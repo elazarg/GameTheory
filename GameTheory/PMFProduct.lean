@@ -10,7 +10,7 @@ universe uι uA uα uβ uγ
 set_option autoImplicit false
 
 -- ============================================================================
--- § 1. Auxiliary Helpers
+-- Auxiliary Helpers
 -- ============================================================================
 
 private lemma pmf_sum_eq_one {α : Type*} [Fintype α] (μ : PMF α) :
@@ -68,7 +68,7 @@ lemma sum_univ_eq_sum_univ_of_involutive
 end Aux
 
 -- ============================================================================
--- § 2. Product PMF & Coordinate Independence
+-- Product PMF & Coordinate Independence
 -- ============================================================================
 
 section Core
@@ -273,7 +273,7 @@ end IgnoresAlgebra
 end Core
 
 -- ============================================================================
--- § 3. Bind Factorization
+-- Bind Factorization
 -- ============================================================================
 
 section BindFactor
@@ -360,7 +360,7 @@ theorem pmfPi_bind_factor
 end BindFactor
 
 -- ============================================================================
--- § 4. Pushforward & Marginals
+-- Pushforward & Marginals
 -- ============================================================================
 
 section Pushforward
@@ -420,7 +420,7 @@ theorem pmfPi_push_coord
 end Pushforward
 
 -- ============================================================================
--- § 5. Conditioning
+-- Conditioning
 -- ============================================================================
 
 section Conditioning
@@ -539,7 +539,7 @@ theorem pmfPi_cond_coord_push_other
 end Conditioning
 
 -- ============================================================================
--- § 6. Family Update Lemmas
+-- Family Update Lemmas
 -- ============================================================================
 
 section UpdateLemmas
@@ -587,7 +587,7 @@ omit [Fintype ι] [∀ i, Fintype (A i)] in
 end UpdateLemmas
 
 -- ============================================================================
--- § 7. Conditioning on Coordinates & Mass Invariance
+-- Conditioning on Coordinates & Mass Invariance
 -- ============================================================================
 
 section ConditioningCoord

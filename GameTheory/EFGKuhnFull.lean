@@ -15,7 +15,7 @@ This is Kuhn's (1953) foundational result in game theory.
 `kuhn_mixed_to_behavioral`: Given a game tree `t` with perfect recall and a
 mixed strategy profile `muP`, there exists a behavioral profile `σ` such that
 `t.evalDist σ = (mixedProfileJoint muP).bind
-  (fun π => t.evalDist (pureProfileToBehavioral π))`.
+  (fun π => t.evalDist (pureToBehavioral π))`.
 
 ## Proof architecture
 
@@ -115,10 +115,6 @@ def flatProfileEquivPureProfile : Equiv (FlatProfile S) (PureProfile S) where
 noncomputable def pmfPureToFlat (mu : PMF (PureProfile S)) : PMF (FlatProfile S) :=
   mu.bind (fun pi => PMF.pure (flatProfileEquivPureProfile.symm pi))
 
-noncomputable def pureProfileToBehavioral (pi : PureProfile S) : BehavioralProfile S :=
-  fun p I => PMF.pure (pi p I)
-
-
 noncomputable def muMarginal {p : S.Player} (I : S.Infoset p)
     (mu : PMF (FlatProfile S)) : PMF (S.Act I) :=
   mu.bind (fun s => PMF.pure (s ⟨p, I⟩))
@@ -151,7 +147,7 @@ abbrev PlayerIndep (mu : PMF (FlatProfile S)) : Prop :=
   ∃ muP : MixedProfile S, mu = pmfPureToFlat (S := S) (mixedProfileJoint (S := S) muP)
 
 ---
--- § 1. Product Conditioning Algebra
+-- Product Conditioning Algebra
 ---
 
 lemma pmfPureToFlat_apply (mu : PMF (PureProfile S)) (s : FlatProfile S) :
@@ -405,7 +401,7 @@ theorem muCond_comm_of_PlayerIndep
     · simp [hsi, hsj]
 
 ---
--- § 2. Path Conditioning, Filtering, and Perfect Recall
+-- Path Conditioning, Filtering, and Perfect Recall
 --
 -- A `DecPath` records the sequence of player decisions along a path from the root.
 -- `GoodPath mu path` witnesses that each step has nonzero marginal mass,
@@ -948,7 +944,7 @@ theorem FilterPlayer_path_eq_history
         rw [map_viewToConstraint_decPathPlayerView]
 
 ---
--- § 3. Behavioral Strategy Construction and Inductive Evaluation
+-- Behavioral Strategy Construction and Inductive Evaluation
 --
 -- `mixedToBehavioralRoot` defines the behavioral strategy: at each infoset,
 -- condition the flat product measure on the canonical history, then take the
@@ -1262,7 +1258,7 @@ theorem eval_subtree_correct
 
 theorem rhs_eq_flat_bind (t : GameTree S Outcome) (muP : MixedProfile S) :
     (mixedProfileJoint (S := S) muP).bind
-      (fun pi => t.evalDist (pureProfileToBehavioral (S := S) pi)) =
+      (fun pi => t.evalDist (pureToBehavioral (S := S) pi)) =
     (pmfPureToFlat (S := S) (mixedProfileJoint (S := S) muP)).bind
       (fun s => t.evalDist (flatToBehavioral s)) := by
   ext x
@@ -1273,14 +1269,14 @@ theorem rhs_eq_flat_bind (t : GameTree S Outcome) (muP : MixedProfile S) :
       (flatProfileEquivPureProfile (S := S)).symm pi =
       (fun idx : FlatIdx S => pi idx.1 idx.2) := rfl
   have hprof :
-      pureProfileToBehavioral (S := S) pi =
+      pureToBehavioral (S := S) pi =
       flatToBehavioral (S := S) (fun idx => pi idx.1 idx.2) := by
     funext p I
     rfl
   simp [hflat, hprof]
 
 ---
--- § 4. Main Theorem
+-- Main Theorem
 ---
 
 /-- The behavioral strategy induced by a player-independent flat measure reproduces
@@ -1308,7 +1304,7 @@ theorem kuhn_mixed_to_behavioral
       t.evalDist sigma =
       (mixedProfileJoint (S := S) muP).bind
         (fun pi => t.evalDist
-          (pureProfileToBehavioral (S := S) pi)) := by
+          (pureToBehavioral (S := S) pi)) := by
   let mu0 : PMF (FlatProfile S) :=
     pmfPureToFlat (S := S) (mixedProfileJoint (S := S) muP)
   refine ⟨mixedToBehavioralRoot (S := S) (Outcome := Outcome)
@@ -1322,7 +1318,7 @@ theorem kuhn_mixed_to_behavioral
             (PlayerIndep_pmfPureToFlat (S := S) muP)
     _ = (mixedProfileJoint (S := S) muP).bind
           (fun pi => t.evalDist
-            (pureProfileToBehavioral (S := S) pi)) := by
+            (pureToBehavioral (S := S) pi)) := by
         exact (rhs_eq_flat_bind (S := S)
           (Outcome := Outcome) t muP).symm
 

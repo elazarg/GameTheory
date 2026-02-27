@@ -23,7 +23,7 @@ Provides:
 namespace GameTheory
 
 -- ============================================================================
--- § 1. Kernels (using Mathlib's PMF)
+-- Kernels (using Mathlib's PMF)
 -- ============================================================================
 
 /-- A stochastic kernel from `α` to `β`: maps each input to a PMF over outputs. -/
@@ -84,7 +84,7 @@ noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a
 end Kernel
 
 -- ============================================================================
--- § 2. Expected value
+-- Expected value
 -- ============================================================================
 
 /-- Expected value of a real-valued function under a PMF. -/
@@ -100,7 +100,7 @@ theorem expect_eq_sum {Ω : Type} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
   simp [expect]
 
 -- ============================================================================
--- § 3. Utility lemmas for expect
+-- Utility lemmas for expect
 -- ============================================================================
 
 /-- Expected value under a point mass is just function evaluation. -/

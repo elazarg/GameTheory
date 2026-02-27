@@ -58,11 +58,14 @@ structure EFGGame where
 
 
 -- ============================================================================
--- § 3. Strategy types
+-- Strategy types
 -- ============================================================================
 
 def PureStrategy (S : InfoStructure) (p : S.Player) : Type :=
   (I : S.Infoset p) → S.Act I
+
+instance {S : InfoStructure} {p : S.Player} : Fintype (PureStrategy S p) :=
+  Pi.instFintype
 
 abbrev MixedProfile (S : InfoStructure) : Type :=
   (p : S.Player) → PMF (PureStrategy S p)
@@ -84,30 +87,7 @@ noncomputable def pureToBehavioral {S : InfoStructure} (σ : PureProfile S) : Be
   fun p I => PMF.pure (σ p I)
 
 -- ============================================================================
--- § 4. WFTree
--- ============================================================================
-
-/-- Well-formedness predicate for a game tree.
-    All well-formedness conditions are built into the type structure:
-    `arity_pos` for decisions, explicit `hk` for chance nodes. -/
-inductive WFTree {S : InfoStructure} {Outcome : Type} : GameTree S Outcome → Prop where
-  | terminal : ∀ z, WFTree (.terminal z)
-  | chance : ∀ k μ hk next,
-      (∀ b, WFTree (next b)) →
-      WFTree (.chance k μ hk next)
-  | decision : ∀ {p} (I : S.Infoset p) next,
-      (∀ a, WFTree (next a)) →
-      WFTree (.decision I next)
-
-/-- Every `GameTree` is well-formed. -/
-theorem allWFTree {S : InfoStructure} {Outcome : Type} (t : GameTree S Outcome) : WFTree t := by
-  induction t with
-  | terminal => constructor
-  | chance _ _ _ _ ih => constructor; exact ih
-  | decision _ _ ih => constructor; exact ih
-
--- ============================================================================
--- § 5. Evaluation
+-- Evaluation
 -- ============================================================================
 
 /-- Evaluate under a behavioral profile, returning a PMF over outcomes. -/
@@ -118,7 +98,7 @@ noncomputable def GameTree.evalDist {S : InfoStructure} {Outcome : Type}
   | .decision (p := p) I next => (σ p I).bind (fun a => (next a).evalDist σ)
 
 -- ============================================================================
--- § 6. Simp lemmas
+-- Simp lemmas
 -- ============================================================================
 
 @[simp] theorem evalDist_terminal {S : InfoStructure} {Outcome : Type}
@@ -137,6 +117,47 @@ noncomputable def GameTree.evalDist {S : InfoStructure} {Outcome : Type}
     (GameTree.decision I next).evalDist σ =
     (σ p I).bind (fun a => (next a).evalDist σ) := rfl
 
+-- ============================================================================
+-- Deterministic trees
+-- ============================================================================
+
+/-- A game tree is deterministic if it has no chance nodes. -/
+inductive IsDeterministic {S : InfoStructure} {Outcome : Type} :
+    GameTree S Outcome → Prop where
+  | terminal (z : Outcome) : IsDeterministic (.terminal z)
+  | decision {p : S.Player} (I : S.Infoset p) (next : S.Act I → GameTree S Outcome) :
+      (∀ a, IsDeterministic (next a)) → IsDeterministic (.decision I next)
+
+/-- Deterministic evaluation of a game tree under a pure strategy profile.
+    At chance nodes (which cannot appear in a deterministic tree),
+    an arbitrary branch is taken as junk. -/
+def GameTree.evalPure {S : InfoStructure} {Outcome : Type}
+    (t : GameTree S Outcome) (σ : PureProfile S) : Outcome :=
+  match t with
+  | .terminal z => z
+  | .chance _k _μ hk next => (next ⟨0, hk⟩).evalPure σ
+  | .decision (p := p) I next => (next (σ p I)).evalPure σ
+
+@[simp] theorem evalPure_terminal {S : InfoStructure} {Outcome : Type}
+    (σ : PureProfile S) (z : Outcome) :
+    (GameTree.terminal z : GameTree S Outcome).evalPure σ = z := rfl
+
+@[simp] theorem evalPure_decision {S : InfoStructure} {Outcome : Type}
+    (σ : PureProfile S) {p : S.Player} (I : S.Infoset p)
+    (next : S.Act I → GameTree S Outcome) :
+    (GameTree.decision I next).evalPure σ = (next (σ p I)).evalPure σ := rfl
+
+/-- For a deterministic tree, `evalDist` under a pure behavioral profile equals
+    `PMF.pure` of the deterministic evaluation. -/
+theorem evalDist_pureToBehavioral_eq_pure {S : InfoStructure} {Outcome : Type}
+    (t : GameTree S Outcome) (σ : PureProfile S) (hd : IsDeterministic t) :
+    t.evalDist (pureToBehavioral σ) = PMF.pure (t.evalPure σ) := by
+  induction hd with
+  | terminal z => rfl
+  | decision I next _hall ih =>
+    simp only [evalDist_decision, pureToBehavioral, PMF.pure_bind, GameTree.evalPure]
+    exact ih (σ _ I)
+
 /-- EFG outcome kernel: behavioral profile → PMF over outcomes. -/
 noncomputable def GameTree.toKernel {S : InfoStructure} {Outcome : Type}
     (t : GameTree S Outcome) :
@@ -144,7 +165,7 @@ noncomputable def GameTree.toKernel {S : InfoStructure} {Outcome : Type}
   fun σ => t.evalDist σ
 
 -- ============================================================================
--- § 7. DecisionNodeIn
+-- DecisionNodeIn
 -- ============================================================================
 
 /-- A decision node with info set `I` (of player `p`) appears somewhere in a `GameTree`. -/
@@ -183,7 +204,7 @@ theorem DecisionNodeIn_decision_inv {S : InfoStructure} {Outcome : Type}
   | in_decision _ _ a hsub => exact Or.inr ⟨a, hsub⟩
 
 -- ============================================================================
--- § 8. Swap theorems
+-- Swap theorems
 -- ============================================================================
 
 /-- Swapping two independent decision nodes preserves the outcome distribution. -/
@@ -224,7 +245,7 @@ theorem swap_chances {S : InfoStructure} {Outcome : Type}
   exact PMF.bind_comm μ₁ μ₂ (fun c₁ c₂ => (grid c₁ c₂).evalDist σ)
 
 -- ============================================================================
--- § 9. toKernelGame
+-- toKernelGame
 -- ============================================================================
 
 /-- Convert an EFG game to a kernel-based game. -/
@@ -236,7 +257,7 @@ noncomputable def EFGGame.toKernelGame (G : EFGGame) :
   outcomeKernel := fun σ => G.tree.evalDist σ
 
 -- ============================================================================
--- § 10. Perfect recall
+-- Perfect recall
 -- ============================================================================
 
 /-- A single step in a play history.
@@ -281,7 +302,7 @@ def PerfectRecall {S : InfoStructure} {Outcome : Type}
     playerHistory S p h₁ = playerHistory S p h₂
 
 -- ============================================================================
--- § 11. Structural lemmas
+-- Structural lemmas
 -- ============================================================================
 
 /-- Terminal trees have perfect recall (vacuously). -/

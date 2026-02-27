@@ -25,7 +25,9 @@ open PDAction in
 /-- The Prisoner's Dilemma game.
   Payoff matrix:
   - (D,D) = (1,1), (C,D) = (0,3), (D,C) = (3,0), (C,C) = (2,2) -/
-def prisonersDilemma : NFGame Bool (fun _ => PDAction) where
+def prisonersDilemma : NFGGame Bool (fun _ => PDAction) where
+  Outcome := ∀ _ : Bool, PDAction
+  outcome := id
   utility s p :=
     match s true, s false, p with
     | defect,    defect,    true  => 1
@@ -75,7 +77,9 @@ open MPAction in
 /-- Matching Pennies game.
   Payoff matrix:
   - (H,H) = (1,-1), (H,T) = (-1,1), (T,H) = (-1,1), (T,T) = (1,-1) -/
-def matchingPennies : NFGame Bool (fun _ => MPAction) where
+def matchingPennies : NFGGame Bool (fun _ => MPAction) where
+  Outcome := ∀ _ : Bool, MPAction
+  outcome := id
   utility s p :=
     match s true, s false, p with
     | heads, heads, true  =>  1

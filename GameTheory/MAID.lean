@@ -21,7 +21,7 @@ Nodes indexed by `Fin n`, values typed by `Val S nd = Fin (S.domainSize nd)`.
 namespace MAID
 
 -- ============================================================================
--- § 1. Core — pure structure
+-- Core — pure structure
 -- ============================================================================
 
 /-- The kind of a node in a MAID. -/
@@ -71,6 +71,25 @@ theorem Struct.dom_pos (S : Struct Player n) (nd : Fin n) :
     rw [S.utility_domain nd a ha]; exact Nat.one_pos
   · exact S.nonutility_pos nd h
 
+/-- Every node appears in the topological order. -/
+theorem Struct.topo_mem (S : Struct Player n) (nd : Fin n) :
+    nd ∈ S.topoOrder := by
+  have hfs : S.topoOrder.toFinset = Finset.univ := by
+    apply Finset.eq_univ_of_card
+    rw [List.toFinset_card_of_nodup S.topo_nodup, S.topo_length, Fintype.card_fin]
+  rw [← List.mem_toFinset]
+  rw [hfs]
+  exact Finset.mem_univ nd
+
+/-- Perfect recall for a MAID: for each player, every later decision node
+    (in topo order) observes earlier decision nodes and their observations. -/
+def Struct.PerfectRecall (S : Struct Player n) : Prop :=
+  ∀ (p : Player) (d₁ d₂ : Fin n),
+    S.kind d₁ = .decision p → S.kind d₂ = .decision p →
+    (∃ i₁ i₂ : Fin S.topoOrder.length,
+      S.topoOrder[i₁] = d₁ ∧ S.topoOrder[i₂] = d₂ ∧ i₁.val < i₂.val) →
+    d₁ ∈ S.obsParents d₂ ∧ S.obsParents d₁ ⊆ S.obsParents d₂
+
 /-- Typed value at a node. -/
 abbrev Val (S : Struct Player n) (nd : Fin n) := Fin (S.domainSize nd)
 
@@ -110,7 +129,7 @@ instance (S : Struct Player n) (p : Player) : DecidableEq (UtilityNode S p) :=
   inferInstanceAs (DecidableEq {nd : Fin n // S.kind nd = .utility p})
 
 -- ============================================================================
--- § 2. Semantics — evaluation
+-- Semantics — evaluation
 -- ============================================================================
 
 /-- Semantic data for a MAID: chance CPDs and utility functions. -/
@@ -159,7 +178,7 @@ noncomputable def utilityOf (S : Struct Player n) (sem : Sem S)
     sem.utilityFn p u (projCfg a (S.parents u.val)))
 
 -- ============================================================================
--- § 3. Game — KernelGame bridge
+-- Game — KernelGame bridge
 -- ============================================================================
 
 /-- Convert a typed MAID to a kernel-based game. -/
@@ -171,7 +190,7 @@ noncomputable def toKernelGame (S : Struct Player n) (sem : Sem S) :
   outcomeKernel := fun σ => evalAssignDist S sem σ
 
 -- ============================================================================
--- § 4. Order-independence — swap lemmas
+-- Order-independence — swap lemmas
 -- ============================================================================
 
 /-- Two nodes have no direct edge between them. -/
@@ -188,6 +207,12 @@ theorem projCfg_update_irrel {S : Struct Player n} (a : TAssign S)
   · next h => exact absurd (h ▸ hnd') hnd
   · rfl
 
+/-- Updating at a node in `ps` and projecting gives the new value at that node. -/
+theorem projCfg_update_self {S : Struct Player n} (a : TAssign S)
+    (nd : Fin n) (v : Val S nd) (ps : Finset (Fin n)) (hnd : nd ∈ ps) :
+    projCfg (updateAssign a nd v) ps ⟨nd, hnd⟩ = v := by
+  simp [projCfg, updateAssign]
+
 /-- `nodeDist` at `nd₂` is unchanged when we update at `nd₁`, provided `nd₁ ∉ S.parents nd₂`. -/
 theorem nodeDist_update_irrel {S : Struct Player n} (sem : Sem S) (pol : Policy S)
     (nd₁ nd₂ : Fin n) (a : TAssign S) (v : Val S nd₁)
@@ -199,6 +224,18 @@ theorem nodeDist_update_irrel {S : Struct Player n} (sem : Sem S) (pol : Policy 
   · congr 1; exact projCfg_update_irrel a nd₁ v _
       (fun hmem => h (S.obs_sub nd₂ hmem))
   · rfl
+
+/-- Reading `updateAssign` at a different node returns the old value. -/
+theorem updateAssign_get_ne {S : Struct Player n} (a : TAssign S)
+    (nd nd' : Fin n) (v : Val S nd) (hne : nd' ≠ nd) :
+    updateAssign a nd v nd' = a nd' := by
+  simp [updateAssign, hne]
+
+/-- Reading `updateAssign` at the same node returns the new value. -/
+theorem updateAssign_get_self {S : Struct Player n} (a : TAssign S)
+    (nd : Fin n) (v : Val S nd) :
+    updateAssign a nd v nd = v := by
+  simp [updateAssign]
 
 /-- `updateAssign` commutes on distinct nodes. -/
 theorem updateAssign_comm {S : Struct Player n} (a : TAssign S)

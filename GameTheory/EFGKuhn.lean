@@ -33,7 +33,7 @@ open scoped BigOperators
 variable {S : InfoStructure} {Outcome : Type}
 
 -- ============================================================================
--- § 1. Type aliases and instances
+-- Type aliases and instances
 -- ============================================================================
 
 /-- Flat index over all infosets across all players. -/
@@ -42,23 +42,17 @@ abbrev FlatIdx (S : InfoStructure) := (p : Fin S.n) × S.Infoset p
 /-- A flat profile assigns an action to every infoset of every player. -/
 abbrev FlatProfile (S : InfoStructure) := (idx : FlatIdx S) → S.Act idx.2
 
-/-- A mixed strategy for player `p`: a distribution over pure strategies. -/
-abbrev MixedStrategy (S : InfoStructure) (p : S.Player) := PMF (PureStrategy S p)
-
 instance : Fintype (FlatIdx S) :=
   Sigma.instFintype
 
 instance : DecidableEq (FlatIdx S) :=
   Sigma.instDecidableEqSigma
 
-instance : Fintype (PureStrategy S p) :=
-  Pi.instFintype
-
 instance : Fintype (FlatProfile S) :=
   Pi.instFintype
 
 -- ============================================================================
--- § 2. Product PMF
+-- Product PMF
 -- ============================================================================
 
 /-- Product PMF: independently sample each info set from a behavioral profile.
@@ -80,7 +74,7 @@ noncomputable def GameTree.evalFlat (t : GameTree S Outcome) (s : FlatProfile S)
   t.evalDist (flatToBehavioral s)
 
 -- ============================================================================
--- § 3. NoInfoSetRepeat (typed version)
+-- NoInfoSetRepeat (typed version)
 -- ============================================================================
 
 /-- No info set appears both at a decision node and in its subtrees.
@@ -137,7 +131,7 @@ theorem PerfectRecall_implies_NoInfoSetRepeat
       split at key <;> simp_all
 
 -- ============================================================================
--- § 4. Agreement lemma
+-- Agreement lemma
 -- ============================================================================
 
 /-- Two flat profiles that agree on all infosets appearing in `t` produce
@@ -161,7 +155,7 @@ theorem evalDist_pure_eq_of_agree (t : GameTree S Outcome)
     exact ih a (fun hdn => h (.in_decision I next a hdn))
 
 -- ============================================================================
--- § 5. Behavioral → Mixed
+-- Behavioral → Mixed
 -- ============================================================================
 
 /-- **Behavioral→Mixed**: the product PMF over all infosets, when composed with
@@ -217,7 +211,7 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S) (t : GameTree S Outcome)
     exact ih a (hnr.2 a)
 
 -- ============================================================================
--- § 6. Reachability (for mixed → behavioral)
+-- Reachability (for mixed → behavioral)
 -- ============================================================================
 
 /-- Whether a flat profile `s` reaches a decision node with info set `I`
@@ -240,7 +234,7 @@ noncomputable def reachProbFlat {p : S.Player}
     if reachesFlat I s t then μ s else 0
 
 -- ============================================================================
--- § 7. Mixed → Behavioral (single-player)
+-- Mixed → Behavioral (single-player)
 -- ============================================================================
 
 open Classical in
@@ -1043,7 +1037,7 @@ theorem mixed_to_behavioral_flat (t : GameTree S Outcome) (hpr : PerfectRecall t
       exact mixedToBehavioralFlat_decision_sub hpr μ hp_marg hdn
 
 -- ============================================================================
--- § 8. Combined Kuhn's theorem
+-- Combined Kuhn's theorem
 -- ============================================================================
 
 /-- Kuhn's theorem (behavioral → mixed direction):

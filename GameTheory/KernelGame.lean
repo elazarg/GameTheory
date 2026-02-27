@@ -24,7 +24,7 @@ namespace GameTheory
 abbrev Payoff (ι : Type) : Type := ι → ℝ
 
 -- ============================================================================
--- § 1. Kernel-based game (strategies + outcome kernel → EU)
+-- Kernel-based game (strategies + outcome kernel → EU)
 -- ============================================================================
 
 /-- A kernel-based game with explicit outcome type.

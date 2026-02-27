@@ -10,5 +10,6 @@ import GameTheory.PMFProduct
 import GameTheory.InfoArena
 import GameTheory.MAID
 import GameTheory.MAID_EFG
+import GameTheory.EFG_NFG
 import GameTheory.EFGKuhn
 import GameTheory.EFGKuhnFull

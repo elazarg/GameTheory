@@ -70,12 +70,6 @@ noncomputable abbrev hiddenDecTree : GameTree onePlayerS (Payoff onePlayerS.Play
       | 0 => .terminal (fun _ => 0)
       | 1 => .terminal (fun _ => 1)
 
-/-! ## WFTree proofs -/
-
-theorem seqTree_wf : WFTree seqTree := allWFTree seqTree
-theorem matchingPenniesTree_wf : WFTree matchingPenniesTree := allWFTree matchingPenniesTree
-theorem hiddenDecTree_wf : WFTree hiddenDecTree := allWFTree hiddenDecTree
-
 /-! ## EU proofs (via KernelGame) -/
 
 /-- Strategy profile: always pick the first action. -/
