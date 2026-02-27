@@ -54,7 +54,6 @@ noncomputable def correlatedOutcome (G : KernelGame ι)
 
 /-- A point-mass profile distribution induces the same outcome distribution
     as direct evaluation at that profile. -/
-omit [DecidableEq ι] in
 @[simp] theorem correlatedOutcome_pure (G : KernelGame ι) (σ : Profile G) :
     G.correlatedOutcome (PMF.pure σ) = G.outcomeKernel σ := by
   simp [correlatedOutcome]
@@ -67,14 +66,19 @@ noncomputable def udist (G : KernelGame ι) (σ : Profile G) : PMF (Payoff ι) :
 noncomputable def udistPlayer (G : KernelGame ι) (σ : Profile G) (who : ι) : PMF ℝ :=
   (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω who))
 
-omit [DecidableEq ι] in
+/-- Player-`who` utility distribution is the pushforward of the joint utility
+    distribution along coordinate projection. -/
+theorem udistPlayer_eq_udist_bind (G : KernelGame ι) (σ : Profile G) (who : ι) :
+    G.udistPlayer σ who =
+      (G.udist σ).bind (fun u : Payoff ι => PMF.pure (u who)) := by
+  simp [udistPlayer, udist, PMF.bind_bind]
+
 /-- `udist` under a deterministic (point-mass) outcome collapses to a point mass. -/
 @[simp] theorem udist_pure (G : KernelGame ι) (σ : Profile G) (ω : G.Outcome)
     (h : G.outcomeKernel σ = PMF.pure ω) :
     G.udist σ = PMF.pure (G.utility ω) := by
   simp [udist, h]
 
-omit [DecidableEq ι] in
 /-- `udistPlayer` under a deterministic outcome collapses to a point mass. -/
 @[simp] theorem udistPlayer_pure (G : KernelGame ι) (σ : Profile G) (ω : G.Outcome)
     (who : ι) (h : G.outcomeKernel σ = PMF.pure ω) :
