@@ -128,6 +128,22 @@ instance (S : Struct Player n) (p : Player) : DecidableEq (DecisionNode S p) :=
 instance (S : Struct Player n) (p : Player) : DecidableEq (UtilityNode S p) :=
   inferInstanceAs (DecidableEq {nd : Fin n // S.kind nd = .utility p})
 
+instance (S : Struct Player n) (ps : Finset (Fin n)) : Fintype (Cfg S ps) :=
+  inferInstance
+
+instance (S : Struct Player n) (ps : Finset (Fin n)) : DecidableEq (Cfg S ps) :=
+  inferInstanceAs (DecidableEq ((nd : ↥ps) → Val S nd.val))
+
+/-- Info set: which decision node + observed parent configuration. -/
+def Infoset (S : Struct Player n) (p : Player) :=
+  Σ (d : DecisionNode S p), Cfg S (S.obsParents d.val)
+
+instance (S : Struct Player n) (p : Player) : Fintype (Infoset S p) :=
+  Sigma.instFintype
+
+instance (S : Struct Player n) (p : Player) : DecidableEq (Infoset S p) :=
+  inferInstanceAs (DecidableEq (Σ (d : DecisionNode S p), Cfg S (S.obsParents d.val)))
+
 -- ============================================================================
 -- Semantics — evaluation
 -- ============================================================================
@@ -137,10 +153,9 @@ structure Sem (S : Struct Player n) where
   chanceCPD : (c : ChanceNode S) → Cfg S (S.parents c.val) → PMF (Val S c.val)
   utilityFn : (p : Player) → (u : UtilityNode S p) → Cfg S (S.parents u.val) → ℝ
 
-/-- Per-player strategy: maps each decision node to a distribution over actions,
-    conditioned on observed parent values. -/
+/-- Per-player strategy: maps each info set to a distribution over actions. -/
 def PlayerStrategy (S : Struct Player n) (p : Player) :=
-  (d : DecisionNode S p) → Cfg S (S.obsParents d.val) → PMF (Val S d.val)
+  (I : Infoset S p) → PMF (Val S I.1.val)
 
 /-- Joint policy: a strategy for every player. -/
 def Policy (S : Struct Player n) := (p : Player) → PlayerStrategy S p
@@ -151,7 +166,7 @@ noncomputable def nodeDist (S : Struct Player n) (sem : Sem S) (pol : Policy S)
     (nd : Fin n) (a : TAssign S) : PMF (Val S nd) :=
   match hk : S.kind nd with
   | .chance => sem.chanceCPD ⟨nd, hk⟩ (projCfg a (S.parents nd))
-  | .decision p => pol p ⟨nd, hk⟩ (projCfg a (S.obsParents nd))
+  | .decision p => pol p ⟨⟨nd, hk⟩, projCfg a (S.obsParents nd)⟩
   | .utility _ => PMF.pure ⟨0, by rw [S.utility_domain nd _ hk]; exact Nat.one_pos⟩
 
 /-- Update a total assignment at node `nd` with value `v`. -/
@@ -221,8 +236,8 @@ theorem nodeDist_update_irrel {S : Struct Player n} (sem : Sem S) (pol : Policy 
   unfold nodeDist
   split
   · congr 1; exact projCfg_update_irrel a nd₁ v _ h
-  · congr 1; exact projCfg_update_irrel a nd₁ v _
-      (fun hmem => h (S.obs_sub nd₂ hmem))
+  · congr 1; exact Sigma.ext rfl (heq_of_eq (projCfg_update_irrel a nd₁ v _
+      (fun hmem => h (S.obs_sub nd₂ hmem))))
   · rfl
 
 /-- Reading `updateAssign` at a different node returns the old value. -/

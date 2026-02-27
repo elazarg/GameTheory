@@ -27,38 +27,13 @@ open MAID EFG
 
 variable {m n : Nat}
 
-/-- Fintype instance for `MAID.Cfg S ps` (dependent Pi over Finset subtype). -/
-instance instFintypeCfg (S : MAID.Struct (Fin m) n) (ps : Finset (Fin n)) :
-    Fintype (MAID.Cfg S ps) :=
-  inferInstance
-
-/-- DecidableEq instance for `MAID.Cfg S ps`. -/
-instance instDecidableEqCfg (S : MAID.Struct (Fin m) n) (ps : Finset (Fin n)) :
-    DecidableEq (MAID.Cfg S ps) :=
-  inferInstanceAs (DecidableEq ((nd : ↥ps) → MAID.Val S nd.val))
-
-/-- Info-set type for the EFG derived from a MAID:
-    which decision node + what was observed. -/
-def MaidInfoset (S : MAID.Struct (Fin m) n) (p : Fin m) :=
-  Σ (d : MAID.DecisionNode S p), MAID.Cfg S (S.obsParents d.val)
-
-instance instFintypeMaidInfoset (S : MAID.Struct (Fin m) n) (p : Fin m) :
-    Fintype (MaidInfoset S p) :=
-  Sigma.instFintype
-
-instance instDecidableEqMaidInfoset (S : MAID.Struct (Fin m) n) (p : Fin m) :
-    DecidableEq (MaidInfoset S p) :=
-  inferInstanceAs (DecidableEq (Σ (d : MAID.DecisionNode S p), MAID.Cfg S (S.obsParents d.val)))
-
 /-- Build an `EFG.InfoStructure` from a MAID structure. -/
 noncomputable def maidInfoS (S : MAID.Struct (Fin m) n) :
     EFG.InfoStructure where
   n := m
-  Infoset := fun p => MaidInfoset S p
-  fInfo := fun p => instFintypeMaidInfoset S p
-  dInfo := fun p => instDecidableEqMaidInfoset S p
-  arity := fun _ ⟨d, _⟩ => S.domainSize d.val
-  arity_pos := fun _ ⟨d, _⟩ => S.dom_pos d.val
+  Infoset := MAID.Infoset S
+  arity := fun _ I => S.domainSize I.1.val
+  arity_pos := fun _ I => S.dom_pos I.1.val
 
 -- ============================================================================
 -- Tree construction
@@ -83,7 +58,7 @@ noncomputable def buildTree (S : MAID.Struct (Fin m) n)
         (fun v => buildTree S sem pol rest (MAID.updateAssign assign nd v))
     | .decision p =>
       .decision (S := maidInfoS S) (p := p)
-        (⟨⟨nd, hk⟩, MAID.projCfg assign (S.obsParents nd)⟩ : MaidInfoset S p)
+        (⟨⟨nd, hk⟩, MAID.projCfg assign (S.obsParents nd)⟩ : MAID.Infoset S p)
         (fun v => buildTree S sem pol rest (MAID.updateAssign assign nd v))
     | .utility _ =>
       buildTree S sem pol rest
@@ -106,15 +81,17 @@ noncomputable def maidToEFG (S : MAID.Struct (Fin m) n) (sem : MAID.Sem S)
 -- Strategy correspondence
 -- ============================================================================
 
-/-- Convert a MAID policy to an EFG behavioral profile. -/
+/-- Convert a MAID policy to an EFG behavioral profile.
+    After unification of `Infoset`, this is the identity. -/
 noncomputable def toEFGProfile {S : MAID.Struct (Fin m) n}
     (pol : MAID.Policy S) : EFG.BehavioralProfile (maidInfoS S) :=
-  fun p ⟨d, obs⟩ => pol p d obs
+  fun p I => pol p I
 
-/-- Convert an EFG behavioral profile back to a MAID policy. -/
+/-- Convert an EFG behavioral profile back to a MAID policy.
+    After unification of `Infoset`, this is the identity. -/
 noncomputable def fromEFGProfile {S : MAID.Struct (Fin m) n}
     (σ : EFG.BehavioralProfile (maidInfoS S)) : MAID.Policy S :=
-  fun p d obs => σ p ⟨d, obs⟩
+  fun p I => σ p I
 
 theorem toFrom {S : MAID.Struct (Fin m) n}
     (σ : EFG.BehavioralProfile (maidInfoS S)) :
@@ -145,7 +122,7 @@ private theorem nodeDist_decision {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S)
     (pol : MAID.Policy S) (nd : Fin n) (assign : MAID.TAssign S)
     (p : Fin m) (hk : S.kind nd = .decision p) :
     MAID.nodeDist S sem pol nd assign =
-    pol p ⟨nd, hk⟩ (MAID.projCfg assign (S.obsParents nd)) := by
+    pol p ⟨⟨nd, hk⟩, MAID.projCfg assign (S.obsParents nd)⟩ := by
   unfold MAID.nodeDist
   split
   · next hk' => exact nomatch hk.symm.trans hk'
@@ -256,7 +233,7 @@ private theorem buildTree_obs_stable
     {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S) (pol : MAID.Policy S)
     (nodes : List (Fin n)) (assign : MAID.TAssign S)
     {h : List (EFG.HistoryStep (maidInfoS S))}
-    {p : Fin m} {I : MaidInfoset S p}
+    {p : Fin m} {I : MAID.Infoset S p}
     {next : (maidInfoS S).Act I → EFG.GameTree (maidInfoS S) (MAID.TAssign S)}
     (hr : EFG.ReachBy h (buildTree S sem pol nodes assign) (.decision I next))
     {nd' : Fin n} (hnd' : nd' ∈ S.obsParents I.1.val) (hnd'_not : nd' ∉ nodes) :
@@ -294,7 +271,7 @@ private theorem buildTree_decNode_mem
     {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S) (pol : MAID.Policy S)
     (nodes : List (Fin n)) (assign : MAID.TAssign S)
     {h : List (EFG.HistoryStep (maidInfoS S))}
-    {p : Fin m} {I : MaidInfoset S p}
+    {p : Fin m} {I : MAID.Infoset S p}
     {next : (maidInfoS S).Act I → EFG.GameTree (maidInfoS S) (MAID.TAssign S)}
     (hr : EFG.ReachBy h (buildTree S sem pol nodes assign) (.decision I next)) :
     I.1.val ∈ nodes := by
@@ -390,7 +367,7 @@ private theorem buildTree_playerHistory_eq
     (nodes : List (Fin n)) (hnodup : nodes.Nodup)
     (hsuffix : ∃ done, S.topoOrder = done ++ nodes)
     (assign₁ assign₂ : MAID.TAssign S)
-    {p : Fin m} {I : MaidInfoset S p}
+    {p : Fin m} {I : MAID.Infoset S p}
     (hagree : ∀ nd', nd' ∉ nodes →
       nd' ∈ S.obsParents I.1.val → assign₁ nd' = assign₂ nd')
     {h₁ h₂ : List (EFG.HistoryStep (maidInfoS S))}
