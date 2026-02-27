@@ -7,8 +7,7 @@ import GameTheory.NFG
 import GameTheory.NFGExamples
 import GameTheory.NFG_EFG
 import GameTheory.PMFProduct
--- InfoArena excluded from MVP: contains sorry in outcomePMF
--- import GameTheory.InfoArena
+-- InfoArena: experimental, see branch `experimental/info-arena`
 import GameTheory.MAID
 import GameTheory.MAID_EFG
 import GameTheory.MAIDExamples

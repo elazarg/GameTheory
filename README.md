@@ -18,9 +18,9 @@ Out of scope:
 - Subgame perfect, sequential, correlated equilibrium.
 - Client-specific product APIs.
 
-## MVP Results
+## Current API Surface
 
-Implemented:
+The library exposes:
 1. `KernelGame.udist` and `KernelGame.udistPlayer` (+ point-mass collapse lemmas).
 2. Preference-parameterized concepts:
    - `KernelGame.IsNashFor`
@@ -42,8 +42,8 @@ Implemented:
    - `EFGExamples.lean`
    - `MAIDExamples.lean`
 
-Build status:
-- `lake build` passes for the current library.
+Build:
+- `lake build` is the project build command.
 
 ## MVP Surface Decision
 
@@ -57,4 +57,4 @@ Build status:
 - `GameTheory/NFG*.lean` - normal-form games and examples/bridges
 - `GameTheory/EFG*.lean` - extensive-form games, Kuhn results, examples/bridges
 - `GameTheory/MAID*.lean` - typed MAID semantics, EFG bridge, examples
-- `MVP_COMPLETION_DESIGN.md` - implementation design notes and rationale
+- `ROADMAP.md` - MVP roadmap and acceptance gates

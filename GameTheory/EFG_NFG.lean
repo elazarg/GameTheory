@@ -49,6 +49,12 @@ theorem toStrategicKernelGame_outcomeKernel (G : EFGGame) (σ : PureProfile G.in
     G.toKernelGame.outcomeKernel (pureToBehavioral σ) := by
   rfl
 
+/-- Semantics equality for the strategic-form bridge. -/
+theorem toStrategicKernelGame_semantics_eq (G : EFGGame) (σ : PureProfile G.inf) :
+    G.toStrategicKernelGame.outcomeKernel σ =
+    G.toKernelGame.outcomeKernel (pureToBehavioral σ) :=
+  toStrategicKernelGame_outcomeKernel G σ
+
 -- ============================================================================
 -- § 2. Deterministic strategic form (NFGGame)
 -- ============================================================================
@@ -83,6 +89,13 @@ theorem toNFGGameDet_outcomeKernel (G : EFGGame) (hd : IsDeterministic G.tree)
     (G.toNFGGameDet hd).toKernelGame.outcomeKernel σ =
     G.toStrategicKernelGame.outcomeKernel σ :=
   (evalDist_pureToBehavioral_eq_pure G.tree σ hd).symm
+
+/-- Semantics equality for deterministic EFG → NFG bridge. -/
+theorem toNFGGameDet_semantics_eq (G : EFGGame) (hd : IsDeterministic G.tree)
+    (σ : PureProfile G.inf) :
+    (G.toNFGGameDet hd).toKernelGame.outcomeKernel σ =
+    G.toStrategicKernelGame.outcomeKernel σ :=
+  toNFGGameDet_outcomeKernel G hd σ
 
 /-- The strategic kernel game has the same `udist` as the behavioral EFG kernel game. -/
 theorem toStrategicKernelGame_udist (G : EFGGame) (σ : PureProfile G.inf) :

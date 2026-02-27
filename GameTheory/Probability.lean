@@ -9,7 +9,7 @@ Stochastic kernels and expected-value infrastructure for discrete game theory.
 
 Provides:
 - `Kernel α β` — stochastic kernels (Markov kernels) using Mathlib's `PMF`
-- `Kernel.id`, `Kernel.comp`, `Kernel.linExt`, `Kernel.ofFun` — basic operations
+- `Kernel.id`, `Kernel.comp`, `Kernel.linExt`, `Kernel.pushforward`, `Kernel.ofFun` — basic operations
 - `expect` — expected value of a real-valued function under a `PMF`
 - Utility lemmas: `expect_pure`, `expect_bind`, `expect_const`, `expect_eq_sum`
 
@@ -19,8 +19,6 @@ Provides:
 - **`expect_add` (linearity)** — requires summability side-conditions that add
   significant overhead for finite games where `expect_eq_sum` suffices.
 -/
-
--- UTF shell edit marker (pwsh direct write)
 
 namespace GameTheory
 
@@ -43,6 +41,9 @@ noncomputable def comp (k₁ : Kernel α β) (k₂ : Kernel β γ) : Kernel α �
 /-- Linear extension / pushforward of a kernel to input distributions. -/
 noncomputable def linExt (k : Kernel α β) : PMF α → PMF β :=
   fun μ => μ.bind k
+
+/-- Pushforward alias for `linExt`. -/
+noncomputable def pushforward (k : Kernel α β) : PMF α → PMF β := Kernel.linExt k
 
 /-- Pushforward along a pure function (deterministic kernel). -/
 noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a)
@@ -71,9 +72,17 @@ noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a
 @[simp] theorem linExt_apply (k : Kernel α β) (μ : PMF α) :
     Kernel.linExt k μ = μ.bind k := rfl
 
+/-- `pushforward` is definitionally `linExt`. -/
+@[simp] theorem pushforward_apply (k : Kernel α β) (μ : PMF α) :
+    Kernel.pushforward k μ = μ.bind k := rfl
+
 /-- `linExt` along a deterministic kernel is exactly `mapPMF`. -/
 @[simp] theorem linExt_ofFun (f : α → β) (μ : PMF α) :
     Kernel.linExt (Kernel.ofFun f) μ = μ.bind (fun a => PMF.pure (f a)) := by
+  rfl
+
+@[simp] theorem pushforward_ofFun (f : α → β) (μ : PMF α) :
+    Kernel.pushforward (Kernel.ofFun f) μ = μ.bind (fun a => PMF.pure (f a)) := by
   rfl
 
 /-- Linear extension respects Kleisli composition. -/
@@ -82,6 +91,12 @@ noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a
   -- μ.bind (fun a => (k₁ a).bind k₂) = (μ.bind k₁).bind k₂
   simp_all only [linExt_apply, PMF.bind_bind]
   rfl
+
+/-- Pushforward respects Kleisli composition. -/
+@[simp] theorem pushforward_comp (k₁ : Kernel α β) (k₂ : Kernel β γ) (μ : PMF α) :
+    Kernel.pushforward (Kernel.comp k₁ k₂) μ =
+      Kernel.pushforward k₂ (Kernel.pushforward k₁ μ) := by
+  simpa [Kernel.pushforward] using (Kernel.linExt_comp k₁ k₂ μ)
 
 end Kernel
 

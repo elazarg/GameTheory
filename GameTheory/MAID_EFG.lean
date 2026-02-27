@@ -224,6 +224,13 @@ theorem maidToEFG_outcomeKernel {S : MAID.Struct (Fin m) n}
   simp only [EFG.EFGGame.toKernelGame, MAID.toKernelGame]
   exact maid_efg_evalDist sem pol
 
+/-- Semantics equality for the MAID → EFG → KernelGame bridge. -/
+theorem maidToEFG_semantics_eq {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S) :
+    (maidToEFG S sem pol).toKernelGame.outcomeKernel (toEFGProfile pol) =
+    (MAID.toKernelGame S sem).outcomeKernel pol :=
+  maidToEFG_outcomeKernel sem pol
+
 /-- The MAID and EFG KernelGames have the same joint utility distribution. -/
 theorem maidToEFG_udist {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S) :

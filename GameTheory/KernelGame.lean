@@ -50,7 +50,7 @@ noncomputable def eu (G : KernelGame ι) (σ : Profile G) (who : ι) : ℝ :=
 /-- Outcome distribution under a correlated profile distribution (correlation device). -/
 noncomputable def correlatedOutcome (G : KernelGame ι)
     (μ : PMF (Profile G)) : PMF G.Outcome :=
-  Kernel.linExt G.outcomeKernel μ
+  Kernel.pushforward G.outcomeKernel μ
 
 /-- Joint utility distribution: pushforward of the outcome distribution through `utility`. -/
 noncomputable def udist (G : KernelGame ι) (σ : Profile G) : PMF (Payoff ι) :=

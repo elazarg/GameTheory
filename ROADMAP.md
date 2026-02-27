@@ -16,9 +16,11 @@ In scope for MVP:
 5. Bridge theorems that preserve semantics across representations.
 6. Utility-distribution corollaries for Kuhn equivalence.
 7. Canonical examples showing end-to-end usage.
-8. Subgame perfect, sequential, and correlated equilibrium.
 
-Out of scope:
+In scope for the broader roadmap (post-MVP):
+1. Additional solution concepts and equilibrium refinements.
+
+Out of scope for MVP:
 1. Continuous/infinite probability spaces.
 2. Client-specific APIs.
 3. Full `InfoArena` semantics.
@@ -77,16 +79,13 @@ Acceptance:
 1. Both directions are exposed as top-level theorems.
 2. Corollaries compose cleanly with bridge theorems.
 
-### E) InfoArena MVP Boundary
+### E) InfoArena
 
-Plan:
-1. Keep `InfoArena` outside MVP surface until semantics are finalized.
-2. Do not export unfinished `InfoArena` from top-level module.
-3. Document it as experimental.
+Status: experimental, definition unclear.
 
-Acceptance:
-1. MVP build/import surface excludes unfinished `InfoArena` semantics.
-2. Experimental status is explicit in docs.
+Source lives on branch `experimental/info-arena` (not on master).
+State-based imperfect-info transition system — an alternative to tree-based EFG.
+Contains `sorry` in `outcomePMF`; semantics need further design work before integration.
 
 ### F) Example Suite
 
@@ -107,11 +106,11 @@ MVP is ready when all are true:
 4. Preference-parameterized concept layer is available.
 5. Bridge preservation coverage exists for NFG, EFG, and MAID.
 6. Kuhn utility-distribution corollaries are available.
-7. `InfoArena` is explicitly excluded from MVP surface.
+7. `InfoArena` lives on `experimental/info-arena` branch, not on master.
 8. README describes scope and delivered capabilities for client consumers.
 
 ## Post-MVP Backlog
 
-1. Complete `InfoArena` evaluator and bridges.
+1. Revisit `InfoArena` design (branch `experimental/info-arena`) — finalize semantics, complete evaluator, add bridges.
 2. Add richer preference families (stochastic dominance, risk, regret).
-3. Add advanced equilibrium refinements.
+3. Add advanced equilibrium refinements (including subgame perfect, sequential, correlated).
