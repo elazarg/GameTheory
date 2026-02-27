@@ -1,11 +1,13 @@
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 import GameTheory.EFG
+import GameTheory.EFG_NFG
 
 /-!
 # EFG Examples
 
-Example extensive-form game trees with evaluation and perfect recall proofs.
+Example extensive-form game trees with evaluation, perfect recall proofs,
+and distributional API demonstrations (`udist`, strategic-form bridge).
 -/
 
 namespace EFG
@@ -180,5 +182,22 @@ theorem hiddenDecTree_perfectRecall :
   intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
   rw [hdTree_playerHistory_nil h₁ I next₁ hr₁,
       hdTree_playerHistory_nil h₂ I next₂ hr₂]
+
+/-! ## Distributional API examples -/
+
+/-- Under alwaysFirst, the joint utility distribution of the sequential game
+    is a point mass at the payoff vector (3, 3). -/
+private noncomputable example :
+    seqGame.toKernelGame.udist (pureToBehavioral alwaysFirst) =
+    PMF.pure (fun i => if i == (0 : Fin 2) then 3 else 3) := by
+  simp [KernelGame.udist, EFGGame.toKernelGame, seqGame,
+        GameTree.evalDist, pureToBehavioral, alwaysFirst, twoPlayerS]
+
+/-- The strategic-form kernel game has the same `udist` as the behavioral EFG
+    kernel game (applying `toStrategicKernelGame_udist`). -/
+private noncomputable example :
+    seqGame.toStrategicKernelGame.udist alwaysFirst =
+    seqGame.toKernelGame.udist (pureToBehavioral alwaysFirst) :=
+  toStrategicKernelGame_udist seqGame alwaysFirst
 
 end EFG

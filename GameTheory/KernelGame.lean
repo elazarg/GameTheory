@@ -52,6 +52,28 @@ noncomputable def correlatedOutcome (G : KernelGame ι)
     (μ : PMF (Profile G)) : PMF G.Outcome :=
   Kernel.linExt G.outcomeKernel μ
 
+/-- Joint utility distribution: pushforward of the outcome distribution through `utility`. -/
+noncomputable def udist (G : KernelGame ι) (σ : Profile G) : PMF (Payoff ι) :=
+  (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω))
+
+/-- Per-player utility distribution: pushforward projected to a single player. -/
+noncomputable def udistPlayer (G : KernelGame ι) (σ : Profile G) (who : ι) : PMF ℝ :=
+  (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω who))
+
+omit [DecidableEq ι] in
+/-- `udist` under a deterministic (point-mass) outcome collapses to a point mass. -/
+@[simp] theorem udist_pure (G : KernelGame ι) (σ : Profile G) (ω : G.Outcome)
+    (h : G.outcomeKernel σ = PMF.pure ω) :
+    G.udist σ = PMF.pure (G.utility ω) := by
+  simp [udist, h]
+
+omit [DecidableEq ι] in
+/-- `udistPlayer` under a deterministic outcome collapses to a point mass. -/
+@[simp] theorem udistPlayer_pure (G : KernelGame ι) (σ : Profile G) (ω : G.Outcome)
+    (who : ι) (h : G.outcomeKernel σ = PMF.pure ω) :
+    G.udistPlayer σ who = PMF.pure (G.utility ω who) := by
+  simp [udistPlayer, h]
+
 end KernelGame
 
 end GameTheory

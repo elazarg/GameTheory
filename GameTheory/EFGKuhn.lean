@@ -1050,4 +1050,18 @@ theorem kuhn_behavioral_to_mixed (σ : BehavioralProfile S) (t : GameTree S Outc
       μ.bind (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ :=
   ⟨productProfile σ, behavioral_to_mixed σ t (PerfectRecall_implies_NoInfoSetRepeat t hpr)⟩
 
+open GameTheory in
+/-- Kuhn's theorem lifted to utility distributions (behavioral → mixed):
+    For any EFG game with perfect recall, every behavioral profile has an
+    equivalent mixed profile that induces the same joint utility distribution. -/
+theorem kuhn_behavioral_to_mixed_udist (G : EFGGame)
+    (σ : BehavioralProfile G.inf) (hpr : PerfectRecall G.tree) :
+    ∃ μ : PMF (FlatProfile G.inf),
+      μ.bind (fun s => G.toKernelGame.udist (flatToBehavioral s)) =
+      G.toKernelGame.udist σ := by
+  obtain ⟨μ, hμ⟩ := kuhn_behavioral_to_mixed σ G.tree hpr
+  exact ⟨μ, by
+    simp only [KernelGame.udist, EFGGame.toKernelGame]
+    rw [← hμ, PMF.bind_bind]⟩
+
 end EFG

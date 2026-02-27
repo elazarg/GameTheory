@@ -224,6 +224,14 @@ theorem maidToEFG_outcomeKernel {S : MAID.Struct (Fin m) n}
   simp only [EFG.EFGGame.toKernelGame, MAID.toKernelGame]
   exact maid_efg_evalDist sem pol
 
+/-- The MAID and EFG KernelGames have the same joint utility distribution. -/
+theorem maidToEFG_udist {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S) :
+    (maidToEFG S sem pol).toKernelGame.udist (toEFGProfile pol) =
+    (MAID.toKernelGame S sem).udist pol := by
+  simp only [GameTheory.KernelGame.udist, maidToEFG_outcomeKernel]
+  rfl
+
 -- ============================================================================
 -- Perfect recall
 -- ============================================================================

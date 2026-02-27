@@ -20,6 +20,8 @@ Provides:
   significant overhead for finite games where `expect_eq_sum` suffices.
 -/
 
+-- UTF shell edit marker (pwsh direct write)
+
 namespace GameTheory
 
 -- ============================================================================

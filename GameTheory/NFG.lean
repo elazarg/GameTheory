@@ -103,6 +103,11 @@ theorem IsDominant_iff_kernelGame (G : NFGGame ι A) (i : ι) (a : A i) :
   simp only [IsDominant, GameTheory.KernelGame.IsDominant, GameTheory.KernelGame.eu,
       NFGGame.toKernelGame, GameTheory.expect_pure, deviate]
 
+/-- The joint utility distribution of a pure NFG is a point mass. -/
+@[simp] theorem NFGGame.toKernelGame_udist (G : NFGGame ι A) (s : StrategyProfile A) :
+    G.toKernelGame.udist s = PMF.pure (G.utility (G.outcome s)) := by
+  simp [GameTheory.KernelGame.udist, NFGGame.toKernelGame]
+
 /-! ## Mixed strategies -/
 
 /-- A mixed strategy profile: each player independently randomizes over actions. -/

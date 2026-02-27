@@ -84,6 +84,11 @@ theorem toNFGGameDet_outcomeKernel (G : EFGGame) (hd : IsDeterministic G.tree)
     G.toStrategicKernelGame.outcomeKernel σ :=
   (evalDist_pureToBehavioral_eq_pure G.tree σ hd).symm
 
+/-- The strategic kernel game has the same `udist` as the behavioral EFG kernel game. -/
+theorem toStrategicKernelGame_udist (G : EFGGame) (σ : PureProfile G.inf) :
+    G.toStrategicKernelGame.udist σ =
+    G.toKernelGame.udist (pureToBehavioral σ) := rfl
+
 -- ============================================================================
 -- § 4. pureToBehavioral_update
 -- ============================================================================

@@ -111,4 +111,33 @@ theorem matchingPennies_no_pure_nash :
     simp [matchingPennies, deviate, Function.update, hs1, hs2] at this
     linarith
 
+/-! ## Distributional API examples -/
+
+open GameTheory
+
+/-- The `udist` of (Defect, Defect) in PD is a point mass (deterministic pure game). -/
+theorem pd_defect_udist :
+    prisonersDilemma.toKernelGame.udist pd_defect_defect =
+    PMF.pure (prisonersDilemma.utility (prisonersDilemma.outcome pd_defect_defect)) :=
+  NFGGame.toKernelGame_udist prisonersDilemma pd_defect_defect
+
+/-- (Defect, Defect) is Nash for the EU preference (via `IsNashFor`).
+    This demonstrates that `IsNash` and `IsNashFor euPref` are interchangeable. -/
+theorem pd_defect_isNashFor_eu :
+    prisonersDilemma.toKernelGame.IsNashFor
+      prisonersDilemma.toKernelGame.euPref pd_defect_defect :=
+  (KernelGame.IsNash_iff_IsNashFor_eu _ _).mp
+    ((IsNashPure_iff_kernelGame _ _).mp pd_defect_is_nash)
+
+/-- Defect is dominant for the EU preference (via `IsDominantFor`). -/
+theorem pd_defect_isDominantFor_eu (i : Bool) :
+    prisonersDilemma.toKernelGame.IsDominantFor
+      prisonersDilemma.toKernelGame.euPref
+      i PDAction.defect :=
+  (KernelGame.IsDominant_iff_IsDominantFor_eu _ _ _).mp
+    ((IsDominant_iff_kernelGame _ _ _).mp (by
+      intro s a'
+      cases i <;> cases ha : a' <;> cases h1 : s true <;> cases h2 : s false <;>
+        simp_all [prisonersDilemma, deviate, Function.update] <;> norm_num))
+
 end NFG

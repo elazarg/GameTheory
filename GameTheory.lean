@@ -7,9 +7,11 @@ import GameTheory.NFG
 import GameTheory.NFGExamples
 import GameTheory.NFG_EFG
 import GameTheory.PMFProduct
-import GameTheory.InfoArena
+-- InfoArena excluded from MVP: contains sorry in outcomePMF
+-- import GameTheory.InfoArena
 import GameTheory.MAID
 import GameTheory.MAID_EFG
+import GameTheory.MAIDExamples
 import GameTheory.EFG_NFG
 import GameTheory.EFGKuhn
 import GameTheory.EFGKuhnFull
