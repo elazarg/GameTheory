@@ -244,7 +244,7 @@ theorem maidToEFG_outcomeKernel {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S) :
     (maidToEFG S sem pol).toKernelGame.outcomeKernel (toEFGProfile pol) =
     (MAID.toKernelGame S sem).outcomeKernel pol := by
-  simp only [EFG.EFGGame.toKernelGame, GameTree.evalDistProfile, MAID.toKernelGame]
+  simp only [EFG.EFGGame.toKernelGame, MAID.toKernelGame]
   exact maid_efg_evalDist sem pol
 
 -- ============================================================================

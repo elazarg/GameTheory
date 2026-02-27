@@ -29,10 +29,10 @@ namespace NFG
 /-- A finite normal-form game.
   - `ι` is the type of players
   - `A i` is the type of actions for player `i`
-  - `payoff s i` is the payoff to player `i` under strategy profile `s` -/
+  - `utility s i` is the utility to player `i` under strategy profile `s` -/
 structure NFGame (ι : Type) [Fintype ι] [DecidableEq ι]
     (A : ι → Type) [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)] where
-  payoff : (∀ i, A i) → ι → ℝ
+  utility : (∀ i, A i) → ι → ℝ
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 variable {A : ι → Type} [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
@@ -59,13 +59,13 @@ theorem deviate_other (s : StrategyProfile A) (i j : ι) (a : A i) (h : j ≠ i)
 
 /-- A pure Nash equilibrium: no player can improve by unilateral deviation. -/
 def IsNashPure (G : NFGame ι A) (s : StrategyProfile A) : Prop :=
-  ∀ i (a' : A i), G.payoff s i ≥ G.payoff (deviate s i a') i
+  ∀ i (a' : A i), G.utility s i ≥ G.utility (deviate s i a') i
 
 /-- Action `a` is dominant for player `i`: regardless of others' actions,
-    `a` yields at least as high a payoff as any alternative. -/
+    `a` yields at least as high a utility as any alternative. -/
 def IsDominant (G : NFGame ι A) (i : ι) (a : A i) : Prop :=
   ∀ (s : StrategyProfile A) (a' : A i),
-    G.payoff (deviate s i a) i ≥ G.payoff (deviate s i a') i
+    G.utility (deviate s i a) i ≥ G.utility (deviate s i a') i
 
 /-- If every player has a dominant action, the profile of dominant actions
     is a pure Nash equilibrium. -/
@@ -78,17 +78,17 @@ theorem dominant_is_nash (G : NFGame ι A) (s : StrategyProfile A)
 
 /-! ## NFG → KernelGame bridge -/
 
-/-- NFG as a deterministic kernel: pure profile → point-mass payoff distribution. -/
+/-- NFG as a deterministic kernel: pure profile → point-mass utility distribution. -/
 noncomputable def NFGame.toKernel (G : NFGame ι A) :
     GameTheory.Kernel (∀ i, A i) (GameTheory.Payoff ι) :=
-  GameTheory.Kernel.ofFun G.payoff
+  GameTheory.Kernel.ofFun G.utility
 
 /-- NFG as a kernel-based game. Outcome type is the action profile. -/
 noncomputable def NFGame.toKernelGame (G : NFGame ι A) :
     GameTheory.KernelGame ι where
   Strategy := A
   Outcome := ∀ i, A i
-  utility := G.payoff
+  utility := G.utility
   outcomeKernel := fun σ => PMF.pure σ
 
 /-- Pure Nash in NFG is equivalent to Nash in the kernel game. -/
@@ -115,7 +115,7 @@ noncomputable def NFGame.toMixedKernelGame
     (G : NFGame ι A) : GameTheory.KernelGame ι where
   Strategy := fun i => PMF (A i)
   Outcome := ∀ i, A i
-  utility := G.payoff
+  utility := G.utility
   outcomeKernel := fun σ => pmfPi σ
 
 /-- A mixed Nash equilibrium: no player can improve expected payoff by

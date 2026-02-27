@@ -1,7 +1,6 @@
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Mathlib.Algebra.BigOperators.Ring.Finset
 
 import GameTheory.EFG
 import GameTheory.PMFProduct

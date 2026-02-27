@@ -42,13 +42,13 @@ variable {ι : Type} [DecidableEq ι]
   simp [KernelGame.eu, ofEU, expect_pure]
 
 /-- A strategy profile `σ` is a Nash equilibrium if no player can
-    improve their payoff by unilateral deviation. -/
+    improve their utility by unilateral deviation. -/
 def KernelGame.IsNash (G : KernelGame ι) (σ : KernelGame.Profile G) : Prop :=
   ∀ (who : ι) (s' : G.Strategy who),
     G.eu σ who ≥ G.eu (Function.update σ who s') who
 
 /-- Action `s` is dominant for player `who` if, regardless of others'
-    actions, `s` yields at least as high a payoff as any alternative. -/
+    actions, `s` yields at least as high a utility as any alternative. -/
 def KernelGame.IsDominant (G : KernelGame ι) (who : ι) (s : G.Strategy who) : Prop :=
   ∀ (σ : KernelGame.Profile G) (s' : G.Strategy who),
     G.eu (Function.update σ who s) who ≥ G.eu (Function.update σ who s') who

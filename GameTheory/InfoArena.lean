@@ -26,7 +26,7 @@ structure InfoArena (ι : Type) where
   -- terminal outcomes
   Outcome : Type w
   outcome : {s : State} → turn s = .terminal → Outcome
-  payoff  : Outcome → Payoff ι
+  utility : Outcome → Payoff ι
 
   -- information sets per player
   InfoSet : ι → Type v
@@ -87,7 +87,7 @@ noncomputable def toKernelGame {ι : Type} [DecidableEq ι] (A : InfoArena ι) :
     KernelGame ι where
   Strategy := fun i => BehavioralStrategy A i
   Outcome := A.Outcome
-  utility := A.payoff
+  utility := A.utility
   outcomeKernel := A.outcomeKernel
 
 end InfoArena

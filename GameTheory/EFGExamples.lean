@@ -98,14 +98,14 @@ noncomputable def seqGame : EFGGame where
 private noncomputable example :
     seqGame.toKernelGame.eu (pureToBehavioral alwaysFirst) (0 : Fin 2) = 3 := by
   simp [KernelGame.eu, EFGGame.toKernelGame, seqGame,
-        GameTree.evalDistProfile, GameTree.evalDist,
+        GameTree.evalDist,
         pureToBehavioral, alwaysFirst, twoPlayerS, expect_pure]
 
 /-- Under alwaysLast, seqGame yields EU 1 for P0. -/
 private noncomputable example :
     seqGame.toKernelGame.eu (pureToBehavioral alwaysLast) (0 : Fin 2) = 1 := by
   simp [KernelGame.eu, EFGGame.toKernelGame, seqGame,
-        GameTree.evalDistProfile, GameTree.evalDist,
+        GameTree.evalDist,
         pureToBehavioral, alwaysLast, twoPlayerS, expect_pure]
 
 /-! ## Perfect recall proofs

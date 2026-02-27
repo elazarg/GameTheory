@@ -57,9 +57,6 @@ structure EFGGame where
   utility : Outcome → Payoff inf.Player
 
 
-def EFGGame.Payoff (G : EFGGame) : Type :=
-  GameTheory.Payoff G.inf.Player
-
 -- ============================================================================
 -- § 3. Strategy types
 -- ============================================================================
@@ -81,14 +78,6 @@ abbrev PureProfile (S : InfoStructure) :=
 abbrev BehavioralProfile (S : InfoStructure) :=
   (p : Fin S.n) → BehavioralStrategy S p
 
-
-/-- A pure strategy specifically for player `p`. -/
-def InfoStructure.PureStrategyFor (S : InfoStructure) (p : S.Player) : Type :=
-  (I : S.Infoset p) → S.Act I
-
-/-- A behavioral strategy specifically for player `p`. -/
-def InfoStructure.BehavioralStrategyFor (S : InfoStructure) (p : S.Player) : Type :=
-  (I : S.Infoset p) → PMF (S.Act I)
 
 /-- Lift a pure strategy profile to a behavioral one (point mass at each info set). -/
 noncomputable def pureToBehavioral {S : InfoStructure} (σ : PureProfile S) : BehavioralProfile S :=
@@ -128,11 +117,6 @@ noncomputable def GameTree.evalDist {S : InfoStructure} {Outcome : Type}
   | .chance _k μ _hk next => μ.bind (fun b => (next b).evalDist σ)
   | .decision (p := p) I next => (σ p I).bind (fun a => (next a).evalDist σ)
 
-/-- Evaluate under a per-player behavioral profile (alias for `evalDist`). -/
-noncomputable def GameTree.evalDistProfile {S : InfoStructure} {Outcome : Type}
-    (σ : BehavioralProfile S) : GameTree S Outcome → PMF Outcome :=
-  GameTree.evalDist σ
-
 -- ============================================================================
 -- § 6. Simp lemmas
 -- ============================================================================
@@ -152,27 +136,6 @@ noncomputable def GameTree.evalDistProfile {S : InfoStructure} {Outcome : Type}
     (next : S.Act I → GameTree S Outcome) :
     (GameTree.decision I next).evalDist σ =
     (σ p I).bind (fun a => (next a).evalDist σ) := rfl
-
-@[simp] theorem evalDistProfile_terminal {S : InfoStructure} {Outcome : Type}
-    (σ : BehavioralProfile S) (z : Outcome) :
-    (GameTree.terminal z : GameTree S Outcome).evalDistProfile σ = PMF.pure z := rfl
-
-@[simp] theorem evalDistProfile_chance {S : InfoStructure} {Outcome : Type}
-    (σ : BehavioralProfile S)
-    (k : Nat) (μ : PMF (Fin k)) {hk : 0 < k} (next : Fin k → GameTree S Outcome) :
-    (GameTree.chance k μ hk next).evalDistProfile σ =
-    μ.bind (fun b => (next b).evalDistProfile σ) := rfl
-
-@[simp] theorem evalDistProfile_decision {S : InfoStructure} {Outcome : Type}
-    (σ : BehavioralProfile S) {p : S.Player} (I : S.Infoset p)
-    (next : S.Act I → GameTree S Outcome) :
-    (GameTree.decision I next).evalDistProfile σ =
-    (σ p I).bind (fun a => (next a).evalDistProfile σ) := rfl
-
-/-- `evalDistProfile` is definitionally equal to `evalDist`. -/
-theorem evalDistProfile_const {S : InfoStructure} {Outcome : Type}
-    (σ : BehavioralProfile S) (t : GameTree S Outcome) :
-    t.evalDistProfile σ = t.evalDist σ := rfl
 
 /-- EFG outcome kernel: behavioral profile → PMF over outcomes. -/
 noncomputable def GameTree.toKernel {S : InfoStructure} {Outcome : Type}
@@ -270,7 +233,7 @@ noncomputable def EFGGame.toKernelGame (G : EFGGame) :
   Strategy := BehavioralStrategy G.inf
   Outcome := G.Outcome
   utility := G.utility
-  outcomeKernel := fun σ => G.tree.evalDistProfile σ
+  outcomeKernel := fun σ => G.tree.evalDist σ
 
 -- ============================================================================
 -- § 10. Perfect recall

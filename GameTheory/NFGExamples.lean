@@ -26,7 +26,7 @@ open PDAction in
   Payoff matrix:
   - (D,D) = (1,1), (C,D) = (0,3), (D,C) = (3,0), (C,C) = (2,2) -/
 def prisonersDilemma : NFGame Bool (fun _ => PDAction) where
-  payoff s p :=
+  utility s p :=
     match s true, s false, p with
     | defect,    defect,    true  => 1
     | cooperate, defect,    true  => 0
@@ -76,7 +76,7 @@ open MPAction in
   Payoff matrix:
   - (H,H) = (1,-1), (H,T) = (-1,1), (T,H) = (-1,1), (T,T) = (1,-1) -/
 def matchingPennies : NFGame Bool (fun _ => MPAction) where
-  payoff s p :=
+  utility s p :=
     match s true, s false, p with
     | heads, heads, true  =>  1
     | heads, tails, true  => -1
