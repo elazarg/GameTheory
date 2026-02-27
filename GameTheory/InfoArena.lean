@@ -87,7 +87,7 @@ noncomputable def toKernelGame {ι : Type} [DecidableEq ι] (A : InfoArena ι) :
     KernelGame ι where
   Strategy := fun i => BehavioralStrategy A i
   Outcome := A.Outcome
-  payoff := A.payoff
+  utility := A.payoff
   outcomeKernel := A.outcomeKernel
 
 end InfoArena

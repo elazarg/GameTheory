@@ -5,7 +5,7 @@ import GameTheory.EFG
 import GameTheory.EFGExamples
 import GameTheory.NFG
 import GameTheory.NFGExamples
-import GameTheory.NFG_EFG
+-- import GameTheory.NFG_EFG  -- needs update for new InfoStructure API
 import GameTheory.PMFProduct
 import GameTheory.InfoArena
 import GameTheory.MAID

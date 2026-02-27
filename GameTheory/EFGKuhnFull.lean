@@ -1,8 +1,7 @@
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
-import GameTheory.EFG
-import GameTheory.PMFProduct
+import GameTheory.EFGKuhn
 
 /-!
 # Kuhn's Theorem: Mixed-to-Behavioral Strategy Equivalence
@@ -98,13 +97,6 @@ open scoped BigOperators
 variable {S : InfoStructure} {Outcome : Type}
 
 
-abbrev FlatIdx (S : InfoStructure) := Sigma fun p : S.Player => S.Infoset p
-abbrev FlatProfile (S : InfoStructure) := (idx : FlatIdx S) -> S.Act idx.2
-
-instance : Fintype (FlatIdx S) := Sigma.instFintype
-instance : DecidableEq (FlatIdx S) := Sigma.instDecidableEqSigma
-instance : Fintype (FlatProfile S) := Pi.instFintype
-instance (p : S.Player) : Fintype (PureStrategy S p) := Pi.instFintype
 instance (p : S.Player) : DecidableEq (PureStrategy S p) :=
   show DecidableEq ((I : S.Infoset p) → S.Act I) from inferInstance
 instance : DecidableEq (PureProfile S) :=
@@ -126,11 +118,6 @@ noncomputable def pmfPureToFlat (mu : PMF (PureProfile S)) : PMF (FlatProfile S)
 noncomputable def pureProfileToBehavioral (pi : PureProfile S) : BehavioralProfile S :=
   fun p I => PMF.pure (pi p I)
 
-noncomputable def flatToBehavioral (s : FlatProfile S) : BehavioralProfile S :=
-  fun p I => PMF.pure (s ⟨p, I⟩)
-
-noncomputable def GameTree.evalFlat (t : GameTree S Outcome) (s : FlatProfile S) : PMF Outcome :=
-  t.evalDist (flatToBehavioral s)
 
 noncomputable def muMarginal {p : S.Player} (I : S.Infoset p)
     (mu : PMF (FlatProfile S)) : PMF (S.Act I) :=

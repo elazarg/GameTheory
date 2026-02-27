@@ -88,7 +88,7 @@ noncomputable def NFGame.toKernelGame (G : NFGame ι A) :
     GameTheory.KernelGame ι where
   Strategy := A
   Outcome := ∀ i, A i
-  payoff := G.payoff
+  utility := G.payoff
   outcomeKernel := fun σ => PMF.pure σ
 
 /-- Pure Nash in NFG is equivalent to Nash in the kernel game. -/
@@ -115,7 +115,7 @@ noncomputable def NFGame.toMixedKernelGame
     (G : NFGame ι A) : GameTheory.KernelGame ι where
   Strategy := fun i => PMF (A i)
   Outcome := ∀ i, A i
-  payoff := G.payoff
+  utility := G.payoff
   outcomeKernel := fun σ => pmfPi σ
 
 /-- A mixed Nash equilibrium: no player can improve expected payoff by
