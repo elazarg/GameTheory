@@ -52,6 +52,13 @@ noncomputable def correlatedOutcome (G : KernelGame ι)
     (μ : PMF (Profile G)) : PMF G.Outcome :=
   Kernel.pushforward G.outcomeKernel μ
 
+/-- A point-mass profile distribution induces the same outcome distribution
+    as direct evaluation at that profile. -/
+omit [DecidableEq ι] in
+@[simp] theorem correlatedOutcome_pure (G : KernelGame ι) (σ : Profile G) :
+    G.correlatedOutcome (PMF.pure σ) = G.outcomeKernel σ := by
+  simp [correlatedOutcome]
+
 /-- Joint utility distribution: pushforward of the outcome distribution through `utility`. -/
 noncomputable def udist (G : KernelGame ι) (σ : Profile G) : PMF (Payoff ι) :=
   (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω))
