@@ -53,6 +53,7 @@ import GameTheory.EFG
 import GameTheory.EFGKuhn
 import GameTheory.EFGKuhnFull
 import GameTheory.EFG_NFG
+import GameTheory.EFGRefinements
 
 -- Normal-form games
 import GameTheory.NFG
