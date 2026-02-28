@@ -20,6 +20,7 @@ import GameTheory.DominanceNash
 -- Nash equilibrium
 import GameTheory.StrictNashProperties
 import GameTheory.NashExistence
+import GameTheory.NashExistenceMixed
 
 -- Game properties and welfare
 import GameTheory.GameProperties
