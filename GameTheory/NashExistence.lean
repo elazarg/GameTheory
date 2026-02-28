@@ -16,7 +16,7 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 /-- If every player has a dominant strategy, the profile of dominant strategies
     is a Nash equilibrium. Constructs the profile via `Classical.choice`. -/
@@ -27,6 +27,7 @@ theorem nash_of_all_have_dominant {G : KernelGame ι}
   let σ : Profile G := fun i => (h i).choose
   exact ⟨σ, KernelGame.dominant_is_nash G σ (fun i => (h i).choose_spec)⟩
 
+set_option linter.unusedFintypeInType false in
 /-- A finite game with an exact potential function has a Nash equilibrium:
     the profile maximizing the potential. -/
 theorem exact_potential_nash_exists {G : KernelGame ι}

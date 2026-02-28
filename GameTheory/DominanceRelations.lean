@@ -16,7 +16,7 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
+variable {ι : Type} {G : KernelGame ι}
 
 /-- Weak dominance is reflexive: every strategy weakly dominates itself. -/
 theorem WeaklyDominates.refl (who : ι) (s : G.Strategy who) :

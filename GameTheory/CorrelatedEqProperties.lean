@@ -13,7 +13,7 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
+variable {ι : Type} {G : KernelGame ι}
 
 /-- Every correlated equilibrium is a coarse correlated equilibrium.
 
@@ -34,6 +34,7 @@ deviation distribution `μ.bind (fun σ => pure (deviateProfile σ who id))`
 simplifies to `μ.bind pure = μ`. -/
 theorem deviateDistribution_id (G : KernelGame ι) (μ : PMF (Profile G)) (who : ι) :
     G.deviateDistribution μ who _root_.id = μ := by
+  classical
   simp only [deviateDistribution, deviateProfile, _root_.id]
   conv_lhs => arg 2; ext σ; rw [Function.update_eq_self]
   exact PMF.bind_pure μ

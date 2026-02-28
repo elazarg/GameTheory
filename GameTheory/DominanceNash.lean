@@ -17,13 +17,14 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
+variable {ι : Type} {G : KernelGame ι}
 
 /-- If strategy `s` is never a best response (against any profile), then no
     Nash equilibrium plays `s`. -/
 theorem not_in_nash_of_not_best_response {who : ι} (s : G.Strategy who)
     (hnbr : ∀ σ : Profile G, ¬ G.IsBestResponse who σ s) {σ : Profile G}
     (hN : G.IsNash σ) : σ who ≠ s := by
+  classical
   intro heq
   apply hnbr σ
   rw [← heq]
@@ -36,6 +37,7 @@ theorem not_in_nash_of_not_best_response {who : ι} (s : G.Strategy who)
 theorem StrictlyDominates.not_nash {who : ι} {s : G.Strategy who}
     {σ : Profile G} (hsd : G.StrictlyDominates who s (σ who)) :
     ¬ G.IsNash σ := by
+  classical
   intro hN
   have hge := hN who s
   have hlt := hsd σ

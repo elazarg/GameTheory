@@ -17,8 +17,9 @@ plain inequalities (or sums) on the underlying utility function.
 
 namespace GameTheory
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
+open Classical in
 /-- Nash equilibrium for an `ofEU` game reduces to a direct inequality
     on the utility function: no player can improve by unilateral deviation. -/
 theorem ofEU_isNash_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ : ∀ i, S i) :
@@ -28,6 +29,7 @@ theorem ofEU_isNash_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ :
   simp only [KernelGame.eu_ofEU]
   rfl
 
+open Classical in
 /-- Dominant strategy for an `ofEU` game reduces to a direct inequality
     on the utility function for all opponent profiles. -/
 theorem ofEU_isDominant_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (who : ι) (s : S who) :
@@ -38,6 +40,7 @@ theorem ofEU_isDominant_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (
   simp only [KernelGame.eu_ofEU]
   rfl
 
+open Classical in
 /-- Best response for an `ofEU` game reduces to a direct inequality
     on the utility function against all alternative strategies. -/
 theorem ofEU_isBestResponse_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
@@ -49,6 +52,7 @@ theorem ofEU_isBestResponse_iff (S : ι → Type) (u : (∀ i, S i) → Payoff �
   simp only [KernelGame.eu_ofEU]
   rfl
 
+open Classical in
 /-- Strict Nash equilibrium for an `ofEU` game reduces to a strict inequality
     on the utility function for every non-trivial unilateral deviation. -/
 theorem ofEU_isStrictNash_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ : ∀ i, S i) :

@@ -15,11 +15,12 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 /-- A profile is Nash iff every player plays a best response to the others' strategies. -/
 theorem isNash_iff_bestResponse (G : KernelGame ι) (σ : Profile G) :
     G.IsNash σ ↔ ∀ who, G.IsBestResponse who σ (σ who) := by
+  classical
   constructor
   · intro hNash who s'
     have := hNash who s'
@@ -33,6 +34,7 @@ theorem isNash_iff_bestResponse (G : KernelGame ι) (σ : Profile G) :
 theorem isNashFor_iff_bestResponseFor (G : KernelGame ι)
     (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop) (σ : Profile G) :
     G.IsNashFor pref σ ↔ ∀ who, G.IsBestResponseFor pref who σ (σ who) := by
+  classical
   constructor
   · intro hNash who s'
     have := hNash who s'

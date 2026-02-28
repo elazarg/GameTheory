@@ -16,9 +16,8 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
-omit [DecidableEq ι] in
 /-- Weakening the reservation utility preserves individual rationality:
     if σ is IR w.r.t. `r` and `r' i ≤ r i` for all `i`, then σ is IR w.r.t. `r'`. -/
 theorem IsIndividuallyRational.mono {G : KernelGame ι} {r r' : ι → ℝ}
@@ -26,7 +25,6 @@ theorem IsIndividuallyRational.mono {G : KernelGame ι} {r r' : ι → ℝ}
     (hle : ∀ i, r' i ≤ r i) : G.IsIndividuallyRational r' σ :=
   fun i => le_trans (hle i) (hIR i)
 
-omit [DecidableEq ι] in
 /-- A Pareto improvement preserves individual rationality:
     if σ Pareto-dominates τ and τ is IR w.r.t. `r`, then σ is IR w.r.t. `r`. -/
 theorem IsIndividuallyRational.of_pareto_dominates {G : KernelGame ι} {r : ι → ℝ}
@@ -34,7 +32,6 @@ theorem IsIndividuallyRational.of_pareto_dominates {G : KernelGame ι} {r : ι �
     (hIR : G.IsIndividuallyRational r τ) : G.IsIndividuallyRational r σ :=
   fun i => le_trans (hIR i) (hdom.1 i)
 
-omit [DecidableEq ι] in
 /-- IR w.r.t. two reservation utilities implies IR w.r.t. their pointwise max. -/
 theorem IsIndividuallyRational.sup {G : KernelGame ι} {r₁ r₂ : ι → ℝ}
     {σ : Profile G} (h1 : G.IsIndividuallyRational r₁ σ)

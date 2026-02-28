@@ -20,9 +20,8 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
-omit [DecidableEq ι] in
 set_option linter.unusedFintypeInType false in
 /-- In a team game, social welfare equals `card ι * eu σ i` for any player `i`,
     since all players share the same expected utility. -/
@@ -33,7 +32,6 @@ theorem IsTeamGame.socialWelfare_eq [Fintype ι] [Inhabited ι]
   conv_lhs => arg 2; ext j; rw [hteam.eu_eq σ j i]
   simp [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
 
-omit [DecidableEq ι] in
 set_option linter.unusedFintypeInType false in
 /-- If all players have non-negative expected utility, social welfare is non-negative. -/
 theorem socialWelfare_nonneg_of_nonneg_eu [Fintype ι]

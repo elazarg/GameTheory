@@ -22,7 +22,7 @@ ranking of outcomes, not on the cardinal utility scale.
 
 namespace GameTheory
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 /-- Affine transformation of utilities preserves Nash equilibria.
 
@@ -35,6 +35,7 @@ theorem ofEU_nash_affine (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     (u' : (∀ i, S i) → Payoff ι)
     (htrans : ∀ σ i, u' σ i = a * u σ i + b i) (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsNash σ ↔ (KernelGame.ofEU S u').IsNash σ := by
+  classical
   simp only [KernelGame.IsNash, KernelGame.eu_ofEU]
   constructor
   · intro hN who s'

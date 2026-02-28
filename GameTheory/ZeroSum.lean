@@ -16,7 +16,7 @@ open scoped BigOperators
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 set_option linter.unusedFintypeInType false in
 /-- In a zero-sum game with finite outcomes and finite players,

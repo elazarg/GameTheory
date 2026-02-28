@@ -16,8 +16,9 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
+open Classical in
 /-- Player `who` playing strategy `s` guarantees at least payoff `v`:
     for every profile `σ`, replacing `who`'s strategy with `s` yields EU ≥ `v`. -/
 def Guarantees (G : KernelGame ι) (who : ι) (s : G.Strategy who) (v : ℝ) : Prop :=
@@ -29,6 +30,7 @@ theorem Guarantees.mono {G : KernelGame ι} {who : ι} {s : G.Strategy who}
     G.Guarantees who s v' :=
   fun σ => le_trans hv (hg σ)
 
+open Classical in
 /-- A profile `σ` is a saddle point for a 2-player game if neither player can
     improve by unilateral deviation. -/
 def IsSaddlePoint (G : KernelGame (Fin 2)) (σ : Profile G) : Prop :=
@@ -40,9 +42,11 @@ theorem isSaddlePoint_iff_isNash (G : KernelGame (Fin 2)) (σ : Profile G) :
     G.IsSaddlePoint σ ↔ G.IsNash σ := by
   constructor
   · intro ⟨h0, h1⟩ who s'
-    fin_cases who <;> simp_all
+    fin_cases who
+    · convert h0 s'
+    · convert h1 s'
   · intro hN
-    exact ⟨fun s₀ => hN 0 s₀, fun s₁ => hN 1 s₁⟩
+    exact ⟨fun s₀ => by convert hN 0 s₀, fun s₁ => by convert hN 1 s₁⟩
 
 end KernelGame
 

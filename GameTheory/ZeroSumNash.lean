@@ -22,7 +22,7 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 set_option linter.unusedFintypeInType false in
 /-- In a 2-player zero-sum game, at any Nash equilibrium the sum of expected
@@ -54,6 +54,7 @@ theorem IsZeroSum.eu_nonneg_iff_nonpos {G : KernelGame (Fin 2)} [Fintype G.Outco
   · intro h1; linarith
 
 set_option linter.unusedFintypeInType false in
+open Classical in
 /-- In a 2-player zero-sum game, the change in player 0's expected utility from
     a unilateral deviation is exactly the negation of the change in player 1's
     expected utility. That is, any gain for one player is an equal loss for the other. -/

@@ -100,12 +100,14 @@ theorem IsNashPure_iff_kernelGame (G : NFGGame ι A) (s : StrategyProfile A) :
     IsNashPure G s ↔ G.toKernelGame.IsNash s := by
   simp only [IsNashPure, GameTheory.KernelGame.IsNash, GameTheory.KernelGame.eu,
       NFGGame.toKernelGame, GameTheory.expect_pure, deviate]
+  constructor <;> intro h who s' <;> convert h who s'
 
 /-- Dominance in NFG is equivalent to dominance in the kernel game. -/
 theorem IsDominant_iff_kernelGame (G : NFGGame ι A) (i : ι) (a : A i) :
     IsDominant G i a ↔ G.toKernelGame.IsDominant i a := by
   simp only [IsDominant, GameTheory.KernelGame.IsDominant, GameTheory.KernelGame.eu,
       NFGGame.toKernelGame, GameTheory.expect_pure, deviate]
+  constructor <;> intro h σ s' <;> convert h σ s'
 
 /-- The joint utility distribution of a pure NFG is a point mass. -/
 @[simp] theorem NFGGame.toKernelGame_udist (G : NFGGame ι A) (s : StrategyProfile A) :

@@ -22,8 +22,9 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
+open Classical in
 /-- The change in a player's expected utility from a unilateral deviation
     equals the change in the exact potential (direct restatement of the
     potential property, useful as a named lemma). -/
@@ -34,6 +35,7 @@ theorem IsExactPotential.eu_diff_eq_potential_diff
       Φ (Function.update σ who s') - Φ σ :=
   hΦ who σ s'
 
+open Classical in
 /-- If a player deviates and strictly improves their expected utility,
     the exact potential strictly increases.
 
@@ -49,6 +51,7 @@ theorem IsExactPotential.improving_deviation_increases_potential
   have hpot := hΦ who σ s'
   linarith
 
+open Classical in
 /-- At a global maximizer of the exact potential, no player has a strictly
     improving unilateral deviation.
 

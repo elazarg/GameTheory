@@ -25,9 +25,10 @@ open scoped BigOperators
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 set_option linter.unusedFintypeInType false in
+open Classical in
 /-- A team game is an exact potential game, with potential function
     `Φ(σ) = eu σ i₀` for any fixed player `i₀`. Since all players share the
     same utility, the change in any player's EU from a unilateral deviation
@@ -41,6 +42,7 @@ theorem IsTeamGame.isExactPotential [Fintype ι]
   linarith
 
 set_option linter.unusedFintypeInType false in
+open Classical in
 /-- In a team game, a profile is Nash if and only if no unilateral deviation
     improves the potential function `Φ(σ) = eu σ i₀`.
 
@@ -64,7 +66,6 @@ theorem IsTeamGame.nash_iff_local_potential_max [Fintype ι]
     linarith
 
 set_option linter.unusedFintypeInType false in
-omit [DecidableEq ι] in
 /-- A game that is both zero-sum and a team game must have all utilities
     identically zero. In a team game all players share the same utility `u`,
     so zero-sum gives `|ι| * u = 0`, hence `u = 0`. -/

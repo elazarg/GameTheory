@@ -15,13 +15,14 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 /-- An exact potential game is an ordinal potential game.
     Proof: the exact potential property gives `eu_diff = Φ_diff`,
     so `eu_diff > 0 ↔ Φ_diff > 0` follows immediately. -/
 theorem IsExactPotential.toOrdinal {G : KernelGame ι} {Φ : Profile G → ℝ}
     (hΦ : G.IsExactPotential Φ) : G.IsOrdinalPotential Φ := by
+  classical
   intro who σ s'
   have h := hΦ who σ s'
   constructor
@@ -38,6 +39,7 @@ theorem IsExactPotential.toOrdinal {G : KernelGame ι} {Φ : Profile G → ℝ}
 theorem IsExactPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G → ℝ}
     (hΦ : G.IsExactPotential Φ) {σ : Profile G}
     (hmax : ∀ τ : Profile G, Φ σ ≥ Φ τ) : G.IsNash σ := by
+  classical
   intro who s'
   have hpot := hΦ who σ s'
   have hle := hmax (Function.update σ who s')
@@ -50,6 +52,7 @@ theorem IsExactPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G �
 theorem IsOrdinalPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G → ℝ}
     (hΦ : G.IsOrdinalPotential Φ) {σ : Profile G}
     (hmax : ∀ τ : Profile G, Φ σ ≥ Φ τ) : G.IsNash σ := by
+  classical
   by_contra hnn
   simp only [IsNash, not_forall, not_le] at hnn
   obtain ⟨who, s', hdev⟩ := hnn

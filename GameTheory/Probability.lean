@@ -9,7 +9,8 @@ Stochastic kernels and expected-value infrastructure for discrete game theory.
 
 Provides:
 - `Kernel α β` — stochastic kernels (Markov kernels) using Mathlib's `PMF`
-- `Kernel.id`, `Kernel.comp`, `Kernel.linExt`, `Kernel.pushforward`, `Kernel.ofFun` — basic operations
+- `Kernel.id`, `Kernel.comp`, `Kernel.linExt`, `Kernel.pushforward`,
+  `Kernel.ofFun` — basic operations
 - `expect` — expected value of a real-valued function under a `PMF`
 - Utility lemmas: `expect_pure`, `expect_bind`, `expect_const`, `expect_eq_sum`
 

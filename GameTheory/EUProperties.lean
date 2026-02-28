@@ -18,21 +18,18 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
-omit [DecidableEq ι] in
 /-- EU is the expected value of utility under the outcome distribution. -/
 theorem eu_eq_expect {G : KernelGame ι} (σ : Profile G) (who : ι) :
     G.eu σ who = expect (G.outcomeKernel σ) (fun ω => G.utility ω who) := rfl
 
 set_option linter.unusedFintypeInType false in
-set_option linter.unusedDecidableInType false in
 /-- For finite outcome types, EU equals a finite sum over outcomes. -/
 theorem eu_eq_sum {G : KernelGame ι} [Fintype G.Outcome] (σ : Profile G) (who : ι) :
     G.eu σ who = ∑ ω : G.Outcome, (G.outcomeKernel σ ω).toReal * G.utility ω who := by
   simp [eu, expect_eq_sum]
 
-omit [DecidableEq ι] in
 /-- If the outcome kernel yields a pure (deterministic) outcome, EU equals
     the utility at that outcome. -/
 theorem eu_pure_outcome {G : KernelGame ι} (σ : Profile G) (who : ι)
@@ -41,7 +38,6 @@ theorem eu_pure_outcome {G : KernelGame ι} (σ : Profile G) (who : ι)
   simp [eu, h, expect_pure]
 
 set_option linter.unusedFintypeInType false in
-set_option linter.unusedDecidableInType false in
 /-- If all utilities for a player are non-negative, EU is non-negative. -/
 theorem eu_nonneg_of_utility_nonneg {G : KernelGame ι} [Fintype G.Outcome]
     (σ : Profile G) (who : ι)

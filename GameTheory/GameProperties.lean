@@ -7,7 +7,7 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 /-- Profile `σ` Pareto-dominates profile `τ`. -/
 def ParetoDominates (G : KernelGame ι) (σ τ : Profile G) : Prop :=
@@ -22,12 +22,14 @@ def IsIndividuallyRational (G : KernelGame ι)
     (r : ι → ℝ) (σ : Profile G) : Prop :=
   ∀ i : ι, G.eu σ i ≥ r i
 
+open Classical in
 /-- Exact potential game (in expected-utility form). -/
 def IsExactPotential (G : KernelGame ι) (Φ : Profile G → ℝ) : Prop :=
   ∀ (who : ι) (σ : Profile G) (s' : G.Strategy who),
     G.eu (Function.update σ who s') who - G.eu σ who =
       (Φ (Function.update σ who s') - Φ σ)
 
+open Classical in
 /-- Ordinal potential game (in expected-utility form). -/
 def IsOrdinalPotential (G : KernelGame ι) (Φ : Profile G → ℝ) : Prop :=
   ∀ (who : ι) (σ : Profile G) (s' : G.Strategy who),

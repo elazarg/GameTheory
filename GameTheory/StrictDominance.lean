@@ -15,7 +15,7 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 variable {G : KernelGame ι}
 
 /-- A strictly dominant strategy is also (weakly) dominant. -/
@@ -37,6 +37,7 @@ theorem strictly_dominant_is_nash (σ : Profile G)
 theorem strictly_dominant_unique_nash (σ : Profile G)
     (hdom : ∀ i, G.IsStrictDominant i (σ i))
     (τ : Profile G) (hτ : G.IsNash τ) : τ = σ := by
+  classical
   funext i
   by_contra hne
   have hstrict := hdom i τ (τ i) hne

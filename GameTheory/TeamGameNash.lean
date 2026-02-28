@@ -25,9 +25,8 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
-omit [DecidableEq ι] in
 set_option linter.unusedFintypeInType false in
 /-- In a team game, Pareto dominance is equivalent to a strict EU improvement
     at any single player (all players share the same EU, so one strict
@@ -45,6 +44,7 @@ theorem IsTeamGame.pareto_dominates_iff [Fintype ι] [Inhabited ι]
            ⟨default, h⟩⟩
 
 set_option linter.unusedFintypeInType false in
+open Classical in
 /-- In a team game, no unilateral deviation from a Nash equilibrium can
     Pareto-dominate the equilibrium profile. -/
 theorem IsTeamGame.nash_no_unilateral_pareto_improvement [Fintype ι]
@@ -56,6 +56,7 @@ theorem IsTeamGame.nash_no_unilateral_pareto_improvement [Fintype ι]
   linarith
 
 set_option linter.unusedFintypeInType false in
+open Classical in
 /-- In a team game Nash equilibrium, the EU at any player `i` is at least
     as large as the EU after any unilateral deviation, measured at any
     player `j`.  This combines the Nash condition with the team-game

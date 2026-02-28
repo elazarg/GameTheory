@@ -15,7 +15,7 @@ Provides:
 
 namespace GameTheory
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 namespace KernelGame
 
@@ -46,6 +46,7 @@ theorem WeaklyDominates.best_response_of_best_response {G : KernelGame ι} {who 
 theorem nash_never_strictly_dominated {G : KernelGame ι} {σ : Profile G}
     (hN : G.IsNash σ) (who : ι) (s : G.Strategy who) :
     ¬ G.StrictlyDominates who s (σ who) := by
+  classical
   intro hsd
   have hsd_σ := hsd σ
   simp only [Function.update_eq_self] at hsd_σ

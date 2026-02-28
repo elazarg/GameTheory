@@ -14,12 +14,13 @@ namespace GameTheory
 
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
+variable {ι : Type} {G : KernelGame ι}
 
 /-- If every player has a strictly dominant strategy and plays it, the resulting
     profile is a strict Nash equilibrium. -/
 theorem strictNash_of_strictDominant (σ : Profile G)
     (hdom : ∀ i, G.IsStrictDominant i (σ i)) : G.IsStrictNash σ := by
+  classical
   intro who s' hne
   have h := hdom who σ s' hne
   simp only [Function.update_eq_self] at h
@@ -30,6 +31,7 @@ theorem strictNash_of_strictDominant (σ : Profile G)
 theorem IsStrictNash.isBestResponse_unique {σ : Profile G}
     (hstrict : G.IsStrictNash σ) {who : ι} {s' : G.Strategy who}
     (hbr : G.IsBestResponse who σ s') : s' = σ who := by
+  classical
   by_contra hne
   have hbr_ge := hbr (σ who)
   simp only [Function.update_eq_self] at hbr_ge

@@ -19,7 +19,7 @@ already handles.
 
 namespace GameTheory
 
-variable {ι : Type} [DecidableEq ι]
+variable {ι : Type}
 
 namespace KernelGame
 

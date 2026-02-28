@@ -20,9 +20,8 @@ Provides:
 namespace GameTheory
 namespace KernelGame
 
-variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
+variable {ι : Type} {G : KernelGame ι}
 
-omit [DecidableEq ι] in
 /-- Correlated EU under a point-mass distribution equals the standard EU.
 
 Under `PMF.pure σ`, `correlatedOutcome` reduces to `outcomeKernel σ`
@@ -32,6 +31,7 @@ theorem correlatedEu_pure (σ : Profile G) (who : ι) :
     G.correlatedEu (PMF.pure σ) who = G.eu σ who := by
   simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
 
+open Classical in
 /-- Constant deviation under a point-mass distribution yields a point mass at
 the deviated profile. `constDeviateDistribution (PMF.pure σ) who s'` reduces
 to `PMF.pure (Function.update σ who s')` since `PMF.pure_bind` collapses
@@ -51,7 +51,6 @@ theorem deviateDistribution_pure (σ : Profile G)
   simp [deviateDistribution, PMF.pure_bind]
 
 set_option linter.unusedFintypeInType false in
-omit [DecidableEq ι] in
 /-- Correlated EU is the expectation of standard EU over the profile distribution.
 
 By unfolding `correlatedEu` and `correlatedOutcome` we get
