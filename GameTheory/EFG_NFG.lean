@@ -6,54 +6,19 @@ import GameTheory.EFG
 
 Three constructions converting an extensive-form game to its strategic form:
 
-1. **`toStrategicKernelGame`** — `KernelGame` preserving outcome distributions.
-   Shares `Outcome` and `utility` with the EFG; all `KernelGame` solution
-   concepts transfer via a single distribution-equivalence theorem.
-
-2. **`toNFGGame`** — `NFGGame` where chance is absorbed into expected payoffs.
+1. **`toNFGGame`** — `NFGGame` where chance is absorbed into expected payoffs.
    `Outcome` is `Payoff`, `utility` is `id`. Works for any EFG.
 
-3. **`toNFGGameDet`** — `NFGGame` for deterministic (chance-free) EFGs.
+2. **`toNFGGameDet`** — `NFGGame` for deterministic (chance-free) EFGs.
    Shares `Outcome` and `utility` with the EFG.
 
 ### Key theorems
-- `toStrategicKernelGame_outcomeKernel` — distribution equivalence
 - `toNFGGameDet_outcomeKernel` — deterministic NFG matches strategic kernel game
-- `pureToBehavioral_update` — behavioral update matches pure update
 -/
 
 namespace EFG
 
 open GameTheory
-
--- ============================================================================
--- Distribution-preserving strategic form (KernelGame)
--- ============================================================================
-
-/-- Strategic form of an EFG as a `KernelGame`, preserving outcome distributions.
-    Strategies are pure contingent plans; the outcome kernel evaluates the game
-    tree under the corresponding behavioral profile. -/
-noncomputable def EFGGame.toStrategicKernelGame (G : EFGGame) :
-    KernelGame G.inf.Player where
-  Strategy := fun p => PureStrategy G.inf p
-  Outcome := G.Outcome
-  utility := G.utility
-  outcomeKernel := fun σ => G.tree.evalDist (pureToBehavioral σ)
-
-/-- The strategic kernel game produces the same outcome distribution as the
-    EFG kernel game under the corresponding behavioral profile.
-    Since both games share `Outcome` and `utility`, any property defined on
-    `KernelGame` (EU, Nash, dominance, …) transfers automatically. -/
-theorem toStrategicKernelGame_outcomeKernel (G : EFGGame) (σ : PureProfile G.inf) :
-    G.toStrategicKernelGame.outcomeKernel σ =
-    G.toKernelGame.outcomeKernel (pureToBehavioral σ) := by
-  rfl
-
-/-- Semantics equality for the strategic-form bridge. -/
-theorem toStrategicKernelGame_semantics_eq (G : EFGGame) (σ : PureProfile G.inf) :
-    G.toStrategicKernelGame.outcomeKernel σ =
-    G.toKernelGame.outcomeKernel (pureToBehavioral σ) :=
-  toStrategicKernelGame_outcomeKernel G σ
 
 -- ============================================================================
 -- § 2. Deterministic strategic form (NFGGame)
@@ -96,25 +61,5 @@ theorem toNFGGameDet_semantics_eq (G : EFGGame) (hd : IsDeterministic G.tree)
     (G.toNFGGameDet hd).toKernelGame.outcomeKernel σ =
     G.toStrategicKernelGame.outcomeKernel σ :=
   toNFGGameDet_outcomeKernel G hd σ
-
-/-- The strategic kernel game has the same `udist` as the behavioral EFG kernel game. -/
-theorem toStrategicKernelGame_udist (G : EFGGame) (σ : PureProfile G.inf) :
-    G.toStrategicKernelGame.udist σ =
-    G.toKernelGame.udist (pureToBehavioral σ) := rfl
-
--- ============================================================================
--- § 4. pureToBehavioral_update
--- ============================================================================
-
-/-- Updating a pure profile and then lifting to behavioral is the same as
-    lifting first and then updating the behavioral profile. -/
-theorem pureToBehavioral_update {S : InfoStructure}
-    (σ : PureProfile S) (p : S.Player) (s' : PureStrategy S p) :
-    pureToBehavioral (Function.update σ p s') =
-    Function.update (pureToBehavioral σ) p (fun I => PMF.pure (s' I)) := by
-  funext p' I
-  by_cases h : p' = p
-  · subst h; simp [pureToBehavioral]
-  · simp [pureToBehavioral, h]
 
 end EFG

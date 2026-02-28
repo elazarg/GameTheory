@@ -114,4 +114,113 @@ theorem KernelGame.IsDominant_iff_IsDominantFor_eu (G : KernelGame ι)
     G.IsDominant who s ↔ G.IsDominantFor G.euPref who s := by
   simp [IsDominant, IsDominantFor, euPref, eu]
 
+namespace KernelGame
+
+/-- Preference relation with per-player reflexivity/transitivity laws. -/
+class PrefPreorder {α : Type} (pref : ι → α → α → Prop) : Prop where
+  refl : ∀ i x, pref i x x
+  trans : ∀ i x y z, pref i x y → pref i y z → pref i x z
+
+/-- `s` is a best response for `who` against opponents fixed by `σ`. -/
+def IsBestResponse (G : KernelGame ι) (who : ι) (σ : Profile G) (s : G.Strategy who) : Prop :=
+  ∀ (s' : G.Strategy who),
+    G.eu (Function.update σ who s) who ≥ G.eu (Function.update σ who s') who
+
+/-- Preference-parameterized best response (on outcome distributions). -/
+def IsBestResponseFor (G : KernelGame ι)
+    (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop)
+    (who : ι) (σ : Profile G) (s : G.Strategy who) : Prop :=
+  ∀ (s' : G.Strategy who),
+    pref who (G.outcomeKernel (Function.update σ who s))
+      (G.outcomeKernel (Function.update σ who s'))
+
+/-- EU best response is exactly `IsBestResponseFor` with `euPref`. -/
+theorem IsBestResponse_iff_IsBestResponseFor_eu (G : KernelGame ι)
+    (who : ι) (σ : Profile G) (s : G.Strategy who) :
+    G.IsBestResponse who σ s ↔ G.IsBestResponseFor G.euPref who σ s := by
+  simp [IsBestResponse, IsBestResponseFor, euPref, eu]
+
+/-- Strict Nash equilibrium: every unilateral deviation strictly decreases utility. -/
+def IsStrictNash (G : KernelGame ι) (σ : Profile G) : Prop :=
+  ∀ (who : ι) (s' : G.Strategy who), s' ≠ σ who →
+    G.eu σ who > G.eu (Function.update σ who s') who
+
+/-- Strictly dominant strategy for player `who`. -/
+def IsStrictDominant (G : KernelGame ι) (who : ι) (s : G.Strategy who) : Prop :=
+  ∀ (σ : Profile G) (s' : G.Strategy who), s' ≠ s →
+    G.eu (Function.update σ who s) who > G.eu (Function.update σ who s') who
+
+/-- `s` weakly dominates `t` for player `who`. -/
+def WeaklyDominates (G : KernelGame ι) (who : ι)
+    (s t : G.Strategy who) : Prop :=
+  ∀ (σ : Profile G),
+    G.eu (Function.update σ who s) who ≥ G.eu (Function.update σ who t) who
+
+/-- `s` strictly dominates `t` for player `who`. -/
+def StrictlyDominates (G : KernelGame ι) (who : ι)
+    (s t : G.Strategy who) : Prop :=
+  ∀ (σ : Profile G),
+    G.eu (Function.update σ who s) who > G.eu (Function.update σ who t) who
+
+/-- Profile-level deviation map for correlated-play concepts. -/
+def deviateProfile (G : KernelGame ι) (σ : Profile G)
+    (who : ι) (dev : G.Strategy who → G.Strategy who) : Profile G :=
+  Function.update σ who (dev (σ who))
+
+/-- Push a profile distribution through a recommendation-dependent deviation. -/
+noncomputable def deviateDistribution (G : KernelGame ι)
+    (μ : PMF (Profile G)) (who : ι)
+    (dev : G.Strategy who → G.Strategy who) : PMF (Profile G) :=
+  μ.bind (fun σ => PMF.pure (G.deviateProfile σ who dev))
+
+/-- Push a profile distribution through a constant unilateral deviation. -/
+noncomputable def constDeviateDistribution (G : KernelGame ι)
+    (μ : PMF (Profile G)) (who : ι) (s' : G.Strategy who) : PMF (Profile G) :=
+  μ.bind (fun σ => PMF.pure (Function.update σ who s'))
+
+/-- Correlated expected utility for player `who`. -/
+noncomputable def correlatedEu (G : KernelGame ι)
+    (μ : PMF (Profile G)) (who : ι) : ℝ :=
+  expect (G.correlatedOutcome μ) (fun ω => G.utility ω who)
+
+/-- Correlated equilibrium: no player gains from recommendation-dependent deviation. -/
+def IsCorrelatedEq (G : KernelGame ι) (μ : PMF (Profile G)) : Prop :=
+  ∀ (who : ι) (dev : G.Strategy who → G.Strategy who),
+    G.correlatedEu μ who ≥ G.correlatedEu (G.deviateDistribution μ who dev) who
+
+/-- Coarse correlated equilibrium: no player gains from constant unilateral deviation. -/
+def IsCoarseCorrelatedEq (G : KernelGame ι) (μ : PMF (Profile G)) : Prop :=
+  ∀ (who : ι) (s' : G.Strategy who),
+    G.correlatedEu μ who ≥ G.correlatedEu (G.constDeviateDistribution μ who s') who
+
+/-- Preference-parameterized correlated equilibrium (on outcome distributions). -/
+def IsCorrelatedEqFor (G : KernelGame ι)
+    (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop)
+    (μ : PMF (Profile G)) : Prop :=
+  ∀ (who : ι) (dev : G.Strategy who → G.Strategy who),
+    pref who (G.correlatedOutcome μ)
+      (G.correlatedOutcome (G.deviateDistribution μ who dev))
+
+/-- Preference-parameterized coarse correlated equilibrium. -/
+def IsCoarseCorrelatedEqFor (G : KernelGame ι)
+    (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop)
+    (μ : PMF (Profile G)) : Prop :=
+  ∀ (who : ι) (s' : G.Strategy who),
+    pref who (G.correlatedOutcome μ)
+      (G.correlatedOutcome (G.constDeviateDistribution μ who s'))
+
+/-- EU CE is exactly CE with `euPref`. -/
+theorem IsCorrelatedEq_iff_IsCorrelatedEqFor_eu (G : KernelGame ι)
+    (μ : PMF (Profile G)) :
+    G.IsCorrelatedEq μ ↔ G.IsCorrelatedEqFor G.euPref μ := by
+  simp [IsCorrelatedEq, IsCorrelatedEqFor, correlatedEu, euPref]
+
+/-- EU CCE is exactly CCE with `euPref`. -/
+theorem IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu (G : KernelGame ι)
+    (μ : PMF (Profile G)) :
+    G.IsCoarseCorrelatedEq μ ↔ G.IsCoarseCorrelatedEqFor G.euPref μ := by
+  simp [IsCoarseCorrelatedEq, IsCoarseCorrelatedEqFor, correlatedEu, euPref]
+
+end KernelGame
+
 end GameTheory

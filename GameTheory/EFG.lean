@@ -256,6 +256,67 @@ noncomputable def EFGGame.toKernelGame (G : EFGGame) :
   utility := G.utility
   outcomeKernel := fun σ => G.tree.evalDist σ
 
+/-- Strategic form of an EFG as a `KernelGame`, preserving outcome distributions.
+    Strategies are pure contingent plans; the outcome kernel evaluates the game
+    tree under the corresponding behavioral profile. -/
+noncomputable def EFGGame.toStrategicKernelGame (G : EFGGame) :
+    KernelGame G.inf.Player where
+  Strategy := fun p => PureStrategy G.inf p
+  Outcome := G.Outcome
+  utility := G.utility
+  outcomeKernel := fun σ => G.tree.evalDist (pureToBehavioral σ)
+
+/-- The strategic kernel game has the same outcome semantics as the behavioral one
+    under `pureToBehavioral`. -/
+theorem toStrategicKernelGame_outcomeKernel (G : EFGGame) (σ : PureProfile G.inf) :
+    G.toStrategicKernelGame.outcomeKernel σ =
+    G.toKernelGame.outcomeKernel (pureToBehavioral σ) := by
+  rfl
+
+/-- Semantics equality alias for the strategic-form bridge. -/
+theorem toStrategicKernelGame_semantics_eq (G : EFGGame) (σ : PureProfile G.inf) :
+    G.toStrategicKernelGame.outcomeKernel σ =
+    G.toKernelGame.outcomeKernel (pureToBehavioral σ) :=
+  toStrategicKernelGame_outcomeKernel G σ
+
+/-- The strategic kernel game has the same joint utility distribution as the
+    behavioral EFG kernel game under `pureToBehavioral`. -/
+theorem toStrategicKernelGame_udist (G : EFGGame) (σ : PureProfile G.inf) :
+    G.toStrategicKernelGame.udist σ =
+    G.toKernelGame.udist (pureToBehavioral σ) := rfl
+
+/-- Updating a pure profile and then lifting to behavioral is the same as
+    lifting first and then updating the behavioral profile. -/
+theorem pureToBehavioral_update {S : InfoStructure}
+    (σ : PureProfile S) (p : S.Player) (s' : PureStrategy S p) :
+    pureToBehavioral (Function.update σ p s') =
+    Function.update (pureToBehavioral σ) p (fun I => PMF.pure (s' I)) := by
+  funext p' I
+  by_cases h : p' = p
+  · subst h; simp [pureToBehavioral]
+  · simp [pureToBehavioral, h]
+
+/-- Reinterpret an EFG game with the same meta-data and a different tree root. -/
+def EFGGame.withTree (G : EFGGame) (t : GameTree G.inf G.Outcome) : EFGGame where
+  inf := G.inf
+  Outcome := G.Outcome
+  tree := t
+  utility := G.utility
+
+/-- Subgame-perfect equilibrium w.r.t. a supplied subgame predicate and preference. -/
+def EFGGame.IsSubgamePerfectFor (G : EFGGame)
+    (isSubgame : GameTree G.inf G.Outcome → Prop)
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (σ : PureProfile G.inf) : Prop :=
+  ∀ t : GameTree G.inf G.Outcome, isSubgame t →
+    (G.withTree t).toStrategicKernelGame.IsNashFor pref σ
+
+/-- EU-specialized subgame-perfect equilibrium. -/
+def EFGGame.IsSubgamePerfect (G : EFGGame)
+    (isSubgame : GameTree G.inf G.Outcome → Prop)
+    (σ : PureProfile G.inf) : Prop :=
+  G.IsSubgamePerfectFor isSubgame (KernelGame.euPref G.toStrategicKernelGame) σ
+
 -- ============================================================================
 -- Perfect recall
 -- ============================================================================
@@ -265,6 +326,25 @@ noncomputable def EFGGame.toKernelGame (G : EFGGame) :
 inductive HistoryStep (S : InfoStructure) where
   | chance (k : Nat) (b : Fin k)
   | action (p : S.Player) (I : S.Infoset p) (act : S.Act I)
+
+/-- Strategy + belief pair for sequential-style refinements. -/
+structure EFGGame.Assessment (G : EFGGame) where
+  strategy : BehavioralProfile G.inf
+  beliefs : ∀ {p : G.inf.Player}, G.inf.Infoset p → PMF (List (HistoryStep G.inf))
+
+/-- Generic sequential-equilibrium schema from supplied rationality/consistency predicates. -/
+def EFGGame.IsSequentialEqFor (G : EFGGame)
+    (SequentiallyRational : G.Assessment → Prop)
+    (BayesConsistent : G.Assessment → Prop)
+    (A : G.Assessment) : Prop :=
+  SequentiallyRational A ∧ BayesConsistent A
+
+/-- Perfect Bayesian equilibrium schema (same shape, different intended predicates). -/
+def EFGGame.IsPerfectBayesianEqFor (G : EFGGame)
+    (SequentiallyRational : G.Assessment → Prop)
+    (BayesConsistent : G.Assessment → Prop)
+    (A : G.Assessment) : Prop :=
+  G.IsSequentialEqFor SequentiallyRational BayesConsistent A
 
 /-- Reachability: `ReachBy h root target` means following history `h` from
     `root` leads to `target`. History is earliest step first. -/

@@ -54,6 +54,7 @@ Build:
 - `GameTheory/Probability.lean` - kernels and expectation utilities
 - `GameTheory/KernelGame.lean` - semantic core, `eu`, `udist`
 - `GameTheory/SolutionConcepts.lean` - Nash/dominance and preference-parameterized variants
+- `GameTheory/GameProperties.lean` - Pareto, individual rationality, potential, zero/constant-sum
 - `GameTheory/NFG*.lean` - normal-form games and examples/bridges
 - `GameTheory/EFG*.lean` - extensive-form games, Kuhn results, examples/bridges
 - `GameTheory/MAID*.lean` - typed MAID semantics, EFG bridge, examples
