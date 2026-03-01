@@ -76,6 +76,16 @@ import GameTheory.NFG_EFG
 import GameTheory.MAID
 import GameTheory.MAID_EFG
 
+-- Bayesian games and mechanism design
+import GameTheory.BayesianGame
+import GameTheory.MechanismDesign
+
+-- Evolutionary game theory
+import GameTheory.EvolutionaryStability
+
+-- Auctions
+import GameTheory.VickreyAuction
+
 -- Examples
 import GameTheory.NFGExamples
 import GameTheory.EFGExamples
