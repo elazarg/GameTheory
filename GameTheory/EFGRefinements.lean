@@ -68,7 +68,7 @@ def IsSubgame {S : InfoStructure} {Outcome : Type}
 
 theorem isSubgame_root {S : InfoStructure} {Outcome : Type}
     (root : GameTree S Outcome) : IsSubgame root root :=
-  ⟨⟨[], .here root⟩, fun _ _ _ h next hR => ⟨h, hR⟩⟩
+  ⟨⟨[], .here root⟩, fun _ _ _ h _next hR => ⟨h, hR⟩⟩
 
 theorem isSubgame_terminal {S : InfoStructure} {Outcome : Type}
     {root : GameTree S Outcome} {z : Outcome} {h₀ : List (HistoryStep S)}
@@ -190,8 +190,8 @@ theorem entrySPE_isSPE : entryGame.IsSubgamePerfectEq entrySPE := by
     intro who s'
     fin_cases who <;> (
       simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-        KernelGame.outcomeKernel, GameTree.evalDist, pureToBehavioral,
-        evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure, entrySPE]
+        GameTree.evalDist, pureToBehavioral,
+        evalDist_decision, PMF.pure_bind, expect_pure, entrySPE]
       rcases entryS_act_eq (s' ()) with h | h <;>
         simp [Function.update, h, pureToBehavioral, GameTree.evalDist,
               evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure, entrySPE])
@@ -205,11 +205,10 @@ theorem entrySPE_isSPE : entryGame.IsSubgamePerfectEq entrySPE := by
         intro who s'
         fin_cases who <;> (
           simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-            KernelGame.outcomeKernel, GameTree.evalDist, pureToBehavioral,
-            evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure, entrySPE]
+            GameTree.evalDist, pureToBehavioral,
+            evalDist_decision, PMF.pure_bind, expect_pure, entrySPE]
           rcases entryS_act_eq (s' ()) with h | h <;>
-            simp [Function.update, h, pureToBehavioral, GameTree.evalDist,
-                  evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure, entrySPE])
+            simp [Function.update, h, evalDist_terminal, expect_pure, entrySPE])
       | action b hRest' =>
         -- Terminal after P1's action
         fin_cases b <;> (cases hRest' with | here => exact terminal_isNashFor_euPref _ _)
@@ -222,9 +221,9 @@ open Classical in
 theorem entryNash_isNash : entryGame.toStrategicKernelGame.IsNash entryNash := by
   intro who s'
   fin_cases who <;> (
-    simp only [KernelGame.eu, EFGGame.toStrategicKernelGame, KernelGame.outcomeKernel,
+    simp only [KernelGame.eu, EFGGame.toStrategicKernelGame,
       GameTree.evalDist, pureToBehavioral, evalDist_decision, PMF.pure_bind,
-      evalDist_terminal, expect_pure, entryNash]
+      expect_pure, entryNash]
     rcases entryS_act_eq (s' ()) with h | h <;>
       simp [Function.update, h, pureToBehavioral, GameTree.evalDist,
             evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure, entryNash])
@@ -256,11 +255,10 @@ theorem entryNash_not_spe : ¬ entryGame.IsSubgamePerfectEq entryNash := by
   have hNash := hSPE _ hSub
   have h1 := hNash (1 : Fin 2) (fun _ => (0 : Fin 2))
   simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-    KernelGame.outcomeKernel, GameTree.evalDist, pureToBehavioral,
-    evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure,
+    GameTree.evalDist, pureToBehavioral,
+    evalDist_decision, PMF.pure_bind, expect_pure,
     entryNash] at h1
-  simp [Function.update, pureToBehavioral, GameTree.evalDist,
-        evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure] at h1
+  simp [Function.update, evalDist_terminal, expect_pure] at h1
   linarith
 
 theorem entrySPE_isNash : entryGame.toStrategicKernelGame.IsNash entrySPE :=
