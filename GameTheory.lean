@@ -25,6 +25,7 @@ import GameTheory.ApproximateNash
 import GameTheory.NashExistence
 import GameTheory.ProductSimplexBrouwer
 import GameTheory.NashExistenceMixed
+import GameTheory.MixedSupport
 
 -- Game properties and welfare
 import GameTheory.GameProperties
