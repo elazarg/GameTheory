@@ -1,7 +1,14 @@
 {"version": "1.1.0",
  "packagesDir": ".lake/packages",
  "packages":
- [{"url": "https://github.com/leanprover-community/mathlib4",
+ [{"type": "path",
+   "scope": "",
+   "name": "FixedPointTheorems",
+   "manifestFile": "lake-manifest.json",
+   "inherited": false,
+   "dir": "fixed-point-theorems-lean4",
+   "configFile": "lakefile.toml"},
+  {"url": "https://github.com/leanprover-community/mathlib4",
    "type": "git",
    "subDir": null,
    "scope": "leanprover-community",
@@ -91,5 +98,5 @@
    "inputRev": "v4.27.0",
    "inherited": true,
    "configFile": "lakefile.toml"}],
- "name": "formal",
+ "name": "GameTheory",
  "lakeDir": ".lake"}

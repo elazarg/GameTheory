@@ -1,127 +1,76 @@
-# Completion Plan: Finite, Discrete Noncooperative Game Theory Core
+# Brouwer/Nash Gap Closure Plan
 
-## Goal
-Complete the library so the claim
-"This library formalizes the core of finite, discrete noncooperative game theory"
-is technically defensible by standard textbook expectations.
+## Objective
+Close the final end-to-end gap:
+- remove `axiom nashMap_has_fixed_point`,
+- prove mixed Nash existence entirely from proved fixed-point machinery.
 
-## Definition of Done (project-level)
-The project is done when all of the following are true:
-- General finite mixed-strategy Nash existence is formalized (not only special cases).
-- Two-player zero-sum minimax theorem is formalized at the mixed-strategy level.
-- Sequential refinements in EFG are upgraded from schemas to concrete definitions with key bridge theorems.
-- No placeholder theorems (`sorry`) remain in project-owned core files.
-- Core examples demonstrate each major theorem family end-to-end.
+Current status:
+- fixed-point pipeline from scale witnesses to `Function.IsFixedPt` is proved,
+- remaining gap is construction of concrete Kuhn/Sperner scale witnesses in higher dimensions.
 
-## Current Gap Summary
-Already strong:
-- Kernel game semantics, EU, Nash/dominance, CE/CCE, potential/team/zero-sum/constant-sum.
-- NFG/EFG/MAID representations and interoperability bridges.
-- Substantial Kuhn-equivalence infrastructure.
+## Critical Path
+1. Construct concrete Kuhn cell family at scale `m`.
+2. Prove facet incidence combinatorics (interior `2`, boundary `1/0` pattern).
+3. Prove boundary marking from `gridLabel` boundary admissibility.
+4. Feed this into `exists_fixedPoint_of_kuhnFacetWitnessPattern_at_scales`.
+5. Specialize to Nash map and replace the axiom.
 
-Primary missing pieces:
-- General mixed Nash existence theorem.
-- Full minimax theorem (value equality and equilibrium existence consequences).
-- Concrete sequential/PBE layer.
-- One known placeholder theorem in `AbstractFolk.lean`.
+## Work Packages
 
-## Milestones (priority order)
-
-### M1: Mixed Nash Existence (highest priority)
+### WP1: Witness Interface (stabilization layer)
 Deliverables:
-- New module: `GameTheory/NashExistenceMixed.lean`.
-- Theorem (core): finite NFG has a mixed Nash equilibrium.
-- Bridge theorem: induced result for kernel games arising from finite NFGs.
+- A structure bundling per-scale witness obligations in the exact shape used by
+  `exists_fixedPoint_of_kuhnFacetWitnessPattern_at_scales`.
+- A one-line bridge theorem from this structure family to fixed-point existence.
 
-Likely prerequisites:
-- Best-response correspondence on mixed profiles.
-- Convexity/nonemptiness/closed graph lemmas for finite simplex products.
-- Fixed-point machinery integration (use mathlib primary results).
+Acceptance:
+- LSP clean.
+- No new axioms.
+- Geometry development can target this structure directly.
 
-Acceptance criteria:
-- Public theorem with usable statement for `NFG.IsNashMixed`.
-- At least one canonical example (e.g., matching pennies) discharged through the general theorem interface.
-
-### M2: Minimax Theorem (2-player finite zero-sum)
+### WP2: Concrete Kuhn Cells
 Deliverables:
-- New module: `GameTheory/MinimaxTheorem.lean`.
-- Value equality theorem:
-  `max_min = min_max` (in library's mixed-kernel vocabulary).
-- Equilibrium corollaries for zero-sum mixed Nash.
+- Concrete `cells m : Finset (Cell n m)` definition.
+- Mesh lemma: `∀ c ∈ cells m, IsMeshCell c`.
+- Facet family characterization lemma(s) for these concrete cells.
 
-Likely prerequisites:
-- Clean definition of maximin/minimax values in current API.
-- Reuse M1 existence and zero-sum structure lemmas.
+Acceptance:
+- LSP clean.
+- Facet membership lemmas usable by incidence counting proofs.
 
-Acceptance criteria:
-- Theorem instantiated for finite action spaces.
-- Link to `IsNashMixed` in zero-sum games is explicit.
-
-### M3: Sequential Refinements in EFG
+### WP3: Incidence Counting
 Deliverables:
-- New modules:
-  - `GameTheory/SequentialEq.lean`
-  - `GameTheory/SubgamePerfect.lean`
-- Replace schema-only predicates with concrete definitions for:
-  - sequential rationality
-  - belief consistency
-  - sequential equilibrium and PBE
-- Strengthen SPE definition with practical `isSubgame` conditions.
+- Interior facet pair-witness theorem.
+- Boundary unique/none witness theorem.
+- Combined per-scale witness theorem in WP1 structure form.
 
-Likely prerequisites:
-- Belief construction on infosets/reachability.
-- Additional technical lemmas for off-path beliefs and conditioning.
+Acceptance:
+- LSP clean.
+- Directly applicable to existing witness-pattern fixed-point theorem.
 
-Acceptance criteria:
-- At least one nontrivial EFG example verified as SPE or not SPE.
-- At least one bridge theorem from EFG equilibrium notion to strategic-form Nash in special cases.
-
-### M4: Cleanup and Completeness
+### WP4: Nash Specialization
 Deliverables:
-- Remove remaining placeholder(s), especially `AbstractFolk.abstract_folk_theorem`.
-- If folk theorem is intentionally out-of-scope, move to `ephemeral/` or mark as non-core extension and exclude from top-level claims.
-- Audit docstrings in all exported modules for scope/guarantees alignment.
+- Instantiate fixed-point theorem for Nash map.
+- Replace `axiom nashMap_has_fixed_point` with theorem.
+- Keep `mixed_nash_exists` statement unchanged.
 
-Acceptance criteria:
-- `rg "\\bsorry\\b|\\badmit\\b" GameTheory *.lean` returns empty for core library files.
-- README claim matches implemented theorem set exactly.
+Acceptance:
+- LSP clean on `GameTheory/NashExistenceMixed.lean`.
+- No axioms in the mixed-Nash chain.
 
-### M5: Consolidation and User-Facing Guarantees
-Deliverables:
-- Add `GameTheory/CoreTheorems.lean` re-exporting theorems that justify the "core" claim.
-- Extend examples:
-  - pure and mixed Nash,
-  - CE/CCE,
-  - minimax,
-  - sequential refinement example.
-- Optional: add theorem index in `README.md`.
+## Parallelization
+- Track A (now): WP1 + early WP2 scaffolding.
+- Track B: WP2 concrete combinatorics lemmas.
+- Track C: WP4 continuity/specialization prep in parallel with WP2/WP3.
 
-Acceptance criteria:
-- One import gives users all core concepts + flagship theorems.
-- Examples compile and reference the final theorem names.
+## Sprint Definition
+Each sprint must add:
+- at least one new compile-checked theorem/definition used on critical path,
+- one measurable reduction of remaining obligations,
+- update `Fixpoint/SPRINTS.md`.
 
-## Implementation Strategy
-- Keep `KernelGame` as semantic center; prove major theorems once there when possible.
-- Use representation bridges (`NFG ↔ KernelGame`, `EFG -> strategic`) to avoid duplication.
-- Prefer small lemma modules over monolithic files.
-- For hard existence proofs, first land technical simplex/fixed-point lemmas, then final theorem.
-
-## Risk Register
-- R1: Fixed-point prerequisites may cause heavy dependency complexity.
-  - Mitigation: isolate topology/convex analysis support lemmas in dedicated helper module.
-- R2: Sequential-equilibrium formalization can sprawl.
-  - Mitigation: deliver minimal concrete SE first, then PBE.
-- R3: Naming/API drift across modules.
-  - Mitigation: add a stable theorem namespace and a public theorem index.
-
-## Suggested Work Breakdown (short horizon)
-1. Land M1 theorem statement + supporting definitions scaffolding.
-2. Prove M1 in finite NFG.
-3. Build M2 on top of M1 and existing zero-sum modules.
-4. Implement concrete SE/SPE (M3) with one validated example.
-5. Final cleanup and claim alignment (M4/M5).
-
-## Exit Criteria for Claim Adoption
-Only adopt the exact claim in README when M1, M2, M3 (minimum concrete SE/SPE), and M4 are complete.
-Until then, use wording like:
-"formalizes substantial foundations of finite, discrete noncooperative game theory."
+## Done Criteria
+- `nashMap_has_fixed_point` is a theorem, not an axiom.
+- `KernelGame.mixed_nash_exists` is fully derived from proved fixed-point layer.
+- LSP clean on all changed files.

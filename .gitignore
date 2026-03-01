@@ -1,3 +1,6 @@
 .lake/
 CLAUDE.md
 .claude/
+.lsp-state.json
+.worktrees/
+ephemeral/checks/
