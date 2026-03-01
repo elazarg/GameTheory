@@ -41,6 +41,7 @@ import GameTheory.ZeroSumNash
 import GameTheory.ConstantSum
 import GameTheory.ConstantSumNash
 import GameTheory.Minimax
+import GameTheory.MinimaxTheorem
 
 -- Potential games and team games
 import GameTheory.PotentialGame
