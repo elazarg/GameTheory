@@ -7,6 +7,7 @@ import GameTheory.TraceKernelGame
 -- Solution concepts and properties
 import GameTheory.SolutionConcepts
 import GameTheory.BestResponse
+import GameTheory.BestResponseExistence
 import GameTheory.PrefPreorderProperties
 import GameTheory.EUProperties
 import GameTheory.OfEUProperties
@@ -20,6 +21,7 @@ import GameTheory.DominanceNash
 
 -- Nash equilibrium
 import GameTheory.StrictNashProperties
+import GameTheory.ApproximateNash
 import GameTheory.NashExistence
 import GameTheory.ProductSimplexBrouwer
 import GameTheory.NashExistenceMixed
@@ -29,10 +31,12 @@ import GameTheory.GameProperties
 import GameTheory.ParetoOptimal
 import GameTheory.NashPareto
 import GameTheory.WelfareTheorems
+import GameTheory.PriceOfAnarchy
 import GameTheory.IndividualRationality
 
 -- Correlated equilibrium
 import GameTheory.CorrelatedEqProperties
+import GameTheory.Regret
 import GameTheory.CorrelatedNashMixed
 import GameTheory.NashCorrelatedEq
 
@@ -44,7 +48,11 @@ import GameTheory.ConstantSumNash
 import GameTheory.Minimax
 import GameTheory.MinimaxTheorem
 
--- Potential games and team games
+-- Symmetric games
+import GameTheory.SymmetricGame
+
+-- Potential games, team games, congestion games
+import GameTheory.CongestionGame
 import GameTheory.PotentialGame
 import GameTheory.PotentialFIP
 import GameTheory.TeamGame

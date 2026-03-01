@@ -60,5 +60,26 @@ theorem IsOrdinalPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G
   have hle := hmax (Function.update σ who s')
   linarith
 
+open Classical in
+/-- In an ordinal potential game, `σ` is Nash iff `σ` is a local maximizer of `Φ`
+    (no single-player deviation increases `Φ`). -/
+theorem IsOrdinalPotential.isNash_iff_local_maximizer
+    {G : KernelGame ι} {Φ : Profile G → ℝ}
+    (hΦ : G.IsOrdinalPotential Φ) {σ : Profile G} :
+    G.IsNash σ ↔ ∀ who (s' : G.Strategy who), Φ σ ≥ Φ (Function.update σ who s') := by
+  constructor
+  · intro hN who s'
+    by_contra h
+    push_neg at h
+    have := (hΦ who σ s').mpr h
+    have := hN who s'
+    linarith
+  · intro hmax who s'
+    by_contra h
+    push_neg at h
+    have := (hΦ who σ s').mp h
+    have := hmax who s'
+    linarith
+
 end KernelGame
 end GameTheory

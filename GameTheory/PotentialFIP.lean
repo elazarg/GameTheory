@@ -67,5 +67,39 @@ theorem IsExactPotential.no_improving_at_maximizer
   have hle := hmax (Function.update σ who s')
   linarith
 
+open Classical in
+/-- If `Φ` is an exact potential and `σ` is the *strict* global maximizer
+    (i.e. `Φ σ > Φ τ` for all `τ ≠ σ`), then `σ` is a strict Nash equilibrium. -/
+theorem IsExactPotential.strictNash_of_strict_maximizer
+    {G : KernelGame ι} {Φ : Profile G → ℝ} (hΦ : G.IsExactPotential Φ)
+    {σ : Profile G}
+    (hmax : ∀ τ : Profile G, τ ≠ σ → Φ σ > Φ τ) : G.IsStrictNash σ := by
+  intro who s' hs'
+  have hpot := hΦ who σ s'
+  have hne : Function.update σ who s' ≠ σ := by
+    intro h
+    apply hs'
+    have := congr_fun h who
+    simpa [Function.update] using this
+  have hlt := hmax _ hne
+  linarith
+
+open Classical in
+/-- In an exact potential game, `σ` is Nash iff `σ` is a local maximizer of `Φ`
+    (no single-player deviation increases `Φ`). -/
+theorem IsExactPotential.isNash_iff_local_maximizer
+    {G : KernelGame ι} {Φ : Profile G → ℝ} (hΦ : G.IsExactPotential Φ)
+    {σ : Profile G} :
+    G.IsNash σ ↔ ∀ who (s' : G.Strategy who), Φ σ ≥ Φ (Function.update σ who s') := by
+  constructor
+  · intro hN who s'
+    have hpot := hΦ who σ s'
+    have hge := hN who s'
+    linarith
+  · intro hmax who s'
+    have hpot := hΦ who σ s'
+    have hge := hmax who s'
+    linarith
+
 end KernelGame
 end GameTheory
