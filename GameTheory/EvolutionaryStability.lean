@@ -69,4 +69,20 @@ theorem isESS_of_strict_nash {u : S → S → ℝ} {s : S}
     · exact le_of_lt (hstrict t h)
   · exact absurd heq (ne_of_gt (hstrict t hne.symm))
 
+/-- **ESS isolation**: if `s` and `t` are both ESS and `s ≠ t`, then
+    `u(s,s) > u(t,s)`. Different ESS are strictly separated. -/
+theorem IsESS.strict_against_other_ess {u : S → S → ℝ} {s t : S}
+    (hs : IsESS u s) (ht : IsESS u t) (hne : s ≠ t) :
+    u s s > u t s := by
+  -- From s being ESS: u(s,s) ≥ u(t,s)
+  have hge := hs.1 t
+  -- Suppose u(s,s) = u(t,s), then stability gives u(s,t) > u(t,t)
+  -- But from t being ESS: u(t,t) ≥ u(s,t), contradiction
+  by_contra h
+  push_neg at h
+  have heq : u s s = u t s := le_antisymm h hge
+  have hstab := hs.2 t heq hne
+  have hge2 := ht.1 s
+  linarith
+
 end GameTheory

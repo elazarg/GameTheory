@@ -82,6 +82,32 @@ theorem shapleyValue_additive (G₁ G₂ : CoalGame ι) (i : ι) :
   ext S
   ring
 
+/-- Two players are symmetric if swapping them in any coalition
+    preserves the value. -/
+def AreSymmetric (G : CoalGame ι) (i j : ι) : Prop :=
+  ∀ S : Finset ι, i ∉ S → j ∉ S → G.v (insert i S) = G.v (insert j S)
+
+/-- Symmetric players have the same marginal contribution to coalitions
+    containing neither of them. -/
+theorem marginalContribution_eq_of_symmetric (G : CoalGame ι) {i j : ι}
+    (hsym : G.AreSymmetric i j) {S : Finset ι}
+    (hi : i ∉ S) (hj : j ∉ S) :
+    G.marginalContribution i S = G.marginalContribution j S := by
+  simp only [marginalContribution]
+  rw [hsym S hi hj]
+
+/-- Scalar multiplication of coalitional games. -/
+def gameScalar (c : ℝ) (G : CoalGame ι) : CoalGame ι where
+  v := fun S => c * G.v S
+  v_empty := by simp [G.v_empty]
+
+/-- Shapley value is linear: scales with scalar multiplication. -/
+theorem shapleyValue_scalar (c : ℝ) (G : CoalGame ι) (i : ι) :
+    (gameScalar c G).shapleyValue i = c * G.shapleyValue i := by
+  simp only [shapleyValue, gameScalar, marginalContribution]
+  rw [Finset.mul_sum]
+  congr 1; ext S; ring
+
 end CoalGame
 
 end GameTheory

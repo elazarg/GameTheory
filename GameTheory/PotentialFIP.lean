@@ -1,5 +1,4 @@
-import GameTheory.GameProperties
-import GameTheory.SolutionConcepts
+import GameTheory.PotentialGame
 
 /-!
 # Finite Improvement Property for Potential Games
@@ -100,6 +99,19 @@ theorem IsExactPotential.isNash_iff_local_maximizer
     have hpot := hΦ who σ s'
     have hge := hmax who s'
     linarith
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Nash existence for finite exact potential games.**
+    A finite exact potential game always has a Nash equilibrium:
+    the profile that maximizes the potential function. -/
+theorem IsExactPotential.nash_exists
+    {G : KernelGame ι} [Fintype (Profile G)] [Nonempty (Profile G)]
+    {Φ : Profile G → ℝ} (hΦ : G.IsExactPotential Φ) :
+    ∃ σ : Profile G, G.IsNash σ := by
+  obtain ⟨σ, _, hmax⟩ := Finset.exists_max_image Finset.univ Φ
+    ⟨Classical.arbitrary _, Finset.mem_univ _⟩
+  exact ⟨σ, IsExactPotential.nash_of_maximizer hΦ (fun τ => hmax τ (Finset.mem_univ τ))⟩
 
 end KernelGame
 end GameTheory

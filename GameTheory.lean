@@ -35,6 +35,7 @@ import GameTheory.NashPareto
 import GameTheory.WelfareTheorems
 import GameTheory.PriceOfAnarchy
 import GameTheory.IndividualRationality
+import GameTheory.SecurityStrategy
 
 -- Correlated equilibrium
 import GameTheory.CorrelatedEqProperties

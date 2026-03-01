@@ -105,5 +105,62 @@ theorem von_neumann_minimax (G : KernelGame (Fin 2))
   · exact hzs'.nash_p0_optimal hN s₁
   · have h := nash_p0_cap hN s₀; linarith
 
+-- ============================================================================
+-- Interchangeability of Nash equilibria in zero-sum games
+-- ============================================================================
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Interchangeability**: in a 2-player zero-sum game, if `σ` and `τ` are
+    both Nash equilibria, then the "cross" profile `(σ 0, τ 1)` is also Nash.
+    This is a consequence of the saddle-point characterization. -/
+theorem IsZeroSum.nash_interchangeable {G : KernelGame (Fin 2)} [Fintype G.Outcome]
+    (hzs : G.IsZeroSum) {σ τ : Profile G}
+    (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
+    G.IsNash (Function.update σ 1 (τ 1)) := by
+  -- The cross profile equals both update σ 1 (τ 1) and update τ 0 (σ 0)
+  have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
+    funext i; fin_cases i <;> simp [Function.update]
+  -- Game value
+  have hval := hzs.nash_eu_eq hNσ hNτ
+  -- EU of cross profile = v (squeezed between two bounds)
+  have hge : G.eu (Function.update σ 1 (τ 1)) 0 ≥ G.eu σ 0 :=
+    hzs.nash_p0_optimal hNσ (τ 1)
+  have hle : G.eu (Function.update τ 0 (σ 0)) 0 ≤ G.eu τ 0 := by
+    have := nash_p0_cap hNτ (σ 0); linarith
+  rw [heq] at hge
+  have hval_cross : G.eu (Function.update σ 1 (τ 1)) 0 = G.eu σ 0 := by
+    rw [heq]; linarith
+  -- Prove Nash for player 0: cap from τ
+  have hN0 : ∀ s₀ : G.Strategy 0,
+      G.eu (Function.update σ 1 (τ 1)) 0 ≥
+      G.eu (Function.update (Function.update σ 1 (τ 1)) 0 s₀) 0 := by
+    intro s₀
+    have hupd : Function.update (Function.update σ 1 (τ 1)) 0 s₀ =
+                Function.update τ 0 s₀ := by
+      funext i; fin_cases i <;> simp [Function.update]
+    rw [hval_cross, hupd]
+    have := nash_p0_cap hNτ s₀
+    linarith [hval]
+  -- Prove Nash for player 1: optimality from σ
+  have hN1 : ∀ s₁ : G.Strategy 1,
+      G.eu (Function.update σ 1 (τ 1)) 1 ≥
+      G.eu (Function.update (Function.update σ 1 (τ 1)) 1 s₁) 1 := by
+    intro s₁
+    have hupd : Function.update (Function.update σ 1 (τ 1)) 1 s₁ =
+                Function.update σ 1 s₁ := by
+      funext i; fin_cases i <;> simp [Function.update]
+    rw [hupd]
+    have h1 := hzs.eu_neg (Function.update σ 1 (τ 1))
+    have h2 := hzs.eu_neg (Function.update σ 1 s₁)
+    have hopt := hzs.nash_p0_optimal hNσ s₁
+    rw [hval_cross] at h1
+    linarith
+  -- Combine
+  intro who s'
+  fin_cases who
+  · convert hN0 s'
+  · convert hN1 s'
+
 end KernelGame
 end GameTheory
