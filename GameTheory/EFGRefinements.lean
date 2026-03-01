@@ -135,6 +135,97 @@ theorem perfectInfo_isSubgame_decision {S : InfoStructure} {Outcome : Type}
   exact ⟨h_sub, hMid2⟩
 
 -- ============================================================================
+-- Locality: evaluation depends only on info-sets in the tree
+-- ============================================================================
+
+/-- If two profiles agree on all info-sets appearing in a tree,
+    they produce the same outcome distribution. -/
+theorem evalDist_eq_of_agree {S : InfoStructure} {Outcome : Type}
+    (t : GameTree S Outcome) (σ₁ σ₂ : PureProfile S)
+    (hagree : ∀ (p : S.Player) (I : S.Infoset p),
+      DecisionNodeIn I t → σ₁ p I = σ₂ p I) :
+    t.evalDist (pureToBehavioral σ₁) = t.evalDist (pureToBehavioral σ₂) := by
+  induction t with
+  | terminal z => rfl
+  | chance k μ hk next ih =>
+    simp only [evalDist_chance]
+    congr 1; funext b
+    exact ih b (fun p I hIn => hagree p I (.in_chance k μ hk next b hIn))
+  | decision I next ih =>
+    simp only [evalDist_decision, pureToBehavioral]
+    have hact : σ₁ _ I = σ₂ _ I := hagree _ I (.root next)
+    rw [hact]
+    congr 1; funext a
+    exact ih a (fun p J hIn => hagree p J (.in_decision I next a hIn))
+
+-- ============================================================================
+-- IsPerfectInfo inherited by subtrees
+-- ============================================================================
+
+theorem IsPerfectInfo_subtree {S : InfoStructure} {Outcome : Type}
+    {root : GameTree S Outcome} (hpi : IsPerfectInfo root)
+    {h : List (HistoryStep S)} {t : GameTree S Outcome}
+    (hreach : ReachBy h root t) : IsPerfectInfo t := by
+  intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
+  have hr₁' := ReachBy_append hreach hr₁
+  have hr₂' := ReachBy_append hreach hr₂
+  obtain ⟨heq, hnext⟩ := hpi _ _ p I next₁ next₂ hr₁' hr₂'
+  exact ⟨List.append_cancel_left heq, hnext⟩
+
+/-- In a perfect-info decision node, the root info-set does not appear
+    in any subtree. -/
+theorem perfectInfo_root_not_in_subtree {S : InfoStructure} {Outcome : Type}
+    {p : S.Player} {I : S.Infoset p}
+    {next : S.Act I → GameTree S Outcome}
+    (hpi : IsPerfectInfo (.decision I next))
+    {a : S.Act I}
+    (ha : DecisionNodeIn I (next a)) : False := by
+  obtain ⟨ha_hist, ha_next, ha_reach⟩ := decisionNodeIn_reachBy ha
+  have ra : ReachBy (HistoryStep.action p I a :: ha_hist)
+      (.decision I next) (.decision I ha_next) :=
+    .action a ha_reach
+  have rb : ReachBy [] (.decision I next) (.decision I next) := .here _
+  obtain ⟨heq, _⟩ := hpi _ _ p I ha_next next ra rb
+  exact absurd heq (by simp)
+
+-- ============================================================================
+-- Expected value monotonicity and DecidableEq bridge
+-- ============================================================================
+
+set_option linter.unusedFintypeInType false in
+theorem expect_mono {α : Type} [Fintype α]
+    (μ : PMF α) (f g : α → ℝ) (hfg : ∀ a, f a ≤ g a) :
+    expect μ f ≤ expect μ g := by
+  simp only [expect_eq_sum]
+  exact Finset.sum_le_sum (fun a _ =>
+    mul_le_mul_of_nonneg_left (hfg a) (ENNReal.toReal_nonneg))
+
+theorem update_eq_update_of_decEq {α : Type} {β : α → Type}
+    (dec₁ dec₂ : DecidableEq α) (f : (a : α) → β a) (a : α) (v : β a) :
+    @Function.update α β dec₁ f a v = @Function.update α β dec₂ f a v := by
+  funext i
+  by_cases h : i = a
+  · subst h
+    simp [Function.update]
+  · simp [Function.update, h]
+
+theorem decisionNodeIn_of_reachBy {S : InfoStructure} {Outcome : Type}
+    {h : List (HistoryStep S)} {t : GameTree S Outcome}
+    {p : S.Player} {I : S.Infoset p} {next : S.Act I → GameTree S Outcome}
+    (hr : ReachBy h t (.decision I next)) : DecisionNodeIn I t := by
+  let rec go {h : List (HistoryStep S)} {t : GameTree S Outcome}
+      {p : S.Player} {I : S.Infoset p} {next : S.Act I → GameTree S Outcome}
+      (hreach : ReachBy h t (.decision I next)) : DecisionNodeIn I t := by
+    cases hreach with
+    | here _ =>
+        exact .root next
+    | chance b hr' =>
+        exact .in_chance _ _ _ _ b (go hr')
+    | action a hr' =>
+        exact .in_decision _ _ a (go hr')
+  exact go hr
+
+-- ============================================================================
 -- Entry Deterrence Game
 -- ============================================================================
 

@@ -1,4 +1,4 @@
-import GameTheory.Zermelo
+import GameTheory.EFGRefinements
 import Mathlib.Tactic.Linarith
 
 /-!

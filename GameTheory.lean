@@ -57,8 +57,8 @@ import GameTheory.EFGKuhn
 import GameTheory.EFGKuhnFull
 import GameTheory.EFG_NFG
 import GameTheory.EFGRefinements
-import GameTheory.Zermelo
 import GameTheory.OneShotDeviation
+import GameTheory.Zermelo
 
 -- Normal-form games
 import GameTheory.NFG
