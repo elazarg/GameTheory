@@ -76,6 +76,13 @@ import GameTheory.NFG_EFG
 import GameTheory.MAID
 import GameTheory.MAID_EFG
 
+-- Coalitional games
+import GameTheory.CoalitionalGame
+
+-- Repeated and stochastic games
+import GameTheory.RepeatedGame
+import GameTheory.StochasticGame
+
 -- Bayesian games and mechanism design
 import GameTheory.BayesianGame
 import GameTheory.MechanismDesign
