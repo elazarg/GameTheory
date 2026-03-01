@@ -31,14 +31,7 @@ theorem IsConstantSum.socialWelfare_eq [Fintype ι]
   simp_rw [← Finset.mul_sum]
   have hc : ∀ ω : G.Outcome, ∑ i : ι, G.utility ω i = c :=
     fun ω => hcs ω
-  simp_rw [hc, ← Finset.sum_mul]
-  have key := @ENNReal.tsum_toReal_eq G.Outcome
-    (fun ω => G.outcomeKernel σ ω)
-    (fun a => PMF.apply_ne_top (G.outcomeKernel σ) a)
-  rw [show ∑ ω : G.Outcome, (G.outcomeKernel σ ω).toReal =
-    ∑' ω, ((fun ω => G.outcomeKernel σ ω) ω).toReal
-    from by simp [tsum_fintype]]
-  rw [← key, PMF.tsum_coe]; simp
+  simp_rw [hc, ← Finset.sum_mul, pmf_toReal_sum_one, one_mul]
 
 set_option linter.unusedFintypeInType false in
 /-- In a 2-player constant-sum game with finite outcomes,

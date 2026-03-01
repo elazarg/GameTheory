@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import GameTheory.NashExistenceMixed
 
 /-!
 # GameTheory.CorrelatedNashMixed
@@ -51,6 +52,19 @@ theorem deviateDistribution_pure (σ : Profile G)
   simp [deviateDistribution, PMF.pure_bind]
 
 set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Constant deviation of a product mixed profile distribution is product update
+    with a point mass at the deviating action. -/
+theorem constDeviateDistribution_pmfPi
+    {G : KernelGame ι}
+    [Fintype ι] [∀ i, Fintype (G.Strategy i)]
+    (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (s' : G.Strategy who) :
+    G.constDeviateDistribution (pmfPi σ) who s' =
+      pmfPi (Function.update σ who (PMF.pure s')) := by
+  unfold constDeviateDistribution
+  simpa using (pmfPi_bind_update_pure σ who s')
+
+set_option linter.unusedFintypeInType false in
 /-- Correlated EU is the expectation of standard EU over the profile distribution.
 
 By unfolding `correlatedEu` and `correlatedOutcome` we get
@@ -61,6 +75,48 @@ theorem correlatedEu_eq_expect_eu [Fintype (Profile G)] [Fintype G.Outcome]
     (μ : PMF (Profile G)) (who : ι) :
     G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
   simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward, expect_bind]
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- A mixed Nash profile induces a coarse correlated equilibrium on pure profiles
+    via the independent product distribution `pmfPi σ`. -/
+theorem mixed_nash_isCoarseCorrelatedEq
+    {G : KernelGame ι}
+    [Fintype ι] [∀ i, Fintype (G.Strategy i)] [Fintype G.Outcome]
+    (σ : ∀ i, PMF (G.Strategy i))
+    (hN : G.mixedExtension.IsNash σ) :
+    G.IsCoarseCorrelatedEq (pmfPi σ) := by
+  intro who s'
+  have hN' : G.mixedExtension.eu σ who ≥
+      G.mixedExtension.eu (Function.update σ who (PMF.pure s')) who :=
+    hN who (PMF.pure s')
+  have hbase :
+      G.correlatedEu (pmfPi σ) who = G.mixedExtension.eu σ who := by
+    rw [G.correlatedEu_eq_expect_eu (μ := pmfPi σ) who]
+    symm
+    exact G.mixedExtension_eu σ who
+  have hdev :
+      G.correlatedEu
+          (G.constDeviateDistribution (pmfPi σ) who s') who
+        =
+      G.mixedExtension.eu (Function.update σ who (PMF.pure s')) who := by
+    rw [G.correlatedEu_eq_expect_eu
+      (μ := G.constDeviateDistribution (pmfPi σ) who s') who]
+    rw [G.mixedExtension_eu (Function.update σ who (PMF.pure s')) who]
+    rw [G.constDeviateDistribution_pmfPi σ who s']
+  rw [hbase, hdev]
+  exact hN'
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Every finite game has a coarse correlated equilibrium. -/
+theorem coarseCorrelatedEq_exists
+    (G : KernelGame ι)
+    [Fintype ι] [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    [Fintype G.Outcome] :
+    ∃ μ : PMF (Profile G), G.IsCoarseCorrelatedEq μ := by
+  obtain ⟨σ, hN⟩ := G.mixed_nash_exists
+  exact ⟨pmfPi σ, G.mixed_nash_isCoarseCorrelatedEq σ hN⟩
 
 end KernelGame
 end GameTheory

@@ -14,11 +14,6 @@ Provides:
 - `expect` — expected value of a real-valued function under a `PMF`
 - Utility lemmas: `expect_pure`, `expect_bind`, `expect_const`, `expect_eq_sum`
 
-## Scope-outs
-
-- **Continuous distributions** — the library is discrete (`PMF`) by design.
-- **`expect_add` (linearity)** — requires summability side-conditions that add
-  significant overhead for finite games where `expect_eq_sum` suffices.
 -/
 
 namespace GameTheory
@@ -118,6 +113,21 @@ theorem expect_eq_sum {Ω : Type} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
   simp [expect]
 
 -- ============================================================================
+-- PMF utility lemmas
+-- ============================================================================
+
+/-- The tsum of a PMF's real-valued weights is 1. -/
+theorem pmf_toReal_tsum_one {Ω : Type} (d : PMF Ω) : ∑' ω, (d ω).toReal = 1 := by
+  have key := @ENNReal.tsum_toReal_eq Ω (fun ω => d ω) (fun a => PMF.apply_ne_top d a)
+  rw [show ∑' ω, (d ω).toReal = ∑' ω, ((fun ω => d ω) ω).toReal from rfl]
+  rw [← key, PMF.tsum_coe]; norm_num
+
+/-- The finite sum of a PMF's real-valued weights is 1. -/
+theorem pmf_toReal_sum_one {Ω : Type} [Fintype Ω] (d : PMF Ω) :
+    ∑ ω : Ω, (d ω).toReal = 1 := by
+  simpa [tsum_fintype] using (pmf_toReal_tsum_one d)
+
+-- ============================================================================
 -- Utility lemmas for expect
 -- ============================================================================
 
@@ -135,10 +145,7 @@ theorem expect_eq_sum {Ω : Type} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
   simp only [expect]
   have hfact : (fun ω => (d ω).toReal * c) = (fun ω => c * (d ω).toReal) := by ext; ring
   rw [hfact, tsum_mul_left]
-  suffices hs : ∑' ω, (d ω).toReal = 1 by rw [hs, mul_one]
-  have key := @ENNReal.tsum_toReal_eq Ω (fun ω => d ω) (fun a => PMF.apply_ne_top d a)
-  rw [show ∑' ω, (d ω).toReal = ∑' ω, ((fun ω => d ω) ω).toReal from rfl]
-  rw [← key, PMF.tsum_coe]; norm_num
+  rw [pmf_toReal_tsum_one d, mul_one]
 
 set_option linter.unusedFintypeInType false in
 /-- Expected value distributes over `PMF.bind`. -/

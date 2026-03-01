@@ -10,12 +10,6 @@ Provides:
 - `eu` — expected utility for a player under a strategy profile
 - `Profile`, `correlatedOutcome` — standard game-theoretic notions
 - `KernelGame.ofEU` — constructs a kernel game from a direct EU function
-  (absorbs the former `StrategicForm.Game`)
-
-## Scope-outs
-
-- **Continuous games** — the library is discrete (`PMF`) by design.
-- **Correlated equilibrium** — `correlatedOutcome` is defined; CE could be added later.
 -/
 
 namespace GameTheory

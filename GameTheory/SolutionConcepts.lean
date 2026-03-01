@@ -13,20 +13,13 @@ Provides:
 These are the single source of truth for solution concepts. Concrete
 representations (NFG, EFG, MAID) should bridge to these definitions
 via their `toKernelGame` conversions.
-
-## Scope-outs
-
-- **Subgame perfection / sequential equilibrium** — needs belief systems
-- **Correlated equilibrium** — `correlatedOutcome` exists in `KernelGame`;
-  CE definition could be added later
 -/
 
 namespace GameTheory
 
 open Classical in
 /-- Build a KernelGame from a direct expected-utility function (no stochastic kernel).
-    This is the "strategic form" special case: outcome = utility vector, kernel = point mass.
-    Absorbs the former `StrategicForm.Game`. -/
+    This is the "strategic form" special case: outcome = utility vector, kernel = point mass. -/
 noncomputable def KernelGame.ofEU
     (Strategy : ι → Type) (eu : (∀ i, Strategy i) → Payoff ι) : KernelGame ι where
   Strategy := Strategy

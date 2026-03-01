@@ -18,10 +18,6 @@ Design:
 - Chance nodes use `Fin k` with a proof `0 < k`
 - Distributional semantics only (`evalDist`); EU is external via `KernelGame`
 
-## Scope-outs
-
-- **Kuhn's theorem** — see `EFGKuhn.lean`
-- **Subgame perfection / sequential equilibrium** — needs belief systems
 -/
 
 namespace EFG

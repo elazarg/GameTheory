@@ -318,8 +318,6 @@ theorem muMarginal_muCond_other
   -- Concretely, marginal at infoset J of player q is pushforward along `π ↦ π q J`.
   -- On the pure side, that’s still coordinate q (as a PureStrategy) then apply at J.
   -- This is one more “pushforward-compose” lemma + `pmfPi_cond_coord_push_other`.
-  --
-  -- If you don’t yet have the pushforward-compose lemma, keep this as `sorry` and fill later.
   -- Unfold muMarginal and rewrite muCond via hrew
   simp only [muMarginal, hrew]
   -- Goal: pmfPureToFlat(pureCond).bind(s↦pure(s⟨q,J⟩)) =

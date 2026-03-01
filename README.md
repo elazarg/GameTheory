@@ -1,128 +1,199 @@
 # GameTheory (Lean 4)
 
-A Lean 4 formalization of finite discrete game theory, built on Mathlib. The library covers normal-form games, extensive-form games, and multi-agent influence diagrams (MAIDs), unified through a common semantic core (`KernelGame`). All probability is discrete (`PMF`); continuous/infinite spaces are out of scope.
+Formalized finite game theory in Lean 4, centered on a single stochastic game model.
 
-## Overview
+This library proves core results for finite, discrete games:
+- normal-form games (NFG),
+- extensive-form games (EFG, including perfect-recall/Kuhn results),
+- MAIDs (multi-agent influence diagrams),
+all unified through `KernelGame`.
 
-The central abstraction is `KernelGame ι`: a game with per-player strategy types, a stochastic outcome kernel, and a utility function. Solution concepts — Nash equilibrium, dominance, correlated equilibrium — are defined once on `KernelGame`. Concrete representations (NFG, EFG, MAID) bridge to `KernelGame` via `toKernelGame` conversions, inheriting all solution-concept theorems automatically.
+## Major Theorems Proved
 
-The library includes 200+ formally verified theorems covering Nash equilibrium characterizations, dominance relations, zero-sum and constant-sum results, potential games, team games, Pareto efficiency, welfare theorems, correlated equilibrium, minimax, and Kuhn's theorem. All proofs are machine-checked with 0 `sorry`.
+- **Mixed Nash existence (finite games)**: `KernelGame.mixed_nash_exists`
+- **Von Neumann minimax (finite 2-player zero-sum)**: `KernelGame.von_neumann_minimax`
+- **Zermelo / backward induction (finite perfect-information EFG)**: `EFG.zermelo`
+- **Kuhn equivalence under perfect recall**:
+  `EFG.kuhn_behavioral_to_mixed`, `EFG.kuhn_mixed_to_behavioral`
+- **Nash characterization by best responses**:
+  `KernelGame.isNash_iff_bestResponse`
+- **Strict dominance gives unique Nash**:
+  `KernelGame.strictly_dominant_unique_nash`
+- **Pure Nash induces correlated equilibrium**:
+  `KernelGame.nash_pure_isCorrelatedEq`
+- **Coarse correlated equilibrium existence (finite games)**:
+  `KernelGame.coarseCorrelatedEq_exists`
 
-## Main Definitions
+Scope is intentionally discrete:
+- probabilities are `PMF` (finite/discrete distributions),
+- expected utility is over finite supports,
+- no continuous strategy spaces or measure-theoretic probability.
 
-### Core Abstraction (`KernelGame.lean`, `SolutionConcepts.lean`)
-- `KernelGame ι` — a game with per-player strategy types, stochastic outcome kernel, and utility
-- `Profile G` — strategy profile (∀ i, G.Strategy i)
-- `eu G σ i` — expected utility of player i under profile σ
+## What This Library Is
 
-### Solution Concepts (`SolutionConcepts.lean`)
-- `IsNash G σ` — σ is a Nash equilibrium: ∀ i s', eu(σ, i) ≥ eu(σ[i↦s'], i)
-- `IsDominant G i s` — s is a dominant strategy for player i
-- `IsStrictNash G σ` — strict Nash: all deviations strictly decrease EU
-- `IsBestResponse G i σ s` — s is a best response for i against σ
-- `IsStrictDominant G i s` — s is a strict dominant strategy
-- `WeaklyDominates G i s t` — s weakly dominates t
-- `StrictlyDominates G i s t` — s strictly dominates t
-- `IsCorrelatedEq G μ` — μ is a correlated equilibrium
-- `IsCoarseCorrelatedEq G μ` — μ is a coarse correlated equilibrium
+The core object is:
+- `KernelGame ι`: per-player strategy types, stochastic outcome kernel, and utility map.
 
-### Game Properties (`GameProperties.lean`)
-- `IsZeroSum G` — zero-sum: ∀ ω, Σ_i u(ω, i) = 0
-- `IsConstantSum G c` — constant-sum: ∀ ω, Σ_i u(ω, i) = c
-- `IsTeamGame G` — identical interest: ∀ ω i j, u(ω, i) = u(ω, j)
-- `IsExactPotential G Φ` — Φ is an exact potential function
-- `IsOrdinalPotential G Φ` — Φ is an ordinal potential function
-- `ParetoDominates G σ τ` — σ Pareto-dominates τ
-- `IsParetoEfficient G σ` — σ is Pareto-efficient
-- `IsIndividuallyRational G r σ` — σ satisfies reservation utilities r
-- `socialWelfare G σ` — Σ_i eu(σ, i)
+Once a model is expressed as `KernelGame`, the same definitions/theorems apply:
+- equilibrium (`IsNash`, `IsStrictNash`, `IsBestResponse`),
+- dominance (`IsDominant`, `WeaklyDominates`, `StrictlyDominates`),
+- correlated equilibrium (`IsCorrelatedEq`, `IsCoarseCorrelatedEq`),
+- structural game classes (`IsZeroSum`, `IsConstantSum`, `IsTeamGame`, potential-game notions).
 
-### Minimax (`Minimax.lean`)
-- `Guarantees G i s v` — strategy s guarantees player i at least v
-- `IsSaddlePoint G σ` — σ is a saddle point (2-player)
+## Key Definitions (Fast Orientation)
 
-### Preference-Parameterized Variants (`SolutionConcepts.lean`)
-- `IsNashFor G pref σ` — Nash w.r.t. arbitrary preference on outcome distributions
-- `IsDominantFor G pref i s` — dominant w.r.t. preference
-- `euPref G` — the standard EU preference (recovers `IsNash` from `IsNashFor`)
+From `GameTheory/SolutionConcepts.lean`, `GameTheory/GameProperties.lean`, `GameTheory/KernelGame.lean`:
+- `KernelGame ι`
+- `Profile G`
+- `KernelGame.eu` / expected utility
+- `KernelGame.udist` / utility-distribution semantics
+- `KernelGame.IsNash`
+- `KernelGame.IsBestResponse`
+- `KernelGame.IsDominant`, `KernelGame.IsStrictDominant`
+- `KernelGame.WeaklyDominates`, `KernelGame.StrictlyDominates`
+- `KernelGame.IsCorrelatedEq`, `KernelGame.IsCoarseCorrelatedEq`
+- `KernelGame.IsZeroSum`, `KernelGame.IsConstantSum`, `KernelGame.IsTeamGame`
+- `KernelGame.IsExactPotential`, `KernelGame.IsOrdinalPotential`
 
-## Main Theorems
+From `GameTheory/Probability.lean`:
+- `Kernel α β` (stochastic kernels via `PMF`)
+- `expect`
+- basic kernel composition/pushforward lemmas used across the library.
 
-### Nash Equilibrium
-- Nash ↔ all players play best responses (`isNash_iff_bestResponse`)
-- Dominant-strategy profile is Nash (`dominant_is_nash`)
-- Strictly dominant profile is the unique Nash (`strictly_dominant_unique_nash`)
-- Strict Nash ⟹ Nash (`IsStrictNash.isNash`)
-- Affine utility transformation preserves Nash (`ofEU_nash_affine`)
-- Nash exists when all players have dominant strategies (`nash_of_all_have_dominant`)
-- Nash exists in finite exact potential games (`exact_potential_nash_exists`)
-- Saddle point ↔ Nash in 2-player games (`isSaddlePoint_iff_isNash`)
+## Landmark Theorems (Exact Names)
 
-### Dominance
-- Weak dominance: reflexive, transitive (`WeaklyDominates.refl`, `.trans`)
-- Strict dominance: transitive, implies weak (`StrictlyDominates.trans`, `.toWeaklyDominates`)
-- Strictly dominated ⟹ never a best response (`StrictlyDominates.not_nash`)
-- Strictly dominant ⟹ unique best response (`IsStrictDominant.unique_best_response`)
+### Nash and Core Characterizations
+- `KernelGame.isNash_iff_bestResponse`
+- `KernelGame.dominant_is_nash`
+- `KernelGame.strictly_dominant_unique_nash`
+- `KernelGame.IsStrictNash.isNash`
+- `ofEU_nash_affine`
+
+### Existence and Fixed-Point Pipeline
+- `KernelGame.mixed_nash_exists` (Nash existence in finite mixed strategies)
+- `KernelGame.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point`
+- `KernelGame.continuous_nashMapOnMixedSimplex`
+- `brouwer_mixedSimplex` (via `ProductSimplexBrouwer`)
+
+### Minimax
+- `KernelGame.isSaddlePoint_iff_isNash`
+- `KernelGame.von_neumann_minimax`
 
 ### Correlated Equilibrium
-- CE ⟹ CCE (`IsCorrelatedEq.toCoarseCorrelatedEq`)
-- Pure Nash ⟹ CE (`nash_pure_isCorrelatedEq`)
-- Pure Nash ⟹ CCE (`nash_pure_isCoarseCorrelatedEq`)
-- Identity deviation is trivial (`deviateDistribution_id`)
+- `KernelGame.IsCorrelatedEq.toCoarseCorrelatedEq`
+- `KernelGame.nash_pure_isCorrelatedEq`
+- `KernelGame.nash_pure_isCoarseCorrelatedEq`
+- `KernelGame.mixed_nash_isCoarseCorrelatedEq`
+- `KernelGame.coarseCorrelatedEq_exists`
 
-### Zero-Sum and Constant-Sum Games
-- Social welfare = c in constant-sum games (`IsConstantSum.socialWelfare_eq`)
-- eu(σ, 0) = c − eu(σ, 1) in 2-player constant-sum (`IsConstantSum.eu_determined`)
-- eu(σ, 0) = −eu(σ, 1) in 2-player zero-sum (`IsZeroSum.eu_neg`)
-- Opponent's Nash deviation helps you in constant-sum (`IsConstantSum.nash_opponent_deviation_helps`)
-- Nash strategy guarantees Nash payoff in constant-sum (`IsConstantSum.nash_guarantees_0`)
+### EFG / Kuhn
+- `EFG.zermelo`
+- `EFG.kuhn_behavioral_to_mixed`
+- `EFG.kuhn_mixed_to_behavioral`
+- with utility-distribution corollaries:
+  `EFG.kuhn_behavioral_to_mixed_udist`,
+  `EFG.kuhn_mixed_to_behavioral_udist`.
 
-### Potential Games
-- Exact potential ⟹ ordinal potential (`IsExactPotential.toOrdinal`)
-- Potential maximizer is Nash (`IsExactPotential.nash_of_maximizer`)
-- Improving deviation increases potential (`IsExactPotential.improving_deviation_increases_potential`)
-- Team game is exact potential game (`IsTeamGame.isExactPotential`)
+## Architecture and Module Map
 
-### Team Games
-- All players have equal EU (`IsTeamGame.eu_eq`)
-- Nash deviation doesn't improve any player (`IsTeamGame.nash_no_unilateral_pareto_improvement`)
-- Zero-sum + team ⟹ all utilities zero (`IsZeroSum.teamGame_utility_zero`)
+Entry point:
+- `GameTheory.lean` (imports the full library surface)
 
-### Pareto Efficiency and Welfare
-- Pareto dominance: irreflexive, asymmetric, transitive (`ParetoDominates.irrefl`, `.asymm`, `.trans`)
-- Pareto-dominated ⟹ not efficient (`ParetoDominates.not_paretoEfficient`)
-- IR monotone in reservation utility, preserved by Pareto improvement (`IsIndividuallyRational.mono`, `.of_pareto_dominates`)
-- Team game social welfare = n · eu (`IsTeamGame.socialWelfare_eq`)
+Core:
+- `GameTheory/Probability.lean`
+- `GameTheory/PMFProduct.lean`
+- `GameTheory/KernelGame.lean`
+- `GameTheory/SolutionConcepts.lean`
 
-### Kuhn's Theorem (EFG)
-- Behavioral → mixed equivalence under perfect recall
-- Mixed → behavioral equivalence under perfect recall
+Major theorem families:
+- Nash/existence: `BestResponse.lean`, `NashExistence.lean`, `NashExistenceMixed.lean`
+- dominance: `StrictDominance.lean`, `DominanceRelations.lean`, `DominanceNash.lean`
+- correlated equilibrium: `CorrelatedEqProperties.lean`, `NashCorrelatedEq.lean`, `CorrelatedNashMixed.lean`
+- zero/constant-sum + minimax: `ZeroSum*.lean`, `ConstantSum*.lean`, `Minimax*.lean`
+- potential/team/welfare/pareto/IR:
+  `Potential*.lean`, `TeamGame*.lean`, `WelfareTheorems.lean`,
+  `ParetoOptimal.lean`, `IndividualRationality.lean`
 
-## Game Representations
+Representations and bridges:
+- NFG: `NFG.lean`, `NFG_EFG.lean`
+- EFG: `EFG.lean`, `EFGKuhn.lean`, `EFGKuhnFull.lean`, `EFG_NFG.lean`
+- MAID: `MAID.lean`, `MAID_EFG.lean`
 
-| Representation | File | Bridge to KernelGame |
-|---|---|---|
-| Normal form (NFG) | `NFG.lean` | `NFGGame.toKernelGame` |
-| Extensive form (EFG) | `EFG.lean` | `GameTree.toKernel` |
-| MAID | `MAID.lean` | `MAID.toKernelGame` |
+Examples:
+- `NFGExamples.lean`
+- `EFGExamples.lean`
+- `MAIDExamples.lean`
 
-Cross-representation bridges: NFG↔EFG (`NFG_EFG.lean`, `EFG_NFG.lean`), MAID→EFG (`MAID_EFG.lean`).
+## Representation Interoperability
 
-## Examples
+The design goal is semantic reuse:
+- each concrete representation has a translation to `KernelGame`,
+- generic theorems are proved once and apply after translation,
+- bridge theorems preserve outcome/utility-distribution semantics where appropriate.
 
-- **Prisoner's Dilemma** with Nash equilibrium proof (`NFGExamples.lean`)
-- **Matching Pennies** with no-pure-Nash proof (`NFGExamples.lean`)
-- **Sequential games** with expected utility computation (`EFGExamples.lean`)
-- **MAID examples** with evaluation equivalence (`MAIDExamples.lean`)
+Important bridge functions include:
+- `NFGGame.toKernelGame`
+- `EFGGame.toKernelGame`
+- `MAID.toKernelGame`
 
-## Experimental
+## Build and Toolchain
 
-- `AbstractFolk.lean` — Folk theorem infrastructure (IR region properties). Contains one `sorry` placeholder for the full folk theorem statement.
+Toolchain and dependencies:
+- Lean: `leanprover/lean4:v4.27.0` (`lean-toolchain`)
+- Mathlib: `v4.27.0` (`lakefile.toml`)
+- local dependency: `fixed-point-theorems-lean4` (`FixedPointTheorems`)
 
-## Building
+Build:
 
 ```bash
-lake build GameTheory   # ~1750 jobs, 0 errors
+lake build
 ```
 
-Requires Lean 4 + Mathlib v4.27.0.
+Targeted build:
+
+```bash
+lake build GameTheory
+```
+
+## Current Status
+
+- The exported `GameTheory/*.lean` library surface builds successfully.
+- Current tree includes 48 imported `GameTheory.*` modules from `GameTheory.lean`.
+- Theorem/lemma/def declarations in `GameTheory/*.lean`: 423 (quick source count).
+
+## Minimal Usage
+
+Import the full library:
+
+```lean
+import GameTheory
+```
+
+Or import specific components:
+
+```lean
+import GameTheory.NashExistenceMixed
+import GameTheory.MinimaxTheorem
+import GameTheory.EFGKuhnFull
+```
+
+## Future Work (Textbook Theorems Within Scope)
+
+- **Aumann correlated-equilibrium existence (finite games)**:
+  for every finite game, `∃ μ, IsCorrelatedEq μ`.
+- **One-shot deviation principle (finite extensive-form, perfect recall)**:
+  characterize sequential rationality / SPE via one-step deviations.
+- **Sequential equilibrium existence (finite extensive-form games)**:
+  Kreps-Wilson style existence with explicit belief consistency.
+- **Perfect Bayesian equilibrium existence (finite extensive-form games)**:
+  after fixing a concrete Bayes-consistency notion in this library.
+- **Shapley theorem for discounted stochastic games (finite state/action)**:
+  existence of stationary equilibrium/value in finite discounted stochastic games.
+
+## Non-Goals
+
+- Infinite/continuous games
+- Measure-theoretic probability foundations
+- Algorithmic equilibrium computation tooling
+
+This repository is focused on formal theorem development for finite game theory.
