@@ -3,4 +3,6 @@ CLAUDE.md
 .claude/
 .lsp-state.json
 .worktrees/
+.cache/
+.mcp.json
 ephemeral/
