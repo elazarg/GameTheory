@@ -23,6 +23,8 @@ all unified through `KernelGame`.
   `KernelGame.nash_pure_isCorrelatedEq`
 - **Correlated equilibrium existence (finite games)**:
   `KernelGame.correlatedEq_exists`
+- **One-shot deviation principle (finite perfect-information EFG)**:
+  `EFG.oneShotDeviation_iff_spe`
 
 Scope is intentionally discrete:
 - probabilities are `PMF` (finite/discrete distributions),
@@ -95,6 +97,11 @@ From `GameTheory/Probability.lean`:
   `EFG.kuhn_behavioral_to_mixed_udist`,
   `EFG.kuhn_mixed_to_behavioral_udist`.
 
+### One-Shot Deviation Principle
+- `EFG.spe_hasNoOneShotDeviation` (SPE implies no profitable OSD)
+- `EFG.hasNoOneShotDeviation_spe` (converse for perfect-info games)
+- `EFG.oneShotDeviation_iff_spe` (the equivalence)
+
 ## Architecture and Module Map
 
 Entry point:
@@ -117,7 +124,8 @@ Major theorem families:
 
 Representations and bridges:
 - NFG: `NFG.lean`, `NFG_EFG.lean`
-- EFG: `EFG.lean`, `EFGKuhn.lean`, `EFGKuhnFull.lean`, `EFG_NFG.lean`
+- EFG: `EFG.lean`, `EFGKuhn.lean`, `EFGKuhnFull.lean`, `EFG_NFG.lean`,
+  `EFGRefinements.lean`, `Zermelo.lean`, `OneShotDeviation.lean`
 - MAID: `MAID.lean`, `MAID_EFG.lean`
 
 Examples:
@@ -180,8 +188,6 @@ import GameTheory.EFGKuhnFull
 
 ## Future Work (Textbook Theorems Within Scope)
 
-- **One-shot deviation principle (finite extensive-form, perfect recall)**:
-  characterize sequential rationality / SPE via one-step deviations.
 - **Sequential equilibrium existence (finite extensive-form games)**:
   Kreps-Wilson style existence with explicit belief consistency.
 - **Perfect Bayesian equilibrium existence (finite extensive-form games)**:

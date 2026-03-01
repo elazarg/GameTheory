@@ -2,6 +2,7 @@
 import GameTheory.Probability
 import GameTheory.PMFProduct
 import GameTheory.KernelGame
+import GameTheory.TraceKernelGame
 
 -- Solution concepts and properties
 import GameTheory.SolutionConcepts
@@ -56,6 +57,8 @@ import GameTheory.EFGKuhn
 import GameTheory.EFGKuhnFull
 import GameTheory.EFG_NFG
 import GameTheory.EFGRefinements
+import GameTheory.Zermelo
+import GameTheory.OneShotDeviation
 
 -- Normal-form games
 import GameTheory.NFG
