@@ -1,6 +1,6 @@
 import GameTheory.SolutionConcepts
 import GameTheory.PMFProduct
-import Fixpoint.ProductSimplexCore
+import GameTheory.ProductSimplexBrouwer
 
 /-!
 # Mixed-Strategy Nash Equilibrium Existence
@@ -19,9 +19,8 @@ Nash's theorem: every finite game has a mixed-strategy Nash equilibrium.
 
 The algebraic core is fully proved: a fixed point of Nash's gain-based map
 on the product of simplices is a Nash equilibrium. The fixed-point existence
-itself relies on Brouwer's theorem applied to the continuous Nash map;
-because Brouwer's FPT is not yet available in Mathlib, it is axiomatized
-as `nashMap_has_fixed_point`.
+relies on Brouwer's theorem (`ProductSimplexBrouwer`) applied to the
+continuous Nash map.
 -/
 
 noncomputable section
@@ -423,7 +422,7 @@ variable [Fintype G.Outcome]
 
 /-- Convert a mixed-simplex profile to PMF profile (same coordinates, repackaged). -/
 noncomputable def profileFromMixedSimplex
-    (x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i)) :
+    (x : MixedSimplex ι (fun i => G.Strategy i)) :
     ∀ i, PMF (G.Strategy i) := by
   let w : ∀ j, G.Strategy j → ℝ := fun j a => x j a
   have hw_nn : ∀ j a, 0 ≤ w j a := by
@@ -436,24 +435,24 @@ noncomputable def profileFromMixedSimplex
 
 /-- Gain viewed on the mixed-simplex domain. -/
 noncomputable def mixedGainOnMixedSimplex
-    (x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i))
+    (x : MixedSimplex ι (fun i => G.Strategy i))
     (who : ι) (a : G.Strategy who) : ℝ :=
   G.mixedGain (G.profileFromMixedSimplex x) who a
 
 /-- Positive-gain sum viewed on the mixed-simplex domain. -/
 noncomputable def gainSumOnMixedSimplex
-    (x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i)) (who : ι) : ℝ :=
+    (x : MixedSimplex ι (fun i => G.Strategy i)) (who : ι) : ℝ :=
   G.gainSum (G.profileFromMixedSimplex x) who
 
 theorem gainSumOnMixedSimplex_nonneg
-    (x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i)) (who : ι) :
+    (x : MixedSimplex ι (fun i => G.Strategy i)) (who : ι) :
     0 ≤ G.gainSumOnMixedSimplex x who := by
   exact G.gainSum_nonneg (G.profileFromMixedSimplex x) who
 
 /-- Nash map viewed as a self-map of the mixed-profile product simplex. -/
 noncomputable def nashMapOnMixedSimplex :
-    Fixpoint.MixedSimplex ι (fun i => G.Strategy i) →
-      Fixpoint.MixedSimplex ι (fun i => G.Strategy i) := by
+    MixedSimplex ι (fun i => G.Strategy i) →
+      MixedSimplex ι (fun i => G.Strategy i) := by
   intro x i
   let w : ∀ j, G.Strategy j → ℝ := fun j a => x j a
   have hw_nn : ∀ j a, 0 ≤ w j a := by
@@ -468,7 +467,7 @@ noncomputable def nashMapOnMixedSimplex :
   · simpa using G.nashMap_sum_one w hw_nn hw_sum i
 
 @[simp] theorem nashMapOnMixedSimplex_apply
-    (x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i))
+    (x : MixedSimplex ι (fun i => G.Strategy i))
     (i : ι) (a : G.Strategy i) :
     ((G.nashMapOnMixedSimplex x i : stdSimplex ℝ (G.Strategy i)) a) =
       (x i a + pospart (G.mixedGainOnMixedSimplex x i a)) /
@@ -482,27 +481,27 @@ then Nash's map on the mixed simplex is continuous.
 -/
 theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedGainOnMixedSimplex
     (hmg : ∀ who (a : G.Strategy who),
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedGainOnMixedSimplex x who a)) :
     Continuous (G.nashMapOnMixedSimplex) := by
   classical
   -- Coordinatewise continuity for the codomain function values.
   have hcoord :
       ∀ i (a : G.Strategy i),
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun j => G.Strategy j) =>
+      Continuous (fun x : MixedSimplex ι (fun j => G.Strategy j) =>
         (x i a + pospart (G.mixedGainOnMixedSimplex x i a)) /
           (1 + G.gainSumOnMixedSimplex x i)) := by
     intro i a
-    have hxia : Continuous (fun x : Fixpoint.MixedSimplex ι (fun j => G.Strategy j) => x i a) := by
+    have hxia : Continuous (fun x : MixedSimplex ι (fun j => G.Strategy j) => x i a) := by
       exact (continuous_apply a).comp (continuous_subtype_val.comp (continuous_apply i))
     have hsum :
-        Continuous (fun x : Fixpoint.MixedSimplex ι (fun j => G.Strategy j) =>
+        Continuous (fun x : MixedSimplex ι (fun j => G.Strategy j) =>
           G.gainSumOnMixedSimplex x i) := by
       simpa [gainSumOnMixedSimplex, gainSum] using
         (continuous_finset_sum (s := (Finset.univ : Finset (G.Strategy i)))
           (fun a _ => continuous_pospart.comp (hmg i a)))
     have hden_nz :
-        ∀ x : Fixpoint.MixedSimplex ι (fun j => G.Strategy j),
+        ∀ x : MixedSimplex ι (fun j => G.Strategy j),
           (1 + G.gainSumOnMixedSimplex x i) ≠ 0 := by
       intro x
       have hnonneg : 0 ≤ G.gainSumOnMixedSimplex x i := G.gainSumOnMixedSimplex_nonneg x i
@@ -524,16 +523,16 @@ then mixed gains are continuous on the mixed simplex.
 -/
 theorem continuous_mixedGainOnMixedSimplex_of_continuous_mixedEu
     (hbase : ∀ who,
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu (G.profileFromMixedSimplex x) who))
     (hdev : ∀ who (a : G.Strategy who),
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
           (@Function.update ι G.mixedExtension.Strategy
             (fun u v => Classical.propDecidable (u = v))
             (G.profileFromMixedSimplex x) who (PMF.pure a)) who)) :
     ∀ who (a : G.Strategy who),
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedGainOnMixedSimplex x who a) := by
   intro who a
   simpa [mixedGainOnMixedSimplex, mixedGain] using (hdev who a).sub (hbase who)
@@ -546,10 +545,10 @@ on the mixed simplex.
 -/
 theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedEu
     (hbase : ∀ who,
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu (G.profileFromMixedSimplex x) who))
     (hdev : ∀ who (a : G.Strategy who),
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
           (@Function.update ι G.mixedExtension.Strategy
             (fun u v => Classical.propDecidable (u = v))
@@ -566,16 +565,16 @@ This is the `hbase` premise used by
 -/
 theorem continuous_mixedExtension_eu_profileFromMixedSimplex
     (who : ι) :
-    Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+    Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu (G.profileFromMixedSimplex x) who) := by
   classical
   letI : DecidableEq ι := Classical.decEq ι
   -- Expand EU under mixed extension into a finite weighted sum over pure profiles.
   have hsum :
-      (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu (G.profileFromMixedSimplex x) who)
       =
-      (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         ∑ s : (∀ i, G.Strategy i), (∏ i, x i (s i)) * G.eu s who) := by
     funext x
     rw [G.mixedExtension_eu (σ := G.profileFromMixedSimplex x) who]
@@ -602,7 +601,7 @@ This is the `hdev` premise used by
 -/
 theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
     (who : ι) (a : G.Strategy who) :
-    Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+    Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu
         (@Function.update ι G.mixedExtension.Strategy
           (fun u v => Classical.propDecidable (u = v))
@@ -610,13 +609,13 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
   classical
   letI : DecidableEq ι := Classical.decEq ι
   have hsum :
-      (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
           (@Function.update ι G.mixedExtension.Strategy
             (fun u v => Classical.propDecidable (u = v))
             (G.profileFromMixedSimplex x) who (PMF.pure a)) who)
       =
-      (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         ∑ s : (∀ i, G.Strategy i),
           ((((PMF.pure a) (s who)).toReal) *
             (∏ i ∈ (Finset.univ.erase who), x i (s i))) * G.eu s who) := by
@@ -647,7 +646,7 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
   refine continuous_finset_sum (s := (Finset.univ : Finset (∀ i, G.Strategy i))) ?_
   intro s hs
   have hprod :
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         ∏ i ∈ (Finset.univ.erase who), x i (s i)) := by
     refine continuous_finset_prod (s := (Finset.univ.erase who)) ?_
     intro i hi
@@ -670,7 +669,7 @@ Nash-map continuity reduced to pure-deviation mixed-EU continuity only
 -/
 theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedEu_deviation
     (hdev : ∀ who (a : G.Strategy who),
-      Continuous (fun x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i) =>
+      Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
           (@Function.update ι G.mixedExtension.Strategy
             (fun u v => Classical.propDecidable (u = v))
@@ -734,10 +733,10 @@ continuity of `nashMapOnMixedSimplex` and approximate fixed points at all scales
 -/
 theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx
     (hcont : Continuous (G.nashMapOnMixedSimplex))
-    (happrox : ∀ n : ℕ, ∃ x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i),
+    (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  rcases Fixpoint.exists_fixedPoint_of_approx_on_mixedSimplex
+  rcases exists_fixedPoint_of_approx_on_mixedSimplex
       (f := G.nashMapOnMixedSimplex) hcont happrox with ⟨x, hxfix⟩
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point ⟨x, hxfix⟩
 
@@ -745,12 +744,12 @@ set_option linter.unusedFintypeInType false in
 /-- Approximate fixed points imply a weight-level fixed-point witness for `nashMap`. -/
 theorem nashMap_weightFixedPoint_of_nashMapOnMixedSimplex_approx
     (hcont : Continuous (G.nashMapOnMixedSimplex))
-    (happrox : ∀ n : ℕ, ∃ x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i),
+    (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ (w : ∀ i, G.Strategy i → ℝ)
       (hw_nn : ∀ i a, 0 ≤ w i a) (hw_sum : ∀ i, ∑ a, w i a = 1),
       G.nashMap w hw_nn hw_sum = w := by
-  rcases Fixpoint.exists_fixedPoint_of_approx_on_mixedSimplex
+  rcases exists_fixedPoint_of_approx_on_mixedSimplex
       (f := G.nashMapOnMixedSimplex) hcont happrox with ⟨x, hxfix⟩
   exact G.nashMap_weightFixedPoint_of_mixedSimplexFixedPoint ⟨x, hxfix⟩
 
@@ -760,7 +759,7 @@ Approximation-only mixed Nash existence:
 continuity is discharged by `continuous_nashMapOnMixedSimplex`.
 -/
 theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly
-    (happrox : ∀ n : ℕ, ∃ x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i),
+    (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approx
@@ -772,7 +771,7 @@ Approximation-only extraction of a weight-level fixed point for `nashMap`:
 continuity is discharged by `continuous_nashMapOnMixedSimplex`.
 -/
 theorem nashMap_weightFixedPoint_of_nashMapOnMixedSimplex_approxOnly
-    (happrox : ∀ n : ℕ, ∃ x : Fixpoint.MixedSimplex ι (fun i => G.Strategy i),
+    (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ (w : ∀ i, G.Strategy i → ℝ)
       (hw_nn : ∀ i a, 0 ≤ w i a) (hw_sum : ∀ i, ∑ a, w i a = 1),
@@ -781,43 +780,6 @@ theorem nashMap_weightFixedPoint_of_nashMapOnMixedSimplex_approxOnly
     (hcont := G.continuous_nashMapOnMixedSimplex) happrox
 
 end NashMapMixedSimplex
-
--- ============================================================================
--- Axiom: Nash's map has a fixed point (Brouwer's FPT, not in Mathlib)
--- ============================================================================
-
-set_option linter.unusedFintypeInType false in
-open Classical in
-/-- Nash's map on the product of simplices has a fixed point.
-
-    This follows from Brouwer's fixed-point theorem: the product of standard
-    simplices is compact and convex, and Nash's map is continuous (it is a
-    rational function with always-positive denominator). Neither Brouwer's FPT
-    nor the topological infrastructure to formalize continuity of Nash's map
-    is currently available in Mathlib (v4.27). -/
-axiom nashMap_has_fixed_point
-    {ι : Type} [Fintype ι]
-    (G : KernelGame ι) [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-    [Fintype G.Outcome] :
-    ∃ (w : ∀ i, G.Strategy i → ℝ)
-      (hw_nn : ∀ i a, 0 ≤ w i a) (hw_sum : ∀ i, ∑ a, w i a = 1),
-      G.nashMap w hw_nn hw_sum = w
-
-set_option linter.unusedFintypeInType false in
-open Classical in
-/-- Fixed-point-to-Nash existence: if Nash's map has a fixed point, then a mixed Nash exists. -/
-theorem mixed_nash_exists_of_nashMap_fixed_point (G : KernelGame ι)
-    [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-    [Fintype G.Outcome]
-    (hfix :
-      ∃ (w : ∀ i, G.Strategy i → ℝ)
-        (hw_nn : ∀ i a, 0 ≤ w i a) (hw_sum : ∀ i, ∑ a, w i a = 1),
-        G.nashMap w hw_nn hw_sum = w) :
-    ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  rcases hfix with ⟨w, hw_nn, hw_sum, hfp⟩
-  exact ⟨G.profileFromWeights w hw_nn hw_sum,
-    G.nash_fp_is_nash _ (G.nashMap_fp_identity w hw_nn hw_sum hfp)⟩
 
 -- ============================================================================
 -- Main theorem
@@ -833,8 +795,10 @@ theorem mixed_nash_exists (G : KernelGame ι)
     [Fintype ι]
     [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     [Fintype G.Outcome] :
-    ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  exact mixed_nash_exists_of_nashMap_fixed_point G (nashMap_has_fixed_point G)
+    ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ :=
+  G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
+    (brouwer_mixedSimplex G.nashMapOnMixedSimplex
+      G.continuous_nashMapOnMixedSimplex)
 
 end KernelGame
 
