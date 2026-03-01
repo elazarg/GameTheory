@@ -18,6 +18,7 @@ import GameTheory.StrictDominance
 import GameTheory.DominanceRelations
 import GameTheory.DominanceSolvable
 import GameTheory.DominanceNash
+import GameTheory.DominanceSolvability
 
 -- Nash equilibrium
 import GameTheory.StrictNashProperties
