@@ -585,76 +585,69 @@ omit [Fintype ι] [∀ i, Fintype (A i)] in
   simp [Function.update, h]
 
 open Classical in
-/-- Binding a product PMF with a pointwise coordinate update equals the product
-    with that component replaced by a point mass. -/
+/-- Binding a product PMF with a function-dependent coordinate update equals the
+    product with that component replaced by the pushforward. -/
+theorem pmfPi_bind_update_map
+    (σ : ∀ i, PMF (A i)) (j : ι) (f : A j → A j) :
+    (pmfPi σ).bind (fun s => PMF.pure (Function.update s j (f (s j)))) =
+      pmfPi (Function.update σ j (PMF.map f (σ j))) := by
+  ext s
+  simp only [PMF.bind_apply, PMF.pure_apply, pmfPi_apply_update_family,
+    PMF.map_apply, tsum_fintype, mul_ite, mul_one, mul_zero]
+  -- Rewrite condition: s = update t j (f(t j)) ↔ (∀ i ≠ j, t i = s i) ∧ f(t j) = s j
+  have hcond : ∀ t : ∀ i, A i,
+      (s = Function.update t j (f (t j))) ↔
+        ((∀ i, i ≠ j → t i = s i) ∧ f (t j) = s j) := by
+    intro t; constructor
+    · intro h; exact ⟨fun i hi => by
+        have := congr_fun h i
+        simp [Function.update_of_ne hi] at this; exact this.symm,
+        by have := congr_fun h j
+           simp [Function.update_self] at this; exact this.symm⟩
+    · intro ⟨heq, hf⟩; ext i; by_cases hi : i = j
+      · subst hi; simp [Function.update_self, hf]
+      · rw [Function.update_of_ne hi]; exact (heq i hi).symm
+  simp_rw [hcond, pmfPi_apply, prod_factor_erase σ j]
+  -- Under the outer condition, the erase-product is constant
+  have hprod : ∀ (x : ∀ i, A i), (∀ i, i ≠ j → x i = s i) →
+      ∏ i ∈ Finset.univ.erase j, (σ i) (x i) =
+        ∏ i ∈ Finset.univ.erase j, (σ i) (s i) :=
+    fun x hx => Finset.prod_congr rfl fun i hi =>
+      congr_arg (σ i) (hx i (Finset.ne_of_mem_erase hi))
+  -- Factor out the constant product
+  have hfactor : ∀ x : ∀ i, A i,
+      (if ((∀ i, i ≠ j → x i = s i) ∧ f (x j) = s j) then
+        (σ j) (x j) * ∏ i ∈ Finset.univ.erase j, (σ i) (x i) else 0) =
+      (if (∀ i, i ≠ j → x i = s i) then
+        (if f (x j) = s j then (σ j) (x j) else 0) else 0) *
+        ∏ i ∈ Finset.univ.erase j, (σ i) (s i) := by
+    intro x; split_ifs with h₁ h₂ <;> simp_all [hprod x]
+  simp_rw [hfactor, ← Finset.sum_mul]
+  congr 1
+  -- Biject with ∑ a : A j via x ↦ x j, inverse a ↦ update s j a
+  rw [← Finset.sum_filter]
+  exact Finset.sum_nbij' (fun x => x j) (fun a => Function.update s j a)
+    (fun _ _ => Finset.mem_univ _)
+    (fun a _ => Finset.mem_filter.mpr ⟨Finset.mem_univ _,
+      fun i hi => by simp [Function.update_of_ne hi]⟩)
+    (fun x hx => by
+      have hx' := (Finset.mem_filter.mp hx).2
+      ext i; by_cases hi : i = j
+      · subst hi; simp [Function.update_self]
+      · simp only [Function.update_of_ne hi]; exact (hx' i hi).symm)
+    (fun a _ => by simp [Function.update_self])
+    (fun _ _ => by simp [eq_comm])
+
+open Classical in
+/-- Binding a product PMF with a constant coordinate update equals the product
+    with that component replaced by a point mass. Special case of
+    `pmfPi_bind_update_map` with `f = fun _ => x`. -/
 theorem pmfPi_bind_update_pure
     (σ : ∀ i, PMF (A i)) (j : ι) (x : A j) :
     (pmfPi σ).bind (fun s => PMF.pure (Function.update s j x)) =
       pmfPi (Function.update σ j (PMF.pure x)) := by
-  ext s
-  simp only [PMF.bind_apply, PMF.pure_apply, pmfPi_apply_update_family, PMF.pure_apply,
-    tsum_fintype, mul_ite, mul_one, mul_zero]
-  -- LHS: ∑ t, if s = update t j x then (pmfPi σ) t else 0
-  -- RHS: (if s j = x then 1 else 0) * ∏ i ∈ erase univ j, σ i (s i)
-  by_cases hs : s j = x
-  · -- s j = x: RHS = ∏ i ∈ erase, σ i (s i)
-    -- LHS: sum over t where s = update t j x, i.e. t i = s i for i ≠ j.
-    -- For each such t, (pmfPi σ) t = σ j (t j) * ∏ i ∈ erase, σ i (s i).
-    -- Summing σ j (t j) over all valid t (= all values of t j) gives 1.
-    subst hs; simp only [ite_true, one_mul]
-    -- Rewrite the condition: s = update t j (s j) iff ∀ i ≠ j, t i = s i
-    have hcond : ∀ t : ∀ i, A i,
-        (s = Function.update t j (s j)) ↔ (∀ i, i ≠ j → t i = s i) := by
-      intro t; constructor
-      · intro h i hi
-        have := congr_fun h i
-        simp [Function.update_of_ne hi] at this
-        exact this.symm
-      · intro h; ext i; by_cases hi : i = j
-        · subst hi; simp [Function.update_self]
-        · rw [Function.update_of_ne hi]; exact (h i hi).symm
-    simp_rw [hcond]
-    -- Expand (pmfPi σ) t and substitute the constant erase-product
-    simp_rw [pmfPi_apply, prod_factor_erase σ j]
-    -- Under the condition, the erase-product is constant
-    have hprod : ∀ (x : ∀ i, A i), (∀ i, i ≠ j → x i = s i) →
-        ∏ i ∈ Finset.univ.erase j, (σ i) (x i) = ∏ i ∈ Finset.univ.erase j, (σ i) (s i) :=
-      fun x hx => Finset.prod_congr rfl fun i hi =>
-        congr_arg (σ i) (hx i (Finset.ne_of_mem_erase hi))
-    -- Factor out the constant product
-    have hfactor : ∀ x : ∀ i, A i,
-        (if (∀ i, i ≠ j → x i = s i) then
-          (σ j) (x j) * ∏ i ∈ Finset.univ.erase j, (σ i) (x i) else 0) =
-        (if (∀ i, i ≠ j → x i = s i) then (σ j) (x j) else 0) *
-          ∏ i ∈ Finset.univ.erase j, (σ i) (s i) := by
-      intro x; split_ifs with h
-      · rw [hprod x h]
-      · simp
-    simp_rw [hfactor, ← Finset.sum_mul]
-    -- Suffices to show the remaining sum = 1
-    suffices hone : (∑ x : ∀ i, A i,
-        if (∀ i, i ≠ j → x i = s i) then (σ j) (x j) else 0) = 1 by
-      rw [hone, one_mul]
-    -- Biject with ∑ a : A j, σ j a via x ↦ x j, inverse a ↦ update s j a
-    rw [← Finset.sum_filter]
-    rw [show (∑ x ∈ Finset.univ.filter (fun x : ∀ i, A i => ∀ i, i ≠ j → x i = s i),
-          (σ j) (x j)) = ∑ a : A j, (σ j) a from
-      Finset.sum_nbij' (fun x => x j) (fun a => Function.update s j a)
-        (fun _ _ => Finset.mem_univ _)
-        (fun a _ => Finset.mem_filter.mpr ⟨Finset.mem_univ _,
-          fun i hi => by simp [Function.update_of_ne hi]⟩)
-        (fun x hx => by
-          have hx' := (Finset.mem_filter.mp hx).2
-          ext i; by_cases hi : i = j
-          · subst hi; simp [Function.update_self]
-          · simp only [Function.update_of_ne hi]; exact (hx' i hi).symm)
-        (fun a _ => by simp [Function.update_self])
-        (fun _ _ => rfl)]
-    have := PMF.tsum_coe (σ j); rwa [tsum_fintype] at this
-  · simp only [show ¬(s j = x) from hs, ite_false, zero_mul]
-    apply Finset.sum_eq_zero; intro t _
-    simp only [ite_eq_right_iff]; intro heq
-    exact absurd (congr_fun heq j) (by simp [Function.update_self, hs])
+  have h := pmfPi_bind_update_map σ j (Function.const _ x)
+  simp only [PMF.map_const] at h; exact h
 
 end UpdateLemmas
 

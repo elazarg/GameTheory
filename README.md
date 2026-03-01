@@ -21,8 +21,8 @@ all unified through `KernelGame`.
   `KernelGame.strictly_dominant_unique_nash`
 - **Pure Nash induces correlated equilibrium**:
   `KernelGame.nash_pure_isCorrelatedEq`
-- **Coarse correlated equilibrium existence (finite games)**:
-  `KernelGame.coarseCorrelatedEq_exists`
+- **Correlated equilibrium existence (finite games)**:
+  `KernelGame.correlatedEq_exists`
 
 Scope is intentionally discrete:
 - probabilities are `PMF` (finite/discrete distributions),
@@ -83,8 +83,9 @@ From `GameTheory/Probability.lean`:
 - `KernelGame.IsCorrelatedEq.toCoarseCorrelatedEq`
 - `KernelGame.nash_pure_isCorrelatedEq`
 - `KernelGame.nash_pure_isCoarseCorrelatedEq`
-- `KernelGame.mixed_nash_isCoarseCorrelatedEq`
-- `KernelGame.coarseCorrelatedEq_exists`
+- `KernelGame.mixed_nash_isCorrelatedEq`
+- `KernelGame.correlatedEq_exists`
+- `KernelGame.coarseCorrelatedEq_exists` (corollary via `toCoarseCorrelatedEq`)
 
 ### EFG / Kuhn
 - `EFG.zermelo`
@@ -179,8 +180,6 @@ import GameTheory.EFGKuhnFull
 
 ## Future Work (Textbook Theorems Within Scope)
 
-- **Aumann correlated-equilibrium existence (finite games)**:
-  for every finite game, `∃ μ, IsCorrelatedEq μ`.
 - **One-shot deviation principle (finite extensive-form, perfect recall)**:
   characterize sequential rationality / SPE via one-step deviations.
 - **Sequential equilibrium existence (finite extensive-form games)**:
