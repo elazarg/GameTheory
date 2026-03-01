@@ -50,6 +50,7 @@ import GameTheory.ConstantSum
 import GameTheory.ConstantSumNash
 import GameTheory.Minimax
 import GameTheory.MinimaxTheorem
+import GameTheory.TwoPlayerGame
 
 -- Symmetric games
 import GameTheory.SymmetricGame
@@ -58,6 +59,7 @@ import GameTheory.SymmetricGame
 import GameTheory.CongestionGame
 import GameTheory.PotentialGame
 import GameTheory.PotentialFIP
+import GameTheory.PotentialWellFounded
 import GameTheory.TeamGame
 import GameTheory.TeamGameNash
 import GameTheory.PotentialTeam

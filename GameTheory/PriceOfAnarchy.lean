@@ -74,6 +74,49 @@ theorem IsTeamGame.pareto_isNash (hteam : G.IsTeamGame) [Inhabited ι]
       linarith
   · exact ⟨who, hdev⟩
 
+section FiniteNash
+
+variable [Fintype (Profile G)] [Nonempty (Profile G)]
+
+open Classical in
+/-- The best social welfare achievable by any Nash equilibrium. -/
+noncomputable def bestNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
+  Finset.sup' (Finset.univ.filter (fun σ => G.IsNash σ))
+    (by obtain ⟨σ, hσ⟩ := hN
+        exact ⟨σ, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩⟩)
+    G.socialWelfare
+
+open Classical in
+/-- The worst social welfare among all Nash equilibria. -/
+noncomputable def worstNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
+  Finset.inf' (Finset.univ.filter (fun σ => G.IsNash σ))
+    (by obtain ⟨σ, hσ⟩ := hN
+        exact ⟨σ, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩⟩)
+    G.socialWelfare
+
+omit [Nonempty (Profile G)] in
+open Classical in
+/-- Worst Nash welfare ≤ best Nash welfare. -/
+theorem worstNashWelfare_le_bestNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.worstNashWelfare hN ≤ G.bestNashWelfare hN := by
+  simp only [worstNashWelfare, bestNashWelfare]
+  have ⟨σ, hσ⟩ := hN
+  have hmem : σ ∈ Finset.univ.filter (fun σ => G.IsNash σ) :=
+    Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩
+  exact le_trans (Finset.inf'_le _ hmem) (Finset.le_sup' _ hmem)
+
+omit [Nonempty (Profile G)] in
+open Classical in
+/-- The best Nash welfare is at most the optimal welfare (when bounded). -/
+theorem bestNashWelfare_le_optimalWelfare (hN : ∃ σ : Profile G, G.IsNash σ)
+    (hbdd : BddAbove (Set.range (fun τ => G.socialWelfare τ))) :
+    G.bestNashWelfare hN ≤ G.optimalWelfare := by
+  apply Finset.sup'_le
+  intro σ _
+  exact welfare_le_optimal G σ hbdd
+
+end FiniteNash
+
 end KernelGame
 
 end GameTheory
