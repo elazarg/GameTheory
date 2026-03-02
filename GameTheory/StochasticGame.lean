@@ -1,4 +1,4 @@
-import GameTheory.KernelGame
+import GameTheory.SolutionConcepts
 
 /-!
 # Stochastic Games
@@ -11,6 +11,11 @@ and probabilistic transitions between states depending on the joint action.
 * `StochasticGame` — stochastic game with states, actions, and transitions
 * `StochasticGame.MarkovStrategy` — stationary (Markov) strategy
 * `StochasticGame.stagePayoff` — single-stage expected payoff
+* `StochasticGame.stageKernelGame` — stage game at a state as a `KernelGame`
+
+## Main results
+
+* `IsMarkovNash_iff_all_stage_nash` — Markov Nash ↔ stage-game Nash at every state
 -/
 
 namespace GameTheory
@@ -54,6 +59,26 @@ def IsMarkovNash (G : StochasticGame ι) (σ : G.MarkovProfile) : Prop :=
   ∀ (s : G.State) (who : ι) (a' : G.Act who),
     G.stagePayoff s (fun i => σ i s) who ≥
     G.stagePayoff s (Function.update (fun i => σ i s) who a') who
+
+open Classical in
+/-- The stage game at state `s` as a `KernelGame`. -/
+noncomputable def stageKernelGame (G : StochasticGame ι) (s : G.State) : KernelGame ι :=
+  KernelGame.ofEU G.Act (fun a i => G.stagePayoff s a i)
+
+open Classical in
+/-- Markov Nash ↔ the Markov profile induces a Nash equilibrium
+    at every state's stage game. -/
+theorem isMarkovNash_iff_all_stage_nash (G : StochasticGame ι) (σ : G.MarkovProfile) :
+    G.IsMarkovNash σ ↔ ∀ s : G.State,
+      (G.stageKernelGame s).IsNash (fun i => σ i s) := by
+  constructor
+  · intro hMN s who a'
+    simp only [stageKernelGame, KernelGame.eu_ofEU]
+    exact hMN s who (a' )
+  · intro hN s who a'
+    have h := hN s who a'
+    simp only [stageKernelGame, KernelGame.eu_ofEU] at h
+    exact h
 
 end StochasticGame
 
