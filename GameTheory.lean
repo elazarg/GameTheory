@@ -97,6 +97,9 @@ import GameTheory.BayesianGame
 import GameTheory.MechanismDesign
 import GameTheory.RevelationPrinciple
 
+-- Social choice
+import GameTheory.SocialChoice
+
 -- Evolutionary game theory
 import GameTheory.EvolutionaryStability
 
