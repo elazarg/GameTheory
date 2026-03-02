@@ -78,6 +78,49 @@ def truthful (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i)) :
     (M.inducedBayesianGame μ).BProfile :=
   fun _ θ => θ
 
+open Classical in
+/-- Dominant-strategy IC implies truthful reporting is a Bayes-Nash
+    equilibrium of the induced game (for any prior). -/
+theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
+    (μ : PMF (∀ i, M.Θ i)) :
+    (M.inducedBayesianGame μ).BayesNash (M.truthful μ) := by
+  rw [BayesianGame.bayesNash_iff_exAnteEU]
+  intro who s'
+  simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful, expect_eq_sum, ge_iff_le]
+  apply Finset.sum_le_sum
+  intro θ _
+  apply mul_le_mul_of_nonneg_left _ ENNReal.toReal_nonneg
+  -- Need: M.outcome (fun i => update (truthful) who s' i (θ i)) who ≤ M.outcome θ who
+  -- update (truthful) who s' i (θ i) = if i = who then s'(θ who) else θ i
+  -- This matches Function.update θ who (s' (θ who))
+  have : (fun i => Function.update (M.truthful μ) who s' i (θ i)) =
+      Function.update θ who (s' (θ who)) := by
+    ext i; simp only [Function.update]
+    split_ifs with h
+    · subst h; rfl
+    · rfl
+  rw [this]
+  exact hIC who θ (s' (θ who))
+
+open Classical in
+/-- BIC is implied by BayesNash of truthful reporting (BayesNash is stronger
+    since it covers type-dependent deviations, not just constant ones). -/
+theorem isBIC_of_truthful_bayesNash (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i))
+    (hBN : (M.inducedBayesianGame μ).BayesNash (M.truthful μ)) :
+    M.isBIC μ := by
+  rw [BayesianGame.bayesNash_iff_exAnteEU] at hBN
+  intro who θ'
+  have h := hBN who (fun _ => θ')
+  simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful] at h
+  -- The LHS of h matches, need to show RHS matches
+  -- update (fun θ => θ) who (fun _ => θ') applied to θ gives update θ who θ'
+  convert h using 2
+  ext θ; congr 1; ext i
+  simp only [Function.update]
+  split_ifs with hi
+  · subst hi; rfl
+  · rfl
+
 end Mechanism
 
 end GameTheory
