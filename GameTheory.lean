@@ -100,6 +100,9 @@ import GameTheory.EvolutionaryStability
 -- Auctions
 import GameTheory.VickreyAuction
 
+-- Stackelberg games
+import GameTheory.Stackelberg
+
 -- Examples
 import GameTheory.NFGExamples
 import GameTheory.EFGExamples
