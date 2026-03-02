@@ -83,8 +83,9 @@ import GameTheory.NFG_EFG
 import GameTheory.MAID
 import GameTheory.MAID_EFG
 
--- Coalitional games
+-- Coalitional and bargaining games
 import GameTheory.CoalitionalGame
+import GameTheory.Bargaining
 
 -- Repeated and stochastic games
 import GameTheory.RepeatedGame
