@@ -12,6 +12,10 @@ import GameTheory.PrefPreorderProperties
 import GameTheory.EUProperties
 import GameTheory.OfEUProperties
 import GameTheory.GameIsomorphism
+import GameTheory.GameMorphism
+
+-- Rationalizability
+import GameTheory.Rationalizability
 
 -- Dominance
 import GameTheory.StrictDominance
@@ -105,6 +109,7 @@ import GameTheory.CommonKnowledge
 import GameTheory.EvolutionaryStability
 
 -- Auctions, mechanism design, and contests
+import GameTheory.Auction
 import GameTheory.VickreyAuction
 import GameTheory.VCG
 import GameTheory.AllPayAuction
