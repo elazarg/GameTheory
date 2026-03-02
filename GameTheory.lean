@@ -95,6 +95,7 @@ import GameTheory.StochasticGame
 -- Bayesian games and mechanism design
 import GameTheory.BayesianGame
 import GameTheory.MechanismDesign
+import GameTheory.RevelationPrinciple
 
 -- Evolutionary game theory
 import GameTheory.EvolutionaryStability
