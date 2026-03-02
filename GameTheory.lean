@@ -97,8 +97,9 @@ import GameTheory.MechanismDesign
 -- Evolutionary game theory
 import GameTheory.EvolutionaryStability
 
--- Auctions
+-- Auctions and mechanism design
 import GameTheory.VickreyAuction
+import GameTheory.VCG
 
 -- Stackelberg games
 import GameTheory.Stackelberg
