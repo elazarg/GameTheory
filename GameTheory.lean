@@ -110,6 +110,9 @@ import GameTheory.VCG
 -- Stackelberg games
 import GameTheory.Stackelberg
 
+-- Public goods
+import GameTheory.PublicGoods
+
 -- Examples
 import GameTheory.NFGExamples
 import GameTheory.EFGExamples
