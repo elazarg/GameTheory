@@ -66,4 +66,24 @@ theorem vickrey_truthful_dominant (v : Fin n → ℝ)
     · simp [hwin_d]; linarith
     · simp [hwin_d]
 
+open Classical in
+/-- The Vickrey auction as a `KernelGame`: strategies are bids (ℝ),
+    utility is the Vickrey payoff. -/
+noncomputable def vickreyGame (v : Fin n → ℝ) : KernelGame (Fin n) :=
+  KernelGame.ofEU (fun _ => ℝ) (vickreyPayoff v)
+
+open Classical in
+/-- Truthful bidding is a dominant strategy in the Vickrey game. -/
+theorem vickrey_truthful_isDominant (v : Fin n → ℝ) (who : Fin n) :
+    (vickreyGame v).IsDominant who (v who) := by
+  intro σ s'
+  simp only [vickreyGame, KernelGame.eu_ofEU]
+  convert vickrey_truthful_dominant v who σ s'
+
+open Classical in
+/-- Truthful bidding is a Nash equilibrium of the Vickrey game. -/
+theorem vickrey_truthful_isNash (v : Fin n → ℝ) :
+    (vickreyGame v).IsNash v := by
+  exact KernelGame.dominant_is_nash _ _ (fun i => vickrey_truthful_isDominant v i)
+
 end GameTheory
