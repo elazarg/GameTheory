@@ -104,9 +104,10 @@ import GameTheory.CommonKnowledge
 -- Evolutionary game theory
 import GameTheory.EvolutionaryStability
 
--- Auctions and mechanism design
+-- Auctions, mechanism design, and contests
 import GameTheory.VickreyAuction
 import GameTheory.VCG
+import GameTheory.AllPayAuction
 
 -- Stackelberg games
 import GameTheory.Stackelberg
