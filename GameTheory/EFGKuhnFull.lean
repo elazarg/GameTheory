@@ -243,8 +243,7 @@ theorem muCond_eq_pmfPureToFlat_pureCond
   have hep : Ep (S := S) I a ((e s) p) ↔ s ⟨p, I⟩ = a := by
     simp [Ep, e, flatProfileEquivPureProfile]
   -- Expand everything at once
-  simp only [muCond, PMF.ofFintype_apply, pmfPureToFlat_eq,
-    pureCond, pmfCond_apply, pmfMask]
+  simp only [muCond_apply, pmfPureToFlat_eq, pureCond, pmfCond_apply, pmfMask]
   -- After simp: LHS has if s⟨p,I⟩=a then mu(es)/muMarginal else 0
   --             RHS has (if Ep .. then mu(es) else 0) / pmfMass
   -- Both conditionals equivalent, both denominators equal

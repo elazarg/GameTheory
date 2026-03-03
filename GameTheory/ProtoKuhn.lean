@@ -229,18 +229,7 @@ theorem pmfPi_push_coordwise {ι : Type} [Fintype ι]
     (μ : ∀ i, PMF (A i)) (g : ∀ i, A i → B i) :
     pushforward (pmfPi μ) (fun f => fun i => g i (f i))
     = pmfPi (fun i => pushforward (μ i) (g i)) := by
-  classical
-  ext b
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply, pmfPi_apply, tsum_fintype]
-  trans (∑ a : ∀ i, A i, ∏ i, ((μ i) (a i) * if b i = g i (a i) then 1 else 0))
-  · apply Finset.sum_congr rfl; intro f _
-    by_cases h : b = fun i => g i (f i)
-    · subst h; simp
-    · have ⟨i₀, hi₀⟩ : ∃ i₀, b i₀ ≠ g i₀ (f i₀) := by
-        by_contra hall; push_neg at hall; exact h (funext hall)
-      simp only [if_neg h, mul_zero]
-      exact (Finset.prod_eq_zero (Finset.mem_univ i₀) (by rw [if_neg hi₀]; ring)).symm
-  · exact (Fintype.prod_sum (fun i ai => (μ i) ai * if b i = g i ai then 1 else 0)).symm
+  simpa using Math.PMFProduct.pmfPi_push_coordwise (μ := μ) (g := g)
 
 -- ============================================================================
 -- Core: single-round factoring

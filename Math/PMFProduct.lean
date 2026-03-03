@@ -413,6 +413,30 @@ theorem pushforward_comp {γ : Type uγ}
   simp [pushforward, PMF.bind_bind, Function.comp]
 
 open Classical in
+/-- The pushforward of a product PMF through a coordinate-wise function
+    is the product of pushforwards. -/
+theorem pmfPi_push_coordwise
+    {B : ι → Type*} [∀ i, Fintype (B i)]
+    (μ : ∀ i, PMF (A i)) (g : ∀ i, A i → B i) :
+    pushforward (pmfPi (A := A) μ) (fun f => fun i => g i (f i))
+      = pmfPi (A := B) (fun i => pushforward (μ i) (g i)) := by
+  ext b
+  simp only [pushforward, PMF.bind_apply, PMF.pure_apply, pmfPi_apply, tsum_fintype]
+  trans (∑ a : ∀ i, A i, ∏ i, ((μ i) (a i) * if b i = g i (a i) then 1 else 0))
+  · apply Finset.sum_congr rfl
+    intro f _
+    by_cases h : b = fun i => g i (f i)
+    · subst h
+      simp
+    · have ⟨i0, hi0⟩ : ∃ i0, b i0 ≠ g i0 (f i0) := by
+        by_contra hall
+        push_neg at hall
+        exact h (funext hall)
+      simp only [if_neg h, mul_zero]
+      exact (Finset.prod_eq_zero (Finset.mem_univ i0) (by rw [if_neg hi0]; ring)).symm
+  · exact (Fintype.prod_sum (fun i ai => (μ i) ai * if b i = g i ai then 1 else 0)).symm
+
+open Classical in
 /-- Pointwise marginal (sum-form) for a coordinate event. -/
 theorem pmfPi_coord_mass
     (σ : ∀ i, PMF (A i)) (j : ι) (a : A j) :
