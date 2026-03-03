@@ -2,6 +2,7 @@ import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
+import Math.FunctionUpdate
 
 namespace Math
 namespace PMFProduct
@@ -147,8 +148,8 @@ theorem pmfPi_pure [Fintype ι] [∀ i, Fintype (A i)] (σ : ∀ i, A i) :
 -- ---- Coordinate independence (Ignores) -----------------------------------
 
 /-- "`F` ignores coordinate `j`": updating `j` does not change `F`. -/
-def Ignores {α : Type uα} (j : ι) (F : (∀ i, A i) → α) : Prop :=
-  ∀ s a, F (update (A := A) s j a) = F s
+abbrev Ignores {α : Type uα} (j : ι) (F : (∀ i, A i) → α) : Prop :=
+  Math.Function.Update.Ignores (A := A) j F
 
 /-- "`G a0 s` ignores coordinate `j` in `s`", uniformly in the external parameter `a0`. -/
 def Ignores₂ {α : Type uα} (j : ι) (G : A j → (∀ i, A i) → α) : Prop :=
@@ -174,11 +175,11 @@ lemma Ignores₂_of_pointwise {α : Type uα} (j : ι) (G : A j → (∀ i, A i)
 
 lemma Ignores_coord_eq (j q : ι) (hq : q ≠ j) (a : A q) :
   Ignores (A := A) j (fun s => s q = a) := by
-    intro s b; simp [update, hq]
+    intro s b; simp [hq]
 
 lemma Ignores_coord_pred (j q : ι) (hq : q ≠ j) (E : A q → Prop) :
   Ignores (A := A) j (fun s => E (s q)) := by
-    intro s b; simp [update, hq]
+    intro s b; simp [hq]
 
 -- ---- Ignores algebra (closure properties) --------------------------------
 
@@ -1180,7 +1181,11 @@ theorem pmfPi_event_ratio_invariant_of_ignores
     intro ⟨s1, s2⟩
     dsimp only [W, W_CD, e]
     -- The events ignore j, so the conditions match.
-    simp_rw [hNum_ign s1 (s2 j), hDenom_ign s2 (s1 j)]
+    have hNum_eq : Num (update (A := A) s1 j (s2 j)) = Num s1 := by
+      simpa [update] using (hNum_ign s1 (s2 j))
+    have hDen_eq : Denom (update (A := A) s2 j (s1 j)) = Denom s2 := by
+      simpa [update] using (hDenom_ign s2 (s1 j))
+    simp_rw [hNum_eq, hDen_eq]
     have h1 : pmfPi (A := A) (Function.update σ j τ) (update (A := A) s1 j (s2 j))
               = τ (s2 j) * ∏ i ∈ Finset.univ.erase j, σ i (s1 i) := by
       rw [pmfPi_apply_update_family]

@@ -37,7 +37,7 @@ theorem bind_congr_on_support
     rw [hfg a haS]
 
 theorem expect_congr_on_support
-    {Ω : Type} (μ : PMF Ω) (f g : Ω → ℝ)
+    {Ω : Type*} (μ : PMF Ω) (f g : Ω → ℝ)
     (hfg : ∀ a, a ∈ μ.support → f a = g a) :
     Math.Probability.expect μ f = Math.Probability.expect μ g := by
   unfold Math.Probability.expect
@@ -49,7 +49,7 @@ theorem expect_congr_on_support
     rw [hfg a haS]
 
 theorem expect_pushforward
-    {Ω Ξ : Type} [Finite Ω] [Finite Ξ]
+    {Ω Ξ : Type*} [Finite Ω] [Finite Ξ]
     (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) :
     Math.Probability.expect (pushforward μ f) φ =
       Math.Probability.expect μ (fun a => φ (f a)) := by
@@ -59,7 +59,7 @@ theorem expect_pushforward
   simp [pushforward, Math.Probability.expect_bind]
 
 theorem expect_bind_congr_on_support
-    {Ω Ξ : Type}
+    {Ω Ξ : Type*}
     (μ : PMF Ω) (k₁ k₂ : Ω → PMF Ξ) (φ : Ξ → ℝ)
     (hk : ∀ a, a ∈ μ.support → k₁ a = k₂ a) :
     Math.Probability.expect (μ.bind k₁) φ =
@@ -68,7 +68,7 @@ theorem expect_bind_congr_on_support
 
 set_option linter.unusedFintypeInType false in
 theorem expect_mono_of_pointwise
-    {Ω : Type} [Fintype Ω]
+    {Ω : Type*} [Fintype Ω]
     (d : PMF Ω) (f g : Ω → ℝ)
     (hfg : ∀ ω, f ω ≤ g ω) :
     Math.Probability.expect d f ≤ Math.Probability.expect d g := by

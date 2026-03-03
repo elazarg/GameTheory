@@ -102,14 +102,14 @@ end Kernel
 -- ============================================================================
 
 /-- Expected value of a real-valued function under a PMF. -/
-noncomputable def expect {Ω : Type} (d : PMF Ω) (f : Ω → ℝ) : ℝ :=
+noncomputable def expect {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ) : ℝ :=
   ∑' ω, (d ω).toReal * f ω
 
 /--
 For finite `Ω`, `expect` is literally a finite sum.
 This is a *huge* simplification for many game models (EFG/NFG/MAID with finite outcomes).
 -/
-theorem expect_eq_sum {Ω : Type} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
+theorem expect_eq_sum {Ω : Type*} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
     expect d f = (∑ ω : Ω, (d ω).toReal * f ω) := by
   simp [expect]
 
@@ -118,13 +118,13 @@ theorem expect_eq_sum {Ω : Type} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
 -- ============================================================================
 
 /-- The tsum of a PMF's real-valued weights is 1. -/
-theorem pmf_toReal_tsum_one {Ω : Type} (d : PMF Ω) : ∑' ω, (d ω).toReal = 1 := by
+theorem pmf_toReal_tsum_one {Ω : Type*} (d : PMF Ω) : ∑' ω, (d ω).toReal = 1 := by
   have key := @ENNReal.tsum_toReal_eq Ω (fun ω => d ω) (fun a => PMF.apply_ne_top d a)
   rw [show ∑' ω, (d ω).toReal = ∑' ω, ((fun ω => d ω) ω).toReal from rfl]
   rw [← key, PMF.tsum_coe]; norm_num
 
 /-- The finite sum of a PMF's real-valued weights is 1. -/
-theorem pmf_toReal_sum_one {Ω : Type} [Fintype Ω] (d : PMF Ω) :
+theorem pmf_toReal_sum_one {Ω : Type*} [Fintype Ω] (d : PMF Ω) :
     ∑ ω : Ω, (d ω).toReal = 1 := by
   simpa [tsum_fintype] using (pmf_toReal_tsum_one d)
 
@@ -133,7 +133,7 @@ theorem pmf_toReal_sum_one {Ω : Type} [Fintype Ω] (d : PMF Ω) :
 -- ============================================================================
 
 /-- Expected value under a point mass is just function evaluation. -/
-@[simp] theorem expect_pure {Ω : Type} (f : Ω → ℝ) (ω : Ω) :
+@[simp] theorem expect_pure {Ω : Type*} (f : Ω → ℝ) (ω : Ω) :
     expect (PMF.pure ω) f = f ω := by
   simp only [expect, PMF.pure_apply]
   rw [tsum_eq_single ω]
@@ -141,18 +141,20 @@ theorem pmf_toReal_sum_one {Ω : Type} [Fintype Ω] (d : PMF Ω) :
   · intro ω' hne; simp [hne]
 
 /-- Expected value of a constant function. -/
-@[simp] theorem expect_const {Ω : Type} [Nonempty Ω] (d : PMF Ω) (c : ℝ) :
+@[simp] theorem expect_const {Ω : Type*} [Nonempty Ω] (d : PMF Ω) (c : ℝ) :
     expect d (fun _ => c) = c := by
   simp only [expect]
   have hfact : (fun ω => (d ω).toReal * c) = (fun ω => c * (d ω).toReal) := by ext; ring
   rw [hfact, tsum_mul_left]
   rw [pmf_toReal_tsum_one d, mul_one]
 
-set_option linter.unusedFintypeInType false in
 /-- Expected value distributes over `PMF.bind`. -/
-theorem expect_bind {α β : Type} [Fintype α] [Fintype β]
+theorem expect_bind {α β : Type*} [Finite α] [Finite β]
     (p : PMF α) (q : α → PMF β) (f : β → ℝ) :
     expect (p.bind q) f = expect p (fun a => expect (q a) f) := by
+  classical
+  letI : Fintype α := Fintype.ofFinite α
+  letI : Fintype β := Fintype.ofFinite β
   simp only [expect, PMF.bind_apply, tsum_fintype]
   have hne : ∀ (a : α) (b : β), p a * q a b ≠ ⊤ := fun a b =>
     ENNReal.mul_ne_top (PMF.apply_ne_top p a) (PMF.apply_ne_top (q a) b)
