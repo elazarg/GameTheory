@@ -72,6 +72,30 @@ theorem transport_iff_of_leftRight
     have hpψ : P (ψ (φ x)) := hR (φ x) hq
     exact (hP_respect (ψ (φ x)) x (hφψ x)).1 hpψ
 
+theorem transport_iff_of_leftInverse
+    {X Y : Type*}
+    {P : X → Prop} {Q : Y → Prop}
+    (φ : X → Y) (ψ : Y → X)
+    (hψφ : Function.LeftInverse ψ φ)
+    (hL : ∀ x, P x → Q (φ x))
+    (hR : ∀ y, Q y → P (ψ y)) :
+    ∀ x, P x ↔ Q (φ x) := by
+  intro x
+  constructor
+  · exact hL x
+  · intro hq
+    have hpψ : P (ψ (φ x)) := hR (φ x) hq
+    simpa [hψφ x] using hpψ
+
+theorem transport_iff_of_equiv
+    {X Y : Type*}
+    {P : X → Prop} {Q : Y → Prop}
+    (e : X ≃ Y)
+    (hL : ∀ x, P x → Q (e x))
+    (hR : ∀ y, Q y → P (e.symm y)) :
+    ∀ x, P x ↔ Q (e x) := by
+  exact transport_iff_of_leftInverse e e.symm e.left_inv hL hR
+
 theorem objective_transport_eq
     {X Y : Type*} {β : Type*}
     (objX : X → β) (objY : Y → β) (φ : X → Y)

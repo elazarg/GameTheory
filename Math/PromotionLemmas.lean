@@ -47,6 +47,24 @@ theorem sup'_update_eq_of_not_mem
     S.sup' hS (Function.update x j a) = S.sup' hS x :=
   Math.Finset.Update.sup'_update_eq_of_not_mem S hS j hj x a
 
+theorem sup'_update_eq_of_forall_ne
+    [DecidableEq ι] [SemilatticeSup α]
+    (S : _root_.Finset ι) (hS : S.Nonempty)
+    (j : ι)
+    (hneq : ∀ i, i ∈ S → i ≠ j)
+    (x : ι → α) (a : α) :
+    S.sup' hS (Function.update x j a) = S.sup' hS x :=
+  Math.Finset.Update.sup'_update_eq_of_forall_ne S hS j hneq x a
+
+theorem sup'_update_eq_of_mem
+    [DecidableEq ι] [SemilatticeSup α]
+    (S : _root_.Finset ι) (hS : S.Nonempty)
+    (j : ι) (hj : j ∈ S)
+    (hE : (S.erase j).Nonempty)
+    (x : ι → α) (a : α) :
+    S.sup' hS (Function.update x j a) = a ⊔ (S.erase j).sup' hE x :=
+  Math.Finset.Update.sup'_update_eq_of_mem S hS j hj hE x a
+
 end Finset
 
 namespace ProbabilityMassFunction
@@ -132,6 +150,62 @@ theorem pmfIter_add
       simp [pmfIter]
   | succ n ih =>
       simpa [pmfIter, Nat.add_assoc] using congrArg (fun p => p.bind k) (ih s)
+
+theorem pmfIter_bind
+    (k : α → PMF α) (m n : Nat) (s : α) :
+    pmfIter k (m + n) s = (pmfIter k m s).bind (pmfIter k n) :=
+  pmfIter_add k m n s
+
+theorem pmfIter_eq_of_step_eqOn_reachable
+    (k₁ k₂ : α → PMF α) (s : α)
+    (hreach : ∀ n, Set.EqOn k₁ k₂ (pmfIter k₁ n s).support) :
+    ∀ n, pmfIter k₁ n s = pmfIter k₂ n s := by
+  intro n
+  induction n with
+  | zero =>
+      simp [pmfIter]
+  | succ n ih =>
+      calc
+        pmfIter k₁ (n + 1) s = (pmfIter k₁ n s).bind k₁ := by simp [pmfIter]
+        _ = (pmfIter k₁ n s).bind k₂ := by
+              exact Math.ProbabilityMassFunction.bind_congr_on_support
+                (pmfIter k₁ n s) k₁ k₂ (fun a ha => hreach n ha)
+        _ = (pmfIter k₂ n s).bind k₂ := by simp [ih]
+        _ = pmfIter k₂ (n + 1) s := by simp [pmfIter]
+
+set_option linter.unusedFintypeInType false in
+theorem pmfIter_apply_le_of_step_le
+    [Fintype α]
+    (k₁ k₂ : α → PMF α)
+    (hstep : ∀ x y, k₁ x y ≤ k₂ x y) :
+    ∀ n s t, pmfIter k₁ n s t ≤ pmfIter k₂ n s t := by
+  intro n
+  induction n with
+  | zero =>
+      intro s t
+      simp [pmfIter]
+  | succ n ih =>
+      intro s t
+      simp only [pmfIter, PMF.bind_apply, tsum_fintype]
+      refine Finset.sum_le_sum (fun a _ => ?_)
+      exact mul_le_mul' (ih s a) (hstep a t)
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem pmfIter_event_mono_of_step_le
+    [Fintype α]
+    (k₁ k₂ : α → PMF α)
+    (hstep : ∀ x y, k₁ x y ≤ k₂ x y)
+    (E : α → Prop) :
+    ∀ n s,
+      (∑ t : α, if E t then pmfIter k₁ n s t else 0)
+        ≤
+      (∑ t : α, if E t then pmfIter k₂ n s t else 0) := by
+  intro n s
+  refine Finset.sum_le_sum (fun t _ => ?_)
+  by_cases hE : E t
+  · simp [hE, pmfIter_apply_le_of_step_le (k₁ := k₁) (k₂ := k₂) hstep n s t]
+  · simp [hE]
 
 end Iteration
 
