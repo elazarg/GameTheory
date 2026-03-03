@@ -1,5 +1,7 @@
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Real.Basic
+import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Tactic
 
 set_option autoImplicit false
 
@@ -94,6 +96,64 @@ theorem locallyOptimal_smul_nonneg
   exact mul_le_mul_of_nonneg_left (h y hy) hc
 
 end OrderedRing
+
+section PositivePart
+
+theorem max_mul_self_eq_sq (x : ℝ) :
+    x * max x 0 = (max x 0) ^ 2 := by
+  by_cases hx : x ≤ 0
+  · have hmax : max x 0 = 0 := max_eq_right hx
+    simp [hmax]
+  · have hx' : 0 < x := lt_of_not_ge hx
+    have hmax : max x 0 = x := max_eq_left (le_of_lt hx')
+    simp [hmax, sq]
+
+theorem all_nonpos_of_weighted_pospart_fixedPoint
+    {α : Type*} [Fintype α]
+    (w g : α → ℝ)
+    (hfp : ∀ a, w a * (1 + ∑ b : α, max (g b) 0) = w a + max (g a) 0)
+    (hwg : ∑ a : α, w a * g a = 0) :
+    ∀ a, g a ≤ 0 := by
+  have hident : ∀ a, w a * (∑ b : α, max (g b) 0) = max (g a) 0 := by
+    intro a
+    have h := hfp a
+    linarith
+  have hsum_zero : ∑ a : α, max (g a) 0 * g a = 0 := by
+    have :
+        (∑ b : α, max (g b) 0) * (∑ a : α, w a * g a) =
+          ∑ a : α, max (g a) 0 * g a := by
+      rw [Finset.mul_sum]
+      refine Finset.sum_congr rfl ?_
+      intro a _
+      have h := hident a
+      calc
+        (∑ b : α, max (g b) 0) * (w a * g a)
+            = w a * (∑ b : α, max (g b) 0) * g a := by ring
+        _ = max (g a) 0 * g a := by rw [h]
+    rw [hwg, mul_zero] at this
+    exact this.symm
+  have hnonneg : ∀ a, 0 ≤ max (g a) 0 * g a := by
+    intro a
+    have hsq : max (g a) 0 * g a = (max (g a) 0) ^ 2 := by
+      simpa [mul_comm] using (max_mul_self_eq_sq (g a))
+    rw [hsq]
+    exact sq_nonneg (max (g a) 0)
+  have hall_zero : ∀ a, max (g a) 0 * g a = 0 := by
+    intro a
+    exact
+      (Finset.sum_eq_zero_iff_of_nonneg (fun a _ => hnonneg a)).1 hsum_zero
+        a (Finset.mem_univ a)
+  intro a
+  by_contra hpos
+  have hg : 0 < g a := lt_of_not_ge hpos
+  have hmax : max (g a) 0 = g a := max_eq_left (le_of_lt hg)
+  have hterm := hall_zero a
+  rw [hmax] at hterm
+  have : g a = 0 := by
+    nlinarith [hterm]
+  exact (ne_of_gt hg) this
+
+end PositivePart
 
 end LocalGlobal
 end Optimization

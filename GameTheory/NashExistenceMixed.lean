@@ -3,6 +3,7 @@ import Math.PMFProduct
 import GameTheory.ProductSimplexBrouwer
 import Math.Probability
 import Math.ProbabilityMassFunction
+import Math.OptimizationLocalGlobal
 
 /-!
 # Mixed-Strategy Nash Equilibrium Existence
@@ -223,46 +224,22 @@ theorem nash_fp_is_nash
         (σ who a).toReal + pospart (G.mixedGain σ who a)) :
     G.mixedExtension.IsNash σ := by
   rw [G.isNash_iff_gains_nonpos σ]
-  suffices hS : ∀ who, G.gainSum σ who = 0 by
-    intro who a
-    have hident : (σ who a).toReal * G.gainSum σ who =
-        pospart (G.mixedGain σ who a) := by have h := hfp who a; linarith
-    rw [hS who, mul_zero] at hident
-    rw [← pospart_eq_zero_iff]; exact hident.symm
-  intro who
-  have hident : ∀ a : G.Strategy who,
-      (σ who a).toReal * G.gainSum σ who =
-        pospart (G.mixedGain σ who a) := by
-    intro a; have h := hfp who a; linarith
+  intro who a
+  have hfp_who :
+      ∀ a : G.Strategy who,
+        (σ who a).toReal *
+            (1 + ∑ b : G.Strategy who, max (G.mixedGain σ who b) 0) =
+          (σ who a).toReal + max (G.mixedGain σ who a) 0 := by
+    intro a
+    simpa [gainSum, pospart] using hfp who a
   have hwg_sum : ∑ a : G.Strategy who,
       (σ who a).toReal * G.mixedGain σ who a = 0 := by
     have hwg := G.weighted_gain_sum_zero σ who
     rwa [expect_eq_sum] at hwg
-  have hsum_sq : ∑ a : G.Strategy who,
-      pospart (G.mixedGain σ who a) * G.mixedGain σ who a = 0 := by
-    have : G.gainSum σ who *
-        (∑ a : G.Strategy who, (σ who a).toReal * G.mixedGain σ who a) =
-      ∑ a : G.Strategy who, pospart (G.mixedGain σ who a) * G.mixedGain σ who a := by
-      rw [Finset.mul_sum]
-      apply Finset.sum_congr rfl
-      intro a _; have h := hident a
-      calc G.gainSum σ who * ((σ who a).toReal * G.mixedGain σ who a)
-          _ = (σ who a).toReal * G.gainSum σ who * G.mixedGain σ who a := by ring
-          _ = pospart (G.mixedGain σ who a) * G.mixedGain σ who a := by rw [h]
-    rw [hwg_sum, mul_zero] at this; linarith
-  have hnn : ∀ a : G.Strategy who,
-      0 ≤ pospart (G.mixedGain σ who a) * G.mixedGain σ who a := by
-    intro a
-    have := pospart_mul_self (G.mixedGain σ who a)
-    nlinarith [sq_nonneg (pospart (G.mixedGain σ who a))]
-  have hall_zero := Finset.sum_eq_zero_iff_of_nonneg (fun a _ => hnn a) |>.mp hsum_sq
-  have hpospart_zero : ∀ a : G.Strategy who, pospart (G.mixedGain σ who a) = 0 := by
-    intro a
-    have h0 := hall_zero a (Finset.mem_univ a)
-    have hsq : pospart (G.mixedGain σ who a) ^ 2 = 0 := by
-      have := pospart_mul_self (G.mixedGain σ who a); nlinarith
-    exact pow_eq_zero_iff (by norm_num : 2 ≠ 0) |>.mp hsq
-  simp [gainSum, hpospart_zero]
+  exact Math.Optimization.LocalGlobal.all_nonpos_of_weighted_pospart_fixedPoint
+    (w := fun a => (σ who a).toReal)
+    (g := fun a => G.mixedGain σ who a)
+    hfp_who hwg_sum a
 
 end NashMapAlgebra
 
