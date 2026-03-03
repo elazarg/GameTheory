@@ -63,10 +63,11 @@ theorem Morphism.nash_of_nash {G H : KernelGame ι} (f : Morphism G H)
   have h2 : H.eu (Function.update (fun i => f.stratMap i (σ i)) who (f.stratMap who s')) who =
       G.eu (Function.update σ who s') who := by
     rw [← f.eu_preserved (Function.update σ who s') who]
-    congr 2; funext i; simp only [Function.update]
-    split_ifs with hi
-    · subst hi; rfl
-    · rfl
+    congr 2
+    funext j
+    simpa using
+      (Function.apply_update
+        (f := f.stratMap) (g := σ) (i := who) (v := s') (j := j)).symm
   linarith
 
 -- ============================================================================
@@ -113,18 +114,6 @@ def symm (e : StratEquiv G H) : StratEquiv H G where
     exact h.symm
 
 open Classical in
-/-- Composing a strategy map with `Function.update` commutes:
-    updating the mapped profile equals mapping the updated profile. -/
-private theorem map_update_eq (f : ∀ i, G.Strategy i → H.Strategy i)
-    (σ : Profile G) (who : ι) (s' : G.Strategy who) :
-    (fun i => f i (Function.update σ who s' i)) =
-    Function.update (fun i => f i (σ i)) who (f who s') := by
-  funext i; simp only [Function.update]
-  split_ifs with hi
-  · subst hi; rfl
-  · rfl
-
-open Classical in
 /-- Strategy equivalences preserve Nash equilibria in both directions. -/
 theorem nash_iff (e : StratEquiv G H) (σ : Profile G) :
     G.IsNash σ ↔ H.IsNash (fun i => e.toFun i (σ i)) := by
@@ -169,7 +158,19 @@ theorem dominant_iff (e : StratEquiv G H) (who : ι) (s : G.Strategy who) :
     have h := hdom (fun i => e.toFun i (σ i)) (e.toFun who s')
     have h1 := e.eu_preserved (Function.update σ who s) who
     have h2 := e.eu_preserved (Function.update σ who s') who
-    rw [map_update_eq] at h1 h2; linarith
+    have hmap_s :
+        (fun i => e.toFun i (Function.update σ who s i)) =
+          Function.update (fun i => e.toFun i (σ i)) who (e.toFun who s) := by
+      funext j
+      simpa using (Function.apply_update (f := e.toFun) (g := σ) (i := who) (v := s) (j := j))
+    have hmap_s' :
+        (fun i => e.toFun i (Function.update σ who s' i)) =
+          Function.update (fun i => e.toFun i (σ i)) who (e.toFun who s') := by
+      funext j
+      simpa using (Function.apply_update (f := e.toFun) (g := σ) (i := who) (v := s') (j := j))
+    rw [hmap_s] at h1
+    rw [hmap_s'] at h2
+    linarith
 
 end StratEquiv
 

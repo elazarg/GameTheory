@@ -70,13 +70,6 @@ theorem Round.eval_actionIrrelevant (r : Round n S V A Sig)
 -- Helper: expect monotonicity and map
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
-private theorem expect_map [Fintype α] [Fintype β]
-    (μ : PMF α) (f : α → β) (g : β → ℝ) :
-    expect (μ.map f) g = expect μ (g ∘ f) := by
-  simpa [Math.ProbabilityMassFunction.pushforward, PMF.bind_pure_comp]
-    using (Math.ProbabilityMassFunction.expect_pushforward (μ := μ) (f := f) (φ := g))
-
 open Classical in
 /-- Under sequential play, the transition depends only on the active player's action. -/
 private theorem transition_eq_active (r : Round n S V A Sig) (s : S)
@@ -197,9 +190,36 @@ private theorem exists_spe_rounds
           simp only [Round.eval]; congr 1; funext sg
           rw [transition_eq_active r s i sg hactive]
           simp [Function.update_self]
-        rw [heval_σ, heval_upd, expect_map, expect_map]
+        rw [heval_σ, heval_upd]
+        have hmap_σ :
+            expect ((r.signal s).map (fun sg => r.transition s (fun _ => σ i (r.view i s (sg i)))))
+              (fun s' => expect (evalRounds rest σ s') (fun s'' => u s'' i)) =
+            expect (r.signal s) (fun sg =>
+              expect (evalRounds rest σ (r.transition s (fun _ => σ i (r.view i s (sg i)))))
+                (fun s'' => u s'' i)) := by
+          simpa [Math.ProbabilityMassFunction.pushforward] using
+            (Math.ProbabilityMassFunction.expect_pushforward
+              (μ := r.signal s)
+              (f := fun sg => r.transition s (fun _ => σ i (r.view i s (sg i))))
+              (φ := fun s' => expect (evalRounds rest σ s') (fun s'' => u s'' i)))
+        have hmap_upd :
+            expect ((r.signal s).map (fun sg => r.transition s (fun _ => si' (r.view i s (sg i)))))
+              (fun s' =>
+                expect (evalRounds rest (Function.update σ i si') s') (fun s'' => u s'' i)) =
+            expect (r.signal s) (fun sg =>
+              expect
+                (evalRounds rest
+                  (Function.update σ i si')
+                  (r.transition s (fun _ => si' (r.view i s (sg i)))))
+                (fun s'' => u s'' i)) := by
+          simpa [Math.ProbabilityMassFunction.pushforward] using
+            (Math.ProbabilityMassFunction.expect_pushforward
+              (μ := r.signal s)
+              (f := fun sg => r.transition s (fun _ => si' (r.view i s (sg i))))
+              (φ := fun s' =>
+                expect (evalRounds rest (Function.update σ i si') s') (fun s'' => u s'' i)))
+        rw [hmap_σ, hmap_upd]
         -- Replace evalRounds rest σ → σ₀ and rest (upd σ i si') → (upd σ₀ i si')
-        simp only [Function.comp_def]
         simp_rw [show ∀ s', evalRounds rest σ s' = evalRounds rest σ₀ s' from
           fun s' => evalRounds_congr rest σ σ₀ hσ_eq s']
         simp_rw [show ∀ s', evalRounds rest (Function.update σ i si') s' =
