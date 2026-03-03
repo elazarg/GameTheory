@@ -1,4 +1,5 @@
 import GameTheory.KernelGame
+import Math.Probability
 
 /-!
 # GameTheory.GameForm
@@ -49,6 +50,8 @@ This decomposition makes explicit a key structural observation:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 -- ============================================================================
 -- Section 1: GameForm structure

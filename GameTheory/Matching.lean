@@ -1,5 +1,6 @@
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Finset.Basic
+import Math.Probability
 
 /-!
 # Stable Matching
@@ -22,6 +23,8 @@ no unmatched pair would both prefer to be matched with each other.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A two-sided matching market. Agents of type `α` are matched to
     agents of type `β`. Preferences are integers (higher = more preferred). -/

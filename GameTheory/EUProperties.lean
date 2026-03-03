@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 open scoped BigOperators
 
@@ -15,6 +16,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

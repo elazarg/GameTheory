@@ -1,9 +1,12 @@
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import GameTheory.GameForm
+import Math.Probability
 
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

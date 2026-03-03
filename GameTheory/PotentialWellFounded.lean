@@ -1,5 +1,6 @@
 import GameTheory.PotentialFIP
 import GameTheory.BestResponseDynamics
+import Math.Probability
 
 /-!
 # Finite Improvement Property for Potential Games
@@ -17,6 +18,8 @@ is no infinite improving path.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

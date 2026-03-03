@@ -2,6 +2,7 @@ import GameTheory.GameProperties
 import GameTheory.SolutionConcepts
 import GameTheory.PotentialFIP
 import GameTheory.PotentialWellFounded
+import Math.Probability
 
 /-!
 # Congestion Games
@@ -25,6 +26,8 @@ proved that every congestion game admits an exact potential function.
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A congestion game: players choose subsets of resources, payoffs depend on congestion. -/
 structure CongestionGame (ι : Type) [Fintype ι] where

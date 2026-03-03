@@ -1,5 +1,6 @@
 import GameTheory.ProtoZermelo
 import Math.PMFProduct
+import Math.Probability
 
 /-!
 # Kuhn's Theorem at the Protocol Level
@@ -26,6 +27,8 @@ outcome-equivalent in games with perfect recall.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 open Math.PMFProduct
 
 variable {n : ℕ} {S V A Sig : Type}

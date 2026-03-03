@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Vickrey (Second-Price) Auction
@@ -18,6 +19,8 @@ the second-highest bid. Vickrey (1961) proved that truthful bidding
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {n : ℕ}
 

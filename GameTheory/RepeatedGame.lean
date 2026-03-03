@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Repeated Games
@@ -21,6 +22,8 @@ all past actions and choose stage-game actions at each round.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A finitely repeated game with observable actions. -/
 structure RepeatedGame (ι : Type) where

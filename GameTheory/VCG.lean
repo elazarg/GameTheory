@@ -1,5 +1,6 @@
 import GameTheory.SolutionConcepts
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Math.Probability
 
 /-!
 # Vickrey-Clarke-Groves (VCG) Mechanism
@@ -23,6 +24,8 @@ The key result is that truthful reporting is a dominant strategy.
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 

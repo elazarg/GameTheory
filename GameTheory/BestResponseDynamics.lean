@@ -1,5 +1,6 @@
 import GameTheory.BestResponse
 import GameTheory.ApproximateNash
+import Math.Probability
 
 /-!
 # Best Response Dynamics
@@ -20,6 +21,8 @@ update their strategies to best-respond to the current profile.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

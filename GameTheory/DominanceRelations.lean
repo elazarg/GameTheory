@@ -1,5 +1,6 @@
 import GameTheory.SolutionConcepts
 import GameTheory.PrefPreorderProperties
+import Math.Probability
 
 /-!
 # GameTheory.DominanceRelations
@@ -15,6 +16,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type} {G : KernelGame ι}

@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.CorrelatedEqProperties
@@ -11,6 +12,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type} {G : KernelGame ι}

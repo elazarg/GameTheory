@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.PrefPreorderProperties
@@ -13,6 +14,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

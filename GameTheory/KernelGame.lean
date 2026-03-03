@@ -1,4 +1,4 @@
-import GameTheory.Probability
+import Math.Probability
 
 /-!
 # GameTheory.KernelGame
@@ -13,6 +13,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A payoff vector for `ι` players. -/
 abbrev Payoff (ι : Type) : Type := ι → ℝ
@@ -87,3 +89,4 @@ theorem fin2_update_comm {α : Fin 2 → Type} (σ τ : ∀ i, α i) :
 end KernelGame
 
 end GameTheory
+

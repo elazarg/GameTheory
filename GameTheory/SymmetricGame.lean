@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Symmetric Games
@@ -18,6 +19,8 @@ under permutation of player identities.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type} {S : Type}
 

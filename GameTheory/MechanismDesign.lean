@@ -1,4 +1,5 @@
 import GameTheory.BayesianGame
+import Math.Probability
 
 /-!
 # Mechanism Design Basics
@@ -19,6 +20,8 @@ if truthful reporting is a Bayes-Nash equilibrium.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type} [Fintype ι]
 

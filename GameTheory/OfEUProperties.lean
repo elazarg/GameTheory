@@ -1,5 +1,6 @@
 import GameTheory.SolutionConcepts
 import GameTheory.GameProperties
+import Math.Probability
 
 open scoped BigOperators
 
@@ -16,6 +17,8 @@ plain inequalities (or sums) on the underlying utility function.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type}
 

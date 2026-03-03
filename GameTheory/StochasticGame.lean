@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Stochastic Games
@@ -19,6 +20,8 @@ and probabilistic transitions between states depending on the joint action.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A stochastic game: at each state, players choose actions simultaneously,
     receive payoffs, and the game transitions to a new state. -/

@@ -1,6 +1,7 @@
 import GameTheory.SolutionConcepts
 import Math.PMFProduct
 import GameTheory.ProductSimplexBrouwer
+import Math.Probability
 
 /-!
 # Mixed-Strategy Nash Equilibrium Existence
@@ -27,6 +28,8 @@ noncomputable section
 
 open scoped BigOperators
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 open Math.PMFProduct

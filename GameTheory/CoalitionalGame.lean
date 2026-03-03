@@ -1,5 +1,6 @@
 import GameTheory.KernelGame
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Math.Probability
 
 /-!
 # Coalitional Games and the Shapley Value
@@ -24,6 +25,8 @@ satisfying efficiency, symmetry, dummy, and additivity axioms.
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A transferable-utility coalitional game: `v S` is the value of coalition `S`. -/
 structure CoalGame (ι : Type) [Fintype ι] [DecidableEq ι] where

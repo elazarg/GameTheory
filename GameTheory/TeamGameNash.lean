@@ -1,5 +1,6 @@
 import GameTheory.TeamGame
 import GameTheory.GameProperties
+import Math.Probability
 
 /-!
 # GameTheory.TeamGameNash
@@ -22,6 +23,8 @@ Nash equilibria.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

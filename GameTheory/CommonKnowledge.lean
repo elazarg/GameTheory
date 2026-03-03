@@ -1,4 +1,4 @@
-import GameTheory.Probability
+import Math.Probability
 
 /-!
 # Common Knowledge and Agreeing to Disagree
@@ -21,6 +21,8 @@ cell and prior must agree on posteriors.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {Ω : Type} [Fintype Ω] [DecidableEq Ω]
 
@@ -88,3 +90,4 @@ theorem posterior_zero_outside_self_evident (μ : Ω → ℝ) (_hμ : ∀ s, μ 
   rw [cell_disjoint_of_not_in_self_evident P E s hs hse, Finset.sum_empty, zero_div]
 
 end GameTheory
+

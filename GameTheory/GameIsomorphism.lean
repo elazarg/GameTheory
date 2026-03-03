@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.GameIsomorphism
@@ -21,6 +22,8 @@ ranking of outcomes, not on the cardinal utility scale.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type}
 

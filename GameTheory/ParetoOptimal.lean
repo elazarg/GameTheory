@@ -1,6 +1,9 @@
 import GameTheory.GameProperties
+import Math.Probability
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

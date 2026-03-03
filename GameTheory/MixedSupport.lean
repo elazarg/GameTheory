@@ -1,4 +1,5 @@
 import GameTheory.NashExistenceMixed
+import Math.Probability
 
 /-!
 # Support Lemma for Mixed Nash Equilibria
@@ -15,6 +16,8 @@ strategy played with positive probability must be a best response
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Security Strategies and Maximin Values
@@ -21,6 +22,8 @@ achieves this guarantee.
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

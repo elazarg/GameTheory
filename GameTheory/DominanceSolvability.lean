@@ -1,5 +1,6 @@
 import GameTheory.StrictDominance
 import GameTheory.DominanceNash
+import Math.Probability
 
 /-!
 # Dominance Solvability
@@ -18,6 +19,8 @@ strategy. In such a game, there is a unique Nash equilibrium.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

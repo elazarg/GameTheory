@@ -1,4 +1,5 @@
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
+import Math.Probability
 
 /-!
 # Nash Bargaining Solution
@@ -21,6 +22,8 @@ solution maximizes the product of utility gains.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A two-player bargaining problem: a feasible set of utility pairs
     and a disagreement point (what each player gets if bargaining fails). -/

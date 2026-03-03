@@ -1,4 +1,5 @@
 import GameTheory.PotentialGame
+import Math.Probability
 
 /-!
 # Finite Improvement Property for Potential Games
@@ -19,6 +20,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}

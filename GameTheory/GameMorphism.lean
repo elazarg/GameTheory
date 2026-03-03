@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Game Morphisms
@@ -23,6 +24,8 @@ This captures when one game "embeds into" or "reduces to" another.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

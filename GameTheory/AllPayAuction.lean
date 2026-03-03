@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # All-Pay Auction
@@ -14,6 +15,8 @@ they win. This models contests, lobbying, and rent-seeking.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- In an all-pay auction, bidding more than the prize value `v` is strictly
     worse than bidding 0, regardless of the outcome. The bidder either:

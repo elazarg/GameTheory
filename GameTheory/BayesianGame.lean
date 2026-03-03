@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Bayesian Games (Games with Incomplete Information)
@@ -21,6 +22,8 @@ that such games can be analyzed via the "type-agent" representation.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A Bayesian game with private types and common prior.
 

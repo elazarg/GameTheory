@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Rationalizability
@@ -24,6 +25,8 @@ rationalizable, but not conversely.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

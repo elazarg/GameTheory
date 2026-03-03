@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Public Goods Game
@@ -15,6 +16,8 @@ universal contribution yields higher payoff than universal defection.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- In a public goods game, each player's net gain from their own contribution
     of `c_i` is `(mpcr - 1) * c_i`, where `mpcr` is the marginal per-capita

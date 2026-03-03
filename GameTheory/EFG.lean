@@ -157,7 +157,7 @@ theorem evalDist_pureToBehavioral_eq_pure {S : InfoStructure} {Outcome : Type}
 /-- EFG outcome kernel: behavioral profile → PMF over outcomes. -/
 noncomputable def GameTree.toKernel {S : InfoStructure} {Outcome : Type}
     (t : GameTree S Outcome) :
-    GameTheory.Kernel (BehavioralProfile S) Outcome :=
+    Math.Probability.Kernel (BehavioralProfile S) Outcome :=
   fun σ => t.evalDist σ
 
 -- ============================================================================

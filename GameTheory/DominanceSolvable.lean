@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.DominanceSolvable
@@ -14,6 +15,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type}
 

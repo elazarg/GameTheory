@@ -1,5 +1,6 @@
 import GameTheory.GameProperties
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.TeamGame
@@ -20,6 +21,8 @@ properties.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

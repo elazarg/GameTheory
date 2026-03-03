@@ -1,5 +1,5 @@
 -- Probability and core
-import GameTheory.Probability
+import Math.Probability
 import GameTheory.KernelGame
 
 -- Game form (protocol layer without utility)
@@ -131,3 +131,4 @@ import GameTheory.PublicGoods
 import GameTheory.NFGExamples
 import GameTheory.EFGExamples
 import GameTheory.MAIDExamples
+

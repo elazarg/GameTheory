@@ -1,5 +1,6 @@
 import GameTheory.GameProperties
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.NashPareto
@@ -13,6 +14,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

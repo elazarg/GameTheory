@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Quasi-Linear Games and Auctions
@@ -26,6 +27,8 @@ with this structure.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

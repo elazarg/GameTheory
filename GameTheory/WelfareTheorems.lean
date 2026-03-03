@@ -1,5 +1,6 @@
 import GameTheory.TeamGame
 import GameTheory.ConstantSum
+import Math.Probability
 
 /-!
 # GameTheory.WelfareTheorems
@@ -17,6 +18,8 @@ Welfare theorems relating social welfare to individual expected utilities.
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

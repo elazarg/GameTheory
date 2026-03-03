@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.StrictNashProperties
@@ -11,6 +12,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

@@ -1,4 +1,5 @@
 import GameTheory.MechanismDesign
+import Math.Probability
 
 /-!
 # The Revelation Principle
@@ -19,6 +20,8 @@ direct mechanism in which truthful reporting is an equilibrium.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type} [Fintype ι]
 

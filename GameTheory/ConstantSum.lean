@@ -1,6 +1,7 @@
 import GameTheory.GameProperties
 import GameTheory.SolutionConcepts
 import Mathlib.Algebra.BigOperators.Fin
+import Math.Probability
 
 /-!
 # GameTheory.ConstantSum
@@ -16,6 +17,8 @@ Provides:
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}

@@ -28,6 +28,7 @@ building on the schema-based definitions in `EFG.lean`.
 namespace EFG
 
 open GameTheory
+open Math.Probability
 
 -- ============================================================================
 -- Helper lemmas

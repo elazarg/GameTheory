@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Two-Player Game Properties
@@ -13,6 +14,8 @@ Specialized results for 2-player games (`KernelGame (Fin 2)`).
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

@@ -1,5 +1,6 @@
 import GameTheory.SymmetricGame
 import GameTheory.ApproximateNash
+import Math.Probability
 
 /-!
 # Evolutionarily Stable Strategies
@@ -24,6 +25,8 @@ the first argument against an opponent using the second.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {S : Type}
 

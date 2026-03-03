@@ -2,6 +2,7 @@ import GameTheory.ConstantSum
 import GameTheory.ZeroSum
 import GameTheory.SolutionConcepts
 import GameTheory.Minimax
+import Math.Probability
 
 /-!
 # GameTheory.ConstantSumNash
@@ -20,6 +21,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}

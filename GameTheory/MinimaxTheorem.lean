@@ -1,6 +1,7 @@
 import GameTheory.Minimax
 import GameTheory.ZeroSumNash
 import GameTheory.NashExistenceMixed
+import Math.Probability
 
 /-!
 # Von Neumann's Minimax Theorem
@@ -20,6 +21,8 @@ noncomputable section
 
 open scoped BigOperators
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 -- ============================================================================

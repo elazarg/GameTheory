@@ -1,4 +1,5 @@
 import GameTheory.BestResponse
+import Math.Probability
 
 /-!
 # Best Response Existence in Finite Games
@@ -13,6 +14,8 @@ a best response always exists.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

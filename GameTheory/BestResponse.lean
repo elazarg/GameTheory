@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.BestResponse
@@ -12,6 +13,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

@@ -31,7 +31,7 @@ noncomputable def EFGGame.toNFGGame (G : EFGGame) :
     NFG.NFGGame G.inf.Player (fun p => PureStrategy G.inf p) where
   Outcome := Payoff G.inf.Player
   outcome := fun σ p =>
-    expect (G.tree.evalDist (pureToBehavioral σ)) (fun ω => G.utility ω p)
+    Math.Probability.expect (G.tree.evalDist (pureToBehavioral σ)) (fun ω => G.utility ω p)
   utility := id
 
 -- ============================================================================

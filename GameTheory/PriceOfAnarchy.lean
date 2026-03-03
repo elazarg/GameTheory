@@ -1,5 +1,6 @@
 import GameTheory.GameProperties
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Price of Anarchy and Price of Stability
@@ -26,6 +27,8 @@ ratio to the *best* Nash equilibrium.
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

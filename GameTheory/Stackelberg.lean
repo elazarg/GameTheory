@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Stackelberg (Leader-Follower) Games
@@ -21,6 +22,8 @@ their Nash payoff in the simultaneous-move game.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 /-- A Stackelberg (leader-follower) game. The leader (player 0) chooses
     an action; the follower (player 1) observes the leader's action and

@@ -1,5 +1,6 @@
 import GameTheory.GameForm
 import Math.PMFProduct
+import Math.Probability
 
 /-!
 # Sequential Game Protocol
@@ -38,6 +39,8 @@ is fixed). The transition is deterministic.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 open Math.PMFProduct
 
 -- ============================================================================

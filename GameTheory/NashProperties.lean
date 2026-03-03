@@ -1,5 +1,6 @@
 import GameTheory.SolutionConcepts
 import GameTheory.BestResponse
+import Math.Probability
 
 /-!
 # Nash Equilibrium Properties
@@ -14,6 +15,8 @@ General properties and characterizations of Nash equilibria.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

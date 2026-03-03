@@ -13,6 +13,7 @@ and distributional API demonstrations (`udist`, strategic-form bridge).
 namespace EFG
 
 open GameTheory
+open Math.Probability
 
 /-! ## InfoStructures for the examples -/
 

@@ -1,5 +1,6 @@
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Finset.Basic
+import Math.Probability
 
 /-!
 # Social Choice Functions
@@ -23,6 +24,8 @@ direction of Arrow's impossibility theorem.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 variable {A : Type} [DecidableEq A]

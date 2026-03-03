@@ -1,6 +1,7 @@
 import GameTheory.SolutionConcepts
 import GameTheory.PotentialGame
 import Mathlib.Data.Finset.Max
+import Math.Probability
 
 /-!
 # Nash Equilibrium Existence Theorems
@@ -14,6 +15,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}

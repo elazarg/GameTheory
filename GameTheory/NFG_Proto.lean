@@ -1,4 +1,5 @@
 import GameTheory.SeqProto
+import Math.Probability
 
 /-!
 # NFG → Protocol Encoding
@@ -18,6 +19,8 @@ type, e.g., via `A = Σ i, B i`. This is deferred.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {m : ℕ}
 

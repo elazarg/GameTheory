@@ -1,5 +1,6 @@
 import GameTheory.ProtoODP
 import Math.ProbabilityMassFunction
+import Math.Probability
 
 /-!
 # Zermelo's Theorem on Protocol
@@ -27,6 +28,8 @@ Requires `[Fintype S]`, `[Fintype A]`, `IsPerfectInfo`, `IsSequential`,
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {n : ℕ} {S V A Sig : Type}
 

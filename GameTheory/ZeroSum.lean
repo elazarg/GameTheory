@@ -1,5 +1,6 @@
 import GameTheory.GameProperties
 import Mathlib.Algebra.BigOperators.Fin
+import Math.Probability
 
 /-!
 # GameTheory.ZeroSum
@@ -14,6 +15,8 @@ Provides:
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}

@@ -1,6 +1,7 @@
 import Mathlib.Topology.Algebra.Module.FiniteDimension
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import FixedPointTheorems.brouwer
+import Math.Probability
 
 /-!
 # Brouwer fixed-point theorem for products of standard simplices
@@ -17,6 +18,8 @@ specialised to the product-simplex domain.
 set_option autoImplicit false
 
 namespace GameTheory
+
+open Math.Probability
 
 open Function
 

@@ -1,4 +1,5 @@
 import GameTheory.CorrelatedEqProperties
+import Math.Probability
 
 /-!
 # Regret and No-Regret Characterizations
@@ -21,6 +22,8 @@ no-regret learning framework.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

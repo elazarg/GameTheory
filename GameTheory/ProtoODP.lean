@@ -1,5 +1,6 @@
 import GameTheory.ProtoSPE
 import Math.ProbabilityMassFunction
+import Math.Probability
 
 /-!
 # One-Shot Deviation Principle on Protocol
@@ -24,6 +25,8 @@ direction requires PI-relevant conditions.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {n : ℕ} {S V A Sig : Type}
 

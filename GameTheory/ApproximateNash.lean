@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Approximate (ε-Nash) Equilibrium
@@ -22,6 +23,8 @@ is fundamental in computational game theory and convergence arguments.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 namespace KernelGame
 

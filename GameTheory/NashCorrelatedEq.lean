@@ -1,4 +1,5 @@
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # GameTheory.NashCorrelatedEq
@@ -18,6 +19,8 @@ already handles.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {ι : Type}
 

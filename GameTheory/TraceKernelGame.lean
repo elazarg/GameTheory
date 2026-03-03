@@ -1,5 +1,6 @@
 import GameTheory.KernelGame
 import Math.PMFProduct
+import Math.Probability
 
 /-!
 # GameTheory.TraceKernelGame
@@ -14,6 +15,8 @@ This is a semantics-first layer: EFG/MAID-style syntax can map into it.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 open scoped BigOperators
 open Math.PMFProduct

@@ -1,5 +1,6 @@
 import GameTheory.SeqProto
 import GameTheory.SolutionConcepts
+import Math.Probability
 
 /-!
 # Subgames and Subgame-Perfect Equilibrium on Protocol
@@ -24,6 +25,8 @@ The full game is the subgame at `(0, G.init)`.
 -/
 
 namespace GameTheory
+
+open Math.Probability
 
 variable {n : ℕ} {S V A Sig : Type}
 

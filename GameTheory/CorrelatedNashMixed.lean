@@ -2,6 +2,7 @@ import GameTheory.SolutionConcepts
 import GameTheory.NashExistenceMixed
 import GameTheory.CorrelatedEqProperties
 import Math.PMFProduct
+import Math.Probability
 
 /-!
 # GameTheory.CorrelatedNashMixed
@@ -26,6 +27,8 @@ Provides:
 -/
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 open Math.PMFProduct
 

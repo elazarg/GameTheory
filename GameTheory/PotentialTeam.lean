@@ -3,6 +3,7 @@ import GameTheory.GameProperties
 import GameTheory.SolutionConcepts
 import GameTheory.ZeroSum
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Math.Probability
 
 /-!
 # Team games as potential games
@@ -23,6 +24,8 @@ potential function being any player's expected utility.
 open scoped BigOperators
 
 namespace GameTheory
+
+open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}
