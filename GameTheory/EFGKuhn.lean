@@ -135,25 +135,32 @@ theorem PerfectRecall_implies_NoInfoSetRepeat
 -- Agreement lemma
 -- ============================================================================
 
+/-- Two behavioral profiles agreeing on all infosets in `t` give the same `evalDist`. -/
+theorem evalDist_eq_of_behavioral_agree_core (t : GameTree S Outcome)
+    (σ₁ σ₂ : BehavioralProfile S)
+    (h : ∀ {q} {J : S.Infoset q}, DecisionNodeIn J t → σ₁ q J = σ₂ q J) :
+    t.evalDist σ₁ = t.evalDist σ₂ := by
+  induction t with
+  | terminal _ => rfl
+  | chance _k _μ _hk next ih =>
+    simp only [GameTree.evalDist]; congr 1; funext b
+    exact ih b (fun hdn => h (.in_chance _ _ _ _ b hdn))
+  | decision I next ih =>
+    simp only [GameTree.evalDist]
+    rw [h (.root next)]
+    congr 1; funext a
+    exact ih a (fun hdn => h (.in_decision I next a hdn))
+
 /-- Two flat profiles that agree on all infosets appearing in `t` produce
     the same evalDist when used as behavioral profiles. -/
 theorem evalDist_pure_eq_of_agree (t : GameTree S Outcome)
     (s₁ s₂ : FlatProfile S)
     (h : ∀ {q} {J : S.Infoset q}, DecisionNodeIn J t → s₁ ⟨q, J⟩ = s₂ ⟨q, J⟩) :
     t.evalFlat s₁ = t.evalFlat s₂ := by
-  simp only [GameTree.evalFlat]
-  induction t with
-  | terminal _ => rfl
-  | chance _k _μ _hk next ih =>
-    simp only [GameTree.evalDist]
-    congr 1; funext b
-    exact ih b (fun hdn => h (.in_chance _ _ _ _ b hdn))
-  | decision I next ih =>
-    simp only [GameTree.evalDist, flatToBehavioral]
-    have hroot := h (DecisionNodeIn.root (I := I) next)
-    simp only [hroot]
-    congr 1; funext a
-    exact ih a (fun hdn => h (.in_decision I next a hdn))
+  simpa [GameTree.evalFlat, flatToBehavioral] using
+    (evalDist_eq_of_behavioral_agree_core t (flatToBehavioral s₁) (flatToBehavioral s₂)
+      (fun {q} {J} hdn => by
+        simp [flatToBehavioral, h hdn]))
 
 -- ============================================================================
 -- Behavioral → Mixed
@@ -856,20 +863,12 @@ theorem reachesFlat_chance_iff {p : S.Player} {J : S.Infoset p}
       (hsp_chance_sub b hsp) hr₁ (fun step hmem => hm₂ step (hph ▸ hmem))
   · exact fun h => ⟨b, h⟩
 
-/-- Two behavioral profiles agreeing on all infosets in `t` give the same `evalDist`. -/
+/-- Backward-compatible name for the reachable-agreement congruence lemma. -/
 theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
     (σ₁ σ₂ : BehavioralProfile S)
     (h : ∀ {q} {J : S.Infoset q}, DecisionNodeIn J t → σ₁ q J = σ₂ q J) :
-    t.evalDist σ₁ = t.evalDist σ₂ := by
-  induction t with
-  | terminal _ => rfl
-  | chance _k _μ _hk next ih =>
-    simp only [GameTree.evalDist]; congr 1; funext b
-    exact ih b (fun hdn => h (.in_chance _ _ _ _ b hdn))
-  | decision I next ih =>
-    simp only [GameTree.evalDist]
-    rw [h (.root next)]; congr 1; funext a
-    exact ih a (fun hdn => h (.in_decision I next a hdn))
+    t.evalDist σ₁ = t.evalDist σ₂ :=
+  evalDist_eq_of_behavioral_agree_core t σ₁ σ₂ h
 
 open Classical in
 /-- Under perfect recall, `mixedToBehavioralFlat` is the same whether conditioned
