@@ -1,0 +1,302 @@
+[
+  {
+    "File": "EFGKuhnFull.lean",
+    "Theorems": 33,
+    "Defs": 14,
+    "Lines": 1338
+  },
+  {
+    "File": "NashExistenceMixed.lean",
+    "Theorems": 32,
+    "Defs": 8,
+    "Lines": 819
+  },
+  {
+    "File": "EFGKuhn.lean",
+    "Theorems": 31,
+    "Defs": 4,
+    "Lines": 1067
+  },
+  {
+    "File": "EFGRefinements.lean",
+    "Theorems": 24,
+    "Defs": 6,
+    "Lines": 377
+  },
+  {
+    "File": "ProtoKuhn.lean",
+    "Theorems": 21,
+    "Defs": 10,
+    "Lines": 670
+  },
+  {
+    "File": "SequentialForm.lean",
+    "Theorems": 21,
+    "Defs": 14,
+    "Lines": 474
+  },
+  {
+    "File": "MAID_EFG.lean",
+    "Theorems": 20,
+    "Defs": 0,
+    "Lines": 530
+  },
+  {
+    "File": "GameForm.lean",
+    "Theorems": 19,
+    "Defs": 16,
+    "Lines": 532
+  },
+  {
+    "File": "EFG.lean",
+    "Theorems": 19,
+    "Defs": 18,
+    "Lines": 486
+  },
+  {
+    "File": "SequentialODP.lean",
+    "Theorems": 18,
+    "Defs": 2,
+    "Lines": 519
+  },
+  {
+    "File": "SolutionConcepts.lean",
+    "Theorems": 13,
+    "Defs": 20,
+    "Lines": 311
+  },
+  {
+    "File": "EFG_Sequential.lean",
+    "Theorems": 13,
+    "Defs": 0,
+    "Lines": 358
+  },
+  {
+    "File": "MAID.lean",
+    "Theorems": 11,
+    "Defs": 17,
+    "Lines": 329
+  },
+  {
+    "File": "ProductSimplexBrouwer.lean",
+    "Theorems": 10,
+    "Defs": 5,
+    "Lines": 195
+  },
+  {
+    "File": "CorrelatedNashMixed.lean",
+    "Theorems": 9,
+    "Defs": 0,
+    "Lines": 148
+  },
+  {
+    "File": "ProtoSPE.lean",
+    "Theorems": 8,
+    "Defs": 1,
+    "Lines": 148
+  },
+  {
+    "File": "ProtoZermelo.lean",
+    "Theorems": 7,
+    "Defs": 3,
+    "Lines": 365
+  },
+  {
+    "File": "PotentialFIP.lean",
+    "Theorems": 6,
+    "Defs": 0,
+    "Lines": 117
+  },
+  {
+    "File": "NFGExamples.lean",
+    "Theorems": 6,
+    "Defs": 4,
+    "Lines": 143
+  },
+  {
+    "File": "EFGExamples.lean",
+    "Theorems": 6,
+    "Defs": 4,
+    "Lines": 203
+  },
+  {
+    "File": "ProtoODP.lean",
+    "Theorems": 6,
+    "Defs": 4,
+    "Lines": 206
+  },
+  {
+    "File": "Rationalizability.lean",
+    "Theorems": 6,
+    "Defs": 2,
+    "Lines": 115
+  },
+  {
+    "File": "ApproximateNash.lean",
+    "Theorems": 6,
+    "Defs": 2,
+    "Lines": 95
+  },
+  {
+    "File": "TwoPlayerGame.lean",
+    "Theorems": 6,
+    "Defs": 0,
+    "Lines": 67
+  },
+  {
+    "File": "CommonKnowledge.lean",
+    "Theorems": 6,
+    "Defs": 2,
+    "Lines": 90
+  },
+  {
+    "File": "MinimaxTheorem.lean",
+    "Theorems": 6,
+    "Defs": 0,
+    "Lines": 166
+  },
+  {
+    "File": "CongestionGame.lean",
+    "Theorems": 6,
+    "Defs": 2,
+    "Lines": 181
+  },
+  {
+    "File": "CoalitionalGame.lean",
+    "Theorems": 5,
+    "Defs": 7,
+    "Lines": 198
+  },
+  {
+    "File": "EvolutionaryStability.lean",
+    "Theorems": 5,
+    "Defs": 2,
+    "Lines": 88
+  },
+  {
+    "File": "SocialChoice.lean",
+    "Theorems": 5,
+    "Defs": 10,
+    "Lines": 114
+  },
+  {
+    "File": "SymmetricGame.lean",
+    "Theorems": 5,
+    "Defs": 2,
+    "Lines": 88
+  },
+  {
+    "File": "NashProperties.lean",
+    "Theorems": 5,
+    "Defs": 0,
+    "Lines": 84
+  },
+  {
+    "File": "Regret.lean",
+    "Theorems": 5,
+    "Defs": 0,
+    "Lines": 75
+  },
+  {
+    "File": "OfEUProperties.lean",
+    "Theorems": 5,
+    "Defs": 0,
+    "Lines": 73
+  },
+  {
+    "File": "DominanceRelations.lean",
+    "Theorems": 5,
+    "Defs": 0,
+    "Lines": 61
+  },
+  {
+    "File": "NFG.lean",
+    "Theorems": 5,
+    "Defs": 7,
+    "Lines": 138
+  },
+  {
+    "File": "RepeatedGame.lean",
+    "Theorems": 4,
+    "Defs": 5,
+    "Lines": 134
+  },
+  {
+    "File": "PotentialGame.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 85
+  },
+  {
+    "File": "OneShotDeviation.lean",
+    "Theorems": 4,
+    "Defs": 1,
+    "Lines": 265
+  },
+  {
+    "File": "VickreyAuction.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 89
+  },
+  {
+    "File": "Zermelo.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 230
+  },
+  {
+    "File": "PriceOfAnarchy.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 122
+  },
+  {
+    "File": "AllPayAuction.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 48
+  },
+  {
+    "File": "ZeroSumNash.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 70
+  },
+  {
+    "File": "EUProperties.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 55
+  },
+  {
+    "File": "DominanceSolvable.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 64
+  },
+  {
+    "File": "ConstantSumNash.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 83
+  },
+  {
+    "File": "Matching.lean",
+    "Theorems": 4,
+    "Defs": 4,
+    "Lines": 109
+  },
+  {
+    "File": "ConstantSum.lean",
+    "Theorems": 4,
+    "Defs": 0,
+    "Lines": 96
+  },
+  {
+    "File": "Bargaining.lean",
+    "Theorems": 4,
+    "Defs": 5,
+    "Lines": 158
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "Name": "EFGKuhnFull.lean",
+    "Count": 33
+  },
+  {
+    "Name": "NashExistenceMixed.lean",
+    "Count": 32
+  },
+  {
+    "Name": "EFGKuhn.lean",
+    "Count": 31
+  },
+  {
+    "Name": "EFGRefinements.lean",
+    "Count": 24
+  },
+  {
+    "Name": "ProtoKuhn.lean",
+    "Count": 21
+  },
+  {
+    "Name": "SequentialForm.lean",
+    "Count": 21
+  },
+  {
+    "Name": "MAID_EFG.lean",
+    "Count": 20
+  },
+  {
+    "Name": "GameForm.lean",
+    "Count": 19
+  },
+  {
+    "Name": "EFG.lean",
+    "Count": 19
+  },
+  {
+    "Name": "SequentialODP.lean",
+    "Count": 18
+  },
+  {
+    "Name": "EFG_Sequential.lean",
+    "Count": 13
+  },
+  {
+    "Name": "SolutionConcepts.lean",
+    "Count": 13
+  },
+  {
+    "Name": "MAID.lean",
+    "Count": 11
+  },
+  {
+    "Name": "ProductSimplexBrouwer.lean",
+    "Count": 10
+  },
+  {
+    "Name": "CorrelatedNashMixed.lean",
+    "Count": 9
+  },
+  {
+    "Name": "ProtoSPE.lean",
+    "Count": 8
+  },
+  {
+    "Name": "ProtoZermelo.lean",
+    "Count": 7
+  },
+  {
+    "Name": "CommonKnowledge.lean",
+    "Count": 6
+  },
+  {
+    "Name": "MinimaxTheorem.lean",
+    "Count": 6
+  },
+  {
+    "Name": "NFGExamples.lean",
+    "Count": 6
+  },
+  {
+    "Name": "ApproximateNash.lean",
+    "Count": 6
+  },
+  {
+    "Name": "PotentialFIP.lean",
+    "Count": 6
+  },
+  {
+    "Name": "CongestionGame.lean",
+    "Count": 6
+  },
+  {
+    "Name": "TwoPlayerGame.lean",
+    "Count": 6
+  },
+  {
+    "Name": "Rationalizability.lean",
+    "Count": 6
+  }
+]

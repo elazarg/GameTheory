@@ -3,7 +3,7 @@ import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 import GameTheory.EFG
-import GameTheory.PMFProduct
+import Math.PMFProduct
 
 /-!
 # Kuhn's Theorem — Behavioral ↔ Mixed Strategy Equivalence
@@ -29,6 +29,7 @@ in extensive-form games with perfect recall.
 namespace EFG
 
 open scoped BigOperators
+open Math.PMFProduct
 
 variable {S : InfoStructure} {Outcome : Type}
 

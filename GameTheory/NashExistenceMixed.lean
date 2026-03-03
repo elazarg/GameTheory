@@ -1,5 +1,5 @@
 import GameTheory.SolutionConcepts
-import GameTheory.PMFProduct
+import Math.PMFProduct
 import GameTheory.ProductSimplexBrouwer
 
 /-!
@@ -29,6 +29,7 @@ open scoped BigOperators
 namespace GameTheory
 
 namespace KernelGame
+open Math.PMFProduct
 
 variable {ι : Type}
 

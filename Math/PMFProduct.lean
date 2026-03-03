@@ -458,7 +458,7 @@ end Pushforward
 
 section Conditioning
 
-variable {ι : Type uι} [Fintype ι]
+variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 variable {α : Type uα}
 
@@ -493,7 +493,6 @@ noncomputable def pmfCond (μ : PMF α) (E : α → Prop) [Fintype α]
     pmfCond (μ := μ) E h a = pmfMask (μ := μ) E a / pmfMass (μ := μ) E := by
   simp [pmfCond, PMF.ofFintype_apply]
 
-open Classical in
 /-- The mass of the coordinate-lifted event under a product is the mass under the factor. -/
 theorem pmfMass_pmfPi_coord
     (σ : ∀ i, PMF (A i)) (j : ι)
@@ -501,6 +500,7 @@ theorem pmfMass_pmfPi_coord
     pmfMass (μ := pmfPi (A := A) σ) (fun s => E (s j))
       =
     pmfMass (μ := σ j) E := by
+  classical
   simp only [pmfMass, pmfMask, pmfPi_apply]
   -- Partition the sum over s by s j values, introducing a double sum
   have hdecomp : ∀ s : (∀ i, A i),
@@ -522,7 +522,6 @@ theorem pmfMass_pmfPi_coord
     simpa [pmfPi_apply] using this
   · simp [hE]
 
-open Classical in
 /-- Conditioning a product PMF on a coordinate event updates only that coordinate's factor. -/
 theorem pmfPi_cond_coord
     (σ : ∀ i, PMF (A i)) (j : ι)
@@ -533,6 +532,7 @@ theorem pmfPi_cond_coord
         simpa [pmfMass_pmfPi_coord (A := A) (σ := σ) (j := j) (E := E)] using hE)
       =
     pmfPi (A := A) (Function.update σ j (pmfCond (μ := σ j) E hE)) := by
+  classical
   ext s
   simp only [pmfCond_apply, pmfPi_apply, pmfMask, pmfMass_pmfPi_coord]
   -- Factor the RHS product at j
@@ -557,7 +557,6 @@ theorem pmfPi_cond_coord
     simp only [div_eq_mul_inv, mul_comm, mul_left_comm]
   · simp [hE_s]
 
-open Classical in
 /-- Conditioning on coordinate `j` does not change other coordinate marginals. -/
 theorem pmfPi_cond_coord_push_other
     (σ : ∀ i, PMF (A i)) {j q : ι} (hq : q ≠ j)
@@ -569,6 +568,7 @@ theorem pmfPi_cond_coord_push_other
       (fun s => s q)
       =
     σ q := by
+  classical
   rw [pmfPi_cond_coord σ j E hE,
       pmfPi_push_coord (Function.update σ j (pmfCond (μ := σ j) E hE)) q]
   simp [Function.update, hq]
@@ -583,9 +583,8 @@ section Disintegration
 
 variable {α : Type*} [Fintype α] {β : Type*} [Fintype β] {γ : Type*}
 
-open Classical in
-omit [Fintype β] in
 set_option linter.unusedFintypeInType false in
+omit [Fintype β] in
 /-- If `b` is in the support of `pushforward μ proj`, then the fibre
     `{a | proj a = b}` meets the support of `μ`. -/
 lemma pushforward_support_fibre
@@ -603,7 +602,6 @@ lemma pushforward_support_fibre
     simp [h, hns]
   · simp [Ne.symm h]
 
-open Classical in
 set_option linter.unusedFintypeInType false in
 /-- **Disintegration / law of total probability for PMF.bind.**
     Decompose `μ.bind g` by first projecting via `proj`, then conditioning on

@@ -1,5 +1,4 @@
 import GameTheory.SolutionConcepts
-import GameTheory.PMFProduct
 
 /-!
 # Bayesian Games (Games with Incomplete Information)

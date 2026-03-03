@@ -1,0 +1,34 @@
+[
+  {
+    "Name": "MinimaxTheorem.lean",
+    "Count": 6
+  },
+  {
+    "Name": "ConstantSum.lean",
+    "Count": 4
+  },
+  {
+    "Name": "PriceOfAnarchy.lean",
+    "Count": 4
+  },
+  {
+    "Name": "TeamGame.lean",
+    "Count": 3
+  },
+  {
+    "Name": "Minimax.lean",
+    "Count": 2
+  },
+  {
+    "Name": "ParetoOptimal.lean",
+    "Count": 2
+  },
+  {
+    "Name": "WelfareTheorems.lean",
+    "Count": 2
+  },
+  {
+    "Name": "ZeroSum.lean",
+    "Count": 2
+  }
+]

@@ -1,5 +1,5 @@
 import GameTheory.ProtoZermelo
-import GameTheory.PMFProduct
+import Math.PMFProduct
 
 /-!
 # Kuhn's Theorem at the Protocol Level
@@ -26,6 +26,7 @@ outcome-equivalent in games with perfect recall.
 -/
 
 namespace GameTheory
+open Math.PMFProduct
 
 variable {n : ℕ} {S V A Sig : Type}
 
@@ -425,7 +426,7 @@ theorem independent_factor
       intro g a
       simp only [Round.eval]
       congr 1; funext sig; congr 1; funext j
-      simp only [Function.curry, update, Function.update_apply]
+      simp only [Function.curry, Function.update_apply]
       rw [if_neg]
       intro heq
       have hji := (Prod.mk.inj heq).1; subst hji
@@ -438,7 +439,7 @@ theorem independent_factor
       dsimp only
       apply evalRounds_congr
       intro r' hr' j s₁ sig₁
-      simp only [Function.curry, update, Function.update_apply]
+      simp only [Function.curry, Function.update_apply]
       rw [if_neg]
       intro heq
       have hji := (Prod.mk.inj heq).1

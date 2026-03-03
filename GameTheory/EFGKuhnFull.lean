@@ -1,5 +1,6 @@
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
+import Math.PMFProduct
 
 import GameTheory.EFGKuhn
 
@@ -93,6 +94,7 @@ player's past decisions does not affect other players' marginals
 namespace EFG
 
 open scoped BigOperators
+open Math.PMFProduct
 
 variable {S : InfoStructure} {Outcome : Type}
 
@@ -201,9 +203,13 @@ noncomputable def pureCond (muP : MixedProfile S) {p : S.Player} (I : S.Infoset 
   pmfCond (μ := mixedProfileJoint (S := S) muP)
     (fun π => Ep (S := S) I a (π p))
     (by
+      classical
       have h : pmfMass (pmfPi muP) (fun s => Ep (S := S) I a (s p)) =
           pmfMass (muP p) (Ep (S := S) I a) := pmfMass_pmfPi_coord muP p (Ep I a)
-      rw [h]; exact hE)
+      have h' : pmfMass (μ := mixedProfileJoint (S := S) muP) (fun π => Ep (S := S) I a (π p)) =
+          pmfMass (μ := muP p) (Ep (S := S) I a) := by
+        simpa [mixedProfileJoint] using h
+      rw [h']; exact hE)
 
 /-- The key bridge: flat-side conditioning (`muCond`) on a product measure equals the
 pushforward of pure-side conditioning (`pureCond`). This reduces all flat conditioning
@@ -254,12 +260,13 @@ theorem PlayerIndep_muCond
     {p : S.Player} {I : S.Infoset p} {a : S.Act I}
     (hpa : muMarginal (S := S) I mu a ≠ 0) :
     PlayerIndep (S := S) (muCond (S := S) I a mu hpa) := by
+  classical
   rcases hind with ⟨muP, rfl⟩
   -- derive the pure-side nonzero mass (you can prove this from `hpa` if you want;
   -- for now, just define it using classical choice + the fact it must be nonzero
   -- because pushforward to flat has nonzero mass).
   have hE : pmfMass (μ := muP p) (Ep (S := S) I a) ≠ 0 := by
-    rw [← pmfMass_pmfPi_coord (A := fun q => PureStrategy S q)
+    rw [← pmfMass_pmfPi_coord
       (σ := muP) (j := p) (E := Ep (S := S) I a),
       ← muMarginal_pmfPureToFlat_eq]
     exact hpa
@@ -300,10 +307,11 @@ theorem muMarginal_muCond_other
     (hpa : muMarginal (S := S) I mu a ≠ 0) :
     muMarginal (S := S) J (muCond (S := S) I a mu hpa) =
     muMarginal (S := S) J mu := by
+  classical
   rcases hind with ⟨muP, rfl⟩
   -- same pure-side nonzero mass as above
   have hE : pmfMass (μ := muP p) (Ep (S := S) I a) ≠ 0 := by
-    rw [← pmfMass_pmfPi_coord (A := fun q => PureStrategy S q)
+    rw [← pmfMass_pmfPi_coord
       (σ := muP) (j := p) (E := Ep (S := S) I a),
       ← muMarginal_pmfPureToFlat_eq]
     exact hpa

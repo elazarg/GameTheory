@@ -1,6 +1,7 @@
 import GameTheory.SolutionConcepts
 import GameTheory.NashExistenceMixed
 import GameTheory.CorrelatedEqProperties
+import Math.PMFProduct
 
 /-!
 # GameTheory.CorrelatedNashMixed
@@ -26,6 +27,7 @@ Provides:
 
 namespace GameTheory
 namespace KernelGame
+open Math.PMFProduct
 
 variable {ι : Type} {G : KernelGame ι}
 

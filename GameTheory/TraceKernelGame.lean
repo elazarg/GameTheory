@@ -1,5 +1,5 @@
 import GameTheory.KernelGame
-import GameTheory.PMFProduct
+import Math.PMFProduct
 
 /-!
 # GameTheory.TraceKernelGame
@@ -16,6 +16,7 @@ This is a semantics-first layer: EFG/MAID-style syntax can map into it.
 namespace GameTheory
 
 open scoped BigOperators
+open Math.PMFProduct
 
 section Core
 

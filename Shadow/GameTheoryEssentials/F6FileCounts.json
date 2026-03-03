@@ -1,0 +1,42 @@
+[
+  {
+    "Name": "SocialChoice.lean",
+    "Count": 5
+  },
+  {
+    "Name": "AllPayAuction.lean",
+    "Count": 4
+  },
+  {
+    "Name": "Matching.lean",
+    "Count": 4
+  },
+  {
+    "Name": "VickreyAuction.lean",
+    "Count": 4
+  },
+  {
+    "Name": "IndividualRationality.lean",
+    "Count": 3
+  },
+  {
+    "Name": "MechanismDesign.lean",
+    "Count": 3
+  },
+  {
+    "Name": "PublicGoods.lean",
+    "Count": 2
+  },
+  {
+    "Name": "VCG.lean",
+    "Count": 2
+  },
+  {
+    "Name": "Auction.lean",
+    "Count": 1
+  },
+  {
+    "Name": "RevelationPrinciple.lean",
+    "Count": 1
+  }
+]

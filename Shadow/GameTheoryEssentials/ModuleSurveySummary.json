@@ -1,0 +1,34 @@
+[
+  {
+    "Name": "F1/F8-CoreMeta",
+    "Count": 21
+  },
+  {
+    "Name": "F2-Bridge",
+    "Count": 12
+  },
+  {
+    "Name": "F3-Trace",
+    "Count": 9
+  },
+  {
+    "Name": "F4-Equilibrium",
+    "Count": 19
+  },
+  {
+    "Name": "F5-Dynamics",
+    "Count": 12
+  },
+  {
+    "Name": "F6-Mechanism",
+    "Count": 10
+  },
+  {
+    "Name": "F7-Value",
+    "Count": 8
+  },
+  {
+    "Name": "F8-Meta",
+    "Count": 4
+  }
+]

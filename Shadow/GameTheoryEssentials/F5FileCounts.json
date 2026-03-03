@@ -1,0 +1,50 @@
+[
+  {
+    "Name": "PotentialFIP.lean",
+    "Count": 6
+  },
+  {
+    "Name": "DominanceRelations.lean",
+    "Count": 5
+  },
+  {
+    "Name": "Regret.lean",
+    "Count": 5
+  },
+  {
+    "Name": "DominanceSolvable.lean",
+    "Count": 4
+  },
+  {
+    "Name": "PotentialGame.lean",
+    "Count": 4
+  },
+  {
+    "Name": "BestResponse.lean",
+    "Count": 3
+  },
+  {
+    "Name": "BestResponseDynamics.lean",
+    "Count": 3
+  },
+  {
+    "Name": "DominanceSolvability.lean",
+    "Count": 3
+  },
+  {
+    "Name": "PotentialTeam.lean",
+    "Count": 3
+  },
+  {
+    "Name": "StrictDominance.lean",
+    "Count": 3
+  },
+  {
+    "Name": "BestResponseExistence.lean",
+    "Count": 2
+  },
+  {
+    "Name": "PotentialWellFounded.lean",
+    "Count": 2
+  }
+]

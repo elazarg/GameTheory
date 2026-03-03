@@ -5,7 +5,7 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 import GameTheory.KernelGame
 import GameTheory.Probability
-import GameTheory.PMFProduct
+import Math.PMFProduct
 import GameTheory.SolutionConcepts
 
 /-!
@@ -25,6 +25,7 @@ Provides:
 -/
 
 namespace NFG
+open Math.PMFProduct
 
 /-- A finite normal-form game.
   - `ι` is the type of players

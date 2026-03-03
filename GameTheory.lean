@@ -1,6 +1,5 @@
 -- Probability and core
 import GameTheory.Probability
-import GameTheory.PMFProduct
 import GameTheory.KernelGame
 
 -- Game form (protocol layer without utility)
