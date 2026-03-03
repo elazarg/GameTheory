@@ -24,3 +24,7 @@ name = "GameTheory"
 [[lean_lib]]
 name = "Math"
 srcDir = "."
+
+[[lean_lib]]
+name = "CS"
+srcDir = "."

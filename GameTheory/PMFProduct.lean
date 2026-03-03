@@ -239,8 +239,9 @@ lemma Ignores_app2 {α : Type uα} {β : Type uβ} {γ : Type uγ} (j : ι)
   exact
     Trans.simple (congrFun (congrArg H (hF s a)) (G (update s j a))) (congrArg (H (F s)) (hG s a))
 
+open Classical in
 lemma Ignores_ite {α : Type uα} (j : ι)
-    (c : (∀ i, A i) → Prop) [DecidablePred c]
+    (c : (∀ i, A i) → Prop)
     (t e : (∀ i, A i) → α)
     (hc : IgnoresP (A := A) j c)
     (ht : Ignores (A := A) j t) (he : Ignores (A := A) j e) :
@@ -453,7 +454,7 @@ end Pushforward
 
 section Conditioning
 
-variable {ι : Type uι} [Fintype ι]
+variable {ι : Type uι} [DecidableEq ι] [Fintype ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 variable {α : Type uα}
 
@@ -569,6 +570,159 @@ theorem pmfPi_cond_coord_push_other
   simp [Function.update, hq]
 
 end Conditioning
+
+-- ============================================================================
+-- PMF disintegration
+-- ============================================================================
+
+section Disintegration
+
+variable {α : Type*} [Fintype α] {β : Type*} [Fintype β] {γ : Type*}
+
+open Classical in
+omit [Fintype β] in
+set_option linter.unusedFintypeInType false in
+/-- If `b` is in the support of `pushforward μ proj`, then the fibre
+    `{a | proj a = b}` meets the support of `μ`. -/
+lemma pushforward_support_fibre
+    (μ : PMF α) (proj : α → β) (b : β)
+    (hb : b ∈ (pushforward μ proj).support) :
+    ∃ a ∈ ({a | proj a = b} : Set α), a ∈ μ.support := by
+  rw [PMF.mem_support_iff] at hb
+  simp only [pushforward, PMF.bind_apply, PMF.pure_apply] at hb
+  by_contra hall; push_neg at hall
+  apply hb; simp only [tsum_fintype]
+  apply Finset.sum_eq_zero; intro a _
+  rcases eq_or_ne (proj a) b with h | h
+  · have hns := hall a h
+    rw [PMF.mem_support_iff] at hns; push_neg at hns
+    simp [h, hns]
+  · simp [Ne.symm h]
+
+open Classical in
+set_option linter.unusedFintypeInType false in
+/-- **Disintegration / law of total probability for PMF.bind.**
+    Decompose `μ.bind g` by first projecting via `proj`, then conditioning on
+    the projected value:
+    `μ.bind g = (pushforward μ proj).bindOnSupport
+        (fun b _ => (μ.filter {a | proj a = b} _).bind g)`.
+    The normalisation constant in `PMF.filter` cancels against the pushforward
+    weight, recovering the original `μ.bind g`. -/
+theorem pmf_bind_disintegrate
+    (μ : PMF α) (proj : α → β) (g : α → PMF γ) :
+    μ.bind g =
+    (pushforward μ proj).bindOnSupport (fun b hb =>
+      (μ.filter {a | proj a = b} (pushforward_support_fibre μ proj b hb)).bind g) := by
+  classical
+  ext y
+  let Z : β → ENNReal := fun b => ∑ a : α, if b = proj a then μ a else 0
+  let W : β → ENNReal := fun b => ∑ a : α, if b = proj a then μ a * g a y else 0
+  have hZ_push : ∀ b, Z b = (pushforward μ proj) b := by
+    intro b
+    simp [Z, pushforward, PMF.bind_apply, PMF.pure_apply]
+  have hcond : ∀ b, (∀ i : α, b = proj i → μ i = 0) ↔ Z b = 0 := by
+    intro b
+    constructor
+    · intro hb
+      refine (Finset.sum_eq_zero_iff_of_nonneg ?_).2 ?_
+      · intro a ha
+        split_ifs <;> simp
+      · intro a ha
+        by_cases hba : b = proj a
+        · simp [hba, hb a hba]
+        · simp [hba]
+    · intro hZ i hi
+      have hle :
+          (if b = proj i then μ i else 0) ≤ ∑ a : α, if b = proj a then μ a else 0 := by
+        exact Finset.single_le_sum
+          (s := Finset.univ) (f := fun a : α => if b = proj a then μ a else 0)
+          (fun a _ => by simp) (Finset.mem_univ i)
+      have hμle : μ i ≤ Z b := by simpa [Z, hi] using hle
+      exact le_antisymm (by simpa [hZ] using hμle) bot_le
+  have hterm :
+      ∀ b,
+        (if ∀ i : α, b = proj i → μ i = 0 then 0
+          else Z b * ∑ a : α,
+            ({a | proj a = b}.indicator (⇑μ) a) * (∑ a', ({a | proj a = b}.indicator (⇑μ) a'))⁻¹ *
+              g a y)
+          = W b := by
+    intro b
+    by_cases hzb : Z b = 0
+    · have hb0 : ∀ i : α, b = proj i → μ i = 0 := (hcond b).2 hzb
+      have hw0 : W b = 0 := by
+        refine (Finset.sum_eq_zero_iff_of_nonneg ?_).2 ?_
+        · intro a ha
+          split_ifs <;> simp
+        · intro a ha
+          by_cases hba : b = proj a
+          · simp [hba, hb0 a hba]
+          · simp [hba]
+      simp [hzb, hw0]
+    · have hz_ne_top : Z b ≠ ⊤ := by
+        exact ne_of_lt <| calc
+          Z b = (pushforward μ proj) b := hZ_push b
+          _ ≤ 1 := PMF.coe_le_one _ _
+          _ < ⊤ := ENNReal.one_lt_top
+      have hb0 : ¬ (∀ i : α, b = proj i → μ i = 0) := by
+        exact mt (fun h => (hcond b).1 h) hzb
+      have hsum_ind : (∑ a', ({a | proj a = b}.indicator (⇑μ) a')) = Z b := by
+        simp [Z, Set.indicator, eq_comm]
+      have hmulinv : Z b * (Z b)⁻¹ = 1 := ENNReal.mul_inv_cancel hzb hz_ne_top
+      calc
+        (if ∀ i : α, b = proj i → μ i = 0 then 0
+          else Z b * ∑ a : α,
+            ({a | proj a = b}.indicator (⇑μ) a) * (∑ a', ({a | proj a = b}.indicator (⇑μ) a'))⁻¹ *
+              g a y)
+            = Z b * ∑ a : α, ({a | proj a = b}.indicator (⇑μ) a) * (Z b)⁻¹ * g a y := by
+                simp [hb0, hsum_ind]
+        _ = ∑ a : α, if b = proj a then μ a * g a y else 0 := by
+              rw [Finset.mul_sum]
+              refine Finset.sum_congr rfl ?_
+              intro a ha
+              by_cases hba : b = proj a
+              · calc
+                  Z b * ({a | proj a = b}.indicator (⇑μ) a * (Z b)⁻¹ * g a y)
+                      = Z b * (μ a * (Z b)⁻¹ * g a y) := by simp [Set.indicator, hba]
+                  _ = μ a * (Z b * ((Z b)⁻¹ * g a y)) := by ac_rfl
+                  _ = μ a * ((Z b * (Z b)⁻¹) * g a y) := by ac_rfl
+                  _ = μ a * (1 * g a y) := by rw [hmulinv]
+                  _ = (if b = proj a then μ a * g a y else 0) := by simp [hba]
+              · have hproj : proj a ≠ b := by
+                  intro h
+                  exact hba h.symm
+                simp [hba, hproj]
+        _ = W b := by
+              simp [W]
+  calc
+    (μ.bind g) y = ∑ a : α, μ a * g a y := by simp [PMF.bind_apply, tsum_fintype]
+    _ = ∑ b : β, W b := by
+          calc
+            (∑ a : α, μ a * g a y)
+                = ∑ a : α, ∑ b : β, if b = proj a then μ a * g a y else 0 := by
+                    refine Finset.sum_congr rfl ?_
+                    intro a ha
+                    simp
+            _ = ∑ b : β, ∑ a : α, if b = proj a then μ a * g a y else 0 := by
+                    simpa using (Finset.sum_comm :
+                      (∑ a : α, ∑ b : β, if b = proj a then μ a * g a y else 0) =
+                        ∑ b : β, ∑ a : α, if b = proj a then μ a * g a y else 0)
+            _ = ∑ b : β, W b := by simp [W]
+    _ = ((pushforward μ proj).bindOnSupport (fun b hb =>
+          (μ.filter {a | proj a = b} (pushforward_support_fibre μ proj b hb)).bind g)) y := by
+          rw [PMF.bindOnSupport_apply]
+          simp only [PMF.bind_apply, PMF.filter_apply, tsum_fintype, dite_eq_ite, mul_ite, mul_zero]
+          refine Finset.sum_congr rfl ?_
+          intro b hb
+          have hcond' :
+              (∀ i : α, b = proj i → μ i = 0) ↔ (pushforward μ proj) b = 0 := by
+            constructor
+            · intro h
+              simpa [hZ_push b] using (hcond b).1 h
+            · intro h
+              exact (hcond b).2 (by simpa [hZ_push b] using h)
+          simpa [hZ_push b, hcond'] using (hterm b).symm
+
+end Disintegration
 
 -- ============================================================================
 -- Family Update Lemmas
@@ -950,11 +1104,11 @@ theorem pmfPi_cond_coord_other_marginal
 open Classical in
 /-- The "event mass" of a predicate under a product PMF (sum form). -/
 noncomputable def pmfPiMass (σ : ∀ i, PMF (A i))
-    (P : (∀ i, A i) → Prop) [DecidablePred P] : ENNReal :=
+    (P : (∀ i, A i) → Prop) : ENNReal :=
   ∑ s : (∀ i, A i), if P s then pmfPi (A := A) σ s else 0
 
 /-- Basic bound: event mass ≤ 1 (hence never `⊤`). -/
-lemma pmfPiMass_le_one (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) [DecidablePred P] :
+lemma pmfPiMass_le_one (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
     pmfPiMass (A := A) σ P ≤ 1 := by
   classical
   -- pointwise: ite ≤ μ s
@@ -975,7 +1129,7 @@ lemma pmfPiMass_le_one (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) [Deci
   -- finish
   exact le_of_le_of_eq hsum htot
 
-lemma pmfPiMass_ne_top (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) [DecidablePred P] :
+lemma pmfPiMass_ne_top (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
     pmfPiMass (A := A) σ P ≠ (⊤ : ENNReal) := by
   exact ne_of_lt (lt_of_le_of_lt (pmfPiMass_le_one (A := A) σ P) (by simp))
 
@@ -992,7 +1146,7 @@ open Classical in
     provided the event ignores coordinate `j`. -/
 theorem pmfPi_event_ratio_invariant_of_ignores
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
-    (Num Denom : (∀ i, A i) → Prop) [DecidablePred Num] [DecidablePred Denom]
+    (Num Denom : (∀ i, A i) → Prop)
     (hNum_ign : Ignores (A := A) j Num)
     (hDenom_ign : Ignores (A := A) j Denom) :
     (∑ s, if Num s then pmfPi (A := A) (Function.update σ j τ) s else 0)
@@ -1076,7 +1230,7 @@ open Classical in
 /-- Mass is invariant under updating coordinate `j`, if the event ignores `j`. -/
 theorem pmfPi_mass_invariant_of_ignores
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
-    (P : (∀ i, A i) → Prop) [DecidablePred P]
+    (P : (∀ i, A i) → Prop)
     (hP : Ignores (A := A) j P) :
     pmfPiMass (A := A) (Function.update σ j τ) P
       =
@@ -1113,7 +1267,7 @@ open Classical in
     provided both events ignore `j` and both denominators have nonzero mass. -/
 theorem pmfPi_cond_prob_invariant_of_ignores
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
-    (Num Denom : (∀ i, A i) → Prop) [DecidablePred Num] [DecidablePred Denom]
+    (Num Denom : (∀ i, A i) → Prop)
     (hNum : Ignores (A := A) j Num)
     (hDen : Ignores (A := A) j Denom)
     (hDO : pmfPiMass (A := A) σ Denom ≠ 0)
@@ -1177,13 +1331,15 @@ end ConditioningCoord
 
 section BindIndep
 
-variable {ι : Type uι} [DecidableEq ι]
+variable {ι : Type uι}
 variable {A : ι → Type uA}
 
+open Classical in
 /-- Replace coordinates in `K` of `x` by those of `y`. -/
-def replaceOn (K : Finset ι) (x y : ∀ i, A i) : (∀ i, A i) :=
+noncomputable def replaceOn (K : Finset ι) (x y : ∀ i, A i) : (∀ i, A i) :=
   fun i => if i ∈ K then y i else x i
 
+open Classical in
 @[simp] lemma replaceOn_apply (K : Finset ι) (x y : ∀ i, A i) (i : ι) :
     replaceOn K x y i = (if i ∈ K then y i else x i) := rfl
 
@@ -1192,6 +1348,7 @@ def replaceOn (K : Finset ι) (x y : ∀ i, A i) : (∀ i, A i) :=
   funext i
   simp [replaceOn]
 
+open Classical in
 lemma replaceOn_insert (K : Finset ι) (j : ι) (hj : j ∉ K)
     (x y : ∀ i, A i) :
     replaceOn (A := A) (K := insert j K) x y =
@@ -1202,6 +1359,7 @@ lemma replaceOn_insert (K : Finset ι) (j : ι) (hj : j ∉ K)
     simp [replaceOn]
   · simp [replaceOn, hi]
 
+open Classical in
 lemma ignores_replaceOn_eq
     {β : Type*}
     (h : (∀ i, A i) → β)
@@ -1230,6 +1388,7 @@ lemma replaceOn_univ_snd [Fintype ι] (x y : ∀ i, A i) :
   funext i
   simp [replaceOn]
 
+open Classical in
 lemma replaceOn_univ_diff [Fintype ι] (J : Finset ι) (x y : ∀ i, A i) :
     replaceOn (A := A) (K := Finset.univ \ J) x y =
       fun i => if i ∈ J then x i else y i := by
@@ -1238,6 +1397,7 @@ lemma replaceOn_univ_diff [Fintype ι] (J : Finset ι) (x y : ∀ i, A i) :
   · simp [replaceOn, hi]
   · simp [replaceOn, hi]
 
+open Classical in
 /-- **Product-measure independence for bind.**
     If `f` uses only `J`-coordinates (i.e., ignores all `j ∉ J`) and
     `g b` ignores `J`-coordinates, then drawing once from `pmfPi σ` and

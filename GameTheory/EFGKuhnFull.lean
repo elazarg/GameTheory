@@ -103,7 +103,7 @@ instance : DecidableEq (PureProfile S) :=
   show DecidableEq ((p : S.Player) → PureStrategy S p) from
     Fintype.decidablePiFintype
 
-noncomputable def mixedProfileJoint (muP : MixedProfile S) : PMF (PureProfile S) :=
+noncomputable abbrev mixedProfileJoint (muP : MixedProfile S) : PMF (PureProfile S) :=
   pmfPi (A := fun p => PureStrategy S p) muP
 
 def flatProfileEquivPureProfile : Equiv (FlatProfile S) (PureProfile S) where
@@ -201,10 +201,9 @@ noncomputable def pureCond (muP : MixedProfile S) {p : S.Player} (I : S.Infoset 
   pmfCond (μ := mixedProfileJoint (S := S) muP)
     (fun π => Ep (S := S) I a (π p))
     (by
-      change pmfMass (μ := pmfPi (A := fun q => PureStrategy S q) muP)
-        (fun π => Ep (S := S) I a (π p)) ≠ 0
-      rwa [pmfMass_pmfPi_coord (A := fun q => PureStrategy S q)
-        (σ := muP) (j := p) (E := Ep (S := S) I a)])
+      have h : pmfMass (pmfPi muP) (fun s => Ep (S := S) I a (s p)) =
+          pmfMass (muP p) (Ep (S := S) I a) := pmfMass_pmfPi_coord muP p (Ep I a)
+      rw [h]; exact hE)
 
 /-- The key bridge: flat-side conditioning (`muCond`) on a product measure equals the
 pushforward of pure-side conditioning (`pureCond`). This reduces all flat conditioning
@@ -260,9 +259,10 @@ theorem PlayerIndep_muCond
   -- for now, just define it using classical choice + the fact it must be nonzero
   -- because pushforward to flat has nonzero mass).
   have hE : pmfMass (μ := muP p) (Ep (S := S) I a) ≠ 0 := by
-    rwa [← pmfMass_pmfPi_coord (A := fun q => PureStrategy S q)
+    rw [← pmfMass_pmfPi_coord (A := fun q => PureStrategy S q)
       (σ := muP) (j := p) (E := Ep (S := S) I a),
       ← muMarginal_pmfPureToFlat_eq]
+    exact hpa
   refine ⟨Function.update muP p (pmfCond (μ := muP p) (Ep (S := S) I a) hE), ?_⟩
   -- Use the bridge lemma + the PMFProduct “conditioning a product updates only that coordinate”
   -- on the pure side:
@@ -303,9 +303,10 @@ theorem muMarginal_muCond_other
   rcases hind with ⟨muP, rfl⟩
   -- same pure-side nonzero mass as above
   have hE : pmfMass (μ := muP p) (Ep (S := S) I a) ≠ 0 := by
-    rwa [← pmfMass_pmfPi_coord (A := fun q => PureStrategy S q)
+    rw [← pmfMass_pmfPi_coord (A := fun q => PureStrategy S q)
       (σ := muP) (j := p) (E := Ep (S := S) I a),
       ← muMarginal_pmfPureToFlat_eq]
+    exact hpa
   -- rewrite `muCond` as pushforward of pure-side conditioning
   have hrew :
       muCond (S := S) I a (pmfPureToFlat (S := S) (mixedProfileJoint (S := S) muP)) hpa

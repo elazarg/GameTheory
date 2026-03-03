@@ -6,8 +6,8 @@ import GameTheory.SolutionConcepts
 Structural properties of correlated and coarse correlated equilibria.
 
 Provides:
-- `IsCorrelatedEq.toCoarseCorrelatedEq` — every CE is a CCE
-- `deviateDistribution_id` — the identity deviation leaves the distribution unchanged
+- `IsCorrelatedEq.toCoarseCorrelatedEq` -- every CE is a CCE
+- `deviateDistribution_id` -- the identity deviation leaves the distribution unchanged
 -/
 
 namespace GameTheory
@@ -31,13 +31,11 @@ theorem IsCorrelatedEq.toCoarseCorrelatedEq {μ : PMF (Profile G)}
 
 `deviateProfile σ who id = Function.update σ who (σ who) = σ`, so the
 deviation distribution `μ.bind (fun σ => pure (deviateProfile σ who id))`
-simplifies to `μ.bind pure = μ`. -/
+simplifies to `μ.bind pure = μ`.
+Delegates to `GameForm.deviateDistributionFn_id`. -/
 theorem deviateDistribution_id (G : KernelGame ι) (μ : PMF (Profile G)) (who : ι) :
-    G.deviateDistribution μ who _root_.id = μ := by
-  classical
-  simp only [deviateDistribution, deviateProfile, _root_.id]
-  conv_lhs => arg 2; ext σ; rw [Function.update_eq_self]
-  exact PMF.bind_pure μ
+    G.deviateDistribution μ who _root_.id = μ :=
+  G.toGameForm.deviateDistributionFn_id μ who
 
 end KernelGame
 end GameTheory

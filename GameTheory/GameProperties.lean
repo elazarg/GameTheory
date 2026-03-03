@@ -1,5 +1,5 @@
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import GameTheory.KernelGame
+import GameTheory.GameForm
 
 open scoped BigOperators
 
@@ -16,6 +16,18 @@ def ParetoDominates (G : KernelGame ι) (σ τ : Profile G) : Prop :=
 /-- Profile `σ` is Pareto-efficient (no Pareto improvement exists). -/
 def IsParetoEfficient (G : KernelGame ι) (σ : Profile G) : Prop :=
   ¬ ∃ τ : Profile G, G.ParetoDominates τ σ
+
+/-- `KernelGame.ParetoDominatesFor` delegates to `GameForm.ParetoDominatesFor`. -/
+def ParetoDominatesFor (G : KernelGame ι)
+    (pref spref : ι → PMF G.Outcome → PMF G.Outcome → Prop)
+    (σ τ : Profile G) : Prop :=
+  G.toGameForm.ParetoDominatesFor pref spref σ τ
+
+/-- `KernelGame.IsParetoEfficientFor` delegates to `GameForm.IsParetoEfficientFor`. -/
+def IsParetoEfficientFor (G : KernelGame ι)
+    (pref spref : ι → PMF G.Outcome → PMF G.Outcome → Prop)
+    (σ : Profile G) : Prop :=
+  G.toGameForm.IsParetoEfficientFor pref spref σ
 
 /-- Individual rationality w.r.t. reservation utility `r`. -/
 def IsIndividuallyRational (G : KernelGame ι)

@@ -281,11 +281,10 @@ theorem entrySPE_isSPE : entryGame.IsSubgamePerfectEq entrySPE := by
     intro who s'
     fin_cases who <;> (
       simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-        GameTree.evalDist, pureToBehavioral,
-        evalDist_decision, PMF.pure_bind, expect_pure, entrySPE]
+        pureToBehavioral, evalDist_decision]
       rcases entryS_act_eq (s' ()) with h | h <;>
         simp [Function.update, h, pureToBehavioral, GameTree.evalDist,
-              evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure, entrySPE])
+              PMF.pure_bind, expect_pure, entrySPE])
   | action a hRest =>
     fin_cases a
     · -- a = 0 (Enter): subtree is P1's decision
@@ -296,8 +295,7 @@ theorem entrySPE_isSPE : entryGame.IsSubgamePerfectEq entrySPE := by
         intro who s'
         fin_cases who <;> (
           simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-            GameTree.evalDist, pureToBehavioral,
-            evalDist_decision, PMF.pure_bind, expect_pure, entrySPE]
+            pureToBehavioral, evalDist_decision]
           rcases entryS_act_eq (s' ()) with h | h <;>
             simp [Function.update, h, evalDist_terminal, expect_pure, entrySPE])
       | action b hRest' =>
@@ -346,10 +344,8 @@ theorem entryNash_not_spe : ¬ entryGame.IsSubgamePerfectEq entryNash := by
   have hNash := hSPE _ hSub
   have h1 := hNash (1 : Fin 2) (fun _ => (0 : Fin 2))
   simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-    GameTree.evalDist, pureToBehavioral,
-    evalDist_decision, PMF.pure_bind, expect_pure,
-    entryNash] at h1
-  simp [Function.update, evalDist_terminal, expect_pure] at h1
+    pureToBehavioral, evalDist_decision] at h1
+  simp [Function.update, entryNash, evalDist_terminal, expect_pure] at h1
   linarith
 
 theorem entrySPE_isNash : entryGame.toStrategicKernelGame.IsNash entrySPE :=

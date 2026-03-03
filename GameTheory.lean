@@ -2,7 +2,14 @@
 import GameTheory.Probability
 import GameTheory.PMFProduct
 import GameTheory.KernelGame
-import GameTheory.TraceKernelGame
+
+-- Game form (protocol layer without utility)
+import GameTheory.GameForm
+import GameTheory.SeqProto
+import GameTheory.ProtoSPE
+import GameTheory.ProtoODP
+import GameTheory.ProtoZermelo
+import GameTheory.ProtoKuhn
 
 -- Solution concepts and properties
 import GameTheory.SolutionConcepts
@@ -76,16 +83,17 @@ import GameTheory.EFGKuhn
 import GameTheory.EFGKuhnFull
 import GameTheory.EFG_NFG
 import GameTheory.EFGRefinements
-import GameTheory.OneShotDeviation
-import GameTheory.Zermelo
+import GameTheory.EFG_Proto
 
 -- Normal-form games
 import GameTheory.NFG
 import GameTheory.NFG_EFG
+import GameTheory.NFG_Proto
 
 -- Multi-agent influence diagrams
 import GameTheory.MAID
 import GameTheory.MAID_EFG
+import GameTheory.MAID_Proto
 
 -- Coalitional, bargaining, and matching games
 import GameTheory.CoalitionalGame

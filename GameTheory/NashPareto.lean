@@ -7,9 +7,9 @@ import GameTheory.SolutionConcepts
 Relationships between Nash equilibrium concepts and Pareto efficiency.
 
 Provides:
-- `IsStrictNash.isNash` — a strict Nash equilibrium is a Nash equilibrium
-- `ParetoDominates.not_paretoEfficient` — Pareto-dominated profiles are not efficient
-- `ParetoDominates.trans` — Pareto dominance is transitive
+- `IsStrictNash.isNash` -- a strict Nash equilibrium is a Nash equilibrium
+- `ParetoDominates.not_paretoEfficient` -- Pareto-dominated profiles are not efficient
+- `ParetoDominates.trans` -- Pareto dominance is transitive
 -/
 
 namespace GameTheory

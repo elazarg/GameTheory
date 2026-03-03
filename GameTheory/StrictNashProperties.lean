@@ -6,8 +6,8 @@ import GameTheory.SolutionConcepts
 Properties of strict Nash equilibria for kernel-based games.
 
 Provides:
-- `strictNash_of_strictDominant` — a profile of strictly dominant strategies is strict Nash
-- `IsStrictNash.isBestResponse_unique` — under strict Nash, best responses are unique
+- `strictNash_of_strictDominant` -- a profile of strictly dominant strategies is strict Nash
+- `IsStrictNash.isBestResponse_unique` -- under strict Nash, best responses are unique
 -/
 
 namespace GameTheory

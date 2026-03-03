@@ -32,6 +32,15 @@ theorem fixedPoint_transfer
     Q x :=
   hQ x hfix
 
+theorem exists_nonrel_succ_of_wellFounded
+    (wf : _root_.WellFounded r) (f : Nat → α) :
+    ∃ n, ¬ r (f (n + 1)) (f n) := by
+  by_contra h
+  push_neg at h
+  have hempty : IsEmpty {g : Nat → α // ∀ n, r (g (n + 1)) (g n)} :=
+    (_root_.wellFounded_iff_isEmpty_descending_chain).1 wf
+  exact hempty.false ⟨f, h⟩
+
 end WellFounded
 end Order
 end Math
