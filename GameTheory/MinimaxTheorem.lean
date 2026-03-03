@@ -69,13 +69,13 @@ theorem IsZeroSum.nash_eu_eq {G : KernelGame (Fin 2)} [Fintype G.Outcome]
     have hopt := hzs.nash_p0_optimal hNσ (τ 1)
     have hcap : G.eu τ 0 ≥ G.eu (Function.update τ 0 (σ 0)) 0 := by convert hNτ 0 (σ 0)
     have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
-      funext i; fin_cases i <;> simp [Function.update]
+      simpa using (fin2_update_comm σ τ).symm
     rw [heq] at hopt; linarith
   · -- Symmetric
     have hopt := hzs.nash_p0_optimal hNτ (σ 1)
     have hcap : G.eu σ 0 ≥ G.eu (Function.update σ 0 (τ 0)) 0 := by convert hNσ 0 (τ 0)
     have heq : Function.update τ 1 (σ 1) = Function.update σ 0 (τ 0) := by
-      funext i; fin_cases i <;> simp [Function.update]
+      simpa using (fin2_update_comm τ σ).symm
     rw [heq] at hopt; linarith
 
 -- ============================================================================
@@ -120,7 +120,7 @@ theorem IsZeroSum.nash_interchangeable {G : KernelGame (Fin 2)} [Fintype G.Outco
     G.IsNash (Function.update σ 1 (τ 1)) := by
   -- The cross profile equals both update σ 1 (τ 1) and update τ 0 (σ 0)
   have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
-    funext i; fin_cases i <;> simp [Function.update]
+    simpa using (fin2_update_comm σ τ).symm
   -- Game value
   have hval := hzs.nash_eu_eq hNσ hNτ
   -- EU of cross profile = v (squeezed between two bounds)
@@ -138,7 +138,7 @@ theorem IsZeroSum.nash_interchangeable {G : KernelGame (Fin 2)} [Fintype G.Outco
     intro s₀
     have hupd : Function.update (Function.update σ 1 (τ 1)) 0 s₀ =
                 Function.update τ 0 s₀ := by
-      funext i; fin_cases i <;> simp [Function.update]
+      simpa [Function.update_idem] using congrArg (fun p => Function.update p 0 s₀) heq
     rw [hval_cross, hupd]
     have := nash_p0_cap hNτ s₀
     linarith [hval]
@@ -149,7 +149,7 @@ theorem IsZeroSum.nash_interchangeable {G : KernelGame (Fin 2)} [Fintype G.Outco
     intro s₁
     have hupd : Function.update (Function.update σ 1 (τ 1)) 1 s₁ =
                 Function.update σ 1 s₁ := by
-      funext i; fin_cases i <;> simp [Function.update]
+      simp [Function.update_idem]
     rw [hupd]
     have h1 := hzs.eu_neg (Function.update σ 1 (τ 1))
     have h2 := hzs.eu_neg (Function.update σ 1 s₁)

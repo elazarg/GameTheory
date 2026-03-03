@@ -189,25 +189,8 @@ theorem perfectInfo_root_not_in_subtree {S : InfoStructure} {Outcome : Type}
   exact absurd heq (by simp)
 
 -- ============================================================================
--- Expected value monotonicity and DecidableEq bridge
+-- Reachability → decision-node witness
 -- ============================================================================
-
-set_option linter.unusedFintypeInType false in
-theorem expect_mono {α : Type} [Fintype α]
-    (μ : PMF α) (f g : α → ℝ) (hfg : ∀ a, f a ≤ g a) :
-    expect μ f ≤ expect μ g := by
-  simp only [expect_eq_sum]
-  exact Finset.sum_le_sum (fun a _ =>
-    mul_le_mul_of_nonneg_left (hfg a) (ENNReal.toReal_nonneg))
-
-theorem update_eq_update_of_decEq {α : Type} {β : α → Type}
-    (dec₁ dec₂ : DecidableEq α) (f : (a : α) → β a) (a : α) (v : β a) :
-    @Function.update α β dec₁ f a v = @Function.update α β dec₂ f a v := by
-  funext i
-  by_cases h : i = a
-  · subst h
-    simp [Function.update]
-  · simp [Function.update, h]
 
 theorem decisionNodeIn_of_reachBy {S : InfoStructure} {Outcome : Type}
     {h : List (HistoryStep S)} {t : GameTree S Outcome}

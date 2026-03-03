@@ -22,7 +22,8 @@ theorem two_player_update_comm {G : KernelGame (Fin 2)}
     (σ : Profile G) (s₀ : G.Strategy 0) (s₁ : G.Strategy 1) :
     Function.update (Function.update σ 0 s₀) 1 s₁ =
     Function.update (Function.update σ 1 s₁) 0 s₀ := by
-  funext i; fin_cases i <;> simp [Function.update]
+  simpa using (Function.update_comm (f := σ) (a := (0 : Fin 2)) (b := (1 : Fin 2))
+    (v := s₀) (w := s₁) (by decide))
 
 open Classical in
 /-- A 2-player profile is determined by its two components. -/
@@ -38,7 +39,12 @@ open Classical in
 theorem two_player_profile_decompose {G : KernelGame (Fin 2)}
     (σ τ : Profile G) :
     Function.update (Function.update τ 0 (σ 0)) 1 (σ 1) = σ := by
-  funext i; fin_cases i <;> simp [Function.update]
+  calc
+    Function.update (Function.update τ 0 (σ 0)) 1 (σ 1)
+        = Function.update (Function.update σ 1 (τ 1)) 1 (σ 1) := by
+            simpa using congrArg (fun p => Function.update p 1 (σ 1)) (fin2_update_comm σ τ)
+    _ = Function.update σ 1 (σ 1) := by simp [Function.update_idem]
+    _ = σ := Function.update_eq_self 1 σ
 
 open Classical in
 /-- In a 2-player game, a profile where player 0 updates to their current

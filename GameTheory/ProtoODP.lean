@@ -1,4 +1,5 @@
 import GameTheory.ProtoSPE
+import Math.ProbabilityMassFunction
 
 /-!
 # One-Shot Deviation Principle on Protocol
@@ -88,19 +89,6 @@ theorem Protocol.perfectInfo_isPerfectInfoRelevant (G : Protocol n S V A Sig)
   exact Or.inl (fun s₂ sig₁ sig₂ h => hPI r hr i s s₂ sig₁ sig₂ h)
 
 -- ============================================================================
--- Helper: expect monotonicity
--- ============================================================================
-
-set_option linter.unusedFintypeInType false in
-/-- Monotonicity of expect: if f ≤ g pointwise then E_μ[f] ≤ E_μ[g]. -/
-private theorem expect_le_of_pointwise [Fintype S]
-    (μ : PMF S) (f g : S → ℝ) (h : ∀ s, f s ≤ g s) :
-    expect μ f ≤ expect μ g := by
-  simp only [expect_eq_sum]
-  exact Finset.sum_le_sum (fun s _ =>
-    mul_le_mul_of_nonneg_left (h s) ENNReal.toReal_nonneg)
-
--- ============================================================================
 -- Hard direction: no OSD → SPE
 -- ============================================================================
 
@@ -145,7 +133,7 @@ private theorem noOSD_implies_nash_suffix [Fintype S]
             (fun s' => u s' i)) ≤
         expect (r.eval (Function.update σ i si') s)
           (fun s' => expect (evalRounds rest σ s') (fun s' => u s' i)) :=
-      expect_le_of_pointwise _ _ _ (fun s' => h_ih s')
+      Math.ProbabilityMassFunction.expect_mono_of_pointwise _ _ _ (fun s' => h_ih s')
     linarith
 
 set_option linter.unusedFintypeInType false in

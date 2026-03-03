@@ -252,11 +252,6 @@ theorem pmfPi_push_coordwise {ι : Type} [Fintype ι]
       exact (Finset.prod_eq_zero (Finset.mem_univ i₀) (by rw [if_neg hi₀]; ring)).symm
   · exact (Fintype.prod_sum (fun i ai => (μ i) ai * if b i = g i ai then 1 else 0)).symm
 
-/-- Pushforward composition. -/
-theorem pushforward_comp {α β γ : Type*} (μ : PMF α) (f : α → β) (g : β → γ) :
-    pushforward (pushforward μ f) g = pushforward μ (g ∘ f) := by
-  simp only [pushforward, PMF.bind_bind, PMF.pure_bind, Function.comp]
-
 -- ============================================================================
 -- Core: single-round factoring
 -- ============================================================================
@@ -301,7 +296,7 @@ theorem Round.evalMixed_eq_bind_eval [Fintype V]
         r.transition s (fun i => f i (r.view i s (sig i)))) =
       (fun acts => r.transition s acts) ∘ (fun f i => f i (r.view i s (sig i)))
     from rfl]
-  rw [← pushforward_comp]
+  rw [← Math.PMFProduct.pushforward_comp]
   -- Now need: pushforward (pmfPi μ) proj = pmfPi (fun i => σ i (v i))
   congr 1
   have : pushforward (pmfPi fun i => pmfPi (σ i)) (fun f i => f i (r.view i s (sig i)))
@@ -492,18 +487,6 @@ theorem Protocol.kuhn_behavioral_to_mixed
     rw [ih_sub]
     -- Now use independent_factor
     exact independent_factor r rest σ s hsep
-
--- ============================================================================
--- PMF.bind support-level congr
--- ============================================================================
-
-private theorem PMF.bind_congr_support {α β : Type*} (μ : PMF α) (f g : α → PMF β)
-    (h : ∀ a, μ a ≠ 0 → f a = g a) : μ.bind f = μ.bind g := by
-  ext b; simp only [PMF.bind_apply]
-  congr 1; funext a
-  by_cases ha : μ a = 0
-  · simp [ha]
-  · rw [h a ha]
 
 -- ============================================================================
 -- Helpers for Kuhn mixed → behavioral

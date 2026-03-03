@@ -73,7 +73,7 @@ theorem IsConstantSum.nash_eu_eq
     have hopt : G.eu σ 1 ≥ G.eu (Function.update σ 1 (τ 1)) 1 := by
       convert hNσ 1 (τ 1)
     have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
-      funext i; fin_cases i <;> simp [Function.update]
+      simpa using (fin2_update_comm σ τ).symm
     have hcs_cross := hcs.eu_determined (Function.update σ 1 (τ 1))
     rw [heq] at hcs_cross
     -- hcap: eu τ 0 ≥ eu(cross) 0
@@ -87,7 +87,7 @@ theorem IsConstantSum.nash_eu_eq
     have hopt : G.eu τ 1 ≥ G.eu (Function.update τ 1 (σ 1)) 1 := by
       convert hNτ 1 (σ 1)
     have heq : Function.update τ 1 (σ 1) = Function.update σ 0 (τ 0) := by
-      funext i; fin_cases i <;> simp [Function.update]
+      simpa using (fin2_update_comm τ σ).symm
     have hcs_cross := hcs.eu_determined (Function.update τ 1 (σ 1))
     rw [heq] at hcs_cross hopt
     linarith

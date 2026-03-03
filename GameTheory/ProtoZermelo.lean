@@ -1,4 +1,5 @@
 import GameTheory.ProtoODP
+import Math.ProbabilityMassFunction
 
 /-!
 # Zermelo's Theorem on Protocol
@@ -65,14 +66,6 @@ theorem Round.eval_actionIrrelevant (r : Round n S V A Sig)
 -- ============================================================================
 -- Helper: expect monotonicity and map
 -- ============================================================================
-
-set_option linter.unusedFintypeInType false in
-private theorem expect_le_expect [Fintype S]
-    (μ : PMF S) (f g : S → ℝ) (h : ∀ s, f s ≤ g s) :
-    expect μ f ≤ expect μ g := by
-  simp only [expect_eq_sum]
-  exact Finset.sum_le_sum (fun s _ =>
-    mul_le_mul_of_nonneg_left (h s) ENNReal.toReal_nonneg)
 
 set_option linter.unusedFintypeInType false in
 private theorem expect_map [Fintype α] [Fintype β]
@@ -213,7 +206,7 @@ private theorem exists_spe_rounds
             · subst hij; simp [Function.update]
             · simp only [Function.update_of_ne hij]; exact hσ_eq r' hr' j s'' sg) s']
         -- Pointwise: for each signal, argmax + IH gives the bound
-        apply expect_le_expect; intro sg
+        apply Math.ProbabilityMassFunction.expect_mono_of_pointwise; intro sg
         -- PI: Classical.choose h = s for any h : isFromR i view
         have hfrom : isFromR i (r.view i s (sg i)) := ⟨s, sg i, rfl⟩
         have hchoose_eq : ∀ (h : isFromR i (r.view i s (sg i))),
@@ -240,7 +233,7 @@ private theorem exists_spe_rounds
         rw [heval_eq]
         -- Need: E_s'[E[rest σ s'](u·i)] ≥ E_s'[E[rest (upd σ i si') s'](u·i)]
         -- This follows from the IH at k=0 on rest + σ/σ₀ congruence + monotonicity
-        apply expect_le_expect
+        apply Math.ProbabilityMassFunction.expect_mono_of_pointwise
         intro s'
         -- evalRounds rest σ s' vs evalRounds rest (upd σ i si') s'
         -- σ agrees with σ₀ on rest, so evalRounds rest σ = evalRounds rest σ₀

@@ -1,4 +1,6 @@
 import GameTheory.EFGRefinements
+import Math.FunctionUpdate
+import Math.ProbabilityMassFunction
 import Mathlib.Tactic.Linarith
 
 /-!
@@ -63,7 +65,7 @@ theorem spe_hasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
     simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
       evalDist_decision] at h
     simp only [evalDist_decision, pureToBehavioral] at h ⊢
-    rw [update_eq_update_of_decEq] at h
+    rw [Math.Function.Update.update_eq_update_of_decEq] at h
     exact h
   -- Simplify both sides
   have hEvalL : (.decision I next : GameTree G.inf G.Outcome).evalDist (pureToBehavioral σ) =
@@ -139,9 +141,9 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
         simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] using hb
       simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
         evalDist_chance, expect_bind,
-        update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
+        Math.Function.Update.update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
           (fun a b => Classical.propDecidable (a = b)) σ who s'] using
-        (expect_mono μ
+        (Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
           (fun b => expect ((next b).evalDist
             (pureToBehavioral (@Function.update G.inf.Player
               (fun p => PureStrategy G.inf p)
@@ -185,7 +187,7 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
               (fun ω => G.utility ω p) := by
           have hb := hNashSub p s'p
           simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] at hb
-          rw [update_eq_update_of_decEq] at hb
+          rw [Math.Function.Update.update_eq_update_of_decEq] at hb
           exact hb
         -- Step 3: Evaluation at root and with deviation
         have hRootL :
@@ -221,7 +223,7 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
               (fun ω => G.utility ω p) := by
           simpa [hUpd] using hMain
         simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-          hwho, update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
+          hwho, Math.Function.Update.update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
             (fun a b => Classical.propDecidable (a = b)) σ who s'] using hMain'
       · -- Deviator is NOT the deciding player
         have hNashOpt :

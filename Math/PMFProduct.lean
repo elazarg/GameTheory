@@ -406,6 +406,12 @@ variable {α : Type uα} {β : Type uβ}
 noncomputable def pushforward (μ : PMF α) (f : α → β) : PMF β :=
   μ.bind (fun a => PMF.pure (f a))
 
+/-- Pushforward composition. -/
+theorem pushforward_comp {γ : Type uγ}
+    (μ : PMF α) (f : α → β) (g : β → γ) :
+    pushforward (pushforward μ f) g = pushforward μ (g ∘ f) := by
+  simp [pushforward, PMF.bind_bind, Function.comp]
+
 open Classical in
 /-- Pointwise marginal (sum-form) for a coordinate event. -/
 theorem pmfPi_coord_mass
