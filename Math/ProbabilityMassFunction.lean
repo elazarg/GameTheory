@@ -15,6 +15,14 @@ theorem pushforward_comp
     pushforward (pushforward μ f) g = pushforward μ (g ∘ f) := by
   simp [pushforward, PMF.bind_bind, Function.comp]
 
+theorem pushforward_id (μ : PMF α) :
+    pushforward μ id = μ := by
+  simp [pushforward]
+
+theorem pushforward_pure (a : α) (f : α → β) :
+    pushforward (PMF.pure a) f = PMF.pure (f a) := by
+  simp [pushforward]
+
 theorem bind_congr_on_support
     (μ : PMF α) (f g : α → PMF β)
     (hfg : ∀ a, a ∈ μ.support → f a = g a) :
@@ -27,6 +35,36 @@ theorem bind_congr_on_support
   · have haS : a ∈ μ.support := by
       simpa [PMF.mem_support_iff] using ha0
     rw [hfg a haS]
+
+theorem expect_congr_on_support
+    {Ω : Type} (μ : PMF Ω) (f g : Ω → ℝ)
+    (hfg : ∀ a, a ∈ μ.support → f a = g a) :
+    Math.Probability.expect μ f = Math.Probability.expect μ g := by
+  unfold Math.Probability.expect
+  refine tsum_congr (fun a => ?_)
+  by_cases ha0 : μ a = 0
+  · simp [ha0]
+  · have haS : a ∈ μ.support := by
+      simpa [PMF.mem_support_iff] using ha0
+    rw [hfg a haS]
+
+theorem expect_pushforward
+    {Ω Ξ : Type} [Finite Ω] [Finite Ξ]
+    (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) :
+    Math.Probability.expect (pushforward μ f) φ =
+      Math.Probability.expect μ (fun a => φ (f a)) := by
+  classical
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  letI : Fintype Ξ := Fintype.ofFinite Ξ
+  simp [pushforward, Math.Probability.expect_bind]
+
+theorem expect_bind_congr_on_support
+    {Ω Ξ : Type}
+    (μ : PMF Ω) (k₁ k₂ : Ω → PMF Ξ) (φ : Ξ → ℝ)
+    (hk : ∀ a, a ∈ μ.support → k₁ a = k₂ a) :
+    Math.Probability.expect (μ.bind k₁) φ =
+      Math.Probability.expect (μ.bind k₂) φ := by
+  rw [bind_congr_on_support (μ := μ) (f := k₁) (g := k₂) hk]
 
 set_option linter.unusedFintypeInType false in
 theorem expect_mono_of_pointwise

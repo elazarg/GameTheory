@@ -55,6 +55,38 @@ theorem replaceOn_eq_right_of_mem
     replaceOn K x y i = y i := by
   simp [replaceOn, hi]
 
+theorem replaceOn_self
+    (K : Set ι) [DecidablePred (fun i => i ∈ K)]
+    (x : ∀ i, A i) :
+    replaceOn K x x = x := by
+  funext i
+  by_cases hi : i ∈ K <;> simp [replaceOn, hi]
+
+theorem replaceOn_replaceOn_same
+    (K : Set ι) [DecidablePred (fun i => i ∈ K)]
+    (x y z : ∀ i, A i) :
+    replaceOn K (replaceOn K x y) z = replaceOn K x z := by
+  funext i
+  by_cases hi : i ∈ K <;> simp [replaceOn, hi]
+
+theorem replaceOn_comm_of_disjoint
+    (K L : Set ι)
+    [DecidablePred (fun i => i ∈ K)]
+    [DecidablePred (fun i => i ∈ L)]
+    (hKL : Disjoint K L)
+    (x y z : ∀ i, A i) :
+    replaceOn K (replaceOn L x y) z =
+      replaceOn L (replaceOn K x z) y := by
+  funext i
+  by_cases hiK : i ∈ K
+  · have hiL : i ∉ L := by
+      intro hiL
+      exact hKL.le_bot ⟨hiK, hiL⟩
+    simp [replaceOn, hiK, hiL]
+  · by_cases hiL : i ∈ L
+    · simp [replaceOn, hiK, hiL]
+    · simp [replaceOn, hiK, hiL]
+
 theorem replaceOn_insert
     [DecidableEq ι]
     (K : Set ι) [DecidablePred (fun i => i ∈ K)]
@@ -166,6 +198,14 @@ theorem aggregate_excluding_index_update_invariant
   apply hF
   intro i hi
   simp [Function.update, hi]
+
+theorem ignores_of_eq_on_ne
+    [DecidableEq ι]
+    (j : ι) (F : (∀ i, A i) → β)
+    (hF : ∀ s t, (∀ i, i ≠ j → s i = t i) → F s = F t) :
+    Ignores j F := by
+  intro s a
+  exact aggregate_excluding_index_update_invariant j F hF s a
 
 -- Existing in core: `Function.update_idem`, `Function.update_comm`,
 -- `Function.update_eq_self`, `Function.update_of_ne`.

@@ -18,6 +18,26 @@ variable [Preorder α]
 def lowerBoundRegion (F : Set E) (coord : ι → E → α) (v : ι → α) : Set E :=
   {x | x ∈ F ∧ ∀ i : ι, v i ≤ coord i x}
 
+theorem mem_lowerBoundRegion
+    {F : Set E} {coord : ι → E → α} {v : ι → α} {x : E} :
+    x ∈ lowerBoundRegion F coord v ↔ x ∈ F ∧ ∀ i : ι, v i ≤ coord i x := Iff.rfl
+
+theorem lowerBoundRegion_mono_left
+    {F G : Set E} {coord : ι → E → α} {v : ι → α}
+    (hFG : F ⊆ G) :
+    lowerBoundRegion F coord v ⊆ lowerBoundRegion G coord v := by
+  intro x hx
+  exact ⟨hFG hx.1, hx.2⟩
+
+theorem lowerBoundRegion_mono_right
+    {F : Set E} {coord : ι → E → α} {v w : ι → α}
+    (hvw : ∀ i, w i ≤ v i) :
+    lowerBoundRegion F coord v ⊆ lowerBoundRegion F coord w := by
+  intro x hx
+  refine ⟨hx.1, ?_⟩
+  intro i
+  exact le_trans (hvw i) (hx.2 i)
+
 theorem coord_lower_isClosed
     [TopologicalSpace E] [TopologicalSpace α]
     (coord : E → α) (v : α)
