@@ -1,5 +1,6 @@
 import GameTheory.SolutionConcepts
 import Math.Probability
+import Math.FinsetUpdate
 
 /-!
 # Vickrey (Second-Price) Auction
@@ -38,10 +39,8 @@ theorem maxOtherBid_update_self (bids : Fin n → ℝ) (who : Fin n) (b : ℝ) :
   simp only [maxOtherBid]
   split <;> simp_all only [ne_eq]
   rename_i h
-  apply Finset.sup'_congr h rfl
-  intro j hj
-  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hj
-  exact Function.update_of_ne hj b bids
+  exact Math.Finset.Update.sup'_update_eq_of_not_mem
+    (S := Finset.univ.filter (· ≠ who)) h who (by simp) bids b
 
 open Classical in
 /-- Payoff in a second-price auction with valuations `v`.

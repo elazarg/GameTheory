@@ -72,9 +72,10 @@ player's past decisions does not affect other players' marginals
   requires variables) or `cases` (which can't decompose non-variable
   equalities).
 
-- **`muCond_app` local unfolding**: To prove `muCond` commutativity, we
+- **`muCond_apply` simp unfolding**: To prove `muCond` commutativity, we
   unfold `muCond` only at top-level application
-  (`(muCond ..) s = if .. then .. else ..`) via a local lemma, preserving
+  (`(muCond ..) s = if .. then .. else ..`) via the dedicated `[simp]` lemma,
+  preserving
   `muMarginal J (muCond ..)` as an opaque subterm so that cross-player
   marginal invariance (`hJsame`, `hIsame`) can rewrite it.
 
