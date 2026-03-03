@@ -98,6 +98,26 @@ theorem expect_bind_congr_on_support
       Math.Probability.expect (μ.bind k₂) φ := by
   rw [bind_congr_on_support (μ := μ) (f := k₁) (g := k₂) hk]
 
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem bind_apply_eq_sum_sum_fiber
+    {β γ : Type*} [Fintype α] [Fintype β]
+    (μ : PMF α) (proj : α → β) (g : α → PMF γ) (x : γ) :
+    (μ.bind g) x =
+      ∑ b : β, ∑ a : α, (if proj a = b then μ a else 0) * g a x := by
+  simp only [PMF.bind_apply, tsum_fintype]
+  rw [show ∑ a, μ a * g a x =
+      ∑ a, ∑ b : β, if proj a = b then μ a * g a x else 0 from by
+    congr 1
+    funext a
+    exact Eq.symm (Fintype.sum_ite_eq (proj a) (fun _ => μ a * (g a) x))]
+  rw [Finset.sum_comm]
+  congr 1
+  funext b
+  congr 1
+  funext a
+  split_ifs <;> ring
+
 theorem foldl_bind_append
     {δ : Type*}
     (l₁ l₂ : List δ) (μ : PMF α) (k : δ → α → PMF α) :

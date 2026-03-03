@@ -1,6 +1,7 @@
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.PMFProduct
+import Math.ProbabilityMassFunction
 
 import GameTheory.EFGKuhn
 
@@ -984,14 +985,9 @@ theorem muCond_disintegration
     ∑ a : S.Act I,
       ∑ s : FlatProfile S,
         (if s ⟨p, I⟩ = a then mu s else 0) * (f s x) := by
-  simp only [PMF.bind_apply, tsum_fintype]
-  rw [show ∑ s, mu s * f s x =
-    ∑ s, ∑ a : S.Act I, if s ⟨p, I⟩ = a then mu s * f s x else 0 from by
-    congr 1; funext s
-    exact Eq.symm (Fintype.sum_ite_eq (s ⟨p, I⟩) fun j ↦ mu s * (f s) x)]
-  rw [Finset.sum_comm]
-  congr 1; funext a; congr 1; funext s
-  split_ifs <;> ring
+  simpa using
+    (Math.ProbabilityMassFunction.bind_apply_eq_sum_sum_fiber
+      (μ := mu) (proj := fun s => s ⟨p, I⟩) (g := f) (x := x))
 
 theorem mixedToBehavioral_context_eq
     (mu : PMF (FlatProfile S)) (tRoot : GameTree S Outcome)
