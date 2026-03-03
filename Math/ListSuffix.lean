@@ -42,6 +42,28 @@ theorem suffixClosed_trans
     P l₃ := by
   exact hP h23 (hP h12 hl₁)
 
+theorem suffixClosed_map
+    {β : Type*} {P : List β → Prop} (hP : SuffixClosed P)
+    (f : α → β) :
+    SuffixClosed (fun l : List α => P (l.map f)) := by
+  intro l₁ l₂ hs h
+  have hs' : List.IsSuffix (l₂.map f) (l₁.map f) := by
+    rcases hs with ⟨t, ht⟩
+    refine ⟨t.map f, ?_⟩
+    have hmap : List.map f (t ++ l₂) = List.map f l₁ := congrArg (List.map f) ht
+    simpa [List.map_append] using hmap
+  exact hP hs' h
+
+theorem suffixClosed_append_right
+    {P : List α → Prop} (hP : SuffixClosed P) (u : List α) :
+    SuffixClosed (fun l : List α => P (l ++ u)) := by
+  intro l₁ l₂ hs h
+  rcases hs with ⟨t, ht⟩
+  have hs' : List.IsSuffix (l₂ ++ u) (l₁ ++ u) := by
+    refine ⟨t, ?_⟩
+    simpa [List.append_assoc] using congrArg (fun l => l ++ u) ht
+  exact hP hs' h
+
 end Suffix
 end List
 end Math

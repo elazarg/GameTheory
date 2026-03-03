@@ -15,6 +15,11 @@ theorem pushforward_comp
     pushforward (pushforward μ f) g = pushforward μ (g ∘ f) := by
   simp [pushforward, PMF.bind_bind, Function.comp]
 
+theorem pushforward_pushforward
+    (μ : PMF α) (f : α → β) (g : β → γ) :
+    pushforward (pushforward μ f) g = pushforward μ (g ∘ f) :=
+  pushforward_comp μ f g
+
 theorem pushforward_id (μ : PMF α) :
     pushforward μ id = μ := by
   simp [pushforward]
@@ -22,6 +27,21 @@ theorem pushforward_id (μ : PMF α) :
 theorem pushforward_pure (a : α) (f : α → β) :
     pushforward (PMF.pure a) f = PMF.pure (f a) := by
   simp [pushforward]
+
+theorem bind_pure_eq_pushforward
+    (μ : PMF α) (f : α → β) :
+    μ.bind (fun a => PMF.pure (f a)) = pushforward μ f := by
+  rfl
+
+theorem bind_assoc
+    (μ : PMF α) (f : α → PMF β) (g : β → PMF γ) :
+    (μ.bind f).bind g = μ.bind (fun a => (f a).bind g) := by
+  exact PMF.bind_bind (p := μ) (f := f) (g := g)
+
+theorem pushforward_bind
+    (μ : PMF α) (k : α → PMF β) (f : β → γ) :
+    pushforward (μ.bind k) f = μ.bind (fun a => pushforward (k a) f) := by
+  simp [pushforward, PMF.bind_bind]
 
 theorem bind_congr_on_support
     (μ : PMF α) (f g : α → PMF β)
