@@ -98,10 +98,11 @@ theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
   -- This matches Function.update θ who (s' (θ who))
   have : (fun i => Function.update (M.truthful μ) who s' i (θ i)) =
       Function.update θ who (s' (θ who)) := by
-    ext i; simp only [Function.update]
-    split_ifs with h
-    · subst h; rfl
-    · rfl
+    ext i
+    by_cases hi : i = who
+    · subst hi
+      simp [Function.update]
+    · simp [truthful, Function.update, hi]
   rw [this]
   exact hIC who θ (s' (θ who))
 
@@ -118,11 +119,13 @@ theorem isBIC_of_truthful_bayesNash (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i)
   -- The LHS of h matches, need to show RHS matches
   -- update (fun θ => θ) who (fun _ => θ') applied to θ gives update θ who θ'
   convert h using 2
-  ext θ; congr 1; ext i
-  simp only [Function.update]
-  split_ifs with hi
-  · subst hi; rfl
-  · rfl
+  ext θ
+  congr 1
+  ext i
+  by_cases hi : i = who
+  · subst hi
+    simp [Function.update]
+  · simp [truthful, Function.update, hi]
 
 end Mechanism
 

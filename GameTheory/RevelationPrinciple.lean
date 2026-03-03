@@ -93,11 +93,12 @@ theorem revelation_principle (M : GeneralMechanism ι)
   have h := hBNE who (fun _ => σ who θ')
   simp only [payoff] at h
   convert h using 2
-  ext θ; congr 1; ext i
-  simp only [Function.update]
-  split_ifs with hi
-  · subst hi; rfl
-  · rfl
+  ext θ
+  congr 1
+  funext i
+  simpa using
+    (Function.apply_update
+      (f := fun j => σ j) (g := θ) (i := who) (v := θ') (j := i))
 
 end GeneralMechanism
 
