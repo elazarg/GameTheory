@@ -1,6 +1,7 @@
 import GameTheory.ProtoZermelo
 import Math.PMFProduct
 import Math.Probability
+import Math.ProbabilityMassFunction
 
 /-!
 # Kuhn's Theorem at the Protocol Level
@@ -168,21 +169,6 @@ noncomputable def behavioralProfileToMixed [Fintype V]
 -- evalRoundsMixed decomposition
 -- ============================================================================
 
-private theorem foldl_roundsMixed_eq_bind [Fintype (Option A)]
-    (rounds : List (Round n S V A Sig))
-    (σ : BehavioralProfile n V A) (μ : PMF S) :
-    List.foldl (fun dist r => dist.bind (r.evalMixed σ)) μ rounds
-    = μ.bind (evalRoundsMixed rounds σ) := by
-  induction rounds generalizing μ with
-  | nil => exact (PMF.bind_pure μ).symm
-  | cons r rest ih =>
-    simp only [List.foldl]
-    rw [ih]
-    rw [PMF.bind_bind]
-    congr 1; funext s
-    simp only [evalRoundsMixed, List.foldl, PMF.pure_bind]
-    exact (ih (r.evalMixed σ s)).symm
-
 @[simp]
 theorem evalRoundsMixed_nil [Fintype (Option A)]
     (σ : BehavioralProfile n V A) (s : S) :
@@ -193,7 +179,7 @@ theorem evalRoundsMixed_cons [Fintype (Option A)]
     (σ : BehavioralProfile n V A) (s : S) :
     evalRoundsMixed (r :: rest) σ s = (r.evalMixed σ s).bind (evalRoundsMixed rest σ) := by
   simp only [evalRoundsMixed, List.foldl]
-  rw [foldl_roundsMixed_eq_bind]
+  rw [Math.ProbabilityMassFunction.foldl_bind_eq_bind_foldl_pure]
   exact congrArg (PMF.bind · (evalRoundsMixed rest σ)) (PMF.pure_bind s (r.evalMixed σ))
 
 -- ============================================================================
