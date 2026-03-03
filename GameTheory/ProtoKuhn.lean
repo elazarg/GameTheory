@@ -2,6 +2,7 @@ import GameTheory.ProtoZermelo
 import Math.PMFProduct
 import Math.Probability
 import Math.ProbabilityMassFunction
+import Math.SetReachability
 
 /-!
 # Kuhn's Theorem at the Protocol Level
@@ -1006,18 +1007,20 @@ theorem kuhnBehavioral_correct
     rw [hstart]
     -- Step 4: condMixed coord fix (now all masses are nonzero on support),
     -- then use support-congruence for bind.
-    refine Math.ProbabilityMassFunction.bind_congr_of_ne_zero
+    refine Math.Set.Reachability.bind_eq_of_eqOn_support
       (μ := pmfPi μ')
       (f := fun f => evalRounds rest f s₁)
       (g := fun f => evalRounds rest f (r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i)))))
       ?_
     intro f hf
+    have hf0 : (pmfPi μ') f ≠ 0 := by
+      simpa [PMF.mem_support_iff] using hf
     have hacts :
         r.transition s₀ acts₀ = r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i))) := by
       congr 1; funext i
       have hi : (μ' i) (f i) ≠ 0 := by
         intro heq
-        exact hf (by
+        exact hf0 (by
           simp only [pmfPi_apply]
           exact Finset.prod_eq_zero (Finset.mem_univ i) heq)
       have hiCond : condMixed (μ i) (r.view i s₀ (sig₀ i)) (acts₀ i) (f i) ≠ 0 := by
