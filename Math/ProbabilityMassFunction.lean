@@ -124,6 +124,21 @@ theorem foldl_bind_congr
         exact bind_congr_on_support μ (k₁ b) (k₂ b) (fun a _ => hk b a)
       simpa [hbind] using ih (μ.bind (k₁ b))
 
+theorem foldl_bind_eq_bind_foldl_pure
+    {δ : Type*}
+    (l : List δ) (μ : PMF α) (k : δ → α → PMF α) :
+    l.foldl (fun dist b => dist.bind (k b)) μ =
+      μ.bind (fun a => l.foldl (fun dist b => dist.bind (k b)) (PMF.pure a)) := by
+  induction l generalizing μ with
+  | nil =>
+      simp [PMF.bind_pure]
+  | cons b rest ih =>
+      simp only [List.foldl]
+      rw [ih, PMF.bind_bind]
+      congr 1
+      funext a
+      simpa using (ih (k b a)).symm
+
 set_option linter.unusedFintypeInType false in
 theorem expect_mono_of_pointwise
     {Ω : Type*} [Fintype Ω]

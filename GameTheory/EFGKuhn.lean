@@ -271,9 +271,7 @@ noncomputable def mixedToBehavioralFlat {p : S.Player}
                 = ∑ s, if reachesFlat I s t then (μ s : ENNReal) else 0 := rfl
               _ ≤ ∑ s, μ s := Finset.sum_le_sum fun s _ => by split_ifs <;> simp
               _ = 1 := by
-                  have h := PMF.tsum_coe μ
-                  rwa [tsum_eq_sum (s := Finset.univ)
-                    (fun x hx => absurd (Finset.mem_univ x) hx)] at h
+                  simpa [tsum_fintype] using (PMF.tsum_coe μ)
           exact ENNReal.mul_inv_cancel hpR
             (ne_of_lt (lt_of_le_of_lt hpReach_le (by simp))))
 
@@ -346,9 +344,7 @@ theorem reachProbFlat_root {p : S.Player} {I' : S.Infoset p}
       (if reachesFlat I' s (GameTree.decision I' next) then (μ s : ENNReal) else 0) = μ s := by
     intro s; rw [if_pos reachesFlat_root]
   simp_rw [this]
-  have h := PMF.tsum_coe μ
-  rwa [tsum_eq_sum (s := Finset.univ)
-    (fun x hx => absurd (Finset.mem_univ x) hx)] at h
+  simpa [tsum_fintype] using (PMF.tsum_coe μ)
 
 open Classical in
 /-- At the root, the conditional numerator collapses. -/
@@ -394,8 +390,7 @@ noncomputable def μCond {p : S.Player} (I₀ : S.Infoset p) (a : S.Act I₀)
           · rw [if_neg h, if_neg (Ne.symm h)]
         rw [h_sum]
         exact ENNReal.mul_inv_cancel hp
-          (ENNReal.ne_top_of_tsum_ne_top
-            (PMF.tsum_coe (μMarginal I₀ μ) ▸ ENNReal.one_ne_top) a))
+          (PMF.apply_ne_top (μMarginal I₀ μ) a))
 
 /-- Evaluating μCond at a specific profile gives μ s / p_a if the action matches, else 0. -/
 theorem μCond_apply {p : S.Player} (I₀ : S.Infoset p) (a : S.Act I₀)
@@ -446,12 +441,10 @@ theorem bind_marginal_cond {p : S.Player} (I₀ : S.Infoset p)
     simp [hp, h_mu_s]
   · rw [μCond_apply I₀ (s ⟨p, I₀⟩) μ s hp, if_pos rfl]
     have h_le_one : μMarginal I₀ μ (s ⟨p, I₀⟩) ≤ 1 := by
-      calc μMarginal I₀ μ (s ⟨p, I₀⟩) ≤ ∑ a, μMarginal I₀ μ a :=
-          Finset.single_le_sum (fun _ _ => zero_le _) (Finset.mem_univ _)
-        _ = 1 := by
-          have h := PMF.tsum_coe (μMarginal I₀ μ)
-          rwa [tsum_eq_sum (s := Finset.univ)
-            (fun x hx => absurd (Finset.mem_univ x) hx)] at h
+        calc μMarginal I₀ μ (s ⟨p, I₀⟩) ≤ ∑ a, μMarginal I₀ μ a :=
+            Finset.single_le_sum (fun _ _ => zero_le _) (Finset.mem_univ _)
+          _ = 1 := by
+            simpa [tsum_fintype] using (PMF.tsum_coe (μMarginal I₀ μ))
     have hp_top : μMarginal I₀ μ (s ⟨p, I₀⟩) ≠ ⊤ := ne_of_lt (lt_of_le_of_lt h_le_one (by simp))
     -- Algebraic cancellation: p_a * (μ s / p_a * f) = μ s * f
     rw [div_eq_mul_inv, mul_comm (μ s), ← mul_assoc]
@@ -503,29 +496,6 @@ theorem evalDist_decision_cond_restrict {p : S.Player} {I₀ : S.Infoset p}
   · -- If the profile does not take action `a`, the conditional probability is 0
     rw [μCond_apply I₀ a μ s hp, if_neg hsa, zero_mul, zero_mul]
 
-lemma ENNReal.div_div_div_cancel_right
-    (X Y p_a : ENNReal) (hp0 : p_a ≠ 0) (hpt : p_a ≠ ⊤) :
-    (X / p_a) / (Y / p_a) = X / Y := by
-  simp only [div_eq_mul_inv, mul_assoc]
-  have hp_inv_ne_top : p_a⁻¹ ≠ (⊤ : ENNReal) := by
-    simpa [ENNReal.inv_ne_top] using hp0
-  have hp_inv_ne_zero : p_a⁻¹ ≠ (0 : ENNReal) := by
-    simpa [ENNReal.inv_ne_zero] using hpt
-  have hinv : (Y * p_a⁻¹)⁻¹ = Y⁻¹ * (p_a⁻¹)⁻¹ := by
-    simpa using
-      (ENNReal.mul_inv (a := Y) (b := p_a⁻¹)
-        (ha := Or.inr hp_inv_ne_top) (hb := Or.inr hp_inv_ne_zero))
-  calc
-    _   = X * p_a⁻¹ * (Y⁻¹ * (p_a⁻¹)⁻¹) := by
-      simp [hinv]
-      grind only
-    _   = X * p_a⁻¹ * (Y⁻¹ * p_a) := by simp
-    _   = X * (Y⁻¹ * (p_a⁻¹ * p_a)) := by
-      simp [mul_assoc, mul_left_comm, mul_comm]
-    _   = X * (Y⁻¹ * 1) := by
-      simp [ENNReal.inv_mul_cancel hp0 hpt]
-    _   = X / Y := by simp [div_eq_mul_inv]
-
 /-- Scaling lemma for the *reach probability* under a decision root:
     reachProb(parent) = p_a * reachProb(subtree under μCond). -/
 lemma reachProbFlat_decision_scale {p}
@@ -548,9 +518,8 @@ lemma reachProbFlat_decision_scale {p}
   -- Abbrev p_a and its non-top proof (standard for PMFs).
   let p_a : ENNReal := μMarginal I₀ μ a
   have hpa_top : p_a ≠ ⊤ := by
-    -- same pattern you used elsewhere
-    exact ENNReal.ne_top_of_tsum_ne_top
-      (PMF.tsum_coe (μMarginal I₀ μ) ▸ ENNReal.one_ne_top) a
+    -- PMF point masses are always finite.
+    exact PMF.apply_ne_top (μMarginal I₀ μ) a
   -- Expand both reachProbFlat, rewrite indicators via hiff, and use μCond_apply.
   simp only [reachProbFlat]
   -- LHS: sum over s of (if s(I₀)=a ∧ reach_sub then μ s else 0)
@@ -642,8 +611,7 @@ lemma num_decision_scale
     fun s => reachesFlat_decision_iff hpr hJ hne
   let p_a : ENNReal := μMarginal I₀ μ a
   have hpa_top : p_a ≠ ⊤ := by
-    exact ENNReal.ne_top_of_tsum_ne_top
-      (PMF.tsum_coe (μMarginal I₀ μ) ▸ ENNReal.one_ne_top) a
+    exact PMF.apply_ne_top (μMarginal I₀ μ) a
   -- Expand RHS, rewrite μCond_apply, and cancel p_a as in reachProb lemma.
   -- Do it by termwise analysis with split_ifs.
   -- First rewrite the LHS indicator via hiff.
@@ -706,8 +674,7 @@ theorem mixedToBehavioralFlat_decision_sub
   classical
   let p_a : ENNReal := μMarginal I₀ μ a
   have hpa_top : p_a ≠ ⊤ := by
-    exact ENNReal.ne_top_of_tsum_ne_top
-      (PMF.tsum_coe (μMarginal I₀ μ) ▸ ENNReal.one_ne_top) a
+    exact PMF.apply_ne_top (μMarginal I₀ μ) a
   have hReach :
       reachProbFlat μ (.decision (p := p) I₀ next) J
         = p_a * reachProbFlat (μCond I₀ a μ) (next a) J := by
@@ -741,11 +708,6 @@ theorem mixedToBehavioralFlat_decision_sub
             then (μCond I₀ a μ s : ENNReal) else 0) := by
       simpa [p_a] using num_decision_scale (p := p) hpr μ hpa hJ b
     simp only [hrL, mul_comm, div_eq_mul_inv, PMF.ofFintype_apply, hNum, mul_left_comm, rR, rL]
-    have := ENNReal.div_div_div_cancel_right
-      (X := (∑ s : FlatProfile S,
-        if reachesFlat J s (next a) ∧ s ⟨p, J⟩ = b
-        then (μCond I₀ a μ s : ENNReal) else 0))
-      (Y := rR) (p_a := p_a) (hp0 := by simpa [p_a] using hpa) (hpt := hpa_top)
     rw [ENNReal.mul_inv]
     · rw [mul_comm (reachProbFlat (μCond I₀ a μ) (next a) J)⁻¹ p_a⁻¹]
       simp_rw [← mul_assoc]

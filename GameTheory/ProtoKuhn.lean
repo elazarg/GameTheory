@@ -400,21 +400,6 @@ theorem independent_factor
   -- Apply pmfPi_bind_indep.symm on the flat product
   let J : Finset (Fin n × V) := Finset.univ.filter (fun p =>
     ∃ sig₀ : Sig, p.2 = r.view p.1 s sig₀)
-  -- Helper: curry commutes with update at (i,v)
-  have curry_update : ∀ (g : Fin n × V → Option A) (i : Fin n) (v : V) (a : Option A),
-      Function.curry (Function.update g (i, v) a) =
-        Function.update (Function.curry g) i
-          (Function.update (Function.curry g i) v a) := by
-    intro g i v a; ext j w
-    simp only [Function.curry, Function.update]
-    by_cases hjw : (j, w) = (i, v)
-    · simp [(Prod.mk.inj hjw).1, (Prod.mk.inj hjw).2]
-    · simp only [hjw, ↓reduceDIte]
-      by_cases hj : j = i
-      · subst hj
-        have hw : w ≠ v := fun hw => hjw (by rw [hw])
-        simp [hw]
-      · simp [hj]
   exact (pmfPi_bind_indep flatσ
     (fun g => r.eval (Function.curry g) s)
     (fun s' g => evalRounds rest (Function.curry g) s')
@@ -628,26 +613,6 @@ private theorem condMixed_coord [Fintype (PureStrategy V A)]
     (hf : condMixed μ v a f ≠ 0) : f v = a := by
   simp only [condMixed, dif_pos hmass, pmfCond_apply, pmfMask] at hf
   by_contra hne; simp [hne] at hf
-
-open Classical in
-/-- The product push(a) * condMixed(a)(f) is nonzero only when f v = a. -/
-private theorem push_mul_condMixed_eq_zero [Fintype (PureStrategy V A)]
-    (μ : MixedStrategy V A) (v : V) (a : Option A) (f : PureStrategy V A)
-    (hne : f v ≠ a) :
-    (pushforward μ (· v)) a * (condMixed μ v a) f = 0 := by
-  by_cases hmass : pmfMass (μ := μ) (fun g => g v = a) ≠ 0
-  · have : (condMixed μ v a) f = 0 := by
-      simp only [condMixed, dif_pos hmass, pmfCond_apply, pmfMask, hne, ite_false]
-      exact ENNReal.zero_div
-    rw [this, mul_zero]
-  · rw [not_not] at hmass
-    have : (pushforward μ (· v)) a = 0 := by
-      simp only [pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype,
-        pmfMass, pmfMask, mul_ite, mul_one, mul_zero] at hmass ⊢
-      convert hmass using 1
-      congr 1; ext g
-      congr 1; ext; simp only [eq_comm (a := a)]
-    rw [this, zero_mul]
 
 /-- Strong recall for the tail of a round list, at a successor state. -/
 theorem RoundsStrongRecall_tail (r : Round n S V A Sig) (rest : List (Round n S V A Sig))
@@ -1028,21 +993,13 @@ theorem kuhnBehavioral_correct
     congr 1; funext sig₀
     -- Apply pmfPi_bind_decompose_views on RHS
     rw [pmfPi_bind_decompose_views μ (fun i => r.view i s₀ (sig₀ i))]
-    -- Both sides: push.bind (fun acts => INNER)
-    -- Prove at the push-bind level so we can case-split on whether push weight is zero.
-    suffices hinner : ∀ acts₀,
-        (pmfPi (fun i => pushforward (μ i) (· (r.view i s₀ (sig₀ i))))) acts₀ ≠ 0 →
-        evalRoundsMixed rest σ (r.transition s₀ acts₀) =
-          (pmfPi (fun i => condMixed (μ i) (r.view i s₀ (sig₀ i)) (acts₀ i))).bind (fun f =>
-            evalRounds rest f (r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i))))) by
-      ext b; simp only [PMF.bind_apply]
-      apply tsum_congr; intro acts₀
-      by_cases hpush : (pmfPi (fun i => pushforward (μ i)
-          (· (r.view i s₀ (sig₀ i))))) acts₀ = 0
-      · simp [hpush]
-      · rw [hinner acts₀ hpush]; simp only [PMF.bind_apply]
-    -- Prove inner equality assuming push weight ≠ 0
-    intro acts₀ hpush
+    refine Math.ProbabilityMassFunction.bind_congr_of_ne_zero
+      (μ := pmfPi (fun i => pushforward (μ i) (· (r.view i s₀ (sig₀ i)))))
+      (f := fun acts₀ => evalRoundsMixed rest σ (r.transition s₀ acts₀))
+      (g := fun acts₀ =>
+        (pmfPi (fun i => condMixed (μ i) (r.view i s₀ (sig₀ i)) (acts₀ i))).bind (fun f =>
+          evalRounds rest f (r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i))))))
+      (fun acts₀ hpush => ?_)
     -- From nonzero push: all per-player masses are nonzero
     have hmass_ne : ∀ i, pmfMass (μ := μ i)
         (fun g => g (r.view i s₀ (sig₀ i)) = acts₀ i) ≠ 0 := by
@@ -1063,22 +1020,31 @@ theorem kuhnBehavioral_correct
       exact kuhnBehavioral_tail_agree r rest s₀ μ hsep hrecall sig₀ acts₀
         i k hk st sig acts hce
     have hih := ih s₁ hsep_tail (hrt acts₀) μ'
-    rw [hbridge, hih]
-    -- Goal: (pmfPi μ').bind (evalRounds rest · s₁) =
-    --       (pmfPi μ').bind (fun f => evalRounds rest f (r.transition s₀ (fun i => f i (v_i))))
-    -- Step 4: condMixed coord fix (now all masses are nonzero)
-    ext b; simp only [PMF.bind_apply]
-    apply tsum_congr; intro f
-    by_cases hf : (pmfPi μ') f = 0
-    · have hf' : (pmfPi fun i => condMixed (μ i) (r.view i s₀ (sig₀ i)) (acts₀ i)) f = 0 := hf
-      simp [hf, hf']
-    · congr 1; congr 1; congr 1
-      change r.transition s₀ acts₀ = r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i)))
+    have hstart : evalRoundsMixed rest σ (r.transition s₀ acts₀) =
+        (pmfPi μ').bind (fun f => evalRounds rest f s₁) := by
+      simpa [s₁] using hbridge.trans hih
+    change evalRoundsMixed rest σ (r.transition s₀ acts₀) =
+      (pmfPi (fun i => condMixed (μ i) (r.view i s₀ (sig₀ i)) (acts₀ i))).bind (fun f =>
+        evalRounds rest f (r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i)))))
+    rw [hstart]
+    -- Step 4: condMixed coord fix (now all masses are nonzero on support),
+    -- then use support-congruence for bind.
+    refine Math.ProbabilityMassFunction.bind_congr_of_ne_zero
+      (μ := pmfPi μ')
+      (f := fun f => evalRounds rest f s₁)
+      (g := fun f => evalRounds rest f (r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i)))))
+      ?_
+    intro f hf
+    have hacts :
+        r.transition s₀ acts₀ = r.transition s₀ (fun i => f i (r.view i s₀ (sig₀ i))) := by
       congr 1; funext i
       have hi : (μ' i) (f i) ≠ 0 := by
-        intro heq; apply hf; simp only [pmfPi_apply]
-        exact Finset.prod_eq_zero (Finset.mem_univ i) heq
+        intro heq
+        exact hf (by
+          simp only [pmfPi_apply]
+          exact Finset.prod_eq_zero (Finset.mem_univ i) heq)
       exact (condMixed_coord (μ i) _ (acts₀ i) (f i) (hmass_ne i) hi).symm
+    simp [s₁, hacts]
 
 set_option linter.unusedFintypeInType false in
 open Classical in

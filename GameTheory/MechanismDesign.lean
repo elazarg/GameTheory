@@ -1,5 +1,6 @@
 import GameTheory.BayesianGame
 import Math.Probability
+import Math.ProbabilityMassFunction
 
 /-!
 # Mechanism Design Basics
@@ -60,11 +61,11 @@ open Classical in
 theorem isIC_implies_isBIC (M : Mechanism ι) (hIC : M.isIC) (μ : PMF (∀ i, M.Θ i)) :
     M.isBIC μ := by
   intro who θ'
-  simp only [expect_eq_sum, ge_iff_le]
-  apply Finset.sum_le_sum
-  intro θ _
-  apply mul_le_mul_of_nonneg_left _ ENNReal.toReal_nonneg
-  exact hIC who θ θ'
+  rw [ge_iff_le]
+  exact Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
+    (fun θ => M.outcome (Function.update θ who θ') who)
+    (fun θ => M.outcome θ who)
+    (fun θ => hIC who θ θ')
 
 open Classical in
 /-- The Bayesian game induced by a mechanism with prior `μ`:
@@ -89,10 +90,9 @@ theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
     (M.inducedBayesianGame μ).BayesNash (M.truthful μ) := by
   rw [BayesianGame.bayesNash_iff_exAnteEU]
   intro who s'
-  simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful, expect_eq_sum, ge_iff_le]
-  apply Finset.sum_le_sum
-  intro θ _
-  apply mul_le_mul_of_nonneg_left _ ENNReal.toReal_nonneg
+  simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful, ge_iff_le]
+  apply Math.ProbabilityMassFunction.expect_mono_of_pointwise
+  intro θ
   -- Need: M.outcome (fun i => update (truthful) who s' i (θ i)) who ≤ M.outcome θ who
   -- update (truthful) who s' i (θ i) = if i = who then s'(θ who) else θ i
   -- This matches Function.update θ who (s' (θ who))

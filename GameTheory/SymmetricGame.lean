@@ -56,19 +56,6 @@ theorem isSymmetricEU_eu_eq (u : (ι → S) → ι → ℝ) (hsym : IsSymmetricE
   linarith
 
 open Classical in
-/-- Updating a permuted profile at `j` with `s'` equals
-    permuting the profile updated at `π⁻¹ j`. -/
-theorem update_comp_perm_eq (σ : ι → S) (π : Equiv.Perm ι) (j : ι) (s' : S) :
-    Function.update (σ ∘ ⇑π⁻¹) j s' = Function.update σ (π⁻¹ j) s' ∘ ⇑π⁻¹ := by
-  ext k
-  simp only [Function.comp_apply]
-  by_cases hk : k = j
-  · subst hk; simp [Function.update_self]
-  · have hk' : (π⁻¹ : Equiv.Perm ι) k ≠ (π⁻¹ : Equiv.Perm ι) j :=
-      fun h => hk (π⁻¹.injective h)
-    simp only [Function.update_of_ne hk, Function.update_of_ne hk', Function.comp_apply]
-
-open Classical in
 /-- In a symmetric `ofEU` game, permuting a Nash profile yields Nash. -/
 theorem isSymmetricEU_nash_perm (u : (ι → S) → ι → ℝ) (hsym : IsSymmetricEU u)
     (π : Equiv.Perm ι) (σ : ι → S) (hN : (KernelGame.ofEU (fun _ => S) u).IsNash σ) :
@@ -78,7 +65,10 @@ theorem isSymmetricEU_nash_perm (u : (ι → S) → ι → ℝ) (hsym : IsSymmet
   -- u (σ ∘ π⁻¹) j = u σ (π⁻¹ j)
   have hlhs := hsym.apply_perm π σ j
   -- update (σ ∘ π⁻¹) j s' = (update σ (π⁻¹ j) s') ∘ π⁻¹
-  have hupd := update_comp_perm_eq σ π j s'
+  have hupd :
+      Function.update (σ ∘ ⇑π⁻¹) j s' =
+        Function.update σ (π⁻¹ j) s' ∘ ⇑π⁻¹ := by
+    simpa using (Function.update_comp_equiv (f := σ) (g := π.symm) (a := π⁻¹ j) (v := s')).symm
   have hrhs : u (Function.update (σ ∘ ⇑π⁻¹) j s') j =
       u (Function.update σ (π⁻¹ j) s') (π⁻¹ j) := by
     rw [hupd]

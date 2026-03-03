@@ -139,8 +139,7 @@ noncomputable def muCond {p : S.Player} (I : S.Infoset p) (a : S.Act I)
         grind
       rw [hsum]
       exact ENNReal.mul_inv_cancel hpa
-        (ENNReal.ne_top_of_tsum_ne_top
-          (PMF.tsum_coe (muMarginal (S := S) I mu) ▸ ENNReal.one_ne_top) a))
+        (PMF.apply_ne_top (muMarginal (S := S) I mu) a))
 
 /-- A flat PMF is **player-independent** if it arises as the pushforward of a product
 of per-player mixed strategies. This is the key structural property preserved
@@ -1064,9 +1063,7 @@ theorem muMarginal_mul_muCond_apply
       muCond (S := S) I a mu ha s =
     if s ⟨p, I⟩ = a then mu s else 0 := by
   have hne_top : (muMarginal (S := S) I mu) a ≠ ⊤ :=
-    ENNReal.ne_top_of_tsum_ne_top
-      (PMF.tsum_coe (muMarginal (S := S) I mu) ▸
-        ENNReal.one_ne_top) a
+    PMF.apply_ne_top (muMarginal (S := S) I mu) a
   simp only [muCond, PMF.ofFintype_apply]
   split_ifs with hs
   · rw [mul_comm,

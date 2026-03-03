@@ -1,6 +1,7 @@
 import GameTheory.SeqProto
 import GameTheory.SolutionConcepts
 import Math.Probability
+import Math.ProbabilityMassFunction
 
 /-!
 # Subgames and Subgame-Perfect Equilibrium on Protocol
@@ -39,28 +40,13 @@ variable {n : ℕ} {S V A Sig : Type}
 theorem evalRounds_nil (σ : PureProfile n V A) (s : S) :
     evalRounds ([] : List (Round n S V A Sig)) σ s = PMF.pure s := rfl
 
-/-- Foldl of rounds equals bind-chaining (induction helper). -/
-private theorem foldl_rounds_eq_bind (rounds : List (Round n S V A Sig))
-    (σ : PureProfile n V A) (μ : PMF S) :
-    List.foldl (fun dist r => dist.bind (r.eval σ)) μ rounds
-    = μ.bind (evalRounds rounds σ) := by
-  induction rounds generalizing μ with
-  | nil => exact (PMF.bind_pure μ).symm
-  | cons r rest ih =>
-    simp only [List.foldl]
-    rw [ih]
-    rw [PMF.bind_bind]
-    congr 1; funext s
-    simp only [evalRounds, List.foldl, PMF.pure_bind]
-    exact (ih (r.eval σ s)).symm
-
 /-- Single-round decomposition: evaluating `r :: rest` is the same as
     evaluating `r` then binding the rest. -/
 theorem evalRounds_cons (r : Round n S V A Sig) (rest : List (Round n S V A Sig))
     (σ : PureProfile n V A) (s : S) :
     evalRounds (r :: rest) σ s = (r.eval σ s).bind (evalRounds rest σ) := by
   simp only [evalRounds, List.foldl]
-  rw [foldl_rounds_eq_bind]
+  rw [Math.ProbabilityMassFunction.foldl_bind_eq_bind_foldl_pure]
   exact congrArg (PMF.bind · (evalRounds rest σ)) (PMF.pure_bind s (r.eval σ))
 
 /-- Concatenation decomposition: evaluating `l₁ ++ l₂` is the same as

@@ -2,6 +2,7 @@ import GameTheory.SolutionConcepts
 import Math.PMFProduct
 import GameTheory.ProductSimplexBrouwer
 import Math.Probability
+import Math.ProbabilityMassFunction
 
 /-!
 # Mixed-Strategy Nash Equilibrium Existence
@@ -127,14 +128,11 @@ theorem isNash_iff_gains_nonpos
     conv_rhs => rw [show G.mixedExtension.eu σ who =
         expect τ (fun _ => G.mixedExtension.eu σ who) from by
       simp [expect_const]]
-    simp only [expect_eq_sum]
-    apply Finset.sum_le_sum
-    intro a _
+    apply Math.ProbabilityMassFunction.expect_mono_of_pointwise
+    intro a
     have hga := hgain who a
     simp only [mixedGain] at hga
-    apply mul_le_mul_of_nonneg_left
-    · linarith
-    · exact ENNReal.toReal_nonneg
+    linarith
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -146,10 +144,7 @@ theorem weighted_gain_sum_zero
     expect (σ who) (fun a => G.mixedGain σ who a) = 0 := by
   simp only [mixedGain, expect_eq_sum]
   have hsum1 : ∑ a : G.Strategy who, ((σ who) a).toReal = 1 := by
-    have h := PMF.tsum_coe (σ who)
-    rw [tsum_fintype] at h
-    rw [← ENNReal.toReal_sum (fun a _ => PMF.apply_ne_top (σ who) a)]
-    simp [h]
+    simpa using pmf_toReal_sum_one (σ who)
   have hdecomp : ∑ a : G.Strategy who, ((σ who) a).toReal *
       G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who =
     G.mixedExtension.eu σ who := by
@@ -278,22 +273,6 @@ end NashMapAlgebra
 section Encoding
 
 variable {α : Type} [Fintype α] [Nonempty α]
-
-/-- Convert a PMF on a finite type to a real-valued weight vector. -/
-def pmfToReal (μ : PMF α) : α → ℝ := fun a => (μ a).toReal
-
-set_option linter.unusedFintypeInType false in
-omit [Fintype α] [Nonempty α] in
-theorem pmfToReal_nonneg (μ : PMF α) (a : α) : 0 ≤ pmfToReal μ a :=
-  ENNReal.toReal_nonneg
-
-omit [Nonempty α] in
-theorem pmfToReal_sum_one (μ : PMF α) : ∑ a : α, pmfToReal μ a = 1 := by
-  simp only [pmfToReal]
-  have h := PMF.tsum_coe μ
-  rw [tsum_fintype] at h
-  rw [← ENNReal.toReal_sum (fun a _ => PMF.apply_ne_top μ a)]
-  simp [h]
 
 /-- Convert a non-negative weight vector summing to 1 to a PMF. -/
 def realToPmf (w : α → ℝ) (hw_nn : ∀ a, 0 ≤ w a) (hw_sum : ∑ a, w a = 1) : PMF α :=
