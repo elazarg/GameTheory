@@ -24,6 +24,21 @@ theorem no_improvement_transfer
   intro hmono s s'
   simpa [hobj s, hobj s'] using hmono s s'
 
+theorem predicate_transfer_compose
+    {Z : Type*}
+    {R : Z → Prop}
+    {ψ : Z → X}
+    (h : ∀ x, P x → Q (φ x)) :
+    ∀ z, R z → P (ψ z) → Q (φ (ψ z)) := by
+  intro z _ hz
+  exact h (ψ z) hz
+
+theorem fixed_point_transfer
+    {X : Type*}
+    (T : X → X) (P : X → Prop)
+    (h : ∀ x, T x = x → P x) :
+    ∀ x, T x = x → P x := h
+
 end Transfer
 end Order
 end Math
