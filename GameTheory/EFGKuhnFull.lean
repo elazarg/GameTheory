@@ -1042,12 +1042,22 @@ theorem muMarginal_zero_of_coord
     (ha : muMarginal (S := S) I mu a = 0)
     (s : FlatProfile S) (hs : s ⟨p, I⟩ = a) :
     mu s = 0 := by
-  simp only [muMarginal, PMF.bind_apply,
-    tsum_fintype] at ha
-  have h0 := Finset.sum_eq_zero_iff.mp ha s
-    (Finset.mem_univ s)
-  simp only [hs, PMF.pure_apply, ↓reduceIte, mul_one] at h0
-  exact h0
+  have hpush : Math.PMFProduct.pushforward mu (fun t : FlatProfile S => t ⟨p, I⟩) a = 0 := by
+    simpa [muMarginal, Math.PMFProduct.pushforward] using ha
+  have hle :
+      mu s ≤ (Math.PMFProduct.pushforward mu (fun t : FlatProfile S => t ⟨p, I⟩)) a := by
+    have hle' :
+        (if a = (fun t : FlatProfile S => t ⟨p, I⟩) s then mu s else 0) ≤
+          ∑ t : FlatProfile S,
+            if a = (fun t : FlatProfile S => t ⟨p, I⟩) t then mu t else 0 :=
+      Finset.single_le_sum
+        (f := fun t : FlatProfile S =>
+          if a = (fun t : FlatProfile S => t ⟨p, I⟩) t then mu t else 0)
+        (fun _ _ => by positivity)
+        (Finset.mem_univ s)
+    simpa [Math.PMFProduct.pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype, hs] using hle'
+  rw [hpush] at hle
+  exact le_antisymm hle bot_le
 
 /-- Mass times conditional = indicator times original. -/
 theorem muMarginal_mul_muCond_apply
