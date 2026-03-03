@@ -21,11 +21,11 @@ private lemma pmf_sum_eq_one {α : Type*} [Fintype α] (μ : PMF α) :
 
 section Aux
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [DecidableEq ι]
 variable {A : ι → Type uA}
 
 /-- Factor the product weight into the `j`-coordinate and the rest. -/
-lemma prod_factor_erase (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) :
+lemma prod_factor_erase [Fintype ι] (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) :
     (∏ i : ι, σ i (s i))
       = (σ j) (s j) * (∏ i ∈ (Finset.univ.erase j), σ i (s i)) := by
   classical
@@ -34,7 +34,8 @@ lemma prod_factor_erase (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) :
       (f := fun i => σ i (s i)) (a := j) (by simp)).symm
 
 /-- Updating at coordinate `j` does not change the product over `univ.erase j`. -/
-lemma prod_erase_update_eq (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) (a : A j) :
+lemma prod_erase_update_eq [Fintype ι]
+    (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) (a : A j) :
     (∏ i ∈ Finset.univ.erase j, σ i ((Function.update s j a) i))
       = (∏ i ∈ Finset.univ.erase j, σ i (s i)) := by
   apply Finset.prod_congr rfl
@@ -45,7 +46,6 @@ lemma prod_erase_update_eq (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) (a 
 def swapJA (j : ι) : (A j × (∀ i, A i)) → (A j × (∀ i, A i)) :=
   fun p => (p.2 j, Function.update p.2 j p.1)
 
-omit [Fintype ι] in
 lemma swapJA_involutive (j : ι) : Function.Involutive (swapJA (A := A) j) := by
   intro ⟨a, s⟩
   apply Prod.ext
@@ -73,22 +73,56 @@ end Aux
 
 section Core
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [DecidableEq ι]
 variable {A : ι → Type uA}
 
 -- ---- Product PMF --------------------------------------------------------
 
+open Classical in
 /-- Product PMF over a finite index type: independently sample each coordinate. -/
-noncomputable def pmfPi [∀ i, Fintype (A i)] (σ : ∀ i, PMF (A i)) : PMF (∀ i, A i) :=
+noncomputable def pmfPi [Fintype ι] [∀ i, Fintype (A i)]
+    (σ : ∀ i, PMF (A i)) : PMF (∀ i, A i) :=
   PMF.ofFintype (fun s => ∏ i, σ i (s i)) (by
     rw [← Fintype.prod_sum]
     have : ∀ i, ∑ j : A i, (σ i) j = 1 := fun i => pmf_sum_eq_one (σ i)
     simp [this])
 
-@[simp] lemma pmfPi_apply [∀ i, Fintype (A i)]
+@[simp] lemma pmfPi_apply [Fintype ι] [∀ i, Fintype (A i)]
     (σ : ∀ i, PMF (A i)) (s : ∀ i, A i) :
     pmfPi (A := A) σ s = ∏ i, σ i (s i) := by
   simp [pmfPi, PMF.ofFintype_apply]
+
+open Classical in
+/-- Product of point masses is a point mass at the joint assignment. -/
+theorem pmfPi_pure [Fintype ι] [∀ i, Fintype (A i)] (σ : ∀ i, A i) :
+    pmfPi (fun i => (PMF.pure (σ i) : PMF (A i))) = PMF.pure σ := by
+  classical
+  ext s
+  by_cases hs : s = σ
+  · subst hs
+    simp [pmfPi_apply]
+  · have hneq : ¬ ∀ i, s i = σ i := by
+      intro hall
+      apply hs
+      funext i
+      exact hall i
+    obtain ⟨i, hi⟩ := not_forall.mp hneq
+    have hfactor0 : (if s i = σ i then (1 : ENNReal) else 0) = 0 := by
+      simp [hi]
+    have hprod0 :
+        (∏ x : ι, (if s x = σ x then (1 : ENNReal) else 0)) = 0 := by
+      calc
+        (∏ x : ι, (if s x = σ x then (1 : ENNReal) else 0))
+            = (if s i = σ i then (1 : ENNReal) else 0) *
+              (Finset.prod (Finset.univ.erase i)
+                (fun x => (if s x = σ x then (1 : ENNReal) else 0))) := by
+                simpa [Finset.mem_univ] using
+                  (Finset.mul_prod_erase
+                    (s := (Finset.univ : Finset ι))
+                    (f := fun x => (if s x = σ x then (1 : ENNReal) else 0))
+                    (a := i) (by simp)).symm
+        _ = 0 := by simp [hfactor0]
+    simpa [pmfPi_apply, PMF.pure_apply, hs] using hprod0
 
 -- ---- Assignment operations -----------------------------------------------
 
@@ -99,12 +133,10 @@ noncomputable def pmfPi [∀ i, Fintype (A i)] (σ : ∀ i, PMF (A i)) : PMF (�
 @[simp] def update (s : (∀ i, A i)) (j : ι) (a : A j) : (∀ i, A i) :=
   Function.update s j a
 
-omit [Fintype ι] in
 @[simp] lemma update_self (s : (∀ i, A i)) (j : ι) (a : A j) :
     update (A := A) s j a j = a := by
   simp [update]
 
-omit [Fintype ι] in
 @[simp] lemma update_ne (s : (∀ i, A i)) {i j : ι} (a : A j) (h : i ≠ j) :
     update (A := A) s j a i = s i := by
   simp [update, h]
@@ -119,7 +151,6 @@ def Ignores {α : Type uα} (j : ι) (F : (∀ i, A i) → α) : Prop :=
 def Ignores₂ {α : Type uα} (j : ι) (G : A j → (∀ i, A i) → α) : Prop :=
   ∀ a0 s a, G a0 (update (A := A) s j a) = G a0 s
 
-omit [Fintype ι] in
 /-- A pointwise (extensional) criterion implying `Ignores`. -/
 lemma Ignores_of_pointwise {α : Type uα} (j : ι) (F : (∀ i, A i) → α)
     (h : ∀ s₁ s₂, (∀ i, i ≠ j → s₁ i = s₂ i) → F s₁ = F s₂) :
@@ -129,7 +160,6 @@ lemma Ignores_of_pointwise {α : Type uα} (j : ι) (F : (∀ i, A i) → α)
   intro i hi
   simp [update, hi]
 
-omit [Fintype ι] in
 /-- A pointwise (extensional) criterion implying `Ignores₂`. -/
 lemma Ignores₂_of_pointwise {α : Type uα} (j : ι) (G : A j → (∀ i, A i) → α)
     (h : ∀ a0 s₁ s₂, (∀ i, i ≠ j → s₁ i = s₂ i) → G a0 s₁ = G a0 s₂) :
@@ -139,12 +169,10 @@ lemma Ignores₂_of_pointwise {α : Type uα} (j : ι) (G : A j → (∀ i, A i)
   intro i hi
   simp [update, hi]
 
-omit [Fintype ι] in
 lemma Ignores_coord_eq (j q : ι) (hq : q ≠ j) (a : A q) :
   Ignores (A := A) j (fun s => s q = a) := by
     intro s b; simp [update, hq]
 
-omit [Fintype ι] in
 lemma Ignores_coord_pred (j q : ι) (hq : q ≠ j) (E : A q → Prop) :
   Ignores (A := A) j (fun s => E (s q)) := by
     intro s b; simp [update, hq]
@@ -319,8 +347,8 @@ theorem sum_pmfPi_factor
       σ j a * ((∏ i : ι, σ i (s i)) * F (s j) s) = W (e (a, s)) := by
     intro a s
     -- F (s j) (Function.update s j a) = F (s j) s by Ignores₂
-    have hF_upd : F (s j) (Function.update s j a) = F (s j) s :=
-      hF (s j) s a
+    have hF_upd : F (s j) (@Function.update ι A (inferInstance) s j a) = F (s j) s := by
+      simpa [update] using (hF (s j) s a)
     dsimp [W, e, swapJA]
     rw [prod_erase_update_eq σ j s a, hF_upd]
     simp_rw [prod_factor_erase σ j s]
@@ -425,24 +453,26 @@ end Pushforward
 
 section Conditioning
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [Fintype ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 variable {α : Type uα}
 
+open Classical in
 /-- Mask a PMF by a decidable event (as an ENNReal-valued function). -/
-noncomputable def pmfMask (μ : PMF α) (E : α → Prop) [DecidablePred E] : α → ENNReal :=
+noncomputable def pmfMask (μ : PMF α) (E : α → Prop) : α → ENNReal :=
   fun a => if E a then μ a else 0
 
 /-- Total mass of a masked PMF. -/
-noncomputable def pmfMass (μ : PMF α) (E : α → Prop) [Fintype α] [DecidablePred E] : ENNReal :=
+noncomputable def pmfMass (μ : PMF α) (E : α → Prop) [Fintype α] : ENNReal :=
   ∑ a : α, pmfMask (μ := μ) E a
 
 /-- Condition a PMF on an event with nonzero mass. -/
-noncomputable def pmfCond (μ : PMF α) (E : α → Prop) [Fintype α] [DecidablePred E]
+noncomputable def pmfCond (μ : PMF α) (E : α → Prop) [Fintype α]
     (h : pmfMass (μ := μ) E ≠ 0) : PMF α :=
   PMF.ofFintype
     (fun a => pmfMask (μ := μ) E a / pmfMass (μ := μ) E)
     (by
+      classical
       simp_rw [div_eq_mul_inv, ← Finset.sum_mul]
       have h_ne_top : pmfMass (μ := μ) E ≠ ⊤ := by
         apply ne_of_lt
@@ -453,7 +483,7 @@ noncomputable def pmfCond (μ : PMF α) (E : α → Prop) [Fintype α] [Decidabl
           _ < ⊤ := ENNReal.one_lt_top
       exact ENNReal.mul_inv_cancel h h_ne_top)
 
-@[simp] lemma pmfCond_apply (μ : PMF α) (E : α → Prop) [Fintype α] [DecidablePred E]
+@[simp] lemma pmfCond_apply (μ : PMF α) (E : α → Prop) [Fintype α]
     (h : pmfMass (μ := μ) E ≠ 0) (a : α) :
     pmfCond (μ := μ) E h a = pmfMask (μ := μ) E a / pmfMass (μ := μ) E := by
   simp [pmfCond, PMF.ofFintype_apply]
@@ -462,7 +492,7 @@ open Classical in
 /-- The mass of the coordinate-lifted event under a product is the mass under the factor. -/
 theorem pmfMass_pmfPi_coord
     (σ : ∀ i, PMF (A i)) (j : ι)
-    (E : A j → Prop) [DecidablePred E] :
+    (E : A j → Prop) :
     pmfMass (μ := pmfPi (A := A) σ) (fun s => E (s j))
       =
     pmfMass (μ := σ j) E := by
@@ -487,10 +517,11 @@ theorem pmfMass_pmfPi_coord
     simpa [pmfPi_apply] using this
   · simp [hE]
 
+open Classical in
 /-- Conditioning a product PMF on a coordinate event updates only that coordinate's factor. -/
 theorem pmfPi_cond_coord
     (σ : ∀ i, PMF (A i)) (j : ι)
-    (E : A j → Prop) [DecidablePred E]
+    (E : A j → Prop)
     (hE : pmfMass (μ := σ j) E ≠ 0) :
     pmfCond (μ := pmfPi (A := A) σ) (fun s => E (s j))
       (by
@@ -521,10 +552,11 @@ theorem pmfPi_cond_coord
     simp only [div_eq_mul_inv, mul_comm, mul_left_comm]
   · simp [hE_s]
 
+open Classical in
 /-- Conditioning on coordinate `j` does not change other coordinate marginals. -/
 theorem pmfPi_cond_coord_push_other
     (σ : ∀ i, PMF (A i)) {j q : ι} (hq : q ≠ j)
-    (E : A j → Prop) [DecidablePred E]
+    (E : A j → Prop)
     (hE : pmfMass (μ := σ j) E ≠ 0) :
     pushforward
       (pmfCond (μ := pmfPi (A := A) σ) (fun s => E (s j))
@@ -544,10 +576,11 @@ end Conditioning
 
 section UpdateLemmas
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [Fintype ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 variable {β : Type uβ}
 
+open Classical in
 /-- Pointwise: updating the *factor family* at `j` only changes that coordinate's factor. -/
 @[simp] lemma pmfPi_apply_update_family (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
     (s : ∀ i, A i) :
@@ -562,6 +595,7 @@ variable {β : Type uβ}
   · apply Finset.prod_congr rfl; intro i hi
     simp [Function.update, Finset.ne_of_mem_erase hi]
 
+open Classical in
 /-- A robust, division-free form: cross-multiplication of the updated and original products. -/
 lemma pmfPi_update_family_mul (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
     (s : ∀ i, A i) :
@@ -573,11 +607,227 @@ lemma pmfPi_update_family_mul (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
   -- RHS: (σ j (s j) * rest) * τ (s j)
   simp [mul_comm, mul_left_comm]
 
+open Classical in
+/-- The product PMF with one component replaced by a mixture `d` equals the mixture of
+    products with that component set to pure values. This is the "Fubini" identity for `pmfPi`. -/
+theorem pmfPi_update_bind (σ : ∀ i, PMF (A i)) (j : ι) (d : PMF (A j)) :
+    pmfPi (A := A) (Function.update σ j d) =
+      d.bind (fun a => pmfPi (A := A) (Function.update σ j (PMF.pure a))) := by
+  ext s
+  simp only [PMF.bind_apply, pmfPi_apply_update_family, PMF.pure_apply]
+  rw [tsum_eq_single (s j)]
+  · simp
+  · intro b hb; simp [Ne.symm hb]
+
+open Classical in
+/-- When `f` ignores coordinate `j`, the bind of a deterministic
+    product (with `pure a` at `j`) through `f` is independent of `a`.
+    This is the core step for marginalizing an irrelevant coordinate. -/
+private theorem pmfPi_pure_bind_ignores
+    (σ : ∀ i, PMF (A i)) (j : ι) (a a' : A j)
+    {β : Type*}
+    (f : (∀ i, A i) → PMF β)
+    (hf : Ignores j f) :
+    (pmfPi (Function.update σ j (PMF.pure a))).bind f =
+      (pmfPi (Function.update σ j (PMF.pure a'))).bind f := by
+  ext t; simp only [PMF.bind_apply, pmfPi_apply_update_family,
+    PMF.pure_apply, tsum_fintype]
+  -- Use Equiv.swap at coordinate j to biject the two sums
+  let e := Equiv.piCongrRight (fun i : ι =>
+    if h : i = j then h ▸ Equiv.swap a a' else Equiv.refl _)
+  apply Fintype.sum_equiv e; intro acts
+  -- Simplify e acts at coordinate j and elsewhere
+  have hej : (e acts) j = Equiv.swap a a' (acts j) := by
+    simp [e, Equiv.piCongrRight_apply]
+  have hene : ∀ i, i ≠ j → (e acts) i = acts i := by
+    intro i hi; simp [e, Equiv.piCongrRight_apply, hi]
+  -- Product over i ≠ j is unchanged
+  have hprod : (∏ i ∈ Finset.univ.erase j,
+      (σ i) ((e acts) i)) =
+      ∏ i ∈ Finset.univ.erase j, (σ i) (acts i) := by
+    apply Finset.prod_congr rfl; intro i hi
+    rw [hene i (Finset.ne_of_mem_erase hi)]
+  rw [hej, hprod]
+  -- f(e acts) = f(acts) since f ignores j
+  have hfeq : f (e acts) = f acts := by
+    show f (e acts) = f acts
+    have : e acts = Function.update acts j
+        (Equiv.swap a a' (acts j)) := by
+      ext i; by_cases hi : i = j
+      · subst hi; simp [hej, Function.update_self]
+      · rw [hene i hi, Function.update_of_ne hi]
+    rw [this]; exact hf acts _
+  rw [hfeq]
+  -- Remaining: ite (acts j = a) * ... = ite (swap(acts j) = a') * ...
+  congr 1; congr 1
+  by_cases h : acts j = a
+  · simp [h, Equiv.swap_apply_left]
+  · by_cases h' : acts j = a'
+    · simp [h', Equiv.swap_apply_right, eq_comm]
+    · simp [h, h', Equiv.swap_apply_of_ne_of_ne h h']
+
+open Classical in
+/-- If `f` ignores coordinate `j`, then `(pmfPi σ).bind f` is
+    independent of `σ j`. That is, updating `σ j` does not change
+    the expected value of `f` under the product. -/
+theorem pmfPi_bind_ignores_coord
+    (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
+    {β : Type*}
+    (f : (∀ i, A i) → PMF β)
+    (hf : Ignores j f) :
+    (pmfPi (Function.update σ j τ)).bind f =
+      (pmfPi σ).bind f := by
+  -- Decompose both sides via pmfPi_update_bind
+  rw [pmfPi_update_bind, PMF.bind_bind]
+  conv_rhs =>
+    rw [show σ = Function.update σ j (σ j) from by
+      ext i x; by_cases h : i = j
+      · subst h; simp
+      · simp [Function.update_of_ne h]]
+    rw [pmfPi_update_bind, PMF.bind_bind]
+  -- Both: d.bind g where g a = pmfPi(update σ j (pure a)).bind f
+  -- g is constant by pmfPi_pure_bind_ignores, so d doesn't matter.
+  -- Pick a₀ from τ's support (PMF is nonempty).
+  obtain ⟨a₀, _⟩ := τ.support_nonempty
+  have hconst : ∀ a,
+      (pmfPi (Function.update σ j (PMF.pure a))).bind f =
+      (pmfPi (Function.update σ j (PMF.pure a₀))).bind f :=
+    fun a => pmfPi_pure_bind_ignores σ j a a₀ f hf
+  simp_rw [hconst]; simp [PMF.bind_const]
+
+open Classical in
+/-- Repeated coordinate updates do not change `pmfPi.bind f` when `f`
+    ignores every updated coordinate.
+
+    This is a list-iterated form of `pmfPi_bind_ignores_coord`, useful when
+    many coordinates are rewritten one-by-one. -/
+theorem pmfPi_bind_ignores_coord_list
+    (σ τ : ∀ i, PMF (A i))
+    {β : Type*}
+    (f : (∀ i, A i) → PMF β)
+    (l : List ι)
+    (hNodup : l.Nodup)
+    (hf : ∀ j, j ∈ l → Ignores j f) :
+    (pmfPi (l.foldl (fun fam j => Function.update fam j (τ j)) σ)).bind f =
+      (pmfPi σ).bind f := by
+  induction l generalizing σ with
+  | nil =>
+      simp
+  | cons j rest ih =>
+      have hNodupRest : rest.Nodup := List.Nodup.of_cons hNodup
+      have hfj : Ignores j f := hf j (by simp)
+      have hfRest : ∀ k, k ∈ rest → Ignores k f := by
+        intro k hk
+        exact hf k (by simp [hk])
+      simp only [List.foldl]
+      calc
+        (pmfPi (rest.foldl (fun fam j => Function.update fam j (τ j))
+            (Function.update σ j (τ j)))).bind f
+            =
+          (pmfPi (Function.update σ j (τ j))).bind f := by
+              exact ih (σ := Function.update σ j (τ j)) hNodupRest hfRest
+        _ = (pmfPi σ).bind f := pmfPi_bind_ignores_coord σ j (τ j) f hfj
+
+open Classical in
+/-- Finset wrapper for `pmfPi_bind_ignores_coord_list`. -/
+theorem pmfPi_bind_ignores_coord_finset
+    (σ τ : ∀ i, PMF (A i))
+    {β : Type*}
+    (f : (∀ i, A i) → PMF β)
+    (J : Finset ι)
+    (hf : ∀ j, j ∈ J → Ignores j f) :
+    (pmfPi ((J.toList).foldl (fun fam j => Function.update fam j (τ j)) σ)).bind f =
+      (pmfPi σ).bind f := by
+  refine pmfPi_bind_ignores_coord_list σ τ f J.toList J.nodup_toList ?_
+  intro j hj
+  exact hf j ((Finset.mem_toList.mp hj))
+
+open Classical in
+omit [Fintype ι] [(i : ι) → Fintype (A i)] in
+/-- Folding coordinate updates along a nodup list rewrites exactly those
+    coordinates (and leaves all others unchanged). -/
+lemma foldl_update_family_eq_of_nodup
+    (l : List ι) (hNodup : l.Nodup)
+    (σ τ : ∀ i, PMF (A i)) :
+    l.foldl (fun fam j => Function.update fam j (τ j)) σ
+      = fun i => if i ∈ l then τ i else σ i := by
+  induction l generalizing σ with
+  | nil =>
+      simp
+  | cons j rest ih =>
+      have hNodupRest : rest.Nodup := List.Nodup.of_cons hNodup
+      simp only [List.foldl]
+      -- rewrite fold over `rest` with updated base family
+      rw [ih (σ := Function.update σ j (τ j)) hNodupRest]
+      funext i
+      by_cases hi : i = j
+      · subst hi
+        simp
+      · simp [List.mem_cons, hi]
+
+open Classical in
+/-- If a continuation ignores every coordinate, binding it under any product PMF
+    collapses to the same constant PMF value. -/
+theorem pmfPi_bind_eq_of_forall_ignores
+    (σ : ∀ i, PMF (A i))
+    {β : Type*}
+    (g : (∀ i, A i) → PMF β)
+    (hg : ∀ j, Ignores j g)
+    (s0 : ∀ i, A i) :
+    (pmfPi σ).bind g = g s0 := by
+  let τ : ∀ i, PMF (A i) := fun i => PMF.pure (s0 i)
+  have hfold :
+      (Finset.univ.toList.foldl
+          (fun fam j => Function.update fam j (τ j)) σ) = τ := by
+    have htmp := foldl_update_family_eq_of_nodup
+      (l := Finset.univ.toList) (σ := σ) (τ := τ) (Finset.univ.nodup_toList)
+    calc
+      (Finset.univ.toList.foldl (fun fam j => Function.update fam j (τ j)) σ)
+          = (fun i => if i ∈ Finset.univ.toList then τ i else σ i) := htmp
+      _ = τ := by
+          funext i
+          simp
+  have hbind :
+      (pmfPi τ).bind g = (pmfPi σ).bind g := by
+    have h := pmfPi_bind_ignores_coord_finset (σ := σ) (τ := τ)
+      (f := g) (J := Finset.univ) (hf := fun j _ => hg j)
+    simpa [hfold] using h
+  calc
+    (pmfPi σ).bind g = (pmfPi τ).bind g := hbind.symm
+    _ = g s0 := by simp [τ, pmfPi_pure]
+
+open Classical in
+/-- "Fresh bind" corollary: if `g` ignores every coordinate, then
+    integrating `g` against any product PMF equals evaluating `g` at an
+    assignment chosen from each factor's support. -/
+theorem pmfPi_bind_comm_fresh_support
+    (σ : ∀ i, PMF (A i))
+    {β : Type*}
+    (g : (∀ i, A i) → PMF β)
+    (hg : ∀ j, Ignores j g) :
+    (pmfPi σ).bind g = g (fun i => (σ i).support_nonempty.choose) :=
+  pmfPi_bind_eq_of_forall_ignores (σ := σ) (g := g) hg
+    (fun i => (σ i).support_nonempty.choose)
+
+open Classical in
+/-- Arbitrary-point variant of `pmfPi_bind_comm_fresh_support`. -/
+theorem pmfPi_bind_comm_fresh
+    (σ : ∀ i, PMF (A i))
+    {β : Type*}
+    (g : (∀ i, A i) → PMF β)
+    (hg : ∀ j, Ignores j g)
+    [∀ i, Nonempty (A i)] :
+    (pmfPi σ).bind g = g (fun i => Classical.arbitrary (A i)) :=
+  pmfPi_bind_eq_of_forall_ignores (σ := σ) (g := g) hg
+    (fun i => Classical.arbitrary (A i))
+
+open Classical in
 omit [Fintype ι] [∀ i, Fintype (A i)] in
 @[simp] lemma update_family_same (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j)) :
     (Function.update σ j τ) j = τ := by
   simp [Function.update]
 
+open Classical in
 omit [Fintype ι] [∀ i, Fintype (A i)] in
 @[simp] lemma update_family_other (σ : ∀ i, PMF (A i)) {i j : ι}
     (τ : PMF (A j)) (h : i ≠ j) :
@@ -657,19 +907,21 @@ end UpdateLemmas
 
 section ConditioningCoord
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
+variable {ι : Type uι} [Fintype ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 
 -- ---- Convenience alias ---------------------------------------------------
 
+open Classical in
 /-- Update family at `j` (thin wrapper around `Function.update`). -/
 noncomputable def updateAt (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j)) : ∀ i, PMF (A i) :=
   Function.update σ j τ
 
+open Classical in
 /-- Conditioning a product on a coordinate event = product of updated family (`updateAt` form). -/
 theorem pmfPi_cond_coord_updateAt
     (σ : ∀ i, PMF (A i)) (j : ι)
-    (E : A j → Prop) [DecidablePred E]
+    (E : A j → Prop)
     (hE : pmfMass (μ := σ j) E ≠ 0) :
     pmfCond (μ := pmfPi (A := A) σ) (fun s => E (s j))
       (by
@@ -679,10 +931,11 @@ theorem pmfPi_cond_coord_updateAt
   -- updateAt unfolds to Function.update, so this is exactly pmfPi_cond_coord.
   exact pmfPi_cond_coord σ j E hE
 
+open Classical in
 /-- Other marginals are unchanged after conditioning on a coordinate. -/
 theorem pmfPi_cond_coord_other_marginal
     (σ : ∀ i, PMF (A i)) {j q : ι} (hq : q ≠ j)
-    (E : A j → Prop) [DecidablePred E]
+    (E : A j → Prop)
     (hE : pmfMass (μ := σ j) E ≠ 0) :
     pushforward
       (pmfCond (μ := pmfPi (A := A) σ) (fun s => E (s j))
@@ -694,6 +947,7 @@ theorem pmfPi_cond_coord_other_marginal
 
 -- ---- Event mass under product PMFs --------------------------------------
 
+open Classical in
 /-- The "event mass" of a predicate under a product PMF (sum form). -/
 noncomputable def pmfPiMass (σ : ∀ i, PMF (A i))
     (P : (∀ i, A i) → Prop) [DecidablePred P] : ENNReal :=
@@ -733,6 +987,7 @@ lemma pmfPiMass_true (σ : ∀ i, PMF (A i)) :
 
 -- ---- Cross-multiplication & mass invariance ------------------------------
 
+open Classical in
 /-- The ratio of an event's mass is invariant under updating coordinate `j`,
     provided the event ignores coordinate `j`. -/
 theorem pmfPi_event_ratio_invariant_of_ignores
@@ -817,6 +1072,7 @@ theorem pmfPi_event_ratio_invariant_of_ignores
         apply Finset.sum_congr rfl; intro s1 _
         rw [Finset.mul_sum]
 
+open Classical in
 /-- Mass is invariant under updating coordinate `j`, if the event ignores `j`. -/
 theorem pmfPi_mass_invariant_of_ignores
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
@@ -852,6 +1108,7 @@ theorem pmfPi_mass_invariant_of_ignores
     exact h
   simpa [mul_one] using h'
 
+open Classical in
 /-- Conditional probability (ratio of masses) is invariant under updating coordinate `j`,
     provided both events ignore `j` and both denominators have nonzero mass. -/
 theorem pmfPi_cond_prob_invariant_of_ignores
@@ -913,3 +1170,212 @@ theorem pmfPi_cond_prob_invariant_of_ignores
   simpa [div_eq_mul_inv, mNU, mDU, mNO, mDO] using this
 
 end ConditioningCoord
+
+-- ============================================================================
+-- Product-measure independence for bind
+-- ============================================================================
+
+section BindIndep
+
+variable {ι : Type uι} [DecidableEq ι]
+variable {A : ι → Type uA}
+
+/-- Replace coordinates in `K` of `x` by those of `y`. -/
+def replaceOn (K : Finset ι) (x y : ∀ i, A i) : (∀ i, A i) :=
+  fun i => if i ∈ K then y i else x i
+
+@[simp] lemma replaceOn_apply (K : Finset ι) (x y : ∀ i, A i) (i : ι) :
+    replaceOn K x y i = (if i ∈ K then y i else x i) := rfl
+
+@[simp] lemma replaceOn_empty (x y : ∀ i, A i) :
+    replaceOn (A := A) (K := ∅) x y = x := by
+  funext i
+  simp [replaceOn]
+
+lemma replaceOn_insert (K : Finset ι) (j : ι) (hj : j ∉ K)
+    (x y : ∀ i, A i) :
+    replaceOn (A := A) (K := insert j K) x y =
+      Function.update (replaceOn (A := A) (K := K) x y) j (y j) := by
+  funext i
+  by_cases hi : i = j
+  · subst hi
+    simp [replaceOn]
+  · simp [replaceOn, hi]
+
+lemma ignores_replaceOn_eq
+    {β : Type*}
+    (h : (∀ i, A i) → β)
+    (K : Finset ι)
+    (hign : ∀ j, j ∈ K → Ignores j h)
+    (x y : ∀ i, A i) :
+    h (replaceOn (A := A) K x y) = h x := by
+  induction K using Finset.induction with
+  | empty =>
+      simp [replaceOn_empty]
+  | @insert j K hj ih =>
+      have hignj : Ignores j h := hign j (by simp)
+      have hignK : ∀ k, k ∈ K → Ignores k h := by
+        intro k hk
+        exact hign k (by simp [hk])
+      rw [replaceOn_insert (A := A) K j hj x y]
+      have hstep :
+          h (@Function.update ι A (inferInstance) (replaceOn (A := A) (K := K) x y) j (y j))
+            = h (replaceOn (A := A) (K := K) x y) := by
+        simpa [update] using (hignj (replaceOn (A := A) (K := K) x y) (y j))
+      rw [hstep]
+      exact ih hignK
+
+lemma replaceOn_univ_snd [Fintype ι] (x y : ∀ i, A i) :
+    replaceOn (A := A) (K := Finset.univ) x y = y := by
+  funext i
+  simp [replaceOn]
+
+lemma replaceOn_univ_diff [Fintype ι] (J : Finset ι) (x y : ∀ i, A i) :
+    replaceOn (A := A) (K := Finset.univ \ J) x y =
+      fun i => if i ∈ J then x i else y i := by
+  funext i
+  by_cases hi : i ∈ J
+  · simp [replaceOn, hi]
+  · simp [replaceOn, hi]
+
+/-- **Product-measure independence for bind.**
+    If `f` uses only `J`-coordinates (i.e., ignores all `j ∉ J`) and
+    `g b` ignores `J`-coordinates, then drawing once from `pmfPi σ` and
+    using the same sample for both `f` and `g` gives the same distribution
+    as drawing independently for each. -/
+theorem pmfPi_bind_indep [Fintype ι] [∀ i, Fintype (A i)]
+    {β γ : Type*} [Finite β]
+    (σ : ∀ i, PMF (A i))
+    (f : (∀ i, A i) → PMF β)
+    (g : β → (∀ i, A i) → PMF γ)
+    (J : Finset ι)
+    (hf : ∀ j, j ∉ J → Ignores j f)
+    (hg : ∀ j, j ∈ J → ∀ b, Ignores j (g b)) :
+    (pmfPi σ).bind (fun s => (f s).bind (fun b => g b s)) =
+    (pmfPi σ).bind (fun s => (f s).bind (fun b =>
+      (pmfPi σ).bind (fun t => g b t))) := by
+  classical
+  letI : Fintype β := Fintype.ofFinite β
+  ext y
+  simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
+  let P : (∀ i, A i) → ENNReal := fun s => ∏ i, σ i (s i)
+  let Fsame : ((∀ i, A i) × (∀ i, A i)) → ENNReal :=
+    fun p => (P p.1 * P p.2) * ∑ b : β, f p.1 b * g b p.1 y
+  let Fcross : ((∀ i, A i) × (∀ i, A i)) → ENNReal :=
+    fun p => (P p.1 * P p.2) * ∑ b : β, f p.1 b * g b p.2 y
+  let e : ((∀ i, A i) × (∀ i, A i)) → ((∀ i, A i) × (∀ i, A i)) :=
+    fun p => (replaceOn (A := A) (Finset.univ \ J) p.1 p.2,
+              replaceOn (A := A) J p.1 p.2)
+  have he : Function.Involutive e := by
+    intro p
+    rcases p with ⟨s, t⟩
+    apply Prod.ext
+    · funext i
+      by_cases hiJ : i ∈ J
+      · simp [e, replaceOn, hiJ]
+      · simp [e, replaceOn, hiJ]
+    · funext i
+      by_cases hiJ : i ∈ J
+      · simp [e, replaceOn, hiJ]
+      · simp [e, replaceOn, hiJ]
+  have hpoint : ∀ p, Fcross p = Fsame (e p) := by
+    intro p
+    rcases p with ⟨s, t⟩
+    set s' : (∀ i, A i) := replaceOn (A := A) (Finset.univ \ J) s t
+    set t' : (∀ i, A i) := replaceOn (A := A) J s t
+    have hweight : P s * P t = P s' * P t' := by
+      simp only [P]
+      calc
+        (∏ i, σ i (s i)) * (∏ i, σ i (t i))
+            = ∏ i, (σ i (s i) * σ i (t i)) := by rw [← Finset.prod_mul_distrib]
+        _ = ∏ i, (σ i (s' i) * σ i (t' i)) := by
+            refine Finset.prod_congr rfl ?_
+            intro i hi
+            by_cases hiJ : i ∈ J
+            · simp [s', t', hiJ]
+            · simp [s', t', hiJ, mul_comm]
+        _ = (∏ i, σ i (s' i)) * (∏ i, σ i (t' i)) := by rw [Finset.prod_mul_distrib]
+    have hf' : f s' = f s := by
+      have hignOut : ∀ j, j ∈ (Finset.univ \ J) → Ignores j f := by
+        intro j hj
+        exact hf j (by simpa using hj)
+      simpa [s', replaceOn] using
+        (ignores_replaceOn_eq (A := A) f (Finset.univ \ J) hignOut s t)
+    have hg' : ∀ b : β, g b s' = g b t := by
+      intro b
+      have hignIn : ∀ j, j ∈ J → Ignores j (g b) := fun j hj => hg j hj b
+      -- s' = replaceOn J t s
+      have hs' : s' = replaceOn (A := A) J t s := by
+        funext i
+        by_cases hiJ : i ∈ J
+        · simp [s', replaceOn, hiJ]
+        · simp [s', replaceOn, hiJ]
+      rw [hs']
+      simpa using (ignores_replaceOn_eq (A := A) (g b) J hignIn t s)
+    simp [Fcross, Fsame, e, s', t', hweight, hf', hg']
+  have hpair : (∑ p, Fcross p) = ∑ p, Fsame p := by
+    calc
+      (∑ p, Fcross p) = ∑ p, Fsame (e p) := by
+        apply Finset.sum_congr rfl
+        intro p hp
+        exact hpoint p
+      _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
+  have hsumP : (∑ t : (∀ i, A i), P t) = 1 := by
+    simpa [P] using (pmf_sum_eq_one (pmfPi (A := A) σ))
+  have hL :
+      (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * ∑ b : β, f s b * g b s y)
+      = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := by
+    calc
+      (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * ∑ b : β, f s b * g b s y)
+          = (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * ∑ b : β, f s b * g b s y)
+              * (∑ t : (∀ i, A i), P t) := by
+              simp [hsumP]
+      _ = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := by
+          simp [Fsame, P, Fintype.sum_prod_type, Finset.mul_sum, Finset.sum_mul,
+            mul_assoc, mul_comm]
+  have hR :
+      (∑ s : (∀ i, A i),
+          (∏ i, σ i (s i)) * ∑ b : β, f s b * ∑ t : (∀ i, A i), (∏ i, σ i (t i)) * g b t y)
+      = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fcross p := by
+    calc
+      (∑ s : (∀ i, A i),
+          (∏ i, σ i (s i)) * ∑ b : β, f s b * ∑ t : (∀ i, A i), (∏ i, σ i (t i)) * g b t y)
+          = ∑ s : (∀ i, A i), ∑ t : (∀ i, A i),
+              (P s * P t) * ∑ b : β, f s b * g b t y := by
+                apply Finset.sum_congr rfl
+                intro s hs
+                calc
+                  (∏ i, σ i (s i)) * ∑ b : β, f s b * ∑ t : (∀ i, A i), (∏ i, σ i (t i)) * g b t y
+                      = ∑ b : β, ∑ t : (∀ i, A i),
+                          (P s) * (f s b * (P t * g b t y)) := by
+                            simp [P, Finset.mul_sum, mul_comm]
+                  _ = ∑ t : (∀ i, A i), ∑ b : β,
+                        (P s) * (f s b * (P t * g b t y)) := by
+                            simpa using
+                              (Finset.sum_comm :
+                                (∑ b : β, ∑ t : (∀ i, A i), (P s) * (f s b * (P t * g b t y)))
+                                  = ∑ t : (∀ i, A i), ∑ b : β,
+                                      (P s) * (f s b * (P t * g b t y)))
+                  _ = ∑ t : (∀ i, A i), (P s * P t) * ∑ b : β, f s b * g b t y := by
+                        apply Finset.sum_congr rfl
+                        intro t ht
+                        calc
+                          ∑ b : β, (P s) * (f s b * (P t * g b t y))
+                              = ∑ b : β, ((P s * P t) * (f s b * g b t y)) := by
+                                  apply Finset.sum_congr rfl
+                                  intro b hb
+                                  ac_rfl
+                          _ = (P s * P t) * ∑ b : β, f s b * g b t y := by
+                                  rw [Finset.mul_sum]
+      _ = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fcross p := by
+          simp [Fcross, Fintype.sum_prod_type]
+  calc
+    (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * ∑ b : β, f s b * g b s y)
+        = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := hL
+    _ = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fcross p := by simpa using hpair.symm
+    _ =
+        (∑ s : (∀ i, A i),
+          (∏ i, σ i (s i)) * ∑ b : β, f s b * ∑ t : (∀ i, A i), (∏ i, σ i (t i)) * g b t y) :=
+      hR.symm
+
+end BindIndep
