@@ -142,6 +142,13 @@ noncomputable def muCond {p : S.Player} (I : S.Infoset p) (a : S.Act I)
       exact ENNReal.mul_inv_cancel hpa
         (PMF.apply_ne_top (muMarginal (S := S) I mu) a))
 
+@[simp] theorem muCond_apply {p : S.Player} (I : S.Infoset p) (a : S.Act I)
+    (mu : PMF (FlatProfile S)) (hpa : muMarginal (S := S) I mu a ≠ 0)
+    (s : FlatProfile S) :
+    muCond (S := S) I a mu hpa s =
+      if s ⟨p, I⟩ = a then mu s / (muMarginal (S := S) I mu a) else 0 := by
+  simp [muCond, PMF.ofFintype_apply]
+
 /-- A flat PMF is **player-independent** if it arises as the pushforward of a product
 of per-player mixed strategies. This is the key structural property preserved
 through conditioning. -/
@@ -379,14 +386,8 @@ theorem muCond_comm_of_PlayerIndep
           congrArg (fun ν => ν a)
             (muMarginal_muCond_other (S := S) mu hind hpq hpb)
         simpa [this] using hpa) := by
-  have muCond_app : ∀ {p'} {I' : S.Infoset p'} {a' : S.Act I'}
-      {mu' : PMF (FlatProfile S)} {h' : muMarginal (S := S) I' mu' a' ≠ 0}
-      (s : FlatProfile S),
-      (muCond (S := S) I' a' mu' h') s =
-        if s ⟨p', I'⟩ = a' then mu' s / muMarginal (S := S) I' mu' a' else 0 := by
-    intros; simp [muCond, PMF.ofFintype_apply]
   ext s
-  simp only [muCond_app]
+  simp only [muCond_apply]
   have hJsame :
       muMarginal (S := S) J (muCond (S := S) I a mu hpa) b =
       muMarginal (S := S) J mu b :=
@@ -1070,7 +1071,7 @@ theorem muMarginal_mul_muCond_apply
     if s ⟨p, I⟩ = a then mu s else 0 := by
   have hne_top : (muMarginal (S := S) I mu) a ≠ ⊤ :=
     PMF.apply_ne_top (muMarginal (S := S) I mu) a
-  simp only [muCond, PMF.ofFintype_apply]
+  simp only [muCond_apply]
   split_ifs with hs
   · rw [mul_comm,
       ENNReal.div_mul_cancel ha hne_top]
