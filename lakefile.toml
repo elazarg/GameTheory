@@ -20,3 +20,7 @@ path = "fixed-point-theorems-lean4"
 
 [[lean_lib]]
 name = "GameTheory"
+
+[[lean_lib]]
+name = "Math"
+srcDir = "."
