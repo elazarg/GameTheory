@@ -591,15 +591,6 @@ theorem pmfPi_bind_decompose_views
   congr 1; funext i
   exact hplayer i (f i)
 
-open Classical in
-/-- Under condMixed with nonzero mass, the conditioned coordinate is fixed. -/
-private theorem condMixed_coord [Fintype (PureStrategy V A)]
-    (μ : MixedStrategy V A) (v : V) (a : Option A) (f : PureStrategy V A)
-    (hmass : pmfMass (μ := μ) (fun g => g v = a) ≠ 0)
-    (hf : condMixed μ v a f ≠ 0) : f v = a := by
-  simp only [condMixed, dif_pos hmass, pmfCond_apply, pmfMask] at hf
-  by_contra hne; simp [hne] at hf
-
 /-- Strong recall for the tail of a round list, at a successor state. -/
 theorem RoundsStrongRecall_tail (r : Round n S V A Sig) (rest : List (Round n S V A Sig))
     (s₀ : S) (acts₀ : Fin n → Option A) (i : Fin n)
@@ -1029,7 +1020,14 @@ theorem kuhnBehavioral_correct
         exact hf (by
           simp only [pmfPi_apply]
           exact Finset.prod_eq_zero (Finset.mem_univ i) heq)
-      exact (condMixed_coord (μ i) _ (acts₀ i) (f i) (hmass_ne i) hi).symm
+      have hiCond : condMixed (μ i) (r.view i s₀ (sig₀ i)) (acts₀ i) (f i) ≠ 0 := by
+        simpa [μ'] using hi
+      have hi' :
+          (pmfCond (μ i) (fun g => g (r.view i s₀ (sig₀ i)) = acts₀ i) (hmass_ne i)) (f i) ≠ 0 := by
+        simpa only [condMixed, dif_pos (hmass_ne i)] using hiCond
+      exact (Math.PMFProduct.pmfCond_ne_zero_implies
+        (μ := μ i) (E := fun g => g (r.view i s₀ (sig₀ i)) = acts₀ i)
+        (h := hmass_ne i) hi').symm
     simp [s₁, hacts]
 
 set_option linter.unusedFintypeInType false in

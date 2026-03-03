@@ -499,6 +499,16 @@ noncomputable def pmfCond (μ : PMF α) (E : α → Prop) [Fintype α]
     pmfCond (μ := μ) E h a = pmfMask (μ := μ) E a / pmfMass (μ := μ) E := by
   simp [pmfCond, PMF.ofFintype_apply]
 
+lemma pmfCond_ne_zero_implies
+    (μ : PMF α) (E : α → Prop) [Fintype α]
+    (h : pmfMass (μ := μ) E ≠ 0) {a : α}
+    (ha : pmfCond (μ := μ) E h a ≠ 0) :
+    E a := by
+  by_contra hEa
+  have : pmfCond (μ := μ) E h a = 0 := by
+    simp [pmfCond_apply, pmfMask, hEa]
+  exact ha this
+
 /-- The mass of the coordinate-lifted event under a product is the mass under the factor. -/
 theorem pmfMass_pmfPi_coord
     (σ : ∀ i, PMF (A i)) (j : ι)
