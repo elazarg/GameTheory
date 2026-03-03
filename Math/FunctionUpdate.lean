@@ -199,6 +199,16 @@ theorem aggregate_excluding_index_update_invariant
   intro i hi
   simp [Function.update, hi]
 
+theorem update_eq_update_of_decEq
+    {α : Type*} {β : α → Type*}
+    (dec₁ dec₂ : DecidableEq α) (f : (a : α) → β a) (a : α) (v : β a) :
+    @Function.update α β dec₁ f a v = @Function.update α β dec₂ f a v := by
+  funext i
+  by_cases h : i = a
+  · subst h
+    simp [Function.update]
+  · simp [Function.update, h]
+
 theorem ignores_of_eq_on_ne
     [DecidableEq ι]
     (j : ι) (F : (∀ i, A i) → β)

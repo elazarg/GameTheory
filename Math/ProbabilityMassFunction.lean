@@ -36,6 +36,12 @@ theorem bind_congr_on_support
       simpa [PMF.mem_support_iff] using ha0
     rw [hfg a haS]
 
+theorem bind_congr_of_ne_zero
+    (μ : PMF α) (f g : α → PMF β)
+    (hfg : ∀ a, μ a ≠ 0 → f a = g a) :
+    μ.bind f = μ.bind g := by
+  exact bind_congr_on_support μ f g (fun a ha => hfg a (by simpa [PMF.mem_support_iff] using ha))
+
 theorem expect_congr_on_support
     {Ω : Type*} (μ : PMF Ω) (f g : Ω → ℝ)
     (hfg : ∀ a, a ∈ μ.support → f a = g a) :
@@ -47,6 +53,12 @@ theorem expect_congr_on_support
   · have haS : a ∈ μ.support := by
       simpa [PMF.mem_support_iff] using ha0
     rw [hfg a haS]
+
+theorem expect_congr_of_ne_zero
+    {Ω : Type*} (μ : PMF Ω) (f g : Ω → ℝ)
+    (hfg : ∀ a, μ a ≠ 0 → f a = g a) :
+    Math.Probability.expect μ f = Math.Probability.expect μ g := by
+  exact expect_congr_on_support μ f g (fun a ha => hfg a (by simpa [PMF.mem_support_iff] using ha))
 
 theorem expect_pushforward
     {Ω Ξ : Type*} [Finite Ω] [Finite Ξ]
@@ -65,6 +77,32 @@ theorem expect_bind_congr_on_support
     Math.Probability.expect (μ.bind k₁) φ =
       Math.Probability.expect (μ.bind k₂) φ := by
   rw [bind_congr_on_support (μ := μ) (f := k₁) (g := k₂) hk]
+
+theorem foldl_bind_append
+    {δ : Type*}
+    (l₁ l₂ : List δ) (μ : PMF α) (k : δ → α → PMF α) :
+    (l₁ ++ l₂).foldl (fun dist b => dist.bind (k b)) μ =
+      l₂.foldl (fun dist b => dist.bind (k b))
+        (l₁.foldl (fun dist b => dist.bind (k b)) μ) := by
+  induction l₁ generalizing μ with
+  | nil =>
+      simp
+  | cons b rest ih =>
+      exact ih (μ.bind (k b))
+
+theorem foldl_bind_congr
+    {δ : Type*}
+    (l : List δ) (μ : PMF α) (k₁ k₂ : δ → α → PMF α)
+    (hk : ∀ b a, k₁ b a = k₂ b a) :
+    l.foldl (fun dist b => dist.bind (k₁ b)) μ =
+      l.foldl (fun dist b => dist.bind (k₂ b)) μ := by
+  induction l generalizing μ with
+  | nil =>
+      simp
+  | cons b rest ih =>
+      have hbind : μ.bind (k₁ b) = μ.bind (k₂ b) := by
+        exact bind_congr_on_support μ (k₁ b) (k₂ b) (fun a _ => hk b a)
+      simpa [hbind] using ih (μ.bind (k₁ b))
 
 set_option linter.unusedFintypeInType false in
 theorem expect_mono_of_pointwise
