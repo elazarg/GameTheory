@@ -125,10 +125,11 @@ theorem nash_iff (e : StratEquiv G H) (σ : Profile G) :
       have h1 := e.eu_preserved σ who
       have h2 := e.eu_preserved (Function.update σ who (e.invFun who s')) who
       linarith
-    congr 2; funext i; simp only [Function.update]
-    split_ifs with hi
-    · subst hi; exact (e.right_inv i s').symm
-    · rfl
+    congr 2
+    funext j
+    simpa [e.right_inv] using
+      (Function.apply_update
+        (f := e.toFun) (g := σ) (i := who) (v := e.invFun who s') (j := j)).symm
   · exact e.toMorphism.nash_of_nash
 
 open Classical in
@@ -140,16 +141,15 @@ theorem dominant_iff (e : StratEquiv G H) (who : ι) (s : G.Strategy who) :
     set τ := fun i => e.invFun i (σ i) with hτ
     have key1 : Function.update σ who (e.toFun who s) =
         fun i => e.toFun i (Function.update τ who s i) := by
-      funext i; simp only [Function.update, hτ]
-      split_ifs with hi
-      · subst hi; rfl
-      · exact (e.right_inv i (σ i)).symm
+      funext j
+      simpa [hτ, e.right_inv] using
+        (Function.apply_update (f := e.toFun) (g := τ) (i := who) (v := s) (j := j)).symm
     have key2 : Function.update σ who s' =
         fun i => e.toFun i (Function.update τ who (e.invFun who s') i) := by
-      funext i; simp only [Function.update, hτ]
-      split_ifs with hi
-      · subst hi; exact (e.right_inv i s').symm
-      · exact (e.right_inv i (σ i)).symm
+      funext j
+      simpa [hτ, e.right_inv] using
+        (Function.apply_update
+          (f := e.toFun) (g := τ) (i := who) (v := e.invFun who s') (j := j)).symm
     rw [key1, key2]
     have h1 := e.eu_preserved (Function.update τ who s) who
     have h2 := e.eu_preserved (Function.update τ who (e.invFun who s')) who
