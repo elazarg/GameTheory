@@ -74,8 +74,8 @@ set_option linter.unusedFintypeInType false in
 private theorem expect_map [Fintype α] [Fintype β]
     (μ : PMF α) (f : α → β) (g : β → ℝ) :
     expect (μ.map f) g = expect μ (g ∘ f) := by
-  rw [← PMF.bind_pure_comp, expect_bind]
-  congr 1; ext a; simp [Function.comp, expect_pure]
+  simpa [Math.ProbabilityMassFunction.pushforward, PMF.bind_pure_comp]
+    using (Math.ProbabilityMassFunction.expect_pushforward (μ := μ) (f := f) (φ := g))
 
 open Classical in
 /-- Under sequential play, the transition depends only on the active player's action. -/
