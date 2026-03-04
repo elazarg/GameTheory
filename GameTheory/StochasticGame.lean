@@ -1,4 +1,4 @@
-import GameTheory.SolutionConcepts
+import GameTheory.Concepts.SolutionConcepts
 import Math.Probability
 
 /-!

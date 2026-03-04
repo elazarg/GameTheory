@@ -1,4 +1,4 @@
-import GameTheory.EFGRefinements
+import GameTheory.EFG.Refinements
 import Math.FunctionUpdate
 import Math.ProbabilityMassFunction
 import Mathlib.Tactic.Linarith

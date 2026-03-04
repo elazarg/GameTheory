@@ -1,5 +1,5 @@
-import GameTheory.SymmetricGame
-import GameTheory.ApproximateNash
+import GameTheory.NFG.SymmetricGame
+import GameTheory.Concepts.ApproximateNash
 import Math.Probability
 
 /-!

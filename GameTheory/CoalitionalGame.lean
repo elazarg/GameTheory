@@ -1,4 +1,4 @@
-import GameTheory.KernelGame
+import GameTheory.Core.KernelGame
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Math.Probability
 

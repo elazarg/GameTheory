@@ -1,98 +1,97 @@
 -- Probability and core
 import Math.Probability
-import GameTheory.KernelGame
+import GameTheory.Core.KernelGame
 
 -- Game form (protocol layer without utility)
-import GameTheory.GameForm
-import GameTheory.SeqProto
-import GameTheory.ProtoSPE
-import GameTheory.ProtoODP
-import GameTheory.ProtoZermelo
-import GameTheory.ProtoKuhn
+import GameTheory.Core.GameForm
+import GameTheory.Protocol.SeqProto
+import GameTheory.Protocol.ProtoSPE
+import GameTheory.Protocol.ProtoODP
+import GameTheory.Protocol.ProtoZermelo
+import GameTheory.Protocol.ProtoKuhn
 
 -- Solution concepts and properties
-import GameTheory.SolutionConcepts
-import GameTheory.BestResponse
-import GameTheory.BestResponseExistence
-import GameTheory.PrefPreorderProperties
-import GameTheory.EUProperties
-import GameTheory.OfEUProperties
-import GameTheory.GameIsomorphism
-import GameTheory.GameMorphism
+import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.BestResponse
+import GameTheory.Concepts.BestResponseExistence
+import GameTheory.Concepts.PrefPreorderProperties
+import GameTheory.Concepts.EUProperties
+import GameTheory.Concepts.OfEUProperties
+import GameTheory.Core.GameIsomorphism
+import GameTheory.Core.GameMorphism
 
 -- Rationalizability
-import GameTheory.Rationalizability
+import GameTheory.Concepts.Rationalizability
 
 -- Dominance
-import GameTheory.StrictDominance
-import GameTheory.DominanceRelations
-import GameTheory.DominanceSolvable
-import GameTheory.DominanceNash
-import GameTheory.DominanceSolvability
+import GameTheory.Concepts.StrictDominance
+import GameTheory.Concepts.DominanceRelations
+import GameTheory.Concepts.DominanceSolvable
+import GameTheory.Concepts.DominanceNash
+import GameTheory.Concepts.DominanceSolvability
 
 -- Nash equilibrium
-import GameTheory.StrictNashProperties
-import GameTheory.ApproximateNash
-import GameTheory.NashExistence
-import GameTheory.ProductSimplexBrouwer
-import GameTheory.NashExistenceMixed
-import GameTheory.MixedSupport
-import GameTheory.BestResponseDynamics
-import GameTheory.NashProperties
+import GameTheory.Concepts.StrictNashProperties
+import GameTheory.Concepts.ApproximateNash
+import GameTheory.Concepts.NashExistence
+import GameTheory.Concepts.ProductSimplexBrouwer
+import GameTheory.Concepts.NashExistenceMixed
+import GameTheory.Concepts.MixedSupport
+import GameTheory.Concepts.BestResponseDynamics
+import GameTheory.Concepts.NashProperties
 
 -- Game properties and welfare
-import GameTheory.GameProperties
-import GameTheory.ParetoOptimal
-import GameTheory.NashPareto
-import GameTheory.WelfareTheorems
-import GameTheory.PriceOfAnarchy
-import GameTheory.IndividualRationality
-import GameTheory.SecurityStrategy
+import GameTheory.Core.GameProperties
+import GameTheory.Concepts.ParetoOptimal
+import GameTheory.Concepts.NashPareto
+import GameTheory.Concepts.WelfareTheorems
+import GameTheory.Concepts.PriceOfAnarchy
+import GameTheory.Concepts.IndividualRationality
+import GameTheory.Concepts.SecurityStrategy
 
 -- Correlated equilibrium
-import GameTheory.CorrelatedEqProperties
-import GameTheory.Regret
-import GameTheory.CorrelatedNashMixed
-import GameTheory.NashCorrelatedEq
+import GameTheory.Concepts.CorrelatedEqProperties
+import GameTheory.Concepts.Regret
+import GameTheory.Concepts.CorrelatedNashMixed
+import GameTheory.Concepts.NashCorrelatedEq
 
 -- Zero-sum and constant-sum
-import GameTheory.ZeroSum
-import GameTheory.ZeroSumNash
-import GameTheory.ConstantSum
-import GameTheory.ConstantSumNash
-import GameTheory.Minimax
-import GameTheory.MinimaxTheorem
+import GameTheory.NFG.ZeroSum
+import GameTheory.NFG.ZeroSumNash
+import GameTheory.NFG.ConstantSum
+import GameTheory.NFG.ConstantSumNash
+import GameTheory.NFG.Minimax
+import GameTheory.NFG.MinimaxTheorem
 import GameTheory.TwoPlayerGame
 
 -- Symmetric games
-import GameTheory.SymmetricGame
+import GameTheory.NFG.SymmetricGame
 
 -- Potential games, team games, congestion games
-import GameTheory.CongestionGame
-import GameTheory.PotentialGame
-import GameTheory.PotentialFIP
-import GameTheory.PotentialWellFounded
-import GameTheory.TeamGame
-import GameTheory.TeamGameNash
-import GameTheory.PotentialTeam
+import GameTheory.NFG.CongestionGame
+import GameTheory.NFG.PotentialGame
+import GameTheory.NFG.PotentialFIP
+import GameTheory.NFG.PotentialWellFounded
+import GameTheory.NFG.TeamGame
+import GameTheory.NFG.TeamGameNash
+import GameTheory.NFG.PotentialTeam
 
 -- Extensive-form games
-import GameTheory.EFG
-import GameTheory.EFGKuhn
-import GameTheory.EFGKuhnFull
-import GameTheory.EFG_NFG
-import GameTheory.EFGRefinements
-import GameTheory.EFG_Proto
+import GameTheory.EFG.EFG
+import GameTheory.EFG.Kuhn
+import GameTheory.Bridge.EFG_NFG
+import GameTheory.EFG.Refinements
+import GameTheory.Bridge.EFG_Proto
 
 -- Normal-form games
-import GameTheory.NFG
-import GameTheory.NFG_EFG
-import GameTheory.NFG_Proto
+import GameTheory.NFG.NFG
+import GameTheory.Bridge.NFG_EFG
+import GameTheory.Bridge.NFG_Proto
 
 -- Multi-agent influence diagrams
-import GameTheory.MAID
-import GameTheory.MAID_EFG
-import GameTheory.MAID_Proto
+import GameTheory.MAID.MAID
+import GameTheory.Bridge.MAID_EFG
+import GameTheory.Bridge.MAID_Proto
 
 -- Coalitional, bargaining, and matching games
 import GameTheory.CoalitionalGame
@@ -116,10 +115,10 @@ import GameTheory.CommonKnowledge
 import GameTheory.EvolutionaryStability
 
 -- Auctions, mechanism design, and contests
-import GameTheory.Auction
-import GameTheory.VickreyAuction
-import GameTheory.VCG
-import GameTheory.AllPayAuction
+import GameTheory.Auctions.Basic
+import GameTheory.Auctions.Vickrey
+import GameTheory.Auctions.VCG
+import GameTheory.Auctions.AllPay
 
 -- Stackelberg games
 import GameTheory.Stackelberg
@@ -128,7 +127,7 @@ import GameTheory.Stackelberg
 import GameTheory.PublicGoods
 
 -- Examples
-import GameTheory.NFGExamples
-import GameTheory.EFGExamples
-import GameTheory.MAIDExamples
+import GameTheory.NFG.Examples
+import GameTheory.EFG.Examples
+import GameTheory.MAID.Examples
 
