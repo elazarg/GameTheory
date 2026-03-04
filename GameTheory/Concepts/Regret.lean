@@ -34,24 +34,24 @@ variable {ι : Type} (G : KernelGame ι)
     is profitable. -/
 noncomputable def swapRegret (μ : PMF (Profile G)) (who : ι)
     (dev : G.Strategy who → G.Strategy who) : ℝ :=
-  G.correlatedEu (G.deviateDistribution μ who dev) who - G.correlatedEu μ who
+  G.correlatedEu (G.unilateralDeviationDistribution μ who dev) who - G.correlatedEu μ who
 
 /-- External regret: expected gain from switching to constant strategy `s'`
     for player `who`. -/
 noncomputable def externalRegret (μ : PMF (Profile G)) (who : ι)
     (s' : G.Strategy who) : ℝ :=
-  G.correlatedEu (G.constDeviateDistribution μ who s') who - G.correlatedEu μ who
+  G.correlatedEu (G.constantDeviationDistribution μ who s') who - G.correlatedEu μ who
 
 /-- The identity deviation has zero swap regret. -/
 theorem swapRegret_id (μ : PMF (Profile G)) (who : ι) :
     G.swapRegret μ who _root_.id = 0 := by
-  simp [swapRegret, deviateDistribution_id]
+  simp [swapRegret, unilateralDeviationDistribution_id]
 
 /-- External regret is swap regret with a constant deviation function. -/
 theorem externalRegret_eq_swapRegret_const (μ : PMF (Profile G)) (who : ι)
     (s' : G.Strategy who) :
     G.externalRegret μ who s' = G.swapRegret μ who (fun _ => s') := by
-  simp [externalRegret, swapRegret, constDeviateDistribution, deviateDistribution,
+  simp [externalRegret, swapRegret,
     KernelGame.constantDeviationDistribution, KernelGame.unilateralDeviationDistribution,
     KernelGame.deviationDistribution, KernelGame.constantDeviation, KernelGame.unilateralDeviation]
 
