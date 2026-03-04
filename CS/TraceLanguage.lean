@@ -29,6 +29,18 @@ theorem PrefixClosed.mem_of_prefix {L : Set (List α)}
     (huv : u <+: v) (hv : v ∈ L) : u ∈ L :=
   hL huv hv
 
+theorem PrefixClosed.mem_take {L : Set (List α)}
+    (hL : PrefixClosed L) {v : List α}
+    (hv : v ∈ L) (n : Nat) :
+    v.take n ∈ L := by
+  exact hL (List.take_prefix n v) hv
+
+theorem PrefixClosed.mem_left_of_append {L : Set (List α)}
+    (hL : PrefixClosed L) (u v : List α)
+    (huv : u ++ v ∈ L) :
+    u ∈ L := by
+  exact hL ⟨v, rfl⟩ huv
+
 theorem PrefixClosed.empty : PrefixClosed (∅ : Set (List α)) := by
   intro _ _ _ hv
   exact False.elim hv
@@ -63,6 +75,9 @@ theorem Rooted.of_nonempty_prefixClosed {L : Set (List α)}
 def TracesFrom (step : α → σ → σ → Prop) (s : σ) : Set (List α) :=
   { w | ∃ t, ReachBy step w s t }
 
+theorem mem_tracesFrom_iff (step : α → σ → σ → Prop) (s : σ) (w : List α) :
+    w ∈ TracesFrom step s ↔ ∃ t, ReachBy step w s t := Iff.rfl
+
 theorem rooted_tracesFrom (step : α → σ → σ → Prop) (s : σ) :
     Rooted (TracesFrom step s) := by
   exact ⟨s, reachBy_nil (step := step) s⟩
@@ -81,6 +96,18 @@ theorem prefixClosed_tracesFrom (step : α → σ → σ → Prop) (s : σ) :
 theorem isTraceTree_tracesFrom (step : α → σ → σ → Prop) (s : σ) :
     IsTraceTree (TracesFrom step s) :=
   ⟨prefixClosed_tracesFrom step s, rooted_tracesFrom step s⟩
+
+theorem append_mem_tracesFrom_iff
+    (step : α → σ → σ → Prop) (s : σ) (u v : List α) :
+    (u ++ v) ∈ TracesFrom step s
+      ↔ ∃ m, ReachBy step u s m ∧ v ∈ TracesFrom step m := by
+  constructor
+  · intro huv
+    rcases huv with ⟨t, hst⟩
+    rcases reachBy_split (step := step) (w1 := u) (w2 := v) hst with ⟨m, hus, hvt⟩
+    exact ⟨m, hus, ⟨t, hvt⟩⟩
+  · rintro ⟨m, hus, ⟨t, hvt⟩⟩
+    exact ⟨t, reachBy_append hus hvt⟩
 
 end Trace
 end CS

@@ -44,12 +44,23 @@ def ObsInvariant (obs : Obs X Ω) (f : X → γ) : Prop :=
 def ObsInvariantOn (obs : Obs X Ω) (f : X → γ) (R : Set X) : Prop :=
   ∀ ⦃x y : X⦄, x ∈ R → y ∈ R → obs x = obs y → f x = f y
 
+/-- Observation fibers are unique on `R` iff `obs` is injective on `R`. -/
+abbrev ObsFiberUniqueOn (obs : Obs X Ω) (R : Set X) : Prop :=
+  Set.InjOn obs R
+
 /-- If two contexts have the same observation, `choose` agrees. -/
 theorem choose_eq_of_obs_eq
     (obs : Obs X Ω) (ctrl : Stochastic Ω β)
     {x y : X} (hxy : obs x = obs y) :
     choose obs ctrl x = choose obs ctrl y := by
   simp [choose, hxy]
+
+/-- Deterministic counterpart of `choose_eq_of_obs_eq`. -/
+theorem chooseDet_eq_of_obs_eq
+    (obs : Obs X Ω) (ctrl : Deterministic Ω β)
+    {x y : X} (hxy : obs x = obs y) :
+    chooseDet obs ctrl x = chooseDet obs ctrl y := by
+  simp [chooseDet, hxy]
 
 /-- If `f` factors through `obs`, then `f` is observation-invariant. -/
 theorem obsInvariant_of_factorsThrough
@@ -66,6 +77,33 @@ theorem choose_eqOn_of_obs_eqOn
     Set.EqOn (choose obs₁ ctrl) (choose obs₂ ctrl) R := by
   intro x hx
   simpa [choose] using congrArg ctrl (hobs hx)
+
+/-- Equality of observations on `R` implies equality of deterministic choices on `R`. -/
+theorem chooseDet_eqOn_of_obs_eqOn
+    (obs₁ obs₂ : Obs X Ω) (ctrl : Deterministic Ω β) (R : Set X)
+    (hobs : Set.EqOn obs₁ obs₂ R) :
+    Set.EqOn (chooseDet obs₁ ctrl) (chooseDet obs₂ ctrl) R := by
+  intro x hx
+  simpa [chooseDet] using congrArg ctrl (hobs hx)
+
+/-- Fiber-uniqueness schema on reachable domain (set-level form). -/
+theorem eq_of_obs_eq_on_reachable
+    (obs : Obs X Ω) (R : Set X)
+    (hinj : ObsFiberUniqueOn obs R)
+    {x y : X} (hx : x ∈ R) (hy : y ∈ R)
+    (hxy : obs x = obs y) :
+    x = y := by
+  exact hinj hx hy hxy
+
+/-- Fiber-uniqueness schema on PMF support (distribution form). -/
+theorem eq_of_obs_eq_on_support
+    (μ : PMF X) (obs : Obs X Ω)
+    (hinj : ObsFiberUniqueOn obs μ.support)
+    {x y : X} (hx : μ x ≠ 0) (hy : μ y ≠ 0)
+    (hxy : obs x = obs y) :
+    x = y := by
+  exact hinj (by simpa [PMF.mem_support_iff] using hx)
+    (by simpa [PMF.mem_support_iff] using hy) hxy
 
 /-- Reachability-restricted congruence for induced choices (PMF bind form). -/
 theorem bind_choose_eq_of_obs_eqOn_reachable

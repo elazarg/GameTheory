@@ -99,5 +99,59 @@ theorem reachBy_map_labels
   | @cons a rest s u t hs hrest ih =>
       exact ReachBy.cons (hmap a s u hs) ih
 
+/-- Map states along a simulation-compatible function while preserving labels. -/
+theorem reachBy_map_states
+    {τ : Type*} {step' : α → τ → τ → Prop}
+    (stateMap : σ → τ)
+    (hmap : ∀ a s t, step a s t → step' a (stateMap s) (stateMap t))
+    {w : List α} {s t : σ}
+    (h : ReachBy step w s t) :
+    ReachBy step' w (stateMap s) (stateMap t) := by
+  induction h with
+  | nil s =>
+      exact ReachBy.nil (step := step') (stateMap s)
+  | @cons a rest s u t hs hrest ih =>
+      exact ReachBy.cons (hmap a s u hs) ih
+
+/-- A step-invariant observable is constant along any labeled reachability witness. -/
+theorem obs_eq_of_reachBy
+    {Ω : Type*} (obs : σ → Ω)
+    (hstep : ∀ a s t, step a s t → obs s = obs t)
+    {w : List α} {s t : σ}
+    (h : ReachBy step w s t) :
+    obs s = obs t := by
+  induction h with
+  | nil s =>
+      rfl
+  | @cons a rest s u t hs hrest ih =>
+      exact (hstep a s u hs).trans ih
+
+/-- State-map transport for unlabeled reflexive-transitive reachability. -/
+theorem reaches_map_states
+    {τ : Type*} {step' : τ → τ → Prop}
+    (stateMap : σ → τ)
+    (hmap : ∀ s t, StepExists step s t → step' (stateMap s) (stateMap t))
+    {s t : σ}
+    (h : Relation.ReflTransGen (StepExists step) s t) :
+    Relation.ReflTransGen step' (stateMap s) (stateMap t) := by
+  induction h with
+  | refl =>
+      exact .refl
+  | tail hab hbc ih =>
+      exact Relation.ReflTransGen.tail ih (hmap _ _ hbc)
+
+/-- A one-step invariant observable is also invariant on reflexive-transitive reachability. -/
+theorem obs_eq_of_reaches
+    {Ω : Type*} (obs : σ → Ω)
+    (hstep : ∀ s t, StepExists step s t → obs s = obs t)
+    {s t : σ}
+    (h : Relation.ReflTransGen (StepExists step) s t) :
+    obs s = obs t := by
+  induction h with
+  | refl =>
+      rfl
+  | tail hab hbc ih =>
+      exact ih.trans (hstep _ _ hbc)
+
 end Transition
 end CS
