@@ -33,6 +33,64 @@ structure ProtocolIsomorphism (F F' : GameForm ι) where
     F'.outcomeKernel (fun i => stratEquiv i (σ i)) =
       (F.outcomeKernel σ).bind (fun ω => PMF.pure (outcomeEquiv ω))
 
+namespace ProtocolIsomorphism
+
+/-- Identity protocol isomorphism. -/
+def id (F : GameForm ι) : ProtocolIsomorphism F F where
+  stratEquiv := fun _i => Equiv.refl _
+  outcomeEquiv := Equiv.refl _
+  outcomeKernel_preserved := by intro σ; simp
+
+/-- Symmetry of protocol isomorphism. -/
+def symm {F F' : GameForm ι} (e : ProtocolIsomorphism F F') : ProtocolIsomorphism F' F where
+  stratEquiv := fun i => (e.stratEquiv i).symm
+  outcomeEquiv := e.outcomeEquiv.symm
+  outcomeKernel_preserved := by
+    intro σ
+    have h : F'.outcomeKernel σ =
+        (F.outcomeKernel (fun i => (e.stratEquiv i).symm (σ i))).bind
+          (fun ω => PMF.pure (e.outcomeEquiv ω)) := by
+      simpa using e.outcomeKernel_preserved (fun i => (e.stratEquiv i).symm (σ i))
+    rw [h]
+    simp [PMF.bind_bind]
+
+/-- Composition of protocol isomorphisms. -/
+def comp {F F' F'' : GameForm ι}
+    (g : ProtocolIsomorphism F' F'') (f : ProtocolIsomorphism F F') :
+    ProtocolIsomorphism F F'' where
+  stratEquiv := fun i => (f.stratEquiv i).trans (g.stratEquiv i)
+  outcomeEquiv := f.outcomeEquiv.trans g.outcomeEquiv
+  outcomeKernel_preserved := by
+    intro σ
+    simp [g.outcomeKernel_preserved, f.outcomeKernel_preserved, PMF.bind_bind]
+
+/-- Forget invertibility and view a protocol isomorphism as a protocol map. -/
+def toProtocolMap {F F' : GameForm ι} (e : ProtocolIsomorphism F F') :
+    ProtocolMap F F' where
+  stratMap := fun i => e.stratEquiv i
+  outcomeMap := e.outcomeEquiv
+  outcomeKernel_preserved := e.outcomeKernel_preserved
+
+@[simp] theorem id_comp {F F' : GameForm ι} (e : ProtocolIsomorphism F F') :
+    comp (id F') e = e := by
+  cases e
+  rfl
+
+@[simp] theorem comp_id {F F' : GameForm ι} (e : ProtocolIsomorphism F F') :
+    comp e (id F) = e := by
+  cases e
+  rfl
+
+theorem comp_assoc {F F' F'' F''' : GameForm ι}
+    (h : ProtocolIsomorphism F'' F''')
+    (g : ProtocolIsomorphism F' F'')
+    (f : ProtocolIsomorphism F F') :
+    comp h (comp g f) = comp (comp h g) f := by
+  cases h; cases g; cases f
+  rfl
+
+end ProtocolIsomorphism
+
 end GameForm
 
 namespace KernelGame

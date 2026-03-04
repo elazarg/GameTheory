@@ -278,6 +278,77 @@ theorem product_map_snd (F₁ F₂ : GameForm ι) (σ : (F₁.product F₂).Prof
   simp [product, PMF.bind_bind, PMF.pure_bind]
 
 -- ============================================================================
+-- Section 5b: Protocol maps (CT-oriented overlay)
+-- ============================================================================
+
+/-- A protocol-preserving map between game forms.
+
+Mnemonic-first interpretation:
+- relabel strategies via `stratMap`,
+- relabel outcomes via `outcomeMap`,
+- preserve induced outcome distributions.
+
+CT-oriented view: this is a morphism in the category of game forms. -/
+structure ProtocolMap (F F' : GameForm ι) where
+  stratMap : ∀ i, F.Strategy i → F'.Strategy i
+  outcomeMap : F.Outcome → F'.Outcome
+  outcomeKernel_preserved : ∀ σ : F.Profile,
+    F'.outcomeKernel (fun i => stratMap i (σ i)) =
+      (F.outcomeKernel σ).bind (fun ω => PMF.pure (outcomeMap ω))
+
+/-- CT alias for protocol maps. -/
+abbrev Hom (F F' : GameForm ι) := ProtocolMap F F'
+
+namespace ProtocolMap
+
+/-- Identity protocol map. -/
+def id (F : GameForm ι) : ProtocolMap F F where
+  stratMap := fun _i => _root_.id
+  outcomeMap := _root_.id
+  outcomeKernel_preserved := by intro σ; simp
+
+/-- Composition of protocol maps. -/
+def comp {F F' F'' : GameForm ι}
+    (g : ProtocolMap F' F'') (f : ProtocolMap F F') : ProtocolMap F F'' where
+  stratMap := fun i => g.stratMap i ∘ f.stratMap i
+  outcomeMap := g.outcomeMap ∘ f.outcomeMap
+  outcomeKernel_preserved := by
+    intro σ
+    simp [g.outcomeKernel_preserved, f.outcomeKernel_preserved, PMF.bind_bind]
+
+@[simp] theorem id_stratMap (F : GameForm ι) (i : ι) :
+    (id F).stratMap i = _root_.id := rfl
+
+@[simp] theorem id_outcomeMap (F : GameForm ι) :
+    (id F).outcomeMap = _root_.id := rfl
+
+@[simp] theorem comp_stratMap {F F' F'' : GameForm ι}
+    (g : ProtocolMap F' F'') (f : ProtocolMap F F') (i : ι) :
+    (comp g f).stratMap i = g.stratMap i ∘ f.stratMap i := rfl
+
+@[simp] theorem comp_outcomeMap {F F' F'' : GameForm ι}
+    (g : ProtocolMap F' F'') (f : ProtocolMap F F') :
+    (comp g f).outcomeMap = g.outcomeMap ∘ f.outcomeMap := rfl
+
+@[simp] theorem id_comp {F F' : GameForm ι} (f : ProtocolMap F F') :
+    comp (id F') f = f := by
+  cases f
+  rfl
+
+@[simp] theorem comp_id {F F' : GameForm ι} (f : ProtocolMap F F') :
+    comp f (id F) = f := by
+  cases f
+  rfl
+
+theorem comp_assoc {F F' F'' F''' : GameForm ι}
+    (h : ProtocolMap F'' F''') (g : ProtocolMap F' F'') (f : ProtocolMap F F') :
+    comp h (comp g f) = comp (comp h g) f := by
+  cases h; cases g; cases f
+  rfl
+
+end ProtocolMap
+
+-- ============================================================================
 -- Section 6: Pure behavior: preference preorder
 -- ============================================================================
 
@@ -322,6 +393,21 @@ def NoProfitableProfileDeviationFor (F : GameForm ι)
     {D : Type*} (deviate : D → PMF F.Profile) : Prop :=
   F.NoProfitableDeviationFor pref who (F.correlatedOutcome μ)
     (fun d => F.correlatedOutcome (deviate d))
+
+theorem noProfitableDeviationFor_iff (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (who : ι) (statusQuo : PMF F.Outcome)
+    {D : Type*} (deviate : D → PMF F.Outcome) :
+    F.NoProfitableDeviationFor pref who statusQuo deviate ↔
+      ∀ d : D, pref who statusQuo (deviate d) := Iff.rfl
+
+theorem noProfitableProfileDeviationFor_iff (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (who : ι) (μ : PMF F.Profile)
+    {D : Type*} (deviate : D → PMF F.Profile) :
+    F.NoProfitableProfileDeviationFor pref who μ deviate ↔
+      ∀ d : D, pref who (F.correlatedOutcome μ) (F.correlatedOutcome (deviate d)) := by
+  rfl
 
 /-- A family of profile-distribution deviations, indexed by player and optionally
     depending on the current profile distribution. -/
@@ -382,12 +468,11 @@ theorem isNashFor_iff (F : GameForm ι)
         pref who (F.outcomeKernel σ) (F.outcomeKernel (Function.update σ who s')) := by
   constructor
   · intro h who s'
-    simpa [IsNashFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
-      NoProfitableDeviationFor, constantDeviationProfileFamily,
-      constDeviateDistributionFn_pure, correlatedOutcome_pure] using h who s'
+    have hwho := h who
+    simpa [IsNashFor, IsDeviationEqFamilyFor, constantDeviationProfileFamily,
+      constDeviateDistributionFn_pure, correlatedOutcome_pure] using hwho s'
   · intro h who s'
-    simpa [IsNashFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
-      NoProfitableDeviationFor, constantDeviationProfileFamily,
+    simpa [IsNashFor, IsDeviationEqFamilyFor, constantDeviationProfileFamily,
       constDeviateDistributionFn_pure, correlatedOutcome_pure] using h who s'
 
 open Classical in
@@ -475,11 +560,11 @@ theorem isCorrelatedEqFor_iff (F : GameForm ι)
           (F.correlatedOutcome (F.deviateDistributionFn μ who dev)) := by
   constructor
   · intro h who dev
-    simpa [IsCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
-      NoProfitableDeviationFor, recommendationDeviationFamily] using h who dev
+    simpa [IsCorrelatedEqFor, IsDeviationEqFamilyFor, recommendationDeviationFamily]
+      using h who dev
   · intro h who dev
-    simpa [IsCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
-      NoProfitableDeviationFor, recommendationDeviationFamily] using h who dev
+    simpa [IsCorrelatedEqFor, IsDeviationEqFamilyFor, recommendationDeviationFamily]
+      using h who dev
 
 /-- Coarse correlated equilibrium w.r.t. preference `pref`: no player gains from
     constant unilateral deviation. -/
@@ -497,11 +582,11 @@ theorem isCoarseCorrelatedEqFor_iff (F : GameForm ι)
           (F.correlatedOutcome (F.constDeviateDistributionFn μ who s')) := by
   constructor
   · intro h who s'
-    simpa [IsCoarseCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
-      NoProfitableDeviationFor, constantDeviationProfileFamily] using h who s'
+    simpa [IsCoarseCorrelatedEqFor, IsDeviationEqFamilyFor, constantDeviationProfileFamily]
+      using h who s'
   · intro h who s'
-    simpa [IsCoarseCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
-      NoProfitableDeviationFor, constantDeviationProfileFamily] using h who s'
+    simpa [IsCoarseCorrelatedEqFor, IsDeviationEqFamilyFor, constantDeviationProfileFamily]
+      using h who s'
 
 -- ============================================================================
 -- Section 8: Properties of *For solution concepts
@@ -636,8 +721,9 @@ theorem IsCorrelatedEqFor.toCoarseCorrelatedEqFor {F : GameForm ι}
     {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
     {μ : PMF F.Profile}
     (hce : F.IsCorrelatedEqFor pref μ) : F.IsCoarseCorrelatedEqFor pref μ := by
+  refine (F.isCoarseCorrelatedEqFor_iff pref μ).2 ?_
   intro who s'
-  exact hce who (fun _ => s')
+  exact (F.isCorrelatedEqFor_iff pref μ).1 hce who (fun _ => s')
 
 open Classical in
 /-- The identity deviation leaves the profile distribution unchanged. -/

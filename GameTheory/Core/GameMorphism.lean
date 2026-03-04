@@ -47,6 +47,41 @@ structure Morphism (G H : KernelGame ι) where
   udist_preserved : ∀ (σ : Profile G),
     H.udist (fun i => stratMap i (σ i)) = G.udist σ
 
+namespace Morphism
+
+/-- Identity morphism. -/
+def id (G : KernelGame ι) : Morphism G G where
+  stratMap := fun _i => _root_.id
+  udist_preserved := by intro σ; rfl
+
+/-- Composition of morphisms. -/
+def comp {G H K : KernelGame ι} (g : Morphism H K) (f : Morphism G H) : Morphism G K where
+  stratMap := fun i => g.stratMap i ∘ f.stratMap i
+  udist_preserved := by
+    intro σ
+    let τ : Profile H := fun i => f.stratMap i (σ i)
+    have hg : K.udist (fun i => g.stratMap i (τ i)) = H.udist τ := g.udist_preserved τ
+    have hf : H.udist τ = G.udist σ := by simpa [τ] using f.udist_preserved σ
+    simpa [τ, Function.comp] using hg.trans hf
+
+@[simp] theorem id_comp {G H : KernelGame ι} (f : Morphism G H) :
+    comp (id H) f = f := by
+  cases f
+  rfl
+
+@[simp] theorem comp_id {G H : KernelGame ι} (f : Morphism G H) :
+    comp f (id G) = f := by
+  cases f
+  rfl
+
+theorem comp_assoc {G H K L : KernelGame ι}
+    (h : Morphism K L) (g : Morphism H K) (f : Morphism G H) :
+    comp h (comp g f) = comp (comp h g) f := by
+  cases h; cases g; cases f
+  rfl
+
+end Morphism
+
 /-- `udist` preservation implies per-player utility-distribution preservation. -/
 theorem Morphism.udistPlayer_preserved {G H : KernelGame ι} (f : Morphism G H)
     (σ : Profile G) (who : ι) :
@@ -64,6 +99,41 @@ structure EUMorphism (G H : KernelGame ι) extends Morphism G H where
   /-- Expected-utility preservation under mapped profiles. -/
   eu_preserved : ∀ (σ : Profile G) (who : ι),
     H.eu (fun i => stratMap i (σ i)) who = G.eu σ who
+
+namespace EUMorphism
+
+/-- Identity EU morphism. -/
+def id (G : KernelGame ι) : EUMorphism G G where
+  toMorphism := Morphism.id G
+  eu_preserved := by intro σ who; rfl
+
+/-- Composition of EU morphisms. -/
+def comp {G H K : KernelGame ι} (g : EUMorphism H K) (f : EUMorphism G H) : EUMorphism G K where
+  toMorphism := Morphism.comp g.toMorphism f.toMorphism
+  eu_preserved := by
+    intro σ who
+    let τ : Profile H := fun i => f.stratMap i (σ i)
+    have hg : K.eu (fun i => g.stratMap i (τ i)) who = H.eu τ who := g.eu_preserved τ who
+    have hf : H.eu τ who = G.eu σ who := by simpa [τ] using f.eu_preserved σ who
+    simpa [τ, Function.comp] using hg.trans hf
+
+@[simp] theorem id_comp {G H : KernelGame ι} (f : EUMorphism G H) :
+    comp (id H) f = f := by
+  cases f
+  rfl
+
+@[simp] theorem comp_id {G H : KernelGame ι} (f : EUMorphism G H) :
+    comp f (id G) = f := by
+  cases f
+  rfl
+
+theorem comp_assoc {G H K L : KernelGame ι}
+    (h : EUMorphism K L) (g : EUMorphism H K) (f : EUMorphism G H) :
+    comp h (comp g f) = comp (comp h g) f := by
+  cases h; cases g; cases f
+  rfl
+
+end EUMorphism
 
 open Classical in
 /-- EU corollary: if a morphism preserves EU values, Nash pulls back. -/
