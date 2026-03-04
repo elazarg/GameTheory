@@ -1043,22 +1043,12 @@ theorem muMarginal_zero_of_coord
     (ha : muMarginal (S := S) I mu a = 0)
     (s : FlatProfile S) (hs : s ⟨p, I⟩ = a) :
     mu s = 0 := by
-  have hpush : Math.PMFProduct.pushforward mu (fun t : FlatProfile S => t ⟨p, I⟩) a = 0 := by
-    simpa [muMarginal, Math.PMFProduct.pushforward] using ha
-  have hle :
-      mu s ≤ (Math.PMFProduct.pushforward mu (fun t : FlatProfile S => t ⟨p, I⟩)) a := by
-    have hle' :
-        (if a = (fun t : FlatProfile S => t ⟨p, I⟩) s then mu s else 0) ≤
-          ∑ t : FlatProfile S,
-            if a = (fun t : FlatProfile S => t ⟨p, I⟩) t then mu t else 0 :=
-      Finset.single_le_sum
-        (f := fun t : FlatProfile S =>
-          if a = (fun t : FlatProfile S => t ⟨p, I⟩) t then mu t else 0)
-        (fun _ _ => by positivity)
-        (Finset.mem_univ s)
-    simpa [Math.PMFProduct.pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype, hs] using hle'
-  rw [hpush] at hle
-  exact le_antisymm hle bot_le
+  have hpush :
+      Math.ProbabilityMassFunction.pushforward
+        mu (fun t : FlatProfile S => t ⟨p, I⟩) a = 0 := by
+    simpa [muMarginal, Math.ProbabilityMassFunction.pushforward] using ha
+  exact Math.ProbabilityMassFunction.eq_zero_of_pushforward_eq_zero
+    (μ := mu) (proj := fun t : FlatProfile S => t ⟨p, I⟩) (b := a) hpush hs
 
 /-- Mass times conditional = indicator times original. -/
 theorem muMarginal_mul_muCond_apply

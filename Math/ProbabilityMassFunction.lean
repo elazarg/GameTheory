@@ -118,6 +118,34 @@ theorem bind_apply_eq_sum_sum_fiber
   funext a
   split_ifs <;> ring
 
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem le_pushforward_apply
+    {β : Type*} [Fintype α]
+    (μ : PMF α) (proj : α → β) (a : α) :
+    μ a ≤ pushforward μ proj (proj a) := by
+  have hle :
+      (if proj a = proj a then (μ a : ENNReal) else 0) ≤
+        ∑ t : α, if proj a = proj t then (μ t : ENNReal) else 0 := by
+    exact Finset.single_le_sum
+      (f := fun t : α => if proj a = proj t then (μ t : ENNReal) else 0)
+      (fun _ _ => by positivity)
+      (Finset.mem_univ a)
+  simpa [pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype] using hle
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem eq_zero_of_pushforward_eq_zero
+    {β : Type*} [Fintype α]
+    (μ : PMF α) (proj : α → β) {b : β}
+    (hb : pushforward μ proj b = 0)
+    {a : α} (ha : proj a = b) :
+    μ a = 0 := by
+  have hle : μ a ≤ pushforward μ proj b := by
+    simpa [ha] using le_pushforward_apply (μ := μ) (proj := proj) a
+  rw [hb] at hle
+  exact le_antisymm hle bot_le
+
 theorem foldl_bind_append
     {δ : Type*}
     (l₁ l₂ : List δ) (μ : PMF α) (k : δ → α → PMF α) :
