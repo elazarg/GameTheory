@@ -114,7 +114,11 @@ def KernelGame.euStrictPref (G : KernelGame ι) :
 /-- `IsNash` is exactly `IsNashFor` with EU preference. -/
 theorem KernelGame.IsNash_iff_IsNashFor_eu (G : KernelGame ι) (σ : KernelGame.Profile G) :
     G.IsNash σ ↔ G.IsNashFor G.euPref σ := by
-  simp [IsNash, IsNashFor, GameForm.IsNashFor, euPref, eu]
+  constructor
+  · intro h who s'
+    exact h who s'
+  · intro h who s'
+    exact h who s'
 
 /-- `IsDominant` is exactly `IsDominantFor` with EU preference. -/
 theorem KernelGame.IsDominant_iff_IsDominantFor_eu (G : KernelGame ι)
@@ -297,20 +301,6 @@ theorem IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu (G : KernelGame ι)
       KernelGame.deviationDistribution,
       GameForm.IsCoarseCorrelatedEqFor, GameForm.constDeviateDistributionFn]
       using h who s'
-
--- ============================================================================
--- Bridge theorems: GameForm ↔ KernelGame
--- ============================================================================
-
-/-- Bridge: `GameForm.IsNashFor` on the underlying form equals `KernelGame.IsNashFor`. -/
-theorem IsNashFor_eq_gameForm (G : KernelGame ι)
-    (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop) (σ : Profile G) :
-    G.IsNashFor pref σ ↔ G.toGameForm.IsNashFor pref σ := Iff.rfl
-
-/-- Bridge: `GameForm.IsDominantFor` on the underlying form equals `KernelGame.IsDominantFor`. -/
-theorem IsDominantFor_eq_gameForm (G : KernelGame ι)
-    (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop) (who : ι) (s : G.Strategy who) :
-    G.IsDominantFor pref who s ↔ G.toGameForm.IsDominantFor pref who s := Iff.rfl
 
 end KernelGame
 

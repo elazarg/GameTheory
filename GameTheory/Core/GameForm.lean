@@ -291,6 +291,43 @@ variable {ι : Type}
 -- Section 7: Preference-parameterized solution concepts on GameForm
 -- ============================================================================
 
+/-!
+`NoProfitableDeviationFor` is the core abstraction combining:
+- a preference `pref`,
+- a status-quo outcome distribution,
+- a family of allowed deviations.
+
+Many equilibrium notions are instances of this schema.
+-/
+
+/-- Generic no-profitable-deviation predicate on outcome distributions. -/
+def NoProfitableDeviationFor (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (who : ι) (statusQuo : PMF F.Outcome)
+    {D : Type*} (deviate : D → PMF F.Outcome) : Prop :=
+  ∀ d : D, pref who statusQuo (deviate d)
+
+/-- Generic no-profitable-deviation predicate where deviations act on profile
+    distributions and are observed through `correlatedOutcome`. -/
+def NoProfitableProfileDeviationFor (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (who : ι) (μ : PMF F.Profile)
+    {D : Type*} (deviate : D → PMF F.Profile) : Prop :=
+  F.NoProfitableDeviationFor pref who (F.correlatedOutcome μ)
+    (fun d => F.correlatedOutcome (deviate d))
+
+/-- Canonical CE deviation family on profile distributions:
+    choose a player and a recommendation-dependent deviation map. -/
+noncomputable def unilateralDeviationFamily (F : GameForm ι) (μ : PMF F.Profile) :
+    (Σ who : ι, F.Strategy who → F.Strategy who) → PMF F.Profile :=
+  fun d => F.deviateDistributionFn μ d.1 d.2
+
+/-- Canonical CCE deviation family on profile distributions:
+    choose a player and a constant replacement strategy. -/
+noncomputable def constantDeviationFamily (F : GameForm ι) (μ : PMF F.Profile) :
+    (Σ who : ι, F.Strategy who) → PMF F.Profile :=
+  fun d => F.constDeviateDistributionFn μ d.1 d.2
+
 open Classical in
 /-- A strategy profile `σ` is a Nash equilibrium w.r.t. preference `pref` on outcome
     distributions if no player prefers the outcome distribution from any unilateral
@@ -301,8 +338,9 @@ open Classical in
 def IsNashFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (σ : F.Profile) : Prop :=
-  ∀ (who : ι) (s' : F.Strategy who),
-    pref who (F.outcomeKernel σ) (F.outcomeKernel (Function.update σ who s'))
+  ∀ who : ι,
+    F.NoProfitableDeviationFor pref who (F.outcomeKernel σ)
+      (fun s' : F.Strategy who => F.outcomeKernel (Function.update σ who s'))
 
 open Classical in
 /-- An action `s` is dominant for player `who` w.r.t. a preference if `who` weakly
@@ -378,18 +416,48 @@ def IsParetoEfficientFor (F : GameForm ι)
 def IsCorrelatedEqFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (μ : PMF F.Profile) : Prop :=
-  ∀ (who : ι) (dev : F.Strategy who → F.Strategy who),
-    pref who (F.correlatedOutcome μ)
-      (F.correlatedOutcome (F.deviateDistributionFn μ who dev))
+  ∀ who : ι,
+    F.NoProfitableProfileDeviationFor pref who μ
+      (fun dev : F.Strategy who → F.Strategy who =>
+        F.deviateDistributionFn μ who dev)
+
+/-- CE as no profitable deviation against the canonical unilateral family. -/
+theorem isCorrelatedEqFor_iff_noProfitable_unilateralFamily (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (μ : PMF F.Profile) :
+    F.IsCorrelatedEqFor pref μ ↔
+      ∀ d : Σ who : ι, F.Strategy who → F.Strategy who,
+        pref d.1 (F.correlatedOutcome μ)
+          (F.correlatedOutcome (F.unilateralDeviationFamily μ d)) := by
+  constructor
+  · intro h d
+    exact h d.1 d.2
+  · intro h who dev
+    exact h ⟨who, dev⟩
 
 /-- Coarse correlated equilibrium w.r.t. preference `pref`: no player gains from
     constant unilateral deviation. -/
 def IsCoarseCorrelatedEqFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (μ : PMF F.Profile) : Prop :=
-  ∀ (who : ι) (s' : F.Strategy who),
-    pref who (F.correlatedOutcome μ)
-      (F.correlatedOutcome (F.constDeviateDistributionFn μ who s'))
+  ∀ who : ι,
+    F.NoProfitableProfileDeviationFor pref who μ
+      (fun s' : F.Strategy who =>
+        F.constDeviateDistributionFn μ who s')
+
+/-- CCE as no profitable deviation against the canonical constant family. -/
+theorem isCoarseCorrelatedEqFor_iff_noProfitable_constantFamily (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (μ : PMF F.Profile) :
+    F.IsCoarseCorrelatedEqFor pref μ ↔
+      ∀ d : Σ who : ι, F.Strategy who,
+        pref d.1 (F.correlatedOutcome μ)
+          (F.correlatedOutcome (F.constantDeviationFamily μ d)) := by
+  constructor
+  · intro h d
+    exact h d.1 d.2
+  · intro h who s'
+    exact h ⟨who, s'⟩
 
 -- ============================================================================
 -- Section 8: Properties of *For solution concepts
