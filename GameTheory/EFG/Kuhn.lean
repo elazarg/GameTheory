@@ -729,7 +729,7 @@ theorem reachesFlat_of_ReachBy_matching {s : FlatProfile S}
     ReachBy hist t (.decision J next_J) →
     (∀ step ∈ playerHistory S p hist, s ⟨p, step.1⟩ = step.2) →
     reachesFlat J s t
-  | .terminal _, _, _, _, hr, _ => nomatch hr
+  | .terminal _, _, _, _, hr, _ => False.elim (ReachBy_terminal_absurd hr)
   | .chance _k _μ _hk next, hsp, _, _, hr, hmatch => by
     obtain ⟨b, rest, rfl, hr'⟩ := ReachBy_chance_inv' hr
     exact ⟨b, reachesFlat_of_ReachBy_matching p J (next b)

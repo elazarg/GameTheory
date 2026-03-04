@@ -2,6 +2,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Monad
 
+import CS.TransitionTrace
 import GameTheory.Core.KernelGame
 import GameTheory.Concepts.SolutionConcepts
 
@@ -336,17 +337,51 @@ def EFGGame.IsPerfectBayesianEqFor (G : EFGGame)
     (A : G.Assessment) : Prop :=
   G.IsSequentialEqFor SequentiallyRational BayesConsistent A
 
+/-- One-step transition relation induced by a `HistoryStep`. -/
+def HistoryStepStep {S : InfoStructure} {Outcome : Type} :
+    HistoryStep S → GameTree S Outcome → GameTree S Outcome → Prop
+  | .chance k b, src, dst =>
+      ∃ (μ : PMF (Fin k)) (hk : 0 < k) (next : Fin k → GameTree S Outcome),
+        src = .chance k μ hk next ∧ dst = next b
+  | .action _p I a, src, dst =>
+      ∃ (next : S.Act I → GameTree S Outcome),
+        src = .decision I next ∧ dst = next a
+
 /-- Reachability: `ReachBy h root target` means following history `h` from
     `root` leads to `target`. History is earliest step first. -/
-inductive ReachBy {S : InfoStructure} {Outcome : Type} :
-    List (HistoryStep S) → GameTree S Outcome → GameTree S Outcome → Prop where
-  | here (t) : ReachBy [] t t
-  | chance {k μ hk next rest s} (b : Fin k) :
-      ReachBy rest (next b) s →
-      ReachBy (HistoryStep.chance k b :: rest) (.chance k μ hk next) s
-  | action {p : S.Player} {I : S.Infoset p} {next rest s} (a : S.Act I) :
-      ReachBy rest (next a) s →
-      ReachBy (HistoryStep.action p I a :: rest) (.decision I next) s
+abbrev ReachBy {S : InfoStructure} {Outcome : Type} :
+    List (HistoryStep S) → GameTree S Outcome → GameTree S Outcome → Prop :=
+  CS.Transition.ReachBy (HistoryStepStep (S := S) (Outcome := Outcome))
+
+namespace ReachBy
+
+theorem here {S : InfoStructure} {Outcome : Type} (t : GameTree S Outcome) :
+    ReachBy (S := S) (Outcome := Outcome) [] t t :=
+  CS.Transition.ReachBy.nil _
+
+theorem chance {S : InfoStructure} {Outcome : Type}
+    {k : Nat} {μ : PMF (Fin k)} {hk : 0 < k}
+    {next : Fin k → GameTree S Outcome}
+    {rest : List (HistoryStep S)} {s : GameTree S Outcome}
+    (b : Fin k)
+    (h : ReachBy (S := S) (Outcome := Outcome) rest (next b) s) :
+    ReachBy (S := S) (Outcome := Outcome)
+      (HistoryStep.chance k b :: rest) (.chance k μ hk next) s := by
+  refine CS.Transition.ReachBy.cons ?_ h
+  exact ⟨μ, hk, next, rfl, rfl⟩
+
+theorem action {S : InfoStructure} {Outcome : Type}
+    {p : S.Player} {I : S.Infoset p}
+    {next : S.Act I → GameTree S Outcome}
+    {rest : List (HistoryStep S)} {s : GameTree S Outcome}
+    (a : S.Act I)
+    (h : ReachBy (S := S) (Outcome := Outcome) rest (next a) s) :
+    ReachBy (S := S) (Outcome := Outcome)
+      (HistoryStep.action p I a :: rest) (.decision I next) s := by
+  refine CS.Transition.ReachBy.cons ?_ h
+  exact ⟨next, rfl, rfl⟩
+
+end ReachBy
 
 /-- Extract the subsequence of actions by player `who` from a history,
     keeping the infoset and the *typed* action taken there. -/
@@ -379,7 +414,9 @@ def PerfectRecall {S : InfoStructure} {Outcome : Type}
 theorem PerfectRecall_terminal {S : InfoStructure} {Outcome : Type}
     (z : Outcome) : PerfectRecall (GameTree.terminal (S := S) z) := by
   intro h₁ h₂ p I next₁ next₂ hr₁ _hr₂
-  nomatch hr₁
+  cases hr₁ with
+  | @cons a _ _ _ _ hstep _ =>
+      cases a <;> simp [HistoryStepStep] at hstep
 
 /-- If each info set appears at most once in the tree, then perfect recall holds.
     (No repeated info sets ⇒ all paths to same info set are the same path.) -/
@@ -400,7 +437,9 @@ theorem ReachBy_terminal_absurd {S : InfoStructure} {Outcome : Type}
     {h : List (HistoryStep S)} {z : Outcome} {p : S.Player} {I : S.Infoset p}
     {next : S.Act I → GameTree S Outcome}
     (hr : ReachBy h (.terminal (S := S) z) (.decision I next)) : False := by
-  nomatch hr
+  cases hr with
+  | @cons a _ _ _ _ hstep _ =>
+      cases a <;> simp [HistoryStepStep] at hstep
 
 /-- Inversion for `ReachBy` from a decision node to a decision node. -/
 theorem ReachBy_decision_inv {S : InfoStructure} {Outcome : Type}
@@ -414,10 +453,17 @@ theorem ReachBy_decision_inv {S : InfoStructure} {Outcome : Type}
       h = HistoryStep.action p I₀ a :: rest ∧
       ReachBy rest (f a) (.decision I next)) := by
   cases hr with
-  | here =>
+  | nil =>
       exact Or.inl ⟨rfl, rfl, HEq.rfl, HEq.rfl⟩
-  | action a hr' =>
-      exact Or.inr ⟨a, _, rfl, hr'⟩
+  | @cons a rest _ u _ hstep hr' =>
+      cases a with
+      | chance k b =>
+          simp [HistoryStepStep] at hstep
+      | action p' I' a =>
+          rcases hstep with ⟨next', hs, hu⟩
+          cases hs
+          subst hu
+          exact Or.inr ⟨a, rest, rfl, hr'⟩
 
 /-- Inversion for `ReachBy` from a chance node to a decision node. -/
 theorem ReachBy_chance_inv' {S : InfoStructure} {Outcome : Type}
@@ -429,7 +475,15 @@ theorem ReachBy_chance_inv' {S : InfoStructure} {Outcome : Type}
       h = HistoryStep.chance k b :: rest ∧
       ReachBy rest (f b) (.decision I next) := by
   cases hr with
-  | chance b hr' => exact ⟨b, _, rfl, hr'⟩
+  | @cons a rest _ u _ hstep hr' =>
+      cases a with
+      | chance k' b =>
+          rcases hstep with ⟨μ', hk', f', hs, hu⟩
+          cases hs
+          subst hu
+          exact ⟨b, rest, rfl, hr'⟩
+      | action p' I' a =>
+          simp [HistoryStepStep] at hstep
 
 /-- Concatenation lemma: if `ReachBy h₁ root mid` and `ReachBy h₂ mid target`,
     then `ReachBy (h₁ ++ h₂) root target`. -/
@@ -438,10 +492,7 @@ theorem ReachBy_append {S : InfoStructure} {Outcome : Type}
     {root mid target : GameTree S Outcome}
     (hr₁ : ReachBy h₁ root mid) (hr₂ : ReachBy h₂ mid target) :
     ReachBy (h₁ ++ h₂) root target := by
-  induction hr₁ with
-  | here _ => exact hr₂
-  | chance b _ ih => exact .chance b (ih hr₂)
-  | action a _ ih => exact .action a (ih hr₂)
+  exact CS.Transition.reachBy_append hr₁ hr₂
 
 /-- Splitting lemma: if `ReachBy (h₁ ++ h₂) root target`, then there exists
     a `mid` such that `ReachBy h₁ root mid` and `ReachBy h₂ mid target`. -/
@@ -450,16 +501,7 @@ theorem ReachBy_split {S : InfoStructure} {Outcome : Type}
     {root target : GameTree S Outcome}
     (hr : ReachBy (h₁ ++ h₂) root target) :
     ∃ mid, ReachBy h₁ root mid ∧ ReachBy h₂ mid target := by
-  induction h₁ generalizing root with
-  | nil => exact ⟨root, .here root, hr⟩
-  | cons step rest ih =>
-    match hr with
-    | .chance b htail =>
-      obtain ⟨mid, hmid₁, hmid₂⟩ := ih htail
-      exact ⟨mid, .chance b hmid₁, hmid₂⟩
-    | .action a htail =>
-      obtain ⟨mid, hmid₁, hmid₂⟩ := ih htail
-      exact ⟨mid, .action a hmid₁, hmid₂⟩
+  exact CS.Transition.reachBy_split hr
 
 /-- `playerHistory` distributes over concatenation. -/
 theorem playerHistory_append (S : InfoStructure) (who : S.Player)

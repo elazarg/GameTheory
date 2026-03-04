@@ -20,6 +20,7 @@ import GameTheory.Concepts.PrefPreorderProperties
 import GameTheory.Concepts.EUProperties
 import GameTheory.Concepts.OfEUProperties
 import GameTheory.Core.GameIsomorphism
+import GameTheory.Core.GameSimulation
 import GameTheory.Core.UtilityInvariance
 import GameTheory.Core.GameMorphism
 

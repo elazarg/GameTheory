@@ -130,7 +130,7 @@ private theorem seqTree_playerHistory_nil :
         -- playerHistory twoPlayerS 1 [.action 0 () _] → 0 ≠ 1, filtered → []
         simp [playerHistory]
       · -- from terminal to decision — impossible
-        fin_cases b <;> nomatch hr'')
+        fin_cases b <;> exact False.elim (ReachBy_terminal_absurd hr''))
 
 /-- seqTree has perfect recall. -/
 theorem seqTree_perfectRecall : PerfectRecall seqTree := by
@@ -150,7 +150,7 @@ private theorem mpTree_playerHistory_nil :
   · fin_cases a <;> (
       rcases ReachBy_decision_inv hr' with ⟨rfl, rfl, _, _⟩ | ⟨b, rest', rfl, hr''⟩
       · simp [playerHistory]
-      · fin_cases b <;> nomatch hr'')
+      · fin_cases b <;> exact False.elim (ReachBy_terminal_absurd hr''))
 
 /-- matchingPenniesTree has perfect recall. -/
 theorem matchingPenniesTree_perfectRecall :
@@ -175,7 +175,7 @@ private theorem hdTree_playerHistory_nil :
       -- playerHistory _ _ [.chance _] = [] (chance steps filtered)
       simp [playerHistory]
     · -- from terminal to decision — impossible
-      fin_cases a <;> nomatch hr'')
+      fin_cases a <;> exact False.elim (ReachBy_terminal_absurd hr''))
 
 /-- hiddenDecTree has perfect recall. -/
 theorem hiddenDecTree_perfectRecall :

@@ -115,15 +115,17 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
   induction t with
   | terminal z =>
     intro hroot hreach_root h u hr
-    cases hr
-    exact terminal_isNashFor_euPref z σ
+    cases hr with
+    | nil => exact terminal_isNashFor_euPref z σ
+    | @cons a _ _ _ _ hstep _ =>
+        cases a <;> simp [HistoryStepStep] at hstep
   | chance k μ hk next ih =>
     intro hroot hreach_root h u hr
     have hpi_next : ∀ b : Fin k, IsPerfectInfo (next b) :=
       fun b => IsPerfectInfo_subtree (root := .chance k μ hk next) hpi
         (.chance b (.here _))
     cases hr with
-    | here =>
+    | nil =>
       intro who s'
       have hNnext : ∀ b : Fin k,
           (G.withTree (next b)).toStrategicKernelGame.IsNashFor
@@ -149,15 +151,22 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
           (fun b => expect ((next b).evalDist (pureToBehavioral σ))
             (fun ω => G.utility ω who))
           (fun b => hpoint b))
-    | chance b hr' =>
-      exact ih b (hpi_next b) _ (ReachBy_append hreach_root (.chance b (.here _))) hr'
+    | @cons a _ _ _ _ hstep hr' =>
+      cases a with
+      | chance _k b =>
+          rcases hstep with ⟨_, _, _, hs, hu⟩
+          cases hs
+          subst hu
+          exact ih b (hpi_next b) _ (ReachBy_append hreach_root (.chance b (.here _))) hr'
+      | action p I a =>
+          simp [HistoryStepStep] at hstep
   | @decision p I next ih =>
     intro hroot hreach_root h u hr
     have hpi_next : ∀ a : G.inf.Act I, IsPerfectInfo (next a) :=
       fun a => IsPerfectInfo_subtree (root := .decision I next) hpi
         (.action a (.here _))
     cases hr with
-    | here =>
+    | nil =>
       intro who s'
       by_cases hwho : who = p
       · -- Deviator is the deciding player
@@ -231,9 +240,16 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
         have hpw : p ≠ who := Ne.symm hwho
         simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
           evalDist_decision, pureToBehavioral, Function.update, hpw] using hOpt
-    | action a hr' =>
-      exact ih a (hpi_next a) _
-        (ReachBy_append hreach_root (.action a (.here _))) hr'
+    | @cons a _ _ _ _ hstep hr' =>
+      cases a with
+      | chance k b =>
+          simp [HistoryStepStep] at hstep
+      | action p' I' a =>
+          rcases hstep with ⟨next', hs, hu⟩
+          cases hs
+          subst hu
+          exact ih a (hpi_next a) _
+            (ReachBy_append hreach_root (.action a (.here _))) hr'
 
 set_option linter.unusedFintypeInType false in
 open Classical in

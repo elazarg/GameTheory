@@ -132,6 +132,5 @@ theorem Protocol.spe_implies_isNash (G : Protocol n S V A Sig)
   simp only [ge_iff_le, KernelGame.eu, Protocol.toKernelGame, Protocol.eval]
   simp only [Protocol.subgameEu, Protocol.subgameEval, List.drop_zero, ge_iff_le] at h
   convert h using 2
-  all_goals (congr 1; funext i; simp [Function.update])
 
 end GameTheory

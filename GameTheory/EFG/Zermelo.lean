@@ -97,7 +97,9 @@ theorem exists_noOSD (G : EFGGame) [Fintype G.Outcome] :
   | terminal z =>
     refine ⟨fun p I => ⟨0, G.inf.arity_pos p I⟩, ?_⟩
     intro q J nextJ ⟨_, hr⟩ _
-    cases hr
+    cases hr with
+    | @cons a _ _ _ _ hstep _ =>
+        cases a <;> simp [HistoryStepStep] at hstep
   | chance k μ hk next ih =>
     classical
     have hpi_next : ∀ b : Fin k, IsPerfectInfo (next b) :=
@@ -124,21 +126,28 @@ theorem exists_noOSD (G : EFGGame) [Fintype G.Outcome] :
     refine ⟨σ, ?_⟩
     intro q J nextJ ⟨h, hreach⟩ a'
     cases hreach with
-    | chance b hr' =>
-      -- Transfer OSD from σChild b to σ
-      have hactJ : σ q J = σChild b q J :=
-        hagree_next b q J (decisionNodeIn_of_reachBy hr')
-      have heval : ∀ x, (nextJ x).evalDist (pureToBehavioral σ) =
-          (nextJ x).evalDist (pureToBehavioral (σChild b)) := by
-        intro x
-        apply evalDist_eq_of_agree
-        intro r K hInK
-        apply hagree_next b
-        obtain ⟨histK, nextK, hReachK⟩ := decisionNodeIn_reachBy hInK
-        exact decisionNodeIn_of_reachBy
-          (ReachBy_append (ReachBy_append hr' (.action x (.here _))) hReachK)
-      rw [hactJ, heval (σChild b q J), heval a']
-      exact hAllChild b J nextJ ⟨_, hr'⟩ a'
+    | @cons a _ _ _ _ hstep hr' =>
+        cases a with
+        | chance _k b =>
+            rcases hstep with ⟨_, _, _, hs, hu⟩
+            cases hs
+            subst hu
+            -- Transfer OSD from σChild b to σ
+            have hactJ : σ q J = σChild b q J :=
+              hagree_next b q J (decisionNodeIn_of_reachBy hr')
+            have heval : ∀ x, (nextJ x).evalDist (pureToBehavioral σ) =
+                (nextJ x).evalDist (pureToBehavioral (σChild b)) := by
+              intro x
+              apply evalDist_eq_of_agree
+              intro r K hInK
+              apply hagree_next b
+              obtain ⟨histK, nextK, hReachK⟩ := decisionNodeIn_reachBy hInK
+              exact decisionNodeIn_of_reachBy
+                (ReachBy_append (ReachBy_append hr' (.action x (.here _))) hReachK)
+            rw [hactJ, heval (σChild b q J), heval a']
+            exact hAllChild b J nextJ ⟨_, hr'⟩ a'
+        | action p I a =>
+            simp [HistoryStepStep] at hstep
   | @decision p I next ih =>
     classical
     have hpi_next : ∀ a : G.inf.Act I, IsPerfectInfo (next a) :=
@@ -188,26 +197,33 @@ theorem exists_noOSD (G : EFGGame) [Fintype G.Outcome] :
     refine ⟨σ, ?_⟩
     intro q J nextJ ⟨h, hreach⟩ a'
     cases hreach with
-    | here =>
-      -- Root decision node: q=p, J=I, nextJ=next
-      -- OSD: V(aOpt) ≥ V(a')
-      rw [hσI, hValEq aOpt, hValEq a']
-      exact hVmax a'
-    | action a hr' =>
-      -- Subtree: transfer OSD from σChild a to σ
-      have hactJ : σ q J = σChild a q J :=
-        hagree_next a q J (decisionNodeIn_of_reachBy hr')
-      have heval : ∀ x, (nextJ x).evalDist (pureToBehavioral σ) =
-          (nextJ x).evalDist (pureToBehavioral (σChild a)) := by
-        intro x
-        apply evalDist_eq_of_agree
-        intro r K hInK
-        apply hagree_next a
-        obtain ⟨histK, nextK, hReachK⟩ := decisionNodeIn_reachBy hInK
-        exact decisionNodeIn_of_reachBy
-          (ReachBy_append (ReachBy_append hr' (.action x (.here _))) hReachK)
-      rw [hactJ, heval (σChild a q J), heval a']
-      exact hAllChild a J nextJ ⟨_, hr'⟩ a'
+    | nil =>
+        -- Root decision node: q=p, J=I, nextJ=next
+        -- OSD: V(aOpt) ≥ V(a')
+        rw [hσI, hValEq aOpt, hValEq a']
+        exact hVmax a'
+    | @cons a _ _ _ _ hstep hr' =>
+        cases a with
+        | chance k b =>
+            simp [HistoryStepStep] at hstep
+        | action p' I' a =>
+            rcases hstep with ⟨next', hs, hu⟩
+            cases hs
+            subst hu
+            -- Subtree: transfer OSD from σChild a to σ
+            have hactJ : σ q J = σChild a q J :=
+              hagree_next a q J (decisionNodeIn_of_reachBy hr')
+            have heval : ∀ x, (nextJ x).evalDist (pureToBehavioral σ) =
+                (nextJ x).evalDist (pureToBehavioral (σChild a)) := by
+              intro x
+              apply evalDist_eq_of_agree
+              intro r K hInK
+              apply hagree_next a
+              obtain ⟨histK, nextK, hReachK⟩ := decisionNodeIn_reachBy hInK
+              exact decisionNodeIn_of_reachBy
+                (ReachBy_append (ReachBy_append hr' (.action x (.here _))) hReachK)
+            rw [hactJ, heval (σChild a q J), heval a']
+            exact hAllChild a J nextJ ⟨_, hr'⟩ a'
 
 -- ============================================================================
 -- Zermelo's Theorem

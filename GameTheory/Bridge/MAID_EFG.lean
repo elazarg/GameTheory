@@ -1,6 +1,7 @@
 import GameTheory.MAID.Basic
 import GameTheory.EFG.Basic
 import GameTheory.EFG.Kuhn
+import GameTheory.Core.GameSimulation
 
 /-!
 # MAID → EFG Reduction
@@ -217,6 +218,27 @@ theorem maid_efg_evalDist {S : MAID.Struct (Fin m) n}
 -- KernelGame equivalence
 -- ============================================================================
 
+/-- `buildTree` is independent of the `pol` argument. -/
+theorem buildTree_pol_irrel {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₁ pol₂ : MAID.Policy S)
+    (nodes : List (Fin n)) (assign : MAID.TAssign S) :
+    buildTree S sem pol₁ nodes assign = buildTree S sem pol₂ nodes assign := by
+  induction nodes generalizing assign with
+  | nil =>
+      simp [buildTree]
+  | cons nd rest ih =>
+      simp only [buildTree]
+      split <;> simp [ih]
+
+/-- `maidToEFG` is independent of the `pol` argument. -/
+theorem maidToEFG_pol_irrel {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₁ pol₂ : MAID.Policy S) :
+    maidToEFG S sem pol₁ = maidToEFG S sem pol₂ := by
+  refine congrArg
+    (fun t => EFG.EFGGame.mk (maidInfoS S) (MAID.TAssign S) t (fun a => MAID.utilityOf S sem a))
+    ?_
+  exact buildTree_pol_irrel sem pol₁ pol₂ S.topoOrder (MAID.defaultAssign S)
+
 /-- The outcome kernels of the MAID and EFG KernelGames agree under strategy correspondence. -/
 theorem maidToEFG_outcomeKernel {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S) :
@@ -233,6 +255,42 @@ theorem maidToEFG_udist {S : MAID.Struct (Fin m) n}
   simp only [GameTheory.KernelGame.udist, maidToEFG_outcomeKernel]
   rfl
 
+/-- MAID to EFG as a game bisimulation (distribution-preserving equivalence). -/
+noncomputable def maidToEFG_bisimulation {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) :
+    GameTheory.KernelGame.Bisimulation (MAID.toKernelGame S sem)
+      ((maidToEFG S sem pol₀).toKernelGame) where
+  stratEquiv := fun _ => Equiv.refl _
+  udist_preserved := by
+    intro pol
+    have ht :
+        buildTree S sem pol₀ S.topoOrder (MAID.defaultAssign S) =
+          buildTree S sem pol S.topoOrder (MAID.defaultAssign S) :=
+      buildTree_pol_irrel sem pol₀ pol S.topoOrder (MAID.defaultAssign S)
+    have hUd :
+        (maidToEFG S sem pol₀).toKernelGame.udist (fun i => pol i) =
+          (maidToEFG S sem pol).toKernelGame.udist (toEFGProfile pol) := by
+      have hUd' :
+          (maidToEFG S sem pol₀).toKernelGame.udist (fun i => pol i) =
+            (maidToEFG S sem pol).toKernelGame.udist (fun i => pol i) := by
+        simp [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame, maidToEFG, ht]
+      simpa [toEFGProfile] using hUd'
+    calc
+      (maidToEFG S sem pol₀).toKernelGame.udist (fun i => pol i)
+          = (maidToEFG S sem pol).toKernelGame.udist (toEFGProfile pol) := hUd
+      _ = (MAID.toKernelGame S sem).udist pol := maidToEFG_udist sem pol
+
+/-- Forward simulation induced by `maidToEFG_bisimulation`.
+
+`Simulation` is kept as a separate definition because many APIs consume forward
+maps, but here it is intentionally not reproved: we project the stronger
+`Bisimulation` witness. -/
+noncomputable def maidToEFG_simulation {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) :
+    GameTheory.KernelGame.Simulation (MAID.toKernelGame S sem)
+      ((maidToEFG S sem pol₀).toKernelGame) :=
+  GameTheory.KernelGame.Bisimulation.toSimulation (maidToEFG_bisimulation sem pol₀)
+
 -- ============================================================================
 -- Perfect recall
 -- ============================================================================
@@ -248,7 +306,9 @@ private theorem buildTree_obs_stable
     {nd' : Fin n} (hnd' : nd' ∈ S.obsParents I.1.val) (hnd'_not : nd' ∉ nodes) :
     I.2 ⟨nd', hnd'⟩ = assign nd' := by
   induction nodes generalizing assign h with
-  | nil => simp only [buildTree] at hr; nomatch hr
+  | nil =>
+      simp only [buildTree] at hr
+      exact False.elim (EFG.ReachBy_terminal_absurd hr)
   | cons nd rest ih =>
     have hnd'_ne : nd' ≠ nd := by
       intro heq; exact hnd'_not (List.mem_cons.mpr (.inl heq))
@@ -285,7 +345,9 @@ private theorem buildTree_decNode_mem
     (hr : EFG.ReachBy h (buildTree S sem pol nodes assign) (.decision I next)) :
     I.1.val ∈ nodes := by
   induction nodes generalizing assign h with
-  | nil => simp only [buildTree] at hr; nomatch hr
+  | nil =>
+      simp only [buildTree] at hr
+      exact False.elim (EFG.ReachBy_terminal_absurd hr)
   | cons nd rest ih =>
     unfold buildTree at hr
     split at hr
@@ -385,7 +447,9 @@ private theorem buildTree_playerHistory_eq
     (hr₂ : EFG.ReachBy h₂ (buildTree S sem pol nodes assign₂) (.decision I next₂)) :
     EFG.playerHistory (maidInfoS S) p h₁ = EFG.playerHistory (maidInfoS S) p h₂ := by
   induction nodes generalizing assign₁ assign₂ h₁ h₂ next₁ next₂ with
-  | nil => simp only [buildTree] at hr₁; nomatch hr₁
+  | nil =>
+      simp only [buildTree] at hr₁
+      exact False.elim (EFG.ReachBy_terminal_absurd hr₁)
   | cons nd rest ih =>
     have hnd_nodup : nd ∉ rest := (List.nodup_cons.mp hnodup).1
     have hrest_nodup : rest.Nodup := (List.nodup_cons.mp hnodup).2
