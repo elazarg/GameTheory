@@ -43,31 +43,36 @@ Once a model is expressed as `KernelGame`, the same definitions/theorems apply:
 - correlated equilibrium (`IsCorrelatedEq`, `IsCoarseCorrelatedEq`),
 - structural game classes (`IsZeroSum`, `IsConstantSum`, `IsTeamGame`, potential-game notions).
 
-## Key Definitions (Fast Orientation)
+## Game Forms
 
-From `GameTheory/Concepts/SolutionConcepts.lean`,
-`GameTheory/Core/GameProperties.lean`,
-`GameTheory/Core/KernelGame.lean`,
-`GameTheory/Concepts/Deviation.lean`:
+Unified semantic form:
 - `KernelGame ι`
 - `Profile G`
 - `KernelGame.eu` / expected utility
 - `KernelGame.udist` / utility-distribution semantics
+
+Concrete forms represented in the library and bridged to `KernelGame`:
+- normal-form games (NFG)
+- extensive-form games (EFG)
+- MAIDs
+
+## Core Concepts
+
+Deviation and incentives:
 - `KernelGame.Deviation`
 - `KernelGame.unilateralDeviation`, `KernelGame.constantDeviation`
 - `KernelGame.unilateralDeviationDistribution`, `KernelGame.constantDeviationDistribution`
+
+Equilibrium and dominance:
 - `KernelGame.IsNash`
 - `KernelGame.IsBestResponse`
 - `KernelGame.IsDominant`, `KernelGame.IsStrictDominant`
 - `KernelGame.WeaklyDominates`, `KernelGame.StrictlyDominates`
 - `KernelGame.IsCorrelatedEq`, `KernelGame.IsCoarseCorrelatedEq`
+
+Structural classes:
 - `KernelGame.IsZeroSum`, `KernelGame.IsConstantSum`, `KernelGame.IsTeamGame`
 - `KernelGame.IsExactPotential`, `KernelGame.IsOrdinalPotential`
-
-From `Math/Probability.lean` and `Math/PMFProduct.lean`:
-- `Kernel α β` (stochastic kernels via `PMF`)
-- `expect`
-- basic kernel composition/pushforward lemmas used across the library.
 
 ## Landmark Theorems (Exact Names)
 
@@ -109,46 +114,6 @@ From `Math/Probability.lean` and `Math/PMFProduct.lean`:
 - `EFG.hasNoOneShotDeviation_spe` (converse for perfect-info games)
 - `EFG.oneShotDeviation_iff_spe` (the equivalence)
 
-## Architecture and Module Map
-
-Entry point:
-- `GameTheory.lean` (imports the full library surface)
-
-Foundational math (game-theory free):
-- `Math/Probability.lean`, `Math/PMFProduct.lean`
-- `Math/Projection.lean`, `Math/FunctionUpdate.lean`, `Math/SetReachability.lean`, etc.
-
-Generic CS abstractions (model-agnostic):
-- `CS/StateMachine.lean`, `CS/TransitionTrace.lean`, `CS/TraceLanguage.lean`, `CS/Controller.lean`
-
-Core game objects:
-- `GameTheory/Core/KernelGame.lean`
-- `GameTheory/Core/GameForm.lean`
-- `GameTheory/Core/GameProperties.lean`
-- `GameTheory/Core/GameMorphism.lean`, `GameTheory/Core/GameIsomorphism.lean`
-
-Major theorem families:
-- concepts (Nash/dominance/CE/regret/etc.): `GameTheory/Concepts/*.lean`
-- NFG results: `GameTheory/NFG/*.lean`
-- EFG results: `GameTheory/EFG/*.lean`
-- protocol-level sequential results: `GameTheory/Sequential/*.lean`
-- bridges: `GameTheory/Bridge/*.lean`
-- mechanism design/social choice: `GameTheory/Mechanism/*.lean`
-- auctions: `GameTheory/Auctions/*.lean`
-
-Representations and bridges:
-- NFG: `GameTheory/NFG/Basic.lean`, `GameTheory/Bridge/NFG_EFG.lean`, `GameTheory/Bridge/NFG_Proto.lean`
-- EFG: `GameTheory/EFG/Basic.lean`, `GameTheory/EFG/Kuhn.lean`,
-  `GameTheory/EFG/Zermelo.lean`, `GameTheory/EFG/OneShotDeviation.lean`,
-  `GameTheory/Bridge/EFG_NFG.lean`, `GameTheory/Bridge/EFG_Proto.lean`
-- MAID: `GameTheory/MAID/Basic.lean`, `GameTheory/Bridge/MAID_EFG.lean`,
-  `GameTheory/Bridge/MAID_Proto.lean`
-
-Examples:
-- `GameTheory/NFG/Examples.lean`
-- `GameTheory/EFG/Examples.lean`
-- `GameTheory/MAID/Examples.lean`
-
 ## Representation Interoperability
 
 The design goal is semantic reuse:
@@ -179,11 +144,6 @@ Targeted build:
 ```bash
 lake build GameTheory
 ```
-
-## Current Status
-
-- The exported `GameTheory/*.lean` library surface builds successfully.
-- `GameTheory.lean` is the maintained top-level import list for the library.
 
 ## Minimal Usage
 
