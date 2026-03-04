@@ -1,24 +1,19 @@
-import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Core.GameForm
 import Math.Probability
 
 /-!
 # GameTheory.Core.GameIsomorphism
 
-Utility transformations that preserve Nash equilibria.
+Structural isomorphisms for finite stochastic games.
 
-An affine transformation of utilities (positive scaling plus per-player shift)
-does not change which strategy profiles are Nash equilibria.  This is a
-fundamental invariance property: solution concepts depend on the *ordinal*
-ranking of outcomes, not on the cardinal utility scale.
+This file separates two notions:
 
-## Main results
+- `GameForm.ProtocolIsomorphism`: same protocol dynamics, i.e. same outcome
+  distributions up to relabeling of strategies/outcomes.
+- `KernelGame.GameIsomorphism`: same utility distributions up to relabeling of
+  strategies.
 
-- `ofEU_nash_affine` — affine transformation `u' σ i = a * u σ i + b i` with
-  `a > 0` preserves Nash equilibria
-- `ofEU_nash_shift` — adding a per-player constant preserves Nash equilibria
-  (special case of affine with `a = 1`)
-- `ofEU_nash_scale` — positive scaling preserves Nash equilibria
-  (special case of affine with `b = 0`)
+Protocol isomorphism plus utility compatibility implies game isomorphism.
 -/
 
 namespace GameTheory
@@ -27,53 +22,67 @@ open Math.Probability
 
 variable {ι : Type}
 
-/-- Affine transformation of utilities preserves Nash equilibria.
+namespace GameForm
 
-If `u' σ i = a * u σ i + b i` with `a > 0`, then a strategy profile is Nash
-in `ofEU S u` if and only if it is Nash in `ofEU S u'`.  Intuitively, positive
-scaling preserves the direction of all utility comparisons, and per-player
-additive constants cancel in any within-player comparison. -/
-theorem ofEU_nash_affine (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
-    (a : ℝ) (ha : a > 0) (b : ι → ℝ)
-    (u' : (∀ i, S i) → Payoff ι)
-    (htrans : ∀ σ i, u' σ i = a * u σ i + b i) (σ : ∀ i, S i) :
-    (KernelGame.ofEU S u).IsNash σ ↔ (KernelGame.ofEU S u').IsNash σ := by
-  classical
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU]
-  constructor
-  · intro hN who s'
-    have := hN who s'
-    rw [htrans σ who, htrans (Function.update σ who s') who]
-    nlinarith
-  · intro hN who s'
-    have := hN who s'
-    rw [htrans σ who, htrans (Function.update σ who s') who] at this
-    nlinarith
+/-- Protocol-level isomorphism: relabel strategies/outcomes while preserving the
+    induced outcome distribution for every profile. -/
+structure ProtocolIsomorphism (F F' : GameForm ι) where
+  stratEquiv : ∀ i, F.Strategy i ≃ F'.Strategy i
+  outcomeEquiv : F.Outcome ≃ F'.Outcome
+  outcomeKernel_preserved : ∀ σ : F.Profile,
+    F'.outcomeKernel (fun i => stratEquiv i (σ i)) =
+      (F.outcomeKernel σ).bind (fun ω => PMF.pure (outcomeEquiv ω))
 
-/-- Adding a per-player constant to utilities preserves Nash equilibria.
+end GameForm
 
-This is the special case of `ofEU_nash_affine` with `a = 1`: player-specific
-constants cancel in any utility comparison within a single player's deviations. -/
-theorem ofEU_nash_shift (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (b : ι → ℝ)
-    (σ : ∀ i, S i) :
-    (KernelGame.ofEU S u).IsNash σ ↔
-    (KernelGame.ofEU S (fun τ i => u τ i + b i)).IsNash σ := by
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU]
-  constructor
-  · intro hN who s'; have := hN who s'; linarith
-  · intro hN who s'; have := hN who s'; linarith
+namespace KernelGame
 
-/-- Positive scaling of utilities preserves Nash equilibria.
+/-- Game-level isomorphism: relabel strategies while preserving joint utility
+    distributions at every profile. -/
+structure GameIsomorphism (G H : KernelGame ι) where
+  stratEquiv : ∀ i, G.Strategy i ≃ H.Strategy i
+  udist_preserved : ∀ σ : Profile G,
+    H.udist (fun i => stratEquiv i (σ i)) = G.udist σ
 
-This is the special case of `ofEU_nash_affine` with `b = 0`: multiplying all
-utilities by a positive constant preserves the direction of every inequality. -/
-theorem ofEU_nash_scale (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
-    (a : ℝ) (ha : a > 0) (σ : ∀ i, S i) :
-    (KernelGame.ofEU S u).IsNash σ ↔
-    (KernelGame.ofEU S (fun τ i => a * u τ i)).IsNash σ := by
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU]
-  constructor
-  · intro hN who s'; have := hN who s'; nlinarith
-  · intro hN who s'; have := hN who s'; nlinarith
+/-- Utility-distribution preservation implies per-player utility-distribution
+    preservation. -/
+theorem GameIsomorphism.udistPlayer_preserved {G H : KernelGame ι}
+    (e : GameIsomorphism G H) (σ : Profile G) (who : ι) :
+    H.udistPlayer (fun i => e.stratEquiv i (σ i)) who = G.udistPlayer σ who := by
+  have h :=
+    congrArg (fun d : PMF (Payoff ι) => d.bind (fun u => PMF.pure (u who))) (e.udist_preserved σ)
+  simpa [KernelGame.udistPlayer_eq_udist_bind] using h
+
+/-- Protocol isomorphism between underlying game forms. -/
+abbrev ProtocolIsomorphism (G H : KernelGame ι) : Type :=
+  GameForm.ProtocolIsomorphism G.toGameForm H.toGameForm
+
+/-- Protocol isomorphism plus utility compatibility implies game isomorphism. -/
+def ProtocolIsomorphism.toGameIsomorphism {G H : KernelGame ι}
+    (e : ProtocolIsomorphism G H)
+    (hutil : ∀ ω : G.Outcome, H.utility (e.outcomeEquiv ω) = G.utility ω) :
+    GameIsomorphism G H where
+  stratEquiv := e.stratEquiv
+  udist_preserved := by
+    intro σ
+    have hk := e.outcomeKernel_preserved σ
+    have hk' : H.outcomeKernel (fun i => e.stratEquiv i (σ i)) =
+        (G.outcomeKernel σ).bind (fun ω => PMF.pure (e.outcomeEquiv ω)) := by
+      simpa using hk
+    calc
+      H.udist (fun i => e.stratEquiv i (σ i))
+          = (H.outcomeKernel (fun i => e.stratEquiv i (σ i))).bind
+              (fun ω => PMF.pure (H.utility ω)) := rfl
+      _ = (G.outcomeKernel σ).bind (fun ω => PMF.pure (H.utility (e.outcomeEquiv ω))) := by
+            rw [hk']
+            rw [PMF.bind_bind]
+            simp
+      _ = (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω)) := by
+            congr
+            funext ω
+            exact congrArg PMF.pure (hutil ω)
+      _ = G.udist σ := rfl
+
+end KernelGame
 
 end GameTheory
