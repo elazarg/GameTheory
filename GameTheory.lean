@@ -122,6 +122,7 @@ import GameTheory.NFG.EvolutionaryStability
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic
 import GameTheory.Auctions.Vickrey
+import GameTheory.Auctions.FirstPrice
 import GameTheory.Auctions.VCG
 import GameTheory.Auctions.AllPay
 
