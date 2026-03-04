@@ -102,6 +102,47 @@ structure GameIsomorphism (G H : KernelGame ι) where
   udist_preserved : ∀ σ : Profile G,
     H.udist (fun i => stratEquiv i (σ i)) = G.udist σ
 
+namespace GameIsomorphism
+
+/-- Identity game isomorphism. -/
+def id (G : KernelGame ι) : GameIsomorphism G G where
+  stratEquiv := fun _i => Equiv.refl _
+  udist_preserved := by intro σ; rfl
+
+/-- Symmetry of game isomorphism. -/
+def symm {G H : KernelGame ι} (e : GameIsomorphism G H) : GameIsomorphism H G where
+  stratEquiv := fun i => (e.stratEquiv i).symm
+  udist_preserved := by
+    intro σ
+    have h := e.udist_preserved (fun i => (e.stratEquiv i).symm (σ i))
+    simpa using h.symm
+
+/-- Composition of game isomorphisms. -/
+def comp {G H K : KernelGame ι}
+    (g : GameIsomorphism H K) (f : GameIsomorphism G H) : GameIsomorphism G K where
+  stratEquiv := fun i => (f.stratEquiv i).trans (g.stratEquiv i)
+  udist_preserved := by
+    intro σ
+    simp [g.udist_preserved, f.udist_preserved]
+
+@[simp] theorem id_comp {G H : KernelGame ι} (e : GameIsomorphism G H) :
+    comp (id H) e = e := by
+  cases e
+  rfl
+
+@[simp] theorem comp_id {G H : KernelGame ι} (e : GameIsomorphism G H) :
+    comp e (id G) = e := by
+  cases e
+  rfl
+
+theorem comp_assoc {G H K L : KernelGame ι}
+    (h : GameIsomorphism K L) (g : GameIsomorphism H K) (f : GameIsomorphism G H) :
+    comp h (comp g f) = comp (comp h g) f := by
+  cases h; cases g; cases f
+  rfl
+
+end GameIsomorphism
+
 /-- Utility-distribution preservation implies per-player utility-distribution
     preservation. -/
 theorem GameIsomorphism.udistPlayer_preserved {G H : KernelGame ι}

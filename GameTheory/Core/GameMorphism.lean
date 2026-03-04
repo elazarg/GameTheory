@@ -176,11 +176,7 @@ def toEUMorphism (e : EUGameIsomorphism G H) : EUMorphism G H where
 
 /-- Inverse EU-preserving game isomorphism. -/
 def symm (e : EUGameIsomorphism G H) : EUGameIsomorphism H G where
-  stratEquiv := fun i => (e.stratEquiv i).symm
-  udist_preserved := by
-    intro σ
-    have h := e.udist_preserved (fun i => (e.stratEquiv i).symm (σ i))
-    simpa using h.symm
+  toGameIsomorphism := e.toGameIsomorphism.symm
   eu_preserved := by
     intro σ who
     have h := e.eu_preserved (fun i => (e.stratEquiv i).symm (σ i)) who
