@@ -52,7 +52,8 @@ theorem externalRegret_eq_swapRegret_const (μ : PMF (Profile G)) (who : ι)
     (s' : G.Strategy who) :
     G.externalRegret μ who s' = G.swapRegret μ who (fun _ => s') := by
   simp [externalRegret, swapRegret, constDeviateDistribution, deviateDistribution,
-    deviateProfile]
+    KernelGame.constantDeviationDistribution, KernelGame.unilateralDeviationDistribution,
+    KernelGame.deviationDistribution, KernelGame.constantDeviation, KernelGame.unilateralDeviation]
 
 /-- Correlated equilibrium ↔ no swap regret: `μ` is a CE iff every
     recommendation-dependent deviation has nonpositive regret. -/

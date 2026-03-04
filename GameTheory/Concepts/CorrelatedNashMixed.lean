@@ -46,7 +46,8 @@ theorem constDeviateDistribution_pure (σ : Profile G)
     (who : ι) (s' : G.Strategy who) :
     G.constDeviateDistribution (PMF.pure σ) who s' =
       PMF.pure (Function.update σ who s') := by
-  simp [constDeviateDistribution, PMF.pure_bind]
+  simp [constDeviateDistribution, KernelGame.constantDeviationDistribution,
+    KernelGame.deviationDistribution, KernelGame.constantDeviation]
 
 /-- Recommendation-dependent deviation under a point-mass distribution yields a
 point mass at the deviated profile. -/
@@ -54,7 +55,8 @@ theorem deviateDistribution_pure (σ : Profile G)
     (who : ι) (dev : G.Strategy who → G.Strategy who) :
     G.deviateDistribution (PMF.pure σ) who dev =
       PMF.pure (G.deviateProfile σ who dev) := by
-  simp [deviateDistribution, PMF.pure_bind]
+  simp [deviateDistribution, KernelGame.unilateralDeviationDistribution,
+    KernelGame.deviationDistribution, KernelGame.unilateralDeviation, KernelGame.deviateProfile]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -67,7 +69,9 @@ theorem deviateDistribution_pmfPi
     (dev : G.Strategy who → G.Strategy who) :
     G.deviateDistribution (pmfPi σ) who dev =
       pmfPi (Function.update σ who (PMF.map dev (σ who))) := by
-  unfold deviateDistribution deviateProfile
+  unfold deviateDistribution
+  unfold KernelGame.unilateralDeviationDistribution KernelGame.deviationDistribution
+  unfold KernelGame.unilateralDeviation
   exact pmfPi_bind_update_map σ who dev
 
 set_option linter.unusedFintypeInType false in

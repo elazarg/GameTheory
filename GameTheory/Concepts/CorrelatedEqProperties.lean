@@ -37,8 +37,11 @@ deviation distribution `μ.bind (fun σ => pure (deviateProfile σ who id))`
 simplifies to `μ.bind pure = μ`.
 Delegates to `GameForm.deviateDistributionFn_id`. -/
 theorem deviateDistribution_id (G : KernelGame ι) (μ : PMF (Profile G)) (who : ι) :
-    G.deviateDistribution μ who _root_.id = μ :=
-  G.toGameForm.deviateDistributionFn_id μ who
+    G.deviateDistribution μ who _root_.id = μ := by
+  simpa [KernelGame.deviateDistribution,
+    KernelGame.unilateralDeviationDistribution,
+    KernelGame.unilateralDeviation] using
+    (KernelGame.deviationDistribution_id (G := G) μ)
 
 end KernelGame
 end GameTheory

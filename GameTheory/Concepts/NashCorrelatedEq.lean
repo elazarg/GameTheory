@@ -33,11 +33,11 @@ namespace KernelGame
 theorem nash_pure_isCorrelatedEq {G : KernelGame ι} {σ : Profile G}
     (hN : G.IsNash σ) : G.IsCorrelatedEq (PMF.pure σ) := by
   intro who dev
-  unfold correlatedEu
-  simp only [correlatedOutcome]
-  unfold deviateDistribution deviateProfile
-  simp only [Kernel.pushforward_apply, PMF.pure_bind]
-  exact hN who (dev (σ who))
+  simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
+    KernelGame.deviateDistribution, KernelGame.unilateralDeviationDistribution,
+    KernelGame.deviationDistribution, KernelGame.unilateralDeviation,
+    KernelGame.eu, Math.Probability.expect_pure]
+    using (hN who (dev (σ who)))
 
 /-- A pure Nash equilibrium, embedded as a point-mass distribution, is a coarse
     correlated equilibrium. Under `PMF.pure σ`, the constant deviation distribution
@@ -46,11 +46,11 @@ theorem nash_pure_isCorrelatedEq {G : KernelGame ι} {σ : Profile G}
 theorem nash_pure_isCoarseCorrelatedEq {G : KernelGame ι} {σ : Profile G}
     (hN : G.IsNash σ) : G.IsCoarseCorrelatedEq (PMF.pure σ) := by
   intro who s'
-  unfold correlatedEu
-  simp only [correlatedOutcome]
-  unfold constDeviateDistribution
-  simp only [Kernel.pushforward_apply, PMF.pure_bind]
-  exact hN who s'
+  simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
+    KernelGame.constDeviateDistribution, KernelGame.constantDeviationDistribution,
+    KernelGame.deviationDistribution, KernelGame.constantDeviation,
+    KernelGame.eu, Math.Probability.expect_pure]
+    using (hN who s')
 
 end KernelGame
 
