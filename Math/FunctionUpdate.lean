@@ -199,6 +199,20 @@ theorem aggregate_excluding_index_update_invariant
   intro i hi
   simp [Function.update, hi]
 
+theorem update_apply_family_eq_of_forall_ne
+    [DecidableEq ι]
+    {X : ι → Type*} {Y : Type*}
+    (σ τ : (i : ι) → X i → Y) (j : ι) (u : X j → Y) (x : (i : ι) → X i)
+    (hστ : ∀ i, i ≠ j → σ i (x i) = τ i (x i)) :
+    (fun i => (Function.update σ j u) i (x i))
+      =
+    (fun i => (Function.update τ j u) i (x i)) := by
+  funext i
+  by_cases hij : i = j
+  · subst hij
+    simp [Function.update]
+  · simp [Function.update_of_ne hij, hστ i hij]
+
 theorem update_eq_update_of_decEq
     {α : Type*} {β : α → Type*}
     (dec₁ dec₂ : DecidableEq α) (f : (a : α) → β a) (a : α) (v : β a) :

@@ -1,6 +1,7 @@
 import GameTheory.ProtoODP
 import Math.ProbabilityMassFunction
 import Math.Probability
+import Math.FunctionUpdate
 
 /-!
 # Zermelo's Theorem on Protocol
@@ -225,9 +226,12 @@ private theorem exists_spe_rounds
         simp_rw [show ∀ s', evalRounds rest (Function.update σ i si') s' =
             evalRounds rest (Function.update σ₀ i si') s' from
           fun s' => evalRounds_congr rest _ _ (fun r' hr' j s'' sg => by
-            by_cases hij : j = i
-            · subst hij; simp [Function.update]
-            · simp only [Function.update_of_ne hij]; exact hσ_eq r' hr' j s'' sg) s']
+            have hupd :=
+              Math.Function.Update.update_apply_family_eq_of_forall_ne
+                (σ := σ) (τ := σ₀) (j := i) (u := si')
+                (x := fun j => r'.view j s'' (sg j))
+                (fun j hj => hσ_eq r' hr' j s'' sg)
+            exact congrArg (fun f => f j) hupd) s']
         -- Pointwise: for each signal, argmax + IH gives the bound
         apply Math.ProbabilityMassFunction.expect_mono_of_pointwise; intro sg
         -- PI: Classical.choose h = s for any h : isFromR i view
@@ -265,10 +269,12 @@ private theorem exists_spe_rounds
           hσ_eq r' hr' j s'' sig) s']
         rw [evalRounds_congr rest (Function.update σ i si') (Function.update σ₀ i si')
           (fun r' hr' j s'' sig => by
-            by_cases hij : j = i
-            · subst hij; simp [Function.update]
-            · simp only [Function.update_of_ne hij]
-              exact hσ_eq r' hr' j s'' sig) s']
+            have hupd :=
+              Math.Function.Update.update_apply_family_eq_of_forall_ne
+                (σ := σ) (τ := σ₀) (j := i) (u := si')
+                (x := fun j => r'.view j s'' (sig j))
+                (fun j hj => hσ_eq r' hr' j s'' sig)
+            exact congrArg (fun f => f j) hupd) s']
         -- Now need: E[rest σ₀ s'](u·i) ≥ E[rest (upd σ₀ i si') s'](u·i)
         exact hσ₀ 0 s' i si'
     · -- k ≥ 1: in the tail, reduce to IH via congruence
@@ -285,10 +291,12 @@ private theorem exists_spe_rounds
             (Function.update σ i si') s' =
           evalRounds (rest.drop (k - 1)) (Function.update σ₀ i si') s' := fun s' =>
         evalRounds_congr _ _ _ (fun r' hr' j s'' sig => by
-          by_cases hij : j = i
-          · subst hij; simp [Function.update]
-          · simp only [Function.update_of_ne hij]
-            exact hσ_eq r' (List.mem_of_mem_drop hr') j s'' sig) s'
+          have hupd :=
+            Math.Function.Update.update_apply_family_eq_of_forall_ne
+              (σ := σ) (τ := σ₀) (j := i) (u := si')
+              (x := fun j => r'.view j s'' (sig j))
+              (fun j hj => hσ_eq r' (List.mem_of_mem_drop hr') j s'' sig)
+          exact congrArg (fun f => f j) hupd) s'
       simp_rw [hcong, hcong_upd]
       exact hσ₀ (k - 1) s i si'
 
