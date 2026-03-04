@@ -2,30 +2,20 @@
 
 Formalized finite game theory in Lean 4, centered on a single stochastic game model.
 
-This library proves core results for finite, discrete games:
-- normal-form games (NFG),
-- extensive-form games (EFG, including perfect-recall/Kuhn results),
-- MAIDs (multi-agent influence diagrams),
-all unified through `KernelGame`, with first-class deviation operators for
-incentive-style concepts (Nash/CE/CCE/regret).
+This project develops a reusable finite-game-theory foundation across multiple
+representations, with one semantic target model used to share definitions and
+proofs. The emphasis is not on isolated model-specific developments, but on
+proving core concepts once and transporting them cleanly.
 
 ## Major Theorems Proved
 
-- **Mixed Nash existence (finite games)**: `KernelGame.mixed_nash_exists`
-- **Von Neumann minimax (finite 2-player zero-sum)**: `KernelGame.von_neumann_minimax`
-- **Zermelo / backward induction (finite perfect-information EFG)**: `EFG.zermelo`
-- **Kuhn equivalence under perfect recall**:
-  `EFG.kuhn_behavioral_to_mixed`, `EFG.kuhn_mixed_to_behavioral`
-- **Nash characterization by best responses**:
-  `KernelGame.isNash_iff_bestResponse`
-- **Strict dominance gives unique Nash**:
-  `KernelGame.strictly_dominant_unique_nash`
-- **Pure Nash induces correlated equilibrium**:
-  `KernelGame.nash_pure_isCorrelatedEq`
-- **Correlated equilibrium existence (finite games)**:
-  `KernelGame.correlatedEq_exists`
-- **One-shot deviation principle (finite perfect-information EFG)**:
-  `EFG.oneShotDeviation_iff_spe`
+The library includes formal proofs of standard finite-game results, including:
+- existence of mixed Nash equilibria in finite games,
+- finite two-player zero-sum minimax,
+- backward induction/Zermelo-style existence in finite perfect-information trees,
+- Kuhn-style mixed/behavioral equivalence under perfect recall assumptions,
+- correlated and coarse correlated equilibrium existence and relations,
+- one-shot deviation principle formulations for sequential settings.
 
 Scope is intentionally discrete:
 - probabilities are `PMF` (finite/discrete distributions),
@@ -34,85 +24,38 @@ Scope is intentionally discrete:
 
 ## What This Library Is
 
-The core object is:
-- `KernelGame ι`: per-player strategy types, stochastic outcome kernel, and utility map.
+At the center is a stochastic strategic-form object (`KernelGame`) that
+packages strategy spaces, outcome uncertainty, and utility. Normal-form,
+extensive-form, MAID-style, and protocol-style developments are connected to
+this shared form through translation/bridge constructions.
 
-Once a model is expressed as `KernelGame`, the same definitions/theorems apply:
-- equilibrium (`IsNash`, `IsStrictNash`, `IsBestResponse`),
-- dominance (`IsDominant`, `WeaklyDominates`, `StrictlyDominates`),
-- correlated equilibrium (`IsCorrelatedEq`, `IsCoarseCorrelatedEq`),
-- structural game classes (`IsZeroSum`, `IsConstantSum`, `IsTeamGame`, potential-game notions).
+Because of this design, notions such as equilibrium, dominance, and incentive
+constraints are defined semantically rather than representation-by-representation.
+The recent deviation-first refactor makes deviation operators explicit in that
+semantic layer, which keeps correlated-equilibrium and regret developments
+uniform and easier to generalize.
 
-## Game Forms
+## Forms and Semantics
 
-Unified semantic form:
-- `KernelGame ι`
-- `Profile G`
-- `KernelGame.eu` / expected utility
-- `KernelGame.udist` / utility-distribution semantics
+The library treats game forms as different presentations of the same underlying
+mathematical object:
+- normal-form descriptions of simultaneous strategic choice,
+- extensive/protocol descriptions of sequentially unfolding choices and information,
+- graph-structured decision models (MAID-like).
 
-Concrete forms represented in the library and bridged to `KernelGame`:
-- normal-form games (NFG)
-- extensive-form games (EFG)
-- MAIDs
+All of these are interpreted into one expected-utility semantics over finite
+probability distributions. This is the key abstraction boundary in the codebase.
 
-## Core Concepts
+## Concepts and Proof Style
 
-Deviation and incentives:
-- `KernelGame.Deviation`
-- `KernelGame.unilateralDeviation`, `KernelGame.constantDeviation`
-- `KernelGame.unilateralDeviationDistribution`, `KernelGame.constantDeviationDistribution`
+Most proofs are structured around a small set of semantic ideas:
+- no-profitable-deviation conditions (best response, Nash, correlated notions),
+- order/comparison arguments on expected utility,
+- decomposition lemmas for finite products and pushforwards,
+- bridge lemmas that move statements across equivalent representations.
 
-Equilibrium and dominance:
-- `KernelGame.IsNash`
-- `KernelGame.IsBestResponse`
-- `KernelGame.IsDominant`, `KernelGame.IsStrictDominant`
-- `KernelGame.WeaklyDominates`, `KernelGame.StrictlyDominates`
-- `KernelGame.IsCorrelatedEq`, `KernelGame.IsCoarseCorrelatedEq`
-
-Structural classes:
-- `KernelGame.IsZeroSum`, `KernelGame.IsConstantSum`, `KernelGame.IsTeamGame`
-- `KernelGame.IsExactPotential`, `KernelGame.IsOrdinalPotential`
-
-## Landmark Theorems (Exact Names)
-
-### Nash and Core Characterizations
-- `KernelGame.isNash_iff_bestResponse`
-- `KernelGame.dominant_is_nash`
-- `KernelGame.strictly_dominant_unique_nash`
-- `KernelGame.IsStrictNash.isNash`
-- `ofEU_nash_affine`
-
-### Existence and Fixed-Point Pipeline
-- `KernelGame.mixed_nash_exists` (Nash existence in finite mixed strategies)
-- `KernelGame.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point`
-- `KernelGame.continuous_nashMapOnMixedSimplex`
-- `brouwer_mixedSimplex` (via `ProductSimplexBrouwer`)
-
-### Minimax
-- `KernelGame.isSaddlePoint_iff_isNash`
-- `KernelGame.von_neumann_minimax`
-
-### Correlated Equilibrium
-- `KernelGame.IsCorrelatedEq.toCoarseCorrelatedEq`
-- `KernelGame.nash_pure_isCorrelatedEq`
-- `KernelGame.nash_pure_isCoarseCorrelatedEq`
-- `KernelGame.mixed_nash_isCorrelatedEq`
-- `KernelGame.correlatedEq_exists`
-- `KernelGame.coarseCorrelatedEq_exists` (corollary via `toCoarseCorrelatedEq`)
-
-### EFG / Kuhn
-- `EFG.zermelo`
-- `EFG.kuhn_behavioral_to_mixed`
-- `EFG.kuhn_mixed_to_behavioral`
-- with utility-distribution corollaries:
-  `EFG.kuhn_behavioral_to_mixed_udist`,
-  `EFG.kuhn_mixed_to_behavioral_udist`.
-
-### One-Shot Deviation Principle
-- `EFG.spe_hasNoOneShotDeviation` (SPE implies no profitable OSD)
-- `EFG.hasNoOneShotDeviation_spe` (converse for perfect-info games)
-- `EFG.oneShotDeviation_iff_spe` (the equivalence)
+This leads to a “prove once, reuse across forms” workflow: representation-specific
+work is mostly in the bridges, while concept proofs live in the shared layer.
 
 ## Representation Interoperability
 
@@ -121,10 +64,9 @@ The design goal is semantic reuse:
 - generic theorems are proved once and apply after translation,
 - bridge theorems preserve outcome/utility-distribution semantics where appropriate.
 
-Important bridge functions include:
-- `NFGGame.toKernelGame`
-- `EFGGame.toKernelGame`
-- `MAID.toKernelGame`
+In practice, this means model-specific developments can focus on modeling and
+structural assumptions, while solution concepts and many existence/characterization
+results come from the shared semantic layer.
 
 ## Build and Toolchain
 
@@ -156,8 +98,8 @@ import GameTheory
 Or import specific components:
 
 ```lean
+import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.NashExistenceMixed
-import GameTheory.NFG.MinimaxTheorem
 import GameTheory.EFG.Kuhn
 ```
 
