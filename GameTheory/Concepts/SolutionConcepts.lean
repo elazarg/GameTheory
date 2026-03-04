@@ -1,4 +1,5 @@
 import GameTheory.Core.GameForm
+import GameTheory.Concepts.Deviation
 import Math.Probability
 
 /-!
@@ -230,24 +231,6 @@ theorem StrictlyDominates_iff_StrictlyDominatesFor_eu (G : KernelGame ι)
 -- Correlated equilibrium (EU-specific)
 -- ============================================================================
 
-open Classical in
-/-- Profile-level deviation map for correlated-play concepts. -/
-noncomputable def deviateProfile (G : KernelGame ι) (σ : Profile G)
-    (who : ι) (dev : G.Strategy who → G.Strategy who) : Profile G :=
-  Function.update σ who (dev (σ who))
-
-/-- Push a profile distribution through a recommendation-dependent deviation. -/
-noncomputable def deviateDistribution (G : KernelGame ι)
-    (μ : PMF (Profile G)) (who : ι)
-    (dev : G.Strategy who → G.Strategy who) : PMF (Profile G) :=
-  μ.bind (fun σ => PMF.pure (G.deviateProfile σ who dev))
-
-open Classical in
-/-- Push a profile distribution through a constant unilateral deviation. -/
-noncomputable def constDeviateDistribution (G : KernelGame ι)
-    (μ : PMF (Profile G)) (who : ι) (s' : G.Strategy who) : PMF (Profile G) :=
-  μ.bind (fun σ => PMF.pure (Function.update σ who s'))
-
 /-- Correlated expected utility for player `who`. -/
 noncomputable def correlatedEu (G : KernelGame ι)
     (μ : PMF (Profile G)) (who : ι) : ℝ :=
@@ -255,13 +238,17 @@ noncomputable def correlatedEu (G : KernelGame ι)
 
 /-- Correlated equilibrium: no player gains from recommendation-dependent deviation. -/
 def IsCorrelatedEq (G : KernelGame ι) (μ : PMF (Profile G)) : Prop :=
-  ∀ (who : ι) (dev : G.Strategy who → G.Strategy who),
-    G.correlatedEu μ who ≥ G.correlatedEu (G.deviateDistribution μ who dev) who
+  by
+    classical
+    exact ∀ (who : ι) (dev : G.Strategy who → G.Strategy who),
+      G.correlatedEu μ who ≥ G.correlatedEu (G.unilateralDeviationDistribution μ who dev) who
 
 /-- Coarse correlated equilibrium: no player gains from constant unilateral deviation. -/
 def IsCoarseCorrelatedEq (G : KernelGame ι) (μ : PMF (Profile G)) : Prop :=
-  ∀ (who : ι) (s' : G.Strategy who),
-    G.correlatedEu μ who ≥ G.correlatedEu (G.constDeviateDistribution μ who s') who
+  by
+    classical
+    exact ∀ (who : ι) (s' : G.Strategy who),
+      G.correlatedEu μ who ≥ G.correlatedEu (G.constantDeviationDistribution μ who s') who
 
 /-- `KernelGame.IsCorrelatedEqFor` delegates to `GameForm.IsCorrelatedEqFor`. -/
 def IsCorrelatedEqFor (G : KernelGame ι)
@@ -281,9 +268,17 @@ theorem IsCorrelatedEq_iff_IsCorrelatedEqFor_eu (G : KernelGame ι)
     G.IsCorrelatedEq μ ↔ G.IsCorrelatedEqFor G.euPref μ := by
   constructor
   · intro h who dev
-    exact h who dev
+    simpa [IsCorrelatedEq, IsCorrelatedEqFor, KernelGame.euPref, KernelGame.correlatedEu,
+      KernelGame.unilateralDeviationDistribution, KernelGame.deviationDistribution,
+      GameForm.IsCorrelatedEqFor,
+      GameForm.deviateDistributionFn, GameForm.deviateProfileFn]
+      using h who dev
   · intro h who dev
-    exact h who dev
+    simpa [IsCorrelatedEq, IsCorrelatedEqFor, KernelGame.euPref, KernelGame.correlatedEu,
+      KernelGame.unilateralDeviationDistribution, KernelGame.deviationDistribution,
+      GameForm.IsCorrelatedEqFor,
+      GameForm.deviateDistributionFn, GameForm.deviateProfileFn]
+      using h who dev
 
 /-- EU CCE is exactly CCE with `euPref`. -/
 theorem IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu (G : KernelGame ι)
@@ -291,9 +286,17 @@ theorem IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu (G : KernelGame ι)
     G.IsCoarseCorrelatedEq μ ↔ G.IsCoarseCorrelatedEqFor G.euPref μ := by
   constructor
   · intro h who s'
-    exact h who s'
+    simpa [IsCoarseCorrelatedEq, IsCoarseCorrelatedEqFor, KernelGame.euPref,
+      KernelGame.correlatedEu, KernelGame.constantDeviationDistribution,
+      KernelGame.deviationDistribution,
+      GameForm.IsCoarseCorrelatedEqFor, GameForm.constDeviateDistributionFn]
+      using h who s'
   · intro h who s'
-    exact h who s'
+    simpa [IsCoarseCorrelatedEq, IsCoarseCorrelatedEqFor, KernelGame.euPref,
+      KernelGame.correlatedEu, KernelGame.constantDeviationDistribution,
+      KernelGame.deviationDistribution,
+      GameForm.IsCoarseCorrelatedEqFor, GameForm.constDeviateDistributionFn]
+      using h who s'
 
 -- ============================================================================
 -- Bridge theorems: GameForm ↔ KernelGame

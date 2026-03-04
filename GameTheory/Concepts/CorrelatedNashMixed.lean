@@ -13,11 +13,11 @@ point-mass (pure) and product (mixed) profile distributions.
 
 Provides:
 - `correlatedEu_pure` — correlated EU under `PMF.pure σ` equals `eu σ`
-- `constDeviateDistribution_pure` — constant deviation under a point mass
+- `constantDeviationDistribution_pure` — constant deviation under a point mass
   yields a point mass at the deviated profile
-- `deviateDistribution_pure` — recommendation-dependent deviation under a
+- `unilateralDeviationDistribution_pure` — recommendation-dependent deviation under a
   point mass yields a point mass at the deviated profile
-- `deviateDistribution_pmfPi` — deviation of a product distribution equals
+- `unilateralDeviationDistribution_pmfPi` — deviation of a product distribution equals
   the product with the deviated component's pushforward
 - `correlatedEu_eq_expect_eu` — correlated EU is the expectation of EU
   over the profile distribution
@@ -42,32 +42,35 @@ theorem correlatedEu_pure (σ : Profile G) (who : ι) :
 open Classical in
 /-- Constant deviation under a point-mass distribution yields a point mass at
 the deviated profile. -/
-theorem constDeviateDistribution_pure (σ : Profile G)
+theorem constantDeviationDistribution_pure (σ : Profile G)
     (who : ι) (s' : G.Strategy who) :
-    G.constDeviateDistribution (PMF.pure σ) who s' =
+    G.constantDeviationDistribution (PMF.pure σ) who s' =
       PMF.pure (Function.update σ who s') := by
-  simp [constDeviateDistribution, PMF.pure_bind]
+  simp [KernelGame.constantDeviationDistribution,
+    KernelGame.deviationDistribution, KernelGame.constantDeviation]
 
 /-- Recommendation-dependent deviation under a point-mass distribution yields a
 point mass at the deviated profile. -/
-theorem deviateDistribution_pure (σ : Profile G)
+theorem unilateralDeviationDistribution_pure (σ : Profile G)
     (who : ι) (dev : G.Strategy who → G.Strategy who) :
-    G.deviateDistribution (PMF.pure σ) who dev =
-      PMF.pure (G.deviateProfile σ who dev) := by
-  simp [deviateDistribution, PMF.pure_bind]
+    G.unilateralDeviationDistribution (PMF.pure σ) who dev =
+      PMF.pure (G.unilateralDeviation who dev σ) := by
+  simp [KernelGame.unilateralDeviationDistribution,
+    KernelGame.deviationDistribution, KernelGame.unilateralDeviation]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Deviation of a product distribution equals the product with the deviated
     component replaced by the pushforward of the original through `dev`. -/
-theorem deviateDistribution_pmfPi
+theorem unilateralDeviationDistribution_pmfPi
     {G : KernelGame ι}
     [Fintype ι] [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     (dev : G.Strategy who → G.Strategy who) :
-    G.deviateDistribution (pmfPi σ) who dev =
+    G.unilateralDeviationDistribution (pmfPi σ) who dev =
       pmfPi (Function.update σ who (PMF.map dev (σ who))) := by
-  unfold deviateDistribution deviateProfile
+  unfold KernelGame.unilateralDeviationDistribution KernelGame.deviationDistribution
+  unfold KernelGame.unilateralDeviation
   exact pmfPi_bind_update_map σ who dev
 
 set_option linter.unusedFintypeInType false in
@@ -84,7 +87,7 @@ open Classical in
     via the independent product distribution `pmfPi σ`.
 
     For any deviation function `dev`, the deviated distribution
-    `deviateDistribution (pmfPi σ) who dev` equals
+    `unilateralDeviationDistribution (pmfPi σ) who dev` equals
     `pmfPi (update σ who (PMF.map dev (σ who)))`. By Nash optimality,
     the pushforward mixed strategy `PMF.map dev (σ who)` cannot improve
     player `who`'s EU. -/
@@ -103,14 +106,14 @@ theorem mixed_nash_isCorrelatedEq
     rw [G.correlatedEu_eq_expect_eu (μ := pmfPi σ) who]
     symm; exact G.mixedExtension_eu σ who
   have hdev :
-      G.correlatedEu (G.deviateDistribution (pmfPi σ) who dev) who =
+      G.correlatedEu (G.unilateralDeviationDistribution (pmfPi σ) who dev) who =
       G.mixedExtension.eu
         (Function.update σ who (PMF.map dev (σ who))) who := by
     rw [G.correlatedEu_eq_expect_eu
-      (μ := G.deviateDistribution (pmfPi σ) who dev) who]
+      (μ := G.unilateralDeviationDistribution (pmfPi σ) who dev) who]
     rw [G.mixedExtension_eu
       (Function.update σ who (PMF.map dev (σ who))) who]
-    rw [G.deviateDistribution_pmfPi σ who dev]
+    rw [G.unilateralDeviationDistribution_pmfPi σ who dev]
   rw [hbase, hdev]
   exact hN'
 

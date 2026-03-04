@@ -13,6 +13,7 @@ import GameTheory.Sequential.ProtoKuhn
 
 -- Solution concepts and properties
 import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Deviation
 import GameTheory.Concepts.BestResponse
 import GameTheory.Concepts.BestResponseExistence
 import GameTheory.Concepts.PrefPreorderProperties

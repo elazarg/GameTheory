@@ -1,5 +1,6 @@
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.BestResponse
+import GameTheory.Concepts.Deviation
 import Math.Probability
 
 /-!
@@ -50,6 +51,25 @@ theorem isNash_iff_no_improving (G : KernelGame ι) {σ : Profile G} :
     by_contra hlt
     push_neg at hlt
     exact h ⟨who, s', hlt⟩
+
+open Classical in
+/-- Nash equilibrium ↔ no strictly improving unilateral deviation map exists. -/
+theorem isNash_iff_no_improving_unilateralDeviation (G : KernelGame ι) {σ : Profile G} :
+    G.IsNash σ ↔ ¬ ∃ (who : ι) (dev : G.Strategy who → G.Strategy who),
+      G.euAfterDeviation who (G.unilateralDeviation who dev) σ > G.eu σ who := by
+  constructor
+  · intro hN ⟨who, dev, himprove⟩
+    have hle := hN who (dev (σ who))
+    have hnot :
+        ¬ G.euAfterDeviation who (G.unilateralDeviation who dev) σ > G.eu σ who := by
+      simpa [KernelGame.euAfterDeviation, KernelGame.unilateralDeviation] using not_lt_of_ge hle
+    exact hnot himprove
+  · intro h who s'
+    by_contra hlt
+    have himprove :
+        G.euAfterDeviation who (G.unilateralDeviation who (fun _ => s')) σ > G.eu σ who := by
+      simpa [KernelGame.euAfterDeviation, KernelGame.unilateralDeviation] using hlt
+    exact h ⟨who, fun _ => s', himprove⟩
 
 /-- If every player's strategy is dominant, then any profile is Nash.
     This is a generalization of `dominant_is_nash` that doesn't require

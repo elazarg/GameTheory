@@ -1,4 +1,5 @@
 import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Deviation
 import Math.Probability
 
 /-!
@@ -45,6 +46,18 @@ theorem dominant_isBestResponse (G : KernelGame ι) (who : ι)
     (hdom : G.IsDominant who s) : G.IsBestResponse who σ s := by
   intro s'
   exact hdom σ s'
+
+open Classical in
+/-- Best response rewritten through the first-class constant deviation operator. -/
+theorem isBestResponse_iff_noConstantDeviationGain (G : KernelGame ι)
+    (who : ι) (σ : Profile G) (s : G.Strategy who) :
+    G.IsBestResponse who σ s ↔
+      ∀ s' : G.Strategy who,
+        G.euAfterDeviation who (G.constantDeviation who s) σ ≥
+        G.euAfterDeviation who (G.constantDeviation who s') σ := by
+  constructor <;> intro h s' <;>
+    simpa [KernelGame.IsBestResponse, KernelGame.euAfterDeviation, KernelGame.constantDeviation]
+      using h s'
 
 end KernelGame
 
