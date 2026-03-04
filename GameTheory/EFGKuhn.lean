@@ -4,6 +4,7 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 import GameTheory.EFG
 import Math.PMFProduct
+import Math.ProbabilityMassFunction
 
 /-!
 # Kuhn's Theorem — Behavioral ↔ Mixed Strategy Equivalence
@@ -431,20 +432,13 @@ theorem bind_marginal_cond {p : S.Player} (I₀ : S.Infoset p)
   rw [h_single]
   by_cases hp : μMarginal I₀ μ (s ⟨p, I₀⟩) = 0
   · have h_mu_s : μ s = 0 := by
-      have h_sum : (∑ s_1 : FlatProfile S,
-          if s_1 ⟨p, I₀⟩ = s ⟨p, I₀⟩ then (μ s_1 : ENNReal) else 0)
-          = μMarginal I₀ μ (s ⟨p, I₀⟩) := by
-        simp only [μMarginal, PMF.bind_apply, PMF.pure_apply, tsum_fintype,
-          mul_ite, mul_one, mul_zero]
-        grind only
-      have h_le : (if s ⟨p, I₀⟩ = s ⟨p, I₀⟩ then (μ s : ENNReal) else 0) ≤
-          ∑ s_1 : FlatProfile S, if s_1 ⟨p, I₀⟩ = s ⟨p, I₀⟩ then (μ s_1 : ENNReal) else 0 :=
-        Finset.single_le_sum
-          (f := fun s_1 => if s_1 ⟨p, I₀⟩ = s ⟨p, I₀⟩ then (μ s_1 : ENNReal) else 0)
-          (fun _ _ => zero_le _)
-          (Finset.mem_univ s)
-      rw [h_sum, hp, if_pos rfl] at h_le
-      exact le_antisymm h_le (zero_le _)
+      have hpush :
+          Math.ProbabilityMassFunction.pushforward
+            μ (fun t : FlatProfile S => t ⟨p, I₀⟩) (s ⟨p, I₀⟩) = 0 := by
+        simpa [μMarginal, Math.ProbabilityMassFunction.pushforward] using hp
+      exact Math.ProbabilityMassFunction.eq_zero_of_pushforward_eq_zero
+        (μ := μ) (proj := fun t : FlatProfile S => t ⟨p, I₀⟩)
+        (b := s ⟨p, I₀⟩) hpush rfl
     simp [hp, h_mu_s]
   · rw [μCond_apply I₀ (s ⟨p, I₀⟩) μ s hp, if_pos rfl]
     have h_le_one : μMarginal I₀ μ (s ⟨p, I₀⟩) ≤ 1 := by
