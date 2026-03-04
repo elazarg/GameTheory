@@ -411,51 +411,10 @@ theorem μCond_apply {p : S.Player} (I₀ : S.Infoset p) (a : S.Act I₀)
 theorem bind_marginal_cond {p : S.Player} (I₀ : S.Infoset p)
     (μ : PMF (FlatProfile S)) (f : FlatProfile S → PMF Outcome) :
     μ.bind f = (μMarginal I₀ μ).bind (fun a => (μCond I₀ a μ).bind f) := by
-  ext x
-  simp only [PMF.bind_apply, tsum_fintype]
-  -- Push the marginal probability inside the inner sum
-  simp_rw [Finset.mul_sum]
-  -- Now the sums are strictly adjacent, so we can commute them
-  rw [Finset.sum_comm]
-  -- Re-associate the multiplication so it matches what we expect
-  simp_rw [← mul_assoc]
-  congr 1; funext s
-  have h_single : (∑ a : S.Act I₀, μMarginal I₀ μ a * μCond I₀ a μ s * f s x) =
-      μMarginal I₀ μ (s ⟨p, I₀⟩) * μCond I₀ (s ⟨p, I₀⟩) μ s * f s x := by
-    apply Finset.sum_eq_single (s ⟨p, I₀⟩)
-    · intro a _ hneq
-      by_cases hp : μMarginal I₀ μ a = 0
-      · simp [hp]
-      · rw [μCond_apply I₀ a μ s hp, if_neg (Ne.symm hneq), mul_zero, zero_mul]
-    · intro h_notin
-      exact absurd (Finset.mem_univ (s ⟨p, I₀⟩)) h_notin
-  rw [h_single]
-  by_cases hp : μMarginal I₀ μ (s ⟨p, I₀⟩) = 0
-  · have h_mu_s : μ s = 0 := by
-      have hpush :
-          Math.ProbabilityMassFunction.pushforward
-            μ (fun t : FlatProfile S => t ⟨p, I₀⟩) (s ⟨p, I₀⟩) = 0 := by
-        simpa [μMarginal, Math.ProbabilityMassFunction.pushforward] using hp
-      exact Math.ProbabilityMassFunction.eq_zero_of_pushforward_eq_zero
-        (μ := μ) (proj := fun t : FlatProfile S => t ⟨p, I₀⟩)
-        (b := s ⟨p, I₀⟩) hpush rfl
-    simp [hp, h_mu_s]
-  · rw [μCond_apply I₀ (s ⟨p, I₀⟩) μ s hp, if_pos rfl]
-    have h_le_one : μMarginal I₀ μ (s ⟨p, I₀⟩) ≤ 1 := by
-        calc μMarginal I₀ μ (s ⟨p, I₀⟩) ≤ ∑ a, μMarginal I₀ μ a :=
-            Finset.single_le_sum (fun _ _ => zero_le _) (Finset.mem_univ _)
-          _ = 1 := by
-            simpa [tsum_fintype] using (PMF.tsum_coe (μMarginal I₀ μ))
-    have hp_top : μMarginal I₀ μ (s ⟨p, I₀⟩) ≠ ⊤ := ne_of_lt (lt_of_le_of_lt h_le_one (by simp))
-    -- Algebraic cancellation: p_a * (μ s / p_a * f) = μ s * f
-    rw [div_eq_mul_inv, mul_comm (μ s), ← mul_assoc]
-    -- Algebraic cancellation: p_a * (μ s / p_a * f) = μ s * f
-    -- Group the marginal probability with its inverse
-    rw [mul_right_comm ((μMarginal I₀ μ) (s ⟨p, I₀⟩)) (μ s)]
-    -- Now they are strictly adjacent, so the cancellation fires
-    rw [ENNReal.mul_inv_cancel hp hp_top]
-    -- Clean up the 1 and match the commutativity of the LHS
-    rw [one_mul, mul_comm (μ s) ((f s) x)]
+  simpa [μMarginal, μCond, Math.ProbabilityMassFunction.pushforward,
+      Math.ProbabilityMassFunction.condOn] using
+    (Math.ProbabilityMassFunction.bind_pushforward_condOn
+      (μ := μ) (proj := fun s : FlatProfile S => s ⟨p, I₀⟩) (g := f))
 
 
 /-- Under perfect recall, for infosets in `next a` (with `I₀ ≠ J`),

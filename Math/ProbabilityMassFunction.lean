@@ -1,4 +1,5 @@
 import Math.Probability
+import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 set_option autoImplicit false
 
@@ -145,6 +146,85 @@ theorem eq_zero_of_pushforward_eq_zero
     simpa [ha] using le_pushforward_apply (μ := μ) (proj := proj) a
   rw [hb] at hle
   exact le_antisymm hle bot_le
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+noncomputable def condOn
+    {β : Type*} [Fintype α]
+    (μ : PMF α) (proj : α → β) (b : β) : PMF α :=
+  let p_b := pushforward μ proj b
+  if hb : p_b = 0 then μ
+  else
+    PMF.ofFintype
+      (fun a => if proj a = b then μ a / p_b else 0)
+      (by
+        rw [show (∑ a, if proj a = b then μ a / p_b else (0 : ENNReal)) =
+            (∑ a, (if proj a = b then (μ a : ENNReal) else 0) * p_b⁻¹) from
+          Finset.sum_congr rfl (fun a _ => by split_ifs <;> simp [div_eq_mul_inv]),
+          ← Finset.sum_mul]
+        have h_sum : (∑ a : α, if proj a = b then (μ a : ENNReal) else 0) = p_b := by
+          change _ = pushforward μ proj b
+          simp [pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype, eq_comm]
+        rw [h_sum]
+        exact ENNReal.mul_inv_cancel hb (PMF.apply_ne_top (pushforward μ proj) b))
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem condOn_apply
+    {β : Type*} [Fintype α]
+    (μ : PMF α) (proj : α → β) (b : β)
+    (a : α) (hb : pushforward μ proj b ≠ 0) :
+    condOn μ proj b a = if proj a = b then μ a / pushforward μ proj b else 0 := by
+  simp [condOn, hb, PMF.ofFintype_apply]
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem bind_pushforward_condOn
+    {β : Type*} [Fintype α] [Fintype β]
+    (μ : PMF α) (proj : α → β) (g : α → PMF γ) :
+    μ.bind g = (pushforward μ proj).bind (fun b => (condOn μ proj b).bind g) := by
+  ext x
+  have hL :=
+    bind_apply_eq_sum_sum_fiber (μ := μ) (proj := proj) (g := g) (x := x)
+  rw [hL]
+  simp only [PMF.bind_apply, tsum_fintype]
+  apply Finset.sum_congr rfl
+  intro b hb_mem
+  by_cases hpb : pushforward μ proj b = 0
+  · have hz : ∀ a : α, proj a = b → μ a = 0 := by
+      intro a ha
+      exact eq_zero_of_pushforward_eq_zero (μ := μ) (proj := proj) hpb ha
+    have hinner_zero :
+        ∑ a : α, (if proj a = b then μ a else 0) * g a x = 0 := by
+      apply Finset.sum_eq_zero
+      intro a ha
+      by_cases hab : proj a = b
+      · simp [hab, hz a hab]
+      · simp [hab]
+    have hrhs_zero :
+        (pushforward μ proj b) *
+            ∑ a : α, condOn μ proj b a * g a x = 0 := by
+      simp [hpb]
+    calc
+      ∑ a : α, (if proj a = b then μ a else 0) * g a x = 0 := hinner_zero
+      _ = (pushforward μ proj b) * ∑ a : α, condOn μ proj b a * g a x := by
+        simp [hpb]
+  · have hpb_top : pushforward μ proj b ≠ ⊤ :=
+      PMF.apply_ne_top (pushforward μ proj) b
+    have hterm :
+        (pushforward μ proj b) *
+            (∑ a : α, condOn μ proj b a * g a x)
+          =
+        ∑ a : α, (if proj a = b then μ a else 0) * g a x := by
+      simp_rw [condOn_apply (μ := μ) (proj := proj) (b := b) (hb := hpb)]
+      rw [Finset.mul_sum]
+      refine Finset.sum_congr rfl ?_
+      intro a ha
+      by_cases hab : proj a = b
+      · simp [hab, div_eq_mul_inv, mul_left_comm, mul_comm,
+          ENNReal.mul_inv_cancel hpb hpb_top]
+      · simp [hab, mul_comm]
+    exact hterm.symm
 
 theorem foldl_bind_append
     {δ : Type*}
