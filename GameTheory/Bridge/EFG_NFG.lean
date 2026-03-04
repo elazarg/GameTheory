@@ -21,7 +21,7 @@ namespace EFG
 open GameTheory
 
 -- ============================================================================
--- § 2. Deterministic strategic form (NFGGame)
+-- Deterministic strategic form (NFGGame)
 -- ============================================================================
 
 /-- Strategic form of an EFG as an `NFGGame`. Chance is absorbed into expected
@@ -35,7 +35,7 @@ noncomputable def EFGGame.toNFGGame (G : EFGGame) :
   utility := id
 
 -- ============================================================================
--- § 3. Deterministic strategic form (NFGGame preserving Outcome)
+-- Deterministic strategic form (NFGGame preserving Outcome)
 -- ============================================================================
 
 /-- Strategic form of a deterministic (chance-free) EFG as an `NFGGame`.
@@ -54,12 +54,5 @@ theorem toNFGGameDet_outcomeKernel (G : EFGGame) (hd : IsDeterministic G.tree)
     (G.toNFGGameDet hd).toKernelGame.outcomeKernel σ =
     G.toStrategicKernelGame.outcomeKernel σ :=
   (evalDist_pureToBehavioral_eq_pure G.tree σ hd).symm
-
-/-- Semantics equality for deterministic EFG → NFG bridge. -/
-theorem toNFGGameDet_semantics_eq (G : EFGGame) (hd : IsDeterministic G.tree)
-    (σ : PureProfile G.inf) :
-    (G.toNFGGameDet hd).toKernelGame.outcomeKernel σ =
-    G.toStrategicKernelGame.outcomeKernel σ :=
-  toNFGGameDet_outcomeKernel G hd σ
 
 end EFG

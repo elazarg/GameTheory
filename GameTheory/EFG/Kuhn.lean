@@ -12,10 +12,10 @@ import Math.ProbabilityMassFunction
 Kuhn's theorem states that behavioral and mixed strategies are outcome-equivalent
 in extensive-form games with perfect recall.
 
-- **Behavioral→Mixed** (§5): The product PMF over independently sampled actions
+- **Behavioral→Mixed**: The product PMF over independently sampled actions
   induces the same outcome. Requires `NoInfoSetRepeat` (no info set appears
   both at a decision node and in its subtrees), which follows from perfect recall.
-- **Mixed→Behavioral** (§7): Requires perfect recall. The conditional behavioral
+- **Mixed→Behavioral**: Requires perfect recall. The conditional behavioral
   strategy induces the same outcome.
 
 ## Key definitions
@@ -284,7 +284,7 @@ noncomputable def mixedToBehavioralFlat {p : S.Player}
             (ne_of_lt (lt_of_le_of_lt hpReach_le (by simp))))
 
 -- ============================================================================
--- § 7b. Helper lemmas for mixed → behavioral
+-- Helper lemmas for mixed → behavioral
 -- ============================================================================
 
 /-- `reachesFlat` implies `DecisionNodeIn`. -/
@@ -805,13 +805,6 @@ theorem reachesFlat_chance_iff {p : S.Player} {J : S.Infoset p}
       (hsp_chance_sub b hsp) hr₁ (fun step hmem => hm₂ step (hph ▸ hmem))
   · exact fun h => ⟨b, h⟩
 
-/-- Backward-compatible name for the reachable-agreement congruence lemma. -/
-theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
-    (σ₁ σ₂ : BehavioralProfile S)
-    (h : ∀ {q} {J : S.Infoset q}, DecisionNodeIn J t → σ₁ q J = σ₂ q J) :
-    t.evalDist σ₁ = t.evalDist σ₂ :=
-  evalDist_eq_of_behavioral_agree_core t σ₁ σ₂ h
-
 open Classical in
 /-- Under perfect recall, `mixedToBehavioralFlat` is the same whether conditioned
     on a chance tree or on a specific branch (for infosets in that branch). -/
@@ -860,7 +853,7 @@ theorem mixed_to_behavioral_flat (t : GameTree S Outcome) (hpr : PerfectRecall t
     simp only [evalDist_chance]
     conv_rhs => rw [PMF.bind_comm μ μ_c]
     congr 1; funext b
-    have h_agree := evalDist_eq_of_behavioral_agree (next b)
+    have h_agree := evalDist_eq_of_behavioral_agree_core (next b)
       (fun q => if h : q = p then h ▸ mixedToBehavioralFlat μ (.chance k μ_c hk next)
                 else fun I => PMF.pure ⟨0, S.arity_pos q I⟩)
       (fun q => if h : q = p then h ▸ mixedToBehavioralFlat μ (next b)
@@ -933,7 +926,7 @@ theorem mixed_to_behavioral_flat (t : GameTree S Outcome) (hpr : PerfectRecall t
       simp only [PMF.bind_apply, tsum_fintype] at h_ih_x
       rw [← h_ih_x]
       congr 1
-      apply evalDist_eq_of_behavioral_agree
+      apply evalDist_eq_of_behavioral_agree_core
       intro q J hdn
       have hqp : q = p := hsp_decision_sub a hsp hdn
       cases hqp

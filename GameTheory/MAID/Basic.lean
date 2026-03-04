@@ -11,11 +11,11 @@ import GameTheory.Core.KernelGame
 EFG-style typed MAID: illegality is untypeable.
 Nodes indexed by `Fin n`, values typed by `Val S nd = Fin (S.domainSize nd)`.
 
-## Sections
-- § 1. Core — `NodeKind`, `Struct`, typed assignments
-- § 2. Semantics — `Sem`, strategies, evaluation
-- § 3. Game — `KernelGame` bridge
-- § 4. Order-independence — swap lemmas
+## Outline
+- Core: `NodeKind`, `Struct`, typed assignments
+- Semantics: `Sem`, strategies, evaluation
+- Game: `KernelGame` bridge
+- Order-independence: swap lemmas
 -/
 
 namespace MAID

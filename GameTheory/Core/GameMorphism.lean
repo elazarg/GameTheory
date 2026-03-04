@@ -10,8 +10,8 @@ strategic structure of different games.
 
 This file is distribution-first:
 - morphisms preserve utility distributions (`udist`) under profile mapping;
-- EU-based corollaries (Nash, dominance) are added in explicitly EU-specialized
-  wrappers.
+- EU-based corollaries (Nash, dominance) are stated in explicitly EU-specialized
+  structures.
 
 ## Main definitions
 

@@ -17,22 +17,6 @@ namespace Function
 
 variable {α α' β : Type*}
 
--- Already in Mathlib as `Function.update_comp_equiv`.
-theorem update_comp_equiv_alias
-    [DecidableEq α] [DecidableEq α']
-    (f : α → β) (e : α ≃ α') (a' : α') (v : β) :
-    Function.update (f ∘ e.symm) a' v =
-      Function.update f (e.symm a') v ∘ e.symm := by
-  simpa using
-    (_root_.Function.update_comp_equiv
-      (α := α) (α' := α') f e.symm (e.symm a') v).symm
-
-theorem update_eq_update_of_decEq_alias
-    {β' : α → Type*}
-    (dec₁ dec₂ : DecidableEq α) (f : (a : α) → β' a) (a : α) (v : β' a) :
-    @Function.update α β' dec₁ f a v = @Function.update α β' dec₂ f a v :=
-  Math.Function.Update.update_eq_update_of_decEq dec₁ dec₂ f a v
-
 end Function
 
 namespace Finset

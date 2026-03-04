@@ -296,9 +296,6 @@ structure ProtocolMap (F F' : GameForm ι) where
     F'.outcomeKernel (fun i => stratMap i (σ i)) =
       (F.outcomeKernel σ).bind (fun ω => PMF.pure (outcomeMap ω))
 
-/-- CT alias for protocol maps. -/
-abbrev Hom (F F' : GameForm ι) := ProtocolMap F F'
-
 namespace ProtocolMap
 
 /-- Identity protocol map. -/

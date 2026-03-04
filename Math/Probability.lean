@@ -9,7 +9,7 @@ Stochastic kernels and expected-value infrastructure for discrete game theory.
 
 Provides:
 - `Kernel α β` — stochastic kernels (Markov kernels) using Mathlib's `PMF`
-- `Kernel.id`, `Kernel.comp`, `Kernel.linExt`, `Kernel.pushforward`,
+- `Kernel.id`, `Kernel.comp`, `Kernel.pushforward`, `Kernel.linExt`,
   `Kernel.ofFun` — basic operations
 - `expect` — expected value of a real-valued function under a `PMF`
 - Utility lemmas: `expect_pure`, `expect_bind`, `expect_const`, `expect_eq_sum`
@@ -35,12 +35,12 @@ noncomputable def id (α : Type) : Kernel α α := PMF.pure
 noncomputable def comp (k₁ : Kernel α β) (k₂ : Kernel β γ) : Kernel α γ :=
   fun a => (k₁ a).bind k₂
 
-/-- Linear extension / pushforward of a kernel to input distributions. -/
-noncomputable def linExt (k : Kernel α β) : PMF α → PMF β :=
+/-- Pushforward of a kernel to input distributions. -/
+noncomputable def pushforward (k : Kernel α β) : PMF α → PMF β :=
   fun μ => μ.bind k
 
-/-- Pushforward alias for `linExt`. -/
-noncomputable def pushforward (k : Kernel α β) : PMF α → PMF β := Kernel.linExt k
+/-- Linear-extension notation for `pushforward`. -/
+noncomputable def linExt (k : Kernel α β) : PMF α → PMF β := Kernel.pushforward k
 
 /-- Pushforward along a pure function (deterministic kernel). -/
 noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a)
@@ -65,11 +65,11 @@ noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a
   funext a
   simp [Kernel.comp, Kernel.id]
 
-/-- Linear extension is just `bind` at the PMF level. -/
+/-- Linear extension is just pushforward/bind at the PMF level. -/
 @[simp] theorem linExt_apply (k : Kernel α β) (μ : PMF α) :
     Kernel.linExt k μ = μ.bind k := rfl
 
-/-- `pushforward` is definitionally `linExt`. -/
+/-- `pushforward` is `bind` by definition. -/
 @[simp] theorem pushforward_apply (k : Kernel α β) (μ : PMF α) :
     Kernel.pushforward k μ = μ.bind k := rfl
 

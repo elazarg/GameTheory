@@ -1114,27 +1114,6 @@ section ConditioningCoord
 variable {ι : Type uι} [Fintype ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 
--- ---- Convenience alias ---------------------------------------------------
-
-open Classical in
-/-- Update family at `j` (thin wrapper around `Function.update`). -/
-noncomputable def updateAt (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j)) : ∀ i, PMF (A i) :=
-  Function.update σ j τ
-
-open Classical in
-/-- Conditioning a product on a coordinate event = product of updated family (`updateAt` form). -/
-theorem pmfPi_cond_coord_updateAt
-    (σ : ∀ i, PMF (A i)) (j : ι)
-    (E : A j → Prop)
-    (hE : pmfMass (μ := σ j) E ≠ 0) :
-    pmfCond (μ := pmfPi (A := A) σ) (fun s => E (s j))
-      (by
-        simpa [pmfMass_pmfPi_coord (A := A) (σ := σ) (j := j) (E := E)] using hE)
-      =
-    pmfPi (A := A) (updateAt (A := A) σ j (pmfCond (μ := σ j) E hE)) := by
-  -- updateAt unfolds to Function.update, so this is exactly pmfPi_cond_coord.
-  exact pmfPi_cond_coord σ j E hE
-
 open Classical in
 /-- Other marginals are unchanged after conditioning on a coordinate. -/
 theorem pmfPi_cond_coord_other_marginal

@@ -269,12 +269,6 @@ theorem toStrategicKernelGame_outcomeKernel (G : EFGGame) (σ : PureProfile G.in
     G.toKernelGame.outcomeKernel (pureToBehavioral σ) := by
   rfl
 
-/-- Semantics equality alias for the strategic-form bridge. -/
-theorem toStrategicKernelGame_semantics_eq (G : EFGGame) (σ : PureProfile G.inf) :
-    G.toStrategicKernelGame.outcomeKernel σ =
-    G.toKernelGame.outcomeKernel (pureToBehavioral σ) :=
-  toStrategicKernelGame_outcomeKernel G σ
-
 /-- The strategic kernel game has the same joint utility distribution as the
     behavioral EFG kernel game under `pureToBehavioral`. -/
 theorem toStrategicKernelGame_udist (G : EFGGame) (σ : PureProfile G.inf) :

@@ -92,8 +92,8 @@ noncomputable def NFGGame.toKernelGame (G : NFGGame ι A) :
   utility := G.utility
   outcomeKernel := fun σ => PMF.pure (G.outcome σ)
 
-/-- Semantics equality for the NFG → KernelGame bridge. -/
-@[simp] theorem NFGGame.toKernelGame_semantics_eq (G : NFGGame ι A) (s : StrategyProfile A) :
+/-- Outcome-kernel equation for the NFG → KernelGame bridge. -/
+@[simp] theorem NFGGame.toKernelGame_outcomeKernel (G : NFGGame ι A) (s : StrategyProfile A) :
     G.toKernelGame.outcomeKernel s = PMF.pure (G.outcome s) := rfl
 
 /-- Pure Nash in NFG is equivalent to Nash in the kernel game. -/
