@@ -218,20 +218,6 @@ theorem RoundsViewSep_head_vs_mem {r : Round n S V A Sig} {rest : List (Round n 
   exact RoundsViewSep_head_vs_tail h hk i s₁ s₂ sig₁ sig₂
 
 -- ============================================================================
--- Core lemma: pushforward of product through coordinate-wise function
--- ============================================================================
-
-open Classical in
-/-- The pushforward of a product PMF through a coordinate-wise function
-    is the product of pushforwards. -/
-theorem pmfPi_push_coordwise {ι : Type} [Fintype ι]
-    {A : ι → Type} {B : ι → Type} [∀ i, Fintype (A i)] [∀ i, Fintype (B i)]
-    (μ : ∀ i, PMF (A i)) (g : ∀ i, A i → B i) :
-    pushforward (pmfPi μ) (fun f => fun i => g i (f i))
-    = pmfPi (fun i => pushforward (μ i) (g i)) := by
-  simpa using Math.PMFProduct.pmfPi_push_coordwise (μ := μ) (g := g)
-
--- ============================================================================
 -- Core: single-round factoring
 -- ============================================================================
 
@@ -280,8 +266,8 @@ theorem Round.evalMixed_eq_bind_eval [Fintype V]
   congr 1
   have : pushforward (pmfPi fun i => pmfPi (σ i)) (fun f i => f i (r.view i s (sig i)))
       = pmfPi (fun i => pushforward (pmfPi (σ i)) (fun fi => fi (r.view i s (sig i)))) :=
-    pmfPi_push_coordwise (fun i => pmfPi (σ i))
-      (fun (i : Fin n) (fi : V → Option A) => fi (r.view i s (sig i)))
+    Math.PMFProduct.pmfPi_push_coordwise (μ := fun i => pmfPi (σ i))
+      (g := fun (i : Fin n) (fi : V → Option A) => fi (r.view i s (sig i)))
   rw [this]; congr 1; funext i
   exact (pmfPi_push_coord (σ i) (r.view i s (sig i))).symm
 
@@ -488,47 +474,45 @@ private theorem pushforward_bind_condMixed
     [Fintype (Option A)] [Fintype (PureStrategy V A)]
     (μ : MixedStrategy V A) (v : V) :
     (pushforward μ (· v)).bind (condMixed μ v) = μ := by
-  -- Helper: push(a) = pmfMass μ {g | g v = a}
   have hpush_eq : ∀ a, (pushforward μ (· v)) a = pmfMass (μ := μ) (fun g => g v = a) := by
     intro a
-    simp only [pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype,
-      pmfMass, pmfMask, mul_ite, mul_one, mul_zero]
-    apply Finset.sum_congr rfl; intro g _
-    by_cases hg : a = g v <;> by_cases hg' : g v = a <;> simp_all
-  -- Helper: mass ≠ ⊤
-  have hmass_ne_top : ∀ a, pmfMass (μ := μ) (fun g => g v = a) ≠ ⊤ := by
-    intro a; apply ne_of_lt
-    calc pmfMass (μ := μ) (fun g => g v = a)
-        ≤ ∑ x : PureStrategy V A, μ x :=
-          Finset.sum_le_sum (fun g _ => by simp only [pmfMask]; split_ifs <;> simp)
-      _ = 1 := by simpa [tsum_fintype] using PMF.tsum_coe μ
-      _ < ⊤ := ENNReal.one_lt_top
-  ext f
-  simp only [PMF.bind_apply, tsum_fintype]
-  -- Only a = f v contributes
-  rw [Finset.sum_eq_single (f v)
-    (fun a _ hne => by
-      rw [hpush_eq]
-      by_cases hmass : pmfMass (μ := μ) (fun g => g v = a) ≠ 0
-      · simp only [condMixed, dif_pos hmass, pmfCond_apply, pmfMask,
-          show ¬(f v = a) from Ne.symm hne, ite_false]
-        simp
-      · rw [not_not.mp hmass, zero_mul])
-    (fun h => absurd (Finset.mem_univ _) h)]
-  -- push(f v) * condMixed(f v)(f) = μ(f)
-  rw [hpush_eq]
-  by_cases hmass : pmfMass (μ := μ) (fun g => g v = f v) = 0
-  · -- mass = 0: μ f = 0 too
-    have hμf : μ f = 0 := le_antisymm
-      (calc μ f = pmfMask (μ := μ) (fun g => g v = f v) f := by simp [pmfMask]
-        _ ≤ ∑ x, pmfMask (μ := μ) (fun g => g v = f v) x :=
-            Finset.single_le_sum (fun x _ => by simp only [pmfMask]; split_ifs <;> simp)
-              (Finset.mem_univ f)
-        _ = _ := hmass) bot_le
-    rw [hmass, zero_mul, hμf]
-  · -- mass > 0: cancel mass with inverse
-    simp only [condMixed, dif_pos hmass, pmfCond_apply, pmfMask, ite_true, div_eq_mul_inv]
-    rw [mul_comm (μ f) _, ← mul_assoc, ENNReal.mul_inv_cancel hmass (hmass_ne_top _), one_mul]
+    simpa [eq_comm] using
+      (Math.PMFProduct.pushforward_apply_eq_pmfMass
+        (μ := μ) (f := (· v)) (b := a))
+  have hcond :
+      ∀ a, (pushforward μ (· v)) a ≠ 0 →
+        condMixed μ v a = Math.ProbabilityMassFunction.condOn μ (· v) a := by
+    intro a ha
+    ext f
+    have hmass : pmfMass (μ := μ) (fun g => g v = a) ≠ 0 := by
+      simpa [hpush_eq] using ha
+    have hpush_math : (Math.ProbabilityMassFunction.pushforward μ (· v)) a ≠ 0 := by
+      simpa [Math.ProbabilityMassFunction.pushforward, Math.PMFProduct.pushforward] using ha
+    have hden :
+        pmfMass (μ := μ) (fun g => g v = a) =
+          (Math.ProbabilityMassFunction.pushforward μ (· v)) a := by
+      simpa [Math.ProbabilityMassFunction.pushforward, Math.PMFProduct.pushforward]
+        using (hpush_eq a).symm
+    simp only [condMixed, dif_pos hmass, pmfCond_apply]
+    rw [Math.ProbabilityMassFunction.condOn_apply (μ := μ) (proj := (· v)) (b := a)
+      (a := f) hpush_math]
+    by_cases hfv : f v = a
+    · simp [pmfMask, hfv, hden]
+    · simp [pmfMask, hfv]
+  calc
+    (pushforward μ (· v)).bind (condMixed μ v)
+        = (pushforward μ (· v)).bind (fun a =>
+            Math.ProbabilityMassFunction.condOn μ (· v) a) := by
+              exact Math.ProbabilityMassFunction.bind_congr_of_ne_zero
+                (μ := pushforward μ (· v))
+                (f := condMixed μ v)
+                (g := fun a => Math.ProbabilityMassFunction.condOn μ (· v) a)
+                hcond
+    _ = μ := by
+          have hdis := Math.ProbabilityMassFunction.bind_pushforward_condOn
+            (μ := μ) (proj := (· v)) (g := fun f => PMF.pure f)
+          simpa [Math.ProbabilityMassFunction.pushforward, Math.PMFProduct.pushforward]
+            using hdis.symm
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -973,9 +957,12 @@ theorem kuhnBehavioral_correct
       intro i hmz
       apply hpush; simp only [pmfPi_apply]
       apply Finset.prod_eq_zero (Finset.mem_univ i)
-      simp only [pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype,
-        pmfMass, pmfMask, mul_ite, mul_one, mul_zero] at hmz ⊢
-      convert hmz using 1; congr 1; ext g; congr 1; ext; simp [eq_comm]
+      have hpush0 :
+          (pushforward (μ i) (· (r.view i s₀ (sig₀ i)))) (acts₀ i) = 0 := by
+        simpa [eq_comm] using
+          (Math.PMFProduct.pushforward_apply_eq_pmfMass
+            (μ := μ i) (f := (· (r.view i s₀ (sig₀ i)))) (b := acts₀ i)).trans hmz
+      simpa using hpush0
     let s₁ := r.transition s₀ acts₀
     let μ' : MixedProfile' n V A :=
       fun i => condMixed (μ i) (r.view i s₀ (sig₀ i)) (acts₀ i)

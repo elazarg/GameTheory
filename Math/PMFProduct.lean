@@ -501,6 +501,14 @@ noncomputable def pmfMask (μ : PMF α) (E : α → Prop) : α → ENNReal :=
 noncomputable def pmfMass (μ : PMF α) (E : α → Prop) [Fintype α] : ENNReal :=
   ∑ a : α, pmfMask (μ := μ) E a
 
+/-- Pushforward probability at a value equals the mass of its fiber. -/
+theorem pushforward_apply_eq_pmfMass
+    {β : Type*} [Fintype α]
+    (μ : PMF α) (f : α → β) (b : β) :
+    pushforward μ f b = pmfMass (μ := μ) (fun a => f a = b) := by
+  classical
+  simp [pushforward, pmfMass, pmfMask, eq_comm]
+
 /-- Condition a PMF on an event with nonzero mass. -/
 noncomputable def pmfCond (μ : PMF α) (E : α → Prop) [Fintype α]
     (h : pmfMass (μ := μ) E ≠ 0) : PMF α :=

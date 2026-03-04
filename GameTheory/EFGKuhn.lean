@@ -369,7 +369,7 @@ theorem root_num_collapse {p : S.Player} {I' : S.Infoset p}
 /-- The marginal/pushforward of μ along the root action. -/
 noncomputable def μMarginal {p : S.Player} (I' : S.Infoset p)
     (μ : PMF (FlatProfile S)) : PMF (S.Act I') :=
-  μ.bind (fun s => PMF.pure (s ⟨p, I'⟩))
+  Math.ProbabilityMassFunction.pushforward μ (fun s => s ⟨p, I'⟩)
 
 open Classical in
 /-- The conditional distribution of flat profiles given that player `p`
@@ -391,11 +391,7 @@ noncomputable def μCond {p : S.Player} (I₀ : S.Infoset p) (a : S.Act I₀)
             if s ⟨p, I₀⟩ = a then (μ s : ENNReal) else 0) = p_a := by
           -- Expose the underlying definition of p_a
           change _ = μMarginal I₀ μ a
-          simp only [μMarginal, PMF.bind_apply, PMF.pure_apply, mul_ite, mul_one, mul_zero]
-          rw [tsum_fintype]; congr 1; funext s
-          by_cases h : s ⟨p, I₀⟩ = a
-          · rw [if_pos h, if_pos h.symm]
-          · rw [if_neg h, if_neg (Ne.symm h)]
+          simp [μMarginal, Math.ProbabilityMassFunction.pushforward, tsum_fintype, eq_comm]
         rw [h_sum]
         exact ENNReal.mul_inv_cancel hp
           (PMF.apply_ne_top (μMarginal I₀ μ) a))
@@ -676,12 +672,15 @@ theorem mixedToBehavioralFlat_root_eq {p : S.Player} {I' : S.Infoset p}
   simp only [mixedToBehavioralFlat, reachProbFlat_root]
   rw [dif_neg (by norm_num : (1 : ENNReal) ≠ 0)]
   ext a
-  simp only [PMF.ofFintype_apply, root_num_collapse, div_one,
-    μMarginal, PMF.bind_apply, PMF.pure_apply, tsum_fintype]
-  congr 1; funext s
-  by_cases h : s ⟨p, I'⟩ = a
-  · simp [h]
-  · simp [h, Ne.symm h]
+  have hroot :
+      (∑ s : FlatProfile S,
+        if reachesFlat I' s (.decision I' next) ∧ a = s ⟨p, I'⟩
+        then (μ s : ENNReal) else 0) =
+      ∑ s : FlatProfile S, if a = s ⟨p, I'⟩ then μ s else 0 := by
+    simpa [eq_comm] using
+      (root_num_collapse (p := p) (I' := I') (next := next) (μ := μ) (a := a))
+  simp [PMF.ofFintype_apply, div_one, hroot,
+    μMarginal, Math.ProbabilityMassFunction.pushforward, tsum_fintype, eq_comm]
 
 /-- PerfectRecall propagates to subtrees under a chance node. -/
 theorem PerfectRecall_chance_sub {k : Nat} {μ : PMF (Fin k)} {hk : 0 < k}
