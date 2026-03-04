@@ -149,6 +149,13 @@ noncomputable def constDeviateDistributionFn (F : GameForm ι)
     (μ : PMF F.Profile) (who : ι) (s' : F.Strategy who) : PMF F.Profile :=
   μ.bind (fun σ => PMF.pure (Function.update σ who s'))
 
+open Classical in
+@[simp] theorem constDeviateDistributionFn_pure (F : GameForm ι)
+    (σ : F.Profile) (who : ι) (s' : F.Strategy who) :
+    F.constDeviateDistributionFn (PMF.pure σ) who s' =
+      PMF.pure (Function.update σ who s') := by
+  simp [constDeviateDistributionFn]
+
 -- ============================================================================
 -- Section 3: Bridge to KernelGame
 -- ============================================================================
@@ -316,27 +323,43 @@ def NoProfitableProfileDeviationFor (F : GameForm ι)
   F.NoProfitableDeviationFor pref who (F.correlatedOutcome μ)
     (fun d => F.correlatedOutcome (deviate d))
 
-/-- Generic deviation-family equilibrium on profile distributions.
+/-- A family of profile-distribution deviations, indexed by player and optionally
+    depending on the current profile distribution. -/
+structure ProfileDeviationFamily (F : GameForm ι) where
+  Dev : ι → Type*
+  deviate : PMF F.Profile → ∀ who : ι, Dev who → PMF F.Profile
 
-`D who` is the family of deviations available to player `who`, and
-`deviate who` maps each such deviation to a transformed profile distribution. -/
-def IsDeviationEqFor (F : GameForm ι)
+/-- Generic deviation-family equilibrium for a profile-distribution-based
+    deviation family. -/
+def IsDeviationEqFamilyFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
-    (μ : PMF F.Profile)
-    (D : ι → Type*) (deviate : ∀ who, D who → PMF F.Profile) : Prop :=
-  ∀ who : ι, F.NoProfitableProfileDeviationFor pref who μ (deviate who)
+    (μ : PMF F.Profile) (Δ : ProfileDeviationFamily F) : Prop :=
+  ∀ who : ι, F.NoProfitableProfileDeviationFor pref who μ (Δ.deviate μ who)
 
-/-- Canonical CE deviation family on profile distributions:
-    choose a player and a recommendation-dependent deviation map. -/
-noncomputable def unilateralDeviationFamily (F : GameForm ι) (μ : PMF F.Profile) :
-    (Σ who : ι, F.Strategy who → F.Strategy who) → PMF F.Profile :=
-  fun d => F.deviateDistributionFn μ d.1 d.2
+/-- Recommendation-dependent unilateral deviations (CE family). -/
+noncomputable def recommendationDeviationFamily (F : GameForm ι) : ProfileDeviationFamily F where
+  Dev := fun who => F.Strategy who → F.Strategy who
+  deviate := fun μ who dev => F.deviateDistributionFn μ who dev
 
-/-- Canonical CCE deviation family on profile distributions:
-    choose a player and a constant replacement strategy. -/
-noncomputable def constantDeviationFamily (F : GameForm ι) (μ : PMF F.Profile) :
-    (Σ who : ι, F.Strategy who) → PMF F.Profile :=
-  fun d => F.constDeviateDistributionFn μ d.1 d.2
+@[simp] theorem recommendationDeviationFamily_deviate (F : GameForm ι)
+    (μ : PMF F.Profile) (who : ι) (dev : F.Strategy who → F.Strategy who) :
+    F.recommendationDeviationFamily.deviate μ who dev = F.deviateDistributionFn μ who dev := rfl
+
+/-- Constant unilateral deviations (CCE/Nash family). -/
+noncomputable def constantDeviationProfileFamily (F : GameForm ι) : ProfileDeviationFamily F where
+  Dev := fun who => F.Strategy who
+  deviate := fun μ who s' => F.constDeviateDistributionFn μ who s'
+
+@[simp] theorem constantDeviationProfileFamily_deviate (F : GameForm ι)
+    (μ : PMF F.Profile) (who : ι) (s' : F.Strategy who) :
+    F.constantDeviationProfileFamily.deviate μ who s' = F.constDeviateDistributionFn μ who s' := rfl
+
+open Classical in
+@[simp] theorem correlatedOutcome_constDeviateDistributionFn_pure (F : GameForm ι)
+    (σ : F.Profile) (who : ι) (s' : F.Strategy who) :
+    F.correlatedOutcome (F.constDeviateDistributionFn (PMF.pure σ) who s') =
+      F.outcomeKernel (Function.update σ who s') := by
+  simp [constDeviateDistributionFn]
 
 open Classical in
 /-- A strategy profile `σ` is a Nash equilibrium w.r.t. preference `pref` on outcome
@@ -348,11 +371,24 @@ open Classical in
 def IsNashFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (σ : F.Profile) : Prop :=
-  by
-    classical
-    exact F.IsDeviationEqFor pref (PMF.pure σ)
-      (fun who => F.Strategy who)
-      (fun who s' => PMF.pure (Function.update σ who s'))
+  F.IsDeviationEqFamilyFor pref (PMF.pure σ) F.constantDeviationProfileFamily
+
+open Classical in
+/-- Unfolded Nash-for form (point profile, unilateral pure replacement). -/
+theorem isNashFor_iff (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop) (σ : F.Profile) :
+    F.IsNashFor pref σ ↔
+      ∀ who : ι, ∀ s' : F.Strategy who,
+        pref who (F.outcomeKernel σ) (F.outcomeKernel (Function.update σ who s')) := by
+  constructor
+  · intro h who s'
+    simpa [IsNashFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
+      NoProfitableDeviationFor, constantDeviationProfileFamily,
+      constDeviateDistributionFn_pure, correlatedOutcome_pure] using h who s'
+  · intro h who s'
+    simpa [IsNashFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
+      NoProfitableDeviationFor, constantDeviationProfileFamily,
+      constDeviateDistributionFn_pure, correlatedOutcome_pure] using h who s'
 
 open Classical in
 /-- An action `s` is dominant for player `who` w.r.t. a preference if `who` weakly
@@ -428,46 +464,44 @@ def IsParetoEfficientFor (F : GameForm ι)
 def IsCorrelatedEqFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (μ : PMF F.Profile) : Prop :=
-  F.IsDeviationEqFor pref μ
-    (fun who => F.Strategy who → F.Strategy who)
-    (fun who dev => F.deviateDistributionFn μ who dev)
+  F.IsDeviationEqFamilyFor pref μ F.recommendationDeviationFamily
 
-/-- CE as no profitable deviation against the canonical unilateral family. -/
-theorem isCorrelatedEqFor_iff_noProfitable_unilateralFamily (F : GameForm ι)
+theorem isCorrelatedEqFor_iff (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (μ : PMF F.Profile) :
     F.IsCorrelatedEqFor pref μ ↔
-      ∀ d : Σ who : ι, F.Strategy who → F.Strategy who,
-        pref d.1 (F.correlatedOutcome μ)
-          (F.correlatedOutcome (F.unilateralDeviationFamily μ d)) := by
+      ∀ who : ι, ∀ dev : F.Strategy who → F.Strategy who,
+        pref who (F.correlatedOutcome μ)
+          (F.correlatedOutcome (F.deviateDistributionFn μ who dev)) := by
   constructor
-  · intro h d
-    exact h d.1 d.2
   · intro h who dev
-    exact h ⟨who, dev⟩
+    simpa [IsCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
+      NoProfitableDeviationFor, recommendationDeviationFamily] using h who dev
+  · intro h who dev
+    simpa [IsCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
+      NoProfitableDeviationFor, recommendationDeviationFamily] using h who dev
 
 /-- Coarse correlated equilibrium w.r.t. preference `pref`: no player gains from
     constant unilateral deviation. -/
 def IsCoarseCorrelatedEqFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (μ : PMF F.Profile) : Prop :=
-  F.IsDeviationEqFor pref μ
-    (fun who => F.Strategy who)
-    (fun who s' => F.constDeviateDistributionFn μ who s')
+  F.IsDeviationEqFamilyFor pref μ F.constantDeviationProfileFamily
 
-/-- CCE as no profitable deviation against the canonical constant family. -/
-theorem isCoarseCorrelatedEqFor_iff_noProfitable_constantFamily (F : GameForm ι)
+theorem isCoarseCorrelatedEqFor_iff (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (μ : PMF F.Profile) :
     F.IsCoarseCorrelatedEqFor pref μ ↔
-      ∀ d : Σ who : ι, F.Strategy who,
-        pref d.1 (F.correlatedOutcome μ)
-          (F.correlatedOutcome (F.constantDeviationFamily μ d)) := by
+      ∀ who : ι, ∀ s' : F.Strategy who,
+        pref who (F.correlatedOutcome μ)
+          (F.correlatedOutcome (F.constDeviateDistributionFn μ who s')) := by
   constructor
-  · intro h d
-    exact h d.1 d.2
   · intro h who s'
-    exact h ⟨who, s'⟩
+    simpa [IsCoarseCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
+      NoProfitableDeviationFor, constantDeviationProfileFamily] using h who s'
+  · intro h who s'
+    simpa [IsCoarseCorrelatedEqFor, IsDeviationEqFamilyFor, NoProfitableProfileDeviationFor,
+      NoProfitableDeviationFor, constantDeviationProfileFamily] using h who s'
 
 -- ============================================================================
 -- Section 8: Properties of *For solution concepts
@@ -480,27 +514,21 @@ theorem dominant_is_nash_for (F : GameForm ι)
     (σ : F.Profile)
     (hdom : ∀ i, F.IsDominantFor pref i (σ i)) :
     F.IsNashFor pref σ := by
+  refine (F.isNashFor_iff pref σ).2 ?_
   intro who s'
-  have h : pref who (F.outcomeKernel σ) (F.outcomeKernel (Function.update σ who s')) := by
-    simpa [Function.update_eq_self] using (hdom who σ s')
-  simpa [IsNashFor, IsDeviationEqFor, NoProfitableProfileDeviationFor,
-    correlatedOutcome_pure] using h
+  simpa [Function.update_eq_self] using (hdom who σ s')
 
 open Classical in
 /-- A profile is Nash for `pref` iff every player plays a best response for `pref`. -/
 theorem isNashFor_iff_bestResponseFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop) (σ : F.Profile) :
     F.IsNashFor pref σ ↔ ∀ who, F.IsBestResponseFor pref who σ (σ who) := by
+  rw [F.isNashFor_iff pref σ]
   constructor
   · intro hNash who s'
-    have : pref who (F.correlatedOutcome (PMF.pure σ))
-        (F.correlatedOutcome (PMF.pure (Function.update σ who s'))) := hNash who s'
-    simpa [IsBestResponseFor, correlatedOutcome_pure, Function.update_eq_self] using this
+    simpa [IsBestResponseFor, Function.update_eq_self] using hNash who s'
   · intro hBR who s'
-    have : pref who (F.outcomeKernel σ) (F.outcomeKernel (Function.update σ who s')) := by
-      simpa [IsBestResponseFor, Function.update_eq_self] using (hBR who s')
-    simpa [IsNashFor, IsDeviationEqFor, NoProfitableProfileDeviationFor,
-      correlatedOutcome_pure] using this
+    simpa [IsBestResponseFor, Function.update_eq_self] using (hBR who s')
 
 /-- A dominant-for strategy is a best-response-for against any profile. -/
 theorem IsDominantFor.isBestResponseFor {F : GameForm ι}
@@ -575,17 +603,16 @@ theorem IsStrictNashFor.isNashFor {F : GameForm ι}
     {σ : F.Profile} (hstrict : F.IsStrictNashFor spref σ) :
     F.IsNashFor pref σ := by
   classical
+  refine (F.isNashFor_iff pref σ).2 ?_
   intro who s'
   by_cases h : s' = σ who
   · subst h
-    simpa [IsNashFor, IsDeviationEqFor, NoProfitableProfileDeviationFor, correlatedOutcome_pure,
-      Function.update_eq_self] using (PrefPreorder.refl who (F.outcomeKernel σ))
+    simpa [Function.update_eq_self] using (PrefPreorder.refl who (F.outcomeKernel σ))
   · have hs : spref who (F.outcomeKernel σ) (F.outcomeKernel (Function.update σ who s')) :=
       hstrict who s' h
     have hp : pref who (F.outcomeKernel σ) (F.outcomeKernel (Function.update σ who s')) :=
       himpl who _ _ hs
-    simpa [IsNashFor, IsDeviationEqFor, NoProfitableProfileDeviationFor,
-      correlatedOutcome_pure] using hp
+    exact hp
 
 /-- No profile Pareto-dominates itself (given `spref` is irreflexive). -/
 theorem ParetoDominatesFor.irrefl {F : GameForm ι}

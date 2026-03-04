@@ -264,7 +264,9 @@ theorem entrySPE_isSPE : entryGame.IsSubgamePerfectEq entrySPE := by
     intro who s'
     fin_cases who <;> (
       simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-        pureToBehavioral, evalDist_decision]
+        pureToBehavioral, evalDist_decision, GameForm.correlatedOutcome_pure,
+        GameForm.constantDeviationProfileFamily_deviate,
+        GameForm.constDeviateDistributionFn_pure]
       rcases entryS_act_eq (s' ()) with h | h <;>
         simp [Function.update, h, pureToBehavioral, GameTree.evalDist,
               PMF.pure_bind, expect_pure, entrySPE])
@@ -278,7 +280,9 @@ theorem entrySPE_isSPE : entryGame.IsSubgamePerfectEq entrySPE := by
         intro who s'
         fin_cases who <;> (
           simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-            pureToBehavioral, evalDist_decision]
+            pureToBehavioral, evalDist_decision, GameForm.correlatedOutcome_pure,
+            GameForm.constantDeviationProfileFamily_deviate,
+            GameForm.constDeviateDistributionFn_pure]
           rcases entryS_act_eq (s' ()) with h | h <;>
             simp [Function.update, h, evalDist_terminal, expect_pure, entrySPE])
       | action b hRest' =>
@@ -327,7 +331,9 @@ theorem entryNash_not_spe : ¬ entryGame.IsSubgamePerfectEq entryNash := by
   have hNash := hSPE _ hSub
   have h1 := hNash (1 : Fin 2) (fun _ => (0 : Fin 2))
   simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-    pureToBehavioral, evalDist_decision] at h1
+    pureToBehavioral, evalDist_decision, GameForm.correlatedOutcome_pure,
+    GameForm.constantDeviationProfileFamily_deviate,
+    GameForm.constDeviateDistributionFn_pure] at h1
   simp [Function.update, entryNash, evalDist_terminal, expect_pure] at h1
   linarith
 
