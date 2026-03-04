@@ -1,0 +1,167 @@
+import Mathlib.Data.Real.Basic
+import Mathlib.Data.NNReal.Basic
+import Mathlib.Probability.ProbabilityMassFunction.Monad
+
+/-!
+# Math.Probability
+
+Stochastic kernels and expected-value infrastructure for discrete game theory.
+
+Provides:
+- `Kernel α β` — stochastic kernels (Markov kernels) using Mathlib's `PMF`
+- `Kernel.id`, `Kernel.comp`, `Kernel.linExt`, `Kernel.pushforward`,
+  `Kernel.ofFun` — basic operations
+- `expect` — expected value of a real-valued function under a `PMF`
+- Utility lemmas: `expect_pure`, `expect_bind`, `expect_const`, `expect_eq_sum`
+
+-/
+
+namespace Math
+namespace Probability
+
+-- ============================================================================
+-- Kernels (using Mathlib's PMF)
+-- ============================================================================
+
+/-- A stochastic kernel from `α` to `β`: maps each input to a PMF over outputs. -/
+abbrev Kernel (α β : Type) : Type := α → PMF β
+
+namespace Kernel
+
+/-- Identity kernel. -/
+noncomputable def id (α : Type) : Kernel α α := PMF.pure
+
+/-- Kernel composition (Kleisli composition). -/
+noncomputable def comp (k₁ : Kernel α β) (k₂ : Kernel β γ) : Kernel α γ :=
+  fun a => (k₁ a).bind k₂
+
+/-- Linear extension / pushforward of a kernel to input distributions. -/
+noncomputable def linExt (k : Kernel α β) : PMF α → PMF β :=
+  fun μ => μ.bind k
+
+/-- Pushforward alias for `linExt`. -/
+noncomputable def pushforward (k : Kernel α β) : PMF α → PMF β := Kernel.linExt k
+
+/-- Pushforward along a pure function (deterministic kernel). -/
+noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a)
+
+
+@[simp] theorem comp_apply (k₁ : Kernel α β) (k₂ : Kernel β γ) (a : α) :
+    Kernel.comp k₁ k₂ a = (k₁ a).bind k₂ := rfl
+
+@[simp] theorem comp_assoc (k₁ : Kernel α β) (k₂ : Kernel β γ) (k₃ : Kernel γ δ) :
+    Kernel.comp (Kernel.comp k₁ k₂) k₃ = Kernel.comp k₁ (Kernel.comp k₂ k₃) := by
+  funext a
+  simp_all only [comp_apply, PMF.bind_bind]
+  rfl
+
+@[simp] theorem comp_id_left (k : Kernel α β) :
+    Kernel.comp (Kernel.id α) k = k := by
+  funext a
+  simp [Kernel.comp, Kernel.id]
+
+@[simp] theorem comp_id_right (k : Kernel α β) :
+    Kernel.comp k (Kernel.id β) = k := by
+  funext a
+  simp [Kernel.comp, Kernel.id]
+
+/-- Linear extension is just `bind` at the PMF level. -/
+@[simp] theorem linExt_apply (k : Kernel α β) (μ : PMF α) :
+    Kernel.linExt k μ = μ.bind k := rfl
+
+/-- `pushforward` is definitionally `linExt`. -/
+@[simp] theorem pushforward_apply (k : Kernel α β) (μ : PMF α) :
+    Kernel.pushforward k μ = μ.bind k := rfl
+
+/-- `linExt` along a deterministic kernel is exactly `mapPMF`. -/
+@[simp] theorem linExt_ofFun (f : α → β) (μ : PMF α) :
+    Kernel.linExt (Kernel.ofFun f) μ = μ.bind (fun a => PMF.pure (f a)) := by
+  rfl
+
+@[simp] theorem pushforward_ofFun (f : α → β) (μ : PMF α) :
+    Kernel.pushforward (Kernel.ofFun f) μ = μ.bind (fun a => PMF.pure (f a)) := by
+  rfl
+
+/-- Linear extension respects Kleisli composition. -/
+@[simp] theorem linExt_comp (k₁ : Kernel α β) (k₂ : Kernel β γ) (μ : PMF α) :
+    Kernel.linExt (Kernel.comp k₁ k₂) μ = Kernel.linExt k₂ (Kernel.linExt k₁ μ) := by
+  -- μ.bind (fun a => (k₁ a).bind k₂) = (μ.bind k₁).bind k₂
+  simp_all only [linExt_apply, PMF.bind_bind]
+  rfl
+
+/-- Pushforward respects Kleisli composition. -/
+@[simp] theorem pushforward_comp (k₁ : Kernel α β) (k₂ : Kernel β γ) (μ : PMF α) :
+    Kernel.pushforward (Kernel.comp k₁ k₂) μ =
+      Kernel.pushforward k₂ (Kernel.pushforward k₁ μ) := by
+  simpa [Kernel.pushforward] using (Kernel.linExt_comp k₁ k₂ μ)
+
+end Kernel
+
+-- ============================================================================
+-- Expected value
+-- ============================================================================
+
+/-- Expected value of a real-valued function under a PMF. -/
+noncomputable def expect {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ) : ℝ :=
+  ∑' ω, (d ω).toReal * f ω
+
+/--
+For finite `Ω`, `expect` is literally a finite sum.
+This is a *huge* simplification for many game models (EFG/NFG/MAID with finite outcomes).
+-/
+theorem expect_eq_sum {Ω : Type*} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
+    expect d f = (∑ ω : Ω, (d ω).toReal * f ω) := by
+  simp [expect]
+
+-- ============================================================================
+-- PMF utility lemmas
+-- ============================================================================
+
+/-- The tsum of a PMF's real-valued weights is 1. -/
+theorem pmf_toReal_tsum_one {Ω : Type*} (d : PMF Ω) : ∑' ω, (d ω).toReal = 1 := by
+  have key := @ENNReal.tsum_toReal_eq Ω (fun ω => d ω) (fun a => PMF.apply_ne_top d a)
+  rw [show ∑' ω, (d ω).toReal = ∑' ω, ((fun ω => d ω) ω).toReal from rfl]
+  rw [← key, PMF.tsum_coe]; norm_num
+
+/-- The finite sum of a PMF's real-valued weights is 1. -/
+theorem pmf_toReal_sum_one {Ω : Type*} [Fintype Ω] (d : PMF Ω) :
+    ∑ ω : Ω, (d ω).toReal = 1 := by
+  simpa [tsum_fintype] using (pmf_toReal_tsum_one d)
+
+-- ============================================================================
+-- Utility lemmas for expect
+-- ============================================================================
+
+/-- Expected value under a point mass is just function evaluation. -/
+@[simp] theorem expect_pure {Ω : Type*} (f : Ω → ℝ) (ω : Ω) :
+    expect (PMF.pure ω) f = f ω := by
+  simp only [expect, PMF.pure_apply]
+  rw [tsum_eq_single ω]
+  · simp
+  · intro ω' hne; simp [hne]
+
+/-- Expected value of a constant function. -/
+@[simp] theorem expect_const {Ω : Type*} [Nonempty Ω] (d : PMF Ω) (c : ℝ) :
+    expect d (fun _ => c) = c := by
+  simp only [expect]
+  have hfact : (fun ω => (d ω).toReal * c) = (fun ω => c * (d ω).toReal) := by ext; ring
+  rw [hfact, tsum_mul_left]
+  rw [pmf_toReal_tsum_one d, mul_one]
+
+/-- Expected value distributes over `PMF.bind`. -/
+theorem expect_bind {α β : Type*} [Finite α] [Finite β]
+    (p : PMF α) (q : α → PMF β) (f : β → ℝ) :
+    expect (p.bind q) f = expect p (fun a => expect (q a) f) := by
+  classical
+  letI : Fintype α := Fintype.ofFinite α
+  letI : Fintype β := Fintype.ofFinite β
+  simp only [expect, PMF.bind_apply, tsum_fintype]
+  have hne : ∀ (a : α) (b : β), p a * q a b ≠ ⊤ := fun a b =>
+    ENNReal.mul_ne_top (PMF.apply_ne_top p a) (PMF.apply_ne_top (q a) b)
+  simp_rw [ENNReal.toReal_sum (fun a _ => hne a _), ENNReal.toReal_mul,
+    Finset.sum_mul, Finset.mul_sum, mul_assoc]
+  exact Finset.sum_comm
+
+end Probability
+end Math
+
