@@ -68,7 +68,8 @@ theorem IsConstantSum.nash_guarantees_0
     G.Guarantees 0 (σ 0) (G.eu σ 0) := by
   intro τ
   convert hcs.nash_opponent_deviation_helps hN (τ 1) using 2
-  convert fin2_update_comm σ τ
+  funext i
+  fin_cases i <;> simp [Function.update]
 
 set_option linter.unusedFintypeInType false in
 /-- At a Nash equilibrium of a 2-player constant-sum game, player 1's Nash strategy

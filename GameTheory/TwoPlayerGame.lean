@@ -42,12 +42,8 @@ open Classical in
 theorem two_player_profile_decompose {G : KernelGame (Fin 2)}
     (σ τ : Profile G) :
     Function.update (Function.update τ 0 (σ 0)) 1 (σ 1) = σ := by
-  calc
-    Function.update (Function.update τ 0 (σ 0)) 1 (σ 1)
-        = Function.update (Function.update σ 1 (τ 1)) 1 (σ 1) := by
-            simpa using congrArg (fun p => Function.update p 1 (σ 1)) (fin2_update_comm σ τ)
-    _ = Function.update σ 1 (σ 1) := by simp [Function.update_idem]
-    _ = σ := Function.update_eq_self 1 σ
+  funext i
+  fin_cases i <;> simp [Function.update]
 
 open Classical in
 /-- In a 2-player game, a profile where player 0 updates to their current

@@ -81,11 +81,6 @@ theorem udistPlayer_eq_udist_bind (G : KernelGame ι) (σ : Profile G) (who : ι
     G.udistPlayer σ who = PMF.pure (G.utility ω who) := by
   simp [udistPlayer, h]
 
-open Classical in
-theorem fin2_update_comm {α : Fin 2 → Type} (σ τ : ∀ i, α i) :
-    Function.update τ 0 (σ 0) = Function.update σ 1 (τ 1) := by
-  funext i; fin_cases i <;> simp [Function.update]
-
 end KernelGame
 
 end GameTheory
