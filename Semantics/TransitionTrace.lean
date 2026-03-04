@@ -2,7 +2,7 @@ import Mathlib.Logic.Relation
 
 set_option autoImplicit false
 
-namespace CS
+namespace Semantics
 namespace Transition
 
 /-- A labeled finite trace witness for a transition system.
@@ -154,4 +154,4 @@ theorem obs_eq_of_reaches
       exact ih.trans (hstep _ _ hbc)
 
 end Transition
-end CS
+end Semantics

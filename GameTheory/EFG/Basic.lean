@@ -2,7 +2,7 @@ import Mathlib.Data.Real.Basic
 import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Monad
 
-import CS.TransitionTrace
+import Semantics.TransitionTrace
 import GameTheory.Core.KernelGame
 import GameTheory.Concepts.SolutionConcepts
 
@@ -351,13 +351,13 @@ def HistoryStepStep {S : InfoStructure} {Outcome : Type} :
     `root` leads to `target`. History is earliest step first. -/
 abbrev ReachBy {S : InfoStructure} {Outcome : Type} :
     List (HistoryStep S) → GameTree S Outcome → GameTree S Outcome → Prop :=
-  CS.Transition.ReachBy (HistoryStepStep (S := S) (Outcome := Outcome))
+  Semantics.Transition.ReachBy (HistoryStepStep (S := S) (Outcome := Outcome))
 
 namespace ReachBy
 
 theorem here {S : InfoStructure} {Outcome : Type} (t : GameTree S Outcome) :
     ReachBy (S := S) (Outcome := Outcome) [] t t :=
-  CS.Transition.ReachBy.nil _
+  Semantics.Transition.ReachBy.nil _
 
 theorem chance {S : InfoStructure} {Outcome : Type}
     {k : Nat} {μ : PMF (Fin k)} {hk : 0 < k}
@@ -367,7 +367,7 @@ theorem chance {S : InfoStructure} {Outcome : Type}
     (h : ReachBy (S := S) (Outcome := Outcome) rest (next b) s) :
     ReachBy (S := S) (Outcome := Outcome)
       (HistoryStep.chance k b :: rest) (.chance k μ hk next) s := by
-  refine CS.Transition.ReachBy.cons ?_ h
+  refine Semantics.Transition.ReachBy.cons ?_ h
   exact ⟨μ, hk, next, rfl, rfl⟩
 
 theorem action {S : InfoStructure} {Outcome : Type}
@@ -378,7 +378,7 @@ theorem action {S : InfoStructure} {Outcome : Type}
     (h : ReachBy (S := S) (Outcome := Outcome) rest (next a) s) :
     ReachBy (S := S) (Outcome := Outcome)
       (HistoryStep.action p I a :: rest) (.decision I next) s := by
-  refine CS.Transition.ReachBy.cons ?_ h
+  refine Semantics.Transition.ReachBy.cons ?_ h
   exact ⟨next, rfl, rfl⟩
 
 end ReachBy
@@ -492,7 +492,7 @@ theorem ReachBy_append {S : InfoStructure} {Outcome : Type}
     {root mid target : GameTree S Outcome}
     (hr₁ : ReachBy h₁ root mid) (hr₂ : ReachBy h₂ mid target) :
     ReachBy (h₁ ++ h₂) root target := by
-  exact CS.Transition.reachBy_append hr₁ hr₂
+  exact Semantics.Transition.reachBy_append hr₁ hr₂
 
 /-- Splitting lemma: if `ReachBy (h₁ ++ h₂) root target`, then there exists
     a `mid` such that `ReachBy h₁ root mid` and `ReachBy h₂ mid target`. -/
@@ -501,7 +501,7 @@ theorem ReachBy_split {S : InfoStructure} {Outcome : Type}
     {root target : GameTree S Outcome}
     (hr : ReachBy (h₁ ++ h₂) root target) :
     ∃ mid, ReachBy h₁ root mid ∧ ReachBy h₂ mid target := by
-  exact CS.Transition.reachBy_split hr
+  exact Semantics.Transition.reachBy_split hr
 
 /-- `playerHistory` distributes over concatenation. -/
 theorem playerHistory_append (S : InfoStructure) (who : S.Player)

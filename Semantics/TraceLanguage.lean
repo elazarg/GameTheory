@@ -1,13 +1,13 @@
 import Mathlib.Data.List.Infix
 import Mathlib.Data.Set.Basic
-import CS.TransitionTrace
+import Semantics.TransitionTrace
 
 set_option autoImplicit false
 
-namespace CS
+namespace Semantics
 namespace Trace
 
-open CS.Transition
+open Semantics.Transition
 
 variable {α σ : Type*}
 
@@ -110,4 +110,4 @@ theorem append_mem_tracesFrom_iff
     exact ⟨t, reachBy_append hus hvt⟩
 
 end Trace
-end CS
+end Semantics

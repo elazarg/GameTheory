@@ -26,5 +26,5 @@ name = "Math"
 srcDir = "."
 
 [[lean_lib]]
-name = "CS"
+name = "Semantics"
 srcDir = "."

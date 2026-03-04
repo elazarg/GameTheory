@@ -2,7 +2,7 @@ import Mathlib.Data.Set.Basic
 
 set_option autoImplicit false
 
-namespace CS
+namespace Semantics
 namespace Machine
 
 universe u v
@@ -77,4 +77,4 @@ theorem eraseLabel_lsm_step (M : LSM α σ) :
     eraseLabel M.step = fun s t => ∃ a, M.step a s t := rfl
 
 end Machine
-end CS
+end Semantics

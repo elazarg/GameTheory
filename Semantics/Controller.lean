@@ -4,7 +4,7 @@ import Math.SetReachability
 
 set_option autoImplicit false
 
-namespace CS
+namespace Semantics
 namespace Controller
 
 open Math
@@ -119,4 +119,4 @@ theorem bind_choose_eq_of_obs_eqOn_reachable
     (choose_eqOn_of_obs_eqOn obs₁ obs₂ ctrl R hobs)
 
 end Controller
-end CS
+end Semantics

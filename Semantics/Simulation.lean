@@ -1,9 +1,9 @@
-import CS.TraceLanguage
+import Semantics.TraceLanguage
 import Math.Probability
 
 set_option autoImplicit false
 
-namespace CS
+namespace Semantics
 namespace Transition
 
 variable {α β σ τ : Type*}
@@ -177,4 +177,4 @@ theorem preserves_distribution
 end MapBisimulation
 
 end KernelSim
-end CS
+end Semantics
