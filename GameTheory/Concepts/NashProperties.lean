@@ -27,16 +27,14 @@ open Classical in
 /-- Nash equilibrium ↔ every player plays a best response to the profile. -/
 theorem isNash_iff_allBestResponse (G : KernelGame ι) {σ : Profile G} :
     G.IsNash σ ↔ ∀ who, G.IsBestResponse who σ (σ who) := by
-  constructor
-  · intro hN who s'
-    have h := hN who s'
-    convert h using 2
-    exact Function.update_eq_self who σ
-  · intro h who s'
-    have h1 := h who s'
-    have : Function.update σ who (σ who) = σ := Function.update_eq_self who σ
-    rw [this] at h1
-    exact h1
+  simpa using (isNash_iff_bestResponse (G := G) σ)
+
+/-- Preference-parameterized counterpart:
+    Nash-for `pref` iff every player plays a best response-for `pref`. -/
+theorem isNashFor_iff_allBestResponseFor (G : KernelGame ι)
+    (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop) (σ : Profile G) :
+    G.IsNashFor pref σ ↔ ∀ who, G.IsBestResponseFor pref who σ (σ who) := by
+  simpa using (isNashFor_iff_bestResponseFor (G := G) pref σ)
 
 open Classical in
 /-- Nash equilibrium ↔ no player has a strictly improving deviation. -/

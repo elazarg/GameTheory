@@ -1,3 +1,4 @@
+import GameTheory.Core.GameIsomorphism
 import GameTheory.Concepts.SolutionConcepts
 import Math.Probability
 
@@ -9,21 +10,20 @@ strategic structure of different games.
 
 This file is distribution-first:
 - morphisms preserve utility distributions (`udist`) under profile mapping;
-- EU-based corollaries (Nash, dominance) are stated with explicit EU-compatibility
-  assumptions, since those concepts are genuinely EU-functional.
+- EU-based corollaries (Nash, dominance) are added in explicitly EU-specialized
+  wrappers.
 
 ## Main definitions
 
 * `KernelGame.Morphism` -- strategy map preserving `udist`
-* `KernelGame.StratEquiv` -- strategy bijection preserving `udist`
 * `KernelGame.EUMorphism` -- morphism with additional EU preservation
-* `KernelGame.EUStratEquiv` -- strategy equivalence with additional EU preservation
+* `KernelGame.EUGameIsomorphism` -- game isomorphism with additional EU preservation
 
 ## Main EU corollaries
 
 * `KernelGame.EUMorphism.nash_of_nash`
-* `KernelGame.EUStratEquiv.nash_iff`
-* `KernelGame.EUStratEquiv.dominant_iff`
+* `KernelGame.EUGameIsomorphism.nash_iff`
+* `KernelGame.EUGameIsomorphism.dominant_iff`
 -/
 
 namespace GameTheory
@@ -55,12 +55,6 @@ theorem Morphism.udistPlayer_preserved {G H : KernelGame ι} (f : Morphism G H)
     congrArg (fun d : PMF (Payoff ι) => d.bind (fun u => PMF.pure (u who))) (f.udist_preserved σ)
   simpa [KernelGame.udistPlayer_eq_udist_bind] using h
 
-end KernelGame
-
-namespace KernelGame
-
-variable {ι : Type}
-
 -- ============================================================================
 -- EU-specialized morphisms
 -- ============================================================================
@@ -72,7 +66,7 @@ structure EUMorphism (G H : KernelGame ι) extends Morphism G H where
     H.eu (fun i => stratMap i (σ i)) who = G.eu σ who
 
 open Classical in
-/-- EU corollary: if a morphism also preserves EU values, Nash pulls back. -/
+/-- EU corollary: if a morphism preserves EU values, Nash pulls back. -/
 theorem EUMorphism.nash_of_nash {G H : KernelGame ι} (f : EUMorphism G H)
     {σ : Profile G}
     (hN : H.IsNash (fun i => f.stratMap i (σ i))) :
@@ -91,150 +85,108 @@ theorem EUMorphism.nash_of_nash {G H : KernelGame ι} (f : EUMorphism G H)
   linarith
 
 -- ============================================================================
--- Strategy equivalences (distribution-preserving bijections)
+-- EU-specialized game isomorphisms
 -- ============================================================================
 
-/-- A strategy equivalence between games `G` and `H`: per-player bijections on
-    strategy spaces preserving joint utility distribution exactly. -/
-structure StratEquiv (G H : KernelGame ι) where
-  /-- Per-player strategy bijection (forward). -/
-  toFun : ∀ i, G.Strategy i → H.Strategy i
-  /-- Per-player strategy bijection (inverse). -/
-  invFun : ∀ i, H.Strategy i → G.Strategy i
-  /-- Left inverse. -/
-  left_inv : ∀ i s, invFun i (toFun i s) = s
-  /-- Right inverse. -/
-  right_inv : ∀ i s, toFun i (invFun i s) = s
-  /-- Utility-distribution preservation under the bijection. -/
-  udist_preserved : ∀ (σ : Profile G),
-    H.udist (fun i => toFun i (σ i)) = G.udist σ
-
-/-- A strategy equivalence with additional EU preservation. -/
-structure EUStratEquiv (G H : KernelGame ι) extends StratEquiv G H where
-  /-- Expected-utility preservation under the bijection. -/
+/-- A game isomorphism with additional EU preservation. -/
+structure EUGameIsomorphism (G H : KernelGame ι) extends GameIsomorphism G H where
+  /-- Expected-utility preservation under the isomorphism. -/
   eu_preserved : ∀ (σ : Profile G) (who : ι),
-    H.eu (fun i => toFun i (σ i)) who = G.eu σ who
+    H.eu (fun i => stratEquiv i (σ i)) who = G.eu σ who
 
-namespace StratEquiv
-
-variable {G H : KernelGame ι}
-
-/-- A strategy equivalence is a morphism. -/
-def toMorphism (e : StratEquiv G H) : Morphism G H where
-  stratMap := e.toFun
-  udist_preserved := e.udist_preserved
-
-/-- The inverse equivalence. -/
-def symm (e : StratEquiv G H) : StratEquiv H G where
-  toFun := e.invFun
-  invFun := e.toFun
-  left_inv := e.right_inv
-  right_inv := e.left_inv
-  udist_preserved := by
-    intro σ
-    have h := e.udist_preserved (fun i => e.invFun i (σ i))
-    simpa [e.right_inv] using h.symm
-
-end StratEquiv
-
-namespace EUStratEquiv
+namespace EUGameIsomorphism
 
 variable {G H : KernelGame ι}
 
-/-- Forgetting EU preservation yields a distribution-preserving strategy equivalence. -/
-def toBase (e : EUStratEquiv G H) : StratEquiv G H :=
-  { toFun := e.toFun
-    invFun := e.invFun
-    left_inv := e.left_inv
-    right_inv := e.right_inv
-    udist_preserved := e.udist_preserved }
-
-/-- A EU-preserving strategy equivalence induces a EU-preserving morphism. -/
-def toEUMorphism (e : EUStratEquiv G H) : EUMorphism G H where
-  stratMap := e.toFun
+/-- An EU-preserving game isomorphism induces an EU-preserving morphism. -/
+def toEUMorphism (e : EUGameIsomorphism G H) : EUMorphism G H where
+  stratMap := fun i => e.stratEquiv i
   udist_preserved := e.udist_preserved
   eu_preserved := e.eu_preserved
 
-/-- Inverse EU-preserving strategy equivalence. -/
-def symm (e : EUStratEquiv G H) : EUStratEquiv H G where
-  toFun := e.invFun
-  invFun := e.toFun
-  left_inv := e.right_inv
-  right_inv := e.left_inv
+/-- Inverse EU-preserving game isomorphism. -/
+def symm (e : EUGameIsomorphism G H) : EUGameIsomorphism H G where
+  stratEquiv := fun i => (e.stratEquiv i).symm
   udist_preserved := by
     intro σ
-    have h := e.udist_preserved (fun i => e.invFun i (σ i))
-    simpa [e.right_inv] using h.symm
+    have h := e.udist_preserved (fun i => (e.stratEquiv i).symm (σ i))
+    simpa using h.symm
   eu_preserved := by
     intro σ who
-    have h := e.eu_preserved (fun i => e.invFun i (σ i)) who
-    simpa [e.right_inv] using h.symm
+    have h := e.eu_preserved (fun i => (e.stratEquiv i).symm (σ i)) who
+    simpa using h.symm
 
 open Classical in
-/-- EU corollary: if a strategy equivalence also preserves EU values, Nash is
-    preserved in both directions. -/
-theorem nash_iff (e : EUStratEquiv G H)
-    (σ : Profile G) :
-    G.IsNash σ ↔ H.IsNash (fun i => e.toFun i (σ i)) := by
+/-- EU corollary: Nash is preserved in both directions. -/
+theorem nash_iff (e : EUGameIsomorphism G H) (σ : Profile G) :
+    G.IsNash σ ↔ H.IsNash (fun i => e.stratEquiv i (σ i)) := by
   constructor
   · intro hN who s'
-    suffices H.eu (Function.update (fun i => e.toFun i (σ i)) who s') who =
-        H.eu (fun i => e.toFun i (Function.update σ who (e.invFun who s') i)) who by
-      have h := hN who (e.invFun who s')
+    suffices H.eu (Function.update (fun i => e.stratEquiv i (σ i)) who s') who =
+        H.eu (fun i => e.stratEquiv i
+          (Function.update σ who ((e.stratEquiv who).symm s') i)) who by
+      have h := hN who ((e.stratEquiv who).symm s')
       have h1 := e.eu_preserved σ who
-      have h2 := e.eu_preserved (Function.update σ who (e.invFun who s')) who
+      have h2 := e.eu_preserved (Function.update σ who ((e.stratEquiv who).symm s')) who
       linarith
     congr 2
     funext j
-    simpa [e.right_inv] using
+    simpa using
       (Function.apply_update
-        (f := e.toFun) (g := σ) (i := who) (v := e.invFun who s') (j := j)).symm
+        (f := fun i => e.stratEquiv i) (g := σ) (i := who)
+        (v := (e.stratEquiv who).symm s') (j := j)).symm
   · exact e.toEUMorphism.nash_of_nash
 
 open Classical in
-/-- EU corollary: if a strategy equivalence also preserves EU values, dominance
-    is preserved in both directions. -/
-theorem dominant_iff (e : EUStratEquiv G H)
+/-- EU corollary: dominance is preserved in both directions. -/
+theorem dominant_iff (e : EUGameIsomorphism G H)
     (who : ι) (s : G.Strategy who) :
-    G.IsDominant who s ↔ H.IsDominant who (e.toFun who s) := by
+    G.IsDominant who s ↔ H.IsDominant who (e.stratEquiv who s) := by
   constructor
   · intro hdom σ s'
-    set τ := fun i => e.invFun i (σ i) with hτ
-    have key1 : Function.update σ who (e.toFun who s) =
-        fun i => e.toFun i (Function.update τ who s i) := by
+    set τ := fun i => (e.stratEquiv i).symm (σ i) with hτ
+    have key1 : Function.update σ who (e.stratEquiv who s) =
+        fun i => e.stratEquiv i (Function.update τ who s i) := by
       funext j
-      simpa [hτ, e.right_inv] using
-        (Function.apply_update (f := e.toFun) (g := τ) (i := who) (v := s) (j := j)).symm
+      simpa [hτ] using
+        (Function.apply_update (f := fun i => e.stratEquiv i) (g := τ)
+          (i := who) (v := s) (j := j)).symm
     have key2 : Function.update σ who s' =
-        fun i => e.toFun i (Function.update τ who (e.invFun who s') i) := by
+        fun i => e.stratEquiv i (Function.update τ who ((e.stratEquiv who).symm s') i) := by
       funext j
-      simpa [hτ, e.right_inv] using
+      simpa [hτ] using
         (Function.apply_update
-          (f := e.toFun) (g := τ) (i := who) (v := e.invFun who s') (j := j)).symm
+          (f := fun i => e.stratEquiv i) (g := τ) (i := who)
+          (v := (e.stratEquiv who).symm s') (j := j)).symm
     rw [key1, key2]
     have h1 := e.eu_preserved (Function.update τ who s) who
-    have h2 := e.eu_preserved (Function.update τ who (e.invFun who s')) who
-    linarith [hdom τ (e.invFun who s')]
+    have h2 := e.eu_preserved (Function.update τ who ((e.stratEquiv who).symm s')) who
+    linarith [hdom τ ((e.stratEquiv who).symm s')]
   · intro hdom σ s'
-    have h := hdom (fun i => e.toFun i (σ i)) (e.toFun who s')
+    have h := hdom (fun i => e.stratEquiv i (σ i)) (e.stratEquiv who s')
     have h1 := e.eu_preserved (Function.update σ who s) who
     have h2 := e.eu_preserved (Function.update σ who s') who
     have hmap_s :
-        (fun i => e.toFun i (Function.update σ who s i)) =
-          Function.update (fun i => e.toFun i (σ i)) who (e.toFun who s) := by
+        (fun i => e.stratEquiv i (Function.update σ who s i)) =
+          Function.update (fun i => e.stratEquiv i (σ i)) who (e.stratEquiv who s) := by
       funext j
-      simpa using (Function.apply_update (f := e.toFun) (g := σ) (i := who) (v := s) (j := j))
+      simpa using
+        (Function.apply_update (f := fun i => e.stratEquiv i) (g := σ)
+          (i := who) (v := s) (j := j))
     have hmap_s' :
-        (fun i => e.toFun i (Function.update σ who s' i)) =
-          Function.update (fun i => e.toFun i (σ i)) who (e.toFun who s') := by
+        (fun i => e.stratEquiv i (Function.update σ who s' i)) =
+          Function.update (fun i => e.stratEquiv i (σ i)) who (e.stratEquiv who s') := by
       funext j
-      simpa using (Function.apply_update (f := e.toFun) (g := σ) (i := who) (v := s') (j := j))
+      simpa using
+        (Function.apply_update (f := fun i => e.stratEquiv i) (g := σ)
+          (i := who) (v := s') (j := j))
     rw [hmap_s] at h1
     rw [hmap_s'] at h2
     linarith
 
-end EUStratEquiv
+end EUGameIsomorphism
 
 end KernelGame
 
 end GameTheory
+

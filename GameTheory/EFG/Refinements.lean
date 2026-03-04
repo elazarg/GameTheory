@@ -102,9 +102,8 @@ theorem terminal_isNashFor_euPref {G : EFGGame} (z : G.Outcome)
     (G.withTree (.terminal z)).toStrategicKernelGame.IsNashFor
       (KernelGame.euPref G.toStrategicKernelGame) σ := by
   intro who _s'
-  change expect (PMF.pure z) (fun ω => G.utility ω who) ≥
-         expect (PMF.pure z) (fun ω => G.utility ω who)
-  exact le_refl _
+  simp [KernelGame.euPref, GameForm.correlatedOutcome_pure,
+    EFGGame.toStrategicKernelGame, EFGGame.withTree]
 
 -- ============================================================================
 -- Perfect information
