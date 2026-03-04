@@ -416,6 +416,21 @@ theorem bind_marginal_cond {p : S.Player} (I₀ : S.Infoset p)
     (Math.ProbabilityMassFunction.bind_pushforward_condOn
       (μ := μ) (proj := fun s : FlatProfile S => s ⟨p, I₀⟩) (g := f))
 
+/-- Mass times conditional recovers original mass on the conditioned fiber. -/
+theorem μMarginal_mul_μCond_apply {p : S.Player}
+    (I₀ : S.Infoset p) (a : S.Act I₀)
+    (μ : PMF (FlatProfile S))
+    (hpa : μMarginal I₀ μ a ≠ 0)
+    (s : FlatProfile S) :
+    μMarginal I₀ μ a * μCond I₀ a μ s =
+      if s ⟨p, I₀⟩ = a then μ s else 0 := by
+  have hpa_top : μMarginal I₀ μ a ≠ ⊤ :=
+    PMF.apply_ne_top (μMarginal I₀ μ) a
+  rw [μCond_apply I₀ a μ s hpa]
+  split_ifs with hs
+  · rw [mul_comm, ENNReal.div_mul_cancel hpa hpa_top]
+  · simp
+
 
 /-- Under perfect recall, for infosets in `next a` (with `I₀ ≠ J`),
     `reachesFlat J s (decision I₀ next)` iff `s ⟨p, I₀⟩ = a ∧ reachesFlat J s (next a)`. -/
@@ -500,29 +515,22 @@ lemma reachProbFlat_decision_scale {p}
         simp_all only [ne_eq, Finset.mem_univ, reduceIte, p_a]
       · simp [hsa]
     · simp [hr]
-  -- Now multiply by p_a and cancel p_a * (μ s / p_a) = μ s.
-  -- Do it termwise inside the sum.
   have hterm :
       (p_a * (∑ s : FlatProfile S,
-        if s ⟨p, I₀⟩ = a ∧ reachesFlat J s (next a) then (μ s / p_a) else 0))
+        if reachesFlat J s (next a) then (μCond I₀ a μ s : ENNReal) else 0))
         =
       (∑ s : FlatProfile S,
         if s ⟨p, I₀⟩ = a ∧ reachesFlat J s (next a) then (μ s : ENNReal) else 0) := by
-    -- pull p_a into the sum and simplify
-    simp only [div_eq_mul_inv, Finset.mul_sum, mul_ite, mul_zero]
+    simp_rw [p_a]
+    simp_rw [Finset.mul_sum, mul_ite, mul_zero,
+      μMarginal_mul_μCond_apply (I₀ := I₀) (a := a) (μ := μ) hpa]
     apply Finset.sum_congr rfl
     intro s _
-    by_cases h : (s ⟨p, I₀⟩ = a ∧ reachesFlat J s (next a))
-    · simp only [h, and_self, ↓reduceIte]
-      -- p_a * (μ s * p_a⁻¹) = μ s * (p_a * p_a⁻¹) = μ s
-      have : p_a * p_a⁻¹ = 1 := by
-        -- ENNReal.mul_inv_cancel wants p_a≠0 and p_a≠⊤
-        simpa [p_a] using (ENNReal.mul_inv_cancel (by simpa [p_a] using hpa) hpa_top)
-      rw [mul_comm]
-      rw [mul_assoc]
-      rw [mul_comm] at this
-      simp_all only [ne_eq, Finset.mem_univ, mul_one, p_a]
-    · simp [h]
+    by_cases hr : reachesFlat J s (next a)
+    · by_cases hs : s ⟨p, I₀⟩ = a
+      · simp [hr, hs]
+      · simp [hr, hs]
+    · simp [hr]
   -- Finally, rewrite LHS using hiff, RHS using the μCond expansion, and use hterm.
   -- LHS:
   have hL :
@@ -541,8 +549,7 @@ lemma reachProbFlat_decision_scale {p}
         intro h; exact hreach ((this.mpr h))
       simp [hreach, this]
   -- we stitch:
-  simpa [hL] using (by
-    simp_all only [ne_eq, p_a])
+  simpa [hL, p_a] using hterm.symm
 
 
 open Classical in
@@ -594,34 +601,17 @@ lemma num_decision_scale
       simp [hreach, hsub]
   -- Now show RHS equals that sum by expanding μCond and cancelling p_a.
   rw [hL]
-  -- RHS:
-  simp only  -- only to bring p_a into scope
-  -- Direct termwise computation:
-  -- p_a * (if reach∧sJ=b then μCond else 0)
-  -- becomes (if sI0=a ∧ reach ∧ sJ=b then μ else 0).
-  -- We do it as a sum_congr.
-  simp only [Finset.mul_sum, mul_ite, mul_zero]
+  simp_rw [Finset.mul_sum, mul_ite, mul_zero,
+    μMarginal_mul_μCond_apply (I₀ := I₀) (a := a) (μ := μ) hpa]
   apply Finset.sum_congr rfl
   intro s _
-  by_cases hR : (reachesFlat J s (next a) ∧ s ⟨p, J⟩ = b)
-  · have hr : reachesFlat J s (next a) := hR.1
-    have hsb : s ⟨p, J⟩ = b := hR.2
-    -- split on s(I₀)=a
-    by_cases hsa : s ⟨p, I₀⟩ = a
-    · -- then μCond = μ/p_a, and p_a * (μ/p_a) = μ
-      simp only [hsa, hR, and_self, ↓reduceIte,
-        μCond_apply (I₀ := I₀) (a := a) (μ := μ) (s := s) hpa, div_eq_mul_inv]
-      have : p_a * p_a⁻¹ = 1 := by
-        simpa [p_a] using (ENNReal.mul_inv_cancel (by simpa [p_a] using hpa) hpa_top)
-      simp only [mul_comm]
-      exact Eq.symm (ENNReal.mul_inv_cancel_left hpa hpa_top)
-    · -- if s(I₀)≠a then μCond mass is 0, so RHS term is 0, and LHS indicator is false
-      simp [hR, hsa, μCond_apply (I₀ := I₀) (a := a) (μ := μ) (s := s) hpa]
-  · -- if reach∧sJ=b is false, RHS term is 0; LHS indicator also false
-    simp only [hR, ↓reduceIte, ite_eq_right_iff, and_imp]
-    intro a_2 a_3 a_4
-    subst a_2 a_4
-    simp_all only [ne_eq, Finset.mem_univ, and_self, not_true_eq_false, p_a]
+  by_cases hr : reachesFlat J s (next a)
+  · by_cases hsb : s ⟨p, J⟩ = b
+    · by_cases hsa : s ⟨p, I₀⟩ = a
+      · simp [hr, hsb, hsa]
+      · simp [hr, hsb, hsa]
+    · simp [hr, hsb]
+  · simp [hr]
 
 /-- Your desired lemma, assuming μMarginal(I₀)=a is nonzero. -/
 theorem mixedToBehavioralFlat_decision_sub
