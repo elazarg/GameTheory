@@ -1,4 +1,5 @@
 import CS.TraceLanguage
+import Math.Probability
 
 set_option autoImplicit false
 
@@ -102,4 +103,78 @@ theorem reachBy_map
 end HomSimulation
 
 end Transition
+
+namespace KernelSim
+
+open Math.Probability
+
+variable {σ τ : Type}
+
+/-- Map-based simulation between Markov kernels. -/
+structure MapSimulation
+    (K : Math.Probability.Kernel σ σ)
+    (K' : Math.Probability.Kernel τ τ)
+    (f : σ → τ) : Prop where
+  step : ∀ s, K' (f s) = (K s).bind (fun s' => PMF.pure (f s'))
+
+namespace MapSimulation
+
+/-- Distributional commutation law induced by a map simulation.
+
+Applying `K` and then mapping by `f` is equal to mapping by `f` first and then
+applying `K'`. -/
+theorem pushforward_comm
+    {K : Math.Probability.Kernel σ σ}
+    {K' : Math.Probability.Kernel τ τ}
+    {f : σ → τ}
+    (sim : MapSimulation K K' f)
+    (μ : PMF σ) :
+    Math.Probability.Kernel.pushforward K' (Math.Probability.Kernel.pushforward
+      (Math.Probability.Kernel.ofFun f) μ) =
+      Math.Probability.Kernel.pushforward (Math.Probability.Kernel.ofFun f)
+        (Math.Probability.Kernel.pushforward K μ) := by
+  have hfun : (fun s => K' (f s)) = (fun s => (K s).bind (fun s' => PMF.pure (f s'))) :=
+    funext sim.step
+  simpa [Math.Probability.Kernel.pushforward, Math.Probability.Kernel.ofFun, PMF.bind_bind]
+    using congrArg (fun g => μ.bind g) hfun
+
+end MapSimulation
+
+/-- Map-based bisimulation between Markov kernels.
+
+This is the same one-step transport law as simulation, but with an equivalence
+of state spaces. -/
+structure MapBisimulation
+    (K : Math.Probability.Kernel σ σ)
+    (K' : Math.Probability.Kernel τ τ)
+    (e : σ ≃ τ) : Prop where
+  step : ∀ s, K' (e s) = (K s).bind (fun s' => PMF.pure (e s'))
+
+namespace MapBisimulation
+
+/-- Forget invertibility and view a bisimulation as a simulation. -/
+def toSimulation
+    {K : Math.Probability.Kernel σ σ}
+    {K' : Math.Probability.Kernel τ τ}
+    {e : σ ≃ τ}
+    (bis : MapBisimulation K K' e) :
+    MapSimulation K K' (fun s => e s) where
+  step := bis.step
+
+/-- Bisimulation preserves one-step pushed-forward state distributions. -/
+theorem preserves_distribution
+    {K : Math.Probability.Kernel σ σ}
+    {K' : Math.Probability.Kernel τ τ}
+    {e : σ ≃ τ}
+    (bis : MapBisimulation K K' e)
+    (μ : PMF σ) :
+    Math.Probability.Kernel.pushforward K' (Math.Probability.Kernel.pushforward
+      (Math.Probability.Kernel.ofFun e) μ) =
+      Math.Probability.Kernel.pushforward (Math.Probability.Kernel.ofFun e)
+        (Math.Probability.Kernel.pushforward K μ) :=
+  bis.toSimulation.pushforward_comm μ
+
+end MapBisimulation
+
+end KernelSim
 end CS
