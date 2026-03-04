@@ -4,11 +4,11 @@ import GameTheory.Core.KernelGame
 
 -- Game form (protocol layer without utility)
 import GameTheory.Core.GameForm
-import GameTheory.Protocol.SeqProto
-import GameTheory.Protocol.ProtoSPE
-import GameTheory.Protocol.ProtoODP
-import GameTheory.Protocol.ProtoZermelo
-import GameTheory.Protocol.ProtoKuhn
+import GameTheory.Sequential.SeqProto
+import GameTheory.Sequential.ProtoSPE
+import GameTheory.Sequential.ProtoODP
+import GameTheory.Sequential.ProtoZermelo
+import GameTheory.Sequential.ProtoKuhn
 
 -- Solution concepts and properties
 import GameTheory.Concepts.SolutionConcepts

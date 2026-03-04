@@ -1,4 +1,4 @@
-import GameTheory.Protocol.ProtoZermelo
+import GameTheory.Sequential.ProtoZermelo
 import Math.PMFProduct
 import Math.Probability
 import Math.ProbabilityMassFunction

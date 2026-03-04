@@ -1,4 +1,4 @@
-import GameTheory.Protocol.ProtoSPE
+import GameTheory.Sequential.ProtoSPE
 import Math.ProbabilityMassFunction
 import Math.Probability
 

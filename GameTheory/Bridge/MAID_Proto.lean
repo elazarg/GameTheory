@@ -1,5 +1,5 @@
 import GameTheory.MAID.MAID
-import GameTheory.Protocol.SeqProto
+import GameTheory.Sequential.SeqProto
 
 /-!
 # MAID → Protocol Encoding

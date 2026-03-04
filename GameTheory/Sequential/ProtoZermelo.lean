@@ -1,4 +1,4 @@
-import GameTheory.Protocol.ProtoODP
+import GameTheory.Sequential.ProtoODP
 import Math.ProbabilityMassFunction
 import Math.Probability
 import Math.FunctionUpdate

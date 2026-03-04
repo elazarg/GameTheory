@@ -3,7 +3,7 @@ import Math.PMFProduct
 import Math.Probability
 
 /-!
-# GameTheory.Protocol.TraceKernelGame
+# GameTheory.Sequential.TraceKernelGame
 
 Minimal trace-style sequential semantics:
 

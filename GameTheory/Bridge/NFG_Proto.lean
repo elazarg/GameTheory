@@ -1,4 +1,4 @@
-import GameTheory.Protocol.SeqProto
+import GameTheory.Sequential.SeqProto
 import Math.Probability
 
 /-!
