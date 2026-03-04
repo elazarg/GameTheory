@@ -46,6 +46,9 @@ variable {ι : Type}
 -- EU-specific solution concepts
 -- ============================================================================
 
+section UpdateConcepts
+variable [DecidableEq ι]
+
 open Classical in
 /-- A strategy profile `σ` is a Nash equilibrium if no player can
     improve their utility by unilateral deviation. -/
@@ -305,5 +308,7 @@ theorem IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu (G : KernelGame ι)
       using h who s'
 
 end KernelGame
+
+end UpdateConcepts
 
 end GameTheory

@@ -20,15 +20,15 @@ abbrev Deviation (G : KernelGame ι) : Type _ := Profile G → Profile G
 
 /-- Unilateral deviation induced by a recommendation-dependent map. -/
 noncomputable def unilateralDeviation (G : KernelGame ι) (who : ι)
-    (dev : G.Strategy who → G.Strategy who) : Deviation G := by
-  classical
-  exact fun σ => Function.update σ who (dev (σ who))
+    [DecidableEq ι]
+    (dev : G.Strategy who → G.Strategy who) : Deviation G :=
+  fun σ => Function.update σ who (dev (σ who))
 
 /-- Unilateral deviation to a fixed strategy. -/
 noncomputable def constantDeviation (G : KernelGame ι) (who : ι)
-    (s' : G.Strategy who) : Deviation G := by
-  classical
-  exact fun σ => Function.update σ who s'
+    [DecidableEq ι]
+    (s' : G.Strategy who) : Deviation G :=
+  fun σ => Function.update σ who s'
 
 /-- Player-`who` EU after applying a deviation to `σ`. -/
 noncomputable def euAfterDeviation (G : KernelGame ι) (who : ι)
@@ -42,12 +42,14 @@ noncomputable def deviationDistribution (G : KernelGame ι)
 
 /-- Push through a unilateral recommendation-dependent deviation. -/
 noncomputable def unilateralDeviationDistribution (G : KernelGame ι)
+    [DecidableEq ι]
     (μ : PMF (Profile G)) (who : ι)
     (dev : G.Strategy who → G.Strategy who) : PMF (Profile G) :=
   G.deviationDistribution μ (G.unilateralDeviation who dev)
 
 /-- Push through a unilateral constant deviation. -/
 noncomputable def constantDeviationDistribution (G : KernelGame ι)
+    [DecidableEq ι]
     (μ : PMF (Profile G)) (who : ι) (s' : G.Strategy who) : PMF (Profile G) :=
   G.deviationDistribution μ (G.constantDeviation who s')
 

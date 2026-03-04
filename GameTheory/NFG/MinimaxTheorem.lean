@@ -32,7 +32,7 @@ namespace KernelGame
 set_option linter.unusedFintypeInType false in
 /-- Zero-sum is preserved under mixed extension (same outcome space and utility). -/
 theorem mixedExtension_isZeroSum {ι : Type} [Fintype ι] {G : KernelGame ι}
-    [∀ i, Fintype (G.Strategy i)] (hzs : G.IsZeroSum) :
+    [DecidableEq ι] [∀ i, Fintype (G.Strategy i)] (hzs : G.IsZeroSum) :
     G.mixedExtension.IsZeroSum :=
   hzs
 

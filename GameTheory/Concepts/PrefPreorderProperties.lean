@@ -19,7 +19,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 /-- The EU preference is a `PrefPreorder`: reflexive and transitive. -/
 instance euPref_isPrefPreorder (G : KernelGame ι) : PrefPreorder (G.euPref) where

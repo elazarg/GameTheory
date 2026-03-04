@@ -91,6 +91,9 @@ noncomputable def correlatedOutcome (F : GameForm ι)
 -- Derivable protocol operations
 -- ============================================================================
 
+section UpdateOps
+variable [DecidableEq ι]
+
 open Classical in
 /-- Unilateral deviation: replace player `who`'s strategy in profile `σ`. -/
 noncomputable def deviateProfile (F : GameForm ι) (σ : F.Profile)
@@ -155,6 +158,8 @@ open Classical in
     F.constDeviateDistributionFn (PMF.pure σ) who s' =
       PMF.pure (Function.update σ who s') := by
   simp [constDeviateDistributionFn]
+
+end UpdateOps
 
 -- ============================================================================
 -- Bridge to KernelGame
@@ -418,6 +423,9 @@ def IsDeviationEqFamilyFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (μ : PMF F.Profile) (Δ : ProfileDeviationFamily F) : Prop :=
   ∀ who : ι, F.NoProfitableProfileDeviationFor pref who μ (Δ.deviate μ who)
+
+section PreferenceUpdate
+variable [DecidableEq ι]
 
 /-- Recommendation-dependent unilateral deviations (CE family). -/
 noncomputable def recommendationDeviationFamily (F : GameForm ι) : ProfileDeviationFamily F where
@@ -696,6 +704,7 @@ theorem IsStrictNashFor.isNashFor {F : GameForm ι}
       himpl who _ _ hs
     exact hp
 
+omit [DecidableEq ι] in
 /-- No profile Pareto-dominates itself (given `spref` is irreflexive). -/
 theorem ParetoDominatesFor.irrefl {F : GameForm ι}
     {pref spref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
@@ -704,6 +713,7 @@ theorem ParetoDominatesFor.irrefl {F : GameForm ι}
   intro ⟨_, ⟨i, hi⟩⟩
   exact hirr i _ hi
 
+omit [DecidableEq ι] in
 /-- Pareto dominance is asymmetric (given strict preference contradicts reverse weak). -/
 theorem ParetoDominatesFor.asymm {F : GameForm ι}
     {pref spref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
@@ -729,6 +739,8 @@ theorem deviateDistributionFn_id (F : GameForm ι) (μ : PMF F.Profile) (who : �
   simp only [deviateDistributionFn, deviateProfileFn, _root_.id]
   conv_lhs => arg 2; ext σ; rw [Function.update_eq_self]
   exact PMF.bind_pure μ
+
+end PreferenceUpdate
 
 end GameForm
 

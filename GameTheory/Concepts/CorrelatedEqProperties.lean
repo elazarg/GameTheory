@@ -17,7 +17,7 @@ namespace GameTheory
 open Math.Probability
 namespace KernelGame
 
-variable {ι : Type} {G : KernelGame ι}
+variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
 /-- Every correlated equilibrium is a coarse correlated equilibrium.
 

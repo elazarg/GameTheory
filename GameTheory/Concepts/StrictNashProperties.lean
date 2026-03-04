@@ -17,7 +17,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type} {G : KernelGame ι}
+variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
 /-- If every player has a strictly dominant strategy and plays it, the resulting
     profile is a strict Nash equilibrium. -/

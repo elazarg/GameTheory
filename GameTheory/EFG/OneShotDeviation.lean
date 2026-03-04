@@ -67,10 +67,7 @@ theorem spe_hasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
       (KernelGame.euPref G.toStrategicKernelGame) σ).1 (hspe _ hSub)
     have h := h' p (Function.update (σ p) I a')
     simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-      evalDist_decision, pureToBehavioral,
-      Math.Function.Update.update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
-        (fun a b => Classical.propDecidable (a = b)) σ p (Function.update (σ p) I a')]
-      using h
+      evalDist_decision, pureToBehavioral] using h
   -- Simplify both sides
   have hEvalL : (.decision I next : GameTree G.inf G.Outcome).evalDist (pureToBehavioral σ) =
       (next (σ p I)).evalDist (pureToBehavioral σ) := by
@@ -136,9 +133,7 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
       have hpoint : ∀ b : Fin k,
           expect ((next b).evalDist (pureToBehavioral σ)) (fun ω => G.utility ω who) ≥
           expect ((next b).evalDist
-            (pureToBehavioral (@Function.update G.inf.Player
-              (fun p => PureStrategy G.inf p)
-              (fun a b => Classical.propDecidable (a = b)) σ who s')))
+            (pureToBehavioral (Function.update σ who s')))
             (fun ω => G.utility ω who) := by
         intro b
         have hNnext' := ((G.withTree (next b)).toStrategicKernelGame.toGameForm.isNashFor_iff
@@ -146,14 +141,10 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
         have hb := hNnext' who s'
         simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] using hb
       simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-        evalDist_chance, expect_bind,
-        Math.Function.Update.update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
-          (fun a b => Classical.propDecidable (a = b)) σ who s'] using
+        evalDist_chance, expect_bind] using
         (Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
           (fun b => expect ((next b).evalDist
-            (pureToBehavioral (@Function.update G.inf.Player
-              (fun p => PureStrategy G.inf p)
-              (fun a b => Classical.propDecidable (a = b)) σ who s')))
+            (pureToBehavioral (Function.update σ who s')))
             (fun ω => G.utility ω who))
           (fun b => expect ((next b).evalDist (pureToBehavioral σ))
             (fun ω => G.utility ω who))
@@ -194,9 +185,7 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
           have hNashSub' := ((G.withTree (next aDev)).toStrategicKernelGame.toGameForm.isNashFor_iff
             (KernelGame.euPref G.toStrategicKernelGame) σ).1 hNashSub
           have hb := hNashSub' p s'p
-          simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-            Math.Function.Update.update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
-              (fun a b => Classical.propDecidable (a = b)) σ p s'p] using hb
+          simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] using hb
         -- Step 3: Evaluation at root and with deviation
         have hRootL :
             expect ((GameTree.decision I next).evalDist (pureToBehavioral σ))
@@ -230,9 +219,8 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
               (fun a => (next a).evalDist (pureToBehavioral σ)))
               (fun ω => G.utility ω p) := by
           simpa [hUpd] using hMain
-        simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-          hwho, Math.Function.Update.update_eq_update_of_decEq (instDecidableEqFin G.inf.n)
-            (fun a b => Classical.propDecidable (a = b)) σ who s'] using hMain'
+        simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree, hwho]
+          using hMain'
       · -- Deviator is NOT the deciding player
         have hNashOpt :
             (G.withTree (next (σ p I))).toStrategicKernelGame.IsNashFor

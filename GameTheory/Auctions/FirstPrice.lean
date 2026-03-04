@@ -88,41 +88,33 @@ theorem firstPrice_no_dominant_strategy_ofEU
     (v : Fin n → ℝ) (who : Fin n) (b : ℝ) :
     ¬ (KernelGame.ofEU (fun _ : Fin n => ℝ) (firstPricePayoff v)).IsDominant who b := by
   intro hdom
-  classical
-  let upd : (Fin n → ℝ) → Fin n → ℝ → Fin n → ℝ :=
-    fun σ i s => @Function.update (Fin n) (fun _ => ℝ)
-      (fun a b => Classical.propDecidable (a = b)) σ i s
   have hdom' := (ofEU_isDominant_iff (fun _ : Fin n => ℝ) (firstPricePayoff v) who b).1 hdom
   let σ : Fin n → ℝ := fun _ => b - 2
   have h := hdom' σ (b - 1)
   -- Identify winners in both compared profiles.
-  have hWb : who = winner (upd σ who b) := by
-    apply eq_winner_of_bid_gt (bids := upd σ who b) who
+  have hWb : who = winner (Function.update σ who b) := by
+    apply eq_winner_of_bid_gt (bids := Function.update σ who b) who
     intro j hj
-    simp [σ, upd, hj]
-  have hWb1 : who = winner (upd σ who (b - 1)) := by
-    apply eq_winner_of_bid_gt (bids := upd σ who (b - 1)) who
+    simp [σ, Function.update, hj]
+  have hWb1 : who = winner (Function.update σ who (b - 1)) := by
+    apply eq_winner_of_bid_gt (bids := Function.update σ who (b - 1)) who
     intro j hj
-    simp [σ, upd, hj]
-  have hupd_b : upd σ who b who = b := by
-    simp [upd]
-  have hupd_b1 : upd σ who (b - 1) who = b - 1 := by
-    simp [upd]
+    simp [σ, Function.update, hj]
   -- Rewrite payoffs in the two compared profiles.
   have hL :
-      firstPricePayoff v (upd σ who b) who = v who - b := by
-    simpa [hupd_b] using firstPricePayoff_winner v (upd σ who b) who hWb
+      firstPricePayoff v (Function.update σ who b) who = v who - b := by
+    simpa [Function.update] using firstPricePayoff_winner v (Function.update σ who b) who hWb
   have hR :
-      firstPricePayoff v (upd σ who (b - 1)) who = v who - (b - 1) := by
-    simpa [hupd_b1] using
-      firstPricePayoff_winner v (upd σ who (b - 1)) who hWb1
+      firstPricePayoff v (Function.update σ who (b - 1)) who = v who - (b - 1) := by
+    simpa [Function.update] using
+      firstPricePayoff_winner v (Function.update σ who (b - 1)) who hWb1
   rw [ge_iff_le] at h
   have hnum : v who - (b - 1) ≤ v who - b := by
     calc
-      v who - (b - 1) = firstPricePayoff v (upd σ who (b - 1)) who := by
+      v who - (b - 1) = firstPricePayoff v (Function.update σ who (b - 1)) who := by
         symm
         exact hR
-      _ ≤ firstPricePayoff v (upd σ who b) who := h
+      _ ≤ firstPricePayoff v (Function.update σ who b) who := h
       _ = v who - b := hL
   linarith [hnum]
 

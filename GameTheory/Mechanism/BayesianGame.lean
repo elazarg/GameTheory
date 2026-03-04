@@ -52,7 +52,7 @@ attribute [instance] BayesianGame.instFintypeΘ BayesianGame.instNonemptyΘ
 
 namespace BayesianGame
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-- A (pure) strategy in a Bayesian game: a map from own type to action. -/
 abbrev Strategy (B : BayesianGame ι) (i : ι) := B.Θ i → B.Act i

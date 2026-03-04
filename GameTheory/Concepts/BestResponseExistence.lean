@@ -19,7 +19,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type} {G : KernelGame ι}
+variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
 set_option linter.unusedFintypeInType false in
 open Classical in

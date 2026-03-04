@@ -24,7 +24,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type} (G : KernelGame ι)
+variable {ι : Type} [DecidableEq ι] (G : KernelGame ι)
 
 /-- A game is dominance-solvable if every player has a strictly dominant strategy. -/
 def IsDominanceSolvable : Prop :=

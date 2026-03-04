@@ -19,7 +19,7 @@ namespace GameTheory
 open Math.Probability
 namespace KernelGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 /-- If every player has a dominant strategy, the profile of dominant strategies
     is a Nash equilibrium. Constructs the profile via `Classical.choice`. -/

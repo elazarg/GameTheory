@@ -21,7 +21,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 open Classical in
 /-- Nash equilibrium ↔ every player plays a best response to the profile. -/
@@ -74,7 +74,7 @@ theorem isNash_iff_no_improving_unilateralDeviation (G : KernelGame ι) {σ : Pr
     matching the profile to the dominant strategies. -/
 theorem isNash_of_allDominant (G : KernelGame ι) {σ : Profile G}
     (h : ∀ i, G.IsDominant i (σ i)) : G.IsNash σ :=
-  @dominant_is_nash _ G _ h
+  G.dominant_is_nash σ h
 
 open Classical in
 /-- Nash is preserved by a player replacing their strategy with another

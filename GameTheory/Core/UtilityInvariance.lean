@@ -25,7 +25,7 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 /-- Affine transformation of utilities preserves Nash equilibria.
 
@@ -77,4 +77,3 @@ theorem ofEU_nash_scale (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
   · intro hN who s'; have := hN who s'; nlinarith
 
 end GameTheory
-

@@ -36,7 +36,7 @@ open Math.Probability
 namespace KernelGame
 open Math.PMFProduct
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 -- ============================================================================
 -- Mixed extension of a KernelGame
@@ -87,7 +87,6 @@ theorem mixedExtension_eu_update (G : KernelGame ι)
       τ.bind (fun a => pmfPi (Function.update σ who (PMF.pure a))) := by
     ext s
     simp only [PMF.bind_apply, tsum_fintype]
-    rw [pmfPi_apply_update_family]
     simp only [pmfPi_apply_update_family, PMF.pure_apply, ite_mul, one_mul, zero_mul,
       mul_ite, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
   rw [hprod, expect_bind]
@@ -449,9 +448,7 @@ theorem continuous_mixedGainOnMixedSimplex_of_continuous_mixedEu
     (hdev : ∀ who (a : G.Strategy who),
       Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
-          (@Function.update ι G.mixedExtension.Strategy
-            (fun u v => Classical.propDecidable (u = v))
-            (G.profileFromMixedSimplex x) who (PMF.pure a)) who)) :
+          (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who)) :
     ∀ who (a : G.Strategy who),
       Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedGainOnMixedSimplex x who a) := by
@@ -495,7 +492,6 @@ theorem continuous_mixedExtension_eu_profileFromMixedSimplex
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu (G.profileFromMixedSimplex x) who) := by
   classical
-  letI : DecidableEq ι := Classical.decEq ι
   -- Expand EU under mixed extension into a finite weighted sum over pure profiles.
   have hsum :
       (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
@@ -530,17 +526,12 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
     (who : ι) (a : G.Strategy who) :
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu
-        (@Function.update ι G.mixedExtension.Strategy
-          (fun u v => Classical.propDecidable (u = v))
-          (G.profileFromMixedSimplex x) who (PMF.pure a)) who) := by
+        (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who) := by
   classical
-  letI : DecidableEq ι := Classical.decEq ι
   have hsum :
       (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
-          (@Function.update ι G.mixedExtension.Strategy
-            (fun u v => Classical.propDecidable (u = v))
-            (G.profileFromMixedSimplex x) who (PMF.pure a)) who)
+          (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who)
       =
       (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         ∑ s : (∀ i, G.Strategy i),
@@ -548,17 +539,13 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
             (∏ i ∈ (Finset.univ.erase who), x i (s i))) * G.eu s who) := by
     funext x
     rw [G.mixedExtension_eu
-      (σ := @Function.update ι G.mixedExtension.Strategy
-        (fun u v => Classical.propDecidable (u = v))
-        (G.profileFromMixedSimplex x) who (PMF.pure a)) who]
+      (σ := Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who]
     rw [expect_eq_sum]
     refine Finset.sum_congr rfl ?_
     intro s hs
     have hcoef :
         ((pmfPi
-          (@Function.update ι G.mixedExtension.Strategy
-            (fun u v => Classical.propDecidable (u = v))
-            (G.profileFromMixedSimplex x) who (PMF.pure a)) s).toReal)
+          (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) s).toReal)
           =
         (((PMF.pure a) (s who)).toReal) *
           (∏ i ∈ (Finset.univ.erase who), x i (s i)) := by
@@ -647,9 +634,7 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedEu
     (hdev : ∀ who (a : G.Strategy who),
       Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
-          (@Function.update ι G.mixedExtension.Strategy
-            (fun u v => Classical.propDecidable (u = v))
-            (G.profileFromMixedSimplex x) who (PMF.pure a)) who)) :
+          (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who)) :
     Continuous (G.nashMapOnMixedSimplex) := by
   refine G.continuous_nashMapOnMixedSimplex_of_continuous_mixedGainOnMixedSimplex ?_
   exact G.continuous_mixedGainOnMixedSimplex_of_continuous_mixedEu hbase hdev
@@ -675,9 +660,7 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedEu_deviation
     (hdev : ∀ who (a : G.Strategy who),
       Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedExtension.eu
-          (@Function.update ι G.mixedExtension.Strategy
-            (fun u v => Classical.propDecidable (u = v))
-            (G.profileFromMixedSimplex x) who (PMF.pure a)) who)) :
+          (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who)) :
     Continuous (G.nashMapOnMixedSimplex) := by
   refine G.continuous_nashMapOnMixedSimplex_of_continuous_mixedEu ?_ hdev
   exact G.continuous_mixedExtension_eu_profileFromMixedSimplex

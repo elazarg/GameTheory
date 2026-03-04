@@ -32,8 +32,9 @@ open Math.Probability
 namespace KernelGame
 open Math.PMFProduct
 
-variable {ι : Type} {G : KernelGame ι}
+variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
+omit [DecidableEq ι] in
 /-- Correlated EU under a point-mass distribution equals the standard EU. -/
 theorem correlatedEu_pure (σ : Profile G) (who : ι) :
     G.correlatedEu (PMF.pure σ) who = G.eu σ who := by
@@ -74,6 +75,7 @@ theorem unilateralDeviationDistribution_pmfPi
   exact pmfPi_bind_update_map σ who dev
 
 set_option linter.unusedFintypeInType false in
+omit [DecidableEq ι] in
 /-- Correlated EU is the expectation of standard EU over the profile
     distribution. -/
 theorem correlatedEu_eq_expect_eu [Fintype (Profile G)] [Fintype G.Outcome]

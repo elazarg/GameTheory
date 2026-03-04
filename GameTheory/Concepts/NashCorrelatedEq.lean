@@ -22,7 +22,7 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 namespace KernelGame
 

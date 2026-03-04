@@ -27,7 +27,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type} (G : KernelGame ι)
+variable {ι : Type} [DecidableEq ι] (G : KernelGame ι)
 
 /-- Swap regret: expected gain from deviation `dev` for player `who`
     under correlated distribution `μ`. Positive regret means the deviation

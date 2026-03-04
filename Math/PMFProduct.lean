@@ -780,7 +780,7 @@ end Disintegration
 
 section UpdateLemmas
 
-variable {ι : Type uι} [Fintype ι]
+variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 variable {β : Type uβ}
 

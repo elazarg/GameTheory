@@ -22,6 +22,19 @@ Scope is intentionally discrete:
 - expected utility is over finite supports,
 - no continuous strategy spaces or measure-theoretic probability.
 
+## Update/Decidability Policy
+
+For any definition or theorem whose statement uses `Function.update`, this
+library now requires an explicit `DecidableEq` instance on the index type
+(typically `[DecidableEq ι]`). This matches mathlib practice and avoids
+instance-coherence mismatches between `Classical.propDecidable` and concrete
+instances (for example `instDecidableEqFin`).
+
+Practical rule:
+- use explicit `[DecidableEq ι]` at the statement boundary;
+- use `classical` only for genuine choice/noncomputable reasoning, not to
+  provide hidden decidability for `update`.
+
 ## What This Library Is
 
 At the center is a stochastic strategic-form object (`KernelGame`) that

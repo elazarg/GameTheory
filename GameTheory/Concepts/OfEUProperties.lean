@@ -22,20 +22,20 @@ open Math.Probability
 
 variable {ι : Type}
 
-open Classical in
 /-- Nash equilibrium for an `ofEU` game reduces to a direct inequality
     on the utility function: no player can improve by unilateral deviation. -/
-theorem ofEU_isNash_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ : ∀ i, S i) :
+theorem ofEU_isNash_iff [DecidableEq ι]
+    (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsNash σ ↔
       ∀ (who : ι) (s' : S who), u σ who ≥ u (Function.update σ who s') who := by
   unfold KernelGame.IsNash
   simp only [KernelGame.eu_ofEU]
   rfl
 
-open Classical in
 /-- Dominant strategy for an `ofEU` game reduces to a direct inequality
     on the utility function for all opponent profiles. -/
-theorem ofEU_isDominant_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (who : ι) (s : S who) :
+theorem ofEU_isDominant_iff [DecidableEq ι]
+    (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (who : ι) (s : S who) :
     (KernelGame.ofEU S u).IsDominant who s ↔
       ∀ (σ : ∀ i, S i) (s' : S who),
         u (Function.update σ who s) who ≥ u (Function.update σ who s') who := by
@@ -43,10 +43,10 @@ theorem ofEU_isDominant_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (
   simp only [KernelGame.eu_ofEU]
   rfl
 
-open Classical in
 /-- Best response for an `ofEU` game reduces to a direct inequality
     on the utility function against all alternative strategies. -/
-theorem ofEU_isBestResponse_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
+theorem ofEU_isBestResponse_iff [DecidableEq ι]
+    (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     (who : ι) (σ : ∀ i, S i) (s : S who) :
     (KernelGame.ofEU S u).IsBestResponse who σ s ↔
       ∀ (s' : S who),
@@ -55,10 +55,10 @@ theorem ofEU_isBestResponse_iff (S : ι → Type) (u : (∀ i, S i) → Payoff �
   simp only [KernelGame.eu_ofEU]
   rfl
 
-open Classical in
 /-- Strict Nash equilibrium for an `ofEU` game reduces to a strict inequality
     on the utility function for every non-trivial unilateral deviation. -/
-theorem ofEU_isStrictNash_iff (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ : ∀ i, S i) :
+theorem ofEU_isStrictNash_iff [DecidableEq ι]
+    (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsStrictNash σ ↔
       ∀ (who : ι) (s' : S who), s' ≠ σ who →
         u σ who > u (Function.update σ who s') who := by

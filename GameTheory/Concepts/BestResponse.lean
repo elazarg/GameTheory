@@ -19,7 +19,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 /-- A profile is Nash iff every player plays a best response to the others' strategies. -/
 theorem isNash_iff_bestResponse (G : KernelGame ι) (σ : Profile G) :

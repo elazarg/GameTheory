@@ -18,22 +18,23 @@ namespace GameTheory
 open Math.Probability
 namespace KernelGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 /-- An exact potential game is an ordinal potential game.
     Proof: the exact potential property gives `eu_diff = Φ_diff`,
     so `eu_diff > 0 ↔ Φ_diff > 0` follows immediately. -/
 theorem IsExactPotential.toOrdinal {G : KernelGame ι} {Φ : Profile G → ℝ}
     (hΦ : G.IsExactPotential Φ) : G.IsOrdinalPotential Φ := by
-  classical
   intro who σ s'
   have h := hΦ who σ s'
   constructor
   · intro heu
-    have : G.eu (Function.update σ who s') who - G.eu σ who > 0 := sub_pos.mpr heu
+    have : G.eu (Function.update σ who s') who - G.eu σ who > 0 := by
+      exact sub_pos.mpr (by simpa [gt_iff_lt] using heu)
     linarith
   · intro hphi
-    have : Φ (Function.update σ who s') - Φ σ > 0 := sub_pos.mpr hphi
+    have : Φ (Function.update σ who s') - Φ σ > 0 := by
+      exact sub_pos.mpr (by simpa [gt_iff_lt] using hphi)
     linarith
 
 /-- If `Φ` is an exact potential for `G` and `σ` maximizes `Φ`, then `σ` is Nash.
@@ -42,10 +43,14 @@ theorem IsExactPotential.toOrdinal {G : KernelGame ι} {Φ : Profile G → ℝ}
 theorem IsExactPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G → ℝ}
     (hΦ : G.IsExactPotential Φ) {σ : Profile G}
     (hmax : ∀ τ : Profile G, Φ σ ≥ Φ τ) : G.IsNash σ := by
-  classical
   intro who s'
-  have hpot := hΦ who σ s'
   have hle := hmax (Function.update σ who s')
+  by_contra hnot
+  have hgt : G.eu (Function.update σ who s') who > G.eu σ who := by
+    linarith
+  have hphi : Φ (Function.update σ who s') > Φ σ := by
+    have hpot := hΦ who σ s'
+    linarith
   linarith
 
 /-- If `Φ` is an ordinal potential for `G` and `σ` maximizes `Φ`, then `σ` is Nash.
@@ -55,11 +60,10 @@ theorem IsExactPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G �
 theorem IsOrdinalPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G → ℝ}
     (hΦ : G.IsOrdinalPotential Φ) {σ : Profile G}
     (hmax : ∀ τ : Profile G, Φ σ ≥ Φ τ) : G.IsNash σ := by
-  classical
   by_contra hnn
   simp only [IsNash, not_forall, not_le] at hnn
   obtain ⟨who, s', hdev⟩ := hnn
-  have hphi := (hΦ who σ s').mp hdev
+  have hphi := (hΦ who σ s').mp (by simpa [gt_iff_lt] using hdev)
   have hle := hmax (Function.update σ who s')
   linarith
 
@@ -74,13 +78,15 @@ theorem IsOrdinalPotential.isNash_iff_local_maximizer
   · intro hN who s'
     by_contra h
     push_neg at h
-    have := (hΦ who σ s').mpr h
+    have : G.eu (Function.update σ who s') who > G.eu σ who := by
+      exact (hΦ who σ s').mpr (by simpa [gt_iff_lt] using h)
     have := hN who s'
     linarith
   · intro hmax who s'
     by_contra h
     push_neg at h
-    have := (hΦ who σ s').mp h
+    have : Φ (Function.update σ who s') > Φ σ := by
+      exact (hΦ who σ s').mp (by simpa [gt_iff_lt] using h)
     have := hmax who s'
     linarith
 

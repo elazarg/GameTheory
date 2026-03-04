@@ -30,7 +30,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 
 open Classical in
 /-- A strategy survives round `n` of iterated strict dominance elimination.

@@ -32,12 +32,13 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type} [Fintype ι] (G : KernelGame ι)
+variable {ι : Type} [Fintype ι] [DecidableEq ι] (G : KernelGame ι)
 
 /-- The optimal social welfare achievable by any profile. -/
 noncomputable def optimalWelfare : ℝ :=
   ⨆ σ : Profile G, G.socialWelfare σ
 
+omit [DecidableEq ι] in
 /-- Social welfare of any profile is at most optimal welfare
     (when the supremum is bounded). -/
 theorem welfare_le_optimal (σ : Profile G)

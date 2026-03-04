@@ -18,7 +18,7 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type}
+variable {ι : Type} [DecidableEq ι]
 variable {G : KernelGame ι}
 
 /-- A strictly dominant strategy is also (weakly) dominant. -/

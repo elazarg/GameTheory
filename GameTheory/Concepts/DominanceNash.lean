@@ -20,7 +20,7 @@ namespace GameTheory
 open Math.Probability
 namespace KernelGame
 
-variable {ι : Type} {G : KernelGame ι}
+variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
 /-- If strategy `s` is never a best response (against any profile), then no
     Nash equilibrium plays `s`. -/

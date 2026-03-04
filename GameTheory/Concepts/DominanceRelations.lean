@@ -20,7 +20,7 @@ namespace GameTheory
 open Math.Probability
 namespace KernelGame
 
-variable {ι : Type} {G : KernelGame ι}
+variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
 /-- Weak dominance is reflexive: every strategy weakly dominates itself.
     Derives from `GameForm.WeaklyDominatesFor.refl` via the EU bridge. -/
