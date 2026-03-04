@@ -1,6 +1,6 @@
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
-import GameTheory.EFG.EFG
+import GameTheory.EFG.Basic
 import GameTheory.Bridge.EFG_NFG
 
 /-!

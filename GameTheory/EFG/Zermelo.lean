@@ -1,4 +1,5 @@
-import GameTheory.OneShotDeviation
+import GameTheory.EFG.OneShotDeviation
+import Math.Probability
 
 /-!
 # Zermelo's Backward Induction Theorem
@@ -22,6 +23,7 @@ backward induction, then applies the one-shot deviation principle.
 namespace EFG
 
 open GameTheory
+open Math.Probability
 
 -- ============================================================================
 -- Disjointness of info-sets in sibling subtrees (perfect info)

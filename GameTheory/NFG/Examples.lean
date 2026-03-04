@@ -1,4 +1,4 @@
-import GameTheory.NFG.NFG
+import GameTheory.NFG.Basic
 import Mathlib.Tactic.Linarith
 
 /-!

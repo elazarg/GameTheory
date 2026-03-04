@@ -5,6 +5,7 @@ import GameTheory.Core.KernelGame
 -- Game form (protocol layer without utility)
 import GameTheory.Core.GameForm
 import GameTheory.Sequential.SeqProto
+import GameTheory.Sequential.TraceKernelGame
 import GameTheory.Sequential.ProtoSPE
 import GameTheory.Sequential.ProtoODP
 import GameTheory.Sequential.ProtoZermelo
@@ -62,7 +63,7 @@ import GameTheory.NFG.ConstantSum
 import GameTheory.NFG.ConstantSumNash
 import GameTheory.NFG.Minimax
 import GameTheory.NFG.MinimaxTheorem
-import GameTheory.TwoPlayerGame
+import GameTheory.NFG.TwoPlayerGame
 
 -- Symmetric games
 import GameTheory.NFG.SymmetricGame
@@ -77,42 +78,44 @@ import GameTheory.NFG.TeamGameNash
 import GameTheory.NFG.PotentialTeam
 
 -- Extensive-form games
-import GameTheory.EFG.EFG
+import GameTheory.EFG.Basic
 import GameTheory.EFG.Kuhn
+import GameTheory.EFG.Zermelo
+import GameTheory.EFG.OneShotDeviation
 import GameTheory.Bridge.EFG_NFG
 import GameTheory.EFG.Refinements
 import GameTheory.Bridge.EFG_Proto
 
 -- Normal-form games
-import GameTheory.NFG.NFG
+import GameTheory.NFG.Basic
 import GameTheory.Bridge.NFG_EFG
 import GameTheory.Bridge.NFG_Proto
 
 -- Multi-agent influence diagrams
-import GameTheory.MAID.MAID
+import GameTheory.MAID.Basic
 import GameTheory.Bridge.MAID_EFG
 import GameTheory.Bridge.MAID_Proto
 
 -- Coalitional, bargaining, and matching games
-import GameTheory.CoalitionalGame
-import GameTheory.Bargaining
-import GameTheory.Matching
+import GameTheory.NFG.CoalitionalGame
+import GameTheory.NFG.Bargaining
+import GameTheory.NFG.Matching
 
 -- Repeated and stochastic games
-import GameTheory.RepeatedGame
-import GameTheory.StochasticGame
+import GameTheory.Sequential.RepeatedGame
+import GameTheory.Sequential.StochasticGame
 
 -- Bayesian games and mechanism design
-import GameTheory.BayesianGame
-import GameTheory.MechanismDesign
-import GameTheory.RevelationPrinciple
+import GameTheory.Mechanism.BayesianGame
+import GameTheory.Mechanism.MechanismDesign
+import GameTheory.Mechanism.RevelationPrinciple
 
 -- Social choice and information
-import GameTheory.SocialChoice
-import GameTheory.CommonKnowledge
+import GameTheory.Mechanism.SocialChoice
+import GameTheory.Concepts.CommonKnowledge
 
 -- Evolutionary game theory
-import GameTheory.EvolutionaryStability
+import GameTheory.NFG.EvolutionaryStability
 
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic
@@ -121,10 +124,10 @@ import GameTheory.Auctions.VCG
 import GameTheory.Auctions.AllPay
 
 -- Stackelberg games
-import GameTheory.Stackelberg
+import GameTheory.NFG.Stackelberg
 
 -- Public goods
-import GameTheory.PublicGoods
+import GameTheory.NFG.PublicGoods
 
 -- Examples
 import GameTheory.NFG.Examples

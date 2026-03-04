@@ -1,4 +1,4 @@
-import GameTheory.MAID.MAID
+import GameTheory.MAID.Basic
 import GameTheory.Sequential.SeqProto
 
 /-!

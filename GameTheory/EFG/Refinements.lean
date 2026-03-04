@@ -1,4 +1,4 @@
-import GameTheory.EFG.EFG
+import GameTheory.EFG.Basic
 import GameTheory.Bridge.EFG_NFG
 import Mathlib.Tactic.Linarith
 

@@ -1,4 +1,4 @@
-import GameTheory.BayesianGame
+import GameTheory.Mechanism.BayesianGame
 import Math.Probability
 import Math.ProbabilityMassFunction
 

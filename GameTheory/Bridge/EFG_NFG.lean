@@ -1,5 +1,5 @@
-import GameTheory.NFG.NFG
-import GameTheory.EFG.EFG
+import GameTheory.NFG.Basic
+import GameTheory.EFG.Basic
 
 /-!
 # EFG → Strategic Form

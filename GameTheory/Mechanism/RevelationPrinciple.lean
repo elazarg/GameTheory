@@ -1,4 +1,4 @@
-import GameTheory.MechanismDesign
+import GameTheory.Mechanism.MechanismDesign
 import Math.Probability
 
 /-!

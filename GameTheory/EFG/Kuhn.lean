@@ -2,7 +2,7 @@ import Mathlib.Data.Fintype.Basic
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
-import GameTheory.EFG.EFG
+import GameTheory.EFG.Basic
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
 
@@ -968,17 +968,7 @@ theorem kuhn_behavioral_to_mixed_udist (G : EFGGame)
     simp only [KernelGame.udist, EFGGame.toKernelGame]
     rw [← hμ, PMF.bind_bind]⟩
 
-end EFG
-
-
 /-! Additional mixed-to-behavioral section (merged from former KuhnFull). -/
-
-namespace EFG
-
-open scoped BigOperators
-open Math.PMFProduct
-
-variable {S : InfoStructure} {Outcome : Type}
 
 
 instance (p : S.Player) : DecidableEq (PureStrategy S p) :=

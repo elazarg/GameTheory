@@ -1,10 +1,10 @@
-import GameTheory.MAID.MAID
-import GameTheory.EFG.EFG
+import GameTheory.MAID.Basic
+import GameTheory.EFG.Basic
 
 /-!
 # MAID → EFG Reduction
 
-Converts a typed MAID (`GameTheory.MAID.MAID`) into an extensive-form game (`GameTheory.EFG.EFG`)
+Converts a typed MAID (`GameTheory.MAID.Basic`) into an extensive-form game (`GameTheory.EFG.Basic`)
 by unrolling the topological order into a game tree.
 
 ## Sections

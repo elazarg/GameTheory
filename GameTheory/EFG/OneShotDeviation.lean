@@ -1,5 +1,6 @@
 import GameTheory.EFG.Refinements
 import Math.FunctionUpdate
+import Math.Probability
 import Math.ProbabilityMassFunction
 import Mathlib.Tactic.Linarith
 
@@ -24,6 +25,7 @@ one-shot deviation at any decision node.
 namespace EFG
 
 open GameTheory
+open Math.Probability
 
 -- ============================================================================
 -- No profitable one-shot deviation
