@@ -54,7 +54,7 @@ namespace GameTheory
 open Math.Probability
 
 -- ============================================================================
--- Section 1: GameForm structure
+-- GameForm structure
 -- ============================================================================
 
 /-- A game form: the protocol layer of a game, without utility.
@@ -88,7 +88,7 @@ noncomputable def correlatedOutcome (F : GameForm ι)
   simp [correlatedOutcome]
 
 -- ============================================================================
--- Section 2: Derivable protocol operations
+-- Derivable protocol operations
 -- ============================================================================
 
 open Classical in
@@ -127,7 +127,7 @@ open Classical in
   simp [deviateOutcome]
 
 -- ============================================================================
--- Section 2b: Function-based deviation (for correlated equilibrium)
+-- Function-based deviation (for correlated equilibrium)
 -- ============================================================================
 
 open Classical in
@@ -157,7 +157,7 @@ open Classical in
   simp [constDeviateDistributionFn]
 
 -- ============================================================================
--- Section 3: Bridge to KernelGame
+-- Bridge to KernelGame
 -- ============================================================================
 
 /-- Attach a utility function to a game form to get a full kernel game. -/
@@ -217,7 +217,7 @@ variable {ι : Type}
   cases F; rfl
 
 -- ============================================================================
--- Section 4: Functorial operations
+-- Functorial operations
 -- ============================================================================
 
 /-- Push outcomes through a function. Strategies and kernel structure unchanged;
@@ -248,7 +248,7 @@ theorem map_comp (F : GameForm ι) (f : F.Outcome → β) (g : β → γ) :
   simp [map, PMF.bind_bind, PMF.pure_bind]
 
 -- ============================================================================
--- Section 5: Product of game forms
+-- Product of game forms
 -- ============================================================================
 
 /-- Independent product of two game forms: players choose a strategy pair,
@@ -278,7 +278,7 @@ theorem product_map_snd (F₁ F₂ : GameForm ι) (σ : (F₁.product F₂).Prof
   simp [product, PMF.bind_bind, PMF.pure_bind]
 
 -- ============================================================================
--- Section 5b: Protocol maps (CT-oriented overlay)
+-- Protocol maps (CT-oriented overlay)
 -- ============================================================================
 
 /-- A protocol-preserving map between game forms.
@@ -349,7 +349,7 @@ theorem comp_assoc {F F' F'' F''' : GameForm ι}
 end ProtocolMap
 
 -- ============================================================================
--- Section 6: Pure behavior: preference preorder
+-- Pure behavior: preference preorder
 -- ============================================================================
 
 end GameForm
@@ -366,7 +366,7 @@ namespace GameForm
 variable {ι : Type}
 
 -- ============================================================================
--- Section 7: Preference-parameterized solution concepts on GameForm
+-- Preference-parameterized solution concepts on GameForm
 -- ============================================================================
 
 /-!
@@ -589,7 +589,7 @@ theorem isCoarseCorrelatedEqFor_iff (F : GameForm ι)
       using h who s'
 
 -- ============================================================================
--- Section 8: Properties of *For solution concepts
+-- Properties of *For solution concepts
 -- ============================================================================
 
 open Classical in
