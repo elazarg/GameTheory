@@ -59,13 +59,13 @@ theorem spe_hasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
   have hSub := perfectInfo_isSubgame_decision G.tree hpi I next hreach
   -- Extract Nash inequality with our local Function.update instance
   have hDecN : expect ((.decision I next : GameTree G.inf G.Outcome).evalDist
-        (pureToBehavioral σ)) (fun ω => G.utility ω p) ≥
-      expect ((.decision I next : GameTree G.inf G.Outcome).evalDist
-        (pureToBehavioral (Function.update σ p (Function.update (σ p) I a'))))
-        (fun ω => G.utility ω p) := by
+      (pureToBehavioral σ)) (fun ω => G.utility ω p) ≥
+    expect ((.decision I next : GameTree G.inf G.Outcome).evalDist
+      (pureToBehavioral (Function.update σ p (Function.update (σ p) I a'))))
+      (fun ω => G.utility ω p) := by
     have h := hspe _ hSub p (Function.update (σ p) I a')
-    simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-      evalDist_decision] at h
+    simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame,
+      EFGGame.withTree, GameForm.correlatedOutcome_pure, evalDist_decision] at h
     simp only [evalDist_decision, pureToBehavioral] at h ⊢
     rw [Math.Function.Update.update_eq_update_of_decEq] at h
     exact h
@@ -188,7 +188,8 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
               (pureToBehavioral (Function.update σ p s'p)))
               (fun ω => G.utility ω p) := by
           have hb := hNashSub p s'p
-          simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] at hb
+          simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame,
+            EFGGame.withTree, GameForm.correlatedOutcome_pure] at hb
           rw [Math.Function.Update.update_eq_update_of_decEq] at hb
           exact hb
         -- Step 3: Evaluation at root and with deviation

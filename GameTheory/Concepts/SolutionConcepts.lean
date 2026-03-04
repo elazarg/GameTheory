@@ -116,9 +116,15 @@ theorem KernelGame.IsNash_iff_IsNashFor_eu (G : KernelGame ι) (σ : KernelGame.
     G.IsNash σ ↔ G.IsNashFor G.euPref σ := by
   constructor
   · intro h who s'
-    exact h who s'
+    simpa [IsNashFor, GameForm.IsNashFor, GameForm.IsDeviationEqFor,
+      GameForm.NoProfitableProfileDeviationFor, GameForm.correlatedOutcome_pure,
+      KernelGame.euPref, KernelGame.eu]
+      using h who s'
   · intro h who s'
-    exact h who s'
+    simpa [IsNashFor, GameForm.IsNashFor, GameForm.IsDeviationEqFor,
+      GameForm.NoProfitableProfileDeviationFor, GameForm.correlatedOutcome_pure,
+      KernelGame.euPref, KernelGame.eu]
+      using h who s'
 
 /-- `IsDominant` is exactly `IsDominantFor` with EU preference. -/
 theorem KernelGame.IsDominant_iff_IsDominantFor_eu (G : KernelGame ι)
