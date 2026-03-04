@@ -101,9 +101,11 @@ theorem terminal_isNashFor_euPref {G : EFGGame} (z : G.Outcome)
     (σ : PureProfile G.inf) :
     (G.withTree (.terminal z)).toStrategicKernelGame.IsNashFor
       (KernelGame.euPref G.toStrategicKernelGame) σ := by
-  intro who _s'
-  simp [KernelGame.euPref, GameForm.correlatedOutcome_pure,
-    EFGGame.toStrategicKernelGame, EFGGame.withTree]
+  refine
+    (((G.withTree (.terminal z)).toStrategicKernelGame.toGameForm.isNashFor_iff
+      (KernelGame.euPref G.toStrategicKernelGame) σ).2 ?_)
+  intro who s'
+  simp [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree]
 
 -- ============================================================================
 -- Perfect information
@@ -329,11 +331,15 @@ theorem entryNash_not_spe : ¬ entryGame.IsSubgamePerfectEq entryNash := by
       | in_decision _ _ a hDeeper =>
         fin_cases a <;> exact absurd hDeeper (by intro h; cases h)
   have hNash := hSPE _ hSub
-  have h1 := hNash (1 : Fin 2) (fun _ => (0 : Fin 2))
+  have hNash' := ((entryGame.withTree
+      (.decision (p := (1 : Fin 2)) () fun
+        | 0 => .terminal (fun i => if i == (0 : Fin 2) then 2 else 2)
+        | 1 => .terminal (fun i => if i == (0 : Fin 2) then 0 else 0))
+      ).toStrategicKernelGame.toGameForm.isNashFor_iff
+      entryGame.toStrategicKernelGame.euPref entryNash).1 hNash
+  have h1 := hNash' (1 : Fin 2) (fun _ => (0 : Fin 2))
   simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-    pureToBehavioral, evalDist_decision, GameForm.correlatedOutcome_pure,
-    GameForm.constantDeviationProfileFamily_deviate,
-    GameForm.constDeviateDistributionFn_pure] at h1
+    pureToBehavioral, evalDist_decision] at h1
   simp [Function.update, entryNash, evalDist_terminal, expect_pure] at h1
   linarith
 
