@@ -1,5 +1,6 @@
 import GameTheory.MAID.Basic
 import GameTheory.EFG.Basic
+import GameTheory.EFG.Kuhn
 
 /-!
 # MAID → EFG Reduction
@@ -519,5 +520,54 @@ theorem buildTree_perfectRecall {S : MAID.Struct (Fin m) n}
   exact buildTree_playerHistory_eq sem pol hpr S.topoOrder S.topo_nodup
     ⟨[], by simp⟩ (MAID.defaultAssign S) (MAID.defaultAssign S)
     (fun _ _ _ => rfl) hr₁ hr₂
+
+-- ============================================================================
+-- Kuhn transfer (via MAID → EFG)
+-- ============================================================================
+
+open GameTheory in
+/-- Kuhn (behavioral → mixed) transferred to MAID via the MAID→EFG bridge.
+    For a MAID policy, there is a mixed profile over pure contingent plans
+    on the induced EFG that yields the same joint utility distribution. -/
+theorem kuhn_behavioral_to_mixed_udist
+    {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (hpr : MAID.Struct.PerfectRecall S) :
+    ∃ μ : PMF (EFG.FlatProfile (maidInfoS S)),
+      (MAID.toKernelGame S sem).udist pol =
+      μ.bind (fun s =>
+        (maidToEFG S sem pol).toKernelGame.udist (EFG.flatToBehavioral s)) := by
+  have hprEFG : EFG.PerfectRecall (maidToEFG S sem pol).tree :=
+    buildTree_perfectRecall hpr sem pol
+  obtain ⟨μ, hμ⟩ :=
+    EFG.kuhn_behavioral_to_mixed_udist
+      (G := maidToEFG S sem pol) (σ := toEFGProfile pol) hprEFG
+  refine ⟨μ, ?_⟩
+  calc
+    (MAID.toKernelGame S sem).udist pol
+        = (maidToEFG S sem pol).toKernelGame.udist (toEFGProfile pol) := by
+            symm
+            exact maidToEFG_udist sem pol
+    _ = μ.bind (fun s =>
+          (maidToEFG S sem pol).toKernelGame.udist (EFG.flatToBehavioral s)) := hμ.symm
+
+open GameTheory in
+/-- Kuhn (mixed → behavioral) transferred to MAID via the MAID→EFG bridge.
+    Any mixed profile over pure contingent plans on the induced EFG has an
+    equivalent behavioral profile with the same joint utility distribution. -/
+theorem kuhn_mixed_to_behavioral_udist
+    {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (hpr : MAID.Struct.PerfectRecall S)
+    (muP : EFG.MixedProfile (maidInfoS S)) :
+    ∃ σ : EFG.BehavioralProfile (maidInfoS S),
+      (maidToEFG S sem pol).toKernelGame.udist σ =
+      (EFG.mixedProfileJoint (S := maidInfoS S) muP).bind
+        (fun pi =>
+          (maidToEFG S sem pol).toKernelGame.udist (EFG.pureToBehavioral pi)) := by
+  have hprEFG : EFG.PerfectRecall (maidToEFG S sem pol).tree :=
+    buildTree_perfectRecall hpr sem pol
+  exact EFG.kuhn_mixed_to_behavioral_udist
+    (G := maidToEFG S sem pol) hprEFG muP
 
 end MAID_EFG
