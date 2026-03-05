@@ -38,6 +38,52 @@ theorem stepDist_depends_on_current_context
   funext i
   exact congrArg PMF.pure (hprof i)
 
+/-- One-step behavioral extension depends only on the current queried local
+contexts. -/
+theorem stepDist_behavioral_depends_on_current_context
+    [∀ i, Fintype (Option (M.Act i))]
+    (σ τ : BehavioralProfile I) (ss : List M.State)
+    (hag : ∀ i, σ i (I.projectStates i ss) = τ i (I.projectStates i ss)) :
+    D.stepDist σ ss = D.stepDist τ ss := by
+  simp only [Execution.Dynamics.stepDist]
+  congr 1
+  funext lab
+  congr 1
+  simp [Execution.Dynamics.jointActionDist, hag]
+
+/-- For a fixed state-trace prefix, one-step pure extension depends only on the
+queried local actions at `projectStates`. -/
+theorem pure_step_pushforward_depends_on_query
+    [∀ i, Fintype (Option (M.Act i))]
+    (hs : List M.Label × List M.State)
+    (y : List M.Label × List M.State)
+    (π π' : PureProfile I)
+    (hquery :
+      ∀ i, π i (I.projectStates i hs.2) = π' i (I.projectStates i hs.2)) :
+    (Math.ProbabilityMassFunction.pushforward
+      (D.stepDist (pureToBehavioral I π) hs.2)
+      (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y
+      =
+    (Math.ProbabilityMassFunction.pushforward
+      (D.stepDist (pureToBehavioral I π') hs.2)
+      (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y := by
+  let ω : I.FlatPolicy := fun k => π k.1 k.2
+  let ω' : I.FlatPolicy := fun k => π' k.1 k.2
+  have hnow :
+      ∀ i, ω ⟨i, I.projectStates i hs.2⟩ = ω' ⟨i, I.projectStates i hs.2⟩ := by
+    intro i
+    simpa [ω, ω'] using hquery i
+  have hstep :
+      D.stepDist (pureToBehavioral I (I.reassemblePolicy ω)) hs.2 =
+        D.stepDist (pureToBehavioral I (I.reassemblePolicy ω')) hs.2 :=
+    stepDist_depends_on_current_context (I := I) (D := D) ω ω' hs.2 hnow
+  have hpush := congrArg
+    (fun ν =>
+      (Math.ProbabilityMassFunction.pushforward ν
+        (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)
+    hstep
+  simpa [ω, ω'] using hpush
+
 /-- Support-local trace length at round `n`: any sampled run-state has state
 trace length `n+1`, hence each local projection also has length `n+1`. -/
 theorem support_current_localTrace_length
