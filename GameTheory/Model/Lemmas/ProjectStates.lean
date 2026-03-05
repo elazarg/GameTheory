@@ -17,6 +17,10 @@ theorem projectStates_length (i : ι) (ss : List M.State) :
     (I.projectStates i ss).length = ss.length := by
   simp [InfoModel.projectStates]
 
+theorem projectStates_take (i : ι) (ss : List M.State) (n : Nat) :
+    I.projectStates i (ss.take n) = (I.projectStates i ss).take n := by
+  simp [InfoModel.projectStates, List.map_take]
+
 theorem projectStates_take_strict_mono_len
     (i : ι) (ss : List M.State) {j₁ j₂ : Nat}
     (hj : j₁ < j₂) (hlen : j₂ < ss.length) :
@@ -44,4 +48,3 @@ theorem outcomeOfStates_apply (ss : List M.State) (i : ι) :
 
 end InfoModel
 end GameTheory
-

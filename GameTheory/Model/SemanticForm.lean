@@ -49,6 +49,10 @@ structure InfoModel {ι : Type} (M : LSM ι) where
   observe : (i : ι) → M.State → Obs i
   /-- Information partition as a state equivalence relation per controller. -/
   infoSetoid : (i : ι) → Setoid M.State
+  /-- Coherence: equal observations imply information equivalence. -/
+  observe_eq_implies_obsEq :
+    ∀ (i : ι) {s t : M.State},
+      observe i s = observe i t → (infoSetoid i).r s t
 
 namespace InfoModel
 
@@ -98,6 +102,91 @@ inductive ReachActionTrace (M : LSM ι) :
 def projectActions (i : ι)
     (ha : List (M.Label × (∀ j, Option (M.Act j)))) : List (Option (M.Act i)) :=
   ha.map (fun e => e.2 i)
+
+/-- Player-local history token:
+prefix local observation trace paired with realized own action at that step. -/
+abbrev LocalHistTok (I : InfoModel M) (i : ι) : Type :=
+  I.LocalTrace i × Option (M.Act i)
+
+/-- Build local-history tokens from action/state traces (auxiliary recursion). -/
+private def localHistTokensAux
+    (I : InfoModel M) (i : ι)
+    (pref : List M.State)
+    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ssTail : List M.State) :
+    List (I.LocalHistTok i) :=
+  match ha, ssTail with
+  | [], _ => []
+  | (_, a) :: ha', s' :: ss' =>
+      (I.projectStates i pref, a i) ::
+        localHistTokensAux I i (pref ++ [s']) ha' ss'
+  | _ :: _, [] => []
+
+/-- First-class local-history projection from action/state traces. -/
+def localHistTokens
+    (I : InfoModel M) (i : ι)
+    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ss : List M.State) :
+    List (I.LocalHistTok i) :=
+  match ss with
+  | [] => []
+  | s0 :: ssTail => localHistTokensAux I i [s0] ha ssTail
+
+private theorem localHistTokensAux_snoc
+    (I : InfoModel M) (i : ι)
+    (pref : List M.State)
+    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ssTail : List M.State)
+    (hLen : ssTail.length = ha.length)
+    (ℓ : M.Label) (a : ∀ j, Option (M.Act j)) (t : M.State) :
+    localHistTokensAux I i pref (ha ++ [(ℓ, a)]) (ssTail ++ [t]) =
+      localHistTokensAux I i pref ha ssTail ++ [(I.projectStates i (pref ++ ssTail), a i)] := by
+  induction ha generalizing pref ssTail with
+  | nil =>
+      cases ssTail with
+      | nil =>
+          simp [localHistTokensAux]
+      | cons s ss =>
+          cases hLen
+  | cons x ha ih =>
+      cases ssTail with
+      | nil =>
+          cases hLen
+      | cons s ss =>
+          simp at hLen
+          simp [localHistTokensAux, ih (pref := pref ++ [s]) (ssTail := ss) hLen,
+            List.append_assoc]
+
+/-- Appending one step to an action/state trace appends exactly one local
+history token. -/
+theorem localHistTokens_snoc
+    (I : InfoModel M) (i : ι)
+    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ss : List M.State)
+    (hLen : ss.length = ha.length + 1)
+    (ℓ : M.Label) (a : ∀ j, Option (M.Act j)) (t : M.State) :
+    localHistTokens I i (ha ++ [(ℓ, a)]) (ss ++ [t]) =
+      localHistTokens I i ha ss ++ [(I.projectStates i ss, a i)] := by
+  cases ss with
+  | nil =>
+      cases hLen
+  | cons s0 ssTail =>
+      have hLen' : ssTail.length = ha.length := by
+        simpa using hLen
+      simpa [localHistTokens, List.cons_append, List.append_assoc] using
+        localHistTokensAux_snoc I i [s0] ha ssTail hLen' ℓ a t
+
+/-- Length relation on action/state traces induced by `ReachActionTrace`. -/
+theorem ReachActionTrace.length_states_eq_succ_actions
+    {ha : List (M.Label × (∀ i, Option (M.Act i)))}
+    {ss : List M.State}
+    (h : ReachActionTrace M ha ss) :
+    ss.length = ha.length + 1 := by
+  induction h with
+  | nil =>
+      simp
+  | snoc _ _ _ ih =>
+      simp [List.length_append, ih, Nat.add_comm]
 
 /-- Project an action trace to a state trace by forgetting joint actions. -/
 theorem ReachActionTrace.toReachStateTrace {ha : List (M.Label × (∀ i, Option (M.Act i)))}
@@ -169,6 +258,20 @@ abbrev PureProfile (I : InfoModel M) : Type :=
 abbrev BehavioralProfile (I : InfoModel M) : Type :=
   ∀ i, I.LocalTrace i → PMF (Option (M.Act i))
 
+/-- Correlated behavioral profile over local trace context.
+This is defined for future correlated-realizability developments.
+Current execution semantics continues to use `BehavioralProfile` (independent). -/
+abbrev BehavioralProfileCorr (I : InfoModel M) : Type :=
+  (∀ i, I.LocalTrace i) → PMF (JointAction M)
+
+/-- Embed an independent behavioral profile as a correlated one by product sampling. -/
+noncomputable def behavioralToCorr
+    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (I : InfoModel M) (σ : BehavioralProfile I) : BehavioralProfileCorr I := by
+  classical
+  intro v
+  exact Math.PMFProduct.pmfPi (fun i => σ i (v i))
+
 /-- Lift a deterministic profile to a behavioral one. -/
 noncomputable def pureToBehavioral (I : InfoModel M) (π : PureProfile I) : BehavioralProfile I :=
   fun i v => PMF.pure (π i v)
@@ -204,6 +307,16 @@ noncomputable def stepDist (D : Dynamics I)
     (jointActionDist (I := I) σ ss).bind fun a =>
       Math.ProbabilityMassFunction.pushforward (D.nextState ℓ a s) (fun t => (ℓ, t))
 
+/-- One stochastic step from a current state under a correlated behavioral profile. -/
+noncomputable def stepDistCorr (D : Dynamics I)
+    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (σ : BehavioralProfileCorr I) (ss : List M.State) : PMF (M.Label × M.State) :=
+  let s := (ss.getLast?).getD M.init
+  let v : ∀ i, I.LocalTrace i := fun i => I.projectStates i ss
+  (D.labelKernel s).bind fun ℓ =>
+    (σ v).bind fun a =>
+      Math.ProbabilityMassFunction.pushforward (D.nextState ℓ a s) (fun t => (ℓ, t))
+
 /-- Bounded run distribution of length exactly `k`:
 stores (label-trace, state-trace). -/
 noncomputable def runDist (D : Dynamics I)
@@ -233,6 +346,40 @@ noncomputable def evalPure (D : Dynamics I)
     [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (k : Nat) (π : PureProfile I) : PMF I.Outcome :=
   Math.ProbabilityMassFunction.pushforward (D.runDistPure k π) (fun hs => I.outcomeOfStates hs.2)
+
+/-- Independent one-step realizability:
+there exists an independent behavioral profile matching the mixed/pure one-step law. -/
+def OneStepIndependentRealizable (D : Dynamics I)
+    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (ν : PMF (PureProfile I)) (n : Nat) : Prop :=
+  ∃ σ : BehavioralProfile I,
+    (ν.bind (fun π =>
+      (D.runDistPure n π).bind (fun hs =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.stepDist σ hs.2)
+          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))) =
+    (ν.bind (fun π =>
+      (D.runDistPure n π).bind (fun hs =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.stepDist (pureToBehavioral I π) hs.2)
+          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))))
+
+/-- Correlated one-step realizability:
+there exists a correlated behavioral profile matching the mixed/pure one-step law. -/
+def OneStepCorrelatedRealizable (D : Dynamics I)
+    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (ν : PMF (PureProfile I)) (n : Nat) : Prop :=
+  ∃ σ : BehavioralProfileCorr I,
+    (ν.bind (fun π =>
+      (D.runDistPure n π).bind (fun hs =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.stepDistCorr σ hs.2)
+          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))) =
+    (ν.bind (fun π =>
+      (D.runDistPure n π).bind (fun hs =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.stepDist (pureToBehavioral I π) hs.2)
+          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))))
 
 end Dynamics
 end Execution
