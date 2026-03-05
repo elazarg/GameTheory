@@ -49,45 +49,6 @@ noncomputable def mixedToBehavioral
     (iterCondMixedLocal (I := I) i (μ i) hist) (fun f => f v)
 
 omit [Fintype ι] in
-private theorem actionTrace_eq_of_labels_projectActions_eq
-    {ha₁ ha₂ : List (M.Label × (∀ j, Option (M.Act j)))}
-    (hlabels : ha₁.map Prod.fst = ha₂.map Prod.fst)
-    (hacts : ∀ i, InfoModel.projectActions i ha₁ = InfoModel.projectActions i ha₂) :
-    ha₁ = ha₂ := by
-  induction ha₁ generalizing ha₂ with
-  | nil =>
-      cases ha₂ with
-      | nil => rfl
-      | cons y ys =>
-          simp at hlabels
-  | cons x xs ih =>
-      cases ha₂ with
-      | nil =>
-          simp at hlabels
-      | cons y ys =>
-          have hlabelTail : x.1 = y.1 ∧ xs.map Prod.fst = ys.map Prod.fst := by
-            simpa using hlabels
-          rcases hlabelTail with ⟨hlabel, htailLabels⟩
-          have hheadAct : ∀ i, x.2 i = y.2 i := by
-            intro i
-            have hi := hacts i
-            simpa [InfoModel.projectActions] using congrArg List.head? hi
-          have htailActs : ∀ i, InfoModel.projectActions i xs = InfoModel.projectActions i ys := by
-            intro i
-            have hi := hacts i
-            simpa [InfoModel.projectActions, hheadAct i] using hi
-          have htail : xs = ys := ih htailLabels htailActs
-          cases x with
-          | mk lx ax =>
-              cases y with
-              | mk ly ay =>
-                  have hfun : ax = ay := by
-                    funext i
-                    simpa using hheadAct i
-                  simp only [List.cons.injEq, Prod.mk.injEq]
-                  exact ⟨⟨hlabel, hfun⟩, htail⟩
-
-omit [Fintype ι] in
 private theorem mixedToBehavioral_eq_iterCond_pushforward
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
