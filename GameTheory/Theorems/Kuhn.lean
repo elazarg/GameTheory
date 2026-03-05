@@ -13,11 +13,7 @@ variable {M : LSM ι} (I : InfoModel M)
 variable (D : Execution.Dynamics I)
 variable (k : Nat)
 
-/-- **Kuhn (complete, both directions)** at the `InfoModel` level.
-
-Do not modify this by strengthening assumptions in either direction.
-If proof infrastructure is missing, keep the exact statement and refine lemmas.
--/
+/-- Kuhn completeness at the outcome-distribution level for an `InfoModel`. -/
 theorem kuhn_complete
     [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]

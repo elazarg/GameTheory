@@ -240,12 +240,7 @@ theorem kuhn_complete_of_infoModel_atomic
       (I := I) (D := D) (μ := μ) (n := n) (hAtomic μ)
   exact kuhn_complete_of_infoModel (I := I) (D := D) (k := k) hStepIndep
 
-/-- **Kuhn (behavioral → mixed)** at the `InfoModel` level.
-
-Do not strengthen this statement by adding structural assumptions
-(in particular, do not add factorization assumptions such as
-`AtomicCoordinateFactorization`).
--/
+/-- Kuhn's behavioral-to-mixed direction for `InfoModel` outcome distributions. -/
 theorem kuhn_behavioral_to_mixed
     [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
