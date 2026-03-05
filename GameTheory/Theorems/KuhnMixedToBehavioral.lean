@@ -125,6 +125,18 @@ noncomputable def mixedToBehavioralAfter
   exact Math.ProbabilityMassFunction.pushforward
     (iterCondMixedLocal (I := I) i (μ i) histTail) (fun f => f v)
 
+/-- Mixed profile obtained by conditioning each player's local pure-plan law on
+the local history realized along a reachable prefix. -/
+noncomputable def conditionedMixedProfile
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (μ : InfoModel.MixedProfile (I := I))
+    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ss : List M.State) :
+    InfoModel.MixedProfile (I := I) :=
+  fun i => iterCondMixedLocal (I := I) i (μ i)
+    (InfoModel.localHistTokens (I := I) i ha ss)
+
 omit [Fintype ι] in
 private theorem mixedToBehavioralAfter_eq_iterCond_pushforward
     [∀ i, Fintype (I.LocalTrace i)]
@@ -290,6 +302,30 @@ private theorem mixedToBehavioral_tail_agree
       mixedToBehavioralAfter (I := I) μ0 ha0 ss0 i
         (I.projectStates i (ss0 ++ ssTail)) := hlocal.symm
 
+private theorem stepDist_mixedToBehavioral_tail_agree
+    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hPR : I.PerfectRecall)
+    (μ : InfoModel.MixedProfile (I := I))
+    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ss0 : List M.State}
+    (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
+    {haTail : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ssTail : List M.State}
+    (hr : InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail)) :
+    D.stepDist (mixedToBehavioral (I := I) μ) (ss0 ++ ssTail) =
+      D.stepDist
+        (mixedToBehavioralAfter (I := I)
+          (conditionedMixedProfile (I := I) μ ha0 ss0) ha0 ss0)
+        (ss0 ++ ssTail) := by
+  apply stepDist_behavioral_depends_on_current_context (I := I) (D := D)
+  intro i
+  exact mixedToBehavioral_tail_agree
+    (I := I) (hPR := hPR) (μ := μ) hr0
+    (μ0 := conditionedMixedProfile (I := I) μ ha0 ss0)
+    (hμ0 := rfl) i hr
+
 theorem stepPoint_eq_via_query_disintegration
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
@@ -369,14 +405,14 @@ theorem stepPoint_eq_via_query_disintegration
     let hist : ∀ i, List (LocalHistTok (I := I) i) :=
       fun i => InfoModel.localHistTokens (I := I) i ha hs.2
     let μHist : InfoModel.MixedProfile (I := I) :=
-      fun i => iterCondMixedLocal (I := I) i (μ i) (hist i)
+      conditionedMixedProfile (I := I) μ ha hs.2
     have hbeh_now :
         ∀ i,
           mixedToBehavioral (I := I) μ i (I.projectStates i hs.2) =
             InfoModel.realizeBehavioralCanonical (I := I) μHist i
               (I.projectStates i hs.2) := by
       intro i
-      simpa [μHist, hist, InfoModel.realizeBehavioralCanonical] using
+      simpa [μHist, conditionedMixedProfile, hist, InfoModel.realizeBehavioralCanonical] using
         mixedToBehavioral_eq_iterCond_pushforward
           (I := I) (hPR := hPR) (μ := μ) i hr
     have hstep_beh :
