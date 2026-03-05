@@ -72,17 +72,17 @@ coordinates induced by that trace. -/
 theorem stepDist_depends_on_current_context
     [∀ i, Fintype (Option (M.Act i))]
     (ω₁ ω₂ : I.FlatPolicy) (ss : List M.State)
-    (hag : ∀ i ℓ,
-      ω₁ ⟨i, (ℓ, I.projectStates i ss)⟩ =
-        ω₂ ⟨i, (ℓ, I.projectStates i ss)⟩) :
+    (hag : ∀ i,
+      ω₁ ⟨i, I.projectStates i ss⟩ =
+        ω₂ ⟨i, I.projectStates i ss⟩) :
     D.stepDist (pureToBehavioral I (I.reassemblePolicy ω₁)) ss =
       D.stepDist (pureToBehavioral I (I.reassemblePolicy ω₂)) ss := by
   have hprof :
-      ∀ i ℓ,
-        (I.reassemblePolicy ω₁) i ℓ (I.projectStates i ss) =
-          (I.reassemblePolicy ω₂) i ℓ (I.projectStates i ss) := by
-    intro i ℓ
-    simpa [InfoModel.reassemblePolicy] using hag i ℓ
+      ∀ i,
+        (I.reassemblePolicy ω₁) i (I.projectStates i ss) =
+          (I.reassemblePolicy ω₂) i (I.projectStates i ss) := by
+    intro i
+    simpa [InfoModel.reassemblePolicy] using hag i
   simp only [Dynamics.stepDist]
   congr 1
   funext ℓ
@@ -90,7 +90,7 @@ theorem stepDist_depends_on_current_context
   simp only [Execution.Dynamics.jointActionDist, pureToBehavioral]
   congr 1
   funext i
-  exact congrArg PMF.pure (hprof i ℓ)
+  exact congrArg PMF.pure (hprof i)
 
 /-- Support-local trace length at round `n`: any sampled run-state has state
 trace length `n+1`, hence each local projection also has length `n+1`. -/
@@ -113,8 +113,8 @@ theorem runDistPure_depends_on_len_le
     (n : Nat)
     [∀ i, Fintype (Option (M.Act i))]
     (ω₁ ω₂ : I.FlatPolicy)
-    (hag : ∀ i ℓ v, v.length ≤ n →
-      ω₁ ⟨i, (ℓ, v)⟩ = ω₂ ⟨i, (ℓ, v)⟩) :
+    (hag : ∀ i v, v.length ≤ n →
+      ω₁ ⟨i, v⟩ = ω₂ ⟨i, v⟩) :
     D.runDistPure n (I.reassemblePolicy ω₁) =
       D.runDistPure n (I.reassemblePolicy ω₂) := by
   induction n with
@@ -125,7 +125,7 @@ theorem runDistPure_depends_on_len_le
       have ih' :
           D.runDist n (pureToBehavioral I (I.reassemblePolicy ω₁)) =
             D.runDist n (pureToBehavioral I (I.reassemblePolicy ω₂)) :=
-        ih (fun i ℓ v hv => hag i ℓ v (Nat.le_succ_of_le hv))
+        ih (fun i v hv => hag i v (Nat.le_succ_of_le hv))
       rw [ih']
       ext y
       simp only [PMF.bind_apply]
@@ -138,7 +138,7 @@ theorem runDistPure_depends_on_len_le
           runDist_support_stateLength (I := I) (D := D) n
             (pureToBehavioral I (I.reassemblePolicy ω₂)) hs hsupp
         have hstep := stepDist_depends_on_current_context (I := I) (D := D) ω₁ ω₂ hs.2
-          (fun i ℓ => by
+          (fun i => by
             apply hag
             simp [I.projectStates_length i hs.2, hlenState])
         simp [Math.ProbabilityMassFunction.pushforward, hstep]
@@ -156,9 +156,9 @@ theorem past_now_disjoint_by_length
       {k : I.CoordIdx | I.IsNowCoord hs k} := by
   rw [Set.disjoint_left]
   intro k hkPast hkNow
-  rcases hkNow with ⟨i, ℓ, hkEq⟩
+  rcases hkNow with ⟨i, hkEq⟩
   have hkPast' : (I.projectStates i hs.2).length ≤ n := by
-    have : k.2.2.length = (I.projectStates i hs.2).length := by
+    have : k.2.length = (I.projectStates i hs.2).length := by
       cases hkEq
       rfl
     simpa [InfoModel.IsPastCoord, this] using hkPast
@@ -174,34 +174,32 @@ end
 /-- The joint action distribution under a fresh draw from the product measure
     equals the behavioral joint action distribution. -/
 theorem jointAction_marginal
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    (σ : BehavioralProfile I) (ss : List M.State) (ℓ : M.Label) :
+    (σ : BehavioralProfile I) (ss : List M.State) :
     Math.PMFProduct.pushforward
       (mixedJoint (I := I) (behavioralToMixed (I := I) σ))
-      (fun π i => π i ℓ (I.projectStates i ss)) =
-    Execution.Dynamics.jointActionDist (I := I) σ ss ℓ := by
+      (fun π i => π i (I.projectStates i ss)) =
+    Execution.Dynamics.jointActionDist (I := I) σ ss := by
   classical
   letI : DecidableEq ι := Classical.decEq ι
   simp only [mixedJoint, Execution.Dynamics.jointActionDist]
   let g : ∀ i, (LocalPure (I := I) i) → Option (M.Act i) :=
-    fun i fi => fi ℓ (I.projectStates i ss)
+    fun i fi => fi (I.projectStates i ss)
   change Math.PMFProduct.pushforward (Math.PMFProduct.pmfPi (behavioralToMixed I σ))
     (fun f i => g i (f i)) = _
   rw [Math.PMFProduct.pmfPi_push_coordwise]
   congr 1; funext i
-  change Math.PMFProduct.pushforward (behavioralToMixed I σ i) (g i) = σ i ℓ (I.projectStates i ss)
-  have h := congr_fun (congr_fun (congr_fun
-    (realize_behavioralToMixed (I := I) σ) i) ℓ) (I.projectStates i ss)
+  change Math.PMFProduct.pushforward (behavioralToMixed I σ i) (g i) = σ i (I.projectStates i ss)
+  have h := congr_fun (congr_fun
+    (realize_behavioralToMixed (I := I) σ) i) (I.projectStates i ss)
   simp only [realizeBehavioralCanonical, Math.ProbabilityMassFunction.pushforward] at h
   exact h
 
 /-- The expected step under a fresh draw from the product measure
     equals the behavioral step distribution. -/
 theorem marginal_stepDist
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
@@ -219,21 +217,21 @@ theorem marginal_stepDist
   simp only [Math.ProbabilityMassFunction.pushforward]
   conv_lhs =>
     arg 2; ext π
-    rw [← PMF.pure_bind (fun i => π i ℓ (I.projectStates i ss))
+    rw [← PMF.pure_bind (fun i => π i (I.projectStates i ss))
       (fun a => (D.nextState ℓ a s).bind (fun t => PMF.pure (ℓ, t)))]
   rw [show ((mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind fun π =>
-      (PMF.pure (fun i => π i ℓ (I.projectStates i ss))).bind fun a =>
+      (PMF.pure (fun i => π i (I.projectStates i ss))).bind fun a =>
         (D.nextState ℓ a s).bind fun t => PMF.pure (ℓ, t)) =
     ((mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
-      (fun π => PMF.pure (fun i => π i ℓ (I.projectStates i ss)))).bind (fun a =>
+      (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))).bind (fun a =>
         (D.nextState ℓ a s).bind fun t => PMF.pure (ℓ, t)) from
     (PMF.bind_bind _ _ _).symm]
   have hJA' :
       (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
-        (fun π => PMF.pure (fun i => π i ℓ (I.projectStates i ss))) =
-      Execution.Dynamics.jointActionDist (I := I) σ ss ℓ := by
+        (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
+      Execution.Dynamics.jointActionDist (I := I) σ ss := by
     simpa [Math.ProbabilityMassFunction.pushforward] using
-      (jointAction_marginal (I := I) σ ss ℓ)
+      (jointAction_marginal (I := I) σ ss)
   rw [hJA']
 
 end InfoModel

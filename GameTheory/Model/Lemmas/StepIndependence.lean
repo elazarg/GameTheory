@@ -17,26 +17,25 @@ variable {M : LSM ι} (I : InfoModel M)
     Proved via involution/swap argument. -/
 theorem behavioralToMixed_scalar_indep
     [DecidableEq ι]
-    [Fintype M.Label] [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
     (σ : BehavioralProfile I) (n : Nat)
     (f g : PureProfile I → ENNReal)
     (hf : ∀ π π' : PureProfile I,
-      (∀ i ℓ (v : I.LocalTrace i), v.length ≤ n → π i ℓ v = π' i ℓ v) → f π = f π')
+      (∀ i (v : I.LocalTrace i), v.length ≤ n → π i v = π' i v) → f π = f π')
     (hg : ∀ π π' : PureProfile I,
-      (∀ i ℓ (v : I.LocalTrace i), v.length > n → π i ℓ v = π' i ℓ v) → g π = g π') :
+      (∀ i (v : I.LocalTrace i), v.length > n → π i v = π' i v) → g π = g π') :
     ∑ π, (mixedJoint I (behavioralToMixed I σ)) π * (f π * g π) =
     (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * f π) *
     (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * g π) := by
   classical
   set μ := mixedJoint I (behavioralToMixed I σ)
-  have hμ_prod : ∀ π, μ π = ∏ i, ∏ p : M.Label × I.LocalTrace i,
-      (σ i p.1 p.2) (π i p.1 p.2) := by
-    intro π; simp only [μ, mixedJoint, pmfPi_apply]
-    congr 1; funext i; exact behavioralToMixed_apply_prod I σ i (π i)
+  have hμ_prod : ∀ π, μ π = ∏ i, ∏ p : I.LocalTrace i, (σ i p) (π i p) := by
+    intro π
+    simpa [μ, mixedJoint, behavioralToMixed_apply_prod]
   let swap : PureProfile I → PureProfile I → PureProfile I :=
-    fun π₁ π₂ i ℓ v => if v.length ≤ n then π₁ i ℓ v else π₂ i ℓ v
+    fun π₁ π₂ i v => if v.length ≤ n then π₁ i v else π₂ i v
   have hweight_i : ∀ (π₁ π₂ : PureProfile I) (i : ι),
       (behavioralToMixed I σ i) (swap π₁ π₂ i) *
       (behavioralToMixed I σ i) (swap π₂ π₁ i) =
@@ -45,7 +44,7 @@ theorem behavioralToMixed_scalar_indep
     intro π₁ π₂ i
     simp only [behavioralToMixed_apply_prod, swap]
     rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
-    congr 1; funext ⟨ℓ, v⟩
+    congr 1; funext v
     by_cases hv : v.length ≤ n <;> simp [hv, mul_comm]
   have hweight : ∀ (π₁ π₂ : PureProfile I),
       μ (swap π₁ π₂) * μ (swap π₂ π₁) = μ π₁ * μ π₂ := by
@@ -54,9 +53,9 @@ theorem behavioralToMixed_scalar_indep
     rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
     congr 1; funext i; exact hweight_i π₁ π₂ i
   have hf_swap : ∀ π₁ π₂, f (swap π₁ π₂) = f π₁ := by
-    intro π₁ π₂; apply hf; intro i ℓ v hv; simp [swap, hv]
+    intro π₁ π₂; apply hf; intro i v hv; simp [swap, hv]
   have hg_swap : ∀ π₁ π₂, g (swap π₁ π₂) = g π₂ := by
-    intro π₁ π₂; apply hg; intro i ℓ v hv
+    intro π₁ π₂; apply hg; intro i v hv
     simp only [swap]; rw [if_neg (Nat.not_le.mpr hv)]
   let P := fun π => μ π
   let Fsame : PureProfile I × PureProfile I → ENNReal :=
@@ -67,7 +66,7 @@ theorem behavioralToMixed_scalar_indep
     fun p => (swap p.1 p.2, swap p.2 p.1)
   have he : Function.Involutive e := by
     intro ⟨π₁, π₂⟩
-    apply Prod.ext <;> (funext i ℓ v; simp only [e, swap]; split <;> rfl)
+    apply Prod.ext <;> (funext i v; simp only [e, swap]; split <;> rfl)
   have hpoint : ∀ p, Fcross p = Fsame (e p) := by
     intro ⟨π₁, π₂⟩
     simp only [Fcross, Fsame, e, P]
@@ -94,7 +93,6 @@ theorem behavioralToMixed_scalar_indep
 /-- Step-independence equality used in the Kuhn run induction. -/
 def StepIndependence
     (D : Execution.Dynamics I)
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -114,7 +112,6 @@ def StepIndependence
 behavioral-induced mixed profile, step-independence transports across the equality. -/
 theorem stepIndependence_of_eq_behavioralMixed
     (D : Execution.Dynamics I)
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -128,29 +125,28 @@ theorem stepIndependence_of_eq_behavioralMixed
 
 /-- Step 4 core proposition: scalar independence under the behavioral product law. -/
 def step4_scalarIndependenceCore : Prop :=
-  ∀ [DecidableEq ι] [Fintype M.Label] [∀ i, Fintype (I.LocalTrace i)]
+  ∀ [DecidableEq ι] [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)],
     ∀ (σ : BehavioralProfile I) (n : Nat)
       (f g : PureProfile I → ENNReal),
       (∀ π π' : PureProfile I,
-        (∀ i ℓ (v : I.LocalTrace i), v.length ≤ n → π i ℓ v = π' i ℓ v) → f π = f π') →
+        (∀ i (v : I.LocalTrace i), v.length ≤ n → π i v = π' i v) → f π = f π') →
       (∀ π π' : PureProfile I,
-        (∀ i ℓ (v : I.LocalTrace i), v.length > n → π i ℓ v = π' i ℓ v) → g π = g π') →
+        (∀ i (v : I.LocalTrace i), v.length > n → π i v = π' i v) → g π = g π') →
       ∑ π, (mixedJoint I (behavioralToMixed I σ)) π * (f π * g π) =
       (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * f π) *
       (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * g π)
 
 /-- Step 4 is proved: this is exactly `behavioralToMixed_scalar_indep`. -/
 theorem step4_scalarIndependenceCore_proved : step4_scalarIndependenceCore (I := I) := by
-  intro _ _ _ _ _ σ n f g hf hg
+  intro _ _ _ _ σ n f g hf hg
   exact behavioralToMixed_scalar_indep (I := I) σ n f g hf hg
 
 /-- Remaining probabilistic bridge for behavioral-induced mixed profiles:
 factor one-step extension through run-prefix sampling. -/
 theorem behavioralToMixed_stepIndependence_bridge
     (D : Execution.Dynamics I)
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -174,16 +170,15 @@ theorem behavioralToMixed_stepIndependence_bridge
     simpa [μ] using (marginal_stepDist (I := I) (D := D) σ ss)
   have hRunCongr :
       ∀ hs : List M.Label × List M.State, ∀ π π' : PureProfile I,
-        (∀ i ℓ (v : I.LocalTrace i), v.length ≤ n → π i ℓ v = π' i ℓ v) →
+        (∀ i (v : I.LocalTrace i), v.length ≤ n → π i v = π' i v) →
         (D.runDistPure n π) hs = (D.runDistPure n π') hs := by
     intro hs π π' hag
-    let ω₁ : I.FlatPolicy := fun k => π k.1 k.2.1 k.2.2
-    let ω₂ : I.FlatPolicy := fun k => π' k.1 k.2.1 k.2.2
+    let ω₁ : I.FlatPolicy := fun k => π k.1 k.2
+    let ω₂ : I.FlatPolicy := fun k => π' k.1 k.2
     have hagFlat :
-        ∀ i ℓ v, v.length ≤ n →
-          ω₁ ⟨i, (ℓ, v)⟩ = ω₂ ⟨i, (ℓ, v)⟩ := by
-      intro i ℓ v hv
-      simpa [ω₁, ω₂] using hag i ℓ v hv
+        ∀ i v, v.length ≤ n → ω₁ ⟨i, v⟩ = ω₂ ⟨i, v⟩ := by
+      intro i v hv
+      simpa [ω₁, ω₂] using hag i v hv
     have hEq :
         D.runDistPure n (I.reassemblePolicy ω₁) =
           D.runDistPure n (I.reassemblePolicy ω₂) :=
@@ -240,25 +235,25 @@ theorem behavioralToMixed_stepIndependence_bridge
       let g : PureProfile I → ENNReal := fun π => Gfun hs π
       have hf :
           ∀ π π' : PureProfile I,
-            (∀ i ℓ (v : I.LocalTrace i), v.length ≤ n → π i ℓ v = π' i ℓ v) →
+            (∀ i (v : I.LocalTrace i), v.length ≤ n → π i v = π' i v) →
             f π = f π' := by
         intro π π' hag
         exact hRunCongr hs π π' hag
       have hg :
           ∀ π π' : PureProfile I,
-            (∀ i ℓ (v : I.LocalTrace i), v.length > n → π i ℓ v = π' i ℓ v) →
+            (∀ i (v : I.LocalTrace i), v.length > n → π i v = π' i v) →
             g π = g π' := by
         intro π π' hag
-        let ω₁ : I.FlatPolicy := fun k => π k.1 k.2.1 k.2.2
-        let ω₂ : I.FlatPolicy := fun k => π' k.1 k.2.1 k.2.2
+        let ω₁ : I.FlatPolicy := fun k => π k.1 k.2
+        let ω₂ : I.FlatPolicy := fun k => π' k.1 k.2
         have hagNow :
-            ∀ i ℓ,
-              ω₁ ⟨i, (ℓ, I.projectStates i hs.2)⟩ =
-                ω₂ ⟨i, (ℓ, I.projectStates i hs.2)⟩ := by
-          intro i ℓ
+            ∀ i,
+              ω₁ ⟨i, I.projectStates i hs.2⟩ =
+                ω₂ ⟨i, I.projectStates i hs.2⟩ := by
+          intro i
           have hvlen : (I.projectStates i hs.2).length > n := by
             simp [I.projectStates_length i hs.2, hlen]
-          simpa [ω₁, ω₂] using hag i ℓ (I.projectStates i hs.2) hvlen
+          simpa [ω₁, ω₂] using hag i (I.projectStates i hs.2) hvlen
         have hstepEq :
             D.stepDist (pureToBehavioral I (I.reassemblePolicy ω₁)) hs.2 =
               D.stepDist (pureToBehavioral I (I.reassemblePolicy ω₂)) hs.2 :=
@@ -350,7 +345,6 @@ it is enough to provide (1) behavioral representation from factorization and
 (2) step-independence on behavioral-induced mixed profiles. -/
 theorem run_factorization
     (D : Execution.Dynamics I)
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -394,7 +388,6 @@ theorem run_factorization
 
 theorem reduce_atomicFactorization_bridge
     (D : Execution.Dynamics I)
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -416,7 +409,6 @@ theorem reduce_atomicFactorization_bridge
 atomic coordinate factorization should imply one-step independence. -/
 theorem atomicFactorization_implies_stepIndependence
     (D : Execution.Dynamics I)
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -435,7 +427,7 @@ theorem atomicFactorization_implies_stepIndependence
   · intro μ' hAtomic'
     classical
     rcases hAtomic' with ⟨τ, hτ⟩
-    let σ : BehavioralProfile I := fun i ℓ v => τ ⟨i, (ℓ, v)⟩
+    let σ : BehavioralProfile I := fun i v => τ ⟨i, v⟩
     have hσ :
         mixedJoint (I := I) (behavioralToMixed (I := I) σ) =
           PMF.map (I.reassemblePolicy) (pmfPi τ) := by

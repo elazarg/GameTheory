@@ -12,7 +12,7 @@ variable {ι : Type}
 variable {M : LSM ι} (I : InfoModel M)
 
 abbrev LocalPure (i : ι) : Type :=
-  M.Label → I.LocalTrace i → Option (M.Act i)
+  I.LocalTrace i → Option (M.Act i)
 
 /-- Mixed profiles over pure local policies (model-level notion). -/
 abbrev MixedProfile : Type := ∀ i, PMF (LocalPure (I := I) i)
@@ -59,51 +59,50 @@ noncomputable def evalMixedCanonical
   (mixedJoint (I := I) μ).bind (D.evalPure k)
 
 /-- Coordinate query on pure profiles. -/
-def pureActionAt (i : ι) (ℓ : M.Label) (v : I.LocalTrace i)
+def pureActionAt (i : ι) (v : I.LocalTrace i)
     (π : PureProfile I) : Option (M.Act i) :=
-  π i ℓ v
+  π i v
 
 /-- Canonical realization from mixed profile by coordinate marginals. -/
 noncomputable def realizeBehavioralCanonical
-    [Fintype M.Label] [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     (μ : MixedProfile (I := I)) : BehavioralProfile I :=
-  fun i ℓ v => Math.ProbabilityMassFunction.pushforward (μ i) (fun f => f ℓ v)
+  fun i v => Math.ProbabilityMassFunction.pushforward (μ i) (fun f => f v)
 
 /-- Behavioral → Mixed: each player's mixed strategy is the product measure over
     all (label, local-trace) coordinates. -/
 noncomputable def behavioralToMixed
-    [Fintype M.Label] [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     (σ : BehavioralProfile I) : MixedProfile (I := I) := by
   classical
-  exact fun i => PMF.map (Equiv.curry _ _ _)
-    (pmfPi (fun p : M.Label × I.LocalTrace i => σ i p.1 p.2))
+  exact fun i => pmfPi (fun v : I.LocalTrace i => σ i v)
 
 /-- Round-trip identity: realizing the behavioral profile recovers the original. -/
 theorem realize_behavioralToMixed
-    [Fintype M.Label] [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     (σ : BehavioralProfile I) :
     realizeBehavioralCanonical (I := I) (behavioralToMixed (I := I) σ) = σ := by
   classical
-  funext i ℓ v
+  funext i v
   simp only [realizeBehavioralCanonical, behavioralToMixed,
-    Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
+    Math.ProbabilityMassFunction.pushforward]
   conv_lhs =>
     arg 2; ext f
     simp only [Function.comp, Equiv.curry, Equiv.coe_fn_mk]
-  change pushforward (pmfPi fun p => σ i p.1 p.2)
-    (fun f => f (ℓ, v)) = σ i ℓ v
+  change pushforward (pmfPi fun w => σ i w)
+    (fun f => f v) = σ i v
   rw [pmfPi_push_coord]
 
 /-- Pure step simplification: `jointActionDist` under `pureToBehavioral` is a point mass. -/
 theorem jointActionDist_pure
     [Fintype ι]
     [∀ i, Fintype (Option (M.Act i))]
-    (π : PureProfile I) (ss : List M.State) (ℓ : M.Label) :
-    Execution.Dynamics.jointActionDist (I := I) (pureToBehavioral I π) ss ℓ =
-      PMF.pure (fun i => π i ℓ (I.projectStates i ss)) := by
+    (π : PureProfile I) (ss : List M.State) :
+    Execution.Dynamics.jointActionDist (I := I) (pureToBehavioral I π) ss =
+      PMF.pure (fun i => π i (I.projectStates i ss)) := by
   simp [Execution.Dynamics.jointActionDist, pureToBehavioral, pmfPi_pure]
 
 /-- Pure step unfolding: `stepDist` under `pureToBehavioral` simplifies. -/
@@ -114,7 +113,7 @@ theorem stepDist_pure
       let s := (ss.getLast?).getD M.init
       (D.labelKernel s).bind (fun ℓ =>
         Math.ProbabilityMassFunction.pushforward
-          (D.nextState ℓ (fun i => π i ℓ (I.projectStates i ss)) s)
+          (D.nextState ℓ (fun i => π i (I.projectStates i ss)) s)
           (fun t => (ℓ, t))) := by
   simp only [Execution.Dynamics.stepDist, jointActionDist_pure]
   congr 1; funext ℓ
