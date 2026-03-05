@@ -6,6 +6,13 @@ namespace InfoModel
 
 variable {ι : Type} {M : LSM ι} (I : InfoModel M)
 
+theorem observe_eq_implies_obsEq
+    (i : ι) {s t : M.State}
+    (hcompat : ∀ {s t : M.State}, I.observe i s = I.observe i t → I.obsEq i s t)
+    (hobs : I.observe i s = I.observe i t) :
+    I.obsEq i s t := by
+  exact hcompat hobs
+
 theorem perfectRecall_project_eq_of_obsEq_last
     {i : ι}
     {h₁ h₂ : List M.Label} {ss₁ ss₂ : List M.State} {s₁ s₂ : M.State}
