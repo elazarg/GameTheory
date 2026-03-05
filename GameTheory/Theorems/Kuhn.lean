@@ -204,6 +204,126 @@ theorem kuhn_complete_of_infoModel_atomic
       (I := I) (D := D) (μ := μ) (n := n) (hAtomic μ)
   exact kuhn_complete_of_infoModel (I := I) (D := D) (k := k) hStepIndep hH
 
+/-- **Kuhn (behavioral → mixed)** at the `InfoModel` level.
+
+Do not strengthen this statement by adding structural assumptions
+(in particular, do not add factorization assumptions such as
+`AtomicCoordinateFactorization`).
+-/
+theorem kuhn_behavioral_to_mixed
+    [Fintype M.Label]
+    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))] :
+    KuhnBehavioralToMixedOutcome
+      (BehavioralProfile I) (PureProfile I) I.Outcome
+      (mixedOfBehavioralCanonical (I := I))
+      (D.evalBehavioral k) (D.evalPure k) := by
+  intro σ
+  let μσ : InfoModel.MixedProfile (I := I) := InfoModel.behavioralToMixed (I := I) σ
+  have hrun :
+      ∀ n,
+        D.runDist n σ =
+          (InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure n π) := by
+    intro n
+    induction n with
+    | zero =>
+        simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure, μσ]
+    | succ n ih =>
+        calc
+          D.runDist (n + 1) σ
+              = (D.runDist n σ).bind (fun hs =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
+                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) := by
+                  simp [Execution.Dynamics.runDist]
+          _ = ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure n π)).bind
+                (fun hs =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
+                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) := by
+                rw [ih]
+          _ = (InfoModel.mixedJoint (I := I) μσ).bind (fun π =>
+                (D.runDistPure n π).bind (fun hs =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
+                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) := by
+                rw [PMF.bind_bind]
+          _ = (InfoModel.mixedJoint (I := I) μσ).bind (fun π =>
+                (D.runDistPure n π).bind (fun hs =>
+                  Math.ProbabilityMassFunction.pushforward
+                    (D.stepDist (pureToBehavioral I π) hs.2)
+                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) := by
+                simpa [μσ] using
+                  (InfoModel.behavioralToMixed_stepIndependence_bridge
+                    (I := I) (D := D) σ n)
+          _ = (InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure (n + 1) π) := by
+                simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure]
+  have hrun' := hrun k
+  have hpush := congrArg
+      (fun p =>
+        Math.ProbabilityMassFunction.pushforward p (fun hs => I.outcomeOfStates hs.2))
+      hrun'
+  have hright :
+      Math.ProbabilityMassFunction.pushforward
+          ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure k π))
+          (fun hs => I.outcomeOfStates hs.2) =
+        (InfoModel.mixedJoint (I := I) μσ).bind (D.evalPure k) := by
+    simpa [Execution.Dynamics.evalPure] using
+      (Math.ProbabilityMassFunction.pushforward_bind
+        (μ := InfoModel.mixedJoint (I := I) μσ)
+        (k := fun π => D.runDistPure k π)
+        (f := fun hs => I.outcomeOfStates hs.2))
+  calc
+    (mixedOfBehavioralCanonical (I := I) σ).bind (D.evalPure k)
+        = (InfoModel.mixedJoint (I := I) μσ).bind (D.evalPure k) := rfl
+    _ = Math.ProbabilityMassFunction.pushforward
+          ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure k π))
+          (fun hs => I.outcomeOfStates hs.2) := hright.symm
+    _ = Math.ProbabilityMassFunction.pushforward (D.runDist k σ)
+          (fun hs => I.outcomeOfStates hs.2) := by
+          simpa using hpush.symm
+    _ = D.evalBehavioral k σ := rfl
+
+/-- **Kuhn (mixed → behavioral)** at the `InfoModel` level.
+
+Do not strengthen this statement by introducing ad hoc assumptions
+on mixed profiles. The intended assumptions are only model-level:
+perfect recall and finite horizon.
+-/
+theorem kuhn_mixed_to_behavioral
+    [Fintype M.Label]
+    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hPR : I.PerfectRecall)
+    (hH : M.FiniteHorizon k) :
+    KuhnMixedToBehavioralViaOutcome
+      (BehavioralProfile I) (InfoModel.MixedProfile (I := I)) (PureProfile I) I.Outcome
+      (InfoModel.mixedJoint (I := I)) (D.evalBehavioral k) (D.evalPure k) := by
+  have _ := hPR
+  have _ := hH
+  sorry
+
+/-- **Kuhn (complete, both directions)** at the `InfoModel` level.
+
+Do not modify this by strengthening assumptions in either direction.
+If proof infrastructure is missing, keep the exact statement and refine lemmas.
+-/
+theorem kuhn_complete
+    [Fintype M.Label]
+    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hPR : I.PerfectRecall)
+    (hH : M.FiniteHorizon k) :
+    KuhnCompleteViaOutcome
+      (BehavioralProfile I) (InfoModel.MixedProfile (I := I)) (PureProfile I) I.Outcome
+      (mixedOfBehavioralCanonical (I := I))
+      (InfoModel.mixedJoint (I := I))
+      (D.evalBehavioral k) (D.evalPure k) := by
+  exact ⟨
+    kuhn_behavioral_to_mixed (I := I) (D := D) (k := k),
+    kuhn_mixed_to_behavioral (I := I) (D := D) (k := k) hPR hH
+  ⟩
+
 end InfoModel
 
 end Theorems
