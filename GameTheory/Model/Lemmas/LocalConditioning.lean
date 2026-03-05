@@ -44,6 +44,26 @@ omit [Fintype ι] in
     iterCondMixedLocal (I := I) i μi [] = μi := rfl
 
 omit [Fintype ι] in
+/-- Repeated local conditioning composes by list append: conditioning on
+`hist₁ ++ hist₂` is the same as first conditioning on `hist₁` and then on
+`hist₂`. -/
+theorem iterCondMixedLocal_append
+    (i : ι)
+    [Fintype (InfoModel.LocalPure (I := I) i)]
+    [Fintype (Option (M.Act i))]
+    (μi : PMF (InfoModel.LocalPure (I := I) i))
+    (hist₁ hist₂ : List (InfoModel.LocalHistTok (I := I) i)) :
+    iterCondMixedLocal (I := I) i μi (hist₁ ++ hist₂) =
+      iterCondMixedLocal (I := I) i
+        (iterCondMixedLocal (I := I) i μi hist₁) hist₂ := by
+  induction hist₁ generalizing μi with
+  | nil =>
+      simp [iterCondMixedLocal]
+  | cons tok rest ih =>
+      rcases tok with ⟨v, a⟩
+      simp [iterCondMixedLocal, ih]
+
+omit [Fintype ι] in
 theorem pushforward_bind_condMixedLocal
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]

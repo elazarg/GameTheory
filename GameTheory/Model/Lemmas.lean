@@ -1,6 +1,7 @@
 import GameTheory.Model.Lemmas.ProjectStates
 import GameTheory.Model.Lemmas.ReachStateTrace
 import GameTheory.Model.Lemmas.PerfectRecall
+import GameTheory.Model.Lemmas.LocalHistories
 import GameTheory.Model.Lemmas.Coordinates
 import GameTheory.Model.Lemmas.ExecutionLocality
 import GameTheory.Model.Lemmas.LocalConditioning
