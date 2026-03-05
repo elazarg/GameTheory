@@ -123,26 +123,6 @@ theorem stepIndependence_of_eq_behavioralMixed
     StepIndependence (I := I) D μ n := by
   simpa [hμ] using hStep
 
-/-- Step 4 core proposition: scalar independence under the behavioral product law. -/
-def step4_scalarIndependenceCore : Prop :=
-  ∀ [DecidableEq ι] [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
-    [∀ i, Fintype (LocalPure (I := I) i)],
-    ∀ (σ : BehavioralProfile I) (n : Nat)
-      (f g : PureProfile I → ENNReal),
-      (∀ π π' : PureProfile I,
-        (∀ i (v : I.LocalTrace i), v.length ≤ n → π i v = π' i v) → f π = f π') →
-      (∀ π π' : PureProfile I,
-        (∀ i (v : I.LocalTrace i), v.length > n → π i v = π' i v) → g π = g π') →
-      ∑ π, (mixedJoint I (behavioralToMixed I σ)) π * (f π * g π) =
-      (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * f π) *
-      (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * g π)
-
-/-- Step 4 is proved: this is exactly `behavioralToMixed_scalar_indep`. -/
-theorem step4_scalarIndependenceCore_proved : step4_scalarIndependenceCore (I := I) := by
-  intro _ _ _ _ σ n f g hf hg
-  exact behavioralToMixed_scalar_indep (I := I) σ n f g hf hg
-
 /-- Remaining probabilistic bridge for behavioral-induced mixed profiles:
 factor one-step extension through run-prefix sampling. -/
 theorem behavioralToMixed_stepIndependence_bridge

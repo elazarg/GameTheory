@@ -3,6 +3,7 @@ import GameTheory.Model.Lemmas.ReachStateTrace
 import GameTheory.Model.Lemmas.PerfectRecall
 import GameTheory.Model.Lemmas.Coordinates
 import GameTheory.Model.Lemmas.ExecutionLocality
+import GameTheory.Model.Lemmas.LocalConditioning
 import GameTheory.Model.Lemmas.Profiles
 import GameTheory.Model.Lemmas.AtomicFactorization
 import GameTheory.Model.Lemmas.StepIndependence
