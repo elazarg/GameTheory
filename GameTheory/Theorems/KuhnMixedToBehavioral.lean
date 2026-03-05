@@ -138,6 +138,24 @@ noncomputable def conditionedMixedProfile
     (InfoModel.localHistTokens (I := I) i ha ss)
 
 omit [Fintype ι] in
+private theorem conditionedMixedProfile_append
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (μ : InfoModel.MixedProfile (I := I))
+    (ha0 haTail : List (M.Label × (∀ j, Option (M.Act j))))
+    (ss0 ssTail : List M.State)
+    (hLen0 : ss0.length = ha0.length + 1) :
+    conditionedMixedProfile (I := I) μ (ha0 ++ haTail) (ss0 ++ ssTail) =
+      fun i =>
+        iterCondMixedLocal (I := I) i
+          (conditionedMixedProfile (I := I) μ ha0 ss0 i)
+          (InfoModel.localHistTokensFrom (I := I) i ss0 haTail ssTail) := by
+  funext i
+  dsimp [conditionedMixedProfile]
+  rw [InfoModel.localHistTokens_append (I := I) i ha0 haTail ss0 ssTail hLen0]
+  rw [iterCondMixedLocal_append]
+
+omit [Fintype ι] in
 private theorem mixedToBehavioralAfter_eq_iterCond_pushforward
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
