@@ -35,40 +35,6 @@ def KuhnCompleteViaOutcome
   (∀ σ : Behavioral, (mixedOfBehavioral σ).bind evalPure = evalBehavioral σ) ∧
   (∀ μ : Mixed, ∃ σ : Behavioral, evalBehavioral σ = (joint μ).bind evalPure)
 
-section Generic
-
-variable {ι : Type} [Fintype ι]
-variable {A : ι → Type} [∀ i, Fintype (A i)]
-variable {β γ : Type} [Finite β]
-
-open Classical in
- theorem kuhn_behavioral_to_mixed_indep
-    (σ : ∀ i, PMF (A i))
-    (f : (∀ i, A i) → PMF β)
-    (g : β → (∀ i, A i) → PMF γ)
-    (J : Finset ι)
-    (hf : ∀ j, j ∉ J → Ignores j f)
-    (hg : ∀ j, j ∈ J → ∀ b, Ignores j (g b)) :
-    (pmfPi σ).bind (fun s => (f s).bind (fun b => g b s)) =
-    (pmfPi σ).bind (fun s => (f s).bind (fun b => (pmfPi σ).bind (fun t => g b t))) :=
-  pmfPi_bind_indep (σ := σ) (f := f) (g := g) (J := J) hf hg
-
-variable {α : Type} [Fintype α]
-
-theorem kuhn_mixed_to_behavioral_disintegrate
-    {β γ : Type} [Finite β]
-    (μ : PMF α) (proj : α → β) (g : α → PMF γ) :
-    μ.bind g =
-      (Math.ProbabilityMassFunction.pushforward μ proj).bind
-        (fun b => (Math.ProbabilityMassFunction.condOn μ proj b).bind g) := by
-  classical
-  letI : Fintype β := Fintype.ofFinite β
-  simpa using
-    (Math.ProbabilityMassFunction.bind_pushforward_condOn
-      (μ := μ) (proj := proj) (g := g))
-
-end Generic
-
 section InfoModel
 
 open Execution

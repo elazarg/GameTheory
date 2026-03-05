@@ -505,8 +505,8 @@ private theorem actionTrace_eq_of_labels_projectActions_eq
                   have hfun : ax = ay := by
                     funext i
                     simpa using hheadAct i
-                  simp [hlabel, hfun, htail]
-                  exact hlabel
+                  simp only [List.cons.injEq, Prod.mk.injEq]
+                  exact ⟨⟨hlabel, hfun⟩, htail⟩
 
 omit [Fintype ι] in
 private theorem mixedToBehavioral_eq_iterCond_pushforward
@@ -660,6 +660,7 @@ private theorem stepDist_pure_point_nonzero
     apply hprod
     rw [hzero, mul_zero]
 
+omit [Fintype ι] in
 private theorem pushforward_append_nonzero_exists
     (μ : PMF (M.Label × M.State))
     (h : List M.Label) (ss : List M.State)
@@ -680,6 +681,7 @@ private theorem pushforward_append_nonzero_exists
     simp [PMF.pure_apply, heq, hμ]
   · simp [PMF.pure_apply, heq]
 
+omit [Fintype ι] in
 private theorem pushforward_append_apply_same
     (μ : PMF (M.Label × M.State))
     (h : List M.Label) (ss : List M.State) (lab : M.Label) (t : M.State) :
@@ -706,6 +708,7 @@ private theorem pushforward_append_apply_same
               rfl
     simp [PMF.pure_apply, hEq]
 
+omit [Fintype ι] in
 private theorem pushforward_append_apply_other
     (μ : PMF (M.Label × M.State))
     (h1 h2 : List M.Label) (ss1 ss2 : List M.State) (lab : M.Label) (t : M.State)
