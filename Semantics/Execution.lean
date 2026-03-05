@@ -131,6 +131,48 @@ theorem runDistPure_eq_runDistPureFrom
     (n : Nat) (π : PureProfile I) :
     D.runDistPure n π = runDistPureFrom D n π ([], [M.init]) := rfl
 
+/-- In the support of `runDistFrom D n σ hs₀`, the resulting state trace has
+length `hs₀.2.length + n`. This is the continuation analogue of
+`runDist_support_stateLength`. -/
+theorem runDistFrom_support_stateLength
+    [∀ i, Fintype (Option (M.Act i))]
+    (D : Dynamics I)
+    (n : Nat) (σ : BehavioralProfile I)
+    (hs₀ hs : List M.Label × List M.State) :
+    runDistFrom D n σ hs₀ hs ≠ 0 → hs.2.length = hs₀.2.length + n := by
+  induction n generalizing hs with
+  | zero =>
+      intro h
+      have hmem : hs ∈ (PMF.pure hs₀ : PMF _).support := by
+        rwa [runDistFrom_zero (D := D)] at h
+      rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
+      subst hmem
+      simp
+  | succ n ih =>
+      intro h
+      rw [runDistFrom_succ (D := D), PMF.bind_apply] at h
+      by_contra hlen
+      apply h
+      rw [ENNReal.tsum_eq_zero]
+      intro hs'
+      by_cases hhs' : runDistFrom D n σ hs₀ hs' = 0
+      · simp [hhs']
+      · have hlen' := ih hs' hhs'
+        suffices hsuff :
+            (Math.ProbabilityMassFunction.pushforward
+              (D.stepDist σ hs'.2) (fun ls => (hs'.1 ++ [ls.1], hs'.2 ++ [ls.2]))) hs = 0 by
+          simp [hsuff]
+        simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+        rw [ENNReal.tsum_eq_zero]
+        intro ls
+        suffices hne : hs ≠ (hs'.1 ++ [ls.1], hs'.2 ++ [ls.2]) by
+          simp [PMF.pure_apply, hne]
+        intro heq
+        apply hlen
+        have : hs.2.length = hs'.2.length + 1 := by
+          simpa [List.length_append] using congrArg (fun z => z.2.length) heq
+        omega
+
 end Dynamics
 end Execution
 
