@@ -15,6 +15,17 @@ theorem reachStateTrace_nonempty
   | snoc _ _ _ =>
       simp
 
+theorem reachActionTrace_nonempty
+    {ha : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ss : List M.State}
+    (hr : InfoModel.ReachActionTrace M ha ss) :
+    ss ≠ [] := by
+  induction hr with
+  | nil =>
+      simp
+  | snoc _ _ _ =>
+      simp
+
 theorem reachStateTrace_length_relation
     (hr : InfoModel.ReachStateTrace M h ss) :
     ss.length = h.length + 1 := by

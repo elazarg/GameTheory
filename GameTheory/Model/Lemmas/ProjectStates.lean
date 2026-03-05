@@ -46,5 +46,18 @@ theorem outcomeOfStates_apply (ss : List M.State) (i : ι) :
     I.outcomeOfStates ss i = I.projectStates i ss := by
   rfl
 
+theorem projectStates_getLast?
+    (i : ι) (ss : List M.State) :
+    (I.projectStates i ss).getLast? = Option.map (I.observe i) ss.getLast? := by
+  induction ss with
+  | nil =>
+      rfl
+  | cons s tl ih =>
+      cases tl with
+      | nil =>
+          simp [InfoModel.projectStates]
+      | cons s' tl' =>
+          simpa [InfoModel.projectStates] using ih
+
 end InfoModel
 end GameTheory

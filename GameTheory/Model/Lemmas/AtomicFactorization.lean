@@ -33,7 +33,7 @@ theorem behavioralToMixed_apply_prod
     (fi : I.LocalTrace i → Option (M.Act i)) :
     (behavioralToMixed I σ i) fi =
       ∏ p : I.LocalTrace i, (σ i p) (fi p) := by
-  simpa [behavioralToMixed, pmfPi_apply]
+  simp [behavioralToMixed, pmfPi_apply]
 
 /-- The joint measure `mixedJoint (behavioralToMixed σ)` decomposes as a double
 product over controllers and coordinates. -/

@@ -33,7 +33,7 @@ theorem behavioralToMixed_scalar_indep
   set μ := mixedJoint I (behavioralToMixed I σ)
   have hμ_prod : ∀ π, μ π = ∏ i, ∏ p : I.LocalTrace i, (σ i p) (π i p) := by
     intro π
-    simpa [μ, mixedJoint, behavioralToMixed_apply_prod]
+    simp [μ, mixedJoint, behavioralToMixed_apply_prod]
   let swap : PureProfile I → PureProfile I → PureProfile I :=
     fun π₁ π₂ i v => if v.length ≤ n then π₁ i v else π₂ i v
   have hweight_i : ∀ (π₁ π₂ : PureProfile I) (i : ι),
