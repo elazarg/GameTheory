@@ -1,3 +1,9 @@
+-- Unified architecture (semantics-first)
+import GameTheory.Model
+import GameTheory.Compilers
+import GameTheory.Bridges
+import GameTheory.Theorems
+
 -- Probability and core
 import Math.Probability
 import GameTheory.Core.KernelGame
@@ -13,6 +19,7 @@ import GameTheory.Sequential.ProtoKuhn
 
 -- Solution concepts and properties
 import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.SemanticSolutionConcepts
 import GameTheory.Concepts.Deviation
 import GameTheory.Concepts.BestResponse
 import GameTheory.Concepts.BestResponseExistence
@@ -85,19 +92,13 @@ import GameTheory.EFG.Basic
 import GameTheory.EFG.Kuhn
 import GameTheory.EFG.Zermelo
 import GameTheory.EFG.OneShotDeviation
-import GameTheory.Bridge.EFG_NFG
 import GameTheory.EFG.Refinements
-import GameTheory.Bridge.EFG_Proto
 
 -- Normal-form games
 import GameTheory.NFG.Basic
-import GameTheory.Bridge.NFG_EFG
-import GameTheory.Bridge.NFG_Proto
 
 -- Multi-agent influence diagrams
 import GameTheory.MAID.Basic
-import GameTheory.Bridge.MAID_EFG
-import GameTheory.Bridge.MAID_Proto
 
 -- Coalitional, bargaining, and matching games
 import GameTheory.NFG.CoalitionalGame

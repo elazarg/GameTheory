@@ -89,24 +89,16 @@ namespace Execution
 
 variable {ι : Type} {M : LSM ι}
 
-/-- Controller view as an information-set quotient of machine states. -/
-abbrev View (I : InfoModel M) (i : ι) : Type :=
-  Quotient (I.infoSetoid i)
-
 /-- Joint (possibly inactive) action profile. -/
 abbrev JointAction (M : LSM ι) : Type := ∀ i, Option (M.Act i)
 
-/-- Deterministic profile over label and local view. -/
+/-- Deterministic profile over label and local trace view. -/
 abbrev PureProfile (I : InfoModel M) : Type :=
-  ∀ i, M.Label → View I i → Option (M.Act i)
+  ∀ i, M.Label → I.LocalTrace i → Option (M.Act i)
 
-/-- Behavioral profile over label and local view. -/
+/-- Behavioral profile over label and local trace view. -/
 abbrev BehavioralProfile (I : InfoModel M) : Type :=
-  ∀ i, M.Label → View I i → PMF (Option (M.Act i))
-
-/-- Canonical view representative of a state. -/
-def viewOf (I : InfoModel M) (i : ι) (s : M.State) : View I i :=
-  Quotient.mk _ s
+  ∀ i, M.Label → I.LocalTrace i → PMF (Option (M.Act i))
 
 /-- Lift a deterministic profile to a behavioral one. -/
 noncomputable def pureToBehavioral (I : InfoModel M) (π : PureProfile I) : BehavioralProfile I :=
@@ -131,15 +123,15 @@ open Classical in
 /-- Independent joint-action distribution induced by a behavioral profile. -/
 noncomputable def jointActionDist
     [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfile I) (ℓ : M.Label) (s : M.State) : PMF (JointAction M) :=
-  Math.PMFProduct.pmfPi (fun i => σ i ℓ (viewOf I i s))
+    (σ : BehavioralProfile I) (h : List M.Label) (ℓ : M.Label) : PMF (JointAction M) :=
+  Math.PMFProduct.pmfPi (fun i => σ i ℓ (I.project i h))
 
 /-- One stochastic step from a current state under behavioral profile `σ`. -/
 noncomputable def stepDist (D : Dynamics I)
     [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfile I) (s : M.State) : PMF (M.Label × M.State) :=
+    (σ : BehavioralProfile I) (h : List M.Label) (s : M.State) : PMF (M.Label × M.State) :=
   (D.labelKernel s).bind fun ℓ =>
-    (jointActionDist (I := I) σ ℓ s).bind fun a =>
+    (jointActionDist (I := I) σ h ℓ).bind fun a =>
       Math.ProbabilityMassFunction.pushforward (D.nextState ℓ a s) (fun t => (ℓ, t))
 
 /-- Bounded run distribution of length exactly `k`:
@@ -150,7 +142,7 @@ noncomputable def runDist (D : Dynamics I)
   Nat.rec (PMF.pure ([], M.init))
     (fun _ rec =>
       rec.bind (fun hs =>
-        Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
+        Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.1 hs.2)
           (fun ls => (hs.1 ++ [ls.1], ls.2))))
     k
 
