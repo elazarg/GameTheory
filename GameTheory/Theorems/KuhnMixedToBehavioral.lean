@@ -823,44 +823,37 @@ theorem stepPoint_eq_via_query_disintegration
       fun i => InfoModel.localHistTokens (I := I) i ha hs
     let μHist : InfoModel.MixedProfile (I := I) :=
       conditionedMixedProfile (I := I) μ ha hs
-    have hbeh_now :
-        ∀ i,
-          mixedToBehavioral (I := I) μ i (I.projectStates i hs) =
-            InfoModel.realizeBehavioralCanonical (I := I) μHist i
-              (I.projectStates i hs) := by
-      intro i
-      simpa [μHist, conditionedMixedProfile, hist, InfoModel.realizeBehavioralCanonical] using
-        mixedToBehavioral_eq_iterCond_pushforward
-          (I := I) (hPR := hPR) (μ := μ) i hr
-    have hstep_beh :
-        D.stepDist (mixedToBehavioral (I := I) μ) hs =
-          D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μHist) hs := by
-      apply stepDist_behavioral_depends_on_current_context (I := I) (D := D)
-      intro i
-      exact hbeh_now i
     have hleft_rewrite :
         (Math.ProbabilityMassFunction.pushforward
           (D.stepDist (mixedToBehavioral (I := I) μ) hs)
           (fun t => hs ++ [t])) y
           =
         (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
+      have hseq :
+          Math.ProbabilityMassFunction.pushforward
+            (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+            (fun t => hs ++ [t]) =
+          (InfoModel.mixedJoint (I := I) μHist).bind
+            (fun π =>
+              Math.ProbabilityMassFunction.pushforward
+                (D.stepDist (pureToBehavioral I π) hs)
+                (fun t => hs ++ [t])) := by
+        simpa [μHist] using
+          kuhn_conditioning_distributes_over_sequencing
+            (I := I) (D := D) (hPR := hPR) (μ := μ) hr
       calc
         (Math.ProbabilityMassFunction.pushforward
           (D.stepDist (mixedToBehavioral (I := I) μ) hs)
           (fun t => hs ++ [t])) y
             =
-          (Math.ProbabilityMassFunction.pushforward
-            (D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μHist) hs)
-            (fun t => hs ++ [t])) y := by
-              simpa using congrArg
-                (fun ν =>
-                  (Math.ProbabilityMassFunction.pushforward ν
-                    (fun t => hs ++ [t])) y)
-                hstep_beh
+          ((InfoModel.mixedJoint (I := I) μHist).bind
+            (fun π =>
+              Math.ProbabilityMassFunction.pushforward
+                (D.stepDist (pureToBehavioral I π) hs)
+                (fun t => hs ++ [t]))) y := by
+                  simpa using congrArg (fun ν => ν y) hseq
         _ = (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-              simpa [stepPureY] using
-                (mixedJoint_stepPoint_eq_realizeBehavioralCanonical
-                  (I := I) (D := D) μHist hs y).symm
+              simp [PMF.bind_apply, stepPureY]
     have hfactor_run :
         ∃ traceMass compatMass : ENNReal,
           C = traceMass * compatMass ∧
