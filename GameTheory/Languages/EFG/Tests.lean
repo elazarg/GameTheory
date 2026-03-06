@@ -1,10 +1,7 @@
 import GameTheory.Languages.EFG.Compile
 import GameTheory.Languages.EFG.SOS
 
-namespace GameTheory
-namespace Languages
-namespace EFG
-namespace Tests
+namespace GameTheory.EFG.Tests
 
 open _root_.EFG
 
@@ -49,7 +46,8 @@ example :
 example :
     Semantics.Transition.ReachBy
       ((compileLSM (S := oneInfo) (Outcome := Bool) decisionTree).stepExists)
-      ([] : List (GameTheory.JointAction (compileLSM (S := oneInfo) (Outcome := Bool) decisionTree)))
+      ([] : List
+        (GameTheory.JointAction (compileLSM (S := oneInfo) (Outcome := Bool) decisionTree)))
       decisionTree decisionTree := by
   exact reachBy_implies_compiled (t := decisionTree) (ReachBy.here decisionTree)
 
@@ -66,7 +64,4 @@ example :
 
 end
 
-end Tests
-end EFG
-end Languages
-end GameTheory
+end GameTheory.EFG.Tests

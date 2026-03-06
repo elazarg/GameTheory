@@ -1,8 +1,6 @@
 import GameTheory.Languages.EFG.Compile
 
-namespace GameTheory
-namespace Languages
-namespace EFG
+namespace GameTheory.EFG
 
 open _root_.EFG
 
@@ -121,6 +119,4 @@ theorem compiled_reach_iff_exists_history
   · rintro ⟨h, hr⟩
     exact ⟨h.map (jointActionOfHistoryStep t), reachBy_implies_compiled t hr⟩
 
-end EFG
-end Languages
-end GameTheory
+end GameTheory.EFG

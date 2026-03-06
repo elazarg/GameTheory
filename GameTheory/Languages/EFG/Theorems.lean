@@ -4,9 +4,7 @@ import GameTheory.Languages.EFG.Compile
 import GameTheory.Languages.EFG.SOS
 import GameTheory.Languages.EFG.Kuhn
 
-namespace GameTheory
-namespace Languages
-namespace EFG
+namespace GameTheory.EFG
 
 open GameTheory.Theorems
 
@@ -53,7 +51,7 @@ noncomputable def mixedOfBehavioralPure (G : _root_.EFG.EFGGame)
 
 /-- Outcome-level behavioral -> mixed direction, packaged with the canonical PMF
 over pure profiles rather than flat contingent plans. -/
-theorem kuhn_behavioral_to_mixed_pure
+ theorem kuhn_behavioral_to_mixed_pure
     (G : _root_.EFG.EFGGame)
     (hpr : _root_.EFG.PerfectRecall G.tree) :
     KuhnBehavioralToMixedOutcome
@@ -209,6 +207,4 @@ theorem kuhn_outcome_both_directions_of_perfectRecall
     (mixedOfBehavioral := mixedOfBehavioral)
     hB2M hM2B
 
-end EFG
-end Languages
-end GameTheory
+end GameTheory.EFG

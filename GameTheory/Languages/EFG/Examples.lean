@@ -8,10 +8,7 @@ Reader-facing extensive-form examples.
 Compilation/SOS validation belongs in `GameTheory.Languages.EFG.Tests`.
 -/
 
-namespace GameTheory
-namespace Languages
-namespace EFG
-namespace Examples
+namespace GameTheory.EFG.Examples
 
 open _root_.EFG
 
@@ -40,7 +37,4 @@ def binaryChoiceGame : EFGGame where
   utility := fun b _ =>
     if b then 1 else 0
 
-end Examples
-end EFG
-end Languages
-end GameTheory
+end GameTheory.EFG.Examples

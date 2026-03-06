@@ -1,9 +1,7 @@
 import GameTheory.Model.SemanticForm
 import GameTheory.Languages.EFG.Syntax
 
-namespace GameTheory
-namespace Languages
-namespace EFG
+namespace GameTheory.EFG
 
 open _root_.EFG
 
@@ -85,6 +83,4 @@ def compileControlBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
       (compileInfoOn (S := S) (Outcome := Outcome) t) where
   control := fun i => GameTheory.ControlSpec.behavior (β i)
 
-end EFG
-end Languages
-end GameTheory
+end GameTheory.EFG
