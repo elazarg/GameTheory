@@ -50,7 +50,7 @@ noncomputable def mixedToBehavioral
     (iterCondMixedLocal (I := I) i (μ i) hist) (fun f => f v)
 
 omit [Fintype ι] [DecidableEq ι] in
-private theorem mixedToBehavioral_eq_iterCond_pushforward
+theorem mixedToBehavioral_eq_iterCond_pushforward
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -156,7 +156,7 @@ private theorem conditionedMixedProfile_append
   rw [iterCondMixedLocal_append]
 
 omit [Fintype ι] [DecidableEq ι] in
-private theorem mixedToBehavioralAfter_eq_iterCond_pushforward
+theorem mixedToBehavioralAfter_eq_iterCond_pushforward
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -253,7 +253,7 @@ private theorem mixedToBehavioralAfter_eq_iterCond_pushforward
   simp [haTail', ssTail', hhistTail]
 
 omit [Fintype ι] [DecidableEq ι] in
-private theorem mixedToBehavioral_tail_agree
+theorem mixedToBehavioral_tail_agree
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -420,7 +420,7 @@ private theorem mixedToBehavioralAfter_stepPoint_eq_conditioned
                 (I := I) (D := D) μ0 ss0 y).symm
 
 omit [Fintype ι] [DecidableEq ι] in
-private theorem mixedToBehavioralAfter_eq_realizeBehavioralCanonical_reachable
+theorem mixedToBehavioralAfter_eq_realizeBehavioralCanonical_reachable
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -478,7 +478,7 @@ private theorem mixedToBehavioralAfter_eq_realizeBehavioralCanonical_reachable
         (I.projectStates i (ss0 ++ ssTail)) := by
           simp [hcond]
 
-private theorem mixedToBehavioralAfter_stepPoint_eq_conditioned_reachable
+theorem mixedToBehavioralAfter_stepPoint_eq_conditioned_reachable
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -542,7 +542,7 @@ private theorem mixedToBehavioralAfter_stepPoint_eq_conditioned_reachable
               (mixedJoint_stepPoint_eq_realizeBehavioralCanonical
                 (I := I) (D := D) μFull (ss0 ++ ssTail) y).symm
 
-private theorem mixedToBehavioralAfter_stepActionStatePoint_eq_conditioned_reachable
+theorem mixedToBehavioralAfter_stepActionStatePoint_eq_conditioned_reachable
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
