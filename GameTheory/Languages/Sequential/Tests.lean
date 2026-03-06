@@ -1,8 +1,12 @@
-import GameTheory.Languages.Sequential.RepeatedGame
-import GameTheory.Languages.Sequential.StochasticGame
+import GameTheory.Languages.Sequential.Syntax
+import GameTheory.Languages.Sequential.SOS
+import GameTheory.Languages.Sequential.Compile
+import GameTheory.Languages.Sequential.Theorems
 
 /-!
 # GameTheory.Languages.Sequential.Tests
 
-Lightweight entrypoint for Sequential examples/smoke tests.
+Compilation/SOS validation entrypoint for Sequential.
+
+Reader-facing worked examples belong in `GameTheory.Languages.Sequential.Examples`.
 -/

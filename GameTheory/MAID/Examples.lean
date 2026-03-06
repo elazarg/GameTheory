@@ -1,6 +1,6 @@
-import GameTheory.Languages.MAID.Tests
+import GameTheory.Languages.MAID.Examples
 
 /-!
-Compatibility shim. Actual MAID examples/tests now live in
-`GameTheory.Languages.MAID.Tests`.
+Compatibility shim. Actual MAID examples now live in
+`GameTheory.Languages.MAID.Examples`.
 -/

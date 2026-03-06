@@ -107,8 +107,7 @@ import GameTheory.NFG.Bargaining
 import GameTheory.NFG.Matching
 
 -- Repeated and stochastic games
-import GameTheory.Languages.Sequential.RepeatedGame
-import GameTheory.Languages.Sequential.StochasticGame
+import GameTheory.Languages.Sequential.Examples
 
 -- Bayesian games and mechanism design
 import GameTheory.Mechanism.BayesianGame
@@ -138,5 +137,5 @@ import GameTheory.NFG.PublicGoods
 -- Examples
 import GameTheory.NFG.Examples
 import GameTheory.EFG.Examples
-import GameTheory.Languages.MAID.Tests
+import GameTheory.Languages.MAID.Examples
 
