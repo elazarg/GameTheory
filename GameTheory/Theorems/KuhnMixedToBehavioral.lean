@@ -29,7 +29,6 @@ abbrev LocalHistTok (i : ι) : Type :=
 /-- Canonical conditional behavioral realization from a mixed profile,
 defined by conditioning on one chosen reachable local history witness. -/
 noncomputable def mixedToBehavioral
-    [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (μ : InfoModel.MixedProfile (I := I)) :
@@ -51,7 +50,6 @@ noncomputable def mixedToBehavioral
 
 omit [Fintype ι] [DecidableEq ι] in
 theorem mixedToBehavioral_eq_iterCond_pushforward
-    [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
@@ -117,7 +115,7 @@ At a reachable prefix, conditioning the mixed profile on the realized local
 history and then taking one action/state continuation step yields exactly the
 same distribution as first passing to `mixedToBehavioral` and then stepping. -/
 theorem kuhn_conditioning_distributes_over_sequencing_actionState
-    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
@@ -130,6 +128,7 @@ theorem kuhn_conditioning_distributes_over_sequencing_actionState
         (conditionedMixedProfile (I := I) μ ha ss)).bind
         (fun π => D.stepActionStateDist (pureToBehavioral I π) ss) := by
   classical
+  letI : ∀ i, Fintype (I.LocalTrace i) := fun i => Fintype.ofFinite (I.LocalTrace i)
   have hbeh_now :
       ∀ i,
         mixedToBehavioral (I := I) μ i (I.projectStates i ss) =
@@ -175,7 +174,7 @@ next explicit action/state step can be computed either:
 This is the strongest local continuation law in the current development; the
 state-only and explicit action/state theorems are its special cases. -/
 theorem kuhn_conditioning_distributes_over_sequencing_map
-    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     {β : Type*}
@@ -192,6 +191,7 @@ theorem kuhn_conditioning_distributes_over_sequencing_map
         (fun π =>
           Math.ProbabilityMassFunction.pushforward
             (D.stepActionStateDist (pureToBehavioral I π) ss) f) := by
+  letI : ∀ i, Fintype (I.LocalTrace i) := fun i => Fintype.ofFinite (I.LocalTrace i)
   have hstep :=
     kuhn_conditioning_distributes_over_sequencing_actionState
       (I := I) (D := D) (hPR := hPR) (μ := μ) hr
@@ -220,7 +220,7 @@ theorem kuhn_conditioning_distributes_over_sequencing_map
 -- realized local history and then taking one continuation step gives the same
 -- continuation law as first passing to `mixedToBehavioral`.
 theorem kuhn_conditioning_distributes_over_sequencing
-    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
@@ -238,6 +238,7 @@ theorem kuhn_conditioning_distributes_over_sequencing
           (D.stepDist (pureToBehavioral I π) ss)
           (fun t => ss ++ [t])) := by
   classical
+  letI : ∀ i, Fintype (I.LocalTrace i) := fun i => Fintype.ofFinite (I.LocalTrace i)
   let μHist : InfoModel.MixedProfile (I := I) := conditionedMixedProfile (I := I) μ ha ss
   calc
     (Math.ProbabilityMassFunction.pushforward
@@ -303,7 +304,7 @@ theorem kuhn_conditioning_distributes_over_sequencing
                         (I := I) (D := D) (σ := pureToBehavioral I π) (ss := ss)]
 
 private theorem reachable_stepPoint_eq_conditioned_sum
-    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
@@ -323,6 +324,7 @@ private theorem reachable_stepPoint_eq_conditioned_sum
       =
     ∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π := by
   classical
+  letI : ∀ i, Fintype (I.LocalTrace i) := fun i => Fintype.ofFinite (I.LocalTrace i)
   let μHist : InfoModel.MixedProfile (I := I) := conditionedMixedProfile (I := I) μ ha hs
   let stepPureY : PureProfile I → ENNReal := fun π =>
     (Math.ProbabilityMassFunction.pushforward
@@ -348,7 +350,7 @@ private theorem reachable_stepPoint_eq_conditioned_sum
 the reachable-prefix sequencing law, while the remaining weighted algebra is
 discharged by reach-conditioned disintegration/factorization. -/
 theorem stepPoint_eq_via_query_disintegration
-    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
@@ -369,6 +371,7 @@ theorem stepPoint_eq_via_query_disintegration
           (D.stepDist (pureToBehavioral I π) hs)
           (fun t => hs ++ [t])) y)) := by
   classical
+  letI : ∀ i, Fintype (I.LocalTrace i) := fun i => Fintype.ofFinite (I.LocalTrace i)
   let μJ : PMF (PureProfile I) := InfoModel.mixedJoint (I := I) μ
   let stepPureY : PureProfile I → ENNReal := fun π =>
     (Math.ProbabilityMassFunction.pushforward
@@ -453,7 +456,7 @@ theorem stepPoint_eq_via_query_disintegration
             simp [stepPureY]
 
 theorem mixedToBehavioral_stepIndependence
-    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
@@ -471,6 +474,7 @@ theorem mixedToBehavioral_stepIndependence
             (fun t => hs ++ [t]))) := by
   intro n
   classical
+  letI : ∀ i, Fintype (I.LocalTrace i) := fun i => Fintype.ofFinite (I.LocalTrace i)
   ext y
   set μJ : PMF (PureProfile I) := InfoModel.mixedJoint (I := I) μ
   let Lfun : (List M.State) → ENNReal :=
@@ -582,13 +586,14 @@ theorem mixedToBehavioral_stepIndependence
 
 /-- Kuhn's mixed-to-behavioral direction for `InfoModel` outcome distributions. -/
 theorem mixedToBehavioral_correct
-    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I)) :
     D.evalBehavioral k (mixedToBehavioral (I := I) μ) =
       (InfoModel.mixedJoint (I := I) μ).bind (D.evalPure k) := by
+  letI : ∀ i, Fintype (I.LocalTrace i) := fun i => Fintype.ofFinite (I.LocalTrace i)
   exact evalBehavioral_eq_mixed_of_stepIndependence (I := I) (D := D) (k := k) μ
     (mixedToBehavioral (I := I) μ)
     (mixedToBehavioral_stepIndependence (I := I) (D := D) hPR μ)
