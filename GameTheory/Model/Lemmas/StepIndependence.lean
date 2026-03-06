@@ -103,6 +103,195 @@ theorem behavioralToMixed_scalar_indep
         ring
     _ = (∑ π, μ π * f π) * ∑ π, μ π * g π := (Finset.sum_mul_sum ..).symm
 
+section Restricted
+
+variable [∀ i, DecidableEq (I.LocalTrace i)]
+
+/-- Scalar independence under the restricted behavioral product measure. The
+proof is the same as the full-coordinate version, but only the coordinates in
+the finite cover `H` are present. -/
+theorem restrictedBehavioralToMixed_scalar_indep
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [DecidableEq ι]
+    [∀ i, Fintype (I.RestrictedLocalCoord H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    (σ : RestrictedBehavioralProfile (I := I) H) (n : Nat)
+    (f g : RestrictedPureProfile (I := I) H → ENNReal)
+    (hf : ∀ π π' : RestrictedPureProfile (I := I) H,
+      (∀ i (v : RestrictedLocalCoord (I := I) H i), v.1.2.length ≤ n → π i v = π' i v) →
+        f π = f π')
+    (hg : ∀ π π' : RestrictedPureProfile (I := I) H,
+      (∀ i (v : RestrictedLocalCoord (I := I) H i), v.1.2.length > n → π i v = π' i v) →
+        g π = g π') :
+    ∑ π, (restrictedMixedJointRaw (I := I) H
+      (restrictedBehavioralToMixed (I := I) H σ)) π * (f π * g π) =
+    (∑ π, (restrictedMixedJointRaw (I := I) H
+      (restrictedBehavioralToMixed (I := I) H σ)) π * f π) *
+    (∑ π, (restrictedMixedJointRaw (I := I) H
+      (restrictedBehavioralToMixed (I := I) H σ)) π * g π) := by
+  classical
+  set μ :=
+    restrictedMixedJointRaw (I := I) H (restrictedBehavioralToMixed (I := I) H σ)
+  let swap :
+      RestrictedPureProfile (I := I) H →
+      RestrictedPureProfile (I := I) H →
+      RestrictedPureProfile (I := I) H :=
+    fun π₁ π₂ i v => if v.1.2.length ≤ n then π₁ i v else π₂ i v
+  have hweight_i :
+      ∀ (π₁ π₂ : RestrictedPureProfile (I := I) H) (i : ι),
+        (restrictedBehavioralToMixed (I := I) H σ i) (swap π₁ π₂ i) *
+        (restrictedBehavioralToMixed (I := I) H σ i) (swap π₂ π₁ i) =
+        (restrictedBehavioralToMixed (I := I) H σ i) (π₁ i) *
+        (restrictedBehavioralToMixed (I := I) H σ i) (π₂ i) := by
+    intro π₁ π₂ i
+    simp only [restrictedBehavioralToMixed_apply_prod, swap]
+    rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
+    congr 1
+    funext v
+    by_cases hv : v.1.2.length ≤ n <;> simp [hv, mul_comm]
+  have hweight :
+      ∀ (π₁ π₂ : RestrictedPureProfile (I := I) H),
+        μ (swap π₁ π₂) * μ (swap π₂ π₁) = μ π₁ * μ π₂ := by
+    intro π₁ π₂
+    simp only [μ, restrictedMixedJointRaw, pmfPi_apply]
+    rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
+    congr 1
+    funext i
+    exact hweight_i π₁ π₂ i
+  have hf_swap : ∀ π₁ π₂, f (swap π₁ π₂) = f π₁ := by
+    intro π₁ π₂
+    apply hf
+    intro i v hv
+    simp [swap, hv]
+  have hg_swap : ∀ π₁ π₂, g (swap π₁ π₂) = g π₂ := by
+    intro π₁ π₂
+    apply hg
+    intro i v hv
+    simp only [swap]
+    rw [if_neg (Nat.not_le.mpr hv)]
+  let P := fun π => μ π
+  let Fsame : RestrictedPureProfile (I := I) H × RestrictedPureProfile (I := I) H → ENNReal :=
+    fun p => P p.1 * P p.2 * (f p.1 * g p.1)
+  let Fcross : RestrictedPureProfile (I := I) H × RestrictedPureProfile (I := I) H → ENNReal :=
+    fun p => P p.1 * P p.2 * (f p.1 * g p.2)
+  let e :
+      RestrictedPureProfile (I := I) H × RestrictedPureProfile (I := I) H →
+      RestrictedPureProfile (I := I) H × RestrictedPureProfile (I := I) H :=
+    fun p => (swap p.1 p.2, swap p.2 p.1)
+  have he : Function.Involutive e := by
+    intro ⟨π₁, π₂⟩
+    apply Prod.ext <;> (funext i v; simp only [e, swap]; split <;> rfl)
+  have hpoint : ∀ p, Fcross p = Fsame (e p) := by
+    intro ⟨π₁, π₂⟩
+    simp only [Fcross, Fsame, e, P]
+    rw [hweight π₁ π₂, hf_swap, hg_swap]
+  have hpair : (∑ p, Fcross p) = ∑ p, Fsame p := by
+    calc (∑ p, Fcross p) = ∑ p, Fsame (e p) :=
+            Finset.sum_congr rfl (fun p _ => hpoint p)
+      _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
+  have hsumP : (∑ π, P π) = 1 := by
+    simp only [P]
+    exact (tsum_fintype (fun π => μ π)).symm.trans μ.tsum_coe
+  calc
+    ∑ π, μ π * (f π * g π)
+        = (∑ π, μ π * (f π * g π)) * 1 := (mul_one _).symm
+    _ = (∑ π, μ π * (f π * g π)) * ∑ π₂, P π₂ := by rw [hsumP]
+    _ = ∑ π₁, ∑ π₂, μ π₁ * (f π₁ * g π₁) * P π₂ := Finset.sum_mul_sum ..
+    _ = ∑ p : _ × _, Fsame p := by
+        rw [← Fintype.sum_prod_type']
+        congr 1
+        ext ⟨π₁, π₂⟩
+        simp only [Fsame, P]
+        ring
+    _ = ∑ p : _ × _, Fcross p := hpair.symm
+    _ = ∑ π₁, ∑ π₂, μ π₁ * f π₁ * (μ π₂ * g π₂) := by
+        rw [← Fintype.sum_prod_type']
+        congr 1
+        ext ⟨π₁, π₂⟩
+        simp only [Fcross, P]
+        ring
+    _ = (∑ π, μ π * f π) * ∑ π, μ π * g π := (Finset.sum_mul_sum ..).symm
+
+/-- Restricted step-independence equality used in the bounded finite-cover Kuhn
+run induction. Execution still happens on the full machine semantics; the pure
+and behavioral profiles are obtained by extending restricted profiles outside
+the cover with the deterministic action `none`. -/
+def RestrictedStepIndependence
+    (D : Execution.Dynamics I)
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [DecidableEq ι]
+    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
+    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (μ : RestrictedMixedProfile (I := I) H) (n : Nat) : Prop :=
+    (restrictedMixedJointRaw (I := I) H μ).bind (fun π =>
+      (D.runDistPure n (extendRestrictedPureProfile (I := I) H π)).bind (fun ss =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.stepDist (restrictedRealizeBehavioralCanonical (I := I) H μ) ss)
+          (fun t => ss ++ [t]))) =
+    (restrictedMixedJointRaw (I := I) H μ).bind (fun π =>
+      (D.runDistPure n (extendRestrictedPureProfile (I := I) H π)).bind (fun ss =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.stepDist (pureToBehavioral I
+            (extendRestrictedPureProfile (I := I) H π)) ss)
+          (fun t => ss ++ [t])))
+
+/-- Restricted bridge reduction: if a restricted mixed profile satisfies
+step-independence at every depth, then run distributions factor through
+sampling a restricted pure profile and executing its full extension. -/
+theorem restricted_run_factorization
+    (D : Execution.Dynamics I)
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [DecidableEq ι]
+    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
+    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hStepIndep : ∀ μ n, RestrictedStepIndependence (I := I) D H μ n)
+    (μ : RestrictedMixedProfile (I := I) H) :
+    ∀ n,
+      D.runDist n (restrictedRealizeBehavioralCanonical (I := I) H μ) =
+        (restrictedMixedJointRaw (I := I) H μ).bind
+          (fun π => D.runDistPure n (extendRestrictedPureProfile (I := I) H π)) := by
+  intro n
+  induction n with
+  | zero =>
+      simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure]
+  | succ n ih =>
+      calc
+        D.runDist (n + 1) (restrictedRealizeBehavioralCanonical (I := I) H μ)
+            = (D.runDist n (restrictedRealizeBehavioralCanonical (I := I) H μ)).bind
+                (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward
+                    (D.stepDist (restrictedRealizeBehavioralCanonical (I := I) H μ) ss)
+                    (fun t => ss ++ [t])) := by
+              simp [Execution.Dynamics.runDist]
+        _ = ((restrictedMixedJointRaw (I := I) H μ).bind
+              (fun π => D.runDistPure n (extendRestrictedPureProfile (I := I) H π))).bind
+                (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward
+                    (D.stepDist (restrictedRealizeBehavioralCanonical (I := I) H μ) ss)
+                    (fun t => ss ++ [t])) := by
+              rw [ih]
+        _ = (restrictedMixedJointRaw (I := I) H μ).bind (fun π =>
+              (D.runDistPure n (extendRestrictedPureProfile (I := I) H π)).bind (fun ss =>
+                Math.ProbabilityMassFunction.pushforward
+                  (D.stepDist (restrictedRealizeBehavioralCanonical (I := I) H μ) ss)
+                  (fun t => ss ++ [t]))) := by
+              rw [PMF.bind_bind]
+        _ = (restrictedMixedJointRaw (I := I) H μ).bind (fun π =>
+              (D.runDistPure n (extendRestrictedPureProfile (I := I) H π)).bind (fun ss =>
+                Math.ProbabilityMassFunction.pushforward
+                  (D.stepDist (pureToBehavioral I
+                    (extendRestrictedPureProfile (I := I) H π)) ss)
+                  (fun t => ss ++ [t]))) := by
+              simpa using hStepIndep μ n
+        _ = (restrictedMixedJointRaw (I := I) H μ).bind
+              (fun π => D.runDistPure (n + 1) (extendRestrictedPureProfile (I := I) H π)) := by
+              simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure]
+
+end Restricted
+
 /-- Step-independence equality used in the Kuhn run induction. -/
 def StepIndependence
     (D : Execution.Dynamics I)
