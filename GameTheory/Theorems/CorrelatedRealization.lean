@@ -902,4 +902,142 @@ theorem mediator_product_of_product
 
 end ProductPreservation
 
+/-! ## Observation-locality of per-player consistency
+
+Under PSAR, the consistency condition `pureRun (update π₀ i πᵢ) ss ≠ 0` depends
+on the trace `ss` only through `projectStates i ss`: it reduces to requiring
+`πᵢ` to agree with `π₀ i` at each observation prefix, and these prefixes are
+determined by player i's projection of the trace.
+
+Combined with `pureRun_const_of_psar` (all nonzero values are equal), this means
+the per-player reweighted PMF `reweightPMF (σ i) (wᵢ_ss)` depends on `ss` only
+through `projectStates i ss`, giving **obs-locality of the mediator factors**. -/
+
+section ObsLocality
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+
+omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))] in
+/-- Helper: `projectStates` of a prefix can be recovered from the full projection.
+If `projectStates i (p ++ [t]) = projectStates i (p' ++ [t'])`, then
+`projectStates i p = projectStates i p'`. -/
+theorem projectStates_prefix_of_append
+    (i : ι) {p p' : List M.State} {t t' : M.State}
+    (h : I.projectStates i (p ++ [t]) = I.projectStates i (p' ++ [t'])) :
+    I.projectStates i p = I.projectStates i p' := by
+  simp only [InfoModel.projectStates, InfoModel.projectPublic, InfoModel.projectPrivate,
+    List.map_append, List.map_cons, List.map_nil] at h ⊢
+  exact Prod.ext
+    (List.append_inj_left' (congr_arg Prod.fst h) (by simp))
+    (List.append_inj_left' (congr_arg Prod.snd h) (by simp))
+
+open Classical in
+/-- Under PSAR, the per-player consistency condition `pureRun (update π₀ i πᵢ) ss ≠ 0`
+depends on `ss` only through `projectStates i ss`. If two traces have the same
+player-i projection and both are reachable under π₀, then `update π₀ i πᵢ` reaches
+one iff it reaches the other.
+
+The proof uses `pureRun_succ_nonzero_iff`: consistency at `p ++ [t]` reduces to
+consistency at `p` plus `πᵢ(projStates i p) = π₀ i(projStates i p)`, and the
+latter depends only on `projectStates i p` (extracted from `projectStates i ss`
+by `projectStates_prefix_of_append`). -/
+theorem pureRun_update_obs_local
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I) (n : Nat)
+    (i : ι) {π₀ : PureProfile I} {ss₁ ss₂ : List M.State}
+    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
+    (h₂ : pureRun (pureStep D) M.init n π₀ ss₂ ≠ 0)
+    (πᵢ : I.LocalTrace i → Option (M.Act i)) :
+    pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
+    pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₂ ≠ 0 := by
+  induction n generalizing ss₁ ss₂ with
+  | zero =>
+    simp only [pureRun, ne_eq] at h₁ h₂ ⊢
+    exact ⟨fun _ => h₂, fun _ => h₁⟩
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss₁ with rfl | ⟨p₁, t₁, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₁
+    rcases List.eq_nil_or_concat ss₂ with rfl | ⟨p₂, t₂, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₂
+    simp only [List.concat_eq_append] at hobs_i h₁ h₂ ⊢
+    -- Extract prefix obs equality
+    have hobs_p : I.projectStates i p₁ = I.projectStates i p₂ :=
+      projectStates_prefix_of_append i hobs_i
+    -- Prefix reachability
+    have hp₁ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have hp₂ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    have ht₁ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have ht₂ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    -- Use pureRun_succ_nonzero_iff decomposition
+    rw [pureRun_succ_nonzero_iff hPSAR D m h₁, pureRun_succ_nonzero_iff hPSAR D m h₂]
+    -- Helper: the action condition for `update π₀ i πᵢ` transfers between p₁ and p₂
+    have hact_transfer :
+        (∀ j, Function.update π₀ i πᵢ j (I.projectStates j p₁) =
+          π₀ j (I.projectStates j p₁)) ↔
+        (∀ j, Function.update π₀ i πᵢ j (I.projectStates j p₂) =
+          π₀ j (I.projectStates j p₂)) := by
+      constructor <;> intro h j <;> by_cases hij : j = i
+      · subst hij; rw [← hobs_p]; exact h j
+      · simp only [Function.update_of_ne hij] at h ⊢
+      · subst hij; rw [hobs_p]; exact h j
+      · simp only [Function.update_of_ne hij] at h ⊢
+    constructor
+    · exact fun ⟨hrec, hact⟩ => ⟨(ih hobs_p hp₁ hp₂).mp hrec, hact_transfer.mp hact⟩
+    · exact fun ⟨hrec, hact⟩ => ⟨(ih hobs_p hp₁ hp₂).mpr hrec, hact_transfer.mpr hact⟩
+
+end ObsLocality
+
+/-! ## Decentralization bridge
+
+The final step of Kuhn's theorem (M→B direction) decomposes as:
+1. **Correlated realization** (`correlated_realization`): any ν → correlated mediator
+2. **Product preservation** (`mediator_product_of_product`): product ν + PSAR →
+   product mediator output at each reachable trace
+3. **Decentralization**: product-valued correlated profile → independent behavioral
+
+Step 3 reduces to **observation-locality**: each factor τᵢ of the product must
+depend only on player i's observation, not on the full state trace.
+
+The bridge theorem below handles step 3, assuming observation-locality.
+The observation-locality itself requires per-step player recall + the conditioning
+argument (see `KuhnMixedToBehavioral.lean`). -/
+
+section Decentralization
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+
+open Math.PMFProduct
+
+/-- If a correlated behavioral profile factors as `pmfPi (fun i => β i (v i))`
+at every observation tuple `v`, then its step distribution equals that of the
+independent behavioral profile `β`. -/
+theorem stepDistCorr_eq_stepDist_of_product
+    (D : Dynamics I) (β : BehavioralProfile I) (σ : BehavioralProfileCorr I)
+    (hprod : ∀ v, σ v = pmfPi (fun i => β i (v i)))
+    (ss : List M.State) :
+    D.stepDistCorr σ ss = D.stepDist β ss := by
+  simp only [Dynamics.stepDistCorr, Dynamics.stepDist, jointActionDist, hprod]
+
+/-- Independent behavioral realization from correlated one: if a correlated profile
+always outputs products with observation-local factors, the independent profile
+produces the same outcome distribution. -/
+theorem evalIndep_of_corrProduct
+    (D : Dynamics I) (β : BehavioralProfile I) (σ : BehavioralProfileCorr I)
+    (hprod : ∀ v, σ v = pmfPi (fun i => β i (v i)))
+    (k : Nat) :
+    D.evalBehavioral k β =
+      Math.ProbabilityMassFunction.pushforward
+        (seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k)
+        I.outcomeOfStates := by
+  unfold Dynamics.evalBehavioral
+  congr 1
+  -- runDist D k β is definitionally seqRun (fun _ ss => D.stepDist β ss) M.init k
+  change seqRun (fun _ ss => D.stepDist β ss) M.init k =
+       seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k
+  congr 1
+  funext _ ss
+  exact (stepDistCorr_eq_stepDist_of_product D β σ hprod ss).symm
+
+end Decentralization
+
 end GameTheory
