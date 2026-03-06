@@ -3,7 +3,6 @@ import GameTheory.Languages.Sequential.Theorems
 import GameTheory.Bridge.MAID_EFG
 import GameTheory.Compilers.EFG
 import GameTheory.Compilers.Protocol
-import GameTheory.Concepts.SemanticSolutionConcepts
 
 /-!
 # Canonical Zermelo Theorem Entry

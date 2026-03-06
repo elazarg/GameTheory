@@ -1,4 +1,5 @@
 import GameTheory.Languages.Sequential.Compile
+import GameTheory.Model.Lemmas.HistoryCover
 import GameTheory.Theorems.Kuhn
 
 /-!
@@ -17,6 +18,131 @@ open GameTheory.Sequential
 open GameTheory.Theorems
 
 variable {n : Nat} {S V A Sig : Type}
+
+/-- Finite public-phase alphabet relevant to a concrete protocol. -/
+noncomputable def publicPhaseAlphabet
+    (G : GameTheory.Protocol n S V A Sig) : Finset PublicPhase :=
+  ((Finset.range G.rounds.length).biUnion fun k =>
+    ({PublicPhase.signal k, PublicPhase.action k} : Finset PublicPhase)) ∪
+    {PublicPhase.terminal}
+
+/-- Canonical finite local-history cover for compiled sequential protocols up to
+depth `k`, assuming a finite view alphabet. -/
+noncomputable def canonicalHistoryCover
+    (G : GameTheory.Protocol n S V A Sig)
+    [Fintype V]
+    (k : Nat) :
+    ∀ i, Finset ((compileInfoOn G).LocalTrace i) := by
+  classical
+  intro i
+  exact
+    ((InfoModel.listsUpToLength (publicPhaseAlphabet G) (k + 1)).product
+      (InfoModel.listsUpToLength (Finset.univ : Finset (Option V)) (k + 1))).image
+      (fun p => (p.1, p.2))
+
+private inductive ValidConfig (G : GameTheory.Protocol n S V A Sig) :
+    Config G → Prop where
+  | signal (k : Nat) (s : S) :
+      G.rounds[k]? ≠ none → ValidConfig G (.signal k s)
+  | action (k : Nat) (s : S) (sig : JointSignal n Sig) :
+      G.rounds[k]? ≠ none → ValidConfig G (.action k s sig)
+  | terminal (s : S) : ValidConfig G (.terminal s)
+
+private theorem initialConfig_valid (G : GameTheory.Protocol n S V A Sig) :
+    ValidConfig G (initialConfig G) := by
+  unfold initialConfig
+  by_cases h0 : G.rounds[0]? = none
+  · simpa [h0] using (ValidConfig.terminal (G := G) G.init)
+  · simpa [h0] using (ValidConfig.signal (G := G) 0 G.init h0)
+
+private theorem validConfig_of_step
+    (G : GameTheory.Protocol n S V A Sig)
+    {a : JointControl n A} {src dst : Config G}
+    (h : Step G a src dst) :
+    ValidConfig G dst := by
+  cases h with
+  | sample hRound _ =>
+      exact ValidConfig.action _ _ _ (by simp [hRound])
+  | act_more _ _ hNext =>
+      exact ValidConfig.signal _ _ (by simp [hNext])
+  | act_last _ _ hLast =>
+      exact ValidConfig.terminal _
+
+private theorem mem_valid_of_reachStateTrace
+    (G : GameTheory.Protocol n S V A Sig)
+    {ss : List (Config G)}
+    (hr : InfoModel.ReachStateTrace (compileLSM G) ss) :
+    ∀ c ∈ ss, ValidConfig G c := by
+  let rec go
+      {ss : List (Config G)}
+      (hr : InfoModel.ReachStateTrace (compileLSM G) ss) :
+      ∀ c ∈ ss, ValidConfig G c :=
+    match hr with
+    | .nil => by
+        intro c hc
+        have hc' : c = initialConfig G := by simpa using hc
+        subst hc'
+        exact initialConfig_valid G
+    | .snoc hr' _ hstep => by
+        intro c hc
+        rw [List.mem_append, List.mem_singleton] at hc
+        rcases hc with hc | rfl
+        · exact go hr' c hc
+        · exact validConfig_of_step G hstep
+  exact go hr
+
+private theorem publicPhase_mem_alphabet_of_valid
+    (G : GameTheory.Protocol n S V A Sig)
+    {c : Config G}
+    (hc : ValidConfig G c) :
+    publicPhase c ∈ publicPhaseAlphabet G := by
+  classical
+  cases hc with
+  | signal k s hk =>
+      rcases Option.ne_none_iff_exists'.mp hk with ⟨r, hr⟩
+      have hklt : k < G.rounds.length := by
+        exact (List.getElem?_eq_some_iff.mp hr).1
+      apply Finset.mem_union_left
+      apply Finset.mem_biUnion.mpr
+      refine ⟨k, Finset.mem_range.mpr hklt, ?_⟩
+      simp
+  | action k s sig hk =>
+      rcases Option.ne_none_iff_exists'.mp hk with ⟨r, hr⟩
+      have hklt : k < G.rounds.length := by
+        exact (List.getElem?_eq_some_iff.mp hr).1
+      apply Finset.mem_union_left
+      apply Finset.mem_biUnion.mpr
+      refine ⟨k, Finset.mem_range.mpr hklt, ?_⟩
+      simp
+  | terminal s =>
+      apply Finset.mem_union_right
+      simp
+
+/-- The canonical bounded-history cover is sufficient for the compiled
+sequential protocol up to horizon `k`. -/
+theorem canonicalHistoryCover_spec
+    (G : GameTheory.Protocol n S V A Sig)
+    [Fintype V]
+    (k : Nat) :
+    (compileInfoOn G).CoversHistoriesUpTo (canonicalHistoryCover G k) k := by
+  classical
+  intro i ss hr hlen
+  have hvalid : ∀ c ∈ ss, ValidConfig G c :=
+    mem_valid_of_reachStateTrace G hr
+  apply Finset.mem_image.mpr
+  refine ⟨((compileInfoOn G).projectPublic ss, (compileInfoOn G).projectPrivate i ss), ?_, rfl⟩
+  simp only [compileInfoOn, InfoModel.projectPublic, InfoModel.projectPrivate]
+  refine Finset.mem_product.mpr ?_
+  refine ⟨?_, ?_⟩
+  · apply InfoModel.mem_listsUpToLength_of_forall_mem
+    · simpa using hlen
+    · intro x hx
+      rcases List.mem_map.mp hx with ⟨c, hc, rfl⟩
+      exact publicPhase_mem_alphabet_of_valid G (hvalid c hc)
+  · apply InfoModel.mem_listsUpToLength_of_forall_mem
+    · simpa [InfoModel.projectPrivate] using hlen
+    · intro x hx
+      exact Finset.mem_univ x
 
 /-- The compiled protocol machine has exactly the native SOS transition relation. -/
 theorem step_iff
@@ -217,5 +343,65 @@ theorem kuhn_complete_of_compiled_via_cover
   simpa [compiledHistoryCover] using
     (GameTheory.Theorems.kuhn_complete_via_cover
       (I := compileInfoOn G) (D := D) (k := k) H hCover hStepIndep)
+
+/-- Canonical-cover mixed-to-behavioral reduction for compiled sequential
+protocols. The finite cover is the bounded list-enumeration built from the
+finite public-phase alphabet and the finite view alphabet. -/
+theorem kuhn_mixed_to_behavioral_of_compiled_canonicalCover
+    (G : GameTheory.Protocol n S V A Sig)
+    [Fintype V]
+    (D : Execution.Dynamics (compileInfoOn G))
+    (k : Nat)
+    [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord (canonicalHistoryCover G k) i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure (canonicalHistoryCover G k) i)]
+    [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
+    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    (hStepIndep :
+      ∀ μ n,
+        (compileInfoOn G).RestrictedStepIndependence D (canonicalHistoryCover G k) μ n) :
+    KuhnMixedToBehavioralViaOutcome
+      (Execution.BehavioralProfile (compileInfoOn G))
+      (InfoModel.MixedProfile (I := compileInfoOn G))
+      (Execution.PureProfile (compileInfoOn G))
+      (compileInfoOn G).Outcome
+      (InfoModel.mixedJoint (I := compileInfoOn G))
+      (D.evalBehavioral k)
+      (D.evalPure k) := by
+  exact kuhn_mixed_to_behavioral_of_compiled_via_cover
+    (G := G) (D := D) (k := k) (H := canonicalHistoryCover G k)
+    (hCover := canonicalHistoryCover_spec G k)
+    hStepIndep
+
+/-- Canonical-cover full Kuhn reduction for compiled sequential protocols. -/
+theorem kuhn_complete_of_compiled_canonicalCover
+    (G : GameTheory.Protocol n S V A Sig)
+    [Fintype V]
+    (D : Execution.Dynamics (compileInfoOn G))
+    (k : Nat)
+    [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord (canonicalHistoryCover G k) i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure (canonicalHistoryCover G k) i)]
+    [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
+    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    (hStepIndep :
+      ∀ μ n,
+        (compileInfoOn G).RestrictedStepIndependence D (canonicalHistoryCover G k) μ n) :
+    KuhnCompleteViaOutcome
+      (Execution.BehavioralProfile (compileInfoOn G))
+      (InfoModel.MixedProfile (I := compileInfoOn G))
+      (Execution.PureProfile (compileInfoOn G))
+      (compileInfoOn G).Outcome
+      (mixedOfBehavioralCanonical (I := compileInfoOn G))
+      (InfoModel.mixedJoint (I := compileInfoOn G))
+      (D.evalBehavioral k)
+      (D.evalPure k) := by
+  exact kuhn_complete_of_compiled_via_cover
+    (G := G) (D := D) (k := k) (H := canonicalHistoryCover G k)
+    (hCover := canonicalHistoryCover_spec G k)
+    hStepIndep
 
 end GameTheory.Theorems.Sequential

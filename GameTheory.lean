@@ -1,9 +1,10 @@
 -- Unified architecture (semantics-first)
 import GameTheory.Model
 import GameTheory.Compilers
-import GameTheory.Bridges
+import GameTheory.Translations
 import GameTheory.Languages
 import GameTheory.Theorems
+import GameTheory.InfoGame
 
 -- Probability and core
 import Math.Probability
@@ -12,7 +13,6 @@ import GameTheory.Core.GameForm
 
 -- Solution concepts and properties
 import GameTheory.Concepts.SolutionConcepts
-import GameTheory.Concepts.SemanticSolutionConcepts
 import GameTheory.Concepts.Deviation
 import GameTheory.Concepts.BestResponse
 import GameTheory.Concepts.BestResponseExistence
@@ -60,35 +60,6 @@ import GameTheory.Concepts.CorrelatedNashMixed
 import GameTheory.Concepts.NashCorrelatedEq
 
 -- Zero-sum and constant-sum
-import GameTheory.NFG.ZeroSum
-import GameTheory.NFG.ZeroSumNash
-import GameTheory.NFG.ConstantSum
-import GameTheory.NFG.ConstantSumNash
-import GameTheory.NFG.Minimax
-import GameTheory.NFG.MinimaxTheorem
-import GameTheory.NFG.TwoPlayerGame
-
--- Symmetric games
-import GameTheory.NFG.SymmetricGame
-
--- Potential games, team games, congestion games
-import GameTheory.NFG.CongestionGame
-import GameTheory.NFG.PotentialGame
-import GameTheory.NFG.PotentialFIP
-import GameTheory.NFG.PotentialWellFounded
-import GameTheory.NFG.TeamGame
-import GameTheory.NFG.TeamGameNash
-import GameTheory.NFG.PotentialTeam
-
--- Normal-form games
-import GameTheory.NFG.Basic
-
--- Coalitional, bargaining, and matching games
-import GameTheory.NFG.CoalitionalGame
-import GameTheory.NFG.Bargaining
-import GameTheory.NFG.Matching
-
--- Bayesian games and mechanism design
 import GameTheory.Mechanism.BayesianGame
 import GameTheory.Mechanism.MechanismDesign
 import GameTheory.Mechanism.RevelationPrinciple
@@ -97,21 +68,9 @@ import GameTheory.Mechanism.RevelationPrinciple
 import GameTheory.Mechanism.SocialChoice
 import GameTheory.Concepts.CommonKnowledge
 
--- Evolutionary game theory
-import GameTheory.NFG.EvolutionaryStability
-
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic
 import GameTheory.Auctions.Vickrey
 import GameTheory.Auctions.FirstPrice
 import GameTheory.Auctions.VCG
 import GameTheory.Auctions.AllPay
-
--- Stackelberg games
-import GameTheory.NFG.Stackelberg
-
--- Public goods
-import GameTheory.NFG.PublicGoods
-
--- Examples
-import GameTheory.NFG.Examples

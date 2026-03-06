@@ -2,7 +2,6 @@ import GameTheory.Theorems.Kuhn
 import GameTheory.Theorems.CorrelatedRealization
 import GameTheory.Theorems.Sequential
 import GameTheory.Theorems.MAID
-import GameTheory.Theorems.NashExistence
 
 /-!
 # GameTheory.Theorems

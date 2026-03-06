@@ -1,5 +1,5 @@
 import GameTheory.Core.KernelGame
-import GameTheory.Model.SemanticForm
+import GameTheory.Model.InfoGame
 import GameTheory.Languages.Sequential.SOS
 import Math.PMFProduct
 import Math.Probability
@@ -240,5 +240,33 @@ theorem compile_publicView_eq_publicPhase
     (c : Config G) :
     (compileInfoOn G).publicView c = publicPhase c := by
   rfl
+
+/-- Build a common-knowledge utility layer over the compiled sequential
+semantics. -/
+def compileControlUtility (G : Protocol n S V A Sig)
+    (u : ∀ _ : Fin n, List (Option V) → ℝ) :
+    GameTheory.ControlModel (compileLSM G) (compileInfoOn G) where
+  control := fun i => GameTheory.ControlSpec.utility (u i)
+
+/-- Build a common-knowledge behavioral layer over the compiled sequential
+semantics. -/
+def compileControlBehavior (G : Protocol n S V A Sig)
+    (β : ∀ _ : Fin n, List (Option V) → PMF (Option A)) :
+    GameTheory.ControlModel (compileLSM G) (compileInfoOn G) where
+  control := fun i => GameTheory.ControlSpec.behavior (β i)
+
+/-- Compile a sequential protocol together with common-knowledge utility
+specifications into the game-level `InfoGame` target. -/
+def compileInfoGameUtility (G : Protocol n S V A Sig)
+    (u : ∀ _ : Fin n, List (Option V) → ℝ) :
+    GameTheory.InfoGame (ι := Fin n) :=
+  .ofControlModel <| compileControlUtility G u
+
+/-- Compile a sequential protocol together with common-knowledge behavioral
+specifications into the game-level `InfoGame` target. -/
+def compileInfoGameBehavior (G : Protocol n S V A Sig)
+    (β : ∀ _ : Fin n, List (Option V) → PMF (Option A)) :
+    GameTheory.InfoGame (ι := Fin n) :=
+  .ofControlModel <| compileControlBehavior G β
 
 end GameTheory.Sequential

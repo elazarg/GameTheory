@@ -1,6 +1,5 @@
-import GameTheory.Model.SemanticGame
 import GameTheory.Model.SemanticForm
-import GameTheory.Model.Preference
+import GameTheory.Model.InfoGame
 
 /-!
 # GameTheory.Model

@@ -1,5 +1,5 @@
 import GameTheory.Concepts.SolutionConcepts
-import GameTheory.NFG.PotentialGame
+import GameTheory.Core.GameProperties
 import Mathlib.Data.Finset.Max
 import Math.Probability
 
@@ -39,7 +39,15 @@ theorem exact_potential_nash_exists {G : KernelGame ι}
     ∃ σ : Profile G, G.IsNash σ := by
   obtain ⟨σ_max, _, hmax⟩ :=
     Finset.exists_max_image Finset.univ Φ Finset.univ_nonempty
-  exact ⟨σ_max, hΦ.nash_of_maximizer (fun τ => hmax τ (Finset.mem_univ τ))⟩
+  refine ⟨σ_max, ?_⟩
+  intro who s'
+  have hpot :
+      G.eu (Function.update σ_max who s') who - G.eu σ_max who =
+        Φ (Function.update σ_max who s') - Φ σ_max :=
+    hΦ who σ_max s'
+  have hmax' : Φ (Function.update σ_max who s') ≤ Φ σ_max :=
+    hmax (Function.update σ_max who s') (Finset.mem_univ _)
+  linarith
 
 /-- For `ofEU` games: if every player has a dominant strategy, a Nash equilibrium exists. -/
 theorem ofEU_nash_of_dominant (S : ι → Type) (u : (∀ i, S i) → Payoff ι)

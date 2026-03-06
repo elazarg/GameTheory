@@ -8,5 +8,6 @@ import GameTheory.Compilers.Protocol
 # GameTheory.Compilers
 
 Language-to-semantics compilers. Each compiler maps a language-level object to
-`GameTheory.Model.SemanticGame`.
+`InfoModel`, and where common-knowledge controllers are supplied, further to
+`InfoGame`.
 -/

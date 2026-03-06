@@ -1,6 +1,6 @@
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.MAID.SOS
-import GameTheory.Model.SemanticForm
+import GameTheory.Model.InfoGame
 
 /-!
 # GameTheory.Languages.MAID.Compile
@@ -70,5 +70,34 @@ theorem compile_observe_eq_frontierInfosets
     (p : Player) (cfg : FrontierCfg S) :
     (compileInfoOn S sem).observe p cfg = frontierInfosets S cfg p := by
   rfl
+
+/-- Build a common-knowledge utility layer over the compiled MAID semantics. -/
+def compileControlUtility (S : Struct Player n) (sem : Sem S)
+    (u : ∀ p : Player, List (List (Infoset S p)) → ℝ) :
+    GameTheory.ControlModel (compileLSM S sem) (compileInfoOn S sem) where
+  control := fun p => GameTheory.ControlSpec.utility (u p)
+
+/-- Build a common-knowledge behavioral layer over the compiled MAID
+semantics. -/
+def compileControlBehavior (S : Struct Player n) (sem : Sem S)
+    (β : ∀ p : Player,
+      List (List (Infoset S p)) → PMF (Option (FrontierAct S p))) :
+    GameTheory.ControlModel (compileLSM S sem) (compileInfoOn S sem) where
+  control := fun p => GameTheory.ControlSpec.behavior (β p)
+
+/-- Compile a MAID together with common-knowledge utility specifications into
+the game-level `InfoGame` target. -/
+noncomputable def compileInfoGameUtility (S : Struct Player n) (sem : Sem S)
+    (u : ∀ p : Player, List (List (Infoset S p)) → ℝ) :
+    GameTheory.InfoGame (ι := Player) :=
+  .ofControlModel <| compileControlUtility S sem u
+
+/-- Compile a MAID together with common-knowledge behavioral specifications
+into the game-level `InfoGame` target. -/
+noncomputable def compileInfoGameBehavior (S : Struct Player n) (sem : Sem S)
+    (β : ∀ p : Player,
+      List (List (Infoset S p)) → PMF (Option (FrontierAct S p))) :
+    GameTheory.InfoGame (ι := Player) :=
+  .ofControlModel <| compileControlBehavior S sem β
 
 end MAID

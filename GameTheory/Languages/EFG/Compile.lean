@@ -1,4 +1,4 @@
-import GameTheory.Model.SemanticForm
+import GameTheory.Model.InfoGame
 import GameTheory.Languages.EFG.Syntax
 
 namespace GameTheory.EFG
@@ -73,6 +73,15 @@ def compileControlUtility {S : _root_.EFG.InfoStructure} {Outcome : Type}
       (compileInfoOn (S := S) (Outcome := Outcome) t) where
   control := fun i => GameTheory.ControlSpec.utility (u i)
 
+/-- Compile an EFG together with common-knowledge utility specifications into
+the game-level `InfoGame` target. -/
+def compileInfoGameUtility {S : _root_.EFG.InfoStructure} {Outcome : Type}
+    (t : _root_.EFG.GameTree S Outcome)
+    (u : ∀ i : S.Player,
+      List (Option (S.Infoset i)) → ℝ) :
+    GameTheory.InfoGame (ι := S.Player) :=
+  .ofControlModel <| compileControlUtility (S := S) (Outcome := Outcome) t u
+
 /-- Build a pure-behavior control model from local behavior laws over each
 player's private infoset history. -/
 def compileControlBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
@@ -82,5 +91,14 @@ def compileControlBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
     GameTheory.ControlModel (compileLSM (S := S) (Outcome := Outcome) t)
       (compileInfoOn (S := S) (Outcome := Outcome) t) where
   control := fun i => GameTheory.ControlSpec.behavior (β i)
+
+/-- Compile an EFG together with common-knowledge behavior specifications into
+the game-level `InfoGame` target. -/
+def compileInfoGameBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
+    (t : _root_.EFG.GameTree S Outcome)
+    (β : ∀ i : S.Player,
+      List (Option (S.Infoset i)) → PMF (Option (CtrlAct S i))) :
+    GameTheory.InfoGame (ι := S.Player) :=
+  .ofControlModel <| compileControlBehavior (S := S) (Outcome := Outcome) t β
 
 end GameTheory.EFG
