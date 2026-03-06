@@ -102,4 +102,55 @@ theorem kuhn_complete_of_compiled
     (GameTheory.Theorems.kuhn_complete
       (I := compileInfoOn G) (D := D) (k := k) hPR)
 
+/-- Restricted finite-cover mixed-to-behavioral reduction for compiled
+sequential protocols. This is the honest generic reduction boundary for finite
+horizons: one supplies a finite local-history cover `H` and step-independence on
+the restricted profile space, rather than pretending the ambient `List × List`
+history type is finite. -/
+theorem kuhn_mixed_to_behavioral_of_compiled_restricted
+    (G : GameTheory.Protocol n S V A Sig)
+    (D : Execution.Dynamics (compileInfoOn G))
+    (k : Nat)
+    (H : ∀ i, Finset ((compileInfoOn G).LocalTrace i))
+    [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord H i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure H i)]
+    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
+    KuhnMixedToBehavioralViaOutcome
+      ((compileInfoOn G).RestrictedBehavioralProfile H)
+      ((compileInfoOn G).RestrictedMixedProfile H)
+      ((compileInfoOn G).RestrictedPureProfile H)
+      (compileInfoOn G).Outcome
+      ((compileInfoOn G).restrictedMixedJointRaw H)
+      (GameTheory.Theorems.evalRestrictedBehavioral (I := compileInfoOn G) D k H)
+      (GameTheory.Theorems.evalRestrictedPure (I := compileInfoOn G) D k H) := by
+  simpa using
+    (GameTheory.Theorems.kuhn_mixed_to_behavioral_restricted
+      (I := compileInfoOn G) (D := D) (k := k) H hStepIndep)
+
+/-- Restricted finite-cover Kuhn reduction for compiled sequential protocols. -/
+theorem kuhn_complete_of_compiled_restricted
+    (G : GameTheory.Protocol n S V A Sig)
+    (D : Execution.Dynamics (compileInfoOn G))
+    (k : Nat)
+    (H : ∀ i, Finset ((compileInfoOn G).LocalTrace i))
+    [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord H i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure H i)]
+    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
+    KuhnCompleteViaOutcome
+      ((compileInfoOn G).RestrictedBehavioralProfile H)
+      ((compileInfoOn G).RestrictedMixedProfile H)
+      ((compileInfoOn G).RestrictedPureProfile H)
+      (compileInfoOn G).Outcome
+      (GameTheory.Theorems.mixedOfBehavioralCanonicalRestricted (I := compileInfoOn G) H)
+      ((compileInfoOn G).restrictedMixedJointRaw H)
+      (GameTheory.Theorems.evalRestrictedBehavioral (I := compileInfoOn G) D k H)
+      (GameTheory.Theorems.evalRestrictedPure (I := compileInfoOn G) D k H) := by
+  simpa using
+    (GameTheory.Theorems.kuhn_complete_restricted
+      (I := compileInfoOn G) (D := D) (k := k) H hStepIndep)
+
 end GameTheory.Theorems.Sequential

@@ -33,6 +33,44 @@ theorem kuhn_complete
     kuhn_mixed_to_behavioral (I := I) (D := D) (k := k) hPR
   ⟩
 
+/-- Restricted finite-cover Kuhn completeness. This is the general bounded
+interface that avoids assuming the full ambient local-trace type is finite. -/
+theorem kuhn_complete_restricted
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [∀ i, DecidableEq (I.LocalTrace i)]
+    [∀ i, Fintype (I.RestrictedLocalCoord H i)]
+    [∀ i, Fintype (I.RestrictedLocalPure H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hStepIndep : ∀ μ n, I.RestrictedStepIndependence D H μ n) :
+    KuhnCompleteViaOutcome
+      (I.RestrictedBehavioralProfile H)
+      (I.RestrictedMixedProfile H)
+      (I.RestrictedPureProfile H)
+      I.Outcome
+      (mixedOfBehavioralCanonicalRestricted (I := I) H)
+      (I.restrictedMixedJointRaw H)
+      (evalRestrictedBehavioral (I := I) D k H)
+      (evalRestrictedPure (I := I) D k H) := by
+  exact kuhn_complete_of_infoModel_restricted (I := I) (D := D) (k := k) H hStepIndep
+
+/-- Restricted finite-cover mixed-to-behavioral direction. -/
+theorem kuhn_mixed_to_behavioral_restricted
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [∀ i, DecidableEq (I.LocalTrace i)]
+    [∀ i, Fintype (I.RestrictedLocalCoord H i)]
+    [∀ i, Fintype (I.RestrictedLocalPure H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hStepIndep : ∀ μ n, I.RestrictedStepIndependence D H μ n) :
+    KuhnMixedToBehavioralViaOutcome
+      (I.RestrictedBehavioralProfile H)
+      (I.RestrictedMixedProfile H)
+      (I.RestrictedPureProfile H)
+      I.Outcome
+      (I.restrictedMixedJointRaw H)
+      (evalRestrictedBehavioral (I := I) D k H)
+      (evalRestrictedPure (I := I) D k H) := by
+  exact kuhn_mixed_to_behavioral_core_restricted (I := I) (D := D) (k := k) H hStepIndep
+
 end InfoModel
 
 end Theorems
