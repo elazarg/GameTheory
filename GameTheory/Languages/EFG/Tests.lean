@@ -1,4 +1,5 @@
 import GameTheory.Languages.EFG.Compile
+import GameTheory.Languages.EFG.SOS
 
 namespace GameTheory
 namespace Languages
@@ -48,23 +49,20 @@ example :
 example :
     Semantics.Transition.ReachBy
       ((compileLSM (S := oneInfo) (Outcome := Bool) decisionTree).stepExists)
-      ([] : List (_root_.EFG.HistoryStep oneInfo)) decisionTree decisionTree := by
-  exact
-    (reachBy_iff_compiled
-      (S := oneInfo) (Outcome := Bool) decisionTree [] decisionTree decisionTree).1
-      (ReachBy.here decisionTree)
+      ([] : List (GameTheory.JointAction (compileLSM (S := oneInfo) (Outcome := Bool) decisionTree)))
+      decisionTree decisionTree := by
+  exact reachBy_implies_compiled (t := decisionTree) (ReachBy.here decisionTree)
 
 example :
-    (compileInfoOn (S := oneInfo) (Outcome := Bool) chanceDecisionTree).project p0
-      [HistoryStep.chance 2 ⟨0, by decide⟩] = [] := by
-  simp [compileInfoOn, _root_.EFG.playerHistory, oneInfo, p0]
+    (compileInfoOn (S := oneInfo) (Outcome := Bool) chanceDecisionTree).projectStates p0
+      [chanceDecisionTree] = ([PUnit.unit], [none]) := by
+  rfl
 
 example :
-    let a : oneInfo.Act PUnit.unit := ⟨1, by decide⟩
-    (compileInfoOn (S := oneInfo) (Outcome := Bool) chanceDecisionTree).project p0
-      [HistoryStep.chance 2 ⟨0, by decide⟩, HistoryStep.action p0 PUnit.unit a] =
-      [Sum.inr (some ⟨PUnit.unit, a⟩)] := by
-  simp [compileInfoOn, _root_.EFG.playerHistory, oneInfo, p0]
+    (compileInfoOn (S := oneInfo) (Outcome := Bool) chanceDecisionTree).observe p0
+      (.decision (p := p0) PUnit.unit (fun a =>
+        if a.1 = 0 then .terminal false else .terminal true)) = some PUnit.unit := by
+  simp [compileInfoOn, obsOfState, oneInfo, p0]
 
 end
 
