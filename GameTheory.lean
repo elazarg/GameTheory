@@ -10,12 +10,10 @@ import GameTheory.Core.KernelGame
 
 -- Game form (protocol layer without utility)
 import GameTheory.Core.GameForm
-import GameTheory.Sequential.SeqProto
-import GameTheory.Sequential.TraceKernelGame
-import GameTheory.Sequential.ProtoSPE
-import GameTheory.Sequential.ProtoODP
-import GameTheory.Sequential.ProtoZermelo
-import GameTheory.Sequential.ProtoKuhn
+import GameTheory.Languages.Sequential.Syntax
+import GameTheory.Languages.Sequential.SOS
+import GameTheory.Languages.Sequential.Compile
+import GameTheory.Languages.Sequential.Theorems
 
 -- Solution concepts and properties
 import GameTheory.Concepts.SolutionConcepts
@@ -98,7 +96,10 @@ import GameTheory.EFG.Refinements
 import GameTheory.NFG.Basic
 
 -- Multi-agent influence diagrams
-import GameTheory.MAID.Basic
+import GameTheory.Languages.MAID.Syntax
+import GameTheory.Languages.MAID.SOS
+import GameTheory.Languages.MAID.Compile
+import GameTheory.Languages.MAID.Theorems
 
 -- Coalitional, bargaining, and matching games
 import GameTheory.NFG.CoalitionalGame
@@ -106,8 +107,8 @@ import GameTheory.NFG.Bargaining
 import GameTheory.NFG.Matching
 
 -- Repeated and stochastic games
-import GameTheory.Sequential.RepeatedGame
-import GameTheory.Sequential.StochasticGame
+import GameTheory.Languages.Sequential.RepeatedGame
+import GameTheory.Languages.Sequential.StochasticGame
 
 -- Bayesian games and mechanism design
 import GameTheory.Mechanism.BayesianGame
@@ -137,5 +138,5 @@ import GameTheory.NFG.PublicGoods
 -- Examples
 import GameTheory.NFG.Examples
 import GameTheory.EFG.Examples
-import GameTheory.MAID.Examples
+import GameTheory.Languages.MAID.Tests
 
