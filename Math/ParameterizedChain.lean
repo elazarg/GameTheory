@@ -29,6 +29,75 @@ noncomputable def pureRun (step : P → List S → PMF S) (s₀ : S)
         pushforward (step π ss) (fun t => ss ++ [t])))
     k
 
+theorem append_singleton_inj {α : Type*} {as bs : List α} {a b : α}
+    (h : as ++ [a] = bs ++ [b]) : as = bs ∧ a = b := by
+  have hlen : as.length = bs.length := by
+    have := congrArg List.length h; simp at this; exact this
+  exact ⟨List.ext_getElem hlen (fun i hi hi' => by
+      have h2 := congrArg (fun l => l[i]?) h
+      simp [List.getElem?_append_left, hi, hi'] at h2; exact h2),
+    by have h2 := congrArg List.getLast? h; simp at h2; exact h2⟩
+
+open Classical in
+/-- At successor step, `pureRun` decomposes as prefix reach times one-step transition. -/
+theorem pureRun_succ_append (step : P → List S → PMF S) (s₀ : S)
+    (k : Nat) (π : P) (ss : List S) (t : S) :
+    pureRun step s₀ (k + 1) π (ss ++ [t]) =
+      pureRun step s₀ k π ss * step π ss t := by
+  change (pureRun step s₀ k π).bind
+    (fun ss' => pushforward (step π ss') (fun t' => ss' ++ [t'])) (ss ++ [t]) = _
+  rw [PMF.bind_apply]
+  have hterm : ∀ ss' : List S, ss' ≠ ss →
+      pureRun step s₀ k π ss' *
+        (pushforward (step π ss') (fun t' => ss' ++ [t'])) (ss ++ [t]) = 0 := by
+    intro ss' hne
+    suffices (pushforward (step π ss') (fun t' => ss' ++ [t'])) (ss ++ [t]) = 0 by
+      rw [this, mul_zero]
+    simp only [pushforward, PMF.bind_apply, PMF.pure_apply]
+    rw [ENNReal.tsum_eq_zero]
+    intro t'
+    rw [if_neg (fun h => hne (append_singleton_inj h).1.symm), mul_zero]
+  rw [tsum_eq_single ss (fun ss' hne => hterm ss' hne)]
+  congr 1
+  simp only [pushforward, PMF.bind_apply, PMF.pure_apply]
+  rw [tsum_eq_single t (fun t' ht' => by
+    rw [if_neg (fun h => ht' (append_singleton_inj h).2.symm), mul_zero])]
+  simp
+
+open Classical in
+/-- `pureRun` at successor step assigns zero probability to the empty trace. -/
+theorem pureRun_succ_nil (step : P → List S → PMF S) (s₀ : S) (k : Nat) (π : P) :
+    pureRun step s₀ (k + 1) π [] = 0 := by
+  change (pureRun step s₀ k π).bind
+    (fun ss => pushforward (step π ss) (fun t => ss ++ [t])) [] = 0
+  simp only [PMF.bind_apply]
+  rw [ENNReal.tsum_eq_zero]
+  intro ss
+  suffices (pushforward (step π ss) (fun t => ss ++ [t])) [] = 0 by rw [this, mul_zero]
+  simp only [pushforward, PMF.bind_apply, PMF.pure_apply]
+  rw [ENNReal.tsum_eq_zero]
+  intro t
+  simp [show ([] : List S) ≠ ss ++ [t] from List.ne_nil_of_length_pos (by simp)]
+
+open Classical in
+/-- Traces with nonzero `pureRun` probability have length exactly `n + 1`. -/
+theorem pureRun_length (step : P → List S → PMF S) (s₀ : S)
+    (n : Nat) (π : P) (ss : List S)
+    (h : pureRun step s₀ n π ss ≠ 0) : ss.length = n + 1 := by
+  induction n generalizing ss with
+  | zero =>
+    have hss : ss = [s₀] := by
+      by_contra hne
+      exact h (by simp [pureRun, PMF.pure_apply, hne])
+    simp [hss]
+  | succ k ih =>
+    rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
+    · exact absurd (pureRun_succ_nil step s₀ k π) h
+    · simp only [List.concat_eq_append, pureRun_succ_append] at h
+      have hp : pureRun step s₀ k π p ≠ 0 :=
+        left_ne_zero_of_mul h
+      simp [List.length_append, ih p hp]
+
 /-- Run a Markov chain with step-index-dependent transition functions. -/
 noncomputable def seqRun (steps : Nat → List S → PMF S) (s₀ : S)
     (k : Nat) : PMF (List S) :=
@@ -78,6 +147,59 @@ theorem reweightPMF_fallback (ν : PMF P) (w : P → ENNReal)
   split_ifs with h
   · rfl
   · exact absurd (Or.inl hC) h
+
+set_option linter.unusedFintypeInType false in
+theorem reweightPMF_degenerate (ν : PMF P) (w : P → ENNReal)
+    (hC : (∑ π : P, ν π * w π) = 0 ∨ (∑ π : P, ν π * w π) = ⊤) :
+    reweightPMF ν w = ν := by
+  unfold reweightPMF
+  exact dif_pos hC
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Scaling the weight function by a finite nonzero constant doesn't change
+the reweighted PMF (the constant cancels in the normalization). -/
+theorem reweightPMF_scale (ν : PMF P) (w : P → ENNReal) (c : ENNReal)
+    (hc0 : c ≠ 0) (hctop : c ≠ ⊤) :
+    reweightPMF ν (fun π => c * w π) = reweightPMF ν w := by
+  have hfact : ∀ π', ν π' * (c * w π') = c * (ν π' * w π') := fun π' => by ring
+  have hCeq : ∑ π' : P, ν π' * (c * w π') = c * ∑ π' : P, ν π' * w π' := by
+    simp_rw [hfact, ← Finset.mul_sum]
+  by_cases hC0 : ∑ π' : P, ν π' * w π' = 0
+  · exact (reweightPMF_degenerate ν _ (Or.inl (by rw [hCeq, hC0, mul_zero]))).trans
+      (reweightPMF_degenerate ν _ (Or.inl hC0)).symm
+  by_cases hCtop : ∑ π' : P, ν π' * w π' = ⊤
+  · exact (reweightPMF_degenerate ν _ (Or.inr (by rw [hCeq, hCtop, ENNReal.mul_top hc0]))).trans
+      (reweightPMF_degenerate ν _ (Or.inr hCtop)).symm
+  · -- Non-degenerate case: both sums are finite and positive
+    have hC0' : ∑ π' : P, ν π' * (c * w π') ≠ 0 := by
+      rw [hCeq]; exact mul_ne_zero hc0 hC0
+    have hCtop' : ∑ π' : P, ν π' * (c * w π') ≠ ⊤ := by
+      rw [hCeq]; exact ENNReal.mul_ne_top hctop.lt_top.ne hCtop
+    ext π
+    rw [reweightPMF_apply ν _ π hC0' hCtop', reweightPMF_apply ν _ π hC0 hCtop]
+    rw [show ν π * (c * w π) = c * (ν π * w π) from by ring, hCeq]
+    exact ENNReal.mul_div_mul_left _ _ hc0 hctop
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- If weights satisfy a cross-multiplication identity
+`∀ π, w₁ π * C₂ = w₂ π * C₁`, the reweighted PMFs are equal. -/
+theorem reweightPMF_eq_of_cross_mul (ν : PMF P) (w₁ w₂ : P → ENNReal)
+    (hC₁ : ∑ π' : P, ν π' * w₁ π' ≠ 0)
+    (hC₁top : ∑ π' : P, ν π' * w₁ π' ≠ ⊤)
+    (hC₂ : ∑ π' : P, ν π' * w₂ π' ≠ 0)
+    (hC₂top : ∑ π' : P, ν π' * w₂ π' ≠ ⊤)
+    (hcross : ∀ π, w₁ π * (∑ π' : P, ν π' * w₂ π') =
+                    w₂ π * (∑ π' : P, ν π' * w₁ π')) :
+    reweightPMF ν w₁ = reweightPMF ν w₂ := by
+  ext π
+  rw [reweightPMF_apply ν w₁ π hC₁ hC₁top, reweightPMF_apply ν w₂ π hC₂ hC₂top]
+  rw [ENNReal.div_eq_div_iff hC₂ hC₂top hC₁ hC₁top]
+  calc (∑ π', ν π' * w₂ π') * (ν π * w₁ π)
+      = ν π * (w₁ π * (∑ π', ν π' * w₂ π')) := by ac_rfl
+    _ = ν π * (w₂ π * (∑ π', ν π' * w₁ π')) := by rw [hcross π]
+    _ = (∑ π', ν π' * w₁ π') * (ν π * w₂ π) := by ac_rfl
 
 end ReweightPMF
 
