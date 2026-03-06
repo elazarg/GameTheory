@@ -743,6 +743,57 @@ theorem kuhn_conditioning_distributes_over_sequencing_actionState
             (I := I) (D := D)
             (conditionedMixedProfile (I := I) μ ha ss) ss
 
+/-- Most general one-step reachable-prefix form of Kuhn's dynamic consistency.
+
+After conditioning the mixed profile on a reachable prefix, any statistic of the
+next explicit action/state step can be computed either:
+- by first passing to `mixedToBehavioral` and then stepping once, or
+- by averaging pure one-step continuations under the conditioned mixed profile.
+
+This is the strongest local continuation law in the current development; the
+state-only and explicit action/state theorems are its special cases. -/
+theorem kuhn_conditioning_distributes_over_sequencing_map
+    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    {β : Type*}
+    (hPR : I.PerfectRecall)
+    (μ : InfoModel.MixedProfile (I := I))
+    {ha : List (JointAction M)}
+    {ss : List M.State}
+    (hr : InfoModel.ReachActionTrace M ha ss)
+    (f : JointAction M × M.State → β) :
+    Math.ProbabilityMassFunction.pushforward
+      (D.stepActionStateDist (mixedToBehavioral (I := I) μ) ss) f =
+      (InfoModel.mixedJoint (I := I)
+        (conditionedMixedProfile (I := I) μ ha ss)).bind
+        (fun π =>
+          Math.ProbabilityMassFunction.pushforward
+            (D.stepActionStateDist (pureToBehavioral I π) ss) f) := by
+  have hstep :=
+    kuhn_conditioning_distributes_over_sequencing_actionState
+      (I := I) (D := D) (hPR := hPR) (μ := μ) hr
+  calc
+    Math.ProbabilityMassFunction.pushforward
+      (D.stepActionStateDist (mixedToBehavioral (I := I) μ) ss) f
+        =
+      Math.ProbabilityMassFunction.pushforward
+        ((InfoModel.mixedJoint (I := I)
+          (conditionedMixedProfile (I := I) μ ha ss)).bind
+          (fun π => D.stepActionStateDist (pureToBehavioral I π) ss))
+        f := by simpa using congrArg (fun ν => Math.ProbabilityMassFunction.pushforward ν f) hstep
+    _ =
+      (InfoModel.mixedJoint (I := I)
+        (conditionedMixedProfile (I := I) μ ha ss)).bind
+        (fun π =>
+          Math.ProbabilityMassFunction.pushforward
+            (D.stepActionStateDist (pureToBehavioral I π) ss) f) := by
+          simpa using Math.ProbabilityMassFunction.pushforward_bind
+            (μ := InfoModel.mixedJoint (I := I)
+              (conditionedMixedProfile (I := I) μ ha ss))
+            (k := fun π => D.stepActionStateDist (pureToBehavioral I π) ss)
+            (f := f)
+
 theorem stepPoint_eq_via_query_disintegration
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
