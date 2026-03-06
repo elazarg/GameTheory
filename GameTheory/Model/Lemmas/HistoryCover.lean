@@ -152,5 +152,79 @@ theorem evalPure_eq_of_agreeOnCover
     (fun ν => Math.ProbabilityMassFunction.pushforward ν I.outcomeOfStates)
     (runDistPure_eq_of_agreeOnCover (I := I) (D := D) hCover le_rfl π π' hag)
 
+/-- Under a valid cover, extending a restricted behavioral profile obtained by
+restriction from `σ` does not change `n`-step run distributions. -/
+theorem runDist_eq_extend_restrict_behavioral_of_cover
+    [DecidableEq ι]
+    [∀ i, DecidableEq (I.LocalTrace i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    {H : ∀ i, Finset (I.LocalTrace i)} {k n : Nat}
+    (hCover : I.CoversHistoriesUpTo H k)
+    (hn : n ≤ k)
+    (σ : BehavioralProfile I) :
+    D.runDist n
+      (I.extendRestrictedBehavioralProfile H
+        (I.restrictBehavioralProfile H σ)) =
+      D.runDist n σ := by
+  exact runDist_eq_of_agreeOnCover (I := I) (D := D) hCover hn
+    (I.extendRestrictedBehavioralProfile H (I.restrictBehavioralProfile H σ)) σ
+    (fun i v hv => I.extendRestrictedBehavioralProfile_apply_mem H
+      (I.restrictBehavioralProfile H σ) i v hv)
+
+/-- Under a valid cover, extending a restricted pure profile obtained by
+restriction from `π` does not change `n`-step pure-run distributions. -/
+theorem runDistPure_eq_extend_restrict_pure_of_cover
+    [DecidableEq ι]
+    [∀ i, DecidableEq (I.LocalTrace i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    {H : ∀ i, Finset (I.LocalTrace i)} {k n : Nat}
+    (hCover : I.CoversHistoriesUpTo H k)
+    (hn : n ≤ k)
+    (π : PureProfile I) :
+    D.runDistPure n
+      (I.extendRestrictedPureProfile H (I.restrictPureProfile H π)) =
+      D.runDistPure n π := by
+  exact runDistPure_eq_of_agreeOnCover (I := I) (D := D) hCover hn
+    (I.extendRestrictedPureProfile H (I.restrictPureProfile H π)) π
+    (fun i v hv => I.extendRestrictedPureProfile_apply_mem H
+      (I.restrictPureProfile H π) i v hv)
+
+/-- Outcome-level behavioral corollary of
+`runDist_eq_extend_restrict_behavioral_of_cover`. -/
+theorem evalBehavioral_eq_extend_restrict_behavioral_of_cover
+    [DecidableEq ι]
+    [∀ i, DecidableEq (I.LocalTrace i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    {H : ∀ i, Finset (I.LocalTrace i)} {k : Nat}
+    (hCover : I.CoversHistoriesUpTo H k)
+    (σ : BehavioralProfile I) :
+    D.evalBehavioral k
+      (I.extendRestrictedBehavioralProfile H
+        (I.restrictBehavioralProfile H σ)) =
+      D.evalBehavioral k σ := by
+  unfold Execution.Dynamics.evalBehavioral
+  exact congrArg
+    (fun ν => Math.ProbabilityMassFunction.pushforward ν I.outcomeOfStates)
+    (runDist_eq_extend_restrict_behavioral_of_cover
+      (I := I) (D := D) hCover le_rfl σ)
+
+/-- Outcome-level pure-run corollary of
+`runDistPure_eq_extend_restrict_pure_of_cover`. -/
+theorem evalPure_eq_extend_restrict_pure_of_cover
+    [DecidableEq ι]
+    [∀ i, DecidableEq (I.LocalTrace i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    {H : ∀ i, Finset (I.LocalTrace i)} {k : Nat}
+    (hCover : I.CoversHistoriesUpTo H k)
+    (π : PureProfile I) :
+    D.evalPure k
+      (I.extendRestrictedPureProfile H (I.restrictPureProfile H π)) =
+      D.evalPure k π := by
+  unfold Execution.Dynamics.evalPure
+  exact congrArg
+    (fun ν => Math.ProbabilityMassFunction.pushforward ν I.outcomeOfStates)
+    (runDistPure_eq_extend_restrict_pure_of_cover
+      (I := I) (D := D) hCover le_rfl π)
+
 end InfoModel
 end GameTheory
