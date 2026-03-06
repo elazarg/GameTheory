@@ -493,6 +493,181 @@ theorem action_component_unique_of_pspr
   hPSPR i a a' s s' t t' (D.nextState_sound a s t ha) (D.nextState_sound a' s' t' ha')
     hobs hobst
 
+/-! ## Reach factoring under PSAR
+
+Under `PerStepActionRecall`, the reach probability `pureRun(pureStep D, s₀, n, π, ss)`
+depends on `π` only through whether `π` produces the uniquely forced action at each
+step. This gives:
+
+1. **Constancy**: nonzero reach probabilities are equal across all profiles
+2. **Per-player factoring**: the nonzero condition factors as `∀ i, π_i consistent`
+3. **Product preservation**: reweighting a product measure by reach gives a product -/
+
+section ReachFactor
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+
+/-- Under PSAR, nonzero reach probabilities at the same trace are equal.
+If two profiles both reach `ss` with nonzero probability, they must produce
+the same action at every step, hence have the same reach probability. -/
+theorem pureRun_const_of_psar
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (n : Nat) {π π' : PureProfile I} {ss : List M.State}
+    (h : pureRun (pureStep D) M.init n π ss ≠ 0)
+    (h' : pureRun (pureStep D) M.init n π' ss ≠ 0) :
+    pureRun (pureStep D) M.init n π ss =
+      pureRun (pureStep D) M.init n π' ss := by
+  induction n generalizing ss with
+  | zero => simp [pureRun] at h h' ⊢
+  | succ k ih =>
+    rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h
+    · simp only [List.concat_eq_append, pureRun_succ_append] at h h' ⊢
+      have hp := left_ne_zero_of_mul h
+      have hp' := left_ne_zero_of_mul h'
+      have ht := right_ne_zero_of_mul h
+      have ht' := right_ne_zero_of_mul h'
+      rw [ih hp hp',
+          pureStep_eq_of_nonzero_same hPSAR D ht ht']
+
+/-- Under PSAR, at a reachable transition, `pureStep` is nonzero iff
+the profile produces the same action as any fixed witness profile. -/
+theorem pureStep_nonzero_iff_action_eq
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    {π₀ : PureProfile I} {ss : List M.State} {t : M.State}
+    (h₀ : pureStep D π₀ ss t ≠ 0) (π : PureProfile I) :
+    pureStep D π ss t ≠ 0 ↔
+      (fun i => π i (I.projectStates i ss)) =
+        (fun i => π₀ i (I.projectStates i ss)) := by
+  constructor
+  · intro hne
+    rw [pureStep_eq] at hne h₀
+    exact hPSAR _ _ _ _ _ _
+      (D.nextState_sound _ _ _ hne) (D.nextState_sound _ _ _ h₀)
+      (fun _ => ⟨rfl, rfl⟩) (fun _ => ⟨rfl, rfl⟩)
+  · intro heq
+    rwa [pureStep_eq, heq, ← pureStep_eq]
+
+/-- Under PSAR, `pureRun` is nonzero iff the profile produces the same
+action as the witness at every step (prefix). The condition is:
+at each prefix `p ++ [t]` of `ss`, the profile agrees on the action at `p`. -/
+theorem pureRun_nonzero_iff_action_eq
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (n : Nat) {π₀ : PureProfile I} {ss : List M.State}
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) (π : PureProfile I) :
+    pureRun (pureStep D) M.init n π ss ≠ 0 ↔
+      (pureRun (pureStep D) M.init n π ss =
+        pureRun (pureStep D) M.init n π₀ ss) := by
+  constructor
+  · exact fun h => pureRun_const_of_psar hPSAR D n h h₀
+  · intro heq; rw [heq]; exact h₀
+
+/-- Under PSAR, `pureStep D π ss t` factors per-player: it is nonzero iff
+each player `i` individually produces the forced action component. -/
+theorem pureStep_nonzero_iff_forall_player
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    {π₀ : PureProfile I} {ss : List M.State} {t : M.State}
+    (h₀ : pureStep D π₀ ss t ≠ 0) (π : PureProfile I) :
+    pureStep D π ss t ≠ 0 ↔
+      ∀ i, π i (I.projectStates i ss) = π₀ i (I.projectStates i ss) := by
+  rw [pureStep_nonzero_iff_action_eq hPSAR D h₀]
+  exact ⟨fun h i => congr_fun h i, funext⟩
+
+/-- Under PSAR, `pureRun` factors into a trace-dependent constant times a
+per-player consistency indicator. If `π` is consistent (nonzero reach),
+the reach value equals the witness; otherwise it's zero. -/
+theorem pureRun_eq_const_mul_indicator
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (n : Nat) (π₀ : PureProfile I) (ss : List M.State)
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0)
+    (π : PureProfile I) :
+    pureRun (pureStep D) M.init n π ss =
+      if pureRun (pureStep D) M.init n π ss ≠ 0
+      then pureRun (pureStep D) M.init n π₀ ss
+      else 0 := by
+  split
+  · exact pureRun_const_of_psar hPSAR D n ‹_› h₀
+  · push_neg at *; exact le_antisymm (le_of_eq ‹_›) (zero_le _)
+
+/-- Under PSAR, `pureRun` nonzero is equivalent to matching the witness action
+at every prefix. Stated inductively: nonzero at `p ++ [t]` iff nonzero at `p`
+and action matches at `p`. -/
+theorem pureRun_succ_nonzero_iff
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (m : Nat) {π₀ : PureProfile I} {p : List M.State} {t : M.State}
+    (h₀ : pureRun (pureStep D) M.init (m + 1) π₀ (p ++ [t]) ≠ 0)
+    (π : PureProfile I) :
+    pureRun (pureStep D) M.init (m + 1) π (p ++ [t]) ≠ 0 ↔
+      pureRun (pureStep D) M.init m π p ≠ 0 ∧
+        ∀ i, π i (I.projectStates i p) = π₀ i (I.projectStates i p) := by
+  simp only [pureRun_succ_append] at h₀ ⊢
+  have hp₀ := left_ne_zero_of_mul h₀
+  have ht₀ := right_ne_zero_of_mul h₀
+  constructor
+  · intro hne
+    exact ⟨left_ne_zero_of_mul hne,
+      (pureStep_nonzero_iff_forall_player hPSAR D ht₀ π).mp
+        (right_ne_zero_of_mul hne)⟩
+  · intro ⟨hp, hall⟩
+    exact mul_ne_zero hp
+      ((pureStep_nonzero_iff_forall_player hPSAR D ht₀ π).mpr hall)
+
+/-- Under PSAR, `pureStep` is invariant under changing players who produce
+the same action. If `π` and `π'` agree on the action at `ss` (all players
+give the same action component), then `pureStep D π ss = pureStep D π' ss`. -/
+theorem pureStep_eq_of_action_eq (D : Dynamics I)
+    {π π' : PureProfile I} {ss : List M.State}
+    (h : ∀ i, π i (I.projectStates i ss) = π' i (I.projectStates i ss)) :
+    pureStep D π ss = pureStep D π' ss := by
+  simp only [pureStep_eq, funext h]
+
+open Classical in
+/-- Under PSAR, reach factors per-player via `Function.update`:
+`pureRun π ss ≠ 0` iff for each player `i`, swapping just player `i`'s
+component from `π` into the witness `π₀` still gives nonzero reach.
+
+This is the cleanest per-player factoring: each player's consistency
+can be tested independently. -/
+theorem pureRun_nonzero_iff_update
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (n : Nat) {π₀ : PureProfile I} {ss : List M.State}
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0)
+    (π : PureProfile I) :
+    pureRun (pureStep D) M.init n π ss ≠ 0 ↔
+      ∀ i, pureRun (pureStep D) M.init n
+        (Function.update π₀ i (π i)) ss ≠ 0 := by
+  induction n generalizing ss with
+  | zero =>
+    simp only [pureRun, ne_eq] at h₀ ⊢
+    exact ⟨fun _ _ => h₀, fun _ => h₀⟩
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₀
+    · simp only [List.concat_eq_append] at h₀ ⊢
+      have hp₀ : pureRun (pureStep D) M.init m π₀ p ≠ 0 := by
+        rw [pureRun_succ_append] at h₀; exact left_ne_zero_of_mul h₀
+      rw [pureRun_succ_nonzero_iff hPSAR D m h₀]
+      constructor
+      · -- Forward: π consistent → each update consistent
+        intro ⟨hp, hact⟩ i
+        exact (pureRun_succ_nonzero_iff hPSAR D m h₀
+          (Function.update π₀ i (π i))).mpr
+          ⟨(ih hp₀).mp hp i, fun j => by
+            by_cases hij : j = i
+            · subst hij; simp [Function.update_self, hact]
+            · simp [Function.update_of_ne hij]⟩
+      · -- Backward: each update consistent → π consistent
+        intro hall
+        constructor
+        · exact (ih hp₀).mpr fun i =>
+            ((pureRun_succ_nonzero_iff hPSAR D m h₀ _).mp (hall i)).1
+        · intro i
+          have := ((pureRun_succ_nonzero_iff hPSAR D m h₀ _).mp (hall i)).2 i
+          simp only [Function.update_self] at this
+          exact this
+
+end ReachFactor
+
 section Decentralization
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
