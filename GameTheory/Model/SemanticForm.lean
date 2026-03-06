@@ -7,8 +7,8 @@ import GameTheory.Model.FiniteRecall
 # GameTheory.Model.SemanticForm
 
 Semantics-first model decomposition:
-- `LSM`: labeled nondeterministic machine with joint actions
-- `InfoModel`: information structure over an `LSM`
+- `LSM`: latent-state machine with joint actions
+- `InfoModel`: public and player-local visibility over an `LSM`
 - `ControlModel`: common-knowledge controller specifications (separate layer)
 
 `ObsRecall`, `ActionRecall`, `PerfectRecall`, and `FiniteHorizon` are predicates,
@@ -19,92 +19,111 @@ namespace GameTheory
 
 open Math.Probability
 
-/-- Labeled nondeterministic machine with joint (possibly inactive) actions. -/
+/-- Latent-state machine with joint (possibly inactive) actions. -/
 structure LSM (ι : Type) where
-  Label : Type
   State : Type
   Act : ι → Type
   init : State
-  step : Label → (∀ i, Option (Act i)) → State → State → Prop
+  step : (∀ i, Option (Act i)) → State → State → Prop
+
+/-- Joint (possibly inactive) action profile. -/
+abbrev JointAction {ι : Type} (M : LSM ι) : Type :=
+  ∀ i, Option (M.Act i)
 
 namespace LSM
 
 variable {ι : Type}
 
-/-- Action-erased one-step relation. -/
-def stepExists (M : LSM ι) : M.Label → M.State → M.State → Prop :=
-  fun ℓ s t => ∃ a, M.step ℓ a s t
+/-- Action-erased one-step relation. Since the machine is already action-indexed,
+this is just `step` under the shared `JointAction` abbreviation. -/
+def stepExists (M : LSM ι) : JointAction M → M.State → M.State → Prop :=
+  M.step
 
 /-- Bounded-horizon predicate (theorem-local assumption). -/
 def FiniteHorizon (M : LSM ι) (k : Nat) : Prop :=
-  ∀ (h : List M.Label) (s : M.State),
+  ∀ (h : List (JointAction M)) (s : M.State),
     Semantics.Transition.ReachBy M.stepExists h M.init s → h.length ≤ k
 
 end LSM
 
-/-- Information structure over a fixed machine. -/
+/-- Information structure over a fixed latent machine.
+
+`publicView` is the common visible component of a state.
+`observe i` is player `i`'s private/local visible component. -/
 structure InfoModel {ι : Type} (M : LSM ι) where
+  Public : Type
+  publicView : M.State → Public
   Obs : ι → Type
-  /-- Primitive observation map from states. -/
   observe : (i : ι) → M.State → Obs i
-  /-- Information partition as a state equivalence relation per controller. -/
-  infoSetoid : (i : ι) → Setoid M.State
-  /-- Coherence: equal observations imply information equivalence. -/
-  observe_eq_implies_obsEq :
-    ∀ (i : ι) {s t : M.State},
-      observe i s = observe i t → (infoSetoid i).r s t
 
 namespace InfoModel
 
 variable {ι : Type} {M : LSM ι}
 
-/-- Derived observation-equivalence relation from the partition. -/
+/-- Derived player-information equivalence: same public view and same local view. -/
 def obsEq (I : InfoModel M) (i : ι) : M.State → M.State → Prop :=
-  (I.infoSetoid i).r
+  fun s t => I.publicView s = I.publicView t ∧ I.observe i s = I.observe i t
 
-/-- Controller-local observation-trace type. -/
-abbrev LocalTrace (I : InfoModel M) (i : ι) : Type :=
+/-- Common public trace induced by a state trace. -/
+abbrev PublicTrace (I : InfoModel M) : Type :=
+  List I.Public
+
+/-- Controller-local private observation trace. -/
+abbrev PrivateTrace (I : InfoModel M) (i : ι) : Type :=
   List (I.Obs i)
 
-/-- Derived global projected-trace outcome (no primitive `Outcome` type). -/
-abbrev Outcome (I : InfoModel M) : Type := ∀ i, I.LocalTrace i
+/-- Controller-local visible history: public history paired with the player's
+private observation history. -/
+abbrev LocalTrace (I : InfoModel M) (i : ι) : Type :=
+  I.PublicTrace × I.PrivateTrace i
 
-/-- Local projection by mapping primitive state observations over a state trace. -/
-def projectStates (I : InfoModel M) (i : ι) (ss : List M.State) : I.LocalTrace i :=
+/-- Visible outcome induced by a state trace. -/
+abbrev Outcome (I : InfoModel M) : Type :=
+  I.PublicTrace × (∀ i, I.PrivateTrace i)
+
+/-- Project the public component of a state trace. -/
+def projectPublic (I : InfoModel M) (ss : List M.State) : I.PublicTrace :=
+  ss.map I.publicView
+
+/-- Project player `i`'s private component of a state trace. -/
+def projectPrivate (I : InfoModel M) (i : ι) (ss : List M.State) : I.PrivateTrace i :=
   ss.map (I.observe i)
 
-/-- Outcome induced by a machine state trace via local projections. -/
+/-- Local projection by pairing the public trace with player `i`'s private trace. -/
+def projectStates (I : InfoModel M) (i : ι) (ss : List M.State) : I.LocalTrace i :=
+  (I.projectPublic ss, I.projectPrivate i ss)
+
+/-- Outcome induced by a machine state trace via public/private projections. -/
 def outcomeOfStates (I : InfoModel M) (ss : List M.State) : I.Outcome :=
-  fun i => I.projectStates i ss
+  (I.projectPublic ss, fun i => I.projectPrivate i ss)
 
-/-- Reachability witness carrying both labels and visited states (states include init). -/
-inductive ReachStateTrace (M : LSM ι) : List M.Label → List M.State → Prop
-  | nil : ReachStateTrace M [] [M.init]
-  | snoc {h : List M.Label} {ss : List M.State} {s t : M.State} {ℓ : M.Label} :
-      ReachStateTrace M h ss →
+/-- Reachability witness carrying visited states (states include init). -/
+inductive ReachStateTrace (M : LSM ι) : List M.State → Prop
+  | nil : ReachStateTrace M [M.init]
+  | snoc {ss : List M.State} {s t : M.State} {a : JointAction M} :
+      ReachStateTrace M ss →
       ss.getLast? = some s →
-      M.stepExists ℓ s t →
-      ReachStateTrace M (h ++ [ℓ]) (ss ++ [t])
+      M.step a s t →
+      ReachStateTrace M (ss ++ [t])
 
-/-- Reachability witness carrying labels, joint actions, and visited states. -/
+/-- Reachability witness carrying joint actions and visited states. -/
 inductive ReachActionTrace (M : LSM ι) :
-    List (M.Label × (∀ i, Option (M.Act i))) → List M.State → Prop
+    List (JointAction M) → List M.State → Prop
   | nil : ReachActionTrace M [] [M.init]
   | snoc
-      {ha : List (M.Label × (∀ i, Option (M.Act i)))}
-      {ss : List M.State} {s t : M.State} {ℓ : M.Label} {a : ∀ i, Option (M.Act i)} :
+      {ha : List (JointAction M)}
+      {ss : List M.State} {s t : M.State} {a : JointAction M} :
       ReachActionTrace M ha ss →
       ss.getLast? = some s →
-      M.step ℓ a s t →
-      ReachActionTrace M (ha ++ [(ℓ, a)]) (ss ++ [t])
+      M.step a s t →
+      ReachActionTrace M (ha ++ [a]) (ss ++ [t])
 
 /-- Player-local projected own-action trace from an action-annotated history. -/
-def projectActions (i : ι)
-    (ha : List (M.Label × (∀ j, Option (M.Act j)))) : List (Option (M.Act i)) :=
-  ha.map (fun e => e.2 i)
+def projectActions (i : ι) (ha : List (JointAction M)) : List (Option (M.Act i)) :=
+  ha.map (fun a => a i)
 
 /-- Player-local history token:
-prefix local observation trace paired with realized own action at that step. -/
+visible local history paired with realized own action at that step. -/
 abbrev LocalHistTok (I : InfoModel M) (i : ι) : Type :=
   I.LocalTrace i × Option (M.Act i)
 
@@ -112,12 +131,12 @@ abbrev LocalHistTok (I : InfoModel M) (i : ι) : Type :=
 private def localHistTokensAux
     (I : InfoModel M) (i : ι)
     (pref : List M.State)
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ssTail : List M.State) :
     List (I.LocalHistTok i) :=
   match ha, ssTail with
   | [], _ => []
-  | (_, a) :: ha', s' :: ss' =>
+  | a :: ha', s' :: ss' =>
       (I.projectStates i pref, a i) ::
         localHistTokensAux I i (pref ++ [s']) ha' ss'
   | _ :: _, [] => []
@@ -125,7 +144,7 @@ private def localHistTokensAux
 /-- First-class local-history projection from action/state traces. -/
 def localHistTokens
     (I : InfoModel M) (i : ι)
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ss : List M.State) :
     List (I.LocalHistTok i) :=
   match ss with
@@ -133,12 +152,12 @@ def localHistTokens
   | s0 :: ssTail => localHistTokensAux I i [s0] ha ssTail
 
 /-- Local-history tokens generated by continuing after an already accumulated
-global state prefix `pref`. Each token records the local trace visible just
-before one further action together with the action taken at that point. -/
+state prefix `pref`. Each token records the visible local history just before
+one further action together with the action taken at that point. -/
 def localHistTokensFrom
     (I : InfoModel M) (i : ι)
     (pref : List M.State)
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ssTail : List M.State) :
     List (I.LocalHistTok i) :=
   localHistTokensAux I i pref ha ssTail
@@ -148,7 +167,7 @@ def localHistTokensFrom
 theorem localHistTokens_cons_eq_localHistTokensFrom
     (I : InfoModel M) (i : ι)
     (s₀ : M.State)
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ssTail : List M.State) :
     localHistTokens I i ha (s₀ :: ssTail) =
       localHistTokensFrom I i [s₀] ha ssTail := rfl
@@ -156,11 +175,11 @@ theorem localHistTokens_cons_eq_localHistTokensFrom
 private theorem localHistTokensAux_snoc
     (I : InfoModel M) (i : ι)
     (pref : List M.State)
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ssTail : List M.State)
     (hLen : ssTail.length = ha.length)
-    (ℓ : M.Label) (a : ∀ j, Option (M.Act j)) (t : M.State) :
-    localHistTokensAux I i pref (ha ++ [(ℓ, a)]) (ssTail ++ [t]) =
+    (a : JointAction M) (t : M.State) :
+    localHistTokensAux I i pref (ha ++ [a]) (ssTail ++ [t]) =
       localHistTokensAux I i pref ha ssTail ++ [(I.projectStates i (pref ++ ssTail), a i)] := by
   induction ha generalizing pref ssTail with
   | nil =>
@@ -169,7 +188,7 @@ private theorem localHistTokensAux_snoc
           simp [localHistTokensAux]
       | cons s ss =>
           cases hLen
-  | cons x ha ih =>
+  | cons a0 ha ih =>
       cases ssTail with
       | nil =>
           cases hLen
@@ -182,11 +201,11 @@ private theorem localHistTokensAux_snoc
 history token. -/
 theorem localHistTokens_snoc
     (I : InfoModel M) (i : ι)
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ss : List M.State)
     (hLen : ss.length = ha.length + 1)
-    (ℓ : M.Label) (a : ∀ j, Option (M.Act j)) (t : M.State) :
-    localHistTokens I i (ha ++ [(ℓ, a)]) (ss ++ [t]) =
+    (a : JointAction M) (t : M.State) :
+    localHistTokens I i (ha ++ [a]) (ss ++ [t]) =
       localHistTokens I i ha ss ++ [(I.projectStates i ss, a i)] := by
   cases ss with
   | nil =>
@@ -195,24 +214,24 @@ theorem localHistTokens_snoc
       have hLen' : ssTail.length = ha.length := by
         simpa using hLen
       simpa [localHistTokens, List.cons_append, List.append_assoc] using
-        localHistTokensAux_snoc I i [s0] ha ssTail hLen' ℓ a t
+        localHistTokensAux_snoc I i [s0] ha ssTail hLen' a t
 
 /-- Appending one step to a continuation appends exactly one continuation local
 history token. -/
 theorem localHistTokensFrom_snoc
     (I : InfoModel M) (i : ι)
     (pref : List M.State)
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ssTail : List M.State)
     (hLen : ssTail.length = ha.length)
-    (ℓ : M.Label) (a : ∀ j, Option (M.Act j)) (t : M.State) :
-    localHistTokensFrom I i pref (ha ++ [(ℓ, a)]) (ssTail ++ [t]) =
+    (a : JointAction M) (t : M.State) :
+    localHistTokensFrom I i pref (ha ++ [a]) (ssTail ++ [t]) =
       localHistTokensFrom I i pref ha ssTail ++ [(I.projectStates i (pref ++ ssTail), a i)] := by
-  simpa [localHistTokensFrom] using localHistTokensAux_snoc I i pref ha ssTail hLen ℓ a t
+  simpa [localHistTokensFrom] using localHistTokensAux_snoc I i pref ha ssTail hLen a t
 
 /-- Length relation on action/state traces induced by `ReachActionTrace`. -/
 theorem ReachActionTrace.length_states_eq_succ_actions
-    {ha : List (M.Label × (∀ i, Option (M.Act i)))}
+    {ha : List (JointAction M)}
     {ss : List M.State}
     (h : ReachActionTrace M ha ss) :
     ss.length = ha.length + 1 := by
@@ -222,32 +241,32 @@ theorem ReachActionTrace.length_states_eq_succ_actions
   | snoc _ _ _ ih =>
       simp [List.length_append, ih, Nat.add_comm]
 
-/-- Project an action trace to a state trace by forgetting joint actions. -/
-theorem ReachActionTrace.toReachStateTrace {ha : List (M.Label × (∀ i, Option (M.Act i)))}
+/-- Forgetting actions from an action/state witness yields a state-trace witness. -/
+theorem ReachActionTrace.toReachStateTrace
+    {ha : List (JointAction M)}
     {ss : List M.State} (h : ReachActionTrace M ha ss) :
-    ReachStateTrace M (ha.map Prod.fst) ss := by
+    ReachStateTrace M ss := by
   induction h with
   | nil => exact .nil
   | snoc _ hlast hstep ih =>
-    simp only [List.map_append, List.map_cons, List.map_nil]
-    exact .snoc ih hlast ⟨_, hstep⟩
+      exact .snoc ih hlast hstep
 
-/-- Observation recall: indistinguishable terminal states imply identical
-player-local projected observation traces on the corresponding reaches. -/
+/-- Observation recall: indistinguishable terminal visible states imply identical
+player-local visible histories on the corresponding reaches. -/
 def ObsRecall (I : InfoModel M) : Prop :=
-  ∀ (i : ι) (h₁ h₂ : List M.Label) (ss₁ ss₂ : List M.State) (s₁ s₂ : M.State),
-    ReachStateTrace M h₁ ss₁ →
-    ReachStateTrace M h₂ ss₂ →
+  ∀ (i : ι) (ss₁ ss₂ : List M.State) (s₁ s₂ : M.State),
+    ReachStateTrace M ss₁ →
+    ReachStateTrace M ss₂ →
     ss₁.getLast? = some s₁ →
     ss₂.getLast? = some s₂ →
     I.obsEq i s₁ s₂ →
     I.projectStates i ss₁ = I.projectStates i ss₂
 
-/-- Action recall: indistinguishable terminal states imply identical
+/-- Action recall: indistinguishable terminal visible states imply identical
 player-local own-action traces on the corresponding action-annotated reaches. -/
 def ActionRecall (I : InfoModel M) : Prop :=
   ∀ (i : ι)
-    (ha₁ ha₂ : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha₁ ha₂ : List (JointAction M))
     (ss₁ ss₂ : List M.State) (s₁ s₂ : M.State),
     ReachActionTrace M ha₁ ss₁ →
     ReachActionTrace M ha₂ ss₂ →
@@ -281,18 +300,15 @@ namespace Execution
 
 variable {ι : Type} {M : LSM ι}
 
-/-- Joint (possibly inactive) action profile. -/
-abbrev JointAction (M : LSM ι) : Type := ∀ i, Option (M.Act i)
-
-/-- Deterministic profile over label and local trace view. -/
+/-- Deterministic profile over local visible history. -/
 abbrev PureProfile (I : InfoModel M) : Type :=
   ∀ i, I.LocalTrace i → Option (M.Act i)
 
-/-- Behavioral profile over label and local trace view. -/
+/-- Behavioral profile over local visible history. -/
 abbrev BehavioralProfile (I : InfoModel M) : Type :=
   ∀ i, I.LocalTrace i → PMF (Option (M.Act i))
 
-/-- Correlated behavioral profile over local trace context.
+/-- Correlated behavioral profile over the full visible history context.
 This is defined for future correlated-realizability developments.
 Current execution semantics continues to use `BehavioralProfile` (independent). -/
 abbrev BehavioralProfileCorr (I : InfoModel M) : Type :=
@@ -300,11 +316,9 @@ abbrev BehavioralProfileCorr (I : InfoModel M) : Type :=
 
 /-- Embed an independent behavioral profile as a correlated one by product sampling. -/
 noncomputable def behavioralToCorr
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (I : InfoModel M) (σ : BehavioralProfile I) : BehavioralProfileCorr I := by
-  classical
-  intro v
-  exact Math.PMFProduct.pmfPi (fun i => σ i (v i))
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (I : InfoModel M) (σ : BehavioralProfile I) : BehavioralProfileCorr I :=
+  fun v => Math.PMFProduct.pmfPi (fun i => σ i (v i))
 
 /-- Lift a deterministic profile to a behavioral one. -/
 noncomputable def pureToBehavioral (I : InfoModel M) (π : PureProfile I) : BehavioralProfile I :=
@@ -312,108 +326,102 @@ noncomputable def pureToBehavioral (I : InfoModel M) (π : PureProfile I) : Beha
 
 /-- Stochastic execution choices on top of nondeterministic machine rules. -/
 structure Dynamics (I : InfoModel M) where
-  /-- Label sampling policy from current state. -/
-  labelKernel : M.State → PMF M.Label
-  /-- Next-state kernel, conditioned on label/joint-action/current-state. -/
-  nextState : M.Label → JointAction M → M.State → PMF M.State
+  /-- Next-state kernel, conditioned on joint action and current latent state. -/
+  nextState : JointAction M → M.State → PMF M.State
   /-- Soundness: sampled next states respect machine step relation. -/
   nextState_sound :
-    ∀ (ℓ : M.Label) (a : JointAction M) (s t : M.State),
-      (nextState ℓ a s) t ≠ 0 → M.step ℓ a s t
+    ∀ (a : JointAction M) (s t : M.State),
+      (nextState a s) t ≠ 0 → M.step a s t
 
 namespace Dynamics
 
 variable {I : InfoModel M}
 
-open Classical in
 /-- Independent joint-action distribution induced by a behavioral profile. -/
 noncomputable def jointActionDist
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (σ : BehavioralProfile I) (ss : List M.State) : PMF (JointAction M) :=
   Math.PMFProduct.pmfPi (fun i => σ i (I.projectStates i ss))
 
 /-- One stochastic step from a current state under behavioral profile `σ`. -/
 noncomputable def stepDist (D : Dynamics I)
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfile I) (ss : List M.State) : PMF (M.Label × M.State) :=
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (σ : BehavioralProfile I) (ss : List M.State) : PMF M.State :=
   let s := (ss.getLast?).getD M.init
-  (D.labelKernel s).bind fun ℓ =>
-    (jointActionDist (I := I) σ ss).bind fun a =>
-      Math.ProbabilityMassFunction.pushforward (D.nextState ℓ a s) (fun t => (ℓ, t))
+  (jointActionDist (I := I) σ ss).bind fun a =>
+    D.nextState a s
 
 /-- One stochastic step from a current state under a correlated behavioral profile. -/
 noncomputable def stepDistCorr (D : Dynamics I)
     [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfileCorr I) (ss : List M.State) : PMF (M.Label × M.State) :=
+    (σ : BehavioralProfileCorr I) (ss : List M.State) : PMF M.State :=
   let s := (ss.getLast?).getD M.init
   let v : ∀ i, I.LocalTrace i := fun i => I.projectStates i ss
-  (D.labelKernel s).bind fun ℓ =>
-    (σ v).bind fun a =>
-      Math.ProbabilityMassFunction.pushforward (D.nextState ℓ a s) (fun t => (ℓ, t))
+  (σ v).bind fun a =>
+    D.nextState a s
 
-/-- Bounded run distribution of length exactly `k`:
-stores (label-trace, state-trace). -/
+/-- Bounded run distribution of length exactly `k`, storing just the state trace. -/
 noncomputable def runDist (D : Dynamics I)
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (k : Nat) (σ : BehavioralProfile I) : PMF (List M.Label × List M.State) :=
-  Nat.rec (PMF.pure ([], [M.init]))
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (k : Nat) (σ : BehavioralProfile I) : PMF (List M.State) :=
+  Nat.rec (PMF.pure [M.init])
     (fun _ rec =>
-      rec.bind (fun hs =>
-        Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))
+      rec.bind (fun ss =>
+        Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+          (fun t => ss ++ [t])))
     k
 
 /-- Pure-profile run distribution via `pureToBehavioral`. -/
 noncomputable def runDistPure (D : Dynamics I)
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (k : Nat) (π : PureProfile I) : PMF (List M.Label × List M.State) :=
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (k : Nat) (π : PureProfile I) : PMF (List M.State) :=
   D.runDist k (pureToBehavioral I π)
 
-/-- Outcome distribution (projected-trace outcome) from bounded behavioral runs. -/
+/-- Outcome distribution (public/private visible outcome) from bounded behavioral runs. -/
 noncomputable def evalBehavioral (D : Dynamics I)
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (k : Nat) (σ : BehavioralProfile I) : PMF I.Outcome :=
-  Math.ProbabilityMassFunction.pushforward (D.runDist k σ) (fun hs => I.outcomeOfStates hs.2)
+  Math.ProbabilityMassFunction.pushforward (D.runDist k σ) I.outcomeOfStates
 
 /-- Outcome distribution from bounded pure runs. -/
 noncomputable def evalPure (D : Dynamics I)
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (k : Nat) (π : PureProfile I) : PMF I.Outcome :=
-  Math.ProbabilityMassFunction.pushforward (D.runDistPure k π) (fun hs => I.outcomeOfStates hs.2)
+  Math.ProbabilityMassFunction.pushforward (D.runDistPure k π) I.outcomeOfStates
 
 /-- Independent one-step realizability:
 there exists an independent behavioral profile matching the mixed/pure one-step law. -/
 def OneStepIndependentRealizable (D : Dynamics I)
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (ν : PMF (PureProfile I)) (n : Nat) : Prop :=
   ∃ σ : BehavioralProfile I,
     (ν.bind (fun π =>
-      (D.runDistPure n π).bind (fun hs =>
+      (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDist σ hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))) =
+          (D.stepDist σ ss)
+          (fun t => ss ++ [t])))) =
     (ν.bind (fun π =>
-      (D.runDistPure n π).bind (fun hs =>
+      (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (pureToBehavioral I π) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))))
+          (D.stepDist (pureToBehavioral I π) ss)
+          (fun t => ss ++ [t]))))
 
 /-- Correlated one-step realizability:
 there exists a correlated behavioral profile matching the mixed/pure one-step law. -/
 def OneStepCorrelatedRealizable (D : Dynamics I)
-    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (ν : PMF (PureProfile I)) (n : Nat) : Prop :=
   ∃ σ : BehavioralProfileCorr I,
     (ν.bind (fun π =>
-      (D.runDistPure n π).bind (fun hs =>
+      (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDistCorr σ hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))) =
+          (D.stepDistCorr σ ss)
+          (fun t => ss ++ [t])))) =
     (ν.bind (fun π =>
-      (D.runDistPure n π).bind (fun hs =>
+      (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (pureToBehavioral I π) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))))
+          (D.stepDist (pureToBehavioral I π) ss)
+          (fun t => ss ++ [t]))))
 
 end Dynamics
 end Execution

@@ -8,14 +8,13 @@ section InfoModel
 
 open Execution
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
 variable {M : LSM ι} (I : InfoModel M)
 variable (D : Execution.Dynamics I)
 variable (k : Nat)
 
 /-- Kuhn completeness at the outcome-distribution level for an `InfoModel`. -/
 theorem kuhn_complete
-    [Fintype M.Label]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]

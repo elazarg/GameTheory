@@ -53,6 +53,7 @@ theorem mixedJoint_injective
 /-- Canonical mixed evaluation (sample pure profile, then evaluate). -/
 noncomputable def evalMixedCanonical
     (D : Execution.Dynamics I)
+    [DecidableEq ι]
     [Fintype ι]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -72,7 +73,7 @@ noncomputable def realizeBehavioralCanonical
   fun i v => Math.ProbabilityMassFunction.pushforward (μ i) (fun f => f v)
 
 /-- Behavioral → Mixed: each player's mixed strategy is the product measure over
-    all (label, local-trace) coordinates. -/
+all local-trace coordinates. -/
 noncomputable def behavioralToMixed
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -99,43 +100,38 @@ theorem realize_behavioralToMixed
 
 /-- Pure step simplification: `jointActionDist` under `pureToBehavioral` is a point mass. -/
 theorem jointActionDist_pure
+    [DecidableEq ι]
     [Fintype ι]
     [∀ i, Fintype (Option (M.Act i))]
     (π : PureProfile I) (ss : List M.State) :
     Execution.Dynamics.jointActionDist (I := I) (pureToBehavioral I π) ss =
       PMF.pure (fun i => π i (I.projectStates i ss)) := by
-  simp [Execution.Dynamics.jointActionDist, pureToBehavioral, pmfPi_pure]
+  simpa [Execution.Dynamics.jointActionDist, pureToBehavioral] using
+    (pmfPi_pure (σ := fun i => π i (I.projectStates i ss)))
 
 /-- Pure step unfolding: `stepDist` under `pureToBehavioral` simplifies. -/
 theorem stepDist_pure
-    (D : Execution.Dynamics I) [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (D : Execution.Dynamics I)
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (π : PureProfile I) (ss : List M.State) :
     D.stepDist (pureToBehavioral I π) ss =
       let s := (ss.getLast?).getD M.init
-      (D.labelKernel s).bind (fun ℓ =>
-        Math.ProbabilityMassFunction.pushforward
-          (D.nextState ℓ (fun i => π i (I.projectStates i ss)) s)
-          (fun t => (ℓ, t))) := by
-  simp only [Execution.Dynamics.stepDist, jointActionDist_pure]
-  congr 1; funext ℓ
-  simp [PMF.pure_bind]
+      D.nextState (fun i => π i (I.projectStates i ss)) s := by
+  simp [Execution.Dynamics.stepDist, jointActionDist_pure, PMF.pure_bind]
 
 /-- Pure explicit-step unfolding: `stepActionStateDist` under `pureToBehavioral`
 records the current queried action profile without additional randomness. -/
 theorem stepActionStateDist_pure
-    (D : Execution.Dynamics I) [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (D : Execution.Dynamics I)
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
     (π : PureProfile I) (ss : List M.State) :
     D.stepActionStateDist (pureToBehavioral I π) ss =
       let s := (ss.getLast?).getD M.init
-      let a : ∀ i, Option (M.Act i) := fun i => π i (I.projectStates i ss)
-      (D.labelKernel s).bind (fun ℓ =>
-        Math.ProbabilityMassFunction.pushforward
-          (D.nextState ℓ a s)
-          (fun t => ((ℓ, a), t))) := by
-  simp only [Execution.Dynamics.stepActionStateDist, jointActionDist_pure]
-  congr 1
-  funext ℓ
-  simp [PMF.pure_bind]
+      let a : JointAction M := fun i => π i (I.projectStates i ss)
+      Math.ProbabilityMassFunction.pushforward
+        (D.nextState a s)
+        (fun t => (a, t)) := by
+  simp [Execution.Dynamics.stepActionStateDist, jointActionDist_pure, PMF.pure_bind]
 
 end InfoModel
 end GameTheory

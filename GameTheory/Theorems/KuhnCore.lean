@@ -45,7 +45,7 @@ variable (D : Execution.Dynamics I)
 variable (k : Nat)
 
 noncomputable def mixedOfBehavioralCanonical
-    [Fintype M.Label]
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -55,22 +55,22 @@ noncomputable def mixedOfBehavioralCanonical
 /-- If a behavioral profile `σ` satisfies one-step mixed/pure compatibility
 at every depth under `μ`, then its bounded evaluation equals mixed evaluation. -/
 theorem evalBehavioral_eq_mixed_of_stepIndependence
+    [DecidableEq ι]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (μ : InfoModel.MixedProfile (I := I))
     (σ : BehavioralProfile I)
-    (hStep :
-      ∀ n,
+    (hStep : ∀ n,
       (InfoModel.mixedJoint (I := I) μ).bind (fun π =>
-        (D.runDistPure n π).bind (fun hs =>
+        (D.runDistPure n π).bind (fun ss =>
           Math.ProbabilityMassFunction.pushforward
-            (D.stepDist σ hs.2)
-            (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) =
+            (D.stepDist σ ss)
+            (fun t => ss ++ [t]))) =
       (InfoModel.mixedJoint (I := I) μ).bind (fun π =>
-        (D.runDistPure n π).bind (fun hs =>
+        (D.runDistPure n π).bind (fun ss =>
           Math.ProbabilityMassFunction.pushforward
-            (D.stepDist (pureToBehavioral I π) hs.2)
-            (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))) :
+            (D.stepDist (pureToBehavioral I π) ss)
+            (fun t => ss ++ [t])))) :
     D.evalBehavioral k σ = (InfoModel.mixedJoint (I := I) μ).bind (D.evalPure k) := by
   have hrun :
       ∀ n,
@@ -83,51 +83,49 @@ theorem evalBehavioral_eq_mixed_of_stepIndependence
     | succ n ih =>
         calc
           D.runDist (n + 1) σ
-              = (D.runDist n σ).bind (fun hs =>
-                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) := by
+              = (D.runDist n σ).bind (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+                    (fun t => ss ++ [t])) := by
                   simp [Execution.Dynamics.runDist]
           _ = ((InfoModel.mixedJoint (I := I) μ).bind (fun π => D.runDistPure n π)).bind
-                (fun hs =>
-                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) := by
+                (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+                    (fun t => ss ++ [t])) := by
                 rw [ih]
           _ = (InfoModel.mixedJoint (I := I) μ).bind (fun π =>
-                (D.runDistPure n π).bind (fun hs =>
-                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) := by
+                (D.runDistPure n π).bind (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+                    (fun t => ss ++ [t]))) := by
                 rw [PMF.bind_bind]
           _ = (InfoModel.mixedJoint (I := I) μ).bind (fun π =>
-                (D.runDistPure n π).bind (fun hs =>
+                (D.runDistPure n π).bind (fun ss =>
                   Math.ProbabilityMassFunction.pushforward
-                    (D.stepDist (pureToBehavioral I π) hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) := by
+                    (D.stepDist (pureToBehavioral I π) ss)
+                    (fun t => ss ++ [t]))) := by
                 simpa using hStep n
           _ = (InfoModel.mixedJoint (I := I) μ).bind (fun π => D.runDistPure (n + 1) π) := by
                 simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure]
   have hrun' := hrun k
   have hpush := congrArg
-      (fun p =>
-        Math.ProbabilityMassFunction.pushforward p (fun hs => I.outcomeOfStates hs.2))
+      (fun p => Math.ProbabilityMassFunction.pushforward p I.outcomeOfStates)
       hrun'
   calc
     D.evalBehavioral k σ
-        = Math.ProbabilityMassFunction.pushforward (D.runDist k σ)
-            (fun hs => I.outcomeOfStates hs.2) := rfl
+        = Math.ProbabilityMassFunction.pushforward (D.runDist k σ) I.outcomeOfStates := rfl
     _ = Math.ProbabilityMassFunction.pushforward
           ((InfoModel.mixedJoint (I := I) μ).bind (fun π => D.runDistPure k π))
-          (fun hs => I.outcomeOfStates hs.2) := by
+          I.outcomeOfStates := by
           simpa using hpush
     _ = (InfoModel.mixedJoint (I := I) μ).bind (D.evalPure k) := by
           simpa [Execution.Dynamics.evalPure] using
             (Math.ProbabilityMassFunction.pushforward_bind
               (μ := InfoModel.mixedJoint (I := I) μ)
               (k := fun π => D.runDistPure k π)
-              (f := fun hs => I.outcomeOfStates hs.2))
+              (f := I.outcomeOfStates))
 
 /-- Behavioral -> mixed direction from model-level step-independence. -/
 theorem kuhn_behavioral_to_mixed_core
-    [Fintype M.Label]
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -146,32 +144,31 @@ theorem kuhn_behavioral_to_mixed_core
     simpa [μσ, InfoModel.realize_behavioralToMixed] using hrun
   have hpush :=
     congrArg
-      (fun p =>
-        Math.ProbabilityMassFunction.pushforward p (fun hs => I.outcomeOfStates hs.2))
+      (fun p => Math.ProbabilityMassFunction.pushforward p I.outcomeOfStates)
       hrun'
   have hright :
       Math.ProbabilityMassFunction.pushforward
           ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure k π))
-          (fun hs => I.outcomeOfStates hs.2) =
+          I.outcomeOfStates =
         (InfoModel.mixedJoint (I := I) μσ).bind (D.evalPure k) := by
     simpa [Execution.Dynamics.evalPure] using
       (Math.ProbabilityMassFunction.pushforward_bind
         (μ := InfoModel.mixedJoint (I := I) μσ)
         (k := fun π => D.runDistPure k π)
-        (f := fun hs => I.outcomeOfStates hs.2))
+        (f := I.outcomeOfStates))
   calc
     (mixedOfBehavioralCanonical (I := I) σ).bind (D.evalPure k)
         = (InfoModel.mixedJoint (I := I) μσ).bind (D.evalPure k) := rfl
     _ = Math.ProbabilityMassFunction.pushforward
           ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure k π))
-          (fun hs => I.outcomeOfStates hs.2) := hright.symm
-    _ = Math.ProbabilityMassFunction.pushforward (D.runDist k σ)
-          (fun hs => I.outcomeOfStates hs.2) := by
+          I.outcomeOfStates := hright.symm
+    _ = Math.ProbabilityMassFunction.pushforward (D.runDist k σ) I.outcomeOfStates := by
           simpa using hpush.symm
     _ = D.evalBehavioral k σ := rfl
 
 /-- Mixed -> behavioral direction from model-level step-independence. -/
 theorem kuhn_mixed_to_behavioral_core
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -185,28 +182,27 @@ theorem kuhn_mixed_to_behavioral_core
     InfoModel.run_factorization (I := I) (D := D) hStepIndep μ k
   have hpush :=
     congrArg
-      (fun p =>
-        Math.ProbabilityMassFunction.pushforward p (fun hs => I.outcomeOfStates hs.2))
+      (fun p => Math.ProbabilityMassFunction.pushforward p I.outcomeOfStates)
       hrun
   calc
     D.evalBehavioral k (InfoModel.realizeBehavioralCanonical (I := I) μ)
         = Math.ProbabilityMassFunction.pushforward
             (D.runDist k (InfoModel.realizeBehavioralCanonical (I := I) μ))
-            (fun hs => I.outcomeOfStates hs.2) := rfl
+            I.outcomeOfStates := rfl
     _ = Math.ProbabilityMassFunction.pushforward
           ((InfoModel.mixedJoint (I := I) μ).bind (fun π => D.runDistPure k π))
-          (fun hs => I.outcomeOfStates hs.2) := by
+          I.outcomeOfStates := by
           simpa using hpush
     _ = (InfoModel.mixedJoint (I := I) μ).bind (D.evalPure k) := by
           simpa [Execution.Dynamics.evalPure] using
             (Math.ProbabilityMassFunction.pushforward_bind
               (μ := InfoModel.mixedJoint (I := I) μ)
               (k := fun π => D.runDistPure k π)
-              (f := fun hs => I.outcomeOfStates hs.2))
+              (f := I.outcomeOfStates))
 
 /-- Full Kuhn on `InfoModel` from the step-independence bridge. -/
 theorem kuhn_complete_of_infoModel
-    [Fintype M.Label]
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -223,7 +219,7 @@ theorem kuhn_complete_of_infoModel
 
 /-- Full Kuhn from structural atomic factorization plus finite horizon. -/
 theorem kuhn_complete_of_infoModel_atomic
-    [Fintype M.Label]
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
@@ -242,7 +238,7 @@ theorem kuhn_complete_of_infoModel_atomic
 
 /-- Kuhn's behavioral-to-mixed direction for `InfoModel` outcome distributions. -/
 theorem kuhn_behavioral_to_mixed
-    [Fintype M.Label]
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))] :
@@ -263,25 +259,25 @@ theorem kuhn_behavioral_to_mixed
     | succ n ih =>
         calc
           D.runDist (n + 1) σ
-              = (D.runDist n σ).bind (fun hs =>
-                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) := by
+              = (D.runDist n σ).bind (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+                    (fun t => ss ++ [t])) := by
                   simp [Execution.Dynamics.runDist]
           _ = ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure n π)).bind
-                (fun hs =>
-                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) := by
+                (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+                    (fun t => ss ++ [t])) := by
                 rw [ih]
           _ = (InfoModel.mixedJoint (I := I) μσ).bind (fun π =>
-                (D.runDistPure n π).bind (fun hs =>
-                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) := by
+                (D.runDistPure n π).bind (fun ss =>
+                  Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+                    (fun t => ss ++ [t]))) := by
                 rw [PMF.bind_bind]
           _ = (InfoModel.mixedJoint (I := I) μσ).bind (fun π =>
-                (D.runDistPure n π).bind (fun hs =>
+                (D.runDistPure n π).bind (fun ss =>
                   Math.ProbabilityMassFunction.pushforward
-                    (D.stepDist (pureToBehavioral I π) hs.2)
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) := by
+                    (D.stepDist (pureToBehavioral I π) ss)
+                    (fun t => ss ++ [t]))) := by
                 simpa [μσ] using
                   (InfoModel.behavioralToMixed_stepIndependence_bridge
                     (I := I) (D := D) σ n)
@@ -289,27 +285,25 @@ theorem kuhn_behavioral_to_mixed
                 simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure]
   have hrun' := hrun k
   have hpush := congrArg
-      (fun p =>
-        Math.ProbabilityMassFunction.pushforward p (fun hs => I.outcomeOfStates hs.2))
+      (fun p => Math.ProbabilityMassFunction.pushforward p I.outcomeOfStates)
       hrun'
   have hright :
       Math.ProbabilityMassFunction.pushforward
           ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure k π))
-          (fun hs => I.outcomeOfStates hs.2) =
+          I.outcomeOfStates =
         (InfoModel.mixedJoint (I := I) μσ).bind (D.evalPure k) := by
     simpa [Execution.Dynamics.evalPure] using
       (Math.ProbabilityMassFunction.pushforward_bind
         (μ := InfoModel.mixedJoint (I := I) μσ)
         (k := fun π => D.runDistPure k π)
-        (f := fun hs => I.outcomeOfStates hs.2))
+        (f := I.outcomeOfStates))
   calc
     (mixedOfBehavioralCanonical (I := I) σ).bind (D.evalPure k)
         = (InfoModel.mixedJoint (I := I) μσ).bind (D.evalPure k) := rfl
     _ = Math.ProbabilityMassFunction.pushforward
           ((InfoModel.mixedJoint (I := I) μσ).bind (fun π => D.runDistPure k π))
-          (fun hs => I.outcomeOfStates hs.2) := hright.symm
-    _ = Math.ProbabilityMassFunction.pushforward (D.runDist k σ)
-          (fun hs => I.outcomeOfStates hs.2) := by
+          I.outcomeOfStates := hright.symm
+    _ = Math.ProbabilityMassFunction.pushforward (D.runDist k σ) I.outcomeOfStates := by
           simpa using hpush.symm
     _ = D.evalBehavioral k σ := rfl
 
@@ -317,4 +311,3 @@ end InfoModel
 
 end Theorems
 end GameTheory
-

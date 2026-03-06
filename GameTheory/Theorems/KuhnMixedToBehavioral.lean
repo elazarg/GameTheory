@@ -15,7 +15,7 @@ section InfoModel
 open Execution
 open InfoModel
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
 variable {M : LSM ι} (I : InfoModel M)
 variable (D : Execution.Dynamics I)
 variable (k : Nat)
@@ -37,19 +37,19 @@ noncomputable def mixedToBehavioral
   classical
   refine fun i v =>
     if h :
-      ∃ ha : List (M.Label × (∀ j, Option (M.Act j))),
+      ∃ ha : List (JointAction M),
       ∃ ss : List M.State,
         InfoModel.ReachActionTrace M ha ss ∧
         I.projectStates i ss = v
     then ?_ else PMF.pure none
-  let ha : List (M.Label × (∀ j, Option (M.Act j))) := Classical.choose h
+  let ha : List (JointAction M) := Classical.choose h
   let ss : List M.State := Classical.choose (Classical.choose_spec h)
   have hv : I.projectStates i ss = v := (Classical.choose_spec (Classical.choose_spec h)).2
   let hist := InfoModel.localHistTokens (I := I) i ha ss
   exact Math.ProbabilityMassFunction.pushforward
     (iterCondMixedLocal (I := I) i (μ i) hist) (fun f => f v)
 
-omit [Fintype ι] in
+omit [Fintype ι] [DecidableEq ι] in
 private theorem mixedToBehavioral_eq_iterCond_pushforward
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
@@ -57,7 +57,7 @@ private theorem mixedToBehavioral_eq_iterCond_pushforward
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
     (i : ι)
-    {ha : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha : List (JointAction M)}
     {ss : List M.State}
     (hr : InfoModel.ReachActionTrace M ha ss) :
     mixedToBehavioral (I := I) μ i (I.projectStates i ss) =
@@ -69,14 +69,14 @@ private theorem mixedToBehavioral_eq_iterCond_pushforward
   unfold mixedToBehavioral
   let v : I.LocalTrace i := I.projectStates i ss
   have hreach :
-      ∃ ha' : List (M.Label × (∀ j, Option (M.Act j))),
+      ∃ ha' : List (JointAction M),
       ∃ ss' : List M.State,
         InfoModel.ReachActionTrace M ha' ss' ∧
           I.projectStates i ss' = v := by
     exact ⟨ha, ss, hr, rfl⟩
   rw [dif_pos hreach]
   dsimp [v]
-  let ha' : List (M.Label × (∀ j, Option (M.Act j))) := Classical.choose hreach
+  let ha' : List (JointAction M) := Classical.choose hreach
   let ss' : List M.State := Classical.choose (Classical.choose_spec hreach)
   have hr' : InfoModel.ReachActionTrace M ha' ss' :=
     (Classical.choose_spec (Classical.choose_spec hreach)).1
@@ -108,18 +108,18 @@ noncomputable def mixedToBehavioralAfter
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (μ : InfoModel.MixedProfile (I := I))
-    (ha0 : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha0 : List (JointAction M))
     (ss0 : List M.State) :
     BehavioralProfile I := by
   classical
   refine fun i v =>
     if h :
-      ∃ haTail : List (M.Label × (∀ j, Option (M.Act j))),
+      ∃ haTail : List (JointAction M),
       ∃ ssTail : List M.State,
         InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail) ∧
         I.projectStates i (ss0 ++ ssTail) = v
     then ?_ else PMF.pure none
-  let haTail : List (M.Label × (∀ j, Option (M.Act j))) := Classical.choose h
+  let haTail : List (JointAction M) := Classical.choose h
   let ssTail : List M.State := Classical.choose (Classical.choose_spec h)
   let histTail := InfoModel.localHistTokensFrom (I := I) i ss0 haTail ssTail
   exact Math.ProbabilityMassFunction.pushforward
@@ -131,18 +131,18 @@ noncomputable def conditionedMixedProfile
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (μ : InfoModel.MixedProfile (I := I))
-    (ha : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha : List (JointAction M))
     (ss : List M.State) :
     InfoModel.MixedProfile (I := I) :=
   fun i => iterCondMixedLocal (I := I) i (μ i)
     (InfoModel.localHistTokens (I := I) i ha ss)
 
-omit [Fintype ι] in
+omit [Fintype ι] [DecidableEq ι] in
 private theorem conditionedMixedProfile_append
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (μ : InfoModel.MixedProfile (I := I))
-    (ha0 haTail : List (M.Label × (∀ j, Option (M.Act j))))
+    (ha0 haTail : List (JointAction M))
     (ss0 ssTail : List M.State)
     (hLen0 : ss0.length = ha0.length + 1) :
     conditionedMixedProfile (I := I) μ (ha0 ++ haTail) (ss0 ++ ssTail) =
@@ -155,18 +155,18 @@ private theorem conditionedMixedProfile_append
   rw [InfoModel.localHistTokens_append (I := I) i ha0 haTail ss0 ssTail hLen0]
   rw [iterCondMixedLocal_append]
 
-omit [Fintype ι] in
+omit [Fintype ι] [DecidableEq ι] in
 private theorem mixedToBehavioralAfter_eq_iterCond_pushforward
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
-    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha0 : List (JointAction M)}
     {ss0 : List M.State}
     (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
     (i : ι)
-    {haTail : List (M.Label × (∀ j, Option (M.Act j)))}
+    {haTail : List (JointAction M)}
     {ssTail : List M.State}
     (hr : InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail)) :
     mixedToBehavioralAfter (I := I) μ ha0 ss0 i (I.projectStates i (ss0 ++ ssTail)) =
@@ -178,14 +178,14 @@ private theorem mixedToBehavioralAfter_eq_iterCond_pushforward
   unfold mixedToBehavioralAfter
   let v : I.LocalTrace i := I.projectStates i (ss0 ++ ssTail)
   have hreach :
-      ∃ haTail' : List (M.Label × (∀ j, Option (M.Act j))),
+      ∃ haTail' : List (JointAction M),
       ∃ ssTail' : List M.State,
         InfoModel.ReachActionTrace M (ha0 ++ haTail') (ss0 ++ ssTail') ∧
           I.projectStates i (ss0 ++ ssTail') = v := by
     exact ⟨haTail, ssTail, hr, rfl⟩
   rw [dif_pos hreach]
   dsimp [v]
-  let haTail' : List (M.Label × (∀ j, Option (M.Act j))) := Classical.choose hreach
+  let haTail' : List (JointAction M) := Classical.choose hreach
   let ssTail' : List M.State := Classical.choose (Classical.choose_spec hreach)
   have hr' : InfoModel.ReachActionTrace M (ha0 ++ haTail') (ss0 ++ ssTail') :=
     (Classical.choose_spec (Classical.choose_spec hreach)).1
@@ -252,14 +252,14 @@ private theorem mixedToBehavioralAfter_eq_iterCond_pushforward
     exact (List.append_right_injective (InfoModel.localHistTokens (I := I) i ha0 ss0)) happend
   simp [haTail', ssTail', hhistTail]
 
-omit [Fintype ι] in
+omit [Fintype ι] [DecidableEq ι] in
 private theorem mixedToBehavioral_tail_agree
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
-    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha0 : List (JointAction M)}
     {ss0 : List M.State}
     (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
     (μ0 : InfoModel.MixedProfile (I := I))
@@ -268,7 +268,7 @@ private theorem mixedToBehavioral_tail_agree
         fun i => iterCondMixedLocal (I := I) i (μ i)
           (InfoModel.localHistTokens (I := I) i ha0 ss0))
     (i : ι)
-    {haTail : List (M.Label × (∀ j, Option (M.Act j)))}
+    {haTail : List (JointAction M)}
     {ssTail : List M.State}
     (hr : InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail)) :
     mixedToBehavioral (I := I) μ i (I.projectStates i (ss0 ++ ssTail)) =
@@ -326,10 +326,10 @@ private theorem stepDist_mixedToBehavioral_tail_agree
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
-    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha0 : List (JointAction M)}
     {ss0 : List M.State}
     (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
-    {haTail : List (M.Label × (∀ j, Option (M.Act j)))}
+    {haTail : List (JointAction M)}
     {ssTail : List M.State}
     (hr : InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail)) :
     D.stepDist (mixedToBehavioral (I := I) μ) (ss0 ++ ssTail) =
@@ -350,19 +350,19 @@ private theorem mixedToBehavioralAfter_stepPoint_eq_conditioned
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
-    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha0 : List (JointAction M)}
     {ss0 : List M.State}
     (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
-    (y : List M.Label × List M.State) :
+    (y : List M.State) :
     let μ0 := conditionedMixedProfile (I := I) μ ha0 ss0
     (Math.ProbabilityMassFunction.pushforward
       (D.stepDist (mixedToBehavioralAfter (I := I) μ0 ha0 ss0) ss0)
-      (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y
+      (fun t => ss0 ++ [t])) y
       =
     ∑' π, (InfoModel.mixedJoint (I := I) μ0) π *
       ((Math.ProbabilityMassFunction.pushforward
         (D.stepDist (pureToBehavioral I π) ss0)
-        (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y) := by
+        (fun t => ss0 ++ [t])) y) := by
   classical
   let μ0 : InfoModel.MixedProfile (I := I) := conditionedMixedProfile (I := I) μ ha0 ss0
   have hr0' : InfoModel.ReachActionTrace M (ha0 ++ []) (ss0 ++ []) := by
@@ -391,46 +391,46 @@ private theorem mixedToBehavioralAfter_stepPoint_eq_conditioned
   calc
     (Math.ProbabilityMassFunction.pushforward
       (D.stepDist (mixedToBehavioralAfter (I := I) μ0 ha0 ss0) ss0)
-      (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y
+      (fun t => ss0 ++ [t])) y
         =
       (Math.ProbabilityMassFunction.pushforward
         (D.stepDist (mixedToBehavioral (I := I) μ) ss0)
-        (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y := by
+        (fun t => ss0 ++ [t])) y := by
           simpa using congrArg
             (fun ν =>
               (Math.ProbabilityMassFunction.pushforward ν
-                (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y)
+                (fun t => ss0 ++ [t])) y)
             htail.symm
     _ =
       (Math.ProbabilityMassFunction.pushforward
         (D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μ0) ss0)
-        (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y := by
+        (fun t => ss0 ++ [t])) y := by
           simpa using congrArg
             (fun ν =>
               (Math.ProbabilityMassFunction.pushforward ν
-                (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y)
+                (fun t => ss0 ++ [t])) y)
             hstep_realize
     _ =
       ∑' π, (InfoModel.mixedJoint (I := I) μ0) π *
         ((Math.ProbabilityMassFunction.pushforward
           (D.stepDist (pureToBehavioral I π) ss0)
-          (fun ls => (ha0.map Prod.fst ++ [ls.1], ss0 ++ [ls.2]))) y) := by
+          (fun t => ss0 ++ [t])) y) := by
             simpa using
               (mixedJoint_stepPoint_eq_realizeBehavioralCanonical
-                (I := I) (D := D) μ0 (ha0.map Prod.fst, ss0) y).symm
+                (I := I) (D := D) μ0 ss0 y).symm
 
-omit [Fintype ι] in
+omit [Fintype ι] [DecidableEq ι] in
 private theorem mixedToBehavioralAfter_eq_realizeBehavioralCanonical_reachable
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
-    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha0 : List (JointAction M)}
     {ss0 : List M.State}
     (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
     (i : ι)
-    {haTail : List (M.Label × (∀ j, Option (M.Act j)))}
+    {haTail : List (JointAction M)}
     {ssTail : List M.State}
     (hr : InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail)) :
     mixedToBehavioralAfter (I := I)
@@ -484,25 +484,25 @@ private theorem mixedToBehavioralAfter_stepPoint_eq_conditioned_reachable
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
-    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha0 : List (JointAction M)}
     {ss0 : List M.State}
     (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
-    {haTail : List (M.Label × (∀ j, Option (M.Act j)))}
+    {haTail : List (JointAction M)}
     {ssTail : List M.State}
     (hr : InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail))
-    (y : List M.Label × List M.State) :
+    (y : List M.State) :
     let μFull := conditionedMixedProfile (I := I) μ (ha0 ++ haTail) (ss0 ++ ssTail)
     (Math.ProbabilityMassFunction.pushforward
       (D.stepDist
         (mixedToBehavioralAfter (I := I)
           (conditionedMixedProfile (I := I) μ ha0 ss0) ha0 ss0)
         (ss0 ++ ssTail))
-      (fun ls => ((ha0 ++ haTail).map Prod.fst ++ [ls.1], (ss0 ++ ssTail) ++ [ls.2]))) y
+      (fun t => (ss0 ++ ssTail) ++ [t])) y
       =
     ∑' π, (InfoModel.mixedJoint (I := I) μFull) π *
       ((Math.ProbabilityMassFunction.pushforward
         (D.stepDist (pureToBehavioral I π) (ss0 ++ ssTail))
-        (fun ls => ((ha0 ++ haTail).map Prod.fst ++ [ls.1], (ss0 ++ ssTail) ++ [ls.2]))) y) := by
+        (fun t => (ss0 ++ ssTail) ++ [t])) y) := by
   classical
   let μFull : InfoModel.MixedProfile (I := I) :=
     conditionedMixedProfile (I := I) μ (ha0 ++ haTail) (ss0 ++ ssTail)
@@ -523,24 +523,24 @@ private theorem mixedToBehavioralAfter_stepPoint_eq_conditioned_reachable
         (mixedToBehavioralAfter (I := I)
           (conditionedMixedProfile (I := I) μ ha0 ss0) ha0 ss0)
         (ss0 ++ ssTail))
-      (fun ls => ((ha0 ++ haTail).map Prod.fst ++ [ls.1], (ss0 ++ ssTail) ++ [ls.2]))) y
+      (fun t => (ss0 ++ ssTail) ++ [t])) y
         =
       (Math.ProbabilityMassFunction.pushforward
         (D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μFull) (ss0 ++ ssTail))
-        (fun ls => ((ha0 ++ haTail).map Prod.fst ++ [ls.1], (ss0 ++ ssTail) ++ [ls.2]))) y := by
+        (fun t => (ss0 ++ ssTail) ++ [t])) y := by
           simpa using congrArg
             (fun ν =>
               (Math.ProbabilityMassFunction.pushforward ν
-                (fun ls => ((ha0 ++ haTail).map Prod.fst ++ [ls.1], (ss0 ++ ssTail) ++ [ls.2]))) y)
+                (fun t => (ss0 ++ ssTail) ++ [t])) y)
             hstep
     _ =
       ∑' π, (InfoModel.mixedJoint (I := I) μFull) π *
         ((Math.ProbabilityMassFunction.pushforward
           (D.stepDist (pureToBehavioral I π) (ss0 ++ ssTail))
-          (fun ls => ((ha0 ++ haTail).map Prod.fst ++ [ls.1], (ss0 ++ ssTail) ++ [ls.2]))) y) := by
+          (fun t => (ss0 ++ ssTail) ++ [t])) y) := by
             simpa using
               (mixedJoint_stepPoint_eq_realizeBehavioralCanonical
-                (I := I) (D := D) μFull ((ha0 ++ haTail).map Prod.fst, ss0 ++ ssTail) y).symm
+                (I := I) (D := D) μFull (ss0 ++ ssTail) y).symm
 
 private theorem mixedToBehavioralAfter_stepActionStatePoint_eq_conditioned_reachable
     [∀ i, Fintype (I.LocalTrace i)]
@@ -548,13 +548,13 @@ private theorem mixedToBehavioralAfter_stepActionStatePoint_eq_conditioned_reach
     [∀ i, Fintype (Option (M.Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
-    {ha0 : List (M.Label × (∀ j, Option (M.Act j)))}
+    {ha0 : List (JointAction M)}
     {ss0 : List M.State}
     (hr0 : InfoModel.ReachActionTrace M ha0 ss0)
-    {haTail : List (M.Label × (∀ j, Option (M.Act j)))}
+    {haTail : List (JointAction M)}
     {ssTail : List M.State}
     (hr : InfoModel.ReachActionTrace M (ha0 ++ haTail) (ss0 ++ ssTail))
-    (y : List (M.Label × (∀ j, Option (M.Act j))) × List M.State) :
+    (y : List (JointAction M) × List M.State) :
     let μFull := conditionedMixedProfile (I := I) μ (ha0 ++ haTail) (ss0 ++ ssTail)
     (Math.ProbabilityMassFunction.pushforward
       (D.stepActionStateDist
@@ -617,27 +617,27 @@ theorem stepPoint_eq_via_query_disintegration
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
     (n : Nat)
-    (hs y : List M.Label × List M.State)
-    (hlen : hs.2.length = n + 1) :
+    (hs y : List M.State)
+    (hlen : hs.length = n + 1) :
     let μJ : PMF (PureProfile I) := InfoModel.mixedJoint (I := I) μ
     let C : ENNReal := ∑' π, μJ π * (D.runDistPure n π) hs
     C *
       ((Math.ProbabilityMassFunction.pushforward
-        (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-        (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)
+        (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+        (fun t => hs ++ [t])) y)
       =
     ∑' π, μJ π *
       ((D.runDistPure n π) hs *
         ((Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (pureToBehavioral I π) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)) := by
+          (D.stepDist (pureToBehavioral I π) hs)
+          (fun t => hs ++ [t])) y)) := by
   classical
   let μJ : PMF (PureProfile I) := InfoModel.mixedJoint (I := I) μ
-  let v : ∀ i, I.LocalTrace i := fun i => I.projectStates i hs.2
+  let v : ∀ i, I.LocalTrace i := fun i => I.projectStates i hs
   let stepPureY : PureProfile I → ENNReal := fun π =>
     (Math.ProbabilityMassFunction.pushforward
-      (D.stepDist (pureToBehavioral I π) hs.2)
-      (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y
+      (D.stepDist (pureToBehavioral I π) hs)
+      (fun t => hs ++ [t])) y
   let q : PureProfile I → (∀ i, Option (M.Act i)) := fun π i => π i (v i)
   have hstepPure_dep_q :
       ∀ π : PureProfile I,
@@ -662,14 +662,14 @@ theorem stepPoint_eq_via_query_disintegration
     calc
       C *
         ((Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)
+          (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+          (fun t => hs ++ [t])) y)
           = 0 := by rw [hC0, zero_mul]
       _ = ∑' π, μJ π *
             ((D.runDistPure n π) hs *
               ((Math.ProbabilityMassFunction.pushforward
-                (D.stepDist (pureToBehavioral I π) hs.2)
-                (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)) := by
+                (D.stepDist (pureToBehavioral I π) hs)
+                (fun t => hs ++ [t])) y)) := by
             simpa [stepPureY] using hsum0.symm
   · have hCpos : C ≠ 0 := hC0
     have hexists : ∃ π : PureProfile I, μJ π * (D.runDistPure n π) hs ≠ 0 := by
@@ -683,46 +683,46 @@ theorem stepPoint_eq_via_query_disintegration
       intro hzero
       apply hπ0
       simp [hzero]
-    obtain ⟨ha, hr, hlabels, hcompat⟩ :=
+    obtain ⟨ha, hr, hcompat⟩ :=
       exists_reachActionTrace_of_runDistPure_ne_zero
         (I := I) (D := D) n π0 hs hrun0
     let hist : ∀ i, List (LocalHistTok (I := I) i) :=
-      fun i => InfoModel.localHistTokens (I := I) i ha hs.2
+      fun i => InfoModel.localHistTokens (I := I) i ha hs
     let μHist : InfoModel.MixedProfile (I := I) :=
-      conditionedMixedProfile (I := I) μ ha hs.2
+      conditionedMixedProfile (I := I) μ ha hs
     have hbeh_now :
         ∀ i,
-          mixedToBehavioral (I := I) μ i (I.projectStates i hs.2) =
+          mixedToBehavioral (I := I) μ i (I.projectStates i hs) =
             InfoModel.realizeBehavioralCanonical (I := I) μHist i
-              (I.projectStates i hs.2) := by
+              (I.projectStates i hs) := by
       intro i
       simpa [μHist, conditionedMixedProfile, hist, InfoModel.realizeBehavioralCanonical] using
         mixedToBehavioral_eq_iterCond_pushforward
           (I := I) (hPR := hPR) (μ := μ) i hr
     have hstep_beh :
-        D.stepDist (mixedToBehavioral (I := I) μ) hs.2 =
-          D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μHist) hs.2 := by
+        D.stepDist (mixedToBehavioral (I := I) μ) hs =
+          D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μHist) hs := by
       apply stepDist_behavioral_depends_on_current_context (I := I) (D := D)
       intro i
       exact hbeh_now i
     have hleft_rewrite :
         (Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y
+          (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+          (fun t => hs ++ [t])) y
           =
         (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
       calc
         (Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y
+          (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+          (fun t => hs ++ [t])) y
             =
           (Math.ProbabilityMassFunction.pushforward
-            (D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μHist) hs.2)
-            (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y := by
+            (D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μHist) hs)
+            (fun t => hs ++ [t])) y := by
               simpa using congrArg
                 (fun ν =>
                   (Math.ProbabilityMassFunction.pushforward ν
-                    (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)
+                    (fun t => hs ++ [t])) y)
                 hstep_beh
         _ = (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
               simpa [stepPureY] using
@@ -753,10 +753,10 @@ theorem stepPoint_eq_via_query_disintegration
         dsimp [traceMass]
         calc
           (D.runDistPure n π) hs =
-            D.runDistPure ha.length π (ha.map Prod.fst, hs.2) := by
-              simp [hlabels, hhaLen]
+            D.runDistPure ha.length π hs := by
+              simp [hhaLen]
           _ =
-            D.runDistPure ha.length π0 (ha.map Prod.fst, hs.2) *
+            D.runDistPure ha.length π0 hs *
               ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
                 simpa [hist] using
                   runDistPure_factor_via_localHistIndicators
@@ -764,7 +764,7 @@ theorem stepPoint_eq_via_query_disintegration
           _ =
             (D.runDistPure n π0) hs *
               ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
-                simp [hlabels, hhaLen]
+                simp [hhaLen]
       have hmixed_factor :
           ∀ π : PureProfile I,
             compatMass * (InfoModel.mixedJoint (I := I) μHist) π =
@@ -864,8 +864,8 @@ theorem stepPoint_eq_via_query_disintegration
     calc
       C *
         ((Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)
+          (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+          (fun t => hs ++ [t])) y)
           = (traceMass * compatMass) *
               (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
                 rw [hCfact, hleft_rewrite]
@@ -875,8 +875,8 @@ theorem stepPoint_eq_via_query_disintegration
       _ = ∑' π, μJ π *
             ((D.runDistPure n π) hs *
               ((Math.ProbabilityMassFunction.pushforward
-                (D.stepDist (pureToBehavioral I π) hs.2)
-                (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)) := by
+                (D.stepDist (pureToBehavioral I π) hs)
+                (fun t => hs ++ [t])) y)) := by
             simp [stepPureY]
 
 theorem mixedToBehavioral_stepIndependence
@@ -889,30 +889,30 @@ theorem mixedToBehavioral_stepIndependence
       (InfoModel.mixedJoint (I := I) μ).bind (fun π =>
         (D.runDistPure n π).bind (fun hs =>
           Math.ProbabilityMassFunction.pushforward
-            (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-            (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) =
+            (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+            (fun t => hs ++ [t]))) =
       (InfoModel.mixedJoint (I := I) μ).bind (fun π =>
         (D.runDistPure n π).bind (fun hs =>
           Math.ProbabilityMassFunction.pushforward
-            (D.stepDist (pureToBehavioral I π) hs.2)
-            (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2])))) := by
+            (D.stepDist (pureToBehavioral I π) hs)
+            (fun t => hs ++ [t]))) := by
   intro n
   classical
   ext y
   set μJ : PMF (PureProfile I) := InfoModel.mixedJoint (I := I) μ
-  let Lfun : (List M.Label × List M.State) → ENNReal :=
+  let Lfun : (List M.State) → ENNReal :=
     fun hs =>
       (Math.ProbabilityMassFunction.pushforward
-        (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-        (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y
-  let Gfun : (List M.Label × List M.State) → PureProfile I → ENNReal :=
+        (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+        (fun t => hs ++ [t])) y
+  let Gfun : (List M.State) → PureProfile I → ENNReal :=
     fun hs π =>
       (Math.ProbabilityMassFunction.pushforward
-        (D.stepDist (pureToBehavioral I π) hs.2)
-        (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y
-  let FL : PureProfile I → (List M.Label × List M.State) → ENNReal :=
+        (D.stepDist (pureToBehavioral I π) hs)
+        (fun t => hs ++ [t])) y
+  let FL : PureProfile I → (List M.State) → ENNReal :=
     fun π hs => μJ π * ((D.runDistPure n π) hs * Lfun hs)
-  let FR : PureProfile I → (List M.Label × List M.State) → ENNReal :=
+  let FR : PureProfile I → (List M.State) → ENNReal :=
     fun π hs => μJ π * ((D.runDistPure n π) hs * Gfun hs π)
   have hswapL :
       (∑' π, μJ π * ∑' hs, (D.runDistPure n π) hs * Lfun hs)
@@ -943,9 +943,9 @@ theorem mixedToBehavioral_stepIndependence
                 (f := fun π hs => μJ π * ((D.runDistPure n π) hs * Gfun hs π)))
       _ = ∑' hs, ∑' π, FR π hs := by simp [FR]
   have hPerHs :
-      ∀ hs : List M.Label × List M.State, (∑' π, FL π hs) = ∑' π, FR π hs := by
+      ∀ hs : List M.State, (∑' π, FL π hs) = ∑' π, FR π hs := by
     intro hs
-    by_cases hlen : hs.2.length = n + 1
+    by_cases hlen : hs.length = n + 1
     · let C : ENNReal := ∑' π, μJ π * (D.runDistPure n π) hs
       have hL :
           (∑' π, FL π hs) = C * Lfun hs := by
@@ -975,7 +975,7 @@ theorem mixedToBehavioral_stepIndependence
         intro π
         by_contra hne
         have hlen' :
-            hs.2.length = n + 1 := by
+            hs.length = n + 1 := by
           have hrun : (D.runDist n (pureToBehavioral I π)) hs ≠ 0 := by
             simpa [Execution.Dynamics.runDistPure] using hne
           exact InfoModel.runDist_support_stateLength (I := I) (D := D) n
@@ -990,8 +990,8 @@ theorem mixedToBehavioral_stepIndependence
     (μJ.bind (fun π =>
       (D.runDistPure n π).bind (fun hs =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (mixedToBehavioral (I := I) μ) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))) y
+          (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+          (fun t => hs ++ [t])))) y
         = (∑' π, μJ π * ∑' hs, (D.runDistPure n π) hs * Lfun hs) := by
             simp [μJ, Lfun, PMF.bind_apply]
     _ = ∑' hs, ∑' π, FL π hs := hswapL
@@ -1003,8 +1003,8 @@ theorem mixedToBehavioral_stepIndependence
     _ = (μJ.bind (fun π =>
       (D.runDistPure n π).bind (fun hs =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (pureToBehavioral I π) hs.2)
-          (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))))) y := by
+          (D.stepDist (pureToBehavioral I π) hs)
+          (fun t => hs ++ [t])))) y := by
             simp [μJ, Gfun, PMF.bind_apply]
 
 /-- Kuhn's mixed-to-behavioral direction for `InfoModel` outcome distributions. -/
@@ -1037,4 +1037,5 @@ end InfoModel
 
 end Theorems
 end GameTheory
+
 

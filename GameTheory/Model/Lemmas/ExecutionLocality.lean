@@ -13,9 +13,10 @@ variable {ι : Type} [Fintype ι]
 variable {M : LSM ι} (I : InfoModel M)
 variable (D : Execution.Dynamics I)
 
-/-- One-step extension from a state-trace depends only on the current queried
-coordinates induced by that trace. -/
+/-- One-step pure extension from a state trace depends only on the current
+queried coordinates induced by that trace. -/
 theorem stepDist_depends_on_current_context
+    [DecidableEq ι]
     [∀ i, Fintype (Option (M.Act i))]
     (ω₁ ω₂ : I.FlatPolicy) (ss : List M.State)
     (hag : ∀ i,
@@ -29,18 +30,15 @@ theorem stepDist_depends_on_current_context
           (I.reassemblePolicy ω₂) i (I.projectStates i ss) := by
     intro i
     simpa [InfoModel.reassemblePolicy] using hag i
-  simp only [Dynamics.stepDist]
+  simp only [Execution.Dynamics.stepDist]
   congr 1
-  funext ℓ
-  congr 1
-  simp only [Execution.Dynamics.jointActionDist, pureToBehavioral]
-  congr 1
-  funext i
-  exact congrArg PMF.pure (hprof i)
+  ext a
+  simp [Execution.Dynamics.jointActionDist, pureToBehavioral, hprof]
 
-/-- Explicit one-step extension from a state-trace depends only on the current
-queried coordinates induced by that trace. -/
+/-- Explicit one-step pure extension from a state trace depends only on the
+current queried coordinates induced by that trace. -/
 theorem stepActionStateDist_depends_on_current_context
+    [DecidableEq ι]
     [∀ i, Fintype (Option (M.Act i))]
     (ω₁ ω₂ : I.FlatPolicy) (ss : List M.State)
     (hag : ∀ i,
@@ -54,96 +52,78 @@ theorem stepActionStateDist_depends_on_current_context
           (I.reassemblePolicy ω₂) i (I.projectStates i ss) := by
     intro i
     simpa [InfoModel.reassemblePolicy] using hag i
-  simp only [Dynamics.stepActionStateDist]
+  simp only [Execution.Dynamics.stepActionStateDist]
   congr 1
-  funext ℓ
-  congr 1
-  simp only [Execution.Dynamics.jointActionDist, pureToBehavioral]
-  congr 1
-  funext i
-  exact congrArg PMF.pure (hprof i)
+  ext a
+  simp [Execution.Dynamics.jointActionDist, pureToBehavioral, hprof]
 
 /-- One-step behavioral extension depends only on the current queried local
 contexts. -/
 theorem stepDist_behavioral_depends_on_current_context
+    [DecidableEq ι]
     [∀ i, Fintype (Option (M.Act i))]
     (σ τ : BehavioralProfile I) (ss : List M.State)
     (hag : ∀ i, σ i (I.projectStates i ss) = τ i (I.projectStates i ss)) :
     D.stepDist σ ss = D.stepDist τ ss := by
   simp only [Execution.Dynamics.stepDist]
   congr 1
-  funext lab
-  congr 1
+  ext a
   simp [Execution.Dynamics.jointActionDist, hag]
 
 /-- Explicit one-step behavioral extension depends only on the current queried
 local contexts. -/
 theorem stepActionStateDist_behavioral_depends_on_current_context
+    [DecidableEq ι]
     [∀ i, Fintype (Option (M.Act i))]
     (σ τ : BehavioralProfile I) (ss : List M.State)
     (hag : ∀ i, σ i (I.projectStates i ss) = τ i (I.projectStates i ss)) :
     D.stepActionStateDist σ ss = D.stepActionStateDist τ ss := by
   simp only [Execution.Dynamics.stepActionStateDist]
   congr 1
-  funext lab
-  congr 1
+  ext a
   simp [Execution.Dynamics.jointActionDist, hag]
 
 /-- For a fixed state-trace prefix, one-step pure extension depends only on the
 queried local actions at `projectStates`. -/
 theorem pure_step_pushforward_depends_on_query
+    [DecidableEq ι]
     [∀ i, Fintype (Option (M.Act i))]
-    (hs : List M.Label × List M.State)
-    (y : List M.Label × List M.State)
+    (hs y : List M.State)
     (π π' : PureProfile I)
     (hquery :
-      ∀ i, π i (I.projectStates i hs.2) = π' i (I.projectStates i hs.2)) :
+      ∀ i, π i (I.projectStates i hs) = π' i (I.projectStates i hs)) :
     (Math.ProbabilityMassFunction.pushforward
-      (D.stepDist (pureToBehavioral I π) hs.2)
-      (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y
+      (D.stepDist (pureToBehavioral I π) hs)
+      (fun t => hs ++ [t])) y
       =
     (Math.ProbabilityMassFunction.pushforward
-      (D.stepDist (pureToBehavioral I π') hs.2)
-      (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y := by
+      (D.stepDist (pureToBehavioral I π') hs)
+      (fun t => hs ++ [t])) y := by
   let ω : I.FlatPolicy := fun k => π k.1 k.2
   let ω' : I.FlatPolicy := fun k => π' k.1 k.2
   have hnow :
-      ∀ i, ω ⟨i, I.projectStates i hs.2⟩ = ω' ⟨i, I.projectStates i hs.2⟩ := by
+      ∀ i, ω ⟨i, I.projectStates i hs⟩ = ω' ⟨i, I.projectStates i hs⟩ := by
     intro i
     simpa [ω, ω'] using hquery i
   have hstep :
-      D.stepDist (pureToBehavioral I (I.reassemblePolicy ω)) hs.2 =
-        D.stepDist (pureToBehavioral I (I.reassemblePolicy ω')) hs.2 :=
-    stepDist_depends_on_current_context (I := I) (D := D) ω ω' hs.2 hnow
+      D.stepDist (pureToBehavioral I (I.reassemblePolicy ω)) hs =
+        D.stepDist (pureToBehavioral I (I.reassemblePolicy ω')) hs :=
+    stepDist_depends_on_current_context (I := I) (D := D) ω ω' hs hnow
   have hpush := congrArg
     (fun ν =>
       (Math.ProbabilityMassFunction.pushforward ν
-        (fun ls => (hs.1 ++ [ls.1], hs.2 ++ [ls.2]))) y)
+        (fun t => hs ++ [t])) y)
     hstep
   simpa [ω, ω'] using hpush
 
-/-- Support-local trace length at round `n`: any sampled run-state has state
-trace length `n+1`, hence each local projection also has length `n+1`. -/
-theorem support_current_localTrace_length
-    (n : Nat)
-    [∀ i, Fintype (Option (M.Act i))]
-    (π : PureProfile I) (hs : List M.Label × List M.State)
-    (hhs : D.runDistPure n π hs ≠ 0) (i : ι) :
-    (I.projectStates i hs.2).length = n + 1 := by
-  have hrun : (D.runDist n (pureToBehavioral I π)) hs ≠ 0 := by
-    simpa [Execution.Dynamics.runDistPure] using hhs
-  have hlen := runDist_support_stateLength (I := I) (D := D) n (pureToBehavioral I π) hs hrun
-  calc
-    (I.projectStates i hs.2).length = hs.2.length := I.projectStates_length i hs.2
-    _ = n + 1 := hlen
-
-/-- Prefix execution up to `n` depends only on coordinates whose local-trace
-length is at most `n`. -/
+/-- Prefix execution up to round `n` depends only on coordinates whose private
+visible-history length is at most `n`. -/
 theorem runDistPure_depends_on_len_le
-    (n : Nat)
+    [DecidableEq ι]
     [∀ i, Fintype (Option (M.Act i))]
+    (n : Nat)
     (ω₁ ω₂ : I.FlatPolicy)
-    (hag : ∀ i v, v.length ≤ n →
+    (hag : ∀ i v, v.2.length ≤ n →
       ω₁ ⟨i, v⟩ = ω₂ ⟨i, v⟩) :
     D.runDistPure n (I.reassemblePolicy ω₁) =
       D.runDistPure n (I.reassemblePolicy ω₂) := by
@@ -164,13 +144,16 @@ theorem runDistPure_depends_on_len_le
       by_cases hsupp : (D.runDist n (pureToBehavioral I (I.reassemblePolicy ω₂))) hs = 0
       · simp [hsupp]
       · have hlenState :
-            hs.2.length = n + 1 :=
+            hs.length = n + 1 :=
           runDist_support_stateLength (I := I) (D := D) n
             (pureToBehavioral I (I.reassemblePolicy ω₂)) hs hsupp
-        have hstep := stepDist_depends_on_current_context (I := I) (D := D) ω₁ ω₂ hs.2
+        have hstep := stepDist_depends_on_current_context (I := I) (D := D) ω₁ ω₂ hs
           (fun i => by
+            have hprojLen :
+                (I.projectStates i hs).2.length = n + 1 := by
+              exact (I.projectStates_lengths i hs).2.trans hlenState
             apply hag
-            simp [I.projectStates_length i hs.2, hlenState])
+            rw [hprojLen])
         simp [Math.ProbabilityMassFunction.pushforward, hstep]
 
 section
@@ -179,31 +162,32 @@ omit [Fintype ι]
 /-- Freshness by length: for a run-state at round `n`, no coordinate can be
 both "past" (`≤ n`) and "now" (`= projection at round n+1`). -/
 theorem past_now_disjoint_by_length
-    (n : Nat) (hs : List M.Label × List M.State)
-    (hlen : hs.2.length = n + 1) :
+    (n : Nat) (ss : List M.State)
+    (hlen : ss.length = n + 1) :
     Disjoint
       {k : I.CoordIdx | I.IsPastCoord n k}
-      {k : I.CoordIdx | I.IsNowCoord hs k} := by
+      {k : I.CoordIdx | I.IsNowCoord ss k} := by
   rw [Set.disjoint_left]
   intro k hkPast hkNow
   rcases hkNow with ⟨i, hkEq⟩
-  have hkPast' : (I.projectStates i hs.2).length ≤ n := by
-    have : k.2.length = (I.projectStates i hs.2).length := by
+  have hkPast' : (I.projectStates i ss).2.length ≤ n := by
+    have : k.2.2.length = (I.projectStates i ss).2.length := by
       cases hkEq
       rfl
     simpa [InfoModel.IsPastCoord, this] using hkPast
-  have hkNowLen : (I.projectStates i hs.2).length = n + 1 := by
-    simpa [hlen] using (I.projectStates_length i hs.2)
+  have hkNowLen : (I.projectStates i ss).2.length = n + 1 := by
+    exact (I.projectStates_lengths i ss).2.trans hlen
   have : n + 1 ≤ n := by
-    rw [hkNowLen] at hkPast'
+    rw [← hkNowLen]
     exact hkPast'
   exact (Nat.not_succ_le_self n) this
 
 end
 
 /-- The joint action distribution under a fresh draw from the product measure
-    equals the behavioral joint action distribution. -/
+equals the behavioral joint action distribution. -/
 theorem jointAction_marginal
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
@@ -213,23 +197,23 @@ theorem jointAction_marginal
       (fun π i => π i (I.projectStates i ss)) =
     Execution.Dynamics.jointActionDist (I := I) σ ss := by
   classical
-  letI : DecidableEq ι := Classical.decEq ι
   simp only [mixedJoint, Execution.Dynamics.jointActionDist]
   let g : ∀ i, (LocalPure (I := I) i) → Option (M.Act i) :=
     fun i fi => fi (I.projectStates i ss)
   change Math.PMFProduct.pushforward (Math.PMFProduct.pmfPi (behavioralToMixed I σ))
     (fun f i => g i (f i)) = _
   rw [Math.PMFProduct.pmfPi_push_coordwise]
-  congr 1; funext i
+  congr 1
+  funext i
   change Math.PMFProduct.pushforward (behavioralToMixed I σ i) (g i) = σ i (I.projectStates i ss)
   have h := congr_fun (congr_fun
     (realize_behavioralToMixed (I := I) σ) i) (I.projectStates i ss)
-  simp only [realizeBehavioralCanonical, Math.ProbabilityMassFunction.pushforward] at h
-  exact h
+  simpa [realizeBehavioralCanonical] using h
 
-/-- The expected step under a fresh draw from the product measure
-    equals the behavioral step distribution. -/
+/-- The expected one-step transition under a fresh draw from the product measure
+equals the behavioral step distribution. -/
 theorem marginal_stepDist
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
@@ -239,35 +223,47 @@ theorem marginal_stepDist
     D.stepDist σ ss := by
   classical
   letI : DecidableEq ι := Classical.decEq ι
-  simp_rw [stepDist_pure (I := I)]
   set s := (ss.getLast?).getD M.init
-  conv_lhs => rw [PMF.bind_comm]
-  simp only [Execution.Dynamics.stepDist]
-  congr 1; funext ℓ
-  simp only [Math.ProbabilityMassFunction.pushforward]
-  conv_lhs =>
-    arg 2; ext π
-    rw [← PMF.pure_bind (fun i => π i (I.projectStates i ss))
-      (fun a => (D.nextState ℓ a s).bind (fun t => PMF.pure (ℓ, t)))]
-  rw [show ((mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind fun π =>
-      (PMF.pure (fun i => π i (I.projectStates i ss))).bind fun a =>
-        (D.nextState ℓ a s).bind fun t => PMF.pure (ℓ, t)) =
+  calc
+    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+        (fun π => D.stepDist (pureToBehavioral I π) ss)
+      =
+    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+        (fun π => D.nextState (fun i => π i (I.projectStates i ss)) s)
+        := by
+          congr 1
+          funext π
+          simpa [s] using (stepDist_pure (I := I) (D := D) π ss)
+    _ =
+    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+        (fun π =>
+          (PMF.pure (fun i => π i (I.projectStates i ss))).bind
+            (fun a => D.nextState a s)) := by
+          congr 1
+          funext π
+          rw [PMF.pure_bind]
+    _ =
     ((mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
-      (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))).bind (fun a =>
-        (D.nextState ℓ a s).bind fun t => PMF.pure (ℓ, t)) from
-    (PMF.bind_bind _ _ _).symm]
-  have hJA' :
-      (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
-        (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
-      Execution.Dynamics.jointActionDist (I := I) σ ss := by
-    simpa [Math.ProbabilityMassFunction.pushforward] using
-      (jointAction_marginal (I := I) σ ss)
-  rw [hJA']
+        (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))).bind
+        (fun a => D.nextState a s) := by
+          rw [PMF.bind_bind]
+    _ =
+      (Execution.Dynamics.jointActionDist (I := I) σ ss).bind
+        (fun a => D.nextState a s) := by
+          have hJA :
+              (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+                (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
+              Execution.Dynamics.jointActionDist (I := I) σ ss := by
+            simpa [Math.ProbabilityMassFunction.pushforward] using
+              (jointAction_marginal (I := I) σ ss)
+          rw [hJA]
+    _ = D.stepDist σ ss := by
+          simp [Execution.Dynamics.stepDist, s]
 
-/-- The expected explicit step under the product measure induced by a mixed
-profile equals the explicit step distribution of its canonical behavioral
-realization. -/
+/-- The expected explicit step under a fresh draw from the product measure
+equals the explicit step distribution of the canonical behavioral realization. -/
 theorem mixedJoint_stepActionStateDist_eq_realizeBehavioralCanonical
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (M.Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
@@ -277,44 +273,65 @@ theorem mixedJoint_stepActionStateDist_eq_realizeBehavioralCanonical
     D.stepActionStateDist (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
   classical
   letI : DecidableEq ι := Classical.decEq ι
-  simp_rw [stepActionStateDist_pure (I := I)]
   set s := (ss.getLast?).getD M.init
-  conv_lhs => rw [PMF.bind_comm]
-  simp only [Execution.Dynamics.stepActionStateDist]
-  congr 1
-  funext ℓ
-  simp only [Math.ProbabilityMassFunction.pushforward]
-  conv_lhs =>
-    arg 2
-    ext π
-    rw [← PMF.pure_bind (fun i => π i (I.projectStates i ss))
-      (fun a => (D.nextState ℓ a s).bind (fun t => PMF.pure ((ℓ, a), t)))]
-  rw [show ((mixedJoint (I := I) μ).bind fun π =>
-      (PMF.pure (fun i => π i (I.projectStates i ss))).bind fun a =>
-        (D.nextState ℓ a s).bind fun t => PMF.pure ((ℓ, a), t)) =
+  calc
+    (mixedJoint (I := I) μ).bind
+        (fun π => D.stepActionStateDist (pureToBehavioral I π) ss)
+      =
+    (mixedJoint (I := I) μ).bind
+        (fun π =>
+          Math.ProbabilityMassFunction.pushforward
+            (D.nextState (fun i => π i (I.projectStates i ss)) s)
+            (fun t => ((fun i => π i (I.projectStates i ss)), t)))
+        := by
+          congr 1
+          funext π
+          simpa [s] using (stepActionStateDist_pure (I := I) (D := D) π ss)
+    _ =
+    (mixedJoint (I := I) μ).bind
+        (fun π =>
+          ((D.nextState (fun i => π i (I.projectStates i ss)) s).bind
+            (fun t => PMF.pure ((fun i => π i (I.projectStates i ss)), t)))) := by
+          rfl
+    _ =
     ((mixedJoint (I := I) μ).bind
-      (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))).bind (fun a =>
-        (D.nextState ℓ a s).bind fun t => PMF.pure ((ℓ, a), t)) from
-    (PMF.bind_bind _ _ _).symm]
-  have hJA' :
-      (mixedJoint (I := I) μ).bind
-        (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
-      Execution.Dynamics.jointActionDist (I := I)
-        (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
-    simpa [Math.ProbabilityMassFunction.pushforward, InfoModel.mixedJoint,
-      Execution.Dynamics.jointActionDist, InfoModel.realizeBehavioralCanonical] using
-      (Math.PMFProduct.pmfPi_push_coordwise
-        (μ := μ) (g := fun i fi => fi (I.projectStates i ss)))
-  rw [hJA']
+        (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))).bind
+        (fun a =>
+          Math.ProbabilityMassFunction.pushforward (D.nextState a s)
+            (fun t => (a, t))) := by
+          rw [PMF.bind_bind]
+          congr
+          funext a
+          simp [Math.ProbabilityMassFunction.pushforward]
+    _ =
+      (Execution.Dynamics.jointActionDist (I := I)
+        (InfoModel.realizeBehavioralCanonical (I := I) μ) ss).bind
+        (fun a =>
+          Math.ProbabilityMassFunction.pushforward (D.nextState a s)
+            (fun t => (a, t))) := by
+          have hJA :
+              (mixedJoint (I := I) μ).bind
+                (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
+              Execution.Dynamics.jointActionDist (I := I)
+                (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
+            simpa [Math.ProbabilityMassFunction.pushforward, InfoModel.mixedJoint,
+              Execution.Dynamics.jointActionDist, InfoModel.realizeBehavioralCanonical] using
+              (Math.PMFProduct.pmfPi_push_coordwise
+                (μ := μ) (g := fun i fi => fi (I.projectStates i ss)))
+          rw [hJA]
+    _ =
+      D.stepActionStateDist (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
+          simp [Execution.Dynamics.stepActionStateDist, s]
 
 /-- Pointwise explicit one-step bridge between a mixed profile and its
 canonical behavioral realization. -/
 theorem mixedJoint_stepActionStatePoint_eq_realizeBehavioralCanonical
+    [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (M.Act i))]
-    [∀ i, Fintype (LocalPure (I := I) i)]
     (μ : MixedProfile (I := I))
-    (hs y : List (M.Label × (∀ i, Option (M.Act i))) × List M.State) :
+    (hs y : List (JointAction M) × List M.State) :
     (∑' π, (mixedJoint (I := I) μ) π *
       (Math.ProbabilityMassFunction.pushforward
         (D.stepActionStateDist (pureToBehavioral I π) hs.2)
