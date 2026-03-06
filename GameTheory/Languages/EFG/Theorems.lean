@@ -1,6 +1,7 @@
 import GameTheory.Theorems
 import GameTheory.Languages.EFG.Syntax
 import GameTheory.Languages.EFG.Compile
+import GameTheory.Languages.EFG.SOS
 import GameTheory.Languages.EFG.Kuhn
 
 namespace GameTheory
@@ -42,13 +43,91 @@ noncomputable def evalPure (G : _root_.EFG.EFGGame)
     (π : _root_.EFG.PureProfile G.inf) : PMF G.Outcome :=
   G.tree.evalDist (_root_.EFG.pureToBehavioral π)
 
-/-- EFG Kuhn as an immediate corollary of the semantics-level Kuhn assembly theorem. -/
+/-- Canonical mixed realization of an EFG behavioral profile as a PMF over pure
+profiles, obtained by independently sampling each infoset action and then
+repacking the resulting flat contingent plan as a per-player pure profile. -/
+noncomputable def mixedOfBehavioralPure (G : _root_.EFG.EFGGame)
+    (σ : _root_.EFG.BehavioralProfile G.inf) : PMF (_root_.EFG.PureProfile G.inf) :=
+  (_root_.EFG.productProfile σ).bind
+    (fun s => PMF.pure ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s))
+
+/-- Outcome-level behavioral -> mixed direction, packaged with the canonical PMF
+over pure profiles rather than flat contingent plans. -/
+theorem kuhn_behavioral_to_mixed_pure
+    (G : _root_.EFG.EFGGame)
+    (hpr : _root_.EFG.PerfectRecall G.tree) :
+    KuhnBehavioralToMixedOutcome
+      (_root_.EFG.BehavioralProfile G.inf)
+      (_root_.EFG.PureProfile G.inf)
+      G.Outcome
+      (mixedOfBehavioralPure G)
+      (evalBehavioral G)
+      (evalPure G) := by
+  intro σ
+  have hflat :
+      (_root_.EFG.productProfile σ).bind
+        (fun s => G.tree.evalDist (_root_.EFG.pureToBehavioral
+          ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s))) =
+      (_root_.EFG.productProfile σ).bind
+        (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s)) := by
+    refine Math.ProbabilityMassFunction.bind_congr_on_support
+      (_root_.EFG.productProfile σ)
+      (fun s => G.tree.evalDist (_root_.EFG.pureToBehavioral
+        ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s)))
+      (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s))
+      ?_
+    intro s _
+    have hbeh :
+        _root_.EFG.pureToBehavioral
+          ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s) =
+          _root_.EFG.flatToBehavioral s := by
+      funext p I
+      simp [_root_.EFG.flatProfileEquivPureProfile, _root_.EFG.pureToBehavioral,
+        _root_.EFG.flatToBehavioral]
+    simp [hbeh]
+  calc
+    (mixedOfBehavioralPure G σ).bind (evalPure G)
+      =
+      (_root_.EFG.productProfile σ).bind
+        (fun s => G.tree.evalDist (_root_.EFG.pureToBehavioral
+          ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s))) := by
+            simp [mixedOfBehavioralPure, evalPure, PMF.bind_bind]
+    _ =
+      (_root_.EFG.productProfile σ).bind
+        (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s)) := hflat
+    _ = evalBehavioral G σ := by
+            simpa [evalBehavioral] using
+              (_root_.EFG.behavioral_to_mixed
+                (S := G.inf) (Outcome := G.Outcome) σ G.tree
+                (_root_.EFG.PerfectRecall_implies_NoInfoSetRepeat G.tree hpr))
+
+/-- Complete EFG Kuhn theorem at the outcome-distribution level. The
+behavioral->mixed direction uses the canonical product measure over infosets,
+repacked as a PMF on pure strategy profiles. -/
+theorem kuhn_complete
+    (G : _root_.EFG.EFGGame)
+    (hpr : _root_.EFG.PerfectRecall G.tree) :
+    KuhnCompleteViaOutcome
+      (_root_.EFG.BehavioralProfile G.inf)
+      (_root_.EFG.MixedProfile G.inf)
+      (_root_.EFG.PureProfile G.inf)
+      G.Outcome
+      (mixedOfBehavioralPure G)
+      (_root_.EFG.mixedProfileJoint (S := G.inf))
+      (evalBehavioral G)
+      (evalPure G) := by
+  exact ⟨
+    kuhn_behavioral_to_mixed_pure G hpr,
+    fun μ =>
+      by
+        simpa [evalBehavioral, evalPure] using
+          (_root_.EFG.kuhn_mixed_to_behavioral
+            (S := G.inf) (Outcome := G.Outcome) G.tree hpr μ)
+  ⟩
+
+/-- Bundle both EFG Kuhn directions at the outcome-distribution level. -/
 theorem kuhn_outcome_both_directions
     (G : _root_.EFG.EFGGame)
-    (I : InfoSemantics G.inf.Player
-      (_root_.EFG.GameTree G.inf G.Outcome)
-      (_root_.EFG.HistoryStep G.inf))
-    (hPR : I.PerfectRecall _root_.EFG.HistoryStepStep G.tree)
     (mixedOfBehavioral : _root_.EFG.BehavioralProfile G.inf → PMF (_root_.EFG.PureProfile G.inf))
     (hB2M :
       KuhnBehavioralToMixedOutcome
@@ -59,15 +138,14 @@ theorem kuhn_outcome_both_directions
         (evalBehavioral G)
         (evalPure G))
     (hM2B :
-      I.PerfectRecall _root_.EFG.HistoryStepStep G.tree →
-        KuhnMixedToBehavioralViaOutcome
-          (_root_.EFG.BehavioralProfile G.inf)
-          (PMF (_root_.EFG.PureProfile G.inf))
-          (_root_.EFG.PureProfile G.inf)
-          G.Outcome
-          (fun μ => μ)
-          (evalBehavioral G)
-          (evalPure G)) :
+      KuhnMixedToBehavioralViaOutcome
+        (_root_.EFG.BehavioralProfile G.inf)
+        (PMF (_root_.EFG.PureProfile G.inf))
+        (_root_.EFG.PureProfile G.inf)
+        G.Outcome
+        (fun μ => μ)
+        (evalBehavioral G)
+        (evalPure G)) :
     KuhnBehavioralToMixedOutcome
       (_root_.EFG.BehavioralProfile G.inf)
       (_root_.EFG.PureProfile G.inf)
@@ -84,15 +162,7 @@ theorem kuhn_outcome_both_directions
       (fun μ => μ)
       (evalBehavioral G)
       (evalPure G) := by
-  exact GameTheory.Theorems.kuhn_outcome_both_directions_of_state_machine
-    (I := I)
-    (step := _root_.EFG.HistoryStepStep)
-    (init := G.tree)
-    (mixedOfBehavioral := mixedOfBehavioral)
-    (joint := fun μ => μ)
-    (evalBehavioral := evalBehavioral G)
-    (evalPure := evalPure G)
-    hPR hB2M hM2B
+  exact ⟨hB2M, hM2B⟩
 
 /-- Same corollary specialized to the canonical EFG compilation interface:
 `EFG.PerfectRecall` is transported to semantics-level perfect recall automatically. -/
@@ -109,16 +179,14 @@ theorem kuhn_outcome_both_directions_of_perfectRecall
         (evalBehavioral G)
         (evalPure G))
     (hM2B :
-      (GameTheory.Languages.EFG.infoSemantics G.inf G.Outcome).PerfectRecall
-          _root_.EFG.HistoryStepStep G.tree →
-        KuhnMixedToBehavioralViaOutcome
-          (_root_.EFG.BehavioralProfile G.inf)
-          (PMF (_root_.EFG.PureProfile G.inf))
-          (_root_.EFG.PureProfile G.inf)
-          G.Outcome
-          (fun μ => μ)
-          (evalBehavioral G)
-          (evalPure G)) :
+      KuhnMixedToBehavioralViaOutcome
+        (_root_.EFG.BehavioralProfile G.inf)
+        (PMF (_root_.EFG.PureProfile G.inf))
+        (_root_.EFG.PureProfile G.inf)
+        G.Outcome
+        (fun μ => μ)
+        (evalBehavioral G)
+        (evalPure G)) :
     KuhnBehavioralToMixedOutcome
       (_root_.EFG.BehavioralProfile G.inf)
       (_root_.EFG.PureProfile G.inf)
@@ -135,11 +203,9 @@ theorem kuhn_outcome_both_directions_of_perfectRecall
       (fun μ => μ)
       (evalBehavioral G)
       (evalPure G) := by
+  have _ := hPR
   exact kuhn_outcome_both_directions
     (G := G)
-    (I := GameTheory.Languages.EFG.infoSemantics G.inf G.Outcome)
-    (hPR := GameTheory.Languages.EFG.infoSemantics_perfectRecall_of_efgPerfectRecall
-      (S := G.inf) (Outcome := G.Outcome) (t := G.tree) hPR)
     (mixedOfBehavioral := mixedOfBehavioral)
     hB2M hM2B
 

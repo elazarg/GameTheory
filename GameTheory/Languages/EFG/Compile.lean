@@ -7,21 +7,43 @@ namespace EFG
 
 open _root_.EFG
 
-/-- EFG controller action alphabet at player `i`: infoset + local action. -/
+/-- EFG controller action alphabet at player `i`: infoset paired with a local
+action admissible at that infoset. -/
 abbrev CtrlAct (S : _root_.EFG.InfoStructure) (i : S.Player) : Type :=
   Sigma (fun I : S.Infoset i => S.Act I)
 
-/-- Compile EFG transition semantics to the generic LSM layer.
-Joint actions are ignored because EFG step labels already carry the realized move. -/
+/-- Compile an EFG tree to the generic latent-state machine layer.
+
+- states are EFG subtrees
+- joint actions are controller actions for the currently active player, with
+  all other coordinates inactive
+- chance moves are compiled as all-player inactivity, with the latent state
+  choosing the realized branch -/
 def compileLSM {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome) : GameTheory.LSM S.Player where
-  Label := _root_.EFG.HistoryStep S
   State := _root_.EFG.GameTree S Outcome
   Act := CtrlAct S
   init := t
-  step := fun ℓ _ s s' => _root_.EFG.HistoryStepStep (S := S) (Outcome := Outcome) ℓ s s'
+  step := fun a s s' =>
+    match s with
+    | .terminal _ => False
+    | .chance _k _μ _hk next =>
+        (∀ i, a i = none) ∧ ∃ b, s' = next b
+    | .decision (p := p) I next =>
+        ∃ act : S.Act I,
+          a p = some ⟨I, act⟩ ∧
+          (∀ q, q ≠ p → a q = none) ∧
+          s' = next act
 
-/-- Local observation token extracted from a state for player `i`. -/
+/-- Public component exposed by the EFG compilation.
+
+The compiled state-based semantics does not attempt to reconstruct the public
+history from the current subtree, so the public view is kept trivial here. The
+syntax-level public trace is handled separately in `EFG.SOS`. -/
+abbrev PublicObs : Type := PUnit
+
+/-- Local observation token extracted from a state for player `i`: the current
+infoset when `i` moves, and `none` otherwise. -/
 def obsOfState {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (i : S.Player) : _root_.EFG.GameTree S Outcome → Option (S.Infoset i)
   | .decision (p := p) I _ =>
@@ -32,63 +54,36 @@ def obsOfState {S : _root_.EFG.InfoStructure} {Outcome : Type}
       else none
   | _ => none
 
-/-- Compile EFG information to the generic `InfoModel` layer. -/
+/-- Compile EFG visibility to the generic `InfoModel` layer. Public visibility
+is trivial at the state layer; private visibility is the current infoset, if
+any, for the acting player. -/
 def compileInfoOn {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome) :
     GameTheory.InfoModel (compileLSM (S := S) (Outcome := Outcome) t) where
+  Public := PublicObs
+  publicView := fun _ => PUnit.unit
   Obs := fun i => Option (S.Infoset i)
-  infoSetoid := fun i =>
-    ⟨fun s₁ s₂ => obsOfState (S := S) (Outcome := Outcome) i s₁ =
-        obsOfState (S := S) (Outcome := Outcome) i s₂,
-      ⟨by intro s; rfl,
-       by intro s t h; simpa [eq_comm] using h,
-       by intro s t u hst htu; exact hst.trans htu⟩⟩
-  project := fun i h =>
-    (_root_.EFG.playerHistory S i h).map (fun a => Sum.inr (some a))
+  observe := fun i s => obsOfState (S := S) (Outcome := Outcome) i s
 
-/-- Build a pure-utility control model from local utility functionals. -/
+/-- Build a pure-utility control model from local utility functionals over the
+private infoset history seen by each player. -/
 def compileControlUtility {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     (u : ∀ i : S.Player,
-      List (Option (S.Infoset i) ⊕ Option (CtrlAct S i)) → ℝ) :
+      List (Option (S.Infoset i)) → ℝ) :
     GameTheory.ControlModel (compileLSM (S := S) (Outcome := Outcome) t)
       (compileInfoOn (S := S) (Outcome := Outcome) t) where
   control := fun i => GameTheory.ControlSpec.utility (u i)
 
-/-- Build a pure-behavior control model from local public behavior laws. -/
+/-- Build a pure-behavior control model from local behavior laws over each
+player's private infoset history. -/
 def compileControlBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     (β : ∀ i : S.Player,
-      _root_.EFG.HistoryStep S → Option (S.Infoset i) → PMF (Option (CtrlAct S i))) :
+      List (Option (S.Infoset i)) → PMF (Option (CtrlAct S i))) :
     GameTheory.ControlModel (compileLSM (S := S) (Outcome := Outcome) t)
       (compileInfoOn (S := S) (Outcome := Outcome) t) where
   control := fun i => GameTheory.ControlSpec.behavior (β i)
-
-/-- Reachability in EFG syntax is equivalent to reachability under compiled machine
-action-erased dynamics. -/
-theorem reachBy_iff_compiled
-    {S : _root_.EFG.InfoStructure} {Outcome : Type}
-    (t : _root_.EFG.GameTree S Outcome)
-    (h : List (_root_.EFG.HistoryStep S))
-    (src dst : _root_.EFG.GameTree S Outcome) :
-    _root_.EFG.ReachBy h src dst ↔
-      Semantics.Transition.ReachBy (compileLSM (S := S) (Outcome := Outcome) t |>.stepExists)
-        h src dst := by
-  constructor
-  · intro hr
-    induction hr with
-    | nil s =>
-      exact Semantics.Transition.ReachBy.nil s
-    | @cons a rest s u v hsu huv ih =>
-        refine Semantics.Transition.ReachBy.cons ?_ ih
-        exact ⟨fun _ => none, hsu⟩
-  · intro hr
-    induction hr with
-    | nil s =>
-        exact Semantics.Transition.ReachBy.nil s
-    | @cons a rest s u v hsu huv ih =>
-        rcases hsu with ⟨_, hstep⟩
-        exact Semantics.Transition.ReachBy.cons hstep ih
 
 end EFG
 end Languages
