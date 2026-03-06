@@ -254,6 +254,97 @@ noncomputable def restrictedMixedJoint
   exact Math.ProbabilityMassFunction.pushforward
     (restrictedMixedJointRaw (I := I) H μ) (extendRestrictedPureProfile (I := I) H)
 
+/-- Extending each restricted local-policy marginal and then taking the full
+joint law agrees with pushing the restricted joint law forward along
+`extendRestrictedPureProfile`. -/
+theorem mixedJoint_extendRestrictedMixedProfile_eq_restrictedMixedJoint
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [Fintype ι]
+    [∀ i, Fintype (LocalPure (I := I) i)]
+    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    (μ : RestrictedMixedProfile (I := I) H) :
+    mixedJoint (I := I) (extendRestrictedMixedProfile (I := I) H μ) =
+      restrictedMixedJoint (I := I) H μ := by
+  classical
+  rw [mixedJoint, restrictedMixedJoint]
+  exact (pmfPi_push_coordwise μ
+    (fun i => extendRestrictedLocalPure (I := I) H i)).symm
+
+/-- Restricted mixed evaluation against full pure-profile observables is just
+evaluation after pushing the raw restricted joint law forward along
+`extendRestrictedPureProfile`. -/
+theorem restrictedMixedJointRaw_bind_eq_restrictedMixedJoint_bind
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [Fintype ι]
+    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    {β : Type*}
+    (μ : RestrictedMixedProfile (I := I) H)
+    (f : PureProfile I → PMF β) :
+    (restrictedMixedJointRaw (I := I) H μ).bind
+        (fun π => f (extendRestrictedPureProfile (I := I) H π)) =
+      (restrictedMixedJoint (I := I) H μ).bind f := by
+  simp [restrictedMixedJoint, Math.ProbabilityMassFunction.pushforward,
+    PMF.bind_bind]
+
+/-- Pushing forward `mixedJoint μ` by "restrict then extend" is the same as
+taking the joint law of the coordinatewise pushed-forward marginals. -/
+theorem mixedJoint_extendRestrict_eq_pushforward
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [Fintype ι]
+    [∀ i, Fintype (LocalPure (I := I) i)]
+    (μ : MixedProfile (I := I)) :
+    mixedJoint (I := I)
+        (extendRestrictedMixedProfile (I := I) H
+          (restrictMixedProfile (I := I) H μ)) =
+      Math.ProbabilityMassFunction.pushforward
+        (mixedJoint (I := I) μ)
+        (fun π => extendRestrictedPureProfile (I := I) H
+          (restrictPureProfile (I := I) H π)) := by
+  classical
+  have hcoord :
+      (fun i =>
+        Math.ProbabilityMassFunction.pushforward
+          (Math.ProbabilityMassFunction.pushforward (μ i)
+            (restrictLocalPure (I := I) H i))
+          (extendRestrictedLocalPure (I := I) H i))
+        =
+      (fun i =>
+        Math.ProbabilityMassFunction.pushforward (μ i)
+          ((extendRestrictedLocalPure (I := I) H i) ∘
+            (restrictLocalPure (I := I) H i))) := by
+    funext i
+    rw [Math.ProbabilityMassFunction.pushforward_comp]
+  calc
+    mixedJoint (I := I)
+        (extendRestrictedMixedProfile (I := I) H
+          (restrictMixedProfile (I := I) H μ))
+        =
+      pmfPi (fun i =>
+        Math.ProbabilityMassFunction.pushforward (μ i)
+          ((extendRestrictedLocalPure (I := I) H i) ∘
+            (restrictLocalPure (I := I) H i))) := by
+          rw [mixedJoint]
+          change pmfPi
+            (fun i =>
+              Math.ProbabilityMassFunction.pushforward
+                (Math.ProbabilityMassFunction.pushforward (μ i)
+                  (restrictLocalPure (I := I) H i))
+                (extendRestrictedLocalPure (I := I) H i)) =
+            pmfPi (fun i =>
+              Math.ProbabilityMassFunction.pushforward (μ i)
+                ((extendRestrictedLocalPure (I := I) H i) ∘
+                  (restrictLocalPure (I := I) H i)))
+          rw [hcoord]
+    _ =
+      Math.ProbabilityMassFunction.pushforward
+        (mixedJoint (I := I) μ)
+        (fun π => extendRestrictedPureProfile (I := I) H
+          (restrictPureProfile (I := I) H π)) := by
+          rw [mixedJoint]
+          exact (pmfPi_push_coordwise μ
+            (fun i => (extendRestrictedLocalPure (I := I) H i) ∘
+              (restrictLocalPure (I := I) H i))).symm
+
 /-- Canonical behavioral realization from a restricted mixed profile, extended
 outside the cover by the deterministic `none` action. -/
 noncomputable def restrictedRealizeBehavioralCanonical

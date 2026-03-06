@@ -138,6 +138,34 @@ theorem kuhn_mixed_to_behavioral_of_compiled_restricted
     (GameTheory.Theorems.kuhn_mixed_to_behavioral_restricted
       (I := compileInfoOn G) (D := D) (k := k) H hStepIndep)
 
+/-- Cover-based mixed-to-behavioral Kuhn reduction for compiled sequential
+protocols. This lifts the restricted finite-cover theorem back to ordinary
+compiled profiles using the generic cover invariance layer. -/
+theorem kuhn_mixed_to_behavioral_of_compiled_via_cover
+    (G : GameTheory.Protocol n S V A Sig)
+    (D : Execution.Dynamics (compileInfoOn G))
+    (k : Nat)
+    (H : ∀ i, Finset ((compileInfoOn G).LocalTrace i))
+    [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord H i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure H i)]
+    [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
+    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    (hCover : compiledHistoryCover G k H)
+    (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
+    KuhnMixedToBehavioralViaOutcome
+      (Execution.BehavioralProfile (compileInfoOn G))
+      (InfoModel.MixedProfile (I := compileInfoOn G))
+      (Execution.PureProfile (compileInfoOn G))
+      (compileInfoOn G).Outcome
+      (InfoModel.mixedJoint (I := compileInfoOn G))
+      (D.evalBehavioral k)
+      (D.evalPure k) := by
+  simpa [compiledHistoryCover] using
+    (GameTheory.Theorems.kuhn_mixed_to_behavioral_via_cover
+      (I := compileInfoOn G) (D := D) (k := k) H hCover hStepIndep)
+
 /-- Restricted finite-cover Kuhn reduction for compiled sequential protocols. -/
 theorem kuhn_complete_of_compiled_restricted
     (G : GameTheory.Protocol n S V A Sig)
@@ -161,5 +189,33 @@ theorem kuhn_complete_of_compiled_restricted
   simpa using
     (GameTheory.Theorems.kuhn_complete_restricted
       (I := compileInfoOn G) (D := D) (k := k) H hStepIndep)
+
+/-- Cover-based full Kuhn reduction for compiled sequential protocols. -/
+theorem kuhn_complete_of_compiled_via_cover
+    (G : GameTheory.Protocol n S V A Sig)
+    (D : Execution.Dynamics (compileInfoOn G))
+    (k : Nat)
+    (H : ∀ i, Finset ((compileInfoOn G).LocalTrace i))
+    [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord H i)]
+    [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure H i)]
+    [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype ((compileInfoOn G).LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
+    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    (hCover : compiledHistoryCover G k H)
+    (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
+    KuhnCompleteViaOutcome
+      (Execution.BehavioralProfile (compileInfoOn G))
+      (InfoModel.MixedProfile (I := compileInfoOn G))
+      (Execution.PureProfile (compileInfoOn G))
+      (compileInfoOn G).Outcome
+      (mixedOfBehavioralCanonical (I := compileInfoOn G))
+      (InfoModel.mixedJoint (I := compileInfoOn G))
+      (D.evalBehavioral k)
+      (D.evalPure k) := by
+  simpa [compiledHistoryCover] using
+    (GameTheory.Theorems.kuhn_complete_via_cover
+      (I := compileInfoOn G) (D := D) (k := k) H hCover hStepIndep)
 
 end GameTheory.Theorems.Sequential
