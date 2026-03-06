@@ -1,3 +1,8 @@
-import GameTheory.Bridge.NFG_EFG
+import GameTheory.Languages.EFG
 
-/-! Bridge: NFG to EFG and semantic preservation lemmas. -/
+/-!
+# NFG–EFG Bridge
+
+Public landing point for reductions from normal-form games to extensive-form
+games.
+-/

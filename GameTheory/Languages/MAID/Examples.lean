@@ -1,11 +1,11 @@
 import GameTheory.Languages.MAID.Syntax
-import GameTheory.Bridge.MAID_EFG
 
 /-!
 # MAID Examples
 
-Reader-facing MAID examples demonstrating concrete diagrams and their semantic
-bridges. These are not compilation tests.
+Reader-facing MAID examples demonstrating concrete diagrams and their native
+semantic objects. Compilation/SOS validation belongs in
+`GameTheory.Languages.MAID.Tests`.
 -/
 
 namespace MAID
@@ -57,17 +57,14 @@ noncomputable def tinySem : Sem tinyStruct where
 noncomputable def tinyPol0 : Policy tinyStruct :=
   fun _p _I => PMF.pure ⟨0, tinyStruct.dom_pos _⟩
 
-/-! ## KernelGame bridge and udist -/
+/-! ## KernelGame bridge -/
 
 /-- The MAID KernelGame for our tiny example. -/
 noncomputable def tinyKG : KernelGame (Fin 1) :=
   toKernelGame tinyStruct tinySem
 
-/-- The MAID → EFG reduction preserves `udist` on the tiny example. -/
-noncomputable example :
-    (MAID_EFG.maidToEFG tinyStruct tinySem tinyPol0).toKernelGame.udist
-      (MAID_EFG.toEFGProfile tinyPol0) =
-    tinyKG.udist tinyPol0 :=
-  MAID_EFG.maidToEFG_udist tinySem tinyPol0
+/-- The tiny MAID induces a well-formed outcome distribution on total assignments. -/
+noncomputable example : PMF (TAssign tinyStruct) :=
+  evalAssignDist tinyStruct tinySem tinyPol0
 
 end MAID

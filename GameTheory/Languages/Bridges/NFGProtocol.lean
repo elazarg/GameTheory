@@ -1,3 +1,8 @@
-import GameTheory.Bridge.NFG_Proto
+import GameTheory.Languages.Sequential
 
-/-! Bridge: NFG to protocol-style sequential forms. -/
+/-!
+# NFG–Sequential Bridge
+
+Public landing point for reductions from normal-form games to the
+protocol/sequential language layer.
+-/

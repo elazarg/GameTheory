@@ -1,3 +1,9 @@
-import GameTheory.Bridge.MAID_EFG
+import GameTheory.Languages.MAID
+import GameTheory.Languages.EFG
 
-/-! Bridge: MAID to EFG and semantic preservation results. -/
+/-!
+# MAID–EFG Bridge
+
+Public landing point for reductions from MAIDs to extensive-form games and
+their semantics-preservation theorems.
+-/

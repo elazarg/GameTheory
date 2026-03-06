@@ -1,3 +1,9 @@
-import GameTheory.Bridge.MAID_Proto
+import GameTheory.Languages.MAID
+import GameTheory.Languages.Sequential
 
-/-! Bridge: MAID to protocol-style sequential forms. -/
+/-!
+# MAID–Sequential Bridge
+
+Public landing point for reductions from MAIDs to the sequential/protocol
+language layer.
+-/

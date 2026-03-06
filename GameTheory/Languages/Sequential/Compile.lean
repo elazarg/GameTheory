@@ -3,15 +3,17 @@ import Math.PMFProduct
 import Math.Probability
 
 /-!
-# GameTheory.Sequential.TraceKernelGame
+# GameTheory.Languages.Sequential.Compile
 
-Minimal trace-style sequential semantics:
+Compilation-facing semantic core for sequential/protocol languages.
 
-- `PreKernelStep`: one semantic step (state, views, controls, combine kernel)
+This file provides a small repeated-step semantics:
+- `PreKernelStep`: one semantic step (state, local views, joint controls)
 - `SequentialGame`: initial distribution + finite horizon + terminal utility
-- `toKernelGame`: collapse sequential semantics to a `KernelGame`
+- `toKernelGame`: collapse to a `KernelGame`
 
-This is a semantics-first layer: EFG/MAID-style syntax can map into it.
+Language-native protocol syntax should compile into this layer, and then
+further into the generic semantic targets when theorem transport is needed.
 -/
 
 namespace GameTheory

@@ -1,3 +1,8 @@
-import GameTheory.Bridge.EFG_NFG
+import GameTheory.Languages.EFG
 
-/-! Bridge: EFG to NFG. -/
+/-!
+# EFG–NFG Bridge
+
+Public landing point for semantics-preservation and compilation results between
+extensive-form and normal-form presentations.
+-/

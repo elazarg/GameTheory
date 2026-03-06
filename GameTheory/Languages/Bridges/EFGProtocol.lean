@@ -1,3 +1,9 @@
-import GameTheory.Bridge.EFG_Proto
+import GameTheory.Languages.EFG
+import GameTheory.Languages.Sequential
 
-/-! Bridge: EFG to protocol-style sequential forms. -/
+/-!
+# EFG–Sequential Bridge
+
+Public landing point for comparisons between extensive-form syntax and the
+protocol/sequential language layer.
+-/
