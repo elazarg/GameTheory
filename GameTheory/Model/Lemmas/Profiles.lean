@@ -133,5 +133,207 @@ theorem stepActionStateDist_pure
         (fun t => (a, t)) := by
   simp [Execution.Dynamics.stepActionStateDist, jointActionDist_pure, PMF.pure_bind]
 
+section Restricted
+
+variable [∀ i, DecidableEq (I.LocalTrace i)]
+
+/-- Covered local-history coordinates for a finite cover `H`. -/
+abbrev RestrictedLocalCoord
+    (H : ∀ i, Finset (I.LocalTrace i)) (i : ι) : Type :=
+  {v : I.LocalTrace i // v ∈ H i}
+
+/-- Pure local policy restricted to the covered coordinates. -/
+abbrev RestrictedLocalPure
+    (H : ∀ i, Finset (I.LocalTrace i)) (i : ι) : Type :=
+  RestrictedLocalCoord (I := I) H i → Option (M.Act i)
+
+/-- Joint pure profile restricted to a finite local-history cover. -/
+abbrev RestrictedPureProfile
+    (H : ∀ i, Finset (I.LocalTrace i)) : Type :=
+  ∀ i, RestrictedLocalPure (I := I) H i
+
+/-- Behavioral profile restricted to a finite local-history cover. -/
+abbrev RestrictedBehavioralProfile
+    (H : ∀ i, Finset (I.LocalTrace i)) : Type :=
+  ∀ i, RestrictedLocalCoord (I := I) H i → PMF (Option (M.Act i))
+
+/-- Mixed profile over restricted pure local policies. -/
+abbrev RestrictedMixedProfile
+    (H : ∀ i, Finset (I.LocalTrace i)) : Type :=
+  ∀ i, PMF (RestrictedLocalPure (I := I) H i)
+
+/-- Extend a restricted local pure policy by playing `none` outside the cover. -/
+def extendRestrictedLocalPure
+    (H : ∀ i, Finset (I.LocalTrace i)) (i : ι)
+    (f : RestrictedLocalPure (I := I) H i) :
+    LocalPure (I := I) i :=
+  fun v =>
+    if hv : v ∈ H i then
+      f ⟨v, hv⟩
+    else
+      none
+
+/-- Restrict a full local pure policy to a finite cover. -/
+def restrictLocalPure
+    (H : ∀ i, Finset (I.LocalTrace i)) (i : ι)
+    (f : LocalPure (I := I) i) :
+    RestrictedLocalPure (I := I) H i :=
+  fun v => f v.1
+
+/-- Extend a restricted pure profile by playing `none` outside the cover. -/
+def extendRestrictedPureProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (π : RestrictedPureProfile (I := I) H) :
+    PureProfile I :=
+  fun i => extendRestrictedLocalPure (I := I) H i (π i)
+
+/-- Restrict a full pure profile to a finite cover. -/
+def restrictPureProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (π : PureProfile I) :
+    RestrictedPureProfile (I := I) H :=
+  fun i => restrictLocalPure (I := I) H i (π i)
+
+/-- Extend a restricted behavioral profile by playing `none` outside the cover. -/
+noncomputable def extendRestrictedBehavioralProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (σ : RestrictedBehavioralProfile (I := I) H) :
+    BehavioralProfile I :=
+  fun i v =>
+    if hv : v ∈ H i then
+      σ i ⟨v, hv⟩
+    else
+      PMF.pure none
+
+/-- Restrict a full behavioral profile to a finite cover. -/
+def restrictBehavioralProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (σ : BehavioralProfile I) :
+    RestrictedBehavioralProfile (I := I) H :=
+  fun i v => σ i v.1
+
+/-- Extend a restricted mixed profile to the full local-policy space by
+pushforward along the pure-policy extension map. -/
+noncomputable def extendRestrictedMixedProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (μ : RestrictedMixedProfile (I := I) H) :
+    MixedProfile (I := I) :=
+  fun i =>
+    Math.ProbabilityMassFunction.pushforward
+      (μ i) (extendRestrictedLocalPure (I := I) H i)
+
+/-- Restrict a full mixed profile to the covered coordinates. -/
+noncomputable def restrictMixedProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (μ : MixedProfile (I := I)) :
+    RestrictedMixedProfile (I := I) H :=
+  fun i =>
+    Math.ProbabilityMassFunction.pushforward
+      (μ i) (restrictLocalPure (I := I) H i)
+
+/-- Product-joint law induced by a restricted mixed profile, pushed forward to
+full pure profiles via extension outside the finite cover. -/
+noncomputable def restrictedMixedJoint
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [Fintype ι]
+    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    (μ : RestrictedMixedProfile (I := I) H) :
+    PMF (PureProfile I) := by
+  classical
+  letI : DecidableEq ι := Classical.decEq ι
+  exact Math.ProbabilityMassFunction.pushforward
+    (pmfPi μ) (extendRestrictedPureProfile (I := I) H)
+
+/-- Canonical behavioral realization from a restricted mixed profile, extended
+outside the cover by the deterministic `none` action. -/
+noncomputable def restrictedRealizeBehavioralCanonical
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (μ : RestrictedMixedProfile (I := I) H) :
+    BehavioralProfile I :=
+  extendRestrictedBehavioralProfile (I := I) H <|
+    fun i v =>
+      Math.ProbabilityMassFunction.pushforward (μ i) (fun f => f v)
+
+/-- Behavioral-to-mixed lifting over a restricted finite local-history cover. -/
+noncomputable def restrictedBehavioralToMixed
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (σ : RestrictedBehavioralProfile (I := I) H) :
+    RestrictedMixedProfile (I := I) H := by
+  classical
+  exact fun i => pmfPi (fun v : RestrictedLocalCoord (I := I) H i => σ i v)
+
+/-- Restricting an extended local pure policy recovers the original. -/
+theorem restrict_extend_localPure
+    (H : ∀ i, Finset (I.LocalTrace i)) (i : ι)
+    (f : RestrictedLocalPure (I := I) H i) :
+    restrictLocalPure (I := I) H i
+      (extendRestrictedLocalPure (I := I) H i f) = f := by
+  funext v
+  simp [restrictLocalPure, extendRestrictedLocalPure, v.2]
+
+/-- Restricting an extended pure profile recovers the original. -/
+theorem restrict_extend_pureProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (π : RestrictedPureProfile (I := I) H) :
+    restrictPureProfile (I := I) H
+      (extendRestrictedPureProfile (I := I) H π) = π := by
+  funext i
+  exact restrict_extend_localPure (I := I) H i (π i)
+
+/-- Restricting an extended behavioral profile recovers the original. -/
+theorem restrict_extend_behavioralProfile
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (σ : RestrictedBehavioralProfile (I := I) H) :
+    restrictBehavioralProfile (I := I) H
+      (extendRestrictedBehavioralProfile (I := I) H σ) = σ := by
+  funext i v
+  simp [restrictBehavioralProfile, extendRestrictedBehavioralProfile, v.2]
+
+/-- The extension of a restricted pure profile agrees with the restricted value
+on covered coordinates. -/
+theorem extendRestrictedPureProfile_apply_mem
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (π : RestrictedPureProfile (I := I) H)
+    (i : ι) (v : I.LocalTrace i) (hv : v ∈ H i) :
+    extendRestrictedPureProfile (I := I) H π i v = π i ⟨v, hv⟩ := by
+  simp [extendRestrictedPureProfile, extendRestrictedLocalPure, hv]
+
+/-- The extension of a restricted behavioral profile agrees with the restricted
+value on covered coordinates. -/
+theorem extendRestrictedBehavioralProfile_apply_mem
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (σ : RestrictedBehavioralProfile (I := I) H)
+    (i : ι) (v : I.LocalTrace i) (hv : v ∈ H i) :
+    extendRestrictedBehavioralProfile (I := I) H σ i v = σ i ⟨v, hv⟩ := by
+  simp [extendRestrictedBehavioralProfile, hv]
+
+/-- Round-trip identity on the restricted cover: realizing the behavioral
+profile produced from `restrictedBehavioralToMixed` recovers the original. -/
+theorem restricted_realize_behavioralToMixed
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (σ : RestrictedBehavioralProfile (I := I) H) :
+    restrictBehavioralProfile (I := I) H
+      (restrictedRealizeBehavioralCanonical (I := I) H
+        (restrictedBehavioralToMixed (I := I) H σ)) = σ := by
+  classical
+  funext i v
+  simp only [restrictBehavioralProfile, restrictedRealizeBehavioralCanonical,
+    restrictedBehavioralToMixed, extendRestrictedBehavioralProfile]
+  suffices
+      Math.ProbabilityMassFunction.pushforward
+        (pmfPi (fun w : RestrictedLocalCoord (I := I) H i => σ i w))
+        (fun f => f v) = σ i v by
+    simpa only [SetLike.coe_mem, ↓reduceDIte, Subtype.coe_eta] using this
+  simpa [Math.PMFProduct.pushforward, Math.ProbabilityMassFunction.pushforward] using
+    (pmfPi_push_coord (σ := fun w : RestrictedLocalCoord (I := I) H i => σ i w) (j := v))
+
+end Restricted
+
 end InfoModel
 end GameTheory
