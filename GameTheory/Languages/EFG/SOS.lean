@@ -1,4 +1,5 @@
 import GameTheory.Languages.EFG.Compile
+import GameTheory.Model.Simulation
 
 namespace GameTheory.EFG
 
@@ -118,5 +119,33 @@ theorem compiled_reach_iff_exists_history
         exact ⟨ℓ :: h, Semantics.Transition.ReachBy.cons hℓ hh⟩
   · rintro ⟨h, hr⟩
     exact ⟨h.map (jointActionOfHistoryStep t), reachBy_implies_compiled t hr⟩
+
+/-- Honest semantic contract for the current EFG compilation.
+
+This is a homomorphic simulation, not a bisimulation on source labels:
+player action steps are preserved exactly, while chance branch labels are
+mapped to the compiled joint action alphabet by `jointActionOfHistoryStep`.
+The state and observation components are preserved definitionally. -/
+def nativeInfoHomSimulation
+    {S : _root_.EFG.InfoStructure} {Outcome : Type}
+    (t : _root_.EFG.GameTree S Outcome) :
+    GameTheory.NativeInfoHomSimulation
+      (_root_.EFG.HistoryStepStep (S := S) (Outcome := Outcome))
+      t
+      (compileInfoOn (S := S) (Outcome := Outcome) t)
+      (fun _ => PUnit.unit)
+      (obsOfState (S := S) (Outcome := Outcome)) where
+  stateMap := id
+  labelMap := jointActionOfHistoryStep t
+  init := rfl
+  step := by
+    intro ℓ src dst h
+    exact historyStepStep_implies_compiled_step t h
+  publicView_eq := by
+    intro s
+    rfl
+  observe_eq := by
+    intro i s
+    rfl
 
 end GameTheory.EFG

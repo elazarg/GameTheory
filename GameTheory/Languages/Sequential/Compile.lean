@@ -1,5 +1,6 @@
 import GameTheory.Core.KernelGame
 import GameTheory.Model.InfoGame
+import GameTheory.Model.Simulation
 import GameTheory.Languages.Sequential.SOS
 import Math.PMFProduct
 import Math.Probability
@@ -240,6 +241,28 @@ theorem compile_publicView_eq_publicPhase
     (c : Config G) :
     (compileInfoOn G).publicView c = publicPhase c := by
   rfl
+
+/-- The compiled `InfoModel` is definitionally bisimilar to the native
+protocol SOS: states are identical, labels are identical joint controls, and
+public/private observations coincide. -/
+def nativeInfoBisimulation (G : Protocol n S V A Sig) :
+    GameTheory.NativeInfoBisimulation
+      (Step G)
+      (initialConfig G)
+      (compileInfoOn G)
+      publicPhase
+      (observe G) where
+  stateEquiv := Equiv.refl _
+  init := rfl
+  step_iff := by
+    intro a s t
+    rfl
+  publicView_eq := by
+    intro s
+    rfl
+  observe_eq := by
+    intro i s
+    rfl
 
 /-- Build a common-knowledge utility layer over the compiled sequential
 semantics. -/

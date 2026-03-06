@@ -1,6 +1,7 @@
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.MAID.SOS
 import GameTheory.Model.InfoGame
+import GameTheory.Model.Simulation
 
 /-!
 # GameTheory.Languages.MAID.Compile
@@ -70,6 +71,28 @@ theorem compile_observe_eq_frontierInfosets
     (p : Player) (cfg : FrontierCfg S) :
     (compileInfoOn S sem).observe p cfg = frontierInfosets S cfg p := by
   rfl
+
+/-- The compiled `InfoModel` is definitionally bisimilar to the native MAID
+frontier SOS: states are frontier configurations, labels are frontier actions,
+and public/private observations are exactly the native frontier observables. -/
+noncomputable def nativeInfoBisimulation (S : Struct Player n) (sem : Sem S) :
+    GameTheory.NativeInfoBisimulation
+      (Step S sem)
+      (initialCfg S)
+      (compileInfoOn S sem)
+      (frontierList S)
+      (fun p cfg => frontierInfosets S cfg p) where
+  stateEquiv := Equiv.refl _
+  init := rfl
+  step_iff := by
+    intro a s t
+    rfl
+  publicView_eq := by
+    intro cfg
+    rfl
+  observe_eq := by
+    intro p cfg
+    rfl
 
 /-- Build a common-knowledge utility layer over the compiled MAID semantics. -/
 def compileControlUtility (S : Struct Player n) (sem : Sem S)
