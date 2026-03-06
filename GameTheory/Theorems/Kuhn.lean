@@ -13,7 +13,11 @@ variable {M : LSM ι} (I : InfoModel M)
 variable (D : Execution.Dynamics I)
 variable (k : Nat)
 
-/-- Kuhn completeness at the outcome-distribution level for an `InfoModel`. -/
+/-- Kuhn completeness at the outcome-distribution level for an `InfoModel`.
+
+Conceptually, the mixed-to-behavioral direction is driven by a reachable-prefix
+distributive law: conditioning the mixed profile on the realized local history
+distributes over sequencing/continuation. -/
 theorem kuhn_complete
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]

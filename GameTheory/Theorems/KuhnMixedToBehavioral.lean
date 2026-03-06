@@ -610,6 +610,84 @@ theorem mixedToBehavioralAfter_stepActionStatePoint_eq_conditioned_reachable
               (mixedJoint_stepActionStatePoint_eq_realizeBehavioralCanonical
                 (I := I) (D := D) μFull (ha0 ++ haTail, ss0 ++ ssTail) y).symm
 
+-- Reachable-prefix distributive law: conditioning the mixed profile on the
+-- realized local history and then taking one continuation step gives the same
+-- continuation law as first passing to `mixedToBehavioral`.
+theorem kuhn_conditioning_distributes_over_sequencing
+    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hPR : I.PerfectRecall)
+    (μ : InfoModel.MixedProfile (I := I))
+    {ha : List (JointAction M)}
+    {ss : List M.State}
+    (hr : InfoModel.ReachActionTrace M ha ss) :
+    Math.ProbabilityMassFunction.pushforward
+      (D.stepDist (mixedToBehavioral (I := I) μ) ss)
+      (fun t => ss ++ [t]) =
+    (InfoModel.mixedJoint (I := I)
+      (conditionedMixedProfile (I := I) μ ha ss)).bind
+      (fun π =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.stepDist (pureToBehavioral I π) ss)
+          (fun t => ss ++ [t])) := by
+  classical
+  letI : DecidableEq ι := Classical.decEq ι
+  ext y
+  have hbeh_now :
+      ∀ i,
+        mixedToBehavioral (I := I) μ i (I.projectStates i ss) =
+          InfoModel.realizeBehavioralCanonical (I := I)
+            (conditionedMixedProfile (I := I) μ ha ss) i
+            (I.projectStates i ss) := by
+    intro i
+    simpa [conditionedMixedProfile, InfoModel.realizeBehavioralCanonical] using
+      mixedToBehavioral_eq_iterCond_pushforward
+        (I := I) (hPR := hPR) (μ := μ) i hr
+  have hstep_beh :
+      D.stepDist (mixedToBehavioral (I := I) μ) ss =
+        D.stepDist
+          (InfoModel.realizeBehavioralCanonical (I := I)
+            (conditionedMixedProfile (I := I) μ ha ss))
+          ss := by
+    apply stepDist_behavioral_depends_on_current_context (I := I) (D := D)
+    intro i
+    exact hbeh_now i
+  calc
+    (Math.ProbabilityMassFunction.pushforward
+      (D.stepDist (mixedToBehavioral (I := I) μ) ss)
+      (fun t => ss ++ [t])) y
+        =
+      (Math.ProbabilityMassFunction.pushforward
+        (D.stepDist
+          (InfoModel.realizeBehavioralCanonical (I := I)
+            (conditionedMixedProfile (I := I) μ ha ss))
+          ss)
+        (fun t => ss ++ [t])) y := by
+          simpa using congrArg
+            (fun ν =>
+              (Math.ProbabilityMassFunction.pushforward ν
+                (fun t => ss ++ [t])) y)
+            hstep_beh
+    _ =
+      ∑' π, (InfoModel.mixedJoint (I := I)
+        (conditionedMixedProfile (I := I) μ ha ss)) π *
+        ((Math.ProbabilityMassFunction.pushforward
+          (D.stepDist (pureToBehavioral I π) ss)
+          (fun t => ss ++ [t])) y) := by
+            simpa using
+              (mixedJoint_stepPoint_eq_realizeBehavioralCanonical
+                (I := I) (D := D)
+                (conditionedMixedProfile (I := I) μ ha ss) ss y).symm
+    _ =
+      ((InfoModel.mixedJoint (I := I)
+        (conditionedMixedProfile (I := I) μ ha ss)).bind
+        (fun π =>
+          Math.ProbabilityMassFunction.pushforward
+            (D.stepDist (pureToBehavioral I π) ss)
+            (fun t => ss ++ [t]))) y := by
+              simp [PMF.bind_apply]
+
 theorem stepPoint_eq_via_query_disintegration
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
