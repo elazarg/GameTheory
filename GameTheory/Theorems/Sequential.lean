@@ -49,6 +49,15 @@ theorem observe_eq
     (compileInfoOn G).observe i c = observe G i c :=
   compile_observe_eq_observe G i c
 
+/-- The remaining finite-horizon language-specific obligation for the restricted
+Kuhn reduction: a finite local-history cover for the compiled protocol up to
+horizon `k`. -/
+abbrev compiledHistoryCover
+    (G : GameTheory.Protocol n S V A Sig)
+    (k : Nat)
+    (H : ∀ i, Finset ((compileInfoOn G).LocalTrace i)) : Prop :=
+  (compileInfoOn G).CoversHistoriesUpTo H k
+
 /-- Mixed-to-behavioral Kuhn reduction for the compiled sequential semantics.
 
 This is the honest reduction boundary currently available: once a sequential

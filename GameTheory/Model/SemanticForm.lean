@@ -118,6 +118,18 @@ inductive ReachActionTrace (M : LSM ι) :
       M.step a s t →
       ReachActionTrace M (ha ++ [a]) (ss ++ [t])
 
+/-- A finite local-history cover `H` is sufficient up to horizon `k` if every
+reachable state trace of length at most `k + 1` projects into `H`. This is the
+generic bounded object needed by the restricted-profile Kuhn theorem. -/
+def CoversHistoriesUpTo
+    (I : InfoModel M)
+    (H : ∀ i, Finset (I.LocalTrace i))
+    (k : Nat) : Prop :=
+  ∀ (i : ι) {ss : List M.State},
+    ReachStateTrace M ss →
+    ss.length ≤ k + 1 →
+    I.projectStates i ss ∈ H i
+
 /-- Player-local projected own-action trace from an action-annotated history. -/
 def projectActions (i : ι) (ha : List (JointAction M)) : List (Option (M.Act i)) :=
   ha.map (fun a => a i)

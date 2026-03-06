@@ -68,6 +68,93 @@ theorem runDist_support_stateLength
           simpa [List.length_append] using congrArg List.length heq
         omega
 
+private theorem exists_action_of_stepDist_ne_zero
+    [DecidableEq ι]
+    [∀ i, Fintype (Option (M.Act i))]
+    (σ : BehavioralProfile I) (ss : List M.State) (t : M.State)
+    (h : (D.stepDist σ ss) t ≠ 0) :
+    ∃ a : JointAction M,
+      Execution.Dynamics.jointActionDist (I := I) σ ss a ≠ 0 ∧
+        D.nextState a ((ss.getLast?).getD M.init) t ≠ 0 := by
+  by_contra hnot
+  rw [Execution.Dynamics.stepDist, PMF.bind_apply] at h
+  apply h
+  rw [ENNReal.tsum_eq_zero]
+  intro a
+  by_cases ha : Execution.Dynamics.jointActionDist (I := I) σ ss a = 0
+  · simp [ha]
+  · have hnext : D.nextState a ((ss.getLast?).getD M.init) t = 0 := by
+      by_contra hnext
+      exact hnot ⟨a, ha, hnext⟩
+    simp [hnext]
+
+/-- A nonzero one-step continuation from a reachable state trace extends that
+trace to another reachable state trace. -/
+theorem stepDist_support_reachStateTrace
+    [DecidableEq ι]
+    [∀ i, Fintype (Option (M.Act i))]
+    (σ : BehavioralProfile I)
+    {ss : List M.State}
+    (hr : InfoModel.ReachStateTrace M ss)
+    {t : M.State}
+    (h : (D.stepDist σ ss) t ≠ 0) :
+    InfoModel.ReachStateTrace M (ss ++ [t]) := by
+  rcases exists_action_of_stepDist_ne_zero (I := I) (D := D) σ ss t h with
+    ⟨a, _, hnext⟩
+  have hne : ss ≠ [] := InfoModel.reachStateTrace_nonempty (M := M) hr
+  let s : M.State := ss.getLast hne
+  have hsLast : ss.getLast? = some s := by
+    simpa [s] using (List.getLast?_eq_getLast_of_ne_nil hne)
+  have hnext' : D.nextState a s t ≠ 0 := by
+    simpa [hsLast, s] using hnext
+  exact InfoModel.ReachStateTrace.snoc hr hsLast
+    (D.nextState_sound a s t hnext')
+
+/-- State traces in the support of `runDist n` are machine-reachable. -/
+theorem runDist_support_reachStateTrace
+    [DecidableEq ι]
+    [∀ i, Fintype (Option (M.Act i))]
+    (n : Nat)
+    (σ : BehavioralProfile I) (ss : List M.State) :
+    (D.runDist n σ) ss ≠ 0 → InfoModel.ReachStateTrace M ss := by
+  induction n generalizing ss with
+  | zero =>
+      intro h
+      have hmem : ss ∈ (PMF.pure [M.init] : PMF _).support := by
+        rwa [runDist_zero (I := I) (D := D)] at h
+      rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
+      subst hmem
+      exact InfoModel.ReachStateTrace.nil
+  | succ n ih =>
+      intro h
+      rw [runDist_succ (I := I) (D := D), PMF.bind_apply] at h
+      by_contra hreach
+      apply h
+      rw [ENNReal.tsum_eq_zero]
+      intro ss'
+      by_cases hss' : (D.runDist n σ) ss' = 0
+      · simp [hss']
+      · have hr' : InfoModel.ReachStateTrace M ss' := ih ss' hss'
+        have hpush0 :
+            (Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss')
+              (fun t => ss' ++ [t])) ss = 0 := by
+          rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+          rw [ENNReal.tsum_eq_zero]
+          intro t
+          by_cases heq : ss' ++ [t] = ss
+          · have hstep0 : (D.stepDist σ ss') t = 0 := by
+              by_contra hstep
+              have hreach' : InfoModel.ReachStateTrace M ss := by
+                simpa [heq] using
+                  stepDist_support_reachStateTrace (I := I) (D := D) σ hr' hstep
+              exact hreach hreach'
+            simp [PMF.pure_apply, heq, hstep0]
+          · have hneq : ss ≠ ss' ++ [t] := by
+              intro h'
+              exact heq h'.symm
+            simp [PMF.pure_apply, hneq]
+        simp [hpush0]
+
 end InfoModel
 
 namespace Execution
