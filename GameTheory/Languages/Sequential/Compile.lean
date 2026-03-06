@@ -1,4 +1,6 @@
 import GameTheory.Core.KernelGame
+import GameTheory.Model.SemanticForm
+import GameTheory.Languages.Sequential.SOS
 import Math.PMFProduct
 import Math.Probability
 
@@ -175,3 +177,68 @@ end KernelEmbedding
 end Core
 
 end GameTheory
+
+namespace GameTheory.Sequential
+
+open Math.Probability
+
+variable {n : Nat} {S V A Sig : Type}
+
+/-- Compile a sequential protocol directly into the latent-state machine layer.
+
+The compiled machine uses the native SOS configurations as states:
+- `signal` states wait for nature's joint signal realization
+- `action` states wait for the players' joint action
+- `terminal` states have no outgoing transitions
+-/
+def compileLSM (G : Protocol n S V A Sig) : GameTheory.LSM (Fin n) where
+  State := Config G
+  Act := fun _ => A
+  init := initialConfig G
+  step := Step G
+
+/-- Compile protocol visibility into the generic `InfoModel` layer.
+
+Public visibility is the current execution phase and round index; private
+visibility is the current round view when the protocol is waiting for actions,
+and `none` otherwise. -/
+def compileInfoOn (G : Protocol n S V A Sig) :
+    GameTheory.InfoModel (compileLSM G) where
+  Public := PublicPhase
+  publicView := publicPhase
+  Obs := fun _ => Option V
+  observe := observe G
+
+/-- A protocol SOS step is definitionally the compiled machine step. -/
+theorem compile_step_iff
+    (G : Protocol n S V A Sig)
+    (a : JointControl n A)
+    (src dst : Config G) :
+    (compileLSM G).step a src dst ↔ Step G a src dst := by
+  rfl
+
+/-- Native SOS reachability is definitionally the same as reachability in the
+compiled latent-state machine. -/
+theorem compile_reach_iff
+    (G : Protocol n S V A Sig)
+    (ha : List (JointControl n A))
+    (src dst : Config G) :
+    Semantics.Transition.ReachBy (compileLSM G |>.stepExists) ha src dst ↔
+      ReachBy G ha src dst := by
+  rfl
+
+/-- The compiled private observation agrees with the native SOS observation. -/
+theorem compile_observe_eq_observe
+    (G : Protocol n S V A Sig)
+    (i : Fin n) (c : Config G) :
+    (compileInfoOn G).observe i c = observe G i c := by
+  rfl
+
+/-- The compiled public view agrees with the native SOS public phase. -/
+theorem compile_publicView_eq_publicPhase
+    (G : Protocol n S V A Sig)
+    (c : Config G) :
+    (compileInfoOn G).publicView c = publicPhase c := by
+  rfl
+
+end GameTheory.Sequential
