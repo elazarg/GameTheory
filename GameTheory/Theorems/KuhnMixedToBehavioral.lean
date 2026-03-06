@@ -302,6 +302,184 @@ theorem kuhn_conditioning_distributes_over_sequencing
                       rw [Execution.Dynamics.stepDist_eq_pushforward_stepActionStateDist
                         (I := I) (D := D) (σ := pureToBehavioral I π) (ss := ss)]
 
+private theorem reachable_stepPoint_eq_conditioned_sum
+    [∀ i, Fintype (I.LocalTrace i)]
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hPR : I.PerfectRecall)
+    (μ : InfoModel.MixedProfile (I := I))
+    {ha : List (JointAction M)}
+    {hs : List M.State}
+    (hr : InfoModel.ReachActionTrace M ha hs)
+    (y : List M.State) :
+    let μHist : InfoModel.MixedProfile (I := I) := conditionedMixedProfile (I := I) μ ha hs
+    let stepPureY : PureProfile I → ENNReal := fun π =>
+      (Math.ProbabilityMassFunction.pushforward
+        (D.stepDist (pureToBehavioral I π) hs)
+        (fun t => hs ++ [t])) y
+    (Math.ProbabilityMassFunction.pushforward
+      (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+      (fun t => hs ++ [t])) y
+      =
+    ∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π := by
+  classical
+  let μHist : InfoModel.MixedProfile (I := I) := conditionedMixedProfile (I := I) μ ha hs
+  let stepPureY : PureProfile I → ENNReal := fun π =>
+    (Math.ProbabilityMassFunction.pushforward
+      (D.stepDist (pureToBehavioral I π) hs)
+      (fun t => hs ++ [t])) y
+  calc
+    (Math.ProbabilityMassFunction.pushforward
+      (D.stepDist (mixedToBehavioral (I := I) μ) hs)
+      (fun t => hs ++ [t])) y
+        =
+      ((InfoModel.mixedJoint (I := I) μHist).bind
+        (fun π =>
+          Math.ProbabilityMassFunction.pushforward
+            (D.stepDist (pureToBehavioral I π) hs)
+            (fun t => hs ++ [t]))) y := by
+              simpa [μHist] using congrArg (fun ν => ν y)
+                (kuhn_conditioning_distributes_over_sequencing
+                  (I := I) (D := D) (hPR := hPR) (μ := μ) hr)
+    _ = ∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π := by
+          simp [PMF.bind_apply, stepPureY]
+
+private theorem query_disintegration_factorization
+    [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
+    [∀ i, Fintype (Option (M.Act i))]
+    (hPR : I.PerfectRecall)
+    (μ : InfoModel.MixedProfile (I := I))
+    (n : Nat)
+    {hs : List M.State}
+    (hlen : hs.length = n + 1)
+    {π0 : PureProfile I}
+    {ha : List (JointAction M)}
+    (hr : InfoModel.ReachActionTrace M ha hs)
+    (hcompat : ∀ i, LocalHistCompatible (I := I) i (π0 i)
+      (InfoModel.localHistTokens (I := I) i ha hs))
+    (stepPureY : PureProfile I → ENNReal) :
+    let μJ : PMF (PureProfile I) := InfoModel.mixedJoint (I := I) μ
+    let μHist : InfoModel.MixedProfile (I := I) :=
+      conditionedMixedProfile (I := I) μ ha hs
+    let C : ENNReal := ∑' π, μJ π * (D.runDistPure n π) hs
+    ∃ traceMass compatMass : ENNReal,
+      C = traceMass * compatMass ∧
+      (∑' π, μJ π * ((D.runDistPure n π) hs * stepPureY π))
+        = traceMass * compatMass *
+            (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
+  classical
+  let μJ : PMF (PureProfile I) := InfoModel.mixedJoint (I := I) μ
+  let hist : ∀ i, List (LocalHistTok (I := I) i) :=
+    fun i => InfoModel.localHistTokens (I := I) i ha hs
+  let μHist : InfoModel.MixedProfile (I := I) := conditionedMixedProfile (I := I) μ ha hs
+  let C : ENNReal := ∑' π, μJ π * (D.runDistPure n π) hs
+  have hhaLen : ha.length = n := by
+    have hreachLen := InfoModel.ReachActionTrace.length_states_eq_succ_actions hr
+    exact Nat.succ.inj <| by
+      simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
+        hreachLen.symm.trans hlen
+  let traceMass : ENNReal := (D.runDistPure n π0) hs
+  let compatMass : ENNReal := ∏ i, localHistMass (I := I) i (μ i) (hist i)
+  have hrun_factor :
+      ∀ π : PureProfile I,
+        (D.runDistPure n π) hs =
+          traceMass * ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
+    intro π
+    dsimp [traceMass]
+    calc
+      (D.runDistPure n π) hs = D.runDistPure ha.length π hs := by simp [hhaLen]
+      _ =
+        D.runDistPure ha.length π0 hs *
+          ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
+            simpa [hist] using
+              runDistPure_factor_via_localHistIndicators
+                (I := I) (D := D) hPR hr π0 hcompat π
+      _ =
+        (D.runDistPure n π0) hs *
+          ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
+            simp [hhaLen]
+  have hmixed_factor :
+      ∀ π : PureProfile I,
+        compatMass * (InfoModel.mixedJoint (I := I) μHist) π =
+          μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
+    intro π
+    simpa [compatMass, μHist, μJ] using
+      localHistMass_mul_mixedJoint_iterCond_apply
+        (I := I) (μ := μ) (hist := hist) π
+  have hsum_indicators :
+      ∑' π, μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i) = compatMass := by
+    calc
+      ∑' π, μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i)
+          =
+        ∑' π, compatMass * (InfoModel.mixedJoint (I := I) μHist) π := by
+            refine tsum_congr ?_
+            intro π
+            exact (hmixed_factor π).symm
+      _ = compatMass * ∑' π, (InfoModel.mixedJoint (I := I) μHist) π := by
+            rw [ENNReal.tsum_mul_left]
+      _ = compatMass * 1 := by
+            simpa using congrArg (fun z : ENNReal => compatMass * z)
+              ((InfoModel.mixedJoint (I := I) μHist).tsum_coe)
+      _ = compatMass := by simp
+  refine ⟨traceMass, compatMass, ?_, ?_⟩
+  · calc
+      C = ∑' π, μJ π *
+          (traceMass * ∏ i, localHistIndicator (I := I) i (π i) (hist i)) := by
+            refine tsum_congr ?_
+            intro π
+            rw [hrun_factor π]
+      _ = ∑' π, traceMass *
+          (μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i)) := by
+            refine tsum_congr ?_
+            intro π
+            ac_rfl
+      _ = traceMass *
+          ∑' π, μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
+            rw [ENNReal.tsum_mul_left]
+      _ = traceMass * compatMass := by rw [hsum_indicators]
+  · calc
+      (∑' π, μJ π * ((D.runDistPure n π) hs * stepPureY π))
+          =
+        ∑' π, μJ π *
+          ((traceMass * ∏ i, localHistIndicator (I := I) i (π i) (hist i)) *
+            stepPureY π) := by
+              refine tsum_congr ?_
+              intro π
+              rw [hrun_factor π]
+      _ = ∑' π, traceMass *
+          ((μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i)) *
+            stepPureY π) := by
+              refine tsum_congr ?_
+              intro π
+              ac_rfl
+      _ = traceMass *
+          ∑' π, ((μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i)) *
+            stepPureY π) := by
+              rw [ENNReal.tsum_mul_left]
+      _ = traceMass *
+          ∑' π, ((compatMass * (InfoModel.mixedJoint (I := I) μHist) π) * stepPureY π) := by
+              congr 1
+              refine tsum_congr ?_
+              intro π
+              rw [← hmixed_factor π]
+      _ = traceMass *
+          (compatMass * ∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
+              congr 1
+              calc
+                ∑' π, ((compatMass * (InfoModel.mixedJoint (I := I) μHist) π) * stepPureY π)
+                    =
+                  ∑' π, compatMass *
+                    ((InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
+                      refine tsum_congr ?_
+                      intro π
+                      ac_rfl
+                _ = compatMass *
+                    ∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π := by
+                      rw [ENNReal.tsum_mul_left]
+      _ = traceMass * compatMass *
+          (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
+            ac_rfl
+
 theorem stepPoint_eq_via_query_disintegration
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
@@ -378,8 +556,6 @@ theorem stepPoint_eq_via_query_disintegration
     obtain ⟨ha, hr, hcompat⟩ :=
       exists_reachActionTrace_of_runDistPure_ne_zero
         (I := I) (D := D) n π0 hs hrun0
-    let hist : ∀ i, List (LocalHistTok (I := I) i) :=
-      fun i => InfoModel.localHistTokens (I := I) i ha hs
     let μHist : InfoModel.MixedProfile (I := I) :=
       conditionedMixedProfile (I := I) μ ha hs
     have hleft_rewrite :
@@ -388,82 +564,9 @@ theorem stepPoint_eq_via_query_disintegration
           (fun t => hs ++ [t])) y
           =
         (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-      calc
-        (Math.ProbabilityMassFunction.pushforward
-          (D.stepDist (mixedToBehavioral (I := I) μ) hs)
-          (fun t => hs ++ [t])) y
-            =
-          (Math.ProbabilityMassFunction.pushforward
-            (D.stepActionStateDist (mixedToBehavioral (I := I) μ) hs)
-            (fun x => hs ++ [x.2])) y := by
-              rw [← Execution.Dynamics.stepDist_eq_pushforward_stepActionStateDist
-                (I := I) (D := D) (σ := mixedToBehavioral (I := I) μ) (ss := hs)]
-              simpa [Function.comp] using congrArg (fun ν => ν y)
-                (Math.ProbabilityMassFunction.pushforward_comp
-                  (μ := D.stepActionStateDist (mixedToBehavioral (I := I) μ) hs)
-                  (f := Prod.snd) (g := fun t => hs ++ [t]))
-        _ =
-          ((InfoModel.mixedJoint (I := I) μHist).bind
-            (fun π =>
-              Math.ProbabilityMassFunction.pushforward
-                (D.stepActionStateDist (pureToBehavioral I π) hs)
-                (fun x => hs ++ [x.2]))) y := by
-                  simpa [μHist] using congrArg (fun ν => ν y)
-                    (kuhn_conditioning_distributes_over_sequencing_map
-                      (I := I) (D := D) (hPR := hPR) (μ := μ) hr
-                      (fun x => hs ++ [x.2]))
-        _ =
-          ((InfoModel.mixedJoint (I := I) μHist).bind
-            (fun π =>
-              Math.ProbabilityMassFunction.pushforward
-                (D.stepDist (pureToBehavioral I π) hs)
-                (fun t => hs ++ [t]))) y := by
-                  have hbind :
-                      (InfoModel.mixedJoint (I := I) μHist).bind
-                        (fun π =>
-                          Math.ProbabilityMassFunction.pushforward
-                            (D.stepActionStateDist (pureToBehavioral I π) hs)
-                            (fun x => hs ++ [x.2])) =
-                      (InfoModel.mixedJoint (I := I) μHist).bind
-                        (fun π =>
-                          Math.ProbabilityMassFunction.pushforward
-                            (D.stepDist (pureToBehavioral I π) hs)
-                            (fun t => hs ++ [t])) := by
-                    refine Math.ProbabilityMassFunction.bind_congr_on_support
-                      (μ := InfoModel.mixedJoint (I := I) μHist)
-                      (f := fun π =>
-                        Math.ProbabilityMassFunction.pushforward
-                          (D.stepActionStateDist (pureToBehavioral I π) hs)
-                          (fun x => hs ++ [x.2]))
-                      (g := fun π =>
-                        Math.ProbabilityMassFunction.pushforward
-                          (D.stepDist (pureToBehavioral I π) hs)
-                          (fun t => hs ++ [t])) ?_
-                    intro π _
-                    calc
-                      Math.ProbabilityMassFunction.pushforward
-                        (D.stepActionStateDist (pureToBehavioral I π) hs)
-                        (fun x => hs ++ [x.2])
-                          =
-                        Math.ProbabilityMassFunction.pushforward
-                          (Math.ProbabilityMassFunction.pushforward
-                            (D.stepActionStateDist (pureToBehavioral I π) hs)
-                            Prod.snd)
-                          (fun t => hs ++ [t]) := by
-                            symm
-                            simpa [Function.comp] using
-                              (Math.ProbabilityMassFunction.pushforward_comp
-                                (μ := D.stepActionStateDist (pureToBehavioral I π) hs)
-                                (f := Prod.snd) (g := fun t => hs ++ [t]))
-                      _ =
-                        Math.ProbabilityMassFunction.pushforward
-                          (D.stepDist (pureToBehavioral I π) hs)
-                          (fun t => hs ++ [t]) := by
-                            rw [Execution.Dynamics.stepDist_eq_pushforward_stepActionStateDist
-                              (I := I) (D := D) (σ := pureToBehavioral I π) (ss := hs)]
-                  simpa using congrArg (fun ν => ν y) hbind
-        _ = (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-              simp [PMF.bind_apply, stepPureY]
+      simpa [μHist] using
+        reachable_stepPoint_eq_conditioned_sum
+          (I := I) (D := D) (hPR := hPR) (μ := μ) hr y
     have hfactor_run :
         ∃ traceMass compatMass : ENNReal,
           C = traceMass * compatMass ∧
@@ -471,131 +574,10 @@ theorem stepPoint_eq_via_query_disintegration
             ((D.runDistPure n π) hs * stepPureY π))
             = traceMass * compatMass *
                 (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-      have hhaLen : ha.length = n := by
-        have hreachLen :=
-          InfoModel.ReachActionTrace.length_states_eq_succ_actions hr
-        exact Nat.succ.inj <| by
-          simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
-            hreachLen.symm.trans hlen
-      let traceMass : ENNReal := (D.runDistPure n π0) hs
-      let compatMass : ENNReal :=
-        ∏ i, localHistMass (I := I) i (μ i) (hist i)
-      have hrun_factor :
-          ∀ π : PureProfile I,
-            (D.runDistPure n π) hs =
-              traceMass *
-                ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
-        intro π
-        dsimp [traceMass]
-        calc
-          (D.runDistPure n π) hs =
-            D.runDistPure ha.length π hs := by
-              simp [hhaLen]
-          _ =
-            D.runDistPure ha.length π0 hs *
-              ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
-                simpa [hist] using
-                  runDistPure_factor_via_localHistIndicators
-                    (I := I) (D := D) hPR hr π0 hcompat π
-          _ =
-            (D.runDistPure n π0) hs *
-              ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
-                simp [hhaLen]
-      have hmixed_factor :
-          ∀ π : PureProfile I,
-            compatMass * (InfoModel.mixedJoint (I := I) μHist) π =
-              μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
-        intro π
-        simpa [compatMass, μHist, μJ] using
-          localHistMass_mul_mixedJoint_iterCond_apply
-            (I := I) (μ := μ) (hist := hist) π
-      have hsum_indicators :
-          ∑' π, μJ π *
-            ∏ i, localHistIndicator (I := I) i (π i) (hist i) = compatMass := by
-        calc
-          ∑' π, μJ π *
-            ∏ i, localHistIndicator (I := I) i (π i) (hist i)
-              =
-            ∑' π, compatMass * (InfoModel.mixedJoint (I := I) μHist) π := by
-                refine tsum_congr ?_
-                intro π
-                exact (hmixed_factor π).symm
-          _ = compatMass * ∑' π, (InfoModel.mixedJoint (I := I) μHist) π := by
-                rw [ENNReal.tsum_mul_left]
-          _ = compatMass * 1 := by
-                simpa using congrArg (fun z : ENNReal => compatMass * z)
-                  ((InfoModel.mixedJoint (I := I) μHist).tsum_coe)
-          _ = compatMass := by simp
-      refine ⟨traceMass, compatMass, ?_, ?_⟩
-      · calc
-          C = ∑' π, μJ π *
-              (traceMass *
-                ∏ i, localHistIndicator (I := I) i (π i) (hist i)) := by
-                refine tsum_congr ?_
-                intro π
-                rw [hrun_factor π]
-          _ = ∑' π, traceMass *
-              (μJ π * ∏ i, localHistIndicator (I := I) i (π i) (hist i)) := by
-                refine tsum_congr ?_
-                intro π
-                ac_rfl
-          _ = traceMass *
-              ∑' π, μJ π *
-                ∏ i, localHistIndicator (I := I) i (π i) (hist i) := by
-                rw [ENNReal.tsum_mul_left]
-          _ = traceMass * compatMass := by
-                rw [hsum_indicators]
-      · calc
-          (∑' π, μJ π *
-            ((D.runDistPure n π) hs * stepPureY π))
-              =
-            ∑' π, μJ π *
-              ((traceMass *
-                ∏ i, localHistIndicator (I := I) i (π i) (hist i)) *
-                stepPureY π) := by
-                  refine tsum_congr ?_
-                  intro π
-                  rw [hrun_factor π]
-          _ = ∑' π, traceMass *
-              ((μJ π *
-                ∏ i, localHistIndicator (I := I) i (π i) (hist i)) *
-                stepPureY π) := by
-                  refine tsum_congr ?_
-                  intro π
-                  ac_rfl
-          _ = traceMass *
-              ∑' π, ((μJ π *
-                ∏ i, localHistIndicator (I := I) i (π i) (hist i)) *
-                stepPureY π) := by
-                  rw [ENNReal.tsum_mul_left]
-          _ = traceMass *
-              ∑' π, ((compatMass *
-                (InfoModel.mixedJoint (I := I) μHist) π) *
-                stepPureY π) := by
-                  congr 1
-                  refine tsum_congr ?_
-                  intro π
-                  rw [← hmixed_factor π]
-          _ = traceMass *
-              (compatMass *
-                ∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-                  congr 1
-                  calc
-                    ∑' π, ((compatMass *
-                      (InfoModel.mixedJoint (I := I) μHist) π) *
-                      stepPureY π)
-                        =
-                      ∑' π, compatMass *
-                        ((InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-                          refine tsum_congr ?_
-                          intro π
-                          ac_rfl
-                    _ = compatMass *
-                        ∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π := by
-                          rw [ENNReal.tsum_mul_left]
-          _ = traceMass * compatMass *
-              (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-                ac_rfl
+      simpa [μHist, C] using
+        query_disintegration_factorization
+          (I := I) (D := D) (hPR := hPR) (μ := μ) n hlen
+          (π0 := π0) hr hcompat stepPureY
     rcases hfactor_run with ⟨traceMass, compatMass, hCfact, hRfact⟩
     calc
       C *
