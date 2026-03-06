@@ -1,4 +1,5 @@
 import Math.ProbabilityMassFunction
+import Math.PMFProduct
 
 /-! # Tower property for parameterized Markov chains
 
@@ -202,6 +203,47 @@ theorem reweightPMF_eq_of_cross_mul (ν : PMF P) (w₁ w₂ : P → ENNReal)
     _ = (∑ π', ν π' * w₁ π') * (ν π * w₂ π) := by ac_rfl
 
 end ReweightPMF
+
+section ReweightProduct
+
+open Math.PMFProduct
+
+variable {ι : Type*} {A : ι → Type*}
+  [Fintype ι] [DecidableEq ι] [∀ i, Fintype (A i)]
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Reweighting a product PMF by product weights gives a product of reweighted
+marginals. This is the multiplicative Fubini identity for `reweightPMF`. -/
+theorem reweightPMF_pmfPi
+    (σ : ∀ i, PMF (A i)) (w : ∀ i, A i → ENNReal)
+    (hC : ∀ i, ∑ a, σ i a * w i a ≠ 0)
+    (hCt : ∀ i, ∑ a, σ i a * w i a ≠ ⊤) :
+    reweightPMF (pmfPi σ) (fun f => ∏ i, w i (f i)) =
+      pmfPi (fun i => reweightPMF (σ i) (w i)) := by
+  -- Total weight factorization via Fubini
+  have hfub : ∑ f : ∀ i, A i, (pmfPi σ) f * ∏ i, w i (f i) =
+      ∏ i, ∑ a, σ i a * w i a := by
+    simp only [pmfPi_apply, ← Finset.prod_mul_distrib]
+    exact (Fintype.prod_sum (fun i a => σ i a * w i a)).symm
+  have hCL : ∑ f, (pmfPi σ) f * ∏ i, w i (f i) ≠ 0 := by
+    rw [hfub]; exact (Finset.prod_ne_zero_iff.mpr (fun i _ => hC i))
+  have hCLt : ∑ f, (pmfPi σ) f * ∏ i, w i (f i) ≠ ⊤ := by
+    rw [hfub]; exact ne_of_lt (ENNReal.prod_lt_top (fun i _ => (hCt i).lt_top))
+  ext f
+  rw [reweightPMF_apply _ _ _ hCL hCLt, pmfPi_apply, pmfPi_apply, hfub]
+  simp_rw [reweightPMF_apply _ _ _ (hC _) (hCt _)]
+  -- Goal: (∏ σ * ∏ w) / ∏ C = ∏ (σ * w / C)
+  rw [← Finset.prod_mul_distrib]
+  -- Goal: ∏ (σ * w) / ∏ C = ∏ (σ * w / C)
+  simp only [ENNReal.div_eq_inv_mul]
+  -- Goal: (∏ C)⁻¹ * ∏ (σ * w) = ∏ (C⁻¹ * (σ * w))
+  conv_lhs =>
+    rw [ENNReal.prod_inv_distrib (by
+      intro i _ j _ _; exact Or.inl (hC i))]
+  rw [← Finset.prod_mul_distrib]
+
+end ReweightProduct
 
 set_option linter.unusedFintypeInType false in
 /-- Conditioned step at depth `n`: reweight `ν` by the probability of each
