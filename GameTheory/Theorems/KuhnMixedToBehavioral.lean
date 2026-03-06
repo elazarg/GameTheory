@@ -888,29 +888,80 @@ theorem stepPoint_eq_via_query_disintegration
           (fun t => hs ++ [t])) y
           =
         (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
-      have hseq :
-          Math.ProbabilityMassFunction.pushforward
-            (D.stepDist (mixedToBehavioral (I := I) μ) hs)
-            (fun t => hs ++ [t]) =
-          (InfoModel.mixedJoint (I := I) μHist).bind
-            (fun π =>
-              Math.ProbabilityMassFunction.pushforward
-                (D.stepDist (pureToBehavioral I π) hs)
-                (fun t => hs ++ [t])) := by
-        simpa [μHist] using
-          kuhn_conditioning_distributes_over_sequencing
-            (I := I) (D := D) (hPR := hPR) (μ := μ) hr
       calc
         (Math.ProbabilityMassFunction.pushforward
           (D.stepDist (mixedToBehavioral (I := I) μ) hs)
           (fun t => hs ++ [t])) y
             =
+          (Math.ProbabilityMassFunction.pushforward
+            (D.stepActionStateDist (mixedToBehavioral (I := I) μ) hs)
+            (fun x => hs ++ [x.2])) y := by
+              rw [← Execution.Dynamics.stepDist_eq_pushforward_stepActionStateDist
+                (I := I) (D := D) (σ := mixedToBehavioral (I := I) μ) (ss := hs)]
+              simpa [Function.comp] using congrArg (fun ν => ν y)
+                (Math.ProbabilityMassFunction.pushforward_comp
+                  (μ := D.stepActionStateDist (mixedToBehavioral (I := I) μ) hs)
+                  (f := Prod.snd) (g := fun t => hs ++ [t]))
+        _ =
+          ((InfoModel.mixedJoint (I := I) μHist).bind
+            (fun π =>
+              Math.ProbabilityMassFunction.pushforward
+                (D.stepActionStateDist (pureToBehavioral I π) hs)
+                (fun x => hs ++ [x.2]))) y := by
+                  simpa [μHist] using congrArg (fun ν => ν y)
+                    (kuhn_conditioning_distributes_over_sequencing_map
+                      (I := I) (D := D) (hPR := hPR) (μ := μ) hr
+                      (fun x => hs ++ [x.2]))
+        _ =
           ((InfoModel.mixedJoint (I := I) μHist).bind
             (fun π =>
               Math.ProbabilityMassFunction.pushforward
                 (D.stepDist (pureToBehavioral I π) hs)
                 (fun t => hs ++ [t]))) y := by
-                  simpa using congrArg (fun ν => ν y) hseq
+                  have hbind :
+                      (InfoModel.mixedJoint (I := I) μHist).bind
+                        (fun π =>
+                          Math.ProbabilityMassFunction.pushforward
+                            (D.stepActionStateDist (pureToBehavioral I π) hs)
+                            (fun x => hs ++ [x.2])) =
+                      (InfoModel.mixedJoint (I := I) μHist).bind
+                        (fun π =>
+                          Math.ProbabilityMassFunction.pushforward
+                            (D.stepDist (pureToBehavioral I π) hs)
+                            (fun t => hs ++ [t])) := by
+                    refine Math.ProbabilityMassFunction.bind_congr_on_support
+                      (μ := InfoModel.mixedJoint (I := I) μHist)
+                      (f := fun π =>
+                        Math.ProbabilityMassFunction.pushforward
+                          (D.stepActionStateDist (pureToBehavioral I π) hs)
+                          (fun x => hs ++ [x.2]))
+                      (g := fun π =>
+                        Math.ProbabilityMassFunction.pushforward
+                          (D.stepDist (pureToBehavioral I π) hs)
+                          (fun t => hs ++ [t])) ?_
+                    intro π _
+                    calc
+                      Math.ProbabilityMassFunction.pushforward
+                        (D.stepActionStateDist (pureToBehavioral I π) hs)
+                        (fun x => hs ++ [x.2])
+                          =
+                        Math.ProbabilityMassFunction.pushforward
+                          (Math.ProbabilityMassFunction.pushforward
+                            (D.stepActionStateDist (pureToBehavioral I π) hs)
+                            Prod.snd)
+                          (fun t => hs ++ [t]) := by
+                            symm
+                            simpa [Function.comp] using
+                              (Math.ProbabilityMassFunction.pushforward_comp
+                                (μ := D.stepActionStateDist (pureToBehavioral I π) hs)
+                                (f := Prod.snd) (g := fun t => hs ++ [t]))
+                      _ =
+                        Math.ProbabilityMassFunction.pushforward
+                          (D.stepDist (pureToBehavioral I π) hs)
+                          (fun t => hs ++ [t]) := by
+                            rw [Execution.Dynamics.stepDist_eq_pushforward_stepActionStateDist
+                              (I := I) (D := D) (σ := pureToBehavioral I π) (ss := hs)]
+                  simpa using congrArg (fun ν => ν y) hbind
         _ = (∑' π, (InfoModel.mixedJoint (I := I) μHist) π * stepPureY π) := by
               simp [PMF.bind_apply, stepPureY]
     have hfactor_run :
@@ -1222,5 +1273,6 @@ end InfoModel
 
 end Theorems
 end GameTheory
+
 
 
