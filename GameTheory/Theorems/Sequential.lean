@@ -184,14 +184,15 @@ abbrev compiledHistoryCover
     (H : ∀ i, Finset ((compileInfoOn G).LocalTrace i)) : Prop :=
   (compileInfoOn G).CoversHistoriesUpTo H k
 
-/-- Mixed-to-behavioral Kuhn reduction for the compiled sequential semantics.
+/-- Ambient full-history mixed-to-behavioral Kuhn reduction for the compiled
+sequential semantics.
 
 This is the honest reduction boundary currently available: once a sequential
 protocol has been compiled into an `InfoModel` together with a stochastic
 `Execution.Dynamics`, the generic mixed-to-behavioral theorem applies directly
 under the same finiteness and perfect-recall obligations required by the
 generic theorem. -/
-theorem kuhn_mixed_to_behavioral_of_compiled
+theorem kuhn_mixed_to_behavioral_of_compiled_fullTraceFinite
     (G : GameTheory.Protocol n S V A Sig)
     (D : Execution.Dynamics (compileInfoOn G))
     (k : Nat)
@@ -211,12 +212,12 @@ theorem kuhn_mixed_to_behavioral_of_compiled
     (GameTheory.Theorems.kuhn_mixed_to_behavioral
       (I := compileInfoOn G) (D := D) (k := k) hPR)
 
-/-- Full Kuhn reduction for the compiled sequential semantics.
+/-- Ambient full-history Kuhn reduction for the compiled sequential semantics.
 
 This packages the generic `InfoModel` Kuhn theorem without adding any
 language-specific proof burden beyond supplying the compiled dynamics and the
 generic theorem's own finiteness/perfect-recall hypotheses. -/
-theorem kuhn_complete_of_compiled
+theorem kuhn_complete_of_compiled_fullTraceFinite
     (G : GameTheory.Protocol n S V A Sig)
     (D : Execution.Dynamics (compileInfoOn G))
     (k : Nat)
@@ -347,7 +348,7 @@ theorem kuhn_complete_of_compiled_via_cover
 /-- Canonical-cover mixed-to-behavioral reduction for compiled sequential
 protocols. The finite cover is the bounded list-enumeration built from the
 finite public-phase alphabet and the finite view alphabet. -/
-theorem kuhn_mixed_to_behavioral_of_compiled_canonicalCover
+theorem kuhn_mixed_to_behavioral_of_compiled
     (G : GameTheory.Protocol n S V A Sig)
     [Fintype V]
     (D : Execution.Dynamics (compileInfoOn G))
@@ -375,7 +376,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled_canonicalCover
     hStepIndep
 
 /-- Canonical-cover full Kuhn reduction for compiled sequential protocols. -/
-theorem kuhn_complete_of_compiled_canonicalCover
+theorem kuhn_complete_of_compiled
     (G : GameTheory.Protocol n S V A Sig)
     [Fintype V]
     (D : Execution.Dynamics (compileInfoOn G))

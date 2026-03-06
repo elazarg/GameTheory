@@ -1,3 +1,3 @@
-import GameTheory.Bridges.NFGEFG
+import GameTheory.Languages.Bridges.NFGEFG
 
 /-! Compatibility shim: canonical surface is now `Translations`, not `Bridges`. -/

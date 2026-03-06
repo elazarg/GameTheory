@@ -231,7 +231,7 @@ theorem kuhn_complete_of_compiled_via_cover
 
 /-- Canonical-cover mixed-to-behavioral reduction for compiled MAIDs. The
 finite cover is the bounded list-enumeration built from frontier observations. -/
-theorem kuhn_mixed_to_behavioral_of_compiled_canonicalCover
+theorem kuhn_mixed_to_behavioral_of_compiled
     (S : Struct Player n) (sem : Sem S)
     (D : Execution.Dynamics (compileInfoOn S sem))
     (k : Nat)
@@ -258,7 +258,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled_canonicalCover
     hStepIndep
 
 /-- Canonical-cover full Kuhn reduction for compiled MAIDs. -/
-theorem kuhn_complete_of_compiled_canonicalCover
+theorem kuhn_complete_of_compiled
     (S : Struct Player n) (sem : Sem S)
     (D : Execution.Dynamics (compileInfoOn S sem))
     (k : Nat)
