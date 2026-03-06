@@ -59,6 +59,14 @@ mathematical object:
 All of these are interpreted into one expected-utility semantics over finite
 probability distributions. This is the key abstraction boundary in the codebase.
 
+The current direction is **semantics-first theorem statements**:
+- abstract theorem schemas are stated over semantic/distributional objects,
+- format-specific theorems (`EFG`, `MAID`, `NFG`, protocol-style) are treated as
+  instantiations/corollaries via compiler and bridge lemmas.
+
+This keeps representation-specific assumptions local to compilation/bridging,
+while concept-level reasoning stays reusable across formats.
+
 ## Concepts and Proof Style
 
 Most proofs are structured around a small set of semantic ideas:

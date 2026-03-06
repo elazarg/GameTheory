@@ -1573,6 +1573,110 @@ theorem pmfPi_bind_indep [Fintype ι] [∀ i, Fintype (A i)]
 
 end BindIndep
 
+-- ============================================================================
+-- Scalar independence under product measure
+-- ============================================================================
+
+section ScalarIndep
+
+variable {ι : Type*}
+variable {A : ι → Type*}
+
+open Classical in
+/-- **Scalar independence under product measure.**
+    If `f` ignores all coordinates outside `J` and `g` ignores all coordinates
+    inside `J`, then `E[f·g] = E[f]·E[g]` under the product measure `pmfPi σ`. -/
+theorem pmfPi_expect_indep [Fintype ι] [∀ i, Fintype (A i)]
+    (σ : ∀ i, PMF (A i))
+    (f g : (∀ i, A i) → ENNReal)
+    (J : Finset ι)
+    (hf : ∀ j, j ∉ J → Ignores j f)
+    (hg : ∀ j, j ∈ J → Ignores j g) :
+    (∑ s, (pmfPi σ) s * (f s * g s)) =
+      (∑ s, (pmfPi σ) s * f s) * (∑ s, (pmfPi σ) s * g s) := by
+  classical
+  simp only [pmfPi_apply]
+  let P : (∀ i, A i) → ENNReal := fun s => ∏ i, σ i (s i)
+  let Fsame : ((∀ i, A i) × (∀ i, A i)) → ENNReal :=
+    fun p => (P p.1 * P p.2) * (f p.1 * g p.1)
+  let Fcross : ((∀ i, A i) × (∀ i, A i)) → ENNReal :=
+    fun p => (P p.1 * P p.2) * (f p.1 * g p.2)
+  let e : ((∀ i, A i) × (∀ i, A i)) → ((∀ i, A i) × (∀ i, A i)) :=
+    fun p => (replaceOn (A := A) (Finset.univ \ J) p.1 p.2,
+              replaceOn (A := A) J p.1 p.2)
+  have he : Function.Involutive e := by
+    intro p
+    rcases p with ⟨s, t⟩
+    apply Prod.ext
+    · funext i; by_cases hiJ : i ∈ J <;> simp [e, replaceOn, hiJ]
+    · funext i; by_cases hiJ : i ∈ J <;> simp [e, replaceOn, hiJ]
+  have hpoint : ∀ p, Fcross p = Fsame (e p) := by
+    intro ⟨s, t⟩
+    set s' : (∀ i, A i) := replaceOn (A := A) (Finset.univ \ J) s t
+    set t' : (∀ i, A i) := replaceOn (A := A) J s t
+    have hweight : P s * P t = P s' * P t' := by
+      simp only [P]
+      calc
+        (∏ i, σ i (s i)) * (∏ i, σ i (t i))
+            = ∏ i, (σ i (s i) * σ i (t i)) := by rw [← Finset.prod_mul_distrib]
+        _ = ∏ i, (σ i (s' i) * σ i (t' i)) := by
+            refine Finset.prod_congr rfl ?_
+            intro i _; by_cases hiJ : i ∈ J <;> simp [s', t', hiJ, mul_comm]
+        _ = (∏ i, σ i (s' i)) * (∏ i, σ i (t' i)) := by rw [Finset.prod_mul_distrib]
+    have hf' : f s' = f s := by
+      have hignOut : ∀ j, j ∈ (Finset.univ \ J) → Ignores j f := by
+        intro j hj
+        exact hf j (by simpa using hj)
+      simpa [s', replaceOn] using
+        (ignores_replaceOn_eq (A := A) f (Finset.univ \ J) hignOut s t)
+    have hg' : g s' = g t := by
+      have hignIn : ∀ j, j ∈ J → Ignores j g := fun j hj => hg j hj
+      have hs' : s' = replaceOn (A := A) J t s := by
+        funext i; by_cases hiJ : i ∈ J <;> simp [s', replaceOn, hiJ]
+      rw [hs']
+      simpa using (ignores_replaceOn_eq (A := A) g J hignIn t s)
+    simp [Fcross, Fsame, e, s', t', hweight, hf', hg']
+  have hpair : (∑ p, Fcross p) = ∑ p, Fsame p := by
+    calc
+      (∑ p, Fcross p) = ∑ p, Fsame (e p) := by
+        apply Finset.sum_congr rfl
+        intro p hp
+        exact hpoint p
+      _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
+  have hsumP : (∑ t : (∀ i, A i), P t) = 1 := by
+    simpa [P] using (pmf_sum_eq_one (pmfPi (A := A) σ))
+  have hL :
+      (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * (f s * g s))
+      = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := by
+    calc
+      (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * (f s * g s))
+          = (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * (f s * g s))
+              * (∑ t : (∀ i, A i), P t) := by
+              simp [hsumP]
+      _ = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := by
+          simp [Fsame, P, Fintype.sum_prod_type, Finset.mul_sum,
+            mul_assoc, mul_comm]
+  have hR :
+      (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * f s)
+        * (∑ t : (∀ i, A i), (∏ i, σ i (t i)) * g t)
+      = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fcross p := by
+    calc
+      (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * f s)
+          * (∑ t : (∀ i, A i), (∏ i, σ i (t i)) * g t)
+          = ∑ s : (∀ i, A i), ∑ t : (∀ i, A i),
+              ((∏ i, σ i (s i)) * f s) * ((∏ i, σ i (t i)) * g t) := by
+                rw [Finset.sum_mul_sum]
+      _ = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fcross p := by
+          simp [Fcross, P, Fintype.sum_prod_type, mul_assoc, mul_comm, mul_left_comm]
+  calc
+    (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * (f s * g s))
+        = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := hL
+    _ = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fcross p := by simpa using hpair.symm
+    _ = (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * f s)
+          * (∑ t : (∀ i, A i), (∏ i, σ i (t i)) * g t) := hR.symm
+
+end ScalarIndep
+
 end PMFProduct
 end Math
 
