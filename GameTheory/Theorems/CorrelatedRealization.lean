@@ -752,4 +752,154 @@ theorem pureStep_component_eq_of_pspr
 
 end Decentralization
 
+section ProductPreservation
+
+open Math.PMFProduct
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+variable [∀ i, Fintype (I.LocalTrace i)]
+
+open Classical in
+/-- Under PSAR, the reach weight `pureRun π ss` satisfies the cross-multiplication
+identity with the per-player product weight `∏ᵢ pureRun (update π₀ i (π i)) ss`.
+This allows switching between them via `reweightPMF_eq_of_cross_mul`. -/
+theorem pureRun_cross_mul_product
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I) (ν : PMF (PureProfile I))
+    (n : Nat) {π₀ : PureProfile I} {ss : List M.State}
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) (π : PureProfile I) :
+    pureRun (pureStep D) M.init n π ss *
+      (∑ π' : PureProfile I, ν π' *
+        ∏ i, pureRun (pureStep D) M.init n (Function.update π₀ i (π' i)) ss) =
+    (∏ i, pureRun (pureStep D) M.init n (Function.update π₀ i (π i)) ss) *
+      (∑ π' : PureProfile I, ν π' *
+        pureRun (pureStep D) M.init n π' ss) := by
+  set C₀ := pureRun (pureStep D) M.init n π₀ ss with hC₀_def
+  -- Helper: for consistent π', the reach equals C₀
+  have hconst : ∀ π', pureRun (pureStep D) M.init n π' ss ≠ 0 →
+      pureRun (pureStep D) M.init n π' ss = C₀ :=
+    fun π' h => pureRun_const_of_psar hPSAR D n h h₀
+  -- Helper: for consistent π', each per-player weight equals C₀
+  have hconst_upd : ∀ (π' : PureProfile I) (i : ι),
+      pureRun (pureStep D) M.init n (Function.update π₀ i (π' i)) ss ≠ 0 →
+      pureRun (pureStep D) M.init n (Function.update π₀ i (π' i)) ss = C₀ :=
+    fun π' i h => pureRun_const_of_psar hPSAR D n h h₀
+  -- Distribute multiplication into sums
+  rw [Finset.mul_sum, Finset.mul_sum]
+  apply Finset.sum_congr rfl; intro π' _
+  -- Pointwise: w(π) * (ν π' * ∏ wᵢ(π'ᵢ)) = (∏ wᵢ(πᵢ)) * (ν π' * w(π'))
+  -- Case split on consistency of π and π'
+  by_cases hπ : pureRun (pureStep D) M.init n π ss = 0
+  · -- π not consistent: w(π) = 0 and ∏ wᵢ(πᵢ) = 0
+    rw [hπ, zero_mul]
+    have := mt (pureRun_nonzero_iff_update hPSAR D n h₀ π).mpr
+      (not_not.mpr hπ)
+    push_neg at this; obtain ⟨i, hi⟩ := this
+    rw [Finset.prod_eq_zero (Finset.mem_univ i) hi, zero_mul]
+  · by_cases hπ' : pureRun (pureStep D) M.init n π' ss = 0
+    · -- π' not consistent: w(π') = 0 and ∏ wᵢ(π'ᵢ) = 0
+      rw [hπ', mul_zero, mul_zero]
+      have := mt (pureRun_nonzero_iff_update hPSAR D n h₀ π').mpr
+        (not_not.mpr hπ')
+      push_neg at this; obtain ⟨j, hj⟩ := this
+      rw [Finset.prod_eq_zero (Finset.mem_univ j) hj, mul_zero, mul_zero]
+    · -- Both consistent: all values equal C₀
+      have hw := hconst π hπ; have hw' := hconst π' hπ'
+      have hwi : ∀ i, pureRun (pureStep D) M.init n
+          (Function.update π₀ i (π i)) ss = C₀ :=
+        fun i => hconst_upd π i
+          ((pureRun_nonzero_iff_update hPSAR D n h₀ π).mp hπ i)
+      have hwi' : ∀ i, pureRun (pureStep D) M.init n
+          (Function.update π₀ i (π' i)) ss = C₀ :=
+        fun i => hconst_upd π' i
+          ((pureRun_nonzero_iff_update hPSAR D n h₀ π').mp hπ' i)
+      rw [hw, hw']; simp_rw [hwi, hwi']; ring
+
+open Classical in
+set_option linter.unusedFintypeInType false in
+/-- Under PSAR, when `ν = pmfPi σ` (product of per-player strategy distributions)
+and the trace `ss` is reachable, the mediator `mixedToMediator ν D n ss` produces
+a **product** action distribution: the recommended actions are independent across
+players.
+
+This is the "product in → product out" property: independence of the input
+strategy distribution is preserved by the mediator construction. Combined with
+the observation-level realization, this gives the independent behavioral profile
+(Kuhn's theorem for the mixed → behavioral direction). -/
+theorem mediator_product_of_product
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (n : Nat) (ss : List M.State)
+    {π₀ : PureProfile I}
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) :
+    ∃ τ : ∀ i, PMF (Option (M.Act i)),
+      mixedToMediator (pmfPi σ) D n ss = pmfPi τ := by
+  set ν := pmfPi σ with hν_def
+  set w : PureProfile I → ENNReal :=
+    fun π => pureRun (pureStep D) M.init n π ss
+  set wᵢ : ∀ i, (I.LocalTrace i → Option (M.Act i)) → ENNReal :=
+    fun i πᵢ => pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss
+  -- Reduce to: reweightPMF ν w is a product PMF
+  -- The mediator is a pushforward of (reweightPMF ν w) through the coordwise map
+  -- fun π i => π i (projectStates i ss), and pushforward of product
+  -- = product (pmfPi_push_coordwise)
+  suffices hprod : ∃ ρ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)),
+      reweightPMF ν w = pmfPi ρ by
+    obtain ⟨ρ, hρ⟩ := hprod
+    exact ⟨fun i => Math.PMFProduct.pushforward (ρ i) (fun πᵢ => πᵢ (I.projectStates i ss)), by
+      unfold mixedToMediator; rw [hρ]
+      simp only [jointActionDist, pureToBehavioral]
+      conv_lhs => arg 2; ext π; rw [pmfPi_pure]
+      exact pmfPi_push_coordwise ρ (fun i πᵢ => πᵢ (I.projectStates i ss))⟩
+  -- Case split on mass condition for reweightPMF
+  by_cases hmass : (∑ π, ν π * w π) = 0 ∨ (∑ π, ν π * w π) = ⊤
+  · -- Degenerate: reweightPMF falls back to ν = pmfPi σ
+    exact ⟨σ, by rw [reweightPMF_degenerate _ _ hmass, hν_def]⟩
+  · -- Non-degenerate: use cross-multiplication to factor the reweighted PMF
+    push_neg at hmass; obtain ⟨hCw0, hCwt⟩ := hmass
+    -- Extract a witness with nonzero mass
+    have ⟨π_w, hπw⟩ : ∃ π, ν π * w π ≠ 0 := by
+      by_contra hall; push_neg at hall
+      exact hCw0 (Finset.sum_eq_zero fun a _ => hall a)
+    have hν_ne : ν π_w ≠ 0 := left_ne_zero_of_mul hπw
+    have hw_ne : w π_w ≠ 0 := right_ne_zero_of_mul hπw
+    -- Per-player non-degeneracy from the witness
+    have hσ_ne : ∀ i, σ i (π_w i) ≠ 0 := by
+      intro i hi; apply hν_ne
+      rw [hν_def, pmfPi_apply]
+      exact Finset.prod_eq_zero (Finset.mem_univ i) hi
+    have hwi_ne : ∀ i, wᵢ i (π_w i) ≠ 0 := by
+      intro i; exact ((pureRun_nonzero_iff_update hPSAR D n h₀ π_w).mp hw_ne) i
+    have hCwi0 : ∀ i, ∑ a, σ i a * wᵢ i a ≠ 0 := fun i => by
+      apply ne_of_gt
+      exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero (hσ_ne i) (hwi_ne i)))
+        (Finset.single_le_sum (f := fun a => σ i a * wᵢ i a)
+          (fun _ _ => zero_le _) (Finset.mem_univ (π_w i)))
+    have hCwit : ∀ i, ∑ a, σ i a * wᵢ i a ≠ ⊤ := fun i => by
+      apply ne_of_lt; calc
+        ∑ a, σ i a * wᵢ i a ≤ ∑ a, σ i a :=
+          Finset.sum_le_sum fun a _ =>
+            mul_le_of_le_one_right (zero_le _)
+              (PMF.coe_le_one (pureRun (pureStep D) M.init n
+                (Function.update π₀ i a)) ss)
+        _ = 1 := by have := PMF.tsum_coe (σ i); rwa [tsum_fintype] at this
+        _ < ⊤ := ENNReal.one_lt_top
+    -- Non-degeneracy for the product weight ∏ wᵢ
+    have hsum_eq : ∑ π, ν π * ∏ i, wᵢ i (π i) = ∏ i, ∑ a, σ i a * wᵢ i a := by
+      rw [hν_def]; conv_lhs => arg 2; ext π; rw [pmfPi_apply, ← Finset.prod_mul_distrib]
+      exact (Fintype.prod_sum (fun i a => σ i a * wᵢ i a)).symm
+    have hCprod0 : ∑ π, ν π * ∏ i, wᵢ i (π i) ≠ 0 := by
+      rw [hsum_eq]; exact Finset.prod_ne_zero_iff.mpr (fun i _ => hCwi0 i)
+    have hCprodt : ∑ π, ν π * ∏ i, wᵢ i (π i) ≠ ⊤ := by
+      rw [hsum_eq]
+      exact ne_of_lt (ENNReal.prod_lt_top (fun i _ => (hCwit i).lt_top))
+    -- Cross-multiplication identity → reweightPMF w = reweightPMF ∏ wᵢ
+    have hreweight : reweightPMF ν w = reweightPMF ν (fun π => ∏ i, wᵢ i (π i)) :=
+      reweightPMF_eq_of_cross_mul ν w (fun π => ∏ i, wᵢ i (π i))
+        hCw0 hCwt hCprod0 hCprodt (pureRun_cross_mul_product hPSAR D ν n h₀)
+    -- Factor the product-weighted reweightPMF via reweightPMF_pmfPi
+    exact ⟨fun i => reweightPMF (σ i) (wᵢ i), by
+      rw [hreweight, hν_def]; exact reweightPMF_pmfPi σ wᵢ hCwi0 hCwit⟩
+
+end ProductPreservation
+
 end GameTheory
