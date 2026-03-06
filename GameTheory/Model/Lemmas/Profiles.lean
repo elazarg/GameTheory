@@ -233,16 +233,26 @@ noncomputable def restrictMixedProfile
 
 /-- Product-joint law induced by a restricted mixed profile, pushed forward to
 full pure profiles via extension outside the finite cover. -/
+noncomputable def restrictedMixedJointRaw
+    (H : ∀ i, Finset (I.LocalTrace i))
+    [Fintype ι]
+    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    (μ : RestrictedMixedProfile (I := I) H) :
+    PMF (RestrictedPureProfile (I := I) H) := by
+  classical
+  letI : DecidableEq ι := Classical.decEq ι
+  exact pmfPi μ
+
+/-- Product-joint law induced by a restricted mixed profile, pushed forward to
+full pure profiles via extension outside the finite cover. -/
 noncomputable def restrictedMixedJoint
     (H : ∀ i, Finset (I.LocalTrace i))
     [Fintype ι]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
     (μ : RestrictedMixedProfile (I := I) H) :
     PMF (PureProfile I) := by
-  classical
-  letI : DecidableEq ι := Classical.decEq ι
   exact Math.ProbabilityMassFunction.pushforward
-    (pmfPi μ) (extendRestrictedPureProfile (I := I) H)
+    (restrictedMixedJointRaw (I := I) H μ) (extendRestrictedPureProfile (I := I) H)
 
 /-- Canonical behavioral realization from a restricted mixed profile, extended
 outside the cover by the deterministic `none` action. -/
