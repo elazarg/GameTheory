@@ -1,4 +1,5 @@
 import GameTheory.Model.SemanticForm
+import Semantics.Execution
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
 
@@ -117,6 +118,23 @@ theorem stepDist_pure
           (fun t => (ℓ, t))) := by
   simp only [Execution.Dynamics.stepDist, jointActionDist_pure]
   congr 1; funext ℓ
+  simp [PMF.pure_bind]
+
+/-- Pure explicit-step unfolding: `stepActionStateDist` under `pureToBehavioral`
+records the current queried action profile without additional randomness. -/
+theorem stepActionStateDist_pure
+    (D : Execution.Dynamics I) [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (π : PureProfile I) (ss : List M.State) :
+    D.stepActionStateDist (pureToBehavioral I π) ss =
+      let s := (ss.getLast?).getD M.init
+      let a : ∀ i, Option (M.Act i) := fun i => π i (I.projectStates i ss)
+      (D.labelKernel s).bind (fun ℓ =>
+        Math.ProbabilityMassFunction.pushforward
+          (D.nextState ℓ a s)
+          (fun t => ((ℓ, a), t))) := by
+  simp only [Execution.Dynamics.stepActionStateDist, jointActionDist_pure]
+  congr 1
+  funext ℓ
   simp [PMF.pure_bind]
 
 end InfoModel
