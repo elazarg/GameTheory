@@ -1802,6 +1802,190 @@ theorem kuhn_mixed_to_behavioral_pspr
 
 end KuhnMtoB
 
+/-! ## Semantic vs syntactic conditions
+
+The Kuhn M→B proof uses two kinds of conditions:
+
+**Syntactic conditions** — structural properties of the game model `M` and info structure `I`,
+independent of dynamics `D`:
+- `PerStepActionRecall I` (PSAR): joint action determined by joint obs transition
+- `PlayerStepRecall I i`: player i's action determined by own obs transition
+- `PerStepPlayerRecall I` (PSPR = ∀ i, PlayerStepRecall I i)
+- `ReachablePlayerStepRecall I i`: PlayerStepRecall restricted to step-reachable states
+- `PerfectRecall I`: full history reconstruction from observations
+
+**Semantic conditions** — properties of the execution semantics, depending on dynamics `D`:
+- `ObsLocalFeasibility D i`: whether a continuation πᵢ is feasible at a reachable trace
+  depends only on player i's observation
+- `StepActionDeterminism D`: at any reachable transition, the joint action that
+  caused the transition is uniquely determined
+
+The key relationships:
+
+```
+Syntactic → Semantic (always holds):
+  PSAR + PlayerStepRecall I i  →  ObsLocalFeasibility D i  (for all D)
+  PSAR                         →  StepActionDeterminism D   (for all D)
+
+Semantic ↛ Syntactic (converse fails):
+  ObsLocalFeasibility may hold for specific D without PlayerStepRecall
+  (e.g., dynamics that make certain transitions impossible)
+```
+-/
+
+section SemanticConditions
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+
+/-- **Semantic condition**: Whether a continuation strategy `πᵢ` for player `i` is feasible
+(has nonzero probability of reaching a given trace) depends only on player `i`'s observation
+of that trace, not on the full state trace.
+
+This is the semantic content of what `PlayerStepRecall I i` provides in the Kuhn proof.
+Unlike `PlayerStepRecall`, this condition depends on the dynamics `D`. -/
+def ObsLocalFeasibility (D : Dynamics I) (i : ι) : Prop :=
+  ∀ (n : Nat) (π₀ π₀' : PureProfile I) (ss₁ ss₂ : List M.State),
+    I.projectStates i ss₁ = I.projectStates i ss₂ →
+    pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0 →
+    pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0 →
+    ∀ (πᵢ : I.LocalTrace i → Option (M.Act i)),
+      pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
+      pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0
+
+/-- **Semantic condition**: At any reachable transition `(s, a, t)`, the joint action `a`
+is uniquely determined by the source-target pair `(s, t)`.
+
+This is the semantic content of what `PerStepActionRecall` provides: at reachable
+transitions with the same obs-equivalence classes, the action must be the same.
+Since `StepActionDeterminism` applies to the *same* states (reflexive obs-equivalence),
+it is strictly weaker than PSAR. -/
+def StepActionDeterminism (_ : Dynamics I) : Prop :=
+  ∀ (a a' : JointAction M) (s t : M.State),
+    M.step a s t → M.step a' s t → a = a'
+
+omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))] in
+set_option linter.unusedFintypeInType false in
+/-- PSAR implies step action determinism for any dynamics.
+PSAR with reflexive obs-equivalence (same source, same target) gives action uniqueness. -/
+theorem PerStepActionRecall.toStepActionDeterminism
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I) :
+    StepActionDeterminism (I := I) D :=
+  fun _ _ _ _ h1 h2 => hPSAR _ _ _ _ _ _ h1 h2 (fun _ => ⟨rfl, rfl⟩) (fun _ => ⟨rfl, rfl⟩)
+
+open Classical in
+/-- **Syntactic → Semantic**: PSAR + `PlayerStepRecall I i` implies `ObsLocalFeasibility D i`
+for any dynamics `D`.
+
+This is exactly `pureRun_update_obs_local_player`, restated as an implication between
+named conditions. -/
+theorem obsLocalFeasibility_of_playerStepRecall
+    (hPSAR : PerStepActionRecall I) (i : ι) (hPSR_i : PlayerStepRecall I i)
+    (D : Dynamics I) : ObsLocalFeasibility (I := I) D i :=
+  fun n _ _ _ _ hobs h₁ h₂ πᵢ =>
+    pureRun_update_obs_local_player hPSAR i hPSR_i D n hobs h₁ h₂ πᵢ
+
+/-- Under `PerStepPlayerRecall` (= ∀ i, PlayerStepRecall I i), obs-local feasibility
+holds for every player and any dynamics. -/
+theorem obsLocalFeasibility_of_pspr
+    (hPSPR : PerStepPlayerRecall I) (D : Dynamics I) (i : ι) :
+    ObsLocalFeasibility (I := I) D i :=
+  obsLocalFeasibility_of_playerStepRecall
+    hPSPR.toAction i (perStepPlayerRecall_iff_forall.mp hPSPR i) D
+
+/-- Per-player step action equality at reachable states: like
+`pureStep_component_eq_of_playerRecall` but using the weaker
+`ReachablePlayerStepRecall` with explicit step-reachability witnesses. -/
+theorem pureStep_component_eq_of_reachablePlayerRecall
+    (i : ι) (hRPSR_i : ReachablePlayerStepRecall (I := I) i) (D : Dynamics I)
+    {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
+    (hobs_i : I.projectStates i ss = I.projectStates i ss')
+    (hobst_i : I.obsEq i t t')
+    (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0)
+    (hreach_s : StepReachable (M := M) (ss.getLast?.getD M.init))
+    (hreach_s' : StepReachable (M := M) (ss'.getLast?.getD M.init)) :
+    π i (I.projectStates i ss) = π' i (I.projectStates i ss') := by
+  rw [pureStep_eq] at h1 h2
+  have hs1 := D.nextState_sound _ _ _ h1
+  have hs2 := D.nextState_sound _ _ _ h2
+  have hobss_i : I.obsEq i ((ss.getLast?).getD M.init)
+      ((ss'.getLast?).getD M.init) := by
+    have hproj := hobs_i
+    unfold InfoModel.projectStates InfoModel.projectPublic
+      InfoModel.projectPrivate at hproj
+    have hpub := (Prod.ext_iff.mp hproj).1
+    have hpriv := (Prod.ext_iff.mp hproj).2
+    constructor
+    · have := congr_arg List.getLast? hpub
+      simp only [List.getLast?_map] at this
+      cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;>
+        simp_all [Option.map]
+    · have := congr_arg List.getLast? hpriv
+      simp only [List.getLast?_map] at this
+      cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;>
+        simp_all [Option.map]
+  exact hRPSR_i _ _ _ _ _ _ hs1 hs2 hobss_i hobst_i hreach_s hreach_s'
+
+open Classical in
+/-- **Weakest syntactic → semantic**: PSAR + `ReachablePlayerStepRecall I i`
+implies `ObsLocalFeasibility D i`. This uses the weakest syntactic condition
+that the Kuhn proof actually needs.
+
+The key insight: `pureRun_update_obs_local_player` only invokes
+`PlayerStepRecall` at states reached via `pureRun` with nonzero probability,
+which are exactly the step-reachable states. -/
+theorem obsLocalFeasibility_of_reachablePlayerStepRecall
+    (hPSAR : PerStepActionRecall I) (i : ι)
+    (hRPSR_i : ReachablePlayerStepRecall (I := I) i)
+    (D : Dynamics I) : ObsLocalFeasibility (I := I) D i := by
+  intro n π₀ π₀' ss₁ ss₂ hobs_i h₁ h₂ πᵢ
+  induction n generalizing ss₁ ss₂ with
+  | zero =>
+    simp only [pureRun, ne_eq] at h₁ h₂ ⊢
+    exact ⟨fun _ => h₂, fun _ => h₁⟩
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss₁ with rfl | ⟨p₁, t₁, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₁
+    rcases List.eq_nil_or_concat ss₂ with rfl | ⟨p₂, t₂, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₂
+    simp only [List.concat_eq_append] at hobs_i h₁ h₂ ⊢
+    have hobs_p : I.projectStates i p₁ = I.projectStates i p₂ :=
+      projectStates_prefix_of_append i hobs_i
+    have hobst : I.obsEq i t₁ t₂ := obsEq_of_projectStates_append i hobs_i
+    have hp₁ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have hp₂ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    have ht₁ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have ht₂ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    rw [pureRun_succ_nonzero_iff hPSAR D m h₁,
+        pureRun_succ_nonzero_iff hPSAR D m h₂]
+    -- Use ReachablePlayerStepRecall: source states are step-reachable
+    have hreach₁ := pureRun_nonzero_last_stepReachable D m π₀ p₁ hp₁
+    have hreach₂ := pureRun_nonzero_last_stepReachable D m π₀' p₂ hp₂
+    have hforced : π₀ i (I.projectStates i p₁) =
+        π₀' i (I.projectStates i p₂) :=
+      pureStep_component_eq_of_reachablePlayerRecall i hRPSR_i D
+        hobs_p hobst ht₁ ht₂ hreach₁ hreach₂
+    have hact_transfer :
+        (∀ j, Function.update π₀ i πᵢ j (I.projectStates j p₁) =
+          π₀ j (I.projectStates j p₁)) ↔
+        (∀ j, Function.update π₀' i πᵢ j (I.projectStates j p₂) =
+          π₀' j (I.projectStates j p₂)) := by
+      constructor <;> intro h
+      · intro j; by_cases hij : j = i
+        · rw [hij, Function.update_self, ← hforced, ← hobs_p]
+          have := h i; rwa [Function.update_self] at this
+        · rw [Function.update_of_ne hij]
+      · intro j; by_cases hij : j = i
+        · rw [hij, Function.update_self, hforced, hobs_p]
+          have := h i; rwa [Function.update_self] at this
+        · rw [Function.update_of_ne hij]
+    constructor
+    · exact fun ⟨hrec, hact⟩ =>
+        ⟨(ih p₁ p₂ hobs_p hp₁ hp₂).mp hrec, hact_transfer.mp hact⟩
+    · exact fun ⟨hrec, hact⟩ =>
+        ⟨(ih p₁ p₂ hobs_p hp₁ hp₂).mpr hrec, hact_transfer.mpr hact⟩
+
+end SemanticConditions
+
 /-! ## Kuhn theorem hierarchy
 
 The results in this file form a hierarchy of increasingly specific realization
@@ -1857,7 +2041,30 @@ Neither PSPR nor PerfectRecall implies the other:
 - PerfectRecall reconstructs full history; PSPR only constrains one-step actions
 
 But both imply the weakest condition `∀ i, ReachablePlayerStepRecall I i`,
-which is what the Kuhn proof actually needs. -/
+which is what the Kuhn proof actually needs.
+
+### Semantic conditions
+
+`ObsLocalFeasibility D i`: whether continuation πᵢ is feasible at a
+reachable trace depends only on player i's observation. This is the
+semantic content of `PlayerStepRecall I i` — it depends on dynamics `D`.
+
+`StepActionDeterminism D`: at any transition, the action is determined
+by the source-target pair. This is the semantic content of PSAR
+(specifically, the reflexive case).
+
+Full implication graph (syntactic → semantic):
+```
+  PSPR → ∀ i, PlayerStepRecall I i → ∀ i, ReachablePlayerStepRecall I i
+                                                     ↓ (+ PSAR)
+  PerfectRecall → ∀ i, ReachablePlayerStepRecall I i → ObsLocalFeasibility D i
+  PSAR → StepActionDeterminism D
+```
+
+The semantic conditions depend on D; syntactic ones do not. The converse
+(semantic → syntactic) does not hold in general: dynamics-specific
+feasibility structure can make obs-locality hold without the syntactic
+action-uniqueness property. -/
 
 section Hierarchy
 
