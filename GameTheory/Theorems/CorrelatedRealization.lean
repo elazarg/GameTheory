@@ -1,19 +1,32 @@
 import GameTheory.Model.SemanticForm
 import Math.ParameterizedChain
 
-/-! # Correlated realization theorem
+/-! # Correlated realization and Kuhn M→B
+
+## Correlated realization (no assumptions)
 
 For **any** joint distribution `ν : PMF (PureProfile I)` (not necessarily a product),
 there exists a **mediator** — a history-dependent correlated action recommendation —
-producing the same outcome distribution.  No perfect-recall assumption is needed.
+producing the same outcome distribution. No structural assumptions are needed.
 
-The mediator sees the full state trace and recommends correlated joint actions,
-which the dynamics then converts to state transitions.  This separates the
-strategic choice (actions) from the physical transition (dynamics).
+## Decentralization hierarchy
 
 Decentralizing the mediator into independent per-player behavioral strategies
-requires perfect recall (classical Kuhn = correlated realization + decentralization).
--/
+requires progressively stronger conditions:
+
+- **PSAR** (`PerStepActionRecall`): mediator factors through observations;
+  product input → product output (coordination preservation)
+- **PSAR + PlayerStepRecall i**: each player's factor is obs-local
+- **PSPR** (`PerStepPlayerRecall = ∀ i, PlayerStepRecall I i`): full
+  decentralization into independent `BehavioralProfile`
+
+The per-player condition admits two weakenings:
+- `ReachablePlayerStepRecall I i`: restricted to step-reachable states
+- `TracePlayerStepRecall I i`: restricted to states reached via traces
+  with equal full observation histories (tightest syntactic condition)
+
+Both `PSPR` and `PerfectRecall` imply `∀ i, TracePlayerStepRecall I i`
+(neither implies the other). See the hierarchy section at the end. -/
 
 set_option autoImplicit false
 
@@ -1150,6 +1163,113 @@ theorem mediator_product_of_product
 
 end ProductPreservation
 
+/-! ## Product preservation at the strategy level
+
+Under PSAR, the reach weight `w(π) = pureRun π ss` is cross-multiplicatively
+equivalent to the per-player product weight `∏ᵢ wᵢ(πᵢ)` (proved in
+`pureRun_cross_mul_product`). This cross-multiplicative equivalence means
+that for product distributions, reweighting by `w` gives a product:
+independence in → independence out.
+
+This is **product in → product out**, not a general "coordination preservation"
+for arbitrary joint laws. For non-product `ν`, conditioning by `w` does
+reweight by something cross-multiplicatively equivalent to a product weight,
+but that does not imply the correlation structure of `ν` is preserved in any
+precise sense. -/
+
+section CoordinationPreservation
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+variable [∀ i, Fintype (I.LocalTrace i)]
+
+open Math.PMFProduct
+
+open Classical in
+/-- **Product in → product out**: Under PSAR, if the ex ante distribution
+is a product `ν = pmfPi σ`, then conditioning on reaching any reachable
+trace `ss` gives a product at the strategy level:
+
+  `reweightPMF (pmfPi σ) w = pmfPi (reweightPMF σᵢ wᵢ)`
+
+Each player's conditional strategy `reweightPMF (σ i) wᵢ` depends only
+on their own per-player reach weight. Pushing forward through the action
+map gives the action-level product (`mediator_product_of_product`).
+
+The mechanism: under PSAR, `pureRun_cross_mul_product` shows the reach
+weight is cross-multiplicatively equivalent to `∏ᵢ wᵢ(πᵢ)`, and
+`reweightPMF_pmfPi` factors reweighting by a product weight. -/
+theorem conditioning_preserves_product
+    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (n : Nat) {ss : List M.State}
+    {π₀ : PureProfile I}
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) :
+    ∃ τ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)),
+      reweightPMF (pmfPi σ)
+        (fun π => pureRun (pureStep D) M.init n π ss) =
+          pmfPi τ := by
+  set ν := pmfPi σ
+  set w : PureProfile I → ENNReal :=
+    fun π => pureRun (pureStep D) M.init n π ss
+  set wᵢ : ∀ i, (I.LocalTrace i → Option (M.Act i)) → ENNReal :=
+    fun i πᵢ => pureRun (pureStep D) M.init n
+      (Function.update π₀ i πᵢ) ss
+  -- Mass conditions
+  by_cases hmass : (∑ π, ν π * w π) = 0 ∨ (∑ π, ν π * w π) = ⊤
+  · exact ⟨σ, by rw [reweightPMF_degenerate _ _ hmass]⟩
+  · push_neg at hmass; obtain ⟨hCw0, hCwt⟩ := hmass
+    -- Witness with nonzero mass
+    have ⟨π_w, hπw⟩ : ∃ π, ν π * w π ≠ 0 := by
+      by_contra hall; push_neg at hall
+      exact hCw0 (Finset.sum_eq_zero fun a _ => hall a)
+    have hν_ne : ν π_w ≠ 0 := left_ne_zero_of_mul hπw
+    have hw_ne : w π_w ≠ 0 := right_ne_zero_of_mul hπw
+    -- Per-player non-degeneracy
+    have hσ_ne : ∀ i, σ i (π_w i) ≠ 0 := by
+      intro i hi; apply hν_ne
+      rw [pmfPi_apply]
+      exact Finset.prod_eq_zero (Finset.mem_univ i) hi
+    have hwi_ne : ∀ i, wᵢ i (π_w i) ≠ 0 := by
+      intro i
+      exact ((pureRun_nonzero_iff_update hPSAR D n h₀ π_w).mp hw_ne) i
+    have hCwi0 : ∀ i, ∑ a, σ i a * wᵢ i a ≠ 0 := fun i => by
+      apply ne_of_gt
+      exact lt_of_lt_of_le
+        (pos_iff_ne_zero.mpr (mul_ne_zero (hσ_ne i) (hwi_ne i)))
+        (Finset.single_le_sum (f := fun a => σ i a * wᵢ i a)
+          (fun _ _ => zero_le _) (Finset.mem_univ (π_w i)))
+    have hCwit : ∀ i, ∑ a, σ i a * wᵢ i a ≠ ⊤ := fun i => by
+      apply ne_of_lt; calc
+        ∑ a, σ i a * wᵢ i a ≤ ∑ a, σ i a :=
+          Finset.sum_le_sum fun a _ =>
+            mul_le_of_le_one_right (zero_le _)
+              (PMF.coe_le_one (pureRun (pureStep D) M.init n
+                (Function.update π₀ i a)) ss)
+        _ = 1 := by have := PMF.tsum_coe (σ i); rwa [tsum_fintype] at this
+        _ < ⊤ := ENNReal.one_lt_top
+    -- Product weight sum factorization
+    have hsum_eq : ∑ π, ν π * ∏ i, wᵢ i (π i) =
+        ∏ i, ∑ a, σ i a * wᵢ i a := by
+      conv_lhs => arg 2; ext π; rw [pmfPi_apply, ← Finset.prod_mul_distrib]
+      exact (Fintype.prod_sum (fun i a => σ i a * wᵢ i a)).symm
+    have hCprod0 : ∑ π, ν π * ∏ i, wᵢ i (π i) ≠ 0 := by
+      rw [hsum_eq]
+      exact Finset.prod_ne_zero_iff.mpr (fun i _ => hCwi0 i)
+    have hCprodt : ∑ π, ν π * ∏ i, wᵢ i (π i) ≠ ⊤ := by
+      rw [hsum_eq]
+      exact ne_of_lt (ENNReal.prod_lt_top (fun i _ => (hCwit i).lt_top))
+    -- Step 1: reach weight ≡ product weight (cross-multiplicatively)
+    have hreweight : reweightPMF ν w =
+        reweightPMF ν (fun π => ∏ i, wᵢ i (π i)) :=
+      reweightPMF_eq_of_cross_mul ν w (fun π => ∏ i, wᵢ i (π i))
+        hCw0 hCwt hCprod0 hCprodt
+        (pureRun_cross_mul_product hPSAR D ν n h₀)
+    -- Step 2: product weight on product dist = product of per-player
+    exact ⟨fun i => reweightPMF (σ i) (wᵢ i), by
+      rw [hreweight]; exact reweightPMF_pmfPi σ wᵢ hCwi0 hCwit⟩
+
+end CoordinationPreservation
+
 /-! ## Observation-locality of per-player consistency
 
 Under PSAR, the consistency condition `pureRun (update π₀ i πᵢ) ss ≠ 0` depends
@@ -2151,8 +2271,15 @@ mediator factors through observations, giving a `BehavioralProfileCorr I`
 (correlated behavioral profile).
 
 ### Level 2: Product preservation (PSAR)
-`mediator_product_of_product`: Under PSAR, if `ν = pmfPi σ` is a product,
-the mediator's output is also a product at each reachable trace.
+`conditioning_preserves_product`: Under PSAR, if the ex ante
+distribution is a product (`pmfPi σ`), conditioning on reaching any
+trace gives a product at the strategy level. The reach weight is
+cross-multiplicatively equivalent to a per-player product weight
+(`pureRun_cross_mul_product`), and product weights on product
+distributions factor (`reweightPMF_pmfPi`).
+
+`mediator_product_of_product`: The action-level corollary — product
+ν gives product mediator output at each reachable trace.
 
 ### Level 3: Per-player obs-locality (PSAR + PlayerStepRecall i)
 `reweightPMF_update_obs_local_player`: Under PSAR + `PlayerStepRecall I i`,
