@@ -3,11 +3,16 @@ import Math.ParameterizedChain
 
 /-! # Correlated realization and Kuhn M→B
 
+All theorems are stated at the **trace distribution** level (`runDist`/`runDistPure`),
+not the outcome level. This makes them independent of the outcome projection
+(`outcomeOfStates`): apply any function `f : List State → X` to recover
+outcome-level, utility-level, or any other derived equality.
+
 ## Correlated realization (no assumptions)
 
 For **any** joint distribution `ν : PMF (PureProfile I)` (not necessarily a product),
 there exists a **mediator** — a history-dependent correlated action recommendation —
-producing the same outcome distribution. No structural assumptions are needed.
+producing the same trace distribution. No structural assumptions are needed.
 
 ## Decentralization hierarchy
 
@@ -76,24 +81,21 @@ theorem mediator_step_eq_condStep [Fintype (PureProfile I)]
   unfold mixedToMediator condStep pureStep stepDist
   rw [PMF.bind_bind]
 
-variable [∀ i, Fintype (I.LocalTrace i)]
-
 set_option linter.unusedFintypeInType false in
 /-- **Correlated realization theorem**: for any joint distribution `ν` over
 pure profiles, there exists a mediator `m` — producing correlated action
 recommendations from the state trace at each step — such that the run under `m`
 (with actions converted to state transitions by the dynamics) yields the same
-outcome distribution as the `ν`-averaged pure runs.
+trace distribution as the `ν`-averaged pure runs.
 
 No perfect recall is needed. -/
-theorem correlated_realization (D : Dynamics I) (ν : PMF (PureProfile I)) (k : Nat) :
+theorem correlated_realization (D : Dynamics I) [Fintype (PureProfile I)]
+    (ν : PMF (PureProfile I)) (k : Nat) :
     ∃ m : Nat → List M.State → PMF (JointAction M),
-      pushforward
-        (seqRun (fun n ss =>
-          (m n ss).bind (fun a => D.nextState a ((ss.getLast?).getD M.init)))
-          M.init k)
-        I.outcomeOfStates =
-        ν.bind (fun π => D.evalPure k π) := by
+      seqRun (fun n ss =>
+        (m n ss).bind (fun a => D.nextState a ((ss.getLast?).getD M.init)))
+        M.init k =
+      ν.bind (pureRun (pureStep D) M.init k) := by
   classical
   refine ⟨mixedToMediator ν D, ?_⟩
   have hstep : (fun n ss =>
@@ -102,8 +104,7 @@ theorem correlated_realization (D : Dynamics I) (ν : PMF (PureProfile I)) (k : 
       condStep ν (pureStep D) M.init := by
     funext n ss
     exact mediator_step_eq_condStep ν D n ss
-  rw [hstep, condRun_eq_mixedRun, pushforward_bind]
-  rfl
+  rw [hstep, condRun_eq_mixedRun]
 
 end
 
@@ -365,15 +366,13 @@ set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Observation-level correlated realization**: under `PerStepActionRecall`,
 a `BehavioralProfileCorr I` (observation-level mediator) produces the same
-outcome distribution as any mixed strategy `ν`. -/
+trace distribution as any mixed strategy `ν`. -/
 theorem obs_correlated_realization [Inhabited ι]
     (hPSAR : PerStepActionRecall I)
     (D : Dynamics I) (ν : PMF (PureProfile I)) (k : Nat) :
     ∃ σ : BehavioralProfileCorr I,
-      pushforward
-        (seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k)
-        I.outcomeOfStates =
-        ν.bind (fun π => D.evalPure k π) := by
+      seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k =
+      ν.bind (pureRun (pureStep D) M.init k) := by
   -- Define obs-level mediator: pick a reachable representative state trace
   let σ : BehavioralProfileCorr I := fun v =>
     if h : ∃ ss : List M.State,
@@ -385,8 +384,7 @@ theorem obs_correlated_realization [Inhabited ι]
   -- Suffices: seqRun under σ = seqRun under condStep
   suffices hsuff : seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k =
       seqRun (condStep ν (pureStep D) M.init) M.init k by
-    rw [hsuff, condRun_eq_mixedRun, pushforward_bind]
-    rfl
+    rw [hsuff, condRun_eq_mixedRun]
   -- Key lemma: step functions agree on the support
   suffices hfn : ∀ (n : Nat) (ss : List M.State),
       (seqRun (condStep ν (pureStep D) M.init) M.init n) ss ≠ 0 →
@@ -866,14 +864,14 @@ section Decentralization
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 
-/-- Generalized step-independence-to-outcome theorem: if a behavioral profile
+/-- Generalized step-independence-to-trace theorem: if a behavioral profile
 `σ` satisfies the step-independence property with respect to any
 `ν : PMF (PureProfile I)` (not necessarily a product), then
-`evalBehavioral k σ = ν.bind (evalPure k)`.
+`runDist k σ = ν.bind (runDistPure k)`.
 
-This generalizes `evalBehavioral_eq_mixed_of_stepIndependence` from
+This generalizes the step-independence theorem from
 `KuhnCore.lean` by replacing `mixedJoint μ` with an arbitrary `ν`. -/
-theorem evalBehavioral_eq_of_stepIndependence
+theorem runDist_eq_of_stepIndependence
     (D : Dynamics I) (ν : PMF (PureProfile I))
     (σ : BehavioralProfile I)
     (hStep : ∀ n,
@@ -884,37 +882,26 @@ theorem evalBehavioral_eq_of_stepIndependence
         (D.runDistPure n π).bind (fun ss =>
           pushforward (D.stepDist (pureToBehavioral I π) ss)
             (fun t => ss ++ [t])))) (k : Nat) :
-    D.evalBehavioral k σ = ν.bind (D.evalPure k) := by
-  have hrun : ∀ n,
-      D.runDist n σ = ν.bind (fun π => D.runDistPure n π) := by
-    intro n
-    induction n with
-    | zero => simp [runDist, runDistPure]
-    | succ n ih =>
-      calc D.runDist (n + 1) σ
-          = (D.runDist n σ).bind (fun ss =>
-              pushforward (D.stepDist σ ss) (fun t => ss ++ [t])) := by
-            simp [runDist]
-        _ = (ν.bind (fun π => D.runDistPure n π)).bind (fun ss =>
-              pushforward (D.stepDist σ ss) (fun t => ss ++ [t])) := by rw [ih]
-        _ = ν.bind (fun π =>
-              (D.runDistPure n π).bind (fun ss =>
-                pushforward (D.stepDist σ ss) (fun t => ss ++ [t]))) := by
-            rw [PMF.bind_bind]
-        _ = ν.bind (fun π =>
-              (D.runDistPure n π).bind (fun ss =>
-                pushforward (D.stepDist (pureToBehavioral I π) ss)
-                  (fun t => ss ++ [t]))) := by simpa using hStep n
-        _ = ν.bind (fun π => D.runDistPure (n + 1) π) := by
-            simp [runDist, runDistPure]
-  calc D.evalBehavioral k σ
-      = pushforward (D.runDist k σ) I.outcomeOfStates := rfl
-    _ = pushforward (ν.bind (fun π => D.runDistPure k π)) I.outcomeOfStates := by
-        rw [hrun]
-    _ = ν.bind (D.evalPure k) := by
-        simpa [evalPure] using
-          pushforward_bind (μ := ν) (k := fun π => D.runDistPure k π)
-            (f := I.outcomeOfStates)
+    D.runDist k σ = ν.bind (fun π => D.runDistPure k π) := by
+  induction k with
+  | zero => simp [runDist, runDistPure]
+  | succ n ih =>
+    calc D.runDist (n + 1) σ
+        = (D.runDist n σ).bind (fun ss =>
+            pushforward (D.stepDist σ ss) (fun t => ss ++ [t])) := by
+          simp [runDist]
+      _ = (ν.bind (fun π => D.runDistPure n π)).bind (fun ss =>
+            pushforward (D.stepDist σ ss) (fun t => ss ++ [t])) := by rw [ih]
+      _ = ν.bind (fun π =>
+            (D.runDistPure n π).bind (fun ss =>
+              pushforward (D.stepDist σ ss) (fun t => ss ++ [t]))) := by
+          rw [PMF.bind_bind]
+      _ = ν.bind (fun π =>
+            (D.runDistPure n π).bind (fun ss =>
+              pushforward (D.stepDist (pureToBehavioral I π) ss)
+                (fun t => ss ++ [t]))) := by simpa using hStep n
+      _ = ν.bind (fun π => D.runDistPure (n + 1) π) := by
+          simp [runDist, runDistPure]
 
 /-- Under `PerStepPlayerRecall`, the pure-step action component for player `i`
 depends only on player `i`'s observation at obs-equivalent traces. -/
@@ -1530,17 +1517,13 @@ theorem stepDistCorr_eq_stepDist_of_product
 
 /-- Independent behavioral realization from correlated one: if a correlated profile
 always outputs products with observation-local factors, the independent profile
-produces the same outcome distribution. -/
-theorem evalIndep_of_corrProduct
+produces the same trace distribution. -/
+theorem runDist_eq_of_corrProduct
     (D : Dynamics I) (β : BehavioralProfile I) (σ : BehavioralProfileCorr I)
     (hprod : ∀ v, σ v = pmfPi (fun i => β i (v i)))
     (k : Nat) :
-    D.evalBehavioral k β =
-      Math.ProbabilityMassFunction.pushforward
-        (seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k)
-        I.outcomeOfStates := by
-  unfold Dynamics.evalBehavioral
-  congr 1
+    D.runDist k β =
+      seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k := by
   -- runDist D k β is definitionally seqRun (fun _ ss => D.stepDist β ss) M.init k
   change seqRun (fun _ ss => D.stepDist β ss) M.init k =
        seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k
@@ -1555,10 +1538,10 @@ end Decentralization
 The full mixed-to-behavioral direction of Kuhn's theorem under
 `PerStepPlayerRecall`. Given a product distribution `ν = pmfPi σ` over
 pure profiles, we construct an independent behavioral profile `β`
-with `evalBehavioral k β = ν.bind (evalPure k)`.
+with `runDist k β = ν.bind (runDistPure k)`.
 
 **Proof structure**:
-1. Correlated realization gives a mediator matching the mixed outcome.
+1. Correlated realization gives a mediator matching the mixed trace distribution.
 2. Product preservation (PSAR) gives per-player factors at each reachable trace.
 3. Per-player obs-locality (PSPR) makes these factors depend only on player i's
    local trace, giving a well-defined behavioral profile.
@@ -1938,8 +1921,6 @@ section Hierarchy
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 variable [∀ i, Fintype (I.LocalTrace i)]
 
-set_option linter.unusedFintypeInType false
-
 open Math.PMFProduct
 
 open Classical in
@@ -1959,7 +1940,7 @@ theorem kuhn_mixed_to_behavioral_trace
     (D : Dynamics I) (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
     (k : Nat) :
     ∃ β : BehavioralProfile I,
-      D.evalBehavioral k β = (pmfPi σ).bind (D.evalPure k) := by
+      D.runDist k β = (pmfPi σ).bind (D.runDistPure k) := by
   set ν := pmfPi σ with hν_def
   -- Abbreviation for the per-player factor at a specific trace
   let factorAt (i : ι) (n : Nat) (ss : List M.State) (π₀ : PureProfile I) :
@@ -2009,7 +1990,7 @@ theorem kuhn_mixed_to_behavioral_trace
       hexist.choose_spec.choose_spec.choose_spec.1
       hexist.choose_spec.choose_spec.choose_spec.2 hreach
   refine ⟨β, ?_⟩
-  -- Main proof: evalBehavioral k β = ν.bind (evalPure k)
+  -- Main proof: runDist k β = ν.bind (runDistPure k)
   suffices hfn : ∀ (n : Nat) (ss : List M.State),
       (seqRun (condStep ν (pureStep D) M.init) M.init n) ss ≠ 0 →
       D.stepDist β ss = condStep ν (pureStep D) M.init n ss by
@@ -2028,16 +2009,8 @@ theorem kuhn_mixed_to_behavioral_trace
         by_cases hss : (seqRun (condStep ν (pureStep D) M.init) M.init n) ss = 0
         · simp [hss]
         · rw [hfn n ss hss]
-    calc D.evalBehavioral k β
-        = Math.ProbabilityMassFunction.pushforward (D.runDist k β) I.outcomeOfStates := rfl
-      _ = Math.ProbabilityMassFunction.pushforward
-            (seqRun (condStep ν (pureStep D) M.init) M.init k) I.outcomeOfStates := by
-          rw [hrun]
-      _ = Math.ProbabilityMassFunction.pushforward
-            (ν.bind (pureRun (pureStep D) M.init k)) I.outcomeOfStates := by
-          rw [condRun_eq_mixedRun]
-      _ = ν.bind (D.evalPure k) := by
-          rw [Math.ProbabilityMassFunction.pushforward_bind]; congr 1
+    change D.runDist k β = ν.bind (pureRun (pureStep D) M.init k)
+    rw [hrun, condRun_eq_mixedRun]
   -- Prove the step function equality at supported traces
   intro n ss hss
   have hreach : ∑ π, ν π * pureRun (pureStep D) M.init n π ss ≠ 0 := by
@@ -2058,7 +2031,7 @@ theorem kuhn_mixed_to_behavioral_trace
 open Classical in
 /-- **Generalized Kuhn (M→B) under PSPR**: For any product distribution over
 pure profiles, there exists an independent behavioral profile producing the
-same outcome distribution.
+same trace distribution.
 
 Corollary of `kuhn_mixed_to_behavioral_trace` via
 `PlayerStepRecall → ReachablePlayerStepRecall → TracePlayerStepRecall`. -/
@@ -2067,7 +2040,7 @@ theorem kuhn_mixed_to_behavioral_pspr
     (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
     (k : Nat) :
     ∃ β : BehavioralProfile I,
-      D.evalBehavioral k β = (pmfPi σ).bind (D.evalPure k) :=
+      D.runDist k β = (pmfPi σ).bind (D.runDistPure k) :=
   kuhn_mixed_to_behavioral_trace hPSPR.toAction
     (fun i => ((perStepPlayerRecall_iff_forall.mp hPSPR i).toReachable).toTrace) D σ k
 
@@ -2086,7 +2059,7 @@ theorem kuhn_mixed_to_behavioral_decomposed
     (D : Dynamics I) (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
     (k : Nat) :
     ∃ β : BehavioralProfile I,
-      D.evalBehavioral k β = (pmfPi σ).bind (D.evalPure k) :=
+      D.runDist k β = (pmfPi σ).bind (D.runDistPure k) :=
   kuhn_mixed_to_behavioral_pspr
     (perStepPlayerRecall_iff_forall.mpr hPSR) D σ k
 
