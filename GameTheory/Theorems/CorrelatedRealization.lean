@@ -474,6 +474,20 @@ theorem PerStepPlayerRecall.toAction (h : PerStepPlayerRecall I) :
   fun a a' s s' t t' hs hs' hobs hobst =>
     funext fun i => h i a a' s s' t t' hs hs' (hobs i) (hobst i)
 
+/-- Per-player step recall for a **single** player `i`: player i's action
+component is determined by player i's own observation transition.
+`PerStepPlayerRecall I` is equivalent to `∀ i, PlayerStepRecall I i`. -/
+def PlayerStepRecall (I : InfoModel M) (i : ι) : Prop :=
+  ∀ (a a' : JointAction M) (s s' t t' : M.State),
+    M.step a s t → M.step a' s' t' →
+    I.obsEq i s s' → I.obsEq i t t' →
+    a i = a' i
+
+/-- `PerStepPlayerRecall` is equivalent to every player having step recall. -/
+theorem perStepPlayerRecall_iff_forall :
+    PerStepPlayerRecall I ↔ ∀ i, PlayerStepRecall I i :=
+  ⟨fun h i => h i, fun h i => h i⟩
+
 /-- Under `PerStepActionRecall`, at most one action can produce a nonzero
 transition probability between any pair of states. -/
 theorem action_unique_of_psar
@@ -751,6 +765,37 @@ theorem pureStep_component_eq_of_pspr
       cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;>
         simp_all [Option.map]
   exact hPSPR i _ _ _ _ _ _ hs1 hs2 hobss_i hobst_i
+
+/-- Per-player version of `pureStep_component_eq_of_pspr`:
+only needs `PlayerStepRecall I i` for the specific player `i`,
+not the full `PerStepPlayerRecall` for all players. -/
+theorem pureStep_component_eq_of_playerRecall
+    (i : ι) (hPSR_i : PlayerStepRecall I i) (D : Dynamics I)
+    {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
+    (hobs_i : I.projectStates i ss = I.projectStates i ss')
+    (hobst_i : I.obsEq i t t')
+    (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0) :
+    π i (I.projectStates i ss) = π' i (I.projectStates i ss') := by
+  rw [pureStep_eq] at h1 h2
+  have hs1 := D.nextState_sound _ _ _ h1
+  have hs2 := D.nextState_sound _ _ _ h2
+  have hobss_i : I.obsEq i ((ss.getLast?).getD M.init)
+      ((ss'.getLast?).getD M.init) := by
+    have hproj := hobs_i
+    unfold InfoModel.projectStates InfoModel.projectPublic
+      InfoModel.projectPrivate at hproj
+    have hpub := (Prod.ext_iff.mp hproj).1
+    have hpriv := (Prod.ext_iff.mp hproj).2
+    constructor
+    · have := congr_arg List.getLast? hpub
+      simp only [List.getLast?_map] at this
+      cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;>
+        simp_all [Option.map]
+    · have := congr_arg List.getLast? hpriv
+      simp only [List.getLast?_map] at this
+      cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;>
+        simp_all [Option.map]
+  exact hPSR_i _ _ _ _ _ _ hs1 hs2 hobss_i hobst_i
 
 end Decentralization
 
@@ -1209,6 +1254,160 @@ theorem reweightPMF_update_obs_local_pspr
 
 end ObsLocality
 
+/-! ## Per-player obs-locality under PSAR + PlayerStepRecall
+
+The obs-locality lemmas in the previous section use `PerStepPlayerRecall I`
+(which equals `∀ i, PlayerStepRecall I i`). But each player's factor only
+needs their OWN recall condition. This section isolates the per-player
+requirement.
+
+The per-player chain is:
+1. `pureRun_succ_nonzero_iff` — needs `PerStepActionRecall` (joint, not per-player)
+2. `pureStep_component_eq_of_playerRecall` — needs `PlayerStepRecall I i` (only player i)
+3. `pureRun_update_obs_local_player` — needs PSAR + `PlayerStepRecall I i`
+4. `reweightPMF_update_obs_local_player` — needs PSAR + `PlayerStepRecall I i`
+
+This shows that `PerStepPlayerRecall I` in the main Kuhn theorem decomposes
+cleanly: the global PSAR handles the reach structure, while each player's
+factor needs only their own `PlayerStepRecall`. -/
+
+section PerPlayerObsLocality
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+
+open Classical in
+/-- Under PSAR + `PlayerStepRecall I i`, the per-player consistency condition
+`pureRun (update π₀ i πᵢ) ss ≠ 0` is obs-local for player i, even with
+**different** reference profiles at the two traces.
+
+This weakens `pureRun_update_obs_local_pspr` from full `PerStepPlayerRecall`
+to `PerStepActionRecall` + `PlayerStepRecall I i`. -/
+theorem pureRun_update_obs_local_player
+    (hPSAR : PerStepActionRecall I) (i : ι) (hPSR_i : PlayerStepRecall I i)
+    (D : Dynamics I) (n : Nat)
+    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
+    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
+    (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0)
+    (πᵢ : I.LocalTrace i → Option (M.Act i)) :
+    pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
+    pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 := by
+  induction n generalizing ss₁ ss₂ with
+  | zero =>
+    simp only [pureRun, ne_eq] at h₁ h₂ ⊢
+    exact ⟨fun _ => h₂, fun _ => h₁⟩
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss₁ with rfl | ⟨p₁, t₁, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₁
+    rcases List.eq_nil_or_concat ss₂ with rfl | ⟨p₂, t₂, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₂
+    simp only [List.concat_eq_append] at hobs_i h₁ h₂ ⊢
+    have hobs_p : I.projectStates i p₁ = I.projectStates i p₂ :=
+      projectStates_prefix_of_append i hobs_i
+    have hobst : I.obsEq i t₁ t₂ := obsEq_of_projectStates_append i hobs_i
+    have hp₁ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have hp₂ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    have ht₁ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have ht₂ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    rw [pureRun_succ_nonzero_iff hPSAR D m h₁,
+        pureRun_succ_nonzero_iff hPSAR D m h₂]
+    -- Only PlayerStepRecall I i needed for the forced action
+    have hforced : π₀ i (I.projectStates i p₁) = π₀' i (I.projectStates i p₂) :=
+      pureStep_component_eq_of_playerRecall i hPSR_i D hobs_p hobst ht₁ ht₂
+    have hact_transfer :
+        (∀ j, Function.update π₀ i πᵢ j (I.projectStates j p₁) =
+          π₀ j (I.projectStates j p₁)) ↔
+        (∀ j, Function.update π₀' i πᵢ j (I.projectStates j p₂) =
+          π₀' j (I.projectStates j p₂)) := by
+      constructor <;> intro h
+      · intro j; by_cases hij : j = i
+        · rw [hij, Function.update_self, ← hforced, ← hobs_p]
+          have := h i; rwa [Function.update_self] at this
+        · rw [Function.update_of_ne hij]
+      · intro j; by_cases hij : j = i
+        · rw [hij, Function.update_self, hforced, hobs_p]
+          have := h i; rwa [Function.update_self] at this
+        · rw [Function.update_of_ne hij]
+    constructor
+    · exact fun ⟨hrec, hact⟩ =>
+        ⟨(ih hobs_p hp₁ hp₂).mp hrec, hact_transfer.mp hact⟩
+    · exact fun ⟨hrec, hact⟩ =>
+        ⟨(ih hobs_p hp₁ hp₂).mpr hrec, hact_transfer.mpr hact⟩
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Under PSAR + `PlayerStepRecall I i`, the per-player reweighted PMF is
+obs-local even with different reference profiles at the two traces.
+
+This weakens `reweightPMF_update_obs_local_pspr` from full `PerStepPlayerRecall`
+to `PerStepActionRecall` + `PlayerStepRecall I i`. -/
+theorem reweightPMF_update_obs_local_player
+    [∀ i, Fintype (I.LocalTrace i)]
+    (hPSAR : PerStepActionRecall I) (i : ι) (hPSR_i : PlayerStepRecall I i)
+    (D : Dynamics I) (n : Nat)
+    (σ_i : PMF (I.LocalTrace i → Option (M.Act i)))
+    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
+    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
+    (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0) :
+    reweightPMF σ_i
+      (fun πᵢ => pureRun (pureStep D) M.init n
+        (Function.update π₀ i πᵢ) ss₁) =
+    reweightPMF σ_i
+      (fun πᵢ => pureRun (pureStep D) M.init n
+        (Function.update π₀' i πᵢ) ss₂) := by
+  set w₁ := fun πᵢ =>
+    pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁
+  set w₂ := fun πᵢ =>
+    pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂
+  have hiff : ∀ πᵢ, w₁ πᵢ ≠ 0 ↔ w₂ πᵢ ≠ 0 :=
+    fun πᵢ => pureRun_update_obs_local_player hPSAR i hPSR_i D n hobs_i h₁ h₂ πᵢ
+  have hsum_zero_iff :
+      (∑ πᵢ, σ_i πᵢ * w₁ πᵢ) = 0 ↔ (∑ πᵢ, σ_i πᵢ * w₂ πᵢ) = 0 := by
+    simp only [Finset.sum_eq_zero_iff, Finset.mem_univ, true_implies, mul_eq_zero]
+    constructor
+    · intro h πᵢ; rcases h πᵢ with h | h
+      · exact Or.inl h
+      · exact Or.inr (of_not_not (mt (hiff πᵢ).mpr (not_not.mpr h)))
+    · intro h πᵢ; rcases h πᵢ with h | h
+      · exact Or.inl h
+      · exact Or.inr (of_not_not (mt (hiff πᵢ).mp (not_not.mpr h)))
+  have htop₁ : (∑ πᵢ, σ_i πᵢ * w₁ πᵢ) ≠ ⊤ := ne_of_lt (calc
+    ∑ πᵢ, σ_i πᵢ * w₁ πᵢ ≤ ∑ πᵢ, σ_i πᵢ :=
+      Finset.sum_le_sum fun πᵢ _ =>
+        mul_le_of_le_one_right (zero_le _) (PMF.coe_le_one _ ss₁)
+    _ = 1 := by have := PMF.tsum_coe σ_i; rwa [tsum_fintype] at this
+    _ < ⊤ := ENNReal.one_lt_top)
+  have htop₂ : (∑ πᵢ, σ_i πᵢ * w₂ πᵢ) ≠ ⊤ := ne_of_lt (calc
+    ∑ πᵢ, σ_i πᵢ * w₂ πᵢ ≤ ∑ πᵢ, σ_i πᵢ :=
+      Finset.sum_le_sum fun πᵢ _ =>
+        mul_le_of_le_one_right (zero_le _) (PMF.coe_le_one _ ss₂)
+    _ = 1 := by have := PMF.tsum_coe σ_i; rwa [tsum_fintype] at this
+    _ < ⊤ := ENNReal.one_lt_top)
+  by_cases hC₁ : (∑ πᵢ, σ_i πᵢ * w₁ πᵢ) = 0
+  · rw [reweightPMF_fallback _ _ hC₁,
+        reweightPMF_fallback _ _ (hsum_zero_iff.mp hC₁)]
+  · have hC₂ : (∑ πᵢ, σ_i πᵢ * w₂ πᵢ) ≠ 0 := mt hsum_zero_iff.mpr hC₁
+    exact reweightPMF_eq_of_cross_mul σ_i w₁ w₂ hC₁ htop₁ hC₂ htop₂
+      (fun πᵢ => by
+        simp only [Finset.mul_sum]
+        apply Finset.sum_congr rfl; intro πᵢ' _
+        by_cases hw : w₁ πᵢ = 0
+        · simp [hw, of_not_not (mt (hiff πᵢ).mpr (not_not.mpr hw))]
+        · by_cases hw' : w₁ πᵢ' = 0
+          · simp [hw', of_not_not (mt (hiff πᵢ').mpr (not_not.mpr hw'))]
+          · have eq1 : w₁ πᵢ = pureRun (pureStep D) M.init n π₀ ss₁ :=
+              pureRun_const_of_psar hPSAR D n hw h₁
+            have eq2 : w₂ πᵢ = pureRun (pureStep D) M.init n π₀' ss₂ :=
+              pureRun_const_of_psar hPSAR D n ((hiff πᵢ).mp hw) h₂
+            have eq3 : w₁ πᵢ' = pureRun (pureStep D) M.init n π₀ ss₁ :=
+              pureRun_const_of_psar hPSAR D n hw' h₁
+            have eq4 : w₂ πᵢ' = pureRun (pureStep D) M.init n π₀' ss₂ :=
+              pureRun_const_of_psar hPSAR D n ((hiff πᵢ').mp hw') h₂
+            rw [eq1, eq2, eq3, eq4]; ring)
+
+end PerPlayerObsLocality
+
 /-! ## Decentralization bridge
 
 The final step of Kuhn's theorem (M→B direction) decomposes as:
@@ -1472,5 +1671,71 @@ theorem kuhn_mixed_to_behavioral_pspr
   exact β_eq i n ss π_w hw_ne
 
 end KuhnMtoB
+
+/-! ## Kuhn theorem hierarchy
+
+The results in this file form a hierarchy of increasingly specific realization
+theorems:
+
+### Level 0: Correlated realization (no recall needed)
+`correlated_realization`: For any `ν : PMF (PureProfile I)`, there exists a
+state-trace mediator producing the same outcome distribution. No structural
+assumptions on the game.
+
+### Level 1: Observation-level correlated realization (PSAR)
+`obs_correlated_realization`: Under `PerStepActionRecall`, the state-trace
+mediator factors through observations, giving a `BehavioralProfileCorr I`
+(correlated behavioral profile).
+
+### Level 2: Product preservation (PSAR)
+`mediator_product_of_product`: Under PSAR, if `ν = pmfPi σ` is a product,
+the mediator's output is also a product at each reachable trace.
+
+### Level 3: Per-player obs-locality (PSAR + PlayerStepRecall i)
+`reweightPMF_update_obs_local_player`: Under PSAR + `PlayerStepRecall I i`,
+the i-th factor of the product mediator depends only on player i's
+observation. This is the per-player content — each player's decentralization
+needs only their own recall condition.
+
+### Level 4: Full decentralization (PSPR = ∀ i, PlayerStepRecall I i)
+`kuhn_mixed_to_behavioral_pspr`: Under `PerStepPlayerRecall` (= PSAR + all
+players have step recall), the product mediator fully decentralizes into an
+independent `BehavioralProfile I`.
+
+### Relationship to classical Kuhn
+The classical Kuhn theorem (`KuhnMixedToBehavioral.lean`) uses `PerfectRecall`
+(= `ObsRecall ∧ ActionRecall`), which is an **orthogonal** condition to PSPR:
+- `PerfectRecall` is about history reconstruction from observations
+- `PSPR` is about action uniqueness at transitions
+Neither implies the other. -/
+
+section Hierarchy
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+variable [∀ i, Fintype (I.LocalTrace i)]
+
+open Math.PMFProduct
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Per-player Kuhn M→B**: each player individually needs `PlayerStepRecall`.
+Logically equivalent to `kuhn_mixed_to_behavioral_pspr` since
+`PSPR ↔ ∀ i, PlayerStepRecall I i` (and PSPR → PSAR).
+
+The conceptual value is that it shows the proof decomposes cleanly per player:
+the global PSAR handles the reach structure (derived from the per-player
+conditions), while each player's factor obs-locality uses only their own
+`PlayerStepRecall`. See `reweightPMF_update_obs_local_player` for the
+per-player lemma. -/
+theorem kuhn_mixed_to_behavioral_decomposed
+    (hPSR : ∀ i, PlayerStepRecall I i)
+    (D : Dynamics I) (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (k : Nat) :
+    ∃ β : BehavioralProfile I,
+      D.evalBehavioral k β = (pmfPi σ).bind (D.evalPure k) :=
+  kuhn_mixed_to_behavioral_pspr
+    (perStepPlayerRecall_iff_forall.mpr hPSR) D σ k
+
+end Hierarchy
 
 end GameTheory
