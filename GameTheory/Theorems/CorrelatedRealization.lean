@@ -624,6 +624,12 @@ theorem PerfectRecall.toReachablePlayerStepRecall (hPR : I.PerfectRecall) (i : Î
   simp only [List.getLast?_concat] at this
   exact Option.some_injective _ this
 
+/-- `PerfectRecall` implies `TracePlayerStepRecall` for all players. -/
+theorem PerfectRecall.toTracePlayerStepRecall
+    (hPR : I.PerfectRecall) (i : Î¹) :
+    TracePlayerStepRecall (I := I) i :=
+  (PerfectRecall.toReachablePlayerStepRecall hPR i).toTrace
+
 /-- Under `PerStepActionRecall`, at most one action can produce a nonzero
 transition probability between any pair of states. -/
 theorem action_unique_of_psar
