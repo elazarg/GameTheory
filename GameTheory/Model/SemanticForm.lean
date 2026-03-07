@@ -2,12 +2,13 @@ import Math.Probability
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
 import GameTheory.Model.FiniteRecall
+import GameTheory.Core.ObsModel
 
 /-!
 # GameTheory.Model.SemanticForm
 
 Semantics-first model decomposition:
-- `LSM`: latent-state machine with joint actions
+- `LSM`: latent-state machine with joint actions (defined in `Core.LSM`)
 - `InfoModel`: public and player-local visibility over an `LSM`
 - `ControlModel`: common-knowledge controller specifications (separate layer)
 
@@ -19,25 +20,9 @@ namespace GameTheory
 
 open Math.Probability
 
-/-- Latent-state machine with joint (possibly inactive) actions. -/
-structure LSM (ι : Type) where
-  State : Type
-  Act : ι → Type
-  init : State
-  step : (∀ i, Option (Act i)) → State → State → Prop
-
-/-- Joint (possibly inactive) action profile. -/
-abbrev JointAction {ι : Type} (M : LSM ι) : Type :=
-  ∀ i, Option (M.Act i)
-
 namespace LSM
 
 variable {ι : Type}
-
-/-- Action-erased one-step relation. Since the machine is already action-indexed,
-this is just `step` under the shared `JointAction` abbreviation. -/
-def stepExists (M : LSM ι) : JointAction M → M.State → M.State → Prop :=
-  M.step
 
 /-- Bounded-horizon predicate (theorem-local assumption). -/
 def FiniteHorizon (M : LSM ι) (k : Nat) : Prop :=
@@ -97,27 +82,6 @@ def projectStates (I : InfoModel M) (i : ι) (ss : List M.State) : I.LocalTrace 
 def outcomeOfStates (I : InfoModel M) (ss : List M.State) : I.Outcome :=
   (I.projectPublic ss, fun i => I.projectPrivate i ss)
 
-/-- Reachability witness carrying visited states (states include init). -/
-inductive ReachStateTrace (M : LSM ι) : List M.State → Prop
-  | nil : ReachStateTrace M [M.init]
-  | snoc {ss : List M.State} {s t : M.State} {a : JointAction M} :
-      ReachStateTrace M ss →
-      ss.getLast? = some s →
-      M.step a s t →
-      ReachStateTrace M (ss ++ [t])
-
-/-- Reachability witness carrying joint actions and visited states. -/
-inductive ReachActionTrace (M : LSM ι) :
-    List (JointAction M) → List M.State → Prop
-  | nil : ReachActionTrace M [] [M.init]
-  | snoc
-      {ha : List (JointAction M)}
-      {ss : List M.State} {s t : M.State} {a : JointAction M} :
-      ReachActionTrace M ha ss →
-      ss.getLast? = some s →
-      M.step a s t →
-      ReachActionTrace M (ha ++ [a]) (ss ++ [t])
-
 /-- A finite local-history cover `H` is sufficient up to horizon `k` if every
 reachable state trace of length at most `k + 1` projects into `H`. This is the
 generic bounded object needed by the restricted-profile Kuhn theorem. -/
@@ -129,10 +93,6 @@ def CoversHistoriesUpTo
     ReachStateTrace M ss →
     ss.length ≤ k + 1 →
     I.projectStates i ss ∈ H i
-
-/-- Player-local projected own-action trace from an action-annotated history. -/
-def projectActions (i : ι) (ha : List (JointAction M)) : List (Option (M.Act i)) :=
-  ha.map (fun a => a i)
 
 /-- Player-local history token:
 visible local history paired with realized own action at that step. -/
@@ -241,27 +201,11 @@ theorem localHistTokensFrom_snoc
       localHistTokensFrom I i pref ha ssTail ++ [(I.projectStates i (pref ++ ssTail), a i)] := by
   simpa [localHistTokensFrom] using localHistTokensAux_snoc I i pref ha ssTail hLen a t
 
-/-- Length relation on action/state traces induced by `ReachActionTrace`. -/
-theorem ReachActionTrace.length_states_eq_succ_actions
-    {ha : List (JointAction M)}
-    {ss : List M.State}
-    (h : ReachActionTrace M ha ss) :
-    ss.length = ha.length + 1 := by
-  induction h with
-  | nil =>
-      simp
-  | snoc _ _ _ ih =>
-      simp [List.length_append, ih, Nat.add_comm]
-
-/-- Forgetting actions from an action/state witness yields a state-trace witness. -/
-theorem ReachActionTrace.toReachStateTrace
-    {ha : List (JointAction M)}
-    {ss : List M.State} (h : ReachActionTrace M ha ss) :
-    ReachStateTrace M ss := by
-  induction h with
-  | nil => exact .nil
-  | snoc _ hlast hstep ih =>
-      exact .snoc ih hlast hstep
+/-- Convert an `InfoModel` to an `ObsModel` by bundling public and private observations.
+Player `i`'s observation is `(publicView s, observe i s)`. -/
+def toObsModel (I : InfoModel M) : ObsModel M where
+  Obs i := I.Public × I.Obs i
+  observe i s := (I.publicView s, I.observe i s)
 
 /-- Observation recall: indistinguishable terminal visible states imply identical
 player-local visible histories on the corresponding reaches. -/

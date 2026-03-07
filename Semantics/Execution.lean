@@ -95,10 +95,10 @@ theorem stepDist_support_reachStateTrace
     [∀ i, Fintype (Option (M.Act i))]
     (σ : BehavioralProfile I)
     {ss : List M.State}
-    (hr : InfoModel.ReachStateTrace M ss)
+    (hr : ReachStateTrace M ss)
     {t : M.State}
     (h : (D.stepDist σ ss) t ≠ 0) :
-    InfoModel.ReachStateTrace M (ss ++ [t]) := by
+    ReachStateTrace M (ss ++ [t]) := by
   rcases exists_action_of_stepDist_ne_zero (I := I) (D := D) σ ss t h with
     ⟨a, _, hnext⟩
   have hne : ss ≠ [] := InfoModel.reachStateTrace_nonempty (M := M) hr
@@ -107,7 +107,7 @@ theorem stepDist_support_reachStateTrace
     simpa [s] using (List.getLast?_eq_getLast_of_ne_nil hne)
   have hnext' : D.nextState a s t ≠ 0 := by
     simpa [hsLast, s] using hnext
-  exact InfoModel.ReachStateTrace.snoc hr hsLast
+  exact ReachStateTrace.snoc hr hsLast
     (D.nextState_sound a s t hnext')
 
 /-- State traces in the support of `runDist n` are machine-reachable. -/
@@ -116,7 +116,7 @@ theorem runDist_support_reachStateTrace
     [∀ i, Fintype (Option (M.Act i))]
     (n : Nat)
     (σ : BehavioralProfile I) (ss : List M.State) :
-    (D.runDist n σ) ss ≠ 0 → InfoModel.ReachStateTrace M ss := by
+    (D.runDist n σ) ss ≠ 0 → ReachStateTrace M ss := by
   induction n generalizing ss with
   | zero =>
       intro h
@@ -124,7 +124,7 @@ theorem runDist_support_reachStateTrace
         rwa [runDist_zero (I := I) (D := D)] at h
       rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
       subst hmem
-      exact InfoModel.ReachStateTrace.nil
+      exact ReachStateTrace.nil
   | succ n ih =>
       intro h
       rw [runDist_succ (I := I) (D := D), PMF.bind_apply] at h
@@ -134,7 +134,7 @@ theorem runDist_support_reachStateTrace
       intro ss'
       by_cases hss' : (D.runDist n σ) ss' = 0
       · simp [hss']
-      · have hr' : InfoModel.ReachStateTrace M ss' := ih ss' hss'
+      · have hr' : ReachStateTrace M ss' := ih ss' hss'
         have hpush0 :
             (Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss')
               (fun t => ss' ++ [t])) ss = 0 := by
@@ -144,7 +144,7 @@ theorem runDist_support_reachStateTrace
           by_cases heq : ss' ++ [t] = ss
           · have hstep0 : (D.stepDist σ ss') t = 0 := by
               by_contra hstep
-              have hreach' : InfoModel.ReachStateTrace M ss := by
+              have hreach' : ReachStateTrace M ss := by
                 simpa [heq] using
                   stepDist_support_reachStateTrace (I := I) (D := D) σ hr' hstep
               exact hreach hreach'

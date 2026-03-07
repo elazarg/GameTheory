@@ -27,8 +27,8 @@ private theorem append_singleton_eq
 private theorem actionTrace_eq_of_projectActions_eq
     {ι : Type} [Nonempty ι] {M : LSM ι}
     {ha₁ ha₂ : List (JointAction M)}
-    (hacts : ∀ i, GameTheory.InfoModel.projectActions i ha₁ =
-      GameTheory.InfoModel.projectActions i ha₂) :
+    (hacts : ∀ i, GameTheory.projectActions i ha₁ =
+      GameTheory.projectActions i ha₂) :
     ha₁ = ha₂ := by
   induction ha₁ generalizing ha₂ with
   | nil =>
@@ -36,21 +36,21 @@ private theorem actionTrace_eq_of_projectActions_eq
       | nil => rfl
       | cons y ys =>
           have hi := hacts (Classical.arbitrary ι)
-          simp [InfoModel.projectActions] at hi
+          simp [projectActions] at hi
   | cons x xs ih =>
       cases ha₂ with
       | nil =>
           have hi := hacts (Classical.arbitrary ι)
-          simp [InfoModel.projectActions] at hi
+          simp [projectActions] at hi
       | cons y ys =>
           have hheadAct : ∀ i, x i = y i := by
             intro i
             have hi := hacts i
-            simpa [InfoModel.projectActions] using congrArg List.head? hi
-          have htailActs : ∀ i, InfoModel.projectActions i xs = InfoModel.projectActions i ys := by
+            simpa [projectActions] using congrArg List.head? hi
+          have htailActs : ∀ i, projectActions i xs = projectActions i ys := by
             intro i
             have hi := hacts i
-            simpa [InfoModel.projectActions, hheadAct i] using hi
+            simpa [projectActions, hheadAct i] using hi
           have htail : xs = ys := ih htailActs
           have hfun : x = y := by
             funext i
@@ -160,7 +160,7 @@ theorem exists_reachActionTrace_of_runDistPure_ne_zero
     (n : Nat) (π : PureProfile I) (ss : List M.State)
     (hss : D.runDistPure n π ss ≠ 0) :
     ∃ ha : List (JointAction M),
-      InfoModel.ReachActionTrace M ha ss ∧
+      ReachActionTrace M ha ss ∧
       ∀ i, LocalHistCompatible (I := I) i (π i)
         (InfoModel.localHistTokens (I := I) i ha ss) := by
   induction n generalizing ss with
@@ -171,7 +171,7 @@ theorem exists_reachActionTrace_of_runDistPure_ne_zero
         simpa [PMF.mem_support_iff] using hss
       rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
       subst hmem
-      refine ⟨[], InfoModel.ReachActionTrace.nil, ?_⟩
+      refine ⟨[], ReachActionTrace.nil, ?_⟩
       intro _ _ htok
       cases htok
   | succ n ih =>
@@ -194,10 +194,10 @@ theorem exists_reachActionTrace_of_runDistPure_ne_zero
         simp
       have hrel : M.step aCur s t :=
         D.nextState_sound aCur s t hstep'
-      refine ⟨haPrev ++ [aCur], InfoModel.ReachActionTrace.snoc hrPrev hsLast hrel, ?_⟩
+      refine ⟨haPrev ++ [aCur], ReachActionTrace.snoc hrPrev hsLast hrel, ?_⟩
       intro i
       have hLenPrev : ssPrev.length = haPrev.length + 1 :=
-        InfoModel.ReachActionTrace.length_states_eq_succ_actions hrPrev
+        ReachActionTrace.length_states_eq_succ_actions hrPrev
       have htoks :
           InfoModel.localHistTokens (I := I) i (haPrev ++ [aCur]) (ssPrev ++ [t]) =
             InfoModel.localHistTokens (I := I) i haPrev ssPrev ++
@@ -217,7 +217,7 @@ private theorem runDistPure_eq_of_localHistCompatible
     [∀ i, Fintype (Option (M.Act i))]
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss)
+    (hr : ReachActionTrace M ha ss)
     (π π' : PureProfile I)
     (hπ :
       ∀ i, LocalHistCompatible (I := I) i (π i)
@@ -233,7 +233,7 @@ private theorem runDistPure_eq_of_localHistCompatible
   | @snoc ha ss s t a hrPrev hsLast hrel ih =>
       have hLenPrev :
           ss.length = ha.length + 1 :=
-        InfoModel.ReachActionTrace.length_states_eq_succ_actions hrPrev
+        ReachActionTrace.length_states_eq_succ_actions hrPrev
       have htoks :
           ∀ i,
             InfoModel.localHistTokens (I := I) i (ha ++ [a]) (ss ++ [t]) =
@@ -325,7 +325,7 @@ private theorem runDistPure_eq_zero_of_not_localHistCompatible
     (hPR : I.PerfectRecall)
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss)
+    (hr : ReachActionTrace M ha ss)
     (π : PureProfile I)
     (hnc :
       ¬ ∀ i, LocalHistCompatible (I := I) i (π i)
@@ -336,7 +336,7 @@ private theorem runDistPure_eq_zero_of_not_localHistCompatible
     exists_reachActionTrace_of_runDistPure_ne_zero
       (I := I) (D := D) ha.length π ss hne
   have hacts :
-      ∀ i, InfoModel.projectActions i ha' = InfoModel.projectActions i ha := by
+      ∀ i, projectActions i ha' = projectActions i ha := by
     intro i
     exact actionRecall_of_projectStates_eq (I := I) hPR i hr' hr rfl
   haveI : Nonempty ι := by
@@ -361,7 +361,7 @@ theorem runDistPure_factor_via_localHistIndicators
     (hPR : I.PerfectRecall)
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss)
+    (hr : ReachActionTrace M ha ss)
     (π0 : PureProfile I)
     (hcompat0 :
       ∀ i, LocalHistCompatible (I := I) i (π0 i)
@@ -417,7 +417,7 @@ theorem query_disintegration_factorization
     (hlen : hs.length = n + 1)
     {π0 : PureProfile I}
     {ha : List (JointAction M)}
-    (hr : InfoModel.ReachActionTrace M ha hs)
+    (hr : ReachActionTrace M ha hs)
     (hcompat : ∀ i, LocalHistCompatible (I := I) i (π0 i)
       (InfoModel.localHistTokens (I := I) i ha hs))
     (stepPureY : PureProfile I → ENNReal) :
@@ -440,7 +440,7 @@ theorem query_disintegration_factorization
     fun i => iterCondMixedLocal (I := I) i (μ i) (hist i)
   let C : ENNReal := ∑' π, μJ π * (D.runDistPure n π) hs
   have hhaLen : ha.length = n := by
-    have hreachLen := InfoModel.ReachActionTrace.length_states_eq_succ_actions hr
+    have hreachLen := ReachActionTrace.length_states_eq_succ_actions hr
     exact Nat.succ.inj <| by
       simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
         hreachLen.symm.trans hlen

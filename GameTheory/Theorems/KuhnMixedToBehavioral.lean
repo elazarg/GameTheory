@@ -38,7 +38,7 @@ noncomputable def mixedToBehavioral
     if h :
       ∃ ha : List (JointAction M),
       ∃ ss : List M.State,
-        InfoModel.ReachActionTrace M ha ss ∧
+        ReachActionTrace M ha ss ∧
         I.projectStates i ss = v
     then ?_ else PMF.pure none
   let ha : List (JointAction M) := Classical.choose h
@@ -57,7 +57,7 @@ theorem mixedToBehavioral_eq_iterCond_pushforward
     (i : ι)
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss) :
+    (hr : ReachActionTrace M ha ss) :
     mixedToBehavioral (I := I) μ i (I.projectStates i ss) =
       Math.ProbabilityMassFunction.pushforward
         (iterCondMixedLocal (I := I) i (μ i)
@@ -69,27 +69,27 @@ theorem mixedToBehavioral_eq_iterCond_pushforward
   have hreach :
       ∃ ha' : List (JointAction M),
       ∃ ss' : List M.State,
-        InfoModel.ReachActionTrace M ha' ss' ∧
+        ReachActionTrace M ha' ss' ∧
           I.projectStates i ss' = v := by
     exact ⟨ha, ss, hr, rfl⟩
   rw [dif_pos hreach]
   dsimp [v]
   let ha' : List (JointAction M) := Classical.choose hreach
   let ss' : List M.State := Classical.choose (Classical.choose_spec hreach)
-  have hr' : InfoModel.ReachActionTrace M ha' ss' :=
+  have hr' : ReachActionTrace M ha' ss' :=
     (Classical.choose_spec (Classical.choose_spec hreach)).1
   have hproj :
       I.projectStates i ss' = I.projectStates i ss :=
     (Classical.choose_spec (Classical.choose_spec hreach)).2
   have hacts :
-      InfoModel.projectActions i ha' = InfoModel.projectActions i ha :=
+      projectActions i ha' = projectActions i ha :=
     actionRecall_of_projectStates_eq (I := I) hPR i hr' hr hproj
   have hLen' :
       ss'.length = ha'.length + 1 :=
-    InfoModel.ReachActionTrace.length_states_eq_succ_actions hr'
+    ReachActionTrace.length_states_eq_succ_actions hr'
   have hLen :
       ss.length = ha.length + 1 :=
-    InfoModel.ReachActionTrace.length_states_eq_succ_actions hr
+    ReachActionTrace.length_states_eq_succ_actions hr
   have hhist :
       InfoModel.localHistTokens (I := I) i ha' ss' =
         InfoModel.localHistTokens (I := I) i ha ss :=
@@ -122,7 +122,7 @@ theorem kuhn_conditioning_distributes_over_sequencing_actionState
     (μ : InfoModel.MixedProfile (I := I))
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss) :
+    (hr : ReachActionTrace M ha ss) :
     D.stepActionStateDist (mixedToBehavioral (I := I) μ) ss =
       (InfoModel.mixedJoint (I := I)
         (conditionedMixedProfile (I := I) μ ha ss)).bind
@@ -182,7 +182,7 @@ theorem kuhn_conditioning_distributes_over_sequencing_map
     (μ : InfoModel.MixedProfile (I := I))
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss)
+    (hr : ReachActionTrace M ha ss)
     (f : JointAction M × M.State → β) :
     Math.ProbabilityMassFunction.pushforward
       (D.stepActionStateDist (mixedToBehavioral (I := I) μ) ss) f =
@@ -227,7 +227,7 @@ theorem kuhn_conditioning_distributes_over_sequencing
     (μ : InfoModel.MixedProfile (I := I))
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss) :
+    (hr : ReachActionTrace M ha ss) :
     Math.ProbabilityMassFunction.pushforward
       (D.stepDist (mixedToBehavioral (I := I) μ) ss)
       (fun t => ss ++ [t]) =
@@ -311,7 +311,7 @@ private theorem reachable_stepPoint_eq_conditioned_sum
     (μ : InfoModel.MixedProfile (I := I))
     {ha : List (JointAction M)}
     {hs : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha hs)
+    (hr : ReachActionTrace M ha hs)
     (y : List M.State) :
     let μHist : InfoModel.MixedProfile (I := I) := conditionedMixedProfile (I := I) μ ha hs
     let stepPureY : PureProfile I → ENNReal := fun π =>

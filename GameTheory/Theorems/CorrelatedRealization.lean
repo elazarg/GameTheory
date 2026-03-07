@@ -1,5 +1,4 @@
-import GameTheory.Model.SemanticForm
-import GameTheory.Model.Lemmas.ProjectStates
+import GameTheory.Core.ObsModel
 import Math.ParameterizedChain
 
 /-! # Correlated realization and Kuhn M→B
@@ -11,7 +10,7 @@ outcome-level, utility-level, or any other derived equality.
 
 ## Correlated realization (no assumptions)
 
-For **any** joint distribution `ν : PMF (PureProfile I)` (not necessarily a product),
+For **any** joint distribution `ν : PMF (PureProfile O)` (not necessarily a product),
 there exists a **mediator** — a history-dependent correlated action recommendation —
 producing the same trace distribution. No structural assumptions are needed.
 
@@ -23,21 +22,21 @@ requires progressively stronger conditions:
 - **PSAR** (`PerStepActionRecall`): mediator factors through observations;
   product input → product output (coordination preservation)
 - **PSAR + PlayerStepRecall i**: each player's factor is obs-local
-- **PSPR** (`PerStepPlayerRecall = ∀ i, PlayerStepRecall I i`): full
+- **PSPR** (`PerStepPlayerRecall = ∀ i, PlayerStepRecall O i`): full
   decentralization into independent `BehavioralProfile`
 
 The per-player condition admits two weakenings:
-- `ReachablePlayerStepRecall I i`: restricted to step-reachable states
-- `TracePlayerStepRecall I i`: restricted to states reached via traces
+- `ReachablePlayerStepRecall O i`: restricted to step-reachable states
+- `TracePlayerStepRecall O i`: restricted to states reached via traces
   with equal full observation histories (tightest syntactic condition)
 
-Both `PSPR` and `PerfectRecall` imply `∀ i, TracePlayerStepRecall I i`
+Both `PSPR` and `PerfectRecall` imply `∀ i, TracePlayerStepRecall O i`
 (neither implies the other). See the hierarchy section at the end.
 
 ## Main theorem
 
 `kuhn_mixed_to_behavioral_trace` is the central result: under
-`PSAR + ∀ i, TracePlayerStepRecall I i` (the weakest syntactic condition),
+`PSAR + ∀ i, TracePlayerStepRecall O i` (the weakest syntactic condition),
 any product distribution over pure profiles can be realized by an independent
 behavioral profile. Both `kuhn_mixed_to_behavioral_pspr` and
 `kuhn_mixed_to_behavioral_decomposed` are direct corollaries. -/
@@ -46,9 +45,193 @@ set_option autoImplicit false
 
 namespace GameTheory
 
-open Math.ProbabilityMassFunction Math.ParameterizedChain Execution Execution.Dynamics
+namespace ObsModel
 
-variable {ι : Type} {M : LSM ι} {I : InfoModel M}
+variable {ι : Type} {M : LSM ι}
+
+/-- Player-local visible trace: list of per-step observations. -/
+abbrev LocalTrace (O : ObsModel M) (i : ι) := List (O.Obs i)
+
+/-- Project a state trace to player `i`'s local observation trace. -/
+def projectStates (O : ObsModel M) (i : ι) (ss : List M.State) : O.LocalTrace i :=
+  ss.map (O.observe i)
+
+/-- Observation equivalence: two states are obs-equivalent for player `i`
+when `observe i` gives the same value. -/
+def obsEq (O : ObsModel M) (i : ι) (s t : M.State) : Prop :=
+  O.observe i s = O.observe i t
+
+/-! ### Profile types -/
+
+/-- Deterministic profile over local visible history. -/
+abbrev PureProfile (O : ObsModel M) : Type :=
+  ∀ i, O.LocalTrace i → Option (M.Act i)
+
+/-- Behavioral (stochastic) profile over local visible history. -/
+abbrev BehavioralProfile (O : ObsModel M) : Type :=
+  ∀ i, O.LocalTrace i → PMF (Option (M.Act i))
+
+/-- Correlated behavioral profile over the full visible history context. -/
+abbrev BehavioralProfileCorr (O : ObsModel M) : Type :=
+  (∀ i, O.LocalTrace i) → PMF (JointAction M)
+
+/-- Lift a deterministic profile to a behavioral one. -/
+noncomputable def pureToBehavioral (O : ObsModel M) (π : PureProfile O) : BehavioralProfile O :=
+  fun i v => PMF.pure (π i v)
+
+/-- Embed an independent behavioral profile as a correlated one by product sampling. -/
+noncomputable def behavioralToCorr
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (O : ObsModel M) (σ : BehavioralProfile O) : BehavioralProfileCorr O :=
+  fun v => Math.PMFProduct.pmfPi (fun i => σ i (v i))
+
+/-! ### Dynamics -/
+
+/-- Stochastic execution choices on top of nondeterministic machine rules. -/
+structure Dynamics (O : ObsModel M) where
+  /-- Next-state kernel, conditioned on joint action and current latent state. -/
+  nextState : JointAction M → M.State → PMF M.State
+  /-- Soundness: sampled next states respect machine step relation. -/
+  nextState_sound :
+    ∀ (a : JointAction M) (s t : M.State),
+      (nextState a s) t ≠ 0 → M.step a s t
+
+namespace Dynamics
+
+variable {O : ObsModel M}
+
+/-- Independent joint-action distribution induced by a behavioral profile. -/
+noncomputable def jointActionDist
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (σ : BehavioralProfile O) (ss : List M.State) : PMF (JointAction M) :=
+  Math.PMFProduct.pmfPi (fun i => σ i (O.projectStates i ss))
+
+/-- One stochastic step from a current state under behavioral profile `σ`. -/
+noncomputable def stepDist (D : Dynamics O)
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (σ : BehavioralProfile O) (ss : List M.State) : PMF M.State :=
+  let s := (ss.getLast?).getD M.init
+  (jointActionDist (O := O) σ ss).bind fun a =>
+    D.nextState a s
+
+/-- One stochastic step under a correlated behavioral profile. -/
+noncomputable def stepDistCorr (D : Dynamics O)
+    [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (σ : BehavioralProfileCorr O) (ss : List M.State) : PMF M.State :=
+  let s := (ss.getLast?).getD M.init
+  let v : ∀ i, O.LocalTrace i := fun i => O.projectStates i ss
+  (σ v).bind fun a =>
+    D.nextState a s
+
+/-- Bounded run distribution of length exactly `k`, storing just the state trace. -/
+noncomputable def runDist (D : Dynamics O)
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (k : Nat) (σ : BehavioralProfile O) : PMF (List M.State) :=
+  Nat.rec (PMF.pure [M.init])
+    (fun _ rec =>
+      rec.bind (fun ss =>
+        Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss)
+          (fun t => ss ++ [t])))
+    k
+
+/-- Pure-profile run distribution via `pureToBehavioral`. -/
+noncomputable def runDistPure (D : Dynamics O)
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+    (k : Nat) (π : PureProfile O) : PMF (List M.State) :=
+  D.runDist k (pureToBehavioral O π)
+
+end Dynamics
+
+/-! ### ProjectStates API lemmas -/
+
+section ProjectStatesAPI
+
+variable (O : ObsModel M)
+
+theorem projectStates_eq_length (i : ι) {ss₁ ss₂ : List M.State}
+    (h : O.projectStates i ss₁ = O.projectStates i ss₂) :
+    ss₁.length = ss₂.length := by
+  have := congr_arg List.length h
+  simp only [projectStates, List.length_map] at this
+  exact this
+
+theorem obsEq_of_projectStates_getLast (i : ι) {ss ss' : List M.State}
+    (hproj : O.projectStates i ss = O.projectStates i ss') :
+    O.obsEq i (ss.getLast?.getD M.init) (ss'.getLast?.getD M.init) := by
+  simp only [projectStates] at hproj
+  simp only [obsEq]
+  have hlen := congr_arg List.length hproj
+  simp only [List.length_map] at hlen
+  have := congr_arg List.getLast? hproj
+  simp only [List.getLast?_map] at this
+  cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;> simp_all [Option.map]
+
+theorem projectStates_prefix_of_append
+    (i : ι) {p p' : List M.State} {t t' : M.State}
+    (h : O.projectStates i (p ++ [t]) = O.projectStates i (p' ++ [t'])) :
+    O.projectStates i p = O.projectStates i p' := by
+  simp only [projectStates, List.map_append, List.map_cons, List.map_nil] at h
+  exact List.append_inj_left' h (by simp)
+
+theorem obsEq_of_projectStates_append
+    (i : ι) {p p' : List M.State} {t t' : M.State}
+    (h : O.projectStates i (p ++ [t]) = O.projectStates i (p' ++ [t'])) :
+    O.obsEq i t t' := by
+  simp only [projectStates, List.map_append, List.map_cons, List.map_nil] at h
+  simp only [obsEq]
+  have := List.append_inj_right' h (by simp)
+  simpa using this
+
+/-- `projectActions` distributes over append (LSM-only, no observation model needed). -/
+theorem projectActions_snoc (i : ι) (ha : List (JointAction M)) (a : JointAction M) :
+    projectActions i (ha ++ [a]) = projectActions i ha ++ [a i] := by
+  simp [projectActions, List.map_append]
+
+/-- Equal `projectActions` on appended singletons implies equal last actions. -/
+theorem projectActions_last_eq (i : ι) {ha ha' : List (JointAction M)}
+    {a a' : JointAction M}
+    (h : projectActions i (ha ++ [a]) = projectActions i (ha' ++ [a'])) :
+    a i = a' i := by
+  rw [projectActions_snoc, projectActions_snoc] at h
+  exact List.cons.inj (List.append_inj_right' h (by simp)) |>.1
+
+end ProjectStatesAPI
+
+/-! ### Recall predicates -/
+
+/-- Observation recall: indistinguishable terminal visible states imply identical
+player-local visible histories on the corresponding reaches. -/
+def ObsRecall (O : ObsModel M) : Prop :=
+  ∀ (i : ι) (ss₁ ss₂ : List M.State) (s₁ s₂ : M.State),
+    ReachStateTrace M ss₁ →
+    ReachStateTrace M ss₂ →
+    ss₁.getLast? = some s₁ →
+    ss₂.getLast? = some s₂ →
+    O.obsEq i s₁ s₂ →
+    O.projectStates i ss₁ = O.projectStates i ss₂
+
+/-- Action recall: indistinguishable terminal visible states imply identical
+player-local own-action traces on the corresponding action-annotated reaches. -/
+def ActionRecall (O : ObsModel M) : Prop :=
+  ∀ (i : ι)
+    (ha₁ ha₂ : List (JointAction M))
+    (ss₁ ss₂ : List M.State) (s₁ s₂ : M.State),
+    ReachActionTrace M ha₁ ss₁ →
+    ReachActionTrace M ha₂ ss₂ →
+    ss₁.getLast? = some s₁ →
+    ss₂.getLast? = some s₂ →
+    O.obsEq i s₁ s₂ →
+    projectActions i ha₁ = projectActions i ha₂
+
+/-- Perfect recall is the conjunction of observation recall and action recall. -/
+def PerfectRecall (O : ObsModel M) : Prop :=
+  O.ObsRecall ∧ O.ActionRecall
+
+end ObsModel
+
+open Math.ProbabilityMassFunction Math.ParameterizedChain ObsModel ObsModel.Dynamics
+
+variable {ι : Type} {M : LSM ι} {O : ObsModel M}
 
 section
 
@@ -56,26 +239,26 @@ variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 
 /-- The parameterized step function extracted from game dynamics:
 maps a pure profile and a state trace to a next-state distribution. -/
-noncomputable def pureStep (D : Dynamics I) (π : PureProfile I)
+noncomputable def pureStep (D : Dynamics O) (π : PureProfile O)
     (ss : List M.State) : PMF M.State :=
-  D.stepDist (pureToBehavioral I π) ss
+  D.stepDist (pureToBehavioral O π) ss
 
 /-- `runDistPure` is definitionally equal to `pureRun` applied to `pureStep`. -/
-theorem runDistPure_eq_pureRun (D : Dynamics I) (k : Nat) (π : PureProfile I) :
+theorem runDistPure_eq_pureRun (D : Dynamics O) (k : Nat) (π : PureProfile O) :
     D.runDistPure k π = pureRun (pureStep D) M.init k π := rfl
 
 /-- Mediator construction: condition `ν` on the probability of reaching
 the current state trace, then extract correlated joint actions. -/
-noncomputable def mixedToMediator [Fintype (PureProfile I)]
-    (ν : PMF (PureProfile I)) (D : Dynamics I)
+noncomputable def mixedToMediator [Fintype (PureProfile O)]
+    (ν : PMF (PureProfile O)) (D : Dynamics O)
     (n : Nat) (ss : List M.State) : PMF (JointAction M) :=
   (reweightPMF ν (fun π => pureRun (pureStep D) M.init n π ss)).bind
-    (fun π => jointActionDist (pureToBehavioral I π) ss)
+    (fun π => jointActionDist (pureToBehavioral O π) ss)
 
 /-- The mediator's action recommendations composed with dynamics equal
 the `condStep` from `ParameterizedChain` (monad associativity). -/
-theorem mediator_step_eq_condStep [Fintype (PureProfile I)]
-    (ν : PMF (PureProfile I)) (D : Dynamics I) (n : Nat) (ss : List M.State) :
+theorem mediator_step_eq_condStep [Fintype (PureProfile O)]
+    (ν : PMF (PureProfile O)) (D : Dynamics O) (n : Nat) (ss : List M.State) :
     (mixedToMediator ν D n ss).bind
       (fun a => D.nextState a ((ss.getLast?).getD M.init)) =
       condStep ν (pureStep D) M.init n ss := by
@@ -90,8 +273,8 @@ recommendations from the state trace at each step — such that the run under `m
 trace distribution as the `ν`-averaged pure runs.
 
 No perfect recall is needed. -/
-theorem correlated_realization (D : Dynamics I) [Fintype (PureProfile I)]
-    (ν : PMF (PureProfile I)) (k : Nat) :
+theorem correlated_realization (D : Dynamics O) [Fintype (PureProfile O)]
+    (ν : PMF (PureProfile O)) (k : Nat) :
     ∃ m : Nat → List M.State → PMF (JointAction M),
       seqRun (fun n ss =>
         (m n ss).bind (fun a => D.nextState a ((ss.getLast?).getD M.init)))
@@ -113,15 +296,15 @@ end
 
 Under **per-step action recall** (the observation transition determines the
 action), the state-trace mediator factors through observations, giving a
-`BehavioralProfileCorr I` witness. -/
+`BehavioralProfileCorr O` witness. -/
 
 /-- Per-step action recall: any two transitions with observation-equivalent
 source and target states must use the same joint action.  This means the
 observation transition uniquely determines the action taken. -/
-def PerStepActionRecall (I : InfoModel M) : Prop :=
+def PerStepActionRecall (O : ObsModel M) : Prop :=
   ∀ (a a' : JointAction M) (s s' t t' : M.State),
     M.step a s t → M.step a' s' t' →
-    (∀ i, I.obsEq i s s') → (∀ i, I.obsEq i t t') →
+    (∀ i, O.obsEq i s s') → (∀ i, O.obsEq i t t') →
     a = a'
 
 
@@ -142,81 +325,81 @@ variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 
 /-- `jointActionDist` depends on the state trace only through observations. -/
 theorem jointActionDist_obs_invariant
-    (σ : BehavioralProfile I) (ss₁ ss₂ : List M.State)
-    (hobs : ∀ i, I.projectStates i ss₁ = I.projectStates i ss₂) :
-    jointActionDist (I := I) σ ss₁ = jointActionDist (I := I) σ ss₂ := by
+    (σ : BehavioralProfile O) (ss₁ ss₂ : List M.State)
+    (hobs : ∀ i, O.projectStates i ss₁ = O.projectStates i ss₂) :
+    jointActionDist (O := O) σ ss₁ = jointActionDist (O := O) σ ss₂ := by
   unfold jointActionDist
   congr 1; funext i; rw [hobs]
 
 /-- For pure profiles, `pureStep` is just `D.nextState` at the deterministic
 joint action. (Because `jointActionDist` on a pure profile is a point mass.) -/
-theorem pureStep_eq (D : Dynamics I) (π : PureProfile I) (ss : List M.State) :
+theorem pureStep_eq (D : Dynamics O) (π : PureProfile O) (ss : List M.State) :
     pureStep D π ss =
-      D.nextState (fun i => π i (I.projectStates i ss)) ((ss.getLast?).getD M.init) := by
+      D.nextState (fun i => π i (O.projectStates i ss)) ((ss.getLast?).getD M.init) := by
   unfold pureStep stepDist jointActionDist pureToBehavioral
   simp [Math.PMFProduct.pmfPi_pure, PMF.pure_bind]
 
 /-- Under PSAR, if two profiles produce nonzero transition at the same state
 trace and target, their step distributions are equal. -/
 theorem pureStep_eq_of_nonzero_same
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    {π₁ π₂ : PureProfile I} {ss : List M.State} {t : M.State}
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    {π₁ π₂ : PureProfile O} {ss : List M.State} {t : M.State}
     (h₁ : pureStep D π₁ ss t ≠ 0) (h₂ : pureStep D π₂ ss t ≠ 0) :
     pureStep D π₁ ss = pureStep D π₂ ss := by
   simp only [pureStep_eq] at h₁ h₂ ⊢
   rw [hPSAR _ _ _ _ _ _
     (D.nextState_sound _ _ _ h₁) (D.nextState_sound _ _ _ h₂)
-    (fun _ => ⟨rfl, rfl⟩) (fun _ => ⟨rfl, rfl⟩)]
+    (fun _ => rfl) (fun _ => rfl)]
 
 /-- Under `PerStepActionRecall`, if `pureStep` at obs-equivalent traces gives
 nonzero probability to obs-equivalent next states, the actions are equal. -/
 theorem pureStep_action_eq_of_psar
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
-    (hobs : ∀ i, I.projectStates i ss = I.projectStates i ss')
-    (hobst : ∀ i, I.obsEq i t t')
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    {π π' : PureProfile O} {ss ss' : List M.State} {t t' : M.State}
+    (hobs : ∀ i, O.projectStates i ss = O.projectStates i ss')
+    (hobst : ∀ i, O.obsEq i t t')
     (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0) :
-    (fun i => π i (I.projectStates i ss)) = (fun i => π' i (I.projectStates i ss')) := by
+    (fun i => π i (O.projectStates i ss)) = (fun i => π' i (O.projectStates i ss')) := by
   rw [pureStep_eq] at h1 h2
   exact hPSAR _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (fun i => I.obsEq_of_projectStates_getLast i (hobs i)) hobst
+    (fun i => O.obsEq_of_projectStates_getLast i (hobs i)) hobst
 
 /-- Under PSAR, `pureStep` satisfies the cross-ratio for obs-equivalent
 state traces and obs-equivalent targets. -/
 theorem pureStep_cross_ratio
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    {π₁ π₂ : PureProfile I} {ss₁ ss₂ : List M.State} {t₁ t₂ : M.State}
-    (hobs : ∀ i, I.projectStates i ss₁ = I.projectStates i ss₂)
-    (hobst : ∀ i, I.obsEq i t₁ t₂) :
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    {π₁ π₂ : PureProfile O} {ss₁ ss₂ : List M.State} {t₁ t₂ : M.State}
+    (hobs : ∀ i, O.projectStates i ss₁ = O.projectStates i ss₂)
+    (hobst : ∀ i, O.obsEq i t₁ t₂) :
     pureStep D π₁ ss₁ t₁ * pureStep D π₂ ss₂ t₂ =
       pureStep D π₂ ss₁ t₁ * pureStep D π₁ ss₂ t₂ := by
   -- Actions are the same at obs-equivalent traces for any fixed profile
-  have hact₁ : (fun i => π₁ i (I.projectStates i ss₁)) =
-      (fun i => π₁ i (I.projectStates i ss₂)) := by funext i; rw [hobs]
-  have hact₂ : (fun i => π₂ i (I.projectStates i ss₁)) =
-      (fun i => π₂ i (I.projectStates i ss₂)) := by funext i; rw [hobs]
+  have hact₁ : (fun i => π₁ i (O.projectStates i ss₁)) =
+      (fun i => π₁ i (O.projectStates i ss₂)) := by funext i; rw [hobs]
+  have hact₂ : (fun i => π₂ i (O.projectStates i ss₁)) =
+      (fun i => π₂ i (O.projectStates i ss₂)) := by funext i; rw [hobs]
   simp only [pureStep_eq, ← hact₁, ← hact₂]
   -- Now: nextState(a, last ss₁)(t₁) * nextState(b, last ss₂)(t₂) = ...
   -- where a = act(π₁,ss₁), b = act(π₂,ss₁)
   by_cases hab :
-      (fun i => π₁ i (I.projectStates i ss₁)) = (fun i => π₂ i (I.projectStates i ss₁))
+      (fun i => π₁ i (O.projectStates i ss₁)) = (fun i => π₂ i (O.projectStates i ss₁))
   · rw [hab]
   · -- If a ≠ b, PSAR forces both products to be zero
-    have hobss : ∀ i, I.obsEq i
+    have hobss : ∀ i, O.obsEq i
         ((ss₁.getLast?).getD M.init) ((ss₂.getLast?).getD M.init) :=
-      fun i => I.obsEq_of_projectStates_getLast i (hobs i)
-    have hL : D.nextState (fun i => π₁ i (I.projectStates i ss₁))
+      fun i => O.obsEq_of_projectStates_getLast i (hobs i)
+    have hL : D.nextState (fun i => π₁ i (O.projectStates i ss₁))
           ((ss₁.getLast?).getD M.init) t₁ *
-        D.nextState (fun i => π₂ i (I.projectStates i ss₁))
+        D.nextState (fun i => π₂ i (O.projectStates i ss₁))
           ((ss₂.getLast?).getD M.init) t₂ = 0 := by
       by_contra h
       rw [mul_eq_zero, not_or] at h
       exact hab (hPSAR _ _ _ _ _ _
         (D.nextState_sound _ _ _ h.1) (D.nextState_sound _ _ _ h.2) hobss hobst)
-    have hR : D.nextState (fun i => π₂ i (I.projectStates i ss₁))
+    have hR : D.nextState (fun i => π₂ i (O.projectStates i ss₁))
           ((ss₁.getLast?).getD M.init) t₁ *
-        D.nextState (fun i => π₁ i (I.projectStates i ss₁))
+        D.nextState (fun i => π₁ i (O.projectStates i ss₁))
           ((ss₂.getLast?).getD M.init) t₂ = 0 := by
       by_contra h
       rw [mul_eq_zero, not_or] at h
@@ -229,9 +412,9 @@ obs-equivalent traces: the reach probability ratio is profile-independent.
 Proof: by induction on k, using `pureStep_eq_of_nonzero_same` for the
 same-state case and `pureStep_action_eq_of_psar` for cross-state. -/
 theorem pureRun_pairwise_cross_of_psar
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (k : Nat) (π₁ π₂ : PureProfile I) (ss₁ ss₂ : List M.State)
-    (hobs : ∀ i, I.projectStates i ss₁ = I.projectStates i ss₂) :
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (k : Nat) (π₁ π₂ : PureProfile O) (ss₁ ss₂ : List M.State)
+    (hobs : ∀ i, O.projectStates i ss₁ = O.projectStates i ss₂) :
     pureRun (pureStep D) M.init k π₁ ss₁ *
       pureRun (pureStep D) M.init k π₂ ss₂ =
     pureRun (pureStep D) M.init k π₂ ss₁ *
@@ -256,10 +439,10 @@ theorem pureRun_pairwise_cross_of_psar
         -- Goal: R(n,π₁,p₁)*S(π₁,p₁,t₁) * (R(n,π₂,p₂)*S(π₂,p₂,t₂)) =
         --       R(n,π₂,p₁)*S(π₂,p₁,t₁) * (R(n,π₁,p₂)*S(π₁,p₂,t₂))
         -- Extract obs-equiv of prefixes and last elements
-        have hobs_prefix : ∀ i, I.projectStates i p₁ = I.projectStates i p₂ :=
-          fun i => I.projectStates_prefix_of_append i (hobs i)
-        have hobs_last : ∀ i, I.obsEq i t₁ t₂ :=
-          fun i => I.obsEq_of_projectStates_append i (hobs i)
+        have hobs_prefix : ∀ i, O.projectStates i p₁ = O.projectStates i p₂ :=
+          fun i => O.projectStates_prefix_of_append i (hobs i)
+        have hobs_last : ∀ i, O.obsEq i t₁ t₂ :=
+          fun i => O.obsEq_of_projectStates_append i (hobs i)
         -- Use IH for prefixes and step cross-ratio for last elements
         have hIH := ih p₁ p₂ hobs_prefix
         have hStep := pureStep_cross_ratio hPSAR D hobs_prefix hobs_last
@@ -277,17 +460,17 @@ theorem pureRun_pairwise_cross_of_psar
           _ = pureRun (pureStep D) M.init n π₂ p₁ * pureStep D π₂ p₁ t₁ *
               (pureRun (pureStep D) M.init n π₁ p₂ * pureStep D π₁ p₂ t₂) := by ring
 
-variable [Fintype (PureProfile I)]
+variable [Fintype (PureProfile O)]
 
 /-- Under `PerStepActionRecall`, for obs-equivalent state traces, the
 `reweightPMF` on reach probabilities gives the same distribution. -/
 theorem reweightPMF_pureRun_obs_invariant
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (ν : PMF (PureProfile I)) (n : Nat)
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (ν : PMF (PureProfile O)) (n : Nat)
     (ss₁ ss₂ : List M.State)
-    (hobs : ∀ i, I.projectStates i ss₁ = I.projectStates i ss₂)
-    (hreach₁ : ∑ π : PureProfile I, ν π * pureRun (pureStep D) M.init n π ss₁ ≠ 0)
-    (hreach₂ : ∑ π : PureProfile I, ν π * pureRun (pureStep D) M.init n π ss₂ ≠ 0) :
+    (hobs : ∀ i, O.projectStates i ss₁ = O.projectStates i ss₂)
+    (hreach₁ : ∑ π : PureProfile O, ν π * pureRun (pureStep D) M.init n π ss₁ ≠ 0)
+    (hreach₂ : ∑ π : PureProfile O, ν π * pureRun (pureStep D) M.init n π ss₂ ≠ 0) :
     reweightPMF ν (fun π => pureRun (pureStep D) M.init n π ss₁) =
     reweightPMF ν (fun π => pureRun (pureStep D) M.init n π ss₂) := by
   have hCtop₁ : ∑ π, ν π * pureRun (pureStep D) M.init n π ss₁ ≠ ⊤ :=
@@ -311,42 +494,42 @@ theorem reweightPMF_pureRun_obs_invariant
 /-- Under `PerStepActionRecall`, the state-trace mediator at obs-equivalent
 reachable traces produces the same action distribution. -/
 theorem mixedToMediator_obs_invariant
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (ν : PMF (PureProfile I)) (n : Nat)
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (ν : PMF (PureProfile O)) (n : Nat)
     (ss₁ ss₂ : List M.State)
-    (hobs : ∀ i, I.projectStates i ss₁ = I.projectStates i ss₂)
-    (hreach₁ : ∑ π : PureProfile I, ν π * pureRun (pureStep D) M.init n π ss₁ ≠ 0)
-    (hreach₂ : ∑ π : PureProfile I, ν π * pureRun (pureStep D) M.init n π ss₂ ≠ 0) :
+    (hobs : ∀ i, O.projectStates i ss₁ = O.projectStates i ss₂)
+    (hreach₁ : ∑ π : PureProfile O, ν π * pureRun (pureStep D) M.init n π ss₁ ≠ 0)
+    (hreach₂ : ∑ π : PureProfile O, ν π * pureRun (pureStep D) M.init n π ss₂ ≠ 0) :
     mixedToMediator ν D n ss₁ = mixedToMediator ν D n ss₂ := by
   unfold mixedToMediator
   rw [reweightPMF_pureRun_obs_invariant hPSAR D ν n ss₁ ss₂ hobs hreach₁ hreach₂]
   congr 1; funext π
-  exact jointActionDist_obs_invariant (pureToBehavioral I π) ss₁ ss₂ hobs
+  exact jointActionDist_obs_invariant (pureToBehavioral O π) ss₁ ss₂ hobs
 
 end ObsLevel
 
 section ObsCorrelatedRealization
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-variable [Fintype (PureProfile I)] [∀ i, Fintype (I.LocalTrace i)]
+variable [Fintype (PureProfile O)] [∀ i, Fintype (O.LocalTrace i)]
 
 set_option linter.unusedSectionVars false in
 set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Observation-level correlated realization**: under `PerStepActionRecall`,
-a `BehavioralProfileCorr I` (observation-level mediator) produces the same
+a `BehavioralProfileCorr O` (observation-level mediator) produces the same
 trace distribution as any mixed strategy `ν`. -/
 theorem obs_correlated_realization [Inhabited ι]
-    (hPSAR : PerStepActionRecall I)
-    (D : Dynamics I) (ν : PMF (PureProfile I)) (k : Nat) :
-    ∃ σ : BehavioralProfileCorr I,
+    (hPSAR : PerStepActionRecall O)
+    (D : Dynamics O) (ν : PMF (PureProfile O)) (k : Nat) :
+    ∃ σ : BehavioralProfileCorr O,
       seqRun (fun _ ss => D.stepDistCorr σ ss) M.init k =
       ν.bind (pureRun (pureStep D) M.init k) := by
   -- Define obs-level mediator: pick a reachable representative state trace
-  let σ : BehavioralProfileCorr I := fun v =>
+  let σ : BehavioralProfileCorr O := fun v =>
     if h : ∃ ss : List M.State,
-          (∀ i, I.projectStates i ss = v i) ∧
-          ∑ π : PureProfile I, ν π * pureRun (pureStep D) M.init (ss.length - 1) π ss ≠ 0
+          (∀ i, O.projectStates i ss = v i) ∧
+          ∑ π : PureProfile O, ν π * pureRun (pureStep D) M.init (ss.length - 1) π ss ≠ 0
     then mixedToMediator ν D (h.choose.length - 1) h.choose
     else PMF.pure (fun _ => none)
   refine ⟨σ, ?_⟩
@@ -385,14 +568,14 @@ theorem obs_correlated_realization [Inhabited ι]
     obtain ⟨π, _, hπ⟩ := Finset.exists_ne_zero_of_sum_ne_zero hreach
     exact pureRun_length (pureStep D) M.init n π ss (right_ne_zero_of_mul hπ)
   -- 3. σ(projectStates(ss)) = mixedToMediator ν D n ss
-  have hσ : σ (fun i => I.projectStates i ss) = mixedToMediator ν D n ss := by
+  have hσ : σ (fun i => O.projectStates i ss) = mixedToMediator ν D n ss := by
     -- The existential is satisfied by ss itself
     have hexist : ∃ ss' : List M.State,
-        (∀ i, I.projectStates i ss' = I.projectStates i ss) ∧
+        (∀ i, O.projectStates i ss' = O.projectStates i ss) ∧
         ∑ π, ν π * pureRun (pureStep D) M.init (ss'.length - 1) π ss' ≠ 0 :=
       ⟨ss, fun _ => rfl, by rwa [show ss.length - 1 = n from by omega]⟩
     change (if h : ∃ ss' : List M.State,
-        (∀ i, I.projectStates i ss' = (fun i => I.projectStates i ss) i) ∧
+        (∀ i, O.projectStates i ss' = (fun i => O.projectStates i ss) i) ∧
         ∑ π, ν π * pureRun (pureStep D) M.init (ss'.length - 1) π ss' ≠ 0
       then mixedToMediator ν D (h.choose.length - 1) h.choose
       else PMF.pure (fun _ => none)) = _
@@ -403,7 +586,7 @@ theorem obs_correlated_realization [Inhabited ι]
     have hreach' := hexist.choose_spec.2
     -- ss'.length = ss.length (from obs-equiv via publicView)
     have hlen' : ss'.length = ss.length :=
-      I.projectStates_eq_length (default : ι) (hobs' default)
+      O.projectStates_eq_length (default : ι) (hobs' default)
     -- ss'.length - 1 = n
     have hn' : ss'.length - 1 = n := by omega
     rw [hn']
@@ -411,7 +594,7 @@ theorem obs_correlated_realization [Inhabited ι]
       (by rwa [hn'] at hreach') hreach
   -- 4. stepDistCorr σ ss = condStep ... n ss
   calc D.stepDistCorr σ ss
-      = (σ (fun i => I.projectStates i ss)).bind
+      = (σ (fun i => O.projectStates i ss)).bind
           (fun a => D.nextState a ((ss.getLast?).getD M.init)) := rfl
     _ = (mixedToMediator ν D n ss).bind
           (fun a => D.nextState a ((ss.getLast?).getD M.init)) := by rw [hσ]
@@ -427,30 +610,30 @@ transition (not requiring other players' observations). -/
 
 /-- Per-step player recall: each player's action is determined by
 their own observation transition alone. -/
-def PerStepPlayerRecall (I : InfoModel M) : Prop :=
+def PerStepPlayerRecall (O : ObsModel M) : Prop :=
   ∀ (i : ι) (a a' : JointAction M) (s s' t t' : M.State),
     M.step a s t → M.step a' s' t' →
-    I.obsEq i s s' → I.obsEq i t t' →
+    O.obsEq i s s' → O.obsEq i t t' →
     a i = a' i
 
 /-- `PerStepPlayerRecall` implies `PerStepActionRecall`. -/
-theorem PerStepPlayerRecall.toAction (h : PerStepPlayerRecall I) :
-    PerStepActionRecall I :=
+theorem PerStepPlayerRecall.toAction (h : PerStepPlayerRecall O) :
+    PerStepActionRecall O :=
   fun a a' s s' t t' hs hs' hobs hobst =>
     funext fun i => h i a a' s s' t t' hs hs' (hobs i) (hobst i)
 
 /-- Per-player step recall for a **single** player `i`: player i's action
 component is determined by player i's own observation transition.
-`PerStepPlayerRecall I` is equivalent to `∀ i, PlayerStepRecall I i`. -/
-def PlayerStepRecall (I : InfoModel M) (i : ι) : Prop :=
+`PerStepPlayerRecall O` is equivalent to `∀ i, PlayerStepRecall O i`. -/
+def PlayerStepRecall (O : ObsModel M) (i : ι) : Prop :=
   ∀ (a a' : JointAction M) (s s' t t' : M.State),
     M.step a s t → M.step a' s' t' →
-    I.obsEq i s s' → I.obsEq i t t' →
+    O.obsEq i s s' → O.obsEq i t t' →
     a i = a' i
 
 /-- `PerStepPlayerRecall` is equivalent to every player having step recall. -/
 theorem perStepPlayerRecall_iff_forall :
-    PerStepPlayerRecall I ↔ ∀ i, PlayerStepRecall I i :=
+    PerStepPlayerRecall O ↔ ∀ i, PlayerStepRecall O i :=
   ⟨fun h i => h i, fun h i => h i⟩
 
 /-! ## Reachable per-step player recall
@@ -461,8 +644,8 @@ condition, `ReachablePlayerStepRecall`, that restricts the action-uniqueness
 requirement to reachable source states.
 
 The exact weakest condition for the Kuhn M→B proof is
-`∀ i, ReachablePlayerStepRecall I i`. It is implied by:
-- `PlayerStepRecall I i` (trivially, by dropping reachability hypotheses)
+`∀ i, ReachablePlayerStepRecall O i`. It is implied by:
+- `PlayerStepRecall O i` (trivially, by dropping reachability hypotheses)
 - `PerfectRecall I` (via `ActionRecall`): at obs-equivalent reachable
   endpoints, action traces are equal, hence last actions are equal.
 -/
@@ -471,7 +654,7 @@ The exact weakest condition for the Kuhn M→B proof is
 sequence of joint-action transitions from `M.init` reaching `s`. -/
 def StepReachable (s : M.State) : Prop :=
   ∃ (ha : List (JointAction M)) (ss : List M.State),
-    InfoModel.ReachActionTrace M ha ss ∧ ss.getLast? = some s
+    ReachActionTrace M ha ss ∧ ss.getLast? = some s
 
 /-- The initial state is always step-reachable. -/
 theorem stepReachable_init : StepReachable (M := M) M.init :=
@@ -485,16 +668,16 @@ theorem stepReachable_step {s t : M.State} {a : JointAction M}
   exact ⟨ha ++ [a], ss ++ [t], .snoc hreach hlast hstep, List.getLast?_concat ..⟩
 
 /-- Reachable per-step player recall for a single player `i`:
-`PlayerStepRecall I i` restricted to step-reachable source states.
+`PlayerStepRecall O i` restricted to step-reachable source states.
 
 This is the weakest condition under which the Kuhn M→B proof operates.
 Implied by:
-- `PlayerStepRecall I i` (trivially)
+- `PlayerStepRecall O i` (trivially)
 - `PerfectRecall I` (via `ActionRecall`) -/
 def ReachablePlayerStepRecall (i : ι) : Prop :=
   ∀ (a a' : JointAction M) (s s' t t' : M.State),
     M.step a s t → M.step a' s' t' →
-    I.obsEq i s s' → I.obsEq i t t' →
+    O.obsEq i s s' → O.obsEq i t t' →
     StepReachable (M := M) s → StepReachable (M := M) s' →
     a i = a' i
 
@@ -510,27 +693,27 @@ full obs-traces implies endpoint obs-equivalence, but not conversely. -/
 def TracePlayerStepRecall (i : ι) : Prop :=
   ∀ (a a' : JointAction M) (t t' : M.State)
     (ss ss' : List M.State),
-    (∃ ha, InfoModel.ReachActionTrace M ha ss) →
-    (∃ ha', InfoModel.ReachActionTrace M ha' ss') →
-    I.projectStates i ss = I.projectStates i ss' →
+    (∃ ha, ReachActionTrace M ha ss) →
+    (∃ ha', ReachActionTrace M ha' ss') →
+    O.projectStates i ss = O.projectStates i ss' →
     M.step a (ss.getLast?.getD M.init) t →
     M.step a' (ss'.getLast?.getD M.init) t' →
-    I.obsEq i t t' →
+    O.obsEq i t t' →
     a i = a' i
 
 /-- `PlayerStepRecall` implies `ReachablePlayerStepRecall` (drop reachability). -/
-theorem PlayerStepRecall.toReachable {i : ι} (h : PlayerStepRecall I i) :
-    ReachablePlayerStepRecall (I := I) i :=
+theorem PlayerStepRecall.toReachable {i : ι} (h : PlayerStepRecall O i) :
+    ReachablePlayerStepRecall (O := O) i :=
   fun _ _ _ _ _ _ hs hs' hobs hobst _ _ => h _ _ _ _ _ _ hs hs' hobs hobst
 
 /-- `ReachablePlayerStepRecall` implies `TracePlayerStepRecall`.
 The obs-equivalence `obsEq i s s'` follows from the trace equality
 `projectStates i ss = projectStates i ss'`. -/
 theorem ReachablePlayerStepRecall.toTrace {i : ι}
-    (h : ReachablePlayerStepRecall (I := I) i) :
-    TracePlayerStepRecall (I := I) i := by
+    (h : ReachablePlayerStepRecall (O := O) i) :
+    TracePlayerStepRecall (O := O) i := by
   intro a a' t t' ss ss' ⟨ha, hrat⟩ ⟨ha', hrat'⟩ hproj hstep hstep' hobst
-  have hobss := I.obsEq_of_projectStates_getLast i hproj
+  have hobss := O.obsEq_of_projectStates_getLast i hproj
   have hlast : ss.getLast? = some (ss.getLast?.getD M.init) := by
     cases hg : ss.getLast? with
     | none => cases hrat with | nil => simp at hg | snoc _ _ _ => simp at hg
@@ -543,51 +726,51 @@ theorem ReachablePlayerStepRecall.toTrace {i : ι}
     ⟨ha, ss, hrat, hlast⟩ ⟨ha', ss', hrat', hlast'⟩
 
 /-- `PlayerStepRecall` implies `TracePlayerStepRecall` (via `Reachable`). -/
-theorem PlayerStepRecall.toTrace {i : ι} (h : PlayerStepRecall I i) :
-    TracePlayerStepRecall (I := I) i :=
+theorem PlayerStepRecall.toTrace {i : ι} (h : PlayerStepRecall O i) :
+    TracePlayerStepRecall (O := O) i :=
   h.toReachable.toTrace
 
 /-- `PerfectRecall` implies `ReachablePlayerStepRecall` for all players.
 
 The key is `ActionRecall`: obs-equivalent reachable endpoints have equal
 action traces (per player), hence equal last actions. -/
-theorem PerfectRecall.toReachablePlayerStepRecall (hPR : I.PerfectRecall) (i : ι) :
-    ReachablePlayerStepRecall (I := I) i := by
+theorem PerfectRecall.toReachablePlayerStepRecall (hPR : O.PerfectRecall) (i : ι) :
+    ReachablePlayerStepRecall (O := O) i := by
   intro a a' s s' t t' hstep hstep' _ hobs_t hreach_s hreach_s'
   obtain ⟨ha_s, ss_s, hrat_s, hlast_s⟩ := hreach_s
   obtain ⟨ha_s', ss_s', hrat_s', hlast_s'⟩ := hreach_s'
   -- Extend the reach traces with the transitions
-  have hrat_t := InfoModel.ReachActionTrace.snoc hrat_s hlast_s hstep
-  have hrat_t' := InfoModel.ReachActionTrace.snoc hrat_s' hlast_s' hstep'
+  have hrat_t := ReachActionTrace.snoc hrat_s hlast_s hstep
+  have hrat_t' := ReachActionTrace.snoc hrat_s' hlast_s' hstep'
   -- Apply ActionRecall: obs-equiv endpoints ⟹ equal action traces
   have hact := hPR.2 i _ _ _ _ t t' hrat_t hrat_t'
     (List.getLast?_concat ..) (List.getLast?_concat ..) hobs_t
   -- Extract last action from the equal lists
-  exact InfoModel.projectActions_last_eq i hact
+  exact projectActions_last_eq i hact
 
 /-- `PerfectRecall` implies `TracePlayerStepRecall` for all players. -/
 theorem PerfectRecall.toTracePlayerStepRecall
-    (hPR : I.PerfectRecall) (i : ι) :
-    TracePlayerStepRecall (I := I) i :=
+    (hPR : O.PerfectRecall) (i : ι) :
+    TracePlayerStepRecall (O := O) i :=
   (PerfectRecall.toReachablePlayerStepRecall hPR i).toTrace
 
 /-- Under `PerStepActionRecall`, at most one action can produce a nonzero
 transition probability between any pair of states. -/
 theorem action_unique_of_psar
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
     {a a' : JointAction M} {s t : M.State}
     (ha : D.nextState a s t ≠ 0) (ha' : D.nextState a' s t ≠ 0) :
     a = a' :=
   hPSAR a a' s s t t (D.nextState_sound a s t ha) (D.nextState_sound a' s t ha')
-    (fun _ => ⟨rfl, rfl⟩) (fun _ => ⟨rfl, rfl⟩)
+    (fun _ => rfl) (fun _ => rfl)
 
 /-- Under `PerStepPlayerRecall`, player `i`'s action component is determined by
 their own observation at source and target. -/
 theorem action_component_unique_of_pspr
-    (hPSPR : PerStepPlayerRecall I) (D : Dynamics I)
+    (hPSPR : PerStepPlayerRecall O) (D : Dynamics O)
     (i : ι) {a a' : JointAction M} {s s' t t' : M.State}
     (ha : D.nextState a s t ≠ 0) (ha' : D.nextState a' s' t' ≠ 0)
-    (hobs : I.obsEq i s s') (hobst : I.obsEq i t t') :
+    (hobs : O.obsEq i s s') (hobst : O.obsEq i t t') :
     a i = a' i :=
   hPSPR i a a' s s' t t' (D.nextState_sound a s t ha) (D.nextState_sound a' s' t' ha')
     hobs hobst
@@ -602,14 +785,13 @@ section PureRunBridge
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 
-open Execution in
 /-- If `pureRun` reaches a trace with nonzero probability, there exists a
 corresponding `ReachActionTrace`. -/
 theorem pureRun_nonzero_to_reachActionTrace
-    (D : Dynamics I) (n : Nat)
-    (π : PureProfile I) (ss : List M.State)
+    (D : Dynamics O) (n : Nat)
+    (π : PureProfile O) (ss : List M.State)
     (h : pureRun (pureStep D) M.init n π ss ≠ 0) :
-    ∃ ha : List (JointAction M), InfoModel.ReachActionTrace M ha ss := by
+    ∃ ha : List (JointAction M), ReachActionTrace M ha ss := by
   induction n generalizing ss with
   | zero =>
     have hss : ss = [M.init] := by
@@ -632,12 +814,11 @@ theorem pureRun_nonzero_to_reachActionTrace
         | some _ => rfl
       exact ⟨ha_p ++ [_], .snoc hrat_p hlast hstep⟩
 
-open Execution in
 /-- If `pureRun` reaches `ss` with nonzero probability, the last state of `ss`
 is step-reachable from `M.init`. -/
 theorem pureRun_nonzero_last_stepReachable
-    (D : Dynamics I) (n : Nat)
-    (π : PureProfile I) (ss : List M.State)
+    (D : Dynamics O) (n : Nat)
+    (π : PureProfile O) (ss : List M.State)
     (h : pureRun (pureStep D) M.init n π ss ≠ 0) :
     StepReachable (M := M) (ss.getLast?.getD M.init) := by
   obtain ⟨ha, hrat⟩ := pureRun_nonzero_to_reachActionTrace D n π ss h
@@ -669,8 +850,8 @@ variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 If two profiles both reach `ss` with nonzero probability, they must produce
 the same action at every step, hence have the same reach probability. -/
 theorem pureRun_const_of_psar
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (n : Nat) {π π' : PureProfile I} {ss : List M.State}
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (n : Nat) {π π' : PureProfile O} {ss : List M.State}
     (h : pureRun (pureStep D) M.init n π ss ≠ 0)
     (h' : pureRun (pureStep D) M.init n π' ss ≠ 0) :
     pureRun (pureStep D) M.init n π ss =
@@ -691,18 +872,18 @@ theorem pureRun_const_of_psar
 /-- Under PSAR, at a reachable transition, `pureStep` is nonzero iff
 the profile produces the same action as any fixed witness profile. -/
 theorem pureStep_nonzero_iff_action_eq
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    {π₀ : PureProfile I} {ss : List M.State} {t : M.State}
-    (h₀ : pureStep D π₀ ss t ≠ 0) (π : PureProfile I) :
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    {π₀ : PureProfile O} {ss : List M.State} {t : M.State}
+    (h₀ : pureStep D π₀ ss t ≠ 0) (π : PureProfile O) :
     pureStep D π ss t ≠ 0 ↔
-      (fun i => π i (I.projectStates i ss)) =
-        (fun i => π₀ i (I.projectStates i ss)) := by
+      (fun i => π i (O.projectStates i ss)) =
+        (fun i => π₀ i (O.projectStates i ss)) := by
   constructor
   · intro hne
     rw [pureStep_eq] at hne h₀
     exact hPSAR _ _ _ _ _ _
       (D.nextState_sound _ _ _ hne) (D.nextState_sound _ _ _ h₀)
-      (fun _ => ⟨rfl, rfl⟩) (fun _ => ⟨rfl, rfl⟩)
+      (fun _ => rfl) (fun _ => rfl)
   · intro heq
     rwa [pureStep_eq, heq, ← pureStep_eq]
 
@@ -710,9 +891,9 @@ theorem pureStep_nonzero_iff_action_eq
 action as the witness at every step (prefix). The condition is:
 at each prefix `p ++ [t]` of `ss`, the profile agrees on the action at `p`. -/
 theorem pureRun_nonzero_iff_action_eq
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (n : Nat) {π₀ : PureProfile I} {ss : List M.State}
-    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) (π : PureProfile I) :
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (n : Nat) {π₀ : PureProfile O} {ss : List M.State}
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) (π : PureProfile O) :
     pureRun (pureStep D) M.init n π ss ≠ 0 ↔
       (pureRun (pureStep D) M.init n π ss =
         pureRun (pureStep D) M.init n π₀ ss) := by
@@ -723,11 +904,11 @@ theorem pureRun_nonzero_iff_action_eq
 /-- Under PSAR, `pureStep D π ss t` factors per-player: it is nonzero iff
 each player `i` individually produces the forced action component. -/
 theorem pureStep_nonzero_iff_forall_player
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    {π₀ : PureProfile I} {ss : List M.State} {t : M.State}
-    (h₀ : pureStep D π₀ ss t ≠ 0) (π : PureProfile I) :
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    {π₀ : PureProfile O} {ss : List M.State} {t : M.State}
+    (h₀ : pureStep D π₀ ss t ≠ 0) (π : PureProfile O) :
     pureStep D π ss t ≠ 0 ↔
-      ∀ i, π i (I.projectStates i ss) = π₀ i (I.projectStates i ss) := by
+      ∀ i, π i (O.projectStates i ss) = π₀ i (O.projectStates i ss) := by
   rw [pureStep_nonzero_iff_action_eq hPSAR D h₀]
   exact ⟨fun h i => congr_fun h i, funext⟩
 
@@ -735,10 +916,10 @@ theorem pureStep_nonzero_iff_forall_player
 per-player consistency indicator. If `π` is consistent (nonzero reach),
 the reach value equals the witness; otherwise it's zero. -/
 theorem pureRun_eq_const_mul_indicator
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (n : Nat) (π₀ : PureProfile I) (ss : List M.State)
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (n : Nat) (π₀ : PureProfile O) (ss : List M.State)
     (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0)
-    (π : PureProfile I) :
+    (π : PureProfile O) :
     pureRun (pureStep D) M.init n π ss =
       if pureRun (pureStep D) M.init n π ss ≠ 0
       then pureRun (pureStep D) M.init n π₀ ss
@@ -751,13 +932,13 @@ theorem pureRun_eq_const_mul_indicator
 at every prefix. Stated inductively: nonzero at `p ++ [t]` iff nonzero at `p`
 and action matches at `p`. -/
 theorem pureRun_succ_nonzero_iff
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (m : Nat) {π₀ : PureProfile I} {p : List M.State} {t : M.State}
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (m : Nat) {π₀ : PureProfile O} {p : List M.State} {t : M.State}
     (h₀ : pureRun (pureStep D) M.init (m + 1) π₀ (p ++ [t]) ≠ 0)
-    (π : PureProfile I) :
+    (π : PureProfile O) :
     pureRun (pureStep D) M.init (m + 1) π (p ++ [t]) ≠ 0 ↔
       pureRun (pureStep D) M.init m π p ≠ 0 ∧
-        ∀ i, π i (I.projectStates i p) = π₀ i (I.projectStates i p) := by
+        ∀ i, π i (O.projectStates i p) = π₀ i (O.projectStates i p) := by
   simp only [pureRun_succ_append] at h₀ ⊢
   have hp₀ := left_ne_zero_of_mul h₀
   have ht₀ := right_ne_zero_of_mul h₀
@@ -773,9 +954,9 @@ theorem pureRun_succ_nonzero_iff
 /-- Under PSAR, `pureStep` is invariant under changing players who produce
 the same action. If `π` and `π'` agree on the action at `ss` (all players
 give the same action component), then `pureStep D π ss = pureStep D π' ss`. -/
-theorem pureStep_eq_of_action_eq (D : Dynamics I)
-    {π π' : PureProfile I} {ss : List M.State}
-    (h : ∀ i, π i (I.projectStates i ss) = π' i (I.projectStates i ss)) :
+theorem pureStep_eq_of_action_eq (D : Dynamics O)
+    {π π' : PureProfile O} {ss : List M.State}
+    (h : ∀ i, π i (O.projectStates i ss) = π' i (O.projectStates i ss)) :
     pureStep D π ss = pureStep D π' ss := by
   simp only [pureStep_eq, funext h]
 
@@ -787,10 +968,10 @@ component from `π` into the witness `π₀` still gives nonzero reach.
 This is the cleanest per-player factoring: each player's consistency
 can be tested independently. -/
 theorem pureRun_nonzero_iff_update
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (n : Nat) {π₀ : PureProfile I} {ss : List M.State}
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (n : Nat) {π₀ : PureProfile O} {ss : List M.State}
     (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0)
-    (π : PureProfile I) :
+    (π : PureProfile O) :
     pureRun (pureStep D) M.init n π ss ≠ 0 ↔
       ∀ i, pureRun (pureStep D) M.init n
         (Function.update π₀ i (π i)) ss ≠ 0 := by
@@ -832,21 +1013,21 @@ variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 
 /-- Generalized step-independence-to-trace theorem: if a behavioral profile
 `σ` satisfies the step-independence property with respect to any
-`ν : PMF (PureProfile I)` (not necessarily a product), then
+`ν : PMF (PureProfile O)` (not necessarily a product), then
 `runDist k σ = ν.bind (runDistPure k)`.
 
 This generalizes the step-independence theorem from
 `KuhnCore.lean` by replacing `mixedJoint μ` with an arbitrary `ν`. -/
 theorem runDist_eq_of_stepIndependence
-    (D : Dynamics I) (ν : PMF (PureProfile I))
-    (σ : BehavioralProfile I)
+    (D : Dynamics O) (ν : PMF (PureProfile O))
+    (σ : BehavioralProfile O)
     (hStep : ∀ n,
       ν.bind (fun π =>
         (D.runDistPure n π).bind (fun ss =>
           pushforward (D.stepDist σ ss) (fun t => ss ++ [t]))) =
       ν.bind (fun π =>
         (D.runDistPure n π).bind (fun ss =>
-          pushforward (D.stepDist (pureToBehavioral I π) ss)
+          pushforward (D.stepDist (pureToBehavioral O π) ss)
             (fun t => ss ++ [t])))) (k : Nat) :
     D.runDist k σ = ν.bind (fun π => D.runDistPure k π) := by
   induction k with
@@ -864,7 +1045,7 @@ theorem runDist_eq_of_stepIndependence
           rw [PMF.bind_bind]
       _ = ν.bind (fun π =>
             (D.runDistPure n π).bind (fun ss =>
-              pushforward (D.stepDist (pureToBehavioral I π) ss)
+              pushforward (D.stepDist (pureToBehavioral O π) ss)
                 (fun t => ss ++ [t]))) := by simpa using hStep n
       _ = ν.bind (fun π => D.runDistPure (n + 1) π) := by
           simp [runDist, runDistPure]
@@ -872,31 +1053,31 @@ theorem runDist_eq_of_stepIndependence
 /-- Under `PerStepPlayerRecall`, the pure-step action component for player `i`
 depends only on player `i`'s observation at obs-equivalent traces. -/
 theorem pureStep_component_eq_of_pspr
-    (hPSPR : PerStepPlayerRecall I) (D : Dynamics I)
-    (i : ι) {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
-    (hobs_i : I.projectStates i ss = I.projectStates i ss')
-    (hobst_i : I.obsEq i t t')
+    (hPSPR : PerStepPlayerRecall O) (D : Dynamics O)
+    (i : ι) {π π' : PureProfile O} {ss ss' : List M.State} {t t' : M.State}
+    (hobs_i : O.projectStates i ss = O.projectStates i ss')
+    (hobst_i : O.obsEq i t t')
     (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0) :
-    π i (I.projectStates i ss) = π' i (I.projectStates i ss') := by
+    π i (O.projectStates i ss) = π' i (O.projectStates i ss') := by
   rw [pureStep_eq] at h1 h2
   exact hPSPR i _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (I.obsEq_of_projectStates_getLast i hobs_i) hobst_i
+    (O.obsEq_of_projectStates_getLast i hobs_i) hobst_i
 
 /-- Per-player version of `pureStep_component_eq_of_pspr`:
-only needs `PlayerStepRecall I i` for the specific player `i`,
+only needs `PlayerStepRecall O i` for the specific player `i`,
 not the full `PerStepPlayerRecall` for all players. -/
 theorem pureStep_component_eq_of_playerRecall
-    (i : ι) (hPSR_i : PlayerStepRecall I i) (D : Dynamics I)
-    {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
-    (hobs_i : I.projectStates i ss = I.projectStates i ss')
-    (hobst_i : I.obsEq i t t')
+    (i : ι) (hPSR_i : PlayerStepRecall O i) (D : Dynamics O)
+    {π π' : PureProfile O} {ss ss' : List M.State} {t t' : M.State}
+    (hobs_i : O.projectStates i ss = O.projectStates i ss')
+    (hobst_i : O.obsEq i t t')
     (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0) :
-    π i (I.projectStates i ss) = π' i (I.projectStates i ss') := by
+    π i (O.projectStates i ss) = π' i (O.projectStates i ss') := by
   rw [pureStep_eq] at h1 h2
   exact hPSR_i _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (I.obsEq_of_projectStates_getLast i hobs_i) hobst_i
+    (O.obsEq_of_projectStates_getLast i hobs_i) hobst_i
 
 end Decentralization
 
@@ -905,21 +1086,21 @@ section ProductPreservation
 open Math.PMFProduct
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-variable [∀ i, Fintype (I.LocalTrace i)]
+variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Classical in
 /-- Under PSAR, the reach weight `pureRun π ss` satisfies the cross-multiplication
 identity with the per-player product weight `∏ᵢ pureRun (update π₀ i (π i)) ss`.
 This allows switching between them via `reweightPMF_eq_of_cross_mul`. -/
 theorem pureRun_cross_mul_product
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I) (ν : PMF (PureProfile I))
-    (n : Nat) {π₀ : PureProfile I} {ss : List M.State}
-    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) (π : PureProfile I) :
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O) (ν : PMF (PureProfile O))
+    (n : Nat) {π₀ : PureProfile O} {ss : List M.State}
+    (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) (π : PureProfile O) :
     pureRun (pureStep D) M.init n π ss *
-      (∑ π' : PureProfile I, ν π' *
+      (∑ π' : PureProfile O, ν π' *
         ∏ i, pureRun (pureStep D) M.init n (Function.update π₀ i (π' i)) ss) =
     (∏ i, pureRun (pureStep D) M.init n (Function.update π₀ i (π i)) ss) *
-      (∑ π' : PureProfile I, ν π' *
+      (∑ π' : PureProfile O, ν π' *
         pureRun (pureStep D) M.init n π' ss) := by
   set C₀ := pureRun (pureStep D) M.init n π₀ ss with hC₀_def
   -- Helper: for consistent π', the reach equals C₀
@@ -927,7 +1108,7 @@ theorem pureRun_cross_mul_product
       pureRun (pureStep D) M.init n π' ss = C₀ :=
     fun π' h => pureRun_const_of_psar hPSAR D n h h₀
   -- Helper: for consistent π', each per-player weight equals C₀
-  have hconst_upd : ∀ (π' : PureProfile I) (i : ι),
+  have hconst_upd : ∀ (π' : PureProfile O) (i : ι),
       pureRun (pureStep D) M.init n (Function.update π₀ i (π' i)) ss ≠ 0 →
       pureRun (pureStep D) M.init n (Function.update π₀ i (π' i)) ss = C₀ :=
     fun π' i h => pureRun_const_of_psar hPSAR D n h h₀
@@ -974,30 +1155,30 @@ strategy distribution is preserved by the mediator construction. Combined with
 the observation-level realization, this gives the independent behavioral profile
 (Kuhn's theorem for the mixed → behavioral direction). -/
 theorem mediator_product_of_product
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (σ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)))
     (n : Nat) (ss : List M.State)
-    {π₀ : PureProfile I}
+    {π₀ : PureProfile O}
     (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) :
     ∃ τ : ∀ i, PMF (Option (M.Act i)),
       mixedToMediator (pmfPi σ) D n ss = pmfPi τ := by
   set ν := pmfPi σ with hν_def
-  set w : PureProfile I → ENNReal :=
+  set w : PureProfile O → ENNReal :=
     fun π => pureRun (pureStep D) M.init n π ss
-  set wᵢ : ∀ i, (I.LocalTrace i → Option (M.Act i)) → ENNReal :=
+  set wᵢ : ∀ i, (O.LocalTrace i → Option (M.Act i)) → ENNReal :=
     fun i πᵢ => pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss
   -- Reduce to: reweightPMF ν w is a product PMF
   -- The mediator is a pushforward of (reweightPMF ν w) through the coordwise map
   -- fun π i => π i (projectStates i ss), and pushforward of product
   -- = product (pmfPi_push_coordwise)
-  suffices hprod : ∃ ρ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)),
+  suffices hprod : ∃ ρ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)),
       reweightPMF ν w = pmfPi ρ by
     obtain ⟨ρ, hρ⟩ := hprod
-    exact ⟨fun i => Math.PMFProduct.pushforward (ρ i) (fun πᵢ => πᵢ (I.projectStates i ss)), by
+    exact ⟨fun i => Math.PMFProduct.pushforward (ρ i) (fun πᵢ => πᵢ (O.projectStates i ss)), by
       unfold mixedToMediator; rw [hρ]
       simp only [jointActionDist, pureToBehavioral]
       conv_lhs => arg 2; ext π; rw [pmfPi_pure]
-      exact pmfPi_push_coordwise ρ (fun i πᵢ => πᵢ (I.projectStates i ss))⟩
+      exact pmfPi_push_coordwise ρ (fun i πᵢ => πᵢ (O.projectStates i ss))⟩
   -- Case split on mass condition for reweightPMF
   by_cases hmass : (∑ π, ν π * w π) = 0 ∨ (∑ π, ν π * w π) = ⊤
   · -- Degenerate: reweightPMF falls back to ν = pmfPi σ
@@ -1060,7 +1241,7 @@ precise sense. -/
 section CoordinationPreservation
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-variable [∀ i, Fintype (I.LocalTrace i)]
+variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Math.PMFProduct
 
@@ -1079,19 +1260,19 @@ The mechanism: under PSAR, `pureRun_cross_mul_product` shows the reach
 weight is cross-multiplicatively equivalent to `∏ᵢ wᵢ(πᵢ)`, and
 `reweightPMF_pmfPi` factors reweighting by a product weight. -/
 theorem conditioning_preserves_product
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (σ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)))
     (n : Nat) {ss : List M.State}
-    {π₀ : PureProfile I}
+    {π₀ : PureProfile O}
     (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0) :
-    ∃ τ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)),
+    ∃ τ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)),
       reweightPMF (pmfPi σ)
         (fun π => pureRun (pureStep D) M.init n π ss) =
           pmfPi τ := by
   set ν := pmfPi σ
-  set w : PureProfile I → ENNReal :=
+  set w : PureProfile O → ENNReal :=
     fun π => pureRun (pureStep D) M.init n π ss
-  set wᵢ : ∀ i, (I.LocalTrace i → Option (M.Act i)) → ENNReal :=
+  set wᵢ : ∀ i, (O.LocalTrace i → Option (M.Act i)) → ENNReal :=
     fun i πᵢ => pureRun (pureStep D) M.init n
       (Function.update π₀ i πᵢ) ss
   -- Mass conditions
@@ -1167,19 +1348,19 @@ projections.
 All concrete variants (`pureRun_update_obs_local`, `_pspr`, `_player`) are
 one-line corollaries that supply the appropriate `hStep`. -/
 theorem pureRun_update_obs_local_of
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I) (n : Nat)
-    (i : ι) {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O) (n : Nat)
+    (i : ι) {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0)
     (hStep : ∀ (m : Nat) (p₁ p₂ : List M.State) (t₁ t₂ : M.State),
-      I.projectStates i p₁ = I.projectStates i p₂ →
-      I.obsEq i t₁ t₂ →
+      O.projectStates i p₁ = O.projectStates i p₂ →
+      O.obsEq i t₁ t₂ →
       pureRun (pureStep D) M.init m π₀ p₁ ≠ 0 →
       pureRun (pureStep D) M.init m π₀' p₂ ≠ 0 →
       pureStep D π₀ p₁ t₁ ≠ 0 → pureStep D π₀' p₂ t₂ ≠ 0 →
-      π₀ i (I.projectStates i p₁) = π₀' i (I.projectStates i p₂))
-    (πᵢ : I.LocalTrace i → Option (M.Act i)) :
+      π₀ i (O.projectStates i p₁) = π₀' i (O.projectStates i p₂))
+    (πᵢ : O.LocalTrace i → Option (M.Act i)) :
     pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 := by
   induction n generalizing ss₁ ss₂ with
@@ -1192,22 +1373,22 @@ theorem pureRun_update_obs_local_of
     rcases List.eq_nil_or_concat ss₂ with rfl | ⟨p₂, t₂, rfl⟩
     · exact absurd (pureRun_succ_nil _ _ _ _) h₂
     simp only [List.concat_eq_append] at hobs_i h₁ h₂ ⊢
-    have hobs_p : I.projectStates i p₁ = I.projectStates i p₂ :=
-      I.projectStates_prefix_of_append i hobs_i
-    have hobst : I.obsEq i t₁ t₂ := I.obsEq_of_projectStates_append i hobs_i
+    have hobs_p : O.projectStates i p₁ = O.projectStates i p₂ :=
+      O.projectStates_prefix_of_append i hobs_i
+    have hobst : O.obsEq i t₁ t₂ := O.obsEq_of_projectStates_append i hobs_i
     have hp₁ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
     have hp₂ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
     have ht₁ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
     have ht₂ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
     rw [pureRun_succ_nonzero_iff hPSAR D m h₁,
         pureRun_succ_nonzero_iff hPSAR D m h₂]
-    have hforced : π₀ i (I.projectStates i p₁) = π₀' i (I.projectStates i p₂) :=
+    have hforced : π₀ i (O.projectStates i p₁) = π₀' i (O.projectStates i p₂) :=
       hStep m p₁ p₂ t₁ t₂ hobs_p hobst hp₁ hp₂ ht₁ ht₂
     have hact_transfer :
-        (∀ j, Function.update π₀ i πᵢ j (I.projectStates j p₁) =
-          π₀ j (I.projectStates j p₁)) ↔
-        (∀ j, Function.update π₀' i πᵢ j (I.projectStates j p₂) =
-          π₀' j (I.projectStates j p₂)) := by
+        (∀ j, Function.update π₀ i πᵢ j (O.projectStates j p₁) =
+          π₀ j (O.projectStates j p₁)) ↔
+        (∀ j, Function.update π₀' i πᵢ j (O.projectStates j p₂) =
+          π₀' j (O.projectStates j p₂)) := by
       constructor <;> intro h
       · intro j; by_cases hij : j = i
         · rw [hij, Function.update_self, ← hforced, ← hobs_p]
@@ -1231,12 +1412,12 @@ one iff it reaches the other.
 
 Corollary of `pureRun_update_obs_local_of` with trivial `hStep` (same π₀). -/
 theorem pureRun_update_obs_local
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I) (n : Nat)
-    (i : ι) {π₀ : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O) (n : Nat)
+    (i : ι) {π₀ : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀ ss₂ ≠ 0)
-    (πᵢ : I.LocalTrace i → Option (M.Act i)) :
+    (πᵢ : O.LocalTrace i → Option (M.Act i)) :
     pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of hPSAR D n i hobs_i h₁ h₂
@@ -1252,10 +1433,10 @@ identity holds and `reweightPMF_eq_of_cross_mul` closes the goal.
 All concrete variants (`reweightPMF_update_obs_local`, `_pspr`, `_player`) are
 one-line corollaries that supply the appropriate `hiff`. -/
 theorem reweightPMF_update_obs_local_of
-    [∀ i, Fintype (I.LocalTrace i)]
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I) (n : Nat)
-    (i : ι) (σ_i : PMF (I.LocalTrace i → Option (M.Act i)))
-    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
+    [∀ i, Fintype (O.LocalTrace i)]
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O) (n : Nat)
+    (i : ι) (σ_i : PMF (O.LocalTrace i → Option (M.Act i)))
+    {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0)
     (hiff : ∀ πᵢ,
@@ -1307,11 +1488,11 @@ open Classical in
 /-- Under PSAR, the per-player reweighted PMF depends on `ss` only through
 `projectStates i ss`. Corollary of `reweightPMF_update_obs_local_of`. -/
 theorem reweightPMF_update_obs_local
-    [∀ i, Fintype (I.LocalTrace i)]
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I) (n : Nat)
-    (i : ι) (σ_i : PMF (I.LocalTrace i → Option (M.Act i)))
-    {π₀ : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    [∀ i, Fintype (O.LocalTrace i)]
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O) (n : Nat)
+    (i : ι) (σ_i : PMF (O.LocalTrace i → Option (M.Act i)))
+    {π₀ : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀ ss₂ ≠ 0) :
     reweightPMF σ_i
@@ -1325,12 +1506,12 @@ open Classical in
 /-- Under PSPR, obs-locality with **different** reference profiles.
 Corollary of `pureRun_update_obs_local_of` with `hStep` from `pureStep_component_eq_of_pspr`. -/
 theorem pureRun_update_obs_local_pspr
-    (hPSPR : PerStepPlayerRecall I) (D : Dynamics I) (n : Nat)
-    (i : ι) {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (hPSPR : PerStepPlayerRecall O) (D : Dynamics O) (n : Nat)
+    (i : ι) {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0)
-    (πᵢ : I.LocalTrace i → Option (M.Act i)) :
+    (πᵢ : O.LocalTrace i → Option (M.Act i)) :
     pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of (hPSPR.toAction) D n i hobs_i h₁ h₂
@@ -1343,11 +1524,11 @@ open Classical in
 Corollary of `reweightPMF_update_obs_local_of` with `hiff` from
 `pureRun_update_obs_local_pspr`. -/
 theorem reweightPMF_update_obs_local_pspr
-    [∀ i, Fintype (I.LocalTrace i)]
-    (hPSPR : PerStepPlayerRecall I) (D : Dynamics I) (n : Nat)
-    (i : ι) (σ_i : PMF (I.LocalTrace i → Option (M.Act i)))
-    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    [∀ i, Fintype (O.LocalTrace i)]
+    (hPSPR : PerStepPlayerRecall O) (D : Dynamics O) (n : Nat)
+    (i : ι) (σ_i : PMF (O.LocalTrace i → Option (M.Act i)))
+    {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0) :
     reweightPMF σ_i
@@ -1361,18 +1542,18 @@ end ObsLocality
 
 /-! ## Per-player obs-locality under PSAR + PlayerStepRecall
 
-The obs-locality lemmas in the previous section use `PerStepPlayerRecall I`
-(which equals `∀ i, PlayerStepRecall I i`). But each player's factor only
+The obs-locality lemmas in the previous section use `PerStepPlayerRecall O`
+(which equals `∀ i, PlayerStepRecall O i`). But each player's factor only
 needs their OWN recall condition. This section isolates the per-player
 requirement.
 
 The per-player chain is:
 1. `pureRun_succ_nonzero_iff` — needs `PerStepActionRecall` (joint, not per-player)
-2. `pureStep_component_eq_of_playerRecall` — needs `PlayerStepRecall I i` (only player i)
-3. `pureRun_update_obs_local_player` — needs PSAR + `PlayerStepRecall I i`
-4. `reweightPMF_update_obs_local_player` — needs PSAR + `PlayerStepRecall I i`
+2. `pureStep_component_eq_of_playerRecall` — needs `PlayerStepRecall O i` (only player i)
+3. `pureRun_update_obs_local_player` — needs PSAR + `PlayerStepRecall O i`
+4. `reweightPMF_update_obs_local_player` — needs PSAR + `PlayerStepRecall O i`
 
-This shows that `PerStepPlayerRecall I` in the main Kuhn theorem decomposes
+This shows that `PerStepPlayerRecall O` in the main Kuhn theorem decomposes
 cleanly: the global PSAR handles the reach structure, while each player's
 factor needs only their own `PlayerStepRecall`. -/
 
@@ -1381,17 +1562,17 @@ section PerPlayerObsLocality
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 
 open Classical in
-/-- Under PSAR + `PlayerStepRecall I i`, obs-locality with **different** reference profiles.
+/-- Under PSAR + `PlayerStepRecall O i`, obs-locality with **different** reference profiles.
 Corollary of `pureRun_update_obs_local_of` with `hStep` from
 `pureStep_component_eq_of_playerRecall`. -/
 theorem pureRun_update_obs_local_player
-    (hPSAR : PerStepActionRecall I) (i : ι) (hPSR_i : PlayerStepRecall I i)
-    (D : Dynamics I) (n : Nat)
-    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (hPSAR : PerStepActionRecall O) (i : ι) (hPSR_i : PlayerStepRecall O i)
+    (D : Dynamics O) (n : Nat)
+    {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0)
-    (πᵢ : I.LocalTrace i → Option (M.Act i)) :
+    (πᵢ : O.LocalTrace i → Option (M.Act i)) :
     pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of hPSAR D n i hobs_i h₁ h₂
@@ -1400,16 +1581,16 @@ theorem pureRun_update_obs_local_player
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-/-- Under PSAR + `PlayerStepRecall I i`, obs-locality with different reference profiles.
+/-- Under PSAR + `PlayerStepRecall O i`, obs-locality with different reference profiles.
 Corollary of `reweightPMF_update_obs_local_of` with `hiff` from
 `pureRun_update_obs_local_player`. -/
 theorem reweightPMF_update_obs_local_player
-    [∀ i, Fintype (I.LocalTrace i)]
-    (hPSAR : PerStepActionRecall I) (i : ι) (hPSR_i : PlayerStepRecall I i)
-    (D : Dynamics I) (n : Nat)
-    (σ_i : PMF (I.LocalTrace i → Option (M.Act i)))
-    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    [∀ i, Fintype (O.LocalTrace i)]
+    (hPSAR : PerStepActionRecall O) (i : ι) (hPSR_i : PlayerStepRecall O i)
+    (D : Dynamics O) (n : Nat)
+    (σ_i : PMF (O.LocalTrace i → Option (M.Act i)))
+    {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0) :
     reweightPMF σ_i
@@ -1448,7 +1629,7 @@ open Math.PMFProduct
 at every observation tuple `v`, then its step distribution equals that of the
 independent behavioral profile `β`. -/
 theorem stepDistCorr_eq_stepDist_of_product
-    (D : Dynamics I) (β : BehavioralProfile I) (σ : BehavioralProfileCorr I)
+    (D : Dynamics O) (β : BehavioralProfile O) (σ : BehavioralProfileCorr O)
     (hprod : ∀ v, σ v = pmfPi (fun i => β i (v i)))
     (ss : List M.State) :
     D.stepDistCorr σ ss = D.stepDist β ss := by
@@ -1458,7 +1639,7 @@ theorem stepDistCorr_eq_stepDist_of_product
 always outputs products with observation-local factors, the independent profile
 produces the same trace distribution. -/
 theorem runDist_eq_of_corrProduct
-    (D : Dynamics I) (β : BehavioralProfile I) (σ : BehavioralProfileCorr I)
+    (D : Dynamics O) (β : BehavioralProfile O) (σ : BehavioralProfileCorr O)
     (hprod : ∀ v, σ v = pmfPi (fun i => β i (v i)))
     (k : Nat) :
     D.runDist k β =
@@ -1490,7 +1671,7 @@ with `runDist k β = ν.bind (runDistPure k)`.
 section KuhnMtoB
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-variable [∀ i, Fintype (I.LocalTrace i)]
+variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Math.PMFProduct
 
@@ -1499,26 +1680,26 @@ open Classical in
 /-- Non-existential version of `mediator_product_of_product`:
 the mediator output equals the product of per-player factors. -/
 private theorem mixedToMediator_eq_pmfPi_factor
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I)
-    (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
-    (n : Nat) (ss : List M.State) {π₀ : PureProfile I}
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O)
+    (σ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)))
+    (n : Nat) (ss : List M.State) {π₀ : PureProfile O}
     (h₀ : pureRun (pureStep D) M.init n π₀ ss ≠ 0)
     (hν₀ : (pmfPi σ) π₀ ≠ 0) :
     mixedToMediator (pmfPi σ) D n ss = pmfPi (fun i =>
       Math.PMFProduct.pushforward
         (reweightPMF (σ i)
           (fun πᵢ => pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss))
-        (fun πᵢ => πᵢ (I.projectStates i ss))) := by
+        (fun πᵢ => πᵢ (O.projectStates i ss))) := by
   set ν := pmfPi σ with hν_def
   set w := fun π => pureRun (pureStep D) M.init n π ss
-  set wᵢ := fun i (πᵢ : I.LocalTrace i → Option (M.Act i)) =>
+  set wᵢ := fun i (πᵢ : O.LocalTrace i → Option (M.Act i)) =>
     pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss
   suffices hprod : reweightPMF ν w = pmfPi (fun i => reweightPMF (σ i) (wᵢ i)) by
     unfold mixedToMediator; rw [hprod]
     simp only [jointActionDist, pureToBehavioral]
     conv_lhs => arg 2; ext π; rw [pmfPi_pure]
-    exact pmfPi_push_coordwise _ (fun i (πᵢ : I.LocalTrace i → Option (M.Act i)) =>
-      πᵢ (I.projectStates i ss))
+    exact pmfPi_push_coordwise _ (fun i (πᵢ : O.LocalTrace i → Option (M.Act i)) =>
+      πᵢ (O.projectStates i ss))
   -- Non-degeneracy setup
   have hσ_ne : ∀ i, σ i (π₀ i) ≠ 0 := by
     intro i hi; apply hν₀; rw [hν_def, pmfPi_apply]
@@ -1559,10 +1740,10 @@ The Kuhn M→B proof uses two kinds of conditions:
 
 **Syntactic conditions** — structural properties of the game model `M` and info structure `I`,
 independent of dynamics `D`:
-- `PerStepActionRecall I` (PSAR): joint action determined by joint obs transition
-- `PlayerStepRecall I i`: player i's action determined by own obs transition
-- `PerStepPlayerRecall I` (PSPR = ∀ i, PlayerStepRecall I i)
-- `ReachablePlayerStepRecall I i`: PlayerStepRecall restricted to step-reachable states
+- `PerStepActionRecall O` (PSAR): joint action determined by joint obs transition
+- `PlayerStepRecall O i`: player i's action determined by own obs transition
+- `PerStepPlayerRecall O` (PSPR = ∀ i, PlayerStepRecall O i)
+- `ReachablePlayerStepRecall O i`: PlayerStepRecall restricted to step-reachable states
 - `PerfectRecall I`: full history reconstruction from observations
 
 **Semantic conditions** — properties of the execution semantics, depending on dynamics `D`:
@@ -1575,7 +1756,7 @@ The key relationships:
 
 ```
 Syntactic → Semantic (always holds):
-  PSAR + PlayerStepRecall I i  →  ObsLocalFeasibility D i  (for all D)
+  PSAR + PlayerStepRecall O i  →  ObsLocalFeasibility D i  (for all D)
   PSAR                         →  StepActionDeterminism D   (for all D)
 
 Semantic ↛ Syntactic (converse fails):
@@ -1592,14 +1773,14 @@ variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 (has nonzero probability of reaching a given trace) depends only on player `i`'s observation
 of that trace, not on the full state trace.
 
-This is the semantic content of what `PlayerStepRecall I i` provides in the Kuhn proof.
+This is the semantic content of what `PlayerStepRecall O i` provides in the Kuhn proof.
 Unlike `PlayerStepRecall`, this condition depends on the dynamics `D`. -/
-def ObsLocalFeasibility (D : Dynamics I) (i : ι) : Prop :=
-  ∀ (n : Nat) (π₀ π₀' : PureProfile I) (ss₁ ss₂ : List M.State),
-    I.projectStates i ss₁ = I.projectStates i ss₂ →
+def ObsLocalFeasibility (D : Dynamics O) (i : ι) : Prop :=
+  ∀ (n : Nat) (π₀ π₀' : PureProfile O) (ss₁ ss₂ : List M.State),
+    O.projectStates i ss₁ = O.projectStates i ss₂ →
     pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0 →
     pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0 →
-    ∀ (πᵢ : I.LocalTrace i → Option (M.Act i)),
+    ∀ (πᵢ : O.LocalTrace i → Option (M.Act i)),
       pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
       pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0
 
@@ -1610,7 +1791,7 @@ This is the semantic content of what `PerStepActionRecall` provides: at reachabl
 transitions with the same obs-equivalence classes, the action must be the same.
 Since `StepActionDeterminism` applies to the *same* states (reflexive obs-equivalence),
 it is strictly weaker than PSAR. -/
-def StepActionDeterminism (_ : Dynamics I) : Prop :=
+def StepActionDeterminism (_ : Dynamics O) : Prop :=
   ∀ (a a' : JointAction M) (s t : M.State),
     M.step a s t → M.step a' s t → a = a'
 
@@ -1618,27 +1799,27 @@ omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))] in
 /-- PSAR implies step action determinism for any dynamics.
 PSAR with reflexive obs-equivalence (same source, same target) gives action uniqueness. -/
 theorem PerStepActionRecall.toStepActionDeterminism
-    (hPSAR : PerStepActionRecall I) (D : Dynamics I) :
-    StepActionDeterminism (I := I) D :=
-  fun _ _ _ _ h1 h2 => hPSAR _ _ _ _ _ _ h1 h2 (fun _ => ⟨rfl, rfl⟩) (fun _ => ⟨rfl, rfl⟩)
+    (hPSAR : PerStepActionRecall O) (D : Dynamics O) :
+    StepActionDeterminism (O := O) D :=
+  fun _ _ _ _ h1 h2 => hPSAR _ _ _ _ _ _ h1 h2 (fun _ => rfl) (fun _ => rfl)
 
 open Classical in
-/-- **Syntactic → Semantic**: PSAR + `PlayerStepRecall I i` implies `ObsLocalFeasibility D i`
+/-- **Syntactic → Semantic**: PSAR + `PlayerStepRecall O i` implies `ObsLocalFeasibility D i`
 for any dynamics `D`.
 
 This is exactly `pureRun_update_obs_local_player`, restated as an implication between
 named conditions. -/
 theorem obsLocalFeasibility_of_playerStepRecall
-    (hPSAR : PerStepActionRecall I) (i : ι) (hPSR_i : PlayerStepRecall I i)
-    (D : Dynamics I) : ObsLocalFeasibility (I := I) D i :=
+    (hPSAR : PerStepActionRecall O) (i : ι) (hPSR_i : PlayerStepRecall O i)
+    (D : Dynamics O) : ObsLocalFeasibility (O := O) D i :=
   fun n _ _ _ _ hobs h₁ h₂ πᵢ =>
     pureRun_update_obs_local_player hPSAR i hPSR_i D n hobs h₁ h₂ πᵢ
 
-/-- Under `PerStepPlayerRecall` (= ∀ i, PlayerStepRecall I i), obs-local feasibility
+/-- Under `PerStepPlayerRecall` (= ∀ i, PlayerStepRecall O i), obs-local feasibility
 holds for every player and any dynamics. -/
 theorem obsLocalFeasibility_of_pspr
-    (hPSPR : PerStepPlayerRecall I) (D : Dynamics I) (i : ι) :
-    ObsLocalFeasibility (I := I) D i :=
+    (hPSPR : PerStepPlayerRecall O) (D : Dynamics O) (i : ι) :
+    ObsLocalFeasibility (O := O) D i :=
   obsLocalFeasibility_of_playerStepRecall
     hPSPR.toAction i (perStepPlayerRecall_iff_forall.mp hPSPR i) D
 
@@ -1646,21 +1827,21 @@ theorem obsLocalFeasibility_of_pspr
 `pureStep_component_eq_of_playerRecall` but using the weaker
 `ReachablePlayerStepRecall` with explicit step-reachability witnesses. -/
 theorem pureStep_component_eq_of_reachablePlayerRecall
-    (i : ι) (hRPSR_i : ReachablePlayerStepRecall (I := I) i) (D : Dynamics I)
-    {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
-    (hobs_i : I.projectStates i ss = I.projectStates i ss')
-    (hobst_i : I.obsEq i t t')
+    (i : ι) (hRPSR_i : ReachablePlayerStepRecall (O := O) i) (D : Dynamics O)
+    {π π' : PureProfile O} {ss ss' : List M.State} {t t' : M.State}
+    (hobs_i : O.projectStates i ss = O.projectStates i ss')
+    (hobst_i : O.obsEq i t t')
     (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0)
     (hreach_s : StepReachable (M := M) (ss.getLast?.getD M.init))
     (hreach_s' : StepReachable (M := M) (ss'.getLast?.getD M.init)) :
-    π i (I.projectStates i ss) = π' i (I.projectStates i ss') := by
+    π i (O.projectStates i ss) = π' i (O.projectStates i ss') := by
   rw [pureStep_eq] at h1 h2
   exact hRPSR_i _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (I.obsEq_of_projectStates_getLast i hobs_i) hobst_i hreach_s hreach_s'
+    (O.obsEq_of_projectStates_getLast i hobs_i) hobst_i hreach_s hreach_s'
 
 open Classical in
-/-- **Weakest syntactic → semantic**: PSAR + `ReachablePlayerStepRecall I i`
+/-- **Weakest syntactic → semantic**: PSAR + `ReachablePlayerStepRecall O i`
 implies `ObsLocalFeasibility D i`. This uses the weakest syntactic condition
 that the Kuhn proof actually needs.
 
@@ -1668,9 +1849,9 @@ The key insight: `pureRun_update_obs_local_player` only invokes
 `PlayerStepRecall` at states reached via `pureRun` with nonzero probability,
 which are exactly the step-reachable states. -/
 theorem obsLocalFeasibility_of_reachablePlayerStepRecall
-    (hPSAR : PerStepActionRecall I) (i : ι)
-    (hRPSR_i : ReachablePlayerStepRecall (I := I) i)
-    (D : Dynamics I) : ObsLocalFeasibility (I := I) D i :=
+    (hPSAR : PerStepActionRecall O) (i : ι)
+    (hRPSR_i : ReachablePlayerStepRecall (O := O) i)
+    (D : Dynamics O) : ObsLocalFeasibility (O := O) D i :=
   fun n _ _ _ _ hobs h₁ h₂ πᵢ =>
     pureRun_update_obs_local_of hPSAR D n i hobs h₁ h₂
       (fun m p₁ p₂ _ _ hobs_p hobst hp₁ hp₂ ht₁ ht₂ =>
@@ -1683,20 +1864,20 @@ theorem obsLocalFeasibility_of_reachablePlayerStepRecall
 at pureStep-supported transitions from traces with equal obs-projections,
 the player-i action components agree. -/
 theorem pureStep_component_eq_of_tracePlayerRecall
-    (i : ι) (hTPSR : TracePlayerStepRecall (I := I) i) (D : Dynamics I)
-    {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
-    (hproj : I.projectStates i ss = I.projectStates i ss')
-    (hobst : I.obsEq i t t')
+    (i : ι) (hTPSR : TracePlayerStepRecall (O := O) i) (D : Dynamics O)
+    {π π' : PureProfile O} {ss ss' : List M.State} {t t' : M.State}
+    (hproj : O.projectStates i ss = O.projectStates i ss')
+    (hobst : O.obsEq i t t')
     (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0)
-    (hreach : ∃ ha, InfoModel.ReachActionTrace M ha ss)
-    (hreach' : ∃ ha', InfoModel.ReachActionTrace M ha' ss') :
-    π i (I.projectStates i ss) = π' i (I.projectStates i ss') := by
+    (hreach : ∃ ha, ReachActionTrace M ha ss)
+    (hreach' : ∃ ha', ReachActionTrace M ha' ss') :
+    π i (O.projectStates i ss) = π' i (O.projectStates i ss') := by
   rw [pureStep_eq] at h1 h2
   exact hTPSR _ _ _ _ _ _ hreach hreach' hproj
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2) hobst
 
 open Classical in
-/-- **Tightest syntactic → semantic**: PSAR + `TracePlayerStepRecall I i`
+/-- **Tightest syntactic → semantic**: PSAR + `TracePlayerStepRecall O i`
 implies `ObsLocalFeasibility D i`.
 
 This is strictly tighter than `obsLocalFeasibility_of_reachablePlayerStepRecall`
@@ -1705,9 +1886,9 @@ reached via traces with equal full observation histories, not at all
 obs-equivalent reachable states. The proof's induction naturally maintains
 the stronger `projectStates i p₁ = projectStates i p₂` invariant. -/
 theorem obsLocalFeasibility_of_tracePlayerStepRecall
-    (hPSAR : PerStepActionRecall I) (i : ι)
-    (hTPSR : TracePlayerStepRecall (I := I) i)
-    (D : Dynamics I) : ObsLocalFeasibility (I := I) D i :=
+    (hPSAR : PerStepActionRecall O) (i : ι)
+    (hTPSR : TracePlayerStepRecall (O := O) i)
+    (D : Dynamics O) : ObsLocalFeasibility (O := O) D i :=
   fun n _ _ _ _ hobs h₁ h₂ πᵢ =>
     pureRun_update_obs_local_of hPSAR D n i hobs h₁ h₂
       (fun m p₁ p₂ _ _ hobs_p hobst hp₁ hp₂ ht₁ ht₂ =>
@@ -1727,18 +1908,18 @@ and `pureRun_nonzero_to_reachActionTrace` from that section. -/
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-/-- Under PSAR + `TracePlayerStepRecall I i`, updating player `i`'s strategy
+/-- Under PSAR + `TracePlayerStepRecall O i`, updating player `i`'s strategy
 preserves feasibility across obs-equivalent traces. -/
 theorem pureRun_update_obs_local_trace
     [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (hPSAR : PerStepActionRecall I) (i : ι)
-    (hTPSR : TracePlayerStepRecall (I := I) i)
-    (D : Dynamics I) (n : Nat)
-    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    (hPSAR : PerStepActionRecall O) (i : ι)
+    (hTPSR : TracePlayerStepRecall (O := O) i)
+    (D : Dynamics O) (n : Nat)
+    {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0)
-    (πᵢ : I.LocalTrace i → Option (M.Act i)) :
+    (πᵢ : O.LocalTrace i → Option (M.Act i)) :
     pureRun (pureStep D) M.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (pureStep D) M.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of hPSAR D n i hobs_i h₁ h₂
@@ -1750,16 +1931,16 @@ theorem pureRun_update_obs_local_trace
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-/-- Under PSAR + `TracePlayerStepRecall I i`, `reweightPMF` is obs-local for player `i`. -/
+/-- Under PSAR + `TracePlayerStepRecall O i`, `reweightPMF` is obs-local for player `i`. -/
 theorem reweightPMF_update_obs_local_trace
     [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    [∀ i, Fintype (I.LocalTrace i)]
-    (hPSAR : PerStepActionRecall I) (i : ι)
-    (hTPSR : TracePlayerStepRecall (I := I) i)
-    (D : Dynamics I) (n : Nat)
-    (σ_i : PMF (I.LocalTrace i → Option (M.Act i)))
-    {π₀ π₀' : PureProfile I} {ss₁ ss₂ : List M.State}
-    (hobs_i : I.projectStates i ss₁ = I.projectStates i ss₂)
+    [∀ i, Fintype (O.LocalTrace i)]
+    (hPSAR : PerStepActionRecall O) (i : ι)
+    (hTPSR : TracePlayerStepRecall (O := O) i)
+    (D : Dynamics O) (n : Nat)
+    (σ_i : PMF (O.LocalTrace i → Option (M.Act i)))
+    {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List M.State}
+    (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (pureStep D) M.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (pureStep D) M.init n π₀' ss₂ ≠ 0) :
     reweightPMF σ_i
@@ -1775,13 +1956,13 @@ The results in this file form a hierarchy of increasingly specific realization
 theorems:
 
 ### Level 0: Correlated realization (no recall needed)
-`correlated_realization`: For any `ν : PMF (PureProfile I)`, there exists a
+`correlated_realization`: For any `ν : PMF (PureProfile O)`, there exists a
 state-trace mediator producing the same outcome distribution. No structural
 assumptions on the game.
 
 ### Level 1: Observation-level correlated realization (PSAR)
 `obs_correlated_realization`: Under `PerStepActionRecall`, the state-trace
-mediator factors through observations, giving a `BehavioralProfileCorr I`
+mediator factors through observations, giving a `BehavioralProfileCorr O`
 (correlated behavioral profile).
 
 ### Level 2: Product preservation (PSAR)
@@ -1796,36 +1977,36 @@ distributions factor (`reweightPMF_pmfPi`).
 ν gives product mediator output at each reachable trace.
 
 ### Level 3: Per-player obs-locality (PSAR + PlayerStepRecall i)
-`reweightPMF_update_obs_local_player`: Under PSAR + `PlayerStepRecall I i`,
+`reweightPMF_update_obs_local_player`: Under PSAR + `PlayerStepRecall O i`,
 the i-th factor of the product mediator depends only on player i's
 observation. This is the per-player content — each player's decentralization
 needs only their own recall condition.
 
-### Level 4: Full decentralization (PSAR + ∀ i, TracePlayerStepRecall I i)
+### Level 4: Full decentralization (PSAR + ∀ i, TracePlayerStepRecall O i)
 `kuhn_mixed_to_behavioral_trace`: Under the weakest syntactic condition
 (PSAR + per-player trace step recall), the product mediator fully
-decentralizes into an independent `BehavioralProfile I`.
+decentralizes into an independent `BehavioralProfile O`.
 
 `kuhn_mixed_to_behavioral_pspr`: PSPR corollary (via PlayerStepRecall → TracePlayerStepRecall).
 `kuhn_mixed_to_behavioral_decomposed`: Per-player corollary.
 
 ### Weakening the per-player condition
 
-`ReachablePlayerStepRecall I i`: `PlayerStepRecall I i` restricted to
+`ReachablePlayerStepRecall O i`: `PlayerStepRecall O i` restricted to
 step-reachable source states.
 
-`TracePlayerStepRecall I i`: Even tighter — requires action agreement
+`TracePlayerStepRecall O i`: Even tighter — requires action agreement
 only at reachable states reached via traces with equal **full**
 observation histories (`projectStates i ss = projectStates i ss'`),
 not merely obs-equivalent endpoints (`obsEq i s s'`).
 
 Syntactic implication chain:
 ```
-  PSPR = ∀ i, PlayerStepRecall I i
+  PSPR = ∀ i, PlayerStepRecall O i
                ↓ (drop reachability req)
-         ∀ i, ReachablePlayerStepRecall I i
+         ∀ i, ReachablePlayerStepRecall O i
                ↓ (strengthen hyp: obsEq → full trace eq)
-         ∀ i, TracePlayerStepRecall I i
+         ∀ i, TracePlayerStepRecall O i
                ↑ (PerfectRecall → Reachable → Trace)
          PerfectRecall = ObsRecall ∧ ActionRecall
 ```
@@ -1844,10 +2025,10 @@ by the source-target pair. Semantic content of PSAR (reflexive case).
 
 Full syntactic → semantic implication graph:
 ```
-  PlayerStepRecall I i → ReachablePlayerStepRecall I i
-    → TracePlayerStepRecall I i → (+ PSAR) ObsLocalFeasibility D i
+  PlayerStepRecall O i → ReachablePlayerStepRecall O i
+    → TracePlayerStepRecall O i → (+ PSAR) ObsLocalFeasibility D i
 
-  PerfectRecall → ReachablePlayerStepRecall I i (via ActionRecall)
+  PerfectRecall → ReachablePlayerStepRecall O i (via ActionRecall)
   PSAR → StepActionDeterminism D
 ```
 
@@ -1858,12 +2039,12 @@ make obs-locality hold without the syntactic action-uniqueness property. -/
 section Hierarchy
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-variable [∀ i, Fintype (I.LocalTrace i)]
+variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Math.PMFProduct
 
 open Classical in
-/-- **Kuhn M→B under the weakest syntactic condition**: `PSAR + ∀ i, TracePlayerStepRecall I i`.
+/-- **Kuhn M→B under the weakest syntactic condition**: `PSAR + ∀ i, TracePlayerStepRecall O i`.
 
 `TracePlayerStepRecall` requires that player i's action is determined by their
 own observation only at states reached via traces with equal **full** observation
@@ -1874,32 +2055,32 @@ condition under which the mixed-to-behavioral direction of Kuhn's theorem holds.
 Both `kuhn_mixed_to_behavioral_pspr` and `kuhn_mixed_to_behavioral_decomposed`
 are corollaries of this theorem. -/
 theorem kuhn_mixed_to_behavioral_trace
-    (hPSAR : PerStepActionRecall I)
-    (hTPSR : ∀ i, TracePlayerStepRecall (I := I) i)
-    (D : Dynamics I) (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (hPSAR : PerStepActionRecall O)
+    (hTPSR : ∀ i, TracePlayerStepRecall (O := O) i)
+    (D : Dynamics O) (σ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)))
     (k : Nat) :
-    ∃ β : BehavioralProfile I,
+    ∃ β : BehavioralProfile O,
       D.runDist k β = (pmfPi σ).bind (D.runDistPure k) := by
   set ν := pmfPi σ with hν_def
   -- Abbreviation for the per-player factor at a specific trace
-  let factorAt (i : ι) (n : Nat) (ss : List M.State) (π₀ : PureProfile I) :
+  let factorAt (i : ι) (n : Nat) (ss : List M.State) (π₀ : PureProfile O) :
       PMF (Option (M.Act i)) :=
     Math.PMFProduct.pushforward
       (reweightPMF (σ i)
         (fun πᵢ => pureRun (pureStep D) M.init n
           (Function.update π₀ i πᵢ) ss))
-      (fun πᵢ => πᵢ (I.projectStates i ss))
+      (fun πᵢ => πᵢ (O.projectStates i ss))
   -- Standalone: factorAt is obs-local under PSAR + TracePlayerStepRecall
   have factorAt_obs_local :
       ∀ (i : ι) (n₁ n₂ : Nat) (ss₁ ss₂ : List M.State)
-        (π₁ π₂ : PureProfile I),
-      I.projectStates i ss₁ = I.projectStates i ss₂ →
+        (π₁ π₂ : PureProfile O),
+      O.projectStates i ss₁ = O.projectStates i ss₂ →
       pureRun (pureStep D) M.init n₁ π₁ ss₁ ≠ 0 →
       pureRun (pureStep D) M.init n₂ π₂ ss₂ ≠ 0 →
       factorAt i n₁ ss₁ π₁ = factorAt i n₂ ss₂ π₂ := by
     intro i n₁ n₂ ss₁ ss₂ π₁ π₂ hobs h₁ h₂
     have hn : n₁ = n₂ := by
-      have := I.projectStates_eq_length i hobs
+      have := O.projectStates_eq_length i hobs
       have := pureRun_length _ _ _ _ _ h₁
       have := pureRun_length _ _ _ _ _ h₂
       omega
@@ -1909,18 +2090,18 @@ theorem kuhn_mixed_to_behavioral_trace
     · exact reweightPMF_update_obs_local_trace hPSAR i (hTPSR i) D n₁ (σ i) hobs h₁ h₂
     · exact funext fun πᵢ => by rw [hobs]
   -- Key property: β is well-defined
-  let β : BehavioralProfile I := fun i v_i =>
-    if h : ∃ (n : Nat) (ss : List M.State) (π₀ : PureProfile I),
-        I.projectStates i ss = v_i ∧
+  let β : BehavioralProfile O := fun i v_i =>
+    if h : ∃ (n : Nat) (ss : List M.State) (π₀ : PureProfile O),
+        O.projectStates i ss = v_i ∧
         pureRun (pureStep D) M.init n π₀ ss ≠ 0
     then factorAt i h.choose h.choose_spec.choose h.choose_spec.choose_spec.choose
     else PMF.pure none
-  have β_eq : ∀ (i : ι) (n : Nat) (ss : List M.State) (π₀ : PureProfile I),
+  have β_eq : ∀ (i : ι) (n : Nat) (ss : List M.State) (π₀ : PureProfile O),
       pureRun (pureStep D) M.init n π₀ ss ≠ 0 →
-      β i (I.projectStates i ss) = factorAt i n ss π₀ := by
+      β i (O.projectStates i ss) = factorAt i n ss π₀ := by
     intro i n ss π₀ hreach
-    have hexist : ∃ (n' : Nat) (ss' : List M.State) (π₀' : PureProfile I),
-        I.projectStates i ss' = I.projectStates i ss ∧
+    have hexist : ∃ (n' : Nat) (ss' : List M.State) (π₀' : PureProfile O),
+        O.projectStates i ss' = O.projectStates i ss ∧
         pureRun (pureStep D) M.init n' π₀' ss' ≠ 0 :=
       ⟨n, ss, π₀, rfl, hreach⟩
     change (if h : _ then _ else _) = _
@@ -1975,10 +2156,10 @@ same trace distribution.
 Corollary of `kuhn_mixed_to_behavioral_trace` via
 `PlayerStepRecall → ReachablePlayerStepRecall → TracePlayerStepRecall`. -/
 theorem kuhn_mixed_to_behavioral_pspr
-    (hPSPR : PerStepPlayerRecall I) (D : Dynamics I)
-    (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (hPSPR : PerStepPlayerRecall O) (D : Dynamics O)
+    (σ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)))
     (k : Nat) :
-    ∃ β : BehavioralProfile I,
+    ∃ β : BehavioralProfile O,
       D.runDist k β = (pmfPi σ).bind (D.runDistPure k) :=
   kuhn_mixed_to_behavioral_trace hPSPR.toAction
     (fun i => ((perStepPlayerRecall_iff_forall.mp hPSPR i).toReachable).toTrace) D σ k
@@ -1986,7 +2167,7 @@ theorem kuhn_mixed_to_behavioral_pspr
 open Classical in
 /-- **Per-player Kuhn M→B**: each player individually needs `PlayerStepRecall`.
 Logically equivalent to `kuhn_mixed_to_behavioral_pspr` since
-`PSPR ↔ ∀ i, PlayerStepRecall I i` (and PSPR → PSAR).
+`PSPR ↔ ∀ i, PlayerStepRecall O i` (and PSPR → PSAR).
 
 The conceptual value is that it shows the proof decomposes cleanly per player:
 the global PSAR handles the reach structure (derived from the per-player
@@ -1994,10 +2175,10 @@ conditions), while each player's factor obs-locality uses only their own
 `PlayerStepRecall`. See `reweightPMF_update_obs_local_player` for the
 per-player lemma. -/
 theorem kuhn_mixed_to_behavioral_decomposed
-    (hPSR : ∀ i, PlayerStepRecall I i)
-    (D : Dynamics I) (σ : ∀ i, PMF (I.LocalTrace i → Option (M.Act i)))
+    (hPSR : ∀ i, PlayerStepRecall O i)
+    (D : Dynamics O) (σ : ∀ i, PMF (O.LocalTrace i → Option (M.Act i)))
     (k : Nat) :
-    ∃ β : BehavioralProfile I,
+    ∃ β : BehavioralProfile O,
       D.runDist k β = (pmfPi σ).bind (D.runDistPure k) :=
   kuhn_mixed_to_behavioral_pspr
     (perStepPlayerRecall_iff_forall.mpr hPSR) D σ k

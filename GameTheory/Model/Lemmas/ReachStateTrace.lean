@@ -7,7 +7,7 @@ variable {ι : Type} {M : LSM ι}
 
 theorem reachStateTrace_nonempty
     {ss : List M.State}
-    (hr : InfoModel.ReachStateTrace M ss) :
+    (hr : ReachStateTrace M ss) :
     ss ≠ [] := by
   induction hr with
   | nil =>
@@ -18,7 +18,7 @@ theorem reachStateTrace_nonempty
 theorem reachActionTrace_nonempty
     {ha : List (JointAction M)}
     {ss : List M.State}
-    (hr : InfoModel.ReachActionTrace M ha ss) :
+    (hr : ReachActionTrace M ha ss) :
     ss ≠ [] := by
   induction hr with
   | nil =>

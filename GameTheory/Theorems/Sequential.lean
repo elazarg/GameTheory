@@ -71,11 +71,11 @@ private theorem validConfig_of_step
 private theorem mem_valid_of_reachStateTrace
     (G : GameTheory.Protocol n S V A Sig)
     {ss : List (Config G)}
-    (hr : InfoModel.ReachStateTrace (compileLSM G) ss) :
+    (hr : ReachStateTrace (compileLSM G) ss) :
     ∀ c ∈ ss, ValidConfig G c := by
   let rec go
       {ss : List (Config G)}
-      (hr : InfoModel.ReachStateTrace (compileLSM G) ss) :
+      (hr : ReachStateTrace (compileLSM G) ss) :
       ∀ c ∈ ss, ValidConfig G c :=
     match hr with
     | .nil => by

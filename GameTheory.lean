@@ -9,6 +9,8 @@ import GameTheory.InfoGame
 -- Probability and core
 import Math.Probability
 import GameTheory.Core.KernelGame
+import GameTheory.Core.LSM
+import GameTheory.Core.ObsModel
 import GameTheory.Core.GameForm
 
 -- Solution concepts and properties
