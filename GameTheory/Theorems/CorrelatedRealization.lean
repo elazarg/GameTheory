@@ -488,6 +488,77 @@ theorem perStepPlayerRecall_iff_forall :
     PerStepPlayerRecall I ↔ ∀ i, PlayerStepRecall I i :=
   ⟨fun h i => h i, fun h i => h i⟩
 
+/-! ## Reachable per-step player recall
+
+The Kuhn M→B proof only invokes `PlayerStepRecall` at states that are
+reachable from `M.init` via valid transitions. This motivates a weaker
+condition, `ReachablePlayerStepRecall`, that restricts the action-uniqueness
+requirement to reachable source states.
+
+The exact weakest condition for the Kuhn M→B proof is
+`∀ i, ReachablePlayerStepRecall I i`. It is implied by:
+- `PlayerStepRecall I i` (trivially, by dropping reachability hypotheses)
+- `PerfectRecall I` (via `ActionRecall`): at obs-equivalent reachable
+  endpoints, action traces are equal, hence last actions are equal.
+-/
+
+/-- A state `s` is step-reachable from `M.init` if there exists a valid
+sequence of joint-action transitions from `M.init` reaching `s`. -/
+def StepReachable (s : M.State) : Prop :=
+  ∃ (ha : List (JointAction M)) (ss : List M.State),
+    InfoModel.ReachActionTrace M ha ss ∧ ss.getLast? = some s
+
+/-- The initial state is always step-reachable. -/
+theorem stepReachable_init : StepReachable (M := M) M.init :=
+  ⟨[], [M.init], .nil, rfl⟩
+
+/-- If `s` is step-reachable and `M.step a s t`, then `t` is step-reachable. -/
+theorem stepReachable_step {s t : M.State} {a : JointAction M}
+    (hs : StepReachable (M := M) s) (hstep : M.step a s t) :
+    StepReachable t := by
+  obtain ⟨ha, ss, hreach, hlast⟩ := hs
+  exact ⟨ha ++ [a], ss ++ [t], .snoc hreach hlast hstep, List.getLast?_concat ..⟩
+
+/-- Reachable per-step player recall for a single player `i`:
+`PlayerStepRecall I i` restricted to step-reachable source states.
+
+This is the weakest condition under which the Kuhn M→B proof operates.
+Implied by:
+- `PlayerStepRecall I i` (trivially)
+- `PerfectRecall I` (via `ActionRecall`) -/
+def ReachablePlayerStepRecall (i : ι) : Prop :=
+  ∀ (a a' : JointAction M) (s s' t t' : M.State),
+    M.step a s t → M.step a' s' t' →
+    I.obsEq i s s' → I.obsEq i t t' →
+    StepReachable (M := M) s → StepReachable (M := M) s' →
+    a i = a' i
+
+/-- `PlayerStepRecall` implies `ReachablePlayerStepRecall` (drop reachability). -/
+theorem PlayerStepRecall.toReachable {i : ι} (h : PlayerStepRecall I i) :
+    ReachablePlayerStepRecall (I := I) i :=
+  fun _ _ _ _ _ _ hs hs' hobs hobst _ _ => h _ _ _ _ _ _ hs hs' hobs hobst
+
+/-- `PerfectRecall` implies `ReachablePlayerStepRecall` for all players.
+
+The key is `ActionRecall`: obs-equivalent reachable endpoints have equal
+action traces (per player), hence equal last actions. -/
+theorem PerfectRecall.toReachablePlayerStepRecall (hPR : I.PerfectRecall) (i : ι) :
+    ReachablePlayerStepRecall (I := I) i := by
+  intro a a' s s' t t' hstep hstep' _ hobs_t hreach_s hreach_s'
+  obtain ⟨ha_s, ss_s, hrat_s, hlast_s⟩ := hreach_s
+  obtain ⟨ha_s', ss_s', hrat_s', hlast_s'⟩ := hreach_s'
+  -- Extend the reach traces with the transitions
+  have hrat_t := InfoModel.ReachActionTrace.snoc hrat_s hlast_s hstep
+  have hrat_t' := InfoModel.ReachActionTrace.snoc hrat_s' hlast_s' hstep'
+  -- Apply ActionRecall: obs-equiv endpoints ⟹ equal action traces
+  have hact := hPR.2 i _ _ _ _ t t' hrat_t hrat_t'
+    (List.getLast?_concat ..) (List.getLast?_concat ..) hobs_t
+  -- Extract last action from the equal lists
+  simp only [InfoModel.projectActions, List.map_append, List.map_cons, List.map_nil] at hact
+  have := congr_arg List.getLast? hact
+  simp only [List.getLast?_concat] at this
+  exact Option.some_injective _ this
+
 /-- Under `PerStepActionRecall`, at most one action can produce a nonzero
 transition probability between any pair of states. -/
 theorem action_unique_of_psar
@@ -508,6 +579,65 @@ theorem action_component_unique_of_pspr
     a i = a' i :=
   hPSPR i a a' s s' t t' (D.nextState_sound a s t ha) (D.nextState_sound a' s' t' ha')
     hobs hobst
+
+/-! ## Bridge: pureRun reachability
+
+The `pureRun` chain produces traces where every state is step-reachable.
+This bridges the `Math.ParameterizedChain` execution model with the
+`ReachActionTrace` witnesses from `SemanticForm`. -/
+
+section PureRunBridge
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
+
+open Execution in
+/-- If `pureRun` reaches a trace with nonzero probability, there exists a
+corresponding `ReachActionTrace`. -/
+theorem pureRun_nonzero_to_reachActionTrace
+    (D : Dynamics I) (n : Nat)
+    (π : PureProfile I) (ss : List M.State)
+    (h : pureRun (pureStep D) M.init n π ss ≠ 0) :
+    ∃ ha : List (JointAction M), InfoModel.ReachActionTrace M ha ss := by
+  induction n generalizing ss with
+  | zero =>
+    have hss : ss = [M.init] := by
+      by_contra hne; exact h (by simp [pureRun, PMF.pure_apply, hne])
+    subst hss; exact ⟨[], .nil⟩
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h
+    · simp only [List.concat_eq_append] at h ⊢
+      have hp := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h)
+      have ht := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h)
+      obtain ⟨ha_p, hrat_p⟩ := ih p hp
+      rw [pureStep_eq] at ht
+      have hstep := D.nextState_sound _ _ _ ht
+      have hlen_p := pureRun_length _ _ m π p hp
+      have hp_ne : p ≠ [] := by intro h'; simp [h'] at hlen_p
+      have hlast : p.getLast? = some (p.getLast?.getD M.init) := by
+        cases hg : p.getLast? with
+        | none => exact absurd (List.getLast?_eq_none_iff.mp hg) hp_ne
+        | some _ => rfl
+      exact ⟨ha_p ++ [_], .snoc hrat_p hlast hstep⟩
+
+open Execution in
+/-- If `pureRun` reaches `ss` with nonzero probability, the last state of `ss`
+is step-reachable from `M.init`. -/
+theorem pureRun_nonzero_last_stepReachable
+    (D : Dynamics I) (n : Nat)
+    (π : PureProfile I) (ss : List M.State)
+    (h : pureRun (pureStep D) M.init n π ss ≠ 0) :
+    StepReachable (M := M) (ss.getLast?.getD M.init) := by
+  obtain ⟨ha, hrat⟩ := pureRun_nonzero_to_reachActionTrace D n π ss h
+  have hlen := pureRun_length _ _ n π ss h
+  have hne : ss ≠ [] := by intro h'; simp [h'] at hlen
+  have hlast : ss.getLast? = some (ss.getLast?.getD M.init) := by
+    cases hg : ss.getLast? with
+    | none => exact absurd (List.getLast?_eq_none_iff.mp hg) hne
+    | some _ => rfl
+  exact ⟨ha, ss, hrat, hlast⟩
+
+end PureRunBridge
 
 /-! ## Reach factoring under PSAR
 
@@ -1702,12 +1832,32 @@ needs only their own recall condition.
 players have step recall), the product mediator fully decentralizes into an
 independent `BehavioralProfile I`.
 
-### Relationship to classical Kuhn
-The classical Kuhn theorem (`KuhnMixedToBehavioral.lean`) uses `PerfectRecall`
-(= `ObsRecall ∧ ActionRecall`), which is an **orthogonal** condition to PSPR:
-- `PerfectRecall` is about history reconstruction from observations
-- `PSPR` is about action uniqueness at transitions
-Neither implies the other. -/
+### Exact weakest condition: ReachablePlayerStepRecall
+
+`ReachablePlayerStepRecall I i`: like `PlayerStepRecall I i`, but restricted
+to step-reachable source states. The proof only visits states reachable
+from `M.init` via `M.step`, so this weaker condition suffices.
+
+`∀ i, ReachablePlayerStepRecall I i` is the exact weakest condition for
+the Kuhn M→B proof. It provides:
+1. Action determinism at reachable states (reflexive case) — for PSAR usage
+2. Per-player obs-locality at reachable states — for strategy well-definedness
+
+The implication graph:
+```
+  PSPR = ∀ i, PlayerStepRecall I i
+        ↓ (trivially, by dropping reachability)
+  ∀ i, ReachablePlayerStepRecall I i
+        ↑ (via ActionRecall — last actions of equal action traces)
+  PerfectRecall = ObsRecall ∧ ActionRecall
+```
+
+Neither PSPR nor PerfectRecall implies the other:
+- PSPR talks about ALL transitions; PerfectRecall only about reachable traces
+- PerfectRecall reconstructs full history; PSPR only constrains one-step actions
+
+But both imply the weakest condition `∀ i, ReachablePlayerStepRecall I i`,
+which is what the Kuhn proof actually needs. -/
 
 section Hierarchy
 
