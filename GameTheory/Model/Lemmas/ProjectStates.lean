@@ -114,5 +114,70 @@ theorem projectStates_getLast? (i : ι) (ss : List M.State) :
       (I.projectStates i ss).2.getLast? = Option.map (I.observe i) ss.getLast? := by
   simp [InfoModel.projectStates, projectPublic_getLast?, projectPrivate_getLast?]
 
+/-- Equal trace projections imply equal trace lengths (via public component). -/
+theorem projectStates_eq_length (i : ι) {ss₁ ss₂ : List M.State}
+    (h : I.projectStates i ss₁ = I.projectStates i ss₂) :
+    ss₁.length = ss₂.length := by
+  have := congr_arg (fun p => p.1.length) h
+  simp only [InfoModel.projectStates, InfoModel.projectPublic, List.length_map] at this
+  exact this
+
+/-- Equal trace projections imply obs-equivalent endpoints (or `M.init` fallback). -/
+theorem obsEq_of_projectStates_getLast (i : ι) {ss ss' : List M.State}
+    (hproj : I.projectStates i ss = I.projectStates i ss') :
+    I.obsEq i (ss.getLast?.getD M.init) (ss'.getLast?.getD M.init) := by
+  unfold InfoModel.projectStates InfoModel.projectPublic InfoModel.projectPrivate at hproj
+  have hpub := (Prod.ext_iff.mp hproj).1
+  have hpriv := (Prod.ext_iff.mp hproj).2
+  constructor
+  · have := congr_arg List.getLast? hpub
+    simp only [List.getLast?_map] at this
+    cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;> simp_all [Option.map]
+  · have := congr_arg List.getLast? hpriv
+    simp only [List.getLast?_map] at this
+    cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;> simp_all [Option.map]
+
+/-- Append decomposition: `projectStates i (p ++ [t]) = projectStates i (p' ++ [t'])`
+    implies both prefix and endpoint equalities. -/
+theorem projectStates_append_singleton_eq
+    (i : ι) {p p' : List M.State} {t t' : M.State}
+    (h : I.projectStates i (p ++ [t]) = I.projectStates i (p' ++ [t'])) :
+    I.projectStates i p = I.projectStates i p' ∧ I.obsEq i t t' := by
+  simp only [InfoModel.projectStates, InfoModel.projectPublic, InfoModel.projectPrivate,
+    List.map_append, List.map_cons, List.map_nil] at h
+  have hpub_p := List.append_inj_left' (congr_arg Prod.fst h) (by simp)
+  have hpriv_p := List.append_inj_left' (congr_arg Prod.snd h) (by simp)
+  have hpub_t := List.append_inj_right' (congr_arg Prod.fst h) (by simp)
+  have hpriv_t := List.append_inj_right' (congr_arg Prod.snd h) (by simp)
+  exact ⟨Prod.ext hpub_p hpriv_p, ⟨by simpa using hpub_t, by simpa using hpriv_t⟩⟩
+
+/-- Prefix extraction from append: `projectStates i (p ++ [t]) = projectStates i (p' ++ [t'])`
+    implies `projectStates i p = projectStates i p'`. -/
+theorem projectStates_prefix_of_append
+    (i : ι) {p p' : List M.State} {t t' : M.State}
+    (h : I.projectStates i (p ++ [t]) = I.projectStates i (p' ++ [t'])) :
+    I.projectStates i p = I.projectStates i p' :=
+  (projectStates_append_singleton_eq I i h).1
+
+/-- Endpoint obsEq from append: `projectStates i (p ++ [t]) = projectStates i (p' ++ [t'])`
+    implies `obsEq i t t'`. -/
+theorem obsEq_of_projectStates_append
+    (i : ι) {p p' : List M.State} {t t' : M.State}
+    (h : I.projectStates i (p ++ [t]) = I.projectStates i (p' ++ [t'])) :
+    I.obsEq i t t' :=
+  (projectStates_append_singleton_eq I i h).2
+
+theorem projectActions_snoc (i : ι) (ha : List (JointAction M)) (a : JointAction M) :
+    projectActions i (ha ++ [a]) = projectActions i ha ++ [a i] := by
+  simp [projectActions, List.map_append]
+
+/-- Equal `projectActions` on appended singletons implies equal last actions. -/
+theorem projectActions_last_eq (i : ι) {ha ha' : List (JointAction M)}
+    {a a' : JointAction M}
+    (h : projectActions i (ha ++ [a]) = projectActions i (ha' ++ [a'])) :
+    a i = a' i := by
+  rw [projectActions_snoc, projectActions_snoc] at h
+  exact List.cons.inj (List.append_inj_right' h (by simp)) |>.1
+
 end InfoModel
 end GameTheory

@@ -1,4 +1,5 @@
 import GameTheory.Model.SemanticForm
+import GameTheory.Model.Lemmas.ProjectStates
 import Math.ParameterizedChain
 
 /-! # Correlated realization and Kuhn M→B
@@ -123,21 +124,6 @@ def PerStepActionRecall (I : InfoModel M) : Prop :=
     (∀ i, I.obsEq i s s') → (∀ i, I.obsEq i t t') →
     a = a'
 
-/-- If two state traces have the same observation projection for player `i`,
-then their last elements (or `M.init` fallback) are obs-equivalent. -/
-theorem obsEq_of_projectStates_getLast (i : ι) {ss ss' : List M.State}
-    (hproj : I.projectStates i ss = I.projectStates i ss') :
-    I.obsEq i (ss.getLast?.getD M.init) (ss'.getLast?.getD M.init) := by
-  unfold InfoModel.projectStates InfoModel.projectPublic InfoModel.projectPrivate at hproj
-  have hpub := (Prod.ext_iff.mp hproj).1
-  have hpriv := (Prod.ext_iff.mp hproj).2
-  constructor
-  · have := congr_arg List.getLast? hpub
-    simp only [List.getLast?_map] at this
-    cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;> simp_all [Option.map]
-  · have := congr_arg List.getLast? hpriv
-    simp only [List.getLast?_map] at this
-    cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;> simp_all [Option.map]
 
 /-- When `σ` is a PMF and `w x ≤ 1` for all `x`, the sum `∑ x, σ x * w x` is
 not `⊤`. This is used throughout the correlated-realization proofs whenever
@@ -194,7 +180,7 @@ theorem pureStep_action_eq_of_psar
   rw [pureStep_eq] at h1 h2
   exact hPSAR _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (fun i => obsEq_of_projectStates_getLast i (hobs i)) hobst
+    (fun i => I.obsEq_of_projectStates_getLast i (hobs i)) hobst
 
 /-- Under PSAR, `pureStep` satisfies the cross-ratio for obs-equivalent
 state traces and obs-equivalent targets. -/
@@ -219,7 +205,7 @@ theorem pureStep_cross_ratio
   · -- If a ≠ b, PSAR forces both products to be zero
     have hobss : ∀ i, I.obsEq i
         ((ss₁.getLast?).getD M.init) ((ss₂.getLast?).getD M.init) :=
-      fun i => obsEq_of_projectStates_getLast i (hobs i)
+      fun i => I.obsEq_of_projectStates_getLast i (hobs i)
     have hL : D.nextState (fun i => π₁ i (I.projectStates i ss₁))
           ((ss₁.getLast?).getD M.init) t₁ *
         D.nextState (fun i => π₂ i (I.projectStates i ss₁))
@@ -270,19 +256,10 @@ theorem pureRun_pairwise_cross_of_psar
         -- Goal: R(n,π₁,p₁)*S(π₁,p₁,t₁) * (R(n,π₂,p₂)*S(π₂,p₂,t₂)) =
         --       R(n,π₂,p₁)*S(π₂,p₁,t₁) * (R(n,π₁,p₂)*S(π₁,p₂,t₂))
         -- Extract obs-equiv of prefixes and last elements
-        have hobs_prefix : ∀ i, I.projectStates i p₁ = I.projectStates i p₂ := by
-          intro i; have hi := hobs i
-          simp only [InfoModel.projectStates, InfoModel.projectPublic,
-            InfoModel.projectPrivate, List.map_append, List.map_cons, List.map_nil] at hi
-          exact Prod.ext
-            (Math.ParameterizedChain.append_singleton_inj (Prod.ext_iff.mp hi).1).1
-            (Math.ParameterizedChain.append_singleton_inj (Prod.ext_iff.mp hi).2).1
-        have hobs_last : ∀ i, I.obsEq i t₁ t₂ := by
-          intro i; have hi := hobs i
-          simp only [InfoModel.projectStates, InfoModel.projectPublic,
-            InfoModel.projectPrivate, List.map_append, List.map_cons, List.map_nil] at hi
-          exact ⟨(Math.ParameterizedChain.append_singleton_inj (Prod.ext_iff.mp hi).1).2,
-                 (Math.ParameterizedChain.append_singleton_inj (Prod.ext_iff.mp hi).2).2⟩
+        have hobs_prefix : ∀ i, I.projectStates i p₁ = I.projectStates i p₂ :=
+          fun i => I.projectStates_prefix_of_append i (hobs i)
+        have hobs_last : ∀ i, I.obsEq i t₁ t₂ :=
+          fun i => I.obsEq_of_projectStates_append i (hobs i)
         -- Use IH for prefixes and step cross-ratio for last elements
         have hIH := ih p₁ p₂ hobs_prefix
         have hStep := pureStep_cross_ratio hPSAR D hobs_prefix hobs_last
@@ -349,14 +326,6 @@ theorem mixedToMediator_obs_invariant
 end ObsLevel
 
 section ObsCorrelatedRealization
-
-/-- Obs-equivalent state traces have the same length (via publicView map). -/
-theorem projectStates_eq_length (i : ι) {ss₁ ss₂ : List M.State}
-    (h : I.projectStates i ss₁ = I.projectStates i ss₂) :
-    ss₁.length = ss₂.length := by
-  have := congr_arg (fun p => p.1.length) h
-  simp only [InfoModel.projectStates, InfoModel.projectPublic, List.length_map] at this
-  exact this
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 variable [Fintype (PureProfile I)] [∀ i, Fintype (I.LocalTrace i)]
@@ -434,7 +403,7 @@ theorem obs_correlated_realization [Inhabited ι]
     have hreach' := hexist.choose_spec.2
     -- ss'.length = ss.length (from obs-equiv via publicView)
     have hlen' : ss'.length = ss.length :=
-      projectStates_eq_length (default : ι) (hobs' default)
+      I.projectStates_eq_length (default : ι) (hobs' default)
     -- ss'.length - 1 = n
     have hn' : ss'.length - 1 = n := by omega
     rw [hn']
@@ -561,7 +530,7 @@ theorem ReachablePlayerStepRecall.toTrace {i : ι}
     (h : ReachablePlayerStepRecall (I := I) i) :
     TracePlayerStepRecall (I := I) i := by
   intro a a' t t' ss ss' ⟨ha, hrat⟩ ⟨ha', hrat'⟩ hproj hstep hstep' hobst
-  have hobss := obsEq_of_projectStates_getLast i hproj
+  have hobss := I.obsEq_of_projectStates_getLast i hproj
   have hlast : ss.getLast? = some (ss.getLast?.getD M.init) := by
     cases hg : ss.getLast? with
     | none => cases hrat with | nil => simp at hg | snoc _ _ _ => simp at hg
@@ -594,10 +563,7 @@ theorem PerfectRecall.toReachablePlayerStepRecall (hPR : I.PerfectRecall) (i : �
   have hact := hPR.2 i _ _ _ _ t t' hrat_t hrat_t'
     (List.getLast?_concat ..) (List.getLast?_concat ..) hobs_t
   -- Extract last action from the equal lists
-  simp only [InfoModel.projectActions, List.map_append, List.map_cons, List.map_nil] at hact
-  have := congr_arg List.getLast? hact
-  simp only [List.getLast?_concat] at this
-  exact Option.some_injective _ this
+  exact InfoModel.projectActions_last_eq i hact
 
 /-- `PerfectRecall` implies `TracePlayerStepRecall` for all players. -/
 theorem PerfectRecall.toTracePlayerStepRecall
@@ -915,7 +881,7 @@ theorem pureStep_component_eq_of_pspr
   rw [pureStep_eq] at h1 h2
   exact hPSPR i _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (obsEq_of_projectStates_getLast i hobs_i) hobst_i
+    (I.obsEq_of_projectStates_getLast i hobs_i) hobst_i
 
 /-- Per-player version of `pureStep_component_eq_of_pspr`:
 only needs `PlayerStepRecall I i` for the specific player `i`,
@@ -930,7 +896,7 @@ theorem pureStep_component_eq_of_playerRecall
   rw [pureStep_eq] at h1 h2
   exact hPSR_i _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (obsEq_of_projectStates_getLast i hobs_i) hobst_i
+    (I.obsEq_of_projectStates_getLast i hobs_i) hobst_i
 
 end Decentralization
 
@@ -1192,33 +1158,6 @@ section ObsLocality
 
 variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
 
-omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))] in
-/-- Helper: `projectStates` of a prefix can be recovered from the full projection.
-If `projectStates i (p ++ [t]) = projectStates i (p' ++ [t'])`, then
-`projectStates i p = projectStates i p'`. -/
-theorem projectStates_prefix_of_append
-    (i : ι) {p p' : List M.State} {t t' : M.State}
-    (h : I.projectStates i (p ++ [t]) = I.projectStates i (p' ++ [t'])) :
-    I.projectStates i p = I.projectStates i p' := by
-  simp only [InfoModel.projectStates, InfoModel.projectPublic, InfoModel.projectPrivate,
-    List.map_append, List.map_cons, List.map_nil] at h ⊢
-  exact Prod.ext
-    (List.append_inj_left' (congr_arg Prod.fst h) (by simp))
-    (List.append_inj_left' (congr_arg Prod.snd h) (by simp))
-
-omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))] in
-/-- Extract obs-equivalence of the appended elements from a `projectStates` equality.
-If `projectStates i (p ++ [t]) = projectStates i (p' ++ [t'])`, then `obsEq i t t'`. -/
-theorem obsEq_of_projectStates_append
-    (i : ι) {p p' : List M.State} {t t' : M.State}
-    (h : I.projectStates i (p ++ [t]) = I.projectStates i (p' ++ [t'])) :
-    I.obsEq i t t' := by
-  simp only [InfoModel.projectStates, InfoModel.projectPublic, InfoModel.projectPrivate,
-    List.map_append, List.map_cons, List.map_nil] at h
-  have hpub := List.append_inj_right' (congr_arg Prod.fst h) (by simp)
-  have hpriv := List.append_inj_right' (congr_arg Prod.snd h) (by simp)
-  exact ⟨by simpa using hpub, by simpa using hpriv⟩
-
 open Classical in
 /-- Generic obs-locality of `pureRun (update π₀ i πᵢ)`, parameterized by a
 step-level hypothesis `hStep` that says: given obs-equal prefixes and obs-equal
@@ -1254,8 +1193,8 @@ theorem pureRun_update_obs_local_of
     · exact absurd (pureRun_succ_nil _ _ _ _) h₂
     simp only [List.concat_eq_append] at hobs_i h₁ h₂ ⊢
     have hobs_p : I.projectStates i p₁ = I.projectStates i p₂ :=
-      projectStates_prefix_of_append i hobs_i
-    have hobst : I.obsEq i t₁ t₂ := obsEq_of_projectStates_append i hobs_i
+      I.projectStates_prefix_of_append i hobs_i
+    have hobst : I.obsEq i t₁ t₂ := I.obsEq_of_projectStates_append i hobs_i
     have hp₁ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
     have hp₂ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
     have ht₁ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
@@ -1718,7 +1657,7 @@ theorem pureStep_component_eq_of_reachablePlayerRecall
   rw [pureStep_eq] at h1 h2
   exact hRPSR_i _ _ _ _ _ _
     (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2)
-    (obsEq_of_projectStates_getLast i hobs_i) hobst_i hreach_s hreach_s'
+    (I.obsEq_of_projectStates_getLast i hobs_i) hobst_i hreach_s hreach_s'
 
 open Classical in
 /-- **Weakest syntactic → semantic**: PSAR + `ReachablePlayerStepRecall I i`
@@ -1960,7 +1899,7 @@ theorem kuhn_mixed_to_behavioral_trace
       factorAt i n₁ ss₁ π₁ = factorAt i n₂ ss₂ π₂ := by
     intro i n₁ n₂ ss₁ ss₂ π₁ π₂ hobs h₁ h₂
     have hn : n₁ = n₂ := by
-      have := projectStates_eq_length i hobs
+      have := I.projectStates_eq_length i hobs
       have := pureRun_length _ _ _ _ _ h₁
       have := pureRun_length _ _ _ _ _ h₂
       omega
