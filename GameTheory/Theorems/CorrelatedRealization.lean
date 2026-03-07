@@ -533,10 +533,75 @@ def ReachablePlayerStepRecall (i : ι) : Prop :=
     StepReachable (M := M) s → StepReachable (M := M) s' →
     a i = a' i
 
+/-- Trace-level per-step player recall: tighter than `ReachablePlayerStepRecall`.
+
+Like `ReachablePlayerStepRecall`, but requires action agreement only when
+the source states are endpoints of traces with equal **full** observation
+histories (`projectStates i ss = projectStates i ss'`), not merely
+obs-equivalent endpoints (`obsEq i s s'`).
+
+This is strictly weaker than `ReachablePlayerStepRecall` because equal
+full obs-traces implies endpoint obs-equivalence, but not conversely. -/
+def TracePlayerStepRecall (i : ι) : Prop :=
+  ∀ (a a' : JointAction M) (t t' : M.State)
+    (ss ss' : List M.State),
+    (∃ ha, InfoModel.ReachActionTrace M ha ss) →
+    (∃ ha', InfoModel.ReachActionTrace M ha' ss') →
+    I.projectStates i ss = I.projectStates i ss' →
+    M.step a (ss.getLast?.getD M.init) t →
+    M.step a' (ss'.getLast?.getD M.init) t' →
+    I.obsEq i t t' →
+    a i = a' i
+
 /-- `PlayerStepRecall` implies `ReachablePlayerStepRecall` (drop reachability). -/
 theorem PlayerStepRecall.toReachable {i : ι} (h : PlayerStepRecall I i) :
     ReachablePlayerStepRecall (I := I) i :=
   fun _ _ _ _ _ _ hs hs' hobs hobst _ _ => h _ _ _ _ _ _ hs hs' hobs hobst
+
+/-- `ReachablePlayerStepRecall` implies `TracePlayerStepRecall`.
+The obs-equivalence `obsEq i s s'` follows from the trace equality
+`projectStates i ss = projectStates i ss'`. -/
+theorem ReachablePlayerStepRecall.toTrace {i : ι}
+    (h : ReachablePlayerStepRecall (I := I) i) :
+    TracePlayerStepRecall (I := I) i := by
+  intro a a' t t' ss ss' ⟨ha, hrat⟩ ⟨ha', hrat'⟩ hproj hstep hstep' hobst
+  have hobss : I.obsEq i (ss.getLast?.getD M.init)
+      (ss'.getLast?.getD M.init) := by
+    unfold InfoModel.projectStates InfoModel.projectPublic
+      InfoModel.projectPrivate at hproj
+    have hpub := (Prod.ext_iff.mp hproj).1
+    have hpriv := (Prod.ext_iff.mp hproj).2
+    constructor
+    · have := congr_arg List.getLast? hpub
+      simp only [List.getLast?_map] at this
+      cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;>
+        simp_all [Option.map]
+    · have := congr_arg List.getLast? hpriv
+      simp only [List.getLast?_map] at this
+      cases hss : ss.getLast? <;> cases hss' : ss'.getLast? <;>
+        simp_all [Option.map]
+  have hlast : ss.getLast? = some (ss.getLast?.getD M.init) := by
+    cases hg : ss.getLast? with
+    | none =>
+      -- ReachActionTrace implies ss ≠ [], so getLast? ≠ none
+      cases hrat with
+      | nil => simp at hg
+      | snoc _ _ _ => simp at hg
+    | some _ => rfl
+  have hlast' : ss'.getLast? = some (ss'.getLast?.getD M.init) := by
+    cases hg : ss'.getLast? with
+    | none =>
+      cases hrat' with
+      | nil => simp at hg
+      | snoc _ _ _ => simp at hg
+    | some _ => rfl
+  exact h _ _ _ _ _ _ hstep hstep' hobss hobst
+    ⟨ha, ss, hrat, hlast⟩ ⟨ha', ss', hrat', hlast'⟩
+
+/-- `PlayerStepRecall` implies `TracePlayerStepRecall` (via `Reachable`). -/
+theorem PlayerStepRecall.toTrace {i : ι} (h : PlayerStepRecall I i) :
+    TracePlayerStepRecall (I := I) i :=
+  h.toReachable.toTrace
 
 /-- `PerfectRecall` implies `ReachablePlayerStepRecall` for all players.
 
@@ -1984,6 +2049,84 @@ theorem obsLocalFeasibility_of_reachablePlayerStepRecall
     · exact fun ⟨hrec, hact⟩ =>
         ⟨(ih p₁ p₂ hobs_p hp₁ hp₂).mpr hrec, hact_transfer.mpr hact⟩
 
+/-- Step-level action equality under `TracePlayerStepRecall`:
+at pureStep-supported transitions from traces with equal obs-projections,
+the player-i action components agree. -/
+theorem pureStep_component_eq_of_tracePlayerRecall
+    (i : ι) (hTPSR : TracePlayerStepRecall (I := I) i) (D : Dynamics I)
+    {π π' : PureProfile I} {ss ss' : List M.State} {t t' : M.State}
+    (hproj : I.projectStates i ss = I.projectStates i ss')
+    (hobst : I.obsEq i t t')
+    (h1 : pureStep D π ss t ≠ 0) (h2 : pureStep D π' ss' t' ≠ 0)
+    (hreach : ∃ ha, InfoModel.ReachActionTrace M ha ss)
+    (hreach' : ∃ ha', InfoModel.ReachActionTrace M ha' ss') :
+    π i (I.projectStates i ss) = π' i (I.projectStates i ss') := by
+  rw [pureStep_eq] at h1 h2
+  exact hTPSR _ _ _ _ _ _ hreach hreach' hproj
+    (D.nextState_sound _ _ _ h1) (D.nextState_sound _ _ _ h2) hobst
+
+open Classical in
+/-- **Tightest syntactic → semantic**: PSAR + `TracePlayerStepRecall I i`
+implies `ObsLocalFeasibility D i`.
+
+This is strictly tighter than `obsLocalFeasibility_of_reachablePlayerStepRecall`
+because `TracePlayerStepRecall` only requires action agreement at states
+reached via traces with equal full observation histories, not at all
+obs-equivalent reachable states. The proof's induction naturally maintains
+the stronger `projectStates i p₁ = projectStates i p₂` invariant. -/
+theorem obsLocalFeasibility_of_tracePlayerStepRecall
+    (hPSAR : PerStepActionRecall I) (i : ι)
+    (hTPSR : TracePlayerStepRecall (I := I) i)
+    (D : Dynamics I) : ObsLocalFeasibility (I := I) D i := by
+  intro n π₀ π₀' ss₁ ss₂ hobs_i h₁ h₂ πᵢ
+  induction n generalizing ss₁ ss₂ with
+  | zero =>
+    simp only [pureRun, ne_eq] at h₁ h₂ ⊢
+    exact ⟨fun _ => h₂, fun _ => h₁⟩
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss₁ with rfl | ⟨p₁, t₁, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₁
+    rcases List.eq_nil_or_concat ss₂ with rfl | ⟨p₂, t₂, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ _ _) h₂
+    simp only [List.concat_eq_append] at hobs_i h₁ h₂ ⊢
+    have hobs_p : I.projectStates i p₁ = I.projectStates i p₂ :=
+      projectStates_prefix_of_append i hobs_i
+    have hobst : I.obsEq i t₁ t₂ := obsEq_of_projectStates_append i hobs_i
+    have hp₁ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have hp₂ := left_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    have ht₁ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₁)
+    have ht₂ := right_ne_zero_of_mul (pureRun_succ_append .. ▸ h₂)
+    rw [pureRun_succ_nonzero_iff hPSAR D m h₁,
+        pureRun_succ_nonzero_iff hPSAR D m h₂]
+    -- Use TracePlayerStepRecall with full trace witnesses
+    have hreach_p₁ := pureRun_nonzero_to_reachActionTrace D m π₀ p₁ hp₁
+    have hreach_p₂ := pureRun_nonzero_to_reachActionTrace D m π₀' p₂ hp₂
+    have hforced : π₀ i (I.projectStates i p₁) =
+        π₀' i (I.projectStates i p₂) :=
+      pureStep_component_eq_of_tracePlayerRecall i hTPSR D
+        hobs_p hobst ht₁ ht₂ hreach_p₁ hreach_p₂
+    have hact_transfer :
+        (∀ j, Function.update π₀ i πᵢ j (I.projectStates j p₁) =
+          π₀ j (I.projectStates j p₁)) ↔
+        (∀ j, Function.update π₀' i πᵢ j (I.projectStates j p₂) =
+          π₀' j (I.projectStates j p₂)) := by
+      constructor <;> intro h
+      · intro j; by_cases hij : j = i
+        · rw [hij, Function.update_self, ← hforced, ← hobs_p]
+          have := h i; rwa [Function.update_self] at this
+        · rw [Function.update_of_ne hij]
+      · intro j; by_cases hij : j = i
+        · rw [hij, Function.update_self, hforced, hobs_p]
+          have := h i; rwa [Function.update_self] at this
+        · rw [Function.update_of_ne hij]
+    constructor
+    · exact fun ⟨hrec, hact⟩ =>
+        ⟨(ih p₁ p₂ hobs_p hp₁ hp₂).mp hrec,
+         hact_transfer.mp hact⟩
+    · exact fun ⟨hrec, hact⟩ =>
+        ⟨(ih p₁ p₂ hobs_p hp₁ hp₂).mpr hrec,
+         hact_transfer.mpr hact⟩
+
 end SemanticConditions
 
 /-! ## Kuhn theorem hierarchy
@@ -2016,55 +2159,51 @@ needs only their own recall condition.
 players have step recall), the product mediator fully decentralizes into an
 independent `BehavioralProfile I`.
 
-### Exact weakest condition: ReachablePlayerStepRecall
+### Weakening the per-player condition
 
-`ReachablePlayerStepRecall I i`: like `PlayerStepRecall I i`, but restricted
-to step-reachable source states. The proof only visits states reachable
-from `M.init` via `M.step`, so this weaker condition suffices.
+`ReachablePlayerStepRecall I i`: `PlayerStepRecall I i` restricted to
+step-reachable source states.
 
-`∀ i, ReachablePlayerStepRecall I i` is the exact weakest condition for
-the Kuhn M→B proof. It provides:
-1. Action determinism at reachable states (reflexive case) — for PSAR usage
-2. Per-player obs-locality at reachable states — for strategy well-definedness
+`TracePlayerStepRecall I i`: Even tighter — requires action agreement
+only at reachable states reached via traces with equal **full**
+observation histories (`projectStates i ss = projectStates i ss'`),
+not merely obs-equivalent endpoints (`obsEq i s s'`).
 
-The implication graph:
+Syntactic implication chain:
 ```
   PSPR = ∀ i, PlayerStepRecall I i
-        ↓ (trivially, by dropping reachability)
-  ∀ i, ReachablePlayerStepRecall I i
-        ↑ (via ActionRecall — last actions of equal action traces)
-  PerfectRecall = ObsRecall ∧ ActionRecall
+               ↓ (drop reachability req)
+         ∀ i, ReachablePlayerStepRecall I i
+               ↓ (strengthen hyp: obsEq → full trace eq)
+         ∀ i, TracePlayerStepRecall I i
+               ↑ (PerfectRecall → Reachable → Trace)
+         PerfectRecall = ObsRecall ∧ ActionRecall
 ```
 
 Neither PSPR nor PerfectRecall implies the other:
-- PSPR talks about ALL transitions; PerfectRecall only about reachable traces
-- PerfectRecall reconstructs full history; PSPR only constrains one-step actions
-
-But both imply the weakest condition `∀ i, ReachablePlayerStepRecall I i`,
-which is what the Kuhn proof actually needs.
+- PSPR constrains ALL transitions; PerfectRecall only reachable traces
+- PerfectRecall reconstructs full history; PSPR is one-step
 
 ### Semantic conditions
 
 `ObsLocalFeasibility D i`: whether continuation πᵢ is feasible at a
-reachable trace depends only on player i's observation. This is the
-semantic content of `PlayerStepRecall I i` — it depends on dynamics `D`.
+reachable trace depends only on player i's observation. Depends on `D`.
 
 `StepActionDeterminism D`: at any transition, the action is determined
-by the source-target pair. This is the semantic content of PSAR
-(specifically, the reflexive case).
+by the source-target pair. Semantic content of PSAR (reflexive case).
 
-Full implication graph (syntactic → semantic):
+Full syntactic → semantic implication graph:
 ```
-  PSPR → ∀ i, PlayerStepRecall I i → ∀ i, ReachablePlayerStepRecall I i
-                                                     ↓ (+ PSAR)
-  PerfectRecall → ∀ i, ReachablePlayerStepRecall I i → ObsLocalFeasibility D i
+  PlayerStepRecall I i → ReachablePlayerStepRecall I i
+    → TracePlayerStepRecall I i → (+ PSAR) ObsLocalFeasibility D i
+
+  PerfectRecall → ReachablePlayerStepRecall I i (via ActionRecall)
   PSAR → StepActionDeterminism D
 ```
 
 The semantic conditions depend on D; syntactic ones do not. The converse
-(semantic → syntactic) does not hold in general: dynamics-specific
-feasibility structure can make obs-locality hold without the syntactic
-action-uniqueness property. -/
+(semantic → syntactic) does not hold: dynamics-specific feasibility can
+make obs-locality hold without the syntactic action-uniqueness property. -/
 
 section Hierarchy
 
