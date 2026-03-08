@@ -1,7 +1,7 @@
 import Math.Probability
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
-import GameTheory.Core.ObsModel
+import Semantics.SM
 import Semantics.TransitionTrace
 
 /-!
@@ -37,13 +37,6 @@ variable {ι σ : Type} {Act : ι → Type}
 
 /-- Joint (possibly inactive) action profile. -/
 abbrev JointAction (_ : InfoModel ι σ Act) := ∀ i, Option (Act i)
-
-/-- Convert an `InfoModel` to an `ObsModel` by bundling public and private observations.
-Player `i`'s observation is `(publicView s, observe i s)`. -/
-def toObsModel (I : InfoModel ι σ Act) : ObsModel ι σ Act where
-  toSM := I.toSM
-  Obs i := I.Public × I.Obs i
-  observe i s := (I.publicView s, I.observe i s)
 
 /-- Derived player-information equivalence: same public view and same local view. -/
 def obsEq (I : InfoModel ι σ Act) (i : ι) : σ → σ → Prop :=
