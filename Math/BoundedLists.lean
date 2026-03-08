@@ -25,8 +25,7 @@ def listsOfLength [DecidableEq α] (s : Finset α) : Nat → Finset (List α)
 def listsUpToLength [DecidableEq α] (s : Finset α) (n : Nat) : Finset (List α) :=
   (Finset.range (n + 1)).biUnion (fun k => listsOfLength s k)
 
-open Classical in
-theorem mem_listsOfLength_of_forall_mem
+theorem mem_listsOfLength_of_forall_mem [DecidableEq α]
     {s : Finset α} :
     ∀ {xs : List α} {n : Nat},
       xs.length = n →
@@ -47,8 +46,7 @@ theorem mem_listsOfLength_of_forall_mem
       refine ⟨(x, xs), ?_, by simp⟩
       simp [hx, hrec]
 
-open Classical in
-theorem mem_listsUpToLength_of_forall_mem
+theorem mem_listsUpToLength_of_forall_mem [DecidableEq α]
     {s : Finset α} {xs : List α} {n : Nat}
     (hlen : xs.length ≤ n)
     (hmem : ∀ x ∈ xs, x ∈ s) :

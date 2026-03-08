@@ -59,6 +59,28 @@ import GameTheory.Concepts.CorrelatedNashMixed
 import GameTheory.Concepts.NashCorrelatedEq
 
 -- Zero-sum and constant-sum
+import GameTheory.Concepts.ZeroSum
+import GameTheory.Concepts.ConstantSum
+import GameTheory.Concepts.ZeroSumNash
+import GameTheory.Concepts.ConstantSumNash
+
+-- Potential games
+import GameTheory.Concepts.PotentialGame
+import GameTheory.Concepts.PotentialFIP
+import GameTheory.Concepts.PotentialWellFounded
+import GameTheory.Concepts.PotentialTeam
+
+-- Team games and symmetric games
+import GameTheory.Concepts.TeamGame
+import GameTheory.Concepts.TeamGameNash
+import GameTheory.Concepts.SymmetricGame
+import GameTheory.Concepts.TwoPlayerGame
+import GameTheory.Concepts.EvolutionaryStability
+
+-- Minimax
+import GameTheory.Concepts.Minimax
+
+-- Mechanism design
 import GameTheory.Mechanism.BayesianGame
 import GameTheory.Mechanism.MechanismDesign
 import GameTheory.Mechanism.RevelationPrinciple
