@@ -1,4 +1,4 @@
-import GameTheory.Concepts.NashExistenceMixed
+import GameTheory.Theorems.NashExistenceMixed
 import Math.Probability
 
 /-!

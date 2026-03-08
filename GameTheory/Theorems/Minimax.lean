@@ -1,6 +1,6 @@
 import GameTheory.Concepts.Minimax
 import GameTheory.Concepts.ZeroSumNash
-import GameTheory.Concepts.NashExistenceMixed
+import GameTheory.Theorems.NashExistenceMixed
 import Math.Probability
 
 /-!
