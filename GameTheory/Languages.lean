@@ -1,4 +1,5 @@
 import GameTheory.Languages.EFG
+import GameTheory.Languages.NFG
 import GameTheory.Languages.Sequential
 import GameTheory.Languages.MAID
 import GameTheory.Languages.Intrinsic.PerfectRecall
