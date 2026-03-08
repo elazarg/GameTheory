@@ -1,7 +1,6 @@
 import Math.Probability
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
-import GameTheory.Model.FiniteRecall
 import GameTheory.Core.ObsModel
 
 /-!
