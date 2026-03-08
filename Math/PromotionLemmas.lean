@@ -61,7 +61,7 @@ theorem bind_disintegrate
     [Fintype α] [Fintype β]
     (μ : PMF α) (proj : α → β) (g : α → PMF γ) :
     μ.bind g =
-      (Math.PMFProduct.pushforward μ proj).bindOnSupport (fun b hb =>
+      (Math.ProbabilityMassFunction.pushforward μ proj).bindOnSupport (fun b hb =>
         (μ.filter {a | proj a = b}
           (Math.PMFProduct.pushforward_support_fibre μ proj b hb)).bind g) := by
   exact Math.PMFProduct.pmf_bind_disintegrate μ proj g

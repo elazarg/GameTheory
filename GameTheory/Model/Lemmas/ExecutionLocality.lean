@@ -192,7 +192,7 @@ theorem jointAction_marginal
     [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
     (b : BehavioralProfile I) (ss : List σ) :
-    Math.PMFProduct.pushforward
+    Math.ProbabilityMassFunction.pushforward
       (mixedJoint (I := I) (behavioralToMixed (I := I) b))
       (fun π i => π i (I.projectStates i ss)) =
     Execution.Dynamics.jointActionDist (I := I) b ss := by
@@ -200,12 +200,13 @@ theorem jointAction_marginal
   simp only [mixedJoint, Execution.Dynamics.jointActionDist]
   let g : ∀ i, (LocalPure (I := I) i) → Option (Act i) :=
     fun i fi => fi (I.projectStates i ss)
-  change Math.PMFProduct.pushforward (Math.PMFProduct.pmfPi (behavioralToMixed I b))
+  change Math.ProbabilityMassFunction.pushforward (Math.PMFProduct.pmfPi (behavioralToMixed I b))
     (fun f i => g i (f i)) = _
   rw [Math.PMFProduct.pmfPi_push_coordwise]
   congr 1
   funext i
-  change Math.PMFProduct.pushforward (behavioralToMixed I b i) (g i) = b i (I.projectStates i ss)
+  change Math.ProbabilityMassFunction.pushforward (behavioralToMixed I b i) (g i) =
+    b i (I.projectStates i ss)
   have h := congr_fun (congr_fun
     (realize_behavioralToMixed (I := I) b) i) (I.projectStates i ss)
   simpa [realizeBehavioralCanonical] using h

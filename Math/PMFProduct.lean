@@ -3,6 +3,7 @@ import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.FunctionUpdate
+import Math.ProbabilityMassFunction
 
 namespace Math
 namespace PMFProduct
@@ -402,15 +403,9 @@ variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
 variable {A : ι → Type uA} [∀ i, Fintype (A i)]
 variable {α : Type uα} {β : Type uβ}
 
-/-- Pushforward of a PMF along a function. -/
-noncomputable def pushforward (μ : PMF α) (f : α → β) : PMF β :=
-  μ.bind (fun a => PMF.pure (f a))
-
-/-- Pushforward composition. -/
-theorem pushforward_comp {γ : Type uγ}
-    (μ : PMF α) (f : α → β) (g : β → γ) :
-    pushforward (pushforward μ f) g = pushforward μ (g ∘ f) := by
-  simp [pushforward, PMF.bind_bind, Function.comp]
+-- `pushforward` is defined in `Math.ProbabilityMassFunction`; re-exported here
+-- so existing `PMFProduct.pushforward` references continue to resolve.
+export Math.ProbabilityMassFunction (pushforward pushforward_comp)
 
 open Classical in
 /-- The pushforward of a product PMF through a coordinate-wise function

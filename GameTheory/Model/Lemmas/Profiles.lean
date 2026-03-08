@@ -430,7 +430,7 @@ theorem restricted_realize_behavioralToMixed
         (pmfPi (fun w : RestrictedLocalCoord (I := I) H i => b i w))
         (fun f => f v) = b i v by
     simpa only [SetLike.coe_mem, ↓reduceDIte, Subtype.coe_eta] using this
-  simpa [Math.PMFProduct.pushforward, Math.ProbabilityMassFunction.pushforward] using
+  simpa [Math.ProbabilityMassFunction.pushforward] using
     (pmfPi_push_coord (σ := fun w : RestrictedLocalCoord (I := I) H i => b i w) (j := v))
 
 end Restricted

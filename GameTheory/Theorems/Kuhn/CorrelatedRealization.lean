@@ -928,7 +928,9 @@ theorem mediator_product_of_product
   suffices hprod : ∃ ρ : ∀ i, PMF (O.LocalStrategy i),
       reweightPMF ν w = pmfPi ρ by
     obtain ⟨ρ, hρ⟩ := hprod
-    exact ⟨fun i => Math.PMFProduct.pushforward (ρ i) (fun πᵢ => πᵢ (O.projectStates i ss)), by
+    exact ⟨fun i =>
+      Math.ProbabilityMassFunction.pushforward (ρ i)
+        (fun πᵢ => πᵢ (O.projectStates i ss)), by
       unfold mixedToMediator; rw [hρ]
       simp only [jointActionDist, pureToBehavioral]
       conv_lhs => arg 2; ext π; rw [pmfPi_pure]
@@ -1450,7 +1452,7 @@ private theorem mixedToMediator_eq_pmfPi_factor
     (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0)
     (hν₀ : (pmfPi μ) π₀ ≠ 0) :
     O.mixedToMediator (pmfPi μ) n ss = pmfPi (fun i =>
-      Math.PMFProduct.pushforward
+      Math.ProbabilityMassFunction.pushforward
         (reweightPMF (μ i)
           (fun πᵢ => pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss))
         (fun πᵢ => πᵢ (O.projectStates i ss))) := by
@@ -1850,7 +1852,7 @@ theorem kuhn_mixed_to_behavioral_trace [∀ i o, Nonempty (Act i o)]
   -- Abbreviation for the per-player factor at a specific trace
   let factorAt (i : ι) (n : Nat) (ss : List σ) (π₀ : PureProfile O) :
       PMF (Act i (O.lastObs i (O.projectStates i ss))) :=
-    Math.PMFProduct.pushforward
+    Math.ProbabilityMassFunction.pushforward
       (reweightPMF (μ i)
         (fun πᵢ => pureRun (O.pureStep) O.init n
           (Function.update π₀ i πᵢ) ss))
@@ -1870,7 +1872,7 @@ theorem kuhn_mixed_to_behavioral_trace [∀ i o, Nonempty (Act i o)]
       have := pureRun_length _ _ _ _ _ h₂
       omega
     subst hn
-    simp only [factorAt, Math.PMFProduct.pushforward]
+    simp only [factorAt, Math.ProbabilityMassFunction.pushforward]
     exact pmf_bind_heq'
       (congrArg (fun v => Act i (O.lastObs i v)) hobs)
       _ _
