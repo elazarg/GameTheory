@@ -3,16 +3,16 @@ import GameTheory.Model.Lemmas.HistoryCover
 import GameTheory.Theorems.Kuhn
 
 /-!
-# GameTheory.Theorems.MAID
+# GameTheory.Languages.MAID.Kuhn
 
-Target-side reduction lemmas for compiled MAIDs.
+Kuhn reduction lemmas for compiled MAIDs.
 
 This file packages the structural equivalence between native frontier semantics
 and the compiled `InfoModel` presentation so later theorem ports can ignore the
 surface syntax.
 -/
 
-namespace GameTheory.Theorems.MAID
+namespace GameTheory.Languages.MAID
 
 open _root_.MAID
 open GameTheory.Theorems
@@ -288,4 +288,4 @@ theorem kuhn_complete_of_compiled
     (hCover := canonicalHistoryCover_spec S sem k)
     hStepIndep
 
-end GameTheory.Theorems.MAID
+end GameTheory.Languages.MAID

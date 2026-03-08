@@ -1,4 +1,4 @@
-import GameTheory.Languages.EFG.OneShotDeviation
+import GameTheory.Theorems.OneShotDeviation
 import Math.Probability
 
 /-!

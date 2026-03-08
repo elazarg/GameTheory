@@ -3,16 +3,16 @@ import GameTheory.Model.Lemmas.HistoryCover
 import GameTheory.Theorems.Kuhn
 
 /-!
-# GameTheory.Theorems.Sequential
+# GameTheory.Languages.Sequential.Kuhn
 
-Target-side reduction lemmas for compiled sequential protocols.
+Kuhn reduction lemmas for compiled sequential protocols.
 
 This file is intentionally thin. It packages the structural equivalence between
 native protocol SOS and the compiled `InfoModel` presentation, so later ports of
 Kuhn/Zermelo-style theorems can depend on one semantic interface.
 -/
 
-namespace GameTheory.Theorems.Sequential
+namespace GameTheory.Languages.Sequential
 
 open GameTheory.Sequential
 open GameTheory.Theorems
@@ -405,4 +405,4 @@ theorem kuhn_complete_of_compiled
     (hCover := canonicalHistoryCover_spec G k)
     hStepIndep
 
-end GameTheory.Theorems.Sequential
+end GameTheory.Languages.Sequential

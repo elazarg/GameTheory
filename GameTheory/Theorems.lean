@@ -1,8 +1,8 @@
 import GameTheory.Theorems.Kuhn
 import GameTheory.Theorems.Kuhn.CorrelatedRealization
-import GameTheory.Theorems.Sequential
-import GameTheory.Theorems.MAID
 import GameTheory.Theorems.Minimax
+import GameTheory.Theorems.OneShotDeviation
+import GameTheory.Theorems.Zermelo
 
 /-!
 # GameTheory.Theorems

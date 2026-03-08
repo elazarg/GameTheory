@@ -1,7 +1,7 @@
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.MAID.SOS
 import GameTheory.Languages.MAID.Compile
-import GameTheory.Theorems.MAID
+import GameTheory.Languages.MAID.Kuhn
 
 /-!
 # GameTheory.Languages.MAID.Theorems
