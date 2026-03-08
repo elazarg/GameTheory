@@ -1,6 +1,6 @@
 import GameTheory.EFG.Zermelo
 import GameTheory.Languages.Sequential.Theorems
-import GameTheory.Bridge.MAID_EFG
+import GameTheory.Languages.Bridges.MAIDEFG
 import GameTheory.Compilers.EFG
 import GameTheory.Compilers.Protocol
 
