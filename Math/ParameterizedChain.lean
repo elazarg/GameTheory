@@ -31,13 +31,9 @@ noncomputable def pureRun (step : P → List S → PMF S) (s₀ : S)
     k
 
 theorem append_singleton_inj {α : Type*} {as bs : List α} {a b : α}
-    (h : as ++ [a] = bs ++ [b]) : as = bs ∧ a = b := by
-  have hlen : as.length = bs.length := by
-    have := congrArg List.length h; simp at this; exact this
-  exact ⟨List.ext_getElem hlen (fun i hi hi' => by
-      have h2 := congrArg (fun l => l[i]?) h
-      simp [List.getElem?_append_left, hi, hi'] at h2; exact h2),
-    by have h2 := congrArg List.getLast? h; simp at h2; exact h2⟩
+    (h : as ++ [a] = bs ++ [b]) : as = bs ∧ a = b :=
+  ⟨List.append_inj_left' h (by simp),
+   by have := List.append_inj_right' h (by simp); simpa using this⟩
 
 open Classical in
 /-- At successor step, `pureRun` decomposes as prefix reach times one-step transition. -/
