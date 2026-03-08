@@ -10,7 +10,7 @@ open Execution
 open Math.PMFProduct
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 variable (D : Execution.Dynamics I)
 
 private theorem append_singleton_eq
@@ -25,10 +25,9 @@ private theorem append_singleton_eq
     exact Option.some.inj this
 
 private theorem actionTrace_eq_of_projectActions_eq
-    {ι : Type} [Nonempty ι] {M : LSM ι}
-    {ha₁ ha₂ : List (JointAction M)}
-    (hacts : ∀ i, GameTheory.projectActions i ha₁ =
-      GameTheory.projectActions i ha₂) :
+    {ι : Type} [Nonempty ι] {α : ι → Type}
+    {ha₁ ha₂ : List (∀ i, Option (α i))}
+    (hacts : ∀ i, ha₁.map (fun a => a i) = ha₂.map (fun a => a i)) :
     ha₁ = ha₂ := by
   induction ha₁ generalizing ha₂ with
   | nil =>
@@ -36,21 +35,21 @@ private theorem actionTrace_eq_of_projectActions_eq
       | nil => rfl
       | cons y ys =>
           have hi := hacts (Classical.arbitrary ι)
-          simp [projectActions] at hi
+          simp at hi
   | cons x xs ih =>
       cases ha₂ with
       | nil =>
           have hi := hacts (Classical.arbitrary ι)
-          simp [projectActions] at hi
+          simp at hi
       | cons y ys =>
           have hheadAct : ∀ i, x i = y i := by
             intro i
             have hi := hacts i
-            simpa [projectActions] using congrArg List.head? hi
-          have htailActs : ∀ i, projectActions i xs = projectActions i ys := by
+            simpa using congrArg List.head? hi
+          have htailActs : ∀ i, xs.map (fun a => a i) = ys.map (fun a => a i) := by
             intro i
             have hi := hacts i
-            simpa [projectActions, hheadAct i] using hi
+            simpa [hheadAct i] using hi
           have htail : xs = ys := ih htailActs
           have hfun : x = y := by
             funext i
@@ -59,8 +58,8 @@ private theorem actionTrace_eq_of_projectActions_eq
 
 omit [Fintype ι] in
 private theorem pushforward_append_nonzero_exists
-    (μ : PMF M.State)
-    (ss hs : List M.State)
+    (μ : PMF σ)
+    (ss hs : List σ)
     (hpush : (Math.ProbabilityMassFunction.pushforward μ
       (fun t => ss ++ [t])) hs ≠ 0) :
     ∃ t, hs = ss ++ [t] ∧ μ t ≠ 0 := by
@@ -78,8 +77,8 @@ private theorem pushforward_append_nonzero_exists
 
 omit [Fintype ι] in
 private theorem pushforward_append_apply_same
-    (μ : PMF M.State)
-    (ss : List M.State) (t : M.State) :
+    (μ : PMF σ)
+    (ss : List σ) (t : σ) :
     (Math.ProbabilityMassFunction.pushforward μ
       (fun u => ss ++ [u])) (ss ++ [t]) = μ t := by
   rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
@@ -94,8 +93,8 @@ private theorem pushforward_append_apply_same
 
 omit [Fintype ι] in
 private theorem pushforward_append_apply_other
-    (μ : PMF M.State)
-    (ss₁ ss₂ : List M.State) (t₂ : M.State)
+    (μ : PMF σ)
+    (ss₁ ss₂ : List σ) (t₂ : σ)
     (hneq : ss₁ ≠ ss₂) :
     (Math.ProbabilityMassFunction.pushforward μ
       (fun u => ss₁ ++ [u])) (ss₂ ++ [t₂]) = 0 := by
@@ -110,9 +109,9 @@ private theorem pushforward_append_apply_other
 
 private theorem runDistPure_succ_apply_path
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (π : PureProfile I)
-    (n : Nat) (ssPrev : List M.State) (t : M.State) :
+    (n : Nat) (ssPrev : List σ) (t : σ) :
     D.runDistPure (n + 1) π (ssPrev ++ [t]) =
       D.runDistPure n π ssPrev *
         (D.stepDist (pureToBehavioral I π) ssPrev) t := by
@@ -129,10 +128,10 @@ private theorem runDistPure_succ_apply_path
 
 private theorem exists_prev_of_runDistPure_succ_ne_zero
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (π : PureProfile I)
     (n : Nat)
-    (ss : List M.State)
+    (ss : List σ)
     (hss : D.runDistPure (n + 1) π ss ≠ 0) :
     ∃ ssPrev,
       D.runDistPure n π ssPrev ≠ 0 ∧
@@ -156,22 +155,22 @@ private theorem exists_prev_of_runDistPure_succ_ne_zero
 reachable action/state witness. -/
 theorem exists_reachActionTrace_of_runDistPure_ne_zero
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (n : Nat) (π : PureProfile I) (ss : List M.State)
+    [∀ i, Fintype (Option (Act i))]
+    (n : Nat) (π : PureProfile I) (ss : List σ)
     (hss : D.runDistPure n π ss ≠ 0) :
-    ∃ ha : List (JointAction M),
-      ReachActionTrace M ha ss ∧
+    ∃ ha : List (I.JointAction),
+      Semantics.SM.ReachActionTrace I.toSM ha ss ∧
       ∀ i, LocalHistCompatible (I := I) i (π i)
         (InfoModel.localHistTokens (I := I) i ha ss) := by
   induction n generalizing ss with
   | zero =>
       rw [Execution.Dynamics.runDistPure,
         InfoModel.runDist_zero (I := I) (D := D) (pureToBehavioral I π)] at hss
-      have hmem : ss ∈ (PMF.pure [M.init] : PMF (List M.State)).support := by
+      have hmem : ss ∈ (PMF.pure [I.init] : PMF (List σ)).support := by
         simpa [PMF.mem_support_iff] using hss
       rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
       subst hmem
-      refine ⟨[], ReachActionTrace.nil, ?_⟩
+      refine ⟨[], Semantics.SM.ReachActionTrace.nil, ?_⟩
       intro _ _ htok
       cases htok
   | succ n ih =>
@@ -183,21 +182,21 @@ theorem exists_reachActionTrace_of_runDistPure_ne_zero
           (μ := D.stepDist (pureToBehavioral I π) ssPrev)
           ssPrev ss hpush
       subst hEq
-      let s : M.State := (ssPrev.getLast?).getD M.init
-      let aCur : JointAction M := fun i => π i (I.projectStates i ssPrev)
+      let s : σ := (ssPrev.getLast?).getD I.init
+      let aCur : I.JointAction := fun i => π i (I.projectStates i ssPrev)
       have hstep' : D.nextState aCur s t ≠ 0 := by
         simpa [s, aCur] using (congrArg (fun ν => ν t)
           (stepDist_pure (I := I) (D := D) π ssPrev)) ▸ hstep
       have hsLast : ssPrev.getLast? = some s := by
         unfold s
-        rw [List.getLast?_eq_getLast_of_ne_nil (reachActionTrace_nonempty (M := M) hrPrev)]
+        rw [List.getLast?_eq_getLast_of_ne_nil (reachActionTrace_nonempty hrPrev)]
         simp
-      have hrel : M.step aCur s t :=
+      have hrel : I.step aCur s t :=
         D.nextState_sound aCur s t hstep'
-      refine ⟨haPrev ++ [aCur], ReachActionTrace.snoc hrPrev hsLast hrel, ?_⟩
+      refine ⟨haPrev ++ [aCur], Semantics.SM.ReachActionTrace.snoc hrPrev hsLast hrel, ?_⟩
       intro i
       have hLenPrev : ssPrev.length = haPrev.length + 1 :=
-        ReachActionTrace.length_states_eq_succ_actions hrPrev
+        Semantics.SM.ReachActionTrace.length_states_eq_succ_actions hrPrev
       have htoks :
           InfoModel.localHistTokens (I := I) i (haPrev ++ [aCur]) (ssPrev ++ [t]) =
             InfoModel.localHistTokens (I := I) i haPrev ssPrev ++
@@ -214,10 +213,10 @@ theorem exists_reachActionTrace_of_runDistPure_ne_zero
 
 private theorem runDistPure_eq_of_localHistCompatible
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    {ha : List (JointAction M)}
-    {ss : List M.State}
-    (hr : ReachActionTrace M ha ss)
+    [∀ i, Fintype (Option (Act i))]
+    {ha : List (I.JointAction)}
+    {ss : List σ}
+    (hr : Semantics.SM.ReachActionTrace I.toSM ha ss)
     (π π' : PureProfile I)
     (hπ :
       ∀ i, LocalHistCompatible (I := I) i (π i)
@@ -233,7 +232,7 @@ private theorem runDistPure_eq_of_localHistCompatible
   | @snoc ha ss s t a hrPrev hsLast hrel ih =>
       have hLenPrev :
           ss.length = ha.length + 1 :=
-        ReachActionTrace.length_states_eq_succ_actions hrPrev
+        Semantics.SM.ReachActionTrace.length_states_eq_succ_actions hrPrev
       have htoks :
           ∀ i,
             InfoModel.localHistTokens (I := I) i (ha ++ [a]) (ss ++ [t]) =
@@ -321,11 +320,11 @@ private theorem runDistPure_eq_of_localHistCompatible
 
 private theorem runDistPure_eq_zero_of_not_localHistCompatible
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hPR : I.PerfectRecall)
-    {ha : List (JointAction M)}
-    {ss : List M.State}
-    (hr : ReachActionTrace M ha ss)
+    {ha : List (I.JointAction)}
+    {ss : List σ}
+    (hr : Semantics.SM.ReachActionTrace I.toSM ha ss)
     (π : PureProfile I)
     (hnc :
       ¬ ∀ i, LocalHistCompatible (I := I) i (π i)
@@ -336,7 +335,7 @@ private theorem runDistPure_eq_zero_of_not_localHistCompatible
     exists_reachActionTrace_of_runDistPure_ne_zero
       (I := I) (D := D) ha.length π ss hne
   have hacts :
-      ∀ i, projectActions i ha' = projectActions i ha := by
+      ∀ i, I.projectActions i ha' = I.projectActions i ha := by
     intro i
     exact actionRecall_of_projectStates_eq (I := I) hPR i hr' hr rfl
   haveI : Nonempty ι := by
@@ -357,11 +356,11 @@ private theorem runDistPure_eq_zero_of_not_localHistCompatible
 prefix mass times the product of local-history compatibility indicators. -/
 theorem runDistPure_factor_via_localHistIndicators
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hPR : I.PerfectRecall)
-    {ha : List (JointAction M)}
-    {ss : List M.State}
-    (hr : ReachActionTrace M ha ss)
+    {ha : List (I.JointAction)}
+    {ss : List σ}
+    (hr : Semantics.SM.ReachActionTrace I.toSM ha ss)
     (π0 : PureProfile I)
     (hcompat0 :
       ∀ i, LocalHistCompatible (I := I) i (π0 i)
@@ -409,15 +408,15 @@ mixed product law factors through the iteratively conditioned local marginals. -
 theorem query_disintegration_factorization
     [DecidableEq ι]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hPR : I.PerfectRecall)
     (μ : InfoModel.MixedProfile (I := I))
     (n : Nat)
-    {hs : List M.State}
+    {hs : List σ}
     (hlen : hs.length = n + 1)
     {π0 : PureProfile I}
-    {ha : List (JointAction M)}
-    (hr : ReachActionTrace M ha hs)
+    {ha : List (I.JointAction)}
+    (hr : Semantics.SM.ReachActionTrace I.toSM ha hs)
     (hcompat : ∀ i, LocalHistCompatible (I := I) i (π0 i)
       (InfoModel.localHistTokens (I := I) i ha hs))
     (stepPureY : PureProfile I → ENNReal) :
@@ -440,7 +439,7 @@ theorem query_disintegration_factorization
     fun i => iterCondMixedLocal (I := I) i (μ i) (hist i)
   let C : ENNReal := ∑' π, μJ π * (D.runDistPure n π) hs
   have hhaLen : ha.length = n := by
-    have hreachLen := ReachActionTrace.length_states_eq_succ_actions hr
+    have hreachLen := Semantics.SM.ReachActionTrace.length_states_eq_succ_actions hr
     exact Nat.succ.inj <| by
       simpa [Nat.add_comm, Nat.add_left_comm, Nat.add_assoc] using
         hreachLen.symm.trans hlen
@@ -550,16 +549,16 @@ private theorem mixedJoint_stepDist_eq_realizeBehavioralCanonical
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : InfoModel.MixedProfile (I := I))
-    (ss : List M.State) :
+    (ss : List σ) :
     (InfoModel.mixedJoint (I := I) μ).bind
       (fun π => D.stepDist (pureToBehavioral I π) ss)
       =
     D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
   classical
   letI : DecidableEq ι := Classical.decEq ι
-  set s := (ss.getLast?).getD M.init
+  set s := (ss.getLast?).getD I.init
   calc
     (InfoModel.mixedJoint (I := I) μ).bind
         (fun π => D.stepDist (pureToBehavioral I π) ss)
@@ -605,9 +604,9 @@ theorem mixedJoint_stepPoint_eq_realizeBehavioralCanonical
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : InfoModel.MixedProfile (I := I))
-    (hs y : List M.State) :
+    (hs y : List σ) :
     (∑' π, (InfoModel.mixedJoint (I := I) μ) π *
       (Math.ProbabilityMassFunction.pushforward
         (D.stepDist (pureToBehavioral I π) hs)

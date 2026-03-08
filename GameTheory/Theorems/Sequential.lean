@@ -71,11 +71,11 @@ private theorem validConfig_of_step
 private theorem mem_valid_of_reachStateTrace
     (G : GameTheory.Protocol n S V A Sig)
     {ss : List (Config G)}
-    (hr : ReachStateTrace (compileLSM G) ss) :
+    (hr : Semantics.SM.ReachStateTrace (compileInfoOn G).toSM ss) :
     ∀ c ∈ ss, ValidConfig G c := by
   let rec go
       {ss : List (Config G)}
-      (hr : ReachStateTrace (compileLSM G) ss) :
+      (hr : Semantics.SM.ReachStateTrace (compileInfoOn G).toSM ss) :
       ∀ c ∈ ss, ValidConfig G c :=
     match hr with
     | .nil => by
@@ -149,7 +149,7 @@ theorem step_iff
     (G : GameTheory.Protocol n S V A Sig)
     (a : JointControl n A)
     (src dst : Config G) :
-    (compileLSM G).step a src dst ↔ Step G a src dst :=
+    (compileInfoOn G).step a src dst ↔ Step G a src dst :=
   compile_step_iff G a src dst
 
 /-- Reachability in the compiled machine is exactly native SOS reachability. -/
@@ -157,7 +157,7 @@ theorem reach_iff
     (G : GameTheory.Protocol n S V A Sig)
     (ha : List (JointControl n A))
     (src dst : Config G) :
-    Semantics.Transition.ReachBy (compileLSM G |>.stepExists) ha src dst ↔
+    Semantics.Transition.ReachBy (compileInfoOn G).step ha src dst ↔
       ReachBy G ha src dst :=
   compile_reach_iff G ha src dst
 
@@ -198,7 +198,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled_fullTraceFinite
     (k : Nat)
     [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hPR : (compileInfoOn G).PerfectRecall) :
     KuhnMixedToBehavioralViaOutcome
       (Execution.BehavioralProfile (compileInfoOn G))
@@ -223,7 +223,7 @@ theorem kuhn_complete_of_compiled_fullTraceFinite
     (k : Nat)
     [∀ i, Fintype ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hPR : (compileInfoOn G).PerfectRecall) :
     KuhnCompleteViaOutcome
       (Execution.BehavioralProfile (compileInfoOn G))
@@ -251,7 +251,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled_restricted
     [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord H i)]
     [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure H i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
     KuhnMixedToBehavioralViaOutcome
       ((compileInfoOn G).RestrictedBehavioralProfile H)
@@ -278,7 +278,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled_via_cover
     [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure H i)]
     [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hCover : compiledHistoryCover G k H)
     (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
     KuhnMixedToBehavioralViaOutcome
@@ -302,7 +302,7 @@ theorem kuhn_complete_of_compiled_restricted
     [∀ i, DecidableEq ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype ((compileInfoOn G).RestrictedLocalCoord H i)]
     [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure H i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
     KuhnCompleteViaOutcome
       ((compileInfoOn G).RestrictedBehavioralProfile H)
@@ -329,7 +329,7 @@ theorem kuhn_complete_of_compiled_via_cover
     [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hCover : compiledHistoryCover G k H)
     (hStepIndep : ∀ μ n, (compileInfoOn G).RestrictedStepIndependence D H μ n) :
     KuhnCompleteViaOutcome
@@ -358,7 +358,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled
     [∀ i, Fintype ((compileInfoOn G).RestrictedLocalPure (canonicalHistoryCover G k) i)]
     [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hStepIndep :
       ∀ μ n,
         (compileInfoOn G).RestrictedStepIndependence D (canonicalHistoryCover G k) μ n) :
@@ -387,7 +387,7 @@ theorem kuhn_complete_of_compiled
     [∀ i, Finite ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype ((compileInfoOn G).LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := compileInfoOn G) i)]
-    [∀ i, Fintype (Option ((compileLSM G).Act i))]
+    [Fintype (Option A)]
     (hStepIndep :
       ∀ μ n,
         (compileInfoOn G).RestrictedStepIndependence D (canonicalHistoryCover G k) μ n) :

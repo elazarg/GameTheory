@@ -10,7 +10,7 @@ section InfoModel
 open Execution
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 variable (D : Execution.Dynamics I)
 variable (k : Nat)
 
@@ -22,7 +22,7 @@ distributes over sequencing/continuation. -/
 theorem kuhn_complete
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hPR : I.PerfectRecall) :
     KuhnCompleteViaOutcome
       (BehavioralProfile I) (InfoModel.MixedProfile (I := I)) (PureProfile I) I.Outcome
@@ -41,7 +41,7 @@ theorem kuhn_complete_restricted
     [∀ i, DecidableEq (I.LocalTrace i)]
     [∀ i, Fintype (I.RestrictedLocalCoord H i)]
     [∀ i, Fintype (I.RestrictedLocalPure H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, I.RestrictedStepIndependence D H μ n) :
     KuhnCompleteViaOutcome
       (I.RestrictedBehavioralProfile H)
@@ -60,7 +60,7 @@ theorem kuhn_mixed_to_behavioral_restricted
     [∀ i, DecidableEq (I.LocalTrace i)]
     [∀ i, Fintype (I.RestrictedLocalCoord H i)]
     [∀ i, Fintype (I.RestrictedLocalPure H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, I.RestrictedStepIndependence D H μ n) :
     KuhnMixedToBehavioralViaOutcome
       (I.RestrictedBehavioralProfile H)
@@ -80,7 +80,7 @@ theorem kuhn_mixed_to_behavioral_via_cover
     [∀ i, Fintype (I.RestrictedLocalPure H i)]
     [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hCover : I.CoversHistoriesUpTo H k)
     (hStepIndep : ∀ μ n, I.RestrictedStepIndependence D H μ n) :
     KuhnMixedToBehavioralViaOutcome
@@ -179,7 +179,7 @@ theorem kuhn_complete_via_cover
     [∀ i, Finite (I.LocalTrace i)]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hCover : I.CoversHistoriesUpTo H k)
     (hStepIndep : ∀ μ n, I.RestrictedStepIndependence D H μ n) :
     KuhnCompleteViaOutcome

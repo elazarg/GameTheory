@@ -5,13 +5,13 @@ namespace InfoModel
 
 open Execution
 
-variable {ι : Type} {M : LSM ι} (I : InfoModel M)
+variable {ι σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 
 /-- Controller-local decision coordinate. -/
 abbrev CoordIdx : Type := Σ i, I.LocalTrace i
 
 /-- Flat pure policy indexed by coordinates. -/
-abbrev FlatPolicy : Type := ∀ k : CoordIdx I, Option (M.Act k.1)
+abbrev FlatPolicy : Type := ∀ k : CoordIdx I, Option (Act k.1)
 
 /-- Reassemble a coordinate-indexed flat policy into a standard pure profile. -/
 def reassemblePolicy (ω : FlatPolicy I) : PureProfile I :=
@@ -26,7 +26,7 @@ def IsPastCoord (n : Nat) (k : CoordIdx I) : Prop :=
   k.2.2.length ≤ n
 
 /-- Current queried coordinate predicate at run-state `ss`. -/
-def IsNowCoord (ss : List M.State) (k : CoordIdx I) : Prop :=
+def IsNowCoord (ss : List σ) (k : CoordIdx I) : Prop :=
   ∃ i, k = ⟨i, I.projectStates i ss⟩
 
 end InfoModel

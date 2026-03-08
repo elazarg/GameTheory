@@ -5,14 +5,14 @@ import GameTheory.Model.Lemmas.ReachStateTrace
 namespace GameTheory
 namespace InfoModel
 
-variable {ι : Type} {M : LSM ι} (I : InfoModel M)
+variable {ι σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 
 theorem perfectRecall_project_eq_of_obsEq_last
     {i : ι}
-    {ss₁ ss₂ : List M.State} {s₁ s₂ : M.State}
+    {ss₁ ss₂ : List σ} {s₁ s₂ : σ}
     (hOR : I.ObsRecall)
-    (hr₁ : ReachStateTrace M ss₁)
-    (hr₂ : ReachStateTrace M ss₂)
+    (hr₁ : Semantics.SM.ReachStateTrace I.toSM ss₁)
+    (hr₂ : Semantics.SM.ReachStateTrace I.toSM ss₂)
     (hs₁ : ss₁.getLast? = some s₁)
     (hs₂ : ss₂.getLast? = some s₂)
     (hobs : I.obsEq i s₁ s₂) :
@@ -25,24 +25,24 @@ then player `i` has identical full visible history and own-action history. -/
 theorem perfectRecall_histories_eq_of_last_observe_eq
     (hPR : I.PerfectRecall)
     (i : ι)
-    {ha₁ ha₂ : List (JointAction M)}
-    {ss₁ ss₂ : List M.State}
-    (hr₁ : ReachActionTrace M ha₁ ss₁)
-    (hr₂ : ReachActionTrace M ha₂ ss₂)
+    {ha₁ ha₂ : List I.JointAction}
+    {ss₁ ss₂ : List σ}
+    (hr₁ : Semantics.SM.ReachActionTrace I.toSM ha₁ ss₁)
+    (hr₂ : Semantics.SM.ReachActionTrace I.toSM ha₂ ss₂)
     (hobs :
       I.obsEq i
-        (ss₁.getLast (reachActionTrace_nonempty (M := M) hr₁))
-        (ss₂.getLast (reachActionTrace_nonempty (M := M) hr₂))) :
+        (ss₁.getLast (reachActionTrace_nonempty hr₁))
+        (ss₂.getLast (reachActionTrace_nonempty hr₂))) :
     I.projectStates i ss₁ = I.projectStates i ss₂ ∧
-    projectActions i ha₁ = projectActions i ha₂ := by
-  let s₁ : M.State := ss₁.getLast (reachActionTrace_nonempty (M := M) hr₁)
-  let s₂ : M.State := ss₂.getLast (reachActionTrace_nonempty (M := M) hr₂)
+    I.projectActions i ha₁ = I.projectActions i ha₂ := by
+  let s₁ : σ := ss₁.getLast (reachActionTrace_nonempty hr₁)
+  let s₂ : σ := ss₂.getLast (reachActionTrace_nonempty hr₂)
   have hs₁ : ss₁.getLast? = some s₁ := by
     simpa [s₁] using
-      (List.getLast?_eq_getLast_of_ne_nil (reachActionTrace_nonempty (M := M) hr₁))
+      (List.getLast?_eq_getLast_of_ne_nil (reachActionTrace_nonempty hr₁))
   have hs₂ : ss₂.getLast? = some s₂ := by
     simpa [s₂] using
-      (List.getLast?_eq_getLast_of_ne_nil (reachActionTrace_nonempty (M := M) hr₂))
+      (List.getLast?_eq_getLast_of_ne_nil (reachActionTrace_nonempty hr₂))
   have hStates :
       I.projectStates i ss₁ = I.projectStates i ss₂ := by
     exact
@@ -53,7 +53,7 @@ theorem perfectRecall_histories_eq_of_last_observe_eq
         (hs₁ := hs₁) (hs₂ := hs₂)
         (hobs := by simpa [s₁, s₂] using hobs)
   have hActs :
-      projectActions i ha₁ = projectActions i ha₂ := by
+      I.projectActions i ha₁ = I.projectActions i ha₂ := by
     exact (I.perfectRecall_action hPR) i ha₁ ha₂ ss₁ ss₂ s₁ s₂
       hr₁ hr₂ hs₁ hs₂ (by simpa [s₁, s₂] using hobs)
   exact ⟨hStates, hActs⟩
@@ -63,16 +63,16 @@ player `i`, then perfect recall forces the same projected own-action history. -/
 theorem actionRecall_of_projectStates_eq
     (hPR : I.PerfectRecall)
     (i : ι)
-    {ha₁ ha₂ : List (JointAction M)}
-    {ss₁ ss₂ : List M.State}
-    (hr₁ : ReachActionTrace M ha₁ ss₁)
-    (hr₂ : ReachActionTrace M ha₂ ss₂)
+    {ha₁ ha₂ : List I.JointAction}
+    {ss₁ ss₂ : List σ}
+    (hr₁ : Semantics.SM.ReachActionTrace I.toSM ha₁ ss₁)
+    (hr₂ : Semantics.SM.ReachActionTrace I.toSM ha₂ ss₂)
     (hproj : I.projectStates i ss₁ = I.projectStates i ss₂) :
-    projectActions i ha₁ = projectActions i ha₂ := by
-  have hne1 : ss₁ ≠ [] := InfoModel.reachActionTrace_nonempty (M := M) hr₁
-  have hne2 : ss₂ ≠ [] := InfoModel.reachActionTrace_nonempty (M := M) hr₂
-  let s1 : M.State := ss₁.getLast hne1
-  let s2 : M.State := ss₂.getLast hne2
+    I.projectActions i ha₁ = I.projectActions i ha₂ := by
+  have hne1 : ss₁ ≠ [] := InfoModel.reachActionTrace_nonempty hr₁
+  have hne2 : ss₂ ≠ [] := InfoModel.reachActionTrace_nonempty hr₂
+  let s1 : σ := ss₁.getLast hne1
+  let s2 : σ := ss₂.getLast hne2
   have hs1 : ss₁.getLast? = some s1 := by
     simpa [s1] using (List.getLast?_eq_getLast_of_ne_nil hne1)
   have hs2 : ss₂.getLast? = some s2 := by
@@ -95,12 +95,12 @@ theorem actionRecall_of_projectStates_eq
 
 theorem localHistTokens_eq_of_projectStates_actions_eq
     (i : ι)
-    {ha₁ ha₂ : List (JointAction M)}
-    {ss₁ ss₂ : List M.State}
+    {ha₁ ha₂ : List I.JointAction}
+    {ss₁ ss₂ : List σ}
     (hLen₁ : ss₁.length = ha₁.length + 1)
     (hLen₂ : ss₂.length = ha₂.length + 1)
     (hproj : I.projectStates i ss₁ = I.projectStates i ss₂)
-    (hact : projectActions i ha₁ = projectActions i ha₂) :
+    (hact : I.projectActions i ha₁ = I.projectActions i ha₂) :
     InfoModel.localHistTokens (I := I) i ha₁ ss₁ =
       InfoModel.localHistTokens (I := I) i ha₂ ss₂ := by
   induction ha₁ using List.reverseRecOn generalizing ss₁ ha₂ ss₂ with
@@ -203,12 +203,12 @@ theorem localHistTokens_eq_of_projectStates_actions_eq
                 _ = I.projectPrivate i ss₂.dropLast := by
                   rw [← hss₂decomp, I.projectPrivate_snoc]
                   simp
-          have hact' : projectActions i ha = projectActions i ha₂ := by
+          have hact' : I.projectActions i ha = I.projectActions i ha₂ := by
             have hdrop := congrArg List.dropLast hact
-            simpa [projectActions, List.map_append] using hdrop
+            simpa [InfoModel.projectActions, List.map_append] using hdrop
           have hlastAct : x i = y i := by
             have hlast := congrArg List.getLast? hact
-            simpa [projectActions, List.map_append] using hlast
+            simpa [InfoModel.projectActions, List.map_append] using hlast
           have hrec := ih hLen₁' hLen₂' hproj' hact'
           rw [← hss₁decomp, ← hss₂decomp]
           rw [InfoModel.localHistTokens_snoc (I := I) i ha ss₁.dropLast hLen₁' x t₁]

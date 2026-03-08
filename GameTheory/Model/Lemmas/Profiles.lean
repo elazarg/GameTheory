@@ -9,11 +9,10 @@ namespace InfoModel
 open Execution
 open Math.PMFProduct
 
-variable {ι : Type}
-variable {M : LSM ι} (I : InfoModel M)
+variable {ι σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 
 abbrev LocalPure (i : ι) : Type :=
-  I.LocalTrace i → Option (M.Act i)
+  I.LocalTrace i → Option (Act i)
 
 /-- Mixed profiles over pure local policies (model-level notion). -/
 abbrev MixedProfile : Type := ∀ i, PMF (LocalPure (I := I) i)
@@ -56,19 +55,19 @@ noncomputable def evalMixedCanonical
     [DecidableEq ι]
     [Fintype ι]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (k : Nat) (μ : MixedProfile (I := I)) : PMF I.Outcome :=
   (mixedJoint (I := I) μ).bind (D.evalPure k)
 
 /-- Coordinate query on pure profiles. -/
 def pureActionAt (i : ι) (v : I.LocalTrace i)
-    (π : PureProfile I) : Option (M.Act i) :=
+    (π : PureProfile I) : Option (Act i) :=
   π i v
 
 /-- Canonical realization from mixed profile by coordinate marginals. -/
 noncomputable def realizeBehavioralCanonical
     [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : MixedProfile (I := I)) : BehavioralProfile I :=
   fun i v => Math.ProbabilityMassFunction.pushforward (μ i) (fun f => f v)
 
@@ -76,17 +75,17 @@ noncomputable def realizeBehavioralCanonical
 all local-trace coordinates. -/
 noncomputable def behavioralToMixed
     [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfile I) : MixedProfile (I := I) := by
+    [∀ i, Fintype (Option (Act i))]
+    (b : BehavioralProfile I) : MixedProfile (I := I) := by
   classical
-  exact fun i => pmfPi (fun v : I.LocalTrace i => σ i v)
+  exact fun i => pmfPi (fun v : I.LocalTrace i => b i v)
 
 /-- Round-trip identity: realizing the behavioral profile recovers the original. -/
 theorem realize_behavioralToMixed
     [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfile I) :
-    realizeBehavioralCanonical (I := I) (behavioralToMixed (I := I) σ) = σ := by
+    [∀ i, Fintype (Option (Act i))]
+    (b : BehavioralProfile I) :
+    realizeBehavioralCanonical (I := I) (behavioralToMixed (I := I) b) = b := by
   classical
   funext i v
   simp only [realizeBehavioralCanonical, behavioralToMixed,
@@ -94,16 +93,16 @@ theorem realize_behavioralToMixed
   conv_lhs =>
     arg 2; ext f
     simp only [Function.comp, Equiv.curry, Equiv.coe_fn_mk]
-  change pushforward (pmfPi fun w => σ i w)
-    (fun f => f v) = σ i v
+  change pushforward (pmfPi fun w => b i w)
+    (fun f => f v) = b i v
   rw [pmfPi_push_coord]
 
 /-- Pure step simplification: `jointActionDist` under `pureToBehavioral` is a point mass. -/
 theorem jointActionDist_pure
     [DecidableEq ι]
     [Fintype ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (π : PureProfile I) (ss : List M.State) :
+    [∀ i, Fintype (Option (Act i))]
+    (π : PureProfile I) (ss : List σ) :
     Execution.Dynamics.jointActionDist (I := I) (pureToBehavioral I π) ss =
       PMF.pure (fun i => π i (I.projectStates i ss)) := by
   simpa [Execution.Dynamics.jointActionDist, pureToBehavioral] using
@@ -112,10 +111,10 @@ theorem jointActionDist_pure
 /-- Pure step unfolding: `stepDist` under `pureToBehavioral` simplifies. -/
 theorem stepDist_pure
     (D : Execution.Dynamics I)
-    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (π : PureProfile I) (ss : List M.State) :
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (π : PureProfile I) (ss : List σ) :
     D.stepDist (pureToBehavioral I π) ss =
-      let s := (ss.getLast?).getD M.init
+      let s := (ss.getLast?).getD I.init
       D.nextState (fun i => π i (I.projectStates i ss)) s := by
   simp [Execution.Dynamics.stepDist, jointActionDist_pure, PMF.pure_bind]
 
@@ -123,11 +122,11 @@ theorem stepDist_pure
 records the current queried action profile without additional randomness. -/
 theorem stepActionStateDist_pure
     (D : Execution.Dynamics I)
-    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (M.Act i))]
-    (π : PureProfile I) (ss : List M.State) :
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (π : PureProfile I) (ss : List σ) :
     D.stepActionStateDist (pureToBehavioral I π) ss =
-      let s := (ss.getLast?).getD M.init
-      let a : JointAction M := fun i => π i (I.projectStates i ss)
+      let s := (ss.getLast?).getD I.init
+      let a : I.JointAction := fun i => π i (I.projectStates i ss)
       Math.ProbabilityMassFunction.pushforward
         (D.nextState a s)
         (fun t => (a, t)) := by
@@ -145,7 +144,7 @@ abbrev RestrictedLocalCoord
 /-- Pure local policy restricted to the covered coordinates. -/
 abbrev RestrictedLocalPure
     (H : ∀ i, Finset (I.LocalTrace i)) (i : ι) : Type :=
-  RestrictedLocalCoord (I := I) H i → Option (M.Act i)
+  RestrictedLocalCoord (I := I) H i → Option (Act i)
 
 /-- Joint pure profile restricted to a finite local-history cover. -/
 abbrev RestrictedPureProfile
@@ -155,7 +154,7 @@ abbrev RestrictedPureProfile
 /-- Behavioral profile restricted to a finite local-history cover. -/
 abbrev RestrictedBehavioralProfile
     (H : ∀ i, Finset (I.LocalTrace i)) : Type :=
-  ∀ i, RestrictedLocalCoord (I := I) H i → PMF (Option (M.Act i))
+  ∀ i, RestrictedLocalCoord (I := I) H i → PMF (Option (Act i))
 
 /-- Mixed profile over restricted pure local policies. -/
 abbrev RestrictedMixedProfile
@@ -197,20 +196,20 @@ def restrictPureProfile
 /-- Extend a restricted behavioral profile by playing `none` outside the cover. -/
 noncomputable def extendRestrictedBehavioralProfile
     (H : ∀ i, Finset (I.LocalTrace i))
-    (σ : RestrictedBehavioralProfile (I := I) H) :
+    (b : RestrictedBehavioralProfile (I := I) H) :
     BehavioralProfile I :=
   fun i v =>
     if hv : v ∈ H i then
-      σ i ⟨v, hv⟩
+      b i ⟨v, hv⟩
     else
       PMF.pure none
 
 /-- Restrict a full behavioral profile to a finite cover. -/
 def restrictBehavioralProfile
     (H : ∀ i, Finset (I.LocalTrace i))
-    (σ : BehavioralProfile I) :
+    (b : BehavioralProfile I) :
     RestrictedBehavioralProfile (I := I) H :=
-  fun i v => σ i v.1
+  fun i v => b i v.1
 
 /-- Extend a restricted mixed profile to the full local-policy space by
 pushforward along the pure-policy extension map. -/
@@ -350,7 +349,7 @@ outside the cover by the deterministic `none` action. -/
 noncomputable def restrictedRealizeBehavioralCanonical
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) :
     BehavioralProfile I :=
   extendRestrictedBehavioralProfile (I := I) H <|
@@ -361,11 +360,11 @@ noncomputable def restrictedRealizeBehavioralCanonical
 noncomputable def restrictedBehavioralToMixed
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ : RestrictedBehavioralProfile (I := I) H) :
+    [∀ i, Fintype (Option (Act i))]
+    (b : RestrictedBehavioralProfile (I := I) H) :
     RestrictedMixedProfile (I := I) H := by
   classical
-  exact fun i => pmfPi (fun v : RestrictedLocalCoord (I := I) H i => σ i v)
+  exact fun i => pmfPi (fun v : RestrictedLocalCoord (I := I) H i => b i v)
 
 /-- Restricting an extended local pure policy recovers the original. -/
 theorem restrict_extend_localPure
@@ -388,9 +387,9 @@ theorem restrict_extend_pureProfile
 /-- Restricting an extended behavioral profile recovers the original. -/
 theorem restrict_extend_behavioralProfile
     (H : ∀ i, Finset (I.LocalTrace i))
-    (σ : RestrictedBehavioralProfile (I := I) H) :
+    (b : RestrictedBehavioralProfile (I := I) H) :
     restrictBehavioralProfile (I := I) H
-      (extendRestrictedBehavioralProfile (I := I) H σ) = σ := by
+      (extendRestrictedBehavioralProfile (I := I) H b) = b := by
   funext i v
   simp [restrictBehavioralProfile, extendRestrictedBehavioralProfile, v.2]
 
@@ -407,9 +406,9 @@ theorem extendRestrictedPureProfile_apply_mem
 value on covered coordinates. -/
 theorem extendRestrictedBehavioralProfile_apply_mem
     (H : ∀ i, Finset (I.LocalTrace i))
-    (σ : RestrictedBehavioralProfile (I := I) H)
+    (b : RestrictedBehavioralProfile (I := I) H)
     (i : ι) (v : I.LocalTrace i) (hv : v ∈ H i) :
-    extendRestrictedBehavioralProfile (I := I) H σ i v = σ i ⟨v, hv⟩ := by
+    extendRestrictedBehavioralProfile (I := I) H b i v = b i ⟨v, hv⟩ := by
   simp [extendRestrictedBehavioralProfile, hv]
 
 /-- Round-trip identity on the restricted cover: realizing the behavioral
@@ -417,22 +416,22 @@ profile produced from `restrictedBehavioralToMixed` recovers the original. -/
 theorem restricted_realize_behavioralToMixed
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ : RestrictedBehavioralProfile (I := I) H) :
+    [∀ i, Fintype (Option (Act i))]
+    (b : RestrictedBehavioralProfile (I := I) H) :
     restrictBehavioralProfile (I := I) H
       (restrictedRealizeBehavioralCanonical (I := I) H
-        (restrictedBehavioralToMixed (I := I) H σ)) = σ := by
+        (restrictedBehavioralToMixed (I := I) H b)) = b := by
   classical
   funext i v
   simp only [restrictBehavioralProfile, restrictedRealizeBehavioralCanonical,
     restrictedBehavioralToMixed, extendRestrictedBehavioralProfile]
   suffices
       Math.ProbabilityMassFunction.pushforward
-        (pmfPi (fun w : RestrictedLocalCoord (I := I) H i => σ i w))
-        (fun f => f v) = σ i v by
+        (pmfPi (fun w : RestrictedLocalCoord (I := I) H i => b i w))
+        (fun f => f v) = b i v by
     simpa only [SetLike.coe_mem, ↓reduceDIte, Subtype.coe_eta] using this
   simpa [Math.PMFProduct.pushforward, Math.ProbabilityMassFunction.pushforward] using
-    (pmfPi_push_coord (σ := fun w : RestrictedLocalCoord (I := I) H i => σ i w) (j := v))
+    (pmfPi_push_coord (σ := fun w : RestrictedLocalCoord (I := I) H i => b i w) (j := v))
 
 end Restricted
 

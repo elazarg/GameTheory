@@ -28,20 +28,19 @@ variable {ι : Type}
 /-- Map-based simulation from a native source semantics into a compiled
 `InfoModel`. -/
 structure NativeInfoHomSimulation
-    {α σ : Type}
+    {α σ τ : Type} {Act : ι → Type}
     (step : α → σ → σ → Prop)
     (s0 : σ)
-    {M : LSM ι}
-    (I : InfoModel M)
+    (I : InfoModel ι τ Act)
     (publicView : σ → I.Public)
     (observe : (i : ι) → σ → I.Obs i) where
-  stateMap : σ → M.State
-  labelMap : α → JointAction M
-  init : stateMap s0 = M.init
+  stateMap : σ → τ
+  labelMap : α → I.JointAction
+  init : stateMap s0 = I.init
   step :
     ∀ {a : α} {s t : σ},
       step a s t →
-      M.step (labelMap a) (stateMap s) (stateMap t)
+      I.step (labelMap a) (stateMap s) (stateMap t)
   publicView_eq :
     ∀ s, I.publicView (stateMap s) = publicView s
   observe_eq :
@@ -49,10 +48,10 @@ structure NativeInfoHomSimulation
 
 namespace NativeInfoHomSimulation
 
-variable {α σ : Type}
+variable {α σ τ : Type} {Act : ι → Type}
 variable {step : α → σ → σ → Prop}
 variable {s0 : σ}
-variable {M : LSM ι} {I : InfoModel M}
+variable {I : InfoModel ι τ Act}
 variable {publicView : σ → I.Public}
 variable {observe : (i : ι) → σ → I.Obs i}
 
@@ -61,8 +60,8 @@ theorem reachBy_map
     (sim : NativeInfoHomSimulation step s0 I publicView observe)
     {w : List α} {s t : σ}
     (h : ReachBy step w s t) :
-    ReachBy M.step (w.map sim.labelMap) (sim.stateMap s) (sim.stateMap t) := by
-  let hsim : Semantics.Transition.HomSimulation step M.step :=
+    ReachBy I.step (w.map sim.labelMap) (sim.stateMap s) (sim.stateMap t) := by
+  let hsim : Semantics.Transition.HomSimulation step I.step :=
     { stateMap := sim.stateMap
       labelMap := sim.labelMap
       step := by
@@ -76,18 +75,17 @@ end NativeInfoHomSimulation
 `InfoModel`. This is the strong structural notion used when compilation keeps
 the joint action labels unchanged. -/
 structure NativeInfoBisimulation
-    {σ : Type}
-    {M : LSM ι}
-    (step : JointAction M → σ → σ → Prop)
+    {σ τ : Type} {Act : ι → Type}
+    {I : InfoModel ι τ Act}
+    (step : I.JointAction → σ → σ → Prop)
     (s0 : σ)
-    (I : InfoModel M)
     (publicView : σ → I.Public)
     (observe : (i : ι) → σ → I.Obs i) where
-  stateEquiv : σ ≃ M.State
-  init : stateEquiv s0 = M.init
+  stateEquiv : σ ≃ τ
+  init : stateEquiv s0 = I.init
   step_iff :
-    ∀ {a : JointAction M} {s t : σ},
-      step a s t ↔ M.step a (stateEquiv s) (stateEquiv t)
+    ∀ {a : I.JointAction} {s t : σ},
+      step a s t ↔ I.step a (stateEquiv s) (stateEquiv t)
   publicView_eq :
     ∀ s, I.publicView (stateEquiv s) = publicView s
   observe_eq :
@@ -95,18 +93,17 @@ structure NativeInfoBisimulation
 
 namespace NativeInfoBisimulation
 
-variable {σ : Type}
-variable {M : LSM ι}
-variable {step : JointAction M → σ → σ → Prop}
+variable {σ τ : Type} {Act : ι → Type}
+variable {I : InfoModel ι τ Act}
+variable {step : I.JointAction → σ → σ → Prop}
 variable {s0 : σ}
-variable {I : InfoModel M}
 variable {publicView : σ → I.Public}
 variable {observe : (i : ι) → σ → I.Obs i}
 
 /-- Forget the backward direction and view a bisimulation as a homomorphic
 simulation. -/
 def toHomSimulation
-    (bis : NativeInfoBisimulation step s0 I publicView observe) :
+    (bis : NativeInfoBisimulation step s0 publicView observe) :
     NativeInfoHomSimulation step s0 I publicView observe where
   stateMap := bis.stateEquiv
   labelMap := id
@@ -117,10 +114,10 @@ def toHomSimulation
 
 /-- Same-label reachability transport induced by a native-info bisimulation. -/
 theorem reachBy_map
-    (bis : NativeInfoBisimulation step s0 I publicView observe)
-    {w : List (JointAction M)} {s t : σ}
+    (bis : NativeInfoBisimulation step s0 publicView observe)
+    {w : List I.JointAction} {s t : σ}
     (h : ReachBy step w s t) :
-    ReachBy M.step w (bis.stateEquiv s) (bis.stateEquiv t) := by
+    ReachBy I.step w (bis.stateEquiv s) (bis.stateEquiv t) := by
   simpa [NativeInfoBisimulation.toHomSimulation] using
     (NativeInfoHomSimulation.reachBy_map (sim := bis.toHomSimulation) h)
 

@@ -13,28 +13,27 @@ compilation, without replacing `KernelGame` as the strategic-form target.
 
 namespace GameTheory
 
-/-- Common-knowledge game layer built over a latent machine and information
+/-- Common-knowledge game layer built over an information model and control
 structure. This is the canonical game-level target for language compilation. -/
-structure InfoGame {ι : Type} where
-  M : LSM ι
-  I : InfoModel M
-  C : ControlModel M I
+structure InfoGame {ι σ : Type} {Act : ι → Type} where
+  I : InfoModel ι σ Act
+  C : ControlModel I
 
 namespace InfoGame
 
-variable {ι : Type}
+variable {ι σ : Type} {Act : ι → Type}
 
-/-- Build an `InfoGame` from an existing machine, information model, and common-
+/-- Build an `InfoGame` from an existing information model and common-
 knowledge control layer. -/
-def ofControlModel {M : LSM ι} {I : InfoModel M}
-    (C : ControlModel M I) : InfoGame (ι := ι) := ⟨M, I, C⟩
+def ofControlModel {I : InfoModel ι σ Act}
+    (C : ControlModel I) : InfoGame (ι := ι) (σ := σ) (Act := Act) := ⟨I, C⟩
 
 /-- Forget the common-knowledge control layer. -/
-abbrev toInfoModel (G : InfoGame (ι := ι)) : InfoModel G.M := G.I
+abbrev toInfoModel (G : InfoGame (ι := ι) (σ := σ) (Act := Act)) : InfoModel ι σ Act := G.I
 
 /-- Access the controller specification at player `i`. -/
-abbrev control (G : InfoGame (ι := ι)) (i : ι) :
-    ControlSpec (G.I.Obs i) (G.M.Act i) :=
+abbrev control (G : InfoGame (ι := ι) (σ := σ) (Act := Act)) (i : ι) :
+    ControlSpec (G.I.Obs i) (Act i) :=
   G.C.control i
 
 end InfoGame

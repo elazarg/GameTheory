@@ -94,7 +94,7 @@ theorem step_iff
     (S : Struct Player n) (sem : Sem S)
     (a : ∀ p : Player, Option (FrontierAct S p))
     (src dst : FrontierCfg S) :
-    (compileLSM S sem).step a src dst ↔ Step S sem a src dst :=
+    (compileInfoOn S sem).step a src dst ↔ Step S sem a src dst :=
   compile_step_iff S sem a src dst
 
 /-- Reachability in the compiled machine is exactly native frontier reachability. -/
@@ -102,7 +102,7 @@ theorem reach_iff
     (S : Struct Player n) (sem : Sem S)
     (ha : List (∀ p : Player, Option (FrontierAct S p)))
     (src dst : FrontierCfg S) :
-    Semantics.Transition.ReachBy (compileLSM S sem |>.stepExists) ha src dst ↔
+    Semantics.Transition.ReachBy (compileInfoOn S sem).step ha src dst ↔
       ReachBy S sem ha src dst :=
   compile_reach_iff S sem ha src dst
 
@@ -137,7 +137,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled_restricted
     [∀ p, DecidableEq ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype ((compileInfoOn S sem).RestrictedLocalCoord H p)]
     [∀ p, Fintype ((compileInfoOn S sem).RestrictedLocalPure H p)]
-    [∀ p, Fintype (Option ((compileLSM S sem).Act p))]
+    [∀ p, Fintype (Option (FrontierAct S p))]
     (hStepIndep : ∀ μ n, (compileInfoOn S sem).RestrictedStepIndependence D H μ n) :
     KuhnMixedToBehavioralViaOutcome
       ((compileInfoOn S sem).RestrictedBehavioralProfile H)
@@ -162,7 +162,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled_via_cover
     [∀ p, Fintype ((compileInfoOn S sem).RestrictedLocalPure H p)]
     [∀ p, Finite ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype (InfoModel.LocalPure (I := compileInfoOn S sem) p)]
-    [∀ p, Fintype (Option ((compileLSM S sem).Act p))]
+    [∀ p, Fintype (Option (FrontierAct S p))]
     (hCover : compiledHistoryCover S sem k H)
     (hStepIndep : ∀ μ n, (compileInfoOn S sem).RestrictedStepIndependence D H μ n) :
     KuhnMixedToBehavioralViaOutcome
@@ -186,7 +186,7 @@ theorem kuhn_complete_of_compiled_restricted
     [∀ p, DecidableEq ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype ((compileInfoOn S sem).RestrictedLocalCoord H p)]
     [∀ p, Fintype ((compileInfoOn S sem).RestrictedLocalPure H p)]
-    [∀ p, Fintype (Option ((compileLSM S sem).Act p))]
+    [∀ p, Fintype (Option (FrontierAct S p))]
     (hStepIndep : ∀ μ n, (compileInfoOn S sem).RestrictedStepIndependence D H μ n) :
     KuhnCompleteViaOutcome
       ((compileInfoOn S sem).RestrictedBehavioralProfile H)
@@ -213,7 +213,7 @@ theorem kuhn_complete_of_compiled_via_cover
     [∀ p, Finite ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype (InfoModel.LocalPure (I := compileInfoOn S sem) p)]
-    [∀ p, Fintype (Option ((compileLSM S sem).Act p))]
+    [∀ p, Fintype (Option (FrontierAct S p))]
     (hCover : compiledHistoryCover S sem k H)
     (hStepIndep : ∀ μ n, (compileInfoOn S sem).RestrictedStepIndependence D H μ n) :
     KuhnCompleteViaOutcome
@@ -240,7 +240,7 @@ theorem kuhn_mixed_to_behavioral_of_compiled
     [∀ p, Fintype ((compileInfoOn S sem).RestrictedLocalPure (canonicalHistoryCover S sem k) p)]
     [∀ p, Finite ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype (InfoModel.LocalPure (I := compileInfoOn S sem) p)]
-    [∀ p, Fintype (Option ((compileLSM S sem).Act p))]
+    [∀ p, Fintype (Option (FrontierAct S p))]
     (hStepIndep :
       ∀ μ n,
         (compileInfoOn S sem).RestrictedStepIndependence D (canonicalHistoryCover S sem k) μ n) :
@@ -268,7 +268,7 @@ theorem kuhn_complete_of_compiled
     [∀ p, Finite ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype ((compileInfoOn S sem).LocalTrace p)]
     [∀ p, Fintype (InfoModel.LocalPure (I := compileInfoOn S sem) p)]
-    [∀ p, Fintype (Option ((compileLSM S sem).Act p))]
+    [∀ p, Fintype (Option (FrontierAct S p))]
     (hStepIndep :
       ∀ μ n,
         (compileInfoOn S sem).RestrictedStepIndependence D (canonicalHistoryCover S sem k) μ n) :

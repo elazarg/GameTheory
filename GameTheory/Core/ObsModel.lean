@@ -1,21 +1,30 @@
-import GameTheory.Core.LSM
+import Semantics.SM
 
-/-! # Observation model interface
+/-! # Observation model
 
-A minimal interface for observation-based game models. Any representation
-(InfoModel, EFG, etc.) can provide an `ObsModel` to use downstream theorems
-(e.g. correlated realization, Kuhn's theorem). -/
+Multi-agent observation model extending `Semantics.SM`.
+State type `σ` and per-player action type `Act` are parameters;
+the SM label type is the joint action profile `∀ i, Option (Act i)`. -/
 
 set_option autoImplicit false
 
 namespace GameTheory
 
-/-- Observation model: per-player observation function on machine states.
-Everything else (local traces, observation equivalence, profile types) is derived. -/
-structure ObsModel {ι : Type} (M : LSM ι) where
-  /-- Player-specific observation type. -/
+/-- Multi-agent observation model extending a pointed labeled state machine.
+Adds per-player observation types and functions. -/
+structure ObsModel (ι σ : Type) (Act : ι → Type)
+    extends Semantics.SM (∀ i, Option (Act i)) σ where
+  /-- Per-player observation type. -/
   Obs : ι → Type
-  /-- Player-specific observation function. -/
-  observe : (i : ι) → M.State → Obs i
+  /-- Per-player observation function on states. -/
+  observe : (i : ι) → σ → Obs i
 
+namespace ObsModel
+
+variable {ι σ : Type} {Act : ι → Type}
+
+/-- Joint (possibly inactive) action profile. -/
+abbrev JointAction (_ : ObsModel ι σ Act) := ∀ i, Option (Act i)
+
+end ObsModel
 end GameTheory

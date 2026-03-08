@@ -185,26 +185,20 @@ open Math.Probability
 
 variable {n : Nat} {S V A Sig : Type}
 
-/-- Compile a sequential protocol directly into the latent-state machine layer.
+/-- Compile a sequential protocol directly into the generic `InfoModel` layer.
 
-The compiled machine uses the native SOS configurations as states:
+The compiled model uses the native SOS configurations as states:
 - `signal` states wait for nature's joint signal realization
 - `action` states wait for the players' joint action
 - `terminal` states have no outgoing transitions
--/
-def compileLSM (G : Protocol n S V A Sig) : GameTheory.LSM (Fin n) where
-  State := Config G
-  Act := fun _ => A
-  init := initialConfig G
-  step := Step G
-
-/-- Compile protocol visibility into the generic `InfoModel` layer.
 
 Public visibility is the current execution phase and round index; private
 visibility is the current round view when the protocol is waiting for actions,
 and `none` otherwise. -/
 def compileInfoOn (G : Protocol n S V A Sig) :
-    GameTheory.InfoModel (compileLSM G) where
+    GameTheory.InfoModel (Fin n) (Config G) (fun _ => A) where
+  init := initialConfig G
+  step := Step G
   Public := PublicPhase
   publicView := publicPhase
   Obs := fun _ => Option V
@@ -215,7 +209,7 @@ theorem compile_step_iff
     (G : Protocol n S V A Sig)
     (a : JointControl n A)
     (src dst : Config G) :
-    (compileLSM G).step a src dst ↔ Step G a src dst := by
+    (compileInfoOn G).step a src dst ↔ Step G a src dst := by
   rfl
 
 /-- Native SOS reachability is definitionally the same as reachability in the
@@ -224,7 +218,7 @@ theorem compile_reach_iff
     (G : Protocol n S V A Sig)
     (ha : List (JointControl n A))
     (src dst : Config G) :
-    Semantics.Transition.ReachBy (compileLSM G |>.stepExists) ha src dst ↔
+    Semantics.Transition.ReachBy (compileInfoOn G).step ha src dst ↔
       ReachBy G ha src dst := by
   rfl
 
@@ -246,10 +240,9 @@ theorem compile_publicView_eq_publicPhase
 protocol SOS: states are identical, labels are identical joint controls, and
 public/private observations coincide. -/
 def nativeInfoBisimulation (G : Protocol n S V A Sig) :
-    GameTheory.NativeInfoBisimulation
+    GameTheory.NativeInfoBisimulation (I := compileInfoOn G)
       (Step G)
       (initialConfig G)
-      (compileInfoOn G)
       publicPhase
       (observe G) where
   stateEquiv := Equiv.refl _
@@ -268,28 +261,30 @@ def nativeInfoBisimulation (G : Protocol n S V A Sig) :
 semantics. -/
 def compileControlUtility (G : Protocol n S V A Sig)
     (u : ∀ _ : Fin n, List (Option V) → ℝ) :
-    GameTheory.ControlModel (compileLSM G) (compileInfoOn G) where
+    GameTheory.ControlModel (compileInfoOn G) where
   control := fun i => GameTheory.ControlSpec.utility (u i)
 
 /-- Build a common-knowledge behavioral layer over the compiled sequential
 semantics. -/
 def compileControlBehavior (G : Protocol n S V A Sig)
     (β : ∀ _ : Fin n, List (Option V) → PMF (Option A)) :
-    GameTheory.ControlModel (compileLSM G) (compileInfoOn G) where
+    GameTheory.ControlModel (compileInfoOn G) where
   control := fun i => GameTheory.ControlSpec.behavior (β i)
 
 /-- Compile a sequential protocol together with common-knowledge utility
 specifications into the game-level `InfoGame` target. -/
 def compileInfoGameUtility (G : Protocol n S V A Sig)
     (u : ∀ _ : Fin n, List (Option V) → ℝ) :
-    GameTheory.InfoGame (ι := Fin n) :=
+    GameTheory.InfoGame (ι := Fin n)
+      (σ := Config G) (Act := fun _ => A) :=
   .ofControlModel <| compileControlUtility G u
 
 /-- Compile a sequential protocol together with common-knowledge behavioral
 specifications into the game-level `InfoGame` target. -/
 def compileInfoGameBehavior (G : Protocol n S V A Sig)
     (β : ∀ _ : Fin n, List (Option V) → PMF (Option A)) :
-    GameTheory.InfoGame (ι := Fin n) :=
+    GameTheory.InfoGame (ι := Fin n)
+      (σ := Config G) (Act := fun _ => A) :=
   .ofControlModel <| compileControlBehavior G β
 
 end GameTheory.Sequential

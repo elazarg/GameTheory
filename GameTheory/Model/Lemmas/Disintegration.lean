@@ -7,14 +7,14 @@ namespace InfoModel
 open Execution
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 
 /-- Mixed evaluation disintegration at one queried coordinate. -/
 theorem mixedEval_disintegrate_coordinate
     (D : Execution.Dynamics I)
     [DecidableEq ι]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     [Fintype (PureProfile I)]
     (μ : MixedProfile (I := I))
     (k : Nat)
@@ -38,7 +38,7 @@ theorem evalBehavioral_realize_eq_evalMixed
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (k : Nat)
     (μ : MixedProfile (I := I))
     (hRun :

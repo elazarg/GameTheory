@@ -12,7 +12,7 @@ A protocol round is executed in two phases:
 - `action`: players respond with a joint action, producing the next state
 
 This makes the protocol semantics explicit enough to compare directly with the
-compiled `LSM`/`InfoModel` semantics.
+compiled `SM`/`InfoModel` semantics.
 -/
 
 namespace GameTheory.Sequential

@@ -41,7 +41,7 @@ open Execution
 open GameTheory.InfoModel
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 variable (D : Execution.Dynamics I)
 variable (k : Nat)
 
@@ -55,7 +55,7 @@ outside the finite cover by the deterministic action `none`. -/
 noncomputable def evalRestrictedPure
     (D : Execution.Dynamics I) (k : Nat)
     (H : ∀ i, Finset (I.LocalTrace i))
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (π : RestrictedPureProfile (I := I) H) : PMF I.Outcome :=
   D.evalPure k (extendRestrictedPureProfile (I := I) H π)
 
@@ -64,7 +64,7 @@ extension outside the finite cover by `PMF.pure none`. -/
 noncomputable def evalRestrictedBehavioral
     (D : Execution.Dynamics I) (k : Nat)
     (H : ∀ i, Finset (I.LocalTrace i))
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (σ : RestrictedBehavioralProfile (I := I) H) : PMF I.Outcome :=
   D.evalBehavioral k (extendRestrictedBehavioralProfile (I := I) H σ)
 
@@ -73,7 +73,7 @@ noncomputable def evalRestrictedMixedCanonical
     (D : Execution.Dynamics I) (k : Nat) (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) : PMF I.Outcome :=
   (restrictedMixedJointRaw (I := I) H μ).bind
     (fun π => evalRestrictedPure (I := I) D k H π)
@@ -83,7 +83,7 @@ noncomputable def mixedOfBehavioralCanonicalRestricted
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (σ : RestrictedBehavioralProfile (I := I) H) :
     PMF (RestrictedPureProfile (I := I) H) :=
   restrictedMixedJointRaw (I := I) H (restrictedBehavioralToMixed (I := I) H σ)
@@ -92,7 +92,7 @@ noncomputable def mixedOfBehavioralCanonicalRestricted
 theorem evalRestrictedBehavioral_eq_mixed_of_stepIndependence
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H)
     (σ : RestrictedBehavioralProfile (I := I) H)
     (hStep : ∀ n,
@@ -178,7 +178,7 @@ theorem kuhn_behavioral_to_mixed_core_restricted
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, RestrictedStepIndependence (I := I) D H μ n) :
     KuhnBehavioralToMixedOutcome
       (RestrictedBehavioralProfile (I := I) H)
@@ -242,7 +242,7 @@ theorem kuhn_mixed_to_behavioral_core_restricted
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, RestrictedStepIndependence (I := I) D H μ n) :
     KuhnMixedToBehavioralViaOutcome
       (RestrictedBehavioralProfile (I := I) H)
@@ -280,7 +280,7 @@ theorem kuhn_complete_of_infoModel_restricted
     (H : ∀ i, Finset (I.LocalTrace i))
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, RestrictedStepIndependence (I := I) D H μ n) :
     KuhnCompleteViaOutcome
       (RestrictedBehavioralProfile (I := I) H)
@@ -302,7 +302,7 @@ noncomputable def mixedOfBehavioralCanonical
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (σ : BehavioralProfile I) : PMF (PureProfile I) :=
   InfoModel.mixedJoint (I := I) (InfoModel.behavioralToMixed (I := I) σ)
 
@@ -311,7 +311,7 @@ at every depth under `μ`, then its bounded evaluation equals mixed evaluation. 
 theorem evalBehavioral_eq_mixed_of_stepIndependence
     [DecidableEq ι]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : InfoModel.MixedProfile (I := I))
     (σ : BehavioralProfile I)
     (hStep : ∀ n,
@@ -382,7 +382,7 @@ theorem kuhn_behavioral_to_mixed_core
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, InfoModel.StepIndependence (I := I) D μ n) :
     KuhnBehavioralToMixedOutcome
       (BehavioralProfile I) (PureProfile I) I.Outcome
@@ -425,7 +425,7 @@ theorem kuhn_mixed_to_behavioral_core
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, InfoModel.StepIndependence (I := I) D μ n) :
     KuhnMixedToBehavioralViaOutcome
       (BehavioralProfile I) (InfoModel.MixedProfile (I := I)) (PureProfile I) I.Outcome
@@ -459,7 +459,7 @@ theorem kuhn_complete_of_infoModel
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, InfoModel.StepIndependence (I := I) D μ n) :
     KuhnCompleteViaOutcome
       (BehavioralProfile I) (InfoModel.MixedProfile (I := I)) (PureProfile I) I.Outcome
@@ -476,7 +476,7 @@ theorem kuhn_complete_of_infoModel_atomic
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hAtomic : ∀ μ : InfoModel.MixedProfile (I := I),
       InfoModel.AtomicCoordinateFactorization (I := I) μ) :
     KuhnCompleteViaOutcome
@@ -495,7 +495,7 @@ theorem kuhn_behavioral_to_mixed
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))] :
+    [∀ i, Fintype (Option (Act i))] :
     KuhnBehavioralToMixedOutcome
       (BehavioralProfile I) (PureProfile I) I.Outcome
       (mixedOfBehavioralCanonical (I := I))

@@ -25,7 +25,7 @@ def chanceDecisionTree : GameTree oneInfo Bool :=
       if a.1 = 0 then .terminal false else .terminal true))
 
 example :
-    (compileLSM (S := oneInfo) (Outcome := Bool) decisionTree).init = decisionTree := rfl
+    (compileInfoOn (S := oneInfo) (Outcome := Bool) decisionTree).init = decisionTree := rfl
 
 example :
     (compileInfoOn (S := oneInfo) (Outcome := Bool) decisionTree).Obs p0 =
@@ -45,9 +45,9 @@ example :
 
 example :
     Semantics.Transition.ReachBy
-      ((compileLSM (S := oneInfo) (Outcome := Bool) decisionTree).stepExists)
+      ((compileInfoOn (S := oneInfo) (Outcome := Bool) decisionTree).step)
       ([] : List
-        (GameTheory.JointAction (compileLSM (S := oneInfo) (Outcome := Bool) decisionTree)))
+        ((compileInfoOn (S := oneInfo) (Outcome := Bool) decisionTree).JointAction))
       decisionTree decisionTree := by
   exact reachBy_implies_compiled (t := decisionTree) (ReachBy.here decisionTree)
 

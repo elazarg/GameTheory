@@ -10,15 +10,15 @@ open Execution
 open Execution.Dynamics
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 variable (D : Execution.Dynamics I)
 
 /-- One-step pure extension from a state trace depends only on the current
 queried coordinates induced by that trace. -/
 theorem stepDist_depends_on_current_context
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (ω₁ ω₂ : I.FlatPolicy) (ss : List M.State)
+    [∀ i, Fintype (Option (Act i))]
+    (ω₁ ω₂ : I.FlatPolicy) (ss : List σ)
     (hag : ∀ i,
       ω₁ ⟨i, I.projectStates i ss⟩ =
         ω₂ ⟨i, I.projectStates i ss⟩) :
@@ -39,8 +39,8 @@ theorem stepDist_depends_on_current_context
 current queried coordinates induced by that trace. -/
 theorem stepActionStateDist_depends_on_current_context
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (ω₁ ω₂ : I.FlatPolicy) (ss : List M.State)
+    [∀ i, Fintype (Option (Act i))]
+    (ω₁ ω₂ : I.FlatPolicy) (ss : List σ)
     (hag : ∀ i,
       ω₁ ⟨i, I.projectStates i ss⟩ =
         ω₂ ⟨i, I.projectStates i ss⟩) :
@@ -61,10 +61,10 @@ theorem stepActionStateDist_depends_on_current_context
 contexts. -/
 theorem stepDist_behavioral_depends_on_current_context
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ τ : BehavioralProfile I) (ss : List M.State)
-    (hag : ∀ i, σ i (I.projectStates i ss) = τ i (I.projectStates i ss)) :
-    D.stepDist σ ss = D.stepDist τ ss := by
+    [∀ i, Fintype (Option (Act i))]
+    (b τ : BehavioralProfile I) (ss : List σ)
+    (hag : ∀ i, b i (I.projectStates i ss) = τ i (I.projectStates i ss)) :
+    D.stepDist b ss = D.stepDist τ ss := by
   simp only [Execution.Dynamics.stepDist]
   congr 1
   ext a
@@ -74,10 +74,10 @@ theorem stepDist_behavioral_depends_on_current_context
 local contexts. -/
 theorem stepActionStateDist_behavioral_depends_on_current_context
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ τ : BehavioralProfile I) (ss : List M.State)
-    (hag : ∀ i, σ i (I.projectStates i ss) = τ i (I.projectStates i ss)) :
-    D.stepActionStateDist σ ss = D.stepActionStateDist τ ss := by
+    [∀ i, Fintype (Option (Act i))]
+    (b τ : BehavioralProfile I) (ss : List σ)
+    (hag : ∀ i, b i (I.projectStates i ss) = τ i (I.projectStates i ss)) :
+    D.stepActionStateDist b ss = D.stepActionStateDist τ ss := by
   simp only [Execution.Dynamics.stepActionStateDist]
   congr 1
   ext a
@@ -87,8 +87,8 @@ theorem stepActionStateDist_behavioral_depends_on_current_context
 queried local actions at `projectStates`. -/
 theorem pure_step_pushforward_depends_on_query
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (hs y : List M.State)
+    [∀ i, Fintype (Option (Act i))]
+    (hs y : List σ)
     (π π' : PureProfile I)
     (hquery :
       ∀ i, π i (I.projectStates i hs) = π' i (I.projectStates i hs)) :
@@ -120,7 +120,7 @@ theorem pure_step_pushforward_depends_on_query
 visible-history length is at most `n`. -/
 theorem runDistPure_depends_on_len_le
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (n : Nat)
     (ω₁ ω₂ : I.FlatPolicy)
     (hag : ∀ i v, v.2.length ≤ n →
@@ -162,7 +162,7 @@ omit [Fintype ι]
 /-- Freshness by length: for a run-state at round `n`, no coordinate can be
 both "past" (`≤ n`) and "now" (`= projection at round n+1`). -/
 theorem past_now_disjoint_by_length
-    (n : Nat) (ss : List M.State)
+    (n : Nat) (ss : List σ)
     (hlen : ss.length = n + 1) :
     Disjoint
       {k : I.CoordIdx | I.IsPastCoord n k}
@@ -189,25 +189,25 @@ equals the behavioral joint action distribution. -/
 theorem jointAction_marginal
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    (σ : BehavioralProfile I) (ss : List M.State) :
+    (b : BehavioralProfile I) (ss : List σ) :
     Math.PMFProduct.pushforward
-      (mixedJoint (I := I) (behavioralToMixed (I := I) σ))
+      (mixedJoint (I := I) (behavioralToMixed (I := I) b))
       (fun π i => π i (I.projectStates i ss)) =
-    Execution.Dynamics.jointActionDist (I := I) σ ss := by
+    Execution.Dynamics.jointActionDist (I := I) b ss := by
   classical
   simp only [mixedJoint, Execution.Dynamics.jointActionDist]
-  let g : ∀ i, (LocalPure (I := I) i) → Option (M.Act i) :=
+  let g : ∀ i, (LocalPure (I := I) i) → Option (Act i) :=
     fun i fi => fi (I.projectStates i ss)
-  change Math.PMFProduct.pushforward (Math.PMFProduct.pmfPi (behavioralToMixed I σ))
+  change Math.PMFProduct.pushforward (Math.PMFProduct.pmfPi (behavioralToMixed I b))
     (fun f i => g i (f i)) = _
   rw [Math.PMFProduct.pmfPi_push_coordwise]
   congr 1
   funext i
-  change Math.PMFProduct.pushforward (behavioralToMixed I σ i) (g i) = σ i (I.projectStates i ss)
+  change Math.PMFProduct.pushforward (behavioralToMixed I b i) (g i) = b i (I.projectStates i ss)
   have h := congr_fun (congr_fun
-    (realize_behavioralToMixed (I := I) σ) i) (I.projectStates i ss)
+    (realize_behavioralToMixed (I := I) b) i) (I.projectStates i ss)
   simpa [realizeBehavioralCanonical] using h
 
 /-- The expected one-step transition under a fresh draw from the product measure
@@ -215,27 +215,27 @@ equals the behavioral step distribution. -/
 theorem marginal_stepDist
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    (σ : BehavioralProfile I) (ss : List M.State) :
-    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+    (b : BehavioralProfile I) (ss : List σ) :
+    (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
       (fun π => D.stepDist (pureToBehavioral I π) ss) =
-    D.stepDist σ ss := by
+    D.stepDist b ss := by
   classical
   letI : DecidableEq ι := Classical.decEq ι
-  set s := (ss.getLast?).getD M.init
+  set s := (ss.getLast?).getD I.init
   calc
-    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+    (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
         (fun π => D.stepDist (pureToBehavioral I π) ss)
       =
-    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+    (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
         (fun π => D.nextState (fun i => π i (I.projectStates i ss)) s)
         := by
           congr 1
           funext π
           simpa [s] using (stepDist_pure (I := I) (D := D) π ss)
     _ =
-    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+    (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
         (fun π =>
           (PMF.pure (fun i => π i (I.projectStates i ss))).bind
             (fun a => D.nextState a s)) := by
@@ -243,21 +243,21 @@ theorem marginal_stepDist
           funext π
           rw [PMF.pure_bind]
     _ =
-    ((mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+    ((mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
         (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))).bind
         (fun a => D.nextState a s) := by
           rw [PMF.bind_bind]
     _ =
-      (Execution.Dynamics.jointActionDist (I := I) σ ss).bind
+      (Execution.Dynamics.jointActionDist (I := I) b ss).bind
         (fun a => D.nextState a s) := by
           have hJA :
-              (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind
+              (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
                 (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
-              Execution.Dynamics.jointActionDist (I := I) σ ss := by
+              Execution.Dynamics.jointActionDist (I := I) b ss := by
             simpa [Math.ProbabilityMassFunction.pushforward] using
-              (jointAction_marginal (I := I) σ ss)
+              (jointAction_marginal (I := I) b ss)
           rw [hJA]
-    _ = D.stepDist σ ss := by
+    _ = D.stepDist b ss := by
           simp [Execution.Dynamics.stepDist, s]
 
 /-- The expected explicit step under a fresh draw from the product measure
@@ -265,15 +265,15 @@ equals the explicit step distribution of the canonical behavioral realization. -
 theorem mixedJoint_stepActionStateDist_eq_realizeBehavioralCanonical
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    (μ : MixedProfile (I := I)) (ss : List M.State) :
+    (μ : MixedProfile (I := I)) (ss : List σ) :
     (mixedJoint (I := I) μ).bind
       (fun π => D.stepActionStateDist (pureToBehavioral I π) ss) =
     D.stepActionStateDist (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
   classical
   letI : DecidableEq ι := Classical.decEq ι
-  set s := (ss.getLast?).getD M.init
+  set s := (ss.getLast?).getD I.init
   calc
     (mixedJoint (I := I) μ).bind
         (fun π => D.stepActionStateDist (pureToBehavioral I π) ss)
@@ -329,9 +329,9 @@ theorem mixedJoint_stepActionStatePoint_eq_realizeBehavioralCanonical
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : MixedProfile (I := I))
-    (hs y : List (JointAction M) × List M.State) :
+    (hs y : List (I.JointAction) × List σ) :
     (∑' π, (mixedJoint (I := I) μ) π *
       (Math.ProbabilityMassFunction.pushforward
         (D.stepActionStateDist (pureToBehavioral I π) hs.2)

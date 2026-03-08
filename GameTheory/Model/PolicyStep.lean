@@ -5,9 +5,9 @@ import GameTheory.Model.SemanticForm
 
 Experimental enabled-player semantics with a minimal control source language.
 
-The current `LSM` uses
+The current `SM`-based `InfoModel` uses
 
-- `step : (∀ i, Option (Act i)) -> State -> State -> Prop`
+- `step : (∀ i, Option (Act i)) -> σ -> σ -> Prop`
 
 This draft explores a tighter alternative:
 
@@ -17,7 +17,7 @@ This draft explores a tighter alternative:
   - still chosen by the player at execution time
   - hard-coded as a random law, tagged by visibility
 
-This is only a design sketch. It does not replace `LSM`, `InfoModel`, or
+This is only a design sketch. It does not replace `InfoModel` or
 `InfoGame`.
 -/
 

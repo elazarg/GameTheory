@@ -3,11 +3,11 @@ import GameTheory.Model.SemanticForm
 namespace GameTheory
 namespace InfoModel
 
-variable {ι : Type} {M : LSM ι}
+variable {ι σ : Type} {Act : ι → Type} {I : InfoModel ι σ Act}
 
 theorem reachStateTrace_nonempty
-    {ss : List M.State}
-    (hr : ReachStateTrace M ss) :
+    {ss : List σ}
+    (hr : Semantics.SM.ReachStateTrace I.toSM ss) :
     ss ≠ [] := by
   induction hr with
   | nil =>
@@ -16,9 +16,9 @@ theorem reachStateTrace_nonempty
       simp
 
 theorem reachActionTrace_nonempty
-    {ha : List (JointAction M)}
-    {ss : List M.State}
-    (hr : ReachActionTrace M ha ss) :
+    {ha : List I.JointAction}
+    {ss : List σ}
+    (hr : Semantics.SM.ReachActionTrace I.toSM ha ss) :
     ss ≠ [] := by
   induction hr with
   | nil =>

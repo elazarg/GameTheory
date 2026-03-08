@@ -10,29 +10,6 @@ action admissible at that infoset. -/
 abbrev CtrlAct (S : _root_.EFG.InfoStructure) (i : S.Player) : Type :=
   Sigma (fun I : S.Infoset i => S.Act I)
 
-/-- Compile an EFG tree to the generic latent-state machine layer.
-
-- states are EFG subtrees
-- joint actions are controller actions for the currently active player, with
-  all other coordinates inactive
-- chance moves are compiled as all-player inactivity, with the latent state
-  choosing the realized branch -/
-def compileLSM {S : _root_.EFG.InfoStructure} {Outcome : Type}
-    (t : _root_.EFG.GameTree S Outcome) : GameTheory.LSM S.Player where
-  State := _root_.EFG.GameTree S Outcome
-  Act := CtrlAct S
-  init := t
-  step := fun a s s' =>
-    match s with
-    | .terminal _ => False
-    | .chance _k _μ _hk next =>
-        (∀ i, a i = none) ∧ ∃ b, s' = next b
-    | .decision (p := p) I next =>
-        ∃ act : S.Act I,
-          a p = some ⟨I, act⟩ ∧
-          (∀ q, q ≠ p → a q = none) ∧
-          s' = next act
-
 /-- Public component exposed by the EFG compilation.
 
 The compiled state-based semantics does not attempt to reconstruct the public
@@ -52,12 +29,29 @@ def obsOfState {S : _root_.EFG.InfoStructure} {Outcome : Type}
       else none
   | _ => none
 
-/-- Compile EFG visibility to the generic `InfoModel` layer. Public visibility
-is trivial at the state layer; private visibility is the current infoset, if
-any, for the acting player. -/
+/-- Compile an EFG tree to the generic `InfoModel` layer.
+
+- states are EFG subtrees
+- joint actions are controller actions for the currently active player, with
+  all other coordinates inactive
+- chance moves are compiled as all-player inactivity, with the latent state
+  choosing the realized branch
+- public visibility is trivial at the state layer
+- private visibility is the current infoset, if any, for the acting player -/
 def compileInfoOn {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome) :
-    GameTheory.InfoModel (compileLSM (S := S) (Outcome := Outcome) t) where
+    GameTheory.InfoModel S.Player (_root_.EFG.GameTree S Outcome) (CtrlAct S) where
+  init := t
+  step := fun a s s' =>
+    match s with
+    | .terminal _ => False
+    | .chance _k _μ _hk next =>
+        (∀ i, a i = none) ∧ ∃ b, s' = next b
+    | .decision (p := p) I next =>
+        ∃ act : S.Act I,
+          a p = some ⟨I, act⟩ ∧
+          (∀ q, q ≠ p → a q = none) ∧
+          s' = next act
   Public := PublicObs
   publicView := fun _ => PUnit.unit
   Obs := fun i => Option (S.Infoset i)
@@ -69,8 +63,7 @@ def compileControlUtility {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     (u : ∀ i : S.Player,
       List (Option (S.Infoset i)) → ℝ) :
-    GameTheory.ControlModel (compileLSM (S := S) (Outcome := Outcome) t)
-      (compileInfoOn (S := S) (Outcome := Outcome) t) where
+    GameTheory.ControlModel (compileInfoOn (S := S) (Outcome := Outcome) t) where
   control := fun i => GameTheory.ControlSpec.utility (u i)
 
 /-- Compile an EFG together with common-knowledge utility specifications into
@@ -79,7 +72,8 @@ def compileInfoGameUtility {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     (u : ∀ i : S.Player,
       List (Option (S.Infoset i)) → ℝ) :
-    GameTheory.InfoGame (ι := S.Player) :=
+    GameTheory.InfoGame (ι := S.Player)
+      (σ := _root_.EFG.GameTree S Outcome) (Act := CtrlAct S) :=
   .ofControlModel <| compileControlUtility (S := S) (Outcome := Outcome) t u
 
 /-- Build a pure-behavior control model from local behavior laws over each
@@ -88,8 +82,7 @@ def compileControlBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     (β : ∀ i : S.Player,
       List (Option (S.Infoset i)) → PMF (Option (CtrlAct S i))) :
-    GameTheory.ControlModel (compileLSM (S := S) (Outcome := Outcome) t)
-      (compileInfoOn (S := S) (Outcome := Outcome) t) where
+    GameTheory.ControlModel (compileInfoOn (S := S) (Outcome := Outcome) t) where
   control := fun i => GameTheory.ControlSpec.behavior (β i)
 
 /-- Compile an EFG together with common-knowledge behavior specifications into
@@ -98,7 +91,8 @@ def compileInfoGameBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     (β : ∀ i : S.Player,
       List (Option (S.Infoset i)) → PMF (Option (CtrlAct S i))) :
-    GameTheory.InfoGame (ι := S.Player) :=
+    GameTheory.InfoGame (ι := S.Player)
+      (σ := _root_.EFG.GameTree S Outcome) (Act := CtrlAct S) :=
   .ofControlModel <| compileControlBehavior (S := S) (Outcome := Outcome) t β
 
 end GameTheory.EFG

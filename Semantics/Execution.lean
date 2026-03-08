@@ -8,20 +8,20 @@ open Execution
 open Execution.Dynamics
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 variable (D : Execution.Dynamics I)
 
 /-- Unfold `runDist` at `0`. -/
 @[simp] theorem runDist_zero
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (σ : BehavioralProfile I) :
-    D.runDist 0 σ = PMF.pure [M.init] := rfl
+    D.runDist 0 σ = PMF.pure [I.init] := rfl
 
 /-- One-step unfolding equation for `runDist`. -/
 @[simp] theorem runDist_succ
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (n : Nat) (σ : BehavioralProfile I) :
     D.runDist (n + 1) σ =
       (D.runDist n σ).bind (fun ss =>
@@ -31,14 +31,14 @@ variable (D : Execution.Dynamics I)
 /-- In the support of `runDist n`, state traces have length `n + 1`. -/
 theorem runDist_support_stateLength
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (n : Nat)
-    (σ : BehavioralProfile I) (ss : List M.State) :
+    (σ : BehavioralProfile I) (ss : List _) :
     (D.runDist n σ) ss ≠ 0 → ss.length = n + 1 := by
   induction n generalizing ss with
   | zero =>
       intro h
-      have hmem : ss ∈ (PMF.pure [M.init] : PMF _).support := by
+      have hmem : ss ∈ (PMF.pure [I.init] : PMF _).support := by
         rwa [runDist_zero (I := I) (D := D)] at h
       rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
       subst hmem
@@ -70,12 +70,12 @@ theorem runDist_support_stateLength
 
 private theorem exists_action_of_stepDist_ne_zero
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfile I) (ss : List M.State) (t : M.State)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : BehavioralProfile I) (ss : List _) (t : _)
     (h : (D.stepDist σ ss) t ≠ 0) :
-    ∃ a : JointAction M,
+    ∃ a : I.JointAction,
       Execution.Dynamics.jointActionDist (I := I) σ ss a ≠ 0 ∧
-        D.nextState a ((ss.getLast?).getD M.init) t ≠ 0 := by
+        D.nextState a ((ss.getLast?).getD I.init) t ≠ 0 := by
   by_contra hnot
   rw [Execution.Dynamics.stepDist, PMF.bind_apply] at h
   apply h
@@ -83,7 +83,7 @@ private theorem exists_action_of_stepDist_ne_zero
   intro a
   by_cases ha : Execution.Dynamics.jointActionDist (I := I) σ ss a = 0
   · simp [ha]
-  · have hnext : D.nextState a ((ss.getLast?).getD M.init) t = 0 := by
+  · have hnext : D.nextState a ((ss.getLast?).getD I.init) t = 0 := by
       by_contra hnext
       exact hnot ⟨a, ha, hnext⟩
     simp [hnext]
@@ -92,39 +92,39 @@ private theorem exists_action_of_stepDist_ne_zero
 trace to another reachable state trace. -/
 theorem stepDist_support_reachStateTrace
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (σ : BehavioralProfile I)
-    {ss : List M.State}
-    (hr : ReachStateTrace M ss)
-    {t : M.State}
+    {ss : List _}
+    (hr : Semantics.SM.ReachStateTrace I.toSM ss)
+    {t : _}
     (h : (D.stepDist σ ss) t ≠ 0) :
-    ReachStateTrace M (ss ++ [t]) := by
+    Semantics.SM.ReachStateTrace I.toSM (ss ++ [t]) := by
   rcases exists_action_of_stepDist_ne_zero (I := I) (D := D) σ ss t h with
     ⟨a, _, hnext⟩
-  have hne : ss ≠ [] := InfoModel.reachStateTrace_nonempty (M := M) hr
-  let s : M.State := ss.getLast hne
+  have hne : ss ≠ [] := InfoModel.reachStateTrace_nonempty hr
+  let s := ss.getLast hne
   have hsLast : ss.getLast? = some s := by
     simpa [s] using (List.getLast?_eq_getLast_of_ne_nil hne)
   have hnext' : D.nextState a s t ≠ 0 := by
     simpa [hsLast, s] using hnext
-  exact ReachStateTrace.snoc hr hsLast
+  exact Semantics.SM.ReachStateTrace.snoc hr hsLast
     (D.nextState_sound a s t hnext')
 
 /-- State traces in the support of `runDist n` are machine-reachable. -/
 theorem runDist_support_reachStateTrace
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (n : Nat)
-    (σ : BehavioralProfile I) (ss : List M.State) :
-    (D.runDist n σ) ss ≠ 0 → ReachStateTrace M ss := by
+    (σ : BehavioralProfile I) (ss : List _) :
+    (D.runDist n σ) ss ≠ 0 → Semantics.SM.ReachStateTrace I.toSM ss := by
   induction n generalizing ss with
   | zero =>
       intro h
-      have hmem : ss ∈ (PMF.pure [M.init] : PMF _).support := by
+      have hmem : ss ∈ (PMF.pure [I.init] : PMF _).support := by
         rwa [runDist_zero (I := I) (D := D)] at h
       rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
       subst hmem
-      exact ReachStateTrace.nil
+      exact Semantics.SM.ReachStateTrace.nil
   | succ n ih =>
       intro h
       rw [runDist_succ (I := I) (D := D), PMF.bind_apply] at h
@@ -134,7 +134,7 @@ theorem runDist_support_reachStateTrace
       intro ss'
       by_cases hss' : (D.runDist n σ) ss' = 0
       · simp [hss']
-      · have hr' : ReachStateTrace M ss' := ih ss' hss'
+      · have hr' : Semantics.SM.ReachStateTrace I.toSM ss' := ih ss' hss'
         have hpush0 :
             (Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss')
               (fun t => ss' ++ [t])) ss = 0 := by
@@ -144,7 +144,7 @@ theorem runDist_support_reachStateTrace
           by_cases heq : ss' ++ [t] = ss
           · have hstep0 : (D.stepDist σ ss') t = 0 := by
               by_contra hstep
-              have hreach' : ReachStateTrace M ss := by
+              have hreach' : Semantics.SM.ReachStateTrace I.toSM ss := by
                 simpa [heq] using
                   stepDist_support_reachStateTrace (I := I) (D := D) σ hr' hstep
               exact hreach hreach'
@@ -161,19 +161,19 @@ namespace Execution
 namespace Dynamics
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι}
-variable {I : InfoModel M}
+variable {S : Type} {Act : ι → Type}
+variable {I : InfoModel ι S Act}
 
 /-- Action-explicit one-step kernel from a current state under behavioral
 profile `σ`. The sampled result retains the realized joint action and successor
 state. -/
 noncomputable def stepActionStateDist
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (D : Dynamics I)
-    (σ : BehavioralProfile I) (ss : List M.State) :
-    PMF (JointAction M × M.State) :=
-  let s := (ss.getLast?).getD M.init
+    (σ : BehavioralProfile I) (ss : List S) :
+    PMF (I.JointAction × S) :=
+  let s := (ss.getLast?).getD I.init
   (jointActionDist (I := I) σ ss).bind fun a =>
     Math.ProbabilityMassFunction.pushforward (D.nextState a s) (fun t => (a, t))
 
@@ -181,9 +181,9 @@ noncomputable def stepActionStateDist
 ordinary one-step kernel `stepDist`. -/
 theorem stepDist_eq_pushforward_stepActionStateDist
     [DecidableEq ι]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (D : Dynamics I)
-    (σ : BehavioralProfile I) (ss : List M.State) :
+    (σ : BehavioralProfile I) (ss : List S) :
     Math.ProbabilityMassFunction.pushforward
       (stepActionStateDist (I := I) D σ ss)
       Prod.snd =

@@ -7,17 +7,17 @@ open Execution
 open Math.PMFProduct
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 
 /-- Condition a player-local mixed strategy on taking action `a` at local
 observation trace `v`. Falls back to `μ` on zero-mass events. -/
 noncomputable def condMixedLocal
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
-    [Fintype (Option (M.Act i))]
+    [Fintype (Option (Act i))]
     (μi : PMF (InfoModel.LocalPure (I := I) i))
     (v : I.LocalTrace i)
-    (a : Option (M.Act i)) :
+    (a : Option (Act i)) :
     PMF (InfoModel.LocalPure (I := I) i) :=
   if _ : Math.ProbabilityMassFunction.pushforward μi (fun f => f v) a ≠ 0 then
     Math.ProbabilityMassFunction.condOn μi (fun f => f v) a
@@ -28,7 +28,7 @@ noncomputable def condMixedLocal
 noncomputable def iterCondMixedLocal
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
-    [Fintype (Option (M.Act i))]
+    [Fintype (Option (Act i))]
     (μi : PMF (InfoModel.LocalPure (I := I) i)) :
     List (InfoModel.LocalHistTok (I := I) i) → PMF (InfoModel.LocalPure (I := I) i)
   | [] => μi
@@ -39,7 +39,7 @@ omit [Fintype ι] in
 @[simp] theorem iterCondMixedLocal_nil
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
-    [Fintype (Option (M.Act i))]
+    [Fintype (Option (Act i))]
     (μi : PMF (InfoModel.LocalPure (I := I) i)) :
     iterCondMixedLocal (I := I) i μi [] = μi := rfl
 
@@ -50,7 +50,7 @@ omit [Fintype ι] in
 theorem iterCondMixedLocal_append
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
-    [Fintype (Option (M.Act i))]
+    [Fintype (Option (Act i))]
     (μi : PMF (InfoModel.LocalPure (I := I) i))
     (hist₁ hist₂ : List (InfoModel.LocalHistTok (I := I) i)) :
     iterCondMixedLocal (I := I) i μi (hist₁ ++ hist₂) =
@@ -67,7 +67,7 @@ omit [Fintype ι] in
 theorem pushforward_bind_condMixedLocal
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
-    [Fintype (Option (M.Act i))]
+    [Fintype (Option (Act i))]
     (μi : PMF (InfoModel.LocalPure (I := I) i))
     (v : I.LocalTrace i) :
     (Math.ProbabilityMassFunction.pushforward μi (fun f => f v)).bind
@@ -103,7 +103,7 @@ then resampling local pure policies from per-player conditionals. -/
 theorem mixedJoint_bind_decompose_query
     (μ : InfoModel.MixedProfile (I := I))
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (v : ∀ i, I.LocalTrace i)
     {β : Type}
     (g : PureProfile I → PMF β) :
@@ -114,7 +114,7 @@ theorem mixedJoint_bind_decompose_query
             (fun i => condMixedLocal (I := I) i (μ i) (v i) (acts i))).bind g) := by
   have hplayer :
       ∀ i fi,
-        ∑ a : Option (M.Act i),
+        ∑ a : Option (Act i),
           (Math.ProbabilityMassFunction.pushforward (μ i) (fun f => f (v i))) a *
             (condMixedLocal (I := I) i (μ i) (v i) a) fi
           = (μ i) fi := by
@@ -159,7 +159,7 @@ noncomputable def localHistIndicator
 noncomputable def localHistMass
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
-    [Fintype (Option (M.Act i))]
+    [Fintype (Option (Act i))]
     (μi : PMF (InfoModel.LocalPure (I := I) i)) :
     List (InfoModel.LocalHistTok (I := I) i) → ENNReal
   | [] => 1
@@ -171,7 +171,7 @@ omit [Fintype ι] in
 theorem localHistMass_mul_iterCondMixedLocal_apply
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
-    [Fintype (Option (M.Act i))]
+    [Fintype (Option (Act i))]
     (μi : PMF (InfoModel.LocalPure (I := I) i)) :
     ∀ (hist : List (InfoModel.LocalHistTok (I := I) i)) (f : InfoModel.LocalPure (I := I) i),
       localHistMass (I := I) i μi hist *
@@ -247,7 +247,7 @@ theorem localHistCompatible_append_singleton_iff
     (f : InfoModel.LocalPure (I := I) i)
     (hist : List (InfoModel.LocalHistTok (I := I) i))
     (v : I.LocalTrace i)
-    (a : Option (M.Act i)) :
+    (a : Option (Act i)) :
     LocalHistCompatible (I := I) i f (hist ++ [(v, a)]) ↔
       LocalHistCompatible (I := I) i f hist ∧ f v = a := by
   constructor
@@ -267,7 +267,7 @@ theorem localHistCompatible_append_singleton_iff
 realized local history. -/
 theorem localHistMass_mul_mixedJoint_iterCond_apply
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : InfoModel.MixedProfile (I := I))
     (hist : ∀ i, List (InfoModel.LocalHistTok (I := I) i))
     (π : PureProfile I) :

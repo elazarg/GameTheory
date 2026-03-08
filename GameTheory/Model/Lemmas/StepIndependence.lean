@@ -9,7 +9,7 @@ open Execution
 open Math.PMFProduct
 
 variable {ι : Type} [Fintype ι]
-variable {M : LSM ι} (I : InfoModel M)
+variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 
 /-- **Scalar independence under the behavioral product measure.**
 `E[f·g] = E[f]·E[g]` when `f` depends only on coordinates with private-history
@@ -18,26 +18,26 @@ length `≤ n` and `g` depends only on coordinates with private-history length
 theorem behavioralToMixed_scalar_indep
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    (σ : BehavioralProfile I) (n : Nat)
+    (b : BehavioralProfile I) (n : Nat)
     (f g : PureProfile I → ENNReal)
     (hf : ∀ π π' : PureProfile I,
       (∀ i (v : I.LocalTrace i), v.2.length ≤ n → π i v = π' i v) → f π = f π')
     (hg : ∀ π π' : PureProfile I,
       (∀ i (v : I.LocalTrace i), v.2.length > n → π i v = π' i v) → g π = g π') :
-    ∑ π, (mixedJoint I (behavioralToMixed I σ)) π * (f π * g π) =
-    (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * f π) *
-    (∑ π, (mixedJoint I (behavioralToMixed I σ)) π * g π) := by
+    ∑ π, (mixedJoint I (behavioralToMixed I b)) π * (f π * g π) =
+    (∑ π, (mixedJoint I (behavioralToMixed I b)) π * f π) *
+    (∑ π, (mixedJoint I (behavioralToMixed I b)) π * g π) := by
   classical
-  set μ := mixedJoint I (behavioralToMixed I σ)
+  set μ := mixedJoint I (behavioralToMixed I b)
   let swap : PureProfile I → PureProfile I → PureProfile I :=
     fun π₁ π₂ i v => if v.2.length ≤ n then π₁ i v else π₂ i v
   have hweight_i : ∀ (π₁ π₂ : PureProfile I) (i : ι),
-      (behavioralToMixed I σ i) (swap π₁ π₂ i) *
-      (behavioralToMixed I σ i) (swap π₂ π₁ i) =
-      (behavioralToMixed I σ i) (π₁ i) *
-      (behavioralToMixed I σ i) (π₂ i) := by
+      (behavioralToMixed I b i) (swap π₁ π₂ i) *
+      (behavioralToMixed I b i) (swap π₂ π₁ i) =
+      (behavioralToMixed I b i) (π₁ i) *
+      (behavioralToMixed I b i) (π₂ i) := by
     intro π₁ π₂ i
     simp only [behavioralToMixed_apply_prod, swap]
     rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
@@ -114,9 +114,9 @@ theorem restrictedBehavioralToMixed_scalar_indep
     (H : ∀ i, Finset (I.LocalTrace i))
     [DecidableEq ι]
     [∀ i, Fintype (I.RestrictedLocalCoord H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    (σ : RestrictedBehavioralProfile (I := I) H) (n : Nat)
+    (b : RestrictedBehavioralProfile (I := I) H) (n : Nat)
     (f g : RestrictedPureProfile (I := I) H → ENNReal)
     (hf : ∀ π π' : RestrictedPureProfile (I := I) H,
       (∀ i (v : RestrictedLocalCoord (I := I) H i), v.1.2.length ≤ n → π i v = π' i v) →
@@ -125,14 +125,14 @@ theorem restrictedBehavioralToMixed_scalar_indep
       (∀ i (v : RestrictedLocalCoord (I := I) H i), v.1.2.length > n → π i v = π' i v) →
         g π = g π') :
     ∑ π, (restrictedMixedJointRaw (I := I) H
-      (restrictedBehavioralToMixed (I := I) H σ)) π * (f π * g π) =
+      (restrictedBehavioralToMixed (I := I) H b)) π * (f π * g π) =
     (∑ π, (restrictedMixedJointRaw (I := I) H
-      (restrictedBehavioralToMixed (I := I) H σ)) π * f π) *
+      (restrictedBehavioralToMixed (I := I) H b)) π * f π) *
     (∑ π, (restrictedMixedJointRaw (I := I) H
-      (restrictedBehavioralToMixed (I := I) H σ)) π * g π) := by
+      (restrictedBehavioralToMixed (I := I) H b)) π * g π) := by
   classical
   set μ :=
-    restrictedMixedJointRaw (I := I) H (restrictedBehavioralToMixed (I := I) H σ)
+    restrictedMixedJointRaw (I := I) H (restrictedBehavioralToMixed (I := I) H b)
   let swap :
       RestrictedPureProfile (I := I) H →
       RestrictedPureProfile (I := I) H →
@@ -140,10 +140,10 @@ theorem restrictedBehavioralToMixed_scalar_indep
     fun π₁ π₂ i v => if v.1.2.length ≤ n then π₁ i v else π₂ i v
   have hweight_i :
       ∀ (π₁ π₂ : RestrictedPureProfile (I := I) H) (i : ι),
-        (restrictedBehavioralToMixed (I := I) H σ i) (swap π₁ π₂ i) *
-        (restrictedBehavioralToMixed (I := I) H σ i) (swap π₂ π₁ i) =
-        (restrictedBehavioralToMixed (I := I) H σ i) (π₁ i) *
-        (restrictedBehavioralToMixed (I := I) H σ i) (π₂ i) := by
+        (restrictedBehavioralToMixed (I := I) H b i) (swap π₁ π₂ i) *
+        (restrictedBehavioralToMixed (I := I) H b i) (swap π₂ π₁ i) =
+        (restrictedBehavioralToMixed (I := I) H b i) (π₁ i) *
+        (restrictedBehavioralToMixed (I := I) H b i) (π₂ i) := by
     intro π₁ π₂ i
     simp only [restrictedBehavioralToMixed_apply_prod, swap]
     rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
@@ -223,7 +223,7 @@ def RestrictedStepIndependence
     [DecidableEq ι]
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) (n : Nat) : Prop :=
     (restrictedMixedJointRaw (I := I) H μ).bind (fun π =>
       (D.runDistPure n (extendRestrictedPureProfile (I := I) H π)).bind (fun ss =>
@@ -246,7 +246,7 @@ theorem restricted_run_factorization
     [DecidableEq ι]
     [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, RestrictedStepIndependence (I := I) D H μ n)
     (μ : RestrictedMixedProfile (I := I) H) :
     ∀ n,
@@ -298,7 +298,7 @@ def StepIndependence
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : MixedProfile (I := I)) (n : Nat) : Prop :=
     (mixedJoint (I := I) μ).bind (fun π =>
       (D.runDistPure n π).bind (fun ss =>
@@ -318,12 +318,12 @@ theorem stepIndependence_of_eq_behavioralMixed
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : MixedProfile (I := I))
-    (σ : BehavioralProfile I)
-    (hμ : μ = behavioralToMixed (I := I) σ)
+    (b : BehavioralProfile I)
+    (hμ : μ = behavioralToMixed (I := I) b)
     (n : Nat)
-    (hStep : StepIndependence (I := I) D (behavioralToMixed (I := I) σ) n) :
+    (hStep : StepIndependence (I := I) D (behavioralToMixed (I := I) b) n) :
     StepIndependence (I := I) D μ n := by
   simpa [hμ] using hStep
 
@@ -334,27 +334,27 @@ theorem behavioralToMixed_stepIndependence_bridge
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
-    (σ : BehavioralProfile I) (n : Nat) :
-    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind (fun π =>
+    [∀ i, Fintype (Option (Act i))]
+    (b : BehavioralProfile I) (n : Nat) :
+    (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind (fun π =>
       (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDist σ ss)
+          (D.stepDist b ss)
           (fun t => ss ++ [t]))) =
-    (mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind (fun π =>
+    (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind (fun π =>
       (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
           (D.stepDist (pureToBehavioral I π) ss)
           (fun t => ss ++ [t]))) := by
   classical
-  set μ : PMF (PureProfile I) := mixedJoint (I := I) (behavioralToMixed (I := I) σ)
+  set μ : PMF (PureProfile I) := mixedJoint (I := I) (behavioralToMixed (I := I) b)
   have hstepMarg :
-      ∀ ss : List M.State,
-        μ.bind (fun π => D.stepDist (pureToBehavioral I π) ss) = D.stepDist σ ss := by
+      ∀ ss : List σ,
+        μ.bind (fun π => D.stepDist (pureToBehavioral I π) ss) = D.stepDist b ss := by
     intro ss
-    simpa [μ] using (marginal_stepDist (I := I) (D := D) σ ss)
+    simpa [μ] using (marginal_stepDist (I := I) (D := D) b ss)
   have hRunCongr :
-      ∀ ss : List M.State, ∀ π π' : PureProfile I,
+      ∀ ss : List σ, ∀ π π' : PureProfile I,
         (∀ i (v : I.LocalTrace i), v.2.length ≤ n → π i v = π' i v) →
         (D.runDistPure n π) ss = (D.runDistPure n π') ss := by
     intro ss π π' hag
@@ -370,19 +370,19 @@ theorem behavioralToMixed_stepIndependence_bridge
       runDistPure_depends_on_len_le (I := I) (D := D) n ω₁ ω₂ hagFlat
     simpa [ω₁, ω₂] using congrArg (fun ν => ν ss) hEq
   ext y
-  let Lfun : List M.State → ENNReal :=
+  let Lfun : List σ → ENNReal :=
     fun ss =>
       (Math.ProbabilityMassFunction.pushforward
-        (D.stepDist σ ss)
+        (D.stepDist b ss)
         (fun t => ss ++ [t])) y
-  let Gfun : List M.State → PureProfile I → ENNReal :=
+  let Gfun : List σ → PureProfile I → ENNReal :=
     fun ss π =>
       (Math.ProbabilityMassFunction.pushforward
         (D.stepDist (pureToBehavioral I π) ss)
         (fun t => ss ++ [t])) y
-  let FL : PureProfile I → List M.State → ENNReal :=
+  let FL : PureProfile I → List σ → ENNReal :=
     fun π ss => μ π * ((D.runDistPure n π) ss * Lfun ss)
-  let FR : PureProfile I → List M.State → ENNReal :=
+  let FR : PureProfile I → List σ → ENNReal :=
     fun π ss => μ π * ((D.runDistPure n π) ss * Gfun ss π)
   have hswapL :
       (∑' π, μ π * ∑' ss, (D.runDistPure n π) ss * Lfun ss) =
@@ -411,7 +411,7 @@ theorem behavioralToMixed_stepIndependence_bridge
               (ENNReal.tsum_comm (f := fun π ss => μ π * ((D.runDistPure n π) ss * Gfun ss π)))
       _ = ∑' ss, ∑' π, FR π ss := by simp [FR]
   have hPerSs :
-      ∀ ss : List M.State, (∑' π, FL π ss) = ∑' π, FR π ss := by
+      ∀ ss : List σ, (∑' π, FL π ss) = ∑' π, FR π ss := by
     intro ss
     by_cases hlen : ss.length = n + 1
     · let f : PureProfile I → ENNReal := fun π => (D.runDistPure n π) ss
@@ -453,7 +453,7 @@ theorem behavioralToMixed_stepIndependence_bridge
       have hind :
           ∑ π, μ π * (f π * g π) =
             (∑ π, μ π * f π) * (∑ π, μ π * g π) := by
-        simpa [μ] using behavioralToMixed_scalar_indep (I := I) σ n f g hf hg
+        simpa [μ] using behavioralToMixed_scalar_indep (I := I) b n f g hf hg
       have hEg :
           (∑ π, μ π * g π) = Lfun ss := by
         have hbindPush :
@@ -477,7 +477,7 @@ theorem behavioralToMixed_stepIndependence_bridge
                       (f := fun t => ss ++ [t])).symm)
             _ =
               (Math.ProbabilityMassFunction.pushforward
-                (D.stepDist σ ss)
+                (D.stepDist b ss)
                 (fun t => ss ++ [t])) y := by
                   simp [hstepMarg ss]
             _ = Lfun ss := rfl
@@ -506,10 +506,10 @@ theorem behavioralToMixed_stepIndependence_bridge
         exact (ENNReal.tsum_eq_zero).2 (by intro π; simp [FR, hfzero π])
       rw [hFL0, hFR0]
   calc
-    ((mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind (fun π =>
+    ((mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind (fun π =>
       (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
-          (D.stepDist σ ss)
+          (D.stepDist b ss)
           (fun t => ss ++ [t])))) y
         = (∑' π, μ π * ∑' ss, (D.runDistPure n π) ss * Lfun ss) := by
             simp [μ, Lfun, PMF.bind_apply]
@@ -519,7 +519,7 @@ theorem behavioralToMixed_stepIndependence_bridge
           intro ss
           exact hPerSs ss
     _ = (∑' π, μ π * ∑' ss, (D.runDistPure n π) ss * Gfun ss π) := hswapR.symm
-    _ = ((mixedJoint (I := I) (behavioralToMixed (I := I) σ)).bind (fun π =>
+    _ = ((mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind (fun π =>
       (D.runDistPure n π).bind (fun ss =>
         Math.ProbabilityMassFunction.pushforward
           (D.stepDist (pureToBehavioral I π) ss)
@@ -533,7 +533,7 @@ theorem run_factorization
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, StepIndependence (I := I) D μ n)
     (μ : MixedProfile (I := I)) :
     ∀ n, D.runDist n (realizeBehavioralCanonical (I := I) μ) =
@@ -577,20 +577,20 @@ theorem reduce_atomicFactorization_bridge
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (hrepr :
       ∀ μ : MixedProfile (I := I),
         AtomicCoordinateFactorization (I := I) μ →
-        ∃ σ : BehavioralProfile I, μ = behavioralToMixed (I := I) σ)
+        ∃ b : BehavioralProfile I, μ = behavioralToMixed (I := I) b)
     (hstepBehavioral :
-      ∀ (σ : BehavioralProfile I) (n : Nat),
-        StepIndependence (I := I) D (behavioralToMixed (I := I) σ) n) :
+      ∀ (b : BehavioralProfile I) (n : Nat),
+        StepIndependence (I := I) D (behavioralToMixed (I := I) b) n) :
     ∀ (μ : MixedProfile (I := I)) (n : Nat),
       AtomicCoordinateFactorization (I := I) μ →
       StepIndependence (I := I) D μ n := by
   intro μ n hAtomic
-  rcases hrepr μ hAtomic with ⟨σ, hμ⟩
-  exact stepIndependence_of_eq_behavioralMixed (I := I) (D := D) μ σ hμ n (hstepBehavioral σ n)
+  rcases hrepr μ hAtomic with ⟨b, hμ⟩
+  exact stepIndependence_of_eq_behavioralMixed (I := I) (D := D) μ b hμ n (hstepBehavioral b n)
 
 /-- Standalone bridge statement: atomic coordinate factorization implies one-step
 independence. -/
@@ -599,7 +599,7 @@ theorem atomicFactorization_implies_stepIndependence
     [DecidableEq ι]
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (Option (M.Act i))]
+    [∀ i, Fintype (Option (Act i))]
     (μ : MixedProfile (I := I)) (n : Nat) :
     AtomicCoordinateFactorization (I := I) μ →
     StepIndependence (I := I) D μ n := by
@@ -612,24 +612,24 @@ theorem atomicFactorization_implies_stepIndependence
   · intro μ' hAtomic'
     classical
     rcases hAtomic' with ⟨τ, hτ⟩
-    let σ : BehavioralProfile I := fun i v => τ ⟨i, v⟩
-    have hσ :
-        mixedJoint (I := I) (behavioralToMixed (I := I) σ) =
+    let b : BehavioralProfile I := fun i v => τ ⟨i, v⟩
+    have hb :
+        mixedJoint (I := I) (behavioralToMixed (I := I) b) =
           PMF.map (I.reassemblePolicy) (pmfPi τ) := by
-      simpa [σ] using
-        (mixedJoint_behavioralToMixed_eq_map_reassemble (I := I) σ)
+      simpa [b] using
+        (mixedJoint_behavioralToMixed_eq_map_reassemble (I := I) b)
     have hJoint :
         mixedJoint (I := I) μ' =
-          mixedJoint (I := I) (behavioralToMixed (I := I) σ) := by
+          mixedJoint (I := I) (behavioralToMixed (I := I) b) := by
       calc
         mixedJoint (I := I) μ' = PMF.map (I.reassemblePolicy) (pmfPi τ) := hτ
-        _ = mixedJoint (I := I) (behavioralToMixed (I := I) σ) := hσ.symm
-    refine ⟨σ, ?_⟩
+        _ = mixedJoint (I := I) (behavioralToMixed (I := I) b) := hb.symm
+    refine ⟨b, ?_⟩
     exact mixedJoint_injective (I := I) hJoint
-  · intro σ n'
+  · intro b n'
     classical
-    simpa [StepIndependence, realize_behavioralToMixed (I := I) σ] using
-      (behavioralToMixed_stepIndependence_bridge (I := I) (D := D) σ n')
+    simpa [StepIndependence, realize_behavioralToMixed (I := I) b] using
+      (behavioralToMixed_stepIndependence_bridge (I := I) (D := D) b n')
 
 end InfoModel
 end GameTheory

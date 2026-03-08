@@ -12,7 +12,7 @@ def jointActionOfHistoryStep
     {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome) :
     _root_.EFG.HistoryStep S →
-      GameTheory.JointAction (compileLSM (S := S) (Outcome := Outcome) t)
+      (compileInfoOn (S := S) (Outcome := Outcome) t).JointAction
   | .chance _ _ => fun _ => none
   | .action p I act => Function.update (fun _ => none) p (some (Sigma.mk I act))
 
@@ -43,9 +43,9 @@ theorem historyStepStep_implies_compiled_step
     {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     {ℓ : _root_.EFG.HistoryStep S}
-    {src dst : (compileLSM (S := S) (Outcome := Outcome) t).State}
+    {src dst : _root_.EFG.GameTree S Outcome}
     (h : _root_.EFG.HistoryStepStep (S := S) (Outcome := Outcome) ℓ src dst) :
-    (compileLSM (S := S) (Outcome := Outcome) t).step
+    (compileInfoOn (S := S) (Outcome := Outcome) t).step
       (jointActionOfHistoryStep t ℓ) src dst := by
   cases ℓ with
   | chance k b =>
@@ -63,9 +63,9 @@ step. Chance branch choices are recovered from the reached successor state. -/
 theorem compiled_step_implies_exists_historyStep
     {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
-    {a : GameTheory.JointAction (compileLSM (S := S) (Outcome := Outcome) t)}
-    {src dst : (compileLSM (S := S) (Outcome := Outcome) t).State}
-    (h : (compileLSM (S := S) (Outcome := Outcome) t).step a src dst) :
+    {a : (compileInfoOn (S := S) (Outcome := Outcome) t).JointAction}
+    {src dst : _root_.EFG.GameTree S Outcome}
+    (h : (compileInfoOn (S := S) (Outcome := Outcome) t).step a src dst) :
     ∃ ℓ : _root_.EFG.HistoryStep S,
       _root_.EFG.HistoryStepStep (S := S) (Outcome := Outcome) ℓ src dst := by
   cases src with
@@ -84,9 +84,9 @@ theorem reachBy_implies_compiled
     {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
     {h : List (_root_.EFG.HistoryStep S)}
-    {src dst : (compileLSM (S := S) (Outcome := Outcome) t).State}
+    {src dst : _root_.EFG.GameTree S Outcome}
     (hr : _root_.EFG.ReachBy h src dst) :
-    Semantics.Transition.ReachBy (compileLSM (S := S) (Outcome := Outcome) t |>.stepExists)
+    Semantics.Transition.ReachBy (compileInfoOn (S := S) (Outcome := Outcome) t).step
       (h.map (jointActionOfHistoryStep t)) src dst := by
   induction hr with
   | nil s =>
@@ -102,9 +102,9 @@ branch labels, so the converse is existential rather than pointwise. -/
 theorem compiled_reach_iff_exists_history
     {S : _root_.EFG.InfoStructure} {Outcome : Type}
     (t : _root_.EFG.GameTree S Outcome)
-    {src dst : (compileLSM (S := S) (Outcome := Outcome) t).State} :
+    {src dst : _root_.EFG.GameTree S Outcome} :
     (∃ ha,
-      Semantics.Transition.ReachBy (compileLSM (S := S) (Outcome := Outcome) t |>.stepExists)
+      Semantics.Transition.ReachBy (compileInfoOn (S := S) (Outcome := Outcome) t).step
         ha src dst)
       ↔
     (∃ h : List (_root_.EFG.HistoryStep S), _root_.EFG.ReachBy h src dst) := by

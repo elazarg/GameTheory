@@ -6,8 +6,7 @@ import GameTheory.Model.Simulation
 /-!
 # GameTheory.Languages.MAID.Compile
 
-Compilation of MAID frontier semantics into the generic `LSM`/`InfoModel`
-layers.
+Compilation of MAID frontier semantics into the generic `InfoModel` layer.
 
 The compiled state is exactly the native frontier configuration. A compiled step
 is exactly one frontier assignment step of the native SOS semantics.
@@ -19,22 +18,18 @@ open GameTheory
 
 variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
 
-/-- The MAID frontier SOS already has the right shape for the latent-state
-machine layer, so compilation is structural. -/
-def compileLSM (S : Struct Player n) (sem : Sem S) : GameTheory.LSM Player where
-  State := FrontierCfg S
-  Act := FrontierAct S
-  init := initialCfg S
-  step := Step S sem
-
 /-- Publicly visible frontier information in the compiled MAID semantics. -/
 abbrev PublicObs := List (Fin n)
 
-/-- Compile MAID visibility into the generic `InfoModel` layer. Public
-visibility is the current frontier in topological order; player-local
+/-- Compile MAID frontier semantics into the generic `InfoModel` layer.
+
+The MAID frontier SOS already has the right shape, so compilation is structural.
+Public visibility is the current frontier in topological order; player-local
 visibility is the list of currently enabled infosets for that player. -/
 noncomputable def compileInfoOn (S : Struct Player n) (sem : Sem S) :
-    GameTheory.InfoModel (compileLSM S sem) where
+    GameTheory.InfoModel Player (FrontierCfg S) (FrontierAct S) where
+  init := initialCfg S
+  step := Step S sem
   Public := PublicObs
   publicView := frontierList S
   Obs := fun p => List (Infoset S p)
@@ -45,7 +40,7 @@ theorem compile_step_iff
     (S : Struct Player n) (sem : Sem S)
     (a : ∀ p : Player, Option (FrontierAct S p))
     (src dst : FrontierCfg S) :
-    (compileLSM S sem).step a src dst ↔ Step S sem a src dst := by
+    (compileInfoOn S sem).step a src dst ↔ Step S sem a src dst := by
   rfl
 
 /-- Reachability in the compiled machine is definitionally the same as native
@@ -54,7 +49,7 @@ theorem compile_reach_iff
     (S : Struct Player n) (sem : Sem S)
     (ha : List (∀ p : Player, Option (FrontierAct S p)))
     (src dst : FrontierCfg S) :
-    Semantics.Transition.ReachBy (compileLSM S sem |>.stepExists) ha src dst ↔
+    Semantics.Transition.ReachBy (compileInfoOn S sem).step ha src dst ↔
       ReachBy S sem ha src dst := by
   rfl
 
@@ -76,10 +71,9 @@ theorem compile_observe_eq_frontierInfosets
 frontier SOS: states are frontier configurations, labels are frontier actions,
 and public/private observations are exactly the native frontier observables. -/
 noncomputable def nativeInfoBisimulation (S : Struct Player n) (sem : Sem S) :
-    GameTheory.NativeInfoBisimulation
+    GameTheory.NativeInfoBisimulation (I := compileInfoOn S sem)
       (Step S sem)
       (initialCfg S)
-      (compileInfoOn S sem)
       (frontierList S)
       (fun p cfg => frontierInfosets S cfg p) where
   stateEquiv := Equiv.refl _
@@ -97,7 +91,7 @@ noncomputable def nativeInfoBisimulation (S : Struct Player n) (sem : Sem S) :
 /-- Build a common-knowledge utility layer over the compiled MAID semantics. -/
 def compileControlUtility (S : Struct Player n) (sem : Sem S)
     (u : ∀ p : Player, List (List (Infoset S p)) → ℝ) :
-    GameTheory.ControlModel (compileLSM S sem) (compileInfoOn S sem) where
+    GameTheory.ControlModel (compileInfoOn S sem) where
   control := fun p => GameTheory.ControlSpec.utility (u p)
 
 /-- Build a common-knowledge behavioral layer over the compiled MAID
@@ -105,14 +99,15 @@ semantics. -/
 def compileControlBehavior (S : Struct Player n) (sem : Sem S)
     (β : ∀ p : Player,
       List (List (Infoset S p)) → PMF (Option (FrontierAct S p))) :
-    GameTheory.ControlModel (compileLSM S sem) (compileInfoOn S sem) where
+    GameTheory.ControlModel (compileInfoOn S sem) where
   control := fun p => GameTheory.ControlSpec.behavior (β p)
 
 /-- Compile a MAID together with common-knowledge utility specifications into
 the game-level `InfoGame` target. -/
 noncomputable def compileInfoGameUtility (S : Struct Player n) (sem : Sem S)
     (u : ∀ p : Player, List (List (Infoset S p)) → ℝ) :
-    GameTheory.InfoGame (ι := Player) :=
+    GameTheory.InfoGame (ι := Player)
+      (σ := FrontierCfg S) (Act := FrontierAct S) :=
   .ofControlModel <| compileControlUtility S sem u
 
 /-- Compile a MAID together with common-knowledge behavioral specifications
@@ -120,7 +115,8 @@ into the game-level `InfoGame` target. -/
 noncomputable def compileInfoGameBehavior (S : Struct Player n) (sem : Sem S)
     (β : ∀ p : Player,
       List (List (Infoset S p)) → PMF (Option (FrontierAct S p))) :
-    GameTheory.InfoGame (ι := Player) :=
+    GameTheory.InfoGame (ι := Player)
+      (σ := FrontierCfg S) (Act := FrontierAct S) :=
   .ofControlModel <| compileControlBehavior S sem β
 
 end MAID
