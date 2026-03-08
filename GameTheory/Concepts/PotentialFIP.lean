@@ -1,5 +1,5 @@
-import GameTheory.Concepts.PotentialGame
 import Math.Probability
+import GameTheory.Concepts.PotentialGame
 
 /-!
 # Finite Improvement Property for Potential Games

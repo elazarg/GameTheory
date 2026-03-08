@@ -1,8 +1,8 @@
 import GameTheory.Theorems.Kuhn.Core
-import GameTheory.Model.Lemmas.PerfectRecall
-import GameTheory.Model.Lemmas.LocalHistories
-import GameTheory.Model.Lemmas.LocalConditioning
-import GameTheory.Model.Lemmas.ReachFactorization
+import GameTheory.Languages.InfoModel.Lemmas.PerfectRecall
+import GameTheory.Languages.InfoModel.Lemmas.LocalHistories
+import GameTheory.Languages.InfoModel.Lemmas.LocalConditioning
+import GameTheory.Languages.InfoModel.Lemmas.ReachFactorization
 
 namespace GameTheory
 namespace Theorems

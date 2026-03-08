@@ -1,5 +1,5 @@
-import GameTheory.Model.Lemmas.Profiles
-import GameTheory.Model.Lemmas.Coordinates
+import GameTheory.Languages.InfoModel.Lemmas.Profiles
+import GameTheory.Languages.InfoModel.Lemmas.Coordinates
 import Math.PMFProduct
 import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 

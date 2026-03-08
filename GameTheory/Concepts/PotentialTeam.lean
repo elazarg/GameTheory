@@ -1,9 +1,9 @@
+import Mathlib.Algebra.BigOperators.Ring.Finset
+import Math.Probability
 import GameTheory.Concepts.TeamGame
 import GameTheory.Core.GameProperties
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.ZeroSum
-import Mathlib.Algebra.BigOperators.Ring.Finset
-import Math.Probability
 
 /-!
 # Team games as potential games

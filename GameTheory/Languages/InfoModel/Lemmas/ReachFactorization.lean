@@ -1,7 +1,7 @@
-import GameTheory.Model.Lemmas.Profiles
-import GameTheory.Model.Lemmas.ExecutionLocality
-import GameTheory.Model.Lemmas.LocalConditioning
-import GameTheory.Model.Lemmas.PerfectRecall
+import GameTheory.Languages.InfoModel.Lemmas.Profiles
+import GameTheory.Languages.InfoModel.Lemmas.ExecutionLocality
+import GameTheory.Languages.InfoModel.Lemmas.LocalConditioning
+import GameTheory.Languages.InfoModel.Lemmas.PerfectRecall
 
 namespace GameTheory
 namespace InfoModel

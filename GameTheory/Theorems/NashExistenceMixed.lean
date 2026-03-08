@@ -1,9 +1,9 @@
-import GameTheory.Concepts.SolutionConcepts
 import Math.PMFProduct
-import GameTheory.Concepts.ProductSimplexBrouwer
 import Math.Probability
 import Math.ProbabilityMassFunction
 import Math.OptimizationLocalGlobal
+import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.ProductSimplexBrouwer
 
 /-!
 # Mixed-Strategy Nash Equilibrium Existence
@@ -37,22 +37,6 @@ namespace KernelGame
 open Math.PMFProduct
 
 variable {ι : Type} [DecidableEq ι]
-
--- ============================================================================
--- Mixed extension of a KernelGame
--- ============================================================================
-
-open Classical in
-/-- The mixed extension of a kernel game. Each player's strategy is lifted from
-    `G.Strategy i` to `PMF (G.Strategy i)` (a mixed strategy). The outcome kernel
-    samples from the independent product distribution over pure strategy profiles,
-    then applies the original outcome kernel. -/
-def mixedExtension (G : KernelGame ι) [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] : KernelGame ι where
-  Strategy := fun i => PMF (G.Strategy i)
-  Outcome := G.Outcome
-  utility := G.utility
-  outcomeKernel := fun σ => (pmfPi σ).bind G.outcomeKernel
 
 -- ============================================================================
 -- EU in the mixed extension

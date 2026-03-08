@@ -1,6 +1,6 @@
-import GameTheory.Model.Lemmas.Profiles
-import GameTheory.Model.Lemmas.AtomicFactorization
-import GameTheory.Model.Lemmas.ExecutionLocality
+import GameTheory.Languages.InfoModel.Lemmas.Profiles
+import GameTheory.Languages.InfoModel.Lemmas.AtomicFactorization
+import GameTheory.Languages.InfoModel.Lemmas.ExecutionLocality
 
 namespace GameTheory
 namespace InfoModel

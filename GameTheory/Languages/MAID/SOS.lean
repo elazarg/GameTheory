@@ -1,5 +1,5 @@
 import GameTheory.Languages.MAID.Syntax
-import GameTheory.Model.SemanticForm
+import GameTheory.Languages.InfoModel.SemanticForm
 
 /-!
 # GameTheory.Languages.MAID.SOS

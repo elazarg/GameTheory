@@ -1,5 +1,5 @@
 import GameTheory.Languages.Sequential.Syntax
-import GameTheory.Model.SemanticForm
+import GameTheory.Languages.InfoModel.SemanticForm
 import Math.Probability
 
 /-!

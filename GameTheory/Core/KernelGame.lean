@@ -1,4 +1,5 @@
 import Math.Probability
+import Math.PMFProduct
 
 /-!
 # GameTheory.Core.KernelGame
@@ -81,7 +82,18 @@ theorem udistPlayer_eq_udist_bind (G : KernelGame ι) (σ : Profile G) (who : ι
     G.udistPlayer σ who = PMF.pure (G.utility ω who) := by
   simp [udistPlayer, h]
 
+open Classical in
+/-- The mixed extension of a kernel game. Each player's strategy is lifted from
+    `G.Strategy i` to `PMF (G.Strategy i)` (a mixed strategy). The outcome kernel
+    samples from the independent product distribution over pure strategy profiles,
+    then applies the original outcome kernel. -/
+noncomputable def mixedExtension (G : KernelGame ι) [Fintype ι]
+    [∀ i, Fintype (G.Strategy i)] : KernelGame ι where
+  Strategy := fun i => PMF (G.Strategy i)
+  Outcome := G.Outcome
+  utility := G.utility
+  outcomeKernel := fun σ => (Math.PMFProduct.pmfPi σ).bind G.outcomeKernel
+
 end KernelGame
 
 end GameTheory
-

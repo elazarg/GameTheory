@@ -1,6 +1,6 @@
 import GameTheory.Core.KernelGame
-import GameTheory.Model.InfoGame
-import GameTheory.Model.Simulation
+import GameTheory.Languages.InfoModel.InfoGame
+import GameTheory.Languages.InfoModel.Simulation
 import GameTheory.Languages.Sequential.SOS
 import Math.PMFProduct
 import Math.Probability

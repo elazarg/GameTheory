@@ -1,4 +1,4 @@
-import GameTheory.Model.Lemmas.Profiles
+import GameTheory.Languages.InfoModel.Lemmas.Profiles
 import Math.ProbabilityMassFunction
 
 namespace GameTheory

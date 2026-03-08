@@ -1,4 +1,4 @@
-import GameTheory.Model.SemanticForm
+import GameTheory.Languages.InfoModel.SemanticForm
 
 namespace GameTheory
 namespace InfoModel

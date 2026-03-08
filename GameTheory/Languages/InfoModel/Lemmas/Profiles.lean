@@ -1,5 +1,5 @@
-import GameTheory.Model.SemanticForm
-import GameTheory.Model.Lemmas.ExecutionSupport
+import GameTheory.Languages.InfoModel.SemanticForm
+import GameTheory.Languages.InfoModel.Lemmas.ExecutionSupport
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
 

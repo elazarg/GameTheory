@@ -1,5 +1,5 @@
-import GameTheory.Concepts.SolutionConcepts
 import Math.Probability
+import GameTheory.Concepts.SolutionConcepts
 
 /-!
 # Security Strategies and Maximin Values

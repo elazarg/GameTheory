@@ -1,5 +1,5 @@
 import GameTheory.Languages.EFG.Compile
-import GameTheory.Model.Simulation
+import GameTheory.Languages.InfoModel.Simulation
 
 namespace GameTheory.EFG
 

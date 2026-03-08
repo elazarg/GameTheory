@@ -1,20 +1,19 @@
-import GameTheory.Model.SemanticForm
+import GameTheory.Languages.InfoModel.SemanticForm
 
 /-!
-# GameTheory.Model.InfoGame
+# GameTheory.Languages.InfoModel.InfoGame
 
-Common-knowledge game layer over the semantics-first core.
+Common-knowledge game layer over InfoModel.
 
 `InfoModel` carries latent state and visibility.
 `ControlModel` carries common-knowledge controller specifications.
-`InfoGame` packages both as the canonical game-level target for language
-compilation, without replacing `KernelGame` as the strategic-form target.
+`InfoGame` packages both as a game-level target for language compilation.
 -/
 
 namespace GameTheory
 
 /-- Common-knowledge game layer built over an information model and control
-structure. This is the canonical game-level target for language compilation. -/
+structure. -/
 structure InfoGame {ι σ : Type} {Act : ι → Type} where
   I : InfoModel ι σ Act
   C : ControlModel I

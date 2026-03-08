@@ -1,4 +1,4 @@
-import GameTheory.Model.Lemmas.Profiles
+import GameTheory.Languages.InfoModel.Lemmas.Profiles
 
 namespace GameTheory
 namespace InfoModel

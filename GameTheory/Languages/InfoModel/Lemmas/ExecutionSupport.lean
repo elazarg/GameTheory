@@ -1,5 +1,5 @@
-import GameTheory.Model.SemanticForm
-import GameTheory.Model.Lemmas.ReachStateTrace
+import GameTheory.Languages.InfoModel.SemanticForm
+import GameTheory.Languages.InfoModel.Lemmas.ReachStateTrace
 
 namespace GameTheory
 namespace InfoModel

@@ -1,4 +1,4 @@
-import GameTheory.Model.InfoGame
+import GameTheory.Languages.InfoModel.InfoGame
 import GameTheory.Languages.EFG.Syntax
 
 namespace GameTheory.EFG

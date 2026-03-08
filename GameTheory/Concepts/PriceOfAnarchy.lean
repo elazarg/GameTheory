@@ -1,6 +1,6 @@
+import Math.Probability
 import GameTheory.Core.GameProperties
 import GameTheory.Concepts.SolutionConcepts
-import Math.Probability
 
 /-!
 # Price of Anarchy and Price of Stability

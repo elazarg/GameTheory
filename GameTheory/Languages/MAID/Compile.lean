@@ -1,7 +1,7 @@
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.MAID.SOS
-import GameTheory.Model.InfoGame
-import GameTheory.Model.Simulation
+import GameTheory.Languages.InfoModel.InfoGame
+import GameTheory.Languages.InfoModel.Simulation
 
 /-!
 # GameTheory.Languages.MAID.Compile

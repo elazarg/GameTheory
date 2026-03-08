@@ -1,8 +1,8 @@
-import GameTheory.Model.SemanticForm
+import GameTheory.Languages.InfoModel.SemanticForm
 import Semantics.Simulation
 
 /-!
-# GameTheory.Model.Simulation
+# GameTheory.Languages.InfoModel.Simulation
 
 Semantic simulation and bisimulation notions for source-language operational
 semantics compiled into `InfoModel`.

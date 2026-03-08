@@ -1,6 +1,6 @@
-import GameTheory.Model.Lemmas.Profiles
-import GameTheory.Model.Lemmas.ExecutionLocality
-import GameTheory.Model.Lemmas.ExecutionSupport
+import GameTheory.Languages.InfoModel.Lemmas.Profiles
+import GameTheory.Languages.InfoModel.Lemmas.ExecutionLocality
+import GameTheory.Languages.InfoModel.Lemmas.ExecutionSupport
 import Math.BoundedLists
 
 namespace GameTheory

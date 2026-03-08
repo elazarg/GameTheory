@@ -5,7 +5,7 @@ import Semantics.SM
 import Semantics.TransitionTrace
 
 /-!
-# GameTheory.Model.SemanticForm
+# GameTheory.Languages.InfoModel.SemanticForm
 
 Semantics-first model decomposition:
 - `InfoModel`: public and player-local visibility, extending `Semantics.SM`

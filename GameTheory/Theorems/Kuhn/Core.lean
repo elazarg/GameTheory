@@ -1,7 +1,7 @@
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
-import GameTheory.Model.Lemmas.StepIndependence
-import GameTheory.Model.Lemmas.PerfectRecall
+import GameTheory.Languages.InfoModel.Lemmas.StepIndependence
+import GameTheory.Languages.InfoModel.Lemmas.PerfectRecall
 
 namespace GameTheory
 namespace Theorems

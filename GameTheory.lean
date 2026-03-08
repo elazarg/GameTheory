@@ -1,8 +1,6 @@
 -- Unified architecture (semantics-first)
-import GameTheory.Model
 import GameTheory.Languages
 import GameTheory.Theorems
-import GameTheory.InfoGame
 
 -- Probability and core
 import Math.Probability
@@ -35,9 +33,9 @@ import GameTheory.Concepts.DominanceSolvability
 -- Nash equilibrium
 import GameTheory.Concepts.StrictNashProperties
 import GameTheory.Concepts.ApproximateNash
-import GameTheory.Concepts.NashExistence
+import GameTheory.Theorems.NashExistence
 import GameTheory.Concepts.ProductSimplexBrouwer
-import GameTheory.Concepts.NashExistenceMixed
+import GameTheory.Theorems.NashExistenceMixed
 import GameTheory.Concepts.MixedSupport
 import GameTheory.Concepts.BestResponseDynamics
 import GameTheory.Concepts.NashProperties

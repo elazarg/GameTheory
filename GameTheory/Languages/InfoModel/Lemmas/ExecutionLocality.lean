@@ -1,7 +1,7 @@
-import GameTheory.Model.Lemmas.ExecutionSupport
-import GameTheory.Model.Lemmas.Coordinates
-import GameTheory.Model.Lemmas.ProjectStates
-import GameTheory.Model.Lemmas.Profiles
+import GameTheory.Languages.InfoModel.Lemmas.ExecutionSupport
+import GameTheory.Languages.InfoModel.Lemmas.Coordinates
+import GameTheory.Languages.InfoModel.Lemmas.ProjectStates
+import GameTheory.Languages.InfoModel.Lemmas.Profiles
 
 namespace GameTheory
 namespace InfoModel

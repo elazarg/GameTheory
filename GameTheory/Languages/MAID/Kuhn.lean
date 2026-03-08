@@ -1,5 +1,5 @@
 import GameTheory.Languages.MAID.Compile
-import GameTheory.Model.Lemmas.HistoryCover
+import GameTheory.Languages.InfoModel.Lemmas.HistoryCover
 import GameTheory.Theorems.Kuhn
 
 /-!

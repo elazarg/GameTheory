@@ -1,6 +1,6 @@
+import Math.Probability
 import GameTheory.Concepts.PotentialFIP
 import GameTheory.Concepts.BestResponseDynamics
-import Math.Probability
 
 /-!
 # Finite Improvement Property for Potential Games
