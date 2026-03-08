@@ -9,7 +9,7 @@ structure ObsModel (ι σ : Type) (Act : ι → Type) where
   init : σ
   /-- Stochastic transition: given joint action and state, produce a distribution
   over next states. -/
-  step : (∀ i, Option (Act i)) → σ → PMF σ
+  step : (∀ i, Act i) → σ → PMF σ
   /-- Per-player observation type. -/
   Obs : ι → Type
   /-- Per-player observation function on states. -/
@@ -19,8 +19,8 @@ namespace ObsModel
 
 variable {ι σ : Type} {Act : ι → Type}
 
-/-- Joint (possibly inactive) action profile. -/
-abbrev JointAction (_ : ObsModel ι σ Act) := ∀ i, Option (Act i)
+/-- Joint action profile. -/
+abbrev JointAction (_ : ObsModel ι σ Act) := ∀ i, Act i
 
 /-! ### Observations and projections -/
 
@@ -48,11 +48,11 @@ theorem obsEq_of_projectStates_getLast (O : ObsModel ι σ Act) (i : ι) {ss ss'
 
 /-- Deterministic profile over local visible history. -/
 abbrev PureProfile (O : ObsModel ι σ Act) : Type :=
-  ∀ i, O.LocalTrace i → Option (Act i)
+  ∀ i, O.LocalTrace i → Act i
 
 /-- Behavioral (stochastic) profile over local visible history. -/
 abbrev BehavioralProfile (O : ObsModel ι σ Act) : Type :=
-  ∀ i, O.LocalTrace i → PMF (Option (Act i))
+  ∀ i, O.LocalTrace i → PMF (Act i)
 
 /-- Correlated behavioral profile over the full visible history context. -/
 abbrev BehavioralProfileCorr (O : ObsModel ι σ Act) : Type :=
@@ -65,13 +65,13 @@ noncomputable def pureToBehavioral (O : ObsModel ι σ Act)
 
 /-- Embed an independent behavioral profile as a correlated one by product sampling. -/
 noncomputable def behavioralToCorr
-    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
     (O : ObsModel ι σ Act) (b : BehavioralProfile O) : BehavioralProfileCorr O :=
   fun v => Math.PMFProduct.pmfPi (fun i => b i (v i))
 
 /-! ### Stochastic execution -/
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- Independent joint-action distribution induced by a behavioral profile. -/
 noncomputable def jointActionDist (O : ObsModel ι σ Act)
@@ -163,14 +163,14 @@ def TracePlayerStepRecall (O : ObsModel ι σ Act) (i : ι) : Prop :=
     O.obsEq i t t' →
     a i = a' i
 
-omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))] in
+omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)] in
 /-- `PerStepPlayerRecall` implies `PerStepActionRecall`. -/
 theorem PerStepPlayerRecall.toAction {O : ObsModel ι σ Act}
     (h : O.PerStepPlayerRecall) : O.PerStepActionRecall :=
   fun a a' s s' t t' hs hs' hobs hobst =>
     funext fun i => h i a a' s s' t t' hs hs' (hobs i) (hobst i)
 
-omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))] in
+omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)] in
 /-- `PlayerStepRecall` implies `TracePlayerStepRecall`. -/
 theorem PlayerStepRecall.toTrace {O : ObsModel ι σ Act} {i : ι}
     (h : O.PlayerStepRecall i) : O.TracePlayerStepRecall i := by
@@ -181,16 +181,16 @@ theorem PlayerStepRecall.toTrace {O : ObsModel ι σ Act} {i : ι}
 /-! ### ProjectStates API -/
 
 -- The following definitions and theorems don't need [DecidableEq ι], [Fintype ι],
--- or [∀ i, Fintype (Option (Act i))], but they live inside the namespace that
+-- or [∀ i, Fintype (Act i)], but they live inside the namespace that
 -- declared them. We omit them here to avoid unused-variable warnings.
 
 section NoFintype
 
-omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- Player-local projected own-action trace from an action-annotated history. -/
 def projectActions (O : ObsModel ι σ Act) (i : ι) (ha : List O.JointAction) :
-    List (Option (Act i)) :=
+    List (Act i) :=
   ha.map (fun a => a i)
 
 theorem projectStates_eq_length (O : ObsModel ι σ Act) (i : ι) {ss₁ ss₂ : List σ}
@@ -260,7 +260,7 @@ end NoFintype
 
 /-- One stochastic step under a correlated behavioral profile. -/
 noncomputable def stepDistCorr (O : ObsModel ι σ Act)
-    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [∀ i, Fintype (Act i)]
     (b : BehavioralProfileCorr O) (ss : List σ) : PMF σ :=
   let s := (ss.getLast?).getD O.init
   let v : ∀ i, O.LocalTrace i := fun i => O.projectStates i ss
@@ -270,7 +270,7 @@ noncomputable def stepDistCorr (O : ObsModel ι σ Act)
 
 section NoFintype2
 
-omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- The initial state is always step-reachable. -/
 theorem stepReachable_init (O : ObsModel ι σ Act) :
@@ -350,7 +350,7 @@ end NoFintype2
 /-- Mediator construction: condition `ν` on the probability of reaching
 the current state trace, then extract correlated joint actions. -/
 noncomputable def mixedToMediator (O : ObsModel ι σ Act)
-    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
     [Fintype (PureProfile O)]
     (ν : PMF (PureProfile O))
     (n : Nat) (ss : List σ) : PMF (O.JointAction) :=
@@ -397,7 +397,33 @@ Both `PSPR` and `PerfectRecall` imply `∀ i, TracePlayerStepRecall O i`
 `PSAR + ∀ i, TracePlayerStepRecall O i` (the weakest syntactic condition),
 any product distribution over pure profiles can be realized by an independent
 behavioral profile. Both `kuhn_mixed_to_behavioral_pspr` and
-`kuhn_mixed_to_behavioral_decomposed` are direct corollaries. -/
+`kuhn_mixed_to_behavioral_decomposed` are direct corollaries.
+
+## Design notes: action type parameterization
+
+The current `Act : ι → Type` is a per-player action alphabet that is state-independent.
+This is a simplification: in general, a player's available actions depend on the game
+state (or at least on the information set). Three alternative designs are worth considering:
+
+**B. Bundled action type with feasibility predicate.**
+Use a single type `Action` for all actions, with a predicate `Feasible : ι → σ → Action → Prop`
+constraining which actions are available at each state. The step function gives zero probability
+to infeasible actions. Profiles map `LocalTrace i → Action`, and recall predicates compare
+actions as elements of the same type. This is the standard game-theory encoding and avoids
+dependent types entirely. The tradeoff: `Action` is a "universal" type that may contain
+actions irrelevant to some players/states, and feasibility must be tracked as a side condition.
+
+**C. Observation-indexed action types.**
+The correct mathematical decomposition is `Act : ι → Obs i → Type`, where actions depend
+on the player's *observation* (information set), not the raw state. This avoids the type-theoretic
+problems of state-dependent actions (`Act : ι → σ → Type`) — since observations are the same
+within an information set, actions at obs-equivalent states share the same type. The structure
+becomes an observation predicate `Obs : ι → Type` paired with an LSM (labeled state machine)
+parameterized by per-observation actions. Recall predicates compare actions within the same
+observation type, eliminating the need for `HEq` or transport. The tradeoff: the `ObsModel`
+structure must be split into an observation layer and an action layer, with the action layer
+parameterized by observation values. This is architecturally cleaner but requires restructuring
+the `ObsModel` definition. -/
 
 set_option autoImplicit false
 
@@ -409,7 +435,7 @@ variable {ι σ : Type} {Act : ι → Type} {O : ObsModel ι σ Act}
 
 section
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- The mediator's action recommendations composed with step equal
 the `condStep` from `ParameterizedChain` (monad associativity). -/
@@ -467,7 +493,7 @@ theorem sum_mul_pmf_ne_top {α : Type*} [Fintype α] (d : PMF α) (w : α → EN
 
 section ObsLevel
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- `jointActionDist` depends on the state trace only through observations. -/
 theorem jointActionDist_obs_invariant
@@ -650,7 +676,7 @@ end ObsLevel
 
 section ObsCorrelatedRealization
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 variable [Fintype (PureProfile O)] [∀ i, Fintype (O.LocalTrace i)]
 
 set_option linter.unusedSectionVars false in
@@ -659,7 +685,7 @@ open Classical in
 /-- **Observation-level correlated realization**: under `PerStepActionRecall`,
 a `BehavioralProfileCorr O` (observation-level mediator) produces the same
 trace distribution as any mixed strategy `ν`. -/
-theorem obs_correlated_realization [Inhabited ι]
+theorem obs_correlated_realization [Inhabited ι] [∀ i, Nonempty (Act i)]
     (hPSAR : PerStepActionRecall O)
     (ν : PMF (PureProfile O)) (k : Nat) :
     ∃ bc : BehavioralProfileCorr O,
@@ -671,7 +697,7 @@ theorem obs_correlated_realization [Inhabited ι]
           (∀ i, O.projectStates i ss = v i) ∧
           ∑ π : PureProfile O, ν π * pureRun (O.pureStep) O.init (ss.length - 1) π ss ≠ 0
     then O.mixedToMediator ν (h.choose.length - 1) h.choose
-    else PMF.pure (fun _ => none)
+    else PMF.pure (fun _ => Classical.arbitrary _)
   refine ⟨bc, ?_⟩
   -- Suffices: seqRun under bc = seqRun under condStep
   suffices hsuff : seqRun (fun _ ss => O.stepDistCorr bc ss) O.init k =
@@ -718,7 +744,7 @@ theorem obs_correlated_realization [Inhabited ι]
         (∀ i, O.projectStates i ss' = (fun i => O.projectStates i ss) i) ∧
         ∑ π, ν π * pureRun (O.pureStep) O.init (ss'.length - 1) π ss' ≠ 0
       then O.mixedToMediator ν (h.choose.length - 1) h.choose
-      else PMF.pure (fun _ => none)) = _
+      else PMF.pure (fun _ => Classical.arbitrary _)) = _
     rw [dif_pos hexist]
     -- hexist.choose has same projections and is reachable
     set ss' := hexist.choose with hss'_def
@@ -769,7 +795,7 @@ This bridges the `Math.ParameterizedChain` execution model with the
 
 section PureRunBridge
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- If `pureRun` reaches a trace with nonzero probability, there exists a
 corresponding `ReachActionTrace`. -/
@@ -829,7 +855,7 @@ step. This gives:
 
 section ReachFactor
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- Under PSAR, nonzero reach probabilities at the same trace are equal.
 If two profiles both reach `ss` with nonzero probability, they must produce
@@ -986,7 +1012,7 @@ end ReachFactor
 
 section Decentralization
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- Generalized step-independence-to-trace theorem: if a behavioral profile
 `b` satisfies the step-independence property with respect to any
@@ -1060,7 +1086,7 @@ section ProductPreservation
 
 open Math.PMFProduct
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Classical in
@@ -1130,22 +1156,22 @@ strategy distribution is preserved by the mediator construction. Combined with
 the observation-level realization, this gives the independent behavioral profile
 (Kuhn's theorem for the mixed → behavioral direction). -/
 theorem mediator_product_of_product
-    (hPSAR : PerStepActionRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+    (hPSAR : PerStepActionRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Act i))
     (n : Nat) (ss : List σ)
     {π₀ : PureProfile O}
     (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0) :
-    ∃ τ : ∀ i, PMF (Option (Act i)),
+    ∃ τ : ∀ i, PMF (Act i),
       O.mixedToMediator (pmfPi μ) n ss = pmfPi τ := by
   set ν := pmfPi μ with hν_def
   set w : PureProfile O → ENNReal :=
     fun π => pureRun (O.pureStep) O.init n π ss
-  set wᵢ : ∀ i, (O.LocalTrace i → Option (Act i)) → ENNReal :=
+  set wᵢ : ∀ i, (O.LocalTrace i → Act i) → ENNReal :=
     fun i πᵢ => pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss
   -- Reduce to: reweightPMF ν w is a product PMF
   -- The mediator is a pushforward of (reweightPMF ν w) through the coordwise map
   -- fun π i => π i (projectStates i ss), and pushforward of product
   -- = product (pmfPi_push_coordwise)
-  suffices hprod : ∃ ρ : ∀ i, PMF (O.LocalTrace i → Option (Act i)),
+  suffices hprod : ∃ ρ : ∀ i, PMF (O.LocalTrace i → Act i),
       reweightPMF ν w = pmfPi ρ by
     obtain ⟨ρ, hρ⟩ := hprod
     exact ⟨fun i => Math.PMFProduct.pushforward (ρ i) (fun πᵢ => πᵢ (O.projectStates i ss)), by
@@ -1214,7 +1240,7 @@ precise sense. -/
 
 section CoordinationPreservation
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Math.PMFProduct
@@ -1234,18 +1260,18 @@ The mechanism: under PSAR, `pureRun_cross_mul_product` shows the reach
 weight is cross-multiplicatively equivalent to `∏ᵢ wᵢ(πᵢ)`, and
 `reweightPMF_pmfPi` factors reweighting by a product weight. -/
 theorem conditioning_preserves_product
-    (hPSAR : PerStepActionRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+    (hPSAR : PerStepActionRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Act i))
     (n : Nat) {ss : List σ}
     {π₀ : PureProfile O}
     (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0) :
-    ∃ τ : ∀ i, PMF (O.LocalTrace i → Option (Act i)),
+    ∃ τ : ∀ i, PMF (O.LocalTrace i → Act i),
       reweightPMF (pmfPi μ)
         (fun π => pureRun (O.pureStep) O.init n π ss) =
           pmfPi τ := by
   set ν := pmfPi μ
   set w : PureProfile O → ENNReal :=
     fun π => pureRun (O.pureStep) O.init n π ss
-  set wᵢ : ∀ i, (O.LocalTrace i → Option (Act i)) → ENNReal :=
+  set wᵢ : ∀ i, (O.LocalTrace i → Act i) → ENNReal :=
     fun i πᵢ => pureRun (O.pureStep) O.init n
       (Function.update π₀ i πᵢ) ss
   -- Mass conditions
@@ -1310,7 +1336,7 @@ through `projectStates i ss`, giving **obs-locality of the mediator factors**. -
 
 section ObsLocality
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 open Classical in
 /-- Generic obs-locality of `pureRun (update π₀ i πᵢ)`, parameterized by a
@@ -1333,7 +1359,7 @@ theorem pureRun_update_obs_local_of
       pureRun (O.pureStep) O.init m π₀' p₂ ≠ 0 →
       O.pureStep π₀ p₁ t₁ ≠ 0 → O.pureStep π₀' p₂ t₂ ≠ 0 →
       π₀ i (O.projectStates i p₁) = π₀' i (O.projectStates i p₂))
-    (πᵢ : O.LocalTrace i → Option (Act i)) :
+    (πᵢ : O.LocalTrace i → Act i) :
     pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (O.pureStep) O.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 := by
   induction n generalizing ss₁ ss₂ with
@@ -1390,7 +1416,7 @@ theorem pureRun_update_obs_local
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (O.pureStep) O.init n π₀ ss₂ ≠ 0)
-    (πᵢ : O.LocalTrace i → Option (Act i)) :
+    (πᵢ : O.LocalTrace i → Act i) :
     pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of hPSAR n i hobs_i h₁ h₂
@@ -1408,7 +1434,7 @@ one-line corollaries that supply the appropriate `hiff`. -/
 theorem reweightPMF_update_obs_local_of
     [∀ i, Fintype (O.LocalTrace i)]
     (hPSAR : PerStepActionRecall O) (n : Nat)
-    (i : ι) (b_i : PMF (O.LocalTrace i → Option (Act i)))
+    (i : ι) (b_i : PMF (O.LocalTrace i → Act i))
     {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List σ}
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (O.pureStep) O.init n π₀' ss₂ ≠ 0)
@@ -1463,7 +1489,7 @@ open Classical in
 theorem reweightPMF_update_obs_local
     [∀ i, Fintype (O.LocalTrace i)]
     (hPSAR : PerStepActionRecall O) (n : Nat)
-    (i : ι) (b_i : PMF (O.LocalTrace i → Option (Act i)))
+    (i : ι) (b_i : PMF (O.LocalTrace i → Act i))
     {π₀ : PureProfile O} {ss₁ ss₂ : List σ}
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
@@ -1484,7 +1510,7 @@ theorem pureRun_update_obs_local_pspr
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (O.pureStep) O.init n π₀' ss₂ ≠ 0)
-    (πᵢ : O.LocalTrace i → Option (Act i)) :
+    (πᵢ : O.LocalTrace i → Act i) :
     pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (O.pureStep) O.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of (hPSPR.toAction) n i hobs_i h₁ h₂
@@ -1499,7 +1525,7 @@ Corollary of `reweightPMF_update_obs_local_of` with `hiff` from
 theorem reweightPMF_update_obs_local_pspr
     [∀ i, Fintype (O.LocalTrace i)]
     (hPSPR : PerStepPlayerRecall O) (n : Nat)
-    (i : ι) (b_i : PMF (O.LocalTrace i → Option (Act i)))
+    (i : ι) (b_i : PMF (O.LocalTrace i → Act i))
     {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List σ}
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
@@ -1532,7 +1558,7 @@ factor needs only their own `PlayerStepRecall`. -/
 
 section PerPlayerObsLocality
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 open Classical in
 /-- Under PSAR + `PlayerStepRecall O i`, obs-locality with **different** reference profiles.
@@ -1545,7 +1571,7 @@ theorem pureRun_update_obs_local_player
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (O.pureStep) O.init n π₀' ss₂ ≠ 0)
-    (πᵢ : O.LocalTrace i → Option (Act i)) :
+    (πᵢ : O.LocalTrace i → Act i) :
     pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (O.pureStep) O.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of hPSAR n i hobs_i h₁ h₂
@@ -1561,7 +1587,7 @@ theorem reweightPMF_update_obs_local_player
     [∀ i, Fintype (O.LocalTrace i)]
     (hPSAR : PerStepActionRecall O) (i : ι) (hPSR_i : PlayerStepRecall O i)
     (n : Nat)
-    (b_i : PMF (O.LocalTrace i → Option (Act i)))
+    (b_i : PMF (O.LocalTrace i → Act i))
     {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List σ}
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
@@ -1594,7 +1620,7 @@ argument (see `KuhnMixedToBehavioral.lean`). -/
 
 section Decentralization
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 open Math.PMFProduct
 
@@ -1643,7 +1669,7 @@ with `runDist k β = ν.bind (runDistPure k)`.
 
 section KuhnMtoB
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Math.PMFProduct
@@ -1653,7 +1679,7 @@ open Classical in
 /-- Non-existential version of `mediator_product_of_product`:
 the mediator output equals the product of per-player factors. -/
 private theorem mixedToMediator_eq_pmfPi_factor
-    (hPSAR : PerStepActionRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+    (hPSAR : PerStepActionRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Act i))
     (n : Nat) (ss : List σ) {π₀ : PureProfile O}
     (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0)
     (hν₀ : (pmfPi μ) π₀ ≠ 0) :
@@ -1664,13 +1690,13 @@ private theorem mixedToMediator_eq_pmfPi_factor
         (fun πᵢ => πᵢ (O.projectStates i ss))) := by
   set ν := pmfPi μ with hν_def
   set w := fun π => pureRun (O.pureStep) O.init n π ss
-  set wᵢ := fun i (πᵢ : O.LocalTrace i → Option (Act i)) =>
+  set wᵢ := fun i (πᵢ : O.LocalTrace i → Act i) =>
     pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss
   suffices hprod : reweightPMF ν w = pmfPi (fun i => reweightPMF (μ i) (wᵢ i)) by
     unfold mixedToMediator; rw [hprod]
     simp only [jointActionDist, pureToBehavioral]
     conv_lhs => arg 2; ext π; rw [pmfPi_pure]
-    exact pmfPi_push_coordwise _ (fun i (πᵢ : O.LocalTrace i → Option (Act i)) =>
+    exact pmfPi_push_coordwise _ (fun i (πᵢ : O.LocalTrace i → Act i) =>
       πᵢ (O.projectStates i ss))
   -- Non-degeneracy setup
   have hμ_ne : ∀ i, μ i (π₀ i) ≠ 0 := by
@@ -1739,7 +1765,7 @@ Semantic ↛ Syntactic (converse fails):
 
 section SemanticConditions
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 
 /-- **Semantic condition**: Whether a continuation strategy `πᵢ` for player `i` is feasible
 (has nonzero probability of reaching a given trace) depends only on player `i`'s observation
@@ -1752,7 +1778,7 @@ def ObsLocalFeasibility (i : ι) : Prop :=
     O.projectStates i ss₁ = O.projectStates i ss₂ →
     pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0 →
     pureRun (O.pureStep) O.init n π₀' ss₂ ≠ 0 →
-    ∀ (πᵢ : O.LocalTrace i → Option (Act i)),
+    ∀ (πᵢ : O.LocalTrace i → Act i),
       pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
       pureRun (O.pureStep) O.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0
 
@@ -1767,7 +1793,7 @@ def StepActionDeterminism (O : ObsModel ι σ Act) : Prop :=
   ∀ (a a' : O.JointAction) (s t : σ),
     (O.step a s) t ≠ 0 → (O.step a' s) t ≠ 0 → a = a'
 
-omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))] in
+omit [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)] in
 /-- PSAR implies step action determinism.
 PSAR with reflexive obs-equivalence (same source, same target) gives action uniqueness. -/
 theorem PerStepActionRecall.toStepActionDeterminism
@@ -1883,7 +1909,7 @@ open Classical in
 /-- Under PSAR + `TracePlayerStepRecall O i`, updating player `i`'s strategy
 preserves feasibility across obs-equivalent traces. -/
 theorem pureRun_update_obs_local_trace
-    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
     (hPSAR : PerStepActionRecall O) (i : ι)
     (hTPSR : O.TracePlayerStepRecall i)
     (n : Nat)
@@ -1891,7 +1917,7 @@ theorem pureRun_update_obs_local_trace
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (O.pureStep) O.init n π₀' ss₂ ≠ 0)
-    (πᵢ : O.LocalTrace i → Option (Act i)) :
+    (πᵢ : O.LocalTrace i → Act i) :
     pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
     pureRun (O.pureStep) O.init n (Function.update π₀' i πᵢ) ss₂ ≠ 0 :=
   pureRun_update_obs_local_of hPSAR n i hobs_i h₁ h₂
@@ -1905,12 +1931,12 @@ set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Under PSAR + `TracePlayerStepRecall O i`, `reweightPMF` is obs-local for player `i`. -/
 theorem reweightPMF_update_obs_local_trace
-    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
     [∀ i, Fintype (O.LocalTrace i)]
     (hPSAR : PerStepActionRecall O) (i : ι)
     (hTPSR : O.TracePlayerStepRecall i)
     (n : Nat)
-    (b_i : PMF (O.LocalTrace i → Option (Act i)))
+    (b_i : PMF (O.LocalTrace i → Act i))
     {π₀ π₀' : PureProfile O} {ss₁ ss₂ : List σ}
     (hobs_i : O.projectStates i ss₁ = O.projectStates i ss₂)
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
@@ -2010,7 +2036,7 @@ make obs-locality hold without the syntactic action-uniqueness property. -/
 
 section Hierarchy
 
-variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Act i)]
 variable [∀ i, Fintype (O.LocalTrace i)]
 
 open Math.PMFProduct
@@ -2026,17 +2052,17 @@ condition under which the mixed-to-behavioral direction of Kuhn's theorem holds.
 
 Both `kuhn_mixed_to_behavioral_pspr` and `kuhn_mixed_to_behavioral_decomposed`
 are corollaries of this theorem. -/
-theorem kuhn_mixed_to_behavioral_trace
+theorem kuhn_mixed_to_behavioral_trace [∀ i, Nonempty (Act i)]
     (hPSAR : PerStepActionRecall O)
     (hTPSR : ∀ i, O.TracePlayerStepRecall i)
-    (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+    (μ : ∀ i, PMF (O.LocalTrace i → Act i))
     (k : Nat) :
     ∃ β : BehavioralProfile O,
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
   set ν := pmfPi μ with hν_def
   -- Abbreviation for the per-player factor at a specific trace
   let factorAt (i : ι) (n : Nat) (ss : List σ) (π₀ : PureProfile O) :
-      PMF (Option (Act i)) :=
+      PMF (Act i) :=
     Math.PMFProduct.pushforward
       (reweightPMF (μ i)
         (fun πᵢ => pureRun (O.pureStep) O.init n
@@ -2067,7 +2093,7 @@ theorem kuhn_mixed_to_behavioral_trace
         O.projectStates i ss = v_i ∧
         pureRun (O.pureStep) O.init n π₀ ss ≠ 0
     then factorAt i h.choose h.choose_spec.choose h.choose_spec.choose_spec.choose
-    else PMF.pure none
+    else PMF.pure (Classical.arbitrary _)
   have β_eq : ∀ (i : ι) (n : Nat) (ss : List σ) (π₀ : PureProfile O),
       pureRun (O.pureStep) O.init n π₀ ss ≠ 0 →
       β i (O.projectStates i ss) = factorAt i n ss π₀ := by
@@ -2127,8 +2153,8 @@ same trace distribution.
 
 Corollary of `kuhn_mixed_to_behavioral_trace` via
 `PlayerStepRecall → ReachablePlayerStepRecall → TracePlayerStepRecall`. -/
-theorem kuhn_mixed_to_behavioral_pspr
-    (hPSPR : PerStepPlayerRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+theorem kuhn_mixed_to_behavioral_pspr [∀ i, Nonempty (Act i)]
+    (hPSPR : PerStepPlayerRecall O) (μ : ∀ i, PMF (O.LocalTrace i → Act i))
     (k : Nat) :
     ∃ β : BehavioralProfile O,
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) :=
@@ -2145,9 +2171,9 @@ the global PSAR handles the reach structure (derived from the per-player
 conditions), while each player's factor obs-locality uses only their own
 `PlayerStepRecall`. See `reweightPMF_update_obs_local_player` for the
 per-player lemma. -/
-theorem kuhn_mixed_to_behavioral_decomposed
+theorem kuhn_mixed_to_behavioral_decomposed [∀ i, Nonempty (Act i)]
     (hPSR : ∀ i, PlayerStepRecall O i)
-    (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+    (μ : ∀ i, PMF (O.LocalTrace i → Act i))
     (k : Nat) :
     ∃ β : BehavioralProfile O,
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) :=
