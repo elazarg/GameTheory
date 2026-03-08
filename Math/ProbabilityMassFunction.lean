@@ -3,6 +3,14 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 set_option autoImplicit false
 
+/-!
+# PMF Utilities
+
+Canonical home for generic PMF utilities: pushforward, bind congruence, support
+extensionality, conditioning (`condOn`), and sequential fold/bind composition.
+Does not cover product structure (see `PMFProduct.lean`).
+-/
+
 namespace Math
 namespace ProbabilityMassFunction
 

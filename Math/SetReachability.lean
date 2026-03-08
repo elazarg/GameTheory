@@ -3,6 +3,13 @@ import Math.ProbabilityMassFunction
 
 set_option autoImplicit false
 
+/-!
+# Set.EqOn Congruence for PMF Operations
+
+`Set.EqOn`-based congruence lemmas for `PMF.bind` and `expect`: functions
+agreeing on support/reachable sets produce equal results.
+-/
+
 namespace Math
 namespace Set
 namespace Reachability

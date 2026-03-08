@@ -4,6 +4,13 @@ import Mathlib.Data.Set.Finite.Basic
 
 set_option autoImplicit false
 
+/-!
+# Function Update Utilities
+
+Lemmas for `Function.update`, `replaceOn` (multi-coordinate update), and the
+`Ignores` predicate (a function does not depend on a coordinate).
+-/
+
 namespace Math
 namespace Function
 namespace Update

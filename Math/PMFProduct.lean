@@ -5,6 +5,14 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.FunctionUpdate
 import Math.ProbabilityMassFunction
 
+/-!
+# Independent Product Distributions
+
+Independent product distributions (`pmfPi`) and their coordinate-level operations:
+marginals, conditioning, disintegration, coordinate independence.
+Re-exports pushforward from `ProbabilityMassFunction.lean`.
+-/
+
 namespace Math
 namespace PMFProduct
 

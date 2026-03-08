@@ -2,6 +2,12 @@ import Mathlib.Data.Set.Basic
 
 set_option autoImplicit false
 
+/-!
+# Projection and FactorsThrough
+
+`FactorsThrough`: predicate asserting a function factors through an observation map.
+-/
+
 namespace Math
 namespace Projection
 
