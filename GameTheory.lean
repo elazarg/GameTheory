@@ -1,7 +1,5 @@
 -- Unified architecture (semantics-first)
 import GameTheory.Model
-import GameTheory.Compilers
-import GameTheory.Translations
 import GameTheory.Languages
 import GameTheory.Theorems
 import GameTheory.InfoGame
