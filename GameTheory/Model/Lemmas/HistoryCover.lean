@@ -1,6 +1,6 @@
 import GameTheory.Model.Lemmas.Profiles
 import GameTheory.Model.Lemmas.ExecutionLocality
-import Semantics.Execution
+import GameTheory.Model.Lemmas.ExecutionSupport
 
 namespace GameTheory
 namespace InfoModel
