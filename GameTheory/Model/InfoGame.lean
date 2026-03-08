@@ -36,6 +36,19 @@ abbrev control (G : InfoGame (ι := ι) (σ := σ) (Act := Act)) (i : ι) :
     ControlSpec (G.I.Obs i) (Act i) :=
   G.C.control i
 
+/-- Build an `InfoGame` with pure-utility control from per-player utility
+    functions over observation histories. -/
+def ofUtility {I : InfoModel ι σ Act}
+    (u : ∀ i, List (I.Obs i) → ℝ) : InfoGame (ι := ι) (σ := σ) (Act := Act) :=
+  ⟨I, ⟨fun i => .utility (u i)⟩⟩
+
+/-- Build an `InfoGame` with behavioral control from per-player behavior laws
+    over observation histories. -/
+def ofBehavior {I : InfoModel ι σ Act}
+    (β : ∀ i, List (I.Obs i) → PMF (Option (Act i))) :
+    InfoGame (ι := ι) (σ := σ) (Act := Act) :=
+  ⟨I, ⟨fun i => .behavior (β i)⟩⟩
+
 end InfoGame
 
 end GameTheory

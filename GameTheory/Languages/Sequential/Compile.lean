@@ -257,34 +257,4 @@ def nativeInfoBisimulation (G : Protocol n S V A Sig) :
     intro i s
     rfl
 
-/-- Build a common-knowledge utility layer over the compiled sequential
-semantics. -/
-def compileControlUtility (G : Protocol n S V A Sig)
-    (u : ∀ _ : Fin n, List (Option V) → ℝ) :
-    GameTheory.ControlModel (compileInfoOn G) where
-  control := fun i => GameTheory.ControlSpec.utility (u i)
-
-/-- Build a common-knowledge behavioral layer over the compiled sequential
-semantics. -/
-def compileControlBehavior (G : Protocol n S V A Sig)
-    (β : ∀ _ : Fin n, List (Option V) → PMF (Option A)) :
-    GameTheory.ControlModel (compileInfoOn G) where
-  control := fun i => GameTheory.ControlSpec.behavior (β i)
-
-/-- Compile a sequential protocol together with common-knowledge utility
-specifications into the game-level `InfoGame` target. -/
-def compileInfoGameUtility (G : Protocol n S V A Sig)
-    (u : ∀ _ : Fin n, List (Option V) → ℝ) :
-    GameTheory.InfoGame (ι := Fin n)
-      (σ := Config G) (Act := fun _ => A) :=
-  .ofControlModel <| compileControlUtility G u
-
-/-- Compile a sequential protocol together with common-knowledge behavioral
-specifications into the game-level `InfoGame` target. -/
-def compileInfoGameBehavior (G : Protocol n S V A Sig)
-    (β : ∀ _ : Fin n, List (Option V) → PMF (Option A)) :
-    GameTheory.InfoGame (ι := Fin n)
-      (σ := Config G) (Act := fun _ => A) :=
-  .ofControlModel <| compileControlBehavior G β
-
 end GameTheory.Sequential

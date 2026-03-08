@@ -88,35 +88,4 @@ noncomputable def nativeInfoBisimulation (S : Struct Player n) (sem : Sem S) :
     intro p cfg
     rfl
 
-/-- Build a common-knowledge utility layer over the compiled MAID semantics. -/
-def compileControlUtility (S : Struct Player n) (sem : Sem S)
-    (u : ∀ p : Player, List (List (Infoset S p)) → ℝ) :
-    GameTheory.ControlModel (compileInfoOn S sem) where
-  control := fun p => GameTheory.ControlSpec.utility (u p)
-
-/-- Build a common-knowledge behavioral layer over the compiled MAID
-semantics. -/
-def compileControlBehavior (S : Struct Player n) (sem : Sem S)
-    (β : ∀ p : Player,
-      List (List (Infoset S p)) → PMF (Option (FrontierAct S p))) :
-    GameTheory.ControlModel (compileInfoOn S sem) where
-  control := fun p => GameTheory.ControlSpec.behavior (β p)
-
-/-- Compile a MAID together with common-knowledge utility specifications into
-the game-level `InfoGame` target. -/
-noncomputable def compileInfoGameUtility (S : Struct Player n) (sem : Sem S)
-    (u : ∀ p : Player, List (List (Infoset S p)) → ℝ) :
-    GameTheory.InfoGame (ι := Player)
-      (σ := FrontierCfg S) (Act := FrontierAct S) :=
-  .ofControlModel <| compileControlUtility S sem u
-
-/-- Compile a MAID together with common-knowledge behavioral specifications
-into the game-level `InfoGame` target. -/
-noncomputable def compileInfoGameBehavior (S : Struct Player n) (sem : Sem S)
-    (β : ∀ p : Player,
-      List (List (Infoset S p)) → PMF (Option (FrontierAct S p))) :
-    GameTheory.InfoGame (ι := Player)
-      (σ := FrontierCfg S) (Act := FrontierAct S) :=
-  .ofControlModel <| compileControlBehavior S sem β
-
 end MAID

@@ -57,42 +57,4 @@ def compileInfoOn {S : _root_.EFG.InfoStructure} {Outcome : Type}
   Obs := fun i => Option (S.Infoset i)
   observe := fun i s => obsOfState (S := S) (Outcome := Outcome) i s
 
-/-- Build a pure-utility control model from local utility functionals over the
-private infoset history seen by each player. -/
-def compileControlUtility {S : _root_.EFG.InfoStructure} {Outcome : Type}
-    (t : _root_.EFG.GameTree S Outcome)
-    (u : ∀ i : S.Player,
-      List (Option (S.Infoset i)) → ℝ) :
-    GameTheory.ControlModel (compileInfoOn (S := S) (Outcome := Outcome) t) where
-  control := fun i => GameTheory.ControlSpec.utility (u i)
-
-/-- Compile an EFG together with common-knowledge utility specifications into
-the game-level `InfoGame` target. -/
-def compileInfoGameUtility {S : _root_.EFG.InfoStructure} {Outcome : Type}
-    (t : _root_.EFG.GameTree S Outcome)
-    (u : ∀ i : S.Player,
-      List (Option (S.Infoset i)) → ℝ) :
-    GameTheory.InfoGame (ι := S.Player)
-      (σ := _root_.EFG.GameTree S Outcome) (Act := CtrlAct S) :=
-  .ofControlModel <| compileControlUtility (S := S) (Outcome := Outcome) t u
-
-/-- Build a pure-behavior control model from local behavior laws over each
-player's private infoset history. -/
-def compileControlBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
-    (t : _root_.EFG.GameTree S Outcome)
-    (β : ∀ i : S.Player,
-      List (Option (S.Infoset i)) → PMF (Option (CtrlAct S i))) :
-    GameTheory.ControlModel (compileInfoOn (S := S) (Outcome := Outcome) t) where
-  control := fun i => GameTheory.ControlSpec.behavior (β i)
-
-/-- Compile an EFG together with common-knowledge behavior specifications into
-the game-level `InfoGame` target. -/
-def compileInfoGameBehavior {S : _root_.EFG.InfoStructure} {Outcome : Type}
-    (t : _root_.EFG.GameTree S Outcome)
-    (β : ∀ i : S.Player,
-      List (Option (S.Infoset i)) → PMF (Option (CtrlAct S i))) :
-    GameTheory.InfoGame (ι := S.Player)
-      (σ := _root_.EFG.GameTree S Outcome) (Act := CtrlAct S) :=
-  .ofControlModel <| compileControlBehavior (S := S) (Outcome := Outcome) t β
-
 end GameTheory.EFG
