@@ -2,17 +2,25 @@ import Mathlib.Data.List.Basic
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
+import Mathlib.Order.RelClasses
 
 import GameTheory.Core.KernelGame
+import Math.DAG
 
 /-!
-# Multi-Agent Influence Diagrams (MAID) — Typed Redesign
+# Multi-Agent Influence Diagrams (MAID)
 
-EFG-style typed MAID: illegality is untypeable.
-Nodes indexed by `Fin n`, values typed by `Val S nd = Fin (S.domainSize nd)`.
+A MAID (Koller & Milch 2003) is a directed acyclic graph with three kinds of
+nodes — chance, decision, utility — together with conditional probability
+distributions for chance nodes and utility functions for utility nodes.
+
+The DAG structure (parent sets) is fundamental; evaluation along a topological
+order is a derived operation parameterized by a `DAG.TopologicalOrder`.  The swap
+lemmas show this evaluation is independent of which topological order is chosen.
 
 ## Outline
 - Core: `NodeKind`, `Struct`, typed assignments
+- Topological orders: `TopologicalOrder`, order-parameterized evaluation
 - Semantics: `Sem`, strategies, evaluation
 - Game: `KernelGame` bridge
 - Order-independence: swap lemmas
@@ -21,7 +29,7 @@ Nodes indexed by `Fin n`, values typed by `Val S nd = Fin (S.domainSize nd)`.
 namespace MAID
 
 -- ============================================================================
--- Core — pure structure
+-- Core — pure DAG structure
 -- ============================================================================
 
 /-- The kind of a node in a MAID. -/
@@ -31,26 +39,62 @@ inductive NodeKind (Player : Type) where
   | utility (agent : Player)
 deriving DecidableEq, Repr
 
-/-- A MAID structure: DAG with typed nodes over `Fin n`. -/
+/-- A MAID structure: a DAG with typed nodes over `Fin n`.
+
+The structure is defined by node kinds, parent relations, and domain sizes.
+Acyclicity is stated as irreflexivity of the transitive closure of the parent
+relation — the standard definition of "directed acyclic graph". -/
 structure Struct (Player : Type) [DecidableEq Player] [Fintype Player]
     (n : Nat) where
   kind : Fin n → NodeKind Player
   parents    : Fin n → Finset (Fin n)
   obsParents : Fin n → Finset (Fin n)
   domainSize : Fin n → Nat
-  topoOrder  : List (Fin n)
   -- Invariants
   obs_sub        : ∀ nd, obsParents nd ⊆ parents nd
   obs_eq_nondec  : ∀ nd, (¬ ∃ a, kind nd = .decision a) → obsParents nd = parents nd
   utility_domain : ∀ nd a, kind nd = .utility a → domainSize nd = 1
   nonutility_pos : ∀ nd, (¬ ∃ a, kind nd = .utility a) → 0 < domainSize nd
-  topo_nodup     : topoOrder.Nodup
-  topo_length    : topoOrder.length = n
-  topo_acyclic   : ∀ (i : Fin topoOrder.length),
-    ∀ p ∈ parents (topoOrder[i]),
-      ∃ j : Fin topoOrder.length, j.val < i.val ∧ topoOrder[j] = p
+  acyclic        : DAG.Acyclic (· ∈ parents ·)
 
 variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
+
+/-- Node `a` is an ancestor of node `b` in the DAG: there is a directed path
+from `a` to `b` through the parent relation. -/
+def Struct.IsAncestor (S : Struct Player n) (a b : Fin n) : Prop :=
+  Relation.TransGen (· ∈ S.parents ·) a b
+
+/-- `IsAncestor` is irreflexive (no node is its own ancestor). -/
+theorem Struct.isAncestor_irrefl (S : Struct Player n) (nd : Fin n) :
+    ¬ S.IsAncestor nd nd :=
+  S.acyclic nd
+
+/-- If `a` is a parent of `b`, then `a` is an ancestor of `b`. -/
+theorem Struct.parent_isAncestor (S : Struct Player n) {a b : Fin n}
+    (h : a ∈ S.parents b) : S.IsAncestor a b :=
+  Relation.TransGen.single h
+
+/-- Ancestry is transitive. -/
+theorem Struct.isAncestor_trans (S : Struct Player n) {a b c : Fin n}
+    (hab : S.IsAncestor a b) (hbc : S.IsAncestor b c) : S.IsAncestor a c :=
+  Relation.TransGen.trans hab hbc
+
+-- ============================================================================
+-- Topological orders
+-- ============================================================================
+
+/-- A topological order for a MAID: a permutation of all nodes that respects the
+parent relation (every parent appears before its child). -/
+abbrev TopologicalOrder (S : Struct Player n) := DAG.TopologicalOrder S.parents
+
+/-- Acyclicity guarantees at least one topological order exists. -/
+theorem topologicalOrder_exists (S : Struct Player n) :
+    Nonempty (TopologicalOrder S) :=
+  DAG.topologicalOrder_of_acyclic S.acyclic
+
+-- ============================================================================
+-- Node subtypes and assignments
+-- ============================================================================
 
 /-- Chance node subtype. -/
 abbrev ChanceNode (S : Struct Player n) := {nd : Fin n // S.kind nd = .chance}
@@ -70,25 +114,6 @@ theorem Struct.dom_pos (S : Struct Player n) (nd : Fin n) :
   · obtain ⟨a, ha⟩ := h
     rw [S.utility_domain nd a ha]; exact Nat.one_pos
   · exact S.nonutility_pos nd h
-
-/-- Every node appears in the topological order. -/
-theorem Struct.topo_mem (S : Struct Player n) (nd : Fin n) :
-    nd ∈ S.topoOrder := by
-  have hfs : S.topoOrder.toFinset = Finset.univ := by
-    apply Finset.eq_univ_of_card
-    rw [List.toFinset_card_of_nodup S.topo_nodup, S.topo_length, Fintype.card_fin]
-  rw [← List.mem_toFinset]
-  rw [hfs]
-  exact Finset.mem_univ nd
-
-/-- Perfect recall for a MAID: for each player, every later decision node
-    (in topo order) observes earlier decision nodes and their observations. -/
-def Struct.PerfectRecall (S : Struct Player n) : Prop :=
-  ∀ (p : Player) (d₁ d₂ : Fin n),
-    S.kind d₁ = .decision p → S.kind d₂ = .decision p →
-    (∃ i₁ i₂ : Fin S.topoOrder.length,
-      S.topoOrder[i₁] = d₁ ∧ S.topoOrder[i₂] = d₂ ∧ i₁.val < i₂.val) →
-    d₁ ∈ S.obsParents d₂ ∧ S.obsParents d₁ ⊆ S.obsParents d₂
 
 /-- Typed value at a node. -/
 abbrev Val (S : Struct Player n) (nd : Fin n) := Fin (S.domainSize nd)
@@ -145,6 +170,22 @@ instance (S : Struct Player n) (p : Player) : DecidableEq (Infoset S p) :=
   inferInstanceAs (DecidableEq (Σ (d : DecisionNode S p), Cfg S (S.obsParents d.val)))
 
 -- ============================================================================
+-- Perfect recall — defined on DAG ancestry
+-- ============================================================================
+
+/-- Perfect recall for a MAID: for each player, if decision node `d₁` is an
+ancestor of decision node `d₂` (both owned by the same player), then `d₂`
+observes `d₁` and all of `d₁`'s observed parents.
+
+This is the standard MAID perfect recall condition, stated purely in terms of
+DAG ancestry without reference to any particular topological order. -/
+def Struct.PerfectRecall (S : Struct Player n) : Prop :=
+  ∀ (p : Player) (d₁ d₂ : Fin n),
+    S.kind d₁ = .decision p → S.kind d₂ = .decision p →
+    S.IsAncestor d₁ d₂ →
+    d₁ ∈ S.obsParents d₂ ∧ S.obsParents d₁ ⊆ S.obsParents d₂
+
+-- ============================================================================
 -- Semantics — evaluation
 -- ============================================================================
 
@@ -181,10 +222,13 @@ noncomputable def evalStep (S : Struct Player n) (sem : Sem S) (pol : Policy S)
     (nodeDist S sem pol nd a).bind (fun v =>
       PMF.pure (updateAssign a nd v)))
 
-/-- Joint distribution over total assignments, by folding over the topological order. -/
+/-- Joint distribution over total assignments, by folding over a topological order.
+
+The result is independent of which topological order is used (see
+`evalAssignDist_order_independent`). -/
 noncomputable def evalAssignDist (S : Struct Player n) (sem : Sem S) (pol : Policy S)
-    : PMF (TAssign S) :=
-  S.topoOrder.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S))
+    (σ : TopologicalOrder S) : PMF (TAssign S) :=
+  σ.order.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S))
 
 /-- Payoff for a player: sum of utility values over that player's utility nodes. -/
 noncomputable def utilityOf (S : Struct Player n) (sem : Sem S)
@@ -196,13 +240,15 @@ noncomputable def utilityOf (S : Struct Player n) (sem : Sem S)
 -- Game — KernelGame bridge
 -- ============================================================================
 
-/-- Convert a typed MAID to a kernel-based game. -/
-noncomputable def toKernelGame (S : Struct Player n) (sem : Sem S) :
-    GameTheory.KernelGame Player where
+/-- Convert a MAID to a kernel-based game, using a given topological order for
+evaluation. By `evalAssignDist_order_independent`, the choice of order does
+not affect the resulting game. -/
+noncomputable def toKernelGame (S : Struct Player n) (sem : Sem S)
+    (σ : TopologicalOrder S) : GameTheory.KernelGame Player where
   Strategy := PlayerStrategy S
   Outcome := TAssign S
   utility := fun a => utilityOf S sem a
-  outcomeKernel := fun σ => evalAssignDist S sem σ
+  outcomeKernel := fun pol => evalAssignDist S sem pol σ
 
 -- ============================================================================
 -- Order-independence — swap lemmas
@@ -314,14 +360,15 @@ theorem foldl_swapAdj {α β : Type*} (f : α → β → α) (init : α) (l : Li
         simp only [List.getElem_cons_succ] at this
         exact this)
 
-/-- Swapping two adjacent independent nodes in the topological order
-    doesn't change `evalAssignDist`. -/
+/-- Swapping two adjacent independent nodes in a topological order doesn't change
+the evaluation distribution. -/
 theorem evalAssignDist_swap_adj {S : Struct Player n} (sem : Sem S) (pol : Policy S)
-    (i : Nat) (hi : i + 1 < S.topoOrder.length)
-    (hne : S.topoOrder[i]'(by omega) ≠ S.topoOrder[i + 1]'hi)
-    (hindep : NoDirectEdge S (S.topoOrder[i]'(by omega)) (S.topoOrder[i + 1]'hi)) :
-    evalAssignDist S sem pol =
-    (swapAdj S.topoOrder i hi).foldl (evalStep S sem pol) (PMF.pure (defaultAssign S)) := by
+    (σ : TopologicalOrder S)
+    (i : Nat) (hi : i + 1 < σ.order.length)
+    (hne : σ.order[i]'(by omega) ≠ σ.order[i + 1]'hi)
+    (hindep : NoDirectEdge S (σ.order[i]'(by omega)) (σ.order[i + 1]'hi)) :
+    evalAssignDist S sem pol σ =
+    (swapAdj σ.order i hi).foldl (evalStep S sem pol) (PMF.pure (defaultAssign S)) := by
   simp only [evalAssignDist]
   exact foldl_swapAdj _ _ _ i hi (fun acc =>
     evalStep_swap sem pol _ _ hne hindep acc)

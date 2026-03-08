@@ -44,23 +44,25 @@ private theorem frontierList_mem_publicFrontierAlphabet
     (S : Struct Player n) (cfg : FrontierCfg S) :
     frontierList S cfg ∈ publicFrontierAlphabet S := by
   classical
-  exact InfoModel.mem_listsUpToLength_of_forall_mem
-    (s := (Finset.univ : Finset (Fin n)))
-    (n := n)
-    (xs := frontierList S cfg)
-    (Nat.le_trans (List.length_filter_le _ _) (by simp [S.topo_length]))
-    (fun x _ => by simp)
+  apply InfoModel.mem_listsUpToLength_of_forall_mem
+  · show (frontierList S cfg).length ≤ n
+    simp only [frontierList, Finset.length_toList]
+    exact Nat.le_trans (Finset.card_le_univ _) (by simp [Fintype.card_fin])
+  · intro x _; simp
 
 private theorem frontierInfosets_mem_privateFrontierAlphabet
     (S : Struct Player n) (cfg : FrontierCfg S) (p : Player) :
     frontierInfosets S cfg p ∈ privateFrontierAlphabet S p := by
   classical
-  exact InfoModel.mem_listsUpToLength_of_forall_mem
-    (s := (Finset.univ : Finset (Infoset S p)))
-    (n := n)
-    (xs := frontierInfosets S cfg p)
-    (Nat.le_trans (List.length_filterMap_le _ _) (by simp [S.topo_length]))
-    (fun x _ => by simp)
+  apply InfoModel.mem_listsUpToLength_of_forall_mem
+  · show (frontierInfosets S cfg p).length ≤ n
+    have hlen : ∀ (l : List (Fin n)), l.length ≤ n →
+        ∀ (f : Fin n → Option (Infoset S p)), (l.filterMap f).length ≤ n :=
+      fun l hl f => Nat.le_trans (List.length_filterMap_le f l) hl
+    have hfl : (frontier S cfg).toList.length ≤ n := by
+      rw [Finset.length_toList]; exact Nat.le_trans (Finset.card_le_univ _) (by simp)
+    exact Nat.le_trans (List.length_filterMap_le _ _) hfl
+  · intro x _; exact Finset.mem_univ _
 
 /-- The canonical bounded-history cover is sufficient for the compiled MAID up
 to horizon `k`. -/

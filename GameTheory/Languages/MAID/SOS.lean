@@ -44,9 +44,9 @@ noncomputable def frontier (S : Struct Player n) (cfg : FrontierCfg S) : Finset 
     classical
     exact Finset.filter (enabled S cfg) Finset.univ
 
-/-- Frontier nodes listed in topological order. -/
+/-- Frontier nodes listed in canonical order. -/
 noncomputable def frontierList (S : Struct Player n) (cfg : FrontierCfg S) : List (Fin n) :=
-  S.topoOrder.filter (fun nd => nd ∈ frontier S cfg)
+  (frontier S cfg).toList
 
 /-- Player action alphabet for one frontier step: a partial assignment over all
 of that player's decision nodes. Only currently enabled decision nodes are read
@@ -64,7 +64,7 @@ def restrictCfg {S : Struct Player n}
 frontier decision nodes owned by `p`, with their observed-parent values. -/
 noncomputable def frontierInfosets (S : Struct Player n) (cfg : FrontierCfg S) (p : Player) :
     List (Infoset S p) :=
-  S.topoOrder.filterMap fun nd =>
+  (frontier S cfg).toList.filterMap fun nd =>
     if hEnabled : nd ∈ frontier S cfg then
       match hk : S.kind nd with
       | .decision q =>
