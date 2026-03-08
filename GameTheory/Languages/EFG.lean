@@ -4,6 +4,9 @@ import GameTheory.Languages.EFG.Compile
 import GameTheory.Languages.EFG.Kuhn
 import GameTheory.Languages.EFG.Theorems
 import GameTheory.Languages.EFG.Examples
+import GameTheory.Languages.EFG.Refinements
+import GameTheory.Languages.EFG.OneShotDeviation
+import GameTheory.Languages.EFG.Zermelo
 
 /-!
 # GameTheory.Languages.EFG

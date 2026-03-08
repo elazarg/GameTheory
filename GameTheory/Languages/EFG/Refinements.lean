@@ -1,0 +1,416 @@
+import GameTheory.Languages.EFG.Syntax
+import Mathlib.Tactic.Linarith
+
+/-!
+# Concrete Sequential Refinements for Extensive-Form Games
+
+Concrete definitions for subgame perfection and related refinements,
+building on the schema-based definitions in `EFG.lean`.
+
+## Main definitions
+
+- `IsSubgame` — concrete subgame identification (informationally closed subtree)
+- `IsSubgamePerfectEq` — subgame-perfect equilibrium using the concrete predicate
+- `IsPerfectInfo` — perfect-information trees (each info-set appears at most once)
+
+## Main theorems
+
+- `isSubgame_root` — the root is always a subgame of itself
+- `isSubgame_terminal` — terminal nodes are subgames (when reachable)
+- `spe_implies_nash` — SPE implies Nash equilibrium in the strategic form
+- `spe_implies_isNash` — SPE implies Nash (EU formulation)
+- `perfectInfo_isSubgame_decision` — in perfect-info games, every decision node
+  starts a subgame
+- Entry deterrence game: SPE and non-SPE Nash verification
+-/
+
+namespace EFG
+
+open GameTheory
+open Math.Probability
+
+-- ============================================================================
+-- Helper lemmas
+-- ============================================================================
+
+theorem decisionNodeIn_reachBy {S : InfoStructure} {Outcome : Type}
+    {p : S.Player} {I : S.Infoset p} {t : GameTree S Outcome}
+    (h : DecisionNodeIn I t) :
+    ∃ (hist : List (HistoryStep S)) (next : S.Act I → GameTree S Outcome),
+      ReachBy hist t (.decision I next) := by
+  induction h with
+  | root next => exact ⟨[], next, .here _⟩
+  | in_chance k μ hk next' b _hIn ih =>
+    obtain ⟨hist, next, hReach⟩ := ih
+    exact ⟨HistoryStep.chance k b :: hist, next, .chance b hReach⟩
+  | in_decision I' next' a _hIn ih =>
+    obtain ⟨hist, next, hReach⟩ := ih
+    exact ⟨HistoryStep.action _ I' a :: hist, next, .action a hReach⟩
+
+theorem reachBy_deterministic {S : InfoStructure} {Outcome : Type}
+    {h : List (HistoryStep S)} {root t₁ t₂ : GameTree S Outcome}
+    (hr₁ : ReachBy h root t₁) (hr₂ : ReachBy h root t₂) : t₁ = t₂ := by
+  induction hr₁ generalizing t₂ with
+  | nil =>
+      cases hr₂
+      rfl
+  | @cons a rest s u t₁ hstep₁ htail₁ ih =>
+      cases hr₂ with
+      | @cons _ _ _ u₂ _ hstep₂ htail₂ =>
+          have hu : u = u₂ := by
+            cases a with
+            | chance k b =>
+                rcases hstep₁ with ⟨μ₁, hk₁, next₁, hs₁, hu₁⟩
+                rcases hstep₂ with ⟨μ₂, hk₂, next₂, hs₂, hu₂⟩
+                cases hs₁
+                cases hs₂
+                simp [hu₁, hu₂]
+            | action p I a =>
+                rcases hstep₁ with ⟨next₁, hs₁, hu₁⟩
+                rcases hstep₂ with ⟨next₂, hs₂, hu₂⟩
+                cases hs₁
+                cases hs₂
+                simp [hu₁, hu₂]
+          subst hu
+          exact ih htail₂
+
+-- ============================================================================
+-- Concrete subgame identification
+-- ============================================================================
+
+def IsSubgame {S : InfoStructure} {Outcome : Type}
+    (root t : GameTree S Outcome) : Prop :=
+  (∃ h, ReachBy h root t) ∧
+  ∀ (p : S.Player) (I : S.Infoset p), DecisionNodeIn I t →
+    ∀ (h : List (HistoryStep S)) (next : S.Act I → GameTree S Outcome),
+      ReachBy h root (.decision I next) → ∃ h', ReachBy h' t (.decision I next)
+
+theorem isSubgame_root {S : InfoStructure} {Outcome : Type}
+    (root : GameTree S Outcome) : IsSubgame root root :=
+  ⟨⟨[], .here root⟩, fun _ _ _ h _next hR => ⟨h, hR⟩⟩
+
+theorem isSubgame_terminal {S : InfoStructure} {Outcome : Type}
+    {root : GameTree S Outcome} {z : Outcome} {h₀ : List (HistoryStep S)}
+    (hreach : ReachBy h₀ root (.terminal z)) : IsSubgame root (.terminal z) :=
+  ⟨⟨h₀, hreach⟩, fun _ _ hIn _ _ _ => absurd hIn (by intro h; cases h)⟩
+
+-- ============================================================================
+-- Concrete SPE and bridge theorems
+-- ============================================================================
+
+def EFGGame.IsSubgamePerfectEq (G : EFGGame) (σ : PureProfile G.inf) : Prop :=
+  G.IsSubgamePerfect (IsSubgame G.tree) σ
+
+theorem spe_implies_nash (G : EFGGame) (σ : PureProfile G.inf)
+    (h : G.IsSubgamePerfectEq σ) :
+    G.toStrategicKernelGame.IsNashFor
+      (KernelGame.euPref G.toStrategicKernelGame) σ :=
+  h G.tree (isSubgame_root G.tree)
+
+theorem spe_implies_isNash (G : EFGGame) (σ : PureProfile G.inf)
+    (h : G.IsSubgamePerfectEq σ) : G.toStrategicKernelGame.IsNash σ := by
+  rw [KernelGame.IsNash_iff_IsNashFor_eu]; exact spe_implies_nash G σ h
+
+-- ============================================================================
+-- Terminal subgames are trivially Nash
+-- ============================================================================
+
+theorem terminal_isNashFor_euPref {G : EFGGame} (z : G.Outcome)
+    (σ : PureProfile G.inf) :
+    (G.withTree (.terminal z)).toStrategicKernelGame.IsNashFor
+      (KernelGame.euPref G.toStrategicKernelGame) σ := by
+  refine
+    (((G.withTree (.terminal z)).toStrategicKernelGame.toGameForm.isNashFor_iff
+      (KernelGame.euPref G.toStrategicKernelGame) σ).2 ?_)
+  intro who s'
+  simp [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree]
+
+-- ============================================================================
+-- Perfect information
+-- ============================================================================
+
+def IsPerfectInfo {S : InfoStructure} {Outcome : Type}
+    (t : GameTree S Outcome) : Prop :=
+  ∀ (h₁ h₂ : List (HistoryStep S)) (p : S.Player) (I : S.Infoset p)
+    (next₁ next₂ : S.Act I → GameTree S Outcome),
+    ReachBy h₁ t (.decision I next₁) → ReachBy h₂ t (.decision I next₂) →
+    h₁ = h₂ ∧ HEq next₁ next₂
+
+theorem perfectInfo_implies_perfectRecall {S : InfoStructure} {Outcome : Type}
+    (t : GameTree S Outcome) (hpi : IsPerfectInfo t) : PerfectRecall t :=
+  PerfectRecall_single_infoSet t hpi
+
+theorem perfectInfo_isSubgame_decision {S : InfoStructure} {Outcome : Type}
+    (root : GameTree S Outcome) (hpi : IsPerfectInfo root)
+    {p : S.Player} (I : S.Infoset p) (next : S.Act I → GameTree S Outcome)
+    {h₀ : List (HistoryStep S)} (hreach : ReachBy h₀ root (.decision I next)) :
+    IsSubgame root (.decision I next) := by
+  refine ⟨⟨h₀, hreach⟩, fun q J hInSub h' next' hReachRoot => ?_⟩
+  obtain ⟨h_sub, nextJ, hReachSub⟩ := decisionNodeIn_reachBy hInSub
+  obtain ⟨hEq, _⟩ := hpi (h₀ ++ h_sub) h' q J _ next'
+    (ReachBy_append hreach hReachSub) hReachRoot
+  rw [← hEq] at hReachRoot
+  obtain ⟨mid, hMid1, hMid2⟩ := ReachBy_split h₀ h_sub hReachRoot
+  have hmid := reachBy_deterministic hreach hMid1; subst hmid
+  exact ⟨h_sub, hMid2⟩
+
+-- ============================================================================
+-- Locality: evaluation depends only on info-sets in the tree
+-- ============================================================================
+
+/-- If two profiles agree on all info-sets appearing in a tree,
+    they produce the same outcome distribution. -/
+theorem evalDist_eq_of_agree {S : InfoStructure} {Outcome : Type}
+    (t : GameTree S Outcome) (σ₁ σ₂ : PureProfile S)
+    (hagree : ∀ (p : S.Player) (I : S.Infoset p),
+      DecisionNodeIn I t → σ₁ p I = σ₂ p I) :
+    t.evalDist (pureToBehavioral σ₁) = t.evalDist (pureToBehavioral σ₂) := by
+  induction t with
+  | terminal z => rfl
+  | chance k μ hk next ih =>
+    simp only [evalDist_chance]
+    congr 1; funext b
+    exact ih b (fun p I hIn => hagree p I (.in_chance k μ hk next b hIn))
+  | decision I next ih =>
+    simp only [evalDist_decision, pureToBehavioral]
+    have hact : σ₁ _ I = σ₂ _ I := hagree _ I (.root next)
+    rw [hact]
+    congr 1; funext a
+    exact ih a (fun p J hIn => hagree p J (.in_decision I next a hIn))
+
+-- ============================================================================
+-- IsPerfectInfo inherited by subtrees
+-- ============================================================================
+
+theorem IsPerfectInfo_subtree {S : InfoStructure} {Outcome : Type}
+    {root : GameTree S Outcome} (hpi : IsPerfectInfo root)
+    {h : List (HistoryStep S)} {t : GameTree S Outcome}
+    (hreach : ReachBy h root t) : IsPerfectInfo t := by
+  intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
+  have hr₁' := ReachBy_append hreach hr₁
+  have hr₂' := ReachBy_append hreach hr₂
+  obtain ⟨heq, hnext⟩ := hpi _ _ p I next₁ next₂ hr₁' hr₂'
+  exact ⟨List.append_cancel_left heq, hnext⟩
+
+/-- In a perfect-info decision node, the root info-set does not appear
+    in any subtree. -/
+theorem perfectInfo_root_not_in_subtree {S : InfoStructure} {Outcome : Type}
+    {p : S.Player} {I : S.Infoset p}
+    {next : S.Act I → GameTree S Outcome}
+    (hpi : IsPerfectInfo (.decision I next))
+    {a : S.Act I}
+    (ha : DecisionNodeIn I (next a)) : False := by
+  obtain ⟨ha_hist, ha_next, ha_reach⟩ := decisionNodeIn_reachBy ha
+  have ra : ReachBy (HistoryStep.action p I a :: ha_hist)
+      (.decision I next) (.decision I ha_next) :=
+    .action a ha_reach
+  have rb : ReachBy [] (.decision I next) (.decision I next) := .here _
+  obtain ⟨heq, _⟩ := hpi _ _ p I ha_next next ra rb
+  exact absurd heq (by simp)
+
+-- ============================================================================
+-- Reachability → decision-node witness
+-- ============================================================================
+
+theorem decisionNodeIn_of_reachBy {S : InfoStructure} {Outcome : Type}
+    {h : List (HistoryStep S)} {t : GameTree S Outcome}
+    {p : S.Player} {I : S.Infoset p} {next : S.Act I → GameTree S Outcome}
+    (hr : ReachBy h t (.decision I next)) : DecisionNodeIn I t := by
+  let rec go {h : List (HistoryStep S)} {t : GameTree S Outcome}
+      {p : S.Player} {I : S.Infoset p} {next : S.Act I → GameTree S Outcome}
+      (hreach : ReachBy h t (.decision I next)) : DecisionNodeIn I t := by
+    cases hreach with
+    | nil _ =>
+        exact .root next
+    | @cons a _ _ _ _ hstep hr' =>
+        cases a with
+        | chance k b =>
+            rcases hstep with ⟨μ, hk, next', hs, hu⟩
+            cases hs
+            subst hu
+            exact .in_chance _ _ _ _ b (go hr')
+        | action p I' a =>
+            rcases hstep with ⟨next', hs, hu⟩
+            cases hs
+            subst hu
+            exact .in_decision _ _ a (go hr')
+  exact go hr
+
+-- ============================================================================
+-- Entry Deterrence Game
+-- ============================================================================
+
+abbrev entryS : InfoStructure where
+  n := 2; Infoset := fun _ => Unit; arity := fun _ _ => 2
+  arity_pos := fun _ _ => by omega
+
+noncomputable abbrev entryTree : GameTree entryS (Payoff entryS.Player) :=
+  .decision (p := (0 : Fin 2)) () fun
+    | 0 => .decision (p := (1 : Fin 2)) () fun
+      | 0 => .terminal (fun i => if i == (0 : Fin 2) then 2 else 2)
+      | 1 => .terminal (fun i => if i == (0 : Fin 2) then 0 else 0)
+    | 1 => .terminal (fun i => if i == (0 : Fin 2) then 1 else 3)
+
+noncomputable abbrev entryGame : EFGGame where
+  inf := entryS; Outcome := Payoff entryS.Player; tree := entryTree; utility := id
+
+def entrySPE : PureProfile entryS := fun _ _ => (0 : Fin 2)
+def entryNash : PureProfile entryS := fun _ _ => (1 : Fin 2)
+
+theorem entry_spe_eu_p0 :
+    entryGame.toStrategicKernelGame.eu entrySPE (0 : Fin 2) = 2 := by
+  simp [KernelGame.eu, EFGGame.toStrategicKernelGame,
+        GameTree.evalDist, pureToBehavioral, entrySPE, expect_pure]
+
+theorem entry_nash_eu_p0 :
+    entryGame.toStrategicKernelGame.eu entryNash (0 : Fin 2) = 1 := by
+  simp [KernelGame.eu, EFGGame.toStrategicKernelGame,
+        GameTree.evalDist, pureToBehavioral, entryNash, expect_pure]
+
+-- ============================================================================
+-- Nash proof tactic: simp + omega to close all Fin 2 EFG cases
+-- ============================================================================
+
+-- The key insight: after simp with Function.update reduces the profile,
+-- we need to also reduce `match`/`if` on Fin 2, `pureToBehavioral`, and
+-- `evalDist` on the resulting subtree. Using `simp` with the full set
+-- after the `rcases` on Fin 2 action value handles this.
+
+private theorem entryS_act_eq (a : Fin 2) : a = 0 ∨ a = 1 := by fin_cases a <;> simp
+
+-- ============================================================================
+-- SPE proof
+-- ============================================================================
+
+open Classical in
+theorem entrySPE_isSPE : entryGame.IsSubgamePerfectEq entrySPE := by
+  intro t ⟨⟨h, hReach⟩, _⟩
+  -- Exhaustively enumerate reachable subtrees via cases on ReachBy
+  cases hReach with
+  | nil =>
+    -- t = root (P0's decision)
+    intro who s'
+    fin_cases who <;> (
+      simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+        pureToBehavioral, evalDist_decision, GameForm.correlatedOutcome_pure,
+        GameForm.constantDeviationProfileFamily_deviate,
+        GameForm.constDeviateDistributionFn_pure]
+      rcases entryS_act_eq (s' ()) with h | h <;>
+        simp [Function.update, h, pureToBehavioral, GameTree.evalDist,
+              PMF.pure_bind, expect_pure, entrySPE])
+  | @cons a _ _ _ _ hstep hRest =>
+    cases a with
+    | chance k b =>
+        simp [HistoryStepStep] at hstep
+    | action p I a =>
+        rcases hstep with ⟨next, hs, hu⟩
+        cases hs
+        subst hu
+        fin_cases a
+        · -- a = 0 (Enter): subtree is P1's decision
+          cases hRest with
+          | nil =>
+            -- t = P1's decision subtree
+            intro who s'
+            fin_cases who <;> (
+              simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+                pureToBehavioral, evalDist_decision, GameForm.correlatedOutcome_pure,
+                GameForm.constantDeviationProfileFamily_deviate,
+                GameForm.constDeviateDistributionFn_pure]
+              rcases entryS_act_eq (s' ()) with h | h <;>
+                simp [Function.update, h, evalDist_terminal, expect_pure, entrySPE])
+          | @cons b _ _ _ _ hstep' hRest' =>
+            -- Terminal after P1's action
+            cases b with
+            | chance k c =>
+                simp [HistoryStepStep] at hstep'
+            | action p' I' b =>
+                rcases hstep' with ⟨next', hs', hu'⟩
+                cases hs'
+                subst hu'
+                fin_cases b <;> (
+                  cases hRest' with
+                  | nil => exact terminal_isNashFor_euPref _ _
+                  | @cons a'' _ _ _ _ hstep'' _ =>
+                      cases a'' <;> simp [HistoryStepStep] at hstep'')
+        · -- a = 1 (Stay Out): terminal
+          cases hRest with
+          | nil => exact terminal_isNashFor_euPref _ _
+          | @cons a'' _ _ _ _ hstep'' _ =>
+              cases a'' <;> simp [HistoryStepStep] at hstep''
+
+open Classical in
+theorem entryNash_isNash : entryGame.toStrategicKernelGame.IsNash entryNash := by
+  intro who s'
+  fin_cases who <;> (
+    simp only [KernelGame.eu, EFGGame.toStrategicKernelGame,
+      GameTree.evalDist, pureToBehavioral, evalDist_decision, PMF.pure_bind,
+      expect_pure, entryNash]
+    rcases entryS_act_eq (s' ()) with h | h <;>
+      simp [Function.update, h, pureToBehavioral, GameTree.evalDist,
+            evalDist_decision, PMF.pure_bind, evalDist_terminal, expect_pure, entryNash])
+
+open Classical in
+theorem entryNash_not_spe : ¬ entryGame.IsSubgamePerfectEq entryNash := by
+  intro hSPE
+  have hSub : IsSubgame entryTree
+      (.decision (p := (1 : Fin 2)) () fun
+        | 0 => .terminal (fun i => if i == (0 : Fin 2) then 2 else 2)
+        | 1 => .terminal (fun i => if i == (0 : Fin 2) then 0 else 0)) := by
+    constructor
+    · exact ⟨_, .action (0 : Fin 2) (.here _)⟩
+    · intro p I hIn hist next' hReach
+      cases hIn with
+      | root _ =>
+        rcases ReachBy_decision_inv hReach with ⟨_, hp, _, _⟩ | ⟨a, rest, _, hRest⟩
+        · exact absurd hp (by decide)
+        · fin_cases a
+          · simp only [Fin.isValue] at hRest
+            rcases ReachBy_decision_inv hRest with ⟨rfl, _, hI, hN⟩ | ⟨b, _, _, hb⟩
+            · -- next' and the P1 subtree children match via HEq
+              have hN' := (eq_of_heq hN).symm; subst hN'
+              exact ⟨[], .here _⟩
+            · fin_cases b <;> exact False.elim (ReachBy_terminal_absurd hb)
+          · exact False.elim (ReachBy_terminal_absurd hRest)
+      | in_decision _ _ a hDeeper =>
+        fin_cases a <;> exact absurd hDeeper (by intro h; cases h)
+  have hNash := hSPE _ hSub
+  have hNash' := ((entryGame.withTree
+      (.decision (p := (1 : Fin 2)) () fun
+        | 0 => .terminal (fun i => if i == (0 : Fin 2) then 2 else 2)
+        | 1 => .terminal (fun i => if i == (0 : Fin 2) then 0 else 0))
+      ).toStrategicKernelGame.toGameForm.isNashFor_iff
+      entryGame.toStrategicKernelGame.euPref entryNash).1 hNash
+  have h1 := hNash' (1 : Fin 2) (fun _ => (0 : Fin 2))
+  simp only [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+    pureToBehavioral, evalDist_decision] at h1
+  simp [Function.update, entryNash, evalDist_terminal, expect_pure] at h1
+  linarith
+
+theorem entrySPE_isNash : entryGame.toStrategicKernelGame.IsNash entrySPE :=
+  spe_implies_isNash entryGame entrySPE entrySPE_isSPE
+
+-- ============================================================================
+-- Perfect recall
+-- ============================================================================
+
+private theorem entry_playerHistory_nil :
+    ∀ h {p : entryS.Player} (I : entryS.Infoset p)
+    (next : entryS.Act I → GameTree entryS (Payoff entryS.Player)),
+    ReachBy h entryTree (.decision I next) →
+    playerHistory entryS p h = [] := by
+  intro h p I next hr
+  rcases ReachBy_decision_inv hr with ⟨rfl, _, _, _⟩ | ⟨a, rest, rfl, hr'⟩
+  · rfl
+  · fin_cases a
+    · simp only [Fin.isValue] at hr'
+      rcases ReachBy_decision_inv hr' with ⟨rfl, rfl, _, _⟩ | ⟨b, _, rfl, hr''⟩
+      · simp [playerHistory]
+      · fin_cases b <;> exact False.elim (ReachBy_terminal_absurd hr'')
+    · exact False.elim (ReachBy_terminal_absurd hr')
+
+theorem entry_perfectRecall : PerfectRecall entryTree := by
+  intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
+  rw [entry_playerHistory_nil h₁ I next₁ hr₁, entry_playerHistory_nil h₂ I next₂ hr₂]
+
+end EFG

@@ -2,6 +2,7 @@ import Math.Probability
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
 import GameTheory.Core.ObsModel
+import Semantics.TransitionTrace
 
 /-!
 # GameTheory.Model.SemanticForm
