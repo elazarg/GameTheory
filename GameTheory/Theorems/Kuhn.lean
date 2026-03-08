@@ -1,5 +1,5 @@
-import GameTheory.Theorems.KuhnCore
-import GameTheory.Theorems.KuhnMixedToBehavioral
+import GameTheory.Theorems.Kuhn.Core
+import GameTheory.Theorems.Kuhn.MixedToBehavioral
 import GameTheory.Model.Lemmas.HistoryCover
 
 namespace GameTheory

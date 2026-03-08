@@ -1,4 +1,4 @@
-import GameTheory.Theorems.KuhnCore
+import GameTheory.Theorems.Kuhn.Core
 import GameTheory.Model.Lemmas.PerfectRecall
 import GameTheory.Model.Lemmas.LocalHistories
 import GameTheory.Model.Lemmas.LocalConditioning
