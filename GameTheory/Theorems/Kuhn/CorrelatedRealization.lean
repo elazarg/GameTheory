@@ -2190,4 +2190,183 @@ theorem kuhn_mixed_to_behavioral_decomposed
 
 end Hierarchy
 
+/-! ## Stochastic observation model
+
+`SObsModel` is the correct compilation target for game languages: the step
+function is a **deterministic** map from `(joint action, state)` to `PMF σ`.
+This replaces the pair `(ObsModel, Dynamics)` — the nondeterministic step
+relation and its separate stochastic refinement — with a single stochastic
+transition.
+
+All theorems above are restated on `SObsModel` via conversion to the existing
+`(ObsModel, Dynamics)` formulation. -/
+
+/-- Stochastic observation model. The step function deterministically maps
+a joint action and current state to a distribution over next states.
+This replaces the `ObsModel + Dynamics` pair. -/
+structure SObsModel (ι σ : Type) (Act : ι → Type) where
+  /-- Initial state. -/
+  init : σ
+  /-- Stochastic transition: given joint action and state, produce a distribution
+  over next states. This is a deterministic function — no nondeterminism. -/
+  step : (∀ i, Option (Act i)) → σ → PMF σ
+  /-- Per-player observation type. -/
+  Obs : ι → Type
+  /-- Per-player observation function on states. -/
+  observe : (i : ι) → σ → Obs i
+
+namespace SObsModel
+
+variable {ι σ : Type} {Act : ι → Type}
+
+/-- Joint (possibly inactive) action profile. -/
+abbrev JointAction (_ : SObsModel ι σ Act) := ∀ i, Option (Act i)
+
+/-- Convert to the nondeterministic `ObsModel` by taking PMF support as step relation. -/
+def toObsModel (O : SObsModel ι σ Act) : ObsModel ι σ Act where
+  toSM := { init := O.init, step := fun a s t => (O.step a s) t ≠ 0 }
+  Obs := O.Obs
+  observe := O.observe
+
+/-- The stochastic step is trivially a `Dynamics` on the derived `ObsModel`:
+`nextState` is `O.step`, and soundness is the identity. -/
+def toDynamics (O : SObsModel ι σ Act) : ObsModel.Dynamics O.toObsModel where
+  nextState := O.step
+  nextState_sound := fun _ _ _ h => h
+
+/-! ### Derived definitions via conversion -/
+
+/-- Player-local visible trace. -/
+abbrev LocalTrace (O : SObsModel ι σ Act) (i : ι) := O.toObsModel.LocalTrace i
+
+/-- Project a state trace to player `i`'s observation trace. -/
+def projectStates (O : SObsModel ι σ Act) (i : ι) (ss : List σ) : O.LocalTrace i :=
+  O.toObsModel.projectStates i ss
+
+/-- Observation equivalence. -/
+def obsEq (O : SObsModel ι σ Act) (i : ι) (s t : σ) : Prop :=
+  O.toObsModel.obsEq i s t
+
+/-- Deterministic profile over local visible history. -/
+abbrev PureProfile (O : SObsModel ι σ Act) := O.toObsModel.PureProfile
+
+/-- Behavioral (stochastic) profile over local visible history. -/
+abbrev BehavioralProfile (O : SObsModel ι σ Act) := O.toObsModel.BehavioralProfile
+
+/-- Correlated behavioral profile. -/
+abbrev BehavioralProfileCorr (O : SObsModel ι σ Act) := O.toObsModel.BehavioralProfileCorr
+
+/-- Lift a pure profile to behavioral. -/
+noncomputable def pureToBehavioral (O : SObsModel ι σ Act) (π : PureProfile O) :
+    BehavioralProfile O :=
+  ObsModel.pureToBehavioral O.toObsModel π
+
+/-! ### Stochastic execution (no separate Dynamics) -/
+
+variable [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
+
+/-- Joint-action distribution induced by a behavioral profile.
+Delegates to `ObsModel.Dynamics.jointActionDist`. -/
+noncomputable def jointActionDist (O : SObsModel ι σ Act)
+    (b : BehavioralProfile O) (ss : List σ) : PMF O.JointAction :=
+  ObsModel.Dynamics.jointActionDist (O := O.toObsModel) b ss
+
+/-- One stochastic step: sample action from profile, then step. -/
+noncomputable def stepDist (O : SObsModel ι σ Act)
+    (b : BehavioralProfile O) (ss : List σ) : PMF σ :=
+  O.toDynamics.stepDist b ss
+
+/-- Bounded run distribution under behavioral profile. -/
+noncomputable def runDist (O : SObsModel ι σ Act)
+    (k : Nat) (b : BehavioralProfile O) : PMF (List σ) :=
+  O.toDynamics.runDist k b
+
+/-- Pure-profile run distribution. -/
+noncomputable def runDistPure (O : SObsModel ι σ Act)
+    (k : Nat) (π : PureProfile O) : PMF (List σ) :=
+  O.toDynamics.runDistPure k π
+
+/-- The pure step function: directly applies `O.step` at the deterministic action. -/
+noncomputable def spureStep (O : SObsModel ι σ Act) (π : PureProfile O)
+    (ss : List σ) : PMF σ :=
+  pureStep O.toDynamics π ss
+
+/-! ### Recall predicates
+
+All recall predicates on `SObsModel` are defined as the corresponding
+predicates on `toObsModel`, where the nondeterministic step relation is
+`(O.step a s) t ≠ 0`. -/
+
+/-- Per-step action recall: the joint action is determined by the observation
+transition. Uses `(O.step a s) t ≠ 0` as the transition predicate. -/
+def SPerStepActionRecall (O : SObsModel ι σ Act) : Prop :=
+  _root_.GameTheory.PerStepActionRecall O.toObsModel
+
+/-- Per-step player recall (all players). -/
+def SPerStepPlayerRecall (O : SObsModel ι σ Act) : Prop :=
+  _root_.GameTheory.PerStepPlayerRecall O.toObsModel
+
+/-- Per-step recall for a single player. -/
+def SPlayerStepRecall (O : SObsModel ι σ Act) (i : ι) : Prop :=
+  _root_.GameTheory.PlayerStepRecall O.toObsModel i
+
+/-- Trace-level per-step player recall (weakest syntactic condition for Kuhn). -/
+def STracePlayerStepRecall (O : SObsModel ι σ Act) (i : ι) : Prop :=
+  _root_.GameTheory.TracePlayerStepRecall (O := O.toObsModel) i
+
+/-- Observation recall. -/
+def SObsRecall (O : SObsModel ι σ Act) : Prop :=
+  _root_.GameTheory.ObsModel.ObsRecall O.toObsModel
+
+/-- Action recall. -/
+def SActionRecall (O : SObsModel ι σ Act) : Prop :=
+  _root_.GameTheory.ObsModel.ActionRecall O.toObsModel
+
+/-- Perfect recall. -/
+def SPerfectRecall (O : SObsModel ι σ Act) : Prop :=
+  _root_.GameTheory.ObsModel.PerfectRecall O.toObsModel
+
+/-! ### Main theorems -/
+
+open Math.PMFProduct in
+set_option linter.unusedFintypeInType false in
+/-- **Correlated realization** on `SObsModel`: no assumptions needed. -/
+theorem scorrelated_realization (O : SObsModel ι σ Act)
+    [Fintype (PureProfile O)]
+    (ν : PMF (PureProfile O)) (k : Nat) :
+    ∃ m : Nat → List σ → PMF O.JointAction,
+      Math.ParameterizedChain.seqRun (fun n ss =>
+        (m n ss).bind (fun a => O.step a ((ss.getLast?).getD O.init)))
+        O.init k =
+      ν.bind (Math.ParameterizedChain.pureRun (pureStep O.toDynamics) O.init k) :=
+  correlated_realization O.toDynamics ν k
+
+open Classical Math.PMFProduct in
+set_option linter.unusedFintypeInType false in
+/-- **Kuhn M→B** on `SObsModel` under the weakest syntactic condition:
+`PSAR + ∀ i, TracePlayerStepRecall`. No separate `Dynamics` parameter. -/
+theorem skuhn_mixed_to_behavioral_trace (O : SObsModel ι σ Act)
+    [∀ i, Fintype (O.LocalTrace i)]
+    (hPSAR : O.SPerStepActionRecall)
+    (hTPSR : ∀ i, O.STracePlayerStepRecall i)
+    (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+    (k : Nat) :
+    ∃ β : BehavioralProfile O,
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) :=
+  kuhn_mixed_to_behavioral_trace hPSAR hTPSR O.toDynamics μ k
+
+open Classical Math.PMFProduct in
+set_option linter.unusedFintypeInType false in
+/-- **Kuhn M→B** on `SObsModel` under PSPR. -/
+theorem skuhn_mixed_to_behavioral_pspr (O : SObsModel ι σ Act)
+    [∀ i, Fintype (O.LocalTrace i)]
+    (hPSPR : O.SPerStepPlayerRecall)
+    (μ : ∀ i, PMF (O.LocalTrace i → Option (Act i)))
+    (k : Nat) :
+    ∃ β : BehavioralProfile O,
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) :=
+  kuhn_mixed_to_behavioral_pspr hPSPR O.toDynamics μ k
+
+end SObsModel
+
 end GameTheory
