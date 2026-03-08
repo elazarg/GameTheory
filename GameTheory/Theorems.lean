@@ -1,5 +1,5 @@
 import GameTheory.Theorems.Kuhn
-import GameTheory.Theorems.CorrelatedRealization
+import GameTheory.Theorems.Kuhn.CorrelatedRealization
 import GameTheory.Theorems.Sequential
 import GameTheory.Theorems.MAID
 
