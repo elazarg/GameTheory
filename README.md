@@ -101,10 +101,17 @@ The EFG language has its own self-contained tree-based proof (`EFG/Kuhn.lean`).
 MAID and Sequential languages compile to `ObsModel` and apply the generic
 theorems directly.
 
-The Intrinsic form (`Languages/Intrinsic/`) formalizes an alternative
-perspective based on Heymann, De Lara, and Chancelier (2020), where information
-is represented as equivalence relations on a product configuration space rather
-than as tree-based information sets.
+The Intrinsic form (`Languages/Intrinsic/`) formalizes Witsenhausen's intrinsic
+model following Heymann, De Lara, and Chancelier (2020), where information is
+represented as equivalence relations on a product configuration space rather
+than as tree-based information sets. Key results:
+
+- **Proposition 12**: product-mixed → behavioral (unconditional)
+- **Proposition 13**: behavioral → product-mixed via product PMF over
+  information classes, with the marginal identity proved using an equivalence
+  `PureStrategy ≃ (InfoClass → Decision)`
+- **Theorem 16 (Kuhn's equivalence)**: for any mixed strategy there exists a
+  product-mixed strategy with matching behavioral marginals
 
 ## Auctions and mechanism design
 
