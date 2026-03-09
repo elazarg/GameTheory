@@ -137,13 +137,30 @@ noncomputable def mixedToBehavioral (G : WGame) (p : G.P)
     2. Behavioral → Product-mixed (Proposition 13)
     The perfect recall hypothesis ensures the marginal and conditional
     versions agree, making the composition valid. -/
-theorem kuhn_equivalence (G : WGame) (hsolv : Solvable G.toWModel)
-    (ϕ : ConfigOrdering G.toWModel) (hcausal : Causal G.toWModel)
-    (p : G.P) (hpr : PerfectRecall G ϕ p) (μ : MixedStrategy G p) :
+theorem kuhn_equivalence (G : WGame) (_hsolv : Solvable G.toWModel)
+    (ϕ : ConfigOrdering G.toWModel) (_hcausal : Causal G.toWModel)
+    (p : G.P) (_hpr : PerfectRecall G ϕ p) (μ : MixedStrategy G p) :
     ∃ π : ProductMixedStrategy G p,
       ∀ (a : G.agents p) (h : G.toWModel.H) (u : G.U a),
         (productMixedToBehavioral G p π a).kernel h u =
         (mixedToBehavioral G p μ a).kernel h u := by
-  sorry
+  -- Step 1: extract the behavioral strategy from the mixed strategy
+  let β := mixedToBehavioral G p μ
+  -- Step 2: realize it as product-mixed (Proposition 13)
+  obtain ⟨π, hπ⟩ := behavioral_realizes_productMixed G p β
+  -- Step 3: show the marginals agree
+  refine ⟨π, fun a h u => ?_⟩
+  -- productMixedToBehavioral gives (π a).map (fun s => s.act h)
+  -- We show this equals (β a).kernel h u via toOuterMeasure
+  change (productMixedToBehavioral G p π a).kernel h u = (β a).kernel h u
+  simp only [productMixedToBehavioral]
+  rw [show ((π a).map (fun s => s.act h)) u =
+    (π a).toOuterMeasure {s | s.act h = u} from by
+    rw [PMF.toOuterMeasure_apply_fintype, PMF.map]
+    simp only [PMF.bind_apply, Set.indicator, Set.mem_setOf_eq, tsum_fintype]
+    congr 1; funext s
+    simp only [Function.comp, PMF.pure_apply]
+    split <;> simp_all [eq_comm]]
+  exact hπ a h u
 
 end Intrinsic

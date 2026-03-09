@@ -1,5 +1,6 @@
 import GameTheory.Languages.Intrinsic.Syntax
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
+import Math.PMFProduct
 
 /-!
 # Strategy Types for Games in Intrinsic Form
@@ -18,13 +19,14 @@ Heymann–De Lara–Chancelier (2020):
 
 ## Key results
 
-- `Proposition12`: product-mixed → behavioral (the induced behavioral
-  strategy, equation 24)
-- `Proposition13`: behavioral → product-mixed (the realization, equation 25)
+- `productMixedToBehavioral`: product-mixed → behavioral (Proposition 12)
+- `behavioral_realizes_productMixed`: behavioral → product-mixed (Proposition 13)
 - These two directions hold unconditionally (no perfect recall needed).
 -/
 
 namespace Intrinsic
+
+open Math.PMFProduct
 
 variable (G : WGame)
 
@@ -95,8 +97,122 @@ noncomputable def productMixedToBehavioral (G : WGame) (p : G.P)
   exact s.meas h h' hequiv
 
 -- ============================================================================
+-- Information classes and strategy equivalence
+-- ============================================================================
+
+/-- The information quotient for agent `a`: configurations modulo the
+    agent's information equivalence. Each element represents an
+    information set. -/
+abbrev InfoClass (M : WModel) (a : M.A) : Type :=
+  Quotient (M.info a)
+
+open Classical in
+noncomputable instance (M : WModel) (a : M.A) : Fintype (InfoClass M a) :=
+  Quotient.fintype (M.info a)
+
+@[ext] theorem PureStrategy.ext {M : WModel} {a : M.A}
+    {s t : PureStrategy M a} (h : s.act = t.act) : s = t := by
+  cases s; cases t; simp_all
+
+/-- Build a pure strategy from a function on information classes. -/
+def PureStrategy.ofQuotientFun (M : WModel) (a : M.A)
+    (f : InfoClass M a → M.U a) : PureStrategy M a where
+  act := fun h => f ⟦h⟧
+  meas := fun h h' hequiv => by
+    show f ⟦h⟧ = f ⟦h'⟧
+    congr 1
+    exact Quotient.sound hequiv
+
+/-- Extract the quotient function from a pure strategy. -/
+noncomputable def PureStrategy.toQuotientFun (M : WModel) (a : M.A)
+    (s : PureStrategy M a) : InfoClass M a → M.U a :=
+  Quotient.lift s.act (fun h h' hequiv => s.meas h h' hequiv)
+
+theorem PureStrategy.ofQuotientFun_toQuotientFun (M : WModel) (a : M.A)
+    (s : PureStrategy M a) :
+    PureStrategy.ofQuotientFun M a (PureStrategy.toQuotientFun M a s) = s := by
+  ext1
+  funext h
+  simp [ofQuotientFun, toQuotientFun]
+
+theorem PureStrategy.toQuotientFun_ofQuotientFun (M : WModel) (a : M.A)
+    (f : InfoClass M a → M.U a) :
+    PureStrategy.toQuotientFun M a (PureStrategy.ofQuotientFun M a f) = f := by
+  ext q
+  induction q using Quotient.inductionOn with
+  | h x => simp [ofQuotientFun, toQuotientFun]
+
+/-- Pure strategies for agent `a` are equivalent to functions from
+    information classes to decisions. -/
+noncomputable def pureStrategyEquiv (M : WModel) (a : M.A) :
+    PureStrategy M a ≃ (InfoClass M a → M.U a) where
+  toFun := PureStrategy.toQuotientFun M a
+  invFun := PureStrategy.ofQuotientFun M a
+  left_inv := PureStrategy.ofQuotientFun_toQuotientFun M a
+  right_inv := PureStrategy.toQuotientFun_ofQuotientFun M a
+
+open Classical in
+noncomputable instance (M : WModel) (a : M.A) : Fintype (PureStrategy M a) :=
+  Fintype.ofEquiv _ (pureStrategyEquiv M a).symm
+
+-- ============================================================================
 -- Behavioral → Product-mixed (Proposition 13)
 -- ============================================================================
+
+/-- The behavioral kernel descends to a well-defined PMF on each information
+    class (it is constant on equivalence classes by measurability). -/
+noncomputable def BehavioralAgentStrategy.classKernel
+    {M : WModel} {a : M.A} (β : BehavioralAgentStrategy M a) :
+    InfoClass M a → PMF (M.U a) :=
+  Quotient.lift β.kernel (fun h h' hequiv => β.meas h h' hequiv)
+
+@[simp] theorem BehavioralAgentStrategy.classKernel_mk
+    {M : WModel} {a : M.A} (β : BehavioralAgentStrategy M a) (h : M.H) :
+    β.classKernel ⟦h⟧ = β.kernel h :=
+  rfl
+
+open Classical in
+/-- The product PMF over information classes. -/
+noncomputable def behavioralProductPMF {M : WModel} {a : M.A}
+    (β : BehavioralAgentStrategy M a) :
+    PMF (InfoClass M a → M.U a) :=
+  pmfPi β.classKernel
+
+open Classical in
+/-- Transport the product PMF on quotient functions to a PMF on pure strategies. -/
+noncomputable def behavioralToPureStrategyPMF {M : WModel} {a : M.A}
+    (β : BehavioralAgentStrategy M a) :
+    PMF (PureStrategy M a) :=
+  (behavioralProductPMF β).map (PureStrategy.ofQuotientFun M a)
+
+/-- The preimage of `{s | s.act h = u}` under `ofQuotientFun` is
+    `{f | f ⟦h⟧ = u}`. -/
+theorem ofQuotientFun_preimage_act {M : WModel} {a : M.A}
+    (h : M.H) (u : M.U a) :
+    PureStrategy.ofQuotientFun M a ⁻¹' {s | s.act h = u} =
+    {f | f ⟦h⟧ = u} := by
+  ext f
+  simp [PureStrategy.ofQuotientFun, Set.mem_setOf_eq]
+
+open Classical in
+/-- Key lemma: the probability that a randomly chosen pure strategy
+    assigns decision `u` at configuration `h` equals `β(u | h)`.
+
+    This is the marginal identity (equation 25). -/
+theorem behavioralToPureStrategyPMF_marginal {M : WModel} {a : M.A}
+    (β : BehavioralAgentStrategy M a) (h : M.H) (u : M.U a) :
+    (behavioralToPureStrategyPMF β).toOuterMeasure {s | s.act h = u} =
+    β.kernel h u := by
+  -- Step 1: map + toOuterMeasure = toOuterMeasure of preimage
+  rw [behavioralToPureStrategyPMF, PMF.toOuterMeasure_map_apply]
+  -- Step 2: preimage simplification
+  rw [ofQuotientFun_preimage_act]
+  -- Step 3: expand toOuterMeasure as fintype sum
+  rw [PMF.toOuterMeasure_apply_fintype]
+  -- Step 4: this is exactly pmfPi_coord_mass
+  simp only [Set.indicator, Set.mem_setOf_eq, behavioralProductPMF]
+  rw [pmfPi_coord_mass β.classKernel ⟦h⟧ u]
+  simp
 
 /-- Proposition 13: A behavioral strategy can be "realized" as a
     product-mixed strategy. For each agent, we construct a probability
@@ -110,7 +226,8 @@ theorem behavioral_realizes_productMixed (G : WGame) (p : G.P)
     ∃ π : ProductMixedStrategy G p,
       ∀ (a : G.agents p) (h : G.toWModel.H) (u : G.toWModel.U a),
         (π a).toOuterMeasure {s | s.act h = u} =
-        (β a).kernel h u := by
-  sorry
+        (β a).kernel h u :=
+  ⟨fun a => behavioralToPureStrategyPMF (β a),
+    fun a h u => behavioralToPureStrategyPMF_marginal (β a) h u⟩
 
 end Intrinsic
