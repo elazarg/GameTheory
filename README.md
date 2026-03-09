@@ -1,142 +1,135 @@
 # GameTheory (Lean 4)
 
-Formalized finite game theory in Lean 4, centered on a single stochastic game model.
+A formalization of finite game theory in Lean 4 / Mathlib, covering normal-form
+games, extensive-form games, multi-agent influence diagrams (MAIDs), and their
+interconnections.
 
-This project develops a reusable finite-game-theory foundation across multiple
-representations, with one semantic target model used to share definitions and
-proofs. The emphasis is not on isolated model-specific developments, but on
-proving core concepts once and transporting them cleanly.
+The library is organized around a single semantic target — `KernelGame` — that
+packages strategy spaces, stochastic outcomes, and utility. Solution concepts
+like Nash equilibrium, dominance, and correlated equilibrium are defined once on
+this shared abstraction, then inherited by every concrete representation through
+compilation and bridging.
 
-## Major Theorems Proved
+## Theorems
 
-The library includes formal proofs of standard finite-game results, including:
-- existence of mixed Nash equilibria in finite games,
-- finite two-player zero-sum minimax,
-- backward induction/Zermelo-style existence in finite perfect-information trees,
-- Kuhn-style mixed/behavioral equivalence under perfect recall assumptions,
-- correlated and coarse correlated equilibrium existence and relations,
-- one-shot deviation principle formulations for sequential settings.
+Formal proofs of standard results in finite game theory:
 
-Scope is intentionally discrete:
-- probabilities are `PMF` (finite/discrete distributions),
-- expected utility is over finite supports,
-- no continuous strategy spaces or measure-theoretic probability.
+- **Nash existence** — every finite game has a mixed Nash equilibrium
+  (via Brouwer fixed point on product simplices)
+- **Minimax** — von Neumann's minimax theorem for finite two-player zero-sum games
+- **Kuhn's theorem** — equivalence of mixed and behavioral strategies under
+  perfect recall, proved on a semantic model layer with step-independence and
+  measure-factorization lemmas, then transferred to EFG and MAID representations
+  via bridges
+- **Zermelo / backward induction** — finite perfect-information games have
+  pure subgame-perfect equilibria
+- **One-shot deviation principle** — SPE characterization via single-step
+  deviations
+- **Correlated equilibrium existence** — every finite game has a correlated
+  equilibrium
+- **MAID → EFG perfect recall preservation** — a MAID with perfect recall
+  produces an EFG tree with perfect recall, using DAG topological ordering
 
-## Update/Decidability Policy
+## Core abstractions
 
-For any definition or theorem whose statement uses `Function.update`, this
-library now requires an explicit `DecidableEq` instance on the index type
-(typically `[DecidableEq ι]`). This matches mathlib practice and avoids
-instance-coherence mismatches between `Classical.propDecidable` and concrete
-instances (for example `instDecidableEqFin`).
+| Abstraction | Role |
+|---|---|
+| `GameForm` | Utility-free game: strategies, outcomes, stochastic kernel. Solution concept templates (`IsNashFor`, `WeaklyDominatesFor`, …) live here. |
+| `KernelGame` | `GameForm` + utility function. All EU-based solution concepts (`IsNash`, `IsDominant`, …) are defined here. |
+| `InfoModel` | State-based sequential game model with observations, actions, and signals. Major theorems (Kuhn, ODP) are stated at this level. |
 
-Practical rule:
-- use explicit `[DecidableEq ι]` at the statement boundary;
-- use `classical` only for genuine choice/noncomputable reasoning, not to
-  provide hidden decidability for `update`.
+`Payoff ι` is just `ι → ℝ`. Probabilities are `PMF` (discrete distributions).
+There are no continuous strategy spaces or measure-theoretic foundations.
 
-## What This Library Is
+## Solution concepts
 
-At the center is a stochastic strategic-form object (`KernelGame`) that
-packages strategy spaces, outcome uncertainty, and utility. Normal-form,
-extensive-form, MAID-style, and protocol-style developments are connected to
-this shared form through translation/bridge constructions.
+The `Concepts/` directory defines ~40 interrelated notions, including:
 
-Because of this design, notions such as equilibrium, dominance, and incentive
-constraints are defined semantically rather than representation-by-representation.
-The recent deviation-first refactor makes deviation operators explicit in that
-semantic layer, which keeps correlated-equilibrium and regret developments
-uniform and easier to generalize.
+- Nash equilibrium, strict Nash, approximate (ε-)Nash
+- Dominant strategies, strict/weak dominance, iterated elimination
+- Correlated and coarse correlated equilibrium
+- Best response, best-response dynamics
+- Security strategies (maximin), minimax guarantees, saddle points
+- Potential games (exact, ordinal, weighted), finite improvement property
+- Rationalizability, dominance solvability
+- Evolutionary stable strategies (ESS)
+- Price of anarchy, individual rationality, social welfare
+- Zero-sum, constant-sum, symmetric, and team game properties
 
-## Forms and Semantics
+Key relationships are proved: dominant strategies are Nash, Nash EU dominates
+the security level, ESS implies Nash, Nash equilibria are correlated equilibria,
+potential game maximizers are Nash.
 
-The library treats game forms as different presentations of the same underlying
-mathematical object:
-- normal-form descriptions of simultaneous strategic choice,
-- extensive/protocol descriptions of sequentially unfolding choices and information,
-- graph-structured decision models (MAID-like).
+## Representations and bridges
 
-All of these are interpreted into one expected-utility semantics over finite
-probability distributions. This is the key abstraction boundary in the codebase.
+The library treats game representations as *languages* with a uniform pipeline:
+`Syntax → SOS → Compile → KernelGame`.
 
-The current direction is **semantics-first theorem statements**:
-- abstract theorem schemas are stated over semantic/distributional objects,
-- format-specific theorems (`EFG`, `MAID`, `NFG`, protocol-style) are treated as
-  instantiations/corollaries via compiler and bridge lemmas.
+| Language | What it models |
+|---|---|
+| **NFG** | Simultaneous strategic choice (normal form) |
+| **EFG** | Sequential play with information sets (extensive form) |
+| **MAID** | Graph-structured decisions with chance, decision, and utility nodes |
+| **Sequential** | Protocol-based sequential games, repeated games, stochastic games |
+| **Intrinsic** | Witsenhausen's intrinsic model — information as equivalence relations on a product configuration space |
 
-This keeps representation-specific assumptions local to compilation/bridging,
-while concept-level reasoning stays reusable across formats.
+Bridges connect representations: MAID → EFG (topological unrolling, preserving
+perfect recall and evaluation semantics), EFG ↔ NFG (strategic form extraction
+and simultaneous-game embedding), and all languages compile to `KernelGame`.
 
-## Concepts and Proof Style
+## Kuhn's theorem — proof architecture
 
-Most proofs are structured around a small set of semantic ideas:
-- no-profitable-deviation conditions (best response, Nash, correlated notions),
-- order/comparison arguments on expected utility,
-- decomposition lemmas for finite products and pushforwards,
-- bridge lemmas that move statements across equivalent representations.
+The proof of Kuhn's equivalence theorem is worth highlighting for its structure.
+Rather than working directly on tree syntax, the proof operates on a semantic
+`InfoModel` layer that captures the essential ingredients:
 
-This leads to a “prove once, reuse across forms” workflow: representation-specific
-work is mostly in the bridges, while concept proofs live in the shared layer.
+- **Step independence**: actions at different steps are probabilistically
+  independent given the history
+- **Atomic factorization**: outcome distributions decompose along the
+  sequential structure
+- **Perfect recall decomposition**: perfect recall = observation recall ∧
+  action recall, tracked through reachability witnesses carrying observation
+  and action traces
 
-## Representation Interoperability
+The behavioral → mixed direction constructs a joint distribution over pure
+profiles by taking products of per-step marginals; an involution/swap argument
+establishes the needed independence. The result is then transferred to EFG and
+MAID via their compilation bridges.
 
-The design goal is semantic reuse:
-- each concrete representation has a translation to `KernelGame`,
-- generic theorems are proved once and apply after translation,
-- bridge theorems preserve outcome/utility-distribution semantics where appropriate.
+The Intrinsic form (`Languages/Intrinsic/`) formalizes an alternative
+perspective based on Heymann, De Lara, and Chancelier (2020), where information
+is represented as equivalence relations on a product configuration space rather
+than as tree-based information sets.
 
-In practice, this means model-specific developments can focus on modeling and
-structural assumptions, while solution concepts and many existence/characterization
-results come from the shared semantic layer.
+## Auctions and mechanism design
 
-## Build and Toolchain
+- First-price, second-price (Vickrey), all-pay, and VCG auctions
+- Quasi-linear utility decomposition (allocation + payment)
+- Bayesian games with type spaces
+- Incentive compatibility (dominant-strategy and Bayesian)
+- Revelation principle
+- Social choice and aggregation
 
-Toolchain and dependencies:
-- Lean: `leanprover/lean4:v4.27.0` (`lean-toolchain`)
-- Mathlib: `v4.27.0` (`lakefile.toml`)
-- local dependency: `fixed-point-theorems-lean4` (`FixedPointTheorems`)
+## Mathematical infrastructure
 
-Build:
+The `Math/` directory provides supporting libraries for discrete probability
+(`PMF` products, marginals, conditioning), directed acyclic graphs (acyclicity,
+topological orders), function/finset update lemmas, and local-to-global
+optimization.
+
+## Build
+
+Requires Lean 4 (v4.27.0) and Mathlib (v4.27.0). Also depends on
+[`fixed-point-theorems-lean4`](https://github.com/ldct/fixed-point-theorems-lean4)
+for Brouwer/Kakutani.
 
 ```bash
-lake build
+lake build          # full build
+lake build GameTheory  # library only
 ```
 
-Targeted build:
+## Non-goals
 
-```bash
-lake build GameTheory
-```
-
-## Minimal Usage
-
-Import the full library:
-
-```lean
-import GameTheory
-```
-
-Or import specific components:
-
-```lean
-import GameTheory.Concepts.SolutionConcepts
-import GameTheory.Concepts.NashExistenceMixed
-import GameTheory.EFG.Kuhn
-```
-
-## Future Work (Textbook Theorems Within Scope)
-
-- **Sequential equilibrium existence (finite extensive-form games)**:
-  Kreps-Wilson style existence with explicit belief consistency.
-- **Perfect Bayesian equilibrium existence (finite extensive-form games)**:
-  after fixing a concrete Bayes-consistency notion in this library.
-- **Shapley theorem for discounted stochastic games (finite state/action)**:
-  existence of stationary equilibrium/value in finite discounted stochastic games.
-
-## Non-Goals
-
-- Infinite/continuous games
-- Measure-theoretic probability foundations
-- Algorithmic equilibrium computation tooling
-
-This repository is focused on formal theorem development for finite game theory.
+- Infinite or continuous strategy spaces
+- Measure-theoretic probability
+- Algorithmic equilibrium computation
