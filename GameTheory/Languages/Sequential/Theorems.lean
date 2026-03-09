@@ -1,6 +1,7 @@
 import GameTheory.Languages.Sequential.Syntax
 import GameTheory.Languages.Sequential.SOS
 import GameTheory.Languages.Sequential.Compile
+import GameTheory.Languages.Sequential.CompileObs
 import GameTheory.Languages.Sequential.Kuhn
 
 /-!

@@ -36,7 +36,8 @@ Formal proofs of standard results in finite game theory:
 |---|---|
 | `GameForm` | Utility-free game: strategies, outcomes, stochastic kernel. Solution concept templates (`IsNashFor`, `WeaklyDominatesFor`, …) live here. |
 | `KernelGame` | `GameForm` + utility function. All EU-based solution concepts (`IsNash`, `IsDominant`, …) are defined here. |
-| `InfoModel` | State-based sequential game model with observations, actions, and signals. Major theorems (Kuhn, ODP) are stated at this level. |
+| `ObsModel` | Observation-indexed actions over a `DSMachine`. Canonical model for Kuhn's theorem. |
+| `InfoModel` | State-based sequential game model with observations, actions, and signals. ODP and other sequential theorems are stated at this level. |
 
 `Payoff ι` is just `ι → ℝ`. Probabilities are `PMF` (discrete distributions).
 There are no continuous strategy spaces or measure-theoretic foundations.
@@ -79,22 +80,26 @@ and simultaneous-game embedding), and all languages compile to `KernelGame`.
 
 ## Kuhn's theorem — proof architecture
 
-The proof of Kuhn's equivalence theorem is worth highlighting for its structure.
-Rather than working directly on tree syntax, the proof operates on a semantic
-`InfoModel` layer that captures the essential ingredients:
+Kuhn's equivalence theorem (behavioral ↔ mixed strategies) is proved at the
+`ObsModel` level — a multi-player observation model over a deterministic
+stochastic machine (`DSMachine`). This is the canonical abstraction: players
+observe state through per-player observation functions, and actions are
+indexed by observations.
 
-- **Step independence**: actions at different steps are probabilistically
-  independent given the history
-- **Atomic factorization**: outcome distributions decompose along the
-  sequential structure
-- **Perfect recall decomposition**: perfect recall = observation recall ∧
-  action recall, tracked through reachability witnesses carrying observation
-  and action traces
+The proof decomposes into two independent directions:
 
-The behavioral → mixed direction constructs a joint distribution over pure
-profiles by taking products of per-step marginals; an involution/swap argument
-establishes the needed independence. The result is then transferred to EFG and
-MAID via their compilation bridges.
+- **B→M** (`BehavioralToMixed.lean`): constructs a joint distribution over
+  pure profiles by taking products of per-step marginals. An involution/swap
+  argument establishes scalar independence. **No recall conditions needed.**
+
+- **M→B** (`CorrelatedRealization.lean`): starts with a correlated mediator
+  realization (always exists), then decentralizes under progressively weaker
+  recall conditions. The weakest sufficient condition is
+  `TracePlayerStepRecall` (weaker than classical perfect recall).
+
+The EFG language has its own self-contained tree-based proof (`EFG/Kuhn.lean`).
+MAID and Sequential languages compile to `ObsModel` and apply the generic
+theorems directly.
 
 The Intrinsic form (`Languages/Intrinsic/`) formalizes an alternative
 perspective based on Heymann, De Lara, and Chancelier (2020), where information

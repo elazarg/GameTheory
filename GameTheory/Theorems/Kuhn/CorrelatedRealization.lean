@@ -2,35 +2,75 @@ import GameTheory.Theorems.Kuhn.ObsModel
 
 /-! # Correlated realization and Kuhn M→B
 
-All theorems are stated at the **trace distribution** level (`runDist`/`runDistPure`),
-not the outcome level. This makes them independent of the outcome projection
-(`outcomeOfStates`): apply any function `f : List State → X` to recover
-outcome-level, utility-level, or any other derived equality.
+## Conceptual overview
 
-## Correlated realization (no assumptions)
+Kuhn's theorem states that mixed strategies in sequential games can be
+implemented by independent behavioral strategies. The classical statement
+requires perfect recall; this development shows that weaker conditions suffice.
+
+The key insight is that global randomness over full plans can be pushed down
+to local decision points provided that each player can reconstruct their own
+action from the observable trace of play. The proof separates three independent
+concerns:
+
+1. **Realization of correlated plans** — always possible, no assumptions needed.
+2. **Observation factoring** — actions are recoverable from state transitions
+   (a property of the transition structure, not the observation model).
+3. **Player-local decentralization** — each player's factor depends only on
+   their own observation history (a property of the observation model).
+
+Perfect recall implies these conditions but is stronger than necessary.
+The weakest purely syntactic step-local condition sufficient for Kuhn in
+this framework is `TracePlayerStepRecall`.
+
+## Semantic level
+
+All theorems are stated at the **trace distribution** level (`runDist`/`runDistPure`),
+not the outcome level. This makes them independent of the outcome projection:
+apply any function `f : List State → X` to recover outcome-level, utility-level,
+or any other derived equality.
+
+## Proof pipeline
+
+### Step 1 — Correlated realization (no assumptions)
 
 For **any** joint distribution `ν : PMF (PureProfile O)` (not necessarily a product),
 there exists a **mediator** — a history-dependent correlated action recommendation —
 producing the same trace distribution. No structural assumptions are needed.
 
-## Decentralization hierarchy
+### Step 2 — Observation factoring (PSAR)
 
-Decentralizing the mediator into independent per-player behavioral strategies
-requires progressively stronger conditions:
+`PerStepActionRecall` states that the joint action at a transition can be
+recovered from the source and target observations. This is not about players
+remembering the past — it is about actions being implicitly encoded in state
+transitions. Under PSAR, the mediator factors through observations, and
+product input distributions yield product output distributions.
 
-- **PSAR** (`PerStepActionRecall`): mediator factors through observations;
-  product input → product output (coordination preservation)
-- **PSAR + PlayerStepRecall i**: each player's factor is obs-local
-- **PSPR** (`PerStepPlayerRecall = ∀ i, PlayerStepRecall O i`): full
-  decentralization into independent `BehavioralProfile`
+### Step 3 — Player-local decentralization
 
-The per-player condition admits two weakenings:
-- `ReachablePlayerStepRecall O i`: restricted to step-reachable states
-- `TracePlayerStepRecall O i`: restricted to states reached via traces
-  with equal full observation histories (tightest syntactic condition)
+Under `TracePlayerStepRecall i`, each player's own action is uniquely
+determined by their observation history along any reachable trace. This
+allows each player's factor of the correlated mediator to be expressed as
+a function of that player's observations alone.
 
-Both `PSPR` and `PerfectRecall` imply `∀ i, TracePlayerStepRecall O i`
-(neither implies the other). See the hierarchy section at the end.
+### Step 4 — Full decentralization
+
+Combining PSAR with `∀ i, TracePlayerStepRecall O i` yields full
+decentralization into an independent `BehavioralProfile`.
+
+## Recall condition hierarchy
+
+The per-player recall conditions form a decreasing chain of strength:
+
+1. `PlayerStepRecall i` — the player's action is uniquely determined at
+   every step where observations match, regardless of reachability.
+2. `ReachablePlayerStepRecall i` — same, restricted to step-reachable states.
+3. `TracePlayerStepRecall i` — same, restricted to states reached via traces
+   with identical observation histories (the weakest syntactic condition).
+
+`PerStepPlayerRecall` (PSPR) is `∀ i, PlayerStepRecall O i`.
+PSPR implies PSAR. `PerfectRecall` implies PSPR (and hence all conditions
+above), but PSPR does not imply `PerfectRecall`.
 
 ## Main theorem
 
@@ -39,32 +79,7 @@ Both `PSPR` and `PerfectRecall` imply `∀ i, TracePlayerStepRecall O i`
 any product distribution over pure profiles can be realized by an independent
 behavioral profile. Both `kuhn_mixed_to_behavioral_pspr` and
 `kuhn_mixed_to_behavioral_decomposed` are direct corollaries.
-
-## Design notes: action type parameterization
-
-The current `Act : ι → Type` is a per-player action alphabet that is state-independent.
-This is a simplification: in general, a player's available actions depend on the game
-state (or at least on the information set). Three alternative designs are worth considering:
-
-**B. Bundled action type with feasibility predicate.**
-Use a single type `Action` for all actions, with a predicate `Feasible : ι → σ → Action → Prop`
-constraining which actions are available at each state. The step function gives zero probability
-to infeasible actions. Profiles map `LocalTrace i → Action`, and recall predicates compare
-actions as elements of the same type. This is the standard game-theory encoding and avoids
-dependent types entirely. The tradeoff: `Action` is a "universal" type that may contain
-actions irrelevant to some players/states, and feasibility must be tracked as a side condition.
-
-**C. Observation-indexed action types.**
-The correct mathematical decomposition is `Act : ι → Obs i → Type`, where actions depend
-on the player's *observation* (information set), not the raw state. This avoids the type-theoretic
-problems of state-dependent actions (`Act : ι → σ → Type`) — since observations are the same
-within an information set, actions at obs-equivalent states share the same type. The structure
-becomes an observation predicate `Obs : ι → Type` paired with an LSM (labeled state machine)
-parameterized by per-observation actions. Recall predicates compare actions within the same
-observation type, eliminating the need for `HEq` or transport. The tradeoff: the `ObsModel`
-structure must be split into an observation layer and an action layer, with the action layer
-parameterized by observation values. This is architecturally cleaner but requires restructuring
-the `ObsModel` definition. -/
+-/
 
 set_option autoImplicit false
 

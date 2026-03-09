@@ -1,5 +1,6 @@
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.InfoModel.SemanticForm
+import Math.PMFProduct
 
 /-!
 # GameTheory.Languages.MAID.SOS
@@ -109,25 +110,35 @@ noncomputable def extendFrontier (S : Struct Player n) (cfg : FrontierCfg S)
       vals ⟨nd.1, by
         exact (Finset.mem_union.mp nd.2).resolve_left hOld⟩
 
-/-- A proposed frontier value is compatible with the MAID semantics and the
-players' simultaneous frontier controls. -/
+/-- Per-node distribution over values at a frontier node. Chance nodes sample
+from their CPDs, decision nodes use the player's action (defaulting to 0),
+and utility nodes take their deterministic value. -/
+noncomputable def nodeDistrib (S : Struct Player n) (sem : Sem S)
+    (cfg : FrontierCfg S) (acts : ∀ p : Player, Option (FrontierAct S p))
+    (nd : ↥(frontier S cfg)) : PMF (Val S nd.1) :=
+  have hEnabled : enabled S cfg nd.1 := by
+    have := nd.2; simp only [frontier, Finset.mem_filter, Finset.mem_univ, true_and] at this
+    exact this
+  match hk : S.kind nd.1 with
+  | .chance =>
+      sem.chanceCPD ⟨nd.1, hk⟩ (restrictCfg cfg (S.parents nd.1) hEnabled.2)
+  | .decision p =>
+      match acts p with
+      | some α =>
+          match α ⟨nd.1, hk⟩ with
+          | some v => PMF.pure v
+          | none   => PMF.pure ⟨0, S.dom_pos nd.1⟩
+      | none => PMF.pure ⟨0, S.dom_pos nd.1⟩
+  | .utility _ =>
+      PMF.pure (utilityValue S nd.1 ⟨_, hk⟩)
+
+/-- A proposed frontier value is allowed iff the per-node distribution assigns
+it nonzero probability. -/
 def FrontierValueAllowed (S : Struct Player n) (sem : Sem S)
     (cfg : FrontierCfg S)
     (acts : ∀ p : Player, Option (FrontierAct S p))
-    (nd : Fin n) (hnd : nd ∈ frontier S cfg) (v : Val S nd) : Prop :=
-  match hk : S.kind nd with
-  | .chance =>
-      let hParents : S.parents nd ⊆ cfg.assigned := by
-        intro x hx
-        have hen : enabled S cfg nd := by
-          simpa [frontier] using hnd
-        exact hen.2 hx
-      sem.chanceCPD ⟨nd, hk⟩ (restrictCfg cfg (S.parents nd) hParents) v ≠ 0
-  | .decision p =>
-      ∃ α : FrontierAct S p,
-        acts p = some α ∧ α ⟨nd, hk⟩ = some v
-  | .utility _ =>
-      v = utilityValue S nd ⟨_, hk⟩
+    (nd : ↥(frontier S cfg)) (v : Val S nd.1) : Prop :=
+  nodeDistrib S sem cfg acts nd v ≠ 0
 
 /-- One frontier step in the native MAID SOS semantics. -/
 inductive Step (S : Struct Player n) (sem : Sem S) :
@@ -136,7 +147,7 @@ inductive Step (S : Struct Player n) (sem : Sem S) :
       {acts : ∀ p : Player, Option (FrontierAct S p)}
       {vals : FrontierValues S cfg} :
       (∀ nd : ↥(frontier S cfg),
-        FrontierValueAllowed S sem cfg acts nd.1 nd.2 (vals nd)) →
+        FrontierValueAllowed S sem cfg acts nd (vals nd)) →
       Step S sem acts cfg (extendFrontier S cfg vals)
 
 /-- Reachability in the native frontier semantics. -/

@@ -64,10 +64,11 @@ def initialConfig (G : Protocol n S V A Sig) : Config G :=
 /-- One native small step of a protocol. Signal phases use the all-`none`
 action profile; action phases use the actual joint control. -/
 inductive Step (G : Protocol n S V A Sig) : JointControl n A → Config G → Config G → Prop where
-  | sample {k : Nat} {s : S} {r : Round n S V A Sig} {sig : JointSignal n Sig} :
+  | sample {k : Nat} {s : S} {r : Round n S V A Sig} {sig : JointSignal n Sig}
+      {acts : JointControl n A} :
       G.rounds[k]? = some r →
       (r.signal s) sig ≠ 0 →
-      Step G (fun _ => none) (.signal k s) (.action k s sig)
+      Step G acts (.signal k s) (.action k s sig)
   | act_more {k : Nat} {s next : S} {sig : JointSignal n Sig}
       {acts : JointControl n A} {r rNext : Round n S V A Sig} :
       G.rounds[k]? = some r →
@@ -80,6 +81,15 @@ inductive Step (G : Protocol n S V A Sig) : JointControl n A → Config G → Co
       next = r.transition s acts →
       G.rounds[k + 1]? = none →
       Step G acts (.action k s sig) (.terminal next)
+  | terminal {s : S} {acts : JointControl n A} :
+      Step G acts (.terminal s) (.terminal s)
+  | signal_stuck {k : Nat} {s : S} {acts : JointControl n A} :
+      G.rounds[k]? = none →
+      Step G acts (.signal k s) (.signal k s)
+  | action_stuck {k : Nat} {s : S} {sig : JointSignal n Sig}
+      {acts : JointControl n A} :
+      G.rounds[k]? = none →
+      Step G acts (.action k s sig) (.action k s sig)
 
 /-- Reachability in the native SOS semantics. -/
 abbrev ReachBy (G : Protocol n S V A Sig) :=
