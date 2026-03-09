@@ -83,4 +83,25 @@ theorem IsESS.strict_against_other_ess {u : S → S → ℝ} {s t : S}
   have hge2 := ht.1 s
   linarith
 
+-- ============================================================================
+-- ESS → Nash equilibrium bridge
+-- ============================================================================
+
+/-- Build a 2-player symmetric EU function from a payoff matrix `u`.
+    Player `i`'s payoff is `u (σ i) (σ (opponent i))`. -/
+def symmetricEU (u : S → S → ℝ) : (Fin 2 → S) → Fin 2 → ℝ :=
+  fun σ => ![u (σ 0) (σ 1), u (σ 1) (σ 0)]
+
+open Classical in
+/-- An ESS induces a Nash equilibrium of the corresponding 2-player
+    symmetric `ofEU` game at the symmetric profile. -/
+theorem IsESS.isNash_symmetric {u : S → S → ℝ} {s : S} (h : IsESS u s) :
+    (KernelGame.ofEU (fun _ : Fin 2 => S) (symmetricEU u)).IsNash (fun _ => s) := by
+  intro who s'
+  simp only [KernelGame.eu, KernelGame.ofEU, Math.Probability.expect_pure, ge_iff_le, id]
+  fin_cases who <;>
+    simp only [symmetricEU, Function.update, Fin.zero_eta, Fin.mk_one, Fin.isValue,
+      Matrix.cons_val_zero, Matrix.cons_val_one] <;>
+    exact h.1 s'
+
 end GameTheory

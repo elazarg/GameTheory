@@ -17,7 +17,7 @@ Converts a typed MAID (`GameTheory.Languages.MAID.Syntax`) into an extensive-for
 - Strategy correspondence
 - Evaluation equivalence
 - KernelGame equivalence
-- Perfect recall (sorry — needs adaptation for ancestry-based PerfectRecall)
+- Perfect recall preservation
 -/
 
 namespace MAID_EFG
@@ -405,13 +405,6 @@ theorem maidToEFG_udist {S : MAID.Struct (Fin m) n}
 -- Perfect recall
 -- ============================================================================
 
--- The perfect recall proof requires adaptation: the current MAID.Struct.PerfectRecall
--- uses S.IsAncestor (ancestry-based), but the bridge proof was written for a
--- topological-index-based definition. The core tree traversal lemmas
--- (buildTree_obs_stable, buildTree_decNode_mem) are independent of this issue.
--- The main proof (buildTree_playerHistory_eq → buildTree_perfectRecall) needs
--- restructuring to establish IsAncestor from the tree traversal context.
-
 /-- Stability: the info set's observation at `nd'` not in `nodes` equals `assign nd'`. -/
 private theorem buildTree_obs_stable
     {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S) (pol : MAID.Policy S)
@@ -481,19 +474,210 @@ private theorem buildTree_decNode_mem
         exact List.mem_cons.mpr (.inr (ih _ hr'))
     · exact List.mem_cons.mpr (.inr (ih _ hr))
 
+
 /-- The EFG tree built from a MAID with perfect recall has EFG perfect recall.
 
-**Status:** sorry — the proof needs restructuring for the ancestry-based
-`MAID.Struct.PerfectRecall`. The old proof used topological-index evidence;
-the new `PerfectRecall` requires `S.IsAncestor d₁ d₂`. The tree traversal
-lemmas (`buildTree_obs_stable`, `buildTree_decNode_mem`) are proved above;
-the gap is converting topo-order precedence to `IsAncestor` in the player
-history agreement induction. -/
+The proof proceeds by induction on the node list. At each node:
+- **Chance/utility**: the player history is unaffected; recurse.
+- **Decision (q ≠ p)**: not recorded in player p's history; recurse.
+- **Decision (q = p)**: by the strengthened MAID perfect recall (decision ordering +
+  observation), `nd` is an ancestor of the target info set's node, so `nd` is
+  observed. `buildTree_obs_stable` pins down the action, forcing both paths to
+  agree on the recorded (info-set, action) pair. -/
+private theorem buildTree_playerHistory_eq
+    {S : MAID.Struct (Fin m) n}
+    (hpr : MAID.Struct.PerfectRecall S)
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (nodes : List (Fin n)) (hnodup : nodes.Nodup)
+    (horder : ∀ (i j : Fin nodes.length),
+      S.IsAncestor nodes[i] nodes[j] → i.val < j.val)
+    (assign₁ assign₂ : MAID.TAssign S)
+    (p : Fin m) (I : MAID.Infoset S p)
+    {next₁ next₂ : (maidInfoS S).Act I → EFG.GameTree (maidInfoS S) (MAID.TAssign S)}
+    {h₁ h₂ : List (EFG.HistoryStep (maidInfoS S))}
+    (hassign : ∀ nd' ∈ S.obsParents I.1.val, assign₁ nd' = assign₂ nd')
+    (hr₁ : EFG.ReachBy h₁ (buildTree S sem pol nodes assign₁) (.decision I next₁))
+    (hr₂ : EFG.ReachBy h₂ (buildTree S sem pol nodes assign₂) (.decision I next₂)) :
+    EFG.playerHistory (maidInfoS S) p h₁ = EFG.playerHistory (maidInfoS S) p h₂ := by
+  induction nodes generalizing assign₁ assign₂ h₁ h₂ with
+  | nil =>
+    simp only [buildTree] at hr₁
+    exact False.elim (EFG.ReachBy_terminal_absurd hr₁)
+  | cons nd rest ih =>
+    have hnd_notin : nd ∉ rest := (List.nodup_cons.mp hnodup).1
+    have hrest_nodup : rest.Nodup := (List.nodup_cons.mp hnodup).2
+    have horder_rest : ∀ (i j : Fin rest.length),
+        S.IsAncestor rest[i] rest[j] → i.val < j.val := by
+      intro ⟨i, hi⟩ ⟨j, hj⟩ hanc
+      have hi1 : i + 1 < (nd :: rest).length := by simp [List.length_cons]; omega
+      have hj1 : j + 1 < (nd :: rest).length := by simp [List.length_cons]; omega
+      have hei : (nd :: rest)[i + 1]'hi1 = rest[i]'hi := List.getElem_cons_succ ..
+      have hej : (nd :: rest)[j + 1]'hj1 = rest[j]'hj := List.getElem_cons_succ ..
+      have hanc' : S.IsAncestor ((nd :: rest)[i + 1]'hi1) ((nd :: rest)[j + 1]'hj1) := by
+        rw [hei, hej]; exact hanc
+      have h := horder ⟨i + 1, hi1⟩ ⟨j + 1, hj1⟩ hanc'
+      exact Nat.lt_of_succ_lt_succ h
+    -- Unfold buildTree in hr₁ and case-split on S.kind nd
+    unfold buildTree at hr₁; split at hr₁
+    · -- chance node
+      next hk =>
+      -- Coerce hr₂ to the same match branch
+      unfold buildTree at hr₂
+      split at hr₂
+      · -- chance (matching)
+        obtain ⟨b₁, _, rfl, hr₁'⟩ := EFG.ReachBy_chance_inv' hr₁
+        obtain ⟨b₂, _, rfl, hr₂'⟩ := EFG.ReachBy_chance_inv' hr₂
+        simp only [EFG.playerHistory]
+        -- Propagate hassign through updateAssign
+        have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
+            MAID.updateAssign assign₁ nd b₁ nd' = MAID.updateAssign assign₂ nd b₂ nd' := by
+          intro nd' hnd'
+          by_cases hne : nd' = nd
+          · subst hne
+            exact (buildTree_obs_stable sem pol rest _ hr₁' hnd' hnd_notin).symm.trans
+              (buildTree_obs_stable sem pol rest _ hr₂' hnd' hnd_notin)
+          · rw [MAID.updateAssign_get_ne _ _ _ _ hne, MAID.updateAssign_get_ne _ _ _ _ hne]
+            exact hassign nd' hnd'
+        exact ih hrest_nodup horder_rest _ _ hassign' hr₁' hr₂'
+      · next p' heq => exact nomatch hk.symm.trans heq
+      · next a heq => exact nomatch hk.symm.trans heq
+    · -- decision node for player q
+      next q hk =>
+      -- Coerce hr₂ to the same match branch
+      unfold buildTree at hr₂
+      split at hr₂
+      · next heq => exact nomatch hk.symm.trans heq
+      · next q' hk' =>
+        -- decision (matching): unify q = q'
+        have hqq : q = q' := by injection hk.symm.trans hk'
+        subst hqq
+        -- Invert both ReachBy from decision nodes
+        cases EFG.ReachBy_decision_inv hr₁ with
+        | inl heq₁ =>
+          -- h₁ = []: current node IS info set I
+          obtain ⟨rfl, hpq, hI₁, _⟩ := heq₁; subst hpq
+          have hIeq := eq_of_heq hI₁; subst hIeq
+          cases EFG.ReachBy_decision_inv hr₂ with
+          | inl heq₂ => obtain ⟨rfl, _, _, _⟩ := heq₂; rfl
+          | inr hex₂ =>
+            -- h₂ continues past nd: I.1.val = nd but buildTree_decNode_mem says I.1.val ∈ rest
+            obtain ⟨_, _, rfl, hr₂'⟩ := hex₂
+            exfalso; exact hnd_notin (buildTree_decNode_mem sem pol rest _ hr₂')
+        | inr hex₁ =>
+          obtain ⟨a₁, _, rfl, hr₁'⟩ := hex₁
+          cases EFG.ReachBy_decision_inv hr₂ with
+          | inl heq₂ =>
+            -- Symmetric contradiction
+            obtain ⟨rfl, hpq, hI₂, _⟩ := heq₂; subst hpq
+            have hIeq := eq_of_heq hI₂; subst hIeq
+            exfalso; exact hnd_notin (buildTree_decNode_mem sem pol rest _ hr₁')
+          | inr hex₂ =>
+            -- Both paths take an action at nd and continue
+            obtain ⟨a₂, _, rfl, hr₂'⟩ := hex₂
+            simp only [EFG.playerHistory]
+            split
+            · -- q = p: this decision contributes to playerHistory
+              next hp =>
+              subst hp
+              -- nd and I.1.val are both player q's decision nodes, nd ≠ I.1.val
+              have hI_mem := buildTree_decNode_mem sem pol rest _ hr₁'
+              have hI_ne : I.1.val ≠ nd := fun heq => hnd_notin (heq ▸ hI_mem)
+              -- By decision ordering (PR.1), nd is an ancestor of I.1.val
+              have hanc : S.IsAncestor nd I.1.val := by
+                rcases hpr.1 q nd I.1.val hk I.1.2 hI_ne.symm with h | h
+                · exact h
+                · -- I.1.val ancestor of nd contradicts topo ordering
+                  exfalso
+                  obtain ⟨k, hk_lt, hk_eq⟩ := List.mem_iff_getElem.mp hI_mem
+                  have hk1 : k + 1 < (nd :: rest).length := by
+                    simp only [List.length_cons]; omega
+                  have := horder ⟨k + 1, hk1⟩ ⟨0, by simp only [List.length_cons]; omega⟩
+                    (by
+                      change S.IsAncestor (nd :: rest)[k + 1] (nd :: rest)[0]
+                      simp only [List.getElem_cons_succ, List.getElem_cons_zero, hk_eq]
+                      exact h)
+                  exact absurd this (Nat.not_lt_zero _)
+              -- By PR.2, nd ∈ obsParents I.1.val and obsParents nd ⊆ obsParents I.1.val
+              have ⟨hnd_obs, hobs_sub⟩ := hpr.2 q nd I.1.val hk I.1.2 hanc
+              -- The info sets at nd match (obsParents nd ⊆ obsParents I.1.val, hassign)
+              have hobs_eq : ∀ nd' ∈ S.obsParents nd, assign₁ nd' = assign₂ nd' :=
+                fun nd' hnd' => hassign nd' (hobs_sub hnd')
+              -- The actions match: obs_stable gives I.2 ⟨nd, hnd_obs⟩ = updateAssign ... nd = aᵢ
+              have he₁ := buildTree_obs_stable sem pol rest _ hr₁' hnd_obs hnd_notin
+              have he₂ := buildTree_obs_stable sem pol rest _ hr₂' hnd_obs hnd_notin
+              have ha_eq : a₁ = a₂ := by
+                have := he₁.symm.trans he₂
+                rwa [MAID.updateAssign_get_self, MAID.updateAssign_get_self] at this
+              subst ha_eq
+              -- The info set entries match
+              have hI_eq : (⟨⟨nd, hk⟩, MAID.projCfg assign₁ (S.obsParents nd)⟩ :
+                  MAID.Infoset S q) =
+                  ⟨⟨nd, hk⟩, MAID.projCfg assign₂ (S.obsParents nd)⟩ := by
+                congr 1; ext ⟨nd', hnd'⟩; simp only [MAID.projCfg]
+                exact congrArg _ (hobs_eq nd' hnd')
+              simp only [maidInfoS_infoset_eq, maidInfoS_act_eq, List.cons.injEq,
+                Sigma.mk.injEq, heq_eq_eq, and_true, true_and, hI_eq]
+              -- Propagate hassign through updateAssign
+              have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
+                  MAID.updateAssign assign₁ nd a₁ nd' =
+                  MAID.updateAssign assign₂ nd a₁ nd' := by
+                intro nd' hnd'
+                by_cases hne : nd' = nd
+                · subst hne; simp [MAID.updateAssign]
+                · rw [MAID.updateAssign_get_ne _ _ _ _ hne,
+                      MAID.updateAssign_get_ne _ _ _ _ hne]
+                  exact hassign nd' hnd'
+              exact ih hrest_nodup horder_rest _ _ hassign' hr₁' hr₂'
+            · -- q ≠ p: no contribution to playerHistory, just recurse
+              next hp =>
+              -- Same hassign propagation
+              have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
+                  MAID.updateAssign assign₁ nd a₁ nd' =
+                  MAID.updateAssign assign₂ nd a₂ nd' := by
+                intro nd' hnd'
+                by_cases hne : nd' = nd
+                · subst hne
+                  exact (buildTree_obs_stable sem pol rest _ hr₁' hnd' hnd_notin).symm.trans
+                    (buildTree_obs_stable sem pol rest _ hr₂' hnd' hnd_notin)
+                · rw [MAID.updateAssign_get_ne _ _ _ _ hne,
+                      MAID.updateAssign_get_ne _ _ _ _ hne]
+                  exact hassign nd' hnd'
+              exact ih hrest_nodup horder_rest _ _ hassign' hr₁' hr₂'
+      · next a' heq => exact nomatch hk.symm.trans heq
+    · -- utility node
+      next a hk =>
+      -- Coerce hr₂ to the same match branch
+      unfold buildTree at hr₂
+      split at hr₂
+      · next heq => exact nomatch hk.symm.trans heq
+      · next p' heq => exact nomatch hk.symm.trans heq
+      · next a' hk' =>
+        -- utility (matching): unify a = a'
+        have haa : a = a' := by injection hk.symm.trans hk'
+        subst haa
+        have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
+            MAID.updateAssign assign₁ nd
+              ⟨0, by rw [S.utility_domain nd a hk]; exact Nat.one_pos⟩ nd' =
+            MAID.updateAssign assign₂ nd
+              ⟨0, by rw [S.utility_domain nd a hk]; exact Nat.one_pos⟩ nd' := by
+          intro nd' hnd'
+          by_cases hne : nd' = nd
+          · subst hne; simp [MAID.updateAssign]
+          · rw [MAID.updateAssign_get_ne _ _ _ _ hne, MAID.updateAssign_get_ne _ _ _ _ hne]
+            exact hassign nd' hnd'
+        exact ih hrest_nodup horder_rest _ _ hassign' hr₁ hr₂
+
 theorem buildTree_perfectRecall {S : MAID.Struct (Fin m) n}
     (hpr : MAID.Struct.PerfectRecall S)
     (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
     EFG.PerfectRecall (maidToEFG S sem pol σ).tree := by
-  sorry
+  intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
+  have horder : ∀ (i j : Fin σ.order.length),
+      S.IsAncestor σ.order[i] σ.order[j] → i.val < j.val := by
+    intro i j h
+    exact σ.ancestor_lt h rfl rfl
+  exact buildTree_playerHistory_eq hpr sem pol σ.order σ.nodup horder _ _ p I
+    (fun _ _ => rfl) hr₁ hr₂
 
 -- ============================================================================
 -- Kuhn transfer (via MAID → EFG)

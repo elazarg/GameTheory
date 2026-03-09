@@ -11,7 +11,6 @@ import GameTheory.Core.GameForm
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.Deviation
 import GameTheory.Concepts.BestResponse
-import GameTheory.Concepts.BestResponseExistence
 import GameTheory.Concepts.PrefPreorderProperties
 import GameTheory.Concepts.EUProperties
 import GameTheory.Concepts.OfEUProperties
@@ -43,7 +42,6 @@ import GameTheory.Concepts.NashProperties
 
 -- Game properties and welfare
 import GameTheory.Core.GameProperties
-import GameTheory.Concepts.ParetoOptimal
 import GameTheory.Concepts.NashPareto
 import GameTheory.Concepts.WelfareTheorems
 import GameTheory.Concepts.PriceOfAnarchy
@@ -70,9 +68,7 @@ import GameTheory.Concepts.PotentialTeam
 
 -- Team games and symmetric games
 import GameTheory.Concepts.TeamGame
-import GameTheory.Concepts.TeamGameNash
 import GameTheory.Concepts.SymmetricGame
-import GameTheory.Concepts.TwoPlayerGame
 import GameTheory.Concepts.EvolutionaryStability
 
 -- Minimax

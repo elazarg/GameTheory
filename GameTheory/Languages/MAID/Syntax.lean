@@ -173,17 +173,24 @@ instance (S : Struct Player n) (p : Player) : DecidableEq (Infoset S p) :=
 -- Perfect recall — defined on DAG ancestry
 -- ============================================================================
 
-/-- Perfect recall for a MAID: for each player, if decision node `d₁` is an
-ancestor of decision node `d₂` (both owned by the same player), then `d₂`
-observes `d₁` and all of `d₁`'s observed parents.
+/-- Perfect recall for a MAID, following Koller & Milgrom:
 
-This is the standard MAID perfect recall condition, stated purely in terms of
-DAG ancestry without reference to any particular topological order. -/
+1. **Temporal ordering**: for each player, any two decision nodes are comparable
+   by DAG ancestry (one is an ancestor of the other).
+2. **Full observation**: if `d₁` is an ancestor of `d₂` (both owned by the same
+   player), then `d₂` observes `d₁` and all of `d₁`'s observed parents.
+
+Condition (1) ensures that a player's decision nodes form a directed path in the
+DAG. Together with (2), this gives the standard perfect recall property: a player
+remembers all previous observations and actions. -/
 def Struct.PerfectRecall (S : Struct Player n) : Prop :=
-  ∀ (p : Player) (d₁ d₂ : Fin n),
+  (∀ (p : Player) (d₁ d₂ : Fin n),
+    S.kind d₁ = .decision p → S.kind d₂ = .decision p → d₁ ≠ d₂ →
+    S.IsAncestor d₁ d₂ ∨ S.IsAncestor d₂ d₁) ∧
+  (∀ (p : Player) (d₁ d₂ : Fin n),
     S.kind d₁ = .decision p → S.kind d₂ = .decision p →
     S.IsAncestor d₁ d₂ →
-    d₁ ∈ S.obsParents d₂ ∧ S.obsParents d₁ ⊆ S.obsParents d₂
+    d₁ ∈ S.obsParents d₂ ∧ S.obsParents d₁ ⊆ S.obsParents d₂)
 
 -- ============================================================================
 -- Semantics — evaluation

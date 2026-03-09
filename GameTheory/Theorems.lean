@@ -5,6 +5,7 @@ import GameTheory.Theorems.NashExistence
 import GameTheory.Theorems.NashExistenceMixed
 import GameTheory.Theorems.OneShotDeviation
 import GameTheory.Theorems.Zermelo
+import GameTheory.Theorems.CorrelatedEqExistence
 
 /-!
 # GameTheory.Theorems

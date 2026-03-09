@@ -93,6 +93,33 @@ theorem mem (σ : TopologicalOrder preds) (nd : Fin n) :
   rw [← List.mem_toFinset, hfs]
   exact Finset.mem_univ nd
 
+/-- In a topological order, ancestors (transitive closure of `preds`) have
+strictly smaller indices than their descendants. -/
+theorem ancestor_lt (σ : TopologicalOrder preds) {x y : Fin n}
+    (h : Relation.TransGen (fun a b => a ∈ preds b) x y)
+    {ix iy : Fin σ.order.length}
+    (hix : σ.order[ix] = x) (hiy : σ.order[iy] = y) :
+    ix.val < iy.val := by
+  have idx_eq : ∀ (i j : Fin σ.order.length),
+      σ.order[i] = σ.order[j] → i = j :=
+    fun i j h => σ.nodup.get_inj_iff.mp h
+  suffices key : ∀ x y, Relation.TransGen (fun a b => a ∈ preds b) x y →
+      ∀ (ix iy : Fin σ.order.length),
+      σ.order[ix] = x → σ.order[iy] = y → ix.val < iy.val from
+    key x y h ix iy hix hiy
+  intro x y hxy
+  induction hxy with
+  | single hstep =>
+    intro ix iy hix hiy; subst hix; subst hiy
+    obtain ⟨j, hj_lt, hj_eq⟩ := σ.respects iy _ hstep
+    have := idx_eq ix j hj_eq.symm; omega
+  | tail hab hbc ih =>
+    intro ix iy hix hiy
+    obtain ⟨ib, hib, hib_eq⟩ := List.mem_iff_getElem.mp (σ.mem _)
+    have hxb := ih ix ⟨ib, hib⟩ hix hib_eq
+    obtain ⟨jb, hjb_lt, hjb_eq⟩ := σ.respects iy _ (hiy ▸ hbc)
+    have := idx_eq ⟨ib, hib⟩ jb (hib_eq.trans hjb_eq.symm); omega
+
 end TopologicalOrder
 
 -- ============================================================================
