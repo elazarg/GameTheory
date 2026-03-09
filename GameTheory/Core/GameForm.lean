@@ -384,7 +384,7 @@ Many equilibrium notions are instances of this schema.
 def NoProfitableDeviationFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (who : ι) (statusQuo : PMF F.Outcome)
-    {D : Type*} (deviate : D → PMF F.Outcome) : Prop :=
+    {D : Type} (deviate : D → PMF F.Outcome) : Prop :=
   ∀ d : D, pref who statusQuo (deviate d)
 
 /-- Generic no-profitable-deviation predicate where deviations act on profile
@@ -392,21 +392,21 @@ def NoProfitableDeviationFor (F : GameForm ι)
 def NoProfitableProfileDeviationFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (who : ι) (μ : PMF F.Profile)
-    {D : Type*} (deviate : D → PMF F.Profile) : Prop :=
+    {D : Type} (deviate : D → PMF F.Profile) : Prop :=
   F.NoProfitableDeviationFor pref who (F.correlatedOutcome μ)
     (fun d => F.correlatedOutcome (deviate d))
 
 theorem noProfitableDeviationFor_iff (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (who : ι) (statusQuo : PMF F.Outcome)
-    {D : Type*} (deviate : D → PMF F.Outcome) :
+    {D : Type} (deviate : D → PMF F.Outcome) :
     F.NoProfitableDeviationFor pref who statusQuo deviate ↔
       ∀ d : D, pref who statusQuo (deviate d) := Iff.rfl
 
 theorem noProfitableProfileDeviationFor_iff (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (who : ι) (μ : PMF F.Profile)
-    {D : Type*} (deviate : D → PMF F.Profile) :
+    {D : Type} (deviate : D → PMF F.Profile) :
     F.NoProfitableProfileDeviationFor pref who μ deviate ↔
       ∀ d : D, pref who (F.correlatedOutcome μ) (F.correlatedOutcome (deviate d)) := by
   rfl
@@ -414,7 +414,7 @@ theorem noProfitableProfileDeviationFor_iff (F : GameForm ι)
 /-- A family of profile-distribution deviations, indexed by player and optionally
     depending on the current profile distribution. -/
 structure ProfileDeviationFamily (F : GameForm ι) where
-  Dev : ι → Type*
+  Dev : ι → Type
   deviate : PMF F.Profile → ∀ who : ι, Dev who → PMF F.Profile
 
 /-- Generic deviation-family equilibrium for a profile-distribution-based

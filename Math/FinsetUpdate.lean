@@ -3,6 +3,12 @@ import Mathlib.Data.Finset.Basic
 
 set_option autoImplicit false
 
+/-!
+# Finset Sum/Sup Stability Under Function.update
+
+Lemmas for `Finset.sum` and `Finset.sup'` stability under `Function.update`.
+-/
+
 namespace Math
 namespace Finset
 namespace Update

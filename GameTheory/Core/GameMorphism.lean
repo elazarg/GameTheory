@@ -1,6 +1,6 @@
 import GameTheory.Core.GameIsomorphism
-import GameTheory.Concepts.SolutionConcepts
 import Math.Probability
+import GameTheory.Concepts.SolutionConcepts
 
 /-!
 # Game Morphisms
@@ -255,4 +255,3 @@ end EUGameIsomorphism
 end KernelGame
 
 end GameTheory
-

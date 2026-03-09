@@ -5,6 +5,13 @@ import Mathlib.Tactic
 
 set_option autoImplicit false
 
+/-!
+# Local Optimality and Fixed Points
+
+Abstract fixed-point and local optimality theory: `IsFixedPoint`, `NoImprovement`,
+`LocallyOptimal`. Transfer lemmas for objectives and neighborhoods.
+-/
+
 namespace Math
 namespace Optimization
 namespace LocalGlobal

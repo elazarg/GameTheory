@@ -1,5 +1,4 @@
-import GameTheory.NFG.TeamGame
-import GameTheory.NFG.ConstantSum
+import GameTheory.Core.GameProperties
 import Math.Probability
 
 /-!
@@ -31,9 +30,19 @@ set_option linter.unusedFintypeInType false in
 theorem IsTeamGame.socialWelfare_eq [Fintype ι] [Inhabited ι]
     {G : KernelGame ι} (hteam : G.IsTeamGame) (σ : Profile G) (i : ι) :
     G.socialWelfare σ = Fintype.card ι * G.eu σ i := by
-  simp only [socialWelfare]
-  conv_lhs => arg 2; ext j; rw [hteam.eu_eq σ j i]
-  simp [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
+  simp only [KernelGame.socialWelfare]
+  have heu : ∀ j : ι, G.eu σ j = G.eu σ i := by
+    intro j
+    rw [KernelGame.eu, KernelGame.eu]
+    congr with ω
+    exact hteam ω j i
+  calc
+    ∑ j : ι, G.eu σ j = ∑ _j : ι, G.eu σ i := by
+      apply Finset.sum_congr rfl
+      intro j _
+      exact heu j
+    _ = Fintype.card ι * G.eu σ i := by
+      simp [Finset.sum_const, nsmul_eq_mul]
 
 set_option linter.unusedFintypeInType false in
 /-- If all players have non-negative expected utility, social welfare is non-negative. -/
