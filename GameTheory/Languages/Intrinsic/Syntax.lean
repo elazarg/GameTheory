@@ -211,7 +211,7 @@ structure WGame extends WModel where
   /-- Assignment of each agent to a player (the sets `Aₚ`). -/
   owner : A → P
   /-- Utility function for each player, defined on configurations. -/
-  utility : P → H → ℝ
+  utility : P → Config Ω A U → ℝ
   /-- Prior distribution over states of nature. -/
   prior : PMF Ω
 

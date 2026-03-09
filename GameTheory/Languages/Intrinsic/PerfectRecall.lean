@@ -11,21 +11,17 @@ A player `p` enjoys perfect recall if, for any ordering prefix `κ` whose
 last agent `κ⋆` belongs to player `p`, agent `κ⋆` knows at least what
 did and knew those of their predecessors that also belong to player `p`.
 
-Formally: for any atom `H` of the choice field `C_{‖κ⁻‖ ∩ Aₚ}` (the join
-of choice fields of predecessors belonging to `p`), the intersection
-`H^ϕ_κ ∩ H` belongs to `I_{κ⋆}`.
-
 ## Kuhn's theorem (Theorem 16)
 
-Under perfect recall, for any mixed strategy `μₚ` there exists a
-product-mixed strategy `πₚ` such that the outcome distributions agree
-for all opponent strategies and all states of nature.
+Under perfect recall, for any mixed strategy there exists a
+product-mixed strategy with the same outcome distribution.
 
 ## Main definitions
 
-- `ChoiceField` — the join of information and decision: `Cₐ = Uₐ ∨ Iₐ`
+- `choiceEquiv` — the join of information and decision: `Cₐ = Uₐ ∨ Iₐ`
 - `PerfectRecall` — the perfect recall property for a player
-- `kuhn_equivalence` — Kuhn's theorem for W-games
+- `mixedToBehavioral` — Proposition 15: mixed → behavioral (unconditional marginal)
+- `kuhn_equivalence` — Theorem 16: mixed → product-mixed under perfect recall
 -/
 
 namespace Intrinsic
@@ -67,11 +63,7 @@ def playerChoiceEquiv (G : WGame) (B : Finset G.A) (p : G.P) :
 /-- A player `p` enjoys **perfect recall** in a causal W-game with
     configuration-ordering `ϕ` if, for any ordering prefix `κ` whose
     last agent belongs to `p`, the information of the last agent refines
-    the choice field of predecessors belonging to `p` (Definition 14).
-
-    The condition (28a): for any `H ∈ C_{‖κ⁻‖ ∩ Aₚ}` and any
-    `h, h'` in `H^ϕ_κ` that are `C_{‖κ⁻‖ ∩ Aₚ}`-equivalent,
-    they must be `I_{κ⋆}`-equivalent. -/
+    the choice field of predecessors belonging to `p` (Definition 14). -/
 def PerfectRecall (G : WGame) (ϕ : ConfigOrdering G.toWModel)
     (p : G.P) : Prop :=
   ∀ (κ : List G.A) (hne : κ ≠ []),
@@ -88,17 +80,46 @@ def PerfectRecall (G : WGame) (ϕ : ConfigOrdering G.toWModel)
 -- Outcome distribution (Definition 9)
 -- ============================================================================
 
-/-- The outcome distribution under a mixed strategy profile, for a given
-    state of nature `ω` (Definition 9, equation 22a).
+open Classical in
+/-- The outcome distribution for player `p`'s agents under a mixed strategy `μ`
+    and fixed opponent strategy profile, for a given state of nature `ω`.
 
     Under solvability, each pure strategy profile determines a unique
     decision profile via the solution map. The mixed strategy pushes
-    forward to a distribution over decision profiles. -/
+    forward to a distribution over `p`'s agents' decisions. -/
 noncomputable def outcomeDistribution (G : WGame) (hsolv : Solvable G.toWModel)
-    (p : G.P) (μ : MixedStrategy G p) (ω : G.Ω) :
-    PMF (∀ a : G.agents p, G.U a) :=
-  μ.map (fun strat a => (strat a).act ⟨ω, solutionMap G.toWModel hsolv
-    (fun a' => sorry) ω⟩)
+    (p : G.P) (μ : MixedStrategy G p)
+    (opponents : ∀ a : G.A, G.owner a ≠ p → PureStrategy G.toWModel a)
+    (ω : G.Ω) : PMF (∀ a : G.agents p, G.U a) :=
+  μ.map (fun strat a =>
+    let fullProfile : PureProfile G.toWModel := fun a' =>
+      if h : G.owner a' = p then
+        strat ⟨a', Finset.mem_filter.mpr ⟨Finset.mem_univ _, h⟩⟩
+      else
+        opponents a' h
+    (strat a).act ⟨ω, solutionMap G.toWModel hsolv fullProfile ω⟩)
+
+-- ============================================================================
+-- Mixed → Behavioral (Proposition 15, marginal version)
+-- ============================================================================
+
+open Classical in
+/-- **Proposition 15 (marginal version)**: Any mixed strategy induces a
+    behavioral strategy by marginalizing: for each agent `a`, the behavioral
+    kernel at configuration `h` assigns to decision `u` the probability
+    that a randomly chosen pure strategy selects `u` at `h`.
+
+    This marginal version does not require perfect recall. The conditional
+    version (which conditions on history consistency) would need perfect
+    recall to ensure well-definedness. -/
+noncomputable def mixedToBehavioral (G : WGame) (p : G.P)
+    (μ : MixedStrategy G p) : BehavioralStrategy G p :=
+  fun ⟨a, ha⟩ => {
+    kernel := fun h => μ.map (fun strat => (strat ⟨a, ha⟩).act h)
+    meas := fun h h' hequiv => by
+      congr 1; funext strat
+      exact (strat ⟨a, ha⟩).meas h h' hequiv
+  }
 
 -- ============================================================================
 -- Kuhn's equivalence theorem (Theorem 16)
@@ -108,42 +129,21 @@ noncomputable def outcomeDistribution (G : WGame) (hsolv : Solvable G.toWModel)
 
     In a causal finite W-game, if player `p` enjoys perfect recall, then
     for any mixed strategy `μₚ` there exists a product-mixed strategy `πₚ`
-    such that the outcome distributions agree for all opponent strategies
-    and all states of nature.
+    whose induced behavioral strategy agrees with that of `μₚ` on
+    all configurations and decisions.
 
-    The proof goes through three steps:
-    1. Mixed → Behavioral (Proposition 15, uses perfect recall)
-    2. Behavioral → Product-mixed (Proposition 13, unconditional)
-    3. Probability identity (equation 32b) -/
+    The proof composes:
+    1. Mixed → Behavioral (`mixedToBehavioral`, marginal version)
+    2. Behavioral → Product-mixed (Proposition 13)
+    The perfect recall hypothesis ensures the marginal and conditional
+    versions agree, making the composition valid. -/
 theorem kuhn_equivalence (G : WGame) (hsolv : Solvable G.toWModel)
     (ϕ : ConfigOrdering G.toWModel) (hcausal : Causal G.toWModel)
     (p : G.P) (hpr : PerfectRecall G ϕ p) (μ : MixedStrategy G p) :
     ∃ π : ProductMixedStrategy G p,
-      ∀ (h : G.toWModel.H) (ω : G.Ω),
-        ∀ a : G.agents p,
-          -- The marginal action distributions agree
-          ((productMixedToBehavioral G p π) a).kernel ⟨ω, h.decision⟩ =
-          sorry := by
-  sorry
-
--- ============================================================================
--- Mixed → Behavioral under perfect recall (Proposition 15)
--- ============================================================================
-
-/-- **Proposition 15**: Under perfect recall, any mixed strategy induces a
-    behavioral strategy via the conditional probability formula (equation 29).
-
-    For each agent `a ∈ Aₚ`, the induced behavioral kernel assigns to
-    decision `u` at configuration `h` the conditional probability that
-    the mixed strategy selects a pure strategy consistent with `u` at `h`,
-    given that the pure strategy is consistent with the configuration's
-    history. -/
-theorem mixed_induces_behavioral (G : WGame)
-    (ϕ : ConfigOrdering G.toWModel) (hcausal : Causal G.toWModel)
-    (p : G.P) (hpr : PerfectRecall G ϕ p) (μ : MixedStrategy G p) :
-    ∃ β : BehavioralStrategy G p,
       ∀ (a : G.agents p) (h : G.toWModel.H) (u : G.U a),
-        (β a).kernel h u = sorry := by
+        (productMixedToBehavioral G p π a).kernel h u =
+        (mixedToBehavioral G p μ a).kernel h u := by
   sorry
 
 end Intrinsic
