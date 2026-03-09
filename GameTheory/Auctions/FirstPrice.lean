@@ -1,6 +1,6 @@
+import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.OfEUProperties
-import Math.Probability
 
 /-!
 # First-Price Auction

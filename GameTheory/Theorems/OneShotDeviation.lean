@@ -1,8 +1,8 @@
-import GameTheory.Languages.EFG.Refinements
+import Mathlib.Tactic.Linarith
 import Math.FunctionUpdate
 import Math.Probability
 import Math.ProbabilityMassFunction
-import Mathlib.Tactic.Linarith
+import GameTheory.Languages.EFG.Refinements
 
 /-!
 # One-Shot Deviation Principle

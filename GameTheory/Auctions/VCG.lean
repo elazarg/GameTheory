@@ -1,6 +1,6 @@
-import GameTheory.Concepts.SolutionConcepts
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Math.Probability
+import GameTheory.Concepts.SolutionConcepts
 
 /-!
 # Vickrey-Clarke-Groves (VCG) Mechanism

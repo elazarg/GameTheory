@@ -1,6 +1,6 @@
+import Math.FinsetUpdate
 import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
-import Math.FinsetUpdate
 
 /-!
 # Vickrey (Second-Price) Auction
