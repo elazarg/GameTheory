@@ -97,9 +97,8 @@ The proof decomposes into two independent directions:
   recall conditions. The weakest sufficient condition is
   `TracePlayerStepRecall` (weaker than classical perfect recall).
 
-The EFG language has its own self-contained tree-based proof (`EFG/Kuhn.lean`).
-MAID and Sequential languages compile to `ObsModel` and apply the generic
-theorems directly.
+EFG, MAID, and Sequential languages each compile to `ObsModel` (via
+`CompileObs.lean`) and apply the generic theorems directly.
 
 The Intrinsic form (`Languages/Intrinsic/`) formalizes Witsenhausen's intrinsic
 model following Heymann, De Lara, and Chancelier (2020), where information is

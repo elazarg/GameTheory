@@ -1,6 +1,7 @@
 import GameTheory.Languages.EFG.Syntax
 import GameTheory.Languages.EFG.SOS
 import GameTheory.Languages.EFG.Compile
+import GameTheory.Languages.EFG.CompileObs
 import GameTheory.Languages.EFG.Kuhn
 import GameTheory.Languages.EFG.Theorems
 import GameTheory.Languages.EFG.Examples

@@ -95,9 +95,9 @@ over pure profiles rather than flat contingent plans. -/
         (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s)) := hflat
     _ = evalBehavioral G σ := by
             simpa [evalBehavioral] using
-              (_root_.EFG.behavioral_to_mixed
-                (S := G.inf) (Outcome := G.Outcome) σ G.tree
-                (_root_.EFG.PerfectRecall_implies_NoInfoSetRepeat G.tree hpr))
+              (_root_.EFG.behavioral_to_mixed σ G.tree
+                (_root_.EFG.PerfectRecall_implies_NoInfoSetRepeat
+                  G.tree hpr))
 
 /-- Complete EFG Kuhn theorem at the outcome-distribution level. The
 behavioral->mixed direction uses the canonical product measure over infosets,
