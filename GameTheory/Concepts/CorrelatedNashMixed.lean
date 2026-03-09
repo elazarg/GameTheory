@@ -1,8 +1,5 @@
-import GameTheory.Concepts.SolutionConcepts
-import GameTheory.Theorems.NashExistenceMixed
+import GameTheory.Concepts.MixedExtension
 import GameTheory.Concepts.CorrelatedEqProperties
-import Math.PMFProduct
-import Math.Probability
 
 /-!
 # GameTheory.Concepts.CorrelatedNashMixed

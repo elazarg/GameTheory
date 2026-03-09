@@ -33,6 +33,7 @@ import GameTheory.Concepts.DominanceSolvability
 -- Nash equilibrium
 import GameTheory.Concepts.StrictNashProperties
 import GameTheory.Concepts.ApproximateNash
+import GameTheory.Concepts.MixedExtension
 import GameTheory.Theorems.NashExistence
 import GameTheory.Concepts.ProductSimplexBrouwer
 import GameTheory.Theorems.NashExistenceMixed

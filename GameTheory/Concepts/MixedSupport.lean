@@ -1,5 +1,4 @@
-import Math.Probability
-import GameTheory.Core.KernelGame
+import GameTheory.Concepts.MixedExtension
 
 /-!
 # Support Lemma for Mixed Nash Equilibria
