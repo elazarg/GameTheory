@@ -48,6 +48,7 @@ noncomputable def compileObsModel (S : Struct Player n) (sem : Sem S) :
     ObsModel Player (FrontierCfg S)
       (fun p => List (Infoset S p))
       (fun (p : Player) (_ : List (Infoset S p)) => Option (FrontierAct S p)) where
+  infoState := fun _ => InfoStateSpec.list _
   observe := fun p cfg => frontierInfosets S cfg p
   machine := {
     init := initialCfg S

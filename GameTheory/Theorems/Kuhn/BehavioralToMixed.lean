@@ -14,10 +14,9 @@ are needed for this direction.
 
 ## Assumptions
 
-The theorem assumes `Fintype (O.LocalTrace i)` for each player `i`. Since
-`O.LocalTrace i = List (Obs i)`, this is satisfiable only for bounded-horizon
-games or restricted trace types. This is the same finiteness assumption used
-in the InfoModel B→M proof.
+The theorem assumes `Fintype (O.InfoState i)` for each player `i`. After the
+information-state refactor, this means finiteness of the model's chosen
+admissible local summary state, not necessarily all raw observation lists.
 -/
 
 set_option autoImplicit false
@@ -34,7 +33,7 @@ variable {O : ObsModel ι σ Obs Act}
 section Definitions
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.LocalTrace i)]
+variable [∀ i, Fintype (O.InfoState i)]
 
 open Classical in
 /-- Convert a behavioral profile to per-player mixed strategies by taking
@@ -44,7 +43,7 @@ noncomputable def behavioralToMixed
   fun i => Math.PMFProduct.pmfPi (β i)
 
 open Classical in
-/-- The full product mixed strategy: first product over traces per player,
+/-- The full product mixed strategy: first product over information states per player,
 then product over players. -/
 noncomputable def behavioralToMixedJoint
     [∀ i, Fintype (O.LocalStrategy i)]
@@ -98,10 +97,10 @@ section RunLemmas
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 
 omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] in
-/-- `projectStates i ss` has the same length as `ss`. -/
+/-- `projectStates i ss` has semantic information-state depth `ss.length`. -/
 theorem projectStates_length (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) :
-    (O.projectStates i ss).length = ss.length := by
-  simp [projectStates]
+    O.stateDepth i (O.projectStates i ss) = ss.length :=
+  O.stateDepth_projectStates i ss
 
 /-- Traces in the support of `runDistPure n` have length `n + 1`. -/
 theorem runDistPure_support_length (O : ObsModel ι σ Obs Act)
@@ -111,15 +110,15 @@ theorem runDistPure_support_length (O : ObsModel ι σ Obs Act)
   exact pureRun_length O.pureStep O.init n π ss h
 
 /-- The bounded run distribution `runDistPure n π` depends only on
-the values of `π` at observation traces of length `≤ n`. -/
+the values of `π` at information states of depth `≤ n`. -/
 theorem runDistPure_congr_of_agree_le (O : ObsModel ι σ Obs Act)
     {π₁ π₂ : PureProfile O} (n : Nat)
-    (h : ∀ i (v : O.LocalTrace i), v.length ≤ n → π₁ i v = π₂ i v) :
+    (h : ∀ i (v : O.InfoState i), O.stateDepth i v ≤ n → π₁ i v = π₂ i v) :
     O.runDistPure n π₁ = O.runDistPure n π₂ := by
   induction n with
   | zero => simp [runDistPure, runDist]
   | succ n ih =>
-    have hle : ∀ i (v : O.LocalTrace i), v.length ≤ n → π₁ i v = π₂ i v :=
+    have hle : ∀ i (v : O.InfoState i), O.stateDepth i v ≤ n → π₁ i v = π₂ i v :=
       fun i v hv => h i v (Nat.le_succ_of_le hv)
     have hIH := ih hle
     ext ss
@@ -150,7 +149,7 @@ end RunLemmas
 section MarginalStep
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.LocalTrace i)]
+variable [∀ i, Fintype (O.InfoState i)]
 
 open Classical in
 /-- The marginal of the pure step over the product measure equals the
@@ -228,16 +227,16 @@ end MarginalStep
 section ScalarIndependence
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.LocalTrace i)]
+variable [∀ i, Fintype (O.InfoState i)]
 
 open Classical in
-/-- Swap operation: for `v.length ≤ n` take from `π₁`, otherwise from `π₂`. -/
+/-- Swap operation: for states of depth `≤ n` take from `π₁`, otherwise from `π₂`. -/
 noncomputable def swapProfile
     (n : Nat) (π₁ π₂ : PureProfile O) : PureProfile O :=
-  fun i v => if v.length ≤ n then π₁ i v else π₂ i v
+  fun i v => if O.stateDepth i v ≤ n then π₁ i v else π₂ i v
 
 omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-  [∀ i, Fintype (O.LocalTrace i)] in
+  [∀ i, Fintype (O.InfoState i)] in
 open Classical in
 /-- The swap is an involution when paired with its reverse. -/
 theorem swapProfile_involutive (n : Nat) :
@@ -264,21 +263,22 @@ theorem swap_weight_eq
   simp only [swapProfile]
   rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
   congr 1; funext v
-  by_cases hv : v.length ≤ n <;> simp [hv, mul_comm]
+  by_cases hv : O.stateDepth i v ≤ n <;> simp [hv, mul_comm]
 
 open Classical in
 /-- **Scalar independence under the product measure.**
-If `f` depends only on coordinates with trace length `≤ n` and `g` depends
-only on coordinates with trace length `> n`, then `E[f·g] = E[f]·E[g]`. -/
+If `f` depends only on coordinates with information-state depth `≤ n` and `g`
+depends only on coordinates with information-state depth `> n`, then
+`E[f·g] = E[f]·E[g]`. -/
 theorem scalar_indep
     [∀ i, Fintype (O.LocalStrategy i)]
     [Fintype (PureProfile O)]
     (β : BehavioralProfile O) (n : Nat)
     (f g : PureProfile O → ENNReal)
     (hf : ∀ π₁ π₂ : PureProfile O,
-      (∀ i (v : O.LocalTrace i), v.length ≤ n → π₁ i v = π₂ i v) → f π₁ = f π₂)
+      (∀ i (v : O.InfoState i), O.stateDepth i v ≤ n → π₁ i v = π₂ i v) → f π₁ = f π₂)
     (hg : ∀ π₁ π₂ : PureProfile O,
-      (∀ i (v : O.LocalTrace i), v.length > n → π₁ i v = π₂ i v) → g π₁ = g π₂) :
+      (∀ i (v : O.InfoState i), O.stateDepth i v > n → π₁ i v = π₂ i v) → g π₁ = g π₂) :
     ∑ π, (O.behavioralToMixedJoint β) π * (f π * g π) =
     (∑ π, (O.behavioralToMixedJoint β) π * f π) *
     (∑ π, (O.behavioralToMixedJoint β) π * g π) := by
@@ -287,7 +287,7 @@ theorem scalar_indep
     intro π₁ π₂; apply hf; intro i v hv; simp [swapProfile, hv]
   have hg_swap : ∀ π₁ π₂, g (swapProfile n π₁ π₂) = g π₂ := by
     intro π₁ π₂; apply hg; intro i v hv
-    simp only [swapProfile, show ¬(v.length ≤ n) from Nat.not_le.mpr hv, ite_false]
+    simp only [swapProfile, show ¬(O.stateDepth i v ≤ n) from Nat.not_le.mpr hv, ite_false]
   let P := fun π => ν π
   let Fsame : PureProfile O × PureProfile O → ENNReal :=
     fun p => P p.1 * P p.2 * (f p.1 * g p.1)
@@ -340,7 +340,7 @@ end ScalarIndependence
 section StepIndependenceBridge
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.LocalTrace i)]
+variable [∀ i, Fintype (O.InfoState i)]
 
 open Classical in
 set_option linter.unusedFintypeInType false in
@@ -392,12 +392,12 @@ theorem stepIndependence_bridge
     let g : PureProfile O → ENNReal := fun π => Gfun ss π
     -- f depends on traces of length ≤ n
     have hf : ∀ π₁ π₂ : PureProfile O,
-        (∀ i (v : O.LocalTrace i), v.length ≤ n → π₁ i v = π₂ i v) → f π₁ = f π₂ := by
+        (∀ i (v : O.InfoState i), O.stateDepth i v ≤ n → π₁ i v = π₂ i v) → f π₁ = f π₂ := by
       intro π₁ π₂ hag
       exact congrArg (· ss) (runDistPure_congr_of_agree_le O n hag)
     -- g depends on traces of length = ss.length = n+1 > n
     have hg : ∀ π₁ π₂ : PureProfile O,
-        (∀ i (v : O.LocalTrace i), v.length > n → π₁ i v = π₂ i v) → g π₁ = g π₂ := by
+        (∀ i (v : O.InfoState i), O.stateDepth i v > n → π₁ i v = π₂ i v) → g π₁ = g π₂ := by
       intro π₁ π₂ hag
       change Gfun ss π₁ = Gfun ss π₂
       simp only [Gfun]
@@ -455,7 +455,7 @@ end StepIndependenceBridge
 section MainTheorem
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.LocalTrace i)]
+variable [∀ i, Fintype (O.InfoState i)]
 
 set_option linter.unusedFintypeInType false in
 open Classical in

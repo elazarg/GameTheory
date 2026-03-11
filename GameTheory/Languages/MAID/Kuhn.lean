@@ -8,8 +8,8 @@ Kuhn reduction lemmas for compiled MAIDs via the `ObsModel` layer.
 
 This file connects MAID frontier semantics to Kuhn's theorem by:
 1. Compiling MAIDs to `ObsModel` via `compileObsModel`
-2. Proving (or assuming) the recall conditions on the compiled model
-3. Applying ObsModel-level Kuhn theorems
+2. Assuming the finiteness / recall conditions needed by the generic theorem
+3. Applying ObsModel-level Kuhn corollaries honestly
 
 ## Main results
 
@@ -33,34 +33,15 @@ variable (S : Struct Player n) (sem : Sem S)
 noncomputable abbrev compiledObs (S : Struct Player n) (sem : Sem S) :=
   compileObsModel S sem
 
-variable [∀ p, Fintype (Option (FrontierAct S p))]
-
--- The action type `Option (FrontierAct S p)` is constant across observations,
--- so these instances are straightforward.
-noncomputable instance compiledObs_localStrategy_fintype :
-    ∀ p, Fintype ((compiledObs S sem).LocalStrategy p) := by
-  intro p
-  exact sorry
-
-noncomputable instance compiledObs_pureProfile_fintype :
-    Fintype (PureProfile (compiledObs S sem)) := by
-  exact sorry
-
-noncomputable instance compiledObs_localTrace_fintype :
-    ∀ p, Fintype ((compiledObs S sem).LocalTrace p) := by
-  intro p
-  exact sorry
-
-/-- The compiled MAID ObsModel satisfies per-step player recall
-(assuming the MAID has perfect recall). -/
-theorem compiled_pspr_of_perfectRecall
-    (hPR : sorry /- MAID.Struct.PerfectRecall S -/) :
-    PerStepPlayerRecall (compiledObs S sem) :=
-  sorry
-
 /-- **Kuhn B→M for compiled MAIDs**: behavioral strategies can be realized as
-product mixed strategies. No recall conditions needed. -/
+product mixed strategies.
+
+This requires finiteness of the compiled information-state type; the default
+list-backed summary used by `compileObsModel` does not provide that instance
+automatically. -/
 theorem kuhn_behavioral_to_mixed_of_compiled
+    [∀ p, Fintype (Option (FrontierAct S p))]
+    [∀ p, Fintype ((compiledObs S sem).InfoState p)]
     (β : BehavioralProfile (compiledObs S sem)) (k : Nat) :
     (compiledObs S sem).runDist k β =
       ((compiledObs S sem).behavioralToMixedJoint β).bind
@@ -70,6 +51,8 @@ theorem kuhn_behavioral_to_mixed_of_compiled
 /-- **Kuhn M→B for compiled MAIDs**: under per-step player recall,
 product mixed strategies can be realized by behavioral strategies. -/
 theorem kuhn_mixed_to_behavioral_of_compiled
+    [∀ p, Fintype (Option (FrontierAct S p))]
+    [∀ p, Fintype ((compiledObs S sem).InfoState p)]
     [∀ p, Nonempty (Option (FrontierAct S p))]
     (hPSPR : PerStepPlayerRecall (compiledObs S sem))
     (μ : ∀ p, PMF ((compiledObs S sem).LocalStrategy p))

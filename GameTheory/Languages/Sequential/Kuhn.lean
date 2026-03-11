@@ -8,8 +8,8 @@ Kuhn reduction lemmas for compiled sequential protocols via the `ObsModel` layer
 
 This file connects sequential protocol semantics to Kuhn's theorem by:
 1. Compiling protocols to `ObsModel` via `compileObsModel`
-2. Proving (or assuming) the recall conditions on the compiled model
-3. Applying ObsModel-level Kuhn theorems
+2. Assuming the finiteness / recall conditions needed by the generic theorem
+3. Applying ObsModel-level Kuhn corollaries honestly
 
 ## Main results
 
@@ -32,34 +32,15 @@ variable (G : Protocol n S V A Sig)
 noncomputable abbrev compiledObs (G : Protocol n S V A Sig) :=
   GameTheory.Sequential.compileObsModel G
 
-variable [Fintype (Option A)]
-
--- The action type `Option A` is constant across observations,
--- so these instances are straightforward.
-noncomputable instance compiledObs_localStrategy_fintype :
-    ∀ i, Fintype ((compiledObs G).LocalStrategy i) := by
-  intro i
-  exact sorry
-
-noncomputable instance compiledObs_pureProfile_fintype :
-    Fintype (ObsModel.PureProfile (compiledObs G)) := by
-  exact sorry
-
-noncomputable instance compiledObs_localTrace_fintype :
-    ∀ i, Fintype ((compiledObs G).LocalTrace i) := by
-  intro i
-  exact sorry
-
-/-- The compiled sequential protocol ObsModel satisfies per-step player recall
-(assuming the protocol has perfect recall). -/
-theorem compiled_pspr_of_perfectRecall
-    (hPR : sorry /- protocol perfect recall condition -/) :
-    ObsModel.PerStepPlayerRecall (compiledObs G) :=
-  sorry
-
 /-- **Kuhn B→M for compiled sequential protocols**: behavioral strategies can be
-realized as product mixed strategies. No recall conditions needed. -/
+realized as product mixed strategies.
+
+This requires finiteness of the compiled information-state type; the default
+list-backed summary used by `compileObsModel` does not provide that instance
+automatically. -/
 theorem kuhn_behavioral_to_mixed_of_compiled
+    [Fintype (Option A)]
+    [∀ i, Fintype ((compiledObs G).InfoState i)]
     (β : ObsModel.BehavioralProfile (compiledObs G)) (k : Nat) :
     (compiledObs G).runDist k β =
       ((compiledObs G).behavioralToMixedJoint β).bind
@@ -69,6 +50,8 @@ theorem kuhn_behavioral_to_mixed_of_compiled
 /-- **Kuhn M→B for compiled sequential protocols**: under per-step player recall,
 product mixed strategies can be realized by behavioral strategies. -/
 theorem kuhn_mixed_to_behavioral_of_compiled
+    [Fintype (Option A)]
+    [∀ i, Fintype ((compiledObs G).InfoState i)]
     [Nonempty (Option A)]
     (hPSPR : ObsModel.PerStepPlayerRecall (compiledObs G))
     (μ : ∀ i, PMF ((compiledObs G).LocalStrategy i))

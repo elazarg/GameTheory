@@ -153,42 +153,42 @@ variable (t : GameTree S Outcome)
 noncomputable abbrev compiledObs (t : GameTree S Outcome) :=
   GameTheory.EFG.compileObsModel t
 
-variable [∀ i, Fintype (Option (CtrlAct S i))]
-
-noncomputable instance compiledObs_localStrategy_fintype :
-    ∀ i, Fintype ((compiledObs t).LocalStrategy i) := by
-  intro i
-  exact sorry
-
-noncomputable instance compiledObs_pureProfile_fintype :
-    Fintype (ObsModel.PureProfile (compiledObs t)) := by
-  exact sorry
-
-noncomputable instance compiledObs_localTrace_fintype :
-    ∀ i, Fintype ((compiledObs t).LocalTrace i) := by
-  intro i
-  exact sorry
-
 /-- **Kuhn B→M for compiled EFGs**: behavioral strategies can be realized as
-product mixed strategies. No recall conditions needed. -/
+product mixed strategies.
+
+This requires finiteness of the compiled information-state type; the default
+list-backed summary used by `compileObsModel` does not provide that instance
+automatically. -/
 theorem kuhn_behavioral_to_mixed_of_compiled
+    [∀ i, Fintype ((compiledObs t).InfoState i)]
     (β : ObsModel.BehavioralProfile (compiledObs t)) (k : Nat) :
     (compiledObs t).runDist k β =
       ((compiledObs t).behavioralToMixedJoint β).bind
-        ((compiledObs t).runDistPure k) :=
-  ObsModel.kuhn_behavioral_to_mixed β k
+        ((compiledObs t).runDistPure k) := by
+  letI : ∀ i, Fintype ((compiledObs t).LocalStrategy i) :=
+    fun i => ObsModel.localStrategyFintype (compiledObs t) i
+  letI : Fintype (ObsModel.PureProfile (compiledObs t)) := by
+    unfold ObsModel.PureProfile
+    infer_instance
+  simpa using (ObsModel.kuhn_behavioral_to_mixed (O := compiledObs t) β k)
 
 /-- **Kuhn M→B for compiled EFGs**: under per-step player recall,
 product mixed strategies can be realized by behavioral strategies. -/
 theorem kuhn_mixed_to_behavioral_of_compiled
-    [∀ i, Nonempty (Option (CtrlAct S i))]
+    [∀ i, Fintype ((compiledObs t).InfoState i)]
     (hPSPR : ObsModel.PerStepPlayerRecall (compiledObs t))
     (μ : ∀ i, PMF ((compiledObs t).LocalStrategy i))
     (k : Nat) :
     ∃ β : ObsModel.BehavioralProfile (compiledObs t),
       (compiledObs t).runDist k β =
-        (pmfPi μ).bind ((compiledObs t).runDistPure k) :=
-  ObsModel.kuhn_mixed_to_behavioral_pspr hPSPR μ k
+        (pmfPi μ).bind ((compiledObs t).runDistPure k) := by
+  letI : ∀ i, Fintype ((compiledObs t).LocalStrategy i) :=
+    fun i => ObsModel.localStrategyFintype (compiledObs t) i
+  letI : Fintype (ObsModel.PureProfile (compiledObs t)) := by
+    unfold ObsModel.PureProfile
+    infer_instance
+  simpa using
+    (ObsModel.kuhn_mixed_to_behavioral_pspr (O := compiledObs t) hPSPR μ k)
 
 end ObsModelKuhn
 
