@@ -1,3 +1,4 @@
+import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.BehavioralToMixed
 import GameTheory.Theorems.Kuhn.CorrelatedRealization
 
