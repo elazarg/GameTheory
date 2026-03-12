@@ -1,6 +1,6 @@
+import Math.PMFProduct
 import GameTheory.Languages.MAID.SOS
 import GameTheory.Theorems.Kuhn.ObsModel
-import Math.PMFProduct
 
 /-!
 # GameTheory.Languages.MAID.CompileObs

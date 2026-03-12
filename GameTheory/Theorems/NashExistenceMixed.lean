@@ -353,9 +353,9 @@ theorem nashMap_weightFixedPoint_of_mixedSimplexFixedPoint
     simpa [nashMapOnMixedSimplex, w, hw_nn, hw_sum] using h
   exact ⟨w, hw_nn, hw_sum, hfp_weights⟩
 
-section  -- EU continuity needs [Fintype Outcome]
-variable [Fintype G.Outcome]
+section
 
+omit [DecidableEq ι] in
 set_option linter.unusedFintypeInType false in
 /--
 Baseline mixed-EU continuity on the mixed-simplex domain.
@@ -363,7 +363,7 @@ This is the `hbase` premise used by
 `continuous_nashMapOnMixedSimplex_of_continuous_mixedEu`.
 -/
 theorem continuous_mixedExtension_eu_profileFromMixedSimplex
-    (who : ι) :
+    [Fintype G.Outcome] (who : ι) :
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu (G.profileFromMixedSimplex x) who) := by
   classical
@@ -398,7 +398,7 @@ This is the `hdev` premise used by
 `continuous_nashMapOnMixedSimplex_of_continuous_mixedEu`.
 -/
 theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
-    (who : ι) (a : G.Strategy who) :
+    [Fintype G.Outcome] (who : ι) (a : G.Strategy who) :
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu
         (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who) := by

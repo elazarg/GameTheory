@@ -1,15 +1,17 @@
 import GameTheory.Theorems.Kuhn.ObsModel
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
-
 /-! # Behavioral -> Mixed direction of Kuhn's theorem for `ObsModel`
 
-This file is a thin migration wrapper.
+This file provides the `ObsModel` wrapper around the core behavioral-to-mixed
+theorem.
 
-The generic B->M theorem now lives on `ObsModelCore`; the stronger `ObsModel`
-surface only adds the snapshot structure needed to prove that the core-side
-`HorizonSeparation` hypothesis holds automatically. Existing clients can keep
-using `ObsModel.kuhn_behavioral_to_mixed`, but the proof is delegated to the
-core theorem.
+The main core theorem is stated for `ObsModelCore` under the hypothesis
+`NoNontrivialInfoStateRepeat`. For `ObsModel`, this condition holds
+automatically because snapshot-refined information states cannot repeat along a
+trace unless their action space is trivial.
+
+The theorem `ObsModel.kuhn_behavioral_to_mixed` is therefore obtained by
+instantiating the core theorem on `O.toCore`.
 -/
 
 set_option autoImplicit false
@@ -53,6 +55,30 @@ noncomputable abbrev behavioralToMixedJoint
 
 end Definitions
 
+section NoNontrivialInfoStateRepeat
+
+/-- Snapshot-refined information states satisfy the core non-repetition
+condition required for the behavioral-to-mixed theorem. -/
+theorem noNontrivialInfoStateRepeat_toCore
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (O : ObsModel ι σ Obs Act) :
+    O.toCore.NoNontrivialInfoStateRepeat := by
+  intro i π k ss hreach j₁ j₂ hjlt hjlen hEq
+  have hdepth :
+      O.stateDepth i (O.toCore.projectStates i (ss.take (j₁ + 1))) =
+      O.stateDepth i (O.toCore.projectStates i (ss.take (j₂ + 1))) := by
+    simpa [ObsModel.toCore, ObsModelCore.InfoState, ObsModel.InfoState] using
+      congrArg (O.stateDepth i) hEq
+  have hlenEq : j₁ + 1 = j₂ + 1 := by
+    rw [O.stateDepth_projectStates i (ss.take (j₁ + 1)),
+        O.stateDepth_projectStates i (ss.take (j₂ + 1))] at hdepth
+    have hj₁len : j₁ + 1 ≤ ss.length := by omega
+    have hj₂len : j₂ + 1 ≤ ss.length := by omega
+    simpa [List.length_take, hj₁len, hj₂len] using hdepth
+  omega
+
+end NoNontrivialInfoStateRepeat
+
 section HorizonSeparation
 
 /-- Snapshot-refined information states cannot recur at different horizons. -/
@@ -73,9 +99,9 @@ variable [∀ i, Fintype (O.InfoState i)]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-/-- **Kuhn's theorem, B->M direction for `ObsModel`.**
-Every behavioral profile has the same bounded trace distribution as the
-product mixed strategy. No recall conditions are needed. -/
+/-- **Kuhn's theorem, behavioral-to-mixed direction for `ObsModel`.**
+Every behavioral profile induces the same bounded trace distribution as the
+corresponding product mixed strategy. -/
 theorem kuhn_behavioral_to_mixed
     [∀ i, Fintype (O.LocalStrategy i)]
     (β : BehavioralProfile O) (k : Nat) :
@@ -84,7 +110,7 @@ theorem kuhn_behavioral_to_mixed
   simpa [ObsModel.runDist, ObsModel.runDistPure, ObsModel.behavioralToMixedJoint,
     ObsModel.behavioralToMixed, ObsModel.toCore] using
     (ObsModelCore.kuhn_behavioral_to_mixed (O := O.toCore)
-      (hSep := O.horizonSeparation_toCore) β k)
+      (hNontriv := O.noNontrivialInfoStateRepeat_toCore) β k)
 
 end MainTheorem
 

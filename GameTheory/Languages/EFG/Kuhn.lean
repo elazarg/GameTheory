@@ -1,6 +1,6 @@
+import Math.PMFProduct
 import GameTheory.Languages.EFG.CompileObs
 import GameTheory.Theorems.Kuhn
-import Math.PMFProduct
 
 /-!
 # Kuhn's Theorem for EFG — via ObsModelCore

@@ -1,8 +1,9 @@
-import GameTheory.Theorems.Kuhn.KuhnModel
-import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
-import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 import GameTheory.Theorems.Kuhn.BehavioralToMixed
+import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.CorrelatedRealization
+import GameTheory.Theorems.Kuhn.KuhnModel
+import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
+import GameTheory.Theorems.Kuhn.ObsModel
 
 /-!
 # GameTheory.Theorems.Kuhn
