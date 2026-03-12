@@ -3,28 +3,27 @@ import GameTheory.Theorems.Kuhn
 import Math.PMFProduct
 
 /-!
-# Kuhn's Theorem for EFG — via ObsModel
+# Kuhn's Theorem for EFG — via ObsModelCore
 
 Kuhn's theorem (behavioral ↔ mixed strategy equivalence) for extensive-form
-games, derived as a corollary of the generic ObsModel-level proof.
+games, derived as a corollary of the generic Kuhn development on
+`ObsModelCore`.
 
 ## Architecture
 
-The EFG game tree compiles to an `ObsModel` via `compileObsModel` (in
-`CompileObs.lean`). Kuhn's theorem is proved generically on `ObsModel`
+The EFG game tree compiles to an `ObsModelCore` via `compileObsCoreModel` (in
+`CompileObs.lean`). Kuhn's theorem is proved generically on `ObsModelCore`
 (in `Theorems/Kuhn/`). This file:
 
-1. States the ObsModel-level Kuhn corollary for compiled EFGs
-2. Provides EFG-native definitions used downstream (`FlatProfile`,
+1. Provides EFG-native definitions used downstream (`FlatProfile`,
    `productProfile`, `flatToBehavioral`, etc.)
-3. Bridges the ObsModel result to tree-level `evalDist` statements
+2. Builds the EFG-specific `ObsModelCore` bridge
+3. Transports the generic Kuhn result to tree-level `evalDist` statements
 
 ## Main results
 
-- `kuhn_behavioral_to_mixed_of_compiled` : B→M at ObsModel level (no recall)
-- `kuhn_mixed_to_behavioral_of_compiled` : M→B at ObsModel level (under PSPR)
 - `kuhn_behavioral_to_mixed` : B→M at tree level
-- `kuhn_mixed_to_behavioral` : M→B at tree level
+- `kuhn_mixed_to_behavioral` : M→B at tree level via `ObsModelCore`
 -/
 
 namespace EFG
@@ -139,62 +138,9 @@ theorem PerfectRecall_implies_NoInfoSetRepeat
       simp only [playerHistory] at key
       split at key <;> simp_all
 
--- ============================================================================
--- ObsModel-level Kuhn corollary
--- ============================================================================
-
-section ObsModelKuhn
-
-open GameTheory.EFG GameTheory.Theorems
-
-variable (t : GameTree S Outcome)
-
-/-- The compiled ObsModel for an EFG tree. -/
-noncomputable abbrev compiledObs (t : GameTree S Outcome) :=
-  GameTheory.EFG.compileObsModel t
-
 /-- The honest core compilation for an EFG tree. -/
 noncomputable abbrev compiledCoreObs (t : GameTree S Outcome) :=
   GameTheory.EFG.compileObsCoreModel t
-
-/-- **Kuhn B→M for compiled EFGs**: behavioral strategies can be realized as
-product mixed strategies.
-
-This requires finiteness of the compiled information-state type; the default
-list-backed summary used by `compileObsModel` does not provide that instance
-automatically. -/
-theorem kuhn_behavioral_to_mixed_of_compiled
-    [∀ i, Fintype ((compiledObs t).InfoState i)]
-    (β : ObsModel.BehavioralProfile (compiledObs t)) (k : Nat) :
-    (compiledObs t).runDist k β =
-      ((compiledObs t).behavioralToMixedJoint β).bind
-        ((compiledObs t).runDistPure k) := by
-  letI : ∀ i, Fintype ((compiledObs t).LocalStrategy i) :=
-    fun i => ObsModel.localStrategyFintype (compiledObs t) i
-  letI : Fintype (ObsModel.PureProfile (compiledObs t)) := by
-    unfold ObsModel.PureProfile
-    infer_instance
-  simpa using (ObsModel.kuhn_behavioral_to_mixed (O := compiledObs t) β k)
-
-/-- **Kuhn M→B for compiled EFGs**: under per-step player recall,
-product mixed strategies can be realized by behavioral strategies. -/
-theorem kuhn_mixed_to_behavioral_of_compiled
-    [∀ i, Fintype ((compiledObs t).InfoState i)]
-    (hPSPR : ObsModel.PerStepPlayerRecall (compiledObs t))
-    (μ : ∀ i, PMF ((compiledObs t).LocalStrategy i))
-    (k : Nat) :
-    ∃ β : ObsModel.BehavioralProfile (compiledObs t),
-      (compiledObs t).runDist k β =
-        (pmfPi μ).bind ((compiledObs t).runDistPure k) := by
-  letI : ∀ i, Fintype ((compiledObs t).LocalStrategy i) :=
-    fun i => ObsModel.localStrategyFintype (compiledObs t) i
-  letI : Fintype (ObsModel.PureProfile (compiledObs t)) := by
-    unfold ObsModel.PureProfile
-    infer_instance
-  simpa using
-    (ObsModel.kuhn_mixed_to_behavioral_pspr (O := compiledObs t) hPSPR μ k)
-
-end ObsModelKuhn
 
 -- ============================================================================
 -- ObsModelCore bridge for EFG
@@ -1450,19 +1396,15 @@ theorem kuhn_behavioral_to_mixed_udist (G : EFGGame)
     simp only [KernelGame.udist, EFGGame.toKernelGame]
     rw [← hμ, PMF.bind_bind]⟩
 
-/-- **Kuhn's theorem (mixed → behavioral direction).**
-    For any game tree with perfect recall and any mixed strategy profile,
-    there exists a behavioral strategy profile that induces the same
-    outcome distribution. -/
-theorem kuhn_mixed_to_behavioral
+private theorem kuhn_mixed_to_behavioral_core
     (t : GameTree S Outcome)
     (hpr : PerfectRecall t)
     (muP : MixedProfile S) :
-    ∃ sigma : BehavioralProfile S,
-      t.evalDist sigma =
-      (mixedProfileJoint (S := S) muP).bind
-        (fun pi => t.evalDist
-          (pureToBehavioral (S := S) pi)) := by
+    ∃ β : (compiledCoreObs (S := S) (Outcome := Outcome) t).BehavioralProfile,
+      let O := compiledCoreObs (S := S) (Outcome := Outcome) t
+      let k := treeHeight (S := S) (Outcome := Outcome) t
+      let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
   let O := compiledCoreObs (S := S) (Outcome := Outcome) t
   let k := treeHeight (S := S) (Outcome := Outcome) t
   let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
@@ -1484,9 +1426,26 @@ theorem kuhn_mixed_to_behavioral
             simpa [O] using
               obsLocalFeasibility_compiledCore (S := S) (Outcome := Outcome) (t := t) hpr i))
       μ k
+  exact ⟨β, hβ⟩
+
+private theorem compiledCore_runEq_to_evalDistEq
+    (t : GameTree S Outcome)
+    (muP : MixedProfile S)
+    {β : (compiledCoreObs (S := S) (Outcome := Outcome) t).BehavioralProfile}
+    (hβ :
+      let O := compiledCoreObs (S := S) (Outcome := Outcome) t
+      let k := treeHeight (S := S) (Outcome := Outcome) t
+      let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k)) :
+    let σ := GameTheory.EFG.descendBehavioralProfileCore (S := S) (Outcome := Outcome) t β
+    t.evalDist σ =
+      (mixedProfileJoint (S := S) muP).bind
+        (fun pi => t.evalDist (pureToBehavioral (S := S) pi)) := by
+  let O := compiledCoreObs (S := S) (Outcome := Outcome) t
+  let k := treeHeight (S := S) (Outcome := Outcome) t
+  let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
   let σ : BehavioralProfile S :=
     GameTheory.EFG.descendBehavioralProfileCore (S := S) (Outcome := Outcome) t β
-  refine ⟨σ, ?_⟩
   have hleft :
       (O.runDist k β).bind (fun ss => (O.lastState ss).evalDist σ) = t.evalDist σ := by
     simpa [O, k, σ, GameTheory.EFG.liftBehavioralProfileCore_descendBehavioralProfileCore] using
@@ -1560,6 +1519,27 @@ theorem kuhn_mixed_to_behavioral
     _ =
       (mixedProfileJoint (S := S) muP).bind
         (fun pi => t.evalDist (pureToBehavioral (S := S) pi)) := hright
+
+/-- **Kuhn's theorem (mixed → behavioral direction).**
+    For any game tree with perfect recall and any mixed strategy profile,
+    there exists a behavioral strategy profile that induces the same
+    outcome distribution. -/
+theorem kuhn_mixed_to_behavioral
+    (t : GameTree S Outcome)
+    (hpr : PerfectRecall t)
+    (muP : MixedProfile S) :
+    ∃ sigma : BehavioralProfile S,
+      t.evalDist sigma =
+      (mixedProfileJoint (S := S) muP).bind
+        (fun pi => t.evalDist
+          (pureToBehavioral (S := S) pi)) := by
+  obtain ⟨β, hβ⟩ :=
+    kuhn_mixed_to_behavioral_core (S := S) (Outcome := Outcome) t hpr muP
+  let σ : BehavioralProfile S :=
+    GameTheory.EFG.descendBehavioralProfileCore (S := S) (Outcome := Outcome) t β
+  refine ⟨σ, ?_⟩
+  simpa [σ] using
+    compiledCore_runEq_to_evalDistEq (S := S) (Outcome := Outcome) t muP hβ
 
 open GameTheory in
 /-- Kuhn's theorem lifted to utility distributions (mixed → behavioral). -/
