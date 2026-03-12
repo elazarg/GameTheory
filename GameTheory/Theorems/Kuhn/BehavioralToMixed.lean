@@ -64,8 +64,8 @@ theorem jointActionDist_pureToBehavioral (O : ObsModel ι σ Obs Act)
     (π : PureProfile O) (ss : List σ) :
     O.jointActionDist (O.pureToBehavioral π) ss =
       PMF.pure (fun i => π i (O.projectStates i ss)) := by
-  unfold jointActionDist pureToBehavioral
-  exact Math.PMFProduct.pmfPi_pure (fun i => π i (O.projectStates i ss))
+  simpa [ObsModel.jointActionDist, ObsModel.pureToBehavioral, ObsModel.toCore] using
+    (ObsModelCore.jointActionDist_pureToBehavioral (O := O.toCore) π ss)
 
 /-- Under a pure behavioral profile, `stepDist` is a deterministic step. -/
 theorem stepDist_pureToBehavioral (O : ObsModel ι σ Obs Act)
@@ -73,8 +73,9 @@ theorem stepDist_pureToBehavioral (O : ObsModel ι σ Obs Act)
     O.stepDist (O.pureToBehavioral π) ss =
       O.step (O.lastState ss)
         (O.castJointAction ss (fun i => π i (O.projectStates i ss))) := by
-  unfold stepDist
-  rw [jointActionDist_pureToBehavioral, PMF.pure_bind]
+  simpa [ObsModel.stepDist, ObsModel.pureToBehavioral,
+    ObsModel.castJointAction, ObsModel.toCore] using
+    (ObsModelCore.stepDist_pureToBehavioral (O := O.toCore) π ss)
 
 /-- The step distribution depends only on the profile's values at
 the current observation trace. -/
@@ -86,7 +87,7 @@ theorem stepDist_pureToBehavioral_congr (O : ObsModel ι σ Obs Act)
   simp only [stepDist_pureToBehavioral]
   congr 1
   funext i
-  simp only [castJointAction, h i]
+  exact congrArg (O.currentObs_projectStates i ss ▸ ·) (h i)
 
 end StepLemmas
 
@@ -116,13 +117,15 @@ theorem runDistPure_congr_of_agree_le (O : ObsModel ι σ Obs Act)
     (h : ∀ i (v : O.InfoState i), O.stateDepth i v ≤ n → π₁ i v = π₂ i v) :
     O.runDistPure n π₁ = O.runDistPure n π₂ := by
   induction n with
-  | zero => simp [runDistPure, runDist]
+  | zero =>
+    simp [ObsModel.runDistPure, ObsModel.toCore, ObsModelCore.runDistPure,
+      ObsModelCore.runDist]
   | succ n ih =>
     have hle : ∀ i (v : O.InfoState i), O.stateDepth i v ≤ n → π₁ i v = π₂ i v :=
       fun i v hv => h i v (Nat.le_succ_of_le hv)
     have hIH := ih hle
     ext ss
-    simp only [runDistPure, runDist]
+    simp only [runDistPure]
     -- Both sides: (runDist n ...).bind (fun ss' => pushforward (stepDist ... ss') (...))
     -- Use IH for the prefix run, and h for the step
     change (O.runDist n (O.pureToBehavioral π₁)).bind _ ss =
@@ -140,7 +143,10 @@ theorem runDistPure_congr_of_agree_le (O : ObsModel ι σ Obs Act)
           O.stepDist (O.pureToBehavioral π₂) ss' :=
         stepDist_pureToBehavioral_congr O ss' (fun i => h i _ (by
           rw [projectStates_length]; omega))
-      rw [hstep]
+      have hpush := congrArg
+        (fun d => Math.ProbabilityMassFunction.pushforward d (fun t => ss' ++ [t])) hstep
+      have hpush_eval := congrArg (fun d => d ss) hpush
+      exact congrArg (fun x => (O.runDist n (O.pureToBehavioral π₂)) ss' * x) hpush_eval
 
 end RunLemmas
 
@@ -161,10 +167,12 @@ theorem marginal_stepDist
     (O.behavioralToMixedJoint β).bind
       (fun π => O.stepDist (O.pureToBehavioral π) ss) =
       O.stepDist β ss := by
-  -- Unfold stepDist to (jointActionDist ...).bind (step ...) on both sides
-  simp only [stepDist]
-  -- Simplify LHS inner jointActionDist using pure profile structure
-  simp only [jointActionDist_pureToBehavioral, PMF.pure_bind]
+  rw [show (fun π => O.stepDist (O.pureToBehavioral π) ss) =
+      (fun π => O.step (O.lastState ss)
+        (O.castJointAction ss (fun i => π i (O.projectStates i ss)))) from by
+        funext π
+        exact stepDist_pureToBehavioral O π ss]
+  simp only [ObsModel.stepDist]
   -- Goal: ν.bind (fun π => step s (cast ss (fun i => π i (proj i ss)))) =
   --       (jointActionDist β ss).bind (fun a => step s (cast ss a))
   -- Key: pushforward of ν along eval = jointActionDist β ss
@@ -172,10 +180,18 @@ theorem marginal_stepDist
   suffices hpush : (O.behavioralToMixedJoint β).bind
       (fun π => PMF.pure (fun i => π i (O.projectStates i ss))) =
       O.jointActionDist β ss by
-    -- RHS = (ν.bind (pure ∘ eval)).bind g, by hpush
-    rw [← hpush, PMF.bind_bind]
-    -- Now: ν.bind (fun π => (pure (eval π)).bind g) = ν.bind (fun π => g (eval π))
-    simp only [PMF.pure_bind]
+    calc
+      (O.behavioralToMixedJoint β).bind
+          (fun π => O.step (O.lastState ss)
+            (O.castJointAction ss (fun i => π i (O.projectStates i ss)))) =
+        ((O.behavioralToMixedJoint β).bind
+          (fun π => PMF.pure (fun i => π i (O.projectStates i ss)))).bind
+            (fun a => O.step (O.lastState ss) (O.castJointAction ss a)) := by
+              rw [PMF.bind_bind]
+              simp
+      _ = O.stepDist β ss := by
+            rw [hpush]
+            rfl
   -- Prove the pushforward equality: ν.bind (pure ∘ eval) = jointActionDist β ss
   unfold behavioralToMixedJoint behavioralToMixed jointActionDist
   -- Goal: (pmfPi (fun i => pmfPi (β i))).bind (fun π => pure (fun i => π i (proj i ss)))
@@ -216,7 +232,9 @@ theorem marginal_stepDist
     (@Fintype.prod_sum ι ENNReal _ _ _ (fun i => O.LocalStrategy i) _
       (fun i πi => if πi (O.projectStates i ss) = a i
         then (Math.PMFProduct.pmfPi (β i)) πi else 0)).symm]
-  rw [Math.PMFProduct.pmfPi_apply]
+  change (∏ i, ∑ πi : O.LocalStrategy i, if πi (O.projectStates i ss) = a i
+      then (Math.PMFProduct.pmfPi (β i)) πi else 0) =
+    ∏ i, β i (O.projectStates i ss) (a i)
   congr 1; funext i
   convert Math.PMFProduct.pmfPi_coord_mass (β i) (O.projectStates i ss) (a i)
 

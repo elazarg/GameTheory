@@ -25,22 +25,25 @@ the proofs use.
 
 open Math.ProbabilityMassFunction Math.ParameterizedChain
 
-/-- Abstract player information-state interface over observations.
+/-- Core player information-state interface over observations. -/
+structure InfoStateCore (α : Type) where
+  Carrier : Type
+  start : α → Carrier
+  push : Carrier → α → Carrier
+  current : Carrier → α
+  current_start : ∀ a, current (start a) = a
+  current_push : ∀ h a, current (push h a) = a
+
+/-- Snapshot refinement of `InfoStateCore`.
 
 The strategic state carries the current observation together with whatever
 path summary the model wants to retain from earlier observations. The
 `snapshot` field is proof-facing: the current Kuhn proofs still use a faithful
 list view to recover prefix/current decomposition, even though the strategic
 meaning is "current observation plus summary", not "raw list". -/
-structure InfoStateSpec (α : Type) where
-  Carrier : Type
-  start : α → Carrier
-  push : Carrier → α → Carrier
-  current : Carrier → α
+structure InfoStateSpec (α : Type) extends InfoStateCore α where
   snapshot : Carrier → List α
   snapshot_injective : Function.Injective snapshot
-  current_start : ∀ a, current (start a) = a
-  current_push : ∀ h a, current (push h a) = a
   snapshot_start : ∀ a, snapshot (start a) = [a]
   snapshot_push : ∀ h a, snapshot (push h a) = snapshot h ++ [a]
 
@@ -73,6 +76,15 @@ end InfoStateSpec
 
 /-- Multi-player observation model over a `DSMachine` with observation-indexed actions.
 The label at state `s` is the joint action `∀ i, Act i (observe i s)`. -/
+structure ObsModelCore (ι σ : Type) (Obs : ι → Type) (Act : (i : ι) → Obs i → Type) where
+  /-- Per-player strategic information-state representation. -/
+  infoState : (i : ι) → InfoStateCore (Obs i)
+  /-- Per-player observation function on states. -/
+  observe : (i : ι) → σ → Obs i
+  /-- Underlying dependent stochastic machine. -/
+  machine : DSMachine σ (fun s => ∀ i, Act i (observe i s))
+
+/-- Snapshot-refined observation model. -/
 structure ObsModel (ι σ : Type) (Obs : ι → Type) (Act : (i : ι) → Obs i → Type) where
   /-- Per-player information-state representation of observation traces. -/
   infoState : (i : ι) → InfoStateSpec (Obs i)
@@ -81,80 +93,43 @@ structure ObsModel (ι σ : Type) (Obs : ι → Type) (Act : (i : ι) → Obs i 
   /-- Underlying dependent stochastic machine. -/
   machine : DSMachine σ (fun s => ∀ i, Act i (observe i s))
 
-namespace ObsModel
+namespace ObsModelCore
 
 variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}
 
 /-- Initial state (delegated to `machine`). -/
-abbrev init (O : ObsModel ι σ Obs Act) : σ := O.machine.init
+abbrev init (O : ObsModelCore ι σ Obs Act) : σ := O.machine.init
 
 /-- Stochastic step (delegated to `machine`). -/
-abbrev step (O : ObsModel ι σ Obs Act) (s : σ) : (∀ i, Act i (O.observe i s)) → PMF σ :=
+abbrev step (O : ObsModelCore ι σ Obs Act) (s : σ) : (∀ i, Act i (O.observe i s)) → PMF σ :=
   O.machine.step s
 
 /-- Joint action profile at state `s`. -/
-abbrev JointActionAt (O : ObsModel ι σ Obs Act) (s : σ) := ∀ i, Act i (O.observe i s)
-
-/-! ### Observations and projections -/
+abbrev JointActionAt (O : ObsModelCore ι σ Obs Act) (s : σ) := ∀ i, Act i (O.observe i s)
 
 /-- Last state of a trace (or initial state for empty traces). -/
-def lastState (O : ObsModel ι σ Obs Act) (ss : List σ) : σ :=
+def lastState (O : ObsModelCore ι σ Obs Act) (ss : List σ) : σ :=
   ss.getLast?.getD O.init
 
-/-- Player-local information state, represented by the model's chosen carrier. -/
-abbrev InfoState (O : ObsModel ι σ Obs Act) (i : ι) := (O.infoState i).Carrier
-
-/-- Proof-facing snapshot view of a player-local information state. -/
-abbrev stateSnapshot (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) : List (Obs i) :=
-  (O.infoState i).snapshot v
-
-/-- Semantic depth of a player-local information state, discounting the distinguished
-initial observation. -/
-def stateDepth (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) : Nat :=
-  (O.stateSnapshot i v).length - 1
+/-- Player-local strategic information state. -/
+abbrev InfoState (O : ObsModelCore ι σ Obs Act) (i : ι) := (O.infoState i).Carrier
 
 /-- Current observation stored in a player-local information state. -/
-def currentObs (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) : Obs i :=
+def currentObs (O : ObsModelCore ι σ Obs Act) (i : ι) (v : O.InfoState i) : Obs i :=
   (O.infoState i).current v
 
 /-- Extend a local information state by projecting additional states. -/
-def projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) :
+def projectStatesFrom (O : ObsModelCore ι σ Obs Act) (i : ι) (v : O.InfoState i) :
     List σ → O.InfoState i
   | [] => v
   | s :: ss => O.projectStatesFrom i ((O.infoState i).push v (O.observe i s)) ss
 
-/-- Project a state trace to player `i`'s local observation trace. -/
-def projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) : O.InfoState i :=
+/-- Project a state trace to player `i`'s strategic information state. -/
+def projectStates (O : ObsModelCore ι σ Obs Act) (i : ι) (ss : List σ) : O.InfoState i :=
   O.projectStatesFrom i ((O.infoState i).start (O.observe i O.init)) ss
 
-/-- The snapshot view of `projectStatesFrom` appends the projected observations. -/
-theorem stateSnapshot_projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι)
-    (v : O.InfoState i) (ss : List σ) :
-    O.stateSnapshot i (O.projectStatesFrom i v ss) =
-      O.stateSnapshot i v ++ ss.map (O.observe i) := by
-  induction ss generalizing v with
-  | nil =>
-      simp [projectStatesFrom, stateSnapshot]
-  | cons s ss ih =>
-      simpa [projectStatesFrom, stateSnapshot, (O.infoState i).snapshot_push, List.map]
-        using ih ((O.infoState i).push v (O.observe i s))
-
-/-- The snapshot view of `projectStates` prepends the initial observation and then
-records the projected observation list. -/
-theorem stateSnapshot_projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) :
-    O.stateSnapshot i (O.projectStates i ss) = O.observe i O.init :: ss.map (O.observe i) := by
-  simp [projectStates, stateSnapshot_projectStatesFrom, stateSnapshot,
-    (O.infoState i).snapshot_start]
-
-/-- Projected information states have semantic depth equal to the underlying
-state trace length. -/
-theorem stateDepth_projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) :
-    O.stateDepth i (O.projectStates i ss) = ss.length := by
-  simp [stateDepth, stateSnapshot, O.stateSnapshot_projectStates i ss,
-    List.length_map]
-
 /-- Current observation after extending a local information state. -/
-theorem currentObs_projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι)
+theorem currentObs_projectStatesFrom (O : ObsModelCore ι σ Obs Act) (i : ι)
     (v : O.InfoState i) (ss : List σ) :
     O.currentObs i (O.projectStatesFrom i v ss) =
       match ss.getLast? with
@@ -172,12 +147,12 @@ theorem currentObs_projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι)
             ih ((O.infoState i).push v (O.observe i s))
 
 /-- Observation equivalence: two states look the same to player `i`. -/
-def obsEq (O : ObsModel ι σ Obs Act) (i : ι) (s t : σ) : Prop :=
+def obsEq (O : ObsModelCore ι σ Obs Act) (i : ι) (s t : σ) : Prop :=
   O.observe i s = O.observe i t
 
 /-- The current observation of a projected information state is the observation at
 the last state. -/
-theorem currentObs_projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) :
+theorem currentObs_projectStates (O : ObsModelCore ι σ Obs Act) (i : ι) (ss : List σ) :
     O.currentObs i (O.projectStates i ss) = O.observe i (O.lastState ss) := by
   cases h : ss.getLast? with
   | none =>
@@ -189,6 +164,251 @@ theorem currentObs_projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : Lis
       have hlast : O.lastState ss = s := by simp [lastState, h]
       rw [hlast]
       simp [projectStates, currentObs_projectStatesFrom, h]
+
+/-- A single player's local strategy: information-state-dependent action
+selection, with the action type determined by the current observation. -/
+abbrev LocalStrategy (O : ObsModelCore ι σ Obs Act) (i : ι) : Type :=
+  (v : O.InfoState i) → Act i (O.currentObs i v)
+
+/-- Deterministic profile over local information states. -/
+abbrev PureProfile (O : ObsModelCore ι σ Obs Act) : Type :=
+  ∀ (i : ι), O.LocalStrategy i
+
+/-- Behavioral profile over local information states. -/
+abbrev BehavioralProfile (O : ObsModelCore ι σ Obs Act) : Type :=
+  ∀ (i : ι) (v : O.InfoState i), PMF (Act i (O.currentObs i v))
+
+/-- Correlated behavioral profile over the full information-state context. -/
+abbrev BehavioralProfileCorr (O : ObsModelCore ι σ Obs Act) : Type :=
+  (v : ∀ i, O.InfoState i) → PMF (∀ i, Act i (O.currentObs i (v i)))
+
+/-- Lift a deterministic profile to a behavioral one. -/
+noncomputable def pureToBehavioral (O : ObsModelCore ι σ Obs Act)
+    (π : PureProfile O) : BehavioralProfile O :=
+  fun i v => PMF.pure (π i v)
+
+section FintypeInstances
+
+open Classical in
+/-- Finite information states and finite action alphabets give finitely many
+local strategies. -/
+noncomputable instance localStrategyFintype (O : ObsModelCore ι σ Obs Act)
+    [∀ i, Fintype (O.InfoState i)] [∀ i o, Fintype (Act i o)] (i : ι) :
+    Fintype (O.LocalStrategy i) := by
+  unfold LocalStrategy
+  infer_instance
+
+end FintypeInstances
+
+/-- Cast a profile's action from information-state world to step world. -/
+def castProfileAction (O : ObsModelCore ι σ Obs Act) (i : ι) (ss : List σ)
+    (a : Act i (O.currentObs i (O.projectStates i ss))) :
+    Act i (O.observe i (O.lastState ss)) :=
+  O.currentObs_projectStates i ss ▸ a
+
+/-- Independent joint-action distribution induced by a behavioral profile. -/
+noncomputable def jointActionDist (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (b : BehavioralProfile O) (ss : List σ) :
+    PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))) :=
+  Math.PMFProduct.pmfPi (fun i => b i (O.projectStates i ss))
+
+/-- Cast a profile-world joint action to step-world. -/
+def castJointAction (O : ObsModelCore ι σ Obs Act) (ss : List σ)
+    (a : ∀ i, Act i (O.currentObs i (O.projectStates i ss))) :
+    ∀ i, Act i (O.observe i (O.lastState ss)) :=
+  fun i => O.currentObs_projectStates i ss ▸ a i
+
+/-- Embed an independent behavioral profile as a correlated one by product sampling. -/
+noncomputable def behavioralToCorr
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (O : ObsModelCore ι σ Obs Act) (b : BehavioralProfile O) : BehavioralProfileCorr O :=
+  fun v => Math.PMFProduct.pmfPi (fun i => b i (v i))
+
+/-- One stochastic step: sample action from profile, cast to step-world, then step. -/
+noncomputable def stepDist (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (b : BehavioralProfile O) (ss : List σ) : PMF σ :=
+  let s := O.lastState ss
+  (O.jointActionDist b ss).bind fun a => O.step s (O.castJointAction ss a)
+
+/-- Bounded run distribution under behavioral profile. -/
+noncomputable def runDist (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (k : Nat) (b : BehavioralProfile O) : PMF (List σ) :=
+  Nat.rec (PMF.pure [O.init])
+    (fun _ rec =>
+      rec.bind (fun ss =>
+        pushforward (O.stepDist b ss) (fun t => ss ++ [t])))
+    k
+
+/-- Pure-profile run distribution via `pureToBehavioral`. -/
+noncomputable def runDistPure (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (k : Nat) (π : PureProfile O) : PMF (List σ) :=
+  O.runDist k (O.pureToBehavioral π)
+
+/-- The pure step function: directly applies `O.step` at the deterministic action. -/
+noncomputable def pureStep (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (π : PureProfile O) (ss : List σ) : PMF σ :=
+  O.stepDist (O.pureToBehavioral π) ss
+
+/-- `runDistPure` equals `pureRun` applied to `pureStep`. -/
+theorem runDistPure_eq_pureRun (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (k : Nat) (π : PureProfile O) :
+    O.runDistPure k π = pureRun (O.pureStep) O.init k π := rfl
+
+/-- Reachability witness via nonzero-probability transitions (Type-valued). -/
+inductive ReachActionTrace (O : ObsModelCore ι σ Obs Act) : List σ → Type
+  | init : ReachActionTrace O [O.init]
+  | snoc {ss : List σ} {s t : σ} (a : O.JointActionAt s) :
+      ReachActionTrace O ss →
+      ss.getLast? = some s →
+      (O.step s a) t ≠ 0 →
+      ReachActionTrace O (ss ++ [t])
+
+/-- A state is reachable if it appears at the end of some nonzero-probability trace. -/
+def StepReachable (O : ObsModelCore ι σ Obs Act) (s : σ) : Prop :=
+  ∃ (ss : List σ), Nonempty (O.ReachActionTrace ss) ∧ ss.getLast? = some s
+
+/-- One stochastic step under a correlated behavioral profile. -/
+noncomputable def stepDistCorr (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (b : BehavioralProfileCorr O) (ss : List σ) : PMF σ :=
+  let s := O.lastState ss
+  let v : ∀ i, O.InfoState i := fun i => O.projectStates i ss
+  (b v).bind fun a => O.step s (fun i => O.currentObs_projectStates i ss ▸ a i)
+
+/-- Per-step action recall on the core information-state model. -/
+def PerStepActionRecall (O : ObsModelCore ι σ Obs Act) : Prop :=
+  ∀ (s s' t t' : σ) (a : O.JointActionAt s) (a' : O.JointActionAt s'),
+    (O.step s a) t ≠ 0 → (O.step s' a') t' ≠ 0 →
+    (hobs : ∀ i, O.observe i s = O.observe i s') →
+    (∀ i, O.observe i t = O.observe i t') →
+    ∀ i, (hobs i) ▸ (a i) = a' i
+
+/-- Mediator construction: condition `ν` on the probability of reaching
+the current state trace, then extract joint actions in profile-world types. -/
+noncomputable def mixedToMediator (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    [Fintype (PureProfile O)]
+    (ν : PMF (PureProfile O))
+    (n : Nat) (ss : List σ) :
+    PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))) :=
+  (reweightPMF ν (fun π => pureRun O.pureStep O.init n π ss)).bind
+    (fun π => O.jointActionDist (O.pureToBehavioral π) ss)
+
+end ObsModelCore
+
+namespace ObsModel
+
+variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}
+
+/-- Forget the proof-facing snapshot refinement. -/
+def toCore (O : ObsModel ι σ Obs Act) : ObsModelCore ι σ Obs Act where
+  infoState := fun i =>
+    { Carrier := (O.infoState i).Carrier
+      start := (O.infoState i).start
+      push := (O.infoState i).push
+      current := (O.infoState i).current
+      current_start := (O.infoState i).current_start
+      current_push := (O.infoState i).current_push }
+  observe := O.observe
+  machine := O.machine
+
+/-- Initial state (delegated to `machine`). -/
+abbrev init (O : ObsModel ι σ Obs Act) : σ := O.machine.init
+
+/-- Stochastic step (delegated to `machine`). -/
+abbrev step (O : ObsModel ι σ Obs Act) (s : σ) : (∀ i, Act i (O.observe i s)) → PMF σ :=
+  O.machine.step s
+
+/-- Joint action profile at state `s`. -/
+abbrev JointActionAt (O : ObsModel ι σ Obs Act) (s : σ) := ∀ i, Act i (O.observe i s)
+
+/-! ### Observations and projections -/
+
+/-- Last state of a trace (or initial state for empty traces). -/
+abbrev lastState (O : ObsModel ι σ Obs Act) (ss : List σ) : σ :=
+  O.toCore.lastState ss
+
+/-- Player-local information state, represented by the model's chosen carrier. -/
+abbrev InfoState (O : ObsModel ι σ Obs Act) (i : ι) := (O.infoState i).Carrier
+
+/-- Proof-facing snapshot view of a player-local information state. -/
+abbrev stateSnapshot (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) : List (Obs i) :=
+  (O.infoState i).snapshot v
+
+/-- Semantic depth of a player-local information state, discounting the distinguished
+initial observation. -/
+def stateDepth (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) : Nat :=
+  (O.stateSnapshot i v).length - 1
+
+/-- Current observation stored in a player-local information state. -/
+abbrev currentObs (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) : Obs i :=
+  O.toCore.currentObs i v
+
+/-- Extend a local information state by projecting additional states. -/
+abbrev projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι) (v : O.InfoState i) :
+    List σ → O.InfoState i :=
+  O.toCore.projectStatesFrom i v
+
+/-- Project a state trace to player `i`'s local observation trace. -/
+abbrev projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) : O.InfoState i :=
+  O.toCore.projectStates i ss
+
+/-- The snapshot view of `projectStatesFrom` appends the projected observations. -/
+theorem stateSnapshot_projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι)
+    (v : O.InfoState i) (ss : List σ) :
+    O.stateSnapshot i (O.projectStatesFrom i v ss) =
+      O.stateSnapshot i v ++ ss.map (O.observe i) := by
+  induction ss generalizing v with
+  | nil =>
+      simp [projectStatesFrom, ObsModelCore.projectStatesFrom, stateSnapshot]
+  | cons s ss ih =>
+      simpa [projectStatesFrom, ObsModelCore.projectStatesFrom, stateSnapshot,
+        (O.infoState i).snapshot_push, List.map]
+        using ih ((O.infoState i).push v (O.observe i s))
+
+/-- The snapshot view of `projectStates` prepends the initial observation and then
+records the projected observation list. -/
+theorem stateSnapshot_projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) :
+    O.stateSnapshot i (O.projectStates i ss) = O.observe i O.init :: ss.map (O.observe i) := by
+  rw [show O.projectStates i ss =
+      O.projectStatesFrom i ((O.infoState i).start (O.observe i O.init)) ss by
+        rfl]
+  rw [stateSnapshot_projectStatesFrom]
+  simp [stateSnapshot, (O.infoState i).snapshot_start]
+
+/-- Projected information states have semantic depth equal to the underlying
+state trace length. -/
+theorem stateDepth_projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) :
+    O.stateDepth i (O.projectStates i ss) = ss.length := by
+  simp [stateDepth, stateSnapshot, O.stateSnapshot_projectStates i ss,
+    List.length_map]
+
+/-- Current observation after extending a local information state. -/
+theorem currentObs_projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι)
+    (v : O.InfoState i) (ss : List σ) :
+    O.currentObs i (O.projectStatesFrom i v ss) =
+      match ss.getLast? with
+      | some s => O.observe i s
+      | none => O.currentObs i v := by
+  simpa [ObsModel.currentObs, ObsModel.projectStatesFrom, ObsModel.toCore] using
+    O.toCore.currentObs_projectStatesFrom i v ss
+
+/-- Observation equivalence: two states look the same to player `i`. -/
+def obsEq (O : ObsModel ι σ Obs Act) (i : ι) (s t : σ) : Prop :=
+  O.observe i s = O.observe i t
+
+/-- The current observation of a projected information state is the observation at
+the last state. -/
+theorem currentObs_projectStates (O : ObsModel ι σ Obs Act) (i : ι) (ss : List σ) :
+    O.currentObs i (O.projectStates i ss) = O.observe i (O.lastState ss) := by
+  simpa [ObsModel.currentObs, ObsModel.projectStates, ObsModel.lastState, ObsModel.toCore] using
+    O.toCore.currentObs_projectStates i ss
 
 theorem obsEq_of_projectStates_getLast (O : ObsModel ι σ Obs Act) (i : ι) {ss ss' : List σ}
     (hproj : O.projectStates i ss = O.projectStates i ss') :
@@ -219,9 +439,9 @@ abbrev BehavioralProfileCorr (O : ObsModel ι σ Obs Act) : Type :=
   (v : ∀ i, O.InfoState i) → PMF (∀ i, Act i (O.currentObs i (v i)))
 
 /-- Lift a deterministic profile to a behavioral one. -/
-noncomputable def pureToBehavioral (O : ObsModel ι σ Obs Act)
+noncomputable abbrev pureToBehavioral (O : ObsModel ι σ Obs Act)
     (π : PureProfile O) : BehavioralProfile O :=
-  fun i v => PMF.pure (π i v)
+  O.toCore.pureToBehavioral π
 
 section FintypeInstances
 
@@ -255,41 +475,36 @@ variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 /-- Independent joint-action distribution induced by a behavioral profile,
 in information-state world types indexed by the current observation of the
 projected state summary. -/
-noncomputable def jointActionDist (O : ObsModel ι σ Obs Act)
+noncomputable abbrev jointActionDist (O : ObsModel ι σ Obs Act)
     (b : BehavioralProfile O) (ss : List σ) :
     PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))) :=
-  Math.PMFProduct.pmfPi (fun i => b i (O.projectStates i ss))
+  O.toCore.jointActionDist b ss
 
 /-- Cast a profile-world joint action to step-world (observation at the last state). -/
-def castJointAction (O : ObsModel ι σ Obs Act) (ss : List σ)
+abbrev castJointAction (O : ObsModel ι σ Obs Act) (ss : List σ)
     (a : ∀ i, Act i (O.currentObs i (O.projectStates i ss))) :
     ∀ i, Act i (O.observe i (O.lastState ss)) :=
-  fun i => O.currentObs_projectStates i ss ▸ a i
+  O.toCore.castJointAction ss a
 
 /-- One stochastic step: sample action from profile, cast to step-world, then step. -/
-noncomputable def stepDist (O : ObsModel ι σ Obs Act)
+noncomputable abbrev stepDist (O : ObsModel ι σ Obs Act)
     (b : BehavioralProfile O) (ss : List σ) : PMF σ :=
-  let s := O.lastState ss
-  (O.jointActionDist b ss).bind fun a => O.step s (O.castJointAction ss a)
+  O.toCore.stepDist b ss
 
 /-- Bounded run distribution under behavioral profile. -/
-noncomputable def runDist (O : ObsModel ι σ Obs Act)
+noncomputable abbrev runDist (O : ObsModel ι σ Obs Act)
     (k : Nat) (b : BehavioralProfile O) : PMF (List σ) :=
-  Nat.rec (PMF.pure [O.init])
-    (fun _ rec =>
-      rec.bind (fun ss =>
-        pushforward (O.stepDist b ss) (fun t => ss ++ [t])))
-    k
+  O.toCore.runDist k b
 
 /-- Pure-profile run distribution via `pureToBehavioral`. -/
-noncomputable def runDistPure (O : ObsModel ι σ Obs Act)
+noncomputable abbrev runDistPure (O : ObsModel ι σ Obs Act)
     (k : Nat) (π : PureProfile O) : PMF (List σ) :=
-  O.runDist k (O.pureToBehavioral π)
+  O.toCore.runDistPure k π
 
 /-- The pure step function: directly applies `O.step` at the deterministic action. -/
-noncomputable def pureStep (O : ObsModel ι σ Obs Act) (π : PureProfile O)
+noncomputable abbrev pureStep (O : ObsModel ι σ Obs Act) (π : PureProfile O)
     (ss : List σ) : PMF σ :=
-  O.stepDist (O.pureToBehavioral π) ss
+  O.toCore.pureStep π ss
 
 /-- `runDistPure` equals `pureRun` applied to `pureStep`. -/
 theorem runDistPure_eq_pureRun (O : ObsModel ι σ Obs Act) (k : Nat)
@@ -506,12 +721,10 @@ end NoFintype
 /-! ### Additional execution -/
 
 /-- One stochastic step under a correlated behavioral profile. -/
-noncomputable def stepDistCorr (O : ObsModel ι σ Obs Act)
+noncomputable abbrev stepDistCorr (O : ObsModel ι σ Obs Act)
     [Fintype ι] [∀ i o, Fintype (Act i o)]
     (b : BehavioralProfileCorr O) (ss : List σ) : PMF σ :=
-  let s := O.lastState ss
-  let v : ∀ i, O.InfoState i := fun i => O.projectStates i ss
-  (b v).bind fun a => O.step s (fun i => O.currentObs_projectStates i ss ▸ a i)
+  O.toCore.stepDistCorr b ss
 
 /-! ### StepReachable lemmas -/
 
@@ -588,8 +801,13 @@ noncomputable def mixedToMediator (O : ObsModel ι σ Obs Act)
     [Fintype (PureProfile O)]
     (ν : PMF (PureProfile O))
     (n : Nat) (ss : List σ) :
-    PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))) :=
-  (reweightPMF ν (fun π => pureRun O.pureStep O.init n π ss)).bind
-    (fun π => O.jointActionDist (O.pureToBehavioral π) ss)
+    PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))) := by
+  letI : Fintype (O.toCore.PureProfile) := by
+    simpa [ObsModel.toCore, ObsModelCore.PureProfile, PureProfile,
+      ObsModelCore.LocalStrategy, LocalStrategy,
+      ObsModelCore.InfoState, InfoState,
+      ObsModelCore.currentObs, currentObs] using
+      (inferInstance : Fintype (PureProfile O))
+  exact O.toCore.mixedToMediator ν n ss
 
 end ObsModel
