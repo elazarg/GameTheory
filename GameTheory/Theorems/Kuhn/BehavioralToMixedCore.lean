@@ -1,15 +1,19 @@
 import GameTheory.Theorems.Kuhn.KuhnModel
 import Math.PMFProduct
 
-/-! # Behavioral -> Mixed direction of Kuhn's theorem for `KuhnModel`
+/-! # Behavioral -> Mixed direction of Kuhn's theorem for `ObsModelCore`
 
-This is the semantic-core version of Kuhn's B->M direction, proved on
-`KuhnModel` (currently named `ObsModelCore` in the code). Unlike the older
-snapshot-refined `ObsModel` proof, it does not assume a faithful observation
-history. The only additional hypothesis beyond finite information states is
-`HorizonSeparation`: if the same information state occurs at two different
-horizons, then its action space is trivial. This is exactly what is needed to
-justify sampling all nontrivial contingent choices ex ante.
+This file proves the behavioral-to-mixed direction of Kuhn's theorem for
+`ObsModelCore`.
+
+For a behavioral profile `β`, we build the corresponding ex-ante product mixed
+strategy by sampling independently at each player's information states, and then
+show that both semantics induce the same bounded trace distribution.
+
+The key hypothesis is `NoNontrivialInfoStateRepeat`: along any reachable trace,
+if the same information state is visited more than once, then its action space
+is trivial. This isolates exactly the case in which repeated visits cannot
+distinguish behavioral resampling from ex-ante pure-strategy sampling.
 -/
 
 set_option autoImplicit false
@@ -154,17 +158,55 @@ theorem runDistPure_congr_of_agree_within
       by_cases hne : (O.runDist n (O.pureToBehavioral π₂)) ss' = 0
       · simp [hne]
       · have hlen : ss'.length = n + 1 := by
-          apply runDistPure_support_length (O := O) n π₂
+          apply runDistPure_support_length n π₂
           simpa [runDistPure] using hne
         have hstep : O.stepDist (O.pureToBehavioral π₁) ss' =
             O.stepDist (O.pureToBehavioral π₂) ss' :=
-          stepDist_pureToBehavioral_congr (O := O) ss' (fun i =>
+          stepDist_pureToBehavioral_congr ss' (fun i =>
             h i _ (O.reachableInfoStateWithin_projectStates i (by omega)))
         have hpush := congrArg
           (fun d => Math.ProbabilityMassFunction.pushforward d (fun t => ss' ++ [t])) hstep
         exact congrArg
           (fun x => (O.runDist n (O.pureToBehavioral π₂)) ss' * x)
           (congrArg (· ss) hpush)
+
+/-- Per-trace version: `runDistPure` at a specific trace depends only on
+the profile's values at info states encountered along that trace. -/
+theorem runDistPure_congr_on_trace
+    {π₁ π₂ : PureProfile O} {n : Nat} {ss : List σ}
+    (hlen : ss.length = n + 1)
+    (h : ∀ (j : Nat), j < n → ∀ (i : ι),
+      π₁ i (O.projectStates i (ss.take (j + 1))) =
+      π₂ i (O.projectStates i (ss.take (j + 1)))) :
+    O.runDistPure n π₁ ss = O.runDistPure n π₂ ss := by
+  induction n generalizing ss with
+  | zero => simp [runDistPure, runDist]
+  | succ m ih =>
+    have hne : ss ≠ [] := by intro he; simp [he] at hlen
+    set pre := ss.dropLast with hpre_def
+    set t := ss.getLast hne with ht_def
+    have hss : ss = pre ++ [t] := (List.dropLast_append_getLast hne).symm
+    have hplen : pre.length = m + 1 := by
+      have := congrArg List.length hss
+      simp [List.length_append] at this; omega
+    simp only [runDistPure_eq_pureRun, hss]
+    rw [pureRun_succ_append, pureRun_succ_append]
+    have htake : ∀ j, j + 1 ≤ pre.length →
+        ss.take (j + 1) = pre.take (j + 1) := by
+      intro j hj; rw [hss]; exact List.take_append_of_le_length hj
+    have hIH : pureRun O.pureStep O.init m π₁ pre =
+        pureRun O.pureStep O.init m π₂ pre := by
+      rw [← runDistPure_eq_pureRun, ← runDistPure_eq_pureRun]
+      exact ih hplen (fun j hj i => by
+        rw [← htake j (by omega)]; exact h j (by omega) i)
+    have hpi : ∀ i, π₁ i (O.projectStates i pre) =
+        π₂ i (O.projectStates i pre) := by
+      intro i
+      have htake_m : ss.take (m + 1) = pre := by
+        rw [hss, show m + 1 = pre.length from hplen.symm]; exact List.take_left
+      have := h m (by omega) i; rwa [htake_m] at this
+    rw [hIH, show O.pureStep π₁ pre t = O.pureStep π₂ pre t from
+      congrArg (· t) (stepDist_pureToBehavioral_congr pre hpi)]
 
 end RunLemmas
 
@@ -186,7 +228,7 @@ theorem marginal_stepDist
       (fun π => O.step (O.lastState ss)
         (O.castJointAction ss (fun i => π i (O.projectStates i ss)))) from by
         funext π
-        exact stepDist_pureToBehavioral (O := O) π ss]
+        exact stepDist_pureToBehavioral π ss]
   simp only [ObsModelCore.stepDist]
   suffices hpush : (O.behavioralToMixedJoint β).bind
       (fun π => PMF.pure (fun i => π i (O.projectStates i ss))) =
@@ -245,83 +287,88 @@ end MarginalStep
 section ScalarIndependence
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.InfoState i)]
 
 open Classical in
-/-- Swap: use `π₁` on states reachable within horizon `n`, and `π₂` otherwise. -/
-noncomputable def swapProfile
-    (n : Nat) (π₁ π₂ : PureProfile O) : PureProfile O :=
-  fun i v => if O.ReachableInfoStateWithin i n v then π₁ i v else π₂ i v
+/-- Swap: use `π₁` where predicate `P` holds, and `π₂` elsewhere. -/
+noncomputable def swapProfileBy
+    (P : ∀ i, O.InfoState i → Prop)
+    (π₁ π₂ : PureProfile O) : PureProfile O :=
+  fun i v => if P i v then π₁ i v else π₂ i v
 
-omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] [∀ i, Fintype (O.InfoState i)] in
-theorem swapProfile_involutive (n : Nat) :
+omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] in
+theorem swapProfileBy_involutive (P : ∀ i, O.InfoState i → Prop) :
     Function.Involutive (fun (p : PureProfile O × PureProfile O) =>
-      (swapProfile (O := O) n p.1 p.2, swapProfile (O := O) n p.2 p.1)) := by
+      (swapProfileBy P p.1 p.2, swapProfileBy P p.2 p.1)) := by
   intro ⟨π₁, π₂⟩
   apply Prod.ext
   · funext i v
-    by_cases hv : O.ReachableInfoStateWithin i n v <;> simp [swapProfile, hv]
+    by_cases hv : P i v <;> simp [swapProfileBy, hv]
   · funext i v
-    by_cases hv : O.ReachableInfoStateWithin i n v <;> simp [swapProfile, hv]
+    by_cases hv : P i v <;> simp [swapProfileBy, hv]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
-theorem swap_weight_eq
+theorem swapBy_weight_eq
+    [∀ i, Fintype (O.InfoState i)]
     [∀ i, Fintype (O.LocalStrategy i)]
-    [Fintype (PureProfile O)]
-    (β : BehavioralProfile O) (n : Nat) (π₁ π₂ : PureProfile O) :
-    (O.behavioralToMixedJoint β) (swapProfile (O := O) n π₁ π₂) *
-    (O.behavioralToMixedJoint β) (swapProfile (O := O) n π₂ π₁) =
+    (P : ∀ i, O.InfoState i → Prop)
+    (β : BehavioralProfile O) (π₁ π₂ : PureProfile O) :
+    (O.behavioralToMixedJoint β) (swapProfileBy P π₁ π₂) *
+    (O.behavioralToMixedJoint β) (swapProfileBy P π₂ π₁) =
     (O.behavioralToMixedJoint β) π₁ *
     (O.behavioralToMixedJoint β) π₂ := by
   simp only [behavioralToMixedJoint, behavioralToMixed, Math.PMFProduct.pmfPi_apply]
   rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
   congr 1
   funext i
-  simp only [swapProfile]
+  simp only [swapProfileBy]
   rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
   congr 1
   funext v
-  by_cases hv : O.ReachableInfoStateWithin i n v <;> simp [hv, mul_comm]
+  by_cases hv : P i v <;> simp [hv, mul_comm]
 
 open Classical in
+/-- Independence under the product measure: if `f` depends only on coordinates
+where `P` holds, and `g` depends only on coordinates where `P` does not hold,
+then `E[f·g] = E[f]·E[g]` under the product measure. -/
 theorem scalar_indep
+    [∀ i, Fintype (O.InfoState i)]
     [∀ i, Fintype (O.LocalStrategy i)]
     [Fintype (PureProfile O)]
-    (β : BehavioralProfile O) (n : Nat)
+    (P : ∀ i, O.InfoState i → Prop)
+    (β : BehavioralProfile O)
     (f g : PureProfile O → ENNReal)
     (hf : ∀ π₁ π₂ : PureProfile O,
-      (∀ i (v : O.InfoState i), O.ReachableInfoStateWithin i n v → π₁ i v = π₂ i v) →
+      (∀ i (v : O.InfoState i), P i v → π₁ i v = π₂ i v) →
         f π₁ = f π₂)
     (hg : ∀ π₁ π₂ : PureProfile O,
-      (∀ i (v : O.InfoState i), ¬ O.ReachableInfoStateWithin i n v → π₁ i v = π₂ i v) →
+      (∀ i (v : O.InfoState i), ¬ P i v → π₁ i v = π₂ i v) →
         g π₁ = g π₂) :
     ∑ π, (O.behavioralToMixedJoint β) π * (f π * g π) =
       (∑ π, (O.behavioralToMixedJoint β) π * f π) *
       (∑ π, (O.behavioralToMixedJoint β) π * g π) := by
   set ν := O.behavioralToMixedJoint β
-  have hf_swap : ∀ π₁ π₂, f (swapProfile (O := O) n π₁ π₂) = f π₁ := by
+  have hf_swap : ∀ π₁ π₂, f (swapProfileBy P π₁ π₂) = f π₁ := by
     intro π₁ π₂
     apply hf
     intro i v hv
-    simp [swapProfile, hv]
-  have hg_swap : ∀ π₁ π₂, g (swapProfile (O := O) n π₁ π₂) = g π₂ := by
+    simp [swapProfileBy, hv]
+  have hg_swap : ∀ π₁ π₂, g (swapProfileBy P π₁ π₂) = g π₂ := by
     intro π₁ π₂
     apply hg
     intro i v hv
-    simp [swapProfile, hv]
-  let P := fun π => ν π
+    simp [swapProfileBy, hv]
+  let W := fun π => ν π
   let Fsame : PureProfile O × PureProfile O → ENNReal :=
-    fun p => P p.1 * P p.2 * (f p.1 * g p.1)
+    fun p => W p.1 * W p.2 * (f p.1 * g p.1)
   let Fcross : PureProfile O × PureProfile O → ENNReal :=
-    fun p => P p.1 * P p.2 * (f p.1 * g p.2)
+    fun p => W p.1 * W p.2 * (f p.1 * g p.2)
   let e : PureProfile O × PureProfile O → PureProfile O × PureProfile O :=
-    fun p => (swapProfile (O := O) n p.1 p.2, swapProfile (O := O) n p.2 p.1)
-  have he : Function.Involutive e := swapProfile_involutive (O := O) n
+    fun p => (swapProfileBy P p.1 p.2, swapProfileBy P p.2 p.1)
+  have he : Function.Involutive e := swapProfileBy_involutive P
   have hpoint : ∀ p, Fcross p = Fsame (e p) := by
     intro ⟨π₁, π₂⟩
-    simp only [Fcross, Fsame, e, P]
-    rw [swap_weight_eq (O := O) β n π₁ π₂, hf_swap π₁ π₂, hg_swap π₁ π₂]
+    simp only [Fcross, Fsame, e, W]
+    rw [swapBy_weight_eq P β π₁ π₂, hf_swap π₁ π₂, hg_swap π₁ π₂]
   have hFsame_eq_Fcross : ∑ p : PureProfile O × PureProfile O, Fsame p =
       ∑ p : PureProfile O × PureProfile O, Fcross p := by
     calc
@@ -335,14 +382,14 @@ theorem scalar_indep
       (∑ π, ν π * (f π * g π)) * (∑ π₂, ν π₂) := by
     have h1 : ∀ (a b : PureProfile O),
         Fsame (a, b) = (ν a * (f a * g a)) * ν b := fun a b => by
-      simp [Fsame, P]
+      simp [Fsame, W]
       ring
     simp_rw [Fintype.sum_prod_type, h1, ← Finset.mul_sum, ← Finset.sum_mul]
   have hFcross_expand : ∑ p : PureProfile O × PureProfile O, Fcross p =
       (∑ π, ν π * f π) * (∑ π, ν π * g π) := by
     have h1 : ∀ (a b : PureProfile O),
         Fcross (a, b) = (ν a * f a) * (ν b * g b) := fun a b => by
-      simp [Fcross, P]
+      simp [Fcross, W]
       ring
     simp_rw [Fintype.sum_prod_type, h1, ← Finset.mul_sum]
     rw [← Finset.sum_mul]
@@ -360,15 +407,40 @@ end ScalarIndependence
 
 section StepIndependenceBridge
 
-variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+variable [DecidableEq ι] [Fintype ι]
+variable [∀ i o, Fintype (Act i o)]
+
+/-- On a reachable trace of length `n + 1`, if the current information state
+already appeared earlier on the same trace, then the current action space is
+trivial. -/
+theorem currentInfoState_subsingleton_of_repeated_on_reachable_trace
+    (hNontriv : O.NoNontrivialInfoStateRepeat)
+    {i : ι} {π : PureProfile O} {n : Nat} {ss : List σ}
+    (hreach : O.runDistPure n π ss ≠ 0)
+    (hlen : ss.length = n + 1)
+    {j : Nat} (hj : j < n)
+    (hrepeat : O.projectStates i (ss.take (j + 1)) = O.projectStates i ss) :
+    Subsingleton (Act i (O.currentObs i (O.projectStates i ss))) := by
+  have htake_all : ss.take (n + 1) = ss := by
+    simp_all only [ne_eq, List.take_eq_self_iff, le_refl]
+  have hrepeat' :
+      O.projectStates i (ss.take (j + 1)) =
+        O.projectStates i (ss.take (n + 1)) := by
+    rw [htake_all]
+    exact hrepeat
+  have hsub :
+      Subsingleton
+        (Act i (O.currentObs i (O.projectStates i (ss.take (n + 1))))) :=
+    hNontriv i π n ss hreach j n hj (by omega) hrepeat'
+  rw [htake_all] at hsub
+  exact hsub
+
 variable [∀ i, Fintype (O.InfoState i)]
 
 open Classical in
-set_option linter.unusedFintypeInType false in
 theorem stepIndependence_bridge
     [∀ i, Fintype (O.LocalStrategy i)]
-    [Fintype (PureProfile O)]
-    (hSep : O.HorizonSeparation)
+    (hNontriv : O.NoNontrivialInfoStateRepeat)
     (β : BehavioralProfile O) (n : Nat) :
     (O.behavioralToMixedJoint β).bind (fun π =>
       (O.runDistPure n π).bind (fun ss =>
@@ -382,7 +454,7 @@ theorem stepIndependence_bridge
   set ν := O.behavioralToMixedJoint β
   have hstepMarg : ∀ ss : List σ,
       ν.bind (fun π => O.stepDist (O.pureToBehavioral π) ss) = O.stepDist β ss :=
-    marginal_stepDist (O := O) β
+    marginal_stepDist β
   ext y
   let Lfun : List σ → ENNReal := fun ss =>
     (Math.ProbabilityMassFunction.pushforward (O.stepDist β ss) (fun t => ss ++ [t])) y
@@ -404,66 +476,88 @@ theorem stepIndependence_bridge
   congr 1
   funext ss
   by_cases hlen : ss.length = n + 1
-  · let f : PureProfile O → ENNReal := fun π => (O.runDistPure n π) ss
-    let g : PureProfile O → ENNReal := fun π => Gfun ss π
-    have hf : ∀ π₁ π₂ : PureProfile O,
-        (∀ i (v : O.InfoState i), O.ReachableInfoStateWithin i n v → π₁ i v = π₂ i v) →
-          f π₁ = f π₂ := by
-      intro π₁ π₂ hag
-      exact congrArg (· ss) (runDistPure_congr_of_agree_within (O := O) n hag)
-    have hg : ∀ π₁ π₂ : PureProfile O,
-        (∀ i (v : O.InfoState i), ¬ O.ReachableInfoStateWithin i n v → π₁ i v = π₂ i v) →
-          g π₁ = g π₂ := by
-      intro π₁ π₂ hag
-      change Gfun ss π₁ = Gfun ss π₂
-      simp only [Gfun]
-      rw [stepDist_pureToBehavioral_congr (O := O) ss (fun i =>
-        by
-          by_cases hreach : O.ReachableInfoStateWithin i n (O.projectStates i ss)
-          · rcases hreach with ⟨ss', hss', hproj⟩
-            have hsub : Subsingleton (Act i (O.currentObs i (O.projectStates i ss))) := by
-              apply hSep i hproj
-              omega
-            exact Subsingleton.elim _ _
-          · exact hag i _ hreach)]
-    have hind :
-        ∑ π, ν π * (f π * g π) =
-          (∑ π, ν π * f π) * (∑ π, ν π * g π) :=
-      scalar_indep (O := O) β n f g hf hg
-    have hEg : (∑ π, ν π * g π) = Lfun ss := by
-      have hbindPush :
-          (ν.bind (fun π =>
-            Math.ProbabilityMassFunction.pushforward
-              (O.stepDist (O.pureToBehavioral π) ss)
-              (fun t => ss ++ [t]))) y = Lfun ss := by
-        simp only [Lfun]
-        congr 1
-        rw [show ν.bind (fun π =>
-            Math.ProbabilityMassFunction.pushforward
-              (O.stepDist (O.pureToBehavioral π) ss) (fun t => ss ++ [t]))
-          = Math.ProbabilityMassFunction.pushforward
-            (ν.bind (fun π => O.stepDist (O.pureToBehavioral π) ss))
-            (fun t => ss ++ [t]) from by
-              simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]]
-        rw [hstepMarg ss]
-      simp only [PMF.bind_apply] at hbindPush
-      simp only [g, Gfun]
-      convert hbindPush using 1
-      simp_rw [tsum_fintype]
-    calc
-      (∑' π, ν π * ((O.runDistPure n π) ss * Lfun ss)) =
-        ∑ π, ν π * (f π * Lfun ss) := by simp [f, tsum_fintype]
-      _ = (∑ π, ν π * f π) * Lfun ss := by
-          simp_rw [← mul_assoc]
-          exact (Finset.sum_mul ..).symm
-      _ = (∑ π, ν π * f π) * (∑ π, ν π * g π) := by rw [hEg]
-      _ = ∑ π, ν π * (f π * g π) := hind.symm
-      _ = ∑' π, ν π * ((O.runDistPure n π) ss * Gfun ss π) := by
-          simp [f, g, tsum_fintype]
+  · rw [tsum_fintype, tsum_fintype]
+    by_cases hreach : ∃ π₀ : PureProfile O, O.runDistPure n π₀ ss ≠ 0
+    · -- Trace-specific partition: P(i,v) iff v appears as an info state at
+      -- some position j < n along the trace ss.
+      let P : ∀ i, O.InfoState i → Prop := fun i v =>
+        ∃ j, j < n ∧ O.projectStates i (ss.take (j + 1)) = v
+      let f : PureProfile O → ENNReal := fun π => (O.runDistPure n π) ss
+      let g : PureProfile O → ENNReal := fun π => Gfun ss π
+      -- `f` depends only on the coordinates that appear strictly before time `n`.
+      have hf : ∀ π₁ π₂ : PureProfile O,
+          (∀ i (v : O.InfoState i), P i v → π₁ i v = π₂ i v) →
+            f π₁ = f π₂ := by
+        intro π₁ π₂ hag
+        exact runDistPure_congr_on_trace hlen (fun j hj i => by
+          exact hag i _ ⟨j, hj, rfl⟩)
+      -- `g` depends only on the complementary coordinates.  If the current
+      -- info-state already appeared earlier on this trace, reachability plus
+      -- `hNontriv` makes its action space subsingleton.
+      have hg : ∀ π₁ π₂ : PureProfile O,
+          (∀ i (v : O.InfoState i), ¬ P i v → π₁ i v = π₂ i v) →
+            g π₁ = g π₂ := by
+        intro π₁ π₂ hag
+        change Gfun ss π₁ = Gfun ss π₂
+        simp only [Gfun]
+        rw [stepDist_pureToBehavioral_congr (O := O) ss (fun i => by
+          by_cases hP : P i (O.projectStates i ss)
+          · rcases hP with ⟨j, hj, hproj⟩
+            rcases hreach with ⟨π₀, hπ₀⟩
+            have hsub :
+                Subsingleton (Act i (O.currentObs i (O.projectStates i ss))) :=
+              currentInfoState_subsingleton_of_repeated_on_reachable_trace
+                (O := O) hNontriv hπ₀ hlen hj hproj
+            exact @Subsingleton.elim _ hsub _ _
+          · exact hag i _ hP)]
+      have hindep :=
+        scalar_indep P β f g hf hg
+      have hg_sum :
+          (∑ π, ν π * g π) = Lfun ss := by
+        calc
+          (∑ π, ν π * g π)
+              = (ν.bind (fun π =>
+                  Math.ProbabilityMassFunction.pushforward
+                    (O.stepDist (O.pureToBehavioral π) ss)
+                    (fun t => ss ++ [t]))) y := by
+                  simp [g, Gfun, PMF.bind_apply]
+          _ =
+              (Math.ProbabilityMassFunction.pushforward
+                (ν.bind (fun π => O.stepDist (O.pureToBehavioral π) ss))
+                (fun t => ss ++ [t])) y := by
+                  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind,
+                    PMF.bind_apply, mul_comm]
+          _ =
+              (Math.ProbabilityMassFunction.pushforward
+                (O.stepDist β ss) (fun t => ss ++ [t])) y := by
+                  simpa using congrArg
+                    (fun d =>
+                      (Math.ProbabilityMassFunction.pushforward d (fun t => ss ++ [t])) y)
+                    (hstepMarg ss)
+          _ = Lfun ss := by
+                rfl
+      calc
+        ∑ π, ν π * ((O.runDistPure n π) ss * Lfun ss)
+            = (∑ π, ν π * f π) * Lfun ss := by
+                simp_rw [show ∀ π,
+                    ν π * ((O.runDistPure n π) ss * Lfun ss) =
+                      (ν π * f π) * Lfun ss from by
+                    intro π
+                    simp [f, mul_assoc]]
+                rw [Finset.sum_mul]
+        _ = (∑ π, ν π * f π) * (∑ π, ν π * g π) := by
+              rw [hg_sum]
+        _ = ∑ π, ν π * (f π * g π) := by
+              symm
+              exact hindep
+        _ = ∑ π, ν π * ((O.runDistPure n π) ss * Gfun ss π) := by
+              rfl
+    · simp_all only [tsum_fintype, ne_eq, not_exists, Decidable.not_not, zero_mul, mul_zero,
+        Finset.sum_const_zero, ν, Lfun, Gfun]
   · have hzero : ∀ π : PureProfile O, (O.runDistPure n π) ss = 0 := by
       intro π
       by_contra hne
-      exact hlen (runDistPure_support_length (O := O) n π ss hne)
+      exact hlen (runDistPure_support_length n π ss hne)
     simp [hzero]
 
 end StepIndependenceBridge
@@ -472,7 +566,6 @@ section MainTheorem
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Generic step-independence implies trace-distribution equality on the core
 model.  This local copy keeps the core B->M development self-contained. -/
@@ -519,13 +612,13 @@ states do not recur at different horizons. -/
 theorem kuhn_behavioral_to_mixed
     [∀ i, Fintype (O.InfoState i)]
     [∀ i, Fintype (O.LocalStrategy i)]
-    (hSep : O.HorizonSeparation)
+    (hNontriv : O.NoNontrivialInfoStateRepeat)
     (β : BehavioralProfile O) (k : Nat) :
     O.runDist k β =
       (O.behavioralToMixedJoint β).bind (fun π => O.runDistPure k π) := by
   exact runDist_eq_of_stepIndependence (O := O)
     (O.behavioralToMixedJoint β) β
-    (fun n => stepIndependence_bridge (O := O) hSep β n) k
+    (fun n => stepIndependence_bridge hNontriv β n) k
 
 end MainTheorem
 

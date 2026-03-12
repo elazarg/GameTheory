@@ -5,29 +5,30 @@ import Semantics.DSMachine
 
 Semantic core for Kuhn's theorem.
 
-This file contains the minimal currently-formalized execution model used by the
-generic Kuhn theorems:
+This file defines the execution model used by the generic Kuhn-theorem
+development:
 
-- per-player information states
-- observation-indexed actions
-- bounded run semantics
-- correlated mediator semantics
-- step reachability
+- per-player information states,
+- observation-indexed actions,
+- bounded run semantics,
+- correlated mediator semantics,
+- reachability-style structural conditions on traces.
 
-The older name `ObsModelCore` is kept as a migration name because the theorem
-stack still uses it extensively. Conceptually, this is the real Kuhn model;
-the stronger `ObsModel` layer is only a snapshot-refined wrapper that supports
-syntactic recall corollaries.
+`KuhnModel` is an alias of `ObsModelCore`.
 
-Note: technically even `Obs` is not fundamental. The real strategic object is
-the information state. We keep a distinguished current observation readout
-because the current theorem stack still indexes actions and recall lemmas
-through it.
+The strategic object is the player-local information state. Observations are
+retained as an explicit readout because action types and several semantic
+constructions are indexed by the current observation.
 -/
 
 open Math.ProbabilityMassFunction Math.ParameterizedChain
 
-/-- Core player information-state interface over observations. -/
+/-- Player-local information state over an observation type `α`.
+
+`start` initializes the information state from the initial observation,
+`push` updates it with a newly observed value, and `current` exposes the
+current observation stored in the state. The two axioms state that `current`
+returns the most recently incorporated observation. -/
 structure InfoStateCore (α : Type) where
   Carrier : Type
   start : α → Carrier
@@ -82,11 +83,14 @@ def projectStatesFrom (O : ObsModelCore ι σ Obs Act) (i : ι) (v : O.InfoState
   | [] => v
   | s :: ss => O.projectStatesFrom i ((O.infoState i).push v (O.observe i s)) ss
 
-/-- Project a state trace to player `i`'s strategic information state. -/
+/-- Compute player `i`'s information state after observing the states in `ss`,
+starting from the initial observation at `O.init`. -/
 def projectStates (O : ObsModelCore ι σ Obs Act) (i : ι) (ss : List σ) : O.InfoState i :=
   O.projectStatesFrom i ((O.infoState i).start (O.observe i O.init)) ss
 
-/-- Current observation after extending a local information state. -/
+/-- The current observation stored after processing `ss` is the last observed
+state in `ss`, if any; otherwise it is the current observation already stored
+in the starting information state `v`. -/
 theorem currentObs_projectStatesFrom (O : ObsModelCore ι σ Obs Act) (i : ι)
     (v : O.InfoState i) (ss : List σ) :
     O.currentObs i (O.projectStatesFrom i v ss) =
@@ -132,7 +136,9 @@ abbrev LocalStrategy (O : ObsModelCore ι σ Obs Act) (i : ι) : Type :=
 abbrev PureProfile (O : ObsModelCore ι σ Obs Act) : Type :=
   ∀ (i : ι), O.LocalStrategy i
 
-/-- Behavioral profile over local information states. -/
+/-- Independent behavioral strategy profile: for each player `i` and local
+information state `v`, a distribution over actions at the current observation
+stored in `v`. -/
 abbrev BehavioralProfile (O : ObsModelCore ι σ Obs Act) : Type :=
   ∀ (i : ι) (v : O.InfoState i), PMF (Act i (O.currentObs i v))
 
@@ -190,7 +196,8 @@ noncomputable def stepDist (O : ObsModelCore ι σ Obs Act)
   let s := O.lastState ss
   (O.jointActionDist b ss).bind fun a => O.step s (O.castJointAction ss a)
 
-/-- Bounded run distribution under behavioral profile. -/
+/-- Distribution on state traces of length `k + 1` obtained by running the
+machine for `k` steps under behavioral profile `b`, starting from `[init]`. -/
 noncomputable def runDist (O : ObsModelCore ι σ Obs Act)
     [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
     (k : Nat) (b : BehavioralProfile O) : PMF (List σ) :=
@@ -257,5 +264,23 @@ noncomputable def mixedToMediator (O : ObsModelCore ι σ Obs Act)
     PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))) :=
   (reweightPMF ν (fun π => pureRun O.pureStep O.init n π ss)).bind
     (fun π => O.jointActionDist (O.pureToBehavioral π) ss)
+
+/-- On every reachable trace, any repeated information state has trivial action space.
+
+More precisely: if `ss` has nonzero probability under `runDistPure k π`, and
+player `i` sees the same projected information state at two positions on `ss`,
+then the action space at that information state is `Subsingleton`.
+
+This condition is used in the behavioral-to-mixed direction of Kuhn's theorem
+to rule out repeated nontrivial contingent choices along a reachable trace. -/
+def NoNontrivialInfoStateRepeat (O : ObsModelCore ι σ Obs Act)
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] : Prop :=
+  ∀ (i : ι) (π : PureProfile O) (k : Nat) (ss : List σ),
+    O.runDistPure k π ss ≠ 0 →
+    ∀ (j₁ j₂ : Nat), j₁ < j₂ → j₂ < ss.length →
+      O.projectStates i (ss.take (j₁ + 1)) =
+        O.projectStates i (ss.take (j₂ + 1)) →
+      Subsingleton (Act i (O.currentObs i
+        (O.projectStates i (ss.take (j₂ + 1)))))
 
 end ObsModelCore
