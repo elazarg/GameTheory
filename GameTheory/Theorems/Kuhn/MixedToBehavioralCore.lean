@@ -1,4 +1,5 @@
-import GameTheory.Theorems.Kuhn.ObsModel
+import GameTheory.Theorems.Kuhn.KuhnModel
+import Math.PMFProduct
 
 /-! # Mixed-to-behavioral realization on `KuhnModel`
 
@@ -15,15 +16,6 @@ The stronger `ObsModel` layer and syntactic recall corollaries live in
 -/
 
 set_option autoImplicit false
-
-namespace ObsModel
-
-open Math.ProbabilityMassFunction Math.ParameterizedChain
-
-variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}
-variable {O : ObsModel ι σ Obs Act}
-
-variable {O : ObsModel ι σ Obs Act}
 
 namespace ObsModelCore
 
@@ -143,7 +135,7 @@ section ReachFactorCore
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 
 /-- Under a pure behavioral profile, `jointActionDist` is a point mass. -/
-theorem jointActionDist_pureToBehavioral (O : ObsModelCore ι σ Obs Act)
+theorem jointActionDist_pureToBehavioral_m2b (O : ObsModelCore ι σ Obs Act)
     (π : ObsModelCore.PureProfile O) (ss : List σ) :
     O.jointActionDist (O.pureToBehavioral π) ss =
       PMF.pure (fun i => π i (O.projectStates i ss)) := by
@@ -151,13 +143,13 @@ theorem jointActionDist_pureToBehavioral (O : ObsModelCore ι σ Obs Act)
   exact Math.PMFProduct.pmfPi_pure (fun i => π i (O.projectStates i ss))
 
 /-- Under a pure behavioral profile, `stepDist` is a deterministic step. -/
-theorem stepDist_pureToBehavioral (O : ObsModelCore ι σ Obs Act)
+theorem stepDist_pureToBehavioral_m2b (O : ObsModelCore ι σ Obs Act)
     (π : ObsModelCore.PureProfile O) (ss : List σ) :
     O.stepDist (O.pureToBehavioral π) ss =
       O.step (O.lastState ss)
         (O.castJointAction ss (fun i => π i (O.projectStates i ss))) := by
   unfold ObsModelCore.stepDist
-  rw [jointActionDist_pureToBehavioral, PMF.pure_bind]
+  rw [jointActionDist_pureToBehavioral_m2b, PMF.pure_bind]
 
 /-- For pure profiles, `pureStep` is just `O.step` with the cast action. -/
 theorem pureStep_eq (π : ObsModelCore.PureProfile O) (ss : List σ) :
@@ -710,18 +702,14 @@ theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
 
 end CoreKuhnSemantic
 
-end ObsModelCore
-
 section
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 
-namespace ObsModelCore
-
 open Math.PMFProduct
 
 /-- Generic step-independence implies trace-distribution equality on the core model. -/
-theorem runDist_eq_of_stepIndependence
+theorem runDist_eq_of_correlatedStepIndependence
     (O : ObsModelCore ι σ Obs Act)
     (ν : PMF (ObsModelCore.PureProfile O))
     (b : ObsModelCore.BehavioralProfile O)
@@ -765,8 +753,6 @@ theorem stepDistCorr_eq_stepDist_of_product
   simp only [ObsModelCore.stepDistCorr, ObsModelCore.stepDist, hprod]
   rfl
 
-end ObsModelCore
-
 end
 
-end ObsModel
+end ObsModelCore

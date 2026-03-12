@@ -294,7 +294,7 @@ theorem pureStep_compiledCore_eq
       | .chance _k μ _hk next => μ.map next
       | .decision (p := p) I next => PMF.pure (next (π p (some I))) := by
   let O := compiledCoreObs (S := S) (Outcome := Outcome) t
-  rw [ObsModel.ObsModelCore.pureStep_eq]
+  rw [ObsModelCore.pureStep_eq]
   have hcast :
       (fun i =>
         O.currentObs_projectStates i ss ▸ π i (O.projectStates i ss)) =
@@ -528,7 +528,7 @@ theorem stepDist_compiledCore_eq
 
 /-- The honest core EFG compilation has step-mass invariance. -/
 theorem stepMassInvariant_compiledCore :
-    ObsModel.ObsModelCore.StepMassInvariant
+    ObsModelCore.StepMassInvariant
       (compiledCoreObs (S := S) (Outcome := Outcome) t) := by
   intro ss dst π₁ π₂ h₁ h₂
   cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
@@ -547,7 +547,7 @@ theorem stepMassInvariant_compiledCore :
 
 /-- The honest core EFG compilation has one-step support factorization. -/
 theorem stepSupportFactorization_compiledCore :
-    ObsModel.ObsModelCore.StepSupportFactorization
+    ObsModelCore.StepSupportFactorization
       (compiledCoreObs (S := S) (Outcome := Outcome) t) := by
   intro ss dst π₀ π h₀
   cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
@@ -1047,7 +1047,7 @@ private theorem infoState_some_of_not_subsingleton
 
 private theorem obsLocalFeasibility_compiledCore
     (hpr : PerfectRecall t) (i : S.Player) :
-    ObsModel.ObsModelCore.ObsLocalFeasibility
+    ObsModelCore.ObsLocalFeasibility
       (compiledCoreObs (S := S) (Outcome := Outcome) t) i := by
   intro n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ hsub πᵢ
   obtain ⟨I, hI₁⟩ :=
@@ -1409,18 +1409,18 @@ private theorem kuhn_mixed_to_behavioral_core
   let k := treeHeight (S := S) (Outcome := Outcome) t
   let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
   have hMass :
-      ObsModel.ObsModelCore.StepMassInvariant O := by
+      ObsModelCore.StepMassInvariant O := by
     intro ss u π₁ π₂ h₁ h₂
     exact stepMassInvariant_compiledCore (S := S) (Outcome := Outcome) (t := t) π₁ π₂ h₁ h₂
   have hFactor :
-      ObsModel.ObsModelCore.StepSupportFactorization O := by
+      ObsModelCore.StepSupportFactorization O := by
     intro ss u π₀ π h₀
     exact stepSupportFactorization_compiledCore (S := S) (Outcome := Outcome) (t := t) π₀ π h₀
   obtain ⟨β, hβ⟩ :=
-    ObsModel.ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := O)
+    ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := O)
       hMass hFactor
       (fun i =>
-        ObsModel.ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility (O := O)
+        ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility (O := O)
           hMass i
           (by
             simpa [O] using

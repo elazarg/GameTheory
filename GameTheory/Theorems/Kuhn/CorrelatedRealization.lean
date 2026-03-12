@@ -1,3 +1,4 @@
+import GameTheory.Theorems.Kuhn.ObsModel
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 
 /-! # Correlated realization and Kuhn M→B wrappers
@@ -734,7 +735,7 @@ theorem runDist_eq_of_stepIndependence
     O.runDist k b = ν.bind (fun π => O.runDistPure k π) := by
   simpa [ObsModel.runDist, ObsModel.runDistPure, ObsModel.stepDist,
     ObsModel.pureToBehavioral, ObsModel.toCore] using
-    (ObsModelCore.runDist_eq_of_stepIndependence (O := O.toCore) ν b hStep k)
+    (ObsModelCore.runDist_eq_of_correlatedStepIndependence (O := O.toCore) ν b hStep k)
 
 /-- Under `PerStepPlayerRecall`, the pure-step action component for player `i`
 depends only on player `i`'s observation at obs-equivalent traces. -/
