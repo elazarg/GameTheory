@@ -42,15 +42,6 @@ abbrev FlatIdx (S : InfoStructure) := (p : Fin S.n) × S.Infoset p
 /-- A flat profile assigns an action to every infoset of every player. -/
 abbrev FlatProfile (S : InfoStructure) := (idx : FlatIdx S) → S.Act idx.2
 
-instance : Fintype (FlatIdx S) :=
-  Sigma.instFintype
-
-instance : DecidableEq (FlatIdx S) :=
-  Sigma.instDecidableEqSigma
-
-instance : Fintype (FlatProfile S) :=
-  Pi.instFintype
-
 -- ============================================================================
 -- Product PMF and flat-to-behavioral conversion
 -- ============================================================================
@@ -154,15 +145,15 @@ open Math.PMFProduct
 variable (t : GameTree S Outcome)
 
 noncomputable instance compiledCoreInfoStateFintype (t : GameTree S Outcome) (i : S.Player) :
-    Fintype ((compiledCoreObs (S := S) (Outcome := Outcome) t).InfoState i) := by
+    Fintype ((compiledCoreObs t).InfoState i) := by
   dsimp [compiledCoreObs, compileObsCoreModel, ObsModelCore.InfoState]
   infer_instance
 
 @[simp] theorem projectStates_compiledCore
     (i : S.Player) (ss : List (GameTree S Outcome)) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).projectStates i ss =
-      obsOfState (S := S) (Outcome := Outcome) i
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss) := by
+    (compiledCoreObs t).projectStates i ss =
+      obsOfState i
+        ((compiledCoreObs t).lastState ss) := by
   induction ss with
   | nil =>
       simp [ObsModelCore.projectStates, ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
@@ -180,19 +171,19 @@ noncomputable instance compiledCoreInfoStateFintype (t : GameTree S Outcome) (i 
 pushforward of the native mixed-profile joint law along `liftPureProfileCore`. -/
 theorem liftMixedProfileCore_joint
     (μ : MixedProfile S) :
-    pmfPi (liftMixedProfileCore (S := S) (Outcome := Outcome) t μ) =
-      Math.ProbabilityMassFunction.pushforward (mixedProfileJoint (S := S) μ)
-        (liftPureProfileCore (S := S) (Outcome := Outcome) t) := by
+    pmfPi (liftMixedProfileCore t μ) =
+      Math.ProbabilityMassFunction.pushforward (mixedProfileJoint μ)
+        (liftPureProfileCore t) := by
   classical
   rw [mixedProfileJoint]
   exact (Math.PMFProduct.pmfPi_push_coordwise μ
-    (fun i => pureStrategyEquivCoreLocalStrategy (S := S) (Outcome := Outcome) t i)).symm
+    (fun i => pureStrategyEquivCoreLocalStrategy t i)).symm
 
 /-- Closed form of one compiled-core step at an explicit tree state. -/
 private theorem compiledCore_step_eq
     (s : GameTree S Outcome)
-    (a : (compiledCoreObs (S := S) (Outcome := Outcome) t).JointActionAt s) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).step s a =
+    (a : (compiledCoreObs t).JointActionAt s) :
+    (compiledCoreObs t).step s a =
       match s with
       | .terminal z => PMF.pure (.terminal z)
       | .chance _k μ _hk next => μ.map next
@@ -201,7 +192,7 @@ private theorem compiledCore_step_eq
             (next
               (cast
                 (compiledAct_eq_of_some S p
-                  (show obsOfState (S := S) (Outcome := Outcome) p (.decision I next) = some I by
+                  (show obsOfState p (.decision I next) = some I by
                     simp [obsOfState]))
                 (a p))) := by
   cases s with
@@ -211,7 +202,7 @@ private theorem compiledCore_step_eq
 
 @[simp] private theorem obsOfState_decision_eq_some
     {p : S.Player} (I : S.Infoset p) (next : S.Act I → GameTree S Outcome) :
-    obsOfState (S := S) (Outcome := Outcome) p (.decision I next) = some I := by
+    obsOfState p (.decision I next) = some I := by
   simp [obsOfState]
 
 private theorem compiledCore_step_of_decision
@@ -219,13 +210,13 @@ private theorem compiledCore_step_of_decision
     {p : S.Player} (I : S.Infoset p)
     (next : S.Act I → GameTree S Outcome)
     (hs : s = .decision I next)
-    (a : (compiledCoreObs (S := S) (Outcome := Outcome) t).JointActionAt s) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).step s a =
+    (a : (compiledCoreObs t).JointActionAt s) :
+    (compiledCoreObs t).step s a =
       PMF.pure
         (next
           (cast
             (compiledAct_eq_of_some S p
-              (obsOfState_decision_eq_some (S := S) (Outcome := Outcome) I next))
+              (obsOfState_decision_eq_some I next))
             (hs ▸ a p))) := by
   cases hs
   simp [ObsModelCore.step, compileObsCoreModel, treeStepPMF, obsOfState]
@@ -233,8 +224,8 @@ private theorem compiledCore_step_of_decision
 private theorem compiledCore_step_of_terminal
     {s : GameTree S Outcome} {z : Outcome}
     (hs : s = .terminal z)
-    (a : (compiledCoreObs (S := S) (Outcome := Outcome) t).JointActionAt s) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).step s a = PMF.pure (.terminal z) := by
+    (a : (compiledCoreObs t).JointActionAt s) :
+    (compiledCoreObs t).step s a = PMF.pure (.terminal z) := by
   cases hs
   simp [compiledCore_step_eq]
 
@@ -243,20 +234,20 @@ private theorem compiledCore_step_of_chance
     {k : Nat} {μ : PMF (Fin k)} {hk : 0 < k}
     (next : Fin k → GameTree S Outcome)
     (hs : s = .chance k μ hk next)
-    (a : (compiledCoreObs (S := S) (Outcome := Outcome) t).JointActionAt s) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).step s a = μ.map next := by
+    (a : (compiledCoreObs t).JointActionAt s) :
+    (compiledCoreObs t).step s a = μ.map next := by
   cases hs
   simp [compiledCore_step_eq]
 
 /-- In the honest core compilation, projecting a pure profile action to the
 current step just evaluates it at the current observation cell. -/
 @[simp] theorem castProfileAction_compiledCore
-    (π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t))
+    (π : ObsModelCore.PureProfile (compiledCoreObs t))
     (i : S.Player) (ss : List (GameTree S Outcome)) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).castProfileAction i ss
-      (π i ((compiledCoreObs (S := S) (Outcome := Outcome) t).projectStates i ss)) =
-        π i (obsOfState (S := S) (Outcome := Outcome) i
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss)) := by
+    (compiledCoreObs t).castProfileAction i ss
+      (π i ((compiledCoreObs t).projectStates i ss)) =
+        π i (obsOfState i
+          ((compiledCoreObs t).lastState ss)) := by
   induction ss with
   | nil =>
       simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
@@ -274,26 +265,26 @@ current step just evaluates it at the current observation cell. -/
             compileObsCoreModel, obsOfState] using ih
 
 @[simp] theorem castJointAction_compiledCore
-    (π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t))
+    (π : ObsModelCore.PureProfile (compiledCoreObs t))
     (ss : List (GameTree S Outcome)) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).castJointAction ss
-      (fun i => π i ((compiledCoreObs (S := S) (Outcome := Outcome) t).projectStates i ss)) =
+    (compiledCoreObs t).castJointAction ss
+      (fun i => π i ((compiledCoreObs t).projectStates i ss)) =
         (fun i =>
-          π i (obsOfState (S := S) (Outcome := Outcome) i
-            ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss))) := by
+          π i (obsOfState i
+            ((compiledCoreObs t).lastState ss))) := by
   funext i
-  exact castProfileAction_compiledCore (S := S) (Outcome := Outcome) (t := t) π i ss
+  exact castProfileAction_compiledCore t π i ss
 
 /-- Closed form of pure one-step execution in the honest core compilation. -/
 theorem pureStep_compiledCore_eq
-    (π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t))
+    (π : ObsModelCore.PureProfile (compiledCoreObs t))
     (ss : List (GameTree S Outcome)) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep π ss =
-      match (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+    (compiledCoreObs t).pureStep π ss =
+      match (compiledCoreObs t).lastState ss with
       | .terminal z => PMF.pure (.terminal z)
       | .chance _k μ _hk next => μ.map next
       | .decision (p := p) I next => PMF.pure (next (π p (some I))) := by
-  let O := compiledCoreObs (S := S) (Outcome := Outcome) t
+  let O := compiledCoreObs t
   rw [ObsModelCore.pureStep_eq]
   have hcast :
       (fun i =>
@@ -303,14 +294,14 @@ theorem pureStep_compiledCore_eq
   rw [hcast]
   have hact :
       (fun i => O.castProfileAction i ss (π i (O.projectStates i ss))) =
-        (fun i => π i (obsOfState (S := S) (Outcome := Outcome) i (O.lastState ss))) := by
+        (fun i => π i (obsOfState i (O.lastState ss))) := by
     funext i
-    exact castProfileAction_compiledCore (S := S) (Outcome := Outcome) (t := t) π i ss
+    exact castProfileAction_compiledCore t π i ss
   rw [hact]
   have hstep :=
-    compiledCore_step_eq (S := S) (Outcome := Outcome) (t := t)
+    compiledCore_step_eq t
       (O.lastState ss)
-      (fun i => π i (obsOfState (S := S) (Outcome := Outcome) i (O.lastState ss)))
+      (fun i => π i (obsOfState i (O.lastState ss)))
   cases hlast : O.lastState ss with
   | terminal z =>
       simp [compiledCore_step_eq, obsOfState]
@@ -321,7 +312,7 @@ theorem pureStep_compiledCore_eq
       have hcast' :
           cast
             (compiledAct_eq_of_some S p
-              (obsOfState_decision_eq_some (S := S) (Outcome := Outcome) I next))
+              (obsOfState_decision_eq_some I next))
             (π p (if p = p then some I else none)) =
           π p (some I) := by
         grind
@@ -331,20 +322,20 @@ theorem pureStep_compiledCore_eq
 private theorem stepDist_compiledCore_eq_terminal
     (σ : BehavioralProfile S) (ss : List (GameTree S Outcome))
     {z : Outcome}
-    (hs : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss = .terminal z) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-      (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss =
+    (hs : (compiledCoreObs t).lastState ss = .terminal z) :
+    (compiledCoreObs t).stepDist
+      (liftBehavioralProfileCore t σ) ss =
       PMF.pure (.terminal z) := by
   dsimp [ObsModelCore.stepDist, ObsModelCore.jointActionDist]
   have hf :
       (fun a =>
-        (compiledCoreObs (S := S) (Outcome := Outcome) t).step
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss)
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).castJointAction ss a)) =
+        (compiledCoreObs t).step
+          ((compiledCoreObs t).lastState ss)
+          ((compiledCoreObs t).castJointAction ss a)) =
       (fun _ => PMF.pure (.terminal z)) := by
     funext a
-    exact compiledCore_step_of_terminal (S := S) (Outcome := Outcome) (t := t) hs
-      ((compiledCoreObs (S := S) (Outcome := Outcome) t).castJointAction ss a)
+    exact compiledCore_step_of_terminal t hs
+      ((compiledCoreObs t).castJointAction ss a)
   rw [hf]
   simp
 
@@ -352,20 +343,20 @@ private theorem stepDist_compiledCore_eq_chance
     (σ : BehavioralProfile S) (ss : List (GameTree S Outcome))
     {k : Nat} {μ : PMF (Fin k)} {hk : 0 < k}
     (next : Fin k → GameTree S Outcome)
-    (hs : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss = .chance k μ hk next) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-      (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss =
+    (hs : (compiledCoreObs t).lastState ss = .chance k μ hk next) :
+    (compiledCoreObs t).stepDist
+      (liftBehavioralProfileCore t σ) ss =
       μ.map next := by
   dsimp [ObsModelCore.stepDist, ObsModelCore.jointActionDist]
   have hf :
       (fun a =>
-        (compiledCoreObs (S := S) (Outcome := Outcome) t).step
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss)
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).castJointAction ss a)) =
+        (compiledCoreObs t).step
+          ((compiledCoreObs t).lastState ss)
+          ((compiledCoreObs t).castJointAction ss a)) =
       (fun _ => μ.map next) := by
     funext a
-    exact compiledCore_step_of_chance (S := S) (Outcome := Outcome) (t := t) next hs
-      ((compiledCoreObs (S := S) (Outcome := Outcome) t).castJointAction ss a)
+    exact compiledCore_step_of_chance t next hs
+      ((compiledCoreObs t).castJointAction ss a)
   rw [hf]
   simp
 
@@ -373,11 +364,11 @@ private theorem stepDist_compiledCore_eq_decision
     (σ : BehavioralProfile S) (ss : List (GameTree S Outcome))
     {p : S.Player} (I : S.Infoset p)
     (next : S.Act I → GameTree S Outcome)
-    (hs : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss = .decision I next) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-      (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss =
+    (hs : (compiledCoreObs t).lastState ss = .decision I next) :
+    (compiledCoreObs t).stepDist
+      (liftBehavioralProfileCore t σ) ss =
       (σ p I).bind (fun a => PMF.pure (next a)) := by
-  let O := compiledCoreObs (S := S) (Outcome := Outcome) t
+  let O := compiledCoreObs t
   dsimp [ObsModelCore.stepDist, ObsModelCore.jointActionDist]
   have hf :
       (fun a =>
@@ -392,7 +383,7 @@ private theorem stepDist_compiledCore_eq_decision
               (a p)))) := by
     funext a
     have hs' :=
-      compiledCore_step_of_decision (S := S) (Outcome := Outcome) (t := t) I next hs
+      compiledCore_step_of_decision t I next hs
         (O.castJointAction ss a)
     grind [obsOfState, ObsModelCore.castJointAction, cast_cast]
   rw [hf]
@@ -400,7 +391,7 @@ private theorem stepDist_compiledCore_eq_decision
   have hcomp :
       Math.ProbabilityMassFunction.pushforward
         (pmfPi (fun i =>
-          liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+          liftBehavioralProfileCore t σ i
             (O.projectStates i ss)))
         (fun a =>
           next
@@ -411,7 +402,7 @@ private theorem stepDist_compiledCore_eq_decision
       Math.ProbabilityMassFunction.pushforward
         (Math.ProbabilityMassFunction.pushforward
           (pmfPi (fun i =>
-            liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+            liftBehavioralProfileCore t σ i
               (O.projectStates i ss)))
           (fun a =>
             cast
@@ -422,7 +413,7 @@ private theorem stepDist_compiledCore_eq_decision
     simpa [Function.comp] using
       (Math.ProbabilityMassFunction.pushforward_comp
         (pmfPi (fun i =>
-          liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+          liftBehavioralProfileCore t σ i
             (O.projectStates i ss)))
         (fun a =>
           cast
@@ -434,7 +425,7 @@ private theorem stepDist_compiledCore_eq_decision
   have hpush :
       Math.ProbabilityMassFunction.pushforward
         (pmfPi (fun i =>
-          liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+          liftBehavioralProfileCore t σ i
             (O.projectStates i ss)))
         (fun a =>
           cast
@@ -445,7 +436,7 @@ private theorem stepDist_compiledCore_eq_decision
     have hcomp' :
         Math.ProbabilityMassFunction.pushforward
           (pmfPi (fun i =>
-            liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+            liftBehavioralProfileCore t σ i
               (O.projectStates i ss)))
           (fun a =>
             cast
@@ -455,7 +446,7 @@ private theorem stepDist_compiledCore_eq_decision
         Math.ProbabilityMassFunction.pushforward
           (Math.ProbabilityMassFunction.pushforward
             (pmfPi (fun i =>
-              liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+              liftBehavioralProfileCore t σ i
                 (O.projectStates i ss)))
             (fun a => a p))
           (fun x =>
@@ -466,7 +457,7 @@ private theorem stepDist_compiledCore_eq_decision
       simpa [Function.comp] using
         (Math.ProbabilityMassFunction.pushforward_comp
           (pmfPi (fun i =>
-            liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+            liftBehavioralProfileCore t σ i
               (O.projectStates i ss)))
           (fun a => a p)
           (fun x =>
@@ -481,7 +472,7 @@ private theorem stepDist_compiledCore_eq_decision
         ∀ v : Option (S.Infoset p),
           ∀ h : v = some I,
             Math.ProbabilityMassFunction.pushforward
-              (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ p v)
+              (liftBehavioralProfileCore t σ p v)
               (fun x => cast (compiledAct_eq_of_some S p h) x) =
             σ p I := by
       intro v h
@@ -493,26 +484,26 @@ private theorem stepDist_compiledCore_eq_decision
 
 theorem stepDist_compiledCore_eq
     (σ : BehavioralProfile S) (ss : List (GameTree S Outcome)) :
-    (compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-      (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss =
-      match (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+    (compiledCoreObs t).stepDist
+      (liftBehavioralProfileCore t σ) ss =
+      match (compiledCoreObs t).lastState ss with
       | .terminal z => PMF.pure (.terminal z)
       | .chance _k μ _hk next => μ.map next
       | .decision (p := p) I next => (σ p I).bind (fun a => PMF.pure (next a)) := by
-  match hs : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+  match hs : (compiledCoreObs t).lastState ss with
   | .terminal z =>
-      exact stepDist_compiledCore_eq_terminal (S := S) (Outcome := Outcome) (t := t) σ ss hs
+      exact stepDist_compiledCore_eq_terminal t σ ss hs
   | .chance k μ hk next =>
-      exact stepDist_compiledCore_eq_chance (S := S) (Outcome := Outcome) (t := t) σ ss next hs
+      exact stepDist_compiledCore_eq_chance t σ ss next hs
   | .decision (p := p) I next =>
-      exact stepDist_compiledCore_eq_decision (S := S) (Outcome := Outcome) (t := t) σ ss I next hs
+      exact stepDist_compiledCore_eq_decision t σ ss I next hs
 
 /-- The honest core EFG compilation has step-mass invariance. -/
 theorem stepMassInvariant_compiledCore :
     ObsModelCore.StepMassInvariant
-      (compiledCoreObs (S := S) (Outcome := Outcome) t) := by
+      (compiledCoreObs t) := by
   intro ss dst π₁ π₂ h₁ h₂
-  cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+  cases hlast : (compiledCoreObs t).lastState ss with
   | terminal z =>
       simp [pureStep_compiledCore_eq, hlast] at h₁ h₂ ⊢
   | chance k μ hk next =>
@@ -529,9 +520,9 @@ theorem stepMassInvariant_compiledCore :
 /-- The honest core EFG compilation has one-step support factorization. -/
 theorem stepSupportFactorization_compiledCore :
     ObsModelCore.StepSupportFactorization
-      (compiledCoreObs (S := S) (Outcome := Outcome) t) := by
+      (compiledCoreObs t) := by
   intro ss dst π₀ π h₀
-  cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+  cases hlast : (compiledCoreObs t).lastState ss with
   | terminal z =>
       have h₀' := h₀
       simp only [pureStep_compiledCore_eq, hlast, PMF.pure_apply, ne_eq, ite_eq_right_iff,
@@ -571,19 +562,19 @@ private theorem bind_pushforward_lastState_evalDist
     (σ : BehavioralProfile S) (ss : List (GameTree S Outcome)) (d : PMF (GameTree S Outcome)) :
     (Math.ProbabilityMassFunction.pushforward d (fun u => ss ++ [u])).bind
       (fun ss' =>
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss').evalDist σ) =
+        ((compiledCoreObs t).lastState ss').evalDist σ) =
       d.bind (fun u => u.evalDist σ) := by
   simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, ObsModelCore.lastState]
 
 /-- One-step adequacy for the honest core compilation. -/
 theorem stepDist_bind_evalDist_core
     (σ : BehavioralProfile S) (ss : List (GameTree S Outcome)) :
-    ((compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-      (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss).bind
+    ((compiledCoreObs t).stepDist
+      (liftBehavioralProfileCore t σ) ss).bind
         (fun u => u.evalDist σ) =
-      ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss).evalDist σ := by
-  rw [stepDist_compiledCore_eq (S := S) (Outcome := Outcome) t σ ss]
-  cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+      ((compiledCoreObs t).lastState ss).evalDist σ := by
+  rw [stepDist_compiledCore_eq t σ ss]
+  cases hlast : (compiledCoreObs t).lastState ss with
   | terminal z =>
       simp
   | chance k μ hk next =>
@@ -594,9 +585,9 @@ theorem stepDist_bind_evalDist_core
 /-- Bounded-run adequacy for behavioral profiles on the honest core compilation. -/
 theorem runDist_bind_evalDist_core
     (σ : BehavioralProfile S) (k : Nat) :
-    ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
-      (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ)).bind
-        (fun ss => ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss).evalDist σ) =
+    ((compiledCoreObs t).runDist k
+      (liftBehavioralProfileCore t σ)).bind
+        (fun ss => ((compiledCoreObs t).lastState ss).evalDist σ) =
       t.evalDist σ := by
   induction k with
   | zero =>
@@ -604,79 +595,79 @@ theorem runDist_bind_evalDist_core
   | succ k ih =>
       rw [ObsModelCore.runDist]
       calc
-        (((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
-            (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ)).bind
+        (((compiledCoreObs t).runDist k
+            (liftBehavioralProfileCore t σ)).bind
             (fun ss =>
               Math.ProbabilityMassFunction.pushforward
-                ((compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-                  (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss)
+                ((compiledCoreObs t).stepDist
+                  (liftBehavioralProfileCore t σ) ss)
                 (fun u => ss ++ [u]))).bind
               (fun ss' =>
-                ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss').evalDist σ)
+                ((compiledCoreObs t).lastState ss').evalDist σ)
             =
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
-            (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ)).bind
+          ((compiledCoreObs t).runDist k
+            (liftBehavioralProfileCore t σ)).bind
             (fun ss =>
               (Math.ProbabilityMassFunction.pushforward
-                ((compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-                  (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss)
+                ((compiledCoreObs t).stepDist
+                  (liftBehavioralProfileCore t σ) ss)
                 (fun u => ss ++ [u])).bind
                   (fun ss' =>
-                    ((compiledCoreObs (S := S)
-                     (Outcome := Outcome) t).lastState ss').evalDist σ)) := by
+                    ((compiledCoreObs
+                     t).lastState ss').evalDist σ)) := by
               rw [PMF.bind_bind]
         _ =
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
-            (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ)).bind
+          ((compiledCoreObs t).runDist k
+            (liftBehavioralProfileCore t σ)).bind
             (fun ss =>
-              ((compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-                (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss).bind
+              ((compiledCoreObs t).stepDist
+                (liftBehavioralProfileCore t σ) ss).bind
                   (fun u => u.evalDist σ)) := by
               refine Math.ProbabilityMassFunction.bind_congr_on_support
-                ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
-                  (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ))
+                ((compiledCoreObs t).runDist k
+                  (liftBehavioralProfileCore t σ))
                 _ _ ?_
               intro ss _
               exact bind_pushforward_lastState_evalDist
-                (S := S) (Outcome := Outcome) (t := t) σ ss
-                ((compiledCoreObs (S := S) (Outcome := Outcome) t).stepDist
-                  (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss)
+                t σ ss
+                ((compiledCoreObs t).stepDist
+                  (liftBehavioralProfileCore t σ) ss)
         _ =
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
-            (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ)).bind
+          ((compiledCoreObs t).runDist k
+            (liftBehavioralProfileCore t σ)).bind
             (fun ss =>
-              ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss).evalDist σ) := by
+              ((compiledCoreObs t).lastState ss).evalDist σ) := by
               refine Math.ProbabilityMassFunction.bind_congr_on_support
-                ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
-                  (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ))
+                ((compiledCoreObs t).runDist k
+                  (liftBehavioralProfileCore t σ))
                 _ _ ?_
               intro ss _
-              exact stepDist_bind_evalDist_core (S := S) (Outcome := Outcome) (t := t) σ ss
+              exact stepDist_bind_evalDist_core t σ ss
         _ = t.evalDist σ := ih
 
 @[simp] theorem liftBehavioralProfileCore_pure_descend
-    (π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t)) :
-    liftBehavioralProfileCore (S := S) (Outcome := Outcome) t
-      (pureToBehavioral (descendPureProfileCore (S := S) (Outcome := Outcome) t π)) =
-      (compiledCoreObs (S := S) (Outcome := Outcome) t).pureToBehavioral π := by
+    (π : ObsModelCore.PureProfile (compiledCoreObs t)) :
+    liftBehavioralProfileCore t
+      (pureToBehavioral (descendPureProfileCore t π)) =
+      (compiledCoreObs t).pureToBehavioral π := by
   funext i v
   cases v <;> rfl
 
 /-- Pure-profile adequacy for the honest core compilation. -/
 theorem runDistPure_bind_evalDist_core
-    (π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t))
+    (π : ObsModelCore.PureProfile (compiledCoreObs t))
     (k : Nat) :
-    ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDistPure k π).bind
+    ((compiledCoreObs t).runDistPure k π).bind
         (fun ss =>
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss).evalDist
-            (pureToBehavioral (descendPureProfileCore (S := S) (Outcome := Outcome) t π))) =
-      t.evalDist (pureToBehavioral (descendPureProfileCore (S := S) (Outcome := Outcome) t π)) := by
+          ((compiledCoreObs t).lastState ss).evalDist
+            (pureToBehavioral (descendPureProfileCore t π))) =
+      t.evalDist (pureToBehavioral (descendPureProfileCore t π)) := by
   simpa [ObsModelCore.runDistPure, liftBehavioralProfileCore_pure_descend]
-    using runDist_bind_evalDist_core (S := S) (Outcome := Outcome) t
-      (pureToBehavioral (descendPureProfileCore (S := S) (Outcome := Outcome) t π)) k
+    using runDist_bind_evalDist_core t
+      (pureToBehavioral (descendPureProfileCore t π)) k
 
 private def HistoryCompatibleCore
-    (π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t))
+    (π : ObsModelCore.PureProfile (compiledCoreObs t))
     (h : List (HistoryStep S)) : Prop :=
   ∀ ⦃p : S.Player⦄ ⦃I : S.Infoset p⦄ ⦃a : S.Act I⦄,
     HistoryStep.action p I a ∈ h → π p (some I) = a
@@ -696,18 +687,18 @@ private inductive HistorySupportTrace (t : GameTree S Outcome) :
   | stutter {ss : List (GameTree S Outcome)} {h : List (HistoryStep S)}
       {z : Outcome}
       (hw : HistorySupportTrace t ss h)
-      (hterm : ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss) = .terminal z) :
+      (hterm : ((compiledCoreObs t).lastState ss) = .terminal z) :
       HistorySupportTrace t (ss ++ [.terminal z]) h
   | snoc {ss : List (GameTree S Outcome)} {h : List (HistoryStep S)}
       {u : GameTree S Outcome} {ℓ : HistoryStep S}
       (hw : HistorySupportTrace t ss h)
-      (hstep : HistorySupportStep (S := S) (Outcome := Outcome) ℓ
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss) u) :
+      (hstep : HistorySupportStep ℓ
+        ((compiledCoreObs t).lastState ss) u) :
       HistorySupportTrace t (ss ++ [u]) (h ++ [ℓ])
 
 private theorem historySupportTrace_nonempty
     {ss : List (GameTree S Outcome)} {h : List (HistoryStep S)}
-    (hw : HistorySupportTrace (S := S) (Outcome := Outcome) t ss h) :
+    (hw : HistorySupportTrace t ss h) :
     ss ≠ [] := by
   induction hw with
   | init =>
@@ -721,14 +712,14 @@ private theorem historySupportTrace_nonempty
 
 private theorem historySupportTrace_length_pos
     {ss : List (GameTree S Outcome)} {h : List (HistoryStep S)}
-    (hw : HistorySupportTrace (S := S) (Outcome := Outcome) t ss h) :
+    (hw : HistorySupportTrace t ss h) :
     0 < ss.length := by
   exact List.length_pos_iff_ne_nil.mpr
-    (historySupportTrace_nonempty (S := S) (Outcome := Outcome) (t := t) hw)
+    (historySupportTrace_nonempty t hw)
 
 private theorem reachBy_singleton_of_historySupportStep
     {src dst : GameTree S Outcome} {ℓ : HistoryStep S}
-    (hstep : HistorySupportStep (S := S) (Outcome := Outcome) ℓ src dst) :
+    (hstep : HistorySupportStep ℓ src dst) :
     ReachBy [ℓ] src dst := by
   cases ℓ with
   | chance k b =>
@@ -740,8 +731,8 @@ private theorem reachBy_singleton_of_historySupportStep
 
 private theorem historySupportTrace_reachBy
     {ss : List (GameTree S Outcome)} {h : List (HistoryStep S)}
-    (hw : HistorySupportTrace (S := S) (Outcome := Outcome) t ss h) :
-    ReachBy h t ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss) := by
+    (hw : HistorySupportTrace t ss h) :
+    ReachBy h t ((compiledCoreObs t).lastState ss) := by
   induction hw with
   | init =>
       simp [compiledCoreObs, compileObsCoreModel, ObsModelCore.lastState]
@@ -749,14 +740,14 @@ private theorem historySupportTrace_reachBy
       have ih' : ReachBy h t (.terminal z) := by
         simpa [hterm] using ih
       have hlast :
-          (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState (ss ++ [.terminal z]) =
+          (compiledCoreObs t).lastState (ss ++ [.terminal z]) =
             .terminal z := by
         simp [ObsModelCore.lastState]
       exact hlast.symm ▸ ih'
   | @snoc ss h u ℓ hw hstep ih =>
       have htail : ReachBy [ℓ]
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss) u :=
-        reachBy_singleton_of_historySupportStep (S := S) (Outcome := Outcome) hstep
+          ((compiledCoreObs t).lastState ss) u :=
+        reachBy_singleton_of_historySupportStep hstep
       have hcat := ReachBy_append ih htail
       simpa [compiledCoreObs, compileObsCoreModel, ObsModelCore.lastState] using hcat
 
@@ -813,43 +804,43 @@ private theorem action_mem_of_playerHistory_mem
 
 private theorem playerHistory_agrees_of_historyCompatibleCore_update
     {i : S.Player}
-    {π₀ : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t)}
-    {πᵢ : (compiledCoreObs (S := S) (Outcome := Outcome) t).LocalStrategy i}
+    {π₀ : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {πᵢ : (compiledCoreObs t).LocalStrategy i}
     {h : List (HistoryStep S)}
-    (hcomp : HistoryCompatibleCore (S := S) (Outcome := Outcome) (t := t)
+    (hcomp : HistoryCompatibleCore t
       (Function.update π₀ i πᵢ) h) :
     ∀ tok ∈ playerHistory S i h, πᵢ (some tok.1) = tok.2 := by
   intro tok htok
   have hm : HistoryStep.action i tok.1 tok.2 ∈ h :=
-    action_mem_of_playerHistory_mem (S := S) htok
+    action_mem_of_playerHistory_mem htok
   simpa [HistoryCompatibleCore, Function.update_self] using hcomp hm
 
 private theorem historyCompatibleCore_update_of_playerHistory
     {i : S.Player}
-    {π₀ : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t)}
-    {πᵢ : (compiledCoreObs (S := S) (Outcome := Outcome) t).LocalStrategy i}
+    {π₀ : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {πᵢ : (compiledCoreObs t).LocalStrategy i}
     {h : List (HistoryStep S)}
-    (hbase : HistoryCompatibleCore (S := S) (Outcome := Outcome) (t := t) π₀ h)
+    (hbase : HistoryCompatibleCore t π₀ h)
     (hpi : ∀ tok ∈ playerHistory S i h, πᵢ (some tok.1) = tok.2) :
-    HistoryCompatibleCore (S := S) (Outcome := Outcome) (t := t)
+    HistoryCompatibleCore t
       (Function.update π₀ i πᵢ) h := by
   intro q J a hm
   by_cases hq : q = i
   · subst hq
     simpa [Function.update_self] using
-      hpi ⟨J, a⟩ (playerHistory_mem_of_action_mem (S := S) hm)
+      hpi ⟨J, a⟩ (playerHistory_mem_of_action_mem hm)
   · simpa [HistoryCompatibleCore, Function.update_of_ne hq] using hbase hm
 
 private theorem pureRun_nonzero_to_historySupportTrace
     {n : Nat}
-    {π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t)}
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
     {ss : List (GameTree S Outcome)}
     (h : Math.ParameterizedChain.pureRun
-      ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-      ((compiledCoreObs (S := S) (Outcome := Outcome) t).init) n π ss ≠ 0) :
+      ((compiledCoreObs t).pureStep)
+      ((compiledCoreObs t).init) n π ss ≠ 0) :
     ∃ hist,
-      Nonempty (HistorySupportTrace (S := S) (Outcome := Outcome) t ss hist) ∧
-      HistoryCompatibleCore (S := S) (Outcome := Outcome) (t := t) π hist := by
+      Nonempty (HistorySupportTrace t ss hist) ∧
+      HistoryCompatibleCore t π hist := by
   induction n generalizing ss with
   | zero =>
       simp only [Math.ParameterizedChain.pureRun, Nat.rec_zero, PMF.pure_apply, ne_eq,
@@ -863,16 +854,16 @@ private theorem pureRun_nonzero_to_historySupportTrace
       · exact absurd (Math.ParameterizedChain.pureRun_succ_nil _ _ _ _) h
       · have hp :
             Math.ParameterizedChain.pureRun
-              ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-              ((compiledCoreObs (S := S) (Outcome := Outcome) t).init) n π pfx ≠ 0 := by
+              ((compiledCoreObs t).pureStep)
+              ((compiledCoreObs t).init) n π pfx ≠ 0 := by
             rw [List.concat_eq_append, Math.ParameterizedChain.pureRun_succ_append] at h
             exact left_ne_zero_of_mul h
         have hu :
-            ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep π pfx) u ≠ 0 := by
+            ((compiledCoreObs t).pureStep π pfx) u ≠ 0 := by
             rw [List.concat_eq_append, Math.ParameterizedChain.pureRun_succ_append] at h
             exact right_ne_zero_of_mul h
         rcases ih hp with ⟨hist, ⟨hh⟩, hcompat⟩
-        cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState pfx with
+        cases hlast : (compiledCoreObs t).lastState pfx with
         | terminal z =>
             have hu' : u = .terminal z := by
               simpa [pureStep_compiledCore_eq, hlast] using hu
@@ -888,9 +879,9 @@ private theorem pureRun_nonzero_to_historySupportTrace
             · refine ⟨by
                 simpa [List.concat_eq_append] using
                   (HistorySupportTrace.snoc hh
-                    (show HistorySupportStep (S := S) (Outcome := Outcome)
+                    (show HistorySupportStep
                       (HistoryStep.chance k b)
-                      ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState pfx)
+                      ((compiledCoreObs t).lastState pfx)
                       (next b) from ⟨μ, hk, next, hlast, hb, rfl⟩))⟩
             · intro p I a hm
               simp only [List.mem_append, List.mem_singleton] at hm
@@ -906,9 +897,9 @@ private theorem pureRun_nonzero_to_historySupportTrace
             · refine ⟨by
                 simpa [List.concat_eq_append] using
                   (HistorySupportTrace.snoc hh
-                    (show HistorySupportStep (S := S) (Outcome := Outcome)
+                    (show HistorySupportStep
                       (HistoryStep.action p I (π p (some I)))
-                      ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState pfx)
+                      ((compiledCoreObs t).lastState pfx)
                       (next (π p (some I))) from ⟨next, hlast, rfl⟩))⟩
             · intro q J a hm
               simp only [List.mem_append, List.mem_singleton] at hm
@@ -918,41 +909,41 @@ private theorem pureRun_nonzero_to_historySupportTrace
                 rfl
 
 private theorem historySupportTrace_pureRun_nonzero
-    {π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t)}
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
     {ss : List (GameTree S Outcome)} {hist : List (HistoryStep S)}
-    (hw : HistorySupportTrace (S := S) (Outcome := Outcome) t ss hist)
-    (hcompat : HistoryCompatibleCore (S := S) (Outcome := Outcome) (t := t) π hist) :
+    (hw : HistorySupportTrace t ss hist)
+    (hcompat : HistoryCompatibleCore t π hist) :
     Math.ParameterizedChain.pureRun
-      ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-      ((compiledCoreObs (S := S) (Outcome := Outcome) t).init) (ss.length - 1) π ss ≠ 0 := by
+      ((compiledCoreObs t).pureStep)
+      ((compiledCoreObs t).init) (ss.length - 1) π ss ≠ 0 := by
   induction hw with
   | init =>
       simp [Math.ParameterizedChain.pureRun, compiledCoreObs, compileObsCoreModel]
   | @stutter ss hist z hw hterm ih =>
       have hu :
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep π ss)
+          ((compiledCoreObs t).pureStep π ss)
             (.terminal z) ≠ 0 := by
         simp [pureStep_compiledCore_eq, hterm]
       have hlen : 0 < ss.length :=
-        historySupportTrace_length_pos (S := S) (Outcome := Outcome) (t := t) hw
+        historySupportTrace_length_pos t hw
       have hslen : ss.length - 1 + 1 = ss.length := by
         omega
       have hmul :
           Math.ParameterizedChain.pureRun
-            ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-            ((compiledCoreObs (S := S) (Outcome := Outcome) t).init)
+            ((compiledCoreObs t).pureStep)
+            ((compiledCoreObs t).init)
             ((ss.length - 1) + 1) π (ss ++ [.terminal z]) ≠ 0 := by
         rw [Math.ParameterizedChain.pureRun_succ_append]
         exact mul_ne_zero (ih hcompat) hu
       simpa [List.length_append, hslen] using hmul
   | @snoc ss hist u ℓ hw hstep ih =>
       have hcompat_prev :
-          HistoryCompatibleCore (S := S) (Outcome := Outcome) (t := t) π hist := by
+          HistoryCompatibleCore t π hist := by
         intro p I a hm
         exact hcompat (by simp [hm])
       have hp := ih hcompat_prev
       have hu :
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep π ss) u ≠ 0 := by
+          ((compiledCoreObs t).pureStep π ss) u ≠ 0 := by
         cases ℓ with
         | chance k b =>
             rcases hstep with ⟨μ, hk, next, hsrc, hb, hdst⟩
@@ -966,13 +957,13 @@ private theorem historySupportTrace_pureRun_nonzero
               simp
             simp [pureStep_compiledCore_eq, hsrc, hdst, ha]
       have hlen : 0 < ss.length :=
-        historySupportTrace_length_pos (S := S) (Outcome := Outcome) (t := t) hw
+        historySupportTrace_length_pos t hw
       have hslen : ss.length - 1 + 1 = ss.length := by
         omega
       have hmul :
           Math.ParameterizedChain.pureRun
-            ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-            ((compiledCoreObs (S := S) (Outcome := Outcome) t).init)
+            ((compiledCoreObs t).pureStep)
+            ((compiledCoreObs t).init)
             ((ss.length - 1) + 1) π (ss ++ [u]) ≠ 0 := by
         rw [Math.ParameterizedChain.pureRun_succ_append]
         exact mul_ne_zero hp hu
@@ -980,10 +971,10 @@ private theorem historySupportTrace_pureRun_nonzero
 
 private theorem exists_decision_of_projectStates_eq_some
     {i : S.Player} {I : S.Infoset i} {ss : List (GameTree S Outcome)}
-    (h : (compiledCoreObs (S := S) (Outcome := Outcome) t).projectStates i ss = some I) :
+    (h : (compiledCoreObs t).projectStates i ss = some I) :
     ∃ next : S.Act I → GameTree S Outcome,
-      (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss = .decision I next := by
-  cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+      (compiledCoreObs t).lastState ss = .decision I next := by
+  cases hlast : (compiledCoreObs t).lastState ss with
   | terminal z =>
       simp [projectStates_compiledCore, hlast, obsOfState] at h
   | chance k μ hk next =>
@@ -1001,11 +992,11 @@ private theorem infoState_some_of_not_subsingleton
     {i : S.Player} {ss : List (GameTree S Outcome)}
     (hsub : ¬ Subsingleton
       (CompiledAct S i
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).currentObs i
-          ((compiledCoreObs (S := S) (Outcome := Outcome) t).projectStates i ss)))) :
+        ((compiledCoreObs t).currentObs i
+          ((compiledCoreObs t).projectStates i ss)))) :
     ∃ I : S.Infoset i,
-      (compiledCoreObs (S := S) (Outcome := Outcome) t).projectStates i ss = some I := by
-  cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
+      (compiledCoreObs t).projectStates i ss = some I := by
+  cases hlast : (compiledCoreObs t).lastState ss with
   | terminal z =>
       exfalso
       apply hsub
@@ -1029,38 +1020,38 @@ private theorem infoState_some_of_not_subsingleton
 private theorem obsLocalFeasibility_compiledCore
     (hpr : PerfectRecall t) (i : S.Player) :
     ObsModelCore.ObsLocalFeasibility
-      (compiledCoreObs (S := S) (Outcome := Outcome) t) i := by
+      (compiledCoreObs t) i := by
   intro n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ hsub πᵢ
   obtain ⟨I, hI₁⟩ :=
-    infoState_some_of_not_subsingleton (S := S) (Outcome := Outcome) (t := t)
+    infoState_some_of_not_subsingleton t
       (i := i) (ss := ss₁) hsub
   have hI₂ :
-      (compiledCoreObs (S := S) (Outcome := Outcome) t).projectStates i ss₂ = some I := by
+      (compiledCoreObs t).projectStates i ss₂ = some I := by
     exact hobs.symm ▸ hI₁
   obtain ⟨next₁, hdec₁⟩ :=
-    exists_decision_of_projectStates_eq_some (S := S) (Outcome := Outcome) (t := t) hI₁
+    exists_decision_of_projectStates_eq_some t hI₁
   obtain ⟨next₂, hdec₂⟩ :=
-    exists_decision_of_projectStates_eq_some (S := S) (Outcome := Outcome) (t := t) hI₂
+    exists_decision_of_projectStates_eq_some t hI₂
   obtain ⟨hist₁, ⟨hsupp₁⟩, hcompat₁⟩ :=
-    pureRun_nonzero_to_historySupportTrace (S := S) (Outcome := Outcome) (t := t) h₁
+    pureRun_nonzero_to_historySupportTrace t h₁
   obtain ⟨hist₂, ⟨hsupp₂⟩, hcompat₂⟩ :=
-    pureRun_nonzero_to_historySupportTrace (S := S) (Outcome := Outcome) (t := t) h₂
+    pureRun_nonzero_to_historySupportTrace t h₂
   have hreach₁ : ReachBy hist₁ t (.decision I next₁) := by
     simpa [hdec₁] using
-      (historySupportTrace_reachBy (S := S) (Outcome := Outcome) (t := t) hsupp₁)
+      (historySupportTrace_reachBy t hsupp₁)
   have hreach₂ : ReachBy hist₂ t (.decision I next₂) := by
     simpa [hdec₂] using
-      (historySupportTrace_reachBy (S := S) (Outcome := Outcome) (t := t) hsupp₂)
+      (historySupportTrace_reachBy t hsupp₂)
   have hplayer :
       playerHistory S i hist₁ = playerHistory S i hist₂ := by
     exact hpr hist₁ hist₂ I next₁ next₂ hreach₁ hreach₂
   constructor
   · intro hupd₁
     obtain ⟨hist₁', ⟨hsupp₁'⟩, hcompat₁'⟩ :=
-      pureRun_nonzero_to_historySupportTrace (S := S) (Outcome := Outcome) (t := t) hupd₁
+      pureRun_nonzero_to_historySupportTrace t hupd₁
     have hreach₁' : ReachBy hist₁' t (.decision I next₁) := by
       simpa [hdec₁] using
-        (historySupportTrace_reachBy (S := S) (Outcome := Outcome) (t := t) hsupp₁')
+        (historySupportTrace_reachBy t hsupp₁')
     have hplayer₁' :
         playerHistory S i hist₁' = playerHistory S i hist₁ := by
       exact hpr hist₁' hist₁ I next₁ next₁ hreach₁' hreach₁
@@ -1070,7 +1061,7 @@ private theorem obsLocalFeasibility_compiledCore
       have htok' : tok ∈ playerHistory S i hist₁' := by
         simpa [hplayer₁'] using htok
       exact playerHistory_agrees_of_historyCompatibleCore_update
-        (S := S) (Outcome := Outcome) (t := t) hcompat₁' tok htok'
+        t hcompat₁' tok htok'
     have hagree₂ :
         ∀ tok ∈ playerHistory S i hist₂, πᵢ (some tok.1) = tok.2 := by
       intro tok htok
@@ -1079,21 +1070,21 @@ private theorem obsLocalFeasibility_compiledCore
       exact hagree₁ tok htok₁
     have hcompat₂' :=
       historyCompatibleCore_update_of_playerHistory
-        (S := S) (Outcome := Outcome) (t := t) hcompat₂ hagree₂
+        t hcompat₂ hagree₂
     have hlen₂ : ss₂.length - 1 = n₂ := by
       have := Math.ParameterizedChain.pureRun_length
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).init) n₂ π₀' ss₂ h₂
+        ((compiledCoreObs t).pureStep)
+        ((compiledCoreObs t).init) n₂ π₀' ss₂ h₂
       omega
     simpa [hlen₂] using
       historySupportTrace_pureRun_nonzero
-        (S := S) (Outcome := Outcome) (t := t) hsupp₂ hcompat₂'
+        t hsupp₂ hcompat₂'
   · intro hupd₂
     obtain ⟨hist₂', ⟨hsupp₂'⟩, hcompat₂'⟩ :=
-      pureRun_nonzero_to_historySupportTrace (S := S) (Outcome := Outcome) (t := t) hupd₂
+      pureRun_nonzero_to_historySupportTrace t hupd₂
     have hreach₂' : ReachBy hist₂' t (.decision I next₂) := by
       simpa [hdec₂] using
-        (historySupportTrace_reachBy (S := S) (Outcome := Outcome) (t := t) hsupp₂')
+        (historySupportTrace_reachBy t hsupp₂')
     have hplayer₂' :
         playerHistory S i hist₂' = playerHistory S i hist₂ := by
       exact hpr hist₂' hist₂ I next₂ next₂ hreach₂' hreach₂
@@ -1103,7 +1094,7 @@ private theorem obsLocalFeasibility_compiledCore
       have htok' : tok ∈ playerHistory S i hist₂' := by
         simpa [hplayer₂'] using htok
       exact playerHistory_agrees_of_historyCompatibleCore_update
-        (S := S) (Outcome := Outcome) (t := t) hcompat₂' tok htok'
+        t hcompat₂' tok htok'
     have hagree₁ :
         ∀ tok ∈ playerHistory S i hist₁, πᵢ (some tok.1) = tok.2 := by
       intro tok htok
@@ -1112,15 +1103,15 @@ private theorem obsLocalFeasibility_compiledCore
       exact hagree₂ tok htok₂
     have hcompat₁' :=
       historyCompatibleCore_update_of_playerHistory
-        (S := S) (Outcome := Outcome) (t := t) hcompat₁ hagree₁
+        t hcompat₁ hagree₁
     have hlen₁ : ss₁.length - 1 = n₁ := by
       have := Math.ParameterizedChain.pureRun_length
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).init) n₁ π₀ ss₁ h₁
+        ((compiledCoreObs t).pureStep)
+        ((compiledCoreObs t).init) n₁ π₀ ss₁ h₁
       omega
     simpa [hlen₁] using
       historySupportTrace_pureRun_nonzero
-        (S := S) (Outcome := Outcome) (t := t) hsupp₁ hcompat₁'
+        t hsupp₁ hcompat₁'
 
 private noncomputable def treeHeight : GameTree S Outcome → Nat
   | .terminal _ => 0
@@ -1129,7 +1120,7 @@ private noncomputable def treeHeight : GameTree S Outcome → Nat
 
 private theorem treeHeight_pos_of_nonterminal
     {u : GameTree S Outcome} (hnterm : ∀ z, u ≠ .terminal z) :
-    0 < treeHeight (S := S) (Outcome := Outcome) u := by
+    0 < treeHeight u := by
   cases u with
   | terminal z =>
       exact (hnterm z rfl).elim
@@ -1140,45 +1131,45 @@ private theorem treeHeight_pos_of_nonterminal
 
 private theorem historyStepStep_height_lt
     {src dst : GameTree S Outcome} {ℓ : HistoryStep S}
-    (hstep : HistoryStepStep (S := S) (Outcome := Outcome) ℓ src dst) :
-    treeHeight (S := S) (Outcome := Outcome) dst <
-      treeHeight (S := S) (Outcome := Outcome) src := by
+    (hstep : HistoryStepStep ℓ src dst) :
+    treeHeight dst <
+      treeHeight src := by
   cases ℓ with
   | chance k b =>
       rcases hstep with ⟨μ, hk, next, rfl, rfl⟩
       simp only [treeHeight, Nat.succ_eq_add_one, Order.lt_add_one_iff]
       exact Finset.le_sup
-        (f := fun b : Fin k => treeHeight (S := S) (Outcome := Outcome) (next b))
+        (f := fun b : Fin k => treeHeight (next b))
         (by simp)
   | action p I a =>
       rcases hstep with ⟨next, rfl, rfl⟩
       simp only [treeHeight, Nat.succ_eq_add_one, Order.lt_add_one_iff]
       exact Finset.le_sup
-        (f := fun a : S.Act I => treeHeight (S := S) (Outcome := Outcome) (next a))
+        (f := fun a : S.Act I => treeHeight (next a))
         (by simp)
 
 private theorem reachBy_length_add_height_le
     {src dst : GameTree S Outcome} {h : List (HistoryStep S)}
     (hr : ReachBy h src dst) :
-    h.length + treeHeight (S := S) (Outcome := Outcome) dst ≤
-      treeHeight (S := S) (Outcome := Outcome) src := by
+    h.length + treeHeight dst ≤
+      treeHeight src := by
   induction hr with
   | nil =>
       simp only [List.length_nil, zero_add, le_refl]
   | @cons ℓ rest src mid dst hstep hreach ih =>
       have hlt :
-          treeHeight (S := S) (Outcome := Outcome) mid <
-            treeHeight (S := S) (Outcome := Outcome) src :=
-        historyStepStep_height_lt (S := S) (Outcome := Outcome) hstep
+          treeHeight mid <
+            treeHeight src :=
+        historyStepStep_height_lt hstep
       have hle :
-          rest.length + treeHeight (S := S) (Outcome := Outcome) dst + 1 ≤
-            treeHeight (S := S) (Outcome := Outcome) src := by
+          rest.length + treeHeight dst + 1 ≤
+            treeHeight src := by
         exact Nat.succ_le_of_lt (lt_of_le_of_lt ih hlt)
       simpa [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using hle
 
 private theorem historySupportStep_source_nonterminal
     {src dst : GameTree S Outcome} {ℓ : HistoryStep S}
-    (hstep : HistorySupportStep (S := S) (Outcome := Outcome) ℓ src dst) :
+    (hstep : HistorySupportStep ℓ src dst) :
     ∀ z, src ≠ .terminal z := by
   intro z hz
   cases ℓ with
@@ -1191,9 +1182,9 @@ private theorem historySupportStep_source_nonterminal
 
 private theorem historySupportTrace_length_eq_of_nonterminal
     {ss : List (GameTree S Outcome)} {h : List (HistoryStep S)}
-    (hw : HistorySupportTrace (S := S) (Outcome := Outcome) t ss h)
+    (hw : HistorySupportTrace t ss h)
     (hnterm : ∀ z,
-      (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss ≠ .terminal z) :
+      (compiledCoreObs t).lastState ss ≠ .terminal z) :
     ss.length = h.length + 1 := by
   induction hw with
   | init =>
@@ -1202,53 +1193,53 @@ private theorem historySupportTrace_length_eq_of_nonterminal
       exfalso
       exact hnterm z (by
         have :
-            (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState (ss ++ [.terminal z]) =
+            (compiledCoreObs t).lastState (ss ++ [.terminal z]) =
               .terminal z := by
           simp [ObsModelCore.lastState]
         exact this)
   | @snoc ss h u ℓ hw hstep ih =>
       have hsrc_nonterm :
           ∀ z,
-            (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss ≠ .terminal z :=
-        historySupportStep_source_nonterminal (S := S) (Outcome := Outcome) hstep
+            (compiledCoreObs t).lastState ss ≠ .terminal z :=
+        historySupportStep_source_nonterminal hstep
       have hlen := ih hsrc_nonterm
       simp [List.length_append, hlen]
 
 private theorem lastState_terminal_of_pureRun_height
-    {π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t)}
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
     {ss : List (GameTree S Outcome)}
     (h :
       Math.ParameterizedChain.pureRun
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).init)
-        (treeHeight (S := S) (Outcome := Outcome) t) π ss ≠ 0) :
+        ((compiledCoreObs t).pureStep)
+        ((compiledCoreObs t).init)
+        (treeHeight t) π ss ≠ 0) :
     ∃ z,
-      (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss = .terminal z := by
+      (compiledCoreObs t).lastState ss = .terminal z := by
   obtain ⟨hist, ⟨hsupp⟩, hcompat⟩ :=
-    pureRun_nonzero_to_historySupportTrace (S := S) (Outcome := Outcome) (t := t) h
+    pureRun_nonzero_to_historySupportTrace t h
   by_contra hnot
   have hnterm :
-      ∀ z, (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss ≠ .terminal z := by
+      ∀ z, (compiledCoreObs t).lastState ss ≠ .terminal z := by
     intro z hz
     exact hnot ⟨z, hz⟩
   have hlenTrace := Math.ParameterizedChain.pureRun_length
-    ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep)
-    ((compiledCoreObs (S := S) (Outcome := Outcome) t).init)
-    (treeHeight (S := S) (Outcome := Outcome) t) π ss h
+    ((compiledCoreObs t).pureStep)
+    ((compiledCoreObs t).init)
+    (treeHeight t) π ss h
   have hlenHist :
-      hist.length = treeHeight (S := S) (Outcome := Outcome) t := by
+      hist.length = treeHeight t := by
     have hlenSupport :=
       historySupportTrace_length_eq_of_nonterminal
-        (S := S) (Outcome := Outcome) (t := t) hsupp hnterm
+        t hsupp hnterm
     omega
   have hreach :=
-    historySupportTrace_reachBy (S := S) (Outcome := Outcome) (t := t) hsupp
+    historySupportTrace_reachBy t hsupp
   have hbound :=
-    reachBy_length_add_height_le (S := S) (Outcome := Outcome) hreach
+    reachBy_length_add_height_le hreach
   have hpos :
-      0 < treeHeight (S := S) (Outcome := Outcome)
-        ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss) := by
-    exact treeHeight_pos_of_nonterminal (S := S) (Outcome := Outcome) hnterm
+      0 < treeHeight
+        ((compiledCoreObs t).lastState ss) := by
+    exact treeHeight_pos_of_nonterminal hnterm
   omega
 
 end ObsModelCoreBridge
@@ -1381,22 +1372,22 @@ private theorem kuhn_mixed_to_behavioral_core
     (t : GameTree S Outcome)
     (hpr : PerfectRecall t)
     (muP : MixedProfile S) :
-    ∃ β : (compiledCoreObs (S := S) (Outcome := Outcome) t).BehavioralProfile,
-      let O := compiledCoreObs (S := S) (Outcome := Outcome) t
-      let k := treeHeight (S := S) (Outcome := Outcome) t
-      let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
+    ∃ β : (compiledCoreObs t).BehavioralProfile,
+      let O := compiledCoreObs t
+      let k := treeHeight t
+      let μ := GameTheory.EFG.liftMixedProfileCore t muP
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
-  let O := compiledCoreObs (S := S) (Outcome := Outcome) t
-  let k := treeHeight (S := S) (Outcome := Outcome) t
-  let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
+  let O := compiledCoreObs t
+  let k := treeHeight t
+  let μ := GameTheory.EFG.liftMixedProfileCore t muP
   have hMass :
       ObsModelCore.StepMassInvariant O := by
     intro ss u π₁ π₂ h₁ h₂
-    exact stepMassInvariant_compiledCore (S := S) (Outcome := Outcome) (t := t) π₁ π₂ h₁ h₂
+    exact stepMassInvariant_compiledCore t π₁ π₂ h₁ h₂
   have hFactor :
       ObsModelCore.StepSupportFactorization O := by
     intro ss u π₀ π h₀
-    exact stepSupportFactorization_compiledCore (S := S) (Outcome := Outcome) (t := t) π₀ π h₀
+    exact stepSupportFactorization_compiledCore t π₀ π h₀
   obtain ⟨β, hβ⟩ :=
     ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := O)
       hMass hFactor
@@ -1405,37 +1396,37 @@ private theorem kuhn_mixed_to_behavioral_core
           hMass i
           (by
             simpa [O] using
-              obsLocalFeasibility_compiledCore (S := S) (Outcome := Outcome) (t := t) hpr i))
+              obsLocalFeasibility_compiledCore t hpr i))
       μ k
   exact ⟨β, hβ⟩
 
 private theorem compiledCore_runEq_to_evalDistEq
     (t : GameTree S Outcome)
     (muP : MixedProfile S)
-    {β : (compiledCoreObs (S := S) (Outcome := Outcome) t).BehavioralProfile}
+    {β : (compiledCoreObs t).BehavioralProfile}
     (hβ :
-      let O := compiledCoreObs (S := S) (Outcome := Outcome) t
-      let k := treeHeight (S := S) (Outcome := Outcome) t
-      let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
+      let O := compiledCoreObs t
+      let k := treeHeight t
+      let μ := GameTheory.EFG.liftMixedProfileCore t muP
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k)) :
-    let σ := GameTheory.EFG.descendBehavioralProfileCore (S := S) (Outcome := Outcome) t β
+    let σ := GameTheory.EFG.descendBehavioralProfileCore t β
     t.evalDist σ =
-      (mixedProfileJoint (S := S) muP).bind
-        (fun pi => t.evalDist (pureToBehavioral (S := S) pi)) := by
-  let O := compiledCoreObs (S := S) (Outcome := Outcome) t
-  let k := treeHeight (S := S) (Outcome := Outcome) t
-  let μ := GameTheory.EFG.liftMixedProfileCore (S := S) (Outcome := Outcome) t muP
+      (mixedProfileJoint muP).bind
+        (fun pi => t.evalDist (pureToBehavioral pi)) := by
+  let O := compiledCoreObs t
+  let k := treeHeight t
+  let μ := GameTheory.EFG.liftMixedProfileCore t muP
   let σ : BehavioralProfile S :=
-    GameTheory.EFG.descendBehavioralProfileCore (S := S) (Outcome := Outcome) t β
+    GameTheory.EFG.descendBehavioralProfileCore t β
   have hleft :
       (O.runDist k β).bind (fun ss => (O.lastState ss).evalDist σ) = t.evalDist σ := by
     simpa [O, k, σ, GameTheory.EFG.liftBehavioralProfileCore_descendBehavioralProfileCore] using
-      runDist_bind_evalDist_core (S := S) (Outcome := Outcome) (t := t) σ k
+      runDist_bind_evalDist_core t σ k
   have hright :
       ((pmfPi μ).bind (O.runDistPure k)).bind
           (fun ss => (O.lastState ss).evalDist σ) =
-        (mixedProfileJoint (S := S) muP).bind
-          (fun pi => t.evalDist (pureToBehavioral (S := S) pi)) := by
+        (mixedProfileJoint muP).bind
+          (fun pi => t.evalDist (pureToBehavioral pi)) := by
     rw [PMF.bind_bind]
     calc
       (pmfPi μ).bind
@@ -1448,7 +1439,7 @@ private theorem compiledCore_runEq_to_evalDistEq
                 (O.lastState ss).evalDist
                   (pureToBehavioral
                     (GameTheory.EFG.descendPureProfileCore
-                      (S := S) (Outcome := Outcome) t π)))) := by
+                      t π)))) := by
             refine Math.ProbabilityMassFunction.bind_congr_on_support (pmfPi μ) _ _ ?_
             intro π _hπ
             refine Math.ProbabilityMassFunction.bind_congr_on_support (O.runDistPure k π) _ _ ?_
@@ -1458,7 +1449,7 @@ private theorem compiledCore_runEq_to_evalDistEq
               simpa [O, k, ObsModelCore.runDistPure_eq_pureRun] using hss
             obtain ⟨z, hz⟩ :=
               lastState_terminal_of_pureRun_height
-                (S := S) (Outcome := Outcome) (t := t)
+                t
                 (by simpa [O, k] using hss')
             simp [O, hz]
       _ =
@@ -1467,24 +1458,24 @@ private theorem compiledCore_runEq_to_evalDistEq
             t.evalDist
               (pureToBehavioral
                 (GameTheory.EFG.descendPureProfileCore
-                  (S := S) (Outcome := Outcome) t π))) := by
+                  t π))) := by
           refine Math.ProbabilityMassFunction.bind_congr_on_support (pmfPi μ) _ _ ?_
           intro π _hπ
           simpa [O, k] using
-            runDistPure_bind_evalDist_core (S := S) (Outcome := Outcome) (t := t) π k
+            runDistPure_bind_evalDist_core t π k
       _ =
         (Math.ProbabilityMassFunction.pushforward
-          (mixedProfileJoint (S := S) muP)
-          (GameTheory.EFG.liftPureProfileCore (S := S) (Outcome := Outcome) t)).bind
+          (mixedProfileJoint muP)
+          (GameTheory.EFG.liftPureProfileCore t)).bind
             (fun π =>
               t.evalDist
                 (pureToBehavioral
                   (GameTheory.EFG.descendPureProfileCore
-                    (S := S) (Outcome := Outcome) t π))) := by
-          rw [liftMixedProfileCore_joint (S := S) (Outcome := Outcome) (t := t) muP]
+                    t π))) := by
+          rw [liftMixedProfileCore_joint t muP]
       _ =
-        (mixedProfileJoint (S := S) muP).bind
-          (fun pi => t.evalDist (pureToBehavioral (S := S) pi)) := by
+        (mixedProfileJoint muP).bind
+          (fun pi => t.evalDist (pureToBehavioral pi)) := by
           simp [Math.ProbabilityMassFunction.pushforward,
             GameTheory.EFG.descendPureProfileCore_liftPureProfileCore]
   calc
@@ -1498,8 +1489,8 @@ private theorem compiledCore_runEq_to_evalDistEq
           simpa [O, k, μ] using congrArg
             (fun d => d.bind (fun ss => (O.lastState ss).evalDist σ)) hβ
     _ =
-      (mixedProfileJoint (S := S) muP).bind
-        (fun pi => t.evalDist (pureToBehavioral (S := S) pi)) := hright
+      (mixedProfileJoint muP).bind
+        (fun pi => t.evalDist (pureToBehavioral pi)) := hright
 
 /-- **Kuhn's theorem (mixed → behavioral direction).**
     For any game tree with perfect recall and any mixed strategy profile,
@@ -1511,16 +1502,16 @@ theorem kuhn_mixed_to_behavioral
     (muP : MixedProfile S) :
     ∃ sigma : BehavioralProfile S,
       t.evalDist sigma =
-      (mixedProfileJoint (S := S) muP).bind
+      (mixedProfileJoint muP).bind
         (fun pi => t.evalDist
-          (pureToBehavioral (S := S) pi)) := by
+          (pureToBehavioral pi)) := by
   obtain ⟨β, hβ⟩ :=
-    kuhn_mixed_to_behavioral_core (S := S) (Outcome := Outcome) t hpr muP
+    kuhn_mixed_to_behavioral_core t hpr muP
   let σ : BehavioralProfile S :=
-    GameTheory.EFG.descendBehavioralProfileCore (S := S) (Outcome := Outcome) t β
+    GameTheory.EFG.descendBehavioralProfileCore t β
   refine ⟨σ, ?_⟩
   simpa [σ] using
-    compiledCore_runEq_to_evalDistEq (S := S) (Outcome := Outcome) t muP hβ
+    compiledCore_runEq_to_evalDistEq t muP hβ
 
 open GameTheory in
 /-- Kuhn's theorem lifted to utility distributions (mixed → behavioral). -/
