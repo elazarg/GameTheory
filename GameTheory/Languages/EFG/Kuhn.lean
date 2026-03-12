@@ -313,16 +313,19 @@ current step just evaluates it at the current observation cell. -/
           ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss)) := by
   induction ss with
   | nil =>
-      simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates, ObsModelCore.projectStatesFrom,
-        ObsModelCore.lastState, compiledCoreObs, compileObsCoreModel, obsOfState]
+      simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
+        ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
+        compileObsCoreModel, obsOfState]
   | cons s ss ih =>
       cases ss with
       | nil =>
-          simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates, ObsModelCore.projectStatesFrom,
-            ObsModelCore.lastState, compiledCoreObs, compileObsCoreModel, obsOfState]
+          simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
+            ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
+            compileObsCoreModel, obsOfState]
       | cons t ts =>
-          simpa [ObsModelCore.castProfileAction, ObsModelCore.projectStates, ObsModelCore.projectStatesFrom,
-            ObsModelCore.lastState, compiledCoreObs, compileObsCoreModel, obsOfState] using ih
+          simpa [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
+            ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
+            compileObsCoreModel, obsOfState] using ih
 
 @[simp] theorem castJointAction_compiledCore
     (π : ObsModelCore.PureProfile (compiledCoreObs (S := S) (Outcome := Outcome) t))
@@ -364,11 +367,11 @@ theorem pureStep_compiledCore_eq
       (fun i => π i (obsOfState (S := S) (Outcome := Outcome) i (O.lastState ss)))
   cases hlast : O.lastState ss with
   | terminal z =>
-      simp [compiledCore_step_eq, obsOfState, hlast]
+      simp [compiledCore_step_eq, obsOfState]
   | chance k μ hk next =>
-      simp [compiledCore_step_eq, obsOfState, hlast]
+      simp [compiledCore_step_eq, obsOfState]
   | @decision p I next =>
-      simp [compiledCore_step_eq, obsOfState, hlast]
+      simp [compiledCore_step_eq, obsOfState]
       have hcast' :
           cast
             (compiledAct_eq_of_some S p
@@ -454,7 +457,9 @@ private theorem stepDist_compiledCore_eq_decision
   rw [Math.ProbabilityMassFunction.bind_pure_eq_pushforward]
   have hcomp :
       Math.ProbabilityMassFunction.pushforward
-        (pmfPi (fun i => liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i (O.projectStates i ss)))
+        (pmfPi (fun i =>
+          liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+            (O.projectStates i ss)))
         (fun a =>
           next
             (cast
@@ -465,7 +470,9 @@ private theorem stepDist_compiledCore_eq_decision
               (a p))) =
       Math.ProbabilityMassFunction.pushforward
         (Math.ProbabilityMassFunction.pushforward
-          (pmfPi (fun i => liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i (O.projectStates i ss)))
+          (pmfPi (fun i =>
+            liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+              (O.projectStates i ss)))
           (fun a =>
             cast
               (compiledAct_eq_of_some S p
@@ -476,7 +483,9 @@ private theorem stepDist_compiledCore_eq_decision
         next := by
     simpa [Function.comp] using
       (Math.ProbabilityMassFunction.pushforward_comp
-        (pmfPi (fun i => liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i (O.projectStates i ss)))
+        (pmfPi (fun i =>
+          liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+            (O.projectStates i ss)))
         (fun a =>
           cast
             (compiledAct_eq_of_some S p
@@ -488,7 +497,9 @@ private theorem stepDist_compiledCore_eq_decision
   rw [hcomp]
   have hpush :
       Math.ProbabilityMassFunction.pushforward
-        (pmfPi (fun i => liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i (O.projectStates i ss)))
+        (pmfPi (fun i =>
+          liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+            (O.projectStates i ss)))
         (fun a =>
           cast
             (compiledAct_eq_of_some S p
@@ -499,7 +510,9 @@ private theorem stepDist_compiledCore_eq_decision
       σ p I := by
     have hcomp' :
         Math.ProbabilityMassFunction.pushforward
-          (pmfPi (fun i => liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i (O.projectStates i ss)))
+          (pmfPi (fun i =>
+            liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+              (O.projectStates i ss)))
           (fun a =>
             cast
               (compiledAct_eq_of_some S p
@@ -509,7 +522,9 @@ private theorem stepDist_compiledCore_eq_decision
               (a p)) =
         Math.ProbabilityMassFunction.pushforward
           (Math.ProbabilityMassFunction.pushforward
-            (pmfPi (fun i => liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i (O.projectStates i ss)))
+            (pmfPi (fun i =>
+              liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+                (O.projectStates i ss)))
             (fun a => a p))
           (fun x =>
             cast
@@ -520,14 +535,16 @@ private theorem stepDist_compiledCore_eq_decision
               x) := by
       simpa [Function.comp] using
         (Math.ProbabilityMassFunction.pushforward_comp
-          (pmfPi (fun i => liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i (O.projectStates i ss)))
+          (pmfPi (fun i =>
+            liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ i
+              (O.projectStates i ss)))
           (fun a => a p)
           (fun x =>
             cast
-              (compiledAct_eq_of_some S p
-                (show O.projectStates p ss = some I by
-                  simpa [O, hs, obsOfState] using
-                    (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+            (compiledAct_eq_of_some S p
+              (show O.projectStates p ss = some I by
+                simpa [O, hs, obsOfState] using
+                  (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
               x)).symm
     rw [hcomp', Math.PMFProduct.pmfPi_push_coord]
     have hproj : O.projectStates p ss = some I := by
@@ -638,7 +655,7 @@ theorem stepDist_bind_evalDist_core
   | terminal z =>
       simp
   | chance k μ hk next =>
-      simp [PMF.map, Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+      simp [PMF.map, PMF.bind_bind]
   | decision I next =>
       simp [GameTree.evalDist]
 
@@ -764,10 +781,10 @@ private theorem historySupportTrace_nonempty
       simp
   | @stutter ss h z hw _ ih =>
       intro hnil
-      simpa using hnil
+      simp at hnil
   | @snoc ss h u ℓ hw _ ih =>
       intro hnil
-      simpa using hnil
+      simp at hnil
 
 private theorem historySupportTrace_length_pos
     {ss : List (GameTree S Outcome)} {h : List (HistoryStep S)}
@@ -801,7 +818,7 @@ private theorem historySupportTrace_reachBy
       have hlast :
           (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState (ss ++ [.terminal z]) =
             .terminal z := by
-        simp [ObsModelCore.lastState, List.getLast?_concat]
+        simp [ObsModelCore.lastState]
       exact hlast.symm ▸ ih'
   | @snoc ss h u ℓ hw hstep ih =>
       have htail : ReachBy [ℓ]
@@ -942,7 +959,7 @@ private theorem pureRun_nonzero_to_historySupportTrace
                       ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState pfx)
                       (next b) from ⟨μ, hk, next, hlast, hb, rfl⟩))⟩
             · intro p I a hm
-              simp only [List.mem_append, List.mem_singleton, or_false] at hm
+              simp only [List.mem_append, List.mem_singleton] at hm
               rcases hm with hm | hm
               · exact hcompat hm
               · cases hm
@@ -960,7 +977,7 @@ private theorem pureRun_nonzero_to_historySupportTrace
                       ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState pfx)
                       (next (π p (some I))) from ⟨next, hlast, rfl⟩))⟩
             · intro q J a hm
-              simp only [List.mem_append, List.mem_singleton, or_false] at hm
+              simp only [List.mem_append, List.mem_singleton] at hm
               rcases hm with hm | hm
               · exact hcompat hm
               · cases hm
@@ -1174,7 +1191,7 @@ private theorem obsLocalFeasibility_compiledCore
 private noncomputable def treeHeight : GameTree S Outcome → Nat
   | .terminal _ => 0
   | .chance _k _μ _hk next => Nat.succ <| Finset.univ.sup fun b => treeHeight (next b)
-  | .decision I next => Nat.succ <| Finset.univ.sup fun a => treeHeight (next a)
+  | .decision _ next => Nat.succ <| Finset.univ.sup fun a => treeHeight (next a)
 
 private theorem treeHeight_pos_of_nonterminal
     {u : GameTree S Outcome} (hnterm : ∀ z, u ≠ .terminal z) :
