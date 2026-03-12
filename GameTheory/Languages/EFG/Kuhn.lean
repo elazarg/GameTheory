@@ -388,17 +388,13 @@ private theorem stepDist_compiledCore_eq_decision
             (cast
               (compiledAct_eq_of_some S p
                 (show O.projectStates p ss = some I by
-                  simpa [O, hs, obsOfState] using
-                    (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+                  simp [O, hs, obsOfState]))
               (a p)))) := by
     funext a
     have hs' :=
       compiledCore_step_of_decision (S := S) (Outcome := Outcome) (t := t) I next hs
         (O.castJointAction ss a)
-    have hproj : O.projectStates p ss = some I := by
-      simpa [O, hs, obsOfState] using
-        (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)
-    grind [ObsModelCore.castJointAction, cast_cast]
+    grind [obsOfState, ObsModelCore.castJointAction, cast_cast]
   rw [hf]
   rw [Math.ProbabilityMassFunction.bind_pure_eq_pushforward]
   have hcomp :
@@ -410,9 +406,7 @@ private theorem stepDist_compiledCore_eq_decision
           next
             (cast
               (compiledAct_eq_of_some S p
-                (show O.projectStates p ss = some I by
-                  simpa [O, hs, obsOfState] using
-                    (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+                (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
               (a p))) =
       Math.ProbabilityMassFunction.pushforward
         (Math.ProbabilityMassFunction.pushforward
@@ -422,9 +416,7 @@ private theorem stepDist_compiledCore_eq_decision
           (fun a =>
             cast
               (compiledAct_eq_of_some S p
-                (show O.projectStates p ss = some I by
-                  simpa [O, hs, obsOfState] using
-                    (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+                (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
               (a p)))
         next := by
     simpa [Function.comp] using
@@ -435,9 +427,7 @@ private theorem stepDist_compiledCore_eq_decision
         (fun a =>
           cast
             (compiledAct_eq_of_some S p
-              (show O.projectStates p ss = some I by
-                simpa [O, hs, obsOfState] using
-                  (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+              (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
             (a p))
         next).symm
   rw [hcomp]
@@ -449,9 +439,7 @@ private theorem stepDist_compiledCore_eq_decision
         (fun a =>
           cast
             (compiledAct_eq_of_some S p
-              (show O.projectStates p ss = some I by
-                simpa [O, hs, obsOfState] using
-                  (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+              (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
             (a p)) =
       σ p I := by
     have hcomp' :
@@ -462,9 +450,7 @@ private theorem stepDist_compiledCore_eq_decision
           (fun a =>
             cast
               (compiledAct_eq_of_some S p
-                (show O.projectStates p ss = some I by
-                  simpa [O, hs, obsOfState] using
-                    (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+                (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
               (a p)) =
         Math.ProbabilityMassFunction.pushforward
           (Math.ProbabilityMassFunction.pushforward
@@ -475,9 +461,7 @@ private theorem stepDist_compiledCore_eq_decision
           (fun x =>
             cast
               (compiledAct_eq_of_some S p
-                (show O.projectStates p ss = some I by
-                  simpa [O, hs, obsOfState] using
-                    (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+                (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
               x) := by
       simpa [Function.comp] using
         (Math.ProbabilityMassFunction.pushforward_comp
@@ -488,14 +472,11 @@ private theorem stepDist_compiledCore_eq_decision
           (fun x =>
             cast
             (compiledAct_eq_of_some S p
-              (show O.projectStates p ss = some I by
-                simpa [O, hs, obsOfState] using
-                  (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)))
+              (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
               x)).symm
     rw [hcomp', Math.PMFProduct.pmfPi_push_coord]
     have hproj : O.projectStates p ss = some I := by
-      simpa [O, hs, obsOfState] using
-        (projectStates_compiledCore (S := S) (Outcome := Outcome) (t := t) p ss)
+      simp [O, hs, obsOfState]
     have hlocal :
         ∀ v : Option (S.Infoset p),
           ∀ h : v = some I,
@@ -619,7 +600,7 @@ theorem runDist_bind_evalDist_core
       t.evalDist σ := by
   induction k with
   | zero =>
-      simpa [compiledCoreObs, compileObsCoreModel, ObsModelCore.runDist, ObsModelCore.lastState]
+      simp [compiledCoreObs, compileObsCoreModel, ObsModelCore.runDist, ObsModelCore.lastState]
   | succ k ih =>
       rw [ObsModelCore.runDist]
       calc
@@ -763,7 +744,7 @@ private theorem historySupportTrace_reachBy
     ReachBy h t ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss) := by
   induction hw with
   | init =>
-      simpa [compiledCoreObs, compileObsCoreModel, ObsModelCore.lastState] using ReachBy.here t
+      simp [compiledCoreObs, compileObsCoreModel, ObsModelCore.lastState]
   | @stutter ss h z hw hterm ih =>
       have ih' : ReachBy h t (.terminal z) := by
         simpa [hterm] using ih
@@ -951,7 +932,7 @@ private theorem historySupportTrace_pureRun_nonzero
       have hu :
           ((compiledCoreObs (S := S) (Outcome := Outcome) t).pureStep π ss)
             (.terminal z) ≠ 0 := by
-        simpa [pureStep_compiledCore_eq, hterm]
+        simp [pureStep_compiledCore_eq, hterm]
       have hlen : 0 < ss.length :=
         historySupportTrace_length_pos (S := S) (Outcome := Outcome) (t := t) hw
       have hslen : ss.length - 1 + 1 = ss.length := by
@@ -983,7 +964,7 @@ private theorem historySupportTrace_pureRun_nonzero
                 π p (some I) = a := by
               apply hcompat
               simp
-            simpa [pureStep_compiledCore_eq, hsrc, hdst, ha]
+            simp [pureStep_compiledCore_eq, hsrc, hdst, ha]
       have hlen : 0 < ss.length :=
         historySupportTrace_length_pos (S := S) (Outcome := Outcome) (t := t) hw
       have hslen : ss.length - 1 + 1 = ss.length := by
@@ -1010,10 +991,10 @@ private theorem exists_decision_of_projectStates_eq_some
   | @decision p J next =>
       by_cases hp : p = i
       · subst hp
-        simp [projectStates_compiledCore, hlast, obsOfState] at h
+        simp only [projectStates_compiledCore, obsOfState, hlast, ↓reduceDIte] at h
         cases h
         refine ⟨next, ?_⟩
-        simpa using hlast
+        simp
       · simp [projectStates_compiledCore, hlast, obsOfState, hp] at h
 
 private theorem infoState_some_of_not_subsingleton
@@ -1165,13 +1146,13 @@ private theorem historyStepStep_height_lt
   cases ℓ with
   | chance k b =>
       rcases hstep with ⟨μ, hk, next, rfl, rfl⟩
-      simp [treeHeight]
+      simp only [treeHeight, Nat.succ_eq_add_one, Order.lt_add_one_iff]
       exact Finset.le_sup
         (f := fun b : Fin k => treeHeight (S := S) (Outcome := Outcome) (next b))
         (by simp)
   | action p I a =>
       rcases hstep with ⟨next, rfl, rfl⟩
-      simp [treeHeight]
+      simp only [treeHeight, Nat.succ_eq_add_one, Order.lt_add_one_iff]
       exact Finset.le_sup
         (f := fun a : S.Act I => treeHeight (S := S) (Outcome := Outcome) (next a))
         (by simp)
@@ -1479,7 +1460,7 @@ private theorem compiledCore_runEq_to_evalDistEq
               lastState_terminal_of_pureRun_height
                 (S := S) (Outcome := Outcome) (t := t)
                 (by simpa [O, k] using hss')
-            simpa [O, hz]
+            simp [O, hz]
       _ =
         (pmfPi μ).bind
           (fun π =>
