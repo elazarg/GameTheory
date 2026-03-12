@@ -56,6 +56,7 @@ def HorizonSeparation (O : ObsModelCore ι σ Obs Act) : Prop :=
     ss.length < ss'.length →
     Subsingleton (Act i (O.currentObs i (O.projectStates i ss')))
 
+omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] [∀ i, Fintype (O.InfoState i)] in
 theorem reachableInfoStateWithin_mono
     (i : ι) {n m : Nat} {v : O.InfoState i}
     (h : O.ReachableInfoStateWithin i n v) (hnm : n ≤ m) :
@@ -63,6 +64,7 @@ theorem reachableInfoStateWithin_mono
   rcases h with ⟨ss, hss, rfl⟩
   exact ⟨ss, le_trans hss hnm, rfl⟩
 
+omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] [∀ i, Fintype (O.InfoState i)] in
 theorem reachableInfoStateWithin_projectStates
     (i : ι) {ss : List σ} {n : Nat} (hss : ss.length ≤ n) :
     O.ReachableInfoStateWithin i n (O.projectStates i ss) :=
@@ -88,9 +90,11 @@ theorem jointActionDist_pureToBehavioral
       by_contra hall
       push_neg at hall
       exact h (funext hall)
-    simp [ObsModelCore.jointActionDist, ObsModelCore.pureToBehavioral,
-      Math.PMFProduct.pmfPi_apply, h]
-    exact Finset.prod_eq_zero (Finset.mem_univ i) (by simp [hi])
+    have hprod :
+        (∏ x, if a x = π x (O.projectStates x ss) then (1 : ENNReal) else 0) = 0 := by
+      exact Finset.prod_eq_zero (Finset.mem_univ i) (by simp [hi])
+    simpa only [ObsModelCore.jointActionDist, ObsModelCore.pureToBehavioral,
+      Math.PMFProduct.pmfPi_apply, PMF.pure_apply, h] using hprod
 
 /-- Under a pure behavioral profile, `stepDist` is a deterministic step. -/
 theorem stepDist_pureToBehavioral
@@ -117,7 +121,6 @@ end StepLemmas
 section RunLemmas
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.InfoState i)]
 
 /-- Traces in the support of `runDistPure n` have length `n + 1`. -/
 theorem runDistPure_support_length
@@ -158,7 +161,9 @@ theorem runDistPure_congr_of_agree_within
             h i _ (O.reachableInfoStateWithin_projectStates i (by omega)))
         have hpush := congrArg
           (fun d => Math.ProbabilityMassFunction.pushforward d (fun t => ss' ++ [t])) hstep
-        exact congrArg (fun x => (O.runDist n (O.pureToBehavioral π₂)) ss' * x) (congrArg (· ss) hpush)
+        exact congrArg
+          (fun x => (O.runDist n (O.pureToBehavioral π₂)) ss' * x)
+          (congrArg (· ss) hpush)
 
 end RunLemmas
 
@@ -247,11 +252,16 @@ noncomputable def swapProfile
     (n : Nat) (π₁ π₂ : PureProfile O) : PureProfile O :=
   fun i v => if O.ReachableInfoStateWithin i n v then π₁ i v else π₂ i v
 
+omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] [∀ i, Fintype (O.InfoState i)] in
 theorem swapProfile_involutive (n : Nat) :
     Function.Involutive (fun (p : PureProfile O × PureProfile O) =>
       (swapProfile (O := O) n p.1 p.2, swapProfile (O := O) n p.2 p.1)) := by
   intro ⟨π₁, π₂⟩
-  apply Prod.ext <;> (funext i v; by_cases hv : O.ReachableInfoStateWithin i n v <;> simp [swapProfile, hv])
+  apply Prod.ext
+  · funext i v
+    by_cases hv : O.ReachableInfoStateWithin i n v <;> simp [swapProfile, hv]
+  · funext i v
+    by_cases hv : O.ReachableInfoStateWithin i n v <;> simp [swapProfile, hv]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -460,7 +470,6 @@ end StepIndependenceBridge
 section MainTheorem
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [∀ i, Fintype (O.InfoState i)]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -507,13 +516,15 @@ Every behavioral profile has the same bounded trace distribution as the
 corresponding ex-ante product mixed strategy, provided nontrivial information
 states do not recur at different horizons. -/
 theorem kuhn_behavioral_to_mixed
+    [∀ i, Fintype (O.InfoState i)]
     [∀ i, Fintype (O.LocalStrategy i)]
-    [Fintype (PureProfile O)]
+    [Finite (PureProfile O)]
     (hSep : O.HorizonSeparation)
     (β : BehavioralProfile O) (k : Nat) :
     O.runDist k β =
-      (O.behavioralToMixedJoint β).bind (fun π => O.runDistPure k π) :=
-  runDist_eq_of_stepIndependence (O := O)
+      (O.behavioralToMixedJoint β).bind (fun π => O.runDistPure k π) := by
+  letI : Fintype (PureProfile O) := Fintype.ofFinite (PureProfile O)
+  exact runDist_eq_of_stepIndependence (O := O)
     (O.behavioralToMixedJoint β) β
     (fun n => stepIndependence_bridge (O := O) hSep β n) k
 
