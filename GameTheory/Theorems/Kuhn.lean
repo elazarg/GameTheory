@@ -1,5 +1,6 @@
 import GameTheory.Theorems.Kuhn.KuhnModel
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
+import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 import GameTheory.Theorems.Kuhn.BehavioralToMixed
 import GameTheory.Theorems.Kuhn.CorrelatedRealization
 
@@ -14,7 +15,7 @@ The semantic core now lives on `KuhnModel`/`ObsModelCore`:
   horizon-separation condition used to fold sequential randomization into an
   ex-ante product distribution.
 - **M→B** (`ObsModelCore.kuhn_mixed_to_behavioral_semantic` in
-  `CorrelatedRealization.lean`): stated over semantic step/locality
+  `MixedToBehavioralCore.lean`): stated over semantic step/locality
   assumptions.
 
 `ObsModel` is now the stronger snapshot-refined compatibility layer. It is
