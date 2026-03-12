@@ -371,7 +371,7 @@ theorem pureStep_compiledCore_eq
   | chance k μ hk next =>
       simp [compiledCore_step_eq, obsOfState]
   | @decision p I next =>
-      simp [compiledCore_step_eq, obsOfState]
+      simp only [obsOfState, compiledCore_step_eq, dite_eq_ite]
       have hcast' :
           cast
             (compiledAct_eq_of_some S p
@@ -593,7 +593,8 @@ theorem stepMassInvariant_compiledCore :
   | @decision p I next =>
       have h₁' := h₁
       have h₂' := h₂
-      simp [pureStep_compiledCore_eq, hlast] at h₁' h₂' ⊢
+      simp only [pureStep_compiledCore_eq, hlast, PMF.pure_apply, ne_eq, ite_eq_right_iff,
+        one_ne_zero, imp_false, not_not] at h₁' h₂' ⊢
       have hEq : next (π₁ p (some I)) = next (π₂ p (some I)) := h₁'.symm.trans h₂'
       cases h₁'
       simp [hEq]
@@ -606,15 +607,18 @@ theorem stepSupportFactorization_compiledCore :
   cases hlast : (compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss with
   | terminal z =>
       have h₀' := h₀
-      simp [pureStep_compiledCore_eq, hlast] at h₀' ⊢
+      simp only [pureStep_compiledCore_eq, hlast, PMF.pure_apply, ne_eq, ite_eq_right_iff,
+        one_ne_zero, imp_false, not_not] at h₀' ⊢
       constructor
       · intro hd i
         simpa using hd
       · intro hall
-        simpa [h₀'] using h₀'
+        simpa only using h₀'
   | chance k μ hk next =>
       have h₀' := h₀
-      simp [pureStep_compiledCore_eq, hlast] at h₀' ⊢
+      simp only [pureStep_compiledCore_eq, hlast, PMF.map_apply, tsum_fintype, ne_eq,
+        Finset.sum_eq_zero_iff, Finset.mem_univ, ite_eq_right_iff,
+        forall_const, not_forall] at h₀' ⊢
       constructor
       · intro hd i
         simpa using hd
@@ -622,7 +626,8 @@ theorem stepSupportFactorization_compiledCore :
         simpa [h₀'] using h₀'
   | @decision p I next =>
       have h₀' := h₀
-      simp [pureStep_compiledCore_eq, hlast] at h₀' ⊢
+      simp only [pureStep_compiledCore_eq, hlast, PMF.pure_apply, ne_eq, ite_eq_right_iff,
+        one_ne_zero, imp_false, not_not] at h₀' ⊢
       constructor
       · intro hd i
         by_cases hi : i = p
@@ -690,7 +695,8 @@ theorem runDist_bind_evalDist_core
                   (liftBehavioralProfileCore (S := S) (Outcome := Outcome) t σ) ss)
                 (fun u => ss ++ [u])).bind
                   (fun ss' =>
-                    ((compiledCoreObs (S := S) (Outcome := Outcome) t).lastState ss').evalDist σ)) := by
+                    ((compiledCoreObs (S := S)
+                     (Outcome := Outcome) t).lastState ss').evalDist σ)) := by
               rw [PMF.bind_bind]
         _ =
           ((compiledCoreObs (S := S) (Outcome := Outcome) t).runDist k
@@ -837,13 +843,13 @@ private theorem playerHistory_mem_of_action_mem
   | cons step rest ih =>
       cases step with
       | chance k b =>
-          simp [playerHistory] at hm ⊢
+          simp only [List.mem_cons, reduceCtorEq, false_or, playerHistory] at hm ⊢
           exact ih hm
       | action p J act =>
           by_cases hp : p = i
           · subst hp
             simp only [List.mem_cons] at hm
-            simp [playerHistory]
+            simp only [playerHistory, ↓reduceDIte, List.mem_cons, Sigma.mk.injEq]
             rcases hm with hm | hm
             · cases hm
               simp
@@ -860,7 +866,7 @@ private theorem action_mem_of_playerHistory_mem
     HistoryStep.action i tok.1 tok.2 ∈ h := by
   induction h with
   | nil =>
-      simpa [playerHistory] using hm
+      simp only [List.not_mem_nil, playerHistory] at hm
   | cons step rest ih =>
       cases step with
       | chance k b =>
@@ -870,7 +876,7 @@ private theorem action_mem_of_playerHistory_mem
           by_cases hp : p = i
           · subst hp
             simp only [List.mem_cons] at ⊢
-            simp [playerHistory] at hm
+            simp only [playerHistory, ↓reduceDIte, List.mem_cons] at hm
             rcases hm with rfl | hm
             · exact Or.inl rfl
             · exact Or.inr (ih hm)
@@ -919,7 +925,8 @@ private theorem pureRun_nonzero_to_historySupportTrace
       HistoryCompatibleCore (S := S) (Outcome := Outcome) (t := t) π hist := by
   induction n generalizing ss with
   | zero =>
-      simp [Math.ParameterizedChain.pureRun] at h
+      simp only [Math.ParameterizedChain.pureRun, Nat.rec_zero, PMF.pure_apply, ne_eq,
+        ite_eq_right_iff, one_ne_zero, imp_false, not_not] at h
       subst ss
       exact ⟨[], ⟨.init⟩, by
         intro p I a hm
@@ -1230,7 +1237,7 @@ private theorem reachBy_length_add_height_le
       treeHeight (S := S) (Outcome := Outcome) src := by
   induction hr with
   | nil =>
-      simp [treeHeight]
+      simp only [List.length_nil, zero_add, le_refl]
   | @cons ℓ rest src mid dst hstep hreach ih =>
       have hlt :
           treeHeight (S := S) (Outcome := Outcome) mid <

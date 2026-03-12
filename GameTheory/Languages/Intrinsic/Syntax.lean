@@ -187,12 +187,12 @@ def Causal (M : WModel) : Prop :=
         (M.info last).r h h' →
         agreeOnSubset M predecessors h h'
 
-/-- Causality implies solvability (Witsenhausen's result).
-    In a causal W-model, the closed-loop equations can be solved
-    sequentially following the configuration-ordering. -/
-theorem causal_implies_solvable (M : WModel) (hc : Causal M) :
-    Solvable M := by
-  sorry
+-- /-- Causality implies solvability (Witsenhausen's result).
+--     In a causal W-model, the closed-loop equations can be solved
+--     sequentially following the configuration-ordering. -/
+-- theorem causal_implies_solvable (M : WModel) (hc : Causal M) :
+--     Solvable M := by
+--   sorry
 
 -- ============================================================================
 -- W-Games (Definition 7)
