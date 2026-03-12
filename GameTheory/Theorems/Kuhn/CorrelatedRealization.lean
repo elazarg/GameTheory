@@ -48,14 +48,15 @@ product input distributions yield product output distributions.
 
 ### Step 3 — Player-local decentralization
 
-The real semantic requirement is `ObsLocalFeasibility i`: each player's
-feasibility factor depends only on that player's information state. Stronger
-syntactic recall principles such as `TracePlayerStepRecall i` are proved later
-to imply this semantic condition.
+The minimal semantic requirement is `ActionPosteriorLocal i`: each player's
+posterior law of recommended actions depends only on that player's information
+state. The stronger condition `ObsLocalFeasibility i` is used as a convenient
+sufficient criterion, and the later syntactic recall principles are proved to
+imply it.
 
 ### Step 4 — Full decentralization
 
-Combining PSAR with `∀ i, ObsLocalFeasibility i` yields full decentralization
+Combining PSAR with `∀ i, ActionPosteriorLocal i` yields full decentralization
 into an independent `BehavioralProfile`.
 
 ## Recall condition hierarchy
@@ -74,9 +75,10 @@ above), but PSPR does not imply `PerfectRecall`.
 
 ## Main theorem
 
-`kuhn_mixed_to_behavioral_semantic` is the central result: under
-`PSAR + ∀ i, ObsLocalFeasibility i`, any product distribution over pure
-profiles can be realized by an independent behavioral profile.
+`kuhn_mixed_to_behavioral_semantic` is the central result on
+`KuhnModel`/`ObsModelCore`: under `PSAR + ∀ i, ActionPosteriorLocal i`, any
+product distribution over pure profiles can be realized by an independent
+behavioral profile.
 
 `kuhn_mixed_to_behavioral_trace`, `kuhn_mixed_to_behavioral_pspr`, and
 `kuhn_mixed_to_behavioral_decomposed` are syntactic corollaries.

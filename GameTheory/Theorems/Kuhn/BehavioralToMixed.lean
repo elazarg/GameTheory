@@ -1,3 +1,4 @@
+import GameTheory.Theorems.Kuhn.ObsModel
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 
 /-! # Behavioral -> Mixed direction of Kuhn's theorem for `ObsModel`
@@ -77,7 +78,6 @@ Every behavioral profile has the same bounded trace distribution as the
 product mixed strategy. No recall conditions are needed. -/
 theorem kuhn_behavioral_to_mixed
     [∀ i, Fintype (O.LocalStrategy i)]
-    [Fintype (PureProfile O)]
     (β : BehavioralProfile O) (k : Nat) :
     O.runDist k β =
       (O.behavioralToMixedJoint β).bind (fun π => O.runDistPure k π) := by

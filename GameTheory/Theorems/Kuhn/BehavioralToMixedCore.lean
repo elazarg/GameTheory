@@ -1,14 +1,15 @@
-import GameTheory.Theorems.Kuhn.CorrelatedRealization
+import GameTheory.Theorems.Kuhn.KuhnModel
 import Math.PMFProduct
 
-/-! # Behavioral -> Mixed direction of Kuhn's theorem for `ObsModelCore`
+/-! # Behavioral -> Mixed direction of Kuhn's theorem for `KuhnModel`
 
-This is the semantic-core version of Kuhn's B->M direction.  Unlike the older
-`ObsModel` proof, it does not assume a faithful snapshot representation of
-information states.  The only additional hypothesis beyond finite information
-states is that if the same information state occurs at two different horizons,
-then its action space is trivial.  This is exactly what is needed to justify
-sampling all nontrivial contingent choices ex ante.
+This is the semantic-core version of Kuhn's B->M direction, proved on
+`KuhnModel` (currently named `ObsModelCore` in the code). Unlike the older
+snapshot-refined `ObsModel` proof, it does not assume a faithful observation
+history. The only additional hypothesis beyond finite information states is
+`HorizonSeparation`: if the same information state occurs at two different
+horizons, then its action space is trivial. This is exactly what is needed to
+justify sampling all nontrivial contingent choices ex ante.
 -/
 
 set_option autoImplicit false
@@ -518,12 +519,10 @@ states do not recur at different horizons. -/
 theorem kuhn_behavioral_to_mixed
     [∀ i, Fintype (O.InfoState i)]
     [∀ i, Fintype (O.LocalStrategy i)]
-    [Finite (PureProfile O)]
     (hSep : O.HorizonSeparation)
     (β : BehavioralProfile O) (k : Nat) :
     O.runDist k β =
       (O.behavioralToMixedJoint β).bind (fun π => O.runDistPure k π) := by
-  letI : Fintype (PureProfile O) := Fintype.ofFinite (PureProfile O)
   exact runDist_eq_of_stepIndependence (O := O)
     (O.behavioralToMixedJoint β) β
     (fun n => stepIndependence_bridge (O := O) hSep β n) k
