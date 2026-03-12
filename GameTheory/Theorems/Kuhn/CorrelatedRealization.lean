@@ -5,7 +5,7 @@ import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 
 Snapshot-refined wrapper layer for the mixed-to-behavioral direction.
 
-The semantic core now lives in `MixedToBehavioralCore.lean` on
+The semantic core lives in `MixedToBehavioralCore.lean` on
 `KuhnModel`/`ObsModelCore`. This file keeps:
 - `ObsModel` wrappers of the core correlated-realization results
 - observation-level factoring lemmas
