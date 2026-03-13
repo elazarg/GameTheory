@@ -552,6 +552,52 @@ theorem evalLinearized_eq_eval (G : Protocol n S V A Sig)
     evalLinearized G σ G.rounds G.init = G.eval σ :=
   evalLinearized_eq_evalRounds G σ G.rounds G.init
 
+/-- Resolve players `pVal, pVal+1, ..., n-1` with pure strategies, accumulating
+their actions. Returns the fully populated action vector. -/
+def resolveActions (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) (r : Round n S V A Sig)
+    (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A) :
+    Fin n → Option A :=
+  if hp : pVal < n then
+    let p : Fin n := ⟨pVal, hp⟩
+    resolveActions G σ r s sig (pVal + 1)
+      (Function.update accActs p (σ p (r.view p s (sig p))))
+  else
+    accActs
+  termination_by (n - pVal)
+
+/-- After resolving players from `pVal` onward, the accumulated actions for
+players `< pVal` are unchanged and players `≥ pVal` get their strategy values. -/
+private theorem resolveActions_spec (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) (r : Round n S V A Sig)
+    (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A)
+    (h_below : ∀ i : Fin n, i.val < pVal → accActs i = σ i (r.view i s (sig i))) :
+    resolveActions G σ r s sig pVal accActs =
+      fun i => σ i (r.view i s (sig i)) := by
+  unfold resolveActions
+  split
+  case isTrue hp =>
+    apply resolveActions_spec
+    intro i hi
+    by_cases hpi : i = ⟨pVal, hp⟩
+    · subst hpi; simp [Function.update_self]
+    · rw [Function.update_of_ne hpi]
+      exact h_below i (Nat.lt_of_le_of_ne (Nat.lt_succ_iff.mp hi) (by
+        intro heq; exact hpi (Fin.ext heq)))
+  case isFalse hp =>
+    funext i
+    exact h_below i (by omega)
+  termination_by (n - pVal)
+
+/-- After resolving all players from 0, the accumulated actions equal the
+simultaneous action vector. -/
+theorem resolveActions_eq (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) (r : Round n S V A Sig)
+    (s : S) (sig : Fin n → Sig) :
+    resolveActions G σ r s sig 0 (fun _ => none) =
+      fun i => σ i (r.view i s (sig i)) :=
+  resolveActions_spec G σ r s sig 0 _ (fun i hi => absurd hi (by omega))
+
 /-- **Adequacy (pure profiles)**: running the linearized compiled model with
 `liftPureProfile σ` for enough steps, and extracting the terminal state, gives
 the same distribution as `Protocol.eval G σ`.
