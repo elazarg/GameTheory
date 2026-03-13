@@ -171,9 +171,16 @@ structure RoundRecord (n : ℕ) (S Sig : Type) where
 def Round.playerView (r : Round n S V A Sig) (i : Fin n) (rec : RoundRecord n S Sig) : V :=
   r.view i rec.state (rec.signals i)
 
-/-- Perfect recall for a sequential protocol: if two execution prefixes produce the
-same view for player `i` at round `k`, then they produced the same view at every
-previous round.
+/-- An execution record at one round: state, signals, and the joint action taken. -/
+structure ExecRecord (n : ℕ) (S A Sig : Type) extends RoundRecord n S Sig where
+  actions : Fin n → Option A
+
+/-- Coerce an `ExecRecord` to its underlying `RoundRecord`. -/
+def ExecRecord.toRound (r : ExecRecord n S A Sig) : RoundRecord n S Sig := r.toRoundRecord
+
+/-- Perfect recall (view only) for a sequential protocol: if two execution
+prefixes produce the same view for player `i` at round `k`, then they produced
+the same view at every previous round.
 
 This is a structural condition on the view functions: the view at round `k` encodes
 enough information to determine the player's full observation history. -/
@@ -187,6 +194,31 @@ def Protocol.PerfectRecall (G : Protocol n S V A Sig) : Prop :=
     ∀ (j : Nat) (hj : j < k),
       G.rounds[j].playerView i (recs₁ ⟨j, by omega⟩) =
         G.rounds[j].playerView i (recs₂ ⟨j, by omega⟩)
+
+/-- Full perfect recall for a sequential protocol: if two execution
+prefixes produce the same view for player `i` at round `k`, then they produced
+the same view AND the same own-action at every previous round.
+
+This is the standard game-theoretic notion of perfect recall, which requires
+that a player remembers both what they observed and what they did. -/
+def Protocol.FullRecall (G : Protocol n S V A Sig) : Prop :=
+  ∀ (i : Fin n) (k : Nat) (hk : k < G.rounds.length)
+    (recs₁ recs₂ : Fin (k + 1) → ExecRecord n S A Sig),
+    -- Same view at round k
+    G.rounds[k].playerView i (recs₁ ⟨k, Nat.lt_succ_self k⟩).toRound =
+      G.rounds[k].playerView i (recs₂ ⟨k, Nat.lt_succ_self k⟩).toRound →
+    -- Implies same view AND same own-action at every previous round
+    ∀ (j : Nat) (hj : j < k),
+      G.rounds[j].playerView i (recs₁ ⟨j, by omega⟩).toRound =
+        G.rounds[j].playerView i (recs₂ ⟨j, by omega⟩).toRound ∧
+      (recs₁ ⟨j, by omega⟩).actions i = (recs₂ ⟨j, by omega⟩).actions i
+
+/-- Full recall implies view-only perfect recall. -/
+theorem Protocol.FullRecall.toPerfectRecall {G : Protocol n S V A Sig}
+    (h : G.FullRecall) : G.PerfectRecall := by
+  intro i k hk recs₁ recs₂ hview j hj
+  exact (h i k hk (fun m => ⟨recs₁ m, fun _ => none⟩)
+    (fun m => ⟨recs₂ m, fun _ => none⟩) hview j hj).1
 
 -- ============================================================================
 -- Bridge to GameForm / KernelGame

@@ -115,52 +115,43 @@ theorem kuhn_mixed_to_behavioral_compiledLin
     hAPL μ k
 
 set_option linter.unusedFintypeInType false in
-/-- Perfect recall implies `ActionPosteriorLocal` on the linearized model.
+/-- Full recall (view + action) implies `ActionPosteriorLocal` on the linearized model.
 
-The proof route is: PerfectRecall → `ObsLocalFeasibility` → (+ MI) → APL, using
+The proof route is: FullRecall → `ObsLocalFeasibility` → (+ MI) → APL, using
 `ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility`.
 
-**Open issue**: `ObsLocalFeasibility` requires that updating player `i`'s strategy
-preserves trace reachability iff the info states match. With the identity info state
-(carrier = `Option V`), `projectStates i ss` captures only the *last* observation.
-Two traces with the same last observation can differ at intermediate rounds. OLF
-then requires that the actions encoded in both traces at player `i`'s turns agree —
-which follows from `PerfectRecall` only if the view function encodes past actions
-(standard in game theory, but not captured by the current `Protocol.PerfectRecall`
-definition, which is purely about view determinism).
-
-To close this sorry, either:
-1. Strengthen `Protocol.PerfectRecall` to also require action recall (i.e., the view
-   at round `k` determines both the view *and action* history), or
-2. Use a list-based info state that tracks the full view history (but this creates
-   `Fintype` issues for the `InfoState` type), or
-3. Add a separate `Protocol.ActionRecall` condition. -/
-theorem actionPosteriorLocal_of_perfectRecall
+With the identity info state, `projectStates i ss` captures only the *last*
+observation. Under view-only `PerfectRecall`, two traces with the same last
+observation have matching view histories — but the *action* histories may differ.
+`FullRecall` additionally requires that same view at round `k` determines past
+own-actions, which ensures that the actions encoded in both traces at player `i`'s
+turns agree, making `ObsLocalFeasibility` hold. -/
+theorem actionPosteriorLocal_of_fullRecall
     [Fintype A] [Nonempty A]
     [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
     [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
-    (hPR : G.PerfectRecall) (i : Fin n) :
+    (hFR : G.FullRecall) (i : Fin n) :
     ObsModelCore.ActionPosteriorLocal (compiledLinObs' G) i := by
   sorry
 
 set_option linter.unusedFintypeInType false in
-/-- **Kuhn M→B for sequential protocols under perfect recall**: product mixed
+/-- **Kuhn M→B for sequential protocols under full recall**: product mixed
 strategies can be realized by behavioral strategies.
 
-Combines: linearized compilation (structural MI + SF), PerfectRecall → APL,
+Combines: linearized compilation (structural MI + SF), FullRecall → APL,
 and the core M→B theorem. -/
-theorem kuhn_mixed_to_behavioral_perfectRecall
+theorem kuhn_mixed_to_behavioral_fullRecall
     [Fintype A] [Nonempty A]
     [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
     [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
-    (hPR : G.PerfectRecall)
+    (hFR : G.FullRecall)
     (μ : ∀ i, PMF ((compiledLinObs' G).LocalStrategy i))
     (k : Nat) :
     ∃ β : ObsModelCore.BehavioralProfile (compiledLinObs' G),
       (compiledLinObs' G).runDist k β =
         (Math.PMFProduct.pmfPi μ).bind ((compiledLinObs' G).runDistPure k) :=
   kuhn_mixed_to_behavioral_compiledLin G
-    (fun i => actionPosteriorLocal_of_perfectRecall G hPR i) μ k
+    (fun i => actionPosteriorLocal_of_fullRecall G hFR i) μ k
 
 end KuhnLinearized
 
