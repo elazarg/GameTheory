@@ -117,10 +117,24 @@ theorem kuhn_mixed_to_behavioral_compiledLin
 set_option linter.unusedFintypeInType false in
 /-- Perfect recall implies `ActionPosteriorLocal` on the linearized model.
 
-Under perfect recall, the view at any round determines the player's full
-view-action history. This means the posterior action distribution at an
-information state depends only on that information state, not on the
-full trace leading to it. -/
+The proof route is: PerfectRecall → `ObsLocalFeasibility` → (+ MI) → APL, using
+`ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility`.
+
+**Open issue**: `ObsLocalFeasibility` requires that updating player `i`'s strategy
+preserves trace reachability iff the info states match. With the identity info state
+(carrier = `Option V`), `projectStates i ss` captures only the *last* observation.
+Two traces with the same last observation can differ at intermediate rounds. OLF
+then requires that the actions encoded in both traces at player `i`'s turns agree —
+which follows from `PerfectRecall` only if the view function encodes past actions
+(standard in game theory, but not captured by the current `Protocol.PerfectRecall`
+definition, which is purely about view determinism).
+
+To close this sorry, either:
+1. Strengthen `Protocol.PerfectRecall` to also require action recall (i.e., the view
+   at round `k` determines both the view *and action* history), or
+2. Use a list-based info state that tracks the full view history (but this creates
+   `Fintype` issues for the `InfoState` type), or
+3. Add a separate `Protocol.ActionRecall` condition. -/
 theorem actionPosteriorLocal_of_perfectRecall
     [Fintype A] [Nonempty A]
     [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
