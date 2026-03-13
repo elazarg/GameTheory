@@ -98,4 +98,120 @@ theorem compileObsModel_step_consistent (S : Struct Player n) (sem : Sem S)
           PMF.map (extendFrontier S cfg) (pmfPi (nodeDistrib S sem cfg acts)) from rfl]
       exact (PMF.mem_support_iff _ _).mp hmem
 
+/-- Core MAID compilation with the identity info-state model.
+
+Unlike `compileObsModel` which uses the list-backed `InfoStateSpec.list`
+representation via `ObsModel`, this compilation uses the identity info-state
+core where the carrier is the observation type itself. This allows direct
+application of `ObsModelCore`-level Kuhn theorems without going through the
+`ObsModel` compatibility layer.
+
+**Caveat**: The action type `Option (FrontierAct S p)` is non-trivial even when
+player `p` has no active decision nodes. This means
+`NoNontrivialInfoStateRepeat` can fail (the empty observation `[]` can repeat
+with nontrivial action space). For the B→M direction under `PerfectRecall`,
+use `compileObsCoreModelPR` instead, which uses the refined observation type
+`Option (Infoset S p)`. -/
+noncomputable def compileObsCoreModel (S : Struct Player n) (sem : Sem S) :
+    ObsModelCore Player (FrontierCfg S)
+      (fun p => List (Infoset S p))
+      (fun (p : Player) (_ : List (Infoset S p)) => Option (FrontierAct S p)) where
+  infoState := fun _ => {
+    Carrier := List _
+    start := id
+    push := fun _ o => o
+    current := id
+    current_start := by intro o; rfl
+    current_push := by intro _ o; rfl
+  }
+  observe := fun p cfg => frontierInfosets S cfg p
+  machine := {
+    init := initialCfg S
+    step := fun cfg acts => frontierStepPMF S sem cfg acts
+  }
+
+/-- The compiled `ObsModelCore` for a MAID. -/
+noncomputable abbrev compiledCoreObs (S : Struct Player n) (sem : Sem S) :=
+  compileObsCoreModel S sem
+
+-- ============================================================================
+-- Perfect-recall-refined compilation
+-- ============================================================================
+
+/-- Under `PerfectRecall`, the observation is the unique active infoset
+(or `none` when inactive). This is the MAID analogue of EFG's `CompiledAct`. -/
+def CompiledMAIDAct (S : Struct Player n) (p : Player) :
+    Option (Infoset S p) → Type
+  | none => PUnit
+  | some I => Val S I.1.val
+
+instance compiledMAIDActFintype (S : Struct Player n) (p : Player)
+    (o : Option (Infoset S p)) : Fintype (CompiledMAIDAct S p o) := by
+  cases o <;> dsimp [CompiledMAIDAct] <;> infer_instance
+
+instance compiledMAIDActNonempty (S : Struct Player n) (p : Player)
+    (o : Option (Infoset S p)) : Nonempty (CompiledMAIDAct S p o) := by
+  cases o with
+  | none => exact ⟨PUnit.unit⟩
+  | some I => exact ⟨⟨0, S.dom_pos I.1.val⟩⟩
+
+instance compiledMAIDActSubsingleton_none (S : Struct Player n) (p : Player) :
+    Subsingleton (CompiledMAIDAct S p none) :=
+  inferInstanceAs (Subsingleton PUnit)
+
+/-- Extract the unique active infoset from a frontier configuration.
+
+Under `PerfectRecall`, at most one of player `p`'s decision nodes is enabled
+at any frontier (because decision nodes are totally ordered by ancestry and
+only a node whose parents are all assigned can be enabled). This function
+extracts the head of `frontierInfosets` (if any). -/
+noncomputable def frontierActiveInfoset (S : Struct Player n)
+    (cfg : FrontierCfg S) (p : Player) : Option (Infoset S p) :=
+  (frontierInfosets S cfg p).head?
+
+/-- Stochastic frontier step for the perfect-recall-refined compilation.
+
+Each player's action at observation `some I` is a value `Val S I.1.val`
+for the decision node `I.1`. At observation `none`, the action is `PUnit`
+(trivial). The step converts these back to the `Option (FrontierAct S p)`
+format expected by `frontierStepPMF`. -/
+noncomputable def frontierStepPMF_PR (S : Struct Player n) (sem : Sem S)
+    (cfg : FrontierCfg S)
+    (acts : ∀ p : Player, CompiledMAIDAct S p (frontierActiveInfoset S cfg p)) :
+    PMF (FrontierCfg S) :=
+  let rawActs : ∀ p : Player, Option (FrontierAct S p) := fun p =>
+    match h : frontierActiveInfoset S cfg p with
+    | none => none
+    | some I =>
+        some (fun d =>
+          if hd : d = I.1 then
+            some (hd ▸ (show CompiledMAIDAct S p (some I) from h ▸ acts p))
+          else none)
+  frontierStepPMF S sem cfg rawActs
+
+/-- Core MAID compilation refined for `PerfectRecall`.
+
+Observations are `Option (Infoset S p)` (at most one active infoset under
+perfect recall). Actions are `CompiledMAIDAct S p` — trivial when inactive,
+`Val S d.val` when acting at decision node `d`. This ensures
+`NoNontrivialInfoStateRepeat` holds, enabling the B→M direction of Kuhn's
+theorem. -/
+noncomputable def compileObsCoreModelPR (S : Struct Player n) (sem : Sem S) :
+    ObsModelCore Player (FrontierCfg S)
+      (fun p => Option (Infoset S p))
+      (CompiledMAIDAct S) where
+  infoState := fun _ => {
+    Carrier := Option _
+    start := id
+    push := fun _ o => o
+    current := id
+    current_start := by intro o; rfl
+    current_push := by intro _ o; rfl
+  }
+  observe := fun p cfg => frontierActiveInfoset S cfg p
+  machine := {
+    init := initialCfg S
+    step := fun cfg acts => frontierStepPMF_PR S sem cfg acts
+  }
+
 end MAID

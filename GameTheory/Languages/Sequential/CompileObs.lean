@@ -147,4 +147,74 @@ theorem compileObsModel_step_consistent (G : Protocol n S V A Sig)
     | .action_stuck hr =>
       simp [configStepPMF, hr, PMF.pure_apply]
 
+/-- At every configuration, `configStepPMF` is mass-invariant with respect to
+the joint action: if two action vectors both assign nonzero probability to the
+same successor, then the full step distributions are equal.
+
+- **Signal phase**: the step samples from the round's signal distribution and
+  ignores the action vector entirely, so any two action vectors yield the same
+  PMF.
+- **Action phase**: the step is `PMF.pure` of a deterministic successor, so if
+  two action vectors reach the same target the pure PMFs coincide.
+- **Terminal phase**: absorbing — `PMF.pure` of the current state, independent
+  of actions. -/
+theorem configStepPMF_mass_invariant (G : Protocol n S V A Sig)
+    (cfg : Config G) (acts₁ acts₂ : Fin n → Option A) (t : Config G)
+    (h₁ : (configStepPMF G cfg acts₁) t ≠ 0)
+    (h₂ : (configStepPMF G cfg acts₂) t ≠ 0) :
+    configStepPMF G cfg acts₁ = configStepPMF G cfg acts₂ := by
+  match cfg with
+  | .signal k s =>
+    simp only [configStepPMF] at h₁ h₂ ⊢
+  | .action k s sig =>
+    simp only [configStepPMF] at h₁ h₂ ⊢
+    match hr : G.rounds[k]? with
+    | some r =>
+      simp only [hr] at h₁ h₂ ⊢
+      match hr' : G.rounds[k + 1]? with
+      | some _ =>
+        simp only [hr'] at h₁ h₂ ⊢
+        exact congrArg PMF.pure ((pure_ne_zero_iff _ _).mp h₁ |>.symm.trans
+          ((pure_ne_zero_iff _ _).mp h₂))
+      | none =>
+        simp only [hr'] at h₁ h₂ ⊢
+        exact congrArg PMF.pure ((pure_ne_zero_iff _ _).mp h₁ |>.symm.trans
+          ((pure_ne_zero_iff _ _).mp h₂))
+    | none =>
+      simp only [hr] at h₁ h₂ ⊢
+  | .terminal s =>
+    simp only [configStepPMF] at h₁ h₂ ⊢
+
+/-- Compile a sequential protocol into the `ObsModelCore` layer using the
+identity info-state model (observations are their own information states).
+
+- **States**: protocol configurations (`Config G`)
+- **Players**: `Fin n`
+- **Observations**: player-local view (`Option V`)
+- **Actions**: optional actions per player
+- **InfoState**: identity — observation = info state
+- **Step**: stochastic resolution via `configStepPMF`
+-/
+noncomputable def compileObsCoreModel (G : Protocol n S V A Sig) :
+    ObsModelCore (Fin n) (Config G)
+      (fun _ => Option V)
+      (fun (_ : Fin n) (_ : Option V) => Option A) where
+  infoState := fun _ => {
+    Carrier := Option V
+    start := id
+    push := fun _ o => o
+    current := id
+    current_start := by intro o; rfl
+    current_push := by intro _ o; rfl
+  }
+  observe := fun i cfg => observe G i cfg
+  machine := {
+    init := initialConfig G
+    step := fun cfg acts => configStepPMF G cfg acts
+  }
+
+/-- The compiled `ObsModelCore` for a sequential protocol. -/
+noncomputable abbrev compiledCoreObs (G : Protocol n S V A Sig) :=
+  compileObsCoreModel G
+
 end GameTheory.Sequential

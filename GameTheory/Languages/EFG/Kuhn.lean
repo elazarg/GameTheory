@@ -1242,16 +1242,325 @@ private theorem lastState_terminal_of_pureRun_height
     exact treeHeight_pos_of_nonterminal hnterm
   omega
 
+-- ============================================================================
+-- NoNontrivialInfoStateRepeat for the compiled core
+-- ============================================================================
+
+/-- Extract the child relationship from a nonzero compiled pureStep at a chance node. -/
+private theorem compiledStep_chance_child
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {ss : List (GameTree S Outcome)} {u : GameTree S Outcome}
+    {k : Nat} {μ : PMF (Fin k)} {hk : k > 0}
+    {next : Fin k → GameTree S Outcome}
+    (hlast : (compiledCoreObs t).lastState ss = .chance k μ hk next)
+    (hstep : (compiledCoreObs t).pureStep π ss u ≠ 0) :
+    ∃ b, u = next b := by
+  rw [pureStep_compiledCore_eq, hlast] at hstep
+  rw [ne_eq, PMF.map_apply, ENNReal.tsum_eq_zero, not_forall] at hstep
+  obtain ⟨b, hb⟩ := hstep
+  exact ⟨b, by split_ifs at hb with h <;> [exact h; exact absurd rfl hb]⟩
+
+/-- `DecisionNodeIn` lifts through nonzero compiled tree steps: if a decision
+node for infoset `I` appears in a successor, it appeared in the source. -/
+private theorem decisionNodeIn_of_compiledStep
+    {p : S.Player} {I : S.Infoset p}
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {ss : List (GameTree S Outcome)} {u : GameTree S Outcome}
+    (hstep : (compiledCoreObs t).pureStep π ss u ≠ 0)
+    (hd : DecisionNodeIn I u) :
+    DecisionNodeIn I ((compiledCoreObs t).lastState ss) := by
+  rw [pureStep_compiledCore_eq] at hstep
+  split at hstep
+  case h_1 z hlast =>
+    simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
+    exact absurd (hstep ▸ hd) DecisionNodeIn_terminal_false
+  case h_2 k μ hk next hlast =>
+    obtain ⟨b, rfl⟩ := compiledStep_chance_child (π := π) t hlast
+      (by rwa [pureStep_compiledCore_eq, hlast])
+    rw [hlast]; exact .in_chance k μ hk next b hd
+  case h_3 q I' next hlast =>
+    simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
+    rw [hlast]; exact .in_decision I' next _ (hstep ▸ hd)
+
+/-- `NoInfoSetRepeat` is hereditary through nonzero compiled steps. -/
+private theorem noInfoSetRepeat_of_compiledStep
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {ss : List (GameTree S Outcome)} {u : GameTree S Outcome}
+    (hstep : (compiledCoreObs t).pureStep π ss u ≠ 0)
+    (hnr : NoInfoSetRepeat ((compiledCoreObs t).lastState ss)) :
+    NoInfoSetRepeat u := by
+  rw [pureStep_compiledCore_eq] at hstep
+  split at hstep
+  case h_1 z hlast =>
+    simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
+    subst hstep; exact trivial
+  case h_2 k μ hk next hlast =>
+    obtain ⟨b, rfl⟩ := compiledStep_chance_child (π := π) t hlast
+      (by rwa [pureStep_compiledCore_eq, hlast])
+    rw [hlast] at hnr; exact hnr b
+  case h_3 q I' next hlast =>
+    simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
+    rw [hlast] at hnr; exact hstep ▸ hnr.2 _
+
+/-- If `obsOfState i node = some I`, then `node` is a decision node for `I`. -/
+private theorem decisionNodeIn_of_obsOfState_some
+    {i : S.Player} {I : S.Infoset i} {node : GameTree S Outcome}
+    (hobs : obsOfState i node = some I) :
+    DecisionNodeIn I node := by
+  match node with
+  | .terminal _ | .chance .. => simp [obsOfState] at hobs
+  | .decision (p := p) I' next =>
+    have hp : p = i := by by_contra h; simp [obsOfState, h] at hobs
+    subst hp
+    have hI : I' = I := by simpa [obsOfState] using hobs
+    subst hI; exact .root next
+
+/-- Prefix of a nonzero `pureRun` trace is also nonzero. -/
+private theorem pureRun_take_nonzero
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {k : Nat} {ss : List (GameTree S Outcome)}
+    (h : (compiledCoreObs t).runDistPure k π ss ≠ 0)
+    {j : Nat} (hj : j ≤ k) :
+    (compiledCoreObs t).runDistPure j π (ss.take (j + 1)) ≠ 0 := by
+  have hlen : ss.length = k + 1 :=
+    Math.ParameterizedChain.pureRun_length _ _ _ _ _ h
+  induction k generalizing j ss with
+  | zero =>
+    have hj0 : j = 0 := by omega
+    subst hj0
+    rwa [List.take_of_length_le (by omega)]
+  | succ k ih =>
+    by_cases hj' : j = k + 1
+    · subst hj'; rwa [List.take_of_length_le (by omega)]
+    · rcases List.eq_nil_or_concat ss with rfl | ⟨pfx, last, rfl⟩
+      · simp at hlen
+      · rw [List.concat_eq_append] at h hlen ⊢
+        rw [ObsModelCore.runDistPure_eq_pureRun,
+            Math.ParameterizedChain.pureRun_succ_append] at h
+        have hpfx : (compiledCoreObs t).runDistPure k π pfx ≠ 0 := by
+          rw [ObsModelCore.runDistPure_eq_pureRun]; exact left_ne_zero_of_mul h
+        have hlen_pfx : pfx.length = k + 1 := by
+          simp [List.length_append] at hlen; omega
+        have htake : (pfx ++ [last]).take (j + 1) = pfx.take (j + 1) := by
+          rw [List.take_eq_left_iff]; right; omega
+        rw [htake]; exact ih hpfx (by omega) hlen_pfx
+
+/-- Individual step on a nonzero trace is nonzero. -/
+private theorem pureStep_of_pureRun_nonzero
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {k : Nat} {ss : List (GameTree S Outcome)}
+    (h : (compiledCoreObs t).runDistPure k π ss ≠ 0)
+    {j : Nat} (hj : j + 1 < ss.length) :
+    (compiledCoreObs t).pureStep π (ss.take (j + 1))
+      ((compiledCoreObs t).lastState (ss.take (j + 2))) ≠ 0 := by
+  have hlen : ss.length = k + 1 :=
+    Math.ParameterizedChain.pureRun_length _ _ _ _ _ h
+  have hpfx : (compiledCoreObs t).runDistPure (j + 1) π (ss.take (j + 2)) ≠ 0 :=
+    pureRun_take_nonzero t h (by omega)
+  rw [ObsModelCore.runDistPure_eq_pureRun] at hpfx
+  have htake : ss.take (j + 2) = ss.take (j + 1) ++ [ss[j + 1]] := by
+    rw [show j + 2 = (j + 1) + 1 from by omega, List.take_add_one,
+        List.getElem?_eq_getElem (by omega)]; simp
+  rw [htake, Math.ParameterizedChain.pureRun_succ_append] at hpfx
+  have hstep := right_ne_zero_of_mul hpfx
+  have hlast : (compiledCoreObs t).lastState (ss.take (j + 1 + 1)) = ss[j + 1] := by
+    change (ss.take (j + 1 + 1)).getLast?.getD _ = _
+    rw [show j + 1 + 1 = j + 2 from by omega, htake, List.getLast?_append_of_ne_nil]
+    · simp
+    · exact List.cons_ne_nil _ _
+  rwa [hlast]
+
+/-- For the compiled core EFG model, `NoInfoSetRepeat` implies no non-trivial
+info state repeats on reachable traces. -/
+theorem noNontrivialInfoStateRepeat_compiledCore
+    (hnr : NoInfoSetRepeat t) :
+    (compiledCoreObs t).NoNontrivialInfoStateRepeat := by
+  intro i π k ss hreach j₁ j₂ hjlt hjlen hEq
+  simp only [projectStates_compiledCore] at hEq ⊢
+  change Subsingleton
+    (CompiledAct S i (obsOfState i ((compiledCoreObs t).lastState (List.take (j₂ + 1) ss))))
+  match hobs : obsOfState i ((compiledCoreObs t).lastState (ss.take (j₂ + 1))) with
+  | none =>
+    change Subsingleton PUnit; exact inferInstance
+  | some I =>
+    exfalso
+    have hobs₁ : obsOfState i ((compiledCoreObs t).lastState (ss.take (j₁ + 1))) = some I := by
+      rw [hEq, hobs]
+    have hlen : ss.length = k + 1 :=
+      Math.ParameterizedChain.pureRun_length _ _ _ _ _ hreach
+    -- NoInfoSetRepeat propagates from root to position j₁
+    have hnr_j₁ : NoInfoSetRepeat ((compiledCoreObs t).lastState (ss.take (j₁ + 1))) := by
+      suffices ∀ m, m ≤ j₁ →
+          NoInfoSetRepeat ((compiledCoreObs t).lastState (ss.take (m + 1))) from
+        this j₁ le_rfl
+      intro m hm; induction m with
+      | zero =>
+        have hpfx0 : (compiledCoreObs t).runDistPure 0 π (ss.take 1) ≠ 0 :=
+          pureRun_take_nonzero t hreach (by omega)
+        rw [ObsModelCore.runDistPure_eq_pureRun] at hpfx0
+        -- pureRun 0 π ss' ≠ 0 means ss' = [init]
+        have htake1 : ss.take 1 = [(compiledCoreObs t).init] := by
+          have : Math.ParameterizedChain.pureRun (compiledCoreObs t).pureStep
+              (compiledCoreObs t).init 0 π = PMF.pure [(compiledCoreObs t).init] := rfl
+          rw [this, PMF.pure_apply] at hpfx0
+          split_ifs at hpfx0 with heq
+          · exact heq
+          · exact absurd rfl hpfx0
+        have hlast : (compiledCoreObs t).lastState (ss.take 1) = (compiledCoreObs t).init := by
+          change (ss.take 1).getLast?.getD _ = _
+          rw [htake1]; simp
+        rw [hlast]; exact hnr
+      | succ m ihm =>
+        exact noInfoSetRepeat_of_compiledStep t
+          (pureStep_of_pureRun_nonzero t hreach (by omega)) (ihm (by omega))
+    -- The node at j₁ must be a decision node for I
+    have hdec₁ := decisionNodeIn_of_obsOfState_some hobs₁
+    -- At the decision node for I, the NoInfoSetRepeat property says
+    -- no child subtree contains a decision node for I
+    have hnd_base : ¬ DecisionNodeIn I ((compiledCoreObs t).lastState (ss.take (j₁ + 2))) := by
+      intro hd
+      have hstep := pureStep_of_pureRun_nonzero t hreach (show j₁ + 1 < ss.length by omega)
+      have hlift := decisionNodeIn_of_compiledStep t hstep hd
+      -- hlift says DecisionNodeIn I (lastState (ss.take (j₁+1)))
+      -- But hnr_j₁ + obsOfState = some I means it's .decision I next
+      -- with ¬DecisionNodeIn I (next a) for all a
+      -- We need to show: the child at j₁+1 is a child of the decision node at j₁
+      -- Use the pureStep structure
+      rw [pureStep_compiledCore_eq] at hstep
+      revert hstep hlift
+      generalize (compiledCoreObs t).lastState (ss.take (j₁ + 1)) = node at hnr_j₁ hobs₁ hdec₁ ⊢
+      intro hlift hstep
+      match node, hnr_j₁, hobs₁ with
+      | .decision (p := p) I' next, hnr_node, hobs_node =>
+        have hp : p = i := by
+          by_contra hne; simp [obsOfState, hne] at hobs_node
+        subst hp
+        have hI : I' = I := by simpa [obsOfState] using hobs_node
+        subst hI
+        -- hlift: the step from .decision I next is PMF.pure (next (π p (some I)))
+        -- so lastState (ss.take (j₁+2)) = next (π p (some I))
+        simp only [PMF.pure_apply] at hlift
+        rw [show (0 : ENNReal) = 0 from rfl] at hlift
+        split_ifs at hlift with heq
+        -- hd: DecisionNodeIn I (lastState (ss.take (j₁+2)))
+        · rw [heq] at hd; exact hnr_node.1 _ hd
+        · exact absurd rfl hlift
+      | .terminal _, _, hobs_node => simp [obsOfState] at hobs_node
+      | .chance .., _, hobs_node => simp [obsOfState] at hobs_node
+    -- Propagate ¬ DecisionNodeIn I from j₁+1 to j₂ (DecisionNodeIn lifts through steps)
+    have hnd_j₂ : ¬ DecisionNodeIn I ((compiledCoreObs t).lastState (ss.take (j₂ + 1))) := by
+      suffices ∀ m, j₁ + 1 ≤ m → m ≤ j₂ →
+          ¬ DecisionNodeIn I ((compiledCoreObs t).lastState (ss.take (m + 1))) from
+        this j₂ (by omega) le_rfl
+      intro m hm₁ hm₂; induction m with
+      | zero => omega
+      | succ m ihm =>
+        by_cases hm : j₁ + 1 = m + 1
+        · rw [← hm]; exact hnd_base
+        · intro hd
+          exact ihm (by omega) (by omega)
+            (decisionNodeIn_of_compiledStep t
+              (pureStep_of_pureRun_nonzero t hreach (by omega)) hd)
+    exact absurd (decisionNodeIn_of_obsOfState_some hobs) hnd_j₂
+
 end ObsModelCoreBridge
+
+-- ============================================================================
+-- B→M via the central ObsModelCore theorem
+-- ============================================================================
+
+/-- **Kuhn B→M for EFG via the central theorem.**
+The `runDist` of the lifted behavioral profile equals the product mixed strategy
+bound to `runDistPure`, provided the tree has no info-set repeats. -/
+theorem kuhn_behavioral_to_mixed_runDist
+    (σ : BehavioralProfile S) (t : GameTree S Outcome)
+    (hnr : NoInfoSetRepeat t) (k : Nat) :
+    let O := compiledCoreObs t
+    O.runDist k (GameTheory.EFG.liftBehavioralProfileCore t σ) =
+      (O.behavioralToMixedJoint (GameTheory.EFG.liftBehavioralProfileCore t σ)).bind
+        (fun π => O.runDistPure k π) :=
+  ObsModelCore.kuhn_behavioral_to_mixed
+    (noNontrivialInfoStateRepeat_compiledCore t hnr)
+    (GameTheory.EFG.liftBehavioralProfileCore t σ) k
+
+/-- **Kuhn B→M for EFG at the `evalDist` level, via the central theorem.**
+For any behavioral profile on a tree with no info-set repeats,
+the `evalDist` equals the expected `evalDist` under the product mixed strategy. -/
+theorem kuhn_behavioral_to_mixed_evalDist
+    (σ : BehavioralProfile S) (t : GameTree S Outcome)
+    (hnr : NoInfoSetRepeat t) :
+    let O := compiledCoreObs t
+    t.evalDist σ =
+      (O.behavioralToMixedJoint
+        (GameTheory.EFG.liftBehavioralProfileCore t σ)).bind
+        (fun π => t.evalDist
+          (pureToBehavioral
+            (GameTheory.EFG.descendPureProfileCore t π))) := by
+  let O := compiledCoreObs t
+  let k := treeHeight t
+  let β' := GameTheory.EFG.liftBehavioralProfileCore t σ
+  have hrun := kuhn_behavioral_to_mixed_runDist σ t hnr k
+  -- Apply adequacy to both sides
+  have hleft :
+      (O.runDist k β').bind (fun ss => (O.lastState ss).evalDist σ) =
+        t.evalDist σ :=
+    runDist_bind_evalDist_core t σ k
+  have hper_pure :
+      ∀ π, (O.runDistPure k π).bind (fun ss => (O.lastState ss).evalDist σ) =
+        t.evalDist (pureToBehavioral (GameTheory.EFG.descendPureProfileCore t π)) := by
+    intro π
+    have hadq := runDistPure_bind_evalDist_core t π k
+    -- Both sides agree on terminal states, and all reachable states are terminal
+    calc
+      (O.runDistPure k π).bind (fun ss => (O.lastState ss).evalDist σ)
+        = (O.runDistPure k π).bind (fun ss =>
+            (O.lastState ss).evalDist
+              (pureToBehavioral (GameTheory.EFG.descendPureProfileCore t π))) := by
+          refine Math.ProbabilityMassFunction.bind_congr_on_support
+            (O.runDistPure k π) _ _ ?_
+          intro ss hss
+          have hss' :=
+            lastState_terminal_of_pureRun_height t
+              (by simpa [O, k, ObsModelCore.runDistPure_eq_pureRun] using hss)
+          obtain ⟨z, hz⟩ := hss'
+          simp [O, hz]
+      _ = t.evalDist
+            (pureToBehavioral (GameTheory.EFG.descendPureProfileCore t π)) := hadq
+  have hright :
+      ((O.behavioralToMixedJoint β').bind (O.runDistPure k)).bind
+          (fun ss => (O.lastState ss).evalDist σ) =
+        (O.behavioralToMixedJoint β').bind
+          (fun π => t.evalDist
+            (pureToBehavioral
+              (GameTheory.EFG.descendPureProfileCore t π))) := by
+    rw [PMF.bind_bind]
+    refine Math.ProbabilityMassFunction.bind_congr_on_support
+      (O.behavioralToMixedJoint β') _ _ ?_
+    intro π _hπ
+    exact hper_pure π
+  calc
+    t.evalDist σ =
+      (O.runDist k β').bind (fun ss => (O.lastState ss).evalDist σ) :=
+        hleft.symm
+    _ = ((O.behavioralToMixedJoint β').bind (O.runDistPure k)).bind
+        (fun ss => (O.lastState ss).evalDist σ) := by
+      rw [hrun]
+    _ = (O.behavioralToMixedJoint β').bind
+        (fun π => t.evalDist
+          (pureToBehavioral
+            (GameTheory.EFG.descendPureProfileCore t π))) :=
+      hright
 
 -- ============================================================================
 -- Tree-level Kuhn theorems (bridge from ObsModel to evalDist)
 -- ============================================================================
 
-/-- Two behavioral profiles agreeing on all infosets in `t` give the same `evalDist`. -/
+/-- Two behavioral profiles agreeing on all infosets in `t` give the same
+`evalDist`. -/
 theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
     (σ₁ σ₂ : BehavioralProfile S)
-    (h : ∀ {q} {J : S.Infoset q}, DecisionNodeIn J t → σ₁ q J = σ₂ q J) :
+    (h : ∀ {q} {J : S.Infoset q},
+      DecisionNodeIn J t → σ₁ q J = σ₂ q J) :
     t.evalDist σ₁ = t.evalDist σ₂ := by
   induction t with
   | terminal _ => rfl
@@ -1266,7 +1575,11 @@ theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
     exact ih a (fun hd => h (.in_decision I next a hd))
 
 /-- The tree-level B→M core: the product PMF `productProfile σ` induces the
-    same `evalDist` as `σ` when no info set repeats. -/
+    same `evalDist` as `σ` when no info set repeats.
+
+This is proved by tree induction. At decision nodes it uses the
+`pmfPi_update_bind` / `pmfPi_bind_update_pure` decomposition to isolate the
+current info-set's factor, then the `Ignores` property to discard it. -/
 theorem behavioral_to_mixed (σ : BehavioralProfile S)
     (t : GameTree S Outcome) (hnr : NoInfoSetRepeat t) :
     (productProfile σ).bind (fun s => t.evalDist (flatToBehavioral s)) =
@@ -1276,9 +1589,6 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
     simp [GameTree.evalDist]
   | chance _k _μ _hk next ih =>
     simp only [GameTree.evalDist]
-    -- Need: (productProfile σ).bind (fun s => μ.bind (fun b => ...)) =
-    --       μ.bind (fun b => ...)
-    -- Swap the two binds, then apply the IH per branch.
     rw [show (productProfile σ).bind
           (fun s => _μ.bind
             (fun b => (next b).evalDist (flatToBehavioral s))) =
@@ -1293,12 +1603,14 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
     simp only [GameTree.evalDist]
     simp only [flatToBehavioral, PMF.pure_bind]
     let j : FlatIdx S := ⟨p, I⟩
-    let fam : (idx : FlatIdx S) → PMF (S.Act idx.2) := fun idx => σ idx.1 idx.2
+    let fam : (idx : FlatIdx S) → PMF (S.Act idx.2) :=
+      fun idx => σ idx.1 idx.2
     let g : S.Act I → FlatProfile S → PMF Outcome :=
       fun a s => (next a).evalDist (flatToBehavioral s)
     have hg : ∀ a,
         Math.PMFProduct.Ignores
-          (A := fun idx : FlatIdx S => S.Act idx.2) j (g a) := by
+          (A := fun idx : FlatIdx S => S.Act idx.2)
+          j (g a) := by
       intro a
       refine Math.PMFProduct.Ignores_of_pointwise
         (A := fun idx : FlatIdx S => S.Act idx.2) j (g a) ?_
@@ -1315,7 +1627,8 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
     have hdecomp :
         productProfile σ =
           (σ p I).bind (fun a =>
-            Math.PMFProduct.pmfPi (A := fun idx : FlatIdx S => S.Act idx.2)
+            Math.PMFProduct.pmfPi
+              (A := fun idx : FlatIdx S => S.Act idx.2)
               (Function.update fam j (PMF.pure a))) := by
       simpa [productProfile, fam, j] using
         (Math.PMFProduct.pmfPi_update_bind (σ := fam) j (σ p I))
@@ -1323,27 +1636,37 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
     congr 1
     funext a
     calc
-      (Math.PMFProduct.pmfPi (A := fun idx : FlatIdx S => S.Act idx.2)
+      (Math.PMFProduct.pmfPi
+          (A := fun idx : FlatIdx S => S.Act idx.2)
           (Function.update fam j (PMF.pure a))).bind
           (fun s => (next (s j)).evalDist (flatToBehavioral s))
-          =
-        ((Math.PMFProduct.pmfPi (A := fun idx : FlatIdx S => S.Act idx.2) fam).bind
+        = ((Math.PMFProduct.pmfPi
+            (A := fun idx : FlatIdx S => S.Act idx.2)
+            fam).bind
           (fun s => PMF.pure (Function.update s j a))).bind
-            (fun s => (next (s j)).evalDist (flatToBehavioral s)) := by
+            (fun s =>
+              (next (s j)).evalDist (flatToBehavioral s)) := by
               rw [Math.PMFProduct.pmfPi_bind_update_pure]
-      _ =
-        (Math.PMFProduct.pmfPi (A := fun idx : FlatIdx S => S.Act idx.2) fam).bind
-          (g a) := by
+      _ = (Math.PMFProduct.pmfPi
+            (A := fun idx : FlatIdx S => S.Act idx.2)
+            fam).bind (g a) := by
             rw [PMF.bind_bind]
             congr 1
             funext s
             rw [PMF.pure_bind]
             have hignore := hg a s a
-            simpa [g, j, flatToBehavioral, Function.update_self] using hignore
-      _ =
-        (productProfile σ).bind (fun s => (next a).evalDist (flatToBehavioral s)) := by
+            simpa [g, j, flatToBehavioral,
+              Function.update_self] using hignore
+      _ = (productProfile σ).bind
+            (fun s =>
+              (next a).evalDist (flatToBehavioral s)) := by
             rfl
       _ = (next a).evalDist σ := ih a (hnr_sub a)
+
+/-- `flatToBehavioral ∘ flatProfileEquivPureProfile.symm = pureToBehavioral`. -/
+theorem flatToBehavioral_equiv_symm (f : PureProfile S) :
+    flatToBehavioral (flatProfileEquivPureProfile.symm f) = pureToBehavioral f := by
+  rfl
 
 /-- Kuhn's theorem (behavioral → mixed direction):
     For any behavioral profile σ and tree with perfect recall,
