@@ -159,6 +159,36 @@ theorem PureProfile.toBehavioral_apply (σ : PureProfile n V A) (i : Fin n) :
 
 
 -- ============================================================================
+-- Perfect recall
+-- ============================================================================
+
+/-- A round-step record: the state and signals seen at one round. -/
+structure RoundRecord (n : ℕ) (S Sig : Type) where
+  state : S
+  signals : Fin n → Sig
+
+/-- Player `i`'s view at a round, given the round and a record. -/
+def Round.playerView (r : Round n S V A Sig) (i : Fin n) (rec : RoundRecord n S Sig) : V :=
+  r.view i rec.state (rec.signals i)
+
+/-- Perfect recall for a sequential protocol: if two execution prefixes produce the
+same view for player `i` at round `k`, then they produced the same view at every
+previous round.
+
+This is a structural condition on the view functions: the view at round `k` encodes
+enough information to determine the player's full observation history. -/
+def Protocol.PerfectRecall (G : Protocol n S V A Sig) : Prop :=
+  ∀ (i : Fin n) (k : Nat) (hk : k < G.rounds.length)
+    (recs₁ recs₂ : Fin (k + 1) → RoundRecord n S Sig),
+    -- Same view at round k
+    G.rounds[k].playerView i (recs₁ ⟨k, Nat.lt_succ_self k⟩) =
+      G.rounds[k].playerView i (recs₂ ⟨k, Nat.lt_succ_self k⟩) →
+    -- Implies same view at every previous round
+    ∀ (j : Nat) (hj : j < k),
+      G.rounds[j].playerView i (recs₁ ⟨j, by omega⟩) =
+        G.rounds[j].playerView i (recs₂ ⟨j, by omega⟩)
+
+-- ============================================================================
 -- Bridge to GameForm / KernelGame
 -- ============================================================================
 

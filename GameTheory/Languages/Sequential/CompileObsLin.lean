@@ -133,14 +133,14 @@ noncomputable def linConfigStepPMF [DecidableEq (Fin n)] (G : Protocol n S V A S
     PMF (LinConfig G) :=
   match cfg with
   | .signal k s =>
-      match hr : G.rounds[k]? with
+      match G.rounds[k]? with
       | some r =>
           if hn : 0 < n then
             (r.signal s).map fun sig =>
               .playerTurn k s sig ⟨0, hn⟩ (fun _ => none)
           else
             -- n = 0: no players, apply transition with empty action vector
-            (r.signal s).bind fun sig =>
+            (r.signal s).bind fun _sig =>
               let next := r.transition s (fun i => absurd i.pos hn)
               match G.rounds[k + 1]? with
               | some _ => PMF.pure (.signal (k + 1) next)
@@ -798,15 +798,214 @@ theorem runDistPure_bind_evalFromCfg [Fintype A]
     simp_rw [pureStep_compiledLin_eq, stepPMF_bind_evalFromCfg]
     exact ih
 
+/-- A `LinConfig` is "done" when `evalFromCfg` reduces to `PMF.pure ∘ state`:
+terminal configs, and non-terminal configs past all rounds. -/
+def LinConfig.isDone (G : Protocol n S V A Sig) : LinConfig G → Prop
+  | .terminal _ => True
+  | .signal k _ => G.rounds[k]? = none
+  | .playerTurn k _ _ _ _ => G.rounds[k]? = none
+
+/-- Combined round+player phase measure. Increases by ≥1 at each non-done step.
+Terminal configs get maximum phase so that monotonicity holds universally. -/
+def LinConfig.phase (G : Protocol n S V A Sig) : LinConfig G → Nat
+  | .signal k _ => k * (n + 1)
+  | .playerTurn k _ _ p _ => k * (n + 1) + p.val + 1
+  | .terminal _ => G.rounds.length * (n + 1)
+
+private theorem evalFromCfg_of_isDone (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) (cfg : LinConfig G)
+    (hd : cfg.isDone G) :
+    evalFromCfg G σ cfg = PMF.pure cfg.state := by
+  cases cfg with
+  | terminal s => rfl
+  | signal k s =>
+    change evalLinearized G σ (G.rounds.drop k) s = PMF.pure s
+    have hdr : G.rounds.drop k = [] := by
+      apply List.drop_eq_nil_of_le
+      by_contra h; push_neg at h
+      have : G.rounds[k]? = some G.rounds[k] := List.getElem?_eq_getElem h
+      simp [LinConfig.isDone, this] at hd
+    rw [hdr, evalLinearized]
+  | playerTurn k s sig p accActs =>
+    change (match G.rounds[k]? with | some r => _ | none => PMF.pure s) = PMF.pure s
+    have hd' : G.rounds[k]? = none := hd
+    rw [hd']
+
+omit [DecidableEq (Fin n)] in
+private theorem isDone_of_phase_ge (G : Protocol n S V A Sig)
+    (cfg : LinConfig G) (h : cfg.phase G ≥ G.rounds.length * (n + 1)) :
+    cfg.isDone G := by
+  cases cfg with
+  | terminal _ => trivial
+  | signal k s =>
+    simp only [LinConfig.phase] at h
+    have hk : k ≥ G.rounds.length := Nat.le_of_mul_le_mul_right h (Nat.succ_pos n)
+    simp only [LinConfig.isDone]
+    exact List.getElem?_eq_none (by omega)
+  | playerTurn k s sig p accActs =>
+    simp only [LinConfig.phase] at h
+    have hk : k ≥ G.rounds.length := by
+      by_contra hlt; push_neg at hlt
+      have : k * (n + 1) + p.val + 1 ≤ k * (n + 1) + n := by omega
+      have : k * (n + 1) + n < G.rounds.length * (n + 1) := by nlinarith
+      omega
+    simp only [LinConfig.isDone]
+    exact List.getElem?_eq_none (by omega)
+
+omit [DecidableEq (Fin n)] in
+private theorem phase_init_le (G : Protocol n S V A Sig) :
+    (linInitialConfig G).phase G ≤ G.rounds.length * (n + 1) := by
+  simp only [linInitialConfig]
+  split <;> simp [LinConfig.phase]
+
+/-- At done configs, step is absorbing: `linConfigStepPMF = PMF.pure cfg`. -/
+private theorem step_of_isDone (G : Protocol n S V A Sig)
+    (cfg : LinConfig G)
+    (acts : (i : Fin n) → LinAct V A (linObserve G i cfg))
+    (hd : cfg.isDone G) :
+    linConfigStepPMF G cfg acts = PMF.pure cfg := by
+  cases cfg with
+  | terminal s => simp [linConfigStepPMF]
+  | signal k s =>
+    simp only [linConfigStepPMF]; split
+    · rename_i r hr; exact absurd hr (by change G.rounds[k]? = none at hd; simp [hd])
+    · rfl
+  | playerTurn k s sig p accActs =>
+    simp only [linConfigStepPMF]; split
+    · rename_i r hr; exact absurd hr (by change G.rounds[k]? = none at hd; simp [hd])
+    · rfl
+
+/-- At non-done configs, every successor has strictly higher phase. -/
+private theorem phase_step_progress (G : Protocol n S V A Sig)
+    (cfg : LinConfig G)
+    (acts : (i : Fin n) → LinAct V A (linObserve G i cfg))
+    (hnd : ¬ cfg.isDone G) (t : LinConfig G)
+    (ht : t ∈ (linConfigStepPMF G cfg acts).support) :
+    t.phase G ≥ cfg.phase G + 1 := by
+  rw [PMF.mem_support_iff] at ht
+  cases cfg with
+  | terminal s => exact absurd trivial hnd
+  | signal k s =>
+    simp only [linConfigStepPMF] at ht
+    -- Split on match G.rounds[k]?
+    split at ht
+    · -- some r branch: split on if 0 < n
+      rename_i r hr
+      have hk : k < G.rounds.length := by
+        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+      split at ht
+      · -- 0 < n: (r.signal s).map (fun sig => .playerTurn k s sig ⟨0, _⟩ _)
+        rename_i hn
+        obtain ⟨_, _, rfl⟩ := (PMF.mem_support_map_iff _ _ t).mp
+          ((PMF.mem_support_iff _ t).mpr ht)
+        simp [LinConfig.phase]
+      · -- ¬(0 < n): bind
+        rename_i hn
+        have h0 : n = 0 := by omega
+        obtain ⟨_, _, ht'⟩ := (PMF.mem_support_bind_iff _ _ t).mp
+          ((PMF.mem_support_iff _ t).mpr ht)
+        split at ht' <;> (rw [PMF.mem_support_pure_iff] at ht'; subst ht')
+        · simp only [LinConfig.phase]; subst h0; omega
+        · simp only [LinConfig.phase]; subst h0; omega
+    · -- none branch: contradicts ¬isDone
+      exact absurd (by assumption : G.rounds[k]? = none) hnd
+  | playerTurn k s sig p accActs =>
+    simp only [linConfigStepPMF] at ht
+    split at ht
+    · -- some r branch
+      rename_i r hr
+      have hk : k < G.rounds.length := by
+        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+      simp only [advancePlayerTurn] at ht
+      have hpn : p.val < n := p.isLt
+      split at ht
+      · rename_i hp1
+        obtain rfl := (pure_ne_zero_iff' _ t).mp ht
+        simp [LinConfig.phase]
+      · rename_i hp1
+        split at ht
+        · obtain rfl := (pure_ne_zero_iff' _ t).mp ht
+          simp only [LinConfig.phase]
+          nlinarith [show p.val + 1 = n by omega]
+        · obtain rfl := (pure_ne_zero_iff' _ t).mp ht
+          simp only [LinConfig.phase]
+          nlinarith [show p.val + 1 = n by omega]
+    · -- none branch: contradicts ¬isDone
+      exact absurd (by assumption : G.rounds[k]? = none) hnd
+
+private theorem PMF.bind_congr_support {α β : Type*} (p : PMF α) (f g : α → PMF β)
+    (h : ∀ x ∈ p.support, f x = g x) : p.bind f = p.bind g := by
+  ext b; simp only [PMF.bind_apply]
+  congr 1; ext a
+  by_cases ha : a ∈ p.support
+  · rw [h a ha]
+  · rw [PMF.mem_support_iff, not_not] at ha; simp [ha]
+
+/-- After `k ≥ rounds.length * (n+1)` steps, all reachable last states are done. -/
+private theorem isDone_of_reachable [Fintype A]
+    (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) (k : Nat) (ss : List (LinConfig G))
+    (hss : ss ∈ ((compiledLinObs G).runDistPure k (liftPureProfile σ)).support) :
+    ((compiledLinObs G).lastState ss).isDone G ∨
+    ((compiledLinObs G).lastState ss).phase G ≥ k := by
+  rw [PMF.mem_support_iff] at hss
+  induction k generalizing ss with
+  | zero => right; omega
+  | succ k ih =>
+    -- Unfold runDistPure (k+1) using support membership
+    change _ at hss
+    rw [show (compiledLinObs G).runDistPure (k + 1) (liftPureProfile σ) =
+      ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
+        (fun ss' => Math.ProbabilityMassFunction.pushforward
+          ((compiledLinObs G).pureStep (liftPureProfile σ) ss')
+          (fun t => ss' ++ [t])) from rfl] at hss
+    have hsupp := (PMF.mem_support_iff _ _).mpr hss
+    rw [PMF.mem_support_bind_iff] at hsupp
+    obtain ⟨ss', hss'_supp, ht_supp⟩ := hsupp
+    -- pushforward: ss = ss' ++ [t] for some t in pureStep support
+    rw [show Math.ProbabilityMassFunction.pushforward
+        ((compiledLinObs G).pureStep (liftPureProfile σ) ss')
+        (fun t => ss' ++ [t]) =
+      ((compiledLinObs G).pureStep (liftPureProfile σ) ss').map
+        (fun t => ss' ++ [t]) from rfl] at ht_supp
+    rw [PMF.mem_support_map_iff] at ht_supp
+    obtain ⟨t, ht_in_step, rfl⟩ := ht_supp
+    rw [lastState_snoc]
+    -- IH on ss'
+    have ih_ss' := ih ss' ((PMF.mem_support_iff _ _).mp hss'_supp)
+    -- t is in support of pureStep at ss'
+    rw [pureStep_compiledLin_eq] at ht_in_step
+    set cfg := (compiledLinObs G).lastState ss' with cfg_def
+    set acts := (fun i => (liftPureProfile (G := G) σ) i (linObserve G i cfg))
+    -- Case split on whether cfg is done
+    by_cases hd : cfg.isDone G
+    · -- cfg is done: step is absorbing, so t = cfg
+      have hstep : linConfigStepPMF G cfg acts = PMF.pure cfg :=
+        step_of_isDone G cfg acts hd
+      rw [hstep, PMF.mem_support_pure_iff] at ht_in_step
+      rw [ht_in_step]; left; exact hd
+    · -- Not done: phase increases
+      right
+      have hprog := phase_step_progress G cfg acts hd t ht_in_step
+      rcases ih_ss' with hd' | hph
+      · exact absurd hd' hd
+      · omega
+
 /-- **Adequacy (pure profiles)**: running the linearized compiled model with
 `liftPureProfile σ` for enough steps, and extracting the terminal state, gives
 the same distribution as `Protocol.eval G σ`. -/
-theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype (Fin n)] [Fintype A]
+theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype A]
     (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 1)) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
         (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) =
       G.eval σ := by
-  sorry
+  have htele := runDistPure_bind_evalFromCfg (G := G) σ k
+  rw [← htele]
+  exact PMF.bind_congr_support _ _ _ fun ss hss => by
+    have hdr := isDone_of_reachable G σ k ss hss
+    rcases hdr with hd | hph
+    · exact (evalFromCfg_of_isDone G σ _ hd).symm
+    · exact (evalFromCfg_of_isDone G σ _ (isDone_of_phase_ge G _ (by omega))).symm
 
 end Adequacy
 

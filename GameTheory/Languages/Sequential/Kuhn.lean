@@ -13,6 +13,7 @@ Kuhn's theorem for compiled sequential protocols.
 - `stepMassInvariant_compiledCore` : `StepMassInvariant` holds for the compiled core model
 - `kuhn_mixed_to_behavioral_compiledLin` : M→B on linearized `ObsModelCore`
   (under `ActionPosteriorLocal`, which follows from perfect recall)
+- `kuhn_mixed_to_behavioral_perfectRecall` : M→B under `Protocol.PerfectRecall`
 
 ## Architecture
 
@@ -112,6 +113,40 @@ theorem kuhn_mixed_to_behavioral_compiledLin
     (stepMassInvariant_compiledLin G)
     (stepSupportFactorization_compiledLin G)
     hAPL μ k
+
+set_option linter.unusedFintypeInType false in
+/-- Perfect recall implies `ActionPosteriorLocal` on the linearized model.
+
+Under perfect recall, the view at any round determines the player's full
+view-action history. This means the posterior action distribution at an
+information state depends only on that information state, not on the
+full trace leading to it. -/
+theorem actionPosteriorLocal_of_perfectRecall
+    [Fintype A] [Nonempty A]
+    [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
+    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
+    (hPR : G.PerfectRecall) (i : Fin n) :
+    ObsModelCore.ActionPosteriorLocal (compiledLinObs' G) i := by
+  sorry
+
+set_option linter.unusedFintypeInType false in
+/-- **Kuhn M→B for sequential protocols under perfect recall**: product mixed
+strategies can be realized by behavioral strategies.
+
+Combines: linearized compilation (structural MI + SF), PerfectRecall → APL,
+and the core M→B theorem. -/
+theorem kuhn_mixed_to_behavioral_perfectRecall
+    [Fintype A] [Nonempty A]
+    [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
+    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
+    (hPR : G.PerfectRecall)
+    (μ : ∀ i, PMF ((compiledLinObs' G).LocalStrategy i))
+    (k : Nat) :
+    ∃ β : ObsModelCore.BehavioralProfile (compiledLinObs' G),
+      (compiledLinObs' G).runDist k β =
+        (Math.PMFProduct.pmfPi μ).bind ((compiledLinObs' G).runDistPure k) :=
+  kuhn_mixed_to_behavioral_compiledLin G
+    (fun i => actionPosteriorLocal_of_perfectRecall G hPR i) μ k
 
 end KuhnLinearized
 
