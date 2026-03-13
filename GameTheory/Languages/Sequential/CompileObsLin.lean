@@ -475,4 +475,83 @@ theorem liftPureProfile_descendPureProfile (π : (compiledLinObs G).PureProfile)
 
 end Profiles
 
+-- ============================================================================
+-- Adequacy: linearized execution matches protocol evaluation
+-- ============================================================================
+
+section Adequacy
+
+variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)]
+
+/-- The final state of a `LinConfig`. For `terminal s`, this is `s`.
+For non-terminal configurations, this is the current state carried
+by the configuration (evaluation not yet complete). -/
+def LinConfig.state : LinConfig G → S
+  | .signal _ s => s
+  | .playerTurn _ s _ _ _ => s
+  | .terminal s => s
+
+/-- Resolve players `pVal, pVal+1, ..., n-1` at round `k`, accumulating actions,
+then transition and continue from round `k+1`.
+
+This is the "semantic backbone" for adequacy: it evaluates the protocol by
+resolving one player at a time, matching the linearized model's step structure. -/
+noncomputable def evalLinearized (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A)
+    (rounds : List (Round n S V A Sig))
+    (s : S) : PMF S :=
+  match rounds with
+  | [] => PMF.pure s
+  | r :: rest =>
+    (r.signal s).bind fun sig =>
+      let acts : Fin n → Option A := fun i => σ i (r.view i s (sig i))
+      let next := r.transition s acts
+      evalLinearized G σ rest next
+
+omit [DecidableEq (Fin n)] in
+private theorem pmf_foldl_bind
+    (f : Round n S V A Sig → PureProfile n V A → S → PMF S)
+    (σ : PureProfile n V A) (μ : PMF S) (rest : List (Round n S V A Sig)) :
+    rest.foldl (fun dist r => dist.bind (f r σ)) μ =
+      μ.bind (fun s => rest.foldl (fun dist r => dist.bind (f r σ)) (PMF.pure s)) := by
+  induction rest generalizing μ with
+  | nil => simp
+  | cons r' rest' ih =>
+    simp only [List.foldl_cons]
+    rw [ih, PMF.bind_bind]
+    congr 1
+    ext s
+    rw [PMF.pure_bind, ih]
+
+omit [DecidableEq (Fin n)] in
+private theorem evalRounds_cons (r : Round n S V A Sig)
+    (rest : List (Round n S V A Sig)) (σ : PureProfile n V A) (s : S) :
+    evalRounds (r :: rest) σ s = (r.eval σ s).bind (evalRounds rest σ) := by
+  simp only [evalRounds, List.foldl_cons]
+  rw [PMF.pure_bind]
+  exact pmf_foldl_bind Round.eval σ (r.eval σ s) rest
+
+omit [DecidableEq (Fin n)] in
+private theorem evalLinearized_eq_evalRounds (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) (rounds : List (Round n S V A Sig)) (s : S) :
+    evalLinearized G σ rounds s = evalRounds rounds σ s := by
+  induction rounds generalizing s with
+  | nil => simp [evalLinearized, evalRounds]
+  | cons r rest ih =>
+    rw [evalRounds_cons]
+    simp only [evalLinearized, Round.eval, PMF.map]
+    conv_rhs => rw [PMF.bind_bind]
+    congr 1
+    ext sig
+    simp only [Function.comp, PMF.pure_bind]
+    exact congrFun (congrArg DFunLike.coe (ih _)) _
+
+omit [DecidableEq (Fin n)] in
+theorem evalLinearized_eq_eval (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) :
+    evalLinearized G σ G.rounds G.init = G.eval σ :=
+  evalLinearized_eq_evalRounds G σ G.rounds G.init
+
+end Adequacy
+
 end GameTheory.Sequential
