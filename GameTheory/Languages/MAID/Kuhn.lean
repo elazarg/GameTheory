@@ -83,9 +83,10 @@ private theorem activeInfoset_mem_frontier
   · -- decision q case
     by_cases hq : (‹Player› = p)  -- the matched player q
     · simp only [hq, ↓reduceDIte] at hnd_val
-      rw [← hnd_val]
-      exact hnd_frontier
+      have heq : I = ⟨⟨nd, _⟩, _⟩ := (Option.some_injective _ hnd_val).symm
+      rw [heq]; exact hnd_frontier
     · simp only [hq, ↓reduceDIte] at hnd_val
+      exact absurd hnd_val.symm (Option.some_ne_none _)
   · simp at hnd_val
 
 /-- An enabled node is not yet assigned. -/
@@ -155,6 +156,15 @@ private theorem projectStates_identity_last
   rw [hlast] at h
   exact h
 
+/-- Any state in the support of `frontierStepPMF_PR` has assigned ⊇ old ∪ frontier. -/
+private theorem assigned_union_frontier_sub_stepPR
+    (cfg : FrontierCfg S)
+    (acts : ∀ p : Player, CompiledMAIDAct S p (frontierActiveInfoset S cfg p))
+    (cfg' : FrontierCfg S)
+    (h : frontierStepPMF_PR S sem cfg acts cfg' ≠ 0) :
+    cfg.assigned ∪ frontier S cfg ⊆ cfg'.assigned :=
+  assigned_union_frontier_sub_step S sem cfg _ cfg' h
+
 /-- On a reachable trace, assigned sets grow: frontier nodes at `j` are assigned at `j+1`. -/
 private theorem assigned_mono_on_trace
     (π : ObsModelCore.PureProfile (compiledPRObs S sem))
@@ -162,11 +172,29 @@ private theorem assigned_mono_on_trace
     (hss : (compiledPRObs S sem).runDistPure k π ss ≠ 0)
     (j : Nat) (hj : j + 1 < ss.length) :
     ss[j].assigned ∪ frontier S ss[j] ⊆ ss[j + 1].assigned := by
-  -- On a runDistPure trace, ss[j+1] is in the support of pureStep at ss.take(j+1)
-  -- pureStep calls the machine's step, which is frontierStepPMF_PR
-  -- frontierStepPMF_PR calls frontierStepPMF = pushforward (pmfPi ...) (extendFrontier ...)
-  -- So ss[j+1] = extendFrontier S ss[j] vals, giving assigned' = assigned ∪ frontier
-  sorry
+  -- Extract per-step nonzero from the trace
+  have hstep := Math.ParameterizedChain.pureRun_step_nonzero
+    (compiledPRObs S sem).pureStep (compiledPRObs S sem).machine.init
+    k π ss (by rwa [ObsModelCore.runDistPure_eq_pureRun] at hss) j hj
+  -- pureStep = stepDist (pureToBehavioral π), and stepDist delegates to machine.step
+  -- For compiledPRObs, machine.step = frontierStepPMF_PR
+  -- We need: machine.step (lastState (ss.take(j+1))) acts ss[j+1] ≠ 0
+  --   with lastState (ss.take(j+1)) = ss[j]
+  -- Then apply assigned_union_frontier_sub_stepPR
+  rw [ObsModelCore.pureStep_eq] at hstep
+  -- step for compiledPRObs is frontierStepPMF_PR, which wraps frontierStepPMF
+  -- Apply assigned_union_frontier_sub_stepPR to get the monotonicity
+  have hmono := assigned_union_frontier_sub_stepPR S sem
+    ((compiledPRObs S sem).lastState (ss.take (j + 1))) _ ss[j + 1] hstep
+  -- lastState (ss.take(j+1)) = ss[j], so rewrite the goal
+  have hlast : (compiledPRObs S sem).lastState (ss.take (j + 1)) = ss[j] := by
+    simp only [ObsModelCore.lastState]
+    have hlen : (ss.take (j + 1)).length = j + 1 :=
+      List.length_take_of_le (by omega)
+    rw [List.getLast?_eq_getElem?, hlen]
+    simp only [show j + 1 - 1 = j from by omega, List.getElem?_take_of_succ,
+      show ss[j]? = some ss[j] from List.getElem?_eq_getElem (by omega), Option.getD_some]
+  rwa [hlast] at hmono
 
 /-- On a reachable trace, assigned sets are monotone across multiple steps. -/
 private theorem assigned_mono_multi

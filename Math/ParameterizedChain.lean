@@ -95,6 +95,46 @@ theorem pureRun_length (step : P → List S → PMF S) (s₀ : S)
         left_ne_zero_of_mul h
       simp [List.length_append, ih p hp]
 
+open Classical in
+/-- On a nonzero-probability trace, each per-step transition has nonzero probability.
+If `pureRun step s₀ k π ss ≠ 0` and `j + 1 < ss.length`, then
+`step π (ss.take (j + 1)) ss[j + 1] ≠ 0`. -/
+theorem pureRun_step_nonzero (step : P → List S → PMF S) (s₀ : S)
+    (k : Nat) (π : P) (ss : List S)
+    (h : pureRun step s₀ k π ss ≠ 0)
+    (j : Nat) (hj : j + 1 < ss.length) :
+    step π (ss.take (j + 1)) ss[j + 1] ≠ 0 := by
+  have hlen := pureRun_length step s₀ k π ss h
+  -- Induction on k from the end of the trace
+  induction k generalizing ss j with
+  | zero => omega
+  | succ m ih =>
+    have hne : ss ≠ [] := by intro he; simp [he] at hlen
+    -- Decompose ss = pre ++ [t]
+    obtain ⟨pre, t, hss_eq⟩ : ∃ pre t, ss = pre ++ [t] := by
+      exact ⟨ss.dropLast, ss.getLast hne, (List.dropLast_append_getLast hne).symm⟩
+    subst hss_eq
+    have hplen : pre.length = m + 1 := by simp at hlen; omega
+    rw [pureRun_succ_append] at h
+    have hpre : pureRun step s₀ m π pre ≠ 0 := left_ne_zero_of_mul h
+    have hstep_last : step π pre t ≠ 0 := right_ne_zero_of_mul h
+    by_cases hjlast : j + 1 = pre.length
+    · -- The last step: step π pre t ≠ 0
+      suffices step π (List.take (j + 1) (pre ++ [t])) (pre ++ [t])[j + 1] ≠ 0 from this
+      rw [List.take_append_of_le_length (by omega)]
+      rw [List.getElem_append_right (by omega)]
+      simp only [List.getElem_singleton, ne_eq]
+      have : List.take pre.length pre = pre := List.take_length
+      rw [hjlast, this]
+      exact hstep_last
+    · -- An earlier step: delegate to IH on pre
+      have hjpre : j + 1 < pre.length := by simp at hj; omega
+      suffices step π (List.take (j + 1) (pre ++ [t]))
+          (pre ++ [t])[j + 1] ≠ 0 from this
+      rw [List.take_append_of_le_length (by omega)]
+      rw [List.getElem_append_left hjpre]
+      exact ih pre hpre j hjpre hplen
+
 /-- Run a Markov chain with step-index-dependent transition functions. -/
 noncomputable def seqRun (steps : Nat → List S → PMF S) (s₀ : S)
     (k : Nat) : PMF (List S) :=
