@@ -311,25 +311,99 @@ private theorem linAct_eq_punit_of_ne [DecidableEq (Fin n)]
     rw [hobs]; exact ⟨fun a b => PUnit.ext a b⟩
   exact hsub.elim a₁ a₂
 
+/-- For identity info states (current = id), the cast in `pureStep_eq`
+is trivial: evaluating a dependent function after transport equals
+evaluating at the transported index. -/
+private theorem cast_dep_apply {α : Type} {P : α → Type}
+    (f : ∀ x, P x) {a b : α} (h : a = b) :
+    h ▸ f a = f b := by cases h; rfl
+
+omit [Nonempty A] in
+/-- Closed form of pure one-step execution in the linearized compilation.
+Eliminates all dependent-type casts from `pureStep_eq`. -/
+theorem pureStep_compiledLin_eq (G : Protocol n S V A Sig)
+    (π : (compiledLinObs G).PureProfile) (ss : List (LinConfig G)) :
+    (compiledLinObs G).pureStep π ss =
+      linConfigStepPMF G ((compiledLinObs G).lastState ss)
+        (fun i => π i (linObserve G i ((compiledLinObs G).lastState ss))) := by
+  rw [ObsModelCore.pureStep_eq]
+  congr 1
+  funext i
+  exact cast_dep_apply (π i) ((compiledLinObs G).currentObs_projectStates i ss)
+
+omit [Nonempty A] in
+/-- Two profiles producing the same observation-dependent actions at a given
+configuration have equal pure steps. Takes the last state as a parameter
+to avoid matching issues with `lastState ss`. -/
+private theorem pureStep_congr_compiledLin (G : Protocol n S V A Sig)
+    (π₁ π₂ : (compiledLinObs G).PureProfile) (ss : List (LinConfig G))
+    (cfg : LinConfig G) (hlast : (compiledLinObs G).lastState ss = cfg)
+    (h : ∀ i, π₁ i (linObserve G i cfg) = π₂ i (linObserve G i cfg)) :
+    (compiledLinObs G).pureStep π₁ ss = (compiledLinObs G).pureStep π₂ ss := by
+  rw [pureStep_compiledLin_eq, pureStep_compiledLin_eq, hlast]
+  exact congrArg (linConfigStepPMF G cfg) (funext h)
+
+omit [Nonempty A] in
 /-- The linearized model satisfies `StepSupportFactorization`.
 At each step, at most one player has a nontrivial action (the acting player
 at a `playerTurn` phase). Changing any other player's strategy does not
-affect the step, so the per-player update condition holds trivially.
-
-**Proof sketch**: At signal/terminal phases, the step is action-independent,
-so all profiles produce the same PMF. At `playerTurn p`, the step depends only
-on player p's action (via `extractPlayerAction`). For `i ≠ p`,
-`Function.update π₀ i (π i)` has the same player-p action as π₀, so the step
-equals π₀'s step. For `i = p`, it has the same player-p action as π.
-
-The helper `linConfigStepPMF_playerTurn_congr` provides the step-level
-equality; connecting profiles to actions via `pureStep_eq` and `Function.update`
-requires a `pureStep` reduction lemma analogous to EFG's
-`pureStep_compiledCore_eq`. -/
+affect the step, so the per-player update condition holds trivially. -/
 theorem stepSupportFactorization_compiledLin (G : Protocol n S V A Sig) :
     ObsModelCore.StepSupportFactorization (compiledLinObs G) := by
   intro ss t π₀ π h₀
-  sorry
+  constructor
+  · -- Forward: pureStep π reaches t → all single-player updates reach t
+    intro hπ i
+    cases hlast : (compiledLinObs G).lastState ss with
+    | signal k s =>
+        -- All observations are none at signal → all actions are PUnit → profiles agree
+        suffices heq : (compiledLinObs G).pureStep (Function.update π₀ i (π i)) ss =
+            (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
+        exact pureStep_congr_compiledLin G _ _ ss _ hlast
+          (fun j => PUnit.ext _ _)
+    | terminal s =>
+        suffices heq : (compiledLinObs G).pureStep (Function.update π₀ i (π i)) ss =
+            (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
+        exact pureStep_congr_compiledLin G _ _ ss _ hlast
+          (fun j => PUnit.ext _ _)
+    | playerTurn k s sig p accActs =>
+        by_cases hip : i = p
+        · -- i = p: update at acting player, step matches π's step
+          subst hip
+          suffices heq : (compiledLinObs G).pureStep (Function.update π₀ i (π i)) ss =
+              (compiledLinObs G).pureStep π ss from heq ▸ hπ
+          exact pureStep_congr_compiledLin G _ _ ss _ hlast (fun j => by
+            by_cases hji : j = i
+            · subst hji; exact congrFun (Function.update_self j (π j) π₀) _
+            · exact linAct_eq_punit_of_ne (accActs := accActs) hji _ _)
+        · -- i ≠ p: update at non-acting player, step matches π₀'s step
+          suffices heq : (compiledLinObs G).pureStep (Function.update π₀ i (π i)) ss =
+              (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
+          exact pureStep_congr_compiledLin G _ _ ss _ hlast (fun j => by
+            by_cases hji : j = i
+            · subst hji; exact linAct_eq_punit_of_ne (accActs := accActs) hip _ _
+            · simp only [Function.update, dif_neg hji])
+  · -- Backward: all single-player updates reach t → pureStep π reaches t
+    intro hall
+    cases hlast : (compiledLinObs G).lastState ss with
+    | signal k s =>
+        suffices heq : (compiledLinObs G).pureStep π ss =
+            (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
+        exact pureStep_congr_compiledLin G _ _ ss _ hlast
+          (fun j => PUnit.ext _ _)
+    | terminal s =>
+        suffices heq : (compiledLinObs G).pureStep π ss =
+            (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
+        exact pureStep_congr_compiledLin G _ _ ss _ hlast
+          (fun j => PUnit.ext _ _)
+    | playerTurn k s sig p accActs =>
+        have hp := hall p
+        suffices heq : (compiledLinObs G).pureStep π ss =
+            (compiledLinObs G).pureStep (Function.update π₀ p (π p)) ss from heq ▸ hp
+        exact pureStep_congr_compiledLin G _ _ ss _ hlast (fun j => by
+          by_cases hjp : j = p
+          · subst hjp; exact (congrFun (Function.update_self j (π j) π₀) _).symm
+          · exact (linAct_eq_punit_of_ne (accActs := accActs) hjp _ _).symm)
 
 end Properties
 
