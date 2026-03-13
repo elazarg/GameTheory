@@ -1,4 +1,5 @@
 import GameTheory.Languages.Sequential.CompileObs
+import GameTheory.Languages.Sequential.CompileObsLin
 import GameTheory.Theorems.Kuhn
 
 /-!
@@ -6,16 +7,27 @@ import GameTheory.Theorems.Kuhn
 
 Kuhn's theorem for compiled sequential protocols.
 
-Both directions go through the `ObsModel` layer, which automatically provides
-the `StepActionDeterminism` / `StepSupportFactorization` needed by the core
-proof (via its snapshot-refined information states).
-
 ## Main results
 
-- `kuhn_behavioral_to_mixed_of_compiled` : B→M direction (no recall needed)
-- `kuhn_mixed_to_behavioral_of_compiled` : M→B direction (under PSPR)
 - `kuhn_behavioral_to_mixed_core` : B→M on `ObsModelCore` (under `NoNontrivialInfoStateRepeat`)
 - `stepMassInvariant_compiledCore` : `StepMassInvariant` holds for the compiled core model
+- `kuhn_mixed_to_behavioral_compiledLin` : M→B on linearized `ObsModelCore`
+  (under `ActionPosteriorLocal`, which follows from perfect recall)
+
+## Architecture
+
+**B→M** uses the simultaneous-action `ObsModelCore` compilation (`compiledCoreObs`).
+The `NoNontrivialInfoStateRepeat` condition ensures behavioral strategies can be
+decomposed into product mixed strategies.
+
+**M→B** uses the **linearized** `ObsModelCore` compilation (`compiledLinObs`), which
+splits each simultaneous action phase into per-player sub-steps. This ensures
+`StepSupportFactorization` holds (one player per step), which is required by the
+core M→B proof but fails for simultaneous-action models.
+
+The structural conditions `StepMassInvariant` and `StepSupportFactorization` hold
+automatically for the linearized model. The remaining condition,
+`ActionPosteriorLocal`, requires a protocol-level recall condition.
 -/
 
 namespace GameTheory.Languages.Sequential
@@ -24,45 +36,6 @@ open GameTheory.Sequential
 open GameTheory.Theorems
 
 variable {n : Nat} {S V A Sig : Type}
-
-section Kuhn
-
-variable (G : Protocol n S V A Sig)
-
-/-- The compiled ObsModel for a sequential protocol. -/
-noncomputable abbrev compiledObs (G : Protocol n S V A Sig) :=
-  GameTheory.Sequential.compileObsModel G
-
-/-- **Kuhn B→M for compiled sequential protocols**: behavioral strategies can be
-realized as product mixed strategies.
-
-This requires finiteness of the compiled information-state type; the default
-list-backed summary used by `compileObsModel` does not provide that instance
-automatically. -/
-theorem kuhn_behavioral_to_mixed_of_compiled
-    [Fintype (Option A)]
-    [∀ i, Fintype ((compiledObs G).InfoState i)]
-    (β : ObsModel.BehavioralProfile (compiledObs G)) (k : Nat) :
-    (compiledObs G).runDist k β =
-      ((compiledObs G).behavioralToMixedJoint β).bind
-        ((compiledObs G).runDistPure k) :=
-  ObsModel.kuhn_behavioral_to_mixed β k
-
-/-- **Kuhn M→B for compiled sequential protocols**: under per-step player recall,
-product mixed strategies can be realized by behavioral strategies. -/
-theorem kuhn_mixed_to_behavioral_of_compiled
-    [Fintype (Option A)]
-    [∀ i, Fintype ((compiledObs G).InfoState i)]
-    [Nonempty (Option A)]
-    (hPSPR : ObsModel.PerStepPlayerRecall (compiledObs G))
-    (μ : ∀ i, PMF ((compiledObs G).LocalStrategy i))
-    (k : Nat) :
-    ∃ β : ObsModel.BehavioralProfile (compiledObs G),
-      (compiledObs G).runDist k β =
-        (Math.PMFProduct.pmfPi μ).bind ((compiledObs G).runDistPure k) :=
-  ObsModel.kuhn_mixed_to_behavioral_pspr hPSPR μ k
-
-end Kuhn
 
 section KuhnCore
 
@@ -109,5 +82,37 @@ theorem stepMassInvariant_compiledCore
   exact congrFun (congrArg DFunLike.coe hmass) t
 
 end KuhnCore
+
+section KuhnLinearized
+
+variable [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable (G : Protocol n S V A Sig)
+
+/-- The compiled linearized ObsModelCore for a sequential protocol. -/
+noncomputable abbrev compiledLinObs' (G : Protocol n S V A Sig) :=
+  GameTheory.Sequential.compiledLinObs G
+
+/-- **Kuhn M→B for linearized sequential protocols**: under action-posterior
+locality, product mixed strategies can be realized by behavioral strategies.
+
+The linearized model satisfies `StepMassInvariant` and `StepSupportFactorization`
+structurally. The remaining condition, `ActionPosteriorLocal`, requires a
+protocol-level recall condition (e.g. perfect recall). -/
+theorem kuhn_mixed_to_behavioral_compiledLin
+    [Fintype A] [Nonempty A]
+    [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
+    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
+    (hAPL : ∀ i, ObsModelCore.ActionPosteriorLocal (compiledLinObs' G) i)
+    (μ : ∀ i, PMF ((compiledLinObs' G).LocalStrategy i))
+    (k : Nat) :
+    ∃ β : ObsModelCore.BehavioralProfile (compiledLinObs' G),
+      (compiledLinObs' G).runDist k β =
+        (Math.PMFProduct.pmfPi μ).bind ((compiledLinObs' G).runDistPure k) :=
+  ObsModelCore.kuhn_mixed_to_behavioral_semantic
+    (stepMassInvariant_compiledLin G)
+    (stepSupportFactorization_compiledLin G)
+    hAPL μ k
+
+end KuhnLinearized
 
 end GameTheory.Languages.Sequential
