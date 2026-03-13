@@ -1,5 +1,6 @@
 import GameTheory.Languages.Sequential.SOS
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
+import Mathlib.Data.List.TakeDrop
 
 /-!
 # Linearized Compilation of Sequential Protocols to ObsModelCore
@@ -598,14 +599,208 @@ theorem resolveActions_eq (G : Protocol n S V A Sig)
       fun i => σ i (r.view i s (sig i)) :=
   resolveActions_spec G σ r s sig 0 _ (fun i hi => absurd hi (by omega))
 
+/-- Evaluate from a `LinConfig` using a pure profile. Non-recursive: dispatches
+to `evalLinearized` on the remaining rounds.
+
+- **Signal k s**: evaluate rounds from k onward
+- **PlayerTurn k s sig p accActs**: resolve remaining players, then evaluate from k+1
+- **Terminal s**: point mass on s -/
+noncomputable def evalFromCfg (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) : LinConfig G → PMF S
+  | .terminal s => PMF.pure s
+  | .signal k s => evalLinearized G σ (G.rounds.drop k) s
+  | .playerTurn k s sig p accActs =>
+    match G.rounds[k]? with
+    | some r =>
+      let fullActs := resolveActions G σ r s sig p.val accActs
+      let next := r.transition s fullActs
+      evalLinearized G σ (G.rounds.drop (k + 1)) next
+    | none => PMF.pure s
+
+/-- `evalFromCfg` at the initial configuration equals `Protocol.eval`. -/
+theorem evalFromCfg_init (G : Protocol n S V A Sig)
+    (σ : PureProfile n V A) :
+    evalFromCfg G σ (linInitialConfig G) = G.eval σ := by
+  simp only [linInitialConfig]
+  split <;> simp only [evalFromCfg]
+  · -- G.rounds[0]? = none → rounds is empty → terminal case
+    rename_i h
+    have hnil : G.rounds = [] := by
+      match hr : G.rounds with
+      | [] => rfl
+      | _ :: _ => simp [hr] at h
+    simp [Protocol.eval, evalRounds, hnil]
+  · -- G.rounds[0]? ≠ none → signal case
+    rw [List.drop_zero]
+    exact evalLinearized_eq_eval G σ
+
+/-- `extractPlayerAction` with `liftPureProfile` gives the protocol-level action. -/
+private theorem extractPlayerAction_lift (σ : PureProfile n V A)
+    (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n)
+    (accActs : Fin n → Option A) (r : Round n S V A Sig)
+    (hr : G.rounds[k]? = some r) :
+    extractPlayerAction G k s sig p accActs
+      (fun i => (liftPureProfile (G := G) σ) i
+        (linObserve G i (.playerTurn k s sig p accActs))) =
+    σ p (r.view p s (sig p)) := by
+  unfold extractPlayerAction
+  split
+  case h_1 r' hr' =>
+    -- G.rounds[k]? = some r' — need r' = r
+    have : r' = r := by rw [hr'] at hr; exact Option.some.inj hr
+    subst this
+    have hobs : linObserve G p (.playerTurn k s sig p accActs) =
+        some (r'.view p s (sig p)) := by simp [linObserve, hr']
+    change cast _ _ = _
+    rw [cast_eq_iff_heq]
+    simp only [liftPureProfile, liftLocalStrategy]
+    exact hobs ▸ HEq.rfl
+  case h_2 hr' =>
+    -- G.rounds[k]? = none — contradicts hr
+    rw [hr'] at hr; exact absurd hr (by simp)
+
+/-- One step of the linearized model composed with `evalFromCfg` telescopes:
+performing one step and then evaluating from the resulting configuration gives
+the same result as evaluating from the current configuration. -/
+private theorem stepPMF_bind_evalFromCfg
+    (σ : PureProfile n V A) (cfg : LinConfig G) :
+    (linConfigStepPMF G cfg
+      (fun i => (liftPureProfile (G := G) σ) i (linObserve G i cfg))).bind
+        (evalFromCfg G σ) =
+    evalFromCfg G σ cfg := by
+  cases cfg with
+  | terminal s =>
+    -- Step at terminal is PMF.pure (.terminal s), identity
+    simp [linConfigStepPMF, evalFromCfg, PMF.pure_bind]
+  | signal k s =>
+    -- Step samples signal and creates playerTurn (or transitions if n=0)
+    simp only [linConfigStepPMF]
+    split
+    case h_1 r hr =>
+      split
+      case isTrue hn =>
+        -- n > 0: signal → playerTurn 0
+        -- LHS: (r.signal s).map (fun sig => .playerTurn k s sig ⟨0, hn⟩ (fun _ => none))
+        --        .bind (evalFromCfg G σ)
+        -- = (r.signal s).bind (fun sig => evalFromCfg G σ (.playerTurn ...))
+        rw [PMF.bind_map]
+        -- Unfold evalFromCfg at the playerTurn
+        simp only [Function.comp_def, evalFromCfg, hr]
+        -- RHS: evalLinearized G σ (G.rounds.drop k) s
+        -- Since G.rounds[k]? = some r, drop k = r :: drop (k+1)
+        have hk : k < G.rounds.length := by
+          by_contra h; push_neg at h
+          simp [List.getElem?_eq_none (by omega)] at hr
+        have hdrop : G.rounds.drop k = r :: G.rounds.drop (k + 1) := by
+          rw [← List.cons_getElem_drop_succ (h := hk)]
+          congr 1; exact (List.getElem_of_getElem? hr).choose_spec
+        rw [hdrop, evalLinearized]
+        congr 1; ext sig; simp only []
+        rw [resolveActions_eq]
+      case isFalse hn =>
+        have h0 : n = 0 := by omega
+        subst h0
+        have hempty : ∀ (f g : Fin 0 → Option A), f = g :=
+          fun f g => funext fun i => absurd i.pos hn
+        have hk : k < G.rounds.length := by
+          by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+        have hdrop : G.rounds.drop k = r :: G.rounds.drop (k + 1) := by
+          rw [← List.cons_getElem_drop_succ (h := hk)]
+          congr 1; exact (List.getElem_of_getElem? hr).choose_spec
+        -- LHS and RHS both have the form (r.signal s).bind (fun sig => ...)
+        simp only [PMF.bind_bind]
+        -- Unfold RHS: evalFromCfg → evalLinearized → (r.signal s).bind
+        conv_rhs => rw [show evalFromCfg G σ (LinConfig.signal k s) =
+          evalLinearized G σ (G.rounds.drop k) s from by simp [evalFromCfg]]
+        rw [hdrop, evalLinearized]; dsimp only []
+        -- Both sides: (r.signal s).bind (fun sig => ...)
+        congr 1; funext sig
+        -- Equate the transition arguments using hempty
+        have htrans : r.transition s (fun i => absurd i.pos hn) =
+            r.transition s (fun i => σ i (r.view i s (sig i))) :=
+          congrArg (r.transition s) (hempty _ _)
+        split
+        case h_1 r' hr2 =>
+          simp only [PMF.pure_bind, evalFromCfg]
+          exact congrArg (evalLinearized G σ (G.rounds.drop (k + 1))) htrans
+        case h_2 hr2 =>
+          have hdrop2 : G.rounds.drop (k + 1) = [] := by
+            apply List.drop_eq_nil_of_le; by_contra hle; push_neg at hle
+            rw [List.getElem?_eq_getElem hle] at hr2; exact absurd hr2 (by simp)
+          simp only [PMF.pure_bind, evalFromCfg, hdrop2, evalLinearized]
+          exact congrArg PMF.pure htrans
+    case h_2 hr =>
+      -- G.rounds[k]? = none: step is identity
+      simp [PMF.pure_bind]
+  | playerTurn k s sig p accActs =>
+    -- Step resolves player p; evalFromCfg resolves p onward
+    simp only [linConfigStepPMF]
+    split
+    case h_1 r hr =>
+      simp only [advancePlayerTurn]
+      rw [extractPlayerAction_lift σ k s sig p accActs r hr]
+      split
+      case isTrue hp1 =>
+        -- p.val + 1 < n: advance to next player
+        simp only [PMF.pure_bind, evalFromCfg, hr]
+        congr 1
+        -- resolveActions from p with updated accActs = resolveActions from p with original
+        conv_rhs => rw [show p.val = p.val from rfl]; unfold resolveActions; rw [dif_pos p.isLt]
+      case isFalse hp1 =>
+        -- p is last player: resolveActions from p gives Function.update
+        have hresolve : resolveActions G σ r s sig p.val accActs =
+            Function.update accActs p (σ p (r.view p s (sig p))) := by
+          unfold resolveActions; rw [dif_pos p.isLt]
+          have : ⟨p.val, p.isLt⟩ = p := Fin.ext rfl
+          rw [this]; unfold resolveActions; rw [dif_neg hp1]
+        split
+        case h_1 _ hr2 =>
+          simp only [PMF.pure_bind, evalFromCfg, hr, hresolve]
+        case h_2 _ hr2 =>
+          simp only [PMF.pure_bind, evalFromCfg, hr, hresolve]
+          have hdrop2 : G.rounds.drop (k + 1) = [] :=
+            List.drop_eq_nil_of_le (by
+              by_contra h; push_neg at h
+              rw [List.getElem?_eq_getElem h] at hr2; exact absurd hr2 (by simp))
+          rw [hdrop2, evalLinearized]
+    case h_2 hr =>
+      simp [PMF.pure_bind, evalFromCfg, hr]
+
+/-- **Telescoping**: running the linearized model for `k` steps and composing
+with `evalFromCfg` on the last state equals `evalFromCfg` at the initial config,
+which is `Protocol.eval`.
+
+Proof idea: by induction on `k`, using `stepPMF_bind_evalFromCfg` at each step
+to show that one step composed with `evalFromCfg` telescopes back to `evalFromCfg`
+on the previous last state. The base case is `evalFromCfg_init`. -/
+private theorem lastState_snoc (ss : List (LinConfig G)) (t : LinConfig G) :
+    (compiledLinObs G).lastState (ss ++ [t]) = t := by
+  simp [ObsModelCore.lastState, List.getLast?_append_of_ne_nil _ (List.cons_ne_nil t [])]
+
+theorem runDistPure_bind_evalFromCfg [Fintype A]
+    (σ : PureProfile n V A) (k : Nat) :
+    ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
+        (fun ss => evalFromCfg G σ ((compiledLinObs G).lastState ss)) =
+      G.eval σ := by
+  induction k with
+  | zero =>
+    change (PMF.pure [(compiledLinObs G).init]).bind _ = _
+    simp only [PMF.pure_bind, ObsModelCore.lastState, List.getLast?_singleton, Option.getD_some]
+    exact evalFromCfg_init G σ
+  | succ k ih =>
+    change ((ObsModelCore.runDistPure (compiledLinObs G) k (liftPureProfile σ)).bind
+      (fun ss => Math.ProbabilityMassFunction.pushforward
+        ((compiledLinObs G).pureStep (liftPureProfile σ) ss)
+        (fun t => ss ++ [t]))).bind
+      (fun ss => evalFromCfg G σ ((compiledLinObs G).lastState ss)) = _
+    simp only [PMF.bind_bind, Math.ProbabilityMassFunction.pushforward, PMF.pure_bind,
+      lastState_snoc]
+    simp_rw [pureStep_compiledLin_eq, stepPMF_bind_evalFromCfg]
+    exact ih
+
 /-- **Adequacy (pure profiles)**: running the linearized compiled model with
 `liftPureProfile σ` for enough steps, and extracting the terminal state, gives
-the same distribution as `Protocol.eval G σ`.
-
-The key argument is that the linearized model's step function resolves one player
-at a time, and for pure memoryless strategies the order of resolution doesn't
-matter — the final accumulated action vector is the same. So the linearized
-execution matches `evalLinearized`, which equals `Protocol.eval`. -/
+the same distribution as `Protocol.eval G σ`. -/
 theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype (Fin n)] [Fintype A]
     (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 1)) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
