@@ -397,7 +397,178 @@ theorem pureRun_cross_mul_product
       simp_rw [hwi, hwi']
       ac_rfl
 
+/-- Run-level support factorization: the run-level analogue of
+`StepSupportFactorization`. A profile reaches a trace iff each single-player
+update of the witness does. This is strictly weaker than `StepSupportFactorization`
+because it only constrains reachable traces, not unreachable states. -/
+def RunSupportFactorization (O : ObsModelCore ι σ Obs Act) : Prop :=
+  ∀ (n : Nat) {ss : List σ} (π₀ π : ObsModelCore.PureProfile O),
+    pureRun (O.pureStep) O.init n π₀ ss ≠ 0 →
+      (pureRun (O.pureStep) O.init n π ss ≠ 0 ↔
+        ∀ i, pureRun (O.pureStep) O.init n
+          (Function.update π₀ i (π i)) ss ≠ 0)
+
+/-- Step-level support factorization implies run-level. -/
+theorem StepSupportFactorization.toRunSupportFactorization
+    (hFactor : StepSupportFactorization O) :
+    RunSupportFactorization O := by
+  intro n ss π₀ π h₀
+  exact pureRun_nonzero_iff_update (ss := ss) hFactor n h₀ π
+
+/-- Cross-multiplication identity using run-level support factorization. -/
+theorem pureRun_cross_mul_product_of_run
+    (hMass : StepMassInvariant O)
+    (hRun : RunSupportFactorization O)
+    [Fintype (ObsModelCore.PureProfile O)]
+    (ν : PMF (ObsModelCore.PureProfile O))
+    (n : Nat) {π₀ : ObsModelCore.PureProfile O} {ss : List σ}
+    (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0)
+    (π : ObsModelCore.PureProfile O) :
+    pureRun (O.pureStep) O.init n π ss *
+      (∑ π' : ObsModelCore.PureProfile O, ν π' *
+        ∏ i, pureRun (O.pureStep) O.init n (Function.update π₀ i (π' i)) ss) =
+    (∏ i, pureRun (O.pureStep) O.init n (Function.update π₀ i (π i)) ss) *
+      (∑ π' : ObsModelCore.PureProfile O, ν π' *
+        pureRun (O.pureStep) O.init n π' ss) := by
+  set C₀ := pureRun (O.pureStep) O.init n π₀ ss with hC₀_def
+  have hconst : ∀ π', pureRun (O.pureStep) O.init n π' ss ≠ 0 →
+      pureRun (O.pureStep) O.init n π' ss = C₀ :=
+    fun π' h => pureRun_const_of_support hMass n h h₀
+  have hconst_upd : ∀ (π' : ObsModelCore.PureProfile O) (i : ι),
+      pureRun (O.pureStep) O.init n (Function.update π₀ i (π' i)) ss ≠ 0 →
+      pureRun (O.pureStep) O.init n (Function.update π₀ i (π' i)) ss = C₀ :=
+    fun π' i h => pureRun_const_of_support hMass n h h₀
+  rw [Finset.mul_sum, Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro π' _
+  by_cases hπ : pureRun (O.pureStep) O.init n π ss = 0
+  · rw [hπ, zero_mul]
+    have hnotall : ¬ ∀ i,
+        pureRun (O.pureStep) O.init n (Function.update π₀ i (π i)) ss ≠ 0 := by
+      intro hall
+      exact ((hRun n π₀ π h₀).mpr hall) hπ
+    push_neg at hnotall
+    obtain ⟨i, hi⟩ := hnotall
+    rw [Finset.prod_eq_zero (Finset.mem_univ i) hi, zero_mul]
+  · by_cases hπ' : pureRun (O.pureStep) O.init n π' ss = 0
+    · rw [hπ', mul_zero, mul_zero]
+      have := mt (hRun n π₀ π' h₀).mpr (not_not.mpr hπ')
+      push_neg at this
+      obtain ⟨j, hj⟩ := this
+      rw [Finset.prod_eq_zero (Finset.mem_univ j) hj, mul_zero, mul_zero]
+    · have hw := hconst π hπ
+      have hw' := hconst π' hπ'
+      have hwi : ∀ i, pureRun (O.pureStep) O.init n
+          (Function.update π₀ i (π i)) ss = C₀ :=
+        fun i => hconst_upd π i ((hRun n π₀ π h₀).mp hπ i)
+      have hwi' : ∀ i, pureRun (O.pureStep) O.init n
+          (Function.update π₀ i (π' i)) ss = C₀ :=
+        fun i => hconst_upd π' i ((hRun n π₀ π' h₀).mp hπ' i)
+      rw [hw, hw']
+      simp_rw [hwi, hwi']
+      ac_rfl
+
 end ReachFactorCore
+
+section ObsLocalKuhn
+
+variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+
+/-- Full obs-local feasibility: like `ObsLocalFeasibility` but without the
+`Subsingleton` guard. This is the condition needed for the chaining argument
+that derives run-level support factorization.
+
+`ObsLocalFeasibility` guards by `¬ Subsingleton (Act i ...)` because it was
+designed for `ActionPosteriorLocal` (where subsingleton types are trivially
+handled). For run-level support factorization, we need the iff at ALL info
+states including those with subsingleton actions, because updating player `i`'s
+full local strategy can affect earlier steps even when the current action type
+is trivial. -/
+def ObsLocalFeasibilityFull (O : ObsModelCore ι σ Obs Act) (i : ι) : Prop :=
+  ∀ (n₁ n₂ : Nat) (π₀ π₀' : ObsModelCore.PureProfile O) (ss₁ ss₂ : List σ),
+    O.projectStates i ss₁ = O.projectStates i ss₂ →
+    pureRun (O.pureStep) O.init n₁ π₀ ss₁ ≠ 0 →
+    pureRun (O.pureStep) O.init n₂ π₀' ss₂ ≠ 0 →
+    ∀ (πᵢ : O.LocalStrategy i),
+      pureRun (O.pureStep) O.init n₁ (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
+      pureRun (O.pureStep) O.init n₂ (Function.update π₀' i πᵢ) ss₂ ≠ 0
+
+/-- Profile that agrees with `π` on players in `S` and with `π₀` elsewhere. -/
+private noncomputable def multiUpdate [DecidableEq ι]
+    (π₀ π : ObsModelCore.PureProfile O) (S : Finset ι) :
+    ObsModelCore.PureProfile O :=
+  fun i => if i ∈ S then π i else π₀ i
+
+omit [Fintype ι] [∀ i o, Fintype (Act i o)] in
+private theorem multiUpdate_empty (π₀ π : ObsModelCore.PureProfile O) :
+    multiUpdate π₀ π ∅ = π₀ := by
+  ext i; simp [multiUpdate]
+
+omit [∀ i o, Fintype (Act i o)] in
+private theorem multiUpdate_univ (π₀ π : ObsModelCore.PureProfile O) :
+    multiUpdate π₀ π Finset.univ = π := by
+  ext i; simp [multiUpdate]
+
+omit [Fintype ι] [∀ i o, Fintype (Act i o)] in
+private theorem multiUpdate_insert {j : ι} {S : Finset ι} (hj : j ∉ S)
+    (π₀ π : ObsModelCore.PureProfile O) :
+    multiUpdate π₀ π (insert j S) =
+      Function.update (multiUpdate π₀ π S) j (π j) := by
+  ext i
+  simp only [multiUpdate, Finset.mem_insert, Function.update]
+  split
+  next h =>
+    rcases h with rfl | h
+    · simp
+    · simp [h, show i ≠ j from fun he => hj (he ▸ h)]
+  next h =>
+    push_neg at h
+    simp [h.1, h.2]
+
+omit [Fintype ι] [∀ i o, Fintype (Act i o)] in
+private theorem multiUpdate_singleton (π₀ π : ObsModelCore.PureProfile O) (i : ι) :
+    multiUpdate π₀ π {i} = Function.update π₀ i (π i) := by
+  ext j
+  simp only [multiUpdate, Finset.mem_singleton, Function.update]
+  split
+  · next h => subst h; simp
+  · next h => simp
+
+/-- **Chaining lemma**: If `ObsLocalFeasibilityFull` holds for all players and
+all single-player updates of the witness reach `ss`, then any multi-player
+update also reaches `ss`. -/
+private theorem multiUpdate_reach_of_obsLocal
+    (hOLF : ∀ i, ObsLocalFeasibilityFull O i)
+    {n : Nat} {ss : List σ} {π₀ π : ObsModelCore.PureProfile O}
+    (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0)
+    (hall : ∀ i, pureRun (O.pureStep) O.init n
+      (Function.update π₀ i (π i)) ss ≠ 0)
+    (S : Finset ι) :
+    pureRun (O.pureStep) O.init n (multiUpdate π₀ π S) ss ≠ 0 := by
+  induction S using Finset.induction with
+  | empty => rwa [multiUpdate_empty]
+  | insert j S hj ih =>
+      rw [multiUpdate_insert hj]
+      exact (hOLF j n n π₀ (multiUpdate π₀ π S) ss ss rfl h₀ ih (π j)).mp (hall j)
+
+/-- `ObsLocalFeasibilityFull` for all players implies `RunSupportFactorization`. -/
+theorem obsLocalFeasibilityFull_toRunSupportFactorization
+    (hOLF : ∀ i, ObsLocalFeasibilityFull O i) :
+    RunSupportFactorization O := by
+  intro n ss π₀ π h₀
+  constructor
+  · -- Forward: π reaches ⟹ all single-player updates reach
+    intro hπ i
+    -- Use OLF with witness π (reaches) and π₀ (reaches), same trace
+    exact (hOLF i n n π π₀ ss ss rfl hπ h₀ (π i)).mp
+      (by rwa [Function.update_eq_self])
+  · -- Backward: all single-player updates reach ⟹ π reaches
+    intro hall
+    -- Chain updates: multiUpdate π₀ π univ = π
+    have := multiUpdate_reach_of_obsLocal hOLF h₀ hall Finset.univ
+    rwa [multiUpdate_univ] at this
+
+end ObsLocalKuhn
 
 section CoreKuhnSemantic
 
@@ -695,6 +866,163 @@ theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
     unfold ObsModelCore.stepDist
     rw [haction, mediator_step_eq_condStep]
   rw [mixedToMediator_eq_pmfPi_factor hMass hFactor μ n ss hw_ne (hν_def ▸ hν_ne)]
+  simp only [ObsModelCore.jointActionDist]
+  congr 1
+  funext i
+  exact β_eq i n ss π_w hw_ne
+
+/-- Variant of `mixedToMediator_eq_pmfPi_factor` using run-level support
+factorization instead of step-level. -/
+theorem mixedToMediator_eq_pmfPi_factor_of_run
+    (hMass : StepMassInvariant O)
+    (hRun : RunSupportFactorization O)
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (n : Nat) (ss : List σ) {π₀ : ObsModelCore.PureProfile O}
+    (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0)
+    (hν₀ : (pmfPi μ) π₀ ≠ 0) :
+    O.mixedToMediator (pmfPi μ) n ss = pmfPi (fun i =>
+      Math.ProbabilityMassFunction.pushforward
+        (reweightPMF (μ i)
+          (fun πᵢ => pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss))
+        (fun πᵢ => πᵢ (O.projectStates i ss))) := by
+  set ν := pmfPi μ with hν_def
+  set w := fun π => pureRun (O.pureStep) O.init n π ss
+  set wᵢ := fun i (πᵢ : O.LocalStrategy i) =>
+    pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss
+  suffices hprod : reweightPMF ν w = pmfPi (fun i => reweightPMF (μ i) (wᵢ i)) by
+    unfold ObsModelCore.mixedToMediator
+    rw [hprod]
+    simp only [ObsModelCore.jointActionDist, ObsModelCore.pureToBehavioral]
+    conv_lhs => arg 2; ext π; rw [pmfPi_pure]
+    exact pmfPi_push_coordwise _ (fun i (πᵢ : O.LocalStrategy i) =>
+      πᵢ (O.projectStates i ss))
+  have hμ_ne : ∀ i, μ i (π₀ i) ≠ 0 := by
+    intro i hi; apply hν₀; rw [hν_def, pmfPi_apply]
+    exact Finset.prod_eq_zero (Finset.mem_univ i) hi
+  have hwi_ne : ∀ i, wᵢ i (π₀ i) ≠ 0 := by
+    intro i
+    exact ((hRun n π₀ π₀ h₀).mp h₀) i
+  have hCwi0 : ∀ i, ∑ a, μ i a * wᵢ i a ≠ 0 := fun i => by
+    apply ne_of_gt
+    exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero (hμ_ne i) (hwi_ne i)))
+      (Finset.single_le_sum (f := fun a => μ i a * wᵢ i a)
+        (fun _ _ => zero_le _) (Finset.mem_univ (π₀ i)))
+  have hCwit : ∀ i, ∑ a, μ i a * wᵢ i a ≠ ⊤ := fun i =>
+    sum_mul_pmf_ne_top (μ i) _ fun a => PMF.coe_le_one _ ss
+  have hCw0 : ∑ π, ν π * w π ≠ 0 := by
+    apply ne_of_gt
+    exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero hν₀ h₀))
+      (Finset.single_le_sum (f := fun π => ν π * w π)
+        (fun _ _ => zero_le _) (Finset.mem_univ π₀))
+  have hCwt : ∑ π, ν π * w π ≠ ⊤ := sum_mul_pmf_ne_top ν _ fun π => PMF.coe_le_one _ ss
+  have hsum_eq : ∑ π, ν π * ∏ i, wᵢ i (π i) = ∏ i, ∑ a, μ i a * wᵢ i a := by
+    rw [hν_def]
+    conv_lhs => arg 2; ext π; rw [pmfPi_apply, ← Finset.prod_mul_distrib]
+    exact (Fintype.prod_sum (fun i a => μ i a * wᵢ i a)).symm
+  have hCprod0 : ∑ π, ν π * ∏ i, wᵢ i (π i) ≠ 0 := by
+    rw [hsum_eq]
+    exact Finset.prod_ne_zero_iff.mpr (fun i _ => hCwi0 i)
+  have hCprodt : ∑ π, ν π * ∏ i, wᵢ i (π i) ≠ ⊤ := by
+    rw [hsum_eq]
+    exact ne_of_lt (ENNReal.prod_lt_top (fun i _ => (hCwit i).lt_top))
+  rw [reweightPMF_eq_of_cross_mul ν w (fun π => ∏ i, wᵢ i (π i))
+      hCw0 hCwt hCprod0 hCprodt (pureRun_cross_mul_product_of_run hMass hRun ν n h₀),
+    hν_def]
+  exact reweightPMF_pmfPi μ wᵢ hCwi0 hCwit
+
+/-- **Unified core M→B theorem**: requires only `StepMassInvariant` and
+`ObsLocalFeasibilityFull` for all players. This subsumes the three-condition
+`kuhn_mixed_to_behavioral_semantic` because `ObsLocalFeasibilityFull` implies
+both `RunSupportFactorization` (for the cross-multiplication identity) and
+`ActionPosteriorLocal` (for the behavioral profile well-definedness). -/
+theorem kuhn_mixed_to_behavioral_of_obsLocal [∀ i o, Nonempty (Act i o)]
+    (hMass : StepMassInvariant O)
+    (hOLF : ∀ i, ObsLocalFeasibilityFull O i)
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (k : Nat) :
+    ∃ β : ObsModelCore.BehavioralProfile O,
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
+  have hRun := obsLocalFeasibilityFull_toRunSupportFactorization hOLF
+  have hAPL : ∀ i, ActionPosteriorLocal O i := fun i =>
+    actionPosteriorLocal_of_obsLocalFeasibility hMass i
+      (fun n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ _ =>
+        hOLF i n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂)
+  -- Reuse the same proof structure as kuhn_mixed_to_behavioral_semantic
+  classical
+  set ν := pmfPi μ with hν_def
+  let factorAt (i : ι) (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O) :
+      PMF (Act i (O.currentObs i (O.projectStates i ss))) :=
+    Math.ProbabilityMassFunction.pushforward
+      (reweightPMF (μ i)
+        (fun πᵢ => pureRun (O.pureStep) O.init n
+          (Function.update π₀ i πᵢ) ss))
+      (fun πᵢ => πᵢ (O.projectStates i ss))
+  have factorAt_obs_local :
+      ∀ (i : ι) (n₁ n₂ : Nat) (ss₁ ss₂ : List σ)
+        (π₁ π₂ : ObsModelCore.PureProfile O),
+      O.projectStates i ss₁ = O.projectStates i ss₂ →
+      pureRun (O.pureStep) O.init n₁ π₁ ss₁ ≠ 0 →
+      pureRun (O.pureStep) O.init n₂ π₂ ss₂ ≠ 0 →
+      HEq (factorAt i n₁ ss₁ π₁) (factorAt i n₂ ss₂ π₂) := by
+    intro i n₁ n₂ ss₁ ss₂ π₁ π₂ hobs h₁ h₂
+    simpa [factorAt] using hAPL i n₁ n₂ π₁ π₂ ss₁ ss₂ hobs h₁ h₂ (μ i)
+  let β : ObsModelCore.BehavioralProfile O := fun i v_i =>
+    if h : ∃ (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
+        O.projectStates i ss = v_i ∧
+        pureRun (O.pureStep) O.init n π₀ ss ≠ 0
+    then h.choose_spec.choose_spec.choose_spec.1 ▸
+      factorAt i h.choose h.choose_spec.choose h.choose_spec.choose_spec.choose
+    else PMF.pure (Classical.arbitrary _)
+  have β_eq : ∀ (i : ι) (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
+      pureRun (O.pureStep) O.init n π₀ ss ≠ 0 →
+      β i (O.projectStates i ss) = factorAt i n ss π₀ := by
+    intro i n ss π₀ hreach
+    have hexist : ∃ (n' : Nat) (ss' : List σ) (π₀' : ObsModelCore.PureProfile O),
+        O.projectStates i ss' = O.projectStates i ss ∧
+        pureRun (O.pureStep) O.init n' π₀' ss' ≠ 0 := ⟨n, ss, π₀, rfl, hreach⟩
+    change (if h : _ then _ else _) = _
+    rw [dif_pos hexist]
+    have hps := hexist.choose_spec.choose_spec.choose_spec.1
+    have hreach' := hexist.choose_spec.choose_spec.choose_spec.2
+    exact eq_of_heq ((fwd_subst_heq (P := fun v => PMF (Act i (O.currentObs i v)))
+      hps (factorAt i _ _ _)).symm.trans
+      (factorAt_obs_local i _ n _ ss _ π₀ hps hreach' hreach))
+  refine ⟨β, ?_⟩
+  suffices hfn : ∀ (n : Nat) (ss : List σ),
+      (seqRun (condStep ν (O.pureStep) O.init) O.init n) ss ≠ 0 →
+      O.stepDist β ss = condStep ν (O.pureStep) O.init n ss by
+    have hrun : ∀ m, O.runDist m β = seqRun (condStep ν (O.pureStep) O.init) O.init m := by
+      intro m
+      induction m with
+      | zero => simp [ObsModelCore.runDist, seqRun]
+      | succ n ih =>
+          change (O.runDist n β).bind
+              (fun ss => Math.ProbabilityMassFunction.pushforward
+                (O.stepDist β ss) (fun t => ss ++ [t])) =
+            (seqRun (condStep ν (O.pureStep) O.init) O.init n).bind
+              (fun ss => Math.ProbabilityMassFunction.pushforward
+                (condStep ν (O.pureStep) O.init n ss) (fun t => ss ++ [t]))
+          rw [ih]
+          ext y
+          simp only [PMF.bind_apply]
+          apply tsum_congr
+          intro ss
+          by_cases hss : (seqRun (condStep ν (O.pureStep) O.init) O.init n) ss = 0
+          · simp [hss]
+          · rw [hfn n ss hss]
+    change O.runDist k β = ν.bind (pureRun (O.pureStep) O.init k)
+    rw [hrun, condRun_eq_mixedRun]
+  intro n ss hss
+  have hreach : ∑ π, ν π * pureRun (O.pureStep) O.init n π ss ≠ 0 := by
+    rwa [condRun_eq_mixedRun, PMF.bind_apply, tsum_fintype] at hss
+  obtain ⟨π_w, _, hπw⟩ := Finset.exists_ne_zero_of_sum_ne_zero hreach
+  have hw_ne : pureRun (O.pureStep) O.init n π_w ss ≠ 0 := right_ne_zero_of_mul hπw
+  have hν_ne : ν π_w ≠ 0 := left_ne_zero_of_mul hπw
+  suffices haction : O.jointActionDist β ss = O.mixedToMediator ν n ss by
+    change O.stepDist β ss = condStep ν (O.pureStep) O.init n ss
+    unfold ObsModelCore.stepDist
+    rw [haction, mediator_step_eq_condStep]
+  rw [mixedToMediator_eq_pmfPi_factor_of_run hMass hRun μ n ss hw_ne (hν_def ▸ hν_ne)]
   simp only [ObsModelCore.jointActionDist]
   congr 1
   funext i
