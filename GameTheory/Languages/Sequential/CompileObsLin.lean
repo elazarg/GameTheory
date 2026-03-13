@@ -552,6 +552,21 @@ theorem evalLinearized_eq_eval (G : Protocol n S V A Sig)
     evalLinearized G σ G.rounds G.init = G.eval σ :=
   evalLinearized_eq_evalRounds G σ G.rounds G.init
 
+/-- **Adequacy (pure profiles)**: running the linearized compiled model with
+`liftPureProfile σ` for enough steps, and extracting the terminal state, gives
+the same distribution as `Protocol.eval G σ`.
+
+The key argument is that the linearized model's step function resolves one player
+at a time, and for pure memoryless strategies the order of resolution doesn't
+matter — the final accumulated action vector is the same. So the linearized
+execution matches `evalLinearized`, which equals `Protocol.eval`. -/
+theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype (Fin n)] [Fintype A]
+    (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 1)) :
+    ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
+        (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) =
+      G.eval σ := by
+  sorry
+
 end Adequacy
 
 end GameTheory.Sequential
