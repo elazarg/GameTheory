@@ -157,6 +157,7 @@ theorem PureStrategy.toBehavioral_apply (s : PureStrategy V A) (v : V) :
 theorem PureProfile.toBehavioral_apply (σ : PureProfile n V A) (i : Fin n) :
     σ.toBehavioral i = (σ i).toBehavioral := rfl
 
+
 -- ============================================================================
 -- Bridge to GameForm / KernelGame
 -- ============================================================================

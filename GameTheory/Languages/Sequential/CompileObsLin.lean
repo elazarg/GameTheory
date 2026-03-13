@@ -407,4 +407,72 @@ theorem stepSupportFactorization_compiledLin (G : Protocol n S V A Sig) :
 
 end Properties
 
+-- ============================================================================
+-- Profile lift / descend
+-- ============================================================================
+
+section Profiles
+
+variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)]
+
+/-- Lift a protocol-level pure strategy to a compiled local strategy.
+At `some v` (active), uses the strategy's action; at `none` (inactive), uses
+the unique `PUnit` action. -/
+def liftLocalStrategy (σ : PureStrategy V A) :
+    (compiledLinObs G).LocalStrategy (i := i) :=
+  fun obs =>
+    match obs with
+    | some v => (σ v : LinAct V A (some v))
+    | none => (PUnit.unit : LinAct V A none)
+
+/-- Lift a protocol-level pure profile to a compiled pure profile. -/
+def liftPureProfile (σ : PureProfile n V A) :
+    (compiledLinObs G).PureProfile :=
+  fun i => liftLocalStrategy (i := i) (σ i)
+
+/-- Descend a compiled local strategy to a protocol-level pure strategy.
+Extracts the action at `some v` observations. -/
+def descendLocalStrategy (π : (compiledLinObs G).LocalStrategy (i := i)) :
+    PureStrategy V A :=
+  fun v => π (some v)
+
+/-- Descend a compiled pure profile to a protocol-level pure profile. -/
+def descendPureProfile (π : (compiledLinObs G).PureProfile) :
+    PureProfile n V A :=
+  fun i => descendLocalStrategy (π i)
+
+/-- Lift then descend is the identity on pure strategies. -/
+@[simp]
+theorem descendLocalStrategy_liftLocalStrategy (σ : PureStrategy V A) :
+    descendLocalStrategy (G := G) (i := i) (liftLocalStrategy σ) = σ := by
+  ext v; simp [descendLocalStrategy, liftLocalStrategy]
+
+/-- Descend then lift agrees with the original on all observations. -/
+@[simp]
+theorem liftLocalStrategy_descendLocalStrategy
+    (π : (compiledLinObs G).LocalStrategy (i := i)) :
+    liftLocalStrategy (G := G) (descendLocalStrategy π) = π := by
+  funext obs
+  match obs with
+  | some v => simp [liftLocalStrategy, descendLocalStrategy]
+  | none => exact PUnit.ext _ _
+
+/-- Lift then descend is the identity on pure profiles. -/
+@[simp]
+theorem descendPureProfile_liftPureProfile (σ : PureProfile n V A) :
+    descendPureProfile (G := G) (liftPureProfile σ) = σ := by
+  ext i v; simp [descendPureProfile, liftPureProfile, descendLocalStrategy, liftLocalStrategy]
+
+/-- Descend then lift is the identity on compiled pure profiles. -/
+@[simp]
+theorem liftPureProfile_descendPureProfile (π : (compiledLinObs G).PureProfile) :
+    liftPureProfile (G := G) (descendPureProfile π) = π := by
+  funext i obs
+  simp only [liftPureProfile, descendPureProfile, liftLocalStrategy, descendLocalStrategy]
+  match obs with
+  | some _ => rfl
+  | none => exact PUnit.ext _ _
+
+end Profiles
+
 end GameTheory.Sequential
