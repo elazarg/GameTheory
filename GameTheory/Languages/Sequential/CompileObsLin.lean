@@ -46,11 +46,19 @@ decomposes the simultaneous action phase into per-player sub-phases.
 - `signal k s` — waiting for signal at round `k`, state `s`
 - `playerTurn k s sig p accActs` — player `p` is choosing; players `< p` have
   already committed their actions in `accActs`
-- `terminal s` — game over -/
+- `applyTransition k s sig accActs` — all players have acted; apply transition
+- `terminal s` — game over
+
+The `applyTransition` phase separates the transition application from the last
+player's action storage. This ensures every player's step is injective in their
+action (the action is stored as a field of the successor state), which is needed
+for `ObsLocalFeasibility` and hence Kuhn's M→B theorem. -/
 inductive LinConfig (G : Protocol n S V A Sig) where
   | signal (round : Nat) (state : S)
   | playerTurn (round : Nat) (state : S) (sig : Fin n → Sig)
       (currentPlayer : Fin n) (accActs : Fin n → Option A)
+  | applyTransition (round : Nat) (state : S) (sig : Fin n → Sig)
+      (accActs : Fin n → Option A)
   | terminal (state : S)
 
 /-- Initial configuration for the linearized model. -/
@@ -61,30 +69,37 @@ def linInitialConfig (G : Protocol n S V A Sig) : LinConfig G :=
 -- Observations and actions
 -- ============================================================================
 
+/-- Round-indexed observation type. Includes the round number to distinguish
+the same view at different rounds, which is essential for `ObsLocalFeasibility`
+(ensures OLF only compares traces at the same round, where FullRecall applies). -/
+abbrev RoundView (G : Protocol n S V A Sig) := Fin G.rounds.length × V
+
 /-- Player-local observation in the linearized model.
-Only the currently acting player has a nontrivial observation. -/
+Only the currently acting player has a nontrivial observation, which includes
+the round number. -/
 def linObserve (G : Protocol n S V A Sig) [DecidableEq (Fin n)]
-    (i : Fin n) : LinConfig G → Option V
+    (i : Fin n) : LinConfig G → Option (RoundView G)
   | .signal _ _ => none
   | .terminal _ => none
+  | .applyTransition _ _ _ _ => none
   | .playerTurn k s sig p _ =>
       if i = p then
-        match G.rounds[k]? with
-        | some r => some (r.view i s (sig i))
-        | none => none
+        if hk : k < G.rounds.length then
+          some (⟨k, hk⟩, G.rounds[k].view i s (sig i))
+        else none
       else none
 
 /-- Observation-dependent action type: nontrivial (`Option A`) when the player
-is active (sees `some v`), trivial (`PUnit`) when inactive (sees `none`). -/
-def LinAct (V A : Type) : Option V → Type
+is active (sees `some (k, v)`), trivial (`PUnit`) when inactive (sees `none`). -/
+def LinAct (RV A : Type) : Option RV → Type
   | some _ => Option A
   | none => PUnit
 
-instance linActFintype [Fintype A] : (o : Option V) → Fintype (LinAct V A o)
+instance linActFintype {O : Type} [Fintype A] : (o : Option O) → Fintype (LinAct O A o)
   | some _ => inferInstanceAs (Fintype (Option A))
   | none => inferInstanceAs (Fintype PUnit)
 
-instance linActNonempty [Nonempty A] : (o : Option V) → Nonempty (LinAct V A o)
+instance linActNonempty {O : Type} [Nonempty A] : (o : Option O) → Nonempty (LinAct O A o)
   | some _ => inferInstanceAs (Nonempty (Option A))
   | none => ⟨PUnit.unit⟩
 
@@ -93,31 +108,29 @@ instance linActNonempty [Nonempty A] : (o : Option V) → Nonempty (LinAct V A o
 -- ============================================================================
 
 /-- Advance to the next sub-phase after player `p` acts. If `p` is the last
-player, apply the transition and advance to the next round (or terminal). -/
+player, move to `applyTransition` (which fires the transition in a separate
+action-free step). -/
 private noncomputable def advancePlayerTurn (G : Protocol n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
-    (r : Round n S V A Sig) : PMF (LinConfig G) :=
+    (_r : Round n S V A Sig) : PMF (LinConfig G) :=
   if h : p.val + 1 < n then
     PMF.pure (.playerTurn k s sig ⟨p.val + 1, h⟩ accActs)
   else
-    let next := r.transition s accActs
-    match G.rounds[k + 1]? with
-    | some _ => PMF.pure (.signal (k + 1) next)
-    | none => PMF.pure (.terminal next)
+    PMF.pure (.applyTransition k s sig accActs)
 
 /-- Extract the effective `Option A` action for the acting player from a
 dependent action tuple at a `playerTurn` configuration. The `cast` resolves
-the dependent type `LinAct V A (linObserve G p cfg)` to `Option A`. -/
+the dependent type to `Option A`. -/
 private def extractPlayerAction [DecidableEq (Fin n)] (G : Protocol n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
-    (acts : (i : Fin n) → LinAct V A (linObserve G i (.playerTurn k s sig p accActs)))
+    (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs)))
     : Option A :=
-  match hr : G.rounds[k]? with
-  | some r =>
+  if hk : k < G.rounds.length then
       have hobs : linObserve G p (.playerTurn k s sig p accActs) =
-          some (r.view p s (sig p)) := by simp [linObserve, hr]
-      cast (congrArg (LinAct V A) hobs) (acts p)
-  | none =>
+          some (⟨k, hk⟩, G.rounds[k].view p s (sig p)) := by
+        simp [linObserve, hk]
+      cast (congrArg (LinAct (RoundView G) A) hobs) (acts p)
+  else
       -- linObserve G p ... = none in this case, so acts p : PUnit → use none
       none
 
@@ -125,11 +138,12 @@ private def extractPlayerAction [DecidableEq (Fin n)] (G : Protocol n S V A Sig)
 
 - **Signal phase**: sample signal, start player 0's turn with default actions.
 - **Player turn**: read the acting player's action, store it, advance to next
-  player or apply transition.
+  player or to `applyTransition`.
+- **Apply transition**: fire the round's transition, advance to next round or terminal.
 - **Terminal**: absorbing. -/
 noncomputable def linConfigStepPMF [DecidableEq (Fin n)] (G : Protocol n S V A Sig)
     (cfg : LinConfig G)
-    (acts : (i : Fin n) → LinAct V A (linObserve G i cfg)) :
+    (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg)) :
     PMF (LinConfig G) :=
   match cfg with
   | .signal k s =>
@@ -139,12 +153,9 @@ noncomputable def linConfigStepPMF [DecidableEq (Fin n)] (G : Protocol n S V A S
             (r.signal s).map fun sig =>
               .playerTurn k s sig ⟨0, hn⟩ (fun _ => none)
           else
-            -- n = 0: no players, apply transition with empty action vector
-            (r.signal s).bind fun _sig =>
-              let next := r.transition s (fun i => absurd i.pos hn)
-              match G.rounds[k + 1]? with
-              | some _ => PMF.pure (.signal (k + 1) next)
-              | none => PMF.pure (.terminal next)
+            -- n = 0: no players, go directly to applyTransition
+            (r.signal s).map fun sig =>
+              .applyTransition k s sig (fun _ => none)
       | none => PMF.pure (.signal k s)
   | .playerTurn k s sig p accActs =>
       match G.rounds[k]? with
@@ -153,6 +164,14 @@ noncomputable def linConfigStepPMF [DecidableEq (Fin n)] (G : Protocol n S V A S
               (extractPlayerAction G k s sig p accActs acts)
           advancePlayerTurn G k s sig p accActs' r
       | none => PMF.pure (.playerTurn k s sig p accActs)
+  | .applyTransition k s _sig accActs =>
+      match G.rounds[k]? with
+      | some r =>
+          let next := r.transition s accActs
+          match G.rounds[k + 1]? with
+          | some _ => PMF.pure (.signal (k + 1) next)
+          | none => PMF.pure (.terminal next)
+      | none => PMF.pure (.terminal s)
   | .terminal s => PMF.pure (.terminal s)
 
 -- ============================================================================
@@ -164,16 +183,16 @@ action sub-phases. At each step, at most one player has a nontrivial action.
 
 - **States**: `LinConfig G` (extended configurations with per-player turns)
 - **Players**: `Fin n`
-- **Observations**: `Option V` (nontrivial only for the acting player)
-- **Actions**: `LinAct V A` (nontrivial only when active)
+- **Observations**: `Option (RoundView G)` (nontrivial only for the acting player)
+- **Actions**: `LinAct (RoundView G) A` (nontrivial only when active)
 - **InfoState**: identity — observation = info state -/
 noncomputable def compileObsCoreModelLin [DecidableEq (Fin n)]
     (G : Protocol n S V A Sig) :
     ObsModelCore (Fin n) (LinConfig G)
-      (fun _ => Option V)
-      (fun _ => LinAct V A) where
+      (fun _ => Option (RoundView G))
+      (fun _ => LinAct (RoundView G) A) where
   infoState := fun _ => {
-    Carrier := Option V
+    Carrier := Option (RoundView G)
     start := id
     push := fun _ o => o
     current := id
@@ -228,9 +247,30 @@ private theorem advancePlayerTurn_mass_invariant (G : Protocol n S V A Sig)
   unfold advancePlayerTurn at h₁ h₂ ⊢
   split
   · simp_all [PMF.pure_apply]
-  · split
-    · simp_all [PMF.pure_apply]
-    · simp_all [PMF.pure_apply]
+  · simp_all [PMF.pure_apply]
+
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+/-- If two `accActs` both give nonzero probability at the same target through
+`advancePlayerTurn`, then the `accActs` must be equal (since the step is `PMF.pure`). -/
+private theorem advancePlayerTurn_accActs_eq (G : Protocol n S V A Sig)
+    (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n)
+    (accActs₁ accActs₂ : Fin n → Option A) (r : Round n S V A Sig)
+    (t : LinConfig G)
+    (h₁ : (advancePlayerTurn G k s sig p accActs₁ r) t ≠ 0)
+    (h₂ : (advancePlayerTurn G k s sig p accActs₂ r) t ≠ 0) :
+    accActs₁ = accActs₂ := by
+  unfold advancePlayerTurn at h₁ h₂
+  split at h₁
+  · rename_i h_pos
+    simp only [dif_pos h_pos] at h₂
+    rw [pure_ne_zero_iff'] at h₁ h₂
+    have := h₁.symm.trans h₂
+    exact (LinConfig.playerTurn.injEq .. ▸ this).2.2.2.2
+  · rename_i h_neg
+    simp only [dif_neg h_neg] at h₂
+    rw [pure_ne_zero_iff'] at h₁ h₂
+    have := h₁.symm.trans h₂
+    exact (LinConfig.applyTransition.injEq .. ▸ this).2.2.2
 
 omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 /-- `linConfigStepPMF` is mass-invariant: if two action vectors both assign
@@ -242,7 +282,7 @@ nonzero probability to the same successor, the step probabilities are equal.
 private theorem linConfigStepPMF_mass_invariant (G : Protocol n S V A Sig)
     [DecidableEq (Fin n)]
     (cfg : LinConfig G)
-    (acts₁ acts₂ : (i : Fin n) → LinAct V A (linObserve G i cfg))
+    (acts₁ acts₂ : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
     (t : LinConfig G)
     (h₁ : (linConfigStepPMF G cfg acts₁) t ≠ 0)
     (h₂ : (linConfigStepPMF G cfg acts₂) t ≠ 0) :
@@ -255,6 +295,7 @@ private theorem linConfigStepPMF_mass_invariant (G : Protocol n S V A Sig)
     match G.rounds[k]? with
     | some r => intro h₁ h₂; exact advancePlayerTurn_mass_invariant G k s sig p _ _ r t h₁ h₂
     | none => intro _ _; rfl
+  | .applyTransition _ _ _ _ => simp only [linConfigStepPMF] at h₁ h₂ ⊢
   | .terminal _ => simp only [linConfigStepPMF] at h₁ h₂ ⊢
 
 omit [Nonempty A] in
@@ -274,7 +315,8 @@ omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem extractPlayerAction_congr [DecidableEq (Fin n)]
     (G : Protocol n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
-    (acts₁ acts₂ : (i : Fin n) → LinAct V A (linObserve G i (.playerTurn k s sig p accActs)))
+    (acts₁ acts₂ : (i : Fin n) →
+      LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs)))
     (hp : acts₁ p = acts₂ p) :
     extractPlayerAction G k s sig p accActs acts₁ =
     extractPlayerAction G k s sig p accActs acts₂ := by
@@ -287,7 +329,8 @@ omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem linConfigStepPMF_playerTurn_congr [DecidableEq (Fin n)]
     (G : Protocol n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
-    (acts₁ acts₂ : (i : Fin n) → LinAct V A (linObserve G i (.playerTurn k s sig p accActs)))
+    (acts₁ acts₂ : (i : Fin n) →
+      LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs)))
     (hp : acts₁ p = acts₂ p) :
     linConfigStepPMF G (.playerTurn k s sig p accActs) acts₁ =
     linConfigStepPMF G (.playerTurn k s sig p accActs) acts₂ := by
@@ -304,11 +347,13 @@ private theorem linAct_eq_punit_of_ne [DecidableEq (Fin n)]
     {G : Protocol n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n} {accActs : Fin n → Option A}
     {i : Fin n} (hi : i ≠ p)
-    (a₁ a₂ : LinAct V A (linObserve G i (.playerTurn k s sig p accActs))) :
+    (a₁ a₂ : LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs))) :
     a₁ = a₂ := by
   have hobs : linObserve G i (.playerTurn k s sig p accActs) = none := by
     simp [linObserve, hi]
-  have hsub : Subsingleton (LinAct V A (linObserve G i (.playerTurn k s sig p accActs))) := by
+  have hsub : Subsingleton
+      (LinAct (RoundView G) A
+        (linObserve G i (.playerTurn k s sig p accActs))) := by
     rw [hobs]; exact ⟨fun a b => PUnit.ext a b⟩
   exact hsub.elim a₁ a₂
 
@@ -367,6 +412,11 @@ theorem stepSupportFactorization_compiledLin (G : Protocol n S V A Sig) :
             (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
         exact pureStep_congr_compiledLin G _ _ ss _ hlast
           (fun j => PUnit.ext _ _)
+    | applyTransition k s sig accActs =>
+        suffices heq : (compiledLinObs G).pureStep (Function.update π₀ i (π i)) ss =
+            (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
+        exact pureStep_congr_compiledLin G _ _ ss _ hlast
+          (fun j => PUnit.ext _ _)
     | playerTurn k s sig p accActs =>
         by_cases hip : i = p
         · -- i = p: update at acting player, step matches π's step
@@ -397,6 +447,11 @@ theorem stepSupportFactorization_compiledLin (G : Protocol n S V A Sig) :
             (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
         exact pureStep_congr_compiledLin G _ _ ss _ hlast
           (fun j => PUnit.ext _ _)
+    | applyTransition k s sig accActs =>
+        suffices heq : (compiledLinObs G).pureStep π ss =
+            (compiledLinObs G).pureStep π₀ ss from heq ▸ h₀
+        exact pureStep_congr_compiledLin G _ _ ss _ hlast
+          (fun j => PUnit.ext _ _)
     | playerTurn k s sig p accActs =>
         have hp := hall p
         suffices heq : (compiledLinObs G).pureStep π ss =
@@ -405,6 +460,153 @@ theorem stepSupportFactorization_compiledLin (G : Protocol n S V A Sig) :
           by_cases hjp : j = p
           · subst hjp; exact (congrFun (Function.update_self j (π j) π₀) _).symm
           · exact (linAct_eq_punit_of_ne (accActs := accActs) hjp _ _).symm)
+
+-- ============================================================================
+-- OLF (Obs-Local Feasibility) helpers
+-- ============================================================================
+
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+/-- Index into `l.concat a` at position `j < l.length` equals `l[j]`. -/
+private theorem getElem_concat_left {α : Type*} (l : List α) (a : α)
+    (j : Nat) (hj : j < l.length) {h : j < (l.concat a).length} :
+    (l.concat a)[j] = l[j] := by
+  simp [List.getElem_append_left hj]
+
+omit [Nonempty A] in
+open Math.ParameterizedChain in
+/-- Under the linearized model, if `πᵢ` agrees with `(π i)` at every intermediate
+observation along the trace, then `pureRun` under the player-i update equals the
+original `pureRun`. -/
+theorem pureRun_update_eq_of_obs_agree (G : Protocol n S V A Sig)
+    (π : (compiledLinObs G).PureProfile) (i : Fin n)
+    (πᵢ : (compiledLinObs G).LocalStrategy i)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun ((compiledLinObs G).pureStep) (compiledLinObs G).init k π ss ≠ 0)
+    (h : ∀ j (hj : j + 1 < ss.length),
+        πᵢ (linObserve G i ss[j]) = (π i) (linObserve G i ss[j])) :
+    pureRun ((compiledLinObs G).pureStep) (compiledLinObs G).init k
+      (Function.update π i πᵢ) ss =
+    pureRun ((compiledLinObs G).pureStep) (compiledLinObs G).init k π ss := by
+  induction k generalizing ss with
+  | zero => rfl
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss with rfl | ⟨pre, t, rfl⟩
+    · exact absurd (pureRun_succ_nil _ _ m _) hss
+    · -- Convert concat→append for pureRun only
+      have hconcat : pre.concat t = pre ++ [t] := List.concat_eq_append
+      rw [hconcat] at hss ⊢
+      simp only [pureRun_succ_append] at hss ⊢
+      have hpre : pureRun _ _ m π pre ≠ 0 := left_ne_zero_of_mul hss
+      have hlen : pre.length = m + 1 := pureRun_length _ _ m _ pre hpre
+      -- Helper: extract from h at index j < pre.length (converting concat indexing)
+      have h' : ∀ j (hj : j < pre.length),
+          πᵢ (linObserve G i pre[j]) = (π i) (linObserve G i pre[j]) := by
+        intro j hj
+        have hjlt : j + 1 < (pre.concat t).length := by simp; omega
+        have hobs := h j hjlt
+        rw [getElem_concat_left pre t j hj] at hobs
+        exact hobs
+      -- IH for prefix
+      have hpre_eq : pureRun _ _ m (Function.update π i πᵢ) pre =
+          pureRun _ _ m π pre := ih pre hpre (fun j hj => h' j (by omega))
+      -- Step agreement at lastState pre
+      have hstep_eq : (compiledLinObs G).pureStep (Function.update π i πᵢ) pre =
+          (compiledLinObs G).pureStep π pre :=
+        pureStep_congr_compiledLin G _ _ pre _ rfl (fun j => by
+          by_cases hji : j = i
+          · subst hji
+            have hobs := h' (pre.length - 1) (by omega)
+            have hlast : (compiledLinObs G).lastState pre = pre[pre.length - 1] := by
+              simp [ObsModelCore.lastState, List.getLast?_eq_getElem?,
+                List.getElem?_eq_getElem (by omega : pre.length - 1 < pre.length),
+                Option.getD_some]
+            rw [Function.update_self, hlast]
+            exact hobs
+          · simp [Function.update, dif_neg hji])
+      rw [hpre_eq, hstep_eq]
+
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+private theorem lastState_take_eq_getElem
+    [DecidableEq (Fin n)] {G : Protocol n S V A Sig}
+    (ss : List (LinConfig G)) (j : Nat) (hj : j + 1 < ss.length) :
+    (compiledLinObs G).lastState (ss.take (j + 1)) = ss[j] := by
+  simp [ObsModelCore.lastState, List.getLast?_eq_getElem?,
+    List.length_take_of_le (by omega : j + 1 ≤ ss.length),
+    show j + 1 - 1 = j from by omega, Option.getD_some]
+
+open Math.ParameterizedChain in
+omit [Nonempty A] in
+/-- Converse: if `pureRun` is nonzero under both the original profile and a
+player-i update, then `πᵢ` must agree with `(π i)` at all observations along
+the trace. At non-i steps this is trivial (PUnit). At i-steps, the step is
+deterministic and injective in the action, so both hitting the same target forces
+the actions to agree. -/
+theorem pureRun_update_nonzero_agree (G : Protocol n S V A Sig)
+    (π : (compiledLinObs G).PureProfile) (i : Fin n)
+    (πᵢ : (compiledLinObs G).LocalStrategy i)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun ((compiledLinObs G).pureStep) (compiledLinObs G).init k π ss ≠ 0)
+    (hupd : pureRun ((compiledLinObs G).pureStep) (compiledLinObs G).init k
+      (Function.update π i πᵢ) ss ≠ 0)
+    (j : Nat) (hj : j + 1 < ss.length) :
+    πᵢ (linObserve G i ss[j]) = (π i) (linObserve G i ss[j]) := by
+  -- Extract per-step nonzero for both profiles
+  have hstep_π := pureRun_step_nonzero _ _ k π ss hss j hj
+  have hstep_upd := pureRun_step_nonzero _ _ k (Function.update π i πᵢ) ss hupd j hj
+  -- Rewrite pureStep to linConfigStepPMF form
+  rw [pureStep_compiledLin_eq] at hstep_π hstep_upd
+  -- cfg = lastState(ss.take(j+1)) = ss[j]
+  have hcfg_eq : (compiledLinObs G).lastState (ss.take (j + 1)) = ss[j] :=
+    lastState_take_eq_getElem ss j hj
+  -- Suffices to show the claim at cfg = ss[j]
+  suffices ∀ (cfg : LinConfig G),
+      (compiledLinObs G).lastState (ss.take (j + 1)) = cfg →
+      (linConfigStepPMF G cfg
+        (fun p => (Function.update π i πᵢ) p (linObserve G p cfg))) ss[j + 1] ≠ 0 →
+      (linConfigStepPMF G cfg
+        (fun p => π p (linObserve G p cfg))) ss[j + 1] ≠ 0 →
+      πᵢ (linObserve G i cfg) = (π i) (linObserve G i cfg) by
+    rw [← hcfg_eq]; exact this _ rfl (hcfg_eq ▸ hstep_upd) (hcfg_eq ▸ hstep_π)
+  intro cfg _ h_upd h_orig
+  match cfg with
+  | .signal k' s =>
+    have : linObserve G i (.signal k' s) = none := by simp [linObserve]
+    rw [this]; exact PUnit.ext _ _
+  | .terminal s =>
+    have : linObserve G i (.terminal s) = none := by simp [linObserve]
+    rw [this]; exact PUnit.ext _ _
+  | .applyTransition k' s sig' aa =>
+    have : linObserve G i (.applyTransition k' s sig' aa) = none := by simp [linObserve]
+    rw [this]; exact PUnit.ext _ _
+  | .playerTurn k' s sig p accActs =>
+    by_cases hip : i = p
+    · subst hip
+      -- Active player = i: step is deterministic (PMF.pure via advancePlayerTurn).
+      -- Both nonzero at same target → same accActs' → same extractPlayerAction → acts agree.
+      by_cases hk : k' < G.rounds.length
+      · -- Valid round: unfold linConfigStepPMF to advancePlayerTurn
+        have hr : G.rounds[k']? = some G.rounds[k'] := List.getElem?_eq_getElem hk
+        simp only [linConfigStepPMF, hr] at h_upd h_orig
+        -- advancePlayerTurn nonzero at same target → updated accActs agree
+        have haa := advancePlayerTurn_accActs_eq G k' s sig i _ _
+          G.rounds[k'] ss[j + 1] h_upd h_orig
+        -- Function.update accActs i epa₁ = Function.update accActs i epa₂ → epa₁ = epa₂
+        have hepa := congrFun haa i
+        simp only [Function.update_self] at hepa
+        -- hepa : extractPlayerAction ... acts₁ = extractPlayerAction ... acts₂
+        -- extractPlayerAction with hk is cast ... (acts i), cast injective via HEq
+        unfold extractPlayerAction at hepa
+        simp only [hk, dite_true, Function.update_self] at hepa
+        -- hepa : cast ⋯ (πᵢ obs) = cast ⋯ ((π i) obs)
+        exact eq_of_heq ((cast_heq _ _).symm.trans ((heq_of_eq hepa).trans (cast_heq _ _)))
+      · -- Invalid round: obs = none, PUnit
+        have : linObserve G i (.playerTurn k' s sig i accActs) = none := by
+          simp [linObserve, hk]
+        rw [this]; exact PUnit.ext _ _
+    · -- Non-active player: observation is none, PUnit
+      have : linObserve G i (.playerTurn k' s sig p accActs) = none :=
+        linObserve_ne_acting hip
+      rw [this]; exact PUnit.ext _ _
 
 end Properties
 
@@ -417,14 +619,14 @@ section Profiles
 variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)]
 
 /-- Lift a protocol-level pure strategy to a compiled local strategy.
-At `some v` (active), uses the strategy's action; at `none` (inactive), uses
-the unique `PUnit` action. -/
+At `some (k, v)` (active), uses the strategy's action on `v`; at `none`
+(inactive), uses the unique `PUnit` action. -/
 def liftLocalStrategy (σ : PureStrategy V A) :
     (compiledLinObs G).LocalStrategy (i := i) :=
   fun obs =>
     match obs with
-    | some v => (σ v : LinAct V A (some v))
-    | none => (PUnit.unit : LinAct V A none)
+    | some (_, v) => (σ v : LinAct (RoundView G) A (some (_, v)))
+    | none => (PUnit.unit : LinAct (RoundView G) A none)
 
 /-- Lift a protocol-level pure profile to a compiled pure profile. -/
 def liftPureProfile (σ : PureProfile n V A) :
@@ -432,47 +634,32 @@ def liftPureProfile (σ : PureProfile n V A) :
   fun i => liftLocalStrategy (i := i) (σ i)
 
 /-- Descend a compiled local strategy to a protocol-level pure strategy.
-Extracts the action at `some v` observations. -/
-def descendLocalStrategy (π : (compiledLinObs G).LocalStrategy (i := i)) :
+Extracts the action at `some (k₀, v)` observations where `k₀` is a chosen
+round index. Requires `G.rounds` to be nonempty. -/
+noncomputable def descendLocalStrategy [Nonempty (Fin G.rounds.length)]
+    (π : (compiledLinObs G).LocalStrategy (i := i)) :
     PureStrategy V A :=
-  fun v => π (some v)
+  fun v => π (some (Classical.arbitrary _, v))
 
 /-- Descend a compiled pure profile to a protocol-level pure profile. -/
-def descendPureProfile (π : (compiledLinObs G).PureProfile) :
+noncomputable def descendPureProfile [Nonempty (Fin G.rounds.length)]
+    (π : (compiledLinObs G).PureProfile) :
     PureProfile n V A :=
   fun i => descendLocalStrategy (π i)
 
 /-- Lift then descend is the identity on pure strategies. -/
 @[simp]
-theorem descendLocalStrategy_liftLocalStrategy (σ : PureStrategy V A) :
+theorem descendLocalStrategy_liftLocalStrategy [Nonempty (Fin G.rounds.length)]
+    (σ : PureStrategy V A) :
     descendLocalStrategy (G := G) (i := i) (liftLocalStrategy σ) = σ := by
   ext v; simp [descendLocalStrategy, liftLocalStrategy]
 
-/-- Descend then lift agrees with the original on all observations. -/
-@[simp]
-theorem liftLocalStrategy_descendLocalStrategy
-    (π : (compiledLinObs G).LocalStrategy (i := i)) :
-    liftLocalStrategy (G := G) (descendLocalStrategy π) = π := by
-  funext obs
-  match obs with
-  | some v => simp [liftLocalStrategy, descendLocalStrategy]
-  | none => exact PUnit.ext _ _
-
 /-- Lift then descend is the identity on pure profiles. -/
 @[simp]
-theorem descendPureProfile_liftPureProfile (σ : PureProfile n V A) :
+theorem descendPureProfile_liftPureProfile [Nonempty (Fin G.rounds.length)]
+    (σ : PureProfile n V A) :
     descendPureProfile (G := G) (liftPureProfile σ) = σ := by
   ext i v; simp [descendPureProfile, liftPureProfile, descendLocalStrategy, liftLocalStrategy]
-
-/-- Descend then lift is the identity on compiled pure profiles. -/
-@[simp]
-theorem liftPureProfile_descendPureProfile (π : (compiledLinObs G).PureProfile) :
-    liftPureProfile (G := G) (descendPureProfile π) = π := by
-  funext i obs
-  simp only [liftPureProfile, descendPureProfile, liftLocalStrategy, descendLocalStrategy]
-  match obs with
-  | some _ => rfl
-  | none => exact PUnit.ext _ _
 
 end Profiles
 
@@ -490,6 +677,7 @@ by the configuration (evaluation not yet complete). -/
 def LinConfig.state : LinConfig G → S
   | .signal _ s => s
   | .playerTurn _ s _ _ _ => s
+  | .applyTransition _ s _ _ => s
   | .terminal s => s
 
 /-- Resolve players `pVal, pVal+1, ..., n-1` at round `k`, accumulating actions,
@@ -616,6 +804,12 @@ noncomputable def evalFromCfg (G : Protocol n S V A Sig)
       let next := r.transition s fullActs
       evalLinearized G σ (G.rounds.drop (k + 1)) next
     | none => PMF.pure s
+  | .applyTransition k s _sig accActs =>
+    match G.rounds[k]? with
+    | some r =>
+      let next := r.transition s accActs
+      evalLinearized G σ (G.rounds.drop (k + 1)) next
+    | none => PMF.pure s
 
 /-- `evalFromCfg` at the initial configuration equals `Protocol.eval`. -/
 theorem evalFromCfg_init (G : Protocol n S V A Sig)
@@ -644,20 +838,20 @@ private theorem extractPlayerAction_lift (σ : PureProfile n V A)
         (linObserve G i (.playerTurn k s sig p accActs))) =
     σ p (r.view p s (sig p)) := by
   unfold extractPlayerAction
+  have hk : k < G.rounds.length := by
+    by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
   split
-  case h_1 r' hr' =>
-    -- G.rounds[k]? = some r' — need r' = r
-    have : r' = r := by rw [hr'] at hr; exact Option.some.inj hr
-    subst this
+  case isTrue hk' =>
     have hobs : linObserve G p (.playerTurn k s sig p accActs) =
-        some (r'.view p s (sig p)) := by simp [linObserve, hr']
+        some (⟨k, hk'⟩, G.rounds[k].view p s (sig p)) := by simp [linObserve, hk']
+    have hr' : G.rounds[k] = r := by
+      have := List.getElem?_eq_getElem hk' ▸ hr; exact Option.some.inj this
     change cast _ _ = _
     rw [cast_eq_iff_heq]
     simp only [liftPureProfile, liftLocalStrategy]
-    exact hobs ▸ HEq.rfl
-  case h_2 hr' =>
-    -- G.rounds[k]? = none — contradicts hr
-    rw [hr'] at hr; exact absurd hr (by simp)
+    rw [hobs, hr']
+  case isFalse hk' =>
+    exact absurd hk hk'
 
 /-- One step of the linearized model composed with `evalFromCfg` telescopes:
 performing one step and then evaluating from the resulting configuration gives
@@ -707,28 +901,17 @@ private theorem stepPMF_bind_evalFromCfg
         have hdrop : G.rounds.drop k = r :: G.rounds.drop (k + 1) := by
           rw [← List.cons_getElem_drop_succ (h := hk)]
           congr 1; exact (List.getElem_of_getElem? hr).choose_spec
-        -- LHS and RHS both have the form (r.signal s).bind (fun sig => ...)
-        simp only [PMF.bind_bind]
-        -- Unfold RHS: evalFromCfg → evalLinearized → (r.signal s).bind
-        conv_rhs => rw [show evalFromCfg G σ (LinConfig.signal k s) =
-          evalLinearized G σ (G.rounds.drop k) s from by simp [evalFromCfg]]
-        rw [hdrop, evalLinearized]; dsimp only []
+        -- LHS: (r.signal s).map (.applyTransition k s · (fun _ => none)).bind (evalFromCfg G σ)
+        rw [PMF.bind_map]
+        -- Unfold evalFromCfg at .applyTransition
+        simp only [Function.comp_def, evalFromCfg, hr]
+        -- RHS: evalLinearized G σ (G.rounds.drop k) s
+        rw [hdrop, evalLinearized]
         -- Both sides: (r.signal s).bind (fun sig => ...)
         congr 1; funext sig
         -- Equate the transition arguments using hempty
-        have htrans : r.transition s (fun i => absurd i.pos hn) =
-            r.transition s (fun i => σ i (r.view i s (sig i))) :=
-          congrArg (r.transition s) (hempty _ _)
-        split
-        case h_1 r' hr2 =>
-          simp only [PMF.pure_bind, evalFromCfg]
-          exact congrArg (evalLinearized G σ (G.rounds.drop (k + 1))) htrans
-        case h_2 hr2 =>
-          have hdrop2 : G.rounds.drop (k + 1) = [] := by
-            apply List.drop_eq_nil_of_le; by_contra hle; push_neg at hle
-            rw [List.getElem?_eq_getElem hle] at hr2; exact absurd hr2 (by simp)
-          simp only [PMF.pure_bind, evalFromCfg, hdrop2, evalLinearized]
-          exact congrArg PMF.pure htrans
+        exact congrArg (evalLinearized G σ (G.rounds.drop (k + 1)))
+          (congrArg (r.transition s) (hempty _ _))
     case h_2 hr =>
       -- G.rounds[k]? = none: step is identity
       simp [PMF.pure_bind]
@@ -747,22 +930,40 @@ private theorem stepPMF_bind_evalFromCfg
         -- resolveActions from p with updated accActs = resolveActions from p with original
         conv_rhs => rw [show p.val = p.val from rfl]; unfold resolveActions; rw [dif_pos p.isLt]
       case isFalse hp1 =>
-        -- p is last player: resolveActions from p gives Function.update
+        -- p is last player: advance → applyTransition
         have hresolve : resolveActions G σ r s sig p.val accActs =
             Function.update accActs p (σ p (r.view p s (sig p))) := by
           unfold resolveActions; rw [dif_pos p.isLt]
           have : ⟨p.val, p.isLt⟩ = p := Fin.ext rfl
           rw [this]; unfold resolveActions; rw [dif_neg hp1]
-        split
-        case h_1 _ hr2 =>
-          simp only [PMF.pure_bind, evalFromCfg, hr, hresolve]
-        case h_2 _ hr2 =>
-          simp only [PMF.pure_bind, evalFromCfg, hr, hresolve]
-          have hdrop2 : G.rounds.drop (k + 1) = [] :=
-            List.drop_eq_nil_of_le (by
-              by_contra h; push_neg at h
-              rw [List.getElem?_eq_getElem h] at hr2; exact absurd hr2 (by simp))
-          rw [hdrop2, evalLinearized]
+        -- LHS: PMF.pure (.applyTransition k s sig updatedActs).bind (evalFromCfg G σ)
+        simp only [PMF.pure_bind, evalFromCfg, hr, hresolve]
+    case h_2 hr =>
+      simp [PMF.pure_bind, evalFromCfg, hr]
+  | applyTransition k s sig accActs =>
+    -- Step applies transition; evalFromCfg does the same thing
+    simp only [linConfigStepPMF]
+    split
+    case h_1 r hr =>
+      -- G.rounds[k]? = some r: transition fires
+      split
+      case h_1 _ hr2 =>
+        -- G.rounds[k+1]? = some _: next round exists → signal (k+1)
+        simp only [PMF.pure_bind]
+        show evalFromCfg G σ (.signal (k + 1) (r.transition s accActs)) =
+          evalFromCfg G σ (.applyTransition k s sig accActs)
+        simp only [evalFromCfg, hr]
+      case h_2 _ hr2 =>
+        -- G.rounds[k+1]? = none: terminal
+        simp only [PMF.pure_bind]
+        show evalFromCfg G σ (.terminal (r.transition s accActs)) =
+          evalFromCfg G σ (.applyTransition k s sig accActs)
+        simp only [evalFromCfg, hr]
+        have hdrop2 : G.rounds.drop (k + 1) = [] :=
+          List.drop_eq_nil_of_le (by
+            by_contra h; push_neg at h
+            rw [List.getElem?_eq_getElem h] at hr2; exact absurd hr2 (by simp))
+        rw [hdrop2, evalLinearized]
     case h_2 hr =>
       simp [PMF.pure_bind, evalFromCfg, hr]
 
@@ -804,13 +1005,15 @@ def LinConfig.isDone (G : Protocol n S V A Sig) : LinConfig G → Prop
   | .terminal _ => True
   | .signal k _ => G.rounds[k]? = none
   | .playerTurn k _ _ _ _ => G.rounds[k]? = none
+  | .applyTransition k _ _ _ => G.rounds[k]? = none
 
 /-- Combined round+player phase measure. Increases by ≥1 at each non-done step.
 Terminal configs get maximum phase so that monotonicity holds universally. -/
 def LinConfig.phase (G : Protocol n S V A Sig) : LinConfig G → Nat
-  | .signal k _ => k * (n + 1)
-  | .playerTurn k _ _ p _ => k * (n + 1) + p.val + 1
-  | .terminal _ => G.rounds.length * (n + 1)
+  | .signal k _ => k * (n + 2)
+  | .playerTurn k _ _ p _ => k * (n + 2) + p.val + 1
+  | .applyTransition k _ _ _ => k * (n + 2) + n + 1
+  | .terminal _ => G.rounds.length * (n + 2)
 
 private theorem evalFromCfg_of_isDone (G : Protocol n S V A Sig)
     (σ : PureProfile n V A) (cfg : LinConfig G)
@@ -830,58 +1033,78 @@ private theorem evalFromCfg_of_isDone (G : Protocol n S V A Sig)
     change (match G.rounds[k]? with | some r => _ | none => PMF.pure s) = PMF.pure s
     have hd' : G.rounds[k]? = none := hd
     rw [hd']
+  | applyTransition k s sig accActs =>
+    change (match G.rounds[k]? with | some r => _ | none => PMF.pure s) = PMF.pure s
+    have hd' : G.rounds[k]? = none := hd
+    rw [hd']
 
 omit [DecidableEq (Fin n)] in
 private theorem isDone_of_phase_ge (G : Protocol n S V A Sig)
-    (cfg : LinConfig G) (h : cfg.phase G ≥ G.rounds.length * (n + 1)) :
+    (cfg : LinConfig G) (h : cfg.phase G ≥ G.rounds.length * (n + 2)) :
     cfg.isDone G := by
   cases cfg with
   | terminal _ => trivial
   | signal k s =>
     simp only [LinConfig.phase] at h
-    have hk : k ≥ G.rounds.length := Nat.le_of_mul_le_mul_right h (Nat.succ_pos n)
+    have hk : k ≥ G.rounds.length := Nat.le_of_mul_le_mul_right h (by omega)
     simp only [LinConfig.isDone]
     exact List.getElem?_eq_none (by omega)
   | playerTurn k s sig p accActs =>
     simp only [LinConfig.phase] at h
     have hk : k ≥ G.rounds.length := by
       by_contra hlt; push_neg at hlt
-      have : k * (n + 1) + p.val + 1 ≤ k * (n + 1) + n := by omega
-      have : k * (n + 1) + n < G.rounds.length * (n + 1) := by nlinarith
+      have : k * (n + 2) + p.val + 1 ≤ k * (n + 2) + n + 1 := by omega
+      have : k * (n + 2) + n + 1 < G.rounds.length * (n + 2) := by nlinarith
+      omega
+    simp only [LinConfig.isDone]
+    exact List.getElem?_eq_none (by omega)
+  | applyTransition k s sig accActs =>
+    simp only [LinConfig.phase] at h
+    have hk : k ≥ G.rounds.length := by
+      by_contra hlt; push_neg at hlt
+      have : k * (n + 2) + n + 1 < G.rounds.length * (n + 2) := by nlinarith
       omega
     simp only [LinConfig.isDone]
     exact List.getElem?_eq_none (by omega)
 
 omit [DecidableEq (Fin n)] in
 private theorem phase_init_le (G : Protocol n S V A Sig) :
-    (linInitialConfig G).phase G ≤ G.rounds.length * (n + 1) := by
+    (linInitialConfig G).phase G ≤ G.rounds.length * (n + 2) := by
   simp only [linInitialConfig]
   split <;> simp [LinConfig.phase]
 
-/-- At done configs, step is absorbing: `linConfigStepPMF = PMF.pure cfg`. -/
-private theorem step_of_isDone (G : Protocol n S V A Sig)
+/-- At done configs, any successor is also done and has the same state. -/
+private theorem isDone_step_of_isDone (G : Protocol n S V A Sig)
     (cfg : LinConfig G)
-    (acts : (i : Fin n) → LinAct V A (linObserve G i cfg))
-    (hd : cfg.isDone G) :
-    linConfigStepPMF G cfg acts = PMF.pure cfg := by
+    (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
+    (hd : cfg.isDone G) (t : LinConfig G)
+    (ht : t ∈ (linConfigStepPMF G cfg acts).support) :
+    t.isDone G ∧ t.state = cfg.state := by
+  rw [PMF.mem_support_iff] at ht
   cases cfg with
-  | terminal s => simp [linConfigStepPMF]
+  | terminal s =>
+    have ht' := (pure_ne_zero_iff' _ t).mp (by rwa [linConfigStepPMF] at ht)
+    subst ht'; exact ⟨trivial, rfl⟩
   | signal k s =>
-    simp only [linConfigStepPMF]; split
+    simp only [linConfigStepPMF] at ht; split at ht
     · rename_i r hr; exact absurd hr (by change G.rounds[k]? = none at hd; simp [hd])
-    · rfl
+    · rw [pure_ne_zero_iff'] at ht; subst ht; exact ⟨hd, rfl⟩
   | playerTurn k s sig p accActs =>
-    simp only [linConfigStepPMF]; split
+    simp only [linConfigStepPMF] at ht; split at ht
     · rename_i r hr; exact absurd hr (by change G.rounds[k]? = none at hd; simp [hd])
-    · rfl
+    · rw [pure_ne_zero_iff'] at ht; subst ht; exact ⟨hd, rfl⟩
+  | applyTransition k s sig accActs =>
+    simp only [linConfigStepPMF] at ht; split at ht
+    · rename_i r hr; exact absurd hr (by change G.rounds[k]? = none at hd; simp [hd])
+    · rw [pure_ne_zero_iff'] at ht; subst ht; exact ⟨trivial, rfl⟩
 
-/-- At non-done configs, every successor has strictly higher phase. -/
+/-- At non-done configs, every successor has phase exactly `cfg.phase + 1`. -/
 private theorem phase_step_progress (G : Protocol n S V A Sig)
     (cfg : LinConfig G)
-    (acts : (i : Fin n) → LinAct V A (linObserve G i cfg))
+    (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
     (hnd : ¬ cfg.isDone G) (t : LinConfig G)
     (ht : t ∈ (linConfigStepPMF G cfg acts).support) :
-    t.phase G ≥ cfg.phase G + 1 := by
+    t.phase G = cfg.phase G + 1 := by
   rw [PMF.mem_support_iff] at ht
   cases cfg with
   | terminal s => exact absurd trivial hnd
@@ -899,14 +1122,12 @@ private theorem phase_step_progress (G : Protocol n S V A Sig)
         obtain ⟨_, _, rfl⟩ := (PMF.mem_support_map_iff _ _ t).mp
           ((PMF.mem_support_iff _ t).mpr ht)
         simp [LinConfig.phase]
-      · -- ¬(0 < n): bind
+      · -- ¬(0 < n): map to .applyTransition
         rename_i hn
         have h0 : n = 0 := by omega
-        obtain ⟨_, _, ht'⟩ := (PMF.mem_support_bind_iff _ _ t).mp
+        obtain ⟨_, _, rfl⟩ := (PMF.mem_support_map_iff _ _ t).mp
           ((PMF.mem_support_iff _ t).mpr ht)
-        split at ht' <;> (rw [PMF.mem_support_pure_iff] at ht'; subst ht')
-        · simp only [LinConfig.phase]; subst h0; omega
-        · simp only [LinConfig.phase]; subst h0; omega
+        simp only [LinConfig.phase]; subst h0; omega
     · -- none branch: contradicts ¬isDone
       exact absurd (by assumption : G.rounds[k]? = none) hnd
   | playerTurn k s sig p accActs =>
@@ -921,15 +1142,32 @@ private theorem phase_step_progress (G : Protocol n S V A Sig)
       split at ht
       · rename_i hp1
         obtain rfl := (pure_ne_zero_iff' _ t).mp ht
-        simp [LinConfig.phase]
+        simp only [LinConfig.phase]; omega
       · rename_i hp1
-        split at ht
-        · obtain rfl := (pure_ne_zero_iff' _ t).mp ht
-          simp only [LinConfig.phase]
-          nlinarith [show p.val + 1 = n by omega]
-        · obtain rfl := (pure_ne_zero_iff' _ t).mp ht
-          simp only [LinConfig.phase]
-          nlinarith [show p.val + 1 = n by omega]
+        obtain rfl := (pure_ne_zero_iff' _ t).mp ht
+        simp only [LinConfig.phase]
+        nlinarith [show p.val + 1 = n by omega]
+    · -- none branch: contradicts ¬isDone
+      exact absurd (by assumption : G.rounds[k]? = none) hnd
+  | applyTransition k s sig accActs =>
+    simp only [linConfigStepPMF] at ht
+    split at ht
+    · -- some r branch: transition fires
+      rename_i r hr
+      have hk : k < G.rounds.length := by
+        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+      split at ht
+      · -- G.rounds[k+1]? = some _: signal (k+1)
+        obtain rfl := (pure_ne_zero_iff' _ t).mp ht
+        simp only [LinConfig.phase]; nlinarith
+      · -- G.rounds[k+1]? = none: terminal
+        rename_i hknone
+        have hklen : G.rounds.length = k + 1 := by
+          have hge : G.rounds.length ≤ k + 1 := by
+            simp only [List.getElem?_eq_none_iff] at hknone; exact hknone
+          omega
+        obtain rfl := (pure_ne_zero_iff' _ t).mp ht
+        simp only [LinConfig.phase]; nlinarith
     · -- none branch: contradicts ¬isDone
       exact absurd (by assumption : G.rounds[k]? = none) hnd
 
@@ -979,11 +1217,9 @@ private theorem isDone_of_reachable [Fintype A]
     set acts := (fun i => (liftPureProfile (G := G) σ) i (linObserve G i cfg))
     -- Case split on whether cfg is done
     by_cases hd : cfg.isDone G
-    · -- cfg is done: step is absorbing, so t = cfg
-      have hstep : linConfigStepPMF G cfg acts = PMF.pure cfg :=
-        step_of_isDone G cfg acts hd
-      rw [hstep, PMF.mem_support_pure_iff] at ht_in_step
-      rw [ht_in_step]; left; exact hd
+    · -- cfg is done: successor is also done
+      left
+      exact (isDone_step_of_isDone G cfg acts hd t ht_in_step).1
     · -- Not done: phase increases
       right
       have hprog := phase_step_progress G cfg acts hd t ht_in_step
@@ -995,7 +1231,7 @@ private theorem isDone_of_reachable [Fintype A]
 `liftPureProfile σ` for enough steps, and extracting the terminal state, gives
 the same distribution as `Protocol.eval G σ`. -/
 theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype A]
-    (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 1)) :
+    (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 2)) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
         (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) =
       G.eval σ := by
@@ -1008,5 +1244,543 @@ theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype A]
     · exact (evalFromCfg_of_isDone G σ _ (isDone_of_phase_ge G _ (by omega))).symm
 
 end Adequacy
+
+
+-- ============================================================================
+-- ObsLocalFeasibility from FullRecall
+-- ============================================================================
+
+section OLFBridge
+
+open Math.ParameterizedChain
+
+variable [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable [Fintype A] [Nonempty A]
+variable (G : Protocol n S V A Sig)
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- `linObserve G i cfg = some obs` implies cfg is a playerTurn for player i
+at a valid round, and extracts the state, signals, and accumulated actions. -/
+private theorem linObserve_some_playerTurn (cfg : LinConfig G) (i : Fin n)
+    (obs : RoundView G)
+    (h : linObserve G i cfg = some obs) :
+    ∃ (s : S) (sig : Fin n → Sig) (accActs : Fin n → Option A),
+      cfg = .playerTurn obs.1.val s sig i accActs ∧
+      (G.rounds[obs.1.val]'(obs.1.isLt)).view i s (sig i) = obs.2 := by
+  cases cfg with
+  | signal _ _ => simp [linObserve] at h
+  | terminal _ => simp [linObserve] at h
+  | applyTransition _ _ _ _ => simp [linObserve] at h
+  | playerTurn k s sig p accActs =>
+    simp only [linObserve] at h
+    split at h
+    · rename_i hip
+      split at h
+      · rename_i hk
+        simp only [Option.some.injEq] at h
+        subst hip
+        have hk_eq : k = obs.1.val := by
+          have := congrArg (fun x => x.1.val) h; simp at this; omega
+        have hv_eq : G.rounds[k].view i s (sig i) = obs.2 := congrArg Prod.snd h
+        subst hk_eq
+        exact ⟨s, sig, accActs, rfl, hv_eq⟩
+      · simp at h
+    · simp at h
+
+set_option linter.unusedFintypeInType false in
+/-- `linObserve G i cfg = some obs` implies `cfg` is not done. -/
+private theorem not_isDone_of_linObserve_some
+    (cfg : LinConfig G) (i : Fin n) (obs : RoundView G)
+    (h : linObserve G i cfg = some obs) : ¬ cfg.isDone G := by
+  obtain ⟨s, sig, accActs, hcfg, _⟩ := linObserve_some_playerTurn G cfg i obs h
+  subst hcfg
+  change ¬ (G.rounds[obs.1.val]? = none)
+  rw [show G.rounds[obs.1.val]? = some G.rounds[obs.1.val] from
+    List.getElem?_eq_getElem obs.1.isLt]
+  exact Option.some_ne_none _
+
+set_option linter.unusedFintypeInType false in
+/-- Phase of a config where `linObserve G i cfg = some (⟨r, hr⟩, v)`. -/
+private theorem phase_of_linObserve_some
+    (cfg : LinConfig G) (i : Fin n) (r : Fin G.rounds.length) (v : V)
+    (h : linObserve G i cfg = some (r, v)) :
+    cfg.phase G = r.val * (n + 2) + i.val + 1 := by
+  obtain ⟨s, sig, accActs, hcfg, _⟩ := linObserve_some_playerTurn G cfg i ⟨r, v⟩ h
+  rw [hcfg]; simp [LinConfig.phase]
+
+set_option linter.unusedSectionVars false in
+/-- On a nonzero trace, if `ss[b]` is not done, then `ss[a]` is not done for `a ≤ b`. -/
+private theorem not_isDone_of_later_not_isDone
+    (pi : (compiledLinObs G).PureProfile)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init k pi ss ≠ 0)
+    (a b : Nat) (ha : a < ss.length) (hb : b < ss.length) (hab : a ≤ b)
+    (hnd : ¬ (ss[b]'hb).isDone G) : ¬ (ss[a]'ha).isDone G := by
+  intro hd; apply hnd
+  suffices h : ∀ c, a ≤ c → (hc : c < ss.length) → (ss[c]'hc).isDone G from h b hab hb
+  intro c hac
+  induction c with
+  | zero =>
+    intro hc
+    have ha0 : a = 0 := by omega
+    subst ha0; exact hd
+  | succ c ih =>
+    intro hc
+    by_cases hac' : a ≤ c
+    · have hc' : c < ss.length := by omega
+      have ihc := ih hac' hc'
+      have hstep := pureRun_step_nonzero _ _ k pi ss hss c (show c + 1 < ss.length by omega)
+      rw [pureStep_compiledLin_eq] at hstep
+      have hcfg := lastState_take_eq_getElem ss c (show c + 1 < ss.length by omega)
+      rw [hcfg] at hstep
+      exact (isDone_step_of_isDone G _ _ ihc _ (PMF.mem_support_iff _ _ |>.mpr hstep)).1
+    · have ha0 : a = c + 1 := by omega
+      subst ha0; exact hd
+
+/-- On a nonzero trace, if `ss[b]` is not done and `a < b`, then
+`phase(ss[a]) < phase(ss[b])`. -/
+private theorem phase_strict_mono_of_not_done
+    (pi : (compiledLinObs G).PureProfile)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init k pi ss ≠ 0)
+    (a b : Nat) (ha : a < ss.length) (hb : b < ss.length) (hab : a < b)
+    (hnd : ¬ (ss[b]'hb).isDone G) :
+    (ss[a]'ha).phase G < (ss[b]'hb).phase G := by
+  induction b with
+  | zero => omega
+  | succ b' ih =>
+    have hb'lt : b' < ss.length := by omega
+    have hstep := pureRun_step_nonzero _ _ k pi ss hss b' (show b' + 1 < ss.length by omega)
+    rw [pureStep_compiledLin_eq] at hstep
+    have hcfg := lastState_take_eq_getElem ss b' (show b' + 1 < ss.length by omega)
+    rw [hcfg] at hstep
+    have hnd' : ¬ (ss[b']'hb'lt).isDone G :=
+      not_isDone_of_later_not_isDone G pi k ss hss b' (b' + 1) hb'lt hb (by omega) hnd
+    have hprog := phase_step_progress G _ _ hnd' _ (PMF.mem_support_iff _ _ |>.mpr hstep)
+    by_cases hab' : a < b'
+    · exact lt_of_lt_of_le (ih hb'lt hab' hnd') (by omega)
+    · have hab'eq : a = b' := by omega
+      subst hab'eq; omega
+
+/-- The first element of a nonzero `pureRun` trace is the initial state. -/
+private theorem pureRun_head_eq_init
+    {T P : Type} (step : P → List T → PMF T) (s₀ : T)
+    (m : Nat) (π : P) (ss : List T)
+    (h : pureRun step s₀ m π ss ≠ 0)
+    (h0 : 0 < ss.length) :
+    ss[0] = s₀ := by
+  induction m generalizing ss with
+  | zero =>
+    have hss : ss = [s₀] := by
+      by_contra hne; exact h (by simp [pureRun, PMF.pure_apply, hne])
+    subst hss; rfl
+  | succ m ih =>
+    have hne : ss ≠ [] := by intro he; subst he; simp at h0
+    have hsplit := (List.dropLast_append_getLast hne).symm
+    have h_pre : pureRun step s₀ m π ss.dropLast ≠ 0 := by
+      rw [hsplit] at h; rw [pureRun_succ_append] at h; exact left_ne_zero_of_mul h
+    have hlen_pre : 0 < ss.dropLast.length := by
+      have := pureRun_length step s₀ m π ss.dropLast h_pre; omega
+    have hih := ih ss.dropLast h_pre hlen_pre
+    -- ss[0] = ss.dropLast[0] since dropLast is a prefix
+    have h_eq : ss[0] = ss.dropLast[0]'hlen_pre := by
+      rcases ss with _ | ⟨hd, tl⟩
+      · exact absurd rfl hne
+      · cases tl with
+        | nil => simp at hlen_pre
+        | cons h t => rfl
+    rw [h_eq, hih]
+
+set_option linter.unusedSectionVars false in
+/-- On a nonzero trace where `ss[last]` is not done, `phase(ss[j]) = j` for all j. -/
+private theorem phase_eq_index
+    (pi : (compiledLinObs G).PureProfile)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init k pi ss ≠ 0)
+    (hlast_nd : ¬ (ss[ss.length - 1]'(by
+      have := pureRun_length _ _ k pi ss hss; omega)).isDone G)
+    (j : Nat) (hj : j < ss.length) :
+    (ss[j]'hj).phase G = j := by
+  induction j with
+  | zero =>
+    have hlen : 0 < ss.length := by omega
+    have h0 := pureRun_head_eq_init _ _ k pi ss hss hlen
+    conv_lhs => rw [show ss[0]'hj = ss[0]'hlen from rfl, h0]
+    -- linInitialConfig G phase
+    simp only [compiledLinObs, compileObsCoreModelLin, linInitialConfig]
+    split
+    · -- rounds empty: terminal phase = G.rounds.length * (n+2) = 0
+      rename_i hempty
+      simp only [LinConfig.phase]
+      have : G.rounds.length = 0 := by
+        by_contra hne; push_neg at hne
+        have : G.rounds[0]? ≠ none := by
+          rw [ne_eq, List.getElem?_eq_none_iff]; omega
+        exact this hempty
+      simp [this]
+    · simp [LinConfig.phase]
+  | succ j ih =>
+    have hjlt : j < ss.length := by omega
+    have hnd_j : ¬ (ss[j]'hjlt).isDone G :=
+      not_isDone_of_later_not_isDone G pi k ss hss j (ss.length - 1) hjlt
+        (by have := pureRun_length _ _ k pi ss hss; omega) (by omega) hlast_nd
+    have hstep := pureRun_step_nonzero _ _ k pi ss hss j (show j + 1 < ss.length by omega)
+    rw [pureStep_compiledLin_eq] at hstep
+    have hcfg := lastState_take_eq_getElem ss j (show j + 1 < ss.length by omega)
+    rw [hcfg] at hstep
+    have hprog := phase_step_progress G _ _ hnd_j _ (PMF.mem_support_iff _ _ |>.mpr hstep)
+    rw [hprog, ih hjlt]
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- A config with phase `r*(n+2) + i.val + 1` (where `r < G.rounds.length` and `i < n`)
+is a `playerTurn` for player `i` at round `r`, so `linObserve G i` returns `some`. -/
+private theorem linObserve_of_phase_eq
+    (cfg : LinConfig G) (p : Fin n)
+    (r : Nat) (hr : r < G.rounds.length)
+    (hphase : cfg.phase G = r * (n + 2) + p.val + 1) :
+    ∃ (v : V), linObserve G p cfg = some (⟨r, hr⟩, v) := by
+  cases cfg with
+  | signal k s =>
+    simp only [LinConfig.phase] at hphase
+    -- k*(n+2) = r*(n+2) + p.val + 1, impossible since p.val+1 < n+2
+    exfalso
+    rcases le_or_gt r k with hrk | hrk
+    · have heq : (k - r) * (n + 2) = p.val + 1 := by
+        rw [Nat.sub_mul]; omega
+      rcases Nat.eq_zero_or_pos (k - r) with h0 | h0
+      · simp [h0] at heq
+      · have := Nat.le_mul_of_pos_left (n + 2) h0; omega
+    · have : k * (n + 2) < r * (n + 2) :=
+        (Nat.mul_lt_mul_right (by omega : 0 < n + 2)).mpr hrk
+      omega
+  | playerTurn k s sig q accActs =>
+    simp only [LinConfig.phase] at hphase
+    -- k*(n+2) + q.val + 1 = r*(n+2) + p.val + 1 → k = r, q = p
+    have hk : k = r := by
+      rcases le_or_gt r k with hrk | hrk
+      · rcases le_or_gt k r with hkr | hkr
+        · omega
+        · have : (k - r) * (n + 2) = p.val - q.val := by rw [Nat.sub_mul]; omega
+          rcases Nat.eq_zero_or_pos (k - r) with h0 | h0
+          · omega
+          · have := Nat.le_mul_of_pos_left (n + 2) h0; omega
+      · have : (r - k) * (n + 2) = q.val - p.val := by rw [Nat.sub_mul]; omega
+        rcases Nat.eq_zero_or_pos (r - k) with h0 | h0
+        · omega
+        · have := Nat.le_mul_of_pos_left (n + 2) h0; omega
+    subst hk
+    have hp : q = p := Fin.ext (by omega)
+    subst hp
+    simp only [linObserve]
+    split
+    · exact ⟨G.rounds[k].view q s (sig q), rfl⟩
+    · rename_i habs
+      exfalso
+      have : G.rounds[k]? ≠ none := by rw [ne_eq, List.getElem?_eq_none_iff]; omega
+      simp at habs
+  | applyTransition k s sig accActs =>
+    simp only [LinConfig.phase] at hphase
+    -- k*(n+2) + n + 1 = r*(n+2) + p.val + 1, same sub_mul technique
+    exfalso
+    rcases le_or_gt k r with hkr | hkr
+    · have heq : (r - k) * (n + 2) = n - p.val := by rw [Nat.sub_mul]; omega
+      rcases Nat.eq_zero_or_pos (r - k) with h0 | h0
+      · simp [h0] at heq; omega
+      · have := Nat.le_mul_of_pos_left (n + 2) h0; omega
+    · have heq : (k - r) * (n + 2) = p.val - n := by rw [Nat.sub_mul]; omega
+      rcases Nat.eq_zero_or_pos (k - r) with h0 | h0
+      · omega
+      · have := Nat.le_mul_of_pos_left (n + 2) h0; omega
+  | terminal s =>
+    simp only [LinConfig.phase] at hphase
+    -- G.rounds.length*(n+2) = r*(n+2) + p.val + 1, same technique as signal
+    exfalso
+    rcases le_or_gt r G.rounds.length with hrk | hrk
+    · have heq : (G.rounds.length - r) * (n + 2) = p.val + 1 := by rw [Nat.sub_mul]; omega
+      rcases Nat.eq_zero_or_pos (G.rounds.length - r) with h0 | h0
+      · simp [h0] at heq
+      · have := Nat.le_mul_of_pos_left (n + 2) h0; omega
+    · have : G.rounds.length * (n + 2) < r * (n + 2) :=
+        (Nat.mul_lt_mul_right (by omega : 0 < n + 2)).mpr hrk
+      omega
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- On a nonzero trace, if `linObserve G i ss[last] = some (kLast, vLast)`,
+then for every r < kLast, there exists an internal position j (j+1 < ss.length)
+with `linObserve G i ss[j] = some (r, v)` for some v. -/
+private theorem earlier_i_step_exists
+    (pi : (compiledLinObs G).PureProfile)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init k pi ss ≠ 0)
+    (i : Fin n) (kLast : Fin G.rounds.length) (vLast : V)
+    (hobsLast : linObserve G i (ss[ss.length - 1]'(by
+      have := pureRun_length _ _ k pi ss hss; omega)) = some (kLast, vLast))
+    (r : Nat) (hr : r < kLast.val) :
+    ∃ (j : Nat) (hj : j + 1 < ss.length)
+      (hr' : r < G.rounds.length) (v : V),
+      linObserve G i (ss[j]'(by omega)) = some (⟨r, hr'⟩, v) := by
+  have hlen := pureRun_length _ _ k pi ss hss
+  have hlast_nd : ¬ (ss[ss.length - 1]'(by omega)).isDone G :=
+    not_isDone_of_linObserve_some G _ i _ hobsLast
+  have hr' : r < G.rounds.length := lt_trans hr kLast.isLt
+  set target := r * (n + 2) + i.val + 1
+  have hp_last := phase_of_linObserve_some G _ i kLast vLast hobsLast
+  -- phase(ss[last]) = kLast.val * (n+2) + i.val + 1 = ss.length - 1
+  have hlast_phase := phase_eq_index G pi k ss hss hlast_nd (ss.length - 1) (by omega)
+  -- target < ss.length - 1
+  have htarget_lt_last : target < ss.length - 1 := by
+    rw [← hlast_phase, hp_last]
+    change r * (n + 2) + i.val + 1 < kLast.val * (n + 2) + i.val + 1
+    have : r * (n + 2) < kLast.val * (n + 2) :=
+      (Nat.mul_lt_mul_right (by omega : 0 < n + 2)).mpr hr
+    omega
+  have htarget_lt : target < ss.length := by omega
+  have hphase_target := phase_eq_index G pi k ss hss hlast_nd target htarget_lt
+  obtain ⟨v, hobs⟩ := linObserve_of_phase_eq G (ss[target]'htarget_lt) i r hr' hphase_target
+  exact ⟨target, by omega, hr', v, hobs⟩
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- Two positions in a nonzero trace with the same `linObserve G i` returning
+`some` at the same round must be at the same position and have the same view. -/
+private theorem unique_i_step_position
+    (pi : (compiledLinObs G).PureProfile)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init k pi ss ≠ 0)
+    (i : Fin n) (kLast : Fin G.rounds.length) (vLast : V)
+    (hobsLast : linObserve G i (ss[ss.length - 1]'(by
+      have := pureRun_length _ _ k pi ss hss; omega)) = some (kLast, vLast))
+    (j1 j2 : Nat) (hj1 : j1 + 1 < ss.length) (hj2 : j2 + 1 < ss.length)
+    (r : Fin G.rounds.length) (v1 v2 : V)
+    (hobs1 : linObserve G i (ss[j1]'(by omega)) = some (r, v1))
+    (hobs2 : linObserve G i (ss[j2]'(by omega)) = some (r, v2)) :
+    j1 = j2 ∧ v1 = v2 := by
+  have hp1 := phase_of_linObserve_some G _ i r v1 hobs1
+  have hp2 := phase_of_linObserve_some G _ i r v2 hobs2
+  have hj_eq : j1 = j2 := by
+    by_contra hne
+    rcases Nat.lt_or_gt_of_ne hne with hlt | hlt
+    · have hnd2 : ¬ (ss[j2]'(by omega)).isDone G :=
+        not_isDone_of_linObserve_some G _ i _ hobs2
+      have := phase_strict_mono_of_not_done G pi k ss hss
+        j1 j2 (by omega) (by omega) hlt hnd2
+      omega
+    · have hnd1 : ¬ (ss[j1]'(by omega)).isDone G :=
+        not_isDone_of_linObserve_some G _ i _ hobs1
+      have := phase_strict_mono_of_not_done G pi k ss hss
+        j2 j1 (by omega) (by omega) hlt hnd1
+      omega
+  subst hj_eq
+  have heq : (r, v1) = (r, v2) := Option.some_injective _ (hobs1.symm.trans hobs2)
+  exact ⟨rfl, (Prod.mk.inj heq).2⟩
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- Show r < kLast from phase arithmetic on a trace. -/
+private theorem round_lt_of_earlier_step
+    (pi : (compiledLinObs G).PureProfile)
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init k pi ss ≠ 0)
+    (i : Fin n) (kLast : Fin G.rounds.length) (vLast : V)
+    (hobsLast : linObserve G i (ss[ss.length - 1]'(by
+      have := pureRun_length _ _ k pi ss hss; omega)) = some (kLast, vLast))
+    (j : Nat) (hj : j + 1 < ss.length) (r : Fin G.rounds.length) (v : V)
+    (hobs : linObserve G i (ss[j]'(by omega)) = some (r, v)) :
+    r.val < kLast.val := by
+  have hlast : ss.length - 1 < ss.length := by
+    have := pureRun_length _ _ k pi ss hss; omega
+  have hndLast : ¬ (ss[ss.length - 1]'hlast).isDone G :=
+    not_isDone_of_linObserve_some G _ i _ hobsLast
+  have hlt : j < ss.length - 1 := by omega
+  have hphase_lt := phase_strict_mono_of_not_done G pi k ss hss
+    j (ss.length - 1) (by omega) hlast hlt hndLast
+  have hp_j := phase_of_linObserve_some G _ i r v hobs
+  have hp_last := phase_of_linObserve_some G _ i kLast vLast hobsLast
+  rw [hp_j, hp_last] at hphase_lt
+  by_contra h; push_neg at h
+  exact Nat.not_lt.mpr (Nat.add_le_add_right (Nat.add_le_add_right
+    (Nat.mul_le_mul_right _ h) _) _) hphase_lt
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- **FullRecall bridge**: On nonzero traces with same last i-observation,
+for each round r < kLast, the view at round r matches between the two traces
+and the profile actions at that view agree. -/
+private theorem fullRecall_view_action_match
+    (hFR : G.FullRecall)
+    (pi0 pi0' : (compiledLinObs G).PureProfile)
+    (n1 n2 : Nat) (ss1 ss2 : List (LinConfig G))
+    (h1 : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init n1 pi0 ss1 ≠ 0)
+    (h2 : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init n2 pi0' ss2 ≠ 0)
+    (i : Fin n) (kLast : Fin G.rounds.length) (vLast : V)
+    (hobs1 : linObserve G i (ss1[ss1.length - 1]'(by
+      have := pureRun_length _ _ n1 pi0 ss1 h1; omega)) = some (kLast, vLast))
+    (hobs2 : linObserve G i (ss2[ss2.length - 1]'(by
+      have := pureRun_length _ _ n2 pi0' ss2 h2; omega)) = some (kLast, vLast))
+    (r : Nat) (hr : r < kLast.val) :
+    ∃ (hr' : r < G.rounds.length)
+      (j1 : Nat) (hj1 : j1 + 1 < ss1.length) (v : V),
+      linObserve G i (ss1[j1]'(by omega)) = some (⟨r, hr'⟩, v) ∧
+      ∃ (j2 : Nat) (hj2 : j2 + 1 < ss2.length),
+        linObserve G i (ss2[j2]'(by omega)) = some (⟨r, hr'⟩, v) ∧
+        ∀ (o : Option (RoundView G)),
+          o = some (⟨r, hr'⟩, v) →
+          (pi0 i) o = (pi0' i) o := by
+  obtain ⟨j1, hj1, hr', v1, hobs_j1⟩ :=
+    earlier_i_step_exists G pi0 n1 ss1 h1 i kLast vLast hobs1 r hr
+  obtain ⟨j2, hj2, _, v2, hobs_j2⟩ :=
+    earlier_i_step_exists G pi0' n2 ss2 h2 i kLast vLast hobs2 r hr
+  obtain ⟨s1, sig1, acc1, hcfg1, hview1⟩ :=
+    linObserve_some_playerTurn G _ i ⟨⟨r, hr'⟩, v1⟩ hobs_j1
+  obtain ⟨s2, sig2, acc2, hcfg2, hview2⟩ :=
+    linObserve_some_playerTurn G _ i ⟨⟨r, _⟩, v2⟩ hobs_j2
+  obtain ⟨sL1, sigL1, accL1, hcfgL1, hviewL1⟩ :=
+    linObserve_some_playerTurn G _ i ⟨kLast, vLast⟩ hobs1
+  obtain ⟨sL2, sigL2, accL2, hcfgL2, hviewL2⟩ :=
+    linObserve_some_playerTurn G _ i ⟨kLast, vLast⟩ hobs2
+  -- Build ExecRecords with correct actions for player i
+  let act1 : Option A := (pi0 i) (some (⟨r, hr'⟩, v1))
+  let act2 : Option A := (pi0' i) (some (⟨r, hr'⟩, v2))
+  let recs1 : Fin (kLast.val + 1) → ExecRecord n S A Sig := fun m =>
+    if hm : m.val = kLast.val then
+      ⟨⟨sL1, sigL1⟩, fun _ => none⟩
+    else if hm : m.val = r then
+      ⟨⟨s1, sig1⟩, Function.update (fun _ => none) i act1⟩
+    else ⟨⟨s1, sig1⟩, fun _ => none⟩
+  let recs2 : Fin (kLast.val + 1) → ExecRecord n S A Sig := fun m =>
+    if hm : m.val = kLast.val then
+      ⟨⟨sL2, sigL2⟩, fun _ => none⟩
+    else if hm : m.val = r then
+      ⟨⟨s2, sig2⟩, Function.update (fun _ => none) i act2⟩
+    else ⟨⟨s2, sig2⟩, fun _ => none⟩
+  -- Views at round kLast match
+  have hview_kLast : G.rounds[kLast.val].playerView i
+        (recs1 ⟨kLast.val, Nat.lt_succ_self _⟩).toRound =
+      G.rounds[kLast.val].playerView i
+        (recs2 ⟨kLast.val, Nat.lt_succ_self _⟩).toRound := by
+    simp only [recs1, recs2, ↓reduceDIte]
+    simp only [ExecRecord.toRound, Round.playerView]
+    rw [hviewL1, hviewL2]
+  -- Apply FullRecall
+  have hfr := hFR i kLast.val kLast.isLt recs1 recs2 hview_kLast r hr
+  obtain ⟨hview_match, haction_match⟩ := hfr
+  have hr_ne : ¬(r = kLast.val) := by omega
+  simp only [recs1, recs2, hr_ne, ↓reduceDIte] at hview_match haction_match
+  simp only [ExecRecord.toRound, Round.playerView] at hview_match
+  change G.rounds[r].view i s1 (sig1 i) = v1 at hview1
+  change G.rounds[r].view i s2 (sig2 i) = v2 at hview2
+  have hv_eq : v1 = v2 := by rw [← hview1, ← hview2]; exact hview_match
+  subst hv_eq
+  simp only [Function.update_self] at haction_match
+  refine ⟨hr', j1, hj1, v1, hobs_j1, j2, hj2, ?_, ?_⟩
+  · convert hobs_j2 using 2
+  · intro o ho; subst ho; exact haction_match
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- projectStates for the compiled model equals the last observation. -/
+private theorem projectStates_eq_lastObs
+    (i : Fin n) (ss : List (LinConfig G)) (hne : ss ≠ []) :
+    (compiledLinObs G).projectStates i ss =
+      linObserve G i (ss[ss.length - 1]'(by
+        rcases ss with _ | ⟨_, _⟩ <;> simp_all)) := by
+  have h := ObsModelCore.currentObs_projectStates (compiledLinObs G) i ss
+  change id ((compiledLinObs G).projectStates i ss) =
+    (compiledLinObs G).observe i ((compiledLinObs G).lastState ss) at h
+  rw [id_eq] at h; rw [h]
+  simp only [ObsModelCore.lastState]
+  rcases ss with _ | ⟨hd, tl⟩
+  · exact absurd rfl hne
+  · have hne' : hd :: tl ≠ [] := by simp
+    rw [List.getLast?_eq_getLast_of_ne_nil hne', Option.getD_some,
+      List.getLast_eq_getElem]
+    rfl
+
+set_option linter.unusedSectionVars false in
+/-- **ObsLocalFeasibility for the linearized model under FullRecall**:
+if two traces have the same `projectStates` for player i, then updating
+player i's strategy preserves reachability equivalently. -/
+theorem obsLocalFeasibility_of_fullRecall
+    (hFR : G.FullRecall) (i : Fin n) :
+    ObsModelCore.ObsLocalFeasibility (compiledLinObs G) i := by
+  intro n1 n2 pi0 pi0' ss1 ss2 hproj h1 h2 hns pii
+  have hlen1 := pureRun_length _ _ n1 pi0 ss1 h1
+  have hlen2 := pureRun_length _ _ n2 pi0' ss2 h2
+  have hne1 : ss1 ≠ [] := by intro h; subst h; simp at hlen1
+  have hne2 : ss2 ≠ [] := by intro h; subst h; simp at hlen2
+  have hproj1 := projectStates_eq_lastObs G i ss1 hne1
+  have hproj2 := projectStates_eq_lastObs G i ss2 hne2
+  have hproj' : linObserve G i (ss1[ss1.length - 1]'(by omega)) =
+      linObserve G i (ss2[ss2.length - 1]'(by omega)) := by
+    rw [← hproj1, ← hproj2]; exact hproj
+  match hobs_last1 : linObserve G i (ss1[ss1.length - 1]'(by omega)) with
+  | none =>
+    exfalso; apply hns
+    have : (compiledLinObs G).currentObs i ((compiledLinObs G).projectStates i ss1) =
+        (compiledLinObs G).projectStates i ss1 := rfl
+    rw [this, hproj1, hobs_last1]
+    exact inferInstanceAs (Subsingleton PUnit)
+  | some ⟨kLast, vLast⟩ =>
+    have hobs_last2 : linObserve G i (ss2[ss2.length - 1]'(by omega)) =
+        some (kLast, vLast) := by rwa [← hproj']
+    suffices key : ∀ (nA nB : Nat) (piA piB : (compiledLinObs G).PureProfile)
+        (ssA ssB : List (LinConfig G))
+        (hA : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init nA piA ssA ≠ 0)
+        (hB : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init nB piB ssB ≠ 0)
+        (hobsA : linObserve G i (ssA[ssA.length - 1]'(by
+          have := pureRun_length _ _ nA piA ssA hA; omega)) = some (kLast, vLast))
+        (hobsB : linObserve G i (ssB[ssB.length - 1]'(by
+          have := pureRun_length _ _ nB piB ssB hB; omega)) = some (kLast, vLast))
+        (hagree : ∀ j (hj : j + 1 < ssA.length),
+          pii (linObserve G i (ssA[j]'(by omega))) =
+            (piA i) (linObserve G i (ssA[j]'(by omega))))
+        (j : Nat) (hj : j + 1 < ssB.length),
+        pii (linObserve G i (ssB[j]'(by omega))) =
+          (piB i) (linObserve G i (ssB[j]'(by omega))) by
+      constructor
+      · intro hup1
+        have hagree1 : ∀ j (hj : j + 1 < ss1.length),
+            pii (linObserve G i (ss1[j]'(by omega))) =
+              (pi0 i) (linObserve G i (ss1[j]'(by omega))) :=
+          fun j hj => pureRun_update_nonzero_agree G pi0 i pii n1 ss1 h1 hup1 j hj
+        rw [pureRun_update_eq_of_obs_agree G pi0' i pii n2 ss2 h2
+          (fun j hj => key n1 n2 pi0 pi0' ss1 ss2 h1 h2
+            hobs_last1 hobs_last2 hagree1 j hj)]
+        exact h2
+      · intro hup2
+        have hagree2 : ∀ j (hj : j + 1 < ss2.length),
+            pii (linObserve G i (ss2[j]'(by omega))) =
+              (pi0' i) (linObserve G i (ss2[j]'(by omega))) :=
+          fun j hj => pureRun_update_nonzero_agree G pi0' i pii n2 ss2 h2 hup2 j hj
+        rw [pureRun_update_eq_of_obs_agree G pi0 i pii n1 ss1 h1
+          (fun j hj => key n2 n1 pi0' pi0 ss2 ss1 h2 h1
+            hobs_last2 hobs_last1 hagree2 j hj)]
+        exact h1
+    -- Prove the key lemma
+    intro nA nB piA piB ssA ssB hA hB hobsA hobsB hagree j hj
+    match hobs : linObserve G i (ssB[j]'(by omega)) with
+    | none => exact PUnit.ext _ _
+    | some ⟨⟨r, hr⟩, v⟩ =>
+      have hr_lt : r < kLast.val :=
+        round_lt_of_earlier_step G piB nB ssB hB i kLast vLast hobsB j hj ⟨r, hr⟩ v hobs
+      obtain ⟨hr', jA, hjA, v_match, hobsA_j, jB, hjB, hobsB_j, hact_eq⟩ :=
+        fullRecall_view_action_match G hFR piA piB nA nB ssA ssB hA hB i kLast vLast
+          hobsA hobsB r hr_lt
+      have ⟨hjBeq, hveq⟩ := unique_i_step_position G piB nB ssB hB i kLast vLast hobsB
+        jB j hjB hj ⟨r, hr'⟩ v_match v hobsB_j
+        (by convert hobs using 2)
+      subst hjBeq; subst hveq
+      have hfin_eq : (⟨r, hr⟩ : Fin G.rounds.length) = ⟨r, hr'⟩ := Fin.ext rfl
+      have h1' := hagree jA hjA
+      rw [hobsA_j] at h1'
+      have h2' := hact_eq (some (⟨r, hr'⟩, v_match)) rfl
+      rw [show (some (⟨r, hr⟩, v_match) : Option (RoundView G)) =
+        some (⟨r, hr'⟩, v_match) from by rw [hfin_eq]]
+      rw [h1', h2']
+
+end OLFBridge
 
 end GameTheory.Sequential

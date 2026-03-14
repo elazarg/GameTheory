@@ -131,8 +131,10 @@ theorem actionPosteriorLocal_of_fullRecall
     [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
     [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
     (hFR : G.FullRecall) (i : Fin n) :
-    ObsModelCore.ActionPosteriorLocal (compiledLinObs' G) i := by
-  sorry
+    ObsModelCore.ActionPosteriorLocal (compiledLinObs' G) i :=
+  ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility
+    (stepMassInvariant_compiledLin G) i
+    (obsLocalFeasibility_of_fullRecall G hFR i)
 
 set_option linter.unusedFintypeInType false in
 /-- **Kuhn M→B for sequential protocols under full recall**: product mixed
