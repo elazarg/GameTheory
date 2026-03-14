@@ -661,6 +661,62 @@ theorem descendPureProfile_liftPureProfile [Nonempty (Fin G.rounds.length)]
     descendPureProfile (G := G) (liftPureProfile σ) = σ := by
   ext i v; simp [descendPureProfile, liftPureProfile, descendLocalStrategy, liftLocalStrategy]
 
+-- ============================================================================
+-- Behavioral profile bridges
+-- ============================================================================
+
+/-- Lift a native behavioral strategy to a compiled behavioral local strategy.
+At `none` (inactive), returns `PMF.pure PUnit.unit`.
+At `some (k, v)` (active), returns `σ v : PMF (Option A)`. -/
+noncomputable def liftBehavioralStrategy [Fintype (Option A)]
+    (σ : BehavioralStrategy V A) :
+    (obs : Option (RoundView G)) → PMF (LinAct (RoundView G) A obs)
+  | none => PMF.pure PUnit.unit
+  | some (_, v) => σ v
+
+/-- Lift a native behavioral profile to a compiled behavioral profile. -/
+noncomputable def liftBehavioralProfile [Fintype (Option A)]
+    (σ : BehavioralProfile n V A) :
+    ObsModelCore.BehavioralProfile (compiledLinObs G) :=
+  fun i => liftBehavioralStrategy (G := G) (σ i)
+
+/-- Descend a compiled behavioral profile to a native behavioral profile.
+Extracts the action distribution at `some (k₀, v)` observations. -/
+noncomputable def descendBehavioralProfile [Nonempty (Fin G.rounds.length)]
+    (β : ObsModelCore.BehavioralProfile (compiledLinObs G)) :
+    BehavioralProfile n V A :=
+  fun i v => β i (some (Classical.arbitrary _, v))
+
+/-- Lift then descend is the identity on behavioral profiles. -/
+@[simp]
+theorem descendBehavioralProfile_liftBehavioralProfile
+    [Fintype (Option A)] [Nonempty (Fin G.rounds.length)]
+    (σ : BehavioralProfile n V A) :
+    descendBehavioralProfile (G := G) (liftBehavioralProfile σ) = σ := by
+  ext i v; simp [descendBehavioralProfile, liftBehavioralProfile, liftBehavioralStrategy]
+
+-- ============================================================================
+-- Mixed profile lift
+-- ============================================================================
+
+/-- Lift native per-player mixed strategies to compiled local strategy distributions. -/
+noncomputable def liftMixedProfile
+    (μ : ∀ i : Fin n, PMF (PureStrategy V A)) :
+    ∀ i : Fin n, PMF ((compiledLinObs G).LocalStrategy i) :=
+  fun i => (μ i).map (liftLocalStrategy (G := G) (i := i))
+
+/-- The joint product of lifted mixed profiles equals the pushforward of the native
+joint product through `liftPureProfile`. -/
+theorem liftMixedProfile_joint [DecidableEq V] [Fintype V] [Fintype A]
+    [Fintype (Fin n)]
+    [∀ i, Fintype ((compiledLinObs G).LocalStrategy i)]
+    (μ : ∀ i : Fin n, PMF (PureStrategy V A)) :
+    Math.PMFProduct.pmfPi (liftMixedProfile (G := G) μ) =
+      Math.ProbabilityMassFunction.pushforward
+        (Math.PMFProduct.pmfPi μ) (liftPureProfile (G := G)) := by
+  exact (Math.PMFProduct.pmfPi_push_coordwise μ
+    (fun (i : Fin n) => liftLocalStrategy (G := G) (i := i))).symm
+
 end Profiles
 
 -- ============================================================================
@@ -669,7 +725,13 @@ end Profiles
 
 section Adequacy
 
-variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)]
+variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
+
+-- [Fintype (Fin n)] is needed for runDistPure_eq_eval to unify with
+-- downstream callers that have [Fintype (Fin n)] section variables.
+-- Many intermediate lemmas don't use it directly.
+set_option linter.unusedSectionVars false
+set_option linter.unusedFintypeInType false
 
 /-- The final state of a `LinConfig`. For `terminal s`, this is `s`.
 For non-terminal configurations, this is the current state carried
@@ -1244,6 +1306,163 @@ theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype A]
     · exact (evalFromCfg_of_isDone G σ _ (isDone_of_phase_ge G _ (by omega))).symm
 
 end Adequacy
+
+-- ============================================================================
+-- Behavioral adequacy: linearized execution matches Protocol.evalMixed
+-- ============================================================================
+
+section BehavioralAdequacy
+
+variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)] [Fintype (Option A)]
+
+/-- Resolve players `pVal, pVal+1, ..., n-1` by sampling from behavioral
+strategies, accumulating actions into `accActs`. -/
+noncomputable def resolveActionsMixed
+    (σ : BehavioralProfile n V A) (r : Round n S V A Sig)
+    (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A) :
+    PMF (Fin n → Option A) :=
+  if hp : pVal < n then
+    let p : Fin n := ⟨pVal, hp⟩
+    (σ p (r.view p s (sig p))).bind fun a =>
+      resolveActionsMixed σ r s sig (pVal + 1) (Function.update accActs p a)
+  else
+    PMF.pure accActs
+  termination_by (n - pVal)
+
+private theorem resolveActionsMixed_gen [Fintype (Fin n)]
+    (σ : BehavioralProfile n V A) (r : Round n S V A Sig)
+    (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A) :
+    resolveActionsMixed σ r s sig pVal accActs =
+      Math.PMFProduct.pmfPi (fun i : Fin n =>
+        if i.val < pVal then PMF.pure (accActs i)
+        else σ i (r.view i s (sig i))) := by
+  suffices h : ∀ m, m = n - pVal → resolveActionsMixed σ r s sig pVal accActs =
+      Math.PMFProduct.pmfPi (fun i : Fin n =>
+        if i.val < pVal then PMF.pure (accActs i)
+        else σ i (r.view i s (sig i))) from h _ rfl
+  intro m
+  induction m generalizing pVal accActs with
+  | zero =>
+    intro hm
+    have hp : ¬ pVal < n := by omega
+    rw [resolveActionsMixed, dif_neg hp]
+    have : ∀ (i : Fin n), i.val < pVal := fun i => by omega
+    simp only [this, ite_true]
+    exact (Math.PMFProduct.pmfPi_pure accActs).symm
+  | succ m ih =>
+    intro hm
+    have hp : pVal < n := by omega
+    rw [resolveActionsMixed, dif_pos hp]
+    let q : Fin n := ⟨pVal, hp⟩
+    -- Apply IH to each branch of the bind
+    change (σ q (r.view q s (sig q))).bind (fun a =>
+      resolveActionsMixed σ r s sig (pVal + 1) (Function.update accActs q a)) = _
+    have hbind : ∀ a, resolveActionsMixed σ r s sig (pVal + 1) (Function.update accActs q a) =
+        Math.PMFProduct.pmfPi (fun i : Fin n =>
+          if i.val < pVal + 1 then PMF.pure (Function.update accActs q a i)
+          else σ i (r.view i s (sig i))) := fun a => ih (pVal + 1) _ (by omega)
+    simp_rw [hbind]
+    -- Define the family for the RHS
+    let σ' := fun i : Fin n => if i.val < pVal then PMF.pure (accActs i)
+        else σ i (r.view i s (sig i))
+    -- Show the families agree
+    suffices hfam : ∀ a,
+        Math.PMFProduct.pmfPi (fun i : Fin n =>
+          if i.val < pVal + 1 then PMF.pure (Function.update accActs q a i)
+          else σ i (r.view i s (sig i))) =
+        Math.PMFProduct.pmfPi (Function.update σ' q (PMF.pure a)) by
+      simp_rw [hfam]
+      have hσ'q : σ' q = σ q (r.view q s (sig q)) := by
+        change (if pVal < pVal then _ else _) = _
+        simp
+      rw [show Math.PMFProduct.pmfPi σ' =
+          Math.PMFProduct.pmfPi (Function.update σ' q (σ q (r.view q s (sig q)))) from by
+        rw [Function.update_eq_self_iff.mpr hσ'q.symm]]
+      rw [Math.PMFProduct.pmfPi_update_bind]
+    intro a; congr 1; funext i
+    by_cases hi : i = q
+    · subst hi
+      simp only [Function.update_self, σ']
+      -- goal: (if ↑q < pVal + 1 then PMF.pure a else ...) = PMF.pure a
+      have : (q : Fin n).val < pVal + 1 := show pVal < pVal + 1 from by omega
+      rw [if_pos this]
+    · simp only [Function.update_of_ne hi, σ']
+      -- goal: (if ↑i < pVal + 1 then ... else ...) = (if ↑i < pVal then ... else ...)
+      have hne : i.val ≠ pVal := fun h => hi (Fin.ext h)
+      congr 1; ext; constructor <;> intro h <;> omega
+
+/-- Resolving from player 0 with default actions equals the joint behavioral
+sampling `pmfPi (fun i => σ i (r.view i s (sig i)))`. -/
+theorem resolveActionsMixed_eq_pmfPi [Fintype (Fin n)]
+    (σ : BehavioralProfile n V A) (r : Round n S V A Sig)
+    (s : S) (sig : Fin n → Sig) :
+    resolveActionsMixed σ r s sig 0 (fun _ => none) =
+      Math.PMFProduct.pmfPi (fun i => σ i (r.view i s (sig i))) :=
+  resolveActionsMixed_gen σ r s sig 0 _
+
+/-- Evaluate from a `LinConfig` using behavioral strategies. Like `evalFromCfg`
+but samples actions from behavioral distributions rather than applying pure
+strategies deterministically. -/
+noncomputable def evalFromCfgMixed
+    (G : Protocol n S V A Sig) (σ : BehavioralProfile n V A) : LinConfig G → PMF S
+  | .terminal s => PMF.pure s
+  | .signal k s => evalRoundsMixed (G.rounds.drop k) σ s
+  | .playerTurn k s sig p accActs =>
+      match G.rounds[k]? with
+      | some r =>
+        (resolveActionsMixed σ r s sig p.val accActs).bind fun fullActs =>
+          let next := r.transition s fullActs
+          evalRoundsMixed (G.rounds.drop (k + 1)) σ next
+      | none => PMF.pure s
+  | .applyTransition k s _sig accActs =>
+      match G.rounds[k]? with
+      | some r =>
+        let next := r.transition s accActs
+        evalRoundsMixed (G.rounds.drop (k + 1)) σ next
+      | none => PMF.pure s
+
+/-- `evalFromCfgMixed` at the initial configuration equals `Protocol.evalMixed`. -/
+theorem evalFromCfgMixed_init (G : Protocol n S V A Sig)
+    (σ : BehavioralProfile n V A) :
+    evalFromCfgMixed G σ (linInitialConfig G) = G.evalMixed σ := by
+  simp only [linInitialConfig]
+  split <;> simp only [evalFromCfgMixed]
+  · -- G.rounds[0]? = none → rounds is empty
+    rename_i h
+    have hnil : G.rounds = [] := by
+      match hr : G.rounds with
+      | [] => rfl
+      | _ :: _ => simp [hr] at h
+    simp [Protocol.evalMixed, evalRoundsMixed, hnil]
+  · -- G.rounds[0]? ≠ none → signal case
+    rw [List.drop_zero]
+    rfl
+
+/-- At done configs, `evalFromCfgMixed` reduces to `PMF.pure cfg.state`. -/
+private theorem evalFromCfgMixed_of_isDone (G : Protocol n S V A Sig)
+    (σ : BehavioralProfile n V A) (cfg : LinConfig G)
+    (hd : cfg.isDone G) :
+    evalFromCfgMixed G σ cfg = PMF.pure cfg.state := by
+  cases cfg with
+  | terminal s => rfl
+  | signal k s =>
+    change evalRoundsMixed (G.rounds.drop k) σ s = PMF.pure s
+    have hdr : G.rounds.drop k = [] := by
+      apply List.drop_eq_nil_of_le
+      by_contra h; push_neg at h
+      have : G.rounds[k]? = some G.rounds[k] := List.getElem?_eq_getElem h
+      simp [LinConfig.isDone, this] at hd
+    rw [hdr]; rfl
+  | playerTurn k s sig p accActs =>
+    change (match G.rounds[k]? with | some r => _ | none => PMF.pure s) = PMF.pure s
+    have hd' : G.rounds[k]? = none := hd
+    rw [hd']
+  | applyTransition k s sig accActs =>
+    change (match G.rounds[k]? with | some r => _ | none => PMF.pure s) = PMF.pure s
+    have hd' : G.rounds[k]? = none := hd
+    rw [hd']
+
+end BehavioralAdequacy
 
 
 -- ============================================================================

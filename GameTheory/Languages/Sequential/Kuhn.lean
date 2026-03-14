@@ -13,7 +13,8 @@ Kuhn's theorem for compiled sequential protocols.
 - `stepMassInvariant_compiledCore` : `StepMassInvariant` holds for the compiled core model
 - `kuhn_mixed_to_behavioral_compiledLin` : M→B on linearized `ObsModelCore`
   (under `ActionPosteriorLocal`, which follows from perfect recall)
-- `kuhn_mixed_to_behavioral_perfectRecall` : M→B under `Protocol.PerfectRecall`
+- `kuhn_mixed_to_behavioral_native` : M→B with native `Protocol.eval` on the RHS
+  (under `Protocol.FullRecall`)
 
 ## Architecture
 
@@ -154,6 +155,52 @@ theorem kuhn_mixed_to_behavioral_fullRecall
         (Math.PMFProduct.pmfPi μ).bind ((compiledLinObs' G).runDistPure k) :=
   kuhn_mixed_to_behavioral_compiledLin G
     (fun i => actionPosteriorLocal_of_fullRecall G hFR i) μ k
+
+-- ============================================================================
+-- Native M→B: stated on Protocol.eval
+-- ============================================================================
+
+/-- Extract the terminal state from a trace of the linearized model. -/
+private noncomputable def extractState (G : Protocol n S V A Sig) :
+    List (LinConfig G) → S :=
+  fun ss => ((compiledLinObs G).lastState ss).state
+
+set_option linter.unusedFintypeInType false in
+/-- **Kuhn M→B (native)**: under full recall, every product mixed strategy profile
+can be realized by a behavioral strategy profile on the linearized compiled model,
+with the same outcome distribution as `Protocol.eval`.
+
+The behavioral profile lives on the compiled model. The RHS is the native
+protocol evaluation: `(pmfPi μ).bind (Protocol.eval G)`. -/
+theorem kuhn_mixed_to_behavioral_native
+    [DecidableEq V] [Fintype V] [Fintype A] [Nonempty A]
+    [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
+    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
+    (hFR : G.FullRecall)
+    (μ : (i : Fin n) → PMF (PureStrategy V A))
+    (k : Nat) (hk : k ≥ G.rounds.length * (n + 2)) :
+    ∃ β : ObsModelCore.BehavioralProfile (compiledLinObs' G),
+      ((compiledLinObs' G).runDist k β).bind
+        (fun ss => PMF.pure (extractState G ss)) =
+      (Math.PMFProduct.pmfPi μ).bind (fun σ => G.eval σ) := by
+  obtain ⟨β, hβ⟩ := kuhn_mixed_to_behavioral_fullRecall G hFR
+    (liftMixedProfile (G := G) μ) k
+  refine ⟨β, ?_⟩
+  -- Apply .bind extract to hβ
+  have hlhs : ((compiledLinObs' G).runDist k β).bind
+      (fun ss => PMF.pure (extractState G ss)) =
+    ((Math.PMFProduct.pmfPi (liftMixedProfile (G := G) μ)).bind
+      ((compiledLinObs' G).runDistPure k)).bind
+        (fun ss => PMF.pure (extractState G ss)) := by
+    rw [hβ]
+  rw [hlhs, PMF.bind_bind]
+  -- Replace pmfPi (liftMixedProfile μ) with pushforward (pmfPi μ) liftPureProfile
+  rw [liftMixedProfile_joint (G := G) μ]
+  -- pushforward (pmfPi μ) liftPureProfile = (pmfPi μ).bind (fun σ => pure (liftPureProfile σ))
+  simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, PMF.pure_bind]
+  -- Now both sides: (pmfPi μ).bind (fun σ => ...)
+  congr 1; funext σ
+  exact runDistPure_eq_eval G σ k hk
 
 end KuhnLinearized
 
