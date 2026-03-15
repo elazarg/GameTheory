@@ -680,6 +680,7 @@ theorem descendPureProfile_liftPureProfile [Nonempty (Fin G.rounds.length)]
     descendPureProfile (G := G) (liftPureProfile σ) = σ := by
   ext i v; simp [descendPureProfile, liftPureProfile, descendLocalStrategy, liftLocalStrategy]
 
+
 -- ============================================================================
 -- Behavioral profile bridges
 -- ============================================================================
@@ -2408,6 +2409,56 @@ theorem obsLocalFeasibility_of_fullRecall
         some (⟨r, hr'⟩, v_match) from by rw [hfin_eq]]
       rw [h1', h2']
 
+/-- The linearized compiled model satisfies `NoNontrivialInfoStateRepeat`
+unconditionally: along any reachable trace, no observation `some (k, v)`
+appears at two distinct positions. This follows from the strict monotonicity
+of the phase function along non-done traces. -/
+theorem noNontrivialInfoStateRepeat_compiledLin :
+    (compiledLinObs G).NoNontrivialInfoStateRepeat := by
+  intro i π k ss hss j₁ j₂ hlt hj₂ hproj
+  rw [ObsModelCore.runDistPure_eq_pureRun] at hss
+  have hlen := pureRun_length _ _ k π ss hss
+  -- For identity info state, projectStates (take) = linObserve at last element
+  have hne₁ : ss.take (j₁ + 1) ≠ [] := List.ne_nil_of_length_pos (by simp; omega)
+  have hne₂ : ss.take (j₂ + 1) ≠ [] := List.ne_nil_of_length_pos (by simp; omega)
+  have hobs_eq₁ := projectStates_eq_lastObs G i (ss.take (j₁ + 1)) hne₁
+  have hobs_eq₂ := projectStates_eq_lastObs G i (ss.take (j₂ + 1)) hne₂
+  -- Simplify: last element of take (j+1) ss is ss[j]
+  have htake_last₁ : (ss.take (j₁ + 1))[(ss.take (j₁ + 1)).length - 1]'(by
+      simp; omega) = ss[j₁]'(by omega) := by
+    have : (ss.take (j₁ + 1)).length - 1 = j₁ := by simp; omega
+    simp only [this]; exact List.getElem_take
+  have htake_last₂ : (ss.take (j₂ + 1))[(ss.take (j₂ + 1)).length - 1]'(by
+      simp; omega) = ss[j₂]'(by omega) := by
+    have : (ss.take (j₂ + 1)).length - 1 = j₂ := by simp; omega
+    simp only [this]; exact List.getElem_take
+  rw [htake_last₁] at hobs_eq₁
+  rw [htake_last₂] at hobs_eq₂
+  -- Now: projectStates i (take (j+1) ss) = linObserve G i ss[j]
+  -- hproj gives equal projectStates → equal observations
+  have hobseq : linObserve G i (ss[j₁]'(by omega)) =
+      linObserve G i (ss[j₂]'(by omega)) := by
+    rw [← hobs_eq₁, ← hobs_eq₂]; exact hproj
+  -- The goal is about Act at currentObs (projectStates (take (j₂+1) ss))
+  -- For identity: currentObs = id, so this is projectStates = linObserve at j₂
+  -- For identity info state: currentObs = id, so goal reduces to
+  -- Subsingleton (LinAct _ A (projectStates i (take (j₂+1) ss)))
+  -- which equals linObserve G i ss[j₂] by hobs_eq₂
+  change Subsingleton (LinAct (RoundView G) A
+    ((compiledLinObs G).projectStates i (ss.take (j₂ + 1))))
+  rw [hobs_eq₂]
+  cases hobs₂ : linObserve G i (ss[j₂]'(by omega)) with
+  | none => exact inferInstanceAs (Subsingleton PUnit)
+  | some rv =>
+    obtain ⟨r, v⟩ := rv
+    rw [hobs₂] at hobseq
+    have hp₁ := phase_of_linObserve_some G _ i r v hobseq
+    have hp₂ := phase_of_linObserve_some G _ i r v hobs₂
+    have hnd₂ := not_isDone_of_linObserve_some G _ i _ hobs₂
+    have hphase_lt := phase_strict_mono_of_not_done G π k ss hss
+      j₁ j₂ (by omega) (by omega) hlt hnd₂
+    omega
+
 end OLFBridge
 
 -- ============================================================================
@@ -2464,5 +2515,66 @@ theorem liftBehavioralProfile_descendVRD_agree
     rw [hvr]
 
 end VRDAgreement
+
+-- ============================================================================
+-- Pure profile VRD descent (for B→M)
+-- ============================================================================
+
+section PureVRDDescent
+
+variable [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable [Fintype A] [Nonempty A]
+variable {G : Protocol n S V A Sig}
+
+/-- Descend a compiled local strategy using `ViewDeterminesRound`: picks the
+canonical round for each view via `viewRound`. -/
+noncomputable def descendLocalStrategyVRD [Nonempty (Fin G.rounds.length)]
+    (hVRD : G.ViewDeterminesRound)
+    (π : (compiledLinObs G).LocalStrategy (i := i)) :
+    PureStrategy V A :=
+  fun v => π (some (viewRound hVRD i v, v))
+
+/-- Descend a compiled pure profile using `ViewDeterminesRound`. -/
+noncomputable def descendPureProfileVRD [Nonempty (Fin G.rounds.length)]
+    (hVRD : G.ViewDeterminesRound)
+    (π : (compiledLinObs G).PureProfile) :
+    PureProfile n V A :=
+  fun i => descendLocalStrategyVRD hVRD (π i)
+
+/-- `liftPureProfile (descendPureProfileVRD hVRD π)` agrees with `π` at all
+reachable info states under `pureToBehavioral`. -/
+theorem liftPureProfile_descendVRD_agree
+    [Nonempty (Fin G.rounds.length)]
+    (hVRD : G.ViewDeterminesRound)
+    (π : (compiledLinObs G).PureProfile)
+    (m : Nat) (i : Fin n) (ss : List (LinConfig G))
+    (_hss : ((compiledLinObs G).runDist m
+      ((compiledLinObs G).pureToBehavioral π)) ss ≠ 0) :
+    ((compiledLinObs G).pureToBehavioral π) i
+      ((compiledLinObs G).projectStates i ss) =
+    ((compiledLinObs G).pureToBehavioral
+      (liftPureProfile (G := G) (descendPureProfileVRD hVRD π))) i
+      ((compiledLinObs G).projectStates i ss) := by
+  set obs := (compiledLinObs G).projectStates i ss
+  cases hobs : obs with
+  | none =>
+    simp [ObsModelCore.pureToBehavioral]
+    rfl
+  | some rv =>
+    obtain ⟨k, v⟩ := rv
+    have hps : obs = linObserve G i ((compiledLinObs G).lastState ss) := by
+      have h := ObsModelCore.currentObs_projectStates (compiledLinObs G) i ss
+      simp only [ObsModelCore.currentObs, compileObsCoreModelLin] at h
+      exact h
+    rw [hobs] at hps
+    obtain ⟨s, sig, _, _, hview⟩ := linObserve_some_playerTurn G _ i (k, v) hps.symm
+    have hvr : viewRound hVRD i v = k := viewRound_eq hVRD k s (sig i) i hview
+    simp only [ObsModelCore.pureToBehavioral]
+    congr 1
+    change π i (some (k, v)) =
+      liftLocalStrategy (descendLocalStrategyVRD hVRD (π i)) (some (k, v))
+    simp only [liftLocalStrategy, descendLocalStrategyVRD]; rw [hvr]
+
+end PureVRDDescent
 
 end GameTheory.Sequential

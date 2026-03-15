@@ -249,6 +249,81 @@ theorem kuhn_mixed_to_behavioral_sequential
   congr 1; funext π
   exact runDistPure_eq_eval G π k (by omega)
 
+-- ============================================================================
+-- B→M: behavioral strategies can be realized as product mixed strategies
+-- ============================================================================
+
+set_option linter.unusedFintypeInType false in
+/-- **Kuhn B→M for linearized sequential protocols**: behavioral strategies
+can be decomposed into product mixed strategies. The `NoNontrivialInfoStateRepeat`
+condition holds unconditionally on the linearized model.
+
+This is at the compiled level — LHS and RHS use `runDist`. -/
+theorem kuhn_behavioral_to_mixed_compiledLin
+    [Fintype A] [Nonempty A]
+    [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
+    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
+    (β : ObsModelCore.BehavioralProfile (compiledLinObs' G)) (k : Nat) :
+    (compiledLinObs' G).runDist k β =
+      ((compiledLinObs' G).behavioralToMixedJoint β).bind
+        ((compiledLinObs' G).runDistPure k) :=
+  ObsModelCore.kuhn_behavioral_to_mixed
+    (noNontrivialInfoStateRepeat_compiledLin G) β k
+
+set_option linter.unusedFintypeInType false in
+/-- **Kuhn B→M (fully native)**: under `ViewDeterminesRound`, every behavioral
+strategy profile can be realized by a product mixed strategy with the same
+outcome distribution.
+
+Both LHS and RHS use native Sequential types. The compiled model is used
+internally. The `NoNontrivialInfoStateRepeat` condition holds unconditionally
+on the linearized model (no recall assumption needed for B→M). -/
+theorem kuhn_behavioral_to_mixed_sequential
+    [DecidableEq V] [Fintype V] [Fintype A] [Nonempty A]
+    [Nonempty (Fin G.rounds.length)]
+    (hVRD : G.ViewDeterminesRound)
+    (σ : BehavioralProfile n V A) :
+    ∃ μ : ∀ _i, PMF (PureStrategy V A),
+      G.evalMixed σ = (Math.PMFProduct.pmfPi μ).bind (fun π => G.eval π) := by
+  set k := G.rounds.length * (n + 2)
+  -- 1. Lift native behavioral to compiled
+  set β := liftBehavioralProfile (G := G) σ
+  -- 2. Apply core B→M on linearized model
+  have hbm := kuhn_behavioral_to_mixed_compiledLin G β k
+  -- 3. Define native μ by descending the compiled mixed strategy using VRD
+  set μ : ∀ i, PMF (PureStrategy V A) :=
+    fun i => ((compiledLinObs' G).behavioralToMixed β i).map
+      (descendLocalStrategyVRD (G := G) hVRD)
+  refine ⟨μ, ?_⟩
+  -- 4. LHS: evalMixed σ = (runDist k β).bind extractState via behavioral adequacy
+  rw [← runDist_liftBehavioral_extractState_eq_evalMixed (G := G) σ k (by omega)]
+  -- 5. Apply hbm: runDist k β = (behavioralToMixedJoint β).bind (runDistPure k)
+  conv_lhs => rw [hbm]
+  rw [PMF.bind_bind]
+  -- 6. pmfPi μ = pushforward (pmfPi (behavioralToMixed β)) descendPureProfileVRD
+  have hpush : Math.PMFProduct.pmfPi μ =
+      Math.ProbabilityMassFunction.pushforward
+        (Math.PMFProduct.pmfPi ((compiledLinObs' G).behavioralToMixed β))
+        (descendPureProfileVRD (G := G) hVRD) := by
+    exact (Math.PMFProduct.pmfPi_push_coordwise
+      ((compiledLinObs' G).behavioralToMixed β)
+      (fun (i : Fin n) => descendLocalStrategyVRD (G := G) hVRD (i := i))).symm
+  rw [hpush]
+  simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, PMF.pure_bind]
+  change ((compiledLinObs' G).behavioralToMixedJoint β).bind _ = _
+  congr 1; funext π
+  -- Show (runDistPure k π).bind extract = G.eval (descendPureProfileVRD hVRD π)
+  -- by showing runDistPure agrees with liftPureProfile (descendPureProfileVRD hVRD π)
+  have hcongr : (compiledLinObs G).runDistPure k π =
+      (compiledLinObs G).runDistPure k
+        (liftPureProfile (G := G) (descendPureProfileVRD hVRD π)) := by
+    simp only [ObsModelCore.runDistPure]
+    apply ObsModelCore.runDist_congr
+    intro m i ss hss
+    exact liftPureProfile_descendVRD_agree hVRD π m i ss hss
+  rw [hcongr]
+  exact runDistPure_eq_eval G (descendPureProfileVRD hVRD π) k (by omega)
+
 end KuhnLinearized
 
 end GameTheory.Languages.Sequential
