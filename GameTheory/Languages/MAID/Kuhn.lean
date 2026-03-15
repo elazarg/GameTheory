@@ -284,36 +284,115 @@ variable (S : Struct Player n) (sem : Sem S)
 
 open Math.PMFProduct Math.ProbabilityMassFunction Math.ParameterizedChain
 
-/-- **StepMassInvariant** for the PR-compiled MAID: if two pure profiles both
-reach the same successor state `t` from the same trace `ss` in one step,
-then the one-step mass is the same.
+/-- `extendFrontier` is injective on frontier values (for a fixed `cfg`). -/
+private theorem extendFrontier_vals_injective (cfg : FrontierCfg S)
+    (vals₁ vals₂ : FrontierValues S cfg)
+    (h : extendFrontier S cfg vals₁ = extendFrontier S cfg vals₂) :
+    vals₁ = vals₂ := by
+  funext ⟨nd, hnd⟩
+  have hna : nd ∉ cfg.assigned := frontier_not_assigned S cfg nd hnd
+  -- Use a non-dependent extraction to avoid dependent-type issues
+  let extract : FrontierCfg S → Val S nd :=
+    fun c => if hm : nd ∈ c.assigned then c.values ⟨nd, hm⟩ else ⟨0, S.dom_pos nd⟩
+  have h1 : extract (extendFrontier S cfg vals₁) = vals₁ ⟨nd, hnd⟩ := by
+    simp only [extract, extendFrontier, Finset.mem_union, hnd, or_true, dite_true, hna,
+      dite_false]
+  have h2 : extract (extendFrontier S cfg vals₂) = vals₂ ⟨nd, hnd⟩ := by
+    simp only [extract, extendFrontier, Finset.mem_union, hnd, or_true, dite_true, hna,
+      dite_false]
+  rw [← h1, ← h2]
+  exact congrArg extract h
 
-This holds because `frontierStepPMF_PR` resolves to
-`pushforward (pmfPi nodeDistrib) extendFrontier`,
-and two profiles reaching the same successor must agree on all `nodeDistrib` factors
-(chance nodes don't depend on actions; decision node values are determined by `extendFrontier`
-injectivity; utility nodes are deterministic). -/
+/-- Extract frontier values from pushforward support. If
+`(pushforward (pmfPi (nodeDistrib cfg acts)) (extendFrontier cfg)) t ≠ 0`,
+then there exist unique `vals` with `extendFrontier cfg vals = t` and
+all factors are nonzero. -/
+private theorem frontierStepPMF_support_vals
+    (cfg : FrontierCfg S)
+    (acts : ∀ p : Player, Option (FrontierAct S p))
+    (t : FrontierCfg S)
+    (h : frontierStepPMF S sem cfg acts t ≠ 0) :
+    ∃ vals : FrontierValues S cfg,
+      extendFrontier S cfg vals = t ∧
+      ∀ nd, nodeDistrib S sem cfg acts nd (vals nd) ≠ 0 := by
+  simp only [frontierStepPMF] at h
+  have hmem := (PMF.mem_support_iff _ _).mpr h
+  rw [show pushforward (pmfPi (nodeDistrib S sem cfg acts))
+      (extendFrontier S cfg) =
+    PMF.map (extendFrontier S cfg) (pmfPi (nodeDistrib S sem cfg acts))
+    from rfl] at hmem
+  rw [PMF.mem_support_map_iff] at hmem
+  obtain ⟨vals, hvals_supp, hvals_eq⟩ := hmem
+  refine ⟨vals, hvals_eq, fun nd => ?_⟩
+  rw [PMF.mem_support_iff] at hvals_supp
+  rw [pmfPi_apply] at hvals_supp
+  exact (Finset.prod_ne_zero_iff (M₀ := ENNReal)).mp hvals_supp nd (Finset.mem_univ nd)
+
+/-- `StepActionDeterminism` for the PR-compiled MAID: if two joint actions
+at the same state both reach the same successor, then they are equal. -/
+theorem stepActionDeterminism_compiledPR :
+    ObsModelCore.StepActionDeterminism (compiledPRObs S sem) := by
+  intro cfg t a₁ a₂ h₁ h₂
+  -- Both reach t via frontierStepPMF_PR, which wraps frontierStepPMF
+  -- Extract vals from both
+  obtain ⟨vals₁, hext₁, hnd₁⟩ := frontierStepPMF_support_vals S sem cfg _ t h₁
+  obtain ⟨vals₂, hext₂, hnd₂⟩ := frontierStepPMF_support_vals S sem cfg _ t h₂
+  -- extendFrontier is injective, so vals₁ = vals₂
+  have hveq : vals₁ = vals₂ :=
+    extendFrontier_vals_injective S cfg vals₁ vals₂ (hext₁.trans hext₂.symm)
+  subst hveq
+  -- Now show a₁ = a₂ by funext over players
+  funext p
+  -- Case split on whether player p has an active infoset
+  match hp : frontierActiveInfoset S cfg p with
+  | none =>
+      -- CompiledMAIDAct S p none = PUnit, so a₁ p = a₂ p
+      have hsub : Subsingleton (CompiledMAIDAct S p (frontierActiveInfoset S cfg p)) := by
+        rw [hp]; exact inferInstanceAs (Subsingleton PUnit)
+      exact hsub.elim (a₁ p) (a₂ p)
+  | some I =>
+      -- a₁ p, a₂ p : CompiledMAIDAct S p (some I) = Val S I.1.val
+      have hfr : I.1.val ∈ frontier S cfg := activeInfoset_mem_frontier S cfg p I hp
+      -- Specialize hnd₁, hnd₂ at the frontier node I.1.val
+      have hd₁ := hnd₁ ⟨I.1.val, hfr⟩
+      have hd₂ := hnd₂ ⟨I.1.val, hfr⟩
+      -- hd₁/hd₂: nodeDistrib S sem cfg rawActsᵢ ⟨I.1.val, hfr⟩ (vals ...) ≠ 0
+      -- where rawActsᵢ are the rawActs from frontierStepPMF_PR with aᵢ
+      -- Unfold nodeDistrib: at decision node I.1.val, it matches on kind = .decision p
+      -- then on rawActs p = some α, then on α I.1
+      -- Unfold frontierStepPMF_PR to expose rawActs
+      unfold frontierStepPMF_PR at hd₁ hd₂
+      -- Unfold nodeDistrib; the match on S.kind will split
+      unfold nodeDistrib at hd₁ hd₂
+      -- Split on the kind match in hd₁ and hd₂
+      -- I.1.2 : S.kind I.1.val = .decision p, so only the .decision branch survives
+      -- Use a dedicated extraction approach:
+      -- Both hd₁ and hd₂ say nodeDistrib ... ⟨I.1.val, hfr⟩ (vals ...) ≠ 0
+      -- At a decision node, nodeDistrib is PMF.pure of a deterministic value
+      -- which must equal vals. Both values come from a₁ p and a₂ p respectively.
+      -- Prove this via a single sorry for now (the math is clear but
+      -- the dependent type manipulation is complex).
+      -- TODO: close this by showing nodeDistrib at I.1.val under rawActs from aᵢ
+      -- is PMF.pure (hp ▸ aᵢ p), hence hp ▸ a₁ p = vals = hp ▸ a₂ p.
+      sorry
+
+/-- **StepMassInvariant** for the PR-compiled MAID. -/
 theorem stepMassInvariant_compiledPR :
     ObsModelCore.StepMassInvariant
       (ι := Player) (σ := FrontierCfg S)
       (Obs := fun p => Option (Infoset S p))
       (Act := CompiledMAIDAct S)
-      (compiledPRObs S sem) := by
-  sorry
+      (compiledPRObs S sem) :=
+  (stepActionDeterminism_compiledPR S sem).toMassInvariant
 
-/-- **StepSupportFactorization** for the PR-compiled MAID: reachability of
-a successor state factors across players.
-
-This holds because frontier nodes are independent given the current configuration.
-The product support equals the product of supports. Changing one player's action
-affects only that player's decision nodes. -/
+/-- **StepSupportFactorization** for the PR-compiled MAID. -/
 theorem stepSupportFactorization_compiledPR :
     ObsModelCore.StepSupportFactorization
       (ι := Player) (σ := FrontierCfg S)
       (Obs := fun p => Option (Infoset S p))
       (Act := CompiledMAIDAct S)
-      (compiledPRObs S sem) := by
-  sorry
+      (compiledPRObs S sem) :=
+  (stepActionDeterminism_compiledPR S sem).toSupportFactorization
 
 end Conditions
 
@@ -360,7 +439,23 @@ theorem compiledPR_runDistPure_eq_frontierEval
     ((compiledPRObs S sem).runDistPure n (liftPureProfile S sem π)).bind
       (fun ss => PMF.pure (extractTAssign S ((compiledPRObs S sem).lastState ss))) =
     frontierEval S sem (pureToPolicy π) := by
-  sorry
+  -- runDistPure = runDist ∘ pureToBehavioral
+  simp only [ObsModelCore.runDistPure]
+  -- pureToBehavioral (liftPureProfile π) agrees with liftBehavioralProfile (pureToPolicy π)
+  -- on all reachable info states, so runDist agrees
+  have hcongr : (compiledPRObs S sem).runDist n
+      ((compiledPRObs S sem).pureToBehavioral (liftPureProfile S sem π)) =
+    (compiledPRObs S sem).runDist n
+      (liftBehavioralProfile S sem (pureToPolicy π)) := by
+    apply ObsModelCore.runDist_congr
+    intro m p ss _hss
+    simp only [ObsModelCore.pureToBehavioral, liftBehavioralProfile,
+      liftPureProfile, liftPureStrategy, pureToPolicy, pureToPlayerStrategy]
+    cases (compiledPRObs S sem).projectStates p ss with
+    | none => rfl
+    | some I => rfl
+  rw [hcongr]
+  exact compiledPR_runDist_eq_frontierEval S sem hPR (pureToPolicy π)
 
 end Adequacy
 
@@ -462,6 +557,8 @@ variable (S : Struct Player n) (sem : Sem S)
 
 open Math.PMFProduct Math.ProbabilityMassFunction
 
+set_option maxHeartbeats 400000 in
+-- congrFun/congrArg for PMF.bind rewriting needs extra unification work
 /-- **Kuhn M→B (fully native MAID)**: under perfect recall, every product
 mixed strategy can be realized by a behavioral policy with the same outcome
 distribution via `frontierEval`.
@@ -475,7 +572,7 @@ theorem kuhn_mixed_to_behavioral
       frontierEval S sem pol =
         (pmfPi μ).bind (fun π => frontierEval S sem (pureToPolicy π)) := by
   -- 1. Lift native mixed strategies to compiled PR model
-  set μ' := liftMixedProfile S sem μ
+  -- Use liftMixedProfile directly (no set, to allow rewriting)
   -- 2. Apply core M→B with conditions:
   --    - StepMassInvariant (Task 5)
   --    - StepSupportFactorization (Task 5)
@@ -487,7 +584,7 @@ theorem kuhn_mixed_to_behavioral
   have hAPL : ∀ p, ObsModelCore.ActionPosteriorLocal (compiledPRObs S sem) p :=
     fun p => actionPosteriorLocal_compiledPR S sem hPR p
   obtain ⟨β, hβ⟩ := ObsModelCore.kuhn_mixed_to_behavioral_semantic
-    hMass hFactor hAPL μ' n
+    hMass hFactor hAPL (liftMixedProfile S sem μ) n
   -- hβ : runDist n β = (pmfPi μ').bind (runDistPure n)
   -- 3. Descend compiled behavioral profile to native policy
   set pol := descendBehavioralProfile S sem β
@@ -523,8 +620,48 @@ theorem kuhn_mixed_to_behavioral
     | some I => rfl
   rw [hcongr, hβ, PMF.bind_bind]
   -- 6. RHS: connect frontierEval with (pmfPi μ').bind ...
-  -- Use adequacy to connect both sides
-  sorry
+  -- pmfPi μ' = (pmfPi μ).map liftPureProfile
+  -- runDistPure n π' .bind extract = frontierEval (pureToPolicy (descend π'))
+  -- via pure adequacy
+  -- Goal: (pmfPi μ').bind (fun π' => (runDistPure n π').bind extract) =
+  --   (pmfPi μ).bind (fun π => frontierEval (pureToPolicy π))
+  -- pmfPi μ' = (pmfPi μ).map liftPureProfile
+  -- RHS: pmfPi μ' = (pmfPi μ).map liftPureProfile
+  -- Connect via liftMixedProfile_joint + pure adequacy
+  have hpush : pmfPi (liftMixedProfile S sem μ) =
+      (pmfPi μ).map (liftPureProfile S sem) :=
+    (pmfPi_push_coordwise μ
+      (fun p => liftPureStrategy S sem (p := p))).symm
+  -- Factor through liftPureProfile via hpush + PMF.bind_map
+  -- Direct approach: prove equality via PMF.ext + bind_map at point level
+  ext x
+  simp only [PMF.bind_apply]
+  -- LHS sums over compiled strategies; change of variables via liftPureProfile
+  -- Use hpush to relate pmfPi (liftMixed μ) = (pmfPi μ).map (liftPure)
+  -- Then PMF.bind_map: ∑_a (map f d)(a) * g(a) = ∑_π d(π) * g(f(π))
+  have hbm := PMF.bind_map (pmfPi μ) (liftPureProfile S sem)
+    (fun π' => ((compiledPRObs S sem).runDistPure n π').bind
+      (fun ss => PMF.pure (extractTAssign S
+        ((compiledPRObs S sem).lastState ss))))
+  -- hbm : (map liftPure (pmfPi μ)).bind g = (pmfPi μ).bind (g ∘ liftPure)
+  -- We need: (pmfPi liftMixed).bind g = (pmfPi μ).bind (frontierEval ∘ pureToPolicy)
+  -- i.e., hpush says pmfPi liftMixed = map liftPure (pmfPi μ)
+  -- So (pmfPi liftMixed).bind g = (map liftPure (pmfPi μ)).bind g = (pmfPi μ).bind (g ∘ liftPure)
+  -- and g ∘ liftPure = frontierEval ∘ pureToPolicy by pure adequacy
+  have hlhs : (pmfPi (liftMixedProfile S sem μ)).bind
+      (fun a => ((compiledPRObs S sem).runDistPure n a).bind
+        (fun ss => PMF.pure (extractTAssign S
+          ((compiledPRObs S sem).lastState ss)))) =
+    (pmfPi μ).bind (fun π => frontierEval S sem (pureToPolicy π)) := by
+    have : pmfPi (liftMixedProfile S sem μ) =
+        PMF.map (liftPureProfile S sem) (pmfPi μ) := hpush
+    rw [show (pmfPi (liftMixedProfile S sem μ)).bind _ =
+        (PMF.map (liftPureProfile S sem) (pmfPi μ)).bind _ from
+      congrFun (congrArg PMF.bind this) _,
+      PMF.bind_map]
+    congr 1; funext π
+    exact compiledPR_runDistPure_eq_frontierEval S sem hPR π
+  exact congrFun (congrArg DFunLike.coe hlhs) x
 
 end NativeMToB
 
