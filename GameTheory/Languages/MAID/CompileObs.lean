@@ -214,4 +214,72 @@ noncomputable def compileObsCoreModelPR (S : Struct Player n) (sem : Sem S) :
     step := fun cfg acts => frontierStepPMF_PR S sem cfg acts
   }
 
+-- ============================================================================
+-- Profile lift/descend between native MAID and compiled PR model
+-- ============================================================================
+
+section ProfileLiftDescend
+
+variable (S : Struct Player n) (sem : Sem S)
+
+/-- Lift a native pure strategy to a compiled PR local strategy.
+The compiled PR model uses identity info state, so `InfoState p = Option (Infoset S p)`
+and `currentObs = id`. At `some I`, the action type is `Val S I.1.val`;
+at `none`, it is `PUnit`. -/
+def liftPureStrategy {p : Player} (σ : PureStrategy S p) :
+    (compileObsCoreModelPR S sem).LocalStrategy p :=
+  fun v => match v with
+    | none => PUnit.unit
+    | some I => σ I
+
+/-- Lift a native pure policy to a compiled PR pure profile. -/
+def liftPureProfile (π : PurePolicy S) :
+    ObsModelCore.PureProfile (compileObsCoreModelPR S sem) :=
+  fun p => liftPureStrategy S sem (π p)
+
+/-- Descend a compiled PR local strategy to a native pure strategy. -/
+def descendPureStrategy (σ' : (compileObsCoreModelPR S sem).LocalStrategy p) :
+    PureStrategy S p :=
+  fun I => σ' (some I)
+
+/-- Descend a compiled PR pure profile to a native pure policy. -/
+def descendPureProfile (π' : ObsModelCore.PureProfile (compileObsCoreModelPR S sem)) :
+    PurePolicy S :=
+  fun p => descendPureStrategy S sem (π' p)
+
+/-- Round-trip: descend ∘ lift = id for pure strategies. -/
+theorem descend_lift_pureStrategy (σ : PureStrategy S p) :
+    descendPureStrategy S sem (liftPureStrategy S sem σ) = σ := by
+  funext I; rfl
+
+/-- Round-trip: descend ∘ lift = id for pure policies. -/
+theorem descend_lift_pureProfile (π : PurePolicy S) :
+    descendPureProfile S sem (liftPureProfile S sem π) = π := by
+  funext p I; rfl
+
+/-- Lift a native policy to a compiled PR behavioral profile. -/
+noncomputable def liftBehavioralProfile (pol : Policy S) :
+    ObsModelCore.BehavioralProfile (compileObsCoreModelPR S sem) :=
+  fun p v => match v with
+    | none => PMF.pure PUnit.unit
+    | some I => pol p I
+
+/-- Descend a compiled PR behavioral profile to a native policy. -/
+noncomputable def descendBehavioralProfile
+    (β : ObsModelCore.BehavioralProfile (compileObsCoreModelPR S sem)) :
+    Policy S :=
+  fun p I => β p (some I)
+
+/-- Round-trip: descend ∘ lift = id for behavioral profiles. -/
+theorem descend_lift_behavioralProfile (pol : Policy S) :
+    descendBehavioralProfile S sem (liftBehavioralProfile S sem pol) = pol := by
+  funext p I; rfl
+
+/-- Lift a native mixed profile to compiled PR per-player mixed strategies. -/
+noncomputable def liftMixedProfile (μ : ∀ p, PMF (PureStrategy S p)) :
+    ∀ p, PMF ((compileObsCoreModelPR S sem).LocalStrategy p) :=
+  fun p => (μ p).map (liftPureStrategy S sem)
+
+end ProfileLiftDescend
+
 end MAID

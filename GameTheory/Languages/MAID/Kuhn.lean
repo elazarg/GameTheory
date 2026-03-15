@@ -248,4 +248,284 @@ theorem noNontrivialInfoStateRepeat_compiledPR :
 
 end KuhnBToM
 
+-- ============================================================================
+-- Typeclass instances for compiled PR model
+-- ============================================================================
+
+section Instances
+
+variable (S : Struct Player n) (sem : Sem S)
+
+/-- `InfoState p = Option (Infoset S p)` for the PR model. -/
+theorem compiledPR_infoState_eq (p : Player) :
+    (compileObsCoreModelPR S sem).InfoState p = Option (Infoset S p) := rfl
+
+noncomputable instance compiledPR_infoState_fintype (p : Player) :
+    Fintype ((compileObsCoreModelPR S sem).InfoState p) :=
+  compiledPR_infoState_eq S sem p ▸ inferInstance
+
+instance compiledPR_infoState_decidableEq (p : Player) :
+    DecidableEq ((compileObsCoreModelPR S sem).InfoState p) :=
+  compiledPR_infoState_eq S sem p ▸ inferInstance
+
+noncomputable instance compiledPR_localStrategy_fintype (p : Player) :
+    Fintype ((compileObsCoreModelPR S sem).LocalStrategy p) :=
+  Pi.instFintype
+
+end Instances
+
+-- ============================================================================
+-- StepMassInvariant + StepSupportFactorization for PR model (Tasks 5)
+-- ============================================================================
+
+section Conditions
+
+variable (S : Struct Player n) (sem : Sem S)
+
+open Math.PMFProduct Math.ProbabilityMassFunction Math.ParameterizedChain
+
+/-- **StepMassInvariant** for the PR-compiled MAID: if two pure profiles both
+reach the same successor state `t` from the same trace `ss` in one step,
+then the one-step mass is the same.
+
+This holds because `frontierStepPMF_PR` resolves to
+`pushforward (pmfPi nodeDistrib) extendFrontier`,
+and two profiles reaching the same successor must agree on all `nodeDistrib` factors
+(chance nodes don't depend on actions; decision node values are determined by `extendFrontier`
+injectivity; utility nodes are deterministic). -/
+theorem stepMassInvariant_compiledPR :
+    ObsModelCore.StepMassInvariant
+      (ι := Player) (σ := FrontierCfg S)
+      (Obs := fun p => Option (Infoset S p))
+      (Act := CompiledMAIDAct S)
+      (compiledPRObs S sem) := by
+  sorry
+
+/-- **StepSupportFactorization** for the PR-compiled MAID: reachability of
+a successor state factors across players.
+
+This holds because frontier nodes are independent given the current configuration.
+The product support equals the product of supports. Changing one player's action
+affects only that player's decision nodes. -/
+theorem stepSupportFactorization_compiledPR :
+    ObsModelCore.StepSupportFactorization
+      (ι := Player) (σ := FrontierCfg S)
+      (Obs := fun p => Option (Infoset S p))
+      (Act := CompiledMAIDAct S)
+      (compiledPRObs S sem) := by
+  sorry
+
+end Conditions
+
+-- ============================================================================
+-- Adequacy: compiled PR runDist ↔ frontierEval (Task 4)
+-- ============================================================================
+
+section Adequacy
+
+variable (S : Struct Player n) (sem : Sem S)
+
+open Math.PMFProduct Math.ProbabilityMassFunction
+
+/-- One-step adequacy: the compiled PR model's step with the lifted behavioral profile
+equals `frontierStepPol`.
+
+Under perfect recall, at most one decision node per player is in the frontier.
+The compiled model samples one action per active infoset, then applies it via
+`frontierStepPMF_PR`. The native `frontierStepPol` samples at each decision node
+independently. These agree because there's at most one decision node per player. -/
+theorem compiledPR_stepDist_eq_frontierStepPol
+    (hPR : S.PerfectRecall)
+    (pol : Policy S) (ss : List (FrontierCfg S))
+    (hne : ss ≠ []) :
+    (compiledPRObs S sem).stepDist (liftBehavioralProfile S sem pol) ss =
+      frontierStepPol S sem pol ((compiledPRObs S sem).lastState ss) := by
+  sorry
+
+/-- Full adequacy: the compiled PR model's runDist with lifted behavioral profile,
+mapped by `extractTAssign` on the last state, equals `frontierEval`. -/
+theorem compiledPR_runDist_eq_frontierEval
+    (hPR : S.PerfectRecall)
+    (pol : Policy S) :
+    ((compiledPRObs S sem).runDist n (liftBehavioralProfile S sem pol)).bind
+      (fun ss => PMF.pure (extractTAssign S ((compiledPRObs S sem).lastState ss))) =
+    frontierEval S sem pol := by
+  sorry
+
+/-- Pure adequacy: the compiled PR model's runDistPure with lifted pure profile,
+mapped by `extractTAssign` on the last state, equals `frontierEval (pureToPolicy π)`. -/
+theorem compiledPR_runDistPure_eq_frontierEval
+    (hPR : S.PerfectRecall)
+    (π : PurePolicy S) :
+    ((compiledPRObs S sem).runDistPure n (liftPureProfile S sem π)).bind
+      (fun ss => PMF.pure (extractTAssign S ((compiledPRObs S sem).lastState ss))) =
+    frontierEval S sem (pureToPolicy π) := by
+  sorry
+
+end Adequacy
+
+-- ============================================================================
+-- B→M native theorem (Task 6)
+-- ============================================================================
+
+section NativeBToM
+
+variable (S : Struct Player n) (sem : Sem S)
+
+open Math.PMFProduct Math.ProbabilityMassFunction
+
+/-- **Kuhn B→M (fully native MAID)**: under perfect recall, every behavioral
+policy can be realized by a product mixed strategy with the same outcome
+distribution via `frontierEval`.
+
+Both LHS and RHS use native MAID types — no compiled model types in the statement.
+The compiled model is used internally to construct the mixed strategy
+via the core B→M theorem. -/
+theorem kuhn_behavioral_to_mixed
+    (hPR : S.PerfectRecall) (pol : Policy S) :
+    ∃ μ : ∀ p, PMF (PureStrategy S p),
+      frontierEval S sem pol =
+        (pmfPi μ).bind (fun π => frontierEval S sem (pureToPolicy π)) := by
+  -- 1. Lift native policy to compiled behavioral profile
+  set β := liftBehavioralProfile S sem pol
+  -- 2. Apply compiled B→M (NNISIR holds unconditionally)
+  have hNR := noNontrivialInfoStateRepeat_compiledPR S sem
+  have hbm := ObsModelCore.kuhn_behavioral_to_mixed hNR β n
+  -- hbm : runDist n β = (behavioralToMixedJoint β).bind (runDistPure n)
+  -- 3. Define native μ by descending the compiled mixed strategies
+  set μ : ∀ p, PMF (PureStrategy S p) :=
+    fun p => ((compiledPRObs S sem).behavioralToMixed β p).map
+      (descendPureStrategy S sem)
+  refine ⟨μ, ?_⟩
+  -- 4. LHS: frontierEval pol = (runDist n β).bind extractTAssign  (adequacy)
+  rw [← compiledPR_runDist_eq_frontierEval S sem hPR pol]
+  -- 5. Apply hbm
+  rw [hbm, PMF.bind_bind]
+  -- 6. RHS: (pmfPi μ).bind (frontierEval ∘ pureToPolicy) via pure adequacy
+  -- Connect pmfPi μ with pmfPi (behavioralToMixed β) via push
+  have hpush : pmfPi μ =
+      pushforward (pmfPi ((compiledPRObs S sem).behavioralToMixed β))
+        (descendPureProfile S sem) := by
+    exact (pmfPi_push_coordwise
+      ((compiledPRObs S sem).behavioralToMixed β)
+      (fun p => descendPureStrategy S sem (p := p))).symm
+  rw [hpush]
+  simp only [pushforward, PMF.bind_bind, PMF.pure_bind]
+  change ((compiledPRObs S sem).behavioralToMixedJoint β).bind _ = _
+  congr 1; funext π'
+  -- Show: (runDistPure n π').bind extract = frontierEval (pureToPolicy (descendPureProfile π'))
+  rw [← compiledPR_runDistPure_eq_frontierEval S sem hPR (descendPureProfile S sem π')]
+  -- Need: runDistPure n π' = runDistPure n (liftPureProfile (descendPureProfile π'))
+  congr 1
+  simp only [ObsModelCore.runDistPure]
+  apply ObsModelCore.runDist_congr
+  intro m p ss _hss
+  -- lift ∘ descend agrees with original on each info state:
+  -- some I → rfl, none → PUnit.ext
+  unfold ObsModelCore.pureToBehavioral
+  congr 1
+  unfold liftPureProfile liftPureStrategy descendPureProfile descendPureStrategy
+  cases (compiledPRObs S sem).projectStates p ss with
+  | none => exact PUnit.ext _ _
+  | some I => rfl
+
+end NativeBToM
+
+-- ============================================================================
+-- ActionPosteriorLocal from PerfectRecall (Task 7)
+-- ============================================================================
+
+section APL
+
+variable (S : Struct Player n) (sem : Sem S)
+
+/-- Under perfect recall, `ActionPosteriorLocal` holds for every player
+in the PR-compiled MAID.
+
+Perfect recall ensures that a player's past observations and actions
+are fully observable, so the posterior distribution of actions depends
+only on the current information state. -/
+theorem actionPosteriorLocal_compiledPR
+    (hPR : S.PerfectRecall) (p : Player) :
+    ObsModelCore.ActionPosteriorLocal (compiledPRObs S sem) p := by
+  sorry
+
+end APL
+
+-- ============================================================================
+-- M→B native theorem (Task 8)
+-- ============================================================================
+
+section NativeMToB
+
+variable (S : Struct Player n) (sem : Sem S)
+
+open Math.PMFProduct Math.ProbabilityMassFunction
+
+/-- **Kuhn M→B (fully native MAID)**: under perfect recall, every product
+mixed strategy can be realized by a behavioral policy with the same outcome
+distribution via `frontierEval`.
+
+Both LHS and RHS use native MAID types. The compiled model is used
+internally to construct the behavioral profile. -/
+theorem kuhn_mixed_to_behavioral
+    (hPR : S.PerfectRecall)
+    (μ : ∀ p, PMF (PureStrategy S p)) :
+    ∃ pol : Policy S,
+      frontierEval S sem pol =
+        (pmfPi μ).bind (fun π => frontierEval S sem (pureToPolicy π)) := by
+  -- 1. Lift native mixed strategies to compiled PR model
+  set μ' := liftMixedProfile S sem μ
+  -- 2. Apply core M→B with conditions:
+  --    - StepMassInvariant (Task 5)
+  --    - StepSupportFactorization (Task 5)
+  --    - ActionPosteriorLocal (Task 7)
+  have hMass : ObsModelCore.StepMassInvariant (compiledPRObs S sem) :=
+    stepMassInvariant_compiledPR S sem
+  have hFactor : ObsModelCore.StepSupportFactorization (compiledPRObs S sem) :=
+    stepSupportFactorization_compiledPR S sem
+  have hAPL : ∀ p, ObsModelCore.ActionPosteriorLocal (compiledPRObs S sem) p :=
+    fun p => actionPosteriorLocal_compiledPR S sem hPR p
+  obtain ⟨β, hβ⟩ := ObsModelCore.kuhn_mixed_to_behavioral_semantic
+    hMass hFactor hAPL μ' n
+  -- hβ : runDist n β = (pmfPi μ').bind (runDistPure n)
+  -- 3. Descend compiled behavioral profile to native policy
+  set pol := descendBehavioralProfile S sem β
+  refine ⟨pol, ?_⟩
+  -- 4. LHS: frontierEval pol
+  rw [← compiledPR_runDist_eq_frontierEval S sem hPR pol]
+  -- 5. Connect: runDist n (liftBehavioralProfile pol) ≈ runDist n β
+  --    They agree on reachable info states
+  have hcongr : (compiledPRObs S sem).runDist n (liftBehavioralProfile S sem pol) =
+      (compiledPRObs S sem).runDist n β := by
+    symm
+    apply ObsModelCore.runDist_congr
+    intro m p ss _hss
+    -- pol = descendBehavioralProfile β, so liftBehavioralProfile pol = lift (descend β)
+    -- At `some I`: lift (descend β) = β (definitionally)
+    -- At `none`: both are PMF PUnit = subsingleton
+    change β p _ =
+      (liftBehavioralProfile S sem (descendBehavioralProfile S sem β))
+        p ((compiledPRObs S sem).projectStates p ss)
+    simp only [liftBehavioralProfile, descendBehavioralProfile]
+    cases (compiledPRObs S sem).projectStates p ss with
+    | none =>
+        -- Both sides are PMF over CompiledMAIDAct S p (currentObs p none) = PMF PUnit
+        -- currentObs p none = none for identity info state, so type is PUnit
+        -- All PMF over PUnit are equal (only PMF.pure PUnit.unit)
+        change β p none = PMF.pure PUnit.unit
+        ext ⟨⟩
+        simp only [PMF.pure_apply, if_true]
+        have := PMF.tsum_coe (β p none)
+        rw [tsum_fintype, show Finset.univ = ({PUnit.unit} : Finset PUnit)
+          from rfl] at this
+        simpa using this
+    | some I => rfl
+  rw [hcongr, hβ, PMF.bind_bind]
+  -- 6. RHS: connect frontierEval with (pmfPi μ').bind ...
+  -- Use adequacy to connect both sides
+  sorry
+
+end NativeMToB
+
 end GameTheory.Languages.MAID

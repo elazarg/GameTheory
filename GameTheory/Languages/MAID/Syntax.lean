@@ -380,4 +380,37 @@ theorem evalAssignDist_swap_adj {S : Struct Player n} (sem : Sem S) (pol : Polic
   exact foldl_swapAdj _ _ _ i hi (fun acc =>
     evalStep_swap sem pol _ _ hne hindep acc)
 
+-- ============================================================================
+-- Pure strategies
+-- ============================================================================
+
+/-- A pure strategy for player `p`: choose a value at each info set. -/
+def PureStrategy (S : Struct Player n) (p : Player) :=
+  (I : Infoset S p) → Val S I.1.val
+
+/-- A pure policy: a pure strategy for every player. -/
+def PurePolicy (S : Struct Player n) := (p : Player) → PureStrategy S p
+
+instance (S : Struct Player n) (p : Player) : Fintype (PureStrategy S p) :=
+  Pi.instFintype
+
+instance (S : Struct Player n) (p : Player) : Nonempty (PureStrategy S p) :=
+  ⟨fun I => ⟨0, S.dom_pos I.1.val⟩⟩
+
+instance (S : Struct Player n) : Fintype (PurePolicy S) :=
+  Pi.instFintype
+
+instance (S : Struct Player n) : Nonempty (PurePolicy S) :=
+  ⟨fun _ I => ⟨0, S.dom_pos I.1.val⟩⟩
+
+/-- Lift a pure strategy to a behavioral (deterministic) player strategy. -/
+noncomputable def pureToPlayerStrategy {S : Struct Player n} {p : Player}
+    (σ : PureStrategy S p) : PlayerStrategy S p :=
+  fun I => PMF.pure (σ I)
+
+/-- Lift a pure policy to a (deterministic) policy. -/
+noncomputable def pureToPolicy {S : Struct Player n}
+    (π : PurePolicy S) : Policy S :=
+  fun p => pureToPlayerStrategy (π p)
+
 end MAID

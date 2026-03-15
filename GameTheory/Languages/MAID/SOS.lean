@@ -154,4 +154,46 @@ inductive Step (S : Struct Player n) (sem : Sem S) :
 abbrev ReachBy (S : Struct Player n) (sem : Sem S) :=
   Semantics.Transition.ReachBy (Step S sem)
 
+-- ============================================================================
+-- Policy-driven frontier evaluation
+-- ============================================================================
+
+/-- Per-node distribution under a policy. Chance nodes sample from their CPDs,
+decision nodes use the policy, utility nodes are deterministic. -/
+noncomputable def nodeDistPol (S : Struct Player n) (sem : Sem S)
+    (pol : Policy S) (cfg : FrontierCfg S)
+    (nd : ↥(frontier S cfg)) : PMF (Val S nd.1) :=
+  have hEnabled : enabled S cfg nd.1 := by
+    have := nd.2; simp only [frontier, Finset.mem_filter, Finset.mem_univ, true_and] at this
+    exact this
+  match hk : S.kind nd.1 with
+  | .chance =>
+      sem.chanceCPD ⟨nd.1, hk⟩ (restrictCfg cfg (S.parents nd.1) hEnabled.2)
+  | .decision p =>
+      pol p ⟨⟨nd.1, hk⟩, restrictCfg cfg (S.obsParents nd.1)
+        (fun x hx => hEnabled.2 (S.obs_sub nd.1 hx))⟩
+  | .utility _ =>
+      PMF.pure (utilityValue S nd.1 ⟨_, hk⟩)
+
+/-- One frontier step under a policy: sample independently at each frontier node
+then extend the configuration. -/
+noncomputable def frontierStepPol (S : Struct Player n) (sem : Sem S)
+    (pol : Policy S) (cfg : FrontierCfg S) : PMF (FrontierCfg S) :=
+  Math.ProbabilityMassFunction.pushforward
+    (Math.PMFProduct.pmfPi (nodeDistPol S sem pol cfg))
+    (extendFrontier S cfg)
+
+/-- Extract total assignment from a frontier config (default 0 for unassigned). -/
+def extractTAssign (S : Struct Player n)
+    (cfg : FrontierCfg S) : TAssign S :=
+  fun nd => if h : nd ∈ cfg.assigned then cfg.values ⟨nd, h⟩
+            else ⟨0, S.dom_pos nd⟩
+
+/-- Frontier evaluation: iterate frontier steps, extract terminal assignment.
+`n` steps suffice (each step assigns ≥1 node while unassigned nodes remain). -/
+noncomputable def frontierEval (S : Struct Player n) (sem : Sem S)
+    (pol : Policy S) : PMF (TAssign S) :=
+  (Nat.iterate (fun d => d.bind (frontierStepPol S sem pol)) n
+    (PMF.pure (initialCfg S))).map (extractTAssign S)
+
 end MAID
