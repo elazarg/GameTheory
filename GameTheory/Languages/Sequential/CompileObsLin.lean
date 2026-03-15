@@ -211,6 +211,25 @@ noncomputable abbrev compiledLinObs [DecidableEq (Fin n)]
   compileObsCoreModelLin G
 
 -- ============================================================================
+-- Fintype instances for the compiled model
+-- ============================================================================
+
+noncomputable instance compiledLinObs_infoState_fintype [DecidableEq (Fin n)]
+    [Fintype V] (G : Protocol n S V A Sig) (i : Fin n) :
+    Fintype ((compiledLinObs G).InfoState i) :=
+  inferInstanceAs (Fintype (Option (Fin G.rounds.length × V)))
+
+noncomputable instance compiledLinObs_infoState_decidableEq [DecidableEq (Fin n)]
+    [DecidableEq V] (G : Protocol n S V A Sig) (i : Fin n) :
+    DecidableEq ((compiledLinObs G).InfoState i) :=
+  inferInstanceAs (DecidableEq (Option (Fin G.rounds.length × V)))
+
+noncomputable instance compiledLinObs_localStrategy_fintype [DecidableEq (Fin n)]
+    [DecidableEq V] [Fintype V] [Fintype A] (G : Protocol n S V A Sig) (i : Fin n) :
+    Fintype ((compiledLinObs G).LocalStrategy i) :=
+  Pi.instFintype
+
+-- ============================================================================
 -- Structural properties
 -- ============================================================================
 
@@ -695,14 +714,54 @@ theorem descendBehavioralProfile_liftBehavioralProfile
     descendBehavioralProfile (G := G) (liftBehavioralProfile σ) = σ := by
   ext i v; simp [descendBehavioralProfile, liftBehavioralProfile, liftBehavioralStrategy]
 
+open Classical in
+/-- The unique round for a view under `ViewDeterminesRound`. -/
+noncomputable def viewRound [Nonempty (Fin G.rounds.length)]
+    (_hVRD : G.ViewDeterminesRound) (i : Fin n) (v : V) :
+    Fin G.rounds.length :=
+  if h : ∃ (k : Fin G.rounds.length) (s : S) (sig : Sig),
+    G.rounds[k].view i s sig = v
+  then h.choose
+  else Classical.arbitrary _
+
+omit [DecidableEq (Fin n)] in
+theorem viewRound_eq [Nonempty (Fin G.rounds.length)] (hVRD : G.ViewDeterminesRound)
+    (k : Fin G.rounds.length) (s : S) (sig_i : Sig) (i : Fin n)
+    (hv : G.rounds[k].view i s sig_i = v) :
+    viewRound hVRD i v = k := by
+  classical
+  unfold viewRound
+  have hex : ∃ (k' : Fin G.rounds.length) (s' : S) (sig' : Sig),
+    G.rounds[k'].view i s' sig' = v := ⟨k, s, sig_i, hv⟩
+  rw [dif_pos hex]
+  obtain ⟨s', sig', hv'⟩ := hex.choose_spec
+  exact hVRD i _ _ _ _ _ _ (hv'.trans hv.symm)
+
+/-- Smart descent using `viewRound` — uses the unique reachable round for each view
+instead of `Classical.arbitrary`. -/
+noncomputable def descendBehavioralProfileVRD [Nonempty (Fin G.rounds.length)]
+    (hVRD : G.ViewDeterminesRound)
+    (β : ObsModelCore.BehavioralProfile (compiledLinObs G)) :
+    BehavioralProfile n V A :=
+  fun i v => β i (some (viewRound hVRD i v, v))
+
+/-- Lift then descend is the identity under `ViewDeterminesRound`. -/
+@[simp]
+theorem descendBehavioralProfileVRD_liftBehavioralProfile
+    [Fintype (Option A)] [Nonempty (Fin G.rounds.length)]
+    (hVRD : G.ViewDeterminesRound)
+    (σ : BehavioralProfile n V A) :
+    descendBehavioralProfileVRD hVRD (liftBehavioralProfile σ) = σ := by
+  ext i v; simp [descendBehavioralProfileVRD, liftBehavioralProfile, liftBehavioralStrategy]
+
 -- ============================================================================
 -- Mixed profile lift
 -- ============================================================================
 
 /-- Lift native per-player mixed strategies to compiled local strategy distributions. -/
 noncomputable def liftMixedProfile
-    (μ : ∀ i : Fin n, PMF (PureStrategy V A)) :
-    ∀ i : Fin n, PMF ((compiledLinObs G).LocalStrategy i) :=
+    (μ : (i : Fin n) → PMF (PureStrategy V A)) :
+    (i : Fin n) → PMF ((compiledLinObs G).LocalStrategy i) :=
   fun i => (μ i).map (liftLocalStrategy (G := G) (i := i))
 
 /-- The joint product of lifted mixed profiles equals the pushforward of the native
@@ -710,7 +769,7 @@ joint product through `liftPureProfile`. -/
 theorem liftMixedProfile_joint [DecidableEq V] [Fintype V] [Fintype A]
     [Fintype (Fin n)]
     [∀ i, Fintype ((compiledLinObs G).LocalStrategy i)]
-    (μ : ∀ i : Fin n, PMF (PureStrategy V A)) :
+    (μ : (i : Fin n) → PMF (PureStrategy V A)) :
     Math.PMFProduct.pmfPi (liftMixedProfile (G := G) μ) =
       Math.ProbabilityMassFunction.pushforward
         (Math.PMFProduct.pmfPi μ) (liftPureProfile (G := G)) := by
@@ -781,6 +840,31 @@ private theorem evalRounds_cons (r : Round n S V A Sig)
   simp only [evalRounds, List.foldl_cons]
   rw [PMF.pure_bind]
   exact pmf_foldl_bind Round.eval σ (r.eval σ s) rest
+
+omit [DecidableEq (Fin n)] in
+set_option linter.unusedFintypeInType false in
+private theorem pmf_foldl_bind_mixed [Fintype (Option A)]
+    (f : Round n S V A Sig → BehavioralProfile n V A → S → PMF S)
+    (σ : BehavioralProfile n V A) (μ : PMF S) (rest : List (Round n S V A Sig)) :
+    rest.foldl (fun dist r => dist.bind (f r σ)) μ =
+      μ.bind (fun s => rest.foldl (fun dist r => dist.bind (f r σ)) (PMF.pure s)) := by
+  induction rest generalizing μ with
+  | nil => simp
+  | cons r' rest' ih =>
+    simp only [List.foldl_cons]
+    rw [ih, PMF.bind_bind]
+    congr 1
+    ext s
+    rw [PMF.pure_bind, ih]
+
+omit [DecidableEq (Fin n)] in
+set_option linter.unusedFintypeInType false in
+private theorem evalRoundsMixed_cons [Fintype (Option A)] (r : Round n S V A Sig)
+    (rest : List (Round n S V A Sig)) (σ : BehavioralProfile n V A) (s : S) :
+    evalRoundsMixed (r :: rest) σ s = (r.evalMixed σ s).bind (evalRoundsMixed rest σ) := by
+  simp only [evalRoundsMixed, List.foldl_cons]
+  rw [PMF.pure_bind]
+  exact pmf_foldl_bind_mixed Round.evalMixed σ (r.evalMixed σ s) rest
 
 omit [DecidableEq (Fin n)] in
 private theorem evalLinearized_eq_evalRounds (G : Protocol n S V A Sig)
@@ -1462,6 +1546,330 @@ private theorem evalFromCfgMixed_of_isDone (G : Protocol n S V A Sig)
     have hd' : G.rounds[k]? = none := hd
     rw [hd']
 
+variable [Fintype (Fin n)] [Fintype A]
+
+omit [Fintype (Option A)] in
+/-- Any config reachable via `stepDist` is in the support of `linConfigStepPMF`
+for some action choice. -/
+private theorem stepDist_support_subset_step_support
+    {β : ObsModelCore.BehavioralProfile (compiledLinObs G)}
+    {ss : List (LinConfig G)} {t : LinConfig G}
+    (ht : t ∈ ((compiledLinObs G).stepDist β ss).support) :
+    ∃ acts, t ∈ (linConfigStepPMF G ((compiledLinObs G).lastState ss) acts).support := by
+  simp only [ObsModelCore.stepDist, PMF.mem_support_bind_iff] at ht
+  obtain ⟨a, _, ht'⟩ := ht
+  exact ⟨(compiledLinObs G).castJointAction ss a, ht'⟩
+
+omit [Fintype (Option A)] in
+/-- For large enough k, all configs reachable by `runDist k β` are done. -/
+private theorem isDone_of_reachable_behavioral
+    {β : ObsModelCore.BehavioralProfile (compiledLinObs G)}
+    (k : Nat) (ss : List (LinConfig G))
+    (hss : ((compiledLinObs G).runDist k β) ss ≠ 0) :
+    ((compiledLinObs G).lastState ss).isDone G ∨
+    ((compiledLinObs G).lastState ss).phase G ≥ k := by
+  induction k generalizing ss with
+  | zero => right; omega
+  | succ k ih =>
+    change _ at hss
+    rw [show (compiledLinObs G).runDist (k + 1) β =
+      ((compiledLinObs G).runDist k β).bind
+        (fun ss' => Math.ProbabilityMassFunction.pushforward
+          ((compiledLinObs G).stepDist β ss')
+          (fun t => ss' ++ [t])) from rfl] at hss
+    have hsupp := (PMF.mem_support_iff _ _).mpr hss
+    rw [PMF.mem_support_bind_iff] at hsupp
+    obtain ⟨ss', hss'_supp, ht_supp⟩ := hsupp
+    rw [show Math.ProbabilityMassFunction.pushforward
+        ((compiledLinObs G).stepDist β ss')
+        (fun t => ss' ++ [t]) =
+      ((compiledLinObs G).stepDist β ss').map
+        (fun t => ss' ++ [t]) from rfl] at ht_supp
+    rw [PMF.mem_support_map_iff] at ht_supp
+    obtain ⟨t, ht_in_step, rfl⟩ := ht_supp
+    rw [lastState_snoc]
+    have ih_ss' := ih ss' ((PMF.mem_support_iff _ _).mp hss'_supp)
+    obtain ⟨acts', ht_acts⟩ := stepDist_support_subset_step_support ht_in_step
+    by_cases hd : ((compiledLinObs G).lastState ss').isDone G
+    · left; exact (isDone_step_of_isDone G _ acts' hd t ht_acts).1
+    · right
+      have hprog := phase_step_progress G _ acts' hd t ht_acts
+      rcases ih_ss' with hd' | hph
+      · exact absurd hd' hd
+      · omega
+
+private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
+    (σ : BehavioralProfile n V A) (ss : List (LinConfig G)) :
+    ((compiledLinObs G).stepDist (liftBehavioralProfile σ) ss).bind
+        (evalFromCfgMixed G σ) =
+      evalFromCfgMixed G σ ((compiledLinObs G).lastState ss) := by
+  -- Unfold stepDist and merge binds.
+  simp only [ObsModelCore.stepDist, ObsModelCore.jointActionDist]
+  rw [PMF.bind_bind]
+  -- Relate projectStates to linObserve at lastState (identity info states).
+  have hps : ∀ i, (compiledLinObs G).projectStates i ss =
+      linObserve G i ((compiledLinObs G).lastState ss) := fun i => by
+    have h := ObsModelCore.currentObs_projectStates (compiledLinObs G) i ss
+    simp only [ObsModelCore.currentObs, compileObsCoreModelLin] at h; exact h
+  -- suffices: prove the result by cases on the config type of lastState ss.
+  -- We use a helper that takes cfg explicitly, avoiding castJointAction issues.
+  suffices helper : ∀ (cfg : LinConfig G)
+      (obs : Fin n → Option (RoundView G))
+      (hobs : ∀ i, obs i = linObserve G i cfg),
+      ((Math.PMFProduct.pmfPi (fun i =>
+          liftBehavioralStrategy (G := G) (σ i) (obs i))).bind
+        (fun a => (linConfigStepPMF G cfg
+          (fun i => cast (congrArg (LinAct (RoundView G) A) (hobs i)) (a i))).bind
+          (evalFromCfgMixed G σ))) =
+      evalFromCfgMixed G σ cfg by
+    convert helper ((compiledLinObs G).lastState ss)
+      (fun i => (compiledLinObs G).projectStates i ss) hps using 2
+    rename_i a
+    funext j; congr 1; congr 1
+    funext i
+    -- Both sides transport j i along propositionally equal proofs.
+    -- castJointAction uses currentObs_projectStates, the other uses hps.
+    simp only [ObsModelCore.castJointAction, compileObsCoreModelLin]
+    simp [eqRec_eq_cast]
+  -- Now prove the helper by cases on cfg.
+  intro cfg obs hobs
+  cases cfg with
+  | terminal s =>
+    -- All obs are none, step is PMF.pure (terminal s)
+    have hall : ∀ i, obs i = none := fun i => by simp [hobs, linObserve]
+    simp only [linConfigStepPMF, PMF.pure_bind, evalFromCfgMixed]
+    simp [PMF.bind_const]
+  | signal k s =>
+    -- All obs are none for signal configs
+    have hall : ∀ i, obs i = none := fun i => by simp [hobs, linObserve]
+    -- linConfigStepPMF at signal doesn't use the action tuple.
+    -- Show the function is constant, then use PMF.bind_const.
+    have default_a : (i : Fin n) → LinAct (RoundView G) A (obs i) :=
+      fun i => (hall i).symm ▸ PUnit.unit
+    have hconst : ∀ (a : (i : Fin n) → LinAct (RoundView G) A (obs i)),
+        (linConfigStepPMF G (.signal k s)
+          (fun i => cast (congrArg _ (hobs i)) (a i))).bind
+          (evalFromCfgMixed G σ) =
+        (linConfigStepPMF G (.signal k s)
+          (fun i => cast (congrArg _ (hobs i)) (default_a i))).bind
+          (evalFromCfgMixed G σ) := by
+      intro a; congr 1
+    simp_rw [hconst]; rw [PMF.bind_const]
+    -- Now: step(any_acts).bind(eval) = eval(signal k s)
+    simp only [linConfigStepPMF]
+    split
+    case h_1 r hr =>
+      have hk : k < G.rounds.length := by
+        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+      have hdrop : G.rounds.drop k = r :: G.rounds.drop (k + 1) := by
+        rw [← List.cons_getElem_drop_succ (h := hk)]
+        congr 1; exact (List.getElem_of_getElem? hr).choose_spec
+      split
+      case isTrue hn =>
+        rw [PMF.bind_map]
+        simp only [Function.comp_def, evalFromCfgMixed, hr, hdrop, evalRoundsMixed_cons,
+          Round.evalMixed, PMF.bind_bind]
+        congr 1; funext sig'
+        conv_rhs => rw [PMF.bind_map]; simp only [Function.comp_def]
+        rw [resolveActionsMixed_eq_pmfPi]; convert rfl using 3
+      case isFalse hn =>
+        rw [PMF.bind_map]
+        simp only [Function.comp_def, evalFromCfgMixed, hr, hdrop, evalRoundsMixed_cons,
+          Round.evalMixed, PMF.bind_bind]
+        congr 1; funext sig'
+        have hn0 : n = 0 := by omega
+        subst hn0
+        have : ∀ f : Fin 0 → Option A, r.transition s f = r.transition s (fun _ => none) := by
+          intro f; congr 1; funext i; exact Fin.elim0 i
+        simp_rw [this]
+        have hmc : (fun acts : Fin 0 → Option A => r.transition s fun x => none) =
+            Function.const _ (r.transition s fun x => none) := funext fun _ => rfl
+        rw [hmc, PMF.map_const, PMF.pure_bind]
+    case h_2 hr =>
+      simp [PMF.pure_bind, evalFromCfgMixed]
+  | playerTurn k s sig p accActs =>
+    simp only [linConfigStepPMF]
+    split
+    case h_2 hr =>
+      -- G.rounds[k]? = none: step is pure, all obs are none
+      have hlen : G.rounds.length ≤ k := by
+        by_contra h; push_neg at h; rw [List.getElem?_eq_getElem h] at hr; exact absurd hr (by simp)
+      have hall : ∀ i, obs i = none := fun i => by
+        rw [hobs]; simp [linObserve, show ¬(k < G.rounds.length) from by omega]
+      simp only [PMF.pure_bind, evalFromCfgMixed, hr]
+      simp only [PMF.bind_const]
+    case h_1 r hr =>
+      have hk : k < G.rounds.length := by
+        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+      -- Observations: player p sees some, others see none
+      have hobs_p : obs p = some (⟨k, hk⟩, r.view p s (sig p)) := by
+        rw [hobs]; simp [linObserve, hk, (List.getElem_of_getElem? hr).choose_spec]
+      have hobs_ne : ∀ i, i ≠ p → obs i = none := fun i hi => by
+        rw [hobs]; simp [linObserve, hi]
+      -- Unfold advancePlayerTurn and evalFromCfgMixed on the RHS
+      simp only [advancePlayerTurn, evalFromCfgMixed, hr]
+      -- Unfold resolveActionsMixed one step
+      rw [resolveActionsMixed, dif_pos p.isLt]
+      simp only [PMF.bind_bind]
+      -- The continuation only depends on extractPlayerAction, which only uses a p.
+      -- We'll show extractPlayerAction gives cast(a p) = the Option A value of a p.
+      -- Then factor the pmfPi to extract player p's marginal.
+      -- Step 1: Simplify the bind. Push pure_bind inside the if.
+      have hbind_eq :
+          ∀ a : (i : Fin n) → LinAct (RoundView G) A (obs i),
+          ((if h : ↑p + 1 < n then
+              PMF.pure (LinConfig.playerTurn k s sig ⟨↑p + 1, h⟩
+                (Function.update accActs p
+                  (extractPlayerAction G k s sig p accActs
+                    fun i => cast (congrArg _ (hobs i)) (a i))))
+            else
+              PMF.pure (LinConfig.applyTransition k s sig
+                (Function.update accActs p
+                  (extractPlayerAction G k s sig p accActs
+                    fun i => cast (congrArg _ (hobs i)) (a i))))).bind
+            (evalFromCfgMixed G σ)) =
+          (resolveActionsMixed σ r s sig (↑p + 1)
+            (Function.update accActs p
+              (extractPlayerAction G k s sig p accActs
+                fun i => cast (congrArg _ (hobs i)) (a i)))).bind
+            fun fullActs =>
+              evalRoundsMixed (G.rounds.drop (k + 1)) σ
+                (r.transition s fullActs) := by
+        intro a
+        split
+        case isTrue hp1 =>
+          rw [PMF.pure_bind]
+          simp only [evalFromCfgMixed, hr]
+        case isFalse hp1 =>
+          rw [PMF.pure_bind]
+          simp only [evalFromCfgMixed, hr]
+          rw [resolveActionsMixed, dif_neg (by omega)]
+          simp [PMF.pure_bind]
+      simp_rw [hbind_eq]
+      -- Step 2: extractPlayerAction with cast gives cast(a p).
+      -- extractPlayerAction uses cast based on linObserve.
+      -- Net effect: extractPlayerAction = a p (modulo cast).
+      have hextract :
+          ∀ a : (i : Fin n) → LinAct (RoundView G) A (obs i),
+          extractPlayerAction G k s sig p accActs
+            (fun i => cast (congrArg _ (hobs i)) (a i)) =
+          cast (congrArg _ hobs_p) (a p) := by
+        intro a
+        unfold extractPlayerAction
+        rw [dif_pos hk]
+        -- Both sides cast (a p) to Option A through propositionally equal proofs
+        simp only [cast_cast]
+      simp_rw [hextract]
+      -- Goal: pmfPi(lift).bind(fun a => g(cast(a p))) = (σ p view).bind(fun ap => g ap)
+      -- The cast transports LinAct(obs p) → LinAct(some(k_fin, view)) = Option A.
+      -- We prove the two sides are equal using pmfPi_bind_eval after
+      -- eliminating the cast via congrArg on the continuation.
+      -- First, show the cast is identity by changing it to an Eq.rec and using
+      -- proof that the two types are equal via hobs_p.
+      -- pmfPi_bind_eval says: pmfPi(σ).bind(fun s => f(s j)) = (σ j).bind f
+      -- Our continuation is: fun a => g(cast ⋯ (a p))
+      -- = fun a => (fun ap => g(cast ⋯ ap)) (a p)
+      -- = fun a => f(a p) where f = fun ap => g(cast ⋯ ap)
+      -- So pmfPi_bind_eval gives:
+      -- (liftBehavioralStrategy (σ p) (obs p)).bind(fun ap => g(cast ⋯ ap))
+      -- We need this to equal (σ p view).bind g.
+      -- Key: cast ⋯ is a function LinAct(obs p) → Option A, and
+      -- liftBehavioralStrategy (σ p) (obs p) : PMF (LinAct(obs p)).
+      -- We use the fact that for any h : α = β,
+      -- (cast (show PMF α = PMF β from congrArg PMF h) d).bind f = d.bind (f ∘ cast h)
+      -- And liftBehavioralStrategy (σ p) (obs p) = cast ⋯ (σ p view).
+      -- Then: (cast ⋯ (σ p view)).bind(f ∘ cast ⋯) = (σ p view).bind f.
+      -- Actually, let's use a simpler approach.
+      -- Directly show: ∀ (h : obs p = some(k, v)),
+      -- Factor the pmfPi to extract player p's marginal via pmfPi_bind_eval.
+      have heval := Math.PMFProduct.pmfPi_bind_eval
+        (fun i => liftBehavioralStrategy (G := G) (σ i) (obs i)) p
+        (fun (ap : LinAct (RoundView G) A (obs p)) =>
+          (resolveActionsMixed σ r s sig (↑p + 1)
+            (Function.update accActs p (cast (congrArg (LinAct (RoundView G) A) hobs_p) ap))).bind
+            fun fullActs => evalRoundsMixed (G.rounds.drop (k + 1)) σ (r.transition s fullActs))
+      rw [heval]; clear heval
+      -- Goal: (liftBehav(σ p)(obs p)).bind(fun ap => g(cast ap)) = (σ p view).bind g
+      -- Generalize obs p to a free variable so we can subst.
+      set op := obs p with hop_def
+      rw [hobs_p] at hop_def
+      -- Now op = some(⟨k,hk⟩, r.view p s (sig p)) and we have hobs_p : op = some(...)
+      -- But op appears in the types. We need to rewrite using hobs_p.
+      -- Use a general lemma: for h : α = β, cast h applied to bind gives the same.
+      have key : ∀ (o : Option (RoundView G))
+          (h : o = some (⟨k, hk⟩, r.view p s (sig p)))
+          (g' : Option A → PMF S),
+          (liftBehavioralStrategy (G := G) (σ p) o).bind
+            (fun ap => g' (cast (congrArg (LinAct (RoundView G) A) h) ap)) =
+          (σ p (r.view p s (sig p))).bind g' := by
+        intro o h g'; subst h; simp [liftBehavioralStrategy, cast_eq]
+      convert key op hobs_p _ using 2
+      ext ap; congr 2
+  | applyTransition k s sig accActs =>
+    -- All obs are none, step doesn't depend on actions
+    have hall : ∀ i, obs i = none := fun i => by simp [hobs, linObserve]
+    have default_a : (i : Fin n) → LinAct (RoundView G) A (obs i) :=
+      fun i => (hall i).symm ▸ PUnit.unit
+    have hconst : ∀ (a : (i : Fin n) → LinAct (RoundView G) A (obs i)),
+        (linConfigStepPMF G (.applyTransition k s sig accActs)
+          (fun i => cast (congrArg (LinAct (RoundView G) A) (hobs i)) (a i))).bind
+          (evalFromCfgMixed G σ) =
+        (linConfigStepPMF G (.applyTransition k s sig accActs)
+          (fun i => cast (congrArg (LinAct (RoundView G) A) (hobs i)) (default_a i))).bind
+          (evalFromCfgMixed G σ) := by
+      intro a; congr 1
+    simp_rw [hconst]; rw [PMF.bind_const]
+    simp only [linConfigStepPMF]
+    split
+    case h_1 r hr =>
+      split
+      case h_1 _ hr2 =>
+        simp only [PMF.pure_bind, evalFromCfgMixed, hr]
+      case h_2 _ hr2 =>
+        simp only [PMF.pure_bind, evalFromCfgMixed, hr]
+        have hdrop2 : G.rounds.drop (k + 1) = [] :=
+          List.drop_eq_nil_of_le (by
+            by_contra h; push_neg at h
+            rw [List.getElem?_eq_getElem h] at hr2; exact absurd hr2 (by simp))
+        rw [hdrop2, evalRoundsMixed]; simp
+    case h_2 hr =>
+      simp [PMF.pure_bind, evalFromCfgMixed, hr]
+
+/-- **Behavioral adequacy (telescoping)**: running the linearized model for `k`
+steps under `liftBehavioralProfile σ` and composing with `evalFromCfgMixed`
+equals `evalFromCfgMixed` at the initial configuration.
+
+Uses `runDist_bind_interp` with the one-step simulation. -/
+theorem runDist_liftBehavioral_bind_evalFromCfgMixed
+    (σ : BehavioralProfile n V A) (k : Nat) :
+    ((compiledLinObs G).runDist k (liftBehavioralProfile σ)).bind
+        (fun ss => evalFromCfgMixed G σ ((compiledLinObs G).lastState ss)) =
+      G.evalMixed σ := by
+  have hstep := stepDist_liftBehavioral_bind_evalFromCfgMixed (G := G) σ
+  have := ObsModelCore.runDist_bind_interp (compiledLinObs G)
+    (evalFromCfgMixed G σ) (liftBehavioralProfile σ) hstep k
+  rw [this]
+  exact evalFromCfgMixed_init G σ
+
+/-- **Behavioral adequacy (state extraction)**: running the linearized model
+for enough steps and extracting the terminal state gives `Protocol.evalMixed`.
+
+For large enough `k`, all reachable configs are done, so `evalFromCfgMixed`
+reduces to `PMF.pure ∘ state`. -/
+theorem runDist_liftBehavioral_extractState_eq_evalMixed
+    (σ : BehavioralProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 2)) :
+    ((compiledLinObs G).runDist k (liftBehavioralProfile σ)).bind
+        (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) =
+      G.evalMixed σ := by
+  rw [← runDist_liftBehavioral_bind_evalFromCfgMixed (G := G) σ k]
+  apply PMF.bind_congr_support
+  intro ss hss
+  have hdr := isDone_of_reachable_behavioral (G := G) k ss hss
+  rcases hdr with hd | hph
+  · exact (evalFromCfgMixed_of_isDone G σ _ hd).symm
+  · exact (evalFromCfgMixed_of_isDone G σ _
+      (isDone_of_phase_ge G _ (by omega))).symm
+
 end BehavioralAdequacy
 
 
@@ -1481,7 +1889,7 @@ set_option linter.unusedSectionVars false in
 set_option linter.unusedFintypeInType false in
 /-- `linObserve G i cfg = some obs` implies cfg is a playerTurn for player i
 at a valid round, and extracts the state, signals, and accumulated actions. -/
-private theorem linObserve_some_playerTurn (cfg : LinConfig G) (i : Fin n)
+theorem linObserve_some_playerTurn (cfg : LinConfig G) (i : Fin n)
     (obs : RoundView G)
     (h : linObserve G i cfg = some obs) :
     ∃ (s : S) (sig : Fin n → Sig) (accActs : Fin n → Option A),
@@ -1770,7 +2178,7 @@ private theorem unique_i_step_position
     (k : Nat) (ss : List (LinConfig G))
     (hss : pureRun (compiledLinObs G).pureStep (compiledLinObs G).init k pi ss ≠ 0)
     (i : Fin n) (kLast : Fin G.rounds.length) (vLast : V)
-    (hobsLast : linObserve G i (ss[ss.length - 1]'(by
+    (_hobsLast : linObserve G i (ss[ss.length - 1]'(by
       have := pureRun_length _ _ k pi ss hss; omega)) = some (kLast, vLast))
     (j1 j2 : Nat) (hj1 : j1 + 1 < ss.length) (hj2 : j2 + 1 < ss.length)
     (r : Fin G.rounds.length) (v1 v2 : V)
@@ -1901,7 +2309,7 @@ private theorem fullRecall_view_action_match
 set_option linter.unusedSectionVars false in
 set_option linter.unusedFintypeInType false in
 /-- projectStates for the compiled model equals the last observation. -/
-private theorem projectStates_eq_lastObs
+theorem projectStates_eq_lastObs
     (i : Fin n) (ss : List (LinConfig G)) (hne : ss ≠ []) :
     (compiledLinObs G).projectStates i ss =
       linObserve G i (ss[ss.length - 1]'(by
@@ -2001,5 +2409,60 @@ theorem obsLocalFeasibility_of_fullRecall
       rw [h1', h2']
 
 end OLFBridge
+
+-- ============================================================================
+-- VRD agreement: lift ∘ descendVRD agrees with β at reachable observations
+-- ============================================================================
+
+section VRDAgreement
+
+variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable [Fintype A] [Nonempty A] [Nonempty (Fin G.rounds.length)]
+
+set_option linter.unusedSectionVars false in
+set_option linter.unusedFintypeInType false in
+/-- Under `ViewDeterminesRound`, the lifted VRD-descended profile agrees with `β` at all
+info states visited during `runDist`. This provides the hypothesis for `runDist_congr`. -/
+theorem liftBehavioralProfile_descendVRD_agree
+    (hVRD : G.ViewDeterminesRound)
+    (β : ObsModelCore.BehavioralProfile (compiledLinObs G))
+    (m : Nat) (i : Fin n) (ss : List (LinConfig G))
+    (_hss : ((compiledLinObs G).runDist m β) ss ≠ 0) :
+    β i ((compiledLinObs G).projectStates i ss) =
+      (liftBehavioralProfile (G := G) (descendBehavioralProfileVRD hVRD β)) i
+        ((compiledLinObs G).projectStates i ss) := by
+  -- For identity info states, projectStates i ss = observe i (lastState ss)
+  set obs := (compiledLinObs G).projectStates i ss
+  -- The key insight: projectStates is linObserve at the last state
+  have hps : obs = linObserve G i ((compiledLinObs G).lastState ss) := by
+    have h := ObsModelCore.currentObs_projectStates (compiledLinObs G) i ss
+    simp only [ObsModelCore.currentObs, compileObsCoreModelLin] at h
+    exact h
+  cases hobs : obs with
+  | none =>
+    -- Both sides are PMF over PUnit (subsingleton action type at none)
+    change β i none = liftBehavioralStrategy (descendBehavioralProfileVRD hVRD β i) none
+    simp only [liftBehavioralStrategy]
+    -- Goal: β i none = PMF.pure PUnit.unit
+    ext ⟨⟩
+    simp only [PMF.pure_apply, ite_true]
+    have h : ∑' (a : PUnit), (β i none) a = 1 := (β i none).tsum_coe
+    rwa [tsum_eq_single PUnit.unit
+      (fun x hx => absurd (Subsingleton.elim x PUnit.unit) hx)] at h
+  | some rv =>
+    obtain ⟨k, v⟩ := rv
+    -- linObserve at lastState = some (k, v)
+    rw [hobs] at hps
+    obtain ⟨s, sig, _, _, hview⟩ := linObserve_some_playerTurn G _ i (k, v) hps.symm
+    -- viewRound hVRD i v = k by ViewDeterminesRound
+    have hvr : viewRound hVRD i v = k :=
+      viewRound_eq hVRD k s (sig i) i hview
+    -- Both sides now reduce to β i (some (k, v))
+    change β i (some (k, v)) =
+      liftBehavioralStrategy (descendBehavioralProfileVRD hVRD β i) (some (k, v))
+    simp only [liftBehavioralStrategy, descendBehavioralProfileVRD]
+    rw [hvr]
+
+end VRDAgreement
 
 end GameTheory.Sequential

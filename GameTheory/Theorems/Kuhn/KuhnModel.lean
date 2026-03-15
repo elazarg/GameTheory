@@ -225,6 +225,31 @@ theorem runDistPure_eq_pureRun (O : ObsModelCore ι σ Obs Act)
     (k : Nat) (π : PureProfile O) :
     O.runDistPure k π = pureRun (O.pureStep) O.init k π := rfl
 
+/-- Two behavioral profiles that agree at all info states visited by `runDist m β₁`
+(for all `m`) produce the same `runDist k` for every `k`. -/
+theorem runDist_congr [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    {O : ObsModelCore ι σ Obs Act} {β₁ β₂ : BehavioralProfile O}
+    (h : ∀ (m : Nat) (i : ι) (ss : List σ),
+      (O.runDist m β₁) ss ≠ 0 →
+      β₁ i (O.projectStates i ss) = β₂ i (O.projectStates i ss))
+    (k : Nat) :
+    O.runDist k β₁ = O.runDist k β₂ := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    change (O.runDist k β₁).bind _ = (O.runDist k β₂).bind _
+    rw [ih]
+    apply bind_congr_on_support
+    intro ss hss
+    have hreach : (O.runDist k β₁) ss ≠ 0 := by
+      rw [ih]; simpa using hss
+    suffices O.stepDist β₁ ss = O.stepDist β₂ ss by
+      change pushforward _ _ = pushforward _ _
+      congr 1
+    simp only [stepDist, jointActionDist]
+    congr 1
+    exact congrArg Math.PMFProduct.pmfPi (funext (fun i => h k i ss hreach))
+
 /-- Reachability witness via nonzero-probability transitions (Type-valued). -/
 inductive ReachActionTrace (O : ObsModelCore ι σ Obs Act) : List σ → Type
   | init : ReachActionTrace O [O.init]
@@ -282,5 +307,53 @@ def NoNontrivialInfoStateRepeat (O : ObsModelCore ι σ Obs Act)
         O.projectStates i (ss.take (j₂ + 1)) →
       Subsingleton (Act i (O.currentObs i
         (O.projectStates i (ss.take (j₂ + 1)))))
+
+-- ============================================================================
+-- Generic adequacy (stochastic simulation)
+-- ============================================================================
+
+/-- `lastState` of a trace extended by one element is that element. -/
+theorem lastState_append_singleton (O : ObsModelCore ι σ Obs Act)
+    (ss : List σ) (t : σ) :
+    O.lastState (ss ++ [t]) = t := by
+  simp [lastState, List.getLast?_append_of_ne_nil ss
+    (show [t] ≠ [] by simp)]
+
+/-- **Generic adequacy**: if one compiled step followed by `interp` equals
+`interp` at the current state, then `k` compiled steps followed by `interp`
+equals `interp` at the initial state.
+
+This factors out the induction that every language-to-ObsModelCore adequacy
+proof performs. Each language only needs to prove:
+1. The one-step simulation property (`hstep`)
+2. That `interp O.init` equals the native evaluation
+
+The conclusion `interp O.init` is then connected to native semantics
+by each language's init bridge. -/
+theorem runDist_bind_interp
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (O : ObsModelCore ι σ Obs Act) {ω : Type}
+    (interp : σ → PMF ω)
+    (β : BehavioralProfile O)
+    (hstep : ∀ ss, (O.stepDist β ss).bind interp =
+                    interp (O.lastState ss))
+    (k : Nat) :
+    (O.runDist k β).bind
+      (fun ss => interp (O.lastState ss)) =
+    interp O.init := by
+  induction k with
+  | zero =>
+    change (PMF.pure [O.init]).bind _ = _
+    rw [PMF.pure_bind]; rfl
+  | succ k ih =>
+    simp only [runDist]
+    rw [PMF.bind_bind]
+    conv_lhs =>
+      arg 2; ext ss
+      rw [pushforward, PMF.bind_bind]
+      arg 2; ext t
+      rw [PMF.pure_bind, lastState_append_singleton]
+    simp_rw [hstep]
+    exact ih
 
 end ObsModelCore

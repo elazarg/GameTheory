@@ -220,6 +220,16 @@ theorem Protocol.FullRecall.toPerfectRecall {G : Protocol n S V A Sig}
   exact (h i k hk (fun m => ⟨recs₁ m, fun _ => none⟩)
     (fun m => ⟨recs₂ m, fun _ => none⟩) hview j hj).1
 
+/-- No absent-mindedness: each view value uniquely identifies a round.
+If the same view `v` can be produced at rounds `k₁` and `k₂` (for any states
+and signals), then `k₁ = k₂`. This is the sequential-protocol analogue of the
+standard condition that no information set is visited twice on any play path. -/
+def Protocol.ViewDeterminesRound (G : Protocol n S V A Sig) : Prop :=
+  ∀ (i : Fin n) (k₁ : Fin G.rounds.length) (k₂ : Fin G.rounds.length)
+    (s₁ s₂ : S) (sig₁ sig₂ : Sig),
+    G.rounds[k₁].view i s₁ sig₁ = G.rounds[k₂].view i s₂ sig₂ →
+    k₁ = k₂
+
 -- ============================================================================
 -- Bridge to GameForm / KernelGame
 -- ============================================================================

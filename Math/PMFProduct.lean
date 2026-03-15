@@ -399,6 +399,18 @@ theorem pmfPi_bind_factor
     -- hg gives: g a0 (update s j a) = g a0 s  (as PMFs)
     exact congrFun (congrArg DFunLike.coe (hg a0 s a)) b)
 
+/-- Marginalization: binding over the product and projecting to coordinate `j`
+equals binding directly from the `j`-th marginal. -/
+theorem pmfPi_bind_eval
+    (σ : ∀ i, PMF (A i)) (j : ι) {β : Type*} (f : A j → PMF β) :
+    (pmfPi (A := A) σ).bind (fun s => f (s j)) = (σ j).bind f := by
+  have hg : Ignores₂ (A := A) j (fun a (_ : ∀ i, A i) => f a) :=
+    fun _ _ _ => rfl
+  change (pmfPi (A := A) σ).bind
+    (fun s => (fun a (_ : ∀ i, A i) => f a) (s j) s) = _
+  rw [pmfPi_bind_factor σ j _ hg]
+  simp only [PMF.bind_const]
+
 end BindFactor
 
 -- ============================================================================

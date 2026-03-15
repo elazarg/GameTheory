@@ -558,14 +558,6 @@ theorem stepSupportFactorization_compiledCore :
       · intro hall
         simpa [Function.update_self] using hall p
 
-private theorem bind_pushforward_lastState_evalDist
-    (σ : BehavioralProfile S) (ss : List (GameTree S Outcome)) (d : PMF (GameTree S Outcome)) :
-    (Math.ProbabilityMassFunction.pushforward d (fun u => ss ++ [u])).bind
-      (fun ss' =>
-        ((compiledCoreObs t).lastState ss').evalDist σ) =
-      d.bind (fun u => u.evalDist σ) := by
-  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, ObsModelCore.lastState]
-
 /-- One-step adequacy for the honest core compilation. -/
 theorem stepDist_bind_evalDist_core
     (σ : BehavioralProfile S) (ss : List (GameTree S Outcome)) :
@@ -582,68 +574,17 @@ theorem stepDist_bind_evalDist_core
   | decision I next =>
       simp [GameTree.evalDist]
 
-/-- Bounded-run adequacy for behavioral profiles on the honest core compilation. -/
+/-- Bounded-run adequacy via generic `runDist_bind_interp`. -/
 theorem runDist_bind_evalDist_core
     (σ : BehavioralProfile S) (k : Nat) :
     ((compiledCoreObs t).runDist k
       (liftBehavioralProfileCore t σ)).bind
         (fun ss => ((compiledCoreObs t).lastState ss).evalDist σ) =
-      t.evalDist σ := by
-  induction k with
-  | zero =>
-      simp [compiledCoreObs, compileObsCoreModel, ObsModelCore.runDist, ObsModelCore.lastState]
-  | succ k ih =>
-      rw [ObsModelCore.runDist]
-      calc
-        (((compiledCoreObs t).runDist k
-            (liftBehavioralProfileCore t σ)).bind
-            (fun ss =>
-              Math.ProbabilityMassFunction.pushforward
-                ((compiledCoreObs t).stepDist
-                  (liftBehavioralProfileCore t σ) ss)
-                (fun u => ss ++ [u]))).bind
-              (fun ss' =>
-                ((compiledCoreObs t).lastState ss').evalDist σ)
-            =
-          ((compiledCoreObs t).runDist k
-            (liftBehavioralProfileCore t σ)).bind
-            (fun ss =>
-              (Math.ProbabilityMassFunction.pushforward
-                ((compiledCoreObs t).stepDist
-                  (liftBehavioralProfileCore t σ) ss)
-                (fun u => ss ++ [u])).bind
-                  (fun ss' =>
-                    ((compiledCoreObs
-                     t).lastState ss').evalDist σ)) := by
-              rw [PMF.bind_bind]
-        _ =
-          ((compiledCoreObs t).runDist k
-            (liftBehavioralProfileCore t σ)).bind
-            (fun ss =>
-              ((compiledCoreObs t).stepDist
-                (liftBehavioralProfileCore t σ) ss).bind
-                  (fun u => u.evalDist σ)) := by
-              refine Math.ProbabilityMassFunction.bind_congr_on_support
-                ((compiledCoreObs t).runDist k
-                  (liftBehavioralProfileCore t σ))
-                _ _ ?_
-              intro ss _
-              exact bind_pushforward_lastState_evalDist
-                t σ ss
-                ((compiledCoreObs t).stepDist
-                  (liftBehavioralProfileCore t σ) ss)
-        _ =
-          ((compiledCoreObs t).runDist k
-            (liftBehavioralProfileCore t σ)).bind
-            (fun ss =>
-              ((compiledCoreObs t).lastState ss).evalDist σ) := by
-              refine Math.ProbabilityMassFunction.bind_congr_on_support
-                ((compiledCoreObs t).runDist k
-                  (liftBehavioralProfileCore t σ))
-                _ _ ?_
-              intro ss _
-              exact stepDist_bind_evalDist_core t σ ss
-        _ = t.evalDist σ := ih
+      t.evalDist σ :=
+  ObsModelCore.runDist_bind_interp
+    (compiledCoreObs t) (fun u => u.evalDist σ)
+    (liftBehavioralProfileCore t σ)
+    (stepDist_bind_evalDist_core t σ) k
 
 @[simp] theorem liftBehavioralProfileCore_pure_descend
     (π : ObsModelCore.PureProfile (compiledCoreObs t)) :
