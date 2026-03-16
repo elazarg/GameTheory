@@ -1692,6 +1692,107 @@ theorem pmfPi_expect_indep [Fintype ι] [∀ i, Fintype (A i)]
 
 end ScalarIndep
 
+-- ============================================================================
+-- Cross-index product-bind factorization
+-- ============================================================================
+
+/-- A `Finset.prod` of functions that all ignore coordinate `j` also ignores `j`. -/
+lemma Ignores_finset_prod
+    {ι : Type*} [DecidableEq ι] {A : ι → Type*}
+    {κ : Type*} {α : Type*} [CommMonoid α]
+    (j : ι) (F : κ → (∀ i, A i) → α) (S : Finset κ)
+    (hF : ∀ k, k ∈ S → Ignores j (F k)) :
+    Ignores j (fun s => ∏ k ∈ S, F k s) := by
+  intro s a
+  exact Finset.prod_congr rfl (fun k hk => hF k hk s a)
+
+open Classical in
+/-- **Cross-index product-bind factorization.**
+
+If each factor `G a k` of the inner product depends on at most one
+coordinate of `a`, and no two factors share the same dependency, then
+binding the outer product with the inner product equals the product
+of individual bindings.
+
+`coord k` specifies the single coordinate that `G · k` may depend on
+(`none` = constant in `a`). The conditions are:
+- `h_const`: if `coord k = none`, then `G · k` ignores all coordinates.
+- `h_single`: if `coord k = some i`, then `G · k` ignores all `j ≠ i`.
+- `h_inj`: no two factors depend on the same coordinate.
+
+Proof: by `Finset.induction_on`, peeling off one factor at a time using
+`pmfPi_expect_indep` (E[f·g] = E[f]·E[g] for independent f, g). -/
+theorem pmfPi_bind_pmfPi_of_disjoint_coords
+    {ι : Type*} [Fintype ι] {A : ι → Type*} [∀ i, Fintype (A i)]
+    {κ : Type*} [Fintype κ] {B : κ → Type*} [∀ k, Fintype (B k)]
+    (σ : ∀ i, PMF (A i))
+    (G : (∀ i, A i) → ∀ k, PMF (B k))
+    (coord : κ → Option ι)
+    (h_const : ∀ k, coord k = none → ∀ j, Ignores j (fun a => G a k))
+    (h_single : ∀ k i, coord k = some i → ∀ j, j ≠ i →
+      Ignores j (fun a => G a k))
+    (h_inj : ∀ k₁ k₂ i, coord k₁ = some i → coord k₂ = some i → k₁ = k₂) :
+    (pmfPi σ).bind (fun a => pmfPi (G a)) =
+      pmfPi (fun k => (pmfPi σ).bind (fun a => G a k)) := by
+  ext vals
+  simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
+  -- Helper: Ignores on PMFs implies Ignores on pointwise values
+  have pt : ∀ k j, Ignores j (fun a => G a k) →
+      Ignores j (fun a => (G a k) (vals k)) :=
+    fun k j hign s a => congrFun (congrArg DFunLike.coe (hign s a)) (vals k)
+  -- Main claim by Finset induction
+  suffices hmain : ∀ S : Finset κ,
+      (∀ k₁ k₂, k₁ ∈ S → k₂ ∈ S → k₁ ≠ k₂ →
+        ∀ i, coord k₁ = some i → coord k₂ ≠ some i) →
+      ∑ a, (pmfPi σ) a * ∏ k ∈ S, (G a k) (vals k) =
+        ∏ k ∈ S, (∑ a, (pmfPi σ) a * (G a k) (vals k)) by
+    simp only [pmfPi_apply] at hmain
+    exact hmain Finset.univ
+      (fun k₁ k₂ _ _ hne i h1 h2 => absurd (h_inj k₁ k₂ i h1 h2) hne)
+  intro S hS
+  induction S using Finset.induction_on with
+  | empty =>
+    simp only [pmfPi_apply, Finset.prod_empty, mul_one]
+    exact pmf_sum_eq_one (pmfPi σ)
+  | insert k₀ S' hk₀ ih =>
+    have hS' : ∀ k₁ k₂, k₁ ∈ S' → k₂ ∈ S' → k₁ ≠ k₂ →
+        ∀ i, coord k₁ = some i → coord k₂ ≠ some i :=
+      fun k₁ k₂ h1 h2 => hS k₁ k₂
+        (Finset.mem_insert_of_mem h1) (Finset.mem_insert_of_mem h2)
+    conv_lhs => arg 2; ext a; rw [Finset.prod_insert hk₀]
+    conv_rhs => rw [Finset.prod_insert hk₀, ← ih hS']
+    -- Goal: ∑ a, P a * (f a * g a) = (∑ a, P a * f a) * (∑ a, P a * g a)
+    -- where f a = (G a k₀)(vals k₀), g a = ∏_{S'} (G a k)(vals k)
+    -- Choose J = {i₀} if coord k₀ = some i₀, else ∅
+    set J : Finset ι := match coord k₀ with | none => ∅ | some i₀ => {i₀}
+    -- f ignores j ∉ J
+    have hf : ∀ j, j ∉ J → Ignores j (fun a => (G a k₀) (vals k₀)) := by
+      intro j hj
+      cases hc : coord k₀ with
+      | none => exact pt k₀ j (h_const k₀ hc j)
+      | some i₀ =>
+        simp only [J, hc, Finset.mem_singleton] at hj
+        exact pt k₀ j (h_single k₀ i₀ hc j hj)
+    -- g ignores j ∈ J
+    have hg : ∀ j, j ∈ J → Ignores j (fun a => ∏ k ∈ S', (G a k) (vals k)) := by
+      intro j hj
+      refine Ignores_finset_prod j (fun k a => (G a k) (vals k)) S' (fun k hk => ?_)
+      cases hck : coord k with
+      | none => exact pt k j (h_const k hck j)
+      | some i' =>
+        have hne : i' ≠ j := by
+          intro heq; subst heq
+          cases hc₀ : coord k₀ with
+          | none => simp [J, hc₀] at hj
+          | some i₀ =>
+            simp only [J, hc₀, Finset.mem_singleton] at hj; subst hj
+            exact absurd hc₀
+              (hS k k₀ (Finset.mem_insert_of_mem hk)
+                (Finset.mem_insert_self k₀ S')
+                (ne_of_mem_of_not_mem hk hk₀) i' hck)
+        exact pt k j (h_single k i' hck j (Ne.symm hne))
+    exact pmfPi_expect_indep σ _ _ J hf hg
+
 end PMFProduct
 end Math
 
