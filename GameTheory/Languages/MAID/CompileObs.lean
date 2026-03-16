@@ -116,14 +116,7 @@ noncomputable def compileObsCoreModel (S : Struct Player n) (sem : Sem S) :
     ObsModelCore Player (FrontierCfg S)
       (fun p => List (Infoset S p))
       (fun (p : Player) (_ : List (Infoset S p)) => Option (FrontierAct S p)) where
-  infoState := fun _ => {
-    Carrier := List _
-    start := id
-    push := fun _ o => o
-    current := id
-    current_start := by intro o; rfl
-    current_push := by intro _ o; rfl
-  }
+  infoState := fun _ => InfoStateCore.identity _
   observe := fun p cfg => frontierInfosets S cfg p
   machine := {
     init := initialCfg S
@@ -200,14 +193,7 @@ noncomputable def compileObsCoreModelPR (S : Struct Player n) (sem : Sem S) :
     ObsModelCore Player (FrontierCfg S)
       (fun p => Option (Infoset S p))
       (CompiledMAIDAct S) where
-  infoState := fun _ => {
-    Carrier := Option _
-    start := id
-    push := fun _ o => o
-    current := id
-    current_start := by intro o; rfl
-    current_push := by intro _ o; rfl
-  }
+  infoState := fun _ => InfoStateCore.identity _
   observe := fun p cfg => frontierActiveInfoset S cfg p
   machine := {
     init := initialCfg S

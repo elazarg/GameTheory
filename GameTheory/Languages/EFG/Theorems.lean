@@ -16,7 +16,7 @@ theorem kuhn_behavioral_to_mixed
     (hpr : _root_.EFG.PerfectRecall t) :
     ∃ μ : PMF (_root_.EFG.FlatProfile S),
       μ.bind (fun s => t.evalDist (_root_.EFG.flatToBehavioral s)) = t.evalDist σ :=
-  _root_.EFG.kuhn_behavioral_to_mixed (S := S) (Outcome := Outcome) σ t hpr
+  _root_.EFG.kuhn_behavioral_to_mixed_pr (S := S) (Outcome := Outcome) σ t hpr
 
 /-- Original-strength EFG Kuhn (mixed -> behavioral), re-exported in the new
 language layout. -/
@@ -94,10 +94,10 @@ over pure profiles rather than flat contingent plans. -/
       (_root_.EFG.productProfile σ).bind
         (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s)) := hflat
     _ = evalBehavioral G σ := by
-            simpa [evalBehavioral] using
-              (_root_.EFG.behavioral_to_mixed σ G.tree
-                (_root_.EFG.PerfectRecall_implies_NoInfoSetRepeat
-                  G.tree hpr))
+            simp only [evalBehavioral]
+            exact _root_.EFG.productProfile_bind_evalDist σ G.tree
+              (_root_.EFG.PerfectRecall_implies_NoInfoSetRepeat
+                G.tree hpr)
 
 /-- Complete EFG Kuhn theorem at the outcome-distribution level. The
 behavioral->mixed direction uses the canonical product measure over infosets,

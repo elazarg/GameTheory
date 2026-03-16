@@ -111,14 +111,7 @@ noncomputable def compileObsCoreModel (t : GameTree S Outcome) :
     ObsModelCore S.Player (GameTree S Outcome)
       (fun i => Option (S.Infoset i))
       (CompiledAct S) where
-  infoState := fun _ => {
-    Carrier := Option _
-    start := id
-    push := fun _ o => o
-    current := id
-    current_start := by intro o; rfl
-    current_push := by intro _ o; rfl
-  }
+  infoState := fun _ => InfoStateCore.identity _
   observe := fun i s => obsOfState (S := S) (Outcome := Outcome) i s
   machine := {
     init := t

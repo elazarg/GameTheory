@@ -37,6 +37,26 @@ structure InfoStateCore (α : Type) where
   current_start : ∀ a, current (start a) = a
   current_push : ∀ h a, current (push h a) = a
 
+/-- The identity information-state core: the carrier is the observation type
+itself, `start` and `current` are both the identity, and `push` discards
+the old state and returns the new observation. -/
+@[reducible] def InfoStateCore.identity (α : Type) : InfoStateCore α where
+  Carrier := α
+  start := id
+  push := fun _ o => o
+  current := id
+  current_start := fun _ => rfl
+  current_push := fun _ _ => rfl
+
+@[simp] theorem InfoStateCore.identity_Carrier (α : Type) :
+    (InfoStateCore.identity α).Carrier = α := rfl
+@[simp] theorem InfoStateCore.identity_start (α : Type) :
+    (InfoStateCore.identity α).start = id := rfl
+@[simp] theorem InfoStateCore.identity_push (α : Type) :
+    (InfoStateCore.identity α).push = fun _ o => o := rfl
+@[simp] theorem InfoStateCore.identity_current (α : Type) :
+    (InfoStateCore.identity α).current = id := rfl
+
 /-- Multi-player information-state model over a `DSMachine` with
 observation-indexed actions. The label at state `s` is the joint action
 `∀ i, Act i (observe i s)`. -/

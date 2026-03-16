@@ -191,14 +191,7 @@ noncomputable def compileObsCoreModelLin [DecidableEq (Fin n)]
     ObsModelCore (Fin n) (LinConfig G)
       (fun _ => Option (RoundView G))
       (fun _ => LinAct (RoundView G) A) where
-  infoState := fun _ => {
-    Carrier := Option (RoundView G)
-    start := id
-    push := fun _ o => o
-    current := id
-    current_start := fun _ => rfl
-    current_push := fun _ _ => rfl
-  }
+  infoState := fun _ => InfoStateCore.identity _
   observe := linObserve G
   machine := {
     init := linInitialConfig G

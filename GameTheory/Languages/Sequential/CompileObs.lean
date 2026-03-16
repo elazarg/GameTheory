@@ -199,14 +199,7 @@ noncomputable def compileObsCoreModel (G : Protocol n S V A Sig) :
     ObsModelCore (Fin n) (Config G)
       (fun _ => Option V)
       (fun (_ : Fin n) (_ : Option V) => Option A) where
-  infoState := fun _ => {
-    Carrier := Option V
-    start := id
-    push := fun _ o => o
-    current := id
-    current_start := by intro o; rfl
-    current_push := by intro _ o; rfl
-  }
+  infoState := fun _ => InfoStateCore.identity _
   observe := fun i cfg => observe G i cfg
   machine := {
     init := initialConfig G

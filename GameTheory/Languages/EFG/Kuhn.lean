@@ -146,7 +146,7 @@ variable (t : GameTree S Outcome)
 
 noncomputable instance compiledCoreInfoStateFintype (t : GameTree S Outcome) (i : S.Player) :
     Fintype ((compiledCoreObs t).InfoState i) := by
-  dsimp [compiledCoreObs, compileObsCoreModel, ObsModelCore.InfoState]
+  dsimp [compiledCoreObs, compileObsCoreModel, ObsModelCore.InfoState, InfoStateCore.identity]
   infer_instance
 
 @[simp] theorem projectStates_compiledCore
@@ -157,15 +157,15 @@ noncomputable instance compiledCoreInfoStateFintype (t : GameTree S Outcome) (i 
   induction ss with
   | nil =>
       simp [ObsModelCore.projectStates, ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-        compiledCoreObs, compileObsCoreModel, obsOfState]
+        compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, obsOfState]
   | cons s ss ih =>
       cases ss with
       | nil =>
           simp [ObsModelCore.projectStates, ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compiledCoreObs, compileObsCoreModel, obsOfState]
+            compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, obsOfState]
       | cons t ts =>
           simpa [ObsModelCore.projectStates, ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compiledCoreObs, compileObsCoreModel, obsOfState] using ih
+            compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, obsOfState] using ih
 
 /-- Product mixed distribution over lifted core local strategies is the
 pushforward of the native mixed-profile joint law along `liftPureProfileCore`. -/
@@ -219,7 +219,7 @@ private theorem compiledCore_step_of_decision
               (obsOfState_decision_eq_some I next))
             (hs ▸ a p))) := by
   cases hs
-  simp [ObsModelCore.step, compileObsCoreModel, treeStepPMF, obsOfState]
+  simp [ObsModelCore.step, compileObsCoreModel, InfoStateCore.identity, treeStepPMF, obsOfState]
 
 private theorem compiledCore_step_of_terminal
     {s : GameTree S Outcome} {z : Outcome}
@@ -252,17 +252,17 @@ current step just evaluates it at the current observation cell. -/
   | nil =>
       simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
         ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-        compileObsCoreModel, obsOfState]
+        compileObsCoreModel, InfoStateCore.identity, obsOfState]
   | cons s ss ih =>
       cases ss with
       | nil =>
           simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
             ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compileObsCoreModel, obsOfState]
+            compileObsCoreModel, InfoStateCore.identity, obsOfState]
       | cons t ts =>
           simpa [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
             ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compileObsCoreModel, obsOfState] using ih
+            compileObsCoreModel, InfoStateCore.identity, obsOfState] using ih
 
 @[simp] theorem castJointAction_compiledCore
     (π : ObsModelCore.PureProfile (compiledCoreObs t))
@@ -676,7 +676,7 @@ private theorem historySupportTrace_reachBy
     ReachBy h t ((compiledCoreObs t).lastState ss) := by
   induction hw with
   | init =>
-      simp [compiledCoreObs, compileObsCoreModel, ObsModelCore.lastState]
+      simp [compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, ObsModelCore.lastState]
   | @stutter ss h z hw hterm ih =>
       have ih' : ReachBy h t (.terminal z) := by
         simpa [hterm] using ih
@@ -690,7 +690,8 @@ private theorem historySupportTrace_reachBy
           ((compiledCoreObs t).lastState ss) u :=
         reachBy_singleton_of_historySupportStep hstep
       have hcat := ReachBy_append ih htail
-      simpa [compiledCoreObs, compileObsCoreModel, ObsModelCore.lastState] using hcat
+      simpa [compiledCoreObs, compileObsCoreModel, InfoStateCore.identity,
+        ObsModelCore.lastState] using hcat
 
 private theorem playerHistory_mem_of_action_mem
     {i : S.Player} {I : S.Infoset i} {a : S.Act I} {h : List (HistoryStep S)}
@@ -859,7 +860,8 @@ private theorem historySupportTrace_pureRun_nonzero
       ((compiledCoreObs t).init) (ss.length - 1) π ss ≠ 0 := by
   induction hw with
   | init =>
-      simp [Math.ParameterizedChain.pureRun, compiledCoreObs, compileObsCoreModel]
+      simp [Math.ParameterizedChain.pureRun, compiledCoreObs,
+        compileObsCoreModel, InfoStateCore.identity]
   | @stutter ss hist z hw hterm ih =>
       have hu :
           ((compiledCoreObs t).pureStep π ss)
@@ -1498,7 +1500,7 @@ theorem kuhn_behavioral_to_mixed_evalDist
 
 /-- Two behavioral profiles agreeing on all infosets in `t` give the same
 `evalDist`. -/
-theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
+private theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
     (σ₁ σ₂ : BehavioralProfile S)
     (h : ∀ {q} {J : S.Infoset q},
       DecisionNodeIn J t → σ₁ q J = σ₂ q J) :
@@ -1515,15 +1517,13 @@ theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
     congr 1; funext a
     exact ih a (fun hd => h (.in_decision I next a hd))
 
-/-- The tree-level B→M core: the product PMF `productProfile σ` induces the
-    same `evalDist` as `σ` when no info set repeats.
-
-This is proved by tree induction. At decision nodes it uses the
-`pmfPi_update_bind` / `pmfPi_bind_update_pure` decomposition to isolate the
-current info-set's factor, then the `Ignores` property to discard it. -/
-theorem behavioral_to_mixed (σ : BehavioralProfile S)
+/-- The product PMF `productProfile σ` induces the same `evalDist` as `σ`
+when no info set repeats. Tree-induction proof used by `kuhn_behavioral_to_mixed_pr`
+to provide the canonical `productProfile` witness. -/
+private theorem behavioral_to_mixed (σ : BehavioralProfile S)
     (t : GameTree S Outcome) (hnr : NoInfoSetRepeat t) :
-    (productProfile σ).bind (fun s => t.evalDist (flatToBehavioral s)) =
+    (productProfile σ).bind
+      (fun s => t.evalDist (flatToBehavioral s)) =
     t.evalDist σ := by
   induction t with
   | terminal z =>
@@ -1554,10 +1554,12 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
           j (g a) := by
       intro a
       refine Math.PMFProduct.Ignores_of_pointwise
-        (A := fun idx : FlatIdx S => S.Act idx.2) j (g a) ?_
+        (A := fun idx : FlatIdx S => S.Act idx.2)
+        j (g a) ?_
       intro s₁ s₂ hagree
       apply evalDist_eq_of_behavioral_agree (t := next a)
-        (σ₁ := flatToBehavioral s₁) (σ₂ := flatToBehavioral s₂)
+        (σ₁ := flatToBehavioral s₁)
+        (σ₂ := flatToBehavioral s₂)
       intro q J hJ
       have hneq : (⟨q, J⟩ : FlatIdx S) ≠ j := by
         intro heq
@@ -1572,7 +1574,8 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
               (A := fun idx : FlatIdx S => S.Act idx.2)
               (Function.update fam j (PMF.pure a))) := by
       simpa [productProfile, fam, j] using
-        (Math.PMFProduct.pmfPi_update_bind (σ := fam) j (σ p I))
+        (Math.PMFProduct.pmfPi_update_bind
+          (σ := fam) j (σ p I))
     rw [hdecomp, PMF.bind_bind]
     congr 1
     funext a
@@ -1580,13 +1583,16 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
       (Math.PMFProduct.pmfPi
           (A := fun idx : FlatIdx S => S.Act idx.2)
           (Function.update fam j (PMF.pure a))).bind
-          (fun s => (next (s j)).evalDist (flatToBehavioral s))
+          (fun s =>
+            (next (s j)).evalDist (flatToBehavioral s))
         = ((Math.PMFProduct.pmfPi
             (A := fun idx : FlatIdx S => S.Act idx.2)
             fam).bind
-          (fun s => PMF.pure (Function.update s j a))).bind
+          (fun s =>
+            PMF.pure (Function.update s j a))).bind
             (fun s =>
-              (next (s j)).evalDist (flatToBehavioral s)) := by
+              (next (s j)).evalDist
+                (flatToBehavioral s)) := by
               rw [Math.PMFProduct.pmfPi_bind_update_pure]
       _ = (Math.PMFProduct.pmfPi
             (A := fun idx : FlatIdx S => S.Act idx.2)
@@ -1600,25 +1606,39 @@ theorem behavioral_to_mixed (σ : BehavioralProfile S)
               Function.update_self] using hignore
       _ = (productProfile σ).bind
             (fun s =>
-              (next a).evalDist (flatToBehavioral s)) := by
+              (next a).evalDist
+                (flatToBehavioral s)) := by
             rfl
       _ = (next a).evalDist σ := ih a (hnr_sub a)
 
-/-- `flatToBehavioral ∘ flatProfileEquivPureProfile.symm = pureToBehavioral`. -/
-theorem flatToBehavioral_equiv_symm (f : PureProfile S) :
-    flatToBehavioral (flatProfileEquivPureProfile.symm f) = pureToBehavioral f := by
-  rfl
-
 /-- Kuhn's theorem (behavioral → mixed direction):
-    For any behavioral profile σ and tree with perfect recall,
-    there exists a product distribution over flat profiles
-    that induces the same outcome distribution. -/
+    For any behavioral profile σ and tree with no info-set repeats,
+    there exists a distribution over flat profiles
+    that induces the same outcome distribution.
+
+Delegates to `kuhn_behavioral_to_mixed_evalDist` (the central ObsModel proof)
+and transports the witness through `flatProfileEquivPureProfile`. -/
 theorem kuhn_behavioral_to_mixed (σ : BehavioralProfile S) (t : GameTree S Outcome)
+    (hnr : NoInfoSetRepeat t) :
+    ∃ μ : PMF (FlatProfile S),
+      μ.bind (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ :=
+  ⟨productProfile σ, behavioral_to_mixed σ t hnr⟩
+
+/-- The `productProfile σ` witness specifically realizes `evalDist σ`
+under `NoInfoSetRepeat`. Non-existential form for downstream proofs
+that need the concrete witness. -/
+theorem productProfile_bind_evalDist (σ : BehavioralProfile S)
+    (t : GameTree S Outcome) (hnr : NoInfoSetRepeat t) :
+    (productProfile σ).bind
+      (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ :=
+  behavioral_to_mixed σ t hnr
+
+/-- `kuhn_behavioral_to_mixed` under the original `PerfectRecall` assumption. -/
+theorem kuhn_behavioral_to_mixed_pr (σ : BehavioralProfile S) (t : GameTree S Outcome)
     (hpr : PerfectRecall t) :
     ∃ μ : PMF (FlatProfile S),
       μ.bind (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ :=
-  ⟨productProfile σ, behavioral_to_mixed σ t
-    (PerfectRecall_implies_NoInfoSetRepeat t hpr)⟩
+  kuhn_behavioral_to_mixed σ t (PerfectRecall_implies_NoInfoSetRepeat t hpr)
 
 open GameTheory in
 /-- Kuhn's theorem lifted to utility distributions (behavioral → mixed). -/
@@ -1627,7 +1647,7 @@ theorem kuhn_behavioral_to_mixed_udist (G : EFGGame)
     ∃ μ : PMF (FlatProfile G.inf),
       μ.bind (fun s => G.toKernelGame.udist (flatToBehavioral s)) =
       G.toKernelGame.udist σ := by
-  obtain ⟨μ, hμ⟩ := kuhn_behavioral_to_mixed σ G.tree hpr
+  obtain ⟨μ, hμ⟩ := kuhn_behavioral_to_mixed_pr σ G.tree hpr
   exact ⟨μ, by
     simp only [KernelGame.udist, EFGGame.toKernelGame]
     rw [← hμ, PMF.bind_bind]⟩
