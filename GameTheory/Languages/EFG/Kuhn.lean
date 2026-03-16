@@ -1457,119 +1457,6 @@ theorem kuhn_behavioral_to_mixed_evalDist
 -- Tree-level Kuhn theorems (bridge from ObsModel to evalDist)
 -- ============================================================================
 
-/-- Two behavioral profiles agreeing on all infosets in `t` give the same
-`evalDist`. -/
-private theorem evalDist_eq_of_behavioral_agree (t : GameTree S Outcome)
-    (σ₁ σ₂ : BehavioralProfile S)
-    (h : ∀ {q} {J : S.Infoset q},
-      DecisionNodeIn J t → σ₁ q J = σ₂ q J) :
-    t.evalDist σ₁ = t.evalDist σ₂ := by
-  induction t with
-  | terminal _ => rfl
-  | chance _k _μ _hk next ih =>
-    simp only [GameTree.evalDist]; congr 1; funext b
-    exact ih b (fun hd => h (.in_chance _ _ _ _ b hd))
-  | decision I next ih =>
-    simp only [GameTree.evalDist]
-    have hI := h (DecisionNodeIn.root next)
-    rw [hI]
-    congr 1; funext a
-    exact ih a (fun hd => h (.in_decision I next a hd))
-
-/-- The product PMF `productProfile σ` induces the same `evalDist` as `σ`
-when no info set repeats. Tree-induction proof used by `kuhn_behavioral_to_mixed_pr`
-to provide the canonical `productProfile` witness. -/
-private theorem behavioral_to_mixed (σ : BehavioralProfile S)
-    (t : GameTree S Outcome) (hnr : NoInfoSetRepeat t) :
-    (productProfile σ).bind
-      (fun s => t.evalDist (flatToBehavioral s)) =
-    t.evalDist σ := by
-  induction t with
-  | terminal z =>
-    simp [GameTree.evalDist]
-  | chance _k _μ _hk next ih =>
-    simp only [GameTree.evalDist]
-    rw [show (productProfile σ).bind
-          (fun s => _μ.bind
-            (fun b => (next b).evalDist (flatToBehavioral s))) =
-        _μ.bind (fun b => (productProfile σ).bind
-          (fun s => (next b).evalDist (flatToBehavioral s))) from
-      PMF.bind_comm (productProfile σ) _μ
-        (fun s b => (next b).evalDist (flatToBehavioral s))]
-    congr 1; funext b
-    exact ih b (hnr b)
-  | @decision p I next ih =>
-    obtain ⟨hnodup, hnr_sub⟩ := hnr
-    simp only [GameTree.evalDist]
-    simp only [flatToBehavioral, PMF.pure_bind]
-    let j : FlatIdx S := ⟨p, I⟩
-    let fam : (idx : FlatIdx S) → PMF (S.Act idx.2) :=
-      fun idx => σ idx.1 idx.2
-    let g : S.Act I → FlatProfile S → PMF Outcome :=
-      fun a s => (next a).evalDist (flatToBehavioral s)
-    have hg : ∀ a,
-        Math.PMFProduct.Ignores
-          (A := fun idx : FlatIdx S => S.Act idx.2)
-          j (g a) := by
-      intro a
-      refine Math.PMFProduct.Ignores_of_pointwise
-        (A := fun idx : FlatIdx S => S.Act idx.2)
-        j (g a) ?_
-      intro s₁ s₂ hagree
-      apply evalDist_eq_of_behavioral_agree (t := next a)
-        (σ₁ := flatToBehavioral s₁)
-        (σ₂ := flatToBehavioral s₂)
-      intro q J hJ
-      have hneq : (⟨q, J⟩ : FlatIdx S) ≠ j := by
-        intro heq
-        dsimp [j] at heq
-        cases heq
-        exact (hnodup a) hJ
-      simp [flatToBehavioral, hagree _ hneq]
-    have hdecomp :
-        productProfile σ =
-          (σ p I).bind (fun a =>
-            Math.PMFProduct.pmfPi
-              (A := fun idx : FlatIdx S => S.Act idx.2)
-              (Function.update fam j (PMF.pure a))) := by
-      simpa [productProfile, fam, j] using
-        (Math.PMFProduct.pmfPi_update_bind
-          (σ := fam) j (σ p I))
-    rw [hdecomp, PMF.bind_bind]
-    congr 1
-    funext a
-    calc
-      (Math.PMFProduct.pmfPi
-          (A := fun idx : FlatIdx S => S.Act idx.2)
-          (Function.update fam j (PMF.pure a))).bind
-          (fun s =>
-            (next (s j)).evalDist (flatToBehavioral s))
-        = ((Math.PMFProduct.pmfPi
-            (A := fun idx : FlatIdx S => S.Act idx.2)
-            fam).bind
-          (fun s =>
-            PMF.pure (Function.update s j a))).bind
-            (fun s =>
-              (next (s j)).evalDist
-                (flatToBehavioral s)) := by
-              rw [Math.PMFProduct.pmfPi_bind_update_pure]
-      _ = (Math.PMFProduct.pmfPi
-            (A := fun idx : FlatIdx S => S.Act idx.2)
-            fam).bind (g a) := by
-            rw [PMF.bind_bind]
-            congr 1
-            funext s
-            rw [PMF.pure_bind]
-            have hignore := hg a s a
-            simpa [g, j, flatToBehavioral,
-              Function.update_self] using hignore
-      _ = (productProfile σ).bind
-            (fun s =>
-              (next a).evalDist
-                (flatToBehavioral s)) := by
-            rfl
-      _ = (next a).evalDist σ := ih a (hnr_sub a)
-
 /-- Kuhn's theorem (behavioral → mixed direction):
     For any behavioral profile σ and tree with no info-set repeats,
     there exists a distribution over flat profiles
@@ -1580,17 +1467,24 @@ and transports the witness through `flatProfileEquivPureProfile`. -/
 theorem kuhn_behavioral_to_mixed (σ : BehavioralProfile S) (t : GameTree S Outcome)
     (hnr : NoInfoSetRepeat t) :
     ∃ μ : PMF (FlatProfile S),
-      μ.bind (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ :=
-  ⟨productProfile σ, behavioral_to_mixed σ t hnr⟩
-
-/-- The `productProfile σ` witness specifically realizes `evalDist σ`
-under `NoInfoSetRepeat`. Non-existential form for downstream proofs
-that need the concrete witness. -/
-theorem productProfile_bind_evalDist (σ : BehavioralProfile S)
-    (t : GameTree S Outcome) (hnr : NoInfoSetRepeat t) :
-    (productProfile σ).bind
-      (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ :=
-  behavioral_to_mixed σ t hnr
+      μ.bind (fun s => t.evalDist (flatToBehavioral s)) = t.evalDist σ := by
+  let O := compiledCoreObs t
+  let β' := GameTheory.EFG.liftBehavioralProfileCore t σ
+  have heval := kuhn_behavioral_to_mixed_evalDist σ t hnr
+  let μ : PMF (FlatProfile S) :=
+    (O.behavioralToMixedJoint β').map
+      (fun π => flatProfileEquivPureProfile.symm
+        (GameTheory.EFG.descendPureProfileCore t π))
+  refine ⟨μ, ?_⟩
+  simp only [μ, PMF.bind_map]
+  have : (fun s => t.evalDist (flatToBehavioral s)) ∘
+      (fun π => flatProfileEquivPureProfile.symm
+        (GameTheory.EFG.descendPureProfileCore t π)) =
+      fun π => t.evalDist (pureToBehavioral
+        (GameTheory.EFG.descendPureProfileCore t π)) := by
+    ext π; congr 1
+  rw [this]
+  exact heval.symm
 
 /-- `kuhn_behavioral_to_mixed` under the original `PerfectRecall` assumption. -/
 theorem kuhn_behavioral_to_mixed_pr (σ : BehavioralProfile S) (t : GameTree S Outcome)

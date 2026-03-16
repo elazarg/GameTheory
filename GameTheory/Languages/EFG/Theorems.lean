@@ -41,63 +41,35 @@ noncomputable def evalPure (G : _root_.EFG.EFGGame)
     (π : _root_.EFG.PureProfile G.inf) : PMF G.Outcome :=
   G.tree.evalDist (_root_.EFG.pureToBehavioral π)
 
-/-- Canonical mixed realization of an EFG behavioral profile as a PMF over pure
-profiles, obtained by independently sampling each infoset action and then
-repacking the resulting flat contingent plan as a per-player pure profile. -/
+/-- Mixed realization of an EFG behavioral profile as a PMF over pure
+profiles, obtained from the Kuhn B→M witness repacked via
+`flatProfileEquivPureProfile`. -/
 noncomputable def mixedOfBehavioralPure (G : _root_.EFG.EFGGame)
-    (σ : _root_.EFG.BehavioralProfile G.inf) : PMF (_root_.EFG.PureProfile G.inf) :=
-  (_root_.EFG.productProfile σ).bind
-    (fun s => PMF.pure ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s))
+    (hpr : _root_.EFG.PerfectRecall G.tree)
+    (σ : _root_.EFG.BehavioralProfile G.inf) :
+    PMF (_root_.EFG.PureProfile G.inf) :=
+  (_root_.EFG.kuhn_behavioral_to_mixed_pr σ G.tree hpr).choose.map
+    (_root_.EFG.flatProfileEquivPureProfile (S := G.inf))
 
-/-- Outcome-level behavioral -> mixed direction, packaged with the canonical PMF
-over pure profiles rather than flat contingent plans. -/
- theorem kuhn_behavioral_to_mixed_pure
+/-- Outcome-level behavioral -> mixed direction, packaged with a PMF
+over pure profiles. -/
+theorem kuhn_behavioral_to_mixed_pure
     (G : _root_.EFG.EFGGame)
     (hpr : _root_.EFG.PerfectRecall G.tree) :
     KuhnBehavioralToMixedOutcome
       (_root_.EFG.BehavioralProfile G.inf)
       (_root_.EFG.PureProfile G.inf)
       G.Outcome
-      (mixedOfBehavioralPure G)
+      (mixedOfBehavioralPure G hpr)
       (evalBehavioral G)
       (evalPure G) := by
   intro σ
-  have hflat :
-      (_root_.EFG.productProfile σ).bind
-        (fun s => G.tree.evalDist (_root_.EFG.pureToBehavioral
-          ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s))) =
-      (_root_.EFG.productProfile σ).bind
-        (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s)) := by
-    refine Math.ProbabilityMassFunction.bind_congr_on_support
-      (_root_.EFG.productProfile σ)
-      (fun s => G.tree.evalDist (_root_.EFG.pureToBehavioral
-        ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s)))
-      (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s))
-      ?_
-    intro s _
-    have hbeh :
-        _root_.EFG.pureToBehavioral
-          ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s) =
-          _root_.EFG.flatToBehavioral s := by
-      funext p I
-      simp [_root_.EFG.flatProfileEquivPureProfile, _root_.EFG.pureToBehavioral,
-        _root_.EFG.flatToBehavioral]
-    simp [hbeh]
-  calc
-    (mixedOfBehavioralPure G σ).bind (evalPure G)
-      =
-      (_root_.EFG.productProfile σ).bind
-        (fun s => G.tree.evalDist (_root_.EFG.pureToBehavioral
-          ((_root_.EFG.flatProfileEquivPureProfile (S := G.inf)) s))) := by
-            simp [mixedOfBehavioralPure, evalPure, PMF.bind_bind]
-    _ =
-      (_root_.EFG.productProfile σ).bind
-        (fun s => G.tree.evalDist (_root_.EFG.flatToBehavioral s)) := hflat
-    _ = evalBehavioral G σ := by
-            simp only [evalBehavioral]
-            exact _root_.EFG.productProfile_bind_evalDist σ G.tree
-              (_root_.EFG.PerfectRecall_implies_NoInfoSetRepeat
-                G.tree hpr)
+  simp only [mixedOfBehavioralPure, evalBehavioral,
+    PMF.bind_map]
+  have hspec :=
+    (_root_.EFG.kuhn_behavioral_to_mixed_pr σ G.tree hpr).choose_spec
+  conv_rhs => rw [← hspec]
+  congr 1
 
 /-- Complete EFG Kuhn theorem at the outcome-distribution level. The
 behavioral->mixed direction uses the canonical product measure over infosets,
@@ -110,7 +82,7 @@ theorem kuhn_complete
       (_root_.EFG.MixedProfile G.inf)
       (_root_.EFG.PureProfile G.inf)
       G.Outcome
-      (mixedOfBehavioralPure G)
+      (mixedOfBehavioralPure G hpr)
       (_root_.EFG.mixedProfileJoint (S := G.inf))
       (evalBehavioral G)
       (evalPure G) := by
