@@ -101,27 +101,14 @@ The proof decomposes into two independent directions:
   `TracePlayerStepRecall` (weaker than classical perfect recall).
 
 Each concrete language compiles to `ObsModel` and applies the generic
-theorems. The compilation verifies that the relevant structural conditions
-hold:
+theorems:
 
-- **EFG** (`Languages/EFG/Kuhn.lean`): Compiles game trees into an
-  observation model where each step resolves one information set. Both
-  directions (B→M and M→B) are proved for the `evalDist` outcome
-  distribution and for expected utility (`udist`).
-
-- **MAID** (`Languages/MAID/Kuhn.lean`): Compiles the simultaneous frontier
-  evaluation semantics into a PR-refined observation model where each player
-  has at most one active decision node per step (under perfect recall).
-  Proves one-step adequacy (`compiledPR_stepDist_eq_frontierStepPol`) —
-  that the compiled model's step distribution matches the native frontier
-  step — then derives B→M and M→B for `frontierEval`. The adequacy proof
-  uses a cross-index product-bind factorization theorem
-  (`pmfPi_bind_pmfPi_of_disjoint_coords`) to decompose the simultaneous
-  sampling into per-node independent distributions.
-
-- **Sequential** (`Languages/Sequential/Kuhn.lean`): Compiles protocol-based
-  sequential games via linearized observation models. Both B→M and M→B are
-  proved for the native `seqEval` outcome distribution.
+- **EFG**: Both directions proved for the outcome distribution and
+  expected utility.
+- **MAID**: Both directions proved for the native frontier evaluation
+  semantics under DAG perfect recall (Koller & Milch).
+- **Sequential**: Both directions proved for the native sequential
+  evaluation semantics.
 
 The Intrinsic form (`Languages/Intrinsic/`) formalizes Witsenhausen's intrinsic
 model following Heymann, De Lara, and Chancelier (2020), where information is
