@@ -1189,61 +1189,59 @@ private theorem lastState_terminal_of_pureRun_height
 -- NoNontrivialInfoStateRepeat for the compiled core
 -- ============================================================================
 
-/-- Extract the child relationship from a nonzero compiled pureStep at a chance node. -/
-private theorem compiledStep_chance_child
-    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
-    {ss : List (GameTree S Outcome)} {u : GameTree S Outcome}
-    {k : Nat} {μ : PMF (Fin k)} {hk : k > 0}
-    {next : Fin k → GameTree S Outcome}
-    (hlast : (compiledCoreObs t).lastState ss = .chance k μ hk next)
-    (hstep : (compiledCoreObs t).pureStep π ss u ≠ 0) :
-    ∃ b, u = next b := by
-  rw [pureStep_compiledCore_eq, hlast] at hstep
-  rw [ne_eq, PMF.map_apply, ENNReal.tsum_eq_zero, not_forall] at hstep
-  obtain ⟨b, hb⟩ := hstep
-  exact ⟨b, by split_ifs at hb with h <;> [exact h; exact absurd rfl hb]⟩
+/-- `NoInfoSetRepeat` is hereditary along `ReachBy` paths in the game tree. -/
+private theorem noInfoSetRepeat_of_reachBy
+    {src dst : GameTree S Outcome} {h : List (HistoryStep S)}
+    (hnr : NoInfoSetRepeat src) (hr : ReachBy h src dst) :
+    NoInfoSetRepeat dst := by
+  induction hr with
+  | nil => exact hnr
+  | @cons ℓ _ src mid _ hstep _ ih =>
+    apply ih
+    cases ℓ with
+    | chance k b =>
+      rcases hstep with ⟨μ, hk, next, rfl, rfl⟩; exact hnr b
+    | action p I a =>
+      rcases hstep with ⟨next, rfl, rfl⟩; exact hnr.2 a
 
-/-- `DecisionNodeIn` lifts through nonzero compiled tree steps: if a decision
-node for infoset `I` appears in a successor, it appeared in the source. -/
-private theorem decisionNodeIn_of_compiledStep
+/-- `DecisionNodeIn` lifts backwards along `ReachBy` paths in the game tree. -/
+private theorem decisionNodeIn_of_reachBy
+    {parent child : GameTree S Outcome} {h : List (HistoryStep S)}
     {p : S.Player} {I : S.Infoset p}
-    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
-    {ss : List (GameTree S Outcome)} {u : GameTree S Outcome}
-    (hstep : (compiledCoreObs t).pureStep π ss u ≠ 0)
-    (hd : DecisionNodeIn I u) :
-    DecisionNodeIn I ((compiledCoreObs t).lastState ss) := by
-  rw [pureStep_compiledCore_eq] at hstep
-  split at hstep
-  case h_1 z hlast =>
-    simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
-    exact absurd (hstep ▸ hd) DecisionNodeIn_terminal_false
-  case h_2 k μ hk next hlast =>
-    obtain ⟨b, rfl⟩ := compiledStep_chance_child (π := π) t hlast
-      (by rwa [pureStep_compiledCore_eq, hlast])
-    rw [hlast]; exact .in_chance k μ hk next b hd
-  case h_3 q I' next hlast =>
-    simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
-    rw [hlast]; exact .in_decision I' next _ (hstep ▸ hd)
+    (hr : ReachBy h parent child) (hd : DecisionNodeIn I child) :
+    DecisionNodeIn I parent := by
+  induction hr with
+  | nil => exact hd
+  | @cons ℓ _ src mid _ hstep _ ih =>
+    cases ℓ with
+    | chance k b =>
+      rcases hstep with ⟨μ, hk, next, rfl, rfl⟩
+      exact .in_chance k μ hk next b (ih hd)
+    | action q I' a =>
+      rcases hstep with ⟨next, rfl, rfl⟩
+      exact .in_decision I' next a (ih hd)
 
-/-- `NoInfoSetRepeat` is hereditary through nonzero compiled steps. -/
-private theorem noInfoSetRepeat_of_compiledStep
+/-- A nonzero compiled pureStep yields a `ReachBy` path (one step for
+chance/decision nodes, zero steps for terminal stuttering). -/
+private theorem reachBy_of_pureStep_nonzero
     {π : ObsModelCore.PureProfile (compiledCoreObs t)}
     {ss : List (GameTree S Outcome)} {u : GameTree S Outcome}
-    (hstep : (compiledCoreObs t).pureStep π ss u ≠ 0)
-    (hnr : NoInfoSetRepeat ((compiledCoreObs t).lastState ss)) :
-    NoInfoSetRepeat u := by
+    (hstep : (compiledCoreObs t).pureStep π ss u ≠ 0) :
+    ∃ hist, ReachBy hist ((compiledCoreObs t).lastState ss) u := by
   rw [pureStep_compiledCore_eq] at hstep
   split at hstep
   case h_1 z hlast =>
     simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
-    subst hstep; exact trivial
+    exact ⟨[], by rw [hlast, hstep]; exact .here _⟩
   case h_2 k μ hk next hlast =>
-    obtain ⟨b, rfl⟩ := compiledStep_chance_child (π := π) t hlast
-      (by rwa [pureStep_compiledCore_eq, hlast])
-    rw [hlast] at hnr; exact hnr b
+    rw [ne_eq, PMF.map_apply, ENNReal.tsum_eq_zero, not_forall] at hstep
+    obtain ⟨b, hb⟩ := hstep
+    have hub : u = next b := by split_ifs at hb with h <;> [exact h; exact absurd rfl hb]
+    exact ⟨[.chance k b], by rw [hlast, hub]; exact ReachBy.chance b (.here _)⟩
   case h_3 q I' next hlast =>
     simp only [ne_eq, PMF.pure_apply, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at hstep
-    rw [hlast] at hnr; exact hstep ▸ hnr.2 _
+    exact ⟨[.action q I' (π q (some I'))], by
+      rw [hlast, hstep]; exact ReachBy.action _ (.here _)⟩
 
 /-- If `obsOfState i node = some I`, then `node` is a decision node for `I`. -/
 private theorem decisionNodeIn_of_obsOfState_some
@@ -1258,60 +1256,63 @@ private theorem decisionNodeIn_of_obsOfState_some
     have hI : I' = I := by simpa [obsOfState] using hobs
     subst hI; exact .root next
 
-/-- Prefix of a nonzero `pureRun` trace is also nonzero. -/
-private theorem pureRun_take_nonzero
-    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
-    {k : Nat} {ss : List (GameTree S Outcome)}
-    (h : (compiledCoreObs t).runDistPure k π ss ≠ 0)
-    {j : Nat} (hj : j ≤ k) :
-    (compiledCoreObs t).runDistPure j π (ss.take (j + 1)) ≠ 0 := by
-  have hlen : ss.length = k + 1 :=
-    Math.ParameterizedChain.pureRun_length _ _ _ _ _ h
-  induction k generalizing j ss with
-  | zero =>
-    have hj0 : j = 0 := by omega
-    subst hj0
-    rwa [List.take_of_length_le (by omega)]
-  | succ k ih =>
-    by_cases hj' : j = k + 1
-    · subst hj'; rwa [List.take_of_length_le (by omega)]
-    · rcases List.eq_nil_or_concat ss with rfl | ⟨pfx, last, rfl⟩
-      · simp at hlen
-      · rw [List.concat_eq_append] at h hlen ⊢
-        rw [ObsModelCore.runDistPure_eq_pureRun,
-            Math.ParameterizedChain.pureRun_succ_append] at h
-        have hpfx : (compiledCoreObs t).runDistPure k π pfx ≠ 0 := by
-          rw [ObsModelCore.runDistPure_eq_pureRun]; exact left_ne_zero_of_mul h
-        have hlen_pfx : pfx.length = k + 1 := by
-          simp [List.length_append] at hlen; omega
-        have htake : (pfx ++ [last]).take (j + 1) = pfx.take (j + 1) := by
-          rw [List.take_eq_left_iff]; right; omega
-        rw [htake]; exact ih hpfx (by omega) hlen_pfx
+/-- `lastState` of a take-prefix equals the corresponding element. -/
+private theorem lastState_take_eq
+    (ss : List (GameTree S Outcome)) (j : Nat) (hj : j < ss.length) :
+    (compiledCoreObs t).lastState (ss.take (j + 1)) = ss[j] := by
+  simp only [ObsModelCore.lastState]
+  have hlen : (ss.take (j + 1)).length = j + 1 :=
+    List.length_take_of_le (by omega)
+  rw [List.getLast?_eq_getElem?, hlen]
+  simp only [show j + 1 - 1 = j from by omega, List.getElem?_take_of_succ,
+    show ss[j]? = some ss[j] from List.getElem?_eq_getElem hj, Option.getD_some]
 
-/-- Individual step on a nonzero trace is nonzero. -/
-private theorem pureStep_of_pureRun_nonzero
+/-- On a nonzero trace, the first element is the tree root. -/
+private theorem pureRun_getElem_zero
     {π : ObsModelCore.PureProfile (compiledCoreObs t)}
     {k : Nat} {ss : List (GameTree S Outcome)}
     (h : (compiledCoreObs t).runDistPure k π ss ≠ 0)
-    {j : Nat} (hj : j + 1 < ss.length) :
-    (compiledCoreObs t).pureStep π (ss.take (j + 1))
-      ((compiledCoreObs t).lastState (ss.take (j + 2))) ≠ 0 := by
+    (h0 : 0 < ss.length) :
+    ss[0] = t := by
+  rw [ObsModelCore.runDistPure_eq_pureRun] at h
+  induction k generalizing ss with
+  | zero =>
+    have : ss = [(compiledCoreObs t).init] := by
+      by_contra hne; exact h (by simp [Math.ParameterizedChain.pureRun, PMF.pure_apply, hne])
+    simp [this, compiledCoreObs, compileObsCoreModel]
+  | succ m ih =>
+    rcases List.eq_nil_or_concat ss with rfl | ⟨pre, last, hcat⟩
+    · simp at h0
+    · rw [List.concat_eq_append] at hcat; subst hcat
+      have hpre := left_ne_zero_of_mul
+        (Math.ParameterizedChain.pureRun_succ_append .. ▸ h)
+      have hlen_pre : 0 < pre.length := by
+        have := Math.ParameterizedChain.pureRun_length _ _ m π pre hpre; omega
+      simp only [List.getElem_append_left hlen_pre]
+      exact ih hpre hlen_pre
+
+/-- `ReachBy` between positions on a nonzero compiled trace, using
+`pureRun_step_nonzero` from `Math.ParameterizedChain`. -/
+private theorem reachBy_trace_positions
+    {π : ObsModelCore.PureProfile (compiledCoreObs t)}
+    {k : Nat} {ss : List (GameTree S Outcome)}
+    (hrun : (compiledCoreObs t).runDistPure k π ss ≠ 0)
+    {j₁ j₂ : Nat} (hle : j₁ ≤ j₂) (hj₂ : j₂ < ss.length) :
+    ∃ hist, ReachBy hist ss[j₁] ss[j₂] := by
   have hlen : ss.length = k + 1 :=
-    Math.ParameterizedChain.pureRun_length _ _ _ _ _ h
-  have hpfx : (compiledCoreObs t).runDistPure (j + 1) π (ss.take (j + 2)) ≠ 0 :=
-    pureRun_take_nonzero t h (by omega)
-  rw [ObsModelCore.runDistPure_eq_pureRun] at hpfx
-  have htake : ss.take (j + 2) = ss.take (j + 1) ++ [ss[j + 1]] := by
-    rw [show j + 2 = (j + 1) + 1 from by omega, List.take_add_one,
-        List.getElem?_eq_getElem (by omega)]; simp
-  rw [htake, Math.ParameterizedChain.pureRun_succ_append] at hpfx
-  have hstep := right_ne_zero_of_mul hpfx
-  have hlast : (compiledCoreObs t).lastState (ss.take (j + 1 + 1)) = ss[j + 1] := by
-    change (ss.take (j + 1 + 1)).getLast?.getD _ = _
-    rw [show j + 1 + 1 = j + 2 from by omega, htake, List.getLast?_append_of_ne_nil]
-    · simp
-    · exact List.cons_ne_nil _ _
-  rwa [hlast]
+    Math.ParameterizedChain.pureRun_length _ _ _ _ _ hrun
+  obtain ⟨d, rfl⟩ : ∃ d, j₂ = j₁ + d := ⟨j₂ - j₁, by omega⟩
+  induction d with
+  | zero => exact ⟨[], .here _⟩
+  | succ d ih =>
+    obtain ⟨hist₁, hr₁⟩ := ih (by omega) (by omega)
+    have hstep_ne : (compiledCoreObs t).pureStep π
+        (ss.take ((j₁ + d) + 1)) ss[j₁ + d + 1] ≠ 0 :=
+      Math.ParameterizedChain.pureRun_step_nonzero _ _ k π ss
+        (ObsModelCore.runDistPure_eq_pureRun (compiledCoreObs t) k π ▸ hrun) (j₁ + d) (by omega)
+    obtain ⟨hist_step, hr_step⟩ := reachBy_of_pureStep_nonzero t hstep_ne
+    rw [lastState_take_eq t ss (j₁ + d) (by omega)] at hr_step
+    exact ⟨hist₁ ++ hist_step, ReachBy_append hr₁ hr_step⟩
 
 /-- For the compiled core EFG model, `NoInfoSetRepeat` implies no non-trivial
 info state repeats on reachable traces. -/
@@ -1320,91 +1321,49 @@ theorem noNontrivialInfoStateRepeat_compiledCore
     (compiledCoreObs t).NoNontrivialInfoStateRepeat := by
   intro i π k ss hreach j₁ j₂ hjlt hjlen hEq
   simp only [projectStates_compiledCore] at hEq ⊢
-  change Subsingleton
-    (CompiledAct S i (obsOfState i ((compiledCoreObs t).lastState (List.take (j₂ + 1) ss))))
-  match hobs : obsOfState i ((compiledCoreObs t).lastState (ss.take (j₂ + 1))) with
+  have hlen : ss.length = k + 1 :=
+    Math.ParameterizedChain.pureRun_length _ _ _ _ _ hreach
+  -- Rewrite lastState (ss.take (j + 1)) = ss[j] everywhere
+  rw [lastState_take_eq t ss j₁ (by omega)] at hEq
+  rw [lastState_take_eq t ss j₂ (by omega)] at hEq ⊢
+  change Subsingleton (CompiledAct S i (obsOfState i ss[j₂]))
+  match hobs : obsOfState i ss[j₂] with
   | none =>
     change Subsingleton PUnit; exact inferInstance
   | some I =>
     exfalso
-    have hobs₁ : obsOfState i ((compiledCoreObs t).lastState (ss.take (j₁ + 1))) = some I := by
-      rw [hEq, hobs]
-    have hlen : ss.length = k + 1 :=
-      Math.ParameterizedChain.pureRun_length _ _ _ _ _ hreach
+    have hobs₁ : obsOfState i ss[j₁] = some I := by rw [hEq, hobs]
+    -- Get ReachBy from root to j₁ and from j₁+1 to j₂
+    have hroot : ss[0] = t := pureRun_getElem_zero t hreach (by omega)
+    obtain ⟨hist_root, hr_root⟩ := reachBy_trace_positions t hreach
+      (Nat.zero_le j₁) (by omega)
+    rw [hroot] at hr_root
     -- NoInfoSetRepeat propagates from root to position j₁
-    have hnr_j₁ : NoInfoSetRepeat ((compiledCoreObs t).lastState (ss.take (j₁ + 1))) := by
-      suffices ∀ m, m ≤ j₁ →
-          NoInfoSetRepeat ((compiledCoreObs t).lastState (ss.take (m + 1))) from
-        this j₁ le_rfl
-      intro m hm; induction m with
-      | zero =>
-        have hpfx0 : (compiledCoreObs t).runDistPure 0 π (ss.take 1) ≠ 0 :=
-          pureRun_take_nonzero t hreach (by omega)
-        rw [ObsModelCore.runDistPure_eq_pureRun] at hpfx0
-        -- pureRun 0 π ss' ≠ 0 means ss' = [init]
-        have htake1 : ss.take 1 = [(compiledCoreObs t).init] := by
-          have : Math.ParameterizedChain.pureRun (compiledCoreObs t).pureStep
-              (compiledCoreObs t).init 0 π = PMF.pure [(compiledCoreObs t).init] := rfl
-          rw [this, PMF.pure_apply] at hpfx0
-          split_ifs at hpfx0 with heq
-          · exact heq
-          · exact absurd rfl hpfx0
-        have hlast : (compiledCoreObs t).lastState (ss.take 1) = (compiledCoreObs t).init := by
-          change (ss.take 1).getLast?.getD _ = _
-          rw [htake1]; simp
-        rw [hlast]; exact hnr
-      | succ m ihm =>
-        exact noInfoSetRepeat_of_compiledStep t
-          (pureStep_of_pureRun_nonzero t hreach (by omega)) (ihm (by omega))
-    -- The node at j₁ must be a decision node for I
-    have hdec₁ := decisionNodeIn_of_obsOfState_some hobs₁
-    -- At the decision node for I, the NoInfoSetRepeat property says
-    -- no child subtree contains a decision node for I
-    have hnd_base : ¬ DecisionNodeIn I ((compiledCoreObs t).lastState (ss.take (j₁ + 2))) := by
-      intro hd
-      have hstep := pureStep_of_pureRun_nonzero t hreach (show j₁ + 1 < ss.length by omega)
-      have hlift := decisionNodeIn_of_compiledStep t hstep hd
-      -- hlift says DecisionNodeIn I (lastState (ss.take (j₁+1)))
-      -- But hnr_j₁ + obsOfState = some I means it's .decision I next
-      -- with ¬DecisionNodeIn I (next a) for all a
-      -- We need to show: the child at j₁+1 is a child of the decision node at j₁
-      -- Use the pureStep structure
-      rw [pureStep_compiledCore_eq] at hstep
-      revert hstep hlift
-      generalize (compiledCoreObs t).lastState (ss.take (j₁ + 1)) = node at hnr_j₁ hobs₁ hdec₁ ⊢
-      intro hlift hstep
-      match node, hnr_j₁, hobs₁ with
-      | .decision (p := p) I' next, hnr_node, hobs_node =>
-        have hp : p = i := by
-          by_contra hne; simp [obsOfState, hne] at hobs_node
-        subst hp
-        have hI : I' = I := by simpa [obsOfState] using hobs_node
-        subst hI
-        -- hlift: the step from .decision I next is PMF.pure (next (π p (some I)))
-        -- so lastState (ss.take (j₁+2)) = next (π p (some I))
-        simp only [PMF.pure_apply] at hlift
-        rw [show (0 : ENNReal) = 0 from rfl] at hlift
-        split_ifs at hlift with heq
-        -- hd: DecisionNodeIn I (lastState (ss.take (j₁+2)))
-        · rw [heq] at hd; exact hnr_node.1 _ hd
-        · exact absurd rfl hlift
-      | .terminal _, _, hobs_node => simp [obsOfState] at hobs_node
-      | .chance .., _, hobs_node => simp [obsOfState] at hobs_node
-    -- Propagate ¬ DecisionNodeIn I from j₁+1 to j₂ (DecisionNodeIn lifts through steps)
-    have hnd_j₂ : ¬ DecisionNodeIn I ((compiledCoreObs t).lastState (ss.take (j₂ + 1))) := by
-      suffices ∀ m, j₁ + 1 ≤ m → m ≤ j₂ →
-          ¬ DecisionNodeIn I ((compiledCoreObs t).lastState (ss.take (m + 1))) from
-        this j₂ (by omega) le_rfl
-      intro m hm₁ hm₂; induction m with
-      | zero => omega
-      | succ m ihm =>
-        by_cases hm : j₁ + 1 = m + 1
-        · rw [← hm]; exact hnd_base
-        · intro hd
-          exact ihm (by omega) (by omega)
-            (decisionNodeIn_of_compiledStep t
-              (pureStep_of_pureRun_nonzero t hreach (by omega)) hd)
-    exact absurd (decisionNodeIn_of_obsOfState_some hobs) hnd_j₂
+    have hnr_j₁ := noInfoSetRepeat_of_reachBy hnr hr_root
+    -- Get ReachBy from j₁+1 to j₂; lift DecisionNodeIn I back
+    obtain ⟨hist_seg, hr_seg⟩ := reachBy_trace_positions t hreach
+      (show j₁ + 1 ≤ j₂ by omega) (by omega)
+    have hdec_child := decisionNodeIn_of_reachBy hr_seg
+      (decisionNodeIn_of_obsOfState_some hobs)
+    -- The step from j₁ to j₁+1 identifies the child
+    have hstep_ne : (compiledCoreObs t).pureStep π
+        (ss.take (j₁ + 1)) ss[j₁ + 1] ≠ 0 :=
+      Math.ParameterizedChain.pureRun_step_nonzero _ _ k π ss
+        (ObsModelCore.runDistPure_eq_pureRun (compiledCoreObs t) k π ▸ hreach) j₁ (by omega)
+    rw [pureStep_compiledCore_eq, lastState_take_eq t ss j₁ (by omega)] at hstep_ne
+    -- Case split on the node at j₁
+    match hnode : ss[j₁], hnr_j₁, hobs₁, hstep_ne, hdec_child with
+    | .decision (p := p) I' next, hnr_node, hobs_node, hstep, hdec =>
+      have hp : p = i := by by_contra hne; simp [obsOfState, hne] at hobs_node
+      subst hp
+      have hI : I' = I := by simpa [obsOfState] using hobs_node
+      subst hI
+      simp only [PMF.pure_apply, ne_eq, ite_eq_right_iff, one_ne_zero, imp_false,
+        not_not] at hstep
+      rw [hstep] at hdec
+      exact hnr_node.1 _ hdec
+    | .terminal _, _, hobs_node, _, _ => simp [obsOfState] at hobs_node
+    | .chance .., _, hobs_node, _, _ => simp [obsOfState] at hobs_node
 
 end ObsModelCoreBridge
 

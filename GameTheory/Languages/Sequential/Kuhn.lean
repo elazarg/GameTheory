@@ -1,5 +1,5 @@
 import GameTheory.Languages.Sequential.CompileObs
-import GameTheory.Languages.Sequential.CompileObsLin
+import GameTheory.Languages.Sequential.CompileObsLinRecall
 import GameTheory.Theorems.Kuhn
 
 /-!
