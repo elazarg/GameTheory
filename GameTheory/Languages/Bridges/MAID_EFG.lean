@@ -13,11 +13,14 @@ Converts a typed MAID (`GameTheory.Languages.MAID.Syntax`) into an extensive-for
 ## Outline
 - InfoStructure from MAID
 - Tree construction
-- EFGGame from MAID
+- `maidToEFGAt`: EFGGame from MAID at a given topological order
+- `maidToEFG`: order-free variant (classically chosen order)
 - Strategy correspondence
 - Evaluation equivalence
-- KernelGame equivalence
+- KernelGame equivalence (bisimulation)
+- Order equivalence (`maidToEFGAt_order_bisimulation`)
 - Perfect recall preservation
+- Kuhn transfer theorems (order-specific and order-free)
 -/
 
 namespace MAID_EFG
@@ -71,14 +74,19 @@ noncomputable def buildTree (S : MAID.Struct (Fin m) n)
 -- EFGGame from MAID
 -- ============================================================================
 
-/-- Convert a MAID to an extensive-form game, using a topological order. -/
-noncomputable def maidToEFG (S : MAID.Struct (Fin m) n) (sem : MAID.Sem S)
+/-- Convert a MAID to an extensive-form game at a given topological order. -/
+noncomputable def maidToEFGAt (S : MAID.Struct (Fin m) n) (sem : MAID.Sem S)
     (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
     EFG.EFGGame where
   inf := maidInfoS S
   Outcome := MAID.TAssign S
   tree := buildTree S sem pol σ.order (MAID.defaultAssign S)
   utility := fun a => MAID.utilityOf S sem a
+
+/-- Convert a MAID to an extensive-form game, using a classically-chosen topological order. -/
+noncomputable def maidToEFG (S : MAID.Struct (Fin m) n) (sem : MAID.Sem S)
+    (pol : MAID.Policy S) : EFG.EFGGame :=
+  maidToEFGAt S sem pol (Classical.choice (MAID.topologicalOrder_exists S))
 
 /-- Convert a MAID to an extensive-form game using an explicit node order.
 No correctness assumptions on `order` are required to define it. -/
@@ -93,7 +101,7 @@ noncomputable def maidToEFGWithOrder (S : MAID.Struct (Fin m) n) (sem : MAID.Sem
 @[simp] theorem maidToEFGWithOrder_topoOrder
     (S : MAID.Struct (Fin m) n) (sem : MAID.Sem S) (pol : MAID.Policy S)
     (σ : MAID.TopologicalOrder S) :
-    maidToEFGWithOrder S sem pol σ.order = maidToEFG S sem pol σ := by
+    maidToEFGWithOrder S sem pol σ.order = maidToEFGAt S sem pol σ := by
   rfl
 
 -- ============================================================================
@@ -250,6 +258,11 @@ theorem maid_efg_evalDist_withOrder {S : MAID.Struct (Fin m) n}
   simpa [maidToEFGWithOrder] using
     buildTree_evalDist sem pol order (MAID.defaultAssign S)
 
+-- The following swap infrastructure gives an alternative, algebraic proof of
+-- order independence via certified adjacent transpositions. The main order
+-- equivalence result (`maidToEFGAt_order_bisimulation`) uses the bisimulation
+-- approach instead, but these results are interesting in their own right.
+
 /-- One certified adjacent swap step on node orders.
 Swappable adjacent nodes must be distinct and have no direct edge either way. -/
 def OrderSwapStep (S : MAID.Struct (Fin m) n) :
@@ -268,7 +281,7 @@ abbrev OrderSwapReachable (S : MAID.Struct (Fin m) n) :
   Relation.ReflTransGen (OrderSwapStep S)
 
 /-- MAID fold semantics are invariant under one certified adjacent swap. -/
-theorem evalAssignDist_swap_adj_any_order {S : MAID.Struct (Fin m) n}
+theorem evalFold_swap_adj_any_order {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S)
     (order : List (Fin n))
     (i : Nat) (hi : i + 1 < order.length) (a b : Fin n)
@@ -287,7 +300,7 @@ theorem evalAssignDist_swap_adj_any_order {S : MAID.Struct (Fin m) n}
     (fun acc => MAID.evalStep_swap sem pol _ _ hne' hindep' acc)
 
 /-- MAID fold semantics are invariant under any sequence of certified swaps. -/
-theorem evalAssignDist_orderSwapReachable {S : MAID.Struct (Fin m) n}
+theorem evalFold_orderSwapReachable {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S)
     {o₁ o₂ : List (Fin n)}
     (hreach : OrderSwapReachable S o₁ o₂) :
@@ -298,7 +311,7 @@ theorem evalAssignDist_orderSwapReachable {S : MAID.Struct (Fin m) n}
       rfl
   | tail hreach hstep ih =>
       rcases hstep with ⟨i, hi, a, b, ha, hb, hne, hindep, rfl⟩
-      exact ih.trans (evalAssignDist_swap_adj_any_order sem pol _ i hi a b ha hb hne hindep)
+      exact ih.trans (evalFold_swap_adj_any_order sem pol _ i hi a b ha hb hne hindep)
 
 /-- EFG-with-order evaluation is invariant under any sequence of certified swaps. -/
 theorem maid_efg_evalDist_orderSwapReachable {S : MAID.Struct (Fin m) n}
@@ -312,17 +325,26 @@ theorem maid_efg_evalDist_orderSwapReachable {S : MAID.Struct (Fin m) n}
         = o₁.foldl (MAID.evalStep S sem pol) (PMF.pure (MAID.defaultAssign S)) := by
             exact maid_efg_evalDist_withOrder sem pol o₁
     _ = o₂.foldl (MAID.evalStep S sem pol) (PMF.pure (MAID.defaultAssign S)) :=
-          evalAssignDist_orderSwapReachable sem pol hreach
+          evalFold_orderSwapReachable sem pol hreach
     _ = (maidToEFGWithOrder S sem pol o₂).tree.evalDist (toEFGProfile pol) := by
           symm
           exact maid_efg_evalDist_withOrder sem pol o₂
 
-/-- Corollary: the EFG tree's outcome distribution matches the MAID's. -/
-theorem maid_efg_evalDist {S : MAID.Struct (Fin m) n}
+/-- Corollary: the EFG tree's outcome distribution matches the MAID's fold-based
+evaluation along the same topological order. -/
+theorem maid_efg_evalDist_fold_at {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    (maidToEFG S sem pol σ).tree.evalDist (toEFGProfile pol) =
-    MAID.evalAssignDist S sem pol σ := by
+    (maidToEFGAt S sem pol σ).tree.evalDist (toEFGProfile pol) =
+    MAID.evalFold S sem pol σ := by
   exact buildTree_evalDist sem pol σ.order (MAID.defaultAssign S)
+
+/-- The EFG tree's outcome distribution matches the MAID's canonical evaluation. -/
+theorem maid_efg_evalDist_at {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
+    (maidToEFGAt S sem pol σ).tree.evalDist (toEFGProfile pol) =
+    MAID.evalAssignDist S sem pol := by
+  rw [MAID.evalAssignDist_eq_evalFold S sem pol σ]
+  exact maid_efg_evalDist_fold_at sem pol σ
 
 -- ============================================================================
 -- KernelGame equivalence
@@ -340,28 +362,28 @@ theorem buildTree_pol_irrel {S : MAID.Struct (Fin m) n}
       simp only [buildTree]
       split <;> simp [ih]
 
-/-- `maidToEFG` is independent of the `pol` argument. -/
-theorem maidToEFG_pol_irrel {S : MAID.Struct (Fin m) n}
+/-- `maidToEFGAt` is independent of the `pol` argument. -/
+theorem maidToEFGAt_pol_irrel {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol₁ pol₂ : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    maidToEFG S sem pol₁ σ = maidToEFG S sem pol₂ σ := by
+    maidToEFGAt S sem pol₁ σ = maidToEFGAt S sem pol₂ σ := by
   refine congrArg
     (fun t => EFG.EFGGame.mk (maidInfoS S) (MAID.TAssign S) t (fun a => MAID.utilityOf S sem a))
     ?_
   exact buildTree_pol_irrel sem pol₁ pol₂ σ.order (MAID.defaultAssign S)
 
 /-- The outcome kernels of the MAID and EFG KernelGames agree under strategy correspondence. -/
-theorem maidToEFG_outcomeKernel {S : MAID.Struct (Fin m) n}
+theorem maidToEFGAt_outcomeKernel {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    (maidToEFG S sem pol σ).toKernelGame.outcomeKernel (toEFGProfile pol) =
-    (MAID.toKernelGame S sem σ).outcomeKernel pol := by
+    (maidToEFGAt S sem pol σ).toKernelGame.outcomeKernel (toEFGProfile pol) =
+    (MAID.toKernelGame S sem).outcomeKernel pol := by
   simp only [EFG.EFGGame.toKernelGame, MAID.toKernelGame]
-  exact maid_efg_evalDist sem pol σ
+  exact maid_efg_evalDist_at sem pol σ
 
 /-- MAID to EFG as a game bisimulation (distribution-preserving equivalence). -/
-noncomputable def maidToEFG_bisimulation {S : MAID.Struct (Fin m) n}
+noncomputable def maidToEFGAt_bisimulation {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol₀ : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    GameTheory.KernelGame.Bisimulation (MAID.toKernelGame S sem σ)
-      ((maidToEFG S sem pol₀ σ).toKernelGame) where
+    GameTheory.KernelGame.Bisimulation (MAID.toKernelGame S sem)
+      ((maidToEFGAt S sem pol₀ σ).toKernelGame) where
   stratEquiv := fun _ => Equiv.refl _
   udist_preserved := by
     intro pol
@@ -370,36 +392,36 @@ noncomputable def maidToEFG_bisimulation {S : MAID.Struct (Fin m) n}
           buildTree S sem pol σ.order (MAID.defaultAssign S) :=
       buildTree_pol_irrel sem pol₀ pol σ.order (MAID.defaultAssign S)
     have hUd :
-        (maidToEFG S sem pol₀ σ).toKernelGame.udist (fun i => pol i) =
-          (maidToEFG S sem pol σ).toKernelGame.udist (toEFGProfile pol) := by
+        (maidToEFGAt S sem pol₀ σ).toKernelGame.udist (fun i => pol i) =
+          (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) := by
       have hUd' :
-          (maidToEFG S sem pol₀ σ).toKernelGame.udist (fun i => pol i) =
-            (maidToEFG S sem pol σ).toKernelGame.udist (fun i => pol i) := by
-        simp [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame, maidToEFG, ht]
+          (maidToEFGAt S sem pol₀ σ).toKernelGame.udist (fun i => pol i) =
+            (maidToEFGAt S sem pol σ).toKernelGame.udist (fun i => pol i) := by
+        simp [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame, maidToEFGAt, ht]
       simpa [toEFGProfile] using hUd'
     calc
-      (maidToEFG S sem pol₀ σ).toKernelGame.udist (fun i => pol i)
-          = (maidToEFG S sem pol σ).toKernelGame.udist (toEFGProfile pol) := hUd
-      _ = (MAID.toKernelGame S sem σ).udist pol := by
+      (maidToEFGAt S sem pol₀ σ).toKernelGame.udist (fun i => pol i)
+          = (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) := hUd
+      _ = (MAID.toKernelGame S sem).udist pol := by
             have hBind := congrArg
               (fun d => d.bind (fun ω => PMF.pure (MAID.utilityOf S sem ω)))
-              (maid_efg_evalDist sem pol σ)
+              (maid_efg_evalDist_at sem pol σ)
             simpa [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame,
               MAID.toKernelGame, toEFGProfile] using hBind
 
-/-- Forward simulation induced by `maidToEFG_bisimulation`. -/
-noncomputable def maidToEFG_simulation {S : MAID.Struct (Fin m) n}
+/-- Forward simulation induced by `maidToEFGAt_bisimulation`. -/
+noncomputable def maidToEFGAt_simulation {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol₀ : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    GameTheory.KernelGame.Simulation (MAID.toKernelGame S sem σ)
-      ((maidToEFG S sem pol₀ σ).toKernelGame) :=
-  GameTheory.KernelGame.Bisimulation.toSimulation (maidToEFG_bisimulation sem pol₀ σ)
+    GameTheory.KernelGame.Simulation (MAID.toKernelGame S sem)
+      ((maidToEFGAt S sem pol₀ σ).toKernelGame) :=
+  GameTheory.KernelGame.Bisimulation.toSimulation (maidToEFGAt_bisimulation sem pol₀ σ)
 
 /-- The MAID and EFG KernelGames have the same joint utility distribution. -/
-theorem maidToEFG_udist {S : MAID.Struct (Fin m) n}
+theorem maidToEFGAt_udist {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    (maidToEFG S sem pol σ).toKernelGame.udist (toEFGProfile pol) =
-      (MAID.toKernelGame S sem σ).udist pol := by
-  simpa [toEFGProfile] using (maidToEFG_bisimulation sem pol σ).udist_preserved pol
+    (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) =
+      (MAID.toKernelGame S sem).udist pol := by
+  simpa [toEFGProfile] using (maidToEFGAt_bisimulation sem pol σ).udist_preserved pol
 
 -- ============================================================================
 -- Perfect recall
@@ -670,7 +692,7 @@ private theorem buildTree_playerHistory_eq
 theorem buildTree_perfectRecall {S : MAID.Struct (Fin m) n}
     (hpr : MAID.Struct.PerfectRecall S)
     (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    EFG.PerfectRecall (maidToEFG S sem pol σ).tree := by
+    EFG.PerfectRecall (maidToEFGAt S sem pol σ).tree := by
   intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
   have horder : ∀ (i j : Fin σ.order.length),
       S.IsAncestor σ.order[i] σ.order[j] → i.val < j.val := by
@@ -685,43 +707,110 @@ theorem buildTree_perfectRecall {S : MAID.Struct (Fin m) n}
 
 open GameTheory in
 /-- Kuhn (behavioral → mixed) transferred to MAID via the MAID→EFG bridge. -/
-theorem kuhn_behavioral_to_mixed_udist
+theorem kuhn_behavioral_to_mixed_udist_at
     {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S)
     (hpr : MAID.Struct.PerfectRecall S) (σ : MAID.TopologicalOrder S) :
     ∃ μ : PMF (EFG.FlatProfile (maidInfoS S)),
-      (MAID.toKernelGame S sem σ).udist pol =
+      (MAID.toKernelGame S sem).udist pol =
       μ.bind (fun s =>
-        (maidToEFG S sem pol σ).toKernelGame.udist (EFG.flatToBehavioral s)) := by
-  have hprEFG : EFG.PerfectRecall (maidToEFG S sem pol σ).tree :=
+        (maidToEFGAt S sem pol σ).toKernelGame.udist (EFG.flatToBehavioral s)) := by
+  have hprEFG : EFG.PerfectRecall (maidToEFGAt S sem pol σ).tree :=
     buildTree_perfectRecall hpr sem pol σ
   obtain ⟨μ, hμ⟩ :=
     EFG.kuhn_behavioral_to_mixed_udist
-      (G := maidToEFG S sem pol σ) (σ := toEFGProfile pol) hprEFG
+      (G := maidToEFGAt S sem pol σ) (σ := toEFGProfile pol) hprEFG
   refine ⟨μ, ?_⟩
   calc
-    (MAID.toKernelGame S sem σ).udist pol
-        = (maidToEFG S sem pol σ).toKernelGame.udist (toEFGProfile pol) := by
+    (MAID.toKernelGame S sem).udist pol
+        = (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) := by
             symm
-            exact maidToEFG_udist sem pol σ
+            exact maidToEFGAt_udist sem pol σ
     _ = μ.bind (fun s =>
-          (maidToEFG S sem pol σ).toKernelGame.udist (EFG.flatToBehavioral s)) := hμ.symm
+          (maidToEFGAt S sem pol σ).toKernelGame.udist (EFG.flatToBehavioral s)) := hμ.symm
 
 open GameTheory in
 /-- Kuhn (mixed → behavioral) transferred to MAID via the MAID→EFG bridge. -/
-theorem kuhn_mixed_to_behavioral_udist
+theorem kuhn_mixed_to_behavioral_udist_at
     {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol : MAID.Policy S)
     (hpr : MAID.Struct.PerfectRecall S) (σ : MAID.TopologicalOrder S)
     (muP : EFG.MixedProfile (maidInfoS S)) :
     ∃ σ' : EFG.BehavioralProfile (maidInfoS S),
-      (maidToEFG S sem pol σ).toKernelGame.udist σ' =
+      (maidToEFGAt S sem pol σ).toKernelGame.udist σ' =
       (EFG.mixedProfileJoint (S := maidInfoS S) muP).bind
         (fun pi =>
-          (maidToEFG S sem pol σ).toKernelGame.udist (EFG.pureToBehavioral pi)) := by
-  have hprEFG : EFG.PerfectRecall (maidToEFG S sem pol σ).tree :=
+          (maidToEFGAt S sem pol σ).toKernelGame.udist (EFG.pureToBehavioral pi)) := by
+  have hprEFG : EFG.PerfectRecall (maidToEFGAt S sem pol σ).tree :=
     buildTree_perfectRecall hpr sem pol σ
   exact EFG.kuhn_mixed_to_behavioral_udist
-    (G := maidToEFG S sem pol σ) hprEFG muP
+    (G := maidToEFGAt S sem pol σ) hprEFG muP
+
+-- ============================================================================
+-- Order equivalence
+-- ============================================================================
+
+/-- Different topological orders produce bisimilar EFG games.
+    Composed from the two bisimulations MAID ↔ EFG(σᵢ). -/
+noncomputable def maidToEFGAt_order_bisimulation {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (σ₁ σ₂ : MAID.TopologicalOrder S) :
+    GameTheory.KernelGame.Bisimulation
+      ((maidToEFGAt S sem pol σ₁).toKernelGame)
+      ((maidToEFGAt S sem pol σ₂).toKernelGame) :=
+  GameTheory.KernelGame.Bisimulation.comp
+    (maidToEFGAt_bisimulation sem pol σ₂)
+    (GameTheory.KernelGame.Bisimulation.symm (maidToEFGAt_bisimulation sem pol σ₁))
+
+-- ============================================================================
+-- Order-free convenience theorems
+-- ============================================================================
+
+/-- MAID to EFG as a game bisimulation (order-free). -/
+noncomputable def maidToEFG_bisimulation {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) :
+    GameTheory.KernelGame.Bisimulation (MAID.toKernelGame S sem)
+      ((maidToEFG S sem pol₀).toKernelGame) :=
+  maidToEFGAt_bisimulation sem pol₀ _
+
+/-- The MAID and order-free EFG KernelGames have the same joint utility distribution. -/
+theorem maidToEFG_udist {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S) :
+    (maidToEFG S sem pol).toKernelGame.udist (toEFGProfile pol) =
+      (MAID.toKernelGame S sem).udist pol :=
+  maidToEFGAt_udist sem pol _
+
+/-- The order-free EFG tree built from a MAID with perfect recall has EFG perfect recall. -/
+theorem maidToEFG_perfectRecall {S : MAID.Struct (Fin m) n}
+    (hpr : MAID.Struct.PerfectRecall S)
+    (sem : MAID.Sem S) (pol : MAID.Policy S) :
+    EFG.PerfectRecall (maidToEFG S sem pol).tree :=
+  buildTree_perfectRecall hpr sem pol _
+
+open GameTheory in
+/-- Kuhn (behavioral → mixed) transferred to MAID via the order-free MAID→EFG bridge. -/
+theorem kuhn_behavioral_to_mixed_udist
+    {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (hpr : MAID.Struct.PerfectRecall S) :
+    ∃ μ : PMF (EFG.FlatProfile (maidInfoS S)),
+      (MAID.toKernelGame S sem).udist pol =
+      μ.bind (fun s =>
+        (maidToEFG S sem pol).toKernelGame.udist (EFG.flatToBehavioral s)) :=
+  kuhn_behavioral_to_mixed_udist_at sem pol hpr _
+
+open GameTheory in
+/-- Kuhn (mixed → behavioral) transferred to MAID via the order-free MAID→EFG bridge. -/
+theorem kuhn_mixed_to_behavioral_udist
+    {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (hpr : MAID.Struct.PerfectRecall S)
+    (muP : EFG.MixedProfile (maidInfoS S)) :
+    ∃ σ' : EFG.BehavioralProfile (maidInfoS S),
+      (maidToEFG S sem pol).toKernelGame.udist σ' =
+      (EFG.mixedProfileJoint (S := maidInfoS S) muP).bind
+        (fun pi =>
+          (maidToEFG S sem pol).toKernelGame.udist (EFG.pureToBehavioral pi)) :=
+  kuhn_mixed_to_behavioral_udist_at sem pol hpr _ muP
 
 end MAID_EFG
