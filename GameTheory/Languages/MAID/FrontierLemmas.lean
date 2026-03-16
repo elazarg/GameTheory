@@ -1,4 +1,4 @@
-import GameTheory.Languages.MAID.SOS
+import GameTheory.Languages.MAID.CompileObs
 
 /-!
 # Frontier lemmas for MAIDs
@@ -112,5 +112,107 @@ theorem nodeDistPol_at_decision {S : Struct Player n} (sem : Sem S)
     subst hp
     congr 1
   · next hku => exact absurd (hku.symm.trans hk) nofun
+
+/-- If `nd` is a decision node of player `p` in the frontier, then
+`frontierActiveInfoset S cfg p` returns `some I` with `I.1.val = nd`. -/
+theorem frontierActiveInfoset_of_frontier_decision
+    {S : Struct Player n} (hPR : S.PerfectRecall)
+    {cfg : FrontierCfg S} {nd : Fin n}
+    (hf : nd ∈ frontier S cfg) (p : Player)
+    (hk : S.kind nd = .decision p) :
+    ∃ I : Infoset S p,
+      frontierActiveInfoset S cfg p = some I ∧
+      I.1.val = nd := by
+  have hen := enabled_of_mem_frontier hf
+  let hObs : S.obsParents nd ⊆ cfg.assigned := fun x hx => hen.2 (S.obs_sub nd hx)
+  let I₀ : Infoset S p := ⟨⟨nd, hk⟩, restrictCfg cfg _ hObs⟩
+  have hMem : I₀ ∈ frontierInfosets S cfg p := by
+    simp only [frontierInfosets, List.mem_filterMap]
+    exact ⟨nd, Finset.mem_toList.mpr hf, by
+      simp only [hf, dite_true]; split
+      · next q hkq =>
+        have : q = p := NodeKind.decision.inj (hkq.symm.trans hk)
+        subst this
+        simp [reduceDIte]
+        simp_all only [I₀]
+      · next h => exact absurd h (by rw [hk]; exact Not.imp (h p) fun a ↦ hk)⟩
+  -- frontierInfosets is nonempty, so head? = some J for some J in the list
+  simp only [frontierActiveInfoset]
+  match hhead : (frontierInfosets S cfg p) with
+  | [] =>
+    exfalso
+    simp_all only [List.not_mem_nil, I₀]
+  | J :: _ =>
+    exact ⟨J, rfl, by
+      -- J ∈ frontierInfosets, extract that J.1.val is a decision node of p in frontier
+      have hJmem : J ∈ frontierInfosets S cfg p := hhead ▸ List.mem_cons_self
+      simp only [frontierInfosets, List.mem_filterMap] at hJmem
+      obtain ⟨nd', hnd'_mem, hnd'_val⟩ := hJmem
+      have hnd'_fr : nd' ∈ frontier S cfg := Finset.mem_toList.mp hnd'_mem
+      simp only [hnd'_fr, dite_true] at hnd'_val
+      revert hnd'_val; intro hnd'_val
+      split at hnd'_val
+      · next q hkq =>
+        by_cases hq : q = p
+        · simp only [hq, ↓reduceDIte] at hnd'_val
+          have := (Option.some_injective _ hnd'_val).symm
+          rw [show J.1.val = nd' from by rw [this]]
+          exact frontier_unique_decision_per_player S hPR cfg p nd' nd
+            hnd'_fr hf (hq ▸ hkq) hk
+        · simp_all only [List.mem_cons, Finset.mem_toList, ↓reduceDIte, reduceCtorEq, I₀]
+      · simp at hnd'_val⟩
+
+/-- Stronger form: the active infoset is exactly the canonical one built from `restrictCfg`. -/
+theorem frontierActiveInfoset_eq_canonical
+    {S : Struct Player n} (hPR : S.PerfectRecall)
+    {cfg : FrontierCfg S} {nd : Fin n}
+    (hf : nd ∈ frontier S cfg) (p : Player)
+    (hk : S.kind nd = .decision p)
+    (hobs : S.obsParents nd ⊆ cfg.assigned) :
+    frontierActiveInfoset S cfg p =
+      some ⟨⟨nd, hk⟩, restrictCfg cfg (S.obsParents nd) hobs⟩ := by
+  -- Build the canonical infoset
+  set I_nd : Infoset S p := ⟨⟨nd, hk⟩, restrictCfg cfg (S.obsParents nd) hobs⟩
+  -- Show I_nd ∈ frontierInfosets
+  have hMem : I_nd ∈ frontierInfosets S cfg p := by
+    simp only [frontierInfosets, List.mem_filterMap]
+    exact ⟨nd, Finset.mem_toList.mpr hf, by
+      simp only [hf, dite_true]; split
+      · next q hkq =>
+        have : q = p := NodeKind.decision.inj (hkq.symm.trans hk)
+        subst this
+        simp [reduceDIte]
+        simp_all only [I_nd]
+      · next h => exact absurd h (by rw [hk]; exact Not.imp (h p) fun a => hk)⟩
+  -- frontierInfosets is nonempty, head? = some J for J in the list
+  simp only [frontierActiveInfoset]
+  match hhead : (frontierInfosets S cfg p) with
+  | [] => exfalso; simp_all only [List.not_mem_nil, I_nd]
+  | J :: _ =>
+    -- J is the head, and under PR there's only one decision node of p
+    -- So J.1.val = nd (by uniqueness), and J.2 = restrictCfg (from construction)
+    have hJmem : J ∈ frontierInfosets S cfg p := hhead ▸ .head _
+    simp only [frontierInfosets, List.mem_filterMap] at hJmem
+    obtain ⟨nd', hnd'_mem, hnd'_val⟩ := hJmem
+    have hnd'_fr : nd' ∈ frontier S cfg := Finset.mem_toList.mp hnd'_mem
+    simp only [hnd'_fr, dite_true] at hnd'_val
+    revert hnd'_val; intro hnd'_val
+    split at hnd'_val
+    · next q hkq =>
+      by_cases hq : q = p
+      · simp only [hq, ↓reduceDIte] at hnd'_val
+        have hJeq := (Option.some_injective _ hnd'_val).symm
+        -- J = ⟨⟨nd', hkq'⟩, restrictCfg cfg _ _⟩ (from the filterMap construction)
+        -- J.1.val = nd' and nd' = nd (by uniqueness)
+        have hnd'eq := frontier_unique_decision_per_player S hPR cfg p nd' nd
+          hnd'_fr hf (hq ▸ hkq) hk
+        -- J is constructed with restrictCfg at nd', which equals nd
+        -- The returned infoset IS restrictCfg by construction
+        -- J = ⟨⟨nd', hkq'⟩, restrictCfg ...⟩ from the filterMap
+        -- nd' = nd by uniqueness. Both are restrictCfg so they match.
+        subst hnd'eq; subst hJeq
+        simp only [List.head?_cons, I_nd]
+      · simp only [hq, ↓reduceDIte] at hnd'_val; exact absurd hnd'_val nofun
+    · simp at hnd'_val
 
 end MAID

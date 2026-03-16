@@ -284,5 +284,22 @@ theorem expect_mono_of_pointwise
   simpa [Math.Probability.expect_eq_sum] using
     (Finset.sum_le_sum (fun ω _ => mul_le_mul_of_nonneg_left (hfg ω) ENNReal.toReal_nonneg))
 
+-- ============================================================================
+-- HEq lemmas for PMF
+-- ============================================================================
+
+universe u in
+theorem pure_heq {α β : Type u} {a : α} {b : β} (h : HEq a b) :
+    HEq (PMF.pure a) (PMF.pure b) := by
+  cases h; exact HEq.rfl
+
+universe u in
+theorem bind_heq {α : Type*} {β γ : Type u} (μ : PMF α)
+    {f : α → PMF β} {g : α → PMF γ}
+    (htype : β = γ) (h : ∀ a, HEq (f a) (g a)) :
+    HEq (μ.bind f) (μ.bind g) := by
+  subst htype
+  exact heq_of_eq (congrArg (μ.bind ·) (funext fun a => eq_of_heq (h a)))
+
 end ProbabilityMassFunction
 end Math

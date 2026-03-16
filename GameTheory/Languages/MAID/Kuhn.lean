@@ -1,5 +1,7 @@
-import GameTheory.Languages.MAID.CompileObs
+import Math.PMFProduct
 import GameTheory.Theorems.Kuhn
+import GameTheory.Languages.MAID.CompileObs
+import GameTheory.Languages.MAID.FrontierLemmas
 
 /-!
 # GameTheory.Languages.MAID.Kuhn
@@ -434,6 +436,49 @@ theorem stepSupportFactorization_compiledPR :
 
 end Conditions
 
+/-- At a chance node, `nodeDistrib` equals `chanceCPD` (independent of `acts`). -/
+private theorem nodeDistrib_at_chance
+    (S : Struct Player n) (sem : Sem S) (cfg : FrontierCfg S)
+    (acts : ∀ p : Player, Option (FrontierAct S p))
+    (nd : ↥(frontier S cfg)) (hk : S.kind nd.1 = .chance) :
+    nodeDistrib S sem cfg acts nd =
+      sem.chanceCPD ⟨nd.1, hk⟩ (restrictCfg cfg (S.parents nd.1)
+        (enabled_of_mem_frontier nd.2).2) := by
+  simp only [nodeDistrib]; split
+  · rfl
+  · exact absurd (‹_› : S.kind nd.1 = .decision _) (by rw [hk]; exact nofun)
+  · exact absurd (‹_› : S.kind nd.1 = .utility _) (by rw [hk]; exact nofun)
+
+/-- At a utility node, `nodeDistrib` equals `PMF.pure utilityValue` (independent of `acts`). -/
+private theorem nodeDistrib_at_utility
+    (S : Struct Player n) (sem : Sem S) (cfg : FrontierCfg S)
+    (acts : ∀ p : Player, Option (FrontierAct S p))
+    (nd : frontier S cfg) (p : Player) (hk : S.kind nd.1 = .utility p) :
+    nodeDistrib S sem cfg acts nd =
+      PMF.pure (utilityValue S nd.1 ⟨p, hk⟩) := by
+  simp only [nodeDistrib]; split
+  · exact absurd (‹_› : S.kind nd.1 = .chance) (by rw [hk]; exact nofun)
+  · exact absurd (‹_› : S.kind nd.1 = .decision _) (by rw [hk]; exact nofun)
+  · rename_i q hkq
+    have hqp : q = p := NodeKind.utility.inj (hkq.symm.trans hk)
+    subst hqp; rfl
+
+/-- At a decision node of player `p`, `nodeDistrib` depends only on `acts p`. -/
+private theorem nodeDistrib_congr_decision
+    (S : Struct Player n) (sem : Sem S) (cfg : FrontierCfg S)
+    (acts₁ acts₂ : ∀ p : Player, Option (FrontierAct S p))
+    (nd : ↥(frontier S cfg)) (p : Player)
+    (hk : S.kind nd.1 = .decision p)
+    (h : acts₁ p = acts₂ p) :
+    nodeDistrib S sem cfg acts₁ nd = nodeDistrib S sem cfg acts₂ nd := by
+  simp only [nodeDistrib]
+  split
+  · rfl  -- chance
+  · rename_i q hkq
+    have hqp : q = p := NodeKind.decision.inj (hkq.symm.trans hk)
+    subst hqp; rw [h]
+  · exact absurd (‹_› : S.kind nd.1 = .utility _) (by rw [hk]; exact nofun)
+
 -- ============================================================================
 -- Adequacy: compiled PR runDist ↔ frontierEval (Task 4)
 -- ============================================================================
@@ -456,7 +501,225 @@ theorem compiledPR_stepDist_eq_frontierStepPol
     (pol : Policy S) (ss : List (FrontierCfg S)) :
     (compiledPRObs S sem).stepDist (liftBehavioralProfile S sem pol) ss =
       frontierStepPol S sem pol ((compiledPRObs S sem).lastState ss) := by
-  sorry
+  set O := compiledPRObs S sem
+  set cfg := O.lastState ss
+  set O := compiledPRObs S sem
+  set cfg := O.lastState ss
+  -- For identity info state: projectStates p ss = frontierActiveInfoset S cfg p
+  have hproj : ∀ p, O.projectStates p ss = frontierActiveInfoset S cfg p :=
+    fun p => O.currentObs_projectStates p ss
+  -- Abbreviate the rawActs conversion from frontierStepPMF_PR
+  set rawActs : (∀ p, CompiledMAIDAct S p (frontierActiveInfoset S cfg p)) →
+      ∀ p, Option (FrontierAct S p) :=
+    fun acts p => match h : frontierActiveInfoset S cfg p with
+      | none => none
+      | some I => some fun d => if hd : d = I.fst then
+          some (hd ▸ (show CompiledMAIDAct S p (some I) from h ▸ acts p)) else none
+  -- The nodeDistrib function for a given player action profile
+  set G : (∀ p, CompiledMAIDAct S p (frontierActiveInfoset S cfg p)) →
+      ∀ nd : ↥(frontier S cfg), PMF (Val S nd.1) :=
+    fun acts nd => nodeDistrib S sem cfg (rawActs acts) nd
+  -- Step 1: Reduce to inner product equality by factoring out pushforward.
+  -- LHS = (jointActionDist).bind (fun a => pushforward (pmfPi (G a)) extend)
+  --      = pushforward ((jointActionDist).bind (fun a => pmfPi (G a))) extend
+  -- RHS = pushforward (pmfPi nodeDistPol) extend
+  -- Both are pushforward through extend, so suffices: inner match.
+  suffices h_inner :
+      (O.jointActionDist (liftBehavioralProfile S sem pol) ss).bind
+        (fun a => pmfPi (G (O.castJointAction ss a))) =
+        pmfPi (nodeDistPol S sem pol cfg) by
+    simp only [ObsModelCore.stepDist, frontierStepPol]
+    change (O.jointActionDist _ ss).bind (fun a =>
+        frontierStepPMF_PR S sem cfg (O.castJointAction ss a)) =
+      pushforward (pmfPi (nodeDistPol S sem pol cfg)) (extendFrontier S cfg)
+    conv_lhs =>
+      arg 2; ext a
+      change pushforward (pmfPi (G (O.castJointAction ss a))) (extendFrontier S cfg)
+    rw [← Math.ProbabilityMassFunction.pushforward_bind]
+    exact congrArg (pushforward · (extendFrontier S cfg)) h_inner
+  -- Step 2: Apply pmfPi_bind_pmfPi_of_disjoint_coords
+  -- to factor the bind over players into a product over nodes.
+  -- Define H a nd = G (castJointAction a) nd, which maps player actions to node distros.
+  set H := fun a nd => G (O.castJointAction ss a) nd with hH_def
+  -- Define coord: which player "owns" each frontier node
+  set coord : ↥(frontier S cfg) → Option Player := fun nd =>
+    match S.kind nd.1 with
+    | .decision p => some p
+    | _ => none
+  -- Apply the routing theorem
+  have hroute := pmfPi_bind_pmfPi_of_disjoint_coords
+    (fun p => (liftBehavioralProfile S sem pol) p (O.projectStates p ss))
+    H coord
+    (fun nd hc j => ?h_const)
+    (fun nd i hc j hne => ?h_single)
+    (fun k₁ k₂ i hc₁ hc₂ => ?h_inj)
+  · -- Use the routing result
+    simp only [ObsModelCore.jointActionDist]
+    change (pmfPi fun p => liftBehavioralProfile S sem pol p (O.projectStates p ss)).bind
+        (fun a => pmfPi (H a)) =
+      pmfPi (nodeDistPol S sem pol cfg)
+    conv_lhs => rw [show ((pmfPi fun p => liftBehavioralProfile S sem pol p
+        (O.projectStates p ss)).bind fun a => pmfPi (H a)) =
+      pmfPi (fun k => (pmfPi fun p => liftBehavioralProfile S sem pol p
+        (O.projectStates p ss)).bind fun a => H a k) from hroute]
+    -- Now: pmfPi (fun nd => marginal) = pmfPi nodeDistPol
+    congr 1; funext nd
+    -- Step 3: per-node marginal agreement
+    -- For chance/utility, H a nd is constant in a, so the bind collapses.
+    -- For decision nodes, the bind marginal equals pol p I.
+    -- First, determine the node kind.
+    match hk : S.kind nd.1 with
+    | .chance =>
+      -- H a nd = chanceCPD (constant, doesn't use a) by nodeDistrib_at_chance
+      conv_lhs => arg 2; ext a; rw [show H a nd =
+        nodeDistrib S sem cfg (rawActs (O.castJointAction ss a)) nd from rfl,
+        nodeDistrib_at_chance S sem cfg _ nd hk]
+      simp only [PMF.bind_const]
+      -- RHS
+      simp only [nodeDistPol]; split
+      · rfl
+      · exact absurd (‹_› : S.kind nd.1 = .decision _) (by rw [hk]; exact nofun)
+      · exact absurd (‹_› : S.kind nd.1 = .utility _) (by rw [hk]; exact nofun)
+    | .decision p =>
+      rw [nodeDistPol_at_decision sem pol cfg nd p hk hk
+        (fun x hx => (enabled_of_mem_frontier nd.2).2 (S.obs_sub nd.1 hx))]
+      -- Use the canonical form of frontierActiveInfoset
+      have hactive := frontierActiveInfoset_eq_canonical hPR nd.2 p hk
+        (fun x hx => (enabled_of_mem_frontier nd.2).2 (S.obs_sub nd.1 hx))
+      have hprojq : O.projectStates p ss =
+          some ⟨⟨nd.1, hk⟩, restrictCfg cfg (S.obsParents nd.1)
+            (fun x hx => (enabled_of_mem_frontier nd.2).2 (S.obs_sub nd.1 hx))⟩ := by
+        rw [hproj p, hactive]
+      -- Prove H a nd HEq PMF.pure (a p) by resolving all dependent matches
+      have hH_heq : ∀ a, HEq (H a nd) (PMF.pure (a p) :
+          PMF (CompiledMAIDAct S p (O.projectStates p ss))) := by
+        intro a; simp only [H, G, nodeDistrib]
+        split
+        · exact absurd (‹_› : S.kind nd.1 = .chance) (by rw [hk]; exact nofun)
+        · rename_i q hkq
+          simp_all only [O, cfg, H, G, rawActs]
+          obtain ⟨val, property⟩ := nd
+          simp_all only [cfg, O]
+          split
+          next x α heq =>
+            split
+            next x_1 v heq_1 =>
+              simp_all only
+              split at heq
+              next heq_2 => simp_all only [reduceCtorEq]
+              next J heq_2 =>
+                simp_all only [Option.some.injEq]
+                subst heq
+                simp_all only [Option.dite_none_right_eq_some, Option.some.injEq]
+                obtain ⟨w, h⟩ := heq_1
+                subst h
+                simp only [ObsModelCore.castJointAction]
+                apply Math.ProbabilityMassFunction.pure_heq
+                simp_all only [eqRec_heq_iff_heq]
+                grind only
+            next x_1 heq_1 =>
+              simp_all only
+              split at heq
+              next heq_2 => simp_all only [reduceCtorEq]
+              next J heq_2 =>
+                simp_all only [Option.some.injEq]
+                subst heq
+                simp_all only [dite_eq_right_iff, reduceCtorEq, imp_false]
+                -- heq_1 : ¬⟨val, ⋯⟩ = J.fst, but J = canonical infoset so J.fst.val = val
+                have hqp : q = p := NodeKind.decision.inj (hkq.symm.trans hk)
+                subst hqp
+                have := Option.some_injective _ (heq_2.symm.trans hactive)
+                exact absurd (congrArg Sigma.fst this ▸ Subtype.ext rfl) heq_1
+          next x heq =>
+            simp_all only [NodeKind.decision.injEq]
+            subst hkq
+            split at heq
+            next heq_1 => simp_all only [reduceCtorEq]
+            next J heq_1 => simp_all only [Option.some.injEq, reduceCtorEq]
+        · exact absurd (‹_› : S.kind nd.1 = .utility _) (by rw [hk]; exact nofun)
+      -- Now work at ext level
+      -- Work at the PMF level, not pointwise
+      -- hH_heq : ∀ a, H a nd ≍ PMF.pure (a p)
+      -- So the bind with H ≍ the bind with PMF.pure (· p)
+      have hbind_heq : HEq
+          ((pmfPi fun i => liftBehavioralProfile S sem pol i
+            (O.projectStates i ss)).bind (fun a => H a nd))
+          ((pmfPi fun i => liftBehavioralProfile S sem pol i
+            (O.projectStates i ss)).bind (fun a => PMF.pure (a p))) := by
+        exact Math.ProbabilityMassFunction.bind_heq _
+          (congrArg (CompiledMAIDAct S p) hprojq.symm) hH_heq
+      -- The RHS bind collapses to the p-th marginal
+      have hbind_eq : ((pmfPi fun i => liftBehavioralProfile S sem pol i
+            (O.projectStates i ss)).bind (fun a => PMF.pure (a p))) =
+          liftBehavioralProfile S sem pol p (O.projectStates p ss) := by
+        rw [pmfPi_bind_eval]; exact PMF.bind_pure _
+      -- Combine: LHS ≍ marginal = pol p I_nd
+      -- Chain: LHS ≍ bind(PMF.pure ∘ proj p) = marginal p = pol p I_nd
+      have hfinal : HEq
+          ((pmfPi fun i => liftBehavioralProfile S sem pol i (O.projectStates i ss)).bind
+            (fun a => H a nd))
+          (liftBehavioralProfile S sem pol p (O.projectStates p ss)) :=
+        hbind_heq.trans (heq_of_eq hbind_eq)
+      -- hfinal : LHS ≍ liftBehavioral pol p (projectStates p ss) : PMF (CompiledMAIDAct ...)
+      -- After rw [hprojq], liftBehavioral reduces to pol p I_nd : PMF (Val S nd.1)
+      -- Since LHS : PMF (Val S nd.1) and pol p I_nd : PMF (Val S nd.1), eq_of_heq works
+      exact eq_of_heq (hfinal.trans (by rw [hprojq]; exact HEq.rfl))
+    | .utility p =>
+      conv_lhs => arg 2; ext a; rw [show H a nd =
+        nodeDistrib S sem cfg (rawActs (O.castJointAction ss a)) nd from rfl,
+        nodeDistrib_at_utility S sem cfg _ nd p hk]
+      simp only [PMF.bind_const]
+      simp only [nodeDistPol]; split
+      · exact absurd (‹_› : S.kind nd.1 = .chance) (by rw [hk]; exact nofun)
+      · exact absurd (‹_› : S.kind nd.1 = .decision _) (by rw [hk]; exact nofun)
+      · rename_i q hkq
+        have : q = p := NodeKind.utility.inj (hkq.symm.trans hk)
+        subst this; rfl
+  · -- h_const: chance/utility nodes ignore all player coordinates
+    -- coord nd = none means S.kind nd ≠ .decision _
+    -- nodeDistrib at chance/utility doesn't use rawActs at all
+    intro s x; dsimp only []
+    simp only [H, G, nodeDistrib]
+    split
+    · rfl  -- chance: uses chanceCPD, independent of acts
+    · -- decision p: contradicts coord nd = none
+      rename_i p hk
+      exact absurd (show coord nd = some p from by simp [coord, hk]) (by rw [hc]; exact nofun)
+    · rfl  -- utility: uses PMF.pure utilityValue, independent of acts
+  · -- h_single: decision node of player i, H a nd depends only on a i
+    classical
+    intro s x; dsimp only []
+    have hk : S.kind nd.1 = .decision i := by
+      simp only [coord] at hc
+      match hk : S.kind nd.1, hc with
+      | .decision p, h => exact congrArg NodeKind.decision (Option.some_injective _ h)
+    simp only [H, G]
+    apply nodeDistrib_congr_decision S sem cfg _ _ nd i hk
+    -- rawActs (castJointAction (update s j x)) i = rawActs (castJointAction s) i
+    have hcast_eq : O.castJointAction ss (Function.update s j x) i =
+        O.castJointAction ss s i := by
+      simp only [ObsModelCore.castJointAction]
+      congr 1; simp [Function.update, Ne.symm hne]
+    simp only [rawActs]
+    split
+    · rfl
+    · congr 1; funext d
+      split
+      · congr 1; congr 1; congr 1; convert hcast_eq using 2; exact
+          funext fun q => by simp [Function.update]
+      · rfl
+  · -- h_inj: at most one decision node per player (PerfectRecall)
+    -- coord k = some i means S.kind k = .decision i
+    have hk₁ : S.kind k₁.1 = .decision i := by
+      simp only [coord] at hc₁
+      match hk : S.kind k₁.1, hc₁ with
+      | .decision p, h => exact congrArg NodeKind.decision (Option.some_injective _ h)
+    have hk₂ : S.kind k₂.1 = .decision i := by
+      simp only [coord] at hc₂
+      match hk : S.kind k₂.1, hc₂ with
+      | .decision p, h => exact congrArg NodeKind.decision (Option.some_injective _ h)
+    exact Subtype.ext
+      (frontier_unique_decision_per_player S hPR cfg i k₁.1 k₂.1 k₁.2 k₂.2 hk₁ hk₂)
 
 /-- Full adequacy: the compiled PR model's runDist with lifted behavioral profile,
 mapped by `extractTAssign` on the last state, equals `frontierEval`. -/
