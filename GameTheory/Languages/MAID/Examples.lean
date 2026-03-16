@@ -91,10 +91,10 @@ def tinyOrder : TopologicalOrder tinyStruct where
 
 /-- The MAID KernelGame for our tiny example. -/
 noncomputable def tinyKG : KernelGame (Fin 1) :=
-  toKernelGame tinyStruct tinySem tinyOrder
+  toKernelGame tinyStruct tinySem
 
 /-- The tiny MAID induces a well-formed outcome distribution on total assignments. -/
 noncomputable example : PMF (TAssign tinyStruct) :=
-  evalAssignDist tinyStruct tinySem tinyPol0 tinyOrder
+  evalAssignDist tinyStruct tinySem tinyPol0
 
 end MAID

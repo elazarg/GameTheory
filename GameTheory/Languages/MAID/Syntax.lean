@@ -1,4 +1,5 @@
 import Mathlib.Data.List.Basic
+import Mathlib.Data.List.Induction
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
@@ -14,16 +15,18 @@ A MAID (Koller & Milch 2003) is a directed acyclic graph with three kinds of
 nodes — chance, decision, utility — together with conditional probability
 distributions for chance nodes and utility functions for utility nodes.
 
-The DAG structure (parent sets) is fundamental; evaluation along a topological
-order is a derived operation parameterized by a `DAG.TopologicalOrder`.  The swap
-lemmas show this evaluation is independent of which topological order is chosen.
+The DAG structure (parent sets) is fundamental; the joint distribution over
+assignments is defined as the standard Bayesian network factorization
+`P(x) = ∏ᵢ P(xᵢ | parents(xᵢ))`, which is manifestly order-independent.
+A fold-based evaluation (`evalFold`) is provided for relating to sequential
+constructions (e.g. EFG reduction).
 
 ## Outline
 - Core: `NodeKind`, `Struct`, typed assignments
-- Topological orders: `TopologicalOrder`, order-parameterized evaluation
-- Semantics: `Sem`, strategies, evaluation
+- Topological orders: `TopologicalOrder`
+- Semantics: `Sem`, strategies, `assignProb`, `evalAssignDist`
+- Fold-based evaluation: `evalStep`, `evalFold`, swap lemmas
 - Game: `KernelGame` bridge
-- Order-independence: swap lemmas
 -/
 
 namespace MAID
@@ -222,6 +225,22 @@ def updateAssign {S : Struct Player n} (a : TAssign S) (nd : Fin n) (v : Val S n
     TAssign S :=
   fun nd' => if h : nd' = nd then h ▸ v else a nd'
 
+-- ============================================================================
+-- Bayesian network factorization (order-free)
+-- ============================================================================
+
+/-- Probability of a total assignment: product of conditional probabilities at
+each node. This is the standard Bayesian network factorization formula
+`P(x₁,…,xₙ) = ∏ᵢ P(xᵢ | parents(xᵢ))`, which is manifestly independent of
+any node ordering. -/
+noncomputable def assignProb (S : Struct Player n) (sem : Sem S) (pol : Policy S)
+    (a : TAssign S) : ENNReal :=
+  ∏ nd : Fin n, (nodeDist S sem pol nd a) (a nd)
+
+-- ============================================================================
+-- Fold-based evaluation (used in proofs)
+-- ============================================================================
+
 /-- One step of the evaluation fold: draw a value at `nd` and update the assignment. -/
 noncomputable def evalStep (S : Struct Player n) (sem : Sem S) (pol : Policy S)
     (acc : PMF (TAssign S)) (nd : Fin n) : PMF (TAssign S) :=
@@ -229,13 +248,315 @@ noncomputable def evalStep (S : Struct Player n) (sem : Sem S) (pol : Policy S)
     (nodeDist S sem pol nd a).bind (fun v =>
       PMF.pure (updateAssign a nd v)))
 
-/-- Joint distribution over total assignments, by folding over a topological order.
-
-The result is independent of which topological order is used (see
-`evalAssignDist_order_independent`). -/
-noncomputable def evalAssignDist (S : Struct Player n) (sem : Sem S) (pol : Policy S)
+/-- Fold-based evaluation along a topological order. This computes the same
+distribution as `assignProb` (see `evalFold_eq_assignProb`) but is easier
+to relate to sequential tree constructions (e.g. EFG reduction). -/
+noncomputable def evalFold (S : Struct Player n) (sem : Sem S) (pol : Policy S)
     (σ : TopologicalOrder S) : PMF (TAssign S) :=
   σ.order.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S))
+
+/-- No node is its own parent (from acyclicity). -/
+private theorem Struct.self_not_parent (S : Struct Player n) (nd : Fin n) :
+    nd ∉ S.parents nd :=
+  fun h => S.acyclic nd (Relation.TransGen.single h)
+
+/-- In a topological order, a later node cannot be a parent of an earlier node. -/
+private theorem topo_later_not_parent {S : Struct Player n}
+    (σ : DAG.TopologicalOrder S.parents) {i k : Fin σ.order.length}
+    (hik : i.val < k.val) :
+    σ.order[k] ∉ S.parents σ.order[i] := by
+  intro hp
+  have hki := σ.ancestor_lt (Relation.TransGen.single hp) rfl rfl
+  omega
+
+/-- Updating at a node not in `ps` doesn't change a projection onto `ps`. -/
+private theorem projCfg_update_irrel' {S : Struct Player n} (a : TAssign S)
+    (nd : Fin n) (v : Val S nd) (ps : Finset (Fin n)) (hnd : nd ∉ ps) :
+    projCfg (updateAssign a nd v) ps = projCfg a ps := by
+  ext ⟨nd', hnd'⟩
+  simp only [projCfg, updateAssign]
+  split
+  · next h => exact absurd (h ▸ hnd') hnd
+  · rfl
+
+/-- `nodeDist` at `nd₂` is unchanged when we update at `nd₁`, provided `nd₁ ∉ S.parents nd₂`. -/
+private theorem nodeDist_update_irrel' {S : Struct Player n} (sem : Sem S) (pol : Policy S)
+    (nd₁ nd₂ : Fin n) (a : TAssign S) (v : Val S nd₁)
+    (h : nd₁ ∉ S.parents nd₂) :
+    nodeDist S sem pol nd₂ (updateAssign a nd₁ v) = nodeDist S sem pol nd₂ a := by
+  unfold nodeDist
+  split
+  · congr 1; exact projCfg_update_irrel' a nd₁ v _ h
+  · congr 1; exact Sigma.ext rfl (heq_of_eq (projCfg_update_irrel' a nd₁ v _
+      (fun hmem => h (S.obs_sub nd₂ hmem))))
+  · rfl
+
+/-- Fold invariant: after processing nodes `L` (a prefix of a topological order
+starting from `defaultAssign`), the PMF at assignment `a` equals the product of
+conditionals on `L` times an indicator that `a` agrees with `defaultAssign`
+off `L`. -/
+private theorem foldl_evalStep_invariant {S : Struct Player n}
+    (sem : Sem S) (pol : Policy S)
+    (L : List (Fin n)) (hnodup : L.Nodup)
+    (htopo : ∀ (i : Fin L.length), ∀ p ∈ S.parents L[i],
+      ∃ j : Fin L.length, j.val < i.val ∧ L[j] = p)
+    (a : TAssign S) :
+    (L.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S))) a =
+    (L.toFinset.prod fun nd => (nodeDist S sem pol nd a) (a nd)) *
+      (if ∀ nd, ¬ nd ∈ L → a nd = (defaultAssign S) nd then 1 else 0) := by
+  induction L using List.reverseRecOn generalizing a with
+  | nil =>
+    simp only [List.foldl_nil, List.toFinset_nil, Finset.prod_empty, one_mul, PMF.pure_apply,
+      List.not_mem_nil, not_false_eq_true, forall_true_left, funext_iff]
+  | append_singleton L nd ih =>
+    -- Extract nodup and topo hypotheses for L from (L ++ [nd])
+    have hnodup_L : L.Nodup := by
+      rw [List.nodup_append] at hnodup; exact hnodup.1
+    have hnd_notin : nd ∉ L := by
+      rw [List.nodup_append] at hnodup
+      intro h; exact hnodup.2.2 nd h nd (List.mem_singleton.mpr rfl) rfl
+    -- Helper: convert Fin-indexed getElem on (L ++ [nd]) to L or nd
+    -- We use `show` to convert Fin-indexed to Nat-indexed getElem
+    have getAppL' (j : Fin (L ++ [nd]).length) (hj : j.val < L.length) :
+        (L ++ [nd])[j] = L[j.val]'hj := by
+      change (L ++ [nd])[j.val]'j.isLt = L[j.val]'hj
+      exact List.getElem_append_left hj
+    have getAppNd' (j : Fin (L ++ [nd]).length) (hj : j.val = L.length) :
+        (L ++ [nd])[j] = nd := by
+      change (L ++ [nd])[j.val]'j.isLt = nd
+      simp [hj]
+    -- Parents of nd are all in L (from htopo at the last index)
+    have hnd_parents_in_L : ∀ p ∈ S.parents nd, p ∈ L := by
+      intro p hp
+      have hlen : L.length < (L ++ [nd]).length := by simp
+      let idx : Fin (L ++ [nd]).length := ⟨L.length, hlen⟩
+      have hnd_get : (L ++ [nd])[idx] = nd := getAppNd' idx rfl
+      have hp' : p ∈ S.parents (L ++ [nd])[idx] := hnd_get.symm ▸ hp
+      obtain ⟨j, hj_lt, hj_eq⟩ := htopo idx p hp'
+      have hj_lt_L : j.val < L.length := by omega
+      rw [getAppL' j hj_lt_L] at hj_eq
+      exact hj_eq ▸ List.getElem_mem ..
+    -- Extract topo hypothesis for L
+    have htopo_L : ∀ (i : Fin L.length), ∀ p ∈ S.parents L[i],
+        ∃ j : Fin L.length, j.val < i.val ∧ L[j] = p := by
+      intro i p hp
+      have hi' : i.val < (L ++ [nd]).length := by have := i.isLt; simp
+      let idx : Fin (L ++ [nd]).length := ⟨i.val, hi'⟩
+      have hi_get : (L ++ [nd])[idx] = L[i] := getAppL' idx i.isLt
+      have hp' : p ∈ S.parents (L ++ [nd])[idx] := hi_get.symm ▸ hp
+      obtain ⟨j, hj_lt, hj_eq⟩ := htopo idx p hp'
+      have hj_lt_L : j.val < L.length := by
+        by_contra hc; push_neg at hc
+        have hj_len : j.val = L.length := by have := j.isLt; simp at this; omega
+        rw [getAppNd' j hj_len] at hj_eq; subst hj_eq
+        have hi_lt := i.isLt; change j.val < i.val at hj_lt; omega
+      refine ⟨⟨j.val, hj_lt_L⟩, by omega, ?_⟩
+      rw [getAppL' j hj_lt_L] at hj_eq; exact hj_eq
+    -- Apply IH
+    have ih_applied := ih hnodup_L htopo_L
+    -- Rewrite foldl on L ++ [nd]
+    rw [List.foldl_concat]
+    -- Abbreviate the accumulated PMF
+    set μ := L.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S)) with hμ_def
+    -- Expand evalStep and bind/pure
+    simp only [evalStep, PMF.bind_apply, PMF.pure_apply]
+    -- Goal: ∑' a_1, μ a_1 * ∑' a_2, (nodeDist nd a_1) a_2 * [a = updateAssign a_1 nd a_2] = RHS
+    -- Substitute IH into the outer tsum
+    simp_rw [ih_applied]
+    -- Now goal involves:
+    --   ∑' a_1, (∏ ... * [a_1 agrees with default off L]) *
+    --           ∑' a_2, (nodeDist nd a_1) a_2 * [a = updateAssign a_1 nd a_2]
+    -- = (∏ ... over L ∪ {nd}) * [a agrees with default off L ∪ {nd}]
+    --
+    -- Step 1: Characterize when a = updateAssign a_1 nd a_2
+    -- This holds iff a_2 = a nd and a_1 nd' = a nd' for all nd' ≠ nd
+    have hupdate_iff : ∀ (a_1 : TAssign S) (a_2 : Val S nd),
+        (a = updateAssign a_1 nd a_2) ↔ (a_2 = a nd ∧ ∀ nd', nd' ≠ nd → a_1 nd' = a nd') := by
+      intro a_1 a_2; constructor
+      · intro h; constructor
+        · have := congr_fun h nd; simp [updateAssign] at this; exact this.symm
+        · intro nd' hne
+          have := congr_fun h nd'; simp [updateAssign, hne] at this; exact this.symm
+      · intro ⟨h1, h2⟩; funext nd'; simp only [updateAssign]; split
+        · next h => subst h; exact h1.symm
+        · next h => exact (h2 nd' h).symm
+    simp_rw [hupdate_iff]
+    -- Step 2: Factor the inner tsum: split [a_2 = a nd ∧ cond] into [a_2 = a nd] * [cond]
+    -- Then collapse the a_2 sum
+    have inner_simp : ∀ (a_1 : TAssign S),
+        (∑' (a_2 : Val S nd), (nodeDist S sem pol nd a_1) a_2 *
+          if a_2 = a nd ∧ ∀ nd', nd' ≠ nd → a_1 nd' = a nd' then 1 else 0) =
+        (nodeDist S sem pol nd a_1) (a nd) *
+          if ∀ nd', nd' ≠ nd → a_1 nd' = a nd' then 1 else 0 := by
+      intro a_1
+      by_cases hcond : ∀ nd', nd' ≠ nd → a_1 nd' = a nd'
+      · have hsimp : ∀ a_2,
+            (if a_2 = a nd ∧ ∀ nd', nd' ≠ nd → a_1 nd' = a nd'
+              then (1 : ENNReal) else 0) =
+            if a_2 = a nd then 1 else 0 := by
+          intro a_2; congr 1; simp only [eq_true hcond, and_true]
+        simp_rw [hsimp, mul_ite, mul_one, mul_zero]
+        rw [tsum_eq_single (a nd) (fun b hb => by simp [hb]), if_pos rfl, if_pos hcond]
+      · have hsimp : ∀ a_2,
+            (if a_2 = a nd ∧ ∀ nd', nd' ≠ nd → a_1 nd' = a nd'
+              then (1 : ENNReal) else 0) = 0 := by
+          intro a_2; rw [if_neg]; exact fun ⟨_, h⟩ => hcond h
+        simp_rw [hsimp, mul_zero, tsum_zero, if_neg hcond, mul_zero]
+    simp_rw [inner_simp]
+    -- Step 3: Case-split on whether `a` agrees with default off L ++ [nd]
+    -- This determines whether both sides are 0 or both equal the product.
+    --
+    -- Key observation: the two indicators in the LHS summand combine to pin down a_1
+    -- uniquely (when both are 1). We show the tsum has at most one nonzero term.
+    --
+    -- Define the unique candidate a₀
+    let a₀ : TAssign S := updateAssign a nd (defaultAssign S nd)
+    -- Show a₀ satisfies both conditions iff a agrees with default off L ++ [nd]
+    have ha₀_cond2 : ∀ nd', nd' ≠ nd → a₀ nd' = a nd' := by
+      intro nd' hne; simp [a₀, updateAssign, hne]
+    have ha₀_self : a₀ nd = defaultAssign S nd := by simp [a₀, updateAssign]
+    have ha₀_cond1_iff : (∀ nd' ∉ L, a₀ nd' = defaultAssign S nd') ↔
+        ∀ nd' ∉ L ++ [nd], a nd' = defaultAssign S nd' := by
+      constructor
+      · intro h nd' hnd'
+        have hnd'' : nd' ∉ L ∧ nd' ≠ nd :=
+          ⟨fun h => hnd' (List.mem_append.mpr (Or.inl h)),
+           fun h => hnd' (List.mem_append.mpr (Or.inr (List.mem_singleton.mpr h)))⟩
+        rw [← ha₀_cond2 nd' hnd''.2]; exact h nd' hnd''.1
+      · intro h nd' hnd'
+        by_cases hne : nd' = nd
+        · subst hne; exact ha₀_self
+        · rw [ha₀_cond2 nd' hne]
+          exact h nd' (by simp [List.mem_append, hnd', hne])
+    -- Any a_1 ≠ a₀ contributes 0
+    have hzero : ∀ (a_1 : TAssign S), a_1 ≠ a₀ →
+        ((∏ nd' ∈ L.toFinset, (nodeDist S sem pol nd' a_1) (a_1 nd')) *
+          if ∀ nd' ∉ L, a_1 nd' = defaultAssign S nd' then 1 else 0) *
+        ((nodeDist S sem pol nd a_1) (a nd) *
+          if ∀ nd', nd' ≠ nd → a_1 nd' = a nd' then 1 else 0) = 0 := by
+      intro a_1 hne
+      by_cases h1 : ∀ nd' ∉ L, a_1 nd' = defaultAssign S nd'
+      · by_cases h2 : ∀ nd', nd' ≠ nd → a_1 nd' = a nd'
+        · exfalso; apply hne; funext nd'
+          by_cases hnd' : nd' = nd
+          · subst hnd'; exact (h1 _ hnd_notin).trans ha₀_self.symm
+          · exact (h2 nd' hnd').trans (ha₀_cond2 nd' hnd').symm
+        · simp [if_neg h2]
+      · simp [if_neg h1]
+    rw [tsum_eq_single a₀ hzero]
+    -- Evaluate at a₀: simplify the cond2 indicator
+    rw [if_pos ha₀_cond2]
+    -- Now the LHS has: (∏ nd' ∈ L.toFinset, (nodeDist nd' a₀) (a₀ nd')) *
+    --                   [∀ nd' ∉ L, a₀ nd' = default] * (nodeDist nd a₀) (a nd)
+    -- And the RHS has: (∏ nd' ∈ (L ++ [nd]).toFinset, (nodeDist nd' a) (a nd')) *
+    --                   [∀ nd' ∉ L ++ [nd], a nd' = default]
+    --
+    -- Key facts:
+    -- 1. (nodeDist nd' a₀) = (nodeDist nd' a) for nd' ∈ L (since nd ∉ parents of nd')
+    -- 2. a₀ nd' = a nd' for nd' ≠ nd (by ha₀_cond2)
+    -- 3. nodeDist nd a₀ = nodeDist nd a (nd ∉ parents nd)
+    -- 4. Product over L ++ [nd] = (product over L) * (nodeDist nd a) (a nd)
+    -- Simplify: mul_one on the RHS of second factor
+    simp only [mul_one]
+    -- Step 4: nodeDist nd a₀ = nodeDist nd a (since nd ∉ parents nd)
+    have hnd_dist : nodeDist S sem pol nd a₀ = nodeDist S sem pol nd a :=
+      nodeDist_update_irrel' sem pol nd nd a (defaultAssign S nd) (S.self_not_parent nd)
+    rw [hnd_dist]
+    -- Step 5: For nd' ∈ L, nodeDist nd' a₀ = nodeDist nd' a
+    -- because nd is not a parent of nd' (topo ordering: nd comes after nd' in L ++ [nd])
+    have hnd_not_parent_of_L : ∀ nd' ∈ L.toFinset, nd ∉ S.parents nd' := by
+      intro nd' hnd' hp
+      rw [List.mem_toFinset] at hnd'
+      -- nd ∈ parents nd' and nd' ∈ L. By htopo, nd must appear before nd' in L ++ [nd].
+      -- But nd only appears at index L.length, while nd' has index < L.length.
+      -- So nd can't precede nd'. Thus (L ++ [nd])[j] = nd implies j.val < L.length,
+      -- meaning nd ∈ L — contradicting hnd_notin.
+      obtain ⟨i, hi_mem, hnd'_eq⟩ := List.getElem_of_mem
+        (List.mem_append.mpr (Or.inl hnd') : nd' ∈ L ++ [nd])
+      have hp' : nd ∈ S.parents (L ++ [nd])[i] := hnd'_eq ▸ hp
+      obtain ⟨j, hj_lt, hj_eq⟩ := htopo ⟨i, hi_mem⟩ nd hp'
+      have hj_in_L : j.val < L.length := by
+        -- i < L.length (since (L ++ [nd])[i] = nd' ∈ L, and if i ≥ L.length then nd' = nd ∉ L)
+        have hi_lt_L : i < L.length := by
+          by_contra hc; push_neg at hc
+          have hi_eq : i = L.length := by simp at hi_mem; omega
+          have h_eq_nd := getAppNd' ⟨i, hi_mem⟩ hi_eq
+          rw [← hnd'_eq] at hnd'; exact hnd_notin (h_eq_nd ▸ hnd')
+        -- j.val < ⟨i, hi_mem⟩.val = i < L.length
+        have : (⟨i, hi_mem⟩ : Fin (L ++ [nd]).length).val = i := rfl
+        omega
+      rw [getAppL' j hj_in_L] at hj_eq
+      exact hnd_notin (hj_eq ▸ List.getElem_mem ..)
+    -- Replace nodeDist nd' a₀ with nodeDist nd' a for all nd' ∈ L.toFinset
+    have hprod_eq : (∏ nd' ∈ L.toFinset, (nodeDist S sem pol nd' a₀) (a₀ nd')) =
+        ∏ nd' ∈ L.toFinset, (nodeDist S sem pol nd' a) (a nd') := by
+      apply Finset.prod_congr rfl
+      intro nd' hnd'
+      have hne : nd' ≠ nd := by
+        intro h; subst h; exact hnd_notin (List.mem_toFinset.mp hnd')
+      rw [ha₀_cond2 nd' hne]
+      congr 1
+      exact nodeDist_update_irrel' sem pol nd nd' a (defaultAssign S nd)
+        (hnd_not_parent_of_L nd' hnd')
+    rw [hprod_eq]
+    -- Rewrite indicator using ha₀_cond1_iff
+    rw [show (if ∀ nd' ∉ L, a₀ nd' = defaultAssign S nd' then (1 : ENNReal) else 0) =
+        if ∀ nd' ∉ L ++ [nd], a nd' = defaultAssign S nd' then 1 else 0 from by
+      congr 1; exact propext ha₀_cond1_iff]
+    -- Now LHS = (∏ nd' ∈ L.toFinset, ...) * [cond] * (nodeDist nd a) (a nd)
+    -- RHS = (∏ nd' ∈ (L ++ [nd]).toFinset, ...) * [cond]
+    -- Extend product: (L ++ [nd]).toFinset = L.toFinset ∪ {nd}
+    have hfs : (L ++ [nd]).toFinset = L.toFinset ∪ {nd} := by
+      rw [List.toFinset_append]; simp
+    rw [hfs, Finset.prod_union (by
+      rw [Finset.disjoint_singleton_right]; rwa [List.mem_toFinset])]
+    simp only [Finset.prod_singleton]
+    ring
+
+/-- The fold-based evaluation computes the Bayesian network product formula. -/
+theorem evalFold_eq_assignProb (S : Struct Player n) (sem : Sem S) (pol : Policy S)
+    (σ : TopologicalOrder S) (a : TAssign S) :
+    (evalFold S sem pol σ) a = assignProb S sem pol a := by
+  unfold evalFold assignProb
+  rw [foldl_evalStep_invariant sem pol σ.order σ.nodup
+    (fun i p hp => σ.respects i p hp) a]
+  have hmem : ∀ nd : Fin n, nd ∈ σ.order := σ.mem
+  have hcond : (∀ nd, ¬ nd ∈ σ.order → a nd = (defaultAssign S) nd) = True :=
+    propext ⟨fun _ => trivial, fun _ nd h => absurd (hmem nd) h⟩
+  simp only [hcond, ite_true, mul_one]
+  congr 1
+  have hfs : σ.order.toFinset = Finset.univ := by
+    apply Finset.eq_univ_of_card
+    rw [List.toFinset_card_of_nodup σ.nodup, σ.length, Fintype.card_fin]
+  rw [hfs]
+
+-- ============================================================================
+-- Order-free evaluation (the canonical API)
+-- ============================================================================
+
+/-- The Bayesian network factorization defines a valid probability distribution. -/
+private theorem assignProb_hasSum (S : Struct Player n) (sem : Sem S) (pol : Policy S) :
+    HasSum (assignProb S sem pol) 1 := by
+  have σ := (topologicalOrder_exists S).some
+  have h : assignProb S sem pol = (evalFold S sem pol σ).val :=
+    funext fun a => (evalFold_eq_assignProb S sem pol σ a).symm
+  rw [h]; exact (evalFold S sem pol σ).2
+
+/-- Joint distribution over total assignments, defined as the product of
+conditional distributions (Bayesian network factorization).
+
+This is manifestly independent of any topological order.
+See `evalAssignDist_eq_evalFold` for the connection to the sequential
+fold-based computation. -/
+noncomputable def evalAssignDist (S : Struct Player n) (sem : Sem S) (pol : Policy S) :
+    PMF (TAssign S) :=
+  ⟨assignProb S sem pol, assignProb_hasSum S sem pol⟩
+
+/-- `evalAssignDist` agrees with fold-based evaluation along any topological order. -/
+theorem evalAssignDist_eq_evalFold (S : Struct Player n) (sem : Sem S) (pol : Policy S)
+    (σ : TopologicalOrder S) :
+    evalAssignDist S sem pol = evalFold S sem pol σ := by
+  ext a; exact (evalFold_eq_assignProb S sem pol σ a).symm
 
 /-- Payoff for a player: sum of utility values over that player's utility nodes. -/
 noncomputable def utilityOf (S : Struct Player n) (sem : Sem S)
@@ -247,15 +568,14 @@ noncomputable def utilityOf (S : Struct Player n) (sem : Sem S)
 -- Game — KernelGame bridge
 -- ============================================================================
 
-/-- Convert a MAID to a kernel-based game, using a given topological order for
-evaluation. By `evalAssignDist_order_independent`, the choice of order does
-not affect the resulting game. -/
-noncomputable def toKernelGame (S : Struct Player n) (sem : Sem S)
-    (σ : TopologicalOrder S) : GameTheory.KernelGame Player where
+/-- Convert a MAID to a kernel-based game. The outcome kernel is the
+order-free Bayesian network factorization. -/
+noncomputable def toKernelGame (S : Struct Player n) (sem : Sem S) :
+    GameTheory.KernelGame Player where
   Strategy := PlayerStrategy S
   Outcome := TAssign S
   utility := fun a => utilityOf S sem a
-  outcomeKernel := fun pol => evalAssignDist S sem pol σ
+  outcomeKernel := fun pol => evalAssignDist S sem pol
 
 -- ============================================================================
 -- Order-independence — swap lemmas
@@ -368,15 +688,15 @@ theorem foldl_swapAdj {α β : Type*} (f : α → β → α) (init : α) (l : Li
         exact this)
 
 /-- Swapping two adjacent independent nodes in a topological order doesn't change
-the evaluation distribution. -/
-theorem evalAssignDist_swap_adj {S : Struct Player n} (sem : Sem S) (pol : Policy S)
+the fold-based evaluation. -/
+theorem evalFold_swap_adj {S : Struct Player n} (sem : Sem S) (pol : Policy S)
     (σ : TopologicalOrder S)
     (i : Nat) (hi : i + 1 < σ.order.length)
     (hne : σ.order[i]'(by omega) ≠ σ.order[i + 1]'hi)
     (hindep : NoDirectEdge S (σ.order[i]'(by omega)) (σ.order[i + 1]'hi)) :
-    evalAssignDist S sem pol σ =
+    evalFold S sem pol σ =
     (swapAdj σ.order i hi).foldl (evalStep S sem pol) (PMF.pure (defaultAssign S)) := by
-  simp only [evalAssignDist]
+  simp only [evalFold]
   exact foldl_swapAdj _ _ _ i hi (fun acc =>
     evalStep_swap sem pol _ _ hne hindep acc)
 
