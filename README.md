@@ -18,9 +18,12 @@ Formal proofs of standard results in finite game theory:
   (via Brouwer fixed point on product simplices)
 - **Minimax** — von Neumann's minimax theorem for finite two-player zero-sum games
 - **Kuhn's theorem** — equivalence of mixed and behavioral strategies under
-  perfect recall, proved on a semantic model layer with step-independence and
-  measure-factorization lemmas, then transferred to EFG and MAID representations
-  via bridges
+  perfect recall, proved at a semantic model layer and instantiated for three
+  game representations:
+  - **EFG** — behavioral ↔ mixed for extensive-form games with information sets
+  - **MAID** — behavioral policy ↔ product mixed strategy for multi-agent
+    influence diagrams under DAG perfect recall
+  - **Sequential** — behavioral ↔ mixed for protocol-based sequential games
 - **Zermelo / backward induction** — finite perfect-information games have
   pure subgame-perfect equilibria
 - **One-shot deviation principle** — SPE characterization via single-step
@@ -97,8 +100,28 @@ The proof decomposes into two independent directions:
   recall conditions. The weakest sufficient condition is
   `TracePlayerStepRecall` (weaker than classical perfect recall).
 
-EFG, MAID, and Sequential languages each compile to `ObsModel` (via
-`CompileObs.lean`) and apply the generic theorems directly.
+Each concrete language compiles to `ObsModel` and applies the generic
+theorems. The compilation verifies that the relevant structural conditions
+hold:
+
+- **EFG** (`Languages/EFG/Kuhn.lean`): Compiles game trees into an
+  observation model where each step resolves one information set. Both
+  directions (B→M and M→B) are proved for the `evalDist` outcome
+  distribution and for expected utility (`udist`).
+
+- **MAID** (`Languages/MAID/Kuhn.lean`): Compiles the simultaneous frontier
+  evaluation semantics into a PR-refined observation model where each player
+  has at most one active decision node per step (under perfect recall).
+  Proves one-step adequacy (`compiledPR_stepDist_eq_frontierStepPol`) —
+  that the compiled model's step distribution matches the native frontier
+  step — then derives B→M and M→B for `frontierEval`. The adequacy proof
+  uses a cross-index product-bind factorization theorem
+  (`pmfPi_bind_pmfPi_of_disjoint_coords`) to decompose the simultaneous
+  sampling into per-node independent distributions.
+
+- **Sequential** (`Languages/Sequential/Kuhn.lean`): Compiles protocol-based
+  sequential games via linearized observation models. Both B→M and M→B are
+  proved for the native `seqEval` outcome distribution.
 
 The Intrinsic form (`Languages/Intrinsic/`) formalizes Witsenhausen's intrinsic
 model following Heymann, De Lara, and Chancelier (2020), where information is
