@@ -1,4 +1,5 @@
 import GameTheory.Languages.MAID.Syntax
+import GameTheory.Languages.MAID.Prefix
 import GameTheory.Languages.MAID.SOS
 import GameTheory.Languages.MAID.Compile
 import GameTheory.Languages.MAID.Theorems
