@@ -52,15 +52,21 @@ structure Struct (Player : Type) [DecidableEq Player] [Fintype Player]
   kind : Fin n → NodeKind Player
   parents    : Fin n → Finset (Fin n)
   obsParents : Fin n → Finset (Fin n)
-  domainSize : Fin n → Nat
+  Val : Fin n → Type
+  instFintype : ∀ nd, Fintype (Val nd)
+  instDecidableEq : ∀ nd, DecidableEq (Val nd)
+  instInhabited : ∀ nd, Inhabited (Val nd)
   -- Invariants
   obs_sub        : ∀ nd, obsParents nd ⊆ parents nd
   obs_eq_nondec  : ∀ nd, (¬ ∃ a, kind nd = .decision a) → obsParents nd = parents nd
-  utility_domain : ∀ nd a, kind nd = .utility a → domainSize nd = 1
-  nonutility_pos : ∀ nd, (¬ ∃ a, kind nd = .utility a) → 0 < domainSize nd
+  utility_unique : ∀ nd a, kind nd = .utility a → Unique (Val nd)
   acyclic        : DAG.Acyclic (· ∈ parents ·)
 
 variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
+
+instance (S : Struct Player n) (nd : Fin n) : Fintype (S.Val nd) := S.instFintype nd
+instance (S : Struct Player n) (nd : Fin n) : DecidableEq (S.Val nd) := S.instDecidableEq nd
+instance (S : Struct Player n) (nd : Fin n) : Inhabited (S.Val nd) := S.instInhabited nd
 
 /-- Node `a` is an ancestor of node `b` in the DAG: there is a directed path
 from `a` to `b` through the parent relation. -/
@@ -110,32 +116,45 @@ abbrev DecisionNode (S : Struct Player n) (p : Player) :=
 abbrev UtilityNode (S : Struct Player n) (p : Player) :=
   {nd : Fin n // S.kind nd = .utility p}
 
-/-- Every node has positive domain size. -/
-theorem Struct.dom_pos (S : Struct Player n) (nd : Fin n) :
-    0 < S.domainSize nd := by
-  by_cases h : ∃ a, S.kind nd = .utility a
-  · obtain ⟨a, ha⟩ := h
-    rw [S.utility_domain nd a ha]; exact Nat.one_pos
-  · exact S.nonutility_pos nd h
-
-/-- Typed value at a node. -/
-abbrev Val (S : Struct Player n) (nd : Fin n) := Fin (S.domainSize nd)
-
 /-- Configuration: values at a subset of nodes. -/
 abbrev Cfg (S : Struct Player n) (ps : Finset (Fin n)) :=
-  (nd : ↥ps) → Val S nd.val
+  (nd : ↥ps) → S.Val nd.val
 
 /-- Total assignment: a value at every node. -/
-abbrev TAssign (S : Struct Player n) := ∀ nd : Fin n, Val S nd
+abbrev TAssign (S : Struct Player n) := ∀ nd : Fin n, S.Val nd
 
 /-- Project a total assignment to a configuration on a subset. -/
 def projCfg {S : Struct Player n} (a : TAssign S) (ps : Finset (Fin n)) :
     Cfg S ps :=
   fun nd => a nd.val
 
-/-- Default assignment: 0 at every node. -/
+/-- Default assignment: the default value at every node. -/
 def defaultAssign (S : Struct Player n) : TAssign S :=
-  fun nd => ⟨0, S.dom_pos nd⟩
+  fun _ => default
+
+-- ============================================================================
+-- Derived domain-size API (for bridges to Fin-based representations like EFG)
+-- ============================================================================
+
+/-- Domain size derived from Val's Fintype instance. -/
+def Struct.domainSize (S : Struct Player n) (nd : Fin n) : Nat :=
+  Fintype.card (S.Val nd)
+
+/-- Every node has positive domain size. -/
+theorem Struct.dom_pos (S : Struct Player n) (nd : Fin n) :
+    0 < S.domainSize nd :=
+  Fintype.card_pos
+
+/-- Utility nodes have domain size 1. -/
+theorem Struct.utility_domain (S : Struct Player n) (nd : Fin n) (a : Player)
+    (h : S.kind nd = .utility a) : S.domainSize nd = 1 := by
+  have := S.utility_unique nd a h
+  exact Fintype.card_unique
+
+/-- Equivalence between node values and `Fin (domainSize nd)`. -/
+noncomputable def Struct.valEquiv (S : Struct Player n) (nd : Fin n) :
+    S.Val nd ≃ Fin (S.domainSize nd) :=
+  Fintype.equivFin (S.Val nd)
 
 -- Fintype instances for node subtypes
 instance (S : Struct Player n) : Fintype (ChanceNode S) :=
@@ -160,7 +179,7 @@ instance (S : Struct Player n) (ps : Finset (Fin n)) : Fintype (Cfg S ps) :=
   inferInstance
 
 instance (S : Struct Player n) (ps : Finset (Fin n)) : DecidableEq (Cfg S ps) :=
-  inferInstanceAs (DecidableEq ((nd : ↥ps) → Val S nd.val))
+  inferInstanceAs (DecidableEq ((nd : ↥ps) → S.Val nd.val))
 
 /-- Info set: which decision node + observed parent configuration. -/
 def Infoset (S : Struct Player n) (p : Player) :=
@@ -201,12 +220,12 @@ def Struct.PerfectRecall (S : Struct Player n) : Prop :=
 
 /-- Semantic data for a MAID: chance CPDs and utility functions. -/
 structure Sem (S : Struct Player n) where
-  chanceCPD : (c : ChanceNode S) → Cfg S (S.parents c.val) → PMF (Val S c.val)
+  chanceCPD : (c : ChanceNode S) → Cfg S (S.parents c.val) → PMF (S.Val c.val)
   utilityFn : (p : Player) → (u : UtilityNode S p) → Cfg S (S.parents u.val) → ℝ
 
 /-- Per-player strategy: maps each info set to a distribution over actions. -/
 def PlayerStrategy (S : Struct Player n) (p : Player) :=
-  (I : Infoset S p) → PMF (Val S I.1.val)
+  (I : Infoset S p) → PMF (S.Val I.1.val)
 
 /-- Joint policy: a strategy for every player. -/
 def Policy (S : Struct Player n) := (p : Player) → PlayerStrategy S p
@@ -214,14 +233,14 @@ def Policy (S : Struct Player n) := (p : Player) → PlayerStrategy S p
 /-- Distribution at a single node, given the current total assignment.
     Dispatches by node kind using `match` on `S.kind nd`. -/
 noncomputable def nodeDist (S : Struct Player n) (sem : Sem S) (pol : Policy S)
-    (nd : Fin n) (a : TAssign S) : PMF (Val S nd) :=
+    (nd : Fin n) (a : TAssign S) : PMF (S.Val nd) :=
   match hk : S.kind nd with
   | .chance => sem.chanceCPD ⟨nd, hk⟩ (projCfg a (S.parents nd))
   | .decision p => pol p ⟨⟨nd, hk⟩, projCfg a (S.obsParents nd)⟩
-  | .utility _ => PMF.pure ⟨0, by rw [S.utility_domain nd _ hk]; exact Nat.one_pos⟩
+  | .utility _ => PMF.pure default
 
 /-- Update a total assignment at node `nd` with value `v`. -/
-def updateAssign {S : Struct Player n} (a : TAssign S) (nd : Fin n) (v : Val S nd) :
+def updateAssign {S : Struct Player n} (a : TAssign S) (nd : Fin n) (v : S.Val nd) :
     TAssign S :=
   fun nd' => if h : nd' = nd then h ▸ v else a nd'
 
@@ -271,7 +290,7 @@ private theorem topo_later_not_parent {S : Struct Player n}
 
 /-- Updating at a node not in `ps` doesn't change a projection onto `ps`. -/
 private theorem projCfg_update_irrel' {S : Struct Player n} (a : TAssign S)
-    (nd : Fin n) (v : Val S nd) (ps : Finset (Fin n)) (hnd : nd ∉ ps) :
+    (nd : Fin n) (v : S.Val nd) (ps : Finset (Fin n)) (hnd : nd ∉ ps) :
     projCfg (updateAssign a nd v) ps = projCfg a ps := by
   ext ⟨nd', hnd'⟩
   simp only [projCfg, updateAssign]
@@ -281,7 +300,7 @@ private theorem projCfg_update_irrel' {S : Struct Player n} (a : TAssign S)
 
 /-- `nodeDist` at `nd₂` is unchanged when we update at `nd₁`, provided `nd₁ ∉ S.parents nd₂`. -/
 private theorem nodeDist_update_irrel' {S : Struct Player n} (sem : Sem S) (pol : Policy S)
-    (nd₁ nd₂ : Fin n) (a : TAssign S) (v : Val S nd₁)
+    (nd₁ nd₂ : Fin n) (a : TAssign S) (v : S.Val nd₁)
     (h : nd₁ ∉ S.parents nd₂) :
     nodeDist S sem pol nd₂ (updateAssign a nd₁ v) = nodeDist S sem pol nd₂ a := by
   unfold nodeDist
@@ -370,7 +389,7 @@ private theorem foldl_evalStep_invariant {S : Struct Player n}
     --
     -- Step 1: Characterize when a = updateAssign a_1 nd a_2
     -- This holds iff a_2 = a nd and a_1 nd' = a nd' for all nd' ≠ nd
-    have hupdate_iff : ∀ (a_1 : TAssign S) (a_2 : Val S nd),
+    have hupdate_iff : ∀ (a_1 : TAssign S) (a_2 : S.Val nd),
         (a = updateAssign a_1 nd a_2) ↔ (a_2 = a nd ∧ ∀ nd', nd' ≠ nd → a_1 nd' = a nd') := by
       intro a_1 a_2; constructor
       · intro h; constructor
@@ -384,7 +403,7 @@ private theorem foldl_evalStep_invariant {S : Struct Player n}
     -- Step 2: Factor the inner tsum: split [a_2 = a nd ∧ cond] into [a_2 = a nd] * [cond]
     -- Then collapse the a_2 sum
     have inner_simp : ∀ (a_1 : TAssign S),
-        (∑' (a_2 : Val S nd), (nodeDist S sem pol nd a_1) a_2 *
+        (∑' (a_2 : S.Val nd), (nodeDist S sem pol nd a_1) a_2 *
           if a_2 = a nd ∧ ∀ nd', nd' ≠ nd → a_1 nd' = a nd' then 1 else 0) =
         (nodeDist S sem pol nd a_1) (a nd) *
           if ∀ nd', nd' ≠ nd → a_1 nd' = a nd' then 1 else 0 := by
@@ -587,7 +606,7 @@ def NoDirectEdge (S : Struct Player n) (u v : Fin n) : Prop :=
 
 /-- Updating at a node not in `ps` doesn't change a projection onto `ps`. -/
 theorem projCfg_update_irrel {S : Struct Player n} (a : TAssign S)
-    (nd : Fin n) (v : Val S nd) (ps : Finset (Fin n)) (hnd : nd ∉ ps) :
+    (nd : Fin n) (v : S.Val nd) (ps : Finset (Fin n)) (hnd : nd ∉ ps) :
     projCfg (updateAssign a nd v) ps = projCfg a ps := by
   ext ⟨nd', hnd'⟩
   simp only [projCfg, updateAssign]
@@ -597,13 +616,13 @@ theorem projCfg_update_irrel {S : Struct Player n} (a : TAssign S)
 
 /-- Updating at a node in `ps` and projecting gives the new value at that node. -/
 theorem projCfg_update_self {S : Struct Player n} (a : TAssign S)
-    (nd : Fin n) (v : Val S nd) (ps : Finset (Fin n)) (hnd : nd ∈ ps) :
+    (nd : Fin n) (v : S.Val nd) (ps : Finset (Fin n)) (hnd : nd ∈ ps) :
     projCfg (updateAssign a nd v) ps ⟨nd, hnd⟩ = v := by
   simp [projCfg, updateAssign]
 
 /-- `nodeDist` at `nd₂` is unchanged when we update at `nd₁`, provided `nd₁ ∉ S.parents nd₂`. -/
 theorem nodeDist_update_irrel {S : Struct Player n} (sem : Sem S) (pol : Policy S)
-    (nd₁ nd₂ : Fin n) (a : TAssign S) (v : Val S nd₁)
+    (nd₁ nd₂ : Fin n) (a : TAssign S) (v : S.Val nd₁)
     (h : nd₁ ∉ S.parents nd₂) :
     nodeDist S sem pol nd₂ (updateAssign a nd₁ v) = nodeDist S sem pol nd₂ a := by
   unfold nodeDist
@@ -615,19 +634,19 @@ theorem nodeDist_update_irrel {S : Struct Player n} (sem : Sem S) (pol : Policy 
 
 /-- Reading `updateAssign` at a different node returns the old value. -/
 theorem updateAssign_get_ne {S : Struct Player n} (a : TAssign S)
-    (nd nd' : Fin n) (v : Val S nd) (hne : nd' ≠ nd) :
+    (nd nd' : Fin n) (v : S.Val nd) (hne : nd' ≠ nd) :
     updateAssign a nd v nd' = a nd' := by
   simp [updateAssign, hne]
 
 /-- Reading `updateAssign` at the same node returns the new value. -/
 theorem updateAssign_get_self {S : Struct Player n} (a : TAssign S)
-    (nd : Fin n) (v : Val S nd) :
+    (nd : Fin n) (v : S.Val nd) :
     updateAssign a nd v nd = v := by
   simp [updateAssign]
 
 /-- `updateAssign` commutes on distinct nodes. -/
 theorem updateAssign_comm {S : Struct Player n} (a : TAssign S)
-    (nd₁ nd₂ : Fin n) (v₁ : Val S nd₁) (v₂ : Val S nd₂) (hne : nd₁ ≠ nd₂) :
+    (nd₁ nd₂ : Fin n) (v₁ : S.Val nd₁) (v₂ : S.Val nd₂) (hne : nd₁ ≠ nd₂) :
     updateAssign (updateAssign a nd₁ v₁) nd₂ v₂ =
     updateAssign (updateAssign a nd₂ v₂) nd₁ v₁ := by
   ext nd'
@@ -706,7 +725,7 @@ theorem evalFold_swap_adj {S : Struct Player n} (sem : Sem S) (pol : Policy S)
 
 /-- A pure strategy for player `p`: choose a value at each info set. -/
 def PureStrategy (S : Struct Player n) (p : Player) :=
-  (I : Infoset S p) → Val S I.1.val
+  (I : Infoset S p) → S.Val I.1.val
 
 /-- A pure policy: a pure strategy for every player. -/
 def PurePolicy (S : Struct Player n) := (p : Player) → PureStrategy S p
@@ -715,13 +734,13 @@ instance (S : Struct Player n) (p : Player) : Fintype (PureStrategy S p) :=
   Pi.instFintype
 
 instance (S : Struct Player n) (p : Player) : Nonempty (PureStrategy S p) :=
-  ⟨fun I => ⟨0, S.dom_pos I.1.val⟩⟩
+  ⟨fun _ => default⟩
 
 instance (S : Struct Player n) : Fintype (PurePolicy S) :=
   Pi.instFintype
 
 instance (S : Struct Player n) : Nonempty (PurePolicy S) :=
-  ⟨fun _ I => ⟨0, S.dom_pos I.1.val⟩⟩
+  ⟨fun _ _ => default⟩
 
 /-- Lift a pure strategy to a behavioral (deterministic) player strategy. -/
 noncomputable def pureToPlayerStrategy {S : Struct Player n} {p : Player}

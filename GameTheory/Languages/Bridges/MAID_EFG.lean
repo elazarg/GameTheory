@@ -48,7 +48,7 @@ noncomputable def maidInfoS (S : MAID.Struct (Fin m) n) :
 /-- Build a game tree by walking the MAID's topological order.
     - Chance nodes → `GameTree.chance`
     - Decision nodes → `GameTree.decision`
-    - Utility nodes → skipped (domain size 1, assign 0) -/
+    - Utility nodes → skipped (domain size 1, assign default) -/
 noncomputable def buildTree (S : MAID.Struct (Fin m) n)
     (sem : MAID.Sem S) (pol : MAID.Policy S)
     (nodes : List (Fin n)) (assign : MAID.TAssign S) :
@@ -59,16 +59,18 @@ noncomputable def buildTree (S : MAID.Struct (Fin m) n)
     match hk : S.kind nd with
     | .chance =>
       .chance (S.domainSize nd)
-        (sem.chanceCPD ⟨nd, hk⟩ (MAID.projCfg assign (S.parents nd)))
+        ((sem.chanceCPD ⟨nd, hk⟩ (MAID.projCfg assign (S.parents nd))).map (S.valEquiv nd))
         (S.dom_pos nd)
-        (fun v => buildTree S sem pol rest (MAID.updateAssign assign nd v))
+        (fun v => buildTree S sem pol rest
+          (MAID.updateAssign assign nd ((S.valEquiv nd).symm v)))
     | .decision p =>
       .decision (S := maidInfoS S) (p := p)
         (⟨⟨nd, hk⟩, MAID.projCfg assign (S.obsParents nd)⟩ : MAID.Infoset S p)
-        (fun v => buildTree S sem pol rest (MAID.updateAssign assign nd v))
+        (fun v => buildTree S sem pol rest
+          (MAID.updateAssign assign nd ((S.valEquiv nd).symm v)))
     | .utility _ =>
       buildTree S sem pol rest
-        (MAID.updateAssign assign nd ⟨0, by rw [S.utility_domain nd _ hk]; exact Nat.one_pos⟩)
+        (MAID.updateAssign assign nd default)
 
 -- ============================================================================
 -- EFGGame from MAID
@@ -112,32 +114,50 @@ noncomputable def maidToEFGWithOrder (S : MAID.Struct (Fin m) n) (sem : MAID.Sem
 @[simp] theorem maidInfoS_infoset_eq {S : MAID.Struct (Fin m) n} (p : Fin m) :
     (maidInfoS S).Infoset p = MAID.Infoset S p := rfl
 
-/-- Sanity: EFG actions at a MAID infoset are exactly MAID node values. -/
+/-- EFG actions at a MAID infoset are `Fin (S.domainSize I.1.val)`. -/
 @[simp] theorem maidInfoS_act_eq {S : MAID.Struct (Fin m) n}
     {p : Fin m} (I : MAID.Infoset S p) :
-    (maidInfoS S).Act I = MAID.Val S I.1.val := rfl
+    (maidInfoS S).Act I = Fin (S.domainSize I.1.val) := rfl
+
+/-- Equivalence between EFG actions and MAID node values at an infoset. -/
+noncomputable def maidInfoS_actEquiv {S : MAID.Struct (Fin m) n}
+    {p : Fin m} (I : MAID.Infoset S p) :
+    (maidInfoS S).Act I ≃ S.Val I.1.val :=
+  (S.valEquiv I.1.val).symm
 
 /-- Convert a MAID policy to an EFG behavioral profile.
-    After unification of `Infoset`, this is the identity. -/
+    Maps through `valEquiv` to convert `PMF (S.Val nd)` to `PMF (Fin (S.domainSize nd))`. -/
 noncomputable def toEFGProfile {S : MAID.Struct (Fin m) n}
     (pol : MAID.Policy S) : EFG.BehavioralProfile (maidInfoS S) :=
-  fun p I => pol p I
+  fun p I => (pol p I).map (S.valEquiv I.1.val)
 
 /-- Convert an EFG behavioral profile back to a MAID policy.
-    After unification of `Infoset`, this is the identity. -/
+    Maps through `valEquiv.symm` to convert `PMF (Fin (S.domainSize nd))` to `PMF (S.Val nd)`. -/
 noncomputable def fromEFGProfile {S : MAID.Struct (Fin m) n}
     (σ : EFG.BehavioralProfile (maidInfoS S)) : MAID.Policy S :=
-  fun p I => σ p I
+  fun p I => (σ p I).map (S.valEquiv I.1.val).symm
 
 theorem toFrom {S : MAID.Struct (Fin m) n}
     (σ : EFG.BehavioralProfile (maidInfoS S)) :
-    toEFGProfile (fromEFGProfile σ) = σ := rfl
+    toEFGProfile (fromEFGProfile σ) = σ := by
+  funext p I
+  simp only [toEFGProfile, fromEFGProfile]
+  rw [PMF.map_comp]
+  conv_lhs => rw [show (S.valEquiv I.1.val) ∘ (S.valEquiv I.1.val).symm = id from
+    funext fun x => (S.valEquiv I.1.val).apply_symm_apply x]
+  exact PMF.map_id _
 
 theorem fromTo {S : MAID.Struct (Fin m) n}
     (pol : MAID.Policy S) :
-    fromEFGProfile (toEFGProfile pol) = pol := rfl
+    fromEFGProfile (toEFGProfile pol) = pol := by
+  funext p I
+  simp only [toEFGProfile, fromEFGProfile]
+  rw [PMF.map_comp]
+  conv_lhs => rw [show (S.valEquiv I.1.val).symm ∘ (S.valEquiv I.1.val) = id from
+    funext fun x => (S.valEquiv I.1.val).symm_apply_apply x]
+  exact PMF.map_id _
 
-/-- Policy spaces are definitionally equivalent under MAID→EFG. -/
+/-- Policy spaces are equivalent under MAID→EFG via `valEquiv`. -/
 noncomputable def policyBehavioralEquiv {S : MAID.Struct (Fin m) n} :
     MAID.Policy S ≃ EFG.BehavioralProfile (maidInfoS S) where
   toFun := toEFGProfile
@@ -175,12 +195,11 @@ private theorem nodeDist_decision {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S)
     subst hp; rfl
   · next a hk' => exact nomatch hk.symm.trans hk'
 
-/-- `nodeDist` at a utility node is a point mass at 0. -/
+/-- `nodeDist` at a utility node is a point mass at `default`. -/
 private theorem nodeDist_utility {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S)
     (pol : MAID.Policy S) (nd : Fin n) (assign : MAID.TAssign S)
     (a : Fin m) (hk : S.kind nd = .utility a) :
-    MAID.nodeDist S sem pol nd assign =
-    PMF.pure ⟨0, by rw [S.utility_domain nd a hk]; exact Nat.one_pos⟩ := by
+    MAID.nodeDist S sem pol nd assign = PMF.pure default := by
   unfold MAID.nodeDist
   split
   · next hk' => exact nomatch hk.symm.trans hk'
@@ -233,6 +252,17 @@ theorem buildTree_evalDist {S : MAID.Struct (Fin m) n}
     · -- chance
       next hk =>
       simp only [EFG.evalDist_chance]
+      -- LHS: (CPD.map equiv).bind (fun v => (next (equiv.symm v)).evalDist _)
+      -- Rewrite (μ.map e).bind f = μ.bind (f ∘ e) and simplify equiv.symm ∘ equiv = id
+      conv_lhs => rw [show (((sem.chanceCPD ⟨nd, hk⟩ (MAID.projCfg assign (S.parents nd))).map
+          (S.valEquiv nd)).bind (fun v => (buildTree S sem pol rest
+            (MAID.updateAssign assign nd ((S.valEquiv nd).symm v))).evalDist
+            (toEFGProfile pol))) =
+          (sem.chanceCPD ⟨nd, hk⟩ (MAID.projCfg assign (S.parents nd))).bind (fun w =>
+            (buildTree S sem pol rest (MAID.updateAssign assign nd w)).evalDist
+            (toEFGProfile pol)) from by
+        rw [PMF.bind_map]; congr 1; funext w
+        simp [Function.comp, Equiv.symm_apply_apply]]
       rw [evalStep_pure, nodeDist_chance sem pol nd assign hk, foldl_evalStep_bind]
       congr 1
       funext v
@@ -240,6 +270,17 @@ theorem buildTree_evalDist {S : MAID.Struct (Fin m) n}
     · -- decision p
       next p hk =>
       simp only [EFG.evalDist_decision]
+      conv_lhs => rw [show ((toEFGProfile pol p
+          ⟨⟨nd, hk⟩, MAID.projCfg assign (S.obsParents nd)⟩).bind (fun v =>
+            (buildTree S sem pol rest
+              (MAID.updateAssign assign nd ((S.valEquiv nd).symm v))).evalDist
+              (toEFGProfile pol))) =
+          (pol p ⟨⟨nd, hk⟩, MAID.projCfg assign (S.obsParents nd)⟩).bind (fun w =>
+            (buildTree S sem pol rest (MAID.updateAssign assign nd w)).evalDist
+            (toEFGProfile pol)) from by
+        simp only [toEFGProfile]
+        rw [PMF.bind_map]; congr 1; funext w
+        simp [Function.comp, Equiv.symm_apply_apply]]
       rw [evalStep_pure, nodeDist_decision sem pol nd assign p hk, foldl_evalStep_bind]
       congr 1
       funext v
@@ -379,35 +420,59 @@ theorem maidToEFGAt_outcomeKernel {S : MAID.Struct (Fin m) n}
   simp only [EFG.EFGGame.toKernelGame, MAID.toKernelGame]
   exact maid_efg_evalDist_at sem pol σ
 
-/-- MAID to EFG as a game bisimulation (distribution-preserving equivalence). -/
+/-- The MAID and EFG KernelGames have the same joint utility distribution. -/
+theorem maidToEFGAt_udist {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
+    (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) =
+      (MAID.toKernelGame S sem).udist pol := by
+  have hBind := congrArg
+    (fun d => d.bind (fun ω => PMF.pure (MAID.utilityOf S sem ω)))
+    (maid_efg_evalDist_at sem pol σ)
+  simpa [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame,
+    MAID.toKernelGame, toEFGProfile] using hBind
+
+/-- Per-player strategy equivalence: `PMF (S.Val I.1.val) ≃ PMF (Fin (S.domainSize I.1.val))`. -/
+private noncomputable def strategyEquivPlayer {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) (σ : MAID.TopologicalOrder S) (p : Fin m) :
+    (MAID.toKernelGame S sem).Strategy p ≃
+    ((maidToEFGAt S sem pol₀ σ).toKernelGame).Strategy p :=
+  Equiv.piCongrRight fun I => {
+    toFun := fun μ => μ.map (S.valEquiv I.1.val)
+    invFun := fun μ => μ.map (S.valEquiv I.1.val).symm
+    left_inv := fun μ => by
+      change PMF.map _ (PMF.map _ μ) = μ
+      rw [PMF.map_comp]
+      conv_lhs => rw [show (S.valEquiv I.1.val).symm ∘ (S.valEquiv I.1.val) = id from
+        funext fun x => (S.valEquiv I.1.val).symm_apply_apply x]
+      exact PMF.map_id μ
+    right_inv := fun μ => by
+      change PMF.map _ (PMF.map _ μ) = μ
+      rw [PMF.map_comp]
+      conv_lhs => rw [show (S.valEquiv I.1.val) ∘ (S.valEquiv I.1.val).symm = id from
+        funext fun x => (S.valEquiv I.1.val).apply_symm_apply x]
+      exact PMF.map_id μ
+  }
+
 noncomputable def maidToEFGAt_bisimulation {S : MAID.Struct (Fin m) n}
     (sem : MAID.Sem S) (pol₀ : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
     GameTheory.KernelGame.Bisimulation (MAID.toKernelGame S sem)
       ((maidToEFGAt S sem pol₀ σ).toKernelGame) where
-  stratEquiv := fun _ => Equiv.refl _
+  stratEquiv := strategyEquivPlayer sem pol₀ σ
   udist_preserved := by
     intro pol
-    have ht :
-        buildTree S sem pol₀ σ.order (MAID.defaultAssign S) =
-          buildTree S sem pol σ.order (MAID.defaultAssign S) :=
-      buildTree_pol_irrel sem pol₀ pol σ.order (MAID.defaultAssign S)
-    have hUd :
-        (maidToEFGAt S sem pol₀ σ).toKernelGame.udist (fun i => pol i) =
-          (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) := by
-      have hUd' :
-          (maidToEFGAt S sem pol₀ σ).toKernelGame.udist (fun i => pol i) =
-            (maidToEFGAt S sem pol σ).toKernelGame.udist (fun i => pol i) := by
-        simp [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame, maidToEFGAt, ht]
-      simpa [toEFGProfile] using hUd'
-    calc
-      (maidToEFGAt S sem pol₀ σ).toKernelGame.udist (fun i => pol i)
-          = (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) := hUd
-      _ = (MAID.toKernelGame S sem).udist pol := by
-            have hBind := congrArg
-              (fun d => d.bind (fun ω => PMF.pure (MAID.utilityOf S sem ω)))
-              (maid_efg_evalDist_at sem pol σ)
-            simpa [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame,
-              MAID.toKernelGame, toEFGProfile] using hBind
+    have hstrat : (fun i => strategyEquivPlayer sem pol₀ σ i (pol i)) =
+        toEFGProfile pol := by
+      funext p I
+      simp only [strategyEquivPlayer, toEFGProfile, Equiv.piCongrRight]
+      rfl
+    rw [hstrat]
+    -- maidToEFGAt is pol-independent, so udist agrees
+    have h1 : (maidToEFGAt S sem pol₀ σ).toKernelGame.udist (toEFGProfile pol) =
+        (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) := by
+      simp [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame, maidToEFGAt,
+        buildTree_pol_irrel sem pol₀ pol σ.order (MAID.defaultAssign S)]
+    rw [h1]
+    exact maidToEFGAt_udist sem pol σ
 
 /-- Forward simulation induced by `maidToEFGAt_bisimulation`. -/
 noncomputable def maidToEFGAt_simulation {S : MAID.Struct (Fin m) n}
@@ -415,13 +480,6 @@ noncomputable def maidToEFGAt_simulation {S : MAID.Struct (Fin m) n}
     GameTheory.KernelGame.Simulation (MAID.toKernelGame S sem)
       ((maidToEFGAt S sem pol₀ σ).toKernelGame) :=
   GameTheory.KernelGame.Bisimulation.toSimulation (maidToEFGAt_bisimulation sem pol₀ σ)
-
-/-- The MAID and EFG KernelGames have the same joint utility distribution. -/
-theorem maidToEFGAt_udist {S : MAID.Struct (Fin m) n}
-    (sem : MAID.Sem S) (pol : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
-    (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) =
-      (MAID.toKernelGame S sem).udist pol := by
-  simpa [toEFGProfile] using (maidToEFGAt_bisimulation sem pol σ).udist_preserved pol
 
 -- ============================================================================
 -- Perfect recall
@@ -450,8 +508,8 @@ private theorem buildTree_obs_stable
     split at hr
     · next hk =>
       obtain ⟨b, _, rfl, hr'⟩ := EFG.ReachBy_chance_inv' hr
-      rw [ih (MAID.updateAssign assign nd b) hr' hnd'_rest,
-          MAID.updateAssign_get_ne assign nd nd' b hnd'_ne]
+      rw [ih (MAID.updateAssign assign nd ((S.valEquiv nd).symm b)) hr' hnd'_rest,
+          MAID.updateAssign_get_ne assign nd nd' ((S.valEquiv nd).symm b) hnd'_ne]
     · next q hk =>
       cases EFG.ReachBy_decision_inv hr with
       | inl heq =>
@@ -460,8 +518,8 @@ private theorem buildTree_obs_stable
         simp [MAID.projCfg]
       | inr hex =>
         obtain ⟨a, _, rfl, hr'⟩ := hex
-        rw [ih (MAID.updateAssign assign nd a) hr' hnd'_rest,
-            MAID.updateAssign_get_ne assign nd nd' a hnd'_ne]
+        rw [ih (MAID.updateAssign assign nd ((S.valEquiv nd).symm a)) hr' hnd'_rest,
+            MAID.updateAssign_get_ne assign nd nd' ((S.valEquiv nd).symm a) hnd'_ne]
     · next a hk =>
       rw [ih (MAID.updateAssign assign nd _) hr hnd'_rest,
           MAID.updateAssign_get_ne assign nd nd' _ hnd'_ne]
@@ -552,7 +610,8 @@ private theorem buildTree_playerHistory_eq
         simp only [EFG.playerHistory]
         -- Propagate hassign through updateAssign
         have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
-            MAID.updateAssign assign₁ nd b₁ nd' = MAID.updateAssign assign₂ nd b₂ nd' := by
+            MAID.updateAssign assign₁ nd ((S.valEquiv nd).symm b₁) nd' =
+            MAID.updateAssign assign₂ nd ((S.valEquiv nd).symm b₂) nd' := by
           intro nd' hnd'
           by_cases hne : nd' = nd
           · subst hne
@@ -629,20 +688,21 @@ private theorem buildTree_playerHistory_eq
               have he₂ := buildTree_obs_stable sem pol rest _ hr₂' hnd_obs hnd_notin
               have ha_eq : a₁ = a₂ := by
                 have := he₁.symm.trans he₂
-                rwa [MAID.updateAssign_get_self, MAID.updateAssign_get_self] at this
+                rw [MAID.updateAssign_get_self, MAID.updateAssign_get_self] at this
+                exact (S.valEquiv nd).symm.injective this
               subst ha_eq
               -- The info set entries match
               have hI_eq : (⟨⟨nd, hk⟩, MAID.projCfg assign₁ (S.obsParents nd)⟩ :
                   MAID.Infoset S q) =
                   ⟨⟨nd, hk⟩, MAID.projCfg assign₂ (S.obsParents nd)⟩ := by
                 congr 1; ext ⟨nd', hnd'⟩; simp only [MAID.projCfg]
-                exact congrArg _ (hobs_eq nd' hnd')
+                exact hobs_eq nd' hnd'
               simp only [maidInfoS_infoset_eq, maidInfoS_act_eq, List.cons.injEq,
                 Sigma.mk.injEq, heq_eq_eq, and_true, true_and, hI_eq]
               -- Propagate hassign through updateAssign
               have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
-                  MAID.updateAssign assign₁ nd a₁ nd' =
-                  MAID.updateAssign assign₂ nd a₁ nd' := by
+                  MAID.updateAssign assign₁ nd ((S.valEquiv nd).symm a₁) nd' =
+                  MAID.updateAssign assign₂ nd ((S.valEquiv nd).symm a₁) nd' := by
                 intro nd' hnd'
                 by_cases hne : nd' = nd
                 · subst hne; simp [MAID.updateAssign]
@@ -654,8 +714,8 @@ private theorem buildTree_playerHistory_eq
               next hp =>
               -- Same hassign propagation
               have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
-                  MAID.updateAssign assign₁ nd a₁ nd' =
-                  MAID.updateAssign assign₂ nd a₂ nd' := by
+                  MAID.updateAssign assign₁ nd ((S.valEquiv nd).symm a₁) nd' =
+                  MAID.updateAssign assign₂ nd ((S.valEquiv nd).symm a₂) nd' := by
                 intro nd' hnd'
                 by_cases hne : nd' = nd
                 · subst hne
@@ -678,10 +738,8 @@ private theorem buildTree_playerHistory_eq
         have haa : a = a' := by injection hk.symm.trans hk'
         subst haa
         have hassign' : ∀ nd' ∈ S.obsParents I.1.val,
-            MAID.updateAssign assign₁ nd
-              ⟨0, by rw [S.utility_domain nd a hk]; exact Nat.one_pos⟩ nd' =
-            MAID.updateAssign assign₂ nd
-              ⟨0, by rw [S.utility_domain nd a hk]; exact Nat.one_pos⟩ nd' := by
+            MAID.updateAssign assign₁ nd (default : S.Val nd) nd' =
+            MAID.updateAssign assign₂ nd (default : S.Val nd) nd' := by
           intro nd' hnd'
           by_cases hne : nd' = nd
           · subst hne; simp [MAID.updateAssign]

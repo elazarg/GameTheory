@@ -53,7 +53,7 @@ noncomputable def frontierList (S : Struct Player n) (cfg : FrontierCfg S) : Lis
 of that player's decision nodes. Only currently enabled decision nodes are read
 by the SOS step relation. -/
 abbrev FrontierAct (S : Struct Player n) (p : Player) :=
-  (d : DecisionNode S p) → Option (Val S d.1)
+  (d : DecisionNode S p) → Option (S.Val d.1)
 
 /-- Restrict a partial assignment to a smaller parent set. -/
 def restrictCfg {S : Struct Player n}
@@ -87,17 +87,13 @@ noncomputable def frontierInfosets (S : Struct Player n) (cfg : FrontierCfg S) (
 
 /-- Default value for deterministic utility nodes on the frontier. -/
 noncomputable def utilityValue
-    (S : Struct Player n) (nd : Fin n) (h : ∃ p, S.kind nd = .utility p) :
-    Val S nd := by
-  let p := Classical.choose h
-  let hp : S.kind nd = .utility p := Classical.choose_spec h
-  refine ⟨0, ?_⟩
-  rw [S.utility_domain nd p hp]
-  exact Nat.one_pos
+    (S : Struct Player n) (nd : Fin n) (_h : ∃ p, S.kind nd = .utility p) :
+    S.Val nd :=
+  default
 
 /-- A simultaneous assignment of values to the current frontier. -/
 abbrev FrontierValues (S : Struct Player n) (cfg : FrontierCfg S) :=
-  (nd : ↥(frontier S cfg)) → Val S nd.1
+  (nd : ↥(frontier S cfg)) → S.Val nd.1
 
 /-- Extend a partial assignment by assigning the whole current frontier. -/
 noncomputable def extendFrontier (S : Struct Player n) (cfg : FrontierCfg S)
@@ -115,7 +111,7 @@ from their CPDs, decision nodes use the player's action (defaulting to 0),
 and utility nodes take their deterministic value. -/
 noncomputable def nodeDistrib (S : Struct Player n) (sem : Sem S)
     (cfg : FrontierCfg S) (acts : ∀ p : Player, Option (FrontierAct S p))
-    (nd : ↥(frontier S cfg)) : PMF (Val S nd.1) :=
+    (nd : ↥(frontier S cfg)) : PMF (S.Val nd.1) :=
   have hEnabled : enabled S cfg nd.1 := by
     have := nd.2; simp only [frontier, Finset.mem_filter, Finset.mem_univ, true_and] at this
     exact this
@@ -127,8 +123,8 @@ noncomputable def nodeDistrib (S : Struct Player n) (sem : Sem S)
       | some α =>
           match α ⟨nd.1, hk⟩ with
           | some v => PMF.pure v
-          | none   => PMF.pure ⟨0, S.dom_pos nd.1⟩
-      | none => PMF.pure ⟨0, S.dom_pos nd.1⟩
+          | none   => PMF.pure default
+      | none => PMF.pure default
   | .utility _ =>
       PMF.pure (utilityValue S nd.1 ⟨_, hk⟩)
 
@@ -137,7 +133,7 @@ it nonzero probability. -/
 def FrontierValueAllowed (S : Struct Player n) (sem : Sem S)
     (cfg : FrontierCfg S)
     (acts : ∀ p : Player, Option (FrontierAct S p))
-    (nd : ↥(frontier S cfg)) (v : Val S nd.1) : Prop :=
+    (nd : ↥(frontier S cfg)) (v : S.Val nd.1) : Prop :=
   nodeDistrib S sem cfg acts nd v ≠ 0
 
 /-- One frontier step in the native MAID SOS semantics. -/
@@ -162,7 +158,7 @@ abbrev ReachBy (S : Struct Player n) (sem : Sem S) :=
 decision nodes use the policy, utility nodes are deterministic. -/
 noncomputable def nodeDistPol (S : Struct Player n) (sem : Sem S)
     (pol : Policy S) (cfg : FrontierCfg S)
-    (nd : ↥(frontier S cfg)) : PMF (Val S nd.1) :=
+    (nd : ↥(frontier S cfg)) : PMF (S.Val nd.1) :=
   have hEnabled : enabled S cfg nd.1 := by
     have := nd.2; simp only [frontier, Finset.mem_filter, Finset.mem_univ, true_and] at this
     exact this
@@ -187,7 +183,7 @@ noncomputable def frontierStepPol (S : Struct Player n) (sem : Sem S)
 def extractTAssign (S : Struct Player n)
     (cfg : FrontierCfg S) : TAssign S :=
   fun nd => if h : nd ∈ cfg.assigned then cfg.values ⟨nd, h⟩
-            else ⟨0, S.dom_pos nd⟩
+            else default
 
 /-- Frontier evaluation: iterate frontier steps, extract terminal assignment.
 `n` steps suffice (each step assigns ≥1 node while unassigned nodes remain). -/

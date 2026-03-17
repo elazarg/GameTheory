@@ -136,7 +136,7 @@ noncomputable abbrev compiledCoreObs (S : Struct Player n) (sem : Sem S) :=
 def CompiledMAIDAct (S : Struct Player n) (p : Player) :
     Option (Infoset S p) → Type
   | none => PUnit
-  | some I => Val S I.1.val
+  | some I => S.Val I.1.val
 
 instance compiledMAIDActFintype (S : Struct Player n) (p : Player)
     (o : Option (Infoset S p)) : Fintype (CompiledMAIDAct S p o) := by
@@ -146,7 +146,7 @@ instance compiledMAIDActNonempty (S : Struct Player n) (p : Player)
     (o : Option (Infoset S p)) : Nonempty (CompiledMAIDAct S p o) := by
   cases o with
   | none => exact ⟨PUnit.unit⟩
-  | some I => exact ⟨⟨0, S.dom_pos I.1.val⟩⟩
+  | some I => exact ⟨(default : S.Val I.1.val)⟩
 
 instance compiledMAIDActSubsingleton_none (S : Struct Player n) (p : Player) :
     Subsingleton (CompiledMAIDAct S p none) :=
@@ -164,7 +164,7 @@ noncomputable def frontierActiveInfoset (S : Struct Player n)
 
 /-- Stochastic frontier step for the perfect-recall-refined compilation.
 
-Each player's action at observation `some I` is a value `Val S I.1.val`
+Each player's action at observation `some I` is a value `S.Val I.1.val`
 for the decision node `I.1`. At observation `none`, the action is `PUnit`
 (trivial). The step converts these back to the `Option (FrontierAct S p)`
 format expected by `frontierStepPMF`. -/
@@ -186,7 +186,7 @@ noncomputable def frontierStepPMF_PR (S : Struct Player n) (sem : Sem S)
 
 Observations are `Option (Infoset S p)` (at most one active infoset under
 perfect recall). Actions are `CompiledMAIDAct S p` — trivial when inactive,
-`Val S d.val` when acting at decision node `d`. This ensures
+`S.Val d.val` when acting at decision node `d`. This ensures
 `NoNontrivialInfoStateRepeat` holds, enabling the B→M direction of Kuhn's
 theorem. -/
 noncomputable def compileObsCoreModelPR (S : Struct Player n) (sem : Sem S) :
@@ -210,7 +210,7 @@ variable (S : Struct Player n) (sem : Sem S)
 
 /-- Lift a native pure strategy to a compiled PR local strategy.
 The compiled PR model uses identity info state, so `InfoState p = Option (Infoset S p)`
-and `currentObs = id`. At `some I`, the action type is `Val S I.1.val`;
+and `currentObs = id`. At `some I`, the action type is `S.Val I.1.val`;
 at `none`, it is `PUnit`. -/
 def liftPureStrategy {p : Player} (σ : PureStrategy S p) :
     (compileObsCoreModelPR S sem).LocalStrategy p :=

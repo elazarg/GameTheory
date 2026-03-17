@@ -294,8 +294,8 @@ private theorem extendFrontier_vals_injective (cfg : FrontierCfg S)
   funext ⟨nd, hnd⟩
   have hna : nd ∉ cfg.assigned := frontier_not_assigned S cfg nd hnd
   -- Use a non-dependent extraction to avoid dependent-type issues
-  let extract : FrontierCfg S → Val S nd :=
-    fun c => if hm : nd ∈ c.assigned then c.values ⟨nd, hm⟩ else ⟨0, S.dom_pos nd⟩
+  let extract : FrontierCfg S → S.Val nd :=
+    fun c => if hm : nd ∈ c.assigned then c.values ⟨nd, hm⟩ else default
   have h1 : extract (extendFrontier S cfg vals₁) = vals₁ ⟨nd, hnd⟩ := by
     simp only [extract, extendFrontier, Finset.mem_union, hnd, or_true, dite_true, hna,
       dite_false]
@@ -355,7 +355,7 @@ private theorem nodeDistrib_rawActs_eq
     (hp : frontierActiveInfoset S cfg p = some I)
     (hfr : I.1.val ∈ frontier S cfg)
     (a : (compiledPRObs S sem).JointActionAt cfg)
-    (v : Val S I.1.val) :
+    (v : S.Val I.1.val) :
     nodeDistrib S sem cfg
       (fun q => match h : frontierActiveInfoset S cfg q with
         | none => none
@@ -517,7 +517,7 @@ theorem compiledPR_stepDist_eq_frontierStepPol
           some (hd ▸ (show CompiledMAIDAct S p (some I) from h ▸ acts p)) else none
   -- The nodeDistrib function for a given player action profile
   set G : (∀ p, CompiledMAIDAct S p (frontierActiveInfoset S cfg p)) →
-      ∀ nd : ↥(frontier S cfg), PMF (Val S nd.1) :=
+      ∀ nd : ↥(frontier S cfg), PMF (S.Val nd.1) :=
     fun acts nd => nodeDistrib S sem cfg (rawActs acts) nd
   -- Step 1: Reduce to inner product equality by factoring out pushforward.
   -- LHS = (jointActionDist).bind (fun a => pushforward (pmfPi (G a)) extend)
@@ -661,8 +661,8 @@ theorem compiledPR_stepDist_eq_frontierStepPol
           (liftBehavioralProfile S sem pol p (O.projectStates p ss)) :=
         hbind_heq.trans (heq_of_eq hbind_eq)
       -- hfinal : LHS ≍ liftBehavioral pol p (projectStates p ss) : PMF (CompiledMAIDAct ...)
-      -- After rw [hprojq], liftBehavioral reduces to pol p I_nd : PMF (Val S nd.1)
-      -- Since LHS : PMF (Val S nd.1) and pol p I_nd : PMF (Val S nd.1), eq_of_heq works
+      -- After rw [hprojq], liftBehavioral reduces to pol p I_nd : PMF (S.Val nd.1)
+      -- Since LHS : PMF (S.Val nd.1) and pol p I_nd : PMF (S.Val nd.1), eq_of_heq works
       exact eq_of_heq (hfinal.trans (by rw [hprojq]; exact HEq.rfl))
     | .utility p =>
       conv_lhs => arg 2; ext a; rw [show H a nd =
@@ -1150,7 +1150,7 @@ private theorem frontierActiveInfoset_transfer
     have hmem₂ := hen₂.2 (S.obs_sub I.1.val hx)
     have h1 := hvals x hx hmem₁ hmem₂
     have h2 := activeInfoset_obsParent_value S cfg₂ p I hact x hx hmem₂
-    exact congrArg Fin.val (h1.trans h2)
+    exact h1.trans h2
   -- Step 3: Show frontierActiveInfoset cfg₁ p = some I
   -- Use the generic filterMap_head? lemma
   unfold frontierActiveInfoset frontierInfosets at hact ⊢

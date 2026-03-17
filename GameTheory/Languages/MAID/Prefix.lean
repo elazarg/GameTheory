@@ -49,18 +49,18 @@ theorem Struct.NaturalOrder.obsParents_lt {S : Struct Player n} (h : S.NaturalOr
 /-- Assignment to a prefix of nodes. `PrefixAssign S k` assigns a value to each
 node in `{0, ..., k-1}`, where `k ≤ n`. -/
 def PrefixAssign (S : Struct Player n) (k : Nat) (hk : k ≤ n) :=
-  (i : Fin k) → Val S (Fin.castLE hk i)
+  (i : Fin k) → S.Val (Fin.castLE hk i)
 
 instance (S : Struct Player n) (k : Nat) (hk : k ≤ n) :
     Fintype (PrefixAssign S k hk) := Pi.instFintype
 
 instance (S : Struct Player n) (k : Nat) (hk : k ≤ n) :
     DecidableEq (PrefixAssign S k hk) :=
-  inferInstanceAs (DecidableEq ((i : Fin k) → Val S (Fin.castLE hk i)))
+  inferInstanceAs (DecidableEq ((i : Fin k) → S.Val (Fin.castLE hk i)))
 
 instance (S : Struct Player n) (k : Nat) (hk : k ≤ n) :
     Nonempty (PrefixAssign S k hk) :=
-  ⟨fun _ => ⟨0, S.dom_pos _⟩⟩
+  ⟨fun _ => default⟩
 
 /-- The empty prefix assignment (`k = 0`). -/
 def PrefixAssign.empty (S : Struct Player n) : PrefixAssign S 0 (Nat.zero_le n) :=
@@ -68,13 +68,13 @@ def PrefixAssign.empty (S : Struct Player n) : PrefixAssign S 0 (Nat.zero_le n) 
 
 /-- Read a value from a prefix assignment at a node known to be in the prefix. -/
 def PrefixAssign.get {S : Struct Player n} {k : Nat} {hk : k ≤ n}
-    (a : PrefixAssign S k hk) (nd : Fin n) (h : nd.val < k) : Val S nd :=
+    (a : PrefixAssign S k hk) (nd : Fin n) (h : nd.val < k) : S.Val nd :=
   have heq : Fin.castLE hk ⟨nd.val, h⟩ = nd := Fin.ext rfl
   heq ▸ a ⟨nd.val, h⟩
 
 /-- Extend a prefix assignment by one value at node `k`. -/
 def PrefixAssign.snoc {S : Struct Player n} {k : Nat} {hk : k < n}
-    (a : PrefixAssign S k (le_of_lt hk)) (v : Val S ⟨k, hk⟩) :
+    (a : PrefixAssign S k (le_of_lt hk)) (v : S.Val ⟨k, hk⟩) :
     PrefixAssign S (k + 1) hk :=
   fun i =>
     if h : i.val < k then
@@ -95,7 +95,7 @@ def PrefixAssign.toTAssign {S : Struct Player n}
 default values (0). -/
 def PrefixAssign.extend {S : Struct Player n} {k : Nat} {hk : k ≤ n}
     (a : PrefixAssign S k hk) : TAssign S :=
-  fun nd => if h : nd.val < k then a.get nd h else ⟨0, S.dom_pos nd⟩
+  fun nd => if h : nd.val < k then a.get nd h else default
 
 theorem PrefixAssign.extend_get {S : Struct Player n} {k : Nat} {hk : k ≤ n}
     (a : PrefixAssign S k hk) (nd : Fin n) (h : nd.val < k) :
@@ -104,7 +104,7 @@ theorem PrefixAssign.extend_get {S : Struct Player n} {k : Nat} {hk : k ≤ n}
 
 theorem PrefixAssign.extend_default {S : Struct Player n} {k : Nat} {hk : k ≤ n}
     (a : PrefixAssign S k hk) (nd : Fin n) (h : ¬(nd.val < k)) :
-    a.extend nd = ⟨0, S.dom_pos nd⟩ := by
+    a.extend nd = default := by
   simp only [extend, h, ↓reduceDIte]
 
 theorem PrefixAssign.extend_agree {S : Struct Player n} {k : Nat} {hk : k ≤ n}
@@ -119,7 +119,7 @@ theorem PrefixAssign.empty_extend {S : Struct Player n} :
   simp [extend, show ¬(nd.val < 0) from by omega, defaultAssign]
 
 theorem PrefixAssign.snoc_extend {S : Struct Player n} {k : Nat} {hk : k < n}
-    (a : PrefixAssign S k (le_of_lt hk)) (v : Val S ⟨k, hk⟩) :
+    (a : PrefixAssign S k (le_of_lt hk)) (v : S.Val ⟨k, hk⟩) :
     (a.snoc v).extend = updateAssign a.extend ⟨k, hk⟩ v := by
   funext nd
   simp only [extend, snoc, get, updateAssign]
@@ -171,11 +171,11 @@ noncomputable def nodeDistPrefix (S : Struct Player n) (sem : Sem S) (pol : Poli
     (a : PrefixAssign S k hk)
     (hparents : ∀ p ∈ S.parents nd, p.val < k)
     (hobs : ∀ p ∈ S.obsParents nd, p.val < k) :
-    PMF (Val S nd) :=
+    PMF (S.Val nd) :=
   match hkind : S.kind nd with
   | .chance => sem.chanceCPD ⟨nd, hkind⟩ (projPrefixCfg a (S.parents nd) hparents)
   | .decision p => pol p ⟨⟨nd, hkind⟩, projPrefixCfg a (S.obsParents nd) hobs⟩
-  | .utility _ => PMF.pure ⟨0, by rw [S.utility_domain nd _ hkind]; exact Nat.one_pos⟩
+  | .utility _ => PMF.pure default
 
 -- ============================================================================
 -- Prefix step and fold
@@ -251,7 +251,7 @@ theorem projPrefixCfg_eq_projCfg {S : Struct Player n} {k : Nat} {hk : k ≤ n}
     projPrefixCfg a ps hps = projCfg ext ps := by
   ext ⟨p, hp⟩
   simp only [projPrefixCfg, PrefixAssign.get, projCfg]
-  exact congr_arg Fin.val (hagree ⟨p.val, hps p hp⟩).symm
+  exact (hagree ⟨p.val, hps p hp⟩).symm
 
 /-- `nodeDistPrefix` agrees with `nodeDist` for any compatible total extension. -/
 theorem nodeDistPrefix_eq_nodeDist {S : Struct Player n}
@@ -270,7 +270,7 @@ theorem nodeDistPrefix_eq_nodeDist {S : Struct Player n}
       match hkind : S.kind nd with
       | .chance => sem.chanceCPD ⟨nd, hkind⟩ (projPrefixCfg a (S.parents nd) hparents)
       | .decision p => pol p ⟨⟨nd, hkind⟩, projPrefixCfg a (S.obsParents nd) hobs⟩
-      | .utility _ => PMF.pure ⟨0, by rw [S.utility_domain nd _ hkind]; exact Nat.one_pos⟩ :=
+      | .utility _ => PMF.pure default :=
     rfl
   rw [this, hproj, hobs_proj]
   rfl
