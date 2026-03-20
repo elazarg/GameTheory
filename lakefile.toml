@@ -3,12 +3,6 @@ version = "0.1.0"
 keywords = ["math", "game-theory"]
 defaultTargets = ["GameTheory"]
 
-[leanOptions]
-pp.unicode.fun = true
-relaxedAutoImplicit = false
-weak.linter.mathlibStandardSet = true
-maxSynthPendingDepth = 3
-
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
@@ -20,11 +14,26 @@ path = "fixed-point-theorems-lean4"
 
 [[lean_lib]]
 name = "GameTheory"
+[lean_lib.leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
 
 [[lean_lib]]
 name = "Math"
 srcDir = "."
+[lean_lib.leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
 
 [[lean_lib]]
 name = "Semantics"
 srcDir = "."
+[lean_lib.leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+maxSynthPendingDepth = 3
