@@ -192,4 +192,106 @@ noncomputable def frontierEval (S : Struct Player n) (sem : Sem S)
   (Nat.iterate (fun d => d.bind (frontierStepPol S sem pol)) n
     (PMF.pure (initialCfg S))).map (extractTAssign S)
 
+-- ============================================================================
+-- Frontier infrastructure lemmas
+-- ============================================================================
+
+/-- An enabled node is not yet assigned. -/
+theorem frontier_not_assigned (S : Struct Player n) (cfg : FrontierCfg S) (nd : Fin n)
+    (h : nd ∈ frontier S cfg) : nd ∉ cfg.assigned := by
+  classical
+  have : enabled S cfg nd := (Finset.mem_filter.mp h).2
+  exact this.1
+
+/-- After `extendFrontier`, the old frontier is assigned. -/
+theorem frontier_sub_extendFrontier_assigned (S : Struct Player n)
+    (cfg : FrontierCfg S) (vals : FrontierValues S cfg) :
+    frontier S cfg ⊆ (extendFrontier S cfg vals).assigned := by
+  intro nd hnd
+  simp only [extendFrontier, Finset.mem_union]
+  exact Or.inr hnd
+
+/-- After `extendFrontier`, old assigned nodes stay assigned. -/
+theorem assigned_sub_extendFrontier (S : Struct Player n)
+    (cfg : FrontierCfg S) (vals : FrontierValues S cfg) :
+    cfg.assigned ⊆ (extendFrontier S cfg vals).assigned := by
+  intro nd hnd
+  simp only [extendFrontier, Finset.mem_union]
+  exact Or.inl hnd
+
+/-- `extendFrontier` is injective on frontier values (for a fixed `cfg`). -/
+theorem extendFrontier_vals_injective (S : Struct Player n) (cfg : FrontierCfg S)
+    (vals₁ vals₂ : FrontierValues S cfg)
+    (h : extendFrontier S cfg vals₁ = extendFrontier S cfg vals₂) :
+    vals₁ = vals₂ := by
+  funext ⟨nd, hnd⟩
+  have hna : nd ∉ cfg.assigned := frontier_not_assigned S cfg nd hnd
+  let extract : FrontierCfg S → S.Val nd :=
+    fun c => if hm : nd ∈ c.assigned then c.values ⟨nd, hm⟩ else default
+  have h1 : extract (extendFrontier S cfg vals₁) = vals₁ ⟨nd, hnd⟩ := by
+    simp only [extract, extendFrontier, Finset.mem_union, hnd, or_true, dite_true, hna,
+      dite_false]
+  have h2 : extract (extendFrontier S cfg vals₂) = vals₂ ⟨nd, hnd⟩ := by
+    simp only [extract, extendFrontier, Finset.mem_union, hnd, or_true, dite_true, hna,
+      dite_false]
+  rw [← h1, ← h2]
+  exact congrArg extract h
+
+/-- `frontier` depends only on `assigned`: equal assigned sets give equal frontiers. -/
+theorem frontier_eq_of_assigned_eq (S : Struct Player n)
+    (cfg₁ cfg₂ : FrontierCfg S)
+    (h : cfg₁.assigned = cfg₂.assigned) :
+    frontier S cfg₁ = frontier S cfg₂ := by
+  simp only [frontier]
+  congr 1; ext nd
+  simp only [enabled]
+  rw [h]
+
+/-- `extendFrontier` preserves values at already-assigned nodes. -/
+theorem extendFrontier_preserves_old (S : Struct Player n)
+    (cfg : FrontierCfg S) (vals : FrontierValues S cfg)
+    (nd : Fin n) (hOld : nd ∈ cfg.assigned)
+    (hNew : nd ∈ (extendFrontier S cfg vals).assigned) :
+    (extendFrontier S cfg vals).values ⟨nd, hNew⟩ = cfg.values ⟨nd, hOld⟩ := by
+  simp only [extendFrontier, hOld, dite_true]
+
+/-- `extendFrontier` sets frontier values at frontier nodes. -/
+theorem extendFrontier_sets_frontier (S : Struct Player n)
+    (cfg : FrontierCfg S) (vals : FrontierValues S cfg)
+    (nd : Fin n) (hFr : nd ∈ frontier S cfg)
+    (hNew : nd ∈ (extendFrontier S cfg vals).assigned) :
+    (extendFrontier S cfg vals).values ⟨nd, hNew⟩ = vals ⟨nd, hFr⟩ := by
+  have hna : nd ∉ cfg.assigned := frontier_not_assigned S cfg nd hFr
+  simp only [extendFrontier, hna, dite_false]
+
+/-- If the assigned set does not cover all nodes, the frontier is nonempty. -/
+theorem frontier_nonempty_of_ne_univ (S : Struct Player n)
+    (cfg : FrontierCfg S) (h : cfg.assigned ≠ Finset.univ) :
+    (frontier S cfg).Nonempty := by
+  classical
+  -- There exists an unassigned node
+  have hne : (Finset.univ \ cfg.assigned).Nonempty := by
+    rw [Finset.sdiff_nonempty]
+    intro hsub
+    exact h (Finset.eq_univ_of_forall (fun x => hsub (Finset.mem_univ x)))
+  -- WellFounded parent relation from acyclicity
+  have wf := S.acyclic.wellFounded
+  -- Find minimal unassigned node under the parent relation
+  set U := (Finset.univ \ cfg.assigned : Finset (Fin n))
+  have hne' : (U : Set (Fin n)).Nonempty := Finset.coe_nonempty.mpr hne
+  set m := wf.min (U : Set (Fin n)) hne'
+  have hm_mem : m ∈ U := wf.min_mem _ hne'
+  have hm_min : ∀ y, y ∈ S.parents m → y ∉ U := by
+    intro y hy hyU
+    exact wf.not_lt_min _ hne' hyU hy
+  -- m is in the frontier: unassigned with all parents assigned
+  have hm_unassigned : m ∉ cfg.assigned := by
+    simp only [U, Finset.mem_sdiff, Finset.mem_univ, true_and] at hm_mem
+    exact hm_mem
+  have hm_parents : S.parents m ⊆ cfg.assigned := by
+    intro p hp
+    by_contra h'
+    exact hm_min p hp (Finset.mem_sdiff.mpr ⟨Finset.mem_univ _, h'⟩)
+  exact ⟨m, Finset.mem_filter.mpr ⟨Finset.mem_univ _, ⟨hm_unassigned, hm_parents⟩⟩⟩
+
 end MAID

@@ -18,14 +18,14 @@ distributions for chance nodes and utility functions for utility nodes.
 The DAG structure (parent sets) is fundamental; the joint distribution over
 assignments is defined as the standard Bayesian network factorization
 `P(x) = ∏ᵢ P(xᵢ | parents(xᵢ))`, which is manifestly order-independent.
-A fold-based evaluation (`evalFold`) is provided for relating to sequential
-constructions (e.g. EFG reduction).
+Fold-based evaluation (`evalStep`, `evalFold`) lives in `FoldEval.lean` for
+use by the EFG bridge; the core module here is order-free.
 
 ## Outline
 - Core: `NodeKind`, `Struct`, typed assignments
 - Topological orders: `TopologicalOrder`
 - Semantics: `Sem`, strategies, `assignProb`, `evalAssignDist`
-- Fold-based evaluation: `evalStep`, `evalFold`, swap lemmas
+- `bayesian_marginal_fold`: Bayesian product invariant (used internally and by `FoldEval`)
 - Game: `KernelGame` bridge
 -/
 
@@ -257,22 +257,8 @@ noncomputable def assignProb (S : Struct Player n) (sem : Sem S) (pol : Policy S
   ∏ nd : Fin n, (nodeDist S sem pol nd a) (a nd)
 
 -- ============================================================================
--- Fold-based evaluation (used in proofs)
+-- Bayesian network marginal — private infrastructure
 -- ============================================================================
-
-/-- One step of the evaluation fold: draw a value at `nd` and update the assignment. -/
-noncomputable def evalStep (S : Struct Player n) (sem : Sem S) (pol : Policy S)
-    (acc : PMF (TAssign S)) (nd : Fin n) : PMF (TAssign S) :=
-  acc.bind (fun a =>
-    (nodeDist S sem pol nd a).bind (fun v =>
-      PMF.pure (updateAssign a nd v)))
-
-/-- Fold-based evaluation along a topological order. This computes the same
-distribution as `assignProb` (see `evalFold_eq_assignProb`) but is easier
-to relate to sequential tree constructions (e.g. EFG reduction). -/
-noncomputable def evalFold (S : Struct Player n) (sem : Sem S) (pol : Policy S)
-    (σ : TopologicalOrder S) : PMF (TAssign S) :=
-  σ.order.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S))
 
 /-- No node is its own parent (from acyclicity). -/
 private theorem Struct.self_not_parent (S : Struct Player n) (nd : Fin n) :
@@ -320,7 +306,10 @@ private theorem foldl_evalStep_invariant {S : Struct Player n}
     (htopo : ∀ (i : Fin L.length), ∀ p ∈ S.parents L[i],
       ∃ j : Fin L.length, j.val < i.val ∧ L[j] = p)
     (a : TAssign S) :
-    (L.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S))) a =
+    (L.foldl (fun acc nd => acc.bind (fun a' =>
+      (nodeDist S sem pol nd a').bind (fun v =>
+        PMF.pure (updateAssign a' nd v))))
+      (PMF.pure (defaultAssign S))) a =
     (L.toFinset.prod fun nd => (nodeDist S sem pol nd a) (a nd)) *
       (if ∀ nd, ¬ nd ∈ L → a nd = (defaultAssign S) nd then 1 else 0) := by
   induction L using List.reverseRecOn generalizing a with
@@ -376,9 +365,12 @@ private theorem foldl_evalStep_invariant {S : Struct Player n}
     -- Rewrite foldl on L ++ [nd]
     rw [List.foldl_concat]
     -- Abbreviate the accumulated PMF
-    set μ := L.foldl (evalStep S sem pol) (PMF.pure (defaultAssign S)) with hμ_def
-    -- Expand evalStep and bind/pure
-    simp only [evalStep, PMF.bind_apply, PMF.pure_apply]
+    set μ := L.foldl (fun acc nd => acc.bind (fun a' =>
+      (nodeDist S sem pol nd a').bind (fun v =>
+        PMF.pure (updateAssign a' nd v))))
+      (PMF.pure (defaultAssign S)) with hμ_def
+    -- Expand bind/pure
+    simp only [PMF.bind_apply, PMF.pure_apply]
     -- Goal: ∑' a_1, μ a_1 * ∑' a_2, (nodeDist nd a_1) a_2 * [a = updateAssign a_1 nd a_2] = RHS
     -- Substitute IH into the outer tsum
     simp_rw [ih_applied]
@@ -532,22 +524,26 @@ private theorem foldl_evalStep_invariant {S : Struct Player n}
     simp only [Finset.prod_singleton]
     ring
 
-/-- The fold-based evaluation computes the Bayesian network product formula. -/
-theorem evalFold_eq_assignProb (S : Struct Player n) (sem : Sem S) (pol : Policy S)
-    (σ : TopologicalOrder S) (a : TAssign S) :
-    (evalFold S sem pol σ) a = assignProb S sem pol a := by
-  unfold evalFold assignProb
-  rw [foldl_evalStep_invariant sem pol σ.order σ.nodup
-    (fun i p hp => σ.respects i p hp) a]
-  have hmem : ∀ nd : Fin n, nd ∈ σ.order := σ.mem
-  have hcond : (∀ nd, ¬ nd ∈ σ.order → a nd = (defaultAssign S) nd) = True :=
-    propext ⟨fun _ => trivial, fun _ nd h => absurd (hmem nd) h⟩
-  simp only [hcond, ite_true, mul_one]
-  congr 1
-  have hfs : σ.order.toFinset = Finset.univ := by
-    apply Finset.eq_univ_of_card
-    rw [List.toFinset_card_of_nodup σ.nodup, σ.length, Fintype.card_fin]
-  rw [hfs]
+/-- Bayesian network marginal: folding node-by-node evaluation along a topological
+prefix `L` gives the product of conditionals, with an indicator for agreement with
+the default assignment off `L`.
+
+This is the core Bayesian network factorization lemma, stated without naming any
+intermediate fold construction. It is used by `assignProb_hasSum` and by
+`FoldEval.evalFold_eq_assignProb`. -/
+theorem bayesian_marginal_fold {S : Struct Player n}
+    (sem : Sem S) (pol : Policy S)
+    (L : List (Fin n)) (hnodup : L.Nodup)
+    (htopo : ∀ (i : Fin L.length), ∀ p ∈ S.parents L[i],
+      ∃ j : Fin L.length, j.val < i.val ∧ L[j] = p)
+    (a : TAssign S) :
+    (L.foldl (fun acc nd => acc.bind (fun a' =>
+      (nodeDist S sem pol nd a').bind (fun v =>
+        PMF.pure (updateAssign a' nd v))))
+      (PMF.pure (defaultAssign S))) a =
+    (L.toFinset.prod fun nd => (nodeDist S sem pol nd a) (a nd)) *
+      (if ∀ nd, ¬ nd ∈ L → a nd = (defaultAssign S) nd then 1 else 0) :=
+  foldl_evalStep_invariant sem pol L hnodup htopo a
 
 -- ============================================================================
 -- Order-free evaluation (the canonical API)
@@ -557,25 +553,35 @@ theorem evalFold_eq_assignProb (S : Struct Player n) (sem : Sem S) (pol : Policy
 private theorem assignProb_hasSum (S : Struct Player n) (sem : Sem S) (pol : Policy S) :
     HasSum (assignProb S sem pol) 1 := by
   have σ := (topologicalOrder_exists S).some
-  have h : assignProb S sem pol = (evalFold S sem pol σ).val :=
-    funext fun a => (evalFold_eq_assignProb S sem pol σ a).symm
-  rw [h]; exact (evalFold S sem pol σ).2
+  -- Construct a PMF by folding node-by-node (local, not an exported definition)
+  let μ : PMF (TAssign S) := σ.order.foldl (fun acc nd => acc.bind (fun a =>
+    (nodeDist S sem pol nd a).bind (fun v => PMF.pure (updateAssign a nd v))))
+    (PMF.pure (defaultAssign S))
+  suffices h : μ.val = assignProb S sem pol from h ▸ μ.2
+  funext a
+  change μ a = assignProb S sem pol a
+  change (σ.order.foldl (fun acc nd => acc.bind (fun a' =>
+    (nodeDist S sem pol nd a').bind (fun v => PMF.pure (updateAssign a' nd v))))
+    (PMF.pure (defaultAssign S))) a = _
+  rw [bayesian_marginal_fold sem pol σ.order σ.nodup
+    (fun i p hp => σ.respects i p hp) a]
+  have hmem : ∀ nd : Fin n, nd ∈ σ.order := σ.mem
+  have hcond : (∀ nd, ¬ nd ∈ σ.order → a nd = (defaultAssign S) nd) = True :=
+    propext ⟨fun _ => trivial, fun _ nd h => absurd (hmem nd) h⟩
+  simp only [hcond, ite_true, mul_one, assignProb]
+  congr 1
+  have hfs : σ.order.toFinset = Finset.univ := by
+    apply Finset.eq_univ_of_card
+    rw [List.toFinset_card_of_nodup σ.nodup, σ.length, Fintype.card_fin]
+  rw [hfs]
 
 /-- Joint distribution over total assignments, defined as the product of
 conditional distributions (Bayesian network factorization).
 
-This is manifestly independent of any topological order.
-See `evalAssignDist_eq_evalFold` for the connection to the sequential
-fold-based computation. -/
+This is manifestly independent of any topological order. -/
 noncomputable def evalAssignDist (S : Struct Player n) (sem : Sem S) (pol : Policy S) :
     PMF (TAssign S) :=
   ⟨assignProb S sem pol, assignProb_hasSum S sem pol⟩
-
-/-- `evalAssignDist` agrees with fold-based evaluation along any topological order. -/
-theorem evalAssignDist_eq_evalFold (S : Struct Player n) (sem : Sem S) (pol : Policy S)
-    (σ : TopologicalOrder S) :
-    evalAssignDist S sem pol = evalFold S sem pol σ := by
-  ext a; exact (evalFold_eq_assignProb S sem pol σ a).symm
 
 /-- Payoff for a player: sum of utility values over that player's utility nodes. -/
 noncomputable def utilityOf (S : Struct Player n) (sem : Sem S)
@@ -653,71 +659,6 @@ theorem updateAssign_comm {S : Struct Player n} (a : TAssign S)
   simp only [updateAssign]
   split <;> split <;> simp_all only [ne_eq]
   · next h₁ h₂ => exact absurd (h₂.symm ▸ h₁) hne
-
-/-- Swapping two adjacent independent nodes in `evalStep` gives the same result. -/
-theorem evalStep_swap {S : Struct Player n} (sem : Sem S) (pol : Policy S)
-    (nd₁ nd₂ : Fin n) (hne : nd₁ ≠ nd₂)
-    (hindep : NoDirectEdge S nd₁ nd₂)
-    (acc : PMF (TAssign S)) :
-    evalStep S sem pol (evalStep S sem pol acc nd₁) nd₂ =
-    evalStep S sem pol (evalStep S sem pol acc nd₂) nd₁ := by
-  simp only [evalStep, PMF.bind_bind, PMF.pure_bind]
-  congr 1; funext a
-  simp_rw [nodeDist_update_irrel sem pol nd₁ nd₂ a _ hindep.1]
-  simp_rw [nodeDist_update_irrel sem pol nd₂ nd₁ a _ hindep.2]
-  simp_rw [updateAssign_comm a nd₁ nd₂ _ _ hne]
-  exact PMF.bind_comm _ _ _
-
-/-- Swap two adjacent elements in a list. -/
-def swapAdj (l : List α) (i : Nat) (hi : i + 1 < l.length) : List α :=
-  let a := l[i]'(by omega)
-  let b := l[i + 1]'hi
-  (l.set i b).set (i + 1) a
-
-/-- General lemma: swapping adjacent elements in a `foldl` is invariant when
-    the fold function commutes on those two elements (for any accumulator). -/
-theorem foldl_swapAdj {α β : Type*} (f : α → β → α) (init : α) (l : List β)
-    (i : Nat) (hi : i + 1 < l.length)
-    (hcomm : ∀ acc, f (f acc (l[i]'(by omega))) (l[i + 1]'hi) =
-                     f (f acc (l[i + 1]'hi)) (l[i]'(by omega))) :
-    l.foldl f init = (swapAdj l i hi).foldl f init := by
-  induction i generalizing l init with
-  | zero =>
-    match l, hi with
-    | a :: b :: rest, _ =>
-      simp only [swapAdj, List.getElem_cons_zero, List.getElem_cons_succ,
-                  List.set_cons_zero, List.set_cons_succ, List.set_cons_zero,
-                  List.foldl_cons]
-      have h := hcomm init
-      simp only [List.getElem_cons_zero, List.getElem_cons_succ] at h
-      rw [h]
-  | succ j ih =>
-    match l, hi with
-    | x :: xs, hi' =>
-      simp only [List.foldl_cons]
-      have hlen : j + 1 < xs.length := by
-        simp only [List.length_cons] at hi'; omega
-      have hswap : swapAdj (x :: xs) (j + 1) hi' = x :: swapAdj xs j hlen := by
-        unfold swapAdj
-        simp [List.getElem_cons_succ, List.set_cons_succ]
-      rw [hswap, List.foldl_cons]
-      exact ih (f init x) xs hlen (fun acc => by
-        have := hcomm acc
-        simp only [List.getElem_cons_succ] at this
-        exact this)
-
-/-- Swapping two adjacent independent nodes in a topological order doesn't change
-the fold-based evaluation. -/
-theorem evalFold_swap_adj {S : Struct Player n} (sem : Sem S) (pol : Policy S)
-    (σ : TopologicalOrder S)
-    (i : Nat) (hi : i + 1 < σ.order.length)
-    (hne : σ.order[i]'(by omega) ≠ σ.order[i + 1]'hi)
-    (hindep : NoDirectEdge S (σ.order[i]'(by omega)) (σ.order[i + 1]'hi)) :
-    evalFold S sem pol σ =
-    (swapAdj σ.order i hi).foldl (evalStep S sem pol) (PMF.pure (defaultAssign S)) := by
-  simp only [evalFold]
-  exact foldl_swapAdj _ _ _ i hi (fun acc =>
-    evalStep_swap sem pol _ _ hne hindep acc)
 
 -- ============================================================================
 -- Pure strategies

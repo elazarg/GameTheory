@@ -1,4 +1,5 @@
 import GameTheory.Languages.MAID.Syntax
+import GameTheory.Languages.MAID.FoldEval
 import GameTheory.Languages.EFG.Syntax
 import GameTheory.Languages.EFG.Kuhn
 import GameTheory.Core.GameSimulation

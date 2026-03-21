@@ -91,32 +91,6 @@ private theorem activeInfoset_mem_frontier
       exact absurd hnd_val.symm (Option.some_ne_none _)
   · simp at hnd_val
 
-/-- An enabled node is not yet assigned. -/
-private theorem frontier_not_assigned
-    (cfg : FrontierCfg S) (nd : Fin n)
-    (h : nd ∈ frontier S cfg) :
-    nd ∉ cfg.assigned := by
-  classical
-  have : enabled S cfg nd := (Finset.mem_filter.mp h).2
-  exact this.1
-
-/-- After `extendFrontier`, the old frontier is assigned. -/
-private theorem frontier_sub_extendFrontier_assigned
-    (cfg : FrontierCfg S)
-    (vals : FrontierValues S cfg) :
-    frontier S cfg ⊆ (extendFrontier S cfg vals).assigned := by
-  intro nd hnd
-  simp only [extendFrontier, Finset.mem_union]
-  exact Or.inr hnd
-
-/-- After `extendFrontier`, old assigned nodes stay assigned. -/
-private theorem assigned_sub_extendFrontier
-    (cfg : FrontierCfg S)
-    (vals : FrontierValues S cfg) :
-    cfg.assigned ⊆ (extendFrontier S cfg vals).assigned := by
-  intro nd hnd
-  simp only [extendFrontier, Finset.mem_union]
-  exact Or.inl hnd
 
 /-- Every state in the support of `frontierStepPMF` has assigned ⊇ old assigned ∪ frontier. -/
 private theorem assigned_union_frontier_sub_step
@@ -285,25 +259,6 @@ section Conditions
 variable (S : Struct Player n) (sem : Sem S)
 
 open Math.PMFProduct Math.ProbabilityMassFunction Math.ParameterizedChain
-
-/-- `extendFrontier` is injective on frontier values (for a fixed `cfg`). -/
-private theorem extendFrontier_vals_injective (cfg : FrontierCfg S)
-    (vals₁ vals₂ : FrontierValues S cfg)
-    (h : extendFrontier S cfg vals₁ = extendFrontier S cfg vals₂) :
-    vals₁ = vals₂ := by
-  funext ⟨nd, hnd⟩
-  have hna : nd ∉ cfg.assigned := frontier_not_assigned S cfg nd hnd
-  -- Use a non-dependent extraction to avoid dependent-type issues
-  let extract : FrontierCfg S → S.Val nd :=
-    fun c => if hm : nd ∈ c.assigned then c.values ⟨nd, hm⟩ else default
-  have h1 : extract (extendFrontier S cfg vals₁) = vals₁ ⟨nd, hnd⟩ := by
-    simp only [extract, extendFrontier, Finset.mem_union, hnd, or_true, dite_true, hna,
-      dite_false]
-  have h2 : extract (extendFrontier S cfg vals₂) = vals₂ ⟨nd, hnd⟩ := by
-    simp only [extract, extendFrontier, Finset.mem_union, hnd, or_true, dite_true, hna,
-      dite_false]
-  rw [← h1, ← h2]
-  exact congrArg extract h
 
 /-- Extract frontier values from pushforward support. If
 `(pushforward (pmfPi (nodeDistrib cfg acts)) (extendFrontier cfg)) t ≠ 0`,
@@ -893,34 +848,6 @@ private theorem assigned_eq_step
   rw [PMF.mem_support_map_iff] at hmem
   obtain ⟨vals, _, rfl⟩ := hmem
   rfl
-
-/-- `frontier` depends only on `assigned`: equal assigned sets give equal frontiers. -/
-private theorem frontier_eq_of_assigned_eq
-    (cfg₁ cfg₂ : FrontierCfg S)
-    (h : cfg₁.assigned = cfg₂.assigned) :
-    MAID.frontier S cfg₁ = MAID.frontier S cfg₂ := by
-  simp only [MAID.frontier]
-  congr 1; ext nd
-  simp only [MAID.enabled]
-  rw [h]
-
-/-- `extendFrontier` preserves values at already-assigned nodes. -/
-private theorem extendFrontier_preserves_old
-    (cfg : FrontierCfg S) (vals : FrontierValues S cfg)
-    (nd : Fin n) (hOld : nd ∈ cfg.assigned)
-    (hNew : nd ∈ (extendFrontier S cfg vals).assigned) :
-    (extendFrontier S cfg vals).values ⟨nd, hNew⟩ = cfg.values ⟨nd, hOld⟩ := by
-  simp only [extendFrontier, hOld, dite_true]
-
-/-- `extendFrontier` sets frontier values at frontier nodes. -/
-private theorem extendFrontier_sets_frontier
-    (cfg : FrontierCfg S) (vals : FrontierValues S cfg)
-    (nd : Fin n) (hFr : nd ∈ MAID.frontier S cfg)
-    (hNew : nd ∈ (extendFrontier S cfg vals).assigned) :
-    (extendFrontier S cfg vals).values ⟨nd, hNew⟩ =
-      vals ⟨nd, hFr⟩ := by
-  have hna : nd ∉ cfg.assigned := frontier_not_assigned S cfg nd hFr
-  simp only [extendFrontier, hna, dite_false]
 
 /-- On a feasible trace, the first element is the initial config. -/
 private theorem pureRun_getElem_zero

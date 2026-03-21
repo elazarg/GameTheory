@@ -1,4 +1,5 @@
 import GameTheory.Languages.MAID.Syntax
+import GameTheory.Languages.MAID.FoldEval
 
 /-!
 # Prefix Semantics for MAID
