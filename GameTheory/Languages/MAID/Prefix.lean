@@ -23,7 +23,7 @@ length 0 to length `n`, so "future nodes are irrelevant" is definitional.
 
 namespace MAID
 
-variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
+variable {Player : Type} [DecidableEq Player] [fp : Fintype Player] {n : Nat}
 
 -- ============================================================================
 -- Natural order
