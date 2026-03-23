@@ -21,7 +21,7 @@ namespace MAID
 
 open GameTheory
 
-variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
+variable {Player : Type} [DecidableEq Player] [fp : Fintype Player] {n : Nat}
 
 /-- A partial MAID assignment together with its assigned-node domain. -/
 structure FrontierCfg (S : Struct Player n) where
