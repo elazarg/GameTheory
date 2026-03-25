@@ -1793,6 +1793,38 @@ theorem pmfPi_bind_pmfPi_of_disjoint_coords
         exact pt k j (h_single k i' hck j (Ne.symm hne))
     exact pmfPi_expect_indep σ _ _ J hf hg
 
+/-- Product of mapped marginals distributes over bind:
+`(pmfPi (fun i => (σ i).map (f i))).bind g = (pmfPi σ).bind (fun s => g (fun i => f i (s i)))`. -/
+theorem pmfPi_map_bind {ι : Type uι} [Fintype ι] [DecidableEq ι]
+    {A : ι → Type uA} [∀ i, Fintype (A i)]
+    {B : ι → Type uβ} [∀ i, Fintype (B i)]
+    (σ : ∀ i, PMF (A i)) (f : ∀ i, A i → B i)
+    {γ : Type uγ} (g : (∀ i, B i) → PMF γ) :
+    (pmfPi (A := B) (fun i => (σ i).map (f i))).bind g =
+      (pmfPi (A := A) σ).bind (fun s => g (fun i => f i (s i))) := by
+  ext c
+  simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
+  -- Expand PMF.map_apply
+  simp only [PMF.map_apply, tsum_fintype, Finset.sum_filter]
+  -- LHS: ∑ t, (∏ i, ∑ a, if f i a = t i then (σ i) a else 0) * g t c
+  -- Use Fintype.prod_sum to distribute ∏ over ∑
+  simp_rw [Fintype.prod_sum]
+  -- LHS: ∑ t, (∑ s, ∏ i, if f i (s i) = t i then (σ i) (s i) else 0) * g t c
+  simp_rw [Finset.sum_mul, Finset.sum_comm (s := Finset.univ (α := ∀ i, B i))]
+  -- LHS: ∑ s, ∑ t, (∏ i, if f i (s i) = t i then (σ i) (s i) else 0) * g t c
+  -- For fixed s, the product is 0 unless t = fun i => f i (s i), so the inner sum collapses
+  congr 1; ext s
+  rw [Finset.sum_eq_single (fun i => f i (s i))]
+  · simp
+  · intro t _ hne
+    have : ∃ i, t i ≠ f i (s i) := by
+      by_contra h; push_neg at h; exact hne (funext h)
+    obtain ⟨i, hi⟩ := this
+    apply mul_eq_zero_of_left
+    apply Finset.prod_eq_zero (Finset.mem_univ i)
+    simp [hi]
+  · simp
+
 end PMFProduct
 end Math
 
