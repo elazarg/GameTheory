@@ -1805,7 +1805,7 @@ theorem pmfPi_map_bind {ι : Type uι} [Fintype ι] [DecidableEq ι]
   ext c
   simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
   -- Expand PMF.map_apply
-  simp only [PMF.map_apply, tsum_fintype, Finset.sum_filter]
+  simp only [PMF.map_apply, tsum_fintype]
   -- LHS: ∑ t, (∏ i, ∑ a, if f i a = t i then (σ i) a else 0) * g t c
   -- Use Fintype.prod_sum to distribute ∏ over ∑
   simp_rw [Fintype.prod_sum]
@@ -1827,4 +1827,3 @@ theorem pmfPi_map_bind {ι : Type uι} [Fintype ι] [DecidableEq ι]
 
 end PMFProduct
 end Math
-
