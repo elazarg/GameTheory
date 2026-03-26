@@ -6,3 +6,4 @@ CLAUDE.md
 .cache/
 .mcp.json
 ephemeral/
+*.log
