@@ -445,7 +445,7 @@ theorem pmfPi_push_coordwise
       simp
     · have ⟨i0, hi0⟩ : ∃ i0, b i0 ≠ g i0 (f i0) := by
         by_contra hall
-        push_neg at hall
+        push Not at hall
         exact h (funext hall)
       simp only [if_neg h, mul_zero]
       exact (Finset.prod_eq_zero (Finset.mem_univ i0) (by rw [if_neg hi0]; ring)).symm
@@ -656,12 +656,12 @@ lemma pushforward_support_fibre
     ∃ a ∈ ({a | proj a = b} : Set α), a ∈ μ.support := by
   rw [PMF.mem_support_iff] at hb
   simp only [pushforward, PMF.bind_apply, PMF.pure_apply] at hb
-  by_contra hall; push_neg at hall
+  by_contra hall; push Not at hall
   apply hb; simp only [tsum_fintype]
   apply Finset.sum_eq_zero; intro a _
   rcases eq_or_ne (proj a) b with h | h
   · have hns := hall a h
-    rw [PMF.mem_support_iff] at hns; push_neg at hns
+    rw [PMF.mem_support_iff] at hns; push Not at hns
     simp [h, hns]
   · simp [Ne.symm h]
 
@@ -1818,7 +1818,7 @@ theorem pmfPi_map_bind {ι : Type uι} [Fintype ι] [DecidableEq ι]
   · simp
   · intro t _ hne
     have : ∃ i, t i ≠ f i (s i) := by
-      by_contra h; push_neg at h; exact hne (funext h)
+      by_contra h; push Not at h; exact hne (funext h)
     obtain ⟨i, hi⟩ := this
     apply mul_eq_zero_of_left
     apply Finset.prod_eq_zero (Finset.mem_univ i)

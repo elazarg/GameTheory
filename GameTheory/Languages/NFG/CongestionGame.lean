@@ -135,7 +135,7 @@ theorem isExactPotential (C : CongestionGame ι) :
       ∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r) =
       ∑ r, ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1) -
       ∑ r, ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1) by
-    show -(∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r)) -
+    change -(∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r)) -
           -(∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r)) =
         -(∑ r, ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1)) -
           -(∑ r, ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1))

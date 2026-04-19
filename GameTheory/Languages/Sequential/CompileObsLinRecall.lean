@@ -643,7 +643,6 @@ theorem liftBehavioralProfile_descendVRD_agree
     simp only [liftBehavioralStrategy]
     -- Goal: β i none = PMF.pure PUnit.unit
     ext ⟨⟩
-    simp only [PMF.pure_apply, ite_true]
     have h : ∑' (a : PUnit), (β i none) a = 1 := (β i none).tsum_coe
     rw [tsum_eq_single PUnit.unit
       (fun x hx => absurd (Subsingleton.elim x PUnit.unit) hx)] at h
