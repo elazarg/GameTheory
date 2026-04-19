@@ -631,7 +631,7 @@ theorem pureRun_eq_const_mul_indicator
       else 0 := by
   split
   · exact pureRun_const_of_psar hPSAR n ‹_› h₀
-  · push_neg at *; exact le_antisymm (le_of_eq ‹_›) (zero_le _)
+  · push Not at *; exact le_antisymm (le_of_eq ‹_›) (zero_le _)
 
 /-- Under PSAR, `pureRun` nonzero is equivalent to matching the witness action
 at every prefix. Stated inductively: nonzero at `p ++ [t]` iff nonzero at `p`
@@ -821,14 +821,14 @@ theorem pureRun_cross_mul_product
     rw [hπ, zero_mul]
     have := mt (pureRun_nonzero_iff_update hPSAR n h₀ π).mpr
       (not_not.mpr hπ)
-    push_neg at this; obtain ⟨i, hi⟩ := this
+    push Not at this; obtain ⟨i, hi⟩ := this
     rw [Finset.prod_eq_zero (Finset.mem_univ i) hi, zero_mul]
   · by_cases hπ' : pureRun (O.pureStep) O.init n π' ss = 0
     · -- π' not consistent: w(π') = 0 and ∏ wᵢ(π'ᵢ) = 0
       rw [hπ', mul_zero, mul_zero]
       have := mt (pureRun_nonzero_iff_update hPSAR n h₀ π').mpr
         (not_not.mpr hπ')
-      push_neg at this; obtain ⟨j, hj⟩ := this
+      push Not at this; obtain ⟨j, hj⟩ := this
       rw [Finset.prod_eq_zero (Finset.mem_univ j) hj, mul_zero, mul_zero]
     · -- Both consistent: all values equal C₀
       have hw := hconst π hπ; have hw' := hconst π' hπ'
@@ -901,10 +901,10 @@ theorem mediator_product_of_product
   · -- Degenerate: reweightPMF falls back to ν = pmfPi μ
     exact ⟨μ, by rw [reweightPMF_degenerate _ _ hmass, hν_def]⟩
   · -- Non-degenerate: use cross-multiplication to factor the reweighted PMF
-    push_neg at hmass; obtain ⟨hCw0, hCwt⟩ := hmass
+    push Not at hmass; obtain ⟨hCw0, hCwt⟩ := hmass
     -- Extract a witness with nonzero mass
     have ⟨π_w, hπw⟩ : ∃ π, ν π * w π ≠ 0 := by
-      by_contra hall; push_neg at hall
+      by_contra hall; push Not at hall
       exact hCw0 (Finset.sum_eq_zero fun a _ => hall a)
     have hν_ne : ν π_w ≠ 0 := left_ne_zero_of_mul hπw
     have hw_ne : w π_w ≠ 0 := right_ne_zero_of_mul hπw
@@ -994,10 +994,10 @@ theorem conditioning_preserves_product
   -- Mass conditions
   by_cases hmass : (∑ π, ν π * w π) = 0 ∨ (∑ π, ν π * w π) = ⊤
   · exact ⟨μ, by rw [reweightPMF_degenerate _ _ hmass]⟩
-  · push_neg at hmass; obtain ⟨hCw0, hCwt⟩ := hmass
+  · push Not at hmass; obtain ⟨hCw0, hCwt⟩ := hmass
     -- Witness with nonzero mass
     have ⟨π_w, hπw⟩ : ∃ π, ν π * w π ≠ 0 := by
-      by_contra hall; push_neg at hall
+      by_contra hall; push Not at hall
       exact hCw0 (Finset.sum_eq_zero fun a _ => hall a)
     have hν_ne : ν π_w ≠ 0 := left_ne_zero_of_mul hπw
     have hw_ne : w π_w ≠ 0 := right_ne_zero_of_mul hπw

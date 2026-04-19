@@ -77,7 +77,7 @@ theorem IsESS.strict_against_other_ess {u : S → S → ℝ} {s t : S}
     u s s > u t s := by
   have hge := hs.1 t
   by_contra h
-  push_neg at h
+  push Not at h
   have heq : u s s = u t s := le_antisymm h hge
   have hstab := hs.2 t heq hne
   have hge2 := ht.1 s

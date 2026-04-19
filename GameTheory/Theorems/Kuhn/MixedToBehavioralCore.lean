@@ -376,13 +376,13 @@ theorem pureRun_cross_mul_product
         pureRun (O.pureStep) O.init n (Function.update π₀ i (π i)) ss ≠ 0 := by
       intro hall
       exact ((pureRun_nonzero_iff_update hFactor n h₀ π).mpr hall) hπ
-    push_neg at hnotall
+    push Not at hnotall
     obtain ⟨i, hi⟩ := hnotall
     rw [Finset.prod_eq_zero (Finset.mem_univ i) hi, zero_mul]
   · by_cases hπ' : pureRun (O.pureStep) O.init n π' ss = 0
     · rw [hπ', mul_zero, mul_zero]
       have := mt (pureRun_nonzero_iff_update hFactor n h₀ π').mpr (not_not.mpr hπ')
-      push_neg at this
+      push Not at this
       obtain ⟨j, hj⟩ := this
       rw [Finset.prod_eq_zero (Finset.mem_univ j) hj, mul_zero, mul_zero]
     · have hw := hconst π hπ
@@ -447,13 +447,13 @@ theorem pureRun_cross_mul_product_of_run
         pureRun (O.pureStep) O.init n (Function.update π₀ i (π i)) ss ≠ 0 := by
       intro hall
       exact ((hRun n π₀ π h₀).mpr hall) hπ
-    push_neg at hnotall
+    push Not at hnotall
     obtain ⟨i, hi⟩ := hnotall
     rw [Finset.prod_eq_zero (Finset.mem_univ i) hi, zero_mul]
   · by_cases hπ' : pureRun (O.pureStep) O.init n π' ss = 0
     · rw [hπ', mul_zero, mul_zero]
       have := mt (hRun n π₀ π' h₀).mpr (not_not.mpr hπ')
-      push_neg at this
+      push Not at this
       obtain ⟨j, hj⟩ := this
       rw [Finset.prod_eq_zero (Finset.mem_univ j) hj, mul_zero, mul_zero]
     · have hw := hconst π hπ
@@ -522,7 +522,7 @@ private theorem multiUpdate_insert {j : ι} {S : Finset ι} (hj : j ∉ S)
     · simp
     · simp [h, show i ≠ j from fun he => hj (he ▸ h)]
   next h =>
-    push_neg at h
+    push Not at h
     simp [h.1, h.2]
 
 omit [Fintype ι] [∀ i o, Fintype (Act i o)] in

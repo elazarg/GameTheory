@@ -47,7 +47,7 @@ theorem pospart_nonneg (x : ℝ) : 0 ≤ pospart x := le_max_right x 0
 theorem pospart_eq_zero_iff (x : ℝ) : pospart x = 0 ↔ x ≤ 0 := by
   simp only [pospart]
   constructor
-  · intro h; by_contra hgt; push_neg at hgt
+  · intro h; by_contra hgt; push Not at hgt
     have : max x 0 = x := max_eq_left (le_of_lt hgt)
     linarith
   · intro h; exact max_eq_right h
@@ -56,7 +56,7 @@ theorem pospart_mul_self (x : ℝ) : x * pospart x = pospart x ^ 2 := by
   simp only [pospart]
   by_cases h : x ≤ 0
   · have : max x 0 = 0 := max_eq_right h; simp [this]
-  · push_neg at h
+  · push Not at h
     have : max x 0 = x := max_eq_left (le_of_lt h)
     simp [this, sq]
 

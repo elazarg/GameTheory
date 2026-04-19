@@ -225,7 +225,7 @@ private theorem extractPlayerAction_lift (σ : PureProfile n V A)
     σ p (r.view p s (sig p)) := by
   unfold extractPlayerAction
   have hk : k < G.rounds.length := by
-    by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+    by_contra h; push Not at h; simp [List.getElem?_eq_none (by omega)] at hr
   split
   case isTrue hk' =>
     have hobs : linObserve G p (.playerTurn k s sig p accActs) =
@@ -270,7 +270,7 @@ private theorem stepPMF_bind_evalFromCfg
         -- RHS: evalLinearized G σ (G.rounds.drop k) s
         -- Since G.rounds[k]? = some r, drop k = r :: drop (k+1)
         have hk : k < G.rounds.length := by
-          by_contra h; push_neg at h
+          by_contra h; push Not at h
           simp [List.getElem?_eq_none (by omega)] at hr
         have hdrop : G.rounds.drop k = r :: G.rounds.drop (k + 1) := by
           rw [← List.cons_getElem_drop_succ (h := hk)]
@@ -284,7 +284,7 @@ private theorem stepPMF_bind_evalFromCfg
         have hempty : ∀ (f g : Fin 0 → Option A), f = g :=
           fun f g => funext fun i => absurd i.pos hn
         have hk : k < G.rounds.length := by
-          by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+          by_contra h; push Not at h; simp [List.getElem?_eq_none (by omega)] at hr
         have hdrop : G.rounds.drop k = r :: G.rounds.drop (k + 1) := by
           rw [← List.cons_getElem_drop_succ (h := hk)]
           congr 1; exact (List.getElem_of_getElem? hr).choose_spec
@@ -348,7 +348,7 @@ private theorem stepPMF_bind_evalFromCfg
         simp only [evalFromCfg, hr]
         have hdrop2 : G.rounds.drop (k + 1) = [] :=
           List.drop_eq_nil_of_le (by
-            by_contra h; push_neg at h
+            by_contra h; push Not at h
             rw [List.getElem?_eq_getElem h] at hr2; exact absurd hr2 (by simp))
         rw [hdrop2, evalLinearized]
     case h_2 hr =>
@@ -412,7 +412,7 @@ private theorem evalFromCfg_of_isDone (G : Protocol n S V A Sig)
     change evalLinearized G σ (G.rounds.drop k) s = PMF.pure s
     have hdr : G.rounds.drop k = [] := by
       apply List.drop_eq_nil_of_le
-      by_contra h; push_neg at h
+      by_contra h; push Not at h
       have : G.rounds[k]? = some G.rounds[k] := List.getElem?_eq_getElem h
       simp [LinConfig.isDone, this] at hd
     rw [hdr, evalLinearized]
@@ -439,7 +439,7 @@ private theorem isDone_of_phase_ge (G : Protocol n S V A Sig)
   | playerTurn k s sig p accActs =>
     simp only [LinConfig.phase] at h
     have hk : k ≥ G.rounds.length := by
-      by_contra hlt; push_neg at hlt
+      by_contra hlt; push Not at hlt
       have : k * (n + 2) + p.val + 1 ≤ k * (n + 2) + n + 1 := by omega
       have : k * (n + 2) + n + 1 < G.rounds.length * (n + 2) := by nlinarith
       omega
@@ -448,7 +448,7 @@ private theorem isDone_of_phase_ge (G : Protocol n S V A Sig)
   | applyTransition k s sig accActs =>
     simp only [LinConfig.phase] at h
     have hk : k ≥ G.rounds.length := by
-      by_contra hlt; push_neg at hlt
+      by_contra hlt; push Not at hlt
       have : k * (n + 2) + n + 1 < G.rounds.length * (n + 2) := by nlinarith
       omega
     simp only [LinConfig.isDone]
@@ -502,7 +502,7 @@ theorem phase_step_progress (G : Protocol n S V A Sig)
     · -- some r branch: split on if 0 < n
       rename_i r hr
       have hk : k < G.rounds.length := by
-        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+        by_contra h; push Not at h; simp [List.getElem?_eq_none (by omega)] at hr
       split at ht
       · -- 0 < n: (r.signal s).map (fun sig => .playerTurn k s sig ⟨0, _⟩ _)
         rename_i hn
@@ -523,7 +523,7 @@ theorem phase_step_progress (G : Protocol n S V A Sig)
     · -- some r branch
       rename_i r hr
       have hk : k < G.rounds.length := by
-        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+        by_contra h; push Not at h; simp [List.getElem?_eq_none (by omega)] at hr
       simp only [advancePlayerTurn] at ht
       have hpn : p.val < n := p.isLt
       split at ht
@@ -542,7 +542,7 @@ theorem phase_step_progress (G : Protocol n S V A Sig)
     · -- some r branch: transition fires
       rename_i r hr
       have hk : k < G.rounds.length := by
-        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+        by_contra h; push Not at h; simp [List.getElem?_eq_none (by omega)] at hr
       split at ht
       · -- G.rounds[k+1]? = some _: signal (k+1)
         obtain rfl := (pure_ne_zero_iff' _ t).mp ht
@@ -774,7 +774,7 @@ private theorem evalFromCfgMixed_of_isDone (G : Protocol n S V A Sig)
     change evalRoundsMixed (G.rounds.drop k) σ s = PMF.pure s
     have hdr : G.rounds.drop k = [] := by
       apply List.drop_eq_nil_of_le
-      by_contra h; push_neg at h
+      by_contra h; push Not at h
       have : G.rounds[k]? = some G.rounds[k] := List.getElem?_eq_getElem h
       simp [LinConfig.isDone, this] at hd
     rw [hdr]; rfl
@@ -902,7 +902,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
     split
     case h_1 r hr =>
       have hk : k < G.rounds.length := by
-        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+        by_contra h; push Not at h; simp [List.getElem?_eq_none (by omega)] at hr
       have hdrop : G.rounds.drop k = r :: G.rounds.drop (k + 1) := by
         rw [← List.cons_getElem_drop_succ (h := hk)]
         congr 1; exact (List.getElem_of_getElem? hr).choose_spec
@@ -935,14 +935,14 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
     case h_2 hr =>
       -- G.rounds[k]? = none: step is pure, all obs are none
       have hlen : G.rounds.length ≤ k := by
-        by_contra h; push_neg at h; rw [List.getElem?_eq_getElem h] at hr; exact absurd hr (by simp)
+        by_contra h; push Not at h; rw [List.getElem?_eq_getElem h] at hr; exact absurd hr (by simp)
       have hall : ∀ i, obs i = none := fun i => by
         rw [hobs]; simp [linObserve, show ¬(k < G.rounds.length) from by omega]
       simp only [PMF.pure_bind, evalFromCfgMixed, hr]
       simp only [PMF.bind_const]
     case h_1 r hr =>
       have hk : k < G.rounds.length := by
-        by_contra h; push_neg at h; simp [List.getElem?_eq_none (by omega)] at hr
+        by_contra h; push Not at h; simp [List.getElem?_eq_none (by omega)] at hr
       -- Observations: player p sees some, others see none
       have hobs_p : obs p = some (⟨k, hk⟩, r.view p s (sig p)) := by
         rw [hobs]; simp [linObserve, hk, (List.getElem_of_getElem? hr).choose_spec]
@@ -1071,7 +1071,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
         simp only [PMF.pure_bind, evalFromCfgMixed, hr]
         have hdrop2 : G.rounds.drop (k + 1) = [] :=
           List.drop_eq_nil_of_le (by
-            by_contra h; push_neg at h
+            by_contra h; push Not at h
             rw [List.getElem?_eq_getElem h] at hr2; exact absurd hr2 (by simp))
         rw [hdrop2, evalRoundsMixed]; simp
     case h_2 hr =>

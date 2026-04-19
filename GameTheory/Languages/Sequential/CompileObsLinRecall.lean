@@ -189,7 +189,7 @@ private theorem phase_eq_index
       rename_i hempty
       simp only [LinConfig.phase]
       have : G.rounds.length = 0 := by
-        by_contra hne; push_neg at hne
+        by_contra hne; push Not at hne
         have : G.rounds[0]? ≠ none := by
           rw [ne_eq, List.getElem?_eq_none_iff]; omega
         exact this hempty
@@ -375,7 +375,7 @@ private theorem round_lt_of_earlier_step
   have hp_j := phase_of_linObserve_some G _ i r v hobs
   have hp_last := phase_of_linObserve_some G _ i kLast vLast hobsLast
   rw [hp_j, hp_last] at hphase_lt
-  by_contra h; push_neg at h
+  by_contra h; push Not at h
   exact Nat.not_lt.mpr (Nat.add_le_add_right (Nat.add_le_add_right
     (Nat.mul_le_mul_right _ h) _) _) hphase_lt
 

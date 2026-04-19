@@ -77,14 +77,14 @@ theorem IsOrdinalPotential.isNash_iff_local_maximizer
   constructor
   · intro hN who s'
     by_contra h
-    push_neg at h
+    push Not at h
     have : G.eu (Function.update σ who s') who > G.eu σ who := by
       exact (hΦ who σ s').mpr (by simpa [gt_iff_lt] using h)
     have := hN who s'
     linarith
   · intro hmax who s'
     by_contra h
-    push_neg at h
+    push Not at h
     have : Φ (Function.update σ who s') > Φ σ := by
       exact (hΦ who σ s').mp (by simpa [gt_iff_lt] using h)
     have := hmax who s'

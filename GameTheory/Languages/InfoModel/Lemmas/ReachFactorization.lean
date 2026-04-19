@@ -66,7 +66,7 @@ private theorem pushforward_append_nonzero_exists
   classical
   rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply] at hpush
   by_contra hnone
-  push_neg at hnone
+  push Not at hnone
   apply hpush
   rw [ENNReal.tsum_eq_zero]
   intro t
@@ -143,7 +143,7 @@ private theorem exists_prev_of_runDistPure_succ_ne_zero
     InfoModel.runDist_succ (I := I) (D := D) n (pureToBehavioral I π),
     PMF.bind_apply] at hss
   by_contra hnone
-  push_neg at hnone
+  push Not at hnone
   apply hss
   rw [ENNReal.tsum_eq_zero]
   intro ssPrev

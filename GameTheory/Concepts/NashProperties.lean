@@ -47,7 +47,7 @@ theorem isNash_iff_no_improving (G : KernelGame ι) {σ : Profile G} :
     linarith
   · intro h who s'
     by_contra hlt
-    push_neg at hlt
+    push Not at hlt
     exact h ⟨who, s', hlt⟩
 
 open Classical in

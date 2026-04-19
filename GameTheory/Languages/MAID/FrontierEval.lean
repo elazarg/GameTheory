@@ -331,7 +331,7 @@ theorem frontierStepPol_apply
   split
   · next h => subst h; simp
   · next h =>
-    push_neg at h
+    push Not at h
     rw [if_neg (Ne.symm h), mul_zero]
 
 -- ============================================================================
@@ -450,7 +450,7 @@ theorem iterDist_assigned (S : Struct Player n) (sem : Sem S)
     rw [PMF.bind_apply] at h
     -- Some term in the tsum is nonzero
     have hne := mt ENNReal.tsum_eq_zero.mpr h
-    push_neg at hne
+    push Not at hne
     obtain ⟨cfg', hcfg'⟩ := hne
     have h1 : iterDist S sem pol k cfg' ≠ 0 :=
       left_ne_zero_of_mul hcfg'
@@ -460,7 +460,7 @@ theorem iterDist_assigned (S : Struct Player n) (sem : Sem S)
     -- frontierStepPol cfg' cfg ≠ 0 → ∃ vals, cfg = extend
     rw [frontierStepPol_apply] at h2
     have hne2 := mt ENNReal.tsum_eq_zero.mpr h2
-    push_neg at hne2
+    push Not at hne2
     obtain ⟨vals, hvals⟩ := hne2
     split_ifs at hvals with heq
     · rw [← heq]
@@ -525,7 +525,7 @@ theorem iterDist_at_cfgOfAssign (S : Struct Player n) (sem : Sem S)
         -- b ≠ a on some node in Lk
         have hb_ne : ∃ nd ∈ Lk, b nd ≠ a nd := by
           by_contra hall
-          push_neg at hall
+          push Not at hall
           have : cfg' = cfg_k := by
             rw [hcfg'eq]; unfold cfg_k cfgOfAssign; congr 1
             funext ⟨nd, hnd⟩; exact hall nd hnd

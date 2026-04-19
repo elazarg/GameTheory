@@ -354,7 +354,7 @@ private theorem foldl_evalStep_invariant {S : Struct Player n}
       have hp' : p ∈ S.parents (L ++ [nd])[idx] := hi_get.symm ▸ hp
       obtain ⟨j, hj_lt, hj_eq⟩ := htopo idx p hp'
       have hj_lt_L : j.val < L.length := by
-        by_contra hc; push_neg at hc
+        by_contra hc; push Not at hc
         have hj_len : j.val = L.length := by have := j.isLt; simp at this; omega
         rw [getAppNd' j hj_len] at hj_eq; subst hj_eq
         have hi_lt := i.isLt; change j.val < i.val at hj_lt; omega
@@ -489,7 +489,7 @@ private theorem foldl_evalStep_invariant {S : Struct Player n}
       have hj_in_L : j.val < L.length := by
         -- i < L.length (since (L ++ [nd])[i] = nd' ∈ L, and if i ≥ L.length then nd' = nd ∉ L)
         have hi_lt_L : i < L.length := by
-          by_contra hc; push_neg at hc
+          by_contra hc; push Not at hc
           have hi_eq : i = L.length := by simp at hi_mem; omega
           have h_eq_nd := getAppNd' ⟨i, hi_mem⟩ hi_eq
           rw [← hnd'_eq] at hnd'; exact hnd_notin (h_eq_nd ▸ hnd')

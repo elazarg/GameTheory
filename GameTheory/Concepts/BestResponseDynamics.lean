@@ -42,7 +42,7 @@ theorem no_improving_deviation_iff_nash {σ : Profile G} :
   constructor
   · intro hemp who s'
     by_contra h
-    push_neg at h
+    push Not at h
     exact (hemp.false ⟨who, s', h⟩).elim
   · intro hN
     constructor

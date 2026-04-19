@@ -93,7 +93,7 @@ theorem jointActionDist_pureToBehavioral
     simp [ObsModelCore.jointActionDist, ObsModelCore.pureToBehavioral, Math.PMFProduct.pmfPi_apply]
   · have ⟨i, hi⟩ : ∃ i, a i ≠ π i (O.projectStates i ss) := by
       by_contra hall
-      push_neg at hall
+      push Not at hall
       exact h (funext hall)
     have hprod :
         (∏ x, if a x = π x (O.projectStates x ss) then (1 : ENNReal) else 0) = 0 := by
@@ -264,7 +264,7 @@ theorem marginal_stepDist
     · rw [if_neg h]
       have ⟨i, hi⟩ : ∃ i, π i (O.projectStates i ss) ≠ a i := by
         by_contra hall
-        push_neg at hall
+        push Not at hall
         exact h (funext hall)
       exact (Finset.prod_eq_zero (Finset.mem_univ i) (by rw [if_neg hi])).symm
   simp_rw [hfactor]
