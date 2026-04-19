@@ -92,13 +92,7 @@ theorem revelation_principle (M : GeneralMechanism ι)
   -- This follows from BNE with the deviation σ'_who = fun _ => σ_who(θ')
   have h := hBNE who (fun _ => σ who θ')
   simp only [payoff] at h
-  convert h using 2
-  ext θ
-  congr 1
-  funext i
-  simpa using
-    (Function.apply_update
-      (f := fun j => σ j) (g := θ) (i := who) (v := θ') (j := i))
+  simpa only [Function.apply_update] using h
 
 end GeneralMechanism
 

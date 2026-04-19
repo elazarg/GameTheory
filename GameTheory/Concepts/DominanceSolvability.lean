@@ -56,8 +56,7 @@ theorem IsDominanceSolvable.nash_unique
   have hbr : G.IsBestResponse i σ (σ i) := by
     intro s'
     have h := hN i s'
-    convert h using 2
-    exact Function.update_eq_self i σ
+    simpa [Function.update_eq_self] using h
   exact hdom.unique_best_response σ hbr
 
 /-- Combining: the dominant profile is the unique Nash equilibrium. -/
