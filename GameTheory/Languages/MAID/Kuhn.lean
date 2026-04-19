@@ -631,7 +631,7 @@ theorem compiledPR_stepDist_eq_frontierStepPol
   · -- h_const: chance/utility nodes ignore all player coordinates
     -- coord nd = none means S.kind nd ≠ .decision _
     -- nodeDistrib at chance/utility doesn't use rawActs at all
-    intro s x; dsimp only []
+    intro s x
     simp only [H, G, nodeDistrib]
     split
     · rfl  -- chance: uses chanceCPD, independent of acts
@@ -641,7 +641,7 @@ theorem compiledPR_stepDist_eq_frontierStepPol
     · rfl  -- utility: uses PMF.pure utilityValue, independent of acts
   · -- h_single: decision node of player i, H a nd depends only on a i
     classical
-    intro s x; dsimp only []
+    intro s x
     have hk : S.kind nd.1 = .decision i := by
       simp only [coord] at hc
       match hk : S.kind nd.1, hc with
@@ -1448,7 +1448,6 @@ private theorem decision_value_eq_profile_action
         π p ((compiledPRObs S sem).projectStates p (ss.take (j + 1))) := by
     simpa using congrFun ha_def p
   rw [ha_p]
-  simp only []
   apply eq_of_heq
   exact cast_dep_apply_trans_heq (π p) hp
 
