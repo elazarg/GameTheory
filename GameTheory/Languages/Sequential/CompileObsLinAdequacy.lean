@@ -276,7 +276,7 @@ private theorem stepPMF_bind_evalFromCfg
           rw [← List.cons_getElem_drop_succ (h := hk)]
           congr 1; exact (List.getElem_of_getElem? hr).choose_spec
         rw [hdrop, evalLinearized]
-        congr 1; ext sig; simp only []
+        congr 1; ext sig
         rw [resolveActions_eq]
       case isFalse hn =>
         have h0 : n = 0 := by omega
