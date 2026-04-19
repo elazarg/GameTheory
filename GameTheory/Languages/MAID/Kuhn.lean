@@ -650,18 +650,15 @@ theorem compiledPR_stepDist_eq_frontierStepPol
       | .decision p, h => exact congrArg NodeKind.decision (Option.some_injective _ h)
     simp only [H, G]
     apply nodeDistrib_congr_decision S sem cfg _ _ nd i hk
-    -- rawActs (castJointAction (update s j x)) i = rawActs (castJointAction s) i
-    have hcast_eq : O.castJointAction ss (Function.update s j x) i =
-        O.castJointAction ss s i := by
-      simp only [ObsModelCore.castJointAction]
-      congr 1; simp [Function.update, Ne.symm hne]
     simp only [rawActs]
     split
     · rfl
     · congr 1; funext d
       split
-      · congr 1; congr 1; congr 1; convert hcast_eq using 2; exact
-          funext fun q => by simp [Function.update]
+      · congr 1; congr 1; congr 1
+        simp only [ObsModelCore.castJointAction]
+        congr 1
+        simp [Function.update, Ne.symm hne]
       · rfl
   · -- h_inj: at most one decision node per player (PerfectRecall)
     -- coord k = some i means S.kind k = .decision i
@@ -804,24 +801,44 @@ theorem kuhn_behavioral_to_mixed
       ((compiledPRObs S sem).behavioralToMixed β)
       (fun p => descendPureStrategy S sem (p := p))).symm
   rw [hpush]
-  simp only [pushforward, PMF.bind_bind, PMF.pure_bind]
-  change ((compiledPRObs S sem).behavioralToMixedJoint β).bind _ = _
-  congr 1; funext π'
-  -- Show: (runDistPure n π').bind extract = frontierEval (pureToPolicy (descendPureProfile π'))
-  rw [← compiledPR_runDistPure_eq_frontierEval S sem hPR (descendPureProfile S sem π')]
-  -- Need: runDistPure n π' = runDistPure n (liftPureProfile (descendPureProfile π'))
-  congr 1
-  simp only [ObsModelCore.runDistPure]
-  apply ObsModelCore.runDist_congr
-  intro m p ss _hss
-  -- lift ∘ descend agrees with original on each info state:
-  -- some I → rfl, none → PUnit.ext
-  unfold ObsModelCore.pureToBehavioral
-  congr 1
-  unfold liftPureProfile liftPureStrategy descendPureProfile descendPureStrategy
-  cases (compiledPRObs S sem).projectStates p ss with
-  | none => exact PUnit.ext _ _
-  | some I => rfl
+  unfold pushforward
+  trans (pmfPi (ObsModelCore.behavioralToMixed β)).bind
+      (fun π' => frontierEval S sem (pureToPolicy (descendPureProfile S sem π')))
+  · unfold ObsModelCore.behavioralToMixedJoint
+    apply bind_congr_on_support
+    intro π' _hπ'
+    -- Show: (runDistPure n π').bind extract = frontierEval (pureToPolicy (descendPureProfile π'))
+    rw [← compiledPR_runDistPure_eq_frontierEval S sem hPR (descendPureProfile S sem π')]
+    -- Need: runDistPure n π' = runDistPure n (liftPureProfile (descendPureProfile π'))
+    congr 1
+    simp only [ObsModelCore.runDistPure]
+    apply ObsModelCore.runDist_congr
+    intro m p ss _hss
+    -- lift ∘ descend agrees with original on each info state:
+    -- some I → rfl, none → PUnit.ext
+    unfold ObsModelCore.pureToBehavioral
+    congr 1
+    unfold liftPureProfile liftPureStrategy descendPureProfile descendPureStrategy
+    cases (compiledPRObs S sem).projectStates p ss with
+    | none => exact PUnit.ext _ _
+    | some I => rfl
+  · calc
+      (pmfPi (ObsModelCore.behavioralToMixed β)).bind
+          (fun π' => frontierEval S sem (pureToPolicy (descendPureProfile S sem π'))) =
+        (pmfPi (ObsModelCore.behavioralToMixed β)).bind
+          (fun a => (PMF.pure (descendPureProfile S sem a)).bind
+            (fun π => frontierEval S sem (pureToPolicy π))) := by
+          congr 1
+          funext a
+          exact (PMF.pure_bind (descendPureProfile S sem a)
+            (fun π => frontierEval S sem (pureToPolicy π))).symm
+      _ = ((pmfPi (ObsModelCore.behavioralToMixed β)).bind
+          (fun a => PMF.pure (descendPureProfile S sem a))).bind
+            (fun π => frontierEval S sem (pureToPolicy π)) := by
+          exact (PMF.bind_bind
+            (pmfPi (ObsModelCore.behavioralToMixed β))
+            (fun a => PMF.pure (descendPureProfile S sem a))
+            (fun π => frontierEval S sem (pureToPolicy π))).symm
 
 end NativeBToM
 
@@ -1426,12 +1443,18 @@ private theorem decision_value_eq_profile_action
   --          = (cos.trans hp) ▸ π p (projectStates p ss')    (by transport_trans')
   --          = π p (some I)                                   (by cast_dep_apply')
   change (show CompiledMAIDAct S p (some I) from hp ▸ a p) = π p (some I)
-  rw [ha_def]
+  have ha_p : a p =
+      ((compiledPRObs S sem).currentObs_projectStates p (ss.take (j + 1))) ▸
+        π p ((compiledPRObs S sem).projectStates p (ss.take (j + 1))) := by
+    simpa using congrFun ha_def p
+  rw [ha_p]
   simp only []
-  rw [transport_trans'
-    ((compiledPRObs S sem).currentObs_projectStates p (ss.take (j + 1))) hp
-    (π p ((compiledPRObs S sem).projectStates p (ss.take (j + 1))))]
-  exact cast_dep_apply' (π p) _
+  apply eq_of_heq
+  rw [eqRec_heq_iff_heq]
+  exact (eqRec_heq _ (π p
+      ((compiledPRObs S sem).projectStates p (ss.take (j + 1))))).trans
+    (eqRec_heq_iff_heq.mp (heq_of_eq (cast_dep_apply' (π p)
+      (((compiledPRObs S sem).currentObs_projectStates p (ss.take (j + 1))).trans hp))))
 
 /-- Transfer of intermediate observation agreement between two feasible traces
 with the same final observation, under PerfectRecall.
@@ -1550,7 +1573,7 @@ private theorem obs_agree_transfer
     -- But I_k is in the frontier at step j of ss₂, contradiction.
     have hj₁' : j + 1 < ss₁.length := by
       by_contra hle
-      push_neg at hle
+      push Not at hle
       -- ss₁.length = n₁ + 1, so n₁ + 1 ≤ j + 1, i.e., n₁ ≤ j
       have hn₁_le_j : n₁ ≤ j := by omega
       -- At step n₁ of both traces, assigned sets match
@@ -1744,11 +1767,10 @@ theorem kuhn_mixed_to_behavioral
         -- All PMF over PUnit are equal (only PMF.pure PUnit.unit)
         change β p none = PMF.pure PUnit.unit
         ext ⟨⟩
-        simp only [PMF.pure_apply, if_true]
-        have := PMF.tsum_coe (β p none)
-        rw [tsum_fintype, show Finset.univ = ({PUnit.unit} : Finset PUnit)
-          from rfl] at this
-        simpa using this
+        change (β p none : PMF PUnit) PUnit.unit =
+          (PMF.pure PUnit.unit : PMF PUnit) PUnit.unit
+        have := PMF.tsum_coe (show PMF PUnit from β p none)
+        simpa [PMF.pure_apply] using this
     | some I => rfl
   rw [hcongr, hβ, PMF.bind_bind]
   -- 6. RHS: connect frontierEval with (pmfPi μ').bind ...
