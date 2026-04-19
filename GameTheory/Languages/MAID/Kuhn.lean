@@ -458,8 +458,6 @@ theorem compiledPR_stepDist_eq_frontierStepPol
       frontierStepPol S sem pol ((compiledPRObs S sem).lastState ss) := by
   set O := compiledPRObs S sem
   set cfg := O.lastState ss
-  set O := compiledPRObs S sem
-  set cfg := O.lastState ss
   -- For identity info state: projectStates p ss = frontierActiveInfoset S cfg p
   have hproj : ∀ p, O.projectStates p ss = frontierActiveInfoset S cfg p :=
     fun p => O.currentObs_projectStates p ss
@@ -1389,12 +1387,6 @@ private theorem cast_dep_apply' {α : Type} {P : α → Type}
     (f : ∀ x, P x) {a b : α} (h : a = b) :
     h ▸ f a = f b := by cases h; rfl
 
-/-- Double transport composes: `h₂ ▸ (h₁ ▸ x) = (h₁.trans h₂) ▸ x`. -/
-private theorem transport_trans' {α : Type} {P : α → Type} {a b c : α}
-    (h₁ : a = b) (h₂ : b = c) (x : P a) :
-    h₂ ▸ (h₁ ▸ x) = (h₁.trans h₂) ▸ x := by
-  cases h₁; cases h₂; rfl
-
 /-- On a feasible trace, the value assigned to a decision node at step `j+1`
 equals the profile's action at the corresponding infoset. -/
 private theorem decision_value_eq_profile_action
@@ -1439,9 +1431,8 @@ private theorem decision_value_eq_profile_action
   rw [hval_eq]
   -- Step 7: hp ▸ a p = π p (some I) using cast_dep_apply
   -- a p = currentObs_projectStates p ss' ▸ π p (projectStates p ss')
-  -- hp ▸ a p = hp ▸ (cos ▸ π p (projectStates p ss'))
-  --          = (cos.trans hp) ▸ π p (projectStates p ss')    (by transport_trans')
-  --          = π p (some I)                                   (by cast_dep_apply')
+  -- The final HEq proof avoids matching on the hidden proof term inside the
+  -- inner transport, which is brittle across Lean versions.
   change (show CompiledMAIDAct S p (some I) from hp ▸ a p) = π p (some I)
   have ha_p : a p =
       ((compiledPRObs S sem).currentObs_projectStates p (ss.take (j + 1))) ▸
