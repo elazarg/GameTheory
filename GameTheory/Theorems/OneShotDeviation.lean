@@ -143,7 +143,8 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
         have hb := hNnext' who s'
         simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] using hb
       simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-        evalDist_chance, expect_bind] using
+        evalDist_chance, expect_bind, GameForm.correlatedOutcome_pure,
+        KernelGame.toGameForm] using
         (Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
           (fun b => expect ((next b).evalDist
             (pureToBehavioral (Function.update σ who s')))
@@ -228,7 +229,8 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
               (fun a => (next a).evalDist (pureToBehavioral σ)))
               (fun ω => G.utility ω p) := by
           simpa [hUpd] using hMain
-        simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree, hwho]
+        simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree, hwho,
+          GameForm.correlatedOutcome_pure, KernelGame.toGameForm]
           using hMain'
       · -- Deviator is NOT the deciding player
         have hNashOpt :
@@ -239,7 +241,8 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
         have hOpt := hNashOpt who s'
         have hpw : p ≠ who := Ne.symm hwho
         simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-          evalDist_decision, pureToBehavioral, Function.update, hpw] using hOpt
+          evalDist_decision, pureToBehavioral, Function.update, hpw,
+          GameForm.correlatedOutcome_pure, KernelGame.toGameForm] using hOpt
     | @cons a _ _ _ _ hstep hr' =>
       cases a with
       | chance k b =>

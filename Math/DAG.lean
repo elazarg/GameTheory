@@ -189,7 +189,7 @@ theorem topologicalOrder_of_acyclic {n : Nat} {preds : Fin n → Finset (Fin n)}
       set m := wf.min (S : Set (Fin n)) hne
       have hm_mem : m ∈ S := wf.min_mem (S : Set (Fin n)) hne
       have hm_min : ∀ y ∈ S, y ∉ preds m :=
-        fun y hy h => wf.not_lt_min (S : Set (Fin n)) hne hy h
+        fun y hy h => wf.not_lt_min (S : Set (Fin n)) hy h
       set S' := S.erase m
       have hS'_lt : S' ⊂ S := Finset.erase_ssubset hm_mem
       obtain ⟨l', hl'_nd, hl'_eq, hl'_resp⟩ := ih S' hS'_lt

@@ -51,7 +51,7 @@ theorem mixedExtension_eu_update (G : KernelGame ι)
     G.mixedExtension.eu (Function.update σ who τ) who =
       expect τ (fun a =>
         G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) := by
-  simp only [mixedExtension_eu]
+  simp only [mixedExtension_eu, KernelGame.mixedExtension_Strategy]
   have hprod : pmfPi (Function.update σ who τ) =
       τ.bind (fun a => pmfPi (Function.update σ who (PMF.pure a))) := by
     ext s

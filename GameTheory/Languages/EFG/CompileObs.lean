@@ -327,14 +327,14 @@ noncomputable def descendBehavioralProfile (t : GameTree S Outcome) :
     descendPureProfile t (liftPureProfile t π) = π := by
   funext i I
   unfold descendPureProfile
-  simp
+  rfl
 
 @[simp] theorem descendBehavioralProfile_liftBehavioralProfile
     (t : GameTree S Outcome) (σ : BehavioralProfile S) :
     descendBehavioralProfile t (liftBehavioralProfile t σ) = σ := by
   funext i I
   unfold descendBehavioralProfile
-  simp
+  rfl
 
 /-- The canonical bundled EFG compilation to ObsModel together with the
 lift/descent maps used for bridge constructions. -/

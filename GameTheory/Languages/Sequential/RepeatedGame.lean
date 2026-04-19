@@ -115,7 +115,7 @@ theorem constStrategy_isNash (R : RepeatedGame ι) (a : ∀ i, R.Act i)
       R.stageUtil a who ≥ R.stageUtil (Function.update a who a') who) :
     R.toKernelGame.IsNash (R.constStrategy a) := by
   intro who s'
-  simp only [toKernelGame, KernelGame.eu_ofEU, totalPayoff]
+  simp only [toKernelGame, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy, totalPayoff]
   apply Finset.sum_le_sum
   intro t _
   rw [R.play_constStrategy a t]

@@ -142,21 +142,17 @@ theorem toFrom {S : MAID.Struct (Fin m) n}
     (σ : EFG.BehavioralProfile (maidInfoS S)) :
     toEFGProfile (fromEFGProfile σ) = σ := by
   funext p I
-  simp only [toEFGProfile, fromEFGProfile]
-  rw [PMF.map_comp]
-  conv_lhs => rw [show (S.valEquiv I.1.val) ∘ (S.valEquiv I.1.val).symm = id from
-    funext fun x => (S.valEquiv I.1.val).apply_symm_apply x]
-  exact PMF.map_id _
+  simp only [toEFGProfile, fromEFGProfile, PMF.map_comp]
+  have hcomp : (⇑(S.valEquiv ↑I.fst) ∘ ⇑(S.valEquiv ↑I.fst).symm) = id :=
+    funext fun x => (S.valEquiv I.1.val).apply_symm_apply x
+  simp [hcomp, PMF.map_id]
 
 theorem fromTo {S : MAID.Struct (Fin m) n}
     (pol : MAID.Policy S) :
     fromEFGProfile (toEFGProfile pol) = pol := by
   funext p I
-  simp only [toEFGProfile, fromEFGProfile]
-  rw [PMF.map_comp]
-  conv_lhs => rw [show (S.valEquiv I.1.val).symm ∘ (S.valEquiv I.1.val) = id from
-    funext fun x => (S.valEquiv I.1.val).symm_apply_apply x]
-  exact PMF.map_id _
+  simp [toEFGProfile, fromEFGProfile, ← PMF.bind_pure_comp, PMF.bind_bind,
+    Equiv.symm_apply_apply]
 
 /-- Policy spaces are equivalent under MAID→EFG via `valEquiv`. -/
 noncomputable def policyBehavioralEquiv {S : MAID.Struct (Fin m) n} :
@@ -362,15 +358,9 @@ theorem maid_efg_evalDist_orderSwapReachable {S : MAID.Struct (Fin m) n}
     (hreach : OrderSwapReachable S o₁ o₂) :
     (maidToEFGWithOrder S sem pol o₁).tree.evalDist (toEFGProfile pol) =
       (maidToEFGWithOrder S sem pol o₂).tree.evalDist (toEFGProfile pol) := by
-  calc
-    (maidToEFGWithOrder S sem pol o₁).tree.evalDist (toEFGProfile pol)
-        = o₁.foldl (MAID.evalStep S sem pol) (PMF.pure (MAID.defaultAssign S)) := by
-            exact maid_efg_evalDist_withOrder sem pol o₁
-    _ = o₂.foldl (MAID.evalStep S sem pol) (PMF.pure (MAID.defaultAssign S)) :=
-          evalFold_orderSwapReachable sem pol hreach
-    _ = (maidToEFGWithOrder S sem pol o₂).tree.evalDist (toEFGProfile pol) := by
-          symm
-          exact maid_efg_evalDist_withOrder sem pol o₂
+  rw [maid_efg_evalDist_withOrder sem pol o₁,
+    evalFold_orderSwapReachable sem pol hreach,
+    ← maid_efg_evalDist_withOrder sem pol o₂]
 
 /-- Corollary: the EFG tree's outcome distribution matches the MAID's fold-based
 evaluation along the same topological order. -/
@@ -442,16 +432,10 @@ private noncomputable def strategyEquivPlayer {S : MAID.Struct (Fin m) n}
     invFun := fun μ => μ.map (S.valEquiv I.1.val).symm
     left_inv := fun μ => by
       change PMF.map _ (PMF.map _ μ) = μ
-      rw [PMF.map_comp]
-      conv_lhs => rw [show (S.valEquiv I.1.val).symm ∘ (S.valEquiv I.1.val) = id from
-        funext fun x => (S.valEquiv I.1.val).symm_apply_apply x]
-      exact PMF.map_id μ
+      simp [← PMF.bind_pure_comp, PMF.bind_bind, Equiv.symm_apply_apply]
     right_inv := fun μ => by
       change PMF.map _ (PMF.map _ μ) = μ
-      rw [PMF.map_comp]
-      conv_lhs => rw [show (S.valEquiv I.1.val) ∘ (S.valEquiv I.1.val).symm = id from
-        funext fun x => (S.valEquiv I.1.val).apply_symm_apply x]
-      exact PMF.map_id μ
+      simp [← PMF.bind_pure_comp, PMF.bind_bind, Equiv.apply_symm_apply]
   }
 
 noncomputable def maidToEFGAt_bisimulation {S : MAID.Struct (Fin m) n}
@@ -472,8 +456,7 @@ noncomputable def maidToEFGAt_bisimulation {S : MAID.Struct (Fin m) n}
         (maidToEFGAt S sem pol σ).toKernelGame.udist (toEFGProfile pol) := by
       simp [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame, maidToEFGAt,
         buildTree_pol_irrel sem pol₀ pol σ.order (MAID.defaultAssign S)]
-    rw [h1]
-    exact maidToEFGAt_udist sem pol σ
+    exact h1.trans (maidToEFGAt_udist sem pol σ)
 
 /-- Forward simulation induced by `maidToEFGAt_bisimulation`. -/
 noncomputable def maidToEFGAt_simulation {S : MAID.Struct (Fin m) n}

@@ -151,7 +151,7 @@ theorem layerAssigned_n (S : Struct Player n) :
         have hm_mem : m ∈ U := wf.min_mem _ hne''
         have hm_min : ∀ y, y ∈ S.parents m → y ∉ U := by
           intro y hy hyU
-          exact wf.not_lt_min _ hne'' hyU hy
+          exact wf.not_lt_min _ hyU hy
         have hm_unassigned : m ∉ layerAssigned S k := by
           simp only [U, Finset.mem_sdiff, Finset.mem_univ, true_and] at hm_mem
           exact hm_mem

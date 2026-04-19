@@ -413,8 +413,7 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
           ((((PMF.pure a) (s who)).toReal) *
             (∏ i ∈ (Finset.univ.erase who), x i (s i))) * G.eu s who) := by
     funext x
-    rw [G.mixedExtension_eu
-      (σ := Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who]
+    rw [G.mixedExtension_eu]
     rw [expect_eq_sum]
     refine Finset.sum_congr rfl ?_
     intro s hs
@@ -430,7 +429,7 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
         simp [PMF.pure_apply, profileFromMixedSimplex, profileFromWeights,
           realToPmf_toReal]
       · simp [PMF.pure_apply, hsa]
-    rw [hcoef]
+    exact congrArg (· * G.eu s who) hcoef
   rw [hsum]
   refine continuous_finset_sum (s := (Finset.univ : Finset (∀ i, G.Strategy i))) ?_
   intro s hs

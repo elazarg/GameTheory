@@ -129,7 +129,7 @@ theorem auctionGame_ic_isNash {Bid : ι → Type} {Alloc : Type}
   simp only [auctionGame_eu]
   have := hIC who embed s'
   simp only [Function.update_eq_self] at this
-  linarith
+  exact this
 
 end KernelGame
 

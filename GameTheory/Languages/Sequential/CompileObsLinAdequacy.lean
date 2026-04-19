@@ -236,6 +236,7 @@ private theorem extractPlayerAction_lift (σ : PureProfile n V A)
     rw [cast_eq_iff_heq]
     simp only [liftPureProfile, liftLocalStrategy]
     rw [hobs, hr']
+    rfl
   case isFalse hk' =>
     exact absurd hk hk'
 
@@ -871,6 +872,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
     -- castJointAction uses currentObs_projectStates, the other uses hps.
     simp only [ObsModelCore.castJointAction, compileObsCoreModelLin]
     simp [eqRec_eq_cast]
+    rfl
   -- Now prove the helper by cases on cfg.
   intro cfg obs hobs
   cases cfg with
@@ -997,8 +999,8 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
         intro a
         unfold extractPlayerAction
         rw [dif_pos hk]
-        -- Both sides cast (a p) to Option A through propositionally equal proofs
         simp only [cast_cast]
+        rfl
       simp_rw [hextract]
       -- Goal: pmfPi(lift).bind(fun a => g(cast(a p))) = (σ p view).bind(fun ap => g ap)
       -- The cast transports LinAct(obs p) → LinAct(some(k_fin, view)) = Option A.
@@ -1028,7 +1030,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
           (resolveActionsMixed σ r s sig (↑p + 1)
             (Function.update accActs p (cast (congrArg (LinAct (RoundView G) A) hobs_p) ap))).bind
             fun fullActs => evalRoundsMixed (G.rounds.drop (k + 1)) σ (r.transition s fullActs))
-      rw [heval]; clear heval
+      refine heval.trans ?_; clear heval
       -- Goal: (liftBehav(σ p)(obs p)).bind(fun ap => g(cast ap)) = (σ p view).bind g
       -- Generalize obs p to a free variable so we can subst.
       set op := obs p with hop_def
@@ -1042,7 +1044,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
           (liftBehavioralStrategy (G := G) (σ p) o).bind
             (fun ap => g' (cast (congrArg (LinAct (RoundView G) A) h) ap)) =
           (σ p (r.view p s (sig p))).bind g' := by
-        intro o h g'; subst h; simp [liftBehavioralStrategy, cast_eq]
+        intro o h g'; subst h; rfl
       convert key op hobs_p _ using 2
       ext ap; congr 2
   | applyTransition k s sig accActs =>

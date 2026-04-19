@@ -110,9 +110,9 @@ theorem mixed_nash_isCorrelatedEq
         (Function.update σ who (PMF.map dev (σ who))) who := by
     rw [G.correlatedEu_eq_expect_eu
       (μ := G.unilateralDeviationDistribution (pmfPi σ) who dev) who]
-    rw [G.mixedExtension_eu
-      (Function.update σ who (PMF.map dev (σ who))) who]
+    rw [G.mixedExtension_eu]
     rw [G.unilateralDeviationDistribution_pmfPi σ who dev]
+    rfl
   rw [hbase, hdev]
   exact hN'
 

@@ -283,7 +283,7 @@ theorem frontier_nonempty_of_ne_univ (S : Struct Player n)
   have hm_mem : m ∈ U := wf.min_mem _ hne'
   have hm_min : ∀ y, y ∈ S.parents m → y ∉ U := by
     intro y hy hyU
-    exact wf.not_lt_min _ hne' hyU hy
+    exact wf.not_lt_min _ hyU hy
   -- m is in the frontier: unassigned with all parents assigned
   have hm_unassigned : m ∉ cfg.assigned := by
     simp only [U, Finset.mem_sdiff, Finset.mem_univ, true_and] at hm_mem

@@ -39,7 +39,7 @@ theorem ofEU_nash_affine (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     (htrans : ∀ σ i, u' σ i = a * u σ i + b i) (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsNash σ ↔ (KernelGame.ofEU S u').IsNash σ := by
   classical
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU]
+  simp only [KernelGame.IsNash, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy]
   constructor
   · intro hN who s'
     have := hN who s'
@@ -58,7 +58,7 @@ theorem ofEU_nash_shift (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (b : 
     (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsNash σ ↔
     (KernelGame.ofEU S (fun τ i => u τ i + b i)).IsNash σ := by
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU]
+  simp only [KernelGame.IsNash, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy]
   constructor
   · intro hN who s'; have := hN who s'; linarith
   · intro hN who s'; have := hN who s'; linarith
@@ -71,7 +71,7 @@ theorem ofEU_nash_scale (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     (a : ℝ) (ha : a > 0) (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsNash σ ↔
     (KernelGame.ofEU S (fun τ i => a * u τ i)).IsNash σ := by
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU]
+  simp only [KernelGame.IsNash, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy]
   constructor
   · intro hN who s'; have := hN who s'; nlinarith
   · intro hN who s'; have := hN who s'; nlinarith

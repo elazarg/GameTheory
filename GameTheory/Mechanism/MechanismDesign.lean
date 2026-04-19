@@ -103,6 +103,7 @@ theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
     · subst hi
       simp [Function.update]
     · simp [truthful, Function.update, hi]
+  simp only [inducedBayesianGame] at this
   rw [this]
   exact hIC who θ (s' (θ who))
 

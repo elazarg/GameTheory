@@ -174,8 +174,7 @@ def ProtocolIsomorphism.toGameIsomorphism {G H : KernelGame ι}
               (fun ω => PMF.pure (H.utility ω)) := rfl
       _ = (G.outcomeKernel σ).bind (fun ω => PMF.pure (H.utility (e.outcomeEquiv ω))) := by
             rw [hk']
-            rw [PMF.bind_bind]
-            simp
+            simp [PMF.bind_bind]
       _ = (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω)) := by
             congr
             funext ω

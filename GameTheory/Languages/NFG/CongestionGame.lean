@@ -128,13 +128,18 @@ open Classical in
     for the congestion game. -/
 theorem isExactPotential (C : CongestionGame ι) :
     C.toKernelGame.IsExactPotential C.potential := by
-  intro who σ s'
+  intro who (σ : C.Profile) (s' : C.StrategySet who)
   simp only [toKernelGame, KernelGame.eu_ofEU, playerCost, potential, Function.update_self]
   set σ' := Function.update σ who s'
   suffices h : ∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r) -
       ∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r) =
       ∑ r, ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1) -
-      ∑ r, ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1) by linarith
+      ∑ r, ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1) by
+    show -(∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r)) -
+          -(∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r)) =
+        -(∑ r, ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1)) -
+          -(∑ r, ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1))
+    linarith
   have h_sum_eq : ∀ (S : Finset C.Resource) (f : C.Resource → ℝ),
       ∑ r ∈ S, f r = ∑ r, if r ∈ S then f r else 0 := by
     intro S f; conv_rhs => rw [Finset.sum_ite_mem, Finset.univ_inter]

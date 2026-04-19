@@ -94,6 +94,13 @@ noncomputable def mixedExtension (G : KernelGame ι) [Fintype ι]
   utility := G.utility
   outcomeKernel := fun σ => (Math.PMFProduct.pmfPi σ).bind G.outcomeKernel
 
+/-- The Strategy field of `G.mixedExtension` is `fun i => PMF (G.Strategy i)`.
+Marked `@[simp]` so `Function.update` terms reduce uniformly (see `ofEU_Strategy`
+in `SolutionConcepts` for background on why v4.29 needs this). -/
+@[simp] theorem mixedExtension_Strategy (G : KernelGame ι) [Fintype ι]
+    [∀ i, Fintype (G.Strategy i)] :
+    G.mixedExtension.Strategy = fun i => PMF (G.Strategy i) := rfl
+
 end KernelGame
 
 end GameTheory

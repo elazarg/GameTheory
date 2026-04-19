@@ -42,6 +42,15 @@ variable {ι : Type}
     (ofEU S u).eu σ i = u σ i := by
   simp [KernelGame.eu, ofEU, expect_pure]
 
+/-- The Strategy field of `ofEU S u` is `S` by definition. Marked `@[simp]`
+so that `Function.update` and `Profile` expressions in proofs reduce uniformly
+(Lean 4.29 no longer unfolds these struct projections automatically during
+unification, which can cause otherwise-identical `Function.update` terms
+across hypotheses and goals to become distinct atoms for `linarith`/`rw`). -/
+@[simp] theorem KernelGame.ofEU_Strategy
+    (S : ι → Type) (u : (∀ i, S i) → Payoff ι) :
+    (ofEU S u).Strategy = S := rfl
+
 -- ============================================================================
 -- EU-specific solution concepts
 -- ============================================================================

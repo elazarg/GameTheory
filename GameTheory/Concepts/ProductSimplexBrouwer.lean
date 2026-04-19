@@ -122,7 +122,7 @@ theorem convex_mixedSimplexAsSet :
 omit [Fintype ι] [∀ i, Nonempty (A i)] in
 theorem isCompact_mixedSimplexAsSet :
     IsCompact (mixedSimplexAsSet ι A) :=
-  isCompact_univ_pi (fun i => isCompact_stdSimplex (A i))
+  isCompact_univ_pi (fun i => isCompact_stdSimplex ℝ (A i))
 
 omit [Fintype ι] in
 theorem nonempty_mixedSimplexAsSet :

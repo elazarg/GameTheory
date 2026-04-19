@@ -645,8 +645,10 @@ theorem liftBehavioralProfile_descendVRD_agree
     ext ⟨⟩
     simp only [PMF.pure_apply, ite_true]
     have h : ∑' (a : PUnit), (β i none) a = 1 := (β i none).tsum_coe
-    rwa [tsum_eq_single PUnit.unit
+    rw [tsum_eq_single PUnit.unit
       (fun x hx => absurd (Subsingleton.elim x PUnit.unit) hx)] at h
+    rw [h]
+    exact (PMF.pure_apply_self _).symm
   | some rv =>
     obtain ⟨k, v⟩ := rv
     -- linObserve at lastState = some (k, v)
