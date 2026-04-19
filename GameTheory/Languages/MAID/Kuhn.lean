@@ -1387,6 +1387,15 @@ private theorem cast_dep_apply' {α : Type} {P : α → Type}
     (f : ∀ x, P x) {a b : α} (h : a = b) :
     h ▸ f a = f b := by cases h; rfl
 
+/-- Heterogeneous version of composing a hidden inner transport with a visible
+outer transport. This avoids matching on proof terms inside `▸`. -/
+private theorem cast_dep_apply_trans_heq {α : Type} {P : α → Type}
+    (f : ∀ x, P x) {a b c : α} {h₁ : a = b} (h₂ : b = c) :
+    h₂ ▸ (h₁ ▸ f a) ≍ f c := by
+  rw [eqRec_heq_iff_heq]
+  exact (eqRec_heq _ (f a)).trans
+    (eqRec_heq_iff_heq.mp (heq_of_eq (cast_dep_apply' f (h₁.trans h₂))))
+
 /-- On a feasible trace, the value assigned to a decision node at step `j+1`
 equals the profile's action at the corresponding infoset. -/
 private theorem decision_value_eq_profile_action
@@ -1441,11 +1450,7 @@ private theorem decision_value_eq_profile_action
   rw [ha_p]
   simp only []
   apply eq_of_heq
-  rw [eqRec_heq_iff_heq]
-  exact (eqRec_heq _ (π p
-      ((compiledPRObs S sem).projectStates p (ss.take (j + 1))))).trans
-    (eqRec_heq_iff_heq.mp (heq_of_eq (cast_dep_apply' (π p)
-      (((compiledPRObs S sem).currentObs_projectStates p (ss.take (j + 1))).trans hp))))
+  exact cast_dep_apply_trans_heq (π p) hp
 
 /-- Transfer of intermediate observation agreement between two feasible traces
 with the same final observation, under PerfectRecall.
