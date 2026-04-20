@@ -553,6 +553,43 @@ theorem pubObs_decide_successor_eq_none
       (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) = none := by
   exact pubObs_decide_eq_none (G := G) a _
 
+/-- Inserted serialized decision steps are pure bookkeeping: they keep the
+underlying world state fixed and emit no observations or rewards. -/
+theorem bookkeeping_decide_step
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a })
+    (i : ι) :
+    SerialState.world (G := G)
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) = w ∧
+    SerialState.reward (G := G) (.decide w chosen current rest hvalid) a
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) i = 0 ∧
+    SerialState.privObs (G := G) i (.decide w chosen current rest hvalid) a
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) = none ∧
+    SerialState.pubObs (G := G) (.decide w chosen current rest hvalid) a
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) = none := by
+  refine ⟨world_decidePlayerSuccessor (G := G) a, ?_, ?_, ?_⟩
+  · exact reward_decide_successor_eq_zero (G := G) a i
+  · exact privObs_decide_successor_eq_none (G := G) a
+  · exact pubObs_decide_successor_eq_none (G := G) a
+
+/-- A serialized chance-resolution step reproduces the original transition's
+reward and observations, wrapped into the serialized observation space. -/
+theorem resolution_chance_step
+    {i : ι} {w w' : W} (ga : G.LegalAction w)
+    (a : { a : JointAction Act // legal (G := G) (.chance w ga) a }) :
+    SerialState.world (G := G) (.base w') = w' ∧
+    SerialState.reward (G := G) (.chance w ga) a (.base w') i = G.reward w ga w' i ∧
+    SerialState.privObs (G := G) i (.chance w ga) a (.base w') =
+      some (G.privObs i w ga w') ∧
+    SerialState.pubObs (G := G) (.chance w ga) a (.base w') =
+      some (G.pubObs w ga w') := by
+  refine ⟨rfl, ?_, ?_, ?_⟩
+  · exact reward_chance_base_eq (G := G) ga a i
+  · exact privObs_chance_base_eq (G := G) ga a
+  · exact pubObs_chance_base_eq (G := G) ga a
+
 /-- The serialized FOSG. -/
 noncomputable def serialize :
     FOSG ι (SerialState G) Act (fun i => Option (PrivObs i)) (Option PubObs) where
