@@ -1,4 +1,5 @@
 import GameTheory.Languages.FOSG.Information
+import GameTheory.Languages.FOSG.Values
 import Mathlib.Probability.Distributions.Uniform
 
 /-!
@@ -348,6 +349,12 @@ def p1BetAction (d : Deal) : game.LegalAction (.p1Turn d) :=
 def p1CheckAction (d : Deal) : game.LegalAction (.p1Turn d) :=
   ⟨p1Only .check, by simp [game, legal, isP1Only]⟩
 
+def p2CallAction (d : Deal) : game.LegalAction (.p2AfterBet d) :=
+  ⟨p2Only .call, by simp [game, legal, isP2Only]⟩
+
+def p2FoldAction (d : Deal) : game.LegalAction (.p2AfterBet d) :=
+  ⟨p2Only .fold, by simp [game, legal, isP2Only]⟩
+
 theorem deal_support (d : Deal) :
     game.transition .start startAction (.p1Turn d) ≠ 0 := by
   apply (PMF.mem_support_iff _ _).1
@@ -361,6 +368,14 @@ theorem p1Bet_support (d : Deal) :
 theorem p1Check_support (d : Deal) :
     game.transition (.p1Turn d) (p1CheckAction d) (.p2AfterCheck d) ≠ 0 := by
   simp [game, transition, p1CheckAction, p1Only]
+
+theorem p2Call_support (d : Deal) :
+    game.transition (.p2AfterBet d) (p2CallAction d) (.terminal d .calledShowdown) ≠ 0 := by
+  simp [game, transition, p2CallAction, p2Only]
+
+theorem p2Fold_support (d : Deal) :
+    game.transition (.p2AfterBet d) (p2FoldAction d) (.terminal d .oneWinsFold) ≠ 0 := by
+  simp [game, transition, p2FoldAction, p2Only]
 
 noncomputable def dealStep (d : Deal) : game.Step :=
   ⟨.start, startAction, .p1Turn d, deal_support d⟩
@@ -379,6 +394,12 @@ noncomputable def p1BetHistory (d : Deal) : game.History :=
 
 noncomputable def p1CheckHistory (d : Deal) : game.History :=
   (dealt d).snoc (p1CheckAction d) (.p2AfterCheck d) (p1Check_support d)
+
+noncomputable def calledHistory (d : Deal) : game.History :=
+  (p1BetHistory d).snoc (p2CallAction d) (.terminal d .calledShowdown) (p2Call_support d)
+
+noncomputable def foldedHistory (d : Deal) : game.History :=
+  (p1BetHistory d).snoc (p2FoldAction d) (.terminal d .oneWinsFold) (p2Fold_support d)
 
 @[simp] theorem publicView_dealt (d : Deal) :
     (dealt d).publicView = [.silent] := by
@@ -436,6 +457,45 @@ theorem playerOneView_dealt_jk_ne_qk :
 theorem playerTwoView_dealt_jk_ne_jq :
     (dealt .jk).playerView .two ≠ (dealt .jq).playerView .two := by
   simp [cardOf]
+
+@[simp] theorem utility_dealt (d : Deal) (i : Player) :
+    (dealt d).utility i = 0 := by
+  rw [dealt, History.utility_snoc, History.utility_nil]
+  simp [game, reward, dealOf, terminalKind?]
+
+@[simp] theorem utility_p1BetHistory (d : Deal) (i : Player) :
+    (p1BetHistory d).utility i = 0 := by
+  rw [p1BetHistory, History.utility_snoc, utility_dealt]
+  simp [game, reward, dealOf, terminalKind?]
+
+@[simp] theorem utility_p1CheckHistory (d : Deal) (i : Player) :
+    (p1CheckHistory d).utility i = 0 := by
+  rw [p1CheckHistory, History.utility_snoc, utility_dealt]
+  simp [game, reward, dealOf, terminalKind?]
+
+@[simp] theorem utility_calledHistory (d : Deal) (i : Player) :
+    (calledHistory d).utility i = payoff d .calledShowdown i := by
+  rw [calledHistory, History.utility_snoc, utility_p1BetHistory]
+  simp [game, reward, dealOf, terminalKind?]
+
+@[simp] theorem utility_foldedHistory (d : Deal) (i : Player) :
+    (foldedHistory d).utility i = payoff d .oneWinsFold i := by
+  rw [foldedHistory, History.utility_snoc, utility_p1BetHistory]
+  simp [game, reward, dealOf, terminalKind?]
+
+theorem calledHistory_jk_utilities :
+    (calledHistory .jk).utility .one = -2 ∧
+    (calledHistory .jk).utility .two = 2 := by
+  constructor
+  · simp [utility_calledHistory, payoff, winner, cardRank, cardOf]
+  · simp [utility_calledHistory, payoff, winner, cardRank, cardOf]
+
+theorem foldedHistory_jq_utilities :
+    (foldedHistory .jq).utility .one = 1 ∧
+    (foldedHistory .jq).utility .two = -1 := by
+  constructor
+  · simp [utility_foldedHistory, payoff]
+  · simp [utility_foldedHistory, payoff]
 
 end Kuhn
 
