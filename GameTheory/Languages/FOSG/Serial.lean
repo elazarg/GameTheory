@@ -293,34 +293,55 @@ theorem validDecision_step
   · refine ⟨ga, ?_⟩
     exact G.extendsPartial_recordChoice hcomp hcurrent
 
+/-- The deterministic successor after a serialized player move from a base
+state with nonempty active set. -/
+noncomputable def basePlayerSuccessor
+    (w : W) (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+    SerialState G :=
+  match horder : G.orderedActive w with
+  | [] => .base w
+  | current :: rest =>
+      let hlegal : playerLegal (G := G) w (noopAction Act) current a.1 := by
+        simpa [SerialState.legal, horder] using a.2
+      let ga : G.LegalAction w := Classical.choose hlegal.2.2
+      match rest with
+      | [] => .chance w ga
+      | next :: tail =>
+          .decide w (recordChoice (noopAction Act) a.1 current) next tail
+            (validDecision_from_base (G := G) (a := a.1) (by simpa using horder) hlegal)
+
+/-- The deterministic successor after a serialized player move from an
+intermediate decision state. -/
+noncomputable def decidePlayerSuccessor
+    (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
+    (hvalid : G.ValidDecision w chosen current rest)
+    (a : { a : JointAction Act // legal (G := G) (.decide w chosen current rest hvalid) a }) :
+    SerialState G :=
+  match rest with
+  | [] =>
+      let hlegal : playerLegal (G := G) w chosen current a.1 := by
+        simpa [SerialState.legal] using a.2
+      let ga : G.LegalAction w := Classical.choose hlegal.2.2
+      .chance w ga
+  | next :: tail =>
+      let hlegal : playerLegal (G := G) w chosen current a.1 := by
+        simpa [SerialState.legal] using a.2
+      .decide w (recordChoice chosen a.1 current) next tail
+        (validDecision_step (G := G) (a := a.1) hvalid hlegal)
+
 /-- Transition kernel of the serialized game. -/
 noncomputable def transition :
     (s : SerialState G) → {a : JointAction Act // legal (G := G) s a} → PMF (SerialState G)
   | .base w, a =>
-      match horder : G.orderedActive w with
-      | [] =>
+      if hEmpty : G.orderedActive w = [] then
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
-            simpa [SerialState.legal, horder] using a.2
+            simpa [SerialState.legal, hEmpty] using a.2
           let ga := baseChanceAction (G := G) w ha.1
           PMF.map (SerialState.base (G := G)) (G.transition w ga)
-      | current :: rest =>
-          have hlegal : playerLegal (G := G) w (noopAction Act) current a.1 := by
-            simpa [SerialState.legal, horder] using a.2
-          let ga : G.LegalAction w := Classical.choose hlegal.2.2
-          match rest with
-          | [] => PMF.pure (.chance w ga)
-          | next :: tail =>
-              PMF.pure (.decide w (recordChoice (noopAction Act) a.1 current) next tail
-                (validDecision_from_base (G := G) (a := a.1) (by simpa using horder) hlegal))
+      else
+        PMF.pure (basePlayerSuccessor (G := G) w a)
   | .decide w chosen current rest hvalid, a =>
-      have hlegal : playerLegal (G := G) w chosen current a.1 := by
-        simpa [SerialState.legal] using a.2
-      let ga : G.LegalAction w := Classical.choose hlegal.2.2
-      match rest with
-      | [] => PMF.pure (.chance w ga)
-      | next :: tail =>
-          PMF.pure (.decide w (recordChoice chosen a.1 current) next tail
-            (validDecision_step (G := G) (a := a.1) hvalid hlegal))
+      PMF.pure (decidePlayerSuccessor (G := G) w chosen current rest hvalid a)
   | .chance w ga, _ =>
       PMF.map (SerialState.base (G := G)) (G.transition w ga)
 
@@ -531,6 +552,43 @@ noncomputable def serialize :
           simpa [SerialState.legal] using hlegal⟩
     | chance w ga =>
         exact ⟨noopAction Act, by simp [SerialState.legal]⟩
+
+/-- Seriality predicate: every state has either no active players or exactly one
+active player and deterministic transitions. -/
+def IsSerial
+    (G : FOSG ι W Act PrivObs PubObs) : Prop :=
+  ∀ w, G.active w = ∅ ∨
+    ∃ i, G.active w = {i} ∧ ∀ a : G.LegalAction w, ∃ w', G.transition w a = PMF.pure w'
+
+theorem serialize_isSerial
+    (G : FOSG ι W Act PrivObs PubObs) :
+    IsSerial (SerialState.serialize (G := G)) := by
+  intro s
+  cases s with
+  | base w =>
+      cases horder : G.orderedActive w with
+      | nil =>
+          left
+          simp [SerialState.serialize, SerialState.active, horder]
+      | cons current rest =>
+          right
+          refine ⟨current, by simp [SerialState.serialize, SerialState.active, horder], ?_⟩
+          intro a
+          refine ⟨SerialState.basePlayerSuccessor (G := G) w a, ?_⟩
+          have hne : G.orderedActive w ≠ [] := by
+            simp [horder]
+          change SerialState.transition (G := G) (.base w) a =
+            PMF.pure (SerialState.basePlayerSuccessor (G := G) w a)
+          simp [SerialState.transition, hne]
+  | decide w chosen current rest hvalid =>
+      right
+      refine ⟨current, by simp [SerialState.serialize, SerialState.active], ?_⟩
+      intro a
+      refine ⟨SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a, ?_⟩
+      simp [SerialState.serialize, SerialState.transition]
+  | chance w ga =>
+      left
+      simp [SerialState.serialize, SerialState.active]
 
 end SerialState
 
