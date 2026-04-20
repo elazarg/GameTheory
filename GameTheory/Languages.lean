@@ -1,3 +1,4 @@
+import GameTheory.Languages.FOSG
 import GameTheory.Languages.InfoModel
 import GameTheory.Languages.EFG
 import GameTheory.Languages.NFG
