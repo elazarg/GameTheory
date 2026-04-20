@@ -26,6 +26,47 @@ namespace FOSG
 variable {ι W : Type} [DecidableEq ι]
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
 
+/-- The set of actions available to player `i` at world state `w`. -/
+def availableActionsAtState
+    (G : FOSG ι W Act PrivObs PubObs)
+    (w : W) (i : ι) : Set (Act i) :=
+  { ai | ∃ a : G.LegalAction w, a.1 i = some ai }
+
+theorem mem_availableActionsAtState_iff
+    {G : FOSG ι W Act PrivObs PubObs}
+    {w : W} {i : ι} {ai : Act i} :
+    ai ∈ G.availableActionsAtState w i ↔
+      ∃ a : G.LegalAction w, a.1 i = some ai := by
+  rfl
+
+/-- Local legality of one player's optional action at world state `w`. -/
+def locallyLegalAtState
+    (G : FOSG ι W Act PrivObs PubObs)
+    (w : W) (i : ι) : Option (Act i) → Prop
+  | some ai => ai ∈ G.availableActionsAtState w i
+  | none => i ∉ G.active w
+
+theorem locallyLegalAtState_of_legal
+    {G : FOSG ι W Act PrivObs PubObs}
+    {w : W} {a : G.LegalAction w} (i : ι) :
+    G.locallyLegalAtState w i (a.1 i) := by
+  cases h : a.1 i with
+  | none =>
+      exact by
+        intro hi
+        rcases G.active_has_some (a := a) hi with ⟨ai, hai⟩
+        simp [h] at hai
+  | some ai =>
+      exact ⟨a, h⟩
+
+/-- Paper-facing factorization condition: a joint action is legal whenever each
+player's local component is legal at the current world state. -/
+def LegalityFactorizes
+    (G : FOSG ι W Act PrivObs PubObs) : Prop :=
+  ∀ {w : W} {a : JointAction Act},
+    (∀ i, G.locallyLegalAtState w i (a i)) →
+    G.legal w a
+
 /-- The set of actions available to player `i` at the endpoint of history `h`. -/
 def availableActions
     (G : FOSG ι W Act PrivObs PubObs)
@@ -37,6 +78,12 @@ theorem mem_availableActions_iff
     {h : G.History} {i : ι} {ai : Act i} :
     ai ∈ G.availableActions h i ↔
       ∃ a : G.LegalAction h.lastState, a.1 i = some ai := by
+  rfl
+
+theorem availableActions_eq_availableActionsAtState
+    {G : FOSG ι W Act PrivObs PubObs}
+    (h : G.History) (i : ι) :
+    G.availableActions h i = G.availableActionsAtState h.lastState i := by
   rfl
 
 theorem not_mem_availableActions_of_not_mem_active
