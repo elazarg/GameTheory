@@ -430,6 +430,32 @@ noncomputable def reward :
       | .base w' => G.reward w ga w' i
       | _ => 0
 
+theorem reward_decide_eq_zero
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a })
+    (s' : SerialState G) (i : ι) :
+    SerialState.reward (G := G) (.decide w chosen current rest hvalid) a s' i = 0 := by
+  simp [SerialState.reward]
+
+theorem reward_chance_base_eq
+    {w w' : W} (ga : G.LegalAction w)
+    (a : { a : JointAction Act // legal (G := G) (.chance w ga) a })
+    (i : ι) :
+    SerialState.reward (G := G) (.chance w ga) a (.base w') i = G.reward w ga w' i := by
+  simp [SerialState.reward]
+
+theorem reward_decide_successor_eq_zero
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a })
+    (i : ι) :
+    SerialState.reward (G := G) (.decide w chosen current rest hvalid) a
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) i = 0 := by
+  exact reward_decide_eq_zero (G := G) a _ _
+
 /-- Private observations of the serialized game. Deterministic action-selection
 steps emit `none`; stochastic resolution steps emit the original observation
 wrapped in `some`. -/
@@ -454,6 +480,31 @@ noncomputable def privObs :
       | .base w' => some (G.privObs i w ga w')
       | _ => none
 
+theorem privObs_decide_eq_none
+    {i : ι} {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a })
+    (s' : SerialState G) :
+    SerialState.privObs (G := G) i (.decide w chosen current rest hvalid) a s' = none := by
+  simp [SerialState.privObs]
+
+theorem privObs_chance_base_eq
+    {i : ι} {w w' : W} (ga : G.LegalAction w)
+    (a : { a : JointAction Act // legal (G := G) (.chance w ga) a }) :
+    SerialState.privObs (G := G) i (.chance w ga) a (.base w') =
+      some (G.privObs i w ga w') := by
+  simp [SerialState.privObs]
+
+theorem privObs_decide_successor_eq_none
+    {i : ι} {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a }) :
+    SerialState.privObs (G := G) i (.decide w chosen current rest hvalid) a
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) = none := by
+  exact privObs_decide_eq_none (G := G) a _
+
 /-- Public observations of the serialized game. Deterministic action-selection
 steps emit `none`; stochastic resolution steps emit the original observation
 wrapped in `some`. -/
@@ -476,6 +527,31 @@ noncomputable def pubObs :
       match s' with
       | .base w' => some (G.pubObs w ga w')
       | _ => none
+
+theorem pubObs_decide_eq_none
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a })
+    (s' : SerialState G) :
+    SerialState.pubObs (G := G) (.decide w chosen current rest hvalid) a s' = none := by
+  simp [SerialState.pubObs]
+
+theorem pubObs_chance_base_eq
+    {w w' : W} (ga : G.LegalAction w)
+    (a : { a : JointAction Act // legal (G := G) (.chance w ga) a }) :
+    SerialState.pubObs (G := G) (.chance w ga) a (.base w') =
+      some (G.pubObs w ga w') := by
+  simp [SerialState.pubObs]
+
+theorem pubObs_decide_successor_eq_none
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a }) :
+    SerialState.pubObs (G := G) (.decide w chosen current rest hvalid) a
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) = none := by
+  exact pubObs_decide_eq_none (G := G) a _
 
 /-- The serialized FOSG. -/
 noncomputable def serialize :
