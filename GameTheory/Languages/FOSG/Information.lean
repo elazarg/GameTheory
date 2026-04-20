@@ -122,6 +122,16 @@ theorem playerViewFrom_append_singleton
   | cons e₀ es ih =>
       simp [playerViewFrom, ih, List.append_assoc]
 
+theorem playerViewFrom_append
+    (i : ι) (es₁ es₂ : List G.Step) :
+    playerViewFrom (G := G) i (es₁ ++ es₂) =
+      playerViewFrom (G := G) i es₁ ++ playerViewFrom (G := G) i es₂ := by
+  induction es₁ with
+  | nil =>
+      simp [playerViewFrom]
+  | cons e es ih =>
+      simp [playerViewFrom, ih, List.append_assoc]
+
 @[simp] theorem publicView_nil :
     (History.nil G).publicView = [] := rfl
 
@@ -192,6 +202,42 @@ theorem playerView_ne_snoc
   have hEqLen : (h.playerView i).length = ((h.snoc a dst support).playerView i).length := by
     exact congrArg List.length hEq
   exact Nat.lt_irrefl _ (hEqLen ▸ hlt)
+
+theorem playerView_eq_append_of_prefix
+    {h h' : G.History} (i : ι)
+    (hpref : h.IsPrefix h') :
+    ∃ es : List G.Step,
+      h'.playerView i = h.playerView i ++ playerViewFrom (G := G) i es := by
+  rcases hpref with ⟨es, hes⟩
+  refine ⟨es, ?_⟩
+  rw [History.playerView, History.playerView, hes]
+  exact playerViewFrom_append (G := G) i h.steps es
+
+theorem playerView_length_lt_of_properPrefix
+    {h h' : G.History} (i : ι)
+    (hpref : h.IsPrefix h') (hne : h ≠ h') :
+    (h.playerView i).length < (h'.playerView i).length := by
+  rcases hpref with ⟨es, hes⟩
+  have hneEs : es ≠ [] := by
+    intro hnil
+    apply hne
+    apply History.ext
+    simp [hes, hnil]
+  cases es with
+  | nil =>
+      contradiction
+  | cons e es' =>
+      have hpos : 0 < (e.playerView i).length := Step.playerView_length_pos (G := G) e i
+      simp [History.playerView, hes, playerViewFrom_append, playerViewFrom]
+      omega
+
+theorem playerView_ne_of_properPrefix
+    {h h' : G.History} (i : ι)
+    (hpref : h.IsPrefix h') (hne : h ≠ h') :
+    h.playerView i ≠ h'.playerView i := by
+  intro hEq
+  have hlt := playerView_length_lt_of_properPrefix (G := G) i hpref hne
+  exact Nat.lt_irrefl _ ((congrArg List.length hEq) ▸ hlt)
 
 /-- Information set fiber for player `i`. -/
 def infoSet (i : ι) (s : G.InfoState i) : Set G.History :=
