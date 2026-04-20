@@ -72,6 +72,12 @@ theorem filterMap_publicPart_playerView
   unfold playerView
   split <;> simp [PlayerEvent.publicPart]
 
+theorem playerView_length_pos
+    (e : G.Step) (i : ι) :
+    0 < (e.playerView i).length := by
+  unfold playerView
+  split <;> simp
+
 end Step
 
 namespace History
@@ -162,6 +168,30 @@ theorem publicView_eq_of_playerView_eq
     h.publicView = h'.publicView := by
   simpa [h.publicView_eq_filterMap_playerView i, h'.publicView_eq_filterMap_playerView i] using
     congrArg (fun xs => xs.filterMap (PlayerEvent.publicPart (G := G) (i := i))) hInfo
+
+theorem playerView_length_snoc
+    (h : G.History) (i : ι) (a : G.LegalAction h.lastState)
+    (dst : W) (support : G.transition h.lastState a dst ≠ 0) :
+    ((h.snoc a dst support).playerView i).length =
+      (h.playerView i).length + (Step.playerView ⟨h.lastState, a, dst, support⟩ i).length := by
+  simp
+
+theorem playerView_length_lt_snoc
+    (h : G.History) (i : ι) (a : G.LegalAction h.lastState)
+    (dst : W) (support : G.transition h.lastState a dst ≠ 0) :
+    (h.playerView i).length < ((h.snoc a dst support).playerView i).length := by
+  rw [playerView_length_snoc]
+  exact Nat.lt_add_of_pos_right (Step.playerView_length_pos ⟨h.lastState, a, dst, support⟩ i)
+
+theorem playerView_ne_snoc
+    (h : G.History) (i : ι) (a : G.LegalAction h.lastState)
+    (dst : W) (support : G.transition h.lastState a dst ≠ 0) :
+    h.playerView i ≠ (h.snoc a dst support).playerView i := by
+  intro hEq
+  have hlt := playerView_length_lt_snoc (G := G) h i a dst support
+  have hEqLen : (h.playerView i).length = ((h.snoc a dst support).playerView i).length := by
+    exact congrArg List.length hEq
+  exact Nat.lt_irrefl _ (hEqLen ▸ hlt)
 
 /-- Information set fiber for player `i`. -/
 def infoSet (i : ι) (s : G.InfoState i) : Set G.History :=
