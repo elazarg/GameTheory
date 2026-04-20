@@ -119,6 +119,15 @@ abbrev ActionPosteriorLocal
     (i : ι) : Prop :=
   ObsModelCore.ActionPosteriorLocal (toObsModelCore G) i
 
+/-- FOSG-side name for the stronger semantic locality condition that implies
+both support factorization and posterior locality in the mixed-to-behavioral
+direction. -/
+abbrev ObsLocalFeasibilityFull
+    (G : FOSG ι W Act PrivObs PubObs)
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (i : ι) : Prop :=
+  ObsModelCore.ObsLocalFeasibilityFull (toObsModelCore G) i
+
 set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, behavioral -> mixed direction for FOSGs.**
@@ -169,6 +178,32 @@ theorem mixed_to_behavioral_semantic
     ActionPosteriorLocal] using
     (ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := toObsModelCore G)
       hMass hFactor hLocal μ k)
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, via full
+semantic obs-locality.**
+
+This is the stronger semantic FOSG formulation: step-mass invariance together
+with full obs-local feasibility already suffices to realize any product mixed
+strategy by a behavioral profile with the same bounded execution
+distribution. -/
+theorem mixed_to_behavioral_of_obsLocal
+    (G : FOSG ι W Act PrivObs PubObs)
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : StepMassInvariant G)
+    (hObsLocal : ∀ i, ObsLocalFeasibilityFull G i)
+    (μ : ∀ i, PMF (LocalStrategy G i))
+    (k : Nat) :
+    ∃ β : BehavioralProfile G,
+      runDist G k β = (Math.PMFProduct.pmfPi μ).bind (fun π => runDistPure G k π) := by
+  letI : ∀ i, Fintype ((toObsModelCore G).InfoState i) :=
+    infoStateFintype_toObsModelCore (G := G)
+  simpa [runDist, runDistPure, StepMassInvariant, ObsLocalFeasibilityFull] using
+    (ObsModelCore.kuhn_mixed_to_behavioral_of_obsLocal (O := toObsModelCore G)
+      hMass hObsLocal μ k)
 
 end Kuhn
 
