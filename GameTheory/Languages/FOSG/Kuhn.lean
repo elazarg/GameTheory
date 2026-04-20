@@ -474,6 +474,24 @@ noncomputable def foldedHistory (d : Deal) : game.History :=
     p2FoldAction, game, privObs, pubObs]
   rfl
 
+@[simp] theorem playerOneView_calledHistory (d : Deal) :
+    (calledHistory d).playerView .one =
+      [.obs (.card (cardOf d .one)) .silent, .act .bet, .obs .silent .bet,
+        .obs .silent .call] := by
+  rw [calledHistory, History.playerView_snoc, playerOneView_p1Bet]
+  simp [Step.playerView, Step.ownAction?, Step.privateObs, Step.publicObs,
+    p2CallAction, game, privObs, pubObs]
+  rfl
+
+@[simp] theorem playerOneView_foldedHistory (d : Deal) :
+    (foldedHistory d).playerView .one =
+      [.obs (.card (cardOf d .one)) .silent, .act .bet, .obs .silent .bet,
+        .obs .silent .fold] := by
+  rw [foldedHistory, History.playerView_snoc, playerOneView_p1Bet]
+  simp [Step.playerView, Step.ownAction?, Step.privateObs, Step.publicObs,
+    p2FoldAction, game, privObs, pubObs]
+  rfl
+
 theorem publicView_dealt_same_for_all_deals (d₁ d₂ : Deal) :
     (dealt d₁).publicView = (dealt d₂).publicView := by
   simp
