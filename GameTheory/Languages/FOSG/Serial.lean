@@ -199,6 +199,24 @@ def terminal : SerialState G → Prop
   | .decide _ _ _ _ _ => False
   | .chance _ _ => False
 
+/-- Underlying original-world state represented by a serialized state. -/
+def world : SerialState G → W
+  | .base w => w
+  | .decide w _ _ _ _ => w
+  | .chance w _ => w
+
+@[simp] theorem world_base (w : W) :
+    world (G := G) (.base w) = w := rfl
+
+@[simp] theorem world_decide
+    (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
+    (hvalid : G.ValidDecision w chosen current rest) :
+    world (G := G) (.decide w chosen current rest hvalid) = w := rfl
+
+@[simp] theorem world_chance
+    (w : W) (a : G.LegalAction w) :
+    world (G := G) (.chance w a) = w := rfl
+
 /-- Serialized legal actions at a player-controlled serialized state. -/
 def playerLegal
     (w : W) (chosen : JointAction Act) (current : ι) (a : JointAction Act) : Prop :=
@@ -310,6 +328,14 @@ noncomputable def basePlayerSuccessor
           .decide w (recordChoice (noopAction Act) a.1 current) next tail
             (validDecision_from_base (G := G) (a := a.1) (by simpa using horder) hlegal)
 
+@[simp] theorem world_basePlayerSuccessor
+    {w : W} (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+    SerialState.world (G := G) (SerialState.basePlayerSuccessor (G := G) w a) = w := by
+  unfold SerialState.basePlayerSuccessor
+  split
+  · simp [SerialState.world]
+  · split <;> simp [SerialState.world]
+
 /-- The deterministic successor after a serialized player move from an
 intermediate decision state. -/
 noncomputable def decidePlayerSuccessor
@@ -329,6 +355,16 @@ noncomputable def decidePlayerSuccessor
       .decide w (recordChoice chosen a.1 current) next tail
         (validDecision_step (G := G) (a := a.1) hvalid hlegal)
 
+@[simp] theorem world_decidePlayerSuccessor
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a }) :
+    SerialState.world (G := G)
+      (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) = w := by
+  unfold SerialState.decidePlayerSuccessor
+  split <;> simp [SerialState.world]
+
 /-- Transition kernel of the serialized game. -/
 noncomputable def transition :
     (s : SerialState G) → {a : JointAction Act // legal (G := G) s a} → PMF (SerialState G)
@@ -344,6 +380,33 @@ noncomputable def transition :
       PMF.pure (decidePlayerSuccessor (G := G) w chosen current rest hvalid a)
   | .chance w ga, _ =>
       PMF.map (SerialState.base (G := G)) (G.transition w ga)
+
+theorem transition_base_empty_eq
+    {w : W} (hEmpty : G.orderedActive w = [])
+    (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+    SerialState.transition (G := G) (.base w) a =
+      PMF.map (SerialState.base (G := G))
+        (G.transition w (baseChanceAction (G := G) w ((by
+          have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+            simpa [SerialState.legal, hEmpty] using a.2
+          exact ha.1) : ¬ G.terminal w))) := by
+  simp [SerialState.transition, hEmpty]
+
+theorem transition_base_nonempty_eq
+    {w : W} (hNonempty : G.orderedActive w ≠ [])
+    (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+    SerialState.transition (G := G) (.base w) a =
+      PMF.pure (SerialState.basePlayerSuccessor (G := G) w a) := by
+  simp [SerialState.transition, hNonempty]
+
+theorem transition_decide_eq
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (a : { a : JointAction Act //
+      legal (G := G) (.decide w chosen current rest hvalid) a }) :
+    SerialState.transition (G := G) (.decide w chosen current rest hvalid) a =
+      PMF.pure (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) := by
+  simp [SerialState.transition]
 
 /-- Reward function of the serialized game. Deterministic action-selection steps
 have zero reward; stochastic resolution steps inherit the original reward. -/
