@@ -145,6 +145,16 @@ theorem publicViewFrom_append_singleton
   | cons e₀ es ih =>
       simp [publicViewFrom, ih]
 
+theorem publicViewFrom_append
+    (es₁ es₂ : List G.Step) :
+    publicViewFrom (G := G) (es₁ ++ es₂) =
+      publicViewFrom (G := G) es₁ ++ publicViewFrom (G := G) es₂ := by
+  induction es₁ with
+  | nil =>
+      simp [publicViewFrom]
+  | cons e es ih =>
+      simp [publicViewFrom, ih]
+
 theorem playerViewFrom_append_singleton
     (i : ι) (es : List G.Step) (e : G.Step) :
     playerViewFrom (G := G) i (es ++ [e]) =
