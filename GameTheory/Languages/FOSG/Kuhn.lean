@@ -6,12 +6,12 @@ import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 /-!
 # Kuhn's Theorem for FOSGs
 
-This file exposes the behavioral-to-mixed direction of Kuhn's theorem for
-factored-observation stochastic games by transporting the existing
-`ObsModelCore` theorem across the FOSG bridge.
+This file has two layers:
 
-The theorem is stated in terms of FOSG-specific execution states and profiles,
-not in terms of the bridge implementation.
+- `Kuhn.Bridge` exposes the existing `ObsModelCore` Kuhn theorems through the
+  FOSG bridge.
+- `Kuhn` itself contains native FOSG behavioral-to-mixed results stated
+  directly in terms of FOSG histories, terminal laws, and expected utilities.
 -/
 
 namespace GameTheory
@@ -24,6 +24,8 @@ open ObsModelCoreBridge
 
 variable {ι W : Type} [DecidableEq ι]
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
+
+namespace Bridge
 
 /-- FOSG execution states for the Kuhn semantics: current world plus current
 player information states. -/
@@ -50,7 +52,7 @@ variable [∀ i, Fintype (G.InfoState i)]
 noncomputable instance infoStateFintype_toObsModelCore :
     ∀ i, Fintype ((toObsModelCore G).InfoState i) := by
   intro i
-  simpa [ObsModelCoreBridge.toObsModelCore, ObsModelCore.InfoState, Kuhn.InfoState] using
+  simpa [ObsModelCoreBridge.toObsModelCore, ObsModelCore.InfoState] using
     (inferInstance : Fintype (G.InfoState i))
 
 end CoreInstances
@@ -206,7 +208,7 @@ theorem mixed_to_behavioral_of_obsLocal
     (ObsModelCore.kuhn_mixed_to_behavioral_of_obsLocal (O := toObsModelCore G)
       hMass hObsLocal μ k)
 
-namespace Native
+end Bridge
 
 open scoped BigOperators
 
@@ -259,7 +261,7 @@ section Raw
 variable [∀ i, DecidableEq (Act i)]
 
 omit [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
-theorem stepActionProb_pureToBehavioral
+private theorem stepActionProb_pureToBehavioral
     (π : _root_.GameTheory.FOSG.PureProfile G) (pref : G.History) (e : G.Step) :
     G.stepActionProb (G.pureToBehavioral π) pref e =
       ∏ i, match e.ownAction? i with
@@ -281,7 +283,7 @@ theorem stepActionProb_pureToBehavioral
         simp [PMF.pure_apply, hEq, hEq']
 
 /-- One-step Kuhn marginal at the raw dependent function type. -/
-theorem marginal_stepActionProb_raw
+private theorem marginal_stepActionProb_raw
     (β : BehavioralProfile (G := G)) (pref : G.History) (e : G.Step) :
     ∑ ρ : ((i : ι) → PureStrategy (G := G) i),
       (Math.PMFProduct.pmfPi (behavioralToMixed (G := G) β)) ρ *
@@ -347,7 +349,7 @@ theorem marginal_stepActionProb_raw
 end Raw
 
 /-- One-step Kuhn marginal in the native FOSG profile type. -/
-theorem marginal_stepActionProb
+private theorem marginal_stepActionProb
     (β : BehavioralProfile (G := G)) (pref : G.History) (e : G.Step) :
     ∑ π : _root_.GameTheory.FOSG.PureProfile G,
       behavioralToMixedJoint (G := G) β π *
@@ -369,7 +371,7 @@ theorem marginal_stepActionProb
   simpa using marginal_stepActionProb_raw (G := G) β pref e
 
 /-- One-step Kuhn marginal for realized step weights in native FOSG semantics. -/
-theorem marginal_stepProb
+private theorem marginal_stepProb
     (β : BehavioralProfile (G := G)) (pref : G.History) (e : G.Step) :
     ∑ π : _root_.GameTheory.FOSG.PureProfile G,
       behavioralToMixedJoint (G := G) β π *
@@ -413,7 +415,7 @@ noncomputable local instance pureProfileFintypeScalar
 
 /-- Swap coordinates between two pure profiles according to a predicate on
 player-information-state coordinates. -/
-noncomputable def swapProfileBy
+private noncomputable def swapProfileBy
     (P : ∀ i, G.InfoState i → Prop)
     (π₁ π₂ : _root_.GameTheory.FOSG.PureProfile G) :
     _root_.GameTheory.FOSG.PureProfile G := by
@@ -421,7 +423,7 @@ noncomputable def swapProfileBy
   exact fun i v => if P i v then π₁ i v else π₂ i v
 
 omit [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
-theorem swapProfileBy_involutive
+private theorem swapProfileBy_involutive
     (P : ∀ i, G.InfoState i → Prop) :
     Function.Involutive
       (fun (p : _root_.GameTheory.FOSG.PureProfile G ×
@@ -437,7 +439,7 @@ theorem swapProfileBy_involutive
     by_cases hv : P i v <;> simp [swapProfileBy, hv]
 
 open Classical in
-theorem swapBy_weight_eq
+private theorem swapBy_weight_eq
     (P : ∀ i, G.InfoState i → Prop)
     (β : BehavioralProfile (G := G))
     (π₁ π₂ : _root_.GameTheory.FOSG.PureProfile G) :
@@ -459,7 +461,7 @@ theorem swapBy_weight_eq
 /-- Scalar independence under the native FOSG product mixed measure: if `f`
 depends only on coordinates where `P` holds, and `g` depends only on the
 complementary coordinates, then `E[f * g] = E[f] * E[g]`. -/
-theorem scalar_indep
+private theorem scalar_indep
     (P : ∀ i, G.InfoState i → Prop)
     (β : BehavioralProfile (G := G))
     (f g : _root_.GameTheory.FOSG.PureProfile G → ENNReal)
@@ -554,7 +556,7 @@ section StepCorollaries
 history. If `f` depends only on coordinates in `P`, and the current
 information states of `h` all lie outside `P`, then `f` is independent of the
 next-step realized weight. -/
-theorem scalar_indep_stepProb
+private theorem scalar_indep_stepProb
     (P : ∀ i, G.InfoState i → Prop)
     (β : BehavioralProfile (G := G))
     (f : _root_.GameTheory.FOSG.PureProfile G → ENNReal)
@@ -620,7 +622,7 @@ noncomputable local instance pureProfileFintypeHistory
 
 /-- Information-state coordinates that already appeared on a proper prefix of
 `h`. -/
-def SeenBefore
+private def SeenBefore
     (h : G.History) (i : ι) (v : G.InfoState i) : Prop :=
   ∃ h' : G.History, h'.IsPrefix h ∧ h' ≠ h ∧ h'.playerView i = v
 
@@ -649,7 +651,7 @@ private theorem stepChainFrom_last_src
       simpa [lastStateFrom] using ih htail
 
 omit [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
-theorem seenBefore_mono_appendStep
+private theorem seenBefore_mono_appendStep
     {h : G.History} {e : G.Step} {hsrc : e.src = h.lastState}
     {i : ι} {v : G.InfoState i}
     (hSeen : SeenBefore (G := G) h i v) :
@@ -665,7 +667,7 @@ theorem seenBefore_mono_appendStep
     simp [History.appendStep] at hlen
 
 omit [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
-theorem seenBefore_current_appendStep
+private theorem seenBefore_current_appendStep
     (h : G.History) (e : G.Step) (hsrc : e.src = h.lastState) (i : ι) :
     SeenBefore (G := G) (h.appendStep e hsrc) i (h.playerView i) := by
   refine ⟨h, ?_, ?_, rfl⟩
@@ -675,7 +677,7 @@ theorem seenBefore_current_appendStep
     simp [History.appendStep] at hlen
 
 omit [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
-theorem not_seenBefore_current
+private theorem not_seenBefore_current
     (h : G.History) (i : ι) :
     ¬ SeenBefore (G := G) h i (h.playerView i) := by
   intro hSeen
@@ -683,7 +685,7 @@ theorem not_seenBefore_current
   exact History.playerView_ne_of_properPrefix (G := G) i hpref hne hv
 
 omit [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
-theorem stepProb_pure_congr_at_history
+private theorem stepProb_pure_congr_at_history
     {π₁ π₂ : _root_.GameTheory.FOSG.PureProfile G}
     (h : G.History) (e : G.Step)
     (hag : ∀ i, π₁ i (h.playerView i) = π₂ i (h.playerView i)) :
@@ -706,7 +708,7 @@ theorem stepProb_pure_congr_at_history
 omit [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
 /-- Pure-history weight depends only on the information-state coordinates that
 appear on proper prefixes of the history. -/
-theorem prob_pure_congr_of_agreeOnSeenBefore
+private theorem prob_pure_congr_of_agreeOnSeenBefore
     {π₁ π₂ : _root_.GameTheory.FOSG.PureProfile G}
     (h : G.History)
     (hag : ∀ i (v : G.InfoState i), SeenBefore (G := G) h i v → π₁ i v = π₂ i v) :
@@ -755,7 +757,7 @@ theorem prob_pure_congr_of_agreeOnSeenBefore
   exact H h.steps h.chain hag
 
 /-- Native FOSG behavioral-to-mixed equality for realized-history weights. -/
-theorem marginal_prob
+private theorem marginal_prob
     (β : BehavioralProfile (G := G)) (h : G.History) :
     ∑ π, behavioralToMixedJoint (G := G) β π *
       History.prob (G.pureToBehavioral π) h =
@@ -830,7 +832,7 @@ noncomputable local instance pureProfileFintypeTerminal
   infer_instance
 
 /-- Native FOSG behavioral-to-mixed equality for terminal-history mass. -/
-theorem marginal_terminalWeight
+private theorem marginal_terminalWeight
     (β : BehavioralProfile (G := G)) (h : G.History) :
     ∑ π, behavioralToMixedJoint (G := G) β π *
       History.terminalWeight (G := G) (G.pureToBehavioral π) h =
@@ -862,7 +864,7 @@ theorem marginal_terminalWeight
 histories. The induced product mixed strategy assigns the same total
 terminal-history mass to every finite set of histories as the behavioral
 profile. -/
-theorem marginal_terminalMassOn
+private theorem marginal_terminalMassOn
     (β : BehavioralProfile (G := G)) (hs : Finset G.History) :
     (∑ π, behavioralToMixedJoint (G := G) β π *
       History.terminalMassOn (G := G) (G.pureToBehavioral π) hs) =
@@ -889,7 +891,7 @@ theorem marginal_terminalMassOn
 /-- Native FOSG terminal-law preservation on finite events. This packages the
 behavioral-to-mixed terminal distribution equality as equality of the native
 terminal-history event-mass functional. -/
-theorem marginal_terminalLaw
+private theorem marginal_terminalLaw
     (β : BehavioralProfile (G := G)) :
     (fun hs =>
       ∑ π, behavioralToMixedJoint (G := G) β π *
@@ -901,7 +903,7 @@ theorem marginal_terminalLaw
 /-- Pointwise real-valued terminal-mass preservation. This is the `toReal`
 version of `marginal_terminalWeight`, suitable for expected-utility
 calculations. -/
-theorem marginal_terminalWeight_toReal
+private theorem marginal_terminalWeight_toReal
     (β : BehavioralProfile (G := G)) (h : G.History) :
     ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
       (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal =
@@ -929,7 +931,7 @@ theorem marginal_terminalWeight_toReal
 
 /-- Native FOSG expected-utility preservation under the product mixed strategy
 induced by a behavioral profile. -/
-theorem marginal_expectedUtility
+private theorem marginal_expectedUtility
     [Fintype G.History]
     (β : BehavioralProfile (G := G)) (i : ι) :
     ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
@@ -971,9 +973,66 @@ theorem marginal_expectedUtility
                   congrArg (fun x => x * History.utility h i)
                     (marginal_terminalWeight_toReal (G := G) β h)
 
-end TerminalCorollaries
+omit [DecidablePred G.terminal] in
+/-- **Native Kuhn theorem for FOSGs at realized histories.**
 
-end Native
+Sampling a pure profile ex ante from the independent product mixed strategy
+induced by a behavioral profile preserves the weight of every realized FOSG
+history. -/
+theorem behavioral_to_mixed_prob
+    (β : BehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, behavioralToMixedJoint (G := G) β π *
+      History.prob (G.pureToBehavioral π) h =
+        History.prob β h :=
+  marginal_prob (G := G) β h
+
+/-- **Native Kuhn theorem for FOSGs at terminal histories.**
+
+The product mixed strategy induced by a behavioral profile preserves the
+terminal weight of every realized terminal history. -/
+theorem behavioral_to_mixed_terminalWeight
+    (β : BehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, behavioralToMixedJoint (G := G) β π *
+      History.terminalWeight (G := G) (G.pureToBehavioral π) h =
+        History.terminalWeight (G := G) β h :=
+  marginal_terminalWeight (G := G) β h
+
+/-- **Native Kuhn theorem for finite terminal events in a FOSG.**
+
+The product mixed strategy induced by a behavioral profile assigns the same
+total terminal mass to every finite set of realized histories. -/
+theorem behavioral_to_mixed_terminalMassOn
+    (β : BehavioralProfile (G := G)) (hs : Finset G.History) :
+    (∑ π, behavioralToMixedJoint (G := G) β π *
+      History.terminalMassOn (G := G) (G.pureToBehavioral π) hs) =
+      History.terminalMassOn (G := G) β hs :=
+  marginal_terminalMassOn (G := G) β hs
+
+/-- **Native Kuhn theorem for the terminal law of a FOSG.**
+
+The product mixed strategy induced by a behavioral profile preserves the native
+terminal-history law exactly. -/
+theorem behavioral_to_mixed_terminalLaw
+    (β : BehavioralProfile (G := G)) :
+    (fun hs =>
+      ∑ π, behavioralToMixedJoint (G := G) β π *
+        History.terminalLaw (G := G) (G.pureToBehavioral π) hs) =
+      History.terminalLaw (G := G) β :=
+  marginal_terminalLaw (G := G) β
+
+/-- **Native Kuhn theorem for FOSG expected utility.**
+
+The product mixed strategy induced by a behavioral profile preserves expected
+utility for every player. -/
+theorem behavioral_to_mixed_expectedUtility
+    [Fintype G.History]
+    (β : BehavioralProfile (G := G)) (i : ι) :
+    ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
+      History.expectedUtility (G := G) (G.pureToBehavioral π) i =
+      History.expectedUtility (G := G) β i :=
+  marginal_expectedUtility (G := G) β i
+
+end TerminalCorollaries
 
 end Kuhn
 
