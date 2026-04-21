@@ -3543,6 +3543,18 @@ theorem expandHistory_terminalWeight
     · rw [FOSG.History.terminalWeight_of_not_terminal (G := G) (σ := σ.toProfile) hterm]
     · exact fun htermSer => hterm ((expandHistory_isTerminal_iff (G := G) h).1 htermSer)
 
+theorem expandHistory_terminalMassOn
+    [DecidablePred G.terminal]
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (hs : Finset G.History) :
+    (Finset.sum hs fun h =>
+      FOSG.History.terminalWeight (G := SerialState.serialize (G := G))
+        (translateBehavioralProfile (G := G) σ.toProfile)
+        (expandHistory (G := G) h)) =
+      FOSG.History.terminalMassOn (G := G) σ.toProfile hs := by
+  simp [FOSG.History.terminalMassOn, expandHistory_terminalWeight (G := G) hLegSer σ]
+
 end SerializationProbability
 
 @[simp] theorem eraseStep_decide
