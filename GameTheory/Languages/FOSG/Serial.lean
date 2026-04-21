@@ -1514,6 +1514,70 @@ theorem baseReplaySteps_lastState
 /-- Erase bookkeeping from a realized serialized step. Resolution steps become
 the corresponding original FOSG step; deterministic bookkeeping steps erase to
 `none`. -/
+noncomputable def eraseBaseStepWithOrder
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W}
+    (act : (SerialState.serialize (G := G)).LegalAction (.base w))
+    (dst : SerialState G)
+    (support : (SerialState.serialize (G := G)).transition (.base w) act dst ≠ 0)
+    (oa : List ι)
+    (horder : G.orderedActive w = oa) : Option G.Step :=
+  match oa with
+  | [] =>
+      match dst with
+      | .base w' =>
+          some ⟨w,
+            baseChanceLegalAction (G := G) w
+              (G.active_eq_empty_of_orderedActive_eq_nil horder)
+              ((by
+                have ha : ¬ G.terminal w ∧ act.1 = noopAction Act := by
+                  simpa [SerialState.serialize, SerialState.legal, horder] using act.2
+                exact ha.1) : ¬ G.terminal w),
+            w',
+            base_empty_support (G := G) horder act support⟩
+      | .decide _ _ _ _ _ => none
+      | .chance _ _ => none
+  | _ :: _ => none
+
+private theorem eraseBaseStepWithOrder_nonempty
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W}
+    (act : (SerialState.serialize (G := G)).LegalAction (.base w))
+    (dst : SerialState G)
+    (support : (SerialState.serialize (G := G)).transition (.base w) act dst ≠ 0)
+    (oa : List ι)
+    (horder : G.orderedActive w = oa)
+    (hnonempty : oa ≠ []) :
+    eraseBaseStepWithOrder G act dst support oa horder = none := by
+  cases oa with
+  | nil =>
+      exact False.elim (hnonempty rfl)
+  | cons head tail =>
+      rfl
+
+private theorem eraseBaseStepWithOrder_empty
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W}
+    (act : (SerialState.serialize (G := G)).LegalAction (.base w))
+    (dst : SerialState G)
+    (support : (SerialState.serialize (G := G)).transition (.base w) act dst ≠ 0)
+    (horder : G.orderedActive w = []) :
+    eraseBaseStepWithOrder G act dst support [] horder =
+      match dst with
+      | .base w' =>
+          some ⟨w,
+            baseChanceLegalAction (G := G) w
+              (G.active_eq_empty_of_orderedActive_eq_nil horder)
+              ((by
+                have ha : ¬ G.terminal w ∧ act.1 = noopAction Act := by
+                  simpa [SerialState.serialize, SerialState.legal, horder] using act.2
+                exact ha.1) : ¬ G.terminal w),
+            w',
+            base_empty_support (G := G) horder act support⟩
+      | .decide _ _ _ _ _ => none
+      | .chance _ _ => none := by
+  cases dst <;> rfl
+
 noncomputable def eraseStep
     (G : FOSG ι W Act PrivObs PubObs)
     (e : SerializedStep G) : Option G.Step := by
@@ -1522,25 +1586,7 @@ noncomputable def eraseStep
   | mk src act dst support =>
       cases src with
       | base w =>
-          cases horder : G.orderedActive w with
-          | nil =>
-              cases dst with
-              | base w' =>
-                  exact some ⟨w,
-                    baseChanceLegalAction (G := G) w
-                      (G.active_eq_empty_of_orderedActive_eq_nil horder)
-                      ((by
-                        have ha : ¬ G.terminal w ∧ act.1 = noopAction Act := by
-                          simpa [SerialState.serialize, SerialState.legal, horder] using act.2
-                        exact ha.1) : ¬ G.terminal w),
-                    w',
-                    base_empty_support (G := G) horder act support⟩
-              | decide _ _ _ _ _ =>
-                  exact none
-              | chance _ _ =>
-                  exact none
-          | cons _ _ =>
-              exact none
+          exact eraseBaseStepWithOrder G act dst support (G.orderedActive w) rfl
       | decide _ _ _ _ _ =>
           exact none
       | chance w ga =>
@@ -1589,6 +1635,50 @@ noncomputable def chanceResolutionStep
     eraseStep (G := G) (chanceResolutionStep (G := G) e) = some e := by
   rcases e with ⟨src, act, dst, support⟩
   simp [chanceResolutionStep, eraseStep]
+
+@[simp] theorem eraseStep_baseReplayStepCons
+    {w : W} (ga : G.LegalAction w) {current next : ι} {tail : List ι}
+    (horder : G.orderedActive w = current :: next :: tail) :
+    eraseStep (G := G) (baseReplayStepCons (G := G) ga horder) = none := by
+  change eraseBaseStepWithOrder (G := G)
+      (baseReplayStepCons (G := G) ga horder).act
+      (baseReplayStepCons (G := G) ga horder).dst
+      (baseReplayStepCons (G := G) ga horder).support
+      (G.orderedActive w) rfl = none
+  simpa [horder] using
+    eraseBaseStepWithOrder_nonempty (G := G)
+      (act := (baseReplayStepCons (G := G) ga horder).act)
+      (dst := (baseReplayStepCons (G := G) ga horder).dst)
+      (support := (baseReplayStepCons (G := G) ga horder).support)
+      (oa := current :: next :: tail) horder (by simp)
+
+@[simp] theorem eraseStep_baseReplayStepLast
+    {w : W} (ga : G.LegalAction w) {current : ι}
+    (horder : G.orderedActive w = [current]) :
+    eraseStep (G := G) (baseReplayStepLast (G := G) ga horder) = none := by
+  change eraseBaseStepWithOrder (G := G)
+      (baseReplayStepLast (G := G) ga horder).act
+      (baseReplayStepLast (G := G) ga horder).dst
+      (baseReplayStepLast (G := G) ga horder).support
+      (G.orderedActive w) rfl = none
+  simpa [horder] using
+    eraseBaseStepWithOrder_nonempty (G := G)
+      (act := (baseReplayStepLast (G := G) ga horder).act)
+      (dst := (baseReplayStepLast (G := G) ga horder).dst)
+      (support := (baseReplayStepLast (G := G) ga horder).support)
+      (oa := [current]) horder (by simp)
+
+@[simp] theorem eraseStep_decideReplayStepCons
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current next : ι} {tail : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: next :: tail) :
+    eraseStep (G := G) (decideReplayStepCons (G := G) ga hsplit) = none := by
+  simp [eraseStep, decideReplayStepCons]
+
+@[simp] theorem eraseStep_decideReplayStepLast
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
+    (hsplit : G.orderedActive w = acted ++ [current]) :
+    eraseStep (G := G) (decideReplayStepLast (G := G) ga hsplit) = none := by
+  simp [eraseStep, decideReplayStepLast]
 
 theorem chanceResolutionStep_data
     (e : G.Step) (i : ι) :
@@ -1668,6 +1758,29 @@ noncomputable def baseEmptyResolutionStep
       simpa using
         (map_base_apply (G := G) (p := G.transition e.src e.act) (w := e.dst))
     simpa [hga, hmap] using e.support⟩
+
+@[simp] theorem eraseStep_baseEmptyResolutionStep
+    (e : G.Step) (horder : G.orderedActive e.src = []) :
+    eraseStep (G := G) (baseEmptyResolutionStep (G := G) e horder) = some e := by
+  rcases e with ⟨src, act, dst, support⟩
+  have hga :
+      baseChanceLegalAction (G := G) src
+        (G.active_eq_empty_of_orderedActive_eq_nil horder)
+        (by
+          intro hterm
+          exact G.terminal_no_legal hterm act.2) = act :=
+    baseChanceLegalAction_eq_stepAct (G := G) ⟨src, act, dst, support⟩ horder
+  change eraseBaseStepWithOrder (G := G)
+      (baseEmptyResolutionStep (G := G) ⟨src, act, dst, support⟩ horder).act
+      (baseEmptyResolutionStep (G := G) ⟨src, act, dst, support⟩ horder).dst
+      (baseEmptyResolutionStep (G := G) ⟨src, act, dst, support⟩ horder).support
+      (G.orderedActive src) rfl = some ⟨src, act, dst, support⟩
+  simpa [horder, baseEmptyResolutionStep, hga] using
+    eraseBaseStepWithOrder_empty (G := G)
+      (act := (baseEmptyResolutionStep (G := G) ⟨src, act, dst, support⟩ horder).act)
+      (dst := (baseEmptyResolutionStep (G := G) ⟨src, act, dst, support⟩ horder).dst)
+      (support := (baseEmptyResolutionStep (G := G) ⟨src, act, dst, support⟩ horder).support)
+      horder
 
 @[simp] theorem baseEmptyResolutionStep_reward
     (e : G.Step) (horder : G.orderedActive e.src = []) (i : ι) :
@@ -3306,7 +3419,7 @@ theorem translateBehavioralProfile_stepProb_baseEmptyResolution
       ((baseEmptyResolutionStep (G := G) e horder).act) (.base e.dst) =
     (G.transition e.src e.act) e.dst
   rw [transition_base_empty_eq (G := G) horder]
-  simp [baseEmptyResolutionStep, hga, hmap]
+  simp [hga, hmap]
 
 private theorem stepExpansionWithOrder_probFrom
     (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
@@ -3677,6 +3790,118 @@ noncomputable def eraseHistory
     (h : SerializedHistory G) : G.History :=
   eraseFrom G (History.nil G) (.base G.init) rfl h.steps (by
     simpa [History.lastState, History.nil] using h.chain)
+
+@[simp] theorem eraseSteps_decisionReplaySteps
+    {G : FOSG ι W Act PrivObs PubObs}
+    {w : W} (ga : G.LegalAction w) (acted : List ι)
+    (current : ι) (rest : List ι)
+    (hsplit : G.orderedActive w = acted ++ current :: rest) :
+    List.filterMap (eraseStep (G := G))
+      (decisionReplaySteps (G := G) ga acted current rest hsplit) = [] := by
+  induction rest generalizing acted current with
+  | nil =>
+      simp [decisionReplaySteps]
+  | cons next tail ih =>
+      simp [decisionReplaySteps, ih]
+
+@[simp] theorem eraseSteps_baseReplaySteps
+    {G : FOSG ι W Act PrivObs PubObs}
+    {w : W} (ga : G.LegalAction w) (current : ι) (rest : List ι)
+    (horder : G.orderedActive w = current :: rest) :
+    List.filterMap (eraseStep (G := G))
+      (baseReplaySteps (G := G) ga current rest horder) = [] := by
+  cases rest with
+  | nil =>
+      simp [baseReplaySteps]
+  | cons next tail =>
+      simp [baseReplaySteps]
+
+theorem eraseSteps_stepExpansionWithOrder
+    {G : FOSG ι W Act PrivObs PubObs}
+    (e : G.Step) (oa : List ι) (horder : G.orderedActive e.src = oa) :
+    List.filterMap (eraseStep (G := G)) (stepExpansionWithOrder (G := G) e oa horder) = [e] := by
+  cases oa with
+  | nil =>
+      rw [stepExpansionWithOrder_nil (G := G) e horder]
+      simp
+  | cons current rest =>
+      rw [stepExpansionWithOrder_cons (G := G) e current rest horder]
+      simp
+
+@[simp] theorem eraseSteps_stepExpansion
+    {G : FOSG ι W Act PrivObs PubObs}
+    (e : G.Step) :
+    List.filterMap (eraseStep (G := G)) (stepExpansion (G := G) e) = [e] := by
+  simpa [stepExpansion] using
+    eraseSteps_stepExpansionWithOrder (G := G) e (G.orderedActive e.src) rfl
+
+theorem eraseSteps_expandFrom
+    {G : FOSG ι W Act PrivObs PubObs}
+    (w : W) (es : List G.Step) (hchain : G.StepChainFrom w es) :
+    List.filterMap (eraseStep (G := G)) (expandFrom G w es hchain) = es := by
+  induction es generalizing w with
+  | nil =>
+      simp [expandFrom]
+  | cons e es ih =>
+      rcases hchain with ⟨hsrc, htail⟩
+      subst hsrc
+      simp [expandFrom, eraseSteps_stepExpansion, ih]
+
+@[simp] theorem eraseHistory_expandHistory_steps
+    {G : FOSG ι W Act PrivObs PubObs}
+    (h : G.History) :
+    List.filterMap (eraseStep (G := G)) (expandHistory (G := G) h).steps = h.steps := by
+  simpa [expandHistory_steps] using
+    eraseSteps_expandFrom (G := G) G.init h.steps h.chain
+
+theorem expandHistory_injective
+    {G : FOSG ι W Act PrivObs PubObs} :
+    Function.Injective (expandHistory (G := G)) := by
+  intro h₁ h₂ hEq
+  apply FOSG.History.ext
+  have hsteps : (expandHistory (G := G) h₁).steps = (expandHistory (G := G) h₂).steps := by
+    simpa using congrArg FOSG.History.steps hEq
+  have herased := congrArg (List.filterMap (eraseStep (G := G))) hsteps
+  have herased' :
+      List.filterMap (eraseStep (G := G)) (expandHistory (G := G) h₁).steps =
+        List.filterMap (eraseStep (G := G)) (expandHistory (G := G) h₂).steps := by
+    simpa using herased
+  exact (eraseHistory_expandHistory_steps (G := G) h₁).symm.trans
+    (herased'.trans (eraseHistory_expandHistory_steps (G := G) h₂))
+
+theorem expandHistory_terminalMassOn_image
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι]
+    [DecidablePred G.terminal]
+    [DecidableEq ((SerialState.serialize (G := G)).History)]
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (hs : Finset G.History) :
+    FOSG.History.terminalMassOn (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (hs.image (expandHistory (G := G))) =
+      FOSG.History.terminalMassOn (G := G) σ.toProfile hs := by
+  classical
+  rw [FOSG.History.terminalMassOn]
+  rw [Finset.sum_image]
+  · simpa using expandHistory_terminalMassOn (G := G) hLegSer σ hs
+  · intro h₁ _ h₂ _ hEq
+    exact expandHistory_injective (G := G) hEq
+
+theorem expandHistory_terminalLaw_image
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι]
+    [DecidablePred G.terminal]
+    [DecidableEq ((SerialState.serialize (G := G)).History)]
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (hs : Finset G.History) :
+    FOSG.History.terminalLaw (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (hs.image (expandHistory (G := G))) =
+      FOSG.History.terminalLaw (G := G) σ.toProfile hs := by
+  simpa [FOSG.History.terminalLaw] using
+    expandHistory_terminalMassOn_image (G := G) hLegSer σ hs
 
 end SerialState
 
