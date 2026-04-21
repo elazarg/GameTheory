@@ -1212,6 +1212,83 @@ abbrev SerializedHistory
     (G : FOSG ι W Act PrivObs PubObs) : Type :=
   (SerialState.serialize (G := G)).History
 
+/-- Canonical serialized bookkeeping step replaying the first non-final player
+choice of an original legal action. -/
+noncomputable def baseReplayStepCons
+    {w : W} (ga : G.LegalAction w) {current next : ι} {tail : List ι}
+    (horder : G.orderedActive w = current :: next :: tail) : SerializedStep G :=
+  ⟨.base w,
+    baseReplayAction (G := G) ga horder,
+    .decide w (G.prefixChoice ga [current]) next tail
+      (validDecision_of_prefix (G := G) ga
+        (acted := [current]) (current := next) (rest := tail) (by simpa using horder)),
+    by
+      change SerialState.transition (G := G) (.base w)
+        (baseReplayAction (G := G) ga horder)
+        (.decide w (G.prefixChoice ga [current]) next tail
+          (validDecision_of_prefix (G := G) ga
+            (acted := [current]) (current := next) (rest := tail) (by simpa using horder))) ≠ 0
+      have hne : G.orderedActive w ≠ [] := by simp [horder]
+      rw [transition_base_nonempty_eq (G := G) hne]
+      simp [basePlayerSuccessor_replay_cons (G := G) (ga := ga) horder]⟩
+
+/-- Canonical serialized bookkeeping step replaying the unique player choice
+when exactly one active player remains at a base state. -/
+noncomputable def baseReplayStepLast
+    {w : W} (ga : G.LegalAction w) {current : ι}
+    (horder : G.orderedActive w = [current]) : SerializedStep G :=
+  ⟨.base w,
+    baseReplayAction (G := G) ga horder,
+    .chance w ga,
+    by
+      change SerialState.transition (G := G) (.base w)
+        (baseReplayAction (G := G) ga horder) (.chance w ga) ≠ 0
+      have hne : G.orderedActive w ≠ [] := by simp [horder]
+      rw [transition_base_nonempty_eq (G := G) hne]
+      simp [basePlayerSuccessor_replay_last (G := G) (ga := ga) horder]⟩
+
+/-- Canonical serialized bookkeeping step replaying a non-final player choice
+from an intermediate serialized decision state. -/
+noncomputable def decideReplayStepCons
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current next : ι} {tail : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: next :: tail) : SerializedStep G :=
+  ⟨.decide w (G.prefixChoice ga acted) current (next :: tail)
+      (validDecision_of_prefix (G := G) ga hsplit),
+    decideReplayAction (G := G) ga hsplit,
+    .decide w (G.prefixChoice ga (acted ++ [current])) next tail
+      (validDecision_of_prefix (G := G) ga
+        (acted := acted ++ [current]) (current := next) (rest := tail)
+        (by simpa [List.append_assoc] using hsplit)),
+    by
+      change SerialState.transition (G := G)
+        (.decide w (G.prefixChoice ga acted) current (next :: tail)
+          (validDecision_of_prefix (G := G) ga hsplit))
+        (decideReplayAction (G := G) ga hsplit)
+        (.decide w (G.prefixChoice ga (acted ++ [current])) next tail
+          (validDecision_of_prefix (G := G) ga
+            (acted := acted ++ [current]) (current := next) (rest := tail)
+            (by simpa [List.append_assoc] using hsplit))) ≠ 0
+      rw [transition_decide_eq (G := G)]
+      simp [decidePlayerSuccessor_replay_cons (G := G) (ga := ga) hsplit]⟩
+
+/-- Canonical serialized bookkeeping step replaying the final player choice
+from an intermediate serialized decision state into the inserted chance state. -/
+noncomputable def decideReplayStepLast
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
+    (hsplit : G.orderedActive w = acted ++ [current]) : SerializedStep G :=
+  ⟨.decide w (G.prefixChoice ga acted) current []
+      (validDecision_of_prefix (G := G) ga hsplit),
+    decideReplayAction (G := G) ga hsplit,
+    .chance w ga,
+    by
+      change SerialState.transition (G := G)
+        (.decide w (G.prefixChoice ga acted) current []
+          (validDecision_of_prefix (G := G) ga hsplit))
+        (decideReplayAction (G := G) ga hsplit)
+        (.chance w ga) ≠ 0
+      rw [transition_decide_eq (G := G)]
+      simp [decidePlayerSuccessor_replay_last (G := G) (ga := ga) hsplit]⟩
+
 /-- Erase bookkeeping from a realized serialized step. Resolution steps become
 the corresponding original FOSG step; deterministic bookkeeping steps erase to
 `none`. -/
