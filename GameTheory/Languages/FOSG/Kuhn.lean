@@ -548,6 +548,58 @@ theorem scalar_indep
           _root_.GameTheory.FOSG.PureProfile G, Fcross p := hFsame_eq_Fcross
     _ = (∑ π, ν π * f π) * (∑ π, ν π * g π) := hFcross_expand
 
+section StepCorollaries
+
+/-- Scalar independence specialized to the realized one-step weight at a given
+history. If `f` depends only on coordinates in `P`, and the current
+information states of `h` all lie outside `P`, then `f` is independent of the
+next-step realized weight. -/
+theorem scalar_indep_stepProb
+    (P : ∀ i, G.InfoState i → Prop)
+    (β : BehavioralProfile (G := G))
+    (f : _root_.GameTheory.FOSG.PureProfile G → ENNReal)
+    (h : G.History) (e : G.Step)
+    (hf : ∀ π₁ π₂ : _root_.GameTheory.FOSG.PureProfile G,
+      (∀ i (v : G.InfoState i), P i v → π₁ i v = π₂ i v) →
+        f π₁ = f π₂)
+    (hP : ∀ i, ¬ P i (h.playerView i)) :
+    ∑ π, behavioralToMixedJoint (G := G) β π *
+      (f π * G.stepProb (G.pureToBehavioral π) h e) =
+        (∑ π, behavioralToMixedJoint (G := G) β π * f π) *
+          G.stepProb β h e := by
+  classical
+  have hg : ∀ π₁ π₂ : _root_.GameTheory.FOSG.PureProfile G,
+      (∀ i (v : G.InfoState i), ¬ P i v → π₁ i v = π₂ i v) →
+        G.stepProb (G.pureToBehavioral π₁) h e =
+          G.stepProb (G.pureToBehavioral π₂) h e := by
+    intro π₁ π₂ hag
+    rw [G.stepProb_eq_stepActionProb_mul_transition,
+      G.stepProb_eq_stepActionProb_mul_transition]
+    congr 1
+    unfold FOSG.stepActionProb
+    refine Finset.prod_congr rfl ?_
+    intro i _
+    cases hact : e.ownAction? i with
+    | none =>
+        simp
+    | some ai =>
+        rw [FOSG.pureToBehavioral_apply, FOSG.pureToBehavioral_apply]
+        have hEq : π₁ i (h.playerView i) = π₂ i (h.playerView i) := hag i _ (hP i)
+        simp [PMF.pure_apply, hEq]
+  calc
+    ∑ π, behavioralToMixedJoint (G := G) β π *
+        (f π * G.stepProb (G.pureToBehavioral π) h e)
+      = (∑ π, behavioralToMixedJoint (G := G) β π * f π) *
+          (∑ π, behavioralToMixedJoint (G := G) β π *
+            G.stepProb (G.pureToBehavioral π) h e) := by
+              exact scalar_indep (G := G) P β f
+                (fun π => G.stepProb (G.pureToBehavioral π) h e) hf hg
+    _ = (∑ π, behavioralToMixedJoint (G := G) β π * f π) *
+          G.stepProb β h e := by
+            rw [marginal_stepProb (G := G) β h e]
+
+end StepCorollaries
+
 end ScalarIndependence
 
 end Native
