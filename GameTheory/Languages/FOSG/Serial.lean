@@ -2028,6 +2028,49 @@ theorem translateBehavioralProfile_not_singleton_none_of_active
       (G := G) hLegSer sh i hi
   simp [translateBehavioralProfile, hnot]
 
+section Probability
+
+variable [Fintype ι]
+
+theorem translateBehavioralProfile_stepActionProb_eq_one_of_active_empty
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (pref : SerializedHistory G) (e : SerializedStep G)
+    (hsrc : e.src = pref.lastState)
+    (hEmpty : (SerialState.serialize (G := G)).active pref.lastState = ∅) :
+    (SerialState.serialize (G := G)).stepActionProb
+      (translateBehavioralProfile (G := G) σ) pref e = 1 := by
+  classical
+  unfold FOSG.stepActionProb
+  refine Finset.prod_eq_one ?_
+  intro i hiUniv
+  have hiInactive : i ∉ (SerialState.serialize (G := G)).active pref.lastState := by
+    simp [hEmpty]
+  have hprof :=
+    translateBehavioralProfile_of_inactive (G := G) hLegSer σ pref i hiInactive
+  have hnone : e.ownAction? i = none := by
+    apply FOSG.Step.ownAction?_eq_none_of_not_mem_active (G := SerialState.serialize (G := G))
+    rw [hsrc]
+    exact hiInactive
+  rw [hprof, hnone]
+  simp
+
+theorem translateBehavioralProfile_stepProb_eq_transition_of_active_empty
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (pref : SerializedHistory G) (e : SerializedStep G)
+    (hsrc : e.src = pref.lastState)
+    (hEmpty : (SerialState.serialize (G := G)).active pref.lastState = ∅) :
+    (SerialState.serialize (G := G)).stepProb
+      (translateBehavioralProfile (G := G) σ) pref e =
+      ((SerialState.serialize (G := G)).transition e.src e.act) e.dst := by
+  rw [(SerialState.serialize (G := G)).stepProb_eq_stepActionProb_mul_transition]
+  rw [translateBehavioralProfile_stepActionProb_eq_one_of_active_empty
+    (G := G) hLegSer σ pref e hsrc hEmpty]
+  simp
+
+end Probability
+
 theorem serialPlayerViewFrom_append
     (i : ι) (es₁ es₂ : List (SerializedStep G)) :
     serialPlayerViewFrom G i (es₁ ++ es₂) =
