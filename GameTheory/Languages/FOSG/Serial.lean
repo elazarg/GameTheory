@@ -2726,6 +2726,65 @@ theorem translateBehavioralProfile_stepActionProb_baseReplayStepLast
     simp
   simp [hprod]
 
+theorem translateBehavioralProfile_stepProb_baseReplayStepCons
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (h : G.History)
+    (ga : G.LegalAction h.lastState)
+    {current next : ι} {tail : List ι}
+    (horder : G.orderedActive h.lastState = current :: next :: tail) :
+    (SerialState.serialize (G := G)).stepProb
+      (translateBehavioralProfile (G := G) σ)
+      (expandHistory (G := G) h)
+      (baseReplayStepCons (G := G) ga horder) =
+      (σ current (h.playerView current)) (ga.1 current) := by
+  rw [(SerialState.serialize (G := G)).stepProb_eq_stepActionProb_mul_transition]
+  rw [translateBehavioralProfile_stepActionProb_baseReplayStepCons
+    (G := G) hLegSer σ h ga horder]
+  have htrans :
+      (SerialState.serialize (G := G)).transition
+        (baseReplayStepCons (G := G) ga horder).src
+        (baseReplayStepCons (G := G) ga horder).act
+        (baseReplayStepCons (G := G) ga horder).dst = 1 := by
+    change SerialState.transition (G := G) (.base h.lastState)
+      (baseReplayAction (G := G) ga horder)
+      (.decide h.lastState (G.prefixChoice ga [current]) next tail
+        (validDecision_of_prefix (G := G) ga
+          (acted := [current]) (current := next) (rest := tail) (by simpa using horder))) = 1
+    rw [transition_base_nonempty_eq (G := G) (w := h.lastState) (hNonempty := by simp [horder])]
+    rw [PMF.pure_apply]
+    simp [basePlayerSuccessor_replay_cons (G := G) (ga := ga) horder]
+  rw [htrans]
+  simp
+
+theorem translateBehavioralProfile_stepProb_baseReplayStepLast
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (h : G.History)
+    (ga : G.LegalAction h.lastState)
+    {current : ι}
+    (horder : G.orderedActive h.lastState = [current]) :
+    (SerialState.serialize (G := G)).stepProb
+      (translateBehavioralProfile (G := G) σ)
+      (expandHistory (G := G) h)
+      (baseReplayStepLast (G := G) ga horder) =
+      (σ current (h.playerView current)) (ga.1 current) := by
+  rw [(SerialState.serialize (G := G)).stepProb_eq_stepActionProb_mul_transition]
+  rw [translateBehavioralProfile_stepActionProb_baseReplayStepLast
+    (G := G) hLegSer σ h ga horder]
+  have htrans :
+      (SerialState.serialize (G := G)).transition
+        (baseReplayStepLast (G := G) ga horder).src
+        (baseReplayStepLast (G := G) ga horder).act
+        (baseReplayStepLast (G := G) ga horder).dst = 1 := by
+    change SerialState.transition (G := G) (.base h.lastState)
+      (baseReplayAction (G := G) ga horder) (.chance h.lastState ga) = 1
+    rw [transition_base_nonempty_eq (G := G) (w := h.lastState) (hNonempty := by simp [horder])]
+    rw [PMF.pure_apply]
+    simp [basePlayerSuccessor_replay_last (G := G) (ga := ga) horder]
+  rw [htrans]
+  simp
+
 theorem translateBehavioralProfile_stepActionProb_decideReplayStepCons_of_view
     (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
     (σ : G.BehavioralProfile)
@@ -2780,6 +2839,43 @@ theorem translateBehavioralProfile_stepActionProb_decideReplayStepCons_of_view
     simp
   simp [hprod]
 
+theorem translateBehavioralProfile_stepProb_decideReplayStepCons_of_view
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (sh : SerializedHistory G)
+    {w : W} (ga : G.LegalAction w)
+    {acted : List ι} {current next : ι} {tail : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: next :: tail)
+    (hsrc :
+      sh.lastState =
+        .decide w (G.prefixChoice ga acted) current (next :: tail)
+          (validDecision_of_prefix (G := G) ga hsplit)) :
+    (SerialState.serialize (G := G)).stepProb
+      (translateBehavioralProfile (G := G) σ) sh
+      (decideReplayStepCons (G := G) ga hsplit) =
+      (σ current (normalizeSerialInfoState G current (sh.playerView current))) (ga.1 current) := by
+  rw [(SerialState.serialize (G := G)).stepProb_eq_stepActionProb_mul_transition]
+  rw [translateBehavioralProfile_stepActionProb_decideReplayStepCons_of_view
+    (G := G) hLegSer σ sh ga hsplit hsrc]
+  have htrans :
+      (SerialState.serialize (G := G)).transition
+        (decideReplayStepCons (G := G) ga hsplit).src
+        (decideReplayStepCons (G := G) ga hsplit).act
+        (decideReplayStepCons (G := G) ga hsplit).dst = 1 := by
+    change SerialState.transition (G := G)
+      (.decide w (G.prefixChoice ga acted) current (next :: tail)
+        (validDecision_of_prefix (G := G) ga hsplit))
+      (decideReplayAction (G := G) ga hsplit)
+      (.decide w (G.prefixChoice ga (acted ++ [current])) next tail
+        (validDecision_of_prefix (G := G) ga
+          (acted := acted ++ [current]) (current := next) (rest := tail)
+          (by simpa [List.append_assoc] using hsplit))) = 1
+    rw [transition_decide_eq (G := G)]
+    rw [PMF.pure_apply]
+    simp [decidePlayerSuccessor_replay_cons (G := G) (ga := ga) hsplit]
+  rw [htrans]
+  simp
+
 theorem translateBehavioralProfile_stepActionProb_decideReplayStepLast_of_view
     (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
     (σ : G.BehavioralProfile)
@@ -2833,6 +2929,214 @@ theorem translateBehavioralProfile_stepActionProb_decideReplayStepLast_of_view
     rw [hprof, hnone]
     simp
   simp [hprod]
+
+theorem translateBehavioralProfile_stepProb_decideReplayStepLast_of_view
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (sh : SerializedHistory G)
+    {w : W} (ga : G.LegalAction w)
+    {acted : List ι} {current : ι}
+    (hsplit : G.orderedActive w = acted ++ [current])
+    (hsrc :
+      sh.lastState =
+        .decide w (G.prefixChoice ga acted) current []
+          (validDecision_of_prefix (G := G) ga hsplit)) :
+    (SerialState.serialize (G := G)).stepProb
+      (translateBehavioralProfile (G := G) σ) sh
+      (decideReplayStepLast (G := G) ga hsplit) =
+      (σ current (normalizeSerialInfoState G current (sh.playerView current))) (ga.1 current) := by
+  rw [(SerialState.serialize (G := G)).stepProb_eq_stepActionProb_mul_transition]
+  rw [translateBehavioralProfile_stepActionProb_decideReplayStepLast_of_view
+    (G := G) hLegSer σ sh ga hsplit hsrc]
+  have htrans :
+      (SerialState.serialize (G := G)).transition
+        (decideReplayStepLast (G := G) ga hsplit).src
+        (decideReplayStepLast (G := G) ga hsplit).act
+        (decideReplayStepLast (G := G) ga hsplit).dst = 1 := by
+    change SerialState.transition (G := G)
+      (.decide w (G.prefixChoice ga acted) current []
+        (validDecision_of_prefix (G := G) ga hsplit))
+      (decideReplayAction (G := G) ga hsplit)
+      (.chance w ga) = 1
+    rw [transition_decide_eq (G := G)]
+    rw [PMF.pure_apply]
+    simp [decidePlayerSuccessor_replay_last (G := G) (ga := ga) hsplit]
+  rw [htrans]
+  simp
+
+theorem decisionReplaySteps_probFrom
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History)
+    (sh : SerializedHistory G)
+    (ga : G.LegalAction h.lastState)
+    (acted : List ι) (current : ι) (rest : List ι)
+    (hsplit : G.orderedActive h.lastState = acted ++ current :: rest)
+    (hsrc :
+      sh.lastState =
+        .decide h.lastState (G.prefixChoice ga acted) current rest
+          (validDecision_of_prefix (G := G) ga hsplit))
+    (hviews : ∀ i, i ∉ acted →
+      normalizeSerialInfoState G i (sh.playerView i) = h.playerView i) :
+    FOSG.History.probFrom (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      sh
+      (decisionReplaySteps (G := G) ga acted current rest hsplit)
+      (by simpa [hsrc] using
+        (decisionReplaySteps_chain (G := G) ga acted current rest hsplit)) =
+      ((current :: rest).map (fun i => σ.toProfile i (h.playerView i) (ga.1 i))).prod := by
+  induction rest generalizing acted current sh with
+  | nil =>
+      have hcurNot : current ∉ acted :=
+        not_mem_acted_of_mem_remaining (G := G) hsplit (by simp)
+      have hviewcur := hviews current hcurNot
+      change FOSG.History.probFrom (G := SerialState.serialize (G := G))
+        (translateBehavioralProfile (G := G) σ.toProfile) sh
+        [decideReplayStepLast (G := G) ga hsplit]
+        (by simpa [decisionReplaySteps, hsrc] using
+          (decisionReplaySteps_chain (G := G) ga acted current [] hsplit)) =
+        ((current :: []).map (fun i => σ.toProfile i (h.playerView i) (ga.1 i))).prod
+      rw [FOSG.History.probFrom_cons]
+      rw [translateBehavioralProfile_stepProb_decideReplayStepLast_of_view
+        (G := G) hLegSer σ.toProfile sh ga hsplit hsrc]
+      rw [FOSG.History.probFrom_nil]
+      rw [hviewcur]
+      simp [legalBehavioralProfile_toProfile_apply, List.map_cons,
+        List.map_nil, List.prod_cons, List.prod_nil, mul_one]
+  | cons next tail ih =>
+      have hcurNot : current ∉ acted :=
+        not_mem_acted_of_mem_remaining (G := G) hsplit (by simp)
+      have hviewcur := hviews current hcurNot
+      have hstepSrc :
+          (decideReplayStepCons (G := G) ga hsplit).src = sh.lastState := by
+        simpa [decideReplayStepCons] using hsrc.symm
+      let sh' := sh.appendStep (decideReplayStepCons (G := G) ga hsplit) hstepSrc
+      have hsrc' :
+          sh'.lastState =
+            .decide h.lastState (G.prefixChoice ga (acted ++ [current])) next tail
+              (validDecision_of_prefix (G := G) ga
+                (acted := acted ++ [current]) (current := next) (rest := tail)
+                (by simpa [List.append_assoc] using hsplit)) := by
+        simp [sh', decideReplayStepCons]
+      have hviews' : ∀ i, i ∉ acted ++ [current] →
+          normalizeSerialInfoState G i (sh'.playerView i) = h.playerView i := by
+        intro i hi
+        have hiActed : i ∉ acted := by
+          intro hi'
+          exact hi (by simp [hi'])
+        have hiNe : i ≠ current := by
+          intro hEq
+          subst hEq
+          exact hi (by simp)
+        calc
+          normalizeSerialInfoState G i (sh'.playerView i)
+            = normalizeSerialInfoState G i (sh.playerView i) := by
+                exact normalizeSerialInfoState_append_decideReplayStepCons_of_ne
+                  (G := G) sh ga hsplit hstepSrc hiNe
+          _ = h.playerView i := hviews i hiActed
+      change FOSG.History.probFrom (G := SerialState.serialize (G := G))
+        (translateBehavioralProfile (G := G) σ.toProfile) sh
+        (decideReplayStepCons (G := G) ga hsplit ::
+          decisionReplaySteps (G := G) ga (acted ++ [current]) next tail
+            (by simpa [List.append_assoc] using hsplit))
+        (by simpa [decisionReplaySteps, hsrc] using
+          (decisionReplaySteps_chain (G := G) ga acted current (next :: tail) hsplit)) =
+        ((current :: next :: tail).map
+          (fun i => σ.toProfile i (h.playerView i) (ga.1 i))).prod
+      rw [FOSG.History.probFrom_cons]
+      rw [translateBehavioralProfile_stepProb_decideReplayStepCons_of_view
+        (G := G) hLegSer σ.toProfile sh ga hsplit hsrc]
+      rw [hviewcur]
+      have hrec := ih
+        (acted := acted ++ [current]) (current := next) (sh := sh')
+        (hsplit := by simpa [List.append_assoc] using hsplit)
+        (hsrc := hsrc') (hviews := hviews')
+      simpa [List.map, sh', legalBehavioralProfile_toProfile_apply] using
+        congrArg (fun x => (σ.toProfile current (h.playerView current) (ga.1 current)) * x) hrec
+
+theorem baseReplaySteps_probFrom
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History)
+    (ga : G.LegalAction h.lastState)
+    (current : ι) (rest : List ι)
+    (horder : G.orderedActive h.lastState = current :: rest) :
+    FOSG.History.probFrom (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (expandHistory (G := G) h)
+      (baseReplaySteps (G := G) ga current rest horder)
+      (by simpa [expandHistory_lastState] using
+        (baseReplaySteps_chain (G := G) ga current rest horder)) =
+      ((current :: rest).map (fun i => σ.toProfile i (h.playerView i) (ga.1 i))).prod := by
+  cases rest with
+  | nil =>
+      change FOSG.History.probFrom (G := SerialState.serialize (G := G))
+        (translateBehavioralProfile (G := G) σ.toProfile) (expandHistory (G := G) h)
+        [baseReplayStepLast (G := G) ga horder]
+        (by simpa [baseReplaySteps] using
+          (baseReplaySteps_chain (G := G) ga current [] horder)) =
+        ((current :: []).map (fun i => σ.toProfile i (h.playerView i) (ga.1 i))).prod
+      rw [FOSG.History.probFrom_cons]
+      rw [translateBehavioralProfile_stepProb_baseReplayStepLast
+        (G := G) hLegSer σ.toProfile h ga horder]
+      rw [FOSG.History.probFrom_nil]
+      simp [legalBehavioralProfile_toProfile_apply, List.map_cons,
+        List.map_nil, List.prod_cons, List.prod_nil, mul_one]
+  | cons next tail =>
+      have hbase :
+          (expandHistory (G := G) h).lastState = .base h.lastState :=
+        expandHistory_lastState (G := G) h
+      have hstepSrc :
+          (baseReplayStepCons (G := G) ga horder).src = (expandHistory (G := G) h).lastState := by
+        simpa [hbase] using
+          (show (baseReplayStepCons (G := G) ga horder).src = .base h.lastState from rfl)
+      let sh' := (expandHistory (G := G) h).appendStep
+        (baseReplayStepCons (G := G) ga horder) hstepSrc
+      have hsrc' :
+          sh'.lastState =
+            .decide h.lastState (G.prefixChoice ga [current]) next tail
+              (validDecision_of_prefix (G := G) ga
+                (acted := [current]) (current := next) (rest := tail)
+                (by simpa using horder)) := by
+        have hlast :=
+          FOSG.History.lastState_appendStep
+            ((expandHistory (G := G) h))
+            (baseReplayStepCons (G := G) ga horder) hstepSrc
+        exact hlast
+      change FOSG.History.probFrom (G := SerialState.serialize (G := G))
+        (translateBehavioralProfile (G := G) σ.toProfile) (expandHistory (G := G) h)
+        (baseReplayStepCons (G := G) ga horder ::
+          decisionReplaySteps (G := G) ga [current] next tail (by simpa using horder))
+        (by simpa [baseReplaySteps] using
+          (baseReplaySteps_chain (G := G) ga current (next :: tail) horder)) =
+        ((current :: next :: tail).map
+          (fun i => σ.toProfile i (h.playerView i) (ga.1 i))).prod
+      rw [FOSG.History.probFrom_cons]
+      rw [translateBehavioralProfile_stepProb_baseReplayStepCons
+        (G := G) hLegSer σ.toProfile h ga horder]
+      have hrec :=
+        decisionReplaySteps_probFrom (G := G) hLegSer σ h
+          sh'
+          ga [current] next tail
+          (by simpa using horder)
+          hsrc'
+          (by
+            intro i hi
+            have hiNe : i ≠ current := by
+              intro hEq
+              subst hEq
+              exact hi (by simp)
+            calc
+              normalizeSerialInfoState G i
+                  (sh'.playerView i)
+                = normalizeSerialInfoState G i ((expandHistory (G := G) h).playerView i) := by
+                    exact normalizeSerialInfoState_append_baseReplayStepCons_of_ne
+                      (G := G) (expandHistory (G := G) h) ga horder hstepSrc hiNe
+              _ = h.playerView i := by
+                    rw [normalizeSerialInfoState_playerView, expandHistory_playerView])
+      simpa [legalBehavioralProfile_toProfile_apply, List.map_cons,
+        List.prod_cons] using
+        congrArg (fun x => (σ.toProfile current (h.playerView current) (ga.1 current)) * x) hrec
 
 end SerializationProbability
 
