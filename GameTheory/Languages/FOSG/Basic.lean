@@ -70,7 +70,7 @@ abbrev LegalAction.val'
     JointAction Act :=
   a.1
 
-@[simp] theorem legalAction_val
+theorem legalAction_val
     (G : FOSG ι W Act PrivObs PubObs) {w : W} (a : G.LegalAction w) :
     G.legal w a.1 :=
   a.2

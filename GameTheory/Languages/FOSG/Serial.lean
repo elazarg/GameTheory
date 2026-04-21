@@ -160,7 +160,6 @@ def ValidDecision
     (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι) : Prop :=
   (∃ acted : List ι, G.orderedActive w = acted ++ current :: rest) ∧
   (∀ j, j ∈ current :: rest → chosen j = none) ∧
-  (∀ j, j ∉ G.active w → chosen j = none) ∧
   (∃ a : G.LegalAction w, G.ExtendsPartial chosen a)
 
 /-- Serialized state space. `base w` is the original world state before any
@@ -279,19 +278,12 @@ theorem validDecision_from_base
     (ha : playerLegal (G := G) w (noopAction Act) current a) :
     G.ValidDecision w (recordChoice (noopAction Act) a current) next tail := by
   rcases ha with ⟨_, hnone, ⟨ga, hcomp, hcurrent⟩⟩
-  refine ⟨⟨[current], by simpa using horder⟩, ?_, ?_, ?_⟩
+  refine ⟨⟨[current], by simpa using horder⟩, ?_, ?_⟩
   · intro j hj
     have hneq : j ≠ current := by
       intro hji
       subst hji
       exact G.current_not_mem_rest_of_split ⟨[], horder⟩ hj
-    simp [recordChoice, hneq]
-  · intro j hj
-    have hcur : current ∈ G.active w := G.current_mem_active_of_split ⟨[], horder⟩
-    have hneq : j ≠ current := by
-      intro hji
-      subst hji
-      exact hj hcur
     simp [recordChoice, hneq]
   · refine ⟨ga, ?_⟩
     exact G.extendsPartial_recordChoice hcomp hcurrent
@@ -302,10 +294,10 @@ theorem validDecision_step
     {a : JointAction Act}
     (ha : playerLegal (G := G) w chosen current a) :
     G.ValidDecision w (recordChoice chosen a current) next tail := by
-  rcases hvalid with ⟨hsplit, hnoneRem, hnoneInactive, _⟩
+  rcases hvalid with ⟨hsplit, hnoneRem, hchosen⟩
   rcases hsplit with ⟨acted, hsplit⟩
   rcases ha with ⟨_, hnone, ⟨ga, hcomp, hcurrent⟩⟩
-  refine ⟨⟨acted ++ [current], by simpa [List.append_assoc] using hsplit⟩, ?_, ?_, ?_⟩
+  refine ⟨⟨acted ++ [current], by simpa [List.append_assoc] using hsplit⟩, ?_, ?_⟩
   · intro j hj
     have hneq : j ≠ current := by
       intro hji
@@ -313,13 +305,6 @@ theorem validDecision_step
       exact G.current_not_mem_rest_of_split ⟨acted, hsplit⟩ (by simpa using hj)
     have hchosen : chosen j = none := hnoneRem j (by simp [hj])
     simp [recordChoice, hneq, hchosen]
-  · intro j hj
-    have hcur : current ∈ G.active w := G.current_mem_active_of_split ⟨acted, hsplit⟩
-    have hneq : j ≠ current := by
-      intro hji
-      subst hji
-      exact hj hcur
-    simpa [recordChoice, hneq] using hnoneInactive j hj
   · refine ⟨ga, ?_⟩
     exact G.extendsPartial_recordChoice hcomp hcurrent
 
@@ -729,7 +714,7 @@ noncomputable def serialize :
             exact ⟨singleMove (Act := Act) current ai, by
               simpa [SerialState.legal, horder] using hlegal⟩
     | decide w chosen current rest hvalid =>
-        rcases hvalid with ⟨hsplit, _, _, ⟨ga, hcomp⟩⟩
+        rcases hvalid with ⟨hsplit, _, ⟨ga, hcomp⟩⟩
         have hcur : current ∈ G.active w := G.current_mem_active_of_split hsplit
         obtain ⟨ai, hai⟩ := G.active_has_some (a := ga) hcur
         have hlegal : SerialState.playerLegal (G := G) w chosen current
