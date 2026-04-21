@@ -1289,6 +1289,93 @@ noncomputable def decideReplayStepLast
       rw [transition_decide_eq (G := G)]
       simp [decidePlayerSuccessor_replay_last (G := G) (ga := ga) hsplit]⟩
 
+/-- Canonical bookkeeping replay steps from an intermediate serialized decision
+state to the inserted serialized chance state. -/
+noncomputable def decisionReplaySteps
+    {w : W} (ga : G.LegalAction w) (acted : List ι)
+    (current : ι) (rest : List ι)
+    (hsplit : G.orderedActive w = acted ++ current :: rest) :
+    List (SerializedStep G) :=
+  match rest with
+  | [] => [decideReplayStepLast (G := G) ga hsplit]
+  | next :: tail =>
+      decideReplayStepCons (G := G) ga hsplit ::
+      decisionReplaySteps ga (acted ++ [current]) next tail
+        (by simpa [List.append_assoc] using hsplit)
+
+theorem decisionReplaySteps_chain
+    {w : W} (ga : G.LegalAction w) (acted : List ι)
+    (current : ι) (rest : List ι)
+    (hsplit : G.orderedActive w = acted ++ current :: rest) :
+    (SerialState.serialize (G := G)).StepChainFrom
+      (.decide w (G.prefixChoice ga acted) current rest
+        (validDecision_of_prefix (G := G) ga hsplit))
+      (decisionReplaySteps (G := G) ga acted current rest hsplit) := by
+  induction rest generalizing acted current with
+  | nil =>
+      exact And.intro rfl trivial
+  | cons next tail ih =>
+      refine And.intro rfl ?_
+      exact ih (acted ++ [current]) next
+        (by simpa [List.append_assoc] using hsplit)
+
+theorem decisionReplaySteps_lastState
+    {w : W} (ga : G.LegalAction w) (acted : List ι)
+    (current : ι) (rest : List ι)
+    (hsplit : G.orderedActive w = acted ++ current :: rest) :
+    (SerialState.serialize (G := G)).lastStateFrom
+      (.decide w (G.prefixChoice ga acted) current rest
+        (validDecision_of_prefix (G := G) ga hsplit))
+      (decisionReplaySteps (G := G) ga acted current rest hsplit) =
+      .chance w ga := by
+  induction rest generalizing acted current with
+  | nil =>
+      simp [decisionReplaySteps, FOSG.lastStateFrom, decideReplayStepLast]
+  | cons next tail ih =>
+      simp only [decisionReplaySteps, FOSG.lastStateFrom, decideReplayStepCons]
+      exact ih (acted ++ [current]) next
+        (by simpa [List.append_assoc] using hsplit)
+
+/-- Canonical bookkeeping replay steps from a serialized base state with
+nonempty active-player list to the inserted serialized chance state. -/
+noncomputable def baseReplaySteps
+    {w : W} (ga : G.LegalAction w) (current : ι) (rest : List ι)
+    (horder : G.orderedActive w = current :: rest) :
+    List (SerializedStep G) :=
+  match rest with
+  | [] => [baseReplayStepLast (G := G) ga horder]
+  | next :: tail =>
+      baseReplayStepCons (G := G) ga horder ::
+      decisionReplaySteps (G := G) ga [current] next tail
+        (by simpa using horder)
+
+theorem baseReplaySteps_chain
+    {w : W} (ga : G.LegalAction w) (current : ι) (rest : List ι)
+    (horder : G.orderedActive w = current :: rest) :
+    (SerialState.serialize (G := G)).StepChainFrom
+      (.base w) (baseReplaySteps (G := G) ga current rest horder) := by
+  cases rest with
+  | nil =>
+      exact And.intro rfl trivial
+  | cons next tail =>
+      refine And.intro rfl ?_
+      exact decisionReplaySteps_chain (G := G) ga [current] next tail
+        (by simpa using horder)
+
+theorem baseReplaySteps_lastState
+    {w : W} (ga : G.LegalAction w) (current : ι) (rest : List ι)
+    (horder : G.orderedActive w = current :: rest) :
+    (SerialState.serialize (G := G)).lastStateFrom
+      (.base w) (baseReplaySteps (G := G) ga current rest horder) =
+      .chance w ga := by
+  cases rest with
+  | nil =>
+      simp [baseReplaySteps, FOSG.lastStateFrom, baseReplayStepLast]
+  | cons next tail =>
+      simp only [baseReplaySteps, FOSG.lastStateFrom, baseReplayStepCons]
+      exact decisionReplaySteps_lastState (G := G) ga [current] next tail
+        (by simpa using horder)
+
 /-- Erase bookkeeping from a realized serialized step. Resolution steps become
 the corresponding original FOSG step; deterministic bookkeeping steps erase to
 `none`. -/
@@ -1389,6 +1476,192 @@ theorem chanceResolutionStep_data
   · simpa [chanceResolutionStep] using
       pubObs_chance_base_eq (G := G) e.act
         (chanceResolutionAction (G := G) e.act)
+
+theorem baseChanceLegalAction_eq_stepAct
+    (e : G.Step) (horder : G.orderedActive e.src = []) :
+    baseChanceLegalAction (G := G) e.src
+      (G.active_eq_empty_of_orderedActive_eq_nil horder)
+      (by
+        intro hterm
+        exact G.terminal_no_legal hterm e.act.2) = e.act := by
+  apply legalAction_eq_of_extends_matchesOrderedActive (G := G)
+  · simpa [horder] using
+      matchesActedPrefix_noop (G := G) e.act
+  · exact G.extendsPartial_noop (baseChanceLegalAction (G := G) e.src
+      (G.active_eq_empty_of_orderedActive_eq_nil horder)
+      (by
+        intro hterm
+        exact G.terminal_no_legal hterm e.act.2))
+
+/-- Canonical serialized resolution step for an original realized step whose
+source state has no active players. -/
+noncomputable def baseEmptyResolutionStep
+    (e : G.Step) (horder : G.orderedActive e.src = []) : SerializedStep G :=
+  let a :
+      (SerialState.serialize (G := G)).LegalAction (.base e.src) :=
+    ⟨noopAction Act, by
+      have hnot : ¬ G.terminal e.src := by
+        intro hterm
+        exact G.terminal_no_legal hterm e.act.2
+      simpa [SerialState.serialize, SerialState.legal, horder] using
+        (show ¬ G.terminal e.src ∧ noopAction Act = noopAction Act from ⟨hnot, rfl⟩)⟩
+  ⟨.base e.src, a, .base e.dst, by
+    change SerialState.transition (G := G) (.base e.src) a (.base e.dst) ≠ 0
+    rw [transition_base_empty_eq (G := G) horder]
+    have hga :
+        baseChanceLegalAction (G := G) e.src
+          (G.active_eq_empty_of_orderedActive_eq_nil horder)
+          (by
+            intro hterm
+            exact G.terminal_no_legal hterm e.act.2) = e.act :=
+      baseChanceLegalAction_eq_stepAct (G := G) e horder
+    have hmap :
+        (PMF.map (SerialState.base (G := G)) (G.transition e.src e.act)) (.base e.dst) =
+          (G.transition e.src e.act) e.dst := by
+      simpa using
+        (map_base_apply (G := G) (p := G.transition e.src e.act) (w := e.dst))
+    simpa [hga, hmap] using e.support⟩
+
+/-- Canonical serialized expansion of one original realized step, parameterized
+by an explicit ordered active-player list. -/
+noncomputable def stepExpansionWithOrder
+    (e : G.Step) (oa : List ι) (horder : G.orderedActive e.src = oa) :
+    List (SerializedStep G) :=
+  match oa with
+  | [] => [baseEmptyResolutionStep (G := G) e horder]
+  | current :: rest =>
+      baseReplaySteps (G := G) e.act current rest horder ++
+        [chanceResolutionStep (G := G) e]
+
+/-- Canonical serialized expansion of one original realized step. -/
+noncomputable def stepExpansion
+    (e : G.Step) : List (SerializedStep G) :=
+  stepExpansionWithOrder (G := G) e (G.orderedActive e.src) rfl
+
+@[simp] theorem stepExpansionWithOrder_nil
+    (e : G.Step) (horder : G.orderedActive e.src = []) :
+    stepExpansionWithOrder (G := G) e [] horder =
+      [baseEmptyResolutionStep (G := G) e horder] := by
+  rfl
+
+@[simp] theorem stepExpansionWithOrder_cons
+    (e : G.Step) (current : ι) (rest : List ι)
+    (horder : G.orderedActive e.src = current :: rest) :
+    stepExpansionWithOrder (G := G) e (current :: rest) horder =
+      baseReplaySteps (G := G) e.act current rest horder ++
+        [chanceResolutionStep (G := G) e] := by
+  rfl
+
+theorem stepExpansionWithOrder_chain
+    (e : G.Step) (oa : List ι) (horder : G.orderedActive e.src = oa) :
+    (SerialState.serialize (G := G)).StepChainFrom
+      (.base e.src) (stepExpansionWithOrder (G := G) e oa horder) := by
+  classical
+  cases oa with
+  | nil =>
+      rw [stepExpansionWithOrder_nil (G := G) e horder]
+      simpa [FOSG.StepChainFrom]
+        using (show (SerialState.serialize (G := G)).StepChainFrom
+          (.base e.src) [baseEmptyResolutionStep (G := G) e horder] from And.intro rfl trivial)
+  | cons current rest =>
+      rw [stepExpansionWithOrder_cons (G := G) e current rest horder]
+      refine FOSG.StepChainFrom.append
+        (baseReplaySteps_chain (G := G) e.act current rest horder) ?_
+      have hlast :=
+        baseReplaySteps_lastState (G := G) e.act current rest horder
+      simpa [FOSG.StepChainFrom, chanceResolutionStep] using
+        (show (SerialState.serialize (G := G)).StepChainFrom
+          ((SerialState.serialize (G := G)).lastStateFrom
+            (.base e.src) (baseReplaySteps (G := G) e.act current rest horder))
+          [chanceResolutionStep (G := G) e] from
+            And.intro hlast.symm trivial)
+
+theorem stepExpansionWithOrder_lastState
+    (e : G.Step) (oa : List ι) (horder : G.orderedActive e.src = oa) :
+    (SerialState.serialize (G := G)).lastStateFrom
+      (.base e.src) (stepExpansionWithOrder (G := G) e oa horder) =
+      .base e.dst := by
+  classical
+  cases oa with
+  | nil =>
+      rw [stepExpansionWithOrder_nil (G := G) e horder]
+      rfl
+  | cons current rest =>
+      rw [stepExpansionWithOrder_cons (G := G) e current rest horder]
+      rw [FOSG.lastStateFrom_append, baseReplaySteps_lastState]
+      simp [chanceResolutionStep, FOSG.lastStateFrom]
+
+theorem stepExpansion_chain
+    (e : G.Step) :
+    (SerialState.serialize (G := G)).StepChainFrom
+      (.base e.src) (stepExpansion (G := G) e) := by
+  simpa [stepExpansion] using
+    stepExpansionWithOrder_chain (G := G) e (G.orderedActive e.src) rfl
+
+theorem stepExpansion_lastState
+    (e : G.Step) :
+    (SerialState.serialize (G := G)).lastStateFrom
+      (.base e.src) (stepExpansion (G := G) e) =
+      .base e.dst := by
+  simpa [stepExpansion] using
+    stepExpansionWithOrder_lastState (G := G) e (G.orderedActive e.src) rfl
+
+/-- Expand a chained list of original steps into the corresponding serialized
+list by concatenating the canonical expansion block of each step. -/
+noncomputable def expandFrom
+    (G : FOSG ι W Act PrivObs PubObs) :
+    (w : W) → (es : List G.Step) → G.StepChainFrom w es → List (SerializedStep G)
+  | _, [], _ => []
+  | _, e :: es, hchain =>
+      stepExpansion (G := G) e ++ expandFrom G e.dst es hchain.2
+
+theorem expandFrom_chain
+    (w : W) (es : List G.Step) (hchain : G.StepChainFrom w es) :
+    (SerialState.serialize (G := G)).StepChainFrom
+      (.base w) (expandFrom G w es hchain) := by
+  induction es generalizing w with
+  | nil =>
+      simp [expandFrom, FOSG.StepChainFrom]
+  | cons e es ih =>
+      rcases hchain with ⟨hsrc, htail⟩
+      subst hsrc
+      have hstepLast := stepExpansion_lastState (G := G) e
+      change
+        (SerialState.serialize (G := G)).StepChainFrom (.base e.src)
+          (stepExpansion (G := G) e ++ expandFrom G e.dst es htail)
+      exact FOSG.StepChainFrom.append
+        (stepExpansion_chain (G := G) e)
+        (by simpa [hstepLast] using ih e.dst htail)
+
+theorem expandFrom_lastState
+    (w : W) (es : List G.Step) (hchain : G.StepChainFrom w es) :
+    (SerialState.serialize (G := G)).lastStateFrom
+      (.base w) (expandFrom G w es hchain) =
+      .base (G.lastStateFrom w es) := by
+  induction es generalizing w with
+  | nil =>
+      simp [expandFrom, FOSG.lastStateFrom]
+  | cons e es ih =>
+      rcases hchain with ⟨hsrc, htail⟩
+      subst hsrc
+      rw [expandFrom, FOSG.lastStateFrom_append, stepExpansion_lastState]
+      exact ih e.dst htail
+
+/-- Canonical serialized expansion of an original realized history. -/
+noncomputable def expandHistory
+    (h : G.History) : (SerialState.serialize (G := G)).History :=
+  ⟨expandFrom G G.init h.steps h.chain,
+    expandFrom_chain (G := G) G.init h.steps h.chain⟩
+
+@[simp] theorem expandHistory_steps
+    (h : G.History) :
+    (expandHistory (G := G) h).steps = expandFrom G G.init h.steps h.chain := rfl
+
+@[simp] theorem expandHistory_lastState
+    (h : G.History) :
+    (expandHistory (G := G) h).lastState = .base h.lastState := by
+  simpa [expandHistory, FOSG.History.lastState] using
+    expandFrom_lastState (G := G) G.init h.steps h.chain
 
 @[simp] theorem eraseStep_decide
     (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
