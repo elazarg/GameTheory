@@ -577,6 +577,12 @@ noncomputable def decideReplayAction
             · left
               exact prefixChoice_apply_of_not_mem (G := G) ga hjActed)⟩
 
+/-- Canonical noop action at a serialized chance-resolution state. -/
+noncomputable def chanceResolutionAction
+    {w : W} (ga : G.LegalAction w) :
+    { a : JointAction Act // legal (G := G) (.chance w ga) a } :=
+  ⟨noopAction Act, by simp [SerialState.legal]⟩
+
 /-- Transition kernel of the serialized game. -/
 noncomputable def transition :
     (s : SerialState G) → {a : JointAction Act // legal (G := G) s a} → PMF (SerialState G)
@@ -1090,6 +1096,58 @@ noncomputable def eraseStep
     eraseStep (G := G) ⟨.chance w ga, a, .base w', support⟩ =
       some ⟨w, ga, w', chance_support (G := G) ga a support⟩ := by
   simp [eraseStep]
+
+/-- Canonical serialized resolution step corresponding to an original realized
+transition step. -/
+noncomputable def chanceResolutionStep
+    (e : G.Step) : SerializedStep G :=
+  ⟨.chance e.src e.act,
+    chanceResolutionAction (G := G) e.act,
+    .base e.dst,
+    by
+      have hmap :
+          (PMF.map (SerialState.base (G := G)) (G.transition e.src e.act)) (.base e.dst) =
+            (G.transition e.src e.act) e.dst := by
+        simpa using
+          (map_base_apply (G := G) (p := G.transition e.src e.act) (w := e.dst))
+      simpa [SerialState.serialize, SerialState.transition, chanceResolutionAction, hmap] using
+        e.support⟩
+
+@[simp] theorem chanceResolutionStep_src
+    (e : G.Step) :
+    (chanceResolutionStep (G := G) e).src = .chance e.src e.act := rfl
+
+@[simp] theorem chanceResolutionStep_dst
+    (e : G.Step) :
+    (chanceResolutionStep (G := G) e).dst = .base e.dst := rfl
+
+@[simp] theorem eraseStep_chanceResolutionStep
+    (e : G.Step) :
+    eraseStep (G := G) (chanceResolutionStep (G := G) e) = some e := by
+  rcases e with ⟨src, act, dst, support⟩
+  simp [chanceResolutionStep, eraseStep]
+
+theorem chanceResolutionStep_data
+    (e : G.Step) (i : ι) :
+    SerialState.world (G := G) (chanceResolutionStep (G := G) e).dst = e.dst ∧
+    SerialState.reward (G := G) (chanceResolutionStep (G := G) e).src
+      (chanceResolutionStep (G := G) e).act (chanceResolutionStep (G := G) e).dst i =
+        G.reward e.src e.act e.dst i ∧
+    SerialState.privObs (G := G) i (chanceResolutionStep (G := G) e).src
+      (chanceResolutionStep (G := G) e).act (chanceResolutionStep (G := G) e).dst =
+        some (G.privObs i e.src e.act e.dst) ∧
+    SerialState.pubObs (G := G) (chanceResolutionStep (G := G) e).src
+      (chanceResolutionStep (G := G) e).act (chanceResolutionStep (G := G) e).dst =
+        some (G.pubObs e.src e.act e.dst) := by
+  refine ⟨rfl, ?_, ?_, ?_⟩
+  · simpa [chanceResolutionStep] using
+      reward_chance_base_eq (G := G) e.act (chanceResolutionAction (G := G) e.act) i
+  · simpa [chanceResolutionStep] using
+      privObs_chance_base_eq (G := G) (i := i) e.act
+        (chanceResolutionAction (G := G) e.act)
+  · simpa [chanceResolutionStep] using
+      pubObs_chance_base_eq (G := G) e.act
+        (chanceResolutionAction (G := G) e.act)
 
 @[simp] theorem eraseStep_decide
     (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
