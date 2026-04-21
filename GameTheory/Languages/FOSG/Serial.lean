@@ -2008,6 +2008,53 @@ theorem privObs_base_empty_base_eq_of_active_empty
     congrArg (fun ga => some (G.privObs i w ga w')) hgaEq
   simp [SerialState.privObs, horder, hpriv]
 
+@[simp] theorem chanceResolutionStep_playerView
+    (e : G.Step) (i : ι) :
+    serialPlayerViewFrom G i [chanceResolutionStep (G := G) e] =
+      [.obs (G.privObs i e.src e.act e.dst) (G.pubObs e.src e.act e.dst)] := by
+  have hnone :
+      (chanceResolutionStep (G := G) e).ownAction? i = none := by
+    apply FOSG.Step.ownAction?_eq_none_of_not_mem_active (G := SerialState.serialize (G := G))
+    simp [SerialState.serialize, SerialState.active]
+  have hpriv :
+      (chanceResolutionStep (G := G) e).privateObs i =
+        some (G.privObs i e.src e.act e.dst) := by
+    exact (chanceResolutionStep_data (G := G) e i).2.2.1
+  have hpub :
+      (chanceResolutionStep (G := G) e).publicObs =
+        some (G.pubObs e.src e.act e.dst) := by
+    exact (chanceResolutionStep_data (G := G) e i).2.2.2
+  simp [serialPlayerViewFrom, FOSG.History.playerViewFrom, FOSG.Step.playerView, hnone, hpriv, hpub]
+
+@[simp] theorem baseEmptyResolutionStep_playerView
+    (e : G.Step) (horder : G.orderedActive e.src = []) (i : ι) :
+    serialPlayerViewFrom G i [baseEmptyResolutionStep (G := G) e horder] =
+      [.obs (G.privObs i e.src e.act e.dst) (G.pubObs e.src e.act e.dst)] := by
+  have hnone :
+      (baseEmptyResolutionStep (G := G) e horder).ownAction? i = none := by
+    apply FOSG.Step.ownAction?_eq_none_of_not_mem_active (G := SerialState.serialize (G := G))
+    simp [baseEmptyResolutionStep, SerialState.serialize, SerialState.active, horder]
+  have hpriv :
+      (baseEmptyResolutionStep (G := G) e horder).privateObs i =
+        some (G.privObs i e.src e.act e.dst) := by
+    have hactive : G.active e.src = ∅ :=
+      G.active_eq_empty_of_orderedActive_eq_nil horder
+    have hga :
+        baseChanceLegalAction (G := G) e.src
+          hactive
+          (by
+            intro hterm
+            exact G.terminal_no_legal hterm e.act.2) = e.act :=
+      baseChanceLegalAction_eq_stepAct (G := G) e horder
+    simpa [FOSG.Step.privateObs, baseEmptyResolutionStep, hga] using
+      privObs_base_empty_base_eq_of_active_empty (G := G) (i := i) hactive
+        (a := (baseEmptyResolutionStep (G := G) e horder).act)
+  have hpub :
+      (baseEmptyResolutionStep (G := G) e horder).publicObs =
+        some (G.pubObs e.src e.act e.dst) := by
+    simp [baseEmptyResolutionStep_publicObs]
+  simp [serialPlayerViewFrom, FOSG.History.playerViewFrom, FOSG.Step.playerView, hnone, hpriv, hpub]
+
 theorem decisionReplaySteps_publicView_nil
     {w : W} (ga : G.LegalAction w) (acted : List ι)
     (current : ι) (rest : List ι)
