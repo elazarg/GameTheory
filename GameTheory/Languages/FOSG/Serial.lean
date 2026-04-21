@@ -490,11 +490,12 @@ theorem validDecision_step
     exact G.extendsPartial_recordChoice hcomp hcurrent
 
 /-- The deterministic successor after a serialized player move from a base
-state with nonempty active set. -/
-noncomputable def basePlayerSuccessor
-    (w : W) (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+state, parameterized by the ordered active-player list. -/
+noncomputable def basePlayerSuccessorWithOrder
+    (w : W) (oa : List ι) (horder : G.orderedActive w = oa)
+    (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
     SerialState G :=
-  match horder : G.orderedActive w with
+  match oa with
   | [] => .base w
   | current :: rest =>
       let hlegal : playerLegal (G := G) w (noopAction Act) current a.1 := by
@@ -506,13 +507,33 @@ noncomputable def basePlayerSuccessor
           .decide w (recordChoice (noopAction Act) a.1 current) next tail
             (validDecision_from_base (G := G) (a := a.1) (by simpa using horder) hlegal)
 
+/-- The deterministic successor after a serialized player move from a base
+state with nonempty active set. -/
+noncomputable def basePlayerSuccessor
+    (w : W) (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+    SerialState G :=
+  basePlayerSuccessorWithOrder (G := G) w (G.orderedActive w) rfl a
+
+@[simp] theorem world_basePlayerSuccessorWithOrder
+    {w : W} {oa : List ι} (horder : G.orderedActive w = oa)
+    (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+    SerialState.world (G := G)
+      (SerialState.basePlayerSuccessorWithOrder (G := G) w oa horder a) = w := by
+  cases oa with
+  | nil =>
+      simp [SerialState.basePlayerSuccessorWithOrder, SerialState.world]
+  | cons current rest =>
+      cases rest with
+      | nil =>
+          simp [SerialState.basePlayerSuccessorWithOrder, SerialState.world]
+      | cons next tail =>
+          simp [SerialState.basePlayerSuccessorWithOrder, SerialState.world]
+
 @[simp] theorem world_basePlayerSuccessor
     {w : W} (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
     SerialState.world (G := G) (SerialState.basePlayerSuccessor (G := G) w a) = w := by
   unfold SerialState.basePlayerSuccessor
-  split
-  · simp [SerialState.world]
-  · split <;> simp [SerialState.world]
+  exact world_basePlayerSuccessorWithOrder (G := G) (w := w) rfl a
 
 /-- The deterministic successor after a serialized player move from an
 intermediate decision state. -/
@@ -555,6 +576,86 @@ noncomputable def baseReplayAction
       simpa [SerialState.legal, horder] using
         base_playerLegal_of_legalAction (G := G) ga horder⟩
 
+theorem basePlayerSuccessorWithOrder_replay_cons
+    {w : W} (ga : G.LegalAction w) {current next : ι} {tail : List ι}
+    (horder : G.orderedActive w = current :: next :: tail) :
+    SerialState.basePlayerSuccessorWithOrder (G := G) w (current :: next :: tail) horder
+      (baseReplayAction (G := G) ga horder) =
+      .decide w (G.prefixChoice ga [current]) next tail
+        (validDecision_of_prefix (G := G) ga
+          (acted := [current]) (current := next) (rest := tail) (by simpa using horder)) := by
+  have hcurrent : current ∈ G.active w :=
+    (G.mem_orderedActive_iff w current).1 (by simp [horder])
+  have hchoice :
+      recordChoice (noopAction Act)
+        (moveOfLegalAction (G := G) ga current hcurrent) current =
+        G.prefixChoice ga [current] := by
+    simpa [prefixChoice_nil (G := G) ga] using
+      prefixChoice_recordChoice_move (G := G) ga (acted := []) hcurrent
+  simp [SerialState.basePlayerSuccessorWithOrder, baseReplayAction, hchoice]
+
+theorem basePlayerSuccessorWithOrder_replay_last
+    {w : W} (ga : G.LegalAction w) {current : ι}
+    (horder : G.orderedActive w = [current]) :
+    SerialState.basePlayerSuccessorWithOrder (G := G) w [current] horder
+      (baseReplayAction (G := G) ga horder) =
+      .chance w ga := by
+  have hcurrent : current ∈ G.active w :=
+    (G.mem_orderedActive_iff w current).1 (by simp [horder])
+  have hlegal :
+      playerLegal (G := G) w (noopAction Act) current
+        (moveOfLegalAction (G := G) ga current hcurrent) :=
+    base_playerLegal_of_legalAction (G := G) ga horder
+  let ga' : G.LegalAction w := Classical.choose hlegal.2.2
+  have hga'comp : G.ExtendsPartial (noopAction Act) ga' :=
+    (Classical.choose_spec hlegal.2.2).1
+  have hga'current :
+      ga'.1 current =
+        moveOfLegalAction (G := G) ga current hcurrent current := by
+    simpa [ga'] using (Classical.choose_spec hlegal.2.2).2
+  have hmatchFull :
+      G.MatchesActedPrefix ga (recordChoice (noopAction Act)
+        (moveOfLegalAction (G := G) ga current hcurrent) current) (G.orderedActive w) := by
+    simpa [horder, MatchesActedPrefix] using
+      matchesActedPrefix_recordChoice_move (G := G) ga
+        (chosen := noopAction Act) (acted := [])
+        (hchosen := matchesActedPrefix_noop (G := G) ga) hcurrent
+  have hga : ga' = ga := by
+    apply legalAction_eq_of_extends_matchesOrderedActive (G := G) hmatchFull
+    exact G.extendsPartial_recordChoice hga'comp hga'current
+  have hgaChoose : (Classical.choose hlegal.2.2 : G.LegalAction w) = ga := by
+    simpa [ga'] using hga
+  unfold SerialState.basePlayerSuccessorWithOrder
+  simpa [baseReplayAction, ga'] using hgaChoose
+
+theorem basePlayerSuccessor_replay_cons
+    {w : W} (ga : G.LegalAction w) {current next : ι} {tail : List ι}
+    (horder : G.orderedActive w = current :: next :: tail) :
+    SerialState.basePlayerSuccessor (G := G) w (baseReplayAction (G := G) ga horder) =
+      .decide w (G.prefixChoice ga [current]) next tail
+        (validDecision_of_prefix (G := G) ga
+          (acted := [current]) (current := next) (rest := tail) (by simpa using horder)) := by
+  have hbase :
+      SerialState.basePlayerSuccessor (G := G) w (baseReplayAction (G := G) ga horder) =
+      SerialState.basePlayerSuccessorWithOrder (G := G) w (current :: next :: tail) horder
+        (baseReplayAction (G := G) ga horder) := by
+    simp [SerialState.basePlayerSuccessor, horder]
+  exact hbase.trans <|
+    basePlayerSuccessorWithOrder_replay_cons (G := G) (ga := ga) (horder := horder)
+
+theorem basePlayerSuccessor_replay_last
+    {w : W} (ga : G.LegalAction w) {current : ι}
+    (horder : G.orderedActive w = [current]) :
+    SerialState.basePlayerSuccessor (G := G) w (baseReplayAction (G := G) ga horder) =
+      .chance w ga := by
+  have hbase :
+      SerialState.basePlayerSuccessor (G := G) w (baseReplayAction (G := G) ga horder) =
+      SerialState.basePlayerSuccessorWithOrder (G := G) w [current] horder
+        (baseReplayAction (G := G) ga horder) := by
+    simp [SerialState.basePlayerSuccessor, horder]
+  exact hbase.trans <|
+    basePlayerSuccessorWithOrder_replay_last (G := G) (ga := ga) (horder := horder)
+
 /-- Canonical serialized action replaying the current player's move from a
 decision state for a fixed original legal action. -/
 noncomputable def decideReplayAction
@@ -576,6 +677,69 @@ noncomputable def decideReplayAction
               exact prefixChoice_apply_of_mem (G := G) ga hjActed
             · left
               exact prefixChoice_apply_of_not_mem (G := G) ga hjActed)⟩
+
+theorem decidePlayerSuccessor_replay_cons
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current next : ι} {tail : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: next :: tail) :
+    SerialState.decidePlayerSuccessor (G := G) w (G.prefixChoice ga acted) current (next :: tail)
+      (validDecision_of_prefix (G := G) ga hsplit)
+      (decideReplayAction (G := G) ga hsplit) =
+      .decide w (G.prefixChoice ga (acted ++ [current])) next tail
+        (validDecision_of_prefix (G := G) ga
+          (acted := acted ++ [current]) (current := next) (rest := tail)
+          (by simpa [List.append_assoc] using hsplit)) := by
+  have hcurrent : current ∈ G.active w :=
+    G.current_mem_active_of_split ⟨acted, hsplit⟩
+  have hchoice :
+      recordChoice (G.prefixChoice ga acted)
+        (moveOfLegalAction (G := G) ga current hcurrent) current =
+        G.prefixChoice ga (acted ++ [current]) := by
+    exact prefixChoice_recordChoice_move (G := G) ga (acted := acted) hcurrent
+  simp [SerialState.decidePlayerSuccessor, decideReplayAction, hchoice]
+
+theorem decidePlayerSuccessor_replay_last
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
+    (hsplit : G.orderedActive w = acted ++ [current]) :
+    SerialState.decidePlayerSuccessor (G := G) w (G.prefixChoice ga acted) current []
+      (validDecision_of_prefix (G := G) ga hsplit)
+      (decideReplayAction (G := G) ga hsplit) =
+      .chance w ga := by
+  have hcurrent : current ∈ G.active w :=
+    G.current_mem_active_of_split ⟨acted, by simpa using hsplit⟩
+  have hlegal :
+      playerLegal (G := G) w (G.prefixChoice ga acted) current
+        (moveOfLegalAction (G := G) ga current hcurrent) :=
+    decide_playerLegal_of_legalAction (G := G) ga
+      (validDecision_of_prefix (G := G) ga hsplit) (by
+        intro j
+        by_cases hjActed : j ∈ acted
+        · right
+          exact prefixChoice_apply_of_mem (G := G) ga hjActed
+        · left
+          exact prefixChoice_apply_of_not_mem (G := G) ga hjActed)
+  let ga' : G.LegalAction w := Classical.choose hlegal.2.2
+  have hga'comp : G.ExtendsPartial (G.prefixChoice ga acted) ga' :=
+    (Classical.choose_spec hlegal.2.2).1
+  have hga'current :
+      ga'.1 current =
+        moveOfLegalAction (G := G) ga current hcurrent current := by
+    simpa [ga'] using (Classical.choose_spec hlegal.2.2).2
+  have hmatchFull :
+      G.MatchesActedPrefix ga
+        (recordChoice (G.prefixChoice ga acted)
+          (moveOfLegalAction (G := G) ga current hcurrent) current)
+        (G.orderedActive w) := by
+    simpa [hsplit, MatchesActedPrefix] using
+      matchesActedPrefix_recordChoice_move (G := G) ga
+        (chosen := G.prefixChoice ga acted) (acted := acted)
+        (hchosen := matchesActedPrefix_prefixChoice (G := G) ga acted) hcurrent
+  have hga : ga' = ga := by
+    apply legalAction_eq_of_extends_matchesOrderedActive (G := G) hmatchFull
+    exact G.extendsPartial_recordChoice hga'comp hga'current
+  have hgaChoose : (Classical.choose hlegal.2.2 : G.LegalAction w) = ga := by
+    simpa [ga'] using hga
+  unfold SerialState.decidePlayerSuccessor
+  simpa [decideReplayAction, ga'] using hgaChoose
 
 /-- Canonical noop action at a serialized chance-resolution state. -/
 noncomputable def chanceResolutionAction
