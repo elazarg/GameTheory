@@ -368,6 +368,31 @@ theorem marginal_stepActionProb
       rfl]
   simpa using marginal_stepActionProb_raw (G := G) β pref e
 
+/-- One-step Kuhn marginal for realized step weights in native FOSG semantics. -/
+theorem marginal_stepProb
+    (β : BehavioralProfile (G := G)) (pref : G.History) (e : G.Step) :
+    ∑ π : _root_.GameTheory.FOSG.PureProfile G,
+      behavioralToMixedJoint (G := G) β π *
+        G.stepProb (G.pureToBehavioral π) pref e =
+      G.stepProb β pref e := by
+  let p : ENNReal := (G.transition e.src e.act) e.dst
+  calc
+    ∑ π : _root_.GameTheory.FOSG.PureProfile G,
+        behavioralToMixedJoint (G := G) β π *
+          G.stepProb (G.pureToBehavioral π) pref e
+      = ∑ π : _root_.GameTheory.FOSG.PureProfile G,
+          (behavioralToMixedJoint (G := G) β π *
+            G.stepActionProb (G.pureToBehavioral π) pref e) * p := by
+              simp [p, mul_assoc]
+    _ = (∑ π : _root_.GameTheory.FOSG.PureProfile G,
+          behavioralToMixedJoint (G := G) β π *
+            G.stepActionProb (G.pureToBehavioral π) pref e) * p := by
+              rw [Finset.sum_mul]
+    _ = G.stepActionProb β pref e * p := by
+          rw [marginal_stepActionProb (G := G) β pref e]
+    _ = G.stepProb β pref e := by
+          simp [p]
+
 end Step
 
 end Native
