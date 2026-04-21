@@ -812,6 +812,54 @@ theorem marginal_prob
 
 end HistoryMarginal
 
+section TerminalCorollaries
+
+variable [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)]
+variable [DecidablePred G.terminal]
+
+noncomputable local instance pureStrategyFintypeTerminal
+    (i : ι) : Fintype (PureStrategy (G := G) i) := by
+  classical
+  dsimp [PureStrategy]
+  infer_instance
+
+noncomputable local instance pureProfileFintypeTerminal
+    : Fintype (_root_.GameTheory.FOSG.PureProfile G) := by
+  classical
+  dsimp [_root_.GameTheory.FOSG.PureProfile, PureStrategy]
+  infer_instance
+
+/-- Native FOSG behavioral-to-mixed equality for terminal-history mass. -/
+theorem marginal_terminalWeight
+    (β : BehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, behavioralToMixedJoint (G := G) β π *
+      History.terminalWeight (G := G) (G.pureToBehavioral π) h =
+        History.terminalWeight (G := G) β h := by
+  by_cases hterm : G.terminal h.lastState
+  · have hsum :
+        (∑ π, behavioralToMixedJoint (G := G) β π *
+          History.terminalWeight (G := G) (G.pureToBehavioral π) h) =
+          ∑ π, behavioralToMixedJoint (G := G) β π *
+            History.prob (G.pureToBehavioral π) h := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [History.terminalWeight_of_terminal (G := G)
+                (σ := G.pureToBehavioral π) hterm]
+    rw [History.terminalWeight_of_terminal (G := G) β hterm, hsum, marginal_prob]
+  · rw [History.terminalWeight_of_not_terminal (G := G) β hterm]
+    have hsum :
+        (∑ π, behavioralToMixedJoint (G := G) β π *
+          History.terminalWeight (G := G) (G.pureToBehavioral π) h) =
+          ∑ π, behavioralToMixedJoint (G := G) β π * 0 := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [History.terminalWeight_of_not_terminal (G := G)
+                (σ := G.pureToBehavioral π) hterm]
+    rw [hsum]
+    simp
+
+end TerminalCorollaries
+
 end Native
 
 end Kuhn
