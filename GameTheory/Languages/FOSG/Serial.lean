@@ -1,4 +1,5 @@
 import GameTheory.Languages.FOSG.Information
+import GameTheory.Languages.FOSG.Execution
 import GameTheory.Languages.FOSG.Values
 import Mathlib.Data.Finset.Sort
 import Mathlib.Data.List.Nodup
@@ -1943,6 +1944,89 @@ noncomputable abbrev serialPlayerViewFrom
     List (PlayerEvent G i) :=
   ((FOSG.History.playerViewFrom (G := SerialState.serialize (G := G)) i es).filterMap
     (serialPlayerEvent? (G := G)))
+
+/-- Normalize a serialized player information state by deleting bookkeeping
+observations and unwrapping the real ones back into the original FOSG event
+type. -/
+noncomputable abbrev normalizeSerialInfoState
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι)
+    (s : (SerialState.serialize (G := G)).InfoState i) : G.InfoState i :=
+  s.filterMap (serialPlayerEvent? (G := G))
+
+@[simp] theorem normalizeSerialInfoState_playerView
+    (sh : SerializedHistory G) (i : ι) :
+    normalizeSerialInfoState G i (sh.playerView i) =
+      serialPlayerViewFrom G i sh.steps := by
+  simp [normalizeSerialInfoState, serialPlayerViewFrom, FOSG.History.playerView]
+
+/-- Behavioral profile on the serialized game induced by a behavioral profile
+on the original game, assuming legal moves are observable in the serialized
+game. At serialized information states with only the noop move available, the
+profile plays `none` with probability one; otherwise it reuses the original
+behavioral choice on the normalized information state. -/
+noncomputable def translateBehavioralProfile
+    (σ : G.BehavioralProfile) :
+    (SerialState.serialize (G := G)).BehavioralProfile :=
+  fun i s =>
+    if
+        (SerialState.serialize (G := G)).availableMovesAtInfoState i s = {none} then
+      PMF.pure none
+    else
+      σ i (normalizeSerialInfoState G i s)
+
+@[simp] theorem translateBehavioralProfile_of_inactive
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (sh : SerializedHistory G) (i : ι)
+    (hi : i ∉ (SerialState.serialize (G := G)).active sh.lastState) :
+    translateBehavioralProfile (G := G) σ i (sh.playerView i) = PMF.pure none := by
+  have hEq :
+      (SerialState.serialize (G := G)).availableMovesAtInfoState i (sh.playerView i) =
+        (SerialState.serialize (G := G)).availableMoves sh i :=
+    (SerialState.serialize (G := G)).availableMovesAtInfoState_eq_of_history hLegSer i sh
+  have hSingle :
+      (SerialState.serialize (G := G)).availableMoves sh i = {none} :=
+    (SerialState.serialize (G := G)).availableMoves_eq_singleton_none_of_not_mem_active sh hi
+  simp [translateBehavioralProfile, hEq, hSingle]
+
+theorem translateBehavioralProfile_not_singleton_none_of_active
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (sh : SerializedHistory G) (i : ι)
+    (hi : i ∈ (SerialState.serialize (G := G)).active sh.lastState) :
+    (SerialState.serialize (G := G)).availableMovesAtInfoState i (sh.playerView i) ≠ {none} := by
+  intro hEq
+  have hEqHist :
+      (SerialState.serialize (G := G)).availableMovesAtInfoState i (sh.playerView i) =
+        (SerialState.serialize (G := G)).availableMoves sh i :=
+    (SerialState.serialize (G := G)).availableMovesAtInfoState_eq_of_history hLegSer i sh
+  have hnotterm : ¬ (SerialState.serialize (G := G)).terminal sh.lastState := by
+    intro hterm
+    have hempty :=
+      (SerialState.serialize (G := G)).active_eq_empty_of_terminal hterm
+    simp [hempty] at hi
+  rcases (SerialState.serialize (G := G)).exists_legal_of_not_terminal hnotterm with ⟨a, ha⟩
+  rcases (SerialState.serialize (G := G)).active_has_some
+    (a := ⟨a, ha⟩) hi with ⟨ai, hai⟩
+  have hmem : some ai ∈ (SerialState.serialize (G := G)).availableMoves sh i := by
+    exact ⟨⟨a, ha⟩, hai⟩
+  have hmemInfo : some ai ∈
+      (SerialState.serialize (G := G)).availableMovesAtInfoState i (sh.playerView i) := by
+    rw [hEqHist]
+    exact hmem
+  rw [hEq] at hmemInfo
+  simp at hmemInfo
+
+@[simp] theorem translateBehavioralProfile_of_active
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (sh : SerializedHistory G) (i : ι)
+    (hi : i ∈ (SerialState.serialize (G := G)).active sh.lastState) :
+    translateBehavioralProfile (G := G) σ i (sh.playerView i) =
+      σ i (normalizeSerialInfoState G i (sh.playerView i)) := by
+  have hnot :=
+    translateBehavioralProfile_not_singleton_none_of_active
+      (G := G) hLegSer sh i hi
+  simp [translateBehavioralProfile, hnot]
 
 theorem serialPlayerViewFrom_append
     (i : ι) (es₁ es₂ : List (SerializedStep G)) :
