@@ -2008,6 +2008,17 @@ theorem privObs_base_empty_base_eq_of_active_empty
     congrArg (fun ga => some (G.privObs i w ga w')) hgaEq
   simp [SerialState.privObs, horder, hpriv]
 
+theorem serialPlayerViewFrom_singleton_of_trivialObs
+    (e : SerializedStep G) (i : ι)
+    (hpriv : e.privateObs i = none) (hpub : e.publicObs = none) :
+    serialPlayerViewFrom G i [e] =
+      match e.ownAction? i with
+      | some ai => [.act ai]
+      | none => [] := by
+  unfold serialPlayerViewFrom
+  cases hact : e.ownAction? i <;>
+    simp [FOSG.History.playerViewFrom, FOSG.Step.playerView, hpriv, hpub, hact]
+
 @[simp] theorem chanceResolutionStep_playerView
     (e : G.Step) (i : ι) :
     serialPlayerViewFrom G i [chanceResolutionStep (G := G) e] =
@@ -2054,6 +2065,221 @@ theorem privObs_base_empty_base_eq_of_active_empty
         some (G.pubObs e.src e.act e.dst) := by
     simp [baseEmptyResolutionStep_publicObs]
   simp [serialPlayerViewFrom, FOSG.History.playerViewFrom, FOSG.Step.playerView, hnone, hpriv, hpub]
+
+@[simp] theorem baseReplayStepCons_playerView
+    {w : W} (ga : G.LegalAction w) {current next : ι} {tail : List ι}
+    (horder : G.orderedActive w = current :: next :: tail) (i : ι) :
+    serialPlayerViewFrom G i [baseReplayStepCons (G := G) ga horder] =
+      if i = current then
+        match ga.1 i with
+        | some ai => [.act ai]
+        | none => []
+      else [] := by
+  have hpriv :
+      (baseReplayStepCons (G := G) ga horder).privateObs i = none := by
+    simpa [FOSG.Step.privateObs, baseReplayStepCons,
+      basePlayerSuccessor_replay_cons (G := G) (ga := ga) horder] using
+      privObs_basePlayerSuccessor_eq_none (G := G)
+        (i := i) (a := baseReplayAction (G := G) ga horder)
+        (by simp [horder])
+  have hpub :
+      (baseReplayStepCons (G := G) ga horder).publicObs = none := by
+    simp [baseReplayStepCons_publicObs_none]
+  rw [serialPlayerViewFrom_singleton_of_trivialObs (G := G)
+    (e := baseReplayStepCons (G := G) ga horder) i hpriv hpub]
+  by_cases hEq : i = current
+  · subst hEq
+    simp [FOSG.Step.ownAction?, baseReplayStepCons, baseReplayAction, moveOfLegalAction_current]
+  · simp [FOSG.Step.ownAction?, baseReplayStepCons, baseReplayAction, moveOfLegalAction_other, hEq]
+
+@[simp] theorem baseReplayStepLast_playerView
+    {w : W} (ga : G.LegalAction w) {current : ι}
+    (horder : G.orderedActive w = [current]) (i : ι) :
+    serialPlayerViewFrom G i [baseReplayStepLast (G := G) ga horder] =
+      if i = current then
+        match ga.1 i with
+        | some ai => [.act ai]
+        | none => []
+      else [] := by
+  have hpriv :
+      (baseReplayStepLast (G := G) ga horder).privateObs i = none := by
+    simpa [FOSG.Step.privateObs, baseReplayStepLast,
+      basePlayerSuccessor_replay_last (G := G) (ga := ga) horder] using
+      privObs_basePlayerSuccessor_eq_none (G := G)
+        (i := i) (a := baseReplayAction (G := G) ga horder)
+        (by simp [horder])
+  have hpub :
+      (baseReplayStepLast (G := G) ga horder).publicObs = none := by
+    simp [baseReplayStepLast_publicObs_none]
+  rw [serialPlayerViewFrom_singleton_of_trivialObs (G := G)
+    (e := baseReplayStepLast (G := G) ga horder) i hpriv hpub]
+  by_cases hEq : i = current
+  · subst hEq
+    simp [FOSG.Step.ownAction?, baseReplayStepLast, baseReplayAction, moveOfLegalAction_current]
+  · simp [FOSG.Step.ownAction?, baseReplayStepLast, baseReplayAction, moveOfLegalAction_other, hEq]
+
+@[simp] theorem decideReplayStepCons_playerView
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current next : ι} {tail : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: next :: tail) (i : ι) :
+    serialPlayerViewFrom G i [decideReplayStepCons (G := G) ga hsplit] =
+      if i = current then
+        match ga.1 i with
+        | some ai => [.act ai]
+        | none => []
+      else [] := by
+  have hpriv :
+      (decideReplayStepCons (G := G) ga hsplit).privateObs i = none := by
+    simpa [FOSG.Step.privateObs, decideReplayStepCons] using
+      privObs_decide_successor_eq_none (G := G)
+        (i := i) (a := decideReplayAction (G := G) ga hsplit)
+  have hpub :
+      (decideReplayStepCons (G := G) ga hsplit).publicObs = none := by
+    simp [decideReplayStepCons_publicObs_none]
+  rw [serialPlayerViewFrom_singleton_of_trivialObs (G := G)
+    (e := decideReplayStepCons (G := G) ga hsplit) i hpriv hpub]
+  by_cases hEq : i = current
+  · subst hEq
+    simp [FOSG.Step.ownAction?, decideReplayStepCons,
+      decideReplayAction, moveOfLegalAction_current]
+  · simp [FOSG.Step.ownAction?, decideReplayStepCons,
+      decideReplayAction, moveOfLegalAction_other, hEq]
+
+@[simp] theorem decideReplayStepLast_playerView
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
+    (hsplit : G.orderedActive w = acted ++ [current]) (i : ι) :
+    serialPlayerViewFrom G i [decideReplayStepLast (G := G) ga hsplit] =
+      if i = current then
+        match ga.1 i with
+        | some ai => [.act ai]
+        | none => []
+      else [] := by
+  have hpriv :
+      (decideReplayStepLast (G := G) ga hsplit).privateObs i = none := by
+    simpa [FOSG.Step.privateObs, decideReplayStepLast] using
+      privObs_decide_successor_eq_none (G := G)
+        (i := i) (a := decideReplayAction (G := G) ga hsplit)
+  have hpub :
+      (decideReplayStepLast (G := G) ga hsplit).publicObs = none := by
+    simp [decideReplayStepLast_publicObs_none]
+  rw [serialPlayerViewFrom_singleton_of_trivialObs (G := G)
+    (e := decideReplayStepLast (G := G) ga hsplit) i hpriv hpub]
+  by_cases hEq : i = current
+  · subst hEq
+    simp [FOSG.Step.ownAction?, decideReplayStepLast,
+      decideReplayAction, moveOfLegalAction_current]
+  · simp [FOSG.Step.ownAction?, decideReplayStepLast,
+      decideReplayAction, moveOfLegalAction_other, hEq]
+
+theorem decisionReplaySteps_playerView
+    {w : W} (ga : G.LegalAction w) (acted : List ι)
+    (current : ι) (rest : List ι)
+    (hsplit : G.orderedActive w = acted ++ current :: rest) (i : ι) :
+    serialPlayerViewFrom G i (decisionReplaySteps (G := G) ga acted current rest hsplit) =
+      if i ∈ acted then [] else
+        match ga.1 i with
+        | some ai => [.act ai]
+        | none => [] := by
+  induction rest generalizing acted current with
+  | nil =>
+      by_cases hiActed : i ∈ acted
+      · have hneq : i ≠ current := by
+          intro hEq
+          subst hEq
+          exact (not_mem_acted_of_mem_remaining (G := G)
+            (hsplit := hsplit) (hj := by simp)) hiActed
+        simp [decisionReplaySteps, decideReplayStepLast_playerView, hiActed, hneq]
+      · by_cases hEq : i = current
+        · subst hEq
+          simp [decisionReplaySteps, decideReplayStepLast_playerView, hiActed]
+        · have hNotMem : i ∉ G.active w := by
+            intro hmem
+            have hiOrd : i ∈ G.orderedActive w := (G.mem_orderedActive_iff w i).mpr hmem
+            rw [hsplit] at hiOrd
+            simp [List.mem_append, hiActed, hEq] at hiOrd
+          have hnone : ga.1 i = none := G.legal_inactive_none ga.2 hNotMem
+          simp [decisionReplaySteps, decideReplayStepLast_playerView, hiActed, hEq, hnone]
+  | cons next tail ih =>
+      rw [decisionReplaySteps]
+      rw [show decideReplayStepCons (G := G) ga hsplit ::
+          decisionReplaySteps ga (acted ++ [current]) next tail
+            (by simpa [List.append_assoc] using hsplit) =
+          [decideReplayStepCons (G := G) ga hsplit] ++
+            decisionReplaySteps ga (acted ++ [current]) next tail
+              (by simpa [List.append_assoc] using hsplit) by rfl]
+      rw [serialPlayerViewFrom_append, decideReplayStepCons_playerView]
+      rw [ih (acted := acted ++ [current]) (current := next)
+        (hsplit := by simpa [List.append_assoc] using hsplit)]
+      by_cases hiActed : i ∈ acted
+      · have hneq : i ≠ current := by
+          intro hEq
+          subst hEq
+          exact (not_mem_acted_of_mem_remaining (G := G)
+            (hsplit := hsplit) (hj := by simp)) hiActed
+        simp [hiActed, hneq, List.mem_append]
+      · by_cases hEq : i = current
+        · subst hEq
+          simp [hiActed, List.mem_append]
+        · have hiActed' : i ∉ acted ++ [current] := by
+            simp [List.mem_append, hiActed, hEq]
+          simp [hiActed, hEq, hiActed']
+
+theorem baseReplaySteps_playerView
+    {w : W} (ga : G.LegalAction w) (current : ι) (rest : List ι)
+    (horder : G.orderedActive w = current :: rest) (i : ι) :
+    serialPlayerViewFrom G i (baseReplaySteps (G := G) ga current rest horder) =
+      match ga.1 i with
+      | some ai => [.act ai]
+      | none => [] := by
+  cases rest with
+  | nil =>
+      by_cases hEq : i = current
+      · subst hEq
+        simp [baseReplaySteps, baseReplayStepLast_playerView]
+      · have hNotMem : i ∉ G.active w := by
+          intro hmem
+          have hiOrd : i ∈ G.orderedActive w := (G.mem_orderedActive_iff w i).mpr hmem
+          rw [horder] at hiOrd
+          simp [hEq] at hiOrd
+        have hnone : ga.1 i = none := G.legal_inactive_none ga.2 hNotMem
+        simp [baseReplaySteps, baseReplayStepLast_playerView, hEq, hnone]
+  | cons next tail =>
+      rw [baseReplaySteps]
+      rw [show baseReplayStepCons (G := G) ga horder ::
+          decisionReplaySteps ga [current] next tail (by simpa using horder) =
+          [baseReplayStepCons (G := G) ga horder] ++
+            decisionReplaySteps ga [current] next tail (by simpa using horder) by rfl]
+      rw [serialPlayerViewFrom_append, baseReplayStepCons_playerView]
+      rw [decisionReplaySteps_playerView (G := G) ga [current] next tail
+        (by simpa using horder) i]
+      by_cases hEq : i = current
+      · subst hEq
+        simp
+      · simp [hEq]
+
+theorem stepExpansionWithOrder_playerView
+    (e : G.Step) (oa : List ι) (horder : G.orderedActive e.src = oa) (i : ι) :
+    serialPlayerViewFrom G i (stepExpansionWithOrder (G := G) e oa horder) =
+      FOSG.Step.playerView e i := by
+  cases oa with
+  | nil =>
+      rw [stepExpansionWithOrder_nil (G := G) e horder]
+      have hnone : e.ownAction? i = none := by
+        apply FOSG.Step.ownAction?_eq_none_of_not_mem_active (G := G)
+        simp [G.active_eq_empty_of_orderedActive_eq_nil horder]
+      simp [baseEmptyResolutionStep_playerView, FOSG.Step.playerView, hnone]
+  | cons current rest =>
+      rw [stepExpansionWithOrder_cons (G := G) e current rest horder]
+      rw [serialPlayerViewFrom_append, baseReplaySteps_playerView, chanceResolutionStep_playerView]
+      cases hact : e.act.1 i <;>
+        simp [FOSG.Step.playerView, FOSG.Step.ownAction?,
+          FOSG.Step.privateObs, FOSG.Step.publicObs, hact]
+
+theorem stepExpansion_playerView
+    (e : G.Step) (i : ι) :
+    serialPlayerViewFrom G i (stepExpansion (G := G) e) = FOSG.Step.playerView e i := by
+  simpa [stepExpansion] using
+    stepExpansionWithOrder_playerView (G := G) e (G.orderedActive e.src) rfl i
+
 
 theorem decisionReplaySteps_publicView_nil
     {w : W} (ga : G.LegalAction w) (acted : List ι)
@@ -2197,6 +2423,25 @@ theorem expandHistory_publicView
     serialPublicViewFrom G (expandHistory (G := G) h).steps = h.publicView := by
   simpa [expandHistory, FOSG.History.publicView] using
     expandFrom_publicView (G := G) G.init h.steps h.chain
+
+theorem expandFrom_playerView
+    (w : W) (es : List G.Step) (hchain : G.StepChainFrom w es) (i : ι) :
+    serialPlayerViewFrom G i (expandFrom G w es hchain) =
+      FOSG.History.playerViewFrom (G := G) i es := by
+  induction es generalizing w with
+  | nil =>
+      simp [expandFrom, serialPlayerViewFrom, FOSG.History.playerViewFrom]
+  | cons e es ih =>
+      rcases hchain with ⟨hsrc, htail⟩
+      subst hsrc
+      rw [expandFrom, serialPlayerViewFrom_append, stepExpansion_playerView]
+      simp [FOSG.History.playerViewFrom, ih]
+
+theorem expandHistory_playerView
+    (h : G.History) (i : ι) :
+    serialPlayerViewFrom G i (expandHistory (G := G) h).steps = h.playerView i := by
+  simpa [expandHistory, FOSG.History.playerView] using
+    expandFrom_playerView (G := G) G.init h.steps h.chain i
 
 @[simp] theorem eraseStep_decide
     (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
