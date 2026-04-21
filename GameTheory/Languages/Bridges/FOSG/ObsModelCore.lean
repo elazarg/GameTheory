@@ -35,6 +35,10 @@ namespace State
 
 variable {G : FOSG ι W Act PrivObs PubObs}
 
+/-- A bridge state is well formed when it is realized by some FOSG history. -/
+def WellFormed (s : State G) : Prop :=
+  ∃ h : G.History, h.lastState = s.world ∧ ∀ i, h.playerView i = s.info i
+
 /-- Initial bridge state. -/
 def init (G : FOSG ι W Act PrivObs PubObs) : State G where
   world := G.init
@@ -45,6 +49,12 @@ def init (G : FOSG ι W Act PrivObs PubObs) : State G where
 
 @[simp] theorem info_init (i : ι) :
     (State.init G).info i = [] := rfl
+
+theorem init_wellFormed :
+    (State.init G).WellFormed := by
+  refine ⟨History.nil G, rfl, ?_⟩
+  intro i
+  simp
 
 end State
 
