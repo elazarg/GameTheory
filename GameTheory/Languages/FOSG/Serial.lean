@@ -163,6 +163,13 @@ def MatchesActedPrefix
     {w : W} (ga : G.LegalAction w) (chosen : JointAction Act) (acted : List ι) : Prop :=
   ∀ j, chosen j = if j ∈ acted then ga.1 j else none
 
+/-- The canonical partial choice assignment determined by a legal action `ga`
+and the list of already-acted players. -/
+def prefixChoice
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (ga : G.LegalAction w) (acted : List ι) : JointAction Act :=
+  fun j => if j ∈ acted then ga.1 j else none
+
 /-- Serialized state space. `base w` is the original world state before any
 serialized action is taken at `w`; `decide ...` stores the partial assignment
 after some players have already acted; `chance w a` is the inserted stochastic
@@ -304,6 +311,34 @@ theorem matchesActedPrefix_noop
   simp [noopAction]
 
 omit [LinearOrder ι] in
+theorem matchesActedPrefix_prefixChoice
+    {w : W} (ga : G.LegalAction w) (acted : List ι) :
+    G.MatchesActedPrefix ga (G.prefixChoice ga acted) acted := by
+  intro j
+  rfl
+
+omit [LinearOrder ι] in
+@[simp] theorem prefixChoice_nil
+    {w : W} (ga : G.LegalAction w) :
+    G.prefixChoice ga [] = noopAction Act := by
+  funext j
+  simp [prefixChoice, noopAction]
+
+omit [LinearOrder ι] in
+@[simp] theorem prefixChoice_apply_of_mem
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {j : ι}
+    (hj : j ∈ acted) :
+    G.prefixChoice ga acted j = ga.1 j := by
+  simp [prefixChoice, hj]
+
+omit [LinearOrder ι] in
+@[simp] theorem prefixChoice_apply_of_not_mem
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {j : ι}
+    (hj : j ∉ acted) :
+    G.prefixChoice ga acted j = none := by
+  simp [prefixChoice, hj]
+
+omit [LinearOrder ι] in
 theorem matchesActedPrefix_recordChoice_move
     {w : W} (ga : G.LegalAction w) {chosen : JointAction Act} {acted : List ι}
     {current : ι} (hchosen : G.MatchesActedPrefix ga chosen acted)
@@ -317,6 +352,20 @@ theorem matchesActedPrefix_recordChoice_move
     simpa [recordChoice, moveOfLegalAction] using
       (actionAtActive_spec (G := G) ga j hcurrent).symm
   · simp [recordChoice, hji, hchosen j, List.mem_append]
+
+omit [LinearOrder ι] in
+theorem prefixChoice_recordChoice_move
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
+    (hcurrent : current ∈ G.active w) :
+    recordChoice (G.prefixChoice ga acted)
+      (moveOfLegalAction (G := G) ga current hcurrent) current =
+      G.prefixChoice ga (acted ++ [current]) := by
+  funext j
+  by_cases hji : j = current
+  · subst hji
+    simpa [recordChoice, prefixChoice, moveOfLegalAction] using
+      (actionAtActive_spec (G := G) ga j hcurrent).symm
+  · simp [recordChoice, prefixChoice, hji, List.mem_append]
 
 theorem legalAction_eq_of_extends_matchesOrderedActive
     {w : W} {ga ga' : G.LegalAction w} {chosen : JointAction Act}
@@ -341,6 +390,36 @@ theorem legalAction_eq_of_extends_matchesOrderedActive
     have hnoneGa : ga.1 j = none := G.inactive_eq_none (a := ga) hj
     have hnoneGa' : ga'.1 j = none := G.inactive_eq_none (a := ga') hj
     rw [hnoneGa', hnoneGa]
+
+theorem not_mem_acted_of_mem_remaining
+    {w : W} {acted : List ι} {current : ι} {rest : List ι} {j : ι}
+    (hsplit : G.orderedActive w = acted ++ current :: rest)
+    (hj : j ∈ current :: rest) :
+    j ∉ acted := by
+  have hnodup : (G.orderedActive w).Nodup :=
+    Finset.sort_nodup (s := G.active w) (r := (· ≤ ·))
+  have hnodup' : (acted ++ current :: rest).Nodup := by
+    simpa [hsplit] using hnodup
+  have hdisj : List.Disjoint acted (current :: rest) :=
+    List.disjoint_of_nodup_append hnodup'
+  rw [List.disjoint_left] at hdisj
+  exact fun hjActed => hdisj hjActed hj
+
+theorem validDecision_of_prefix
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι} {rest : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: rest) :
+    G.ValidDecision w (G.prefixChoice ga acted) current rest := by
+  refine ⟨⟨acted, hsplit⟩, ?_, ?_⟩
+  · intro j hj
+    exact prefixChoice_apply_of_not_mem (G := G) ga
+      (not_mem_acted_of_mem_remaining (G := G) hsplit hj)
+  · refine ⟨ga, ?_⟩
+    intro j
+    by_cases hjActed : j ∈ acted
+    · right
+      exact prefixChoice_apply_of_mem (G := G) ga hjActed
+    · left
+      exact prefixChoice_apply_of_not_mem (G := G) ga hjActed
 
 theorem base_playerLegal_of_legalAction
     {w : W} (ga : G.LegalAction w) {current : ι} {rest : List ι}
