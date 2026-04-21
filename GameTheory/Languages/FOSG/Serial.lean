@@ -154,6 +154,15 @@ def ValidDecision
   (∀ j, j ∈ current :: rest → chosen j = none) ∧
   (∃ a : G.LegalAction w, G.ExtendsPartial chosen a)
 
+/-- Proof-layer invariant for canonical serialization of a fixed original legal
+action: `chosen` records exactly the actions of the players in `acted`, and
+records `none` for everyone else. This is stronger than `ExtendsPartial` and is
+the right invariant for serialization-correctness proofs. -/
+def MatchesActedPrefix
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (ga : G.LegalAction w) (chosen : JointAction Act) (acted : List ι) : Prop :=
+  ∀ j, chosen j = if j ∈ acted then ga.1 j else none
+
 /-- Serialized state space. `base w` is the original world state before any
 serialized action is taken at `w`; `decide ...` stores the partial assignment
 after some players have already acted; `chance w a` is the inserted stochastic
@@ -254,6 +263,115 @@ omit [LinearOrder ι] in
 @[simp] theorem baseChanceLegalAction_val
     (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) :
     (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := rfl
+
+/-- The original action chosen by an active player inside a legal joint action. -/
+noncomputable def actionAtActive
+    {w : W} (ga : G.LegalAction w) (i : ι) (hi : i ∈ G.active w) : Act i :=
+  Classical.choose (G.active_has_some (a := ga) hi)
+
+omit [LinearOrder ι] in
+theorem actionAtActive_spec
+    {w : W} (ga : G.LegalAction w) (i : ι) (hi : i ∈ G.active w) :
+    ga.1 i = some (actionAtActive (G := G) ga i hi) :=
+  Classical.choose_spec (G.active_has_some (a := ga) hi)
+
+/-- The canonical serialized move for player `current`, replaying the action
+that `ga` already chose for them. -/
+noncomputable def moveOfLegalAction
+    {w : W} (ga : G.LegalAction w) (current : ι) (hcurrent : current ∈ G.active w) :
+    JointAction Act :=
+  singleMove (Act := Act) current (actionAtActive (G := G) ga current hcurrent)
+
+omit [LinearOrder ι] in
+@[simp] theorem moveOfLegalAction_current
+    {w : W} (ga : G.LegalAction w) (current : ι) (hcurrent : current ∈ G.active w) :
+    moveOfLegalAction (G := G) ga current hcurrent current = ga.1 current := by
+  simpa [moveOfLegalAction] using
+    (actionAtActive_spec (G := G) ga current hcurrent).symm
+
+omit [LinearOrder ι] in
+@[simp] theorem moveOfLegalAction_other
+    {w : W} (ga : G.LegalAction w) {current j : ι}
+    (hcurrent : current ∈ G.active w) (hji : j ≠ current) :
+    moveOfLegalAction (G := G) ga current hcurrent j = none := by
+  simp [moveOfLegalAction, hji]
+
+omit [LinearOrder ι] in
+theorem matchesActedPrefix_noop
+    {w : W} (ga : G.LegalAction w) :
+    G.MatchesActedPrefix ga (noopAction Act) [] := by
+  intro j
+  simp [noopAction]
+
+omit [LinearOrder ι] in
+theorem matchesActedPrefix_recordChoice_move
+    {w : W} (ga : G.LegalAction w) {chosen : JointAction Act} {acted : List ι}
+    {current : ι} (hchosen : G.MatchesActedPrefix ga chosen acted)
+    (hcurrent : current ∈ G.active w) :
+    G.MatchesActedPrefix ga
+      (recordChoice chosen (moveOfLegalAction (G := G) ga current hcurrent) current)
+      (acted ++ [current]) := by
+  intro j
+  by_cases hji : j = current
+  · subst hji
+    simpa [recordChoice, moveOfLegalAction] using
+      (actionAtActive_spec (G := G) ga j hcurrent).symm
+  · simp [recordChoice, hji, hchosen j, List.mem_append]
+
+theorem legalAction_eq_of_extends_matchesOrderedActive
+    {w : W} {ga ga' : G.LegalAction w} {chosen : JointAction Act}
+    (hchosen : G.MatchesActedPrefix ga chosen (G.orderedActive w))
+    (hcomp : G.ExtendsPartial chosen ga') :
+    ga' = ga := by
+  apply Subtype.ext
+  funext j
+  by_cases hj : j ∈ G.active w
+  · have hjOrder : j ∈ G.orderedActive w := (G.mem_orderedActive_iff w j).2 hj
+    have hchosenj : chosen j = ga.1 j := by
+      simpa [MatchesActedPrefix, hjOrder] using hchosen j
+    rcases G.active_has_some (a := ga) hj with ⟨ai, hai⟩
+    rcases hcomp j with hnone | hEq
+    · rw [hchosenj, hai] at hnone
+      cases hnone
+    · exact hEq.symm.trans hchosenj
+  · have hjOrder : j ∉ G.orderedActive w := by
+      simpa [G.mem_orderedActive_iff w j] using hj
+    have hnoneChosen : chosen j = none := by
+      simpa [MatchesActedPrefix, hjOrder] using hchosen j
+    have hnoneGa : ga.1 j = none := G.inactive_eq_none (a := ga) hj
+    have hnoneGa' : ga'.1 j = none := G.inactive_eq_none (a := ga') hj
+    rw [hnoneGa', hnoneGa]
+
+theorem base_playerLegal_of_legalAction
+    {w : W} (ga : G.LegalAction w) {current : ι} {rest : List ι}
+    (horder : G.orderedActive w = current :: rest) :
+    playerLegal (G := G) w (noopAction Act) current
+      (moveOfLegalAction (G := G) ga current
+        ((G.mem_orderedActive_iff w current).1 (by simp [horder]))) := by
+  let hcurrent : current ∈ G.active w :=
+    (G.mem_orderedActive_iff w current).1 (by simp [horder])
+  refine ⟨⟨actionAtActive (G := G) ga current hcurrent, by simp [moveOfLegalAction]⟩, ?_, ?_⟩
+  · intro j hj
+    exact moveOfLegalAction_other (G := G) ga hcurrent hj
+  · refine ⟨ga, G.extendsPartial_noop ga, ?_⟩
+    exact (moveOfLegalAction_current (G := G) ga current hcurrent).symm
+
+theorem decide_playerLegal_of_legalAction
+    {w : W} (ga : G.LegalAction w) {chosen : JointAction Act}
+    {current : ι} {rest : List ι} (hvalid : G.ValidDecision w chosen current rest)
+    (hcomp : G.ExtendsPartial chosen ga) :
+    playerLegal (G := G) w chosen current
+      (moveOfLegalAction (G := G) ga current
+        (G.current_mem_active_of_split
+          (show ∃ acted, G.orderedActive w = acted ++ current :: rest from hvalid.1))) := by
+  let hcurrent : current ∈ G.active w :=
+    G.current_mem_active_of_split (show ∃ acted, G.orderedActive w = acted ++ current :: rest from
+      hvalid.1)
+  refine ⟨⟨actionAtActive (G := G) ga current hcurrent, by simp [moveOfLegalAction]⟩, ?_, ?_⟩
+  · intro j hj
+    exact moveOfLegalAction_other (G := G) ga hcurrent hj
+  · refine ⟨ga, hcomp, ?_⟩
+    exact (moveOfLegalAction_current (G := G) ga current hcurrent).symm
 
 theorem validDecision_from_base
     {w : W} {current next : ι} {tail : List ι}
