@@ -60,6 +60,14 @@ namespace FOSG
 variable {ι W : Type} [DecidableEq ι]
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
 
+/-- The all-`none` joint action. -/
+def noopAction (Act : ι → Type) : JointAction Act :=
+  fun _ => none
+
+omit [DecidableEq ι] in
+@[simp] theorem noopAction_apply (i : ι) :
+    noopAction Act i = none := rfl
+
 /-- Legal joint actions at a given state. -/
 abbrev LegalAction (G : FOSG ι W Act PrivObs PubObs) (w : W) : Type :=
   {a : JointAction Act // G.legal w a}
@@ -106,6 +114,16 @@ theorem exists_legal_of_not_terminal
     {w : W} (hw : ¬ G.terminal w) :
     ∃ a : JointAction Act, G.legal w a :=
   G.nonterminal_exists_legal hw
+
+theorem legal_noopAction_of_active_empty_of_not_terminal
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (hactive : G.active w = ∅) (hterm : ¬ G.terminal w) :
+    G.legal w (noopAction Act) := by
+  rcases G.exists_legal_of_not_terminal hterm with ⟨a, ha⟩
+  have hEq : a = noopAction Act := by
+    funext i
+    exact G.legal_inactive_none ha (by simp [hactive])
+  simpa [hEq] using ha
 
 end FOSG
 

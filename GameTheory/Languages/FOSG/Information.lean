@@ -290,6 +290,15 @@ theorem playerView_ne_of_properPrefix
 def infoSet (i : ι) (s : G.InfoState i) : Set G.History :=
   { h | h.playerView i = s }
 
+/-- Histories at which player `i` is about to act. -/
+def IsDecisionHistory (i : ι) (h : G.History) : Prop :=
+  i ∈ G.active h.lastState
+
+/-- Paper-style information set for player `i`: matching information state at a
+decision point for `i`. -/
+def decisionInfoSet (i : ι) (s : G.InfoState i) : Set G.History :=
+  { h | h.playerView i = s ∧ IsDecisionHistory (G := G) i h }
+
 /-- Public-set fiber. -/
 def publicSet (s : G.PublicState) : Set G.History :=
   { h | h.publicView = s }
@@ -308,6 +317,18 @@ theorem infoSet_subset_publicSet
       publicSet (G := G) (s.filterMap (PlayerEvent.publicPart (G := G) (i := i))) := by
   intro h hh
   exact mem_publicSet_of_mem_infoSet (G := G) i s hh
+
+theorem decisionInfoSet_subset_infoSet
+    (i : ι) (s : G.InfoState i) :
+    decisionInfoSet (G := G) i s ⊆ infoSet (G := G) i s := by
+  intro h hh
+  exact hh.1
+
+theorem mem_decisionInfoSet_iff
+    (i : ι) (s : G.InfoState i) (h : G.History) :
+    h ∈ decisionInfoSet (G := G) i s ↔
+      h.playerView i = s ∧ i ∈ G.active h.lastState := by
+  rfl
 
 theorem infoSet_mem_publicSet
     (i : ι) (s : G.InfoState i) {h h' : G.History}

@@ -23,14 +23,6 @@ namespace FOSG
 variable {ι W : Type} [DecidableEq ι]
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
 
-/-- The all-`none` joint action. -/
-def noopAction (Act : ι → Type) : JointAction Act :=
-  fun _ => none
-
-omit [DecidableEq ι] in
-@[simp] theorem noopAction_apply (i : ι) :
-    noopAction Act i = none := rfl
-
 /-- A one-player serialized move: player `i` submits `ai`, every other player
 submits `none`. -/
 def singleMove (i : ι) (ai : Act i) : JointAction Act :=
@@ -256,20 +248,12 @@ theorem active_eq_empty_of_base_terminal
 /-- A legal original-world action at a base chance node of the original FOSG. -/
 noncomputable def baseChanceLegalAction
     (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) : G.LegalAction w := by
-  classical
-  let a : JointAction Act := Classical.choose (G.exists_legal_of_not_terminal hNotTerm)
-  have ha : G.legal w a := Classical.choose_spec (G.exists_legal_of_not_terminal hNotTerm)
-  have hEq : a = noopAction Act := by
-    funext i
-    have hi : i ∉ G.active w := by simp [h]
-    exact G.legal_inactive_none ha hi
-  exact ⟨noopAction Act, hEq ▸ ha⟩
+  exact ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal h hNotTerm⟩
 
 omit [LinearOrder ι] in
 @[simp] theorem baseChanceLegalAction_val
     (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) :
-    (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := by
-  simp [baseChanceLegalAction]
+    (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := rfl
 
 theorem validDecision_from_base
     {w : W} {current next : ι} {tail : List ι}
