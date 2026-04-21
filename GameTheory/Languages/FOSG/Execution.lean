@@ -455,6 +455,38 @@ noncomputable def terminalWeight
     terminalWeight (G := G) σ h = 0 := by
   exact if_neg hterm
 
+/-- Terminal-history mass assigned by a behavioral profile to a finite event of
+realized histories. -/
+noncomputable def terminalMassOn
+    [DecidablePred G.terminal]
+    (σ : BehavioralProfile G) (hs : Finset G.History) : ENNReal :=
+  Finset.sum hs (fun h => terminalWeight (G := G) σ h)
+
+/-- Terminal-history event-mass functional induced by a behavioral profile. -/
+noncomputable def terminalLaw
+    [DecidablePred G.terminal]
+    (σ : BehavioralProfile G) : Finset G.History → ENNReal :=
+  terminalMassOn (G := G) σ
+
+@[simp] theorem terminalMassOn_empty
+    [DecidablePred G.terminal]
+    (σ : BehavioralProfile G) :
+    terminalMassOn (G := G) σ ∅ = 0 := by
+  rw [terminalMassOn]
+  simp
+
+@[simp] theorem terminalMassOn_singleton
+    [DecidablePred G.terminal]
+    (σ : BehavioralProfile G) (h : G.History) :
+    terminalMassOn (G := G) σ {h} = terminalWeight (G := G) σ h := by
+  rw [terminalMassOn]
+  simp
+
+@[simp] theorem terminalLaw_apply
+    [DecidablePred G.terminal]
+    (σ : BehavioralProfile G) (hs : Finset G.History) :
+    terminalLaw (G := G) σ hs = terminalMassOn (G := G) σ hs := rfl
+
 noncomputable def expectedUtility [Fintype G.History]
     [DecidablePred G.terminal]
     (σ : BehavioralProfile G) (i : ι) : ℝ :=

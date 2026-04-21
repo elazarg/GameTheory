@@ -865,27 +865,38 @@ profile. -/
 theorem marginal_terminalMassOn
     (β : BehavioralProfile (G := G)) (hs : Finset G.History) :
     (∑ π, behavioralToMixedJoint (G := G) β π *
-      Finset.sum hs (fun h =>
-        History.terminalWeight (G := G) (G.pureToBehavioral π) h)) =
-      Finset.sum hs (fun h => History.terminalWeight (G := G) β h) := by
+      History.terminalMassOn (G := G) (G.pureToBehavioral π) hs) =
+      History.terminalMassOn (G := G) β hs := by
   calc
     ∑ π, behavioralToMixedJoint (G := G) β π *
-        Finset.sum hs (fun h =>
-          History.terminalWeight (G := G) (G.pureToBehavioral π) h)
+        History.terminalMassOn (G := G) (G.pureToBehavioral π) hs
       = ∑ π, Finset.sum hs (fun h =>
           behavioralToMixedJoint (G := G) β π *
             History.terminalWeight (G := G) (G.pureToBehavioral π) h) := by
               refine Finset.sum_congr rfl ?_
               intro π _
-              rw [Finset.mul_sum]
+              rw [History.terminalMassOn, Finset.mul_sum]
     _ = Finset.sum hs (fun h => ∑ π,
           behavioralToMixedJoint (G := G) β π *
             History.terminalWeight (G := G) (G.pureToBehavioral π) h) := by
               rw [Finset.sum_comm]
-    _ = Finset.sum hs (fun h => History.terminalWeight (G := G) β h) := by
+    _ = History.terminalMassOn (G := G) β hs := by
+          rw [History.terminalMassOn]
           refine Finset.sum_congr rfl ?_
           intro h hh
           exact marginal_terminalWeight (G := G) β h
+
+/-- Native FOSG terminal-law preservation on finite events. This packages the
+behavioral-to-mixed terminal distribution equality as equality of the native
+terminal-history event-mass functional. -/
+theorem marginal_terminalLaw
+    (β : BehavioralProfile (G := G)) :
+    (fun hs =>
+      ∑ π, behavioralToMixedJoint (G := G) β π *
+        History.terminalLaw (G := G) (G.pureToBehavioral π) hs) =
+      History.terminalLaw (G := G) β := by
+  funext hs
+  simpa [History.terminalLaw] using marginal_terminalMassOn (G := G) β hs
 
 end TerminalCorollaries
 
