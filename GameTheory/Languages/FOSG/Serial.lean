@@ -1900,6 +1900,114 @@ noncomputable abbrev serialPublicViewFrom
     (G : FOSG ι W Act PrivObs PubObs) (es : List (SerializedStep G)) : List PubObs :=
   es.filterMap (fun e => e.publicObs)
 
+/-- Collapse a serialized player event back to an original FOSG player event,
+dismissing bookkeeping observations. -/
+def serialPlayerEvent?
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι} :
+    PlayerEvent (SerialState.serialize (G := G)) i → Option (PlayerEvent G i)
+  | .act a => some (.act a)
+  | .obs (some oPriv) (some oPub) => some (.obs oPriv oPub)
+  | .obs _ _ => none
+
+@[simp] theorem serialPlayerEvent?_act
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι} (a : Act i) :
+    serialPlayerEvent? (G := G) (.act a : PlayerEvent (SerialState.serialize (G := G)) i) =
+      some (.act a : PlayerEvent G i) := rfl
+
+@[simp] theorem serialPlayerEvent?_obs_some_some
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (oPriv : PrivObs i) (oPub : PubObs) :
+    serialPlayerEvent? (G := G)
+      (.obs (some oPriv) (some oPub) : PlayerEvent (SerialState.serialize (G := G)) i) =
+        some (.obs oPriv oPub : PlayerEvent G i) := rfl
+
+@[simp] theorem serialPlayerEvent?_obs_none_none
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι} :
+    serialPlayerEvent? (G := G)
+      (.obs none none : PlayerEvent (SerialState.serialize (G := G)) i) = none := rfl
+
+@[simp] theorem serialPlayerEvent?_obs_none_some
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι} (oPub : PubObs) :
+    serialPlayerEvent? (G := G)
+      (.obs none (some oPub) : PlayerEvent (SerialState.serialize (G := G)) i) = none := rfl
+
+@[simp] theorem serialPlayerEvent?_obs_some_none
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι} (oPriv : PrivObs i) :
+    serialPlayerEvent? (G := G)
+      (.obs (some oPriv) none : PlayerEvent (SerialState.serialize (G := G)) i) = none := rfl
+
+/-- Player-visible trace in the serialized game with bookkeeping observations
+removed and real observations unwrapped back to the original FOSG event type. -/
+noncomputable abbrev serialPlayerViewFrom
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) (es : List (SerializedStep G)) :
+    List (PlayerEvent G i) :=
+  ((FOSG.History.playerViewFrom (G := SerialState.serialize (G := G)) i es).filterMap
+    (serialPlayerEvent? (G := G)))
+
+theorem serialPlayerViewFrom_append
+    (i : ι) (es₁ es₂ : List (SerializedStep G)) :
+    serialPlayerViewFrom G i (es₁ ++ es₂) =
+      serialPlayerViewFrom G i es₁ ++ serialPlayerViewFrom G i es₂ := by
+  simp [serialPlayerViewFrom, FOSG.History.playerViewFrom_append, List.filterMap_append]
+
+@[simp] theorem privObs_basePlayerSuccessor_eq_none
+    {i : ι} {w : W}
+    (a : { a : JointAction Act // legal (G := G) (.base w) a })
+    (hNonempty : G.orderedActive w ≠ []) :
+    SerialState.privObs (G := G) i (.base w) a
+      (SerialState.basePlayerSuccessor (G := G) w a) = none := by
+  simp [SerialState.privObs, hNonempty]
+
+theorem privObs_base_empty_base_eq_of_active_empty
+    {i : ι} {w w' : W}
+    (hactive : G.active w = ∅)
+    (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
+    SerialState.privObs (G := G) i (.base w) a (.base w') =
+      some (G.privObs i w
+        (baseChanceLegalAction (G := G) w hactive
+          (by
+            have horder : G.orderedActive w = [] :=
+              G.orderedActive_eq_nil_of_active_eq_empty hactive
+            have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+              simpa [SerialState.legal, horder] using a.2
+            exact ha.1))
+        w') := by
+  have horder : G.orderedActive w = [] :=
+    G.orderedActive_eq_nil_of_active_eq_empty hactive
+  have hgaEq :
+      baseChanceLegalAction (G := G) w
+        (G.active_eq_empty_of_orderedActive_eq_nil horder)
+        (by
+          have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+            simpa [SerialState.legal, horder] using a.2
+          exact ha.1) =
+      baseChanceLegalAction (G := G) w hactive
+        (by
+          have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+            simpa [SerialState.legal, horder] using a.2
+          exact ha.1) := by
+    apply Subtype.ext
+    funext j
+    simp [baseChanceLegalAction_val]
+  have hpriv :
+      some (G.privObs i w
+        (baseChanceLegalAction (G := G) w
+          (G.active_eq_empty_of_orderedActive_eq_nil horder)
+          (by
+            have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+              simpa [SerialState.legal, horder] using a.2
+            exact ha.1))
+        w') =
+      some (G.privObs i w
+        (baseChanceLegalAction (G := G) w hactive
+          (by
+            have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+              simpa [SerialState.legal, horder] using a.2
+            exact ha.1))
+        w') :=
+    congrArg (fun ga => some (G.privObs i w ga w')) hgaEq
+  simp [SerialState.privObs, horder, hpriv]
+
 theorem decisionReplaySteps_publicView_nil
     {w : W} (ga : G.LegalAction w) (acted : List ι)
     (current : ι) (rest : List ι)
