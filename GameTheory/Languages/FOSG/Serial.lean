@@ -543,6 +543,40 @@ noncomputable def decidePlayerSuccessor
   unfold SerialState.decidePlayerSuccessor
   split <;> simp [SerialState.world]
 
+/-- Canonical serialized action replaying the first active player's move from a
+base state for a fixed original legal action. -/
+noncomputable def baseReplayAction
+    {w : W} (ga : G.LegalAction w) {current : ι} {rest : List ι}
+    (horder : G.orderedActive w = current :: rest) :
+    { a : JointAction Act // legal (G := G) (.base w) a } :=
+  ⟨moveOfLegalAction (G := G) ga current
+      ((G.mem_orderedActive_iff w current).1 (by simp [horder])),
+    by
+      simpa [SerialState.legal, horder] using
+        base_playerLegal_of_legalAction (G := G) ga horder⟩
+
+/-- Canonical serialized action replaying the current player's move from a
+decision state for a fixed original legal action. -/
+noncomputable def decideReplayAction
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι} {rest : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: rest) :
+    { a : JointAction Act //
+      legal (G := G) (.decide w (G.prefixChoice ga acted) current rest
+        (validDecision_of_prefix (G := G) ga hsplit)) a } :=
+  ⟨moveOfLegalAction (G := G) ga current
+      (G.current_mem_active_of_split ⟨acted, hsplit⟩),
+    by
+      simpa [SerialState.legal] using
+        decide_playerLegal_of_legalAction (G := G) ga
+          (validDecision_of_prefix (G := G) ga hsplit)
+          (by
+            intro j
+            by_cases hjActed : j ∈ acted
+            · right
+              exact prefixChoice_apply_of_mem (G := G) ga hjActed
+            · left
+              exact prefixChoice_apply_of_not_mem (G := G) ga hjActed)⟩
+
 /-- Transition kernel of the serialized game. -/
 noncomputable def transition :
     (s : SerialState G) → {a : JointAction Act // legal (G := G) s a} → PMF (SerialState G)
