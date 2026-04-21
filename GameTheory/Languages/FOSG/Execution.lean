@@ -119,6 +119,24 @@ noncomputable def stepProb
     (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) : ENNReal :=
   G.stepActionProb σ pref e * (G.transition e.src e.act) e.dst
 
+theorem stepActionProb_ne_top
+    (G : FOSG ι W Act PrivObs PubObs)
+    (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) :
+    G.stepActionProb σ pref e ≠ ⊤ := by
+  classical
+  unfold stepActionProb
+  refine ENNReal.prod_ne_top ?_
+  intro i hi
+  cases e.ownAction? i <;> simp [PMF.apply_ne_top]
+
+theorem stepProb_ne_top
+    (G : FOSG ι W Act PrivObs PubObs)
+    (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) :
+    G.stepProb σ pref e ≠ ⊤ := by
+  exact ENNReal.mul_ne_top
+    (G.stepActionProb_ne_top σ pref e)
+    (PMF.apply_ne_top (G.transition e.src e.act) e.dst)
+
 @[simp] theorem stepProb_eq_stepActionProb_mul_transition
     (G : FOSG ι W Act PrivObs PubObs)
     (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) :
@@ -303,6 +321,27 @@ noncomputable def prob
     (σ : BehavioralProfile G) :
     prob σ (History.nil G) = 1 := rfl
 
+theorem probFrom_ne_top
+    (σ : BehavioralProfile G) (pref : G.History)
+    (es : List G.Step) (hchain : G.StepChainFrom pref.lastState es) :
+    probFrom σ pref es hchain ≠ ⊤ := by
+  induction es generalizing pref with
+  | nil =>
+      simp [probFrom]
+  | cons e es ih =>
+      rw [probFrom_cons]
+      exact ENNReal.mul_ne_top
+        (G.stepProb_ne_top σ pref e)
+        (ih (pref := pref.appendStep e hchain.1) (hchain := by simpa using hchain.2))
+
+theorem prob_ne_top
+    (σ : BehavioralProfile G) (h : G.History) :
+    prob σ h ≠ ⊤ := by
+  simpa [prob] using
+    probFrom_ne_top (G := G) (σ := σ) (pref := History.nil G)
+      (es := h.steps) (hchain := by
+        simpa [History.lastState, History.nil] using h.chain)
+
 theorem probFrom_eq_playerProbFrom_mul_counterfactualProbFrom
     (σ : BehavioralProfile G) (i : ι) (pref : G.History)
     (es : List G.Step) (hchain : G.StepChainFrom pref.lastState es) :
@@ -440,6 +479,14 @@ noncomputable def terminalWeight
     [DecidablePred G.terminal]
     (σ : BehavioralProfile G) (h : G.History) : ENNReal :=
   if G.terminal h.lastState then History.prob σ h else 0
+
+theorem terminalWeight_ne_top
+    [DecidablePred G.terminal]
+    (σ : BehavioralProfile G) (h : G.History) :
+    terminalWeight (G := G) σ h ≠ ⊤ := by
+  by_cases hterm : G.terminal h.lastState
+  · simp [terminalWeight, hterm, History.prob_ne_top]
+  · simp [terminalWeight, hterm]
 
 @[simp] theorem terminalWeight_of_terminal
     [DecidablePred G.terminal]

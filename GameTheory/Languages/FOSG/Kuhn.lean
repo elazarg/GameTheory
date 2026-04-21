@@ -898,6 +898,79 @@ theorem marginal_terminalLaw
   funext hs
   simpa [History.terminalLaw] using marginal_terminalMassOn (G := G) β hs
 
+/-- Pointwise real-valued terminal-mass preservation. This is the `toReal`
+version of `marginal_terminalWeight`, suitable for expected-utility
+calculations. -/
+theorem marginal_terminalWeight_toReal
+    (β : BehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
+      (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal =
+      (History.terminalWeight (G := G) β h).toReal := by
+  calc
+    ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
+        (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal
+      = ∑ π,
+          (behavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [ENNReal.toReal_mul]
+    _ = (∑ π,
+          behavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal := by
+          symm
+          apply ENNReal.toReal_sum
+          intro π _
+          exact ENNReal.mul_ne_top
+            (PMF.apply_ne_top (behavioralToMixedJoint (G := G) β) π)
+            (History.terminalWeight_ne_top (G := G) (σ := G.pureToBehavioral π) h)
+    _ = (History.terminalWeight (G := G) β h).toReal := by
+          rw [marginal_terminalWeight (G := G) β h]
+
+/-- Native FOSG expected-utility preservation under the product mixed strategy
+induced by a behavioral profile. -/
+theorem marginal_expectedUtility
+    [Fintype G.History]
+    (β : BehavioralProfile (G := G)) (i : ι) :
+    ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
+      History.expectedUtility (G := G) (G.pureToBehavioral π) i =
+      History.expectedUtility (G := G) β i := by
+  unfold History.expectedUtility
+  calc
+    ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
+        ∑ h : G.History,
+          (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal *
+            History.utility h i
+      = ∑ π, ∑ h : G.History,
+          ((behavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal) *
+              History.utility h i := by
+                refine Finset.sum_congr rfl ?_
+                intro π _
+                rw [Finset.mul_sum]
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                simp [mul_assoc]
+    _ = ∑ h : G.History, ∑ π,
+          ((behavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal) *
+              History.utility h i := by
+                rw [Finset.sum_comm]
+    _ = ∑ h : G.History,
+          (∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal) *
+              History.utility h i := by
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                rw [← Finset.sum_mul]
+    _ = ∑ h : G.History,
+          (History.terminalWeight (G := G) β h).toReal * History.utility h i := by
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                simpa using
+                  congrArg (fun x => x * History.utility h i)
+                    (marginal_terminalWeight_toReal (G := G) β h)
+
 end TerminalCorollaries
 
 end Native
