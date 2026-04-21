@@ -295,6 +295,38 @@ def IsLegalBehavioralProfile
     (σ : BehavioralProfile G) : Prop :=
   ∀ i, G.IsLegalBehavioralStrategy i (σ i)
 
+theorem legalBehavioralStrategy_eq_pure_none_of_not_mem_active
+    {G : FOSG ι W Act PrivObs PubObs}
+    {i : ι} {σ : BehavioralStrategy G i}
+    (hσ : G.IsLegalBehavioralStrategy i σ)
+    (h : G.History) (hi : i ∉ G.active h.lastState) :
+    σ (h.playerView i) = PMF.pure none := by
+  let p := σ (h.playerView i)
+  have hsubset : p.support ⊆ ({none} : Set (Option (Act i))) := by
+    intro oi hoi
+    have hlegal : oi ∈ G.availableMoves h i := hσ h hoi
+    simpa [G.availableMoves_eq_singleton_none_of_not_mem_active h hi] using hlegal
+  have hnone : (none : Option (Act i)) ∈ p.support := by
+    rcases p.support_nonempty with ⟨oi, hoi⟩
+    have hoiNone : oi = none := by
+      simpa using hsubset hoi
+    simpa [hoiNone] using hoi
+  have hsupport : p.support = ({none} : Set (Option (Act i))) := by
+    refine Set.Subset.antisymm hsubset ?_
+    intro oi hoi
+    have hoi' : oi = none := by
+      simpa using hoi
+    subst oi
+    exact hnone
+  apply PMF.ext
+  intro oi
+  cases oi with
+  | none =>
+      simpa [p] using (PMF.apply_eq_one_iff p none).2 hsupport
+  | some ai =>
+      simpa using
+        (PMF.apply_eq_zero_iff p (some ai)).2 (by simp [hsupport])
+
 /-- The subtype of legal pure strategies for player `i`. -/
 abbrev LegalPureStrategy
     (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=

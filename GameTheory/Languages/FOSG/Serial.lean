@@ -2570,6 +2570,116 @@ theorem expandHistory_playerView
   simpa [expandHistory, FOSG.History.playerView] using
     expandFrom_playerView (G := G) G.init h.steps h.chain i
 
+section SerializationProbability
+
+variable [Fintype ι]
+
+theorem translateBehavioralProfile_stepActionProb_baseReplayStepCons
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (h : G.History)
+    (ga : G.LegalAction h.lastState)
+    {current next : ι} {tail : List ι}
+    (horder : G.orderedActive h.lastState = current :: next :: tail) :
+    (SerialState.serialize (G := G)).stepActionProb
+      (translateBehavioralProfile (G := G) σ)
+      (expandHistory (G := G) h)
+      (baseReplayStepCons (G := G) ga horder) =
+      (σ current (h.playerView current)) (ga.1 current) := by
+  classical
+  unfold FOSG.stepActionProb
+  rw [← Finset.mul_prod_erase Finset.univ
+    (fun i =>
+      (translateBehavioralProfile (G := G) σ i ((expandHistory (G := G) h).playerView i))
+        ((baseReplayStepCons (G := G) ga horder).ownAction? i))
+    (Finset.mem_univ current)]
+  have hactiveCurrent :
+      current ∈ (SerialState.serialize (G := G)).active (expandHistory (G := G) h).lastState := by
+    rw [expandHistory_lastState]
+    simp [SerialState.serialize, SerialState.active, horder]
+  rw [translateBehavioralProfile_of_active (G := G) hLegSer σ (expandHistory (G := G) h)
+    current hactiveCurrent]
+  rw [normalizeSerialInfoState_playerView, expandHistory_playerView]
+  have hcurrent :
+      (baseReplayStepCons (G := G) ga horder).ownAction? current = ga.1 current := by
+    simp [FOSG.Step.ownAction?, baseReplayStepCons, baseReplayAction, moveOfLegalAction_current]
+  rw [hcurrent]
+  have hprod :
+      ∏ x ∈ Finset.univ.erase current,
+        (translateBehavioralProfile (G := G) σ x ((expandHistory (G := G) h).playerView x))
+          ((baseReplayStepCons (G := G) ga horder).ownAction? x) = 1 := by
+    refine Finset.prod_eq_one ?_
+    intro i hi
+    have hiNe : i ≠ current := (Finset.mem_erase.mp hi).1
+    have hiInactive :
+        i ∉ (SerialState.serialize (G := G)).active (expandHistory (G := G) h).lastState := by
+      rw [expandHistory_lastState]
+      simp [SerialState.serialize, SerialState.active, horder, hiNe]
+    have hprof :=
+      translateBehavioralProfile_of_inactive
+        (G := G) hLegSer σ (expandHistory (G := G) h) i hiInactive
+    have hnone :
+        (baseReplayStepCons (G := G) ga horder).ownAction? i = none := by
+      simp [FOSG.Step.ownAction?, baseReplayStepCons, baseReplayAction,
+        moveOfLegalAction_other, hiNe]
+    rw [hprof, hnone]
+    simp
+  simp [hprod]
+
+theorem translateBehavioralProfile_stepActionProb_baseReplayStepLast
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (h : G.History)
+    (ga : G.LegalAction h.lastState)
+    {current : ι}
+    (horder : G.orderedActive h.lastState = [current]) :
+    (SerialState.serialize (G := G)).stepActionProb
+      (translateBehavioralProfile (G := G) σ)
+      (expandHistory (G := G) h)
+      (baseReplayStepLast (G := G) ga horder) =
+      (σ current (h.playerView current)) (ga.1 current) := by
+  classical
+  unfold FOSG.stepActionProb
+  rw [← Finset.mul_prod_erase Finset.univ
+    (fun i =>
+      (translateBehavioralProfile (G := G) σ i ((expandHistory (G := G) h).playerView i))
+        ((baseReplayStepLast (G := G) ga horder).ownAction? i))
+    (Finset.mem_univ current)]
+  have hactiveCurrent :
+      current ∈ (SerialState.serialize (G := G)).active (expandHistory (G := G) h).lastState := by
+    rw [expandHistory_lastState]
+    simp [SerialState.serialize, SerialState.active, horder]
+  rw [translateBehavioralProfile_of_active (G := G) hLegSer σ (expandHistory (G := G) h)
+    current hactiveCurrent]
+  rw [normalizeSerialInfoState_playerView, expandHistory_playerView]
+  have hcurrent :
+      (baseReplayStepLast (G := G) ga horder).ownAction? current = ga.1 current := by
+    simp [FOSG.Step.ownAction?, baseReplayStepLast, baseReplayAction, moveOfLegalAction_current]
+  rw [hcurrent]
+  have hprod :
+      ∏ x ∈ Finset.univ.erase current,
+        (translateBehavioralProfile (G := G) σ x ((expandHistory (G := G) h).playerView x))
+          ((baseReplayStepLast (G := G) ga horder).ownAction? x) = 1 := by
+    refine Finset.prod_eq_one ?_
+    intro i hi
+    have hiNe : i ≠ current := (Finset.mem_erase.mp hi).1
+    have hiInactive :
+        i ∉ (SerialState.serialize (G := G)).active (expandHistory (G := G) h).lastState := by
+      rw [expandHistory_lastState]
+      simp [SerialState.serialize, SerialState.active, horder, hiNe]
+    have hprof :=
+      translateBehavioralProfile_of_inactive
+        (G := G) hLegSer σ (expandHistory (G := G) h) i hiInactive
+    have hnone :
+        (baseReplayStepLast (G := G) ga horder).ownAction? i = none := by
+      simp [FOSG.Step.ownAction?, baseReplayStepLast, baseReplayAction,
+        moveOfLegalAction_other, hiNe]
+    rw [hprof, hnone]
+    simp
+  simp [hprod]
+
+end SerializationProbability
+
 @[simp] theorem eraseStep_decide
     (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
     (hvalid : G.ValidDecision w chosen current rest)

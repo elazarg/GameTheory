@@ -144,6 +144,39 @@ theorem stepProb_eq_transition_mul_stepActionProb
       (G.transition e.src e.act) e.dst * G.stepActionProb σ pref e := by
   simp [stepProb, mul_comm]
 
+theorem legalBehavioralProfile_stepActionProb_eq_one_of_active_empty
+    (G : FOSG ι W Act PrivObs PubObs)
+    (σ : G.LegalBehavioralProfile) (pref : G.History) (e : G.Step)
+    (hsrc : e.src = pref.lastState)
+    (hEmpty : G.active pref.lastState = ∅) :
+    G.stepActionProb σ.toProfile pref e = 1 := by
+  classical
+  unfold stepActionProb
+  refine Finset.prod_eq_one ?_
+  intro i hiUniv
+  have hiInactive : i ∉ G.active pref.lastState := by
+    simp [hEmpty]
+  have hprof :
+      σ.toProfile i (pref.playerView i) = PMF.pure none :=
+    G.legalBehavioralStrategy_eq_pure_none_of_not_mem_active
+      (i := i) (σ := (σ i).1) (hσ := (σ i).2) pref hiInactive
+  have hnone : e.ownAction? i = none := by
+    apply FOSG.Step.ownAction?_eq_none_of_not_mem_active (G := G)
+    rw [hsrc]
+    exact hiInactive
+  rw [hprof, hnone]
+  simp
+
+theorem legalBehavioralProfile_stepProb_eq_transition_of_active_empty
+    (G : FOSG ι W Act PrivObs PubObs)
+    (σ : G.LegalBehavioralProfile) (pref : G.History) (e : G.Step)
+    (hsrc : e.src = pref.lastState)
+    (hEmpty : G.active pref.lastState = ∅) :
+    G.stepProb σ.toProfile pref e = (G.transition e.src e.act) e.dst := by
+  rw [G.stepProb_eq_stepActionProb_mul_transition]
+  rw [G.legalBehavioralProfile_stepActionProb_eq_one_of_active_empty σ pref e hsrc hEmpty]
+  simp
+
 theorem stepActionProb_eq_player_mul_others
     (G : FOSG ι W Act PrivObs PubObs)
     (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) (i : ι) :
