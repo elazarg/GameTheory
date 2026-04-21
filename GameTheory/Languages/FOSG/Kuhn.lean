@@ -858,6 +858,35 @@ theorem marginal_terminalWeight
     rw [hsum]
     simp
 
+/-- Native FOSG distribution preservation on any finite event of terminal
+histories. The induced product mixed strategy assigns the same total
+terminal-history mass to every finite set of histories as the behavioral
+profile. -/
+theorem marginal_terminalMassOn
+    (β : BehavioralProfile (G := G)) (hs : Finset G.History) :
+    (∑ π, behavioralToMixedJoint (G := G) β π *
+      Finset.sum hs (fun h =>
+        History.terminalWeight (G := G) (G.pureToBehavioral π) h)) =
+      Finset.sum hs (fun h => History.terminalWeight (G := G) β h) := by
+  calc
+    ∑ π, behavioralToMixedJoint (G := G) β π *
+        Finset.sum hs (fun h =>
+          History.terminalWeight (G := G) (G.pureToBehavioral π) h)
+      = ∑ π, Finset.sum hs (fun h =>
+          behavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π) h) := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [Finset.mul_sum]
+    _ = Finset.sum hs (fun h => ∑ π,
+          behavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π) h) := by
+              rw [Finset.sum_comm]
+    _ = Finset.sum hs (fun h => History.terminalWeight (G := G) β h) := by
+          refine Finset.sum_congr rfl ?_
+          intro h hh
+          exact marginal_terminalWeight (G := G) β h
+
 end TerminalCorollaries
 
 end Native
