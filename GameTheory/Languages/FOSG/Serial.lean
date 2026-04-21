@@ -208,6 +208,17 @@ def terminal : SerialState G → Prop
   | .decide _ _ _ _ _ => False
   | .chance _ _ => False
 
+instance instDecidablePredTerminal [DecidablePred G.terminal] :
+    DecidablePred (terminal (G := G)) := by
+  intro s
+  cases s with
+  | base w =>
+      exact ‹DecidablePred G.terminal› w
+  | decide w chosen current rest hvalid =>
+      exact isFalse (by simp [terminal])
+  | chance w a =>
+      exact isFalse (by simp [terminal])
+
 /-- Underlying original-world state represented by a serialized state. -/
 def world : SerialState G → W
   | .base w => w
@@ -1277,6 +1288,17 @@ noncomputable def serialize :
           simpa [SerialState.legal] using hlegal⟩
     | chance w ga =>
         exact ⟨noopAction Act, by simp [SerialState.legal]⟩
+
+instance instDecidablePredSerializeTerminal [DecidablePred G.terminal] :
+    DecidablePred (serialize (G := G)).terminal := by
+  intro s
+  cases s with
+  | base w =>
+      simpa [serialize, SerialState.terminal] using (‹DecidablePred G.terminal› w)
+  | decide w chosen current rest hvalid =>
+      exact isFalse (by simp [serialize, SerialState.terminal])
+  | chance w a =>
+      exact isFalse (by simp [serialize, SerialState.terminal])
 
 /-- Seriality predicate: every state has either no active players or exactly one
 active player and deterministic transitions. -/
@@ -2570,6 +2592,52 @@ theorem expandHistory_playerView
   simpa [expandHistory, FOSG.History.playerView] using
     expandFrom_playerView (G := G) G.init h.steps h.chain i
 
+theorem expandFrom_append
+    (w : W) (es₁ es₂ : List G.Step)
+    (h₁ : G.StepChainFrom w es₁)
+    (h₂ : G.StepChainFrom (G.lastStateFrom w es₁) es₂) :
+    expandFrom G w (es₁ ++ es₂)
+      (FOSG.StepChainFrom.append h₁ h₂) =
+      expandFrom G w es₁ h₁ ++
+        expandFrom G (G.lastStateFrom w es₁) es₂ h₂ := by
+  induction es₁ generalizing w with
+  | nil =>
+      simp [expandFrom, FOSG.lastStateFrom]
+  | cons e es ih =>
+      rcases h₁ with ⟨hsrc, htail⟩
+      subst hsrc
+      simpa [expandFrom, FOSG.lastStateFrom, List.append_assoc] using
+        congrArg (fun xs => stepExpansion (G := G) e ++ xs)
+          (ih (w := e.dst) htail h₂)
+
+theorem expandHistory_appendStep
+    (h : G.History) (e : G.Step) (hsrc : e.src = h.lastState) :
+    FOSG.History.extendBySteps (G := SerialState.serialize (G := G))
+      (expandHistory (G := G) h)
+      (stepExpansion (G := G) e)
+      (by simpa [expandHistory_lastState, hsrc] using
+        (stepExpansion_chain (G := G) e)) =
+      expandHistory (G := G) (h.appendStep e hsrc) := by
+  apply FOSG.History.ext
+  have hsingle : G.StepChainFrom h.lastState [e] := by
+    exact And.intro hsrc trivial
+  calc
+    (FOSG.History.extendBySteps (G := SerialState.serialize (G := G))
+        (expandHistory (G := G) h)
+        (stepExpansion (G := G) e)
+        (by simpa [expandHistory_lastState, hsrc] using
+          (stepExpansion_chain (G := G) e))).steps
+      = (expandHistory (G := G) h).steps ++ stepExpansion (G := G) e := by
+          simp [FOSG.History.steps_extendBySteps]
+    _ = expandFrom G G.init (h.steps ++ [e]) (FOSG.StepChainFrom.append h.chain hsingle) := by
+          symm
+          have happ :=
+            expandFrom_append (G := G) (w := G.init) (es₁ := h.steps) (es₂ := [e])
+              h.chain hsingle
+          simpa [expandHistory, expandFrom, hsrc] using happ
+    _ = (expandHistory (G := G) (h.appendStep e hsrc)).steps := by
+          simp [expandHistory, FOSG.History.appendStep]
+
 theorem normalizeSerialInfoState_appendStep
     (sh : SerializedHistory G) (e : SerializedStep G)
     (hsrc : e.src = sh.lastState) (i : ι) :
@@ -3199,6 +3267,281 @@ theorem translateBehavioralProfile_stepProb_chanceResolution
       (map_base_apply (G := G) (p := G.transition e.src e.act) (w := e.dst))
   · rw [← hsrc]
     simp [SerialState.serialize, SerialState.active]
+
+theorem translateBehavioralProfile_stepProb_baseEmptyResolution
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (h : G.History)
+    (e : G.Step)
+    (horder : G.orderedActive e.src = [])
+    (hsrcBase : (expandHistory (G := G) h).lastState = .base e.src) :
+    (SerialState.serialize (G := G)).stepProb
+      (translateBehavioralProfile (G := G) σ)
+      (expandHistory (G := G) h)
+      (baseEmptyResolutionStep (G := G) e horder) =
+      (G.transition e.src e.act) e.dst := by
+  have hsrc :
+      (baseEmptyResolutionStep (G := G) e horder).src = (expandHistory (G := G) h).lastState := by
+    simpa [baseEmptyResolutionStep] using hsrcBase.symm
+  have hEmpty :
+      (SerialState.serialize (G := G)).active (expandHistory (G := G) h).lastState = ∅ := by
+    rw [hsrcBase]
+    simp [SerialState.serialize, SerialState.active, horder]
+  rw [translateBehavioralProfile_stepProb_eq_transition_of_active_empty
+    (G := G) hLegSer σ (expandHistory (G := G) h)
+    (baseEmptyResolutionStep (G := G) e horder) hsrc hEmpty]
+  have hga :
+      baseChanceLegalAction (G := G) e.src
+        (G.active_eq_empty_of_orderedActive_eq_nil horder)
+        (by
+          intro hterm
+          exact G.terminal_no_legal hterm e.act.2) = e.act :=
+    baseChanceLegalAction_eq_stepAct (G := G) e horder
+  have hmap :
+      (PMF.map (SerialState.base (G := G)) (G.transition e.src e.act)) (.base e.dst) =
+        (G.transition e.src e.act) e.dst := by
+    simpa using
+      (map_base_apply (G := G) (p := G.transition e.src e.act) (w := e.dst))
+  change SerialState.transition (G := G) (.base e.src)
+      ((baseEmptyResolutionStep (G := G) e horder).act) (.base e.dst) =
+    (G.transition e.src e.act) e.dst
+  rw [transition_base_empty_eq (G := G) horder]
+  simp [baseEmptyResolutionStep, hga, hmap]
+
+private theorem stepExpansionWithOrder_probFrom
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History)
+    (ga : G.LegalAction h.lastState)
+    (dst : W)
+    (support : G.transition h.lastState ga dst ≠ 0)
+    (oa : List ι)
+    (horder : G.orderedActive h.lastState = oa) :
+    FOSG.History.probFrom (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (expandHistory (G := G) h)
+      (stepExpansionWithOrder (G := G) ⟨h.lastState, ga, dst, support⟩ oa horder)
+      (by simpa [expandHistory_lastState] using
+        (stepExpansionWithOrder_chain (G := G) ⟨h.lastState, ga, dst, support⟩ oa horder)) =
+      G.stepProb σ.toProfile h ⟨h.lastState, ga, dst, support⟩ := by
+  classical
+  cases oa with
+  | nil =>
+      change FOSG.History.probFrom (G := SerialState.serialize (G := G))
+        (translateBehavioralProfile (G := G) σ.toProfile)
+        (expandHistory (G := G) h)
+        [baseEmptyResolutionStep (G := G) ⟨h.lastState, ga, dst, support⟩ horder]
+        (by
+          refine And.intro ?_ trivial
+          simp [baseEmptyResolutionStep, expandHistory_lastState]) =
+        G.stepProb σ.toProfile h ⟨h.lastState, ga, dst, support⟩
+      rw [FOSG.History.probFrom_cons]
+      rw [translateBehavioralProfile_stepProb_baseEmptyResolution
+        (G := G) hLegSer σ.toProfile h ⟨h.lastState, ga, dst, support⟩ horder
+        (by simp [expandHistory_lastState])]
+      rw [FOSG.History.probFrom_nil]
+      rw [G.stepProb_eq_stepActionProb_mul_transition]
+      rw [legalBehavioralProfile_stepActionProb_eq_orderedActive_prod
+        (G := G) σ h ⟨h.lastState, ga, dst, support⟩ rfl]
+      simp [horder]
+  | cons current rest =>
+      simp [stepExpansionWithOrder]
+      have hbaseReplayChain :
+          (SerialState.serialize (G := G)).StepChainFrom
+            (expandHistory (G := G) h).lastState
+            (baseReplaySteps (G := G) ga current rest horder) := by
+        simpa [expandHistory_lastState] using
+          (baseReplaySteps_chain (G := G) ga current rest horder)
+      have hbaseReplay :
+          FOSG.History.probFrom (G := SerialState.serialize (G := G))
+            (translateBehavioralProfile (G := G) σ.toProfile)
+            (expandHistory (G := G) h)
+            (baseReplaySteps (G := G) ga current rest horder)
+            hbaseReplayChain =
+            ((current :: rest).map
+              (fun i => σ.toProfile i (h.playerView i) (ga.1 i))).prod :=
+        baseReplaySteps_probFrom (G := G) hLegSer σ h ga current rest horder
+      let sh' :=
+        FOSG.History.extendBySteps (G := SerialState.serialize (G := G))
+          (expandHistory (G := G) h)
+          (baseReplaySteps (G := G) ga current rest horder)
+          hbaseReplayChain
+      have hsrcChance :
+          (chanceResolutionStep (G := G) ⟨h.lastState, ga, dst, support⟩).src = sh'.lastState := by
+        dsimp [sh']
+        rw [FOSG.History.lastState_extendBySteps]
+        symm
+        simpa [expandHistory_lastState] using
+          (baseReplaySteps_lastState (G := G) ga current rest horder)
+      have happend :=
+        FOSG.History.probFrom_append_singleton (G := SerialState.serialize (G := G))
+          (σ := translateBehavioralProfile (G := G) σ.toProfile)
+          (pref := expandHistory (G := G) h)
+          (es := baseReplaySteps (G := G) ga current rest horder)
+          (hchain := hbaseReplayChain)
+          (e := chanceResolutionStep (G := G) ⟨h.lastState, ga, dst, support⟩)
+          (by
+            simpa [FOSG.History.lastState_extendBySteps, sh'] using hsrcChance)
+      rw [happend, hbaseReplay]
+      rw [translateBehavioralProfile_stepProb_chanceResolution
+        (G := G) hLegSer σ.toProfile sh' ⟨h.lastState, ga, dst, support⟩ hsrcChance]
+      exact congrArg
+        (fun x => x * (G.transition h.lastState ga) dst)
+        (by
+          simpa [horder] using
+            (legalBehavioralProfile_stepActionProb_eq_orderedActive_prod
+              (G := G) σ h ⟨h.lastState, ga, dst, support⟩ rfl).symm)
+
+theorem stepExpansion_probFrom
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History)
+    (a : G.LegalAction h.lastState)
+    (dst : W)
+    (support : G.transition h.lastState a dst ≠ 0) :
+    FOSG.History.probFrom (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (expandHistory (G := G) h)
+      (stepExpansion (G := G) ⟨h.lastState, a, dst, support⟩)
+      (by simpa [expandHistory_lastState] using
+        (stepExpansion_chain (G := G) ⟨h.lastState, a, dst, support⟩)) =
+      G.stepProb σ.toProfile h ⟨h.lastState, a, dst, support⟩ := by
+  simpa [stepExpansion] using
+    (stepExpansionWithOrder_probFrom (G := G) hLegSer σ h a dst support
+      (G.orderedActive h.lastState) rfl)
+
+theorem stepExpansion_probFrom_step
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History)
+    (e : G.Step)
+    (hsrc : e.src = h.lastState) :
+    FOSG.History.probFrom (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (expandHistory (G := G) h)
+      (stepExpansion (G := G) e)
+      (by simpa [expandHistory_lastState, hsrc] using
+        (stepExpansion_chain (G := G) e)) =
+      G.stepProb σ.toProfile h e := by
+  cases e with
+  | mk src act dst support =>
+      cases hsrc
+      simpa [FOSG.stepProb_eq_stepActionProb_mul_transition] using
+        stepExpansion_probFrom (G := G) hLegSer σ h act dst support
+
+theorem expandFrom_probFrom
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History)
+    (es : List G.Step)
+    (hchain : G.StepChainFrom h.lastState es) :
+    FOSG.History.probFrom (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (expandHistory (G := G) h)
+      (expandFrom G h.lastState es hchain)
+      (by simpa [expandHistory_lastState] using
+        (expandFrom_chain (G := G) h.lastState es hchain)) =
+      FOSG.History.probFrom (G := G) σ.toProfile h es hchain := by
+  induction es generalizing h with
+  | nil =>
+      simp [expandFrom]
+  | cons e es ih =>
+      rcases hchain with ⟨hsrc, htail⟩
+      have h₁ser :
+          (SerialState.serialize (G := G)).StepChainFrom
+            (expandHistory (G := G) h).lastState
+            (stepExpansion (G := G) e) := by
+        simpa [expandHistory_lastState, hsrc] using
+          (stepExpansion_chain (G := G) e)
+      have h₂ser :
+          (SerialState.serialize (G := G)).StepChainFrom
+            ((FOSG.History.extendBySteps (G := SerialState.serialize (G := G))
+              (expandHistory (G := G) h)
+              (stepExpansion (G := G) e) h₁ser).lastState)
+            (expandFrom G e.dst es htail) := by
+        have hlast :
+            (FOSG.History.extendBySteps (G := SerialState.serialize (G := G))
+              (expandHistory (G := G) h)
+              (stepExpansion (G := G) e) h₁ser).lastState = .base e.dst := by
+          simpa [FOSG.History.lastState_extendBySteps, expandHistory_lastState, hsrc] using
+            (stepExpansion_lastState (G := G) e)
+        exact hlast ▸ (expandFrom_chain (G := G) e.dst es htail)
+      have happend :=
+        FOSG.History.probFrom_append (G := SerialState.serialize (G := G))
+          (σ := translateBehavioralProfile (G := G) σ.toProfile)
+          (pref := expandHistory (G := G) h)
+          (es₁ := stepExpansion (G := G) e)
+          (es₂ := expandFrom G e.dst es htail)
+          (h₁ := h₁ser)
+          (h₂ := h₂ser)
+      simp [expandFrom]
+      rw [happend, stepExpansion_probFrom_step (G := G) hLegSer σ h e hsrc]
+      have hext :
+          FOSG.History.extendBySteps (G := SerialState.serialize (G := G))
+            (expandHistory (G := G) h)
+            (stepExpansion (G := G) e)
+            h₁ser =
+            expandHistory (G := G) (h.appendStep e hsrc) :=
+        expandHistory_appendStep (G := G) h e hsrc
+      have htail' : G.StepChainFrom (h.appendStep e hsrc).lastState es := by
+        simpa [FOSG.History.lastState_appendStep] using htail
+      have hrec := ih (h := h.appendStep e hsrc) (hchain := htail')
+      have hrec' :
+          FOSG.History.probFrom (G := SerialState.serialize (G := G))
+            (translateBehavioralProfile (G := G) σ.toProfile)
+            ((FOSG.History.extendBySteps (G := SerialState.serialize (G := G))
+              (expandHistory (G := G) h)
+              (stepExpansion (G := G) e) h₁ser))
+            (expandFrom G e.dst es htail) h₂ser =
+            FOSG.History.probFrom (G := G) σ.toProfile (h.appendStep e hsrc) es htail' := by
+        simpa [hext] using hrec
+      simpa [FOSG.History.probFrom_cons] using
+        congrArg (fun x => G.stepProb σ.toProfile h e * x) hrec'
+
+theorem expandHistory_prob
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History) :
+    FOSG.History.prob (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (expandHistory (G := G) h) =
+      FOSG.History.prob (G := G) σ.toProfile h := by
+  simpa [FOSG.History.prob, expandHistory_steps] using
+    expandFrom_probFrom (G := G) hLegSer σ (FOSG.History.nil G) h.steps
+      (by simpa [FOSG.History.lastState, FOSG.History.nil] using h.chain)
+
+omit [Fintype ι] in
+theorem expandHistory_isTerminal_iff
+    (h : G.History) :
+    FOSG.History.IsTerminal (G := SerialState.serialize (G := G))
+      (expandHistory (G := G) h) ↔
+      FOSG.History.IsTerminal (G := G) h := by
+  change (SerialState.serialize (G := G)).terminal ((expandHistory (G := G) h).lastState) ↔
+      G.terminal h.lastState
+  rw [expandHistory_lastState]
+  simp [SerialState.serialize, SerialState.terminal]
+
+theorem expandHistory_terminalWeight
+    [DecidablePred G.terminal]
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History) :
+    FOSG.History.terminalWeight (G := SerialState.serialize (G := G))
+      (translateBehavioralProfile (G := G) σ.toProfile)
+      (expandHistory (G := G) h) =
+      FOSG.History.terminalWeight (G := G) σ.toProfile h := by
+  by_cases hterm : FOSG.History.IsTerminal (G := G) h
+  · rw [FOSG.History.terminalWeight_of_terminal
+      (G := SerialState.serialize (G := G))
+      (σ := translateBehavioralProfile (G := G) σ.toProfile)
+      ((expandHistory_isTerminal_iff (G := G) h).2 hterm)]
+    rw [FOSG.History.terminalWeight_of_terminal (G := G) (σ := σ.toProfile) hterm]
+    exact expandHistory_prob (G := G) hLegSer σ h
+  · rw [FOSG.History.terminalWeight_of_not_terminal
+      (G := SerialState.serialize (G := G))
+      (σ := translateBehavioralProfile (G := G) σ.toProfile)]
+    · rw [FOSG.History.terminalWeight_of_not_terminal (G := G) (σ := σ.toProfile) hterm]
+    · exact fun htermSer => hterm ((expandHistory_isTerminal_iff (G := G) h).1 htermSer)
 
 end SerializationProbability
 
