@@ -28,11 +28,34 @@ def publicPart : PlayerEvent G i → Option PubObs
   | .act _ => none
   | .obs _ o => some o
 
+/-- Extract the player's own action component carried by an event, if any. -/
+def actionPart : PlayerEvent G i → Option (Act i)
+  | .act a => some a
+  | .obs _ _ => none
+
+/-- Extract the full private/public observation component carried by an event,
+if any. -/
+def observationPart : PlayerEvent G i → Option (PrivObs i × PubObs)
+  | .act _ => none
+  | .obs oPriv oPub => some (oPriv, oPub)
+
 @[simp] theorem publicPart_act (a : Act i) :
     publicPart (.act a : PlayerEvent G i) = none := rfl
 
 @[simp] theorem publicPart_obs (oPriv : PrivObs i) (oPub : PubObs) :
     publicPart (.obs oPriv oPub : PlayerEvent G i) = some oPub := rfl
+
+@[simp] theorem actionPart_act (a : Act i) :
+    actionPart (.act a : PlayerEvent G i) = some a := rfl
+
+@[simp] theorem actionPart_obs (oPriv : PrivObs i) (oPub : PubObs) :
+    actionPart (.obs oPriv oPub : PlayerEvent G i) = none := rfl
+
+@[simp] theorem observationPart_act (a : Act i) :
+    observationPart (.act a : PlayerEvent G i) = none := rfl
+
+@[simp] theorem observationPart_obs (oPriv : PrivObs i) (oPub : PubObs) :
+    observationPart (.obs oPriv oPub : PlayerEvent G i) = some (oPriv, oPub) := rfl
 
 end PlayerEvent
 
@@ -101,6 +124,16 @@ def publicView (h : G.History) : G.PublicState :=
 /-- Player `i`'s information state along a realized history. -/
 def playerView (h : G.History) (i : ι) : G.InfoState i :=
   playerViewFrom i h.steps
+
+/-- The sequence of own actions recalled by player `i` along a realized
+history. -/
+def projectActions (h : G.History) (i : ι) : List (Act i) :=
+  (h.playerView i).filterMap (PlayerEvent.actionPart (G := G) (i := i))
+
+/-- The sequence of private/public observations recalled by player `i` along a
+realized history. -/
+def projectObservations (h : G.History) (i : ι) : List (PrivObs i × PubObs) :=
+  (h.playerView i).filterMap (PlayerEvent.observationPart (G := G) (i := i))
 
 theorem publicViewFrom_append_singleton
     (es : List G.Step) (e : G.Step) :
@@ -178,6 +211,20 @@ theorem publicView_eq_of_playerView_eq
     h.publicView = h'.publicView := by
   simpa [h.publicView_eq_filterMap_playerView i, h'.publicView_eq_filterMap_playerView i] using
     congrArg (fun xs => xs.filterMap (PlayerEvent.publicPart (G := G) (i := i))) hInfo
+
+theorem projectActions_eq_of_playerView_eq
+    (i : ι) {h h' : G.History}
+    (hInfo : h.playerView i = h'.playerView i) :
+    h.projectActions i = h'.projectActions i := by
+  simpa [History.projectActions] using
+    congrArg (fun xs => xs.filterMap (PlayerEvent.actionPart (G := G) (i := i))) hInfo
+
+theorem projectObservations_eq_of_playerView_eq
+    (i : ι) {h h' : G.History}
+    (hInfo : h.playerView i = h'.playerView i) :
+    h.projectObservations i = h'.projectObservations i := by
+  simpa [History.projectObservations] using
+    congrArg (fun xs => xs.filterMap (PlayerEvent.observationPart (G := G) (i := i))) hInfo
 
 theorem playerView_length_snoc
     (h : G.History) (i : ι) (a : G.LegalAction h.lastState)
@@ -269,6 +316,50 @@ theorem infoSet_mem_publicSet
   exact publicView_eq_of_playerView_eq (G := G) i (hh.trans hh'.symm)
 
 end History
+
+/-- Observation recall for a FOSG: equal player information states determine
+equal recalled observation histories. -/
+def ObsRecall (G : FOSG ι W Act PrivObs PubObs) : Prop :=
+  ∀ (i : ι) {h h' : G.History},
+    h.playerView i = h'.playerView i →
+    h.projectObservations i = h'.projectObservations i
+
+/-- Action recall for a FOSG: equal player information states determine equal
+recalled own-action histories. -/
+def ActionRecall (G : FOSG ι W Act PrivObs PubObs) : Prop :=
+  ∀ (i : ι) {h h' : G.History},
+    h.playerView i = h'.playerView i →
+    h.projectActions i = h'.projectActions i
+
+/-- Perfect recall for a FOSG is the conjunction of observation recall and
+action recall. For native FOSGs this holds by construction, since information
+states are action-observation histories. -/
+def PerfectRecall (G : FOSG ι W Act PrivObs PubObs) : Prop :=
+  G.ObsRecall ∧ G.ActionRecall
+
+theorem obsRecall
+    (G : FOSG ι W Act PrivObs PubObs) : G.ObsRecall := by
+  intro i h h' hInfo
+  exact History.projectObservations_eq_of_playerView_eq (G := G) i hInfo
+
+theorem actionRecall
+    (G : FOSG ι W Act PrivObs PubObs) : G.ActionRecall := by
+  intro i h h' hInfo
+  exact History.projectActions_eq_of_playerView_eq (G := G) i hInfo
+
+theorem perfectRecall
+    (G : FOSG ι W Act PrivObs PubObs) : G.PerfectRecall :=
+  ⟨G.obsRecall, G.actionRecall⟩
+
+theorem perfectRecall_obs
+    {G : FOSG ι W Act PrivObs PubObs}
+    (hPR : G.PerfectRecall) : G.ObsRecall :=
+  hPR.1
+
+theorem perfectRecall_action
+    {G : FOSG ι W Act PrivObs PubObs}
+    (hPR : G.PerfectRecall) : G.ActionRecall :=
+  hPR.2
 
 end FOSG
 
