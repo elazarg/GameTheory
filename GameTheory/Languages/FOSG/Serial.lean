@@ -1,4 +1,4 @@
-import GameTheory.Languages.FOSG.Basic
+import GameTheory.Languages.FOSG.History
 import Mathlib.Data.Finset.Sort
 import Mathlib.Data.List.Nodup
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
@@ -592,6 +592,57 @@ theorem resolution_chance_step
   · exact privObs_chance_base_eq (G := G) ga a
   · exact pubObs_chance_base_eq (G := G) ga a
 
+@[simp] theorem map_base_apply
+    (p : PMF W) (w : W) :
+    PMF.map (SerialState.base (G := G)) p (.base w) = p w := by
+  rw [PMF.map_apply]
+  rw [tsum_eq_single w]
+  · simp
+  · intro w' hw'
+    by_cases hEq : (.base w : SerialState G) = .base w'
+    · cases hEq
+      contradiction
+    · simp [hEq]
+
+@[simp] theorem map_base_apply_decide
+    (p : PMF W) (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
+    (hvalid : G.ValidDecision w chosen current rest) :
+    PMF.map (SerialState.base (G := G)) p (.decide w chosen current rest hvalid) = 0 := by
+  rw [PMF.map_apply]
+  rw [ENNReal.tsum_eq_zero]
+  intro w'
+  simp
+
+@[simp] theorem map_base_apply_chance
+    (p : PMF W) (w : W) (a : G.LegalAction w) :
+    PMF.map (SerialState.base (G := G)) p (.chance w a) = 0 := by
+  rw [PMF.map_apply]
+  rw [ENNReal.tsum_eq_zero]
+  intro w'
+  simp
+
+theorem base_empty_support
+    {w w' : W}
+    (hEmpty : G.orderedActive w = [])
+    (a : { a : JointAction Act // legal (G := G) (.base w) a })
+    (hsupp : SerialState.transition (G := G) (.base w) a (.base w') ≠ 0) :
+    G.transition w
+      (baseChanceLegalAction (G := G) w
+        (G.active_eq_empty_of_orderedActive_eq_nil hEmpty)
+        ((by
+          have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+            simpa [SerialState.legal, hEmpty] using a.2
+          exact ha.1) : ¬ G.terminal w)) w' ≠ 0 := by
+  rw [transition_base_empty_eq (G := G) hEmpty] at hsupp
+  simpa using hsupp
+
+theorem chance_support
+    {w w' : W} (ga : G.LegalAction w)
+    (a : { a : JointAction Act // legal (G := G) (.chance w ga) a })
+    (hsupp : SerialState.transition (G := G) (.chance w ga) a (.base w') ≠ 0) :
+    G.transition w ga w' ≠ 0 := by
+  simpa [SerialState.transition] using hsupp
+
 /-- The serialized FOSG. -/
 noncomputable def serialize :
     FOSG ι (SerialState G) Act (fun i => Option (PrivObs i)) (Option PubObs) where
@@ -765,6 +816,186 @@ theorem serialize_isSerial
   | chance w ga =>
       left
       simp [SerialState.serialize, SerialState.active]
+
+/-- One realized step of the serialized FOSG. -/
+abbrev SerializedStep
+    (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  (SerialState.serialize (G := G)).Step
+
+/-- One realized history of the serialized FOSG. -/
+abbrev SerializedHistory
+    (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  (SerialState.serialize (G := G)).History
+
+/-- Erase bookkeeping from a realized serialized step. Resolution steps become
+the corresponding original FOSG step; deterministic bookkeeping steps erase to
+`none`. -/
+noncomputable def eraseStep
+    (G : FOSG ι W Act PrivObs PubObs)
+    (e : SerializedStep G) : Option G.Step := by
+  classical
+  cases e with
+  | mk src act dst support =>
+      cases src with
+      | base w =>
+          cases horder : G.orderedActive w with
+          | nil =>
+              cases dst with
+              | base w' =>
+                  exact some ⟨w,
+                    baseChanceLegalAction (G := G) w
+                      (G.active_eq_empty_of_orderedActive_eq_nil horder)
+                      ((by
+                        have ha : ¬ G.terminal w ∧ act.1 = noopAction Act := by
+                          simpa [SerialState.serialize, SerialState.legal, horder] using act.2
+                        exact ha.1) : ¬ G.terminal w),
+                    w',
+                    base_empty_support (G := G) horder act support⟩
+              | decide _ _ _ _ _ =>
+                  exact none
+              | chance _ _ =>
+                  exact none
+          | cons _ _ =>
+              exact none
+      | decide _ _ _ _ _ =>
+          exact none
+      | chance w ga =>
+          cases dst with
+          | base w' =>
+              exact some ⟨w, ga, w', chance_support (G := G) ga act support⟩
+          | decide _ _ _ _ _ =>
+              exact none
+          | chance _ _ =>
+              exact none
+
+@[simp] theorem eraseStep_chance_base
+    (w w' : W) (ga : G.LegalAction w)
+    (a : (SerialState.serialize (G := G)).LegalAction (.chance w ga))
+    (support : (SerialState.serialize (G := G)).transition (.chance w ga) a (.base w') ≠ 0) :
+    eraseStep (G := G) ⟨.chance w ga, a, .base w', support⟩ =
+      some ⟨w, ga, w', chance_support (G := G) ga a support⟩ := by
+  simp [eraseStep]
+
+@[simp] theorem eraseStep_decide
+    (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)
+    (hvalid : G.ValidDecision w chosen current rest)
+    (a : (SerialState.serialize (G := G)).LegalAction (.decide w chosen current rest hvalid))
+    (dst : SerialState G)
+    (support : (SerialState.serialize (G := G)).transition
+      (.decide w chosen current rest hvalid) a dst ≠ 0) :
+    eraseStep (G := G) ⟨.decide w chosen current rest hvalid, a, dst, support⟩ = none := by
+  simp [eraseStep]
+
+/-- Erase bookkeeping from a serialized step list, starting from a serialized
+state together with the corresponding original-history prefix. -/
+noncomputable def eraseFrom
+    (G : FOSG ι W Act PrivObs PubObs)
+    (pref : G.History) (s : SerialState G)
+    (hworld : pref.lastState = SerialState.world (G := G) s) :
+    (es : List (SerializedStep G)) →
+    ((SerialState.serialize (G := G)).StepChainFrom s es) →
+    G.History
+  | [], _ => pref
+  | e :: es, hchain => by
+      rcases hchain with ⟨hsrc, htail⟩
+      cases e with
+      | mk src act dst support =>
+          cases src with
+          | base w =>
+              cases hsrc
+              have hpref : pref.lastState = w := by
+                simpa using hworld
+              cases horder : G.orderedActive w with
+              | nil =>
+                  cases dst with
+                  | base w' =>
+                      let oe : G.Step := ⟨w,
+                        baseChanceLegalAction (G := G) w
+                          (G.active_eq_empty_of_orderedActive_eq_nil horder)
+                          ((by
+                            have ha : ¬ G.terminal w ∧ act.1 = noopAction Act := by
+                              simpa [SerialState.serialize, SerialState.legal, horder] using act.2
+                            exact ha.1) : ¬ G.terminal w),
+                        w',
+                        base_empty_support (G := G) horder act support⟩
+                      let pref' := pref.appendStep oe (by
+                        change w = pref.lastState
+                        exact hpref.symm)
+                      exact eraseFrom G pref' (.base w') (by
+                        simp [pref', oe]) es (by simpa using htail)
+                  | decide w' chosen current rest hvalid =>
+                      exfalso
+                      have : SerialState.transition (G := G) (.base w) act
+                          (.decide w' chosen current rest hvalid) ≠ 0 := support
+                      simp [SerialState.transition, horder] at this
+                  | chance w' ga =>
+                      exfalso
+                      have : SerialState.transition (G := G) (.base w) act
+                          (.chance w' ga) ≠ 0 := support
+                      simp [SerialState.transition, horder] at this
+              | cons _ _ =>
+                  have hdst :
+                      dst = SerialState.basePlayerSuccessor (G := G) w act := by
+                    have : SerialState.transition (G := G) (.base w) act dst ≠ 0 := support
+                    rw [SerialState.transition_base_nonempty_eq (G := G) (w := w)
+                      (hNonempty := by simp [horder])] at this
+                    simpa only [PMF.pure_apply, ne_eq, ite_eq_right_iff, one_ne_zero,
+                      imp_false, not_not] using this
+                  exact eraseFrom G pref dst (by
+                    rw [hdst]
+                    exact hpref.trans
+                      (SerialState.world_basePlayerSuccessor (G := G) (w := w) act).symm) es
+                    (by simpa [hdst] using htail)
+          | decide w chosen current rest hvalid =>
+              cases hsrc
+              have hpref : pref.lastState = w := by
+                simpa using hworld
+              have hdst :
+                  dst = SerialState.decidePlayerSuccessor
+                    (G := G) w chosen current rest hvalid act := by
+                have : SerialState.transition (G := G)
+                    (.decide w chosen current rest hvalid) act dst ≠ 0 := support
+                rw [SerialState.transition_decide_eq (G := G) (w := w)
+                  (chosen := chosen) (current := current) (rest := rest)
+                  (hvalid := hvalid)] at this
+                simpa only [PMF.pure_apply, ne_eq, ite_eq_right_iff, one_ne_zero,
+                  imp_false, not_not] using this
+              exact eraseFrom G pref dst (by
+                rw [hdst]
+                exact hpref.trans
+                  (SerialState.world_decidePlayerSuccessor (G := G)
+                    (w := w) (chosen := chosen) (current := current)
+                    (rest := rest) (hvalid := hvalid) act).symm) es
+                (by simpa [hdst] using htail)
+          | chance w ga =>
+              cases hsrc
+              have hpref : pref.lastState = w := by
+                simpa using hworld
+              cases dst with
+              | base w' =>
+                  let oe : G.Step := ⟨w, ga, w', chance_support (G := G) ga act support⟩
+                  let pref' := pref.appendStep oe (by
+                    change w = pref.lastState
+                    exact hpref.symm)
+                  exact eraseFrom G pref' (.base w') (by
+                    simp [pref', oe]) es (by simpa using htail)
+              | decide w' chosen current rest hvalid =>
+                  exfalso
+                  have : SerialState.transition (G := G) (.chance w ga) act
+                      (.decide w' chosen current rest hvalid) ≠ 0 := support
+                  simp [SerialState.transition] at this
+              | chance w' ga' =>
+                  exfalso
+                  have : SerialState.transition (G := G) (.chance w ga) act
+                      (.chance w' ga') ≠ 0 := support
+                  simp [SerialState.transition] at this
+
+/-- Erase bookkeeping from a realized serialized history. -/
+noncomputable def eraseHistory
+    (G : FOSG ι W Act PrivObs PubObs)
+    (h : SerializedHistory G) : G.History :=
+  eraseFrom G (History.nil G) (.base G.init) rfl h.steps (by
+    simpa [History.lastState, History.nil] using h.chain)
 
 end SerialState
 
