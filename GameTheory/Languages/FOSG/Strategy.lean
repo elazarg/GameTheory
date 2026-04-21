@@ -10,8 +10,11 @@ This file follows the paper's strategy shape up to a Lean-friendly adaptation:
 - a player's legal moves are derived from the current history endpoint
 - legality at an information state is expressed via an explicit invariance
   predicate `LegalObservable`
-- behavioral strategies are functions from information states to `PMF (Act i)`
-  together with a support constraint, rather than dependent codomains
+- strategies choose optional moves `Option (Act i)`, with `none` representing
+  inactivity
+- behavioral strategies are functions from information states to
+  `PMF (Option (Act i))` together with a support constraint, rather than
+  dependent codomains
 
 The final section keeps a state-based legal-joint policy semantics as an
 explicitly auxiliary construction.
@@ -45,6 +48,20 @@ def locallyLegalAtState
     (w : W) (i : ι) : Option (Act i) → Prop
   | some ai => ai ∈ G.availableActionsAtState w i
   | none => i ∉ G.active w
+
+/-- The set of optional moves available to player `i` at world state `w`. This
+adds `none` exactly when player `i` is inactive at `w`. -/
+def availableMovesAtState
+    (G : FOSG ι W Act PrivObs PubObs)
+    (w : W) (i : ι) : Set (Option (Act i)) :=
+  { oi | G.locallyLegalAtState w i oi }
+
+theorem mem_availableMovesAtState_iff
+    {G : FOSG ι W Act PrivObs PubObs}
+    {w : W} {i : ι} {oi : Option (Act i)} :
+    oi ∈ G.availableMovesAtState w i ↔
+      G.locallyLegalAtState w i oi := by
+  rfl
 
 theorem locallyLegalAtState_of_legal
     {G : FOSG ι W Act PrivObs PubObs}
@@ -86,6 +103,26 @@ theorem availableActions_eq_availableActionsAtState
     G.availableActions h i = G.availableActionsAtState h.lastState i := by
   rfl
 
+/-- The set of optional moves available to player `i` at the endpoint of
+history `h`. -/
+def availableMoves
+    (G : FOSG ι W Act PrivObs PubObs)
+    (h : G.History) (i : ι) : Set (Option (Act i)) :=
+  G.availableMovesAtState h.lastState i
+
+theorem mem_availableMoves_iff
+    {G : FOSG ι W Act PrivObs PubObs}
+    {h : G.History} {i : ι} {oi : Option (Act i)} :
+    oi ∈ G.availableMoves h i ↔
+      G.locallyLegalAtState h.lastState i oi := by
+  simp [availableMoves, availableMovesAtState]
+
+theorem availableMoves_eq_availableMovesAtState
+    {G : FOSG ι W Act PrivObs PubObs}
+    (h : G.History) (i : ι) :
+    G.availableMoves h i = G.availableMovesAtState h.lastState i := by
+  rfl
+
 theorem not_mem_availableActions_of_not_mem_active
     {G : FOSG ι W Act PrivObs PubObs}
     (h : G.History) {i : ι} (hi : i ∉ G.active h.lastState) :
@@ -99,64 +136,128 @@ theorem not_mem_availableActions_of_not_mem_active
   · intro hai
     simp at hai
 
+theorem not_mem_availableActionsAtState_of_not_mem_active
+    {G : FOSG ι W Act PrivObs PubObs}
+    {w : W} {i : ι} (hi : i ∉ G.active w) :
+    G.availableActionsAtState w i = ∅ := by
+  ext ai
+  constructor
+  · intro hai
+    rcases hai with ⟨a, ha⟩
+    have hnone : a.1 i = none := G.inactive_eq_none (a := a) hi
+    simp [hnone] at ha
+  · intro hai
+    simp at hai
+
+theorem availableMoves_eq_singleton_none_of_not_mem_active
+    {G : FOSG ι W Act PrivObs PubObs}
+    (h : G.History) {i : ι} (hi : i ∉ G.active h.lastState) :
+    G.availableMoves h i = {none} := by
+  ext oi
+  cases oi with
+  | none =>
+      simp [availableMoves, availableMovesAtState, locallyLegalAtState, hi]
+  | some ai =>
+      have hnone : G.availableActionsAtState h.lastState i = ∅ :=
+        G.not_mem_availableActionsAtState_of_not_mem_active hi
+      simp [availableMoves, availableMovesAtState, locallyLegalAtState, hnone]
+
 /-- Lean-facing form of the paper's assumption that legal actions are
 deducible from the player's information state. -/
 def LegalObservable (G : FOSG ι W Act PrivObs PubObs) : Prop :=
   ∀ (i : ι) {h h' : G.History},
     h.playerView i = h'.playerView i →
-    G.availableActions h i = G.availableActions h' i
+    G.availableMoves h i = G.availableMoves h' i
+
+theorem availableMoves_eq_of_playerView_eq
+    {G : FOSG ι W Act PrivObs PubObs}
+    (hLeg : G.LegalObservable) (i : ι)
+    {h h' : G.History}
+    (hInfo : h.playerView i = h'.playerView i) :
+    G.availableMoves h i = G.availableMoves h' i :=
+  hLeg i hInfo
 
 theorem availableActions_eq_of_playerView_eq
     {G : FOSG ι W Act PrivObs PubObs}
     (hLeg : G.LegalObservable) (i : ι)
     {h h' : G.History}
     (hInfo : h.playerView i = h'.playerView i) :
-    G.availableActions h i = G.availableActions h' i :=
-  hLeg i hInfo
+    G.availableActions h i = G.availableActions h' i := by
+  ext ai
+  have hEq := G.availableMoves_eq_of_playerView_eq hLeg i hInfo
+  have hmoves : some ai ∈ G.availableMoves h i ↔ some ai ∈ G.availableMoves h' i := by
+    simp [hEq]
+  rw [show ai ∈ G.availableActions h i ↔ some ai ∈ G.availableMoves h i by
+      simp [availableActions, availableMoves, availableMovesAtState,
+        locallyLegalAtState, availableActionsAtState]]
+  rw [show ai ∈ G.availableActions h' i ↔ some ai ∈ G.availableMoves h' i by
+      simp [availableActions, availableMoves, availableMovesAtState,
+        locallyLegalAtState, availableActionsAtState]]
+  exact hmoves
 
-/-- The legal actions associated with an information state, defined as the
-common action set across all realizing histories when `LegalObservable` holds. -/
+/-- The legal optional moves associated with an information state, defined as
+the common move set across all realizing histories when `LegalObservable`
+holds. -/
+def availableMovesAtInfoState
+    (G : FOSG ι W Act PrivObs PubObs)
+    (i : ι) (s : G.InfoState i) : Set (Option (Act i)) :=
+  { oi | ∃ h : G.History, h.playerView i = s ∧ oi ∈ G.availableMoves h i }
+
+theorem mem_availableMovesAtInfoState_iff
+    {G : FOSG ι W Act PrivObs PubObs}
+    {i : ι} {s : G.InfoState i} {oi : Option (Act i)} :
+    oi ∈ G.availableMovesAtInfoState i s ↔
+      ∃ h : G.History, h.playerView i = s ∧ oi ∈ G.availableMoves h i := by
+  rfl
+
+theorem mem_availableMovesAtInfoState_of_history
+    {G : FOSG ι W Act PrivObs PubObs}
+    {i : ι} (h : G.History) {oi : Option (Act i)}
+    (hoi : oi ∈ G.availableMoves h i) :
+    oi ∈ G.availableMovesAtInfoState i (h.playerView i) := by
+  exact ⟨h, rfl, hoi⟩
+
+theorem availableMovesAtInfoState_eq_of_history
+    {G : FOSG ι W Act PrivObs PubObs}
+    (hLeg : G.LegalObservable) (i : ι) (h : G.History) :
+    G.availableMovesAtInfoState i (h.playerView i) = G.availableMoves h i := by
+  ext oi
+  constructor
+  · intro hoi
+    rcases hoi with ⟨h', hh', hoi'⟩
+    have hEq : G.availableMoves h' i = G.availableMoves h i :=
+      G.availableMoves_eq_of_playerView_eq hLeg i hh'
+    exact hEq ▸ hoi'
+  · intro hoi
+    exact G.mem_availableMovesAtInfoState_of_history h hoi
+
+/-- The legal actual actions associated with an information state. -/
 def availableActionsAtInfoState
     (G : FOSG ι W Act PrivObs PubObs)
     (i : ι) (s : G.InfoState i) : Set (Act i) :=
-  { ai | ∃ h : G.History, h.playerView i = s ∧ ai ∈ G.availableActions h i }
-
-theorem mem_availableActionsAtInfoState_iff
-    {G : FOSG ι W Act PrivObs PubObs}
-    {i : ι} {s : G.InfoState i} {ai : Act i} :
-    ai ∈ G.availableActionsAtInfoState i s ↔
-      ∃ h : G.History, h.playerView i = s ∧ ai ∈ G.availableActions h i := by
-  rfl
-
-theorem mem_availableActionsAtInfoState_of_history
-    {G : FOSG ι W Act PrivObs PubObs}
-    {i : ι} (h : G.History) {ai : Act i}
-    (hai : ai ∈ G.availableActions h i) :
-    ai ∈ G.availableActionsAtInfoState i (h.playerView i) := by
-  exact ⟨h, rfl, hai⟩
+  { ai | some ai ∈ G.availableMovesAtInfoState i s }
 
 theorem availableActionsAtInfoState_eq_of_history
     {G : FOSG ι W Act PrivObs PubObs}
     (hLeg : G.LegalObservable) (i : ι) (h : G.History) :
     G.availableActionsAtInfoState i (h.playerView i) = G.availableActions h i := by
   ext ai
-  constructor
-  · intro hai
-    rcases hai with ⟨h', hh', hai'⟩
-    have hEq : G.availableActions h' i = G.availableActions h i :=
-      G.availableActions_eq_of_playerView_eq hLeg i hh'
-    exact hEq ▸ hai'
-  · intro hai
-    exact G.mem_availableActionsAtInfoState_of_history h hai
+  rw [show ai ∈ G.availableActionsAtInfoState i (h.playerView i) ↔
+      some ai ∈ G.availableMovesAtInfoState i (h.playerView i) by rfl]
+  rw [show ai ∈ G.availableActions h i ↔ some ai ∈ G.availableMoves h i by
+      simp [availableActions, availableMoves, availableMovesAtState,
+        locallyLegalAtState, availableActionsAtState]]
+  simp [availableMovesAtInfoState_eq_of_history hLeg i h]
 
-/-- Pure strategy for player `i`: choose an action from each information state. -/
+/-- Pure strategy for player `i`: choose an optional move from each information
+state. `none` represents inactivity. -/
 abbrev PureStrategy (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
-  G.InfoState i → Act i
+  G.InfoState i → Option (Act i)
 
-/-- Behavioral strategy for player `i`: a distribution over actions from each
-information state. -/
+/-- Behavioral strategy for player `i`: a distribution over optional moves from
+each information state. `none` represents inactivity. -/
 abbrev BehavioralStrategy (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
-  G.InfoState i → PMF (Act i)
+  G.InfoState i → PMF (Option (Act i))
 
 /-- Joint pure strategy profile. -/
 abbrev PureProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
@@ -167,20 +268,20 @@ abbrev BehavioralProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
   ∀ i, BehavioralStrategy G i
 
 /-- A pure strategy is legal if at every realized history it chooses an
-available action. -/
+available move. -/
 def IsLegalPureStrategy
     (G : FOSG ι W Act PrivObs PubObs)
     (i : ι) (σ : PureStrategy G i) : Prop :=
-  ∀ h : G.History, σ (h.playerView i) ∈ G.availableActions h i
+  ∀ h : G.History, σ (h.playerView i) ∈ G.availableMoves h i
 
 /-- A behavioral strategy is legal if its support stays within the available
-action set at every realized history. -/
+move set at every realized history. -/
 def IsLegalBehavioralStrategy
     (G : FOSG ι W Act PrivObs PubObs)
     (i : ι) (σ : BehavioralStrategy G i) : Prop :=
-  ∀ (h : G.History) {ai : Act i},
-    ai ∈ (σ (h.playerView i)).support →
-    ai ∈ G.availableActions h i
+  ∀ (h : G.History) {oi : Option (Act i)},
+    oi ∈ (σ (h.playerView i)).support →
+    oi ∈ G.availableMoves h i
 
 /-- A pure profile is legal if every player's strategy is legal. -/
 def IsLegalPureProfile

@@ -264,46 +264,34 @@ omit [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
 private theorem stepActionProb_pureToBehavioral
     (π : _root_.GameTheory.FOSG.PureProfile G) (pref : G.History) (e : G.Step) :
     G.stepActionProb (G.pureToBehavioral π) pref e =
-      ∏ i, match e.ownAction? i with
-        | some ai => if π i (pref.playerView i) = ai then 1 else 0
-        | none => 1 := by
+      ∏ i, if π i (pref.playerView i) = e.ownAction? i then 1 else 0 := by
   classical
   unfold FOSG.stepActionProb
   refine Finset.prod_congr rfl ?_
   intro i _
-  cases hact : e.ownAction? i with
-  | none =>
-      simp
-  | some ai =>
-      rw [FOSG.pureToBehavioral_apply]
-      by_cases hEq : π i (pref.playerView i) = ai
-      · simp [PMF.pure_apply, hEq]
-      · have hEq' : ¬ ai = π i (pref.playerView i) := by
-          simpa [eq_comm] using hEq
-        simp [PMF.pure_apply, hEq, hEq']
+  rw [FOSG.pureToBehavioral_apply]
+  by_cases hEq : π i (pref.playerView i) = e.ownAction? i
+  · simp [PMF.pure_apply, hEq]
+  · have hEq' : e.ownAction? i ≠ π i (pref.playerView i) := by
+      simpa [eq_comm] using hEq
+    simp [PMF.pure_apply, hEq, hEq']
 
 /-- One-step Kuhn marginal at the raw dependent function type. -/
 private theorem marginal_stepActionProb_raw
     (β : BehavioralProfile (G := G)) (pref : G.History) (e : G.Step) :
     ∑ ρ : ((i : ι) → PureStrategy (G := G) i),
       (Math.PMFProduct.pmfPi (behavioralToMixed (G := G) β)) ρ *
-        (∏ i, match e.ownAction? i with
-          | some ai => if ρ i (pref.playerView i) = ai then 1 else 0
-          | none => 1) =
+        (∏ i, if ρ i (pref.playerView i) = e.ownAction? i then 1 else 0) =
       G.stepActionProb β pref e := by
   classical
   have hprod :
       (∑ ρ : ((i : ι) → PureStrategy (G := G) i),
         (Math.PMFProduct.pmfPi (behavioralToMixed (G := G) β)) ρ *
-          (∏ i, match e.ownAction? i with
-            | some ai => if ρ i (pref.playerView i) = ai then 1 else 0
-            | none => 1)) =
+          (∏ i, if ρ i (pref.playerView i) = e.ownAction? i then 1 else 0)) =
       ∑ ρ : ((i : ι) → PureStrategy (G := G) i),
         ∏ i,
           (behavioralToMixed (G := G) β i) (ρ i) *
-            (match e.ownAction? i with
-              | some ai => if ρ i (pref.playerView i) = ai then 1 else 0
-              | none => 1) := by
+            (if ρ i (pref.playerView i) = e.ownAction? i then 1 else 0) := by
     refine Finset.sum_congr rfl ?_
     intro ρ _
     rw [Math.PMFProduct.pmfPi_apply, ← Finset.prod_mul_distrib]
@@ -311,40 +299,26 @@ private theorem marginal_stepActionProb_raw
   rw [show (∑ ρ : ((i : ι) → PureStrategy (G := G) i),
         ∏ i,
           (behavioralToMixed (G := G) β i) (ρ i) *
-            (match e.ownAction? i with
-              | some ai => if ρ i (pref.playerView i) = ai then 1 else 0
-              | none => 1)) =
+            (if ρ i (pref.playerView i) = e.ownAction? i then 1 else 0)) =
       ∏ i, ∑ πi : PureStrategy (G := G) i,
         (behavioralToMixed (G := G) β i) πi *
-          (match e.ownAction? i with
-            | some ai => if πi (pref.playerView i) = ai then 1 else 0
-            | none => 1) by
+          (if πi (pref.playerView i) = e.ownAction? i then 1 else 0) by
       simpa [PureProfile] using
         (@Fintype.prod_sum ι ENNReal _ _ _ (fun i => PureStrategy (G := G) i) _
           (fun i πi =>
             (behavioralToMixed (G := G) β i) πi *
-              (match e.ownAction? i with
-                | some ai => if πi (pref.playerView i) = ai then 1 else 0
-                | none => 1))).symm]
+              (if πi (pref.playerView i) = e.ownAction? i then 1 else 0))).symm]
   unfold FOSG.stepActionProb
   refine Finset.prod_congr rfl ?_
   intro i _
-  cases hact : e.ownAction? i with
-  | none =>
-      have hsum :
-          (∑ πi : PureStrategy (G := G) i, (behavioralToMixed (G := G) β i) πi) = 1 := by
-        have := PMF.tsum_coe (behavioralToMixed (G := G) β i)
-        simpa [behavioralToMixed, PureStrategy, tsum_fintype,
-          Math.PMFProduct.pmfPi_apply] using this
-      simp [hsum]
-  | some ai =>
-      have hcoord :
-          ∑ πi : (G.InfoState i → Act i),
-            (if πi (pref.playerView i) = ai then (behavioralToMixed (G := G) β i) πi else 0) =
-              β i (pref.playerView i) ai := by
-        simpa [behavioralToMixed] using
-          Math.PMFProduct.pmfPi_coord_mass (β i) (pref.playerView i) ai
-      simpa [hact, mul_ite, mul_one, mul_zero] using hcoord
+  have hcoord :
+      ∑ πi : PureStrategy (G := G) i,
+        (behavioralToMixed (G := G) β i) πi *
+          (if πi (pref.playerView i) = e.ownAction? i then 1 else 0) =
+            β i (pref.playerView i) (e.ownAction? i) := by
+    simpa [behavioralToMixed, mul_ite, mul_one, mul_zero] using
+      Math.PMFProduct.pmfPi_coord_mass (β i) (pref.playerView i) (e.ownAction? i)
+  simpa using hcoord
 
 end Raw
 
@@ -361,9 +335,7 @@ private theorem marginal_stepActionProb
           G.stepActionProb (G.pureToBehavioral π) pref e) =
       ∑ ρ : ((i : ι) → PureStrategy (G := G) i),
         (Math.PMFProduct.pmfPi (behavioralToMixed (G := G) β)) ρ *
-          (∏ i, match e.ownAction? i with
-            | some ai => if ρ i (pref.playerView i) = ai then 1 else 0
-            | none => 1) by
+          (∏ i, if ρ i (pref.playerView i) = e.ownAction? i then 1 else 0) by
       refine Finset.sum_congr rfl ?_
       intro ρ _
       rw [stepActionProb_pureToBehavioral (G := G) ρ pref e]
@@ -581,13 +553,9 @@ private theorem scalar_indep_stepProb
     unfold FOSG.stepActionProb
     refine Finset.prod_congr rfl ?_
     intro i _
-    cases hact : e.ownAction? i with
-    | none =>
-        simp
-    | some ai =>
-        rw [FOSG.pureToBehavioral_apply, FOSG.pureToBehavioral_apply]
-        have hEq : π₁ i (h.playerView i) = π₂ i (h.playerView i) := hag i _ (hP i)
-        simp [PMF.pure_apply, hEq]
+    rw [FOSG.pureToBehavioral_apply, FOSG.pureToBehavioral_apply]
+    have hEq : π₁ i (h.playerView i) = π₂ i (h.playerView i) := hag i _ (hP i)
+    simp [PMF.pure_apply, hEq]
   calc
     ∑ π, behavioralToMixedJoint (G := G) β π *
         (f π * G.stepProb (G.pureToBehavioral π) h e)
@@ -698,12 +666,8 @@ private theorem stepProb_pure_congr_at_history
   unfold FOSG.stepActionProb
   refine Finset.prod_congr rfl ?_
   intro i _
-  cases hact : e.ownAction? i with
-  | none =>
-      simp
-  | some ai =>
-      rw [FOSG.pureToBehavioral_apply, FOSG.pureToBehavioral_apply]
-      simp [PMF.pure_apply, hag i]
+  rw [FOSG.pureToBehavioral_apply, FOSG.pureToBehavioral_apply]
+  simp [PMF.pure_apply, hag i]
 
 omit [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)] in
 /-- Pure-history weight depends only on the information-state coordinates that

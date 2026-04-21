@@ -25,8 +25,6 @@ structure FOSG (ι W : Type) [DecidableEq ι]
   init : W
   /-- Active players at a world state. -/
   active : W → Finset ι
-  /-- The initial state has no active strategic players. -/
-  init_active_eq_empty : active init = ∅
   /-- Terminal-state predicate. -/
   terminal : W → Prop
   /-- Legal joint actions at a world state. -/
@@ -108,11 +106,6 @@ theorem exists_legal_of_not_terminal
     {w : W} (hw : ¬ G.terminal w) :
     ∃ a : JointAction Act, G.legal w a :=
   G.nonterminal_exists_legal hw
-
-@[simp] theorem active_init
-    (G : FOSG ι W Act PrivObs PubObs) :
-    G.active G.init = ∅ :=
-  G.init_active_eq_empty
 
 end FOSG
 

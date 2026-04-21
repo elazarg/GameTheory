@@ -90,17 +90,13 @@ given realized prefix history. -/
 noncomputable def stepActionProb
     (G : FOSG ι W Act PrivObs PubObs)
     (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) : ENNReal :=
-  ∏ i, match e.ownAction? i with
-    | some ai => (σ i (pref.playerView i)) ai
-    | none => 1
+  ∏ i, (σ i (pref.playerView i)) (e.ownAction? i)
 
 /-- Player `i`'s own strategic contribution to the realized step weight. -/
 noncomputable def playerStepActionProb
     (G : FOSG ι W Act PrivObs PubObs)
     (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) (i : ι) : ENNReal :=
-  match e.ownAction? i with
-  | some ai => (σ i (pref.playerView i)) ai
-  | none => 1
+  (σ i (pref.playerView i)) (e.ownAction? i)
 
 /-- The contribution of every player except `i` to the realized step's
 strategic action weight. -/
@@ -108,9 +104,7 @@ noncomputable def othersStepActionProb
     (G : FOSG ι W Act PrivObs PubObs)
     (σ : BehavioralProfile G) (pref : G.History) (e : G.Step) (i : ι) : ENNReal :=
   Finset.prod (Finset.univ.erase i) fun j =>
-    match e.ownAction? j with
-    | some aj => (σ j (pref.playerView j)) aj
-    | none => 1
+    (σ j (pref.playerView j)) (e.ownAction? j)
 
 /-- Probability weight of a realized step: strategic action weight times the
 transition kernel weight. -/
@@ -127,7 +121,7 @@ theorem stepActionProb_ne_top
   unfold stepActionProb
   refine ENNReal.prod_ne_top ?_
   intro i hi
-  cases e.ownAction? i <;> simp [PMF.apply_ne_top]
+  exact PMF.apply_ne_top (σ i (pref.playerView i)) (e.ownAction? i)
 
 theorem stepProb_ne_top
     (G : FOSG ι W Act PrivObs PubObs)

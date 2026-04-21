@@ -595,8 +595,6 @@ noncomputable def serialize :
     FOSG ι (SerialState G) Act (fun i => Option (PrivObs i)) (Option PubObs) where
   init := .base G.init
   active := SerialState.active (G := G)
-  init_active_eq_empty := by
-    simp [SerialState.active, G.active_init, G.orderedActive_eq_nil_of_active_eq_empty]
   terminal := SerialState.terminal (G := G)
   legal := SerialState.legal (G := G)
   transition := SerialState.transition (G := G)
