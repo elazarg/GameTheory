@@ -3138,6 +3138,68 @@ theorem baseReplaySteps_probFrom
         List.prod_cons] using
         congrArg (fun x => (σ.toProfile current (h.playerView current) (ga.1 current)) * x) hrec
 
+theorem legalBehavioralProfile_stepActionProb_eq_orderedActive_prod
+    (σ : G.LegalBehavioralProfile)
+    (h : G.History) (e : G.Step)
+    (hsrc : e.src = h.lastState) :
+    G.stepActionProb σ.toProfile h e =
+      ((G.orderedActive h.lastState).map
+        (fun i => σ.toProfile i (h.playerView i) (e.act.1 i))).prod := by
+  classical
+  let f : ι → ENNReal := fun i => (σ.toProfile i (h.playerView i)) (e.ownAction? i)
+  unfold FOSG.stepActionProb
+  change Finset.univ.prod f = _
+  have hsubset :
+      Finset.univ.prod f = (G.active h.lastState).prod f := by
+    symm
+    refine Finset.prod_subset ?_ ?_
+    · intro i _
+      simp
+    · intro i _ hiInactive
+      have hprof :
+          σ.toProfile i (h.playerView i) = PMF.pure none :=
+        G.legalBehavioralStrategy_eq_pure_none_of_not_mem_active
+          (i := i) (σ := (σ i).1) (hσ := (σ i).2) h hiInactive
+      have hnone : e.ownAction? i = none := by
+        apply FOSG.Step.ownAction?_eq_none_of_not_mem_active (G := G)
+        rw [hsrc]
+        exact hiInactive
+      simp [hprof, hnone]
+  rw [hsubset]
+  have hnodup : (G.orderedActive h.lastState).Nodup := by
+    simp [orderedActive]
+  calc
+    (G.active h.lastState).prod f
+      = (G.active h.lastState).prod (fun i => (σ.toProfile i (h.playerView i)) (e.act.1 i)) := by
+          refine Finset.prod_congr rfl ?_
+          intro i hi
+          simp [f]
+    _ = (G.orderedActive h.lastState).toFinset.prod
+          (fun i => (σ.toProfile i (h.playerView i)) (e.act.1 i)) := by
+            simp [orderedActive]
+    _ = ((G.orderedActive h.lastState).map
+          (fun i => σ.toProfile i (h.playerView i) (e.act.1 i))).prod := by
+            exact List.prod_toFinset
+              (f := fun i => (σ.toProfile i (h.playerView i)) (e.act.1 i)) hnodup
+
+theorem translateBehavioralProfile_stepProb_chanceResolution
+    (hLegSer : (SerialState.serialize (G := G)).LegalObservable)
+    (σ : G.BehavioralProfile)
+    (sh : SerializedHistory G)
+    (e : G.Step)
+    (hsrc : (chanceResolutionStep (G := G) e).src = sh.lastState) :
+    (SerialState.serialize (G := G)).stepProb
+      (translateBehavioralProfile (G := G) σ)
+      sh (chanceResolutionStep (G := G) e) =
+      (G.transition e.src e.act) e.dst := by
+  rw [translateBehavioralProfile_stepProb_eq_transition_of_active_empty
+    (G := G) hLegSer σ sh (chanceResolutionStep (G := G) e) hsrc]
+  · simpa [chanceResolutionStep, chanceResolutionAction, SerialState.serialize,
+      SerialState.transition] using
+      (map_base_apply (G := G) (p := G.transition e.src e.act) (w := e.dst))
+  · rw [← hsrc]
+    simp [SerialState.serialize, SerialState.active]
+
 end SerializationProbability
 
 @[simp] theorem eraseStep_decide
