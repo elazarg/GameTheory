@@ -295,6 +295,48 @@ def IsLegalBehavioralProfile
     (σ : BehavioralProfile G) : Prop :=
   ∀ i, G.IsLegalBehavioralStrategy i (σ i)
 
+/-- The subtype of legal pure strategies for player `i`. -/
+abbrev LegalPureStrategy
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
+  { σ : PureStrategy G i // G.IsLegalPureStrategy i σ }
+
+/-- The subtype of legal behavioral strategies for player `i`. -/
+abbrev LegalBehavioralStrategy
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
+  { σ : BehavioralStrategy G i // G.IsLegalBehavioralStrategy i σ }
+
+/-- A profile of legal pure strategies. -/
+abbrev LegalPureProfile
+    (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  ∀ i, G.LegalPureStrategy i
+
+/-- A profile of legal behavioral strategies. -/
+abbrev LegalBehavioralProfile
+    (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  ∀ i, G.LegalBehavioralStrategy i
+
+/-- Forget the legality proofs on a legal pure profile. -/
+abbrev LegalPureProfile.toProfile
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.LegalPureProfile) : G.PureProfile :=
+  fun i => (σ i).1
+
+/-- Forget the legality proofs on a legal behavioral profile. -/
+abbrev LegalBehavioralProfile.toProfile
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.LegalBehavioralProfile) : G.BehavioralProfile :=
+  fun i => (σ i).1
+
+@[simp] theorem legalPureProfile_toProfile_apply
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.LegalPureProfile) (i : ι) :
+    σ.toProfile i = (σ i).1 := rfl
+
+@[simp] theorem legalBehavioralProfile_toProfile_apply
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.LegalBehavioralProfile) (i : ι) :
+    σ.toProfile i = (σ i).1 := rfl
+
 /-- Lift a pure profile to a behavioral one. -/
 noncomputable def pureToBehavioral
     (G : FOSG ι W Act PrivObs PubObs)
@@ -316,6 +358,15 @@ theorem legalBehavioral_of_legalPure
   rw [PMF.support_pure, Set.mem_singleton_iff] at hai
   subst hai
   exact hσ i h
+
+/-- Lift a legal pure profile to a legal behavioral profile. -/
+noncomputable def legalPureToBehavioral
+    (G : FOSG ι W Act PrivObs PubObs)
+    (σ : G.LegalPureProfile) : G.LegalBehavioralProfile :=
+  fun i => ⟨G.pureToBehavioral σ.toProfile i, (G.legalBehavioral_of_legalPure σ.toProfile
+    (by
+      intro j h
+      exact (σ j).2 h)) i⟩
 
 namespace Auxiliary
 

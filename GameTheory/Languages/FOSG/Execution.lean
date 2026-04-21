@@ -528,28 +528,6 @@ noncomputable def terminalLaw
     (σ : BehavioralProfile G) (hs : Finset G.History) :
     terminalLaw (G := G) σ hs = terminalMassOn (G := G) σ hs := rfl
 
-noncomputable def expectedUtility [Fintype G.History]
-    [DecidablePred G.terminal]
-    (σ : BehavioralProfile G) (i : ι) : ℝ :=
-  ∑ h : G.History, (terminalWeight (G := G) σ h).toReal * History.utility h i
-
-theorem expectedUtility_def [Fintype G.History]
-    [DecidablePred G.terminal]
-    (σ : BehavioralProfile G) (i : ι) :
-    expectedUtility (G := G) σ i =
-      ∑ h : G.History,
-        if G.terminal h.lastState then
-          (History.prob σ h).toReal * History.utility h i
-        else
-          0 := by
-  unfold expectedUtility
-  classical
-  refine Finset.sum_congr rfl ?_
-  intro h _
-  by_cases hterm : G.terminal h.lastState
-  · simp [terminalWeight, hterm]
-  · simp [terminalWeight, hterm]
-
 end History
 
 end FOSG

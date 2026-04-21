@@ -4,6 +4,7 @@ import GameTheory.Languages.FOSG.Information
 import GameTheory.Languages.FOSG.Strategy
 import GameTheory.Languages.FOSG.Values
 import GameTheory.Languages.FOSG.Execution
+import GameTheory.Languages.FOSG.Compile
 import GameTheory.Languages.FOSG.Serial
 import GameTheory.Languages.FOSG.Kuhn
 

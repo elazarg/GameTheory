@@ -1,4 +1,5 @@
 import GameTheory.Languages.Bridges.FOSG.ObsModelCore
+import GameTheory.Languages.FOSG.Compile
 import GameTheory.Languages.FOSG.Execution
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
@@ -893,23 +894,36 @@ private theorem marginal_terminalWeight_toReal
     _ = (History.terminalWeight (G := G) β h).toReal := by
           rw [marginal_terminalWeight (G := G) β h]
 
-/-- Native FOSG expected-utility preservation under the product mixed strategy
-induced by a behavioral profile. -/
-private theorem marginal_expectedUtility
+/-- `terminalWeight` specialized to the classical decidability instance, used
+internally to keep private utility lemmas free of hidden section-instance
+arguments. -/
+private noncomputable def terminalWeightClassical
+    [Fintype G.History]
+    (σ : BehavioralProfile (G := G)) (h : G.History) : ENNReal :=
+  @History.terminalWeight ι W _ Act PrivObs PubObs _ G (Classical.decPred G.terminal) σ h
+
+omit [DecidablePred G.terminal] in
+/-- Native FOSG preservation of the terminal-history utility sum under the
+product mixed strategy induced by a behavioral profile. -/
+private theorem marginal_terminalUtilitySum
     [Fintype G.History]
     (β : BehavioralProfile (G := G)) (i : ι) :
     ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
-      History.expectedUtility (G := G) (G.pureToBehavioral π) i =
-      History.expectedUtility (G := G) β i := by
-  unfold History.expectedUtility
+      (∑ h : G.History,
+        (terminalWeightClassical (G := G) (G.pureToBehavioral π) h).toReal *
+          History.utility h i) =
+      ∑ h : G.History,
+        (terminalWeightClassical (G := G) β h).toReal * History.utility h i := by
+  classical
+  letI : DecidablePred G.terminal := Classical.decPred G.terminal
   calc
     ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
         ∑ h : G.History,
-          (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal *
+          (terminalWeightClassical (G := G) (G.pureToBehavioral π) h).toReal *
             History.utility h i
       = ∑ π, ∑ h : G.History,
           ((behavioralToMixedJoint (G := G) β π).toReal *
-            (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal) *
+            (terminalWeightClassical (G := G) (G.pureToBehavioral π) h).toReal) *
               History.utility h i := by
                 refine Finset.sum_congr rfl ?_
                 intro π _
@@ -919,18 +933,18 @@ private theorem marginal_expectedUtility
                 simp [mul_assoc]
     _ = ∑ h : G.History, ∑ π,
           ((behavioralToMixedJoint (G := G) β π).toReal *
-            (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal) *
+            (terminalWeightClassical (G := G) (G.pureToBehavioral π) h).toReal) *
               History.utility h i := by
                 rw [Finset.sum_comm]
     _ = ∑ h : G.History,
           (∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
-            (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal) *
+            (terminalWeightClassical (G := G) (G.pureToBehavioral π) h).toReal) *
               History.utility h i := by
                 refine Finset.sum_congr rfl ?_
                 intro h _
                 rw [← Finset.sum_mul]
     _ = ∑ h : G.History,
-          (History.terminalWeight (G := G) β h).toReal * History.utility h i := by
+          (terminalWeightClassical (G := G) β h).toReal * History.utility h i := by
                 refine Finset.sum_congr rfl ?_
                 intro h _
                 simpa using
@@ -986,15 +1000,27 @@ theorem behavioral_to_mixed_terminalLaw
 
 /-- **Native Kuhn theorem for FOSG expected utility.**
 
-The product mixed strategy induced by a behavioral profile preserves expected
-utility for every player. -/
-theorem behavioral_to_mixed_expectedUtility
+The product mixed strategy induced by a legal behavioral profile preserves
+expected utility for every player in the induced `KernelGame`. -/
+theorem behavioral_to_mixed_eu
     [Fintype G.History]
-    (β : BehavioralProfile (G := G)) (i : ι) :
-    ∑ π, (behavioralToMixedJoint (G := G) β π).toReal *
-      History.expectedUtility (G := G) (G.pureToBehavioral π) i =
-      History.expectedUtility (G := G) β i :=
-  marginal_expectedUtility (G := G) β i
+    (hNorm : G.HasNormalizedTerminalLaw)
+    (β : G.LegalBehavioralProfile) (i : ι) :
+    ∑ π, (behavioralToMixedJoint (G := G) β.toProfile π).toReal *
+      (∑ h : G.History,
+        (History.terminalWeight (G := G) (G.pureToBehavioral π) h).toReal *
+          History.utility h i) =
+      (G.toKernelGame hNorm).eu β i := by
+  have hEqWeight :
+      ∀ (σ : BehavioralProfile (G := G)) (h : G.History),
+        terminalWeightClassical (G := G) σ h = History.terminalWeight (G := G) σ h := by
+    intro σ h
+    classical
+    unfold terminalWeightClassical History.terminalWeight
+    by_cases hterm : G.terminal h.lastState <;> simp [hterm]
+  rw [G.toKernelGame_eu_eq hNorm β i]
+  have hMain := marginal_terminalUtilitySum (G := G) β.toProfile i
+  simpa [hEqWeight] using hMain
 
 end TerminalCorollaries
 

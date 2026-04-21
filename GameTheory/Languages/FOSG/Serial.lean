@@ -255,10 +255,22 @@ theorem active_eq_empty_of_base_terminal
   simp [SerialState.active, horder]
 
 /-- A legal original-world action at a base chance node of the original FOSG. -/
-noncomputable def baseChanceAction
-    (w : W) (h : ¬ G.terminal w) : G.LegalAction w :=
-  let a := Classical.choose (G.exists_legal_of_not_terminal h)
-  ⟨a, Classical.choose_spec (G.exists_legal_of_not_terminal h)⟩
+noncomputable def baseChanceLegalAction
+    (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) : G.LegalAction w := by
+  classical
+  let a : JointAction Act := Classical.choose (G.exists_legal_of_not_terminal hNotTerm)
+  have ha : G.legal w a := Classical.choose_spec (G.exists_legal_of_not_terminal hNotTerm)
+  have hEq : a = noopAction Act := by
+    funext i
+    have hi : i ∉ G.active w := by simp [h]
+    exact G.legal_inactive_none ha hi
+  exact ⟨noopAction Act, hEq ▸ ha⟩
+
+omit [LinearOrder ι] in
+@[simp] theorem baseChanceLegalAction_val
+    (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) :
+    (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := by
+  simp [baseChanceLegalAction]
 
 theorem validDecision_from_base
     {w : W} {current next : ι} {tail : List ι}
@@ -372,7 +384,8 @@ noncomputable def transition :
       if hEmpty : G.orderedActive w = [] then
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
             simpa [SerialState.legal, hEmpty] using a.2
-          let ga := baseChanceAction (G := G) w ha.1
+          let ga := baseChanceLegalAction (G := G) w
+            (G.active_eq_empty_of_orderedActive_eq_nil hEmpty) ha.1
           PMF.map (SerialState.base (G := G)) (G.transition w ga)
       else
         PMF.pure (basePlayerSuccessor (G := G) w a)
@@ -386,7 +399,8 @@ theorem transition_base_empty_eq
     (a : { a : JointAction Act // legal (G := G) (.base w) a }) :
     SerialState.transition (G := G) (.base w) a =
       PMF.map (SerialState.base (G := G))
-        (G.transition w (baseChanceAction (G := G) w ((by
+        (G.transition w (baseChanceLegalAction (G := G) w
+          (G.active_eq_empty_of_orderedActive_eq_nil hEmpty) ((by
           have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
             simpa [SerialState.legal, hEmpty] using a.2
           exact ha.1) : ¬ G.terminal w))) := by
@@ -419,7 +433,8 @@ noncomputable def reward :
       | [] =>
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
             simpa [SerialState.legal, horder] using a.2
-          let ga := baseChanceAction (G := G) w ha.1
+          let ga := baseChanceLegalAction (G := G) w
+            (G.active_eq_empty_of_orderedActive_eq_nil horder) ha.1
           match s' with
           | .base w' => G.reward w ga w' i
           | _ => 0
@@ -469,7 +484,8 @@ noncomputable def privObs :
       | [] =>
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
             simpa [SerialState.legal, horder] using a.2
-          let ga := baseChanceAction (G := G) w ha.1
+          let ga := baseChanceLegalAction (G := G) w
+            (G.active_eq_empty_of_orderedActive_eq_nil horder) ha.1
           match s' with
           | .base w' => some (G.privObs i w ga w')
           | _ => none
@@ -517,7 +533,8 @@ noncomputable def pubObs :
       | [] =>
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
             simpa [SerialState.legal, horder] using a.2
-          let ga := baseChanceAction (G := G) w ha.1
+          let ga := baseChanceLegalAction (G := G) w
+            (G.active_eq_empty_of_orderedActive_eq_nil horder) ha.1
           match s' with
           | .base w' => some (G.pubObs w ga w')
           | _ => none
