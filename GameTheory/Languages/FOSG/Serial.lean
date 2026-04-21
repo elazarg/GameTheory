@@ -1,4 +1,4 @@
-import GameTheory.Languages.FOSG.History
+import GameTheory.Languages.FOSG.Values
 import Mathlib.Data.Finset.Sort
 import Mathlib.Data.List.Nodup
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
@@ -799,16 +799,15 @@ noncomputable def reward :
     {a : JointAction Act // legal (G := G) s a} →
     SerialState G → ι → ℝ
   | .base w, a, s', i =>
-      match horder : G.orderedActive w with
-      | [] =>
+      if hEmpty : G.orderedActive w = [] then
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
-            simpa [SerialState.legal, horder] using a.2
+            simpa [SerialState.legal, hEmpty] using a.2
           let ga := baseChanceLegalAction (G := G) w
-            (G.active_eq_empty_of_orderedActive_eq_nil horder) ha.1
+            (G.active_eq_empty_of_orderedActive_eq_nil hEmpty) ha.1
           match s' with
           | .base w' => G.reward w ga w' i
           | _ => 0
-      | _ :: _ => 0
+      else 0
   | .decide _ _ _ _ _, _, _, _ => 0
   | .chance w ga, _, s', i =>
       match s' with
@@ -841,6 +840,62 @@ theorem reward_decide_successor_eq_zero
       (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid a) i = 0 := by
   exact reward_decide_eq_zero (G := G) a _ _
 
+theorem reward_basePlayerSuccessor_eq_zero
+    {w : W}
+    (a : { a : JointAction Act // legal (G := G) (.base w) a })
+    (hNonempty : G.orderedActive w ≠ []) (i : ι) :
+    SerialState.reward (G := G) (.base w) a
+      (SerialState.basePlayerSuccessor (G := G) w a) i = 0 := by
+  simp [SerialState.reward, hNonempty]
+
+theorem reward_base_empty_base_eq_of_active_empty
+    {w w' : W}
+    (hactive : G.active w = ∅)
+    (a : { a : JointAction Act // legal (G := G) (.base w) a })
+    (i : ι) :
+    SerialState.reward (G := G) (.base w) a (.base w') i =
+      G.reward w
+        (baseChanceLegalAction (G := G) w hactive
+          (by
+            have horder : G.orderedActive w = [] :=
+              G.orderedActive_eq_nil_of_active_eq_empty hactive
+            have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+              simpa [SerialState.legal, horder] using a.2
+            exact ha.1))
+        w' i := by
+  have horder : G.orderedActive w = [] :=
+    G.orderedActive_eq_nil_of_active_eq_empty hactive
+  have hgaEq :
+      baseChanceLegalAction (G := G) w
+        (G.active_eq_empty_of_orderedActive_eq_nil horder)
+        (by
+          have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+            simpa [SerialState.legal, horder] using a.2
+          exact ha.1) =
+      baseChanceLegalAction (G := G) w hactive
+        (by
+          have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+            simpa [SerialState.legal, horder] using a.2
+          exact ha.1) := by
+    apply Subtype.ext
+    funext j
+    simp [baseChanceLegalAction_val]
+  have hrew : G.reward w
+      (baseChanceLegalAction (G := G) w
+        (G.active_eq_empty_of_orderedActive_eq_nil horder)
+        (by
+          have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+            simpa [SerialState.legal, horder] using a.2
+          exact ha.1)) w' i =
+      G.reward w
+        (baseChanceLegalAction (G := G) w hactive
+          (by
+            have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+              simpa [SerialState.legal, horder] using a.2
+            exact ha.1)) w' i :=
+    congrArg (fun ga => G.reward w ga w' i) hgaEq
+  simp [SerialState.reward, horder, hrew]
+
 /-- Private observations of the serialized game. Deterministic action-selection
 steps emit `none`; stochastic resolution steps emit the original observation
 wrapped in `some`. -/
@@ -850,16 +905,15 @@ noncomputable def privObs :
     {a : JointAction Act // legal (G := G) s a} →
     SerialState G → Option (PrivObs i)
   | i, .base w, a, s' =>
-      match horder : G.orderedActive w with
-      | [] =>
+      if hEmpty : G.orderedActive w = [] then
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
-            simpa [SerialState.legal, horder] using a.2
+            simpa [SerialState.legal, hEmpty] using a.2
           let ga := baseChanceLegalAction (G := G) w
-            (G.active_eq_empty_of_orderedActive_eq_nil horder) ha.1
+            (G.active_eq_empty_of_orderedActive_eq_nil hEmpty) ha.1
           match s' with
           | .base w' => some (G.privObs i w ga w')
           | _ => none
-      | _ :: _ => none
+      else none
   | _, .decide _ _ _ _ _, _, _ => none
   | i, .chance w ga, _, s' =>
       match s' with
@@ -899,16 +953,15 @@ noncomputable def pubObs :
     {a : JointAction Act // legal (G := G) s a} →
     SerialState G → Option PubObs
   | .base w, a, s' =>
-      match horder : G.orderedActive w with
-      | [] =>
+      if hEmpty : G.orderedActive w = [] then
           let ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
-            simpa [SerialState.legal, horder] using a.2
+            simpa [SerialState.legal, hEmpty] using a.2
           let ga := baseChanceLegalAction (G := G) w
-            (G.active_eq_empty_of_orderedActive_eq_nil horder) ha.1
+            (G.active_eq_empty_of_orderedActive_eq_nil hEmpty) ha.1
           match s' with
           | .base w' => some (G.pubObs w ga w')
           | _ => none
-      | _ :: _ => none
+      else none
   | .decide _ _ _ _ _, _, _ => none
   | .chance w ga, _, s' =>
       match s' with
@@ -1477,6 +1530,12 @@ theorem chanceResolutionStep_data
       pubObs_chance_base_eq (G := G) e.act
         (chanceResolutionAction (G := G) e.act)
 
+@[simp] theorem chanceResolutionStep_reward
+    (e : G.Step) (i : ι) :
+    (chanceResolutionStep (G := G) e).reward i = G.reward e.src e.act e.dst i := by
+  simpa [FOSG.Step.reward, chanceResolutionStep] using
+    reward_chance_base_eq (G := G) e.act (chanceResolutionAction (G := G) e.act) i
+
 theorem baseChanceLegalAction_eq_stepAct
     (e : G.Step) (horder : G.orderedActive e.src = []) :
     baseChanceLegalAction (G := G) e.src
@@ -1521,6 +1580,22 @@ noncomputable def baseEmptyResolutionStep
       simpa using
         (map_base_apply (G := G) (p := G.transition e.src e.act) (w := e.dst))
     simpa [hga, hmap] using e.support⟩
+
+@[simp] theorem baseEmptyResolutionStep_reward
+    (e : G.Step) (horder : G.orderedActive e.src = []) (i : ι) :
+    (baseEmptyResolutionStep (G := G) e horder).reward i = G.reward e.src e.act e.dst i := by
+  have hactive : G.active e.src = ∅ :=
+    G.active_eq_empty_of_orderedActive_eq_nil horder
+  have hga :
+      baseChanceLegalAction (G := G) e.src
+        hactive
+        (by
+          intro hterm
+          exact G.terminal_no_legal hterm e.act.2) = e.act :=
+    baseChanceLegalAction_eq_stepAct (G := G) e horder
+  simpa [FOSG.Step.reward, baseEmptyResolutionStep, hga] using
+    reward_base_empty_base_eq_of_active_empty (G := G) hactive
+      (a := (baseEmptyResolutionStep (G := G) e horder).act) i
 
 /-- Canonical serialized expansion of one original realized step, parameterized
 by an explicit ordered active-player list. -/
@@ -1606,6 +1681,98 @@ theorem stepExpansion_lastState
   simpa [stepExpansion] using
     stepExpansionWithOrder_lastState (G := G) e (G.orderedActive e.src) rfl
 
+noncomputable abbrev serialRewardSumFrom
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) (es : List (SerializedStep G)) : ℝ :=
+  FOSG.History.rewardSumFrom (SerialState.serialize (G := G)) i es
+
+@[simp] theorem baseReplayStepCons_reward_zero
+    {w : W} (ga : G.LegalAction w) {current next : ι} {tail : List ι}
+    (horder : G.orderedActive w = current :: next :: tail) (i : ι) :
+    (baseReplayStepCons (G := G) ga horder).reward i = 0 := by
+  have hne : G.orderedActive w ≠ [] := by simp [horder]
+  have hzero :=
+    reward_basePlayerSuccessor_eq_zero (G := G)
+      (a := baseReplayAction (G := G) ga horder) hne i
+  simpa [FOSG.Step.reward, baseReplayStepCons,
+    basePlayerSuccessor_replay_cons (G := G) (ga := ga) horder] using hzero
+
+@[simp] theorem baseReplayStepLast_reward_zero
+    {w : W} (ga : G.LegalAction w) {current : ι}
+    (horder : G.orderedActive w = [current]) (i : ι) :
+    (baseReplayStepLast (G := G) ga horder).reward i = 0 := by
+  have hne : G.orderedActive w ≠ [] := by simp [horder]
+  have hzero :=
+    reward_basePlayerSuccessor_eq_zero (G := G)
+      (a := baseReplayAction (G := G) ga horder) hne i
+  simpa [FOSG.Step.reward, baseReplayStepLast,
+    basePlayerSuccessor_replay_last (G := G) (ga := ga) horder] using hzero
+
+@[simp] theorem decideReplayStepCons_reward_zero
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current next : ι} {tail : List ι}
+    (hsplit : G.orderedActive w = acted ++ current :: next :: tail) (i : ι) :
+    (decideReplayStepCons (G := G) ga hsplit).reward i = 0 := by
+  simpa [FOSG.Step.reward, decideReplayStepCons] using
+    reward_decide_eq_zero (G := G)
+      (a := decideReplayAction (G := G) ga hsplit)
+      (s' := .decide w (G.prefixChoice ga (acted ++ [current])) next tail
+        (validDecision_of_prefix (G := G) ga
+          (acted := acted ++ [current]) (current := next) (rest := tail)
+          (by simpa [List.append_assoc] using hsplit)))
+      i
+
+@[simp] theorem decideReplayStepLast_reward_zero
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
+    (hsplit : G.orderedActive w = acted ++ [current]) (i : ι) :
+    (decideReplayStepLast (G := G) ga hsplit).reward i = 0 := by
+  simpa [FOSG.Step.reward, decideReplayStepLast] using
+    reward_decide_eq_zero (G := G)
+      (a := decideReplayAction (G := G) ga hsplit)
+      (s' := .chance w ga) i
+
+theorem decisionReplaySteps_rewardSum_zero
+    {w : W} (ga : G.LegalAction w) (acted : List ι)
+    (current : ι) (rest : List ι)
+    (hsplit : G.orderedActive w = acted ++ current :: rest) (i : ι) :
+    serialRewardSumFrom G i (decisionReplaySteps (G := G) ga acted current rest hsplit) = 0 := by
+  induction rest generalizing acted current with
+  | nil =>
+      simp [decisionReplaySteps, serialRewardSumFrom]
+  | cons next tail ih =>
+      simp [decisionReplaySteps, serialRewardSumFrom, ih]
+
+theorem baseReplaySteps_rewardSum_zero
+    {w : W} (ga : G.LegalAction w) (current : ι) (rest : List ι)
+    (horder : G.orderedActive w = current :: rest) (i : ι) :
+    serialRewardSumFrom G i (baseReplaySteps (G := G) ga current rest horder) = 0 := by
+  cases rest with
+  | nil =>
+      simp [baseReplaySteps, serialRewardSumFrom]
+  | cons next tail =>
+      simp [baseReplaySteps, serialRewardSumFrom, decisionReplaySteps_rewardSum_zero]
+
+theorem stepExpansionWithOrder_reward
+    (e : G.Step) (oa : List ι) (horder : G.orderedActive e.src = oa) (i : ι) :
+    serialRewardSumFrom G i (stepExpansionWithOrder (G := G) e oa horder) =
+      G.reward e.src e.act e.dst i := by
+  cases oa with
+  | nil =>
+      rw [stepExpansionWithOrder_nil (G := G) e horder]
+      simp [serialRewardSumFrom]
+  | cons current rest =>
+      rw [stepExpansionWithOrder_cons (G := G) e current rest horder]
+      simpa [serialRewardSumFrom, baseReplaySteps_rewardSum_zero] using
+        (FOSG.History.rewardSumFrom_append
+          (SerialState.serialize (G := G)) i
+          (baseReplaySteps (G := G) e.act current rest horder)
+          [chanceResolutionStep (G := G) e])
+
+theorem stepExpansion_reward
+    (e : G.Step) (i : ι) :
+    serialRewardSumFrom G i (stepExpansion (G := G) e) =
+      G.reward e.src e.act e.dst i := by
+  simpa [stepExpansion] using
+    stepExpansionWithOrder_reward (G := G) e (G.orderedActive e.src) rfl i
+
 /-- Expand a chained list of original steps into the corresponding serialized
 list by concatenating the canonical expansion block of each step. -/
 noncomputable def expandFrom
@@ -1662,6 +1829,34 @@ noncomputable def expandHistory
     (expandHistory (G := G) h).lastState = .base h.lastState := by
   simpa [expandHistory, FOSG.History.lastState] using
     expandFrom_lastState (G := G) G.init h.steps h.chain
+
+theorem expandFrom_rewardSum
+    (w : W) (es : List G.Step) (hchain : G.StepChainFrom w es) (i : ι) :
+    serialRewardSumFrom G i (expandFrom G w es hchain) =
+      FOSG.History.rewardSumFrom G i es := by
+  induction es generalizing w with
+  | nil =>
+      simp [expandFrom, serialRewardSumFrom]
+  | cons e es ih =>
+      rcases hchain with ⟨hsrc, htail⟩
+      subst hsrc
+      rw [expandFrom]
+      simpa [serialRewardSumFrom, stepExpansion_reward, ih] using
+        (FOSG.History.rewardSumFrom_append
+          (SerialState.serialize (G := G)) i
+          (stepExpansion (G := G) e)
+          (expandFrom G e.dst es htail))
+
+theorem expandHistory_rewardSum
+    (h : G.History) (i : ι) :
+    serialRewardSumFrom G i (expandHistory (G := G) h).steps = h.rewardSum i := by
+  simpa [expandHistory, FOSG.History.rewardSum] using
+    expandFrom_rewardSum (G := G) G.init h.steps h.chain i
+
+theorem expandHistory_utility
+    (h : G.History) (i : ι) :
+    (expandHistory (G := G) h).utility i = h.utility i := by
+  exact expandHistory_rewardSum (G := G) h i
 
 @[simp] theorem eraseStep_decide
     (w : W) (chosen : JointAction Act) (current : ι) (rest : List ι)

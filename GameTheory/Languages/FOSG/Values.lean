@@ -60,6 +60,17 @@ theorem rewardSumFrom_append_singleton
   | cons e₀ es ih =>
       simp [rewardSumFrom, ih, add_assoc]
 
+theorem rewardSumFrom_append
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι)
+    (es₁ es₂ : List G.Step) :
+    rewardSumFrom G i (es₁ ++ es₂) =
+      rewardSumFrom G i es₁ + rewardSumFrom G i es₂ := by
+  induction es₁ with
+  | nil =>
+      simp [rewardSumFrom]
+  | cons e es ih =>
+      simp [rewardSumFrom, ih, add_assoc, add_comm]
+
 @[simp] theorem rewardSum_nil
     (G : FOSG ι W Act PrivObs PubObs) (i : ι) :
     (History.nil G).rewardSum i = 0 := rfl
