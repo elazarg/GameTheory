@@ -51,6 +51,44 @@ theorem exists_ownAction_of_mem_active
 
 end Step
 
+section FiniteStep
+
+variable {G : FOSG ι W Act PrivObs PubObs}
+variable [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+
+/-- Finite legal-action carrier induced by finite optional action choices. -/
+noncomputable instance instFintypeLegalAction (w : W) :
+    Fintype (G.LegalAction w) := by
+  classical
+  unfold FOSG.LegalAction
+  infer_instance
+
+private abbrev StepData (G : FOSG ι W Act PrivObs PubObs) :=
+  Σ src : W, G.LegalAction src × W
+
+/-- Finite realized-step carrier induced by finite worlds and legal actions. -/
+noncomputable instance instFintypeStep :
+    Fintype G.Step := by
+  classical
+  let e : G.Step ≃ {t : StepData G // G.transition t.1 t.2.1 t.2.2 ≠ 0} :=
+    { toFun := fun s => ⟨⟨s.src, s.act, s.dst⟩, s.support⟩
+      invFun := fun t =>
+        { src := t.1.1
+          act := t.1.2.1
+          dst := t.1.2.2
+          support := t.2 }
+      left_inv := by
+        intro s
+        cases s
+        rfl
+      right_inv := by
+        intro t
+        cases t
+        rfl }
+  exact Fintype.ofEquiv _ e.symm
+
+end FiniteStep
+
 /-- Chaining predicate for a list of steps starting from a given world state. -/
 def StepChainFrom (G : FOSG ι W Act PrivObs PubObs) :
     W → List G.Step → Prop

@@ -947,6 +947,37 @@ theorem terminal_length_le_of_boundedHorizon
       have hlegal : G.LegalAction pref.lastState := hsrc ▸ e.act
       exact (pref.not_isTerminal_of_legalAction hlegal) hprefTerm
 
+theorem history_length_le_of_boundedHorizon
+    {G : FOSG ι W Act PrivObs PubObs}
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (h : G.History) :
+    h.steps.length ≤ k := by
+  by_contra hgt
+  have hgt' : k < h.steps.length := Nat.lt_of_not_ge hgt
+  let pref := h.initialSegment k
+  have hprefLen : pref.steps.length = k := by
+    exact h.initialSegment_length (Nat.le_of_lt hgt')
+  have hprefTerm : pref.IsTerminal := hBound pref hprefLen
+  have hchainSplit : G.StepChainFrom G.init (h.steps.take k ++ h.steps.drop k) := by
+    simpa [List.take_append_drop] using h.chain
+  have hdrop_nonempty : h.steps.drop k ≠ [] := by
+    intro hnil
+    have hlenDrop : 0 < (h.steps.drop k).length := by
+      simpa [List.length_drop] using Nat.sub_pos_of_lt hgt'
+    simp [hnil] at hlenDrop
+  cases hdrop : h.steps.drop k with
+  | nil =>
+      exact (hdrop_nonempty hdrop).elim
+  | cons e es =>
+      have hchainAppend : G.StepChainFrom G.init (h.steps.take k ++ e :: es) := by
+        simpa [hdrop] using hchainSplit
+      have hsuffix : G.StepChainFrom (G.lastStateFrom G.init (h.steps.take k)) (e :: es) :=
+        StepChainFrom.right hchainAppend
+      have hsrc : e.src = pref.lastState := by
+        simpa [pref, History.lastState] using hsuffix.1
+      have hlegal : G.LegalAction pref.lastState := hsrc ▸ e.act
+      exact (pref.not_isTerminal_of_legalAction hlegal) hprefTerm
+
 theorem runDist_eq_terminalWeight_of_boundedHorizon
     {G : FOSG ι W Act PrivObs PubObs}
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
@@ -1095,9 +1126,12 @@ theorem toKernelGame_eu_eq
   rw [KernelGame.eu]
   simp [toKernelGame, terminalLawPMF, expect_eq_sum]
 
-/-- Canonical finite-horizon compilation of a FOSG to `KernelGame`, using the
-native history run distribution after exactly `k` steps. This does not require
-any terminal-law normalization assumption. -/
+/-- Raw finite-horizon compilation of a FOSG to `KernelGame`, using the native
+history run distribution after exactly `k` steps.
+
+This kernel can still place mass on nonterminal histories when `k` is only a
+cutoff. For theorem-facing use, prefer `toKernelGameOfBoundedHorizon` or
+`toKernelGameOfExactHorizon`. -/
 noncomputable def toKernelGameAtHorizon
     (G : FOSG ι W Act PrivObs PubObs)
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
@@ -1158,6 +1192,15 @@ theorem toKernelGameOfBoundedHorizon_support_isTerminal
     rw [← G.toKernelGameOfBoundedHorizon_outcomeKernel hBound σ]
     exact hsupp0
   exact G.runDist_support_isTerminal_of_boundedHorizon hBound σ h hsupp'
+
+theorem toKernelGameAtHorizon_eq_toKernelGameOfBoundedHorizon_outcomeKernel
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype G.History] [DecidablePred G.terminal]
+    {k : Nat} (hBound : G.BoundedHorizon k) (σ : G.LegalBehavioralProfile) :
+    (G.toKernelGameAtHorizon k).outcomeKernel σ =
+      (G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ := by
+  rw [toKernelGameAtHorizon_outcomeKernel, toKernelGameOfBoundedHorizon_outcomeKernel]
 
 theorem toKernelGameOfBoundedHorizon_eu_eq
     {G : FOSG ι W Act PrivObs PubObs}

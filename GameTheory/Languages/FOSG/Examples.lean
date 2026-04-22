@@ -12,6 +12,75 @@ namespace FOSG
 
 namespace Examples
 
+section OneStep
+
+variable {ι W : Type} [DecidableEq ι]
+variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
+variable {G : FOSG ι W Act PrivObs PubObs}
+variable [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+
+/-- Finite-history enumeration for one-step games. This is used only in the
+examples to exercise the bounded-horizon compilation route on small games whose
+realized histories have length at most one. -/
+@[reducible]
+noncomputable def historyFintypeOfLengthLeOne
+    (hOne : ∀ h : G.History, h.steps.length ≤ 1) :
+    Fintype G.History := by
+  classical
+  let e : G.History ≃
+      {o : Option G.Step // match o with | none => True | some s => s.src = G.init} :=
+    { toFun := fun h =>
+        by
+          cases h with
+          | mk steps chain =>
+              cases steps with
+              | nil =>
+                  exact ⟨none, trivial⟩
+              | cons e es =>
+                  cases es with
+                  | nil =>
+                      exact ⟨some e, chain.1⟩
+                  | cons e' es' =>
+                      have : False := by
+                        have hlen : (e :: e' :: es').length ≤ 1 := hOne ⟨e :: e' :: es', chain⟩
+                        simp at hlen
+                      exact False.elim this
+      invFun := fun t =>
+        match t with
+        | ⟨none, _⟩ => History.nil G
+        | ⟨some e, hsrc⟩ =>
+            { steps := [e]
+              chain := by
+                simpa [StepChainFrom] using And.intro hsrc trivial }
+      left_inv := by
+        intro h
+        cases h with
+        | mk steps chain =>
+            cases steps with
+            | nil =>
+                rfl
+            | cons e es =>
+                cases es with
+                | nil =>
+                    rfl
+                | cons e' es' =>
+                    have : False := by
+                      have hlen : (e :: e' :: es').length ≤ 1 := hOne ⟨e :: e' :: es', chain⟩
+                      simp at hlen
+                    exact False.elim this
+      right_inv := by
+        intro t
+        cases t with
+        | mk o ho =>
+            cases o with
+            | none =>
+                rfl
+            | some e =>
+                simp }
+  exact Fintype.ofEquiv _ e.symm
+
+end OneStep
+
 inductive Solo where
   | only
   deriving DecidableEq, Fintype
@@ -158,6 +227,9 @@ def payoff (left right : Bool) : Player → ℝ
   | .left => if left = right then 1 else -1
   | .right => if left = right then -1 else 1
 
+/-- Extract the left player's component from a legal simultaneous joint action.
+The simultaneous structure is preserved by reading both components from the same
+joint action witness. -/
 noncomputable def leftMove
     (a : { a : JointAction Act //
       JointActionLegal Act active terminal availableActions .start a }) :
@@ -171,6 +243,9 @@ noncomputable def leftMove
   | some left =>
       exact left
 
+/-- Extract the right player's component from a legal simultaneous joint action.
+The simultaneous structure is preserved by reading both components from the same
+joint action witness. -/
 noncomputable def rightMove
     (a : { a : JointAction Act //
       JointActionLegal Act active terminal availableActions .start a }) :
@@ -294,8 +369,13 @@ theorem boundedHorizon : game.BoundedHorizon 1 := by
           | cons e' es' =>
               simp at hlen
 
+noncomputable instance : Fintype game.History :=
+  historyFintypeOfLengthLeOne
+    (G := game)
+    (fun h => game.history_length_le_of_boundedHorizon boundedHorizon h)
+
 noncomputable def kernel : KernelGame Player :=
-  game.toKernelGameAtHorizon 1
+  game.toKernelGameOfBoundedHorizon boundedHorizon
 
 end MatchingPennies
 
