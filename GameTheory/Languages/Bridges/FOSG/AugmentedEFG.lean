@@ -437,6 +437,18 @@ namespace Position
 noncomputable def descend {k : Nat} (pos : Position G k) (s : SState G) : Position G k :=
   ⟨s, pos.remaining - 1, le_trans (Nat.sub_le _ _) pos.hremaining⟩
 
+abbrev PayoffVec (k : Nat) := Payoff (infoStructure (G := G) k).Player
+
+noncomputable def zeroPayoff {k : Nat} : PayoffVec (G := G) k :=
+  fun _ => 0
+
+noncomputable def liftPayoff {k : Nat} (u : Payoff ι) : PayoffVec (G := G) k :=
+  fun p => u (origPlayer (ι := ι) p)
+
+noncomputable def addPayoff {k : Nat}
+    (x y : PayoffVec (G := G) k) : PayoffVec (G := G) k :=
+  fun p => x p + y p
+
 noncomputable def decisionSuccessor {k : Nat} (pos : Position G k)
     (la : { x : JointAction Act // SerialState.legal (G := G) pos.state x }) : SState G :=
   match hstate : pos.state with
@@ -487,19 +499,45 @@ noncomputable def chanceStatePMF {k : Nat} (pos : Position G k) : PMF (SState G)
     | .chance w ga =>
         PMF.map (SerialState.base (G := G)) (G.transition w ga)
 
-noncomputable def payoff {k : Nat} (pos : Position G k) :
-    Payoff (infoStructure (G := G) k).Player := by
-  intro p
-  exact 0
+noncomputable def chanceEdgePayoff {k : Nat}
+    (pos : Position G k) (dst : SState G) : PayoffVec (G := G) k := by
+  classical
+  exact
+    match pos.state with
+    | .base w =>
+        if hterm : G.terminal w then
+          zeroPayoff (G := G)
+        else
+          match horder : G.orderedActive w with
+          | [] =>
+              match dst with
+              | .base w' =>
+                  liftPayoff (G := G) <|
+                    G.reward w
+                      (SerialState.baseChanceLegalAction (G := G) w
+                        (G.active_eq_empty_of_orderedActive_eq_nil horder) hterm)
+                      w'
+              | _ => zeroPayoff (G := G)
+          | _ :: _ =>
+              zeroPayoff (G := G)
+    | .decide _ _ _ _ _ =>
+        zeroPayoff (G := G)
+    | .chance w ga =>
+        match dst with
+        | .base w' => liftPayoff (G := G) (G.reward w ga w')
+        | _ => zeroPayoff (G := G)
 
 end Position
 
-noncomputable def treeFrom {k : Nat} (pos : Position G k) :
-    GameTree (infoStructure (G := G) k) (Position G k) :=
+abbrev Outcome (k : Nat) := Position G k × Position.PayoffVec (G := G) k
+
+noncomputable def treeFromAccum {k : Nat} (pos : Position G k)
+    (acc : Position.PayoffVec (G := G) k) :
+    GameTree (infoStructure (G := G) k) (Outcome (G := G) k) :=
   if hrem : pos.remaining = 0 then
-    .terminal pos
+    .terminal (pos, acc)
   else if hterm : (SG G).terminal pos.state then
-    .terminal pos
+    .terminal (pos, acc)
   else
     match hplayer : pos.player? with
     | some i =>
@@ -509,19 +547,26 @@ noncomputable def treeFrom {k : Nat} (pos : Position G k) :
         let hI : pos.player? = some (origPlayer (ι := ι) p) := by
           simpa [hp] using hplayer
         let I : {pos : Position G k // pos.player? = some (origPlayer (ι := ι) p)} := ⟨pos, hI⟩
-        .decision (p := p) I (fun a => treeFrom (Position.decisionChild G I a))
+        .decision (p := p) I (fun a => treeFromAccum (Position.decisionChild G I a) acc)
     | none =>
         let μ := Position.chanceStatePMF G pos
         .chance
           (Fintype.card (SupportSubtype μ))
           (supportPMF μ)
           (supportSubtype_card_pos μ)
-          (fun b => treeFrom (Position.descend G pos (supportValue μ b)))
+          (fun b =>
+            let dst := supportValue μ b
+            let acc' := Position.addPayoff (G := G) acc (Position.chanceEdgePayoff (G := G) pos dst)
+            treeFromAccum (Position.descend G pos dst) acc')
 termination_by pos.remaining
 decreasing_by
   all_goals
     simpa [Position.decisionChild_remaining, Position.descend_remaining, Nat.pred_eq_sub_one] using
       Nat.pred_lt hrem
+
+noncomputable def treeFrom {k : Nat} (pos : Position G k) :
+    GameTree (infoStructure (G := G) k) (Outcome (G := G) k) :=
+  treeFromAccum (G := G) pos (Position.zeroPayoff (G := G))
 
 /-- Raw finite-horizon EFG obtained by unrolling serialized positions.
 
@@ -531,9 +576,9 @@ need not yet be terminal. The theorem-facing public API should therefore prefer
 `toPlainEFGOfBoundedHorizon`. -/
 noncomputable def toPlainEFGAtHorizon (k : Nat) : EFGGame where
   inf := infoStructure (G := G) k
-  Outcome := Position G k
+  Outcome := Outcome (G := G) k
   tree := treeFrom (G := G) (Position.root (G := G) k)
-  utility := Position.payoff (G := G)
+  utility := fun z => z.2
 
 /-- Public plain EFG bridge under a genuine FOSG horizon bound. -/
 noncomputable abbrev toPlainEFGOfBoundedHorizon
