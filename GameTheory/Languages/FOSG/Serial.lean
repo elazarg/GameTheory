@@ -273,12 +273,190 @@ def availableActions : SerialState G → (i : ι) → Set (Act i)
       else ∅
   | .chance _ _, _ => ∅
 
+omit [LinearOrder ι] in
+theorem eq_singleMove_of_current_some_other_none
+    {current : ι} {a : JointAction Act} {ai : Act current}
+    (hcurrent : a current = some ai)
+    (hother : ∀ j, j ≠ current → a j = none) :
+    a = singleMove (Act := Act) current ai := by
+  funext j
+  by_cases h : j = current
+  · subst h
+    simpa [singleMove] using hcurrent
+  · simp [singleMove, h, hother j h]
+
+omit [LinearOrder ι] in
+theorem playerLegal_iff_exists_singleMove
+    {w : W} {chosen : JointAction Act} {current : ι} {a : JointAction Act} :
+    playerLegal (G := G) w chosen current a ↔
+      ∃ ai : Act current,
+        a = singleMove (Act := Act) current ai ∧
+        playerLegal (G := G) w chosen current (singleMove (Act := Act) current ai) := by
+  constructor
+  · intro h
+    rcases h with ⟨⟨ai, hcurrent⟩, hother, hrest⟩
+    refine ⟨ai, eq_singleMove_of_current_some_other_none (Act := Act) hcurrent hother, ?_⟩
+    simpa [eq_singleMove_of_current_some_other_none (Act := Act) hcurrent hother] using
+      (show playerLegal (G := G) w chosen current a from ⟨⟨ai, hcurrent⟩, hother, hrest⟩)
+  · rintro ⟨ai, rfl, hsingle⟩
+    exact hsingle
+
 theorem legal_iff_jointActionLegal
     (s : SerialState G) (a : JointAction Act) :
     legal (G := G) s a ↔
       JointActionLegal Act (active (G := G)) (terminal (G := G))
         (availableActions (G := G)) s a := by
-  sorry
+  cases s with
+  | base w =>
+      cases horder : G.orderedActive w with
+      | nil =>
+          constructor
+          · intro h
+            have h' : ¬ G.terminal w ∧ a = noopAction Act := by
+              simpa [SerialState.legal, horder] using h
+            rcases h' with ⟨hterm, rfl⟩
+            refine ⟨hterm, ?_⟩
+            intro i
+            simp [SerialState.active, horder, noopAction]
+          · intro h
+            rcases h with ⟨hterm, hloc⟩
+            have hnone : ∀ i, a i = none := by
+              intro i
+              cases hia : a i with
+              | none => rfl
+              | some ai =>
+                  have hlocal := hloc i
+                  have : False := by
+                    simp [SerialState.active, horder, hia] at hlocal
+                  exact False.elim this
+            have ha : a = noopAction Act := by
+              funext i
+              simpa [noopAction] using hnone i
+            simpa [SerialState.legal, horder, ha] using (show ¬ G.terminal w from hterm)
+      | cons current rest =>
+          constructor
+          · intro h
+            have h' : playerLegal (G := G) w (noopAction Act) current a := by
+              simpa [SerialState.legal, horder] using h
+            rcases h' with ⟨⟨ai, hai⟩, hnone, ⟨ga, hcomp, hcurr⟩⟩
+            refine ⟨ga.2.1, ?_⟩
+            intro j
+            by_cases hj : j = current
+            · rw [hj]
+              rw [hai]
+              refine ⟨by simp [SerialState.active, horder], ?_⟩
+              simpa [SerialState.availableActions, horder] using
+                (show
+                  playerLegal (G := G) w (noopAction Act) current
+                    (singleMove (Act := Act) current ai) from
+                    ⟨⟨ai, by simp [singleMove]⟩,
+                      by
+                        intro k hk
+                        simp [singleMove, hk],
+                      ⟨ga, hcomp, by simpa [singleMove] using hcurr.trans hai⟩⟩)
+            · have hnonej : a j = none := hnone j hj
+              simp [SerialState.active, horder, hj, hnonej]
+          · intro h
+            have hlocalCurrent := h.2 current
+            cases hcurra : a current with
+            | none =>
+                have : False := by
+                  simp [SerialState.active, horder, hcurra] at hlocalCurrent
+                exact False.elim this
+            | some ai =>
+                have hsingle : playerLegal (G := G) w (noopAction Act) current
+                    (singleMove (Act := Act) current ai) := by
+                  have hpair :
+                      current ∈ SerialState.active (G := G) (.base w) ∧
+                        ai ∈ SerialState.availableActions (G := G) (.base w) current := by
+                    simpa [SerialState.active, horder, hcurra] using hlocalCurrent
+                  simpa [SerialState.availableActions, horder] using hpair.2
+                have hnone : ∀ j, j ≠ current → a j = none := by
+                  intro j hj
+                  have hlocal := h.2 j
+                  cases hja : a j with
+                  | none => rfl
+                  | some aj =>
+                      have : False := by
+                        simp [SerialState.active, horder, hja, hj] at hlocal
+                      exact False.elim this
+                have ha : a = singleMove (Act := Act) current ai := by
+                  exact eq_singleMove_of_current_some_other_none (Act := Act) hcurra hnone
+                rw [SerialState.legal, horder, ha]
+                exact hsingle
+  | decide w chosen current rest hvalid =>
+      constructor
+      · intro h
+        have h' : playerLegal (G := G) w chosen current a := by
+          simpa [SerialState.legal] using h
+        rcases h' with ⟨⟨ai, hai⟩, hnone, ⟨ga, hcomp, hcurr⟩⟩
+        refine ⟨by simp [SerialState.terminal], ?_⟩
+        intro j
+        by_cases hj : j = current
+        · rw [hj]
+          rw [hai]
+          refine ⟨by simp [SerialState.active], ?_⟩
+          simpa [SerialState.availableActions] using
+            (show
+              playerLegal (G := G) w chosen current
+                (singleMove (Act := Act) current ai) from
+                ⟨⟨ai, by simp [singleMove]⟩,
+                  by
+                    intro k hk
+                    simp [singleMove, hk],
+                  ⟨ga, hcomp, by simpa [singleMove] using hcurr.trans hai⟩⟩)
+        · have hnonej : a j = none := hnone j hj
+          simp [SerialState.active, hj, hnonej]
+      · intro h
+        have hlocalCurrent := h.2 current
+        cases hcurra : a current with
+        | none =>
+            have : False := by
+              simp [SerialState.active, hcurra] at hlocalCurrent
+            exact False.elim this
+        | some ai =>
+            have hsingle : playerLegal (G := G) w chosen current
+                (singleMove (Act := Act) current ai) := by
+              have hpair :
+                  current ∈ SerialState.active (G := G) (.decide w chosen current rest hvalid) ∧
+                    ai ∈ SerialState.availableActions (G := G)
+                      (.decide w chosen current rest hvalid) current := by
+                simpa [SerialState.active, hcurra] using hlocalCurrent
+              simpa [SerialState.availableActions] using hpair.2
+            have hnone : ∀ j, j ≠ current → a j = none := by
+              intro j hj
+              have hlocal := h.2 j
+              cases hja : a j with
+              | none => rfl
+              | some aj =>
+                  have : False := by
+                    simp [SerialState.active, SerialState.availableActions, hja, hj] at hlocal
+                  exact False.elim this
+            have ha : a = singleMove (Act := Act) current ai := by
+              exact eq_singleMove_of_current_some_other_none (Act := Act) hcurra hnone
+            simpa [SerialState.legal, ha] using hsingle
+  | chance w ga =>
+      constructor
+      · intro h
+        have h' : a = noopAction Act := by simpa [SerialState.legal] using h
+        refine ⟨by simp [SerialState.terminal], ?_⟩
+        intro i
+        rw [h']
+        simp [SerialState.active, noopAction]
+      · intro h
+        have hnone : ∀ i, a i = none := by
+          intro i
+          cases hia : a i with
+          | none => rfl
+              | some ai =>
+                  have hlocal := h.2 i
+                  have : False := by
+                    simp [SerialState.active, hia] at hlocal
+                  exact False.elim this
+        have ha : a = noopAction Act := by
+          funext i
+          simpa [noopAction] using hnone i
+        simp [SerialState.legal, ha]
 
 abbrev LegalAction (s : SerialState G) : Type :=
   { a : JointAction Act // legal (G := G) s a }
