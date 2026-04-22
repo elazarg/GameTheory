@@ -580,10 +580,17 @@ noncomputable def toPlainEFGAtHorizon (k : Nat) : EFGGame where
   tree := treeFrom (G := G) (Position.root (G := G) k)
   utility := fun z => z.2
 
+/-- Safe serialized-step budget for a `k`-step original FOSG horizon.
+
+Each original step expands to at most one serialized move per player, followed
+by one serialized resolution step. -/
+def serialHorizon (k : Nat) : Nat :=
+  k * (Fintype.card ι + 1)
+
 /-- Public plain EFG bridge under a genuine FOSG horizon bound. -/
 noncomputable abbrev toPlainEFGOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) : EFGGame :=
-  toPlainEFGAtHorizon (G := G) k
+  toPlainEFGAtHorizon (G := G) (serialHorizon (ι := ι) k)
 
 namespace Replay
 
@@ -929,14 +936,14 @@ noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
 /-- Public augmented-EFG bridge under a genuine FOSG horizon bound. -/
 noncomputable abbrev toAugmentedOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) : EFG.AugmentedGame :=
-  toAugmentedAtHorizon (G := G) k
+  toAugmentedAtHorizon (G := G) (serialHorizon (ι := ι) k)
 
 @[simp] theorem forget_toAugmentedOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) :
     (toAugmentedOfBoundedHorizon (G := G) hBound).forget =
       toPlainEFGOfBoundedHorizon (G := G) hBound := by
   simpa [toAugmentedOfBoundedHorizon, toPlainEFGOfBoundedHorizon] using
-    (forget_toAugmentedAtHorizon (G := G) (k := k))
+    (forget_toAugmentedAtHorizon (G := G) (k := serialHorizon (ι := ι) k))
 
 end Labels
 
