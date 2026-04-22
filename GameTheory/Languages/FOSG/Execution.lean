@@ -149,6 +149,27 @@ theorem legalBehavioralProfile_legalJointMass_eq_one
     _ = 1 := hmass
 
 open Classical in
+/-- The induced probability law on legal joint actions at a nonterminal
+history. This packages the factorized legal-move mass into a genuine `PMF`. -/
+noncomputable def legalActionLaw
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) : PMF (G.LegalAction h.lastState) := by
+  exact PMF.ofFintype
+    (fun a => G.jointActionDist σ h a.1)
+    (G.legalBehavioralProfile_legalJointMass_eq_one σ h hterm)
+
+open Classical in
+theorem legalActionLaw_apply
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) (a : G.LegalAction h.lastState) :
+    G.legalActionLaw σ h hterm a = G.jointActionDist σ h a.1 := by
+  rw [legalActionLaw, PMF.ofFintype_apply]
+
+open Classical in
 theorem legalBehavioralProfile_jointStepMass_eq_one
     (G : FOSG ι W Act PrivObs PubObs)
     [∀ i, Fintype (Option (Act i))] [Fintype W]
@@ -196,6 +217,19 @@ theorem nextStateLaw_apply
       ∑ a : G.LegalAction h.lastState,
         G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst := by
   rw [nextStateLaw, PMF.ofFintype_apply]
+
+theorem nextStateLaw_eq_bind_legalActionLaw
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))] [Fintype W]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) :
+    G.nextStateLaw σ h hterm =
+      (G.legalActionLaw σ h hterm).bind (fun a => G.transition h.lastState a) := by
+  classical
+  ext dst
+  rw [G.nextStateLaw_apply σ h hterm dst, PMF.bind_apply]
+  rw [tsum_fintype]
+  simp [G.legalActionLaw_apply σ h hterm]
 
 /-- Two behavioral profiles agree off player `i` if all other players have the
 same behavioral strategy. -/
