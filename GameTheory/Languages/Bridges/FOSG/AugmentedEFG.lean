@@ -642,40 +642,280 @@ noncomputable def replayHist (k : Nat) :
         (supportValue (Position.chanceStatePMF (G := G) pos) b)) := by
   simp [advance?, hplayer]
 
-/- TODO:
-Add the one-step replay lemma
-`HistoryStepStep ℓ (treeFrom pos) u -> ∃ pos', advance? pos ℓ = some pos' ∧ u = treeFrom pos'`
-and then extend it to a full reachable-history theorem:
-`ReachBy h (treeFrom pos) node -> ∃ pos', replayFrom pos h = some pos'`.
-The remaining work is a list-induction theorem on `ReachBy` that composes the
-one-step lemma with `replayFrom_cons`. -/
+theorem advance?_some_of_historyStepStepAccum
+    {k : Nat} {pos : Position G k} {acc : Position.PayoffVec (G := G) k}
+    {ℓ : Step (G := G) k} {u : GameTree (infoStructure (G := G) k) (Outcome (G := G) k)}
+    (hstep : HistoryStepStep ℓ (treeFromAccum (G := G) pos acc) u) :
+    ∃ pos' acc',
+      advance? (G := G) pos ℓ = some pos' ∧
+      u = treeFromAccum (G := G) pos' acc' := by
+  classical
+  cases ℓ with
+  | chance k' b =>
+      rcases hstep with ⟨μ, hk, next, hs, hu⟩
+      unfold treeFromAccum at hs
+      split at hs
+      · contradiction
+      · split at hs
+        · contradiction
+        · split at hs
+          · contradiction
+          · cases hs
+            refine ⟨Position.descend (G := G) pos (supportValue (Position.chanceStatePMF (G := G) pos) b),
+              Position.addPayoff (G := G) acc
+                (Position.chanceEdgePayoff (G := G) pos
+                  (supportValue (Position.chanceStatePMF (G := G) pos) b)), ?_, ?_⟩
+            · simpa [advance?]
+            · exact hu.trans rfl
+  | action p I a =>
+      rcases hstep with ⟨next, hs, hu⟩
+      unfold treeFromAccum at hs
+      split at hs
+      · contradiction
+      · split at hs
+        · contradiction
+        · split at hs
+          · rename_i i hplayer
+            cases hs
+            refine ⟨Position.decisionChild (G := G)
+              ⟨pos, by simpa [origPlayer, playerEquiv] using hplayer⟩ a, acc, ?_, ?_⟩
+            · simpa [advance?]
+            · simpa using hu
+          · contradiction
+
+theorem replayFrom_some_of_reachAccum
+    {k : Nat} {pos : Position G k} {acc : Position.PayoffVec (G := G) k}
+    {h : List (Step (G := G) k)}
+    {node : GameTree (infoStructure (G := G) k) (Outcome (G := G) k)}
+    (hr : ReachBy h (treeFromAccum (G := G) pos acc) node) :
+    ∃ pos' acc',
+      replayFrom (G := G) pos h = some pos' ∧
+      node = treeFromAccum (G := G) pos' acc' := by
+  induction h generalizing pos acc node with
+  | nil =>
+      cases hr
+      exact ⟨pos, acc, rfl, rfl⟩
+  | cons ℓ hs ih =>
+      cases hr with
+      | cons hstep hr' =>
+          rcases advance?_some_of_historyStepStepAccum (G := G) (pos := pos) (acc := acc) hstep with
+            ⟨pos₁, acc₁, hadv, hmid⟩
+          cases hmid
+          rcases ih (pos := pos₁) (acc := acc₁) (node := node) hr' with
+            ⟨pos₂, acc₂, hrest, htarget⟩
+          refine ⟨pos₂, acc₂, ?_, htarget⟩
+          simp [replayFrom_cons, hadv, hrest]
+
+theorem replayHist_some_of_reach
+    {k : Nat} {h : List (Step (G := G) k)}
+    {node : GameTree (infoStructure (G := G) k) (Outcome (G := G) k)}
+    (hr : ReachBy h (toPlainEFGAtHorizon (G := G) k).tree node) :
+    ∃ pos' acc',
+      replayHist (G := G) k h = some pos' ∧
+      node = treeFromAccum (G := G) pos' acc' := by
+  simpa [toPlainEFGAtHorizon, replayHist] using
+    (replayFrom_some_of_reachAccum (G := G)
+      (pos := Position.root (G := G) k)
+      (acc := Position.zeroPayoff (G := G)) hr)
+
+noncomputable def publicStep? {k : Nat} (pos : Position G k) :
+    Step (G := G) k → Option ((SG G).PublicState × Position G k)
+  | .action _ I a =>
+      if h : pos = I.1 then
+        let pos' := Position.decisionChild (G := G) I a
+        some ([none], pos')
+      else
+        none
+  | .chance k' b =>
+      let μ := Position.chanceStatePMF (G := G) pos
+      if hplayer : pos.player? = none then
+        if hcard : k' = Fintype.card (SupportSubtype μ) then
+          let dst := supportValue μ (Fin.cast hcard b)
+          let pos' := Position.descend (G := G) pos dst
+          match pos.state, dst with
+          | .base w, .base w' =>
+              if hterm : G.terminal w then
+                none
+              else
+                match horder : G.orderedActive w with
+                | [] =>
+                    let ga := SerialState.baseChanceLegalAction (G := G) w
+                      (G.active_eq_empty_of_orderedActive_eq_nil horder) hterm
+                    some ([some (G.pubObs w ga w')], pos')
+                | _ :: _ => none
+          | .chance w ga, .base w' =>
+              some ([some (G.pubObs w ga w')], pos')
+          | _, _ => none
+        else
+          none
+      else
+        none
+
+noncomputable def playerStep? {k : Nat} (who : ι) (pos : Position G k) :
+    Step (G := G) k → Option ((SG G).InfoState who × Position G k)
+  | .action _ I a =>
+      if h : pos = I.1 then
+        let la := Position.actionFromIndex (G := G) (pos := I.1) a
+        let pos' := Position.decisionChild (G := G) I a
+        let frag :=
+          match la.1 who with
+          | some awho => [FOSG.PlayerEvent.act awho, FOSG.PlayerEvent.obs none none]
+          | none => [FOSG.PlayerEvent.obs none none]
+        some (frag, pos')
+      else
+        none
+  | .chance k' b =>
+      let μ := Position.chanceStatePMF (G := G) pos
+      if hplayer : pos.player? = none then
+        if hcard : k' = Fintype.card (SupportSubtype μ) then
+          let dst := supportValue μ (Fin.cast hcard b)
+          let pos' := Position.descend (G := G) pos dst
+          match pos.state, dst with
+          | .base w, .base w' =>
+              if hterm : G.terminal w then
+                none
+              else
+                match horder : G.orderedActive w with
+                | [] =>
+                    let ga := SerialState.baseChanceLegalAction (G := G) w
+                      (G.active_eq_empty_of_orderedActive_eq_nil horder) hterm
+                    some ([FOSG.PlayerEvent.obs (some (G.privObs who w ga w'))
+                      (some (G.pubObs w ga w'))], pos')
+                | _ :: _ => none
+          | .chance w ga, .base w' =>
+              some ([FOSG.PlayerEvent.obs (some (G.privObs who w ga w'))
+                (some (G.pubObs w ga w'))], pos')
+          | _, _ => none
+        else
+          none
+      else
+        none
+
+noncomputable def publicViewFrom {k : Nat} (pos : Position G k) :
+    List (Step (G := G) k) → Option ((SG G).PublicState × Position G k)
+  | [] => some ([], pos)
+  | ℓ :: hs => do
+      let (frag, pos') <- publicStep? (G := G) pos ℓ
+      let (rest, pos'') <- publicViewFrom pos' hs
+      pure (frag ++ rest, pos'')
+
+noncomputable def playerViewFrom {k : Nat} (who : ι) (pos : Position G k) :
+    List (Step (G := G) k) → Option ((SG G).InfoState who × Position G k)
+  | [] => some ([], pos)
+  | ℓ :: hs => do
+      let (frag, pos') <- playerStep? (G := G) who pos ℓ
+      let (rest, pos'') <- playerViewFrom who pos' hs
+      pure (frag ++ rest, pos'')
+
+noncomputable def publicViewHist? (k : Nat) (h : List (Step (G := G) k)) :
+    Option ((SG G).PublicState) :=
+  Option.map Prod.fst (publicViewFrom (G := G) (Position.root (G := G) k) h)
+
+noncomputable def playerViewHist? (k : Nat) (who : ι) (h : List (Step (G := G) k)) :
+    Option ((SG G).InfoState who) :=
+  Option.map Prod.fst (playerViewFrom (G := G) who (Position.root (G := G) k) h)
+
+theorem publicStep?_eq_filterMap_playerStep?
+    {k : Nat} (who : ι) (pos : Position G k) (ℓ : Step (G := G) k) :
+    publicStep? (G := G) pos ℓ =
+      Option.map (fun (out : (SG G).InfoState who × Position G k) =>
+        ((out.1).filterMap (FOSG.PlayerEvent.publicPart (G := SG G) (i := who)), out.2))
+        (playerStep? (G := G) who pos ℓ) := by
+  classical
+  cases ℓ with
+  | action p I a =>
+      by_cases h : pos = I.1
+      · simp [publicStep?, playerStep?, h, FOSG.PlayerEvent.publicPart]
+        cases hact : ((Position.actionFromIndex (G := G) (pos := I.1) a).1 who) <;>
+          simp [hact]
+      · simp [publicStep?, playerStep?, h]
+  | chance k' b =>
+      by_cases hplayer : pos.player? = none
+      · by_cases hcard : k' = Fintype.card (SupportSubtype (Position.chanceStatePMF (G := G) pos))
+        · simp [publicStep?, playerStep?, hplayer, hcard]
+          cases pos.state <;>
+            cases supportValue (Position.chanceStatePMF (G := G) pos) (Fin.cast hcard b) <;>
+            repeat' (first | split | simp [FOSG.PlayerEvent.publicPart])
+        · simp [publicStep?, playerStep?, hplayer, hcard]
+      · simp [publicStep?, playerStep?, hplayer]
+
+theorem publicViewFrom_eq_filterMap_playerViewFrom
+    {k : Nat} (who : ι) (pos : Position G k) (h : List (Step (G := G) k)) :
+    publicViewFrom (G := G) pos h =
+      Option.map (fun (out : (SG G).InfoState who × Position G k) =>
+        ((out.1).filterMap (FOSG.PlayerEvent.publicPart (G := SG G) (i := who)), out.2))
+        (playerViewFrom (G := G) who pos h) := by
+  induction h generalizing pos with
+  | nil =>
+      rfl
+  | cons ℓ hs ih =>
+      simp [publicViewFrom, playerViewFrom]
+      rw [publicStep?_eq_filterMap_playerStep?]
+      cases hstep : playerStep? (G := G) who pos ℓ with
+      | none =>
+          simp [hstep]
+      | some out =>
+          rcases out with ⟨frag, pos'⟩
+          cases hrest : playerViewFrom (G := G) who pos' hs with
+          | none =>
+              simp [hstep, hrest, ih]
+          | some out' =>
+              rcases out' with ⟨rest, pos''⟩
+              simp [hstep, hrest, ih, List.filterMap_append]
+
+theorem publicViewHist?_eq_filterMap_playerViewHist?
+    {k : Nat} (who : ι) (h : List (Step (G := G) k)) :
+    publicViewHist? (G := G) k h =
+      Option.map (fun xs =>
+        List.filterMap (FOSG.PlayerEvent.publicPart (G := SG G) (i := who)) xs)
+        (playerViewHist? (G := G) k who h) := by
+  simpa [publicViewHist?, playerViewHist?, Function.comp] using
+    congrArg (Option.map Prod.fst)
+      (publicViewFrom_eq_filterMap_playerViewFrom
+        (G := G) who (Position.root (G := G) k) h)
 
 end Replay
 
 /-- Thin augmented wrapper over the raw finite-horizon plain bridge.
 
-At this stage, the augmentation is the reachable EFG history itself. This keeps
-the forgetful classical game definitionally equal to `toPlainEFGAtHorizon`,
-while the replay layer above provides the structural hook for later refinement
-to serialized FOSG public/player views. This is a scaffold layer, not yet the
-actual paper-level augmentation. -/
+At this stage, the bridge exposes the serialized public/player views decoded
+from the unrolled EFG history. Replay success and semantic preservation are
+still separate theorem work, but the augmentation itself is no longer the raw
+EFG history scaffold. -/
 noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
   base := toPlainEFGAtHorizon (G := G) k
-  PubState := List (HistoryStep (infoStructure (G := G) k))
-  InfoState := fun _ => List (HistoryStep (infoStructure (G := G) k))
-  publicState := fun h => h.hist
-  playerState := fun _ h => h.hist
-  publicOf := fun _ s => s
+  PubState := List (HistoryStep (infoStructure (G := G) k)) × Option ((SG G).PublicState)
+  InfoState := fun p =>
+    List (HistoryStep (infoStructure (G := G) k)) × Option ((SG G).InfoState (origPlayer (ι := ι) p))
+  publicState := fun h => (h.hist, Replay.publicViewHist? (G := G) k h.hist)
+  playerState := fun p h => (h.hist, Replay.playerViewHist? (G := G) k (origPlayer (ι := ι) p) h.hist)
+  publicOf := fun p s =>
+    (s.1, Option.map
+      (fun xs => List.filterMap
+        (FOSG.PlayerEvent.publicPart (G := SG G) (i := origPlayer (ι := ι) p)) xs) s.2)
   publicOf_playerState := by
     intro p h
-    rfl
+    change
+      (h.hist,
+        Option.map
+          (fun xs =>
+            List.filterMap
+              (FOSG.PlayerEvent.publicPart (G := SG G) (i := origPlayer (ι := ι) p)) xs)
+          (Replay.playerViewHist? (G := G) k (origPlayer (ι := ι) p) h.hist)) =
+      (h.hist, Replay.publicViewHist? (G := G) k h.hist)
+    symm
+    simpa using congrArg (Prod.mk h.hist)
+      (Replay.publicViewHist?_eq_filterMap_playerViewHist?
+        (G := G) (who := origPlayer (ι := ι) p) (h := h.hist))
   actionIdentified := by
     intro p d₁ d₂ hEq
     cases d₁ with
     | mk hist₁ I₁ next₁ reach₁ =>
         cases d₂ with
         | mk hist₂ I₂ next₂ reach₂ =>
-            cases hEq
+            have hhist : hist₁ = hist₂ := by
+              exact congrArg Prod.fst hEq
+            subst hhist
             have hnode :
                 GameTree.decision I₁ next₁ = GameTree.decision I₂ next₂ := by
               exact EFG.reachBy_deterministic reach₁ reach₂
@@ -683,7 +923,8 @@ noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
             rfl
 
 @[simp] theorem forget_toAugmentedAtHorizon (k : Nat) :
-    (toAugmentedAtHorizon (G := G) k).forget = toPlainEFGAtHorizon (G := G) k := rfl
+    (toAugmentedAtHorizon (G := G) k).forget = toPlainEFGAtHorizon (G := G) k := by
+  rfl
 
 /-- Public augmented-EFG bridge under a genuine FOSG horizon bound. -/
 noncomputable abbrev toAugmentedOfBoundedHorizon
@@ -693,7 +934,9 @@ noncomputable abbrev toAugmentedOfBoundedHorizon
 @[simp] theorem forget_toAugmentedOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) :
     (toAugmentedOfBoundedHorizon (G := G) hBound).forget =
-      toPlainEFGOfBoundedHorizon (G := G) hBound := rfl
+      toPlainEFGOfBoundedHorizon (G := G) hBound := by
+  simpa [toAugmentedOfBoundedHorizon, toPlainEFGOfBoundedHorizon] using
+    (forget_toAugmentedAtHorizon (G := G) (k := k))
 
 end Labels
 
