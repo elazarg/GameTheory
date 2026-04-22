@@ -1,3 +1,4 @@
+import Math.PMFProduct
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import GameTheory.Languages.FOSG.Strategy
 import GameTheory.Languages.FOSG.Values
@@ -77,6 +78,124 @@ def extendBySteps (pref : G.History) :
 end History
 
 variable [Fintype ι]
+
+/-- Product distribution on optional joint moves induced by a legal behavioral
+profile at a realized history. -/
+noncomputable def jointActionDist
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History) : PMF (JointAction Act) := by
+  classical
+  exact Math.PMFProduct.pmfPi (fun i => σ.toProfile i (h.playerView i))
+
+@[simp] theorem jointActionDist_apply
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History) (a : JointAction Act) :
+    G.jointActionDist σ h a = ∏ i, (σ.toProfile i (h.playerView i)) (a i) := by
+  classical
+  simp [jointActionDist, Math.PMFProduct.pmfPi_apply]
+
+theorem legalBehavioralProfile_jointActionDist_eq_zero_of_not_legal
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) {a : JointAction Act}
+    (ha : ¬ G.legal h.lastState a) :
+    G.jointActionDist σ h a = 0 := by
+  classical
+  rw [G.jointActionDist_apply]
+  have hnotLocal : ¬ ∀ i, G.locallyLegalAtState h.lastState i (a i) := by
+    intro hall
+    exact ha ((G.legal_iff_forall).2 ⟨hterm, hall⟩)
+  rw [not_forall] at hnotLocal
+  rcases hnotLocal with ⟨i, hi⟩
+  have hsupp : a i ∉ ((σ i).1 (h.playerView i)).support := by
+    intro hai
+    exact hi ((σ i).2 h hai)
+  have hzero : ((σ i).1 (h.playerView i)) (a i) = 0 := by
+    exact (PMF.apply_eq_zero_iff _ _).2 hsupp
+  rw [Finset.prod_eq_zero_iff]
+  exact ⟨i, by simp, hzero⟩
+
+open Classical in
+theorem legalBehavioralProfile_legalJointMass_eq_one
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) :
+    ∑ a : { a : JointAction Act // G.legal h.lastState a }, G.jointActionDist σ h a.1 = 1 := by
+  have hmass : ∑ a : JointAction Act, G.jointActionDist σ h a = 1 := by
+    have := PMF.tsum_coe (G.jointActionDist σ h)
+    rwa [tsum_fintype] at this
+  calc
+    ∑ a : { a : JointAction Act // G.legal h.lastState a }, G.jointActionDist σ h a.1
+      = ∑ a : JointAction Act,
+          if G.legal h.lastState a then G.jointActionDist σ h a else (0 : ENNReal) := by
+            have hsub :
+                ∑ a ∈ Finset.subtype (fun a : JointAction Act => G.legal h.lastState a)
+                    (Finset.univ : Finset (JointAction Act)),
+                  G.jointActionDist σ h a.1 =
+                  ∑ a : { a : JointAction Act // G.legal h.lastState a },
+                    G.jointActionDist σ h a.1 := by
+              simp
+            rw [← hsub, Finset.sum_subtype_eq_sum_filter, Finset.sum_filter]
+    _ = ∑ a : JointAction Act, G.jointActionDist σ h a := by
+          refine Finset.sum_congr rfl ?_
+          intro a _
+          by_cases ha : G.legal h.lastState a
+          · simp [ha]
+          · simp [ha, G.legalBehavioralProfile_jointActionDist_eq_zero_of_not_legal σ h hterm ha]
+    _ = 1 := hmass
+
+open Classical in
+theorem legalBehavioralProfile_jointStepMass_eq_one
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))] [Fintype W]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) :
+    ∑ a : G.LegalAction h.lastState,
+      ∑ dst : W, G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst = 1 := by
+  classical
+  calc
+    ∑ a : G.LegalAction h.lastState,
+        ∑ dst : W, G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst
+      = ∑ a : G.LegalAction h.lastState, G.jointActionDist σ h a.1 := by
+          refine Finset.sum_congr rfl ?_
+          intro a _
+          rw [← Finset.mul_sum]
+          have htrans : ∑ dst : W, (G.transition h.lastState a) dst = 1 := by
+            have := PMF.tsum_coe (G.transition h.lastState a)
+            rwa [tsum_fintype] at this
+          simp [htrans]
+    _ = 1 := G.legalBehavioralProfile_legalJointMass_eq_one σ h hterm
+
+/-- One-step next-state law induced by a legal behavioral profile at a
+nonterminal realized history. This exists as a genuine `PMF` exactly because
+legal profiles now place total mass `1` on legal joint moves. -/
+noncomputable def nextStateLaw
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))] [Fintype W]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) : PMF W := by
+  classical
+  exact PMF.ofFintype
+    (fun dst => ∑ a : G.LegalAction h.lastState,
+      G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst)
+    (by
+      rw [Finset.sum_comm]
+      exact G.legalBehavioralProfile_jointStepMass_eq_one σ h hterm)
+
+open Classical in
+theorem nextStateLaw_apply
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))] [Fintype W]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) (dst : W) :
+    G.nextStateLaw σ h hterm dst =
+      ∑ a : G.LegalAction h.lastState,
+        G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst := by
+  rw [nextStateLaw, PMF.ofFintype_apply]
 
 /-- Two behavioral profiles agree off player `i` if all other players have the
 same behavioral strategy. -/
