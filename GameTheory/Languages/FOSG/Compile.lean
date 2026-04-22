@@ -90,6 +90,28 @@ theorem extendByOutcome_eq_appendStep_of_head
       rw [History.extendByOutcome_of_support (h := pref) (a := act) (dst := dst) hsupp]
       rfl
 
+/-- The prefix history obtained from the first `n` realized steps of `h`. -/
+def initialSegment (h : G.History) (n : Nat) : G.History :=
+  { steps := h.steps.take n
+    chain := by
+      have hchain :
+          G.StepChainFrom G.init (h.steps.take n ++ h.steps.drop n) := by
+        simpa [List.take_append_drop] using h.chain
+      simpa using StepChainFrom.left hchain }
+
+@[simp] theorem initialSegment_steps (h : G.History) (n : Nat) :
+    (h.initialSegment n).steps = h.steps.take n := rfl
+
+theorem initialSegment_isPrefix (h : G.History) (n : Nat) :
+    (h.initialSegment n).IsPrefix h := by
+  refine ⟨h.steps.drop n, ?_⟩
+  simp [initialSegment, List.take_append_drop]
+
+theorem initialSegment_length
+    (h : G.History) {n : Nat} (hn : n ≤ h.steps.length) :
+    (h.initialSegment n).steps.length = n := by
+  simp [initialSegment, List.length_take, hn]
+
 /-- Horizon-bounded run distribution on realized histories induced by a legal
 behavioral profile. Terminal histories absorb. -/
 noncomputable def runDistFrom
@@ -428,6 +450,245 @@ theorem runDist_support_isTerminal_of_boundedHorizon
   have hmass : G.runDist k σ h ≠ 0 := (PMF.mem_support_iff _ _).1 hsupp
   exact hmass (G.runDist_eq_zero_of_nonterminal_of_boundedHorizon hBound σ h hnot)
 
+open Classical in
+theorem runDistFrom_eq_zero_of_terminal_not_prefix
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    (σ : G.LegalBehavioralProfile) :
+    ∀ (n : Nat) (pref target : G.History),
+      target.IsTerminal →
+      target.steps.length ≤ pref.steps.length + n →
+      ¬ pref.IsPrefix target →
+      History.runDistFrom G σ n pref target = 0
+  | 0, pref, target, hterm, hlen, hnot => by
+      have hneq : target ≠ pref := by
+        intro hEq
+        apply hnot
+        simpa [hEq] using pref.prefix_refl
+      simp [History.runDistFrom, PMF.pure_apply, hneq]
+  | n + 1, pref, target, hterm, hlen, hnot => by
+      by_cases hprefTerm : G.terminal pref.lastState
+      · rw [History.runDistFrom_succ_terminal (G := G) (σ := σ) (n := n) (h := pref) hprefTerm]
+        have hneq : target ≠ pref := by
+          intro hEq
+          apply hnot
+          simpa [hEq] using pref.prefix_refl
+        simp [PMF.pure_apply, hneq]
+      · rw [History.runDistFrom_succ_nonterminal (G := G) (σ := σ) (n := n) (h := pref) hprefTerm]
+        rw [PMF.bind_apply, tsum_fintype]
+        refine Finset.sum_eq_zero ?_
+        intro a _
+        rw [PMF.bind_apply, tsum_fintype]
+        suffices hinner :
+            ∑ dst : W,
+              (G.transition pref.lastState a) dst *
+                History.runDistFrom G σ n (pref.extendByOutcome a dst) target = 0 by
+          rw [hinner]
+          simp
+        refine Finset.sum_eq_zero ?_
+        intro dst _
+        by_cases hsupp : G.transition pref.lastState a dst = 0
+        · simp [hsupp]
+        · have hnot' : ¬ (pref.extendByOutcome a dst).IsPrefix target := by
+            intro hPrefix
+            exact hnot <|
+              History.prefix_trans (History.extendByOutcome_isPrefix (h := pref) a dst) hPrefix
+          have hlen' : target.steps.length ≤ (pref.extendByOutcome a dst).steps.length + n := by
+            rw [History.extendByOutcome_of_support (h := pref) (a := a) (dst := dst) hsupp]
+            simp [Nat.add_assoc, Nat.add_comm] at hlen ⊢
+            omega
+          rw [runDistFrom_eq_zero_of_terminal_not_prefix
+            (G := G) (σ := σ) n (pref := pref.extendByOutcome a dst)
+            (target := target) hterm hlen' hnot']
+          simp
+
+open Classical in
+theorem runDistFrom_eq_probFrom_of_terminal_target
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    (σ : G.LegalBehavioralProfile) :
+    ∀ (pref : G.History) (es : List G.Step)
+      (hchain : G.StepChainFrom pref.lastState es) (slack : Nat),
+      (pref.extendBySteps es hchain).IsTerminal →
+      History.runDistFrom G σ (es.length + slack) pref (pref.extendBySteps es hchain) =
+        History.probFrom (G := G) σ.toProfile pref es hchain
+  | pref, [], hchain, 0, hterm => by
+      have hprefTerm : pref.IsTerminal := by
+        simpa [History.extendBySteps] using hterm
+      simp [History.probFrom]
+  | pref, [], hchain, slack + 1, hterm => by
+      have hprefTerm : pref.IsTerminal := by
+        simpa [History.extendBySteps] using hterm
+      rw [show ([] : List G.Step).length + (slack + 1) = slack + 1 by simp]
+      rw [History.runDistFrom_succ_terminal (G := G) (σ := σ) (n := slack) (h := pref) hprefTerm]
+      simp [History.probFrom]
+  | pref, e :: es, hchain, slack, hterm => by
+      rcases hchain with ⟨hsrc, htail⟩
+      let pref' : G.History := pref.appendStep e hsrc
+      let a₀ : G.LegalAction pref.lastState := hsrc ▸ e.act
+      have htail' : G.StepChainFrom pref'.lastState es := by
+        simpa [pref'] using htail
+      have hprefNotTerm : ¬ pref.IsTerminal := pref.not_isTerminal_of_legalAction a₀
+      rw [show (e :: es).length + slack = es.length + slack + 1 by
+        simp [Nat.add_left_comm, Nat.add_comm]]
+      rw [History.runDistFrom_succ_nonterminal
+        (G := G) (σ := σ) (n := es.length + slack) (h := pref) hprefNotTerm]
+      rw [PMF.bind_apply, tsum_fintype]
+      simp_rw [PMF.bind_apply, tsum_fintype]
+      have hrec :
+          History.runDistFrom G σ (es.length + slack) pref'
+              (History.extendBySteps pref' es htail') =
+            History.probFrom (G := G) σ.toProfile pref' es htail' := by
+        simpa [pref'] using
+          runDistFrom_eq_probFrom_of_terminal_target
+            (G := G) (σ := σ) pref' es htail' slack
+            (by simpa [History.extendBySteps, pref'] using hterm)
+      have houter_zero :
+          ∀ a : G.LegalAction pref.lastState, a ≠ a₀ →
+            ∑ dst : W,
+              (G.transition pref.lastState a) dst *
+                History.runDistFrom G σ (es.length + slack) (pref.extendByOutcome a dst)
+                  (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) = 0 := by
+        intro a hne
+        refine Finset.sum_eq_zero ?_
+        intro dst _
+        by_cases hsupp : G.transition pref.lastState a dst = 0
+        · simp [hsupp]
+        · have hnotPrefix : ¬ (pref.extendByOutcome a dst).IsPrefix
+              (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) := by
+            intro hPrefix
+            rcases History.extendByOutcome_prefix_canonical_imp
+                (pref := pref) (e := e) (es := es) (hchain := ⟨hsrc, htail⟩)
+                (a := a) (dst := dst) hsupp hPrefix with ⟨ha, _⟩
+            exact hne ha
+          have hlen' :
+              (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩).steps.length ≤
+                (pref.extendByOutcome a dst).steps.length + (es.length + slack) := by
+            rw [History.extendByOutcome_of_support (h := pref) (a := a) (dst := dst) hsupp]
+            simp [History.extendBySteps, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm]
+          rw [runDistFrom_eq_zero_of_terminal_not_prefix
+            (G := G) (σ := σ) (n := es.length + slack)
+            (pref := pref.extendByOutcome a dst)
+            (target := pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
+            hterm hlen' hnotPrefix]
+          simp
+      have hinner_a₀ :
+          ∑ dst : W,
+            (G.transition pref.lastState a₀) dst *
+              History.runDistFrom G σ (es.length + slack) (pref.extendByOutcome a₀ dst)
+                (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
+            =
+          (G.transition pref.lastState a₀) e.dst *
+            History.runDistFrom G σ (es.length + slack) pref'
+              (History.extendBySteps pref' es htail') := by
+        let f : W → ENNReal := fun dst =>
+          (G.transition pref.lastState a₀) dst *
+            History.runDistFrom G σ (es.length + slack) (pref.extendByOutcome a₀ dst)
+              (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
+        change ∑ dst : W, f dst = (G.transition pref.lastState a₀) e.dst *
+          History.runDistFrom G σ (es.length + slack) pref' (History.extendBySteps pref' es htail')
+        have hsum : ∑ dst : W, f dst = f e.dst := by
+          refine Finset.sum_eq_single e.dst ?_ ?_
+          · intro dst _ hdst
+            by_cases hsupp : G.transition pref.lastState a₀ dst = 0
+            · simp [f, hsupp]
+            · have hnotPrefix : ¬ (pref.extendByOutcome a₀ dst).IsPrefix
+                  (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) := by
+                intro hPrefix
+                rcases History.extendByOutcome_prefix_canonical_imp
+                    (pref := pref) (e := e) (es := es) (hchain := ⟨hsrc, htail⟩)
+                    (a := a₀) (dst := dst) hsupp hPrefix with ⟨_, hdst'⟩
+                exact hdst hdst'
+              have hlen' :
+                  (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩).steps.length ≤
+                    (pref.extendByOutcome a₀ dst).steps.length + (es.length + slack) := by
+                rw [History.extendByOutcome_of_support (h := pref) (a := a₀) (dst := dst) hsupp]
+                simp [History.extendBySteps, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm]
+              have hzero :=
+                runDistFrom_eq_zero_of_terminal_not_prefix
+                  (G := G) (σ := σ) (n := es.length + slack)
+                  (pref := pref.extendByOutcome a₀ dst)
+                  (target := pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
+                  hterm hlen' hnotPrefix
+              simpa [f, History.extendBySteps, pref'] using
+                congrArg (fun x => (G.transition pref.lastState a₀) dst * x) hzero
+          · simp [f]
+        rw [hsum]
+        unfold f
+        rw [History.extendByOutcome_eq_appendStep_of_head
+          (pref := pref) (e := e) (es := es) (hchain := ⟨hsrc, htail⟩)]
+        simp [History.extendBySteps, pref']
+      have houter_single :
+          ∑ a : G.LegalAction pref.lastState,
+            (G.legalActionLaw σ pref hprefNotTerm) a *
+              ∑ dst : W,
+                (G.transition pref.lastState a) dst *
+                  History.runDistFrom G σ (es.length + slack) (pref.extendByOutcome a dst)
+                    (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
+          =
+          (G.legalActionLaw σ pref hprefNotTerm) a₀ *
+            ∑ dst : W,
+              (G.transition pref.lastState a₀) dst *
+                History.runDistFrom G σ (es.length + slack) (pref.extendByOutcome a₀ dst)
+                  (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) := by
+        refine Finset.sum_eq_single a₀ ?_ ?_
+        · intro a _ hne
+          rw [houter_zero a hne]
+          simp
+        · simp
+      calc
+        ∑ a : G.LegalAction pref.lastState,
+            (G.legalActionLaw σ pref hprefNotTerm) a *
+              ∑ dst : W,
+                (G.transition pref.lastState a) dst *
+                  History.runDistFrom G σ (es.length + slack) (pref.extendByOutcome a dst)
+                    (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
+          =
+          (G.legalActionLaw σ pref hprefNotTerm) a₀ *
+            ∑ dst : W,
+              (G.transition pref.lastState a₀) dst *
+                History.runDistFrom G σ (es.length + slack) (pref.extendByOutcome a₀ dst)
+                  (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) := houter_single
+        _ =
+          (G.legalActionLaw σ pref hprefNotTerm) a₀ *
+            ((G.transition pref.lastState a₀) e.dst *
+              History.runDistFrom G σ (es.length + slack) pref'
+                (History.extendBySteps pref' es htail')) := by
+              rw [hinner_a₀]
+        _ =
+          G.stepProb σ.toProfile pref e *
+            History.probFrom (G := G) σ.toProfile pref' es htail' := by
+              rw [hrec, G.legalActionLaw_apply σ pref hprefNotTerm a₀]
+              rw [G.jointActionDist_apply]
+              cases e with
+              | mk src act dst support =>
+                  cases hsrc
+                  change
+                    (∏ x, (σ.toProfile x (pref.playerView x)) (act.1 x)) *
+                        ((G.transition (G.lastStateFrom G.init pref.steps) act) dst *
+                          History.probFrom (G := G) σ.toProfile
+                            (pref.appendStep
+                              { src := G.lastStateFrom G.init pref.steps
+                                act := act
+                                dst := dst
+                                support := support } rfl) es htail') =
+                      G.stepProb σ.toProfile pref
+                        { src := G.lastStateFrom G.init pref.steps
+                          act := act
+                          dst := dst
+                          support := support } *
+                        History.probFrom (G := G) σ.toProfile
+                          (pref.appendStep
+                            { src := G.lastStateFrom G.init pref.steps
+                              act := act
+                              dst := dst
+                              support := support } rfl) es htail'
+                  simp [FOSG.stepProb, FOSG.stepActionProb, FOSG.Step.ownAction?, mul_assoc]
+        _ = History.probFrom (G := G) σ.toProfile pref (e :: es) ⟨hsrc, htail⟩ := by
+              simp [History.probFrom, pref']
+
 theorem runDist_support_isTerminal_of_exactHorizon
     {G : FOSG ι W Act PrivObs PubObs}
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
@@ -655,6 +916,60 @@ theorem runDist_eq_terminalWeight_of_exactHorizon
     · intro hterm
       exact hlen ((hExact h).1 hterm)
 
+theorem terminal_length_le_of_boundedHorizon
+    {G : FOSG ι W Act PrivObs PubObs}
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (h : G.History) (_hterm : h.IsTerminal) :
+    h.steps.length ≤ k := by
+  by_contra hgt
+  have hgt' : k < h.steps.length := Nat.lt_of_not_ge hgt
+  let pref := h.initialSegment k
+  have hprefLen : pref.steps.length = k := by
+    exact h.initialSegment_length (Nat.le_of_lt hgt')
+  have hprefTerm : pref.IsTerminal := hBound pref hprefLen
+  have hchainSplit : G.StepChainFrom G.init (h.steps.take k ++ h.steps.drop k) := by
+    simpa [List.take_append_drop] using h.chain
+  have hdrop_nonempty : h.steps.drop k ≠ [] := by
+    intro hnil
+    have hlenDrop : 0 < (h.steps.drop k).length := by
+      simpa [List.length_drop] using Nat.sub_pos_of_lt hgt'
+    simp [hnil] at hlenDrop
+  cases hdrop : h.steps.drop k with
+  | nil =>
+      exact (hdrop_nonempty hdrop).elim
+  | cons e es =>
+      have hchainAppend : G.StepChainFrom G.init (h.steps.take k ++ e :: es) := by
+        simpa [hdrop] using hchainSplit
+      have hsuffix : G.StepChainFrom (G.lastStateFrom G.init (h.steps.take k)) (e :: es) :=
+        StepChainFrom.right hchainAppend
+      have hsrc : e.src = pref.lastState := by
+        simpa [pref, History.lastState] using hsuffix.1
+      have hlegal : G.LegalAction pref.lastState := hsrc ▸ e.act
+      exact (pref.not_isTerminal_of_legalAction hlegal) hprefTerm
+
+theorem runDist_eq_terminalWeight_of_boundedHorizon
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (σ : G.LegalBehavioralProfile) (h : G.History) :
+    G.runDist k σ h = History.terminalWeight (G := G) σ.toProfile h := by
+  by_cases hterm : h.IsTerminal
+  · rw [History.terminalWeight_of_terminal (σ := σ.toProfile) hterm]
+    have hle : h.steps.length ≤ k := G.terminal_length_le_of_boundedHorizon hBound h hterm
+    let slack : Nat := k - h.steps.length
+    have hk : h.steps.length + slack = k := Nat.add_sub_of_le hle
+    rw [← hk, runDist]
+    simpa [History.prob, History.extendBySteps_eq] using
+      runDistFrom_eq_probFrom_of_terminal_target
+        (G := G) (σ := σ) (pref := History.nil G) (es := h.steps)
+        (hchain := by
+          have hchain0 := h.chain
+          simpa [History.lastState, History.nil] using hchain0)
+        (slack := slack) (by simpa [History.extendBySteps_eq] using hterm)
+  · rw [History.terminalWeight_of_not_terminal (σ := σ.toProfile) hterm]
+    exact G.runDist_eq_zero_of_nonterminal_of_boundedHorizon hBound σ h hterm
+
 /-- The terminal-history mass function normalizes to a probability law on
 legal behavioral profiles. -/
 def HasNormalizedTerminalLaw
@@ -687,6 +1002,26 @@ theorem hasNormalizedTerminalLaw_of_exactHorizon
           have := PMF.tsum_coe (G.runDist k σ)
           simpa [tsum_fintype] using this
 
+theorem hasNormalizedTerminalLaw_of_boundedHorizon
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι]
+    [Fintype G.History] [DecidablePred G.terminal]
+    {k : Nat} (hBound : G.BoundedHorizon k) :
+    G.HasNormalizedTerminalLaw := by
+  let _ : Fintype W := Fintype.ofFinite W
+  let _ : ∀ i, Fintype (Option (Act i)) := fun i => Fintype.ofFinite (Option (Act i))
+  intro σ
+  calc
+    ∑ h : G.History, History.terminalWeight (G := G) σ.toProfile h
+      = ∑ h : G.History, G.runDist k σ h := by
+          refine Finset.sum_congr rfl ?_
+          intro h _
+          symm
+          exact G.runDist_eq_terminalWeight_of_boundedHorizon hBound σ h
+    _ = 1 := by
+          have := PMF.tsum_coe (G.runDist k σ)
+          simpa [tsum_fintype] using this
+
 end
 
 /-- The terminal-history law induced by a legal behavioral profile, assuming
@@ -708,6 +1043,16 @@ noncomputable def terminalLawPMF
     (σ : G.LegalBehavioralProfile) (h : G.History) :
     G.terminalLawPMF hNorm σ h = History.terminalWeight (G := G) σ.toProfile h := by
   simp [terminalLawPMF, PMF.ofFintype_apply]
+
+theorem terminalLawPMF_eq_runDist_of_boundedHorizon
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype G.History] [DecidablePred G.terminal]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (σ : G.LegalBehavioralProfile) :
+    G.terminalLawPMF (G.hasNormalizedTerminalLaw_of_boundedHorizon hBound) σ = G.runDist k σ := by
+  ext h
+  rw [G.terminalLawPMF_apply, ← G.runDist_eq_terminalWeight_of_boundedHorizon hBound σ h]
 
 theorem terminalLawPMF_eq_runDist_of_exactHorizon
     {G : FOSG ι W Act PrivObs PubObs}
@@ -786,27 +1131,46 @@ terminal support as a theorem. -/
 noncomputable abbrev toKernelGameOfBoundedHorizon
     (G : FOSG ι W Act PrivObs PubObs)
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
-    [DecidablePred G.terminal]
-    {k : Nat} (_hBound : G.BoundedHorizon k) : KernelGame ι :=
-  G.toKernelGameAtHorizon k
+    [Fintype G.History] [DecidablePred G.terminal]
+    {k : Nat} (hBound : G.BoundedHorizon k) : KernelGame ι :=
+  G.toKernelGame (G.hasNormalizedTerminalLaw_of_boundedHorizon hBound)
 
 @[simp] theorem toKernelGameOfBoundedHorizon_outcomeKernel
     {G : FOSG ι W Act PrivObs PubObs}
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
-    [DecidablePred G.terminal]
+    [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k) (σ : G.LegalBehavioralProfile) :
-    (G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ = G.runDist k σ := rfl
+    (G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ = G.runDist k σ := by
+  simpa [toKernelGameOfBoundedHorizon] using
+    G.terminalLawPMF_eq_runDist_of_boundedHorizon hBound σ
 
 theorem toKernelGameOfBoundedHorizon_support_isTerminal
     {G : FOSG ι W Act PrivObs PubObs}
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
-    [DecidablePred G.terminal]
+    [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History)
     (hsupp : h ∈ ((G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ).support) :
     h.IsTerminal := by
-  simpa [toKernelGameOfBoundedHorizon] using
-    G.runDist_support_isTerminal_of_boundedHorizon hBound σ h hsupp
+  have hsupp0 : ((G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ) h ≠ 0 := by
+    simpa [PMF.mem_support_iff] using hsupp
+  have hsupp' : (G.runDist k σ) h ≠ 0 := by
+    rw [← G.toKernelGameOfBoundedHorizon_outcomeKernel hBound σ]
+    exact hsupp0
+  exact G.runDist_support_isTerminal_of_boundedHorizon hBound σ h hsupp'
+
+theorem toKernelGameOfBoundedHorizon_eu_eq
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype G.History] [DecidablePred G.terminal]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (σ : G.LegalBehavioralProfile) (i : ι) :
+    (G.toKernelGameOfBoundedHorizon hBound).eu σ i =
+      ∑ h : G.History, (G.runDist k σ h).toReal * History.utility h i := by
+  rw [G.toKernelGame_eu_eq (G.hasNormalizedTerminalLaw_of_boundedHorizon hBound) σ i]
+  refine Finset.sum_congr rfl ?_
+  intro h _
+  rw [← G.runDist_eq_terminalWeight_of_boundedHorizon hBound σ h]
 
 /-- Exact-horizon compilation of a FOSG to `KernelGame`. This uses the generic
 terminal-law compile together with the derived normalization proof from

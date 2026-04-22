@@ -154,6 +154,32 @@ theorem StepChainFrom.append
       simpa [StepChainFrom, List.cons_append] using
         And.intro hsrc (ih (w := e.dst) htail h₂)
 
+theorem StepChainFrom.left
+    {G : FOSG ι W Act PrivObs PubObs} {w : W}
+    {es₁ es₂ : List G.Step}
+    (h : G.StepChainFrom w (es₁ ++ es₂)) :
+    G.StepChainFrom w es₁ := by
+  induction es₁ generalizing w with
+  | nil =>
+      simp [StepChainFrom]
+  | cons e es ih =>
+      rcases h with ⟨hsrc, htail⟩
+      simpa [StepChainFrom, List.cons_append] using
+        And.intro hsrc (ih (w := e.dst) htail)
+
+theorem StepChainFrom.right
+    {G : FOSG ι W Act PrivObs PubObs} {w : W}
+    {es₁ es₂ : List G.Step}
+    (h : G.StepChainFrom w (es₁ ++ es₂)) :
+    G.StepChainFrom (G.lastStateFrom w es₁) es₂ := by
+  induction es₁ generalizing w with
+  | nil =>
+      simpa [StepChainFrom, lastStateFrom] using h
+  | cons e es ih =>
+      rcases h with ⟨hsrc, htail⟩
+      simpa [StepChainFrom, lastStateFrom, List.cons_append] using
+        ih (w := e.dst) htail
+
 /-- Bundled finite history of realized transitions from the initial world state. -/
 structure History (G : FOSG ι W Act PrivObs PubObs) where
   steps : List G.Step

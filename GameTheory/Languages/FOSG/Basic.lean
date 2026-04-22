@@ -122,12 +122,6 @@ theorem legal_iff_forall
 abbrev LegalAction (G : FOSG ι W Act PrivObs PubObs) (w : W) : Type :=
   {a : JointAction Act // G.legal w a}
 
-/-- Forget the legality proof attached to a legal joint action. -/
-abbrev LegalAction.val'
-    (G : FOSG ι W Act PrivObs PubObs) {w : W} (a : G.LegalAction w) :
-    JointAction Act :=
-  a.1
-
 theorem legalAction_val
     (G : FOSG ι W Act PrivObs PubObs) {w : W} (a : G.LegalAction w) :
     G.legal w a.1 :=
