@@ -1188,9 +1188,15 @@ theorem base_empty_support
         (G.active_eq_empty_of_orderedActive_eq_nil hEmpty)
         (by
           have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
-            sorry
+            have hold : SerialState.legal (G := G) (.base w) a.1 :=
+              (legal_iff_jointActionLegal (G := G) (.base w) a.1).mpr a.2
+            simpa [SerialState.legal, hEmpty] using hold
           exact ha.1)) w' ≠ 0 := by
-  sorry
+  have hold : SerialState.legal (G := G) (.base w) a.1 :=
+    (legal_iff_jointActionLegal (G := G) (.base w) a.1).mpr a.2
+  have ha : ¬ G.terminal w ∧ a.1 = noopAction Act := by
+    simpa [SerialState.legal, hEmpty] using hold
+  simpa [SerialState.transition, hEmpty, ha.2, map_base_apply] using hsupp
 
 theorem chance_support
     {w w' : W} (ga : G.LegalAction w)
@@ -1198,7 +1204,7 @@ theorem chance_support
     (hsupp : SerialState.transition (G := G) (.chance w ga)
       (SerialState.ofFOSGLegalAction (G := G) a) (.base w') ≠ 0) :
     G.transition w ga w' ≠ 0 := by
-  sorry
+  simpa [SerialState.transition, map_base_apply] using hsupp
 
 /-- The serialized FOSG. -/
 noncomputable def serialize :
@@ -1225,7 +1231,38 @@ noncomputable def serialize :
     intro s a hs
     exact fun hleg => hleg.1 hs
   nonterminal_exists_legal := by
-    sorry
+    intro s hs
+    cases s with
+    | base w =>
+        cases horder : G.orderedActive w with
+        | nil =>
+            refine ⟨noopAction Act, ?_⟩
+            exact (legal_iff_jointActionLegal (G := G) (.base w) (noopAction Act)).mp <| by
+              have hs' : ¬ G.terminal w := by simpa [SerialState.terminal] using hs
+              have hlegal : ¬ G.terminal w ∧ noopAction Act = noopAction Act := ⟨hs', rfl⟩
+              simpa [SerialState.legal, horder] using hlegal
+        | cons current rest =>
+            rcases G.nonterminal_exists_legal hs with ⟨a, ha⟩
+            let ga : G.LegalAction w := ⟨a, ha⟩
+            refine ⟨(baseReplayAction (G := G) ga horder).1, ?_⟩
+            exact (legal_iff_jointActionLegal (G := G) (.base w) _).mp
+              (baseReplayAction (G := G) ga horder).2
+    | decide w chosen current rest hvalid =>
+        rcases hvalid.2.2 with ⟨ga, hcomp⟩
+        let move :=
+          moveOfLegalAction (G := G) ga current
+            (G.current_mem_active_of_split hvalid.1)
+        refine ⟨move, ?_⟩
+        have hold : SerialState.legal (G := G) (.decide w chosen current rest hvalid) move := by
+          simpa [move, SerialState.legal] using
+            decide_playerLegal_of_legalAction (G := G) ga hvalid hcomp
+        exact (legal_iff_jointActionLegal (G := G)
+          (.decide w chosen current rest hvalid) _).mp
+          hold
+    | chance w ga =>
+        refine ⟨(chanceResolutionAction (G := G) ga).1, ?_⟩
+        exact (legal_iff_jointActionLegal (G := G) (.chance w ga) _).mp
+          (chanceResolutionAction (G := G) ga).2
 
 instance instDecidablePredSerializeTerminal [DecidablePred G.terminal] :
     DecidablePred (serialize (G := G)).terminal := by
@@ -1248,7 +1285,36 @@ def IsSerial
 theorem serialize_isSerial
     (G : FOSG ι W Act PrivObs PubObs) :
     IsSerial (SerialState.serialize (G := G)) := by
-  sorry
+  intro s
+  cases s with
+  | base w =>
+      cases horder : G.orderedActive w with
+      | nil =>
+          left
+          simp [serialize, SerialState.active, horder]
+      | cons current rest =>
+          right
+          refine ⟨current, ?_, ?_⟩
+          · simp [serialize, SerialState.active, horder]
+          · intro a
+            refine ⟨SerialState.basePlayerSuccessor (G := G) w
+              (SerialState.ofFOSGLegalAction (G := G) a), ?_⟩
+            exact (transition_base_nonempty_eq (G := G) (w := w) (by simp [horder])
+              (SerialState.ofFOSGLegalAction (G := G) a))
+  | decide w chosen current rest hvalid =>
+      right
+      refine ⟨current, ?_, ?_⟩
+      · simp [serialize, SerialState.active]
+      · intro a
+        refine ⟨SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid
+          (SerialState.ofFOSGLegalAction (G := G) a), ?_⟩
+        simpa [serialize] using
+          (transition_decide_eq (G := G)
+            (w := w) (chosen := chosen) (current := current) (rest := rest)
+            (hvalid := hvalid) (SerialState.ofFOSGLegalAction (G := G) a))
+  | chance w ga =>
+      left
+      simp [serialize, SerialState.active]
 
 end SerialState
 
