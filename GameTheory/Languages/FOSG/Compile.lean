@@ -85,8 +85,8 @@ noncomputable def runDistFrom
     (hterm : ¬ G.terminal h.lastState) :
     runDistFrom G σ (n + 1) h =
       (G.legalActionLaw σ h hterm).bind fun a =>
-        (G.transition h.lastState a).bind fun dst =>
-          runDistFrom G σ n (h.extendByOutcome a dst) := by
+          (G.transition h.lastState a).bind fun dst =>
+            runDistFrom G σ n (h.extendByOutcome a dst) := by
   simp [runDistFrom, hterm]
 
 end History
@@ -96,6 +96,60 @@ length `k`. -/
 def ExactHorizon
     (G : FOSG ι W Act PrivObs PubObs) (k : Nat) : Prop :=
   ∀ h : G.History, h.IsTerminal ↔ h.steps.length = k
+
+theorem exactHorizon_iff
+    {G : FOSG ι W Act PrivObs PubObs} {k : Nat}
+    (hExact : G.ExactHorizon k) (h : G.History) :
+    h.IsTerminal ↔ h.steps.length = k :=
+  hExact h
+
+open Classical in
+theorem runDistFrom_eq_zero_of_exactHorizon_length_ne
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    {k : Nat} (hExact : G.ExactHorizon k)
+    (σ : G.LegalBehavioralProfile) :
+    ∀ (n : Nat) (pref target : G.History),
+      pref.steps.length + n = k →
+      target.steps.length ≠ k →
+      History.runDistFrom G σ n pref target = 0
+  | 0, pref, target, hk, hlen => by
+      have hprefTerm : pref.IsTerminal := (hExact pref).2 hk
+      have hneq : target ≠ pref := by
+        intro hEq
+        apply hlen
+        simpa [hEq] using hk
+      simp [History.runDistFrom, PMF.pure_apply, hneq]
+  | n + 1, pref, target, hk, hlen => by
+      have hprefNotTerm : ¬ G.terminal pref.lastState := by
+        intro hterm
+        have : pref.steps.length = k := (hExact pref).1 hterm
+        omega
+      rw [History.runDistFrom_succ_nonterminal (σ := σ) (n := n) (h := pref) hprefNotTerm]
+      rw [PMF.bind_apply, tsum_fintype]
+      refine Finset.sum_eq_zero ?_
+      intro a _
+      rw [PMF.bind_apply, tsum_fintype]
+      suffices hinner :
+          ∑ dst : W,
+            (G.transition pref.lastState a) dst *
+              History.runDistFrom G σ n (pref.extendByOutcome a dst) target = 0 by
+        rw [hinner]
+        simp
+      refine Finset.sum_eq_zero ?_
+      intro dst _
+      by_cases hsupp : G.transition pref.lastState a dst = 0
+      · simp [hsupp]
+      · have hk' : (pref.extendByOutcome a dst).steps.length + n = k := by
+          rw [History.extendByOutcome_of_support (h := pref) (a := a) (dst := dst) hsupp]
+          simpa [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using hk
+        have hzero :=
+          runDistFrom_eq_zero_of_exactHorizon_length_ne
+            (G := G) hExact (σ := σ) n
+            (pref := pref.extendByOutcome a dst) (target := target) hk' hlen
+        rw [hzero]
+        simp
 
 /-- Horizon-bounded run distribution on realized histories from the initial
 history. -/
@@ -112,6 +166,33 @@ noncomputable def runDist
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) :
     G.runDist 0 σ = PMF.pure (History.nil G) := rfl
+
+theorem runDist_eq_zero_of_exactHorizon_length_ne
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    {k : Nat} (hExact : G.ExactHorizon k)
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hlen : h.steps.length ≠ k) :
+    G.runDist k σ h = 0 := by
+  simpa [runDist, History.nil] using
+    runDistFrom_eq_zero_of_exactHorizon_length_ne (G := G) hExact (σ := σ) k
+      (pref := History.nil G) (target := h) (by simp) hlen
+
+theorem runDist_support_isTerminal_of_exactHorizon
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    {k : Nat} (hExact : G.ExactHorizon k)
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hsupp : h ∈ (G.runDist k σ).support) :
+    h.IsTerminal := by
+  have hmass : G.runDist k σ h ≠ 0 := by
+    exact (PMF.mem_support_iff _ _).1 hsupp
+  have hlen : h.steps.length = k := by
+    by_contra hne
+    exact hmass (G.runDist_eq_zero_of_exactHorizon_length_ne hExact σ h hne)
+  exact (hExact h).2 hlen
 
 /-- The terminal-history mass function normalizes to a probability law on
 legal behavioral profiles. -/
@@ -202,6 +283,44 @@ theorem toKernelGameAtHorizon_eu_eq
       ∑ h : G.History, (G.runDist k σ h).toReal * History.utility h i := by
   rw [KernelGame.eu]
   simp [toKernelGameAtHorizon, expect_eq_sum]
+
+/-- Exact-horizon compilation of a FOSG to `KernelGame`. This is just the
+canonical horizon compile at the exact terminal depth, but the extra hypothesis
+records that every supported outcome is terminal in the native FOSG sense. -/
+noncomputable abbrev toKernelGameOfExactHorizon
+    (G : FOSG ι W Act PrivObs PubObs)
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    {k : Nat} (_hExact : G.ExactHorizon k) : KernelGame ι :=
+  G.toKernelGameAtHorizon k
+
+@[simp] theorem toKernelGameOfExactHorizon_outcomeKernel
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    {k : Nat} (hExact : G.ExactHorizon k) (σ : G.LegalBehavioralProfile) :
+    (G.toKernelGameOfExactHorizon hExact).outcomeKernel σ = G.runDist k σ := rfl
+
+theorem toKernelGameOfExactHorizon_support_isTerminal
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    {k : Nat} (hExact : G.ExactHorizon k)
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hsupp : h ∈ ((G.toKernelGameOfExactHorizon hExact).outcomeKernel σ).support) :
+    h.IsTerminal := by
+  simpa [toKernelGameOfExactHorizon] using
+    G.runDist_support_isTerminal_of_exactHorizon hExact σ h hsupp
+
+theorem toKernelGameOfExactHorizon_eu_eq
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal] [Fintype G.History]
+    {k : Nat} (hExact : G.ExactHorizon k)
+    (σ : G.LegalBehavioralProfile) (i : ι) :
+    (G.toKernelGameOfExactHorizon hExact).eu σ i =
+      ∑ h : G.History, (G.runDist k σ h).toReal * History.utility h i := by
+  simpa [toKernelGameOfExactHorizon] using G.toKernelGameAtHorizon_eu_eq k σ i
 
 end FOSG
 
