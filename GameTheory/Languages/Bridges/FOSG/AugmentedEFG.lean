@@ -1,5 +1,6 @@
 import GameTheory.Languages.FOSG.Serial
 import GameTheory.Languages.FOSG.History
+import GameTheory.Languages.FOSG.Compile
 import GameTheory.Languages.EFG.Augmented
 import GameTheory.Languages.EFG.Refinements
 import Mathlib.Data.Fintype.Basic
@@ -10,17 +11,25 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 Bridge support layer for the finite-horizon FOSG -> augmented-EFG pipeline.
 
-This file deliberately stops before tree unrolling. It packages the finite
-carriers and action/index conversions that the tree layer will need:
+This file provides the structural finite-horizon FOSG -> EFG bridge:
 
 - PMF support enumeration
 - finite bounded sequence codes
 - finite coding of serialized FOSG states
 - horizon-bounded positions
 - the finite `InfoStructure` induced by serialized decision positions
+- plain EFG unrolling over serialized positions
+- a list-recursive replay layer for EFG histories
+- a thin augmented-EFG wrapper whose forgetful base is definitionally the
+  plain unrolling
 
-The next file/layer should build the plain horizon-bounded EFG tree over these
-positions, and only after that add replay and augmented public/player states.
+Important status:
+- `toPlainEFGAtHorizon` is a raw cutoff tree and may truncate nonterminal
+  serialized states when `remaining = 0`
+- `toAugmentedAtHorizon` is only a stage-4 scaffold: its public and player
+  information states are currently just reachable EFG histories
+- payoff transport and the actual serialized-view augmentation are deferred to
+  the next layer
 -/
 
 namespace GameTheory
@@ -445,14 +454,19 @@ noncomputable def decisionChild {k : Nat} {p : PlayerIx}
     (a : Fin (Position.actionArity (G := G) I.1)) : Position G k :=
   descend (G := G) I.1 (decisionSuccessor (G := G) I.1 (Position.rawActionFromIndex (G := G) a))
 
-@[simp] theorem descend_remaining {k : Nat} (pos : Position G k) (s : SState G) :
+theorem descend_remaining {k : Nat} (pos : Position G k) (s : SState G) :
     (descend (G := G) pos s).remaining = pos.remaining - 1 := rfl
 
-@[simp] theorem decisionChild_remaining {k : Nat} {p : PlayerIx}
+theorem decisionChild_remaining {k : Nat} {p : PlayerIx}
     (I : {pos : Position G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1)) :
     (decisionChild G I a).remaining = I.1.remaining - 1 := rfl
 
+/-- Chance successor law for a serialized position.
+
+This is totalized on all positions, but only the `player? = none` branches are
+live under `treeFrom`. The player-controlled branches return trivial self-loops
+and are not used by the unrolling. -/
 noncomputable def chanceStatePMF {k : Nat} (pos : Position G k) : PMF (SState G) := by
   classical
   exact
@@ -509,12 +523,22 @@ decreasing_by
     simpa [Position.decisionChild_remaining, Position.descend_remaining, Nat.pred_eq_sub_one] using
       Nat.pred_lt hrem
 
-/-- Plain finite-horizon EFG obtained by unrolling serialized positions. -/
+/-- Raw finite-horizon EFG obtained by unrolling serialized positions.
+
+This is a structural cutoff tree. If `k` is too small, truncation at
+`remaining = 0` produces EFG terminal nodes whose underlying serialized states
+need not yet be terminal. The theorem-facing public API should therefore prefer
+`toPlainEFGOfBoundedHorizon`. -/
 noncomputable def toPlainEFGAtHorizon (k : Nat) : EFGGame where
   inf := infoStructure (G := G) k
   Outcome := Position G k
   tree := treeFrom (G := G) (Position.root (G := G) k)
   utility := Position.payoff (G := G)
+
+/-- Public plain EFG bridge under a genuine FOSG horizon bound. -/
+noncomputable abbrev toPlainEFGOfBoundedHorizon
+    {k : Nat} (hBound : G.BoundedHorizon k) : EFGGame :=
+  toPlainEFGAtHorizon (G := G) k
 
 namespace Replay
 
@@ -573,14 +597,23 @@ noncomputable def replayHist (k : Nat) :
         (supportValue (Position.chanceStatePMF (G := G) pos) b)) := by
   simp [advance?, hplayer]
 
+/- TODO:
+Add the one-step replay lemma
+`HistoryStepStep ℓ (treeFrom pos) u -> ∃ pos', advance? pos ℓ = some pos' ∧ u = treeFrom pos'`
+and then extend it to a full reachable-history theorem:
+`ReachBy h (treeFrom pos) node -> ∃ pos', replayFrom pos h = some pos'`.
+The remaining work is a list-induction theorem on `ReachBy` that composes the
+one-step lemma with `replayFrom_cons`. -/
+
 end Replay
 
-/-- Thin augmented wrapper over the plain finite-horizon bridge.
+/-- Thin augmented wrapper over the raw finite-horizon plain bridge.
 
 At this stage, the augmentation is the reachable EFG history itself. This keeps
 the forgetful classical game definitionally equal to `toPlainEFGAtHorizon`,
 while the replay layer above provides the structural hook for later refinement
-to serialized FOSG information states. -/
+to serialized FOSG public/player views. This is a scaffold layer, not yet the
+actual paper-level augmentation. -/
 noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
   base := toPlainEFGAtHorizon (G := G) k
   PubState := List (HistoryStep (infoStructure (G := G) k))
@@ -606,6 +639,16 @@ noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
 
 @[simp] theorem forget_toAugmentedAtHorizon (k : Nat) :
     (toAugmentedAtHorizon (G := G) k).forget = toPlainEFGAtHorizon (G := G) k := rfl
+
+/-- Public augmented-EFG bridge under a genuine FOSG horizon bound. -/
+noncomputable abbrev toAugmentedOfBoundedHorizon
+    {k : Nat} (hBound : G.BoundedHorizon k) : EFG.AugmentedGame :=
+  toAugmentedAtHorizon (G := G) k
+
+@[simp] theorem forget_toAugmentedOfBoundedHorizon
+    {k : Nat} (hBound : G.BoundedHorizon k) :
+    (toAugmentedOfBoundedHorizon (G := G) hBound).forget =
+      toPlainEFGOfBoundedHorizon (G := G) hBound := rfl
 
 end Labels
 
