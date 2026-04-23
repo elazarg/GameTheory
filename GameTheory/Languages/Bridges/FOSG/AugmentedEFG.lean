@@ -928,6 +928,40 @@ noncomputable def chanceEdgePayoff {k : Nat}
 
 end Position
 
+/-- Live chance successor law for a trace-position.
+
+This is the trace-level version of `Position.chanceStatePMF`, restricted to
+states that are genuinely in a live chance configuration: no acting player, not
+terminal, and not truncated. Impossible branches are discharged immediately. -/
+noncomputable def TracePosition.liveChancePMF {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0) : PMF (SState G) := by
+  classical
+  cases hs : pos.state with
+  | base w =>
+      by_cases hEmpty : G.orderedActive w = []
+      · exact
+          PMF.map (SerialState.base (G := G))
+            (G.transition w
+              (SerialState.baseChanceLegalAction (G := G) w
+                (G.active_eq_empty_of_orderedActive_eq_nil hEmpty) (by
+                  simpa [hs] using hnotTerm)))
+      · cases horder : G.orderedActive w with
+        | nil =>
+            exact False.elim (hEmpty horder)
+        | cons current rest =>
+            exfalso
+            simp [TracePosition.player?, Position.player?, Position.isTruncated,
+              TracePosition.toPosition, hs, horder, hrem] at hplayer
+  | decide w chosen current rest hvalid =>
+      exfalso
+      simp [TracePosition.player?, Position.player?, Position.isTruncated,
+        TracePosition.toPosition, hs, hrem] at hplayer
+  | chance w ga =>
+      exact PMF.map (SerialState.base (G := G)) (G.transition w ga)
+
 abbrev Outcome (k : Nat) := Position G k × Position.PayoffVec (G := G) k
 
 noncomputable def treeFromAccum {k : Nat} (pos : Position G k)
