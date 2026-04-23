@@ -751,6 +751,128 @@ theorem decisionChild_remaining {k : Nat} {p : PlayerIx}
     (a : Fin (Position.actionArity (G := G) I.1)) :
     (decisionChild G I a).remaining = I.1.remaining - 1 := rfl
 
+theorem state_eq_base_or_decide_of_player
+    {k : Nat} {pos : Position G k} {i : ι}
+    (hplayer : pos.player? = some i) :
+    (∃ w, pos.state = .base w ∧ G.orderedActive w ≠ []) ∨
+      (∃ w chosen current rest hvalid,
+        pos.state = .decide w chosen current rest hvalid) := by
+  classical
+  by_cases htrunc : pos.isTruncated
+  · simp [Position.player?, htrunc] at hplayer
+  · cases hstate : pos.state with
+    | base w =>
+        cases horder : G.orderedActive w with
+        | nil =>
+            simp [Position.player?, Position.isTruncated, htrunc, hstate, horder] at hplayer
+        | cons current rest =>
+            exact Or.inl ⟨w, rfl, by simp [horder]⟩
+    | decide w chosen current rest hvalid =>
+        exact Or.inr ⟨w, chosen, current, rest, hvalid, rfl⟩
+    | chance w ga =>
+        simp [Position.player?, Position.isTruncated, htrunc, hstate] at hplayer
+
+theorem decisionTransition_ne_zero {k : Nat} {p : PlayerIx}
+    (I : {pos : Position G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1)) :
+    SerialState.transition (G := G) I.1.state
+      (Position.rawActionFromIndex (G := G) (pos := I.1) a)
+      (Position.decisionSuccessor (G := G) I.1
+        (Position.rawActionFromIndex (G := G) (pos := I.1) a)) ≠ 0 := by
+  classical
+  rcases I with ⟨⟨state, remaining, hremaining⟩, hI⟩
+  dsimp at a ⊢
+  rcases state_eq_base_or_decide_of_player (G := G) hI with hbase | hdecide
+  · rcases hbase with ⟨w, hstate, hNonempty⟩
+    have hs : state = .base w := by simpa using hstate
+    subst state
+    let pos : Position G k := ⟨.base w, remaining, hremaining⟩
+    let act := Position.rawActionFromIndex (G := G) (pos := pos) a
+    let dst := Position.decisionSuccessor (G := G) pos act
+    have hdst : dst = SerialState.basePlayerSuccessor (G := G) w act := by
+      simp [dst, act, pos, Position.decisionSuccessor]
+    have hval :
+        SerialState.transition (G := G) (.base w) act dst = 1 := by
+      simpa [hdst] using
+        congrArg (fun μ => μ dst)
+          (SerialState.transition_base_nonempty_eq (G := G) (w := w) hNonempty act)
+    intro hz
+    rw [hval] at hz
+    simp at hz
+  · rcases hdecide with ⟨w, chosen, current, rest, hvalid, hstate⟩
+    have hs : state = .decide w chosen current rest hvalid := by
+      simpa using hstate
+    subst state
+    let pos : Position G k := ⟨.decide w chosen current rest hvalid, remaining, hremaining⟩
+    let act := Position.rawActionFromIndex (G := G) (pos := pos) a
+    let dst := Position.decisionSuccessor (G := G) pos act
+    have hdst :
+        dst = SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid act := by
+      simp [dst, act, pos, Position.decisionSuccessor]
+    have hval :
+        SerialState.transition (G := G) (.decide w chosen current rest hvalid) act dst = 1 := by
+      simpa [hdst] using
+        congrArg (fun μ => μ dst)
+          (SerialState.transition_decide_eq (G := G)
+            (w := w) (chosen := chosen) (current := current) (rest := rest)
+            (hvalid := hvalid) act)
+    intro hz
+    rw [hval] at hz
+    simp at hz
+
+/-- Realized serialized step for a trace-position player edge. -/
+noncomputable def TracePosition.decisionStep {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    (SG G).Step where
+  src := I.1.state
+  act := TracePosition.actionFromIndex (G := G) I.1 a
+  dst := Position.decisionSuccessor (G := G) I.1.toPosition
+    (TracePosition.rawActionFromIndex (G := G) I.1 a)
+  support := by
+    change SerialState.transition (G := G) I.1.state
+      (TracePosition.rawActionFromIndex (G := G) I.1 a)
+      (Position.decisionSuccessor (G := G) I.1.toPosition
+        (TracePosition.rawActionFromIndex (G := G) I.1 a)) ≠ 0
+    simpa [TracePosition.toPosition, TracePosition.rawActionFromIndex] using
+      Position.decisionTransition_ne_zero (G := G)
+        (I := ⟨I.1.toPosition, I.2⟩) a
+
+theorem TracePosition.remaining_ne_zero_of_player {k : Nat} {pos : TracePosition G k} {i : ι}
+    (hplayer : pos.player? = some i) :
+    pos.remaining ≠ 0 := by
+  intro hzero
+  simp [TracePosition.player?, Position.player?, Position.isTruncated,
+    TracePosition.toPosition, hzero] at hplayer
+
+/-- Trace-position child reached by a realized player edge. -/
+noncomputable def TracePosition.decisionChild {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    TracePosition G k :=
+  TracePosition.appendStep (G := G) I.1 (TracePosition.decisionStep (G := G) I a)
+    (TracePosition.remaining_ne_zero_of_player (G := G) I.2) rfl
+
+@[simp] theorem TracePosition.decisionChild_history_steps {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    (TracePosition.decisionChild (G := G) I a).history.steps =
+      I.1.history.steps ++ [TracePosition.decisionStep (G := G) I a] := by
+  simpa [TracePosition.decisionChild] using
+    TracePosition.appendStep_history_steps (G := G) I.1
+      (TracePosition.decisionStep (G := G) I a)
+      (TracePosition.remaining_ne_zero_of_player (G := G) I.2) rfl
+
+@[simp] theorem TracePosition.decisionChild_lastState {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    (TracePosition.decisionChild (G := G) I a).history.lastState =
+      (TracePosition.decisionStep (G := G) I a).dst := by
+  simpa [TracePosition.decisionChild] using
+    TracePosition.appendStep_history_lastState (G := G) I.1
+      (TracePosition.decisionStep (G := G) I a)
+      (TracePosition.remaining_ne_zero_of_player (G := G) I.2) rfl
+
 /-- Chance successor law for a serialized position.
 
 This is totalized on all positions, but only the `player? = none` branches are
