@@ -662,6 +662,44 @@ noncomputable def playerEquiv : ι ≃ Fin (Fintype.card ι) := Fintype.equivFin
 
 noncomputable def origPlayer (p : Fin (Fintype.card ι)) : ι := (playerEquiv (ι := ι)).symm p
 
+/-- Finite infoset structure induced by history-bearing serialized positions. -/
+noncomputable def traceInfoStructure (k : Nat) : InfoStructure where
+  n := Fintype.card ι
+  Infoset := fun p =>
+    {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)}
+  arity := fun _ I => Position.actionArity (G := G) I.1.toPosition
+  arity_pos := by
+    intro p I
+    exact Position.actionArity_pos (G := G) I.2
+
+namespace TracePosition
+
+abbrev PayoffVec (k : Nat) := Payoff (traceInfoStructure (G := G) k).Player
+
+noncomputable def zeroPayoff {k : Nat} : PayoffVec (G := G) k :=
+  fun _ => 0
+
+noncomputable def liftPayoff {k : Nat} (u : Payoff ι) : PayoffVec (G := G) k :=
+  fun p => u (origPlayer (ι := ι) p)
+
+noncomputable def addPayoff {k : Nat}
+    (x y : PayoffVec (G := G) k) : PayoffVec (G := G) k :=
+  fun p => x p + y p
+
+noncomputable def actionFromIndex {k : Nat}
+    (pos : TracePosition G k)
+    (a : Fin (Position.actionArity (G := G) pos.toPosition)) :
+    (SG G).LegalAction pos.state :=
+  Position.actionFromIndex (G := G) (pos := pos.toPosition) a
+
+noncomputable def rawActionFromIndex {k : Nat}
+    (pos : TracePosition G k)
+    (a : Fin (Position.actionArity (G := G) pos.toPosition)) :
+    {x : JointAction Act // SerialState.legal (G := G) pos.state x} :=
+  Position.rawActionFromIndex (G := G) (pos := pos.toPosition) a
+
+end TracePosition
+
 /-- Finite infoset structure induced by serialized horizon-bounded positions. -/
 noncomputable def infoStructure (k : Nat) : InfoStructure where
   n := Fintype.card ι
