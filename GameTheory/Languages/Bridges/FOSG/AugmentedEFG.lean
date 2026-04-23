@@ -1158,6 +1158,229 @@ noncomputable def TracePosition.decisionChild {k : Nat} {p : PlayerIx}
     (TracePosition.decisionChild (G := G) I a).remaining = I.1.remaining - 1 := by
   simp [TracePosition.decisionChild]
 
+theorem TracePosition.current_mem_active_of_player
+    {k : Nat} {pos : TracePosition G k} {i : ι}
+    (hplayer : pos.player? = some i) :
+    i ∈ G.active (TracePosition.originalHistory (G := G) pos).lastState := by
+  rcases Position.state_eq_base_or_decide_of_player
+      (G := G) (pos := pos.toPosition) hplayer with hbase | hdecide
+  · rcases hbase with ⟨w, hstate, hnonempty⟩
+    cases horder : G.orderedActive w with
+    | nil =>
+        exact False.elim (hnonempty horder)
+    | cons current rest =>
+        have hs : pos.state = .base w := by
+          simpa [TracePosition.toPosition] using hstate
+        have htmp := hplayer
+        simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+          Position.isTruncated, hs, horder] at htmp
+        have hcurr : current = i := htmp.2
+        have hmem : current ∈ G.orderedActive w := by
+          simp [horder]
+        have hactive : current ∈ G.active w := (G.mem_orderedActive_iff w current).1 hmem
+        have hworld : SerialState.world (G := G) pos.state = w := by
+          simpa [hs] using (SerialState.world_base (G := G) w)
+        rw [TracePosition.originalHistory_lastState (G := G) pos]
+        simpa [hworld, hcurr] using hactive
+  · rcases hdecide with ⟨w, chosen, current, rest, hvalid, hstate⟩
+    have hs : pos.state = .decide w chosen current rest hvalid := by
+      simpa [TracePosition.toPosition] using hstate
+    have htmp := hplayer
+    simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+      Position.isTruncated, hs] at htmp
+    have hcurr : current = i := htmp.2
+    have hactive : current ∈ G.active w := G.current_mem_active_of_split (w := w) hvalid.1
+    have hworld : SerialState.world (G := G) pos.state = w := by
+      simpa [hs] using (SerialState.world_decide (G := G) w chosen current rest hvalid)
+    rw [TracePosition.originalHistory_lastState (G := G) pos]
+    simpa [hworld, hcurr] using hactive
+
+theorem TracePosition.not_terminal_originalHistory_of_player
+    {k : Nat} {pos : TracePosition G k} {i : ι}
+    (hplayer : pos.player? = some i) :
+    ¬ G.terminal (TracePosition.originalHistory (G := G) pos).lastState := by
+  intro hterm
+  have hactive : i ∈ G.active (TracePosition.originalHistory (G := G) pos).lastState :=
+    TracePosition.current_mem_active_of_player (G := G) hplayer
+  have hempty : G.active (TracePosition.originalHistory (G := G) pos).lastState = ∅ :=
+    G.terminal_active_eq_empty hterm
+  have hiempty : i ∉ G.active (TracePosition.originalHistory (G := G) pos).lastState := by
+    rw [hempty]
+    simp
+  exact hiempty hactive
+
+theorem TracePosition.actionFromIndex_eq_singleMove
+    {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    ∃ ai : Act (origPlayer (ι := ι) p),
+      (TracePosition.actionFromIndex (G := G) I.1 a).1 =
+        singleMove (Act := Act) (origPlayer (ι := ι) p) ai := by
+  classical
+  rcases Position.state_eq_base_or_decide_of_player
+      (G := G) (pos := I.1.toPosition) I.2 with hbase | hdecide
+  · rcases hbase with ⟨w, hstate, hnonempty⟩
+    cases horder : G.orderedActive w with
+    | nil =>
+        exact False.elim (hnonempty horder)
+    | cons current rest =>
+        have hs : I.1.state = .base w := by
+          simpa [TracePosition.toPosition] using hstate
+        have hI := I.2
+        simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+          Position.isTruncated, hs, horder] at hI
+        have hcurr : current = origPlayer (ι := ι) p := hI.2
+        cases hcurr
+        have hleg :
+            SerialState.playerLegal (G := G) w (noopAction Act) (origPlayer (ι := ι) p)
+              (TracePosition.rawActionFromIndex (G := G) I.1 a).1 := by
+          simpa [TracePosition.rawActionFromIndex, TracePosition.actionFromIndex,
+            TracePosition.toPosition, Position.rawActionFromIndex, Position.actionFromIndex,
+            SerialState.legal, hs, horder] using
+            (TracePosition.rawActionFromIndex (G := G) I.1 a).2
+        rcases (SerialState.playerLegal_iff_exists_singleMove (G := G)).1 hleg with
+          ⟨ai, ha, _⟩
+        exact ⟨ai, by
+          simpa [TracePosition.rawActionFromIndex, TracePosition.actionFromIndex,
+            Position.rawActionFromIndex, Position.actionFromIndex] using ha⟩
+  · rcases hdecide with ⟨w, chosen, current, rest, hvalid, hstate⟩
+    have hs : I.1.state = .decide w chosen current rest hvalid := by
+      simpa [TracePosition.toPosition] using hstate
+    have hI := I.2
+    simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+      Position.isTruncated, hs] at hI
+    have hcurr : current = origPlayer (ι := ι) p := hI.2
+    cases hcurr
+    have hleg :
+        SerialState.playerLegal (G := G) w chosen (origPlayer (ι := ι) p)
+          (TracePosition.rawActionFromIndex (G := G) I.1 a).1 := by
+      simpa [TracePosition.rawActionFromIndex, TracePosition.actionFromIndex,
+        TracePosition.toPosition, Position.rawActionFromIndex, Position.actionFromIndex,
+        SerialState.legal, hs] using
+        (TracePosition.rawActionFromIndex (G := G) I.1 a).2
+    rcases (SerialState.playerLegal_iff_exists_singleMove (G := G)).1 hleg with
+      ⟨ai, ha, _⟩
+    exact ⟨ai, by
+      simpa [TracePosition.rawActionFromIndex, TracePosition.actionFromIndex,
+        Position.rawActionFromIndex, Position.actionFromIndex] using ha⟩
+
+/-- The original concrete action represented by a trace decision index. -/
+noncomputable def TracePosition.actualActionFromIndex
+    {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    Act (origPlayer (ι := ι) p) :=
+  Classical.choose (TracePosition.actionFromIndex_eq_singleMove (G := G) I a)
+
+@[simp] theorem TracePosition.actionFromIndex_eq_singleMove_actual
+    {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    (TracePosition.actionFromIndex (G := G) I.1 a).1 =
+      singleMove (Act := Act) (origPlayer (ι := ι) p)
+        (TracePosition.actualActionFromIndex (G := G) I a) :=
+  Classical.choose_spec (TracePosition.actionFromIndex_eq_singleMove (G := G) I a)
+
+@[simp] theorem TracePosition.actionFromIndex_apply_current
+    {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    (TracePosition.actionFromIndex (G := G) I.1 a).1 (origPlayer (ι := ι) p) =
+      some (TracePosition.actualActionFromIndex (G := G) I a) := by
+  simpa [TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a]
+
+@[simp] theorem TracePosition.actionFromIndex_apply_other
+    {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition))
+    {j : ι} (hj : j ≠ origPlayer (ι := ι) p) :
+    (TracePosition.actionFromIndex (G := G) I.1 a).1 j = none := by
+  simpa [TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a, hj]
+
+theorem TracePosition.actualActionFromIndex_mem_available
+    {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    TracePosition.actualActionFromIndex (G := G) I a ∈
+      G.availableActionsAtHistory (TracePosition.originalHistory (G := G) I.1)
+        (origPlayer (ι := ι) p) := by
+  classical
+  rcases Position.state_eq_base_or_decide_of_player
+      (G := G) (pos := I.1.toPosition) I.2 with hbase | hdecide
+  · rcases hbase with ⟨w, hstate, hnonempty⟩
+    cases horder : G.orderedActive w with
+    | nil =>
+        exact False.elim (hnonempty horder)
+    | cons current rest =>
+        have hs : I.1.state = .base w := by
+          simpa [TracePosition.toPosition] using hstate
+        have hI := I.2
+        simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+          Position.isTruncated, hs, horder] at hI
+        have hcurr : current = origPlayer (ι := ι) p := hI.2
+        cases hcurr
+        have hworld : SerialState.world (G := G) I.1.state = w := by
+          simpa [hs] using (SerialState.world_base (G := G) w)
+        have hlast : (TracePosition.originalHistory (G := G) I.1).lastState = w := by
+          rw [TracePosition.originalHistory_lastState (G := G) I.1]
+          exact hworld
+        have hleg :
+            SerialState.playerLegal (G := G) w (noopAction Act) (origPlayer (ι := ι) p)
+              (singleMove (Act := Act) (origPlayer (ι := ι) p)
+                (TracePosition.actualActionFromIndex (G := G) I a)) := by
+          rw [← TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a]
+          simpa [TracePosition.rawActionFromIndex, TracePosition.actionFromIndex,
+            TracePosition.toPosition, Position.rawActionFromIndex,
+            Position.actionFromIndex, SerialState.legal, hs, horder] using
+            (TracePosition.rawActionFromIndex (G := G) I.1 a).2
+        rcases hleg with ⟨_, _, ⟨ga, _, hcurr⟩⟩
+        have hga := (G.legal_iff_forall).1 ga.2
+        have hlocal :
+            origPlayer (ι := ι) p ∈ G.active w ∧
+              TracePosition.actualActionFromIndex (G := G) I a ∈
+                G.availableActions w (origPlayer (ι := ι) p) := by
+          simpa [FOSG.locallyLegalAtState, hcurr] using hga.2 (origPlayer (ι := ι) p)
+        rw [FOSG.mem_availableActionsAtHistory_iff]
+        rw [hlast]
+        exact ⟨by
+          exact hlocal.1,
+          by exact hlocal.2⟩
+  · rcases hdecide with ⟨w, chosen, current, rest, hvalid, hstate⟩
+    have hs : I.1.state = .decide w chosen current rest hvalid := by
+      simpa [TracePosition.toPosition] using hstate
+    have hI := I.2
+    simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+      Position.isTruncated, hs] at hI
+    have hcurrEq : current = origPlayer (ι := ι) p := hI.2
+    cases hcurrEq
+    have hworld : SerialState.world (G := G) I.1.state = w := by
+      simpa [hs] using
+        (SerialState.world_decide (G := G) w chosen (origPlayer (ι := ι) p) rest hvalid)
+    have hlast : (TracePosition.originalHistory (G := G) I.1).lastState = w := by
+      rw [TracePosition.originalHistory_lastState (G := G) I.1]
+      exact hworld
+    have hleg :
+        SerialState.playerLegal (G := G) w chosen (origPlayer (ι := ι) p)
+          (singleMove (Act := Act) (origPlayer (ι := ι) p)
+            (TracePosition.actualActionFromIndex (G := G) I a)) := by
+      rw [← TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a]
+      simpa [TracePosition.rawActionFromIndex, TracePosition.actionFromIndex,
+        TracePosition.toPosition, Position.rawActionFromIndex,
+        Position.actionFromIndex, SerialState.legal, hs] using
+        (TracePosition.rawActionFromIndex (G := G) I.1 a).2
+    rcases hleg with ⟨_, _, ⟨ga, _, hcurr⟩⟩
+    have hga := (G.legal_iff_forall).1 ga.2
+    have hlocal :
+        origPlayer (ι := ι) p ∈ G.active w ∧
+          TracePosition.actualActionFromIndex (G := G) I a ∈
+            G.availableActions w (origPlayer (ι := ι) p) := by
+      simpa [FOSG.locallyLegalAtState, hcurr] using hga.2 (origPlayer (ι := ι) p)
+    rw [FOSG.mem_availableActionsAtHistory_iff]
+    rw [hlast]
+    exact ⟨by
+      exact hlocal.1,
+      by exact hlocal.2⟩
+
 /-- Chance successor law for a serialized position.
 
 This is totalized on all positions, but only the `player? = none` branches are
