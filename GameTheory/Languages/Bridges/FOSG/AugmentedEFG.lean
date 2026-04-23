@@ -690,6 +690,249 @@ theorem originalPublicViewFrom_eq_filterMap_originalPlayerViewFrom
         originalPublicFrag_eq_filterMap_originalPlayerFrag (G := G) (who := who) (e := e)]
       simp [ih, List.filterMap_append]
 
+/-- Collapse a serialized realized step to the corresponding original realized
+step when the serialized step performs stochastic resolution. Deterministic
+bookkeeping steps erase to `none`. -/
+noncomputable def eraseStep? : (SG G).Step → Option G.Step
+  | ⟨.base w, act, .base w', support⟩ =>
+      if hEmpty : G.orderedActive w = [] then
+        let a' : SerialState.FOSGLegalAction (G := G) (.base w) := act
+        let aRaw : SerialState.LegalAction (G := G) (.base w) :=
+          SerialState.ofFOSGLegalAction (G := G) a'
+        some ⟨w,
+          SerialState.baseChanceLegalAction (G := G) w
+            (G.active_eq_empty_of_orderedActive_eq_nil hEmpty)
+            (by
+              have hleg : SerialState.legal (G := G) (.base w) aRaw.1 := aRaw.2
+              have ha : ¬ G.terminal w ∧ act.1 = noopAction Act := by
+                simpa [SerialState.legal, hEmpty] using hleg
+              exact ha.1),
+          w',
+          SerialState.base_empty_support (G := G) hEmpty a' (by
+            simpa [aRaw, SerialState.ofFOSGLegalAction_val] using support)⟩
+      else
+        none
+  | ⟨.base w, act, .decide w' chosen current rest hvalid, support⟩ =>
+      none
+  | ⟨.base w, act, .chance w' ga, support⟩ =>
+      none
+  | ⟨.decide w chosen current rest hvalid, act, dst, support⟩ =>
+      none
+  | ⟨.chance w ga, act, .base w', support⟩ =>
+      let a' : SerialState.FOSGLegalAction (G := G) (.chance w ga) := act
+      some ⟨w, ga, w', SerialState.chance_support (G := G) ga a' (by
+        simpa [SerialState.ofFOSGLegalAction_val] using support)⟩
+  | ⟨.chance w ga, act, .decide w' chosen current rest hvalid, support⟩ =>
+      none
+  | ⟨.chance w ga, act, .chance w' ga', support⟩ =>
+      none
+
+theorem eraseStep?_some_src
+    (e : (SG G).Step) (e' : G.Step)
+    (h : eraseStep? (G := G) e = some e') :
+    e'.src = SerialState.world (G := G) e.src := by
+  classical
+  cases e with
+  | mk src act dst support =>
+      cases src with
+      | base w =>
+          cases dst with
+          | base w' =>
+              by_cases hEmpty : G.orderedActive w = []
+              · simp [eraseStep?, hEmpty] at h
+                cases h
+                rfl
+              · simp [eraseStep?, hEmpty] at h
+          | decide w' chosen current rest hvalid =>
+              simp [eraseStep?] at h
+          | chance w' ga =>
+              simp [eraseStep?] at h
+      | decide w chosen current rest hvalid =>
+          simp [eraseStep?] at h
+      | chance w ga =>
+          cases dst with
+          | base w' =>
+              simp [eraseStep?] at h
+              cases h
+              rfl
+          | decide w' chosen current rest hvalid =>
+              simp [eraseStep?] at h
+          | chance w' ga' =>
+              simp [eraseStep?] at h
+
+theorem eraseStep?_some_dst
+    (e : (SG G).Step) (e' : G.Step)
+    (h : eraseStep? (G := G) e = some e') :
+    e'.dst = SerialState.world (G := G) e.dst := by
+  classical
+  cases e with
+  | mk src act dst support =>
+      cases src with
+      | base w =>
+          cases dst with
+          | base w' =>
+              by_cases hEmpty : G.orderedActive w = []
+              · simp [eraseStep?, hEmpty] at h
+                cases h
+                rfl
+              · simp [eraseStep?, hEmpty] at h
+          | decide w' chosen current rest hvalid =>
+              simp [eraseStep?] at h
+          | chance w' ga =>
+              simp [eraseStep?] at h
+      | decide w chosen current rest hvalid =>
+          simp [eraseStep?] at h
+      | chance w ga =>
+          cases dst with
+          | base w' =>
+              simp [eraseStep?] at h
+              cases h
+              rfl
+          | decide w' chosen current rest hvalid =>
+              simp [eraseStep?] at h
+          | chance w' ga' =>
+              simp [eraseStep?] at h
+
+theorem eraseStep?_none_world_eq
+    (e : (SG G).Step)
+    (h : eraseStep? (G := G) e = none) :
+    SerialState.world (G := G) e.dst = SerialState.world (G := G) e.src := by
+  classical
+  cases e with
+  | mk src act dst support =>
+      cases src with
+      | base w =>
+          let actRaw : SerialState.LegalAction (G := G) (.base w) :=
+            SerialState.ofFOSGLegalAction (G := G) act
+          by_cases hEmpty : G.orderedActive w = []
+          · cases dst with
+            | base w' =>
+                simp [eraseStep?, hEmpty] at h
+            | decide w' chosen current rest hvalid =>
+                have : False := by
+                  have hsupp :
+                      SerialState.transition (G := G) (.base w) actRaw
+                        (.decide w' chosen current rest hvalid) ≠ 0 := by
+                    simpa [actRaw, SerialState.ofFOSGLegalAction_val] using support
+                  have hzero :
+                      SerialState.transition (G := G) (.base w) actRaw
+                        (.decide w' chosen current rest hvalid) = 0 := by
+                    rw [SerialState.transition_base_empty_eq (G := G) (w := w) hEmpty actRaw]
+                    simp
+                  exact hsupp hzero
+                exact False.elim this
+            | chance w' ga =>
+                have : False := by
+                  have hsupp :
+                      SerialState.transition (G := G) (.base w) actRaw
+                        (.chance w' ga) ≠ 0 := by
+                    simpa [actRaw, SerialState.ofFOSGLegalAction_val] using support
+                  have hzero :
+                      SerialState.transition (G := G) (.base w) actRaw
+                        (.chance w' ga) = 0 := by
+                    rw [SerialState.transition_base_empty_eq (G := G) (w := w) hEmpty actRaw]
+                    simp
+                  exact hsupp hzero
+                exact False.elim this
+          · have hpure :
+              PMF.pure (SerialState.basePlayerSuccessor (G := G) w actRaw) dst ≠ 0 := by
+                have hsupp :
+                    SerialState.transition (G := G) (.base w) actRaw dst ≠ 0 := by
+                  simpa [actRaw, SerialState.ofFOSGLegalAction_val] using support
+                simpa [SerialState.transition_base_nonempty_eq (G := G) (w := w) hEmpty actRaw]
+                  using hsupp
+            have hdst :
+                dst = SerialState.basePlayerSuccessor (G := G) w actRaw := by
+              simpa [PMF.pure_apply] using hpure
+            simpa [hdst] using
+              (SerialState.world_basePlayerSuccessor (G := G) (w := w) (a := actRaw)).symm
+      | decide w chosen current rest hvalid =>
+          let actRaw : SerialState.LegalAction (G := G) (.decide w chosen current rest hvalid) :=
+            SerialState.ofFOSGLegalAction (G := G) act
+          have hpure :
+              PMF.pure (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid actRaw) dst ≠ 0 := by
+            have hsupp :
+                SerialState.transition (G := G) (.decide w chosen current rest hvalid) actRaw dst ≠ 0 := by
+              simpa [actRaw, SerialState.ofFOSGLegalAction_val] using support
+            simpa [SerialState.transition_decide_eq (G := G) (w := w) (chosen := chosen)
+              (current := current) (rest := rest) (hvalid := hvalid) actRaw] using hsupp
+          have hdst :
+              dst = SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid actRaw := by
+            simpa [PMF.pure_apply] using hpure
+          simpa [hdst] using
+            (SerialState.world_decidePlayerSuccessor (G := G) (w := w) (chosen := chosen)
+              (current := current) (rest := rest) (hvalid := hvalid) (a := actRaw)).symm
+      | chance w ga =>
+          let actRaw : SerialState.LegalAction (G := G) (.chance w ga) :=
+            SerialState.ofFOSGLegalAction (G := G) act
+          cases dst with
+          | base w' =>
+              simp [eraseStep?] at h
+          | decide w' chosen current rest hvalid =>
+              have : False := by
+                have hsupp :
+                    SerialState.transition (G := G) (.chance w ga) actRaw
+                      (.decide w' chosen current rest hvalid) ≠ 0 := by
+                  simpa [actRaw, SerialState.ofFOSGLegalAction_val] using support
+                have hzero :
+                    SerialState.transition (G := G) (.chance w ga) actRaw
+                      (.decide w' chosen current rest hvalid) = 0 := by
+                  simp [SerialState.transition]
+                exact hsupp hzero
+              exact False.elim this
+          | chance w' ga' =>
+              have : False := by
+                have hsupp :
+                    SerialState.transition (G := G) (.chance w ga) actRaw
+                      (.chance w' ga') ≠ 0 := by
+                  simpa [actRaw, SerialState.ofFOSGLegalAction_val] using support
+                have hzero :
+                    SerialState.transition (G := G) (.chance w ga) actRaw
+                      (.chance w' ga') = 0 := by
+                  simp [SerialState.transition]
+                exact hsupp hzero
+              exact False.elim this
+
+private noncomputable def originalHistoryFromAux
+    (s : SState G) (h : G.History)
+    (hs : h.lastState = SerialState.world (G := G) s) :
+    (es : List ((SG G).Step)) → (SG G).StepChainFrom s es →
+      { h' : G.History // h'.lastState = SerialState.world (G := G) ((SG G).lastStateFrom s es) }
+  | [], _ => ⟨h, by simpa [FOSG.lastStateFrom] using hs⟩
+  | e :: es, hchain =>
+      match hErase : eraseStep? (G := G) e with
+      | some e' =>
+          let hsrc' : e'.src = h.lastState := by
+            calc
+              e'.src = SerialState.world (G := G) e.src := eraseStep?_some_src (G := G) e e' hErase
+              _ = SerialState.world (G := G) s := by simpa [hchain.1]
+              _ = h.lastState := hs.symm
+          let h' := h.appendStep e' hsrc'
+          have hs' : h'.lastState = SerialState.world (G := G) e.dst := by
+            simpa [h', History.lastState_appendStep] using eraseStep?_some_dst (G := G) e e' hErase
+          originalHistoryFromAux e.dst h' hs' es (by simpa using hchain.2)
+      | none =>
+          let hs' : h.lastState = SerialState.world (G := G) e.dst := by
+            calc
+              h.lastState = SerialState.world (G := G) s := hs
+              _ = SerialState.world (G := G) e.src := by simpa [hchain.1]
+              _ = SerialState.world (G := G) e.dst :=
+                (eraseStep?_none_world_eq (G := G) e hErase).symm
+          originalHistoryFromAux e.dst h hs' es (by simpa using hchain.2)
+
+/-- The original FOSG history represented by a serialized trace position, obtained
+by erasing bookkeeping serialized steps and collapsing resolution steps back to
+their underlying original realized transitions. -/
+noncomputable def originalHistory {k : Nat} (pos : TracePosition G k) : G.History :=
+  (originalHistoryFromAux (G := G) (.base G.init) (History.nil G) (by simp)
+    pos.trail.1 pos.hchain).1
+
+@[simp] theorem originalHistory_lastState {k : Nat} (pos : TracePosition G k) :
+    (originalHistory (G := G) pos).lastState = SerialState.world (G := G) pos.state := by
+  simpa [originalHistory, pos.hstate] using
+    (originalHistoryFromAux (G := G) (.base G.init) (History.nil G) (by simp)
+      pos.trail.1 pos.hchain).2
+
 end TracePosition
 
 abbrev PlayerIx := Fin (Fintype.card ι)
