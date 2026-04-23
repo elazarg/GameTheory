@@ -301,6 +301,14 @@ noncomputable instance instDecidableEqSerialState : DecidableEq (SState G) := by
   classical
   infer_instance
 
+noncomputable instance instFintypeSerialStep : Fintype ((SG G).Step) := by
+  classical
+  infer_instance
+
+noncomputable instance instDecidableEqSerialStep : DecidableEq ((SG G).Step) := by
+  classical
+  infer_instance
+
 /-- Horizon-bounded serialized positions. -/
 structure Position (k : Nat) where
   state : SState G
@@ -416,6 +424,93 @@ noncomputable def rawActionFromIndex
   SerialState.ofFOSGLegalAction (G := G) (s := pos.state) (actionFromIndex (G := G) a)
 
 end Position
+
+/-- History-bearing serialized positions for the next bridge refactor.
+
+This is intentionally separate from the live `Position` used by the current
+tree unrolling. It packages a bounded serialized step trail together with the
+current serialized state and remaining horizon budget, so the later bridge pass
+can recover serialized public/player views directly from the node state. -/
+structure TracePosition (k : Nat) where
+  state : SState G
+  trail : { xs : List ((SG G).Step) // xs.length ≤ k }
+  remaining : Nat
+  hremaining : remaining ≤ k
+  hlen : trail.1.length + remaining = k
+  hchain : (SG G).StepChainFrom (.base G.init) trail.1
+  hstate : (SG G).lastStateFrom (.base G.init) trail.1 = state
+
+namespace TracePosition
+
+noncomputable def root (k : Nat) : TracePosition G k := by
+  let trail : { xs : List ((SG G).Step) // xs.length ≤ k } := ⟨[], Nat.zero_le _⟩
+  refine ⟨.base G.init, trail, k, le_rfl, ?_, trivial, ?_⟩
+  · simp [trail]
+  · simp [trail, FOSG.lastStateFrom]
+
+@[simp] theorem trail_length {k : Nat} (pos : TracePosition G k) :
+    pos.trail.1.length + pos.remaining = k := pos.hlen
+
+noncomputable def history {k : Nat} (pos : TracePosition G k) : (SG G).History :=
+  ⟨pos.trail.1, pos.hchain⟩
+
+@[simp] theorem history_steps {k : Nat} (pos : TracePosition G k) :
+    (history (G := G) pos).steps = pos.trail.1 := rfl
+
+@[simp] theorem history_lastState {k : Nat} (pos : TracePosition G k) :
+    (history (G := G) pos).lastState = pos.state := pos.hstate
+
+noncomputable def publicView {k : Nat} (pos : TracePosition G k) : (SG G).PublicState :=
+  (history (G := G) pos).publicView
+
+noncomputable def playerView {k : Nat} (pos : TracePosition G k) (i : ι) :
+    (SG G).InfoState i :=
+  (history (G := G) pos).playerView i
+
+theorem snoc_length_le {k : Nat} {pos : TracePosition G k} (e : (SG G).Step)
+    (hrem : pos.remaining ≠ 0) :
+    (pos.trail.1 ++ [e]).length ≤ k := by
+  have h1 : 1 ≤ pos.remaining := Nat.succ_le_of_lt (Nat.pos_of_ne_zero hrem)
+  simpa [List.length_append] using
+    (calc
+      pos.trail.1.length + 1 ≤ pos.trail.1.length + pos.remaining := by
+        exact Nat.add_le_add_left h1 _
+      _ = k := pos.hlen)
+
+noncomputable def appendStep {k : Nat} (pos : TracePosition G k) (e : (SG G).Step)
+    (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) : TracePosition G k := by
+  let hlen' : (pos.trail.1 ++ [e]).length ≤ k :=
+    snoc_length_le (G := G) e hrem
+  let trail' : { xs : List ((SG G).Step) // xs.length ≤ k } :=
+    ⟨pos.trail.1 ++ [e], hlen'⟩
+  refine ⟨e.dst, trail', pos.remaining - 1, le_trans (Nat.sub_le _ _) pos.hremaining, ?_, ?_, ?_⟩
+  · have hpos : 0 < pos.remaining := Nat.pos_of_ne_zero hrem
+    calc
+      trail'.1.length + (pos.remaining - 1)
+          = (pos.trail.1 ++ [e]).length + (pos.remaining - 1) := by rfl
+      _ = pos.trail.1.length + 1 + (pos.remaining - 1) := by simp [List.length_append, Nat.add_assoc]
+      _ = pos.trail.1.length + pos.remaining := by omega
+      _ = k := pos.hlen
+  · simpa [trail'] using
+      FOSG.StepChainFrom.snoc (G := SG G) pos.hchain e (by simpa [pos.hstate] using hsrc)
+  · simpa [trail'] using
+      (SG G).lastStateFrom_append_singleton (.base G.init) pos.trail.1 e
+
+@[simp] theorem appendStep_remaining {k : Nat} (pos : TracePosition G k) (e : (SG G).Step)
+    (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) :
+    (appendStep (G := G) pos e hrem hsrc).remaining = pos.remaining - 1 := rfl
+
+@[simp] theorem appendStep_history_steps {k : Nat} (pos : TracePosition G k) (e : (SG G).Step)
+    (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) :
+    (appendStep (G := G) pos e hrem hsrc).history.steps = pos.history.steps ++ [e] := by
+  simp [history, appendStep]
+
+@[simp] theorem appendStep_history_lastState {k : Nat} (pos : TracePosition G k) (e : (SG G).Step)
+    (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) :
+    (appendStep (G := G) pos e hrem hsrc).history.lastState = e.dst := by
+  simp [appendStep]
+
+end TracePosition
 
 abbrev PlayerIx := Fin (Fintype.card ι)
 
