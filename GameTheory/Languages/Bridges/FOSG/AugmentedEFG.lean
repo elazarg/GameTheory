@@ -873,6 +873,12 @@ noncomputable def TracePosition.decisionChild {k : Nat} {p : PlayerIx}
       (TracePosition.decisionStep (G := G) I a)
       (TracePosition.remaining_ne_zero_of_player (G := G) I.2) rfl
 
+@[simp] theorem TracePosition.decisionChild_remaining {k : Nat} {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    (TracePosition.decisionChild (G := G) I a).remaining = I.1.remaining - 1 := by
+  simp [TracePosition.decisionChild]
+
 /-- Chance successor law for a serialized position.
 
 This is totalized on all positions, but only the `player? = none` branches are
@@ -962,7 +968,284 @@ noncomputable def TracePosition.liveChancePMF {k : Nat}
   | chance w ga =>
       exact PMF.map (SerialState.base (G := G)) (G.transition w ga)
 
+theorem TracePosition.liveChancePMF_supportValue_eq_base {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    ∃ w' : W,
+      supportValue (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem) b =
+        .base w' := by
+  classical
+  let dst := supportValue (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem) b
+  have hmem : dst ∈ (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem).support :=
+    (PMF.mem_support_iff _ _).2 (supportValue_spec _ b)
+  cases hs : pos.state with
+  | base w =>
+      by_cases hEmpty : G.orderedActive w = []
+      · have hmap :
+            TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem =
+              PMF.map (SerialState.base (G := G))
+                (G.transition w
+                  (SerialState.baseChanceLegalAction (G := G) w
+                    (G.active_eq_empty_of_orderedActive_eq_nil hEmpty)
+                    (by simpa [hs] using hnotTerm))) := by
+          cases pos
+          cases hs
+          simp [TracePosition.liveChancePMF, hEmpty]
+        rw [hmap, PMF.mem_support_map_iff] at hmem
+        rcases hmem with ⟨w', -, hw'⟩
+        exact ⟨w', hw'.symm⟩
+      · cases horder : G.orderedActive w with
+        | nil =>
+            exact False.elim (hEmpty horder)
+        | cons current rest =>
+            exfalso
+            simp [TracePosition.player?, Position.player?, Position.isTruncated,
+              TracePosition.toPosition, hs, horder, hrem] at hplayer
+  | decide w chosen current rest hvalid =>
+      exfalso
+      simp [TracePosition.player?, Position.player?, Position.isTruncated,
+        TracePosition.toPosition, hs, hrem] at hplayer
+  | chance w ga =>
+      have hmap :
+          TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem =
+            PMF.map (SerialState.base (G := G)) (G.transition w ga) := by
+        cases pos
+        cases hs
+        simp [TracePosition.liveChancePMF]
+      rw [hmap, PMF.mem_support_map_iff] at hmem
+      rcases hmem with ⟨w', -, hw'⟩
+      exact ⟨w', hw'.symm⟩
+
+theorem TracePosition.state_eq_base_empty_or_chance_of_no_player {k : Nat}
+    {pos : TracePosition G k}
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0) :
+    (∃ w, pos.state = .base w ∧ G.orderedActive w = []) ∨
+      (∃ w, ∃ ga : G.LegalAction w, pos.state = .chance w ga) := by
+  classical
+  cases hs : pos.state with
+  | base w =>
+      by_cases hEmpty : G.orderedActive w = []
+      · exact Or.inl ⟨w, rfl, hEmpty⟩
+      · cases horder : G.orderedActive w with
+        | nil =>
+            exact False.elim (hEmpty horder)
+        | cons current rest =>
+            exfalso
+            simp [TracePosition.player?, Position.player?, Position.isTruncated,
+              TracePosition.toPosition, hs, horder, hrem] at hplayer
+  | decide w chosen current rest hvalid =>
+      exfalso
+      simp [TracePosition.player?, Position.player?, Position.isTruncated,
+        TracePosition.toPosition, hs, hrem] at hplayer
+  | chance w ga =>
+      exact Or.inr ⟨w, ga, rfl⟩
+
+/-- Realized serialized chance edge bundled with its source alignment. -/
+noncomputable def TracePosition.chanceEdge {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    { e : (SG G).Step // e.src = pos.state } := by
+  classical
+  let w' := Classical.choose <|
+    TracePosition.liveChancePMF_supportValue_eq_base (G := G) pos hplayer hnotTerm hrem b
+  have hdst :
+      supportValue (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem) b = .base w' :=
+    Classical.choose_spec <|
+      TracePosition.liveChancePMF_supportValue_eq_base (G := G) pos hplayer hnotTerm hrem b
+  have hsupp :
+      TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem (.base w') ≠ 0 := by
+    simpa [hdst] using supportValue_spec
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem) b
+  cases hs : pos.state with
+  | base w =>
+      by_cases hEmpty : G.orderedActive w = []
+      · let a : (SG G).LegalAction (.base w) := by
+            refine ⟨noopAction Act, ?_⟩
+            exact (SerialState.legal_iff_jointActionLegal (G := G) (.base w) (noopAction Act)).mp <| by
+              simpa [SerialState.legal, hEmpty, hs] using hnotTerm
+        refine ⟨⟨.base w, a, .base w', ?_⟩, rfl⟩
+        have hmap :
+            TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem =
+              PMF.map (SerialState.base (G := G))
+                (G.transition w
+                  (SerialState.baseChanceLegalAction (G := G) w
+                    (G.active_eq_empty_of_orderedActive_eq_nil hEmpty)
+                    (by simpa [hs] using hnotTerm))) := by
+          cases pos
+          cases hs
+          simp [TracePosition.liveChancePMF, hEmpty]
+        have hsupp' :
+            PMF.map (SerialState.base (G := G))
+              (G.transition w
+                (SerialState.baseChanceLegalAction (G := G) w
+                  (G.active_eq_empty_of_orderedActive_eq_nil hEmpty)
+                  (by simpa [hs] using hnotTerm))) (.base w') ≠ 0 := by
+          simpa [hmap] using hsupp
+        change SerialState.transition (G := G) (.base w)
+          (SerialState.ofFOSGLegalAction (G := G) a) (.base w') ≠ 0
+        simpa [a, SerialState.transition, hEmpty] using hsupp'
+      · cases horder : G.orderedActive w with
+        | nil =>
+            exact False.elim (hEmpty horder)
+        | cons current rest =>
+            exfalso
+            simp [TracePosition.player?, Position.player?, Position.isTruncated,
+              TracePosition.toPosition, hs, horder, hrem] at hplayer
+  | decide w chosen current rest hvalid =>
+      exfalso
+      simp [TracePosition.player?, Position.player?, Position.isTruncated,
+        TracePosition.toPosition, hs, hrem] at hplayer
+  | chance w ga =>
+      let a : (SG G).LegalAction (.chance w ga) := by
+            refine ⟨noopAction Act, ?_⟩
+            exact (SerialState.legal_iff_jointActionLegal (G := G) (.chance w ga) (noopAction Act)).mp <| by
+              simp [SerialState.legal]
+      refine ⟨⟨.chance w ga, a, .base w', ?_⟩, rfl⟩
+      have hmap :
+          TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem =
+            PMF.map (SerialState.base (G := G)) (G.transition w ga) := by
+        cases pos
+        cases hs
+        simp [TracePosition.liveChancePMF]
+      have hsupp' :
+          PMF.map (SerialState.base (G := G)) (G.transition w ga) (.base w') ≠ 0 := by
+        simpa [hmap] using hsupp
+      change SerialState.transition (G := G) (.chance w ga)
+        (SerialState.ofFOSGLegalAction (G := G) a) (.base w') ≠ 0
+      simpa [a, SerialState.transition] using hsupp'
+
+/-- Realized serialized step for a live trace-position chance edge. -/
+noncomputable def TracePosition.chanceStep {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    (SG G).Step :=
+  (TracePosition.chanceEdge (G := G) pos hplayer hnotTerm hrem b).1
+
+@[simp] theorem TracePosition.chanceStep_src {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b).src = pos.state :=
+  (TracePosition.chanceEdge (G := G) pos hplayer hnotTerm hrem b).2
+
+/-- Trace-position child reached by a realized chance edge. -/
+noncomputable def TracePosition.chanceChild {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    TracePosition G k :=
+  TracePosition.appendStep (G := G) pos
+    (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b)
+    hrem (TracePosition.chanceStep_src (G := G) pos hplayer hnotTerm hrem b)
+
+@[simp] theorem TracePosition.chanceChild_history_steps {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    (TracePosition.chanceChild (G := G) pos hplayer hnotTerm hrem b).history.steps =
+      pos.history.steps ++ [TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b] := by
+  simpa [TracePosition.chanceChild] using
+    TracePosition.appendStep_history_steps (G := G) pos
+      (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b)
+      hrem (TracePosition.chanceStep_src (G := G) pos hplayer hnotTerm hrem b)
+
+@[simp] theorem TracePosition.chanceChild_lastState {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    (TracePosition.chanceChild (G := G) pos hplayer hnotTerm hrem b).history.lastState =
+      (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b).dst := by
+  simpa [TracePosition.chanceChild] using
+    TracePosition.appendStep_history_lastState (G := G) pos
+      (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b)
+      hrem (TracePosition.chanceStep_src (G := G) pos hplayer hnotTerm hrem b)
+
+@[simp] theorem TracePosition.chanceChild_remaining {k : Nat}
+    (pos : TracePosition G k)
+    (hplayer : pos.player? = none)
+    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (hrem : pos.remaining ≠ 0)
+    (b : Fin (Fintype.card (SupportSubtype
+      (TracePosition.liveChancePMF (G := G) pos hplayer hnotTerm hrem)))) :
+    (TracePosition.chanceChild (G := G) pos hplayer hnotTerm hrem b).remaining =
+      pos.remaining - 1 := by
+  simp [TracePosition.chanceChild]
+
 abbrev Outcome (k : Nat) := Position G k × Position.PayoffVec (G := G) k
+
+abbrev TraceOutcome (k : Nat) := TracePosition G k × TracePosition.PayoffVec (G := G) k
+
+noncomputable def traceTreeFromAccum {k : Nat} (pos : TracePosition G k)
+    (acc : TracePosition.PayoffVec (G := G) k) :
+    GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k) :=
+  if hrem : pos.remaining = 0 then
+    .terminal (pos, acc)
+  else if hterm : (SG G).terminal pos.state then
+    .terminal (pos, acc)
+  else
+    match hplayer : pos.player? with
+    | some i =>
+        let p : PlayerIx := playerEquiv (ι := ι) i
+        have hp : origPlayer (ι := ι) p = i := by
+          simp [p, origPlayer, playerEquiv]
+        let hI : pos.player? = some (origPlayer (ι := ι) p) := by
+          simpa [hp] using hplayer
+        let I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)} :=
+          ⟨pos, hI⟩
+        .decision (p := p) I
+          (fun a => traceTreeFromAccum (Position.TracePosition.decisionChild (G := G) I a) acc)
+    | none =>
+        let μ := TracePosition.liveChancePMF (G := G) pos hplayer hterm hrem
+        .chance
+          (Fintype.card (SupportSubtype μ))
+          (supportPMF μ)
+          (supportSubtype_card_pos μ)
+          (fun b =>
+            let child := TracePosition.chanceChild (G := G) pos hplayer hterm hrem b
+            let acc' := TracePosition.addPayoff (G := G) acc
+              (Position.chanceEdgePayoff (G := G) pos.toPosition child.state)
+            traceTreeFromAccum child acc')
+termination_by pos.remaining
+decreasing_by
+  all_goals
+    simpa [Position.TracePosition.decisionChild_remaining, TracePosition.chanceChild_remaining,
+      Nat.pred_eq_sub_one] using Nat.pred_lt hrem
+
+noncomputable def traceTreeFrom {k : Nat} (pos : TracePosition G k) :
+    GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k) :=
+  traceTreeFromAccum (G := G) pos (TracePosition.zeroPayoff (G := G))
+
+noncomputable def toPlainTraceEFGAtHorizon (k : Nat) : EFGGame where
+  inf := traceInfoStructure (G := G) k
+  Outcome := TraceOutcome (G := G) k
+  tree := traceTreeFrom (G := G) (TracePosition.root (G := G) k)
+  utility := fun z => z.2
 
 noncomputable def treeFromAccum {k : Nat} (pos : Position G k)
     (acc : Position.PayoffVec (G := G) k) :
@@ -1023,7 +1306,7 @@ def serialHorizon (k : Nat) : Nat :=
 /-- Public plain EFG bridge under a genuine FOSG horizon bound. -/
 noncomputable abbrev toPlainEFGOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) : EFGGame :=
-  toPlainEFGAtHorizon (G := G) (serialHorizon (ι := ι) k)
+  toPlainTraceEFGAtHorizon (G := G) (serialHorizon (ι := ι) k)
 
 namespace Replay
 
@@ -1367,16 +1650,45 @@ noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
   rfl
 
 /-- Public augmented-EFG bridge under a genuine FOSG horizon bound. -/
+noncomputable def toAugmentedTraceAtHorizon (k : Nat) : EFG.AugmentedGame where
+  base := toPlainTraceEFGAtHorizon (G := G) k
+  PubState := List (HistoryStep (traceInfoStructure (G := G) k))
+  InfoState := fun _ => List (HistoryStep (traceInfoStructure (G := G) k))
+  publicState := fun h => h.hist
+  playerState := fun _ h => h.hist
+  publicOf := fun _ s => s
+  publicOf_playerState := by
+    intro p h
+    rfl
+  actionIdentified := by
+    intro p d₁ d₂ hEq
+    cases d₁ with
+    | mk hist₁ I₁ next₁ reach₁ =>
+        cases d₂ with
+        | mk hist₂ I₂ next₂ reach₂ =>
+            have hhist : hist₁ = hist₂ := by
+              exact hEq
+            subst hhist
+            have hnode :
+                GameTree.decision I₁ next₁ = GameTree.decision I₂ next₂ := by
+              exact EFG.reachBy_deterministic reach₁ reach₂
+            cases hnode
+            rfl
+
+@[simp] theorem forget_toAugmentedTraceAtHorizon (k : Nat) :
+    (toAugmentedTraceAtHorizon (G := G) k).forget = toPlainTraceEFGAtHorizon (G := G) k := by
+  rfl
+
 noncomputable abbrev toAugmentedOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) : EFG.AugmentedGame :=
-  toAugmentedAtHorizon (G := G) (serialHorizon (ι := ι) k)
+  toAugmentedTraceAtHorizon (G := G) (serialHorizon (ι := ι) k)
 
 @[simp] theorem forget_toAugmentedOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) :
     (toAugmentedOfBoundedHorizon (G := G) hBound).forget =
       toPlainEFGOfBoundedHorizon (G := G) hBound := by
   simpa [toAugmentedOfBoundedHorizon, toPlainEFGOfBoundedHorizon] using
-    (forget_toAugmentedAtHorizon (G := G) (k := serialHorizon (ι := ι) k))
+    (forget_toAugmentedTraceAtHorizon (G := G) (k := serialHorizon (ι := ι) k))
 
 end Labels
 
