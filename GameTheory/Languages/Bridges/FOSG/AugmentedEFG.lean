@@ -1648,6 +1648,56 @@ noncomputable def TracePosition.supportDecisionIndex
   (TracePosition.actionIndexEquivAvailableAction (G := G) I).symm
     (TracePosition.supportActionSubtype (G := G) σ I oi hoi)
 
+theorem TracePosition.supportDecisionIndex_injective
+    {k : Nat} {p : PlayerIx}
+    (σ : G.LegalBehavioralProfile)
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    {oi₁ oi₂ : Option (Act (origPlayer (ι := ι) p))}
+    {h₁ : oi₁ ∈
+      ((σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView
+          (origPlayer (ι := ι) p))).support}
+    {h₂ : oi₂ ∈
+      ((σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView
+          (origPlayer (ι := ι) p))).support}
+    (heq : TracePosition.supportDecisionIndex (G := G) σ I oi₁ h₁ =
+      TracePosition.supportDecisionIndex (G := G) σ I oi₂ h₂) :
+    oi₁ = oi₂ := by
+  let h := TracePosition.originalHistory (G := G) I.1
+  have hactive :
+      origPlayer (ι := ι) p ∈ G.active h.lastState :=
+    TracePosition.current_mem_active_of_player (G := G) I.2
+  have hsub :
+      TracePosition.supportActionSubtype (G := G) σ I oi₁ h₁ =
+        TracePosition.supportActionSubtype (G := G) σ I oi₂ h₂ := by
+    exact (TracePosition.actionIndexEquivAvailableAction (G := G) I).symm.injective heq
+  cases hoi1Eq : oi₁ with
+  | none =>
+      have hlegal : none ∈ G.availableMoves h (origPlayer (ι := ι) p) := by
+        have hoi1' : none ∈
+            ((σ (origPlayer (ι := ι) p)).1
+              (h.playerView (origPlayer (ι := ι) p))).support := by
+          simpa [h, hoi1Eq] using h₁
+        exact (σ (origPlayer (ι := ι) p)).2 h hoi1'
+      rw [G.mem_availableMoves_iff] at hlegal
+      simp [FOSG.locallyLegalAtState, hactive, hoi1Eq] at hlegal
+  | some ai₁ =>
+      cases hoi2Eq : oi₂ with
+      | none =>
+          have hlegal : none ∈ G.availableMoves h (origPlayer (ι := ι) p) := by
+            have hoi2' : none ∈
+                ((σ (origPlayer (ι := ι) p)).1
+                  (h.playerView (origPlayer (ι := ι) p))).support := by
+              simpa [h, hoi2Eq] using h₂
+            exact (σ (origPlayer (ι := ι) p)).2 h hoi2'
+          rw [G.mem_availableMoves_iff] at hlegal
+          simp [FOSG.locallyLegalAtState, hactive, hoi2Eq] at hlegal
+      | some ai₂ =>
+          have hval : ai₁ = ai₂ := by
+            simpa [hoi1Eq, hoi2Eq] using congrArg Subtype.val hsub
+          simp [hoi1Eq, hoi2Eq, hval]
+
 @[simp] theorem TracePosition.supportDecisionIndex_eq_actionFromIndex
     {k : Nat} {p : PlayerIx}
     (σ : G.LegalBehavioralProfile)
@@ -1688,6 +1738,128 @@ noncomputable def translateBehavioralProfile
     {k : Nat} (σ : G.LegalBehavioralProfile) :
     EFG.BehavioralProfile (traceInfoStructure (G := G) k) :=
   fun p => translateBehavioralStrategy (G := G) σ p
+
+theorem TracePosition.supportDecisionIndex_eq_some_actual
+    {k : Nat} {p : PlayerIx}
+    (σ : G.LegalBehavioralProfile)
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    {oi : Option (Act (origPlayer (ι := ι) p))}
+    {hoi : oi ∈
+      ((σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView
+          (origPlayer (ι := ι) p))).support}
+    {a : Fin (Position.actionArity (G := G) I.1.toPosition)}
+    (heq : TracePosition.supportDecisionIndex (G := G) σ I oi hoi = a) :
+    oi = some (TracePosition.actualActionFromIndex (G := G) I a) := by
+  let h := TracePosition.originalHistory (G := G) I.1
+  have hsub :
+      TracePosition.supportActionSubtype (G := G) σ I oi hoi =
+        ⟨TracePosition.actualActionFromIndex (G := G) I a,
+          TracePosition.actualActionFromIndex_mem_available (G := G) I a⟩ := by
+    have hsub' :=
+      congrArg (TracePosition.actionIndexEquivAvailableAction (G := G) I) heq
+    simpa [TracePosition.supportDecisionIndex] using hsub'
+  cases hoiEq : oi with
+  | none =>
+      have hactive :
+          origPlayer (ι := ι) p ∈ G.active h.lastState :=
+        TracePosition.current_mem_active_of_player (G := G) I.2
+      have hoi' : none ∈
+          ((σ (origPlayer (ι := ι) p)).1 (h.playerView (origPlayer (ι := ι) p))).support := by
+        simpa [h, hoiEq] using hoi
+      have hlegal : none ∈ G.availableMoves h (origPlayer (ι := ι) p) := by
+        exact (σ (origPlayer (ι := ι) p)).2 h hoi'
+      rw [G.mem_availableMoves_iff] at hlegal
+      simp [FOSG.locallyLegalAtState, hactive, hoiEq] at hlegal
+  | some ai =>
+      have hai :
+          ai = TracePosition.actualActionFromIndex (G := G) I a := by
+        simpa [hoiEq] using congrArg Subtype.val hsub
+      simp [hoiEq, hai]
+
+@[simp] theorem translateBehavioralStrategy_apply
+    {k : Nat} (σ : G.LegalBehavioralProfile) {p : PlayerIx}
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    translateBehavioralStrategy (G := G) σ p I a =
+      (σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p))
+        (some (TracePosition.actualActionFromIndex (G := G) I a)) := by
+  classical
+  let τ :=
+    (σ.toProfile (origPlayer (ι := ι) p))
+      ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p))
+  let oiTarget := some (TracePosition.actualActionFromIndex (G := G) I a)
+  by_cases hmem : oiTarget ∈ τ.support
+  · unfold translateBehavioralStrategy
+    rw [PMF.bindOnSupport_apply]
+    refine (tsum_eq_single oiTarget ?_).trans ?_
+    · intro oi hne
+      have hidx :
+          ∀ h : τ oi ≠ 0, TracePosition.supportDecisionIndex (G := G) σ I oi h ≠ a := by
+        intro h heq
+        have hoitarget :
+            oi = some (TracePosition.actualActionFromIndex (G := G) I a) :=
+          TracePosition.supportDecisionIndex_eq_some_actual (G := G) σ I heq
+        exact hne hoitarget
+      have hif :
+          (if h : τ oi = 0 then 0
+            else (PMF.pure (TracePosition.supportDecisionIndex (G := G) σ I oi h)) a) = 0 := by
+        split_ifs with hoi0
+        · rfl
+        · exact PMF.pure_apply_of_ne
+            (a := TracePosition.supportDecisionIndex (G := G) σ I oi hoi0)
+            (a' := a) (hidx hoi0).symm
+      have hprod :
+          τ oi *
+              (if h : τ oi = 0 then 0
+                else (PMF.pure (TracePosition.supportDecisionIndex (G := G) σ I oi h)) a) = 0 := by
+        split_ifs with hoi0
+        · simp [hoi0]
+        · have hpure0 :
+              (PMF.pure (TracePosition.supportDecisionIndex (G := G) σ I oi hoi0)) a = 0 :=
+            PMF.pure_apply_of_ne
+              (a := TracePosition.supportDecisionIndex (G := G) σ I oi hoi0)
+              (a' := a) (hidx hoi0).symm
+          simp [hpure0]
+      exact hprod
+    · rw [dif_neg ((PMF.mem_support_iff _ _).1 hmem)]
+      rw [TracePosition.supportDecisionIndex_eq_actionFromIndex (G := G) σ I a hmem]
+      simp [τ, oiTarget, PMF.pure_apply_self]
+  · unfold translateBehavioralStrategy
+    have hzero :
+        (τ.bindOnSupport fun oi hoi =>
+          PMF.pure (TracePosition.supportDecisionIndex (G := G) σ I oi hoi)) a = 0 := by
+      rw [PMF.bindOnSupport_eq_zero_iff]
+      intro oi hoi0
+      apply PMF.pure_apply_of_ne
+      intro heq
+      have hoitarget :
+          oi = some (TracePosition.actualActionFromIndex (G := G) I a) :=
+        TracePosition.supportDecisionIndex_eq_some_actual (G := G) σ I heq.symm
+      have : oiTarget ∈ τ.support := by
+        simpa [oiTarget, hoitarget] using (PMF.mem_support_iff τ oi).2 hoi0
+      exact hmem this
+    have htarget0 : τ oiTarget = 0 := by
+      by_contra hne
+      exact hmem ((PMF.mem_support_iff _ _).2 hne)
+    have hfinal :
+        (τ.bindOnSupport fun oi hoi =>
+          PMF.pure (TracePosition.supportDecisionIndex (G := G) σ I oi hoi)) a =
+            τ oiTarget := by
+      rw [hzero, htarget0]
+    simpa [translateBehavioralStrategy, τ, oiTarget] using hfinal
+
+@[simp] theorem translateBehavioralProfile_apply
+    {k : Nat} (σ : G.LegalBehavioralProfile) (p : PlayerIx)
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
+    translateBehavioralProfile (G := G) σ p I a =
+      (σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p))
+        (some (TracePosition.actualActionFromIndex (G := G) I a)) := by
+  simpa [translateBehavioralProfile] using
+    (translateBehavioralStrategy_apply (G := G) σ I a)
 
 /-- Chance successor law for a serialized position.
 
