@@ -920,12 +920,77 @@ private noncomputable def originalHistoryFromAux
                 (eraseStep?_none_world_eq (G := G) e hErase).symm
           originalHistoryFromAux e.dst h hs' es (by simpa using hchain.2)
 
+private theorem originalHistoryFromAux_steps
+    (s : SState G) (h : G.History)
+    (hs : h.lastState = SerialState.world (G := G) s) :
+    ∀ (es : List ((SG G).Step)) (hchain : (SG G).StepChainFrom s es),
+      (originalHistoryFromAux (G := G) s h hs es hchain).1.steps =
+        h.steps ++ es.filterMap (eraseStep? (G := G))
+  | [], _ => by
+      simp [originalHistoryFromAux]
+  | e :: es, hchain => by
+      rcases hchain with ⟨hsrc, htail⟩
+      simp only [List.filterMap_cons]
+      cases hErase : eraseStep? (G := G) e with
+      | some e' =>
+          let hsrc' : e'.src = h.lastState := by
+            calc
+              e'.src = SerialState.world (G := G) e.src := eraseStep?_some_src (G := G) e e' hErase
+              _ = SerialState.world (G := G) s := by rw [hsrc]
+              _ = h.lastState := hs.symm
+          let h' := h.appendStep e' hsrc'
+          have hs' : h'.lastState = SerialState.world (G := G) e.dst := by
+            simpa [h', History.lastState_appendStep] using
+              eraseStep?_some_dst (G := G) e e' hErase
+          have hrec :
+              (originalHistoryFromAux (G := G) e.dst h' hs' es htail).1.steps =
+                h'.steps ++ es.filterMap (eraseStep? (G := G)) :=
+            originalHistoryFromAux_steps e.dst h' hs' es htail
+          unfold originalHistoryFromAux
+          split
+          · rename_i e'' hErase'
+            have heq : e'' = e' := by
+              apply Option.some.inj
+              rw [← hErase', hErase]
+            subst e''
+            simpa [hrec, h', List.append_assoc]
+          · rename_i hErase'
+            exfalso
+            rw [hErase] at hErase'
+            contradiction
+      | none =>
+          let hs' : h.lastState = SerialState.world (G := G) e.dst := by
+            calc
+              h.lastState = SerialState.world (G := G) s := hs
+              _ = SerialState.world (G := G) e.src := by rw [hsrc]
+              _ = SerialState.world (G := G) e.dst :=
+                (eraseStep?_none_world_eq (G := G) e hErase).symm
+          have hrec :
+              (originalHistoryFromAux (G := G) e.dst h hs' es htail).1.steps =
+                h.steps ++ es.filterMap (eraseStep? (G := G)) :=
+            originalHistoryFromAux_steps e.dst h hs' es htail
+          unfold originalHistoryFromAux
+          split
+          · rename_i e' hErase'
+            exfalso
+            rw [hErase] at hErase'
+            contradiction
+          · rename_i hErase'
+            simpa [hrec]
+
 /-- The original FOSG history represented by a serialized trace position, obtained
 by erasing bookkeeping serialized steps and collapsing resolution steps back to
 their underlying original realized transitions. -/
 noncomputable def originalHistory {k : Nat} (pos : TracePosition G k) : G.History :=
   (originalHistoryFromAux (G := G) (.base G.init) (History.nil G) (by simp)
     pos.trail.1 pos.hchain).1
+
+@[simp] theorem originalHistory_steps {k : Nat} (pos : TracePosition G k) :
+    (originalHistory (G := G) pos).steps =
+      pos.history.steps.filterMap (eraseStep? (G := G)) := by
+  simpa [originalHistory, TracePosition.history] using
+    originalHistoryFromAux_steps (G := G) (.base G.init) (History.nil G) (by simp)
+      pos.trail.1 pos.hchain
 
 @[simp] theorem originalHistory_lastState {k : Nat} (pos : TracePosition G k) :
     (originalHistory (G := G) pos).lastState = SerialState.world (G := G) pos.state := by
