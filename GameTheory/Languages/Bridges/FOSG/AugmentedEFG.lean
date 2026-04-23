@@ -2223,11 +2223,45 @@ noncomputable def traceTreeFrom {k : Nat} (pos : TracePosition G k) :
     GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k) :=
   traceTreeFromAccum (G := G) pos (TracePosition.zeroPayoff (G := G))
 
+/-- Bridge-side execution recursion for the trace-backed plain EFG tree under a
+translated legal FOSG behavioral profile. -/
+noncomputable def traceEvalDistAccum
+    {k : Nat} (σ : G.LegalBehavioralProfile) (pos : TracePosition G k)
+    (acc : TracePosition.PayoffVec (G := G) k) :
+    PMF (TraceOutcome (G := G) k) :=
+  (traceTreeFromAccum (G := G) pos acc).evalDist
+    (Position.translateBehavioralProfile (G := G) σ)
+
+theorem traceTreeFromAccum_evalDist
+    {k : Nat} (σ : G.LegalBehavioralProfile) (pos : TracePosition G k)
+    (acc : TracePosition.PayoffVec (G := G) k) :
+    (traceTreeFromAccum (G := G) pos acc).evalDist
+        (Position.translateBehavioralProfile (G := G) σ) =
+      traceEvalDistAccum (G := G) σ pos acc := by
+  rfl
+
+theorem traceTreeFrom_evalDist
+    {k : Nat} (σ : G.LegalBehavioralProfile) (pos : TracePosition G k) :
+    (traceTreeFrom (G := G) pos).evalDist
+        (Position.translateBehavioralProfile (G := G) σ) =
+      traceEvalDistAccum (G := G) σ pos (TracePosition.zeroPayoff (G := G)) := by
+  simpa [traceTreeFrom] using
+    traceTreeFromAccum_evalDist (G := G) σ pos (TracePosition.zeroPayoff (G := G))
+
 noncomputable def toPlainTraceEFGAtHorizon (k : Nat) : EFGGame where
   inf := traceInfoStructure (G := G) k
   Outcome := TraceOutcome (G := G) k
   tree := traceTreeFrom (G := G) (TracePosition.root (G := G) k)
   utility := fun z => z.2
+
+@[simp] theorem toPlainTraceEFGAtHorizon_outcomeKernel
+    (σ : G.LegalBehavioralProfile) (k : Nat) :
+    (toPlainTraceEFGAtHorizon (G := G) k).toKernelGame.outcomeKernel
+        (Position.translateBehavioralProfile (G := G) σ) =
+      traceEvalDistAccum (G := G) σ (TracePosition.root (G := G) k)
+        (TracePosition.zeroPayoff (G := G)) := by
+  simpa [EFGGame.toKernelGame, toPlainTraceEFGAtHorizon] using
+    traceTreeFrom_evalDist (G := G) (k := k) σ (TracePosition.root (G := G) k)
 
 noncomputable def treeFromAccum {k : Nat} (pos : Position G k)
     (acc : Position.PayoffVec (G := G) k) :
