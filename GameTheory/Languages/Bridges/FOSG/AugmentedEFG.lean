@@ -1602,6 +1602,93 @@ noncomputable def TracePosition.actionIndexEquivAvailableAction
     simpa [TracePosition.actionFromIndex_apply_current,
       TracePosition.legalActionOfAvailableAction_apply_current] using hcur
 
+/-- Recover the original available concrete action underlying a support point
+of the native behavioral strategy at a trace decision position. -/
+noncomputable def TracePosition.supportActionSubtype
+    {k : Nat} {p : PlayerIx}
+    (σ : G.LegalBehavioralProfile)
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (oi : Option (Act (origPlayer (ι := ι) p)))
+    (hoi : oi ∈
+      ((σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p))).support) :
+    TracePosition.AvailableActionSubtype (G := G) I := by
+  let h := TracePosition.originalHistory (G := G) I.1
+  have hoi' : oi ∈
+      ((σ (origPlayer (ι := ι) p)).1 (h.playerView (origPlayer (ι := ι) p))).support := by
+    simpa [h] using hoi
+  have hlegal : oi ∈ G.availableMoves h (origPlayer (ι := ι) p) := by
+    exact (σ (origPlayer (ι := ι) p)).2 h hoi'
+  cases hoiEq : oi with
+  | none =>
+      have hactive :
+          origPlayer (ι := ι) p ∈ G.active h.lastState :=
+        TracePosition.current_mem_active_of_player (G := G) I.2
+      rw [G.mem_availableMoves_iff] at hlegal
+      simp [FOSG.locallyLegalAtState, hactive, hoiEq] at hlegal
+  | some ai =>
+      refine ⟨ai, ?_⟩
+      rw [show ai ∈ G.availableActionsAtHistory h (origPlayer (ι := ι) p) ↔
+          some ai ∈ G.availableMoves h (origPlayer (ι := ι) p) by
+          simp [FOSG.availableActionsAtHistory, FOSG.availableMoves,
+            FOSG.availableMovesAtState, FOSG.locallyLegalAtState]]
+      simpa [hoiEq] using hlegal
+
+/-- The trace decision index corresponding to a support point of the native
+behavioral strategy at the same original player view. -/
+noncomputable def TracePosition.supportDecisionIndex
+    {k : Nat} {p : PlayerIx}
+    (σ : G.LegalBehavioralProfile)
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (oi : Option (Act (origPlayer (ι := ι) p)))
+    (hoi : oi ∈
+      ((σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p))).support) :
+    Fin (Position.actionArity (G := G) I.1.toPosition) :=
+  (TracePosition.actionIndexEquivAvailableAction (G := G) I).symm
+    (TracePosition.supportActionSubtype (G := G) σ I oi hoi)
+
+@[simp] theorem TracePosition.supportDecisionIndex_eq_actionFromIndex
+    {k : Nat} {p : PlayerIx}
+    (σ : G.LegalBehavioralProfile)
+    (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
+    (a : Fin (Position.actionArity (G := G) I.1.toPosition))
+    (hmem : some (TracePosition.actualActionFromIndex (G := G) I a) ∈
+      ((σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView
+          (origPlayer (ι := ι) p))).support) :
+    TracePosition.supportDecisionIndex (G := G) σ I
+      (some (TracePosition.actualActionFromIndex (G := G) I a)) hmem = a := by
+  have hsub :
+      TracePosition.supportActionSubtype (G := G) σ I
+          (some (TracePosition.actualActionFromIndex (G := G) I a)) hmem =
+        ⟨TracePosition.actualActionFromIndex (G := G) I a,
+          TracePosition.actualActionFromIndex_mem_available (G := G) I a⟩ := by
+    apply Subtype.ext
+    rfl
+  unfold TracePosition.supportDecisionIndex
+  rw [hsub]
+  exact (TracePosition.actionIndexEquivAvailableAction (G := G) I).symm_apply_apply _
+
+/-- Translate a native legal behavioral strategy to the trace-backed bounded
+plain EFG bridge. -/
+noncomputable def translateBehavioralStrategy
+    {k : Nat} (σ : G.LegalBehavioralProfile) (p : PlayerIx) :
+    EFG.BehavioralStrategy (traceInfoStructure (G := G) k) p :=
+  fun I =>
+    let τ :=
+      (σ.toProfile (origPlayer (ι := ι) p))
+        ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p))
+    τ.bindOnSupport (fun oi hoi =>
+      PMF.pure (TracePosition.supportDecisionIndex (G := G) σ I oi hoi))
+
+/-- Translate a native legal behavioral profile to the trace-backed bounded
+plain EFG bridge. -/
+noncomputable def translateBehavioralProfile
+    {k : Nat} (σ : G.LegalBehavioralProfile) :
+    EFG.BehavioralProfile (traceInfoStructure (G := G) k) :=
+  fun p => translateBehavioralStrategy (G := G) σ p
+
 /-- Chance successor law for a serialized position.
 
 This is totalized on all positions, but only the `player? = none` branches are
