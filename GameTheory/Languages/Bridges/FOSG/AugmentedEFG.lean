@@ -442,6 +442,56 @@ structure TracePosition (k : Nat) where
 
 namespace TracePosition
 
+noncomputable def trailCode {k : Nat} :
+    { xs : List ((SG G).Step) // xs.length ≤ k } → BoundedSeq ((SG G).Step) k
+  | ⟨xs, hxs⟩ => BoundedSeq.ofList xs hxs
+
+theorem trailCode_injective {k : Nat} :
+    Function.Injective (trailCode (G := G) (k := k)) := by
+  intro xs ys h
+  rcases xs with ⟨xs, hxs⟩
+  rcases ys with ⟨ys, hys⟩
+  change BoundedSeq.ofList xs hxs = BoundedSeq.ofList ys hys at h
+  have hlist := congrArg BoundedSeq.toList h
+  simpa [BoundedSeq.toList_ofList] using hlist
+
+noncomputable def code {k : Nat} (pos : TracePosition G k) :
+    SState G × BoundedSeq ((SG G).Step) k × Fin (k + 1) :=
+  (pos.state, trailCode (G := G) (k := k) pos.trail,
+    ⟨pos.remaining, Nat.lt_succ_of_le pos.hremaining⟩)
+
+theorem code_injective {k : Nat} :
+    Function.Injective (code (G := G) (k := k)) := by
+  intro p q h
+  have hState : p.state = q.state := by
+    exact congrArg Prod.fst h
+  have hTrail :
+      trailCode (G := G) (k := k) p.trail = trailCode (G := G) (k := k) q.trail := by
+    exact congrArg (fun x => x.2.1) h
+  have hRem :
+      (⟨p.remaining, Nat.lt_succ_of_le p.hremaining⟩ : Fin (k + 1)) =
+        ⟨q.remaining, Nat.lt_succ_of_le q.hremaining⟩ := by
+    exact congrArg (fun x => x.2.2) h
+  have hTrail' : p.trail = q.trail :=
+    trailCode_injective (G := G) (k := k) hTrail
+  have hRem' : p.remaining = q.remaining := Fin.mk.inj hRem
+  cases p
+  cases q
+  cases hState
+  cases hTrail'
+  cases hRem'
+  simp at *
+
+instance instFinite {k : Nat} : Finite (TracePosition G k) :=
+  Finite.of_injective (code (G := G) (k := k)) (code_injective (G := G) (k := k))
+
+noncomputable instance instFintype {k : Nat} : Fintype (TracePosition G k) :=
+  Fintype.ofFinite (TracePosition G k)
+
+noncomputable instance instDecidableEq {k : Nat} : DecidableEq (TracePosition G k) := by
+  classical
+  infer_instance
+
 noncomputable def root (k : Nat) : TracePosition G k := by
   let trail : { xs : List ((SG G).Step) // xs.length ≤ k } := ⟨[], Nat.zero_le _⟩
   refine ⟨.base G.init, trail, k, le_rfl, ?_, trivial, ?_⟩
@@ -509,6 +559,100 @@ noncomputable def appendStep {k : Nat} (pos : TracePosition G k) (e : (SG G).Ste
     (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) :
     (appendStep (G := G) pos e hrem hsrc).history.lastState = e.dst := by
   simp [appendStep]
+
+def toPosition {k : Nat} (pos : TracePosition G k) : Position G k :=
+  ⟨pos.state, pos.remaining, pos.hremaining⟩
+
+def player? {k : Nat} (pos : TracePosition G k) : Option ι :=
+  Position.player? (G := G) pos.toPosition
+
+theorem not_terminal_of_player
+    {k : Nat} {pos : TracePosition G k} {i : ι}
+    (hplayer : pos.player? = some i) :
+    ¬ (SG G).terminal pos.state :=
+  Position.not_terminal_of_player (G := G) hplayer
+
+private theorem finiteAct (i : ι) : Finite (Act i) :=
+  Finite.of_injective (fun ai => (some ai : Option (Act i))) (by
+    intro a b h
+    simpa using h)
+
+noncomputable instance instFiniteAct (i : ι) : Finite (Act i) :=
+  finiteAct i
+
+noncomputable instance instFintypeAct (i : ι) : Fintype (Act i) := by
+  classical
+  exact Fintype.ofFinite (Act i)
+
+noncomputable def originalPublicFrag (e : (SG G).Step) : G.PublicState := by
+  classical
+  cases hs : e.src with
+  | base w =>
+      by_cases hterm : G.terminal w
+      · exact []
+      · cases horder : G.orderedActive w with
+        | nil =>
+            match e.dst with
+            | .base w' =>
+                exact [G.pubObs w
+                  (SerialState.baseChanceLegalAction (G := G) w
+                    (G.active_eq_empty_of_orderedActive_eq_nil horder) hterm)
+                  w']
+            | _ => exact []
+        | cons current rest =>
+            exact []
+  | decide w chosen current rest hvalid =>
+      exact []
+  | chance w ga =>
+      match e.dst with
+      | .base w' => exact [G.pubObs w ga w']
+      | _ => exact []
+
+noncomputable def originalPlayerFrag (who : ι) (e : (SG G).Step) : G.InfoState who := by
+  classical
+  cases hs : e.src with
+  | base w =>
+      by_cases hterm : G.terminal w
+      · exact []
+      · cases horder : G.orderedActive w with
+        | nil =>
+            match e.dst with
+            | .base w' =>
+                exact [.obs
+                  (G.privObs who w
+                    (SerialState.baseChanceLegalAction (G := G) w
+                      (G.active_eq_empty_of_orderedActive_eq_nil horder) hterm) w')
+                  (G.pubObs w
+                    (SerialState.baseChanceLegalAction (G := G) w
+                      (G.active_eq_empty_of_orderedActive_eq_nil horder) hterm) w')]
+            | _ => exact []
+        | cons current rest =>
+            match e.act.1 who with
+            | some ai => exact [.act ai]
+            | none => exact []
+  | decide w chosen current rest hvalid =>
+      match e.act.1 who with
+      | some ai => exact [.act ai]
+      | none => exact []
+  | chance w ga =>
+      match e.dst with
+      | .base w' => exact [.obs (G.privObs who w ga w') (G.pubObs w ga w')]
+      | _ => exact []
+
+noncomputable def originalPublicViewFrom : List ((SG G).Step) → G.PublicState
+  | [] => []
+  | e :: es => originalPublicFrag (G := G) e ++ originalPublicViewFrom es
+
+noncomputable def originalPlayerViewFrom (who : ι) : List ((SG G).Step) → G.InfoState who
+  | [] => []
+  | e :: es => originalPlayerFrag (G := G) who e ++ originalPlayerViewFrom who es
+
+noncomputable def originalPublicView {k : Nat} (pos : TracePosition G k) : G.PublicState :=
+  originalPublicViewFrom (G := G) pos.history.steps
+
+noncomputable def originalPlayerView {k : Nat} (pos : TracePosition G k) (who : ι) :
+  G.InfoState who :=
+  originalPlayerViewFrom (G := G) who pos.history.steps
 
 end TracePosition
 
