@@ -260,6 +260,33 @@ Only after that, move on to the native bounded compile comparison.
     - build already-normalized chance/decision nodes under explicit state cases,
     - avoid direct `rw` on the match binder in the goal.
 
+12. Even branch-normalization theorems can be too ambitious if their conclusion
+    is still the full recursive term `treeFromAccum pos acc = ...`.
+    In the base/empty and similar cases, `simp` does not fully discharge the
+    named `match hplayer : TracePosition.player? G pos with ...` binder in the
+    conclusion, even after concrete-state hypotheses are available.
+
+    So the next step should not be another family of
+    `treeFromAccum_eq_*` theorems. The remaining stable route is:
+    - use the concrete `player?` lemmas to split the main proof by state,
+    - form the already-built decision/chance node expressions locally,
+    - and compare those local nodes directly with the bind-level helpers.
+
+13. Even an `evalDist`-level branch-shape theorem around the full recursive term
+    is still too ambitious. For example, trying to prove
+    `treeFromAccum ... .evalDist = chanceNode.evalDist` for a `player? = none`
+    branch still leaves the entire recursively expanded child term on the
+    right-hand side after unfolding.
+
+    Two concrete sub-lessons:
+    - rewriting the named `match hplayer : ...` binder is still the wrong seam;
+      if a local branch theorem is needed, split on the match rather than `rw`
+      on the binder
+    - but even after that, the stable comparison surface is not a
+      `treeFromAccum.evalDist = ...` shape theorem; it is the already-exposed
+      `PMF.bind` / `evalDist_chance` layer with child equalities supplied
+      directly
+
 ## File organization
 
 The Step 1-3 theorem stack should not grow `AugmentedEFG.lean` further.
