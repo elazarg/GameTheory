@@ -2986,7 +2986,7 @@ theorem actualActionFromIndex_infosetOfPosition
           (some x))
       (actualActionFromIndex_infosetOfPosition (G := G) I a)
 
-private theorem bind_eq_bind_of_equiv
+theorem bind_eq_bind_of_equiv
     {α β γ : Type} [Fintype α] [Fintype β]
     (e : α ≃ β) (μ₁ : PMF α) (μ₂ : PMF β)
     (f : α → PMF γ) (g : β → PMF γ)
