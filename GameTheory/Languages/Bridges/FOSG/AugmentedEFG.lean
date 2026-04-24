@@ -2986,6 +2986,28 @@ theorem actualActionFromIndex_infosetOfPosition
           (some x))
       (actualActionFromIndex_infosetOfPosition (G := G) I a)
 
+private theorem bind_eq_bind_of_equiv
+    {α β γ : Type} [Fintype α] [Fintype β]
+    (e : α ≃ β) (μ₁ : PMF α) (μ₂ : PMF β)
+    (f : α → PMF γ) (g : β → PMF γ)
+    (hμ : ∀ a, μ₁ a = μ₂ (e a))
+    (hg : ∀ a, f a = g (e a)) :
+    μ₁.bind f = μ₂.bind g := by
+  ext z
+  rw [PMF.bind_apply, PMF.bind_apply, tsum_fintype, tsum_fintype]
+  calc
+    ∑ a : α, μ₁ a * f a z
+        = ∑ a : α, μ₂ (e a) * g (e a) z := by
+            refine Finset.sum_congr rfl ?_
+            intro a _
+            simp [hμ a, hg a]
+    _ = ∑ b : β, μ₂ b * g b z := by
+          exact
+            Fintype.sum_equiv e
+              (fun a : α => μ₂ (e a) * g (e a) z)
+              (fun b : β => μ₂ b * g b z)
+              (fun _ => rfl)
+
 end Semantic
 
 noncomputable def treeFromAccum {k : Nat} (pos : Position G k)
