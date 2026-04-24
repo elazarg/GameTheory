@@ -317,6 +317,25 @@ Only after that, move on to the native bounded compile comparison.
       `evalDist_chance`
     - then apply the existing bind-level helpers with child equalities
 
+16. Even explicit state-splitting is not yet a stable main-proof seam if the
+    recursive equation still contains the named binder
+    `match hplayer : TracePosition.player? G pos with ...`.
+    Two failed variants hit the same issue:
+    - `cases hplayer : pos.player?`
+    - `cases hstate : pos.state`
+
+    In both cases Lean tries to generalize over the remaining named match and
+    breaks motive elaboration before the branch proof even starts.
+
+    So the next stable step is not “split the main theorem harder”. It is to
+    extract one more tiny layer of branch equations that eliminate the named
+    `hplayer` binder *before* the main equality proof:
+    - state-specific semantic node equations
+    - state-specific trace node equations
+
+    After those are available, the main proof can compare already-built
+    decision/chance branch PMFs without touching the problematic named match.
+
 ## File organization
 
 The Step 1-3 theorem stack should not grow `AugmentedEFG.lean` further.
