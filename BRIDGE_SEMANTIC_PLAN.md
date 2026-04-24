@@ -301,6 +301,22 @@ Only after that, move on to the native bounded compile comparison.
     these recursive PMF definitions first, and only then reconnect them to
     `treeFromAccum.evalDist` / `traceTreeFromAccum.evalDist`.
 
+15. Even on the direct recursive PMF layer, `simp` on both recursive
+    definitions at once is still the wrong tool. It loops on the generated
+    `.eq_1` lemmas for:
+    - `Semantic.runDistAccum`
+    - `Semantic.treeFromAccum`
+
+    So the next proof should not use:
+    - `simp [runDistAccum, treeFromAccum, ...]`
+
+    The stable route from here is:
+    - `unfold` each recursive definition once
+    - discharge the terminal/truncated branches explicitly
+    - in nonterminal branches, rewrite only the outer `evalDist_decision` /
+      `evalDist_chance`
+    - then apply the existing bind-level helpers with child equalities
+
 ## File organization
 
 The Step 1-3 theorem stack should not grow `AugmentedEFG.lean` further.
