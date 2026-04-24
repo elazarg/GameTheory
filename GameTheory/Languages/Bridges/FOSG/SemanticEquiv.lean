@@ -145,6 +145,77 @@ theorem player_eq_none_of_chance
   simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
     Position.isTruncated, hrem, hstate]
 
+noncomputable def runDistAccum
+    {k : Nat} (σ : G.LegalBehavioralProfile) (pos : TracePosition G k)
+    (acc : TracePosition.PayoffVec (G := G) k) :
+    PMF (Outcome (G := G) k) :=
+  if hrem : pos.remaining = 0 then
+    PMF.pure (pos, acc)
+  else if hterm : (SG G).terminal pos.state then
+    PMF.pure (pos, acc)
+  else
+    match hplayer : pos.player? with
+    | some i =>
+        let p : PlayerIx := playerEquiv (ι := ι) i
+        have hp : origPlayer (ι := ι) p = i := by
+          simp [p, origPlayer, playerEquiv]
+        let hI : pos.player? = some (origPlayer (ι := ι) p) := by
+          simpa [hp] using hplayer
+        let Ipos : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)} :=
+          ⟨pos, hI⟩
+        (translateBehavioralProfile (G := G) σ p (infosetOfPosition (G := G) Ipos)).bind
+          (fun a =>
+            let a' := (viewIndexEquivPositionIndex (G := G) Ipos) a
+            runDistAccum σ (Position.TracePosition.decisionChild (G := G) Ipos a') acc)
+    | none =>
+        let μ := TracePosition.liveChancePMF (G := G) pos hplayer hterm hrem
+        (supportPMF μ).bind
+          (fun b =>
+            let child := TracePosition.chanceChild (G := G) pos hplayer hterm hrem b
+            let acc' := TracePosition.addPayoff (G := G) acc
+              (Position.chanceEdgePayoff (G := G) pos.toPosition child.state)
+            runDistAccum σ child acc')
+termination_by pos.remaining
+decreasing_by
+  all_goals
+    simpa [Position.TracePosition.decisionChild_remaining, TracePosition.chanceChild_remaining,
+      Nat.pred_eq_sub_one] using Nat.pred_lt hrem
+
+noncomputable def traceRunDistAccum
+    {k : Nat} (σ : G.LegalBehavioralProfile) (pos : TracePosition G k)
+    (acc : TracePosition.PayoffVec (G := G) k) :
+    PMF (TraceOutcome (G := G) k) :=
+  if hrem : pos.remaining = 0 then
+    PMF.pure (pos, acc)
+  else if hterm : (SG G).terminal pos.state then
+    PMF.pure (pos, acc)
+  else
+    match hplayer : pos.player? with
+    | some i =>
+        let p : PlayerIx := playerEquiv (ι := ι) i
+        have hp : origPlayer (ι := ι) p = i := by
+          simp [p, origPlayer, playerEquiv]
+        let hI : pos.player? = some (origPlayer (ι := ι) p) := by
+          simpa [hp] using hplayer
+        let Ipos : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)} :=
+          ⟨pos, hI⟩
+        (Position.translateBehavioralProfile (G := G) σ p Ipos).bind
+          (fun a =>
+            traceRunDistAccum σ (Position.TracePosition.decisionChild (G := G) Ipos a) acc)
+    | none =>
+        let μ := TracePosition.liveChancePMF (G := G) pos hplayer hterm hrem
+        (supportPMF μ).bind
+          (fun b =>
+            let child := TracePosition.chanceChild (G := G) pos hplayer hterm hrem b
+            let acc' := TracePosition.addPayoff (G := G) acc
+              (Position.chanceEdgePayoff (G := G) pos.toPosition child.state)
+            traceRunDistAccum σ child acc')
+termination_by pos.remaining
+decreasing_by
+  all_goals
+    simpa [Position.TracePosition.decisionChild_remaining, TracePosition.chanceChild_remaining,
+      Nat.pred_eq_sub_one] using Nat.pred_lt hrem
+
 end Semantic
 
 end AugmentedEFGBridge

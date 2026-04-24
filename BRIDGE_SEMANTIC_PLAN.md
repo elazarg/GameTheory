@@ -287,6 +287,20 @@ Only after that, move on to the native bounded compile comparison.
       `PMF.bind` / `evalDist_chance` layer with child equalities supplied
       directly
 
+14. A better comparison surface than `GameTree.evalDist` is a direct recursive
+    PMF semantics for the semantic and trace bridges:
+    - `Semantic.runDistAccum`
+    - `Semantic.traceRunDistAccum`
+
+    These recurse on `TracePosition.remaining` directly and differ only at the
+    decision-node bind, which is exactly the seam handled by
+    `decision_bind_eq_of_children_eq`.
+
+    This does not finish the proof by itself, but it removes one entire layer
+    of `GameTree` constructor noise. The remaining comparison should target
+    these recursive PMF definitions first, and only then reconnect them to
+    `treeFromAccum.evalDist` / `traceTreeFromAccum.evalDist`.
+
 ## File organization
 
 The Step 1-3 theorem stack should not grow `AugmentedEFG.lean` further.
