@@ -243,6 +243,23 @@ Only after that, move on to the native bounded compile comparison.
    In other words: land local relabeling lemmas at the `bind` level first, then
    use `evalDist_decision` only in the final tree proof.
 
+10. Concrete-state `player?` simplification lemmas are worth extracting:
+    - base + empty `orderedActive` -> `player? = none`
+    - base + `current :: rest` -> `player? = some current`
+    - decide-state -> `player? = some current`
+    - chance-state -> `player? = none`
+
+    These reduce branch proofs to actual game semantics instead of repeatedly
+    unfolding `TracePosition.toPosition`.
+
+11. Branch-local node equalities are still delicate if they try to rewrite the
+    named binder in
+    `match hplayer : TracePosition.player? G pos with ...`.
+    The right direction is:
+    - keep the concrete `player?` simplification lemmas,
+    - build already-normalized chance/decision nodes under explicit state cases,
+    - avoid direct `rw` on the match binder in the goal.
+
 ## File organization
 
 The Step 1-3 theorem stack should not grow `AugmentedEFG.lean` further.

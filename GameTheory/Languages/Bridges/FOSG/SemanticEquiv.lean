@@ -109,6 +109,42 @@ theorem evalDist_chance_eq_of_children_eq
       (hμ := fun b => rfl)
       (hg := hchild))
 
+theorem player_eq_none_of_base_empty
+    {k : Nat} {pos : TracePosition G k} {w : W}
+    (hstate : pos.state = .base w)
+    (hrem : pos.remaining ≠ 0)
+    (hEmpty : G.orderedActive w = []) :
+    pos.player? = none := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate, hEmpty]
+
+theorem player_eq_some_of_base_cons
+    {k : Nat} {pos : TracePosition G k} {w : W} {current : ι} {rest : List ι}
+    (hstate : pos.state = .base w)
+    (hrem : pos.remaining ≠ 0)
+    (horder : G.orderedActive w = current :: rest) :
+    pos.player? = some current := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate, horder]
+
+theorem player_eq_some_of_decide
+    {k : Nat} {pos : TracePosition G k}
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (hstate : pos.state = .decide w chosen current rest hvalid)
+    (hrem : pos.remaining ≠ 0) :
+    pos.player? = some current := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate]
+
+theorem player_eq_none_of_chance
+    {k : Nat} {pos : TracePosition G k} {w : W} {ga : G.LegalAction w}
+    (hstate : pos.state = .chance w ga)
+    (hrem : pos.remaining ≠ 0) :
+    pos.player? = none := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate]
+
 end Semantic
 
 end AugmentedEFGBridge
