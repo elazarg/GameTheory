@@ -1,8 +1,8 @@
 # GameTheory (Lean 4)
 
 A formalization of finite game theory in Lean 4 / Mathlib, covering normal-form
-games, extensive-form games, multi-agent influence diagrams (MAIDs), and their
-interconnections.
+games, extensive-form games, multi-agent influence diagrams (MAIDs),
+factored-observation stochastic games (FOSGs), and their interconnections.
 
 The library is organized around a single semantic target — `KernelGame` — that
 packages strategy spaces, stochastic outcomes, and utility. Solution concepts
@@ -18,12 +18,14 @@ Formal proofs of standard results in finite game theory:
   (via Brouwer fixed point on product simplices)
 - **Minimax** — von Neumann's minimax theorem for finite two-player zero-sum games
 - **Kuhn's theorem** — equivalence of mixed and behavioral strategies under
-  perfect recall, proved at a semantic model layer and instantiated for three
+  perfect recall, proved at a semantic model layer and instantiated for four
   game representations:
   - **EFG** — behavioral ↔ mixed for extensive-form games with information sets
   - **MAID** — behavioral policy ↔ product mixed strategy for multi-agent
     influence diagrams under DAG perfect recall
   - **Sequential** — behavioral ↔ mixed for protocol-based sequential games
+  - **FOSG** — behavioral ↔ mixed for factored-observation stochastic games,
+    via the bridge to `ObsModelCore` and natively in terms of FOSG histories
 - **Zermelo / backward induction** — finite perfect-information games have
   pure subgame-perfect equilibria
 - **One-shot deviation principle** — SPE characterization via single-step
@@ -75,11 +77,16 @@ The library treats game representations as *languages* with a uniform pipeline:
 | **EFG** | Sequential play with information sets (extensive form) |
 | **MAID** | Graph-structured decisions with chance, decision, and utility nodes |
 | **Sequential** | Protocol-based sequential games, repeated games, stochastic games |
+| **FOSG** | Factored-observation stochastic games: state-based, simultaneous moves, factored private/public observations, optional participation per player |
 | **Intrinsic** | Witsenhausen's intrinsic model — information as equivalence relations on a product configuration space |
 
 Bridges connect representations: MAID → EFG (topological unrolling, preserving
 perfect recall and evaluation semantics), EFG ↔ NFG (strategic form extraction
-and simultaneous-game embedding), and all languages compile to `KernelGame`.
+and simultaneous-game embedding), FOSG → augmented-EFG (bounded-horizon
+presentation with two-way distributional transport — a respectful EFG profile
+maps back to a legal FOSG profile via `efgToFOSGProfile`, and outcome kernels /
+expected utilities agree in both directions), NFG → FOSG (one-shot embedding),
+and all languages compile to `KernelGame`.
 
 ## Kuhn's theorem — proof architecture
 
@@ -109,6 +116,9 @@ theorems:
   semantics under DAG perfect recall (Koller & Milch).
 - **Sequential**: Both directions proved for the native sequential
   evaluation semantics.
+- **FOSG**: Both directions proved natively in terms of FOSG histories,
+  legal behavioral profiles, terminal weights, and run distributions, plus
+  re-exposed through the `ObsModelCore` bridge.
 
 The Intrinsic form (`Languages/Intrinsic/`) formalizes Witsenhausen's intrinsic
 model following Heymann, De Lara, and Chancelier (2020), where information is
