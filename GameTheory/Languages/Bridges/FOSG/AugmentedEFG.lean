@@ -9,8 +9,9 @@ Small FOSG -> augmented-EFG bridge.
 
 The semantic spine is `SerialExec`: outcomes are native FOSG histories, and the
 bridge tree is only a finite EFG presentation of the original-step process.  The
-tree presents each simultaneous FOSG step as a sequence of decisions by the
-currently active players, followed by a chance node for the original transition.
+tree presents each simultaneous FOSG step as one decision opportunity per
+player, followed by a chance node for the original transition.  Inactive players
+have only `none` in the support of translated legal FOSG strategies.
 -/
 
 namespace GameTheory
@@ -141,6 +142,34 @@ def encodePublicView
     {k : Nat} (h : G.History) : EncPublicView (PubObs := PubObs) k :=
   Word.ofList k h.publicView
 
+omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)] [Fintype W]
+  [DecidablePred G.terminal] in
+theorem step_playerView_length_le_two
+    (e : G.Step) (i : ι) : (e.playerView i).length ≤ 2 := by
+  unfold Step.playerView
+  split <;> simp
+
+omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)] [Fintype W]
+  [DecidablePred G.terminal] in
+theorem playerViewFrom_length_le_two_mul
+    (es : List G.Step) (i : ι) :
+    (History.playerViewFrom (G := G) i es).length ≤ 2 * es.length := by
+  induction es with
+  | nil =>
+      simp [History.playerViewFrom]
+  | cons e es ih =>
+      simp only [History.playerViewFrom, List.length_append, List.length_cons]
+      have hstep := step_playerView_length_le_two (G := G) e i
+      omega
+
+omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)] [Fintype W]
+  [DecidablePred G.terminal] in
+theorem history_playerView_length_le_two_mul_steps
+    (h : G.History) (i : ι) :
+    (h.playerView i).length ≤ 2 * h.steps.length := by
+  simpa [History.playerView] using
+    playerViewFrom_length_le_two_mul (G := G) h.steps i
+
 /-- Information structure for the bridge tree.  Decision infosets are encoded
 original player views; actions are optional local moves.  Invalid optional moves
 are totalized in the tree but get zero probability under translated legal FOSG
@@ -218,9 +247,25 @@ noncomputable def legalize
   · let a0 := Classical.choose (G.nonterminal_exists_legal hnot)
     exact ⟨a0, Classical.choose_spec (G.nonterminal_exists_legal hnot)⟩
 
+/-- Present the simultaneous move as sequential EFG decisions, then continue
+with the assembled partial joint action. -/
+noncomputable def choosePlayers
+    (k : Nat) (h : G.History) : List (PlayerIx (ι := ι)) → JointAction Act →
+      (JointAction Act → GameTree (infoStructure (G := G) k) (SerialExec.State G)) →
+      GameTree (infoStructure (G := G) k) (SerialExec.State G)
+  | [], chosen, cont => cont chosen
+  | p :: rest, chosen, cont =>
+      let i := origPlayer (ι := ι) p
+      let I : (infoStructure (G := G) k).Infoset p :=
+        encodePlayerView (G := G) h i
+      .decision I (fun aIx =>
+        let aOpt : Option (Act i) := actionOfIndex (G := G) I aIx
+        choosePlayers k h rest
+          (recordOption (Act := Act) chosen i aOpt) cont)
+
 /-- Tree for original-step execution from a native history.  The outer
-recursion consumes original FOSG steps; the inner local recursion presents the
-currently active players one by one. -/
+recursion consumes original FOSG steps; the inner recursion presents one
+decision opportunity per player. -/
 noncomputable def fromHistory
     (k : Nat) : Nat → G.History → GameTree (infoStructure (G := G) k) (SerialExec.State G)
   | 0, h => .terminal h
@@ -228,33 +273,17 @@ noncomputable def fromHistory
       if hterm : G.terminal h.lastState then
         .terminal h
       else
-        let rec choosePlayers (players : List ι) (chosen : JointAction Act) :
-            GameTree (infoStructure (G := G) k) (SerialExec.State G) :=
-          match players with
-          | [] =>
-              let a := legalize (G := G) h hterm chosen
-              let μ := G.transition h.lastState a
-              .chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
-                (fintype_card_pos_of_pmf μ)
-                (fun b =>
-                  let dst := (Fintype.equivFin W).symm b
-                  let h' := h.extendByOutcome a dst
-                  fromHistory k remaining h')
-          | current :: rest =>
-              let p : PlayerIx (ι := ι) := playerEquiv (ι := ι) current
-              have hp : origPlayer (ι := ι) p = current := by
-                simp [p, origPlayer, playerEquiv]
-              let I : (infoStructure (G := G) k).Infoset p := by
-                change EncPlayerView (G := G) (origPlayer (ι := ι) p) k
-                rw [hp]
-                exact encodePlayerView (G := G) h current
-              .decision I (fun aIx =>
-                let aOptCurrent : Option (Act current) := by
-                  rw [← hp]
-                  exact actionOfIndex (G := G) I aIx
-                choosePlayers rest
-                  (recordOption (Act := Act) chosen current aOptCurrent))
-        choosePlayers (G.active h.lastState).toList (noopAction Act)
+        choosePlayers (G := G) k h (List.finRange (Fintype.card ι))
+          (noopAction Act)
+          (fun chosen =>
+            let a := legalize (G := G) h hterm chosen
+            let μ := G.transition h.lastState a
+            .chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
+              (fintype_card_pos_of_pmf μ)
+              (fun b =>
+                let dst := (Fintype.equivFin W).symm b
+                let h' := h.extendByOutcome a dst
+                fromHistory k remaining h'))
 
 end Tree
 
@@ -275,6 +304,24 @@ end Tree
       (GameTree.terminal h :
         GameTree (infoStructure (G := G) k) (SerialExec.State G)) := by
   simp [Tree.fromHistory, hterm]
+
+theorem tree_fromHistory_succ_nonterminal
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    (k n : Nat) (h : G.History) (hnot : ¬ G.terminal h.lastState) :
+    Tree.fromHistory (G := G) k (n + 1) h =
+      Tree.choosePlayers (G := G) k h (List.finRange (Fintype.card ι))
+        (noopAction Act)
+        (fun chosen =>
+          let a := Tree.legalize (G := G) h hnot chosen
+          let μ := G.transition h.lastState a
+          GameTree.chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
+            (fintype_card_pos_of_pmf μ)
+            (fun b =>
+              let dst := (Fintype.equivFin W).symm b
+              let h' := h.extendByOutcome a dst
+              Tree.fromHistory (G := G) k n h')) := by
+  simp [Tree.fromHistory, hnot]
 
 @[simp] theorem tree_eval_zero
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
@@ -322,6 +369,77 @@ noncomputable def translateBehavioralProfile
     let i := origPlayer (ι := ι) p
     let view : G.InfoState i := Word.toList I
     PMF.map (indexOfAction (G := G) I) (σ.toProfile i view)
+
+@[simp] theorem tree_eval_zero_eq_runDistFrom_zero
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    (k : Nat) (σ : G.LegalBehavioralProfile) (h : G.History) :
+    (Tree.fromHistory (G := G) k 0 h).evalDist
+        (translateBehavioralProfile (G := G) σ) =
+      History.runDistFrom G σ 0 h := by
+  simp
+
+@[simp] theorem tree_eval_succ_terminal_eq_runDistFrom
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    (k n : Nat) (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : G.terminal h.lastState) :
+    (Tree.fromHistory (G := G) k (n + 1) h).evalDist
+        (translateBehavioralProfile (G := G) σ) =
+      History.runDistFrom G σ (n + 1) h := by
+  simp [hterm]
+
+theorem tree_eval_succ_nonterminal_unfold
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    (k n : Nat) (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hnot : ¬ G.terminal h.lastState) :
+    (Tree.fromHistory (G := G) k (n + 1) h).evalDist
+        (translateBehavioralProfile (G := G) σ) =
+      (Tree.choosePlayers (G := G) k h (List.finRange (Fintype.card ι))
+        (noopAction Act)
+        (fun chosen =>
+          let a := Tree.legalize (G := G) h hnot chosen
+          let μ := G.transition h.lastState a
+          GameTree.chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
+            (fintype_card_pos_of_pmf μ)
+            (fun b =>
+              let dst := (Fintype.equivFin W).symm b
+              let h' := h.extendByOutcome a dst
+              Tree.fromHistory (G := G) k n h'))).evalDist
+        (translateBehavioralProfile (G := G) σ) := by
+  rw [tree_fromHistory_succ_nonterminal (G := G) k n h hnot]
+
+omit [Fintype W] [DecidablePred G.terminal] in
+theorem choosePlayers_nil_evalDist
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (σ : G.LegalBehavioralProfile) (h : G.History)
+    (chosen : JointAction Act)
+    (cont : JointAction Act → GameTree (infoStructure (G := G) k) (SerialExec.State G)) :
+    (Tree.choosePlayers (G := G) k h [] chosen cont).evalDist
+        (translateBehavioralProfile (G := G) σ) =
+      (cont chosen).evalDist (translateBehavioralProfile (G := G) σ) := rfl
+
+omit [Fintype W] [DecidablePred G.terminal] in
+theorem choosePlayers_cons_evalDist
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (σ : G.LegalBehavioralProfile) (h : G.History)
+    (p : PlayerIx (ι := ι)) (rest : List (PlayerIx (ι := ι))) (chosen : JointAction Act)
+    (cont : JointAction Act → GameTree (infoStructure (G := G) k) (SerialExec.State G))
+    (hlen : (h.playerView (origPlayer (ι := ι) p)).length ≤ 2 * k) :
+    (Tree.choosePlayers (G := G) k h (p :: rest) chosen cont).evalDist
+        (translateBehavioralProfile (G := G) σ) =
+      (σ.toProfile (origPlayer (ι := ι) p) (h.playerView (origPlayer (ι := ι) p))).bind fun aOpt =>
+        (Tree.choosePlayers (G := G) k h rest
+            (Tree.recordOption (Act := Act) chosen (origPlayer (ι := ι) p) aOpt) cont).evalDist
+          (translateBehavioralProfile (G := G) σ) := by
+  simp only [Tree.choosePlayers, encodePlayerView, evalDist_decision, translateBehavioralProfile,
+    hlen, Word.toList_ofList_eq_self, legalBehavioralProfile_toProfile_apply, PMF.bind_map]
+  congr 1
+  funext aOpt
+  simp
 
 /-- The bounded augmented-EFG bridge.  Public/player augmented states are
 length-stamped native views of the reached history. -/
