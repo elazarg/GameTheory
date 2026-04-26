@@ -956,6 +956,205 @@ theorem toPlainEFGOfBoundedHorizon_support_isTerminal
     exact hsupp
   exact G.runDist_support_isTerminal_of_boundedHorizon hBound σ h hsuppRun
 
+/-! ### Boundary cast helpers for inverse strategy translation
+
+The EFG presentation is indexed by `PlayerIx = Fin (Fintype.card ι)` and uses
+`origPlayer p` as the underlying FOSG player.  When constructing an inverse
+EFG-to-FOSG profile we work with a FOSG player `i : ι` and need to talk about
+the EFG infoset for the corresponding EFG index `playerEquiv i`.  The cast
+`origPlayer (playerEquiv i) = i` is not definitional, so we isolate it here. -/
+
+/-- Encode a native FOSG player view as the EFG bridge infoset for the EFG
+player index corresponding to `i`. -/
+noncomputable def encodedInfoOfView
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (i : ι) (view : G.InfoState i) :
+    (infoStructure (G := G) k).Infoset (playerEquiv (ι := ι) i) :=
+  cast (by simp [infoStructure, EncPlayerView]) (Word.ofList (2 * k) view)
+
+/-- Decode an EFG action index at the encoded EFG player corresponding to a
+FOSG player `i` back to an optional FOSG move for `i`. -/
+noncomputable def actionOfIndexForPlayer
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (i : ι)
+    (I : (infoStructure (G := G) k).Infoset (playerEquiv (ι := ι) i))
+    (a : (infoStructure (G := G) k).Act I) : Option (Act i) :=
+  cast (by rw [origPlayer_playerEquiv]) (actionOfIndex (G := G) I a)
+
+/-! ### Inverse strategy translation
+
+For a respectful EFG profile, project back to a legal FOSG behavioral
+profile. -/
+
+omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)]
+  [Fintype W] [DecidablePred G.terminal] in
+private theorem availableMoves_cast_mem
+    {i j : ι} (hij : i = j) (h : G.History)
+    {oi : Option (Act i)} (hmem : oi ∈ G.availableMoves h i) :
+    cast (by rw [hij]) oi ∈ G.availableMoves h j := by
+  subst hij
+  simpa using hmem
+
+omit [Fintype W] [DecidablePred G.terminal] in
+private theorem word_toList_cast_eq
+    {α β : Type} (n : Nat) (xs : List α) (h : α = β) (hlen : xs.length ≤ n) :
+    Word.toList (cast (by rw [h]) (Word.ofList n xs) : Word β n)
+      = cast (by rw [h]) xs := by
+  subst h
+  simp [Word.toList_ofList_eq_self _ hlen]
+
+omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)]
+  [Fintype W] [DecidablePred G.terminal] in
+private theorem playerView_cast_eq_of_eq
+    {i j : ι} (hij : i = j) (h : G.History) :
+    h.playerView j = cast (by rw [hij]) (h.playerView i) := by
+  subst hij
+  rfl
+
+/-- The inverse strategy translation.  Given an EFG profile that respects
+the FOSG legality predicate, produce a legal FOSG behavioral profile by
+reading the EFG action distribution at the encoded player view and
+decoding back to FOSG moves. -/
+noncomputable def efgToFOSGProfile
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ) :
+    G.LegalBehavioralProfile := by
+  classical
+  intro i
+  refine ⟨fun view =>
+    PMF.map
+      (actionOfIndexForPlayer (G := G) (k := k) i
+        (encodedInfoOfView (G := G) (k := k) i view))
+      (τ (playerEquiv (ι := ι) i)
+        (encodedInfoOfView (G := G) (k := k) i view)), ?_⟩
+  intro h oi hsupp
+  let p : PlayerIx (ι := ι) := playerEquiv (ι := ι) i
+  let I : (infoStructure (G := G) k).Infoset p :=
+    encodedInfoOfView (G := G) (k := k) i (h.playerView i)
+  -- Unfold support of PMF.map
+  have hsuppMap :
+      oi ∈ (PMF.map (actionOfIndexForPlayer (G := G) (k := k) i I) (τ p I)).support :=
+    hsupp
+  rcases (PMF.mem_support_map_iff _ _ _).mp hsuppMap with ⟨aIx, hsupp_aIx, hcast⟩
+  -- Length bound on the player view
+  have hlen : (h.playerView i).length ≤ 2 * k := by
+    have hsteps : h.steps.length ≤ k :=
+      G.history_length_le_of_boundedHorizon hBound h
+    have hv := history_playerView_length_le_two_mul_steps (G := G) h i
+    omega
+  -- Compute Word.toList of the encoded info via the cast helpers
+  have hii : origPlayer (ι := ι) p = i := origPlayer_playerEquiv (ι := ι) i
+  have htypeEq : EncPlayerView (G := G) i k =
+      (infoStructure (G := G) k).Infoset p := by
+    change Word (PlayerEvent G i) (2 * k) =
+      Word (PlayerEvent G (origPlayer (ι := ι) p)) (2 * k)
+    rw [hii]
+  have hI_eq : I = cast htypeEq (Word.ofList (2 * k) (h.playerView i)) := rfl
+  -- View at origPlayer p equals casted view at i
+  have hview_cast :
+      h.playerView (origPlayer (ι := ι) p) =
+        cast (by rw [hii]) (h.playerView i) :=
+    playerView_cast_eq_of_eq G hii.symm h
+  -- Word.toList I = casted view
+  have hPE : PlayerEvent G i = PlayerEvent G (origPlayer (ι := ι) p) := by
+    rw [hii]
+  have hWordTo :
+      Word.toList (I : (infoStructure (G := G) k).Infoset p) =
+        cast (by rw [hii]) (h.playerView i) := by
+    rw [hI_eq]
+    have hw := word_toList_cast_eq (n := 2 * k) (xs := h.playerView i)
+      (h := hPE) hlen
+    convert hw using 2
+  -- hview required by hτ
+  have hview : h.playerView (origPlayer (ι := ι) p) = Word.toList I := by
+    rw [hview_cast, hWordTo]
+  -- Apply hτ
+  have hAvail : actionOfIndex (G := G) I aIx ∈
+      G.availableMoves h (origPlayer (ι := ι) p) :=
+    hτ p I h hsupp_aIx hview
+  -- Push the cast through availableMoves to get the result at i
+  have hcast_av :
+      cast (by rw [hii]) (actionOfIndex (G := G) I aIx) ∈
+        G.availableMoves h i :=
+    availableMoves_cast_mem G hii h hAvail
+  -- Match with oi
+  have hoiEq : oi = cast (by rw [hii]) (actionOfIndex (G := G) I aIx) := by
+    rw [← hcast]; rfl
+  rw [hoiEq]
+  exact hcast_av
+
+omit [Fintype W] [DecidablePred G.terminal] in
+@[simp] theorem efgToFOSGProfile_apply
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ)
+    (i : ι) (view : G.InfoState i) :
+    ((efgToFOSGProfile (G := G) hBound τ hτ) i).1 view =
+      PMF.map (actionOfIndexForPlayer (G := G) (k := k) i
+          (encodedInfoOfView (G := G) (k := k) i view))
+        (τ (playerEquiv (ι := ι) i)
+          (encodedInfoOfView (G := G) (k := k) i view)) := rfl
+
+omit [Fintype ι] [∀ i, DecidableEq (Act i)] [Fintype W] [DecidablePred G.terminal] in
+private theorem efgToFOSGProfile_translateBehavioralProfile_apply_aux
+    {k : Nat} (σ : G.LegalBehavioralProfile)
+    {i j : ι} (hji : j = i) (view : G.InfoState i) (hlen : view.length ≤ 2 * k)
+    (I : Word (PlayerEvent G j) (2 * k))
+    (hI : I = cast (by rw [hji]) (Word.ofList (2 * k) view)) :
+    PMF.map (fun aIx : Fin (Fintype.card (Option (Act j))) =>
+        (cast (by rw [hji]) ((Fintype.equivFin (Option (Act j))).symm aIx)
+          : Option (Act i)))
+      (PMF.map (fun b : Option (Act j) => Fintype.equivFin (Option (Act j)) b)
+        (σ.toProfile j (Word.toList I)))
+      = σ.toProfile i view := by
+  classical
+  subst hji
+  -- Now j = i, casts are identity, I = Word.ofList (2 * k) view
+  have hI' : I = Word.ofList (2 * k) view := by
+    simpa using hI
+  subst hI'
+  rw [Word.toList_ofList_eq_self _ hlen]
+  rw [PMF.map_comp]
+  have hcomp : (fun aIx : Fin (Fintype.card (Option (Act j))) =>
+      cast (rfl : Option (Act j) = Option (Act j))
+        ((Fintype.equivFin (Option (Act j))).symm aIx))
+      ∘ (fun b : Option (Act j) => Fintype.equivFin (Option (Act j)) b)
+      = id := by
+    funext b; simp
+  rw [hcomp, PMF.map_id]
+
+omit [Fintype W] [DecidablePred G.terminal] in
+/-- Round-trip: translating a legal FOSG profile to EFG and back recovers the
+original profile pointwise on player views whose length fits the horizon
+encoding. -/
+theorem efgToFOSGProfile_translateBehavioralProfile_apply
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k) (σ : G.LegalBehavioralProfile)
+    (i : ι) (view : G.InfoState i) (hlen : view.length ≤ 2 * k) :
+    ((efgToFOSGProfile (G := G) hBound (translateBehavioralProfile (G := G) σ)
+        (translateBehavioralProfile_respectsFOSG (G := G) σ)) i).1 view
+      = σ.toProfile i view := by
+  classical
+  rw [efgToFOSGProfile_apply]
+  -- Unfold translateBehavioralProfile to expose the inner PMF.map
+  show PMF.map (actionOfIndexForPlayer (G := G) (k := k) i
+      (encodedInfoOfView (G := G) (k := k) i view))
+      (translateBehavioralProfile (G := G) σ (playerEquiv (ι := ι) i)
+        (encodedInfoOfView (G := G) (k := k) i view)) = _
+  unfold translateBehavioralProfile actionOfIndexForPlayer indexOfAction
+    actionOfIndex
+  exact efgToFOSGProfile_translateBehavioralProfile_apply_aux
+    (G := G) σ (origPlayer_playerEquiv (ι := ι) i) view hlen
+    (encodedInfoOfView (G := G) (k := k) i view) rfl
+
 /-- Extract the player-view component carried by a bridge EFG node.
 
 This is intentionally informative only at decision nodes: there the EFG infoset
