@@ -1,4 +1,6 @@
 .lake/
+.lake-alt/
+.lake-codex/
 CLAUDE.md
 .claude/
 .lsp-state.json

@@ -26,12 +26,14 @@ This file provides the finite-horizon FOSG -> EFG bridge infrastructure:
 Important status:
 - `toPlainEFGAtHorizon` is a raw cutoff tree and may truncate nonterminal
   serialized states when `remaining = 0`
-- `toAugmentedAtHorizon` is only the low-level stage-4 scaffold over the raw
-  control-position bridge
+- the raw augmented wrappers are private low-level scaffolding over the replay
+  layers, not public bridge constructors
 - the theorem-facing bounded bridge goes through
-  `Semantic.toPlainTraceEFGAtHorizon` / `Semantic.toAugmentedTraceAtHorizon`,
-  which use encoded original FOSG views rather than control positions or
-  literal EFG histories
+  `toPlainEFGOfBoundedHorizon` / `toAugmentedOfBoundedHorizon`; internally
+  these use `Semantic.toPlainTraceEFGAtHorizon` /
+  `Semantic.toAugmentedTraceAtHorizon`, whose infosets and augmented states are
+  encoded original FOSG views rather than control positions or literal EFG
+  histories
 -/
 
 namespace GameTheory
@@ -1071,6 +1073,12 @@ omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
     (originalHistoryFromAux (G := G) (.base G.init) (History.nil G) (by simp)
       pos.trail.1 pos.hchain).2
 
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
+@[simp] theorem originalHistory_root (k : Nat) :
+    originalHistory (G := G) (root (G := G) k) = History.nil G := by
+  simp [originalHistory, root, originalHistoryFromAux]
+
 end TracePosition
 
 abbrev PlayerIx := Fin (Fintype.card ι)
@@ -1096,12 +1104,27 @@ abbrev PayoffVec (k : Nat) := Payoff (traceInfoStructure (G := G) k).Player
 noncomputable def zeroPayoff {k : Nat} : PayoffVec (G := G) k :=
   fun _ => 0
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
+@[simp] theorem zeroPayoff_apply {k : Nat}
+    (p : (traceInfoStructure (G := G) k).Player) :
+    zeroPayoff (G := G) p = 0 := rfl
+
 noncomputable def liftPayoff {k : Nat} (u : Payoff ι) : PayoffVec (G := G) k :=
   fun p => u (origPlayer (ι := ι) p)
+
+omit [DecidableEq W] [DecidablePred G.terminal] in
+@[simp] theorem liftPayoff_apply {k : Nat} (u : Payoff ι)
+    (p : (traceInfoStructure (G := G) k).Player) :
+    liftPayoff (G := G) u p = u (origPlayer (ι := ι) p) := rfl
 
 noncomputable def addPayoff {k : Nat}
     (x y : PayoffVec (G := G) k) : PayoffVec (G := G) k :=
   fun p => x p + y p
+
+omit [DecidableEq W] [DecidablePred G.terminal] in
+@[simp] theorem addPayoff_apply {k : Nat}
+    (x y : PayoffVec (G := G) k) (p : (traceInfoStructure (G := G) k).Player) :
+    addPayoff (G := G) x y p = x p + y p := rfl
 
 noncomputable def actionFromIndex {k : Nat}
     (pos : TracePosition G k)
@@ -1136,12 +1159,27 @@ abbrev PayoffVec (k : Nat) := Payoff (infoStructure (G := G) k).Player
 noncomputable def zeroPayoff {k : Nat} : PayoffVec (G := G) k :=
   fun _ => 0
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
+@[simp] theorem zeroPayoff_apply {k : Nat}
+    (p : (infoStructure (G := G) k).Player) :
+    zeroPayoff (G := G) p = 0 := rfl
+
 noncomputable def liftPayoff {k : Nat} (u : Payoff ι) : PayoffVec (G := G) k :=
   fun p => u (origPlayer (ι := ι) p)
+
+omit [DecidableEq W] [DecidablePred G.terminal] in
+@[simp] theorem liftPayoff_apply {k : Nat} (u : Payoff ι)
+    (p : (infoStructure (G := G) k).Player) :
+    liftPayoff (G := G) u p = u (origPlayer (ι := ι) p) := rfl
 
 noncomputable def addPayoff {k : Nat}
     (x y : PayoffVec (G := G) k) : PayoffVec (G := G) k :=
   fun p => x p + y p
+
+omit [DecidableEq W] [DecidablePred G.terminal] in
+@[simp] theorem addPayoff_apply {k : Nat}
+    (x y : PayoffVec (G := G) k) (p : (infoStructure (G := G) k).Player) :
+    addPayoff (G := G) x y p = x p + y p := rfl
 
 noncomputable def decisionSuccessor {k : Nat} (pos : Position G k)
     (la : { x : JointAction Act // SerialState.legal (G := G) pos.state x }) : SState G :=
@@ -4546,7 +4584,7 @@ At this stage, the bridge exposes the serialized public/player views decoded
 from the unrolled EFG history. Replay success and semantic preservation are
 still separate theorem work, but the augmentation itself is no longer the raw
 EFG history scaffold. -/
-noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
+private noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
   base := toPlainEFGAtHorizon (G := G) k
   PubState := List (HistoryStep (infoStructure (G := G) k)) × Option ((SG G).PublicState)
   InfoState := fun p =>
@@ -4587,12 +4625,12 @@ noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
             rfl
 
 omit [DecidableEq W] in
-@[simp] theorem forget_toAugmentedAtHorizon (k : Nat) :
+private theorem forget_toAugmentedAtHorizon (k : Nat) :
     (toAugmentedAtHorizon (G := G) k).forget = toPlainEFGAtHorizon (G := G) k := by
   rfl
 
 /-- Public augmented-EFG bridge under a genuine FOSG horizon bound. -/
-noncomputable def toAugmentedTraceAtHorizon (k : Nat) : EFG.AugmentedGame where
+private noncomputable def toAugmentedTraceAtHorizon (k : Nat) : EFG.AugmentedGame where
   base := toPlainTraceEFGAtHorizon (G := G) k
   PubState := List (HistoryStep (traceInfoStructure (G := G) k)) × Option G.PublicState
   InfoState := fun p =>
@@ -4634,7 +4672,7 @@ noncomputable def toAugmentedTraceAtHorizon (k : Nat) : EFG.AugmentedGame where
             cases hnode
             rfl
 
-@[simp] theorem forget_toAugmentedTraceAtHorizon (k : Nat) :
+private theorem forget_toAugmentedTraceAtHorizon (k : Nat) :
     (toAugmentedTraceAtHorizon (G := G) k).forget = toPlainTraceEFGAtHorizon (G := G) k := by
   rfl
 
