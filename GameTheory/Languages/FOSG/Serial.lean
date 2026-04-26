@@ -91,6 +91,166 @@ theorem extendsPartial_recordChoice
     simp [recordChoice, hcurrent]
   · simpa [recordChoice, hji] using hchosen j
 
+/-- Proof-layer invariant for canonical serialization of a fixed original legal
+action: `chosen` records exactly the actions of the players in `acted`, and
+records `none` for everyone else. This is stronger than `ExtendsPartial` and is
+the right invariant for serialization-correctness proofs. -/
+def MatchesActedPrefix
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (ga : G.LegalAction w) (chosen : JointAction Act) (acted : List ι) : Prop :=
+  ∀ j, chosen j = if j ∈ acted then ga.1 j else none
+
+/-- The canonical partial choice assignment determined by a legal action `ga`
+and the list of already-acted players. -/
+def prefixChoice
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (ga : G.LegalAction w) (acted : List ι) : JointAction Act :=
+  fun j => if j ∈ acted then ga.1 j else none
+
+namespace SerialState
+
+variable {G : FOSG ι W Act PrivObs PubObs}
+
+/-- Serialized player-controlled legal actions. -/
+def playerLegal
+    (w : W) (chosen : JointAction Act) (current : ι) (a : JointAction Act) : Prop :=
+  (∃ ai : Act current, a current = some ai) ∧
+  (∀ j, j ≠ current → a j = none) ∧
+  (∃ ga : G.LegalAction w, G.ExtendsPartial chosen ga ∧ ga.1 current = a current)
+
+theorem eq_singleMove_of_current_some_other_none
+    {current : ι} {a : JointAction Act} {ai : Act current}
+    (hcurrent : a current = some ai)
+    (hother : ∀ j, j ≠ current → a j = none) :
+    a = singleMove (Act := Act) current ai := by
+  funext j
+  by_cases h : j = current
+  · subst h
+    simpa [singleMove] using hcurrent
+  · simp [singleMove, h, hother j h]
+
+theorem playerLegal_iff_exists_singleMove
+    {w : W} {chosen : JointAction Act} {current : ι} {a : JointAction Act} :
+    playerLegal (G := G) w chosen current a ↔
+      ∃ ai : Act current,
+        a = singleMove (Act := Act) current ai ∧
+        playerLegal (G := G) w chosen current (singleMove (Act := Act) current ai) := by
+  constructor
+  · intro h
+    rcases h with ⟨⟨ai, hcurrent⟩, hother, hrest⟩
+    refine ⟨ai, eq_singleMove_of_current_some_other_none (Act := Act) hcurrent hother, ?_⟩
+    simpa [eq_singleMove_of_current_some_other_none (Act := Act) hcurrent hother] using
+      (show playerLegal (G := G) w chosen current a from ⟨⟨ai, hcurrent⟩, hother, hrest⟩)
+  · rintro ⟨ai, rfl, hsingle⟩
+    exact hsingle
+
+theorem playerLegal_current_some
+    {w : W} {chosen a : JointAction Act} {current : ι}
+    (h : playerLegal (G := G) w chosen current a) :
+    ∃ ai : Act current, a current = some ai := h.1
+
+theorem playerLegal_other_none
+    {w : W} {chosen a : JointAction Act} {current j : ι}
+    (h : playerLegal (G := G) w chosen current a) (hji : j ≠ current) :
+    a j = none := h.2.1 j hji
+
+/-- A legal original-world action at a base chance node of the original FOSG. -/
+noncomputable def baseChanceLegalAction
+    (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) : G.LegalAction w := by
+  exact ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal h hNotTerm⟩
+
+@[simp] theorem baseChanceLegalAction_val
+    (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) :
+    (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := rfl
+
+/-- The original action chosen by an active player inside a legal joint action. -/
+noncomputable def actionAtActive
+    {w : W} (ga : G.LegalAction w) (i : ι) (hi : i ∈ G.active w) : Act i :=
+  Classical.choose (G.active_has_some (a := ga) hi)
+
+theorem actionAtActive_spec
+    {w : W} (ga : G.LegalAction w) (i : ι) (hi : i ∈ G.active w) :
+    ga.1 i = some (actionAtActive (G := G) ga i hi) :=
+  Classical.choose_spec (G.active_has_some (a := ga) hi)
+
+/-- The canonical serialized move for player `current`, replaying the action
+that `ga` already chose for them. -/
+noncomputable def moveOfLegalAction
+    {w : W} (ga : G.LegalAction w) (current : ι) (hcurrent : current ∈ G.active w) :
+    JointAction Act :=
+  singleMove (Act := Act) current (actionAtActive (G := G) ga current hcurrent)
+
+@[simp] theorem moveOfLegalAction_current
+    {w : W} (ga : G.LegalAction w) (current : ι) (hcurrent : current ∈ G.active w) :
+    moveOfLegalAction (G := G) ga current hcurrent current = ga.1 current := by
+  simpa [moveOfLegalAction] using
+    (actionAtActive_spec (G := G) ga current hcurrent).symm
+
+@[simp] theorem moveOfLegalAction_other
+    {w : W} (ga : G.LegalAction w) {current j : ι}
+    (hcurrent : current ∈ G.active w) (hji : j ≠ current) :
+    moveOfLegalAction (G := G) ga current hcurrent j = none := by
+  simp [moveOfLegalAction, hji]
+
+theorem matchesActedPrefix_noop
+    {w : W} (ga : G.LegalAction w) :
+    G.MatchesActedPrefix ga (noopAction Act) [] := by
+  intro j
+  simp [noopAction]
+
+theorem matchesActedPrefix_prefixChoice
+    {w : W} (ga : G.LegalAction w) (acted : List ι) :
+    G.MatchesActedPrefix ga (G.prefixChoice ga acted) acted := by
+  intro j
+  rfl
+
+@[simp] theorem prefixChoice_nil
+    {w : W} (ga : G.LegalAction w) :
+    G.prefixChoice ga [] = noopAction Act := by
+  funext j
+  simp [prefixChoice, noopAction]
+
+@[simp] theorem prefixChoice_apply_of_mem
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {j : ι}
+    (hj : j ∈ acted) :
+    G.prefixChoice ga acted j = ga.1 j := by
+  simp [prefixChoice, hj]
+
+@[simp] theorem prefixChoice_apply_of_not_mem
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {j : ι}
+    (hj : j ∉ acted) :
+    G.prefixChoice ga acted j = none := by
+  simp [prefixChoice, hj]
+
+theorem matchesActedPrefix_recordChoice_move
+    {w : W} (ga : G.LegalAction w) {chosen : JointAction Act} {acted : List ι}
+    {current : ι} (hchosen : G.MatchesActedPrefix ga chosen acted)
+    (hcurrent : current ∈ G.active w) :
+    G.MatchesActedPrefix ga
+      (recordChoice chosen (moveOfLegalAction (G := G) ga current hcurrent) current)
+      (acted ++ [current]) := by
+  intro j
+  by_cases hji : j = current
+  · subst hji
+    simpa [recordChoice, moveOfLegalAction] using
+      (actionAtActive_spec (G := G) ga j hcurrent).symm
+  · simp [recordChoice, hji, hchosen j, List.mem_append]
+
+theorem prefixChoice_recordChoice_move
+    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
+    (hcurrent : current ∈ G.active w) :
+    recordChoice (G.prefixChoice ga acted)
+      (moveOfLegalAction (G := G) ga current hcurrent) current =
+      G.prefixChoice ga (acted ++ [current]) := by
+  funext j
+  by_cases hji : j = current
+  · subst hji
+    simpa [recordChoice, prefixChoice, moveOfLegalAction] using
+      (actionAtActive_spec (G := G) ga j hcurrent).symm
+  · simp [recordChoice, prefixChoice, hji, List.mem_append]
+
+end SerialState
+
 section Ordered
 
 variable [LinearOrder ι]
@@ -162,22 +322,6 @@ def ValidDecision
   (∀ j, j ∈ current :: rest → chosen j = none) ∧
   (∃ a : G.LegalAction w, G.ExtendsPartial chosen a)
 
-/-- Proof-layer invariant for canonical serialization of a fixed original legal
-action: `chosen` records exactly the actions of the players in `acted`, and
-records `none` for everyone else. This is stronger than `ExtendsPartial` and is
-the right invariant for serialization-correctness proofs. -/
-def MatchesActedPrefix
-    (G : FOSG ι W Act PrivObs PubObs)
-    {w : W} (ga : G.LegalAction w) (chosen : JointAction Act) (acted : List ι) : Prop :=
-  ∀ j, chosen j = if j ∈ acted then ga.1 j else none
-
-/-- The canonical partial choice assignment determined by a legal action `ga`
-and the list of already-acted players. -/
-def prefixChoice
-    (G : FOSG ι W Act PrivObs PubObs)
-    {w : W} (ga : G.LegalAction w) (acted : List ι) : JointAction Act :=
-  fun j => if j ∈ acted then ga.1 j else none
-
 /-- Serialized state space. `base w` is the original world state before any
 serialized action is taken at `w`; `decide ...` stores the partial assignment
 after some players have already acted; `chance w a` is the inserted stochastic
@@ -243,13 +387,6 @@ def world : SerialState G → W
     (w : W) (a : G.LegalAction w) :
     world (G := G) (.chance w a) = w := rfl
 
-/-- Serialized legal actions at a player-controlled serialized state. -/
-def playerLegal
-    (w : W) (chosen : JointAction Act) (current : ι) (a : JointAction Act) : Prop :=
-  (∃ ai : Act current, a current = some ai) ∧
-  (∀ j, j ≠ current → a j = none) ∧
-  (∃ ga : G.LegalAction w, G.ExtendsPartial chosen ga ∧ ga.1 current = a current)
-
 /-- Legal actions of the serialized game. -/
 def legal : SerialState G → JointAction Act → Prop
   | .base w, a =>
@@ -278,34 +415,6 @@ def availableActions : SerialState G → (i : ι) → Set (Act i)
             (singleMove (Act := Act) i ai) }
       else ∅
   | .chance _ _, _ => ∅
-
-omit [LinearOrder ι] in
-theorem eq_singleMove_of_current_some_other_none
-    {current : ι} {a : JointAction Act} {ai : Act current}
-    (hcurrent : a current = some ai)
-    (hother : ∀ j, j ≠ current → a j = none) :
-    a = singleMove (Act := Act) current ai := by
-  funext j
-  by_cases h : j = current
-  · subst h
-    simpa [singleMove] using hcurrent
-  · simp [singleMove, h, hother j h]
-
-omit [LinearOrder ι] in
-theorem playerLegal_iff_exists_singleMove
-    {w : W} {chosen : JointAction Act} {current : ι} {a : JointAction Act} :
-    playerLegal (G := G) w chosen current a ↔
-      ∃ ai : Act current,
-        a = singleMove (Act := Act) current ai ∧
-        playerLegal (G := G) w chosen current (singleMove (Act := Act) current ai) := by
-  constructor
-  · intro h
-    rcases h with ⟨⟨ai, hcurrent⟩, hother, hrest⟩
-    refine ⟨ai, eq_singleMove_of_current_some_other_none (Act := Act) hcurrent hother, ?_⟩
-    simpa [eq_singleMove_of_current_some_other_none (Act := Act) hcurrent hother] using
-      (show playerLegal (G := G) w chosen current a from ⟨⟨ai, hcurrent⟩, hother, hrest⟩)
-  · rintro ⟨ai, rfl, hsingle⟩
-    exact hsingle
 
 theorem legal_iff_jointActionLegal
     (s : SerialState G) (a : JointAction Act) :
@@ -486,130 +595,12 @@ def ofFOSGLegalAction {s : SerialState G} (a : FOSGLegalAction (G := G) s) :
 @[simp] theorem ofFOSGLegalAction_val {s : SerialState G} (a : FOSGLegalAction (G := G) s) :
     (ofFOSGLegalAction (G := G) a).1 = a.1 := rfl
 
-omit [LinearOrder ι] in
-theorem playerLegal_current_some
-    {w : W} {chosen a : JointAction Act} {current : ι}
-    (h : playerLegal (G := G) w chosen current a) :
-    ∃ ai : Act current, a current = some ai := h.1
-
-omit [LinearOrder ι] in
-theorem playerLegal_other_none
-    {w : W} {chosen a : JointAction Act} {current j : ι}
-    (h : playerLegal (G := G) w chosen current a) (hji : j ≠ current) :
-    a j = none := h.2.1 j hji
-
 theorem active_eq_empty_of_base_terminal
     {w : W} (hterm : G.terminal w) :
     active (G := G) (.base w) = ∅ := by
   have hactive : G.active w = ∅ := G.active_eq_empty_of_terminal hterm
   have horder : G.orderedActive w = [] := G.orderedActive_eq_nil_of_active_eq_empty hactive
   simp [SerialState.active, horder]
-
-/-- A legal original-world action at a base chance node of the original FOSG. -/
-noncomputable def baseChanceLegalAction
-    (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) : G.LegalAction w := by
-  exact ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal h hNotTerm⟩
-
-omit [LinearOrder ι] in
-@[simp] theorem baseChanceLegalAction_val
-    (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) :
-    (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := rfl
-
-/-- The original action chosen by an active player inside a legal joint action. -/
-noncomputable def actionAtActive
-    {w : W} (ga : G.LegalAction w) (i : ι) (hi : i ∈ G.active w) : Act i :=
-  Classical.choose (G.active_has_some (a := ga) hi)
-
-omit [LinearOrder ι] in
-theorem actionAtActive_spec
-    {w : W} (ga : G.LegalAction w) (i : ι) (hi : i ∈ G.active w) :
-    ga.1 i = some (actionAtActive (G := G) ga i hi) :=
-  Classical.choose_spec (G.active_has_some (a := ga) hi)
-
-/-- The canonical serialized move for player `current`, replaying the action
-that `ga` already chose for them. -/
-noncomputable def moveOfLegalAction
-    {w : W} (ga : G.LegalAction w) (current : ι) (hcurrent : current ∈ G.active w) :
-    JointAction Act :=
-  singleMove (Act := Act) current (actionAtActive (G := G) ga current hcurrent)
-
-omit [LinearOrder ι] in
-@[simp] theorem moveOfLegalAction_current
-    {w : W} (ga : G.LegalAction w) (current : ι) (hcurrent : current ∈ G.active w) :
-    moveOfLegalAction (G := G) ga current hcurrent current = ga.1 current := by
-  simpa [moveOfLegalAction] using
-    (actionAtActive_spec (G := G) ga current hcurrent).symm
-
-omit [LinearOrder ι] in
-@[simp] theorem moveOfLegalAction_other
-    {w : W} (ga : G.LegalAction w) {current j : ι}
-    (hcurrent : current ∈ G.active w) (hji : j ≠ current) :
-    moveOfLegalAction (G := G) ga current hcurrent j = none := by
-  simp [moveOfLegalAction, hji]
-
-omit [LinearOrder ι] in
-theorem matchesActedPrefix_noop
-    {w : W} (ga : G.LegalAction w) :
-    G.MatchesActedPrefix ga (noopAction Act) [] := by
-  intro j
-  simp [noopAction]
-
-omit [LinearOrder ι] in
-theorem matchesActedPrefix_prefixChoice
-    {w : W} (ga : G.LegalAction w) (acted : List ι) :
-    G.MatchesActedPrefix ga (G.prefixChoice ga acted) acted := by
-  intro j
-  rfl
-
-omit [LinearOrder ι] in
-@[simp] theorem prefixChoice_nil
-    {w : W} (ga : G.LegalAction w) :
-    G.prefixChoice ga [] = noopAction Act := by
-  funext j
-  simp [prefixChoice, noopAction]
-
-omit [LinearOrder ι] in
-@[simp] theorem prefixChoice_apply_of_mem
-    {w : W} (ga : G.LegalAction w) {acted : List ι} {j : ι}
-    (hj : j ∈ acted) :
-    G.prefixChoice ga acted j = ga.1 j := by
-  simp [prefixChoice, hj]
-
-omit [LinearOrder ι] in
-@[simp] theorem prefixChoice_apply_of_not_mem
-    {w : W} (ga : G.LegalAction w) {acted : List ι} {j : ι}
-    (hj : j ∉ acted) :
-    G.prefixChoice ga acted j = none := by
-  simp [prefixChoice, hj]
-
-omit [LinearOrder ι] in
-theorem matchesActedPrefix_recordChoice_move
-    {w : W} (ga : G.LegalAction w) {chosen : JointAction Act} {acted : List ι}
-    {current : ι} (hchosen : G.MatchesActedPrefix ga chosen acted)
-    (hcurrent : current ∈ G.active w) :
-    G.MatchesActedPrefix ga
-      (recordChoice chosen (moveOfLegalAction (G := G) ga current hcurrent) current)
-      (acted ++ [current]) := by
-  intro j
-  by_cases hji : j = current
-  · subst hji
-    simpa [recordChoice, moveOfLegalAction] using
-      (actionAtActive_spec (G := G) ga j hcurrent).symm
-  · simp [recordChoice, hji, hchosen j, List.mem_append]
-
-omit [LinearOrder ι] in
-theorem prefixChoice_recordChoice_move
-    {w : W} (ga : G.LegalAction w) {acted : List ι} {current : ι}
-    (hcurrent : current ∈ G.active w) :
-    recordChoice (G.prefixChoice ga acted)
-      (moveOfLegalAction (G := G) ga current hcurrent) current =
-      G.prefixChoice ga (acted ++ [current]) := by
-  funext j
-  by_cases hji : j = current
-  · subst hji
-    simpa [recordChoice, prefixChoice, moveOfLegalAction] using
-      (actionAtActive_spec (G := G) ga j hcurrent).symm
-  · simp [recordChoice, prefixChoice, hji, List.mem_append]
 
 theorem legalAction_eq_of_extends_matchesOrderedActive
     {w : W} {ga ga' : G.LegalAction w} {chosen : JointAction Act}
