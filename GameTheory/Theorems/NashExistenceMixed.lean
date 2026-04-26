@@ -584,8 +584,8 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
 set_option linter.unusedFintypeInType false in
 /--
 Approximate fixed points for `nashMapOnMixedSimplex` imply existence of a mixed Nash equilibrium.
-This removes any need for a fixed-point axiom; the only remaining obligations are:
-continuity of `nashMapOnMixedSimplex` and approximate fixed points at all scales.
+The only remaining obligations are: continuity of `nashMapOnMixedSimplex`
+and approximate fixed points at all scales.
 -/
 theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx
     (hcont : Continuous (G.nashMapOnMixedSimplex))
