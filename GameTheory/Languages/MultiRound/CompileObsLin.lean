@@ -1,9 +1,9 @@
-import GameTheory.Languages.Sequential.SOS
+import GameTheory.Languages.MultiRound.SOS
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 import Mathlib.Data.List.TakeDrop
 
 /-!
-# Linearized Compilation of Sequential Protocols to ObsModelCore
+# Linearized Compilation of MultiRound Protocols to ObsModelCore
 
 Compiles a sequential protocol to an `ObsModelCore` where each step involves
 **at most one player** making a nontrivial action choice. This is achieved by
@@ -30,7 +30,7 @@ type `PUnit`.
 - `compileObsCoreModelLin` — linearized ObsModelCore compilation
 -/
 
-namespace GameTheory.Sequential
+namespace GameTheory.MultiRound
 
 open GameTheory
 
@@ -53,7 +53,7 @@ The `applyTransition` phase separates the transition application from the last
 player's action storage. This ensures every player's step is injective in their
 action (the action is stored as a field of the successor state), which is needed
 for `ObsLocalFeasibility` and hence Kuhn's M→B theorem. -/
-inductive LinConfig (G : Protocol n S V A Sig) where
+inductive LinConfig (G : MultiRoundGame n S V A Sig) where
   | signal (round : Nat) (state : S)
   | playerTurn (round : Nat) (state : S) (sig : Fin n → Sig)
       (currentPlayer : Fin n) (accActs : Fin n → Option A)
@@ -62,7 +62,7 @@ inductive LinConfig (G : Protocol n S V A Sig) where
   | terminal (state : S)
 
 /-- Initial configuration for the linearized model. -/
-def linInitialConfig (G : Protocol n S V A Sig) : LinConfig G :=
+def linInitialConfig (G : MultiRoundGame n S V A Sig) : LinConfig G :=
   if G.rounds[0]? = none then .terminal G.init else .signal 0 G.init
 
 -- ============================================================================
@@ -72,12 +72,12 @@ def linInitialConfig (G : Protocol n S V A Sig) : LinConfig G :=
 /-- Round-indexed observation type. Includes the round number to distinguish
 the same view at different rounds, which is essential for `ObsLocalFeasibility`
 (ensures OLF only compares traces at the same round, where FullRecall applies). -/
-abbrev RoundView (G : Protocol n S V A Sig) := Fin G.rounds.length × V
+abbrev RoundView (G : MultiRoundGame n S V A Sig) := Fin G.rounds.length × V
 
 /-- Player-local observation in the linearized model.
 Only the currently acting player has a nontrivial observation, which includes
 the round number. -/
-def linObserve (G : Protocol n S V A Sig) [DecidableEq (Fin n)]
+def linObserve (G : MultiRoundGame n S V A Sig) [DecidableEq (Fin n)]
     (i : Fin n) : LinConfig G → Option (RoundView G)
   | .signal _ _ => none
   | .terminal _ => none
@@ -110,7 +110,7 @@ instance linActNonempty {O : Type} [Nonempty A] : (o : Option O) → Nonempty (L
 /-- Advance to the next sub-phase after player `p` acts. If `p` is the last
 player, move to `applyTransition` (which fires the transition in a separate
 action-free step). -/
-noncomputable def advancePlayerTurn (G : Protocol n S V A Sig)
+noncomputable def advancePlayerTurn (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
     (_r : Round n S V A Sig) : PMF (LinConfig G) :=
   if h : p.val + 1 < n then
@@ -121,7 +121,7 @@ noncomputable def advancePlayerTurn (G : Protocol n S V A Sig)
 /-- Extract the effective `Option A` action for the acting player from a
 dependent action tuple at a `playerTurn` configuration. The `cast` resolves
 the dependent type to `Option A`. -/
-def extractPlayerAction [DecidableEq (Fin n)] (G : Protocol n S V A Sig)
+def extractPlayerAction [DecidableEq (Fin n)] (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs)))
     : Option A :=
@@ -141,7 +141,7 @@ def extractPlayerAction [DecidableEq (Fin n)] (G : Protocol n S V A Sig)
   player or to `applyTransition`.
 - **Apply transition**: fire the round's transition, advance to next round or terminal.
 - **Terminal**: absorbing. -/
-noncomputable def linConfigStepPMF [DecidableEq (Fin n)] (G : Protocol n S V A Sig)
+noncomputable def linConfigStepPMF [DecidableEq (Fin n)] (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg)) :
     PMF (LinConfig G) :=
@@ -187,7 +187,7 @@ action sub-phases. At each step, at most one player has a nontrivial action.
 - **Actions**: `LinAct (RoundView G) A` (nontrivial only when active)
 - **InfoState**: identity — observation = info state -/
 noncomputable def compileObsCoreModelLin [DecidableEq (Fin n)]
-    (G : Protocol n S V A Sig) :
+    (G : MultiRoundGame n S V A Sig) :
     ObsModelCore (Fin n) (LinConfig G)
       (fun _ => Option (RoundView G))
       (fun _ => LinAct (RoundView G) A) where
@@ -200,7 +200,7 @@ noncomputable def compileObsCoreModelLin [DecidableEq (Fin n)]
 
 /-- Abbreviation for the linearized compiled model. -/
 noncomputable abbrev compiledLinObs [DecidableEq (Fin n)]
-    (G : Protocol n S V A Sig) :=
+    (G : MultiRoundGame n S V A Sig) :=
   compileObsCoreModelLin G
 
 -- ============================================================================
@@ -208,17 +208,17 @@ noncomputable abbrev compiledLinObs [DecidableEq (Fin n)]
 -- ============================================================================
 
 noncomputable instance compiledLinObs_infoState_fintype [DecidableEq (Fin n)]
-    [Fintype V] (G : Protocol n S V A Sig) (i : Fin n) :
+    [Fintype V] (G : MultiRoundGame n S V A Sig) (i : Fin n) :
     Fintype ((compiledLinObs G).InfoState i) :=
   inferInstanceAs (Fintype (Option (Fin G.rounds.length × V)))
 
 noncomputable instance compiledLinObs_infoState_decidableEq [DecidableEq (Fin n)]
-    [DecidableEq V] (G : Protocol n S V A Sig) (i : Fin n) :
+    [DecidableEq V] (G : MultiRoundGame n S V A Sig) (i : Fin n) :
     DecidableEq ((compiledLinObs G).InfoState i) :=
   inferInstanceAs (DecidableEq (Option (Fin G.rounds.length × V)))
 
 noncomputable instance compiledLinObs_localStrategy_fintype [DecidableEq (Fin n)]
-    [DecidableEq V] [Fintype V] [Fintype A] (G : Protocol n S V A Sig) (i : Fin n) :
+    [DecidableEq V] [Fintype V] [Fintype A] (G : MultiRoundGame n S V A Sig) (i : Fin n) :
     Fintype ((compiledLinObs G).LocalStrategy i) :=
   Pi.instFintype
 
@@ -234,7 +234,7 @@ variable [Fintype A] [Nonempty A]
 omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 /-- At every playerTurn state, only the acting player has a nontrivial
 observation — all others see `none`. -/
-theorem linObserve_ne_acting {G : Protocol n S V A Sig}
+theorem linObserve_ne_acting {G : MultiRoundGame n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n}
     {accActs : Fin n → Option A} {i : Fin n} (hi : i ≠ p) :
     linObserve G i (.playerTurn k s sig p accActs) = none := by
@@ -248,7 +248,7 @@ theorem pure_ne_zero_iff' {α : Type*} (a b : α) :
   · intro h; subst h; simp
 
 omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
-private theorem advancePlayerTurn_mass_invariant (G : Protocol n S V A Sig)
+private theorem advancePlayerTurn_mass_invariant (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n)
     (accActs₁ accActs₂ : Fin n → Option A) (r : Round n S V A Sig)
     (t : LinConfig G)
@@ -264,7 +264,7 @@ private theorem advancePlayerTurn_mass_invariant (G : Protocol n S V A Sig)
 omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 /-- If two `accActs` both give nonzero probability at the same target through
 `advancePlayerTurn`, then the `accActs` must be equal (since the step is `PMF.pure`). -/
-private theorem advancePlayerTurn_accActs_eq (G : Protocol n S V A Sig)
+private theorem advancePlayerTurn_accActs_eq (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n)
     (accActs₁ accActs₂ : Fin n → Option A) (r : Round n S V A Sig)
     (t : LinConfig G)
@@ -291,7 +291,7 @@ nonzero probability to the same successor, the step probabilities are equal.
 - **Signal**: step ignores actions (samples from signal distribution)
 - **PlayerTurn**: `advancePlayerTurn` is `PMF.pure`; equal at `t` by purity
 - **Terminal**: absorbing, action-independent -/
-private theorem linConfigStepPMF_mass_invariant (G : Protocol n S V A Sig)
+private theorem linConfigStepPMF_mass_invariant (G : MultiRoundGame n S V A Sig)
     [DecidableEq (Fin n)]
     (cfg : LinConfig G)
     (acts₁ acts₂ : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
@@ -314,7 +314,7 @@ omit [Nonempty A] in
 /-- The linearized model satisfies `StepMassInvariant`.
 Signal phases ignore actions entirely. PlayerTurn phases are deterministic
 (the step is `PMF.pure` of a single successor). Terminal is absorbing. -/
-theorem stepMassInvariant_compiledLin (G : Protocol n S V A Sig) :
+theorem stepMassInvariant_compiledLin (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepMassInvariant (compiledLinObs G) := by
   intro ss t π₁ π₂ h₁ h₂
   have eq₁ := ObsModelCore.pureStep_eq π₁ ss
@@ -325,7 +325,7 @@ theorem stepMassInvariant_compiledLin (G : Protocol n S V A Sig) :
 
 omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem extractPlayerAction_congr [DecidableEq (Fin n)]
-    (G : Protocol n S V A Sig)
+    (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
     (acts₁ acts₂ : (i : Fin n) →
       LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs)))
@@ -339,7 +339,7 @@ private theorem extractPlayerAction_congr [DecidableEq (Fin n)]
 
 omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem linConfigStepPMF_playerTurn_congr [DecidableEq (Fin n)]
-    (G : Protocol n S V A Sig)
+    (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
     (acts₁ acts₂ : (i : Fin n) →
       LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs)))
@@ -356,7 +356,7 @@ private theorem linConfigStepPMF_playerTurn_congr [DecidableEq (Fin n)]
 
 omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem linAct_eq_punit_of_ne [DecidableEq (Fin n)]
-    {G : Protocol n S V A Sig}
+    {G : MultiRoundGame n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n} {accActs : Fin n → Option A}
     {i : Fin n} (hi : i ≠ p)
     (a₁ a₂ : LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs))) :
@@ -379,7 +379,7 @@ private theorem cast_dep_apply {α : Type} {P : α → Type}
 omit [Nonempty A] in
 /-- Closed form of pure one-step execution in the linearized compilation.
 Eliminates all dependent-type casts from `pureStep_eq`. -/
-theorem pureStep_compiledLin_eq (G : Protocol n S V A Sig)
+theorem pureStep_compiledLin_eq (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (ss : List (LinConfig G)) :
     (compiledLinObs G).pureStep π ss =
       linConfigStepPMF G ((compiledLinObs G).lastState ss)
@@ -393,7 +393,7 @@ omit [Nonempty A] in
 /-- Two profiles producing the same observation-dependent actions at a given
 configuration have equal pure steps. Takes the last state as a parameter
 to avoid matching issues with `lastState ss`. -/
-private theorem pureStep_congr_compiledLin (G : Protocol n S V A Sig)
+private theorem pureStep_congr_compiledLin (G : MultiRoundGame n S V A Sig)
     (π₁ π₂ : (compiledLinObs G).PureProfile) (ss : List (LinConfig G))
     (cfg : LinConfig G) (hlast : (compiledLinObs G).lastState ss = cfg)
     (h : ∀ i, π₁ i (linObserve G i cfg) = π₂ i (linObserve G i cfg)) :
@@ -406,7 +406,7 @@ omit [Nonempty A] in
 At each step, at most one player has a nontrivial action (the acting player
 at a `playerTurn` phase). Changing any other player's strategy does not
 affect the step, so the per-player update condition holds trivially. -/
-theorem stepSupportFactorization_compiledLin (G : Protocol n S V A Sig) :
+theorem stepSupportFactorization_compiledLin (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepSupportFactorization (compiledLinObs G) := by
   intro ss t π₀ π h₀
   constructor
@@ -489,7 +489,7 @@ open Math.ParameterizedChain in
 /-- Under the linearized model, if `πᵢ` agrees with `(π i)` at every intermediate
 observation along the trace, then `pureRun` under the player-i update equals the
 original `pureRun`. -/
-theorem pureRun_update_eq_of_obs_agree (G : Protocol n S V A Sig)
+theorem pureRun_update_eq_of_obs_agree (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
     (k : Nat) (ss : List (LinConfig G))
@@ -539,7 +539,7 @@ theorem pureRun_update_eq_of_obs_agree (G : Protocol n S V A Sig)
 
 omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 theorem lastState_take_eq_getElem
-    [DecidableEq (Fin n)] {G : Protocol n S V A Sig}
+    [DecidableEq (Fin n)] {G : MultiRoundGame n S V A Sig}
     (ss : List (LinConfig G)) (j : Nat) (hj : j + 1 < ss.length) :
     (compiledLinObs G).lastState (ss.take (j + 1)) = ss[j] := by
   simp [ObsModelCore.lastState, List.getLast?_eq_getElem?,
@@ -553,7 +553,7 @@ player-i update, then `πᵢ` must agree with `(π i)` at all observations along
 the trace. At non-i steps this is trivial (PUnit). At i-steps, the step is
 deterministic and injective in the action, so both hitting the same target forces
 the actions to agree. -/
-theorem pureRun_update_nonzero_agree (G : Protocol n S V A Sig)
+theorem pureRun_update_nonzero_agree (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
     (k : Nat) (ss : List (LinConfig G))
@@ -628,7 +628,7 @@ end Properties
 
 section Profiles
 
-variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)]
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
 
 /-- Lift a protocol-level pure strategy to a compiled local strategy.
 At `some (k, v)` (active), uses the strategy's action on `v`; at `none`
@@ -772,4 +772,4 @@ theorem liftMixedProfile_joint [DecidableEq V] [Fintype V] [Fintype A]
 
 end Profiles
 
-end GameTheory.Sequential
+end GameTheory.MultiRound

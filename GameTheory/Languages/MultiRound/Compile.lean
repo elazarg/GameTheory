@@ -1,18 +1,18 @@
 import GameTheory.Core.KernelGame
 import GameTheory.Languages.InfoModel.InfoGame
 import GameTheory.Languages.InfoModel.Simulation
-import GameTheory.Languages.Sequential.SOS
+import GameTheory.Languages.MultiRound.SOS
 import Math.PMFProduct
 import Math.Probability
 
 /-!
-# GameTheory.Languages.Sequential.Compile
+# GameTheory.Languages.MultiRound.Compile
 
 Compilation-facing semantic core for sequential/protocol languages.
 
 This file provides a small repeated-step semantics:
 - `PreKernelStep`: one semantic step (state, local views, joint controls)
-- `SequentialGame`: initial distribution + finite horizon + terminal utility
+- `StepwiseGame`: initial distribution + finite horizon + terminal utility
 - `toKernelGame`: collapse to a `KernelGame`
 
 Language-native protocol syntax should compile into this layer, and then
@@ -62,15 +62,15 @@ noncomputable def stepKernel (π : Policy K) : Kernel K.State K.State :=
 end PreKernelStep
 
 /-- A finite-horizon sequential game built from a repeated semantic step. -/
-structure SequentialGame (ι : Type) [Fintype ι] where
+structure StepwiseGame (ι : Type) [Fintype ι] where
   Step : PreKernelStep ι
   init : PMF Step.State
   horizon : Nat
   utility : Step.State → Payoff ι
 
-namespace SequentialGame
+namespace StepwiseGame
 
-variable (G : SequentialGame ι)
+variable (G : StepwiseGame ι)
 
 /-- Run distribution after `horizon` repeated steps under policy `π`. -/
 noncomputable def runDist (π : Policy G.Step) : PMF G.Step.State :=
@@ -90,7 +90,7 @@ noncomputable def toKernelGame : KernelGame ι where
 @[simp] theorem toKernelGame_outcomeKernel (π : Policy G.Step) :
     G.toKernelGame.outcomeKernel π = G.runDist π := rfl
 
-end SequentialGame
+end StepwiseGame
 
 section DeterministicPolicy
 
@@ -143,8 +143,8 @@ end DeterministicPolicy
 section KernelEmbedding
 
 /-- A `KernelGame` as a 1-step sequential game with trivial views. -/
-noncomputable def KernelGame.toOneStepSequential (ι : Type) [Fintype ι]
-    (Gk : KernelGame ι) [∀ i, Fintype (Gk.Strategy i)] : SequentialGame ι where
+noncomputable def KernelGame.toOneStepStepwise (ι : Type) [Fintype ι]
+    (Gk : KernelGame ι) [∀ i, Fintype (Gk.Strategy i)] : StepwiseGame ι where
   Step := {
     State := Option Gk.Outcome
     View := fun _ => PUnit
@@ -162,15 +162,15 @@ noncomputable def KernelGame.toOneStepSequential (ι : Type) [Fintype ι]
     | none => fun _ => 0
     | some ω => Gk.utility ω
 
-@[simp] theorem KernelGame.toOneStepSequential_runDist_constPure
+@[simp] theorem KernelGame.toOneStepStepwise_runDist_constPure
     (ι : Type) [Fintype ι]
     (Gk : KernelGame ι)
     [∀ i, Fintype (Gk.Strategy i)]
     (σ : KernelGame.Profile Gk) :
-    (KernelGame.toOneStepSequential ι Gk).runDist
-      (constPurePolicy (KernelGame.toOneStepSequential ι Gk).Step σ) =
+    (KernelGame.toOneStepStepwise ι Gk).runDist
+      (constPurePolicy (KernelGame.toOneStepStepwise ι Gk).Step σ) =
       (Gk.outcomeKernel σ).bind (fun ω => PMF.pure (some ω)) := by
-  simp [KernelGame.toOneStepSequential, SequentialGame.runDist,
+  simp [KernelGame.toOneStepStepwise, StepwiseGame.runDist,
     PreKernelStep.stepKernel, PreKernelStep.jointActDist, constPurePolicy, pmfPi_pure]
 
 end KernelEmbedding
@@ -179,7 +179,7 @@ end Core
 
 end GameTheory
 
-namespace GameTheory.Sequential
+namespace GameTheory.MultiRound
 
 open Math.Probability
 
@@ -195,7 +195,7 @@ The compiled model uses the native SOS configurations as states:
 Public visibility is the current execution phase and round index; private
 visibility is the current round view when the protocol is waiting for actions,
 and `none` otherwise. -/
-def compileInfoOn (G : Protocol n S V A Sig) :
+def compileInfoOn (G : MultiRoundGame n S V A Sig) :
     GameTheory.InfoModel (Fin n) (Config G) (fun _ => A) where
   init := initialConfig G
   step := Step G
@@ -206,7 +206,7 @@ def compileInfoOn (G : Protocol n S V A Sig) :
 
 /-- A protocol SOS step is definitionally the compiled machine step. -/
 theorem compile_step_iff
-    (G : Protocol n S V A Sig)
+    (G : MultiRoundGame n S V A Sig)
     (a : JointControl n A)
     (src dst : Config G) :
     (compileInfoOn G).step a src dst ↔ Step G a src dst := by
@@ -215,7 +215,7 @@ theorem compile_step_iff
 /-- Native SOS reachability is definitionally the same as reachability in the
 compiled latent-state machine. -/
 theorem compile_reach_iff
-    (G : Protocol n S V A Sig)
+    (G : MultiRoundGame n S V A Sig)
     (ha : List (JointControl n A))
     (src dst : Config G) :
     Semantics.Transition.ReachBy (compileInfoOn G).step ha src dst ↔
@@ -224,14 +224,14 @@ theorem compile_reach_iff
 
 /-- The compiled private observation agrees with the native SOS observation. -/
 theorem compile_observe_eq_observe
-    (G : Protocol n S V A Sig)
+    (G : MultiRoundGame n S V A Sig)
     (i : Fin n) (c : Config G) :
     (compileInfoOn G).observe i c = observe G i c := by
   rfl
 
 /-- The compiled public view agrees with the native SOS public phase. -/
 theorem compile_publicView_eq_publicPhase
-    (G : Protocol n S V A Sig)
+    (G : MultiRoundGame n S V A Sig)
     (c : Config G) :
     (compileInfoOn G).publicView c = publicPhase c := by
   rfl
@@ -239,7 +239,7 @@ theorem compile_publicView_eq_publicPhase
 /-- The compiled `InfoModel` is definitionally bisimilar to the native
 protocol SOS: states are identical, labels are identical joint controls, and
 public/private observations coincide. -/
-def nativeInfoBisimulation (G : Protocol n S V A Sig) :
+def nativeInfoBisimulation (G : MultiRoundGame n S V A Sig) :
     GameTheory.NativeInfoBisimulation (I := compileInfoOn G)
       (Step G)
       (initialConfig G)
@@ -257,4 +257,4 @@ def nativeInfoBisimulation (G : Protocol n S V A Sig) :
     intro i s
     rfl
 
-end GameTheory.Sequential
+end GameTheory.MultiRound

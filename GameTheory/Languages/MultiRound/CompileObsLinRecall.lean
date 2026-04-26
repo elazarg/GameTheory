@@ -1,9 +1,9 @@
-import GameTheory.Languages.Sequential.CompileObsLinAdequacy
+import GameTheory.Languages.MultiRound.CompileObsLinAdequacy
 
 /-!
 # FullRecall → OLF, NNIR, and VRD descent for Linearized Compilation
 
-Bridges `Protocol.FullRecall` to `ObsLocalFeasibility` and
+Bridges `MultiRoundGame.FullRecall` to `ObsLocalFeasibility` and
 `NoNontrivialInfoStateRepeat` on the linearized compiled model.
 Also provides VRD (ViewDeterminesRound) agreement lemmas for M→B descent.
 
@@ -15,7 +15,7 @@ Also provides VRD (ViewDeterminesRound) agreement lemmas for M→B descent.
 - `liftPureProfile_descendVRD_agree` — pure profile version
 -/
 
-namespace GameTheory.Sequential
+namespace GameTheory.MultiRound
 
 open GameTheory
 
@@ -31,7 +31,7 @@ open Math.ParameterizedChain
 
 variable [DecidableEq (Fin n)] [Fintype (Fin n)]
 variable [Fintype A] [Nonempty A]
-variable (G : Protocol n S V A Sig)
+variable (G : MultiRoundGame n S V A Sig)
 
 set_option linter.unusedSectionVars false in
 set_option linter.unusedFintypeInType false in
@@ -614,7 +614,7 @@ end OLFBridge
 
 section VRDAgreement
 
-variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
 variable [Fintype A] [Nonempty A] [Nonempty (Fin G.rounds.length)]
 
 set_option linter.unusedSectionVars false in
@@ -672,7 +672,7 @@ section PureVRDDescent
 
 variable [DecidableEq (Fin n)] [Fintype (Fin n)]
 variable [Fintype A] [Nonempty A]
-variable {G : Protocol n S V A Sig}
+variable {G : MultiRoundGame n S V A Sig}
 
 /-- Descend a compiled local strategy using `ViewDeterminesRound`: picks the
 canonical round for each view via `viewRound`. -/
@@ -725,4 +725,4 @@ theorem liftPureProfile_descendVRD_agree
 
 end PureVRDDescent
 
-end GameTheory.Sequential
+end GameTheory.MultiRound

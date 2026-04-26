@@ -1,10 +1,10 @@
-import GameTheory.Languages.Sequential.CompileObsLin
+import GameTheory.Languages.MultiRound.CompileObsLin
 
 /-!
 # Adequacy for Linearized Compilation
 
 Pure and behavioral adequacy theorems: running the linearized compiled model
-matches `Protocol.eval` (pure) and `Protocol.evalMixed` (behavioral).
+matches `MultiRoundGame.eval` (pure) and `MultiRoundGame.evalMixed` (behavioral).
 
 ## Main results
 
@@ -12,7 +12,7 @@ matches `Protocol.eval` (pure) and `Protocol.evalMixed` (behavioral).
 - `runDist_liftBehavioral_extractState_eq_evalMixed` — behavioral adequacy
 -/
 
-namespace GameTheory.Sequential
+namespace GameTheory.MultiRound
 
 open GameTheory
 
@@ -24,7 +24,7 @@ variable {n : Nat} {S V A Sig : Type}
 
 section Adequacy
 
-variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
 
 -- [Fintype (Fin n)] is needed for runDistPure_eq_eval to unify with
 -- downstream callers that have [Fintype (Fin n)] section variables.
@@ -46,7 +46,7 @@ then transition and continue from round `k+1`.
 
 This is the "semantic backbone" for adequacy: it evaluates the protocol by
 resolving one player at a time, matching the linearized model's step structure. -/
-noncomputable def evalLinearized (G : Protocol n S V A Sig)
+noncomputable def evalLinearized (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A)
     (rounds : List (Round n S V A Sig))
     (s : S) : PMF S :=
@@ -107,7 +107,7 @@ private theorem evalRoundsMixed_cons [Fintype (Option A)] (r : Round n S V A Sig
   exact pmf_foldl_bind_mixed Round.evalMixed σ (r.evalMixed σ s) rest
 
 omit [DecidableEq (Fin n)] in
-private theorem evalLinearized_eq_evalRounds (G : Protocol n S V A Sig)
+private theorem evalLinearized_eq_evalRounds (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (rounds : List (Round n S V A Sig)) (s : S) :
     evalLinearized G σ rounds s = evalRounds rounds σ s := by
   induction rounds generalizing s with
@@ -122,14 +122,14 @@ private theorem evalLinearized_eq_evalRounds (G : Protocol n S V A Sig)
     exact congrFun (congrArg DFunLike.coe (ih _)) _
 
 omit [DecidableEq (Fin n)] in
-theorem evalLinearized_eq_eval (G : Protocol n S V A Sig)
+theorem evalLinearized_eq_eval (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) :
     evalLinearized G σ G.rounds G.init = G.eval σ :=
   evalLinearized_eq_evalRounds G σ G.rounds G.init
 
 /-- Resolve players `pVal, pVal+1, ..., n-1` with pure strategies, accumulating
 their actions. Returns the fully populated action vector. -/
-def resolveActions (G : Protocol n S V A Sig)
+def resolveActions (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (r : Round n S V A Sig)
     (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A) :
     Fin n → Option A :=
@@ -143,7 +143,7 @@ def resolveActions (G : Protocol n S V A Sig)
 
 /-- After resolving players from `pVal` onward, the accumulated actions for
 players `< pVal` are unchanged and players `≥ pVal` get their strategy values. -/
-private theorem resolveActions_spec (G : Protocol n S V A Sig)
+private theorem resolveActions_spec (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (r : Round n S V A Sig)
     (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A)
     (h_below : ∀ i : Fin n, i.val < pVal → accActs i = σ i (r.view i s (sig i))) :
@@ -166,7 +166,7 @@ private theorem resolveActions_spec (G : Protocol n S V A Sig)
 
 /-- After resolving all players from 0, the accumulated actions equal the
 simultaneous action vector. -/
-theorem resolveActions_eq (G : Protocol n S V A Sig)
+theorem resolveActions_eq (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (r : Round n S V A Sig)
     (s : S) (sig : Fin n → Sig) :
     resolveActions G σ r s sig 0 (fun _ => none) =
@@ -179,7 +179,7 @@ to `evalLinearized` on the remaining rounds.
 - **Signal k s**: evaluate rounds from k onward
 - **PlayerTurn k s sig p accActs**: resolve remaining players, then evaluate from k+1
 - **Terminal s**: point mass on s -/
-noncomputable def evalFromCfg (G : Protocol n S V A Sig)
+noncomputable def evalFromCfg (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) : LinConfig G → PMF S
   | .terminal s => PMF.pure s
   | .signal k s => evalLinearized G σ (G.rounds.drop k) s
@@ -197,8 +197,8 @@ noncomputable def evalFromCfg (G : Protocol n S V A Sig)
       evalLinearized G σ (G.rounds.drop (k + 1)) next
     | none => PMF.pure s
 
-/-- `evalFromCfg` at the initial configuration equals `Protocol.eval`. -/
-theorem evalFromCfg_init (G : Protocol n S V A Sig)
+/-- `evalFromCfg` at the initial configuration equals `MultiRoundGame.eval`. -/
+theorem evalFromCfg_init (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) :
     evalFromCfg G σ (linInitialConfig G) = G.eval σ := by
   simp only [linInitialConfig]
@@ -209,7 +209,7 @@ theorem evalFromCfg_init (G : Protocol n S V A Sig)
       match hr : G.rounds with
       | [] => rfl
       | _ :: _ => simp [hr] at h
-    simp [Protocol.eval, evalRounds, hnil]
+    simp [MultiRoundGame.eval, evalRounds, hnil]
   · -- G.rounds[0]? ≠ none → signal case
     rw [List.drop_zero]
     exact evalLinearized_eq_eval G σ
@@ -356,7 +356,7 @@ private theorem stepPMF_bind_evalFromCfg
 
 /-- **Telescoping**: running the linearized model for `k` steps and composing
 with `evalFromCfg` on the last state equals `evalFromCfg` at the initial config,
-which is `Protocol.eval`.
+which is `MultiRoundGame.eval`.
 
 Proof idea: by induction on `k`, using `stepPMF_bind_evalFromCfg` at each step
 to show that one step composed with `evalFromCfg` telescopes back to `evalFromCfg`
@@ -388,7 +388,7 @@ theorem runDistPure_bind_evalFromCfg [Fintype A]
 
 /-- A `LinConfig` is "done" when `evalFromCfg` reduces to `PMF.pure ∘ state`:
 terminal configs, and non-terminal configs past all rounds. -/
-def LinConfig.isDone (G : Protocol n S V A Sig) : LinConfig G → Prop
+def LinConfig.isDone (G : MultiRoundGame n S V A Sig) : LinConfig G → Prop
   | .terminal _ => True
   | .signal k _ => G.rounds[k]? = none
   | .playerTurn k _ _ _ _ => G.rounds[k]? = none
@@ -396,13 +396,13 @@ def LinConfig.isDone (G : Protocol n S V A Sig) : LinConfig G → Prop
 
 /-- Combined round+player phase measure. Increases by ≥1 at each non-done step.
 Terminal configs get maximum phase so that monotonicity holds universally. -/
-def LinConfig.phase (G : Protocol n S V A Sig) : LinConfig G → Nat
+def LinConfig.phase (G : MultiRoundGame n S V A Sig) : LinConfig G → Nat
   | .signal k _ => k * (n + 2)
   | .playerTurn k _ _ p _ => k * (n + 2) + p.val + 1
   | .applyTransition k _ _ _ => k * (n + 2) + n + 1
   | .terminal _ => G.rounds.length * (n + 2)
 
-private theorem evalFromCfg_of_isDone (G : Protocol n S V A Sig)
+private theorem evalFromCfg_of_isDone (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (cfg : LinConfig G)
     (hd : cfg.isDone G) :
     evalFromCfg G σ cfg = PMF.pure cfg.state := by
@@ -426,7 +426,7 @@ private theorem evalFromCfg_of_isDone (G : Protocol n S V A Sig)
     rw [hd']
 
 omit [DecidableEq (Fin n)] in
-private theorem isDone_of_phase_ge (G : Protocol n S V A Sig)
+private theorem isDone_of_phase_ge (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G) (h : cfg.phase G ≥ G.rounds.length * (n + 2)) :
     cfg.isDone G := by
   cases cfg with
@@ -455,13 +455,13 @@ private theorem isDone_of_phase_ge (G : Protocol n S V A Sig)
     exact List.getElem?_eq_none (by omega)
 
 omit [DecidableEq (Fin n)] in
-private theorem phase_init_le (G : Protocol n S V A Sig) :
+private theorem phase_init_le (G : MultiRoundGame n S V A Sig) :
     (linInitialConfig G).phase G ≤ G.rounds.length * (n + 2) := by
   simp only [linInitialConfig]
   split <;> simp [LinConfig.phase]
 
 /-- At done configs, any successor is also done and has the same state. -/
-theorem isDone_step_of_isDone (G : Protocol n S V A Sig)
+theorem isDone_step_of_isDone (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
     (hd : cfg.isDone G) (t : LinConfig G)
@@ -486,7 +486,7 @@ theorem isDone_step_of_isDone (G : Protocol n S V A Sig)
     · rw [pure_ne_zero_iff'] at ht; subst ht; exact ⟨trivial, rfl⟩
 
 /-- At non-done configs, every successor has phase exactly `cfg.phase + 1`. -/
-theorem phase_step_progress (G : Protocol n S V A Sig)
+theorem phase_step_progress (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
     (hnd : ¬ cfg.isDone G) (t : LinConfig G)
@@ -568,7 +568,7 @@ private theorem PMF.bind_congr_support {α β : Type*} (p : PMF α) (f g : α �
 
 /-- After `k ≥ rounds.length * (n+1)` steps, all reachable last states are done. -/
 private theorem isDone_of_reachable [Fintype A]
-    (G : Protocol n S V A Sig)
+    (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (k : Nat) (ss : List (LinConfig G))
     (hss : ss ∈ ((compiledLinObs G).runDistPure k (liftPureProfile σ)).support) :
     ((compiledLinObs G).lastState ss).isDone G ∨
@@ -616,8 +616,8 @@ private theorem isDone_of_reachable [Fintype A]
 
 /-- **Adequacy (pure profiles)**: running the linearized compiled model with
 `liftPureProfile σ` for enough steps, and extracting the terminal state, gives
-the same distribution as `Protocol.eval G σ`. -/
-theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype A]
+the same distribution as `MultiRoundGame.eval G σ`. -/
+theorem runDistPure_eq_eval (G : MultiRoundGame n S V A Sig) [Fintype A]
     (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 2)) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
         (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) =
@@ -633,12 +633,12 @@ theorem runDistPure_eq_eval (G : Protocol n S V A Sig) [Fintype A]
 end Adequacy
 
 -- ============================================================================
--- Behavioral adequacy: linearized execution matches Protocol.evalMixed
+-- Behavioral adequacy: linearized execution matches MultiRoundGame.evalMixed
 -- ============================================================================
 
 section BehavioralAdequacy
 
-variable {G : Protocol n S V A Sig} [DecidableEq (Fin n)] [Fintype (Option A)]
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Option A)]
 
 /-- Resolve players `pVal, pVal+1, ..., n-1` by sampling from behavioral
 strategies, accumulating actions into `accActs`. -/
@@ -729,7 +729,7 @@ theorem resolveActionsMixed_eq_pmfPi [Fintype (Fin n)]
 but samples actions from behavioral distributions rather than applying pure
 strategies deterministically. -/
 noncomputable def evalFromCfgMixed
-    (G : Protocol n S V A Sig) (σ : BehavioralProfile n V A) : LinConfig G → PMF S
+    (G : MultiRoundGame n S V A Sig) (σ : BehavioralProfile n V A) : LinConfig G → PMF S
   | .terminal s => PMF.pure s
   | .signal k s => evalRoundsMixed (G.rounds.drop k) σ s
   | .playerTurn k s sig p accActs =>
@@ -746,8 +746,8 @@ noncomputable def evalFromCfgMixed
         evalRoundsMixed (G.rounds.drop (k + 1)) σ next
       | none => PMF.pure s
 
-/-- `evalFromCfgMixed` at the initial configuration equals `Protocol.evalMixed`. -/
-theorem evalFromCfgMixed_init (G : Protocol n S V A Sig)
+/-- `evalFromCfgMixed` at the initial configuration equals `MultiRoundGame.evalMixed`. -/
+theorem evalFromCfgMixed_init (G : MultiRoundGame n S V A Sig)
     (σ : BehavioralProfile n V A) :
     evalFromCfgMixed G σ (linInitialConfig G) = G.evalMixed σ := by
   simp only [linInitialConfig]
@@ -758,13 +758,13 @@ theorem evalFromCfgMixed_init (G : Protocol n S V A Sig)
       match hr : G.rounds with
       | [] => rfl
       | _ :: _ => simp [hr] at h
-    simp [Protocol.evalMixed, evalRoundsMixed, hnil]
+    simp [MultiRoundGame.evalMixed, evalRoundsMixed, hnil]
   · -- G.rounds[0]? ≠ none → signal case
     rw [List.drop_zero]
     rfl
 
 /-- At done configs, `evalFromCfgMixed` reduces to `PMF.pure cfg.state`. -/
-private theorem evalFromCfgMixed_of_isDone (G : Protocol n S V A Sig)
+private theorem evalFromCfgMixed_of_isDone (G : MultiRoundGame n S V A Sig)
     (σ : BehavioralProfile n V A) (cfg : LinConfig G)
     (hd : cfg.isDone G) :
     evalFromCfgMixed G σ cfg = PMF.pure cfg.state := by
@@ -1094,7 +1094,7 @@ theorem runDist_liftBehavioral_bind_evalFromCfgMixed
   exact evalFromCfgMixed_init G σ
 
 /-- **Behavioral adequacy (state extraction)**: running the linearized model
-for enough steps and extracting the terminal state gives `Protocol.evalMixed`.
+for enough steps and extracting the terminal state gives `MultiRoundGame.evalMixed`.
 
 For large enough `k`, all reachable configs are done, so `evalFromCfgMixed`
 reduces to `PMF.pure ∘ state`. -/
@@ -1114,4 +1114,4 @@ theorem runDist_liftBehavioral_extractState_eq_evalMixed
 
 end BehavioralAdequacy
 
-end GameTheory.Sequential
+end GameTheory.MultiRound

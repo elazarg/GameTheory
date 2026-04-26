@@ -1,9 +1,9 @@
-import GameTheory.Languages.Sequential.CompileObs
-import GameTheory.Languages.Sequential.CompileObsLinRecall
+import GameTheory.Languages.MultiRound.CompileObs
+import GameTheory.Languages.MultiRound.CompileObsLinRecall
 import GameTheory.Theorems.Kuhn
 
 /-!
-# GameTheory.Languages.Sequential.Kuhn
+# GameTheory.Languages.MultiRound.Kuhn
 
 Kuhn's theorem for compiled sequential protocols.
 
@@ -13,8 +13,8 @@ Kuhn's theorem for compiled sequential protocols.
 - `stepMassInvariant_compiledCore` : `StepMassInvariant` holds for the compiled core model
 - `kuhn_mixed_to_behavioral_compiledLin` : M→B on linearized `ObsModelCore`
   (under `ActionPosteriorLocal`, which follows from perfect recall)
-- `kuhn_mixed_to_behavioral_native` : M→B with native `Protocol.eval` on the RHS
-  (under `Protocol.FullRecall`)
+- `kuhn_mixed_to_behavioral_native` : M→B with native `MultiRoundGame.eval` on the RHS
+  (under `MultiRoundGame.FullRecall`)
 
 ## Architecture
 
@@ -32,20 +32,20 @@ automatically for the linearized model. The remaining condition,
 `ActionPosteriorLocal`, requires a protocol-level recall condition.
 -/
 
-namespace GameTheory.Languages.Sequential
+namespace GameTheory.Languages.MultiRound
 
-open GameTheory.Sequential
+open GameTheory.MultiRound
 open GameTheory.Theorems
 
 variable {n : Nat} {S V A Sig : Type}
 
 section KuhnCore
 
-variable (G : Protocol n S V A Sig)
+variable (G : MultiRoundGame n S V A Sig)
 
 /-- The compiled ObsModelCore for a sequential protocol. -/
-noncomputable abbrev compiledCoreObs' (G : Protocol n S V A Sig) :=
-  GameTheory.Sequential.compiledCoreObs G
+noncomputable abbrev compiledCoreObs' (G : MultiRoundGame n S V A Sig) :=
+  GameTheory.MultiRound.compiledCoreObs G
 
 /-- **Kuhn B→M for compiled sequential protocol core model**: behavioral
 strategies can be realized as product mixed strategies, given the
@@ -71,7 +71,7 @@ the step is deterministic (`PMF.pure`), so if both profiles reach the same
 target the full distributions coincide. -/
 theorem stepMassInvariant_compiledCore
     [Fintype (Option A)]
-    (G : Protocol n S V A Sig) :
+    (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepMassInvariant (compiledCoreObs' G) := by
   intro ss t π₁ π₂ h₁ h₂
   have eq₁ := ObsModelCore.pureStep_eq π₁ ss
@@ -88,11 +88,11 @@ end KuhnCore
 section KuhnLinearized
 
 variable [DecidableEq (Fin n)] [Fintype (Fin n)]
-variable (G : Protocol n S V A Sig)
+variable (G : MultiRoundGame n S V A Sig)
 
 /-- The compiled linearized ObsModelCore for a sequential protocol. -/
-noncomputable abbrev compiledLinObs' (G : Protocol n S V A Sig) :=
-  GameTheory.Sequential.compiledLinObs G
+noncomputable abbrev compiledLinObs' (G : MultiRoundGame n S V A Sig) :=
+  GameTheory.MultiRound.compiledLinObs G
 
 /-- **Kuhn M→B for linearized sequential protocols**: under action-posterior
 locality, product mixed strategies can be realized by behavioral strategies.
@@ -157,21 +157,21 @@ theorem kuhn_mixed_to_behavioral_fullRecall
     (fun i => actionPosteriorLocal_of_fullRecall G hFR i) μ k
 
 -- ============================================================================
--- Native M→B: stated on Protocol.eval
+-- Native M→B: stated on MultiRoundGame.eval
 -- ============================================================================
 
 /-- Extract the terminal state from a trace of the linearized model. -/
-private noncomputable def extractState (G : Protocol n S V A Sig) :
+private noncomputable def extractState (G : MultiRoundGame n S V A Sig) :
     List (LinConfig G) → S :=
   fun ss => ((compiledLinObs G).lastState ss).state
 
 set_option linter.unusedFintypeInType false in
 /-- **Kuhn M→B (native)**: under full recall, every product mixed strategy profile
 can be realized by a behavioral strategy profile on the linearized compiled model,
-with the same outcome distribution as `Protocol.eval`.
+with the same outcome distribution as `MultiRoundGame.eval`.
 
 The behavioral profile lives on the compiled model. The RHS is the native
-protocol evaluation: `(pmfPi μ).bind (Protocol.eval G)`. -/
+protocol evaluation: `(pmfPi μ).bind (MultiRoundGame.eval G)`. -/
 theorem kuhn_mixed_to_behavioral_native
     [DecidableEq V] [Fintype V] [Fintype A] [Nonempty A]
     (hFR : G.FullRecall)
@@ -201,7 +201,7 @@ theorem kuhn_mixed_to_behavioral_native
   exact runDistPure_eq_eval G σ k hk
 
 -- ============================================================================
--- Fully native M→B: stated entirely on Protocol types
+-- Fully native M→B: stated entirely on MultiRoundGame types
 -- ============================================================================
 
 set_option linter.unusedFintypeInType false in
@@ -209,7 +209,7 @@ set_option linter.unusedFintypeInType false in
 every product mixed strategy profile can be realized by a behavioral strategy
 profile with the same outcome distribution.
 
-Both LHS and RHS use native Sequential types — no compiled model in the statement.
+Both LHS and RHS use native MultiRound types — no compiled model in the statement.
 The compiled model is used internally to construct the behavioral profile
 via the core M→B theorem. -/
 theorem kuhn_mixed_to_behavioral_sequential
@@ -275,7 +275,7 @@ set_option linter.unusedFintypeInType false in
 strategy profile can be realized by a product mixed strategy with the same
 outcome distribution.
 
-Both LHS and RHS use native Sequential types. The compiled model is used
+Both LHS and RHS use native MultiRound types. The compiled model is used
 internally. The `NoNontrivialInfoStateRepeat` condition holds unconditionally
 on the linearized model (no recall assumption needed for B→M). -/
 theorem kuhn_behavioral_to_mixed_sequential
@@ -326,4 +326,4 @@ theorem kuhn_behavioral_to_mixed_sequential
 
 end KuhnLinearized
 
-end GameTheory.Languages.Sequential
+end GameTheory.Languages.MultiRound

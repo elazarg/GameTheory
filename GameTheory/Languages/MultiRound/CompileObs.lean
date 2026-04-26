@@ -1,8 +1,8 @@
-import GameTheory.Languages.Sequential.SOS
+import GameTheory.Languages.MultiRound.SOS
 import GameTheory.Theorems.Kuhn.ObsModel
 
 /-!
-# GameTheory.Languages.Sequential.CompileObs
+# GameTheory.Languages.MultiRound.CompileObs
 
 Compilation of sequential protocol semantics into the `ObsModel` layer.
 
@@ -15,7 +15,7 @@ apply the players' joint control deterministically.
 - `compileObsModel G` : the observation model for a sequential protocol
 -/
 
-namespace GameTheory.Sequential
+namespace GameTheory.MultiRound
 
 open GameTheory
 
@@ -27,7 +27,7 @@ player actions, produce a distribution over successor configurations.
 At signal phases, this samples from the round's signal distribution.
 At action phases, this applies the transition deterministically.
 At terminal states, the state is absorbing. -/
-noncomputable def configStepPMF (G : Protocol n S V A Sig)
+noncomputable def configStepPMF (G : MultiRoundGame n S V A Sig)
     (cfg : Config G)
     (acts : Fin n → Option A) :
     PMF (Config G) :=
@@ -55,7 +55,7 @@ noncomputable def configStepPMF (G : Protocol n S V A Sig)
 - **Actions**: optional actions per player (constant across observations)
 - **Step**: stochastic resolution via `configStepPMF`
 -/
-noncomputable def compileObsModel (G : Protocol n S V A Sig) :
+noncomputable def compileObsModel (G : MultiRoundGame n S V A Sig) :
     ObsModel (Fin n) (Config G)
       (fun _ => Option V)
       (fun (_ : Fin n) (_ : Option V) => Option A) where
@@ -76,7 +76,7 @@ private theorem pure_ne_zero_iff {α : Type*} (a b : α) :
   · intro h; by_contra hne; exact h (if_neg hne)
   · intro h; subst h; simp
 
-theorem compileObsModel_step_consistent (G : Protocol n S V A Sig)
+theorem compileObsModel_step_consistent (G : MultiRoundGame n S V A Sig)
     (acts : JointControl n A)
     (cfg cfg' : Config G) :
     (configStepPMF G cfg acts) cfg' ≠ 0 ↔ Step G acts cfg cfg' := by
@@ -158,7 +158,7 @@ same successor, then the full step distributions are equal.
   two action vectors reach the same target the pure PMFs coincide.
 - **Terminal phase**: absorbing — `PMF.pure` of the current state, independent
   of actions. -/
-theorem configStepPMF_mass_invariant (G : Protocol n S V A Sig)
+theorem configStepPMF_mass_invariant (G : MultiRoundGame n S V A Sig)
     (cfg : Config G) (acts₁ acts₂ : Fin n → Option A) (t : Config G)
     (h₁ : (configStepPMF G cfg acts₁) t ≠ 0)
     (h₂ : (configStepPMF G cfg acts₂) t ≠ 0) :
@@ -195,7 +195,7 @@ identity info-state model (observations are their own information states).
 - **InfoState**: identity — observation = info state
 - **Step**: stochastic resolution via `configStepPMF`
 -/
-noncomputable def compileObsCoreModel (G : Protocol n S V A Sig) :
+noncomputable def compileObsCoreModel (G : MultiRoundGame n S V A Sig) :
     ObsModelCore (Fin n) (Config G)
       (fun _ => Option V)
       (fun (_ : Fin n) (_ : Option V) => Option A) where
@@ -207,7 +207,7 @@ noncomputable def compileObsCoreModel (G : Protocol n S V A Sig) :
   }
 
 /-- The compiled `ObsModelCore` for a sequential protocol. -/
-noncomputable abbrev compiledCoreObs (G : Protocol n S V A Sig) :=
+noncomputable abbrev compiledCoreObs (G : MultiRoundGame n S V A Sig) :=
   compileObsCoreModel G
 
-end GameTheory.Sequential
+end GameTheory.MultiRound

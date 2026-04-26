@@ -3,7 +3,7 @@ import Math.PMFProduct
 import Math.Probability
 
 /-!
-# Sequential Game Protocol
+# MultiRound Game MultiRoundGame
 
 A sequential game protocol defines the mechanics of a finite multi-step game
 with `n` players. The protocol separates game physics (signals, views,
@@ -20,7 +20,7 @@ A game is a finite list of **rounds**. Each round specifies:
 round counters, partial assignments, memory — whatever the specific game needs.
 
 **Actions** are `Option A`: every player can always choose not to act (`none`).
-Sequential play, folding, and termination are all modeled through `none`.
+MultiRound play, folding, and termination are all modeled through `none`.
 
 **Strategies** are pure and memoryless at the protocol level: `V → Option A`.
 Mixed strategies, memory, and recall are analysis-layer concerns.
@@ -31,11 +31,11 @@ is fixed). The transition is deterministic.
 ## Main definitions
 
 - `Round` — one round of signal / view / action / transition
-- `Protocol` — a list of rounds + initial state
+- `MultiRoundGame` — a list of rounds + initial state
 - `PureStrategy`, `PureProfile` — per-player and joint pure strategies
 - `BehavioralStrategy`, `BehavioralProfile` — mixed/behavioral versions
 - `Round.eval` — one-round stochastic kernel given a profile
-- `Protocol.eval` — full evaluation producing `PMF State`
+- `MultiRoundGame.eval` — full evaluation producing `PMF State`
 -/
 
 namespace GameTheory
@@ -63,11 +63,11 @@ structure Round (n : ℕ) (S V A Sig : Type) where
   transition : S → (Fin n → Option A) → S
 
 -- ============================================================================
--- Protocol: a finite sequence of rounds
+-- MultiRoundGame: a finite sequence of rounds
 -- ============================================================================
 
 /-- A sequential game protocol: an initial state and a finite list of rounds. -/
-structure Protocol (n : ℕ) (S V A Sig : Type) where
+structure MultiRoundGame (n : ℕ) (S V A Sig : Type) where
   /-- The initial state. -/
   init : S
   /-- The sequence of rounds, played in order. -/
@@ -116,7 +116,7 @@ noncomputable def evalRounds (rounds : List (Round n S V A Sig))
   rounds.foldl (fun dist r => dist.bind (r.eval σ)) (PMF.pure s)
 
 /-- Evaluate the full protocol under a pure profile. -/
-noncomputable def Protocol.eval (G : Protocol n S V A Sig)
+noncomputable def MultiRoundGame.eval (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) : PMF S :=
   evalRounds G.rounds σ G.init
 
@@ -127,8 +127,8 @@ noncomputable def evalRoundsMixed [Fintype (Option A)]
   rounds.foldl (fun dist r => dist.bind (r.evalMixed σ)) (PMF.pure s)
 
 /-- Evaluate the full protocol under a behavioral profile. -/
-noncomputable def Protocol.evalMixed [Fintype (Option A)]
-    (G : Protocol n S V A Sig) (σ : BehavioralProfile n V A) : PMF S :=
+noncomputable def MultiRoundGame.evalMixed [Fintype (Option A)]
+    (G : MultiRoundGame n S V A Sig) (σ : BehavioralProfile n V A) : PMF S :=
   evalRoundsMixed G.rounds σ G.init
 
 -- ============================================================================
@@ -184,7 +184,7 @@ the same view at every previous round.
 
 This is a structural condition on the view functions: the view at round `k` encodes
 enough information to determine the player's full observation history. -/
-def Protocol.PerfectRecall (G : Protocol n S V A Sig) : Prop :=
+def MultiRoundGame.PerfectRecall (G : MultiRoundGame n S V A Sig) : Prop :=
   ∀ (i : Fin n) (k : Nat) (hk : k < G.rounds.length)
     (recs₁ recs₂ : Fin (k + 1) → RoundRecord n S Sig),
     -- Same view at round k
@@ -201,7 +201,7 @@ the same view AND the same own-action at every previous round.
 
 This is the standard game-theoretic notion of perfect recall, which requires
 that a player remembers both what they observed and what they did. -/
-def Protocol.FullRecall (G : Protocol n S V A Sig) : Prop :=
+def MultiRoundGame.FullRecall (G : MultiRoundGame n S V A Sig) : Prop :=
   ∀ (i : Fin n) (k : Nat) (hk : k < G.rounds.length)
     (recs₁ recs₂ : Fin (k + 1) → ExecRecord n S A Sig),
     -- Same view at round k
@@ -214,7 +214,7 @@ def Protocol.FullRecall (G : Protocol n S V A Sig) : Prop :=
       (recs₁ ⟨j, by omega⟩).actions i = (recs₂ ⟨j, by omega⟩).actions i
 
 /-- Full recall implies view-only perfect recall. -/
-theorem Protocol.FullRecall.toPerfectRecall {G : Protocol n S V A Sig}
+theorem MultiRoundGame.FullRecall.toPerfectRecall {G : MultiRoundGame n S V A Sig}
     (h : G.FullRecall) : G.PerfectRecall := by
   intro i k hk recs₁ recs₂ hview j hj
   exact (h i k hk (fun m => ⟨recs₁ m, fun _ => none⟩)
@@ -224,7 +224,7 @@ theorem Protocol.FullRecall.toPerfectRecall {G : Protocol n S V A Sig}
 If the same view `v` can be produced at rounds `k₁` and `k₂` (for any states
 and signals), then `k₁ = k₂`. This is the sequential-protocol analogue of the
 standard condition that no information set is visited twice on any play path. -/
-def Protocol.ViewDeterminesRound (G : Protocol n S V A Sig) : Prop :=
+def MultiRoundGame.ViewDeterminesRound (G : MultiRoundGame n S V A Sig) : Prop :=
   ∀ (i : Fin n) (k₁ : Fin G.rounds.length) (k₂ : Fin G.rounds.length)
     (s₁ s₂ : S) (sig₁ sig₂ : Sig),
     G.rounds[k₁].view i s₁ sig₁ = G.rounds[k₂].view i s₂ sig₂ →
@@ -235,21 +235,21 @@ def Protocol.ViewDeterminesRound (G : Protocol n S V A Sig) : Prop :=
 -- ============================================================================
 
 /-- A protocol gives a `GameForm`: pure profiles in, final-state distribution out. -/
-noncomputable def Protocol.toGameForm (G : Protocol n S V A Sig) :
+noncomputable def MultiRoundGame.toGameForm (G : MultiRoundGame n S V A Sig) :
     GameForm (Fin n) where
   Strategy := fun _ => PureStrategy V A
   Outcome := S
   outcomeKernel := fun σ => G.eval σ
 
 /-- A protocol paired with a utility function gives a `KernelGame`. -/
-noncomputable def Protocol.toKernelGame (G : Protocol n S V A Sig)
+noncomputable def MultiRoundGame.toKernelGame (G : MultiRoundGame n S V A Sig)
     (u : S → Fin n → ℝ) : KernelGame (Fin n) where
   Strategy := fun _ => PureStrategy V A
   Outcome := S
   utility := fun s i => u s i
   outcomeKernel := fun σ => G.eval σ
 
-theorem Protocol.toKernelGame_toGameForm (G : Protocol n S V A Sig)
+theorem MultiRoundGame.toKernelGame_toGameForm (G : MultiRoundGame n S V A Sig)
     (u : S → Fin n → ℝ) :
     (G.toKernelGame u).toGameForm = G.toGameForm := rfl
 

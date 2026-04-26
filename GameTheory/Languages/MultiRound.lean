@@ -1,11 +1,11 @@
-import GameTheory.Languages.Sequential.Syntax
-import GameTheory.Languages.Sequential.SOS
-import GameTheory.Languages.Sequential.Compile
-import GameTheory.Languages.Sequential.Theorems
-import GameTheory.Languages.Sequential.Examples
+import GameTheory.Languages.MultiRound.Syntax
+import GameTheory.Languages.MultiRound.SOS
+import GameTheory.Languages.MultiRound.Compile
+import GameTheory.Languages.MultiRound.Theorems
+import GameTheory.Languages.MultiRound.Examples
 
 /-!
-# GameTheory.Languages.Sequential
+# GameTheory.Languages.MultiRound
 
 Public entrypoint for the sequential/protocol language layer.
 
