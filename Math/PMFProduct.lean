@@ -796,9 +796,44 @@ end Disintegration
 
 section UpdateLemmas
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
-variable {A : ι → Type uA} [∀ i, Fintype (A i)]
+variable {ι : Type uι} [DecidableEq ι]
+variable {A : ι → Type uA}
 variable {β : Type uβ}
+
+open Classical in
+/-- Folding coordinate updates along a nodup list rewrites exactly those
+    coordinates (and leaves all others unchanged). -/
+lemma foldl_update_family_eq_of_nodup
+    (l : List ι) (hNodup : l.Nodup)
+    (σ τ : ∀ i, PMF (A i)) :
+    l.foldl (fun fam j => Function.update fam j (τ j)) σ
+      = fun i => if i ∈ l then τ i else σ i := by
+  induction l generalizing σ with
+  | nil =>
+      simp
+  | cons j rest ih =>
+      have hNodupRest : rest.Nodup := List.Nodup.of_cons hNodup
+      simp only [List.foldl]
+      -- rewrite fold over `rest` with updated base family
+      rw [ih (σ := Function.update σ j (τ j)) hNodupRest]
+      funext i
+      by_cases hi : i = j
+      · subst hi
+        simp
+      · simp [List.mem_cons, hi]
+
+open Classical in
+@[simp] lemma update_family_same (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j)) :
+    (Function.update σ j τ) j = τ := by
+  simp [Function.update]
+
+open Classical in
+@[simp] lemma update_family_other (σ : ∀ i, PMF (A i)) {i j : ι}
+    (τ : PMF (A j)) (h : i ≠ j) :
+    (Function.update σ j τ) i = σ i := by
+  simp [Function.update, h]
+
+variable [Fintype ι] [∀ i, Fintype (A i)]
 
 open Classical in
 /-- Pointwise: updating the *factor family* at `j` only changes that coordinate's factor. -/
@@ -963,29 +998,6 @@ theorem pmfPi_bind_ignores_coord_finset
   exact hf j ((Finset.mem_toList.mp hj))
 
 open Classical in
-omit [Fintype ι] [(i : ι) → Fintype (A i)] in
-/-- Folding coordinate updates along a nodup list rewrites exactly those
-    coordinates (and leaves all others unchanged). -/
-lemma foldl_update_family_eq_of_nodup
-    (l : List ι) (hNodup : l.Nodup)
-    (σ τ : ∀ i, PMF (A i)) :
-    l.foldl (fun fam j => Function.update fam j (τ j)) σ
-      = fun i => if i ∈ l then τ i else σ i := by
-  induction l generalizing σ with
-  | nil =>
-      simp
-  | cons j rest ih =>
-      have hNodupRest : rest.Nodup := List.Nodup.of_cons hNodup
-      simp only [List.foldl]
-      -- rewrite fold over `rest` with updated base family
-      rw [ih (σ := Function.update σ j (τ j)) hNodupRest]
-      funext i
-      by_cases hi : i = j
-      · subst hi
-        simp
-      · simp [List.mem_cons, hi]
-
-open Classical in
 /-- If a continuation ignores every coordinate, binding it under any product PMF
     collapses to the same constant PMF value. -/
 theorem pmfPi_bind_eq_of_forall_ignores
@@ -1040,19 +1052,6 @@ theorem pmfPi_bind_comm_fresh
     (pmfPi σ).bind g = g (fun i => Classical.arbitrary (A i)) :=
   pmfPi_bind_eq_of_forall_ignores (σ := σ) (g := g) hg
     (fun i => Classical.arbitrary (A i))
-
-open Classical in
-omit [Fintype ι] [∀ i, Fintype (A i)] in
-@[simp] lemma update_family_same (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j)) :
-    (Function.update σ j τ) j = τ := by
-  simp [Function.update]
-
-open Classical in
-omit [Fintype ι] [∀ i, Fintype (A i)] in
-@[simp] lemma update_family_other (σ : ∀ i, PMF (A i)) {i j : ι}
-    (τ : PMF (A j)) (h : i ≠ j) :
-    (Function.update σ j τ) i = σ i := by
-  simp [Function.update, h]
 
 open Classical in
 /-- Binding a product PMF with a function-dependent coordinate update equals the

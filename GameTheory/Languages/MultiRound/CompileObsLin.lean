@@ -228,12 +228,9 @@ noncomputable instance compiledLinObs_localStrategy_fintype [DecidableEq (Fin n)
 
 section Properties
 
-variable [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
-
-omit [Fintype (Fin n)] [Fintype A] in
 /-- At every playerTurn state, only the acting player has a nontrivial
 observation — all others see `none`. -/
-theorem linObserve_ne_acting {G : MultiRoundGame n S V A Sig}
+theorem linObserve_ne_acting [DecidableEq (Fin n)] {G : MultiRoundGame n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n}
     {accActs : Fin n → Option A} {i : Fin n} (hi : i ≠ p) :
     linObserve G i (.playerTurn k s sig p accActs) = none := by
@@ -246,7 +243,6 @@ theorem pure_ne_zero_iff' {α : Type*} (a b : α) :
   · intro h; by_contra hne; exact h (if_neg hne)
   · intro h; subst h; simp
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 private theorem advancePlayerTurn_mass_invariant (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n)
     (accActs₁ accActs₂ : Fin n → Option A) (r : Round n S V A Sig)
@@ -260,7 +256,6 @@ private theorem advancePlayerTurn_mass_invariant (G : MultiRoundGame n S V A Sig
   · simp_all [PMF.pure_apply]
   · simp_all [PMF.pure_apply]
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 /-- If two `accActs` both give nonzero probability at the same target through
 `advancePlayerTurn`, then the `accActs` must be equal (since the step is `PMF.pure`). -/
 private theorem advancePlayerTurn_accActs_eq (G : MultiRoundGame n S V A Sig)
@@ -283,7 +278,6 @@ private theorem advancePlayerTurn_accActs_eq (G : MultiRoundGame n S V A Sig)
     have := h₁.symm.trans h₂
     exact (LinConfig.applyTransition.injEq .. ▸ this).2.2.2
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 /-- `linConfigStepPMF` is mass-invariant: if two action vectors both assign
 nonzero probability to the same successor, the step probabilities are equal.
 
@@ -312,7 +306,8 @@ private theorem linConfigStepPMF_mass_invariant (G : MultiRoundGame n S V A Sig)
 /-- The linearized model satisfies `StepMassInvariant`.
 Signal phases ignore actions entirely. PlayerTurn phases are deterministic
 (the step is `PMF.pure` of a single successor). Terminal is absorbing. -/
-theorem stepMassInvariant_compiledLin (G : MultiRoundGame n S V A Sig) :
+theorem stepMassInvariant_compiledLin [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+    (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepMassInvariant (compiledLinObs G) := by
   intro ss t π₁ π₂ h₁ h₂
   have eq₁ := ObsModelCore.pureStep_eq π₁ ss
@@ -321,8 +316,7 @@ theorem stepMassInvariant_compiledLin (G : MultiRoundGame n S V A Sig) :
   change linConfigStepPMF G _ _ t = linConfigStepPMF G _ _ t
   exact linConfigStepPMF_mass_invariant G _ _ _ t h₁ h₂
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
-private theorem extractPlayerAction_congr [DecidableEq (Fin n)]
+private theorem extractPlayerAction_congr
     (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
     (acts₁ acts₂ : (i : Fin n) →
@@ -335,8 +329,7 @@ private theorem extractPlayerAction_congr [DecidableEq (Fin n)]
   · simp [hp]
   · rfl
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
-private theorem linConfigStepPMF_playerTurn_congr [DecidableEq (Fin n)]
+private theorem linConfigStepPMF_playerTurn_congr
     (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
     (acts₁ acts₂ : (i : Fin n) →
@@ -352,7 +345,6 @@ private theorem linConfigStepPMF_playerTurn_congr [DecidableEq (Fin n)]
     exact extractPlayerAction_congr G k s sig p accActs acts₁ acts₂ hp
   | none => rfl
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 private theorem linAct_eq_punit_of_ne [DecidableEq (Fin n)]
     {G : MultiRoundGame n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n} {accActs : Fin n → Option A}
@@ -376,7 +368,8 @@ private theorem cast_dep_apply {α : Type} {P : α → Type}
 
 /-- Closed form of pure one-step execution in the linearized compilation.
 Eliminates all dependent-type casts from `pureStep_eq`. -/
-theorem pureStep_compiledLin_eq (G : MultiRoundGame n S V A Sig)
+theorem pureStep_compiledLin_eq [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+    (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (ss : List (LinConfig G)) :
     (compiledLinObs G).pureStep π ss =
       linConfigStepPMF G ((compiledLinObs G).lastState ss)
@@ -389,7 +382,8 @@ theorem pureStep_compiledLin_eq (G : MultiRoundGame n S V A Sig)
 /-- Two profiles producing the same observation-dependent actions at a given
 configuration have equal pure steps. Takes the last state as a parameter
 to avoid matching issues with `lastState ss`. -/
-private theorem pureStep_congr_compiledLin (G : MultiRoundGame n S V A Sig)
+private theorem pureStep_congr_compiledLin [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+    (G : MultiRoundGame n S V A Sig)
     (π₁ π₂ : (compiledLinObs G).PureProfile) (ss : List (LinConfig G))
     (cfg : LinConfig G) (hlast : (compiledLinObs G).lastState ss = cfg)
     (h : ∀ i, π₁ i (linObserve G i cfg) = π₂ i (linObserve G i cfg)) :
@@ -401,7 +395,8 @@ private theorem pureStep_congr_compiledLin (G : MultiRoundGame n S V A Sig)
 At each step, at most one player has a nontrivial action (the acting player
 at a `playerTurn` phase). Changing any other player's strategy does not
 affect the step, so the per-player update condition holds trivially. -/
-theorem stepSupportFactorization_compiledLin (G : MultiRoundGame n S V A Sig) :
+theorem stepSupportFactorization_compiledLin [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+    (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepSupportFactorization (compiledLinObs G) := by
   intro ss t π₀ π h₀
   constructor
@@ -482,7 +477,8 @@ open Math.ParameterizedChain in
 /-- Under the linearized model, if `πᵢ` agrees with `(π i)` at every intermediate
 observation along the trace, then `pureRun` under the player-i update equals the
 original `pureRun`. -/
-theorem pureRun_update_eq_of_obs_agree (G : MultiRoundGame n S V A Sig)
+theorem pureRun_update_eq_of_obs_agree [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+    (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
     (k : Nat) (ss : List (LinConfig G))
@@ -530,7 +526,6 @@ theorem pureRun_update_eq_of_obs_agree (G : MultiRoundGame n S V A Sig)
           · simp [Function.update, dif_neg hji])
       rw [hpre_eq, hstep_eq]
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 theorem lastState_take_eq_getElem
     [DecidableEq (Fin n)] {G : MultiRoundGame n S V A Sig}
     (ss : List (LinConfig G)) (j : Nat) (hj : j + 1 < ss.length) :
@@ -545,7 +540,8 @@ player-i update, then `πᵢ` must agree with `(π i)` at all observations along
 the trace. At non-i steps this is trivial (PUnit). At i-steps, the step is
 deterministic and injective in the action, so both hitting the same target forces
 the actions to agree. -/
-theorem pureRun_update_nonzero_agree (G : MultiRoundGame n S V A Sig)
+theorem pureRun_update_nonzero_agree [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+    (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
     (k : Nat) (ss : List (LinConfig G))
@@ -617,6 +613,34 @@ end Properties
 -- ============================================================================
 -- Profile lift / descend
 -- ============================================================================
+
+section ViewRound
+
+variable {G : MultiRoundGame n S V A Sig}
+
+open Classical in
+/-- The unique round for a view under `ViewDeterminesRound`. -/
+noncomputable def viewRound [Nonempty (Fin G.rounds.length)]
+    (_hVRD : G.ViewDeterminesRound) (i : Fin n) (v : V) :
+    Fin G.rounds.length :=
+  if h : ∃ (k : Fin G.rounds.length) (s : S) (sig : Sig),
+    G.rounds[k].view i s sig = v
+  then h.choose
+  else Classical.arbitrary _
+
+theorem viewRound_eq [Nonempty (Fin G.rounds.length)] (hVRD : G.ViewDeterminesRound)
+    (k : Fin G.rounds.length) (s : S) (sig_i : Sig) (i : Fin n)
+    (hv : G.rounds[k].view i s sig_i = v) :
+    viewRound hVRD i v = k := by
+  classical
+  unfold viewRound
+  have hex : ∃ (k' : Fin G.rounds.length) (s' : S) (sig' : Sig),
+    G.rounds[k'].view i s' sig' = v := ⟨k, s, sig_i, hv⟩
+  rw [dif_pos hex]
+  obtain ⟨s', sig', hv'⟩ := hex.choose_spec
+  exact hVRD i _ _ _ _ _ _ (hv'.trans hv.symm)
+
+end ViewRound
 
 section Profiles
 
@@ -699,29 +723,6 @@ theorem descendBehavioralProfile_liftBehavioralProfile
     (σ : BehavioralProfile n V A) :
     descendBehavioralProfile (G := G) (liftBehavioralProfile σ) = σ := by
   ext i v; simp [descendBehavioralProfile, liftBehavioralProfile, liftBehavioralStrategy]
-
-open Classical in
-/-- The unique round for a view under `ViewDeterminesRound`. -/
-noncomputable def viewRound [Nonempty (Fin G.rounds.length)]
-    (_hVRD : G.ViewDeterminesRound) (i : Fin n) (v : V) :
-    Fin G.rounds.length :=
-  if h : ∃ (k : Fin G.rounds.length) (s : S) (sig : Sig),
-    G.rounds[k].view i s sig = v
-  then h.choose
-  else Classical.arbitrary _
-
-omit [DecidableEq (Fin n)] in
-theorem viewRound_eq [Nonempty (Fin G.rounds.length)] (hVRD : G.ViewDeterminesRound)
-    (k : Fin G.rounds.length) (s : S) (sig_i : Sig) (i : Fin n)
-    (hv : G.rounds[k].view i s sig_i = v) :
-    viewRound hVRD i v = k := by
-  classical
-  unfold viewRound
-  have hex : ∃ (k' : Fin G.rounds.length) (s' : S) (sig' : Sig),
-    G.rounds[k'].view i s' sig' = v := ⟨k, s, sig_i, hv⟩
-  rw [dif_pos hex]
-  obtain ⟨s', sig', hv'⟩ := hex.choose_spec
-  exact hVRD i _ _ _ _ _ _ (hv'.trans hv.symm)
 
 /-- Smart descent using `viewRound` — uses the unique reachable round for each view
 instead of `Classical.arbitrary`. -/
