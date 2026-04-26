@@ -1417,6 +1417,53 @@ theorem toPlainEFGOfBoundedHorizon_outcomeKernel_eq_efgToFOSG
   exact toPlainEFGOfBoundedHorizon_outcomeKernel_eq_nativeBounded
     (G := G) hBound (efgToFOSGProfile (G := G) hBound τ hτ)
 
+/-! ### Solution-concept corollaries
+
+Per-player utility distribution and expected utility transport directly from
+outcome-kernel equality plus the bridge's `utility` definition reindexing
+through `origPlayer`.  These are corollaries, not new bridge primitives. -/
+
+theorem toPlainEFGOfBoundedHorizon_eu_eq_native
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs] [Fintype G.History]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (σ : G.LegalBehavioralProfile) (p : PlayerIx (ι := ι)) :
+    (toPlainEFGOfBoundedHorizon (G := G) hBound).toKernelGame.eu
+        (translateBehavioralProfile (G := G) σ) p
+      = (G.toKernelGameOfBoundedHorizon hBound).eu σ (origPlayer (ι := ι) p) := by
+  unfold KernelGame.eu
+  rw [toPlainEFGOfBoundedHorizon_outcomeKernel_eq_nativeBounded
+    (G := G) hBound σ]
+  rfl
+
+theorem toPlainEFGOfBoundedHorizon_udistPlayer_eq_efgToFOSG
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs] [Fintype G.History]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ)
+    (p : PlayerIx (ι := ι)) :
+    (toPlainEFGOfBoundedHorizon (G := G) hBound).toKernelGame.udistPlayer τ p
+      = (G.toKernelGameOfBoundedHorizon hBound).udistPlayer
+          (efgToFOSGProfile (G := G) hBound τ hτ) (origPlayer (ι := ι) p) := by
+  unfold KernelGame.udistPlayer
+  rw [toPlainEFGOfBoundedHorizon_outcomeKernel_eq_efgToFOSG (G := G) hBound τ hτ]
+  rfl
+
+theorem toPlainEFGOfBoundedHorizon_eu_eq_efgToFOSG
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs] [Fintype G.History]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ)
+    (p : PlayerIx (ι := ι)) :
+    (toPlainEFGOfBoundedHorizon (G := G) hBound).toKernelGame.eu τ p
+      = (G.toKernelGameOfBoundedHorizon hBound).eu
+          (efgToFOSGProfile (G := G) hBound τ hτ) (origPlayer (ι := ι) p) := by
+  unfold KernelGame.eu
+  rw [toPlainEFGOfBoundedHorizon_outcomeKernel_eq_efgToFOSG (G := G) hBound τ hτ]
+  rfl
+
 /-- Extract the player-view component carried by a bridge EFG node.
 
 This is intentionally informative only at decision nodes: there the EFG infoset
