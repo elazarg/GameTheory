@@ -76,16 +76,17 @@ structure FOSG (ι W : Type) [DecidableEq ι]
 
 namespace FOSG
 
-variable {ι W : Type} [DecidableEq ι]
+variable {ι W : Type}
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
 
 /-- The all-`none` joint action. -/
 def noopAction (Act : ι → Type) : JointAction Act :=
   fun _ => none
 
-omit [DecidableEq ι] in
 @[simp] theorem noopAction_apply (i : ι) :
     noopAction Act i = none := rfl
+
+variable [DecidableEq ι]
 
 /-- Legal joint actions at a given state. -/
 abbrev legal

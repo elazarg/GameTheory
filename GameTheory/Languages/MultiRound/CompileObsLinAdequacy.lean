@@ -788,9 +788,13 @@ private theorem evalFromCfgMixed_of_isDone (G : MultiRoundGame n S V A Sig)
     have hd' : G.rounds[k]? = none := hd
     rw [hd']
 
+end BehavioralAdequacy
+
+section BehavioralReachability
+
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
 variable [Fintype (Fin n)] [Fintype A]
 
-omit [Fintype (Option A)] in
 /-- Any config reachable via `stepDist` is in the support of `linConfigStepPMF`
 for some action choice. -/
 private theorem stepDist_support_subset_step_support
@@ -802,7 +806,6 @@ private theorem stepDist_support_subset_step_support
   obtain ⟨a, _, ht'⟩ := ht
   exact ⟨(compiledLinObs G).castJointAction ss a, ht'⟩
 
-omit [Fintype (Option A)] in
 /-- For large enough k, all configs reachable by `runDist k β` are done. -/
 private theorem isDone_of_reachable_behavioral
     {β : ObsModelCore.BehavioralProfile (compiledLinObs G)}
@@ -839,6 +842,13 @@ private theorem isDone_of_reachable_behavioral
       rcases ih_ss' with hd' | hph
       · exact absurd hd' hd
       · omega
+
+end BehavioralReachability
+
+section BehavioralAdequacyStep
+
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
+variable [Fintype (Option A)] [Fintype (Fin n)] [Fintype A]
 
 private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
     (σ : BehavioralProfile n V A) (ss : List (LinConfig G)) :
@@ -1113,6 +1123,6 @@ theorem runDist_liftBehavioral_extractState_eq_evalMixed
   · exact (evalFromCfgMixed_of_isDone G σ _
       (isDone_of_phase_ge G _ (by omega))).symm
 
-end BehavioralAdequacy
+end BehavioralAdequacyStep
 
 end GameTheory.MultiRound
