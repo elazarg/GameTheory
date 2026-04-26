@@ -1155,6 +1155,268 @@ theorem efgToFOSGProfile_translateBehavioralProfile_apply
     (G := G) σ (origPlayer_playerEquiv (ι := ι) i) view hlen
     (encodedInfoOfView (G := G) (k := k) i view) rfl
 
+/-! ### Distributional transport for restricted EFG profiles
+
+Step 1: pointwise, at infosets reachable in the bridge tree, a respectful EFG
+profile τ agrees with its `translate ∘ efgToFOSG` round-trip. -/
+
+omit [Fintype W] [DecidablePred G.terminal] in
+/-- Auxiliary that abstracts the cast on the EFG player index.  We take a
+generic `q : PlayerIx` together with a proof that `q = p`, so a `subst` makes
+all the casts trivial. -/
+private theorem translate_efgToFOSG_apply_encoded_aux
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat}
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    {p q : PlayerIx (ι := ι)} (hqp : q = p)
+    (heqAct : Option (Act (origPlayer (ι := ι) q)) =
+      Option (Act (origPlayer (ι := ι) p)))
+    (heqInfoset : (infoStructure (G := G) k).Infoset q =
+      (infoStructure (G := G) k).Infoset p)
+    (Ip : (infoStructure (G := G) k).Infoset p)
+    (Iq : (infoStructure (G := G) k).Infoset q)
+    (hIqIp : HEq Iq Ip) :
+    PMF.map (fun b : Option (Act (origPlayer (ι := ι) p)) =>
+        Fintype.equivFin (Option (Act (origPlayer (ι := ι) p))) b)
+      (PMF.map (fun aIx : (infoStructure (G := G) k).Act Iq =>
+          (cast heqAct
+            ((Fintype.equivFin (Option (Act (origPlayer (ι := ι) q)))).symm aIx) :
+            Option (Act (origPlayer (ι := ι) p))))
+        (τ q Iq))
+      = τ p Ip := by
+  classical
+  subst hqp
+  have hIqIp' : Iq = Ip := eq_of_heq hIqIp
+  subst hIqIp'
+  rw [PMF.map_comp]
+  have hcomp : (fun b : Option (Act (origPlayer (ι := ι) q)) =>
+      Fintype.equivFin (Option (Act (origPlayer (ι := ι) q))) b)
+      ∘ (fun aIx : (infoStructure (G := G) k).Act Iq =>
+          (cast heqAct
+            ((Fintype.equivFin (Option (Act (origPlayer (ι := ι) q)))).symm aIx) :
+            Option (Act (origPlayer (ι := ι) q))))
+      = id := by
+    funext aIx
+    simp
+  rw [hcomp]
+  exact PMF.map_id _
+
+omit [Fintype W] [DecidablePred G.terminal] in
+private theorem translate_efgToFOSG_apply_encoded
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ)
+    (p : PlayerIx (ι := ι)) (h : G.History)
+    (hlen : (h.playerView (origPlayer (ι := ι) p)).length ≤ 2 * k) :
+    translateBehavioralProfile (G := G)
+        (efgToFOSGProfile (G := G) hBound τ hτ) p
+        (encodePlayerView (G := G) (k := k) h (origPlayer (ι := ι) p))
+      = τ p (encodePlayerView (G := G) (k := k) h (origPlayer (ι := ι) p)) := by
+  classical
+  set j : ι := origPlayer (ι := ι) p with hj
+  set I : (infoStructure (G := G) k).Infoset p :=
+    encodePlayerView (G := G) (k := k) h j with hIdef
+  change translateBehavioralProfile (G := G)
+      (efgToFOSGProfile (G := G) hBound τ hτ) p I = τ p I
+  unfold translateBehavioralProfile
+  have htoList : (Word.toList (I : (infoStructure (G := G) k).Infoset p) :
+      List (PlayerEvent G j)) = h.playerView j :=
+    Word.toList_ofList_eq_self (h.playerView j) hlen
+  change PMF.map (indexOfAction (G := G) I)
+      ((efgToFOSGProfile (G := G) hBound τ hτ).toProfile j (Word.toList I)) = _
+  rw [htoList]
+  change PMF.map (indexOfAction (G := G) I)
+      (((efgToFOSGProfile (G := G) hBound τ hτ) j).1 (h.playerView j)) = _
+  rw [efgToFOSGProfile_apply]
+  -- LHS: PMF.map (indexOfAction I) (PMF.map (actionOfIndexForPlayer j I_inner) (τ q I_inner))
+  --   where q = playerEquiv j, I_inner = encodedInfoOfView j (h.playerView j)
+  set q : PlayerIx (ι := ι) := playerEquiv (ι := ι) j with hqdef
+  have hqp : q = p := by
+    rw [hqdef, hj]
+    exact playerEquiv_origPlayer (ι := ι) p
+  set I_inner : (infoStructure (G := G) k).Infoset q :=
+    encodedInfoOfView (G := G) (k := k) j (h.playerView j) with hIinner
+  have heqInfoset : (infoStructure (G := G) k).Infoset q =
+      (infoStructure (G := G) k).Infoset p := by rw [hqp]
+  have heqAct : Option (Act (origPlayer (ι := ι) q)) =
+      Option (Act (origPlayer (ι := ι) p)) := by rw [hqp]
+  have hI_inner_heq : HEq I_inner I := by
+    -- I_inner = cast _ (Word.ofList (2*k) (h.playerView j))
+    -- I = Word.ofList (2*k) (h.playerView j) (as Word (PlayerEvent G j) (2*k))
+    -- both are heterogeneously equal underlying Word values
+    have h1 : HEq I_inner (Word.ofList (2 * k) (h.playerView j)) := by
+      rw [hIinner]
+      change HEq (encodedInfoOfView (G := G) (k := k) j (h.playerView j))
+        (Word.ofList (2 * k) (h.playerView j))
+      exact cast_heq _ _
+    have h2 : HEq (Word.ofList (2 * k) (h.playerView j) :
+        Word (PlayerEvent G j) (2 * k)) I := by
+      rw [hIdef]
+      rfl
+    exact h1.trans h2
+  have hkey : PMF.map (indexOfAction (G := G) I)
+      (PMF.map (actionOfIndexForPlayer (G := G) (k := k) j I_inner) (τ q I_inner))
+      = τ p I := by
+    unfold indexOfAction actionOfIndexForPlayer actionOfIndex
+    exact translate_efgToFOSG_apply_encoded_aux (G := G) τ hqp heqAct
+      heqInfoset I I_inner hI_inner_heq
+  exact hkey
+
+/-! Step 2: tree-level coincidence on `Tree.choosePlayersFrom`. -/
+
+omit [Fintype W] [DecidablePred G.terminal] in
+private theorem choosePlayersFrom_evalDist_eq_translate_efgToFOSG_aux
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ)
+    (h : G.History)
+    (hview : ∀ p : PlayerIx (ι := ι),
+      (h.playerView (origPlayer (ι := ι) p)).length ≤ 2 * k) :
+    ∀ (m pVal : Nat),
+      m = Fintype.card ι - pVal →
+      ∀ (chosen : JointAction Act)
+        (cont : JointAction Act →
+          GameTree (infoStructure (G := G) k) (SerialExec.State G)),
+        (∀ chosen',
+          (cont chosen').evalDist τ = (cont chosen').evalDist
+            (translateBehavioralProfile (G := G)
+              (efgToFOSGProfile (G := G) hBound τ hτ))) →
+        (Tree.choosePlayersFrom (G := G) k h pVal chosen cont).evalDist τ
+          = (Tree.choosePlayersFrom (G := G) k h pVal chosen cont).evalDist
+              (translateBehavioralProfile (G := G)
+                (efgToFOSGProfile (G := G) hBound τ hτ)) := by
+  classical
+  intro m
+  induction m with
+  | zero =>
+      intro pVal hm chosen cont hcont
+      have hp : ¬ pVal < Fintype.card ι := by omega
+      conv_lhs => rw [Tree.choosePlayersFrom, dif_neg hp]
+      conv_rhs => rw [Tree.choosePlayersFrom, dif_neg hp]
+      exact hcont chosen
+  | succ m ih =>
+      intro pVal hm chosen cont hcont
+      have hp : pVal < Fintype.card ι := by omega
+      let p : PlayerIx (ι := ι) := ⟨pVal, hp⟩
+      conv_lhs => rw [Tree.choosePlayersFrom, dif_pos hp]
+      conv_rhs => rw [Tree.choosePlayersFrom, dif_pos hp]
+      simp only [evalDist_decision]
+      have hpw : τ p (encodePlayerView (G := G) (k := k) h
+            (origPlayer (ι := ι) p))
+          = translateBehavioralProfile (G := G)
+              (efgToFOSGProfile (G := G) hBound τ hτ) p
+              (encodePlayerView (G := G) (k := k) h
+                (origPlayer (ι := ι) p)) := by
+        rw [translate_efgToFOSG_apply_encoded (G := G) hBound τ hτ p h (hview p)]
+      change (τ p (encodePlayerView (G := G) (k := k) h
+            (origPlayer (ι := ι) p))).bind _ = _
+      rw [hpw]
+      congr 1
+      funext aIx
+      exact ih (pVal + 1) (by omega) _ cont hcont
+
+omit [Fintype W] [DecidablePred G.terminal] in
+private theorem choosePlayersFrom_evalDist_eq_translate_efgToFOSG
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ)
+    (h : G.History)
+    (hview : ∀ p : PlayerIx (ι := ι),
+      (h.playerView (origPlayer (ι := ι) p)).length ≤ 2 * k)
+    (pVal : Nat) (chosen : JointAction Act)
+    (cont : JointAction Act →
+      GameTree (infoStructure (G := G) k) (SerialExec.State G))
+    (hcont : ∀ chosen',
+      (cont chosen').evalDist τ = (cont chosen').evalDist
+        (translateBehavioralProfile (G := G)
+          (efgToFOSGProfile (G := G) hBound τ hτ))) :
+    (Tree.choosePlayersFrom (G := G) k h pVal chosen cont).evalDist τ
+      = (Tree.choosePlayersFrom (G := G) k h pVal chosen cont).evalDist
+          (translateBehavioralProfile (G := G)
+            (efgToFOSGProfile (G := G) hBound τ hτ)) :=
+  choosePlayersFrom_evalDist_eq_translate_efgToFOSG_aux (G := G) hBound τ hτ h hview
+    _ pVal rfl chosen cont hcont
+
+/-! Step 3: outer induction on the bridge tree depth. -/
+
+private theorem fromHistory_evalDist_eq_translate_efgToFOSG
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ)
+    (n : Nat) (h : G.History) (hbound : h.steps.length + n ≤ k) :
+    (Tree.fromHistory (G := G) k n h).evalDist τ
+      = (Tree.fromHistory (G := G) k n h).evalDist
+          (translateBehavioralProfile (G := G)
+            (efgToFOSGProfile (G := G) hBound τ hτ)) := by
+  classical
+  induction n generalizing h with
+  | zero =>
+      simp [Tree.fromHistory]
+  | succ n ih =>
+      by_cases hterm : G.terminal h.lastState
+      · simp [Tree.fromHistory, hterm]
+      · rw [tree_fromHistory_succ_nonterminal (G := G) k n h hterm]
+        have hview : ∀ p : PlayerIx (ι := ι),
+            (h.playerView (origPlayer (ι := ι) p)).length ≤ 2 * k := by
+          intro p
+          have hv := history_playerView_length_le_two_mul_steps
+            (G := G) h (origPlayer (ι := ι) p)
+          omega
+        apply choosePlayersFrom_evalDist_eq_translate_efgToFOSG
+          (G := G) hBound τ hτ h hview 0 (noopAction Act)
+        intro chosen
+        -- chance node + recurse
+        simp only [evalDist_chance]
+        congr 1
+        funext b
+        have : (h.extendByOutcome (Tree.legalize (G := G) h hterm chosen)
+            ((Fintype.equivFin W).symm b)).steps.length + n ≤ k := by
+          by_cases hsupp : G.transition h.lastState
+              (Tree.legalize (G := G) h hterm chosen)
+              ((Fintype.equivFin W).symm b) ≠ 0
+          · rw [History.extendByOutcome_of_support
+              (h := h) (a := Tree.legalize (G := G) h hterm chosen)
+              (dst := (Fintype.equivFin W).symm b) hsupp]
+            simp; omega
+          · have hzero : G.transition h.lastState
+                (Tree.legalize (G := G) h hterm chosen)
+                ((Fintype.equivFin W).symm b) = 0 :=
+              of_not_not hsupp
+            rw [History.extendByOutcome_of_no_support
+              (h := h) (a := Tree.legalize (G := G) h hterm chosen)
+              (dst := (Fintype.equivFin W).symm b) hzero]
+            omega
+        exact ih _ this
+
+/-- Distributional transport for restricted EFG profiles: a bridge-tree
+outcome distribution under any respectful EFG profile equals the FOSG
+outcome distribution under the inverse-translated FOSG profile. -/
+theorem toPlainEFGOfBoundedHorizon_outcomeKernel_eq_efgToFOSG
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs] [Fintype G.History]
+    {k : Nat} (hBound : G.BoundedHorizon k)
+    (τ : EFG.BehavioralProfile (infoStructure (G := G) k))
+    (hτ : EFGProfileRespectsFOSG (G := G) (k := k) τ) :
+    (toPlainEFGOfBoundedHorizon (G := G) hBound).toKernelGame.outcomeKernel τ
+      = (G.toKernelGameOfBoundedHorizon hBound).outcomeKernel
+          (efgToFOSGProfile (G := G) hBound τ hτ) := by
+  have htree := fromHistory_evalDist_eq_translate_efgToFOSG
+    G hBound τ hτ k (SerialExec.root G)
+    (by simp [SerialExec.root])
+  change (Tree.fromHistory (G := G) k k (SerialExec.root G)).evalDist τ = _
+  rw [htree]
+  exact toPlainEFGOfBoundedHorizon_outcomeKernel_eq_nativeBounded
+    (G := G) hBound (efgToFOSGProfile (G := G) hBound τ hτ)
+
 /-- Extract the player-view component carried by a bridge EFG node.
 
 This is intentionally informative only at decision nodes: there the EFG infoset
