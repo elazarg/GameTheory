@@ -228,10 +228,9 @@ noncomputable instance compiledLinObs_localStrategy_fintype [DecidableEq (Fin n)
 
 section Properties
 
-variable [DecidableEq (Fin n)] [Fintype (Fin n)]
-variable [Fintype A] [Nonempty A]
+variable [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
 
-omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [Fintype (Fin n)] [Fintype A] in
 /-- At every playerTurn state, only the acting player has a nontrivial
 observation — all others see `none`. -/
 theorem linObserve_ne_acting {G : MultiRoundGame n S V A Sig}
@@ -247,7 +246,7 @@ theorem pure_ne_zero_iff' {α : Type*} (a b : α) :
   · intro h; by_contra hne; exact h (if_neg hne)
   · intro h; subst h; simp
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 private theorem advancePlayerTurn_mass_invariant (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n)
     (accActs₁ accActs₂ : Fin n → Option A) (r : Round n S V A Sig)
@@ -261,7 +260,7 @@ private theorem advancePlayerTurn_mass_invariant (G : MultiRoundGame n S V A Sig
   · simp_all [PMF.pure_apply]
   · simp_all [PMF.pure_apply]
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 /-- If two `accActs` both give nonzero probability at the same target through
 `advancePlayerTurn`, then the `accActs` must be equal (since the step is `PMF.pure`). -/
 private theorem advancePlayerTurn_accActs_eq (G : MultiRoundGame n S V A Sig)
@@ -284,7 +283,7 @@ private theorem advancePlayerTurn_accActs_eq (G : MultiRoundGame n S V A Sig)
     have := h₁.symm.trans h₂
     exact (LinConfig.applyTransition.injEq .. ▸ this).2.2.2
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 /-- `linConfigStepPMF` is mass-invariant: if two action vectors both assign
 nonzero probability to the same successor, the step probabilities are equal.
 
@@ -310,7 +309,6 @@ private theorem linConfigStepPMF_mass_invariant (G : MultiRoundGame n S V A Sig)
   | .applyTransition _ _ _ _ => simp only [linConfigStepPMF] at h₁ h₂ ⊢
   | .terminal _ => simp only [linConfigStepPMF] at h₁ h₂ ⊢
 
-omit [Nonempty A] in
 /-- The linearized model satisfies `StepMassInvariant`.
 Signal phases ignore actions entirely. PlayerTurn phases are deterministic
 (the step is `PMF.pure` of a single successor). Terminal is absorbing. -/
@@ -323,7 +321,7 @@ theorem stepMassInvariant_compiledLin (G : MultiRoundGame n S V A Sig) :
   change linConfigStepPMF G _ _ t = linConfigStepPMF G _ _ t
   exact linConfigStepPMF_mass_invariant G _ _ _ t h₁ h₂
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 private theorem extractPlayerAction_congr [DecidableEq (Fin n)]
     (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
@@ -337,7 +335,7 @@ private theorem extractPlayerAction_congr [DecidableEq (Fin n)]
   · simp [hp]
   · rfl
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 private theorem linConfigStepPMF_playerTurn_congr [DecidableEq (Fin n)]
     (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
@@ -354,7 +352,7 @@ private theorem linConfigStepPMF_playerTurn_congr [DecidableEq (Fin n)]
     exact extractPlayerAction_congr G k s sig p accActs acts₁ acts₂ hp
   | none => rfl
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 private theorem linAct_eq_punit_of_ne [DecidableEq (Fin n)]
     {G : MultiRoundGame n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n} {accActs : Fin n → Option A}
@@ -376,7 +374,6 @@ private theorem cast_dep_apply {α : Type} {P : α → Type}
     (f : ∀ x, P x) {a b : α} (h : a = b) :
     h ▸ f a = f b := by cases h; rfl
 
-omit [Nonempty A] in
 /-- Closed form of pure one-step execution in the linearized compilation.
 Eliminates all dependent-type casts from `pureStep_eq`. -/
 theorem pureStep_compiledLin_eq (G : MultiRoundGame n S V A Sig)
@@ -389,7 +386,6 @@ theorem pureStep_compiledLin_eq (G : MultiRoundGame n S V A Sig)
   funext i
   exact cast_dep_apply (π i) ((compiledLinObs G).currentObs_projectStates i ss)
 
-omit [Nonempty A] in
 /-- Two profiles producing the same observation-dependent actions at a given
 configuration have equal pure steps. Takes the last state as a parameter
 to avoid matching issues with `lastState ss`. -/
@@ -401,7 +397,6 @@ private theorem pureStep_congr_compiledLin (G : MultiRoundGame n S V A Sig)
   rw [pureStep_compiledLin_eq, pureStep_compiledLin_eq, hlast]
   exact congrArg (linConfigStepPMF G cfg) (funext h)
 
-omit [Nonempty A] in
 /-- The linearized model satisfies `StepSupportFactorization`.
 At each step, at most one player has a nontrivial action (the acting player
 at a `playerTurn` phase). Changing any other player's strategy does not
@@ -477,14 +472,12 @@ theorem stepSupportFactorization_compiledLin (G : MultiRoundGame n S V A Sig) :
 -- OLF (Obs-Local Feasibility) helpers
 -- ============================================================================
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 /-- Index into `l.concat a` at position `j < l.length` equals `l[j]`. -/
 private theorem getElem_concat_left {α : Type*} (l : List α) (a : α)
     (j : Nat) (hj : j < l.length) {h : j < (l.concat a).length} :
     (l.concat a)[j] = l[j] := by
   simp [List.getElem_append_left hj]
 
-omit [Nonempty A] in
 open Math.ParameterizedChain in
 /-- Under the linearized model, if `πᵢ` agrees with `(π i)` at every intermediate
 observation along the trace, then `pureRun` under the player-i update equals the
@@ -537,7 +530,7 @@ theorem pureRun_update_eq_of_obs_agree (G : MultiRoundGame n S V A Sig)
           · simp [Function.update, dif_neg hji])
       rw [hpre_eq, hstep_eq]
 
-omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A] in
 theorem lastState_take_eq_getElem
     [DecidableEq (Fin n)] {G : MultiRoundGame n S V A Sig}
     (ss : List (LinConfig G)) (j : Nat) (hj : j + 1 < ss.length) :
@@ -547,7 +540,6 @@ theorem lastState_take_eq_getElem
     show j + 1 - 1 = j from by omega, Option.getD_some]
 
 open Math.ParameterizedChain in
-omit [Nonempty A] in
 /-- Converse: if `pureRun` is nonzero under both the original profile and a
 player-i update, then `πᵢ` must agree with `(π i)` at all observations along
 the trace. At non-i steps this is trivial (PUnit). At i-steps, the step is

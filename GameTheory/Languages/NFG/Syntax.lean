@@ -27,8 +27,8 @@ structure NFGGame (ι : Type) [Fintype ι] [DecidableEq ι]
   outcome : (∀ i, A i) → Outcome
   utility : Outcome → ι → ℝ
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
-variable {A : ι → Type} [∀ i, Fintype (A i)]
+variable {ι : Type} [DecidableEq ι]
+variable {A : ι → Type}
 
 /-- A (pure) strategy profile: each player picks an action. -/
 abbrev StrategyProfile (A : ι → Type) := ∀ i, A i
@@ -38,17 +38,17 @@ abbrev StrategyProfile (A : ι → Type) := ∀ i, A i
 def deviate (s : StrategyProfile A) (i : ι) (a : A i) : StrategyProfile A :=
   Function.update s i a
 
-omit [Fintype ι] [∀ i, Fintype (A i)] in
 @[simp]
 theorem deviate_same (s : StrategyProfile A) (i : ι) (a : A i) :
     deviate s i a i = a := by
   simp [deviate]
 
-omit [Fintype ι] [∀ i, Fintype (A i)] in
 @[simp]
 theorem deviate_other (s : StrategyProfile A) (i j : ι) (a : A i) (h : j ≠ i) :
     deviate s i a j = s j := by
   simp [deviate, h]
+
+variable [Fintype ι] [∀ i, Fintype (A i)]
 
 /-- A pure Nash equilibrium: no player can improve by unilateral deviation. -/
 def IsNashPure (G : NFGGame ι A) (s : StrategyProfile A) : Prop :=

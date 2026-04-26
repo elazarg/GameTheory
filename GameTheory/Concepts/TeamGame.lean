@@ -26,9 +26,8 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type}
 
-omit [Fintype ι] in
 /-- In a team game, all players have the same expected utility under any profile. -/
 theorem IsTeamGame.eu_eq {G : KernelGame ι} (hteam : G.IsTeamGame)
     (σ : Profile G) (i j : ι) : G.eu σ i = G.eu σ j := by
@@ -37,7 +36,6 @@ theorem IsTeamGame.eu_eq {G : KernelGame ι} (hteam : G.IsTeamGame)
   ext ω
   exact hteam ω i j
 
-omit [Fintype ι] in
 open Classical in
 /-- In a team game, after a unilateral deviation, all players still have equal EU. -/
 theorem IsTeamGame.eu_eq_update {G : KernelGame ι} (hteam : G.IsTeamGame)
@@ -45,7 +43,6 @@ theorem IsTeamGame.eu_eq_update {G : KernelGame ι} (hteam : G.IsTeamGame)
     G.eu (Function.update σ who s') i = G.eu (Function.update σ who s') j := by
   exact hteam.eu_eq (Function.update σ who s') i j
 
-omit [Fintype ι] in
 open Classical in
 /-- In a team game, if σ is a Nash equilibrium, then for every player `who`,
     every alternative strategy `s'`, and every player `i`,

@@ -6,7 +6,7 @@ namespace InfoModel
 open Execution
 open Math.PMFProduct
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type}
 variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 
 /-- Condition a player-local mixed strategy on taking action `a` at local
@@ -35,7 +35,6 @@ noncomputable def iterCondMixedLocal
   | (v, a) :: rest =>
       iterCondMixedLocal i (condMixedLocal (I := I) i μi v a) rest
 
-omit [Fintype ι] in
 @[simp] theorem iterCondMixedLocal_nil
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
@@ -43,7 +42,6 @@ omit [Fintype ι] in
     (μi : PMF (InfoModel.LocalPure (I := I) i)) :
     iterCondMixedLocal (I := I) i μi [] = μi := rfl
 
-omit [Fintype ι] in
 /-- Repeated local conditioning composes by list append: conditioning on
 `hist₁ ++ hist₂` is the same as first conditioning on `hist₁` and then on
 `hist₂`. -/
@@ -63,7 +61,6 @@ theorem iterCondMixedLocal_append
       rcases tok with ⟨v, a⟩
       simp [iterCondMixedLocal, ih]
 
-omit [Fintype ι] in
 theorem pushforward_bind_condMixedLocal
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
@@ -101,6 +98,7 @@ open Classical in
 /-- Decompose a product-measure bind by sampling queried actions first,
 then resampling local pure policies from per-player conditionals. -/
 theorem mixedJoint_bind_decompose_query
+    [Fintype ι]
     (μ : InfoModel.MixedProfile (I := I))
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (Act i))]
@@ -167,7 +165,6 @@ noncomputable def localHistMass
       (Math.ProbabilityMassFunction.pushforward μi (fun f => f v)) a *
         localHistMass i (condMixedLocal (I := I) i μi v a) rest
 
-omit [Fintype ι] in
 theorem localHistMass_mul_iterCondMixedLocal_apply
     (i : ι)
     [Fintype (InfoModel.LocalPure (I := I) i)]
@@ -241,7 +238,6 @@ theorem localHistMass_mul_iterCondMixedLocal_apply
                 by_cases hrest : LocalHistCompatible (I := I) i f rest <;>
                 simp [localHistIndicator, LocalHistCompatible, hfa]
 
-omit [Fintype ι] in
 theorem localHistCompatible_append_singleton_iff
     (i : ι)
     (f : InfoModel.LocalPure (I := I) i)
@@ -266,6 +262,7 @@ theorem localHistCompatible_append_singleton_iff
 /-- Product-measure identity after conditioning each player's marginal on its
 realized local history. -/
 theorem localHistMass_mul_mixedJoint_iterCond_apply
+    [Fintype ι]
     [∀ i, Fintype (InfoModel.LocalPure (I := I) i)]
     [∀ i, Fintype (Option (Act i))]
     (μ : InfoModel.MixedProfile (I := I))

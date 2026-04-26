@@ -32,19 +32,20 @@ open Math.Probability
 
 namespace KernelGame
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι] (G : KernelGame ι)
+variable {ι : Type} [Fintype ι] (G : KernelGame ι)
 
 /-- The optimal social welfare achievable by any profile. -/
 noncomputable def optimalWelfare : ℝ :=
   ⨆ σ : Profile G, G.socialWelfare σ
 
-omit [DecidableEq ι] in
 /-- Social welfare of any profile is at most optimal welfare
     (when the supremum is bounded). -/
 theorem welfare_le_optimal (σ : Profile G)
     (hbdd : BddAbove (Set.range (fun τ => G.socialWelfare τ))) :
     G.socialWelfare σ ≤ G.optimalWelfare :=
   le_ciSup hbdd σ
+
+variable [DecidableEq ι]
 
 /-- In a team game, every Pareto-optimal profile is Nash. -/
 theorem IsTeamGame.pareto_isNash (hteam : G.IsTeamGame) [Inhabited ι]
@@ -80,7 +81,7 @@ theorem IsTeamGame.pareto_isNash (hteam : G.IsTeamGame) [Inhabited ι]
 
 section FiniteNash
 
-variable [Fintype (Profile G)] [Nonempty (Profile G)]
+variable [Fintype (Profile G)]
 
 open Classical in
 /-- The best social welfare achievable by any Nash equilibrium. -/
@@ -98,7 +99,6 @@ noncomputable def worstNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ 
         exact ⟨σ, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩⟩)
     G.socialWelfare
 
-omit [Nonempty (Profile G)] in
 open Classical in
 /-- Worst Nash welfare ≤ best Nash welfare. -/
 theorem worstNashWelfare_le_bestNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) :
@@ -109,7 +109,6 @@ theorem worstNashWelfare_le_bestNashWelfare (hN : ∃ σ : Profile G, G.IsNash �
     Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩
   exact le_trans (Finset.inf'_le _ hmem) (Finset.le_sup' _ hmem)
 
-omit [Nonempty (Profile G)] in
 open Classical in
 /-- The best Nash welfare is at most the optimal welfare (when bounded). -/
 theorem bestNashWelfare_le_optimalWelfare (hN : ∃ σ : Profile G, G.IsNash σ)

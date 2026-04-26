@@ -320,16 +320,14 @@ end Core
 
 section BindFactor
 
-variable {ι : Type uι} [Fintype ι] [DecidableEq ι]
-variable {A : ι → Type uA} [∀ i, Fintype (A i)]
+variable {ι : Type uι} [DecidableEq ι]
+variable {A : ι → Type uA}
 variable {β : Type uβ}
 
-omit [Fintype ι] [∀ i, Fintype (A i)] in
 @[simp] lemma update_update_same (σ : ∀ i, PMF (A i)) (j : ι) (τ₁ τ₂ : PMF (A j)) :
     Function.update (Function.update σ j τ₁) j τ₂ = Function.update σ j τ₂ := by
   funext i; by_cases h : i = j <;> simp [Function.update, h]
 
-omit [Fintype ι] [∀ i, Fintype (A i)] in
 lemma update_update_comm (σ) {j k : ι} (hjk : j ≠ k) (τj : PMF (A j)) (τk : PMF (A k)) :
     Function.update (Function.update σ j τj) k τk =
     Function.update (Function.update σ k τk) j τj := by
@@ -342,6 +340,8 @@ lemma update_update_comm (σ) {j k : ι} (hjk : j ≠ k) (τj : PMF (A j)) (τk 
   · subst hk
     simp_all only [ne_eq, Function.update_self, not_false_eq_true, Function.update_of_ne]
   · simp_all only [ne_eq, not_false_eq_true, Function.update_of_ne]
+
+variable [Fintype ι] [∀ i, Fintype (A i)]
 
 /-- ENNReal-sum version: "Fubini" for product weights with an `Ignores₂` condition. -/
 theorem sum_pmfPi_factor
@@ -644,10 +644,9 @@ end Conditioning
 
 section Disintegration
 
-variable {α : Type*} [Fintype α] {β : Type*} [Fintype β] {γ : Type*}
+variable {α : Type*} [Fintype α] {β : Type*} {γ : Type*}
 
 set_option linter.unusedFintypeInType false in
-omit [Fintype β] in
 /-- If `b` is in the support of `pushforward μ proj`, then the fibre
     `{a | proj a = b}` meets the support of `μ`. -/
 lemma pushforward_support_fibre
@@ -664,6 +663,8 @@ lemma pushforward_support_fibre
     rw [PMF.mem_support_iff] at hns; push Not at hns
     simp [h, hns]
   · simp [Ne.symm h]
+
+variable [Fintype β]
 
 set_option linter.unusedFintypeInType false in
 /-- **Disintegration / law of total probability for PMF.bind.**

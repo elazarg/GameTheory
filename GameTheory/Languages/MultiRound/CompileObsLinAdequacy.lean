@@ -24,13 +24,7 @@ variable {n : Nat} {S V A Sig : Type}
 
 section Adequacy
 
-variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
-
--- [Fintype (Fin n)] is needed for runDistPure_eq_eval to unify with
--- downstream callers that have [Fintype (Fin n)] section variables.
--- Many intermediate lemmas don't use it directly.
-set_option linter.unusedSectionVars false
-set_option linter.unusedFintypeInType false
+variable {G : MultiRoundGame n S V A Sig}
 
 /-- The final state of a `LinConfig`. For `terminal s`, this is `s`.
 For non-terminal configurations, this is the current state carried
@@ -58,7 +52,6 @@ noncomputable def evalLinearized (G : MultiRoundGame n S V A Sig)
       let next := r.transition s acts
       evalLinearized G σ rest next
 
-omit [DecidableEq (Fin n)] in
 private theorem pmf_foldl_bind
     (f : Round n S V A Sig → PureProfile n V A → S → PMF S)
     (σ : PureProfile n V A) (μ : PMF S) (rest : List (Round n S V A Sig)) :
@@ -73,7 +66,6 @@ private theorem pmf_foldl_bind
     ext s
     rw [PMF.pure_bind, ih]
 
-omit [DecidableEq (Fin n)] in
 private theorem evalRounds_cons (r : Round n S V A Sig)
     (rest : List (Round n S V A Sig)) (σ : PureProfile n V A) (s : S) :
     evalRounds (r :: rest) σ s = (r.eval σ s).bind (evalRounds rest σ) := by
@@ -81,7 +73,6 @@ private theorem evalRounds_cons (r : Round n S V A Sig)
   rw [PMF.pure_bind]
   exact pmf_foldl_bind Round.eval σ (r.eval σ s) rest
 
-omit [DecidableEq (Fin n)] in
 set_option linter.unusedFintypeInType false in
 private theorem pmf_foldl_bind_mixed [Fintype (Option A)]
     (f : Round n S V A Sig → BehavioralProfile n V A → S → PMF S)
@@ -97,7 +88,6 @@ private theorem pmf_foldl_bind_mixed [Fintype (Option A)]
     ext s
     rw [PMF.pure_bind, ih]
 
-omit [DecidableEq (Fin n)] in
 set_option linter.unusedFintypeInType false in
 private theorem evalRoundsMixed_cons [Fintype (Option A)] (r : Round n S V A Sig)
     (rest : List (Round n S V A Sig)) (σ : BehavioralProfile n V A) (s : S) :
@@ -106,7 +96,6 @@ private theorem evalRoundsMixed_cons [Fintype (Option A)] (r : Round n S V A Sig
   rw [PMF.pure_bind]
   exact pmf_foldl_bind_mixed Round.evalMixed σ (r.evalMixed σ s) rest
 
-omit [DecidableEq (Fin n)] in
 private theorem evalLinearized_eq_evalRounds (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (rounds : List (Round n S V A Sig)) (s : S) :
     evalLinearized G σ rounds s = evalRounds rounds σ s := by
@@ -121,7 +110,6 @@ private theorem evalLinearized_eq_evalRounds (G : MultiRoundGame n S V A Sig)
     simp only [Function.comp, PMF.pure_bind]
     exact congrFun (congrArg DFunLike.coe (ih _)) _
 
-omit [DecidableEq (Fin n)] in
 theorem evalLinearized_eq_eval (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) :
     evalLinearized G σ G.rounds G.init = G.eval σ :=
@@ -215,7 +203,7 @@ theorem evalFromCfg_init (G : MultiRoundGame n S V A Sig)
     exact evalLinearized_eq_eval G σ
 
 /-- `extractPlayerAction` with `liftPureProfile` gives the protocol-level action. -/
-private theorem extractPlayerAction_lift (σ : PureProfile n V A)
+private theorem extractPlayerAction_lift [DecidableEq (Fin n)] (σ : PureProfile n V A)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n)
     (accActs : Fin n → Option A) (r : Round n S V A Sig)
     (hr : G.rounds[k]? = some r) :
@@ -243,7 +231,7 @@ private theorem extractPlayerAction_lift (σ : PureProfile n V A)
 /-- One step of the linearized model composed with `evalFromCfg` telescopes:
 performing one step and then evaluating from the resulting configuration gives
 the same result as evaluating from the current configuration. -/
-private theorem stepPMF_bind_evalFromCfg
+private theorem stepPMF_bind_evalFromCfg [DecidableEq (Fin n)]
     (σ : PureProfile n V A) (cfg : LinConfig G) :
     (linConfigStepPMF G cfg
       (fun i => (liftPureProfile (G := G) σ) i (linObserve G i cfg))).bind
@@ -313,9 +301,18 @@ private theorem stepPMF_bind_evalFromCfg
       case isTrue hp1 =>
         -- p.val + 1 < n: advance to next player
         simp only [PMF.pure_bind, evalFromCfg, hr]
-        congr 1
+        apply congrArg (evalLinearized G σ (G.rounds.drop (k + 1)))
+        apply congrArg (r.transition s)
         -- resolveActions from p with updated accActs = resolveActions from p with original
-        conv_rhs => rw [show p.val = p.val from rfl]; unfold resolveActions; rw [dif_pos p.isLt]
+        conv_rhs => unfold resolveActions; rw [dif_pos p.isLt]
+        have hp : (⟨p.val, p.isLt⟩ : Fin n) = p := Fin.ext rfl
+        rw [hp]
+        dsimp
+        apply congrArg (resolveActions G σ r s sig (p.val + 1))
+        funext i
+        by_cases hi : i = p
+        · subst hi; simp [Function.update]
+        · simp [Function.update, hi]
       case isFalse hp1 =>
         -- p is last player: advance → applyTransition
         have hresolve : resolveActions G σ r s sig p.val accActs =
@@ -323,6 +320,10 @@ private theorem stepPMF_bind_evalFromCfg
           unfold resolveActions; rw [dif_pos p.isLt]
           have : ⟨p.val, p.isLt⟩ = p := Fin.ext rfl
           rw [this]; unfold resolveActions; rw [dif_neg hp1]
+          funext i
+          by_cases hi : i = p
+          · subst hi; simp [Function.update]
+          · simp [Function.update, hi]
         -- LHS: PMF.pure (.applyTransition k s sig updatedActs).bind (evalFromCfg G σ)
         simp only [PMF.pure_bind, evalFromCfg, hr, hresolve]
     case h_2 hr =>
@@ -361,11 +362,12 @@ which is `MultiRoundGame.eval`.
 Proof idea: by induction on `k`, using `stepPMF_bind_evalFromCfg` at each step
 to show that one step composed with `evalFromCfg` telescopes back to `evalFromCfg`
 on the previous last state. The base case is `evalFromCfg_init`. -/
-private theorem lastState_snoc (ss : List (LinConfig G)) (t : LinConfig G) :
+private theorem lastState_snoc [DecidableEq (Fin n)]
+    (ss : List (LinConfig G)) (t : LinConfig G) :
     (compiledLinObs G).lastState (ss ++ [t]) = t := by
   simp [ObsModelCore.lastState, List.getLast?_append_of_ne_nil _ (List.cons_ne_nil t [])]
 
-theorem runDistPure_bind_evalFromCfg [Fintype A]
+theorem runDistPure_bind_evalFromCfg [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
     (σ : PureProfile n V A) (k : Nat) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
         (fun ss => evalFromCfg G σ ((compiledLinObs G).lastState ss)) =
@@ -425,7 +427,6 @@ private theorem evalFromCfg_of_isDone (G : MultiRoundGame n S V A Sig)
     have hd' : G.rounds[k]? = none := hd
     rw [hd']
 
-omit [DecidableEq (Fin n)] in
 private theorem isDone_of_phase_ge (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G) (h : cfg.phase G ≥ G.rounds.length * (n + 2)) :
     cfg.isDone G := by
@@ -454,14 +455,13 @@ private theorem isDone_of_phase_ge (G : MultiRoundGame n S V A Sig)
     simp only [LinConfig.isDone]
     exact List.getElem?_eq_none (by omega)
 
-omit [DecidableEq (Fin n)] in
 private theorem phase_init_le (G : MultiRoundGame n S V A Sig) :
     (linInitialConfig G).phase G ≤ G.rounds.length * (n + 2) := by
   simp only [linInitialConfig]
   split <;> simp [LinConfig.phase]
 
 /-- At done configs, any successor is also done and has the same state. -/
-theorem isDone_step_of_isDone (G : MultiRoundGame n S V A Sig)
+theorem isDone_step_of_isDone [DecidableEq (Fin n)] (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
     (hd : cfg.isDone G) (t : LinConfig G)
@@ -486,7 +486,7 @@ theorem isDone_step_of_isDone (G : MultiRoundGame n S V A Sig)
     · rw [pure_ne_zero_iff'] at ht; subst ht; exact ⟨trivial, rfl⟩
 
 /-- At non-done configs, every successor has phase exactly `cfg.phase + 1`. -/
-theorem phase_step_progress (G : MultiRoundGame n S V A Sig)
+theorem phase_step_progress [DecidableEq (Fin n)] (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
     (hnd : ¬ cfg.isDone G) (t : LinConfig G)
@@ -567,7 +567,7 @@ private theorem PMF.bind_congr_support {α β : Type*} (p : PMF α) (f g : α �
   · rw [PMF.mem_support_iff, not_not] at ha; simp [ha]
 
 /-- After `k ≥ rounds.length * (n+1)` steps, all reachable last states are done. -/
-private theorem isDone_of_reachable [Fintype A]
+private theorem isDone_of_reachable [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (k : Nat) (ss : List (LinConfig G))
     (hss : ss ∈ ((compiledLinObs G).runDistPure k (liftPureProfile σ)).support) :
@@ -617,7 +617,8 @@ private theorem isDone_of_reachable [Fintype A]
 /-- **Adequacy (pure profiles)**: running the linearized compiled model with
 `liftPureProfile σ` for enough steps, and extracting the terminal state, gives
 the same distribution as `MultiRoundGame.eval G σ`. -/
-theorem runDistPure_eq_eval (G : MultiRoundGame n S V A Sig) [Fintype A]
+theorem runDistPure_eq_eval (G : MultiRoundGame n S V A Sig)
+    [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
     (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 2)) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
         (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) =

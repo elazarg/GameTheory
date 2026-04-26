@@ -31,9 +31,7 @@ variable {ι : Type}
 
 section Finite
 
-variable (G : KernelGame ι) [Fintype (Profile G)]
-  [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-  [Nonempty (Profile G)]
+variable (G : KernelGame ι) [Fintype (Profile G)] [Nonempty (Profile G)]
 
 open Classical in
 /-- Worst-case EU for player `who` when they play `s`:
@@ -43,19 +41,26 @@ noncomputable def worstCaseEU (who : ι) (s : G.Strategy who) : ℝ :=
     (fun σ => G.eu (Function.update σ who s) who)
 
 open Classical in
+/-- The worst-case EU is a lower bound on EU for any profile. -/
+theorem worstCaseEU_le (who : ι) (s : G.Strategy who) (σ : Profile G) :
+    G.worstCaseEU who s ≤ G.eu (Function.update σ who s) who :=
+  Finset.inf'_le _ (Finset.mem_univ σ)
+
+open Classical in
+/-- The worst-case EU is a lower bound: a strategy guarantees at least
+    its worst-case EU against any opponents. -/
+theorem worstCaseEU_guarantees (who : ι) (s : G.Strategy who) :
+    ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥ G.worstCaseEU who s :=
+  fun σ => worstCaseEU_le G who s σ
+
+variable [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+
+open Classical in
 /-- The security level (maximin value) of player `who`:
     the best worst-case EU they can guarantee. -/
 noncomputable def securityLevel (who : ι) : ℝ :=
   Finset.sup' Finset.univ ⟨Classical.arbitrary _, Finset.mem_univ _⟩
     (fun s => G.worstCaseEU who s)
-
-set_option linter.unusedFintypeInType false in
-omit [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)] in
-open Classical in
-/-- The worst-case EU is a lower bound on EU for any profile. -/
-theorem worstCaseEU_le (who : ι) (s : G.Strategy who) (σ : Profile G) :
-    G.worstCaseEU who s ≤ G.eu (Function.update σ who s) who :=
-  Finset.inf'_le _ (Finset.mem_univ σ)
 
 open Classical in
 /-- In a Nash equilibrium, each player's EU is at least their security level. -/
@@ -82,15 +87,6 @@ theorem IsDominant.eu_ge_securityLevel
       ≤ G.eu (Function.update σ who t) who := worstCaseEU_le G who t σ
     _ ≤ G.eu (Function.update σ who s) who := by
         have := hdom σ t; linarith
-
-set_option linter.unusedFintypeInType false in
-omit [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)] in
-open Classical in
-/-- The worst-case EU is a lower bound: a strategy guarantees at least
-    its worst-case EU against any opponents. -/
-theorem worstCaseEU_guarantees (who : ι) (s : G.Strategy who) :
-    ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥ G.worstCaseEU who s :=
-  fun σ => worstCaseEU_le G who s σ
 
 open Classical in
 /-- The security level is the best guarantee: if a strategy guarantees

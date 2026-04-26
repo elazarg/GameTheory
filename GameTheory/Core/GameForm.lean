@@ -704,7 +704,10 @@ theorem IsStrictNashFor.isNashFor {F : GameForm ι}
       himpl who _ _ hs
     exact hp
 
-omit [DecidableEq ι] in
+end PreferenceUpdate
+
+section ParetoAndCorrelated
+
 /-- No profile Pareto-dominates itself (given `spref` is irreflexive). -/
 theorem ParetoDominatesFor.irrefl {F : GameForm ι}
     {pref spref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
@@ -713,7 +716,6 @@ theorem ParetoDominatesFor.irrefl {F : GameForm ι}
   intro ⟨_, ⟨i, hi⟩⟩
   exact hirr i _ hi
 
-omit [DecidableEq ι] in
 /-- Pareto dominance is asymmetric (given strict preference contradicts reverse weak). -/
 theorem ParetoDominatesFor.asymm {F : GameForm ι}
     {pref spref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
@@ -722,6 +724,11 @@ theorem ParetoDominatesFor.asymm {F : GameForm ι}
     F.ParetoDominatesFor pref spref σ τ → ¬ F.ParetoDominatesFor pref spref τ σ := by
   intro ⟨_, ⟨i, hi⟩⟩ ⟨hge, _⟩
   exact hanti i _ _ hi (hge i)
+
+end ParetoAndCorrelated
+
+section DeviateId
+variable [DecidableEq ι]
 
 /-- Every correlated equilibrium (for pref) is a coarse correlated equilibrium (for pref). -/
 theorem IsCorrelatedEqFor.toCoarseCorrelatedEqFor {F : GameForm ι}
@@ -740,7 +747,7 @@ theorem deviateDistributionFn_id (F : GameForm ι) (μ : PMF F.Profile) (who : �
   conv_lhs => arg 2; ext σ; rw [Function.update_eq_self]
   exact PMF.bind_pure μ
 
-end PreferenceUpdate
+end DeviateId
 
 end GameForm
 

@@ -11,11 +11,10 @@ open Execution
 export Math.BoundedLists (listsOfLength listsUpToLength
   mem_listsOfLength_of_forall_mem mem_listsUpToLength_of_forall_mem)
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type}
 variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)
 variable (D : Execution.Dynamics I)
 
-omit [Fintype ι] in
 /-- Monotonicity of bounded history covers. -/
 theorem CoversHistoriesUpTo.mono
     {H H' : ∀ i, Finset (I.LocalTrace i)} {k : Nat}
@@ -24,6 +23,8 @@ theorem CoversHistoriesUpTo.mono
     I.CoversHistoriesUpTo H' k := by
   intro i ss hr hlen
   exact hsub i (hCover i hr hlen)
+
+variable [Fintype ι]
 
 /-- Any state trace in the support of a `k`-step run is covered by `H` when `H`
 covers all reachable histories up to horizon `k`. -/

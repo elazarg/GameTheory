@@ -23,7 +23,7 @@ namespace NFG
 open GameTheory
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
-variable {A : ι → Type} [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+variable {A : ι → Type} [∀ i, Fintype (A i)]
 variable [∀ i, Nonempty (A i)]
 
 namespace NFGGame
@@ -64,30 +64,24 @@ noncomputable def toFOSG (G : NFGGame ι A) :
     · intro i
       simp [hwfalse]
 
-omit [∀ i, DecidableEq (A i)] in
 /-- Terminal states of the one-shot FOSG are exactly `true`. -/
 @[simp] theorem toFOSG_terminal_iff (G : NFGGame ι A) (w : Bool) :
     (G.toFOSG).terminal w ↔ w = true := Iff.rfl
 
-omit [∀ i, DecidableEq (A i)] in
 /-- Every player is active at the initial state of the one-shot FOSG. -/
 @[simp] theorem toFOSG_active_init (G : NFGGame ι A) :
     (G.toFOSG).active false = Finset.univ := by
   simp [toFOSG]
 
-omit [∀ i, DecidableEq (A i)] in
 /-- The initial state is nonterminal. -/
 @[simp] theorem toFOSG_not_terminal_init (G : NFGGame ι A) :
     ¬ (G.toFOSG).terminal false := by
   simp [toFOSG]
 
-omit [∀ i, DecidableEq (A i)] in
 /-- The transition from the initial state lands in `true`. -/
-@[simp] theorem toFOSG_transition_init
-    (G : NFGGame ι A) (a : (G.toFOSG).LegalAction false) :
+@[simp] theorem toFOSG_transition_init (G : NFGGame ι A) (a : (G.toFOSG).LegalAction false) :
     (G.toFOSG).transition false a = PMF.pure true := rfl
 
-omit [∀ i, DecidableEq (A i)] in
 /-- The one-shot FOSG has bounded horizon `1`. -/
 theorem toFOSG_boundedHorizon (G : NFGGame ι A) :
     (G.toFOSG).BoundedHorizon 1 := by

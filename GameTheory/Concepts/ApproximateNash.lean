@@ -1,5 +1,6 @@
 import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.StrictNashProperties
 
 /-!
 # Approximate (ε-Nash) Equilibrium
@@ -80,13 +81,6 @@ theorem isεNash_iff_εBestResponse {ε : ℝ} {σ : Profile G} :
     have := h who s'
     simp only [Function.update_eq_self] at this
     exact this
-
-/-- A strict Nash equilibrium is a Nash equilibrium. -/
-theorem IsStrictNash.isNash {σ : Profile G} (h : G.IsStrictNash σ) : G.IsNash σ := by
-  intro who s'
-  by_cases heq : s' = σ who
-  · subst heq; simp [Function.update_eq_self]
-  · exact le_of_lt (h who s' heq)
 
 /-- A strict Nash equilibrium is ε-Nash for any ε ≥ 0. -/
 theorem IsStrictNash.isεNash {σ : Profile G} (h : G.IsStrictNash σ) {ε : ℝ} (hε : ε ≥ 0) :

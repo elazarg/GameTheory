@@ -8,6 +8,7 @@ Properties of strict Nash equilibria for kernel-based games.
 
 Provides:
 - `strictNash_of_strictDominant` -- a profile of strictly dominant strategies is strict Nash
+- `IsStrictNash.isNash` -- a strict Nash equilibrium is a Nash equilibrium
 - `IsStrictNash.isBestResponse_unique` -- under strict Nash, best responses are unique
 -/
 
@@ -28,6 +29,15 @@ theorem strictNash_of_strictDominant (σ : Profile G)
   have h := hdom who σ s' hne
   simp only [Function.update_eq_self] at h
   exact h
+
+/-- A strict Nash equilibrium is a Nash equilibrium. -/
+theorem IsStrictNash.isNash {σ : Profile G} (hstrict : G.IsStrictNash σ) :
+    G.IsNash σ := by
+  classical
+  intro who s'
+  by_cases h : s' = σ who
+  · subst h; simp [Function.update_eq_self]
+  · exact le_of_lt (hstrict who s' h)
 
 /-- In a strict Nash equilibrium, the equilibrium strategy is the unique best response:
     any best response must equal the equilibrium strategy. -/

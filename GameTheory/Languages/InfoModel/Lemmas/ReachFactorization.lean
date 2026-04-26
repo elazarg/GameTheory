@@ -56,7 +56,6 @@ private theorem actionTrace_eq_of_projectActions_eq
             exact hheadAct i
           simp [hfun, htail]
 
-omit [Fintype ι] in
 private theorem pushforward_append_nonzero_exists
     (μ : PMF σ)
     (ss hs : List σ)
@@ -75,7 +74,6 @@ private theorem pushforward_append_nonzero_exists
     simp [PMF.pure_apply, heq, hμ]
   · simp [PMF.pure_apply, heq]
 
-omit [Fintype ι] in
 private theorem pushforward_append_apply_same
     (μ : PMF σ)
     (ss : List σ) (t : σ) :
@@ -91,7 +89,6 @@ private theorem pushforward_append_apply_same
       exact hu hs.2.symm
     simp [PMF.pure_apply, hEq]
 
-omit [Fintype ι] in
 private theorem pushforward_append_apply_other
     (μ : PMF σ)
     (ss₁ ss₂ : List σ) (t₂ : σ)

@@ -107,31 +107,30 @@ end ApproxToExact
 section BrouwerMixed
 
 variable {ι : Type*} {A : ι → Type*}
-variable [Fintype ι] [∀ i, Fintype (A i)] [∀ i, Nonempty (A i)]
+variable [∀ i, Fintype (A i)]
 
 /-- Product of standard simplices as a `Set` in the pi normed space. -/
 def mixedSimplexAsSet (ι : Type*) (A : ι → Type*) [∀ i, Fintype (A i)] :
     Set (∀ i, A i → ℝ) :=
   Set.pi Set.univ (fun i => stdSimplex ℝ (A i))
 
-omit [Fintype ι] [∀ i, Nonempty (A i)] in
 theorem convex_mixedSimplexAsSet :
     Convex ℝ (mixedSimplexAsSet ι A) :=
   convex_pi (fun i _ => convex_stdSimplex ℝ (A i))
 
-omit [Fintype ι] [∀ i, Nonempty (A i)] in
 theorem isCompact_mixedSimplexAsSet :
     IsCompact (mixedSimplexAsSet ι A) :=
   isCompact_univ_pi (fun i => isCompact_stdSimplex ℝ (A i))
 
-omit [Fintype ι] in
-theorem nonempty_mixedSimplexAsSet :
+theorem nonempty_mixedSimplexAsSet [∀ i, Nonempty (A i)] :
     (mixedSimplexAsSet ι A).Nonempty := by
   rw [mixedSimplexAsSet, Set.univ_pi_nonempty_iff]
   intro i
   exact ⟨fun _ => (1 : ℝ) / Fintype.card (A i),
     fun _ => div_nonneg one_pos.le (Nat.cast_nonneg _),
     by simp [Finset.card_univ]⟩
+
+variable [Fintype ι]
 
 /-- Forward: `MixedSimplex → ↥(mixedSimplexAsSet)`. -/
 def toMixedSet (σ : MixedSimplex ι A) : ↥(mixedSimplexAsSet ι A) :=
@@ -141,27 +140,25 @@ def toMixedSet (σ : MixedSimplex ι A) : ↥(mixedSimplexAsSet ι A) :=
 def fromMixedSet (x : ↥(mixedSimplexAsSet ι A)) : MixedSimplex ι A :=
   fun i => ⟨x.val i, x.property i (Set.mem_univ i)⟩
 
-omit [∀ i, Nonempty (A i)] in
 theorem fromMixedSet_toMixedSet (σ : MixedSimplex ι A) :
     fromMixedSet (toMixedSet σ) = σ := by
   ext i a; rfl
 
-omit [∀ i, Nonempty (A i)] in
 theorem toMixedSet_fromMixedSet (x : ↥(mixedSimplexAsSet ι A)) :
     toMixedSet (fromMixedSet x) = x := by
   ext; rfl
 
-omit [∀ i, Nonempty (A i)] in
 theorem continuous_toMixedSet :
     Continuous (toMixedSet (ι := ι) (A := A)) :=
   Continuous.subtype_mk
     (continuous_pi (fun i => continuous_subtype_val.comp (continuous_apply i))) _
 
-omit [∀ i, Nonempty (A i)] in
 theorem continuous_fromMixedSet :
     Continuous (fromMixedSet (ι := ι) (A := A)) :=
   continuous_pi fun i =>
     ((continuous_apply i).comp continuous_subtype_val).subtype_mk _
+
+variable [∀ i, Nonempty (A i)]
 
 /-- `MixedSimplex` is homeomorphic to the product-of-simplices set. -/
 def mixedSimplexHomeomorph :

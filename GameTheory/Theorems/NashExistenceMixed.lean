@@ -71,8 +71,7 @@ section NashMapAlgebra
 
 variable [Fintype ι]
 variable (G : KernelGame ι)
-variable [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-variable [Fintype G.Outcome]
+variable [∀ i, Fintype (G.Strategy i)]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -81,11 +80,12 @@ def gainSum (σ : ∀ i, PMF (G.Strategy i)) (who : ι) : ℝ :=
   ∑ a : G.Strategy who, pospart (G.mixedGain σ who a)
 
 set_option linter.unusedFintypeInType false in
-omit [∀ (i : ι), Nonempty (G.Strategy i)] [Fintype G.Outcome] in
 open Classical in
 theorem gainSum_nonneg (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     0 ≤ G.gainSum σ who :=
   Finset.sum_nonneg (fun _ _ => pospart_nonneg _)
+
+variable [∀ i, Nonempty (G.Strategy i)] [Fintype G.Outcome]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -123,7 +123,7 @@ end NashMapAlgebra
 
 section Encoding
 
-variable {α : Type} [Fintype α] [Nonempty α]
+variable {α : Type} [Fintype α]
 
 /-- Convert a non-negative weight vector summing to 1 to a PMF. -/
 def realToPmf (w : α → ℝ) (hw_nn : ∀ a, 0 ≤ w a) (hw_sum : ∑ a, w a = 1) : PMF α :=
@@ -131,12 +131,10 @@ def realToPmf (w : α → ℝ) (hw_nn : ∀ a, 0 ≤ w a) (hw_sum : ∑ a, w a =
     rw [← ENNReal.ofReal_one, ← hw_sum]
     exact (ENNReal.ofReal_sum_of_nonneg (fun i _ => hw_nn i)).symm)
 
-omit [Nonempty α] in
 theorem realToPmf_apply (w : α → ℝ) (hw_nn : ∀ a, 0 ≤ w a) (hw_sum : ∑ a, w a = 1) (a : α) :
     (realToPmf w hw_nn hw_sum) a = ENNReal.ofReal (w a) := by
   simp [realToPmf, PMF.ofFintype_apply]
 
-omit [Nonempty α] in
 theorem realToPmf_toReal (w : α → ℝ) (hw_nn : ∀ a, 0 ≤ w a) (hw_sum : ∑ a, w a = 1) (a : α) :
     ((realToPmf w hw_nn hw_sum) a).toReal = w a := by
   rw [realToPmf_apply]
@@ -152,8 +150,7 @@ section NashMapReal
 
 variable [Fintype ι]
 variable (G : KernelGame ι)
-variable [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-variable [Fintype G.Outcome]
+variable [∀ i, Fintype (G.Strategy i)]
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -180,7 +177,6 @@ def nashMap
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-omit [∀ (i : ι), Nonempty (G.Strategy i)] [Fintype G.Outcome] in
 /-- Nash's map preserves non-negativity of weights. -/
 theorem nashMap_nonneg
     (w : ∀ i, G.Strategy i → ℝ)
@@ -195,7 +191,6 @@ theorem nashMap_nonneg
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-omit [∀ (i : ι), Nonempty (G.Strategy i)] [Fintype G.Outcome] in
 /-- Nash's map preserves the sum-to-one property. -/
 theorem nashMap_sum_one
     (w : ∀ i, G.Strategy i → ℝ)
@@ -218,7 +213,6 @@ theorem nashMap_sum_one
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-omit [∀ (i : ι), Nonempty (G.Strategy i)] [Fintype G.Outcome] in
 /-- A fixed point of Nash's map satisfies the algebraic identity for `nash_fp_is_nash`. -/
 theorem nashMap_fp_identity
     (w : ∀ i, G.Strategy i → ℝ)
