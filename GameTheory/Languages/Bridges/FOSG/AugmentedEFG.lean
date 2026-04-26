@@ -50,12 +50,6 @@ omit [DecidableEq ι] in
     playerEquiv (ι := ι) (origPlayer (ι := ι) p) = p := by
   simp [origPlayer, playerEquiv]
 
-/-- Conservative serialized budget for one original step per active player plus
-one chance resolution.  The public API is original-step based, so this value is
-kept only as a scheduling bound. -/
-def serialHorizon (k : Nat) : Nat :=
-  k * (Fintype.card ι + 1)
-
 /-- Fixed-width finite word used to make bounded views finite. -/
 abbrev Word (α : Type) (n : Nat) := Fin n → Option α
 
@@ -376,6 +370,41 @@ noncomputable def translateBehavioralProfile
     let i := origPlayer (ι := ι) p
     let view : G.InfoState i := Word.toList I
     PMF.map (indexOfAction (G := G) I) (σ.toProfile i view)
+
+/-- An EFG behavioral profile is compatible with the FOSG bridge if every
+positive-probability EFG action decodes to a FOSG move available at every
+native history with the same original player view.
+
+This is the restriction needed before defining an inverse `EFG → FOSG`
+strategy translation.  The forward translation from legal FOSG profiles
+satisfies it automatically. -/
+def EFGProfileRespectsFOSG
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (τ : EFG.BehavioralProfile (infoStructure (G := G) k)) : Prop :=
+  ∀ (p : PlayerIx (ι := ι)) (I : (infoStructure (G := G) k).Infoset p)
+    (h : G.History) {aIx : (infoStructure (G := G) k).Act I},
+    aIx ∈ (τ p I).support →
+    h.playerView (origPlayer (ι := ι) p) = Word.toList I →
+    actionOfIndex (G := G) I aIx ∈
+      G.availableMoves h (origPlayer (ι := ι) p)
+
+omit [Fintype W] [DecidablePred G.terminal] in
+theorem translateBehavioralProfile_respectsFOSG
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (σ : G.LegalBehavioralProfile) :
+    EFGProfileRespectsFOSG (G := G) (k := k)
+      (translateBehavioralProfile (G := G) σ) := by
+  classical
+  intro p I h aIx hsupp hview
+  rw [translateBehavioralProfile] at hsupp
+  rcases (PMF.mem_support_map_iff _ _ _).mp hsupp with ⟨aOpt, haOpt, hidx⟩
+  have haEq : aOpt = actionOfIndex (G := G) I aIx := by
+    rw [← hidx]
+    simp
+  rw [← haEq]
+  exact (σ (origPlayer (ι := ι) p)).2 h (by simpa [hview] using haOpt)
 
 @[simp] theorem tree_eval_zero_eq_runDistFrom_zero
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
@@ -927,6 +956,12 @@ theorem toPlainEFGOfBoundedHorizon_support_isTerminal
     exact hsupp
   exact G.runDist_support_isTerminal_of_boundedHorizon hBound σ h hsuppRun
 
+/-- Extract the player-view component carried by a bridge EFG node.
+
+This is intentionally informative only at decision nodes: there the EFG infoset
+is exactly the encoded original FOSG player view.  Chance and terminal nodes
+return the empty word because the current bridge has no replay layer and no
+downstream theorem needs non-decision-node native views. -/
 noncomputable def nodePlayerView
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
     [Fintype PubObs] [DecidableEq PubObs]

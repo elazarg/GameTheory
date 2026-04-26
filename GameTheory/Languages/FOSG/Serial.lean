@@ -14,6 +14,12 @@ This follows the paper's serial construction at the game-structure level. The
 serialized game inserts deterministic player-choice states and chance-resolution
 states. Deterministic inserted steps emit trivial observations, so serialized
 observation spaces are `Option`-wrapped.
+
+This module is structural.  The current FOSG-to-augmented-EFG bridge in
+`GameTheory.Languages.Bridges.FOSG.AugmentedEFG` bypasses this serializer and
+proves its outcome law directly against native `G.runDist`.  Do not use this
+file as a theorem-transport layer until a dedicated semantic-preservation
+theorem is added.
 -/
 
 namespace GameTheory
