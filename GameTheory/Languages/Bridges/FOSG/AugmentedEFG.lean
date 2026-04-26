@@ -45,6 +45,11 @@ omit [DecidableEq ι] in
     origPlayer (ι := ι) (playerEquiv (ι := ι) i) = i := by
   simp [origPlayer, playerEquiv]
 
+omit [DecidableEq ι] in
+@[simp] theorem playerEquiv_origPlayer (p : PlayerIx (ι := ι)) :
+    playerEquiv (ι := ι) (origPlayer (ι := ι) p) = p := by
+  simp [origPlayer, playerEquiv]
+
 /-- Conservative serialized budget for one original step per active player plus
 one chance resolution.  The public API is original-step based, so this value is
 kept only as a scheduling bound. -/
@@ -409,6 +414,67 @@ theorem tree_eval_succ_nonterminal_unfold
               Tree.fromHistory (G := G) k n h'))).evalDist
         (translateBehavioralProfile (G := G) σ) := by
   rw [tree_fromHistory_succ_nonterminal (G := G) k n h hnot]
+
+/-- The optional-move law used by the EFG presentation at a native history. -/
+noncomputable def efgChoiceProfile
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    (σ : G.LegalBehavioralProfile) (h : G.History) :
+    (p : PlayerIx (ι := ι)) → PMF (Option (Act (origPlayer (ι := ι) p))) :=
+  fun p => σ.toProfile (origPlayer (ι := ι) p) (h.playerView (origPlayer (ι := ι) p))
+
+/-- Convert a product of EFG-indexed optional moves back to a native joint
+action. -/
+noncomputable def efgChoicesEquiv :
+    ((p : PlayerIx (ι := ι)) → Option (Act (origPlayer (ι := ι) p))) ≃
+      JointAction Act :=
+  ((playerEquiv (ι := ι)).symm).piCongr fun _ => Equiv.refl _
+
+/-- The joint-action law induced by the EFG optional decisions. -/
+noncomputable def efgJointActionDist
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    (σ : G.LegalBehavioralProfile) (h : G.History) : PMF (JointAction Act) :=
+  PMF.map (efgChoicesEquiv (Act := Act)) <|
+    Math.PMFProduct.pmfPi (efgChoiceProfile (G := G) σ h)
+
+omit [∀ i, DecidableEq (Act i)] [Fintype W] [DecidablePred G.terminal] in
+theorem efgJointActionDist_eq_jointActionDist
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    (σ : G.LegalBehavioralProfile) (h : G.History) :
+    efgJointActionDist (G := G) σ h = G.jointActionDist σ h := by
+  classical
+  ext a
+  rw [efgJointActionDist, PMF.map_apply]
+  rw [tsum_eq_single ((efgChoicesEquiv (Act := Act)).symm a)]
+  · have hif :
+        a = efgChoicesEquiv (Act := Act) ((efgChoicesEquiv (Act := Act)).symm a) := by
+        simp
+    rw [if_pos hif]
+    rw [Math.PMFProduct.pmfPi_apply, G.jointActionDist_apply]
+    exact Fintype.prod_equiv (playerEquiv (ι := ι)).symm
+      (fun p : PlayerIx (ι := ι) =>
+        (σ.toProfile (origPlayer (ι := ι) p) (h.playerView (origPlayer (ι := ι) p)))
+          (((efgChoicesEquiv (Act := Act)).symm a) p))
+      (fun i : ι => (σ.toProfile i (h.playerView i)) (a i))
+      (by
+        intro p
+        change
+          (σ.toProfile ((playerEquiv (ι := ι)).symm p)
+              (h.playerView ((playerEquiv (ι := ι)).symm p)))
+            (((Equiv.refl (Option (Act ((playerEquiv (ι := ι)).symm p)))).symm)
+              (a ((playerEquiv (ι := ι)).symm p))) =
+          (σ.toProfile ((playerEquiv (ι := ι)).symm p)
+              (h.playerView ((playerEquiv (ι := ι)).symm p)))
+            (a ((playerEquiv (ι := ι)).symm p))
+        rfl)
+  · intro choices hchoices
+    by_cases hEq : a = efgChoicesEquiv (Act := Act) choices
+    · exfalso
+      apply hchoices
+      simp [hEq]
+    · simp [hEq]
 
 omit [Fintype W] [DecidablePred G.terminal] in
 theorem choosePlayers_nil_evalDist
