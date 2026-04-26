@@ -62,7 +62,9 @@ theorem mem_supportFinset_iff (p : PMF α) (a : α) :
 /-- Enumeration of PMF support by `Fin`. -/
 noncomputable def supportEnum (p : PMF α) :
     Fin (supportFinset p).card → α :=
-  fun i => (supportFinset p).toList.get ⟨i.1, by simpa using i.2⟩
+  fun i => (supportFinset p).toList.get ⟨i.1, by
+    rw [Finset.length_toList]
+    exact i.2⟩
 
 omit [DecidableEq α] in
 theorem supportEnum_mem (p : PMF α) (i : Fin (supportFinset p).card) :
@@ -70,6 +72,7 @@ theorem supportEnum_mem (p : PMF α) (i : Fin (supportFinset p).card) :
   unfold supportEnum
   exact Finset.mem_toList.mp (List.get_mem _ _)
 
+omit [DecidableEq α] in
 theorem supportEnum_spec (p : PMF α) (i : Fin (supportFinset p).card) :
     p (supportEnum p i) ≠ 0 :=
   (mem_supportFinset_iff p _).1 (supportEnum_mem p i)
@@ -96,6 +99,7 @@ noncomputable def supportSubtypePMF (p : PMF α) : PMF (SupportSubtype p) := by
   exact hattach.trans <| by
     simpa [supportFinset] using hfilter.trans huniv
 
+omit [DecidableEq α] in
 theorem supportSubtypePMF_apply (p : PMF α) (a : SupportSubtype p) :
     supportSubtypePMF p a = p a.1 := by
   simp [supportSubtypePMF]
@@ -108,19 +112,23 @@ noncomputable def supportPMF (p : PMF α) : PMF (Fin (Fintype.card (SupportSubty
 noncomputable def supportValue (p : PMF α) (i : Fin (Fintype.card (SupportSubtype p))) : α :=
   ((Fintype.equivFin (SupportSubtype p)).symm i).1
 
+omit [DecidableEq α] in
 theorem supportValue_mem (p : PMF α) (i : Fin (Fintype.card (SupportSubtype p))) :
     supportValue p i ∈ supportFinset p :=
   ((Fintype.equivFin (SupportSubtype p)).symm i).2
 
+omit [DecidableEq α] in
 theorem supportValue_spec (p : PMF α) (i : Fin (Fintype.card (SupportSubtype p))) :
     p (supportValue p i) ≠ 0 :=
   (mem_supportFinset_iff p _).1 (supportValue_mem p i)
 
+omit [DecidableEq α] in
 theorem supportSubtype_card_pos (p : PMF α) : 0 < Fintype.card (SupportSubtype p) := by
   classical
   rcases p.support_nonempty with ⟨a, ha⟩
   exact Fintype.card_pos_iff.mpr ⟨⟨a, (mem_supportFinset_iff p a).2 ha⟩⟩
 
+omit [DecidableEq α] in
 theorem supportFinset_card_pos (p : PMF α) : 0 < (supportFinset p).card := by
   classical
   rcases p.support_nonempty with ⟨a, ha⟩
@@ -159,10 +167,10 @@ noncomputable def BoundedSeq.ofList {k : Nat} (xs : List α) (h : xs.length ≤ 
     BoundedSeq α k := by
   refine ⟨⟨xs.length, Nat.lt_succ_of_le h⟩, ?_⟩
   intro i
-  exact xs.get ⟨i.1, by simpa using i.2⟩
+  exact xs.get ⟨i.1, by exact i.2⟩
 
 theorem BoundedSeq.toList_ofList
-    {k : Nat} [DecidableEq α] (xs : List α) (h : xs.length ≤ k) :
+    {k : Nat} (xs : List α) (h : xs.length ≤ k) :
     (BoundedSeq.ofList xs h).toList = xs := by
   ext i
   simp [BoundedSeq.toList, BoundedSeq.ofList]
@@ -201,14 +209,15 @@ noncomputable instance instDecidableEqSerialLegalAction (s : SState G) :
 
 abbrev RestCode := BoundedSeq ι (Fintype.card ι)
 
+omit [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem rest_length_le_card
     {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
     (hvalid : G.ValidDecision w chosen current rest) :
     rest.length ≤ Fintype.card ι := by
   rcases hvalid.1 with ⟨acted, hsplit⟩
   have hnodup : (G.orderedActive w).Nodup := by
-    simpa [FOSG.orderedActive] using
-      Finset.sort_nodup (s := G.active w) (r := (· ≤ ·))
+    exact Finset.sort_nodup (s := G.active w) (r := (· ≤ ·))
   have hnodup' : (acted ++ current :: rest).Nodup := by
     simpa [hsplit] using hnodup
   have hsuffix : (current :: rest).Nodup := List.Nodup.of_append_right hnodup'
@@ -239,21 +248,24 @@ noncomputable def stateStampOfState :
           ((W × JointAction Act × ι × BoundedSeq ι (Fintype.card ι)) ⊕
             (W × JointAction Act)))
 
+omit [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem stateStampOfState_injective :
     Function.Injective (stateStampOfState (G := G)) := by
   intro s t h
   cases s <;> cases t
   case base.base w w' =>
     have hw : w = w' := by
-      simpa [stateStampOfState] using h
+      simp [stateStampOfState] at h
+      exact h
     subst hw
     rfl
   case base.decide =>
-    cases (by simpa [stateStampOfState] using h : False)
+    simp [stateStampOfState] at h
   case base.chance =>
-    cases (by simpa [stateStampOfState] using h : False)
+    simp [stateStampOfState] at h
   case decide.base =>
-    cases (by simpa [stateStampOfState] using h : False)
+    simp [stateStampOfState] at h
   case decide.decide w chosen current rest hs w' chosen' current' rest' hs' =>
     have h' :
         (w, chosen, current, BoundedSeq.ofList rest (rest_length_le_card (G := G) hs)) =
@@ -277,11 +289,11 @@ theorem stateStampOfState_injective :
     subst hproof
     rfl
   case decide.chance =>
-    cases (by simpa [stateStampOfState] using h : False)
+    simp [stateStampOfState] at h
   case chance.base =>
-    cases (by simpa [stateStampOfState] using h : False)
+    simp [stateStampOfState] at h
   case chance.decide =>
-    cases (by simpa [stateStampOfState] using h : False)
+    simp [stateStampOfState] at h
   case chance.chance w a w' a' =>
     have h' : (w, a.1) = (w', a'.1) := by
       simpa [stateStampOfState] using h
@@ -293,6 +305,8 @@ theorem stateStampOfState_injective :
     apply congrArg (fun x => SerialState.chance w x)
     exact Subtype.ext ha
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 instance instFiniteSerialState : Finite (SState G) :=
   Finite.of_injective (stateStampOfState (G := G)) (stateStampOfState_injective (G := G))
 
@@ -328,6 +342,8 @@ noncomputable def code {k : Nat} (pos : Position G k) :
         (W × JointAction Act))) × Fin (k + 1) :=
   (stateStampOfState (G := G) pos.state, ⟨pos.remaining, Nat.lt_succ_of_le pos.hremaining⟩)
 
+omit [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem code_injective {k : Nat} :
     Function.Injective (code (G := G) (k := k)) := by
   intro p q h
@@ -346,6 +362,8 @@ theorem code_injective {k : Nat} :
   cases hr
   rfl
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 instance instFinitePosition {k : Nat} : Finite (Position G k) :=
   Finite.of_injective (code (G := G) (k := k)) (code_injective (G := G) (k := k))
 
@@ -376,6 +394,8 @@ def player? {k : Nat} (pos : Position G k) : Option ι :=
     | .decide _ _ current _ _ => some current
     | .chance _ _ => none
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem not_terminal_of_player
     {k : Nat} {pos : Position G k} {i : ι}
     (hplayer : pos.player? = some i) :
@@ -393,7 +413,7 @@ theorem not_terminal_of_player
           have hactive : SerialState.active (G := G) (.base w) = ∅ :=
             (SG G).terminal_active_eq_empty hterm
           have : ({current} : Finset ι) = ∅ := by
-            simpa [SerialState.active, horder] using hactive
+            simp [SerialState.active, horder] at hactive
           simp at this
   | decide w chosen current rest hvalid =>
       simp [SG, SerialState.serialize, SerialState.terminal]
@@ -403,6 +423,7 @@ theorem not_terminal_of_player
 noncomputable def actionArity {k : Nat} (pos : Position G k) : Nat :=
   Fintype.card ((SG G).LegalAction pos.state)
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 theorem actionArity_pos
     {k : Nat} {pos : Position G k} {i : ι}
     (hplayer : pos.player? = some i) :
@@ -410,7 +431,7 @@ theorem actionArity_pos
   classical
   have hterm : ¬ (SG G).terminal pos.state := not_terminal_of_player (G := G) hplayer
   obtain ⟨a, ha⟩ := (SG G).nonterminal_exists_legal hterm
-  show 0 < Fintype.card ((SG G).LegalAction pos.state)
+  change 0 < Fintype.card ((SG G).LegalAction pos.state)
   exact Fintype.card_pos_iff.mpr ⟨⟨a, ha⟩⟩
 
 noncomputable def actionFromIndex
@@ -448,6 +469,8 @@ noncomputable def trailCode {k : Nat} :
     { xs : List ((SG G).Step) // xs.length ≤ k } → BoundedSeq ((SG G).Step) k
   | ⟨xs, hxs⟩ => BoundedSeq.ofList xs hxs
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem trailCode_injective {k : Nat} :
     Function.Injective (trailCode (G := G) (k := k)) := by
   intro xs ys h
@@ -462,6 +485,12 @@ noncomputable def code {k : Nat} (pos : TracePosition G k) :
   (pos.state, trailCode (G := G) (k := k) pos.trail,
     ⟨pos.remaining, Nat.lt_succ_of_le pos.hremaining⟩)
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
+omit [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
+omit [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem code_injective {k : Nat} :
     Function.Injective (code (G := G) (k := k)) := by
   intro p q h
@@ -484,6 +513,8 @@ theorem code_injective {k : Nat} :
   cases hRem'
   simp at *
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 instance instFinite {k : Nat} : Finite (TracePosition G k) :=
   Finite.of_injective (code (G := G) (k := k)) (code_injective (G := G) (k := k))
 
@@ -500,15 +531,21 @@ noncomputable def root (k : Nat) : TracePosition G k := by
   · simp [trail]
   · simp [trail, FOSG.lastStateFrom]
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem trail_length {k : Nat} (pos : TracePosition G k) :
     pos.trail.1.length + pos.remaining = k := pos.hlen
 
 noncomputable def history {k : Nat} (pos : TracePosition G k) : (SG G).History :=
   ⟨pos.trail.1, pos.hchain⟩
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem history_steps {k : Nat} (pos : TracePosition G k) :
     (history (G := G) pos).steps = pos.trail.1 := rfl
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem history_lastState {k : Nat} (pos : TracePosition G k) :
     (history (G := G) pos).lastState = pos.state := pos.hstate
 
@@ -519,6 +556,8 @@ noncomputable def playerView {k : Nat} (pos : TracePosition G k) (i : ι) :
     (SG G).InfoState i :=
   (history (G := G) pos).playerView i
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem snoc_length_le {k : Nat} {pos : TracePosition G k} (e : (SG G).Step)
     (hrem : pos.remaining ≠ 0) :
     (pos.trail.1 ++ [e]).length ≤ k := by
@@ -548,15 +587,21 @@ noncomputable def appendStep {k : Nat} (pos : TracePosition G k) (e : (SG G).Ste
   · simpa [trail'] using
       (SG G).lastStateFrom_append_singleton (.base G.init) pos.trail.1 e
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem appendStep_remaining {k : Nat} (pos : TracePosition G k) (e : (SG G).Step)
     (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) :
     (appendStep (G := G) pos e hrem hsrc).remaining = pos.remaining - 1 := rfl
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem appendStep_history_steps {k : Nat} (pos : TracePosition G k) (e : (SG G).Step)
     (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) :
     (appendStep (G := G) pos e hrem hsrc).history.steps = pos.history.steps ++ [e] := by
   simp [history, appendStep]
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem appendStep_history_lastState {k : Nat} (pos : TracePosition G k) (e : (SG G).Step)
     (hrem : pos.remaining ≠ 0) (hsrc : e.src = pos.state) :
     (appendStep (G := G) pos e hrem hsrc).history.lastState = e.dst := by
@@ -568,12 +613,15 @@ def toPosition {k : Nat} (pos : TracePosition G k) : Position G k :=
 def player? {k : Nat} (pos : TracePosition G k) : Option ι :=
   Position.player? (G := G) pos.toPosition
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem not_terminal_of_player
     {k : Nat} {pos : TracePosition G k} {i : ι}
     (hplayer : pos.player? = some i) :
     ¬ (SG G).terminal pos.state :=
   Position.not_terminal_of_player (G := G) hplayer
 
+omit [DecidableEq ι] [LinearOrder ι] [Fintype ι] in
 private theorem finiteAct (i : ι) : Finite (Act i) :=
   Finite.of_injective (fun ai => (some ai : Option (Act i))) (by
     intro a b h
@@ -654,6 +702,7 @@ noncomputable def originalPlayerView {k : Nat} (pos : TracePosition G k) (who : 
   G.InfoState who :=
   originalPlayerViewFrom (G := G) who pos.history.steps
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))] in
 theorem originalPublicFrag_eq_filterMap_originalPlayerFrag
     (who : ι) (e : (SG G).Step) :
     originalPublicFrag (G := G) e =
@@ -679,6 +728,7 @@ theorem originalPublicFrag_eq_filterMap_originalPlayerFrag
       cases dst <;>
         simp [originalPublicFrag, originalPlayerFrag, FOSG.PlayerEvent.publicPart]
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))] in
 theorem originalPublicViewFrom_eq_filterMap_originalPlayerViewFrom
     (who : ι) (es : List ((SG G).Step)) :
     originalPublicViewFrom (G := G) es =
@@ -729,6 +779,8 @@ noncomputable def eraseStep? : (SG G).Step → Option G.Step
   | ⟨.chance w ga, act, .chance w' ga', support⟩ =>
       none
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem eraseStep?_some_src
     (e : (SG G).Step) (e' : G.Step)
     (h : eraseStep? (G := G) e = some e') :
@@ -762,6 +814,8 @@ theorem eraseStep?_some_src
           | chance w' ga' =>
               simp [eraseStep?] at h
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem eraseStep?_some_dst
     (e : (SG G).Step) (e' : G.Step)
     (h : eraseStep? (G := G) e = some e') :
@@ -795,6 +849,8 @@ theorem eraseStep?_some_dst
           | chance w' ga' =>
               simp [eraseStep?] at h
 
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem eraseStep?_none_world_eq
     (e : (SG G).Step)
     (h : eraseStep? (G := G) e = none) :
@@ -846,8 +902,12 @@ theorem eraseStep?_none_world_eq
             have hdst :
                 dst = SerialState.basePlayerSuccessor (G := G) w actRaw := by
               simpa [PMF.pure_apply] using hpure
-            simpa [hdst] using
-              (SerialState.world_basePlayerSuccessor (G := G) (w := w) (a := actRaw)).symm
+            exact
+              calc
+                dst.world = (SerialState.basePlayerSuccessor (G := G) w actRaw).world :=
+                  congrArg SerialState.world hdst
+                _ = w :=
+                  SerialState.world_basePlayerSuccessor (G := G) (w := w) (a := actRaw)
       | decide w chosen current rest hvalid =>
           let actRaw : SerialState.LegalAction (G := G) (.decide w chosen current rest hvalid) :=
             SerialState.ofFOSGLegalAction (G := G) act
@@ -861,9 +921,14 @@ theorem eraseStep?_none_world_eq
           have hdst :
               dst = SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid actRaw := by
             simpa [PMF.pure_apply] using hpure
-          simpa [hdst] using
-            (SerialState.world_decidePlayerSuccessor (G := G) (w := w) (chosen := chosen)
-              (current := current) (rest := rest) (hvalid := hvalid) (a := actRaw)).symm
+          exact
+            calc
+              dst.world =
+                  (SerialState.decidePlayerSuccessor (G := G) w chosen current rest hvalid actRaw).world :=
+                congrArg SerialState.world hdst
+              _ = w :=
+                SerialState.world_decidePlayerSuccessor (G := G) (w := w) (chosen := chosen)
+                  (current := current) (rest := rest) (hvalid := hvalid) (a := actRaw)
       | chance w ga =>
           let actRaw : SerialState.LegalAction (G := G) (.chance w ga) :=
             SerialState.ofFOSGLegalAction (G := G) act
@@ -907,7 +972,7 @@ private noncomputable def originalHistoryFromAux
           let hsrc' : e'.src = h.lastState := by
             calc
               e'.src = SerialState.world (G := G) e.src := eraseStep?_some_src (G := G) e e' hErase
-              _ = SerialState.world (G := G) s := by simpa [hchain.1]
+              _ = SerialState.world (G := G) s := by simp [hchain.1]
               _ = h.lastState := hs.symm
           let h' := h.appendStep e' hsrc'
           have hs' : h'.lastState = SerialState.world (G := G) e.dst := by
@@ -917,11 +982,13 @@ private noncomputable def originalHistoryFromAux
           let hs' : h.lastState = SerialState.world (G := G) e.dst := by
             calc
               h.lastState = SerialState.world (G := G) s := hs
-              _ = SerialState.world (G := G) e.src := by simpa [hchain.1]
+              _ = SerialState.world (G := G) e.src := by simp [hchain.1]
               _ = SerialState.world (G := G) e.dst :=
                 (eraseStep?_none_world_eq (G := G) e hErase).symm
           originalHistoryFromAux e.dst h hs' es (by simpa using hchain.2)
 
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 private theorem originalHistoryFromAux_steps
     (s : SState G) (h : G.History)
     (hs : h.lastState = SerialState.world (G := G) s) :
@@ -955,7 +1022,7 @@ private theorem originalHistoryFromAux_steps
               apply Option.some.inj
               rw [← hErase', hErase]
             subst e''
-            simpa [hrec, h', List.append_assoc]
+            simp [hrec, h', List.append_assoc]
           · rename_i hErase'
             exfalso
             rw [hErase] at hErase'
@@ -978,7 +1045,7 @@ private theorem originalHistoryFromAux_steps
             rw [hErase] at hErase'
             contradiction
           · rename_i hErase'
-            simpa [hrec]
+            simp [hrec]
 
 /-- The original FOSG history represented by a serialized trace position, obtained
 by erasing bookkeeping serialized steps and collapsing resolution steps back to
@@ -987,6 +1054,8 @@ noncomputable def originalHistory {k : Nat} (pos : TracePosition G k) : G.Histor
   (originalHistoryFromAux (G := G) (.base G.init) (History.nil G) (by simp)
     pos.trail.1 pos.hchain).1
 
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem originalHistory_steps {k : Nat} (pos : TracePosition G k) :
     (originalHistory (G := G) pos).steps =
       pos.history.steps.filterMap (eraseStep? (G := G)) := by
@@ -994,6 +1063,8 @@ noncomputable def originalHistory {k : Nat} (pos : TracePosition G k) : G.Histor
     originalHistoryFromAux_steps (G := G) (.base G.init) (History.nil G) (by simp)
       pos.trail.1 pos.hchain
 
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem originalHistory_lastState {k : Nat} (pos : TracePosition G k) :
     (originalHistory (G := G) pos).lastState = SerialState.world (G := G) pos.state := by
   simpa [originalHistory, pos.hstate] using
@@ -1089,14 +1160,19 @@ noncomputable def decisionChild {k : Nat} {p : PlayerIx}
     (a : Fin (Position.actionArity (G := G) I.1)) : Position G k :=
   descend (G := G) I.1 (decisionSuccessor (G := G) I.1 (Position.rawActionFromIndex (G := G) a))
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem descend_remaining {k : Nat} (pos : Position G k) (s : SState G) :
     (descend (G := G) pos s).remaining = pos.remaining - 1 := rfl
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 theorem decisionChild_remaining {k : Nat} {p : PlayerIx}
     (I : {pos : Position G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1)) :
     (decisionChild G I a).remaining = I.1.remaining - 1 := rfl
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem state_eq_base_or_decide_of_player
     {k : Nat} {pos : Position G k} {i : ι}
     (hplayer : pos.player? = some i) :
@@ -1110,14 +1186,15 @@ theorem state_eq_base_or_decide_of_player
     | base w =>
         cases horder : G.orderedActive w with
         | nil =>
-            simp [Position.player?, Position.isTruncated, htrunc, hstate, horder] at hplayer
+            simp [Position.player?, Position.isTruncated, hstate, horder] at hplayer
         | cons current rest =>
             exact Or.inl ⟨w, rfl, by simp [horder]⟩
     | decide w chosen current rest hvalid =>
         exact Or.inr ⟨w, chosen, current, rest, hvalid, rfl⟩
     | chance w ga =>
-        simp [Position.player?, Position.isTruncated, htrunc, hstate] at hplayer
+        simp [Position.player?, Position.isTruncated, hstate] at hplayer
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 theorem decisionTransition_ne_zero {k : Nat} {p : PlayerIx}
     (I : {pos : Position G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1)) :
@@ -1184,6 +1261,8 @@ noncomputable def TracePosition.decisionStep {k : Nat} {p : PlayerIx}
       Position.decisionTransition_ne_zero (G := G)
         (I := ⟨I.1.toPosition, I.2⟩) a
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem TracePosition.remaining_ne_zero_of_player {k : Nat} {pos : TracePosition G k} {i : ι}
     (hplayer : pos.player? = some i) :
     pos.remaining ≠ 0 := by
@@ -1199,6 +1278,7 @@ noncomputable def TracePosition.decisionChild {k : Nat} {p : PlayerIx}
   TracePosition.appendStep (G := G) I.1 (TracePosition.decisionStep (G := G) I a)
     (TracePosition.remaining_ne_zero_of_player (G := G) I.2) rfl
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.decisionChild_history_steps {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
@@ -1209,6 +1289,7 @@ noncomputable def TracePosition.decisionChild {k : Nat} {p : PlayerIx}
       (TracePosition.decisionStep (G := G) I a)
       (TracePosition.remaining_ne_zero_of_player (G := G) I.2) rfl
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.decisionChild_lastState {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
@@ -1219,12 +1300,15 @@ noncomputable def TracePosition.decisionChild {k : Nat} {p : PlayerIx}
       (TracePosition.decisionStep (G := G) I a)
       (TracePosition.remaining_ne_zero_of_player (G := G) I.2) rfl
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.decisionChild_remaining {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
     (TracePosition.decisionChild (G := G) I a).remaining = I.1.remaining - 1 := by
   simp [TracePosition.decisionChild]
 
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem TracePosition.current_mem_active_of_player
     {k : Nat} {pos : TracePosition G k} {i : ι}
     (hplayer : pos.player? = some i) :
@@ -1246,7 +1330,7 @@ theorem TracePosition.current_mem_active_of_player
           simp [horder]
         have hactive : current ∈ G.active w := (G.mem_orderedActive_iff w current).1 hmem
         have hworld : SerialState.world (G := G) pos.state = w := by
-          simpa [hs] using (SerialState.world_base (G := G) w)
+          simp [hs]
         rw [TracePosition.originalHistory_lastState (G := G) pos]
         simpa [hworld, hcurr] using hactive
   · rcases hdecide with ⟨w, chosen, current, rest, hvalid, hstate⟩
@@ -1258,10 +1342,12 @@ theorem TracePosition.current_mem_active_of_player
     have hcurr : current = i := htmp.2
     have hactive : current ∈ G.active w := G.current_mem_active_of_split (w := w) hvalid.1
     have hworld : SerialState.world (G := G) pos.state = w := by
-      simpa [hs] using (SerialState.world_decide (G := G) w chosen current rest hvalid)
+      simp [hs]
     rw [TracePosition.originalHistory_lastState (G := G) pos]
     simpa [hworld, hcurr] using hactive
 
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem TracePosition.not_terminal_originalHistory_of_player
     {k : Nat} {pos : TracePosition G k} {i : ι}
     (hplayer : pos.player? = some i) :
@@ -1276,6 +1362,7 @@ theorem TracePosition.not_terminal_originalHistory_of_player
     simp
   exact hiempty hactive
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 theorem TracePosition.actionFromIndex_eq_singleMove
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -1339,6 +1426,7 @@ noncomputable def TracePosition.actualActionFromIndex
     Act (origPlayer (ι := ι) p) :=
   Classical.choose (TracePosition.actionFromIndex_eq_singleMove (G := G) I a)
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.actionFromIndex_eq_singleMove_actual
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -1348,22 +1436,25 @@ noncomputable def TracePosition.actualActionFromIndex
         (TracePosition.actualActionFromIndex (G := G) I a) :=
   Classical.choose_spec (TracePosition.actionFromIndex_eq_singleMove (G := G) I a)
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.actionFromIndex_apply_current
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1.toPosition)) :
     (TracePosition.actionFromIndex (G := G) I.1 a).1 (origPlayer (ι := ι) p) =
       some (TracePosition.actualActionFromIndex (G := G) I a) := by
-  simpa [TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a]
+  simp [TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a]
 
+omit [Fintype W] [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.actionFromIndex_apply_other
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1.toPosition))
     {j : ι} (hj : j ≠ origPlayer (ι := ι) p) :
     (TracePosition.actionFromIndex (G := G) I.1 a).1 j = none := by
-  simpa [TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a, hj]
+  simp [TracePosition.actionFromIndex_eq_singleMove_actual (G := G) I a, hj]
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
 theorem TracePosition.actualActionFromIndex_mem_available
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -1387,7 +1478,7 @@ theorem TracePosition.actualActionFromIndex_mem_available
         have hcurr : current = origPlayer (ι := ι) p := hI.2
         cases hcurr
         have hworld : SerialState.world (G := G) I.1.state = w := by
-          simpa [hs] using (SerialState.world_base (G := G) w)
+          simp [hs]
         have hlast : (TracePosition.originalHistory (G := G) I.1).lastState = w := by
           rw [TracePosition.originalHistory_lastState (G := G) I.1]
           exact hworld
@@ -1421,8 +1512,7 @@ theorem TracePosition.actualActionFromIndex_mem_available
     have hcurrEq : current = origPlayer (ι := ι) p := hI.2
     cases hcurrEq
     have hworld : SerialState.world (G := G) I.1.state = w := by
-      simpa [hs] using
-        (SerialState.world_decide (G := G) w chosen (origPlayer (ι := ι) p) rest hvalid)
+      simp [hs]
     have hlast : (TracePosition.originalHistory (G := G) I.1).lastState = w := by
       rw [TracePosition.originalHistory_lastState (G := G) I.1]
       exact hworld
@@ -1463,6 +1553,7 @@ abbrev TracePosition.AvailableActionSubtype
       ai ∈ G.availableActionsAtHistory (TracePosition.originalHistory (G := G) I.1)
         (origPlayer (ι := ι) p) }
 
+omit [DecidableEq W] [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal] in
 theorem TracePosition.legal_singleMove_of_mem_available
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -1491,7 +1582,7 @@ theorem TracePosition.legal_singleMove_of_mem_available
           TracePosition.not_terminal_originalHistory_of_player (G := G) I.2
         have hlast : (TracePosition.originalHistory (G := G) I.1).lastState = w := by
           rw [TracePosition.originalHistory_lastState (G := G) I.1]
-          simpa [hs] using (SerialState.world_base (G := G) w)
+          simp [hs]
         have hnotTermW : ¬ G.terminal w := by
           simpa [hlast] using hnotTerm
         obtain ⟨a0, ha0⟩ := G.nonterminal_exists_legal hnotTermW
@@ -1528,8 +1619,7 @@ theorem TracePosition.legal_singleMove_of_mem_available
     cases hcurrEq
     have hlast : (TracePosition.originalHistory (G := G) I.1).lastState = w := by
       rw [TracePosition.originalHistory_lastState (G := G) I.1]
-      simpa [hs] using
-        (SerialState.world_decide (G := G) w chosen (origPlayer (ι := ι) p) rest hvalid)
+      simp [hs]
     rcases hvalid.2.2 with ⟨ga0, hga0comp⟩
     let ga : G.LegalAction w := by
       refine ⟨recordChoice ga0.1 (singleMove (Act := Act) (origPlayer (ι := ι) p) ai)
@@ -1582,6 +1672,7 @@ noncomputable def TracePosition.legalActionOfAvailableAction
       ⟩
   exact SerialState.toFOSGLegalAction (G := G) a
 
+omit [DecidableEq W] [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.legalActionOfAvailableAction_val
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -1590,21 +1681,23 @@ noncomputable def TracePosition.legalActionOfAvailableAction
       singleMove (Act := Act) (origPlayer (ι := ι) p) ai.1 := by
   simp [TracePosition.legalActionOfAvailableAction]
 
+omit [DecidableEq W] [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.legalActionOfAvailableAction_apply_current
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
     (ai : TracePosition.AvailableActionSubtype (G := G) I) :
     (TracePosition.legalActionOfAvailableAction (G := G) I ai).1 (origPlayer (ι := ι) p) =
       some ai.1 := by
-  simpa [TracePosition.legalActionOfAvailableAction_val (G := G) I ai]
+  simp
 
+omit [DecidableEq W] [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.legalActionOfAvailableAction_apply_other
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
     (ai : TracePosition.AvailableActionSubtype (G := G) I) {j : ι}
     (hj : j ≠ origPlayer (ι := ι) p) :
     (TracePosition.legalActionOfAvailableAction (G := G) I ai).1 j = none := by
-  simpa [TracePosition.legalActionOfAvailableAction_val (G := G) I ai, hj]
+  simp [hj]
 
 /-- Decision indices at a trace player node are canonically equivalent to the
 original available concrete actions at the corresponding original history. -/
@@ -1692,7 +1785,9 @@ noncomputable def TracePosition.supportActionSubtype
           origPlayer (ι := ι) p ∈ G.active h.lastState :=
         TracePosition.current_mem_active_of_player (G := G) I.2
       rw [G.mem_availableMoves_iff] at hlegal
-      simp [FOSG.locallyLegalAtState, hactive, hoiEq] at hlegal
+      have hfalse : False := by
+        simp [FOSG.locallyLegalAtState, hactive, hoiEq] at hlegal
+      exact False.elim hfalse
   | some ai =>
       refine ⟨ai, ?_⟩
       rw [show ai ∈ G.availableActionsAtHistory h (origPlayer (ι := ι) p) ↔
@@ -1715,6 +1810,7 @@ noncomputable def TracePosition.supportDecisionIndex
   (TracePosition.actionIndexEquivAvailableAction (G := G) I).symm
     (TracePosition.supportActionSubtype (G := G) σ I oi hoi)
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
 theorem TracePosition.supportDecisionIndex_injective
     {k : Nat} {p : PlayerIx}
     (σ : G.LegalBehavioralProfile)
@@ -1748,7 +1844,9 @@ theorem TracePosition.supportDecisionIndex_injective
           simpa [h, hoi1Eq] using h₁
         exact (σ (origPlayer (ι := ι) p)).2 h hoi1'
       rw [G.mem_availableMoves_iff] at hlegal
-      simp [FOSG.locallyLegalAtState, hactive, hoi1Eq] at hlegal
+      have hfalse : False := by
+        simp [FOSG.locallyLegalAtState, hactive] at hlegal
+      exact False.elim hfalse
   | some ai₁ =>
       cases hoi2Eq : oi₂ with
       | none =>
@@ -1759,12 +1857,15 @@ theorem TracePosition.supportDecisionIndex_injective
               simpa [h, hoi2Eq] using h₂
             exact (σ (origPlayer (ι := ι) p)).2 h hoi2'
           rw [G.mem_availableMoves_iff] at hlegal
-          simp [FOSG.locallyLegalAtState, hactive, hoi2Eq] at hlegal
+          have hfalse : False := by
+            simp [FOSG.locallyLegalAtState, hactive] at hlegal
+          exact False.elim hfalse
       | some ai₂ =>
           have hval : ai₁ = ai₂ := by
             simpa [hoi1Eq, hoi2Eq] using congrArg Subtype.val hsub
-          simp [hoi1Eq, hoi2Eq, hval]
+          simp [hval]
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.supportDecisionIndex_eq_actionFromIndex
     {k : Nat} {p : PlayerIx}
     (σ : G.LegalBehavioralProfile)
@@ -1806,6 +1907,7 @@ noncomputable def translateBehavioralProfile
     EFG.BehavioralProfile (traceInfoStructure (G := G) k) :=
   fun p => translateBehavioralStrategy (G := G) σ p
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
 theorem TracePosition.supportDecisionIndex_eq_some_actual
     {k : Nat} {p : PlayerIx}
     (σ : G.LegalBehavioralProfile)
@@ -1837,13 +1939,14 @@ theorem TracePosition.supportDecisionIndex_eq_some_actual
       have hlegal : none ∈ G.availableMoves h (origPlayer (ι := ι) p) := by
         exact (σ (origPlayer (ι := ι) p)).2 h hoi'
       rw [G.mem_availableMoves_iff] at hlegal
-      simp [FOSG.locallyLegalAtState, hactive, hoiEq] at hlegal
+      simp [FOSG.locallyLegalAtState, hactive] at hlegal
   | some ai =>
       have hai :
           ai = TracePosition.actualActionFromIndex (G := G) I a := by
         simpa [hoiEq] using congrArg Subtype.val hsub
-      simp [hoiEq, hai]
+      simp [hai]
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem translateBehavioralStrategy_apply
     {k : Nat} (σ : G.LegalBehavioralProfile) {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -1892,7 +1995,7 @@ theorem TracePosition.supportDecisionIndex_eq_some_actual
       exact hprod
     · rw [dif_neg ((PMF.mem_support_iff _ _).1 hmem)]
       rw [TracePosition.supportDecisionIndex_eq_actionFromIndex (G := G) σ I a hmem]
-      simp [τ, oiTarget, PMF.pure_apply_self]
+      simp [oiTarget]
   · unfold translateBehavioralStrategy
     have hzero :
         (τ.bindOnSupport fun oi hoi =>
@@ -1917,6 +2020,7 @@ theorem TracePosition.supportDecisionIndex_eq_some_actual
       rw [hzero, htarget0]
     simpa [translateBehavioralStrategy, τ, oiTarget] using hfinal
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem translateBehavioralProfile_apply
     {k : Nat} (σ : G.LegalBehavioralProfile) (p : PlayerIx)
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -1925,8 +2029,7 @@ theorem TracePosition.supportDecisionIndex_eq_some_actual
       (σ.toProfile (origPlayer (ι := ι) p))
         ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p))
         (some (TracePosition.actualActionFromIndex (G := G) I a)) := by
-  simpa [translateBehavioralProfile] using
-    (translateBehavioralStrategy_apply (G := G) σ I a)
+  simp [translateBehavioralProfile]
 
 /-- Chance successor law for a serialized position.
 
@@ -2017,6 +2120,7 @@ noncomputable def TracePosition.liveChancePMF {k : Nat}
   | chance w ga =>
       exact PMF.map (SerialState.base (G := G)) (G.transition w ga)
 
+omit [DecidableEq W] [DecidablePred G.terminal] in
 theorem TracePosition.liveChancePMF_supportValue_eq_base {k : Nat}
     (pos : TracePosition G k)
     (hplayer : pos.player? = none)
@@ -2069,10 +2173,12 @@ theorem TracePosition.liveChancePMF_supportValue_eq_base {k : Nat}
       rcases hmem with ⟨w', -, hw'⟩
       exact ⟨w', hw'.symm⟩
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem TracePosition.state_eq_base_empty_or_chance_of_no_player {k : Nat}
     {pos : TracePosition G k}
     (hplayer : pos.player? = none)
-    (hnotTerm : ¬ (SG G).terminal pos.state)
+    (_hnotTerm : ¬ (SG G).terminal pos.state)
     (hrem : pos.remaining ≠ 0) :
     (∃ w, pos.state = .base w ∧ G.orderedActive w = []) ∨
       (∃ w, ∃ ga : G.LegalAction w, pos.state = .chance w ga) := by
@@ -2184,6 +2290,7 @@ noncomputable def TracePosition.chanceStep {k : Nat}
     (SG G).Step :=
   (TracePosition.chanceEdge (G := G) pos hplayer hnotTerm hrem b).1
 
+omit [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.chanceStep_src {k : Nat}
     (pos : TracePosition G k)
     (hplayer : pos.player? = none)
@@ -2207,6 +2314,7 @@ noncomputable def TracePosition.chanceChild {k : Nat}
     (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b)
     hrem (TracePosition.chanceStep_src (G := G) pos hplayer hnotTerm hrem b)
 
+omit [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.chanceChild_history_steps {k : Nat}
     (pos : TracePosition G k)
     (hplayer : pos.player? = none)
@@ -2221,6 +2329,7 @@ noncomputable def TracePosition.chanceChild {k : Nat}
       (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b)
       hrem (TracePosition.chanceStep_src (G := G) pos hplayer hnotTerm hrem b)
 
+omit [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.chanceChild_lastState {k : Nat}
     (pos : TracePosition G k)
     (hplayer : pos.player? = none)
@@ -2235,6 +2344,7 @@ noncomputable def TracePosition.chanceChild {k : Nat}
       (TracePosition.chanceStep (G := G) pos hplayer hnotTerm hrem b)
       hrem (TracePosition.chanceStep_src (G := G) pos hplayer hnotTerm hrem b)
 
+omit [DecidablePred G.terminal] in
 @[simp] theorem TracePosition.chanceChild_remaining {k : Nat}
     (pos : TracePosition G k)
     (hplayer : pos.player? = none)
@@ -2250,6 +2360,107 @@ abbrev Outcome (k : Nat) := Position G k × Position.PayoffVec (G := G) k
 
 abbrev TraceOutcome (k : Nat) := TracePosition G k × TracePosition.PayoffVec (G := G) k
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
+theorem TracePosition.player_eq_none_of_base_empty
+    {k : Nat} {pos : TracePosition G k} {w : W}
+    (hstate : pos.state = .base w)
+    (hrem : pos.remaining ≠ 0)
+    (hEmpty : G.orderedActive w = []) :
+    pos.player? = none := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate, hEmpty]
+
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
+theorem TracePosition.player_eq_some_of_base_cons
+    {k : Nat} {pos : TracePosition G k} {w : W} {current : ι} {rest : List ι}
+    (hstate : pos.state = .base w)
+    (hrem : pos.remaining ≠ 0)
+    (horder : G.orderedActive w = current :: rest) :
+    pos.player? = some current := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate, horder]
+
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
+theorem TracePosition.player_eq_some_of_decide
+    {k : Nat} {pos : TracePosition G k}
+    {w : W} {chosen : JointAction Act} {current : ι} {rest : List ι}
+    {hvalid : G.ValidDecision w chosen current rest}
+    (hstate : pos.state = .decide w chosen current rest hvalid)
+    (hrem : pos.remaining ≠ 0) :
+    pos.player? = some current := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate]
+
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
+theorem TracePosition.player_eq_none_of_chance
+    {k : Nat} {pos : TracePosition G k} {w : W} {ga : G.LegalAction w}
+    (hstate : pos.state = .chance w ga)
+    (hrem : pos.remaining ≠ 0) :
+    pos.player? = none := by
+  simp [TracePosition.player?, TracePosition.toPosition, Position.player?,
+    Position.isTruncated, hrem, hstate]
+
+/-- Trace tree branch for serialized base states, with the active-player list
+exposed. This keeps the main recursive tree definition state-first and prevents
+dependent rewrites through `TracePosition.player?` from becoming the proof
+boundary. -/
+noncomputable def traceTreeBaseBranch
+    {k : Nat}
+    (pos0 : TracePosition G k)
+    (self : (child : TracePosition G k) → child.remaining < pos0.remaining →
+      TracePosition.PayoffVec (G := G) k →
+      GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k))
+    {w : W}
+    (hstate : pos0.state = .base w)
+    (hrem : pos0.remaining ≠ 0)
+    (hterm : ¬ (SG G).terminal pos0.state)
+    (acc : TracePosition.PayoffVec (G := G) k)
+    (order : List ι) (horder : G.orderedActive w = order) :
+    GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k) :=
+  match order with
+  | [] =>
+      let hplayer : pos0.player? = none := by
+        simpa using
+          TracePosition.player_eq_none_of_base_empty (G := G)
+            (pos := pos0) hstate hrem horder
+      let μ := TracePosition.liveChancePMF (G := G) pos0 hplayer hterm hrem
+      .chance
+        (Fintype.card (SupportSubtype μ))
+        (supportPMF μ)
+        (supportSubtype_card_pos μ)
+        (fun b =>
+          let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm hrem b
+          let acc' := TracePosition.addPayoff (G := G) acc
+            (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
+          self child
+            (by
+              simpa [child, TracePosition.chanceChild_remaining, Nat.pred_eq_sub_one] using
+                Nat.pred_lt hrem)
+            acc')
+  | current :: rest =>
+      let p : PlayerIx := playerEquiv (ι := ι) current
+      have hp : origPlayer (ι := ι) p = current := by
+        simp [p, origPlayer, playerEquiv]
+      let hI : pos0.player? = some (origPlayer (ι := ι) p) := by
+        simpa [hp] using
+          TracePosition.player_eq_some_of_base_cons (G := G)
+            (pos := pos0) hstate hrem horder
+      let I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)} :=
+        ⟨pos0, hI⟩
+      .decision (p := p) I
+        (fun a =>
+          let child := Position.TracePosition.decisionChild (G := G) I a
+          self child
+            (by
+              simpa [child, I, Position.TracePosition.decisionChild_remaining,
+                Nat.pred_eq_sub_one] using
+                Nat.pred_lt hrem)
+            acc)
+
 noncomputable def traceTreeFromAccum {k : Nat} (pos : TracePosition G k)
     (acc : TracePosition.PayoffVec (G := G) k) :
     GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k) :=
@@ -2258,33 +2469,62 @@ noncomputable def traceTreeFromAccum {k : Nat} (pos : TracePosition G k)
   else if hterm : (SG G).terminal pos.state then
     .terminal (pos, acc)
   else
-    match hplayer : pos.player? with
-    | some i =>
-        let p : PlayerIx := playerEquiv (ι := ι) i
-        have hp : origPlayer (ι := ι) p = i := by
+    match pos with
+    | ⟨state, trail, remaining, hremaining, hlen, hchain, hlast⟩ =>
+    match state with
+    | .base w =>
+        let pos0 : TracePosition G k :=
+          ⟨.base w, trail, remaining, hremaining, hlen, hchain, hlast⟩
+        have hrem0 : pos0.remaining ≠ 0 := by
+          simpa [pos0] using hrem
+        have hterm0 : ¬ (SG G).terminal pos0.state := by
+          simpa [pos0] using hterm
+        traceTreeBaseBranch (G := G) pos0
+          (fun child _ acc' => traceTreeFromAccum child acc')
+          (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl
+    | .decide w chosen current rest hvalid =>
+        let pos0 : TracePosition G k :=
+          ⟨.decide w chosen current rest hvalid, trail, remaining, hremaining, hlen, hchain, hlast⟩
+        have hrem0 : pos0.remaining ≠ 0 := by
+          simpa [pos0] using hrem
+        let p : PlayerIx := playerEquiv (ι := ι) current
+        have hp : origPlayer (ι := ι) p = current := by
           simp [p, origPlayer, playerEquiv]
-        let hI : pos.player? = some (origPlayer (ι := ι) p) := by
-          simpa [hp] using hplayer
+        let hI : pos0.player? = some (origPlayer (ι := ι) p) := by
+          simpa [hp] using
+            TracePosition.player_eq_some_of_decide (G := G) (pos := pos0) (by rfl) hrem0
         let I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)} :=
-          ⟨pos, hI⟩
+          ⟨pos0, hI⟩
         .decision (p := p) I
           (fun a => traceTreeFromAccum (Position.TracePosition.decisionChild (G := G) I a) acc)
-    | none =>
-        let μ := TracePosition.liveChancePMF (G := G) pos hplayer hterm hrem
+    | .chance w ga =>
+        let pos0 : TracePosition G k :=
+          ⟨.chance w ga, trail, remaining, hremaining, hlen, hchain, hlast⟩
+        have hrem0 : pos0.remaining ≠ 0 := by
+          simpa [pos0] using hrem
+        have hterm0 : ¬ (SG G).terminal pos0.state := by
+          simpa [pos0] using hterm
+        let hplayer : pos0.player? = none := by
+          simpa [pos0] using
+            TracePosition.player_eq_none_of_chance (G := G) (pos := pos0) (by rfl) hrem0
+        let μ := TracePosition.liveChancePMF (G := G) pos0 hplayer hterm0 hrem0
         .chance
           (Fintype.card (SupportSubtype μ))
           (supportPMF μ)
           (supportSubtype_card_pos μ)
           (fun b =>
-            let child := TracePosition.chanceChild (G := G) pos hplayer hterm hrem b
+            let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm0 hrem0 b
             let acc' := TracePosition.addPayoff (G := G) acc
-              (Position.chanceEdgePayoff (G := G) pos.toPosition child.state)
+              (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
             traceTreeFromAccum child acc')
 termination_by pos.remaining
 decreasing_by
   all_goals
-    simpa [Position.TracePosition.decisionChild_remaining, TracePosition.chanceChild_remaining,
-      Nat.pred_eq_sub_one] using Nat.pred_lt hrem
+    first
+    | assumption
+    | simp [Position.TracePosition.decisionChild, TracePosition.chanceChild,
+        TracePosition.appendStep]
+      exact Nat.pos_of_ne_zero hrem
 
 noncomputable def traceTreeFrom {k : Nat} (pos : TracePosition G k) :
     GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k) :=
@@ -2363,6 +2603,10 @@ private noncomputable def encPublicCode (k : Nat) :
     EncPublicView (G := G) k → BoundedSeq PubObs (2 * k)
   | ⟨xs, hxs⟩ => BoundedSeq.ofList xs hxs
 
+omit [LinearOrder ι] [Fintype ι] [Fintype W] [DecidableEq W]
+  [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 private theorem encPublicCode_injective (k : Nat) :
     Function.Injective (encPublicCode (G := G) k) := by
   intro xs ys h
@@ -2376,6 +2620,10 @@ private noncomputable def encPlayerCode (i : ι) (k : Nat) :
     EncPlayerView (G := G) i k → BoundedSeq (FOSG.PlayerEvent G i) (2 * k)
   | ⟨xs, hxs⟩ => BoundedSeq.ofList xs hxs
 
+omit [LinearOrder ι] [Fintype ι] [Fintype W] [DecidableEq W]
+  [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 private theorem encPlayerCode_injective (i : ι) (k : Nat) :
     Function.Injective (encPlayerCode (G := G) i k) := by
   intro xs ys h
@@ -2385,9 +2633,17 @@ private theorem encPlayerCode_injective (i : ι) (k : Nat) :
   apply Subtype.ext
   simpa [encPlayerCode, BoundedSeq.toList_ofList] using hlist
 
+omit [LinearOrder ι] [Fintype ι] [Fintype W] [DecidableEq W]
+  [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 instance instFiniteEncPublicView (k : Nat) : Finite (EncPublicView (G := G) k) :=
   Finite.of_injective (encPublicCode (G := G) k) (encPublicCode_injective (G := G) k)
 
+omit [LinearOrder ι] [Fintype ι] [Fintype W] [DecidableEq W]
+  [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 instance instFiniteEncPlayerView (i : ι) (k : Nat) :
     Finite (EncPlayerView (G := G) i k) :=
   Finite.of_injective (encPlayerCode (G := G) i k) (encPlayerCode_injective (G := G) i k)
@@ -2408,6 +2664,9 @@ noncomputable instance instDecidableEqEncPlayerView (i : ι) (k : Nat) :
   classical
   exact Classical.decEq _
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 private theorem originalPublicFrag_length_le_one (e : (SG G).Step) :
     (TracePosition.originalPublicFrag (G := G) e).length ≤ 1 := by
   classical
@@ -2424,6 +2683,9 @@ private theorem originalPublicFrag_length_le_one (e : (SG G).Step) :
   | chance w ga =>
       cases dst <;> simp [TracePosition.originalPublicFrag]
 
+omit [Fintype ι] [Fintype W] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 private theorem originalPlayerFrag_length_le_one (i : ι) (e : (SG G).Step) :
     (TracePosition.originalPlayerFrag (G := G) i e).length ≤ 1 := by
   classical
@@ -2441,6 +2703,10 @@ private theorem originalPlayerFrag_length_le_one (i : ι) (e : (SG G).Step) :
   | chance w ga =>
       cases dst <;> simp [TracePosition.originalPlayerFrag]
 
+omit [LinearOrder ι] [Fintype ι] [Fintype W] [DecidableEq W]
+  [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 private theorem historyPublicViewFrom_length (es : List G.Step) :
     (FOSG.History.publicViewFrom (G := G) es).length = es.length := by
   induction es with
@@ -2449,11 +2715,19 @@ private theorem historyPublicViewFrom_length (es : List G.Step) :
   | cons e es ih =>
       simp [FOSG.History.publicViewFrom, ih]
 
+omit [LinearOrder ι] [Fintype ι] [Fintype W] [DecidableEq W]
+  [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 private theorem historyPlayerStep_length_le_two (i : ι) (e : G.Step) :
     (FOSG.Step.playerView (G := G) e i).length ≤ 2 := by
   unfold FOSG.Step.playerView
   split <;> simp
 
+omit [LinearOrder ι] [Fintype ι] [Fintype W] [DecidableEq W]
+  [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+  [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 private theorem historyPlayerViewFrom_length_le_twice (i : ι) (es : List G.Step) :
     (FOSG.History.playerViewFrom (G := G) i es).length ≤ 2 * es.length := by
   induction es with
@@ -2470,6 +2744,10 @@ private theorem historyPlayerViewFrom_length_le_twice (i : ι) (es : List G.Step
         _ = 2 * (es.length + 1) := by ring
         _ = 2 * (List.length (e :: es)) := by simp
 
+omit [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)]
+  [∀ i, DecidableEq (PrivObs i)] [Fintype PubObs] [DecidableEq PubObs] in
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 theorem originalHistory_length_le {k : Nat} (pos : TracePosition G k) :
     (TracePosition.originalHistory (G := G) pos).steps.length ≤ k := by
   rw [TracePosition.originalHistory_steps]
@@ -2506,6 +2784,10 @@ noncomputable def publicOfEnc {k : Nat} {who : ι} :
       ⟨xs.filterMap (FOSG.PlayerEvent.publicPart (G := G) (i := who)),
         le_trans (List.length_filterMap_le _ _) hxs⟩
 
+omit [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)]
+  [∀ i, DecidableEq (PrivObs i)] [Fintype PubObs] [DecidableEq PubObs] in
+omit [Fintype ι] [DecidableEq W] [∀ i, Fintype (Option (Act i))]
+  [DecidablePred G.terminal] in
 @[simp] theorem publicOfEnc_encodePlayerView {k : Nat} (who : ι) (pos : TracePosition G k) :
     publicOfEnc (G := G) (who := who) (encodePlayerView (G := G) who pos) =
       encodePublicView (G := G) pos := by
@@ -2591,7 +2873,7 @@ noncomputable def availableActionEquivOfPosition
           have hmem :
               ai.1 ∈ G.availableActionsAtInfoState (origPlayer (ι := ι) p)
                 ((TracePosition.originalHistory (G := G) I.1).playerView (origPlayer (ι := ι) p)) := by
-            simpa [infosetOfPosition, encodePlayerView] using ai.2
+            simp [infosetOfPosition, encodePlayerView]
           exact hEq ▸ hmem⟩
       invFun := fun ai =>
         ⟨ai.1, by
@@ -2659,6 +2941,61 @@ noncomputable def infoStructure (k : Nat) : InfoStructure where
 
 abbrev Outcome (k : Nat) := TraceOutcome (G := G) k
 
+noncomputable def treeBaseBranch
+    {k : Nat}
+    (pos0 : TracePosition G k)
+    (self : (child : TracePosition G k) → child.remaining < pos0.remaining →
+      TracePosition.PayoffVec (G := G) k →
+      GameTree (infoStructure (G := G) k) (Outcome (G := G) k))
+    {w : W}
+    (hstate : pos0.state = .base w)
+    (hrem : pos0.remaining ≠ 0)
+    (hterm : ¬ (SG G).terminal pos0.state)
+    (acc : TracePosition.PayoffVec (G := G) k)
+    (order : List ι) (horder : G.orderedActive w = order) :
+    GameTree (infoStructure (G := G) k) (Outcome (G := G) k) :=
+  match order with
+  | [] =>
+      let hplayer : pos0.player? = none := by
+        simpa using
+          TracePosition.player_eq_none_of_base_empty (G := G)
+            (pos := pos0) hstate hrem horder
+      let μ := TracePosition.liveChancePMF (G := G) pos0 hplayer hterm hrem
+      .chance
+        (Fintype.card (SupportSubtype μ))
+        (supportPMF μ)
+        (supportSubtype_card_pos μ)
+        (fun b =>
+          let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm hrem b
+          let acc' := TracePosition.addPayoff (G := G) acc
+            (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
+          self child
+            (by
+              simpa [child, TracePosition.chanceChild_remaining, Nat.pred_eq_sub_one] using
+                Nat.pred_lt hrem)
+            acc')
+  | current :: rest =>
+      let p : PlayerIx := playerEquiv (ι := ι) current
+      have hp : origPlayer (ι := ι) p = current := by
+        simp [p, origPlayer, playerEquiv]
+      let hI : pos0.player? = some (origPlayer (ι := ι) p) := by
+        simpa [hp] using
+          TracePosition.player_eq_some_of_base_cons (G := G)
+            (pos := pos0) hstate hrem horder
+      let Ipos :
+          {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)} :=
+        ⟨pos0, hI⟩
+      let Isem := infosetOfPosition (G := G) Ipos
+      .decision (p := p) Isem (fun a =>
+        let a' := (viewIndexEquivPositionIndex (G := G) Ipos) a
+        let child := Position.TracePosition.decisionChild (G := G) Ipos a'
+        self child
+          (by
+            simpa [child, Ipos, Position.TracePosition.decisionChild_remaining,
+              Nat.pred_eq_sub_one] using
+              Nat.pred_lt hrem)
+          acc)
+
 noncomputable def treeFromAccum {k : Nat} (pos : TracePosition G k)
     (acc : TracePosition.PayoffVec (G := G) k) :
     GameTree (infoStructure (G := G) k) (Outcome (G := G) k) :=
@@ -2667,35 +3004,65 @@ noncomputable def treeFromAccum {k : Nat} (pos : TracePosition G k)
   else if hterm : (SG G).terminal pos.state then
     .terminal (pos, acc)
   else
-    match hplayer : pos.player? with
-    | some i =>
-        let p : PlayerIx := playerEquiv (ι := ι) i
-        have hp : origPlayer (ι := ι) p = i := by
+    match pos with
+    | ⟨state, trail, remaining, hremaining, hlen, hchain, hlast⟩ =>
+    match state with
+    | .base w =>
+        let pos0 : TracePosition G k :=
+          ⟨.base w, trail, remaining, hremaining, hlen, hchain, hlast⟩
+        have hrem0 : pos0.remaining ≠ 0 := by
+          simpa [pos0] using hrem
+        have hterm0 : ¬ (SG G).terminal pos0.state := by
+          simpa [pos0] using hterm
+        treeBaseBranch (G := G) pos0
+          (fun child _ acc' => treeFromAccum child acc')
+          (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl
+    | .decide w chosen current rest hvalid =>
+        let pos0 : TracePosition G k :=
+          ⟨.decide w chosen current rest hvalid, trail, remaining, hremaining, hlen, hchain, hlast⟩
+        have hrem0 : pos0.remaining ≠ 0 := by
+          simpa [pos0] using hrem
+        let p : PlayerIx := playerEquiv (ι := ι) current
+        have hp : origPlayer (ι := ι) p = current := by
           simp [p, origPlayer, playerEquiv]
-        let hI : pos.player? = some (origPlayer (ι := ι) p) := by
-          simpa [hp] using hplayer
+        let hI : pos0.player? = some (origPlayer (ι := ι) p) := by
+          simpa [hp] using
+            TracePosition.player_eq_some_of_decide (G := G) (pos := pos0) (by rfl) hrem0
         let Ipos : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)} :=
-          ⟨pos, hI⟩
+          ⟨pos0, hI⟩
         let Isem := infosetOfPosition (G := G) Ipos
         .decision (p := p) Isem (fun a =>
           let a' := (viewIndexEquivPositionIndex (G := G) Ipos) a
           treeFromAccum (Position.TracePosition.decisionChild (G := G) Ipos a') acc)
-    | none =>
-        let μ := TracePosition.liveChancePMF (G := G) pos hplayer hterm hrem
+    | .chance w ga =>
+        let pos0 : TracePosition G k :=
+          ⟨.chance w ga, trail, remaining, hremaining, hlen, hchain, hlast⟩
+        have hrem0 : pos0.remaining ≠ 0 := by
+          simpa [pos0] using hrem
+        have hterm0 : ¬ (SG G).terminal pos0.state := by
+          simpa [pos0] using hterm
+        let hplayer : pos0.player? = none := by
+          simpa [pos0] using
+            TracePosition.player_eq_none_of_chance (G := G) (pos := pos0) (by rfl) hrem0
+        let μ := TracePosition.liveChancePMF (G := G) pos0 hplayer hterm0 hrem0
         .chance
           (Fintype.card (SupportSubtype μ))
           (supportPMF μ)
           (supportSubtype_card_pos μ)
           (fun b =>
-            let child := TracePosition.chanceChild (G := G) pos hplayer hterm hrem b
+            let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm0 hrem0 b
             let acc' := TracePosition.addPayoff (G := G) acc
-              (Position.chanceEdgePayoff (G := G) pos.toPosition child.state)
+              (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
             treeFromAccum child acc')
 termination_by pos.remaining
 decreasing_by
   all_goals
-    simpa [Position.TracePosition.decisionChild_remaining, TracePosition.chanceChild_remaining,
-      Nat.pred_eq_sub_one] using Nat.pred_lt hrem
+    first
+    | assumption
+    | simpa [Ipos, Position.TracePosition.decisionChild_remaining, TracePosition.chanceChild_remaining,
+        Nat.pred_eq_sub_one] using Nat.pred_lt hrem
+    | simpa [Position.TracePosition.decisionChild_remaining, TracePosition.chanceChild_remaining,
+        Nat.pred_eq_sub_one] using Nat.pred_lt hrem
 
 noncomputable def treeFrom {k : Nat} (pos : TracePosition G k) :
     GameTree (infoStructure (G := G) k) (Outcome (G := G) k) :=
@@ -2720,6 +3087,9 @@ noncomputable def realizingPosition
       pos.player? = some (origPlayer (ι := ι) p) ∧
         encodePlayerView (G := G) (origPlayer (ι := ι) p) pos = I.1 from I.2)⟩
 
+omit [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)]
+  [∀ i, DecidableEq (PrivObs i)] [Fintype PubObs] [DecidableEq PubObs] in
+omit [DecidableEq W] [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal] in
 theorem realizingPosition_player
     {k : Nat} {p : PlayerIx}
     (I : DecisionInfoset (G := G) k p) :
@@ -2728,6 +3098,9 @@ theorem realizingPosition_player
       pos.player? = some (origPlayer (ι := ι) p) ∧
         encodePlayerView (G := G) (origPlayer (ι := ι) p) pos = I.1 from I.2)).1
 
+omit [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)]
+  [∀ i, DecidableEq (PrivObs i)] [Fintype PubObs] [DecidableEq PubObs] in
+omit [DecidableEq W] [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal] in
 theorem realizingPosition_view
     {k : Nat} {p : PlayerIx}
     (I : DecisionInfoset (G := G) k p) :
@@ -2743,6 +3116,9 @@ noncomputable def actualActionFromIndex
     Act (origPlayer (ι := ι) p) :=
   (actionIndexEquivAvailableAction (G := G) (p := p) I.1 a).1
 
+omit [Fact G.LegalObservable] [∀ i, Fintype (PrivObs i)]
+  [∀ i, DecidableEq (PrivObs i)] [Fintype PubObs] [DecidableEq PubObs] in
+omit [DecidableEq W] [DecidablePred G.terminal] in
 theorem actualActionFromIndex_mem_available
     {k : Nat} {p : PlayerIx}
     (I : DecisionInfoset (G := G) k p)
@@ -2779,7 +3155,7 @@ noncomputable def supportActionSubtype
       have hlegal : none ∈ G.availableMoves h (origPlayer (ι := ι) p) :=
         (σ (origPlayer (ι := ι) p)).2 h hoi'
       rw [G.mem_availableMoves_iff] at hlegal
-      simp [FOSG.locallyLegalAtState, hactive, hoiEq] at hlegal
+      simp [FOSG.locallyLegalAtState, hactive] at hlegal
   | some ai =>
       refine ⟨ai, ?_⟩
       have hoi' : some ai ∈
@@ -2813,6 +3189,9 @@ noncomputable def supportDecisionIndex
   (actionIndexEquivAvailableAction (G := G) (p := p) I.1).symm
     (supportActionSubtype (G := G) σ I oi hoi)
 
+omit [DecidableEq W] [DecidablePred G.terminal]
+  [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 @[simp] theorem supportDecisionIndex_eq_actualAction
     {k : Nat} {p : PlayerIx}
     (σ : G.LegalBehavioralProfile)
@@ -2832,6 +3211,9 @@ noncomputable def supportDecisionIndex
   rw [hsub]
   exact (actionIndexEquivAvailableAction (G := G) (p := p) I.1).symm_apply_apply _
 
+omit [DecidableEq W] [DecidablePred G.terminal]
+  [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 theorem supportDecisionIndex_eq_some_actual
     {k : Nat} {p : PlayerIx}
     (σ : G.LegalBehavioralProfile)
@@ -2866,11 +3248,11 @@ theorem supportDecisionIndex_eq_some_actual
       have hlegal : none ∈ G.availableMoves h (origPlayer (ι := ι) p) :=
         (σ (origPlayer (ι := ι) p)).2 h hoi'
       rw [G.mem_availableMoves_iff] at hlegal
-      simp [FOSG.locallyLegalAtState, hactive, oiEq] at hlegal
+      simp [FOSG.locallyLegalAtState, hactive] at hlegal
   | some ai =>
       have hai : ai = actualActionFromIndex (G := G) I a := by
         simpa [oiEq, actualActionFromIndex] using congrArg Subtype.val hsub
-      simp [oiEq, hai]
+      simp [hai]
 
 noncomputable def translateBehavioralStrategy
     {k : Nat} (σ : G.LegalBehavioralProfile) (p : PlayerIx) :
@@ -2885,6 +3267,8 @@ noncomputable def translateBehavioralProfile
     EFG.BehavioralProfile (infoStructure (G := G) k) :=
   fun p => translateBehavioralStrategy (G := G) σ p
 
+omit [DecidableEq W] [DecidablePred G.terminal]
+  [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 @[simp] theorem translateBehavioralStrategy_apply
     {k : Nat} (σ : G.LegalBehavioralProfile) {p : PlayerIx}
     (I : DecisionInfoset (G := G) k p)
@@ -2922,7 +3306,7 @@ noncomputable def translateBehavioralProfile
       exact hprod
     · rw [dif_neg ((PMF.mem_support_iff _ _).1 hmem)]
       rw [supportDecisionIndex_eq_actualAction (G := G) σ I a hmem]
-      simp [τ, oiTarget, PMF.pure_apply_self]
+      simp [oiTarget]
   · unfold translateBehavioralStrategy
     have hzero :
         (τ.bindOnSupport fun oi hoi =>
@@ -2942,6 +3326,9 @@ noncomputable def translateBehavioralProfile
       exact hmem ((PMF.mem_support_iff _ _).2 hne)
     exact hzero.trans htarget0.symm
 
+omit [DecidableEq W] [DecidablePred G.terminal]
+  [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
+omit [DecidableEq W] [DecidablePred G.terminal] in
 @[simp] theorem translateBehavioralProfile_apply
     {k : Nat} (σ : G.LegalBehavioralProfile) (p : PlayerIx)
     (I : DecisionInfoset (G := G) k p)
@@ -2949,9 +3336,11 @@ noncomputable def translateBehavioralProfile
     translateBehavioralProfile (G := G) σ p I a =
       (σ.toProfile (origPlayer (ι := ι) p)) I.1.1
         (some (actualActionFromIndex (G := G) I a)) := by
-  simpa [translateBehavioralProfile] using
-    (translateBehavioralStrategy_apply (G := G) σ I a)
+  simp [translateBehavioralProfile]
 
+omit [DecidableEq W] [DecidablePred G.terminal]
+  [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+  [Fintype PubObs] [DecidableEq PubObs] in
 theorem actualActionFromIndex_infosetOfPosition
     {k : Nat} {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -2966,9 +3355,11 @@ theorem actualActionFromIndex_infosetOfPosition
           (infosetOfPosition (G := G) I).1 a)) =
       Position.TracePosition.actionIndexEquivAvailableAction (G := G) I
         ((viewIndexEquivPositionIndex (G := G) I) a) := by
-    simpa [viewIndexEquivPositionIndex]
+    simp [viewIndexEquivPositionIndex]
   exact congrArg Subtype.val hsub
 
+omit [DecidableEq W] [DecidablePred G.terminal]
+  [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 @[simp] theorem translateBehavioralStrategy_infosetOfPosition_apply
     {k : Nat} (σ : G.LegalBehavioralProfile) {p : PlayerIx}
     (I : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p)})
@@ -3071,7 +3462,7 @@ noncomputable abbrev toPlainEFGOfBoundedHorizon
     [Fact G.LegalObservable]
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
     [Fintype PubObs] [DecidableEq PubObs]
-    {k : Nat} (hBound : G.BoundedHorizon k) : EFGGame :=
+    {k : Nat} (_hBound : G.BoundedHorizon k) : EFGGame :=
   Semantic.toPlainTraceEFGAtHorizon (G := G) (serialHorizon (ι := ι) k)
 
 namespace Replay
@@ -3087,7 +3478,7 @@ noncomputable def advance? {k : Nat} (pos : Position G k) :
         none
   | .chance k' b =>
       let μ := Position.chanceStatePMF (G := G) pos
-      if hplayer : pos.player? = none then
+      if _hplayer : pos.player? = none then
         if hcard : k' = Fintype.card (SupportSubtype μ) then
           some (Position.descend (G := G) pos (supportValue μ (Fin.cast hcard b)))
         else
@@ -3106,23 +3497,28 @@ noncomputable def replayHist (k : Nat) :
     List (Step (G := G) k) → Option (Position G k) :=
   replayFrom (G := G) (Position.root (G := G) k)
 
+omit [DecidableEq W] in
 @[simp] theorem replayFrom_nil {k : Nat} (pos : Position G k) :
     replayFrom (G := G) pos [] = some pos := rfl
 
+omit [DecidableEq W] in
 @[simp] theorem replayHist_nil (k : Nat) :
     replayHist (G := G) k [] = some (Position.root (G := G) k) := rfl
 
+omit [DecidableEq W] in
 @[simp] theorem replayFrom_cons {k : Nat} (pos : Position G k)
     (ℓ : Step (G := G) k) (hs : List (Step (G := G) k)) :
     replayFrom (G := G) pos (ℓ :: hs) =
       Option.bind (advance? (G := G) pos ℓ) (fun pos' => replayFrom (G := G) pos' hs) := rfl
 
+omit [DecidableEq W] in
 @[simp] theorem advance?_action_eq_some {k : Nat}
     {p : PlayerIx} (I : {pos : Position G k // pos.player? = some (origPlayer (ι := ι) p)})
     (a : Fin (Position.actionArity (G := G) I.1)) :
     advance? (G := G) I.1 (.action p I a) = some (Position.decisionChild (G := G) I a) := by
   simp [advance?]
 
+omit [DecidableEq W] in
 @[simp] theorem advance?_chance_eq_some {k : Nat} {pos : Position G k}
     (hplayer : pos.player? = none)
     (b : Fin (Fintype.card (SupportSubtype (Position.chanceStatePMF (G := G) pos)))) :
@@ -3131,6 +3527,7 @@ noncomputable def replayHist (k : Nat) :
         (supportValue (Position.chanceStatePMF (G := G) pos) b)) := by
   simp [advance?, hplayer]
 
+omit [DecidableEq W] in
 theorem advance?_some_of_historyStepStepAccum
     {k : Nat} {pos : Position G k} {acc : Position.PayoffVec (G := G) k}
     {ℓ : Step (G := G) k} {u : GameTree (infoStructure (G := G) k) (Outcome (G := G) k)}
@@ -3168,10 +3565,11 @@ theorem advance?_some_of_historyStepStepAccum
             cases hs
             refine ⟨Position.decisionChild (G := G)
               ⟨pos, by simpa [origPlayer, playerEquiv] using hplayer⟩ a, acc, ?_, ?_⟩
-            · simpa [advance?]
+            · simp [advance?]
             · simpa using hu
           · contradiction
 
+omit [DecidableEq W] in
 theorem replayFrom_some_of_reachAccum
     {k : Nat} {pos : Position G k} {acc : Position.PayoffVec (G := G) k}
     {h : List (Step (G := G) k)}
@@ -3195,6 +3593,7 @@ theorem replayFrom_some_of_reachAccum
           refine ⟨pos₂, acc₂, ?_, htarget⟩
           simp [replayFrom_cons, hadv, hrest]
 
+omit [DecidableEq W] in
 theorem replayHist_some_of_reach
     {k : Nat} {h : List (Step (G := G) k)}
     {node : GameTree (infoStructure (G := G) k) (Outcome (G := G) k)}
@@ -3210,14 +3609,14 @@ theorem replayHist_some_of_reach
 noncomputable def publicStep? {k : Nat} (pos : Position G k) :
     Step (G := G) k → Option ((SG G).PublicState × Position G k)
   | .action _ I a =>
-      if h : pos = I.1 then
+      if _h : pos = I.1 then
         let pos' := Position.decisionChild (G := G) I a
         some ([none], pos')
       else
         none
   | .chance k' b =>
       let μ := Position.chanceStatePMF (G := G) pos
-      if hplayer : pos.player? = none then
+      if _hplayer : pos.player? = none then
         if hcard : k' = Fintype.card (SupportSubtype μ) then
           let dst := supportValue μ (Fin.cast hcard b)
           let pos' := Position.descend (G := G) pos dst
@@ -3243,7 +3642,7 @@ noncomputable def publicStep? {k : Nat} (pos : Position G k) :
 noncomputable def playerStep? {k : Nat} (who : ι) (pos : Position G k) :
     Step (G := G) k → Option ((SG G).InfoState who × Position G k)
   | .action _ I a =>
-      if h : pos = I.1 then
+      if _h : pos = I.1 then
         let la := Position.actionFromIndex (G := G) (pos := I.1) a
         let pos' := Position.decisionChild (G := G) I a
         let frag :=
@@ -3255,7 +3654,7 @@ noncomputable def playerStep? {k : Nat} (who : ι) (pos : Position G k) :
         none
   | .chance k' b =>
       let μ := Position.chanceStatePMF (G := G) pos
-      if hplayer : pos.player? = none then
+      if _hplayer : pos.player? = none then
         if hcard : k' = Fintype.card (SupportSubtype μ) then
           let dst := supportValue μ (Fin.cast hcard b)
           let pos' := Position.descend (G := G) pos dst
@@ -3304,6 +3703,7 @@ noncomputable def playerViewHist? (k : Nat) (who : ι) (h : List (Step (G := G) 
     Option ((SG G).InfoState who) :=
   Option.map Prod.fst (playerViewFrom (G := G) who (Position.root (G := G) k) h)
 
+omit [DecidableEq W] in
 theorem publicStep?_eq_filterMap_playerStep?
     {k : Nat} (who : ι) (pos : Position G k) (ℓ : Step (G := G) k) :
     publicStep? (G := G) pos ℓ =
@@ -3316,7 +3716,7 @@ theorem publicStep?_eq_filterMap_playerStep?
       by_cases h : pos = I.1
       · simp [publicStep?, playerStep?, h, FOSG.PlayerEvent.publicPart]
         cases hact : ((Position.actionFromIndex (G := G) (pos := I.1) a).1 who) <;>
-          simp [hact]
+          simp
       · simp [publicStep?, playerStep?, h]
   | chance k' b =>
       by_cases hplayer : pos.player? = none
@@ -3328,6 +3728,7 @@ theorem publicStep?_eq_filterMap_playerStep?
         · simp [publicStep?, playerStep?, hplayer, hcard]
       · simp [publicStep?, playerStep?, hplayer]
 
+omit [DecidableEq W] in
 theorem publicViewFrom_eq_filterMap_playerViewFrom
     {k : Nat} (who : ι) (pos : Position G k) (h : List (Step (G := G) k)) :
     publicViewFrom (G := G) pos h =
@@ -3342,16 +3743,17 @@ theorem publicViewFrom_eq_filterMap_playerViewFrom
       rw [publicStep?_eq_filterMap_playerStep?]
       cases hstep : playerStep? (G := G) who pos ℓ with
       | none =>
-          simp [hstep]
+          simp
       | some out =>
           rcases out with ⟨frag, pos'⟩
           cases hrest : playerViewFrom (G := G) who pos' hs with
           | none =>
-              simp [hstep, hrest, ih]
+              simp [hrest, ih]
           | some out' =>
               rcases out' with ⟨rest, pos''⟩
-              simp [hstep, hrest, ih, List.filterMap_append]
+              simp [hrest, ih]
 
+omit [DecidableEq W] in
 theorem publicViewHist?_eq_filterMap_playerViewHist?
     {k : Nat} (who : ι) (h : List (Step (G := G) k)) :
     publicViewHist? (G := G) k h =
@@ -3431,6 +3833,73 @@ noncomputable def replayHist (k : Nat) :
       some (TracePosition.chanceChild (G := G) pos hplayer hterm hrem b) := by
   simp [advance?, hplayer, hrem, hterm]
 
+theorem advance?_some_of_historyStepStepBaseBranch
+    {k : Nat}
+    (pos0 : TracePosition G k)
+    (self : (child : TracePosition G k) → child.remaining < pos0.remaining →
+      TracePosition.PayoffVec (G := G) k →
+      GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k))
+    {w : W}
+    (hstate : pos0.state = .base w)
+    (hrem : pos0.remaining ≠ 0)
+    (hterm : ¬ (SG G).terminal pos0.state)
+    (acc : TracePosition.PayoffVec (G := G) k)
+    (order : List ι) (horder : G.orderedActive w = order)
+    {ℓ : Step (G := G) k}
+    {u : GameTree (traceInfoStructure (G := G) k) (TraceOutcome (G := G) k)}
+    (hstep : HistoryStepStep ℓ
+      (traceTreeBaseBranch (G := G) pos0 self hstate hrem hterm acc order horder) u)
+    (hself : ∀ child hchild acc',
+      self child hchild acc' = traceTreeFromAccum (G := G) child acc') :
+    ∃ pos' acc',
+      advance? (G := G) pos0 ℓ = some pos' ∧
+      u = traceTreeFromAccum (G := G) pos' acc' := by
+  classical
+  cases order with
+  | nil =>
+      let hplayer : pos0.player? = none := by
+        simpa using
+          TracePosition.player_eq_none_of_base_empty (G := G)
+            (pos := pos0) hstate hrem horder
+      let μ := TracePosition.liveChancePMF (G := G) pos0 hplayer hterm hrem
+      cases ℓ with
+      | chance k' b =>
+          rcases hstep with ⟨μ', hk, next, hs, hu⟩
+          dsimp [traceTreeBaseBranch] at hs
+          cases hs
+          let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm hrem b
+          let acc' := TracePosition.addPayoff (G := G) acc
+            (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
+          refine ⟨child, acc', ?_, ?_⟩
+          · simp [advance?, hplayer, hrem, hterm, child]
+          · exact hu.trans (hself _ _ _)
+      | action p I a =>
+          rcases hstep with ⟨next, hs, hu⟩
+          dsimp [traceTreeBaseBranch] at hs
+          cases hs
+  | cons current rest =>
+      let p0 : PlayerIx := playerEquiv (ι := ι) current
+      have hp : origPlayer (ι := ι) p0 = current := by
+        simp [p0, origPlayer, playerEquiv]
+      let hI : pos0.player? = some (origPlayer (ι := ι) p0) := by
+        simpa [hp] using
+          TracePosition.player_eq_some_of_base_cons (G := G)
+            (pos := pos0) hstate hrem horder
+      let I0 : {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p0)} :=
+        ⟨pos0, hI⟩
+      cases ℓ with
+      | chance k' b =>
+          rcases hstep with ⟨μ, hk, next, hs, hu⟩
+          dsimp [traceTreeBaseBranch] at hs
+          cases hs
+      | action p I a =>
+          rcases hstep with ⟨next, hs, hu⟩
+          dsimp [traceTreeBaseBranch] at hs
+          cases hs
+          refine ⟨Position.TracePosition.decisionChild (G := G) I0 a, acc, ?_, ?_⟩
+          · simp [advance?, I0]
+          · exact hu.trans (hself _ _ _)
+
 theorem advance?_some_of_historyStepStepAccum
     {k : Nat} {pos : TracePosition G k} {acc : TracePosition.PayoffVec (G := G) k}
     {ℓ : Step (G := G) k}
@@ -3442,38 +3911,107 @@ theorem advance?_some_of_historyStepStepAccum
   classical
   cases ℓ with
   | chance k' b =>
+      rcases pos with ⟨state, trail, remaining, hremaining, hlen, hchain, hlast⟩
       rcases hstep with ⟨μ, hk, next, hs, hu⟩
       unfold traceTreeFromAccum at hs
       split at hs
       · contradiction
       · split at hs
         · contradiction
-        · split at hs
-          · contradiction
-          · cases hs
-            rename_i hrem hterm hplayer
-            refine ⟨TracePosition.chanceChild (G := G) pos hplayer hterm hrem b,
-              TracePosition.addPayoff (G := G) acc
-                (Position.chanceEdgePayoff (G := G) pos.toPosition
-                  (TracePosition.chanceChild (G := G) pos hplayer hterm hrem b).state),
-              ?_, ?_⟩
-            · simpa [advance?, hplayer, hrem, hterm]
-            · exact hu.trans rfl
+        · rename_i hrem hterm
+          cases state with
+          | base w =>
+              let pos0 : TracePosition G k :=
+                ⟨.base w, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              have hterm0 : ¬ (SG G).terminal pos0.state := by
+                simpa [pos0] using hterm
+              have hstepBase :
+                  HistoryStepStep (.chance k' b)
+                    (traceTreeBaseBranch (G := G) pos0
+                      (fun child _ acc' => traceTreeFromAccum (G := G) child acc')
+                      (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl) u :=
+                ⟨μ, hk, next, by simpa [pos0] using hs, hu⟩
+              simpa [pos0] using
+                advance?_some_of_historyStepStepBaseBranch (G := G) pos0
+                  (fun child _ acc' => traceTreeFromAccum (G := G) child acc')
+                  (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl
+                  hstepBase
+                  (by intro child hchild acc'; rfl)
+          | decide w chosen current rest hvalid =>
+              dsimp at hs
+              cases hs
+          | chance w ga =>
+              dsimp at hs
+              cases hs
+              let pos0 : TracePosition G k :=
+                ⟨.chance w ga, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              have hterm0 : ¬ (SG G).terminal pos0.state := by
+                simpa [pos0] using hterm
+              let hplayer : pos0.player? = none := by
+                simpa [pos0] using
+                  TracePosition.player_eq_none_of_chance (G := G) (pos := pos0) (by rfl) hrem0
+              let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm0 hrem0 b
+              let acc' := TracePosition.addPayoff (G := G) acc
+                (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
+              refine ⟨child, acc', ?_, ?_⟩
+              · simp [advance?, pos0, hplayer, hrem0, hterm0, child]
+              · exact hu.trans rfl
   | action p I a =>
+      rcases pos with ⟨state, trail, remaining, hremaining, hlen, hchain, hlast⟩
       rcases hstep with ⟨next, hs, hu⟩
       unfold traceTreeFromAccum at hs
       split at hs
       · contradiction
       · split at hs
         · contradiction
-        · split at hs
-          · rename_i i hplayer
-            cases hs
-            refine ⟨Position.TracePosition.decisionChild (G := G)
-              ⟨pos, by simpa [origPlayer, playerEquiv] using hplayer⟩ a, acc, ?_, ?_⟩
-            · simpa [advance?]
-            · simpa using hu
-          · contradiction
+        · rename_i hrem hterm
+          cases state with
+          | base w =>
+              let pos0 : TracePosition G k :=
+                ⟨.base w, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              have hterm0 : ¬ (SG G).terminal pos0.state := by
+                simpa [pos0] using hterm
+              have hstepBase :
+                  HistoryStepStep (.action p I a)
+                    (traceTreeBaseBranch (G := G) pos0
+                      (fun child _ acc' => traceTreeFromAccum (G := G) child acc')
+                      (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl) u :=
+                ⟨next, by simpa [pos0] using hs, hu⟩
+              simpa [pos0] using
+                advance?_some_of_historyStepStepBaseBranch (G := G) pos0
+                  (fun child _ acc' => traceTreeFromAccum (G := G) child acc')
+                  (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl
+                  hstepBase
+                  (by intro child hchild acc'; rfl)
+          | decide w chosen current rest hvalid =>
+              dsimp at hs
+              cases hs
+              let pos0 : TracePosition G k :=
+                ⟨.decide w chosen current rest hvalid, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              let p0 : PlayerIx := playerEquiv (ι := ι) current
+              have hp : origPlayer (ι := ι) p0 = current := by
+                simp [p0, origPlayer, playerEquiv]
+              let hI : pos0.player? = some (origPlayer (ι := ι) p0) := by
+                simpa [hp] using
+                  TracePosition.player_eq_some_of_decide (G := G) (pos := pos0) (by rfl) hrem0
+              let I0 :
+                  {pos : TracePosition G k //
+                    pos.player? = some (origPlayer (ι := ι) p0)} :=
+                ⟨pos0, hI⟩
+              refine ⟨Position.TracePosition.decisionChild (G := G) I0 a, acc, ?_, ?_⟩
+              · simp [advance?, pos0, I0]
+              · simpa [I0] using hu
+          | chance w ga =>
+              dsimp at hs
+              cases hs
 
 theorem replayFrom_some_of_reachAccum
     {k : Nat} {pos : TracePosition G k} {acc : TracePosition.PayoffVec (G := G) k}
@@ -3529,7 +4067,7 @@ theorem publicViewHist?_eq_filterMap_playerViewHist?
   unfold publicViewHist? playerViewHist?
   cases hreplay : replayHist (G := G) k h with
   | none =>
-      simp [hreplay]
+      simp
   | some pos =>
       simpa [TracePosition.originalPublicView, TracePosition.originalPlayerView] using
         congrArg some
@@ -3590,17 +4128,92 @@ noncomputable def replayHist (k : Nat) :
     List (Step (G := G) k) → Option (TracePosition G k) :=
   replayFrom (G := G) (TracePosition.root (G := G) k)
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 @[simp] theorem replayFrom_nil {k : Nat} (pos : TracePosition G k) :
     replayFrom (G := G) pos [] = some pos := rfl
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 @[simp] theorem replayHist_nil (k : Nat) :
     replayHist (G := G) k [] = some (TracePosition.root (G := G) k) := rfl
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 @[simp] theorem replayFrom_cons {k : Nat} (pos : TracePosition G k)
     (ℓ : Step (G := G) k) (hs : List (Step (G := G) k)) :
     replayFrom (G := G) pos (ℓ :: hs) =
       Option.bind (advance? (G := G) pos ℓ) (fun pos' => replayFrom (G := G) pos' hs) := rfl
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
+theorem advance?_some_of_historyStepStepBaseBranch
+    {k : Nat}
+    (pos0 : TracePosition G k)
+    (self : (child : TracePosition G k) → child.remaining < pos0.remaining →
+      TracePosition.PayoffVec (G := G) k →
+      GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k))
+    {w : W}
+    (hstate : pos0.state = .base w)
+    (hrem : pos0.remaining ≠ 0)
+    (hterm : ¬ (SG G).terminal pos0.state)
+    (acc : TracePosition.PayoffVec (G := G) k)
+    (order : List ι) (horder : G.orderedActive w = order)
+    {ℓ : Step (G := G) k}
+    {u : GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k)}
+    (hstep : HistoryStepStep ℓ
+      (Semantic.treeBaseBranch (G := G) pos0 self hstate hrem hterm acc order horder) u)
+    (hself : ∀ child hchild acc',
+      self child hchild acc' = Semantic.treeFromAccum (G := G) child acc') :
+    ∃ pos' acc',
+      advance? (G := G) pos0 ℓ = some pos' ∧
+      u = Semantic.treeFromAccum (G := G) pos' acc' := by
+  classical
+  cases order with
+  | nil =>
+      let hplayer : pos0.player? = none := by
+        simpa using
+          TracePosition.player_eq_none_of_base_empty (G := G)
+            (pos := pos0) hstate hrem horder
+      let μ := TracePosition.liveChancePMF (G := G) pos0 hplayer hterm hrem
+      cases ℓ with
+      | chance k' b =>
+          rcases hstep with ⟨μ', hk, next, hs, hu⟩
+          dsimp [Semantic.treeBaseBranch] at hs
+          cases hs
+          let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm hrem b
+          let acc' := TracePosition.addPayoff (G := G) acc
+            (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
+          refine ⟨child, acc', ?_, ?_⟩
+          · simp [advance?, hplayer, hrem, hterm, child]
+          · exact hu.trans (hself _ _ _)
+      | action p I a =>
+          rcases hstep with ⟨next, hs, hu⟩
+          dsimp [Semantic.treeBaseBranch] at hs
+          cases hs
+  | cons current rest =>
+      let p0 : PlayerIx := playerEquiv (ι := ι) current
+      have hp : origPlayer (ι := ι) p0 = current := by
+        simp [p0, origPlayer, playerEquiv]
+      let hI : pos0.player? = some (origPlayer (ι := ι) p0) := by
+        simpa [hp] using
+          TracePosition.player_eq_some_of_base_cons (G := G)
+            (pos := pos0) hstate hrem horder
+      let Ipos :
+          {pos : TracePosition G k // pos.player? = some (origPlayer (ι := ι) p0)} :=
+        ⟨pos0, hI⟩
+      let Isem := Semantic.infosetOfPosition (G := G) Ipos
+      cases ℓ with
+      | chance k' b =>
+          rcases hstep with ⟨μ, hk, next, hs, hu⟩
+          dsimp [Semantic.treeBaseBranch] at hs
+          cases hs
+      | action p I a =>
+          rcases hstep with ⟨next, hs, hu⟩
+          dsimp [Semantic.treeBaseBranch] at hs
+          cases hs
+          refine ⟨Position.TracePosition.decisionChild (G := G) Ipos
+            ((Semantic.viewIndexEquivPositionIndex (G := G) Ipos) a), acc, ?_, ?_⟩
+          · simp [advance?, hI, Semantic.infosetOfPosition, Ipos, p0]
+          · exact hu.trans (hself _ _ _)
+
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 theorem advance?_some_of_historyStepStepAccum
     {k : Nat} {pos : TracePosition G k} {acc : TracePosition.PayoffVec (G := G) k}
     {ℓ : Step (G := G) k}
@@ -3612,45 +4225,110 @@ theorem advance?_some_of_historyStepStepAccum
   classical
   cases ℓ with
   | chance k' b =>
+      rcases pos with ⟨state, trail, remaining, hremaining, hlen, hchain, hlast⟩
       rcases hstep with ⟨μ, hk, next, hs, hu⟩
       unfold Semantic.treeFromAccum at hs
       split at hs
       · contradiction
       · split at hs
         · contradiction
-        · split at hs
-          · contradiction
-          · cases hs
-            rename_i hrem hterm hplayer
-            refine ⟨TracePosition.chanceChild (G := G) pos hplayer hterm hrem b,
-              TracePosition.addPayoff (G := G) acc
-                (Position.chanceEdgePayoff (G := G) pos.toPosition
-                  (TracePosition.chanceChild (G := G) pos hplayer hterm hrem b).state),
-              ?_, ?_⟩
-            · simp [advance?, hplayer, hrem, hterm]
-            · exact hu.trans rfl
+        · rename_i hrem hterm
+          cases state with
+          | base w =>
+              let pos0 : TracePosition G k :=
+                ⟨.base w, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              have hterm0 : ¬ (SG G).terminal pos0.state := by
+                simpa [pos0] using hterm
+              have hstepBase :
+                  HistoryStepStep (.chance k' b)
+                    (Semantic.treeBaseBranch (G := G) pos0
+                      (fun child _ acc' => Semantic.treeFromAccum (G := G) child acc')
+                      (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl) u :=
+                ⟨μ, hk, next, by simpa [pos0] using hs, hu⟩
+              simpa [pos0] using
+                advance?_some_of_historyStepStepBaseBranch (G := G) pos0
+                  (fun child _ acc' => Semantic.treeFromAccum (G := G) child acc')
+                  (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl
+                  hstepBase
+                  (by intro child hchild acc'; rfl)
+          | decide w chosen current rest hvalid =>
+              dsimp at hs
+              cases hs
+          | chance w ga =>
+              dsimp at hs
+              cases hs
+              let pos0 : TracePosition G k :=
+                ⟨.chance w ga, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              have hterm0 : ¬ (SG G).terminal pos0.state := by
+                simpa [pos0] using hterm
+              let hplayer : pos0.player? = none := by
+                simpa [pos0] using
+                  TracePosition.player_eq_none_of_chance (G := G) (pos := pos0) (by rfl) hrem0
+              let child := TracePosition.chanceChild (G := G) pos0 hplayer hterm0 hrem0 b
+              let acc' := TracePosition.addPayoff (G := G) acc
+                (Position.chanceEdgePayoff (G := G) pos0.toPosition child.state)
+              refine ⟨child, acc', ?_, ?_⟩
+              · simp [advance?, pos0, hplayer, hrem0, hterm0, child]
+              · exact hu.trans rfl
   | action p I a =>
+      rcases pos with ⟨state, trail, remaining, hremaining, hlen, hchain, hlast⟩
       rcases hstep with ⟨next, hs, hu⟩
       unfold Semantic.treeFromAccum at hs
       split at hs
       · contradiction
       · split at hs
         · contradiction
-        · split at hs
-          · rename_i i hplayer
-            cases hs
-            have hp' : origPlayer (ι := ι) (playerEquiv (ι := ι) i) = i := by
-              simp [origPlayer, playerEquiv]
-            let Ipos :
-                {pos : TracePosition G k //
-                  pos.player? = some (origPlayer (ι := ι) (playerEquiv (ι := ι) i))} :=
-              ⟨pos, by simpa [hp'] using hplayer⟩
-            refine ⟨Position.TracePosition.decisionChild (G := G) Ipos
-              ((Semantic.viewIndexEquivPositionIndex (G := G) Ipos) a), acc, ?_, ?_⟩
-            · simp [advance?, hplayer, hp', Semantic.infosetOfPosition, Ipos]
-            · simpa [Ipos] using hu
-          · contradiction
+        · rename_i hrem hterm
+          cases state with
+          | base w =>
+              let pos0 : TracePosition G k :=
+                ⟨.base w, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              have hterm0 : ¬ (SG G).terminal pos0.state := by
+                simpa [pos0] using hterm
+              have hstepBase :
+                  HistoryStepStep (.action p I a)
+                    (Semantic.treeBaseBranch (G := G) pos0
+                      (fun child _ acc' => Semantic.treeFromAccum (G := G) child acc')
+                      (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl) u :=
+                ⟨next, by simpa [pos0] using hs, hu⟩
+              simpa [pos0] using
+                advance?_some_of_historyStepStepBaseBranch (G := G) pos0
+                  (fun child _ acc' => Semantic.treeFromAccum (G := G) child acc')
+                  (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl
+                  hstepBase
+                  (by intro child hchild acc'; rfl)
+          | decide w chosen current rest hvalid =>
+              dsimp at hs
+              cases hs
+              let pos0 : TracePosition G k :=
+                ⟨.decide w chosen current rest hvalid, trail, remaining, hremaining, hlen, hchain, hlast⟩
+              have hrem0 : pos0.remaining ≠ 0 := by
+                simpa [pos0] using hrem
+              let p0 : PlayerIx := playerEquiv (ι := ι) current
+              have hp : origPlayer (ι := ι) p0 = current := by
+                simp [p0, origPlayer, playerEquiv]
+              let hI : pos0.player? = some (origPlayer (ι := ι) p0) := by
+                simpa [hp] using
+                  TracePosition.player_eq_some_of_decide (G := G) (pos := pos0) (by rfl) hrem0
+              let Ipos :
+                  {pos : TracePosition G k //
+                    pos.player? = some (origPlayer (ι := ι) p0)} :=
+                ⟨pos0, hI⟩
+              refine ⟨Position.TracePosition.decisionChild (G := G) Ipos
+                ((Semantic.viewIndexEquivPositionIndex (G := G) Ipos) a), acc, ?_, ?_⟩
+              · simp [advance?, hI, Semantic.infosetOfPosition, Ipos, p0, pos0]
+              · simpa [Ipos] using hu
+          | chance w ga =>
+              dsimp at hs
+              cases hs
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 theorem replayFrom_some_of_reachAccum
     {k : Nat} {pos : TracePosition G k} {acc : TracePosition.PayoffVec (G := G) k}
     {h : List (Step (G := G) k)}
@@ -3674,6 +4352,7 @@ theorem replayFrom_some_of_reachAccum
           refine ⟨pos₂, acc₂, ?_, htarget⟩
           simp [replayFrom_cons, hadv, hrest]
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 theorem replayHist_some_of_reach
     {k : Nat} {h : List (Step (G := G) k)}
     {node : GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k)}
@@ -3700,6 +4379,7 @@ noncomputable def replayNode {k : Nat}
   Classical.choose
     (SemanticReplay.replayHist_some_of_reach (G := G) (k := k) (node := h.node) h.reach)
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 theorem replayNode_spec {k : Nat}
     (h : EFG.ReachableNode (Semantic.toPlainTraceEFGAtHorizon (G := G) k)) :
     SemanticReplay.replayHist (G := G) k h.hist = some (replayNode (G := G) h) := by
@@ -3708,6 +4388,7 @@ theorem replayNode_spec {k : Nat}
     with ⟨acc, hrep, htree⟩
   exact hrep
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 theorem replayNode_tree_eq {k : Nat}
     (h : EFG.ReachableNode (Semantic.toPlainTraceEFGAtHorizon (G := G) k)) :
     ∃ acc,
@@ -3717,48 +4398,105 @@ theorem replayNode_tree_eq {k : Nat}
     with ⟨acc, hrep, htree⟩
   exact ⟨acc, htree⟩
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
+theorem decision_infoset_val_eq_of_treeBaseBranch
+    {k : Nat}
+    (pos0 : TracePosition G k)
+    (self : (child : TracePosition G k) → child.remaining < pos0.remaining →
+      TracePosition.PayoffVec (G := G) k →
+      GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k))
+    {w : W}
+    (hstate : pos0.state = .base w)
+    (hrem : pos0.remaining ≠ 0)
+    (hterm : ¬ (SG G).terminal pos0.state)
+    (acc : TracePosition.PayoffVec (G := G) k)
+    (order : List ι) (horder : G.orderedActive w = order)
+    {p : PlayerIx} {I : DecisionInfoset (G := G) k p}
+    {next : (Semantic.infoStructure (G := G) k).Act I →
+      GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k)}
+    (htree :
+      (GameTree.decision I next :
+        GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k)) =
+        Semantic.treeBaseBranch (G := G) pos0 self hstate hrem hterm acc order horder) :
+    I.1 = encodePlayerView (G := G) (origPlayer (ι := ι) p) pos0 := by
+  classical
+  cases order with
+  | nil =>
+      dsimp [Semantic.treeBaseBranch] at htree
+      cases htree
+  | cons current rest =>
+      dsimp [Semantic.treeBaseBranch] at htree
+      cases htree
+      simp [Semantic.infosetOfPosition]
+
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 theorem reachableDecision_infoset_val_eq
     {k : Nat} {p : PlayerIx}
     (d : EFG.ReachableDecision (Semantic.toPlainTraceEFGAtHorizon (G := G) k) p) :
     d.I.1 = encodePlayerView (G := G) (origPlayer (ι := ι) p)
       (replayNode (G := G) d.toReachableNode) := by
   rcases replayNode_tree_eq (G := G) d.toReachableNode with ⟨acc, htree⟩
+  rcases hnode : replayNode (G := G) d.toReachableNode with
+    ⟨state, trail, remaining, hremaining, hlen, hchain, hlast⟩
+  rw [hnode] at htree
   unfold Semantic.treeFromAccum at htree
   split at htree
   · contradiction
   · split at htree
     · contradiction
-    · split at htree
-      · rename_i i hplayer
-        let nodeLabel :
-            GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k) →
-              Option (Σ q : PlayerIx, G.InfoState (origPlayer (ι := ι) q))
-          | .decision (p := q) I _ => some ⟨q, I.1.1⟩
-          | _ => none
-        have hlabel := congrArg nodeLabel htree
-        simp [nodeLabel, Semantic.infosetOfPosition] at hlabel
-        injection hlabel with hsigma
-        rcases Sigma.mk.inj_iff.mp hsigma with ⟨hp, hview⟩
-        subst hp
-        apply Subtype.ext
-        exact eq_of_heq hview
-      · contradiction
+    · rename_i hrem hterm
+      cases state with
+      | base w =>
+          let pos0 : TracePosition G k :=
+            ⟨.base w, trail, remaining, hremaining, hlen, hchain, hlast⟩
+          have hrem0 : pos0.remaining ≠ 0 := by
+            simpa [pos0] using hrem
+          have hterm0 : ¬ (SG G).terminal pos0.state := by
+            simpa [pos0] using hterm
+          simpa [pos0] using
+            decision_infoset_val_eq_of_treeBaseBranch (G := G) pos0
+              (fun child _ acc' => Semantic.treeFromAccum (G := G) child acc')
+              (by rfl) hrem0 hterm0 acc (G.orderedActive w) rfl
+              (p := p) (I := d.I) (next := d.next)
+              (by simpa [pos0] using htree)
+      | decide w chosen current rest hvalid =>
+          dsimp at htree
+          let nodeLabel :
+              GameTree (Semantic.infoStructure (G := G) k) (Semantic.Outcome (G := G) k) →
+                Option (Σ q : PlayerIx, G.InfoState (origPlayer (ι := ι) q))
+            | .decision (p := q) I _ => some ⟨q, I.1.1⟩
+            | _ => none
+          have hlabel := congrArg nodeLabel htree
+          simp [nodeLabel, Semantic.infosetOfPosition] at hlabel
+          injection hlabel with hsigma
+          rcases Sigma.mk.inj_iff.mp hsigma with ⟨hp, hview⟩
+          subst hp
+          apply Subtype.ext
+          exact eq_of_heq hview
+      | chance w ga =>
+          dsimp at htree
+          cases htree
 
 /-- Faithful bounded augmented EFG bridge:
 plain EFG strategies live on encoded player views, and the augmentation carries
 only encoded public/player views, not literal EFG histories. -/
 noncomputable def toAugmentedTraceAtHorizon (k : Nat) : EFG.AugmentedGame where
   base := Semantic.toPlainTraceEFGAtHorizon (G := G) k
-  PubState := Semantic.EncPublicView (G := G) k
-  InfoState := fun p => Semantic.EncPlayerView (G := G) (origPlayer (ι := ι) p) k
-  publicState := fun h => Semantic.encodePublicView (G := G) (replayNode (G := G) h)
+  PubState := Nat × Semantic.EncPublicView (G := G) k
+  InfoState := fun p =>
+    Nat × Semantic.EncPlayerView (G := G) (origPlayer (ι := ι) p) k
+  publicState := fun h =>
+    (h.hist.length, Semantic.encodePublicView (G := G) (replayNode (G := G) h))
   playerState := fun p h =>
-    Semantic.encodePlayerView (G := G) (origPlayer (ι := ι) p) (replayNode (G := G) h)
-  publicOf := fun p => Semantic.publicOfEnc (G := G) (who := origPlayer (ι := ι) p)
+    (h.hist.length,
+      Semantic.encodePlayerView (G := G) (origPlayer (ι := ι) p)
+        (replayNode (G := G) h))
+  publicOf := fun p s =>
+    (s.1, Semantic.publicOfEnc (G := G) (who := origPlayer (ι := ι) p) s.2)
   publicOf_playerState := by
     intro p h
-    simpa using Semantic.publicOfEnc_encodePlayerView (G := G)
-      (who := origPlayer (ι := ι) p) (pos := replayNode (G := G) h)
+    simp [Semantic.publicOfEnc_encodePlayerView (G := G)
+      (who := origPlayer (ι := ι) p) (pos := replayNode (G := G) h)]
   actionIdentified := by
     intro p d₁ d₂ hEq
     change
@@ -3766,19 +4504,39 @@ noncomputable def toAugmentedTraceAtHorizon (k : Nat) : EFG.AugmentedGame where
         Fintype.card (Semantic.AvailableActionSubtype (G := G) (p := p) d₂.I.1)
     have hI1 := reachableDecision_infoset_val_eq (G := G) d₁
     have hI2 := reachableDecision_infoset_val_eq (G := G) d₂
+    have hViewEq := congrArg Prod.snd hEq
     have hview : d₁.I.1 = d₂.I.1 := by
       calc
         d₁.I.1 = Semantic.encodePlayerView (G := G) (origPlayer (ι := ι) p)
             (replayNode (G := G) d₁.toReachableNode) := hI1
         _ = Semantic.encodePlayerView (G := G) (origPlayer (ι := ι) p)
-            (replayNode (G := G) d₂.toReachableNode) := hEq
+            (replayNode (G := G) d₂.toReachableNode) := hViewEq
         _ = d₂.I.1 := hI2.symm
-    simpa [hview]
+    simp [hview]
 
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 @[simp] theorem forget_toAugmentedTraceAtHorizon (k : Nat) :
     (Semantic.toAugmentedTraceAtHorizon (G := G) k).forget =
       Semantic.toPlainTraceEFGAtHorizon (G := G) k := by
   rfl
+
+omit [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
+theorem noThickPublicSets_toAugmentedTraceAtHorizon (k : Nat) :
+    (Semantic.toAugmentedTraceAtHorizon (G := G) k).NoThickPublicSets := by
+  intro g h hpublic hprefix
+  rcases hprefix with ⟨suffix, hsuffix⟩
+  have hlen : g.hist.length = h.hist.length := by
+    exact congrArg Prod.fst hpublic
+  have hsuffixLen : suffix.length = 0 := by
+    have hlenAppend : (g.hist ++ suffix).length = h.hist.length := by
+      rw [hsuffix]
+    have hsum : g.hist.length + suffix.length = g.hist.length := by
+      simpa [List.length_append, hlen] using hlenAppend
+    have hle : g.hist.length + suffix.length ≤ g.hist.length + 0 := by
+      simp [hsum]
+    exact Nat.eq_zero_of_le_zero (Nat.le_of_add_le_add_left hle)
+  have hsuffixNil : suffix = [] := List.eq_nil_of_length_eq_zero hsuffixLen
+  rw [← hsuffix, hsuffixNil, List.append_nil]
 
 end Semantic
 
@@ -3828,6 +4586,7 @@ noncomputable def toAugmentedAtHorizon (k : Nat) : EFG.AugmentedGame where
             cases hnode
             rfl
 
+omit [DecidableEq W] in
 @[simp] theorem forget_toAugmentedAtHorizon (k : Nat) :
     (toAugmentedAtHorizon (G := G) k).forget = toPlainEFGAtHorizon (G := G) k := by
   rfl
@@ -3883,7 +4642,7 @@ noncomputable abbrev toAugmentedOfBoundedHorizon
     [Fact G.LegalObservable]
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
     [Fintype PubObs] [DecidableEq PubObs]
-    {k : Nat} (hBound : G.BoundedHorizon k) : EFG.AugmentedGame :=
+    {k : Nat} (_hBound : G.BoundedHorizon k) : EFG.AugmentedGame :=
   Semantic.toAugmentedTraceAtHorizon (G := G) (serialHorizon (ι := ι) k)
 
 @[simp] theorem forget_toAugmentedOfBoundedHorizon
@@ -3893,8 +4652,17 @@ noncomputable abbrev toAugmentedOfBoundedHorizon
     {k : Nat} (hBound : G.BoundedHorizon k) :
     (toAugmentedOfBoundedHorizon (G := G) hBound).forget =
       toPlainEFGOfBoundedHorizon (G := G) hBound := by
-  simpa [toAugmentedOfBoundedHorizon, toPlainEFGOfBoundedHorizon] using
-    (Semantic.forget_toAugmentedTraceAtHorizon (G := G) (k := serialHorizon (ι := ι) k))
+  simp [toAugmentedOfBoundedHorizon, toPlainEFGOfBoundedHorizon]
+
+theorem noThickPublicSets_toAugmentedOfBoundedHorizon
+    [Fact G.LegalObservable]
+    [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
+    [Fintype PubObs] [DecidableEq PubObs]
+    {k : Nat} (hBound : G.BoundedHorizon k) :
+    (toAugmentedOfBoundedHorizon (G := G) hBound).NoThickPublicSets := by
+  exact
+    Semantic.noThickPublicSets_toAugmentedTraceAtHorizon
+      (G := G) (k := serialHorizon (ι := ι) k)
 
 end Labels
 

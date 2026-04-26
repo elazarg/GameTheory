@@ -106,6 +106,23 @@ def binaryChoiceTerminal : SoloState → Prop
   | .start => False
   | .done _ => True
 
+noncomputable def binaryChoicePick
+    (a : { a : JointAction SoloAct //
+      JointActionLegal SoloAct
+        binaryChoiceActive
+        binaryChoiceTerminal
+        binaryChoiceAvailable
+        .start a }) :
+    Bool := by
+  cases hpick : a.1 Solo.only with
+  | none =>
+      have hnone : Solo.only ∉ ({Solo.only} : Finset Solo) := by
+        simpa [JointActionLegal, binaryChoiceActive, binaryChoiceAvailable,
+          binaryChoiceTerminal, hpick] using a.2.2 Solo.only
+      exact False.elim (by simp at hnone)
+  | some pick =>
+      exact pick
+
 noncomputable def binaryChoiceTransition
     (w : SoloState)
     (a : { a : JointAction SoloAct //
@@ -117,14 +134,7 @@ noncomputable def binaryChoiceTransition
     PMF SoloState := by
   cases w with
   | start =>
-      cases hpick : a.1 Solo.only with
-      | none =>
-          have hnone : Solo.only ∉ ({Solo.only} : Finset Solo) := by
-            simpa [JointActionLegal, binaryChoiceActive, binaryChoiceAvailable,
-              binaryChoiceTerminal, hpick] using a.2.2 Solo.only
-          exact False.elim (by simp at hnone)
-      | some pick =>
-          exact PMF.pure (.done pick)
+      exact PMF.pure (.done (binaryChoicePick a))
   | done pick =>
       have : False := by
         simpa [binaryChoiceTerminal] using a.2.1
@@ -192,8 +202,53 @@ theorem startAction_legal (pick : Bool) :
 noncomputable def startLegalAction (pick : Bool) : binaryChoice.LegalAction .start :=
   ⟨startAction pick, startAction_legal pick⟩
 
-noncomputable def binaryChoiceKernelAtHorizon : KernelGame Solo :=
-  binaryChoice.toKernelGameAtHorizon 1
+theorem binaryChoice_step_from_start_isTerminal
+    (e : binaryChoice.Step) (hsrc : e.src = .start) :
+    binaryChoiceTerminal e.dst := by
+  cases e with
+  | mk src act dst support =>
+      cases hsrc
+      cases hpick : act.1 Solo.only with
+      | none =>
+          have hnone : Solo.only ∉ binaryChoice.active .start := by
+            simpa [binaryChoice, JointActionLegal, binaryChoiceActive, binaryChoiceAvailable,
+              binaryChoiceTerminal, hpick] using act.2.2 Solo.only
+          exact False.elim (by simp [binaryChoice, binaryChoiceActive] at hnone)
+      | some pick =>
+          cases dst with
+          | start =>
+              have hzero : binaryChoice.transition SoloState.start act SoloState.start = 0 := by
+                change binaryChoiceTransition SoloState.start act SoloState.start = 0
+                simp [binaryChoiceTransition]
+              exact False.elim (support hzero)
+          | done pick' =>
+              simp [binaryChoiceTerminal]
+
+theorem binaryChoiceBoundedHorizon : binaryChoice.BoundedHorizon 1 := by
+  intro h hlen
+  cases h with
+  | mk steps chain =>
+      cases steps with
+      | nil =>
+          simp at hlen
+      | cons e es =>
+          cases es with
+          | nil =>
+              have hsrc : e.src = SoloState.start := by
+                simpa using chain.1
+              have hterm : binaryChoiceTerminal e.dst :=
+                binaryChoice_step_from_start_isTerminal e hsrc
+              simpa [History.IsTerminal, History.lastState, binaryChoice, hterm]
+          | cons e' es' =>
+              simp at hlen
+
+noncomputable instance : Fintype binaryChoice.History :=
+  historyFintypeOfLengthLeOne
+    (G := binaryChoice)
+    (fun h => binaryChoice.history_length_le_of_boundedHorizon binaryChoiceBoundedHorizon h)
+
+noncomputable def binaryChoiceKernel : KernelGame Solo :=
+  binaryChoice.toKernelGameOfBoundedHorizon binaryChoiceBoundedHorizon
 
 namespace MatchingPennies
 
