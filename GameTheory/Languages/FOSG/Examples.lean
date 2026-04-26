@@ -85,6 +85,16 @@ inductive Solo where
   | only
   deriving DecidableEq, Fintype
 
+private def soloIndex : Solo → Fin 1
+  | .only => 0
+
+instance : LinearOrder Solo :=
+  LinearOrder.lift' soloIndex (by
+    intro a b h
+    cases a
+    cases b
+    rfl)
+
 abbrev SoloAct (_ : Solo) := Bool
 abbrev SoloObs (_ : Solo) := Unit
 abbrev SoloPub := Unit
@@ -256,6 +266,15 @@ inductive Player where
   | left
   | right
   deriving DecidableEq, Fintype
+
+private def playerIndex : Player → Fin 2
+  | .left => 0
+  | .right => 1
+
+instance : LinearOrder Player :=
+  LinearOrder.lift' playerIndex (by
+    intro a b h
+    cases a <;> cases b <;> simp [playerIndex] at h ⊢)
 
 abbrev Act (_ : Player) := Bool
 abbrev PrivObs (_ : Player) := Unit

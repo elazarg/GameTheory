@@ -1271,7 +1271,7 @@ theorem treeFromAccum_evalDist_eq_traceTreeFromAccum_evalDist
           (traceTreeFromAccum_evalDist_eq_traceRunDistAccum (G := G) σ pos acc).symm
 
 omit [∀ i, DecidableEq (Act i)] [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
-@[simp] theorem toPlainTraceEFGAtHorizon_outcomeKernel_eq_trace
+theorem toPlainTraceEFGAtHorizon_outcomeKernel_eq_trace
     (σ : G.LegalBehavioralProfile) (k : Nat) :
     (toPlainTraceEFGAtHorizon (G := G) k).toKernelGame.outcomeKernel
         (translateBehavioralProfile (G := G) σ) =
@@ -1287,7 +1287,7 @@ omit [∀ i, DecidableEq (Act i)] [∀ i, DecidableEq (PrivObs i)] [DecidableEq 
 /-- Utility distributions agree between the semantic-view EFG bridge and the
 trace-indexed EFG bridge. This is the payoff-facing corollary of the outcome
 kernel equality; both bridges use the same `TraceOutcome` payoff component. -/
-@[simp] theorem toPlainTraceEFGAtHorizon_udist_eq_trace
+theorem toPlainTraceEFGAtHorizon_udist_eq_trace
     (σ : G.LegalBehavioralProfile) (k : Nat) :
     (toPlainTraceEFGAtHorizon (G := G) k).toKernelGame.udist
         (translateBehavioralProfile (G := G) σ) =
@@ -1302,7 +1302,7 @@ kernel equality; both bridges use the same `TraceOutcome` payoff component. -/
 omit [∀ i, DecidableEq (Act i)] [∀ i, DecidableEq (PrivObs i)] [DecidableEq PubObs] in
 /-- Expected utilities agree between the semantic-view EFG bridge and the
 trace-indexed EFG bridge for each EFG player index. -/
-@[simp] theorem toPlainTraceEFGAtHorizon_eu_eq_trace
+theorem toPlainTraceEFGAtHorizon_eu_eq_trace
     (σ : G.LegalBehavioralProfile) (k : Nat) (p : PlayerIx) :
     (toPlainTraceEFGAtHorizon (G := G) k).toKernelGame.eu
         (translateBehavioralProfile (G := G) σ) p =
