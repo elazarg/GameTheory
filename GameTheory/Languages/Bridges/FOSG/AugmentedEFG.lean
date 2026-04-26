@@ -23,11 +23,11 @@ namespace AugmentedEFGBridge
 open EFG
 open Math.Probability
 
-variable {ι W : Type} [DecidableEq ι] [Fintype ι]
-variable {Act : ι → Type} [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)]
-variable {PrivObs : ι → Type} {PubObs : Type}
-variable (G : FOSG ι W Act PrivObs PubObs)
-variable [Fintype W] [DecidablePred G.terminal]
+variable {ι W : Type}
+
+section PlayerIndex
+
+variable [Fintype ι]
 
 /-- EFG player indices corresponding to original FOSG players. -/
 abbrev PlayerIx := Fin (Fintype.card ι)
@@ -40,15 +40,19 @@ noncomputable def playerEquiv : ι ≃ PlayerIx (ι := ι) :=
 noncomputable def origPlayer (p : PlayerIx (ι := ι)) : ι :=
   (playerEquiv (ι := ι)).symm p
 
-omit [DecidableEq ι] in
 @[simp] theorem origPlayer_playerEquiv (i : ι) :
     origPlayer (ι := ι) (playerEquiv (ι := ι) i) = i := by
   simp [origPlayer, playerEquiv]
 
-omit [DecidableEq ι] in
 @[simp] theorem playerEquiv_origPlayer (p : PlayerIx (ι := ι)) :
     playerEquiv (ι := ι) (origPlayer (ι := ι) p) = p := by
   simp [origPlayer, playerEquiv]
+
+end PlayerIndex
+
+variable [DecidableEq ι]
+variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
+variable (G : FOSG ι W Act PrivObs PubObs)
 
 /-- Fixed-width finite word used to make bounded views finite. -/
 abbrev Word (α : Type) (n : Nat) := Fin n → Option α
@@ -98,7 +102,7 @@ noncomputable instance instDecidableEqPlayerEvent
   Classical.decEq _
 
 noncomputable instance instFintypePlayerEvent
-    {i : ι} [Fintype (PrivObs i)] [DecidableEq (PrivObs i)]
+    {i : ι} [Fintype (Act i)] [Fintype (PrivObs i)] [DecidableEq (PrivObs i)]
     [Fintype PubObs] [DecidableEq PubObs] :
     Fintype (PlayerEvent G i) := by
   classical
@@ -117,6 +121,30 @@ noncomputable instance instFintypePlayerEvent
       right_inv := by
         intro e
         cases e <;> rfl }
+
+theorem step_playerView_length_le_two
+    (e : G.Step) (i : ι) : (e.playerView i).length ≤ 2 := by
+  unfold Step.playerView
+  split <;> simp
+
+theorem playerViewFrom_length_le_two_mul
+    (es : List G.Step) (i : ι) :
+    (History.playerViewFrom (G := G) i es).length ≤ 2 * es.length := by
+  induction es with
+  | nil =>
+      simp [History.playerViewFrom]
+  | cons e es ih =>
+      simp only [History.playerViewFrom, List.length_append, List.length_cons]
+      have hstep := step_playerView_length_le_two (G := G) e i
+      omega
+
+theorem history_playerView_length_le_two_mul_steps
+    (h : G.History) (i : ι) :
+    (h.playerView i).length ≤ 2 * h.steps.length := by
+  simpa [History.playerView] using
+    playerViewFrom_length_le_two_mul (G := G) h.steps i
+
+variable [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)]
 
 /-- Player-view infosets are bounded encodings of original FOSG player views. -/
 abbrev EncPlayerView
@@ -140,34 +168,6 @@ def encodePublicView
     [Fintype PubObs] [DecidableEq PubObs]
     {k : Nat} (h : G.History) : EncPublicView (PubObs := PubObs) k :=
   Word.ofList k h.publicView
-
-omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)] [Fintype W]
-  [DecidablePred G.terminal] in
-theorem step_playerView_length_le_two
-    (e : G.Step) (i : ι) : (e.playerView i).length ≤ 2 := by
-  unfold Step.playerView
-  split <;> simp
-
-omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)] [Fintype W]
-  [DecidablePred G.terminal] in
-theorem playerViewFrom_length_le_two_mul
-    (es : List G.Step) (i : ι) :
-    (History.playerViewFrom (G := G) i es).length ≤ 2 * es.length := by
-  induction es with
-  | nil =>
-      simp [History.playerViewFrom]
-  | cons e es ih =>
-      simp only [History.playerViewFrom, List.length_append, List.length_cons]
-      have hstep := step_playerView_length_le_two (G := G) e i
-      omega
-
-omit [Fintype ι] [∀ i, Fintype (Act i)] [∀ i, DecidableEq (Act i)] [Fintype W]
-  [DecidablePred G.terminal] in
-theorem history_playerView_length_le_two_mul_steps
-    (h : G.History) (i : ι) :
-    (h.playerView i).length ≤ 2 * h.steps.length := by
-  simpa [History.playerView] using
-    playerViewFrom_length_le_two_mul (G := G) h.steps i
 
 /-- Information structure for the bridge tree.  Decision infosets are encoded
 original player views; actions are optional local moves.  Invalid optional moves
@@ -203,7 +203,6 @@ noncomputable def indexOfAction
     (infoStructure (G := G) k).Act I :=
   Fintype.equivFin (Option (Act (origPlayer (ι := ι) p))) a
 
-omit [Fintype W] [DecidablePred G.terminal] in
 @[simp] theorem actionOfIndex_indexOfAction
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
     [Fintype PubObs] [DecidableEq PubObs]
@@ -218,6 +217,8 @@ theorem fintype_card_pos_of_pmf {α : Type} [Fintype α] (p : PMF α) :
   classical
   rcases p.support_nonempty with ⟨a, _ha⟩
   exact Fintype.card_pos_iff.mpr ⟨a⟩
+
+variable [Fintype W] [DecidablePred G.terminal]
 
 namespace Tree
 
