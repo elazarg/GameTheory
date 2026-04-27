@@ -47,7 +47,7 @@ deriving DecidableEq, Repr
 The structure is defined by node kinds, parent relations, and domain sizes.
 Acyclicity is stated as irreflexivity of the transitive closure of the parent
 relation — the standard definition of "directed acyclic graph". -/
-structure Struct (Player : Type) [DecidableEq Player] [fp : Fintype Player]
+structure Struct (Player : Type) [DecidableEq Player] [Fintype Player]
     (n : Nat) where
   kind : Fin n → NodeKind Player
   parents    : Fin n → Finset (Fin n)
@@ -62,7 +62,7 @@ structure Struct (Player : Type) [DecidableEq Player] [fp : Fintype Player]
   utility_unique : ∀ nd a, kind nd = .utility a → Unique (Val nd)
   acyclic        : DAG.Acyclic (· ∈ parents ·)
 
-variable {Player : Type} [DecidableEq Player] [fp : Fintype Player] {n : Nat}
+variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
 
 instance (S : Struct Player n) (nd : Fin n) : Fintype (S.Val nd) := S.instFintype nd
 instance (S : Struct Player n) (nd : Fin n) : DecidableEq (S.Val nd) := S.instDecidableEq nd
