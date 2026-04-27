@@ -1,5 +1,6 @@
 import GameTheory.Core.KernelGame
 import GameTheory.Languages.FOSG.Execution
+import Math.BoundedLists
 
 /-!
 # GameTheory.Languages.FOSG.Compile
@@ -977,6 +978,38 @@ theorem history_length_le_of_boundedHorizon
         simpa [pref, History.lastState] using hsuffix.1
       have hlegal : G.LegalAction pref.lastState := hsrc ▸ e.act
       exact (pref.not_isTerminal_of_legalAction hlegal) hprefTerm
+
+/-- Finite-history enumeration from a uniform bound on history lengths. -/
+@[reducible]
+noncomputable def historyFintypeOfLengthLe
+    (G : FOSG ι W Act PrivObs PubObs)
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    (k : Nat) (hLen : ∀ h : G.History, h.steps.length ≤ k) :
+    Fintype G.History := by
+  classical
+  letI : DecidableEq G.Step := Classical.decEq G.Step
+  let enum := Math.BoundedLists.listsUpToLength (Finset.univ : Finset G.Step) k
+  let f : G.History → {xs : List G.Step // xs ∈ enum} := fun h =>
+    ⟨h.steps,
+      Math.BoundedLists.mem_listsUpToLength_of_forall_mem
+        (s := (Finset.univ : Finset G.Step)) (hLen h) (by intro x hx; simp)⟩
+  have hf : Function.Injective f := by
+    intro h h' hh
+    apply History.ext
+    exact congrArg Subtype.val hh
+  haveI : Finite {xs : List G.Step // xs ∈ enum} := Finite.of_fintype _
+  haveI : Finite G.History := Finite.of_injective f hf
+  exact Fintype.ofFinite G.History
+
+/-- Bounded horizon and finite step data give a finite type of realized
+histories. -/
+@[reducible]
+noncomputable def historyFintypeOfBoundedHorizon
+    (G : FOSG ι W Act PrivObs PubObs)
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    {k : Nat} (hBound : G.BoundedHorizon k) :
+    Fintype G.History :=
+  G.historyFintypeOfLengthLe k (G.history_length_le_of_boundedHorizon hBound)
 
 theorem runDist_eq_terminalWeight_of_boundedHorizon
     {G : FOSG ι W Act PrivObs PubObs}
