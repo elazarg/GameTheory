@@ -677,6 +677,197 @@ theorem mixed_to_behavioral_historyMassOn
   intro h hh
   exact hβ h
 
+/-! ### Legal native mixed-to-behavioral witnesses -/
+
+/-- A native mixed profile is legal when each player's mixed strategy supports
+only legal pure strategies. -/
+def IsLegalMixedProfile
+    (μ : MixedProfile (G := G)) : Prop :=
+  ∀ i (πi : PureStrategy (G := G) i),
+    πi ∈ (μ i).support → G.IsLegalPureStrategy i πi
+
+private theorem availableMoves_nonempty
+    (h : G.History) (i : ι) :
+    ∃ oi : Option (Act i), oi ∈ G.availableMoves h i := by
+  classical
+  by_cases hterm : G.terminal h.lastState
+  · refine ⟨none, ?_⟩
+    simp [FOSG.availableMoves, FOSG.availableMovesAtState,
+      FOSG.locallyLegalAtState, G.active_eq_empty_of_terminal hterm]
+  · rcases G.exists_legal_of_not_terminal (w := h.lastState) hterm with ⟨a, ha⟩
+    exact ⟨a i, by simpa [FOSG.availableMoves, FOSG.availableMovesAtState] using ha.2 i⟩
+
+/-- A legal fallback behavioral profile, used only at information states that
+are not reached by any pure profile in the core M→B construction. -/
+noncomputable def legalFallbackBehavioral
+    (_hLeg : G.LegalObservable) : BehavioralProfile (G := G) := by
+  classical
+  exact fun i v =>
+    if h : ∃ oi : Option (Act i), oi ∈ G.availableMovesAtInfoState i v then
+      PMF.pure h.choose
+    else
+      PMF.pure none
+
+private theorem legalFallbackBehavioral_isLegal
+    (hLeg : G.LegalObservable) :
+    G.IsLegalBehavioralProfile (legalFallbackBehavioral (G := G) hLeg) := by
+  classical
+  intro i h oi hoi
+  unfold legalFallbackBehavioral at hoi
+  have hex : ∃ oi : Option (Act i), oi ∈ G.availableMovesAtInfoState i (h.playerView i) := by
+    rcases availableMoves_nonempty (G := G) h i with ⟨oi, hoi⟩
+    exact ⟨oi, G.mem_availableMovesAtInfoState_of_history h hoi⟩
+  rw [dif_pos hex] at hoi
+  have hoi_eq : oi = hex.choose := by
+    rw [PMF.mem_support_iff] at hoi
+    by_contra hne
+    apply hoi
+    simp [PMF.pure_apply, hne]
+  have hchosen : hex.choose ∈ G.availableMovesAtInfoState i (h.playerView i) :=
+    hex.choose_spec
+  have hEq := G.availableMovesAtInfoState_eq_of_history hLeg i h
+  rw [hoi_eq]
+  exact hEq ▸ hchosen
+
+/-- Native FOSG M→B witness with a legal fallback at unreached information
+states. -/
+noncomputable def legalHistoryMixedToBehavioral
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (μ : MixedProfile (G := G)) :
+    BehavioralProfile (G := G) :=
+  ObsModelCore.mixedToBehavioralProfileWithFallback
+    (O := toHistoryObsModelCore G)
+    (liftHistoryMixedProfile (G := G) μ)
+    (legalFallbackBehavioral (G := G) hLeg)
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem legalHistoryMixedToBehavioral_historyOutcomeDist
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    historyOutcomeDist (G := G) k (legalHistoryMixedToBehavioral (G := G) hLeg μ) =
+      (mixedProfileJoint (G := G) μ).bind
+        (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π)) := by
+  letI : ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) :=
+    HistoryNative.historyInfoStateFintype (G := G)
+  letI : ∀ i (o : G.InfoState i), Nonempty (Option (Act i)) := fun _ _ => ⟨none⟩
+  have hβ :=
+    ObsModelCore.mixedToBehavioralProfileWithFallback_runDist
+      (O := toHistoryObsModelCore G)
+      hMass hFactor hLocal (liftHistoryMixedProfile (G := G) μ)
+      (legalFallbackBehavioral (G := G) hLeg) k
+  unfold historyOutcomeDist legalHistoryMixedToBehavioral
+  rw [hβ, PMF.bind_bind, liftHistoryMixedProfile_joint (G := G) μ]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+  simp only [PMF.pure_bind]
+  change (mixedProfileJoint (G := G) μ).bind
+      (fun π => historyOutcomeDistPure (G := G) k (liftHistoryPureProfile (G := G) π)) =
+    (mixedProfileJoint (G := G) μ).bind
+      (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π))
+  congr 1
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+private theorem legalHistoryMixedToBehavioral_isLegal
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (hμ : IsLegalMixedProfile (G := G) μ) :
+    G.IsLegalBehavioralProfile (legalHistoryMixedToBehavioral (G := G) hLeg μ) := by
+  letI : ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) :=
+    HistoryNative.historyInfoStateFintype (G := G)
+  intro i h oi hoi
+  by_cases hex : ∃ (n : Nat) (ss : List G.History) (π₀ : HistoryPureProfile (G := G)),
+      (toHistoryObsModelCore G).projectStates i ss = h.playerView i ∧
+      Math.ParameterizedChain.pureRun
+        ((toHistoryObsModelCore G).pureStep) (toHistoryObsModelCore G).init n π₀ ss ≠ 0
+  · rcases hex with ⟨n, ss, π₀, hproj, hreach⟩
+    have hEq :=
+      ObsModelCore.mixedToBehavioralProfileWithFallback_eq_factorAt
+        (O := toHistoryObsModelCore G) hLocal (liftHistoryMixedProfile (G := G) μ)
+        (legalFallbackBehavioral (G := G) hLeg) i n ss π₀ hreach
+    have hEq' :
+        legalHistoryMixedToBehavioral (G := G) hLeg μ i (h.playerView i) =
+          ObsModelCore.mixedToBehavioralFactorAt
+            (O := toHistoryObsModelCore G) (liftHistoryMixedProfile (G := G) μ)
+            i n ss π₀ := by
+      have hEq'' := hEq
+      rwa [hproj] at hEq''
+    have hfactor :
+        oi ∈ (ObsModelCore.mixedToBehavioralFactorAt
+          (O := toHistoryObsModelCore G) (liftHistoryMixedProfile (G := G) μ)
+          i n ss π₀).support := by
+      rwa [hEq'] at hoi
+    rcases Math.PMFProduct.pushforward_support_fibre
+        (Math.ParameterizedChain.reweightPMF (liftHistoryMixedProfile (G := G) μ i)
+          (fun πᵢ => Math.ParameterizedChain.pureRun ((toHistoryObsModelCore G).pureStep)
+            (toHistoryObsModelCore G).init n (Function.update π₀ i πᵢ) ss))
+        (fun πᵢ => πᵢ ((toHistoryObsModelCore G).projectStates i ss)) oi hfactor with
+      ⟨πiCore, hπiAction, hπiReweight⟩
+    have hπiCoreSupp :
+        πiCore ∈ (liftHistoryMixedProfile (G := G) μ i).support :=
+      Math.ParameterizedChain.reweightPMF_support_subset _ _ hπiReweight
+    rcases Math.PMFProduct.pushforward_support_fibre
+        (μ i) (liftHistoryPureStrategy (G := G) i) πiCore hπiCoreSupp with
+      ⟨πi, hπiLift, hπiSupp⟩
+    have hval : πi (h.playerView i) = oi := by
+      have hact : πiCore ((toHistoryObsModelCore G).projectStates i ss) = oi := hπiAction
+      rw [← hπiLift] at hact
+      rw [hproj] at hact
+      simpa [liftHistoryPureStrategy] using hact
+    rw [← hval]
+    exact hμ i πi hπiSupp h
+  · have hfb :
+        legalHistoryMixedToBehavioral (G := G) hLeg μ i (h.playerView i) =
+          legalFallbackBehavioral (G := G) hLeg i (h.playerView i) := by
+      unfold legalHistoryMixedToBehavioral ObsModelCore.mixedToBehavioralProfileWithFallback
+      rw [dif_neg hex]
+    rw [hfb] at hoi
+    exact legalFallbackBehavioral_isLegal (G := G) hLeg i h hoi
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> legal behavioral direction for FOSGs.**
+
+If the independent native mixed profile supports only legal pure strategies,
+then the native M→B behavioral witness is a legal behavioral profile. -/
+theorem mixed_to_legal_behavioral
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (hμ : IsLegalMixedProfile (G := G) μ)
+    (k : Nat) :
+    ∃ β : G.LegalBehavioralProfile,
+      historyOutcomeDist (G := G) k β.toProfile =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π)) := by
+  let βraw := legalHistoryMixedToBehavioral (G := G) hLeg μ
+  have hβlegal : G.IsLegalBehavioralProfile βraw :=
+    legalHistoryMixedToBehavioral_isLegal (G := G) hLeg hLocal μ hμ
+  let β : G.LegalBehavioralProfile := fun i => ⟨βraw i, hβlegal i⟩
+  refine ⟨β, ?_⟩
+  change historyOutcomeDist (G := G) k βraw = _
+  exact legalHistoryMixedToBehavioral_historyOutcomeDist
+    (G := G) hLeg hMass hFactor hLocal μ k
+
 section Step
 
 variable [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)]
