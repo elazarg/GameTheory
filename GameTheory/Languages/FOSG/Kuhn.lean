@@ -13,6 +13,9 @@ This file has two layers:
   FOSG bridge.
 - `Kuhn` itself contains native FOSG behavioral-to-mixed results stated
   directly in terms of FOSG histories, terminal laws, and expected utilities.
+- `Kuhn.mixed_to_behavioral` is the native FOSG mixed-to-behavioral direction:
+  independent per-player mixed strategies over native pure strategies are
+  realized by a native behavioral profile with the same final-history law.
 -/
 
 namespace GameTheory
@@ -593,6 +596,41 @@ theorem mixed_to_behavioral_native_history
   unfold historyOutcomeDist historyOutcomeDistPure
   rw [hβ, PMF.bind_bind, liftHistoryMixedProfile_joint (G := G) μ]
   simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+
+/-- A lifted native pure profile has the same native-history outcome law as
+its native pure behavioral profile. -/
+@[simp] theorem historyOutcomeDistPure_liftHistoryPureProfile
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (k : Nat) (π : _root_.GameTheory.FOSG.PureProfile G) :
+    historyOutcomeDistPure (G := G) k (liftHistoryPureProfile (G := G) π) =
+      historyOutcomeDist (G := G) k (G.pureToBehavioral π) := by
+  rfl
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs.**
+
+This is the native FOSG-facing M→B theorem.  Every independent mixed profile
+over native per-player pure strategies is realized by a native behavioral
+profile with the same final native-history law in the history-state Kuhn
+semantics.  The core `ObsModelCore` construction is used only internally. -/
+theorem mixed_to_behavioral
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : BehavioralProfile (G := G),
+      historyOutcomeDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π)) := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_native_history (G := G) hMass hFactor hLocal μ k
+  refine ⟨β, ?_⟩
+  simpa using hβ
 
 section Step
 
