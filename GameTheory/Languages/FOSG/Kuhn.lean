@@ -2429,6 +2429,34 @@ theorem reachable_mixed_to_legal_behavioral
   refine ⟨βcore, β, ?_, hβcore⟩
   rfl
 
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Native FOSG form of the legal reachable M→B theorem.
+
+An independent mixed profile over legal reachable pure strategies is realized
+by a legal reachable behavioral profile with the same finite-horizon
+distribution over FOSG histories. -/
+theorem reachable_mixed_to_legal_behavioral_runDist
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (μ : ReachableMixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : G.ReachableLegalBehavioralProfile,
+      G.runDist k β.extend =
+        (reachableMixedProfileJoint (G := G) μ).bind
+          (fun π => G.runDist k (G.legalPureToBehavioral π.extend)) := by
+  obtain ⟨βcore, β, hβ, hdist⟩ :=
+    reachable_mixed_to_legal_behavioral (G := G) hLeg μ k
+  refine ⟨β, ?_⟩
+  have hrun :=
+    reachableHistoryOutcomeDist_eq_runDist
+      (G := G) hLeg k βcore β hβ
+  rw [← hrun, hdist]
+  congr
+  funext π
+  exact reachableHistoryOutcomeDistPureProfile_eq_runDist (G := G) hLeg k π
+
 section Step
 
 variable [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)]
