@@ -145,6 +145,17 @@ noncomputable def runDistFrom
     runDistFrom G σ (n + 1) h = PMF.pure h := by
   simp [runDistFrom, hterm]
 
+@[simp] theorem runDistFrom_terminal
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    (σ : G.LegalBehavioralProfile) (n : Nat) (h : G.History)
+    (hterm : G.terminal h.lastState) :
+    runDistFrom G σ n h = PMF.pure h := by
+  cases n with
+  | zero => rfl
+  | succ n => exact runDistFrom_succ_terminal (G := G) σ n h hterm
+
 @[simp] theorem runDistFrom_succ_nonterminal
     {G : FOSG ι W Act PrivObs PubObs}
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
@@ -156,6 +167,48 @@ noncomputable def runDistFrom
           (G.transition h.lastState a).bind fun dst =>
             runDistFrom G σ n (h.extendByOutcome a dst) := by
   simp [runDistFrom, hterm]
+
+theorem runDistFrom_congr
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    (σ τ : G.LegalBehavioralProfile)
+    (hσ : ∀ (h : G.History) i, σ.toProfile i (h.playerView i) =
+      τ.toProfile i (h.playerView i)) :
+    ∀ (n : Nat) (h : G.History),
+      History.runDistFrom G σ n h = History.runDistFrom G τ n h
+  | 0, _ => rfl
+  | n + 1, h => by
+      by_cases hterm : G.terminal h.lastState
+      · rw [History.runDistFrom_succ_terminal (G := G) σ n h hterm,
+          History.runDistFrom_succ_terminal (G := G) τ n h hterm]
+      · rw [History.runDistFrom_succ_nonterminal (G := G) σ n h hterm,
+          History.runDistFrom_succ_nonterminal (G := G) τ n h hterm]
+        rw [G.legalActionLaw_congr σ τ h hterm (hσ h)]
+        congr
+        funext a
+        congr
+        funext dst
+        exact runDistFrom_congr σ τ hσ n (h.extendByOutcome a dst)
+
+theorem runDistFrom_succ_active_empty
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    (σ : G.LegalBehavioralProfile) (n : Nat) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState)
+    (hactive : G.active h.lastState = ∅) :
+    runDistFrom G σ (n + 1) h =
+      (G.transition h.lastState
+          ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
+            hactive hterm⟩).bind fun dst =>
+        runDistFrom G σ n
+          (h.extendByOutcome
+            ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
+              hactive hterm⟩ dst) := by
+  rw [runDistFrom_succ_nonterminal (G := G) (σ := σ) (n := n) (h := h) hterm]
+  rw [G.legalActionLaw_eq_pure_noop_of_active_empty σ h hterm hactive]
+  simp [PMF.pure_bind]
 
 open Classical in
 theorem runDistFrom_eq_zero_of_exactHorizon_not_prefix
@@ -389,6 +442,16 @@ noncomputable def runDist
     [DecidablePred G.terminal]
     (k : Nat) (σ : G.LegalBehavioralProfile) : PMF G.History :=
   History.runDistFrom G σ k (History.nil G)
+
+theorem runDist_congr
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    (k : Nat) (σ τ : G.LegalBehavioralProfile)
+    (hσ : ∀ (h : G.History) i, σ.toProfile i (h.playerView i) =
+      τ.toProfile i (h.playerView i)) :
+    G.runDist k σ = G.runDist k τ :=
+  History.runDistFrom_congr σ τ hσ k (History.nil G)
 
 @[simp] theorem runDist_zero
     {G : FOSG ι W Act PrivObs PubObs}

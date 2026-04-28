@@ -354,6 +354,22 @@ abbrev ReachablePureProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
 abbrev ReachableBehavioralProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
   ∀ i, G.ReachableBehavioralStrategy i
 
+noncomputable instance instFintypeReachablePureStrategy
+    (G : FOSG ι W Act PrivObs PubObs) [Fintype G.History]
+    (i : ι) [Fintype (Option (Act i))] :
+    Fintype (G.ReachablePureStrategy i) := by
+  classical
+  dsimp [ReachablePureStrategy]
+  infer_instance
+
+noncomputable instance instFintypeReachablePureProfile
+    (G : FOSG ι W Act PrivObs PubObs)
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))] :
+    Fintype G.ReachablePureProfile := by
+  classical
+  dsimp [ReachablePureProfile, ReachablePureStrategy]
+  infer_instance
+
 /-- A reachable pure strategy is legal if it chooses an available move at every
 realizing history. -/
 def IsLegalReachablePureStrategy

@@ -96,6 +96,17 @@ noncomputable def jointActionDist
   classical
   simp [jointActionDist, Math.PMFProduct.pmfPi_apply]
 
+theorem jointActionDist_congr
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ τ : G.LegalBehavioralProfile) (h : G.History)
+    (hσ : ∀ i, σ.toProfile i (h.playerView i) =
+      τ.toProfile i (h.playerView i)) :
+    G.jointActionDist σ h = G.jointActionDist τ h := by
+  classical
+  ext a
+  simp [G.jointActionDist_apply, hσ]
+
 theorem legalBehavioralProfile_jointActionDist_eq_zero_of_not_legal
     (G : FOSG ι W Act PrivObs PubObs)
     [∀ i, Fintype (Option (Act i))]
@@ -168,6 +179,148 @@ theorem legalActionLaw_apply
     (hterm : ¬ G.terminal h.lastState) (a : G.LegalAction h.lastState) :
     G.legalActionLaw σ h hterm a = G.jointActionDist σ h a.1 := by
   rw [legalActionLaw, PMF.ofFintype_apply]
+
+theorem legalActionLaw_congr
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ τ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState)
+    (hσ : ∀ i, σ.toProfile i (h.playerView i) =
+      τ.toProfile i (h.playerView i)) :
+    G.legalActionLaw σ h hterm = G.legalActionLaw τ h hterm := by
+  ext a
+  rw [G.legalActionLaw_apply σ h hterm,
+    G.legalActionLaw_apply τ h hterm,
+    G.jointActionDist_congr σ τ h hσ]
+
+open Classical in
+/-- Binding over the legal-action law is equivalent to binding over the full
+product joint-action distribution. Illegal joint actions have zero product
+mass for legal behavioral profiles, so restricting to the legal subtype loses
+no mass. -/
+theorem legalActionLaw_bind_eq_jointActionDist_bind
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState)
+    {β : Type} (f : JointAction Act → PMF β) :
+    (G.legalActionLaw σ h hterm).bind (fun a => f a.1) =
+      (G.jointActionDist σ h).bind f := by
+  ext b
+  rw [PMF.bind_apply, PMF.bind_apply, tsum_fintype, tsum_fintype]
+  calc
+    ∑ a : G.LegalAction h.lastState,
+        G.legalActionLaw σ h hterm a * f a.1 b
+      = ∑ a : G.LegalAction h.lastState,
+          G.jointActionDist σ h a.1 * f a.1 b := by
+          refine Finset.sum_congr rfl ?_
+          intro a _
+          rw [G.legalActionLaw_apply σ h hterm]
+    _ = ∑ a : JointAction Act,
+          (if G.legal h.lastState a then G.jointActionDist σ h a * f a b else 0) := by
+          have hsub :
+              ∑ a ∈ Finset.subtype (fun a : JointAction Act => G.legal h.lastState a)
+                  (Finset.univ : Finset (JointAction Act)),
+                G.jointActionDist σ h a.1 * f a.1 b =
+                ∑ a : G.LegalAction h.lastState,
+                  G.jointActionDist σ h a.1 * f a.1 b := by
+            simp
+          rw [← hsub]
+          rw [Finset.sum_subtype_eq_sum_filter
+            (s := (Finset.univ : Finset (JointAction Act)))
+            (p := fun a : JointAction Act => G.legal h.lastState a)
+            (f := fun a : JointAction Act => G.jointActionDist σ h a * f a b)]
+          rw [Finset.sum_filter]
+    _ = ∑ a : JointAction Act, G.jointActionDist σ h a * f a b := by
+          refine Finset.sum_congr rfl ?_
+          intro a _
+          by_cases ha : G.legal h.lastState a
+          · simp [ha]
+          · rw [if_neg ha]
+            rw [G.legalBehavioralProfile_jointActionDist_eq_zero_of_not_legal
+              σ h hterm ha]
+            simp
+
+open Classical in
+/-- At any nonterminal history, the legal-action law has the same marginal
+distribution on player `i`'s optional move as that player's behavioral
+strategy. This is the product-measure fact used by singleton-active states:
+the FOSG joint-action layer does not distort the active player's move law. -/
+theorem legalActionLaw_bind_coord
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState)
+    (i : ι) {β : Type} (f : Option (Act i) → PMF β) :
+    (G.legalActionLaw σ h hterm).bind (fun a => f (a.1 i)) =
+      (σ.toProfile i (h.playerView i)).bind f := by
+  rw [G.legalActionLaw_bind_eq_jointActionDist_bind σ h hterm
+    (fun a => f (a i))]
+  simp [jointActionDist, Math.PMFProduct.pmfPi_bind_eval]
+
+open Classical in
+/-- Variant of `legalActionLaw_bind_coord` for continuations over the legal
+joint-action subtype. If the continuation depends only on player `i`'s optional
+move, the legal joint-action layer can be collapsed to player `i`'s behavioral
+kernel. -/
+theorem legalActionLaw_bind_of_coord
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState)
+    (i : ι) {β : Type}
+    (K : G.LegalAction h.lastState → PMF β)
+    (f : Option (Act i) → PMF β)
+    (hK : ∀ a, K a = f (a.1 i)) :
+    (G.legalActionLaw σ h hterm).bind K =
+      (σ.toProfile i (h.playerView i)).bind f := by
+  calc
+    (G.legalActionLaw σ h hterm).bind K
+        = (G.legalActionLaw σ h hterm).bind (fun a => f (a.1 i)) := by
+            congr
+            funext a
+            exact hK a
+    _ = (σ.toProfile i (h.playerView i)).bind f := by
+            exact G.legalActionLaw_bind_coord σ h hterm i f
+
+open Classical in
+/-- At a nonterminal state with no active players, the induced legal-action law
+is the point mass on the all-`none` joint action. -/
+theorem legalActionLaw_eq_pure_noop_of_active_empty
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState)
+    (hactive : G.active h.lastState = ∅) :
+    G.legalActionLaw σ h hterm =
+      PMF.pure
+        ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
+          hactive hterm⟩ := by
+  let a₀ : G.LegalAction h.lastState :=
+    ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
+      hactive hterm⟩
+  apply PMF.ext
+  intro a
+  have haVal : a.1 = noopAction Act := by
+    funext i
+    have hi : i ∉ G.active h.lastState := by
+      simp [hactive]
+    exact G.inactive_eq_none (a := a) hi
+  have ha : a = a₀ := by
+    apply Subtype.ext
+    exact haVal
+  subst a
+  rw [G.legalActionLaw_apply σ h hterm]
+  rw [G.jointActionDist_apply]
+  have hnone :
+      ∀ i, σ.toProfile i (h.playerView i) =
+        PMF.pure (none : Option (Act i)) := by
+    intro i
+    have hi : i ∉ G.active h.lastState := by
+      simp [hactive]
+    exact G.legalBehavioralStrategy_eq_pure_none_of_not_mem_active
+      (σ i).2 h hi
+  simp [a₀, noopAction, hnone]
 
 open Classical in
 theorem legalBehavioralProfile_jointStepMass_eq_one

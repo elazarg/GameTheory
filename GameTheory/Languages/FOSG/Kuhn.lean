@@ -2248,6 +2248,50 @@ private theorem reachable_marginal_terminalUtilitySum
                   congrArg (fun x => x * History.utility h i)
                     (reachable_marginal_terminalWeight_toReal (G := G) β h)
 
+theorem reachable_marginal_terminalExpectation
+    (β : ReachableBehavioralProfile (G := G)) (u : G.History → ℝ) :
+    ∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+      (∑ h : G.History,
+        (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal *
+          u h) =
+      ∑ h : G.History,
+        (History.terminalWeight (G := G) β.extend h).toReal * u h := by
+  classical
+  calc
+    ∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+        ∑ h : G.History,
+          (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal *
+            u h
+      = ∑ π, ∑ h : G.History,
+          ((reachableBehavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal) *
+              u h := by
+                refine Finset.sum_congr rfl ?_
+                intro π _
+                rw [Finset.mul_sum]
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                simp [mul_assoc]
+    _ = ∑ h : G.History, ∑ π,
+          ((reachableBehavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal) *
+              u h := by
+                rw [Finset.sum_comm]
+    _ = ∑ h : G.History,
+          (∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal) *
+              u h := by
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                rw [← Finset.sum_mul]
+    _ = ∑ h : G.History,
+          (History.terminalWeight (G := G) β.extend h).toReal * u h := by
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                simpa using
+                  congrArg (fun x => x * u h)
+                    (reachable_marginal_terminalWeight_toReal (G := G) β h)
+
 /-- Native reachable-coordinate Kuhn theorem for FOSGs at realized histories. -/
 theorem behavioral_to_mixed_prob_reachable
     (β : ReachableBehavioralProfile (G := G)) (h : G.History) :

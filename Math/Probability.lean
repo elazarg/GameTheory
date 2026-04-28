@@ -1,6 +1,7 @@
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Monad
+import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 /-!
 # Math.Probability
@@ -162,6 +163,68 @@ theorem expect_bind {α β : Type*} [Finite α] [Finite β]
     Finset.sum_mul, Finset.mul_sum, mul_assoc]
   exact Finset.sum_comm
 
+/-- Expected value over a pushforward from a finite source.
+
+The target type need not be finite: the pushforward support is contained in the
+finite image of the source. -/
+theorem expect_map_fintype_source {α β : Type*} [Fintype α]
+    (p : PMF α) (f : α → β) (u : β → ℝ) :
+    expect (PMF.map f p) u = ∑ a : α, (p a).toReal * u (f a) := by
+  classical
+  rw [expect]
+  rw [tsum_eq_sum (s := (Finset.univ.image f))]
+  · calc
+      ∑ b ∈ Finset.univ.image f, ((PMF.map f p) b).toReal * u b
+        = ∑ b ∈ Finset.univ.image f,
+            ((∑ a : α, if b = f a then p a else 0).toReal) * u b := by
+            refine Finset.sum_congr rfl ?_
+            intro b _
+            rw [PMF.map_apply, tsum_fintype]
+      _ = ∑ b ∈ Finset.univ.image f,
+            (∑ a : α, if b = f a then (p a).toReal else 0) * u b := by
+            refine Finset.sum_congr rfl ?_
+            intro b _
+            congr 1
+            rw [show (∑ a : α, if b = f a then p a else 0).toReal =
+                ∑ a : α, (if b = f a then p a else 0).toReal by
+              exact ENNReal.toReal_sum (s := (Finset.univ : Finset α))
+                (f := fun a => if b = f a then p a else 0)
+                (by
+                  intro a _
+                  by_cases h : b = f a <;> simp [h, PMF.apply_ne_top])]
+            refine Finset.sum_congr rfl ?_
+            intro a _
+            by_cases h : b = f a <;> simp [h]
+      _ = ∑ b ∈ Finset.univ.image f,
+            ∑ a : α, if b = f a then (p a).toReal * u b else 0 := by
+            refine Finset.sum_congr rfl ?_
+            intro b _
+            rw [Finset.sum_mul]
+            refine Finset.sum_congr rfl ?_
+            intro a _
+            by_cases h : b = f a <;> simp [h]
+      _ = ∑ a : α, ∑ b ∈ Finset.univ.image f,
+            if b = f a then (p a).toReal * u b else 0 := by
+            rw [Finset.sum_comm]
+      _ = ∑ a : α, (p a).toReal * u (f a) := by
+            refine Finset.sum_congr rfl ?_
+            intro a _
+            rw [Finset.sum_eq_single (f a)]
+            · simp
+            · intro b _ hne
+              simp [hne]
+            · intro hnot
+              exact (hnot (Finset.mem_image.2 ⟨a, by simp, rfl⟩)).elim
+  · intro b hb
+    have hmap : PMF.map f p b = 0 := by
+      rw [PMF.map_apply, tsum_fintype]
+      refine Finset.sum_eq_zero ?_
+      intro a _
+      have hne : b ≠ f a := by
+        intro h
+        exact hb (Finset.mem_image.2 ⟨a, by simp, h.symm⟩)
+      simp [hne]
+    simp [hmap]
+
 end Probability
 end Math
-
