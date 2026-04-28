@@ -632,6 +632,51 @@ theorem mixed_to_behavioral
   refine ⟨β, ?_⟩
   simpa using hβ
 
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Pointwise native final-history form of FOSG Kuhn M→B. -/
+theorem mixed_to_behavioral_historyProb
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : BehavioralProfile (G := G),
+      ∀ h : G.History,
+        historyOutcomeDist (G := G) k β h =
+          ((mixedProfileJoint (G := G) μ).bind
+            (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π))) h := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral (G := G) hMass hFactor hLocal μ k
+  exact ⟨β, fun h => congrFun (congrArg DFunLike.coe hβ) h⟩
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Native finite-event form of FOSG Kuhn M→B for final histories. -/
+theorem mixed_to_behavioral_historyMassOn
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) (hs : Finset G.History) :
+    ∃ β : BehavioralProfile (G := G),
+      (∑ h ∈ hs, historyOutcomeDist (G := G) k β h) =
+        ∑ h ∈ hs,
+          ((mixedProfileJoint (G := G) μ).bind
+            (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π))) h := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_historyProb (G := G) hMass hFactor hLocal μ k
+  refine ⟨β, ?_⟩
+  refine Finset.sum_congr rfl ?_
+  intro h hh
+  exact hβ h
+
 section Step
 
 variable [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)]
