@@ -1472,6 +1472,12 @@ dynamics. -/
 abbrev ObsLocalFeasibility (i : ι) : Prop :=
   ObsModelCore.ObsLocalFeasibility O.toCore i
 
+/-- Full semantic locality on `ObsModel`, viewed as the corresponding core
+condition on `O.toCore`. Unlike `ObsLocalFeasibility`, this has no
+`Subsingleton` guard on the current action type. -/
+abbrev ObsLocalFeasibilityFull (i : ι) : Prop :=
+  ObsModelCore.ObsLocalFeasibilityFull O.toCore i
+
 /-- Minimal semantic locality on `ObsModel`, viewed as the corresponding core
 posterior-local condition on `O.toCore`. -/
 abbrev ActionPosteriorLocal (O : ObsModel ι σ Obs Act)
@@ -1685,6 +1691,26 @@ theorem reweightPMF_update_obs_local_trace
   reweightPMF_update_obs_local_of hPSAR n n i b_i h₁ h₂
     fun πᵢ => pureRun_update_obs_local_trace hPSAR i hTPSR n hobs_i h₁ h₂ πᵢ
 
+/-- Trace-level recall implies full obs-local feasibility for the semantic core.
+
+This is the packaging lemma needed by the core mixed-to-behavioral theorem
+whose support-factorization route requires locality even at subsingleton action
+states. The actual induction is `pureRun_update_obs_local_trace`; this theorem
+only reconciles the core `ObsLocalFeasibilityFull` shape. -/
+theorem obsLocalFeasibilityFull_of_tracePlayerStepRecall
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (hPSAR : PerStepActionRecall O) (i : ι)
+    (hTPSR : O.TracePlayerStepRecall i) :
+    O.ObsLocalFeasibilityFull i := by
+  intro n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ πᵢ
+  have hn : n₁ = n₂ := by
+    have hlen : ss₁.length = ss₂.length := O.projectStates_eq_length i hobs
+    have hrun₁ := pureRun_length (O.pureStep) O.init n₁ π₀ ss₁ h₁
+    have hrun₂ := pureRun_length (O.pureStep) O.init n₂ π₀' ss₂ h₂
+    omega
+  subst hn
+  exact pureRun_update_obs_local_trace hPSAR i hTPSR n₁ hobs h₁ h₂ πᵢ
+
 /-- Semantic locality hypotheses on `ObsModel` are exactly the corresponding core
 locality hypotheses on `O.toCore`. -/
 theorem obsLocalFeasibility_toCore
@@ -1693,6 +1719,15 @@ theorem obsLocalFeasibility_toCore
     ∀ i, ObsModelCore.ObsLocalFeasibility O.toCore i := by
   intro i
   simpa [ObsModel.ObsLocalFeasibility] using hLocal i
+
+/-- Full semantic locality hypotheses on `ObsModel` are exactly the
+corresponding full core locality hypotheses on `O.toCore`. -/
+theorem obsLocalFeasibilityFull_toCore
+    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    (hLocal : ∀ i, O.ObsLocalFeasibilityFull i) :
+    ∀ i, ObsModelCore.ObsLocalFeasibilityFull O.toCore i := by
+  intro i
+  simpa [ObsModel.ObsLocalFeasibilityFull] using hLocal i
 
 /-- Stronger feasibility-locality hypotheses imply the minimal posterior-local
 core hypotheses. -/
