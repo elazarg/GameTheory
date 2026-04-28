@@ -2457,6 +2457,90 @@ theorem reachable_mixed_to_legal_behavioral_runDist
   funext π
   exact reachableHistoryOutcomeDistPureProfile_eq_runDist (G := G) hLeg k π
 
+/-- Restrict an independent mixed profile over total legal pure strategies to
+reachable information states. -/
+noncomputable def legalPureMixedProfileRestrictReachable
+    (μ : ∀ i, PMF (G.LegalPureStrategy i)) :
+    ReachableMixedProfile (G := G) :=
+  fun i => PMF.map (fun σ : G.LegalPureStrategy i => σ.restrictReachable) (μ i)
+
+/-- Restrict a total legal pure profile to reachable information states. -/
+noncomputable def legalPureProfileRestrictReachable
+    (π : G.LegalPureProfile) : G.ReachableLegalPureProfile :=
+  fun i => (π i).restrictReachable
+
+theorem legalPureMixedProfileRestrictReachable_joint
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    [∀ i, Fintype (G.LegalPureStrategy i)]
+    (μ : ∀ i, PMF (G.LegalPureStrategy i)) :
+    reachableMixedProfileJoint
+        (G := G) (legalPureMixedProfileRestrictReachable (G := G) μ) =
+      PMF.map (legalPureProfileRestrictReachable (G := G))
+        (Math.PMFProduct.pmfPi μ) := by
+  classical
+  change Math.PMFProduct.pmfPi
+      (fun i => PMF.map
+        (fun σ : G.LegalPureStrategy i => σ.restrictReachable) (μ i)) =
+    PMF.map
+      (fun π => fun i => (π i).restrictReachable)
+      (Math.PMFProduct.pmfPi μ)
+  exact (Math.PMFProduct.pmfPi_push_coordwise μ
+    (fun i σ => σ.restrictReachable)).symm
+
+/-- Extending the reachable restriction of a total legal pure profile is
+run-equivalent to the original total pure profile. -/
+theorem legalPureProfileRestrictReachable_extend_runDist
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [DecidablePred G.terminal]
+    (π : G.LegalPureProfile) (k : Nat) :
+    G.runDist k
+        (G.legalPureToBehavioral
+          ((legalPureProfileRestrictReachable (G := G) π).extend)) =
+      G.runDist k (G.legalPureToBehavioral π) := by
+  apply G.runDist_congr
+  intro h i
+  change PMF.pure
+      (((legalPureProfileRestrictReachable (G := G) π).extend.toProfile i)
+        (h.playerView i)) =
+    PMF.pure (π.toProfile i (h.playerView i))
+  congr 1
+  change ((π i).restrictReachable).1.extend (h.playerView i) =
+    (π i).1 (h.playerView i)
+  exact ReachablePureStrategy.extend_apply_history
+    (G := G) ((π i).restrictReachable).1 h
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Native total FOSG form of the legal M→B theorem.
+
+An independent mixed profile over total legal pure strategies is realized by a
+total legal behavioral profile with the same finite-horizon distribution over
+FOSG histories. Internally the proof restricts to reachable information states,
+uses `reachable_mixed_to_legal_behavioral_runDist`, and extends the behavioral
+witness back to the ordinary total FOSG strategy space. -/
+theorem mixed_legalPure_to_legalBehavioral_runDist
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    [∀ i, Fintype (G.LegalPureStrategy i)]
+    (hLeg : G.LegalObservable)
+    (μ : ∀ i, PMF (G.LegalPureStrategy i))
+    (k : Nat) :
+    ∃ β : G.LegalBehavioralProfile,
+      G.runDist k β =
+        (Math.PMFProduct.pmfPi μ).bind
+          (fun π => G.runDist k (G.legalPureToBehavioral π)) := by
+  let μR := legalPureMixedProfileRestrictReachable (G := G) μ
+  obtain ⟨βR, hβR⟩ :=
+    reachable_mixed_to_legal_behavioral_runDist
+      (G := G) hLeg μR k
+  refine ⟨βR.extend, ?_⟩
+  rw [hβR]
+  rw [legalPureMixedProfileRestrictReachable_joint (G := G) μ]
+  rw [PMF.bind_map]
+  congr
+  funext π
+  exact legalPureProfileRestrictReachable_extend_runDist (G := G) π k
+
 section Step
 
 variable [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)]
