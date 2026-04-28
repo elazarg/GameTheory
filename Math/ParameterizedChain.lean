@@ -176,6 +176,21 @@ theorem reweightPMF_apply (ν : PMF P) (w : P → ENNReal) (π : P)
   · exact PMF.ofFintype_apply _ π
 
 set_option linter.unusedFintypeInType false in
+open Classical in
+theorem reweightPMF_support_subset (ν : PMF P) (w : P → ENNReal) :
+    (reweightPMF ν w).support ⊆ ν.support := by
+  intro π hπ
+  rw [PMF.mem_support_iff] at hπ ⊢
+  intro hν
+  unfold reweightPMF at hπ
+  dsimp only at hπ
+  split_ifs at hπ with hdeg
+  · exact hπ hν
+  · apply hπ
+    rw [PMF.ofFintype_apply, hν]
+    simp
+
+set_option linter.unusedFintypeInType false in
 theorem reweightPMF_fallback (ν : PMF P) (w : P → ENNReal)
     (hC : ∑ π : P, ν π * w π = 0) :
     reweightPMF ν w = ν := by

@@ -306,6 +306,207 @@ abbrev LegalBehavioralProfile.toProfile
     (σ : G.LegalBehavioralProfile) (i : ι) :
     σ.toProfile i = (σ i).1 := rfl
 
+/-- Information states that are realized by at least one FOSG history. -/
+def ReachableInfoState
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
+  { s : G.InfoState i // ∃ h : G.History, h.playerView i = s }
+
+/-- The reachable information state induced by a realized history. -/
+def reachableInfoStateOfHistory
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) (h : G.History) :
+    G.ReachableInfoState i :=
+  ⟨h.playerView i, h, rfl⟩
+
+@[simp] theorem reachableInfoStateOfHistory_val
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) (h : G.History) :
+    (G.reachableInfoStateOfHistory i h).1 = h.playerView i := rfl
+
+noncomputable instance instFintypeReachableInfoState
+    (G : FOSG ι W Act PrivObs PubObs) [Fintype G.History] (i : ι) :
+    Fintype (G.ReachableInfoState i) := by
+  classical
+  let f : G.History → G.ReachableInfoState i := fun h =>
+    G.reachableInfoStateOfHistory i h
+  have hf : Function.Surjective f := by
+    intro s
+    rcases s.2 with ⟨h, hs⟩
+    refine ⟨h, ?_⟩
+    apply Subtype.ext
+    exact hs
+  haveI : Finite (G.ReachableInfoState i) := Finite.of_surjective f hf
+  exact Fintype.ofFinite (G.ReachableInfoState i)
+
+/-- Pure strategy over reachable information states. -/
+abbrev ReachablePureStrategy
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
+  G.ReachableInfoState i → Option (Act i)
+
+/-- Behavioral strategy over reachable information states. -/
+abbrev ReachableBehavioralStrategy
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
+  G.ReachableInfoState i → PMF (Option (Act i))
+
+/-- Joint reachable pure strategy profile. -/
+abbrev ReachablePureProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  ∀ i, G.ReachablePureStrategy i
+
+/-- Joint reachable behavioral strategy profile. -/
+abbrev ReachableBehavioralProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  ∀ i, G.ReachableBehavioralStrategy i
+
+/-- A reachable pure strategy is legal if it chooses an available move at every
+realizing history. -/
+def IsLegalReachablePureStrategy
+    (G : FOSG ι W Act PrivObs PubObs)
+    (i : ι) (σ : G.ReachablePureStrategy i) : Prop :=
+  ∀ h : G.History, σ (G.reachableInfoStateOfHistory i h) ∈ G.availableMoves h i
+
+/-- A reachable behavioral strategy is legal if its support stays within the
+available move set at every realizing history. -/
+def IsLegalReachableBehavioralStrategy
+    (G : FOSG ι W Act PrivObs PubObs)
+    (i : ι) (σ : G.ReachableBehavioralStrategy i) : Prop :=
+  ∀ (h : G.History) {oi : Option (Act i)},
+    oi ∈ (σ (G.reachableInfoStateOfHistory i h)).support →
+      oi ∈ G.availableMoves h i
+
+/-- The subtype of legal reachable pure strategies for player `i`. -/
+abbrev ReachableLegalPureStrategy
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
+  { σ : G.ReachablePureStrategy i // G.IsLegalReachablePureStrategy i σ }
+
+/-- The subtype of legal reachable behavioral strategies for player `i`. -/
+abbrev ReachableLegalBehavioralStrategy
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
+  { σ : G.ReachableBehavioralStrategy i // G.IsLegalReachableBehavioralStrategy i σ }
+
+/-- A profile of legal reachable pure strategies. -/
+abbrev ReachableLegalPureProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  ∀ i, G.ReachableLegalPureStrategy i
+
+/-- A profile of legal reachable behavioral strategies. -/
+abbrev ReachableLegalBehavioralProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
+  ∀ i, G.ReachableLegalBehavioralStrategy i
+
+/-- Forget the legality proofs on a legal reachable pure profile. -/
+abbrev ReachableLegalPureProfile.toProfile
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.ReachableLegalPureProfile) : G.ReachablePureProfile :=
+  fun i => (σ i).1
+
+/-- Forget the legality proofs on a legal reachable behavioral profile. -/
+abbrev ReachableLegalBehavioralProfile.toProfile
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.ReachableLegalBehavioralProfile) : G.ReachableBehavioralProfile :=
+  fun i => (σ i).1
+
+/-- Restrict a global pure strategy to reachable information states. -/
+def PureStrategy.restrictReachable
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.PureStrategy i) : G.ReachablePureStrategy i :=
+  fun s => σ s.1
+
+/-- Restrict a global behavioral strategy to reachable information states. -/
+def BehavioralStrategy.restrictReachable
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.BehavioralStrategy i) : G.ReachableBehavioralStrategy i :=
+  fun s => σ s.1
+
+/-- Restrict a legal global pure strategy to reachable information states. -/
+def LegalPureStrategy.restrictReachable
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.LegalPureStrategy i) : G.ReachableLegalPureStrategy i :=
+  ⟨σ.1.restrictReachable, by intro h; exact σ.2 h⟩
+
+/-- Restrict a legal global behavioral strategy to reachable information states. -/
+def LegalBehavioralStrategy.restrictReachable
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.LegalBehavioralStrategy i) : G.ReachableLegalBehavioralStrategy i :=
+  ⟨σ.1.restrictReachable, by intro h oi hoi; exact σ.2 h hoi⟩
+
+/-- Extend a reachable pure strategy to the global information-state type using
+`none` on unreachable states. -/
+noncomputable def ReachablePureStrategy.extend
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.ReachablePureStrategy i) : G.PureStrategy i := by
+  classical
+  exact fun s =>
+    if h : ∃ h' : G.History, h'.playerView i = s then σ ⟨s, h⟩ else none
+
+/-- Extend a reachable behavioral strategy to the global information-state type
+using `PMF.pure none` on unreachable states. -/
+noncomputable def ReachableBehavioralStrategy.extend
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.ReachableBehavioralStrategy i) : G.BehavioralStrategy i := by
+  classical
+  exact fun s =>
+    if h : ∃ h' : G.History, h'.playerView i = s then σ ⟨s, h⟩ else PMF.pure none
+
+@[simp] theorem ReachablePureStrategy.extend_apply_history
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.ReachablePureStrategy i) (h : G.History) :
+    σ.extend (h.playerView i) = σ (G.reachableInfoStateOfHistory i h) := by
+  classical
+  unfold ReachablePureStrategy.extend
+  rw [dif_pos (show ∃ h' : G.History, h'.playerView i = h.playerView i from ⟨h, rfl⟩)]
+  apply congrArg σ
+  apply Subtype.ext
+  rfl
+
+@[simp] theorem ReachableBehavioralStrategy.extend_apply_history
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    (σ : G.ReachableBehavioralStrategy i) (h : G.History) :
+    σ.extend (h.playerView i) = σ (G.reachableInfoStateOfHistory i h) := by
+  classical
+  unfold ReachableBehavioralStrategy.extend
+  rw [dif_pos (show ∃ h' : G.History, h'.playerView i = h.playerView i from ⟨h, rfl⟩)]
+  apply congrArg σ
+  apply Subtype.ext
+  rfl
+
+/-- Extend a reachable pure profile to the global information-state type. -/
+noncomputable def ReachablePureProfile.extend
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.ReachablePureProfile) : G.PureProfile :=
+  fun i => (σ i).extend
+
+/-- Extend a reachable behavioral profile to the global information-state type. -/
+noncomputable def ReachableBehavioralProfile.extend
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.ReachableBehavioralProfile) : G.BehavioralProfile :=
+  fun i => (σ i).extend
+
+theorem ReachablePureStrategy.isLegal_extend
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    {σ : G.ReachablePureStrategy i}
+    (hσ : G.IsLegalReachablePureStrategy i σ) :
+    G.IsLegalPureStrategy i σ.extend := by
+  intro h
+  simpa using hσ h
+
+theorem ReachableBehavioralStrategy.isLegal_extend
+    {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+    {σ : G.ReachableBehavioralStrategy i}
+    (hσ : G.IsLegalReachableBehavioralStrategy i σ) :
+    G.IsLegalBehavioralStrategy i σ.extend := by
+  intro h oi hoi
+  exact hσ h (by simpa using hoi)
+
+/-- Extend a legal reachable pure profile to a legal global pure profile. -/
+noncomputable def ReachableLegalPureProfile.extend
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.ReachableLegalPureProfile) : G.LegalPureProfile :=
+  fun i => ⟨(σ.toProfile i).extend,
+    ReachablePureStrategy.isLegal_extend (G := G) (i := i) (σ := σ.toProfile i) (σ i).2⟩
+
+/-- Extend a legal reachable behavioral profile to a legal global behavioral
+profile. -/
+noncomputable def ReachableLegalBehavioralProfile.extend
+    {G : FOSG ι W Act PrivObs PubObs}
+    (σ : G.ReachableLegalBehavioralProfile) : G.LegalBehavioralProfile :=
+  fun i => ⟨(σ.toProfile i).extend,
+    ReachableBehavioralStrategy.isLegal_extend (G := G) (i := i) (σ := σ.toProfile i) (σ i).2⟩
+
 /-- Lift a pure profile to a behavioral one. -/
 noncomputable def pureToBehavioral
     (G : FOSG ι W Act PrivObs PubObs)

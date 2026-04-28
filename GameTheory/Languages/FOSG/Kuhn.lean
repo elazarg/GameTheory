@@ -13,6 +13,9 @@ This file has two layers:
   FOSG bridge.
 - `Kuhn` itself contains native FOSG behavioral-to-mixed results stated
   directly in terms of FOSG histories, terminal laws, and expected utilities.
+- `Kuhn.mixed_to_behavioral` is the native FOSG mixed-to-behavioral direction:
+  independent per-player mixed strategies over native pure strategies are
+  realized by a native behavioral profile with the same final-history law.
 -/
 
 namespace GameTheory
@@ -317,9 +320,59 @@ theorem mixed_to_behavioral_of_obsLocal
 abbrev PureStrategy (i : ι) : Type :=
   _root_.GameTheory.FOSG.PureStrategy G i
 
+/-- Native FOSG mixed-strategy profile: independently, each player samples a
+pure strategy for all of its information states. -/
+abbrev MixedProfile : Type :=
+  ∀ i, PMF (PureStrategy (G := G) i)
+
+noncomputable local instance mixedProfilePureStrategyFintype
+    [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (i : ι) : Fintype (PureStrategy (G := G) i) := by
+  classical
+  dsimp [PureStrategy, _root_.GameTheory.FOSG.PureStrategy]
+  infer_instance
+
 /-- Native FOSG behavioral-profile type. -/
 abbrev BehavioralProfile : Type :=
   _root_.GameTheory.FOSG.BehavioralProfile G
+
+/-- Native joint law induced by an independent per-player mixed profile. -/
+noncomputable abbrev mixedProfileJoint
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (μ : MixedProfile (G := G)) : PMF (_root_.GameTheory.FOSG.PureProfile G) :=
+  Math.PMFProduct.pmfPi μ
+
+/-- Lift a native FOSG pure strategy into the Kuhn execution core. -/
+noncomputable def liftPureStrategy
+    (i : ι) (π : PureStrategy (G := G) i) : KuhnLocalStrategy (G := G) i := by
+  intro v
+  exact π v
+
+/-- Lift a native FOSG pure profile into the Kuhn execution core. -/
+noncomputable def liftPureProfile
+    (π : _root_.GameTheory.FOSG.PureProfile G) : KuhnPureProfile (G := G) :=
+  fun i => liftPureStrategy (G := G) i (π i)
+
+/-- Lift a native independent mixed profile into the Kuhn execution core. -/
+noncomputable def liftMixedProfile
+    (μ : MixedProfile (G := G)) : ∀ i, PMF (KuhnLocalStrategy (G := G) i) :=
+  fun i => Math.ProbabilityMassFunction.pushforward (μ i) (liftPureStrategy (G := G) i)
+
+/-- Product sampling commutes with the native-to-core pure-profile lift. -/
+theorem liftMixedProfile_joint
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (μ : MixedProfile (G := G)) :
+    Math.PMFProduct.pmfPi (liftMixedProfile (G := G) μ) =
+      Math.ProbabilityMassFunction.pushforward
+        (mixedProfileJoint (G := G) μ) (liftPureProfile (G := G)) := by
+  classical
+  rw [mixedProfileJoint]
+  change Math.PMFProduct.pmfPi
+      (fun i => Math.ProbabilityMassFunction.pushforward (μ i) (liftPureStrategy (G := G) i)) =
+    Math.ProbabilityMassFunction.pushforward (Math.PMFProduct.pmfPi μ)
+      (fun π => fun i => liftPureStrategy (G := G) i (π i))
+  exact (Math.PMFProduct.pmfPi_push_coordwise μ
+    (fun i => liftPureStrategy (G := G) i)).symm
 
 /-- Native product mixed strategy induced by independently sampling a pure
 strategy at each information state for each player. -/
@@ -338,6 +391,482 @@ noncomputable def behavioralToMixedJoint
   by
     classical
     exact Math.PMFProduct.pmfPi (behavioralToMixed (G := G) β)
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, over native
+independent per-player mixed strategies.**
+
+Under the semantic step-mass invariance, support factorization, and
+posterior-locality assumptions, every native independent mixed profile
+is realized by a behavioral profile with the same bounded execution-state
+trace distribution. -/
+theorem mixed_to_behavioral_runDist
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : Bridge.StepMassInvariant G)
+    (hFactor : Bridge.StepSupportFactorization G)
+    (hLocal : ∀ i, Bridge.ActionPosteriorLocal G i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : KuhnBehavioralProfile (G := G),
+      runDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => runDistPure (G := G) k (liftPureProfile (G := G) π)) := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_semantic (G := G) hMass hFactor hLocal
+      (liftMixedProfile (G := G) μ) k
+  refine ⟨β, ?_⟩
+  rw [hβ, liftMixedProfile_joint (G := G) μ]
+  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, over native
+independent per-player mixed strategies, via full semantic obs-locality.**
+
+This is the obs-locality convenience form of `mixed_to_behavioral_runDist`. -/
+theorem mixed_to_behavioral_runDist_of_obsLocal
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : Bridge.StepMassInvariant G)
+    (hObsLocal : ∀ i, Bridge.ObsLocalFeasibilityFull G i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : KuhnBehavioralProfile (G := G),
+      runDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => runDistPure (G := G) k (liftPureProfile (G := G) π)) := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_of_obsLocal (G := G) hMass hObsLocal
+      (liftMixedProfile (G := G) μ) k
+  refine ⟨β, ?_⟩
+  rw [hβ, liftMixedProfile_joint (G := G) μ]
+  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+
+/-! ### Native-history mixed-to-behavioral semantics
+
+The bridge model above stores only the current world and player information
+states.  For outcome statements over realized FOSG histories we use a second
+`ObsModelCore` whose machine state is the native history itself. -/
+
+/-- Native-history Kuhn execution model for a FOSG.
+
+The state is a realized FOSG history. Legal joint moves append a realized
+outcome to the history; illegal joint moves self-loop. Terminal histories
+self-loop because `G.legal` is false at terminal states. -/
+noncomputable def toHistoryObsModelCore
+    (G : FOSG ι W Act PrivObs PubObs) :
+    ObsModelCore ι G.History (fun i => G.InfoState i) (fun i _ => Option (Act i)) where
+  infoState := fun _ => InfoStateCore.identity _
+  observe := fun i h => h.playerView i
+  machine :=
+    { init := History.nil G
+      step := fun h a => by
+        classical
+        exact if hleg : G.legal h.lastState a then
+          (G.transition h.lastState ⟨a, hleg⟩).map
+            (fun dst => h.extendByOutcome ⟨a, hleg⟩ dst)
+        else
+          PMF.pure h }
+
+namespace HistoryNative
+
+variable (G : FOSG ι W Act PrivObs PubObs)
+
+noncomputable instance historyInfoStateFintype
+    [∀ i, Fintype (G.InfoState i)] :
+    ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) := by
+  intro i
+  simpa [toHistoryObsModelCore, ObsModelCore.InfoState] using
+    (inferInstance : Fintype (G.InfoState i))
+
+end HistoryNative
+
+/-- Native-history pure profile for the FOSG Kuhn semantics. -/
+abbrev HistoryPureProfile : Type :=
+  (toHistoryObsModelCore G).PureProfile
+
+/-- Native-history behavioral profile for the FOSG Kuhn semantics. -/
+abbrev HistoryBehavioralProfile : Type :=
+  (toHistoryObsModelCore G).BehavioralProfile
+
+/-- Lift a native FOSG pure strategy into the native-history Kuhn model. -/
+noncomputable def liftHistoryPureStrategy
+    (i : ι) (π : PureStrategy (G := G) i) :
+    (toHistoryObsModelCore G).LocalStrategy i := by
+  intro v
+  exact π v
+
+/-- Lift a native FOSG pure profile into the native-history Kuhn model. -/
+noncomputable def liftHistoryPureProfile
+    (π : _root_.GameTheory.FOSG.PureProfile G) :
+    HistoryPureProfile (G := G) :=
+  fun i => liftHistoryPureStrategy (G := G) i (π i)
+
+/-- Lift a native independent mixed profile into the native-history Kuhn model. -/
+noncomputable def liftHistoryMixedProfile
+    (μ : MixedProfile (G := G)) : ∀ i, PMF ((toHistoryObsModelCore G).LocalStrategy i) :=
+  fun i => Math.ProbabilityMassFunction.pushforward (μ i) (liftHistoryPureStrategy (G := G) i)
+
+/-- Product sampling commutes with the native-to-history-core pure-profile lift. -/
+theorem liftHistoryMixedProfile_joint
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (μ : MixedProfile (G := G)) :
+    Math.PMFProduct.pmfPi (liftHistoryMixedProfile (G := G) μ) =
+      Math.ProbabilityMassFunction.pushforward
+        (mixedProfileJoint (G := G) μ) (liftHistoryPureProfile (G := G)) := by
+  classical
+  rw [mixedProfileJoint]
+  change Math.PMFProduct.pmfPi
+      (fun i => Math.ProbabilityMassFunction.pushforward
+        (μ i) (liftHistoryPureStrategy (G := G) i)) =
+    Math.ProbabilityMassFunction.pushforward (Math.PMFProduct.pmfPi μ)
+      (fun π => fun i => liftHistoryPureStrategy (G := G) i (π i))
+  exact (Math.PMFProduct.pmfPi_push_coordwise μ
+    (fun i => liftHistoryPureStrategy (G := G) i)).symm
+
+/-- Final native history extracted from a native-history Kuhn trace. -/
+noncomputable def historyTraceLast
+    (ss : List G.History) : G.History :=
+  (toHistoryObsModelCore G).lastState ss
+
+/-- Native final-history law induced by the history-state Kuhn execution model. -/
+noncomputable def historyOutcomeDist
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (k : Nat) (β : HistoryBehavioralProfile (G := G)) : PMF G.History :=
+  ((toHistoryObsModelCore G).runDist k β).bind
+    (fun ss => PMF.pure (historyTraceLast (G := G) ss))
+
+/-- Native final-history law induced by a pure profile in the history-state
+Kuhn execution model. -/
+noncomputable def historyOutcomeDistPure
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (k : Nat) (π : HistoryPureProfile (G := G)) : PMF G.History :=
+  ((toHistoryObsModelCore G).runDistPure k π).bind
+    (fun ss => PMF.pure (historyTraceLast (G := G) ss))
+
+/-- FOSG-side name for step-mass invariance on the native-history Kuhn model. -/
+abbrev HistoryStepMassInvariant
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
+  ObsModelCore.StepMassInvariant (toHistoryObsModelCore G)
+
+/-- FOSG-side name for support factorization on the native-history Kuhn model. -/
+abbrev HistoryStepSupportFactorization
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
+  ObsModelCore.StepSupportFactorization (toHistoryObsModelCore G)
+
+/-- FOSG-side name for posterior locality on the native-history Kuhn model. -/
+abbrev HistoryActionPosteriorLocal
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (i : ι) : Prop :=
+  ObsModelCore.ActionPosteriorLocal (toHistoryObsModelCore G) i
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, native-history form.**
+
+Every independent native mixed profile over FOSG pure strategies is realized by
+a behavioral profile with the same final native-history law in the
+history-state Kuhn semantics. -/
+theorem mixed_to_behavioral_native_history
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : HistoryBehavioralProfile (G := G),
+      historyOutcomeDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => historyOutcomeDistPure (G := G) k
+            (liftHistoryPureProfile (G := G) π)) := by
+  letI : ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) :=
+    HistoryNative.historyInfoStateFintype (G := G)
+  letI : ∀ i (o : G.InfoState i), Nonempty (Option (Act i)) := fun _ _ => ⟨none⟩
+  obtain ⟨β, hβ⟩ :=
+    ObsModelCore.kuhn_mixed_to_behavioral_semantic
+      (O := toHistoryObsModelCore G)
+      hMass hFactor hLocal (liftHistoryMixedProfile (G := G) μ) k
+  refine ⟨β, ?_⟩
+  unfold historyOutcomeDist historyOutcomeDistPure
+  rw [hβ, PMF.bind_bind, liftHistoryMixedProfile_joint (G := G) μ]
+  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+
+/-- A lifted native pure profile has the same native-history outcome law as
+its native pure behavioral profile. -/
+@[simp] theorem historyOutcomeDistPure_liftHistoryPureProfile
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (k : Nat) (π : _root_.GameTheory.FOSG.PureProfile G) :
+    historyOutcomeDistPure (G := G) k (liftHistoryPureProfile (G := G) π) =
+      historyOutcomeDist (G := G) k (G.pureToBehavioral π) := by
+  rfl
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs.**
+
+This is the native FOSG-facing M→B theorem.  Every independent mixed profile
+over native per-player pure strategies is realized by a native behavioral
+profile with the same final native-history law in the history-state Kuhn
+semantics.  The core `ObsModelCore` construction is used only internally. -/
+theorem mixed_to_behavioral
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : BehavioralProfile (G := G),
+      historyOutcomeDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π)) := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_native_history (G := G) hMass hFactor hLocal μ k
+  refine ⟨β, ?_⟩
+  simpa using hβ
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Pointwise native final-history form of FOSG Kuhn M→B. -/
+theorem mixed_to_behavioral_historyProb
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : BehavioralProfile (G := G),
+      ∀ h : G.History,
+        historyOutcomeDist (G := G) k β h =
+          ((mixedProfileJoint (G := G) μ).bind
+            (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π))) h := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral (G := G) hMass hFactor hLocal μ k
+  exact ⟨β, fun h => congrFun (congrArg DFunLike.coe hβ) h⟩
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- Native finite-event form of FOSG Kuhn M→B for final histories. -/
+theorem mixed_to_behavioral_historyMassOn
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) (hs : Finset G.History) :
+    ∃ β : BehavioralProfile (G := G),
+      (∑ h ∈ hs, historyOutcomeDist (G := G) k β h) =
+        ∑ h ∈ hs,
+          ((mixedProfileJoint (G := G) μ).bind
+            (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π))) h := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_historyProb (G := G) hMass hFactor hLocal μ k
+  refine ⟨β, ?_⟩
+  refine Finset.sum_congr rfl ?_
+  intro h hh
+  exact hβ h
+
+/-! ### Legal native mixed-to-behavioral witnesses -/
+
+/-- A native mixed profile is legal when each player's mixed strategy supports
+only legal pure strategies. -/
+def IsLegalMixedProfile
+    (μ : MixedProfile (G := G)) : Prop :=
+  ∀ i (πi : PureStrategy (G := G) i),
+    πi ∈ (μ i).support → G.IsLegalPureStrategy i πi
+
+private theorem availableMoves_nonempty
+    (h : G.History) (i : ι) :
+    ∃ oi : Option (Act i), oi ∈ G.availableMoves h i := by
+  classical
+  by_cases hterm : G.terminal h.lastState
+  · refine ⟨none, ?_⟩
+    simp [FOSG.availableMoves, FOSG.availableMovesAtState,
+      FOSG.locallyLegalAtState, G.active_eq_empty_of_terminal hterm]
+  · rcases G.exists_legal_of_not_terminal (w := h.lastState) hterm with ⟨a, ha⟩
+    exact ⟨a i, by simpa [FOSG.availableMoves, FOSG.availableMovesAtState] using ha.2 i⟩
+
+/-- A legal fallback behavioral profile, used only at information states that
+are not reached by any pure profile in the core M→B construction. -/
+noncomputable def legalFallbackBehavioral
+    (_hLeg : G.LegalObservable) : BehavioralProfile (G := G) := by
+  classical
+  exact fun i v =>
+    if h : ∃ oi : Option (Act i), oi ∈ G.availableMovesAtInfoState i v then
+      PMF.pure h.choose
+    else
+      PMF.pure none
+
+private theorem legalFallbackBehavioral_isLegal
+    (hLeg : G.LegalObservable) :
+    G.IsLegalBehavioralProfile (legalFallbackBehavioral (G := G) hLeg) := by
+  classical
+  intro i h oi hoi
+  unfold legalFallbackBehavioral at hoi
+  have hex : ∃ oi : Option (Act i), oi ∈ G.availableMovesAtInfoState i (h.playerView i) := by
+    rcases availableMoves_nonempty (G := G) h i with ⟨oi, hoi⟩
+    exact ⟨oi, G.mem_availableMovesAtInfoState_of_history h hoi⟩
+  rw [dif_pos hex] at hoi
+  have hoi_eq : oi = hex.choose := by
+    rw [PMF.mem_support_iff] at hoi
+    by_contra hne
+    apply hoi
+    simp [PMF.pure_apply, hne]
+  have hchosen : hex.choose ∈ G.availableMovesAtInfoState i (h.playerView i) :=
+    hex.choose_spec
+  have hEq := G.availableMovesAtInfoState_eq_of_history hLeg i h
+  rw [hoi_eq]
+  exact hEq ▸ hchosen
+
+/-- Native FOSG M→B witness with a legal fallback at unreached information
+states. -/
+noncomputable def legalHistoryMixedToBehavioral
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (μ : MixedProfile (G := G)) :
+    BehavioralProfile (G := G) :=
+  ObsModelCore.mixedToBehavioralProfileWithFallback
+    (O := toHistoryObsModelCore G)
+    (liftHistoryMixedProfile (G := G) μ)
+    (legalFallbackBehavioral (G := G) hLeg)
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+theorem legalHistoryMixedToBehavioral_historyOutcomeDist
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    historyOutcomeDist (G := G) k (legalHistoryMixedToBehavioral (G := G) hLeg μ) =
+      (mixedProfileJoint (G := G) μ).bind
+        (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π)) := by
+  letI : ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) :=
+    HistoryNative.historyInfoStateFintype (G := G)
+  letI : ∀ i (o : G.InfoState i), Nonempty (Option (Act i)) := fun _ _ => ⟨none⟩
+  have hβ :=
+    ObsModelCore.mixedToBehavioralProfileWithFallback_runDist
+      (O := toHistoryObsModelCore G)
+      hMass hFactor hLocal (liftHistoryMixedProfile (G := G) μ)
+      (legalFallbackBehavioral (G := G) hLeg) k
+  unfold historyOutcomeDist legalHistoryMixedToBehavioral
+  rw [hβ, PMF.bind_bind, liftHistoryMixedProfile_joint (G := G) μ]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+  simp only [PMF.pure_bind]
+  change (mixedProfileJoint (G := G) μ).bind
+      (fun π => historyOutcomeDistPure (G := G) k (liftHistoryPureProfile (G := G) π)) =
+    (mixedProfileJoint (G := G) μ).bind
+      (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π))
+  congr 1
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+private theorem legalHistoryMixedToBehavioral_isLegal
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (hμ : IsLegalMixedProfile (G := G) μ) :
+    G.IsLegalBehavioralProfile (legalHistoryMixedToBehavioral (G := G) hLeg μ) := by
+  letI : ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) :=
+    HistoryNative.historyInfoStateFintype (G := G)
+  intro i h oi hoi
+  by_cases hex : ∃ (n : Nat) (ss : List G.History) (π₀ : HistoryPureProfile (G := G)),
+      (toHistoryObsModelCore G).projectStates i ss = h.playerView i ∧
+      Math.ParameterizedChain.pureRun
+        ((toHistoryObsModelCore G).pureStep) (toHistoryObsModelCore G).init n π₀ ss ≠ 0
+  · rcases hex with ⟨n, ss, π₀, hproj, hreach⟩
+    have hEq :=
+      ObsModelCore.mixedToBehavioralProfileWithFallback_eq_factorAt
+        (O := toHistoryObsModelCore G) hLocal (liftHistoryMixedProfile (G := G) μ)
+        (legalFallbackBehavioral (G := G) hLeg) i n ss π₀ hreach
+    have hEq' :
+        legalHistoryMixedToBehavioral (G := G) hLeg μ i (h.playerView i) =
+          ObsModelCore.mixedToBehavioralFactorAt
+            (O := toHistoryObsModelCore G) (liftHistoryMixedProfile (G := G) μ)
+            i n ss π₀ := by
+      have hEq'' := hEq
+      rwa [hproj] at hEq''
+    have hfactor :
+        oi ∈ (ObsModelCore.mixedToBehavioralFactorAt
+          (O := toHistoryObsModelCore G) (liftHistoryMixedProfile (G := G) μ)
+          i n ss π₀).support := by
+      rwa [hEq'] at hoi
+    rcases Math.PMFProduct.pushforward_support_fibre
+        (Math.ParameterizedChain.reweightPMF (liftHistoryMixedProfile (G := G) μ i)
+          (fun πᵢ => Math.ParameterizedChain.pureRun ((toHistoryObsModelCore G).pureStep)
+            (toHistoryObsModelCore G).init n (Function.update π₀ i πᵢ) ss))
+        (fun πᵢ => πᵢ ((toHistoryObsModelCore G).projectStates i ss)) oi hfactor with
+      ⟨πiCore, hπiAction, hπiReweight⟩
+    have hπiCoreSupp :
+        πiCore ∈ (liftHistoryMixedProfile (G := G) μ i).support :=
+      Math.ParameterizedChain.reweightPMF_support_subset _ _ hπiReweight
+    rcases Math.PMFProduct.pushforward_support_fibre
+        (μ i) (liftHistoryPureStrategy (G := G) i) πiCore hπiCoreSupp with
+      ⟨πi, hπiLift, hπiSupp⟩
+    have hval : πi (h.playerView i) = oi := by
+      have hact : πiCore ((toHistoryObsModelCore G).projectStates i ss) = oi := hπiAction
+      rw [← hπiLift] at hact
+      rw [hproj] at hact
+      simpa [liftHistoryPureStrategy] using hact
+    rw [← hval]
+    exact hμ i πi hπiSupp h
+  · have hfb :
+        legalHistoryMixedToBehavioral (G := G) hLeg μ i (h.playerView i) =
+          legalFallbackBehavioral (G := G) hLeg i (h.playerView i) := by
+      unfold legalHistoryMixedToBehavioral ObsModelCore.mixedToBehavioralProfileWithFallback
+      rw [dif_neg hex]
+    rw [hfb] at hoi
+    exact legalFallbackBehavioral_isLegal (G := G) hLeg i h hoi
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> legal behavioral direction for FOSGs.**
+
+If the independent native mixed profile supports only legal pure strategies,
+then the native M→B behavioral witness is a legal behavioral profile. -/
+theorem mixed_to_legal_behavioral
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (hμ : IsLegalMixedProfile (G := G) μ)
+    (k : Nat) :
+    ∃ β : G.LegalBehavioralProfile,
+      historyOutcomeDist (G := G) k β.toProfile =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π)) := by
+  let βraw := legalHistoryMixedToBehavioral (G := G) hLeg μ
+  have hβlegal : G.IsLegalBehavioralProfile βraw :=
+    legalHistoryMixedToBehavioral_isLegal (G := G) hLeg hLocal μ hμ
+  let β : G.LegalBehavioralProfile := fun i => ⟨βraw i, hβlegal i⟩
+  refine ⟨β, ?_⟩
+  change historyOutcomeDist (G := G) k βraw = _
+  exact legalHistoryMixedToBehavioral_historyOutcomeDist
+    (G := G) hLeg hMass hFactor hLocal μ k
 
 section Step
 
@@ -1121,6 +1650,650 @@ theorem behavioral_to_mixed_eu
   simpa [hEqWeight] using hMain
 
 end TerminalCorollaries
+
+set_option linter.unusedFintypeInType false
+set_option linter.unusedSectionVars false
+set_option linter.unusedDecidableInType false
+
+section ReachableNative
+
+variable [Fintype ι] [Fintype G.History] [∀ i, Fintype (Act i)]
+
+/-- Native reachable pure-strategy type. -/
+abbrev ReachablePureStrategy (i : ι) : Type :=
+  _root_.GameTheory.FOSG.ReachablePureStrategy G i
+
+/-- Native reachable behavioral-profile type. -/
+abbrev ReachableBehavioralProfile : Type :=
+  _root_.GameTheory.FOSG.ReachableBehavioralProfile G
+
+noncomputable local instance reachablePureStrategyFintype
+    (i : ι) : Fintype (ReachablePureStrategy (G := G) i) := by
+  classical
+  dsimp [ReachablePureStrategy, _root_.GameTheory.FOSG.ReachablePureStrategy]
+  infer_instance
+
+noncomputable local instance reachablePureProfileFintype
+    : Fintype (_root_.GameTheory.FOSG.ReachablePureProfile G) := by
+  classical
+  dsimp [_root_.GameTheory.FOSG.ReachablePureProfile, ReachablePureStrategy,
+    _root_.GameTheory.FOSG.ReachablePureStrategy]
+  infer_instance
+
+/-- Native product mixed strategy induced by independently sampling a pure
+strategy at each reachable information state for each player. -/
+noncomputable def reachableBehavioralToMixed
+    (β : ReachableBehavioralProfile (G := G)) :
+    ∀ i, PMF (ReachablePureStrategy (G := G) i) := by
+  classical
+  intro i
+  exact Math.PMFProduct.pmfPi (β i)
+
+/-- Native joint mixed strategy over reachable pure profiles. -/
+noncomputable def reachableBehavioralToMixedJoint
+    (β : ReachableBehavioralProfile (G := G)) :
+    PMF (_root_.GameTheory.FOSG.ReachablePureProfile G) := by
+  classical
+  exact Math.PMFProduct.pmfPi (reachableBehavioralToMixed (G := G) β)
+
+open Classical in
+private theorem reachable_stepActionProb_pureToBehavioral
+    (π : _root_.GameTheory.FOSG.ReachablePureProfile G) (pref : G.History) (e : G.Step) :
+    G.stepActionProb (G.pureToBehavioral π.extend) pref e =
+      ∏ i, if π i (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0 := by
+  classical
+  unfold FOSG.stepActionProb
+  refine Finset.prod_congr rfl ?_
+  intro i _
+  rw [FOSG.pureToBehavioral_apply]
+  simp [_root_.GameTheory.FOSG.ReachablePureProfile.extend, eq_comm]
+
+open Classical in
+private theorem reachable_marginal_stepActionProb
+    (β : ReachableBehavioralProfile (G := G)) (pref : G.History) (e : G.Step) :
+    ∑ π : _root_.GameTheory.FOSG.ReachablePureProfile G,
+      reachableBehavioralToMixedJoint (G := G) β π *
+        G.stepActionProb (G.pureToBehavioral π.extend) pref e =
+      G.stepActionProb β.extend pref e := by
+  classical
+  rw [show (∑ π : _root_.GameTheory.FOSG.ReachablePureProfile G,
+        reachableBehavioralToMixedJoint (G := G) β π *
+          G.stepActionProb (G.pureToBehavioral π.extend) pref e) =
+      ∑ ρ : ((i : ι) → ReachablePureStrategy (G := G) i),
+        (Math.PMFProduct.pmfPi (reachableBehavioralToMixed (G := G) β)) ρ *
+          (∏ i, if ρ i (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0) by
+      refine Finset.sum_congr rfl ?_
+      intro ρ _
+      rw [reachable_stepActionProb_pureToBehavioral (G := G) ρ pref e]
+      rfl]
+  have hprod :
+      (∑ ρ : ((i : ι) → ReachablePureStrategy (G := G) i),
+        (Math.PMFProduct.pmfPi (reachableBehavioralToMixed (G := G) β)) ρ *
+          (∏ i, if ρ i (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0)) =
+      ∑ ρ : ((i : ι) → ReachablePureStrategy (G := G) i),
+        ∏ i,
+          (reachableBehavioralToMixed (G := G) β i) (ρ i) *
+            (if ρ i (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0) := by
+    refine Finset.sum_congr rfl ?_
+    intro ρ _
+    rw [Math.PMFProduct.pmfPi_apply, ← Finset.prod_mul_distrib]
+  rw [hprod]
+  rw [show (∑ ρ : ((i : ι) → ReachablePureStrategy (G := G) i),
+        ∏ i,
+          (reachableBehavioralToMixed (G := G) β i) (ρ i) *
+            (if ρ i (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0)) =
+      ∏ i, ∑ πi : ReachablePureStrategy (G := G) i,
+        (reachableBehavioralToMixed (G := G) β i) πi *
+          (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0) by
+      simpa [_root_.GameTheory.FOSG.ReachablePureProfile] using
+        (@Fintype.prod_sum ι ENNReal _ _ _ (fun i => ReachablePureStrategy (G := G) i) _
+          (fun i πi =>
+            (reachableBehavioralToMixed (G := G) β i) πi *
+              (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0))).symm]
+  unfold FOSG.stepActionProb
+  refine Finset.prod_congr rfl ?_
+  intro i _
+  have hcoord :
+      ∑ πi : ReachablePureStrategy (G := G) i,
+        (reachableBehavioralToMixed (G := G) β i) πi *
+          (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0) =
+            β i (G.reachableInfoStateOfHistory i pref) (e.ownAction? i) := by
+    simpa [reachableBehavioralToMixed, mul_ite, mul_one, mul_zero] using
+      Math.PMFProduct.pmfPi_coord_mass (β i) (G.reachableInfoStateOfHistory i pref)
+        (e.ownAction? i)
+  simpa [_root_.GameTheory.FOSG.ReachableBehavioralProfile.extend] using hcoord
+
+private theorem reachable_marginal_stepProb
+    (β : ReachableBehavioralProfile (G := G)) (pref : G.History) (e : G.Step) :
+    ∑ π : _root_.GameTheory.FOSG.ReachablePureProfile G,
+      reachableBehavioralToMixedJoint (G := G) β π *
+        G.stepProb (G.pureToBehavioral π.extend) pref e =
+      G.stepProb β.extend pref e := by
+  let p : ENNReal := (G.transition e.src e.act) e.dst
+  calc
+    ∑ π : _root_.GameTheory.FOSG.ReachablePureProfile G,
+        reachableBehavioralToMixedJoint (G := G) β π *
+          G.stepProb (G.pureToBehavioral π.extend) pref e
+      = ∑ π : _root_.GameTheory.FOSG.ReachablePureProfile G,
+          (reachableBehavioralToMixedJoint (G := G) β π *
+            G.stepActionProb (G.pureToBehavioral π.extend) pref e) * p := by
+              simp [p, mul_assoc]
+    _ = (∑ π : _root_.GameTheory.FOSG.ReachablePureProfile G,
+          reachableBehavioralToMixedJoint (G := G) β π *
+            G.stepActionProb (G.pureToBehavioral π.extend) pref e) * p := by
+              rw [Finset.sum_mul]
+    _ = G.stepActionProb β.extend pref e * p := by
+          rw [reachable_marginal_stepActionProb (G := G) β pref e]
+    _ = G.stepProb β.extend pref e := by
+          simp [p]
+
+private noncomputable def swapReachableProfileBy
+    (P : ∀ i, G.ReachableInfoState i → Prop)
+    (π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G) :
+    _root_.GameTheory.FOSG.ReachablePureProfile G := by
+  classical
+  exact fun i v => if P i v then π₁ i v else π₂ i v
+
+private theorem swapReachableProfileBy_involutive
+    (P : ∀ i, G.ReachableInfoState i → Prop) :
+    Function.Involutive
+      (fun (p : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+          _root_.GameTheory.FOSG.ReachablePureProfile G) =>
+        (swapReachableProfileBy (G := G) P p.1 p.2,
+          swapReachableProfileBy (G := G) P p.2 p.1)) := by
+  classical
+  intro ⟨π₁, π₂⟩
+  apply Prod.ext
+  · funext i v
+    by_cases hv : P i v <;> simp [swapReachableProfileBy, hv]
+  · funext i v
+    by_cases hv : P i v <;> simp [swapReachableProfileBy, hv]
+
+private theorem swapReachableBy_weight_eq
+    (P : ∀ i, G.ReachableInfoState i → Prop)
+    (β : ReachableBehavioralProfile (G := G))
+    (π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G) :
+    reachableBehavioralToMixedJoint (G := G) β (swapReachableProfileBy (G := G) P π₁ π₂) *
+      reachableBehavioralToMixedJoint (G := G) β (swapReachableProfileBy (G := G) P π₂ π₁) =
+    reachableBehavioralToMixedJoint (G := G) β π₁ *
+      reachableBehavioralToMixedJoint (G := G) β π₂ := by
+  simp only [reachableBehavioralToMixedJoint, reachableBehavioralToMixed,
+    Math.PMFProduct.pmfPi_apply]
+  rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
+  congr 1
+  funext i
+  simp only [swapReachableProfileBy]
+  rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
+  congr 1
+  funext v
+  by_cases hv : P i v <;> simp [hv, mul_comm]
+
+private theorem reachable_scalar_indep
+    (P : ∀ i, G.ReachableInfoState i → Prop)
+    (β : ReachableBehavioralProfile (G := G))
+    (f g : _root_.GameTheory.FOSG.ReachablePureProfile G → ENNReal)
+    (hf : ∀ π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G,
+      (∀ i (v : G.ReachableInfoState i), P i v → π₁ i v = π₂ i v) →
+        f π₁ = f π₂)
+    (hg : ∀ π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G,
+      (∀ i (v : G.ReachableInfoState i), ¬ P i v → π₁ i v = π₂ i v) →
+        g π₁ = g π₂) :
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π * (f π * g π) =
+      (∑ π, reachableBehavioralToMixedJoint (G := G) β π * f π) *
+      (∑ π, reachableBehavioralToMixedJoint (G := G) β π * g π) := by
+  set ν : PMF (_root_.GameTheory.FOSG.ReachablePureProfile G) :=
+    reachableBehavioralToMixedJoint (G := G) β
+  have hf_swap :
+      ∀ π₁ π₂, f (swapReachableProfileBy (G := G) P π₁ π₂) = f π₁ := by
+    intro π₁ π₂
+    apply hf
+    intro i v hv
+    simp [swapReachableProfileBy, hv]
+  have hg_swap :
+      ∀ π₁ π₂, g (swapReachableProfileBy (G := G) P π₁ π₂) = g π₂ := by
+    intro π₁ π₂
+    apply hg
+    intro i v hv
+    simp [swapReachableProfileBy, hv]
+  let W := fun π => ν π
+  let Fsame : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+      _root_.GameTheory.FOSG.ReachablePureProfile G → ENNReal :=
+    fun p => W p.1 * W p.2 * (f p.1 * g p.1)
+  let Fcross : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+      _root_.GameTheory.FOSG.ReachablePureProfile G → ENNReal :=
+    fun p => W p.1 * W p.2 * (f p.1 * g p.2)
+  let e : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+      _root_.GameTheory.FOSG.ReachablePureProfile G →
+      _root_.GameTheory.FOSG.ReachablePureProfile G ×
+        _root_.GameTheory.FOSG.ReachablePureProfile G :=
+    fun p => (swapReachableProfileBy (G := G) P p.1 p.2,
+      swapReachableProfileBy (G := G) P p.2 p.1)
+  have he : Function.Involutive e := swapReachableProfileBy_involutive (G := G) P
+  have hpoint : ∀ p, Fcross p = Fsame (e p) := by
+    intro ⟨π₁, π₂⟩
+    simp only [Fcross, Fsame, e, W]
+    rw [swapReachableBy_weight_eq (G := G) P β π₁ π₂, hf_swap π₁ π₂, hg_swap π₁ π₂]
+  have hFsame_eq_Fcross :
+      ∑ p : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+          _root_.GameTheory.FOSG.ReachablePureProfile G, Fsame p =
+        ∑ p : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+          _root_.GameTheory.FOSG.ReachablePureProfile G, Fcross p := by
+    calc
+      ∑ p, Fsame p = ∑ p, Fsame (e p) :=
+        (Math.PMFProduct.sum_univ_eq_sum_univ_of_involutive e he Fsame).symm
+      _ = ∑ p, Fcross p := by
+        congr 1
+        funext p
+        exact (hpoint p).symm
+  have hFsame_expand :
+      ∑ p : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+          _root_.GameTheory.FOSG.ReachablePureProfile G, Fsame p =
+        (∑ π, ν π * (f π * g π)) * (∑ π₂, ν π₂) := by
+    have h1 :
+        ∀ (a b : _root_.GameTheory.FOSG.ReachablePureProfile G),
+          Fsame (a, b) = (ν a * (f a * g a)) * ν b := fun a b => by
+            simp [Fsame, W]
+            ring
+    simp_rw [Fintype.sum_prod_type, h1, ← Finset.mul_sum, ← Finset.sum_mul]
+  have hFcross_expand :
+      ∑ p : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+          _root_.GameTheory.FOSG.ReachablePureProfile G, Fcross p =
+        (∑ π, ν π * f π) * (∑ π, ν π * g π) := by
+    have h1 :
+        ∀ (a b : _root_.GameTheory.FOSG.ReachablePureProfile G),
+          Fcross (a, b) = (ν a * f a) * (ν b * g b) := fun a b => by
+            simp [Fcross, W]
+            ring
+    simp_rw [Fintype.sum_prod_type, h1, ← Finset.mul_sum]
+    rw [← Finset.sum_mul]
+  have hsum_one : (∑ π : _root_.GameTheory.FOSG.ReachablePureProfile G, ν π) = 1 := by
+    have := PMF.tsum_coe ν
+    rwa [tsum_fintype] at this
+  calc
+    ∑ π, ν π * (f π * g π) = (∑ π, ν π * (f π * g π)) * 1 := by ring
+    _ = (∑ π, ν π * (f π * g π)) * (∑ π₂, ν π₂) := by rw [hsum_one]
+    _ = ∑ p : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+          _root_.GameTheory.FOSG.ReachablePureProfile G, Fsame p := hFsame_expand.symm
+    _ = ∑ p : _root_.GameTheory.FOSG.ReachablePureProfile G ×
+          _root_.GameTheory.FOSG.ReachablePureProfile G, Fcross p := hFsame_eq_Fcross
+    _ = (∑ π, ν π * f π) * (∑ π, ν π * g π) := hFcross_expand
+
+private def ReachableSeenBefore
+    (h : G.History) (i : ι) (v : G.ReachableInfoState i) : Prop :=
+  ∃ h' : G.History, h'.IsPrefix h ∧ h' ≠ h ∧ G.reachableInfoStateOfHistory i h' = v
+
+private theorem reachable_seenBefore_mono_appendStep
+    {h : G.History} {e : G.Step} {hsrc : e.src = h.lastState}
+    {i : ι} {v : G.ReachableInfoState i}
+    (hSeen : ReachableSeenBefore (G := G) h i v) :
+    ReachableSeenBefore (G := G) (h.appendStep e hsrc) i v := by
+  rcases hSeen with ⟨h', hpref, hne, hv⟩
+  refine ⟨h', History.prefix_trans hpref ?_, ?_, hv⟩
+  · exact ⟨[e], by simp [History.appendStep]⟩
+  · intro hEq
+    have hpref' : (h.appendStep e hsrc).IsPrefix h := by
+      simpa [hEq] using hpref
+    rcases hpref' with ⟨s, hs⟩
+    have hlen := congrArg List.length hs
+    simp [History.appendStep] at hlen
+
+private theorem reachable_seenBefore_current_appendStep
+    (h : G.History) (e : G.Step) (hsrc : e.src = h.lastState) (i : ι) :
+    ReachableSeenBefore (G := G) (h.appendStep e hsrc) i
+      (G.reachableInfoStateOfHistory i h) := by
+  refine ⟨h, ?_, ?_, rfl⟩
+  · exact ⟨[e], by simp [History.appendStep]⟩
+  · intro hEq
+    have hlen := congrArg (fun h' : G.History => h'.steps.length) hEq
+    simp [History.appendStep] at hlen
+
+private theorem reachable_not_seenBefore_current
+    (h : G.History) (i : ι) :
+    ¬ ReachableSeenBefore (G := G) h i (G.reachableInfoStateOfHistory i h) := by
+  intro hSeen
+  rcases hSeen with ⟨h', hpref, hne, hv⟩
+  have hv' : h'.playerView i = h.playerView i := by
+    exact congrArg Subtype.val hv
+  exact History.playerView_ne_of_properPrefix (G := G) i hpref hne hv'
+
+private theorem reachable_stepProb_pure_congr_at_history
+    {π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G}
+    (h : G.History) (e : G.Step)
+    (hag : ∀ i, π₁ i (G.reachableInfoStateOfHistory i h) =
+      π₂ i (G.reachableInfoStateOfHistory i h)) :
+    G.stepProb (G.pureToBehavioral π₁.extend) h e =
+      G.stepProb (G.pureToBehavioral π₂.extend) h e := by
+  classical
+  rw [G.stepProb_eq_stepActionProb_mul_transition,
+    G.stepProb_eq_stepActionProb_mul_transition]
+  congr 1
+  rw [reachable_stepActionProb_pureToBehavioral (G := G) π₁ h e,
+    reachable_stepActionProb_pureToBehavioral (G := G) π₂ h e]
+  refine Finset.prod_congr rfl ?_
+  intro i _
+  rw [hag i]
+
+/-- Pure-history weight depends only on reachable information-state coordinates
+that appear on proper prefixes of the history. -/
+private theorem reachable_prob_pure_congr_of_agreeOnSeenBefore
+    {π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G}
+    (h : G.History)
+    (hag : ∀ i (v : G.ReachableInfoState i),
+      ReachableSeenBefore (G := G) h i v → π₁ i v = π₂ i v) :
+    History.prob (G.pureToBehavioral π₁.extend) h =
+      History.prob (G.pureToBehavioral π₂.extend) h := by
+  classical
+  let H :
+      ∀ (es : List G.Step) (hchain : G.StepChainFrom G.init es),
+        (∀ i (v : G.ReachableInfoState i),
+          ReachableSeenBefore (G := G) ({ steps := es, chain := hchain } : G.History) i v →
+            π₁ i v = π₂ i v) →
+          History.prob (G.pureToBehavioral π₁.extend)
+              ({ steps := es, chain := hchain } : G.History) =
+            History.prob (G.pureToBehavioral π₂.extend)
+              ({ steps := es, chain := hchain } : G.History) := by
+    intro es
+    induction es using List.reverseRecOn with
+    | nil =>
+        intro hchain hag'
+        simp [History.prob]
+    | append_singleton es e ih =>
+        intro hchain hag'
+        let prefChain : G.StepChainFrom G.init es :=
+          stepChainFrom_prefix (G := G) hchain
+        let pref : G.History := ⟨es, prefChain⟩
+        have hsrc : e.src = pref.lastState := by
+          simpa [pref, History.lastState] using stepChainFrom_last_src (G := G) hchain
+        have hh :
+            ({ steps := es ++ [e], chain := hchain } : G.History) = pref.appendStep e hsrc := by
+          apply History.ext
+          simp [pref, History.appendStep]
+        rw [hh] at hag' ⊢
+        have hPref :
+            History.prob (G.pureToBehavioral π₁.extend) pref =
+              History.prob (G.pureToBehavioral π₂.extend) pref := by
+          apply ih prefChain
+          intro i v hSeen
+          exact hag' i v (reachable_seenBefore_mono_appendStep (G := G) hSeen)
+        have hStep :
+            G.stepProb (G.pureToBehavioral π₁.extend) pref e =
+            G.stepProb (G.pureToBehavioral π₂.extend) pref e := by
+          apply reachable_stepProb_pure_congr_at_history (G := G) pref e
+          intro i
+          exact hag' i _ (reachable_seenBefore_current_appendStep (G := G) pref e hsrc i)
+        rw [History.prob_appendStep, History.prob_appendStep, hPref, hStep]
+  exact H h.steps h.chain hag
+
+private theorem reachable_scalar_indep_stepProb
+    (P : ∀ i, G.ReachableInfoState i → Prop)
+    (β : ReachableBehavioralProfile (G := G))
+    (f : _root_.GameTheory.FOSG.ReachablePureProfile G → ENNReal)
+    (h : G.History) (e : G.Step)
+    (hf : ∀ π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G,
+      (∀ i (v : G.ReachableInfoState i), P i v → π₁ i v = π₂ i v) →
+        f π₁ = f π₂)
+    (hP : ∀ i, ¬ P i (G.reachableInfoStateOfHistory i h)) :
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+      (f π * G.stepProb (G.pureToBehavioral π.extend) h e) =
+        (∑ π, reachableBehavioralToMixedJoint (G := G) β π * f π) *
+          G.stepProb β.extend h e := by
+  classical
+  have hg : ∀ π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G,
+      (∀ i (v : G.ReachableInfoState i), ¬ P i v → π₁ i v = π₂ i v) →
+        G.stepProb (G.pureToBehavioral π₁.extend) h e =
+          G.stepProb (G.pureToBehavioral π₂.extend) h e := by
+    intro π₁ π₂ hag
+    apply reachable_stepProb_pure_congr_at_history (G := G) h e
+    intro i
+    exact hag i _ (hP i)
+  calc
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+        (f π * G.stepProb (G.pureToBehavioral π.extend) h e)
+      = (∑ π, reachableBehavioralToMixedJoint (G := G) β π * f π) *
+          (∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+            G.stepProb (G.pureToBehavioral π.extend) h e) := by
+              exact reachable_scalar_indep (G := G) P β f
+                (fun π => G.stepProb (G.pureToBehavioral π.extend) h e) hf hg
+    _ = (∑ π, reachableBehavioralToMixedJoint (G := G) β π * f π) *
+          G.stepProb β.extend h e := by
+            rw [reachable_marginal_stepProb (G := G) β h e]
+
+private theorem reachable_marginal_prob
+    (β : ReachableBehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+      History.prob (G.pureToBehavioral π.extend) h =
+        History.prob β.extend h := by
+  classical
+  let H :
+      ∀ (es : List G.Step) (hchain : G.StepChainFrom G.init es),
+        ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+          History.prob (G.pureToBehavioral π.extend)
+            ({ steps := es, chain := hchain } : G.History) =
+            History.prob β.extend ({ steps := es, chain := hchain } : G.History) := by
+    intro es
+    induction es using List.reverseRecOn with
+    | nil =>
+        intro hchain
+        simp [History.prob]
+        have := PMF.tsum_coe (reachableBehavioralToMixedJoint (G := G) β)
+        rwa [tsum_fintype] at this
+    | append_singleton es e ih =>
+        intro hchain
+        let prefChain : G.StepChainFrom G.init es :=
+          stepChainFrom_prefix (G := G) hchain
+        let pref : G.History := ⟨es, prefChain⟩
+        have hsrc : e.src = pref.lastState := by
+          simpa [pref, History.lastState] using stepChainFrom_last_src (G := G) hchain
+        have hh :
+            ({ steps := es ++ [e], chain := hchain } : G.History) = pref.appendStep e hsrc := by
+          apply History.ext
+          simp [pref, History.appendStep]
+        rw [hh]
+        calc
+          ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+              History.prob (G.pureToBehavioral π.extend) (pref.appendStep e hsrc)
+            = ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+                (History.prob (G.pureToBehavioral π.extend) pref *
+                  G.stepProb (G.pureToBehavioral π.extend) pref e) := by
+                    refine Finset.sum_congr rfl ?_
+                    intro π _
+                    rw [History.prob_appendStep]
+          _ = (∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+                History.prob (G.pureToBehavioral π.extend) pref) *
+                G.stepProb β.extend pref e := by
+                  exact reachable_scalar_indep_stepProb (G := G)
+                    (P := ReachableSeenBefore (G := G) pref) β
+                    (fun π => History.prob (G.pureToBehavioral π.extend) pref)
+                    pref e
+                    (fun π₁ π₂ hag =>
+                      reachable_prob_pure_congr_of_agreeOnSeenBefore (G := G) pref hag)
+                    (fun i => reachable_not_seenBefore_current (G := G) pref i)
+          _ = History.prob β.extend pref * G.stepProb β.extend pref e := by
+                rw [ih prefChain]
+          _ = History.prob β.extend (pref.appendStep e hsrc) := by
+                rw [History.prob_appendStep]
+  exact H h.steps h.chain
+
+variable [DecidablePred G.terminal]
+
+private theorem reachable_marginal_terminalWeight
+    (β : ReachableBehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+      History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h =
+        History.terminalWeight (G := G) β.extend h := by
+  by_cases hterm : G.terminal h.lastState
+  · have hsum :
+        (∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+          History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h) =
+          ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+            History.prob (G.pureToBehavioral π.extend) h := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [History.terminalWeight_of_terminal (G := G)
+                (σ := G.pureToBehavioral π.extend) hterm]
+    rw [History.terminalWeight_of_terminal (G := G) β.extend hterm, hsum,
+      reachable_marginal_prob]
+  · rw [History.terminalWeight_of_not_terminal (G := G) β.extend hterm]
+    have hsum :
+        (∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+          History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h) =
+          ∑ π, reachableBehavioralToMixedJoint (G := G) β π * 0 := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [History.terminalWeight_of_not_terminal (G := G)
+                (σ := G.pureToBehavioral π.extend) hterm]
+    rw [hsum]
+    simp
+
+private theorem reachable_marginal_terminalMassOn
+    (β : ReachableBehavioralProfile (G := G)) (hs : Finset G.History) :
+    (∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+      History.terminalMassOn (G := G) (G.pureToBehavioral π.extend) hs) =
+      History.terminalMassOn (G := G) β.extend hs := by
+  calc
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+        History.terminalMassOn (G := G) (G.pureToBehavioral π.extend) hs
+      = ∑ π, Finset.sum hs (fun h =>
+          reachableBehavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h) := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [History.terminalMassOn, Finset.mul_sum]
+    _ = Finset.sum hs (fun h => ∑ π,
+          reachableBehavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h) := by
+              rw [Finset.sum_comm]
+    _ = History.terminalMassOn (G := G) β.extend hs := by
+          rw [History.terminalMassOn]
+          refine Finset.sum_congr rfl ?_
+          intro h hh
+          exact reachable_marginal_terminalWeight (G := G) β h
+
+private theorem reachable_marginal_terminalLaw
+    (β : ReachableBehavioralProfile (G := G)) :
+    (fun hs =>
+      ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+        History.terminalLaw (G := G) (G.pureToBehavioral π.extend) hs) =
+      History.terminalLaw (G := G) β.extend := by
+  funext hs
+  simpa [History.terminalLaw] using reachable_marginal_terminalMassOn (G := G) β hs
+
+private theorem reachable_marginal_terminalWeight_toReal
+    (β : ReachableBehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+      (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal =
+      (History.terminalWeight (G := G) β.extend h).toReal := by
+  calc
+    ∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+        (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal
+      = ∑ π,
+          (reachableBehavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal := by
+              refine Finset.sum_congr rfl ?_
+              intro π _
+              rw [ENNReal.toReal_mul]
+    _ = (∑ π,
+          reachableBehavioralToMixedJoint (G := G) β π *
+            History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal := by
+          symm
+          apply ENNReal.toReal_sum
+          intro π _
+          exact ENNReal.mul_ne_top
+            (PMF.apply_ne_top (reachableBehavioralToMixedJoint (G := G) β) π)
+            (History.terminalWeight_ne_top (G := G) (σ := G.pureToBehavioral π.extend) h)
+    _ = (History.terminalWeight (G := G) β.extend h).toReal := by
+          rw [reachable_marginal_terminalWeight (G := G) β h]
+
+private theorem reachable_marginal_terminalUtilitySum
+    (β : ReachableBehavioralProfile (G := G)) (i : ι) :
+    ∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+      (∑ h : G.History,
+        (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal *
+          History.utility h i) =
+      ∑ h : G.History,
+        (History.terminalWeight (G := G) β.extend h).toReal * History.utility h i := by
+  classical
+  calc
+    ∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+        ∑ h : G.History,
+          (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal *
+            History.utility h i
+      = ∑ π, ∑ h : G.History,
+          ((reachableBehavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal) *
+              History.utility h i := by
+                refine Finset.sum_congr rfl ?_
+                intro π _
+                rw [Finset.mul_sum]
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                simp [mul_assoc]
+    _ = ∑ h : G.History, ∑ π,
+          ((reachableBehavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal) *
+              History.utility h i := by
+                rw [Finset.sum_comm]
+    _ = ∑ h : G.History,
+          (∑ π, (reachableBehavioralToMixedJoint (G := G) β π).toReal *
+            (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal) *
+              History.utility h i := by
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                rw [← Finset.sum_mul]
+    _ = ∑ h : G.History,
+          (History.terminalWeight (G := G) β.extend h).toReal * History.utility h i := by
+                refine Finset.sum_congr rfl ?_
+                intro h _
+                simpa using
+                  congrArg (fun x => x * History.utility h i)
+                    (reachable_marginal_terminalWeight_toReal (G := G) β h)
+
+/-- Native reachable-coordinate Kuhn theorem for FOSGs at realized histories. -/
+theorem behavioral_to_mixed_prob_reachable
+    (β : ReachableBehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+      History.prob (G.pureToBehavioral π.extend) h =
+        History.prob β.extend h :=
+  reachable_marginal_prob (G := G) β h
+
+/-- Native reachable-coordinate Kuhn theorem for terminal-history weights. -/
+theorem behavioral_to_mixed_terminalWeight_reachable
+    (β : ReachableBehavioralProfile (G := G)) (h : G.History) :
+    ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+      History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h =
+        History.terminalWeight (G := G) β.extend h :=
+  reachable_marginal_terminalWeight (G := G) β h
+
+/-- Native reachable-coordinate Kuhn theorem for finite terminal events. -/
+theorem behavioral_to_mixed_terminalMassOn_reachable
+    (β : ReachableBehavioralProfile (G := G)) (hs : Finset G.History) :
+    (∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+      History.terminalMassOn (G := G) (G.pureToBehavioral π.extend) hs) =
+      History.terminalMassOn (G := G) β.extend hs :=
+  reachable_marginal_terminalMassOn (G := G) β hs
+
+/-- Native reachable-coordinate Kuhn theorem for terminal laws. -/
+theorem behavioral_to_mixed_terminalLaw_reachable
+    (β : ReachableBehavioralProfile (G := G)) :
+    (fun hs =>
+      ∑ π, reachableBehavioralToMixedJoint (G := G) β π *
+        History.terminalLaw (G := G) (G.pureToBehavioral π.extend) hs) =
+      History.terminalLaw (G := G) β.extend :=
+  reachable_marginal_terminalLaw (G := G) β
+
+/-- Native reachable-coordinate Kuhn theorem for FOSG expected utility. -/
+theorem behavioral_to_mixed_eu_reachable
+    (hNorm : G.HasNormalizedTerminalLaw)
+    (β : G.ReachableLegalBehavioralProfile) (i : ι) :
+    ∑ π, (reachableBehavioralToMixedJoint (G := G) β.toProfile π).toReal *
+      (∑ h : G.History,
+        (History.terminalWeight (G := G) (G.pureToBehavioral π.extend) h).toReal *
+          History.utility h i) =
+      (G.toKernelGame hNorm).eu β.extend i := by
+  rw [G.toKernelGame_eu_eq hNorm β.extend i]
+  exact reachable_marginal_terminalUtilitySum (G := G) β.toProfile i
+
+end ReachableNative
 
 end Kuhn
 

@@ -782,55 +782,79 @@ theorem mixedToMediator_eq_pmfPi_factor
     hν_def]
   exact reweightPMF_pmfPi μ wᵢ hCwi0 hCwit
 
-/-- Core semantic mixed-to-behavioral theorem on `ObsModelCore`. -/
-theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
-    (hMass : StepMassInvariant O)
-    (hFactor : StepSupportFactorization O)
+/-- Player `i`'s posterior action factor at a reachable trace in the core
+mixed-to-behavioral construction. -/
+noncomputable def mixedToBehavioralFactorAt
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (i : ι) (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O) :
+    PMF (Act i (O.currentObs i (O.projectStates i ss))) :=
+  Math.ProbabilityMassFunction.pushforward
+    (reweightPMF (μ i)
+      (fun πᵢ => pureRun (O.pureStep) O.init n
+        (Function.update π₀ i πᵢ) ss))
+    (fun πᵢ => πᵢ (O.projectStates i ss))
+
+open Classical in
+/-- Core mixed-to-behavioral witness with an explicit fallback at information
+states not reached by any pure profile. The run-equality proof only uses the
+reachable branch; language frontends can choose a fallback satisfying their
+own legality predicates. -/
+noncomputable def mixedToBehavioralProfileWithFallback
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (fallback : ObsModelCore.BehavioralProfile O) :
+    ObsModelCore.BehavioralProfile O := fun i v_i =>
+  if h : ∃ (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
+      O.projectStates i ss = v_i ∧
+      pureRun (O.pureStep) O.init n π₀ ss ≠ 0
+  then h.choose_spec.choose_spec.choose_spec.1 ▸
+    mixedToBehavioralFactorAt (O := O) μ i h.choose h.choose_spec.choose
+      h.choose_spec.choose_spec.choose
+  else fallback i v_i
+
+theorem mixedToBehavioralProfileWithFallback_eq_factorAt
     (hLocal : ∀ i, ActionPosteriorLocal O i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
-    (k : Nat) :
-    ∃ β : ObsModelCore.BehavioralProfile O,
-      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
+    (fallback : ObsModelCore.BehavioralProfile O)
+    (i : ι) (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O)
+    (hreach : pureRun (O.pureStep) O.init n π₀ ss ≠ 0) :
+    mixedToBehavioralProfileWithFallback (O := O) μ fallback i (O.projectStates i ss) =
+      mixedToBehavioralFactorAt (O := O) μ i n ss π₀ := by
   classical
-  set ν := pmfPi μ with hν_def
-  let factorAt (i : ι) (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O) :
-      PMF (Act i (O.currentObs i (O.projectStates i ss))) :=
-    Math.ProbabilityMassFunction.pushforward
-      (reweightPMF (μ i)
-        (fun πᵢ => pureRun (O.pureStep) O.init n
-          (Function.update π₀ i πᵢ) ss))
-      (fun πᵢ => πᵢ (O.projectStates i ss))
   have factorAt_obs_local :
       ∀ (i : ι) (n₁ n₂ : Nat) (ss₁ ss₂ : List σ)
         (π₁ π₂ : ObsModelCore.PureProfile O),
       O.projectStates i ss₁ = O.projectStates i ss₂ →
       pureRun (O.pureStep) O.init n₁ π₁ ss₁ ≠ 0 →
       pureRun (O.pureStep) O.init n₂ π₂ ss₂ ≠ 0 →
-      HEq (factorAt i n₁ ss₁ π₁) (factorAt i n₂ ss₂ π₂) := by
+      HEq (mixedToBehavioralFactorAt (O := O) μ i n₁ ss₁ π₁)
+        (mixedToBehavioralFactorAt (O := O) μ i n₂ ss₂ π₂) := by
     intro i n₁ n₂ ss₁ ss₂ π₁ π₂ hobs h₁ h₂
-    simpa [factorAt] using hLocal i n₁ n₂ π₁ π₂ ss₁ ss₂ hobs h₁ h₂ (μ i)
-  let β : ObsModelCore.BehavioralProfile O := fun i v_i =>
-    if h : ∃ (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
-        O.projectStates i ss = v_i ∧
-        pureRun (O.pureStep) O.init n π₀ ss ≠ 0
-    then h.choose_spec.choose_spec.choose_spec.1 ▸
-      factorAt i h.choose h.choose_spec.choose h.choose_spec.choose_spec.choose
-    else PMF.pure (Classical.arbitrary _)
-  have β_eq : ∀ (i : ι) (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
-      pureRun (O.pureStep) O.init n π₀ ss ≠ 0 →
-      β i (O.projectStates i ss) = factorAt i n ss π₀ := by
-    intro i n ss π₀ hreach
-    have hexist : ∃ (n' : Nat) (ss' : List σ) (π₀' : ObsModelCore.PureProfile O),
-        O.projectStates i ss' = O.projectStates i ss ∧
-        pureRun (O.pureStep) O.init n' π₀' ss' ≠ 0 := ⟨n, ss, π₀, rfl, hreach⟩
-    change (if h : _ then _ else _) = _
-    rw [dif_pos hexist]
-    have hps := hexist.choose_spec.choose_spec.choose_spec.1
-    have hreach' := hexist.choose_spec.choose_spec.choose_spec.2
-    exact eq_of_heq ((fwd_subst_heq (P := fun v => PMF (Act i (O.currentObs i v)))
-      hps (factorAt i _ _ _)).symm.trans
-      (factorAt_obs_local i _ n _ ss _ π₀ hps hreach' hreach))
-  refine ⟨β, ?_⟩
+    simpa [mixedToBehavioralFactorAt] using hLocal i n₁ n₂ π₁ π₂ ss₁ ss₂ hobs h₁ h₂ (μ i)
+  have hexist : ∃ (n' : Nat) (ss' : List σ) (π₀' : ObsModelCore.PureProfile O),
+      O.projectStates i ss' = O.projectStates i ss ∧
+      pureRun (O.pureStep) O.init n' π₀' ss' ≠ 0 := ⟨n, ss, π₀, rfl, hreach⟩
+  change (if h : _ then _ else _) = _
+  rw [dif_pos hexist]
+  have hps := hexist.choose_spec.choose_spec.choose_spec.1
+  have hreach' := hexist.choose_spec.choose_spec.choose_spec.2
+  exact eq_of_heq ((fwd_subst_heq (P := fun v => PMF (Act i (O.currentObs i v)))
+    hps (mixedToBehavioralFactorAt (O := O) μ i _ _ _)).symm.trans
+    (factorAt_obs_local i _ n _ ss _ π₀ hps hreach' hreach))
+
+/-- Core semantic mixed-to-behavioral theorem with an explicit fallback for
+unreached information states. -/
+theorem mixedToBehavioralProfileWithFallback_runDist [∀ i o, Nonempty (Act i o)]
+    (hMass : StepMassInvariant O)
+    (hFactor : StepSupportFactorization O)
+    (hLocal : ∀ i, ActionPosteriorLocal O i)
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (fallback : ObsModelCore.BehavioralProfile O)
+    (k : Nat) :
+    O.runDist k (mixedToBehavioralProfileWithFallback (O := O) μ fallback) =
+      (pmfPi μ).bind (O.runDistPure k) := by
+  classical
+  set ν := pmfPi μ with hν_def
+  let β := mixedToBehavioralProfileWithFallback (O := O) μ fallback
   suffices hfn : ∀ (n : Nat) (ss : List σ),
       (seqRun (condStep ν (O.pureStep) O.init) O.init n) ss ≠ 0 →
       O.stepDist β ss = condStep ν (O.pureStep) O.init n ss by
@@ -869,7 +893,22 @@ theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
   simp only [ObsModelCore.jointActionDist]
   congr 1
   funext i
-  exact β_eq i n ss π_w hw_ne
+  exact mixedToBehavioralProfileWithFallback_eq_factorAt (O := O) hLocal μ fallback i n ss π_w hw_ne
+
+/-- Core semantic mixed-to-behavioral theorem on `ObsModelCore`. -/
+theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
+    (hMass : StepMassInvariant O)
+    (hFactor : StepSupportFactorization O)
+    (hLocal : ∀ i, ActionPosteriorLocal O i)
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (k : Nat) :
+    ∃ β : ObsModelCore.BehavioralProfile O,
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
+  classical
+  refine ⟨mixedToBehavioralProfileWithFallback (O := O) μ
+    (fun i v => PMF.pure (Classical.arbitrary _)), ?_⟩
+  exact mixedToBehavioralProfileWithFallback_runDist
+    (O := O) hMass hFactor hLocal μ _ k
 
 /-- Variant of `mixedToMediator_eq_pmfPi_factor` using run-level support
 factorization instead of step-level. -/
