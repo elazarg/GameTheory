@@ -317,9 +317,59 @@ theorem mixed_to_behavioral_of_obsLocal
 abbrev PureStrategy (i : ι) : Type :=
   _root_.GameTheory.FOSG.PureStrategy G i
 
+/-- Native FOSG mixed-strategy profile: independently, each player samples a
+pure strategy for all of its information states. -/
+abbrev MixedProfile : Type :=
+  ∀ i, PMF (PureStrategy (G := G) i)
+
+noncomputable local instance mixedProfilePureStrategyFintype
+    [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (i : ι) : Fintype (PureStrategy (G := G) i) := by
+  classical
+  dsimp [PureStrategy, _root_.GameTheory.FOSG.PureStrategy]
+  infer_instance
+
 /-- Native FOSG behavioral-profile type. -/
 abbrev BehavioralProfile : Type :=
   _root_.GameTheory.FOSG.BehavioralProfile G
+
+/-- Native joint law induced by an independent per-player mixed profile. -/
+noncomputable abbrev mixedProfileJoint
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (μ : MixedProfile (G := G)) : PMF (_root_.GameTheory.FOSG.PureProfile G) :=
+  Math.PMFProduct.pmfPi μ
+
+/-- Lift a native FOSG pure strategy into the Kuhn execution core. -/
+noncomputable def liftPureStrategy
+    (i : ι) (π : PureStrategy (G := G) i) : KuhnLocalStrategy (G := G) i := by
+  intro v
+  exact π v
+
+/-- Lift a native FOSG pure profile into the Kuhn execution core. -/
+noncomputable def liftPureProfile
+    (π : _root_.GameTheory.FOSG.PureProfile G) : KuhnPureProfile (G := G) :=
+  fun i => liftPureStrategy (G := G) i (π i)
+
+/-- Lift a native independent mixed profile into the Kuhn execution core. -/
+noncomputable def liftMixedProfile
+    (μ : MixedProfile (G := G)) : ∀ i, PMF (KuhnLocalStrategy (G := G) i) :=
+  fun i => Math.ProbabilityMassFunction.pushforward (μ i) (liftPureStrategy (G := G) i)
+
+/-- Product sampling commutes with the native-to-core pure-profile lift. -/
+theorem liftMixedProfile_joint
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (μ : MixedProfile (G := G)) :
+    Math.PMFProduct.pmfPi (liftMixedProfile (G := G) μ) =
+      Math.ProbabilityMassFunction.pushforward
+        (mixedProfileJoint (G := G) μ) (liftPureProfile (G := G)) := by
+  classical
+  rw [mixedProfileJoint]
+  change Math.PMFProduct.pmfPi
+      (fun i => Math.ProbabilityMassFunction.pushforward (μ i) (liftPureStrategy (G := G) i)) =
+    Math.ProbabilityMassFunction.pushforward (Math.PMFProduct.pmfPi μ)
+      (fun π => fun i => liftPureStrategy (G := G) i (π i))
+  exact (Math.PMFProduct.pmfPi_push_coordwise μ
+    (fun i => liftPureStrategy (G := G) i)).symm
 
 /-- Native product mixed strategy induced by independently sampling a pure
 strategy at each information state for each player. -/
@@ -338,6 +388,60 @@ noncomputable def behavioralToMixedJoint
   by
     classical
     exact Math.PMFProduct.pmfPi (behavioralToMixed (G := G) β)
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, over native
+independent per-player mixed strategies.**
+
+Under the semantic step-mass invariance, support factorization, and
+posterior-locality assumptions, every native independent mixed profile
+is realized by a behavioral profile with the same bounded execution-state
+trace distribution. -/
+theorem mixed_to_behavioral_runDist
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : Bridge.StepMassInvariant G)
+    (hFactor : Bridge.StepSupportFactorization G)
+    (hLocal : ∀ i, Bridge.ActionPosteriorLocal G i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : KuhnBehavioralProfile (G := G),
+      runDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => runDistPure (G := G) k (liftPureProfile (G := G) π)) := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_semantic (G := G) hMass hFactor hLocal
+      (liftMixedProfile (G := G) μ) k
+  refine ⟨β, ?_⟩
+  rw [hβ, liftMixedProfile_joint (G := G) μ]
+  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, over native
+independent per-player mixed strategies, via full semantic obs-locality.**
+
+This is the obs-locality convenience form of `mixed_to_behavioral_runDist`. -/
+theorem mixed_to_behavioral_runDist_of_obsLocal
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : Bridge.StepMassInvariant G)
+    (hObsLocal : ∀ i, Bridge.ObsLocalFeasibilityFull G i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : KuhnBehavioralProfile (G := G),
+      runDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => runDistPure (G := G) k (liftPureProfile (G := G) π)) := by
+  obtain ⟨β, hβ⟩ :=
+    mixed_to_behavioral_of_obsLocal (G := G) hMass hObsLocal
+      (liftMixedProfile (G := G) μ) k
+  refine ⟨β, ?_⟩
+  rw [hβ, liftMixedProfile_joint (G := G) μ]
+  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
 
 section Step
 
