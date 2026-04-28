@@ -2101,6 +2101,202 @@ noncomputable def eraseReachableHistoryBehavioral
     G.ReachableBehavioralProfile :=
   fun i s => PMF.map (fun a : ReachableInfoLegalMove G i s => a.1) (β i s)
 
+private theorem reachableHistoryBehavioralJointActionDist_map_val
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (βcore : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile)
+    (β : G.ReachableLegalBehavioralProfile)
+    (hβ : β.toProfile = eraseReachableHistoryBehavioral (G := G) hLeg βcore)
+    (ss : List G.History) :
+    let O := toReachableHistoryObsModelCore G hLeg
+    let h : G.History := O.lastState ss
+    Math.ProbabilityMassFunction.pushforward
+        (O.jointActionDist βcore ss)
+        (fun a : ∀ i, ReachableInfoLegalMove G i (O.currentObs i (O.projectStates i ss)) =>
+          fun i => (a i).1) =
+      G.jointActionDist β.extend h := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  let h : G.History := O.lastState ss
+  have hmarg :
+      ∀ i,
+        Math.ProbabilityMassFunction.pushforward
+            (βcore i (O.projectStates i ss))
+            (fun a : ReachableInfoLegalMove G i (O.projectStates i ss) => a.1) =
+          β.extend.toProfile i (h.playerView i) := by
+    intro i
+    calc
+      Math.ProbabilityMassFunction.pushforward
+          (βcore i (O.projectStates i ss))
+          (fun a : ReachableInfoLegalMove G i (O.projectStates i ss) => a.1)
+        = Math.ProbabilityMassFunction.pushforward
+            (βcore i (G.reachableInfoStateOfHistory i h))
+            (fun a : ReachableInfoLegalMove G i
+                (G.reachableInfoStateOfHistory i h) => a.1) := by
+            rw [reachableHistory_projectStates_eq_last (G := G) hLeg i ss]
+      _ = (eraseReachableHistoryBehavioral (G := G) hLeg βcore i)
+            (G.reachableInfoStateOfHistory i h) := rfl
+      _ = β.toProfile i (G.reachableInfoStateOfHistory i h) := by
+            rw [← congrFun hβ i]
+      _ = β.extend.toProfile i (h.playerView i) := by
+            symm
+            exact _root_.GameTheory.FOSG.ReachableBehavioralStrategy.extend_apply_history
+              (G := G) (i := i) (σ := β.toProfile i) h
+  change Math.ProbabilityMassFunction.pushforward
+      (Math.PMFProduct.pmfPi (fun i => βcore i (O.projectStates i ss)))
+      (fun a => fun i => (a i).1) =
+    Math.PMFProduct.pmfPi (fun i => β.extend.toProfile i (h.playerView i))
+  rw [Math.PMFProduct.pmfPi_push_coordwise]
+  congr
+  funext i
+  exact hmarg i
+
+private theorem reachableHistoryBehavioralStepDist_eq_runDistFrom_one
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (βcore : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile)
+    (β : G.ReachableLegalBehavioralProfile)
+    (hβ : β.toProfile = eraseReachableHistoryBehavioral (G := G) hLeg βcore)
+    (ss : List G.History) :
+    let O := toReachableHistoryObsModelCore G hLeg
+    O.stepDist βcore ss =
+      History.runDistFrom G β.extend 1 (O.lastState ss) := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  let h : G.History := O.lastState ss
+  let rawOf :
+      (∀ i, ReachableInfoLegalMove G i (O.currentObs i (O.projectStates i ss))) →
+        JointAction Act :=
+    fun a i => (a i).1
+  let runRaw : JointAction Act → PMF G.History := fun raw =>
+    if hraw : G.legal h.lastState raw then
+      (G.transition h.lastState ⟨raw, hraw⟩).bind
+        (fun dst => PMF.pure (h.extendByOutcome ⟨raw, hraw⟩ dst))
+    else
+      PMF.pure h
+  change O.stepDist βcore ss = History.runDistFrom G β.extend 1 h
+  by_cases hterm : G.terminal h.lastState
+  · rw [History.runDistFrom_succ_terminal
+      (G := G) (σ := β.extend) (n := 0) (h := h) hterm]
+    change (O.jointActionDist βcore ss).bind
+        (fun a => O.step h (O.castJointAction ss a)) = PMF.pure h
+    have hstep :
+        ∀ a, O.step h (O.castJointAction ss a) = PMF.pure h := by
+      intro a
+      change (toReachableHistoryObsModelCore G hLeg).machine.step h
+          (O.castJointAction ss a) = PMF.pure h
+      dsimp [toReachableHistoryObsModelCore]
+      rw [dif_pos hterm]
+    rw [show
+        (fun a => O.step h (O.castJointAction ss a)) =
+          fun _ => PMF.pure h by
+        funext a
+        exact hstep a]
+    simp
+  · rw [History.runDistFrom_succ_nonterminal
+      (G := G) (σ := β.extend) (n := 0) (h := h) hterm]
+    have hleft :
+        O.stepDist βcore ss =
+          (Math.ProbabilityMassFunction.pushforward
+              (O.jointActionDist βcore ss) rawOf).bind runRaw := by
+      change O.stepDist βcore ss =
+        (PMF.map rawOf (O.jointActionDist βcore ss)).bind runRaw
+      rw [PMF.bind_map]
+      change (O.jointActionDist βcore ss).bind
+          (fun a => O.step h (O.castJointAction ss a)) =
+        (O.jointActionDist βcore ss).bind (runRaw ∘ rawOf)
+      apply congrArg
+      funext a
+      have hraw :
+          G.legal h.lastState (rawOf a) := by
+        rw [G.legal_iff_forall]
+        refine ⟨hterm, ?_⟩
+        intro i
+        have haiInfo :
+            rawOf a i ∈ G.availableMovesAtInfoState i
+              (G.reachableInfoStateOfHistory i h).1 := by
+          dsimp [rawOf]
+          have hai :
+              (a i).1 ∈ G.availableMovesAtInfoState i
+                (O.projectStates i ss).1 := (a i).2
+          simpa [O, h, reachableHistory_projectStates_eq_last (G := G) hLeg i ss] using hai
+        have hai : rawOf a i ∈ G.availableMoves h i := by
+          have hEq := G.availableMovesAtInfoState_eq_of_history hLeg i h
+          exact hEq ▸ haiInfo
+        simpa [FOSG.mem_availableMoves_iff] using hai
+      dsimp [runRaw]
+      change (toReachableHistoryObsModelCore G hLeg).machine.step h
+          (O.castJointAction ss a) =
+        if hraw' : G.legal h.lastState (rawOf a) then
+          (G.transition h.lastState ⟨rawOf a, hraw'⟩).bind
+            (fun dst => PMF.pure (h.extendByOutcome ⟨rawOf a, hraw'⟩ dst))
+        else PMF.pure h
+      dsimp [toReachableHistoryObsModelCore]
+      rw [dif_neg hterm, dif_pos hraw]
+      congr 1
+      · funext dst
+        apply congrArg (fun act => h.extendByOutcome act dst)
+        apply Subtype.ext
+        funext i
+        exact reachableHistory_castJointAction_val (G := G) hLeg ss a i
+      · congr 1
+        apply Subtype.ext
+        funext i
+        exact reachableHistory_castJointAction_val (G := G) hLeg ss a i
+    rw [hleft]
+    rw [reachableHistoryBehavioralJointActionDist_map_val
+      (G := G) hLeg βcore β hβ ss]
+    change (G.jointActionDist β.extend h).bind runRaw =
+      (G.legalActionLaw β.extend h hterm).bind
+        (fun a =>
+          (G.transition h.lastState a).bind
+            (fun dst => PMF.pure (h.extendByOutcome a dst)))
+    rw [← G.legalActionLaw_bind_eq_jointActionDist_bind β.extend h hterm runRaw]
+    apply congrArg
+    funext a
+    dsimp [runRaw]
+    rw [dif_pos a.2]
+
+theorem reachableHistoryOutcomeDist_eq_runDist
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable) (k : Nat)
+    (βcore : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile)
+    (β : G.ReachableLegalBehavioralProfile)
+    (hβ : β.toProfile = eraseReachableHistoryBehavioral (G := G) hLeg βcore) :
+    reachableHistoryOutcomeDist (G := G) hLeg k βcore =
+      G.runDist k β.extend := by
+  classical
+  induction k with
+  | zero =>
+      simp [reachableHistoryOutcomeDist, FOSG.runDist, ObsModelCore.runDist,
+        ObsModelCore.lastState, toReachableHistoryObsModelCore]
+  | succ k ih =>
+      let O := toReachableHistoryObsModelCore G hLeg
+      let σ := β.extend
+      change (O.runDist (k + 1) βcore).bind (fun ss => PMF.pure (O.lastState ss)) =
+        History.runDistFrom G σ (k + 1) (History.nil G)
+      rw [← History.runDistFrom_bind_runDistFrom
+        (G := G) σ k 1 (History.nil G)]
+      have ih' :
+          (O.runDist k βcore).bind (fun ss => PMF.pure (O.lastState ss)) =
+            History.runDistFrom G σ k (History.nil G) := by
+        simpa [reachableHistoryOutcomeDist, FOSG.runDist, O, σ] using ih
+      rw [← ih']
+      simp only [ObsModelCore.runDist]
+      rw [PMF.bind_bind, PMF.bind_bind]
+      congr 1
+      funext ss
+      rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+      conv_lhs =>
+        arg 2
+        ext t
+        rw [PMF.pure_bind, ObsModelCore.lastState_append_singleton]
+      rw [reachableHistoryBehavioralStepDist_eq_runDistFrom_one
+        (G := G) hLeg βcore β hβ ss]
+      simp [O, σ]
+
 private theorem eraseReachableHistoryBehavioral_isLegal
     (hLeg : G.LegalObservable)
     (β : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile) :
