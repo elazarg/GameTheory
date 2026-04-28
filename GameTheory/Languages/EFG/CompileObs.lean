@@ -107,7 +107,7 @@ noncomputable def compileObsModel (t : GameTree S Outcome) :
 
 /-- Core EFG compilation with the honest strategic state:
 the current active infoset (or `none` when inactive). -/
-noncomputable def compileObsCoreModel (t : GameTree S Outcome) :
+noncomputable def compileObsModelCore (t : GameTree S Outcome) :
     ObsModelCore S.Player (GameTree S Outcome)
       (fun i => Option (S.Infoset i))
       (CompiledAct S) where
@@ -120,18 +120,18 @@ noncomputable def compileObsCoreModel (t : GameTree S Outcome) :
 
 /-- Canonical core information state for observation `o`. -/
 def canonicalCoreInfoState (i : S.Player) (o : Option (S.Infoset i)) :
-    (compileObsCoreModel (S := S) (Outcome := Outcome) t).InfoState i :=
+    (compileObsModelCore (S := S) (Outcome := Outcome) t).InfoState i :=
   o
 
 @[simp] theorem currentObs_canonicalCoreInfoState (t : GameTree S Outcome)
     (i : S.Player) (o : Option (S.Infoset i)) :
-    (compileObsCoreModel (S := S) (Outcome := Outcome) t).currentObs i
+    (compileObsModelCore (S := S) (Outcome := Outcome) t).currentObs i
       (canonicalCoreInfoState (S := S) (Outcome := Outcome) (t := t) i o) = o := by
   rfl
 
 /-- Lift a native EFG pure profile to the honest core compilation. -/
 noncomputable def liftPureProfileCore (t : GameTree S Outcome) :
-    PureProfile S → ObsModelCore.PureProfile (compileObsCoreModel (S := S) (Outcome := Outcome) t)
+    PureProfile S → ObsModelCore.PureProfile (compileObsModelCore (S := S) (Outcome := Outcome) t)
   | π => fun i v =>
       match v with
       | none => PUnit.unit
@@ -141,7 +141,7 @@ noncomputable def liftPureProfileCore (t : GameTree S Outcome) :
 pure strategies: the `none` observation carries only the trivial action. -/
 noncomputable def pureStrategyEquivCoreLocalStrategy
     (t : GameTree S Outcome) (i : S.Player) :
-    PureStrategy S i ≃ (compileObsCoreModel (S := S) (Outcome := Outcome) t).LocalStrategy i where
+    PureStrategy S i ≃ (compileObsModelCore (S := S) (Outcome := Outcome) t).LocalStrategy i where
   toFun := fun π v =>
     match v with
     | none => PUnit.unit
@@ -158,18 +158,18 @@ noncomputable def pureStrategyEquivCoreLocalStrategy
 
 /-- Descend a compiled core pure profile back to a native EFG pure profile. -/
 noncomputable def descendPureProfileCore (t : GameTree S Outcome) :
-    ObsModelCore.PureProfile (compileObsCoreModel (S := S) (Outcome := Outcome) t) → PureProfile S
+    ObsModelCore.PureProfile (compileObsModelCore (S := S) (Outcome := Outcome) t) → PureProfile S
   | π => fun i I => π i (some I)
 
 /-- Lift a native mixed profile to the core compilation playerwise. -/
 noncomputable def liftMixedProfileCore (t : GameTree S Outcome) (μ : MixedProfile S) :
-    ∀ i, PMF ((compileObsCoreModel (S := S) (Outcome := Outcome) t).LocalStrategy i) :=
+    ∀ i, PMF ((compileObsModelCore (S := S) (Outcome := Outcome) t).LocalStrategy i) :=
   fun i => (μ i).map (pureStrategyEquivCoreLocalStrategy (S := S) (Outcome := Outcome) t i).toFun
 
 /-- Lift a native EFG behavioral profile to the honest core compilation. -/
 noncomputable def liftBehavioralProfileCore (t : GameTree S Outcome) :
     BehavioralProfile S →
-      ObsModelCore.BehavioralProfile (compileObsCoreModel (S := S) (Outcome := Outcome) t)
+      ObsModelCore.BehavioralProfile (compileObsModelCore (S := S) (Outcome := Outcome) t)
   | σ => fun i v =>
       match v with
       | none => PMF.pure PUnit.unit
@@ -177,7 +177,7 @@ noncomputable def liftBehavioralProfileCore (t : GameTree S Outcome) :
 
 /-- Descend a compiled core behavioral profile back to a native EFG behavioral profile. -/
 noncomputable def descendBehavioralProfileCore (t : GameTree S Outcome) :
-    ObsModelCore.BehavioralProfile (compileObsCoreModel (S := S) (Outcome := Outcome) t) →
+    ObsModelCore.BehavioralProfile (compileObsModelCore (S := S) (Outcome := Outcome) t) →
       BehavioralProfile S
   | β => fun i I => β i (some I)
 
@@ -207,7 +207,7 @@ noncomputable def descendBehavioralProfileCore (t : GameTree S Outcome) :
 
 @[simp] theorem liftBehavioralProfileCore_descendBehavioralProfileCore
     (t : GameTree S Outcome)
-    (β : ObsModelCore.BehavioralProfile (compileObsCoreModel (S := S) (Outcome := Outcome) t)) :
+    (β : ObsModelCore.BehavioralProfile (compileObsModelCore (S := S) (Outcome := Outcome) t)) :
     liftBehavioralProfileCore (S := S) (Outcome := Outcome) t
       (descendBehavioralProfileCore (S := S) (Outcome := Outcome) t β) = β := by
   funext i v

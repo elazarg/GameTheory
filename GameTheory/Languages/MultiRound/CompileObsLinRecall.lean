@@ -183,7 +183,7 @@ private theorem phase_eq_index
     have h0 := pureRun_head_eq_init _ _ k pi ss hss hlen
     conv_lhs => rw [show ss[0]'hj = ss[0]'hlen from rfl, h0]
     -- linInitialConfig G phase
-    simp only [compiledLinObs, compileObsCoreModelLin, linInitialConfig]
+    simp only [compiledLinObs, compileObsModelCoreLin, linInitialConfig]
     split
     · -- rounds empty: terminal phase = G.rounds.length * (n+2) = 0
       rename_i hempty
@@ -634,7 +634,7 @@ theorem liftBehavioralProfile_descendVRD_agree
   -- The key insight: projectStates is linObserve at the last state
   have hps : obs = linObserve G i ((compiledLinObs G).lastState ss) := by
     have h := ObsModelCore.currentObs_projectStates (compiledLinObs G) i ss
-    simp only [ObsModelCore.currentObs, compileObsCoreModelLin] at h
+    simp only [ObsModelCore.currentObs, compileObsModelCoreLin] at h
     exact h
   cases hobs : obs with
   | none =>
@@ -712,7 +712,7 @@ theorem liftPureProfile_descendVRD_agree
     obtain ⟨k, v⟩ := rv
     have hps : obs = linObserve G i ((compiledLinObs G).lastState ss) := by
       have h := ObsModelCore.currentObs_projectStates (compiledLinObs G) i ss
-      simp only [ObsModelCore.currentObs, compileObsCoreModelLin] at h
+      simp only [ObsModelCore.currentObs, compileObsModelCoreLin] at h
       exact h
     rw [hobs] at hps
     obtain ⟨s, sig, _, _, hview⟩ := linObserve_some_playerTurn G _ i (k, v) hps.symm

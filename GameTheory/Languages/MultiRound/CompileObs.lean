@@ -195,7 +195,7 @@ identity info-state model (observations are their own information states).
 - **InfoState**: identity — observation = info state
 - **Step**: stochastic resolution via `configStepPMF`
 -/
-noncomputable def compileObsCoreModel (G : MultiRoundGame n S V A Sig) :
+noncomputable def compileObsModelCore (G : MultiRoundGame n S V A Sig) :
     ObsModelCore (Fin n) (Config G)
       (fun _ => Option V)
       (fun (_ : Fin n) (_ : Option V) => Option A) where
@@ -208,6 +208,6 @@ noncomputable def compileObsCoreModel (G : MultiRoundGame n S V A Sig) :
 
 /-- The compiled `ObsModelCore` for a sequential protocol. -/
 noncomputable abbrev compiledCoreObs (G : MultiRoundGame n S V A Sig) :=
-  compileObsCoreModel G
+  compileObsModelCore G
 
 end GameTheory.MultiRound

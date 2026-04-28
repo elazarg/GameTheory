@@ -10,12 +10,12 @@ Kuhn reduction lemmas for compiled MAIDs via `ObsModelCore`.
 
 ## Main results
 
-- `kuhn_behavioral_to_mixed_compiledPR` : B→M direction via `compileObsCoreModelPR`,
+- `kuhn_behavioral_to_mixed_compiledPR` : B→M direction via `compileObsModelCorePR`,
   under `NoNontrivialInfoStateRepeat` (which holds for well-formed MAIDs)
 
 ## Architecture
 
-**B→M** uses `compileObsCoreModelPR`, which compiles MAIDs with observation-dependent
+**B→M** uses `compileObsModelCorePR`, which compiles MAIDs with observation-dependent
 action types (`CompiledMAIDAct`). Under perfect recall, at most one infoset per player
 is active at any frontier step, and `NoNontrivialInfoStateRepeat` holds because each
 decision node is processed exactly once in the frontier evaluation.
@@ -38,7 +38,7 @@ variable (S : Struct Player n) (sem : Sem S)
 
 /-- The compiled PR ObsModelCore for a MAID. -/
 noncomputable abbrev compiledPRObs (S : Struct Player n) (sem : Sem S) :=
-  compileObsCoreModelPR S sem
+  compileObsModelCorePR S sem
 
 /-- **Kuhn B→M for compiled MAIDs (PR model)**: behavioral strategies can be
 realized as product mixed strategies, given the no-nontrivial-info-state-repeat
@@ -234,18 +234,18 @@ variable (S : Struct Player n) (sem : Sem S)
 
 /-- `InfoState p = Option (Infoset S p)` for the PR model. -/
 theorem compiledPR_infoState_eq (p : Player) :
-    (compileObsCoreModelPR S sem).InfoState p = Option (Infoset S p) := rfl
+    (compileObsModelCorePR S sem).InfoState p = Option (Infoset S p) := rfl
 
 noncomputable instance compiledPR_infoState_fintype (p : Player) :
-    Fintype ((compileObsCoreModelPR S sem).InfoState p) :=
+    Fintype ((compileObsModelCorePR S sem).InfoState p) :=
   compiledPR_infoState_eq S sem p ▸ inferInstance
 
 instance compiledPR_infoState_decidableEq (p : Player) :
-    DecidableEq ((compileObsCoreModelPR S sem).InfoState p) :=
+    DecidableEq ((compileObsModelCorePR S sem).InfoState p) :=
   compiledPR_infoState_eq S sem p ▸ inferInstance
 
 noncomputable instance compiledPR_localStrategy_fintype (p : Player) :
-    Fintype ((compileObsCoreModelPR S sem).LocalStrategy p) :=
+    Fintype ((compileObsModelCorePR S sem).LocalStrategy p) :=
   Pi.instFintype
 
 end Instances

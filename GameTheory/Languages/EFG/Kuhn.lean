@@ -11,7 +11,7 @@ games, derived as a corollary of the generic Kuhn development on
 
 ## Architecture
 
-The EFG game tree compiles to an `ObsModelCore` via `compileObsCoreModel` (in
+The EFG game tree compiles to an `ObsModelCore` via `compileObsModelCore` (in
 `CompileObs.lean`). Kuhn's theorem is proved generically on `ObsModelCore`
 (in `Theorems/Kuhn/`). This file:
 
@@ -131,7 +131,7 @@ theorem PerfectRecall_implies_NoInfoSetRepeat
 
 /-- The honest core compilation for an EFG tree. -/
 noncomputable abbrev compiledCoreObs (t : GameTree S Outcome) :=
-  GameTheory.EFG.compileObsCoreModel t
+  GameTheory.EFG.compileObsModelCore t
 
 -- ============================================================================
 -- ObsModelCore bridge for EFG
@@ -146,7 +146,7 @@ variable (t : GameTree S Outcome)
 
 noncomputable instance compiledCoreInfoStateFintype (t : GameTree S Outcome) (i : S.Player) :
     Fintype ((compiledCoreObs t).InfoState i) := by
-  dsimp [compiledCoreObs, compileObsCoreModel, ObsModelCore.InfoState, InfoStateCore.identity]
+  dsimp [compiledCoreObs, compileObsModelCore, ObsModelCore.InfoState, InfoStateCore.identity]
   infer_instance
 
 @[simp] theorem projectStates_compiledCore
@@ -157,15 +157,15 @@ noncomputable instance compiledCoreInfoStateFintype (t : GameTree S Outcome) (i 
   induction ss with
   | nil =>
       simp [ObsModelCore.projectStates, ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-        compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, obsOfState]
+        compiledCoreObs, compileObsModelCore, InfoStateCore.identity, obsOfState]
   | cons s ss ih =>
       cases ss with
       | nil =>
           simp [ObsModelCore.projectStates, ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, obsOfState]
+            compiledCoreObs, compileObsModelCore, InfoStateCore.identity, obsOfState]
       | cons t ts =>
           simpa [ObsModelCore.projectStates, ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, obsOfState] using ih
+            compiledCoreObs, compileObsModelCore, InfoStateCore.identity, obsOfState] using ih
 
 /-- Product mixed distribution over lifted core local strategies is the
 pushforward of the native mixed-profile joint law along `liftPureProfileCore`. -/
@@ -219,7 +219,7 @@ private theorem compiledCore_step_of_decision
               (obsOfState_decision_eq_some I next))
             (hs ▸ a p))) := by
   cases hs
-  simp [ObsModelCore.step, compileObsCoreModel, InfoStateCore.identity, treeStepPMF, obsOfState]
+  simp [ObsModelCore.step, compileObsModelCore, InfoStateCore.identity, treeStepPMF, obsOfState]
 
 private theorem compiledCore_step_of_terminal
     {s : GameTree S Outcome} {z : Outcome}
@@ -252,17 +252,17 @@ current step just evaluates it at the current observation cell. -/
   | nil =>
       simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
         ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-        compileObsCoreModel, InfoStateCore.identity, obsOfState]
+        compileObsModelCore, InfoStateCore.identity, obsOfState]
   | cons s ss ih =>
       cases ss with
       | nil =>
           simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
             ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compileObsCoreModel, InfoStateCore.identity, obsOfState]
+            compileObsModelCore, InfoStateCore.identity, obsOfState]
       | cons t ts =>
           simpa [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
             ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compileObsCoreModel, InfoStateCore.identity, obsOfState] using ih
+            compileObsModelCore, InfoStateCore.identity, obsOfState] using ih
 
 @[simp] theorem castJointAction_compiledCore
     (π : ObsModelCore.PureProfile (compiledCoreObs t))
@@ -676,7 +676,7 @@ private theorem historySupportTrace_reachBy
     ReachBy h t ((compiledCoreObs t).lastState ss) := by
   induction hw with
   | init =>
-      simp [compiledCoreObs, compileObsCoreModel, InfoStateCore.identity, ObsModelCore.lastState]
+      simp [compiledCoreObs, compileObsModelCore, InfoStateCore.identity, ObsModelCore.lastState]
   | @stutter ss h z hw hterm ih =>
       have ih' : ReachBy h t (.terminal z) := by
         simpa [hterm] using ih
@@ -690,7 +690,7 @@ private theorem historySupportTrace_reachBy
           ((compiledCoreObs t).lastState ss) u :=
         reachBy_singleton_of_historySupportStep hstep
       have hcat := ReachBy_append ih htail
-      simpa [compiledCoreObs, compileObsCoreModel, InfoStateCore.identity,
+      simpa [compiledCoreObs, compileObsModelCore, InfoStateCore.identity,
         ObsModelCore.lastState] using hcat
 
 private theorem playerHistory_mem_of_action_mem
@@ -861,7 +861,7 @@ private theorem historySupportTrace_pureRun_nonzero
   induction hw with
   | init =>
       simp [Math.ParameterizedChain.pureRun, compiledCoreObs,
-        compileObsCoreModel, InfoStateCore.identity]
+        compileObsModelCore, InfoStateCore.identity]
   | @stutter ss hist z hw hterm ih =>
       have hu :
           ((compiledCoreObs t).pureStep π ss)
@@ -1279,7 +1279,7 @@ private theorem pureRun_getElem_zero
   | zero =>
     have : ss = [(compiledCoreObs t).init] := by
       by_contra hne; exact h (by simp [Math.ParameterizedChain.pureRun, PMF.pure_apply, hne])
-    simp [this, compiledCoreObs, compileObsCoreModel]
+    simp [this, compiledCoreObs, compileObsModelCore]
   | succ m ih =>
     rcases List.eq_nil_or_concat ss with rfl | ⟨pre, last, hcat⟩
     · simp at h0

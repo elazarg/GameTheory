@@ -110,9 +110,9 @@ application of `ObsModelCore`-level Kuhn theorems without going through the
 player `p` has no active decision nodes. This means
 `NoNontrivialInfoStateRepeat` can fail (the empty observation `[]` can repeat
 with nontrivial action space). For the B→M direction under `PerfectRecall`,
-use `compileObsCoreModelPR` instead, which uses the refined observation type
+use `compileObsModelCorePR` instead, which uses the refined observation type
 `Option (Infoset S p)`. -/
-noncomputable def compileObsCoreModel (S : Struct Player n) (sem : Sem S) :
+noncomputable def compileObsModelCore (S : Struct Player n) (sem : Sem S) :
     ObsModelCore Player (FrontierCfg S)
       (fun p => List (Infoset S p))
       (fun (p : Player) (_ : List (Infoset S p)) => Option (FrontierAct S p)) where
@@ -125,7 +125,7 @@ noncomputable def compileObsCoreModel (S : Struct Player n) (sem : Sem S) :
 
 /-- The compiled `ObsModelCore` for a MAID. -/
 noncomputable abbrev compiledCoreObs (S : Struct Player n) (sem : Sem S) :=
-  compileObsCoreModel S sem
+  compileObsModelCore S sem
 
 -- ============================================================================
 -- Perfect-recall-refined compilation
@@ -189,7 +189,7 @@ perfect recall). Actions are `CompiledMAIDAct S p` — trivial when inactive,
 `S.Val d.val` when acting at decision node `d`. This ensures
 `NoNontrivialInfoStateRepeat` holds, enabling the B→M direction of Kuhn's
 theorem. -/
-noncomputable def compileObsCoreModelPR (S : Struct Player n) (sem : Sem S) :
+noncomputable def compileObsModelCorePR (S : Struct Player n) (sem : Sem S) :
     ObsModelCore Player (FrontierCfg S)
       (fun p => Option (Infoset S p))
       (CompiledMAIDAct S) where
@@ -213,23 +213,23 @@ The compiled PR model uses identity info state, so `InfoState p = Option (Infose
 and `currentObs = id`. At `some I`, the action type is `S.Val I.1.val`;
 at `none`, it is `PUnit`. -/
 def liftPureStrategy {p : Player} (σ : PureStrategy S p) :
-    (compileObsCoreModelPR S sem).LocalStrategy p :=
+    (compileObsModelCorePR S sem).LocalStrategy p :=
   fun v => match v with
     | none => PUnit.unit
     | some I => σ I
 
 /-- Lift a native pure policy to a compiled PR pure profile. -/
 def liftPureProfile (π : PurePolicy S) :
-    ObsModelCore.PureProfile (compileObsCoreModelPR S sem) :=
+    ObsModelCore.PureProfile (compileObsModelCorePR S sem) :=
   fun p => liftPureStrategy S sem (π p)
 
 /-- Descend a compiled PR local strategy to a native pure strategy. -/
-def descendPureStrategy (σ' : (compileObsCoreModelPR S sem).LocalStrategy p) :
+def descendPureStrategy (σ' : (compileObsModelCorePR S sem).LocalStrategy p) :
     PureStrategy S p :=
   fun I => σ' (some I)
 
 /-- Descend a compiled PR pure profile to a native pure policy. -/
-def descendPureProfile (π' : ObsModelCore.PureProfile (compileObsCoreModelPR S sem)) :
+def descendPureProfile (π' : ObsModelCore.PureProfile (compileObsModelCorePR S sem)) :
     PurePolicy S :=
   fun p => descendPureStrategy S sem (π' p)
 
@@ -245,14 +245,14 @@ theorem descend_lift_pureProfile (π : PurePolicy S) :
 
 /-- Lift a native policy to a compiled PR behavioral profile. -/
 noncomputable def liftBehavioralProfile (pol : Policy S) :
-    ObsModelCore.BehavioralProfile (compileObsCoreModelPR S sem) :=
+    ObsModelCore.BehavioralProfile (compileObsModelCorePR S sem) :=
   fun p v => match v with
     | none => PMF.pure PUnit.unit
     | some I => pol p I
 
 /-- Descend a compiled PR behavioral profile to a native policy. -/
 noncomputable def descendBehavioralProfile
-    (β : ObsModelCore.BehavioralProfile (compileObsCoreModelPR S sem)) :
+    (β : ObsModelCore.BehavioralProfile (compileObsModelCorePR S sem)) :
     Policy S :=
   fun p I => β p (some I)
 
@@ -263,7 +263,7 @@ theorem descend_lift_behavioralProfile (pol : Policy S) :
 
 /-- Lift a native mixed profile to compiled PR per-player mixed strategies. -/
 noncomputable def liftMixedProfile (μ : ∀ p, PMF (PureStrategy S p)) :
-    ∀ p, PMF ((compileObsCoreModelPR S sem).LocalStrategy p) :=
+    ∀ p, PMF ((compileObsModelCorePR S sem).LocalStrategy p) :=
   fun p => (μ p).map (liftPureStrategy S sem)
 
 end ProfileLiftDescend

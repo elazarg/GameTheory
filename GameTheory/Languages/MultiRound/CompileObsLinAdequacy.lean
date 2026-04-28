@@ -862,7 +862,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
   have hps : ∀ i, (compiledLinObs G).projectStates i ss =
       linObserve G i ((compiledLinObs G).lastState ss) := fun i => by
     have h := ObsModelCore.currentObs_projectStates (compiledLinObs G) i ss
-    simp only [ObsModelCore.currentObs, compileObsCoreModelLin] at h; exact h
+    simp only [ObsModelCore.currentObs, compileObsModelCoreLin] at h; exact h
   -- suffices: prove the result by cases on the config type of lastState ss.
   -- We use a helper that takes cfg explicitly, avoiding castJointAction issues.
   suffices helper : ∀ (cfg : LinConfig G)
@@ -881,7 +881,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
     funext i
     -- Both sides transport j i along propositionally equal proofs.
     -- castJointAction uses currentObs_projectStates, the other uses hps.
-    simp only [ObsModelCore.castJointAction, compileObsCoreModelLin]
+    simp only [ObsModelCore.castJointAction, compileObsModelCoreLin]
     simp [eqRec_eq_cast]
     rfl
   -- Now prove the helper by cases on cfg.

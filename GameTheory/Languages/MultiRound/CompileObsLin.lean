@@ -10,7 +10,7 @@ Compiles a sequential protocol to an `ObsModelCore` where each step involves
 splitting each simultaneous action phase into `n` sequential per-player
 sub-phases.
 
-The key advantage over the standard `compileObsCoreModel` (which processes all
+The key advantage over the standard `compileObsModelCore` (which processes all
 players simultaneously): `StepSupportFactorization` holds trivially, enabling
 Kuhn's theorem without any special recall conditions.
 
@@ -27,7 +27,7 @@ type `PUnit`.
 - `LinConfig G` — extended configuration with per-player action sub-phases
 - `LinAct V A` — observation-dependent action type (nontrivial only when active)
 - `linConfigStepPMF` — per-player step function
-- `compileObsCoreModelLin` — linearized ObsModelCore compilation
+- `compileObsModelCoreLin` — linearized ObsModelCore compilation
 -/
 
 namespace GameTheory.MultiRound
@@ -186,7 +186,7 @@ action sub-phases. At each step, at most one player has a nontrivial action.
 - **Observations**: `Option (RoundView G)` (nontrivial only for the acting player)
 - **Actions**: `LinAct (RoundView G) A` (nontrivial only when active)
 - **InfoState**: identity — observation = info state -/
-noncomputable def compileObsCoreModelLin [DecidableEq (Fin n)]
+noncomputable def compileObsModelCoreLin [DecidableEq (Fin n)]
     (G : MultiRoundGame n S V A Sig) :
     ObsModelCore (Fin n) (LinConfig G)
       (fun _ => Option (RoundView G))
@@ -201,7 +201,7 @@ noncomputable def compileObsCoreModelLin [DecidableEq (Fin n)]
 /-- Abbreviation for the linearized compiled model. -/
 noncomputable abbrev compiledLinObs [DecidableEq (Fin n)]
     (G : MultiRoundGame n S V A Sig) :=
-  compileObsCoreModelLin G
+  compileObsModelCoreLin G
 
 -- ============================================================================
 -- Fintype instances for the compiled model
