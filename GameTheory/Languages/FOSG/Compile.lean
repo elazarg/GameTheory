@@ -191,6 +191,34 @@ theorem runDistFrom_congr
         funext dst
         exact runDistFrom_congr σ τ hσ n (h.extendByOutcome a dst)
 
+theorem runDistFrom_bind_runDistFrom
+    {G : FOSG ι W Act PrivObs PubObs}
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [DecidablePred G.terminal]
+    (σ : G.LegalBehavioralProfile) (m n : Nat) (h : G.History) :
+    (History.runDistFrom G σ m h).bind (fun h' => History.runDistFrom G σ n h') =
+      History.runDistFrom G σ (m + n) h := by
+  induction m generalizing h with
+  | zero =>
+      simp [History.runDistFrom]
+  | succ m ih =>
+      by_cases hterm : G.terminal h.lastState
+      · rw [History.runDistFrom_succ_terminal (G := G) σ m h hterm]
+        rw [PMF.pure_bind]
+        rw [History.runDistFrom_terminal (G := G) σ n h hterm]
+        rw [History.runDistFrom_terminal (G := G) σ (m + 1 + n) h hterm]
+      · rw [History.runDistFrom_succ_nonterminal (G := G) σ m h hterm]
+        rw [PMF.bind_bind]
+        simp_rw [PMF.bind_bind]
+        conv_lhs =>
+          arg 2
+          ext a
+          arg 2
+          ext dst
+          rw [ih]
+        rw [show m + 1 + n = m + n + 1 by omega]
+        rw [History.runDistFrom_succ_nonterminal (G := G) σ (m + n) h hterm]
+
 theorem runDistFrom_succ_active_empty
     {G : FOSG ι W Act PrivObs PubObs}
     [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]

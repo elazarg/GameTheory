@@ -1952,6 +1952,139 @@ theorem liftReachableHistoryMixedProfile_joint
       reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π := by
   rfl
 
+private theorem reachableHistoryPureStepDist_eq_runDistFrom_one
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (π : _root_.GameTheory.FOSG.ReachableLegalPureProfile G)
+    (ss : List G.History) :
+    let O := toReachableHistoryObsModelCore G hLeg
+    O.stepDist (O.pureToBehavioral (liftReachableHistoryPureProfile (G := G) hLeg π)) ss =
+      History.runDistFrom G (G.legalPureToBehavioral π.extend) 1 (O.lastState ss) := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  let h : G.History := O.lastState ss
+  let aStep : ∀ i, ReachableInfoLegalMove G i (G.reachableInfoStateOfHistory i h) :=
+    O.castJointAction ss
+      (fun i => liftReachableHistoryPureProfile (G := G) hLeg π i (O.projectStates i ss))
+  let raw : JointAction Act := fun i => (aStep i).1
+  have hraw_of_not_terminal :
+      ¬ G.terminal h.lastState → G.legal h.lastState raw := by
+    intro hterm
+    rw [G.legal_iff_forall]
+    refine ⟨hterm, ?_⟩
+    intro i
+    have haiInfo :
+        raw i ∈ G.availableMovesAtInfoState i
+          (G.reachableInfoStateOfHistory i h).1 := (aStep i).2
+    have hai : raw i ∈ G.availableMoves h i := by
+      have hEq := G.availableMovesAtInfoState_eq_of_history hLeg i h
+      exact hEq ▸ haiInfo
+    simpa [FOSG.mem_availableMoves_iff, raw] using hai
+  have hstep :
+      O.stepDist (O.pureToBehavioral
+          (liftReachableHistoryPureProfile (G := G) hLeg π)) ss =
+        O.step h aStep := by
+    simp [O, h, aStep, ObsModelCore.stepDist, ObsModelCore.jointActionDist,
+      ObsModelCore.pureToBehavioral, Math.PMFProduct.pmfPi_pure]
+  change O.stepDist (O.pureToBehavioral
+      (liftReachableHistoryPureProfile (G := G) hLeg π)) ss =
+    History.runDistFrom G (G.legalPureToBehavioral π.extend) 1 h
+  rw [hstep]
+  by_cases hterm : G.terminal h.lastState
+  · rw [History.runDistFrom_succ_terminal
+      (G := G) (σ := G.legalPureToBehavioral π.extend) (n := 0) (h := h) hterm]
+    change (toReachableHistoryObsModelCore G hLeg).machine.step h aStep = PMF.pure h
+    dsimp [toReachableHistoryObsModelCore]
+    rw [dif_pos hterm]
+  · have hraw : G.legal h.lastState raw := hraw_of_not_terminal hterm
+    have hjoint :
+        G.jointActionDist (G.legalPureToBehavioral π.extend) h = PMF.pure raw := by
+      unfold FOSG.jointActionDist
+      rw [show
+          (fun i => (G.legalPureToBehavioral π.extend).toProfile i (h.playerView i)) =
+            fun i => PMF.pure (raw i) by
+        funext i
+        change PMF.pure (π.extend.toProfile i (h.playerView i)) =
+          PMF.pure (raw i)
+        congr
+        rw [show raw i = π.toProfile i (G.reachableInfoStateOfHistory i h) by
+          dsimp [raw, aStep]
+          rw [reachableHistory_castJointAction_val (G := G) hLeg ss
+            (fun i => liftReachableHistoryPureProfile (G := G) hLeg π i
+              ((toReachableHistoryObsModelCore G hLeg).projectStates i ss)) i]
+          rw [reachableHistory_projectStates_eq_last (G := G) hLeg i ss]
+          rfl]
+        change (π.toProfile i).extend (h.playerView i) =
+          π.toProfile i (G.reachableInfoStateOfHistory i h)
+        exact _root_.GameTheory.FOSG.ReachablePureStrategy.extend_apply_history
+          (G := G) (i := i) (σ := π.toProfile i) h]
+      exact Math.PMFProduct.pmfPi_pure raw
+    have hlegalActionLaw :
+        G.legalActionLaw (G.legalPureToBehavioral π.extend) h hterm =
+          PMF.pure ⟨raw, hraw⟩ := by
+      ext a
+      rw [G.legalActionLaw_apply]
+      rw [hjoint]
+      by_cases ha : a = ⟨raw, hraw⟩
+      · subst a
+        simp
+      · have hval : a.1 ≠ raw := by
+          intro hval
+          exact ha (Subtype.ext hval)
+        simp [PMF.pure_apply, hval, ha]
+    rw [History.runDistFrom_succ_nonterminal
+      (G := G) (σ := G.legalPureToBehavioral π.extend) (n := 0) (h := h) hterm]
+    rw [hlegalActionLaw, PMF.pure_bind]
+    simp only [History.runDistFrom_zero]
+    change (toReachableHistoryObsModelCore G hLeg).machine.step h aStep =
+      (G.transition h.lastState ⟨raw, hraw⟩).bind
+        (fun dst => PMF.pure (h.extendByOutcome ⟨raw, hraw⟩ dst))
+    dsimp [toReachableHistoryObsModelCore]
+    rw [dif_neg hterm]
+    simp only [PMF.map]
+    congr 1
+
+theorem reachableHistoryOutcomeDistPureProfile_eq_runDist
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable) (k : Nat)
+    (π : _root_.GameTheory.FOSG.ReachableLegalPureProfile G) :
+    reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π =
+      G.runDist k (G.legalPureToBehavioral π.extend) := by
+  classical
+  induction k with
+  | zero =>
+      simp [reachableHistoryOutcomeDistPureProfile, reachableHistoryOutcomeDistPure,
+        FOSG.runDist, ObsModelCore.runDistPure, ObsModelCore.runDist,
+        ObsModelCore.lastState, toReachableHistoryObsModelCore]
+  | succ k ih =>
+      let O := toReachableHistoryObsModelCore G hLeg
+      let β := O.pureToBehavioral (liftReachableHistoryPureProfile (G := G) hLeg π)
+      let σ := G.legalPureToBehavioral π.extend
+      change (O.runDist (k + 1) β).bind (fun ss => PMF.pure (O.lastState ss)) =
+        History.runDistFrom G σ (k + 1) (History.nil G)
+      rw [← History.runDistFrom_bind_runDistFrom
+        (G := G) σ k 1 (History.nil G)]
+      have ih' :
+          (O.runDist k β).bind (fun ss => PMF.pure (O.lastState ss)) =
+            History.runDistFrom G σ k (History.nil G) := by
+        simpa [reachableHistoryOutcomeDistPureProfile, reachableHistoryOutcomeDistPure,
+          FOSG.runDist, O, β, σ] using ih
+      rw [← ih']
+      simp only [ObsModelCore.runDist]
+      rw [PMF.bind_bind, PMF.bind_bind]
+      congr 1
+      funext ss
+      rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+      conv_lhs =>
+        arg 2
+        ext t
+        rw [PMF.pure_bind, ObsModelCore.lastState_append_singleton]
+      rw [reachableHistoryPureStepDist_eq_runDistFrom_one
+        (G := G) hLeg π ss]
+      simp [O, σ]
+
 /-- Legal fallback for reachable information states, used only at states not
 reached by any pure profile in the core M→B construction. -/
 noncomputable def reachableLegalFallbackBehavioral
