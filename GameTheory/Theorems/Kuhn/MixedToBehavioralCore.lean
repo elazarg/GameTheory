@@ -969,24 +969,20 @@ theorem mixedToMediator_eq_pmfPi_factor_of_run
     hν_def]
   exact reweightPMF_pmfPi μ wᵢ hCwi0 hCwit
 
-/-- **Unified core M→B theorem**: requires only `StepMassInvariant` and
-`ObsLocalFeasibilityFull` for all players. This subsumes the three-condition
-`kuhn_mixed_to_behavioral_semantic` because `ObsLocalFeasibilityFull` implies
-both `RunSupportFactorization` (for the cross-multiplication identity) and
-`ActionPosteriorLocal` (for the behavioral profile well-definedness). -/
-theorem kuhn_mixed_to_behavioral_of_obsLocal [∀ i o, Nonempty (Act i o)]
+/-- Core M→B theorem using the exact run-level semantic hypotheses.
+
+`RunSupportFactorization` is the trace-level support condition actually used
+by the cross-multiplication argument. `ActionPosteriorLocal` is the locality
+condition that makes the behavioral profile independent of the chosen reaching
+witness. -/
+theorem kuhn_mixed_to_behavioral_of_runSupport [∀ i o, Nonempty (Act i o)]
     (hMass : StepMassInvariant O)
-    (hOLF : ∀ i, ObsLocalFeasibilityFull O i)
+    (hRun : RunSupportFactorization O)
+    (hAPL : ∀ i, ActionPosteriorLocal O i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
     (k : Nat) :
     ∃ β : ObsModelCore.BehavioralProfile O,
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
-  have hRun := obsLocalFeasibilityFull_toRunSupportFactorization hOLF
-  have hAPL : ∀ i, ActionPosteriorLocal O i := fun i =>
-    actionPosteriorLocal_of_obsLocalFeasibility hMass i
-      (fun n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ _ =>
-        hOLF i n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂)
-  -- Reuse the same proof structure as kuhn_mixed_to_behavioral_semantic
   classical
   set ν := pmfPi μ with hν_def
   let factorAt (i : ι) (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O) :
@@ -1066,6 +1062,26 @@ theorem kuhn_mixed_to_behavioral_of_obsLocal [∀ i o, Nonempty (Act i o)]
   congr 1
   funext i
   exact β_eq i n ss π_w hw_ne
+
+/-- **Unified core M→B theorem**: requires only `StepMassInvariant` and
+`ObsLocalFeasibilityFull` for all players. This subsumes the three-condition
+`kuhn_mixed_to_behavioral_semantic` because `ObsLocalFeasibilityFull` implies
+both `RunSupportFactorization` (for the cross-multiplication identity) and
+`ActionPosteriorLocal` (for the behavioral profile well-definedness). -/
+theorem kuhn_mixed_to_behavioral_of_obsLocal [∀ i o, Nonempty (Act i o)]
+    (hMass : StepMassInvariant O)
+    (hOLF : ∀ i, ObsLocalFeasibilityFull O i)
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (k : Nat) :
+    ∃ β : ObsModelCore.BehavioralProfile O,
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
+  exact kuhn_mixed_to_behavioral_of_runSupport hMass
+    (obsLocalFeasibilityFull_toRunSupportFactorization hOLF)
+    (fun i =>
+      actionPosteriorLocal_of_obsLocalFeasibility hMass i
+        (fun n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ _ =>
+          hOLF i n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂))
+    μ k
 
 end CoreKuhnSemantic
 
