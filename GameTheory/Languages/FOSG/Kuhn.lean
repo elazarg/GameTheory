@@ -443,6 +443,157 @@ theorem mixed_to_behavioral_runDist_of_obsLocal
   rw [hβ, liftMixedProfile_joint (G := G) μ]
   simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
 
+/-! ### Native-history mixed-to-behavioral semantics
+
+The bridge model above stores only the current world and player information
+states.  For outcome statements over realized FOSG histories we use a second
+`ObsModelCore` whose machine state is the native history itself. -/
+
+/-- Native-history Kuhn execution model for a FOSG.
+
+The state is a realized FOSG history. Legal joint moves append a realized
+outcome to the history; illegal joint moves self-loop. Terminal histories
+self-loop because `G.legal` is false at terminal states. -/
+noncomputable def toHistoryObsModelCore
+    (G : FOSG ι W Act PrivObs PubObs) :
+    ObsModelCore ι G.History (fun i => G.InfoState i) (fun i _ => Option (Act i)) where
+  infoState := fun _ => InfoStateCore.identity _
+  observe := fun i h => h.playerView i
+  machine :=
+    { init := History.nil G
+      step := fun h a => by
+        classical
+        exact if hleg : G.legal h.lastState a then
+          (G.transition h.lastState ⟨a, hleg⟩).map
+            (fun dst => h.extendByOutcome ⟨a, hleg⟩ dst)
+        else
+          PMF.pure h }
+
+namespace HistoryNative
+
+variable (G : FOSG ι W Act PrivObs PubObs)
+
+noncomputable instance historyInfoStateFintype
+    [∀ i, Fintype (G.InfoState i)] :
+    ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) := by
+  intro i
+  simpa [toHistoryObsModelCore, ObsModelCore.InfoState] using
+    (inferInstance : Fintype (G.InfoState i))
+
+end HistoryNative
+
+/-- Native-history pure profile for the FOSG Kuhn semantics. -/
+abbrev HistoryPureProfile : Type :=
+  (toHistoryObsModelCore G).PureProfile
+
+/-- Native-history behavioral profile for the FOSG Kuhn semantics. -/
+abbrev HistoryBehavioralProfile : Type :=
+  (toHistoryObsModelCore G).BehavioralProfile
+
+/-- Lift a native FOSG pure strategy into the native-history Kuhn model. -/
+noncomputable def liftHistoryPureStrategy
+    (i : ι) (π : PureStrategy (G := G) i) :
+    (toHistoryObsModelCore G).LocalStrategy i := by
+  intro v
+  exact π v
+
+/-- Lift a native FOSG pure profile into the native-history Kuhn model. -/
+noncomputable def liftHistoryPureProfile
+    (π : _root_.GameTheory.FOSG.PureProfile G) :
+    HistoryPureProfile (G := G) :=
+  fun i => liftHistoryPureStrategy (G := G) i (π i)
+
+/-- Lift a native independent mixed profile into the native-history Kuhn model. -/
+noncomputable def liftHistoryMixedProfile
+    (μ : MixedProfile (G := G)) : ∀ i, PMF ((toHistoryObsModelCore G).LocalStrategy i) :=
+  fun i => Math.ProbabilityMassFunction.pushforward (μ i) (liftHistoryPureStrategy (G := G) i)
+
+/-- Product sampling commutes with the native-to-history-core pure-profile lift. -/
+theorem liftHistoryMixedProfile_joint
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (μ : MixedProfile (G := G)) :
+    Math.PMFProduct.pmfPi (liftHistoryMixedProfile (G := G) μ) =
+      Math.ProbabilityMassFunction.pushforward
+        (mixedProfileJoint (G := G) μ) (liftHistoryPureProfile (G := G)) := by
+  classical
+  rw [mixedProfileJoint]
+  change Math.PMFProduct.pmfPi
+      (fun i => Math.ProbabilityMassFunction.pushforward
+        (μ i) (liftHistoryPureStrategy (G := G) i)) =
+    Math.ProbabilityMassFunction.pushforward (Math.PMFProduct.pmfPi μ)
+      (fun π => fun i => liftHistoryPureStrategy (G := G) i (π i))
+  exact (Math.PMFProduct.pmfPi_push_coordwise μ
+    (fun i => liftHistoryPureStrategy (G := G) i)).symm
+
+/-- Final native history extracted from a native-history Kuhn trace. -/
+noncomputable def historyTraceLast
+    (ss : List G.History) : G.History :=
+  (toHistoryObsModelCore G).lastState ss
+
+/-- Native final-history law induced by the history-state Kuhn execution model. -/
+noncomputable def historyOutcomeDist
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (k : Nat) (β : HistoryBehavioralProfile (G := G)) : PMF G.History :=
+  ((toHistoryObsModelCore G).runDist k β).bind
+    (fun ss => PMF.pure (historyTraceLast (G := G) ss))
+
+/-- Native final-history law induced by a pure profile in the history-state
+Kuhn execution model. -/
+noncomputable def historyOutcomeDistPure
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (k : Nat) (π : HistoryPureProfile (G := G)) : PMF G.History :=
+  ((toHistoryObsModelCore G).runDistPure k π).bind
+    (fun ss => PMF.pure (historyTraceLast (G := G) ss))
+
+/-- FOSG-side name for step-mass invariance on the native-history Kuhn model. -/
+abbrev HistoryStepMassInvariant
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
+  ObsModelCore.StepMassInvariant (toHistoryObsModelCore G)
+
+/-- FOSG-side name for support factorization on the native-history Kuhn model. -/
+abbrev HistoryStepSupportFactorization
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
+  ObsModelCore.StepSupportFactorization (toHistoryObsModelCore G)
+
+/-- FOSG-side name for posterior locality on the native-history Kuhn model. -/
+abbrev HistoryActionPosteriorLocal
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (i : ι) : Prop :=
+  ObsModelCore.ActionPosteriorLocal (toHistoryObsModelCore G) i
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, native-history form.**
+
+Every independent native mixed profile over FOSG pure strategies is realized by
+a behavioral profile with the same final native-history law in the
+history-state Kuhn semantics. -/
+theorem mixed_to_behavioral_native_history
+    [Fintype ι]
+    [∀ i, Fintype (G.InfoState i)]
+    [∀ i, Fintype (Option (Act i))]
+    (hMass : HistoryStepMassInvariant (G := G))
+    (hFactor : HistoryStepSupportFactorization (G := G))
+    (hLocal : ∀ i, HistoryActionPosteriorLocal (G := G) i)
+    (μ : MixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : HistoryBehavioralProfile (G := G),
+      historyOutcomeDist (G := G) k β =
+        (mixedProfileJoint (G := G) μ).bind
+          (fun π => historyOutcomeDistPure (G := G) k
+            (liftHistoryPureProfile (G := G) π)) := by
+  letI : ∀ i, Fintype ((toHistoryObsModelCore G).InfoState i) :=
+    HistoryNative.historyInfoStateFintype (G := G)
+  letI : ∀ i (o : G.InfoState i), Nonempty (Option (Act i)) := fun _ _ => ⟨none⟩
+  obtain ⟨β, hβ⟩ :=
+    ObsModelCore.kuhn_mixed_to_behavioral_semantic
+      (O := toHistoryObsModelCore G)
+      hMass hFactor hLocal (liftHistoryMixedProfile (G := G) μ) k
+  refine ⟨β, ?_⟩
+  unfold historyOutcomeDist historyOutcomeDistPure
+  rw [hβ, PMF.bind_bind, liftHistoryMixedProfile_joint (G := G) μ]
+  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+
 section Step
 
 variable [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Act i)]
