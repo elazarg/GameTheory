@@ -868,60 +868,120 @@ theorem mixed_to_legal_behavioral
   exact legalHistoryMixedToBehavioral_historyOutcomeDist
     (G := G) hLeg hMass hFactor hLocal μ k
 
-/-! ### Legal reachable mixed-to-behavioral witnesses -/
+/-! ### Legal reachable-history mixed-to-behavioral witnesses -/
 
-/-- Independent mixed profile over reachable pure strategies. This is the
-finite strategy space for bounded-history FOSGs whose full `InfoState` type
-need not be finite. -/
+/-- Legal optional moves at a reachable information state.
+
+This is the canonical local action carrier for bounded-history FOSG Kuhn
+semantics: strategic actions are exactly FOSG moves available at the player's
+current reachable information state. -/
+abbrev ReachableInfoLegalMove
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι)
+    (s : G.ReachableInfoState i) : Type :=
+  { oi : Option (Act i) // oi ∈ G.availableMovesAtInfoState i s.1 }
+
+private theorem reachable_availableMoves_nonempty
+    (h : G.History) (i : ι) :
+    ∃ oi : Option (Act i), oi ∈ G.availableMoves h i := by
+  exact availableMoves_nonempty (G := G) h i
+
+/-- Default legal move at a reachable information state. Used only as the
+fallback at unreached strategic states in the generic core construction. -/
+noncomputable def reachableInfoLegalMoveDefault
+    (G : FOSG ι W Act PrivObs PubObs) (i : ι)
+    (s : G.ReachableInfoState i) :
+    ReachableInfoLegalMove G i s := by
+  classical
+  let h := s.2.choose
+  have hs : h.playerView i = s.1 := by
+    simpa [h] using s.2.choose_spec
+  let oi := Classical.choose (reachable_availableMoves_nonempty (G := G) h i)
+  have hoi : oi ∈ G.availableMoves h i :=
+    Classical.choose_spec (reachable_availableMoves_nonempty (G := G) h i)
+  refine ⟨oi, ?_⟩
+  have hat : oi ∈ G.availableMovesAtInfoState i (h.playerView i) :=
+    G.mem_availableMovesAtInfoState_of_history h hoi
+  simpa [hs] using hat
+
+/-- Independent mixed profile over legal reachable pure strategies. This is the
+finite strategy space for bounded-history FOSGs whose full `InfoState` type need
+not be finite. The legality is in the carrier, not an external support
+predicate. -/
 abbrev ReachableMixedProfile : Type :=
-  ∀ i, PMF (G.ReachablePureStrategy i)
+  ∀ i, PMF (G.ReachableLegalPureStrategy i)
+
+noncomputable instance reachableLegalPureStrategyFintype
+    [Fintype G.History] [Fintype (Option (Act i))] :
+    Fintype (G.ReachableLegalPureStrategy i) := by
+  classical
+  dsimp [_root_.GameTheory.FOSG.ReachableLegalPureStrategy,
+    _root_.GameTheory.FOSG.ReachablePureStrategy]
+  infer_instance
 
 /-- Joint law induced by a reachable independent mixed profile. -/
 noncomputable abbrev reachableMixedProfileJoint
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
     (μ : ReachableMixedProfile (G := G)) :
-    PMF (_root_.GameTheory.FOSG.ReachablePureProfile G) :=
+    PMF (_root_.GameTheory.FOSG.ReachableLegalPureProfile G) :=
   Math.PMFProduct.pmfPi μ
 
-/-- A reachable mixed profile is legal when each player's mixed strategy
-supports only legal reachable pure strategies. -/
-def IsLegalReachableMixedProfile
-    (μ : ReachableMixedProfile (G := G)) : Prop :=
-  ∀ i (πi : G.ReachablePureStrategy i),
-    πi ∈ (μ i).support → G.IsLegalReachablePureStrategy i πi
+/-- Legal reachable-history Kuhn execution model.
 
-/-- Native-history Kuhn execution model whose strategic observations are
-reachable FOSG information states. -/
+The machine state is a realized FOSG history and the strategic observations are
+reachable FOSG information states. Local actions are legal-move subtypes at the
+current reachable information state, so illegal FOSG moves are not represented
+as strategic actions. Terminal histories are absorbing because no legal FOSG
+transition exists there. -/
 noncomputable def toReachableHistoryObsModelCore
-    (G : FOSG ι W Act PrivObs PubObs) :
+    (G : FOSG ι W Act PrivObs PubObs) (hLeg : G.LegalObservable) :
     ObsModelCore ι G.History (fun i => G.ReachableInfoState i)
-      (fun i _ => Option (Act i)) where
+      (fun i s => ReachableInfoLegalMove G i s) where
   infoState := fun _ => InfoStateCore.identity _
   observe := fun i h => G.reachableInfoStateOfHistory i h
   machine :=
     { init := History.nil G
       step := fun h a => by
         classical
-        exact if hleg : G.legal h.lastState a then
-          (G.transition h.lastState ⟨a, hleg⟩).map
-            (fun dst => h.extendByOutcome ⟨a, hleg⟩ dst)
-        else
-          PMF.pure h }
+        by_cases hterm : G.terminal h.lastState
+        · exact PMF.pure h
+        · let raw : JointAction Act := fun i => (a i).1
+          have hraw : G.legal h.lastState raw := by
+            rw [G.legal_iff_forall]
+            refine ⟨hterm, ?_⟩
+            intro i
+            have haiInfo :
+                (a i).1 ∈ G.availableMovesAtInfoState i
+                  (G.reachableInfoStateOfHistory i h).1 := (a i).2
+            have hai : (a i).1 ∈ G.availableMoves h i := by
+              have hEq := G.availableMovesAtInfoState_eq_of_history hLeg i h
+              exact hEq ▸ haiInfo
+            simpa [FOSG.mem_availableMoves_iff] using hai
+          exact (G.transition h.lastState ⟨raw, hraw⟩).map
+            (fun dst => h.extendByOutcome ⟨raw, hraw⟩ dst) }
 
 namespace ReachableHistoryNative
 
 variable (G : FOSG ι W Act PrivObs PubObs)
 
 noncomputable instance reachableHistoryInfoStateFintype
-    [Fintype G.History] :
-    ∀ i, Fintype ((toReachableHistoryObsModelCore G).InfoState i) := by
+    [Fintype G.History] (hLeg : G.LegalObservable) :
+    ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).InfoState i) := by
   intro i
   simpa [toReachableHistoryObsModelCore, ObsModelCore.InfoState] using
     (inferInstance : Fintype (G.ReachableInfoState i))
 
+noncomputable instance reachableInfoLegalMoveFintype
+    [∀ i, Fintype (Option (Act i))]
+    (i : ι) (s : G.ReachableInfoState i) :
+    Fintype (ReachableInfoLegalMove G i s) := by
+  classical
+  dsimp [ReachableInfoLegalMove]
+  infer_instance
+
 noncomputable instance reachableHistoryLocalStrategyFintype
-    [Fintype G.History] [∀ i, Fintype (Option (Act i))] :
-    ∀ i, Fintype ((toReachableHistoryObsModelCore G).LocalStrategy i) := by
+    [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable) :
+    ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).LocalStrategy i) := by
   intro i
   dsimp [ObsModelCore.LocalStrategy]
   infer_instance
@@ -932,116 +992,147 @@ end ReachableHistoryNative
 model. -/
 noncomputable def reachableHistoryOutcomeDist
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
-    (k : Nat)
-    (β : (toReachableHistoryObsModelCore G).BehavioralProfile) : PMF G.History :=
-  ((toReachableHistoryObsModelCore G).runDist k β).bind
-    (fun ss => PMF.pure ((toReachableHistoryObsModelCore G).lastState ss))
+    (hLeg : G.LegalObservable) (k : Nat)
+    (β : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile) :
+    PMF G.History :=
+  ((toReachableHistoryObsModelCore G hLeg).runDist k β).bind
+    (fun ss => PMF.pure ((toReachableHistoryObsModelCore G hLeg).lastState ss))
 
 /-- Native final-history law induced by a pure profile in the reachable-history
 Kuhn execution model. -/
 noncomputable def reachableHistoryOutcomeDistPure
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
-    (k : Nat)
-    (π : (toReachableHistoryObsModelCore G).PureProfile) : PMF G.History :=
-  ((toReachableHistoryObsModelCore G).runDistPure k π).bind
-    (fun ss => PMF.pure ((toReachableHistoryObsModelCore G).lastState ss))
+    (hLeg : G.LegalObservable) (k : Nat)
+    (π : (toReachableHistoryObsModelCore G hLeg).PureProfile) :
+    PMF G.History :=
+  ((toReachableHistoryObsModelCore G hLeg).runDistPure k π).bind
+    (fun ss => PMF.pure ((toReachableHistoryObsModelCore G hLeg).lastState ss))
 
 /-- Reachable FOSG-side name for step-mass invariance on the native-history
 Kuhn model. -/
 abbrev ReachableHistoryStepMassInvariant
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
-  ObsModelCore.StepMassInvariant (toReachableHistoryObsModelCore G)
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable) : Prop :=
+  ObsModelCore.StepMassInvariant (toReachableHistoryObsModelCore G hLeg)
 
 /-- Reachable FOSG-side name for support factorization on the native-history
 Kuhn model. -/
 abbrev ReachableHistoryStepSupportFactorization
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
-  ObsModelCore.StepSupportFactorization (toReachableHistoryObsModelCore G)
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable) : Prop :=
+  ObsModelCore.StepSupportFactorization (toReachableHistoryObsModelCore G hLeg)
 
 /-- Reachable FOSG-side name for posterior locality on the native-history Kuhn
 model. -/
 abbrev ReachableHistoryActionPosteriorLocal
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
-    (i : ι) : Prop :=
-  ObsModelCore.ActionPosteriorLocal (toReachableHistoryObsModelCore G) i
+    (hLeg : G.LegalObservable) (i : ι) : Prop :=
+  ObsModelCore.ActionPosteriorLocal (toReachableHistoryObsModelCore G hLeg) i
+
+/-- Lift a legal reachable FOSG pure strategy into the legal reachable-history
+Kuhn model. -/
+noncomputable def liftReachableHistoryPureStrategy
+    (hLeg : G.LegalObservable) (i : ι)
+    (π : G.ReachableLegalPureStrategy i) :
+    (toReachableHistoryObsModelCore G hLeg).LocalStrategy i := by
+  intro s
+  let h := s.2.choose
+  have hs : h.playerView i = s.1 := by
+    simpa [h] using s.2.choose_spec
+  have hsEq : G.reachableInfoStateOfHistory i h = s := by
+    exact Subtype.ext hs
+  have hraw : π.1 s ∈ G.availableMoves h i := by
+    simpa [hsEq] using π.2 h
+  refine ⟨π.1 s, ?_⟩
+  have hat : π.1 s ∈ G.availableMovesAtInfoState i (h.playerView i) :=
+    G.mem_availableMovesAtInfoState_of_history h hraw
+  simpa [hs] using hat
 
 /-- Lift a reachable FOSG pure profile into the reachable-history Kuhn model. -/
 noncomputable def liftReachableHistoryPureProfile
-    (π : _root_.GameTheory.FOSG.ReachablePureProfile G) :
-    (toReachableHistoryObsModelCore G).PureProfile :=
-  fun i => π i
+    (hLeg : G.LegalObservable)
+    (π : _root_.GameTheory.FOSG.ReachableLegalPureProfile G) :
+    (toReachableHistoryObsModelCore G hLeg).PureProfile :=
+  fun i => liftReachableHistoryPureStrategy (G := G) hLeg i (π i)
 
 /-- Native final-history law induced by a reachable pure profile. -/
 noncomputable def reachableHistoryOutcomeDistPureProfile
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
-    (k : Nat) (π : _root_.GameTheory.FOSG.ReachablePureProfile G) :
+    (hLeg : G.LegalObservable) (k : Nat)
+    (π : _root_.GameTheory.FOSG.ReachableLegalPureProfile G) :
     PMF G.History :=
-  reachableHistoryOutcomeDistPure (G := G) k
-    (liftReachableHistoryPureProfile (G := G) π)
+  reachableHistoryOutcomeDistPure (G := G) hLeg k
+    (liftReachableHistoryPureProfile (G := G) hLeg π)
 
 /-- Lift a reachable independent mixed profile into the reachable-history Kuhn
 model. -/
 noncomputable def liftReachableHistoryMixedProfile
+    (hLeg : G.LegalObservable)
     (μ : ReachableMixedProfile (G := G)) :
-    ∀ i, PMF ((toReachableHistoryObsModelCore G).LocalStrategy i) :=
-  fun i => μ i
+    ∀ i, PMF ((toReachableHistoryObsModelCore G hLeg).LocalStrategy i) :=
+  fun i =>
+    Math.ProbabilityMassFunction.pushforward (μ i)
+      (liftReachableHistoryPureStrategy (G := G) hLeg i)
 
 theorem liftReachableHistoryMixedProfile_joint
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
     (μ : ReachableMixedProfile (G := G)) :
-    Math.PMFProduct.pmfPi (liftReachableHistoryMixedProfile (G := G) μ) =
-      reachableMixedProfileJoint (G := G) μ := by
-  rfl
+    Math.PMFProduct.pmfPi (liftReachableHistoryMixedProfile (G := G) hLeg μ) =
+      Math.ProbabilityMassFunction.pushforward
+        (reachableMixedProfileJoint (G := G) μ)
+        (liftReachableHistoryPureProfile (G := G) hLeg) := by
+  classical
+  rw [reachableMixedProfileJoint]
+  change Math.PMFProduct.pmfPi
+      (fun i => Math.ProbabilityMassFunction.pushforward (μ i)
+        (liftReachableHistoryPureStrategy (G := G) hLeg i)) =
+    Math.ProbabilityMassFunction.pushforward (Math.PMFProduct.pmfPi μ)
+      (fun π => fun i => liftReachableHistoryPureStrategy (G := G) hLeg i (π i))
+  exact (Math.PMFProduct.pmfPi_push_coordwise μ
+    (fun i => liftReachableHistoryPureStrategy (G := G) hLeg i)).symm
 
 @[simp] theorem reachableHistoryOutcomeDistPure_liftReachableHistoryPureProfile
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
-    (k : Nat) (π : _root_.GameTheory.FOSG.ReachablePureProfile G) :
-    reachableHistoryOutcomeDistPure (G := G) k
-        (liftReachableHistoryPureProfile (G := G) π) =
-      reachableHistoryOutcomeDistPureProfile (G := G) k π := by
+    (hLeg : G.LegalObservable) (k : Nat)
+    (π : _root_.GameTheory.FOSG.ReachableLegalPureProfile G) :
+    reachableHistoryOutcomeDistPure (G := G) hLeg k
+        (liftReachableHistoryPureProfile (G := G) hLeg π) =
+      reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π := by
   rfl
-
-private theorem reachable_availableMoves_nonempty
-    (h : G.History) (i : ι) :
-    ∃ oi : Option (Act i), oi ∈ G.availableMoves h i := by
-  exact availableMoves_nonempty (G := G) h i
 
 /-- Legal fallback for reachable information states, used only at states not
 reached by any pure profile in the core M→B construction. -/
 noncomputable def reachableLegalFallbackBehavioral
-    (_hLeg : G.LegalObservable) : G.ReachableBehavioralProfile := by
+    (hLeg : G.LegalObservable) :
+    (toReachableHistoryObsModelCore G hLeg).BehavioralProfile := by
   classical
   exact fun i v =>
-    let h := v.2.choose
-    PMF.pure (Classical.choose (reachable_availableMoves_nonempty (G := G) h i))
+    PMF.pure (reachableInfoLegalMoveDefault G i v)
 
-private theorem reachableLegalFallbackBehavioral_isLegal
-    (hLeg : G.LegalObservable) :
-    (∀ i, G.IsLegalReachableBehavioralStrategy i
-      (reachableLegalFallbackBehavioral (G := G) hLeg i)) := by
+/-- Erase legal-move subtypes from a legal-core reachable behavioral profile. -/
+noncomputable def eraseReachableHistoryBehavioral
+    (hLeg : G.LegalObservable)
+    (β : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile) :
+    G.ReachableBehavioralProfile :=
+  fun i s => PMF.map (fun a : ReachableInfoLegalMove G i s => a.1) (β i s)
+
+private theorem eraseReachableHistoryBehavioral_isLegal
+    (hLeg : G.LegalObservable)
+    (β : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile) :
+    ∀ i, G.IsLegalReachableBehavioralStrategy i
+      (eraseReachableHistoryBehavioral (G := G) hLeg β i) := by
   classical
   intro i h oi hoi
-  unfold reachableLegalFallbackBehavioral at hoi
-  let h' := (G.reachableInfoStateOfHistory i h).2.choose
-  have hh' : h'.playerView i = h.playerView i := by
-    have hs := (G.reachableInfoStateOfHistory i h).2.choose_spec
-    simpa [h'] using hs
-  have hchosen :
-      Classical.choose (reachable_availableMoves_nonempty (G := G) h' i) ∈
-        G.availableMoves h' i :=
-    Classical.choose_spec (reachable_availableMoves_nonempty (G := G) h' i)
-  have hoi_eq :
-      oi = Classical.choose (reachable_availableMoves_nonempty (G := G) h' i) := by
-    rw [PMF.mem_support_iff] at hoi
-    by_contra hne
-    apply hoi
-    rw [PMF.pure_apply]
-    simp only [ite_eq_right_iff, one_ne_zero, imp_false]
-    exact hne
-  have hEq : G.availableMoves h' i = G.availableMoves h i :=
-    G.availableMoves_eq_of_playerView_eq hLeg i hh'
-  rw [hoi_eq]
-  exact hEq ▸ hchosen
+  unfold eraseReachableHistoryBehavioral at hoi
+  rcases (PMF.mem_support_map_iff _ _ _).mp hoi with ⟨a, _ha, haoi⟩
+  have haiInfo :
+      a.1 ∈ G.availableMovesAtInfoState i
+        (G.reachableInfoStateOfHistory i h).1 := a.2
+  have hai : a.1 ∈ G.availableMoves h i := by
+    have hEq := G.availableMovesAtInfoState_eq_of_history hLeg i h
+    exact hEq ▸ haiInfo
+  simpa [← haoi] using hai
 
 /-- Reachable-history M→B witness with legal fallback at unreached reachable
 information states. -/
@@ -1049,10 +1140,10 @@ noncomputable def reachableLegalHistoryMixedToBehavioral
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
     (hLeg : G.LegalObservable)
     (μ : ReachableMixedProfile (G := G)) :
-    G.ReachableBehavioralProfile :=
+    (toReachableHistoryObsModelCore G hLeg).BehavioralProfile :=
   ObsModelCore.mixedToBehavioralProfileWithFallback
-    (O := toReachableHistoryObsModelCore G)
-    (liftReachableHistoryMixedProfile (G := G) μ)
+    (O := toReachableHistoryObsModelCore G hLeg)
+    (liftReachableHistoryMixedProfile (G := G) hLeg μ)
     (reachableLegalFallbackBehavioral (G := G) hLeg)
 
 set_option linter.unusedFintypeInType false in
@@ -1060,142 +1151,106 @@ open Classical in
 theorem reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
     (hLeg : G.LegalObservable)
-    (hMass : ReachableHistoryStepMassInvariant (G := G))
-    (hFactor : ReachableHistoryStepSupportFactorization (G := G))
-    (hLocal : ∀ i, ReachableHistoryActionPosteriorLocal (G := G) i)
+    (hMass : ReachableHistoryStepMassInvariant (G := G) hLeg)
+    (hFactor : ReachableHistoryStepSupportFactorization (G := G) hLeg)
+    (hLocal : ∀ i, ReachableHistoryActionPosteriorLocal (G := G) hLeg i)
     (μ : ReachableMixedProfile (G := G))
     (k : Nat) :
-    reachableHistoryOutcomeDist (G := G) k
+    reachableHistoryOutcomeDist (G := G) hLeg k
         (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ) =
       (reachableMixedProfileJoint (G := G) μ).bind
-        (fun π => reachableHistoryOutcomeDistPureProfile (G := G) k π) := by
-  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G).InfoState i) :=
-    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G)
-  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G).LocalStrategy i) :=
-    ReachableHistoryNative.reachableHistoryLocalStrategyFintype (G := G)
-  letI : ∀ i (o : G.ReachableInfoState i), Nonempty (Option (Act i)) :=
-    fun _ _ => ⟨none⟩
+        (fun π => reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π) := by
+  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).InfoState i) :=
+    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G) hLeg
+  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).LocalStrategy i) :=
+    ReachableHistoryNative.reachableHistoryLocalStrategyFintype (G := G) hLeg
+  letI : ∀ i (o : G.ReachableInfoState i), Nonempty (ReachableInfoLegalMove G i o) :=
+    fun i o => ⟨reachableInfoLegalMoveDefault G i o⟩
   have hβ :=
     ObsModelCore.mixedToBehavioralProfileWithFallback_runDist
-      (O := toReachableHistoryObsModelCore G)
+      (O := toReachableHistoryObsModelCore G hLeg)
       hMass hFactor
       (fun i => by
         simpa [ReachableHistoryActionPosteriorLocal] using hLocal i)
-      (liftReachableHistoryMixedProfile (G := G) μ)
+      (liftReachableHistoryMixedProfile (G := G) hLeg μ)
       (reachableLegalFallbackBehavioral (G := G) hLeg) k
   unfold reachableHistoryOutcomeDist reachableLegalHistoryMixedToBehavioral
   rw [hβ, PMF.bind_bind]
-  rw [← liftReachableHistoryMixedProfile_joint (G := G) μ]
+  change
+    (Math.PMFProduct.pmfPi (liftReachableHistoryMixedProfile (G := G) hLeg μ)).bind
+        (fun π => reachableHistoryOutcomeDistPure (G := G) hLeg k π) =
+      (reachableMixedProfileJoint (G := G) μ).bind
+        (fun π => reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π)
+  have hJoint :=
+    liftReachableHistoryMixedProfile_joint (G := G) hLeg μ
+  rw [hJoint]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+  simp only [PMF.pure_bind]
   rfl
 
 set_option linter.unusedFintypeInType false in
 open Classical in
-private theorem reachableLegalHistoryMixedToBehavioral_isLegal
-    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
-    (hLeg : G.LegalObservable)
-    (hLocal : ∀ i, ReachableHistoryActionPosteriorLocal (G := G) i)
-    (μ : ReachableMixedProfile (G := G))
-    (hμ : IsLegalReachableMixedProfile (G := G) μ) :
-    (∀ i, G.IsLegalReachableBehavioralStrategy i
-      (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ i)) := by
-  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G).InfoState i) :=
-    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G)
-  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G).LocalStrategy i) :=
-    ReachableHistoryNative.reachableHistoryLocalStrategyFintype (G := G)
-  intro i h oi hoi
-  by_cases hex : ∃ (n : Nat) (ss : List G.History)
-      (π₀ : (toReachableHistoryObsModelCore G).PureProfile),
-      (toReachableHistoryObsModelCore G).projectStates i ss =
-        G.reachableInfoStateOfHistory i h ∧
-      Math.ParameterizedChain.pureRun
-        ((toReachableHistoryObsModelCore G).pureStep)
-        (toReachableHistoryObsModelCore G).init n π₀ ss ≠ 0
-  · rcases hex with ⟨n, ss, π₀, hproj, hreach⟩
-    have hEq :=
-      ObsModelCore.mixedToBehavioralProfileWithFallback_eq_factorAt
-        (O := toReachableHistoryObsModelCore G)
-        (fun i => by
-          simpa [ReachableHistoryActionPosteriorLocal] using hLocal i)
-        (liftReachableHistoryMixedProfile (G := G) μ)
-        (reachableLegalFallbackBehavioral (G := G) hLeg) i n ss π₀ hreach
-    have hEq' :
-        reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ i
-            (G.reachableInfoStateOfHistory i h) =
-          ObsModelCore.mixedToBehavioralFactorAt
-            (O := toReachableHistoryObsModelCore G)
-            (liftReachableHistoryMixedProfile (G := G) μ) i n ss π₀ := by
-      have hEq'' := hEq
-      rwa [hproj] at hEq''
-    have hfactor :
-        oi ∈ (ObsModelCore.mixedToBehavioralFactorAt
-          (O := toReachableHistoryObsModelCore G)
-          (liftReachableHistoryMixedProfile (G := G) μ)
-          i n ss π₀).support := by
-      rwa [hEq'] at hoi
-    rcases Math.PMFProduct.pushforward_support_fibre
-        (Math.ParameterizedChain.reweightPMF
-          (liftReachableHistoryMixedProfile (G := G) μ i)
-          (fun πᵢ => Math.ParameterizedChain.pureRun
-            ((toReachableHistoryObsModelCore G).pureStep)
-            (toReachableHistoryObsModelCore G).init n
-            (Function.update π₀ i πᵢ) ss))
-        (fun πᵢ => πᵢ ((toReachableHistoryObsModelCore G).projectStates i ss))
-        oi hfactor with
-      ⟨πiCore, hπiAction, hπiReweight⟩
-    have hπiSupp :
-        πiCore ∈ (μ i).support :=
-      Math.ParameterizedChain.reweightPMF_support_subset _ _ hπiReweight
-    have hval : πiCore (G.reachableInfoStateOfHistory i h) = oi := by
-      rw [← hproj]
-      exact hπiAction
-    rw [← hval]
-    exact hμ i πiCore hπiSupp h
-  · have hfb :
-        reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ i
-            (G.reachableInfoStateOfHistory i h) =
-          reachableLegalFallbackBehavioral (G := G) hLeg i
-            (G.reachableInfoStateOfHistory i h) := by
-      unfold reachableLegalHistoryMixedToBehavioral
-        ObsModelCore.mixedToBehavioralProfileWithFallback
-      rw [dif_neg hex]
-    rw [hfb] at hoi
-    exact reachableLegalFallbackBehavioral_isLegal (G := G) hLeg i h hoi
-
-set_option linter.unusedFintypeInType false in
-open Classical in
-/-- **Kuhn's theorem, mixed -> legal behavioral direction for reachable FOSG
+/-- **Kuhn's theorem, mixed -> behavioral direction for legal reachable FOSG
 strategy spaces.**
 
 This is the bounded-history-friendly M→B theorem: it needs finiteness of
-`G.History`, not finiteness of the full `G.InfoState i = List ...` type. -/
+`G.History`, not finiteness of the full `G.InfoState i = List ...` type. The
+strategy space is already legal, so no separate support-legality assumption is
+needed. -/
+theorem reachable_mixed_to_behavioral
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (hMass : ReachableHistoryStepMassInvariant (G := G) hLeg)
+    (hFactor : ReachableHistoryStepSupportFactorization (G := G) hLeg)
+    (hLocal : ∀ i, ReachableHistoryActionPosteriorLocal (G := G) hLeg i)
+    (μ : ReachableMixedProfile (G := G))
+    (k : Nat) :
+    ∃ β : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile,
+      reachableHistoryOutcomeDist (G := G) hLeg k β =
+        (reachableMixedProfileJoint (G := G) μ).bind
+          (fun π => reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π) := by
+  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).InfoState i) :=
+    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G) hLeg
+  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).LocalStrategy i) :=
+    ReachableHistoryNative.reachableHistoryLocalStrategyFintype (G := G) hLeg
+  refine ⟨reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ, ?_⟩
+  exact reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
+    (G := G) hLeg hMass hFactor hLocal μ k
+
+set_option linter.unusedFintypeInType false in
+open Classical in
+/-- FOSG-facing form of the legal reachable M→B theorem.
+
+The distributional statement is over the canonical legal core profile. Its
+erasure is packaged as a legal reachable FOSG behavioral profile. -/
 theorem reachable_mixed_to_legal_behavioral
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
     (hLeg : G.LegalObservable)
-    (hMass : ReachableHistoryStepMassInvariant (G := G))
-    (hFactor : ReachableHistoryStepSupportFactorization (G := G))
-    (hLocal : ∀ i, ReachableHistoryActionPosteriorLocal (G := G) i)
+    (hMass : ReachableHistoryStepMassInvariant (G := G) hLeg)
+    (hFactor : ReachableHistoryStepSupportFactorization (G := G) hLeg)
+    (hLocal : ∀ i, ReachableHistoryActionPosteriorLocal (G := G) hLeg i)
     (μ : ReachableMixedProfile (G := G))
-    (hμ : IsLegalReachableMixedProfile (G := G) μ)
     (k : Nat) :
+    ∃ βcore : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile,
     ∃ β : G.ReachableLegalBehavioralProfile,
-      reachableHistoryOutcomeDist (G := G) k β.toProfile =
+      β.toProfile = eraseReachableHistoryBehavioral (G := G) hLeg βcore ∧
+      reachableHistoryOutcomeDist (G := G) hLeg k βcore =
         (reachableMixedProfileJoint (G := G) μ).bind
-          (fun π => reachableHistoryOutcomeDistPureProfile (G := G) k π) := by
-  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G).InfoState i) :=
-    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G)
-  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G).LocalStrategy i) :=
-    ReachableHistoryNative.reachableHistoryLocalStrategyFintype (G := G)
-  let βraw := reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ
+          (fun π => reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π) := by
+  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).InfoState i) :=
+    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G) hLeg
+  letI : ∀ i, Fintype ((toReachableHistoryObsModelCore G hLeg).LocalStrategy i) :=
+    ReachableHistoryNative.reachableHistoryLocalStrategyFintype (G := G) hLeg
+  obtain ⟨βcore, hβcore⟩ :=
+    reachable_mixed_to_behavioral (G := G) hLeg hMass hFactor hLocal μ k
+  let βraw := eraseReachableHistoryBehavioral (G := G) hLeg βcore
   have hβlegal :
       ∀ i, G.IsLegalReachableBehavioralStrategy i (βraw i) :=
-    reachableLegalHistoryMixedToBehavioral_isLegal
-      (G := G) hLeg hLocal μ hμ
+    eraseReachableHistoryBehavioral_isLegal (G := G) hLeg βcore
   let β : G.ReachableLegalBehavioralProfile :=
     fun i => ⟨βraw i, hβlegal i⟩
-  refine ⟨β, ?_⟩
-  change reachableHistoryOutcomeDist (G := G) k βraw = _
-  exact reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
-    (G := G) hLeg hMass hFactor hLocal μ k
+  refine ⟨βcore, β, ?_, hβcore⟩
+  rfl
 
 section Step
 
