@@ -493,6 +493,32 @@ def ObsLocalFeasibilityFull (O : ObsModelCore ι σ Obs Act) (i : ι) : Prop :=
       pureRun (O.pureStep) O.init n₁ (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
       pureRun (O.pureStep) O.init n₂ (Function.update π₀' i πᵢ) ss₂ ≠ 0
 
+/-- A **local-support signature** (unguarded): the support of a one-player
+replacement at any reachable trace is characterized by a predicate
+`Req : InfoState i → LocalStrategy i → Prop` of the player's endpoint
+information state.
+
+This is the natural proof target for models where the player's information
+state is a sufficient statistic for the support constraints on a replacement
+strategy. Once available, `ObsLocalFeasibilityFull` follows immediately by
+`rw [hobs]`. -/
+structure LocalSupportSignatureFull
+    (O : ObsModelCore ι σ Obs Act) (i : ι) where
+  Req : O.InfoState i → O.LocalStrategy i → Prop
+  support_iff :
+    ∀ (n : Nat) (π₀ : ObsModelCore.PureProfile O) (ss : List σ),
+      pureRun (O.pureStep) O.init n π₀ ss ≠ 0 →
+      ∀ (πᵢ : O.LocalStrategy i),
+        pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss ≠ 0 ↔
+          Req (O.projectStates i ss) πᵢ
+
+/-- A `LocalSupportSignatureFull` implies `ObsLocalFeasibilityFull`. -/
+theorem obsLocalFeasibilityFull_of_localSupportSignatureFull
+    (i : ι) (S : O.LocalSupportSignatureFull i) :
+    ObsLocalFeasibilityFull O i := by
+  intro n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ πᵢ
+  rw [S.support_iff n₁ π₀ ss₁ h₁ πᵢ, S.support_iff n₂ π₀' ss₂ h₂ πᵢ, hobs]
+
 /-- Profile that agrees with `π` on players in `S` and with `π₀` elsewhere. -/
 private noncomputable def multiUpdate [DecidableEq ι]
     (π₀ π : ObsModelCore.PureProfile O) (S : Finset ι) :
@@ -585,6 +611,30 @@ def ObsLocalFeasibility (O : ObsModelCore ι σ Obs Act) (i : ι) : Prop :=
     ∀ (πᵢ : O.LocalStrategy i),
       pureRun (O.pureStep) O.init n₁ (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
       pureRun (O.pureStep) O.init n₂ (Function.update π₀' i πᵢ) ss₂ ≠ 0
+
+/-- Guarded variant of `LocalSupportSignatureFull`: the support iff is only
+required when the current action type is non-trivial, matching the guard on
+`ObsLocalFeasibility`. -/
+structure LocalSupportSignature
+    (O : ObsModelCore ι σ Obs Act) (i : ι) where
+  Req : O.InfoState i → O.LocalStrategy i → Prop
+  support_iff :
+    ∀ (n : Nat) (π₀ : ObsModelCore.PureProfile O) (ss : List σ),
+      pureRun (O.pureStep) O.init n π₀ ss ≠ 0 →
+      ¬ Subsingleton (Act i (O.currentObs i (O.projectStates i ss))) →
+      ∀ (πᵢ : O.LocalStrategy i),
+        pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss ≠ 0 ↔
+          Req (O.projectStates i ss) πᵢ
+
+omit [∀ i, Fintype (O.InfoState i)] in
+/-- A `LocalSupportSignature` implies `ObsLocalFeasibility`. -/
+theorem obsLocalFeasibility_of_localSupportSignature
+    (i : ι) (S : O.LocalSupportSignature i) :
+    ObsLocalFeasibility O i := by
+  intro n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ hsub πᵢ
+  have hsub₂ : ¬ Subsingleton (Act i (O.currentObs i (O.projectStates i ss₂))) := by
+    rw [← hobs]; exact hsub
+  rw [S.support_iff n₁ π₀ ss₁ h₁ hsub πᵢ, S.support_iff n₂ π₀' ss₂ h₂ hsub₂ πᵢ, hobs]
 
 /-- Minimal semantic locality on the core model: the posterior distribution of
 player `i`'s recommended action, after conditioning on reaching the current

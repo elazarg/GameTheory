@@ -964,97 +964,41 @@ private theorem obsLocalFeasibility_compiledCore
     (hpr : PerfectRecall t) (i : S.Player) :
     ObsModelCore.ObsLocalFeasibility
       (compiledCoreObs t) i := by
-  intro n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ hsub πᵢ
-  obtain ⟨I, hI₁⟩ :=
-    infoState_some_of_not_subsingleton t
-      (i := i) (ss := ss₁) hsub
-  have hI₂ :
-      (compiledCoreObs t).projectStates i ss₂ = some I := by
-    exact hobs.symm ▸ hI₁
-  obtain ⟨next₁, hdec₁⟩ :=
-    exists_decision_of_projectStates_eq_some t hI₁
-  obtain ⟨next₂, hdec₂⟩ :=
-    exists_decision_of_projectStates_eq_some t hI₂
-  obtain ⟨hist₁, ⟨hsupp₁⟩, hcompat₁⟩ :=
-    pureRun_nonzero_to_historySupportTrace t h₁
-  obtain ⟨hist₂, ⟨hsupp₂⟩, hcompat₂⟩ :=
-    pureRun_nonzero_to_historySupportTrace t h₂
-  have hreach₁ : ReachBy hist₁ t (.decision I next₁) := by
-    simpa [hdec₁] using
-      (historySupportTrace_reachBy t hsupp₁)
-  have hreach₂ : ReachBy hist₂ t (.decision I next₂) := by
-    simpa [hdec₂] using
-      (historySupportTrace_reachBy t hsupp₂)
-  have hplayer :
-      playerHistory S i hist₁ = playerHistory S i hist₂ := by
-    exact hpr hist₁ hist₂ I next₁ next₂ hreach₁ hreach₂
+  refine ObsModelCore.obsLocalFeasibility_of_localSupportSignature i
+    { Req := fun v πᵢ =>
+        ∀ I : S.Infoset i, v = some I →
+          ∀ (hist : List (HistoryStep S)) (next : S.Act I → GameTree S Outcome),
+            ReachBy hist t (.decision I next) →
+            ∀ tok ∈ playerHistory S i hist, πᵢ (some tok.1) = tok.2,
+      support_iff := ?_ }
+  intro n_h π₀ ss h_reach hns πᵢ
+  obtain ⟨I, hI⟩ := infoState_some_of_not_subsingleton t (i := i) (ss := ss) hns
+  obtain ⟨next, hdec⟩ := exists_decision_of_projectStates_eq_some t hI
+  obtain ⟨hist, ⟨hsupp⟩, hcompat⟩ := pureRun_nonzero_to_historySupportTrace t h_reach
+  have hreach : ReachBy hist t (.decision I next) := by
+    simpa [hdec] using historySupportTrace_reachBy t hsupp
+  rw [hI]
   constructor
-  · intro hupd₁
-    obtain ⟨hist₁', ⟨hsupp₁'⟩, hcompat₁'⟩ :=
-      pureRun_nonzero_to_historySupportTrace t hupd₁
-    have hreach₁' : ReachBy hist₁' t (.decision I next₁) := by
-      simpa [hdec₁] using
-        (historySupportTrace_reachBy t hsupp₁')
-    have hplayer₁' :
-        playerHistory S i hist₁' = playerHistory S i hist₁ := by
-      exact hpr hist₁' hist₁ I next₁ next₁ hreach₁' hreach₁
-    have hagree₁ :
-        ∀ tok ∈ playerHistory S i hist₁, πᵢ (some tok.1) = tok.2 := by
-      intro tok htok
-      have htok' : tok ∈ playerHistory S i hist₁' := by
-        simpa [hplayer₁'] using htok
-      exact playerHistory_agrees_of_historyCompatibleCore_update
-        t hcompat₁' tok htok'
-    have hagree₂ :
-        ∀ tok ∈ playerHistory S i hist₂, πᵢ (some tok.1) = tok.2 := by
-      intro tok htok
-      have htok₁ : tok ∈ playerHistory S i hist₁ := by
-        simpa [hplayer] using htok
-      exact hagree₁ tok htok₁
-    have hcompat₂' :=
-      historyCompatibleCore_update_of_playerHistory
-        t hcompat₂ hagree₂
-    have hlen₂ : ss₂.length - 1 = n₂ := by
+  · intro h_upd I' hI'eq hist' next' hreach' tok htok
+    -- v = some I (already), and hI'eq : some I = some I' ⟹ I = I'.
+    have hII : I = I' := Option.some.inj hI'eq
+    subst hII
+    obtain ⟨hist'', ⟨hsupp''⟩, hcompat''⟩ := pureRun_nonzero_to_historySupportTrace t h_upd
+    have hreach'' : ReachBy hist'' t (.decision I next) := by
+      simpa [hdec] using historySupportTrace_reachBy t hsupp''
+    have hplayer : playerHistory S i hist'' = playerHistory S i hist' :=
+      hpr hist'' hist' I next next' hreach'' hreach'
+    have htok'' : tok ∈ playerHistory S i hist'' := by simpa [hplayer] using htok
+    exact playerHistory_agrees_of_historyCompatibleCore_update t hcompat'' tok htok''
+  · intro hReq
+    have hagree := hReq I rfl hist next hreach
+    have hcompat' :=
+      historyCompatibleCore_update_of_playerHistory t hcompat hagree
+    have hlen : ss.length - 1 = n_h := by
       have := Math.ParameterizedChain.pureRun_length
-        ((compiledCoreObs t).pureStep)
-        ((compiledCoreObs t).init) n₂ π₀' ss₂ h₂
+        ((compiledCoreObs t).pureStep) ((compiledCoreObs t).init) n_h π₀ ss h_reach
       omega
-    simpa [hlen₂] using
-      historySupportTrace_pureRun_nonzero
-        t hsupp₂ hcompat₂'
-  · intro hupd₂
-    obtain ⟨hist₂', ⟨hsupp₂'⟩, hcompat₂'⟩ :=
-      pureRun_nonzero_to_historySupportTrace t hupd₂
-    have hreach₂' : ReachBy hist₂' t (.decision I next₂) := by
-      simpa [hdec₂] using
-        (historySupportTrace_reachBy t hsupp₂')
-    have hplayer₂' :
-        playerHistory S i hist₂' = playerHistory S i hist₂ := by
-      exact hpr hist₂' hist₂ I next₂ next₂ hreach₂' hreach₂
-    have hagree₂ :
-        ∀ tok ∈ playerHistory S i hist₂, πᵢ (some tok.1) = tok.2 := by
-      intro tok htok
-      have htok' : tok ∈ playerHistory S i hist₂' := by
-        simpa [hplayer₂'] using htok
-      exact playerHistory_agrees_of_historyCompatibleCore_update
-        t hcompat₂' tok htok'
-    have hagree₁ :
-        ∀ tok ∈ playerHistory S i hist₁, πᵢ (some tok.1) = tok.2 := by
-      intro tok htok
-      have htok₂ : tok ∈ playerHistory S i hist₂ := by
-        simpa [hplayer] using htok
-      exact hagree₂ tok htok₂
-    have hcompat₁' :=
-      historyCompatibleCore_update_of_playerHistory
-        t hcompat₁ hagree₁
-    have hlen₁ : ss₁.length - 1 = n₁ := by
-      have := Math.ParameterizedChain.pureRun_length
-        ((compiledCoreObs t).pureStep)
-        ((compiledCoreObs t).init) n₁ π₀ ss₁ h₁
-      omega
-    simpa [hlen₁] using
-      historySupportTrace_pureRun_nonzero
-        t hsupp₁ hcompat₁'
+    simpa [hlen] using historySupportTrace_pureRun_nonzero t hsupp hcompat'
 
 private noncomputable def treeHeight : GameTree S Outcome → Nat
   | .terminal _ => 0
