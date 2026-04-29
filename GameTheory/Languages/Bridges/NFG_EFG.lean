@@ -1,5 +1,7 @@
 import GameTheory.Languages.NFG.Syntax
+import GameTheory.Languages.NFG.Compile
 import GameTheory.Languages.EFG.Syntax
+import GameTheory.Core.GameMorphism
 
 /-!
 ## NFG → EFG: simultaneous game as a sequential tree
@@ -133,5 +135,28 @@ theorem nfgTree_evalDist_pure
   exact nfgTreeAux_evalDist_pure A outcome (List.finRange n) _ s σ hσ
     (List.nodup_finRange n) (fun i => Or.inl (List.mem_finRange i))
 
+-- ============================================================================
+-- KernelGame morphism
+-- ============================================================================
+
+/-- The pure NFG kernel game embeds into the behavioral kernel game of its
+EFG encoding: each pure action maps to its Dirac PMF on the unique info
+set, outcomes coincide on the nose, and `nfgTree_evalDist_pure` discharges
+the kernel-equality side. Built via `Morphism.ofOutcomeEmbedding`. -/
+noncomputable def NFGGame.toEFG_morphism (G : NFG.NFGGame (Fin n) A) :
+    GameTheory.KernelGame.Morphism G.toKernelGame G.toEFG.toKernelGame :=
+  GameTheory.KernelGame.Morphism.ofOutcomeEmbedding
+    (stratMap := fun p s _ => PMF.pure ((actEquiv A p).symm s))
+    (embed := _root_.id)
+    (h_outcome := fun σ => by
+      let s : ∀ i, A i := σ
+      change (nfgTree A G.outcome).evalDist
+          (fun p _ => PMF.pure ((actEquiv A p).symm (s p)))
+        = (PMF.pure (G.outcome s)).map _root_.id
+      rw [nfgTree_evalDist_pure A G.outcome s
+          (fun p _ => PMF.pure ((actEquiv A p).symm (s p)))
+          (fun _ => rfl), PMF.pure_map]
+      rfl)
+    (h_util := fun _ω => rfl)
 
 end NFG

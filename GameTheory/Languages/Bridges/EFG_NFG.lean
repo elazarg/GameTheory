@@ -1,6 +1,7 @@
 import GameTheory.Languages.NFG.Syntax
 import GameTheory.Languages.NFG.Compile
 import GameTheory.Languages.EFG.Syntax
+import GameTheory.Core.GameMorphism
 
 /-!
 # EFG → Strategic Form
@@ -47,5 +48,26 @@ theorem toNFGGameDet_outcomeKernel (G : EFGGame) (hd : IsDeterministic G.tree)
     (G.toNFGGameDet hd).toKernelGame.outcomeKernel σ =
     G.toStrategicKernelGame.outcomeKernel σ :=
   (evalDist_pureToBehavioral_eq_pure G.tree σ hd).symm
+
+-- ============================================================================
+-- KernelGame morphism (deterministic EFG)
+-- ============================================================================
+
+/-- The deterministic strategic-form NFG kernel game agrees with the EFG's
+strategic kernel game on the nose: same strategies (`PureStrategy`), same
+outcomes, and `toNFGGameDet_outcomeKernel` discharges kernel equality.
+Built via `Morphism.ofOutcomeEmbedding` (or equivalently `ofOutcomeProjection`)
+with both `stratMap` and `embed` as `id`. -/
+noncomputable def EFGGame.toNFGGameDet_morphism (G : EFGGame)
+    (hd : IsDeterministic G.tree) :
+    GameTheory.KernelGame.Morphism (G.toNFGGameDet hd).toKernelGame
+      G.toStrategicKernelGame :=
+  GameTheory.KernelGame.Morphism.ofOutcomeEmbedding
+    (stratMap := fun _p s => s)
+    (embed := _root_.id)
+    (h_outcome := fun σ => by
+      rw [toNFGGameDet_outcomeKernel G hd σ]
+      exact (PMF.map_id _).symm)
+    (h_util := fun _ω => rfl)
 
 end EFG

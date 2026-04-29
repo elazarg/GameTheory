@@ -465,6 +465,32 @@ noncomputable def maidToEFGAt_simulation {S : MAID.Struct (Fin m) n}
       ((maidToEFGAt S sem pol₀ σ).toKernelGame) :=
   GameTheory.KernelGame.Bisimulation.toSimulation (maidToEFGAt_bisimulation sem pol₀ σ)
 
+/-- Alternate direct construction of the MAID → EFG morphism via the
+`ofOutcomeEmbedding` recipe, using `maidToEFGAt_outcomeKernel` to discharge
+kernel equality. Outcome type is shared (`MAID.TAssign S`), so `embed = id`
+and utility agreement is reflexive. -/
+noncomputable def maidToEFGAt_morphism {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
+    GameTheory.KernelGame.Morphism (MAID.toKernelGame S sem)
+      ((maidToEFGAt S sem pol₀ σ).toKernelGame) :=
+  GameTheory.KernelGame.Morphism.ofOutcomeEmbedding
+    (stratMap := fun p => strategyEquivPlayer sem pol₀ σ p)
+    (embed := _root_.id)
+    (h_outcome := fun pol => by
+      have hstrat : (fun i => strategyEquivPlayer sem pol₀ σ i (pol i)) =
+          toEFGProfile pol := by
+        funext p I
+        simp only [strategyEquivPlayer, toEFGProfile, Equiv.piCongrRight]
+        rfl
+      have hpol_irrel :
+          (maidToEFGAt S sem pol₀ σ).toKernelGame.outcomeKernel (toEFGProfile pol) =
+          (maidToEFGAt S sem pol σ).toKernelGame.outcomeKernel (toEFGProfile pol) := by
+        simp [EFG.EFGGame.toKernelGame, maidToEFGAt,
+          buildTree_pol_irrel sem pol₀ pol σ.order (MAID.defaultAssign S)]
+      rw [hstrat, hpol_irrel, maidToEFGAt_outcomeKernel sem pol σ]
+      exact (PMF.map_id _).symm)
+    (h_util := fun _ω => rfl)
+
 -- ============================================================================
 -- Perfect recall
 -- ============================================================================
