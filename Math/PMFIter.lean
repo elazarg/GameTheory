@@ -50,6 +50,17 @@ theorem iter_succ' (step : B → PMF B) (b : B) (n : Nat) :
     funext b'
     exact ih b'
 
+/-- The Nat-iterate of `bind step` from a Dirac at `b` equals iter from
+`b`. The bridge that lets call sites previously written as
+`Nat.iterate (· >>= step) k (pure b)` route through the central
+`PMFIter.iter`. -/
+theorem nat_iterate_bind_pure_eq_iter (step : B → PMF B) (k : Nat) (b : B) :
+    Nat.iterate (fun d => d.bind step) k (PMF.pure b) = iter step k b := by
+  induction k with
+  | zero => simp [iter_zero]
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', ih, ← iter_succ']
+
 /-- If `step b` is a fixed point of the kernel, iteration from `b` stays
 at `b`. -/
 theorem iter_of_terminal {step : B → PMF B} {b : B}

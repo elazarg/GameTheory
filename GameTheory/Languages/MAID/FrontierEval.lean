@@ -1,4 +1,5 @@
 import GameTheory.Languages.MAID.FrontierLemmas
+import Math.PMFIter
 
 /-!
 # Frontier evaluation equals order-free evaluation
@@ -273,11 +274,21 @@ theorem extendFrontier_cfgOfAssign_eq
 -- The iteration distribution
 -- ============================================================================
 
-/-- The PMF on `FrontierCfg S` after `k` frontier iteration steps. -/
+/-- The PMF on `FrontierCfg S` after `k` frontier iteration steps,
+expressed as the central iterated PMF kernel `Math.PMFIter.iter`. -/
 noncomputable def iterDist (S : Struct Player n) (sem : Sem S)
     (pol : Policy S) (k : Nat) : PMF (FrontierCfg S) :=
-  Nat.iterate (fun d => d.bind (frontierStepPol S sem pol)) k
-    (PMF.pure (initialCfg S))
+  Math.PMFIter.iter (frontierStepPol S sem pol) k (initialCfg S)
+
+@[simp] theorem iterDist_zero (S : Struct Player n) (sem : Sem S)
+    (pol : Policy S) :
+    iterDist S sem pol 0 = PMF.pure (initialCfg S) := rfl
+
+theorem iterDist_succ' (S : Struct Player n) (sem : Sem S)
+    (pol : Policy S) (k : Nat) :
+    iterDist S sem pol (k + 1) =
+      (iterDist S sem pol k).bind (frontierStepPol S sem pol) :=
+  Math.PMFIter.iter_succ' _ _ _
 
 /-- `initialCfg S` equals `cfgOfAssign S a ∅` for any `a`. -/
 theorem initialCfg_eq_cfgOfAssign (S : Struct Player n) (a : TAssign S) :
@@ -435,18 +446,12 @@ theorem iterDist_assigned (S : Struct Player n) (sem : Sem S)
     cfg.assigned = layerAssigned S k := by
   induction k generalizing cfg with
   | zero =>
-    simp only [iterDist, Nat.iterate, PMF.pure_apply] at h
+    rw [iterDist_zero, PMF.pure_apply] at h
     have : cfg = initialCfg S := by
       by_contra hne; exact h (if_neg hne)
     rw [this]; rfl
   | succ k ih =>
-    -- iterDist (k+1) = (iterDist k).bind (frontierStepPol ...)
-    have hrew : iterDist S sem pol (k + 1) =
-        (iterDist S sem pol k).bind
-          (frontierStepPol S sem pol) := by
-      simp only [iterDist]
-      rw [Function.iterate_succ_apply']
-    rw [hrew] at h
+    rw [iterDist_succ'] at h
     rw [PMF.bind_apply] at h
     -- Some term in the tsum is nonzero
     have hne := mt ENNReal.tsum_eq_zero.mpr h
@@ -489,13 +494,7 @@ theorem iterDist_at_cfgOfAssign (S : Struct Player n) (sem : Sem S)
     rw [PMF.pure_apply,
       if_pos (initialCfg_eq_cfgOfAssign S a).symm]
   | succ k ih =>
-    -- iterDist (k+1) = (iterDist k).bind (frontierStepPol)
-    have hrew : iterDist S sem pol (k + 1) =
-        (iterDist S sem pol k).bind
-          (frontierStepPol S sem pol) := by
-      simp only [iterDist]
-      rw [Function.iterate_succ_apply']
-    rw [hrew, PMF.bind_apply]
+    rw [iterDist_succ', PMF.bind_apply]
     -- The tsum over cfg': only cfgOfAssign S a (layerAssigned S k) contributes
     set Lk := layerAssigned S k
     set Lk1 := layerAssigned S (k + 1)
@@ -592,7 +591,8 @@ theorem frontierEval_eq_evalAssignDist
   -- Rewrite frontierEval in terms of iterDist
   have hfe : frontierEval S sem pol =
       (iterDist S sem pol n).map (extractTAssign S) := by
-    simp [frontierEval, iterDist]
+    rw [frontierEval, iterDist,
+      Math.PMFIter.nat_iterate_bind_pure_eq_iter]
   rw [hfe]
   ext a
   rw [PMF.map_apply]
