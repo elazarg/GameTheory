@@ -1,4 +1,5 @@
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
+import Math.Coupling
 import Math.ProbabilityMassFunction
 
 /-!
@@ -75,31 +76,67 @@ theorem iter_stable_after_terminal
     exact PMF.bind_pure _
 
 -- ============================================================================
--- Functional kernel homomorphism
+-- Probabilistic bisimulation (Larsen-Skou / Desharnais-Edalat-Panangaden)
 -- ============================================================================
+
+open Math.Coupling
 
 variable {A : Type*}
 
+/-- Probabilistic bisimulation between two PMF kernels: a relation on
+states such that for every related pair, the next-state distributions
+admit a coupling supported on the relation. -/
+structure KernelBisim (step₁ : A → PMF A) (step₂ : B → PMF B) where
+  rel : A → B → Prop
+  step_compat : ∀ a b, rel a b → HasCoupling rel (step₁ a) (step₂ b)
+
+/-- Iteration lifts probabilistic bisimulation: if `bs.rel a b` holds,
+the `n`-step iterated distributions admit a coupling supported on
+`bs.rel`. The fundamental compositional property of bisimulation. -/
+noncomputable def iter_HasCoupling_of_bisim
+    {step₁ : A → PMF A} {step₂ : B → PMF B}
+    (bs : KernelBisim step₁ step₂) (a : A) (b : B) (h : bs.rel a b)
+    (n : Nat) :
+    HasCoupling bs.rel (iter step₁ n a) (iter step₂ n b) := by
+  induction n generalizing a b with
+  | zero =>
+    simp only [iter_zero]
+    exact HasCoupling.pure a b h
+  | succ n ih =>
+    rw [iter_succ, iter_succ]
+    exact (bs.step_compat a b h).bind (fun a' b' h' => ih a' b' h')
+
+-- ============================================================================
+-- Functional special case
+-- ============================================================================
+
 /-- Functional kernel homomorphism: a state projection `f : B → A` that
-intertwines `step₂` with `step₁` — taking a step in `B` and projecting
-yields the same distribution as projecting first and stepping in `A`. -/
+intertwines `step₂` with `step₁`. The convenience predicate for the
+common case where bisimulation arises from a deterministic projection. -/
 def IsKernelHom (f : B → A) (step₁ : A → PMF A) (step₂ : B → PMF B) : Prop :=
   ∀ b, step₁ (f b) = (step₂ b).map f
 
-/-- Iteration commutes with a functional kernel homomorphism: iterating
-`step₂` from `b` and projecting via `f` agrees with iterating `step₁`
-from `f b`. -/
+/-- A functional kernel homomorphism induces a probabilistic bisimulation
+with relation `fun a b => a = f b`. -/
+noncomputable def KernelBisim.ofKernelHom {f : B → A}
+    {step₁ : A → PMF A} {step₂ : B → PMF B}
+    (h : IsKernelHom f step₁ step₂) :
+    KernelBisim step₁ step₂ where
+  rel := fun a b => a = f b
+  step_compat := fun a b h_ab => by
+    subst h_ab
+    rw [h b]
+    exact HasCoupling.ofProj (step₂ b)
+
+/-- Iteration commutes with a functional kernel homomorphism. Corollary
+of `iter_HasCoupling_of_bisim` via the projection bridge
+`hasCoupling_proj_iff_map_eq`. -/
 theorem iter_map_of_hom {f : B → A}
     {step₁ : A → PMF A} {step₂ : B → PMF B}
     (h : IsKernelHom f step₁ step₂) (n : Nat) (b : B) :
-    iter step₁ n (f b) = (iter step₂ n b).map f := by
-  induction n generalizing b with
-  | zero => simp [PMF.pure_map]
-  | succ n ih =>
-    rw [iter_succ, h b, PMF.bind_map, iter_succ, PMF.map_bind]
-    congr 1
-    funext b'
-    exact ih b'
+    iter step₁ n (f b) = (iter step₂ n b).map f :=
+  hasCoupling_proj_iff_map_eq.mp
+    ⟨iter_HasCoupling_of_bisim (KernelBisim.ofKernelHom h) (f b) b rfl n⟩
 
 end PMFIter
 end Math

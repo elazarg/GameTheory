@@ -927,6 +927,8 @@ theorem mixedToBehavioralProfileWithFallback_runDist [∀ i o, Nonempty (Act i o
           by_cases hss : (seqRun (condStep ν (O.pureStep) O.init) O.init n) ss = 0
           · simp [hss]
           · rw [hfn n ss hss]
+    rw [show O.runDistPure k = pureRun (O.pureStep) O.init k from
+      funext (O.runDistPure_eq_pureRun k)]
     change O.runDist k β = ν.bind (pureRun (O.pureStep) O.init k)
     rw [hrun, condRun_eq_mixedRun]
   intro n ss hss
@@ -1095,6 +1097,8 @@ theorem kuhn_mixed_to_behavioral_of_runSupport [∀ i o, Nonempty (Act i o)]
           by_cases hss : (seqRun (condStep ν (O.pureStep) O.init) O.init n) ss = 0
           · simp [hss]
           · rw [hfn n ss hss]
+    rw [show O.runDistPure k = pureRun (O.pureStep) O.init k from
+      funext (O.runDistPure_eq_pureRun k)]
     change O.runDist k β = ν.bind (pureRun (O.pureStep) O.init k)
     rw [hrun, condRun_eq_mixedRun]
   intro n ss hss

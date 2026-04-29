@@ -277,7 +277,8 @@ noncomputable abbrev pureStep (O : ObsModel ι σ Obs Act) (π : PureProfile O)
 /-- `runDistPure` equals `pureRun` applied to `pureStep`. -/
 theorem runDistPure_eq_pureRun (O : ObsModel ι σ Obs Act) (k : Nat)
     (π : PureProfile O) :
-    O.runDistPure k π = pureRun (O.pureStep) O.init k π := rfl
+    O.runDistPure k π = pureRun (O.pureStep) O.init k π :=
+  O.toCore.runDistPure_eq_pureRun k π
 
 /-! ### Reachability -/
 

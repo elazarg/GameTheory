@@ -1,5 +1,6 @@
 import Math.ProbabilityMassFunction
 import Math.PMFProduct
+import Math.TraceRun
 
 /-! # Tower property for parameterized Markov chains
 
@@ -21,119 +22,41 @@ open Math.ProbabilityMassFunction
 variable {P S : Type*}
 
 /-- Run a parameterized Markov chain for `k` steps from initial state `s₀`,
-recording the full state trace. -/
+recording the full state trace. Defined as a parameterized wrapper around
+`Math.TraceRun.traceRun`. -/
 noncomputable def pureRun (step : P → List S → PMF S) (s₀ : S)
     (k : Nat) (π : P) : PMF (List S) :=
-  Nat.rec (PMF.pure [s₀])
-    (fun _ rec =>
-      rec.bind (fun ss =>
-        pushforward (step π ss) (fun t => ss ++ [t])))
-    k
+  Math.TraceRun.traceRun (step π) s₀ k
 
 theorem append_singleton_inj {α : Type*} {as bs : List α} {a b : α}
     (h : as ++ [a] = bs ++ [b]) : as = bs ∧ a = b :=
-  ⟨List.append_inj_left' h (by simp),
-   by have := List.append_inj_right' h (by simp); simpa using this⟩
+  Math.TraceRun.append_singleton_inj h
 
-open Classical in
 /-- At successor step, `pureRun` decomposes as prefix reach times one-step transition. -/
 theorem pureRun_succ_append (step : P → List S → PMF S) (s₀ : S)
     (k : Nat) (π : P) (ss : List S) (t : S) :
     pureRun step s₀ (k + 1) π (ss ++ [t]) =
-      pureRun step s₀ k π ss * step π ss t := by
-  change (pureRun step s₀ k π).bind
-    (fun ss' => pushforward (step π ss') (fun t' => ss' ++ [t'])) (ss ++ [t]) = _
-  rw [PMF.bind_apply]
-  have hterm : ∀ ss' : List S, ss' ≠ ss →
-      pureRun step s₀ k π ss' *
-        (pushforward (step π ss') (fun t' => ss' ++ [t'])) (ss ++ [t]) = 0 := by
-    intro ss' hne
-    suffices (pushforward (step π ss') (fun t' => ss' ++ [t'])) (ss ++ [t]) = 0 by
-      rw [this, mul_zero]
-    simp only [pushforward, PMF.bind_apply, PMF.pure_apply]
-    rw [ENNReal.tsum_eq_zero]
-    intro t'
-    rw [if_neg (fun h => hne (append_singleton_inj h).1.symm), mul_zero]
-  rw [tsum_eq_single ss (fun ss' hne => hterm ss' hne)]
-  congr 1
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply]
-  rw [tsum_eq_single t (fun t' ht' => by
-    rw [if_neg (fun h => ht' (append_singleton_inj h).2.symm), mul_zero])]
-  simp
+      pureRun step s₀ k π ss * step π ss t :=
+  Math.TraceRun.traceRun_succ_append (step π) s₀ k ss t
 
-open Classical in
 /-- `pureRun` at successor step assigns zero probability to the empty trace. -/
 theorem pureRun_succ_nil (step : P → List S → PMF S) (s₀ : S) (k : Nat) (π : P) :
-    pureRun step s₀ (k + 1) π [] = 0 := by
-  change (pureRun step s₀ k π).bind
-    (fun ss => pushforward (step π ss) (fun t => ss ++ [t])) [] = 0
-  simp only [PMF.bind_apply]
-  rw [ENNReal.tsum_eq_zero]
-  intro ss
-  suffices (pushforward (step π ss) (fun t => ss ++ [t])) [] = 0 by rw [this, mul_zero]
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply]
-  rw [ENNReal.tsum_eq_zero]
-  intro t
-  simp [show ([] : List S) ≠ ss ++ [t] from List.ne_nil_of_length_pos (by simp)]
+    pureRun step s₀ (k + 1) π [] = 0 :=
+  Math.TraceRun.traceRun_succ_nil (step π) s₀ k
 
-open Classical in
 /-- Traces with nonzero `pureRun` probability have length exactly `n + 1`. -/
 theorem pureRun_length (step : P → List S → PMF S) (s₀ : S)
     (n : Nat) (π : P) (ss : List S)
-    (h : pureRun step s₀ n π ss ≠ 0) : ss.length = n + 1 := by
-  induction n generalizing ss with
-  | zero =>
-    have hss : ss = [s₀] := by
-      by_contra hne
-      exact h (by simp [pureRun, PMF.pure_apply, hne])
-    simp [hss]
-  | succ k ih =>
-    rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
-    · exact absurd (pureRun_succ_nil step s₀ k π) h
-    · simp only [List.concat_eq_append, pureRun_succ_append] at h
-      have hp : pureRun step s₀ k π p ≠ 0 :=
-        left_ne_zero_of_mul h
-      simp [List.length_append, ih p hp]
+    (h : pureRun step s₀ n π ss ≠ 0) : ss.length = n + 1 :=
+  Math.TraceRun.traceRun_length (step π) s₀ n ss h
 
-open Classical in
-/-- On a nonzero-probability trace, each per-step transition has nonzero probability.
-If `pureRun step s₀ k π ss ≠ 0` and `j + 1 < ss.length`, then
-`step π (ss.take (j + 1)) ss[j + 1] ≠ 0`. -/
+/-- On a nonzero-probability trace, each per-step transition has nonzero probability. -/
 theorem pureRun_step_nonzero (step : P → List S → PMF S) (s₀ : S)
     (k : Nat) (π : P) (ss : List S)
     (h : pureRun step s₀ k π ss ≠ 0)
     (j : Nat) (hj : j + 1 < ss.length) :
-    step π (ss.take (j + 1)) ss[j + 1] ≠ 0 := by
-  have hlen := pureRun_length step s₀ k π ss h
-  -- Induction on k from the end of the trace
-  induction k generalizing ss j with
-  | zero => omega
-  | succ m ih =>
-    have hne : ss ≠ [] := by intro he; simp [he] at hlen
-    -- Decompose ss = pre ++ [t]
-    obtain ⟨pre, t, hss_eq⟩ : ∃ pre t, ss = pre ++ [t] := by
-      exact ⟨ss.dropLast, ss.getLast hne, (List.dropLast_append_getLast hne).symm⟩
-    subst hss_eq
-    have hplen : pre.length = m + 1 := by simp at hlen; omega
-    rw [pureRun_succ_append] at h
-    have hpre : pureRun step s₀ m π pre ≠ 0 := left_ne_zero_of_mul h
-    have hstep_last : step π pre t ≠ 0 := right_ne_zero_of_mul h
-    by_cases hjlast : j + 1 = pre.length
-    · -- The last step: step π pre t ≠ 0
-      suffices step π (List.take (j + 1) (pre ++ [t])) (pre ++ [t])[j + 1] ≠ 0 from this
-      rw [List.take_append_of_le_length (by omega)]
-      rw [List.getElem_append_right (by omega)]
-      simp only [List.getElem_singleton, ne_eq]
-      have : List.take pre.length pre = pre := List.take_length
-      rw [hjlast, this]
-      exact hstep_last
-    · -- An earlier step: delegate to IH on pre
-      have hjpre : j + 1 < pre.length := by simp at hj; omega
-      suffices step π (List.take (j + 1) (pre ++ [t]))
-          (pre ++ [t])[j + 1] ≠ 0 from this
-      rw [List.take_append_of_le_length (by omega)]
-      rw [List.getElem_append_left hjpre]
-      exact ih pre hpre j hjpre hplen
+    step π (ss.take (j + 1)) ss[j + 1] ≠ 0 :=
+  Math.TraceRun.traceRun_step_nonzero (step π) s₀ k ss h j hj
 
 /-- Run a Markov chain with step-index-dependent transition functions. -/
 noncomputable def seqRun (steps : Nat → List S → PMF S) (s₀ : S)

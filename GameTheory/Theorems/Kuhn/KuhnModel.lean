@@ -243,7 +243,16 @@ noncomputable def pureStep (O : ObsModelCore ι σ Obs Act)
 theorem runDistPure_eq_pureRun (O : ObsModelCore ι σ Obs Act)
     [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
     (k : Nat) (π : PureProfile O) :
-    O.runDistPure k π = pureRun (O.pureStep) O.init k π := rfl
+    O.runDistPure k π = pureRun (O.pureStep) O.init k π := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [show pureRun O.pureStep O.init (k + 1) π
+         = (pureRun O.pureStep O.init k π).bind
+            (fun ss => pushforward (O.pureStep π ss) (fun t => ss ++ [t]))
+         from Math.TraceRun.traceRun_succ _ _ _]
+    rw [← ih]
+    rfl
 
 /-- Two behavioral profiles that agree at all info states visited by `runDist m β₁`
 (for all `m`) produce the same `runDist k` for every `k`. -/

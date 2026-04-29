@@ -785,8 +785,8 @@ private theorem pureRun_nonzero_to_historySupportTrace
       HistoryCompatibleCore t π hist := by
   induction n generalizing ss with
   | zero =>
-      simp only [Math.ParameterizedChain.pureRun, Nat.rec_zero, PMF.pure_apply, ne_eq,
-        ite_eq_right_iff, one_ne_zero, imp_false, not_not] at h
+      simp only [Math.ParameterizedChain.pureRun, Math.TraceRun.traceRun_zero,
+        PMF.pure_apply, ne_eq, ite_eq_right_iff, one_ne_zero, imp_false, not_not] at h
       subst ss
       exact ⟨[], ⟨.init⟩, by
         intro p I a hm
@@ -1244,7 +1244,8 @@ private theorem reachBy_trace_positions
     {j₁ j₂ : Nat} (hle : j₁ ≤ j₂) (hj₂ : j₂ < ss.length) :
     ∃ hist, ReachBy hist ss[j₁] ss[j₂] := by
   have hlen : ss.length = k + 1 :=
-    Math.ParameterizedChain.pureRun_length _ _ _ _ _ hrun
+    Math.ParameterizedChain.pureRun_length _ _ _ _ _
+      (ObsModelCore.runDistPure_eq_pureRun (compiledCoreObs t) k π ▸ hrun)
   obtain ⟨d, rfl⟩ : ∃ d, j₂ = j₁ + d := ⟨j₂ - j₁, by omega⟩
   induction d with
   | zero => exact ⟨[], .here _⟩
@@ -1266,7 +1267,8 @@ theorem noNontrivialInfoStateRepeat_compiledCore
   intro i π k ss hreach j₁ j₂ hjlt hjlen hEq
   simp only [projectStates_compiledCore] at hEq ⊢
   have hlen : ss.length = k + 1 :=
-    Math.ParameterizedChain.pureRun_length _ _ _ _ _ hreach
+    Math.ParameterizedChain.pureRun_length _ _ _ _ _
+      (ObsModelCore.runDistPure_eq_pureRun (compiledCoreObs t) k π ▸ hreach)
   -- Rewrite lastState (ss.take (j + 1)) = ss[j] everywhere
   rw [lastState_take_eq t ss j₁ (by omega)] at hEq
   rw [lastState_take_eq t ss j₂ (by omega)] at hEq ⊢

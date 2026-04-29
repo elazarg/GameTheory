@@ -1,6 +1,7 @@
 import Math.Probability
 import Math.ProbabilityMassFunction
 import Math.PMFProduct
+import Math.Coupling
 import Math.PMFIter
 import Math.TraceRun
 import Math.ParameterizedChain
