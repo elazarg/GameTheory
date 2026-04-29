@@ -82,12 +82,43 @@ theorem comp_assoc {G H K L : KernelGame ι}
 
 end Morphism
 
+/-- Build a `Morphism` from an outcome embedding: when `G`'s outcome
+distribution pushes forward to `H`'s under `embed`, and utilities agree
+along the embedding, the embedding witnesses that `G` refines into `H`.
+
+The natural recipe when `H` has *more* structure than `G` and `G`'s
+outcomes inject into `H`'s — e.g., `G ↪ G.toOneStepStepwise` via
+`some : G.Outcome → Option G.Outcome`. Utility agreement is required
+only on the image, not on potential sentinels in `H.Outcome \ image embed`.
+-/
+def Morphism.ofOutcomeEmbedding {G H : KernelGame ι}
+    (stratMap : ∀ i, G.Strategy i → H.Strategy i)
+    (embed : G.Outcome → H.Outcome)
+    (h_outcome : ∀ σ : Profile G,
+      H.outcomeKernel (fun i => stratMap i (σ i))
+        = (G.outcomeKernel σ).map embed)
+    (h_util : ∀ ω, H.utility (embed ω) = G.utility ω) :
+    Morphism G H where
+  stratMap := stratMap
+  udist_preserved := by
+    intro σ
+    change (H.outcomeKernel (fun i => stratMap i (σ i))).bind
+        (fun ω => PMF.pure (H.utility ω))
+      = (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω))
+    rw [h_outcome σ, PMF.bind_map]
+    congr 1
+    funext ω
+    simp only [Function.comp, h_util]
+
 /-- Build a `Morphism` from an outcome projection plus utility- and
-outcome-kernel-along-projection equality. The standard recipe for
-form-to-form reductions: a strategy translator, an outcome projection,
-proof that utilities agree under the projection on the support of the
-target outcome kernel (so projection sentinels don't need a meaningful
-utility), and proof that outcome kernels project correctly. -/
+outcome-kernel-along-projection equality. The recipe when `H` *abstracts*
+`G` — `G`'s outcomes are read off as a projection of `H`'s. Utility
+agreement is required only on the support of the target outcome kernel,
+since `H` may carry sentinels off-support whose projected utility is
+irrelevant.
+
+Companion to `Morphism.ofOutcomeEmbedding` (the dual recipe when `G`
+refines into `H`); each fits a different family of bridges. -/
 def Morphism.ofOutcomeProjection {G H : KernelGame ι}
     (stratMap : ∀ i, G.Strategy i → H.Strategy i)
     (proj : H.Outcome → G.Outcome)
