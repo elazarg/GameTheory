@@ -3,6 +3,7 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 import GameTheory.Languages.NFG.Syntax
 import GameTheory.Core.KernelGame
+import GameTheory.Core.GameMorphism
 import Math.Probability
 import Math.PMFProduct
 import GameTheory.Concepts.SolutionConcepts
@@ -75,5 +76,20 @@ noncomputable def NFGGame.toMixedKernelGame
 def IsNashMixed (G : NFGGame ι A)
     (σ : MixedProfile A) : Prop :=
   G.toMixedKernelGame.IsNash σ
+
+/-- The pure NFG kernel game embeds into the mixed NFG kernel game: each
+pure strategy maps to its Dirac PMF, outcomes are preserved on the nose,
+and utilities agree. Built via the `Morphism.ofOutcomeEmbedding` recipe. -/
+noncomputable def NFGGame.toMixed_morphism (G : NFGGame ι A) :
+    GameTheory.KernelGame.Morphism G.toKernelGame G.toMixedKernelGame :=
+  GameTheory.KernelGame.Morphism.ofOutcomeEmbedding
+    (stratMap := fun _i s => PMF.pure s)
+    (embed := _root_.id)
+    (h_outcome := fun σ => by
+      change (pmfPi (A := A) (fun i => PMF.pure (σ i))).bind (fun s => PMF.pure (G.outcome s))
+        = (PMF.pure (G.outcome σ)).map _root_.id
+      rw [pmfPi_pure, PMF.pure_bind, PMF.pure_map]
+      rfl)
+    (h_util := fun _ω => rfl)
 
 end NFG
