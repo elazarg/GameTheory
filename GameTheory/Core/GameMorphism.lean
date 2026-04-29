@@ -82,6 +82,30 @@ theorem comp_assoc {G H K L : KernelGame ι}
 
 end Morphism
 
+/-- Build a `Morphism` from an outcome projection plus utility- and
+outcome-kernel-along-projection equality. The standard recipe for
+form-to-form reductions: a strategy translator, an outcome projection,
+proof that utilities agree under the projection, and proof that
+outcome kernels project correctly. -/
+def Morphism.ofOutcomeProjection {G H : KernelGame ι}
+    (stratMap : ∀ i, G.Strategy i → H.Strategy i)
+    (proj : H.Outcome → G.Outcome)
+    (h_util : ∀ ω, H.utility ω = G.utility (proj ω))
+    (h_outcome : ∀ σ : Profile G,
+      (H.outcomeKernel (fun i => stratMap i (σ i))).map proj
+        = G.outcomeKernel σ) :
+    Morphism G H where
+  stratMap := stratMap
+  udist_preserved := by
+    intro σ
+    change (H.outcomeKernel (fun i => stratMap i (σ i))).bind
+        (fun ω => PMF.pure (H.utility ω))
+      = (G.outcomeKernel σ).bind (fun ω => PMF.pure (G.utility ω))
+    rw [← h_outcome σ, PMF.bind_map]
+    congr 1
+    funext ω
+    simp only [Function.comp, h_util]
+
 /-- `udist` preservation implies per-player utility-distribution preservation. -/
 theorem Morphism.udistPlayer_preserved {G H : KernelGame ι} (f : Morphism G H)
     (σ : Profile G) (who : ι) :

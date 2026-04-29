@@ -2,6 +2,7 @@ import Math.Probability
 import Math.ProbabilityMassFunction
 import Math.PMFProduct
 import Math.PMFIter
+import Math.TraceRun
 import Math.ParameterizedChain
 import Math.FunctionUpdate
 import Math.FinsetUpdate

@@ -74,5 +74,32 @@ theorem iter_stable_after_terminal
         bind_congr_on_support (iter step n b) step PMF.pure h]
     exact PMF.bind_pure _
 
+-- ============================================================================
+-- Functional kernel homomorphism
+-- ============================================================================
+
+variable {A : Type*}
+
+/-- Functional kernel homomorphism: a state projection `f : B → A` that
+intertwines `step₂` with `step₁` — taking a step in `B` and projecting
+yields the same distribution as projecting first and stepping in `A`. -/
+def IsKernelHom (f : B → A) (step₁ : A → PMF A) (step₂ : B → PMF B) : Prop :=
+  ∀ b, step₁ (f b) = (step₂ b).map f
+
+/-- Iteration commutes with a functional kernel homomorphism: iterating
+`step₂` from `b` and projecting via `f` agrees with iterating `step₁`
+from `f b`. -/
+theorem iter_map_of_hom {f : B → A}
+    {step₁ : A → PMF A} {step₂ : B → PMF B}
+    (h : IsKernelHom f step₁ step₂) (n : Nat) (b : B) :
+    iter step₁ n (f b) = (iter step₂ n b).map f := by
+  induction n generalizing b with
+  | zero => simp [PMF.pure_map]
+  | succ n ih =>
+    rw [iter_succ, h b, PMF.bind_map, iter_succ, PMF.map_bind]
+    congr 1
+    funext b'
+    exact ih b'
+
 end PMFIter
 end Math
