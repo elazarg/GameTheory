@@ -1,4 +1,5 @@
 import GameTheory.Core.KernelGame
+import GameTheory.Core.GameMorphism
 import GameTheory.Languages.InfoModel.InfoGame
 import GameTheory.Languages.InfoModel.Simulation
 import GameTheory.Languages.MultiRound.SOS
@@ -172,6 +173,25 @@ noncomputable def KernelGame.toOneStepStepwise (ι : Type) [Fintype ι]
       (Gk.outcomeKernel σ).bind (fun ω => PMF.pure (some ω)) := by
   simp [KernelGame.toOneStepStepwise, StepwiseGame.runDist,
     PreKernelStep.stepKernel, PreKernelStep.jointActDist, constPurePolicy, pmfPi_pure]
+
+/-- Refinement morphism: a `KernelGame` `Gk` injects into its one-step
+stepwise compilation via `some` on outcomes and constant-pure-policy on
+strategies. Built via the `Morphism.ofOutcomeEmbedding` recipe. -/
+noncomputable def KernelGame.toOneStepStepwise_morphism
+    (ι : Type) [Fintype ι]
+    (Gk : KernelGame ι)
+    [∀ i, Fintype (Gk.Strategy i)] :
+    KernelGame.Morphism Gk (KernelGame.toOneStepStepwise ι Gk).toKernelGame :=
+  KernelGame.Morphism.ofOutcomeEmbedding
+    (stratMap := fun _i s => fun _ : PUnit => PMF.pure s)
+    (embed := some)
+    (h_outcome := fun σ => by
+      change (KernelGame.toOneStepStepwise ι Gk).runDist
+          (constPurePolicy _ σ)
+        = (Gk.outcomeKernel σ).map some
+      rw [KernelGame.toOneStepStepwise_runDist_constPure]
+      rfl)
+    (h_util := fun _ω => rfl)
 
 end KernelEmbedding
 
