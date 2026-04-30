@@ -1,5 +1,6 @@
 import GameTheory.Core.KernelGame
 import GameTheory.Core.GameMorphism
+import Math.PMFIter
 import GameTheory.Languages.InfoModel.InfoGame
 import GameTheory.Languages.InfoModel.Simulation
 import GameTheory.Languages.MultiRound.SOS
@@ -73,13 +74,15 @@ namespace StepwiseGame
 
 variable (G : StepwiseGame ι)
 
-/-- Run distribution after `horizon` repeated steps under policy `π`. -/
+/-- Run distribution after `horizon` repeated steps under policy `π`,
+expressed via the central iterated PMF kernel `Math.PMFIter.iter`. -/
 noncomputable def runDist (π : Policy G.Step) : PMF G.Step.State :=
-  Nat.rec G.init (fun _ acc => acc.bind (G.Step.stepKernel π)) G.horizon
+  G.init.bind (Math.PMFIter.iter (G.Step.stepKernel π) G.horizon)
 
 @[simp] theorem runDist_zero (π : Policy G.Step) (h0 : G.horizon = 0) :
     G.runDist π = G.init := by
-  simp [runDist, h0]
+  rw [runDist, h0]
+  exact PMF.bind_pure _
 
 /-- Collapse a sequential game into its profile-to-outcome kernel semantics. -/
 noncomputable def toKernelGame : KernelGame ι where
@@ -172,7 +175,8 @@ noncomputable def KernelGame.toOneStepStepwise (ι : Type) [Fintype ι]
       (constPurePolicy (KernelGame.toOneStepStepwise ι Gk).Step σ) =
       (Gk.outcomeKernel σ).bind (fun ω => PMF.pure (some ω)) := by
   simp [KernelGame.toOneStepStepwise, StepwiseGame.runDist,
-    PreKernelStep.stepKernel, PreKernelStep.jointActDist, constPurePolicy, pmfPi_pure]
+    Math.PMFIter.iter, PreKernelStep.stepKernel, PreKernelStep.jointActDist,
+    constPurePolicy, pmfPi_pure]
 
 /-- Refinement morphism: a `KernelGame` `Gk` injects into its one-step
 stepwise compilation via `some` on outcomes and constant-pure-policy on
