@@ -204,6 +204,111 @@ abbrev PureProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
 abbrev BehavioralProfile (G : FOSG ι W Act PrivObs PubObs) : Type :=
   ∀ i, BehavioralStrategy G i
 
+namespace PureStrategy
+
+variable {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+
+/-- Build a pure strategy from the latest private/public observation in the
+information state, using `fallback` before any observation has been seen. -/
+def ofLatestObservation
+    (fallback : Option (Act i))
+    (policy : PrivObs i × PubObs → Option (Act i)) :
+    G.PureStrategy i :=
+  fun s =>
+    match InfoState.latestObservation? s with
+    | none => fallback
+    | some obs => policy obs
+
+@[simp] theorem ofLatestObservation_nil
+    (fallback : Option (Act i))
+    (policy : PrivObs i × PubObs → Option (Act i)) :
+    ofLatestObservation (G := G) (i := i) fallback policy [] = fallback := rfl
+
+theorem ofLatestObservation_eq_policy
+    {fallback : Option (Act i)}
+    {policy : PrivObs i × PubObs → Option (Act i)}
+    {s : G.InfoState i} {obs : PrivObs i × PubObs}
+    (hobs : InfoState.latestObservation? s = some obs) :
+    ofLatestObservation (G := G) (i := i) fallback policy s =
+      policy obs := by
+  simp [ofLatestObservation, hobs]
+
+end PureStrategy
+
+namespace BehavioralStrategy
+
+variable {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+
+/-- Build a behavioral strategy from the latest private/public observation in
+the information state, using `fallback` before any observation has been seen. -/
+def ofLatestObservation
+    (fallback : PMF (Option (Act i)))
+    (policy : PrivObs i × PubObs → PMF (Option (Act i))) :
+    G.BehavioralStrategy i :=
+  fun s =>
+    match InfoState.latestObservation? s with
+    | none => fallback
+    | some obs => policy obs
+
+@[simp] theorem ofLatestObservation_nil
+    (fallback : PMF (Option (Act i)))
+    (policy : PrivObs i × PubObs → PMF (Option (Act i))) :
+    ofLatestObservation (G := G) (i := i) fallback policy [] = fallback := rfl
+
+theorem ofLatestObservation_eq_policy
+    {fallback : PMF (Option (Act i))}
+    {policy : PrivObs i × PubObs → PMF (Option (Act i))}
+    {s : G.InfoState i} {obs : PrivObs i × PubObs}
+    (hobs : InfoState.latestObservation? s = some obs) :
+    ofLatestObservation (G := G) (i := i) fallback policy s =
+      policy obs := by
+  simp [ofLatestObservation, hobs]
+
+end BehavioralStrategy
+
+namespace PureProfile
+
+variable {G : FOSG ι W Act PrivObs PubObs}
+
+/-- Build a pure profile from player-indexed latest-observation policies. -/
+def ofLatestObservation
+    (fallback : ∀ i, Option (Act i))
+    (policy : ∀ i, PrivObs i × PubObs → Option (Act i)) :
+    G.PureProfile :=
+  fun i =>
+    PureStrategy.ofLatestObservation
+      (G := G) (i := i) (fallback i) (policy i)
+
+@[simp] theorem ofLatestObservation_nil
+    (fallback : ∀ i, Option (Act i))
+    (policy : ∀ i, PrivObs i × PubObs → Option (Act i))
+    (i : ι) :
+    ofLatestObservation (G := G) fallback policy i [] = fallback i := rfl
+
+end PureProfile
+
+namespace BehavioralProfile
+
+variable {G : FOSG ι W Act PrivObs PubObs}
+
+/-- Build a behavioral profile from player-indexed latest-observation
+policies. -/
+def ofLatestObservation
+    (fallback : ∀ i, PMF (Option (Act i)))
+    (policy : ∀ i, PrivObs i × PubObs → PMF (Option (Act i))) :
+    G.BehavioralProfile :=
+  fun i =>
+    BehavioralStrategy.ofLatestObservation
+      (G := G) (i := i) (fallback i) (policy i)
+
+@[simp] theorem ofLatestObservation_nil
+    (fallback : ∀ i, PMF (Option (Act i)))
+    (policy : ∀ i, PrivObs i × PubObs → PMF (Option (Act i)))
+    (i : ι) :
+    ofLatestObservation (G := G) fallback policy i [] = fallback i := rfl
+
+end BehavioralProfile
+
 /-- A pure strategy is legal if at every realized history it chooses an
 available move. -/
 def IsLegalPureStrategy
