@@ -2469,6 +2469,11 @@ noncomputable def legalPureProfileRestrictReachable
     (π : G.LegalPureProfile) : G.ReachableLegalPureProfile :=
   fun i => (π i).restrictReachable
 
+/-- Restrict a total legal behavioral profile to reachable information states. -/
+noncomputable def legalBehavioralProfileRestrictReachable
+    (β : G.LegalBehavioralProfile) : G.ReachableLegalBehavioralProfile :=
+  fun i => (β i).restrictReachable
+
 theorem legalPureMixedProfileRestrictReachable_joint
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (G.LegalPureStrategy i)]
@@ -2508,6 +2513,19 @@ theorem legalPureProfileRestrictReachable_extend_runDist
     (π i).1 (h.playerView i)
   exact ReachablePureStrategy.extend_apply_history
     (G := G) ((π i).restrictReachable).1 h
+
+theorem legalBehavioralProfileRestrictReachable_extend_runDist
+    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [DecidablePred G.terminal]
+    (β : G.LegalBehavioralProfile) (k : Nat) :
+    G.runDist k (legalBehavioralProfileRestrictReachable (G := G) β).extend =
+      G.runDist k β := by
+  apply G.runDist_congr
+  intro h i
+  change (((β i).restrictReachable).1.extend (h.playerView i)) =
+    (β i).1 (h.playerView i)
+  exact ReachableBehavioralStrategy.extend_apply_history
+    (G := G) ((β i).restrictReachable).1 h
 
 set_option linter.unusedFintypeInType false in
 open Classical in
