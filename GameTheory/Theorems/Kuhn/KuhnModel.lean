@@ -1,4 +1,5 @@
 import Math.ParameterizedChain
+import Math.TraceRun
 import Semantics.DSMachine
 
 /-! # KuhnModel
@@ -217,15 +218,12 @@ noncomputable def stepDist (O : ObsModelCore ι σ Obs Act)
   (O.jointActionDist b ss).bind fun a => O.step s (O.castJointAction ss a)
 
 /-- Distribution on state traces of length `k + 1` obtained by running the
-machine for `k` steps under behavioral profile `b`, starting from `[init]`. -/
+machine for `k` steps under behavioral profile `b`, starting from `[init]`.
+Expressed via the central state-trace iterator `Math.TraceRun.traceRun`. -/
 noncomputable def runDist (O : ObsModelCore ι σ Obs Act)
     [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
     (k : Nat) (b : BehavioralProfile O) : PMF (List σ) :=
-  Nat.rec (PMF.pure [O.init])
-    (fun _ rec =>
-      rec.bind (fun ss =>
-        pushforward (O.stepDist b ss) (fun t => ss ++ [t])))
-    k
+  Math.TraceRun.traceRun (O.stepDist b) O.init k
 
 /-- Pure-profile run distribution via `pureToBehavioral`. -/
 noncomputable def runDistPure (O : ObsModelCore ι σ Obs Act)
@@ -375,7 +373,7 @@ theorem runDist_bind_interp
     change (PMF.pure [O.init]).bind _ = _
     rw [PMF.pure_bind]; rfl
   | succ k ih =>
-    simp only [runDist]
+    simp only [runDist, Math.TraceRun.traceRun]
     rw [PMF.bind_bind]
     conv_lhs =>
       arg 2; ext ss

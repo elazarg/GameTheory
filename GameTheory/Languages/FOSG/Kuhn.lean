@@ -2072,7 +2072,7 @@ theorem reachableHistoryOutcomeDistPureProfile_eq_runDist
         simpa [reachableHistoryOutcomeDistPureProfile, reachableHistoryOutcomeDistPure,
           FOSG.runDist, O, β, σ] using ih
       rw [← ih']
-      simp only [ObsModelCore.runDist]
+      simp only [ObsModelCore.runDist, Math.TraceRun.traceRun]
       rw [PMF.bind_bind, PMF.bind_bind]
       congr 1
       funext ss
@@ -2284,7 +2284,7 @@ theorem reachableHistoryOutcomeDist_eq_runDist
             History.runDistFrom G σ k (History.nil G) := by
         simpa [reachableHistoryOutcomeDist, FOSG.runDist, O, σ] using ih
       rw [← ih']
-      simp only [ObsModelCore.runDist]
+      simp only [ObsModelCore.runDist, Math.TraceRun.traceRun]
       rw [PMF.bind_bind, PMF.bind_bind]
       congr 1
       funext ss

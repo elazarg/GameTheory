@@ -589,7 +589,7 @@ theorem runDist_eq_of_stepIndependence
         O.runDist (n + 1) b
           = (O.runDist n b).bind (fun ss =>
               pushforward (O.stepDist b ss) (fun t => ss ++ [t])) := by
-                simp [ObsModelCore.runDist]
+                simp [ObsModelCore.runDist, Math.TraceRun.traceRun]
         _ = (ν.bind (fun π => O.runDistPure n π)).bind (fun ss =>
               pushforward (O.stepDist b ss) (fun t => ss ++ [t])) := by
                 rw [ih]
@@ -603,7 +603,8 @@ theorem runDist_eq_of_stepIndependence
                   (fun t => ss ++ [t]))) := by
                 simpa using hStep n
         _ = ν.bind (fun π => O.runDistPure (n + 1) π) := by
-                simp [ObsModelCore.runDist, ObsModelCore.runDistPure]
+                simp [ObsModelCore.runDist, ObsModelCore.runDistPure,
+                  Math.TraceRun.traceRun]
 
 /-- **Kuhn's theorem, B->M direction for `ObsModelCore`.**
 Every behavioral profile has the same bounded trace distribution as the

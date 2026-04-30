@@ -1372,9 +1372,17 @@ theorem runDist_eq_of_corrProduct
     (k : Nat) :
     O.runDist k β =
       seqRun (fun _ ss => O.stepDistCorr bc ss) O.init k := by
-  -- runDist D k β is definitionally seqRun (fun _ ss => O.stepDist β ss) O.init k
-  change seqRun (fun _ ss => O.stepDist β ss) O.init k =
-       seqRun (fun _ ss => O.stepDistCorr bc ss) O.init k
+  -- runDist k β = traceRun (stepDist β) O.init k (by definition);
+  -- seqRun on a step-index-independent step matches traceRun shape.
+  have hmatch : O.runDist k β =
+      seqRun (fun _ ss => O.stepDist β ss) O.init k := by
+    induction k with
+    | zero => rfl
+    | succ n ih =>
+      change (O.runDist n β).bind _ = _
+      rw [ih]
+      rfl
+  rw [hmatch]
   congr 1
   funext _ ss
   exact (stepDistCorr_eq_stepDist_of_product β bc hprod ss).symm

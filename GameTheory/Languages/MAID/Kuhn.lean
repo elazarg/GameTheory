@@ -703,7 +703,7 @@ theorem compiledPR_runDist_eq_frontierEval
     change (PMF.pure [O.init]).bind _ = _
     rw [PMF.pure_bind]; rfl
   | succ k ih =>
-    simp only [ObsModelCore.runDist]
+    simp only [ObsModelCore.runDist, Math.TraceRun.traceRun]
     rw [PMF.bind_bind]
     conv_lhs =>
       arg 2; ext ss

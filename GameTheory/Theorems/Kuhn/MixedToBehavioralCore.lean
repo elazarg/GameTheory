@@ -1166,7 +1166,7 @@ theorem runDist_eq_of_correlatedStepIndependence
       calc O.runDist (n + 1) b
           = (O.runDist n b).bind (fun ss =>
               pushforward (O.stepDist b ss) (fun t => ss ++ [t])) := by
-            simp [ObsModelCore.runDist]
+            simp [ObsModelCore.runDist, Math.TraceRun.traceRun]
         _ = (ν.bind (fun π => O.runDistPure n π)).bind (fun ss =>
               pushforward (O.stepDist b ss) (fun t => ss ++ [t])) := by rw [ih]
         _ = ν.bind (fun π =>
@@ -1178,7 +1178,8 @@ theorem runDist_eq_of_correlatedStepIndependence
                 pushforward (O.stepDist (O.pureToBehavioral π) ss)
                   (fun t => ss ++ [t]))) := by simpa using hStep n
         _ = ν.bind (fun π => O.runDistPure (n + 1) π) := by
-            simp [ObsModelCore.runDist, ObsModelCore.runDistPure]
+            simp [ObsModelCore.runDist, ObsModelCore.runDistPure,
+              Math.TraceRun.traceRun]
 
 /-- Product correlated steps coincide with independent steps on the core model. -/
 theorem stepDistCorr_eq_stepDist_of_product
