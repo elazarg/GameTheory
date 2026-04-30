@@ -151,6 +151,120 @@ noncomputable def ofProjectedStep
       _ = semanticValue (project h) := semantic_step_value h hterm
   step_rank := step_rank
 
+/-- Build FOSG continuation-value data from a value function on world states.
+
+This is the common case for language compilers whose observed outcome is a
+projection of the terminal state, and whose ranking function also depends only
+on the current state. -/
+noncomputable def ofLastStateValue
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    {σ : G.LegalBehavioralProfile}
+    (rankState : W → Nat)
+    (observeState : W → Ω)
+    (stateValue : W → PMF Ω)
+    (terminal_of_rank_zero :
+      ∀ w, rankState w = 0 → G.terminal w)
+    (terminal_value :
+      ∀ w, G.terminal w → stateValue w = PMF.pure (observeState w))
+    (step_value :
+      ∀ (h : G.History) (hterm : ¬ G.terminal h.lastState),
+        (G.legalActionLaw σ h hterm).bind
+            (fun a =>
+              (G.transition h.lastState a).bind
+                (fun dst =>
+                  stateValue (h.extendByOutcome a dst).lastState)) =
+          stateValue h.lastState)
+    (step_rank :
+      ∀ (h : G.History) (_hterm : ¬ G.terminal h.lastState)
+        (a : G.LegalAction h.lastState) (dst : W),
+        G.transition h.lastState a dst ≠ 0 →
+          rankState dst + 1 = rankState h.lastState) :
+    OutcomeValue (G := G) σ Ω where
+  rank := fun h => rankState h.lastState
+  observe := fun h => observeState h.lastState
+  value := fun h => stateValue h.lastState
+  terminal_of_rank_zero := by
+    intro h hrank
+    exact terminal_of_rank_zero h.lastState hrank
+  terminal_value := by
+    intro h hterm
+    exact terminal_value h.lastState hterm
+  step_value := step_value
+  step_rank := by
+    intro h hterm a dst hsupp
+    simpa [History.extendByOutcome_of_support
+      (h := h) (a := a) (dst := dst) hsupp] using
+      step_rank h hterm a dst hsupp
+
+/-- Lift preservation of a projected semantic step to preservation of a state
+value under one FOSG history step. -/
+theorem stateStepValue_of_projectedStep
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    {σ : G.LegalBehavioralProfile} {S Ω : Type*}
+    (project : W → S)
+    (semanticStep : S → PMF S)
+    (semanticValue : S → PMF Ω)
+    (stateValue : W → PMF Ω)
+    (value_project :
+      ∀ w, semanticValue (project w) = stateValue w)
+    (semantic_step_value :
+      ∀ s, (semanticStep s).bind semanticValue = semanticValue s)
+    (project_step :
+      ∀ (h : G.History) (hterm : ¬ G.terminal h.lastState),
+        (G.legalActionLaw σ h hterm).bind
+            (fun a => PMF.map project (G.transition h.lastState a)) =
+          semanticStep (project h.lastState)) :
+    ∀ (h : G.History) (hterm : ¬ G.terminal h.lastState),
+      (G.legalActionLaw σ h hterm).bind
+          (fun a =>
+            (G.transition h.lastState a).bind
+              (fun dst =>
+                stateValue (h.extendByOutcome a dst).lastState)) =
+        stateValue h.lastState := by
+  intro h hterm
+  have hproject :
+      (G.legalActionLaw σ h hterm).bind
+          (fun a =>
+            (G.transition h.lastState a).bind
+              (fun dst =>
+                stateValue (h.extendByOutcome a dst).lastState)) =
+        (G.legalActionLaw σ h hterm).bind
+          (fun a => (G.transition h.lastState a).bind stateValue) := by
+    refine Math.ProbabilityMassFunction.bind_congr_on_support
+      (G.legalActionLaw σ h hterm) _ _ ?_
+    intro a _ha
+    refine Math.ProbabilityMassFunction.bind_congr_on_support
+      (G.transition h.lastState a) _ _ ?_
+    intro dst hdst
+    have hsupp : G.transition h.lastState a dst ≠ 0 := by
+      simpa [PMF.mem_support_iff] using hdst
+    rw [History.extendByOutcome_of_support
+      (h := h) (a := a) (dst := dst) hsupp]
+    simp
+  calc
+    (G.legalActionLaw σ h hterm).bind
+        (fun a =>
+          (G.transition h.lastState a).bind
+            (fun dst =>
+              stateValue (h.extendByOutcome a dst).lastState)) =
+      (G.legalActionLaw σ h hterm).bind
+        (fun a => (G.transition h.lastState a).bind stateValue) := hproject
+    _ =
+      ((G.legalActionLaw σ h hterm).bind
+          (fun a => PMF.map project (G.transition h.lastState a))).bind
+        semanticValue := by
+          rw [PMF.bind_bind]
+          congr 1
+          funext a
+          simp [PMF.map, PMF.bind_bind, value_project]
+    _ =
+      (semanticStep (project h.lastState)).bind semanticValue := by
+        rw [project_step h hterm]
+    _ =
+      semanticValue (project h.lastState) :=
+        semantic_step_value (project h.lastState)
+    _ = stateValue h.lastState := value_project h.lastState
+
 /-- Convert FOSG continuation-value data to the generic stopped-process
 abstraction. -/
 noncomputable def toValueProcess
