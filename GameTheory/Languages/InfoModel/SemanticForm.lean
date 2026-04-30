@@ -1,6 +1,7 @@
 import Math.Probability
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
+import Math.TraceRun
 import Semantics.SM
 import Semantics.TransitionTrace
 
@@ -317,16 +318,13 @@ noncomputable def stepDistCorr (D : Dynamics I)
   (b v).bind fun a =>
     D.nextState a s
 
-/-- Bounded run distribution of length exactly `k`, storing just the state trace. -/
+/-- Bounded run distribution of length exactly `k`, storing just the state
+trace, expressed via the central state-trace iterator
+`Math.TraceRun.traceRun`. -/
 noncomputable def runDist (D : Dynamics I)
     [DecidableEq ι] [Fintype ι] [∀ i, Fintype (Option (Act i))]
     (k : Nat) (b : BehavioralProfile I) : PMF (List σ) :=
-  Nat.rec (PMF.pure [I.init])
-    (fun _ rec =>
-      rec.bind (fun ss =>
-        Math.ProbabilityMassFunction.pushforward (D.stepDist b ss)
-          (fun t => ss ++ [t])))
-    k
+  Math.TraceRun.traceRun (D.stepDist b) I.init k
 
 /-- Pure-profile run distribution via `pureToBehavioral`. -/
 noncomputable def runDistPure (D : Dynamics I)
