@@ -3,6 +3,7 @@ import Math.ProbabilityMassFunction
 import Math.PMFProduct
 import Math.Coupling
 import Math.PMFIter
+import Math.OutcomeClosure
 import Math.TraceRun
 import Math.ParameterizedChain
 import Math.FunctionUpdate
