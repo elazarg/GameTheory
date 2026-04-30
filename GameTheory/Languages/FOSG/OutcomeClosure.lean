@@ -86,6 +86,71 @@ structure OutcomeValue
 
 namespace OutcomeValue
 
+/-- Build FOSG continuation-value data by projecting histories into an
+external semantic machine.  This is useful when a concrete language has its
+own executable state and value semantics: the client proves only that one
+nonterminal FOSG step, after projection, agrees with the semantic step. -/
+noncomputable def ofProjectedStep
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    {σ : G.LegalBehavioralProfile} {S Ω : Type*}
+    (rank : G.History → Nat)
+    (observe : G.History → Ω)
+    (project : G.History → S)
+    (semanticStep : S → PMF S)
+    (semanticValue : S → PMF Ω)
+    (terminal_of_rank_zero :
+      ∀ h, rank h = 0 → G.terminal h.lastState)
+    (terminal_value :
+      ∀ h, G.terminal h.lastState →
+        semanticValue (project h) = PMF.pure (observe h))
+    (semantic_step_value :
+      ∀ h (_hterm : ¬ G.terminal h.lastState),
+        (semanticStep (project h)).bind semanticValue =
+          semanticValue (project h))
+    (project_step :
+      ∀ h (hterm : ¬ G.terminal h.lastState),
+        (G.legalActionLaw σ h hterm).bind
+            (fun a =>
+              (G.transition h.lastState a).bind
+                (fun dst =>
+                  PMF.pure (project (h.extendByOutcome a dst)))) =
+          semanticStep (project h))
+    (step_rank :
+      ∀ h (_hterm : ¬ G.terminal h.lastState)
+        (a : G.LegalAction h.lastState) (dst : W),
+        G.transition h.lastState a dst ≠ 0 →
+          rank (h.extendByOutcome a dst) + 1 = rank h) :
+    OutcomeValue (G := G) σ Ω where
+  rank := rank
+  observe := observe
+  value := fun h => semanticValue (project h)
+  terminal_of_rank_zero := terminal_of_rank_zero
+  terminal_value := terminal_value
+  step_value := by
+    intro h hterm
+    calc
+      (G.legalActionLaw σ h hterm).bind
+          (fun a =>
+            (G.transition h.lastState a).bind
+              (fun dst =>
+                semanticValue (project (h.extendByOutcome a dst)))) =
+        ((G.legalActionLaw σ h hterm).bind
+            (fun a =>
+              (G.transition h.lastState a).bind
+                (fun dst =>
+                  PMF.pure (project (h.extendByOutcome a dst))))).bind
+          semanticValue := by
+            symm
+            rw [PMF.bind_bind]
+            congr 1
+            funext a
+            rw [PMF.bind_bind]
+            simp only [PMF.pure_bind]
+      _ = (semanticStep (project h)).bind semanticValue := by
+            rw [project_step h hterm]
+      _ = semanticValue (project h) := semantic_step_value h hterm
+  step_rank := step_rank
+
 /-- Convert FOSG continuation-value data to the generic stopped-process
 abstraction. -/
 noncomputable def toValueProcess
