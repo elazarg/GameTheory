@@ -175,7 +175,7 @@ noncomputable def KernelGame.toOneStepStepwise (ι : Type) [Fintype ι]
       (constPurePolicy (KernelGame.toOneStepStepwise ι Gk).Step σ) =
       (Gk.outcomeKernel σ).bind (fun ω => PMF.pure (some ω)) := by
   simp [KernelGame.toOneStepStepwise, StepwiseGame.runDist,
-    Math.PMFIter.iter, PreKernelStep.stepKernel, PreKernelStep.jointActDist,
+    PreKernelStep.stepKernel, PreKernelStep.jointActDist,
     constPurePolicy, pmfPi_pure]
 
 /-- Refinement morphism: a `KernelGame` `Gk` injects into its one-step

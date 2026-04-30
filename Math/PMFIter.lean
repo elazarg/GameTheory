@@ -50,6 +50,27 @@ theorem iter_succ' (step : B → PMF B) (b : B) (n : Nat) :
     funext b'
     exact ih b'
 
+@[simp] theorem iter_one (step : B → PMF B) (b : B) :
+    iter step 1 b = step b := by
+  change (step b).bind PMF.pure = step b
+  exact PMF.bind_pure _
+
+/-- Iteration is additive over the step count: `n + m` iterations from
+`b` factor as `n` iterations from `b` followed by `m` iterations from
+the resulting state. -/
+theorem iter_add (step : B → PMF B) (n m : Nat) (b : B) :
+    iter step (n + m) b = (iter step n b).bind (iter step m) := by
+  induction m generalizing b with
+  | zero =>
+    change iter step n b = (iter step n b).bind PMF.pure
+    exact (PMF.bind_pure _).symm
+  | succ m ih =>
+    rw [show n + (m + 1) = (n + m) + 1 from rfl, iter_succ', ih,
+        PMF.bind_bind]
+    congr 1
+    funext b'
+    exact (iter_succ' step b' m).symm
+
 /-- The Nat-iterate of `bind step` from a Dirac at `b` equals iter from
 `b`. The bridge that lets call sites previously written as
 `Nat.iterate (· >>= step) k (pure b)` route through the central
