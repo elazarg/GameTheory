@@ -67,6 +67,55 @@ abbrev InfoState (G : FOSG ι W Act PrivObs PubObs) (i : ι) : Type :=
 abbrev PublicState (_G : FOSG ι W Act PrivObs PubObs) : Type :=
   List PubObs
 
+namespace InfoState
+
+variable {G : FOSG ι W Act PrivObs PubObs} {i : ι}
+
+/-- Last element of a list, as an `Option`. -/
+def last? {α : Type} : List α → Option α
+  | [] => none
+  | [x] => some x
+  | _ :: xs => last? xs
+
+@[simp] theorem last?_append_singleton {α : Type} (xs : List α) (x : α) :
+    last? (xs ++ [x]) = some x := by
+  induction xs with
+  | nil => rfl
+  | cons y ys ih =>
+      cases ys with
+      | nil => rfl
+      | cons z zs =>
+          simpa [last?] using ih
+
+/-- Observation events extracted from a FOSG information state. -/
+def observationEvents (s : G.InfoState i) : List (PrivObs i × PubObs) :=
+  s.filterMap (PlayerEvent.observationPart (G := G) (i := i))
+
+/-- Latest private/public observation recorded in a FOSG information state. -/
+def latestObservation? (s : G.InfoState i) : Option (PrivObs i × PubObs) :=
+  last? (observationEvents s)
+
+@[simp] theorem observationEvents_nil :
+    observationEvents ([] : G.InfoState i) = [] := rfl
+
+@[simp] theorem latestObservation?_nil :
+    latestObservation? ([] : G.InfoState i) = none := rfl
+
+theorem latestObservation?_append_obs
+    (s : G.InfoState i) (priv : PrivObs i) (pub : PubObs) :
+    latestObservation? (s ++ [PlayerEvent.obs priv pub]) =
+      some (priv, pub) := by
+  simp [latestObservation?, observationEvents]
+
+theorem latestObservation?_append_act_obs
+    (s : G.InfoState i) (a : Act i)
+    (priv : PrivObs i) (pub : PubObs) :
+    latestObservation? (s ++ [PlayerEvent.act a, PlayerEvent.obs priv pub]) =
+      some (priv, pub) := by
+  simp [latestObservation?, observationEvents]
+
+end InfoState
+
 namespace Step
 
 variable {G : FOSG ι W Act PrivObs PubObs}
@@ -100,6 +149,20 @@ theorem playerView_length_pos
     0 < (e.playerView i).length := by
   unfold playerView
   split <;> simp
+
+theorem latestObservation?_append_playerView
+    (s : G.InfoState i) (e : G.Step) :
+    InfoState.latestObservation? (s ++ e.playerView i) =
+      some (e.privateObs i, e.publicObs) := by
+  cases hact : e.ownAction? i with
+  | none =>
+      rw [Step.playerView_of_none e i hact]
+      exact InfoState.latestObservation?_append_obs s
+        (e.privateObs i) e.publicObs
+  | some ai =>
+      rw [Step.playerView_of_some e i hact]
+      exact InfoState.latestObservation?_append_act_obs s ai
+        (e.privateObs i) e.publicObs
 
 end Step
 
@@ -196,6 +259,31 @@ theorem playerViewFrom_append
       h.playerView i ++ (Step.playerView ⟨h.lastState, a, dst, support⟩ i) := by
   simpa [History.playerView, History.snoc] using
     playerViewFrom_append_singleton (G := G) i h.steps ⟨h.lastState, a, dst, support⟩
+
+theorem latestObservation?_playerView_snoc
+    (h : G.History) (i : ι) (a : G.LegalAction h.lastState)
+    (dst : W) (support : G.transition h.lastState a dst ≠ 0) :
+    InfoState.latestObservation?
+        ((h.snoc a dst support).playerView i) =
+      some (G.privObs i h.lastState a dst, G.pubObs h.lastState a dst) := by
+  rw [History.playerView_snoc]
+  exact Step.latestObservation?_append_playerView
+    (G := G) (i := i) (h.playerView i)
+    ⟨h.lastState, a, dst, support⟩
+
+theorem latestObservation?_playerView_appendStep
+    (h : G.History) (i : ι) (e : G.Step)
+    (hsrc : e.src = h.lastState) :
+    InfoState.latestObservation?
+        ((h.appendStep e hsrc).playerView i) =
+      some (e.privateObs i, e.publicObs) := by
+  rw [History.playerView]
+  change InfoState.latestObservation?
+      (playerViewFrom (G := G) i (h.steps ++ [e])) =
+    some (e.privateObs i, e.publicObs)
+  rw [playerViewFrom_append_singleton]
+  exact Step.latestObservation?_append_playerView
+    (G := G) (i := i) (h.playerView i) e
 
 theorem publicViewFrom_eq_filterMap_playerViewFrom
     (i : ι) (es : List G.Step) :
