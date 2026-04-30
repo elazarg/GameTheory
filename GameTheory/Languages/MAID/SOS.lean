@@ -1,5 +1,6 @@
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.InfoModel.SemanticForm
+import Math.PMFIter
 import Math.PMFProduct
 
 /-!
@@ -186,11 +187,12 @@ def extractTAssign (S : Struct Player n)
             else default
 
 /-- Frontier evaluation: iterate frontier steps, extract terminal assignment.
-`n` steps suffice (each step assigns ≥1 node while unassigned nodes remain). -/
+`n` steps suffice (each step assigns ≥1 node while unassigned nodes remain).
+Expressed via the central iterated PMF kernel `Math.PMFIter.iter`. -/
 noncomputable def frontierEval (S : Struct Player n) (sem : Sem S)
     (pol : Policy S) : PMF (TAssign S) :=
-  (Nat.iterate (fun d => d.bind (frontierStepPol S sem pol)) n
-    (PMF.pure (initialCfg S))).map (extractTAssign S)
+  (Math.PMFIter.iter (frontierStepPol S sem pol) n
+    (initialCfg S)).map (extractTAssign S)
 
 -- ============================================================================
 -- Frontier infrastructure lemmas

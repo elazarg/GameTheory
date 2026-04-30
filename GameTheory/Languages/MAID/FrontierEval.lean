@@ -590,9 +590,7 @@ theorem frontierEval_eq_evalAssignDist
     frontierEval S sem pol = evalAssignDist S sem pol := by
   -- Rewrite frontierEval in terms of iterDist
   have hfe : frontierEval S sem pol =
-      (iterDist S sem pol n).map (extractTAssign S) := by
-    rw [frontierEval, iterDist,
-      Math.PMFIter.nat_iterate_bind_pure_eq_iter]
+      (iterDist S sem pol n).map (extractTAssign S) := rfl
   rw [hfe]
   ext a
   rw [PMF.map_apply]

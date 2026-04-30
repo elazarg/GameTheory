@@ -695,7 +695,8 @@ theorem compiledPR_runDist_eq_frontierEval
       rw [show PMF.pure (extractTAssign S (O.lastState ss)) =
           (PMF.pure (O.lastState ss)).bind (fun s => PMF.pure (extractTAssign S s))
         from by simp only [PMF.pure_bind]]
-    rw [← PMF.bind_bind, hmain]; rfl
+    rw [← PMF.bind_bind, hmain, Math.PMFIter.nat_iterate_bind_pure_eq_iter]
+    rfl
   intro k
   induction k with
   | zero =>
