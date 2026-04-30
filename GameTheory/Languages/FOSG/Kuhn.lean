@@ -2457,6 +2457,28 @@ theorem reachable_mixed_to_legal_behavioral_runDist
   funext π
   exact reachableHistoryOutcomeDistPureProfile_eq_runDist (G := G) hLeg k π
 
+theorem reachable_mixed_to_legal_behavioral_mapped_runDist
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (μ : ReachableMixedProfile (G := G))
+    (k : Nat) (project : G.History → Ω) :
+    ∃ β : G.ReachableLegalBehavioralProfile,
+      PMF.map project (G.runDist k β.extend) =
+        (reachableMixedProfileJoint (G := G) μ).bind
+          (fun π =>
+            PMF.map project
+              (reachableHistoryOutcomeDistPureProfile (G := G) hLeg k π)) := by
+  obtain ⟨β, hdist⟩ :=
+    reachable_mixed_to_legal_behavioral_runDist
+      (G := G) hLeg μ k
+  refine ⟨β, ?_⟩
+  rw [hdist, PMF.map_bind]
+  congr
+  funext π
+  rw [← reachableHistoryOutcomeDistPureProfile_eq_runDist
+    (G := G) hLeg k π]
+
 /-- Restrict an independent mixed profile over total legal pure strategies to
 reachable information states. -/
 noncomputable def legalPureMixedProfileRestrictReachable
