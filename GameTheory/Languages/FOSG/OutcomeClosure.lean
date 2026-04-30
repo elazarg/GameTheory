@@ -265,6 +265,56 @@ theorem stateStepValue_of_projectedStep
         semantic_step_value (project h.lastState)
     _ = stateValue h.lastState := value_project h.lastState
 
+/-- Build state-based FOSG continuation-value data when the semantic step is
+proved after projecting the FOSG world into an external state machine. -/
+noncomputable def ofProjectedLastStateStep
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    {σ : G.LegalBehavioralProfile} {S Ω : Type*}
+    (rankState : W → Nat)
+    (observeState : W → Ω)
+    (project : W → S)
+    (semanticStep : S → PMF S)
+    (semanticValue : S → PMF Ω)
+    (stateValue : W → PMF Ω)
+    (terminal_of_rank_zero :
+      ∀ w, rankState w = 0 → G.terminal w)
+    (terminal_value :
+      ∀ w, G.terminal w → stateValue w = PMF.pure (observeState w))
+    (value_project :
+      ∀ w, semanticValue (project w) = stateValue w)
+    (semantic_step_value :
+      ∀ s, (semanticStep s).bind semanticValue = semanticValue s)
+    (project_step :
+      ∀ (h : G.History) (hterm : ¬ G.terminal h.lastState),
+        (G.legalActionLaw σ h hterm).bind
+            (fun a => PMF.map project (G.transition h.lastState a)) =
+          semanticStep (project h.lastState))
+    (step_rank :
+      ∀ (h : G.History) (_hterm : ¬ G.terminal h.lastState)
+        (a : G.LegalAction h.lastState) (dst : W),
+        G.transition h.lastState a dst ≠ 0 →
+          rankState dst + 1 = rankState h.lastState) :
+    OutcomeValue (G := G) σ Ω :=
+  ofLastStateValue
+    (G := G)
+    (σ := σ)
+    rankState
+    observeState
+    stateValue
+    terminal_of_rank_zero
+    terminal_value
+    (stateStepValue_of_projectedStep
+      (G := G)
+      (σ := σ)
+      project
+      semanticStep
+      semanticValue
+      stateValue
+      value_project
+      semantic_step_value
+      project_step)
+    step_rank
+
 /-- Convert FOSG continuation-value data to the generic stopped-process
 abstraction. -/
 noncomputable def toValueProcess
