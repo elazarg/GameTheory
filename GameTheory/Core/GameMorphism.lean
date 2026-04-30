@@ -144,6 +144,28 @@ def Morphism.ofOutcomeProjection {G H : KernelGame ι}
       simp only [h_util σ ω hω]
     · rfl
 
+@[simp] theorem Morphism.ofOutcomeEmbedding_stratMap {G H : KernelGame ι}
+    (stratMap : ∀ i, G.Strategy i → H.Strategy i)
+    (embed : G.Outcome → H.Outcome)
+    (h_outcome : ∀ σ : Profile G,
+      H.outcomeKernel (fun i => stratMap i (σ i))
+        = (G.outcomeKernel σ).map embed)
+    (h_util : ∀ ω, H.utility (embed ω) = G.utility ω) :
+    (Morphism.ofOutcomeEmbedding stratMap embed h_outcome h_util).stratMap
+      = stratMap := rfl
+
+@[simp] theorem Morphism.ofOutcomeProjection_stratMap {G H : KernelGame ι}
+    (stratMap : ∀ i, G.Strategy i → H.Strategy i)
+    (proj : H.Outcome → G.Outcome)
+    (h_outcome : ∀ σ : Profile G,
+      (H.outcomeKernel (fun i => stratMap i (σ i))).map proj
+        = G.outcomeKernel σ)
+    (h_util : ∀ σ : Profile G, ∀ ω ∈
+        (H.outcomeKernel (fun i => stratMap i (σ i))).support,
+      H.utility ω = G.utility (proj ω)) :
+    (Morphism.ofOutcomeProjection stratMap proj h_outcome h_util).stratMap
+      = stratMap := rfl
+
 /-- `udist` preservation implies per-player utility-distribution preservation. -/
 theorem Morphism.udistPlayer_preserved {G H : KernelGame ι} (f : Morphism G H)
     (σ : Profile G) (who : ι) :
