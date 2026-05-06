@@ -82,6 +82,25 @@ theorem mem_availableMoves_iff
       G.locallyLegalAtState h.lastState i oi := by
   simp [availableMoves, availableMovesAtState]
 
+/-- At every history, each player has at least one legal optional move.
+
+At terminal states this move is `none`; otherwise it is the player's
+component of any legal joint action. -/
+theorem availableMoves_nonempty
+    (G : FOSG ι W Act PrivObs PubObs)
+    (h : G.History) (i : ι) :
+    ∃ oi : Option (Act i), oi ∈ G.availableMoves h i := by
+  classical
+  by_cases hterm : G.terminal h.lastState
+  · refine ⟨none, ?_⟩
+    rw [FOSG.mem_availableMoves_iff]
+    simp [FOSG.locallyLegalAtState, G.active_eq_empty_of_terminal hterm]
+  · rcases G.exists_legal_of_not_terminal (w := h.lastState) hterm with
+      ⟨a, ha⟩
+    refine ⟨a i, ?_⟩
+    rw [FOSG.mem_availableMoves_iff]
+    simpa [FOSG.locallyLegalAtState] using ha.2 i
+
 theorem availableMoves_eq_availableMovesAtState
     {G : FOSG ι W Act PrivObs PubObs}
     (h : G.History) (i : ι) :

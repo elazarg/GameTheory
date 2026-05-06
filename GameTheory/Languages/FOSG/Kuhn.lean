@@ -686,17 +686,6 @@ def IsLegalMixedProfile
   ∀ i (πi : PureStrategy (G := G) i),
     πi ∈ (μ i).support → G.IsLegalPureStrategy i πi
 
-private theorem availableMoves_nonempty
-    (h : G.History) (i : ι) :
-    ∃ oi : Option (Act i), oi ∈ G.availableMoves h i := by
-  classical
-  by_cases hterm : G.terminal h.lastState
-  · refine ⟨none, ?_⟩
-    simp [FOSG.availableMoves, FOSG.availableMovesAtState,
-      FOSG.locallyLegalAtState, G.active_eq_empty_of_terminal hterm]
-  · rcases G.exists_legal_of_not_terminal (w := h.lastState) hterm with ⟨a, ha⟩
-    exact ⟨a i, by simpa [FOSG.availableMoves, FOSG.availableMovesAtState] using ha.2 i⟩
-
 /-- A legal fallback behavioral profile, used only at information states that
 are not reached by any pure profile in the core M→B construction. -/
 noncomputable def legalFallbackBehavioral
