@@ -1,6 +1,5 @@
 import GameTheory.Languages.Expressiveness.Basic
 import GameTheory.Core.GameSimulation
-import GameTheory.Core.GameMorphism
 
 /-!
 # GameTheory.Languages.Expressiveness.Relations
@@ -163,14 +162,49 @@ def profileMapUtilityDistributionLens (ι : Type) : EquivalenceLens ι where
 
 /-! ## Expected-utility lens -/
 
+/-- Per-player strategy translation preserving only expected utilities.
+
+This is intentionally weaker than `KernelGame.EUMorphism`: the core
+`EUMorphism` extends utility-distribution `Morphism`, while this expressiveness
+lens is meant to ignore payoff lotteries and keep only expected values. -/
+structure ExpectedUtilityMap (G H : KernelGame ι) where
+  /-- Per-player strategy map. -/
+  stratMap : ∀ i, G.Strategy i → H.Strategy i
+  /-- Expected-utility preservation under mapped profiles. -/
+  eu_preserved : ∀ (σ : KernelGame.Profile G) (who : ι),
+    H.eu (fun i => stratMap i (σ i)) who = G.eu σ who
+
+namespace ExpectedUtilityMap
+
+/-- Identity expected-utility map. -/
+def id (G : KernelGame ι) : ExpectedUtilityMap G G where
+  stratMap := fun _i => _root_.id
+  eu_preserved := by intro σ who; rfl
+
+/-- Composition of expected-utility maps. -/
+def comp {G H K : KernelGame ι}
+    (g : ExpectedUtilityMap H K) (f : ExpectedUtilityMap G H) :
+    ExpectedUtilityMap G K where
+  stratMap := fun i => g.stratMap i ∘ f.stratMap i
+  eu_preserved := by
+    intro σ who
+    let τ : KernelGame.Profile H := fun i => f.stratMap i (σ i)
+    have hg : K.eu (fun i => g.stratMap i (τ i)) who = H.eu τ who :=
+      g.eu_preserved τ who
+    have hf : H.eu τ who = G.eu σ who := by
+      simpa [τ] using f.eu_preserved σ who
+    simpa [τ, Function.comp] using hg.trans hf
+
+end ExpectedUtilityMap
+
 /-- Directed expected-utility simulation.  This is weaker than utility-
 distribution simulation: it preserves expected utilities, not payoff lotteries. -/
 def ExpectedUtilitySimulation (G H : KernelGame ι) : Prop :=
-  Nonempty (KernelGame.EUMorphism G H)
+  Nonempty (ExpectedUtilityMap G H)
 
 theorem expectedUtilitySimulation_refl (G : KernelGame ι) :
     ExpectedUtilitySimulation G G :=
-  ⟨KernelGame.EUMorphism.id G⟩
+  ⟨ExpectedUtilityMap.id G⟩
 
 theorem expectedUtilitySimulation_trans {G H K : KernelGame ι}
     (hGH : ExpectedUtilitySimulation G H)
@@ -178,7 +212,7 @@ theorem expectedUtilitySimulation_trans {G H K : KernelGame ι}
     ExpectedUtilitySimulation G K := by
   rcases hGH with ⟨f⟩
   rcases hHK with ⟨g⟩
-  exact ⟨KernelGame.EUMorphism.comp g f⟩
+  exact ⟨ExpectedUtilityMap.comp g f⟩
 
 /-- Expected-utility equivalence as mutual expected-utility simulation.  This is
 the right coarse lens for strategic-form reductions that absorb chance into

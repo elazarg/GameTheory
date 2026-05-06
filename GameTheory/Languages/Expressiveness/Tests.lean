@@ -33,6 +33,11 @@ example (ι : Type) : PreorderLens ι :=
 example (ι : Type) : EquivalenceLens ι :=
   expectedUtilityLens ι
 
+example {ι : Type} {G H K : KernelGame ι}
+    (f : ExpectedUtilityMap G H) (g : ExpectedUtilityMap H K) :
+    ExpectedUtilityMap G K :=
+  ExpectedUtilityMap.comp g f
+
 example (m : Nat) :
     (utilityDistributionLens (Fin m)).ExpressiveEq
       (MAIDLanguage m) (MAIDEFGLanguage m) :=
