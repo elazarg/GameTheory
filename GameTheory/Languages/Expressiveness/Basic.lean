@@ -107,6 +107,65 @@ def toReduction (r : SubReduction L M P R) :
 
 end SubReduction
 
+/-! ## Directed / simulation-style expressiveness -/
+
+/-- A preorder-style semantic lens for directed expressiveness claims.
+
+The orientation is representation-oriented: `Rel G H` should be read as
+"`H` can simulate/represent `G`."  Thus a language realizes `G` when some
+compiled game appears on the right of the relation.  This is the directed
+analogue of `EquivalenceLens`; use `EquivalenceLens` when the relation is
+symmetric and exact. -/
+structure PreorderLens (ι : Type) where
+  /-- Directed semantic relation.  `Rel G H` means `H` represents `G`. -/
+  Rel : KernelGame ι → KernelGame ι → Prop
+  refl : ∀ G : KernelGame ι, Rel G G
+  trans : ∀ {G H K : KernelGame ι}, Rel G H → Rel H K → Rel G K
+
+namespace PreorderLens
+
+variable {ι : Type}
+
+/-- Directed absolute expressiveness class.  `G` belongs when some compiled
+program simulates/represents `G` according to the preorder lens. -/
+def ExpressiveClass (P : PreorderLens ι) (L : Language.{u} ι) :
+    Set (KernelGame ι) :=
+  { G | ∃ x : L.Syntax, P.Rel G (L.compile x) }
+
+/-- `L` is no more expressive than `M` under a directed preorder lens. -/
+def ExpressiveLe (P : PreorderLens ι) (L : Language.{u} ι)
+    (M : Language.{v} ι) : Prop :=
+  ∀ G : KernelGame ι, G ∈ P.ExpressiveClass L → G ∈ P.ExpressiveClass M
+
+/-- Directed expressiveness equality as inclusion both ways. -/
+def ExpressiveEq (P : PreorderLens ι) (L : Language.{u} ι)
+    (M : Language.{v} ι) : Prop :=
+  P.ExpressiveLe L M ∧ P.ExpressiveLe M L
+
+/-- A syntactic reduction gives directed expressiveness inclusion for a
+transitive simulation/refinement relation. -/
+theorem expressiveLe_of_reduction
+    (P : PreorderLens ι) {L : Language.{u} ι} {M : Language.{v} ι}
+    (r : Reduction L M P.Rel) :
+    P.ExpressiveLe L M := by
+  intro G hG
+  rcases hG with ⟨x, hx⟩
+  exact ⟨r.translate x, P.trans hx (r.sound x)⟩
+
+/-- Reductions in both directions give directed exact relative expressiveness. -/
+theorem expressiveEq_of_reductions
+    (P : PreorderLens ι) {L : Language.{u} ι} {M : Language.{v} ι}
+    (rLM : Reduction L M P.Rel) (rML : Reduction M L P.Rel) :
+    P.ExpressiveEq L M :=
+  ⟨P.expressiveLe_of_reduction rLM, P.expressiveLe_of_reduction rML⟩
+
+/-- Directed language characterization under a preorder lens. -/
+def Characterizes (P : PreorderLens ι) (L : Language.{u} ι)
+    (C : Set (KernelGame ι)) : Prop :=
+  ∀ G : KernelGame ι, G ∈ C ↔ G ∈ P.ExpressiveClass L
+
+end PreorderLens
+
 /-- An equivalence-style semantic lens for absolute expressiveness claims. -/
 structure EquivalenceLens (ι : Type) where
   /-- The semantic equivalence relation used to compare compiled games. -/
@@ -136,7 +195,11 @@ def ExpressiveEq (E : EquivalenceLens ι) (L : Language.{u} ι)
   E.ExpressiveLe L M ∧ E.ExpressiveLe M L
 
 /-- A syntactic reduction gives extensional expressiveness inclusion whenever
-the comparison relation is an equivalence. -/
+the comparison relation is an equivalence.
+
+For non-symmetric simulation/refinement relations, use `PreorderLens`: this
+equivalence proof relies on symmetry to turn the reduction's preservation
+statement around. -/
 theorem expressiveLe_of_reduction
     (E : EquivalenceLens ι) {L : Language.{u} ι} {M : Language.{v} ι}
     (r : Reduction L M E.Rel) :

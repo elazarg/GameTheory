@@ -123,6 +123,13 @@ theorem profileMapUtilityDistributionSimulation_trans {G H K : KernelGame ι}
   rcases hHK with ⟨g, hg⟩
   exact ⟨fun σ => g (f σ), fun σ => (hg (f σ)).trans (hf σ)⟩
 
+/-- Directed preorder lens for utility-distribution preservation by arbitrary
+profile translations. -/
+def profileMapUtilityDistributionSimulationLens (ι : Type) : PreorderLens ι where
+  Rel := ProfileMapUtilityDistributionSimulation
+  refl := profileMapUtilityDistributionSimulation_refl
+  trans := profileMapUtilityDistributionSimulation_trans
+
 /-- Profile-map utility-distribution equivalence as mutual profile-map
 simulation. -/
 def ProfileMapUtilityDistributionEquivalent (G H : KernelGame ι) : Prop :=

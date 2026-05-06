@@ -27,6 +27,9 @@ example (ι : Type) : EquivalenceLens ι :=
 example (ι : Type) : EquivalenceLens ι :=
   profileMapUtilityDistributionLens ι
 
+example (ι : Type) : PreorderLens ι :=
+  profileMapUtilityDistributionSimulationLens ι
+
 example (ι : Type) : EquivalenceLens ι :=
   expectedUtilityLens ι
 
@@ -48,6 +51,20 @@ example (ι : Type) [DecidableEq ι] [Fintype ι] :
     Reduction (BoundedFOSGLanguage ι) (FOSGPlainEFGLanguage ι)
       ProfileMapUtilityDistributionSimulation :=
   boundedFOSGToPlainEFGProfileMapReduction ι
+
+example (ι : Type) [DecidableEq ι] [Fintype ι] :
+    (profileMapUtilityDistributionSimulationLens ι).ExpressiveLe
+      (BoundedFOSGLanguage ι) (FOSGPlainEFGLanguage ι) :=
+  boundedFOSG_expressiveLe_plainEFG_profileMap ι
+
+example (m : Nat) (X : MAIDPresentation m) :
+    (MAIDLanguage m).compile X = MAID.toKernelGame X.struct X.sem :=
+  rfl
+
+example (m : Nat) (X : MAIDPresentation m) :
+    (MAIDEFGLanguage m).compile X =
+      (MAID_EFG.maidToEFG X.struct X.sem (MAID.defaultPolicy X.struct)).toKernelGame :=
+  rfl
 
 end
 

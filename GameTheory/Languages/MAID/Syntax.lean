@@ -230,6 +230,12 @@ def PlayerStrategy (S : Struct Player n) (p : Player) :=
 /-- Joint policy: a strategy for every player. -/
 def Policy (S : Struct Player n) := (p : Player) → PlayerStrategy S p
 
+/-- Deterministic default policy: at every information set, choose the default
+value of the decision node.  This is useful for APIs that need a policy
+argument even when the result is policy-independent. -/
+noncomputable def defaultPolicy (S : Struct Player n) : Policy S :=
+  fun _ I => PMF.pure (default : S.Val I.1.val)
+
 /-- Distribution at a single node, given the current total assignment.
     Dispatches by node kind using `match` on `S.kind nd`. -/
 noncomputable def nodeDist (S : Struct Player n) (sem : Sem S) (pol : Policy S)
