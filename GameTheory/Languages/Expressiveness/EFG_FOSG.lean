@@ -26,17 +26,6 @@ namespace Expressiveness
 
 open FOSG.AugmentedEFGBridge
 
-/-- Profile-map utility-distribution simulation.
-
-This is weaker than `UtilityDistributionSimulation`: the strategy translation
-is allowed to be a whole-profile map rather than a product of per-player maps.
-It is useful for bridge packaging while player-reindexing/proof-irrelevance
-casts are still being factored out. -/
-def ProfileMapUtilityDistributionSimulation {ι : Type}
-    (G H : KernelGame ι) : Prop :=
-  ∃ translateProfile : KernelGame.Profile G → KernelGame.Profile H,
-    ∀ σ, H.udist (translateProfile σ) = G.udist σ
-
 /-- A bounded-horizon FOSG presentation with the finiteness assumptions needed
 for compilation and for the existing EFG bridge.
 

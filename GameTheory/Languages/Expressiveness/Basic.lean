@@ -19,20 +19,6 @@ namespace Expressiveness
 
 universe u v w
 
-/-- Reindex the player type of a kernel game along an equivalence.
-
-This is presentation bookkeeping: some syntactic bridges choose a canonical
-finite player type, such as `Fin (Fintype.card ι)`, while the source game is
-indexed by `ι`. -/
-noncomputable def KernelGame.reindex {ι κ : Type} (e : ι ≃ κ)
-    (G : KernelGame κ) : KernelGame ι where
-  Strategy := fun i => G.Strategy (e i)
-  Outcome := G.Outcome
-  utility := fun ω i => G.utility ω (e i)
-  outcomeKernel := fun σ =>
-    G.outcomeKernel (fun k => by
-      simpa using σ (e.symm k))
-
 /-- A game language for a fixed player type `ι`: syntax plus compilation into
 the common kernel-game semantics. -/
 structure Language (ι : Type) where

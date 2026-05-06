@@ -27,20 +27,23 @@ namespace GameTheory
 namespace Languages
 namespace Expressiveness
 
-/-- A MAID presentation over players `Fin m`.
-
-`seedPolicy` is included because the existing EFG unrolling API takes a policy
-argument to build the tree.  The bridge proves this argument is semantically
-irrelevant; the MAID kernel semantics below ignores it. -/
+/-- A MAID presentation over players `Fin m`. -/
 structure MAIDPresentation (m : Nat) where
   nodeCount : Nat
   struct : MAID.Struct (Fin m) nodeCount
   sem : MAID.Sem struct
-  seedPolicy : MAID.Policy struct
 
 namespace MAIDPresentation
 
 variable {m : Nat}
+
+/-- A deterministic seed policy used only to call the existing EFG unrolling
+API.  The MAID-to-EFG bridge proves the seed-policy argument is semantically
+irrelevant, and the generated tree construction does not use it at decision
+nodes. -/
+noncomputable def defaultPolicy {m n : Nat}
+    (S : MAID.Struct (Fin m) n) : MAID.Policy S :=
+  fun _ I => PMF.pure (default : S.Val I.1.val)
 
 /-- Compile the MAID presentation to its native kernel game. -/
 noncomputable def toKernelGame (X : MAIDPresentation m) :
@@ -50,12 +53,12 @@ noncomputable def toKernelGame (X : MAIDPresentation m) :
 /-- Unroll the MAID presentation to an EFG using the classically chosen
 topological order. -/
 noncomputable def toEFG (X : MAIDPresentation m) : EFG.EFGGame :=
-  MAID_EFG.maidToEFG X.struct X.sem X.seedPolicy
+  MAID_EFG.maidToEFG X.struct X.sem (defaultPolicy X.struct)
 
 /-- Unroll the MAID presentation to an EFG using an explicit topological order. -/
 noncomputable def toEFGAt (X : MAIDPresentation m)
     (order : MAID.TopologicalOrder X.struct) : EFG.EFGGame :=
-  MAID_EFG.maidToEFGAt X.struct X.sem X.seedPolicy order
+  MAID_EFG.maidToEFGAt X.struct X.sem (defaultPolicy X.struct) order
 
 /-- The generated EFG kernel game. -/
 noncomputable def toEFGKernelGame (X : MAIDPresentation m) :
@@ -66,14 +69,14 @@ noncomputable def toEFGKernelGame (X : MAIDPresentation m) :
 bisimilar. -/
 noncomputable def toEFG_bisimulation (X : MAIDPresentation m) :
     KernelGame.Bisimulation X.toKernelGame X.toEFGKernelGame :=
-  MAID_EFG.maidToEFG_bisimulation X.sem X.seedPolicy
+  MAID_EFG.maidToEFG_bisimulation X.sem (defaultPolicy X.struct)
 
 /-- Native MAID and explicitly ordered generated EFG semantics are
 utility-distribution bisimilar. -/
 noncomputable def toEFGAt_bisimulation (X : MAIDPresentation m)
     (order : MAID.TopologicalOrder X.struct) :
     KernelGame.Bisimulation X.toKernelGame (X.toEFGAt order).toKernelGame :=
-  MAID_EFG.maidToEFGAt_bisimulation X.sem X.seedPolicy order
+  MAID_EFG.maidToEFGAt_bisimulation X.sem (defaultPolicy X.struct) order
 
 end MAIDPresentation
 
@@ -122,7 +125,7 @@ presentation. -/
 noncomputable def MAIDPresentation.toCausalContextFreeEFGPresentation
     {m : Nat} (X : MAIDPresentation m) : CausalContextFreeEFGPresentation m where
   form := CausalContextFreeForm.ofMAID X.struct X.sem
-  seedPolicy := X.seedPolicy
+  seedPolicy := MAIDPresentation.defaultPolicy X.struct
   order := Classical.choice (MAID.topologicalOrder_exists X.struct)
 
 /-- Forget an explicit causal context-free EFG presentation back to its native
@@ -132,7 +135,6 @@ noncomputable def CausalContextFreeEFGPresentation.toMAIDPresentation
   nodeCount := X.form.nodeCount
   struct := X.form.toMAIDStruct
   sem := X.form.toMAIDSem
-  seedPolicy := X.seedPolicy
 
 /-- MAID reduces to the explicit causal-context-free EFG sublanguage. -/
 noncomputable def maidToCausalContextFreeEFGReduction (m : Nat) :
@@ -140,9 +142,9 @@ noncomputable def maidToCausalContextFreeEFGReduction (m : Nat) :
       UtilityDistributionEquivalent where
   translate := MAIDPresentation.toCausalContextFreeEFGPresentation
   sound := fun X => by
-    let order : MAID.TopologicalOrder X.struct :=
-      Classical.choice (MAID.topologicalOrder_exists X.struct)
-    exact ⟨MAID_EFG.maidToEFGAt_bisimulation X.sem X.seedPolicy order⟩
+    exact ⟨MAID_EFG.maidToEFGAt_bisimulation X.sem
+      (MAIDPresentation.defaultPolicy X.struct)
+      (MAIDPresentation.toCausalContextFreeEFGPresentation X).order⟩
 
 /-- The explicit causal-context-free EFG sublanguage reduces back to native
 MAID semantics. -/

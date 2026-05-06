@@ -99,6 +99,61 @@ def utilityDistributionLens (ι : Type) : EquivalenceLens ι where
   symm := utilityDistributionEquivalent_symm
   trans := utilityDistributionEquivalent_trans
 
+/-! ## Profile-map utility-distribution lens -/
+
+/-- Directed utility-distribution simulation by a whole-profile map.
+
+Unlike `UtilityDistributionSimulation`, this does not require the strategy
+translation to factor player-by-player.  It is useful for bridges that already
+prove utility-distribution preservation for a profile translation, but have not
+yet exposed that translation as a `KernelGame.Morphism`. -/
+def ProfileMapUtilityDistributionSimulation (G H : KernelGame ι) : Prop :=
+  ∃ translateProfile : KernelGame.Profile G → KernelGame.Profile H,
+    ∀ σ, H.udist (translateProfile σ) = G.udist σ
+
+theorem profileMapUtilityDistributionSimulation_refl (G : KernelGame ι) :
+    ProfileMapUtilityDistributionSimulation G G :=
+  ⟨_root_.id, fun _ => rfl⟩
+
+theorem profileMapUtilityDistributionSimulation_trans {G H K : KernelGame ι}
+    (hGH : ProfileMapUtilityDistributionSimulation G H)
+    (hHK : ProfileMapUtilityDistributionSimulation H K) :
+    ProfileMapUtilityDistributionSimulation G K := by
+  rcases hGH with ⟨f, hf⟩
+  rcases hHK with ⟨g, hg⟩
+  exact ⟨fun σ => g (f σ), fun σ => (hg (f σ)).trans (hf σ)⟩
+
+/-- Profile-map utility-distribution equivalence as mutual profile-map
+simulation. -/
+def ProfileMapUtilityDistributionEquivalent (G H : KernelGame ι) : Prop :=
+  ProfileMapUtilityDistributionSimulation G H ∧
+    ProfileMapUtilityDistributionSimulation H G
+
+theorem profileMapUtilityDistributionEquivalent_refl (G : KernelGame ι) :
+    ProfileMapUtilityDistributionEquivalent G G :=
+  ⟨profileMapUtilityDistributionSimulation_refl G,
+    profileMapUtilityDistributionSimulation_refl G⟩
+
+theorem profileMapUtilityDistributionEquivalent_symm {G H : KernelGame ι}
+    (h : ProfileMapUtilityDistributionEquivalent G H) :
+    ProfileMapUtilityDistributionEquivalent H G :=
+  ⟨h.2, h.1⟩
+
+theorem profileMapUtilityDistributionEquivalent_trans {G H K : KernelGame ι}
+    (hGH : ProfileMapUtilityDistributionEquivalent G H)
+    (hHK : ProfileMapUtilityDistributionEquivalent H K) :
+    ProfileMapUtilityDistributionEquivalent G K :=
+  ⟨profileMapUtilityDistributionSimulation_trans hGH.1 hHK.1,
+    profileMapUtilityDistributionSimulation_trans hHK.2 hGH.2⟩
+
+/-- Equivalence lens for utility-distribution preservation by arbitrary
+profile translations. -/
+def profileMapUtilityDistributionLens (ι : Type) : EquivalenceLens ι where
+  Rel := ProfileMapUtilityDistributionEquivalent
+  refl := profileMapUtilityDistributionEquivalent_refl
+  symm := profileMapUtilityDistributionEquivalent_symm
+  trans := profileMapUtilityDistributionEquivalent_trans
+
 /-! ## Expected-utility lens -/
 
 /-- Directed expected-utility simulation.  This is weaker than utility-

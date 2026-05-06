@@ -40,6 +40,20 @@ variable {ι : Type}
 
 abbrev Profile (G : KernelGame ι) := ∀ i, G.Strategy i
 
+/-- Reindex the player type of a kernel game along an equivalence.
+
+This is presentation bookkeeping: bridges often choose a canonical finite
+player type, such as `Fin (Fintype.card ι)`, while the source game is indexed by
+some equivalent type `ι`. -/
+noncomputable def reindex {ι κ : Type} (e : ι ≃ κ)
+    (G : KernelGame κ) : KernelGame ι where
+  Strategy := fun i => G.Strategy (e i)
+  Outcome := G.Outcome
+  utility := fun ω i => G.utility ω (e i)
+  outcomeKernel := fun σ =>
+    G.outcomeKernel fun k =>
+      cast (congrArg G.Strategy (e.apply_symm_apply k)) (σ (e.symm k))
+
 /-- Expected utility of player `who` under strategy profile `σ`. -/
 noncomputable def eu (G : KernelGame ι) (σ : Profile G) (who : ι) : ℝ :=
   expect (G.outcomeKernel σ) (fun ω => G.utility ω who)

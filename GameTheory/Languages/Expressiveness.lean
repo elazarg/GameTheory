@@ -3,6 +3,7 @@ import GameTheory.Languages.Expressiveness.Relations
 import GameTheory.Languages.Expressiveness.CausalContext
 import GameTheory.Languages.Expressiveness.MAID_EFG
 import GameTheory.Languages.Expressiveness.EFG_FOSG
+import GameTheory.Languages.Expressiveness.Tests
 
 /-!
 # GameTheory.Languages.Expressiveness
