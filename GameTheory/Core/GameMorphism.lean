@@ -174,6 +174,45 @@ theorem Morphism.udistPlayer_preserved {G H : KernelGame ι} (f : Morphism G H)
     congrArg (fun d : PMF (Payoff ι) => d.bind (fun u => PMF.pure (u who))) (f.udist_preserved σ)
   simpa [KernelGame.udistPlayer_eq_udist_bind] using h
 
+/-- Expected utility is the expectation of the corresponding coordinate of
+the utility-vector distribution, when the outcome carrier is finite. -/
+theorem expect_udist_eq_eu (G : KernelGame ι) [Finite G.Outcome]
+    (σ : Profile G) (who : ι) :
+    Math.Probability.expect (G.udist σ) (fun u => u who) =
+      G.eu σ who := by
+  classical
+  letI : Fintype G.Outcome := Fintype.ofFinite G.Outcome
+  rw [KernelGame.udist, KernelGame.eu]
+  change
+    Math.Probability.expect
+        ((G.outcomeKernel σ).bind (PMF.pure ∘ G.utility))
+        (fun u => u who) =
+      Math.Probability.expect (G.outcomeKernel σ)
+        (fun ω => G.utility ω who)
+  rw [← PMF.bind_map]
+  rw [PMF.bind_pure]
+  rw [Math.Probability.expect_map_fintype_source]
+  rw [Math.Probability.expect_eq_sum]
+
+/-- A utility-distribution preserving morphism also preserves expected utility
+when both outcome carriers are finite. The finiteness restriction is only for
+the local `expect` API; the semantic content is already `udist_preserved`. -/
+theorem Morphism.eu_preserved_of_fintype_outcome {G H : KernelGame ι}
+    [Finite G.Outcome] [Finite H.Outcome] (f : Morphism G H)
+    (σ : Profile G) (who : ι) :
+    H.eu (fun i => f.stratMap i (σ i)) who = G.eu σ who := by
+  calc
+    H.eu (fun i => f.stratMap i (σ i)) who =
+        Math.Probability.expect
+          (H.udist (fun i => f.stratMap i (σ i))) (fun u => u who) := by
+          exact (expect_udist_eq_eu H
+            (fun i => f.stratMap i (σ i)) who).symm
+    _ =
+        Math.Probability.expect (G.udist σ) (fun u => u who) := by
+          rw [f.udist_preserved σ]
+    _ = G.eu σ who := by
+          exact expect_udist_eq_eu G σ who
+
 -- ============================================================================
 -- EU-specialized morphisms
 -- ============================================================================
@@ -183,6 +222,14 @@ structure EUMorphism (G H : KernelGame ι) extends Morphism G H where
   /-- Expected-utility preservation under mapped profiles. -/
   eu_preserved : ∀ (σ : Profile G) (who : ι),
     H.eu (fun i => stratMap i (σ i)) who = G.eu σ who
+
+/-- Upgrade a finite-outcome utility-distribution morphism to the EU-specialized
+morphism expected by solution-concept transport theorems. -/
+def Morphism.toEUMorphismOfFintypeOutcome {G H : KernelGame ι}
+    [Finite G.Outcome] [Finite H.Outcome] (f : Morphism G H) :
+    EUMorphism G H where
+  toMorphism := f
+  eu_preserved := f.eu_preserved_of_fintype_outcome
 
 namespace EUMorphism
 

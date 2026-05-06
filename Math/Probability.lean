@@ -226,5 +226,65 @@ theorem expect_map_fintype_source {α β : Type*} [Fintype α]
       simp [hne]
     simp [hmap]
 
+/-- Expected value over a pushforward to a finite target.
+
+The source type need not be finite. This is useful for trace distributions
+whose trace carrier is an unbounded list type, but whose utility factors
+through a finite state or observation projection. -/
+theorem expect_map_fintype_target {α β : Type*} [Finite β]
+    (p : PMF α) (f : α → β) (u : β → ℝ) :
+    expect (PMF.map f p) u = expect p (fun a => u (f a)) := by
+  classical
+  letI : Fintype β := Fintype.ofFinite β
+  have hp : Summable fun a : α => (p a).toReal := by
+    apply ENNReal.summable_toReal
+    rw [PMF.tsum_coe]
+    exact ENNReal.one_ne_top
+  rw [expect_eq_sum]
+  unfold expect
+  simp only [PMF.map_apply]
+  rw [show
+      (∑ b : β, ((∑' a : α, if b = f a then p a else 0).toReal) * u b) =
+        ∑ b : β, (∑' a : α,
+          (if b = f a then (p a).toReal else 0) * u b) from by
+        congr
+        funext b
+        rw [tsum_mul_right]
+        congr 1
+        have hto :
+            (∑' a : α, (if b = f a then p a else 0 : ENNReal)).toReal =
+              ∑' a : α,
+                ((if b = f a then p a else 0 : ENNReal).toReal) := by
+          exact ENNReal.tsum_toReal_eq
+            (f := fun a : α => if b = f a then p a else 0) (by
+              intro a
+              by_cases h : b = f a
+              · simp [h, PMF.apply_ne_top p a]
+              · simp [h])
+        rw [hto]
+        congr
+        funext a
+        by_cases h : b = f a
+        · rw [if_pos h, if_pos h]
+        · rw [if_neg h, if_neg h]
+          exact ENNReal.toReal_zero]
+  rw [← Summable.tsum_finsetSum (s := (Finset.univ : Finset β))]
+  · congr
+    funext a
+    rw [Finset.sum_eq_single (f a)]
+    · rw [if_pos rfl]
+    · intro b _ hne
+      have h : ¬ b = f a := by exact hne
+      rw [if_neg h]
+      exact zero_mul (u b)
+    · intro hnot
+      exact (hnot (Finset.mem_univ (f a))).elim
+  · intro b _
+    have hs :
+        Summable fun a : α => if b = f a then (p a).toReal else 0 := by
+      simpa [Set.indicator, eq_comm] using
+        (hp.indicator {a : α | f a = b})
+    exact hs.mul_right (u b)
+
 end Probability
 end Math
