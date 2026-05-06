@@ -266,9 +266,9 @@ theorem comp_assoc {G H K L : KernelGame ι}
 
 end EUMorphism
 
-open Classical in
 /-- EU corollary: if a morphism preserves EU values, Nash pulls back. -/
-theorem EUMorphism.nash_of_nash {G H : KernelGame ι} (f : EUMorphism G H)
+theorem EUMorphism.nash_of_nash [DecidableEq ι]
+    {G H : KernelGame ι} (f : EUMorphism G H)
     {σ : Profile G}
     (hN : H.IsNash (fun i => f.stratMap i (σ i))) :
     G.IsNash σ := by
@@ -313,9 +313,8 @@ def symm (e : EUGameIsomorphism G H) : EUGameIsomorphism H G where
     have h := e.eu_preserved (fun i => (e.stratEquiv i).symm (σ i)) who
     simpa using h.symm
 
-open Classical in
 /-- EU corollary: Nash is preserved in both directions. -/
-theorem nash_iff (e : EUGameIsomorphism G H) (σ : Profile G) :
+theorem nash_iff [DecidableEq ι] (e : EUGameIsomorphism G H) (σ : Profile G) :
     G.IsNash σ ↔ H.IsNash (fun i => e.stratEquiv i (σ i)) := by
   constructor
   · intro hN who s'
