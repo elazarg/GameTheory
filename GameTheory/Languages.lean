@@ -10,6 +10,7 @@ import GameTheory.Languages.Intrinsic.PerfectRecall
 import GameTheory.Languages.Intrinsic.Tests
 import GameTheory.Languages.Intrinsic.Theorems
 import GameTheory.Languages.Bridges
+import GameTheory.Languages.Expressiveness
 
 /-!
 # GameTheory.Languages
