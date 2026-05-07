@@ -86,14 +86,10 @@ theorem replaceOn_comm_of_disjoint
     replaceOn K (replaceOn L x y) z =
       replaceOn L (replaceOn K x z) y := by
   funext i
-  by_cases hiK : i ∈ K
-  · have hiL : i ∉ L := by
-      intro hiL
-      exact hKL.le_bot ⟨hiK, hiL⟩
-    simp [replaceOn, hiK, hiL]
-  · by_cases hiL : i ∈ L
-    · simp [replaceOn, hiK, hiL]
-    · simp [replaceOn, hiK, hiL]
+  have hdis : ∀ ⦃x⦄, x ∈ K → x ∈ L → False := by
+    intro x hxK hxL
+    exact hKL.le_bot ⟨hxK, hxL⟩
+  by_cases hiK : i ∈ K <;> by_cases hiL : i ∈ L <;> simp_all [replaceOn]
 
 theorem replaceOn_insert
     [DecidableEq ι]
