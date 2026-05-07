@@ -194,8 +194,7 @@ theorem kuhn_mixed_to_behavioral_native
   rw [hlhs, PMF.bind_bind]
   -- Replace pmfPi (liftMixedProfile μ) with pushforward (pmfPi μ) liftPureProfile
   rw [liftMixedProfile_joint (G := G) μ]
-  -- pushforward (pmfPi μ) liftPureProfile = (pmfPi μ).bind (fun σ => pure (liftPureProfile σ))
-  simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, PMF.pure_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
   -- Now both sides: (pmfPi μ).bind (fun σ => ...)
   congr 1; funext σ
   exact runDistPure_eq_eval G σ k hk
@@ -245,7 +244,7 @@ theorem kuhn_mixed_to_behavioral_sequential
         (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) from by
     rw [hβ]]
   rw [PMF.bind_bind, liftMixedProfile_joint (G := G) μ]
-  simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, PMF.pure_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
   congr 1; funext π
   exact runDistPure_eq_eval G π k (by omega)
 
@@ -309,7 +308,7 @@ theorem kuhn_behavioral_to_mixed_sequential
       ((compiledLinObs' G).behavioralToMixed β)
       (fun (i : Fin n) => descendLocalStrategyVRD (G := G) hVRD (i := i))).symm
   rw [hpush]
-  simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, PMF.pure_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
   change ((compiledLinObs' G).behavioralToMixedJoint β).bind _ = _
   congr 1; funext π
   -- Show (runDistPure k π).bind extract = G.eval (descendPureProfileVRD hVRD π)
