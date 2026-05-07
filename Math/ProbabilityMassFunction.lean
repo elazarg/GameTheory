@@ -17,12 +17,12 @@ namespace ProbabilityMassFunction
 variable {α β γ : Type*}
 
 noncomputable def pushforward (μ : PMF α) (f : α → β) : PMF β :=
-  μ.bind (fun a => PMF.pure (f a))
+  μ.map f
 
 theorem pushforward_comp
     (μ : PMF α) (f : α → β) (g : β → γ) :
     pushforward (pushforward μ f) g = pushforward μ (g ∘ f) := by
-  simp [pushforward, PMF.bind_bind, Function.comp]
+  exact PMF.map_comp (p := μ) (f := f) g
 
 theorem pushforward_pushforward
     (μ : PMF α) (f : α → β) (g : β → γ) :
@@ -31,16 +31,16 @@ theorem pushforward_pushforward
 
 theorem pushforward_id (μ : PMF α) :
     pushforward μ id = μ := by
-  simp [pushforward]
+  exact PMF.map_id μ
 
 theorem pushforward_pure (a : α) (f : α → β) :
     pushforward (PMF.pure a) f = PMF.pure (f a) := by
-  simp [pushforward]
+  exact PMF.pure_map f a
 
 theorem bind_pure_eq_pushforward
     (μ : PMF α) (f : α → β) :
     μ.bind (fun a => PMF.pure (f a)) = pushforward μ f := by
-  rfl
+  exact PMF.bind_pure_comp f μ
 
 theorem bind_assoc
     (μ : PMF α) (f : α → PMF β) (g : β → PMF γ) :
@@ -50,7 +50,7 @@ theorem bind_assoc
 theorem pushforward_bind
     (μ : PMF α) (k : α → PMF β) (f : β → γ) :
     pushforward (μ.bind k) f = μ.bind (fun a => pushforward (k a) f) := by
-  simp [pushforward, PMF.bind_bind]
+  exact PMF.map_bind (p := μ) (q := k) f
 
 theorem bind_congr_on_support
     (μ : PMF α) (f g : α → PMF β)
@@ -97,7 +97,7 @@ theorem expect_pushforward
   classical
   letI : Fintype Ω := Fintype.ofFinite Ω
   letI : Fintype Ξ := Fintype.ofFinite Ξ
-  simp [pushforward, Math.Probability.expect_bind]
+  exact Math.Probability.expect_map_fintype_target μ f φ
 
 theorem expect_bind_congr_on_support
     {Ω Ξ : Type*}
@@ -172,7 +172,7 @@ noncomputable def condOn
           ← Finset.sum_mul]
         have h_sum : (∑ a : α, if proj a = b then (μ a : ENNReal) else 0) = p_b := by
           change _ = pushforward μ proj b
-          simp [pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype, eq_comm]
+          simp [pushforward, PMF.map_apply, tsum_fintype, eq_comm]
         rw [h_sum]
         exact ENNReal.mul_inv_cancel hb (PMF.apply_ne_top (pushforward μ proj) b))
 
