@@ -383,8 +383,12 @@ theorem runDistPure_bind_evalFromCfg [DecidableEq (Fin n)] [Fintype (Fin n)] [Fi
         ((compiledLinObs G).pureStep (liftPureProfile σ) ss)
         (fun t => ss ++ [t]))).bind
       (fun ss => evalFromCfg G σ ((compiledLinObs G).lastState ss)) = _
-    simp only [PMF.bind_bind, Math.ProbabilityMassFunction.pushforward, PMF.pure_bind,
-      lastState_snoc]
+    rw [PMF.bind_bind]
+    conv_lhs =>
+      arg 2; ext ss
+      rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
+      arg 2; ext t
+      simp [Function.comp_def, lastState_snoc]
     simp_rw [pureStep_compiledLin_eq, stepPMF_bind_evalFromCfg]
     exact ih
 

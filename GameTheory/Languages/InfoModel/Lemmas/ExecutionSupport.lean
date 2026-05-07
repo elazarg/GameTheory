@@ -57,7 +57,8 @@ theorem runDist_support_stateLength
             (Math.ProbabilityMassFunction.pushforward
               (D.stepDist σ ss') (fun t => ss' ++ [t])) ss = 0 by
           simp [hsuff]
-        simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+        change ((D.stepDist σ ss').bind (fun t => PMF.pure (ss' ++ [t]))) ss = 0
+        rw [PMF.bind_apply]
         rw [ENNReal.tsum_eq_zero]
         intro t
         suffices hne : ss ≠ ss' ++ [t] by
@@ -138,7 +139,8 @@ theorem runDist_support_reachStateTrace
         have hpush0 :
             (Math.ProbabilityMassFunction.pushforward (D.stepDist σ ss')
               (fun t => ss' ++ [t])) ss = 0 := by
-          rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+          change ((D.stepDist σ ss').bind (fun t => PMF.pure (ss' ++ [t]))) ss = 0
+          rw [PMF.bind_apply]
           rw [ENNReal.tsum_eq_zero]
           intro t
           by_cases heq : ss' ++ [t] = ss
@@ -189,16 +191,20 @@ theorem stepDist_eq_pushforward_stepActionStateDist
       Prod.snd =
     D.stepDist σ ss := by
   classical
-  ext t
-  simp [stepActionStateDist, Execution.Dynamics.stepDist,
-    Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+  rw [stepActionStateDist, Execution.Dynamics.stepDist,
+    Math.ProbabilityMassFunction.pushforward_bind]
+  congr 1
+  funext a
+  rw [Math.ProbabilityMassFunction.pushforward_comp]
+  exact Math.ProbabilityMassFunction.pushforward_id (D.nextState a (ss.getLast?.getD I.init))
 
 private theorem pushforward_fixedAction_apply_same
     {α β : Type*}
     (ν : PMF α) (b : β) (a : α) :
     Math.ProbabilityMassFunction.pushforward ν (fun x => (b, x)) (b, a) = ν a := by
   classical
-  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+  change (ν.bind (fun x => PMF.pure (b, x))) (b, a) = ν a
+  rw [PMF.bind_apply]
   rw [tsum_eq_single a]
   · simp
   · intro a' ha'
@@ -217,7 +223,8 @@ private theorem pushforward_fixedAction_apply_ne
     (ν : PMF α) (b b' : β) (a : α) (h : b' ≠ b) :
     Math.ProbabilityMassFunction.pushforward ν (fun x => (b', x)) (b, a) = 0 := by
   classical
-  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+  change (ν.bind (fun x => PMF.pure (b', x))) (b, a) = 0
+  rw [PMF.bind_apply]
   rw [ENNReal.tsum_eq_zero]
   intro a'
   have hEq : (b', a') ≠ (b, a) := by

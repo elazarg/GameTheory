@@ -63,31 +63,29 @@ private theorem pushforward_append_nonzero_exists
       (fun t => ss ++ [t])) hs ≠ 0) :
     ∃ t, hs = ss ++ [t] ∧ μ t ≠ 0 := by
   classical
-  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply] at hpush
-  by_contra hnone
-  push Not at hnone
-  apply hpush
-  rw [ENNReal.tsum_eq_zero]
-  intro t
-  by_cases heq : hs = ss ++ [t]
-  · have hμ : μ t = 0 := hnone t heq
-    simp [PMF.pure_apply, heq, hμ]
-  · simp [PMF.pure_apply, heq]
+  have hmemPush :
+      hs ∈ (Math.ProbabilityMassFunction.pushforward μ (fun t => ss ++ [t])).support := by
+    simpa [PMF.mem_support_iff] using hpush
+  have hmem : hs ∈ (PMF.map (fun t => ss ++ [t]) μ).support := by
+    simpa [Math.ProbabilityMassFunction.pushforward] using hmemPush
+  rw [PMF.mem_support_map_iff] at hmem
+  rcases hmem with ⟨t, ht, hts⟩
+  exact ⟨t, hts.symm, by simpa [PMF.mem_support_iff] using ht⟩
 
 private theorem pushforward_append_apply_same
     (μ : PMF σ)
     (ss : List σ) (t : σ) :
     (Math.ProbabilityMassFunction.pushforward μ
       (fun u => ss ++ [u])) (ss ++ [t]) = μ t := by
-  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.map_apply]
   rw [tsum_eq_single t]
-  · simp [PMF.pure_apply]
+  · simp
   · intro u hu
     have hEq : ss ++ [t] ≠ ss ++ [u] := by
       intro hpair
       have hs := append_singleton_eq hpair
       exact hu hs.2.symm
-    simp [PMF.pure_apply, hEq]
+    simp [hEq]
 
 private theorem pushforward_append_apply_other
     (μ : PMF σ)
@@ -95,14 +93,14 @@ private theorem pushforward_append_apply_other
     (hneq : ss₁ ≠ ss₂) :
     (Math.ProbabilityMassFunction.pushforward μ
       (fun u => ss₁ ++ [u])) (ss₂ ++ [t₂]) = 0 := by
-  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_apply]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.map_apply]
   refine (ENNReal.tsum_eq_zero).2 ?_
   intro u
   have hEq : ss₂ ++ [t₂] ≠ ss₁ ++ [u] := by
     intro hpair
     have hs := append_singleton_eq hpair.symm
     exact hneq hs.1
-  simp [PMF.pure_apply, hEq]
+  simp [hEq]
 
 private theorem runDistPure_succ_apply_path
     [DecidableEq ι]

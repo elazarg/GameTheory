@@ -6,10 +6,6 @@ import Math.PMFIter
 import Math.OutcomeClosure
 import Math.TraceRun
 import Math.ParameterizedChain
-import Math.FunctionUpdate
-import Math.FinsetUpdate
-import Math.Projection
-import Math.SetReachability
 import Math.OptimizationLocalGlobal
 import Math.BoundedLists
 import Math.DAG

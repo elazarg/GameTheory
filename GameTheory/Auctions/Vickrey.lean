@@ -1,4 +1,3 @@
-import Math.FinsetUpdate
 import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
 
@@ -39,8 +38,10 @@ theorem maxOtherBid_update_self (bids : Fin n → ℝ) (who : Fin n) (b : ℝ) :
   simp only [maxOtherBid]
   split <;> simp_all only [ne_eq]
   rename_i h
-  exact Math.Finset.Update.sup'_update_eq_of_not_mem
-    (S := Finset.univ.filter (· ≠ who)) h who (by simp) bids b
+  refine Finset.sup'_congr h rfl ?_
+  intro i hi
+  have hiw : i ≠ who := (Finset.mem_filter.mp hi).2
+  simp [Function.update_of_ne hiw]
 
 open Classical in
 /-- Payoff in a second-price auction with valuations `v`.

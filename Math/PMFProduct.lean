@@ -1,8 +1,8 @@
 import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Finset.Piecewise
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Math.FunctionUpdate
 import Math.ProbabilityMassFunction
 
 /-!
@@ -71,12 +71,7 @@ lemma sum_univ_eq_sum_univ_of_involutive
     {α : Type _} [Fintype α] {δ : Type _} [AddCommMonoid δ]
     (e : α → α) (he : Function.Involutive e) (f : α → δ) :
     (∑ x : α, f (e x)) = ∑ x : α, f x := by
-  simpa using
-    (Finset.sum_bij (s := Finset.univ) (t := Finset.univ)
-      (fun x _ => e x) (by intro x _; simp))
-      (by intro x₁ _ x₂ _ hxe; have := congrArg e hxe; simpa [he x₁, he x₂] using this)
-      (by intro y _; exact ⟨e y, Finset.mem_univ _, he y⟩)
-      (by intro _ _; rfl)
+  simpa [Function.Involutive.coe_toPerm] using Equiv.sum_comp (he.toPerm e) f
 
 end Aux
 
@@ -158,7 +153,7 @@ theorem pmfPi_pure [Fintype ι] [∀ i, Fintype (A i)] (σ : ∀ i, A i) :
 
 /-- "`F` ignores coordinate `j`": updating `j` does not change `F`. -/
 abbrev Ignores {α : Type uα} (j : ι) (F : (∀ i, A i) → α) : Prop :=
-  Math.Function.Update.Ignores (A := A) j F
+  ∀ s a, F (Function.update s j a) = F s
 
 /-- "`G a0 s` ignores coordinate `j` in `s`", uniformly in the external parameter `a0`. -/
 def Ignores₂ {α : Type uα} (j : ι) (G : A j → (∀ i, A i) → α) : Prop :=
@@ -326,20 +321,12 @@ variable {β : Type uβ}
 
 @[simp] lemma update_update_same (σ : ∀ i, PMF (A i)) (j : ι) (τ₁ τ₂ : PMF (A j)) :
     Function.update (Function.update σ j τ₁) j τ₂ = Function.update σ j τ₂ := by
-  funext i; by_cases h : i = j <;> simp [Function.update, h]
+  exact Function.update_idem (a := j) τ₁ τ₂ σ
 
 lemma update_update_comm (σ) {j k : ι} (hjk : j ≠ k) (τj : PMF (A j)) (τk : PMF (A k)) :
     Function.update (Function.update σ j τj) k τk =
     Function.update (Function.update σ k τk) j τj := by
-  funext i
-  by_cases hi : i = j <;> by_cases hk : i = k
-  · subst hi hk
-    simp_all only [ne_eq, not_true_eq_false]
-  · subst hi
-    simp_all only [not_false_eq_true, ne_eq, Function.update_of_ne, Function.update_self]
-  · subst hk
-    simp_all only [ne_eq, Function.update_self, not_false_eq_true, Function.update_of_ne]
-  · simp_all only [ne_eq, not_false_eq_true, Function.update_of_ne]
+  exact Function.update_comm (a := j) (b := k) hjk τj τk σ
 
 variable [Fintype ι] [∀ i, Fintype (A i)]
 
@@ -435,8 +422,10 @@ theorem pmfPi_push_coordwise
     (μ : ∀ i, PMF (A i)) (g : ∀ i, A i → B i) :
     pushforward (pmfPi (A := A) μ) (fun f => fun i => g i (f i))
       = pmfPi (A := B) (fun i => pushforward (μ i) (g i)) := by
+  change (pmfPi (A := A) μ).bind (fun a => PMF.pure (fun i => g i (a i))) =
+    pmfPi (A := B) (fun i => (μ i).bind (fun a => PMF.pure (g i a)))
   ext b
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply, pmfPi_apply, tsum_fintype]
+  simp only [PMF.bind_apply, PMF.pure_apply, pmfPi_apply, tsum_fintype]
   trans (∑ a : ∀ i, A i, ∏ i, ((μ i) (a i) * if b i = g i (a i) then 1 else 0))
   · apply Finset.sum_congr rfl
     intro f _
@@ -489,8 +478,9 @@ open Classical in
 theorem pmfPi_push_coord
     (σ : ∀ i, PMF (A i)) (j : ι) :
     pushforward (pmfPi (A := A) σ) (fun s => s j) = σ j := by
+  change (pmfPi (A := A) σ).bind (fun s => PMF.pure (s j)) = σ j
   ext a
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply,
+  simp only [PMF.bind_apply, PMF.pure_apply,
     tsum_fintype, mul_ite, mul_one, mul_zero]
   simp_rw [@eq_comm _ a]
   exact pmfPi_coord_mass σ j a
@@ -646,23 +636,16 @@ section Disintegration
 
 variable {α : Type*} [Fintype α] {β : Type*} {γ : Type*}
 
-set_option linter.unusedFintypeInType false in
+omit [Fintype α] in
 /-- If `b` is in the support of `pushforward μ proj`, then the fibre
     `{a | proj a = b}` meets the support of `μ`. -/
 lemma pushforward_support_fibre
     (μ : PMF α) (proj : α → β) (b : β)
     (hb : b ∈ (pushforward μ proj).support) :
     ∃ a ∈ ({a | proj a = b} : Set α), a ∈ μ.support := by
-  rw [PMF.mem_support_iff] at hb
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply] at hb
-  by_contra hall; push Not at hall
-  apply hb; simp only [tsum_fintype]
-  apply Finset.sum_eq_zero; intro a _
-  rcases eq_or_ne (proj a) b with h | h
-  · have hns := hall a h
-    rw [PMF.mem_support_iff] at hns; push Not at hns
-    simp [h, hns]
-  · simp [Ne.symm h]
+  change b ∈ (PMF.map proj μ).support at hb
+  rcases (PMF.mem_support_map_iff proj μ b).1 hb with ⟨a, ha, hab⟩
+  exact ⟨a, hab, ha⟩
 
 variable [Fintype β]
 
@@ -685,7 +668,8 @@ theorem pmf_bind_disintegrate
   let W : β → ENNReal := fun b => ∑ a : α, if b = proj a then μ a * g a y else 0
   have hZ_push : ∀ b, Z b = (pushforward μ proj) b := by
     intro b
-    simp [Z, pushforward, PMF.bind_apply, PMF.pure_apply]
+    change Z b = (μ.bind (fun a => PMF.pure (proj a))) b
+    simp [Z, PMF.bind_apply, PMF.pure_apply]
   have hcond : ∀ b, (∀ i : α, b = proj i → μ i = 0) ↔ Z b = 0 := by
     intro b
     constructor
@@ -1385,27 +1369,23 @@ variable {A : ι → Type uA}
 open Classical in
 /-- Replace coordinates in `K` of `x` by those of `y`. -/
 noncomputable def replaceOn (K : Finset ι) (x y : ∀ i, A i) : (∀ i, A i) :=
-  fun i => if i ∈ K then y i else x i
+  K.piecewise y x
 
 open Classical in
 @[simp] lemma replaceOn_apply (K : Finset ι) (x y : ∀ i, A i) (i : ι) :
-    replaceOn K x y i = (if i ∈ K then y i else x i) := rfl
+    replaceOn K x y i = (if i ∈ K then y i else x i) := by
+  rfl
 
 @[simp] lemma replaceOn_empty (x y : ∀ i, A i) :
     replaceOn (A := A) (K := ∅) x y = x := by
-  funext i
   simp [replaceOn]
 
 open Classical in
-lemma replaceOn_insert (K : Finset ι) (j : ι) (hj : j ∉ K)
+lemma replaceOn_insert (K : Finset ι) (j : ι) (_hj : j ∉ K)
     (x y : ∀ i, A i) :
     replaceOn (A := A) (K := insert j K) x y =
       Function.update (replaceOn (A := A) (K := K) x y) j (y j) := by
-  funext i
-  by_cases hi : i = j
-  · subst hi
-    simp [replaceOn]
-  · simp [replaceOn, hi]
+  simpa [replaceOn] using Finset.piecewise_insert K y x j
 
 open Classical in
 lemma ignores_replaceOn_eq
@@ -1433,7 +1413,6 @@ lemma ignores_replaceOn_eq
 
 lemma replaceOn_univ_snd [Fintype ι] (x y : ∀ i, A i) :
     replaceOn (A := A) (K := Finset.univ) x y = y := by
-  funext i
   simp [replaceOn]
 
 open Classical in
