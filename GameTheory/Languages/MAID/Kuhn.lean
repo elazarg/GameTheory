@@ -800,7 +800,7 @@ theorem kuhn_behavioral_to_mixed
       ((compiledPRObs S sem).behavioralToMixed β)
       (fun p => descendPureStrategy S sem (p := p))).symm
   rw [hpush]
-  unfold pushforward
+  rw [pushforward]
   trans (pmfPi (ObsModelCore.behavioralToMixed β)).bind
       (fun π' => frontierEval S sem (pureToPolicy (descendPureProfile S sem π')))
   · unfold ObsModelCore.behavioralToMixedJoint
@@ -821,23 +821,9 @@ theorem kuhn_behavioral_to_mixed
     cases (compiledPRObs S sem).projectStates p ss with
     | none => exact PUnit.ext _ _
     | some I => rfl
-  · calc
-      (pmfPi (ObsModelCore.behavioralToMixed β)).bind
-          (fun π' => frontierEval S sem (pureToPolicy (descendPureProfile S sem π'))) =
-        (pmfPi (ObsModelCore.behavioralToMixed β)).bind
-          (fun a => (PMF.pure (descendPureProfile S sem a)).bind
-            (fun π => frontierEval S sem (pureToPolicy π))) := by
-          congr 1
-          funext a
-          exact (PMF.pure_bind (descendPureProfile S sem a)
-            (fun π => frontierEval S sem (pureToPolicy π))).symm
-      _ = ((pmfPi (ObsModelCore.behavioralToMixed β)).bind
-          (fun a => PMF.pure (descendPureProfile S sem a))).bind
-            (fun π => frontierEval S sem (pureToPolicy π)) := by
-          exact (PMF.bind_bind
-            (pmfPi (ObsModelCore.behavioralToMixed β))
-            (fun a => PMF.pure (descendPureProfile S sem a))
-            (fun π => frontierEval S sem (pureToPolicy π))).symm
+  · exact (PMF.bind_map (pmfPi (ObsModelCore.behavioralToMixed β))
+      (descendPureProfile S sem)
+      (fun π => frontierEval S sem (pureToPolicy π))).symm
 
 end NativeBToM
 
