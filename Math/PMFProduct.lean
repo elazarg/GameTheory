@@ -423,8 +423,10 @@ theorem pmfPi_push_coordwise
     (μ : ∀ i, PMF (A i)) (g : ∀ i, A i → B i) :
     pushforward (pmfPi (A := A) μ) (fun f => fun i => g i (f i))
       = pmfPi (A := B) (fun i => pushforward (μ i) (g i)) := by
+  change (pmfPi (A := A) μ).bind (fun a => PMF.pure (fun i => g i (a i))) =
+    pmfPi (A := B) (fun i => (μ i).bind (fun a => PMF.pure (g i a)))
   ext b
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply, pmfPi_apply, tsum_fintype]
+  simp only [PMF.bind_apply, PMF.pure_apply, pmfPi_apply, tsum_fintype]
   trans (∑ a : ∀ i, A i, ∏ i, ((μ i) (a i) * if b i = g i (a i) then 1 else 0))
   · apply Finset.sum_congr rfl
     intro f _
@@ -477,8 +479,9 @@ open Classical in
 theorem pmfPi_push_coord
     (σ : ∀ i, PMF (A i)) (j : ι) :
     pushforward (pmfPi (A := A) σ) (fun s => s j) = σ j := by
+  change (pmfPi (A := A) σ).bind (fun s => PMF.pure (s j)) = σ j
   ext a
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply,
+  simp only [PMF.bind_apply, PMF.pure_apply,
     tsum_fintype, mul_ite, mul_one, mul_zero]
   simp_rw [@eq_comm _ a]
   exact pmfPi_coord_mass σ j a
@@ -666,7 +669,8 @@ theorem pmf_bind_disintegrate
   let W : β → ENNReal := fun b => ∑ a : α, if b = proj a then μ a * g a y else 0
   have hZ_push : ∀ b, Z b = (pushforward μ proj) b := by
     intro b
-    simp [Z, pushforward, PMF.bind_apply, PMF.pure_apply]
+    change Z b = (μ.bind (fun a => PMF.pure (proj a))) b
+    simp [Z, PMF.bind_apply, PMF.pure_apply]
   have hcond : ∀ b, (∀ i : α, b = proj i → μ i = 0) ↔ Z b = 0 := by
     intro b
     constructor
