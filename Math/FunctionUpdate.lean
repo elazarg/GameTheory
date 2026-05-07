@@ -1,6 +1,7 @@
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.Insert
 import Mathlib.Data.Set.Finite.Basic
+import Mathlib.Data.Set.Piecewise
 
 set_option autoImplicit false
 
@@ -21,7 +22,7 @@ variable {β : Type*}
 
 def replaceOn (K : Set ι) [DecidablePred (fun i => i ∈ K)]
     (x y : ∀ i, A i) : (∀ i, A i) :=
-  fun i => if i ∈ K then y i else x i
+  K.piecewise y x
 
 def Ignores [DecidableEq ι] (j : ι) (F : (∀ i, A i) → β) : Prop :=
   ∀ s a, F (Function.update s j a) = F s
@@ -66,8 +67,7 @@ theorem replaceOn_self
     (K : Set ι) [DecidablePred (fun i => i ∈ K)]
     (x : ∀ i, A i) :
     replaceOn K x x = x := by
-  funext i
-  by_cases hi : i ∈ K <;> simp [replaceOn, hi]
+  simp [replaceOn]
 
 theorem replaceOn_replaceOn_same
     (K : Set ι) [DecidablePred (fun i => i ∈ K)]
@@ -100,20 +100,7 @@ theorem replaceOn_insert
     (j : ι) [DecidablePred (fun i => i ∈ Set.insert j K)] (x y : ∀ i, A i) :
     replaceOn (Set.insert j K) x y =
       Function.update (replaceOn K x y) j (y j) := by
-  funext i
-  by_cases hi : i = j
-  · subst hi
-    have hins : i ∈ Set.insert i K := Set.mem_insert i K
-    simp [replaceOn, hins]
-  · by_cases hik : i ∈ K
-    · have hins : i ∈ Set.insert j K := Set.mem_insert_of_mem j hik
-      simp [replaceOn, hi, hik, hins]
-    · have hins : i ∉ Set.insert j K := by
-        intro h
-        rcases Set.mem_insert_iff.mp h with hEq | hk
-        · exact hi hEq
-        · exact hik hk
-      simp [replaceOn, hi, hik, hins]
+  simpa [replaceOn] using Set.piecewise_insert (s := K) (f := y) (g := x) j
 
 theorem replaceOn_insert_finset
     [DecidableEq ι]
