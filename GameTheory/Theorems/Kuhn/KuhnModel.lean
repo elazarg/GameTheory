@@ -377,9 +377,9 @@ theorem runDist_bind_interp
     rw [PMF.bind_bind]
     conv_lhs =>
       arg 2; ext ss
-      rw [pushforward, PMF.bind_bind]
+      rw [pushforward, PMF.bind_map]
       arg 2; ext t
-      rw [PMF.pure_bind, lastState_append_singleton]
+      simp [Function.comp_def, lastState_append_singleton]
     simp_rw [hstep]
     exact ih
 
