@@ -1,4 +1,5 @@
 import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Finset.Piecewise
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
@@ -1385,27 +1386,23 @@ variable {A : ι → Type uA}
 open Classical in
 /-- Replace coordinates in `K` of `x` by those of `y`. -/
 noncomputable def replaceOn (K : Finset ι) (x y : ∀ i, A i) : (∀ i, A i) :=
-  fun i => if i ∈ K then y i else x i
+  K.piecewise y x
 
 open Classical in
 @[simp] lemma replaceOn_apply (K : Finset ι) (x y : ∀ i, A i) (i : ι) :
-    replaceOn K x y i = (if i ∈ K then y i else x i) := rfl
+    replaceOn K x y i = (if i ∈ K then y i else x i) := by
+  rfl
 
 @[simp] lemma replaceOn_empty (x y : ∀ i, A i) :
     replaceOn (A := A) (K := ∅) x y = x := by
-  funext i
   simp [replaceOn]
 
 open Classical in
-lemma replaceOn_insert (K : Finset ι) (j : ι) (hj : j ∉ K)
+lemma replaceOn_insert (K : Finset ι) (j : ι) (_hj : j ∉ K)
     (x y : ∀ i, A i) :
     replaceOn (A := A) (K := insert j K) x y =
       Function.update (replaceOn (A := A) (K := K) x y) j (y j) := by
-  funext i
-  by_cases hi : i = j
-  · subst hi
-    simp [replaceOn]
-  · simp [replaceOn, hi]
+  simpa [replaceOn] using Finset.piecewise_insert K y x j
 
 open Classical in
 lemma ignores_replaceOn_eq
@@ -1433,7 +1430,6 @@ lemma ignores_replaceOn_eq
 
 lemma replaceOn_univ_snd [Fintype ι] (x y : ∀ i, A i) :
     replaceOn (A := A) (K := Finset.univ) x y = y := by
-  funext i
   simp [replaceOn]
 
 open Classical in
