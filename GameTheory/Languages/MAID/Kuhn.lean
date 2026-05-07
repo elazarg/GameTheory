@@ -711,8 +711,8 @@ theorem compiledPR_runDist_eq_frontierEval
             (fun t => ss ++ [t])).bind
               (fun ss' => PMF.pure (O.lastState ss')) =
             O.stepDist β ss from by
-          simp only [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind, PMF.pure_bind,
-            ObsModelCore.lastState_append_singleton, PMF.bind_pure]]
+          rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
+          simp [Function.comp_def, ObsModelCore.lastState_append_singleton, PMF.bind_pure]]
     conv_lhs =>
       arg 2; ext ss
       rw [compiledPR_stepDist_eq_frontierStepPol S sem hPR pol ss]
