@@ -303,7 +303,10 @@ theorem mixedJoint_stepActionStateDist_eq_realizeBehavioralCanonical
           rw [PMF.bind_bind]
           congr
           funext a
-          simp [Math.ProbabilityMassFunction.pushforward]
+          rw [PMF.pure_bind]
+          exact Math.ProbabilityMassFunction.bind_pure_eq_pushforward
+            (D.nextState (fun i => a i (I.projectStates i ss)) s)
+            (fun t => ((fun i => a i (I.projectStates i ss)), t))
     _ =
       (Execution.Dynamics.jointActionDist (I := I)
         (InfoModel.realizeBehavioralCanonical (I := I) μ) ss).bind
