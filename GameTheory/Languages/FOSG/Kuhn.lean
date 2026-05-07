@@ -419,7 +419,8 @@ theorem mixed_to_behavioral_runDist
       (liftMixedProfile (G := G) μ) k
   refine ⟨β, ?_⟩
   rw [hβ, liftMixedProfile_joint (G := G) μ]
-  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
+  rfl
 
 set_option linter.unusedFintypeInType false in
 open Classical in
@@ -444,7 +445,8 @@ theorem mixed_to_behavioral_runDist_of_obsLocal
       (liftMixedProfile (G := G) μ) k
   refine ⟨β, ?_⟩
   rw [hβ, liftMixedProfile_joint (G := G) μ]
-  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
+  rfl
 
 /-! ### Native-history mixed-to-behavioral semantics
 
@@ -595,7 +597,8 @@ theorem mixed_to_behavioral_native_history
   refine ⟨β, ?_⟩
   unfold historyOutcomeDist historyOutcomeDistPure
   rw [hβ, PMF.bind_bind, liftHistoryMixedProfile_joint (G := G) μ]
-  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
+  rfl
 
 /-- A lifted native pure profile has the same native-history outcome law as
 its native pure behavioral profile. -/
@@ -757,8 +760,7 @@ theorem legalHistoryMixedToBehavioral_historyOutcomeDist
       (legalFallbackBehavioral (G := G) hLeg) k
   unfold historyOutcomeDist legalHistoryMixedToBehavioral
   rw [hβ, PMF.bind_bind, liftHistoryMixedProfile_joint (G := G) μ]
-  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
-  simp only [PMF.pure_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
   change (mixedProfileJoint (G := G) μ).bind
       (fun π => historyOutcomeDistPure (G := G) k (liftHistoryPureProfile (G := G) π)) =
     (mixedProfileJoint (G := G) μ).bind
@@ -2065,11 +2067,11 @@ theorem reachableHistoryOutcomeDistPureProfile_eq_runDist
       rw [PMF.bind_bind, PMF.bind_bind]
       congr 1
       funext ss
-      rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+      rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
       conv_lhs =>
         arg 2
         ext t
-        rw [PMF.pure_bind, ObsModelCore.lastState_append_singleton]
+        simp [Function.comp_def, ObsModelCore.lastState_append_singleton]
       rw [reachableHistoryPureStepDist_eq_runDistFrom_one
         (G := G) hLeg π ss]
       simp [O, σ]
@@ -2277,11 +2279,11 @@ theorem reachableHistoryOutcomeDist_eq_runDist
       rw [PMF.bind_bind, PMF.bind_bind]
       congr 1
       funext ss
-      rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
+      rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
       conv_lhs =>
         arg 2
         ext t
-        rw [PMF.pure_bind, ObsModelCore.lastState_append_singleton]
+        simp [Function.comp_def, ObsModelCore.lastState_append_singleton]
       rw [reachableHistoryBehavioralStepDist_eq_runDistFrom_one
         (G := G) hLeg βcore β hβ ss]
       simp [O, σ]
@@ -2353,8 +2355,7 @@ theorem reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
   have hJoint :=
     liftReachableHistoryMixedProfile_joint (G := G) hLeg μ
   rw [hJoint]
-  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
-  simp only [PMF.pure_bind]
+  rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
   rfl
 
 set_option linter.unusedFintypeInType false in
