@@ -1,4 +1,3 @@
-import Math.Projection
 import Math.ProbabilityMassFunction
 import Math.SetReachability
 
@@ -11,8 +10,8 @@ open Math
 
 variable {X Ω β γ : Type*}
 
-/-- `Obs` is an alias for the projection/readout map abstraction. -/
-abbrev Obs (X Ω : Type*) := Math.Projection.Map X Ω
+/-- Observation/readout map. -/
+abbrev Obs (X Ω : Type*) := X → Ω
 
 /-- A randomized controller: choose a control token from an observation. -/
 abbrev Stochastic (Ω β : Type*) := Ω → PMF β
@@ -48,6 +47,10 @@ def ObsInvariantOn (obs : Obs X Ω) (f : X → γ) (R : Set X) : Prop :=
 abbrev ObsFiberUniqueOn (obs : Obs X Ω) (R : Set X) : Prop :=
   Set.InjOn obs R
 
+/-- A function factors through an observation map. -/
+def FactorsThrough (obs : Obs X Ω) (f : X → γ) : Prop :=
+  ∃ g : Ω → γ, f = g ∘ obs
+
 /-- If two contexts have the same observation, `choose` agrees. -/
 theorem choose_eq_of_obs_eq
     (obs : Obs X Ω) (ctrl : Stochastic Ω β)
@@ -65,10 +68,11 @@ theorem chooseDet_eq_of_obs_eq
 /-- If `f` factors through `obs`, then `f` is observation-invariant. -/
 theorem obsInvariant_of_factorsThrough
     (obs : Obs X Ω) (f : X → γ)
-    (hf : Math.Projection.FactorsThrough obs f) :
+    (hf : FactorsThrough obs f) :
     ObsInvariant obs f := by
   intro x y hxy
-  exact Math.Projection.eq_of_factorsThrough hf hxy
+  rcases hf with ⟨g, rfl⟩
+  simp [hxy]
 
 /-- Equality of observations on `R` implies equality of induced choices on `R`. -/
 theorem choose_eqOn_of_obs_eqOn
