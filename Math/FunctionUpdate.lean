@@ -2,6 +2,7 @@ import Mathlib.Data.Set.Basic
 import Mathlib.Data.Set.Insert
 import Mathlib.Data.Set.Finite.Basic
 import Mathlib.Data.Set.Piecewise
+import Mathlib.Data.Finset.Piecewise
 
 set_option autoImplicit false
 
@@ -108,13 +109,8 @@ theorem replaceOn_insert_finset
     (a : ι) (x y : ∀ i, A i) :
     replaceOn (K := ((insert a S : Finset ι) : Set ι)) x y =
       Function.update (replaceOn (K := (S : Set ι)) x y) a (y a) := by
-  funext i
-  by_cases hi : i = a
-  · subst hi
-    simp [replaceOn]
-  · by_cases his : i ∈ S
-    · simp [replaceOn, hi, his]
-    · simp [replaceOn, hi, his]
+  simpa [replaceOn, Finset.piecewise_coe] using
+    (Finset.piecewise_insert (s := S) (f := y) (g := x) a)
 
 theorem replaceOn_involutive_partition
     (K : Set ι) [DecidablePred (fun i => i ∈ K)] [DecidablePred (fun i => i ∈ Kᶜ)] :
