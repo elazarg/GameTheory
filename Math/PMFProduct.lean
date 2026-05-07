@@ -322,20 +322,12 @@ variable {β : Type uβ}
 
 @[simp] lemma update_update_same (σ : ∀ i, PMF (A i)) (j : ι) (τ₁ τ₂ : PMF (A j)) :
     Function.update (Function.update σ j τ₁) j τ₂ = Function.update σ j τ₂ := by
-  funext i; by_cases h : i = j <;> simp [Function.update, h]
+  exact Function.update_idem (a := j) τ₁ τ₂ σ
 
 lemma update_update_comm (σ) {j k : ι} (hjk : j ≠ k) (τj : PMF (A j)) (τk : PMF (A k)) :
     Function.update (Function.update σ j τj) k τk =
     Function.update (Function.update σ k τk) j τj := by
-  funext i
-  by_cases hi : i = j <;> by_cases hk : i = k
-  · subst hi hk
-    simp_all only [ne_eq, not_true_eq_false]
-  · subst hi
-    simp_all only [not_false_eq_true, ne_eq, Function.update_of_ne, Function.update_self]
-  · subst hk
-    simp_all only [ne_eq, Function.update_self, not_false_eq_true, Function.update_of_ne]
-  · simp_all only [ne_eq, not_false_eq_true, Function.update_of_ne]
+  exact Function.update_comm (a := j) (b := k) hjk τj τk σ
 
 variable [Fintype ι] [∀ i, Fintype (A i)]
 
