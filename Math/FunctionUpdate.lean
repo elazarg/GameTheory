@@ -182,8 +182,7 @@ theorem aggregate_excluding_index_update_invariant
     (x : ∀ i, A i) (a : A j) :
     F (Function.update x j a) = F x := by
   apply hF
-  intro i hi
-  simp [Function.update, hi]
+  grind [Function.update]
 
 theorem update_apply_family_eq_of_forall_ne
     [DecidableEq ι]
