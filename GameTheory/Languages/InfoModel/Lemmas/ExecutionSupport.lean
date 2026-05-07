@@ -191,18 +191,12 @@ theorem stepDist_eq_pushforward_stepActionStateDist
       Prod.snd =
     D.stepDist σ ss := by
   classical
-  ext t
-  change ((stepActionStateDist (I := I) D σ ss).bind (fun p => PMF.pure p.2)) t =
-    D.stepDist σ ss t
-  simp [stepActionStateDist, Execution.Dynamics.stepDist,
-    Math.ProbabilityMassFunction.pushforward, PMF.bind_bind]
-  apply Finset.sum_congr rfl
-  intro a _
+  rw [stepActionStateDist, Execution.Dynamics.stepDist,
+    Math.ProbabilityMassFunction.pushforward_bind]
   congr 1
-  rw [tsum_eq_single t]
-  · simp
-  · intro u hu
-    simp [hu.symm]
+  funext a
+  rw [Math.ProbabilityMassFunction.pushforward_comp]
+  exact Math.ProbabilityMassFunction.pushforward_id (D.nextState a (ss.getLast?.getD I.init))
 
 private theorem pushforward_fixedAction_apply_same
     {α β : Type*}
