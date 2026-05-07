@@ -634,23 +634,16 @@ section Disintegration
 
 variable {α : Type*} [Fintype α] {β : Type*} {γ : Type*}
 
-set_option linter.unusedFintypeInType false in
+omit [Fintype α] in
 /-- If `b` is in the support of `pushforward μ proj`, then the fibre
     `{a | proj a = b}` meets the support of `μ`. -/
 lemma pushforward_support_fibre
     (μ : PMF α) (proj : α → β) (b : β)
     (hb : b ∈ (pushforward μ proj).support) :
     ∃ a ∈ ({a | proj a = b} : Set α), a ∈ μ.support := by
-  rw [PMF.mem_support_iff] at hb
-  simp only [pushforward, PMF.bind_apply, PMF.pure_apply] at hb
-  by_contra hall; push Not at hall
-  apply hb; simp only [tsum_fintype]
-  apply Finset.sum_eq_zero; intro a _
-  rcases eq_or_ne (proj a) b with h | h
-  · have hns := hall a h
-    rw [PMF.mem_support_iff] at hns; push Not at hns
-    simp [h, hns]
-  · simp [Ne.symm h]
+  change b ∈ (PMF.map proj μ).support at hb
+  rcases (PMF.mem_support_map_iff proj μ b).1 hb with ⟨a, ha, hab⟩
+  exact ⟨a, hab, ha⟩
 
 variable [Fintype β]
 
