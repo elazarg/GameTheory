@@ -140,7 +140,7 @@ theorem le_pushforward_apply
       (f := fun t : α => if proj a = proj t then (μ t : ENNReal) else 0)
       (fun _ _ => by positivity)
       (Finset.mem_univ a)
-  simpa [pushforward, PMF.bind_apply, PMF.pure_apply, tsum_fintype] using hle
+  simpa [pushforward, PMF.map_apply, tsum_fintype, eq_comm] using hle
 
 set_option linter.unusedFintypeInType false in
 open Classical in
