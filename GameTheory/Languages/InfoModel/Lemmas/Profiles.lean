@@ -88,12 +88,7 @@ theorem realize_behavioralToMixed
     realizeBehavioralCanonical (I := I) (behavioralToMixed (I := I) b) = b := by
   classical
   funext i v
-  simp only [realizeBehavioralCanonical, behavioralToMixed,
-    Math.ProbabilityMassFunction.pushforward]
-  conv_lhs =>
-    arg 2; ext f
-    simp only [Function.comp, Equiv.curry, Equiv.coe_fn_mk]
-  change pushforward (pmfPi fun w => b i w)
+  change Math.ProbabilityMassFunction.pushforward (pmfPi fun w => b i w)
     (fun f => f v) = b i v
   rw [pmfPi_push_coord]
 
@@ -282,8 +277,13 @@ theorem restrictedMixedJointRaw_bind_eq_restrictedMixedJoint_bind
     (restrictedMixedJointRaw (I := I) H μ).bind
         (fun π => f (extendRestrictedPureProfile (I := I) H π)) =
       (restrictedMixedJoint (I := I) H μ).bind f := by
-  simp [restrictedMixedJoint, Math.ProbabilityMassFunction.pushforward,
-    PMF.bind_bind]
+  rw [restrictedMixedJoint, Math.ProbabilityMassFunction.pushforward]
+  change (restrictedMixedJointRaw (I := I) H μ).bind
+      (f ∘ extendRestrictedPureProfile (I := I) H) =
+    (PMF.map (extendRestrictedPureProfile (I := I) H)
+      (restrictedMixedJointRaw (I := I) H μ)).bind f
+  exact (PMF.bind_map (restrictedMixedJointRaw (I := I) H μ)
+    (extendRestrictedPureProfile (I := I) H) f).symm
 
 /-- Pushing forward `mixedJoint μ` by "restrict then extend" is the same as
 taking the joint law of the coordinatewise pushed-forward marginals. -/
