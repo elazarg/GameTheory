@@ -3,7 +3,6 @@ import Mathlib.Data.Finset.Piecewise
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Math.FunctionUpdate
 import Math.ProbabilityMassFunction
 
 /-!
@@ -154,7 +153,7 @@ theorem pmfPi_pure [Fintype ι] [∀ i, Fintype (A i)] (σ : ∀ i, A i) :
 
 /-- "`F` ignores coordinate `j`": updating `j` does not change `F`. -/
 abbrev Ignores {α : Type uα} (j : ι) (F : (∀ i, A i) → α) : Prop :=
-  Math.Function.Update.Ignores (A := A) j F
+  ∀ s a, F (Function.update s j a) = F s
 
 /-- "`G a0 s` ignores coordinate `j` in `s`", uniformly in the external parameter `a0`. -/
 def Ignores₂ {α : Type uα} (j : ι) (G : A j → (∀ i, A i) → α) : Prop :=
