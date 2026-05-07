@@ -336,14 +336,13 @@ theorem frontierStepPol_apply
         if extendFrontier S cfg vals = cfg'
         then pmfPi (nodeDistPol S sem pol cfg) vals
         else 0 := by
-  simp only [frontierStepPol, pushforward, PMF.bind_apply, PMF.pure_apply]
-  congr 1
-  ext vals
-  split
-  · next h => subst h; simp
-  · next h =>
-    push Not at h
-    rw [if_neg (Ne.symm h), mul_zero]
+  rw [frontierStepPol, pushforward, PMF.map_apply]
+  apply tsum_congr
+  intro vals
+  by_cases h : extendFrontier S cfg vals = cfg'
+  · rw [if_pos h.symm, if_pos h]
+  · have h' : cfg' ≠ extendFrontier S cfg vals := fun hcfg => h hcfg.symm
+    rw [if_neg h', if_neg h]
 
 -- ============================================================================
 -- Main invariant: iterDist characterization
