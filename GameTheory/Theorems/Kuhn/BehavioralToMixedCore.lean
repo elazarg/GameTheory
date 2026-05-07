@@ -525,8 +525,11 @@ theorem stepIndependence_bridge
               (Math.ProbabilityMassFunction.pushforward
                 (ν.bind (fun π => O.stepDist (O.pureToBehavioral π) ss))
                 (fun t => ss ++ [t])) y := by
-                  simp [Math.ProbabilityMassFunction.pushforward, PMF.bind_bind,
-                    PMF.bind_apply, mul_comm]
+                  simpa using congrArg (fun d => d y)
+                    ((Math.ProbabilityMassFunction.pushforward_bind
+                      (μ := ν)
+                      (k := fun π => O.stepDist (O.pureToBehavioral π) ss)
+                      (f := fun t => ss ++ [t])).symm)
           _ =
               (Math.ProbabilityMassFunction.pushforward
                 (O.stepDist β ss) (fun t => ss ++ [t])) y := by
