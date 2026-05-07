@@ -215,16 +215,7 @@ theorem curry_update_prod
     Function.curry (Function.update f (a, b) v) =
       Function.update (Function.curry f) a
         (Function.update (Function.curry f a) b v) := by
-  ext a' b'
-  simp only [Function.curry, Function.update]
-  by_cases hab : (a', b') = (a, b)
-  · simp [(Prod.mk.inj hab).1, (Prod.mk.inj hab).2]
-  · simp only [hab, ↓reduceDIte]
-    by_cases ha' : a' = a
-    · subst ha'
-      have hb' : b' ≠ b := fun hb' => hab (by rw [hb'])
-      simp [hb']
-    · simp [ha']
+  exact Function.curry_update f (a, b) v
 
 theorem ignores_of_eq_on_ne
     [DecidableEq ι]
