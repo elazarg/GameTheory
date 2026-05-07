@@ -72,12 +72,7 @@ lemma sum_univ_eq_sum_univ_of_involutive
     {α : Type _} [Fintype α] {δ : Type _} [AddCommMonoid δ]
     (e : α → α) (he : Function.Involutive e) (f : α → δ) :
     (∑ x : α, f (e x)) = ∑ x : α, f x := by
-  simpa using
-    (Finset.sum_bij (s := Finset.univ) (t := Finset.univ)
-      (fun x _ => e x) (by intro x _; simp))
-      (by intro x₁ _ x₂ _ hxe; have := congrArg e hxe; simpa [he x₁, he x₂] using this)
-      (by intro y _; exact ⟨e y, Finset.mem_univ _, he y⟩)
-      (by intro _ _; rfl)
+  simpa [Function.Involutive.coe_toPerm] using Equiv.sum_comp (he.toPerm e) f
 
 end Aux
 
