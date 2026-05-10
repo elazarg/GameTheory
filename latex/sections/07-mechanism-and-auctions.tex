@@ -1,0 +1,176 @@
+\section{Mechanism design and auctions}
+\label{sec:mechanism-auctions}
+
+The mechanism-design and auction layers are direct consumers of
+the kernel-game core.  They serve a dual role:\ they formalize
+classical results that belong in any game-theory library, and
+they smoke-test the reusability of the core (every definition
+below is built on the kernel-game/game-form layer or the
+solution-concept catalogue, with no representation-specific
+machinery re-introduced).
+
+\subsection{Bayesian games}
+\label{sec:mech:bayesian}
+
+A \emph{Bayesian game}~\citep{Harsanyi1967} models situations
+where players have \emph{private information} that affects payoffs
+— each player knows their own private state but only has a prior
+belief over others'.  Harsanyi's reduction encodes this private
+information as a \emph{type} $\theta_i \in \Theta_i$ for each
+player; types are drawn jointly from a common-prior distribution
+$\mu \in \PMF{\prod_i \Theta_i}$ known to all players, but only
+$\theta_i$ is observed by player $i$.  A pure strategy is then a
+contingent plan $\Theta_i \to \Act_i$ that prescribes an action
+for every type the player might turn out to be.  Concretely, a
+finite Bayesian game is the tuple
+$(\Theta, \Act, \mu, u)$ with finite $\Theta_i, \Act_i$ and a
+payoff $u : \prod_i \Theta_i \times \prod_i \Act_i \to \Players \to
+\RR$ depending on both the realized type vector and the chosen
+joint action.  Behavioral strategies replace the pure version by
+$\Theta_i \to \PMF{\Act_i}$.
+
+The Bayesian game compiles to a kernel game via the \TT{ofEU}
+adapter (\S\ref{sec:semantic-core:kernelgame}):\ the strategy type
+is $\Theta_i \to \Act_i$, and the outcome kernel is the
+deterministic point mass at the \emph{ex-ante} expected utility
+\[
+  \mathrm{exAnteEU}(B, \Profile, i)
+    \;=\; \sum_{\theta} \mu(\theta)\;
+        u(\theta, \Profile_1(\theta_1), \dots, \Profile_n(\theta_n))(i),
+\]
+folded into a single payoff vector per profile.  The
+type$\,\times\,$action sampling is therefore not a separate
+sampling step in the kernel game's $\K$ but is folded into the EU
+function — a deliberate use of \TT{ofEU} that lets every
+EU-specific solution concept on \KG\ apply to Bayesian games
+without further bookkeeping.
+
+\emph{Bayesian Nash equilibrium}~\citep{Harsanyi1967} is then the
+ordinary $\IsNash$ predicate of the compiled kernel game,
+unfolded as
+\[
+  \forall i,\, \forall s' : \Theta_i \to \Act_i.\quad
+    \mathrm{exAnteEU}(B, \Profile, i) \;\ge\;
+    \mathrm{exAnteEU}(B, \Profile[i \mapsto s'], i).
+\]
+Ex-post and interim variants are exposed as separate derived
+definitions:\ ex-post, no profitable deviation conditional on the
+realized type vector; interim, no profitable deviation conditional
+on the deviating player's own type.
+
+\tradeoff{Continuous type spaces and continuous action spaces are
+the natural setting for much of auction theory beyond
+sealed-bid mechanisms with discrete bid grids.  As discussed in
+\S\ref{sec:prelim:pmf}, this falls outside the discrete-PMF
+discipline and is not in scope.  All Bayesian-game results in the
+library hold for finite type and action spaces.}
+
+\leancorr{\TT{Mechanism/BayesianGame.lean} (\TT{BayesianGame},
+\TT{exAnteEU}, \TT{toKernelGame}, \TT{BayesNash},
+\TT{bayesNash\_iff\_exAnteEU}).  Supplement~§7.1.}
+
+\subsection{Mechanism design and the revelation principle}
+\label{sec:mech:revelation}
+
+A \emph{general mechanism}~\citep{Myerson1981} is a
+type-space-and-action-rule
+$M = (\Theta, \Act, g : \prod_i \Act_i \to \Players \to \RR)$;
+a strategy profile is a tuple $\sigma_i : \Theta_i \to \Act_i$.
+A \emph{direct mechanism} is a mechanism with $\Act_i = \Theta_i$;
+the canonical strategy is the identity.  The current Lean definition
+of Bayesian incentive compatibility is an ex-ante finite condition
+against constant misreports $\theta'_i$, not the full interim
+textbook condition against arbitrary type-dependent reporting rules.
+
+\begin{theorem}[Revelation principle]
+\label{thm:revelation}
+Let $M$ be a general mechanism with finite types and actions, $\mu$
+a common prior over types, and $\sigma$ a Bayesian Nash equilibrium
+of $M$.  Then the direct mechanism
+$M^{\mathrm{direct}}$ obtained by composing each player's report with
+$\sigma_i$ — i.e.\ $M^{\mathrm{direct}}(\theta) = g(\sigma(\theta))$ —
+is BIC in the library's constant-misreport sense.
+\end{theorem}
+
+\noindent The proof is the textbook argument restricted to the
+formalized deviation class:\ a constant report $\theta'_i$ in
+$M^{\mathrm{direct}}$ corresponds to the type-independent deviation
+$\theta_i \mapsto \sigma_i(\theta'_i)$ in $M$, and the Nash
+hypothesis on $\sigma$ rules out profitable deviations.
+
+\leancorr{\TT{Mechanism/MechanismDesign.lean} and
+\TT{Mechanism/RevelationPrinciple.lean} (\TT{GeneralMechanism},
+\TT{IsBNE}, \TT{toDirect}, \TT{revelation\_principle}).
+Supplement~§7.2.}
+
+\subsection{Social choice}
+\label{sec:mech:social}
+
+The library formalizes the basic social-choice setup:\ a finite
+set of alternatives, a finite set of voters with strict
+preferences, and a social welfare function or social choice
+function.  It proves the structural fragments needed downstream
+(preference profiles, the existence of a social-welfare-maximizing
+alternative under utilitarian aggregation), but does not formalize
+the impossibility-theorem chain (Arrow~\citep{Arrow1951},
+Gibbard–Satterthwaite~\citep{Gibbard1973, Satterthwaite1975});
+these are flagged in \S\ref{sec:future} as the natural next step.
+
+\leancorr{\TT{Mechanism/SocialChoice.lean}.}
+
+\subsection{Auctions}
+\label{sec:mech:auctions}
+
+The auction directory currently contains four formats at different
+levels of completeness:
+
+\begin{itemize}\itemsep4pt
+\item \emph{Vickrey (second-price)}~\citep{Vickrey1961}.  The
+highest bidder wins and pays the second-highest bid; truthful
+bidding is a weakly dominant strategy.  The proof is by case
+analysis on whether $i$'s bid exceeds the maximum other bid; in
+each case, the EU of bidding $v_i$ matches or exceeds the EU of
+any other bid.
+
+\item \emph{First-price sealed bid}~\citep{Vickrey1961}.  The
+highest bidder pays their own bid.  The file defines the
+deterministic first-price game and proves that no single bid is a
+dominant strategy under the stated non-triviality hypotheses.
+
+\item \emph{All-pay auction}~\citep{KrishnaMorgan1997}.  Every
+bidder pays their own bid regardless of winning.  The current
+formalization does not build a kernel game; it records elementary
+payoff facts such as overbidding being unprofitable, winner
+profit, rent dissipation, and a symmetric negative-payoff lemma.
+
+\item \emph{Vickrey–Clarke–Groves (VCG)}~\citep{Vickrey1961, Clarke1971,
+Groves1973}.  Generalizes Vickrey to multi-item, combinatorial
+settings:\ each agent's payment equals the externality they impose
+on others.  The library proves dominant-strategy incentive
+compatibility on a finite set of allocations and finite type
+spaces.
+\end{itemize}
+
+Vickrey and first-price are direct kernel-game constructions via
+the \TT{ofEU} adapter.  VCG is packaged as a finite setup with an
+efficient allocation rule and a payment function; all-pay is
+currently a collection of real-valued payoff lemmas.  Solution
+concepts come from \S\ref{sec:solution-concepts} wherever a full
+kernel game has been constructed.
+
+\tradeoff{Auctions are typically formalized in the literature
+under continuous bid spaces and continuous valuations; this gives
+the cleanest expressions for symmetric equilibrium bids and
+expected revenue formulas.  Our discrete formalization is
+faithful to the strategic content it currently formalizes
+(truthful bidding is dominant in Vickrey/VCG; first-price has no
+dominant bid; all-pay payoff inequalities are available) but is
+not the primary place a researcher would go to study revenue
+ranking under continuous distributions.  We treat the auction layer
+primarily as a smoke test of the core library; downstream, an
+extension to continuous auctions over mathlib's measure theory
+would be the natural next step.}
+
+\leancorr{\TT{Auctions/Vickrey.lean} (\TT{vickrey\_truthful\_dominant}),
+\TT{Auctions/FirstPrice.lean}, \TT{Auctions/AllPay.lean},
+\TT{Auctions/VCG.lean}.  Supplement~§7.3.}

@@ -1,0 +1,39 @@
+\section*{Notation and glossary}
+\addcontentsline{toc}{section}{Notation and glossary}
+\label{sec:glossary}
+
+We summarize the notation used throughout the chapter.  Names match
+the Lean library's identifiers wherever the LaTeX rendering does
+not get in the way; a separate definitional supplement lists the
+exact Lean signatures.
+
+\begin{center}\small
+\begin{tabular}{@{}p{0.24\textwidth}p{0.66\textwidth}@{}}
+\toprule
+Symbol & Meaning \\
+\midrule
+$\Players$ & player index type, almost always a finite type \\
+$\Payoff{\Players}$ & the type $\Players \to \RR$ of payoff vectors \\
+$\PMF{X}$ & probability mass functions on $X$ (discrete distributions) \\
+$\Strat_i$ & strategy type of player $i$ \\
+$\Profile$ & strategy profile: an element of $\prod_i \Strat_i$ \\
+$\Profile[i \mapsto s']$ & unilateral deviation: replace $\Profile_i$ by $s'$ \\
+$\K$ & outcome kernel $\prod_i \Strat_i \to \PMF{\Outcome}$ \\
+$\GF = (\Strat, \Outcome, \K)$ & game form: protocol layer \\
+$\KG = (\Strat, \Outcome, \util, \K)$ & kernel game: $\GF$ with utility \\
+$\toGF,$\newline$\toKG$ & forgetful and adjoinment maps between $\GF$ and $\KG$ \\
+$\EU(\Profile, i)$ & expected utility of player $i$ under profile $\Profile$ \\
+$\Pref_i, \sPref_i$ & weak / strict preference of player $i$ on $\PMF{\Outcome}$ \\
+$\IsNash, \IsBR$, etc. & solution-concept predicates \\
+$\NFG, \EFG, \MAID,$\newline$\MR, \FOSG$ & language-layer presentations \\
+$\compileTo$ & compilation arrow from a language to $\KG$ \\
+$\Iso, \Sim, \refines$ & isomorphism, simulation, refinement (game-form level) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+We freely use $\NN$, $\RR$, $\Rgeq$ for naturals, reals, and
+non-negative reals, and write $\Dirac_x$ for the Dirac (point-mass)
+distribution at $x$.  ``Finite'' always means \emph{Lean-finite},
+i.e.\ a type with a \texttt{Fintype} instance, equivalently a type
+in bijection with $\{0, \dots, n-1\}$ for some $n \in \NN$.

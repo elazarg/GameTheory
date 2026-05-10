@@ -1,0 +1,524 @@
+\section{Languages and bridges}
+\label{sec:languages}
+
+A \emph{language} in this library is a syntactic class of game
+descriptions paired with a compiler $\compileTo : \mathrm{Syntax} \to
+\KG$ that fixes its denotational semantics.  Equipping the syntax
+with an SOS-style operational semantics is optional but
+ergonomic:\ several theorems about a language are most naturally
+stated by induction on the SOS, and SOS-equivalence between source
+programs is then a structural certificate that they compile to the
+same kernel game.
+
+The library exposes five languages — normal-form (NFG),
+extensive-form (EFG), multi-agent influence diagrams (MAID),
+multi-round games (MR, with stochastic and repeated specializations),
+and factored-observation stochastic games (FOSG) — and the
+relation-parameterized expressiveness framework that relates them
+(\S\ref{sec:languages:expressiveness}).
+
+\subsection{Normal-form games}
+\label{sec:languages:nfg}
+
+The normal-form layer is the simplest:\ a normal-form game over a
+finite player type $\Players$ and a finite action family
+$\Act_i$ is the data
+\[
+  \NFG = \bigl(\,\Players,\,\{\Act_i\}_i,\,\util : ({\textstyle\prod_i}\Act_i)
+                  \to \Payoff{\Players}\,\bigr),
+\]
+i.e., a function from joint pure actions to payoff vectors.  The
+compilation $\NFG \compileTo \KG$ takes the strategy type to be
+$\Act_i$, the outcome type to be $\prod_i \Act_i$, the kernel to
+be the Dirac evaluation $\Profile \mapsto \Dirac_\Profile$, and the
+utility to be the input function.  The kernel-game image is
+deterministic; randomness in NFGs enters only through the mixed
+extension (\S\ref{sec:semantic-core:kernelgame}).
+
+The library's NFG layer also formalizes several worked subclasses
+as named structures:\ \emph{congestion games} with Rosenthal's
+potential~\citep{Rosenthal1973}, \emph{TU coalitional games} with
+the Shapley value~\citep{Shapley1953}, \emph{Nash bargaining}
+\citep{Nash1950bargaining}, \emph{stable matching} (predicates and
+structural lemmas)~\citep{GaleShapley1962}, \emph{public goods},
+and \emph{Stackelberg leader-follower}.  Each subclass states the
+content of its theorems at the level the library currently
+reaches:\ a congestion game is an exact potential game; the
+Shapley value comes with null-player, additivity, linearity, and
+symmetry lemmas; for stable matching, the predicates
+$\mathsf{IsMatching}$, $\mathsf{IsBlockingPair}$, $\mathsf{IsStable}$
+and supporting structural lemmas — the Gale–Shapley algorithm and
+existence of a stable matching are listed in \S\ref{sec:future} as
+natural extensions.  Each subclass is a direct consumer of the
+solution-concept catalogue (\S\ref{sec:solution-concepts}).
+
+\leancorr{\TT{Languages/NFG/} contains \TT{Syntax}, \TT{Compile},
+plus the worked-subclass files \TT{CongestionGame},
+\TT{CoalitionalGame}, \TT{Bargaining}, \TT{Matching},
+\TT{PublicGoods}, \TT{Stackelberg}.  Supplement~§4.1.}
+
+\subsection{Extensive-form games}
+\label{sec:languages:efg}
+
+An \emph{extensive-form game} is a finite rooted tree whose
+non-terminal nodes are owned either by Nature (chance nodes with
+a probability distribution over children) or by a player (decision
+nodes from which the player chooses one child).  Terminal nodes
+carry payoffs.  Two pieces of textbook structure on top of this
+tree are crucial.  First, the assignment of decision nodes to
+\emph{information sets}:\ a partition of each player's decision
+nodes into equivalence classes the player cannot tell apart at
+play time.  When a player moves at a node in an information set
+$I$, they know they are at some node of $I$, but not which one;
+their strategy must therefore commit to the same action across
+all nodes of $I$.  This is what makes EFGs an
+imperfect-information formalism — perfect-information games are
+the special case where every information set is a singleton.
+
+\begin{center}
+\begin{tikzpicture}[
+  font=\small,
+  node distance=8mm,
+  inner/.style={circle, draw, fill=black!8, minimum size=4mm, inner sep=1pt},
+  term/.style={rectangle, draw=none, font=\footnotesize},
+  edgelbl/.style={font=\scriptsize, midway},
+]
+\node[inner] (p1)              {1};
+\node[inner] (p2L) at (-2,-1)  {2};
+\node[inner] (p2R) at ( 2,-1)  {2};
+\node[term]  (o1)  at (-2.8,-2.1) {$(1,0)$};
+\node[term]  (o2)  at (-1.2,-2.1) {$(0,1)$};
+\node[term]  (o3)  at ( 1.2,-2.1) {$(0,1)$};
+\node[term]  (o4)  at ( 2.8,-2.1) {$(1,0)$};
+\draw (p1) -- node[edgelbl, above left]{$L$} (p2L);
+\draw (p1) -- node[edgelbl, above right]{$R$} (p2R);
+\draw (p2L) -- node[edgelbl, left]{$\ell$} (o1);
+\draw (p2L) -- node[edgelbl, right]{$r$} (o2);
+\draw (p2R) -- node[edgelbl, left]{$\ell$} (o3);
+\draw (p2R) -- node[edgelbl, right]{$r$} (o4);
+\draw[dashed, rounded corners=2pt]
+  ($(p2L)+(-0.4,0.4)$) rectangle ($(p2R)+(0.4,-0.4)$);
+\node[font=\scriptsize] at (0,-0.45) {information set};
+\end{tikzpicture}
+\end{center}
+
+\noindent
+Player~1 moves first ($L$ or $R$);  player~2 moves second but
+without observing 1's choice — so 2's two decision nodes are in
+one information set (the dashed box), and 2's pure strategies
+are just $\{\ell, r\}$, not the four functions $\{L,R\}\to\{\ell,r\}$.
+
+The library's EFG follows the textbook structure closely but
+factors it slightly differently for the type theory:\ rather than
+parameterize the tree by a player type directly, players are
+factored through an \emph{information structure}:
+\begin{equation}
+\label{eq:infostructure}
+  \InfoStruct = \bigl(\,n,\,\InfoSet : \mathrm{Fin}\,n \to \mathsf{Type},\,
+                       \mathrm{arity} : \forall p\,I,\,\NN_{>0}\,\bigr),
+\end{equation}
+mapping each player $p \in \mathrm{Fin}\,n$ to a finite type of
+information sets and each information set to a positive action
+arity.  A \emph{game tree} over $\InfoStruct$ is the inductive
+type
+\begin{equation}
+\label{eq:gametree}
+\begin{aligned}
+  \Tree(\InfoStruct, \Outcome) \;\coloneqq\;\;
+    &\mathsf{terminal}(z : \Outcome) \\
+  \mid\;& \mathsf{chance}(k, \mu : \PMF{\mathrm{Fin}\,k}, \mathrm{next} : \mathrm{Fin}\,k \to \Tree) \\
+  \mid\;& \mathsf{decision}(p, I : \InfoSet_p, \mathrm{next} : \mathrm{Fin}\,(\mathrm{arity}_p\,I) \to \Tree).
+\end{aligned}
+\end{equation}
+A decision node stores only the information-set ID; the player
+identity is recovered from the structure.  An EFG is a tree paired
+with a utility $\Outcome \to \Payoff{\Players}$.  Strategies come
+in three flavors:
+\begin{itemize}\itemsep2pt
+\item \emph{Pure}: $\Spure_p = \forall I : \InfoSet_p,\, \mathrm{Fin}\,(\mathrm{arity}_p\,I)$.
+\item \emph{Behavioral}: $\Sbeh_p = \forall I,\, \PMF{\mathrm{Fin}\,(\mathrm{arity}_p\,I)}$.
+\item \emph{Mixed}: $\Smix_p = \PMF{\Spure_p}$.
+\end{itemize}
+
+The library's EFG semantics is \emph{distributional}:\ given a
+behavioral profile $\beta : \forall p,\, \Sbeh_p$, the function
+$\evalDist(\beta, t) \in \PMF{\Outcome}$ is defined by structural
+recursion on $t$, with chance nodes binding the chance distribution
+and decision nodes binding the player's behavioral distribution at
+the relevant information set.  The compilation
+$\EFG \compileTo \KG$ takes strategies to be behavioral profiles,
+outcomes to be the EFG's $\Outcome$, the kernel to be $\evalDist$,
+and the utility to be the EFG utility.
+
+\designnote{Distributional, not deterministic, semantics.  An
+alternative would be to evaluate to a deterministic outcome under
+a pure profile and lift to mixed/behavioral profiles externally.
+We chose distributional semantics because it (a) fits chance nodes
+without ad-hoc lifting, (b) makes Kuhn's theorem
+(\S\ref{sec:theorems:kuhn}) a purely structural identity
+$\evalDist(\beta) = \evalDist(\mathrm{realize}(\mu))$ for the
+realization $\mu$ of $\beta$, and (c) fits the
+$\K : \prod_i \Strat_i \to \PMF{\Outcome}$ shape of \KG\ without
+the strategies-to-outcomes adapter.}
+
+An \emph{augmented} EFG in the FOSG-paper sense — a thin wrapper
+over an EFG that adds a public partition over all reachable
+histories and a per-player information partition over reachable
+histories, including those at which the player does not act — is
+also provided.  Standard EFG information sets are only defined at
+decision nodes for the acting player; the augmentation lifts this
+to all of history space and is the carrier on which the FOSG/EFG
+bridge (\S\ref{sec:languages:bridges}) is most naturally stated.
+
+\leancorr{\TT{Languages/EFG/} contains \TT{Syntax}, \TT{SOS},
+\TT{Compile}, \TT{CompileObs} (compilation to ObsModelCore for
+Kuhn), \TT{Augmented} (the augmented EFG), \TT{Kuhn},
+\TT{Refinements} (subgame perfection,
+\TT{EFGGame.IsSubgamePerfectEq}), \TT{Examples}, \TT{Tests}.
+Supplement~§4.2.}
+
+\subsection{Multi-agent influence diagrams}
+\label{sec:languages:maid}
+
+A \emph{multi-agent influence diagram} (MAID,
+\citealp{KollerMilch2003}) represents a game as a directed acyclic
+graph whose nodes are typed as one of three kinds:
+\begin{itemize}\itemsep2pt
+\item \emph{Chance nodes} $X$ — random variables; each carries a
+  conditional probability distribution (CPD) over its domain given
+  the realizations of its parents.  This is Nature's contribution.
+\item \emph{Decision nodes} $D$ — each owned by a specific player;
+  the parents of a decision node represent the information the
+  owning player observes when deciding, and the player chooses a
+  value in the node's finite domain as a function of those
+  parents.
+\item \emph{Utility nodes} $U$ — real-valued functions of their
+  parents; each utility node is associated with a specific player,
+  and that player's payoff is the sum of all their utility nodes.
+\end{itemize}
+
+\noindent
+The DAG structure makes causal and informational dependence
+\emph{explicit} in the syntax:\ the parent set of a decision node
+is literally the information available to the deciding player, and
+the parent set of a utility node is literally the variables it
+depends on.  Where an EFG has to flatten the same information into
+a tree with shared information sets, a MAID exposes the same
+content as a Bayesian network with decision and utility annotations.
+
+\begin{center}
+\begin{tikzpicture}[
+  font=\small,
+  node distance=12mm,
+  chance/.style ={circle,   draw, fill=black!5,  minimum size=8mm, inner sep=1pt},
+  decision/.style={rectangle,draw, fill=black!10, minimum size=8mm, inner sep=1pt},
+  utility/.style ={diamond,  draw, fill=black!8,  minimum size=8mm, inner sep=1pt},
+  arr/.style={-{Stealth[length=2mm]}, thick, black!75},
+]
+\node[chance]   (M)  at (0, 1.4)   {$M$};
+\node[decision] (D1) at (-2,0)     {$D_1$};
+\node[decision] (D2) at ( 2,0)     {$D_2$};
+\node[utility]  (U1) at (-2,-1.4)  {$U_1$};
+\node[utility]  (U2) at ( 2,-1.4)  {$U_2$};
+\draw[arr] (M)  -- (D1);
+\draw[arr] (M)  -- (D2);
+\draw[arr] (D1) -- (U1);
+\draw[arr] (D1) -- (U2);
+\draw[arr] (D2) -- (U1);
+\draw[arr] (D2) -- (U2);
+\draw[arr] (M)  to[bend right=40] (U1);
+\draw[arr] (M)  to[bend  left=40] (U2);
+\node[font=\scriptsize, anchor=west] at (3.0, 1.4)   {chance};
+\node[font=\scriptsize, anchor=west] at (3.0, 0)     {decision (player 1, 2)};
+\node[font=\scriptsize, anchor=west] at (3.0,-1.4)   {utility (player 1, 2)};
+\end{tikzpicture}
+\end{center}
+
+\noindent
+A two-player MAID:\ a market state $M$ is sampled by Nature; each
+player observes $M$ and chooses an action $D_i$; each player's
+payoff $U_i$ depends on the market state and both decisions.
+Decision nodes are squares, chance nodes are circles, utility
+nodes are diamonds.
+
+The library formalizes a finite-domain fragment:\ each node has a
+finite domain, decision-node parents specify the player's
+information, and utility nodes are real-valued.
+
+The compilation $\MAID \compileTo \KG$ proceeds via an
+intermediate \emph{frontier evaluator}.  At each step, the
+evaluator picks a node whose parents are all assigned and either
+(a) samples its chance distribution, (b) consults the player's
+strategy at the appropriate information set, or (c) accumulates
+its utility into the per-player running sum.  The order of
+evaluation is non-trivial:\ when several decision nodes share a
+parent set, the evaluator's resolution must be order-independent
+to make the compilation well-defined.  The diamond/commutation
+properties licensing the order-independent compiler are proved
+once; the same \emph{frontier-stability} pattern reappears in the
+event-graph-based protocol layer that depends on this library
+\citep{KollerMilch2003}.
+
+\tradeoff{The order-of-evaluation issue is, in our view, the
+single largest design pressure in the MAID layer.  An obvious
+alternative — fixing a topological order at compilation time —
+would simplify the proofs but build into the formalism a choice
+that no MAID-as-a-mathematical-object cares about.  We accepted
+the proof obligations and got an order-independent compiler in
+exchange.}
+
+\leancorr{\TT{Languages/MAID/} contains \TT{Syntax}, \TT{SOS},
+\TT{FrontierEval}, \TT{FrontierLemmas} (the diamond properties),
+\TT{FoldEval}, \TT{Prefix}, \TT{Compile}, \TT{CompileObs},
+\TT{Kuhn}, \TT{Theorems}.  Supplement~§4.3.}
+
+\subsection{Multi-round games, repeated games, stochastic games}
+\label{sec:languages:multiround}
+
+A multi-round game is a finite list of
+\emph{rounds}~\citep{ShohamLeytonBrown2008}, each round consisting
+of a state-dependent signal distribution (nature's joint signal),
+a per-player view function (state plus signal mapped to an
+observation), and a deterministic state transition keyed on the
+joint action profile.  Strategies are pure and memoryless at the
+protocol level — a function from the player's view to an
+\emph{optional} action — with mixed/behavioral and recall
+structure imposed externally as analysis-layer concerns.
+
+The library's compilation $\MR \compileTo \KG$ generates the
+outcome kernel by folding the round list and threading the state
+through the chain of observations and transitions.  A bounded
+horizon ensures termination.  Two specializations are formalized
+on top of the multi-round skeleton:
+\begin{itemize}\itemsep2pt
+\item \emph{Repeated games}:\ identical rounds, single payoff
+aggregation function (sum, discounted sum).  This is the carrier
+for the standard formalizations of trigger strategies, tit-for-tat,
+and folk-theorem fragments.  (A \emph{folk theorem} says that any
+feasible, individually rational payoff vector can be sustained as
+an equilibrium average payoff of a sufficiently patient
+infinitely-repeated game; the classical Friedman / Fudenberg–Maskin
+versions \citep{Friedman1971, FudenbergMaskin1986} are
+infinite-horizon and out of scope here.)
+
+\item \emph{Stochastic games}~\citep{Shapley1953stochastic}:\
+rounds chosen by state, with a stochastic transition.  Bounded
+horizon, by design.
+\end{itemize}
+
+The multi-round layer also compiles into the generic
+\emph{InfoModel}/\emph{ObsModel} substrate that the
+behavioral$\,\leftrightarrow\,$mixed Kuhn theorem
+(\S\ref{sec:theorems:kuhn}) is stated against.  This is the layer
+at which a per-round full-recall hypothesis becomes a per-round
+\emph{ActionPosteriorLocal} hypothesis sufficient for the
+mixed-to-behavioral direction.
+
+\leancorr{\TT{Languages/MultiRound/} contains \TT{Syntax},
+\TT{SOS}, \TT{Compile}, \TT{CompileObs} and its linearizations
+(\TT{CompileObsLin}, \TT{CompileObsLinAdequacy},
+\TT{CompileObsLinRecall}), \TT{RepeatedGame}, \TT{StochasticGame},
+\TT{Kuhn}, \TT{Theorems}.  Supplement~§4.4.}
+
+\subsection{Factored-observation stochastic games}
+\label{sec:languages:fosg}
+
+To explain factored-observation stochastic games we have to
+distinguish two pre-existing notions.  A \emph{stochastic
+game}~\citep{Shapley1953stochastic} is a Markov game on a finite
+state space:\ at each state, every active player simultaneously
+chooses an action; the joint action determines a stage payoff and
+a stochastic transition to a next state, and play continues to
+horizon.  This formalism handles state and transition randomness
+cleanly but is opaque about \emph{what each player observes}
+during a transition — the textbook treatment assumes either
+perfect monitoring of the state or a particular monitoring scheme
+named in prose.  A \emph{factored-observation stochastic game}
+(FOSG, \citealp{Kovarik2022}) makes the monitoring explicit and
+\emph{factored}:\ each transition produces a per-player
+\emph{private} observation (independent component per player) and
+a single \emph{public} observation visible to everyone.  A player's
+strategy is then a function of their own observation \emph{sequence}
+— the only data the player has access to.
+
+\begin{center}\small
+\begin{tabular}{@{}lp{0.62\textwidth}@{}}
+\toprule
+Component & What it adds \\
+\midrule
+state space + transition & ``where am I, and where am I going?'' \\
+active-set per state & which players must move at each state \\
+per-state available actions & legality of each player's action \\
+reward vector & per-step payoff to each player \\
+per-player private obs & what player $i$ alone sees on a transition \\
+public observation & what \emph{every} player sees on a transition \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The FOSG framework subsumes the standard formalisms used in the
+multi-agent reinforcement-learning literature (POMGs,
+Dec-POMDPs) by an appropriate choice of private and public
+observation channels, and it specializes to extensive-form games
+when the per-player observation sequence is rich enough to identify
+the current information set.  This is the modern carrier for
+imperfect-information sequential games:\ a player's strategy can
+depend only on their own observation sequence, which is
+\emph{exactly} the formal counterpart of an information set in the
+sequential setting.
+
+In the library, an FOSG carries a state space, an active-set
+function, per-player available actions, a transition kernel, a
+reward vector, per-player private observations, and a public
+observation.  Histories are recorded by an explicit history type.
+The finite-horizon FOSG kernel game is the canonical native
+carrier on which the bounded Kuhn theorem
+(\S\ref{sec:theorems:kuhn}) is proved.
+
+\leancorr{\TT{Languages/FOSG/} contains \TT{Basic}, \TT{History},
+\TT{Information}, \TT{Strategy}, \TT{Values}, \TT{Execution},
+\TT{OutcomeClosure}, \TT{Serial}, \TT{Compile}, \TT{Kuhn},
+\TT{Theorems}.  Supplement~§4.5.}
+
+\subsection{Intrinsic-form games}
+\label{sec:languages:intrinsic}
+
+A focused layer formalizes the \emph{intrinsic} (a.k.a.\
+Witsenhausen-style) representation of games following
+\citet{HeymannDeLaraChancelier2020}:\ rather than fixing an order
+in which agents act, the syntax exposes a set of agent decision
+\emph{addresses} and information sets directly, and three strategy
+types — \emph{mixed} (a distribution over a player's joint pure
+strategy space $\prod_{a \in A_p} \Lambda_a$), \emph{product-mixed}
+(independent randomization over each address), and
+\emph{behavioral} (independent randomization at each information
+set) — are defined and related propositionally.  The unconditional
+product-mixed/behavioral equivalence is the intrinsic-form analogue
+of one direction of Kuhn's theorem (\S\ref{sec:theorems:kuhn}).
+The intrinsic layer is a separate syntactic root than
+EFG/MAID/MR/FOSG, used as a target by representations that prefer
+order-independent reasoning.
+
+\leancorr{\TT{Languages/Intrinsic/Strategies.lean} for the three
+strategy types and the
+\TT{productMixedToBehavioral}\,/\,\TT{behavioral\_realizes\_productMixed}
+equivalence; \TT{PerfectRecall.lean} and \TT{Theorems.lean} for
+the perfect-recall extension.  Supplement~§4.6.}
+
+\subsection{Bridges as commuting compilations}
+\label{sec:languages:bridges}
+
+A \emph{bridge} between two languages $L_1, L_2$ is a translation
+$\tau : \mathrm{Syntax}_{L_1} \to \mathrm{Syntax}_{L_2}$ paired with
+a theorem stating that the two compilation paths agree under a
+specified semantic relation:
+\begin{equation}
+\label{eq:bridge}
+  R\bigl(\,L_1.\compileTo(x),\;L_2.\compileTo(\tau(x))\,\bigr).
+\end{equation}
+Different relations $R$ correspond to different bridge strengths:
+EU-isomorphism (\S\ref{sec:semantic-core:morphisms}) is the
+strongest; protocol simulation (utility-preserving but not
+necessarily strategy-bijective) is intermediate;
+EU-equivalence-of-equilibria is the minimum useful target.  The
+library exposes the following bridges:
+
+\begin{center}\small
+\begin{tabular}{@{}llp{0.42\textwidth}@{}}
+\toprule
+Source & Target & Relation \\
+\midrule
+NFG  & EFG  & EU-isomorphism (NFG as a depth-1 EFG) \\
+NFG  & FOSG & EU-isomorphism (NFG as a one-shot FOSG) \\
+EFG  & NFG  & EU-equivalence on the realized strategic form \\
+MAID & EFG  & strategic-form refinement (information sets preserved) \\
+EFG  & FOSG & game-form simulation (FOSG view of an EFG with serial execution) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The bridge theorems are stated as identities on the compiled
+kernel games (or game forms), and are the glue that lets a
+theorem about, say, EFG behavioral strategies be transported to a
+MAID by composing the MAID$\to$EFG bridge with the relevant
+strategic-form theorem on the EFG side.
+
+\leancorr{\TT{Languages/Bridges/} contains \TT{NFG\_EFG},
+\TT{NFG\_FOSG}, \TT{EFG\_NFG}, \TT{MAID\_EFG}, and \TT{FOSG/}
+(\TT{ObsModelCore}, \TT{AugmentedEFG}, \TT{SerialExec}).
+Supplement~§5.2.}
+
+\subsection{Relation-parameterized expressiveness}
+\label{sec:languages:expressiveness}
+
+The library packages the bridges into a generic expressiveness
+framework parameterized by a semantic relation $R$ on
+$\KG$.\footnote{In the Lean code the relation, together with its
+\TT{refl}/\TT{symm}/\TT{trans} proofs, is bundled in a record called
+\TT{EquivalenceLens}; we mention the name only because the supplement
+uses it and so does any reader who reads the source.  ``Lens'' here
+is the project's bundling vocabulary; it carries no connection to
+optics in functional programming or to lenses in category theory.}
+A \emph{language} in this layer is a pair $(\mathrm{Syntax},
+\compileTo)$ with $\compileTo$ targeting $\KG_\Players$ for some
+fixed $\Players$; a \emph{reduction} $L \to M$ over a relation $R$
+is a translation $\tau$ and a proof that
+$R(L.\compileTo(x), M.\compileTo(\tau(x)))$ holds for every source
+$x$.  Reductions compose under transitivity of $R$.
+
+\paragraph{The relation taxonomy.}\
+The library catalogues the semantic relations this framework
+supports.  They form a refinement order:\ a stronger relation
+determines a weaker one.
+
+\begin{center}\small
+\begin{tabular}{@{}lp{0.62\textwidth}@{}}
+\toprule
+Relation & What it preserves \\
+\midrule
+$\mathrm{ProtocolEquivalent}$ &
+  Protocol isomorphism on game forms (strategies and outcomes
+  relabeled bijectively, kernel preserved); ignores utility. \\
+$\mathrm{UtilityDistributionEquivalent}$ &
+  Bisimulation in \KG: both protocol and joint utility
+  distribution preserved at every profile. \\
+$\mathrm{UtilityDistributionSimulation}$ &
+  One-way version of the above; the directed reduction. \\
+$\mathrm{EUEquivalent}$ &
+  Equal expected utility for each player at corresponding profiles
+  (the equilibrium-relevant relation). \\
+$\mathrm{EUSimulation}$ &
+  Directed EU-comparison; equilibria of the source pull back to
+  the target. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent
+The bridges of \S\ref{sec:languages:bridges} are reductions in
+this framework for the relation in their column.  Context-aware
+extensions of the framework support languages whose compilation
+depends on a typing/visibility context — the natural target for
+downstream protocol-language formalizations.
+
+\paragraph{Worked theorems.}\
+Two concrete worked expressiveness theorems are packaged in this
+form.  An expressiveness claim like ``every finite NFG is
+a one-shot FOSG up to EU-isomorphism'' becomes the statement that
+$\NFG \to \FOSG$ is a reduction over the EU-isomorphism relation;
+``every bounded MAID is an EFG up to strategic-form refinement''
+becomes the analogous reduction over the refinement relation.
+
+\designnote{Expressiveness comparisons in the protocol-language
+literature are notoriously informal.  By making the relation $R$
+explicit, the library forces every comparison statement to commit
+to which structural information is preserved and which is not.
+The resulting lattice of bridges (NFG, EFG, MAID, MR, FOSG ordered
+by which relation we can prove between them) is itself a
+contribution.}
+
+\leancorr{\TT{Languages/Expressiveness/} contains \TT{Basic}
+(\TT{Language}, \TT{Reduction}), \TT{Relations} (the relation
+taxonomy), \TT{CausalContext}, \TT{MAID\_EFG}, \TT{EFG\_FOSG}.
+Supplement~§5.1.}

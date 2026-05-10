@@ -1,0 +1,326 @@
+\section{The semantic core: game forms and kernel games}
+\label{sec:semantic-core}
+
+The library is organized around two records — \TT{GameForm} and
+\TT{KernelGame} — that together act as the universal target into
+which every other representation compiles, and the universal
+domain on which every solution concept is defined.  This section
+introduces them, the morphisms between them, and the
+deviation-family schema that unifies the equilibrium notions of
+\S\ref{sec:solution-concepts}.
+
+\subsection{Game forms}
+\label{sec:semantic-core:gameform}
+
+A \emph{game form} over a player type $\Players$ is a triple
+\begin{equation}
+\label{eq:gameform}
+  \GF \;=\; \bigl(\,\Strat : \Players \to \mathsf{Type},\;
+                    \Outcome : \mathsf{Type},\;
+                    \K : {\textstyle\prod_i}\Strat_i \to \PMF{\Outcome}\,\bigr).
+\end{equation}
+A \emph{strategy profile} is an element of $\prod_i \Strat_i$,
+written $\Profile$.  The kernel $\K$ assigns to each profile a
+distribution over outcomes; outcome distributions and correlated
+outcome distributions are derived in the obvious way:
+\[
+  \mathrm{outcomeDist}(\GF, \Profile) \;=\; \K(\Profile),
+  \qquad
+  \mathrm{correlatedOutcome}(\GF, \mu) \;=\; \mu \mathbin{\bind} \K
+\]
+where $\mu \in \PMF{\prod_i \Strat_i}$ is a correlated profile
+distribution and $\bind$ is the \TT{PMF} bind.  For a finite
+$\Players$ with \TT{DecidableEq}, unilateral deviation is the
+ordinary update operation
+\[
+  \Profile[i \mapsto s'] \;\coloneqq\;
+    \Profile \text{ with coordinate } i \text{ replaced by } s'.
+\]
+Two derived families of distributions formalize the kinds of
+deviation that equilibrium notions quantify over.  The
+\emph{constant} deviation family
+\[
+  \mathrm{constDev}(\GF, \mu, i, s') \;=\;
+    \mu \mathbin{\bind} \bigl(\Profile \mapsto \Dirac_{\,\Profile[i \mapsto s']}\bigr)
+\]
+replaces $i$'s coordinate by the same $s'$ regardless of what $\mu$
+sampled.  The \emph{recommendation-dependent} family
+\[
+  \mathrm{depDev}(\GF, \mu, i, \mathrm{dev}) \;=\;
+    \mu \mathbin{\bind} \bigl(\Profile \mapsto
+      \Dirac_{\,\Profile[i \mapsto \mathrm{dev}(\Profile_i)]}\bigr)
+\]
+lets the deviation be a function of $i$'s recommendation; this is
+the family used in correlated equilibrium~\citep{Aumann1974}.
+
+\designnote{The two deviation families are kept as named records
+rather than inlined into each equilibrium notion.  This is the
+single point at which the difference between Nash, coarse
+correlated equilibrium, and correlated equilibrium becomes
+visible:\ Nash and CCE quantify over $\mathrm{constDev}$, CE
+quantifies over $\mathrm{depDev}$.  We exploit this in
+\S\ref{sec:solution-concepts:family} by stating monotonicity
+results once on the schema.}
+
+\leancorr{\TT{Core/GameForm.lean} for the record and derived
+operations; supplement~§2.1 has the full Lean signatures.}
+
+\subsection{Kernel games}
+\label{sec:semantic-core:kernelgame}
+
+A \emph{kernel game} adds a utility to a game form,
+\begin{equation}
+\label{eq:kernelgame}
+  \KG \;=\; \bigl(\,\Strat,\;\Outcome,\;\util : \Outcome \to \Payoff{\Players},\;\K\,\bigr),
+\end{equation}
+where $\Payoff{\Players} \coloneqq \Players \to \RR$.  The
+\emph{expected utility} of player $i$ under profile $\Profile$ is
+\begin{equation}
+\label{eq:eu}
+  \EU(\KG, \Profile, i) \;=\; \sum_{\omega} \K(\Profile)(\omega)\;\util(\omega)(i),
+\end{equation}
+a finite sum under the finite-outcome hypotheses used by the major
+theorems.  At the core API level the implementation is mathlib's
+unordered-sum expectation for $\PMF{\cdot}$; finite-support lemmas
+recover the displayed formula.  Expected utility is the only place
+where utility enters a numerical inequality.
+
+The conversion $\toGF : \KG \mapsto \GF$ forgets utility; the
+inverse $\toKG_u : \GF \mapsto \KG$ adjoins a utility $u$.  These
+are mutual inverses up to record equality.
+
+A kernel game over a finite outcome and finite-strategy domain
+admits an explicit \emph{mixed extension}:\ each player's strategy
+type is replaced by $\PMF{\Strat_i}$, and the outcome kernel
+samples a pure profile from the independent product
+$\bigotimes_i \Profile_i \in \PMF{\prod_i \Strat_i}$ and applies
+the original kernel.  The mixed extension is itself a kernel game,
+indexed by the same $\Players$, and serves as the carrier of mixed
+strategies in Nash existence (\S\ref{sec:theorems:nash-mixed}).
+
+\leancorr{\TT{Core/KernelGame.lean} (\TT{KernelGame},
+\TT{KernelGame.eu}, \TT{KernelGame.mixedExtension}, \TT{reindex});
+\TT{Core/GameForm.lean} (\TT{toGameForm}, \TT{withUtility} and the
+round-trip lemmas); \TT{Math/PMFProduct.lean} (\TT{pmfPi});
+supplement~§2.2--2.4.}
+
+\subsection{Solution concepts as predicates: the \texttt{*For} style}
+\label{sec:semantic-core:for-style}
+
+The library follows a uniform style for solution concepts that
+rewards a brief explanation, since it is unusual.  Each concept
+exists in two forms:
+\begin{itemize}
+\item \emph{EU-specific.} $\IsNash$, $\IsBR$,
+$\WDom$, $\SDom$, $\IsCorrelatedEq$, $\IsCoarseCorrelatedEq$:
+  predicates on $\KG$ phrased directly in terms of the expected
+  utility \eqref{eq:eu}.
+
+\item \emph{Preference-parameterized.} $\IsNashFor$,
+  $\IsBRfor$, $\WDomFor$, $\SDomFor$,
+  $\IsCorrelatedEq_{\mathit{For}}$, $\ldots$:\ predicates on $\GF$
+  taking an additional argument, a preference relation
+  $\Pref : \Players \to \PMF{\Outcome} \to \PMF{\Outcome} \to \mathsf{Prop}$
+  on outcome distributions.  ``$\Pref_i \,d_1\,d_2$'' means
+  ``player $i$ weakly prefers distribution $d_1$ over $d_2$.''
+\end{itemize}
+The two are tied together by lemmas of the shape
+\[
+  \KG.\IsNash(\Profile) \;\Longleftrightarrow\;
+    \KG.\toGF.\IsNashFor\bigl(\Pref^{\EU}_{\KG},\,\Profile\bigr),
+\]
+where $\Pref^{\EU}_{\KG,\,i}\,d_1\,d_2 \coloneqq \mathbb{E}_{d_1}[\util(\cdot)(i)] \ge
+\mathbb{E}_{d_2}[\util(\cdot)(i)]$, the expected-utility weak
+preference induced by $\KG$.
+
+\paragraph{Why two layers?}  Two reasons.  First, several
+classical results — Kuhn's theorem, the existence of correlated
+equilibria, the dominance$\,\Rightarrow\,$Nash chain — are
+\emph{purely structural}: they hold whenever players have a
+preorder on outcome distributions, regardless of whether that
+preorder comes from expected utility, lexicographic preferences,
+or maximin attitudes.  Stating them at the $\GF.\IsNashFor$ layer
+keeps them generic and stops them from masquerading as
+EU-specific theorems.  Second, the EU-specific layer keeps the
+common case ergonomic:\ users who care only about expected
+utility never have to mention preference relations.
+
+\paragraph{Why explicit-argument preferences and not a typeclass?}
+This is a question worth posing directly, since at first glance a
+typeclass \TT{[Preference G]} carrying the preference relation —
+with a default \TT{euPref} instance — would make the EU-only user's
+syntax uniform (\TT{G.IsNash}~\Profile\ in every case).  We considered
+this and rejected it because a substantial fraction of the
+library's theorems quantify over \emph{more than one} preference
+simultaneously, and typeclasses fit such theorems poorly:
+
+\begin{itemize}\itemsep2pt
+\item Monotonicity (\TT{IsNashFor.mono}, \TT{IsDominantFor.mono})
+  takes two preferences $\Pref^{(1)}, \Pref^{(2)}$ together with a
+  pointwise-implication hypothesis between them, and concludes a
+  predicate for $\Pref^{(1)}$ from a predicate for $\Pref^{(2)}$.
+
+\item Pareto dominance is parameterized by a \emph{pair} $(\Pref,
+  \sPref)$ of weak-and-strict preferences satisfying compatibility
+  conditions; \TT{ParetoDominatesFor pref spref σ τ} takes both
+  explicitly.
+
+\item The transport theorem of
+  \S\ref{sec:semantic-core:transport} relates a preference on a
+  source game form to its pullback along an outcome bijection — two
+  preferences in the same statement, one a function of the other.
+
+\item Strict-from-weak / weak-from-strict bridges of
+  \S\ref{sec:solution-concepts:dominance} relate a strict preference
+  to a weak preference under a hypothesis $\sPref \Rightarrow \Pref$.
+\end{itemize}
+
+Each of these binds two preferences at once.  A typeclass-based
+design would either force users to construct ad-hoc local instances
+for every multi-preference argument and switch between them by
+\TT{let} bindings (noisy and error-prone), or fall back to
+explicit arguments for these theorems anyway (defeating the
+uniformity the typeclass was supposed to deliver).  Explicit
+arguments are the natural shape from the start, and we add the
+EU-specific predicates as a parallel surface so that the EU-only
+ergonomic is recovered without invoking typeclass inference at
+all.
+
+There is one place where the library does use a typeclass on
+preferences:\ \TT{PrefPreorder pref} asserts that a preference
+relation is a preorder (reflexive and transitive).  This is the
+correct use of a typeclass — it expresses a \emph{property} of a
+given relation, not a choice between relations, and Lean's
+inference resolves it without any of the diamond/multi-preference
+issues above.
+
+\tradeoff{The cost of the two-layer presentation is one extra
+indirection for non-EU users (they must instantiate the preference
+explicitly) and a handful of \texttt{\_iff\_} bridges to keep the
+EU-specific definitions in step with their preference-parameterized
+counterparts.}
+
+\subsection{Morphisms, simulations, and isomorphisms}
+\label{sec:semantic-core:morphisms}
+
+Game forms and kernel games each support a notion of structured
+map closed under composition with identities, with the standard
+identity- and associativity laws proved in the library.  We treat
+them as ordinary categories of presentation but do not exploit
+further categorical structure in the chapter.  At the game-form
+level, a \emph{protocol map} from $\GF \to \GF'$ is a triple
+\[
+  (\stratMap, \outcomeMap, \mathrm{preserved})
+  \quad\text{with}\quad
+  \stratMap : \forall i, \Strat_i \to \Strat'_i,\;
+  \outcomeMap : \Outcome \to \Outcome',
+\]
+satisfying the \emph{outcome-kernel preservation} law
+\begin{equation}
+\label{eq:protocolmap}
+  \K'(\stratMap \circ \Profile) \;=\;
+    \K(\Profile) \mathbin{\bind} \bigl(\omega \mapsto \Dirac_{\,\outcomeMap(\omega)}\bigr).
+\end{equation}
+This is the discrete-Giry analogue of a coalgebra homomorphism,
+and is what makes a bridge between two languages strategically
+faithful (i.e.\ Nash equilibria pull back, dominance pulls back,
+etc., under hypotheses on $\stratMap$).  At the \TT{KernelGame}
+level we add the utility-preservation condition
+$\util'(\outcomeMap(\omega))(i) = \util(\omega)(i)$, yielding a
+\emph{kernel-game simulation}, and call the morphism an
+\emph{EU-isomorphism} when both $\stratMap$ and $\outcomeMap$ are
+bijective and the inverse is also a simulation.
+
+\leancorr{Morphism records in \TT{Core/GameMorphism.lean}
+(\TT{ProtocolMap}, \TT{KernelGame.Morphism}, with the
+\TT{id\_comp}/\TT{comp\_id}/\TT{comp\_assoc} laws);
+\TT{Core/GameSimulation.lean} for kernel-game simulations and
+bisimulations; \TT{Core/GameIsomorphism.lean} for isomorphisms;
+\TT{Core/UtilityInvariance.lean} packages the standard transport
+results; \TT{Concepts/EUProperties.lean} and
+\TT{Concepts/OfEUProperties.lean} record EU structural properties
+and the \TT{ofEU} round-trip.  Supplement~§2.6.}
+
+\subsection{Reindexing and the player type}
+\label{sec:semantic-core:reindex}
+
+The player type $\Players$ is left abstract throughout, but
+bridges between languages typically pick a canonical finite
+player type — most often $\mathrm{Fin}\,n$ for the cardinality of
+the source's player set.  The library provides
+$\mathrm{reindex} : (\Players \simeq \kappa) \to \KG_\kappa \to
+\KG_\Players$, transporting strategy spaces, utilities, and the
+outcome kernel along an equivalence.  This is presentation
+bookkeeping, but it is the kind of bookkeeping that, omitted, leaks
+$\mathrm{Fin}\,n$ assumptions into every downstream consumer.  The
+chapter writes $\KG[e]$ informally for the reindexed game.
+
+\subsection{Transport of solution concepts under bridges}
+\label{sec:semantic-core:transport}
+
+The use we make of protocol maps and EU-isomorphisms in
+\S\ref{sec:languages:bridges} relies on a small family of
+transport theorems we record here for reference.  Each is a
+direct calculation against the preservation law
+\eqref{eq:protocolmap} and the definition of the relevant
+solution concept.
+
+\begin{theorem}[Solution-concept transport]
+\label{thm:transport}
+Let $\GF, \GF'$ be game forms over the same player type
+$\Players$ and let $f : \GF \to \GF'$ be a protocol map with
+$\stratMap_i$ bijective for every $i$ and $\outcomeMap$ bijective.
+Let $\Pref'$ be a preference on $\PMF{\Outcome'}$ and let
+$\Pref_i\,d_1\,d_2 \coloneqq \Pref'_i\,(\outcomeMap_*\,d_1)\,(\outcomeMap_*\,d_2)$
+denote its pullback along the outcome bijection.  Then for every
+profile $\Profile$,
+\[
+  \GF.\IsNashFor(\Pref, \Profile)
+  \;\Longleftrightarrow\;
+  \GF'.\IsNashFor\bigl(\Pref',\,\stratMap \circ \Profile\bigr).
+\]
+The analogous statements hold for $\IsBRfor$, $\IsDomFor$,
+$\WDomFor$, $\SDomFor$, $\IsCorrelatedEqFor$, and
+$\IsCoarseCorrelatedEqFor$.  Specializing $\Pref$ to expected
+utility under a kernel-game simulation that preserves utility
+yields the EU-specific transport laws.
+\end{theorem}
+
+\noindent
+This is the operational content of contributions 3 and 5 in
+\S\ref{sec:introduction}:\ a bridge between two languages, viewed
+as a protocol-preserving (resp.\ EU-preserving) map between the
+compiled game forms (resp.\ kernel games), automatically
+transports solution concepts.  Concrete bridges
+(\S\ref{sec:languages:bridges}) instantiate the theorem with
+specific maps and inherit a Nash/dominance/correlated-eq
+preservation law for free.
+
+\leancorr{\TT{Core/UtilityInvariance.lean} and
+\TT{Core/GameSimulation.lean}.}
+
+\subsection{Designated facts}
+\label{sec:semantic-core:designated}
+
+Three theorems on $\GF$ deserve early visibility:
+\begin{itemize}\itemsep2pt
+\item \emph{Dominance implies Nash}:\ for any preference
+$\Pref$, if every player's strategy in $\Profile$ is
+$\Pref$-dominant, $\Profile$ is a $\Pref$-Nash equilibrium.
+
+\item \emph{Best-response characterization}:\ $\Profile$ is
+$\Pref$-Nash iff each $\Profile_i$ is a $\Pref$-best response
+against the rest.
+
+\item \emph{Correlated $\Rightarrow$ coarse correlated}:\ every
+correlated equilibrium is a coarse correlated equilibrium.
+\end{itemize}
+None of these depends on EU; they hold for any preference
+preorder.  The EU-specific versions are corollaries of the
+generic statements via the EU/preference iff-bridges of
+\S\ref{sec:semantic-core:for-style}.
+
+\leancorr{All three in \TT{Core/GameForm.lean}
+(\TT{dominant\_is\_nash\_for},
+\TT{isNashFor\_iff\_bestResponseFor},
+\TT{IsCorrelatedEqFor.toCoarseCorrelatedEqFor}).}

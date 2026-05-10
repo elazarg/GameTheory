@@ -1,0 +1,303 @@
+\section{Major theorems}
+\label{sec:theorems}
+
+The library proves the central existence and structural theorems
+of finite non-cooperative game theory.  The proofs are stated on
+the kernel-game/game-form layer (or on layered information-model
+abstractions; see \S\ref{sec:theorems:kuhn}), and inherited by
+every language via $\compileTo$.  This section sketches their
+content; full proofs are in the cited Lean files.
+
+\subsection{Existence of mixed Nash equilibria}
+\label{sec:theorems:nash-mixed}
+
+\begin{theorem}[Mixed Nash existence; \TT{KernelGame.mixed\_nash\_exists}]
+\label{thm:nash-mixed}
+Let $\KG$ be a kernel game with $\Players$ finite, every $\Strat_i$
+finite and non-empty, and $\Outcome$ finite.  Then the mixed
+extension $\KG^{\mathrm{mix}}$ admits a Nash equilibrium:\ a
+profile $\Profile^* \in \prod_i \PMF{\Strat_i}$ with
+\[
+  \forall i,\,\forall \tau \in \PMF{\Strat_i}.\quad
+    \EU(\KG^{\mathrm{mix}}, \Profile^*, i)
+      \;\ge\;
+    \EU(\KG^{\mathrm{mix}}, \Profile^*[i \mapsto \tau], i).
+\]
+\end{theorem}
+
+\noindent\emph{Proof structure.}\ Following Nash's
+original~\citep{Nash1950, Nash1951}, we define the gain map
+\[
+  \Phi_i(\Profile)(s)
+    \;=\; \frac{\Profile_i(s) + (\mathrm{gain}_i(\Profile, s))^+}
+              {1 + \sum_{s'} (\mathrm{gain}_i(\Profile, s'))^+},
+  \qquad
+  \mathrm{gain}_i(\Profile, s)
+    \;=\;
+    \EU(\KG^{\mathrm{mix}}, \Profile[i \mapsto \Dirac_s], i)
+      - \EU(\KG^{\mathrm{mix}}, \Profile, i),
+\]
+which sends the product simplex $\prod_i \Delta(\Strat_i)$
+continuously into itself.  The Brouwer fixed-point theorem from
+the \TT{fixed-point-theorems-lean4}
+package~\citep{harfeFixedPointTheorems} is lifted to the product
+of standard simplices, and a fixed point of $\Phi$ is shown to be
+a Nash equilibrium by an algebraic argument bracketing the positive
+parts.
+
+\paragraph{Why mathlib's Brouwer.}  The continuity content of the
+proof — that the Nash map is continuous on a compact convex
+polytope — is genuinely topological, and mechanizing the topology
+of the simplex from scratch would dwarf the rest of the proof.
+mathlib already provides a Brouwer-on-the-disk theorem and the
+infrastructure to lift it across homeomorphisms; we use the
+standard simplex's homeomorphism to a closed ball.  The product
+of simplices step is handled by an explicit product-fixed-point
+lemma rather than by appealing to the product theorem in topology.
+
+\tradeoff{Brouwer is non-constructive, so mixed Nash existence is
+\TT{noncomputable}.  A constructive existence proof would require
+either an explicit algorithmic construction
+(Lemke–Howson~\citep{LemkeHowson1964} for two-player games, or
+the support-enumeration class for finite games more generally) or
+a constructive fixed-point theorem on a finite simplicial
+structure (Sperner's lemma~\citep{Sperner1928} suffices for
+two-player games but the multi-player extension is not as clean).
+We took the topological route because an existing Lean~4
+mechanization of the Brouwer fixed-point theorem was available
+as the standalone \TT{fixed-point-theorems-lean4}
+package~\citep{harfeFixedPointTheorems}, which proves Brouwer for
+nonempty compact convex subsets of finite-dimensional normed
+spaces via a cubical Sperner's-lemma route (Kuhn 1960); this
+gave us a ready dependency in the right shape for arbitrary $n$
+players and let us focus on the strategic-form content of the
+proof.  Algorithm-level Nash existence is independent enough to
+live in a downstream module.}
+
+\leancorr{Statement \TT{KernelGame.mixed\_nash\_exists} in
+\TT{Theorems/NashExistenceMixed.lean}; the product-simplex
+Brouwer wrapper in \TT{Concepts/ProductSimplexBrouwer.lean}.
+Supplement~§6.1.}
+
+\subsection{Existence of correlated and coarse correlated equilibria}
+\label{sec:theorems:correlated-existence}
+
+\begin{theorem}[CE / CCE existence; \TT{KernelGame.correlatedEq\_exists}, \TT{coarseCorrelatedEq\_exists}]
+\label{thm:ce-exists}
+Under the same finiteness hypotheses as
+\Cref{thm:nash-mixed}, $\KG$ admits a correlated equilibrium and a
+coarse correlated equilibrium.
+\end{theorem}
+
+\noindent\emph{Proof.}\ The independent product distribution
+$\bigotimes_i \Profile^*_i$ over the mixed Nash profile
+$\Profile^*$ of \Cref{thm:nash-mixed} is a correlated equilibrium
+of the original $\KG$ (every recommendation-dependent deviation
+factors through a constant-strategy unilateral deviation in
+$\KG^{\mathrm{mix}}$).  CCE existence is the corollary
+$\Pref\text{-CE}\subseteq\Pref\text{-CCE}$
+(\S\ref{sec:solution-concepts:correlated}).
+
+\tradeoff{This route gives CE existence as a corollary of
+mixed Nash existence and is the cleanest path through the
+finite-game machinery already in the library.  Hart and
+Mas-Colell's regret-matching no-regret learning
+construction~\citep{HartMasColell2000} produces CCE existence
+constructively without going through Brouwer.  We have not
+formalized regret-matching itself, but the existence theorem is
+still available as a corollary of Nash existence; if a future
+constructive Nash-existence proof becomes available the dependency
+inverts trivially.}
+
+\leancorr{\TT{KernelGame.correlatedEq\_exists} and
+\TT{coarseCorrelatedEq\_exists} in
+\TT{Theorems/CorrelatedEqExistence.lean}.  Supplement~§6.2.}
+
+\subsection{The minimax theorem}
+\label{sec:theorems:minimax}
+
+\begin{theorem}[Von Neumann's minimax; \TT{KernelGame.von\_neumann\_minimax}]
+\label{thm:minimax}
+Let $\KG$ be a finite two-player zero-sum kernel game.  There exist
+a real value $v$ and a mixed Nash profile $\sigma$ of
+$\KG^{\mathrm{mix}}$ such that player $1$ cannot push player $0$'s
+payoff below $v$ by deviating from $\sigma_1$, and player $0$ cannot
+push their payoff above $v$ by deviating from $\sigma_0$:
+\[
+  \EU(\KG^{\mathrm{mix}}, \sigma, 0) = v,\qquad
+  \forall s_1,\ \EU(\KG^{\mathrm{mix}}, \sigma[1 \mapsto s_1], 0) \ge v,
+\]
+\[
+  \forall s_0,\ \EU(\KG^{\mathrm{mix}}, \sigma[0 \mapsto s_0], 0) \le v.
+\]
+Moreover, all mixed Nash equilibria of a two-player zero-sum game
+give player $0$ the same expected utility.
+\end{theorem}
+
+\noindent\emph{Proof.}\ \Cref{thm:nash-mixed} gives existence of a
+mixed Nash equilibrium.  In a two-player zero-sum game, mixed Nash
+profiles give saddle-style inequalities for $\EU(\cdot, 0)$,
+which combine with the zero-sum-Nash equality lemma and mixed Nash
+existence to deliver the displayed guarantees.  The classical
+max-min/min-max equality is the standard mathematical reading of
+the finite saddle inequalities; the Lean theorem is stated in the
+guarantee form above.
+
+\leancorr{Statement \TT{KernelGame.von\_neumann\_minimax} in
+\TT{Theorems/Minimax.lean}; supporting zero-sum-Nash equality in
+\TT{Concepts/ZeroSumNash.lean} (\TT{IsZeroSum.nash\_eu\_eq}).
+Supplement~§6.3.}
+
+\subsection{Backward induction (Zermelo) and the one-shot deviation principle}
+\label{sec:theorems:zermelo-odp}
+
+A \emph{subgame-perfect equilibrium}~\citep{Selten1965} (SPE) of
+an extensive-form game is a strategy profile that is a Nash
+equilibrium not just of the whole game but of every subgame:\ the
+restriction of $\sigma$ to any decision node and its descendants
+is itself Nash on the subtree rooted there.  This rules out
+``empty threats''  — Nash profiles that prescribe a player to do
+something off-path that they would not actually want to do if the
+off-path subgame were reached.  In a finite perfect-information
+tree, SPE is the standard refinement of Nash equilibrium, and is
+the equilibrium concept the theorems below characterize.
+
+\begin{theorem}[One-shot deviation principle]
+\label{thm:odp}
+Let $G$ be a finite perfect-information extensive-form game.  A pure
+profile $\sigma$ is a subgame-perfect equilibrium of $G$ iff it has
+no profitable one-shot deviation:\ at every reachable decision node,
+the action prescribed by $\sigma$ yields at least as much expected
+utility (holding the rest of $\sigma$ fixed) as any alternative.
+\end{theorem}
+
+\begin{theorem}[Zermelo's backward induction]
+\label{thm:zermelo}
+Every finite perfect-information extensive-form game has a pure
+subgame-perfect equilibrium.
+\end{theorem}
+
+\noindent The backward induction itself constructs, by recursion
+on the tree, a profile with no profitable one-shot deviation; the
+ODP closes the loop to subgame-perfection.  Two non-trivial
+ingredients are worth flagging:
+\begin{itemize}\itemsep2pt
+\item \emph{Disjointness of subtrees in perfect-info trees}:\ in
+a perfect-info tree, sibling subtrees have disjoint information-set
+supports.  This is what allows backward induction to fix actions
+at a decision node without breaking optimality elsewhere.
+
+\item \emph{Reachable-decision quantification}:\ the ODP's
+hypothesis quantifies over reachable decision nodes only.  An
+explicit reach-by relation makes this precise and lets the proof
+ignore unreachable nodes whose action choice cannot affect EU.
+\end{itemize}
+
+\tradeoff{Backward induction is constructively well-defined on a
+finite tree, but the library's Zermelo is \TT{noncomputable}
+because intermediate steps invoke classical reasoning to compare
+real-valued utilities.  A computable variant restricting to
+rational utilities would compile but is not packaged.}
+
+\leancorr{Statements \TT{EFG.oneShotDeviation\_iff\_spe} and
+\TT{EFG.zermelo} in \TT{Theorems/OneShotDeviation.lean} and
+\TT{Theorems/Zermelo.lean}; the subtree disjointness lemma is
+\TT{perfectInfo\_disjoint\_subtrees}; the reachability relation
+is \TT{EFG.ReachBy}.  Supplement~§6.4.}
+
+\subsection{Kuhn's theorem: \texorpdfstring{behavioral $\leftrightarrow$ mixed strategies}{behavioral vs. mixed strategies}}
+\label{sec:theorems:kuhn}
+
+Kuhn's theorem~\citep{Kuhn1953} relates two carriers of randomness
+in extensive-form games:\ a \emph{mixed strategy} is a
+distribution over pure strategies (a single global lottery),
+while a \emph{behavioral strategy} chooses an independent local
+lottery at each information set.  The two are payoff-equivalent
+under recall conditions; without recall, the asymmetry is
+genuine.
+
+The library proves Kuhn's theorem on a representation-neutral
+substrate, the \emph{observation model}:\ a tuple
+$(\sigma, \mathrm{Obs}, \Act)$ recording the world state, each
+player's observation type, and the per-observation action arity.
+A behavioral profile is a per-player function
+$\InfoState_i \to \PMF{\Act_i}$; a mixed profile is a per-player
+distribution over the deterministic functions
+$\InfoState_i \to \Act_i$.\footnote{Notational reconciliation:\
+the Lean code uses \TT{runDist}/\TT{runDistPure} for the
+profile-evaluation function on the observation-model carrier; we
+write $\evalDist$ throughout the chapter for uniformity with the
+EFG-language naming.  The two refer to the same operation
+specialized to the relevant carrier.}
+
+\begin{theorem}[Kuhn behavioral $\to$ mixed]
+\label{thm:kuhn-bm}
+Under the bounded-horizon hypothesis (no infinite traces) and the
+\emph{no-non-trivial info-state repeat} hypothesis, every
+behavioral profile $\beta$ admits an equivalent mixed profile
+$\mu(\beta)$ in the sense
+\[
+  \evalDist(\beta) \;=\; \mu(\beta) \mathbin{\bind} \evalPure.
+\]
+\end{theorem}
+
+\begin{theorem}[Kuhn mixed $\to$ behavioral]
+\label{thm:kuhn-mb}
+Under per-step semantic locality assumptions (sufficient for the
+\emph{ActionPosteriorLocal} property), every mixed profile $\mu$
+admits an equivalent behavioral profile $\beta(\mu)$ in the sense
+\[
+  \evalDist(\beta(\mu)) \;=\; \mu \mathbin{\bind} \evalPure.
+\]
+\end{theorem}
+
+\noindent The two directions are not symmetric.  $B \to M$ does
+not need recall — the mixed lottery can be constructed
+ex-ante by independent product across information states — but
+does need horizon-separation (which holds on snapshot-refined
+$\InfoState$'s).  $M \to B$ requires the per-step recall property
+that, given a player's information state, the conditional
+distribution of their action under $\mu$ does not depend on
+information \emph{outside} the player's recall.  This is
+strictly weaker than perfect recall in the textbook sense:\ it
+does not require remembering one's own past observations
+literally, only that the action conditional has the right
+locality.
+
+The snapshot-refined information-state structure is packaged as a
+derived layer on top of an arbitrary observation model.  A second
+proof of the $M \to B$ direction is given via the mixed-Nash-induced
+correlated distribution.  Language-specific Kuhn theorems for EFG,
+MAID, MR, and FOSG follow by composing the language's compilation
+to the observation-model layer with the generic theorem.
+
+\tradeoff{Stating Kuhn on the observation-model layer rather than
+on a specific syntactic class of EFGs is the single largest piece
+of abstraction work in the library.  The benefit is that one proof
+serves every language with a generic compilation through that
+layer; the cost is a stack of technical infrastructure
+(information-state snapshots, the locality predicates) that is not
+in the textbook proof.  We judge the tradeoff to be sharply
+positive:\ language-specific Kuhn theorems become single-line
+corollaries of a single core result.}
+
+\leancorr{\TT{Theorems/Kuhn/} contains \TT{ObsModel} (the
+snapshot-refined wrapper), \TT{ObsModelCore}, \TT{KuhnModel}, the
+two proof files \TT{BehavioralToMixedCore} and
+\TT{MixedToBehavioralCore}, and \TT{CorrelatedRealization} (the
+alternative $M \to B$ route).  The hypothesis predicates
+\TT{NoNontrivialInfoStateRepeat}, \TT{HorizonSeparation},
+\TT{ActionPosteriorLocal}, \TT{PerStepPlayerRecall} live on
+\TT{ObsModelCore}.  Supplement~§6.5.}
+
+\subsection{Welfare and welfare theorems}
+\label{sec:theorems:welfare}
+
+The library packages the basic welfare analysis:\ social welfare
+is well-defined under finiteness, every
+team-game welfare maximizer is Nash, and the price of stability
+in a team game is $1$.  We do not formalize the deeper welfare
+theorems of mechanism design here — they live in
+\S\ref{sec:mechanism-auctions}.
+
+\leancorr{\TT{Concepts/WelfareTheorems.lean}.}

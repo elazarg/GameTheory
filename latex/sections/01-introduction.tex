@@ -1,0 +1,141 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Game theory has long been a stable consumer of formal-mathematical
+notation, but its primary objects — strategy spaces, equilibria,
+mechanisms — are presented in textbooks~\citep{OsborneRubinstein1994,
+MaschlerSolanZamir2013, ShohamLeytonBrown2008, Myerson1991} in a
+mixture of styles that resists direct mechanization.  A
+mechanization must commit, line by line, to whether ``a game'' means
+a tree, a payoff matrix, an information-set diagram, a stochastic
+process, or a Bayesian belief structure; whether ``a strategy'' is a
+function on histories, on information sets, or on observation
+sequences; whether ``probability'' lives in the discrete or the
+measure-theoretic world; and whether ``equilibrium'' is a predicate
+on a single profile, a profile distribution, or a correlation
+device.  The textbook style routinely picks the most convenient
+answer locally, then quietly switches when the next theorem
+benefits from a different one.
+
+This chapter describes a Lean~4 library that picks one answer at
+the bottom and pays the cost of plumbing every other notion through
+it.  At the bottom is a finite, discrete-probability, utility-aware
+object — the \emph{kernel game}.  Every other representation in the
+library — normal-form, extensive-form, multi-agent influence
+diagrams, multi-round games, factored-observation stochastic games
+— is a \emph{language} whose semantics is a kernel game.  Solution
+concepts are defined once on the kernel-game (and game-form) layer
+and inherited by every language.  Theorems about specific
+representations are stated either as theorems about their kernel
+games or as theorems about commuting compilations between languages.
+
+\subsection{Contributions}
+
+\begin{enumerate}[leftmargin=*]
+
+\item \emph{A semantic core that is small enough to share.}  The
+\TT{KernelGame} record (\S\ref{sec:semantic-core}) and its
+utility-free shadow \TT{GameForm} are tiny:\ a strategy family, an
+outcome type, a stochastic kernel, and (for kernel games) a utility.
+Solution concepts are defined as predicates on this carrier and on
+\TT{GameForm}, parameterized by an arbitrary preference relation on
+outcome distributions.  Every representation downstream — and every
+external consumer of the library — works against the same predicate
+schema.
+
+\item \emph{A protocol/preference split that pays for itself.}
+Following classical mechanism-design practice~\citep{Myerson1991},
+we separate the strategy-and-outcome structure (the \emph{game
+form}) from the payoff function.  Lean lets us make the split
+structural rather than rhetorical:\ \TT{GameForm} is a record without
+\TT{utility}, and \TT{KernelGame} = \TT{GameForm} + \TT{utility} via
+a definitional adjunction.  This lets us state Kuhn's theorem,
+information-set machinery, and unilateral deviation as game-form
+results — independent of preferences — and instantiate Nash,
+dominance, correlated equilibrium, and Pareto efficiency for any
+preference relation on outcome distributions.  Expected-utility
+preferences come for free as a special case.
+
+\item \emph{Languages and bridges as commuting compilations.}  Each
+language layer (NFG, EFG, MAID, MultiRound, FOSG) ships with
+syntax, an SOS-style operational semantics, and a denotational
+\TT{toKernelGame} that is the official semantic anchor.  Bridges
+between languages are not merely translations between syntactic
+objects but theorems that two compilation paths to the same kernel
+game agree.  This is what lets, for example, an EFG strategy theorem
+be transported to a MAID by composing two bridges, without
+re-proving anything strategic.
+
+\item \emph{Classical theorems, mechanized.}  Existence of mixed
+Nash equilibria (via Brouwer on the product simplex, lifted from
+mathlib's fixed-point theory), of correlated and coarse correlated
+equilibria, the minimax theorem, the one-shot deviation principle,
+Zermelo's backward induction, and Kuhn's
+behavioral-vs-mixed-strategy equivalence are all stated and proved
+on the \TT{KernelGame} / \TT{GameForm} layer.  Their statements live
+once; their consequences for any specific language layer are
+corollaries.
+
+\item \emph{An expressiveness layer.}  Beyond raw compilation, the
+library exposes a \emph{relation-parameterized expressiveness
+framework}:\ a comparison between two languages is a translation
+on syntax paired with a soundness theorem stating that the
+compiled kernel games agree under a chosen relation $R$
+(EU-isomorphism, simulation, refinement, etc.;
+\S\ref{sec:languages:expressiveness}).  This is what gives
+substantive content to claims like ``every finite NFG is a
+one-shot FOSG'' or ``every bounded MAID is an EFG up to
+strategic-form refinement,'' both of which are mechanized as
+$R$-reductions in this framework; comparisons that are not in the
+library (e.g., MAID directly to multi-round) appear as targets in
+\S\ref{sec:future}.
+
+\item \emph{Mechanism-design and auction worked examples.}  Bayesian
+games, a finite revelation-principle formulation, social-choice
+machinery, and auction fragments (Vickrey, first-price, all-pay, VCG)
+are formalized as consumers of the library.  The auction layer is
+deliberately uneven:\ Vickrey and VCG carry dominant-strategy
+truthfulness theorems, first-price records a no-dominant-strategy
+result, and all-pay currently consists of format-specific payoff
+lemmas.
+\end{enumerate}
+
+\subsection{What this library is not}
+
+It is not a measure-theoretic foundation.  All probability is
+discrete, encoded by mathlib's \TT{PMF}~\citep{mathlib2020} (we
+explain in \S\ref{sec:preliminaries} what is gained and lost by this
+choice).  It is not a computational engine:\ many definitions are
+\TT{noncomputable}, depending on classical choice for irrelevant
+case splits, and we are explicit about where a constructive
+implementation would diverge.  It is not a coverage of continuous
+games:\ the theorem layer works under finite carrier hypotheses, and
+the core expectation operator reduces to finite sums in those cases.
+It is, finally, not a stand-alone proof assistant for
+game-theoretic claims:\ it is a mechanized library, designed to be
+imported, depended on, and extended.
+
+A separate \emph{Definitional Supplement} accompanies this chapter.
+The supplement documents the Lean signatures of every major object
+and theorem with explicit textbook correspondence, so a reader
+who wants to verify that ``what the library calls Nash equilibrium
+is the textbook Nash equilibrium'' can do so by inspection.  The
+chapter is the narrative; the supplement is the faithfulness
+certificate.  Cross-references throughout this chapter point to
+the relevant supplement section.
+
+\subsection{Reading guide}
+
+\Cref{sec:preliminaries} fixes the probabilistic and finiteness
+discipline and explains why we made the design choices we made.
+\Cref{sec:semantic-core} introduces \TT{GameForm}, \TT{KernelGame},
+their morphisms, and the deviation-family schema that all
+equilibrium notions instantiate.  \Cref{sec:solution-concepts}
+catalogues the solution concepts.  \Cref{sec:languages} introduces
+the language layer and its bridges.  \Cref{sec:theorems} states the
+major theorems and sketches their structure.
+\Cref{sec:mechanism-auctions} covers mechanism design and auctions.
+\Cref{sec:discussion} collects the design tradeoffs we made
+explicit.  \Cref{sec:related-work} situates the library against
+prior formalization efforts and against the textbook tradition.
+\Cref{sec:future} lists the natural extensions.

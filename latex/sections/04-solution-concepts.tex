@@ -1,0 +1,363 @@
+\section{Solution concepts}
+\label{sec:solution-concepts}
+
+This section catalogues the solution concepts the library
+formalizes.  All of them sit on top of \TT{KernelGame} or
+\TT{GameForm}; concrete language layers (\S\ref{sec:languages})
+inherit them via $\toKG$.  The presentation is grouped by the
+\emph{deviation family} the concept quantifies over, which is the
+underlying organizing principle of the library and makes
+several otherwise-disparate equivalences (correlated $\Rightarrow$
+coarse correlated, dominance $\Rightarrow$ Nash, etc.) visible as
+instances of one schema.
+
+\subsection{The deviation-family schema}
+\label{sec:solution-concepts:family}
+
+Fix a game form $\GF$, a player $i$, and a status-quo profile
+distribution $\mu \in \PMF{\prod_j \Strat_j}$.  Let
+$\Pref$ be a per-player weak preference on $\PMF{\Outcome}$ and
+let $\mathcal{D}_i = (D_i, \mathrm{deviate}_i)$ be a
+\emph{deviation family} for $i$:\ a type $D_i$ of deviations and a
+function $\mathrm{deviate}_i : \PMF{\prod_j \Strat_j} \to D_i \to
+\PMF{\prod_j \Strat_j}$.  A profile distribution $\mu$ is
+\emph{$\mathcal{D}$-equilibrium for $\Pref$} if no player has a
+profitable deviation in $\mathcal{D}$:
+\begin{equation}
+\label{eq:devschema}
+  \forall i,\, \forall d \in D_i.\quad
+    \Pref_i\;\bigl(\GF.\mathrm{correlatedOutcome}(\mu),\;
+                   \GF.\mathrm{correlatedOutcome}(\mathrm{deviate}_i(\mu, d))\bigr).
+\end{equation}
+The library identifies exactly two deviation families that matter
+for the standard solution-concept inventory:
+
+\begin{itemize}\itemsep2pt
+\item $\mathcal{D}^{\mathrm{const}}$:\ $D_i = \Strat_i$, with
+$\mathrm{deviate}_i(\mu, s')$ replacing $i$'s coordinate by $s'$
+on every sample of $\mu$.
+
+\item $\mathcal{D}^{\mathrm{dep}}$:\ $D_i = \Strat_i \to \Strat_i$,
+with $\mathrm{deviate}_i(\mu, \mathrm{dev})$ replacing $i$'s
+coordinate $s$ by $\mathrm{dev}(s)$ on every sample.
+\end{itemize}
+
+The four ``profile-distribution'' equilibria of the library are
+then schema instances:
+\[
+  \begin{array}{lcl}
+    \IsNashFor(\Profile)
+      &\equiv& \mathcal{D}^{\mathrm{const}}\text{-eq for } \Dirac_\Profile, \\
+    \IsCoarseCorrelatedEqFor(\mu)
+      &\equiv& \mathcal{D}^{\mathrm{const}}\text{-eq for } \mu, \\
+    \IsCorrelatedEqFor(\mu)
+      &\equiv& \mathcal{D}^{\mathrm{dep}}\text{-eq for } \mu.
+  \end{array}
+\]
+Several library-wide consequences follow:
+\begin{itemize}
+\item \emph{Hierarchy}.  $\mathcal{D}^{\mathrm{const}}$ embeds into
+$\mathcal{D}^{\mathrm{dep}}$ via constant deviation functions, so
+every $\Pref$-CE is a $\Pref$-CCE.  Setting $\mu = \Dirac_\Profile$
+recovers $\Pref$-Nash from $\Pref$-CCE.  Thus pure Nash point masses
+are CCEs, and CE distributions are CCE distributions; CE and CCE are
+both predicates on profile distributions, while Nash is a predicate
+on point profiles.
+\item \emph{Monotonicity in $\Pref$}.  If $\Pref^{(2)}$ implies
+$\Pref^{(1)}$ pointwise, then any $\mathcal{D}$-equilibrium for
+$\Pref^{(2)}$ is a $\mathcal{D}$-equilibrium for $\Pref^{(1)}$.
+The library exposes this as
+\TT{IsNashFor.mono} and \TT{IsDominantFor.mono}.
+\end{itemize}
+
+\leancorr{Schema in \TT{Concepts/Deviation.lean}; full Lean text in
+supplement~§3.1.}
+
+\subsection{Nash equilibrium and best response}
+\label{sec:solution-concepts:nash}
+
+The EU-specific Nash predicate is
+\begin{equation}
+\label{eq:nash}
+  \IsNash_\KG(\Profile) \;\Longleftrightarrow\;
+    \forall i,\, \forall s' \in \Strat_i,\;
+    \EU(\KG, \Profile, i) \;\ge\; \EU(\KG, \Profile[i \mapsto s'], i),
+\end{equation}
+and the preference-parameterized variant on $\GF$ is the schema
+instance with $\mu = \Dirac_\Profile$ and $\mathcal{D} =
+\mathcal{D}^{\mathrm{const}}$.  A \emph{best response} is a
+strategy that maximizes the expected utility against fixed
+opponents:
+\begin{equation}
+\label{eq:br}
+  \IsBR_\KG(i, \Profile, s) \;\Longleftrightarrow\;
+    \forall s' \in \Strat_i,\;
+    \EU(\KG, \Profile[i \mapsto s], i) \;\ge\;
+    \EU(\KG, \Profile[i \mapsto s'], i),
+\end{equation}
+and the standard equivalence
+\[
+  \IsNash_\KG(\Profile) \;\Longleftrightarrow\;
+    \forall i,\, \IsBR_\KG(i, \Profile, \Profile_i)
+\]
+holds at the $\GF.\IsNashFor$/$\IsBRfor$ level for any
+preference and is propagated to the EU level by the bridge of
+\S\ref{sec:semantic-core:for-style}.
+
+A \emph{strict Nash equilibrium} requires the inequality to be
+strict for every $s' \neq \Profile_i$.  The library's
+\TT{StrictNashProperties.lean} records the implication strict
+$\Rightarrow$ Nash, asymmetry under a strict preference that is
+incompatible with reverse weak preference, and uniqueness in
+ordinal-potential games.
+
+\subsection{Dominance}
+\label{sec:solution-concepts:dominance}
+
+Two notions of dominance are formalized.  \emph{Weak dominance}:
+$s$ weakly dominates $t$ for player $i$ when, for every opponent
+profile, $i$'s payoff under $s$ is $\Pref$-preferred to that under
+$t$.  \emph{Strict dominance} replaces $\Pref$ by a strict
+preference $\sPref$ (typically the strict EU comparison).
+
+A strategy $s$ is \emph{(weakly) dominant} for $i$ when it weakly
+dominates every alternative; it is \emph{strictly dominant} when
+the analogous statement holds for $\sPref$.  The library exposes
+these as both EU-specific (\TT{IsDominant}, \TT{IsStrictDominant})
+and preference-parameterized (\TT{IsDominantFor},
+\TT{IsStrictDominantFor}).  The chain
+\[
+  \text{strict dominant} \;\Rightarrow\; \text{weak dominant} \;\Rightarrow\;
+  \text{best response} \;\Rightarrow\; \text{Nash}
+\]
+is recorded modularly:\ each step is one \TT{simp}-able
+proposition, with no hidden EU dependence.
+
+\subsubsection{Iterated elimination and rationalizability}
+
+Iterated elimination of strictly dominated strategies is encoded
+as a sequence $\mathrm{Survives}_n$ of decreasing predicates: round
+$0$ is true of every strategy, and round $n+1$ requires that the
+strategy both survived round $n$ and is not strictly dominated,
+restricted to round-$n$ survivors of all opponents.  A strategy is
+\emph{rationalizable} when it survives every round.  The library
+proves:
+\begin{itemize}
+\item Survival is monotone decreasing in rounds.
+\item Every Nash strategy survives every round, hence is
+rationalizable.
+\item Every dominant strategy is rationalizable.
+\item In a \emph{dominance-solvable} game, the unique surviving
+profile is Nash.
+\end{itemize}
+
+\leancorr{Predicates and theorems in \TT{Concepts/Rationalizability.lean}
+(\TT{Survives}, \TT{IsNash.survives}, \TT{IsNash.isRationalizable},
+\TT{IsDominant.isRationalizable}); the dominance-solvable case in
+\TT{Concepts/DominanceSolvable.lean}.}
+
+\subsection{Correlated and coarse correlated equilibria}
+\label{sec:solution-concepts:correlated}
+
+Aumann's correlated equilibrium~\citep{Aumann1974} interprets
+$\mu \in \PMF{\prod_i \Strat_i}$ as a public correlation device
+that recommends a private action $s = \mu_i$ to each player.  The
+device is incentive-compatible when no player gains in expectation
+by ignoring the recommendation in favor of any function of it.
+This is exactly $\mathcal{D}^{\mathrm{dep}}$-equilibrium under EU.
+Coarse correlated equilibrium~\citep{HartMasColell2000} weakens the
+deviation menu from arbitrary functions to constant strategies,
+which yields $\mathcal{D}^{\mathrm{const}}$-equilibrium under EU.
+
+The library proves the standard inclusions
+\[
+  \Dirac(\Pref\text{-Nash}) \;\subseteq\; \Pref\text{-CCE},
+  \qquad
+  \Pref\text{-CE} \;\subseteq\; \Pref\text{-CCE}.
+\]
+Here \TT{IsCorrelatedEqFor.toCoarseCorrelatedEqFor} records the CE
+$\Rightarrow$ CCE inclusion; the Nash-to-CCE statement is the schema
+instance $\mu = \Dirac_\Profile$.  In the EU-specific layer, existence of
+correlated and coarse correlated equilibria for any finite
+$\KG$ is the content of \S\ref{sec:theorems:correlated-existence}.
+
+\subsection{Pareto efficiency, social welfare, and price of anarchy}
+\label{sec:solution-concepts:welfare}
+
+A profile $\Profile$ \emph{Pareto-dominates} $\tau$ for a pair
+$(\Pref, \sPref)$ when every player weakly prefers $\Profile$'s
+outcome distribution and at least one player strictly does;
+$\Profile$ is \emph{Pareto-efficient} when no profile dominates
+it.  The EU specialization uses $\Pref^{\EU}$ and
+$\sPref^{\EU}$.  The library tracks the basic structural results
+— irreflexivity, asymmetry — modulo the irreflexivity and
+incompatibility hypotheses on $(\Pref, \sPref)$.
+
+\emph{Social welfare} is the EU sum
+$\Welfare(\KG, \Profile) = \sum_i \EU(\KG, \Profile, i)$ over a
+finite player set.  The \emph{price of anarchy}
+\citep{Koutsoupias1999, Roughgarden2005} compares the
+worst-case Nash welfare to the optimum,
+\begin{equation}
+\label{eq:poa}
+  \PoA(\KG) \;=\; \frac{\sup_\Profile \Welfare(\KG, \Profile)}
+                       {\inf_{\Profile \in \Nash(\KG)} \Welfare(\KG, \Profile)},
+\end{equation}
+with the dual \emph{price of stability}
+$\sup_\Profile \Welfare / \sup_{\Profile \in \Nash} \Welfare$.
+The library formalizes the welfare quantities the ratios are built
+from — optimal welfare, worst Nash welfare, best Nash welfare —
+plus the comparison lemmas between them.  It does not yet package
+the ratio-valued PoA/PoS definitions; those require explicit
+positivity and non-empty-Nash hypotheses.
+
+\leancorr{Welfare quantities in \TT{Concepts/PriceOfAnarchy.lean}
+(\TT{optimalWelfare}, \TT{worstNashWelfare}, \TT{bestNashWelfare}).}
+
+\subsection{Security strategies and minimax value}
+\label{sec:solution-concepts:security}
+
+Player $i$'s \emph{security level}~\citep{vNM1944} is the
+guarantee value over a worst-case opponent profile,
+\begin{equation}
+\label{eq:security}
+  \Sec(\KG, i) \;=\; \sup_{s \in \Strat_i}\;
+    \inf_{\Profile_{-i}}\;
+      \EU\bigl(\KG, \Profile_{-i}[i \mapsto s], i\bigr),
+\end{equation}
+and a \emph{security strategy} for $i$ achieves this supremum.
+The library formalizes the worst-case-EU and security-level
+quantities, proves that a security strategy exists in the finite
+case, and proves that Nash payoffs are at least the security
+level.  The two-player zero-sum theorem in
+\S\ref{sec:theorems:minimax} is stated through a mixed Nash profile
+with saddle-style guarantee inequalities.
+
+\leancorr{Definitions and the IR/Nash bound in
+\TT{Concepts/SecurityStrategy.lean} (\TT{worstCaseEU},
+\TT{securityLevel}); individual-rationality interface in
+\TT{Concepts/IndividualRationality.lean}.}
+
+\subsection{Regret}
+\label{sec:solution-concepts:regret}
+
+Internal and external regret are recorded as positive parts of
+EU differences.  External regret of $\Profile$ for player $i$ is
+\begin{equation}
+\label{eq:regret}
+  \Regret^{\mathrm{ext}}(\KG, \Profile, i) \;=\;
+    \max_{s' \in \Strat_i}\,
+    \bigl(\EU(\KG, \Profile[i \mapsto s'], i) - \EU(\KG, \Profile, i)\bigr)^{+};
+\end{equation}
+internal regret replaces the constant $s'$ by a function of
+$\Profile_i$ and is the dual of the $\mathcal{D}^{\mathrm{dep}}$
+deviation family that defines correlated equilibrium.  The
+library proves the structural fact that a profile distribution
+$\mu$ has zero average external regret iff it is a CCE, and zero
+average internal regret iff it is a CE — the standard
+regret-equilibrium duality~\citep{HartMasColell2000}.
+
+\subsection{Approximate equilibria}
+\label{sec:solution-concepts:approx}
+
+An \emph{$\varepsilon$-Nash equilibrium} relaxes the Nash
+inequality by an additive $\varepsilon$ slack:\ every unilateral
+deviation is at most $\varepsilon$-profitable.  Closure under
+$\varepsilon$-relaxation is recorded for the deviation-family
+schema, so the same definition applies to $\varepsilon$-CCE and
+$\varepsilon$-CE.  We do not prove approximation theorems (e.g.,
+LP-duality bounds for $\varepsilon$-CE in succinct games) in this
+layer; we expose the definitions as the natural targets for
+downstream complexity-theoretic work.
+
+\leancorr{\TT{Concepts/ApproximateNash.lean}.}
+
+\subsection{Potential games}
+\label{sec:solution-concepts:potential}
+
+A function $\Pot : \prod_i \Strat_i \to \RR$ is an \emph{exact
+potential}~\citep{MonderShapley1996} when, for every player $i$
+and unilateral deviation $\Profile \to \Profile[i \mapsto s']$,
+\begin{equation}
+\label{eq:potential}
+  \EU(\KG, \Profile[i \mapsto s'], i) - \EU(\KG, \Profile, i)
+  \;=\;
+  \Pot(\Profile[i \mapsto s']) - \Pot(\Profile);
+\end{equation}
+it is an \emph{ordinal potential} when the equality is replaced
+by an iff between the two sides being positive.  The library
+proves:
+\begin{itemize}\itemsep2pt
+\item Every exact potential is an ordinal potential.
+\item Every (local or global) maximizer of an ordinal potential
+is Nash; hence finite ordinal potential games admit pure Nash
+equilibria as a direct consequence (any maximizer of $\Pot$ on
+the finite product $\prod_i \Strat_i$ is Nash).
+\item Best-response dynamics terminates in finitely many steps in
+a finite ordinal potential game.
+\end{itemize}
+Team games (\S\ref{sec:solution-concepts:team}) are an instance:\
+they are exact potential games with $\Pot = u_{\mathrm{any}}$.
+
+\leancorr{\TT{Concepts/PotentialGame.lean} (\TT{IsExactPotential},
+\TT{IsOrdinalPotential}, \TT{IsExactPotential.toOrdinal},
+\TT{IsOrdinalPotential.nash\_of\_maximizer});
+\TT{Concepts/PotentialFIP.lean} and
+\TT{Concepts/PotentialWellFounded.lean} for the dynamics;
+\TT{Concepts/PotentialTeam.lean} for the team-game corollary
+(\TT{IsTeamGame.isExactPotential}).}
+
+\subsection{Zero-sum, constant-sum, team, and symmetric games}
+\label{sec:solution-concepts:team}
+
+A kernel game is \emph{zero-sum} when $\sum_i \util(\omega)(i) =
+0$ for every $\omega$, and \emph{constant-sum} for an
+$\Outcome$-independent constant.  The library proves that the
+Nash equilibria of a two-player constant-sum game give each
+player guarantee inequalities against opponent deviations.
+
+A kernel game is a \emph{team game} when all players have
+identical utilities.  Team games are exact potential games with
+$\Pot = \util_{\mathrm{any}}$; consequently every welfare optimum
+is a Nash equilibrium, and the price of stability is $1$.
+
+A kernel game is \emph{symmetric} when permutations of the player
+type act trivially on outcome distributions and utility (modulo
+the same permutation).  The library proves the structural lemmas
+that permuting a Nash profile by a symmetry yields a Nash profile,
+and that all players obtain equal EU at a symmetric profile.
+Existence of a \emph{symmetric} mixed Nash equilibrium (i.e.\ a
+fixed point of the gain map within the symmetric subspace) is a
+classical corollary of mixed Nash existence~\citep{Nash1951}; the
+corollary is not packaged in the library and is listed in
+\S\ref{sec:future} as a natural next step.  \emph{Evolutionary
+stability}~\citep{MaynardSmithPrice1973} is formalized as the
+appropriate strict-dominance condition on a symmetric two-player
+game.
+
+\leancorr{\TT{Concepts/ZeroSum.lean}, \TT{Concepts/ConstantSum.lean},
+\TT{Concepts/ZeroSumNash.lean}, \TT{Concepts/ConstantSumNash.lean},
+\TT{Concepts/TeamGame.lean}, \TT{Concepts/SymmetricGame.lean}
+(\TT{isSymmetricEU\_nash\_perm}, \TT{isSymmetricEU\_eu\_eq}),
+\TT{Concepts/EvolutionaryStability.lean}.}
+
+\subsection{Common knowledge and individual rationality}
+\label{sec:solution-concepts:misc}
+
+Two further behavioral concepts are formalized for downstream
+use.  An event is \emph{common knowledge} among a group of agents
+when everyone knows it, everyone knows everyone knows it, and so
+on for every finite depth of nested knowledge.  Aumann's
+operator~\citep{Aumann1976} captures this fixed point on a finite
+partition structure (each agent has an information partition over
+the state space; common knowledge of an event $E$ at state $s$
+holds iff $E$ contains the smallest set in the meet of all
+partitions that contains $s$).  \emph{Individual rationality},
+the second concept, is a participation constraint:\ a profile is
+individually rational for player $i$ when $i$'s payoff is at least
+their security level (\S\ref{sec:solution-concepts:security}).
+Both are formal scaffolding for the mechanism-design layer
+(\S\ref{sec:mechanism-auctions}).
+
+\leancorr{\TT{Concepts/CommonKnowledge.lean};
+\TT{Concepts/IndividualRationality.lean}.}

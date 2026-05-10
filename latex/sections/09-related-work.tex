@@ -1,0 +1,163 @@
+\section{Related work}
+\label{sec:related-work}
+
+We organize related work along three axes:\ the textbook tradition
+the library mechanizes, prior efforts to mechanize fragments of
+game theory in interactive theorem provers, and adjacent
+formalizations in dependent type theory or higher-order logic that
+could plausibly serve as alternative platforms.
+
+\subsection{Textbook game theory}
+\label{sec:rw:textbooks}
+
+The library's substantive content is drawn from the standard
+textbook canon.  \citet{vNM1944} laid the basis for the
+expected-utility decision theory the library uses without
+modification; the minimax theorem first appears
+in~\citet{vN1928}.  \citet{Nash1950} and~\citet{Nash1951} are the
+sources for the existence theorem in the form proved in
+\Cref{thm:nash-mixed}.  \citet{Aumann1974, Aumann1987} introduce
+correlated equilibrium and its EU equivalence with
+incentive-compatibility under a correlation device.
+\citet{Selten1965, Selten1975} introduce subgame perfection and
+the trembling-hand variants the one-shot deviation principle
+formalizes.  \citet{Harsanyi1967} formalizes Bayesian games and
+type-conditional strategies.  \citet{Kuhn1953} is the source of
+the behavioral-vs-mixed equivalence, originally proved under
+perfect recall;~\citet{Aumann1964} sharpened the recall hypothesis.
+
+For comprehensive surveys we draw
+on~\citet{OsborneRubinstein1994},
+\citet{MaschlerSolanZamir2013},~\citet{ShohamLeytonBrown2008},
+and~\citet{Myerson1991}.  The mechanism-design layer follows
+Myerson's revelation-principle exposition;
+the auction layer follows~\citet{Krishna2010}.  Algorithmic
+game theory, including the price of anarchy, is treated
+in~\citet{NisanRoughgardenTardosVazirani2007}, with Roughgarden's
+smoothness framework~\citep{Roughgarden2005,Roughgarden2015} and
+Koutsoupias–Papadimitriou's original
+PoA~\citep{Koutsoupias1999} both relevant.
+
+The factored-observation stochastic-game
+formalism~\citep{Kovarik2022} is a recent unification of
+extensive-form games, partially observable Markov games, and
+multi-agent reinforcement-learning settings; the library uses it
+as the most general native presentation, while keeping EFG and
+NFG as distinct languages because the textbook tradition treats
+them so.  The sequence-form representation
+of~\citet{KollerMegiddoVonStengel1994} is conspicuously absent
+from the library; we discuss this in \S\ref{sec:future}.
+
+Multi-agent influence diagrams are due
+to~\citet{KollerMilch2003} and have been further developed
+in~\citet{PfefferGal2007} and~\citet{HammondEtAl2023}.  The
+strategic-relevance / d-separation analyses of MAIDs are partly
+formalized in our library (\TT{MAID/FrontierLemmas.lean}, the
+order-independence content), and partly left as an explicit
+extension target.
+
+\subsection{Prior formalizations of game theory}
+\label{sec:rw:formalization}
+
+\paragraph{Coq.}\ \citet{Vestergaard2006} gives a Coq-formalized
+constructive proof of sequential Nash equilibria.
+\citet{LeRouxMartinDorelSmaus2017} formalize a Nash-equilibrium
+existence theorem in both Coq and Isabelle, taking a constructive
+route distinct from our Brouwer-based proof.
+\citet{Bertot2016} formalized the Stable Marriage / Gale–Shapley
+algorithm in Coq.
+
+\paragraph{Isabelle/HOL.}\ Lange, Caminati, Kerber, Rowat, and
+collaborators have produced a substantial body of mechanized
+auction theory in Isabelle, including VCG, combinatorial
+auctions, and revenue-equivalence
+fragments~\citep{KerberLangeRowat2016, CaminatiKerberLangeRowat2014}.
+Their setting is more directly continuous than ours, since
+Isabelle's analysis library makes real-valued bid spaces
+ergonomic.  Isabelle's CryptHOL~\citep{Lochbihler2016} formalizes
+discrete probability and probabilistic programs and has been
+used for cryptographic-protocol verification rather than
+game-theoretic equilibria.
+
+\paragraph{Lean.}\ The discrete-probability monad \TT{PMF}, the
+standard simplex and its convex/topological API, finite-type
+infrastructure, and the surrounding analysis the library depends
+on are all in mathlib~\citep{mathlib2020}; the Brouwer fixed-point
+theorem itself, however, is not in mathlib at the time of writing,
+and is supplied by the standalone \TT{fixed-point-theorems-lean4}
+package~\citep{harfeFixedPointTheorems}.  Outside the present
+library, scattered Lean game-theory developments exist (mostly in
+the form of self-contained proofs of Nash existence for finite
+games and zero-sum minimax), but to our knowledge none constitute a
+library on the scale of the present chapter.  To our knowledge no other Lean library covers the
+protocol/preference split, the language layer, the bridges, the
+Kuhn theorem at the observation-model level, or the
+mechanism-design layer at the level we have.
+
+\paragraph{Other systems.}\ ACL2, HOL4, and Mizar each have
+isolated game-theoretic results we are aware of but no substantial
+library; we omit them for space.
+
+\subsection{Verified probability and probabilistic programming}
+\label{sec:rw:probability}
+
+The library's reliance on \TT{PMF} places it in a tradition of
+discrete probability formalizations.  \citet{HurdMcIverMorgan2005}
+and \citet{Audebaud2009} formalized discrete probabilistic
+programs in Coq with semantic foundations that anticipate the
+discrete Giry monad.  \citet{Tassarotti2019} mechanized the
+formal-semantics side of higher-order probabilistic programming
+in Lean and Coq.  \citet{Lochbihler2016} (CryptHOL) does similar
+work in Isabelle, with cryptographic applications.  Mathlib's
+\TT{PMF}~\citep{mathlib2020} provides the API on which our
+library builds.
+
+The measure-theoretic side is more developed in mathlib than the
+discrete side, with substantial integration across the Lean Borel,
+Lebesgue, and product-measure infrastructures; an extension of the
+present library over mathlib's measure theory would draw on this.
+
+\subsection{Mechanized programming-language semantics}
+\label{sec:rw:pl}
+
+The library's language layer borrows several patterns from
+mechanized programming-language semantics:\ structural
+operational semantics, denotational compilation into a common
+target, simulation/refinement~\citep{Milner1989, AbramskyJung1994,
+HarperPLFA, BentonHurKennedyMcBride2014}, and CompCert-style
+verified-translation pipelines~\citep{Leroy2009}.  The
+``language as syntax + compiler to a common semantics'' framing
+is direct PL practice; what is unusual in our setting is that the
+common semantics is a strategic object (a kernel game) rather
+than a behavioral one.
+
+\subsection{Categorical game theory}
+\label{sec:rw:category}
+
+A growing body of work treats games and strategies as objects in
+a category with a compositional algebra of game forms.
+\citet{Pavlovic2009, Hyland2010} are early examples;
+\citet{GhaniHedgesWinschelZahn2018} introduce \emph{open games}
+and the bidirectional ``selection function'' approach;
+\citet{Joyal1977} pioneered the categorical view of two-player
+games (in a logical setting).  Our protocol-map and simulation
+infrastructure is inspired by this tradition without committing
+to any of its specific frameworks.  An open-games-as-coalgebras
+approach would be a natural reformulation; we did not take it
+because the kernel-game record is already small enough that
+adding a categorical superstructure would, on net, cost
+ergonomics.
+
+\subsection{Mechanized formal verification of equilibria in protocols}
+\label{sec:rw:protocols}
+
+A different line of work mechanizes
+equilibrium reasoning about cryptographic and economic protocols
+directly.  \citet{HalpernPass2008, AbrahamDolevGonenHalpern2006}
+and successors formalize rationality-based protocol analysis and
+incentive-compatible distributed algorithms.  These are downstream consumers of a
+library like ours; they typically commit to one specific
+representation of a game (often a payoff matrix or an EFG-like
+tree) and prove protocol-specific results.  Our library is meant
+to make their job easier by supplying the strategic-form
+infrastructure they would otherwise build by hand.

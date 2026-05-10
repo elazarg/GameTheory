@@ -1,0 +1,26 @@
+# LaTeX build artifacts
+*.aux
+*.log
+*.toc
+*.out
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.lof
+*.lot
+*.idx
+*.ind
+*.ilg
+*.nav
+*.snm
+*.vrb
+
+# Editor backups
+*~
+*.swp
+.DS_Store
+
+# PDFs: commit or not is a project choice; uncomment to ignore.
+# *.pdf

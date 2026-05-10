@@ -1,0 +1,89 @@
+\section{A worked example end-to-end: Prisoner's Dilemma}
+\label{sec:worked-example}
+
+To anchor the abstractions of \S\ref{sec:semantic-core}--%
+\S\ref{sec:languages}, we trace one small game through the full
+syntax-to-theorem pipeline.  The example is deliberately the
+smallest non-trivial one — Prisoner's Dilemma in NFG form — and
+the corresponding Lean is in
+\TT{Languages/NFG/Examples.lean}.
+
+\paragraph{Source syntax.}\
+The player type is $\Players = \mathrm{Bool}$, the action type is
+\[
+  \Act \;=\; \{\textsf{cooperate},\,\textsf{defect}\},
+\]
+shared between both players, and the payoff matrix is the
+classical one ($r_{CC} = 2$, $r_{DD} = 1$, $r_{DC} = 3$ for the
+defector and $0$ for the cooperator).  As an \TT{NFGGame}, this is
+a record carrying the joint outcome type
+$\prod_{i:\mathrm{Bool}} \Act$, the identity outcome map, and the
+$\mathrm{Bool} \times \Act \times \Act \to \RR$ utility table.
+
+\paragraph{Compilation to a kernel game.}\
+The NFG compiler (\S\ref{sec:languages:nfg}) sets the strategy type
+to $\Act$ for each player, the outcome type to
+$\prod_i \Act$, the kernel to the Dirac evaluation
+$\Profile \mapsto \Dirac_\Profile$, and the utility to the input
+table.  The resulting \TT{KernelGame} is deterministic; randomness
+enters only when we lift to its mixed extension
+(\S\ref{sec:semantic-core:kernelgame}).
+
+\paragraph{Solution-concept instantiation.}\
+The library's $\IsNash$ predicate
+(\S\ref{sec:solution-concepts:nash}) on the compiled kernel game
+unfolds to
+\[
+  \forall i \in \{T, F\},\,\forall a' \in \Act.\quad
+    u_i(\Profile) \;\ge\; u_i(\Profile[i \mapsto a']),
+\]
+which on Prisoner's Dilemma reduces to four inequality checks per
+profile.  The Lean proof
+$\TT{pd\_defect\_is\_nash}$:\
+\TT{IsNashPure prisonersDilemma pd\_defect\_defect} is a single
+\TT{intro/cases/cases/simp} that discharges the four inequalities
+by direct evaluation of the utility table.  The corresponding
+``cooperate is not Nash'' fact is the symmetric \TT{linarith} after
+unfolding the deviation to defect.
+
+\paragraph{Mixed-strategy extension and Nash existence.}\
+Lifting to the mixed extension produces a kernel game with
+strategy type $\PMF{\Act}$ for each player and outcome type
+$\prod_i \Act$ as before.  The library's mixed Nash existence
+theorem (\Cref{thm:nash-mixed}) applies nonconstructively and
+returns some mixed equilibrium of the extension.  Separately, the
+worked example proves that defect is dominant, so the pure
+(defect, defect) profile is Nash by the
+dominance$\,\Rightarrow\,$Nash chain
+(\S\ref{sec:solution-concepts:dominance}) without invoking Brouwer.
+
+\paragraph{Bridging to FOSG.}\
+The NFG$\to$FOSG bridge of \S\ref{sec:languages:bridges} maps
+Prisoner's Dilemma to a one-shot FOSG with two world states
+($\mathsf{init}, \mathsf{terminal}$), every player active at
+$\mathsf{init}$, no observations, and a single deterministic
+transition delivering the NFG payoff as the FOSG reward.  The
+bridge theorem
+\TT{NFG\_FOSG.NFGGame.toFOSG\_terminal\_iff} closes the
+expressiveness contract:\ the EU of any pure profile in the FOSG
+agrees with the EU in the NFG, so $\Profile^*$ remains a Nash
+equilibrium under the EU-isomorphism transport
+(\Cref{thm:transport}).
+
+\paragraph{What this trace illustrates.}\
+\emph{(i)} The NFG syntax is a $\sim$30-line Lean record;
+\emph{(ii)} compilation to \TT{KernelGame} is a definitional
+unfolding, not a proof;
+\emph{(iii)} the strategic-form theorems
+(dominance$\Rightarrow$Nash; mixed existence; equilibrium
+preservation under bridges) apply as black boxes once the
+compilation has fixed the kernel game;
+\emph{(iv)} the same game appears as a different syntactic
+object in two languages (NFG and FOSG) but with definitionally
+equal expected utility, so any equilibrium-level theorem proved
+on one of them transports to the other.
+
+The same trace works for any NFG of finite cardinality, and a
+parallel trace for an EFG (e.g.\ a two-step centipede) is
+recorded in \TT{Languages/EFG/Examples.lean}; we omit the latter
+here for space.

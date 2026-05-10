@@ -1,0 +1,70 @@
+\documentclass[11pt]{article}
+
+\input{macros}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,
+                decorations.pathreplacing}
+\usepackage[numbers,sort&compress]{natbib}
+
+\sloppy
+\emergencystretch=3em
+
+\title{A Mechanized Library of Finite Game Theory:\\
+       Kernel Games, Languages, and Bridges}
+\author{Elazar Gershuni\\\texttt{elazarg@gmail.com}}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This chapter describes a Lean~4 library, built on top of
+mathlib~\citep{mathlib2020}, that formalizes finite game theory in a
+form suited to use as a downstream dependency.  The library takes a
+deliberately uniform stance on what a game \emph{is}: a
+\emph{kernel game} consisting of per-player strategy types, an
+outcome type, a stochastic transition $\K : \prod_i \Strat_i \to
+\PMF{\Outcome}$, and a utility $\util : \Outcome \to (\Players \to
+\RR)$.  Solution concepts are defined once on this carrier and on
+its utility-free shadow, the \emph{game form}; concrete
+representations — normal-form games, extensive-form games,
+multi-agent influence diagrams, multi-round games, and
+factored-observation stochastic games — are presented as
+syntax-and-semantics packages that compile to a kernel game, and
+relationships between representations are stated as bridge theorems
+about the resulting kernel games.  The classical theorems of finite
+non-cooperative game theory live in this layer: existence of mixed
+Nash equilibria via Brouwer on the product simplex, existence of
+correlated and coarse correlated equilibria, the minimax theorem,
+backward induction (Zermelo), the one-shot deviation principle, and
+Kuhn's behavioral/mixed equivalence.  We discuss the design choices
+that make the library reusable — finiteness, discrete probability,
+the protocol/preference split, and the deviation-family schema for
+equilibrium notions — and we are explicit about what each choice
+gains and what it costs.  The chapter is intended as the
+self-contained foundation on which more specialized theories
+(visibility-aware protocol semantics, mechanism design pipelines,
+multi-agent learning models) can be built.
+\end{abstract}
+
+\tableofcontents
+
+\input{sections/00-glossary}
+\input{sections/01-introduction}
+\input{sections/02-preliminaries}
+\input{sections/03-semantic-core}
+\input{sections/04-solution-concepts}
+\input{sections/05-languages}
+\input{sections/05a-worked-example}
+\input{sections/06-theorems}
+\input{sections/07-mechanism-and-auctions}
+\input{sections/08-discussion}
+\input{sections/09-related-work}
+\input{sections/10-future-directions}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

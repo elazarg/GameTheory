@@ -1,0 +1,207 @@
+\section{Preliminaries}
+\label{sec:preliminaries}
+
+This section fixes the probabilistic, type-theoretic, and
+finiteness conventions used throughout the chapter, and explains
+the most consequential design choices.  We are deliberately
+verbose:\ each choice is paired with the alternative we rejected
+and a candid statement of what we gained and what we lost.
+
+\subsection{Discrete probability and \TT{PMF}}
+\label{sec:prelim:pmf}
+
+Every distribution in the library is a probability mass function
+in mathlib's sense:\ a function $\PMF{X}$ assigning to each $x \in
+X$ a non-negative extended real number whose total mass equals
+one.  The relevant API is monadic — $\PMF{\cdot}$ is the discrete
+Giry monad — with \TT{pure}, \TT{bind}, \TT{map}, and a Dirac
+embedding $\Dirac_x \in \PMF{X}$.  Expected value of a function
+$f : X \to \RR$ under $\mu \in \PMF{X}$ is the (countable) sum
+$\sum_{x} \mu(x)\,f(x)$, formalized as
+\TT{Math.Probability.expect}.  When $X$ is finite, this is a
+finite sum; when $X$ is countably infinite, it is a tsum that
+converges by the unit-mass condition together with
+non-negativity of $\mu$.
+
+A \emph{kernel} (in the library's sense, \TT{Math.Probability.Kernel})
+is a function $\K : A \to \PMF{B}$.  This is not a kernel in the
+measure-theoretic sense:\ no $\sigma$-algebra is involved.  It is the
+discrete analogue, and is the right object for finite games:\ a
+strategy profile maps deterministically to a distribution over
+outcomes, and the no-measurability-needed nature of the discrete
+case makes it tractable to reason about by equational rewriting.
+
+\paragraph{Why discrete, and what is gained.}  Mechanizing
+measure theory in dependent type theory is feasible — mathlib
+contains a substantial measure-theoretic library — but the cost is
+non-trivial.  A measure on a space $X$ requires a $\sigma$-algebra
+on $X$ (a designated collection of subsets closed under
+complements and countable unions); functions of interest must be
+proved measurable; integration is defined first for
+non-negative measurable functions via simple-function
+approximation, then extended to integrable real-valued functions;
+Fubini–Tonelli, change of variables, and pushforward each require
+their own measurability hypotheses.  Even small-looking statements
+acquire side conditions — ``measurable function'', ``integrable
+function'', ``$\mu$-a.e.\ equal'' — that propagate through every
+definition that uses them.  In a finite or countable setting,
+these hypotheses are vacuously satisfied (every function from a
+finite type to a measurable space is measurable; every function
+into $\RR$ from a finite type is integrable), but the
+\emph{infrastructure} that produces the side conditions does not
+disappear:\ the proof obligations remain to be discharged, and the
+notation for distributions is more cumbersome.
+
+In the discrete case the same obligations are vacuous and the
+machinery is unnecessary:\ when the underlying type is discrete,
+\emph{every} subset is automatically measurable, \emph{every}
+function out of it is automatically measurable, and integrals
+reduce to ordinary (possibly infinite) sums.  But this only
+matters if we adopt the discrete formalism throughout — if the
+library is built on the measure-theoretic infrastructure, even
+the \emph{statement} of an integral $\int f \, d\mu$ comes with a
+well-formedness side condition that $f$ be measurable, and proofs
+that should rewrite by ordinary algebra acquire that side
+condition at every step.  This is the cost we avoid.
+
+By taking $\PMF{\cdot}$ as the only distribution type, the library
+trades expressivity for ergonomics:
+\begin{itemize}
+\item \emph{Gained.}\ Every distribution-level equation reduces to
+a finite-sum identity.  Expected-utility identities follow by
+\TT{simp}-style rewriting under the monadic laws.  No
+measurability proof obligations arise.  The ``profile $\to$
+distribution-over-outcomes'' presentation of strategy spaces is
+direct.  Pushforwards are given by \TT{PMF.bind} and
+\TT{PMF.map}; products by an explicit \TT{pmfPi}; conditioning by
+ordinary support-restricted sums.
+
+\item \emph{Lost.}\ Continuous strategy spaces (a key fragment of
+auction theory beyond the canonical models we treat), continuous
+type spaces in Bayesian games, and continuous-time stochastic
+games are out of scope.  Some classical existence theorems —
+notably Glicksberg's existence of a mixed equilibrium for
+continuous payoff functions on compact strategy
+spaces~\citep{Glicksberg1952}, and existence of equilibria in
+Bayesian games with uncountable type spaces~\citep{MilgromWeber1985}
+— are not even statable in this idiom.  Information-economic
+results that depend on absolute continuity of one
+distribution with respect to another are also unavailable.
+\end{itemize}
+
+\tradeoff{The library is intentionally a finite-discrete
+formalism.  The boundary it places at $\PMF{\cdot}$ is not a
+limitation we hope to remove later; it is the design contract.
+Downstream users who need continuous payoffs or uncountable type
+spaces must take the library as inspiration, not as a base, and
+reformulate the relevant definitions over mathlib's measure
+theory.}
+
+\subsection{Finiteness}
+\label{sec:prelim:finite}
+
+The library uses Lean's \TT{Fintype} typeclass, which carries a
+finite enumeration of a type's elements.  ``Finite'' means
+\TT{Fintype}, equivalently:\ in bijection with $\{0, \dots, n-1\}$
+for some $n$.  Most theorems require \TT{Fintype} on the player
+type $\Players$ and on each strategy type $\Strat_i$; some
+require \TT{DecidableEq} as well, e.g.\ everything that uses
+\TT{Function.update} for unilateral deviation.
+
+Decidability assumptions enter through \TT{open Classical in},
+which turns on the law of excluded middle for the duration of a
+single declaration.  This is a benign use of classical reasoning
+when it is invoked only to make \TT{Function.update} compute on
+abstract index types; on concrete finite types like \TT{Fin n} the
+decision is constructive and the classical instance is
+definitionally redundant.  We collect these uses in
+\S\ref{sec:discussion:noncomputable} and explain why they do
+not preclude a future computational refinement.
+
+\subsection{Type-theoretic conventions}
+\label{sec:prelim:type-theory}
+
+A reader without a dependent-type-theory background will find
+several constructs in the library that look like ordinary set
+builders but mean something more precise.  We gloss the ones that
+matter:
+
+\begin{itemize}\itemsep2pt
+\item \emph{Dependent function types.}  $\prod_i \Strat_i$ in
+ordinary mathematics is a product of sets indexed by $\Players$.
+In Lean it is the dependent function type \TT{(i : $\iota$) $\to$
+Strategy i}, written below as
+$\forall i, \Strat_i$.  An element is a function that, for each
+$i$, returns a value in the set $\Strat_i$ — exactly a strategy
+profile.  The library uses this throughout as the
+``strategy-profile'' carrier.
+
+\item \emph{Records / structures.}  A record is a labeled product;
+\TT{KernelGame}~$\iota$ bundles four fields into a single value.
+Definitional unfolding of structure projections (e.g.\ ``the
+\TT{utility} field of $\KG$ is $\util$'') is propositional in Lean
+and is freely used in proofs by simp-rewriting.
+
+\item \emph{\TT{Prop} vs.\ \TT{Type}.}  Propositions live in the
+sort \TT{Prop} and are proof-irrelevant; data types live in
+\TT{Type} (or higher universes) and are proof-relevant.  Solution
+concepts are \TT{Prop}-valued; \TT{KernelGame} is \TT{Type}-valued.
+The chapter uses ``predicate'' for a \TT{Prop}-valued definition
+and ``structure'' for a \TT{Type}-valued one.
+
+\item \emph{Typeclass inference.}  When we write that a definition
+``requires \TT{Fintype} on $\Strat_i$'', we mean Lean's typeclass
+inference will look up an instance \TT{Fintype $\Strat_i$} from
+context.  This is bookkeeping for the reader; the resulting object
+is the same whether the instance was synthesized or supplied
+explicitly.
+
+\item \emph{Universe levels.}  The library is universe-polymorphic
+in $\Players$ and \TT{Outcome} where it has to be, but the chapter
+treats them notationally as ordinary sets.  Universe-level
+acrobatics arise only at one place — the lifting of solution
+concepts across reindexing along an equivalence — and we flag
+them when they do.
+\end{itemize}
+
+\subsection{The mathlib base}
+\label{sec:prelim:mathlib}
+
+The library depends on mathlib~\citep{mathlib2020} for finite-type
+infrastructure, the simplex (\TT{stdSimplex} and convex-combination
+machinery), product topology, fixed-point theorems (Brouwer in
+particular), the discrete Giry monad \TT{PMF}, and a substantial
+amount of $\sum$-and-tsum API.  Two non-trivial dependencies
+deserve explicit mention:
+
+\begin{itemize}
+\item \emph{Brouwer's fixed-point theorem.}  Mixed Nash existence
+(\S\ref{sec:theorems:nash-mixed}) is reduced to Brouwer applied to
+the product of standard simplices.  Mathlib supplies the
+continuous-map and topology infrastructure; the Brouwer theorem
+itself is imported from the standalone \TT{fixed-point-theorems-lean4}
+package~\citep{harfeFixedPointTheorems}, a Lean~4 mechanization of
+Brouwer (and Kakutani) for nonempty compact convex subsets of
+finite-dimensional normed spaces.  We use it as a black box.
+
+\item \emph{Discrete Giry monad laws.}  Most equational reasoning
+in the library is monadic in \TT{PMF}: bind associativity,
+left/right unit, and pushforward laws.  These are mathlib lemmas
+we use as black boxes.
+\end{itemize}
+
+A small companion file \TT{Math.Probability} adds the few
+discrete-probability constructions mathlib does not already
+contain (notably \TT{Math.PMFProduct.pmfPi}, the independent
+product of a finite family of $\PMF{\cdot}$'s, used in the mixed
+extension of a kernel game).
+
+\subsection{What we mean by ``finite game''}
+\label{sec:prelim:finite-game}
+
+We will treat a finite game as a kernel game $\KG$ with $\Players$
+finite, each $\Strat_i$ finite, and $\Outcome$ finite.  The
+language layer adds further structural finiteness — a finite
+extensive-form tree, finitely many information sets, a bounded
+horizon.  All theorems in the chapter are stated under (some
+subset of) these assumptions, made explicit in each statement.

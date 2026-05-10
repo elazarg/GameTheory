@@ -1,0 +1,871 @@
+% =====================================================================
+\section{Languages}
+\label{sec:supp:languages}
+
+Each of the six languages in \TT{Languages/} ships with a
+\TT{Syntax} file (the AST), often an \TT{SOS} operational
+semantics, and a \TT{Compile} file producing a
+\DefRef{KernelGame}.  This section anchors at the compilation
+\emph{shape} for each language; full Syntax content beyond the
+top-level record is bunched.
+
+\subsection{NFG: \texttt{Languages/NFG/Compile.lean}}
+\label{sec:supp:nfg}\label{def:NFG.NFGGame}\label{def:NFG.toKernelGame}
+
+\Anchor{NFG.NFGGame.toKernelGame}
+\begin{leanbox}
+structure NFGGame ($\iota$ : Type) (A : $\iota \to$ Type) where\\
+\bd Outcome  : Type\\
+\bd outcome  : ($\forall$ i, A i) $\to$ Outcome\\
+\bd utility  : ($\forall$ i, A i) $\to$ $\iota \to \mathbb{R}$\\[3pt]
+noncomputable def NFGGame.toKernelGame (G : NFGGame $\iota$ A) : KernelGame $\iota$ where\\
+\bd Strategy := A\\
+\bd Outcome  := G.Outcome\\
+\bd utility  := fun $\omega$ i $\Rightarrow$ \dots\\
+\bd outcomeKernel := fun $\sigma$ $\Rightarrow$ PMF.pure (G.outcome $\sigma$)
+\end{leanbox}
+
+\Mathematical
+A normal-form game over a finite player set $\Players$ and finite
+action sets $\{A_i\}_i$ is the textbook tuple
+$(\Players, \{A_i\}_i, \util)$.  The compiler takes the strategy
+type to be $A_i$, the outcome type to be a chosen $\Outcome$ with
+a deterministic projection from joint actions, and the kernel to
+be the Dirac evaluation $\Profile \mapsto \Dirac_{G.\mathrm{outcome}(\Profile)}$.
+The compiled \KG\ is deterministic; randomness enters only at the
+mixed extension.
+
+\Textbook
+Osborne–Rubinstein Definition 11.1 (strategic-form game).  The
+compilation is the identity on the strategic form modulo the
+choice of outcome type.
+
+\Faithfulness
+Faithful, with reformulation:\ the textbook treats utility as a
+direct function of profile; we route through an outcome type so
+that a kernel-game-level theorem applies uniformly to NFGs and to
+languages with non-trivial outcome types.
+
+\Variants
+\TT{Languages/NFG/} also packages worked subclasses, each as its
+own \TT{NFGGame} construction:\ \TT{CongestionGame.lean}
+(Rosenthal's potential), \TT{CoalitionalGame.lean} (the Shapley
+value definition plus null-player, additivity, linearity, and
+symmetry lemmas),
+\TT{Bargaining.lean} (Nash bargaining), \TT{Matching.lean}
+(stable-matching predicates), \TT{PublicGoods.lean},
+\TT{Stackelberg.lean}.  Each subclass lives in its own namespace
+and exposes its characteristic theorem.
+
+\subsection{EFG: \texttt{Languages/EFG/}}
+\label{sec:supp:efg}\label{def:EFG.InfoStructure}\label{def:EFG.GameTree}\label{def:EFG.EFGGame}\label{def:EFG.evalDist}
+
+\Anchor{EFG.GameTree, EFG.evalDist, EFG.toKernelGame}
+\begin{leanbox}
+structure InfoStructure where\\
+\bd n        : Nat\\
+\bd Infoset  : Fin n $\to$ Type\\
+\bd arity    : (p : Fin n) $\to$ Infoset p $\to$ Nat\\
+\bd arity\_pos : $\forall$ p I, 0 < arity p I\\[3pt]
+inductive GameTree (S : InfoStructure) (Outcome : Type) where\\
+\bd $\mid$ terminal (z : Outcome)\\
+\bd $\mid$ chance (k : Nat) ($\mu$ : PMF (Fin k)) (hk : 0 < k) (next : Fin k $\to$ GameTree S Outcome)\\
+\bd $\mid$ decision \{p : S.Player\} (I : S.Infoset p) (next : S.Act I $\to$ GameTree S Outcome)\\[3pt]
+structure EFGGame where\\
+\bd inf : InfoStructure ; Outcome : Type\\
+\bd tree : GameTree inf Outcome ; utility : Outcome $\to$ Payoff inf.Player\\[3pt]
+noncomputable def GameTree.evalDist \{S : InfoStructure\} \{Outcome : Type\}\\
+\bd ($\sigma$ : BehavioralProfile S) : GameTree S Outcome $\to$ PMF Outcome\\
+\bd $\mid$ .terminal z $\Rightarrow$ PMF.pure z\\
+\bd $\mid$ .chance \_ $\mu$ \_ next $\Rightarrow$ $\mu$.bind (fun b $\Rightarrow$ (next b).evalDist $\sigma$)\\
+\bd $\mid$ .decision (p := p) I next $\Rightarrow$ ($\sigma$ p I).bind (fun a $\Rightarrow$ (next a).evalDist $\sigma$)
+\end{leanbox}
+
+\Mathematical
+An extensive-form game is a triple $(\InfoStruct, \Tree, \util)$
+where \InfoStruct\ records the players, their information sets,
+and the action arity at each information set; the tree is
+inductively built from terminal, chance, and decision nodes; and
+the utility maps terminal outcomes to payoff vectors.  Strategies
+come in three flavors:\ pure
+$\Spure_p = \forall I, \mathrm{Fin}(\mathrm{arity}(p, I))$,
+behavioral $\Sbeh_p = \forall I, \PMF{\mathrm{Fin}(\mathrm{arity}(p, I))}$,
+and mixed $\Smix_p = \PMF{\Spure_p}$.  The function \TT{evalDist}
+evaluates the tree under a behavioral profile to a $\PMF{\Outcome}$
+by structural recursion:\ chance binds the chance distribution,
+decision binds the player's behavioral distribution at the
+relevant information set, terminal returns Dirac.  The compiled
+kernel game has \TT{Strategy} the behavioral type, the EFG outcome
+as outcome, \TT{evalDist} as kernel, and the EFG utility as utility.
+
+\Textbook
+Kuhn's representation~\citep{Kuhn1953}; Osborne–Rubinstein Chapter
+6.  The \TT{InfoStructure} factoring through information-set IDs
+(rather than directly through a player type) is a presentation
+choice for the type theory:\ a decision node stores only its
+information-set ID, and the player is recovered from the
+information structure.  Augmented EFGs in the FOSG-paper
+sense~\citep{Kovarik2022} are a thin wrapper adding public and
+per-player history partitions (\TT{Languages/EFG/Augmented.lean}).
+
+\Faithfulness
+Faithful, with reformulation:\ distributional semantics rather
+than deterministic-with-lift.  See chapter §3.2 for the
+rationale.  Subgame-perfect equilibrium
+(\TT{EFG.EFGGame.IsSubgamePerfectEq} in
+\TT{Languages/EFG/Refinements.lean}) is defined as a Nash
+equilibrium of every subgame; the ODP characterization
+(\S\ref{sec:supp:odp}) makes this a one-shot deviation check.
+
+\Variants
+\TT{Languages/EFG/} contains \TT{Augmented.lean} (the augmented
+EFG), \TT{SOS.lean} (operational semantics for the tree),
+\TT{Compile.lean} and \TT{CompileObs.lean} (the latter compiling
+to ObsModelCore for Kuhn), \TT{Kuhn.lean} (language-level Kuhn
+specialization), \TT{Refinements.lean} (subgame perfection,
+behavioral/pure refinements), \TT{Examples.lean}, \TT{Tests.lean}.
+
+\subsection{MAID: \texttt{Languages/MAID/}}
+\label{sec:supp:maid}\label{def:MAID.MAIDGame}
+
+\Anchor{MAID.MAIDGame.toKernelGame}
+\begin{leanbox}
+structure MAIDGame where\\
+\bd Players      : Type ; [fin : Fintype Players]\\
+\bd Node         : Type\\
+\bd parents      : Node $\to$ Finset Node\\
+\bd nodeKind     : Node $\to$ NodeKind  -- chance, decision, utility\\
+\bd domain       : Node $\to$ Type ; chanceDist, decisionInfo, utilityFn fields\\
+\bd acyclic      : ...\\[3pt]
+noncomputable def MAIDGame.toKernelGame (G : MAIDGame) : KernelGame G.Players
+\end{leanbox}
+
+\Mathematical
+A multi-agent influence diagram~\citep{KollerMilch2003} is a
+directed acyclic graph whose nodes are typed as chance, decision,
+or utility, with edges encoding informational and causal
+dependence.  The compiler implements a \emph{frontier evaluator}
+that, at each step, picks a node whose parents are all assigned and
+either samples its chance distribution, consults the player's
+strategy at the relevant decision node, or accumulates its
+utility.  Order-independence (the diamond lemma in
+\TT{MAID/FrontierLemmas.lean}) makes the compilation
+well-defined.
+
+\Textbook
+Koller–Milch Definition 1; Pfeffer–Gal Section 2.  The Lean
+formalization restricts to finite-domain MAIDs (each node has a
+\TT{Fintype} domain).  Strategic-relevance and d-separation
+analyses, prominent in the MAID literature, are not formalized;
+the order-independence content is.
+
+\Faithfulness
+Faithful, with restriction to finite-domain nodes.  See chapter
+§5.4 for the rationale on why we accepted the proof obligations of
+order-independent compilation rather than fixing a topological
+order.
+
+\Variants
+\TT{Languages/MAID/} contains \TT{Syntax.lean}, \TT{SOS.lean},
+\TT{FrontierEval.lean}, \TT{FrontierLemmas.lean},
+\TT{FoldEval.lean}, \TT{Prefix.lean} (subdiagram framework),
+\TT{Compile.lean}, \TT{CompileObs.lean}, \TT{Kuhn.lean},
+\TT{Theorems.lean}.
+
+\subsection{MultiRound: \texttt{Languages/MultiRound/}}
+\label{sec:supp:mr}\label{def:MultiRoundGame}
+
+\Anchor{MultiRoundGame, Round}
+\begin{leanbox}
+structure Round (n : Nat) (S V A Sig : Type) where\\
+\bd signal     : S $\to$ PMF (Fin n $\to$ Sig)\\
+\bd view       : Fin n $\to$ S $\to$ Sig $\to$ V\\
+\bd transition : S $\to$ (Fin n $\to$ Option A) $\to$ S\\[3pt]
+structure MultiRoundGame (n : Nat) (S V A Sig : Type) where\\
+\bd init   : S\\
+\bd rounds : List (Round n S V A Sig)\\[3pt]
+noncomputable def MultiRoundGame.toKernelGame
+\end{leanbox}
+
+\Mathematical
+A multi-round game is an initial state and a finite list of rounds
+\citep{ShohamLeytonBrown2008}.  Each round samples a joint signal
+from a state-dependent distribution, lets each player observe their
+own state-and-signal-derived view, and applies a deterministic
+transition keyed on the joint optional action.  Strategies are pure
+and memoryless at the protocol level — a function from view to
+optional action — with mixed/behavioral and recall structure
+imposed externally.  The compilation generates the outcome kernel
+by folding the round list and threading the state through the
+chain of observations and transitions.
+
+\Variants
+\TT{Languages/MultiRound/RepeatedGame.lean} restricts to identical
+rounds; \TT{StochasticGame.lean}~\citep{Shapley1953stochastic}
+specializes the transition to be itself stochastic and
+state-conditioned.  \TT{CompileObs.lean} and its linearizations
+(\TT{CompileObsLin.lean}, \TT{CompileObsLinAdequacy.lean},
+\TT{CompileObsLinRecall.lean}) compile to the
+\DefRef{ObsModelCore} substrate that the Kuhn theorem
+(\S\ref{sec:supp:kuhn}) is stated against.
+
+\subsection{FOSG: \texttt{Languages/FOSG/}}
+\label{sec:supp:fosg}\label{def:FOSG}
+
+\Anchor{FOSG.toKernelGame}
+\begin{leanbox}
+structure FOSG ($\iota$ W A : Type) (Obs : $\iota \to$ Type) (Pub : Type) where\\
+\bd init             : W\\
+\bd active           : W $\to$ Finset $\iota$\\
+\bd availableActions : (w : W) $\to \iota \to$ Set A\\
+\bd terminal         : W $\to$ Prop\\
+\bd transition       : ...\\
+\bd reward, privObs, pubObs : ...\\
+\bd terminal\_active\_eq\_empty : ...\\
+\bd terminal\_no\_legal, nonterminal\_exists\_legal : ...\\[3pt]
+noncomputable def FOSG.toKernelGame (G : FOSG \dots) [BoundedHorizon] : KernelGame $\iota$
+\end{leanbox}
+
+\Mathematical
+A factored-observation stochastic game~\citep{Kovarik2022} is the
+most general of the language layers:\ a state space, an active-set
+function (the players who must move at each state), per-player
+available actions, a transition kernel, a reward vector, a per-
+player private observation, and a public observation.  Strategies
+are functions of observation sequences; histories are recorded by
+an explicit \TT{History} type.  Bounded horizon makes the
+compilation finite.
+
+\Textbook
+Kovařík et al.~\citep{Kovarik2022} Definition 1.
+
+\Variants
+\TT{Languages/FOSG/} contains \TT{Basic.lean}, \TT{History.lean},
+\TT{Information.lean}, \TT{Strategy.lean}, \TT{Values.lean},
+\TT{Execution.lean}, \TT{OutcomeClosure.lean}, \TT{Serial.lean},
+\TT{Compile.lean}, \TT{Kuhn.lean}, \TT{Theorems.lean}, with the
+canonical \DefRef{ObsModelCore} bridge in \TT{Theorems/Kuhn/}.
+
+\subsection{Intrinsic-form: \texttt{Languages/Intrinsic/}}
+\label{sec:supp:intrinsic}
+
+\Anchor{Intrinsic.productMixedToBehavioral}
+\begin{leanbox}
+structure WGame where\\
+\bd Players, Agents : Type\\
+\bd agentPlayer : Agents $\to$ Players\\
+\bd Action : Agents $\to$ Type ; ...\\
+\bd InfoStructure : ...\\[3pt]
+noncomputable def productMixedToBehavioral (G : WGame) : ...\\
+theorem behavioral\_realizes\_productMixed (G : WGame) : ...
+\end{leanbox}
+
+\Mathematical
+The intrinsic (Witsenhausen-style) representation of a game
+\citep{HeymannDeLaraChancelier2020} exposes agent decision
+\emph{addresses} and information sets directly, without fixing an
+order in which agents act.  Three strategy types are defined:\
+\emph{mixed} (a distribution over a player's joint pure strategy
+space $\prod_{a \in A_p} \Lambda_a$), \emph{product-mixed}
+(independent randomization over each address), and
+\emph{behavioral} (independent randomization at each information
+set).  The unconditional product-mixed/behavioral equivalence is
+the intrinsic-form analogue of one direction of Kuhn's theorem and
+holds without any recall hypothesis.
+
+\Textbook
+Heymann–De Lara–Chancelier 2020 Definitions 8, 10, 11; Propositions
+12, 13.  The intrinsic layer is structurally a separate syntactic
+root than the EFG/MAID/MR/FOSG family.
+
+% =====================================================================
+\section{Bridges}
+\label{sec:supp:bridges}
+
+Bridges between languages are commuting-compilation theorems; the
+expressiveness lens of \TT{Languages/Expressiveness/} packages
+them in a uniform shape.
+
+\subsection{Languages and reductions: anchor}
+\label{sec:supp:expressiveness}\label{def:Expressiveness.Language}\label{def:Expressiveness.Reduction}
+
+\Anchor{Expressiveness.Language, Expressiveness.Reduction}
+\begin{leanbox}
+namespace GameTheory.Languages.Expressiveness\\[1pt]
+structure Language ($\iota$ : Type) where\\
+\bd Syntax  : Type u\\
+\bd compile : Syntax $\to$ KernelGame $\iota$\\[3pt]
+structure Reduction \{$\iota$ : Type\} (L : Language $\iota$) (M : Language $\iota$)\\
+\bd (R : KernelGame $\iota$ $\to$ KernelGame $\iota$ $\to$ Prop) where\\
+\bd translate : L.Syntax $\to$ M.Syntax\\
+\bd sound     : $\forall$ x : L.Syntax, R (L.compile x) (M.compile (translate x))
+\end{leanbox}
+
+\Mathematical
+A \emph{language} for a fixed player type $\Players$ is a syntax
+class together with a compilation $\compileTo : \mathrm{Syntax} \to
+\KG_\Players$.  A \emph{reduction} from $L$ to $M$ over a semantic
+relation $R$ is a translation on syntax together with a proof that
+the compiled games are $R$-related for every source program.
+Reductions compose under transitivity of $R$.
+
+\Variants
+The relation taxonomy in \TT{Expressiveness/Relations.lean}
+catalogues:
+$\mathrm{ProtocolEquivalent}$ (game-form-level isomorphism,
+ignoring utility); $\mathrm{UtilityDistributionEquivalent}$
+(bisimulation; both protocol and joint utility distribution
+preserved); $\mathrm{UtilityDistributionSimulation}$ (the directed
+version); $\mathrm{EUEquivalent}$ (equal expected utility for each
+player at corresponding profiles); $\mathrm{EUSimulation}$ (directed
+EU-comparison; equilibria of the source pull back to the target).
+The bridges of the next subsection are reductions in this lens.
+
+\subsection{Concrete bridges: bunched}
+\label{sec:supp:concrete-bridges}
+
+\paragraph{NFG → EFG (\TT{Languages/Bridges/NFG_EFG.lean}).}\
+Each finite NFG is presented as a depth-1 EFG with a single
+information set per player and a flat tree of $|\Act_i|$ branches
+at each.  Soundness at the EU-isomorphism level.
+
+\paragraph{NFG → FOSG (\TT{Languages/Bridges/NFG_FOSG.lean}).}\
+Each finite NFG is presented as a one-shot FOSG with two world
+states ($\mathsf{init}, \mathsf{terminal}$), every player active
+at $\mathsf{init}$, no observations, and a single deterministic
+transition delivering the NFG payoff as the FOSG reward.
+Soundness:\
+\TT{NFGGame.toFOSG_terminal_iff} and the corresponding EU
+equivalence.
+
+\paragraph{EFG → NFG (\TT{Languages/Bridges/EFG_NFG.lean}).}\
+The strategic form of a finite EFG:\ pure strategy = function from
+information set to action, payoff = expected payoff under the
+behavioral lift of that pure strategy.  Soundness at the
+EU-equivalence level.
+
+\paragraph{MAID → EFG (\TT{Languages/Bridges/MAID_EFG.lean}).}\
+A bounded MAID compiles to an EFG via a topological scheduling of
+its decision nodes; soundness at the strategic-form refinement
+level (information sets preserved).
+
+\paragraph{EFG → FOSG (\TT{Languages/Bridges/FOSG/}).}\
+\TT{ObsModelCore.lean}, \TT{AugmentedEFG.lean},
+\TT{SerialExec.lean}.  An EFG with serial execution is presented
+as an FOSG.  Soundness at the game-form simulation level.
+
+\subsection{Solution-concept transport}
+\label{sec:supp:transport}
+
+The main chapter's transport theorem
+(\TT{Core/UtilityInvariance.lean})
+states that a protocol map with bijective \TT{stratMap} and
+bijective \TT{outcomeMap} transports the
+preference-parameterized Nash, best-response, dominance,
+weak/strict dominance, correlated-equilibrium, and
+coarse-correlated-equilibrium predicates pointwise across the
+bijection on profiles.  Specializing to a kernel-game simulation
+(utility-preserving) yields the EU-specific transport laws.  These
+are the operational content of the bridges:\ a Nash equilibrium of
+a compiled NFG remains a Nash equilibrium of its FOSG image.
+
+% =====================================================================
+\section{Major theorems}
+\label{sec:supp:theorems}
+
+\subsection{Mixed Nash existence: \texttt{KernelGame.mixed\_nash\_exists}}
+\label{sec:supp:nash-exists}\label{def:mixed_nash_exists}
+
+\Anchor{mixed_nash_exists}
+\begin{leanbox}
+theorem KernelGame.mixed\_nash\_exists (G : KernelGame $\iota$)\\
+\bd [Fintype $\iota$] [DecidableEq $\iota$]\\
+\bd [$\forall$ i, Fintype (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
+\bd [Fintype G.Outcome] :\\
+\bd $\exists$ $\sigma$ : $\forall$ i, PMF (G.Strategy i),\ G.mixedExtension.IsNash $\sigma$
+\end{leanbox}
+
+\Mathematical
+Every finite game has a mixed Nash equilibrium.  Hypotheses:\
+finite player type, decidable equality on players, finite
+non-empty strategy space per player, finite outcome.
+
+\paragraph{Proof structure.}\
+The proof follows Nash's gain-map argument~\citep{Nash1951}.
+Define
+$\mathrm{gain}_i(\Profile, s) = \EU(\KG^{\mathrm{mix}}, \Profile[i \mapsto \Dirac_s], i) - \EU(\KG^{\mathrm{mix}}, \Profile, i)$,
+the gain to player $i$ from deviating to pure $s$, and
+\[
+  \Phi_i(\Profile)(s) \;=\;
+    \frac{\Profile_i(s) + (\mathrm{gain}_i(\Profile, s))^+}
+         {1 + \sum_{s'} (\mathrm{gain}_i(\Profile, s'))^+}.
+\]
+$\Phi$ is a continuous self-map of the product simplex
+$\prod_i \Delta(\Strat_i)$.  Brouwer's fixed-point theorem (mathlib's
+\TT{brouwerFixedPoint} on a closed disk, lifted to the product
+simplex via the homeomorphism in
+\TT{Concepts/ProductSimplexBrouwer.lean}) gives a fixed point
+$\Profile^*$.  The algebraic step in
+\TT{Theorems/NashExistenceMixed.lean} (section
+\TT{NashMapAlgebra}) shows that a fixed point of $\Phi$ is a Nash
+equilibrium:\ the positive-part bracketing forces every player's
+gain to vanish at $\Profile^*$.
+
+\Textbook
+Nash 1951 Theorem 1; Osborne–Rubinstein Proposition 33.1.
+
+\Faithfulness
+Faithful.  The library is honest about non-constructivity:\
+\TT{mixed_nash_exists} is \TT{noncomputable} because Brouwer is.
+A constructive route via Sperner's lemma is listed in chapter
+§10 as a future direction.
+
+\subsection{Correlated and coarse correlated equilibrium existence}
+\label{sec:supp:ce-exists}\label{def:correlatedEq_exists}
+
+\begin{leanbox}
+theorem KernelGame.correlatedEq\_exists       (G : KernelGame $\iota$) [...]
+theorem KernelGame.coarseCorrelatedEq\_exists (G : KernelGame $\iota$) [...]
+\end{leanbox}
+
+The independent product
+$\bigotimes_i \Profile^*_i$ over the mixed Nash profile supplied by
+the main chapter's mixed-existence theorem is a correlated equilibrium
+of the original \KG;\ this is the route taken by
+\TT{Theorems/CorrelatedEqExistence.lean}.  CCE existence is the
+corollary $\Pref$-CE $\subseteq$ $\Pref$-CCE.  See chapter §6.2
+for the alternative no-regret-learning route, not formalized.
+
+\subsection{Minimax theorem: \texttt{KernelGame.von\_neumann\_minimax}}
+\label{sec:supp:minimax}\label{def:von_neumann_minimax}
+
+\Anchor{von_neumann_minimax}
+\begin{leanbox}
+theorem KernelGame.von\_neumann\_minimax (G : KernelGame (Fin 2))\\
+\bd [Fintype G.Outcome] [$\forall$ i, Fintype (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
+\bd (hzs : G.IsZeroSum) :\\
+\bd $\exists$ (v : $\mathbb{R}$) ($\sigma$ : Profile G.mixedExtension),\\
+\bdd G.mixedExtension.IsNash $\sigma$ $\wedge$ G.mixedExtension.eu $\sigma$ 0 = v $\wedge$\\
+\bdd ($\forall$ s$_1$, G.mixedExtension.eu (Function.update $\sigma$ 1 s$_1$) 0 $\ge$ v) $\wedge$\\
+\bdd ($\forall$ s$_0$, G.mixedExtension.eu (Function.update $\sigma$ 0 s$_0$) 0 $\le$ v)
+\end{leanbox}
+
+\Mathematical
+Every finite two-player zero-sum game has a mixed Nash profile
+whose player-0 payoff is a saddle value:\ player 1 cannot lower it
+by deviating and player 0 cannot raise it by deviating.  A separate
+lemma records that all mixed Nash equilibria yield the same
+expected utility for player 0.  The usual finite-game
+max-min/min-max equality is the textbook reading of these saddle
+inequalities, but it is not the literal statement packaged here.
+
+\paragraph{Proof structure.}\
+Existence of a mixed Nash profile is \TT{mixed_nash_exists}.
+Equality of EU at any two Nash profiles is the saddle-point
+property of zero-sum Nash, recorded as
+\TT{IsZeroSum.nash_eu_eq} in \TT{Theorems/Minimax.lean}.
+
+\Textbook
+von Neumann 1928~\citep{vN1928}; Maschler–Solan–Zamir Theorem 7.6.
+
+\subsection{Backward induction (Zermelo) and the ODP}
+\label{sec:supp:odp}\label{def:zermelo}\label{def:oneShotDeviation_iff_spe}\label{def:HasNoOneShotDeviation}
+
+\Anchor{HasNoOneShotDeviation, oneShotDeviation_iff_spe, zermelo}
+\begin{leanbox}
+def HasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]\\
+\bd ($\sigma$ : PureProfile G.inf) : Prop :=\\
+\bd $\forall$ \{p\} (I : G.inf.Infoset p) (next : G.inf.Act I $\to$ GameTree G.inf G.Outcome),\\
+\bdd ($\exists$ h, ReachBy h G.tree (.decision I next)) $\to$\\
+\bdd $\forall$ a' : G.inf.Act I,\\
+\bdd \bd expect ((next ($\sigma$ p I)).evalDist (pureToBehavioral $\sigma$)) (G.utility · p) $\ge$\\
+\bdd \bd expect ((next a').evalDist (pureToBehavioral $\sigma$)) (G.utility · p)\\[3pt]
+theorem oneShotDeviation\_iff\_spe (G : EFGGame) (hpi : IsPerfectInfo G.tree) :\\
+\bd $\forall$ $\sigma$, HasNoOneShotDeviation G $\sigma$ $\leftrightarrow$ G.IsSubgamePerfectEq $\sigma$\\[3pt]
+theorem zermelo (G : EFGGame) (hpi : IsPerfectInfo G.tree) :\\
+\bd $\exists$ $\sigma$ : PureProfile G.inf, G.IsSubgamePerfectEq $\sigma$
+\end{leanbox}
+
+\Mathematical
+The one-shot deviation principle:\ in a finite perfect-information
+EFG, a pure profile is subgame-perfect iff it has no profitable
+one-shot deviation at any reachable decision node.  Zermelo's
+theorem:\ every finite perfect-information EFG has a pure
+subgame-perfect equilibrium, constructed by backward induction.
+
+\paragraph{Proof structure.}\
+\TT{Theorems/Zermelo.lean}.
+\TT{perfectInfo_disjoint_subtrees}:\ in a perfect-info tree,
+sibling subtrees have disjoint information-set supports, so
+backward induction can fix actions at one decision node without
+affecting optimality elsewhere.  \TT{exists_noOSD}:\ the inductive
+backward construction yields a profile with no profitable one-shot
+deviation.  Zermelo follows from \TT{exists_noOSD} and the ODP.
+
+\Textbook
+Zermelo 1913 (the chess theorem); modern treatment in
+Selten 1965~\citep{Selten1965, Selten1975}; Osborne–Rubinstein
+Chapter 6.4.  ODP is folklore (see Fudenberg–Tirole §3.3 for a
+modern statement).
+
+\subsection{Kuhn's theorem: \texttt{Theorems/Kuhn/}}
+\label{sec:supp:kuhn}\label{def:ObsModelCore}\label{def:kuhn_behavioral_to_mixed}\label{def:kuhn_mixed_to_behavioral_semantic}
+
+\Anchor{ObsModelCore, kuhn_behavioral_to_mixed, kuhn_mixed_to_behavioral_semantic}
+\begin{leanbox}
+structure ObsModelCore ($\iota\,\sigma$ : Type) (Obs : $\iota \to$ Type)\\
+\bd (Act : (i : $\iota$) $\to$ Obs i $\to$ Type) where\\
+\bd  -- world state, transition kernel, per-player observation, ...\\[3pt]
+def NoNontrivialInfoStateRepeat (O : ObsModelCore ...) : Prop\\
+def HorizonSeparation                (O : ObsModelCore ...) : Prop\\
+def ActionPosteriorLocal            (O : ObsModelCore ...) : Prop\\
+def PerStepPlayerRecall             (O : ObsModelCore ...) : Prop\\[3pt]
+theorem ObsModelCore.kuhn\_behavioral\_to\_mixed\\
+\bd (O : ObsModelCore ...) [...] (hH : HorizonSeparation O) (hR : NoNontrivialInfoStateRepeat O) :\\
+\bd $\forall$ $\beta$ : BehavioralProfile O,\ runDist O $\beta$ = (behavioralToMixedJoint $\beta$).bind (runDistPure O)\\[3pt]
+theorem ObsModelCore.kuhn\_mixed\_to\_behavioral\_semantic\\
+\bd (O : ObsModelCore ...) [...] (hL : ActionPosteriorLocal O) :\\
+\bd $\forall$ $\mu$ : PMF (PureProfile O), $\exists$ $\beta$, runDist O $\beta$ = $\mu$.bind (runDistPure O)
+\end{leanbox}
+
+\Mathematical
+The library proves Kuhn's behavioral$\,\leftrightarrow\,$mixed
+equivalence at a representation-neutral substrate, the
+\TT{ObsModelCore} record:\ a tuple recording the world state, each
+player's observation type, the per-observation action arity, and
+a transition kernel.  Behavioral profiles are per-player
+$\InfoState_i \to \PMF{\Act_i}$; mixed profiles are per-player
+distributions over the deterministic functions
+$\InfoState_i \to \Act_i$.
+
+The four hypothesis predicates control which direction of Kuhn
+applies:
+\begin{itemize}\itemsep1pt
+\item \emph{NoNontrivialInfoStateRepeat}:\ no information state
+  is visited twice along any trace (except at trivially-arity
+  states).  This enforces tree-shaped reachability and is needed
+  for the $B \to M$ direction's product-of-information-states
+  construction to be well-defined.
+\item \emph{HorizonSeparation}:\ a sequential separation of
+  histories by depth, also needed for $B \to M$.
+\item \emph{ActionPosteriorLocal}:\ the conditional distribution
+  of an action given an information state does not depend on
+  information outside the player's recall.  Sufficient for $M \to
+  B$.  Strictly weaker than perfect recall in the textbook sense.
+\item \emph{PerStepPlayerRecall}:\ the syntactic version of
+  ActionPosteriorLocal that is automatic for snapshot-refined
+  information states.
+\end{itemize}
+
+The $B \to M$ direction (\TT{kuhn_behavioral_to_mixed}) constructs
+the equivalent mixed profile by the independent product of the
+behavioral distributions across information states; the
+$M \to B$ direction (\TT{kuhn_mixed_to_behavioral_semantic})
+constructs the behavioral profile by extracting the
+information-state-conditional distributions from $\mu$.
+
+\Textbook
+Kuhn 1953 Theorem 4 (perfect-recall version); Aumann 1964 (recall
+hypothesis sharpening); Selten 1975 §6 (textbook treatment).
+
+\Faithfulness
+Strict generalization.  The textbook Kuhn's theorem requires
+perfect recall; the library proves both directions under
+strictly weaker hypotheses.  The $B \to M$ direction needs no
+recall at all; the $M \to B$ direction needs only
+ActionPosteriorLocal, which holds whenever the information
+structure has the per-step locality property — a condition
+strictly weaker than full perfect recall.  See chapter §6.5 for
+the rationale.
+
+\Variants
+\TT{Theorems/Kuhn/} contains the proof split:\
+\TT{ObsModel.lean} (the snapshot-refined wrapper),
+\TT{KuhnModel.lean} (alternative carrier),
+\TT{BehavioralToMixedCore.lean}
+(the $B \to M$ proof, ~613 lines),
+\TT{MixedToBehavioralCore.lean} (the $M \to B$ proof, ~951 lines),
+\TT{CorrelatedRealization.lean} (an alternative
+$M \to B$ proof via the correlated-equilibrium realization formula).
+The package also exposes generic outcome-equality schemas
+(\TT{KuhnBehavioralToMixedOutcome},
+\TT{KuhnMixedToBehavioralViaOutcome},
+\TT{KuhnCompleteViaOutcome} in \TT{Theorems/Kuhn.lean}) for
+language-specific Kuhn instantiations.
+
+% =====================================================================
+\section{Mechanism design and auctions}
+\label{sec:supp:mechanism}
+
+\subsection{Bayesian games: \texttt{Mechanism/BayesianGame.lean}}
+\label{sec:supp:bayesian}\label{def:BayesianGame}\label{def:BayesianGame.toKernelGame}
+
+\Anchor{BayesianGame, BayesianGame.toKernelGame}
+\begin{leanbox}
+structure BayesianGame ($\iota$ : Type) [Fintype $\iota$] where\\
+\bd $\Theta$       : $\iota \to$ Type ; [Fintype, Nonempty]\\
+\bd Act     : $\iota \to$ Type ; [Fintype, Nonempty]\\
+\bd prior   : PMF ($\forall$ i, $\Theta$ i)\\
+\bd utility : ($\forall$ i, $\Theta$ i) $\to$ ($\forall$ i, Act i) $\to \iota \to \mathbb{R}$\\[3pt]
+abbrev Strategy (B : BayesianGame $\iota$) (i : $\iota$) := B.$\Theta$ i $\to$ B.Act i\\[3pt]
+noncomputable def exAnteEU (B : BayesianGame $\iota$) ($\sigma$ : B.BProfile) (who : $\iota$) : $\mathbb{R}$ :=\\
+\bd expect B.prior (fun $\theta$ $\Rightarrow$ B.utility $\theta$ (fun i $\Rightarrow$ $\sigma$ i ($\theta$ i)) who)\\[3pt]
+noncomputable def toKernelGame (B : BayesianGame $\iota$) : KernelGame $\iota$ :=\\
+\bd KernelGame.ofEU B.Strategy (fun $\sigma$ i $\Rightarrow$ B.exAnteEU $\sigma$ i)\\[3pt]
+def BayesNash (B : BayesianGame $\iota$) ($\sigma$ : B.BProfile) : Prop :=\\
+\bd B.toKernelGame.IsNash $\sigma$\\[3pt]
+theorem bayesNash\_iff\_exAnteEU (B : BayesianGame $\iota$) ($\sigma$ : B.BProfile) :\\
+\bd B.BayesNash $\sigma$ $\leftrightarrow$ $\forall$ (who) (s'), B.exAnteEU $\sigma$ who $\ge$ B.exAnteEU (Function.update $\sigma$ who s') who
+\end{leanbox}
+
+\Mathematical
+A Bayesian game is a tuple
+$(\Theta, \mathrm{Act}, \mu, u)$ with $\Theta_i$ the type space of
+player $i$, $\mathrm{Act}_i$ the action space, $\mu \in
+\PMF{\prod_i \Theta_i}$ the common prior, and $u$ the
+type-and-action-dependent payoff.  A strategy is a function
+$\Theta_i \to \mathrm{Act}_i$.  The compilation goes through
+\TT{KernelGame.ofEU}:\ the strategy type is preserved, the outcome
+type is $\Players \to \RR$, and the kernel is the Dirac evaluation
+at the ex-ante expected utility \TT{exAnteEU}.  Bayes-Nash
+equilibrium is exactly Nash on the compiled kernel game,
+characterized concretely by \TT{bayesNash_iff_exAnteEU}.
+
+\Textbook
+Harsanyi 1967~\citep{Harsanyi1967} type-agent representation;
+Osborne–Rubinstein Chapter 24.
+
+\Faithfulness
+Reformulation.  The textbook Bayesian Nash equilibrium quantifies
+over type-conditional deviations; we use the equivalent ex-ante
+formulation, where a deviation is a function $\Theta_i \to
+\mathrm{Act}_i$ replacing the player's strategy globally.  The
+ex-post and interim variants are derived definitions.
+\emph{Restriction:}\ finite type and action spaces.
+
+\subsection{General mechanisms and the revelation principle}
+\label{sec:supp:revelation}\label{def:GeneralMechanism}\label{def:revelation_principle}
+
+\Anchor{GeneralMechanism, revelation_principle}
+\begin{leanbox}
+structure GeneralMechanism ($\iota$ : Type) [Fintype $\iota$] where\\
+\bd $\Theta$       : $\iota \to$ Type ; Act : $\iota \to$ Type\\
+\bd outcome : ($\forall$ i, Act i) $\to \iota \to \mathbb{R}$\\[3pt]
+def StrategyProfile (M : GeneralMechanism $\iota$) := $\forall$ i, M.$\Theta$ i $\to$ M.Act i\\[3pt]
+def IsBNE (M : GeneralMechanism $\iota$) ($\mu$ : PMF ($\forall$ i, M.$\Theta$ i)) ($\sigma$ : M.StrategyProfile) : Prop\\[3pt]
+noncomputable def toDirect (M : GeneralMechanism $\iota$) ($\sigma$ : M.StrategyProfile) : Mechanism $\iota$\\[3pt]
+theorem revelation\_principle (M : GeneralMechanism $\iota$) ($\mu$ : PMF ($\forall$ i, M.$\Theta$ i))\\
+\bd ($\sigma$ : M.StrategyProfile) (h : M.IsBNE $\mu$ $\sigma$) :\\
+\bd (M.toDirect $\sigma$).isBIC $\mu$
+\end{leanbox}
+
+\Mathematical
+A general mechanism has separate type spaces and action spaces;
+strategies map types to actions.  A direct mechanism has
+$\mathrm{Act}_i = \Theta_i$.  Bayesian incentive compatibility (BIC)
+of a direct mechanism is BNE under truthful reporting.  The
+revelation principle says:\ for any general mechanism with a BNE
+$\sigma$, the direct mechanism that composes reports with $\sigma$
+is BIC in the library's constant-misreport sense.
+
+\Textbook
+Myerson 1981~\citep{Myerson1981}; Maschler–Solan–Zamir Chapter
+17.
+
+\Faithfulness
+Faithful to the finite direct-mechanism construction, with one
+restriction:\ \TT{Mechanism.isBIC} quantifies over constant
+misreports $\theta'_i$, whereas the stronger Bayes-Nash predicate
+over the induced Bayesian game quantifies over arbitrary
+type-dependent reporting strategies.  The library includes
+\TT{isBIC_of_truthful_bayesNash} to relate the two levels.
+
+\subsection{Auctions: bunched}
+\label{sec:supp:auctions}\label{def:vickrey_truthful_dominant}
+
+\Anchor{vickrey_truthful_dominant}
+\begin{leanbox}
+noncomputable def vickreyPayoff (v : Fin n $\to \mathbb{R}$) (bids : Fin n $\to \mathbb{R}$) (who : Fin n) : $\mathbb{R}$ :=\\
+\bd if bids who > maxOtherBid bids who then v who - maxOtherBid bids who else 0\\[3pt]
+theorem vickrey\_truthful\_dominant (v : Fin n $\to \mathbb{R}$) (who : Fin n) :\\
+\bd $\forall$ bids b', vickreyPayoff v (Function.update bids who (v who)) who $\ge$\\
+\bdd vickreyPayoff v (Function.update bids who b') who
+\end{leanbox}
+
+\Mathematical
+In a second-price (Vickrey) auction with valuations $v$, the
+payoff is $v_i - \max_{j \neq i} b_j$ for the highest bidder
+($b_i$) if their bid strictly exceeds the rest, and $0$ otherwise.
+Truthful bidding $b_i = v_i$ is a weakly dominant strategy:\ for
+any opponents' bids and any alternative bid $b'$, the payoff under
+truthful bidding is at least as large.
+
+\Textbook
+Vickrey 1961~\citep{Vickrey1961}.
+
+\Faithfulness
+Faithful.  The proof is a case analysis on whether $b'$ is above
+or below $\max_{j \neq i} b_j$, in each case verifying that the
+payoff under truthful bidding matches or exceeds.
+
+\Variants
+\TT{Auctions/FirstPrice.lean}, \TT{Auctions/AllPay.lean},
+\TT{Auctions/VCG.lean}.  First-price constructs the deterministic
+first-price payoff game and proves that no single bid is dominant.
+All-pay records payoff facts such as overbidding being unprofitable
+and rent dissipation.  VCG packages the efficient-allocation setup
+and proves truthful reporting is dominant
+(Clarke 1971, Groves 1973).
+
+\subsection{Social choice}
+\label{sec:supp:social-choice}
+
+\TT{Mechanism/SocialChoice.lean} formalizes a finite set of
+alternatives, a finite set of voters with strict preferences over
+alternatives, and structural notions:\ preference profiles,
+utilitarian aggregation, the existence of a welfare-maximizing
+alternative.  The classical impossibility theorems (Arrow,
+Gibbard–Satterthwaite, Sen) are not formalized; see chapter §10.
+
+% =====================================================================
+\section{Worked examples}
+\label{sec:supp:examples}
+
+The chapter's §6 (Worked example) traces Prisoner's Dilemma at a
+high level.  This section gives the full Lean text and the
+unfolding of the relevant predicates.
+
+\subsection{Prisoner's Dilemma}
+\label{sec:supp:examples:pd}
+
+\begin{leanbox}
+namespace NFG\\[1pt]
+inductive PDAction where $\mid$ cooperate $\mid$ defect\\
+deriving DecidableEq, Repr\\[3pt]
+def prisonersDilemma : NFGGame Bool (fun \_ $\Rightarrow$ PDAction) where\\
+\bd Outcome := $\forall$ \_ : Bool, PDAction\\
+\bd outcome := id\\
+\bd utility s p :=\\
+\bdd match s true, s false, p with\\
+\bdd $\mid$ defect, defect, true $\Rightarrow$ 1\\
+\bdd $\mid$ cooperate, defect, true $\Rightarrow$ 0\\
+\bdd $\mid$ defect, cooperate, true $\Rightarrow$ 3\\
+\bdd $\mid$ cooperate, cooperate, true $\Rightarrow$ 2\\
+\bdd $\mid$ ...\\[3pt]
+def pd\_defect\_defect : StrategyProfile (fun \_ : Bool $\Rightarrow$ PDAction) :=\\
+\bd fun \_ $\Rightarrow$ PDAction.defect\\[3pt]
+theorem pd\_defect\_is\_nash : IsNashPure prisonersDilemma pd\_defect\_defect := by\\
+\bd intro i a' ; cases i $<;>$ cases a' $<;>$\\
+\bdd simp [prisonersDilemma, pd\_defect\_defect, deviate, Function.update]
+\end{leanbox}
+
+\paragraph{Faithfulness check.}\
+The predicate \TT{IsNashPure prisonersDilemma pd_defect_defect}
+unfolds (after \TT{intro i a'}) to four cases, one per
+$(i \in \{T, F\}, a' \in \{C, D\})$ pair:
+\begin{itemize}\itemsep1pt
+\item $i = T, a' = C$:\ payoff at $(D, D)$ for player $T$ is $1$,
+  payoff at $(C, D)$ for player $T$ is $0$.  $1 \ge 0$. \checkmark
+\item $i = T, a' = D$:\ same profile.  $1 \ge 1$. \checkmark
+\item $i = F, a' = C$:\ payoff at $(D, D)$ for $F$ is $1$, payoff
+  at $(D, C)$ for $F$ is $0$.  $1 \ge 0$. \checkmark
+\item $i = F, a' = D$:\ same profile.  $1 \ge 1$. \checkmark
+\end{itemize}
+Each inequality is the textbook Nash check.  The Lean proof closes
+all four with one \TT{simp}.
+
+The companion theorem \TT{pd_coop_not_nash} :\
+\TT{¬ IsNashPure prisonersDilemma pd_coop_coop}
+exhibits a profitable deviation:\ player $T$ deviates from $C$ to
+$D$ and gains payoff $3 - 2 = 1$.  The Lean proof extracts the
+$T$, $D$ instance of $\IsNash$, simplifies, and closes with
+\TT{linarith}.
+
+\subsection{Matching Pennies}
+\label{sec:supp:examples:mp}
+
+\begin{leanbox}
+inductive MPAction where $\mid$ heads $\mid$ tails\\[3pt]
+def matchingPennies : NFGGame Bool (fun \_ $\Rightarrow$ MPAction) where\\
+\bd Outcome := $\forall$ \_ : Bool, MPAction\\
+\bd outcome := id\\
+\bd utility := -- (H,H) = (1,-1), (H,T) = (-1,1), ...
+\end{leanbox}
+
+\paragraph{Faithfulness check.}\
+There is no pure Nash equilibrium:\ at $(H, H)$ player $F$ deviates
+to $T$ and gains $+2$; at $(H, T)$ player $T$ deviates to $T$ and
+gains $+2$; the four pure profiles are similarly checked.  The
+textbook mixed equilibrium is the symmetric uniform profile
+$\Profile^*_T = \Profile^*_F = \tfrac12 \Dirac_H + \tfrac12 \Dirac_T$,
+at which both players' EU is $0$.  The current Lean example records
+the no-pure-Nash result; it does not package the mixed-equilibrium
+calculation as a theorem in \TT{Languages/NFG/Examples.lean}.
+
+\subsection{A two-step centipede in EFG}
+\label{sec:supp:examples:centipede}
+
+A two-step centipede:\ player 0 chooses Take or Pass; if Pass,
+player 1 chooses Take or Pass; payoffs $\mathrm{TT_0} = (1, 0)$,
+$\mathrm{PT} = (0, 2)$, $\mathrm{PP} = (3, 1)$.  The textbook
+backward-induction solution is $(T, T)$:\ at the second node,
+player 1 strictly prefers $T$ ($2 > 1$), so they play $T$; at the
+first node, player 0 anticipates this and prefers $T$ ($1 > 0$).
+The library's packaged extensive-form example is the entry-deterrence
+game in \TT{Languages/EFG/Refinements.lean}, where it proves:
+\begin{itemize}\itemsep1pt
+\item \TT{entrySPE_isSPE}:\ the backward-induction profile is SPE.
+\item \TT{entryNash_isNash}:\ another profile is Nash.
+\item \TT{entryNash_not_spe}:\ that Nash profile is not SPE.
+\end{itemize}
+The two-step centipede calculation is illustrative prose, not a
+separate Lean theorem.
+
+\subsection{A small Bayesian game}
+\label{sec:supp:examples:bayesian}
+
+A two-player coordination game with binary types:\ each player has
+type $\theta_i \in \{0, 1\}$ drawn independently uniform; actions
+are $a_i \in \{L, R\}$; payoffs are $u_i(\theta, a) = [\![ a_T = a_F ]\!]
+\cdot [\![ a_T = \theta_T ]\!]$.  The Bayes-Nash equilibrium has
+each player play $a_i = \theta_i$;\ the Lean proof unfolds
+\TT{bayesNash_iff_exAnteEU} and verifies the four-deviation
+inequality directly under the uniform prior.
+
+% =====================================================================
+\section{Reading order}
+\label{sec:supp:reading}
+
+Three suggested traversals.
+
+\paragraph{(a)~"I want to use the library on a finite NFG."}\
+\S\ref{sec:supp:probability} (probability primitives) →
+\S\ref{sec:supp:gameform}, \S\ref{sec:supp:kernelgame},
+\S\ref{sec:supp:eu} (semantic core) →
+\S\ref{sec:supp:isNash} (Nash) →
+\S\ref{sec:supp:nfg} (NFG) →
+\S\ref{sec:supp:nash-exists} (existence).
+\S\ref{sec:supp:examples:pd} is the canonical worked example.
+
+\paragraph{(b)~"I want to add a new language."}\
+\S\ref{sec:supp:core} (semantic core) →
+\S\ref{sec:supp:nfg} or \S\ref{sec:supp:efg} as a template →
+\S\ref{sec:supp:expressiveness} (Language/Reduction abstraction)
+to register the language for bridges.  The
+worked subclass files inside \TT{Languages/NFG/} (CongestionGame,
+Bargaining, Stackelberg) are useful as additional templates.
+
+\paragraph{(c)~"I want to follow the Kuhn theorem proof end-to-end."}\
+\S\ref{sec:supp:probability} → \S\ref{sec:supp:gameform},
+\S\ref{sec:supp:kernelgame} → \S\ref{sec:supp:efg} (EFG behavioral
+profiles) → \S\ref{sec:supp:kuhn} (the four hypotheses, then the
+two anchor theorems).  The proof split is in
+\TT{BehavioralToMixedCore.lean} and \TT{MixedToBehavioralCore.lean}
+in \TT{Theorems/Kuhn/}; the
+\TT{CorrelatedRealization.lean} alternative goes via the
+mixed-Nash-induced correlated distribution.
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

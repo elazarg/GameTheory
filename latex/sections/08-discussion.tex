@@ -1,0 +1,257 @@
+\section{Discussion: design tradeoffs}
+\label{sec:discussion}
+
+This section collects, in one place, the design choices that
+shaped the library, paired with what each gained and what each
+cost.  We have referred to these tradeoffs locally throughout the
+chapter; the goal here is to make the global picture explicit so
+that a downstream user can decide whether the library's contract
+matches their needs.
+
+\subsection{Finite, discrete probability}
+\label{sec:discussion:finite}
+
+\paragraph{Choice.}\ Every distribution is a \TT{PMF}; every
+strategy/outcome carrier is a \TT{Fintype} or carries a
+\TT{Fintype} hypothesis on the relevant theorem.  No
+$\sigma$-algebra is ever invoked.
+
+\paragraph{Gained.}\ Every strategic-form definition is a
+$\sum$-of-products identity that the library's \TT{simp} set can
+manipulate.  No measurability hypotheses propagate through
+strategy spaces, profile distributions, or outcome distributions.
+Equational reasoning under the \TT{PMF} monad is mechanically
+straightforward.  Compilation between languages is a calculation
+on finite sums and Dirac/Bind compositions.
+
+\paragraph{Lost.}\ The cost of mechanizing measure theory and
+the catalogue of classical results that fall outside the discrete
+contract are described in detail in
+\S\ref{sec:prelim:pmf}; we do not repeat them here.  What §8 adds
+is the consequence for downstream consumers:\ a protocol or
+auction layer that builds on this library inherits the discrete
+contract and must either rephrase its objects in finite/discrete
+shape (e.g.\ a discretized bid grid, a finite type lattice) or
+build a parallel measure-theoretic infrastructure on top of
+mathlib and accept the corresponding proof obligations.  In
+practice this is a hard contract:\ existing downstream users of
+the library work in the discrete idiom uniformly, and the
+library's design does not provide an automatic bridge to a
+continuous version.  An honest reading of \S\ref{sec:prelim:pmf}
+should leave the consumer with a sense of which classical
+theorems they can call into and which they cannot.
+
+\subsection{Protocol/preference split}
+\label{sec:discussion:protocol-preference}
+
+\paragraph{Choice.}\ \TT{GameForm} is utility-free; \TT{KernelGame}
+adds utility.  Solution concepts exist in two forms:\ EU-specific
+predicates on \TT{KernelGame} and preference-parameterized
+predicates (\TT{*For}) on \TT{GameForm}.
+
+\paragraph{Gained.}\ Theorems about strategic structure (Kuhn,
+information-set machinery, the deviation hierarchy) state and
+prove once at the \TT{GameForm} layer, parametric in any
+preference preorder.  EU is one preference preorder; lexicographic,
+maximin, or non-EU preferences are other preorders that get the
+same theorems.  The library is therefore reusable for, e.g.,
+ordinal-preference solution concepts without rewriting the
+strategic skeleton.
+
+\paragraph{Lost.}\ One additional indirection for \emph{generic}
+users.  A user who only ever cares about expected utility writes
+\TT{G.IsNash $\sigma$} and is done; a user who wants to state a
+generic theorem parametric in the preference must write
+\TT{G.IsNashFor pref $\sigma$} and supply the preference
+explicitly.  Two versions of every solution concept exist
+(\TT{IsNash}, \TT{IsNashFor}, etc.), connected by \TT{\_iff\_}
+bridges; the \TT{simp} set has to know about both.  In practice the
+EU-only ergonomics dominates daily use and the generic version is
+visible only to library authors stating preference-parametric
+theorems.
+
+\paragraph{Why.}\ The split is motivated by classical
+mechanism-design practice~\citep{Myerson1991}, where the
+``social-choice rule + payment scheme = mechanism'' decomposition
+is exactly the protocol/preference split made structural.  Once we
+saw that several classical theorems (dominance $\Rightarrow$ Nash;
+correlated $\Rightarrow$ coarse correlated; the deviation hierarchy)
+were preference-agnostic, building them at the \TT{GameForm} layer
+became the natural design.
+
+\subsection{The \texttt{*For} style versus typeclass overloading}
+\label{sec:discussion:for-style}
+
+\paragraph{Choice.}\ Preferences are passed as explicit
+\TT{Prop}-valued arguments to \TT{*For} solution concepts; they
+are not registered as typeclass instances on \TT{KernelGame}.
+
+\paragraph{Gained.}\ Several library theorems quantify over two
+preferences at once (monotonicity of $\IsNashFor$ in the
+preference; Pareto dominance, which takes a $(\Pref, \sPref)$
+pair; strict-implies-weak bridges; the
+transport theorem of \S\ref{sec:semantic-core:transport}, which
+relates a preference to its pullback along an outcome bijection).
+With explicit-argument preferences each of these is one line; with
+a typeclass-based design each would force ad-hoc local instances
+and \TT{let}-binding tricks at the call site.
+
+\paragraph{Lost.}\ Slight verbosity at the call site for the
+\emph{generic} user:\ they write \TT{G.IsNashFor G.euPref}~\Profile\
+instead of \TT{G.IsNash}~\Profile\ whenever they instantiate the
+generic version at EU.  The EU-only user is unaffected — the
+EU-specific predicates (\TT{IsNash}, \TT{IsBestResponse},
+\TT{IsCorrelatedEq}, …) are exposed directly and the
+\TT{\_iff\_} bridges make round-tripping free for the EU case.
+
+\paragraph{Why.}\ The honest version of the argument is not that
+typeclasses are categorically wrong here — a \TT{[Preference G]}
+typeclass with a default \TT{euPref} instance would in fact make
+the EU-only case ergonomically uniform.  Rather, the multi-preference
+theorems listed above fit explicit-argument predicates naturally
+and fit typeclasses awkwardly, and the EU-only ergonomic is
+recovered cheaply by the EU-specific layer.  The library does
+use a typeclass where one is the right fit:\ \TT{PrefPreorder
+pref} asserts that a preference is reflexive and transitive — a
+property of the relation, not a choice between relations, and
+Lean's inference resolves it without diamond/multi-preference
+issues.
+
+\subsection{Solution concepts on \texttt{KernelGame} only}
+\label{sec:discussion:kg-only}
+
+\paragraph{Choice.}\ \TT{IsNash}, \TT{IsDominant}, \TT{IsBR},
+\TT{IsCorrelatedEq}, etc.\ are defined on \TT{KernelGame} and on
+\TT{GameForm}.  They are \emph{not} re-defined on each
+representation (NFG, EFG, MAID, MultiRound, FOSG); concrete
+representations bridge to the central definitions via $\toKG$.
+
+\paragraph{Gained.}\ The library has one canonical
+``\texttt{IsNash} of an EFG game'' — the \TT{IsNash} of its
+compiled kernel game.  Theorems about Nash on EFGs do not have to
+be re-proved each time a new EFG-like representation is added;
+they are corollaries of the core theorems via composition with
+$\compileTo$.  This is the workhorse of the bridge architecture
+of \S\ref{sec:languages:bridges}.
+
+\paragraph{Lost.}\ Concrete representations occasionally have a
+representation-specific solution concept that is more natural in
+their syntax than in the kernel-game image (subgame-perfect
+equilibrium for EFGs, perfect Bayesian equilibrium for Bayesian
+games).  These exist as separate definitions (e.g.\
+\TT{EFG.IsSubgamePerfectEq}); the library proves their relation
+to the central \TT{IsNash} as a theorem rather than building it
+into the definition.
+
+\subsection{Noncomputable definitions and classical reasoning}
+\label{sec:discussion:noncomputable}
+
+\paragraph{Choice.}\ Many definitions are \TT{noncomputable},
+particularly those that invoke real-number operations, the
+classical disjunction \TT{Function.update} on abstract index types,
+or fixed-point theorems.  We do not attempt to expose computable
+witnesses for, e.g., \TT{mixed\_nash\_exists}.
+
+\paragraph{Gained.}\ Proofs are shorter and more uniform.  Classical
+reasoning is locally invoked via \TT{open Classical in} and is
+flagged at every use.  Real-number arithmetic uses mathlib's full
+real-number API without restriction.
+
+\paragraph{Lost.}\ The library is not a Nash-equilibrium algorithm.
+A \TT{\#eval}-style execution will not produce a witness from
+\TT{mixed\_nash\_exists}.  Constructive consumers must write their
+own algorithm and prove it converges to a Nash equilibrium of the
+same kernel game.
+
+\paragraph{Why.}\ The library targets formalization of theorems,
+not algorithm certification.  Brouwer's fixed-point theorem is
+inherently non-constructive; replacing it with a constructive
+substitute (Sperner's lemma) would change the proof shape of
+\Cref{thm:nash-mixed} without changing the statement, and would
+not improve the user's experience unless they happened to be
+running the Lean kernel as an evaluator.  We treat constructive
+existence as a separate, downstream concern.
+
+\subsection{Distributional, not deterministic, EFG semantics}
+\label{sec:discussion:efg-distributional}
+
+\paragraph{Choice.}\ \TT{GameTree.evalDist} returns a \TT{PMF}
+$\Outcome$ given a \emph{behavioral} profile.  No deterministic
+``play'' function exists at the EFG level; pure strategies are
+lifted to behavioral via point-mass distributions.
+
+\paragraph{Gained.}\ Chance nodes integrate without ad-hoc
+adapters.  Kuhn's theorem becomes a structural identity
+$\evalDist(\beta) = (\mathrm{realize}(\mu)) \mathbin{\bind}
+\evalDist^{\mathrm{pure}}$ rather than a probabilistic
+equivalence, and the full game-form $\toGF$ has the
+$\K : \prod_i \Strat_i \to \PMF{\Outcome}$ shape natively.
+
+\paragraph{Lost.}\ Reasoning about a single play of an EFG (a
+single deterministic execution path) requires unfolding a
+\TT{PMF}.  This is a wash:\ traditional textbook reasoning quietly
+assumes determinism while writing distributional formulas, so
+making the distributional semantics primary forces explicit
+bookkeeping in places where the textbook is implicit.
+
+\subsection{\texorpdfstring{$\mathrm{Fin}\,n$}{Fin n} player types in bridges}
+\label{sec:discussion:fin-n}
+
+\paragraph{Choice.}\ Bridge theorems often canonicalize the
+player type to $\mathrm{Fin}\,n$ for the appropriate $n$.
+
+\paragraph{Gained.}\ A canonical concrete carrier on which to
+state the bridge.  Two bridges into and out of $\mathrm{Fin}\,n$
+compose without re-indexing in the middle.
+
+\paragraph{Lost.}\ Source-game player types (e.g.\
+$\mathrm{Bool}$ for two-player games) must be transported across
+an equivalence \TT{Bool $\simeq$ Fin 2} to use the bridge.
+
+\paragraph{Why.}\ \TT{KernelGame.reindex}
+(\S\ref{sec:semantic-core:reindex}) makes the transport a
+one-line operation.  Treating $\mathrm{Fin}\,n$ as the canonical
+finite-cardinality witness lets every bridge avoid having to
+pick one for itself.
+
+\subsection{What we did not formalize and why}
+\label{sec:discussion:scope}
+
+For honesty's sake we list what is missing.
+
+\begin{itemize}\itemsep2pt
+\item \emph{Repeated and stochastic games at infinite horizon.}
+The library's repeated games are bounded.  The folk-theorem-style
+results (Friedman, Fudenberg–Maskin) require infinite or
+discounted horizons, which interact with measure theory and
+which we have not formalized.
+
+\item \emph{Continuous strategy / type / outcome spaces.}  See
+\S\ref{sec:discussion:finite}.
+
+\item \emph{Computational complexity.}  Nash existence is
+formalized; PPAD-completeness~\citep{DaskalakisGoldbergPapadimitriou2009}
+is not.  Approximate-equilibrium algorithmic results are not
+formalized.
+
+\item \emph{Cooperative game theory beyond Shapley values.}  The
+library defines the Shapley value and proves null-player,
+additivity, linearity, and symmetry lemmas.  The full uniqueness
+axiomatization, the core, the nucleolus, balanced collections, and
+the Bondareva–Shapley theorem~\citep{Bondareva1963, Shapley1967}
+are not formalized.
+
+\item \emph{Impossibility theorems in social choice.}  Arrow,
+Gibbard–Satterthwaite, and Sen's liberal paradox are formalizable
+in this framework but are not in the current library.
+
+\item \emph{Bayesian persuasion and information design.}
+Kamenica–Gentzkow~\citep{KamenicaGentzkow2011} and successors are
+out of scope.
+
+\item \emph{Mean-field / population games.}  These require the
+continuum and are out of scope.
+\end{itemize}
+
+These are not bugs; they are the boundary of the library's
+contract.

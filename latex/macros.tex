@@ -1,0 +1,186 @@
+% macros.tex — GameTheory chapter notation
+% Subset/extension of VegasCore macros.  Kept compatible so that, in a joint
+% thesis, a shared macro file can subsume both.
+
+% ── Packages ──────────────────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage{amsmath,amssymb,amsthm}
+% Unicode characters that appear in Lean snippets / em-dashes / etc.
+\DeclareUnicodeCharacter{2014}{---}
+\DeclareUnicodeCharacter{2013}{--}
+\DeclareUnicodeCharacter{2018}{`}
+\DeclareUnicodeCharacter{2019}{'}
+\DeclareUnicodeCharacter{201C}{``}
+\DeclareUnicodeCharacter{201D}{''}
+\DeclareUnicodeCharacter{2500}{-}
+\DeclareUnicodeCharacter{03B9}{$\iota$}
+\DeclareUnicodeCharacter{03BA}{$\kappa$}
+\DeclareUnicodeCharacter{03C3}{$\sigma$}
+\DeclareUnicodeCharacter{03B2}{$\beta$}
+\DeclareUnicodeCharacter{03BC}{$\mu$}
+\DeclareUnicodeCharacter{03B1}{$\alpha$}
+\DeclareUnicodeCharacter{03B3}{$\gamma$}
+\DeclareUnicodeCharacter{03C4}{$\tau$}
+\DeclareUnicodeCharacter{03BB}{$\lambda$}
+\DeclareUnicodeCharacter{03C0}{$\pi$}
+\DeclareUnicodeCharacter{03B8}{$\theta$}
+\DeclareUnicodeCharacter{03A3}{$\Sigma$}
+\DeclareUnicodeCharacter{0394}{$\Delta$}
+\DeclareUnicodeCharacter{03A6}{$\Phi$}
+\DeclareUnicodeCharacter{2192}{$\to$}
+\DeclareUnicodeCharacter{2194}{$\leftrightarrow$}
+\DeclareUnicodeCharacter{21D2}{$\Rightarrow$}
+\DeclareUnicodeCharacter{21D4}{$\Leftrightarrow$}
+\DeclareUnicodeCharacter{2286}{$\subseteq$}
+\DeclareUnicodeCharacter{2287}{$\supseteq$}
+\DeclareUnicodeCharacter{2265}{$\ge$}
+\DeclareUnicodeCharacter{2264}{$\le$}
+\DeclareUnicodeCharacter{2260}{$\neq$}
+\DeclareUnicodeCharacter{2261}{$\equiv$}
+\DeclareUnicodeCharacter{2208}{$\in$}
+\DeclareUnicodeCharacter{2200}{$\forall$}
+\DeclareUnicodeCharacter{2203}{$\exists$}
+\DeclareUnicodeCharacter{2245}{$\cong$}
+\DeclareUnicodeCharacter{00A7}{\S}
+\DeclareUnicodeCharacter{2026}{\ldots}
+\DeclareUnicodeCharacter{2032}{$'$}
+\DeclareUnicodeCharacter{2033}{$''$}
+\DeclareUnicodeCharacter{2502}{|}
+\usepackage{stmaryrd}        % \llbracket, \rrbracket
+\usepackage{mathtools}        % \coloneqq
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{bbm}
+
+% ── Theorem environments ──────────────────────────────────────────────
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{notation}[theorem]{Notation}
+
+% ── Players and sets ──────────────────────────────────────────────────
+\newcommand{\Players}{\mathcal{I}}
+\newcommand{\pl}[1]{i_{#1}}
+\newcommand{\NN}{\mathbb{N}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\Rgeq}{\mathbb{R}_{\ge 0}}
+
+% ── Distributions ─────────────────────────────────────────────────────
+\newcommand{\PMF}[1]{\ensuremath{\mathrm{PMF}(#1)}}
+\newcommand{\Kernel}{\mathrm{Kernel}}
+\newcommand{\Dirac}{\delta}
+
+% ── Strategic objects ─────────────────────────────────────────────────
+\newcommand{\KG}{\ensuremath{\mathcal{G}}}            % a kernel game
+\newcommand{\GF}{\ensuremath{\mathcal{F}}}            % a game form
+\newcommand{\Strat}{\ensuremath{\mathsf{S}}}          % strategy space
+\newcommand{\Outcome}{\ensuremath{\mathcal{O}}}       % outcome space
+\newcommand{\util}{\ensuremath{u}}                    % utility
+\newcommand{\Profile}{\ensuremath{\sigma}}
+\newcommand{\Payoff}[1]{\mathrm{Payoff}(#1)}
+\newcommand{\EU}{\ensuremath{\mathrm{EU}}}
+\newcommand{\K}{\ensuremath{K}}                       % outcome kernel
+\newcommand{\toKG}{\mathrm{toKernelGame}}
+\newcommand{\toGF}{\mathrm{toGameForm}}
+
+% ── Solution concepts ─────────────────────────────────────────────────
+\newcommand{\Nash}{\mathrm{Nash}}
+\newcommand{\IsNash}{\ensuremath{\mathrm{IsNash}}}
+\newcommand{\IsBR}{\mathrm{IsBestResponse}}
+\newcommand{\IsNashFor}{\mathrm{IsNashFor}}
+\newcommand{\IsBRfor}{\mathrm{IsBestResponseFor}}
+\newcommand{\stratMap}{\mathrm{stratMap}}
+\newcommand{\outcomeMap}{\mathrm{outcomeMap}}
+\newcommand{\notebox}[1]{\par\smallskip\noindent\emph{Notation.} #1\par\smallskip}
+\newcommand{\Dom}{\mathrm{Dom}}
+\newcommand{\WDom}{\mathrm{WeaklyDominates}}
+\newcommand{\SDom}{\mathrm{StrictlyDominates}}
+\newcommand{\WDomFor}{\mathrm{WeaklyDominatesFor}}
+\newcommand{\SDomFor}{\mathrm{StrictlyDominatesFor}}
+\newcommand{\IsDomFor}{\mathrm{IsDominantFor}}
+\newcommand{\IsDom}{\mathrm{IsDominant}}
+\newcommand{\CE}{\mathrm{CE}}                          % correlated eq
+\newcommand{\CCE}{\mathrm{CCE}}                        % coarse correlated
+\newcommand{\IsCorrelatedEq}{\ensuremath{\mathrm{IsCorrelatedEq}}}
+\newcommand{\IsCoarseCorrelatedEq}{\mathrm{IsCoarseCorrelatedEq}}
+\newcommand{\IsCorrelatedEqFor}{\mathrm{IsCorrelatedEqFor}}
+\newcommand{\IsCoarseCorrelatedEqFor}{\mathrm{IsCoarseCorrelatedEqFor}}
+\newcommand{\Sec}{\mathrm{sec}}                        % security value
+\newcommand{\PoA}{\mathrm{PoA}}
+\newcommand{\Welfare}{\mathrm{SW}}
+\newcommand{\Pot}{\Phi}                                % potential
+\newcommand{\Regret}{\mathrm{Reg}}
+
+% ── Preference & EU ───────────────────────────────────────────────────
+\newcommand{\Pref}{\succeq}
+\newcommand{\sPref}{\succ}
+\newcommand{\PrefPo}{\mathrm{PrefPreorder}}
+\newcommand{\euPref}{\Pref_{\EU}}
+
+% ── Language layer ────────────────────────────────────────────────────
+\newcommand{\NFG}{\mathrm{NFG}}
+\newcommand{\EFG}{\mathrm{EFG}}
+\newcommand{\MAID}{\mathrm{MAID}}
+\newcommand{\FOSG}{\mathrm{FOSG}}
+\newcommand{\MR}{\mathrm{MR}}                          % multi-round
+\newcommand{\IM}{\mathrm{InfoModel}}
+\newcommand{\Act}{\mathsf{A}}
+\newcommand{\Hist}{\mathsf{H}}
+\newcommand{\InfoSet}{\mathsf{I}}
+\newcommand{\InfoState}{\mathsf{InfoState}}
+\newcommand{\evalPure}{\mathrm{evalPure}}
+\newcommand{\InfoStruct}{\ensuremath{\mathsf{InfoStruct}}}
+\newcommand{\Tree}{\ensuremath{\mathsf{Tree}}}
+\newcommand{\Obs}{\mathsf{Obs}}
+\newcommand{\eval}{\mathrm{eval}}
+\newcommand{\evalDist}{\mathrm{evalDist}}
+\newcommand{\compileTo}{\rightsquigarrow}              % language→KG
+
+% ── Strategy types in EFG ─────────────────────────────────────────────
+\newcommand{\Sbeh}{\Sigma^{\mathrm{beh}}}
+\newcommand{\Smix}{\Sigma^{\mathrm{mix}}}
+\newcommand{\Spure}{\Sigma^{\mathrm{pure}}}
+
+% ── Categorical / morphisms ───────────────────────────────────────────
+\newcommand{\bind}{\mathbin{\gg\!=}}
+\newcommand{\Iso}{\cong}
+\newcommand{\Sim}{\Rightarrow}
+\newcommand{\refines}{\sqsubseteq}
+\newcommand{\catGF}{\mathbf{GameForm}}
+\newcommand{\catKG}{\mathbf{KernelGame}}
+
+% ── Denotational semantics & Lean refs ────────────────────────────────
+\newcommand{\den}[1]{\llbracket #1 \rrbracket}
+\newcommand{\densub}[2]{\llbracket #1 \rrbracket_{#2}}
+\newcommand{\leanref}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\TT}[1]{\texttt{#1}}
+
+% ── Boxes ─────────────────────────────────────────────────────────────
+\newcommand{\designnote}[1]{\par\smallskip\noindent\emph{Design note.} #1\par\smallskip}
+\newcommand{\leancorr}[1]{\par\smallskip\noindent\emph{Lean correspondence.} #1\par\smallskip}
+\newcommand{\tradeoff}[1]{\par\smallskip\noindent\emph{Tradeoff.} #1\par\smallskip}
+
+\usepackage[most]{tcolorbox}
+\tcbset{
+  leanstyle/.style={
+    colback=black!3, colframe=black!30, boxrule=0.3pt, arc=1pt,
+    left=8pt, right=8pt, top=4pt, bottom=4pt,
+    breakable, enhanced jigsaw,
+    before skip=4pt, after skip=4pt,
+    fontupper=\footnotesize\ttfamily,
+  },
+}
+\newtcolorbox{leanbox}[1][]{leanstyle, #1}
+\newcommand{\bd}{\hspace*{1.6em}}
+\newcommand{\bdd}{\hspace*{3.2em}}

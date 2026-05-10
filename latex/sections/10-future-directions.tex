@@ -1,0 +1,205 @@
+\section{Future directions}
+\label{sec:future}
+
+The library is intentionally a foundation:\ it is meant to be
+extended.  We list the extensions we view as natural, in
+descending order of how much existing infrastructure they would
+re-use.
+
+\subsection{Algorithmic and constructive Nash}
+\label{sec:future:algo}
+
+\Cref{thm:nash-mixed} is non-constructive (Brouwer); a natural
+extension is a constructive proof for two-player games via the
+\emph{Lemke–Howson} pivoting algorithm~\citep{LemkeHowson1964} or
+via \emph{Sperner's lemma}~\citep{Sperner1928} (a combinatorial
+fixed-point statement on triangulated simplices that yields
+Brouwer constructively for low dimensions), packaged as an
+algorithmic witness function on top of the existing strategic-form
+definitions.  The \emph{PPAD}-hardness
+story~\citep{DaskalakisGoldbergPapadimitriou2009} — where PPAD is
+the complexity class of problems whose existence is guaranteed by
+a parity argument on a directed graph, the canonical example being
+end-of-line — is at a different level (it concerns problem
+reductions, not proof-of-existence) and is largely orthogonal:\ a
+complexity formalization would need an independent computation
+model.
+
+\subsection{Sequence form and efficient EFG solving}
+\label{sec:future:sequence-form}
+
+A \emph{sequence} in an extensive-form game with perfect recall is
+the list of own-actions a player has taken along a history.  The
+\emph{sequence-form representation}
+of~\citet{KollerMegiddoVonStengel1994} (see also the survey
+of~\citet{vonStengel2002}) replaces the exponential-sized pure
+strategy space by realization probabilities indexed by sequences,
+turning equilibrium computation into a linear or quadratic
+program of size polynomial in the tree.  Adding the sequence-form bridge as a fourth EFG
+strategy carrier (alongside pure, behavioral, mixed) would let
+the library state and prove correctness of the standard solving
+algorithms (LP duality$\Rightarrow$two-player zero-sum value;
+sequence-form quadratic program for general-sum games).  The
+Kuhn-theorem infrastructure of \S\ref{sec:theorems:kuhn} already
+supplies the recall layer.
+
+\subsection{Counterfactual regret minimization}
+\label{sec:future:cfr}
+
+\emph{Counterfactual regret minimization} (CFR,
+\citealp{Zinkevich2007CFR}) is the dominant family of algorithms
+for finding approximate equilibria in large imperfect-information
+extensive-form games; it works by tracking, at each information
+set, the cumulative regret for not having played each action,
+counterfactually weighted by the probability of reaching that
+information set under the opponents' play.  The regret-equilibrium
+duality is already formalized in the library
+(\S\ref{sec:solution-concepts:regret}), making the CFR convergence
+proof a natural consumer.  This would also produce a
+constructive CCE existence theorem
+(\S\ref{sec:theorems:correlated-existence}) without going through
+Brouwer.
+
+\subsection{Imperfect-recall extensions}
+\label{sec:future:absent-mind}
+
+The Kuhn theorem in the library handles a recall hypothesis
+weaker than perfect recall (per-step ActionPosteriorLocal).  A
+natural extension is to formalize the
+\emph{absent-minded-driver} phenomenon~\citep{PiccionePiccione1997}
+— a single-player imperfect-recall puzzle where a player who
+forgets whether they have already made one decision faces a
+time-consistency problem (the ex-ante optimal mixed strategy is
+not the same as the strategy the player would choose at the
+decision point if they could) — and the broader family of
+imperfect-recall pathologies it generates.  These require exactly
+the representation-neutral observation model the library already
+exposes.
+
+\subsection{Infinite and continuous games}
+\label{sec:future:infinite}
+
+The largest single extension would be to relax the discrete-PMF
+discipline and use mathlib's measure theory.  This would let the
+library state and prove:\ Glicksberg's theorem on continuous
+payoff functions over compact strategy
+spaces~\citep{Glicksberg1952}, the Milgrom–Weber existence theorem
+for Bayesian games with uncountable type
+spaces~\citep{MilgromWeber1985}, infinite-horizon discounted
+stochastic games~\citep{Shapley1953stochastic, MertensNeyman1981},
+and the folk theorems for repeated games.  Several theorems
+of the library would then have continuous companions.
+
+This is a substantial extension and would change the library's
+character.  We see it less as a single project and more as a
+parallel library with shared infrastructure (the
+\TT{KernelGame}/\TT{GameForm} skeleton generalizes to a kernel
+$\K : \prod_i \Strat_i \to \mathcal{P}(\Outcome)$ for a measure
+type $\mathcal{P}$, with the discrete \TT{PMF} as one
+instantiation).
+
+\subsection{Cooperative game theory}
+\label{sec:future:cooperative}
+
+The Shapley value definition and its basic null-player,
+additivity, linearity, and symmetry lemmas
+(\TT{NFG/CoalitionalGame.lean}) are in the library.  Natural
+extensions:\ the full uniqueness axiomatization, the core, balanced
+collections~\citep{Bondareva1963, Shapley1967}, the nucleolus
+\citep{Schmeidler1969}, the Aumann–Shapley value for
+non-atomic games~\citep{AumannShapley1974}, and bargaining
+solutions beyond Nash's~\citep{KalaiSmorodinsky1975, Kalai1977}.
+The TU coalitional structure is already there; only the
+solution-concept layer needs to be filled in.
+
+\subsection{Information design and signaling}
+\label{sec:future:info-design}
+
+In \emph{Bayesian persuasion}~\citep{KamenicaGentzkow2011} a
+sender designs an information structure (a signal-generation
+mechanism that maps the state of the world to a public message)
+to influence a receiver's posterior beliefs and hence their
+action; the design problem is to choose the most persuasive
+signal mechanism subject to the receiver's Bayesian rationality.
+\emph{Signaling games}~\citep{Spence1973} are the strategic
+analogue with an informed sender choosing a costly signal whose
+cost may itself depend on type.  \emph{Information
+design}~\citep{Bergemann2019} generalizes the persuasion setup to
+multiple receivers and richer outcome rules.  All three sit on
+top of the Bayesian-game infrastructure of
+\S\ref{sec:mech:bayesian} and would benefit from a continuous-type
+extension, but admit interesting finite-grid formalizations
+directly.
+
+\subsection{Social choice impossibility theorems}
+\label{sec:future:social-choice}
+
+\emph{Arrow's impossibility theorem}~\citep{Arrow1951} says no
+social-welfare function aggregating individual ordinal preferences
+over $\ge 3$ alternatives can simultaneously satisfy unanimity,
+non-dictatorship, and independence of irrelevant alternatives.
+\emph{Gibbard–Satterthwaite} \citep{Gibbard1973, Satterthwaite1975}
+is the strategic analogue:\ any non-dictatorial social choice
+function with full range over $\ge 3$ alternatives is
+manipulable.  \emph{Sen's liberal paradox}~\citep{Sen1970} shows
+that even a minimal individual-rights condition is inconsistent
+with Pareto efficiency plus universal domain.  All three are
+statable on the existing social-choice setup, the proofs are
+combinatorial and do not require probability, and they would fit
+the library cleanly.
+
+\subsection{Multi-agent learning}
+\label{sec:future:learning}
+
+The FOSG and observation-model layers are built precisely so that
+multi-agent reinforcement-learning algorithms — \emph{fictitious
+play} (each player best-responds to the empirical distribution of
+opponents' past actions), self-play, MCTS, regret matching — can
+be formalized as strategy-update rules on top of an existing
+game.  \emph{No-regret learning} is the central convergence
+notion:\ an algorithm has \emph{vanishing average regret} when
+its average per-round payoff approaches that of the best fixed
+action in hindsight; the classical theorems
+\citep{Cesa-BianchiLugosi2006, BlumMansour2007} link no-regret
+play of a repeated game to convergence to CCE (external regret)
+or CE (internal regret).  These are the natural formal targets;
+the strategic-form definitions they need are already in place.
+
+\subsection{Stable matching and Gale–Shapley}
+\label{sec:future:matching}
+
+The library's NFG layer formalizes the matching predicates
+(\TT{IsMatching}, \TT{IsBlockingPair}, \TT{IsStable}) and a few
+structural lemmas, but not the Gale–Shapley deferred-acceptance
+algorithm itself nor the existence of a stable matching from an
+arbitrary preference profile~\citep{GaleShapley1962}.  The
+algorithm is constructive, terminates in $O(n^2)$ steps, and is a
+natural target for a Lean implementation paired with a
+correctness proof.  Bertot's Coq formalization
+\citep{Bertot2016} is a useful reference point.
+
+\subsection{Symmetric Nash existence}
+\label{sec:future:symmetric-nash}
+
+Existence of a \emph{symmetric} mixed Nash equilibrium in a
+finite symmetric game~\citep{Nash1951} is a classical corollary of
+mixed Nash existence (\Cref{thm:nash-mixed}) by restricting the
+gain map to the symmetric subspace of the product simplex.  The
+restriction step is straightforward but is not packaged on top
+of \TT{SymmetricGame.lean}.
+
+\subsection{Type-theoretic refactoring opportunities}
+\label{sec:future:refactor}
+
+We close with two design directions internal to the library
+itself.  First, an open-games-style
+reformulation~\citep{GhaniHedgesWinschelZahn2018} would expose the
+\TT{KernelGame} category in a shape suitable for compositional
+reasoning at a higher abstraction level; this would not change
+the theorems but might simplify their proofs.  Second, the
+library's \TT{noncomputable} discipline could be tightened by
+isolating the constructive fragment (definitions and theorems
+that do not invoke classical reasoning) as a separately-named
+namespace; this would make the boundary between the constructive
+finite-game fragment and the non-constructive existence-of-Nash
+fragment visible in user code.

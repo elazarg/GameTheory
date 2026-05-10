@@ -1,0 +1,903 @@
+\documentclass[11pt]{article}
+
+\input{macros}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,decorations.pathreplacing}
+\usepackage[numbers,sort&compress]{natbib}
+
+\sloppy
+\emergencystretch=3em
+\hbadness=10000
+\hfuzz=4pt
+
+\renewcommand{\TT}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\DefRef}[1]{\hyperref[def:#1]{\TT{#1}}}
+\newcommand{\Anchor}[1]{\paragraph{Anchor: \texorpdfstring{\TT{#1}}{#1}.}}
+\newcommand{\Mathematical}{\paragraph{Mathematical content.}}
+\newcommand{\Textbook}{\paragraph{Textbook correspondence.}}
+\newcommand{\Faithfulness}{\paragraph{Faithfulness.}}
+\newcommand{\Variants}{\paragraph{Variants.}}
+
+\title{A Mechanized Library of Finite Game Theory:\\
+       Definitional Supplement}
+\author{Elazar Gershuni\\\texttt{elazarg@gmail.com}}
+\date{May 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This document is a companion to the main chapter \emph{A Mechanized
+Library of Finite Game Theory}.  The chapter states results and
+explains design choices; this supplement gives definitions.  Its
+primary purpose is faithfulness:\ the reader should leave convinced
+that what the Lean library calls \emph{Nash equilibrium},
+\emph{correlated equilibrium}, \emph{Kuhn realization},
+\emph{Vickrey auction}, and the rest, is in each case the textbook
+concept of the same name.  We anchor each major notion with a full
+declaration shape and an explicit textbook correspondence, and
+group structurally similar variants in bunched entries so the
+reader can confirm that the variants are routine specializations
+of the anchor.
+\end{abstract}
+
+\tableofcontents
+
+\newpage
+
+% =====================================================================
+\section{How To Read This Document}
+\label{sec:supp:read}
+
+\subsection{Conventions}
+\label{sec:supp:conventions}
+
+\paragraph{Lean boxes.}\
+Each definition appears as a shaded \emph{Lean box} containing the
+declaration shape used in the code.  Universe-polymorphism
+boilerplate, routine implicit binders, and \TT{Fintype}/\TT{DecidableEq}
+typeclass arguments are suppressed when they would obscure the
+content; the file:line reference points to the verbatim source.
+Defined names link to their declaration via
+\DefRef{KernelGame}-style hyperlinks; the linked anchor is the
+real definition site of the name (here, \S\ref{sec:supp:kernelgame}).
+Identifiers that are not project concepts — \TT{PMF},
+\TT{Function.update}, \TT{Finset}, \TT{Fintype} — are typeset
+\TT{monospace} but not hyperlinked.
+
+\paragraph{Anchors versus bunched entries.}\
+A faithful mechanization of a textbook tradition cannot show every
+definition in full and remain readable.  We therefore distinguish
+two formats.
+
+\begin{itemize}\itemsep2pt
+\item An \emph{anchor} entry shows the full Lean declaration, gives
+  the corresponding mathematical content explicitly, cites a
+  textbook page where the same content appears, and (where
+  applicable) names the worked example in \S\ref{sec:supp:examples}
+  in which the predicate is unfolded by hand on a small game.
+  Anchor entries do the convincing work of the supplement.
+\item A \emph{bunched} entry groups several structurally similar
+  definitions in one Lean box, giving the mathematical content of
+  one and a one-line note on each variant.  The reader trusts that
+  the variants are routine specializations of the anchor; the
+  bunched format makes the relationships visible.
+\end{itemize}
+
+\paragraph{Faithfulness gaps.}\
+Where the Lean definition diverges from the textbook (and several
+do, deliberately), the gap is named, in one of three buckets:
+
+\begin{itemize}\itemsep2pt
+\item \emph{Strict generalization}.\ The Lean form is more general
+  than the textbook (e.g.\ \DefRef{IsNashFor} takes any preference
+  relation; the textbook fixes EU).  The
+  reduction back to the textbook case is shown.
+\item \emph{Genuine restriction}.\ The Lean form is finite/discrete
+  where the textbook is general (e.g.\ Bayesian games on continuous
+  type spaces).  The restriction is stated.
+\item \emph{Reformulation}.\ Same content, different shape (e.g.\
+  distributional EFG semantics rather than deterministic-with-lift).
+  The reformulation is justified once.
+\end{itemize}
+
+\subsection{Lean syntax mini-glossary}
+\label{sec:supp:lean-glossary}
+
+A reader who knows finite game theory but not Lean 4 will find a
+handful of constructs in the boxes below that look like ordinary
+mathematical objects but mean something more precise.  We gloss
+the ones that recur:
+
+\begin{itemize}\itemsep3pt
+\item $\forall i, S\,i$, often written \TT{(i : ι) → S i}, is the
+  \emph{dependent function type}:\ for each $i$ in the index type
+  $\Players$, an element of $S\,i$.  When $S$ is a strategy family,
+  an element of this type is exactly a strategy profile.
+
+\item \TT{structure} declares a record (named tuple).
+  \TT{KernelGame ι} below is a record with four fields; we write
+  $(\mathrm{Strat}, \Outcome, \util, \K) : \KG_\Players$ in math.
+
+\item \TT{[Fintype α]} is a typeclass argument:\ Lean's
+  inference looks up a finite-enumeration witness from context.
+  Reading "the theorem requires \TT{[Fintype $\Strat_i$]}" is
+  reading "the theorem requires that each strategy space be
+  finite."
+
+\item \TT{noncomputable} marks a definition that compiles into a
+  proof object but does not reduce by computation —  typically
+  because it invokes \TT{Classical.choice} or real-number
+  arithmetic.  The mathematical content is unchanged.
+
+\item \TT{open Classical in} turns on the law of excluded middle
+  for the duration of one declaration.  This is benign and is
+  flagged at every use.
+
+\item \TT{abbrev} is a definition that unfolds eagerly (in elaboration
+  and in \TT{simp}).  We use it for \TT{Profile} and \TT{Payoff}.
+
+\item \TT{inductive} declares an inductive type.  \TT{GameTree S O}
+  in \S\ref{sec:supp:efg} has three constructors (terminal, chance,
+  decision), one of which is recursive in the same type.
+
+\item \TT{Prop} is the universe of propositions; \TT{Type} is
+  the universe of data.  Solution concepts are \TT{Prop}-valued.
+\end{itemize}
+
+The conventions for ${\bind}$ on $\PMF{\cdot}$, the meaning of
+$\Dirac_x$, and the use of $\mathrm{pmfPi}$ for the independent
+product follow \S\ref{sec:supp:probability}.
+
+\subsection{Convergence diagram}
+\label{sec:supp:diagram}
+
+The library has a single semantic core — \DefRef{KernelGame}
+(\S\ref{sec:supp:kernelgame}) — into which every syntactic
+language compiles, and a graph of \emph{bridges} between languages
+that commute through it.  Every solution concept in
+\S\ref{sec:supp:solution-concepts} is defined once on \KG\ (or on
+its utility-free shadow \DefRef{GameForm}) and inherited by every
+language by composition with $\compileTo$.
+
+\begin{center}
+\begin{tikzpicture}[
+  font=\small,
+  box/.style = {draw, rounded corners=2pt, align=center,
+                minimum height=0.7cm, minimum width=1.6cm,
+                inner sep=3pt, fill=black!3},
+  arr/.style = {-{Stealth[length=2mm]}, thick, black!75},
+  brar/.style = {-{Stealth[length=2mm]}, thick, dashed, black!60},
+]
+\node[box] at (0, 1.4)   (nfg)  {NFG};
+\node[box] at (2.6, 1.4) (efg)  {EFG};
+\node[box] at (5.2, 1.4) (maid) {MAID};
+\node[box] at (7.8, 1.4) (mr)   {MR};
+\node[box] at (10.4,1.4) (fosg) {FOSG};
+\node[box] at (13.0,1.4) (intr) {Intrinsic};
+
+\node[box, fill=black!8, minimum width=2.3cm] at (6.5,-0.6) (kg) {\KG};
+
+\foreach \src in {nfg, efg, maid, mr, fosg, intr} {
+  \draw[arr] (\src.south) -- (kg.north);
+}
+
+\draw[brar, bend left=15] (nfg) to (efg);
+\draw[brar, bend left=15] (efg) to (nfg);
+\draw[brar, bend left=20] (maid) to (efg);
+\draw[brar, bend left=18] (efg) to (fosg);
+\draw[brar, bend right=30] (nfg) to (fosg);
+\end{tikzpicture}
+\end{center}
+
+\noindent
+Solid arrows are compilations $\compileTo$; dashed arrows are
+bridges (\S\ref{sec:supp:bridges}).  The \emph{Repeated} and
+\emph{Stochastic} languages are restrictions of MR and are not
+shown separately.  Augmented EFG is a thin wrapper over EFG; it is
+not a separate language.
+
+\subsection{Code organization}
+\label{sec:supp:code}
+
+\begin{center}\small
+\begin{tabular}{@{}p{0.22\textwidth}p{0.69\textwidth}@{}}
+\toprule
+Folder & Contents \\
+\midrule
+\TT{Math/} &
+  Discrete-probability infrastructure that mathlib does not already
+  provide:\ \DefRef{expect},
+  \TT{Math.PMFProduct.pmfPi}, finsupp/finset update lemmas,
+  optimization primitives. \\
+\TT{Core/} &
+  \DefRef{GameForm}, \DefRef{KernelGame}, the \DefRef{ProtocolMap}
+  morphism vocabulary, simulations, isomorphisms, utility-invariance
+  results. \\
+\TT{Concepts/} &
+  Solution concepts:\ Nash, dominance, best response, correlated /
+  coarse correlated, Pareto, security, regret, approximate Nash,
+  potential, zero-sum, team, symmetric, rationalizability, common
+  knowledge, EU/preference properties. \\
+\TT{Theorems/} &
+  Major theorems:\ \DefRef{mixed_nash_exists},
+  \DefRef{correlatedEq_exists}, \DefRef{von_neumann_minimax},
+  \DefRef{zermelo}, \DefRef{oneShotDeviation_iff_spe}, the
+  \DefRef{ObsModelCore} Kuhn theorems. \\
+\TT{Languages/} &
+  Six syntactic languages (NFG, EFG, MAID, MultiRound, FOSG,
+  Intrinsic), each with its own \TT{Syntax}, \TT{Compile}, and
+  worked-example files; bridges in \TT{Languages/Bridges/}. \\
+\TT{Mechanism/} &
+  Bayesian games, mechanism design, the revelation principle,
+  social-choice fragments. \\
+\TT{Auctions/} &
+  Vickrey, FirstPrice, AllPay, VCG. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% =====================================================================
+\section{Probability infrastructure}
+\label{sec:supp:probability}
+
+The library uses mathlib's discrete probability monad
+\TT{PMF} as its only distribution type.  This section documents
+the few non-mathlib additions in \TT{Math/} that the rest of the
+library depends on.
+
+\subsection{Expected value: \TT{Math.Probability.expect}}
+\label{sec:supp:expect}\label{def:expect}
+
+\begin{leanbox}
+namespace Math.Probability\\[1pt]
+noncomputable def expect \{$\Omega$ : Type*\} (d : PMF $\Omega$) (f : $\Omega \to \mathbb{R}$) : $\mathbb{R}$ :=\\
+\bd $\sum'\ \omega,\ (d\ \omega).\mathrm{toReal} * f\ \omega$\\[2pt]
+theorem expect\_eq\_sum \{$\Omega$ : Type*\} [Fintype $\Omega$] (d : PMF $\Omega$) (f : $\Omega \to \mathbb{R}$) :\\
+\bd expect d f = $\sum\ \omega : \Omega,\ (d\ \omega).\mathrm{toReal} * f\ \omega$\\[2pt]
+@[simp] theorem expect\_pure \{$\Omega$ : Type*\} (f : $\Omega \to \mathbb{R}$) ($\omega$ : $\Omega$) :\\
+\bd expect (PMF.pure $\omega$) f = f $\omega$
+\end{leanbox}
+
+\Mathematical
+For a $\PMF{\Omega}$ given by mass function $d$ and a real-valued
+function $f : \Omega \to \RR$,
+\begin{equation}
+\label{eq:supp:expect}
+  \mathrm{expect}(d, f) \;=\; \sum_{\omega \in \Omega}^{\textsf{tsum}}
+    d(\omega) \cdot f(\omega),
+\end{equation}
+where the sum is mathlib's \TT{tsum} (an unordered series with
+non-negative-real summands; here the summands are real, but $d \ge 0$
+and the unit-mass condition $\sum d = 1$ make absolute convergence
+automatic for any bounded $f$, and the convention $\mathrm{tsum} = 0$
+on non-summable inputs is harmless because we only call \TT{expect}
+on bounded $f$).  When $\Omega$ is finite (the case used everywhere
+in the library), \TT{expect_eq_sum} reduces this to an ordinary
+finite sum.
+
+\Textbook
+This is the standard expected-value functional of the discrete
+case (e.g.\ Maschler–Solan–Zamir~\citep{MaschlerSolanZamir2013}
+§5.4 or Osborne–Rubinstein~\citep{OsborneRubinstein1994} §1.2).
+The \TT{toReal} coercion is the only Lean-specific bookkeeping:\
+\TT{PMF}'s mass function lands in $\overline{\RR}_{\ge 0}$
+(extended non-negative reals) for technical mathlib reasons, and
+\TT{toReal} brings it back to $\RR$.
+
+\Faithfulness
+Reformulation only.  The textbook expectation
+$\mathbb{E}_\mu[f]$ is exactly \eqref{eq:supp:expect}; the
+\TT{tsum} appears because mathlib's $\PMF$ is countably-supported
+in general (the finite-support case is recovered automatically by
+\TT{expect_eq_sum}).
+
+\subsection{Finite product of PMFs: \texttt{Math.PMFProduct.pmfPi}}
+\label{sec:supp:pmfpi}\label{def:pmfPi}
+
+\begin{leanbox}
+namespace Math.PMFProduct\\[1pt]
+noncomputable def pmfPi \{$\iota$ : Type\} [Fintype $\iota$] \{$\alpha$ : $\iota \to$ Type\}\\
+\bd ($\sigma$ : $\forall$ i, PMF ($\alpha$ i)) : PMF ($\forall$ i, $\alpha$ i)
+\end{leanbox}
+
+\Mathematical
+For a finite family $\{\sigma_i \in \PMF{\alpha_i}\}_{i \in \Players}$,
+$\mathrm{pmfPi}(\sigma)$ is the independent product distribution
+on $\prod_i \alpha_i$,
+\[
+  \mathrm{pmfPi}(\sigma)(x) \;=\; \prod_{i \in \Players} \sigma_i(x_i).
+\]
+This is the canonical mixed-strategy joint distribution from
+independent per-player mixings.
+
+\Textbook
+Standard:\ Osborne–Rubinstein §3.1 use it implicitly when defining
+mixed-strategy equilibrium expected utility; we make it
+explicit because the mixed extension of a kernel game
+(\S\ref{sec:supp:mixedExtension}) needs it as a named operator.
+
+\subsection{Other Math/ contents}
+\label{sec:supp:math-other}
+
+\TT{Math/Probability.lean} additionally contains the
+\TT{Kernel}-as-function abbreviation $\mathrm{Kernel}\,A\,B = A \to
+\PMF{B}$, the \TT{Kernel.pushforward} operator
+(post-composition with a function, used to define
+\TT{correlatedOutcome}), \TT{expect_bind} (linearity of
+\TT{expect} along $\bind$), and \TT{expect_const} (expectation of
+a constant function).  \TT{Math/PMFProduct.lean} adds the
+projection laws of \TT{pmfPi}, in particular that
+$\mathrm{pmfPi}(\sigma) \bind \pi_i = \sigma_i$ where $\pi_i$ is the
+$i$-th coordinate projection.  These are routine and we do not
+unfold them.
+
+% =====================================================================
+\section{The semantic core}
+\label{sec:supp:core}
+
+This section anchors the four objects on which the rest of the
+library is built:\ \DefRef{GameForm}, \DefRef{KernelGame}, the
+expected-utility functional \DefRef{KernelGame.eu}, and the
+\DefRef{mixedExtension} construction.
+
+\subsection{Game form: \texttt{GameForm}}
+\label{sec:supp:gameform}\label{def:GameForm}
+
+\Anchor{GameForm}
+\begin{leanbox}
+structure GameForm ($\iota$ : Type) where\\
+\bd Strategy : $\iota \to$ Type\\
+\bd Outcome  : Type\\
+\bd outcomeKernel : Kernel ($\forall$ i, Strategy i) Outcome\\[3pt]
+abbrev Profile (F : GameForm $\iota$) := $\forall$ i, F.Strategy i\\[3pt]
+noncomputable def outcomeDist (F : GameForm $\iota$) ($\sigma$ : F.Profile) : PMF F.Outcome :=\\
+\bd F.outcomeKernel $\sigma$\\[3pt]
+noncomputable def correlatedOutcome (F : GameForm $\iota$) ($\mu$ : PMF F.Profile) : PMF F.Outcome :=\\
+\bd Kernel.pushforward F.outcomeKernel $\mu$
+\end{leanbox}
+
+\Mathematical
+A \emph{game form}~\citep{Myerson1991} over a player type
+$\Players$ is the data
+\[
+  \GF \;=\; \bigl(\Strat : \Players \to \mathsf{Type},\;
+                  \Outcome : \mathsf{Type},\;
+                  \K : {\textstyle\prod_i}\Strat_i \to \PMF{\Outcome}\bigr).
+\]
+A \emph{strategy profile} is an element of $\prod_i \Strat_i$; a
+\emph{correlated profile distribution} is an element of
+$\PMF{\prod_i \Strat_i}$.  The kernel $\K$ assigns to each profile a
+distribution over outcomes; the correlated outcome distribution is
+the pushforward of the profile distribution along $\K$.
+
+\Textbook
+The protocol-only fragment of a game (Myerson §3.1; Maschler–
+Solan–Zamir §1.2 call it the \emph{game form} explicitly).
+Decomposing a game into protocol-only data and a separately
+attached utility is standard mechanism-design practice; the Lean
+record makes the decomposition structural (\TT{utility} is a field
+of \DefRef{KernelGame}, not of \DefRef{GameForm}).
+
+\Faithfulness
+Reformulation.  The textbook game form is usually presented as the
+strategy spaces and a deterministic outcome function or a
+distributional version embedded in a larger structure; we expose
+the distributional version directly because chance moves and
+mixed strategies both produce $\PMF{\Outcome}$, and the cost of an
+indirection through a deterministic outcome function plus an
+external lift is exactly the indirection we wish to avoid
+(see chapter \S3).
+
+\Variants
+\TT{Core/GameForm.lean} also defines:
+\TT{deviateProfile} (unilateral coordinate update via
+\TT{Function.update}); \TT{deviateOutcome},
+\TT{deviateDistribution}, \TT{deviateDistributionFn} (push profile
+or distribution through a deviation, by constant strategy or by a
+function of the recommendation); \TT{constDeviateDistribution} and
+its $\mathrm{Fn}$ variant; the bridge \TT{withUtility} adjoining a
+utility (and the round-trip lemmas with \TT{toGameForm}); the
+functorial action \TT{map} (post-composing a function on outcomes);
+the \emph{independent product} of two game forms;
+the \DefRef{ProtocolMap} morphism record (\S\ref{sec:supp:morphisms}).
+
+\subsection{Kernel game: \texttt{KernelGame}}
+\label{sec:supp:kernelgame}\label{def:KernelGame}
+
+\Anchor{KernelGame}
+\begin{leanbox}
+abbrev Payoff ($\iota$ : Type) : Type := $\iota \to \mathbb{R}$\\[3pt]
+structure KernelGame ($\iota$ : Type) where\\
+\bd Strategy : $\iota \to$ Type\\
+\bd Outcome  : Type\\
+\bd utility  : Outcome $\to$ Payoff $\iota$\\
+\bd outcomeKernel : Kernel ($\forall$ i, Strategy i) Outcome\\[3pt]
+abbrev Profile (G : KernelGame $\iota$) := $\forall$ i, G.Strategy i\\[3pt]
+def toGameForm (G : KernelGame $\iota$) : GameForm $\iota$ where\\
+\bd Strategy := G.Strategy\\
+\bd Outcome  := G.Outcome\\
+\bd outcomeKernel := G.outcomeKernel
+\end{leanbox}
+
+\Mathematical
+A \emph{kernel game} is a game form together with a utility
+$\util : \Outcome \to \Players \to \RR$:
+\[
+  \KG \;=\; \bigl(\Strat,\;\Outcome,\;\util,\;\K\bigr),
+  \qquad \util(\omega) \in \RR^\Players \text{ for each } \omega.
+\]
+The forgetful map $\toGF$ takes a kernel game to its game form;
+its right adjoint \TT{withUtility} adjoins a utility back, and the
+two compose to the identity in both directions.
+
+\Textbook
+This is the strategic-form game with stochastic outcome
+mechanism — the most general finite strategic-form object:\ a
+strategic-form game in the sense of
+Osborne–Rubinstein~\citep{OsborneRubinstein1994} Definition 11.1
+or Maschler–Solan–Zamir Definition 4.1, with the textbook
+"deterministic action profile" replaced by a stochastic kernel.
+A textbook normal-form game with utilities $u_i : A \to \RR$ is the
+special case in which the kernel is the Dirac evaluation
+$\Profile \mapsto \Dirac_\Profile$ (and the outcome type is $A$);
+this is what the NFG language compiler produces.
+
+\Faithfulness
+Strict generalization in two directions.
+\emph{(1)~Stochastic outcomes.}\ The textbook strategic form is
+deterministic given a profile; we allow $\K(\Profile) \in
+\PMF{\Outcome}$ to be any discrete distribution.  This subsumes
+the deterministic case ($\K = \Dirac \circ f$ for a deterministic
+$f$) and accommodates languages with chance moves (EFG, MAID,
+MultiRound, FOSG) without an external lift.
+\emph{(2)~Outcome type.}\ The textbook outcome is implicit (the
+profile itself, or a payoff vector); we expose it as a parameter
+\Outcome\ so that an EFG outcome (a terminal node in the tree) and
+a NFG outcome (a joint action) can both inhabit \KG\ without
+encoding tricks.
+
+\Textbook (continued)
+For a worked confirmation that \TT{IsNash} on a normal-form
+game's compiled \KG\ unfolds to the textbook payoff inequality,
+see \S\ref{sec:supp:examples:pd} (Prisoner's Dilemma).
+
+\subsection{Expected utility: \texttt{KernelGame.eu}}
+\label{sec:supp:eu}\label{def:KernelGame.eu}
+
+\Anchor{KernelGame.eu}
+\begin{leanbox}
+noncomputable def eu (G : KernelGame $\iota$) ($\sigma$ : Profile G) (who : $\iota$) : $\mathbb{R}$ :=\\
+\bd expect (G.outcomeKernel $\sigma$) (fun $\omega$ $\Rightarrow$ G.utility $\omega$ who)\\[3pt]
+noncomputable def correlatedEu (G : KernelGame $\iota$)\\
+\bd ($\mu$ : PMF (Profile G)) (who : $\iota$) : $\mathbb{R}$ :=\\
+\bd expect (G.correlatedOutcome $\mu$) (fun $\omega$ $\Rightarrow$ G.utility $\omega$ who)
+\end{leanbox}
+
+\Mathematical
+The expected utility of player $i$ under profile $\Profile$ in
+kernel game $\KG$ is
+\begin{equation}
+\label{eq:supp:eu}
+  \EU(\KG, \Profile, i) \;=\;
+    \sum_{\omega \in \Outcome} \K(\Profile)(\omega) \cdot \util(\omega)(i),
+\end{equation}
+finite when \Outcome\ is finite.  In the general core API, this is
+the tsum-based expectation over the discrete support.  The theorem
+statements used in this chapter impose the finite hypotheses under
+which this is the displayed finite sum.  The correlated variant is
+the same expectation under the pushforward $\K_*\mu$ of a profile
+distribution $\mu$.
+
+\Textbook
+The expected utility of a strategy profile in a strategic-form
+game with stochastic outcome (vNM~\citep{vNM1944}, Theorem 1;
+Maschler–Solan–Zamir §5.2).  The von Neumann–Morgenstern
+expected-utility theorem is what \emph{justifies} taking
+$\EU$ as the criterion of preference; the library's
+$\IsNashFor$ predicate (\S\ref{sec:supp:isNash}) makes this
+preference choice an explicit parameter so the EU criterion can
+be replaced by another preorder if desired.
+
+\Faithfulness
+Reformulation.  The function \TT{expect}
+(\S\ref{sec:supp:expect}) is exactly $\sum d(\omega)\,f(\omega)$
+on a finite outcome space.  No measurability obligation arises
+because \PMF\ is the discrete monad.
+
+\subsection{Mixed extension: \texttt{KernelGame.mixedExtension}}
+\label{sec:supp:mixedExtension}\label{def:mixedExtension}
+
+\Anchor{KernelGame.mixedExtension}
+\begin{leanbox}
+open Classical in\\
+noncomputable def mixedExtension (G : KernelGame $\iota$)\\
+\bd [Fintype $\iota$] [$\forall$ i, Fintype (G.Strategy i)] : KernelGame $\iota$ where\\
+\bd Strategy := fun i $\Rightarrow$ PMF (G.Strategy i)\\
+\bd Outcome  := G.Outcome\\
+\bd utility  := G.utility\\
+\bd outcomeKernel := fun $\sigma$ $\Rightarrow$ (Math.PMFProduct.pmfPi $\sigma$).bind G.outcomeKernel
+\end{leanbox}
+
+\Mathematical
+The mixed extension $\KG^{\mathrm{mix}}$ of a finite kernel game
+$\KG$ has strategies $\PMF{\Strat_i}$ for each player, the same
+outcome and utility, and the outcome kernel
+\[
+  \K^{\mathrm{mix}}(\Profile)
+    \;=\; \mathrm{pmfPi}(\Profile) \mathbin{\bind} \K
+    \;=\; \sum_{x \in \prod_i \Strat_i} \Bigl(\prod_i \Profile_i(x_i)\Bigr) \K(x).
+\]
+Independence of the per-player mixing is encoded in
+\TT{pmfPi}; the original kernel $\K$ is then applied to the joint
+pure profile drawn from this product.
+
+\Textbook
+The mixed extension of a finite game (Nash~\citep{Nash1951};
+Osborne–Rubinstein Definition 32.1; Myerson §3.2):\ each player
+randomizes independently over their pure strategies, and payoffs
+are the expectation under the resulting product distribution.
+
+\Faithfulness
+Faithful.  The displayed formula is exactly the textbook one for
+finite normal-form games; the only generalization is that
+$\K$ may itself be stochastic (chance moves), in which case the
+mixed extension's outcome kernel is the composition of the mixing
+distribution with $\K$.  The classical case ($\K = \Dirac$) recovers
+the textbook formula verbatim.
+
+\subsection{Reindexing and \texttt{ofEU}: bunched}
+\label{sec:supp:reindex-ofEU}
+
+\begin{leanbox}
+noncomputable def reindex \{$\iota\,\kappa$ : Type\} (e : $\iota \simeq \kappa$)\\
+\bd (G : KernelGame $\kappa$) : KernelGame $\iota$\\[3pt]
+noncomputable def KernelGame.ofEU\\
+\bd (Strategy : $\iota \to$ Type)\\
+\bd (eu : ($\forall$ i, Strategy i) $\to$ Payoff $\iota$) : KernelGame $\iota$
+\end{leanbox}
+
+\DefRef{reindex}\label{def:reindex} transports a kernel game across
+a bijection of player types; this is presentation bookkeeping used
+by bridges (\S\ref{sec:supp:bridges}) that canonicalize $\Players$
+to $\mathrm{Fin}\,n$.  \DefRef{ofEU}\label{def:ofEU} constructs a
+kernel game directly from a per-profile, per-player real-valued
+function $\mathrm{eu} : \prod_i \Strat_i \to \Players \to \RR$ by
+taking the outcome type to be $\Players \to \RR$ itself, the kernel
+to be $\Profile \mapsto \Dirac_{\mathrm{eu}(\Profile)}$, and the
+utility to be the identity.  The \TT{ofEU}-form is the natural
+target of the Bayesian-game compilation
+(\S\ref{sec:supp:bayesian}); structural lemmas in
+\TT{Concepts/OfEUProperties.lean} record that
+$\TT{eu}\,(\TT{ofEU}\,\TT{S}\,\TT{u})\,\sigma\,i = \TT{u}\,\sigma\,i$
+and that solution-concept predicates on \TT{ofEU}-games unfold to
+direct EU comparisons.
+
+\subsection{Morphisms, simulations, isomorphisms}
+\label{sec:supp:morphisms}\label{def:ProtocolMap}
+
+\begin{leanbox}
+structure ProtocolMap (F F' : GameForm $\iota$) where\\
+\bd stratMap   : $\forall$ i, F.Strategy i $\to$ F'.Strategy i\\
+\bd outcomeMap : F.Outcome $\to$ F'.Outcome\\
+\bd outcomeKernel\_preserved : $\forall$ $\sigma$ : F.Profile,\\
+\bdd F'.outcomeKernel (fun i $\Rightarrow$ stratMap i ($\sigma$ i)) =\\
+\bdd \bd (F.outcomeKernel $\sigma$).bind (fun $\omega$ $\Rightarrow$ PMF.pure (outcomeMap $\omega$))\\[3pt]
+def ProtocolMap.id  (F : GameForm $\iota$) : ProtocolMap F F\\
+def ProtocolMap.comp (g : ProtocolMap F' F'') (f : ProtocolMap F F') : ProtocolMap F F''
+\end{leanbox}
+
+\Mathematical
+A \emph{protocol map} from $\GF$ to $\GF'$ is a triple
+$(\stratMap, \outcomeMap, \mathrm{preserved})$ satisfying the
+\emph{outcome-kernel preservation} law:\ pushing a profile of $\GF$
+through $\stratMap$ and then evaluating $\K'$ produces the same
+distribution as evaluating $\K$ first and pushing the outcome
+through $\outcomeMap$.  Equivalently, $\stratMap$ and $\outcomeMap$
+form a coalgebra-style commuting square in the discrete Giry
+monad.  Identity and composition exist and satisfy the standard
+laws (\TT{ProtocolMap.id_comp}, \TT{comp_id}, \TT{comp_assoc}).
+
+\Variants
+\TT{KernelGame.Morphism} (\TT{Core/GameMorphism.lean}) is a protocol
+map together with utility-preservation
+$\util'(\outcomeMap(\omega))(i) = \util(\omega)(i)$.  A
+\TT{KernelGame.Simulation} is a kernel-game morphism (the names
+coincide).  A \TT{KernelGame.Bisimulation} is a simulation whose
+strategy and outcome maps are bijective with simulation inverse;
+it expresses an EU-isomorphism.  A
+\TT{GameForm.ProtocolIsomorphism} is the analogous bijective
+protocol-only version.  All of these come with \TT{id} and
+\TT{comp} together with the corresponding identity/associativity
+lemmas.
+
+\Faithfulness
+The morphism vocabulary is project-internal:\ no textbook canonizes
+"protocol map between strategic-form games."  The categorical laws
+are proved as \TT{simp}-lemmas (\TT{Core/GameForm.lean:307–349},
+\TT{Core/GameMorphism.lean:67–77}); their content is the
+distributional analogue of a coalgebra homomorphism.
+
+% =====================================================================
+\section{Solution concepts}
+\label{sec:supp:solution-concepts}
+
+This section catalogues the solution-concept predicates.  The
+deviation-family schema of \S\ref{sec:supp:deviation-schema} is
+the organizing principle:\ every equilibrium notion is an instance
+of \TT{IsDeviationEqFamilyFor} for an explicit choice of
+$\mathcal{D}$.  We anchor at $\IsNash$ (\S\ref{sec:supp:isNash})
+and $\IsCorrelatedEq$ (\S\ref{sec:supp:isCE}); other concepts are
+bunched.
+
+\subsection{Deviation-family schema: \texttt{Concepts/Deviation.lean}}
+\label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:ProfileDeviationFamily}\label{def:IsDeviationEqFamilyFor}
+
+\begin{leanbox}
+namespace GameForm\\[1pt]
+def NoProfitableDeviationFor (F : GameForm $\iota$)\\
+\bd (pref : $\iota \to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop)\\
+\bd (who : $\iota$) (statusQuo : PMF F.Outcome)\\
+\bd \{D : Type\} (deviate : D $\to$ PMF F.Outcome) : Prop :=\\
+\bdd $\forall$ d : D, pref who statusQuo (deviate d)\\[3pt]
+structure ProfileDeviationFamily (F : GameForm $\iota$) where\\
+\bd Dev      : $\iota \to$ Type\\
+\bd deviate  : PMF F.Profile $\to$ ($\forall$ who : $\iota$, Dev who $\to$ PMF F.Profile)\\[3pt]
+def IsDeviationEqFamilyFor (F : GameForm $\iota$)\\
+\bd (pref : $\iota \to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop)\\
+\bd ($\mu$ : PMF F.Profile) ($\Delta$ : ProfileDeviationFamily F) : Prop :=\\
+\bdd $\forall$ who : $\iota$, F.NoProfitableProfileDeviationFor pref who $\mu$ ($\Delta$.deviate $\mu$ who)\\[3pt]
+noncomputable def constantDeviationProfileFamily (F : GameForm $\iota$) : ProfileDeviationFamily F\\
+noncomputable def recommendationDeviationFamily   (F : GameForm $\iota$) : ProfileDeviationFamily F
+\end{leanbox}
+
+\Mathematical
+A \emph{deviation family} for player $i$ is a type $D_i$ of
+deviations and a function transforming a profile distribution into
+a deviated profile distribution given a deviation.  A profile
+distribution $\mu$ is a $\mathcal{D}$-equilibrium for preference
+$\Pref$ when no player has a profitable deviation in
+$\mathcal{D}$:\
+\[
+  \forall i,\,\forall d \in D_i.\quad
+    \Pref_i\bigl(\GF.\mathrm{correlatedOutcome}(\mu),\,
+                 \GF.\mathrm{correlatedOutcome}(\mathrm{deviate}_i(\mu, d))\bigr).
+\]
+The two named families are
+$\mathcal{D}^{\mathrm{const}}$ (deviations are constant
+strategies; \TT{constantDeviationProfileFamily}) and
+$\mathcal{D}^{\mathrm{dep}}$ (deviations are functions of the
+recommendation; \TT{recommendationDeviationFamily}).
+
+\Textbook
+The deviation-family schema is project-internal but the two
+families are textbook:\ unilateral deviation by a fixed strategy
+(Nash, CCE) and recommendation-dependent deviation
+(Aumann's correlated equilibrium~\citep{Aumann1974}).
+
+% =====================================================================
+\subsection{Nash equilibrium: \texttt{KernelGame.IsNash}}
+\label{sec:supp:isNash}\label{def:KernelGame.IsNash}\label{def:IsNashFor}
+
+\Anchor{KernelGame.IsNash}
+\begin{leanbox}
+open Classical in\\
+def KernelGame.IsNash (G : KernelGame $\iota$) ($\sigma$ : Profile G) : Prop :=\\
+\bd $\forall$ (who : $\iota$) (s' : G.Strategy who),\\
+\bdd G.eu $\sigma$ who $\ge$ G.eu (Function.update $\sigma$ who s') who\\[3pt]
+def KernelGame.IsNashFor (G : KernelGame $\iota$)\\
+\bd (pref : $\iota \to$ PMF G.Outcome $\to$ PMF G.Outcome $\to$ Prop)\\
+\bd ($\sigma$ : Profile G) : Prop :=\\
+\bdd G.toGameForm.IsNashFor pref $\sigma$\\[3pt]
+theorem KernelGame.IsNash\_iff\_IsNashFor\_eu (G : KernelGame $\iota$) ($\sigma$ : Profile G) :\\
+\bd G.IsNash $\sigma$ $\leftrightarrow$ G.IsNashFor G.euPref $\sigma$
+\end{leanbox}
+
+\Mathematical
+A profile $\Profile$ is a Nash equilibrium of $\KG$ when no player
+has a strictly improving unilateral deviation:
+\begin{equation}
+\label{eq:supp:isNash}
+  \forall i \in \Players,\,\forall s' \in \Strat_i.\quad
+    \EU(\KG, \Profile, i) \;\ge\; \EU(\KG, \Profile[i \mapsto s'], i).
+\end{equation}
+The library's \TT{IsNashFor} variant
+(\TT{Core/GameForm.lean}) generalizes \eqref{eq:supp:isNash} to
+take an arbitrary preorder $\Pref$ on $\PMF{\Outcome}$:
+\[
+  \forall i,\,\forall s'.\quad \Pref_i\bigl(\K(\Profile),\;\K(\Profile[i \mapsto s'])\bigr).
+\]
+The bridge \TT{IsNash_iff_IsNashFor_eu} certifies that
+$\IsNash$ is \TT{IsNashFor} instantiated at the EU preference
+$\Pref^{\EU}$.
+
+\Textbook
+Osborne–Rubinstein Definition 14.1 (Nash equilibrium of a strategic
+game):\ a strategy profile $a^*$ such that for every $i$ and every
+$a_i \in A_i$, $u_i(a^*_{-i}, a_i^*) \ge u_i(a^*_{-i}, a_i)$.
+Maschler–Solan–Zamir Definition 5.1 is identical with notation
+$\sigma$ for the profile.  Myerson Definition 3.1 is the same
+modulo the use of $\succsim$ in place of $\ge$ on real numbers.
+\eqref{eq:supp:isNash} is verbatim these definitions specialized
+to the EU preorder, with \TT{Function.update} encoding the
+"$a^*_{-i}, a_i$" notation explicitly:\ \TT{Function.update $\sigma$ who s'}
+is the profile that agrees with $\sigma$ at every coordinate except
+\TT{who}, where it is replaced by \TT{s'}.
+
+\Faithfulness
+Faithful, with strict generalization through \TT{IsNashFor}.  The
+weak-preference convention (the textbook uses $\ge$, the library
+uses $\ge$ on EU; \TT{IsStrictNash} below uses $>$) matches the
+weak Nash equilibrium of Osborne–Rubinstein 14.1.  See
+\S\ref{sec:supp:examples:pd} for an end-to-end unfolding on
+Prisoner's Dilemma:\ the predicate evaluates to four real
+inequalities, one for each player and each alternative action,
+exactly as in the textbook treatment.
+
+\Variants
+The bunched siblings of \TT{IsNash} are:
+\begin{itemize}\itemsep1pt
+\item \TT{IsBestResponse(For)} — a single coordinate is a best
+  response against fixed opponents (the existential factor of
+  Nash).
+\item \TT{IsStrictNash(For)} — strict inequality for every $s' \neq
+  \Profile_i$.
+\item \TT{IsDominant(For)} / \TT{IsStrictDominant(For)} — the
+  coordinate is best-response against \emph{every} opponent
+  profile.
+\item \TT{WeaklyDominates(For)} / \TT{StrictlyDominates(For)} —
+  pairwise dominance as a binary predicate on strategies.
+\end{itemize}
+Each is the obvious quantifier rearrangement of \eqref{eq:supp:isNash}
+and unfolds analogously.  The dominance$\Rightarrow$Nash chain
+(\TT{KernelGame.dominant_is_nash}) and Nash$\Leftrightarrow$best-response
+characterization are recorded as one-line corollaries.
+
+% =====================================================================
+\subsection{Correlated equilibrium: \texttt{KernelGame.IsCorrelatedEq}}
+\label{sec:supp:isCE}\label{def:KernelGame.IsCorrelatedEq}
+
+\Anchor{KernelGame.IsCorrelatedEq}
+\begin{leanbox}
+def IsCorrelatedEq (G : KernelGame $\iota$) ($\mu$ : PMF (Profile G)) : Prop := by\\
+\bd classical\\
+\bd exact $\forall$ (who : $\iota$) (dev : G.Strategy who $\to$ G.Strategy who),\\
+\bdd G.correlatedEu $\mu$ who $\ge$\\
+\bdd G.correlatedEu (G.unilateralDeviationDistribution $\mu$ who dev) who\\[3pt]
+def IsCoarseCorrelatedEq (G : KernelGame $\iota$) ($\mu$ : PMF (Profile G)) : Prop := by\\
+\bd classical\\
+\bd exact $\forall$ (who : $\iota$) (s' : G.Strategy who),\\
+\bdd G.correlatedEu $\mu$ who $\ge$\\
+\bdd G.correlatedEu (G.constantDeviationDistribution $\mu$ who s') who
+\end{leanbox}
+
+\Mathematical
+A profile distribution $\mu \in \PMF{\prod_i \Strat_i}$ is a
+\emph{correlated equilibrium} of $\KG$ when, viewing $\mu$ as a
+public correlation device privately recommending action $\mu_i$ to
+each player, no player gains by replacing their recommendation by
+any function of it:
+\[
+  \forall i,\,\forall \mathrm{dev} : \Strat_i \to \Strat_i.\quad
+    \mathbb{E}_{\Profile \sim \mu}\bigl[u_i(\K(\Profile))\bigr]
+    \;\ge\;
+    \mathbb{E}_{\Profile \sim \mu}\bigl[u_i(\K(\Profile[i \mapsto \mathrm{dev}(\Profile_i)]))\bigr].
+\]
+\emph{Coarse correlated equilibrium}~\citep{HartMasColell2000}
+restricts $\mathrm{dev}$ to constant functions $\mathrm{dev} \equiv s'$;
+this corresponds to the deviation family
+$\mathcal{D}^{\mathrm{const}}$ of
+\S\ref{sec:supp:deviation-schema}.
+
+\Textbook
+Aumann~\citep{Aumann1974} Definition 2 (correlated equilibrium of
+a finite Bayesian game with correlation device):\ for every
+recommended action $a$, the conditional expectation under $\mu$ of
+deviating to any $a' \neq a$ is no larger than the conditional
+expectation of complying.  Our predicate is the (well-known)
+equivalent ex-ante formulation:\ summing over all recommendations
+of the conditional inequality gives \eqref{eq:supp:isNash}-style
+total inequality on $\mu$, and the converse holds because the
+conditional inequalities can be recovered by deviation functions
+that act as the identity outside the conditioning event.
+
+\Faithfulness
+Faithful, with reformulation.  The library's
+$\IsCorrelatedEq$ is the ex-ante form; the equivalent
+ex-post (conditional) form is \TT{Concepts/CorrelatedEqProperties.lean}'s
+\TT{isCorrelatedEq_iff_pointwise} (and similarly for the
+preference-parameterized variant).  Existence is the content of
+the main chapter's CE existence theorem
+(\TT{KernelGame.correlatedEq_exists}).
+
+\Variants
+\TT{IsCorrelatedEqFor}, \TT{IsCoarseCorrelatedEqFor} are the
+preference-parameterized versions; \TT{IsCorrelatedEqFor.toCoarseCorrelatedEqFor}
+records the inclusion CE $\subseteq$ CCE; the schema instantiation
+$\mu = \Dirac_\Profile$ recovers $\IsNashFor$ from
+$\IsCoarseCorrelatedEqFor$.
+
+% =====================================================================
+\subsection{Other solution concepts: bunched}
+\label{sec:supp:other-concepts}
+
+We document the remaining concepts in groups.  Each group cites
+its anchor textbook reference; the structural relation to
+\IsNash\ or \IsCorrelatedEq\ is recorded in the prose.
+
+\paragraph{Pareto and welfare.}\
+\TT{Concepts/NashPareto.lean}, \TT{Concepts/WelfareTheorems.lean},
+\TT{Concepts/PriceOfAnarchy.lean}.  \TT{ParetoDominatesFor} is the
+binary preference-parameterized predicate "$\Profile$ Pareto-dominates
+$\tau$"; \TT{IsParetoEfficient(For)} is its ¬∃-closure.
+\TT{socialWelfare} is $\sum_i \EU(\KG, \Profile, i)$, requiring a
+finite player set.  \TT{optimalWelfare}, \TT{worstNashWelfare},
+\TT{bestNashWelfare} are the standard sup/inf over profile sets;
+the Lean library does not yet package the ratio-valued
+\TT{PoA}/\TT{PoS} definitions
+(\citep{Koutsoupias1999, Roughgarden2005}).
+
+\paragraph{Security and individual rationality.}\
+\TT{Concepts/SecurityStrategy.lean}, \TT{Concepts/IndividualRationality.lean}.
+\TT{securityLevel} of player $i$ is $\sup_s \inf_{\sigma_{-i}}
+\EU(\KG, \sigma_{-i}[i \mapsto s], i)$; a security strategy
+attains this supremum.  Individual rationality says no Nash payoff
+is below the security level (Maschler–Solan–Zamir §5.4).
+
+\paragraph{Regret.}\
+\TT{Concepts/Regret.lean}.  External regret of $\Profile$ for $i$
+is $\max_{s'}(\EU(\Profile[i\mapsto s'],i) - \EU(\Profile,i))^+$;
+internal regret replaces $s'$ by a function of $\Profile_i$.  The
+regret-equilibrium duality (zero average external regret iff CCE;
+zero average internal regret iff CE) is recorded as
+\TT{regret_zero_iff_isCoarseCorrelatedEq} and its CE analogue.
+
+\paragraph{Approximate equilibria.}\
+\TT{Concepts/ApproximateNash.lean}.  \TT{IsEpsilonNash $\varepsilon$}
+relaxes the Nash inequality by an additive $\varepsilon$ slack;
+$\varepsilon = 0$ recovers \TT{IsNash}.  Closure under
+$\varepsilon$-relaxation extends to the deviation-family schema,
+hence applies to $\varepsilon$-CCE and $\varepsilon$-CE.
+
+\paragraph{Potential games.}\
+\TT{Concepts/PotentialGame.lean}, \TT{PotentialFIP.lean},
+\TT{PotentialWellFounded.lean}, \TT{PotentialTeam.lean}.
+\TT{IsExactPotential $\Phi$} requires $\EU(\sigma',i) - \EU(\sigma,i) =
+\Phi(\sigma') - \Phi(\sigma)$ for every unilateral deviation
+$\sigma \to \sigma'$;  \TT{IsOrdinalPotential $\Phi$} replaces equality
+by sign-equality.  \TT{IsExactPotential.toOrdinal} gives the
+expected implication.  \TT{IsOrdinalPotential.nash_of_maximizer}:\
+every $\Phi$-maximizer is Nash.  \TT{IsTeamGame.isExactPotential}:\
+team games are exact potential games with $\Phi = u_{\mathrm{any}}$
+(\citep{MonderShapley1996}).
+
+\paragraph{Zero-sum, constant-sum, team, symmetric, evolutionary.}\
+\TT{Concepts/ZeroSum.lean}, \TT{ConstantSum.lean},
+\TT{TeamGame.lean}, \TT{SymmetricGame.lean},
+\TT{EvolutionaryStability.lean}.  \TT{IsZeroSum}:\ $\sum_i \util(\omega)(i)
+= 0$ for all $\omega$.  Constant-sum, team-game, and symmetric
+predicates are similar.  \TT{ZeroSumNash}, \TT{ConstantSumNash}
+record that two-player zero/constant-sum Nash profiles are exactly
+the maximin/security profiles.  \TT{IsEvolutionarilyStable} is the
+strict-dominance condition on a symmetric two-player game
+(\citep{MaynardSmithPrice1973}).
+
+\paragraph{Rationalizability and dominance solvability.}\
+\TT{Concepts/Rationalizability.lean},
+\TT{Concepts/DominanceSolvable.lean},
+\TT{Concepts/DominanceSolvability.lean}.  \TT{Survives n} is the
+predicate "survives $n$ rounds of iterated strict dominance
+elimination," defined inductively;  \TT{IsRationalizable} is the
+inf over $n$.  \TT{IsNash.isRationalizable} and
+\TT{IsDominant.isRationalizable} are the expected implications.
+\TT{Concepts/DominanceSolvable.lean} records that the unique
+surviving profile (when one exists) is Nash.
+
+\paragraph{Common knowledge.}\
+\TT{Concepts/CommonKnowledge.lean}.  Aumann's common-knowledge
+operator on a finite partition structure
+(\citep{Aumann1976}); used as scaffolding for the mechanism layer.
+
+\input{supplement-tail}
