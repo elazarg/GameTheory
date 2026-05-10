@@ -36,10 +36,9 @@ theorem correlatedEu_pure (σ : Profile G) (who : ι) :
     G.correlatedEu (PMF.pure σ) who = G.eu σ who := by
   simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
 
-set_option linter.unusedFintypeInType false in
 /-- Correlated EU is the expectation of standard EU over the profile
     distribution. -/
-theorem correlatedEu_eq_expect_eu [Fintype (Profile G)] [Fintype G.Outcome]
+theorem correlatedEu_eq_expect_eu [Finite (Profile G)] [Finite G.Outcome]
     (μ : PMF (Profile G)) (who : ι) :
     G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
   simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward, expect_bind]
@@ -65,7 +64,6 @@ theorem unilateralDeviationDistribution_pure (σ : Profile G)
   simp [KernelGame.unilateralDeviationDistribution,
     KernelGame.deviationDistribution, KernelGame.unilateralDeviation]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Deviation of a product distribution equals the product with the deviated
     component replaced by the pushforward of the original through `dev`. -/
@@ -80,7 +78,6 @@ theorem unilateralDeviationDistribution_pmfPi
   unfold KernelGame.unilateralDeviation
   exact pmfPi_bind_update_map σ who dev
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- A mixed Nash profile induces a correlated equilibrium on pure profiles
     via the independent product distribution `pmfPi σ`.
@@ -92,7 +89,7 @@ open Classical in
     player `who`'s EU. -/
 theorem mixed_nash_isCorrelatedEq
     {G : KernelGame ι}
-    [Fintype ι] [∀ i, Fintype (G.Strategy i)] [Fintype G.Outcome]
+    [Fintype ι] [∀ i, Fintype (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ) :
     G.IsCorrelatedEq (pmfPi σ) := by

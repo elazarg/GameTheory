@@ -37,6 +37,8 @@ namespace GameTheory.Languages.MultiRound
 open GameTheory.MultiRound
 open GameTheory.Theorems
 
+attribute [local instance] Fintype.ofFinite
+
 variable {n : Nat} {S V A Sig : Type}
 
 section KuhnCore
@@ -115,7 +117,6 @@ theorem kuhn_mixed_to_behavioral_compiledLin
     (stepSupportFactorization_compiledLin G)
     hAPL μ k
 
-set_option linter.unusedFintypeInType false in
 /-- Full recall (view + action) implies `ActionPosteriorLocal` on the linearized model.
 
 The proof route is: FullRecall → `ObsLocalFeasibility` → (+ MI) → APL, using
@@ -130,14 +131,12 @@ turns agree, making `ObsLocalFeasibility` hold. -/
 theorem actionPosteriorLocal_of_fullRecall
     [Fintype A] [Nonempty A]
     [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
-    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
     (hFR : G.FullRecall) (i : Fin n) :
     ObsModelCore.ActionPosteriorLocal (compiledLinObs' G) i :=
   ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility
     (stepMassInvariant_compiledLin G) i
     (obsLocalFeasibility_of_fullRecall G hFR i)
 
-set_option linter.unusedFintypeInType false in
 /-- **Kuhn M→B for sequential protocols under full recall**: product mixed
 strategies can be realized by behavioral strategies.
 
@@ -145,7 +144,7 @@ Combines: linearized compilation (structural MI + SF), FullRecall → APL,
 and the core M→B theorem. -/
 theorem kuhn_mixed_to_behavioral_fullRecall
     [Fintype A] [Nonempty A]
-    [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
+    [∀ i, Finite ((compiledLinObs' G).InfoState i)]
     [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
     (hFR : G.FullRecall)
     (μ : ∀ i, PMF ((compiledLinObs' G).LocalStrategy i))
@@ -165,7 +164,6 @@ private noncomputable def extractState (G : MultiRoundGame n S V A Sig) :
     List (LinConfig G) → S :=
   fun ss => ((compiledLinObs G).lastState ss).state
 
-set_option linter.unusedFintypeInType false in
 /-- **Kuhn M→B (native)**: under full recall, every product mixed strategy profile
 can be realized by a behavioral strategy profile on the linearized compiled model,
 with the same outcome distribution as `MultiRoundGame.eval`.
@@ -203,7 +201,6 @@ theorem kuhn_mixed_to_behavioral_native
 -- Fully native M→B: stated entirely on MultiRoundGame types
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 /-- **Kuhn M→B (fully native)**: under full recall and view-determines-round,
 every product mixed strategy profile can be realized by a behavioral strategy
 profile with the same outcome distribution.
@@ -252,7 +249,6 @@ theorem kuhn_mixed_to_behavioral_sequential
 -- B→M: behavioral strategies can be realized as product mixed strategies
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 /-- **Kuhn B→M for linearized sequential protocols**: behavioral strategies
 can be decomposed into product mixed strategies. The `NoNontrivialInfoStateRepeat`
 condition holds unconditionally on the linearized model.
@@ -269,7 +265,6 @@ theorem kuhn_behavioral_to_mixed_compiledLin
   ObsModelCore.kuhn_behavioral_to_mixed
     (noNontrivialInfoStateRepeat_compiledLin G) β k
 
-set_option linter.unusedFintypeInType false in
 /-- **Kuhn B→M (fully native)**: under `ViewDeterminesRound`, every behavioral
 strategy profile can be realized by a product mixed strategy with the same
 outcome distribution.

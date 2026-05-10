@@ -20,11 +20,12 @@ open Math.Probability
 
 namespace KernelGame
 
+attribute [local instance] Fintype.ofFinite
+
 variable {ι : Type} [Fintype ι]
   (G : KernelGame ι) [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-  [Fintype G.Outcome]
+  [Finite G.Outcome]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Support lemma**: in a mixed Nash equilibrium, any pure strategy
     played with positive probability has zero gain (is a best response). -/
@@ -46,7 +47,6 @@ theorem mixedNash_support_gain_zero
     ENNReal.toReal_pos hpos (PMF.apply_ne_top _ _)
   exact (mul_eq_zero.mp ha_zero).resolve_left (ne_of_gt hpos_real)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- In a mixed Nash equilibrium, all pure strategies in the support
     yield the same expected utility. -/

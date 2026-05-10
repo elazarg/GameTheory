@@ -21,6 +21,8 @@ namespace ObsModelCore
 
 open Math.PMFProduct Math.ProbabilityMassFunction Math.ParameterizedChain
 
+attribute [local instance] Fintype.ofFinite
+
 variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}
 variable {O : ObsModelCore ι σ Obs Act}
 
@@ -75,9 +77,8 @@ the `condStep` from `ParameterizedChain` (monad associativity). -/
     ObsModelCore.stepDist ObsModelCore.castJointAction
   rw [PMF.bind_bind]
 
-set_option linter.unusedFintypeInType false in
 /-- Core correlated realization theorem, stated on the information-state core. -/
-theorem correlated_realization [Fintype (ObsModelCore.PureProfile O)]
+theorem correlated_realization [Finite (ObsModelCore.PureProfile O)]
     (ν : PMF (ObsModelCore.PureProfile O)) (k : Nat) :
     ∃ m : (n : Nat) → (ss : List σ) →
         PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))),

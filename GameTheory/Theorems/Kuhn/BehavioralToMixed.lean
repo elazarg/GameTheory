@@ -97,7 +97,6 @@ section MainTheorem
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 variable [∀ i, Fintype (O.InfoState i)]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, behavioral-to-mixed direction for `ObsModel`.**
 Every behavioral profile induces the same bounded trace distribution as the

@@ -634,9 +634,8 @@ end Conditioning
 
 section Disintegration
 
-variable {α : Type*} [Fintype α] {β : Type*} {γ : Type*}
+variable {α : Type*} {β : Type*} {γ : Type*}
 
-omit [Fintype α] in
 /-- If `b` is in the support of `pushforward μ proj`, then the fibre
     `{a | proj a = b}` meets the support of `μ`. -/
 lemma pushforward_support_fibre
@@ -646,10 +645,6 @@ lemma pushforward_support_fibre
   change b ∈ (PMF.map proj μ).support at hb
   rcases (PMF.mem_support_map_iff proj μ b).1 hb with ⟨a, ha, hab⟩
   exact ⟨a, hab, ha⟩
-
-variable [Fintype β]
-
-set_option linter.unusedFintypeInType false in
 /-- **Disintegration / law of total probability for PMF.bind.**
     Decompose `μ.bind g` by first projecting via `proj`, then conditioning on
     the projected value:
@@ -658,10 +653,13 @@ set_option linter.unusedFintypeInType false in
     The normalisation constant in `PMF.filter` cancels against the pushforward
     weight, recovering the original `μ.bind g`. -/
 theorem pmf_bind_disintegrate
+    [Finite α] [Finite β]
     (μ : PMF α) (proj : α → β) (g : α → PMF γ) :
     μ.bind g =
     (pushforward μ proj).bindOnSupport (fun b hb =>
       (μ.filter {a | proj a = b} (pushforward_support_fibre μ proj b hb)).bind g) := by
+  letI : Fintype α := Fintype.ofFinite α
+  letI : Fintype β := Fintype.ofFinite β
   classical
   ext y
   let Z : β → ENNReal := fun b => ∑ a : α, if b = proj a then μ a else 0

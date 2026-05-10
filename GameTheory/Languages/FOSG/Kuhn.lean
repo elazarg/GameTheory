@@ -26,6 +26,8 @@ namespace Kuhn
 
 open ObsModelCoreBridge
 
+attribute [local instance] Fintype.ofFinite
+
 variable {ι W : Type} [DecidableEq ι]
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
 
@@ -135,7 +137,6 @@ abbrev ObsLocalFeasibilityFull
     (i : ι) : Prop :=
   ObsModelCore.ObsLocalFeasibilityFull (toObsModelCore G) i
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, behavioral -> mixed direction for FOSGs.**
 
@@ -158,7 +159,6 @@ theorem behavioral_to_mixed
     (ObsModelCore.kuhn_behavioral_to_mixed (O := toObsModelCore G)
       (hNontriv := hNontriv) β k)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, stated at the
 semantic level.**
@@ -186,7 +186,6 @@ theorem mixed_to_behavioral_semantic
     (ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := toObsModelCore G)
       hMass hFactor hLocal μ k)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, via full
 semantic obs-locality.**
@@ -392,7 +391,6 @@ noncomputable def behavioralToMixedJoint
     classical
     exact Math.PMFProduct.pmfPi (behavioralToMixed (G := G) β)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, over native
 independent per-player mixed strategies.**
@@ -422,7 +420,6 @@ theorem mixed_to_behavioral_runDist
   rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
   rfl
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, over native
 independent per-player mixed strategies, via full semantic obs-locality.**
@@ -566,7 +563,6 @@ abbrev HistoryActionPosteriorLocal
     (i : ι) : Prop :=
   ObsModelCore.ActionPosteriorLocal (toHistoryObsModelCore G) i
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, native-history form.**
 
@@ -609,7 +605,6 @@ its native pure behavioral profile. -/
       historyOutcomeDist (G := G) k (G.pureToBehavioral π) := by
   rfl
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs.**
 
@@ -635,7 +630,6 @@ theorem mixed_to_behavioral
   refine ⟨β, ?_⟩
   simpa using hβ
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Pointwise native final-history form of FOSG Kuhn M→B. -/
 theorem mixed_to_behavioral_historyProb
@@ -656,7 +650,6 @@ theorem mixed_to_behavioral_historyProb
     mixed_to_behavioral (G := G) hMass hFactor hLocal μ k
   exact ⟨β, fun h => congrFun (congrArg DFunLike.coe hβ) h⟩
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Native finite-event form of FOSG Kuhn M→B for final histories. -/
 theorem mixed_to_behavioral_historyMassOn
@@ -735,7 +728,6 @@ noncomputable def legalHistoryMixedToBehavioral
     (liftHistoryMixedProfile (G := G) μ)
     (legalFallbackBehavioral (G := G) hLeg)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 theorem legalHistoryMixedToBehavioral_historyOutcomeDist
     [Fintype ι]
@@ -767,7 +759,6 @@ theorem legalHistoryMixedToBehavioral_historyOutcomeDist
       (fun π => historyOutcomeDist (G := G) k (G.pureToBehavioral π))
   congr 1
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 private theorem legalHistoryMixedToBehavioral_isLegal
     [Fintype ι]
@@ -829,7 +820,6 @@ private theorem legalHistoryMixedToBehavioral_isLegal
     rw [hfb] at hoi
     exact legalFallbackBehavioral_isLegal (G := G) hLeg i h hoi
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> legal behavioral direction for FOSGs.**
 
@@ -1158,7 +1148,6 @@ theorem reachableHistory_stepSupportFactorization
     ReachableHistoryStepSupportFactorization (G := G) hLeg :=
   (reachableHistory_stepActionDeterminism (G := G) hLeg).toSupportFactorization
 
-set_option linter.flexible false in
 private theorem playerViewFrom_cons_eq_cons_view
     (i : ι) {e e' : G.Step} {es es' : List G.Step}
     (h :
@@ -1173,19 +1162,20 @@ private theorem playerViewFrom_cons_eq_cons_view
   | none =>
       cases he' : e'.ownAction? i with
       | none =>
-          simp [he, he'] at h
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
           exact ⟨by simp [Step.playerView, he, he', h.1], h.2⟩
       | some ai' =>
-          simp [he, he'] at h
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
+          cases h.1
   | some ai =>
       cases he' : e'.ownAction? i with
       | none =>
-          simp [he, he'] at h
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
+          cases h.1
       | some ai' =>
-          simp [he, he'] at h
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
           exact ⟨by simp [Step.playerView, he, he', h.1, h.2.1], h.2.2⟩
 
-set_option linter.flexible false in
 private theorem playerViewFrom_cons_eq_cons_action
     (i : ι) {e e' : G.Step} {es es' : List G.Step}
     (h :
@@ -1200,17 +1190,19 @@ private theorem playerViewFrom_cons_eq_cons_action
   | none =>
       cases he' : e'.ownAction? i with
       | none =>
-          simp [he, he'] at h
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
           exact ⟨rfl, h.2⟩
       | some ai' =>
-          simp [he, he'] at h
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
+          cases h.1
   | some ai =>
       cases he' : e'.ownAction? i with
       | none =>
-          simp [he, he'] at h
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
+          cases h.1
       | some ai' =>
-          simp [he, he'] at h
-          exact ⟨by simp [h.1], h.2.2⟩
+          simp only [he, he', List.cons_append, List.nil_append, List.cons.injEq] at h
+          exact ⟨by cases h.1; rfl, h.2.2⟩
 
 private theorem playerViewFrom_cons_ne_nil
     (i : ι) (e : G.Step) (es : List G.Step) :
@@ -1536,7 +1528,6 @@ private theorem reachableHistory_source_nonterminal_of_target_nonterminal
     simpa using htmem
   exact ht (by simpa [htEq, h] using hterm)
 
-set_option linter.flexible false in
 private theorem reachableHistory_pureStep_component_eq
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
     (hLeg : G.LegalObservable) (i : ι)
@@ -1600,7 +1591,7 @@ private theorem reachableHistory_pureStep_component_eq
   | mk x hx =>
       cases hπi' : π' i (O.projectStates i p') with
       | mk y hy =>
-          simp [hπi, hπi'] at hval
+          simp only [hπi, hπi'] at hval
           subst y
           apply Subtype.ext
           rw [reachableInfoLegalMove_cast_currentObs_val (G := G) hLeg hobs_p ⟨x, hy⟩]
@@ -1756,9 +1747,8 @@ private theorem reachableHistory_pureRun_nonterminal_last_steps_length
       rw [show O.lastState (p ++ [t]) = t by simp [O, ObsModelCore.lastState], htEq]
       simp [hprefix]
 
-set_option linter.unusedFintypeInType false in
 private theorem reachableHistory_obsLocalFeasibility
-    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [Finite G.History] [∀ i, Fintype (Option (Act i))]
     (hLeg : G.LegalObservable) (i : ι) :
     ObsModelCore.ObsLocalFeasibility (toReachableHistoryObsModelCore G hLeg) i := by
   classical
@@ -2317,7 +2307,6 @@ noncomputable def reachableLegalHistoryMixedToBehavioral
     (liftReachableHistoryMixedProfile (G := G) hLeg μ)
     (reachableLegalFallbackBehavioral (G := G) hLeg)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 theorem reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
@@ -2358,7 +2347,6 @@ theorem reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
   rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
   rfl
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Kuhn's theorem, mixed -> behavioral direction for legal reachable FOSG
 strategy spaces.**
@@ -2387,7 +2375,6 @@ theorem reachable_mixed_to_behavioral
     (reachableHistory_stepSupportFactorization (G := G) hLeg)
     (reachableHistory_actionPosteriorLocal (G := G) hLeg) μ k
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- FOSG-facing form of the legal reachable M→B theorem.
 
@@ -2419,7 +2406,6 @@ theorem reachable_mixed_to_legal_behavioral
   refine ⟨βcore, β, ?_, hβcore⟩
   rfl
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Native FOSG form of the legal reachable M→B theorem.
 
@@ -2539,7 +2525,6 @@ theorem legalBehavioralProfileRestrictReachable_extend_runDist
   exact ReachableBehavioralStrategy.extend_apply_history
     (G := G) ((β i).restrictReachable).1 h
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Native total FOSG form of the legal M→B theorem.
 
@@ -2549,7 +2534,7 @@ FOSG histories. Internally the proof restricts to reachable information states,
 uses `reachable_mixed_to_legal_behavioral_runDist`, and extends the behavioral
 witness back to the ordinary total FOSG strategy space. -/
 theorem mixed_legalPure_to_legalBehavioral_runDist
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype W] [Finite G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     [∀ i, Fintype (G.LegalPureStrategy i)]
     (hLeg : G.LegalObservable)
@@ -3354,9 +3339,6 @@ theorem behavioral_to_mixed_eu
 
 end TerminalCorollaries
 
-set_option linter.unusedFintypeInType false
-set_option linter.unusedSectionVars false
-set_option linter.unusedDecidableInType false
 
 section ReachableNative
 
@@ -3400,6 +3382,7 @@ noncomputable def reachableBehavioralToMixedJoint
   exact Math.PMFProduct.pmfPi (reachableBehavioralToMixed (G := G) β)
 
 open Classical in
+omit [Fintype G.History] [∀ i, Fintype (Act i)] in
 private theorem reachable_stepActionProb_pureToBehavioral
     (π : _root_.GameTheory.FOSG.ReachablePureProfile G) (pref : G.History) (e : G.Step) :
     G.stepActionProb (G.pureToBehavioral π.extend) pref e =
@@ -3497,6 +3480,7 @@ private noncomputable def swapReachableProfileBy
   classical
   exact fun i v => if P i v then π₁ i v else π₂ i v
 
+omit [Fintype ι] [Fintype G.History] [∀ i, Fintype (Act i)] in
 private theorem swapReachableProfileBy_involutive
     (P : ∀ i, G.ReachableInfoState i → Prop) :
     Function.Involutive
@@ -3625,6 +3609,7 @@ private def ReachableSeenBefore
     (h : G.History) (i : ι) (v : G.ReachableInfoState i) : Prop :=
   ∃ h' : G.History, h'.IsPrefix h ∧ h' ≠ h ∧ G.reachableInfoStateOfHistory i h' = v
 
+omit [Fintype ι] [Fintype G.History] [∀ i, Fintype (Act i)] in
 private theorem reachable_seenBefore_mono_appendStep
     {h : G.History} {e : G.Step} {hsrc : e.src = h.lastState}
     {i : ι} {v : G.ReachableInfoState i}
@@ -3640,6 +3625,7 @@ private theorem reachable_seenBefore_mono_appendStep
     have hlen := congrArg List.length hs
     simp [History.appendStep] at hlen
 
+omit [Fintype ι] [Fintype G.History] [∀ i, Fintype (Act i)] in
 private theorem reachable_seenBefore_current_appendStep
     (h : G.History) (e : G.Step) (hsrc : e.src = h.lastState) (i : ι) :
     ReachableSeenBefore (G := G) (h.appendStep e hsrc) i
@@ -3650,6 +3636,7 @@ private theorem reachable_seenBefore_current_appendStep
     have hlen := congrArg (fun h' : G.History => h'.steps.length) hEq
     simp [History.appendStep] at hlen
 
+omit [Fintype ι] [Fintype G.History] [∀ i, Fintype (Act i)] in
 private theorem reachable_not_seenBefore_current
     (h : G.History) (i : ι) :
     ¬ ReachableSeenBefore (G := G) h i (G.reachableInfoStateOfHistory i h) := by
@@ -3659,6 +3646,7 @@ private theorem reachable_not_seenBefore_current
     exact congrArg Subtype.val hv
   exact History.playerView_ne_of_properPrefix (G := G) i hpref hne hv'
 
+omit [Fintype G.History] [∀ i, Fintype (Act i)] in
 private theorem reachable_stepProb_pure_congr_at_history
     {π₁ π₂ : _root_.GameTheory.FOSG.ReachablePureProfile G}
     (h : G.History) (e : G.Step)
@@ -3676,6 +3664,7 @@ private theorem reachable_stepProb_pure_congr_at_history
   intro i _
   rw [hag i]
 
+omit [Fintype G.History] [∀ i, Fintype (Act i)] in
 /-- Pure-history weight depends only on reachable information-state coordinates
 that appear on proper prefixes of the history. -/
 private theorem reachable_prob_pure_congr_of_agreeOnSeenBefore
@@ -3995,7 +3984,8 @@ theorem reachable_marginal_terminalExpectation
                   congrArg (fun x => x * u h)
                     (reachable_marginal_terminalWeight_toReal (G := G) β h)
 
-/-- Native reachable-coordinate Kuhn theorem for FOSGs at realized histories. -/
+/- Native reachable-coordinate Kuhn theorem for FOSGs at realized histories. -/
+omit [DecidablePred G.terminal] in
 theorem behavioral_to_mixed_prob_reachable
     (β : ReachableBehavioralProfile (G := G)) (h : G.History) :
     ∑ π, reachableBehavioralToMixedJoint (G := G) β π *

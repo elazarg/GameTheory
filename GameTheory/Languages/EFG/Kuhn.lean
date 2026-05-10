@@ -1559,8 +1559,11 @@ private theorem compiledCore_runEq_to_evalDistEq
       _ =
         (mixedProfileJoint muP).bind
           (fun pi => t.evalDist (pureToBehavioral pi)) := by
-          simp [Math.ProbabilityMassFunction.pushforward,
-            GameTheory.EFG.descendPureProfileCore_liftPureProfileCore]
+          rw [Math.ProbabilityMassFunction.pushforward, PMF.bind_map]
+          refine Math.ProbabilityMassFunction.bind_congr_on_support
+            (mixedProfileJoint muP) _ _ ?_
+          intro pi _hpi
+          simp
   calc
     t.evalDist σ =
       (O.runDist k β).bind (fun ss => (O.lastState ss).evalDist σ) := by

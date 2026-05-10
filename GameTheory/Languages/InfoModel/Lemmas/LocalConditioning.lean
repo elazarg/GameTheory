@@ -93,7 +93,6 @@ theorem pushforward_bind_condMixedLocal
             (Math.ProbabilityMassFunction.bind_pushforward_condOn
               (μ := μi) (proj := fun f => f v) (g := fun f => PMF.pure f)).symm
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Decompose a product-measure bind by sampling queried actions first,
 then resampling local pure policies from per-player conditionals. -/

@@ -27,7 +27,6 @@ variable {ι : Type}
 theorem eu_eq_expect {G : KernelGame ι} (σ : Profile G) (who : ι) :
     G.eu σ who = expect (G.outcomeKernel σ) (fun ω => G.utility ω who) := rfl
 
-set_option linter.unusedFintypeInType false in
 /-- For finite outcome types, EU equals a finite sum over outcomes. -/
 theorem eu_eq_sum {G : KernelGame ι} [Fintype G.Outcome] (σ : Profile G) (who : ι) :
     G.eu σ who = ∑ ω : G.Outcome, (G.outcomeKernel σ ω).toReal * G.utility ω who := by
@@ -40,12 +39,12 @@ theorem eu_pure_outcome {G : KernelGame ι} (σ : Profile G) (who : ι)
     G.eu σ who = G.utility ω who := by
   simp [eu, h, expect_pure]
 
-set_option linter.unusedFintypeInType false in
 /-- If all utilities for a player are non-negative, EU is non-negative. -/
-theorem eu_nonneg_of_utility_nonneg {G : KernelGame ι} [Fintype G.Outcome]
+theorem eu_nonneg_of_utility_nonneg {G : KernelGame ι} [Finite G.Outcome]
     (σ : Profile G) (who : ι)
     (h : ∀ ω : G.Outcome, G.utility ω who ≥ 0) :
     G.eu σ who ≥ 0 := by
+  letI : Fintype G.Outcome := Fintype.ofFinite G.Outcome
   rw [eu_eq_sum]
   apply Finset.sum_nonneg
   intro ω _

@@ -19,6 +19,8 @@ namespace GameTheory
 open Math.Probability
 namespace KernelGame
 
+attribute [local instance] Fintype.ofFinite
+
 variable {ι : Type} [DecidableEq ι]
 
 /-- If every player has a dominant strategy, the profile of dominant strategies
@@ -30,12 +32,11 @@ theorem nash_of_all_have_dominant {G : KernelGame ι}
   let σ : Profile G := fun i => (h i).choose
   exact ⟨σ, KernelGame.dominant_is_nash G σ (fun i => (h i).choose_spec)⟩
 
-set_option linter.unusedFintypeInType false in
 /-- A finite game with an exact potential function has a Nash equilibrium:
     the profile maximizing the potential. -/
 theorem exact_potential_nash_exists {G : KernelGame ι}
     {Φ : Profile G → ℝ} (hΦ : G.IsExactPotential Φ)
-    [Fintype (Profile G)] [Nonempty (Profile G)] :
+    [Finite (Profile G)] [Nonempty (Profile G)] :
     ∃ σ : Profile G, G.IsNash σ := by
   obtain ⟨σ_max, _, hmax⟩ :=
     Finset.exists_max_image Finset.univ Φ Finset.univ_nonempty

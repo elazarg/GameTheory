@@ -23,12 +23,11 @@ namespace KernelGame
 
 variable {ι : Type}
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- In a 2-player constant-sum Nash equilibrium, when player 1 deviates,
     player 0's expected utility can only increase (or stay the same). -/
 theorem IsConstantSum.nash_opponent_deviation_helps
-    {G : KernelGame (Fin 2)} [Fintype G.Outcome]
+    {G : KernelGame (Fin 2)} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c)
     {σ : Profile G} (hN : G.IsNash σ) (s' : G.Strategy 1) :
     G.eu (Function.update σ 1 s') 0 ≥ G.eu σ 0 := by
@@ -37,12 +36,11 @@ theorem IsConstantSum.nash_opponent_deviation_helps
   have h2 := hcs.eu_determined (Function.update σ 1 s')
   linarith
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Symmetric version: in a 2-player constant-sum Nash equilibrium, when player 0
     deviates, player 1's expected utility can only increase (or stay the same). -/
 theorem IsConstantSum.nash_opponent_deviation_helps'
-    {G : KernelGame (Fin 2)} [Fintype G.Outcome]
+    {G : KernelGame (Fin 2)} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c)
     {σ : Profile G} (hN : G.IsNash σ) (s' : G.Strategy 0) :
     G.eu (Function.update σ 0 s') 1 ≥ G.eu σ 1 := by
@@ -51,11 +49,10 @@ theorem IsConstantSum.nash_opponent_deviation_helps'
   have h2 := hcs.eu_determined (Function.update σ 0 s')
   linarith
 
-set_option linter.unusedFintypeInType false in
 /-- At a Nash equilibrium of a 2-player constant-sum game, player 0's Nash strategy
     guarantees the Nash payoff against any opponent strategy. -/
 theorem IsConstantSum.nash_guarantees_0
-    {G : KernelGame (Fin 2)} [Fintype G.Outcome]
+    {G : KernelGame (Fin 2)} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c)
     {σ : Profile G} (hN : G.IsNash σ) :
     G.Guarantees 0 (σ 0) (G.eu σ 0) := by
@@ -64,11 +61,10 @@ theorem IsConstantSum.nash_guarantees_0
   funext i
   fin_cases i <;> simp [Function.update]
 
-set_option linter.unusedFintypeInType false in
 /-- At a Nash equilibrium of a 2-player constant-sum game, player 1's Nash strategy
     guarantees the Nash payoff against any opponent strategy. -/
 theorem IsConstantSum.nash_guarantees_1
-    {G : KernelGame (Fin 2)} [Fintype G.Outcome]
+    {G : KernelGame (Fin 2)} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c)
     {σ : Profile G} (hN : G.IsNash σ) :
     G.Guarantees 1 (σ 1) (G.eu σ 1) := by

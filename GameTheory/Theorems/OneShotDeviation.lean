@@ -48,7 +48,6 @@ def HasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
 -- Easy direction: SPE → no profitable one-shot deviation
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- SPE implies no profitable one-shot deviation (for perfect-info games). -/
 theorem spe_hasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
@@ -96,7 +95,6 @@ theorem spe_hasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
 -- Hard direction: no profitable one-shot deviation → SPE
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Key inductive lemma: if σ has no profitable one-shot deviation (globally),
     then σ is Nash at every reachable subtree of a perfect-info tree.
@@ -253,7 +251,6 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
           exact ih a (hpi_next a) _
             (ReachBy_append hreach_root (.action a (.here _))) hr'
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- No profitable one-shot deviation implies SPE (for perfect-info games). -/
 theorem hasNoOneShotDeviation_spe (G : EFGGame) [Fintype G.Outcome]
@@ -268,7 +265,6 @@ theorem hasNoOneShotDeviation_spe (G : EFGGame) [Fintype G.Outcome]
 -- The equivalence
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **One-Shot Deviation Principle**: for finite perfect-information extensive-form
     games, a pure strategy profile is a subgame-perfect equilibrium if and only if

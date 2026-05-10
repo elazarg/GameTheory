@@ -73,8 +73,7 @@ private theorem evalRounds_cons (r : Round n S V A Sig)
   rw [PMF.pure_bind]
   exact pmf_foldl_bind Round.eval σ (r.eval σ s) rest
 
-set_option linter.unusedFintypeInType false in
-private theorem pmf_foldl_bind_mixed [Fintype (Option A)]
+private theorem pmf_foldl_bind_mixed
     (f : Round n S V A Sig → BehavioralProfile n V A → S → PMF S)
     (σ : BehavioralProfile n V A) (μ : PMF S) (rest : List (Round n S V A Sig)) :
     rest.foldl (fun dist r => dist.bind (f r σ)) μ =
@@ -88,7 +87,6 @@ private theorem pmf_foldl_bind_mixed [Fintype (Option A)]
     ext s
     rw [PMF.pure_bind, ih]
 
-set_option linter.unusedFintypeInType false in
 private theorem evalRoundsMixed_cons [Fintype (Option A)] (r : Round n S V A Sig)
     (rest : List (Round n S V A Sig)) (σ : BehavioralProfile n V A) (s : S) :
     evalRoundsMixed (r :: rest) σ s = (r.evalMixed σ s).bind (evalRoundsMixed rest σ) := by

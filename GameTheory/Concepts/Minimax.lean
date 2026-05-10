@@ -52,11 +52,10 @@ theorem isSaddlePoint_iff_isNash (G : KernelGame (Fin 2)) (σ : Profile G) :
   · intro hN
     exact ⟨fun s₀ => by convert hN 0 s₀, fun s₁ => by convert hN 1 s₁⟩
 
-set_option linter.unusedFintypeInType false in
 /-- `Guarantees` is equivalent to worst-case EU being at least `v`. -/
 theorem guarantees_iff_worstCaseEU_ge
     (G : KernelGame ι) [Fintype (Profile G)]
-    [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    [∀ i, Nonempty (G.Strategy i)]
     [Nonempty (Profile G)]
     (who : ι) (s : G.Strategy who) (v : ℝ) :
     G.Guarantees who s v ↔ G.worstCaseEU who s ≥ v := by

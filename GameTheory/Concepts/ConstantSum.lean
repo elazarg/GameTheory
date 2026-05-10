@@ -23,13 +23,13 @@ namespace KernelGame
 
 variable {ι : Type}
 
-set_option linter.unusedFintypeInType false in
 /-- In a constant-sum game with finite outcomes and finite players,
     social welfare always equals `c`. -/
 theorem IsConstantSum.socialWelfare_eq [Fintype ι]
-    {G : KernelGame ι} [Fintype G.Outcome]
+    {G : KernelGame ι} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G) :
     G.socialWelfare σ = c := by
+  letI : Fintype G.Outcome := Fintype.ofFinite G.Outcome
   simp only [socialWelfare, eu, expect_eq_sum]
   rw [Finset.sum_comm]
   simp_rw [← Finset.mul_sum]
@@ -37,11 +37,10 @@ theorem IsConstantSum.socialWelfare_eq [Fintype ι]
     fun ω => hcs ω
   simp_rw [hc, ← Finset.sum_mul, pmf_toReal_sum_one, one_mul]
 
-set_option linter.unusedFintypeInType false in
 /-- In a 2-player constant-sum game with finite outcomes,
     player 0's EU is `c - eu σ 1`. -/
 theorem IsConstantSum.eu_determined
-    {G : KernelGame (Fin 2)} [Fintype G.Outcome]
+    {G : KernelGame (Fin 2)} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G) :
     G.eu σ 0 = c - G.eu σ 1 := by
   have h := hcs.socialWelfare_eq σ
@@ -54,11 +53,10 @@ theorem IsZeroSum.isConstantSum_zero [Fintype ι]
     (hzs : G.IsZeroSum) : G.IsConstantSum 0 :=
   hzs
 
-set_option linter.unusedFintypeInType false in
 /-- In a 2-player constant-sum game, all Nash equilibria yield the same EU.
     This extends the zero-sum value uniqueness result. -/
 theorem IsConstantSum.nash_eu_eq
-    {G : KernelGame (Fin 2)} [Fintype G.Outcome]
+    {G : KernelGame (Fin 2)} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c) {σ τ : Profile G}
     (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
     G.eu σ 0 = G.eu τ 0 := by

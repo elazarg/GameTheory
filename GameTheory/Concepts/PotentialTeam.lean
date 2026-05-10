@@ -30,11 +30,10 @@ namespace KernelGame
 
 variable {ι : Type}
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- A team game is an exact potential game, with potential function
     `Φ(σ) = eu σ i₀` for any fixed player `i₀`. -/
-theorem IsTeamGame.isExactPotential [Fintype ι]
+theorem IsTeamGame.isExactPotential
     {G : KernelGame ι} (hteam : G.IsTeamGame) (i₀ : ι) :
     G.IsExactPotential (fun σ => G.eu σ i₀) := by
   intro who σ s'
@@ -42,11 +41,10 @@ theorem IsTeamGame.isExactPotential [Fintype ι]
   have h2 := hteam.eu_eq σ who i₀
   linarith
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- In a team game, a profile is Nash if and only if no unilateral deviation
     improves the potential function `Φ(σ) = eu σ i₀`. -/
-theorem IsTeamGame.nash_iff_local_potential_max [Fintype ι]
+theorem IsTeamGame.nash_iff_local_potential_max
     {G : KernelGame ι} (hteam : G.IsTeamGame) (i₀ : ι) (σ : Profile G) :
     G.IsNash σ ↔ ∀ (who : ι) (s' : G.Strategy who),
       G.eu σ i₀ ≥ G.eu (Function.update σ who s') i₀ := by
@@ -62,7 +60,6 @@ theorem IsTeamGame.nash_iff_local_potential_max [Fintype ι]
     have h2 := hteam.eu_eq (Function.update σ who s') i₀ who
     linarith
 
-set_option linter.unusedFintypeInType false in
 /-- A game that is both zero-sum and a team game must have all utilities
     identically zero. -/
 theorem IsZeroSum.teamGame_utility_zero [Fintype ι] [Nonempty ι]

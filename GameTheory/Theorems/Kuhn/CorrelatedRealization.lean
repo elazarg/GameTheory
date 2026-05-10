@@ -19,6 +19,8 @@ namespace ObsModel
 
 open Math.ProbabilityMassFunction Math.ParameterizedChain
 
+attribute [local instance] Fintype.ofFinite
+
 variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}
 variable {O : ObsModel ι σ Obs Act}
 
@@ -43,7 +45,6 @@ theorem mediator_step_eq_condStep [Fintype (PureProfile O)]
     ObsModel.stepDist, ObsModel.runDistPure, ObsModel.toCore] using
     (ObsModelCore.mediator_step_eq_condStep (O := O.toCore) ν n ss)
 
-set_option linter.unusedFintypeInType false in
 /-- **Correlated realization theorem**: for any joint distribution `ν` over
 pure profiles, there exists a mediator `m` — producing correlated action
 recommendations from the state trace at each step — such that the run under `m`
@@ -51,7 +52,7 @@ recommendations from the state trace at each step — such that the run under `m
 trace distribution as the `ν`-averaged pure runs.
 
 No perfect recall is needed. -/
-theorem correlated_realization [Fintype (PureProfile O)]
+theorem correlated_realization [Finite (PureProfile O)]
     (ν : PMF (PureProfile O)) (k : Nat) :
     ∃ m : (n : Nat) → (ss : List σ) →
         PMF (∀ i, Act i (O.currentObs i (O.projectStates i ss))),
@@ -357,15 +358,14 @@ end ObsLevel
 section ObsCorrelatedRealization
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
-variable [Fintype (PureProfile O)] [∀ i, Fintype (O.InfoState i)]
+variable [∀ i, Finite (O.InfoState i)]
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Observation-level correlated realization**: under `PerStepActionRecall`,
 a `BehavioralProfileCorr O` (observation-level mediator) produces the same
 trace distribution as any mixed strategy `ν`. -/
 theorem obs_correlated_realization [Inhabited ι] [∀ i o, Nonempty (Act i o)]
+    [Finite (PureProfile O)]
     (hPSAR : PerStepActionRecall O)
     (ν : PMF (PureProfile O)) (k : Nat) :
     ∃ bc : BehavioralProfileCorr O,
@@ -843,7 +843,6 @@ theorem pureRun_cross_mul_product
       rw [hw, hw']; simp_rw [hwi, hwi']; ring
 
 open Classical in
-set_option linter.unusedFintypeInType false in
 /-- Under PSAR, when `ν = pmfPi μ` (product of per-player strategy distributions)
 and the trace `ss` is reachable, the mediator `O.mixedToMediator ν n ss` produces
 a **product** action distribution: the recommended actions are independent across
@@ -1150,7 +1149,6 @@ theorem pureRun_update_obs_local
   pureRun_update_obs_local_of hPSAR n i hobs_i h₁ h₂
     (fun _ _ _ _ _ hobs_p _ _ _ _ _ => dep_congr_subst (π₀ i) hobs_p) πᵢ
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Generic obs-locality of `reweightPMF`, parameterized by a support-equivalence
 hypothesis `hiff` between two weight functions `w₁` and `w₂`. Under PSAR,
@@ -1210,7 +1208,6 @@ theorem reweightPMF_update_obs_local_of
             pureRun_const_of_psar hPSAR n₂ ((hiff πᵢ').mp hw') h₂
           rw [eq1, eq2, eq3, eq4]; ring)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Under PSAR, the per-player reweighted PMF depends on `ss` only through
 `projectStates i ss`. Corollary of `reweightPMF_update_obs_local_of`. -/
@@ -1245,7 +1242,6 @@ theorem pureRun_update_obs_local_pspr
     (fun _ _ _ _ _ hobs_p hobst _ _ ht₁ ht₂ =>
       pureStep_component_eq_of_pspr hPSPR i hobs_p hobst ht₁ ht₂) πᵢ
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Under PSPR, obs-locality with **different** reference profiles.
 Corollary of `reweightPMF_update_obs_local_of` with `hiff` from
@@ -1306,7 +1302,6 @@ theorem pureRun_update_obs_local_player
     (fun _ _ _ _ _ hobs_p hobst _ _ ht₁ ht₂ =>
       pureStep_component_eq_of_playerRecall i hPSR_i hobs_p hobst ht₁ ht₂) πᵢ
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Under PSAR + `PlayerStepRecall O i`, obs-locality with different reference profiles.
 Corollary of `reweightPMF_update_obs_local_of` with `hiff` from
@@ -1411,7 +1406,6 @@ variable [∀ i, Fintype (O.InfoState i)]
 
 open Math.PMFProduct
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Non-existential version of `mediator_product_of_product`:
 the mediator output equals the product of per-player factors. -/
@@ -1655,7 +1649,6 @@ the weakest syntactic condition in the hierarchy. They are placed after
 `SemanticConditions` because they depend on `pureStep_component_eq_of_tracePlayerRecall`
 and `pureRun_nonzero_to_reachActionTrace` from that section. -/
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Under PSAR + `TracePlayerStepRecall O i`, updating player `i`'s strategy
 preserves feasibility across obs-equivalent traces. -/
@@ -1678,7 +1671,6 @@ theorem pureRun_update_obs_local_trace
         (pureRun_nonzero_to_reachActionTrace m _ p₁ hp₁)
         (pureRun_nonzero_to_reachActionTrace m _ p₂ hp₂)) πᵢ
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Under PSAR + `TracePlayerStepRecall O i`, `reweightPMF` is obs-local for player `i`. -/
 theorem reweightPMF_update_obs_local_trace

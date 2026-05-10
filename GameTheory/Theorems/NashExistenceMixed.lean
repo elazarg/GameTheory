@@ -33,6 +33,8 @@ open Math.Probability
 namespace KernelGame
 open Math.PMFProduct
 
+attribute [local instance] Fintype.ofFinite
+
 variable {ι : Type} [DecidableEq ι]
 
 -- ============================================================================
@@ -73,21 +75,18 @@ variable [Fintype ι]
 variable (G : KernelGame ι)
 variable [∀ i, Fintype (G.Strategy i)]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- The sum of positive gains for player `who`. -/
 def gainSum (σ : ∀ i, PMF (G.Strategy i)) (who : ι) : ℝ :=
   ∑ a : G.Strategy who, pospart (G.mixedGain σ who a)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 theorem gainSum_nonneg (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     0 ≤ G.gainSum σ who :=
   Finset.sum_nonneg (fun _ _ => pospart_nonneg _)
 
-variable [∀ i, Nonempty (G.Strategy i)] [Fintype G.Outcome]
+variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- If σ satisfies the Nash map fixed-point identity, then σ is Nash.
     This is the core algebraic content of Nash's existence proof. -/
@@ -152,7 +151,6 @@ variable [Fintype ι]
 variable (G : KernelGame ι)
 variable [∀ i, Fintype (G.Strategy i)]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Convert a real weight profile to a PMF profile. -/
 def profileFromWeights
@@ -161,7 +159,6 @@ def profileFromWeights
     (hw_sum : ∀ i, ∑ a, w i a = 1) : ∀ i, PMF (G.Strategy i) :=
   fun i => realToPmf (w i) (hw_nn i) (hw_sum i)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Nash's map on real weight vectors. -/
 def nashMap
@@ -175,7 +172,6 @@ def nashMap
     let S := G.gainSum σ i
     (w i a + g) / (1 + S)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Nash's map preserves non-negativity of weights. -/
 theorem nashMap_nonneg
@@ -189,7 +185,6 @@ theorem nashMap_nonneg
       (G.profileFromWeights w hw_nn hw_sum) i a)]
   · linarith [G.gainSum_nonneg (G.profileFromWeights w hw_nn hw_sum) i]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Nash's map preserves the sum-to-one property. -/
 theorem nashMap_sum_one
@@ -211,7 +206,6 @@ theorem nashMap_sum_one
   rw [hw_sum i]; simp only [gainSum]
   exact div_self hden_ne
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- A fixed point of Nash's map satisfies the algebraic identity for `nash_fp_is_nash`. -/
 theorem nashMap_fp_identity
@@ -248,7 +242,7 @@ variable (G : KernelGame ι)
 variable [∀ i, Fintype (G.Strategy i)]
 
 section  -- Definitions require [Nonempty] and [Fintype Outcome]
-variable [∀ i, Nonempty (G.Strategy i)] [Fintype G.Outcome]
+variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
 
 /-- Convert a mixed-simplex profile to PMF profile (same coordinates, repackaged). -/
 noncomputable def profileFromMixedSimplex
@@ -350,14 +344,13 @@ theorem nashMap_weightFixedPoint_of_mixedSimplexFixedPoint
 section
 
 omit [DecidableEq ι] in
-set_option linter.unusedFintypeInType false in
 /--
 Baseline mixed-EU continuity on the mixed-simplex domain.
 This is the `hbase` premise used by
 `continuous_nashMapOnMixedSimplex_of_continuous_mixedEu`.
 -/
 theorem continuous_mixedExtension_eu_profileFromMixedSimplex
-    [Fintype G.Outcome] (who : ι) :
+    [Finite G.Outcome] (who : ι) :
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu (G.profileFromMixedSimplex x) who) := by
   classical
@@ -385,14 +378,13 @@ theorem continuous_mixedExtension_eu_profileFromMixedSimplex
   intro i hi
   exact (continuous_apply (s i)).comp (continuous_subtype_val.comp (continuous_apply i))
 
-set_option linter.unusedFintypeInType false in
 /--
 Pure-deviation mixed-EU continuity on the mixed-simplex domain.
 This is the `hdev` premise used by
 `continuous_nashMapOnMixedSimplex_of_continuous_mixedEu`.
 -/
 theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
-    [Fintype G.Outcome] (who : ι) (a : G.Strategy who) :
+    [Finite G.Outcome] (who : ι) (a : G.Strategy who) :
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu
         (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who) := by
@@ -507,10 +499,9 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedEu
   refine G.continuous_nashMapOnMixedSimplex_of_continuous_mixedGainOnMixedSimplex ?_
   exact G.continuous_mixedGainOnMixedSimplex_of_continuous_mixedEu hbase hdev
 
-section  -- Game-side continuity closure (needs [Fintype Outcome] only)
-variable [Fintype G.Outcome]
+section  -- Game-side continuity closure (needs finite outcomes only)
+variable [Finite G.Outcome]
 
-set_option linter.unusedFintypeInType false in
 /-- Unconditional continuity of Nash's map on mixed simplex (game-side closure). -/
 theorem continuous_nashMapOnMixedSimplex :
     Continuous (G.nashMapOnMixedSimplex) := by
@@ -518,7 +509,6 @@ theorem continuous_nashMapOnMixedSimplex :
     (hbase := fun who => G.continuous_mixedExtension_eu_profileFromMixedSimplex who)
     (hdev := fun who a => G.continuous_mixedExtension_eu_update_profileFromMixedSimplex who a)
 
-set_option linter.unusedFintypeInType false in
 /--
 Nash-map continuity reduced to pure-deviation mixed-EU continuity only
 (baseline mixed-EU continuity is provided by
@@ -533,7 +523,6 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedEu_deviation
   refine G.continuous_nashMapOnMixedSimplex_of_continuous_mixedEu ?_ hdev
   exact G.continuous_mixedExtension_eu_profileFromMixedSimplex
 
-set_option linter.unusedFintypeInType false in
 /--
 Approximation-only extraction of a weight-level fixed point for `nashMap`:
 continuity is discharged by `continuous_nashMapOnMixedSimplex`.
@@ -550,9 +539,8 @@ theorem nashMap_weightFixedPoint_of_nashMapOnMixedSimplex_approxOnly
 end  -- [Fintype Outcome] game-side closure
 
 section  -- Full continuity and existence theorems
-variable [∀ i, Nonempty (G.Strategy i)] [Fintype G.Outcome]
+variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
 
-set_option linter.unusedFintypeInType false in
 /-- A fixed point of `nashMapOnMixedSimplex` yields a mixed Nash equilibrium. -/
 theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
     (hfix : ∃ x, Function.IsFixedPt (G.nashMapOnMixedSimplex) x) :
@@ -575,7 +563,6 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
   exact ⟨G.profileFromWeights w hw_nn hw_sum,
     G.nash_fp_is_nash _ (G.nashMap_fp_identity w hw_nn hw_sum hfp_weights)⟩
 
-set_option linter.unusedFintypeInType false in
 /--
 Approximate fixed points for `nashMapOnMixedSimplex` imply existence of a mixed Nash equilibrium.
 The only remaining obligations are: continuity of `nashMapOnMixedSimplex`
@@ -590,7 +577,6 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx
       (f := G.nashMapOnMixedSimplex) hcont happrox with ⟨x, hxfix⟩
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point ⟨x, hxfix⟩
 
-set_option linter.unusedFintypeInType false in
 /--
 Approximation-only mixed Nash existence:
 continuity is discharged by `continuous_nashMapOnMixedSimplex`.
@@ -610,7 +596,6 @@ end NashMapMixedSimplex
 -- Main theorem
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- **Nash's Existence Theorem (Mixed Strategies).**
 
@@ -619,7 +604,7 @@ open Classical in
 theorem mixed_nash_exists (G : KernelGame ι)
     [Fintype ι]
     [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-    [Fintype G.Outcome] :
+    [Finite G.Outcome] :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ :=
   G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
     (brouwer_mixedSimplex G.nashMapOnMixedSimplex

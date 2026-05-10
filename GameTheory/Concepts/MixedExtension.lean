@@ -28,25 +28,23 @@ variable {ι : Type} [DecidableEq ι]
 -- EU in the mixed extension
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- EU in the mixed extension equals expectation of pure-profile EU
     under the independent product distribution. -/
 theorem mixedExtension_eu (G : KernelGame ι)
     [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] [Fintype G.Outcome]
+    [∀ i, Fintype (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     G.mixedExtension.eu σ who =
       expect (pmfPi σ) (fun s => G.eu s who) := by
   simp only [mixedExtension, eu, expect_bind]; rfl
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- EU when player `who` deviates to `τ` equals expectation of pure-deviation
     EUs under `τ`. -/
 theorem mixedExtension_eu_update (G : KernelGame ι)
     [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] [Fintype G.Outcome]
+    [∀ i, Fintype (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (τ : PMF (G.Strategy who)) :
     G.mixedExtension.eu (Function.update σ who τ) who =
       expect τ (fun a =>
@@ -69,16 +67,14 @@ section NashGain
 variable [Fintype ι]
 variable (G : KernelGame ι)
 variable [∀ i, Fintype (G.Strategy i)]
-variable [Fintype G.Outcome]
+variable [Finite G.Outcome]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- The gain of player `who` from a pure deviation to action `a`. -/
 def mixedGain (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (a : G.Strategy who) : ℝ :=
   G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who -
   G.mixedExtension.eu σ who
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Weighted gain sum is zero: the expectation of gain under the current
     mixed strategy is zero. -/
@@ -103,7 +99,6 @@ theorem weighted_gain_sum_zero
 
 variable [∀ i, Nonempty (G.Strategy i)]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive. -/
 theorem isNash_iff_gains_nonpos

@@ -74,10 +74,8 @@ theorem empty_stable_if_all_prefer_unmatched (M : MatchingMarket α β)
   · intro ⟨a, b, hblock⟩
     exact absurd (hblock.2.1 rfl) (not_lt.mpr (le_of_lt (hA a b)))
 
-set_option linter.unusedFintypeInType false in
-set_option linter.unusedDecidableInType false in
 /-- Mutual strict top choices must be matched in any stable matching. -/
-theorem stable_respects_mutual_top [DecidableEq α] [DecidableEq β]
+theorem stable_respects_mutual_top
     (M : MatchingMarket α β)
     (μ : α → Option β)
     (a : α) (b : β)

@@ -33,10 +33,9 @@ variable [DecidableEq (Fin n)] [Fintype (Fin n)]
 variable [Fintype A] [Nonempty A]
 variable (G : MultiRoundGame n S V A Sig)
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- `linObserve G i cfg = some obs` implies cfg is a playerTurn for player i
+/- `linObserve G i cfg = some obs` implies cfg is a playerTurn for player i
 at a valid round, and extracts the state, signals, and accumulated actions. -/
+omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 theorem linObserve_some_playerTurn (cfg : LinConfig G) (i : Fin n)
     (obs : RoundView G)
     (h : linObserve G i cfg = some obs) :
@@ -63,8 +62,8 @@ theorem linObserve_some_playerTurn (cfg : LinConfig G) (i : Fin n)
       · simp at h
     · simp at h
 
-set_option linter.unusedFintypeInType false in
-/-- `linObserve G i cfg = some obs` implies `cfg` is not done. -/
+/- `linObserve G i cfg = some obs` implies `cfg` is not done. -/
+omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem not_isDone_of_linObserve_some
     (cfg : LinConfig G) (i : Fin n) (obs : RoundView G)
     (h : linObserve G i cfg = some obs) : ¬ cfg.isDone G := by
@@ -75,8 +74,8 @@ private theorem not_isDone_of_linObserve_some
     List.getElem?_eq_getElem obs.1.isLt]
   exact Option.some_ne_none _
 
-set_option linter.unusedFintypeInType false in
-/-- Phase of a config where `linObserve G i cfg = some (⟨r, hr⟩, v)`. -/
+/- Phase of a config where `linObserve G i cfg = some (⟨r, hr⟩, v)`. -/
+omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem phase_of_linObserve_some
     (cfg : LinConfig G) (i : Fin n) (r : Fin G.rounds.length) (v : V)
     (h : linObserve G i cfg = some (r, v)) :
@@ -84,8 +83,8 @@ private theorem phase_of_linObserve_some
   obtain ⟨s, sig, accActs, hcfg, _⟩ := linObserve_some_playerTurn G cfg i ⟨r, v⟩ h
   rw [hcfg]; simp [LinConfig.phase]
 
-set_option linter.unusedSectionVars false in
-/-- On a nonzero trace, if `ss[b]` is not done, then `ss[a]` is not done for `a ≤ b`. -/
+/- On a nonzero trace, if `ss[b]` is not done, then `ss[a]` is not done for `a ≤ b`. -/
+omit [Nonempty A] in
 private theorem not_isDone_of_later_not_isDone
     (pi : (compiledLinObs G).PureProfile)
     (k : Nat) (ss : List (LinConfig G))
@@ -113,8 +112,9 @@ private theorem not_isDone_of_later_not_isDone
     · have ha0 : a = c + 1 := by omega
       subst ha0; exact hd
 
-/-- On a nonzero trace, if `ss[b]` is not done and `a < b`, then
+/- On a nonzero trace, if `ss[b]` is not done and `a < b`, then
 `phase(ss[a]) < phase(ss[b])`. -/
+omit [Nonempty A] in
 private theorem phase_strict_mono_of_not_done
     (pi : (compiledLinObs G).PureProfile)
     (k : Nat) (ss : List (LinConfig G))
@@ -167,8 +167,8 @@ private theorem pureRun_head_eq_init
         | cons h t => rfl
     rw [h_eq, hih]
 
-set_option linter.unusedSectionVars false in
-/-- On a nonzero trace where `ss[last]` is not done, `phase(ss[j]) = j` for all j. -/
+/- On a nonzero trace where `ss[last]` is not done, `phase(ss[j]) = j` for all j. -/
+omit [Nonempty A] in
 private theorem phase_eq_index
     (pi : (compiledLinObs G).PureProfile)
     (k : Nat) (ss : List (LinConfig G))
@@ -207,10 +207,9 @@ private theorem phase_eq_index
     have hprog := phase_step_progress G _ _ hnd_j _ (PMF.mem_support_iff _ _ |>.mpr hstep)
     rw [hprog, ih hjlt]
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- A config with phase `r*(n+2) + i.val + 1` (where `r < G.rounds.length` and `i < n`)
+/- A config with phase `r*(n+2) + i.val + 1` (where `r < G.rounds.length` and `i < n`)
 is a `playerTurn` for player `i` at round `r`, so `linObserve G i` returns `some`. -/
+omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 private theorem linObserve_of_phase_eq
     (cfg : LinConfig G) (p : Fin n)
     (r : Nat) (hr : r < G.rounds.length)
@@ -281,11 +280,10 @@ private theorem linObserve_of_phase_eq
         (Nat.mul_lt_mul_right (by omega : 0 < n + 2)).mpr hrk
       omega
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- On a nonzero trace, if `linObserve G i ss[last] = some (kLast, vLast)`,
+/- On a nonzero trace, if `linObserve G i ss[last] = some (kLast, vLast)`,
 then for every r < kLast, there exists an internal position j (j+1 < ss.length)
 with `linObserve G i ss[j] = some (r, v)` for some v. -/
+omit [Nonempty A] in
 private theorem earlier_i_step_exists
     (pi : (compiledLinObs G).PureProfile)
     (k : Nat) (ss : List (LinConfig G))
@@ -317,10 +315,9 @@ private theorem earlier_i_step_exists
   obtain ⟨v, hobs⟩ := linObserve_of_phase_eq G (ss[target]'htarget_lt) i r hr' hphase_target
   exact ⟨target, by omega, hr', v, hobs⟩
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- Two positions in a nonzero trace with the same `linObserve G i` returning
+/- Two positions in a nonzero trace with the same `linObserve G i` returning
 `some` at the same round must be at the same position and have the same view. -/
+omit [Nonempty A] in
 private theorem unique_i_step_position
     (pi : (compiledLinObs G).PureProfile)
     (k : Nat) (ss : List (LinConfig G))
@@ -352,9 +349,8 @@ private theorem unique_i_step_position
   have heq : (r, v1) = (r, v2) := Option.some_injective _ (hobs1.symm.trans hobs2)
   exact ⟨rfl, (Prod.mk.inj heq).2⟩
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- Show r < kLast from phase arithmetic on a trace. -/
+/- Show r < kLast from phase arithmetic on a trace. -/
+omit [Nonempty A] in
 private theorem round_lt_of_earlier_step
     (pi : (compiledLinObs G).PureProfile)
     (k : Nat) (ss : List (LinConfig G))
@@ -379,11 +375,10 @@ private theorem round_lt_of_earlier_step
   exact Nat.not_lt.mpr (Nat.add_le_add_right (Nat.add_le_add_right
     (Nat.mul_le_mul_right _ h) _) _) hphase_lt
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- **FullRecall bridge**: On nonzero traces with same last i-observation,
+/- **FullRecall bridge**: On nonzero traces with same last i-observation,
 for each round r < kLast, the view at round r matches between the two traces
 and the profile actions at that view agree. -/
+omit [Nonempty A] in
 private theorem fullRecall_view_action_match
     (hFR : G.FullRecall)
     (pi0 pi0' : (compiledLinObs G).PureProfile)
@@ -454,9 +449,8 @@ private theorem fullRecall_view_action_match
   · convert hobs_j2 using 2
   · intro o ho; subst ho; exact haction_match
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- projectStates for the compiled model equals the last observation. -/
+/- projectStates for the compiled model equals the last observation. -/
+omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
 theorem projectStates_eq_lastObs
     (i : Fin n) (ss : List (LinConfig G)) (hne : ss ≠ []) :
     (compiledLinObs G).projectStates i ss =
@@ -474,10 +468,10 @@ theorem projectStates_eq_lastObs
       List.getLast_eq_getElem]
     rfl
 
-set_option linter.unusedSectionVars false in
-/-- **ObsLocalFeasibility for the linearized model under FullRecall**:
+/- **ObsLocalFeasibility for the linearized model under FullRecall**:
 if two traces have the same `projectStates` for player i, then updating
 player i's strategy preserves reachability equivalently. -/
+omit [Nonempty A] in
 theorem obsLocalFeasibility_of_fullRecall
     (hFR : G.FullRecall) (i : Fin n) :
     ObsModelCore.ObsLocalFeasibility (compiledLinObs G) i := by
@@ -556,10 +550,11 @@ theorem obsLocalFeasibility_of_fullRecall
         some (⟨r, hr'⟩, v_match) from by rw [hfin_eq]]
       rw [h1', h2']
 
-/-- The linearized compiled model satisfies `NoNontrivialInfoStateRepeat`
+/- The linearized compiled model satisfies `NoNontrivialInfoStateRepeat`
 unconditionally: along any reachable trace, no observation `some (k, v)`
 appears at two distinct positions. This follows from the strict monotonicity
 of the phase function along non-done traces. -/
+omit [Nonempty A] in
 theorem noNontrivialInfoStateRepeat_compiledLin :
     (compiledLinObs G).NoNontrivialInfoStateRepeat := by
   intro i π k ss hss j₁ j₂ hlt hj₂ hproj
@@ -617,10 +612,9 @@ section VRDAgreement
 variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
 variable [Fintype A] [Nonempty A] [Nonempty (Fin G.rounds.length)]
 
-set_option linter.unusedSectionVars false in
-set_option linter.unusedFintypeInType false in
-/-- Under `ViewDeterminesRound`, the lifted VRD-descended profile agrees with `β` at all
+/- Under `ViewDeterminesRound`, the lifted VRD-descended profile agrees with `β` at all
 info states visited during `runDist`. This provides the hypothesis for `runDist_congr`. -/
+omit [Nonempty A] in
 theorem liftBehavioralProfile_descendVRD_agree
     (hVRD : G.ViewDeterminesRound)
     (β : ObsModelCore.BehavioralProfile (compiledLinObs G))
@@ -689,8 +683,9 @@ noncomputable def descendPureProfileVRD [Nonempty (Fin G.rounds.length)]
     PureProfile n V A :=
   fun i => descendLocalStrategyVRD hVRD (π i)
 
-/-- `liftPureProfile (descendPureProfileVRD hVRD π)` agrees with `π` at all
+/- `liftPureProfile (descendPureProfileVRD hVRD π)` agrees with `π` at all
 reachable info states under `pureToBehavioral`. -/
+omit [Nonempty A] in
 theorem liftPureProfile_descendVRD_agree
     [Nonempty (Fin G.rounds.length)]
     (hVRD : G.ViewDeterminesRound)

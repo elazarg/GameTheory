@@ -107,7 +107,6 @@ theorem expect_bind_congr_on_support
       Math.Probability.expect (μ.bind k₂) φ := by
   rw [bind_congr_on_support (μ := μ) (f := k₁) (g := k₂) hk]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 theorem bind_apply_eq_sum_sum_fiber
     {β γ : Type*} [Fintype α] [Fintype β]
@@ -127,12 +126,12 @@ theorem bind_apply_eq_sum_sum_fiber
   funext a
   split_ifs <;> ring
 
-set_option linter.unusedFintypeInType false in
-open Classical in
 theorem le_pushforward_apply
-    {β : Type*} [Fintype α]
+    {β : Type*} [Finite α]
     (μ : PMF α) (proj : α → β) (a : α) :
     μ a ≤ pushforward μ proj (proj a) := by
+  letI : Fintype α := Fintype.ofFinite α
+  classical
   have hle :
       (if proj a = proj a then (μ a : ENNReal) else 0) ≤
         ∑ t : α, if proj a = proj t then (μ t : ENNReal) else 0 := by
@@ -142,10 +141,8 @@ theorem le_pushforward_apply
       (Finset.mem_univ a)
   simpa [pushforward, PMF.map_apply, tsum_fintype, eq_comm] using hle
 
-set_option linter.unusedFintypeInType false in
-open Classical in
 theorem eq_zero_of_pushforward_eq_zero
-    {β : Type*} [Fintype α]
+    {β : Type*} [Finite α]
     (μ : PMF α) (proj : α → β) {b : β}
     (hb : pushforward μ proj b = 0)
     {a : α} (ha : proj a = b) :
@@ -155,7 +152,6 @@ theorem eq_zero_of_pushforward_eq_zero
   rw [hb] at hle
   exact le_antisymm hle bot_le
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 noncomputable def condOn
     {β : Type*} [Fintype α]
@@ -176,7 +172,6 @@ noncomputable def condOn
         rw [h_sum]
         exact ENNReal.mul_inv_cancel hb (PMF.apply_ne_top (pushforward μ proj) b))
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 theorem condOn_apply
     {β : Type*} [Fintype α]
@@ -185,12 +180,12 @@ theorem condOn_apply
     condOn μ proj b a = if proj a = b then μ a / pushforward μ proj b else 0 := by
   simp [condOn, hb, PMF.ofFintype_apply]
 
-set_option linter.unusedFintypeInType false in
-open Classical in
 theorem bind_pushforward_condOn
-    {β : Type*} [Fintype α] [Fintype β]
+    {β : Type*} [Fintype α] [Finite β]
     (μ : PMF α) (proj : α → β) (g : α → PMF γ) :
     μ.bind g = (pushforward μ proj).bind (fun b => (condOn μ proj b).bind g) := by
+  letI : Fintype β := Fintype.ofFinite β
+  classical
   ext x
   have hL :=
     bind_apply_eq_sum_sum_fiber (μ := μ) (proj := proj) (g := g) (x := x)
@@ -275,12 +270,12 @@ theorem foldl_bind_eq_bind_foldl_pure
       funext a
       simpa using (ih (k b a)).symm
 
-set_option linter.unusedFintypeInType false in
 theorem expect_mono_of_pointwise
-    {Ω : Type*} [Fintype Ω]
+    {Ω : Type*} [Finite Ω]
     (d : PMF Ω) (f g : Ω → ℝ)
     (hfg : ∀ ω, f ω ≤ g ω) :
     Math.Probability.expect d f ≤ Math.Probability.expect d g := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
   simpa [Math.Probability.expect_eq_sum] using
     (Finset.sum_le_sum (fun ω _ => mul_le_mul_of_nonneg_left (hfg ω) ENNReal.toReal_nonneg))
 

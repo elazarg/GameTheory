@@ -24,7 +24,6 @@ namespace KernelGame
 
 variable {ι : Type}
 
-set_option linter.unusedFintypeInType false in
 /-- In a team game, social welfare equals `card ι * eu σ i` for any player `i`,
     since all players share the same expected utility. -/
 theorem IsTeamGame.socialWelfare_eq [Fintype ι] [Inhabited ι]
@@ -44,7 +43,6 @@ theorem IsTeamGame.socialWelfare_eq [Fintype ι] [Inhabited ι]
     _ = Fintype.card ι * G.eu σ i := by
       simp [Finset.sum_const, nsmul_eq_mul]
 
-set_option linter.unusedFintypeInType false in
 /-- If all players have non-negative expected utility, social welfare is non-negative. -/
 theorem socialWelfare_nonneg_of_nonneg_eu [Fintype ι]
     {G : KernelGame ι} {σ : Profile G}

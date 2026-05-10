@@ -25,6 +25,8 @@ namespace EFG
 open GameTheory
 open Math.Probability
 
+attribute [local instance] Fintype.ofFinite
+
 -- ============================================================================
 -- Disjointness of info-sets in sibling subtrees (perfect info)
 -- ============================================================================
@@ -77,11 +79,10 @@ theorem perfectInfo_disjoint_chance_subtrees {S : InfoStructure} {Outcome : Type
 -- Backward induction constructs a profile with no one-shot deviations
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false in
 /-- Backward induction constructs a pure strategy profile that has no
     profitable one-shot deviation at any decision node in the tree.
     This is the constructive core of Zermelo's theorem. -/
-theorem exists_noOSD (G : EFGGame) [Fintype G.Outcome] :
+theorem exists_noOSD (G : EFGGame) [Finite G.Outcome] :
     ∀ (t : GameTree G.inf G.Outcome), IsPerfectInfo t →
       ∃ σ : PureProfile G.inf,
         ∀ {q : G.inf.Player} (J : G.inf.Infoset q)
@@ -229,7 +230,6 @@ theorem exists_noOSD (G : EFGGame) [Fintype G.Outcome] :
 -- Zermelo's Theorem
 -- ============================================================================
 
-set_option linter.unusedFintypeInType false
 
 /-- **Zermelo's Backward Induction Theorem**: every finite perfect-information
     extensive-form game has a pure subgame-perfect equilibrium.
@@ -237,12 +237,11 @@ set_option linter.unusedFintypeInType false
     The proof constructs a profile with no profitable one-shot deviation via
     backward induction (`exists_noOSD`), then applies the one-shot deviation
     principle (`oneShotDeviation_iff_spe`) to conclude SPE. -/
-theorem zermelo (G : EFGGame) [Fintype G.Outcome]
+theorem zermelo (G : EFGGame) [Finite G.Outcome]
     (hpi : IsPerfectInfo G.tree) :
     ∃ σ : PureProfile G.inf, G.IsSubgamePerfectEq σ := by
   obtain ⟨σ, hOSD⟩ := exists_noOSD G G.tree hpi
   exact ⟨σ, (oneShotDeviation_iff_spe G σ hpi).mpr hOSD⟩
 
-set_option linter.unusedFintypeInType true
 
 end EFG

@@ -19,6 +19,8 @@ namespace Math.ParameterizedChain
 
 open Math.ProbabilityMassFunction
 
+attribute [local instance] Fintype.ofFinite
+
 variable {P S : Type*}
 
 /-- Run a parameterized Markov chain for `k` steps from initial state `s₀`,
@@ -71,7 +73,6 @@ section ReweightPMF
 
 variable [Fintype P]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Reweight a finitely-supported PMF by an `ENNReal` weight function.
 Falls back to `ν` when the total weight is zero or infinite. -/
@@ -86,7 +87,6 @@ noncomputable def reweightPMF (ν : PMF P) (w : P → ENNReal) : PMF P :=
       rw [← Finset.sum_mul]
       exact ENNReal.mul_inv_cancel hne0 hneTop)
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 theorem reweightPMF_apply (ν : PMF P) (w : P → ENNReal) (π : P)
     (hC : ∑ π' : P, ν π' * w π' ≠ 0)
@@ -98,7 +98,6 @@ theorem reweightPMF_apply (ν : PMF P) (w : P → ENNReal) (π : P)
   · exact absurd h (not_or.mpr ⟨hC, hCtop⟩)
   · exact PMF.ofFintype_apply _ π
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 theorem reweightPMF_support_subset (ν : PMF P) (w : P → ENNReal) :
     (reweightPMF ν w).support ⊆ ν.support := by
@@ -113,7 +112,6 @@ theorem reweightPMF_support_subset (ν : PMF P) (w : P → ENNReal) :
     rw [PMF.ofFintype_apply, hν]
     simp
 
-set_option linter.unusedFintypeInType false in
 theorem reweightPMF_fallback (ν : PMF P) (w : P → ENNReal)
     (hC : ∑ π : P, ν π * w π = 0) :
     reweightPMF ν w = ν := by
@@ -123,14 +121,12 @@ theorem reweightPMF_fallback (ν : PMF P) (w : P → ENNReal)
   · rfl
   · exact absurd (Or.inl hC) h
 
-set_option linter.unusedFintypeInType false in
 theorem reweightPMF_degenerate (ν : PMF P) (w : P → ENNReal)
     (hC : (∑ π : P, ν π * w π) = 0 ∨ (∑ π : P, ν π * w π) = ⊤) :
     reweightPMF ν w = ν := by
   unfold reweightPMF
   exact dif_pos hC
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Scaling the weight function by a finite nonzero constant doesn't change
 the reweighted PMF (the constant cancels in the normalization). -/
@@ -156,7 +152,6 @@ theorem reweightPMF_scale (ν : PMF P) (w : P → ENNReal) (c : ENNReal)
     rw [show ν π * (c * w π) = c * (ν π * w π) from by ring, hCeq]
     exact ENNReal.mul_div_mul_left _ _ hc0 hctop
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- If weights satisfy a cross-multiplication identity
 `∀ π, w₁ π * C₂ = w₂ π * C₁`, the reweighted PMFs are equal. -/
@@ -185,7 +180,6 @@ open Math.PMFProduct
 variable {ι : Type*} {A : ι → Type*}
   [Fintype ι] [DecidableEq ι] [∀ i, Fintype (A i)]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Reweighting a product PMF by product weights gives a product of reweighted
 marginals. This is the multiplicative Fubini identity for `reweightPMF`. -/
@@ -219,7 +213,6 @@ theorem reweightPMF_pmfPi
 
 end ReweightProduct
 
-set_option linter.unusedFintypeInType false in
 /-- Conditioned step at depth `n`: reweight `ν` by the probability of each
 parameter reaching state trace `ss` after `n` steps, then average the
 parameterized step function. -/
@@ -231,7 +224,6 @@ section Tower
 
 variable [Fintype P]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Core weighted identity: the total weight times the conditioned step
 equals the parameter-weighted sum of pure steps. -/
@@ -281,7 +273,6 @@ theorem condStep_weighted_eq (ν : PMF P) (step : P → List S → PMF S)
     rw [mul_assoc (ν π * _) (∑ _, _)]
     rw [ENNReal.mul_inv_cancel hC0 hCtop, mul_one, mul_assoc]
 
-set_option linter.unusedFintypeInType false in
 /-- One-step equality: under `ν`-weighted averaging, the conditioned step
 at depth `n` produces the same continuation as the pure step. -/
 theorem condStep_step_eq (ν : PMF P) (step : P → List S → PMF S)
@@ -326,7 +317,6 @@ theorem condStep_step_eq (ν : PMF P) (step : P → List S → PMF S)
   congr 1; funext π
   rw [mul_assoc]
 
-set_option linter.unusedFintypeInType false in
 /-- **Tower property**: running under conditioned steps produces the same
 trace distribution as averaging the parameterized runs over `ν`.
 
@@ -362,28 +352,27 @@ theorem condRun_eq_mixedRun (ν : PMF P) (step : P → List S → PMF S)
               pushforward (step π ss) (fun t => ss ++ [t]))) :=
             condStep_step_eq ν step s₀ n
 
-set_option linter.unusedFintypeInType false in
+end Tower
+
 /-- Corollary: for any `ν` there exists a step sequence realizing
 the mixed run. -/
-theorem exists_realizing_steps (ν : PMF P) (step : P → List S → PMF S)
+theorem exists_realizing_steps [Finite P] (ν : PMF P) (step : P → List S → PMF S)
     (s₀ : S) (k : Nat) :
     ∃ g : Nat → List S → PMF S,
       seqRun g s₀ k = ν.bind (pureRun step s₀ k) :=
+  letI : Fintype P := Fintype.ofFinite P
   ⟨condStep ν step s₀, condRun_eq_mixedRun ν step s₀ k⟩
 
-set_option linter.unusedFintypeInType false in
 /-- Outcome-level corollary: applying any outcome function preserves
 the realization. -/
-theorem exists_realizing_steps_outcome {β : Type*} (ν : PMF P)
+theorem exists_realizing_steps_outcome [Finite P] {β : Type*} (ν : PMF P)
     (step : P → List S → PMF S) (s₀ : S) (k : Nat)
     (outcome : List S → β) :
     ∃ g : Nat → List S → PMF S,
       pushforward (seqRun g s₀ k) outcome =
         ν.bind (fun π => pushforward (pureRun step s₀ k π) outcome) := by
+  letI : Fintype P := Fintype.ofFinite P
   refine ⟨condStep ν step s₀, ?_⟩
   rw [condRun_eq_mixedRun]
   exact pushforward_bind ν (pureRun step s₀ k) outcome
-
-end Tower
-
 end Math.ParameterizedChain

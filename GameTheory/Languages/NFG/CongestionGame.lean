@@ -157,7 +157,6 @@ theorem isExactPotential (C : CongestionGame ι) :
     rw [Finset.sum_range_succ]; ring
   · simp [hold, hnew]
 
-set_option linter.unusedFintypeInType false in
 open Classical in
 /-- Congestion games have Nash equilibria (via Rosenthal's potential). -/
 theorem nash_exists (C : CongestionGame ι) [∀ i, Nonempty (C.StrategySet i)] :
