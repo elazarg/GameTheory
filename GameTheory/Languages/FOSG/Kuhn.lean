@@ -2225,6 +2225,34 @@ theorem reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
           (Function.update π₀ i πᵢ) ss)
       hign hCtop
 
+/-- Local posterior for the constructive B→M strategy on a supported
+reachable-history trace. -/
+theorem reachableHistoryBehavioralToMixedStrategy_factorAt
+    [Fintype ι] [Fintype G.History] [∀ j, Fintype (Option (Act j))]
+    (hLeg : G.LegalObservable) (i : ι)
+    (β : G.ReachableLegalBehavioralStrategy i)
+    (n : Nat) (ss : List G.History)
+    (π₀ : (toReachableHistoryObsModelCore G hLeg).PureProfile)
+    (hreach :
+      Math.ParameterizedChain.pureRun
+        ((toReachableHistoryObsModelCore G hLeg).pureStep)
+        (toReachableHistoryObsModelCore G hLeg).init n π₀ ss ≠ 0) :
+    Math.ProbabilityMassFunction.pushforward
+        (Math.ParameterizedChain.reweightPMF
+          (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β)
+          (fun πᵢ : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i =>
+            Math.ParameterizedChain.pureRun
+              ((toReachableHistoryObsModelCore G hLeg).pureStep)
+              (toReachableHistoryObsModelCore G hLeg).init n
+              (Function.update π₀ i πᵢ) ss))
+        (fun πᵢ => πᵢ ((toReachableHistoryObsModelCore G hLeg).projectStates i ss)) =
+      liftReachableHistoryBehavioralStrategy (G := G) hLeg i β
+        ((toReachableHistoryObsModelCore G hLeg).projectStates i ss) := by
+  exact reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
+    (G := G) hLeg i β n ss π₀
+    (reachableHistory_current_coord_ignores_of_reachable
+      (G := G) hLeg hreach i)
+
 /-- Lift a reachable FOSG pure profile into the reachable-history Kuhn model. -/
 noncomputable def liftReachableHistoryPureProfile
     (hLeg : G.LegalObservable)
