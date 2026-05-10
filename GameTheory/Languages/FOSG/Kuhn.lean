@@ -2890,6 +2890,148 @@ theorem reachable_mixed_to_canonical_behavioral_unilateral_deviation_runDist
   exact (reachableMixedToLegalBehavioral_runDist
       (G := G) hLeg (Function.update μ who μwho') k).symm
 
+open Classical in
+/-- The canonical reachable M→B profile after replacing `who`'s mixed component
+has the same reachable-history trace law as the profile that keeps the original
+canonical M→B profile for the opponents and plugs in the target behavioral
+deviation for `who`. -/
+theorem reachableLegalHistoryMixedToBehavioral_unilateral_deviation_runDist
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (k : Nat)
+    (μ : ReachableMixedProfile (G := G))
+    (who : ι)
+    (βwho' : G.ReachableLegalBehavioralStrategy who) :
+    let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
+    let βsrc :=
+      reachableLegalHistoryMixedToBehavioral (G := G) hLeg
+        (Function.update μ who μwho')
+    let βtgt :=
+      Function.update (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ)
+        who (liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho')
+    (toReachableHistoryObsModelCore G hLeg).runDist k βsrc =
+      (toReachableHistoryObsModelCore G hLeg).runDist k βtgt := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
+  let μ' : ReachableMixedProfile (G := G) := Function.update μ who μwho'
+  let βsrc :=
+    reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ'
+  let βorig :=
+    reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ
+  let βtgt : O.BehavioralProfile :=
+    Function.update βorig who
+      (liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho')
+  let μcore := liftReachableHistoryMixedProfile (G := G) hLeg μ
+  let μcore' := liftReachableHistoryMixedProfile (G := G) hLeg μ'
+  let fallback := reachableLegalFallbackBehavioral (G := G) hLeg
+  letI : ∀ i, Fintype (O.InfoState i) :=
+    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G) hLeg
+  letI : ∀ i, Fintype (O.LocalStrategy i) :=
+    ReachableHistoryNative.reachableHistoryLocalStrategyFintype (G := G) hLeg
+  letI : ∀ i (o : G.ReachableInfoState i), Nonempty (ReachableInfoLegalMove G i o) :=
+    fun i o => ⟨reachableInfoLegalMoveDefault G i o⟩
+  have hsrcRun :
+      O.runDist k βsrc = O.runDist k βtgt := by
+    apply ObsModelCore.runDist_congr (O := O) (β₁ := βsrc) (β₂ := βtgt)
+    intro m q ss hss
+    have hβsrcLaw :
+        O.runDist m βsrc =
+          (Math.PMFProduct.pmfPi μcore').bind (O.runDistPure m) := by
+      have h :=
+        ObsModelCore.mixedToBehavioralProfileWithFallback_runDist
+          (O := O)
+          (reachableHistory_stepMassInvariant (G := G) hLeg)
+          (reachableHistory_stepSupportFactorization (G := G) hLeg)
+          (fun i => by
+            simpa [ReachableHistoryActionPosteriorLocal] using
+              reachableHistory_actionPosteriorLocal (G := G) hLeg i)
+          μcore' fallback m
+      simpa [βsrc, reachableLegalHistoryMixedToBehavioral, μcore', fallback, O] using h
+    have hmix : ((Math.PMFProduct.pmfPi μcore').bind (O.runDistPure m)) ss ≠ 0 := by
+      rw [← hβsrcLaw]
+      exact hss
+    have hmixSum :
+        ∑ π : O.PureProfile,
+          Math.PMFProduct.pmfPi μcore' π * O.runDistPure m π ss ≠ 0 := by
+      simpa only [PMF.bind_apply, tsum_fintype] using hmix
+    obtain ⟨πw, _hπwMem, hπwProd⟩ :=
+      Finset.exists_ne_zero_of_sum_ne_zero hmixSum
+    have hπw : O.runDistPure m πw ss ≠ 0 :=
+      right_ne_zero_of_mul hπwProd
+    have hπwPure :
+        Math.ParameterizedChain.pureRun O.pureStep O.init m πw ss ≠ 0 := by
+      simpa [ObsModelCore.runDistPure_eq_pureRun] using hπw
+    have hsrcFactor :
+        βsrc q (O.projectStates q ss) =
+          ObsModelCore.mixedToBehavioralFactorAt (O := O)
+            μcore' q m ss πw := by
+      have h :=
+        ObsModelCore.mixedToBehavioralProfileWithFallback_eq_factorAt
+          (O := O)
+          (fun i => by
+            simpa [ReachableHistoryActionPosteriorLocal] using
+              reachableHistory_actionPosteriorLocal (G := G) hLeg i)
+          μcore' fallback q m ss πw hπwPure
+      simpa [βsrc, reachableLegalHistoryMixedToBehavioral, μcore', fallback, O] using h
+    by_cases hq : q = who
+    · subst q
+      have hwhoFactor :
+          ObsModelCore.mixedToBehavioralFactorAt (O := O)
+              μcore' who m ss πw =
+            liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho'
+              (O.projectStates who ss) := by
+        have h :=
+          reachableHistoryBehavioralToMixedStrategy_factorAt
+            (G := G) hLeg who βwho' m ss πw hπwPure
+        dsimp [ObsModelCore.mixedToBehavioralFactorAt, μcore',
+          liftReachableHistoryMixedProfile, μ', μwho', O]
+        rw [Function.update_self]
+        have hliftPush :
+            Math.ProbabilityMassFunction.pushforward
+                (reachableLegalBehavioralToMixed (G := G) hLeg who βwho')
+                (liftReachableHistoryPureStrategy (G := G) hLeg who) =
+              reachableHistoryBehavioralToMixedStrategy (G := G) hLeg who βwho' := by
+          simp [Math.ProbabilityMassFunction.pushforward,
+            reachableLegalBehavioralToMixed_lift (G := G) hLeg who βwho']
+        rw [hliftPush]
+        exact h
+      have htgt :
+          βtgt who (O.projectStates who ss) =
+            liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho'
+              (O.projectStates who ss) := by
+        simp [βtgt]
+      exact hsrcFactor.trans (hwhoFactor.trans htgt.symm)
+    · have horigFactor :
+          βorig q (O.projectStates q ss) =
+            ObsModelCore.mixedToBehavioralFactorAt (O := O)
+              μcore q m ss πw := by
+        have h :=
+          ObsModelCore.mixedToBehavioralProfileWithFallback_eq_factorAt
+            (O := O)
+            (fun i => by
+              simpa [ReachableHistoryActionPosteriorLocal] using
+                reachableHistory_actionPosteriorLocal (G := G) hLeg i)
+            μcore fallback q m ss πw hπwPure
+        simpa [βorig, reachableLegalHistoryMixedToBehavioral, μcore, fallback, O] using h
+      have hfactorEq :
+          ObsModelCore.mixedToBehavioralFactorAt (O := O)
+              μcore' q m ss πw =
+            ObsModelCore.mixedToBehavioralFactorAt (O := O)
+              μcore q m ss πw := by
+        simp [ObsModelCore.mixedToBehavioralFactorAt, μcore', μcore,
+          liftReachableHistoryMixedProfile, μ', hq, O]
+      calc
+        βsrc q (O.projectStates q ss)
+            = ObsModelCore.mixedToBehavioralFactorAt (O := O)
+                μcore' q m ss πw := hsrcFactor
+        _ = ObsModelCore.mixedToBehavioralFactorAt (O := O)
+                μcore q m ss πw := hfactorEq
+        _ = βorig q (O.projectStates q ss) := horigFactor.symm
+        _ = βtgt q (O.projectStates q ss) := by
+              simp [βtgt, hq]
+  simpa [O, μwho', μ', βsrc, βorig, βtgt] using hsrcRun
+
 /- The intended unilateral hybrid theorem strengthens the previous statement by
 replacing the canonical behavioral realization of the updated mixed profile with
 `Function.update (reachableMixedToLegalBehavioral hLeg μ) who βwho'`. That
