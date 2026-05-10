@@ -2062,15 +2062,13 @@ noncomputable def liftReachableHistoryPureStrategy
 
 /-- Lift a legal reachable FOSG behavioral strategy into the legal
 reachable-history Kuhn model. -/
-noncomputable def liftReachableHistoryBehavioralStrategy
+private noncomputable def reachableInfoLegalMoveOfBehavioralSupport
     (_hLeg : G.LegalObservable) (i : ι)
-    (β : G.ReachableLegalBehavioralStrategy i) :
-    ∀ s : G.ReachableInfoState i, PMF (ReachableInfoLegalMove G i s) := by
-  classical
-  intro s
-  refine (β.1 s).bindOnSupport ?_
-  intro oi hoi
-  refine PMF.pure ⟨oi, ?_⟩
+    (β : G.ReachableLegalBehavioralStrategy i)
+    (s : G.ReachableInfoState i)
+    (oi : Option (Act i)) (hoi : oi ∈ (β.1 s).support) :
+    ReachableInfoLegalMove G i s := by
+  refine ⟨oi, ?_⟩
   let h := s.2.choose
   have hs : h.playerView i = s.1 := by
     simpa [h] using s.2.choose_spec
@@ -2081,6 +2079,57 @@ noncomputable def liftReachableHistoryBehavioralStrategy
   have hat : oi ∈ G.availableMovesAtInfoState i (h.playerView i) :=
     G.mem_availableMovesAtInfoState_of_history h hraw
   simpa [hs] using hat
+
+noncomputable def liftReachableHistoryBehavioralStrategy
+    (_hLeg : G.LegalObservable) (i : ι)
+    (β : G.ReachableLegalBehavioralStrategy i) :
+    ∀ s : G.ReachableInfoState i, PMF (ReachableInfoLegalMove G i s) := by
+  classical
+  intro s
+  exact (β.1 s).bindOnSupport fun oi hoi =>
+    PMF.pure
+      (reachableInfoLegalMoveOfBehavioralSupport (G := G) _hLeg i β s oi hoi)
+
+@[simp] theorem erase_liftReachableHistoryBehavioralStrategy
+    (hLeg : G.LegalObservable) (i : ι)
+    (β : G.ReachableLegalBehavioralStrategy i)
+    (s : G.ReachableInfoState i) :
+    Math.ProbabilityMassFunction.pushforward
+        (liftReachableHistoryBehavioralStrategy (G := G) hLeg i β s)
+        (fun a : ReachableInfoLegalMove G i s => a.1) =
+      β.1 s := by
+  classical
+  let p := β.1 s
+  let default : ReachableInfoLegalMove G i s := reachableInfoLegalMoveDefault G i s
+  let f : Option (Act i) → PMF (ReachableInfoLegalMove G i s) := fun oi =>
+    if h : oi ∈ p.support then
+      PMF.pure
+        (reachableInfoLegalMoveOfBehavioralSupport (G := G) hLeg i β s oi h)
+    else
+      PMF.pure default
+  have hlift :
+      liftReachableHistoryBehavioralStrategy (G := G) hLeg i β s =
+        p.bind f := by
+    calc
+      liftReachableHistoryBehavioralStrategy (G := G) hLeg i β s =
+          p.bindOnSupport (fun oi _hoi => f oi) := by
+            unfold liftReachableHistoryBehavioralStrategy
+            dsimp [p, f]
+            apply congrArg
+            funext oi hoi
+            simp [hoi]
+      _ = p.bind f := PMF.bindOnSupport_eq_bind p f
+  rw [Math.ProbabilityMassFunction.pushforward, hlift, PMF.map_bind]
+  have hbind :
+      p.bind (fun oi =>
+          PMF.map (fun a : ReachableInfoLegalMove G i s => a.1) (f oi)) =
+        p.bind PMF.pure := by
+    exact Math.ProbabilityMassFunction.bind_congr_on_support
+      p _ _ (fun oi hoi => by
+        dsimp [f]
+        rw [dif_pos hoi, PMF.pure_map]
+        rfl)
+  rw [hbind, PMF.bind_pure]
 
 /-- Erase a legal reachable-history pure strategy back to a native legal
 reachable FOSG pure strategy. -/
