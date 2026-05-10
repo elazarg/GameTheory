@@ -1362,6 +1362,7 @@ end ConditioningCoord
 section BindIndep
 
 variable {ι : Type uι}
+variable [DecidableEq ι]
 variable {A : ι → Type uA}
 
 open Classical in
@@ -1578,7 +1579,7 @@ open Classical in
 /-- **Scalar independence under product measure.**
     If `f` ignores all coordinates outside `J` and `g` ignores all coordinates
     inside `J`, then `E[f·g] = E[f]·E[g]` under the product measure `pmfPi σ`. -/
-theorem pmfPi_expect_indep [Fintype ι] [∀ i, Fintype (A i)]
+theorem pmfPi_expect_indep [Fintype ι] [DecidableEq ι] [∀ i, Fintype (A i)]
     (σ : ∀ i, PMF (A i))
     (f g : (∀ i, A i) → ENNReal)
     (J : Finset ι)
@@ -1700,7 +1701,7 @@ of individual bindings.
 Proof: by `Finset.induction_on`, peeling off one factor at a time using
 `pmfPi_expect_indep` (E[f·g] = E[f]·E[g] for independent f, g). -/
 theorem pmfPi_bind_pmfPi_of_disjoint_coords
-    {ι : Type*} [Fintype ι] {A : ι → Type*} [∀ i, Fintype (A i)]
+    {ι : Type*} [Fintype ι] [DecidableEq ι] {A : ι → Type*} [∀ i, Fintype (A i)]
     {κ : Type*} [Fintype κ] {B : κ → Type*} [∀ k, Fintype (B k)]
     (σ : ∀ i, PMF (A i))
     (G : (∀ i, A i) → ∀ k, PMF (B k))
