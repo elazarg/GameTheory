@@ -357,17 +357,29 @@ as an FOSG.  Soundness at the game-form simulation level.
 \subsection{Solution-concept transport}
 \label{sec:supp:transport}
 
-The main chapter's transport theorem
-(\TT{Core/UtilityInvariance.lean})
-states that a protocol map with bijective \TT{stratMap} and
-bijective \TT{outcomeMap} transports the
+The main chapter's map-based transport theorem
+(\TT{Core/UtilityInvariance.lean}) states that a protocol map with
+bijective \TT{stratMap} and bijective \TT{outcomeMap} transports the
 preference-parameterized Nash, best-response, dominance,
 weak/strict dominance, correlated-equilibrium, and
 coarse-correlated-equilibrium predicates pointwise across the
 bijection on profiles.  Specializing to a kernel-game simulation
-(utility-preserving) yields the EU-specific transport laws.  These
-are the operational content of the bridges:\ a Nash equilibrium of
-a compiled NFG remains a Nash equilibrium of its FOSG image.
+(utility-preserving) yields the EU-specific transport laws.
+
+The observed-law transport layer
+(\TT{Concepts/DeviationSimulation.lean}) removes the need for an
+outcome bijection.  It compares two games through views into a
+common observed carrier $\Omega$, relates profiles or profile
+distributions by equality of the pushed-forward outcome law, and
+requires one-way simulation of target deviations by source
+deviations.  Under these hypotheses, Nash and arbitrary
+\TT{ProfileDeviationFamily} equilibria transfer from source to
+target; a two-way simulation gives an iff.  These results are the
+operational content of bridges whose target presentation contains
+extra trace data or serialized administrative structure:\ a Nash
+equilibrium of the abstract source remains Nash after compilation
+provided all compiled unilateral deviations are observed already by
+some source-side unilateral deviation.
 
 % =====================================================================
 \section{Major theorems}

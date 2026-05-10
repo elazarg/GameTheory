@@ -165,10 +165,12 @@ simultaneously, and typeclasses fit such theorems poorly:
   conditions; \TT{ParetoDominatesFor pref spref σ τ} takes both
   explicitly.
 
-\item The transport theorem of
-  \S\ref{sec:semantic-core:transport} relates a preference on a
-  source game form to its pullback along an outcome bijection — two
-  preferences in the same statement, one a function of the other.
+\item The transport theorems of
+  \S\ref{sec:semantic-core:transport} relate preferences across
+  two presentations of a game, either by pullback along an outcome
+  bijection or by comparison after both outcome laws are projected
+  to a common observation space.  In both cases two preferences
+  appear in the same statement, one a function of the other.
 
 \item Strict-from-weak / weak-from-strict bridges of
   \S\ref{sec:solution-concepts:dominance} relate a strict preference
@@ -259,11 +261,16 @@ chapter writes $\KG[e]$ informally for the reindexed game.
 \label{sec:semantic-core:transport}
 
 The use we make of protocol maps and EU-isomorphisms in
-\S\ref{sec:languages:bridges} relies on a small family of
-transport theorems we record here for reference.  Each is a
-direct calculation against the preservation law
-\eqref{eq:protocolmap} and the definition of the relevant
-solution concept.
+\S\ref{sec:languages:bridges} relies on transport theorems that
+turn semantic preservation into equilibrium preservation.  There
+are two levels.  The first is the familiar map-based case: a
+bijective relabeling of strategies and outcomes preserves every
+deviation menu exactly.  The second is more general and is the one
+needed for representation changes such as richer traces, serialized
+moves, or Kuhn-style realization relations: profiles need only have
+the same \emph{observed} outcome law, and target-side deviations
+must be simulated by source-side deviations with the same observed
+law.
 
 \begin{theorem}[Solution-concept transport]
 \label{thm:transport}
@@ -286,6 +293,48 @@ utility under a kernel-game simulation that preserves utility
 yields the EU-specific transport laws.
 \end{theorem}
 
+\begin{theorem}[Observed-law deviation transport]
+\label{thm:observed-deviation-transport}
+Let $\GF$ and $\GF'$ be game forms over the same player type, let
+$\Omega$ be a common observation space, and let
+$V : \Outcome \to \Omega$ and $V' : \Outcome' \to \Omega$ be
+outcome views.  Suppose a relation $R(\Profile,\Profile')$ between
+profiles satisfies
+\[
+  V_*\,\K(\Profile) = V'_*\,\K'(\Profile')
+\]
+whenever $R(\Profile,\Profile')$ holds.  Suppose further that for
+every target unilateral deviation $\Profile'[i \mapsto s'_i]$
+there exists a source unilateral deviation
+$\Profile[i \mapsto s_i]$ with the same observed outcome law:
+\[
+  V_*\,\K(\Profile[i \mapsto s_i])
+  =
+  V'_*\,\K'(\Profile'[i \mapsto s'_i]).
+\]
+Then, for every preference $\Pref^\Omega$ on $\PMF{\Omega}$,
+\[
+  \GF.\IsNashFor(V^*\Pref^\Omega,\Profile)
+  \;\Longrightarrow\;
+  \GF'.\IsNashFor((V')^*\Pref^\Omega,\Profile').
+\]
+The same statement holds at the level of arbitrary
+\TT{ProfileDeviationFamily} equilibria: if every target-family
+deviation is matched by a source-family deviation with the same
+observed law, then $\mathcal{D}$-equilibrium transfers from the
+source presentation to the target presentation.  The Nash theorem is
+the constant-deviation, point-mass specialization.
+\end{theorem}
+
+\noindent
+The direction of the deviation-simulation hypothesis is important.
+To transfer Nash from $\GF$ to $\GF'$, one must rule out every
+possible deviation in $\GF'$; therefore each such target deviation
+must be represented by some source deviation whose observed law the
+source Nash hypothesis already controls.  Equality of the base
+outcome law alone is not enough, because Nash quantifies over
+counterfactual unilateral deviations.
+
 \noindent
 This is the operational content of contributions 3 and 5 in
 \S\ref{sec:introduction}:\ a bridge between two languages, viewed
@@ -297,7 +346,10 @@ specific maps and inherit a Nash/dominance/correlated-eq
 preservation law for free.
 
 \leancorr{\TT{Core/UtilityInvariance.lean} and
-\TT{Core/GameSimulation.lean}.}
+\TT{Core/GameSimulation.lean} for the map-based transport layer;
+\TT{Concepts/DeviationSimulation.lean} for
+\TT{OutcomeView}, \TT{NashDeviationSimulation}, and
+\TT{DeviationFamilySimulation}.}
 
 \subsection{Designated facts}
 \label{sec:semantic-core:designated}
