@@ -123,5 +123,58 @@ theorem IsConstantSum.nash_guarantees_1
     Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact hcs.nash_guarantees_1_of_bounded hN hbd
 
+-- ============================================================================
+-- Bounded-utility variants (no `[Finite G.Outcome]`)
+-- ============================================================================
+
+open Classical in
+/-- Bounded-utility variant of `nash_opponent_deviation_helps`. -/
+theorem IsConstantSum.nash_opponent_deviation_helps_of_bounded
+    {G : KernelGame (Fin 2)}
+    {c : ℝ} (hcs : G.IsConstantSum c)
+    {σ : Profile G} (hN : G.IsNash σ) (s' : G.Strategy 1)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu (Function.update σ 1 s') 0 ≥ G.eu σ 0 := by
+  have h_nash : G.eu σ 1 ≥ G.eu (Function.update σ 1 s') 1 := by convert hN 1 s'
+  have h1 := hcs.eu_determined_of_bounded σ hbd
+  have h2 := hcs.eu_determined_of_bounded (Function.update σ 1 s') hbd
+  linarith
+
+open Classical in
+/-- Bounded-utility variant of `nash_opponent_deviation_helps'`. -/
+theorem IsConstantSum.nash_opponent_deviation_helps'_of_bounded
+    {G : KernelGame (Fin 2)}
+    {c : ℝ} (hcs : G.IsConstantSum c)
+    {σ : Profile G} (hN : G.IsNash σ) (s' : G.Strategy 0)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu (Function.update σ 0 s') 1 ≥ G.eu σ 1 := by
+  have h_nash : G.eu σ 0 ≥ G.eu (Function.update σ 0 s') 0 := by convert hN 0 s'
+  have h1 := hcs.eu_determined_of_bounded σ hbd
+  have h2 := hcs.eu_determined_of_bounded (Function.update σ 0 s') hbd
+  linarith
+
+/-- Bounded-utility variant of `nash_guarantees_0`. -/
+theorem IsConstantSum.nash_guarantees_0_of_bounded
+    {G : KernelGame (Fin 2)}
+    {c : ℝ} (hcs : G.IsConstantSum c)
+    {σ : Profile G} (hN : G.IsNash σ)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.Guarantees 0 (σ 0) (G.eu σ 0) := by
+  intro τ
+  convert hcs.nash_opponent_deviation_helps_of_bounded hN (τ 1) hbd using 2
+  funext i
+  fin_cases i <;> simp [Function.update]
+
+/-- Bounded-utility variant of `nash_guarantees_1`. -/
+theorem IsConstantSum.nash_guarantees_1_of_bounded
+    {G : KernelGame (Fin 2)}
+    {c : ℝ} (hcs : G.IsConstantSum c)
+    {σ : Profile G} (hN : G.IsNash σ)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.Guarantees 1 (σ 1) (G.eu σ 1) := by
+  intro τ
+  convert hcs.nash_opponent_deviation_helps'_of_bounded hN (τ 0) hbd using 2
+  funext i; fin_cases i <;> simp [Function.update]
+
 end KernelGame
 end GameTheory
