@@ -167,6 +167,178 @@ end NashDeviationBisimulation
 
 end Nash
 
+/-- A relation saying that target profile distributions realize source profile
+distributions up to an observed outcome law. This is the right level for
+deviation-family equilibrium notions such as correlated and coarse correlated
+equilibrium. -/
+structure ProfileDistributionRealization (G H : GameForm ι) (Ω : Type) where
+  viewG : OutcomeView G Ω
+  viewH : OutcomeView H Ω
+  rel : PMF G.Profile → PMF H.Profile → Prop
+  law_eq : ∀ {μG : PMF G.Profile} {μH : PMF H.Profile}, rel μG μH →
+    viewG.correlatedLaw μG = viewH.correlatedLaw μH
+
+/-- One-way simulation for arbitrary profile-deviation families.
+
+To transport a deviation-family equilibrium from `G` to `H`, every allowed
+target-side deviation in `H` must be matched by some allowed source-side
+deviation in `G` with the same observed post-deviation outcome law. -/
+structure DeviationFamilySimulation
+    (G H : GameForm ι) (Ω : Type)
+    (ΔG : ProfileDeviationFamily G) (ΔH : ProfileDeviationFamily H)
+    extends ProfileDistributionRealization G H Ω where
+  simulate_target_deviation :
+    ∀ {μG : PMF G.Profile} {μH : PMF H.Profile}, rel μG μH →
+    ∀ (who : ι) (dH : ΔH.Dev who),
+      ∃ dG : ΔG.Dev who,
+        viewG.correlatedLaw (ΔG.deviate μG who dG) =
+          viewH.correlatedLaw (ΔH.deviate μH who dH)
+
+/-- Transport a generic deviation-family equilibrium along a one-way
+deviation-family simulation. -/
+theorem DeviationFamilySimulation.target_eq_of_source_eq
+    {G H : GameForm ι} {Ω : Type}
+    {ΔG : ProfileDeviationFamily G} {ΔH : ProfileDeviationFamily H}
+    (S : DeviationFamilySimulation G H Ω ΔG ΔH)
+    {μG : PMF G.Profile} {μH : PMF H.Profile}
+    (hrel : S.rel μG μH)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hEq : G.IsDeviationEqFamilyFor (observedPref S.viewG prefΩ) μG ΔG) :
+    H.IsDeviationEqFamilyFor (observedPref S.viewH prefΩ) μH ΔH := by
+  intro who dH
+  rcases S.simulate_target_deviation hrel who dH with ⟨dG, hdev⟩
+  have hsrc := hEq who dG
+  have hsrc' :
+      prefΩ who (S.viewG.correlatedLaw μG)
+        (S.viewG.correlatedLaw (ΔG.deviate μG who dG)) := by
+    simpa [observedPref, OutcomeView.correlatedLaw,
+      NoProfitableProfileDeviationFor, NoProfitableDeviationFor] using hsrc
+  have hbase := S.law_eq hrel
+  rw [hbase, hdev] at hsrc'
+  simpa [observedPref, OutcomeView.correlatedLaw,
+    NoProfitableProfileDeviationFor, NoProfitableDeviationFor] using hsrc'
+
+/-- Two-way simulation for arbitrary profile-deviation families. -/
+structure DeviationFamilyBisimulation
+    (G H : GameForm ι) (Ω : Type)
+    (ΔG : ProfileDeviationFamily G) (ΔH : ProfileDeviationFamily H)
+    extends ProfileDistributionRealization G H Ω where
+  simulate_target_deviation :
+    ∀ {μG : PMF G.Profile} {μH : PMF H.Profile}, rel μG μH →
+    ∀ (who : ι) (dH : ΔH.Dev who),
+      ∃ dG : ΔG.Dev who,
+        viewG.correlatedLaw (ΔG.deviate μG who dG) =
+          viewH.correlatedLaw (ΔH.deviate μH who dH)
+  simulate_source_deviation :
+    ∀ {μG : PMF G.Profile} {μH : PMF H.Profile}, rel μG μH →
+    ∀ (who : ι) (dG : ΔG.Dev who),
+      ∃ dH : ΔH.Dev who,
+        viewG.correlatedLaw (ΔG.deviate μG who dG) =
+          viewH.correlatedLaw (ΔH.deviate μH who dH)
+
+namespace DeviationFamilyBisimulation
+
+/-- Forget a two-way deviation-family simulation to the forward direction. -/
+def toForwardSimulation
+    {G H : GameForm ι} {Ω : Type}
+    {ΔG : ProfileDeviationFamily G} {ΔH : ProfileDeviationFamily H}
+    (S : DeviationFamilyBisimulation G H Ω ΔG ΔH) :
+    DeviationFamilySimulation G H Ω ΔG ΔH where
+  toProfileDistributionRealization := S.toProfileDistributionRealization
+  simulate_target_deviation := S.simulate_target_deviation
+
+/-- Reverse a two-way deviation-family simulation. -/
+def toReverseSimulation
+    {G H : GameForm ι} {Ω : Type}
+    {ΔG : ProfileDeviationFamily G} {ΔH : ProfileDeviationFamily H}
+    (S : DeviationFamilyBisimulation G H Ω ΔG ΔH) :
+    DeviationFamilySimulation H G Ω ΔH ΔG where
+  viewG := S.viewH
+  viewH := S.viewG
+  rel := fun μH μG => S.rel μG μH
+  law_eq := by
+    intro μH μG hrel
+    exact (S.law_eq hrel).symm
+  simulate_target_deviation := by
+    intro μH μG hrel who dG
+    rcases S.simulate_source_deviation hrel who dG with ⟨dH, hdev⟩
+    exact ⟨dH, hdev.symm⟩
+
+/-- A deviation-family equilibrium is invariant across a two-way
+deviation-family simulation. -/
+theorem eq_iff
+    {G H : GameForm ι} {Ω : Type}
+    {ΔG : ProfileDeviationFamily G} {ΔH : ProfileDeviationFamily H}
+    (S : DeviationFamilyBisimulation G H Ω ΔG ΔH)
+    {μG : PMF G.Profile} {μH : PMF H.Profile}
+    (hrel : S.rel μG μH)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop} :
+    G.IsDeviationEqFamilyFor (observedPref S.viewG prefΩ) μG ΔG ↔
+      H.IsDeviationEqFamilyFor (observedPref S.viewH prefΩ) μH ΔH := by
+  constructor
+  · intro hEq
+    exact S.toForwardSimulation.target_eq_of_source_eq hrel hEq
+  · intro hEq
+    exact S.toReverseSimulation.target_eq_of_source_eq hrel hEq
+
+end DeviationFamilyBisimulation
+
+section CanonicalFamilies
+
+variable [DecidableEq ι]
+
+/-- View a Nash-specific deviation simulation as a simulation between the
+constant-deviation profile families, restricted to point-mass profile
+distributions. -/
+noncomputable def NashDeviationSimulation.toConstantDeviationFamilySimulation
+    {G H : GameForm ι} {Ω : Type}
+    (S : NashDeviationSimulation G H Ω) :
+    DeviationFamilySimulation G H Ω
+      G.constantDeviationProfileFamily H.constantDeviationProfileFamily where
+  viewG := S.viewG
+  viewH := S.viewH
+  rel := fun μG μH =>
+    ∃ σ : G.Profile, ∃ τ : H.Profile,
+      S.rel σ τ ∧ μG = PMF.pure σ ∧ μH = PMF.pure τ
+  law_eq := by
+    intro μG μH hrel
+    rcases hrel with ⟨σ, τ, hστ, rfl, rfl⟩
+    simpa [OutcomeView.correlatedLaw] using S.law_eq hστ
+  simulate_target_deviation := by
+    intro μG μH hrel who sH
+    rcases hrel with ⟨σ, τ, hστ, rfl, rfl⟩
+    rcases S.simulate_target_deviation hστ who sH with ⟨sG, hdev⟩
+    refine ⟨sG, ?_⟩
+    simpa [OutcomeView.correlatedLaw] using hdev
+
+/-- Correlated-equilibrium transport as the recommendation-deviation-family
+instance of the generic theorem. -/
+theorem DeviationFamilySimulation.target_correlatedEq_of_source_correlatedEq
+    {G H : GameForm ι} {Ω : Type}
+    (S : DeviationFamilySimulation G H Ω
+      G.recommendationDeviationFamily H.recommendationDeviationFamily)
+    {μG : PMF G.Profile} {μH : PMF H.Profile}
+    (hrel : S.rel μG μH)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hCE : G.IsCorrelatedEqFor (observedPref S.viewG prefΩ) μG) :
+    H.IsCorrelatedEqFor (observedPref S.viewH prefΩ) μH :=
+  S.target_eq_of_source_eq hrel hCE
+
+/-- Coarse-correlated-equilibrium transport as the constant-deviation-family
+instance of the generic theorem. -/
+theorem DeviationFamilySimulation.target_coarseCorrelatedEq_of_source_coarseCorrelatedEq
+    {G H : GameForm ι} {Ω : Type}
+    (S : DeviationFamilySimulation G H Ω
+      G.constantDeviationProfileFamily H.constantDeviationProfileFamily)
+    {μG : PMF G.Profile} {μH : PMF H.Profile}
+    (hrel : S.rel μG μH)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hCCE : G.IsCoarseCorrelatedEqFor (observedPref S.viewG prefΩ) μG) :
+    H.IsCoarseCorrelatedEqFor (observedPref S.viewH prefΩ) μH :=
+  S.target_eq_of_source_eq hrel hCCE
+
+end CanonicalFamilies
+
 end GameForm
 
 end GameTheory
