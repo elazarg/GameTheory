@@ -899,6 +899,10 @@ noncomputable instance reachableLegalPureStrategyFintype
     _root_.GameTheory.FOSG.ReachablePureStrategy]
   infer_instance
 
+noncomputable local instance reachableInfoStateDecidableEq
+    [Fintype G.History] (i : ι) : DecidableEq (G.ReachableInfoState i) :=
+  Classical.decEq _
+
 /-- Joint law induced by a reachable independent mixed profile. -/
 noncomputable abbrev reachableMixedProfileJoint
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
@@ -1528,6 +1532,63 @@ private theorem reachableHistory_source_nonterminal_of_target_nonterminal
     simpa using htmem
   exact ht (by simpa [htEq, h] using hterm)
 
+private theorem reachableHistory_pureRun_last_steps_length_le
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable) (n : Nat)
+    {π : (toReachableHistoryObsModelCore G hLeg).PureProfile}
+    {ss : List G.History}
+    (h :
+      Math.ParameterizedChain.pureRun
+        ((toReachableHistoryObsModelCore G hLeg).pureStep)
+        (toReachableHistoryObsModelCore G hLeg).init n π ss ≠ 0) :
+    ((toReachableHistoryObsModelCore G hLeg).lastState ss).steps.length ≤ n := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  induction n generalizing ss with
+  | zero =>
+      have hss : ss = [O.init] := by
+        by_contra hne
+        exact h (by simp [Math.ParameterizedChain.pureRun,
+          Math.TraceRun.traceRun, PMF.pure_apply, O, hne])
+      rw [hss]
+      rfl
+  | succ m ih =>
+      rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
+      · exact absurd (Math.ParameterizedChain.pureRun_succ_nil _ _ _ _) h
+      simp only [List.concat_eq_append] at h ⊢
+      have hp :
+          Math.ParameterizedChain.pureRun O.pureStep O.init m π p ≠ 0 := by
+        exact left_ne_zero_of_mul
+          (Math.ParameterizedChain.pureRun_succ_append O.pureStep O.init m π p t ▸ h)
+      have ht : O.pureStep π p t ≠ 0 := by
+        exact right_ne_zero_of_mul
+          (Math.ParameterizedChain.pureRun_succ_append O.pureStep O.init m π p t ▸ h)
+      have hplen : (O.lastState p).steps.length ≤ m := ih hp
+      by_cases hterm : G.terminal (O.lastState p).lastState
+      · have hstepO : O.step (O.lastState p)
+            (O.castJointAction p (fun j => π j (O.projectStates j p))) t ≠ 0 := by
+          have ht' := ht
+          rw [ObsModelCore.pureStep_eq] at ht'
+          simpa [O] using ht'
+        have hpure : O.step (O.lastState p)
+            (O.castJointAction p (fun j => π j (O.projectStates j p))) =
+              PMF.pure (O.lastState p) := by
+          change (if hterm' : G.terminal (O.lastState p).lastState then
+              PMF.pure (O.lastState p) else _) = PMF.pure (O.lastState p)
+          rw [dif_pos hterm]
+        have htEq : t = O.lastState p := by
+          have htmem : t ∈ (PMF.pure (O.lastState p)).support := by
+            rw [← hpure]
+            exact (PMF.mem_support_iff _ _).mpr hstepO
+          simpa using htmem
+        rw [show O.lastState (p ++ [t]) = t by simp [O, ObsModelCore.lastState], htEq]
+        exact Nat.le_trans hplen (Nat.le_succ m)
+      · rcases reachableHistory_pureStep_snoc (G := G) hLeg hterm ht with
+          ⟨raw, hraw, dst, hsupp, _hrawEq, htEq⟩
+        rw [show O.lastState (p ++ [t]) = t by simp [O, ObsModelCore.lastState], htEq]
+        simp [History.snoc]
+        omega
+
 private theorem reachableHistory_pureStep_component_eq
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
     (hLeg : G.LegalObservable) (i : ι)
@@ -1746,6 +1807,125 @@ private theorem reachableHistory_pureRun_nonterminal_last_steps_length
       have hprefix := ih hp hpnt
       rw [show O.lastState (p ++ [t]) = t by simp [O, ObsModelCore.lastState], htEq]
       simp [hprefix]
+
+private theorem reachableHistory_repeated_projectStates_subsingleton
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable) {n : Nat}
+    {π : (toReachableHistoryObsModelCore G hLeg).PureProfile}
+    {ss : List G.History}
+    (hreach :
+      Math.ParameterizedChain.pureRun
+        ((toReachableHistoryObsModelCore G hLeg).pureStep)
+        (toReachableHistoryObsModelCore G hLeg).init n π ss ≠ 0)
+    (i : ι) {j : Nat} (hj : j < n)
+    (heq :
+      (toReachableHistoryObsModelCore G hLeg).projectStates i (ss.take (j + 1)) =
+        (toReachableHistoryObsModelCore G hLeg).projectStates i ss) :
+    Subsingleton
+      (ReachableInfoLegalMove G i
+        ((toReachableHistoryObsModelCore G hLeg).projectStates i (ss.take (j + 1)))) := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  have hprefixReach :
+      Math.ParameterizedChain.pureRun O.pureStep O.init j π (ss.take (j + 1)) ≠ 0 := by
+    exact Math.ParameterizedChain.pureRun_take_nonzero
+      O.pureStep O.init n π ss hreach j (by omega)
+  have hprefixLen :
+      (O.lastState (ss.take (j + 1))).steps.length ≤ j :=
+    reachableHistory_pureRun_last_steps_length_le (G := G) hLeg j hprefixReach
+  by_cases hterm : G.terminal (O.lastState ss).lastState
+  · have hsub :
+        Subsingleton
+          (ReachableInfoLegalMove G i (G.reachableInfoStateOfHistory i (O.lastState ss))) :=
+      reachableInfoLegalMove_subsingleton_of_terminal (G := G) hLeg hterm i
+    have hps :
+        O.projectStates i (ss.take (j + 1)) =
+          G.reachableInfoStateOfHistory i (O.lastState ss) := by
+      exact heq.trans (reachableHistory_projectStates_eq_last (G := G) hLeg i ss)
+    simpa [O, hps] using hsub
+  · exfalso
+    have hfinalLen :
+        (O.lastState ss).steps.length = n :=
+      reachableHistory_pureRun_nonterminal_last_steps_length
+        (G := G) hLeg n hreach hterm
+    have hprefixInfo :
+        G.reachableInfoStateOfHistory i (O.lastState (ss.take (j + 1))) =
+          G.reachableInfoStateOfHistory i (O.lastState ss) := by
+      have hp :=
+        reachableHistory_projectStates_eq_last (G := G) hLeg i (ss.take (j + 1))
+      have hf := reachableHistory_projectStates_eq_last (G := G) hLeg i ss
+      exact hp.symm.trans (heq.trans hf)
+    have hview :
+        (O.lastState (ss.take (j + 1))).playerView i =
+          (O.lastState ss).playerView i :=
+      congrArg Subtype.val hprefixInfo
+    have hpub :=
+      History.publicView_eq_of_playerView_eq (G := G) i hview
+    have hstepsEq :
+        (O.lastState (ss.take (j + 1))).steps.length =
+          (O.lastState ss).steps.length := by
+      have hlen := congrArg List.length hpub
+      simpa [publicView_length (G := G) (O.lastState (ss.take (j + 1))),
+        publicView_length (G := G) (O.lastState ss)] using hlen
+    omega
+
+private theorem reachableHistory_current_coord_ignores_of_reachable
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable) {n : Nat}
+    {π₀ : (toReachableHistoryObsModelCore G hLeg).PureProfile}
+    {ss : List G.History}
+    (hreach :
+      Math.ParameterizedChain.pureRun
+        ((toReachableHistoryObsModelCore G hLeg).pureStep)
+        (toReachableHistoryObsModelCore G hLeg).init n π₀ ss ≠ 0)
+    (i : ι) :
+    Math.PMFProduct.Ignores
+      (A := fun s : G.ReachableInfoState i => ReachableInfoLegalMove G i s)
+      ((toReachableHistoryObsModelCore G hLeg).projectStates i ss)
+      (fun πᵢ : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i =>
+        Math.ParameterizedChain.pureRun
+          ((toReachableHistoryObsModelCore G hLeg).pureStep)
+          (toReachableHistoryObsModelCore G hLeg).init n
+          (Function.update π₀ i πᵢ) ss) := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  intro πᵢ a
+  let v := O.projectStates i ss
+  let πᵢ' : O.LocalStrategy i := Function.update πᵢ v a
+  let π₁ : O.PureProfile := Function.update π₀ i πᵢ'
+  let π₂ : O.PureProfile := Function.update π₀ i πᵢ
+  have hlen : ss.length = n + 1 :=
+    Math.ParameterizedChain.pureRun_length O.pureStep O.init n π₀ ss hreach
+  have hagree :
+      ∀ (j : Nat), j < n → ∀ q : ι,
+        π₁ q (O.projectStates q (ss.take (j + 1))) =
+          π₂ q (O.projectStates q (ss.take (j + 1))) := by
+    intro j hj q
+    by_cases hqi : q = i
+    · subst q
+      dsimp [π₁, π₂]
+      rw [Function.update_self, Function.update_self]
+      by_cases hv :
+          O.projectStates i (ss.take (j + 1)) = v
+      · have hsub :
+            Subsingleton
+              (ReachableInfoLegalMove G i (O.projectStates i (ss.take (j + 1)))) :=
+          reachableHistory_repeated_projectStates_subsingleton
+            (G := G) hLeg hreach i hj (by simpa [O, v] using hv)
+        have hsub' :
+            Subsingleton
+              (ReachableInfoLegalMove G i
+                (O.currentObs i (O.projectStates i (ss.take (j + 1))))) := by
+          simpa [O, toReachableHistoryObsModelCore, ObsModelCore.currentObs] using hsub
+        letI := hsub'
+        exact Subsingleton.elim _ _
+      · exact Function.update_of_ne hv a πᵢ
+    · dsimp [π₁, π₂]
+      rw [Function.update_of_ne hqi, Function.update_of_ne hqi]
+  have hrun :=
+    ObsModelCore.runDistPure_congr_on_trace
+      (O := O) (π₁ := π₁) (π₂ := π₂) (n := n) (ss := ss) hlen hagree
+  simpa [π₁, π₂, πᵢ', v, ObsModelCore.runDistPure_eq_pureRun] using hrun
 
 private theorem reachableHistory_obsLocalFeasibility
     [Fintype ι] [Finite G.History] [∀ i, Fintype (Option (Act i))]
