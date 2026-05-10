@@ -56,6 +56,12 @@ def observedPref {F : GameForm ι} (V : OutcomeView F Ω)
     ι → PMF F.Outcome → PMF F.Outcome → Prop :=
   fun who d e => prefΩ who (PMF.map V.observe d) (PMF.map V.observe e)
 
+/-- Expected-utility preference over a common observed outcome carrier. -/
+noncomputable def observedEuPref (uΩ : Ω → Payoff ι) :
+    ι → PMF Ω → PMF Ω → Prop :=
+  fun who d e =>
+    expect d (fun ω => uΩ ω who) ≥ expect e (fun ω => uΩ ω who)
+
 /-- A relation saying that target profiles realize source profiles up to an
 observed outcome law. The relation is intentionally not functional: many game
 presentation bridges, including Kuhn-style realization relations, are
@@ -338,6 +344,204 @@ theorem DeviationFamilySimulation.target_coarseCorrelatedEq_of_source_coarseCorr
   S.target_eq_of_source_eq hrel hCCE
 
 end CanonicalFamilies
+
+end GameForm
+
+namespace KernelGame
+
+variable {ι Ω : Type}
+
+/-- Kernel-game convenience alias for outcome views on the underlying game form. -/
+abbrev OutcomeView (G : KernelGame ι) (Ω : Type) :=
+  GameForm.OutcomeView G.toGameForm Ω
+
+/-- Kernel-game convenience alias for profile realizations on underlying game forms. -/
+abbrev ProfileRealization (G H : KernelGame ι) (Ω : Type) :=
+  GameForm.ProfileRealization G.toGameForm H.toGameForm Ω
+
+/-- Kernel-game convenience alias for Nash deviation simulations on underlying
+game forms. -/
+abbrev NashDeviationSimulation (G H : KernelGame ι) (Ω : Type) [DecidableEq ι] :=
+  GameForm.NashDeviationSimulation G.toGameForm H.toGameForm Ω
+
+/-- Kernel-game convenience alias for profile-deviation families on the
+underlying game form. -/
+abbrev ProfileDeviationFamily (G : KernelGame ι) :=
+  GameForm.ProfileDeviationFamily G.toGameForm
+
+/-- Kernel-game convenience wrapper for generic deviation-family equilibrium. -/
+def IsDeviationEqFamilyFor (G : KernelGame ι)
+    (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop)
+    (μ : PMF G.Profile) (Δ : ProfileDeviationFamily G) : Prop :=
+  G.toGameForm.IsDeviationEqFamilyFor pref μ Δ
+
+/-- Kernel-game convenience alias for profile-distribution realizations on
+underlying game forms. -/
+abbrev ProfileDistributionRealization (G H : KernelGame ι) (Ω : Type) :=
+  GameForm.ProfileDistributionRealization G.toGameForm H.toGameForm Ω
+
+/-- Kernel-game convenience alias for deviation-family simulations on
+underlying game forms. -/
+abbrev DeviationFamilySimulation
+    (G H : KernelGame ι) (Ω : Type)
+    (ΔG : ProfileDeviationFamily G) (ΔH : ProfileDeviationFamily H) :=
+  GameForm.DeviationFamilySimulation G.toGameForm H.toGameForm Ω ΔG ΔH
+
+section Nash
+
+variable [DecidableEq ι]
+
+/-- Kernel-game wrapper for preference-parametric Nash transport. -/
+theorem NashDeviationSimulation.target_nashFor_of_source_nashFor
+    {G H : KernelGame ι} {Ω : Type}
+    (S : NashDeviationSimulation G H Ω)
+    {σ : G.Profile} {τ : H.Profile}
+    (hrel : S.rel σ τ)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hN : G.IsNashFor (GameForm.observedPref S.viewG prefΩ) σ) :
+    H.IsNashFor (GameForm.observedPref S.viewH prefΩ) τ :=
+  GameForm.NashDeviationSimulation.target_nash_of_source_nash S hrel hN
+
+/-- EU Nash transport when both games' EU preferences are compatible with the
+same observed-law preference. The compatibility assumptions are intentionally
+explicit, so the distribution-level transport theorem itself remains independent
+of finiteness or expected-utility representation choices. -/
+theorem NashDeviationSimulation.target_isNash_of_source_isNash
+    {G H : KernelGame ι} {Ω : Type}
+    (S : NashDeviationSimulation G H Ω)
+    {σ : G.Profile} {τ : H.Profile}
+    (hrel : S.rel σ τ)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hprefG : ∀ who d e,
+      G.euPref who d e → GameForm.observedPref S.viewG prefΩ who d e)
+    (hprefH : ∀ who d e,
+      GameForm.observedPref S.viewH prefΩ who d e → H.euPref who d e)
+    (hN : G.IsNash σ) :
+    H.IsNash τ := by
+  have hNForEu : G.IsNashFor G.euPref σ :=
+    (G.IsNash_iff_IsNashFor_eu σ).1 hN
+  have hNForObserved :
+      G.IsNashFor (GameForm.observedPref S.viewG prefΩ) σ :=
+    GameForm.IsNashFor.mono
+      (F := G.toGameForm)
+      (pref₁ := GameForm.observedPref S.viewG prefΩ)
+      (pref₂ := G.euPref)
+      hprefG hNForEu
+  have hTargetObserved :
+      H.IsNashFor (GameForm.observedPref S.viewH prefΩ) τ :=
+    S.target_nashFor_of_source_nashFor hrel hNForObserved
+  have hTargetEu : H.IsNashFor H.euPref τ :=
+    GameForm.IsNashFor.mono
+      (F := H.toGameForm)
+      (pref₁ := H.euPref)
+      (pref₂ := GameForm.observedPref S.viewH prefΩ)
+      hprefH hTargetObserved
+  exact (H.IsNash_iff_IsNashFor_eu τ).2 hTargetEu
+
+end Nash
+
+section DeviationFamilies
+
+/-- Kernel-game wrapper for generic deviation-family equilibrium transport. -/
+theorem DeviationFamilySimulation.target_eqFor_of_source_eqFor
+    {G H : KernelGame ι} {Ω : Type}
+    {ΔG : ProfileDeviationFamily G} {ΔH : ProfileDeviationFamily H}
+    (S : DeviationFamilySimulation G H Ω ΔG ΔH)
+    {μG : PMF G.Profile} {μH : PMF H.Profile}
+    (hrel : S.rel μG μH)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hEq : G.IsDeviationEqFamilyFor (GameForm.observedPref S.viewG prefΩ) μG ΔG) :
+    H.IsDeviationEqFamilyFor (GameForm.observedPref S.viewH prefΩ) μH ΔH :=
+  GameForm.DeviationFamilySimulation.target_eq_of_source_eq S hrel hEq
+
+variable [DecidableEq ι]
+
+/-- Kernel-game wrapper for correlated-equilibrium transport. -/
+theorem DeviationFamilySimulation.target_correlatedEqFor_of_source_correlatedEqFor
+    {G H : KernelGame ι} {Ω : Type}
+    (S : DeviationFamilySimulation G H Ω
+      G.toGameForm.recommendationDeviationFamily H.toGameForm.recommendationDeviationFamily)
+    {μG : PMF G.Profile} {μH : PMF H.Profile}
+    (hrel : S.rel μG μH)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hCE : G.IsCorrelatedEqFor (GameForm.observedPref S.viewG prefΩ) μG) :
+    H.IsCorrelatedEqFor (GameForm.observedPref S.viewH prefΩ) μH :=
+  GameForm.DeviationFamilySimulation.target_correlatedEq_of_source_correlatedEq S hrel hCE
+
+/-- Kernel-game wrapper for coarse-correlated-equilibrium transport. -/
+theorem DeviationFamilySimulation.target_coarseCorrelatedEqFor_of_source_coarseCorrelatedEqFor
+    {G H : KernelGame ι} {Ω : Type}
+    (S : DeviationFamilySimulation G H Ω
+      G.toGameForm.constantDeviationProfileFamily H.toGameForm.constantDeviationProfileFamily)
+    {μG : PMF G.Profile} {μH : PMF H.Profile}
+    (hrel : S.rel μG μH)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop}
+    (hCCE : G.IsCoarseCorrelatedEqFor (GameForm.observedPref S.viewG prefΩ) μG) :
+    H.IsCoarseCorrelatedEqFor (GameForm.observedPref S.viewH prefΩ) μH :=
+  GameForm.DeviationFamilySimulation.target_coarseCorrelatedEq_of_source_coarseCorrelatedEq
+    S hrel hCCE
+
+end DeviationFamilies
+
+end KernelGame
+
+namespace GameForm
+
+namespace DeviationSimulationExamples
+
+/-- A one-player toy form whose outcome is the chosen Boolean strategy. -/
+noncomputable def boolOutcomeForm : GameForm Unit where
+  Strategy := fun _ => Bool
+  Outcome := Bool
+  outcomeKernel := fun σ => PMF.pure (σ ())
+
+/-- The same observed behavior with a richer trace-like outcome carrier. -/
+noncomputable def tracedOutcomeForm : GameForm Unit where
+  Strategy := fun _ => Bool
+  Outcome := Bool × Unit
+  outcomeKernel := fun σ => PMF.pure (σ (), ())
+
+/-- Observe the direct Boolean outcome. -/
+def boolOutcomeView : OutcomeView boolOutcomeForm Bool where
+  observe := id
+
+/-- Observe only the Boolean component of the richer trace outcome. -/
+def tracedOutcomeView : OutcomeView tracedOutcomeForm Bool where
+  observe := Prod.fst
+
+/-- The richer-trace form simulates the direct form for unilateral deviations:
+target deviations are matched by the same Boolean source deviation. -/
+def boolToTracedNashSimulation :
+    NashDeviationSimulation boolOutcomeForm tracedOutcomeForm Bool where
+  viewG := boolOutcomeView
+  viewH := tracedOutcomeView
+  rel := fun σ τ => σ () = τ ()
+  law_eq := by
+    intro σ τ hrel
+    simp [OutcomeView.law, boolOutcomeView, tracedOutcomeView,
+      boolOutcomeForm, tracedOutcomeForm, hrel, PMF.pure_map]
+  simulate_target_deviation := by
+    intro σ τ hrel who sH
+    refine ⟨sH, ?_⟩
+    cases who
+    simp [OutcomeView.law, boolOutcomeView, tracedOutcomeView,
+      boolOutcomeForm, tracedOutcomeForm, PMF.pure_map]
+
+example {σ : boolOutcomeForm.Profile} {τ : tracedOutcomeForm.Profile}
+    (hrel : boolToTracedNashSimulation.rel σ τ) :
+    sameObservedLaw boolOutcomeView tracedOutcomeView σ τ :=
+  boolToTracedNashSimulation.law_eq hrel
+
+example {σ : boolOutcomeForm.Profile} {τ : tracedOutcomeForm.Profile}
+    (hrel : boolToTracedNashSimulation.rel σ τ)
+    {prefΩ : Unit → PMF Bool → PMF Bool → Prop}
+    (hN : boolOutcomeForm.IsNashFor
+      (observedPref boolToTracedNashSimulation.viewG prefΩ) σ) :
+    tracedOutcomeForm.IsNashFor
+      (observedPref boolToTracedNashSimulation.viewH prefΩ) τ :=
+  boolToTracedNashSimulation.target_nash_of_source_nash hrel hN
+
+end DeviationSimulationExamples
 
 end GameForm
 
