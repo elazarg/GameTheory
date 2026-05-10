@@ -288,6 +288,25 @@ theorem reweightPMF_pmfPi_push_coord_of_ignores
     _ = σ j a := by
       rw [mul_assoc, ENNReal.mul_inv_cancel hC0' hCtop', mul_one]
 
+open Classical in
+/-- Reweighting a product distribution by a scalar weight that ignores
+coordinate `j` preserves the `j`-marginal, including the zero-total-weight
+fallback case of `reweightPMF`. -/
+theorem reweightPMF_pmfPi_push_coord_of_ignores'
+    (σ : ∀ i, PMF (A i)) (j : ι)
+    (w : (∀ i, A i) → ENNReal)
+    (hign : Math.PMFProduct.Ignores (A := A) j w)
+    (hCtop : ∑ s, pmfPi (A := A) σ s * w s ≠ ⊤) :
+    Math.ProbabilityMassFunction.pushforward
+        (reweightPMF (pmfPi (A := A) σ) w) (fun s => s j) =
+      σ j := by
+  classical
+  by_cases hC0 : ∑ s, pmfPi (A := A) σ s * w s = 0
+  · rw [reweightPMF_degenerate _ _ (Or.inl hC0)]
+    exact Math.PMFProduct.pmfPi_push_coord (A := A) σ j
+  · exact reweightPMF_pmfPi_push_coord_of_ignores
+      (A := A) σ j w hign hC0 hCtop
+
 end ReweightProduct
 
 /-- Conditioned step at depth `n`: reweight `ν` by the probability of each
