@@ -3081,11 +3081,145 @@ theorem reachableLegalHistoryMixedToBehavioral_unilateral_deviation_runDist
               simp [βtgt, hq]
   simpa [O, μwho', μ', βsrc, βorig, βtgt] using hsrcRun
 
-/- The intended unilateral hybrid theorem strengthens the previous statement by
-replacing the canonical behavioral realization of the updated mixed profile with
-`Function.update (reachableMixedToLegalBehavioral hLeg μ) who βwho'`. That
-replacement is distributional, not pointwise: off-support fallback choices in
-the canonical M→B profile need not equal `βwho'`. -/
+private theorem reachable_unilateral_target_toProfile
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (μ : ReachableMixedProfile (G := G))
+    (who : ι)
+    (βwho' : G.ReachableLegalBehavioralStrategy who) :
+    let βcore :=
+      Function.update (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ)
+        who (liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho')
+    let β : G.ReachableLegalBehavioralProfile :=
+      Function.update (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+        who βwho'
+    β.toProfile = eraseReachableHistoryBehavioral (G := G) hLeg βcore := by
+  classical
+  let βcore :=
+    Function.update (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ)
+      who (liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho')
+  let β : G.ReachableLegalBehavioralProfile :=
+    Function.update (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+      who βwho'
+  funext i s
+  by_cases hi : i = who
+  · subst i
+    change (Function.update (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+          who βwho' who).1 s =
+      PMF.map (fun a : ReachableInfoLegalMove G who s => a.1)
+        ((Function.update (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ)
+          who (liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho')) who s)
+    rw [Function.update_self, Function.update_self]
+    simpa [Math.ProbabilityMassFunction.pushforward] using
+      (erase_liftReachableHistoryBehavioralStrategy
+        (G := G) hLeg who βwho' s).symm
+  · change (Function.update (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+          who βwho' i).1 s =
+      PMF.map (fun a : ReachableInfoLegalMove G i s => a.1)
+        ((Function.update (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ)
+          who (liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho')) i s)
+    rw [Function.update_of_ne hi, Function.update_of_ne hi]
+    exact congrFun (congrFun
+      (reachableMixedToLegalBehavioral_toProfile (G := G) hLeg μ) i) s
+
+open Classical in
+/-- Constructive unilateral Kuhn deviation simulation at the native FOSG
+history-law level.
+
+The mixed pure deviation is explicitly
+`reachableLegalBehavioralToMixed hLeg who βwho'`. Opponents remain exactly at
+their original mixed components, while the target side updates only `who`'s
+canonical behavioral realization. -/
+theorem reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (k : Nat)
+    (μ : ReachableMixedProfile (G := G))
+    (who : ι)
+    (βwho' : G.ReachableLegalBehavioralStrategy who) :
+    let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
+    (reachableMixedProfileJoint (G := G) (Function.update μ who μwho')).bind
+      (fun π => G.runDist k (G.legalPureToBehavioral π.extend)) =
+    G.runDist k
+      (GameTheory.FOSG.ReachableLegalBehavioralProfile.extend
+        ((Function.update
+            (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+            who βwho') : G.ReachableLegalBehavioralProfile)) := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
+  let μ' : ReachableMixedProfile (G := G) := Function.update μ who μwho'
+  let βsrcCore := reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ'
+  let βtgtCore :=
+    Function.update (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ)
+      who (liftReachableHistoryBehavioralStrategy (G := G) hLeg who βwho')
+  let βtgt : G.ReachableLegalBehavioralProfile :=
+    Function.update (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+      who βwho'
+  have hsrcBridge :
+      reachableHistoryOutcomeDist (G := G) hLeg k βsrcCore =
+        G.runDist k
+          (reachableMixedToLegalBehavioral (G := G) hLeg μ').extend :=
+    reachableHistoryOutcomeDist_eq_runDist
+      (G := G) hLeg k βsrcCore
+      (reachableMixedToLegalBehavioral (G := G) hLeg μ')
+      (by
+        simp [βsrcCore, μ',
+          reachableMixedToLegalBehavioral_toProfile (G := G) hLeg μ'])
+  have hcoreTrace :
+      O.runDist k βsrcCore =
+        O.runDist k βtgtCore := by
+    simpa [O, μwho', μ', βsrcCore, βtgtCore] using
+      reachableLegalHistoryMixedToBehavioral_unilateral_deviation_runDist
+        (G := G) hLeg k μ who βwho'
+  have hcoreOutcome :
+      reachableHistoryOutcomeDist (G := G) hLeg k βsrcCore =
+        reachableHistoryOutcomeDist (G := G) hLeg k βtgtCore := by
+    unfold reachableHistoryOutcomeDist
+    rw [hcoreTrace]
+  have htgtProfile :
+      βtgt.toProfile = eraseReachableHistoryBehavioral (G := G) hLeg βtgtCore := by
+    simpa [βtgt, βtgtCore] using
+      reachable_unilateral_target_toProfile
+        (G := G) hLeg μ who βwho'
+  have htgtBridge :
+      reachableHistoryOutcomeDist (G := G) hLeg k βtgtCore =
+        G.runDist k (GameTheory.FOSG.ReachableLegalBehavioralProfile.extend βtgt) :=
+    reachableHistoryOutcomeDist_eq_runDist
+      (G := G) hLeg k βtgtCore βtgt htgtProfile
+  calc
+    (reachableMixedProfileJoint (G := G) μ').bind
+        (fun π => G.runDist k (G.legalPureToBehavioral π.extend))
+        = G.runDist k
+            (reachableMixedToLegalBehavioral (G := G) hLeg μ').extend := by
+            exact (reachableMixedToLegalBehavioral_runDist
+              (G := G) hLeg μ' k).symm
+    _ = reachableHistoryOutcomeDist (G := G) hLeg k βsrcCore := hsrcBridge.symm
+    _ = reachableHistoryOutcomeDist (G := G) hLeg k βtgtCore := hcoreOutcome
+    _ = G.runDist k βtgt.extend := htgtBridge
+
+open Classical in
+/-- Existential form of `reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq`. -/
+theorem reachable_mixed_to_behavioral_unilateral_deviation_runDist
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (k : Nat)
+    (μ : ReachableMixedProfile (G := G))
+    (who : ι)
+    (βwho' : G.ReachableLegalBehavioralStrategy who) :
+    ∃ μwho' : PMF (G.ReachableLegalPureStrategy who),
+      (reachableMixedProfileJoint (G := G) (Function.update μ who μwho')).bind
+        (fun π => G.runDist k (G.legalPureToBehavioral π.extend)) =
+      G.runDist k
+        (GameTheory.FOSG.ReachableLegalBehavioralProfile.extend
+          ((Function.update
+              (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+              who βwho') : G.ReachableLegalBehavioralProfile)) := by
+  refine ⟨reachableLegalBehavioralToMixed (G := G) hLeg who βwho', ?_⟩
+  exact reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
+    (G := G) hLeg k μ who βwho'
 
 theorem reachable_mixed_to_legal_behavioral_mapped_runDist
     [Fintype ι] [Fintype W] [Fintype G.History]
