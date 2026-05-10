@@ -68,10 +68,21 @@ $\Pref^{(1)}$ pointwise, then any $\mathcal{D}$-equilibrium for
 $\Pref^{(2)}$ is a $\mathcal{D}$-equilibrium for $\Pref^{(1)}$.
 The library exposes this as
 \TT{IsNashFor.mono} and \TT{IsDominantFor.mono}.
+\item \emph{Transport across presentations}.  Because the schema is
+phrased in terms of the outcome distribution before and after an
+allowed deviation, it admits a representation-independent transport
+principle: if two presentations have the same observed status-quo
+law and every allowed deviation in the target presentation is
+matched by an allowed deviation in the source presentation with the
+same observed law, then equilibrium transfers from source to target.
+The Nash transport theorem is the point-mass,
+$\mathcal{D}^{\mathrm{const}}$ instance; CE and CCE use the same
+statement at the profile-distribution level.
 \end{itemize}
 
-\leancorr{Schema in \TT{Concepts/Deviation.lean}; full Lean text in
-supplement~§3.1.}
+\leancorr{Schema in \TT{Core/GameForm.lean};
+transport in \TT{Concepts/DeviationSimulation.lean}; full Lean text
+in supplement~§3.1 and §3.2.}
 
 \subsection{Nash equilibrium and best response}
 \label{sec:solution-concepts:nash}

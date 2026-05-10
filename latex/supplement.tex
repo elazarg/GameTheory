@@ -632,7 +632,7 @@ $\mathcal{D}$.  We anchor at $\IsNash$ (\S\ref{sec:supp:isNash})
 and $\IsCorrelatedEq$ (\S\ref{sec:supp:isCE}); other concepts are
 bunched.
 
-\subsection{Deviation-family schema: \texttt{Concepts/Deviation.lean}}
+\subsection{Deviation-family schema: \texttt{Core/GameForm.lean}}
 \label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:ProfileDeviationFamily}\label{def:IsDeviationEqFamilyFor}
 
 \begin{leanbox}
@@ -676,6 +676,112 @@ The deviation-family schema is project-internal but the two
 families are textbook:\ unilateral deviation by a fixed strategy
 (Nash, CCE) and recommendation-dependent deviation
 (Aumann's correlated equilibrium~\citep{Aumann1974}).
+
+\subsection{Deviation-simulation transport: \texttt{Concepts/DeviationSimulation.lean}}
+\label{sec:supp:deviation-simulation}
+\label{def:OutcomeView}\label{def:NashDeviationSimulation}\label{def:DeviationFamilySimulation}
+
+\Anchor{OutcomeView}
+\begin{leanbox}
+structure OutcomeView (F : GameForm $\iota$) ($\Omega$ : Type) where\\
+\bd observe : F.Outcome $\to$ $\Omega$\\[3pt]
+def observedPref (V : OutcomeView F $\Omega$)\\
+\bd (prefOmega : $\iota \to$ PMF $\Omega \to$ PMF $\Omega \to$ Prop) :\\
+\bd $\iota \to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop :=\\
+\bdd fun who d e $\Rightarrow$ prefOmega who (PMF.map V.observe d) (PMF.map V.observe e)
+\end{leanbox}
+
+\Mathematical
+An \emph{outcome view} records what part of a game's native outcome
+is behaviorally relevant for a transport theorem.  If one
+presentation returns terminal payoffs and another returns a richer
+execution trace, both can be compared after projection to a common
+carrier $\Omega$.  The induced preference
+\TT{observedPref V prefOmega} compares native outcome laws only
+through their pushforwards along \TT{V.observe}.  This is deliberately
+more general than expected utility; the EU convenience
+\TT{observedEuPref} is just the instance where \TT{prefOmega}
+orders laws by expectation of a payoff function on $\Omega$.
+
+\begin{leanbox}
+structure ProfileRealization (G H : GameForm $\iota$) ($\Omega$ : Type) where\\
+\bd viewG : OutcomeView G $\Omega$\\
+\bd viewH : OutcomeView H $\Omega$\\
+\bd rel   : G.Profile $\to$ H.Profile $\to$ Prop\\
+\bd law\_eq : $\forall$ \{$\sigma$ : G.Profile\} \{$\tau$ : H.Profile\}, rel $\sigma$ $\tau$ $\to$\\
+\bdd viewG.law $\sigma$ = viewH.law $\tau$\\[3pt]
+structure NashDeviationSimulation (G H : GameForm $\iota$) ($\Omega$ : Type)\\
+\bd extends ProfileRealization G H $\Omega$ where\\
+\bd simulate\_target\_deviation :\\
+\bdd $\forall$ \{$\sigma$ : G.Profile\} \{$\tau$ : H.Profile\}, rel $\sigma$ $\tau$ $\to$\\
+\bdd $\forall$ (who : $\iota$) (sH : H.Strategy who),\\
+\bdd $\exists$ sG : G.Strategy who,\\
+\bdd viewG.law (Function.update $\sigma$ who sG) =\\
+\bdd viewH.law (Function.update $\tau$ who sH)
+\end{leanbox}
+
+\Mathematical
+\TT{ProfileRealization} is a relation, not a map, because many
+semantic bridges are existential or many-to-many: a behavioral
+profile may be realized by several mixed profiles, and a compiled
+trace profile may forget administrative choices.  The base law
+\TT{law_eq} says only that related profiles induce the same observed
+status-quo law.  \TT{NashDeviationSimulation} adds the missing
+equilibrium-relevant hypothesis: every unilateral deviation available
+in the target presentation must be matched by some unilateral
+deviation in the source presentation with the same observed law.
+
+\begin{leanbox}
+theorem NashDeviationSimulation.target\_nash\_of\_source\_nash\\
+\bd (S : NashDeviationSimulation G H $\Omega$)\\
+\bd (hrel : S.rel $\sigma$ $\tau$)\\
+\bd (hN : G.IsNashFor (observedPref S.viewG prefOmega) $\sigma$) :\\
+\bdd H.IsNashFor (observedPref S.viewH prefOmega) $\tau$
+\end{leanbox}
+
+\Mathematical
+The proof is the two-line argument one expects.  Given a target
+deviation $s_H$, use \TT{simulate_target_deviation} to obtain a
+source deviation $s_G$.  The source Nash hypothesis compares the
+source status quo with $s_G$; \TT{law_eq} rewrites the status quo to
+the target law, and the simulation law rewrites the deviated law to
+the target deviation.
+
+\begin{leanbox}
+structure ProfileDistributionRealization (G H : GameForm $\iota$) ($\Omega$ : Type) where\\
+\bd viewG : OutcomeView G $\Omega$\\
+\bd viewH : OutcomeView H $\Omega$\\
+\bd rel   : PMF G.Profile $\to$ PMF H.Profile $\to$ Prop\\
+\bd law\_eq : $\forall$ \{$\mu_G$ : PMF G.Profile\} \{$\mu_H$ : PMF H.Profile\}, rel $\mu_G$ $\mu_H$ $\to$\\
+\bdd viewG.correlatedLaw $\mu_G$ = viewH.correlatedLaw $\mu_H$\\[3pt]
+structure DeviationFamilySimulation\\
+\bd (G H : GameForm $\iota$) ($\Omega$ : Type)\\
+\bd ($\Delta_G$ : ProfileDeviationFamily G) ($\Delta_H$ : ProfileDeviationFamily H)\\
+\bd extends ProfileDistributionRealization G H $\Omega$ where\\
+\bd simulate\_target\_deviation :\\
+\bdd $\forall$ \{$\mu_G$ : PMF G.Profile\} \{$\mu_H$ : PMF H.Profile\}, rel $\mu_G$ $\mu_H$ $\to$\\
+\bdd $\forall$ (who : $\iota$) (dH : $\Delta_H$.Dev who),\\
+\bdd $\exists$ dG : $\Delta_G$.Dev who,\\
+\bdd viewG.correlatedLaw ($\Delta_G$.deviate $\mu_G$ who dG) =\\
+\bdd viewH.correlatedLaw ($\Delta_H$.deviate $\mu_H$ who dH)
+\end{leanbox}
+
+\Mathematical
+The family-level version moves from profiles to profile
+distributions, because correlated and coarse correlated equilibrium
+are predicates on a correlation device $\mu$.  The theorem
+\TT{DeviationFamilySimulation.target_eq_of_source_eq} transports
+\TT{IsDeviationEqFamilyFor}; the CE and CCE wrappers instantiate
+$\Delta$ with \TT{recommendationDeviationFamily} and
+\TT{constantDeviationProfileFamily}.  A two-way
+\TT{DeviationFamilyBisimulation} packages simulations in both
+directions and yields an iff.
+
+\Faithfulness
+No finiteness assumptions appear in these transport theorems.  They
+use only exact equality of pushed-forward \TT{PMF} laws.  Finite
+outcome hypotheses remain localized to existence theorems and to
+expected-value lemmas that need finite sums.
 
 % =====================================================================
 \subsection{Nash equilibrium: \texttt{KernelGame.IsNash}}
