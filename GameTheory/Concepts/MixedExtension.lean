@@ -241,6 +241,31 @@ theorem isNash_iff_gains_nonpos_of_bounded
 
 end NashGainBounded
 
+open Classical in
+/-- EU update lemma without `[Finite G.Outcome]`, under bounded utility. -/
+theorem mixedExtension_eu_update_of_bounded (G : KernelGame ι)
+    [Fintype ι] [∀ i, Fintype (G.Strategy i)]
+    (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (τ : PMF (G.Strategy who))
+    {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+    G.mixedExtension.eu (Function.update σ who τ) who =
+      expect τ (fun a =>
+        G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) := by
+  -- Unfold the LHS: G.mixedExtension.eu (...) = expect (pmfPi (...) >>= G.outcomeKernel) (utility)
+  change expect ((pmfPi (Function.update σ who τ)).bind G.outcomeKernel)
+      (fun ω => G.utility ω who) = _
+  have hprod : pmfPi (Function.update σ who τ) =
+      τ.bind (fun a => pmfPi (Function.update σ who (PMF.pure a))) := by
+    ext s
+    simp only [PMF.bind_apply, tsum_fintype]
+    simp only [pmfPi_apply_update_family, PMF.pure_apply, ite_mul, one_mul, zero_mul,
+      mul_ite, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
+  rw [hprod, PMF.bind_bind]
+  rw [expect_bind_of_bounded τ
+      (fun a => (pmfPi (Function.update σ who (PMF.pure a))).bind G.outcomeKernel)
+      (fun ω => G.utility ω who) hbd]
+  apply tsum_congr; intro a
+  rfl
+
 omit [DecidableEq ι] in
 /-- For a kernel game `G` with bounded utility for player `who`, the EU at any
     profile is also bounded by the same constant. Useful for chaining bounded-EU
@@ -282,6 +307,87 @@ theorem eu_abs_le_of_bounded (G : KernelGame ι) (who : ι)
           h_summable_bd.neg.tsum_le_tsum h_le h_summable
       _ = G.eu s who := rfl
   exact abs_le.mpr ⟨h_lower, h_upper⟩
+
+-- ============================================================================
+-- Bounded-utility analogs of NashGain results
+-- ============================================================================
+
+section NashGainBounded
+
+variable [Fintype ι]
+variable (G : KernelGame ι)
+variable [∀ i, Fintype (G.Strategy i)]
+
+open Classical in
+/-- Weighted gain sum is zero, without `[Finite G.Outcome]`, under bounded utility. -/
+theorem weighted_gain_sum_zero_of_bounded
+    (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
+    {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+    expect (σ who)
+      (fun a => G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who
+        - G.mixedExtension.eu σ who) = 0 := by
+  simp only [expect_eq_sum]
+  have hsum1 : ∑ a : G.Strategy who, ((σ who) a).toReal = 1 := by
+    simpa using pmf_toReal_sum_one (σ who)
+  have hdecomp : ∑ a : G.Strategy who, ((σ who) a).toReal *
+      G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who =
+    G.mixedExtension.eu σ who := by
+    rw [← expect_eq_sum, ← G.mixedExtension_eu_update_of_bounded σ who (σ who) hbd]
+    congr 1
+    exact Function.update_eq_self who σ
+  simp_rw [mul_sub]
+  rw [Finset.sum_sub_distrib, hdecomp]
+  rw [show ∑ a : G.Strategy who, ((σ who) a).toReal * G.mixedExtension.eu σ who =
+    G.mixedExtension.eu σ who from by
+      rw [← Finset.sum_mul, hsum1, one_mul]]
+  ring
+
+variable [∀ i, Nonempty (G.Strategy i)]
+
+open Classical in
+/-- A mixed profile is Nash iff all pure-deviation gains are non-positive,
+    without `[Finite G.Outcome]`, under bounded utility. -/
+theorem isNash_iff_gains_nonpos_of_bounded
+    (σ : ∀ i, PMF (G.Strategy i))
+    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
+    G.mixedExtension.IsNash σ ↔
+      ∀ who (a : G.Strategy who),
+        G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who -
+          G.mixedExtension.eu σ who ≤ 0 := by
+  constructor
+  · intro hN who a
+    have h := hN who (PMF.pure a)
+    linarith
+  · intro hgain who τ
+    rw [ge_iff_le]
+    have hdecomp := G.mixedExtension_eu_update_of_bounded σ who τ (hbd who)
+    rw [hdecomp]
+    conv_rhs => rw [show G.mixedExtension.eu σ who =
+        expect τ (fun _ => G.mixedExtension.eu σ who) from by
+      simp [expect_const]]
+    apply Math.ProbabilityMassFunction.expect_mono_of_pointwise_bounded
+      (C := |C who| + |G.mixedExtension.eu σ who|)
+    · intro a
+      have hga := hgain who a
+      linarith
+    · -- |G.mixedExtension.eu (update σ who (pure a)) who| ≤ |C who| + |...eu σ who|
+      intro a
+      have hb : |G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who| ≤ |C who| := by
+        have h := G.mixedExtension.eu_abs_le_of_bounded who (hbd who)
+          (Function.update σ who (PMF.pure a))
+        exact h.trans (le_abs_self (C who))
+      have habs_sub : |G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who -
+          G.mixedExtension.eu σ who| ≤
+          |G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who| +
+            |G.mixedExtension.eu σ who| :=
+        abs_sub _ _
+      linarith [abs_nonneg (G.mixedExtension.eu σ who)]
+    · -- |G.mixedExtension.eu σ who| ≤ |C who| + |...eu σ who| trivially
+      intro a
+      have := abs_nonneg (C who)
+      linarith [abs_nonneg (G.mixedExtension.eu σ who)]
+
+end NashGainBounded
 
 -- ============================================================================
 -- Gains and Nash characterization
