@@ -1,7 +1,7 @@
 import GameTheory.Concepts.SolutionConcepts
 
 /-!
-# GameTheory.Core.DeviationSimulation
+# GameTheory.Concepts.DeviationSimulation
 
 Distribution-level transport of equilibrium across game presentations.
 

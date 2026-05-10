@@ -9,7 +9,7 @@ import GameTheory.Core.GameForm
 
 -- Solution concepts and properties
 import GameTheory.Concepts.SolutionConcepts
-import GameTheory.Core.DeviationSimulation
+import GameTheory.Concepts.DeviationSimulation
 import GameTheory.Concepts.Deviation
 import GameTheory.Concepts.BestResponse
 import GameTheory.Concepts.PrefPreorderProperties
