@@ -2,6 +2,7 @@ import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Finset.Piecewise
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
+import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.ProbabilityMassFunction
 
@@ -31,6 +32,49 @@ private lemma pmf_sum_eq_one {α : Type*} [Fintype α] (μ : PMF α) :
   have h := PMF.tsum_coe μ
   rwa [tsum_eq_sum (s := Finset.univ)
     (fun x hx => absurd (Finset.mem_univ x) hx)] at h
+
+-- ============================================================================
+-- Prod-tsum commutation for ENNReal (foundation for countable factors)
+-- ============================================================================
+
+/-- For a Fin-indexed dependent family `A : Fin n → Type*` and a family of
+nonneg measure-like functions `g : ∀ i, A i → ℝ≥0∞`, the sum-of-products over
+the product space equals the product-of-sums.
+
+This is the Fin-base for a future generalization of `pmfPi` to countable
+factor types. Currently proved by induction on `n`; the arbitrary-Fintype
+version requires a careful `Equiv.piCongrLeft'` transfer that's deferred. -/
+theorem ENNReal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
+    (g : (i : Fin n) → A i → ENNReal) :
+    ∑' s : ((i : Fin n) → A i), ∏ i, g i (s i) = ∏ i, ∑' a : A i, g i a := by
+  induction n with
+  | zero =>
+    -- `(i : Fin 0) → A i` is `Unique` (only the empty function).
+    haveI : Unique ((i : Fin 0) → A i) := Pi.uniqueOfIsEmpty _
+    rw [tsum_eq_single default (fun s hs => absurd (Unique.eq_default s) hs)]
+    simp [Finset.prod_eq_one (fun (i : Fin 0) _ => Fin.elim0 i)]
+  | succ n ih =>
+    set e : A 0 × ((i : Fin n) → A i.succ) ≃ ((i : Fin (n+1)) → A i) :=
+      Fin.consEquiv A with he
+    rw [← e.tsum_eq (f := fun s => ∏ i, g i (s i))]
+    rw [ENNReal.tsum_prod']
+    have h_split : ∀ (a₀ : A 0) (s' : (i : Fin n) → A i.succ),
+        (∏ i, g i (e (a₀, s') i)) = g 0 a₀ * ∏ i, g i.succ (s' i) := by
+      intro a₀ s'
+      have he_val : ∀ i : Fin (n+1), e (a₀, s') i = Fin.cons a₀ s' i := by intro i; rfl
+      simp_rw [he_val]
+      rw [Fin.prod_univ_succ (f := fun i => g i (Fin.cons a₀ s' i))]
+      simp [Fin.cons_zero, Fin.cons_succ]
+    simp_rw [h_split]
+    simp_rw [ENNReal.tsum_mul_left]
+    rw [ENNReal.tsum_mul_right]
+    rw [ih]
+    rw [Fin.prod_univ_succ (f := fun i => ∑' a, g i a)]
+
+-- TODO: a `Fintype`-version of `ENNReal_tsum_pi_fin` is the goal but requires
+-- careful handling of the dependent-type cast in `Equiv.piCongrLeft'`. The
+-- Fin-version above is sufficient for callers willing to do their own
+-- equiv-transfer; the Fintype version is deferred to a future iteration.
 
 section Aux
 
