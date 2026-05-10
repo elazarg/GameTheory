@@ -35,6 +35,14 @@ theorem IsZeroSum.nash_eu_sum_zero {G : KernelGame (Fin 2)} [Finite G.Outcome]
   have h := hzs.eu_neg σ
   linarith
 
+/-- Bounded-utility variant of `nash_eu_sum_zero`. -/
+theorem IsZeroSum.nash_eu_sum_zero_of_bounded {G : KernelGame (Fin 2)}
+    (hzs : G.IsZeroSum) {σ : Profile G} (_hN : G.IsNash σ)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu σ 0 + G.eu σ 1 = 0 := by
+  have h := hzs.eu_neg_of_bounded σ hbd
+  linarith
+
 /-- In a 2-player constant-sum game, at any profile the sum of expected
     utilities equals the constant `c`. -/
 theorem IsConstantSum.nash_eu_sum {G : KernelGame (Fin 2)} [Finite G.Outcome]
@@ -43,12 +51,30 @@ theorem IsConstantSum.nash_eu_sum {G : KernelGame (Fin 2)} [Finite G.Outcome]
   have h := hcs.eu_determined σ
   linarith
 
+/-- Bounded-utility variant of `IsConstantSum.nash_eu_sum`. -/
+theorem IsConstantSum.nash_eu_sum_of_bounded {G : KernelGame (Fin 2)}
+    {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu σ 0 + G.eu σ 1 = c := by
+  have h := hcs.eu_determined_of_bounded σ hbd
+  linarith
+
 /-- In a 2-player zero-sum game, player 0 has non-negative expected utility
     if and only if player 1 has non-positive expected utility. -/
 theorem IsZeroSum.eu_nonneg_iff_nonpos {G : KernelGame (Fin 2)} [Finite G.Outcome]
     (hzs : G.IsZeroSum) (σ : Profile G) :
     G.eu σ 0 ≥ 0 ↔ G.eu σ 1 ≤ 0 := by
   have h := hzs.eu_neg σ
+  constructor
+  · intro h0; linarith
+  · intro h1; linarith
+
+/-- Bounded-utility variant of `eu_nonneg_iff_nonpos`. -/
+theorem IsZeroSum.eu_nonneg_iff_nonpos_of_bounded {G : KernelGame (Fin 2)}
+    (hzs : G.IsZeroSum) (σ : Profile G)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu σ 0 ≥ 0 ↔ G.eu σ 1 ≤ 0 := by
+  have h := hzs.eu_neg_of_bounded σ hbd
   constructor
   · intro h0; linarith
   · intro h1; linarith
@@ -63,6 +89,17 @@ theorem IsZeroSum.deviation_eu_neg {G : KernelGame (Fin 2)} [Finite G.Outcome]
     -(G.eu (Function.update σ 0 s') 1 - G.eu σ 1) := by
   have h1 := hzs.eu_neg σ
   have h2 := hzs.eu_neg (Function.update σ 0 s')
+  linarith
+
+open Classical in
+/-- Bounded-utility variant of `deviation_eu_neg`. -/
+theorem IsZeroSum.deviation_eu_neg_of_bounded {G : KernelGame (Fin 2)}
+    (hzs : G.IsZeroSum) (σ : Profile G) (s' : G.Strategy 0)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu (Function.update σ 0 s') 0 - G.eu σ 0 =
+    -(G.eu (Function.update σ 0 s') 1 - G.eu σ 1) := by
+  have h1 := hzs.eu_neg_of_bounded σ hbd
+  have h2 := hzs.eu_neg_of_bounded (Function.update σ 0 s') hbd
   linarith
 
 end KernelGame
