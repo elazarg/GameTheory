@@ -3285,6 +3285,7 @@ noncomputable def reachableBehavioralGameFormAtHorizon
   outcomeKernel := fun β =>
     G.runDist k (GameTheory.FOSG.ReachableLegalBehavioralProfile.extend β)
 
+set_option linter.flexible false in
 open Classical in
 /-- FOSG Kuhn simulation for coarse-correlated deviations from mixed pure
 recommendations to behavioral recommendations. -/
@@ -3333,6 +3334,7 @@ noncomputable def reachableKuhnCoarseCorrelatedDeviationSimulation
     exact reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
       (G := G) hLeg k μ who βwho'
 
+set_option linter.flexible false in
 open Classical in
 /-- FOSG Kuhn simulation for correlated recommendation-dependent deviations
 from mixed pure recommendations to behavioral recommendations. -/
