@@ -40,17 +40,12 @@ theorem eu_pure_outcome {G : KernelGame ι} (σ : Profile G) (who : ι)
   simp [eu, h, expect_pure]
 
 /-- If all utilities for a player are non-negative, EU is non-negative. -/
-theorem eu_nonneg_of_utility_nonneg {G : KernelGame ι} [Finite G.Outcome]
+theorem eu_nonneg_of_utility_nonneg {G : KernelGame ι}
     (σ : Profile G) (who : ι)
     (h : ∀ ω : G.Outcome, G.utility ω who ≥ 0) :
     G.eu σ who ≥ 0 := by
-  letI : Fintype G.Outcome := Fintype.ofFinite G.Outcome
-  rw [eu_eq_sum]
-  apply Finset.sum_nonneg
-  intro ω _
-  apply mul_nonneg
-  · exact ENNReal.toReal_nonneg
-  · exact h ω
+  unfold eu expect
+  exact tsum_nonneg (fun ω => mul_nonneg ENNReal.toReal_nonneg (h ω))
 
 end KernelGame
 

@@ -37,6 +37,28 @@ theorem IsConstantSum.socialWelfare_eq [Fintype ι]
     fun ω => hcs ω
   simp_rw [hc, ← Finset.sum_mul, pmf_toReal_sum_one, one_mul]
 
+/-- Bounded-utility version of `socialWelfare_eq`: drops `[Finite G.Outcome]`
+    in favor of per-player utility bounds that ensure summability. -/
+theorem IsConstantSum.socialWelfare_eq_of_bounded [Fintype ι]
+    {G : KernelGame ι}
+    {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G)
+    {C : ι → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.socialWelfare σ = c := by
+  simp only [socialWelfare, eu, expect]
+  rw [show (∑ i : ι, ∑' ω, (G.outcomeKernel σ ω).toReal * G.utility ω i) =
+      ∑' ω, ∑ i : ι, (G.outcomeKernel σ ω).toReal * G.utility ω i from by
+    have hi : ∀ i ∈ (Finset.univ : Finset ι),
+        Summable (fun ω => (G.outcomeKernel σ ω).toReal * G.utility ω i) := by
+      intro i _
+      exact Math.Probability.expect_summable_of_bounded
+        (G.outcomeKernel σ) (fun ω => G.utility ω i) (hbd i)
+    rw [Summable.tsum_finsetSum hi]]
+  simp_rw [← Finset.mul_sum]
+  have hc : ∀ ω : G.Outcome, ∑ i : ι, G.utility ω i = c :=
+    fun ω => hcs ω
+  simp_rw [hc]
+  rw [tsum_mul_right, Math.Probability.pmf_toReal_tsum_one, one_mul]
+
 /-- In a 2-player constant-sum game with finite outcomes,
     player 0's EU is `c - eu σ 1`. -/
 theorem IsConstantSum.eu_determined
