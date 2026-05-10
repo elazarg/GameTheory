@@ -1880,6 +1880,102 @@ noncomputable def liftReachableHistoryPureStrategy
     G.mem_availableMovesAtInfoState_of_history h hraw
   simpa [hs] using hat
 
+/-- Lift a legal reachable FOSG behavioral strategy into the legal
+reachable-history Kuhn model. -/
+noncomputable def liftReachableHistoryBehavioralStrategy
+    (_hLeg : G.LegalObservable) (i : ι)
+    (β : G.ReachableLegalBehavioralStrategy i) :
+    ∀ s : G.ReachableInfoState i, PMF (ReachableInfoLegalMove G i s) := by
+  classical
+  intro s
+  refine (β.1 s).bindOnSupport ?_
+  intro oi hoi
+  refine PMF.pure ⟨oi, ?_⟩
+  let h := s.2.choose
+  have hs : h.playerView i = s.1 := by
+    simpa [h] using s.2.choose_spec
+  have hsEq : G.reachableInfoStateOfHistory i h = s := by
+    exact Subtype.ext hs
+  have hraw : oi ∈ G.availableMoves h i := by
+    exact β.2 h (oi := oi) (by simpa [hsEq] using hoi)
+  have hat : oi ∈ G.availableMovesAtInfoState i (h.playerView i) :=
+    G.mem_availableMovesAtInfoState_of_history h hraw
+  simpa [hs] using hat
+
+/-- Erase a legal reachable-history pure strategy back to a native legal
+reachable FOSG pure strategy. -/
+noncomputable def eraseReachableHistoryPureStrategy
+    (hLeg : G.LegalObservable) (i : ι)
+    (π : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i) :
+    G.ReachableLegalPureStrategy i := by
+  refine ⟨fun s => (π s).1, ?_⟩
+  intro h
+  have haiInfo :
+      (π (G.reachableInfoStateOfHistory i h)).1 ∈
+        G.availableMovesAtInfoState i (G.reachableInfoStateOfHistory i h).1 :=
+    (π (G.reachableInfoStateOfHistory i h)).2
+  have hEq := G.availableMovesAtInfoState_eq_of_history hLeg i h
+  exact hEq ▸ haiInfo
+
+@[simp] theorem liftReachableHistoryPureStrategy_erase
+    (hLeg : G.LegalObservable) (i : ι)
+    (π : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i) :
+    liftReachableHistoryPureStrategy (G := G) hLeg i
+        (eraseReachableHistoryPureStrategy (G := G) hLeg i π) =
+      π := by
+  funext s
+  apply Subtype.ext
+  rfl
+
+/-- The single-player mixed pure strategy induced by a legal reachable
+behavioral strategy in the reachable-history core model. -/
+noncomputable def reachableHistoryBehavioralToMixedStrategy
+    [Fintype G.History]
+    (hLeg : G.LegalObservable) (i : ι) [Fintype (Option (Act i))]
+    (β : G.ReachableLegalBehavioralStrategy i) :
+    PMF ((toReachableHistoryObsModelCore G hLeg).LocalStrategy i) := by
+  classical
+  letI : Fintype ((toReachableHistoryObsModelCore G hLeg).InfoState i) :=
+    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G) hLeg i
+  letI : ∀ s : G.ReachableInfoState i, Fintype (ReachableInfoLegalMove G i s) :=
+    fun _ => by
+      dsimp [ReachableInfoLegalMove]
+      infer_instance
+  exact Math.PMFProduct.pmfPi
+    (liftReachableHistoryBehavioralStrategy (G := G) hLeg i β)
+
+/-- The constructive mixed pure deviation induced by a legal reachable
+behavioral deviation. -/
+noncomputable def reachableLegalBehavioralToMixed
+    [Fintype G.History]
+    (hLeg : G.LegalObservable) (i : ι) [Fintype (Option (Act i))]
+    (β : G.ReachableLegalBehavioralStrategy i) :
+    PMF (G.ReachableLegalPureStrategy i) :=
+  PMF.map (eraseReachableHistoryPureStrategy (G := G) hLeg i)
+    (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β)
+
+@[simp] theorem reachableLegalBehavioralToMixed_lift
+    [Fintype G.History]
+    (hLeg : G.LegalObservable) (i : ι) [Fintype (Option (Act i))]
+    (β : G.ReachableLegalBehavioralStrategy i) :
+    PMF.map (liftReachableHistoryPureStrategy (G := G) hLeg i)
+        (reachableLegalBehavioralToMixed (G := G) hLeg i β) =
+      reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β := by
+  classical
+  unfold reachableLegalBehavioralToMixed
+  rw [PMF.map_comp]
+  change PMF.map
+      ((liftReachableHistoryPureStrategy (G := G) hLeg i) ∘
+        (eraseReachableHistoryPureStrategy (G := G) hLeg i))
+      (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β) =
+    reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β
+  have hfun :
+      ((liftReachableHistoryPureStrategy (G := G) hLeg i) ∘
+        (eraseReachableHistoryPureStrategy (G := G) hLeg i)) = id := by
+    funext π
+    exact liftReachableHistoryPureStrategy_erase (G := G) hLeg i π
+  rw [hfun, PMF.map_id]
+
 /-- Lift a reachable FOSG pure profile into the reachable-history Kuhn model. -/
 noncomputable def liftReachableHistoryPureProfile
     (hLeg : G.LegalObservable)
