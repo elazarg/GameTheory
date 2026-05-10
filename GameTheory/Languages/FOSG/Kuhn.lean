@@ -1976,6 +1976,75 @@ noncomputable def reachableLegalBehavioralToMixed
     exact liftReachableHistoryPureStrategy_erase (G := G) hLeg i π
   rw [hfun, PMF.map_id]
 
+/-- Lift a legal reachable FOSG behavioral profile into the legal
+reachable-history Kuhn model. -/
+noncomputable def liftReachableHistoryBehavioralProfile
+    (hLeg : G.LegalObservable)
+    (β : G.ReachableLegalBehavioralProfile) :
+    (toReachableHistoryObsModelCore G hLeg).BehavioralProfile :=
+  fun i => liftReachableHistoryBehavioralStrategy (G := G) hLeg i (β i)
+
+open Classical in
+/-- Local posterior for the constructive B→M strategy, assuming the reach
+weight ignores the current information-state coordinate.
+
+The remaining semantic work in the unilateral deviation theorem is exactly to
+show this ignore hypothesis for reachable FOSG histories. -/
+theorem reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
+    [Fintype ι] [Fintype G.History] [∀ j, Fintype (Option (Act j))]
+    (hLeg : G.LegalObservable) (i : ι)
+    (β : G.ReachableLegalBehavioralStrategy i)
+    (n : Nat) (ss : List G.History)
+    (π₀ : (toReachableHistoryObsModelCore G hLeg).PureProfile)
+    (hign :
+      Math.PMFProduct.Ignores
+        (A := fun s : G.ReachableInfoState i => ReachableInfoLegalMove G i s)
+        ((toReachableHistoryObsModelCore G hLeg).projectStates i ss)
+        (fun πᵢ : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i =>
+          Math.ParameterizedChain.pureRun
+            ((toReachableHistoryObsModelCore G hLeg).pureStep)
+            (toReachableHistoryObsModelCore G hLeg).init n
+            (Function.update π₀ i πᵢ) ss)) :
+    Math.ProbabilityMassFunction.pushforward
+        (Math.ParameterizedChain.reweightPMF
+          (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β)
+          (fun πᵢ : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i =>
+            Math.ParameterizedChain.pureRun
+              ((toReachableHistoryObsModelCore G hLeg).pureStep)
+              (toReachableHistoryObsModelCore G hLeg).init n
+              (Function.update π₀ i πᵢ) ss))
+        (fun πᵢ => πᵢ ((toReachableHistoryObsModelCore G hLeg).projectStates i ss)) =
+      liftReachableHistoryBehavioralStrategy (G := G) hLeg i β
+        ((toReachableHistoryObsModelCore G hLeg).projectStates i ss) := by
+  classical
+  let O := toReachableHistoryObsModelCore G hLeg
+  letI : Fintype (O.InfoState i) :=
+    ReachableHistoryNative.reachableHistoryInfoStateFintype (G := G) hLeg i
+  letI : ∀ s : G.ReachableInfoState i, Fintype (ReachableInfoLegalMove G i s) :=
+    fun _ => by
+      dsimp [ReachableInfoLegalMove]
+      infer_instance
+  have hCtop :
+      (∑ πᵢ : O.LocalStrategy i,
+        reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β πᵢ *
+          Math.ParameterizedChain.pureRun O.pureStep O.init n
+            (Function.update π₀ i πᵢ) ss) ≠ ⊤ := by
+    exact ObsModelCore.sum_mul_pmf_ne_top
+      (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β)
+      (fun πᵢ : O.LocalStrategy i =>
+        Math.ParameterizedChain.pureRun O.pureStep O.init n
+          (Function.update π₀ i πᵢ) ss)
+      (fun πᵢ => PMF.coe_le_one _ ss)
+  simpa [reachableHistoryBehavioralToMixedStrategy, O] using
+    Math.ParameterizedChain.reweightPMF_pmfPi_push_coord_of_ignores'
+      (A := fun s : G.ReachableInfoState i => ReachableInfoLegalMove G i s)
+      (σ := liftReachableHistoryBehavioralStrategy (G := G) hLeg i β)
+      (j := (O.projectStates i ss))
+      (w := fun πᵢ : O.LocalStrategy i =>
+        Math.ParameterizedChain.pureRun O.pureStep O.init n
+          (Function.update π₀ i πᵢ) ss)
+      hign hCtop
+
 /-- Lift a reachable FOSG pure profile into the reachable-history Kuhn model. -/
 noncomputable def liftReachableHistoryPureProfile
     (hLeg : G.LegalObservable)
