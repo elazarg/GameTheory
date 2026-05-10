@@ -1,5 +1,6 @@
 import Math.Probability
 import Mathlib.Data.Finset.Basic
+import GameTheory.Core.JointAction
 
 /-!
 # GameTheory.Languages.FOSG.Basic
@@ -13,23 +14,6 @@ observations. Bridges to other language layers belong elsewhere.
 namespace GameTheory
 
 open Math.Probability
-
-/-- Joint action profile with optional participation for each player. -/
-abbrev JointAction {ι : Type} (Act : ι → Type) : Type :=
-  ∀ i, Option (Act i)
-
-/-- Paper-faithful factorized legality of a joint action: every active player
-chooses an available action, and inactive players choose `none`. -/
-def JointActionLegal {ι W : Type}
-    (Act : ι → Type)
-    (active : W → Finset ι)
-    (terminal : W → Prop)
-    (availableActions : W → (i : ι) → Set (Act i))
-    (w : W) (a : JointAction Act) : Prop :=
-  ¬ terminal w ∧
-    ∀ i, match a i with
-      | some ai => i ∈ active w ∧ ai ∈ availableActions w i
-      | none => i ∉ active w
 
 /-- A factored-observation stochastic game. -/
 structure FOSG (ι W : Type) [DecidableEq ι]
@@ -78,13 +62,6 @@ namespace FOSG
 
 variable {ι W : Type}
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
-
-/-- The all-`none` joint action. -/
-def noopAction (Act : ι → Type) : JointAction Act :=
-  fun _ => none
-
-@[simp] theorem noopAction_apply (i : ι) :
-    noopAction Act i = none := rfl
 
 variable [DecidableEq ι]
 
