@@ -23,7 +23,7 @@ namespace NFG
 open GameTheory
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
-variable {A : ι → Type} [∀ i, Fintype (A i)]
+variable {A : ι → Type}
 variable [∀ i, Nonempty (A i)]
 
 namespace NFGGame
