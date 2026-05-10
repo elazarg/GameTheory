@@ -2585,6 +2585,40 @@ theorem reachableMixedToLegalBehavioral_runDist
   funext π
   exact reachableHistoryOutcomeDistPureProfile_eq_runDist (G := G) hLeg k π
 
+open Classical in
+/-- Constructive canonical unilateral deviation law at the finite-horizon
+history-law level.
+
+Given a legal reachable behavioral deviation by `who`, replace `who`'s mixed
+component by the induced mixed pure strategy and realize the resulting mixed
+profile by the canonical reachable M→B witness. This is the constructive
+source-side law used by the intended unilateral hybrid theorem. -/
+theorem reachable_mixed_to_canonical_behavioral_unilateral_deviation_runDist
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (k : Nat)
+    (μ : ReachableMixedProfile (G := G))
+    (who : ι)
+    (βwho' : G.ReachableLegalBehavioralStrategy who) :
+    let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
+    (reachableMixedProfileJoint (G := G) (Function.update μ who μwho')).bind
+      (fun π => G.runDist k (G.legalPureToBehavioral π.extend)) =
+    G.runDist k
+      (reachableMixedToLegalBehavioral
+        (G := G) hLeg
+        (Function.update μ who μwho')).extend := by
+  classical
+  let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
+  exact (reachableMixedToLegalBehavioral_runDist
+      (G := G) hLeg (Function.update μ who μwho') k).symm
+
+/- The intended unilateral hybrid theorem strengthens the previous statement by
+replacing the canonical behavioral realization of the updated mixed profile with
+`Function.update (reachableMixedToLegalBehavioral hLeg μ) who βwho'`. That
+replacement is distributional, not pointwise: off-support fallback choices in
+the canonical M→B profile need not equal `βwho'`. -/
+
 theorem reachable_mixed_to_legal_behavioral_mapped_runDist
     [Fintype ι] [Fintype W] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
