@@ -99,6 +99,21 @@ theorem expect_pushforward
   letI : Fintype Ξ := Fintype.ofFinite Ξ
   exact Math.Probability.expect_map_fintype_target μ f φ
 
+/-- `expect` along a pushforward, under a bounded-`φ` hypothesis (countable source/target). -/
+theorem expect_pushforward_of_bounded
+    {Ω Ξ : Type*}
+    (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) {C : ℝ} (hbd : ∀ x, |φ x| ≤ C) :
+    Math.Probability.expect (pushforward μ f) φ =
+      Math.Probability.expect μ (fun a => φ (f a)) := by
+  -- Rewrite pushforward as bind-of-pure and apply `expect_bind_of_bounded`.
+  have h_eq : pushforward μ f = μ.bind (fun a => PMF.pure (f a)) :=
+    (PMF.bind_pure_comp f μ).symm
+  rw [h_eq, Math.Probability.expect_bind_of_bounded
+    (p := μ) (q := fun a => PMF.pure (f a)) (f := φ) hbd]
+  apply tsum_congr; intro a
+  congr 1
+  simp [Math.Probability.expect_pure]
+
 theorem expect_bind_congr_on_support
     {Ω Ξ : Type*}
     (μ : PMF Ω) (k₁ k₂ : Ω → PMF Ξ) (φ : Ξ → ℝ)
@@ -278,6 +293,30 @@ theorem expect_mono_of_pointwise
   letI : Fintype Ω := Fintype.ofFinite Ω
   simpa [Math.Probability.expect_eq_sum] using
     (Finset.sum_le_sum (fun ω _ => mul_le_mul_of_nonneg_left (hfg ω) ENNReal.toReal_nonneg))
+
+/-- Pointwise monotonicity of `expect` for countable types: integrand on either side
+    must be summable (sufficient when `f`, `g` are bounded). -/
+theorem expect_mono_of_pointwise_summable
+    {Ω : Type*}
+    (d : PMF Ω) (f g : Ω → ℝ)
+    (hfg : ∀ ω, f ω ≤ g ω)
+    (hf : Summable (fun ω => (d ω).toReal * f ω))
+    (hg : Summable (fun ω => (d ω).toReal * g ω)) :
+    Math.Probability.expect d f ≤ Math.Probability.expect d g := by
+  unfold Math.Probability.expect
+  exact hf.tsum_le_tsum
+    (fun ω => mul_le_mul_of_nonneg_left (hfg ω) ENNReal.toReal_nonneg) hg
+
+/-- Pointwise monotonicity of `expect` for bounded `f`, `g`. -/
+theorem expect_mono_of_pointwise_bounded
+    {Ω : Type*}
+    (d : PMF Ω) (f g : Ω → ℝ)
+    (hfg : ∀ ω, f ω ≤ g ω)
+    {C : ℝ} (hf : ∀ ω, |f ω| ≤ C) (hg : ∀ ω, |g ω| ≤ C) :
+    Math.Probability.expect d f ≤ Math.Probability.expect d g :=
+  expect_mono_of_pointwise_summable d f g hfg
+    (Math.Probability.expect_summable_of_bounded d f hf)
+    (Math.Probability.expect_summable_of_bounded d g hg)
 
 -- ============================================================================
 -- HEq lemmas for PMF

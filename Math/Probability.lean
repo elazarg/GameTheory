@@ -111,6 +111,28 @@ theorem pmf_toReal_sum_one {Ω : Type*} [Fintype Ω] (d : PMF Ω) :
     ∑ ω : Ω, (d ω).toReal = 1 := by
   simpa [tsum_fintype] using (pmf_toReal_tsum_one d)
 
+/-- A PMF's real-valued weight function is summable. The summability comes
+    from `PMF.tsum_coe = 1` in `ENNReal` plus `ENNReal.summable_toReal`. -/
+theorem pmf_toReal_summable {Ω : Type*} (d : PMF Ω) :
+    Summable (fun ω => (d ω).toReal) := by
+  refine ENNReal.summable_toReal ?_
+  rw [PMF.tsum_coe]; exact ENNReal.one_ne_top
+
+/-- For bounded `f`, the integrand of `expect d f` is summable. -/
+theorem expect_summable_of_bounded {Ω : Type*}
+    (d : PMF Ω) (f : Ω → ℝ) {C : ℝ} (hbd : ∀ ω, |f ω| ≤ C) :
+    Summable (fun ω => (d ω).toReal * f ω) := by
+  apply Summable.of_abs
+  apply Summable.of_nonneg_of_le
+      (g := fun ω => |(d ω).toReal * f ω|)
+      (f := fun ω => (d ω).toReal * C)
+      (fun _ => abs_nonneg _)
+  · intro ω
+    have hd : 0 ≤ (d ω).toReal := ENNReal.toReal_nonneg
+    rw [abs_mul, abs_of_nonneg hd]
+    exact mul_le_mul_of_nonneg_left (hbd ω) hd
+  · exact (pmf_toReal_summable d).mul_right C
+
 -- ============================================================================
 -- Utility lemmas for expect
 -- ============================================================================
@@ -131,7 +153,103 @@ theorem pmf_toReal_sum_one {Ω : Type*} [Fintype Ω] (d : PMF Ω) :
   rw [hfact, tsum_mul_left]
   rw [pmf_toReal_tsum_one d, mul_one]
 
-/-- Expected value distributes over `PMF.bind`. -/
+/-- The joint integrand `(p a).toReal * (q a b).toReal * f b` is summable when `f` is bounded.
+    This is the absolute-summability hypothesis behind Fubini for `expect_bind`. -/
+theorem expect_bind_summable_of_bounded {α β : Type*}
+    (p : PMF α) (q : α → PMF β) (f : β → ℝ) {C : ℝ} (hbd : ∀ b, |f b| ≤ C) :
+    Summable (fun ab : α × β =>
+      (p ab.1).toReal * (q ab.1 ab.2).toReal * f ab.2) := by
+  apply Summable.of_abs
+  apply Summable.of_nonneg_of_le
+      (g := fun ab : α × β => |(p ab.1).toReal * (q ab.1 ab.2).toReal * f ab.2|)
+      (f := fun ab : α × β => (p ab.1).toReal * (q ab.1 ab.2).toReal * C)
+      (fun _ => abs_nonneg _)
+  · intro ⟨a, b⟩
+    have hp : 0 ≤ (p a).toReal := ENNReal.toReal_nonneg
+    have hq : 0 ≤ (q a b).toReal := ENNReal.toReal_nonneg
+    have hpq : 0 ≤ (p a).toReal * (q a b).toReal := mul_nonneg hp hq
+    rw [abs_mul, abs_of_nonneg hpq]
+    exact mul_le_mul_of_nonneg_left (hbd b) hpq
+  · -- ∑'_{(a,b)} (p a).toReal * (q a b).toReal * C is summable
+    have hbind : Summable (fun ab : α × β =>
+        (p ab.1).toReal * (q ab.1 ab.2).toReal) := by
+      have h_ennreal : ∑' ab : α × β, (p ab.1 * q ab.1 ab.2 : ENNReal) = 1 := by
+        rw [ENNReal.tsum_prod']
+        calc
+          ∑' a, ∑' b, p a * q a b
+              = ∑' a, p a * ∑' b, q a b := by
+                simp [ENNReal.tsum_mul_left]
+          _ = ∑' a, p a := by simp [PMF.tsum_coe]
+          _ = 1 := PMF.tsum_coe p
+      have h_ne_top : ∀ ab : α × β, (p ab.1 * q ab.1 ab.2 : ENNReal) ≠ ⊤ := fun ab =>
+        ENNReal.mul_ne_top (PMF.apply_ne_top p ab.1) (PMF.apply_ne_top (q ab.1) ab.2)
+      have h_summable_pq :
+          Summable (fun ab : α × β => (p ab.1 * q ab.1 ab.2 : ENNReal).toReal) := by
+        apply ENNReal.summable_toReal
+        rw [h_ennreal]; exact ENNReal.one_ne_top
+      have h_eq : (fun ab : α × β => (p ab.1).toReal * (q ab.1 ab.2).toReal) =
+          (fun ab : α × β => (p ab.1 * q ab.1 ab.2 : ENNReal).toReal) := by
+        funext ab; exact (ENNReal.toReal_mul (a := p ab.1) (b := q ab.1 ab.2)).symm
+      rw [h_eq]; exact h_summable_pq
+    exact hbind.mul_right C
+
+/-- Expected value distributes over `PMF.bind`, under a bounded-`f` hypothesis. -/
+theorem expect_bind_of_bounded {α β : Type*}
+    (p : PMF α) (q : α → PMF β) (f : β → ℝ) {C : ℝ} (hbd : ∀ b, |f b| ≤ C) :
+    expect (p.bind q) f = expect p (fun a => expect (q a) f) := by
+  -- Define the joint integrand (with `(a, b)` argument order matching uncurry).
+  set F : α → β → ℝ := fun a b => (p a).toReal * (q a b).toReal * f b with hF
+  -- Joint summability (over α × β).
+  have h_summable_ab : Summable (Function.uncurry F) := by
+    have := expect_bind_summable_of_bounded p q f hbd
+    exact this
+  -- For each `a`, inner sum over `b` is summable.
+  have h_inner_a : ∀ a, Summable (F a) := by
+    intro a
+    have := expect_summable_of_bounded (q a) f hbd
+    -- `(q a b).toReal * f b` is summable; multiply by `(p a).toReal` (a constant).
+    simpa [hF, mul_assoc] using this.mul_left ((p a).toReal)
+  -- For each `b`, inner sum over `a` is summable.
+  have h_inner_b : ∀ b, Summable (fun a => F a b) := by
+    intro b
+    have h_pq_summable : Summable (fun a => (p a).toReal * (q a b).toReal) := by
+      -- Bound: (p a).toReal * (q a b).toReal ≤ (p a).toReal.
+      apply Summable.of_nonneg_of_le
+          (g := fun a => (p a).toReal * (q a b).toReal)
+          (f := fun a => (p a).toReal)
+          (fun a => mul_nonneg ENNReal.toReal_nonneg ENNReal.toReal_nonneg)
+      · intro a
+        have hqb_le_one : (q a b).toReal ≤ 1 := by
+          have := PMF.coe_le_one (q a) b
+          exact (ENNReal.toReal_le_toReal (PMF.apply_ne_top (q a) b)
+            (by norm_num)).mpr this |>.trans_eq (by simp)
+        exact (mul_le_of_le_one_right ENNReal.toReal_nonneg hqb_le_one)
+      · exact pmf_toReal_summable p
+    simpa [hF, mul_assoc] using h_pq_summable.mul_right (f b)
+  -- Now: expand bind, use tsum_comm', and refold.
+  have h_inner_real : ∀ b,
+      ((∑' a, p a * q a b : ENNReal)).toReal =
+        ∑' a, (p a).toReal * (q a b).toReal := by
+    intro b
+    rw [ENNReal.tsum_toReal_eq (fun a => ENNReal.mul_ne_top (PMF.apply_ne_top p a)
+      (PMF.apply_ne_top (q a) b))]
+    apply tsum_congr; intro a; exact ENNReal.toReal_mul
+  -- LHS = ∑' b, (∑' a, p a * q a b).toReal * f b
+  --     = ∑' b, (∑' a, (p a).toReal * (q a b).toReal) * f b
+  --     = ∑' b, ∑' a, F a b
+  -- RHS = ∑' a, (p a).toReal * ∑' b, (q a b).toReal * f b
+  --     = ∑' a, ∑' b, F a b
+  -- Fubini: ∑' b, ∑' a, F a b = ∑' a, ∑' b, F a b.
+  simp only [expect, PMF.bind_apply]
+  simp_rw [h_inner_real, ← tsum_mul_right]
+  rw [h_summable_ab.tsum_comm' h_inner_a h_inner_b]
+  apply tsum_congr; intro a
+  rw [← tsum_mul_left]
+  apply tsum_congr; intro b
+  change F a b = (p a).toReal * ((q a b).toReal * f b)
+  simp [hF, mul_assoc]
+
+/-- Expected value distributes over `PMF.bind` for finite types. -/
 theorem expect_bind {α β : Type*} [Finite α] [Finite β]
     (p : PMF α) (q : α → PMF β) (f : β → ℝ) :
     expect (p.bind q) f = expect p (fun a => expect (q a) f) := by
