@@ -74,7 +74,7 @@ noncomputable def NFGGame.toMixedKernelGame
 
 /-- A mixed Nash equilibrium: no player can improve expected payoff by
     changing their marginal distribution. -/
-def IsNashMixed (G : NFGGame ι A)
+def IsNashMixed [∀ i, Fintype (A i)] (G : NFGGame ι A)
     (σ : MixedProfile A) : Prop :=
   G.toMixedKernelGame.IsNash σ
 
