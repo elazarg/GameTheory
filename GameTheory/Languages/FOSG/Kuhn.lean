@@ -2308,6 +2308,34 @@ noncomputable def reachableLegalHistoryMixedToBehavioral
     (reachableLegalFallbackBehavioral (G := G) hLeg)
 
 open Classical in
+/-- Canonical legal reachable FOSG behavioral profile realizing a mixed profile
+over legal reachable pure strategies.
+
+The core M→B construction produces legal-move subtypes. This definition erases
+those subtypes back to native reachable FOSG strategies and packages the
+legality proof. -/
+noncomputable def reachableMixedToLegalBehavioral
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (μ : ReachableMixedProfile (G := G)) :
+    G.ReachableLegalBehavioralProfile := by
+  let βcore := reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ
+  let βraw := eraseReachableHistoryBehavioral (G := G) hLeg βcore
+  have hβlegal :
+      ∀ i, G.IsLegalReachableBehavioralStrategy i (βraw i) :=
+    eraseReachableHistoryBehavioral_isLegal (G := G) hLeg βcore
+  exact fun i => ⟨βraw i, hβlegal i⟩
+
+@[simp] theorem reachableMixedToLegalBehavioral_toProfile
+    [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
+    (hLeg : G.LegalObservable)
+    (μ : ReachableMixedProfile (G := G)) :
+    (reachableMixedToLegalBehavioral (G := G) hLeg μ).toProfile =
+      eraseReachableHistoryBehavioral (G := G) hLeg
+        (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ) := by
+  rfl
+
+open Classical in
 theorem reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
     (hLeg : G.LegalObservable)
@@ -2429,6 +2457,34 @@ theorem reachable_mixed_to_legal_behavioral_runDist
     reachableHistoryOutcomeDist_eq_runDist
       (G := G) hLeg k βcore β hβ
   rw [← hrun, hdist]
+  congr
+  funext π
+  exact reachableHistoryOutcomeDistPureProfile_eq_runDist (G := G) hLeg k π
+
+open Classical in
+/-- Native finite-horizon law for the canonical legal reachable M→B witness. -/
+theorem reachableMixedToLegalBehavioral_runDist
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable)
+    (μ : ReachableMixedProfile (G := G))
+    (k : Nat) :
+    G.runDist k (reachableMixedToLegalBehavioral (G := G) hLeg μ).extend =
+      (reachableMixedProfileJoint (G := G) μ).bind
+        (fun π => G.runDist k (G.legalPureToBehavioral π.extend)) := by
+  have hcore :=
+    reachableLegalHistoryMixedToBehavioral_historyOutcomeDist
+      (G := G) hLeg
+      (reachableHistory_stepMassInvariant (G := G) hLeg)
+      (reachableHistory_stepSupportFactorization (G := G) hLeg)
+      (reachableHistory_actionPosteriorLocal (G := G) hLeg) μ k
+  have hrun :=
+    reachableHistoryOutcomeDist_eq_runDist
+      (G := G) hLeg k
+      (reachableLegalHistoryMixedToBehavioral (G := G) hLeg μ)
+      (reachableMixedToLegalBehavioral (G := G) hLeg μ)
+      (reachableMixedToLegalBehavioral_toProfile (G := G) hLeg μ)
+  rw [← hrun, hcore]
   congr
   funext π
   exact reachableHistoryOutcomeDistPureProfile_eq_runDist (G := G) hLeg k π
