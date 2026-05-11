@@ -44,6 +44,17 @@ theorem IsZeroSum.nash_p0_optimal {G : KernelGame (Fin 2)} [Finite G.Outcome]
   linarith [hzs.eu_neg σ, hzs.eu_neg (Function.update σ 1 s₁)]
 
 open Classical in
+/-- Under bounded utility (no `[Finite G.Outcome]` needed): in a 2-player zero-sum
+    game at a Nash equilibrium, deviating player 1 cannot decrease player 0's payoff. -/
+theorem IsZeroSum.nash_p0_optimal_of_bounded {G : KernelGame (Fin 2)}
+    (hzs : G.IsZeroSum) {σ : Profile G} (hN : G.IsNash σ)
+    (s₁ : G.Strategy 1)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu (Function.update σ 1 s₁) 0 ≥ G.eu σ 0 := by
+  have h1 : G.eu σ 1 ≥ G.eu (Function.update σ 1 s₁) 1 := by convert hN 1 s₁
+  linarith [hzs.eu_neg_of_bounded σ hbd, hzs.eu_neg_of_bounded (Function.update σ 1 s₁) hbd]
+
+open Classical in
 /-- At a Nash equilibrium, deviating player 0 cannot increase player 0's payoff. -/
 theorem nash_p0_cap {G : KernelGame (Fin 2)}
     {σ : Profile G} (hN : G.IsNash σ) (s₀ : G.Strategy 0) :
@@ -65,6 +76,28 @@ theorem IsZeroSum.nash_eu_eq {G : KernelGame (Fin 2)} [Finite G.Outcome]
       fin_cases i <;> simp [Function.update]
     rw [heq] at hopt; linarith
   · have hopt := hzs.nash_p0_optimal hNτ (σ 1)
+    have hcap : G.eu σ 0 ≥ G.eu (Function.update σ 0 (τ 0)) 0 := by convert hNσ 0 (τ 0)
+    have heq : Function.update τ 1 (σ 1) = Function.update σ 0 (τ 0) := by
+      funext i
+      fin_cases i <;> simp [Function.update]
+    rw [heq] at hopt; linarith
+
+open Classical in
+/-- Under bounded utility: all Nash equilibria of a 2-player zero-sum game yield
+    the same EU for player 0 (uniqueness of the value). -/
+theorem IsZeroSum.nash_eu_eq_of_bounded {G : KernelGame (Fin 2)}
+    (hzs : G.IsZeroSum) {σ τ : Profile G}
+    (hNσ : G.IsNash σ) (hNτ : G.IsNash τ)
+    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    G.eu σ 0 = G.eu τ 0 := by
+  apply le_antisymm
+  · have hopt := hzs.nash_p0_optimal_of_bounded hNσ (τ 1) hbd
+    have hcap : G.eu τ 0 ≥ G.eu (Function.update τ 0 (σ 0)) 0 := by convert hNτ 0 (σ 0)
+    have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
+      funext i
+      fin_cases i <;> simp [Function.update]
+    rw [heq] at hopt; linarith
+  · have hopt := hzs.nash_p0_optimal_of_bounded hNτ (σ 1) hbd
     have hcap : G.eu σ 0 ≥ G.eu (Function.update σ 0 (τ 0)) 0 := by convert hNσ 0 (τ 0)
     have heq : Function.update τ 1 (σ 1) = Function.update σ 0 (τ 0) := by
       funext i
