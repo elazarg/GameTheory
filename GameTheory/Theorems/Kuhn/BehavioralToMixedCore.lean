@@ -306,7 +306,7 @@ theorem swapProfileBy_involutive (P : ∀ i, O.InfoState i → Prop) :
   · funext i v
     by_cases hv : P i v <;> simp [swapProfileBy, hv]
 
-open Classical in
+omit [DecidableEq ι] [∀ i o, Fintype (Act i o)] in
 theorem swapBy_weight_eq
     [∀ i, Fintype (O.InfoState i)]
     [∀ i, Fintype (O.LocalStrategy i)]
@@ -316,6 +316,7 @@ theorem swapBy_weight_eq
     (O.behavioralToMixedJoint β) (swapProfileBy P π₂ π₁) =
     (O.behavioralToMixedJoint β) π₁ *
     (O.behavioralToMixedJoint β) π₂ := by
+  classical
   simp only [behavioralToMixedJoint, behavioralToMixed, Math.PMFProduct.pmfPi_apply]
   rw [← Finset.prod_mul_distrib, ← Finset.prod_mul_distrib]
   congr 1
@@ -326,7 +327,7 @@ theorem swapBy_weight_eq
   funext v
   by_cases hv : P i v <;> simp [hv, mul_comm]
 
-open Classical in
+omit [DecidableEq ι] [∀ i o, Fintype (Act i o)] in
 /-- Independence under the product measure: if `f` depends only on coordinates
 where `P` holds, and `g` depends only on coordinates where `P` does not hold,
 then `E[f·g] = E[f]·E[g]` under the product measure. -/
@@ -346,6 +347,7 @@ theorem scalar_indep
     ∑ π, (O.behavioralToMixedJoint β) π * (f π * g π) =
       (∑ π, (O.behavioralToMixedJoint β) π * f π) *
       (∑ π, (O.behavioralToMixedJoint β) π * g π) := by
+  classical
   set ν := O.behavioralToMixedJoint β
   have hf_swap : ∀ π₁ π₂, f (swapProfileBy P π₁ π₂) = f π₁ := by
     intro π₁ π₂

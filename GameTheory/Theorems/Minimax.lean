@@ -29,7 +29,7 @@ attribute [local instance] Fintype.ofFinite
 
 /-- Zero-sum is preserved under mixed extension (same outcome space and utility). -/
 theorem mixedExtension_isZeroSum {ι : Type} [Fintype ι] {G : KernelGame ι}
-    [∀ i, Fintype (G.Strategy i)] (hzs : G.IsZeroSum) :
+    (hzs : G.IsZeroSum) :
     G.mixedExtension.IsZeroSum :=
   hzs
 
@@ -112,7 +112,7 @@ there exists a mixed Nash equilibrium `σ` with EU `v` for player 0 such that
 - player 0's mixed strategy guarantees at least `v` against any opponent, and
 - player 1's mixed strategy prevents player 0 from exceeding `v`. -/
 theorem von_neumann_minimax (G : KernelGame (Fin 2))
-    [Finite G.Outcome] [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    [Finite G.Outcome] [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     (hzs : G.IsZeroSum) :
     ∃ (v : ℝ) (σ : Profile G.mixedExtension),
       G.mixedExtension.IsNash σ ∧

@@ -23,7 +23,7 @@ namespace KernelGame
 attribute [local instance] Fintype.ofFinite
 
 variable {ι : Type} [Fintype ι]
-  (G : KernelGame ι) [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+  (G : KernelGame ι) [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
   [Finite G.Outcome]
 
 open Classical in
@@ -35,6 +35,8 @@ theorem mixedNash_support_gain_zero
     {who : ι} {a : G.Strategy who}
     (hpos : (σ who) a ≠ 0) :
     G.mixedGain σ who a = 0 := by
+  classical
+  letI (i : ι) : Fintype (G.Strategy i) := Fintype.ofFinite (G.Strategy i)
   have hgains := (G.isNash_iff_gains_nonpos σ).mp hN
   have hwg := G.weighted_gain_sum_zero σ who
   rw [expect_eq_sum] at hwg
@@ -71,13 +73,15 @@ open Classical in
     strategy played with positive probability has zero EU gain. -/
 theorem mixedNash_support_gain_zero_of_bounded
     {ι : Type} [Fintype ι]
-    (G : KernelGame ι) [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    (G : KernelGame ι) [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     {σ : ∀ i, PMF (G.Strategy i)}
     (hN : G.mixedExtension.IsNash σ)
     {who : ι} {a : G.Strategy who} (hpos : (σ who) a ≠ 0)
     {C : ι → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
     G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who -
       G.mixedExtension.eu σ who = 0 := by
+  classical
+  letI (i : ι) : Fintype (G.Strategy i) := Fintype.ofFinite (G.Strategy i)
   have hgains := (G.isNash_iff_gains_nonpos_of_bounded σ hbd).mp hN
   have hwg := G.weighted_gain_sum_zero_of_bounded σ who (hbd who)
   rw [Math.Probability.expect_eq_sum] at hwg
@@ -96,7 +100,7 @@ open Classical in
     equilibrium yield the same expected utility. -/
 theorem mixedNash_support_eu_eq_of_bounded
     {ι : Type} [Fintype ι]
-    (G : KernelGame ι) [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    (G : KernelGame ι) [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     {σ : ∀ i, PMF (G.Strategy i)}
     (hN : G.mixedExtension.IsNash σ)
     {who : ι} {a b : G.Strategy who}

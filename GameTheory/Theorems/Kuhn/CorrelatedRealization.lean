@@ -96,7 +96,7 @@ variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 
 omit [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)] in
 private theorem pmfPi_heq_of_eq {O : ObsModel ι σ Obs Act}
-    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
+    [Fintype ι]
     {b : BehavioralProfile O} {v₁ v₂ : ∀ i, O.InfoState i} (h : v₁ = v₂) :
     HEq (Math.PMFProduct.pmfPi (fun i => b i (v₁ i)))
         (Math.PMFProduct.pmfPi (fun i => b i (v₂ i))) := by
@@ -1881,14 +1881,15 @@ theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
       hDet.toMassInvariant hDet.toSupportFactorization
       (fun i => by simpa [ObsModel.ActionPosteriorLocal] using hLocal i) μ k)
 
-open Classical in
+omit [∀ i, Fintype (O.InfoState i)] in
 /-- **Kuhn M→B under the weakest current syntactic condition**:
 `PSAR + ∀ i, TracePlayerStepRecall O i`.
 
 This is now a corollary of the semantic theorem
 `kuhn_mixed_to_behavioral_semantic`, using the derived implication
 `TracePlayerStepRecall -> ObsLocalFeasibility -> ActionPosteriorLocal`. -/
-theorem kuhn_mixed_to_behavioral_trace [∀ i o, Nonempty (Act i o)]
+theorem kuhn_mixed_to_behavioral_trace [∀ i, Finite (O.InfoState i)]
+    [∀ i o, Nonempty (Act i o)]
     (hPSAR : PerStepActionRecall O)
     (hTPSR : ∀ i, O.TracePlayerStepRecall i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
@@ -1900,7 +1901,7 @@ theorem kuhn_mixed_to_behavioral_trace [∀ i o, Nonempty (Act i o)]
   letI : ∀ j, Fintype (O.toCore.InfoState j) := by
     intro j
     simpa [ObsModel.toCore, ObsModelCore.InfoState] using
-      (inferInstance : Fintype (O.InfoState j))
+      Fintype.ofFinite (O.InfoState j)
   simpa [ObsModel.toCore, ObsModelCore.runDist, ObsModel.runDist,
     ObsModelCore.runDistPure, ObsModel.runDistPure,
     ObsModelCore.stepDist, ObsModel.stepDist,
@@ -1920,14 +1921,15 @@ theorem kuhn_mixed_to_behavioral_trace [∀ i o, Nonempty (Act i o)]
           hPSAR i (hTPSR i)))
       μ k)
 
-open Classical in
+omit [∀ i, Fintype (O.InfoState i)] in
 /-- **Generalized Kuhn (M→B) under PSPR**: For any product distribution over
 pure profiles, there exists an independent behavioral profile producing the
 same trace distribution.
 
 Corollary of `kuhn_mixed_to_behavioral_semantic` via
 `PerStepPlayerRecall -> ObsLocalFeasibility -> ActionPosteriorLocal`. -/
-theorem kuhn_mixed_to_behavioral_pspr [∀ i o, Nonempty (Act i o)]
+theorem kuhn_mixed_to_behavioral_pspr [∀ i, Finite (O.InfoState i)]
+    [∀ i o, Nonempty (Act i o)]
     (hPSPR : PerStepPlayerRecall O) (μ : ∀ i, PMF (O.LocalStrategy i))
     (k : Nat) :
     ∃ β : BehavioralProfile O,
@@ -1937,7 +1939,7 @@ theorem kuhn_mixed_to_behavioral_pspr [∀ i o, Nonempty (Act i o)]
   letI : ∀ j, Fintype (O.toCore.InfoState j) := by
     intro j
     simpa [ObsModel.toCore, ObsModelCore.InfoState] using
-      (inferInstance : Fintype (O.InfoState j))
+      Fintype.ofFinite (O.InfoState j)
   exact kuhn_mixed_to_behavioral_semantic hPSPR.toAction
     (fun i => by
       simpa [ObsModel.ActionPosteriorLocal] using
@@ -1946,7 +1948,7 @@ theorem kuhn_mixed_to_behavioral_pspr [∀ i o, Nonempty (Act i o)]
           ((obsLocalFeasibility_of_pspr hPSPR i : O.ObsLocalFeasibility i)))
     μ k
 
-open Classical in
+omit [∀ i, Fintype (O.InfoState i)] in
 /-- **Per-player Kuhn M→B**: each player individually needs `PlayerStepRecall`.
 Logically equivalent to `kuhn_mixed_to_behavioral_pspr` since
 `PSPR ↔ ∀ i, PlayerStepRecall O i` (and PSPR → PSAR).
@@ -1957,6 +1959,7 @@ conditions), while each player's factor obs-locality uses only their own
 `PlayerStepRecall`. See `reweightPMF_update_obs_local_player` for the
 per-player lemma. -/
 theorem kuhn_mixed_to_behavioral_decomposed [∀ i o, Nonempty (Act i o)]
+    [∀ i, Finite (O.InfoState i)]
     (hPSR : ∀ i, PlayerStepRecall O i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
     (k : Nat) :

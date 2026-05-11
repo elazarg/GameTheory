@@ -643,6 +643,7 @@ section BehavioralAdequacy
 
 variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Option A)]
 
+omit [Fintype (Option A)] in
 /-- Resolve players `pVal, pVal+1, ..., n-1` by sampling from behavioral
 strategies, accumulating actions into `accActs`. -/
 noncomputable def resolveActionsMixed
@@ -657,6 +658,7 @@ noncomputable def resolveActionsMixed
     PMF.pure accActs
   termination_by (n - pVal)
 
+omit [Fintype (Option A)] in
 private theorem resolveActionsMixed_gen [Fintype (Fin n)]
     (σ : BehavioralProfile n V A) (r : Round n S V A Sig)
     (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A) :
@@ -719,6 +721,7 @@ private theorem resolveActionsMixed_gen [Fintype (Fin n)]
       have hne : i.val ≠ pVal := fun h => hi (Fin.ext h)
       congr 1; ext; constructor <;> intro h <;> omega
 
+omit [Fintype (Option A)] in
 /-- Resolving from player 0 with default actions equals the joint behavioral
 sampling `pmfPi (fun i => σ i (r.view i s (sig i)))`. -/
 theorem resolveActionsMixed_eq_pmfPi [Fintype (Fin n)]

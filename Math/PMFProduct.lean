@@ -158,11 +158,12 @@ noncomputable def pmfPi [Fintype ι] (σ : ∀ i, PMF (A i)) : PMF (∀ i, A i) 
      rw [ENNReal_tsum_pi (g := fun i a => σ i a)]
      simp [PMF.tsum_coe])⟩
 
+omit [DecidableEq ι] in
 @[simp] lemma pmfPi_apply [Fintype ι]
     (σ : ∀ i, PMF (A i)) (s : ∀ i, A i) :
     pmfPi (A := A) σ s = ∏ i, σ i (s i) := rfl
 
-open Classical in
+omit [DecidableEq ι] in
 /-- Product of point masses is a point mass at the joint assignment. -/
 theorem pmfPi_pure [Fintype ι] (σ : ∀ i, A i) :
     pmfPi (fun i => (PMF.pure (σ i) : PMF (A i))) = PMF.pure σ := by
@@ -433,14 +434,17 @@ theorem sum_pmfPi_factor
         simp [W, Fintype.sum_prod_type, Finset.mul_sum,
           prod_factor_erase σ j, mul_left_comm, mul_comm]
 
+omit [∀ i, Fintype (A i)] in
 /-- Bind factorization over a coordinate when the continuation ignores that coordinate. -/
-theorem pmfPi_bind_factor
+theorem pmfPi_bind_factor [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι)
     (g : A j → (∀ i, A i) → PMF β)
     (hg : Ignores₂ (A := A) j g) :
     (pmfPi (A := A) σ).bind (fun s => g (s j) s)
       =
     (σ j).bind (fun a => (pmfPi (A := A) σ).bind (fun s => g a s)) := by
+  classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   ext b
   simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
   exact sum_pmfPi_factor σ j (fun a s => g a s b) (fun a0 s a => by
@@ -448,11 +452,13 @@ theorem pmfPi_bind_factor
     -- hg gives: g a0 (update s j a) = g a0 s  (as PMFs)
     exact congrFun (congrArg DFunLike.coe (hg a0 s a)) b)
 
+omit [DecidableEq ι] [∀ i, Fintype (A i)] in
 /-- Marginalization: binding over the product and projecting to coordinate `j`
 equals binding directly from the `j`-th marginal. -/
-theorem pmfPi_bind_eval
+theorem pmfPi_bind_eval [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) {β : Type*} (f : A j → PMF β) :
     (pmfPi (A := A) σ).bind (fun s => f (s j)) = (σ j).bind f := by
+  classical
   have hg : Ignores₂ (A := A) j (fun a (_ : ∀ i, A i) => f a) :=
     fun _ _ _ => rfl
   change (pmfPi (A := A) σ).bind
@@ -476,14 +482,17 @@ variable {α : Type uα} {β : Type uβ}
 -- so existing `PMFProduct.pushforward` references continue to resolve.
 export Math.ProbabilityMassFunction (pushforward pushforward_comp)
 
-open Classical in
+omit [DecidableEq ι] [∀ i, Fintype (A i)] in
 /-- The pushforward of a product PMF through a coordinate-wise function
     is the product of pushforwards. -/
 theorem pmfPi_push_coordwise
-    {B : ι → Type*} [∀ i, Fintype (B i)]
+    {B : ι → Type*} [∀ i, Finite (A i)] [∀ i, Finite (B i)]
     (μ : ∀ i, PMF (A i)) (g : ∀ i, A i → B i) :
     pushforward (pmfPi (A := A) μ) (fun f => fun i => g i (f i))
       = pmfPi (A := B) (fun i => pushforward (μ i) (g i)) := by
+  classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
+  letI (i : ι) : Fintype (B i) := Fintype.ofFinite (B i)
   change (pmfPi (A := A) μ).bind (fun a => PMF.pure (fun i => g i (a i))) =
     pmfPi (A := B) (fun i => (μ i).bind (fun a => PMF.pure (g i a)))
   ext b
@@ -534,12 +543,14 @@ theorem pmfPi_coord_mass
     · simp [h]
   simp_rw [h_factor, ← Finset.mul_sum, h_sum, mul_one]
 
-open Classical in
+omit [DecidableEq ι] [∀ i, Fintype (A i)] in
 /-- The pushforward of a product distribution along a coordinate
     is the factor at that coordinate. -/
-theorem pmfPi_push_coord
+theorem pmfPi_push_coord [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) :
     pushforward (pmfPi (A := A) σ) (fun s => s j) = σ j := by
+  classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   change (pmfPi (A := A) σ).bind (fun s => PMF.pure (s j)) = σ j
   ext a
   simp only [PMF.bind_apply, PMF.pure_apply,
@@ -920,17 +931,19 @@ theorem pmfPi_update_bind (σ : ∀ i, PMF (A i)) (j : ι) (d : PMF (A j)) :
 
 variable [∀ i, Fintype (A i)]
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- When `f` ignores coordinate `j`, the bind of a deterministic
     product (with `pure a` at `j`) through `f` is independent of `a`.
     This is the core step for marginalizing an irrelevant coordinate. -/
-private theorem pmfPi_pure_bind_ignores
+private theorem pmfPi_pure_bind_ignores [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (a a' : A j)
     {β : Type*}
     (f : (∀ i, A i) → PMF β)
     (hf : Ignores j f) :
     (pmfPi (Function.update σ j (PMF.pure a))).bind f =
       (pmfPi (Function.update σ j (PMF.pure a'))).bind f := by
+  classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   ext t; simp only [PMF.bind_apply, pmfPi_apply_update_family,
     PMF.pure_apply, tsum_fintype]
   -- Use Equiv.swap at coordinate j to biject the two sums
@@ -967,11 +980,11 @@ private theorem pmfPi_pure_bind_ignores
     · simp [h', Equiv.swap_apply_right, eq_comm]
     · simp [h, h', Equiv.swap_apply_of_ne_of_ne h h']
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- If `f` ignores coordinate `j`, then `(pmfPi σ).bind f` is
     independent of `σ j`. That is, updating `σ j` does not change
     the expected value of `f` under the product. -/
-theorem pmfPi_bind_ignores_coord
+theorem pmfPi_bind_ignores_coord [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
     {β : Type*}
     (f : (∀ i, A i) → PMF β)
@@ -996,13 +1009,13 @@ theorem pmfPi_bind_ignores_coord
     fun a => pmfPi_pure_bind_ignores σ j a a₀ f hf
   simp_rw [hconst]; simp [PMF.bind_const]
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- Repeated coordinate updates do not change `pmfPi.bind f` when `f`
     ignores every updated coordinate.
 
     This is a list-iterated form of `pmfPi_bind_ignores_coord`, useful when
     many coordinates are rewritten one-by-one. -/
-theorem pmfPi_bind_ignores_coord_list
+theorem pmfPi_bind_ignores_coord_list [∀ i, Finite (A i)]
     (σ τ : ∀ i, PMF (A i))
     {β : Type*}
     (f : (∀ i, A i) → PMF β)
@@ -1029,9 +1042,9 @@ theorem pmfPi_bind_ignores_coord_list
               exact ih (σ := Function.update σ j (τ j)) hNodupRest hfRest
         _ = (pmfPi σ).bind f := pmfPi_bind_ignores_coord σ j (τ j) f hfj
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- Finset wrapper for `pmfPi_bind_ignores_coord_list`. -/
-theorem pmfPi_bind_ignores_coord_finset
+theorem pmfPi_bind_ignores_coord_finset [∀ i, Finite (A i)]
     (σ τ : ∀ i, PMF (A i))
     {β : Type*}
     (f : (∀ i, A i) → PMF β)
@@ -1043,10 +1056,10 @@ theorem pmfPi_bind_ignores_coord_finset
   intro j hj
   exact hf j ((Finset.mem_toList.mp hj))
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- If a continuation ignores every coordinate, binding it under any product PMF
     collapses to the same constant PMF value. -/
-theorem pmfPi_bind_eq_of_forall_ignores
+theorem pmfPi_bind_eq_of_forall_ignores [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i))
     {β : Type*}
     (g : (∀ i, A i) → PMF β)
@@ -1074,11 +1087,11 @@ theorem pmfPi_bind_eq_of_forall_ignores
     (pmfPi σ).bind g = (pmfPi τ).bind g := hbind.symm
     _ = g s0 := by simp [τ, pmfPi_pure]
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- "Fresh bind" corollary: if `g` ignores every coordinate, then
     integrating `g` against any product PMF equals evaluating `g` at an
     assignment chosen from each factor's support. -/
-theorem pmfPi_bind_comm_fresh_support
+theorem pmfPi_bind_comm_fresh_support [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i))
     {β : Type*}
     (g : (∀ i, A i) → PMF β)
@@ -1087,9 +1100,9 @@ theorem pmfPi_bind_comm_fresh_support
   pmfPi_bind_eq_of_forall_ignores (σ := σ) (g := g) hg
     (fun i => (σ i).support_nonempty.choose)
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- Arbitrary-point variant of `pmfPi_bind_comm_fresh_support`. -/
-theorem pmfPi_bind_comm_fresh
+theorem pmfPi_bind_comm_fresh [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i))
     {β : Type*}
     (g : (∀ i, A i) → PMF β)
@@ -1099,13 +1112,15 @@ theorem pmfPi_bind_comm_fresh
   pmfPi_bind_eq_of_forall_ignores (σ := σ) (g := g) hg
     (fun i => Classical.arbitrary (A i))
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- Binding a product PMF with a function-dependent coordinate update equals the
     product with that component replaced by the pushforward. -/
-theorem pmfPi_bind_update_map
+theorem pmfPi_bind_update_map [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (f : A j → A j) :
     (pmfPi σ).bind (fun s => PMF.pure (Function.update s j (f (s j)))) =
       pmfPi (Function.update σ j (PMF.map f (σ j))) := by
+  classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   ext s
   simp only [PMF.bind_apply, PMF.pure_apply, pmfPi_apply_update_family,
     PMF.map_apply, tsum_fintype, mul_ite, mul_one, mul_zero]
@@ -1153,11 +1168,11 @@ theorem pmfPi_bind_update_map
     (fun a _ => by simp [Function.update_self])
     (fun _ _ => by simp [eq_comm])
 
-open Classical in
+omit [∀ i, Fintype (A i)] in
 /-- Binding a product PMF with a constant coordinate update equals the product
     with that component replaced by a point mass. Special case of
     `pmfPi_bind_update_map` with `f = fun _ => x`. -/
-theorem pmfPi_bind_update_pure
+theorem pmfPi_bind_update_pure [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (x : A j) :
     (pmfPi σ).bind (fun s => PMF.pure (Function.update s j x)) =
       pmfPi (Function.update σ j (PMF.pure x)) := by
@@ -1487,13 +1502,12 @@ lemma replaceOn_univ_diff [Fintype ι] (J : Finset ι) (x y : ∀ i, A i) :
   · simp [replaceOn, hi]
   · simp [replaceOn, hi]
 
-open Classical in
 /-- **Product-measure independence for bind.**
     If `f` uses only `J`-coordinates (i.e., ignores all `j ∉ J`) and
     `g b` ignores `J`-coordinates, then drawing once from `pmfPi σ` and
     using the same sample for both `f` and `g` gives the same distribution
     as drawing independently for each. -/
-theorem pmfPi_bind_indep [Fintype ι] [∀ i, Fintype (A i)]
+theorem pmfPi_bind_indep [Fintype ι] [∀ i, Finite (A i)]
     {β γ : Type*} [Finite β]
     (σ : ∀ i, PMF (A i))
     (f : (∀ i, A i) → PMF β)
@@ -1505,6 +1519,7 @@ theorem pmfPi_bind_indep [Fintype ι] [∀ i, Fintype (A i)]
     (pmfPi σ).bind (fun s => (f s).bind (fun b =>
       (pmfPi σ).bind (fun t => g b t))) := by
   classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   letI : Fintype β := Fintype.ofFinite β
   ext y
   simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
@@ -1748,7 +1763,6 @@ lemma Ignores_finset_prod
   intro s a
   exact Finset.prod_congr rfl (fun k hk => hF k hk s a)
 
-open Classical in
 /-- **Cross-index product-bind factorization.**
 
 If each factor `G a k` of the inner product depends on at most one
@@ -1765,8 +1779,8 @@ of individual bindings.
 Proof: by `Finset.induction_on`, peeling off one factor at a time using
 `pmfPi_expect_indep` (E[f·g] = E[f]·E[g] for independent f, g). -/
 theorem pmfPi_bind_pmfPi_of_disjoint_coords
-    {ι : Type*} [Fintype ι] [DecidableEq ι] {A : ι → Type*} [∀ i, Fintype (A i)]
-    {κ : Type*} [Fintype κ] {B : κ → Type*} [∀ k, Fintype (B k)]
+    {ι : Type*} [Fintype ι] [DecidableEq ι] {A : ι → Type*} [∀ i, Finite (A i)]
+    {κ : Type*} [Fintype κ] {B : κ → Type*} [∀ k, Finite (B k)]
     (σ : ∀ i, PMF (A i))
     (G : (∀ i, A i) → ∀ k, PMF (B k))
     (coord : κ → Option ι)
@@ -1776,6 +1790,9 @@ theorem pmfPi_bind_pmfPi_of_disjoint_coords
     (h_inj : ∀ k₁ k₂ i, coord k₁ = some i → coord k₂ = some i → k₁ = k₂) :
     (pmfPi σ).bind (fun a => pmfPi (G a)) =
       pmfPi (fun k => (pmfPi σ).bind (fun a => G a k)) := by
+  classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
+  letI (k : κ) : Fintype (B k) := Fintype.ofFinite (B k)
   ext vals
   simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
   -- Helper: Ignores on PMFs implies Ignores on pointwise values
@@ -1837,13 +1854,16 @@ theorem pmfPi_bind_pmfPi_of_disjoint_coords
 
 /-- Product of mapped marginals distributes over bind:
 `(pmfPi (fun i => (σ i).map (f i))).bind g = (pmfPi σ).bind (fun s => g (fun i => f i (s i)))`. -/
-theorem pmfPi_map_bind {ι : Type uι} [Fintype ι] [DecidableEq ι]
-    {A : ι → Type uA} [∀ i, Fintype (A i)]
-    {B : ι → Type uβ} [∀ i, Fintype (B i)]
+theorem pmfPi_map_bind {ι : Type uι} [Fintype ι]
+    {A : ι → Type uA} [∀ i, Finite (A i)]
+    {B : ι → Type uβ} [∀ i, Finite (B i)]
     (σ : ∀ i, PMF (A i)) (f : ∀ i, A i → B i)
     {γ : Type uγ} (g : (∀ i, B i) → PMF γ) :
     (pmfPi (A := B) (fun i => (σ i).map (f i))).bind g =
       (pmfPi (A := A) σ).bind (fun s => g (fun i => f i (s i))) := by
+  classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
+  letI (i : ι) : Fintype (B i) := Fintype.ofFinite (B i)
   ext c
   simp only [PMF.bind_apply, pmfPi_apply, tsum_fintype]
   -- Expand PMF.map_apply

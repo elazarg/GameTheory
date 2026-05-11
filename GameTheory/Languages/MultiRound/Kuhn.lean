@@ -105,7 +105,6 @@ protocol-level recall condition (e.g. perfect recall). -/
 theorem kuhn_mixed_to_behavioral_compiledLin
     [Fintype A] [Nonempty A]
     [∀ i, Fintype ((compiledLinObs' G).InfoState i)]
-    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
     (hAPL : ∀ i, ObsModelCore.ActionPosteriorLocal (compiledLinObs' G) i)
     (μ : ∀ i, PMF ((compiledLinObs' G).LocalStrategy i))
     (k : Nat) :
@@ -145,7 +144,6 @@ and the core M→B theorem. -/
 theorem kuhn_mixed_to_behavioral_fullRecall
     [Fintype A] [Nonempty A]
     [∀ i, Finite ((compiledLinObs' G).InfoState i)]
-    [∀ i, Fintype ((compiledLinObs' G).LocalStrategy i)]
     (hFR : G.FullRecall)
     (μ : ∀ i, PMF ((compiledLinObs' G).LocalStrategy i))
     (k : Nat) :
@@ -171,7 +169,7 @@ with the same outcome distribution as `MultiRoundGame.eval`.
 The behavioral profile lives on the compiled model. The RHS is the native
 protocol evaluation: `(pmfPi μ).bind (MultiRoundGame.eval G)`. -/
 theorem kuhn_mixed_to_behavioral_native
-    [DecidableEq V] [Fintype V] [Fintype A] [Nonempty A]
+    [Finite V] [Fintype A] [Nonempty A]
     (hFR : G.FullRecall)
     (μ : (i : Fin n) → PMF (PureStrategy V A))
     (k : Nat) (hk : k ≥ G.rounds.length * (n + 2)) :
@@ -179,6 +177,7 @@ theorem kuhn_mixed_to_behavioral_native
       ((compiledLinObs' G).runDist k β).bind
         (fun ss => PMF.pure (extractState G ss)) =
       (Math.PMFProduct.pmfPi μ).bind (fun σ => G.eval σ) := by
+  classical
   obtain ⟨β, hβ⟩ := kuhn_mixed_to_behavioral_fullRecall G hFR
     (liftMixedProfile (G := G) μ) k
   refine ⟨β, ?_⟩
@@ -201,6 +200,7 @@ theorem kuhn_mixed_to_behavioral_native
 -- Fully native M→B: stated entirely on MultiRoundGame types
 -- ============================================================================
 
+omit [DecidableEq (Fin n)] in
 /-- **Kuhn M→B (fully native)**: under full recall and view-determines-round,
 every product mixed strategy profile can be realized by a behavioral strategy
 profile with the same outcome distribution.
@@ -209,13 +209,14 @@ Both LHS and RHS use native MultiRound types — no compiled model in the statem
 The compiled model is used internally to construct the behavioral profile
 via the core M→B theorem. -/
 theorem kuhn_mixed_to_behavioral_sequential
-    [DecidableEq V] [Fintype V] [Fintype A] [Nonempty A]
+    [Finite V] [Fintype A] [Nonempty A]
     [Nonempty (Fin G.rounds.length)]
     (hFR : G.FullRecall)
     (hVRD : G.ViewDeterminesRound)
     (μ : (i : Fin n) → PMF (PureStrategy V A)) :
     ∃ σ : BehavioralProfile n V A,
       G.evalMixed σ = (Math.PMFProduct.pmfPi μ).bind (fun π => G.eval π) := by
+  classical
   -- Step 1: Get compiled behavioral profile β from core M→B
   set k := G.rounds.length * (n + 2)
   obtain ⟨β, hβ⟩ := kuhn_mixed_to_behavioral_fullRecall G hFR
@@ -265,6 +266,7 @@ theorem kuhn_behavioral_to_mixed_compiledLin
   ObsModelCore.kuhn_behavioral_to_mixed
     (noNontrivialInfoStateRepeat_compiledLin G) β k
 
+omit [DecidableEq (Fin n)] in
 /-- **Kuhn B→M (fully native)**: under `ViewDeterminesRound`, every behavioral
 strategy profile can be realized by a product mixed strategy with the same
 outcome distribution.
@@ -273,12 +275,13 @@ Both LHS and RHS use native MultiRound types. The compiled model is used
 internally. The `NoNontrivialInfoStateRepeat` condition holds unconditionally
 on the linearized model (no recall assumption needed for B→M). -/
 theorem kuhn_behavioral_to_mixed_sequential
-    [DecidableEq V] [Fintype V] [Fintype A] [Nonempty A]
+    [Finite V] [Fintype A] [Nonempty A]
     [Nonempty (Fin G.rounds.length)]
     (hVRD : G.ViewDeterminesRound)
     (σ : BehavioralProfile n V A) :
     ∃ μ : ∀ _i, PMF (PureStrategy V A),
       G.evalMixed σ = (Math.PMFProduct.pmfPi μ).bind (fun π => G.eval π) := by
+  classical
   set k := G.rounds.length * (n + 2)
   -- 1. Lift native behavioral to compiled
   set β := liftBehavioralProfile (G := G) σ

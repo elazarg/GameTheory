@@ -28,18 +28,18 @@ variable {ι : Type} [DecidableEq ι]
 -- EU in the mixed extension
 -- ============================================================================
 
-open Classical in
+omit [DecidableEq ι] in
 /-- EU in the mixed extension equals expectation of pure-profile EU
     under the independent product distribution. -/
 theorem mixedExtension_eu (G : KernelGame ι)
     [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] [Finite G.Outcome]
+    [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     G.mixedExtension.eu σ who =
       expect (pmfPi σ) (fun s => G.eu s who) := by
   simp only [mixedExtension, eu, expect_bind]
 
-open Classical in
+omit [DecidableEq ι] in
 /-- EU in the mixed extension under bounded utility, for a kernel game whose
 outcome type may be countably infinite. -/
 theorem mixedExtension_eu_of_bounded (G : KernelGame ι)
@@ -57,11 +57,13 @@ open Classical in
     EUs under `τ`. -/
 theorem mixedExtension_eu_update (G : KernelGame ι)
     [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] [Finite G.Outcome]
+    [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (τ : PMF (G.Strategy who)) :
     G.mixedExtension.eu (Function.update σ who τ) who =
       expect τ (fun a =>
         G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) := by
+  classical
+  letI (i : ι) : Fintype (G.Strategy i) := Fintype.ofFinite (G.Strategy i)
   simp only [mixedExtension_eu, KernelGame.mixedExtension_Strategy]
   have hprod : pmfPi (Function.update σ who τ) =
       τ.bind (fun a => pmfPi (Function.update σ who (PMF.pure a))) := by
@@ -231,7 +233,7 @@ section NashGain
 
 variable [Fintype ι]
 variable (G : KernelGame ι)
-variable [∀ i, Fintype (G.Strategy i)]
+variable [∀ i, Finite (G.Strategy i)]
 variable [Finite G.Outcome]
 
 open Classical in
@@ -246,6 +248,8 @@ open Classical in
 theorem weighted_gain_sum_zero
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     expect (σ who) (fun a => G.mixedGain σ who a) = 0 := by
+  classical
+  letI (i : ι) : Fintype (G.Strategy i) := Fintype.ofFinite (G.Strategy i)
   simp only [mixedGain, expect_eq_sum]
   have hsum1 : ∑ a : G.Strategy who, ((σ who) a).toReal = 1 := by
     simpa using pmf_toReal_sum_one (σ who)

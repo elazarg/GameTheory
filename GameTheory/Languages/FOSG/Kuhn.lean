@@ -3494,7 +3494,7 @@ noncomputable def legalBehavioralProfileRestrictReachable
 
 theorem legalPureMixedProfileRestrictReachable_joint
     [Fintype ι] [Fintype G.History] [∀ i, Fintype (Option (Act i))]
-    [∀ i, Fintype (G.LegalPureStrategy i)]
+    [∀ i, Finite (G.LegalPureStrategy i)]
     (μ : ∀ i, PMF (G.LegalPureStrategy i)) :
     reachableMixedProfileJoint
         (G := G) (legalPureMixedProfileRestrictReachable (G := G) μ) =
@@ -3556,7 +3556,7 @@ witness back to the ordinary total FOSG strategy space. -/
 theorem mixed_legalPure_to_legalBehavioral_runDist
     [Fintype ι] [Fintype W] [Finite G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
-    [∀ i, Fintype (G.LegalPureStrategy i)]
+    [∀ i, Finite (G.LegalPureStrategy i)]
     (hLeg : G.LegalObservable)
     (μ : ∀ i, PMF (G.LegalPureStrategy i))
     (k : Nat) :
@@ -4516,6 +4516,7 @@ private theorem swapReachableProfileBy_involutive
   · funext i v
     by_cases hv : P i v <;> simp [swapReachableProfileBy, hv]
 
+omit [∀ i, Fintype (Act i)] in
 private theorem swapReachableBy_weight_eq
     (P : ∀ i, G.ReachableInfoState i → Prop)
     (β : ReachableBehavioralProfile (G := G))

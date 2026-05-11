@@ -29,6 +29,8 @@ open Math.Probability
 namespace KernelGame
 open Math.PMFProduct
 
+attribute [local instance] Fintype.ofFinite
+
 variable {ι : Type} {G : KernelGame ι}
 
 /-- Correlated EU under a point-mass distribution equals the standard EU. -/
@@ -78,7 +80,7 @@ open Classical in
     component replaced by the pushforward of the original through `dev`. -/
 theorem unilateralDeviationDistribution_pmfPi
     {G : KernelGame ι}
-    [Fintype ι] [∀ i, Fintype (G.Strategy i)]
+    [Fintype ι] [∀ i, Finite (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     (dev : G.Strategy who → G.Strategy who) :
     G.unilateralDeviationDistribution (pmfPi σ) who dev =
@@ -98,7 +100,7 @@ open Classical in
     player `who`'s EU. -/
 theorem mixed_nash_isCorrelatedEq
     {G : KernelGame ι}
-    [Fintype ι] [∀ i, Fintype (G.Strategy i)] [Finite G.Outcome]
+    [Fintype ι] [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ) :
     G.IsCorrelatedEq (pmfPi σ) := by

@@ -603,7 +603,7 @@ open Classical in
     finite outcomes) admits a mixed-strategy Nash equilibrium. -/
 theorem mixed_nash_exists (G : KernelGame ι)
     [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     [Finite G.Outcome] :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ :=
   G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point

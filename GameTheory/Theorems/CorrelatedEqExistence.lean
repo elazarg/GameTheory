@@ -39,7 +39,7 @@ open Classical in
     Corollary of `mixed_nash_isCorrelatedEq` via `toCoarseCorrelatedEq`. -/
 theorem mixed_nash_isCoarseCorrelatedEq
     {G : KernelGame ι}
-    [Fintype ι] [∀ i, Fintype (G.Strategy i)] [Finite G.Outcome]
+    [Fintype ι] [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ) :
     G.IsCoarseCorrelatedEq (pmfPi σ) :=

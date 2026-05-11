@@ -98,39 +98,12 @@ end StepwiseGame
 
 section DeterministicPolicy
 
-variable {A : ι → Type} [∀ i, Fintype (A i)]
+variable {A : ι → Type}
 
-open Classical in
 /-- Product of point masses is a point mass at the joint assignment. -/
 theorem pmfPi_pure (σ : ∀ i, A i) :
-    pmfPi (fun i => (PMF.pure (σ i) : PMF (A i))) = PMF.pure σ := by
-  classical
-  ext s
-  by_cases hs : s = σ
-  · subst hs
-    simp [pmfPi_apply]
-  · have hneq : ¬ ∀ i, s i = σ i := by
-      intro hall
-      apply hs
-      funext i
-      exact hall i
-    obtain ⟨i, hi⟩ := not_forall.mp hneq
-    have hfactor0 : (if s i = σ i then (1 : ENNReal) else 0) = 0 := by
-      simp [hi]
-    have hprod0 :
-        (∏ x : ι, (if s x = σ x then (1 : ENNReal) else 0)) = 0 := by
-      calc
-        (∏ x : ι, (if s x = σ x then (1 : ENNReal) else 0))
-            = (if s i = σ i then (1 : ENNReal) else 0) *
-              (Finset.prod (Finset.univ.erase i)
-                (fun x => (if s x = σ x then (1 : ENNReal) else 0))) := by
-                simpa [Finset.mem_univ] using
-                  (Finset.mul_prod_erase
-                    (s := (Finset.univ : Finset ι))
-                    (f := fun x => (if s x = σ x then (1 : ENNReal) else 0))
-                    (a := i) (by simp)).symm
-        _ = 0 := by simp [hfactor0]
-    simpa [pmfPi_apply, PMF.pure_apply, hs] using hprod0
+    pmfPi (fun i => (PMF.pure (σ i) : PMF (A i))) = PMF.pure σ :=
+  Math.PMFProduct.pmfPi_pure σ
 
 variable (K : PreKernelStep ι)
 
