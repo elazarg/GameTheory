@@ -71,10 +71,41 @@ theorem ENNReal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     rw [ih]
     rw [Fin.prod_univ_succ (f := fun i => ∑' a, g i a)]
 
--- TODO: a `Fintype`-version of `ENNReal_tsum_pi_fin` is the goal but requires
--- careful handling of the dependent-type cast in `Equiv.piCongrLeft'`. The
--- Fin-version above is sufficient for callers willing to do their own
--- equiv-transfer; the Fintype version is deferred to a future iteration.
+/-- Transfer of `ENNReal_tsum_pi_fin` to arbitrary `Fintype` index types.
+
+For any Fintype-indexed dependent family `A : ι → Type*` and a family of
+nonneg measure-like functions `g : ∀ i, A i → ENNReal`, the sum-of-products
+over the product space equals the product-of-sums:
+
+  ∑' s : (∀ i, A i), ∏ i, g i (s i) = ∏ i, ∑' a, g i a
+
+Proved by transferring along `Equiv.piCongrLeft A e` where `e : Fin n ≃ ι`
+comes from `Fintype.equivFin`. Using `piCongrLeft` (rather than `piCongrLeft'`)
+gives the clean `piCongrLeft_apply_apply` simp lemma that resolves the
+dependent-type cast without manual cast manipulation. -/
+theorem ENNReal_tsum_pi {ι : Type*} [Fintype ι] {A : ι → Type*}
+    (g : (i : ι) → A i → ENNReal) :
+    ∑' s : ((i : ι) → A i), ∏ i, g i (s i) = ∏ i, ∑' a : A i, g i a := by
+  classical
+  set e : Fin (Fintype.card ι) ≃ ι := (Fintype.equivFin ι).symm
+  -- `ePi : (∀ j : Fin n, A (e j)) ≃ (∀ i : ι, A i)`
+  set ePi : ((j : Fin (Fintype.card ι)) → A (e j)) ≃ ((i : ι) → A i) :=
+    Equiv.piCongrLeft A e
+  -- Transfer the tsum from the ι-side to the Fin-side.
+  rw [← ePi.tsum_eq (f := fun s => ∏ i, g i (s i))]
+  -- Reindex the inner product over ι via `e` to Fin n.
+  have h_prod : ∀ t : ((j : Fin (Fintype.card ι)) → A (e j)),
+      (∏ i : ι, g i (ePi t i)) = ∏ j, g (e j) (t j) := by
+    intro t
+    rw [← e.prod_comp (g := fun i => g i (ePi t i))]
+    apply Finset.prod_congr rfl
+    intro j _
+    show g (e j) (ePi t (e j)) = g (e j) (t j)
+    -- `piCongrLeft_apply_apply` reduces `ePi t (e j) = t j` without cast.
+    rw [show (ePi t (e j) : A (e j)) = t j from Equiv.piCongrLeft_apply_apply A e t j]
+  simp_rw [h_prod]
+  rw [ENNReal_tsum_pi_fin (A := fun j => A (e j)) (g := fun j a => g (e j) a)]
+  rw [← e.prod_comp (g := fun i => ∑' a : A i, g i a)]
 
 section Aux
 
@@ -131,18 +162,19 @@ variable {A : ι → Type uA}
 -- ---- Product PMF --------------------------------------------------------
 
 open Classical in
-/-- Product PMF over a finite index type: independently sample each coordinate. -/
-noncomputable def pmfPi [Fintype ι] [∀ i, Fintype (A i)]
-    (σ : ∀ i, PMF (A i)) : PMF (∀ i, A i) :=
-  PMF.ofFintype (fun s => ∏ i, σ i (s i)) (by
-    rw [← Fintype.prod_sum]
-    have : ∀ i, ∑ j : A i, (σ i) j = 1 := fun i => pmf_sum_eq_one (σ i)
-    simp [this])
+/-- Product PMF over a finite-indexed family of arbitrary PMFs: independently
+sample each coordinate. The factor types `A i` may be uncountable in principle
+but the resulting PMF only puts mass on the at-most-countable support of the
+factor PMFs, so the construction is sound for any `A i`. -/
+noncomputable def pmfPi [Fintype ι] (σ : ∀ i, PMF (A i)) : PMF (∀ i, A i) :=
+  ⟨fun s => ∏ i, σ i (s i),
+   ENNReal.summable.hasSum_iff.2 (by
+     rw [ENNReal_tsum_pi (g := fun i a => σ i a)]
+     simp [PMF.tsum_coe])⟩
 
-@[simp] lemma pmfPi_apply [Fintype ι] [∀ i, Fintype (A i)]
+@[simp] lemma pmfPi_apply [Fintype ι]
     (σ : ∀ i, PMF (A i)) (s : ∀ i, A i) :
-    pmfPi (A := A) σ s = ∏ i, σ i (s i) := by
-  simp [pmfPi, PMF.ofFintype_apply]
+    pmfPi (A := A) σ s = ∏ i, σ i (s i) := rfl
 
 open Classical in
 /-- Product of point masses is a point mass at the joint assignment. -/

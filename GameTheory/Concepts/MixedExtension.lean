@@ -37,7 +37,7 @@ theorem mixedExtension_eu (G : KernelGame ι)
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     G.mixedExtension.eu σ who =
       expect (pmfPi σ) (fun s => G.eu s who) := by
-  simp only [mixedExtension, eu, expect_bind]; rfl
+  simp only [mixedExtension, eu, expect_bind]
 
 open Classical in
 /-- EU in the mixed extension, without `[Finite G.Outcome]`, under bounded utility. -/
