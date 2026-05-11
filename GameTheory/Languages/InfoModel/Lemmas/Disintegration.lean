@@ -15,7 +15,7 @@ theorem mixedEval_disintegrate_coordinate
     [DecidableEq ι]
     [∀ i, Fintype (LocalPure (I := I) i)]
     [∀ i, Fintype (Option (Act i))]
-    [Fintype (PureProfile I)]
+    [Finite (PureProfile I)]
     (μ : MixedProfile (I := I))
     (k : Nat)
     (i : ι) (v : I.LocalTrace i) :
@@ -28,6 +28,7 @@ theorem mixedEval_disintegrate_coordinate
             (mixedJoint (I := I) μ)
             (pureActionAt (I := I) i v) a).bind
             (D.evalPure k)) := by
+  letI : Fintype (PureProfile I) := Fintype.ofFinite (PureProfile I)
   simpa [evalMixedCanonical, pureActionAt] using
     (Math.ProbabilityMassFunction.bind_pushforward_condOn
       (μ := mixedJoint (I := I) μ) (proj := pureActionAt (I := I) i v) (g := D.evalPure k))
