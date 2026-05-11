@@ -139,6 +139,7 @@ variable (G : KernelGame ι)
 open Classical in
 /-- Expected pure-deviation gain under the current mixed strategy is zero. -/
 theorem weighted_gain_sum_zero_of_bounded
+    [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
     expect (σ who)
@@ -177,6 +178,7 @@ open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive,
     under bounded utility. -/
 theorem isNash_iff_gains_nonpos_of_bounded
+    [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i))
     {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
     G.mixedExtension.IsNash σ ↔
