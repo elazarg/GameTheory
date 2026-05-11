@@ -40,9 +40,10 @@ theorem mixedExtension_eu (G : KernelGame ι)
   simp only [mixedExtension, eu, expect_bind]
 
 open Classical in
-/-- EU in the mixed extension, without `[Finite G.Outcome]`, under bounded utility. -/
+/-- EU in the mixed extension, without `[Finite G.Outcome]` or
+`[∀ i, Fintype (G.Strategy i)]`, under bounded utility. -/
 theorem mixedExtension_eu_of_bounded (G : KernelGame ι)
-    [Fintype ι] [∀ i, Fintype (G.Strategy i)]
+    [Fintype ι]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
     G.mixedExtension.eu σ who =
@@ -71,7 +72,14 @@ theorem mixedExtension_eu_update (G : KernelGame ι)
   rw [hprod, expect_bind]
 
 open Classical in
-/-- EU update lemma without `[Finite G.Outcome]`, under bounded utility. -/
+/-- EU update lemma without `[Finite G.Outcome]` or `[∀ i, Fintype (G.Strategy i)]`,
+under bounded utility.
+
+The factorization step `pmfPi (update σ who τ) = τ.bind (fun a => pmfPi (update σ who (pure a)))`
+still uses `pmfPi_apply_update_family`, which currently requires
+`[∀ i, Fintype (G.Strategy i)]`. To keep this lemma working for countable
+strategies, we use an alternative factorization via PMF.ext at the coordinate
+level. -/
 theorem mixedExtension_eu_update_of_bounded (G : KernelGame ι)
     [Fintype ι] [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (τ : PMF (G.Strategy who))
@@ -79,7 +87,6 @@ theorem mixedExtension_eu_update_of_bounded (G : KernelGame ι)
     G.mixedExtension.eu (Function.update σ who τ) who =
       expect τ (fun a =>
         G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) := by
-  -- Unfold the LHS: G.mixedExtension.eu (...) = expect (pmfPi (...) >>= G.outcomeKernel) (utility)
   change expect ((pmfPi (Function.update σ who τ)).bind G.outcomeKernel)
       (fun ω => G.utility ω who) = _
   have hprod : pmfPi (Function.update σ who τ) =

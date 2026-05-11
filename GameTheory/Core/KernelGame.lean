@@ -100,9 +100,13 @@ open Classical in
 /-- The mixed extension of a kernel game. Each player's strategy is lifted from
     `G.Strategy i` to `PMF (G.Strategy i)` (a mixed strategy). The outcome kernel
     samples from the independent product distribution over pure strategy profiles,
-    then applies the original outcome kernel. -/
-noncomputable def mixedExtension (G : KernelGame ι) [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] : KernelGame ι where
+    then applies the original outcome kernel.
+
+    Now that `Math.PMFProduct.pmfPi` accepts arbitrary factor types, the mixed
+    extension is defined for any kernel game with a finite player index — the
+    pure-strategy types `G.Strategy i` can be (countable-support) PMF carriers
+    of any cardinality. -/
+noncomputable def mixedExtension (G : KernelGame ι) [Fintype ι] : KernelGame ι where
   Strategy := fun i => PMF (G.Strategy i)
   Outcome := G.Outcome
   utility := G.utility
@@ -111,8 +115,7 @@ noncomputable def mixedExtension (G : KernelGame ι) [Fintype ι]
 /-- The Strategy field of `G.mixedExtension` is `fun i => PMF (G.Strategy i)`.
 Marked `@[simp]` so `Function.update` terms reduce uniformly (see `ofEU_Strategy`
 in `SolutionConcepts` for background on why v4.29 needs this). -/
-@[simp] theorem mixedExtension_Strategy (G : KernelGame ι) [Fintype ι]
-    [∀ i, Fintype (G.Strategy i)] :
+@[simp] theorem mixedExtension_Strategy (G : KernelGame ι) [Fintype ι] :
     G.mixedExtension.Strategy = fun i => PMF (G.Strategy i) := rfl
 
 end KernelGame
