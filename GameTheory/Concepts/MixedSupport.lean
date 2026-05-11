@@ -64,14 +64,11 @@ theorem mixedNash_support_eu_eq
 
 end KernelGame
 
--- ============================================================================
--- Bounded-utility variants of the support lemma
--- ============================================================================
-
 namespace KernelGame
 
 open Classical in
-/-- Bounded-utility variant of `mixedNash_support_gain_zero`. -/
+/-- Support lemma under bounded utility: in a mixed Nash equilibrium, any pure
+    strategy played with positive probability has zero EU gain. -/
 theorem mixedNash_support_gain_zero_of_bounded
     {ι : Type} [Fintype ι]
     (G : KernelGame ι) [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
@@ -95,7 +92,8 @@ theorem mixedNash_support_gain_zero_of_bounded
   exact (mul_eq_zero.mp ha_zero).resolve_left (ne_of_gt hpos_real)
 
 open Classical in
-/-- Bounded-utility variant of `mixedNash_support_eu_eq`. -/
+/-- Under bounded utility, all pure strategies in the support of a mixed Nash
+    equilibrium yield the same expected utility. -/
 theorem mixedNash_support_eu_eq_of_bounded
     {ι : Type} [Fintype ι]
     (G : KernelGame ι) [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]

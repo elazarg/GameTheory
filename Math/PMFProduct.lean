@@ -39,11 +39,7 @@ private lemma pmf_sum_eq_one {α : Type*} [Fintype α] (μ : PMF α) :
 
 /-- For a Fin-indexed dependent family `A : Fin n → Type*` and a family of
 nonneg measure-like functions `g : ∀ i, A i → ℝ≥0∞`, the sum-of-products over
-the product space equals the product-of-sums.
-
-This is the Fin-base for a future generalization of `pmfPi` to countable
-factor types. Currently proved by induction on `n`; the arbitrary-Fintype
-version requires a careful `Equiv.piCongrLeft'` transfer that's deferred. -/
+the product space equals the product-of-sums. -/
 theorem ENNReal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     (g : (i : Fin n) → A i → ENNReal) :
     ∑' s : ((i : Fin n) → A i), ∏ i, g i (s i) = ∏ i, ∑' a : A i, g i a := by
@@ -71,18 +67,10 @@ theorem ENNReal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     rw [ih]
     rw [Fin.prod_univ_succ (f := fun i => ∑' a, g i a)]
 
-/-- Transfer of `ENNReal_tsum_pi_fin` to arbitrary `Fintype` index types.
+/-- For any Fintype-indexed dependent family `A : ι → Type*` and a family of
+nonneg measure-like functions `g : ∀ i, A i → ENNReal`,
 
-For any Fintype-indexed dependent family `A : ι → Type*` and a family of
-nonneg measure-like functions `g : ∀ i, A i → ENNReal`, the sum-of-products
-over the product space equals the product-of-sums:
-
-  ∑' s : (∀ i, A i), ∏ i, g i (s i) = ∏ i, ∑' a, g i a
-
-Proved by transferring along `Equiv.piCongrLeft A e` where `e : Fin n ≃ ι`
-comes from `Fintype.equivFin`. Using `piCongrLeft` (rather than `piCongrLeft'`)
-gives the clean `piCongrLeft_apply_apply` simp lemma that resolves the
-dependent-type cast without manual cast manipulation. -/
+  ∑' s : (∀ i, A i), ∏ i, g i (s i) = ∏ i, ∑' a, g i a. -/
 theorem ENNReal_tsum_pi {ι : Type*} [Fintype ι] {A : ι → Type*}
     (g : (i : ι) → A i → ENNReal) :
     ∑' s : ((i : ι) → A i), ∏ i, g i (s i) = ∏ i, ∑' a : A i, g i a := by
@@ -162,10 +150,8 @@ variable {A : ι → Type uA}
 -- ---- Product PMF --------------------------------------------------------
 
 open Classical in
-/-- Product PMF over a finite-indexed family of arbitrary PMFs: independently
-sample each coordinate. The factor types `A i` may be uncountable in principle
-but the resulting PMF only puts mass on the at-most-countable support of the
-factor PMFs, so the construction is sound for any `A i`. -/
+/-- Product PMF over a finite index of arbitrary per-coordinate PMFs:
+independently sample each coordinate. -/
 noncomputable def pmfPi [Fintype ι] (σ : ∀ i, PMF (A i)) : PMF (∀ i, A i) :=
   ⟨fun s => ∏ i, σ i (s i),
    ENNReal.summable.hasSum_iff.2 (by
@@ -178,7 +164,7 @@ noncomputable def pmfPi [Fintype ι] (σ : ∀ i, PMF (A i)) : PMF (∀ i, A i) 
 
 open Classical in
 /-- Product of point masses is a point mass at the joint assignment. -/
-theorem pmfPi_pure [Fintype ι] [∀ i, Fintype (A i)] (σ : ∀ i, A i) :
+theorem pmfPi_pure [Fintype ι] (σ : ∀ i, A i) :
     pmfPi (fun i => (PMF.pure (σ i) : PMF (A i))) = PMF.pure σ := by
   classical
   ext s

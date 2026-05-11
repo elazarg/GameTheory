@@ -80,12 +80,8 @@ def IsNashMixed (G : NFGGame ι A)
 
 /-- The pure NFG kernel game embeds into the mixed NFG kernel game: each
 pure strategy maps to its Dirac PMF, outcomes are preserved on the nose,
-and utilities agree. Built via the `Morphism.ofOutcomeEmbedding` recipe.
-
-Requires `[∀ i, Fintype (A i)]` only because the proof uses `pmfPi_pure`,
-which is still Fintype-bound (a downstream PMFProduct lemma scheduled for
-later relaxation). -/
-noncomputable def NFGGame.toMixed_morphism [∀ i, Fintype (A i)]
+and utilities agree. Built via the `Morphism.ofOutcomeEmbedding` recipe. -/
+noncomputable def NFGGame.toMixed_morphism
     (G : NFGGame ι A) :
     GameTheory.KernelGame.Morphism G.toKernelGame G.toMixedKernelGame :=
   GameTheory.KernelGame.Morphism.ofOutcomeEmbedding

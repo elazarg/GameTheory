@@ -43,8 +43,8 @@ theorem correlatedEu_eq_expect_eu [Finite (Profile G)] [Finite G.Outcome]
     G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
   simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward, expect_bind]
 
-/-- Bounded-utility variant of `correlatedEu_eq_expect_eu`: drops
-`[Finite G.Outcome]` in favor of an explicit utility bound. -/
+/-- Correlated EU equals the expectation of standard EU over the profile distribution,
+    under bounded utility. -/
 theorem correlatedEu_eq_expect_eu_of_bounded
     (μ : PMF (Profile G)) (who : ι)
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :

@@ -2,15 +2,11 @@ import GameTheory.Languages.NFG.Compile
 import Mathlib.Tactic.Linarith
 
 /-!
-# Countable-action NFG: smoke test for the relaxed `NFGGame` structure
+# Countable-action NFG over `ℕ`
 
-After removing `[∀ i, Fintype (A i)]` from `NFGGame`, the pure-strategy layer
-(`IsNashPure`, `IsDominant`, compile-to-`KernelGame`) works for arbitrary
-action types — including countably infinite ones like `ℕ`.
-
-This example: a 2-player game where each player picks a natural number, and
-the only nonzero payoff is at `(0, 0)`. The profile `(0, 0)` is a Nash
-equilibrium with utility `1` for both players.
+A 2-player game where each player picks a natural number, with the only
+nonzero payoff at `(0, 0)`. Demonstrates `NFGGame`, `IsNashPure`, and
+`IsDominant` over an infinite action type.
 -/
 
 namespace NFG

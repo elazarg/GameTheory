@@ -16,11 +16,6 @@ Provides:
 namespace NFG
 
 /-- A normal-form game.
-
-The original `[∀ i, Fintype (A i)]` requirement has been relaxed; downstream
-operations (compilation to `KernelGame`, mixed extension) add their own
-finiteness where genuinely required.
-
   - `ι` is the type of players
   - `A i` is the type of actions for player `i`
   - `Outcome` is the type of game outcomes

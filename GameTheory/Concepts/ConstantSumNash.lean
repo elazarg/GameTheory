@@ -72,12 +72,9 @@ theorem IsConstantSum.nash_guarantees_1
   convert hcs.nash_opponent_deviation_helps' hN (τ 0) using 2
   funext i; fin_cases i <;> simp [Function.update]
 
--- ============================================================================
--- Bounded-utility variants (no `[Finite G.Outcome]`)
--- ============================================================================
-
 open Classical in
-/-- Bounded-utility variant of `nash_opponent_deviation_helps`. -/
+/-- In a 2-player constant-sum Nash equilibrium with bounded utility, when player 1
+    deviates, player 0's expected utility can only increase. -/
 theorem IsConstantSum.nash_opponent_deviation_helps_of_bounded
     {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c)
@@ -90,7 +87,8 @@ theorem IsConstantSum.nash_opponent_deviation_helps_of_bounded
   linarith
 
 open Classical in
-/-- Bounded-utility variant of `nash_opponent_deviation_helps'`. -/
+/-- Symmetric form: when player 0 deviates, player 1's expected utility can only
+    increase. -/
 theorem IsConstantSum.nash_opponent_deviation_helps'_of_bounded
     {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c)
@@ -102,7 +100,8 @@ theorem IsConstantSum.nash_opponent_deviation_helps'_of_bounded
   have h2 := hcs.eu_determined_of_bounded (Function.update σ 0 s') hbd
   linarith
 
-/-- Bounded-utility variant of `nash_guarantees_0`. -/
+/-- Under bounded utility, player 0's Nash strategy guarantees the Nash payoff
+    against any opponent. -/
 theorem IsConstantSum.nash_guarantees_0_of_bounded
     {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c)
@@ -114,7 +113,8 @@ theorem IsConstantSum.nash_guarantees_0_of_bounded
   funext i
   fin_cases i <;> simp [Function.update]
 
-/-- Bounded-utility variant of `nash_guarantees_1`. -/
+/-- Under bounded utility, player 1's Nash strategy guarantees the Nash payoff
+    against any opponent. -/
 theorem IsConstantSum.nash_guarantees_1_of_bounded
     {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c)

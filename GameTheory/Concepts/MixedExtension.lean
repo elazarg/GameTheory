@@ -40,8 +40,8 @@ theorem mixedExtension_eu (G : KernelGame ι)
   simp only [mixedExtension, eu, expect_bind]
 
 open Classical in
-/-- EU in the mixed extension, without `[Finite G.Outcome]` or
-`[∀ i, Fintype (G.Strategy i)]`, under bounded utility. -/
+/-- EU in the mixed extension under bounded utility, for a kernel game whose
+outcome type may be countably infinite. -/
 theorem mixedExtension_eu_of_bounded (G : KernelGame ι)
     [Fintype ι]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
@@ -72,14 +72,8 @@ theorem mixedExtension_eu_update (G : KernelGame ι)
   rw [hprod, expect_bind]
 
 open Classical in
-/-- EU update lemma without `[Finite G.Outcome]` or `[∀ i, Fintype (G.Strategy i)]`,
-under bounded utility.
-
-The factorization step `pmfPi (update σ who τ) = τ.bind (fun a => pmfPi (update σ who (pure a)))`
-still uses `pmfPi_apply_update_family`, which currently requires
-`[∀ i, Fintype (G.Strategy i)]`. To keep this lemma working for countable
-strategies, we use an alternative factorization via PMF.ext at the coordinate
-level. -/
+/-- EU under a unilateral mixed-strategy update equals the expectation, under the
+new mixed strategy `τ`, of EUs under the corresponding pure deviations. -/
 theorem mixedExtension_eu_update_of_bounded (G : KernelGame ι)
     [Fintype ι] [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (τ : PMF (G.Strategy who))
@@ -155,7 +149,7 @@ variable (G : KernelGame ι)
 variable [∀ i, Fintype (G.Strategy i)]
 
 open Classical in
-/-- Weighted gain sum is zero, without `[Finite G.Outcome]`, under bounded utility. -/
+/-- Expected pure-deviation gain under the current mixed strategy is zero. -/
 theorem weighted_gain_sum_zero_of_bounded
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
@@ -182,7 +176,7 @@ variable [∀ i, Nonempty (G.Strategy i)]
 
 open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive,
-    without `[Finite G.Outcome]`, under bounded utility. -/
+    under bounded utility. -/
 theorem isNash_iff_gains_nonpos_of_bounded
     (σ : ∀ i, PMF (G.Strategy i))
     {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :

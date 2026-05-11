@@ -35,7 +35,8 @@ theorem IsZeroSum.nash_eu_sum_zero {G : KernelGame (Fin 2)} [Finite G.Outcome]
   have h := hzs.eu_neg σ
   linarith
 
-/-- Bounded-utility variant of `nash_eu_sum_zero`. -/
+/-- In a 2-player zero-sum game with bounded utility, the sum of expected utilities
+    at any Nash equilibrium is zero. -/
 theorem IsZeroSum.nash_eu_sum_zero_of_bounded {G : KernelGame (Fin 2)}
     (hzs : G.IsZeroSum) {σ : Profile G} (_hN : G.IsNash σ)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
@@ -51,7 +52,8 @@ theorem IsConstantSum.nash_eu_sum {G : KernelGame (Fin 2)} [Finite G.Outcome]
   have h := hcs.eu_determined σ
   linarith
 
-/-- Bounded-utility variant of `IsConstantSum.nash_eu_sum`. -/
+/-- In a 2-player constant-sum game with bounded utility, the sum of expected
+    utilities at any profile equals `c`. -/
 theorem IsConstantSum.nash_eu_sum_of_bounded {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
@@ -69,7 +71,8 @@ theorem IsZeroSum.eu_nonneg_iff_nonpos {G : KernelGame (Fin 2)} [Finite G.Outcom
   · intro h0; linarith
   · intro h1; linarith
 
-/-- Bounded-utility variant of `eu_nonneg_iff_nonpos`. -/
+/-- In a 2-player zero-sum game with bounded utility, player 0 has non-negative EU
+    iff player 1 has non-positive EU. -/
 theorem IsZeroSum.eu_nonneg_iff_nonpos_of_bounded {G : KernelGame (Fin 2)}
     (hzs : G.IsZeroSum) (σ : Profile G)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
@@ -92,7 +95,8 @@ theorem IsZeroSum.deviation_eu_neg {G : KernelGame (Fin 2)} [Finite G.Outcome]
   linarith
 
 open Classical in
-/-- Bounded-utility variant of `deviation_eu_neg`. -/
+/-- In a 2-player zero-sum game with bounded utility, the change in player 0's EU
+    from a unilateral deviation equals the negation of the change in player 1's EU. -/
 theorem IsZeroSum.deviation_eu_neg_of_bounded {G : KernelGame (Fin 2)}
     (hzs : G.IsZeroSum) (σ : Profile G) (s' : G.Strategy 0)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :

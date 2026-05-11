@@ -31,8 +31,8 @@ theorem IsZeroSum.socialWelfare_eq_zero [Fintype ι] {G : KernelGame ι} [Finite
   have : ∀ ω : G.Outcome, ∑ i : ι, G.utility ω i = 0 := fun ω => hzs ω
   simp [this]
 
-/-- Bounded-utility variant: social welfare is zero in a zero-sum game with
-finite players and per-player bounded utility, no `[Finite G.Outcome]`. -/
+/-- In a zero-sum game with finite players and per-player bounded utility, the
+    social welfare is zero. -/
 theorem IsZeroSum.socialWelfare_eq_zero_of_bounded [Fintype ι] {G : KernelGame ι}
     (hzs : G.IsZeroSum) (σ : Profile G)
     {C : ι → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) : G.socialWelfare σ = 0 := by
@@ -58,7 +58,8 @@ theorem IsZeroSum.eu_neg {G : KernelGame (Fin 2)} [Finite G.Outcome]
   simp only [socialWelfare, Fin.sum_univ_two] at h
   linarith
 
-/-- Bounded-utility variant of `eu_neg`. -/
+/-- In a 2-player zero-sum game with bounded utility, one player's EU is the
+    negation of the other's. -/
 theorem IsZeroSum.eu_neg_of_bounded {G : KernelGame (Fin 2)}
     (hzs : G.IsZeroSum) (σ : Profile G)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :

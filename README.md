@@ -167,26 +167,21 @@ lake build GameTheory  # library only
 
 ## Countable-support PMFs
 
-The library is moving from a strict `Fintype`-everywhere stance toward
-support for countably-infinite strategy and outcome types under
-bounded-utility hypotheses. Concretely:
-
-- `Math.Probability` provides `expect_bind_of_bounded`,
-  `expect_pushforward_of_bounded`, and `expect_mono_of_pointwise_bounded`
-  for arbitrary types under a bounded `|f| ≤ C` hypothesis.
-- `KernelGame.mixedExtension` has `_of_bounded` siblings
-  (`mixedExtension_eu_of_bounded`, `weighted_gain_sum_zero_of_bounded`,
-  `isNash_iff_gains_nonpos_of_bounded`) that drop `[Finite G.Outcome]`.
-- `NFGGame` no longer requires `[∀ i, Fintype (A i)]` in its structure;
-  pure-strategy notions work over countable action types. See
-  `Languages/NFG/CountableExample.lean` for an `ℕ`-action smoke test.
-- `Math.PMFProduct.ENNReal_tsum_pi_fin` proves the prod-tsum commutation
-  for `Fin n`-indexed dependent families — the foundation for a
-  countable-factor `pmfPi`. The full `pmfPi` rewrite for countable
-  factors is in progress.
+Strategy and outcome types can be countably infinite. `pmfPi` is defined
+for any per-coordinate PMF family over a finite player index, and
+`KernelGame.mixedExtension` inherits that generality. Expected-utility
+lemmas (`expect_bind`, `expect_pushforward`, `expect_mono_of_pointwise`)
+have `_of_bounded` siblings in `Math.Probability` that work over arbitrary
+types under a `|f| ≤ C` hypothesis. Concept-layer theorems
+(`mixedExtension_eu`, `weighted_gain_sum_zero`, zero-sum / constant-sum
+results, the support lemma, correlated-EU identity) likewise have
+bounded-utility variants that don't require `[Finite G.Outcome]`.
 
 Existence theorems (`mixed_nash_exists`, `correlatedEq_exists`,
-`zermelo`, Kuhn's theorem) still carry their original finite hypotheses
-because the proofs genuinely use Brouwer / `Finite.exists_max` /
+`zermelo`, Kuhn's theorem) carry finite hypotheses where the proofs
+genuinely require Brouwer's fixed point, `Finite.exists_max`, or
 `PureStrategy ≃ Π_info Act` enumeration. The *definitions* are
 unconditional; only the *existence statements* are gated by finiteness.
+
+See `Languages/NFG/CountableExample.lean` for a smoke test exercising
+`NFGGame` over `ℕ`-valued actions.

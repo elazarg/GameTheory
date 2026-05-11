@@ -37,8 +37,8 @@ theorem IsConstantSum.socialWelfare_eq [Fintype ι]
     fun ω => hcs ω
   simp_rw [hc, ← Finset.sum_mul, pmf_toReal_sum_one, one_mul]
 
-/-- Bounded-utility version of `socialWelfare_eq`: drops `[Finite G.Outcome]`
-    in favor of per-player utility bounds that ensure summability. -/
+/-- Constant-sum social welfare equals `c` for any profile, when each player's
+    utility is bounded. -/
 theorem IsConstantSum.socialWelfare_eq_of_bounded [Fintype ι]
     {G : KernelGame ι}
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G)
@@ -69,7 +69,7 @@ theorem IsConstantSum.eu_determined
   simp only [socialWelfare, Fin.sum_univ_two] at h
   linarith
 
-/-- Bounded-utility variant of `eu_determined`. -/
+/-- In a 2-player constant-sum game with bounded utility, player 0's EU is `c - eu σ 1`. -/
 theorem IsConstantSum.eu_determined_of_bounded
     {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G)
@@ -85,7 +85,8 @@ theorem IsZeroSum.isConstantSum_zero [Fintype ι]
     (hzs : G.IsZeroSum) : G.IsConstantSum 0 :=
   hzs
 
-/-- Bounded-utility variant of `nash_eu_eq`. -/
+/-- In a 2-player constant-sum game with bounded utility, all Nash equilibria yield
+    the same EU for player 0. -/
 theorem IsConstantSum.nash_eu_eq_of_bounded
     {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c) {σ τ : Profile G}
