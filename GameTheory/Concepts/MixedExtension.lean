@@ -139,6 +139,16 @@ variable [Fintype ι]
 variable (G : KernelGame ι)
 
 open Classical in
+/-- The gain of player `who` from a pure deviation to action `a`.
+
+The definition itself is distribution-level and does not require finite outcomes;
+boundedness or finiteness assumptions enter only when proving EU decomposition
+and Nash-characterization lemmas. -/
+def mixedGain (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (a : G.Strategy who) : ℝ :=
+  G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who -
+  G.mixedExtension.eu σ who
+
+open Classical in
 /-- Expected pure-deviation gain under the current mixed strategy is zero. -/
 theorem weighted_gain_sum_zero_of_bounded
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
@@ -228,12 +238,6 @@ section NashGain
 variable [Fintype ι]
 variable (G : KernelGame ι)
 variable [Finite G.Outcome]
-
-open Classical in
-/-- The gain of player `who` from a pure deviation to action `a`. -/
-def mixedGain (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (a : G.Strategy who) : ℝ :=
-  G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who -
-  G.mixedExtension.eu σ who
 
 open Classical in
 /-- Weighted gain sum is zero: the expectation of gain under the current
