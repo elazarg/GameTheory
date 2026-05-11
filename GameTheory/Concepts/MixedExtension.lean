@@ -146,31 +146,42 @@ section NashGainBounded
 
 variable [Fintype ι]
 variable (G : KernelGame ι)
-variable [∀ i, Fintype (G.Strategy i)]
 
 open Classical in
 /-- Expected pure-deviation gain under the current mixed strategy is zero. -/
 theorem weighted_gain_sum_zero_of_bounded
+    [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
     expect (σ who)
       (fun a => G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who
         - G.mixedExtension.eu σ who) = 0 := by
-  simp only [expect_eq_sum]
-  have hsum1 : ∑ a : G.Strategy who, ((σ who) a).toReal = 1 := by
-    simpa using pmf_toReal_sum_one (σ who)
-  have hdecomp : ∑ a : G.Strategy who, ((σ who) a).toReal *
-      G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who =
-    G.mixedExtension.eu σ who := by
-    rw [← expect_eq_sum, ← G.mixedExtension_eu_update_of_bounded σ who (σ who) hbd]
-    congr 1
-    exact Function.update_eq_self who σ
+  -- Split the expectation of the difference into two pieces.
+  have h_eu_bd : ∀ a, |G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who| ≤ C :=
+    fun a => G.mixedExtension.eu_abs_le_of_bounded who hbd _
+  have h_summable_eu : Summable (fun a => ((σ who) a).toReal *
+      G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) :=
+    Math.Probability.expect_summable_of_bounded (σ who) _ h_eu_bd
+  have h_summable_const : Summable (fun a : G.Strategy who =>
+      ((σ who) a).toReal * G.mixedExtension.eu σ who) :=
+    (Math.Probability.pmf_toReal_summable (σ who)).mul_right _
+  -- The first piece is `eu σ who` (via `mixedExtension_eu_update_of_bounded` at τ = σ who).
+  have hdecomp :
+      (∑' a, ((σ who) a).toReal *
+        G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) =
+      G.mixedExtension.eu σ who := by
+    have h := G.mixedExtension_eu_update_of_bounded σ who (σ who) hbd
+    simp only [Function.update_eq_self] at h
+    exact h.symm
+  -- The second piece is `eu σ who` (constant times PMF mass).
+  have hconst :
+      (∑' a : G.Strategy who, ((σ who) a).toReal * G.mixedExtension.eu σ who) =
+      G.mixedExtension.eu σ who := by
+    rw [tsum_mul_right, Math.Probability.pmf_toReal_tsum_one, one_mul]
+  -- Subtract the two.
+  unfold Math.Probability.expect
   simp_rw [mul_sub]
-  rw [Finset.sum_sub_distrib, hdecomp]
-  rw [show ∑ a : G.Strategy who, ((σ who) a).toReal * G.mixedExtension.eu σ who =
-    G.mixedExtension.eu σ who from by
-      rw [← Finset.sum_mul, hsum1, one_mul]]
-  ring
+  rw [h_summable_eu.tsum_sub h_summable_const, hdecomp, hconst, sub_self]
 
 variable [∀ i, Nonempty (G.Strategy i)]
 
@@ -178,6 +189,7 @@ open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive,
     under bounded utility. -/
 theorem isNash_iff_gains_nonpos_of_bounded
+    [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i))
     {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
     G.mixedExtension.IsNash σ ↔
