@@ -3287,6 +3287,66 @@ noncomputable def reachableBehavioralGameFormAtHorizon
 
 set_option linter.flexible false in
 open Classical in
+/-- FOSG Kuhn unilateral-deviation simulation from mixed pure strategies to
+behavioral strategies at a finite horizon.
+
+This is the Nash-specific wrapper around
+`reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq`: every legal
+behavioral unilateral deviation is matched by the constructive mixed pure
+deviation `reachableLegalBehavioralToMixed`. -/
+noncomputable def reachableKuhnNashDeviationSimulation
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable) (k : Nat) :
+    GameForm.NashDeviationSimulation
+      (reachableMixedPureGameFormAtHorizon (G := G) k)
+      (reachableBehavioralGameFormAtHorizon (G := G) k)
+      G.History where
+  viewG := { observe := id }
+  viewH := { observe := id }
+  rel := fun μ β =>
+    β = reachableMixedToLegalBehavioral (G := G) hLeg μ
+  law_eq := by
+    intro μ β hrel
+    rw [hrel]
+    simp [GameForm.OutcomeView.law, reachableMixedPureGameFormAtHorizon,
+      reachableBehavioralGameFormAtHorizon]
+    rw [PMF.map_id, PMF.map_id]
+    exact (reachableMixedToLegalBehavioral_runDist (G := G) hLeg μ k).symm
+  simulate_target_deviation := by
+    intro μ β hrel who βwho'
+    refine ⟨reachableLegalBehavioralToMixed (G := G) hLeg who βwho', ?_⟩
+    rw [hrel]
+    simp [GameForm.OutcomeView.law, reachableMixedPureGameFormAtHorizon,
+      reachableBehavioralGameFormAtHorizon]
+    rw [PMF.map_id, PMF.map_id]
+    exact reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
+      (G := G) hLeg k μ who βwho'
+
+open Classical in
+/-- Ready-made Nash transport for the finite-horizon reachable Kuhn
+mixed-pure-to-behavioral presentation. -/
+theorem reachableKuhn_target_nashFor_of_source_nashFor
+    [Fintype ι] [Fintype W] [Fintype G.History]
+    [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
+    (hLeg : G.LegalObservable) (k : Nat)
+    (μ : (reachableMixedPureGameFormAtHorizon (G := G) k).Profile)
+    {prefΩ : ι → PMF G.History → PMF G.History → Prop}
+    (hN :
+      (reachableMixedPureGameFormAtHorizon (G := G) k).IsNashFor
+        (GameForm.observedPref
+          (reachableKuhnNashDeviationSimulation (G := G) hLeg k).viewG
+          prefΩ) μ) :
+    (reachableBehavioralGameFormAtHorizon (G := G) k).IsNashFor
+      (GameForm.observedPref
+        (reachableKuhnNashDeviationSimulation (G := G) hLeg k).viewH
+        prefΩ)
+      (reachableMixedToLegalBehavioral (G := G) hLeg μ) := by
+  exact GameForm.NashDeviationSimulation.target_nash_of_source_nash
+    (reachableKuhnNashDeviationSimulation (G := G) hLeg k) rfl hN
+
+set_option linter.flexible false in
+open Classical in
 /-- FOSG Kuhn simulation for coarse-correlated deviations from mixed pure
 recommendations to behavioral recommendations. -/
 noncomputable def reachableKuhnCoarseCorrelatedDeviationSimulation
