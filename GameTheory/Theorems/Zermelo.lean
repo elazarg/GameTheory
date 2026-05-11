@@ -82,7 +82,7 @@ theorem perfectInfo_disjoint_chance_subtrees {S : InfoStructure} {Outcome : Type
 /-- Backward induction constructs a pure strategy profile that has no
     profitable one-shot deviation at any decision node in the tree.
     This is the constructive core of Zermelo's theorem. -/
-theorem exists_noOSD (G : EFGGame) [Finite G.Outcome] :
+theorem exists_noOSD (G : EFGGame) :
     ∀ (t : GameTree G.inf G.Outcome), IsPerfectInfo t →
       ∃ σ : PureProfile G.inf,
         ∀ {q : G.inf.Player} (J : G.inf.Infoset q)
@@ -231,17 +231,32 @@ theorem exists_noOSD (G : EFGGame) [Finite G.Outcome] :
 -- ============================================================================
 
 
-/-- **Zermelo's Backward Induction Theorem**: every finite perfect-information
-    extensive-form game has a pure subgame-perfect equilibrium.
+/-- **Zermelo's Backward Induction Theorem**, bounded-utility form: every
+    finite perfect-information extensive-form game with bounded utilities has a
+    pure subgame-perfect equilibrium. The outcome carrier need not be finite.
 
     The proof constructs a profile with no profitable one-shot deviation via
     backward induction (`exists_noOSD`), then applies the one-shot deviation
     principle (`oneShotDeviation_iff_spe`) to conclude SPE. -/
+theorem zermelo_of_bounded (G : EFGGame)
+    (hpi : IsPerfectInfo G.tree)
+    {C : G.inf.Player → ℝ} (hbd : ∀ p ω, |G.utility ω p| ≤ C p) :
+    ∃ σ : PureProfile G.inf, G.IsSubgamePerfectEq σ := by
+  obtain ⟨σ, hOSD⟩ := exists_noOSD G G.tree hpi
+  exact ⟨σ, (oneShotDeviation_iff_spe_of_bounded G σ hpi hbd).mpr hOSD⟩
+
+open Classical in
+/-- **Zermelo's Backward Induction Theorem**: finite-outcome wrapper for
+    `zermelo_of_bounded`. -/
 theorem zermelo (G : EFGGame) [Finite G.Outcome]
     (hpi : IsPerfectInfo G.tree) :
     ∃ σ : PureProfile G.inf, G.IsSubgamePerfectEq σ := by
-  obtain ⟨σ, hOSD⟩ := exists_noOSD G G.tree hpi
-  exact ⟨σ, (oneShotDeviation_iff_spe G σ hpi).mpr hOSD⟩
-
+  let C : G.inf.Player → ℝ := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose
+  have hbd : ∀ p ω, |G.utility ω p| ≤ C p := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose_spec
+  exact zermelo_of_bounded G hpi hbd
 
 end EFG

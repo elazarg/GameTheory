@@ -33,8 +33,7 @@ open Math.Probability
 /-- A profile has no profitable one-shot deviation if at every reachable
     decision node, the action chosen by `σ` gives at least as much EU
     as any alternative action, with the rest of the profile unchanged. -/
-def HasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
-    (σ : PureProfile G.inf) : Prop :=
+def HasNoOneShotDeviation (G : EFGGame) (σ : PureProfile G.inf) : Prop :=
   ∀ {p : G.inf.Player} (I : G.inf.Infoset p)
     (next : G.inf.Act I → GameTree G.inf G.Outcome),
     (∃ h : List (HistoryStep G.inf), ReachBy h G.tree (.decision I next)) →
@@ -50,7 +49,7 @@ def HasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
 
 open Classical in
 /-- SPE implies no profitable one-shot deviation (for perfect-info games). -/
-theorem spe_hasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
+theorem spe_hasNoOneShotDeviation (G : EFGGame)
     (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
     (hspe : G.IsSubgamePerfectEq σ) : HasNoOneShotDeviation G σ := by
   intro p I next ⟨h, hreach⟩ a'
@@ -98,9 +97,10 @@ theorem spe_hasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]
 open Classical in
 /-- Key inductive lemma: if σ has no profitable one-shot deviation (globally),
     then σ is Nash at every reachable subtree of a perfect-info tree.
-    Proof by structural induction on the tree. -/
-theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
+    Proof by structural induction on the tree, under bounded utility. -/
+theorem nash_of_noOSD_of_bounded (G : EFGGame)
     (σ : PureProfile G.inf)
+    {C : G.inf.Player → ℝ} (hbd : ∀ p ω, |G.utility ω p| ≤ C p)
     (hnosd : HasNoOneShotDeviation G σ) :
     ∀ (t : GameTree G.inf G.Outcome),
       IsPerfectInfo t →
@@ -139,9 +139,25 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
           (KernelGame.euPref G.toStrategicKernelGame) σ).1 (hNnext b)
         have hb := hNnext' who s'
         simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] using hb
-      simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-        evalDist_chance, expect_bind, GameForm.correlatedOutcome_pure,
-        KernelGame.toGameForm] using
+      have hbind_base :
+          expect (μ.bind fun b => (next b).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω who) =
+            expect μ (fun b => expect ((next b).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω who)) :=
+        expect_bind_of_bounded μ (fun b => (next b).evalDist (pureToBehavioral σ))
+          (fun ω => G.utility ω who) (hbd who)
+      have hbind_dev :
+          expect (μ.bind fun b => (next b).evalDist
+              (pureToBehavioral (Function.update σ who s')))
+              (fun ω => G.utility ω who) =
+            expect μ (fun b => expect ((next b).evalDist
+              (pureToBehavioral (Function.update σ who s')))
+              (fun ω => G.utility ω who)) :=
+        expect_bind_of_bounded μ
+          (fun b => (next b).evalDist
+            (pureToBehavioral (Function.update σ who s')))
+          (fun ω => G.utility ω who) (hbd who)
+      have hmono :=
         (Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
           (fun b => expect ((next b).evalDist
             (pureToBehavioral (Function.update σ who s')))
@@ -149,6 +165,17 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
           (fun b => expect ((next b).evalDist (pureToBehavioral σ))
             (fun ω => G.utility ω who))
           (fun b => hpoint b))
+      have hroot :
+          expect (μ.bind fun b => (next b).evalDist
+              (pureToBehavioral (Function.update σ who s')))
+              (fun ω => G.utility ω who) ≤
+            expect (μ.bind fun b => (next b).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω who) := by
+        rw [hbind_dev, hbind_base]
+        exact hmono
+      simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+        evalDist_chance, GameForm.correlatedOutcome_pure,
+        KernelGame.toGameForm, ge_iff_le] using hroot
     | @cons a _ _ _ _ hstep hr' =>
       cases a with
       | chance _k b =>
@@ -252,14 +279,48 @@ theorem nash_of_noOSD (G : EFGGame) [Fintype G.Outcome]
             (ReachBy_append hreach_root (.action a (.here _))) hr'
 
 open Classical in
-/-- No profitable one-shot deviation implies SPE (for perfect-info games). -/
-theorem hasNoOneShotDeviation_spe (G : EFGGame) [Fintype G.Outcome]
+/-- Finite-outcome wrapper for `nash_of_noOSD_of_bounded`. -/
+theorem nash_of_noOSD (G : EFGGame) [Finite G.Outcome]
+    (σ : PureProfile G.inf)
+    (hnosd : HasNoOneShotDeviation G σ) :
+    ∀ (t : GameTree G.inf G.Outcome),
+      IsPerfectInfo t →
+      ∀ hroot, ReachBy hroot G.tree t →
+      ∀ {h u}, ReachBy h t u →
+        (G.withTree u).toStrategicKernelGame.IsNashFor
+          (KernelGame.euPref G.toStrategicKernelGame) σ := by
+  let C : G.inf.Player → ℝ := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose
+  have hbd : ∀ p ω, |G.utility ω p| ≤ C p := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose_spec
+  exact nash_of_noOSD_of_bounded G σ hbd hnosd
+
+open Classical in
+/-- No profitable one-shot deviation implies SPE (for perfect-info games),
+    under bounded utility. -/
+theorem hasNoOneShotDeviation_spe_of_bounded (G : EFGGame)
     (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
+    {C : G.inf.Player → ℝ} (hbd : ∀ p ω, |G.utility ω p| ≤ C p)
     (hnosd : HasNoOneShotDeviation G σ) : G.IsSubgamePerfectEq σ := by
   intro t hSub
   rcases hSub.1 with ⟨hpath, hreach⟩
   have hpi_t := IsPerfectInfo_subtree hpi hreach
-  exact nash_of_noOSD G σ hnosd t hpi_t hpath hreach (.here _)
+  exact nash_of_noOSD_of_bounded G σ hbd hnosd t hpi_t hpath hreach (.here _)
+
+open Classical in
+/-- Finite-outcome wrapper for `hasNoOneShotDeviation_spe_of_bounded`. -/
+theorem hasNoOneShotDeviation_spe (G : EFGGame) [Finite G.Outcome]
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
+    (hnosd : HasNoOneShotDeviation G σ) : G.IsSubgamePerfectEq σ := by
+  let C : G.inf.Player → ℝ := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose
+  have hbd : ∀ p ω, |G.utility ω p| ≤ C p := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose_spec
+  exact hasNoOneShotDeviation_spe_of_bounded G σ hpi hbd hnosd
 
 -- ============================================================================
 -- The equivalence
@@ -269,9 +330,25 @@ open Classical in
 /-- **One-Shot Deviation Principle**: for finite perfect-information extensive-form
     games, a pure strategy profile is a subgame-perfect equilibrium if and only if
     no player has a profitable one-shot deviation at any decision node. -/
-theorem oneShotDeviation_iff_spe (G : EFGGame) [Fintype G.Outcome]
-    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree) :
+theorem oneShotDeviation_iff_spe_of_bounded (G : EFGGame)
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
+    {C : G.inf.Player → ℝ} (hbd : ∀ p ω, |G.utility ω p| ≤ C p) :
     G.IsSubgamePerfectEq σ ↔ HasNoOneShotDeviation G σ :=
-  ⟨spe_hasNoOneShotDeviation G σ hpi, hasNoOneShotDeviation_spe G σ hpi⟩
+  ⟨spe_hasNoOneShotDeviation G σ hpi,
+    hasNoOneShotDeviation_spe_of_bounded G σ hpi hbd⟩
+
+open Classical in
+/-- **One-Shot Deviation Principle**: finite-outcome wrapper for the bounded
+    one-shot deviation theorem. -/
+theorem oneShotDeviation_iff_spe (G : EFGGame) [Finite G.Outcome]
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree) :
+    G.IsSubgamePerfectEq σ ↔ HasNoOneShotDeviation G σ := by
+  let C : G.inf.Player → ℝ := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose
+  have hbd : ∀ p ω, |G.utility ω p| ≤ C p := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose_spec
+  exact oneShotDeviation_iff_spe_of_bounded G σ hpi hbd
 
 end EFG
