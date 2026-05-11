@@ -63,9 +63,9 @@ abbrev MixedProfile (A : ι → Type) := ∀ i, PMF (A i)
 
 /-- NFG as a kernel-based game with mixed strategies.
     The outcome kernel maps independent per-player PMFs to a joint distribution
-    over pure action profiles via the product PMF construction. The product
-    PMF currently requires `[∀ i, Fintype (A i)]`. -/
-noncomputable def NFGGame.toMixedKernelGame [∀ i, Fintype (A i)]
+    over pure action profiles via the product PMF construction. Works for
+    arbitrary action types (the product PMF accepts countable factors). -/
+noncomputable def NFGGame.toMixedKernelGame
     (G : NFGGame ι A) : GameTheory.KernelGame ι where
   Strategy := fun i => PMF (A i)
   Outcome := G.Outcome
@@ -74,13 +74,17 @@ noncomputable def NFGGame.toMixedKernelGame [∀ i, Fintype (A i)]
 
 /-- A mixed Nash equilibrium: no player can improve expected payoff by
     changing their marginal distribution. -/
-def IsNashMixed [∀ i, Fintype (A i)] (G : NFGGame ι A)
+def IsNashMixed (G : NFGGame ι A)
     (σ : MixedProfile A) : Prop :=
   G.toMixedKernelGame.IsNash σ
 
 /-- The pure NFG kernel game embeds into the mixed NFG kernel game: each
 pure strategy maps to its Dirac PMF, outcomes are preserved on the nose,
-and utilities agree. Built via the `Morphism.ofOutcomeEmbedding` recipe. -/
+and utilities agree. Built via the `Morphism.ofOutcomeEmbedding` recipe.
+
+Requires `[∀ i, Fintype (A i)]` only because the proof uses `pmfPi_pure`,
+which is still Fintype-bound (a downstream PMFProduct lemma scheduled for
+later relaxation). -/
 noncomputable def NFGGame.toMixed_morphism [∀ i, Fintype (A i)]
     (G : NFGGame ι A) :
     GameTheory.KernelGame.Morphism G.toKernelGame G.toMixedKernelGame :=
