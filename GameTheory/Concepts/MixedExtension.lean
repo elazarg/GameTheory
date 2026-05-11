@@ -33,11 +33,15 @@ omit [DecidableEq ι] in
     under the independent product distribution. -/
 theorem mixedExtension_eu (G : KernelGame ι)
     [Fintype ι]
-    [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
+    [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     G.mixedExtension.eu σ who =
       expect (pmfPi σ) (fun s => G.eu s who) := by
-  simp only [mixedExtension, eu, expect_bind]
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  simp only [mixedExtension, eu]
+  exact expect_bind_of_bounded (pmfPi σ) G.outcomeKernel
+    (fun ω => G.utility ω who) hbd
 
 omit [DecidableEq ι] in
 /-- EU in the mixed extension under bounded utility, for a kernel game whose
@@ -57,21 +61,21 @@ open Classical in
     EUs under `τ`. -/
 theorem mixedExtension_eu_update (G : KernelGame ι)
     [Fintype ι]
-    [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
+    [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (τ : PMF (G.Strategy who)) :
     G.mixedExtension.eu (Function.update σ who τ) who =
       expect τ (fun a =>
         G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) := by
-  classical
-  letI (i : ι) : Fintype (G.Strategy i) := Fintype.ofFinite (G.Strategy i)
-  simp only [mixedExtension_eu, KernelGame.mixedExtension_Strategy]
-  have hprod : pmfPi (Function.update σ who τ) =
-      τ.bind (fun a => pmfPi (Function.update σ who (PMF.pure a))) := by
-    ext s
-    simp only [PMF.bind_apply, tsum_fintype]
-    simp only [pmfPi_apply_update_family, PMF.pure_apply, ite_mul, one_mul, zero_mul,
-      mul_ite, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
-  rw [hprod, expect_bind]
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  change expect ((pmfPi (Function.update σ who τ)).bind G.outcomeKernel)
+      (fun ω => G.utility ω who) = _
+  rw [pmfPi_update_bind, PMF.bind_bind]
+  rw [expect_bind_of_bounded τ
+      (fun a => (pmfPi (Function.update σ who (PMF.pure a))).bind G.outcomeKernel)
+      (fun ω => G.utility ω who) hbd]
+  apply tsum_congr; intro a
+  rfl
 
 open Classical in
 /-- EU under a unilateral mixed-strategy update equals the expectation, under the
@@ -178,8 +182,6 @@ theorem weighted_gain_sum_zero_of_bounded
   simp_rw [mul_sub]
   rw [h_summable_eu.tsum_sub h_summable_const, hdecomp, hconst, sub_self]
 
-variable [∀ i, Nonempty (G.Strategy i)]
-
 open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive,
     under bounded utility. -/
@@ -198,6 +200,7 @@ theorem isNash_iff_gains_nonpos_of_bounded
     rw [ge_iff_le]
     have hdecomp := G.mixedExtension_eu_update_of_bounded σ who τ (hbd who)
     rw [hdecomp]
+    letI : Nonempty (G.Strategy who) := ⟨τ.support_nonempty.choose⟩
     conv_rhs => rw [show G.mixedExtension.eu σ who =
         expect τ (fun _ => G.mixedExtension.eu σ who) from by
       simp [expect_const]]
@@ -233,7 +236,6 @@ section NashGain
 
 variable [Fintype ι]
 variable (G : KernelGame ι)
-variable [∀ i, Finite (G.Strategy i)]
 variable [Finite G.Outcome]
 
 open Classical in
@@ -248,25 +250,9 @@ open Classical in
 theorem weighted_gain_sum_zero
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     expect (σ who) (fun a => G.mixedGain σ who a) = 0 := by
-  classical
-  letI (i : ι) : Fintype (G.Strategy i) := Fintype.ofFinite (G.Strategy i)
-  simp only [mixedGain, expect_eq_sum]
-  have hsum1 : ∑ a : G.Strategy who, ((σ who) a).toReal = 1 := by
-    simpa using pmf_toReal_sum_one (σ who)
-  have hdecomp : ∑ a : G.Strategy who, ((σ who) a).toReal *
-      G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who =
-    G.mixedExtension.eu σ who := by
-    rw [← expect_eq_sum, ← G.mixedExtension_eu_update σ who (σ who)]
-    congr 1
-    exact Function.update_eq_self who σ
-  simp_rw [mul_sub]
-  rw [Finset.sum_sub_distrib, hdecomp]
-  rw [show ∑ a : G.Strategy who, ((σ who) a).toReal * G.mixedExtension.eu σ who =
-    G.mixedExtension.eu σ who from by
-      rw [← Finset.sum_mul, hsum1, one_mul]]
-  ring
-
-variable [∀ i, Nonempty (G.Strategy i)]
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  simpa [mixedGain] using G.weighted_gain_sum_zero_of_bounded σ who hbd
 
 open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive. -/
@@ -274,23 +260,13 @@ theorem isNash_iff_gains_nonpos
     (σ : ∀ i, PMF (G.Strategy i)) :
     G.mixedExtension.IsNash σ ↔
       ∀ who (a : G.Strategy who), G.mixedGain σ who a ≤ 0 := by
-  constructor
-  · intro hN who a
-    have h := hN who (PMF.pure a)
-    simp only [mixedGain]
-    linarith
-  · intro hgain who τ
-    rw [ge_iff_le]
-    have hdecomp := G.mixedExtension_eu_update σ who τ
-    rw [hdecomp]
-    conv_rhs => rw [show G.mixedExtension.eu σ who =
-        expect τ (fun _ => G.mixedExtension.eu σ who) from by
-      simp [expect_const]]
-    apply Math.ProbabilityMassFunction.expect_mono_of_pointwise
-    intro a
-    have hga := hgain who a
-    simp only [mixedGain] at hga
-    linarith
+  let C : ι → ℝ := fun who =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω who)).choose
+  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω who)).choose_spec
+  simpa [mixedGain] using G.isNash_iff_gains_nonpos_of_bounded σ hbd
 
 end NashGain
 

@@ -85,7 +85,7 @@ theorem gainSum_nonneg (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     0 ≤ G.gainSum σ who :=
   Finset.sum_nonneg (fun _ _ => pospart_nonneg _)
 
-variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
+variable [Finite G.Outcome]
 
 open Classical in
 /-- If σ satisfies the Nash map fixed-point identity, then σ is Nash.
@@ -541,6 +541,7 @@ end  -- [Fintype Outcome] game-side closure
 section  -- Full continuity and existence theorems
 variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
 
+omit [∀ i, Nonempty (G.Strategy i)] in
 /-- A fixed point of `nashMapOnMixedSimplex` yields a mixed Nash equilibrium. -/
 theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
     (hfix : ∃ x, Function.IsFixedPt (G.nashMapOnMixedSimplex) x) :
@@ -563,6 +564,7 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
   exact ⟨G.profileFromWeights w hw_nn hw_sum,
     G.nash_fp_is_nash _ (G.nashMap_fp_identity w hw_nn hw_sum hfp_weights)⟩
 
+omit [∀ i, Nonempty (G.Strategy i)] in
 /--
 Approximate fixed points for `nashMapOnMixedSimplex` imply existence of a mixed Nash equilibrium.
 The only remaining obligations are: continuity of `nashMapOnMixedSimplex`
@@ -577,6 +579,7 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx
       (f := G.nashMapOnMixedSimplex) hcont happrox with ⟨x, hxfix⟩
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point ⟨x, hxfix⟩
 
+omit [∀ i, Nonempty (G.Strategy i)] in
 /--
 Approximation-only mixed Nash existence:
 continuity is discharged by `continuous_nashMapOnMixedSimplex`.

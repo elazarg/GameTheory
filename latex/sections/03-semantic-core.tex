@@ -81,22 +81,29 @@ where $\Payoff{\Players} \coloneqq \Players \to \RR$.  The
 \end{equation}
 a finite sum under the finite-outcome hypotheses used by the major
 theorems.  At the core API level the implementation is mathlib's
-unordered-sum expectation for $\PMF{\cdot}$; finite-support lemmas
-recover the displayed formula.  Expected utility is the only place
+unordered-sum expectation for $\PMF{\cdot}$, well-defined on
+bounded utilities over an arbitrary (countable) \Outcome; the
+finite-support lemmas recover the displayed formula, and a
+parallel family of \TT{\_of\_bounded} lemmas replays the same
+algebra without a \TT{[Finite \Outcome]} hypothesis.  Expected utility is the only place
 where utility enters a numerical inequality.
 
 The conversion $\toGF : \KG \mapsto \GF$ forgets utility; the
 inverse $\toKG_u : \GF \mapsto \KG$ adjoins a utility $u$.  These
 are mutual inverses up to record equality.
 
-A kernel game over a finite outcome and finite-strategy domain
-admits an explicit \emph{mixed extension}:\ each player's strategy
-type is replaced by $\PMF{\Strat_i}$, and the outcome kernel
-samples a pure profile from the independent product
+A kernel game admits an explicit \emph{mixed extension}:\ each
+player's strategy type is replaced by $\PMF{\Strat_i}$, and the
+outcome kernel samples a pure profile from the independent product
 $\bigotimes_i \Profile_i \in \PMF{\prod_i \Strat_i}$ and applies
-the original kernel.  The mixed extension is itself a kernel game,
-indexed by the same $\Players$, and serves as the carrier of mixed
-strategies in Nash existence (\S\ref{sec:theorems:nash-mixed}).
+the original kernel.  Only the player index $\Players$ needs to
+be finite (so the product over players is well-defined); the
+per-player strategy types $\Strat_i$ and the outcome type
+$\Outcome$ may be countably infinite.  The mixed extension is
+itself a kernel game, indexed by the same $\Players$, and serves
+as the carrier of mixed strategies in Nash existence
+(\S\ref{sec:theorems:nash-mixed}), where the existence proof
+adds finiteness back as a hypothesis on $\Strat_i$ and $\Outcome$.
 
 \leancorr{\TT{Core/KernelGame.lean} (\TT{KernelGame},
 \TT{KernelGame.eu}, \TT{KernelGame.mixedExtension}, \TT{reindex});

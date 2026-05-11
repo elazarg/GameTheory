@@ -171,17 +171,41 @@ Strategy and outcome types can be countably infinite. `pmfPi` is defined
 for any per-coordinate PMF family over a finite player index, and
 `KernelGame.mixedExtension` inherits that generality. Expected-utility
 lemmas (`expect_bind`, `expect_pushforward`, `expect_mono_of_pointwise`)
-have `_of_bounded` siblings in `Math.Probability` that work over arbitrary
-types under a `|f| ≤ C` hypothesis. Concept-layer theorems
-(`mixedExtension_eu`, `weighted_gain_sum_zero`, zero-sum / constant-sum
-results, the support lemma, correlated-EU identity) likewise have
-bounded-utility variants that don't require `[Finite G.Outcome]`.
+have bounded/countable siblings in `Math.Probability`. Concept-layer
+theorems such as `mixedExtension_eu`, `weighted_gain_sum_zero`,
+`isNash_iff_gains_nonpos`, the mixed-Nash support lemma, and the
+correlated-EU identity no longer require finite strategy carriers; finite
+outcomes are used only as a convenient source of bounded utility, with
+explicit `_of_bounded` variants available when outcomes are not finite.
 
-Existence theorems (`mixed_nash_exists`, `correlatedEq_exists`,
-`zermelo`, Kuhn's theorem) carry finite hypotheses where the proofs
-genuinely require Brouwer's fixed point, `Finite.exists_max`, or
-`PureStrategy ≃ Π_info Act` enumeration. The *definitions* are
-unconditional; only the *existence statements* are gated by finiteness.
+Remaining finite assumptions are intentional proof boundaries:
+
+- `mixed_nash_exists`, `correlatedEq_exists`, and `coarseCorrelatedEq_exists`
+  still require finite nonempty strategy spaces and finite outcomes because
+  the current proof is Brouwer-on-product-simplices plus finite-dimensional
+  continuity of expected utility. Removing this would require a different
+  compactness/fixed-point theorem and integrability/continuity hypotheses for
+  infinite-dimensional mixed spaces.
+- Security-level and minimax existence statements still use finite maxima and
+  minima over strategy/profile spaces. Removing those assumptions would require
+  sup/inf formulations plus existence/attainment hypotheses.
+- Zermelo and one-shot-deviation theorems still require finite trees/outcomes
+  because the proofs take maxima during backward induction.
+- Kuhn wrappers keep finiteness where they enumerate pure strategies,
+  histories, or reachable information/action carriers. Removing those would
+  require countable/integrable versions of the reweighting and pure-strategy
+  product arguments.
+- The CE/CCE theorem “mixed Nash induces CE/CCE” now has bounded-utility
+  variants without finite outcomes, but still assumes finite strategy carriers
+  because `unilateralDeviationDistribution_pmfPi` uses the current finite
+  coordinate-update theorem for `pmfPi`. Generalizing that product-update
+  theorem to countable coordinates would remove this last algebraic finite
+  strategy assumption.
+- Some EU-specialized morphism wrappers still use finite outcomes to turn
+  utility-distribution equality into expected-utility equality. The semantic
+  morphism statement is distributional already; removing the wrapper's finite
+  outcome assumption needs an `expect_pushforward` lemma whose boundedness
+  hypothesis is only on the image of the pushed-forward map.
 
 See `Languages/NFG/CountableExample.lean` for a smoke test exercising
 `NFGGame` over `ℕ`-valued actions.

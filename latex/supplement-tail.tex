@@ -26,14 +26,19 @@ noncomputable def NFGGame.toKernelGame (G : NFGGame $\iota$ A) : KernelGame $\io
 \end{leanbox}
 
 \Mathematical
-A normal-form game over a finite player set $\Players$ and finite
+A normal-form game over a finite player set $\Players$ and
 action sets $\{A_i\}_i$ is the textbook tuple
 $(\Players, \{A_i\}_i, \util)$.  The compiler takes the strategy
 type to be $A_i$, the outcome type to be a chosen $\Outcome$ with
 a deterministic projection from joint actions, and the kernel to
 be the Dirac evaluation $\Profile \mapsto \Dirac_{G.\mathrm{outcome}(\Profile)}$.
 The compiled \KG\ is deterministic; randomness enters only at the
-mixed extension.
+mixed extension.  The structure does not impose finiteness on the
+action types $A_i$ — countably infinite action spaces are
+admitted at the definitional level (see
+\TT{Languages/NFG/CountableExample.lean} for an $\mathbb{N}$-valued
+smoke test); the mixed-Nash existence theorem reintroduces
+\TT{[Fintype (A i)]} where the proof requires it.
 
 \Textbook
 Osborne–Rubinstein Definition 11.1 (strategic-form game).  The

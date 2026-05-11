@@ -292,9 +292,12 @@ Reformulation only.  The textbook expectation
 $\mathbb{E}_\mu[f]$ is exactly \eqref{eq:supp:expect}; the
 \TT{tsum} appears because mathlib's $\PMF$ is countably-supported
 in general (the finite-support case is recovered automatically by
-\TT{expect_eq_sum}).
+\TT{expect_eq_sum}, and bounded-$f$ identities such as
+\TT{expect_bind_of_bounded}, \TT{expect_pushforward_of_bounded},
+and \TT{expect_mono_of_pointwise_bounded} carry the algebra
+into the genuinely countable case).
 
-\subsection{Finite product of PMFs: \texttt{Math.PMFProduct.pmfPi}}
+\subsection{Indexed product of PMFs: \texttt{Math.PMFProduct.pmfPi}}
 \label{sec:supp:pmfpi}\label{def:pmfPi}
 
 \begin{leanbox}
@@ -304,7 +307,9 @@ noncomputable def pmfPi \{$\iota$ : Type\} [Fintype $\iota$] \{$\alpha$ : $\iota
 \end{leanbox}
 
 \Mathematical
-For a finite family $\{\sigma_i \in \PMF{\alpha_i}\}_{i \in \Players}$,
+For a family $\{\sigma_i \in \PMF{\alpha_i}\}_{i \in \Players}$
+indexed by a finite type $\Players$ — the per-coordinate types
+$\alpha_i$ are otherwise arbitrary and may be countably infinite —
 $\mathrm{pmfPi}(\sigma)$ is the independent product distribution
 on $\prod_i \alpha_i$,
 \[
@@ -485,11 +490,16 @@ kernel game $\KG$ is
     \sum_{\omega \in \Outcome} \K(\Profile)(\omega) \cdot \util(\omega)(i),
 \end{equation}
 finite when \Outcome\ is finite.  In the general core API, this is
-the tsum-based expectation over the discrete support.  The theorem
-statements used in this chapter impose the finite hypotheses under
-which this is the displayed finite sum.  The correlated variant is
-the same expectation under the pushforward $\K_*\mu$ of a profile
-distribution $\mu$.
+the tsum-based expectation over the discrete support, well-defined
+on bounded utility for arbitrary (e.g.\ countably infinite)
+\Outcome.  The major theorem statements in this chapter still
+impose finiteness on \Outcome\ where the proofs need it (so the
+display reduces to a finite sum); a parallel \TT{\_of\_bounded}
+family of lemmas in \TT{Math.Probability} and
+\TT{Concepts/MixedExtension} replays the same identities under a
+$|u| \le C$ hypothesis without \TT{[Finite \Outcome]}.  The
+correlated variant is the same expectation under the pushforward
+$\K_*\mu$ of a profile distribution $\mu$.
 
 \Textbook
 The expected utility of a strategy profile in a strategic-form
@@ -514,7 +524,7 @@ because \PMF\ is the discrete monad.
 \begin{leanbox}
 open Classical in\\
 noncomputable def mixedExtension (G : KernelGame $\iota$)\\
-\bd [Fintype $\iota$] [$\forall$ i, Fintype (G.Strategy i)] : KernelGame $\iota$ where\\
+\bd [Fintype $\iota$] : KernelGame $\iota$ where\\
 \bd Strategy := fun i $\Rightarrow$ PMF (G.Strategy i)\\
 \bd Outcome  := G.Outcome\\
 \bd utility  := G.utility\\
@@ -522,7 +532,7 @@ noncomputable def mixedExtension (G : KernelGame $\iota$)\\
 \end{leanbox}
 
 \Mathematical
-The mixed extension $\KG^{\mathrm{mix}}$ of a finite kernel game
+The mixed extension $\KG^{\mathrm{mix}}$ of a kernel game
 $\KG$ has strategies $\PMF{\Strat_i}$ for each player, the same
 outcome and utility, and the outcome kernel
 \[
@@ -533,6 +543,14 @@ outcome and utility, and the outcome kernel
 Independence of the per-player mixing is encoded in
 \TT{pmfPi}; the original kernel $\K$ is then applied to the joint
 pure profile drawn from this product.
+
+The surrounding mixed-extension lemmas follow the same boundary:
+EU decomposition, unilateral mixed updates, zero weighted gain,
+the pure-deviation characterization of Nash, and the mixed-Nash
+support lemma all work over arbitrary strategy carriers under a
+bounded-utility hypothesis.  When \Outcome\ is finite, boundedness
+is derived automatically, so the corresponding finite-outcome
+wrappers do not require finite strategy carriers.
 
 \Textbook
 The mixed extension of a finite game (Nash~\citep{Nash1951};

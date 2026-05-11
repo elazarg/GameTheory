@@ -317,6 +317,49 @@ theorem expect_mono_of_pointwise_bounded
     (Math.Probability.expect_summable_of_bounded d f hf)
     (Math.Probability.expect_summable_of_bounded d g hg)
 
+/-- If a non-positive summable payoff has zero expectation, then every point
+    receiving positive probability has zero payoff. -/
+theorem eq_zero_of_expect_eq_zero_of_nonpos_of_pos
+    {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ)
+    (h_nonpos : ∀ ω, f ω ≤ 0)
+    (h_expect : Math.Probability.expect d f = 0)
+    (h_summable : Summable (fun ω => (d ω).toReal * f ω))
+    {ω : Ω} (hpos : d ω ≠ 0) :
+    f ω = 0 := by
+  classical
+  refine le_antisymm (h_nonpos ω) ?_
+  by_contra hnot
+  have hlt : f ω < 0 := lt_of_not_ge hnot
+  have hdpos : 0 < (d ω).toReal := ENNReal.toReal_pos hpos (PMF.apply_ne_top d ω)
+  have hterm_neg : (d ω).toReal * f ω < 0 := mul_neg_of_pos_of_neg hdpos hlt
+  let g : Ω → ℝ := fun x => if x = ω then (d ω).toReal * f ω else 0
+  have hg : Summable g := by
+    exact summable_of_hasFiniteSupport ((Set.finite_singleton ω).subset (by
+      intro x hx
+      simp only [Function.mem_support, g] at hx
+      simp only [Set.mem_singleton_iff]
+      by_contra hne
+      simp [hne] at hx))
+  have hle : ∀ x, (d x).toReal * f x ≤ g x := by
+    intro x
+    by_cases hx : x = ω
+    · subst hx
+      simp [g]
+    · have hmul : (d x).toReal * f x ≤ 0 :=
+        mul_nonpos_of_nonneg_of_nonpos ENNReal.toReal_nonneg (h_nonpos x)
+      simpa [g, hx] using hmul
+  have htsum_le : Math.Probability.expect d f ≤ ∑' x, g x := by
+    unfold Math.Probability.expect
+    exact h_summable.tsum_le_tsum hle hg
+  have hg_tsum : (∑' x, g x) = (d ω).toReal * f ω := by
+    rw [tsum_eq_single ω]
+    · simp [g]
+    · intro x hx
+      simp [g, hx]
+  have hle_neg : (0 : ℝ) ≤ (d ω).toReal * f ω := by
+    simpa [h_expect, hg_tsum] using htsum_le
+  exact (not_le_of_gt hterm_neg) hle_neg
+
 -- ============================================================================
 -- HEq lemmas for PMF
 -- ============================================================================
