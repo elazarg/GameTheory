@@ -55,14 +55,18 @@ section Bump
 /-- The Schauder bump centred at `y` with radius `ε`. -/
 noncomputable def bump (ε : ℝ) (y x : X) : ℝ := max 0 (ε - ‖x - y‖)
 
+omit [NormedSpace ℝ X] in
 @[simp] lemma bump_nonneg (ε : ℝ) (y x : X) : 0 ≤ bump ε y x := le_max_left _ _
 
+omit [NormedSpace ℝ X] in
 lemma bump_pos_iff {ε : ℝ} (y x : X) : 0 < bump ε y x ↔ ‖x - y‖ < ε := by
   simp only [bump, lt_max_iff, lt_self_iff_false, sub_pos, false_or]
 
+omit [NormedSpace ℝ X] in
 lemma bump_eq_zero_of_dist_ge {ε : ℝ} {y x : X} (h : ε ≤ ‖x - y‖) : bump ε y x = 0 := by
   simp only [bump]; grind
 
+omit [NormedSpace ℝ X] in
 lemma continuous_bump (ε : ℝ) (y : X) : Continuous (bump ε y) := by
   unfold bump; fun_prop
 
@@ -78,12 +82,15 @@ variable {m : ℕ}
 noncomputable def bumpSum (ε : ℝ) (y : Fin m → X) (x : X) : ℝ :=
   ∑ i, bump ε (y i) x
 
+omit [NormedSpace ℝ X] in
 lemma bumpSum_nonneg (ε : ℝ) (y : Fin m → X) (x : X) : 0 ≤ bumpSum ε y x :=
   Finset.sum_nonneg fun _ _ => bump_nonneg _ _ _
 
+omit [NormedSpace ℝ X] in
 lemma continuous_bumpSum (ε : ℝ) (y : Fin m → X) : Continuous (bumpSum ε y) :=
   continuous_finset_sum _ fun i _ => continuous_bump ε (y i)
 
+omit [NormedSpace ℝ X] in
 /-- If `x` lies within `ε` of some `y i`, the bump sum is strictly positive at `x`. -/
 lemma bumpSum_pos {ε : ℝ} {y : Fin m → X} {x : X} (h : ∃ i, ‖x - y i‖ < ε) :
     0 < bumpSum ε y x := by
@@ -108,6 +115,7 @@ lemma bary_mem_of_simplex {K : Set X} (hK : Convex ℝ K) {y : Fin m → X}
 noncomputable def weights (ε : ℝ) (y : Fin m → X) (x : X) : Fin m → ℝ :=
   fun i => bump ε (y i) x / bumpSum ε y x
 
+omit [NormedSpace ℝ X] in
 lemma weights_mem_stdSimplex {ε : ℝ} {y : Fin m → X} {x : X}
     (hpos : 0 < bumpSum ε y x) : weights ε y x ∈ stdSimplex ℝ (Fin m) := by
   refine ⟨fun _ => div_nonneg (bump_nonneg _ _ _) hpos.le, ?_⟩
@@ -115,6 +123,7 @@ lemma weights_mem_stdSimplex {ε : ℝ} {y : Fin m → X} {x : X}
     (Finset.sum_div _ _ _).symm]
   exact div_self hpos.ne'
 
+omit [NormedSpace ℝ X] in
 lemma continuousOn_weights (ε : ℝ) (y : Fin m → X) :
     ContinuousOn (weights ε y) {x | 0 < bumpSum ε y x} :=
   continuousOn_pi.2 fun _ =>
