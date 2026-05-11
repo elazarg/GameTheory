@@ -38,16 +38,6 @@ theorem correlatedEu_pure (σ : Profile G) (who : ι) :
     G.correlatedEu (PMF.pure σ) who = G.eu σ who := by
   simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
 
-/-- Correlated EU is the expectation of standard EU over the profile
-    distribution. -/
-theorem correlatedEu_eq_expect_eu [Finite G.Outcome]
-    (μ : PMF (Profile G)) (who : ι) :
-    G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
-  obtain ⟨C, hbd⟩ :=
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
-  simp only [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
-  exact expect_bind_of_bounded μ G.outcomeKernel (fun ω => G.utility ω who) hbd
-
 /-- Correlated EU equals the expectation of standard EU over the profile distribution,
     under bounded utility. -/
 theorem correlatedEu_eq_expect_eu_of_bounded
@@ -56,6 +46,15 @@ theorem correlatedEu_eq_expect_eu_of_bounded
     G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
   simp only [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
   exact expect_bind_of_bounded μ G.outcomeKernel (fun ω => G.utility ω who) hbd
+
+/-- Correlated EU is the expectation of standard EU over the profile
+    distribution. -/
+theorem correlatedEu_eq_expect_eu [Finite G.Outcome]
+    (μ : PMF (Profile G)) (who : ι) :
+    G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  exact G.correlatedEu_eq_expect_eu_of_bounded μ who hbd
 
 variable [DecidableEq ι]
 

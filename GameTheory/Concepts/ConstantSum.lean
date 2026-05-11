@@ -23,20 +23,6 @@ namespace KernelGame
 
 variable {ι : Type}
 
-/-- In a constant-sum game with finite outcomes and finite players,
-    social welfare always equals `c`. -/
-theorem IsConstantSum.socialWelfare_eq [Fintype ι]
-    {G : KernelGame ι} [Finite G.Outcome]
-    {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G) :
-    G.socialWelfare σ = c := by
-  letI : Fintype G.Outcome := Fintype.ofFinite G.Outcome
-  simp only [socialWelfare, eu, expect_eq_sum]
-  rw [Finset.sum_comm]
-  simp_rw [← Finset.mul_sum]
-  have hc : ∀ ω : G.Outcome, ∑ i : ι, G.utility ω i = c :=
-    fun ω => hcs ω
-  simp_rw [hc, ← Finset.sum_mul, pmf_toReal_sum_one, one_mul]
-
 /-- Constant-sum social welfare equals `c` for any profile, when each player's
     utility is bounded. -/
 theorem IsConstantSum.socialWelfare_eq_of_bounded [Fintype ι]
@@ -59,15 +45,16 @@ theorem IsConstantSum.socialWelfare_eq_of_bounded [Fintype ι]
   simp_rw [hc]
   rw [tsum_mul_right, Math.Probability.pmf_toReal_tsum_one, one_mul]
 
-/-- In a 2-player constant-sum game with finite outcomes,
-    player 0's EU is `c - eu σ 1`. -/
-theorem IsConstantSum.eu_determined
-    {G : KernelGame (Fin 2)} [Finite G.Outcome]
+/-- In a constant-sum game with finite outcomes and finite players,
+    social welfare always equals `c`. -/
+theorem IsConstantSum.socialWelfare_eq [Fintype ι]
+    {G : KernelGame ι} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G) :
-    G.eu σ 0 = c - G.eu σ 1 := by
-  have h := hcs.socialWelfare_eq σ
-  simp only [socialWelfare, Fin.sum_univ_two] at h
-  linarith
+    G.socialWelfare σ = c := by
+  classical
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
+  exact hcs.socialWelfare_eq_of_bounded σ hbd
 
 /-- In a 2-player constant-sum game with bounded utility, player 0's EU is `c - eu σ 1`. -/
 theorem IsConstantSum.eu_determined_of_bounded
@@ -78,6 +65,17 @@ theorem IsConstantSum.eu_determined_of_bounded
   have h := hcs.socialWelfare_eq_of_bounded σ hbd
   simp only [socialWelfare, Fin.sum_univ_two] at h
   linarith
+
+/-- In a 2-player constant-sum game with finite outcomes,
+    player 0's EU is `c - eu σ 1`. -/
+theorem IsConstantSum.eu_determined
+    {G : KernelGame (Fin 2)} [Finite G.Outcome]
+    {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G) :
+    G.eu σ 0 = c - G.eu σ 1 := by
+  classical
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
+  exact hcs.eu_determined_of_bounded σ hbd
 
 /-- A zero-sum game is a constant-sum game with constant 0. -/
 theorem IsZeroSum.isConstantSum_zero [Fintype ι]
@@ -125,30 +123,10 @@ theorem IsConstantSum.nash_eu_eq
     {c : ℝ} (hcs : G.IsConstantSum c) {σ τ : Profile G}
     (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
     G.eu σ 0 = G.eu τ 0 := by
-  have h1σ := hcs.eu_determined σ
-  have h1τ := hcs.eu_determined τ
-  apply le_antisymm
-  · have hcap : G.eu τ 0 ≥ G.eu (Function.update τ 0 (σ 0)) 0 := by
-      convert hNτ 0 (σ 0)
-    have hopt : G.eu σ 1 ≥ G.eu (Function.update σ 1 (τ 1)) 1 := by
-      convert hNσ 1 (τ 1)
-    have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
-      funext i
-      fin_cases i <;> simp [Function.update]
-    have hcs_cross := hcs.eu_determined (Function.update σ 1 (τ 1))
-    rw [heq] at hcs_cross
-    rw [heq] at hopt
-    linarith
-  · have hcap : G.eu σ 0 ≥ G.eu (Function.update σ 0 (τ 0)) 0 := by
-      convert hNσ 0 (τ 0)
-    have hopt : G.eu τ 1 ≥ G.eu (Function.update τ 1 (σ 1)) 1 := by
-      convert hNτ 1 (σ 1)
-    have heq : Function.update τ 1 (σ 1) = Function.update σ 0 (τ 0) := by
-      funext i
-      fin_cases i <;> simp [Function.update]
-    have hcs_cross := hcs.eu_determined (Function.update τ 1 (σ 1))
-    rw [heq] at hcs_cross hopt
-    linarith
+  classical
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
+  exact hcs.nash_eu_eq_of_bounded hNσ hNτ hbd
 
 end KernelGame
 end GameTheory
