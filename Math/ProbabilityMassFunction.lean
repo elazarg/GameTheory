@@ -52,6 +52,71 @@ theorem pushforward_bind
     pushforward (μ.bind k) f = μ.bind (fun a => pushforward (k a) f) := by
   exact PMF.map_bind (p := μ) (q := k) f
 
+open Classical in
+/-- Mask a PMF by an event, as an `ENNReal`-valued function. -/
+noncomputable def pmfMask (μ : PMF α) (E : α → Prop) : α → ENNReal :=
+  fun a => if E a then μ a else 0
+
+/-- Total mass assigned by a PMF to an event. This is `tsum`-based and does not
+require the underlying type to be finite. -/
+noncomputable def pmfMass (μ : PMF α) (E : α → Prop) : ENNReal :=
+  ∑' a : α, pmfMask (μ := μ) E a
+
+theorem pmfMass_ne_top (μ : PMF α) (E : α → Prop) :
+    pmfMass (μ := μ) E ≠ ⊤ := by
+  classical
+  simpa [pmfMass, pmfMask, Set.indicator, Set.mem_setOf_eq] using
+    μ.tsum_coe_indicator_ne_top {a | E a}
+
+theorem pmfMass_eq_toOuterMeasure (μ : PMF α) (E : α → Prop) :
+    pmfMass (μ := μ) E = μ.toOuterMeasure {a | E a} := by
+  classical
+  rw [PMF.toOuterMeasure_apply]
+  apply tsum_congr
+  intro a
+  simp [pmfMask, Set.indicator]
+
+/-- Pushforward mass of an event is the mass of its preimage. -/
+theorem pmfMass_pushforward
+    (μ : PMF α) (f : α → β) (E : β → Prop) :
+    pmfMass (μ := pushforward μ f) E = pmfMass (μ := μ) (fun a => E (f a)) := by
+  rw [pmfMass_eq_toOuterMeasure, pmfMass_eq_toOuterMeasure]
+  exact PMF.toOuterMeasure_map_apply f μ {b | E b}
+
+/-- Pushforward probability at a value equals the mass of its fiber. -/
+theorem pushforward_apply_eq_pmfMass
+    (μ : PMF α) (f : α → β) (b : β) :
+    pushforward μ f b = pmfMass (μ := μ) (fun a => f a = b) := by
+  calc
+    pushforward μ f b = (pushforward μ f).toOuterMeasure {b} :=
+      (PMF.toOuterMeasure_apply_singleton (pushforward μ f) b).symm
+    _ = pmfMass (μ := pushforward μ f) (fun x => x = b) :=
+      (pmfMass_eq_toOuterMeasure (pushforward μ f) (fun x => x = b)).symm
+    _ = pmfMass (μ := μ) (fun a => f a = b) := by
+      simpa using pmfMass_pushforward μ f (fun x => x = b)
+
+open Classical in
+/-- Condition a PMF on an event with nonzero mass. -/
+noncomputable def pmfCond (μ : PMF α) (E : α → Prop)
+    (h : pmfMass (μ := μ) E ≠ 0) : PMF α :=
+  PMF.normalize (pmfMask (μ := μ) E) h (pmfMass_ne_top μ E)
+
+@[simp] theorem pmfCond_apply (μ : PMF α) (E : α → Prop)
+    (h : pmfMass (μ := μ) E ≠ 0) (a : α) :
+    pmfCond (μ := μ) E h a = pmfMask (μ := μ) E a / pmfMass (μ := μ) E := by
+  simp [pmfCond, pmfMass, div_eq_mul_inv]
+
+theorem pmfCond_ne_zero_implies
+    (μ : PMF α) (E : α → Prop)
+    (h : pmfMass (μ := μ) E ≠ 0) {a : α}
+    (ha : pmfCond (μ := μ) E h a ≠ 0) :
+    E a := by
+  classical
+  by_contra hEa
+  have : pmfCond (μ := μ) E h a = 0 := by
+    simp [pmfMask, hEa]
+  exact ha this
+
 theorem bind_congr_on_support
     (μ : PMF α) (f g : α → PMF β)
     (hfg : ∀ a, a ∈ μ.support → f a = g a) :
@@ -212,38 +277,48 @@ theorem eq_zero_of_pushforward_eq_zero
   rw [hb] at hle
   exact le_antisymm hle bot_le
 
+/-- If `b` is in the support of `pushforward μ proj`, then the fibre
+    `{a | proj a = b}` meets the support of `μ`. -/
+theorem pushforward_support_fibre
+    {β : Type*} (μ : PMF α) (proj : α → β) (b : β)
+    (hb : b ∈ (pushforward μ proj).support) :
+    ∃ a ∈ ({a | proj a = b} : Set α), a ∈ μ.support := by
+  change b ∈ (PMF.map proj μ).support at hb
+  rcases (PMF.mem_support_map_iff proj μ b).1 hb with ⟨a, ha, hab⟩
+  exact ⟨a, hab, ha⟩
+
 open Classical in
 noncomputable def condOn
-    {β : Type*} [Fintype α]
+    {β : Type*}
     (μ : PMF α) (proj : α → β) (b : β) : PMF α :=
-  let p_b := pushforward μ proj b
-  if hb : p_b = 0 then μ
+  if h : ∃ a ∈ ({a | b = proj a} : Set α), a ∈ μ.support then
+    μ.filter {a | b = proj a} h
   else
-    PMF.ofFintype
-      (fun a => if proj a = b then μ a / p_b else 0)
-      (by
-        rw [show (∑ a, if proj a = b then μ a / p_b else (0 : ENNReal)) =
-            (∑ a, (if proj a = b then (μ a : ENNReal) else 0) * p_b⁻¹) from
-          Finset.sum_congr rfl (fun a _ => by split_ifs <;> simp [div_eq_mul_inv]),
-          ← Finset.sum_mul]
-        have h_sum : (∑ a : α, if proj a = b then (μ a : ENNReal) else 0) = p_b := by
-          change _ = pushforward μ proj b
-          simp [pushforward, PMF.map_apply, tsum_fintype, eq_comm]
-        rw [h_sum]
-        exact ENNReal.mul_inv_cancel hb (PMF.apply_ne_top (pushforward μ proj) b))
+    μ
 
 open Classical in
 theorem condOn_apply
-    {β : Type*} [Fintype α]
+    {β : Type*}
     (μ : PMF α) (proj : α → β) (b : β)
     (a : α) (hb : pushforward μ proj b ≠ 0) :
     condOn μ proj b a = if proj a = b then μ a / pushforward μ proj b else 0 := by
-  simp [condOn, hb, PMF.ofFintype_apply]
+  have hb_support : b ∈ (pushforward μ proj).support := by
+    simpa [PMF.mem_support_iff] using hb
+  have hs : ∃ a ∈ ({a | b = proj a} : Set α), a ∈ μ.support := by
+    rcases pushforward_support_fibre μ proj b hb_support with ⟨a, ha, hμa⟩
+    exact ⟨a, ha.symm, hμa⟩
+  change (if h : ∃ a ∈ ({a | b = proj a} : Set α), a ∈ μ.support then
+      μ.filter {a | b = proj a} h else μ) a =
+    if proj a = b then μ a / pushforward μ proj b else 0
+  rw [dif_pos hs]
+  simp [pushforward, PMF.map_apply, Set.indicator, div_eq_mul_inv, eq_comm]
+  rfl
 
 theorem bind_pushforward_condOn
-    {β : Type*} [Fintype α] [Finite β]
+    {β : Type*} [Finite α] [Finite β]
     (μ : PMF α) (proj : α → β) (g : α → PMF γ) :
     μ.bind g = (pushforward μ proj).bind (fun b => (condOn μ proj b).bind g) := by
+  letI : Fintype α := Fintype.ofFinite α
   letI : Fintype β := Fintype.ofFinite β
   classical
   ext x
@@ -362,49 +437,6 @@ theorem expect_mono_of_pointwise_bounded
   expect_mono_of_pointwise_summable d f g hfg
     (Math.Probability.expect_summable_of_bounded d f hf)
     (Math.Probability.expect_summable_of_bounded d g hg)
-
-/-- If a non-positive summable payoff has zero expectation, then every point
-    receiving positive probability has zero payoff. -/
-theorem eq_zero_of_expect_eq_zero_of_nonpos_of_pos
-    {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ)
-    (h_nonpos : ∀ ω, f ω ≤ 0)
-    (h_expect : Math.Probability.expect d f = 0)
-    (h_summable : Summable (fun ω => (d ω).toReal * f ω))
-    {ω : Ω} (hpos : d ω ≠ 0) :
-    f ω = 0 := by
-  classical
-  refine le_antisymm (h_nonpos ω) ?_
-  by_contra hnot
-  have hlt : f ω < 0 := lt_of_not_ge hnot
-  have hdpos : 0 < (d ω).toReal := ENNReal.toReal_pos hpos (PMF.apply_ne_top d ω)
-  have hterm_neg : (d ω).toReal * f ω < 0 := mul_neg_of_pos_of_neg hdpos hlt
-  let g : Ω → ℝ := fun x => if x = ω then (d ω).toReal * f ω else 0
-  have hg : Summable g := by
-    exact summable_of_hasFiniteSupport ((Set.finite_singleton ω).subset (by
-      intro x hx
-      simp only [Function.mem_support, g] at hx
-      simp only [Set.mem_singleton_iff]
-      by_contra hne
-      simp [hne] at hx))
-  have hle : ∀ x, (d x).toReal * f x ≤ g x := by
-    intro x
-    by_cases hx : x = ω
-    · subst hx
-      simp [g]
-    · have hmul : (d x).toReal * f x ≤ 0 :=
-        mul_nonpos_of_nonneg_of_nonpos ENNReal.toReal_nonneg (h_nonpos x)
-      simpa [g, hx] using hmul
-  have htsum_le : Math.Probability.expect d f ≤ ∑' x, g x := by
-    unfold Math.Probability.expect
-    exact h_summable.tsum_le_tsum hle hg
-  have hg_tsum : (∑' x, g x) = (d ω).toReal * f ω := by
-    rw [tsum_eq_single ω]
-    · simp [g]
-    · intro x hx
-      simp [g, hx]
-  have hle_neg : (0 : ℝ) ≤ (d ω).toReal * f ω := by
-    simpa [h_expect, hg_tsum] using htsum_le
-  exact (not_le_of_gt hterm_neg) hle_neg
 
 -- ============================================================================
 -- HEq lemmas for PMF

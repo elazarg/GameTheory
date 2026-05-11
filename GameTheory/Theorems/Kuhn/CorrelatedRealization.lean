@@ -1467,6 +1467,17 @@ section SemanticConditions
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
 
+noncomputable local instance semanticToCoreInfoStateFintype
+    [∀ i, Fintype (O.InfoState i)] (i : ι) :
+    Fintype (O.toCore.InfoState i) := by
+  simpa [ObsModel.toCore, ObsModelCore.InfoState] using
+    ((inferInstance : ∀ i, Fintype (O.InfoState i)) i)
+
+noncomputable local instance semanticToCoreInfoStateFintypeFamily
+    [∀ i, Fintype (O.InfoState i)] :
+    ∀ i, Fintype (O.toCore.InfoState i) :=
+  fun i => semanticToCoreInfoStateFintype (O := O) i
+
 /-- Semantic locality on `ObsModel`, viewed as the corresponding core condition on
 `O.toCore`. This is the semantic content of what `PlayerStepRecall O i` provides
 in the Kuhn proof. Unlike `PlayerStepRecall`, this condition depends on the
@@ -1484,10 +1495,6 @@ abbrev ObsLocalFeasibilityFull (i : ι) : Prop :=
 posterior-local condition on `O.toCore`. -/
 abbrev ActionPosteriorLocal (O : ObsModel ι σ Obs Act)
     [∀ i, Fintype (O.InfoState i)] [∀ i o, Fintype (Act i o)] (i : ι) : Prop :=
-  letI : ∀ j, Fintype (O.toCore.InfoState j) := by
-    intro j
-    simpa [ObsModel.toCore, ObsModelCore.InfoState] using
-      (inferInstance : Fintype (O.InfoState j))
   ObsModelCore.ActionPosteriorLocal O.toCore i
 
 /-- **Semantic condition**: At any reachable transition `(s, a, t)`, the joint action `a`
@@ -1737,14 +1744,14 @@ theorem actionPosteriorLocal_toCore
     (hDet : ObsModelCore.StepMassInvariant O.toCore)
     (hLocal : ∀ i, O.ObsLocalFeasibility i) :
     ∀ i, O.ActionPosteriorLocal i := by
-  intro i
   letI : ∀ j, Fintype (O.toCore.InfoState j) := by
     intro j
     simpa [ObsModel.toCore, ObsModelCore.InfoState] using
-      (inferInstance : Fintype (O.InfoState j))
-  simpa [ObsModel.ActionPosteriorLocal] using
-    (ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility
-      (O := O.toCore) hDet i (obsLocalFeasibility_toCore hLocal i))
+      ((inferInstance : ∀ j, Fintype (O.InfoState j)) j)
+  change ∀ i, ObsModelCore.ActionPosteriorLocal O.toCore i
+  intro i
+  exact ObsModelCore.actionPosteriorLocal_of_obsLocalFeasibility
+    (O := O.toCore) hDet i (obsLocalFeasibility_toCore hLocal i)
 
 /-! ## Kuhn theorem hierarchy
 
@@ -1844,6 +1851,15 @@ variable [∀ i, Fintype (O.InfoState i)]
 
 open Math.PMFProduct
 
+noncomputable local instance hierarchyToCoreInfoStateFintype (i : ι) :
+    Fintype (O.toCore.InfoState i) := by
+  simpa [ObsModel.toCore, ObsModelCore.InfoState] using
+    ((inferInstance : ∀ i, Fintype (O.InfoState i)) i)
+
+noncomputable local instance hierarchyToCoreInfoStateFintypeFamily :
+    ∀ i, Fintype (O.toCore.InfoState i) :=
+  fun i => hierarchyToCoreInfoStateFintype (O := O) i
+
 open Classical in
 /-- **Core Kuhn M→B theorem**: under step-action determinism and the semantic
 locality condition `ObsLocalFeasibility`, every product distribution over pure
@@ -1862,10 +1878,6 @@ theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
     ∃ β : BehavioralProfile O,
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
   have hDet : ObsModelCore.StepActionDeterminism O.toCore := hPSAR.toStepActionDeterminism
-  letI : ∀ i, Fintype (O.toCore.InfoState i) := by
-    intro i
-    simpa [ObsModel.toCore, ObsModelCore.InfoState] using
-      (inferInstance : Fintype (O.InfoState i))
   simpa [ObsModel.toCore, ObsModelCore.runDist, ObsModel.runDist,
     ObsModelCore.runDistPure, ObsModel.runDistPure,
     ObsModelCore.stepDist, ObsModel.stepDist,
@@ -1888,8 +1900,8 @@ omit [∀ i, Fintype (O.InfoState i)] in
 This is now a corollary of the semantic theorem
 `kuhn_mixed_to_behavioral_semantic`, using the derived implication
 `TracePlayerStepRecall -> ObsLocalFeasibility -> ActionPosteriorLocal`. -/
-theorem kuhn_mixed_to_behavioral_trace [∀ i, Finite (O.InfoState i)]
-    [∀ i o, Nonempty (Act i o)]
+theorem kuhn_mixed_to_behavioral_trace
+    [∀ i, Finite (O.InfoState i)] [∀ i o, Nonempty (Act i o)]
     (hPSAR : PerStepActionRecall O)
     (hTPSR : ∀ i, O.TracePlayerStepRecall i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
@@ -1928,8 +1940,8 @@ same trace distribution.
 
 Corollary of `kuhn_mixed_to_behavioral_semantic` via
 `PerStepPlayerRecall -> ObsLocalFeasibility -> ActionPosteriorLocal`. -/
-theorem kuhn_mixed_to_behavioral_pspr [∀ i, Finite (O.InfoState i)]
-    [∀ i o, Nonempty (Act i o)]
+theorem kuhn_mixed_to_behavioral_pspr
+    [∀ i, Finite (O.InfoState i)] [∀ i o, Nonempty (Act i o)]
     (hPSPR : PerStepPlayerRecall O) (μ : ∀ i, PMF (O.LocalStrategy i))
     (k : Nat) :
     ∃ β : BehavioralProfile O,
@@ -1957,9 +1969,9 @@ The conceptual value is that it shows the proof decomposes cleanly per player:
 the global PSAR handles the reach structure (derived from the per-player
 conditions), while each player's factor obs-locality uses only their own
 `PlayerStepRecall`. See `reweightPMF_update_obs_local_player` for the
-per-player lemma. -/
-theorem kuhn_mixed_to_behavioral_decomposed [∀ i o, Nonempty (Act i o)]
-    [∀ i, Finite (O.InfoState i)]
+corresponding local conditioning lemma. -/
+theorem kuhn_mixed_to_behavioral_decomposed
+    [∀ i, Finite (O.InfoState i)] [∀ i o, Nonempty (Act i o)]
     (hPSR : ∀ i, PlayerStepRecall O i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
     (k : Nat) :

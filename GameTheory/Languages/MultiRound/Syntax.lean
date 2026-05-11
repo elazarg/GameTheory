@@ -103,7 +103,7 @@ noncomputable def Round.eval (r : Round n S V A Sig) (σ : PureProfile n V A)
     r.transition s (fun i => σ i (r.view i s (sig i)))
 
 /-- Evaluate one round under a behavioral profile. -/
-noncomputable def Round.evalMixed [Fintype (Option A)]
+noncomputable def Round.evalMixed
     (r : Round n S V A Sig) (σ : BehavioralProfile n V A)
     (s : S) : PMF S :=
   (r.signal s).bind fun sig =>
@@ -121,13 +121,13 @@ noncomputable def MultiRoundGame.eval (G : MultiRoundGame n S V A Sig)
   evalRounds G.rounds σ G.init
 
 /-- Evaluate a sequence of rounds under a behavioral profile. -/
-noncomputable def evalRoundsMixed [Fintype (Option A)]
+noncomputable def evalRoundsMixed
     (rounds : List (Round n S V A Sig))
     (σ : BehavioralProfile n V A) (s : S) : PMF S :=
   rounds.foldl (fun dist r => dist.bind (r.evalMixed σ)) (PMF.pure s)
 
 /-- Evaluate the full protocol under a behavioral profile. -/
-noncomputable def MultiRoundGame.evalMixed [Fintype (Option A)]
+noncomputable def MultiRoundGame.evalMixed
     (G : MultiRoundGame n S V A Sig) (σ : BehavioralProfile n V A) : PMF S :=
   evalRoundsMixed G.rounds σ G.init
 

@@ -9,3 +9,4 @@ import Math.ParameterizedChain
 import Math.OptimizationLocalGlobal
 import Math.BoundedLists
 import Math.DAG
+import Math.SchauderFixedPoint

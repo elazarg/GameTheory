@@ -38,6 +38,13 @@ theorem correlatedEu_pure (σ : Profile G) (who : ι) :
     G.correlatedEu (PMF.pure σ) who = G.eu σ who := by
   simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
 
+/-- Correlated EU is the expectation of standard EU over the profile
+    distribution. -/
+theorem correlatedEu_eq_expect_eu [Finite (Profile G)] [Finite G.Outcome]
+    (μ : PMF (Profile G)) (who : ι) :
+    G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
+  simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward, expect_bind]
+
 /-- Correlated EU equals the expectation of standard EU over the profile distribution,
     under bounded utility. -/
 theorem correlatedEu_eq_expect_eu_of_bounded
@@ -46,15 +53,6 @@ theorem correlatedEu_eq_expect_eu_of_bounded
     G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
   simp only [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
   exact expect_bind_of_bounded μ G.outcomeKernel (fun ω => G.utility ω who) hbd
-
-/-- Correlated EU is the expectation of standard EU over the profile
-    distribution. -/
-theorem correlatedEu_eq_expect_eu [Finite G.Outcome]
-    (μ : PMF (Profile G)) (who : ι) :
-    G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
-  obtain ⟨C, hbd⟩ :=
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
-  exact G.correlatedEu_eq_expect_eu_of_bounded μ who hbd
 
 variable [DecidableEq ι]
 
@@ -82,7 +80,7 @@ open Classical in
     component replaced by the pushforward of the original through `dev`. -/
 theorem unilateralDeviationDistribution_pmfPi
     {G : KernelGame ι}
-    [Fintype ι]
+    [Fintype ι] [∀ i, Finite (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     (dev : G.Strategy who → G.Strategy who) :
     G.unilateralDeviationDistribution (pmfPi σ) who dev =
@@ -90,40 +88,6 @@ theorem unilateralDeviationDistribution_pmfPi
   unfold KernelGame.unilateralDeviationDistribution KernelGame.deviationDistribution
   unfold KernelGame.unilateralDeviation
   exact pmfPi_bind_update_map σ who dev
-
-open Classical in
-/-- A mixed Nash profile induces a correlated equilibrium under bounded utility.
-
-This assumes only a finite player index and bounded utility. Strategy carriers
-may be countable, since `unilateralDeviationDistribution_pmfPi` is now proved
-directly for product PMFs over arbitrary coordinate carriers. -/
-theorem mixed_nash_isCorrelatedEq_of_bounded
-    {G : KernelGame ι}
-    [Fintype ι]
-    (σ : ∀ i, PMF (G.Strategy i))
-    (hN : G.mixedExtension.IsNash σ)
-    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
-    G.IsCorrelatedEq (pmfPi σ) := by
-  intro who dev
-  have hN' : G.mixedExtension.eu σ who ≥
-      G.mixedExtension.eu (Function.update σ who (PMF.map dev (σ who))) who :=
-    hN who (PMF.map dev (σ who))
-  have hbase :
-      G.correlatedEu (pmfPi σ) who = G.mixedExtension.eu σ who := by
-    rw [G.correlatedEu_eq_expect_eu_of_bounded (μ := pmfPi σ) who (hbd who)]
-    symm; exact G.mixedExtension_eu_of_bounded σ who (hbd who)
-  have hdev :
-      G.correlatedEu (G.unilateralDeviationDistribution (pmfPi σ) who dev) who =
-      G.mixedExtension.eu
-        (Function.update σ who (PMF.map dev (σ who))) who := by
-    rw [G.correlatedEu_eq_expect_eu_of_bounded
-      (μ := G.unilateralDeviationDistribution (pmfPi σ) who dev) who (hbd who)]
-    rw [G.unilateralDeviationDistribution_pmfPi σ who dev]
-    symm
-    exact G.mixedExtension_eu_of_bounded
-      (Function.update σ who (PMF.map dev (σ who))) who (hbd who)
-  rw [hbase, hdev]
-  exact hN'
 
 open Classical in
 /-- A mixed Nash profile induces a correlated equilibrium on pure profiles
@@ -136,17 +100,30 @@ open Classical in
     player `who`'s EU. -/
 theorem mixed_nash_isCorrelatedEq
     {G : KernelGame ι}
-    [Fintype ι] [Finite G.Outcome]
+    [Fintype ι] [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ) :
     G.IsCorrelatedEq (pmfPi σ) := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
-  exact G.mixed_nash_isCorrelatedEq_of_bounded σ hN hbd
+  intro who dev
+  letI : ∀ i, Fintype (G.Strategy i) := fun i => Fintype.ofFinite (G.Strategy i)
+  have hN' : G.mixedExtension.eu σ who ≥
+      G.mixedExtension.eu (Function.update σ who (PMF.map dev (σ who))) who :=
+    hN who (PMF.map dev (σ who))
+  have hbase :
+      G.correlatedEu (pmfPi σ) who = G.mixedExtension.eu σ who := by
+    rw [G.correlatedEu_eq_expect_eu (μ := pmfPi σ) who]
+    symm; exact G.mixedExtension_eu σ who
+  have hdev :
+      G.correlatedEu (G.unilateralDeviationDistribution (pmfPi σ) who dev) who =
+      G.mixedExtension.eu
+        (Function.update σ who (PMF.map dev (σ who))) who := by
+    rw [G.correlatedEu_eq_expect_eu
+      (μ := G.unilateralDeviationDistribution (pmfPi σ) who dev) who]
+    rw [G.mixedExtension_eu]
+    rw [G.unilateralDeviationDistribution_pmfPi σ who dev]
+    rfl
+  rw [hbase, hdev]
+  exact hN'
 
 end KernelGame
 end GameTheory

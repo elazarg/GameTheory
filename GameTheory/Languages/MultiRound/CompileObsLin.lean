@@ -753,9 +753,7 @@ noncomputable def liftMixedProfile
 
 /-- The joint product of lifted mixed profiles equals the pushforward of the native
 joint product through `liftPureProfile`. -/
-theorem liftMixedProfile_joint [Finite V] [Finite A]
-    [Fintype (Fin n)]
-    [∀ i, Finite ((compiledLinObs G).LocalStrategy i)]
+theorem liftMixedProfile_joint [Fintype (Fin n)]
     (μ : (i : Fin n) → PMF (PureStrategy V A)) :
     Math.PMFProduct.pmfPi (liftMixedProfile (G := G) μ) =
       Math.ProbabilityMassFunction.pushforward

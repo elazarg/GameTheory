@@ -29,9 +29,18 @@ attribute [local instance] Fintype.ofFinite
 
 /-- Zero-sum is preserved under mixed extension (same outcome space and utility). -/
 theorem mixedExtension_isZeroSum {ι : Type} [Fintype ι] {G : KernelGame ι}
-    (hzs : G.IsZeroSum) :
-    G.mixedExtension.IsZeroSum :=
+    (hzs : G.IsZeroSum) : G.mixedExtension.IsZeroSum :=
   hzs
+
+open Classical in
+/-- In a 2-player zero-sum game at a Nash equilibrium, deviating player 1
+    cannot decrease player 0's payoff. -/
+theorem IsZeroSum.nash_p0_optimal {G : KernelGame (Fin 2)} [Finite G.Outcome]
+    (hzs : G.IsZeroSum) {σ : Profile G} (hN : G.IsNash σ)
+    (s₁ : G.Strategy 1) :
+    G.eu (Function.update σ 1 s₁) 0 ≥ G.eu σ 0 := by
+  have h1 : G.eu σ 1 ≥ G.eu (Function.update σ 1 s₁) 1 := by convert hN 1 s₁
+  linarith [hzs.eu_neg σ, hzs.eu_neg (Function.update σ 1 s₁)]
 
 open Classical in
 /-- Under bounded utility (no `[Finite G.Outcome]` needed): in a 2-player zero-sum
@@ -45,23 +54,32 @@ theorem IsZeroSum.nash_p0_optimal_of_bounded {G : KernelGame (Fin 2)}
   linarith [hzs.eu_neg_of_bounded σ hbd, hzs.eu_neg_of_bounded (Function.update σ 1 s₁) hbd]
 
 open Classical in
-/-- In a 2-player zero-sum game at a Nash equilibrium, deviating player 1
-    cannot decrease player 0's payoff. -/
-theorem IsZeroSum.nash_p0_optimal {G : KernelGame (Fin 2)} [Finite G.Outcome]
-    (hzs : G.IsZeroSum) {σ : Profile G} (hN : G.IsNash σ)
-    (s₁ : G.Strategy 1) :
-    G.eu (Function.update σ 1 s₁) 0 ≥ G.eu σ 0 := by
-  classical
-  choose C hbd using fun i =>
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
-  exact hzs.nash_p0_optimal_of_bounded hN s₁ hbd
-
-open Classical in
 /-- At a Nash equilibrium, deviating player 0 cannot increase player 0's payoff. -/
 theorem nash_p0_cap {G : KernelGame (Fin 2)}
     {σ : Profile G} (hN : G.IsNash σ) (s₀ : G.Strategy 0) :
     G.eu σ 0 ≥ G.eu (Function.update σ 0 s₀) 0 := by
   convert hN 0 s₀
+
+open Classical in
+/-- All Nash equilibria of a 2-player zero-sum game yield the same EU for player 0.
+    This establishes the uniqueness of the game's value. -/
+theorem IsZeroSum.nash_eu_eq {G : KernelGame (Fin 2)} [Finite G.Outcome]
+    (hzs : G.IsZeroSum) {σ τ : Profile G}
+    (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
+    G.eu σ 0 = G.eu τ 0 := by
+  apply le_antisymm
+  · have hopt := hzs.nash_p0_optimal hNσ (τ 1)
+    have hcap : G.eu τ 0 ≥ G.eu (Function.update τ 0 (σ 0)) 0 := by convert hNτ 0 (σ 0)
+    have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
+      funext i
+      fin_cases i <;> simp [Function.update]
+    rw [heq] at hopt; linarith
+  · have hopt := hzs.nash_p0_optimal hNτ (σ 1)
+    have hcap : G.eu σ 0 ≥ G.eu (Function.update σ 0 (τ 0)) 0 := by convert hNσ 0 (τ 0)
+    have heq : Function.update τ 1 (σ 1) = Function.update σ 0 (τ 0) := by
+      funext i
+      fin_cases i <;> simp [Function.update]
+    rw [heq] at hopt; linarith
 
 open Classical in
 /-- Under bounded utility: all Nash equilibria of a 2-player zero-sum game yield
@@ -86,44 +104,6 @@ theorem IsZeroSum.nash_eu_eq_of_bounded {G : KernelGame (Fin 2)}
     rw [heq] at hopt; linarith
 
 open Classical in
-/-- All Nash equilibria of a 2-player zero-sum game yield the same EU for player 0.
-    This establishes the uniqueness of the game's value. -/
-theorem IsZeroSum.nash_eu_eq {G : KernelGame (Fin 2)} [Finite G.Outcome]
-    (hzs : G.IsZeroSum) {σ τ : Profile G}
-    (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
-    G.eu σ 0 = G.eu τ 0 := by
-  classical
-  choose C hbd using fun i =>
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
-  exact hzs.nash_eu_eq_of_bounded hNσ hNτ hbd
-
-open Classical in
-/-- **Von Neumann's Minimax Theorem**, bounded-utility form.
-
-Every finite-strategy 2-player zero-sum game with bounded utility has a value
-`v` in mixed strategies:
-there exists a mixed Nash equilibrium `σ` with EU `v` for player 0 such that
-- player 0's mixed strategy guarantees at least `v` against any opponent, and
-- player 1's mixed strategy prevents player 0 from exceeding `v`.
-
-The outcome carrier need not be finite. -/
-theorem von_neumann_minimax_of_bounded (G : KernelGame (Fin 2))
-    [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-    (hzs : G.IsZeroSum)
-    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
-    ∃ (v : ℝ) (σ : Profile G.mixedExtension),
-      G.mixedExtension.IsNash σ ∧
-      G.mixedExtension.eu σ 0 = v ∧
-      (∀ s₁, G.mixedExtension.eu (Function.update σ 1 s₁) 0 ≥ v) ∧
-      (∀ s₀, G.mixedExtension.eu (Function.update σ 0 s₀) 0 ≤ v) := by
-  have hzs' : G.mixedExtension.IsZeroSum := mixedExtension_isZeroSum hzs
-  obtain ⟨σ, hN⟩ := mixed_nash_exists_of_bounded G hbd
-  have hbd' : ∀ i ω, |G.mixedExtension.utility ω i| ≤ C i := hbd
-  refine ⟨_, σ, hN, rfl, fun s₁ => ?_, fun s₀ => ?_⟩
-  · exact hzs'.nash_p0_optimal_of_bounded hN s₁ hbd'
-  · have h := nash_p0_cap hN s₀; linarith
-
-open Classical in
 /-- **Von Neumann's Minimax Theorem.**
 
 Every finite 2-player zero-sum game has a value `v` in mixed strategies:
@@ -138,25 +118,29 @@ theorem von_neumann_minimax (G : KernelGame (Fin 2))
       G.mixedExtension.eu σ 0 = v ∧
       (∀ s₁, G.mixedExtension.eu (Function.update σ 1 s₁) 0 ≥ v) ∧
       (∀ s₀, G.mixedExtension.eu (Function.update σ 0 s₀) 0 ≤ v) := by
-  choose C hbd using fun i =>
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
-  exact G.von_neumann_minimax_of_bounded hzs hbd
+  letI : ∀ i, Fintype (G.Strategy i) := fun i => Fintype.ofFinite (G.Strategy i)
+  have hzs' : G.mixedExtension.IsZeroSum := mixedExtension_isZeroSum hzs
+  obtain ⟨σ, hN⟩ := mixed_nash_exists G
+  haveI : Finite G.mixedExtension.Outcome := by
+    change Finite G.Outcome
+    infer_instance
+  refine ⟨_, σ, hN, rfl, fun s₁ => ?_, fun s₀ => ?_⟩
+  · exact hzs'.nash_p0_optimal hN s₁
+  · have h := nash_p0_cap hN s₀; linarith
 
 open Classical in
-/-- **Interchangeability**, bounded-utility form: in a 2-player zero-sum game,
-    if `σ` and `τ` are both Nash equilibria, then the cross profile
-    `(σ 0, τ 1)` is also Nash. -/
-theorem IsZeroSum.nash_interchangeable_of_bounded {G : KernelGame (Fin 2)}
+/-- **Interchangeability**: in a 2-player zero-sum game, if `σ` and `τ` are
+    both Nash equilibria, then the "cross" profile `(σ 0, τ 1)` is also Nash. -/
+theorem IsZeroSum.nash_interchangeable {G : KernelGame (Fin 2)} [Finite G.Outcome]
     (hzs : G.IsZeroSum) {σ τ : Profile G}
-    (hNσ : G.IsNash σ) (hNτ : G.IsNash τ)
-    {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
+    (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
     G.IsNash (Function.update σ 1 (τ 1)) := by
   have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
     funext i
     fin_cases i <;> simp [Function.update]
-  have hval := hzs.nash_eu_eq_of_bounded hNσ hNτ hbd
+  have hval := hzs.nash_eu_eq hNσ hNτ
   have hge : G.eu (Function.update σ 1 (τ 1)) 0 ≥ G.eu σ 0 :=
-    hzs.nash_p0_optimal_of_bounded hNσ (τ 1) hbd
+    hzs.nash_p0_optimal hNσ (τ 1)
   have hle : G.eu (Function.update τ 0 (σ 0)) 0 ≤ G.eu τ 0 := by
     have := nash_p0_cap hNτ (σ 0); linarith
   rw [heq] at hge
@@ -180,26 +164,15 @@ theorem IsZeroSum.nash_interchangeable_of_bounded {G : KernelGame (Fin 2)}
                 Function.update σ 1 s₁ := by
       simp [Function.update_idem]
     rw [hupd]
-    have h1 := hzs.eu_neg_of_bounded (Function.update σ 1 (τ 1)) hbd
-    have h2 := hzs.eu_neg_of_bounded (Function.update σ 1 s₁) hbd
-    have hopt := hzs.nash_p0_optimal_of_bounded hNσ s₁ hbd
+    have h1 := hzs.eu_neg (Function.update σ 1 (τ 1))
+    have h2 := hzs.eu_neg (Function.update σ 1 s₁)
+    have hopt := hzs.nash_p0_optimal hNσ s₁
     rw [hval_cross] at h1
     linarith
   intro who s'
   fin_cases who
   · convert hN0 s'
   · convert hN1 s'
-
-open Classical in
-/-- **Interchangeability**: in a 2-player zero-sum game, if `σ` and `τ` are
-    both Nash equilibria, then the "cross" profile `(σ 0, τ 1)` is also Nash. -/
-theorem IsZeroSum.nash_interchangeable {G : KernelGame (Fin 2)} [Finite G.Outcome]
-    (hzs : G.IsZeroSum) {σ τ : Profile G}
-    (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
-    G.IsNash (Function.update σ 1 (τ 1)) := by
-  choose C hbd using fun i =>
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
-  exact hzs.nash_interchangeable_of_bounded hNσ hNτ hbd
 
 end KernelGame
 end GameTheory
