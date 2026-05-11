@@ -171,41 +171,40 @@ Strategy and outcome types can be countably infinite. `pmfPi` is defined
 for any per-coordinate PMF family over a finite player index, and
 `KernelGame.mixedExtension` inherits that generality. Expected-utility
 lemmas (`expect_bind`, `expect_pushforward`, `expect_mono_of_pointwise`)
-have bounded/countable siblings in `Math.Probability`. Concept-layer
-theorems such as `mixedExtension_eu`, `weighted_gain_sum_zero`,
-`isNash_iff_gains_nonpos`, the mixed-Nash support lemma, and the
-correlated-EU identity no longer require finite strategy carriers; finite
-outcomes are used only as a convenient source of bounded utility, with
-explicit `_of_bounded` variants available when outcomes are not finite.
+have bounded/countable siblings in `Math.Probability`; the pushforward API
+also has an image-bounded variant for utility-distribution morphisms.
+Concept-layer theorems such as `mixedExtension_eu`,
+`weighted_gain_sum_zero`, `isNash_iff_gains_nonpos`, the mixed-Nash support
+lemma, CE/CCE transport from mixed Nash, correlated-EU identities, OSD,
+Zermelo, and EU morphism wrappers no longer need finite outcome carriers
+when a bounded-utility hypothesis is supplied. Finite outcomes remain as
+convenient wrappers that derive boundedness automatically.
 
 Remaining finite assumptions are intentional proof boundaries:
 
-- `mixed_nash_exists`, `correlatedEq_exists`, and `coarseCorrelatedEq_exists`
-  still require finite nonempty strategy spaces and finite outcomes because
-  the current proof is Brouwer-on-product-simplices plus finite-dimensional
-  continuity of expected utility. Removing this would require a different
-  compactness/fixed-point theorem and integrability/continuity hypotheses for
+- `mixed_nash_exists_of_bounded`, `correlatedEq_exists_of_bounded`, and
+  `coarseCorrelatedEq_exists_of_bounded` remove finite outcomes but still
+  require finite nonempty strategy spaces because the current proof is
+  Brouwer-on-product-simplices. Removing that would require a different
+  compactness/fixed-point theorem and continuity hypotheses for
   infinite-dimensional mixed spaces.
-- Security-level and minimax existence statements still use finite maxima and
-  minima over strategy/profile spaces. Removing those assumptions would require
-  sup/inf formulations plus existence/attainment hypotheses.
-- Zermelo and one-shot-deviation theorems still require finite trees/outcomes
-  because the proofs take maxima during backward induction.
+- Security levels now have sup/inf definitions (`worstCaseEUInf`,
+  `securityLevelSup`) without finite profile/strategy enumerations. Existence
+  of an attaining security strategy still requires finite/compact attainment
+  hypotheses.
+- `zermelo_of_bounded` and `oneShotDeviation_iff_spe_of_bounded` remove finite
+  outcomes. They still rely on the finite game-tree/action structure for
+  backward induction and local action maximization.
 - Kuhn wrappers keep finiteness where they enumerate pure strategies,
   histories, or reachable information/action carriers. Removing those would
   require countable/integrable versions of the reweighting and pure-strategy
   product arguments.
-- The CE/CCE theorem “mixed Nash induces CE/CCE” now has bounded-utility
-  variants without finite outcomes, but still assumes finite strategy carriers
-  because `unilateralDeviationDistribution_pmfPi` uses the current finite
-  coordinate-update theorem for `pmfPi`. Generalizing that product-update
-  theorem to countable coordinates would remove this last algebraic finite
-  strategy assumption.
-- Some EU-specialized morphism wrappers still use finite outcomes to turn
-  utility-distribution equality into expected-utility equality. The semantic
-  morphism statement is distributional already; removing the wrapper's finite
-  outcome assumption needs an `expect_pushforward` lemma whose boundedness
-  hypothesis is only on the image of the pushed-forward map.
+- The CE/CCE theorem “mixed Nash induces CE/CCE” is now finite-strategy-free;
+  the product-deviation identity is proved directly for arbitrary coordinate
+  carriers over a finite player index.
+- Von Neumann minimax and zero-sum interchangeability have bounded-utility
+  variants without finite outcomes, but still depend on mixed Nash existence,
+  hence on finite nonempty pure strategy spaces in the current development.
 
 See `Languages/NFG/CountableExample.lean` for a smoke test exercising
 `NFGGame` over `ℕ`-valued actions.

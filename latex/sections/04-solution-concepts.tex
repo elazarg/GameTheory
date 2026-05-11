@@ -237,16 +237,20 @@ guarantee value over a worst-case opponent profile,
       \EU\bigl(\KG, \Profile_{-i}[i \mapsto s], i\bigr),
 \end{equation}
 and a \emph{security strategy} for $i$ achieves this supremum.
-The library formalizes the worst-case-EU and security-level
-quantities, proves that a security strategy exists in the finite
-case, and proves that Nash payoffs are at least the security
-level.  The two-player zero-sum theorem in
+The library formalizes both finite attained versions
+(\TT{worstCaseEU}, \TT{securityLevel}) and order-theoretic sup/inf
+versions (\TT{worstCaseEUInf}, \TT{securityLevelSup}).  It proves
+that a security strategy exists in the finite attained case, and that
+Nash payoffs are at least the corresponding security level under the
+boundedness hypotheses needed for the sup/inf API.  The two-player
+zero-sum theorem in
 \S\ref{sec:theorems:minimax} is stated through a mixed Nash profile
 with saddle-style guarantee inequalities.
 
 \leancorr{Definitions and the IR/Nash bound in
 \TT{Concepts/SecurityStrategy.lean} (\TT{worstCaseEU},
-\TT{securityLevel}); individual-rationality interface in
+\TT{securityLevel}, \TT{worstCaseEUInf}, \TT{securityLevelSup});
+individual-rationality interface in
 \TT{Concepts/IndividualRationality.lean}.}
 
 \subsection{Regret}

@@ -52,7 +52,23 @@ theorem isSaddlePoint_iff_isNash (G : KernelGame (Fin 2)) (σ : Profile G) :
   · intro hN
     exact ⟨fun s₀ => by convert hN 0 s₀, fun s₁ => by convert hN 1 s₁⟩
 
-/-- `Guarantees` is equivalent to worst-case EU being at least `v`. -/
+open Classical in
+/-- `Guarantees` is equivalent to order-theoretic worst-case EU being at least
+    `v`, without enumerating the profile space. -/
+theorem guarantees_iff_worstCaseEUInf_ge
+    (G : KernelGame ι) [Nonempty (Profile G)]
+    (who : ι) (s : G.Strategy who) (v : ℝ)
+    (hbdd : BddBelow (Set.range (fun σ : Profile G =>
+      G.eu (Function.update σ who s) who))) :
+    G.Guarantees who s v ↔ G.worstCaseEUInf who s ≥ v := by
+  constructor
+  · intro hg
+    exact le_ciInf hg
+  · intro hge σ
+    exact le_trans hge (G.worstCaseEUInf_le who s hbdd σ)
+
+/-- Finite-profile specialization: `Guarantees` is equivalent to finite
+    worst-case EU being at least `v`. -/
 theorem guarantees_iff_worstCaseEU_ge
     (G : KernelGame ι) [Fintype (Profile G)]
     [∀ i, Nonempty (G.Strategy i)]

@@ -109,10 +109,12 @@ the EU operator, the solution-concept predicates — do not
 require \TT{Fintype} on $\Strat_i$ or $\Outcome$:\ strategy and
 outcome types may be countably infinite, and the EU operator is
 the tsum-based expectation, well-defined on bounded utilities.
-Most \emph{existence theorems} (Nash, correlated equilibrium,
-Zermelo, Kuhn) carry finite hypotheses where the proof genuinely
-needs them — Brouwer's fixed point on a product of simplices,
-\TT{Finite.exists\_max}, or an enumeration of pure strategies.
+Most \emph{existence theorems} carry finite hypotheses where the
+proof genuinely needs them — Brouwer's fixed point on a finite
+product of simplices, \TT{Finite.exists\_max}, or an enumeration of
+pure strategies.  Several of these theorems also have bounded-utility
+forms that remove finite outcome carriers while retaining the finite
+strategy/tree hypotheses used by the proof.
 A parallel family of \TT{\_of\_bounded} lemmas in
 \TT{Math.Probability} and \TT{Concepts/MixedExtension} replays
 the algebra of expected utility under a $|u| \le C$ hypothesis

@@ -19,29 +19,23 @@ defined over a finite player index but arbitrary per-coordinate
 types, and a parallel family of \TT{\_of\_bounded} lemmas
 replays the algebra without \TT{[Finite \Outcome]}.  The
 \TT{Fintype} hypotheses re-enter at the level of major existence
-theorems (Nash, correlated equilibrium, Zermelo, Kuhn), where
-the proof needs Brouwer, \TT{Finite.exists\_max}, or
-pure-strategy enumeration.
+theorems, where the proof needs Brouwer, \TT{Finite.exists\_max},
+or pure-strategy enumeration.  For Nash, CE/CCE existence, Zermelo,
+OSD, minimax, and morphism EU wrappers, bounded-utility variants
+remove finite outcome carriers while preserving the proof-relevant
+finite strategy/tree hypotheses.
 
 \paragraph{Remaining finite boundaries.}\ The finiteness assumptions
 that remain are proof boundaries rather than definitional restrictions.
-Mixed-Nash and correlated-equilibrium existence use Brouwer on a
-finite-dimensional product of simplices and finite-dimensional
-continuity of expected utility.  Security levels and minimax values
-use attained finite maxima/minima.  Backward induction and the
-one-shot-deviation principle use finite trees and finite outcome
-comparisons.  The Kuhn wrappers enumerate pure strategies, histories,
-or reachable information/action carriers.  Finally, the theorem that a
-mixed Nash distribution induces CE/CCE has bounded-utility variants
-without finite outcomes, but its current product-deviation step still
-uses a finite-coordinate \TT{pmfPi} update lemma; removing that last
-finite strategy assumption would require a countable product-update
-theorem for \TT{pmfPi}.
-Some EU-specialized morphism wrappers also still use finite outcomes
-to convert equality of utility distributions into equality of expected
-utilities; removing that wrapper assumption requires an
-\TT{expect\_pushforward} lemma whose boundedness hypothesis is only on
-the image of the pushed-forward utility map.
+Mixed-Nash and correlated-equilibrium existence still use Brouwer on a
+finite-dimensional product of simplices; dropping finite strategy
+sets would require a different compactness/fixed-point theorem.
+Security levels now have sup/inf definitions, but existence of an
+attaining security strategy still needs finite or compact attainment.
+Backward induction and the one-shot-deviation principle use finite
+trees and finite action sets, but not finite outcomes in their
+bounded-utility forms.  The Kuhn wrappers still enumerate pure
+strategies, histories, or reachable information/action carriers.
 
 \paragraph{Gained.}\ Every strategic-form definition is a
 $\sum$-of-products identity that the library's \TT{simp} set can

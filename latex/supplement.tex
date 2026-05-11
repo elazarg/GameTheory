@@ -294,7 +294,8 @@ $\mathbb{E}_\mu[f]$ is exactly \eqref{eq:supp:expect}; the
 in general (the finite-support case is recovered automatically by
 \TT{expect_eq_sum}, and bounded-$f$ identities such as
 \TT{expect_bind_of_bounded}, \TT{expect_pushforward_of_bounded},
-and \TT{expect_mono_of_pointwise_bounded} carry the algebra
+\TT{expect_pushforward_of_bounded_on_source}, and
+\TT{expect_mono_of_pointwise_bounded} carry the algebra
 into the genuinely countable case).
 
 \subsection{Indexed product of PMFs: \texttt{Math.PMFProduct.pmfPi}}
@@ -629,7 +630,9 @@ it expresses an EU-isomorphism.  A
 \TT{GameForm.ProtocolIsomorphism} is the analogous bijective
 protocol-only version.  All of these come with \TT{id} and
 \TT{comp} together with the corresponding identity/associativity
-lemmas.
+lemmas.  Distribution-preserving morphisms can be upgraded to
+EU-preserving morphisms either from finite outcomes or from explicit
+bounded-utility hypotheses via \TT{toEUMorphismOfBounded}.
 
 \Faithfulness
 The morphism vocabulary is project-internal:\ no textbook canonizes
@@ -932,9 +935,11 @@ Faithful, with reformulation.  The library's
 $\IsCorrelatedEq$ is the ex-ante form; the equivalent
 ex-post (conditional) form is \TT{Concepts/CorrelatedEqProperties.lean}'s
 \TT{isCorrelatedEq_iff_pointwise} (and similarly for the
-preference-parameterized variant).  Existence is the content of
-the main chapter's CE existence theorem
-(\TT{KernelGame.correlatedEq_exists}).
+preference-parameterized variant).  Existence is the content of the
+main chapter's CE existence theorem
+(\TT{KernelGame.correlatedEq_exists}); the bounded-utility sibling
+\TT{KernelGame.correlatedEq_exists_of_bounded} removes finite
+outcomes while retaining the finite-strategy Brouwer hypothesis.
 
 \Variants
 \TT{IsCorrelatedEqFor}, \TT{IsCoarseCorrelatedEqFor} are the
@@ -965,10 +970,14 @@ the Lean library does not yet package the ratio-valued
 
 \paragraph{Security and individual rationality.}\
 \TT{Concepts/SecurityStrategy.lean}, \TT{Concepts/IndividualRationality.lean}.
-\TT{securityLevel} of player $i$ is $\sup_s \inf_{\sigma_{-i}}
-\EU(\KG, \sigma_{-i}[i \mapsto s], i)$; a security strategy
-attains this supremum.  Individual rationality says no Nash payoff
-is below the security level (Maschler–Solan–Zamir §5.4).
+\TT{securityLevel} is the finite attained version of
+$\sup_s \inf_{\sigma_{-i}}
+\EU(\KG, \sigma_{-i}[i \mapsto s], i)$, while
+\TT{securityLevelSup} and \TT{worstCaseEUInf} are the
+order-theoretic sup/inf versions for non-enumerated carriers.  A
+security strategy attains the finite supremum.  Individual
+rationality says no Nash payoff is below the relevant security level
+(Maschler–Solan–Zamir §5.4).
 
 \paragraph{Regret.}\
 \TT{Concepts/Regret.lean}.  External regret of $\Profile$ for $i$

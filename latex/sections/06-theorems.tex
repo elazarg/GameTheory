@@ -143,7 +143,8 @@ max-min/min-max equality is the standard mathematical reading of
 the finite saddle inequalities; the Lean theorem is stated in the
 guarantee form above.
 
-\leancorr{Statement \TT{KernelGame.von\_neumann\_minimax} in
+\leancorr{Statements \TT{KernelGame.von\_neumann\_minimax} and
+\TT{KernelGame.von\_neumann\_minimax\_of\_bounded} in
 \TT{Theorems/Minimax.lean}; supporting zero-sum-Nash equality in
 \TT{Concepts/ZeroSumNash.lean} (\TT{IsZeroSum.nash\_eu\_eq}).
 Supplement~§6.3.}
@@ -169,12 +170,16 @@ profile $\sigma$ is a subgame-perfect equilibrium of $G$ iff it has
 no profitable one-shot deviation:\ at every reachable decision node,
 the action prescribed by $\sigma$ yields at least as much expected
 utility (holding the rest of $\sigma$ fixed) as any alternative.
+In Lean the main statement is the bounded-utility theorem; the
+finite-outcome statement is a wrapper that derives boundedness.
 \end{theorem}
 
 \begin{theorem}[Zermelo's backward induction]
 \label{thm:zermelo}
 Every finite perfect-information extensive-form game has a pure
 subgame-perfect equilibrium.
+The formal theorem again has a bounded-utility form without a finite
+outcome carrier, plus a finite-outcome wrapper.
 \end{theorem}
 
 \noindent The backward induction itself constructs, by recursion
@@ -199,8 +204,9 @@ because intermediate steps invoke classical reasoning to compare
 real-valued utilities.  A computable variant restricting to
 rational utilities would compile but is not packaged.}
 
-\leancorr{Statements \TT{EFG.oneShotDeviation\_iff\_spe} and
-\TT{EFG.zermelo} in \TT{Theorems/OneShotDeviation.lean} and
+\leancorr{Statements \TT{EFG.oneShotDeviation\_iff\_spe\_of\_bounded},
+\TT{EFG.oneShotDeviation\_iff\_spe}, \TT{EFG.zermelo\_of\_bounded},
+and \TT{EFG.zermelo} in \TT{Theorems/OneShotDeviation.lean} and
 \TT{Theorems/Zermelo.lean}; the subtree disjointness lemma is
 \TT{perfectInfo\_disjoint\_subtrees}; the reachability relation
 is \TT{EFG.ReachBy}.  Supplement~§6.4.}

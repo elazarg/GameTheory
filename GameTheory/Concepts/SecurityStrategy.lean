@@ -10,6 +10,8 @@ achieves this guarantee.
 
 ## Main definitions
 
+* `worstCaseEUInf` — infimum EU over opponent profiles for a fixed strategy
+* `securityLevelSup` — supremum over own strategies of `worstCaseEUInf`
 * `worstCaseEU` — minimum EU over opponent profiles for a fixed strategy
 * `securityLevel` — the max over own strategies of `worstCaseEU`
 
@@ -28,6 +30,100 @@ open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}
+
+section Order
+
+variable (G : KernelGame ι)
+
+open Classical in
+/-- Worst-case EU as an order-theoretic infimum over opponent profiles.
+
+Unlike `worstCaseEU`, this definition does not enumerate the profile space.
+Useful bounds require the displayed payoff range to be bounded below. -/
+noncomputable def worstCaseEUInf (who : ι) (s : G.Strategy who) : ℝ :=
+  ⨅ σ : Profile G, G.eu (Function.update σ who s) who
+
+open Classical in
+/-- Security level as an order-theoretic supremum over own strategies.
+
+Unlike `securityLevel`, this definition does not enumerate the strategy space.
+Upper-bound lemmas require the strategy range to be nonempty. Lower-bound
+lemmas additionally require the displayed range to be bounded above. -/
+noncomputable def securityLevelSup (who : ι) : ℝ :=
+  ⨆ s : G.Strategy who, G.worstCaseEUInf who s
+
+open Classical in
+/-- The infimum worst-case EU is below every profile payoff when the payoff
+    range is bounded below. -/
+theorem worstCaseEUInf_le (who : ι) (s : G.Strategy who)
+    (hbdd : BddBelow (Set.range (fun σ : Profile G =>
+      G.eu (Function.update σ who s) who)))
+    (σ : Profile G) :
+    G.worstCaseEUInf who s ≤ G.eu (Function.update σ who s) who := by
+  exact ciInf_le hbdd σ
+
+open Classical in
+/-- The infimum worst case is a guaranteed payoff against every profile, under
+    the same bounded-below hypothesis needed to use `iInf` as a lower bound. -/
+theorem worstCaseEUInf_guarantees (who : ι) (s : G.Strategy who)
+    (hbdd : BddBelow (Set.range (fun σ : Profile G =>
+      G.eu (Function.update σ who s) who))) :
+    ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥
+      G.worstCaseEUInf who s :=
+  fun σ => G.worstCaseEUInf_le who s hbdd σ
+
+open Classical in
+/-- In a Nash equilibrium, each player's EU is at least their order-theoretic
+    security level, assuming each pure-deviation worst-case range is bounded
+    below. -/
+theorem nash_eu_ge_securityLevelSup {σ : Profile G} (hN : G.IsNash σ)
+    (who : ι) [Nonempty (G.Strategy who)]
+    (hbddWorst : ∀ s : G.Strategy who,
+      BddBelow (Set.range (fun τ : Profile G =>
+        G.eu (Function.update τ who s) who))) :
+    G.eu σ who ≥ G.securityLevelSup who := by
+  simp only [securityLevelSup]
+  apply ciSup_le
+  intro s
+  calc G.worstCaseEUInf who s
+      ≤ G.eu (Function.update σ who s) who := G.worstCaseEUInf_le who s (hbddWorst s) σ
+    _ ≤ G.eu σ who := by have := hN who s; linarith
+
+open Classical in
+/-- A dominant strategy guarantees at least the order-theoretic security level
+    against any profile, under bounded-below worst-case ranges. -/
+theorem IsDominant.eu_ge_securityLevelSup
+    {who : ι} [Nonempty (G.Strategy who)]
+    {s : G.Strategy who} (hdom : G.IsDominant who s)
+    (σ : Profile G)
+    (hbddWorst : ∀ t : G.Strategy who,
+      BddBelow (Set.range (fun τ : Profile G =>
+        G.eu (Function.update τ who t) who))) :
+    G.eu (Function.update σ who s) who ≥ G.securityLevelSup who := by
+  simp only [securityLevelSup]
+  apply ciSup_le
+  intro t
+  calc G.worstCaseEUInf who t
+      ≤ G.eu (Function.update σ who t) who := G.worstCaseEUInf_le who t (hbddWorst t) σ
+    _ ≤ G.eu (Function.update σ who s) who := by
+        have := hdom σ t; linarith
+
+open Classical in
+/-- The order-theoretic security level is the best guaranteed payoff, provided
+    the chosen strategy's profile range is nonempty/bounded below and the
+    strategy-level worst-case range is bounded above. -/
+theorem le_securityLevelSup_of_forall_eu_ge (who : ι) [Nonempty (Profile G)]
+    (s : G.Strategy who) (v : ℝ)
+    (hg : ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥ v)
+    (hbddSec : BddAbove (Set.range (fun t : G.Strategy who =>
+      G.worstCaseEUInf who t))) :
+    v ≤ G.securityLevelSup who := by
+  calc v ≤ G.worstCaseEUInf who s := by
+          exact le_ciInf hg
+     _ ≤ G.securityLevelSup who :=
+          le_ciSup hbddSec s
+
+end Order
 
 section Finite
 
