@@ -87,7 +87,7 @@ private theorem pmf_foldl_bind_mixed
     ext s
     rw [PMF.pure_bind, ih]
 
-private theorem evalRoundsMixed_cons [Fintype (Option A)] (r : Round n S V A Sig)
+private theorem evalRoundsMixed_cons (r : Round n S V A Sig)
     (rest : List (Round n S V A Sig)) (σ : BehavioralProfile n V A) (s : S) :
     evalRoundsMixed (r :: rest) σ s = (r.evalMixed σ s).bind (evalRoundsMixed rest σ) := by
   simp only [evalRoundsMixed, List.foldl_cons]
@@ -641,9 +641,8 @@ end Adequacy
 
 section BehavioralAdequacy
 
-variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Option A)]
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
 
-omit [Fintype (Option A)] in
 /-- Resolve players `pVal, pVal+1, ..., n-1` by sampling from behavioral
 strategies, accumulating actions into `accActs`. -/
 noncomputable def resolveActionsMixed
@@ -658,7 +657,6 @@ noncomputable def resolveActionsMixed
     PMF.pure accActs
   termination_by (n - pVal)
 
-omit [Fintype (Option A)] in
 private theorem resolveActionsMixed_gen [Fintype (Fin n)]
     (σ : BehavioralProfile n V A) (r : Round n S V A Sig)
     (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A) :
@@ -721,7 +719,6 @@ private theorem resolveActionsMixed_gen [Fintype (Fin n)]
       have hne : i.val ≠ pVal := fun h => hi (Fin.ext h)
       congr 1; ext; constructor <;> intro h <;> omega
 
-omit [Fintype (Option A)] in
 /-- Resolving from player 0 with default actions equals the joint behavioral
 sampling `pmfPi (fun i => σ i (r.view i s (sig i)))`. -/
 theorem resolveActionsMixed_eq_pmfPi [Fintype (Fin n)]

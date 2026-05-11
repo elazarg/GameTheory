@@ -85,18 +85,18 @@ theorem gainSum_nonneg (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     0 ≤ G.gainSum σ who :=
   Finset.sum_nonneg (fun _ _ => pospart_nonneg _)
 
+variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
+
 open Classical in
-/-- If σ satisfies the Nash map fixed-point identity under bounded utilities,
-    then σ is Nash. This is the core algebraic content of Nash's existence
-    proof; no finite-outcome assumption is needed. -/
-theorem nash_fp_is_nash_of_bounded
+/-- If σ satisfies the Nash map fixed-point identity, then σ is Nash.
+    This is the core algebraic content of Nash's existence proof. -/
+theorem nash_fp_is_nash
     (σ : ∀ i, PMF (G.Strategy i))
-    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who)
     (hfp : ∀ who (a : G.Strategy who),
       (σ who a).toReal * (1 + G.gainSum σ who) =
         (σ who a).toReal + pospart (G.mixedGain σ who a)) :
     G.mixedExtension.IsNash σ := by
-  rw [G.isNash_iff_gains_nonpos_of_bounded σ hbd]
+  rw [G.isNash_iff_gains_nonpos σ]
   intro who a
   have hfp_who :
       ∀ a : G.Strategy who,
@@ -107,30 +107,12 @@ theorem nash_fp_is_nash_of_bounded
     simpa [gainSum, pospart] using hfp who a
   have hwg_sum : ∑ a : G.Strategy who,
       (σ who a).toReal * G.mixedGain σ who a = 0 := by
-    have hwg := G.weighted_gain_sum_zero_of_bounded σ who (hbd who)
-    change expect (σ who) (fun a => G.mixedGain σ who a) = 0 at hwg
+    have hwg := G.weighted_gain_sum_zero σ who
     rwa [expect_eq_sum] at hwg
   exact Math.Optimization.LocalGlobal.all_nonpos_of_weighted_pospart_fixedPoint
     (w := fun a => (σ who a).toReal)
     (g := fun a => G.mixedGain σ who a)
     hfp_who hwg_sum a
-
-open Classical in
-/-- Finite-outcome wrapper for `nash_fp_is_nash_of_bounded`. -/
-theorem nash_fp_is_nash
-    [Finite G.Outcome]
-    (σ : ∀ i, PMF (G.Strategy i))
-    (hfp : ∀ who (a : G.Strategy who),
-      (σ who a).toReal * (1 + G.gainSum σ who) =
-        (σ who a).toReal + pospart (G.mixedGain σ who a)) :
-    G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
-  exact G.nash_fp_is_nash_of_bounded σ hbd hfp
 
 end NashMapAlgebra
 
@@ -259,6 +241,9 @@ variable [Fintype ι]
 variable (G : KernelGame ι)
 variable [∀ i, Fintype (G.Strategy i)]
 
+section  -- Definitions require [Nonempty] and [Fintype Outcome]
+variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
+
 /-- Convert a mixed-simplex profile to PMF profile (same coordinates, repackaged). -/
 noncomputable def profileFromMixedSimplex
     (x : MixedSimplex ι (fun i => G.Strategy i)) :
@@ -299,6 +284,8 @@ noncomputable def nashMapOnMixedSimplex :
   · intro a
     exact G.nashMap_nonneg w hw_nn hw_sum i a
   · simpa using G.nashMap_sum_one w hw_nn hw_sum i
+
+end  -- definitions section
 
 theorem gainSumOnMixedSimplex_nonneg
     (x : MixedSimplex ι (fun i => G.Strategy i)) (who : ι) :
@@ -362,8 +349,8 @@ Baseline mixed-EU continuity on the mixed-simplex domain.
 This is the `hbase` premise used by
 `continuous_nashMapOnMixedSimplex_of_continuous_mixedEu`.
 -/
-theorem continuous_mixedExtension_eu_profileFromMixedSimplex_of_bounded
-    {C : ℝ} (who : ι) (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+theorem continuous_mixedExtension_eu_profileFromMixedSimplex
+    [Finite G.Outcome] (who : ι) :
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu (G.profileFromMixedSimplex x) who) := by
   classical
@@ -375,7 +362,7 @@ theorem continuous_mixedExtension_eu_profileFromMixedSimplex_of_bounded
       (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         ∑ s : (∀ i, G.Strategy i), (∏ i, x i (s i)) * G.eu s who) := by
     funext x
-    rw [G.mixedExtension_eu_of_bounded (σ := G.profileFromMixedSimplex x) who hbd]
+    rw [G.mixedExtension_eu (σ := G.profileFromMixedSimplex x) who]
     rw [expect_eq_sum]
     refine Finset.sum_congr rfl ?_
     intro s hs
@@ -396,9 +383,8 @@ Pure-deviation mixed-EU continuity on the mixed-simplex domain.
 This is the `hdev` premise used by
 `continuous_nashMapOnMixedSimplex_of_continuous_mixedEu`.
 -/
-theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex_of_bounded
-    {C : ℝ} (who : ι) (a : G.Strategy who)
-    (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
+    [Finite G.Outcome] (who : ι) (a : G.Strategy who) :
     Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
       G.mixedExtension.eu
         (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who) := by
@@ -413,13 +399,7 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex_of_bounded
           ((((PMF.pure a) (s who)).toReal) *
             (∏ i ∈ (Finset.univ.erase who), x i (s i))) * G.eu s who) := by
     funext x
-    change expect
-        ((pmfPi (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a))).bind
-          G.outcomeKernel)
-        (fun ω => G.utility ω who) = _
-    rw [expect_bind_of_bounded
-      (pmfPi (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)))
-      G.outcomeKernel (fun ω => G.utility ω who) hbd]
+    rw [G.mixedExtension_eu]
     rw [expect_eq_sum]
     refine Finset.sum_congr rfl ?_
     intro s hs
@@ -447,27 +427,7 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex_of_bounded
     exact (continuous_apply (s i)).comp (continuous_subtype_val.comp (continuous_apply i))
   exact (continuous_const.mul hprod).mul continuous_const
 
-omit [DecidableEq ι] in
-/-- Baseline mixed-EU continuity on the mixed-simplex domain. -/
-theorem continuous_mixedExtension_eu_profileFromMixedSimplex
-    [Finite G.Outcome] (who : ι) :
-    Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
-      G.mixedExtension.eu (G.profileFromMixedSimplex x) who) := by
-  obtain ⟨C, hbd⟩ :=
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
-  exact G.continuous_mixedExtension_eu_profileFromMixedSimplex_of_bounded who hbd
-
-/-- Pure-deviation mixed-EU continuity on the mixed-simplex domain. -/
-theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex
-    [Finite G.Outcome] (who : ι) (a : G.Strategy who) :
-    Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
-      G.mixedExtension.eu
-        (Function.update (G.profileFromMixedSimplex x) who (PMF.pure a)) who) := by
-  obtain ⟨C, hbd⟩ :=
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
-  exact G.continuous_mixedExtension_eu_update_profileFromMixedSimplex_of_bounded who a hbd
-
-end
+end  -- [Fintype Outcome] section
 
 /--
 Continuity reduction: if all coordinate mixed gains are continuous on the mixed simplex,
@@ -539,29 +499,15 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedEu
   refine G.continuous_nashMapOnMixedSimplex_of_continuous_mixedGainOnMixedSimplex ?_
   exact G.continuous_mixedGainOnMixedSimplex_of_continuous_mixedEu hbase hdev
 
-/-- Nash-map continuity under bounded utilities. -/
-theorem continuous_nashMapOnMixedSimplex_of_bounded
-    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
-    Continuous (G.nashMapOnMixedSimplex) := by
-  refine G.continuous_nashMapOnMixedSimplex_of_continuous_mixedEu
-    (hbase := fun who =>
-      G.continuous_mixedExtension_eu_profileFromMixedSimplex_of_bounded who (hbd who))
-    (hdev := fun who a =>
-      G.continuous_mixedExtension_eu_update_profileFromMixedSimplex_of_bounded who a (hbd who))
-
-section  -- Game-side continuity closure (finite outcomes imply bounded utilities)
+section  -- Game-side continuity closure (needs finite outcomes only)
 variable [Finite G.Outcome]
 
 /-- Unconditional continuity of Nash's map on mixed simplex (game-side closure). -/
 theorem continuous_nashMapOnMixedSimplex :
     Continuous (G.nashMapOnMixedSimplex) := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
-  exact continuous_nashMapOnMixedSimplex_of_bounded (G := G) hbd
+  refine G.continuous_nashMapOnMixedSimplex_of_continuous_mixedEu
+    (hbase := fun who => G.continuous_mixedExtension_eu_profileFromMixedSimplex who)
+    (hdev := fun who a => G.continuous_mixedExtension_eu_update_profileFromMixedSimplex who a)
 
 /--
 Nash-map continuity reduced to pure-deviation mixed-EU continuity only
@@ -593,13 +539,10 @@ theorem nashMap_weightFixedPoint_of_nashMapOnMixedSimplex_approxOnly
 end  -- [Fintype Outcome] game-side closure
 
 section  -- Full continuity and existence theorems
-variable [∀ i, Nonempty (G.Strategy i)]
+variable [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
 
-omit [∀ i, Nonempty (G.Strategy i)] in
-/-- A fixed point of `nashMapOnMixedSimplex` yields a mixed Nash equilibrium
-    under bounded utilities. -/
-theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point_of_bounded
-    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who)
+/-- A fixed point of `nashMapOnMixedSimplex` yields a mixed Nash equilibrium. -/
+theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
     (hfix : ∃ x, Function.IsFixedPt (G.nashMapOnMixedSimplex) x) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
   rcases hfix with ⟨x, hfx⟩
@@ -618,103 +561,40 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point_of_bounded
     have h := congr_fun hwho a
     simpa [nashMapOnMixedSimplex, w, hw_nn, hw_sum] using h
   exact ⟨G.profileFromWeights w hw_nn hw_sum,
-    G.nash_fp_is_nash_of_bounded _
-      hbd (G.nashMap_fp_identity w hw_nn hw_sum hfp_weights)⟩
+    G.nash_fp_is_nash _ (G.nashMap_fp_identity w hw_nn hw_sum hfp_weights)⟩
 
-omit [∀ i, Nonempty (G.Strategy i)] in
-/-- Finite-outcome wrapper: a fixed point of `nashMapOnMixedSimplex` yields a
-    mixed Nash equilibrium. -/
-theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
-    [Finite G.Outcome]
-    (hfix : ∃ x, Function.IsFixedPt (G.nashMapOnMixedSimplex) x) :
-    ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
-  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point_of_bounded hbd hfix
-
-omit [∀ i, Nonempty (G.Strategy i)] in
 /--
 Approximate fixed points for `nashMapOnMixedSimplex` imply existence of a mixed Nash equilibrium.
 The only remaining obligations are: continuity of `nashMapOnMixedSimplex`
 and approximate fixed points at all scales.
 -/
-theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx_of_bounded
-    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who)
+theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx
     (hcont : Continuous (G.nashMapOnMixedSimplex))
     (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
   rcases exists_fixedPoint_of_approx_on_mixedSimplex
       (f := G.nashMapOnMixedSimplex) hcont happrox with ⟨x, hxfix⟩
-  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point_of_bounded hbd ⟨x, hxfix⟩
+  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point ⟨x, hxfix⟩
 
-omit [∀ i, Nonempty (G.Strategy i)] in
-/-- Finite-outcome wrapper for approximate fixed-point mixed Nash existence. -/
-theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx
-    [Finite G.Outcome]
-    (hcont : Continuous (G.nashMapOnMixedSimplex))
-    (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
-      dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
-    ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
-  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approx_of_bounded hbd hcont happrox
-
-omit [∀ i, Nonempty (G.Strategy i)] in
 /--
 Approximation-only mixed Nash existence:
-continuity is discharged by `continuous_nashMapOnMixedSimplex_of_bounded`.
+continuity is discharged by `continuous_nashMapOnMixedSimplex`.
 -/
-theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly_of_bounded
-    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who)
-    (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
-      dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
-    ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approx_of_bounded hbd
-    (hcont := continuous_nashMapOnMixedSimplex_of_bounded (G := G) hbd) happrox
-
-omit [∀ i, Nonempty (G.Strategy i)] in
-/-- Finite-outcome wrapper for approximation-only mixed Nash existence. -/
 theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly
-    [Finite G.Outcome]
     (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
-  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly_of_bounded hbd happrox
+  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approx
+    (hcont := G.continuous_nashMapOnMixedSimplex) happrox
 
-end  -- [Nonempty] section
+end  -- [Nonempty] + [Fintype Outcome] section
 
 end NashMapMixedSimplex
 
 -- ============================================================================
 -- Main theorem
 -- ============================================================================
-
-open Classical in
-/-- Mixed Nash existence for finite nonempty strategy spaces and bounded utility,
-    without assuming a finite outcome carrier. -/
-theorem mixed_nash_exists_of_bounded (G : KernelGame ι)
-    [Fintype ι]
-    [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
-    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
-    ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point_of_bounded hbd
-    (brouwer_mixedSimplex G.nashMapOnMixedSimplex
-      (continuous_nashMapOnMixedSimplex_of_bounded (G := G) hbd))
 
 open Classical in
 /-- **Nash's Existence Theorem (Mixed Strategies).**
@@ -726,13 +606,10 @@ theorem mixed_nash_exists (G : KernelGame ι)
     [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     [Finite G.Outcome] :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
-  exact G.mixed_nash_exists_of_bounded hbd
+  letI : ∀ i, Fintype (G.Strategy i) := fun i => Fintype.ofFinite (G.Strategy i)
+  exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
+    (brouwer_mixedSimplex G.nashMapOnMixedSimplex
+      G.continuous_nashMapOnMixedSimplex)
 
 end KernelGame
 

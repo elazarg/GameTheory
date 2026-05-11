@@ -1124,16 +1124,15 @@ omit [∀ i, Fintype (O.InfoState i)] in
 `kuhn_mixed_to_behavioral_semantic` because `ObsLocalFeasibilityFull` implies
 both `RunSupportFactorization` (for the cross-multiplication identity) and
 `ActionPosteriorLocal` (for the behavioral profile well-definedness). -/
-theorem kuhn_mixed_to_behavioral_of_obsLocal [∀ i, Finite (O.InfoState i)]
-    [∀ i o, Nonempty (Act i o)]
+theorem kuhn_mixed_to_behavioral_of_obsLocal
+    [∀ i, Finite (O.InfoState i)] [∀ i o, Nonempty (Act i o)]
     (hMass : StepMassInvariant O)
     (hOLF : ∀ i, ObsLocalFeasibilityFull O i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
     (k : Nat) :
     ∃ β : ObsModelCore.BehavioralProfile O,
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
-  classical
-  letI (i : ι) : Fintype (O.InfoState i) := Fintype.ofFinite (O.InfoState i)
+  letI : ∀ i, Fintype (O.InfoState i) := fun i => Fintype.ofFinite (O.InfoState i)
   exact kuhn_mixed_to_behavioral_of_runSupport hMass
     (obsLocalFeasibilityFull_toRunSupportFactorization hOLF)
     (fun i =>
