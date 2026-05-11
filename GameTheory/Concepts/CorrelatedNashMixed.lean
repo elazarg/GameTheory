@@ -82,7 +82,7 @@ open Classical in
     component replaced by the pushforward of the original through `dev`. -/
 theorem unilateralDeviationDistribution_pmfPi
     {G : KernelGame ι}
-    [Fintype ι] [∀ i, Finite (G.Strategy i)]
+    [Fintype ι]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     (dev : G.Strategy who → G.Strategy who) :
     G.unilateralDeviationDistribution (pmfPi σ) who dev =
@@ -94,13 +94,12 @@ theorem unilateralDeviationDistribution_pmfPi
 open Classical in
 /-- A mixed Nash profile induces a correlated equilibrium under bounded utility.
 
-This removes the finite-outcome assumption from `mixed_nash_isCorrelatedEq`;
-finite strategy carriers are still used by `unilateralDeviationDistribution_pmfPi`,
-which identifies the product distribution after an arbitrary recommendation-dependent
-unilateral deviation. -/
+This assumes only a finite player index and bounded utility. Strategy carriers
+may be countable, since `unilateralDeviationDistribution_pmfPi` is now proved
+directly for product PMFs over arbitrary coordinate carriers. -/
 theorem mixed_nash_isCorrelatedEq_of_bounded
     {G : KernelGame ι}
-    [Fintype ι] [∀ i, Finite (G.Strategy i)]
+    [Fintype ι]
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ)
     {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
@@ -137,7 +136,7 @@ open Classical in
     player `who`'s EU. -/
 theorem mixed_nash_isCorrelatedEq
     {G : KernelGame ι}
-    [Fintype ι] [∀ i, Finite (G.Strategy i)] [Finite G.Outcome]
+    [Fintype ι] [Finite G.Outcome]
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ) :
     G.IsCorrelatedEq (pmfPi σ) := by
