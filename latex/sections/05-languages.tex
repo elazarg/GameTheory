@@ -388,23 +388,36 @@ A focused layer formalizes the \emph{intrinsic} (a.k.a.\
 Witsenhausen-style) representation of games following
 \citet{HeymannDeLaraChancelier2020}:\ rather than fixing an order
 in which agents act, the syntax exposes a set of agent decision
-\emph{addresses} and information sets directly, and three strategy
-types — \emph{mixed} (a distribution over a player's joint pure
-strategy space $\prod_{a \in A_p} \Lambda_a$), \emph{product-mixed}
-(independent randomization over each address), and
-\emph{behavioral} (independent randomization at each information
-set) — are defined and related propositionally.  The unconditional
-product-mixed/behavioral equivalence is the intrinsic-form analogue
-of one direction of Kuhn's theorem (\S\ref{sec:theorems:kuhn}).
+\emph{addresses} and information sets directly.  Nature first
+selects an exogenous state; choices at the addresses then have to
+fit together into a global configuration.  A model is
+\emph{solvable} when, for every state and every profile of local
+choices, there is a unique compatible configuration and hence a
+well-defined law over realized decisions.
+
+This syntax supports the same three ways of randomizing that
+appear in sequential games, but without building a tree.  A
+player may draw one complete contingent plan, randomize
+independently across that player's decision addresses, or randomize
+independently at the information atoms the player can distinguish.  The
+first comparison is unconditional:\ independent randomization by
+address and behavioral randomization by information atom induce
+the same local choice laws.  The second is the intrinsic analogue
+of Kuhn's theorem.  If the information structure admits a causal
+order and the player has perfect recall along that order, then
+the conditional behavioral strategy extracted from a mixed plan
+preserves the full outcome law against every opponent profile.
+The conclusion is equality of distributions over realized
+decision profiles, not just equality of one-address marginals.
+
 The intrinsic layer is a separate syntactic root than
 EFG/MAID/MR/FOSG, used as a target by representations that prefer
 order-independent reasoning.
 
-\leancorr{\TT{Languages/Intrinsic/Strategies.lean} for the three
-strategy types and the
-\TT{productMixedToBehavioral}\,/\,\TT{behavioral\_realizes\_productMixed}
-equivalence; \TT{PerfectRecall.lean} and \TT{Theorems.lean} for
-the perfect-recall extension.  Supplement~§4.6.}
+\leancorr{\TT{Languages/Intrinsic/} contains the strategy
+carriers, causal-order and perfect-recall predicates, and the
+formal outcome-law equivalence for solvable W-models.  The
+definition and theorem anchors are listed in Supplement~§4.6.}
 
 \subsection{Bridges as commuting compilations}
 \label{sec:languages:bridges}

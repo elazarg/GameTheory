@@ -117,6 +117,171 @@ theorem pmfCond_ne_zero_implies
     simp [pmfMask, hEa]
   exact ha this
 
+open Classical in
+theorem pmfMass_true (μ : PMF α) :
+    pmfMass (μ := μ) (fun _ : α => True) = 1 := by
+  simp [pmfMass, pmfMask, PMF.tsum_coe]
+
+open Classical in
+theorem pmfMass_mono (μ : PMF α) {E F : α → Prop}
+    (hEF : ∀ a, E a → F a) :
+    pmfMass (μ := μ) E ≤ pmfMass (μ := μ) F := by
+  simp only [pmfMass, pmfMask]
+  apply ENNReal.tsum_le_tsum
+  intro a
+  by_cases hE : E a
+  · simp [hE, hEF a hE]
+  · by_cases hF : F a <;> simp [hE, hF]
+
+open Classical in
+theorem pmfMass_and_eq_zero_of_left_zero
+    (μ : PMF α) (E F : α → Prop)
+    (hE : pmfMass (μ := μ) E = 0) :
+    pmfMass (μ := μ) (fun a => E a ∧ F a) = 0 := by
+  have hle : pmfMass (μ := μ) (fun a => E a ∧ F a) ≤ pmfMass (μ := μ) E :=
+    pmfMass_mono μ (fun _ h => h.1)
+  exact le_antisymm (by simpa [hE] using hle) bot_le
+
+open Classical in
+theorem pmfMass_and_eq_mul_cond
+    (μ : PMF α) (E F : α → Prop)
+    (hE : pmfMass (μ := μ) E ≠ 0) :
+    pmfMass (μ := μ) (fun a => E a ∧ F a) =
+      pmfMass (μ := μ) E * pmfMass (μ := pmfCond (μ := μ) E hE) F := by
+  have hE_top : pmfMass (μ := μ) E ≠ ⊤ := pmfMass_ne_top μ E
+  symm
+  simp only [pmfMass, pmfMask, pmfCond_apply]
+  rw [← ENNReal.tsum_mul_left]
+  apply tsum_congr
+  intro a
+  by_cases hEa : E a
+  · by_cases hFa : F a
+    · simp only [hEa, hFa, true_and, ↓reduceIte, div_eq_mul_inv]
+      calc
+        (∑' a : α, if E a then μ a else 0) *
+            (μ a * (∑' a : α, if E a then μ a else 0)⁻¹)
+            = μ a * ((∑' a : α, if E a then μ a else 0) *
+                (∑' a : α, if E a then μ a else 0)⁻¹) := by
+              ac_rfl
+        _ = μ a := by
+              have hcancel :
+                  (∑' a : α, if E a then μ a else 0) *
+                      (∑' a : α, if E a then μ a else 0)⁻¹ = 1 := by
+                simpa [pmfMass, pmfMask] using ENNReal.mul_inv_cancel hE hE_top
+              rw [hcancel, mul_one]
+    · simp [hEa, hFa]
+  · simp [hEa]
+
+/-- Conjunction of a finite list of events. -/
+def allEvents (events : List (α → Prop)) (a : α) : Prop :=
+  ∀ E ∈ events, E a
+
+@[simp] theorem allEvents_nil :
+    allEvents ([] : List (α → Prop)) = fun _ : α => True := by
+  funext a
+  simp [allEvents]
+
+@[simp] theorem allEvents_cons (E : α → Prop) (events : List (α → Prop)) :
+    allEvents (E :: events) = fun a => E a ∧ allEvents events a := by
+  funext a
+  apply propext
+  simp [allEvents]
+
+theorem allEvents_append_singleton (events : List (α → Prop)) (E : α → Prop) :
+    allEvents (events ++ [E]) = fun a => allEvents events a ∧ E a := by
+  funext a
+  apply propext
+  constructor
+  · intro h
+    constructor
+    · intro F hF
+      exact h F (by simp [hF])
+    · exact h E (by simp)
+  · intro h F hF
+    rw [List.mem_append, List.mem_singleton] at hF
+    rcases hF with hF | rfl
+    · exact h.1 F hF
+    · exact h.2
+
+open Classical in
+/-- Conditional factor for extending a past event by one more event. If the
+    past has zero mass, the supplied fallback value is used; chain products
+    remain correct because the accumulated past mass is already zero. -/
+noncomputable def condEventFactor (μ : PMF α) (past event : α → Prop)
+    (fallback : ENNReal) : ENNReal :=
+  if h : pmfMass (μ := μ) past ≠ 0 then
+    pmfMass (μ := pmfCond (μ := μ) past h) event
+  else
+    fallback
+
+open Classical in
+/-- Product of conditional factors for a list of events, starting from a
+    supplied past event. -/
+noncomputable def condEventChainProduct (μ : PMF α)
+    (past : α → Prop) : List (α → Prop) → (List (α → Prop) → (α → Prop) → ENNReal) → ENNReal
+  | [], _ => 1
+  | E :: Es, fallback =>
+      condEventFactor μ past E (fallback [] E) *
+        condEventChainProduct μ (fun a => past a ∧ E a) Es
+          (fun pref F => fallback (E :: pref) F)
+
+open Classical in
+theorem pmfMass_event_chain_aux (μ : PMF α)
+    (past : α → Prop) (events : List (α → Prop))
+    (fallback : List (α → Prop) → (α → Prop) → ENNReal) :
+    pmfMass (μ := μ) (fun a => past a ∧ allEvents events a) =
+      pmfMass (μ := μ) past *
+        condEventChainProduct μ past events fallback := by
+  induction events generalizing past fallback with
+  | nil =>
+      simp [condEventChainProduct, allEvents]
+  | cons E Es ih =>
+      by_cases hpast : pmfMass (μ := μ) past = 0
+      · have hleft :
+            pmfMass (μ := μ) (fun a => past a ∧ allEvents (E :: Es) a) = 0 :=
+          pmfMass_and_eq_zero_of_left_zero μ past (fun a => allEvents (E :: Es) a) hpast
+        have hleft' :
+            pmfMass (μ := μ) (fun a => past a ∧ E a ∧ allEvents Es a) = 0 := by
+          calc
+            pmfMass (μ := μ) (fun a => past a ∧ E a ∧ allEvents Es a)
+                = pmfMass (μ := μ) (fun a => past a ∧ allEvents (E :: Es) a) := by
+                    apply congrArg
+                    funext a
+                    simp [allEvents]
+            _ = 0 := hleft
+        simp [condEventChainProduct, condEventFactor, hpast, hleft']
+      · have hpast_ne : pmfMass (μ := μ) past ≠ 0 := hpast
+        have hstep :
+            pmfMass (μ := μ) (fun a => past a ∧ E a) =
+              pmfMass (μ := μ) past *
+                pmfMass (μ := pmfCond (μ := μ) past hpast_ne) E :=
+          pmfMass_and_eq_mul_cond μ past E hpast_ne
+        have htail := ih (fun a => past a ∧ E a)
+          (fun pref F => fallback (E :: pref) F)
+        calc
+          pmfMass (μ := μ) (fun a => past a ∧ allEvents (E :: Es) a)
+              = pmfMass (μ := μ)
+                  (fun a => (past a ∧ E a) ∧ allEvents Es a) := by
+                    apply congrArg
+                    funext a
+                    simp [allEvents, and_assoc]
+          _ = pmfMass (μ := μ) (fun a => past a ∧ E a) *
+                condEventChainProduct μ (fun a => past a ∧ E a) Es
+                  (fun pref F => fallback (E :: pref) F) := htail
+          _ = pmfMass (μ := μ) past *
+                condEventChainProduct μ past (E :: Es) fallback := by
+                  simp [condEventChainProduct, condEventFactor, hpast_ne, hstep,
+                    mul_assoc]
+
+open Classical in
+/-- Finite chain rule for event masses. -/
+theorem pmfMass_event_chain (μ : PMF α) (events : List (α → Prop))
+    (fallback : List (α → Prop) → (α → Prop) → ENNReal) :
+    pmfMass (μ := μ) (allEvents events) =
+      condEventChainProduct μ (fun _ : α => True) events fallback := by
+  have h := pmfMass_event_chain_aux μ (fun _ : α => True) events fallback
+  simpa [pmfMass_true] using h
+
 theorem bind_congr_on_support
     (μ : PMF α) (f g : α → PMF β)
     (hfg : ∀ a, a ∈ μ.support → f a = g a) :

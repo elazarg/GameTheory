@@ -129,8 +129,10 @@ than as tree-based information sets. Key results:
 - **Proposition 13**: behavioral → product-mixed via product PMF over
   information classes, with the marginal identity proved using an equivalence
   `PureStrategy ≃ (InfoClass → Decision)`
-- **Theorem 16 (Kuhn's equivalence)**: for any mixed strategy there exists a
-  product-mixed strategy with matching behavioral marginals
+- **Kuhn outcome-equivalence reduction**: the Intrinsic API proves full
+  outcome-law equivalence from the player-local event-mass realization
+  condition; the old behavioral-marginal statement is not exposed as Kuhn's
+  theorem.
 
 ## Auctions and mechanism design
 

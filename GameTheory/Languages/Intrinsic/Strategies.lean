@@ -1,5 +1,6 @@
 import GameTheory.Languages.Intrinsic.Syntax
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
+import Math.ProbabilityMassFunction
 import Math.PMFProduct
 
 /-!
@@ -27,6 +28,7 @@ Heymann–De Lara–Chancelier (2020):
 namespace Intrinsic
 
 open Math.PMFProduct
+open Math.ProbabilityMassFunction
 
 variable (G : WGame)
 
@@ -44,6 +46,17 @@ def PlayerStrategySpace (G : WGame) (p : G.P) : Type :=
 def MixedStrategy (G : WGame) (p : G.P) : Type :=
   PMF (PlayerStrategySpace G p)
 
+/-- A mixed-strategy profile, one mixed strategy per player. -/
+def MixedProfile (G : WGame) : Type :=
+  ∀ p : G.P, MixedStrategy G p
+
+open Classical in
+/-- The joint distribution over player pure-strategy profiles induced by a
+    mixed profile. This is the product over players. -/
+noncomputable def mixedJoint (G : WGame) (μ : MixedProfile G) :
+    PMF (∀ p : G.P, PlayerStrategySpace G p) :=
+  pmfPi μ
+
 -- ============================================================================
 -- Product-mixed W-strategies (Definition 10)
 -- ============================================================================
@@ -53,6 +66,13 @@ def MixedStrategy (G : WGame) (p : G.P) : Type :=
     This induces a product probability over `Λₚ`. -/
 def ProductMixedStrategy (G : WGame) (p : G.P) : Type :=
   ∀ a : G.agents p, PMF (PureStrategy G.toWModel a)
+
+open Classical in
+/-- The mixed strategy induced by independent randomization over a player's
+    agent-level pure strategies. -/
+noncomputable def productMixedAsMixed (G : WGame) (p : G.P)
+    (π : ProductMixedStrategy G p) : MixedStrategy G p :=
+  pmfPi π
 
 -- ============================================================================
 -- Behavioral W-strategies (Definition 11)
@@ -201,8 +221,10 @@ open Classical in
     This is the marginal identity (equation 25). -/
 theorem behavioralToPureStrategyPMF_marginal {M : WModel} {a : M.A}
     (β : BehavioralAgentStrategy M a) (h : M.H) (u : M.U a) :
-    (behavioralToPureStrategyPMF β).toOuterMeasure {s | s.act h = u} =
+    Math.ProbabilityMassFunction.pmfMass
+      (μ := behavioralToPureStrategyPMF β) (fun s => s.act h = u) =
     β.kernel h u := by
+  rw [Math.ProbabilityMassFunction.pmfMass_eq_toOuterMeasure]
   -- Step 1: map + toOuterMeasure = toOuterMeasure of preimage
   rw [behavioralToPureStrategyPMF, PMF.toOuterMeasure_map_apply]
   -- Step 2: preimage simplification
@@ -225,9 +247,20 @@ theorem behavioral_realizes_productMixed (G : WGame) (p : G.P)
     (β : BehavioralStrategy G p) :
     ∃ π : ProductMixedStrategy G p,
       ∀ (a : G.agents p) (h : G.toWModel.H) (u : G.toWModel.U a),
-        (π a).toOuterMeasure {s | s.act h = u} =
+        Math.ProbabilityMassFunction.pmfMass (μ := π a) (fun s => s.act h = u) =
         (β a).kernel h u :=
   ⟨fun a => behavioralToPureStrategyPMF (β a),
     fun a h u => behavioralToPureStrategyPMF_marginal (β a) h u⟩
+
+/-- Proposition 12 as a point-mass identity: the behavioral kernel induced by a
+    product-mixed strategy is the mass of the corresponding pure-strategy
+    fibre. -/
+theorem productMixedToBehavioral_apply_eq_pmfMass (G : WGame) (p : G.P)
+    (π : ProductMixedStrategy G p) (a : G.agents p)
+    (h : G.toWModel.H) (u : G.toWModel.U a) :
+    (productMixedToBehavioral G p π a).kernel h u =
+      Math.ProbabilityMassFunction.pmfMass (μ := π a) (fun s => s.act h = u) := by
+  simp only [productMixedToBehavioral]
+  exact pushforward_apply_eq_pmfMass (π a) (fun s => s.act h) u
 
 end Intrinsic

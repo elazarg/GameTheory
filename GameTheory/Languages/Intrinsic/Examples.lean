@@ -41,11 +41,12 @@ def mpUtility (p : Fin 2)
   if p = 0 then (if h.decision 0 = h.decision 1 then 1 else -1)
   else (if h.decision 0 = h.decision 1 then -1 else 1)
 
-/-- Matching Pennies as a W-game. -/
-noncomputable def matchingPennies : WGame :=
+/-- Matching Pennies as an expected-utility W-game. -/
+noncomputable def matchingPennies : EUWGame :=
   { matchingPenniesModel with
     P := Fin 2
     owner := id
+    owner_nonempty := fun p => ⟨p, rfl⟩
     utility := mpUtility
     prior := PMF.pure () }
 
@@ -113,11 +114,12 @@ def signalingUtility (_p : Fin 2) (h : signalingModel.H) : ℝ :=
   | SigType.low, RcvAction.reject => 1
   | _, _ => 0
 
-/-- Simple signaling W-game. -/
-noncomputable def signalingGame : WGame :=
+/-- Simple signaling expected-utility W-game. -/
+noncomputable def signalingGame : EUWGame :=
   { signalingModel with
     P := Fin 2
     owner := id
+    owner_nonempty := fun p => ⟨p, rfl⟩
     utility := signalingUtility
     prior := PMF.pure SigType.high }
 

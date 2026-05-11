@@ -624,6 +624,27 @@ theorem pmfMass_pmfPi_coord
             (pmfMass_pushforward (pmfPi (A := A) σ) (fun s => s j) E).symm
     _ = pmfMass (μ := σ j) E := by rw [pmfPi_push_coord σ j]
 
+omit [DecidableEq ι] in
+open Classical in
+/-- The mass of a coordinatewise conjunction under a product PMF factors as the
+    product of the coordinate event masses. -/
+theorem pmfMass_pmfPi_forall
+    (σ : ∀ i, PMF (A i)) (E : ∀ i, A i → Prop) :
+    pmfMass (μ := pmfPi (A := A) σ) (fun s => ∀ i, E i (s i)) =
+      ∏ i, pmfMass (μ := σ i) (E i) := by
+  classical
+  simp only [pmfMass, pmfMask, pmfPi_apply]
+  rw [← ENNReal_tsum_pi (g := fun i a => if E i a then σ i a else 0)]
+  apply tsum_congr
+  intro s
+  by_cases hs : ∀ i, E i (s i)
+  · simp [hs]
+  · rw [if_neg hs]
+    symm
+    push Not at hs
+    rcases hs with ⟨i, hi⟩
+    exact Finset.prod_eq_zero (Finset.mem_univ i) (by simp [hi])
+
 /-- Conditioning a product PMF on a coordinate event updates only that coordinate's factor. -/
 theorem pmfPi_cond_coord
     [∀ i, Finite (A i)]
