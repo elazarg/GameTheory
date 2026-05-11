@@ -111,15 +111,6 @@ theorem pmf_toReal_sum_one {Ω : Type*} [Fintype Ω] (d : PMF Ω) :
     ∑ ω : Ω, (d ω).toReal = 1 := by
   simpa [tsum_fintype] using (pmf_toReal_tsum_one d)
 
-/-- A real-valued function on a finite type has a uniform absolute bound. -/
-theorem exists_abs_bound_of_finite {Ω : Type*} [Finite Ω] (f : Ω → ℝ) :
-    ∃ C : ℝ, ∀ ω, |f ω| ≤ C := by
-  classical
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  refine ⟨∑ ω : Ω, |f ω|, ?_⟩
-  intro ω
-  exact Finset.single_le_sum (fun x _ => abs_nonneg (f x)) (Finset.mem_univ ω)
-
 /-- A PMF's real-valued weight function is summable. The summability comes
     from `PMF.tsum_coe = 1` in `ENNReal` plus `ENNReal.summable_toReal`. -/
 theorem pmf_toReal_summable {Ω : Type*} (d : PMF Ω) :
