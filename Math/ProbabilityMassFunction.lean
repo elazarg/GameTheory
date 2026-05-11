@@ -105,7 +105,6 @@ theorem expect_pushforward_of_bounded
     (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) {C : ℝ} (hbd : ∀ x, |φ x| ≤ C) :
     Math.Probability.expect (pushforward μ f) φ =
       Math.Probability.expect μ (fun a => φ (f a)) := by
-  -- Rewrite pushforward as bind-of-pure and apply `expect_bind_of_bounded`.
   have h_eq : pushforward μ f = μ.bind (fun a => PMF.pure (f a)) :=
     (PMF.bind_pure_comp f μ).symm
   rw [h_eq, Math.Probability.expect_bind_of_bounded
