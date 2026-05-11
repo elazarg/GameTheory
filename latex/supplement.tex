@@ -211,7 +211,8 @@ Folder & Contents \\
   Discrete-probability infrastructure that mathlib does not already
   provide:\ \DefRef{expect},
   \TT{Math.PMFProduct.pmfPi}, finsupp/finset update lemmas,
-  optimization primitives. \\
+  optimization primitives, and the standalone
+  \TT{Math.Schauder.schauder_fixed_point} theorem. \\
 \TT{Core/} &
   \DefRef{GameForm}, \DefRef{KernelGame}, the \DefRef{ProtocolMap}
   morphism vocabulary, simulations, isomorphisms, utility-invariance
@@ -273,10 +274,10 @@ where the sum is mathlib's \TT{tsum} (an unordered series with
 non-negative-real summands; here the summands are real, but $d \ge 0$
 and the unit-mass condition $\sum d = 1$ make absolute convergence
 automatic for any bounded $f$, and the convention $\mathrm{tsum} = 0$
-on non-summable inputs is harmless because we only call \TT{expect}
-on bounded $f$).  When $\Omega$ is finite (the case used everywhere
-in the library), \TT{expect_eq_sum} reduces this to an ordinary
-finite sum.
+on non-summable inputs is harmless because the expected-utility
+theorems call \TT{expect} under boundedness or finite-support
+hypotheses).  When $\Omega$ is finite,
+\TT{expect_eq_sum} reduces this to an ordinary finite sum.
 
 \Textbook
 This is the standard expected-value functional of the discrete
@@ -338,7 +339,11 @@ a constant function).  \TT{Math/PMFProduct.lean} adds the
 projection laws of \TT{pmfPi}, in particular that
 $\mathrm{pmfPi}(\sigma) \bind \pi_i = \sigma_i$ where $\pi_i$ is the
 $i$-th coordinate projection.  These are routine and we do not
-unfold them.
+unfold them.  \TT{Math/SchauderFixedPoint.lean} proves
+Schauder's fixed-point theorem for nonempty compact convex subsets
+of real normed spaces.  It is not part of the finite-dimensional
+mixed-Nash proof, but it provides a reusable analytic fixed-point
+principle for compact-convex equilibrium arguments.
 
 % =====================================================================
 \section{The semantic core}
@@ -493,11 +498,11 @@ kernel game $\KG$ is
 finite when \Outcome\ is finite.  In the general core API, this is
 the tsum-based expectation over the discrete support, well-defined
 on bounded utility for arbitrary (e.g.\ countably infinite)
-\Outcome.  The major theorem statements in this chapter still
-impose finiteness on \Outcome\ where the proofs need it (so the
-display reduces to a finite sum); a parallel \TT{\_of\_bounded}
-family of lemmas in \TT{Math.Probability} and
-\TT{Concepts/MixedExtension} replays the same identities under a
+\Outcome.  The major theorem statements use finite outcomes only
+where a finite wrapper is more convenient or where a proof still
+requires finite support; the corresponding \TT{\_of\_bounded}
+lemmas in \TT{Math.Probability} and
+\TT{Concepts/MixedExtension} replay the same identities under a
 $|u| \le C$ hypothesis without \TT{[Finite \Outcome]}.  The
 correlated variant is the same expectation under the pushforward
 $\K_*\mu$ of a profile distribution $\mu$.
@@ -514,9 +519,11 @@ be replaced by another preorder if desired.
 
 \Faithfulness
 Reformulation.  The function \TT{expect}
-(\S\ref{sec:supp:expect}) is exactly $\sum d(\omega)\,f(\omega)$
-on a finite outcome space.  No measurability obligation arises
-because \PMF\ is the discrete monad.
+(\S\ref{sec:supp:expect}) is exactly the discrete sum
+$\sum d(\omega)\,f(\omega)$, finite when the outcome carrier is
+finite and a tsum under boundedness in the general \PMF\ case.
+No measurability obligation arises because \PMF\ is the discrete
+monad.
 
 \subsection{Mixed extension: \texttt{KernelGame.mixedExtension}}
 \label{sec:supp:mixedExtension}\label{def:mixedExtension}

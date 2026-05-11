@@ -201,6 +201,16 @@ package~\citep{harfeFixedPointTheorems}, a Lean~4 mechanization of
 Brouwer (and Kakutani) for nonempty compact convex subsets of
 finite-dimensional normed spaces.  We use it as a black box.
 
+\item \emph{Schauder's fixed-point theorem.}  The companion file
+\TT{Math/SchauderFixedPoint.lean} proves a Schauder fixed-point
+principle for nonempty compact convex subsets of real normed
+spaces:\ every continuous self-map has a fixed point.  It is
+separate from the finite-dimensional product-simplex proof used
+for mixed Nash existence.  Its role is analytic infrastructure:
+it supplies the fixed-point principle one would need after a
+game-theoretic model has supplied the corresponding compactness
+and continuity hypotheses.
+
 \item \emph{Discrete Giry monad laws.}  Most equational reasoning
 in the library is monadic in \TT{PMF}: bind associativity,
 left/right unit, and pushforward laws.  These are mathlib lemmas

@@ -11,11 +11,14 @@ content; full proofs are in the cited Lean files.
 \subsection{Existence of mixed Nash equilibria}
 \label{sec:theorems:nash-mixed}
 
-\begin{theorem}[Mixed Nash existence; \TT{KernelGame.mixed\_nash\_exists}]
+\begin{theorem}[Mixed Nash existence; \TT{KernelGame.mixed\_nash\_exists\_of\_bounded}]
 \label{thm:nash-mixed}
 Let $\KG$ be a kernel game with $\Players$ finite, every $\Strat_i$
-finite and non-empty, and $\Outcome$ finite.  Then the mixed
-extension $\KG^{\mathrm{mix}}$ admits a Nash equilibrium:\ a
+finite and non-empty, and player utilities bounded on outcomes:
+there are constants $C_i$ such that
+$|\util(\omega,i)| \le C_i$ for all $\omega$ and $i$.  No finiteness
+assumption is needed on $\Outcome$.  Then the mixed extension
+$\KG^{\mathrm{mix}}$ admits a Nash equilibrium:\ a
 profile $\Profile^* \in \prod_i \PMF{\Strat_i}$ with
 \[
   \forall i,\,\forall \tau \in \PMF{\Strat_i}.\quad
@@ -43,7 +46,10 @@ the \TT{fixed-point-theorems-lean4}
 package~\citep{harfeFixedPointTheorems} is lifted to the product
 of standard simplices, and a fixed point of $\Phi$ is shown to be
 a Nash equilibrium by an algebraic argument bracketing the positive
-parts.
+parts.  The bounded-utility hypothesis supplies the convergence
+facts for expected utility; the finite-outcome theorem
+\TT{KernelGame.mixed\_nash\_exists} is the wrapper that obtains
+such a bound automatically.
 
 \paragraph{Why mathlib's Brouwer.}  The continuity content of the
 proof — that the Nash map is continuous on a compact convex
@@ -63,18 +69,18 @@ the support-enumeration class for finite games more generally) or
 a constructive fixed-point theorem on a finite simplicial
 structure (Sperner's lemma~\citep{Sperner1928} suffices for
 two-player games but the multi-player extension is not as clean).
-We took the topological route because an existing Lean~4
-mechanization of the Brouwer fixed-point theorem was available
-as the standalone \TT{fixed-point-theorems-lean4}
-package~\citep{harfeFixedPointTheorems}, which proves Brouwer for
+The topological route keeps the game-theoretic proof small: the
+standalone \TT{fixed-point-theorems-lean4}
+package~\citep{harfeFixedPointTheorems} proves Brouwer for
 nonempty compact convex subsets of finite-dimensional normed
-spaces via a cubical Sperner's-lemma route (Kuhn 1960); this
-gave us a ready dependency in the right shape for arbitrary $n$
-players and let us focus on the strategic-form content of the
-proof.  Algorithm-level Nash existence is independent enough to
-live in a downstream module.}
+spaces via a cubical Sperner's-lemma route (Kuhn 1960), which has
+the right shape for arbitrary $n$ players and lets the library
+focus on the strategic-form content of the proof.  Algorithm-level
+Nash existence is independent enough to live in a downstream
+module.}
 
-\leancorr{Statement \TT{KernelGame.mixed\_nash\_exists} in
+\leancorr{Statements \TT{KernelGame.mixed\_nash\_exists\_of\_bounded}
+and \TT{KernelGame.mixed\_nash\_exists} in
 \TT{Theorems/NashExistenceMixed.lean}; the product-simplex
 Brouwer wrapper in \TT{Concepts/ProductSimplexBrouwer.lean}.
 Supplement~§6.1.}
@@ -82,9 +88,10 @@ Supplement~§6.1.}
 \subsection{Existence of correlated and coarse correlated equilibria}
 \label{sec:theorems:correlated-existence}
 
-\begin{theorem}[CE / CCE existence; \TT{KernelGame.correlatedEq\_exists}, \TT{coarseCorrelatedEq\_exists}]
+\begin{theorem}[CE / CCE existence; \TT{KernelGame.correlatedEq\_exists\_of\_bounded}, \TT{coarseCorrelatedEq\_exists\_of\_bounded}]
 \label{thm:ce-exists}
-Under the same finiteness hypotheses as
+Under the same finite-player, finite-strategy, non-empty-strategy,
+and bounded-utility hypotheses as
 \Cref{thm:nash-mixed}, $\KG$ admits a correlated equilibrium and a
 coarse correlated equilibrium.
 \end{theorem}
@@ -100,7 +107,7 @@ $\Pref\text{-CE}\subseteq\Pref\text{-CCE}$
 
 \tradeoff{This route gives CE existence as a corollary of
 mixed Nash existence and is the cleanest path through the
-finite-game machinery already in the library.  Hart and
+finite-strategy machinery used by the proof.  Hart and
 Mas-Colell's regret-matching no-regret learning
 construction~\citep{HartMasColell2000} produces CCE existence
 constructively without going through Brouwer.  We have not
@@ -109,17 +116,20 @@ still available as a corollary of Nash existence; if a future
 constructive Nash-existence proof becomes available the dependency
 inverts trivially.}
 
-\leancorr{\TT{KernelGame.correlatedEq\_exists} and
-\TT{coarseCorrelatedEq\_exists} in
+\leancorr{\TT{KernelGame.correlatedEq\_exists\_of\_bounded},
+\TT{KernelGame.correlatedEq\_exists},
+\TT{KernelGame.coarseCorrelatedEq\_exists\_of\_bounded}, and
+\TT{KernelGame.coarseCorrelatedEq\_exists} in
 \TT{Theorems/CorrelatedEqExistence.lean}.  Supplement~§6.2.}
 
 \subsection{The minimax theorem}
 \label{sec:theorems:minimax}
 
-\begin{theorem}[Von Neumann's minimax; \TT{KernelGame.von\_neumann\_minimax}]
+\begin{theorem}[Von Neumann's minimax; \TT{KernelGame.von\_neumann\_minimax\_of\_bounded}]
 \label{thm:minimax}
-Let $\KG$ be a finite two-player zero-sum kernel game.  There exist
-a real value $v$ and a mixed Nash profile $\sigma$ of
+Let $\KG$ be a two-player zero-sum kernel game with finite
+non-empty strategy spaces and bounded utilities.  There exist a
+real value $v$ and a mixed Nash profile $\sigma$ of
 $\KG^{\mathrm{mix}}$ such that player $1$ cannot push player $0$'s
 payoff below $v$ by deviating from $\sigma_1$, and player $0$ cannot
 push their payoff above $v$ by deviating from $\sigma_0$:

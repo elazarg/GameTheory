@@ -77,7 +77,7 @@ type-space-and-action-rule
 $M = (\Theta, \Act, g : \prod_i \Act_i \to \Players \to \RR)$;
 a strategy profile is a tuple $\sigma_i : \Theta_i \to \Act_i$.
 A \emph{direct mechanism} is a mechanism with $\Act_i = \Theta_i$;
-the canonical strategy is the identity.  The current Lean definition
+the canonical strategy is the identity.  The Lean definition
 of Bayesian incentive compatibility is an ex-ante finite condition
 against constant misreports $\theta'_i$, not the full interim
 textbook condition against arbitrary type-dependent reporting rules.
@@ -121,7 +121,7 @@ these are flagged in \S\ref{sec:future} as the natural next step.
 \subsection{Auctions}
 \label{sec:mech:auctions}
 
-The auction directory currently contains four formats at different
+The auction directory contains four formats at different
 levels of completeness:
 
 \begin{itemize}\itemsep4pt
@@ -138,7 +138,7 @@ deterministic first-price game and proves that no single bid is a
 dominant strategy under the stated non-triviality hypotheses.
 
 \item \emph{All-pay auction}~\citep{KrishnaMorgan1997}.  Every
-bidder pays their own bid regardless of winning.  The current
+bidder pays their own bid regardless of winning.  The
 formalization does not build a kernel game; it records elementary
 payoff facts such as overbidding being unprofitable, winner
 profit, rent dissipation, and a symmetric negative-payoff lemma.
@@ -154,7 +154,7 @@ spaces.
 Vickrey and first-price are direct kernel-game constructions via
 the \TT{ofEU} adapter.  VCG is packaged as a finite setup with an
 efficient allocation rule and a payment function; all-pay is
-currently a collection of real-valued payoff lemmas.  Solution
+packaged as a collection of real-valued payoff lemmas.  Solution
 concepts come from \S\ref{sec:solution-concepts} wherever a full
 kernel game has been constructed.
 
@@ -162,7 +162,7 @@ kernel game has been constructed.
 under continuous bid spaces and continuous valuations; this gives
 the cleanest expressions for symmetric equilibrium bids and
 expected revenue formulas.  Our discrete formalization is
-faithful to the strategic content it currently formalizes
+faithful to the strategic content it formalizes
 (truthful bidding is dominant in Vickrey/VCG; first-price has no
 dominant bid; all-pay payoff inequalities are available) but is
 not the primary place a researcher would go to study revenue

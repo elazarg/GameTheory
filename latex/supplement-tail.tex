@@ -390,22 +390,31 @@ some source-side unilateral deviation.
 \section{Major theorems}
 \label{sec:supp:theorems}
 
-\subsection{Mixed Nash existence: \texttt{KernelGame.mixed\_nash\_exists}}
+\subsection{Mixed Nash existence: \texttt{KernelGame.mixed\_nash\_exists\_of\_bounded}}
 \label{sec:supp:nash-exists}\label{def:mixed_nash_exists}
 
-\Anchor{mixed_nash_exists}
+\Anchor{mixed_nash_exists_of_bounded, mixed_nash_exists}
 \begin{leanbox}
+theorem KernelGame.mixed\_nash\_exists\_of\_bounded (G : KernelGame $\iota$)\\
+\bd [Fintype $\iota$] [DecidableEq $\iota$]\\
+\bd [$\forall$ i, Finite (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
+\bd \{$C$ : $\iota \to \mathbb{R}$\} (hbd : $\forall$ who $\omega$, |G.utility $\omega$ who| $\le$ C who) :\\
+\bd $\exists$ $\sigma$ : $\forall$ i, PMF (G.Strategy i),\ G.mixedExtension.IsNash $\sigma$\\[3pt]
 theorem KernelGame.mixed\_nash\_exists (G : KernelGame $\iota$)\\
 \bd [Fintype $\iota$] [DecidableEq $\iota$]\\
-\bd [$\forall$ i, Fintype (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
-\bd [Fintype G.Outcome] :\\
+\bd [$\forall$ i, Finite (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
+\bd [Finite G.Outcome] :\\
 \bd $\exists$ $\sigma$ : $\forall$ i, PMF (G.Strategy i),\ G.mixedExtension.IsNash $\sigma$
 \end{leanbox}
 
 \Mathematical
-Every finite game has a mixed Nash equilibrium.  Hypotheses:\
-finite player type, decidable equality on players, finite
-non-empty strategy space per player, finite outcome.
+Every finite-strategy game with bounded player utilities has a
+mixed Nash equilibrium.  Hypotheses:\ finite player type,
+decidable equality on players, finite non-empty strategy space per
+player, and a playerwise bound $|\util(\omega,i)| \le C_i$.
+The outcome carrier need not be finite.  The theorem
+\TT{mixed_nash_exists} is the finite-outcome wrapper that derives
+boundedness automatically.
 
 \paragraph{Proof structure.}\
 The proof follows Nash's gain-map argument~\citep{Nash1951}.
@@ -433,7 +442,7 @@ Nash 1951 Theorem 1; Osborne–Rubinstein Proposition 33.1.
 
 \Faithfulness
 Faithful.  The library is honest about non-constructivity:\
-\TT{mixed_nash_exists} is \TT{noncomputable} because Brouwer is.
+\TT{mixed_nash_exists_of_bounded} is \TT{noncomputable} because Brouwer is.
 A constructive route via Sperner's lemma is listed in chapter
 §10 as a future direction.
 
@@ -441,8 +450,10 @@ A constructive route via Sperner's lemma is listed in chapter
 \label{sec:supp:ce-exists}\label{def:correlatedEq_exists}
 
 \begin{leanbox}
-theorem KernelGame.correlatedEq\_exists       (G : KernelGame $\iota$) [...]
-theorem KernelGame.coarseCorrelatedEq\_exists (G : KernelGame $\iota$) [...]
+theorem KernelGame.correlatedEq\_exists\_of\_bounded       (G : KernelGame $\iota$) [...]
+theorem KernelGame.correlatedEq\_exists                   (G : KernelGame $\iota$) [...]
+theorem KernelGame.coarseCorrelatedEq\_exists\_of\_bounded (G : KernelGame $\iota$) [...]
+theorem KernelGame.coarseCorrelatedEq\_exists             (G : KernelGame $\iota$) [...]
 \end{leanbox}
 
 The independent product
@@ -451,15 +462,25 @@ the main chapter's mixed-existence theorem is a correlated equilibrium
 of the original \KG;\ this is the route taken by
 \TT{Theorems/CorrelatedEqExistence.lean}.  CCE existence is the
 corollary $\Pref$-CE $\subseteq$ $\Pref$-CCE.  See chapter §6.2
-for the alternative no-regret-learning route, not formalized.
+for the alternative no-regret-learning route, not formalized.  The
+\TT{\_of\_bounded} statements require finite strategy spaces but
+not finite outcomes.
 
-\subsection{Minimax theorem: \texttt{KernelGame.von\_neumann\_minimax}}
+\subsection{Minimax theorem: \texttt{KernelGame.von\_neumann\_minimax\_of\_bounded}}
 \label{sec:supp:minimax}\label{def:von_neumann_minimax}
 
-\Anchor{von_neumann_minimax}
+\Anchor{von_neumann_minimax_of_bounded, von_neumann_minimax}
 \begin{leanbox}
+theorem KernelGame.von\_neumann\_minimax\_of\_bounded (G : KernelGame (Fin 2))\\
+\bd [$\forall$ i, Finite (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
+\bd (hzs : G.IsZeroSum)\\
+\bd \{$C$ : Fin 2 $\to \mathbb{R}$\} (hbd : $\forall$ i $\omega$, |G.utility $\omega$ i| $\le$ C i) :\\
+\bd $\exists$ (v : $\mathbb{R}$) ($\sigma$ : Profile G.mixedExtension),\\
+\bdd G.mixedExtension.IsNash $\sigma$ $\wedge$ G.mixedExtension.eu $\sigma$ 0 = v $\wedge$\\
+\bdd ($\forall$ s$_1$, G.mixedExtension.eu (Function.update $\sigma$ 1 s$_1$) 0 $\ge$ v) $\wedge$\\
+\bdd ($\forall$ s$_0$, G.mixedExtension.eu (Function.update $\sigma$ 0 s$_0$) 0 $\le$ v)\\[3pt]
 theorem KernelGame.von\_neumann\_minimax (G : KernelGame (Fin 2))\\
-\bd [Fintype G.Outcome] [$\forall$ i, Fintype (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
+\bd [Finite G.Outcome] [$\forall$ i, Finite (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
 \bd (hzs : G.IsZeroSum) :\\
 \bd $\exists$ (v : $\mathbb{R}$) ($\sigma$ : Profile G.mixedExtension),\\
 \bdd G.mixedExtension.IsNash $\sigma$ $\wedge$ G.mixedExtension.eu $\sigma$ 0 = v $\wedge$\\
@@ -468,19 +489,19 @@ theorem KernelGame.von\_neumann\_minimax (G : KernelGame (Fin 2))\\
 \end{leanbox}
 
 \Mathematical
-Every finite two-player zero-sum game has a mixed Nash profile
-whose player-0 payoff is a saddle value:\ player 1 cannot lower it
-by deviating and player 0 cannot raise it by deviating.  A separate
-lemma records that all mixed Nash equilibria yield the same
+Every finite-strategy two-player zero-sum game with bounded utility
+has a mixed Nash profile whose player-0 payoff is a saddle value:\
+player 1 cannot lower it by deviating and player 0 cannot raise it
+by deviating.  A separate lemma records that all mixed Nash equilibria yield the same
 expected utility for player 0.  The usual finite-game
 max-min/min-max equality is the textbook reading of these saddle
 inequalities, but it is not the literal statement packaged here.
 
 \paragraph{Proof structure.}\
-Existence of a mixed Nash profile is \TT{mixed_nash_exists}.
+Existence of a mixed Nash profile is \TT{mixed_nash_exists_of_bounded}.
 Equality of EU at any two Nash profiles is the saddle-point
 property of zero-sum Nash, recorded as
-\TT{IsZeroSum.nash_eu_eq} in \TT{Theorems/Minimax.lean}.
+\TT{IsZeroSum.nash_eu_eq_of_bounded} in \TT{Theorems/Minimax.lean}.
 
 \Textbook
 von Neumann 1928~\citep{vN1928}; Maschler–Solan–Zamir Theorem 7.6.
@@ -490,16 +511,19 @@ von Neumann 1928~\citep{vN1928}; Maschler–Solan–Zamir Theorem 7.6.
 
 \Anchor{HasNoOneShotDeviation, oneShotDeviation_iff_spe, zermelo}
 \begin{leanbox}
-def HasNoOneShotDeviation (G : EFGGame) [Fintype G.Outcome]\\
+def HasNoOneShotDeviation (G : EFGGame)\\
 \bd ($\sigma$ : PureProfile G.inf) : Prop :=\\
 \bd $\forall$ \{p\} (I : G.inf.Infoset p) (next : G.inf.Act I $\to$ GameTree G.inf G.Outcome),\\
 \bdd ($\exists$ h, ReachBy h G.tree (.decision I next)) $\to$\\
 \bdd $\forall$ a' : G.inf.Act I,\\
 \bdd \bd expect ((next ($\sigma$ p I)).evalDist (pureToBehavioral $\sigma$)) (G.utility · p) $\ge$\\
 \bdd \bd expect ((next a').evalDist (pureToBehavioral $\sigma$)) (G.utility · p)\\[3pt]
-theorem oneShotDeviation\_iff\_spe (G : EFGGame) (hpi : IsPerfectInfo G.tree) :\\
-\bd $\forall$ $\sigma$, HasNoOneShotDeviation G $\sigma$ $\leftrightarrow$ G.IsSubgamePerfectEq $\sigma$\\[3pt]
-theorem zermelo (G : EFGGame) (hpi : IsPerfectInfo G.tree) :\\
+theorem oneShotDeviation\_iff\_spe\_of\_bounded (G : EFGGame)\\
+\bd ($\sigma$ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)\\
+\bd \{$C$ : G.inf.Player $\to \mathbb{R}$\} (hbd : $\forall$ p $\omega$, |G.utility $\omega$ p| $\le$ C p) :\\
+\bd G.IsSubgamePerfectEq $\sigma$ $\leftrightarrow$ HasNoOneShotDeviation G $\sigma$\\[3pt]
+theorem zermelo\_of\_bounded (G : EFGGame) (hpi : IsPerfectInfo G.tree)\\
+\bd \{$C$ : G.inf.Player $\to \mathbb{R}$\} (hbd : $\forall$ p $\omega$, |G.utility $\omega$ p| $\le$ C p) :\\
 \bd $\exists$ $\sigma$ : PureProfile G.inf, G.IsSubgamePerfectEq $\sigma$
 \end{leanbox}
 
@@ -509,6 +533,9 @@ EFG, a pure profile is subgame-perfect iff it has no profitable
 one-shot deviation at any reachable decision node.  Zermelo's
 theorem:\ every finite perfect-information EFG has a pure
 subgame-perfect equilibrium, constructed by backward induction.
+The displayed theorems are the bounded-utility forms; finite
+outcome wrappers \TT{oneShotDeviation\_iff\_spe} and \TT{zermelo}
+derive boundedness automatically.
 
 \paragraph{Proof structure.}\
 \TT{Theorems/Zermelo.lean}.
@@ -815,7 +842,7 @@ to $T$ and gains $+2$; at $(H, T)$ player $T$ deviates to $T$ and
 gains $+2$; the four pure profiles are similarly checked.  The
 textbook mixed equilibrium is the symmetric uniform profile
 $\Profile^*_T = \Profile^*_F = \tfrac12 \Dirac_H + \tfrac12 \Dirac_T$,
-at which both players' EU is $0$.  The current Lean example records
+at which both players' EU is $0$.  The Lean example records
 the no-pure-Nash result; it does not package the mixed-equilibrium
 calculation as a theorem in \TT{Languages/NFG/Examples.lean}.
 

@@ -29,7 +29,12 @@ finite strategy/tree hypotheses.
 that remain are proof boundaries rather than definitional restrictions.
 Mixed-Nash and correlated-equilibrium existence still use Brouwer on a
 finite-dimensional product of simplices; dropping finite strategy
-sets would require a different compactness/fixed-point theorem.
+sets requires a topologized mixed-strategy space, compactness of
+that space, and continuity of expected utility.  The library's
+\TT{Math/SchauderFixedPoint.lean} supplies a suitable
+fixed-point principle for compact convex subsets of real normed
+spaces, but the game-theoretic compactness and continuity layer is
+separate work.
 Security levels now have sup/inf definitions, but existence of an
 attaining security strategy still needs finite or compact attainment.
 Backward induction and the one-shot-deviation principle use finite
@@ -266,7 +271,7 @@ are not formalized.
 
 \item \emph{Impossibility theorems in social choice.}  Arrow,
 Gibbard–Satterthwaite, and Sen's liberal paradox are formalizable
-in this framework but are not in the current library.
+in this framework but are not formalized here.
 
 \item \emph{Bayesian persuasion and information design.}
 Kamenica–Gentzkow~\citep{KamenicaGentzkow2011} and successors are

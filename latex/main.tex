@@ -21,8 +21,9 @@
 
 \begin{abstract}
 This chapter describes a Lean~4 library, built on top of
-mathlib~\citep{mathlib2020}, that formalizes finite game theory in a
-form suited to use as a downstream dependency.  The library takes a
+mathlib~\citep{mathlib2020}, that formalizes the finite-game core
+of game theory in a general discrete kernel-game form suited to use
+as a downstream dependency.  The library takes a
 deliberately uniform stance on what a game \emph{is}: a
 \emph{kernel game} consisting of per-player strategy types, an
 outcome type, a stochastic transition $\K : \prod_i \Strat_i \to
@@ -35,11 +36,12 @@ factored-observation stochastic games — are presented as
 syntax-and-semantics packages that compile to a kernel game, and
 relationships between representations are stated as bridge theorems
 about the resulting kernel games.  The classical theorems of finite
-non-cooperative game theory live in this layer: existence of mixed
-Nash equilibria via Brouwer on the product simplex, existence of
-correlated and coarse correlated equilibria, the minimax theorem,
-backward induction (Zermelo), the one-shot deviation principle, and
-Kuhn's behavioral/mixed equivalence.  We discuss the design choices
+non-cooperative game theory live in this layer, often in
+bounded-utility forms that do not require finite outcome carriers:
+existence of mixed Nash equilibria via Brouwer on the product
+simplex, existence of correlated and coarse correlated equilibria,
+the minimax theorem, backward induction (Zermelo), the one-shot
+deviation principle, and Kuhn's behavioral/mixed equivalence.  We discuss the design choices
 that make the library reusable — finiteness, discrete probability,
 the protocol/preference split, and the deviation-family schema for
 equilibrium notions — and we are explicit about what each choice

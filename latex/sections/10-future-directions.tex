@@ -91,8 +91,13 @@ and the folk theorems for repeated games.  Several theorems
 of the library would then have continuous companions.
 
 This is a substantial extension and would change the library's
-character.  We see it less as a single project and more as a
-parallel library with shared infrastructure (the
+character.  The fixed-point ingredient is partly isolated:
+\TT{Math/SchauderFixedPoint.lean} proves Schauder's theorem for
+compact convex subsets of real normed spaces.  What remains for
+continuous games is not just a fixed-point theorem but the
+measure-theoretic and topological game layer around it.  We see
+that less as a single project and more as a parallel library with
+shared infrastructure (the
 \TT{KernelGame}/\TT{GameForm} skeleton generalizes to a kernel
 $\K : \prod_i \Strat_i \to \mathcal{P}(\Outcome)$ for a measure
 type $\mathcal{P}$, with the discrete \TT{PMF} as one

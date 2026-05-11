@@ -79,11 +79,11 @@ where $\Payoff{\Players} \coloneqq \Players \to \RR$.  The
 \label{eq:eu}
   \EU(\KG, \Profile, i) \;=\; \sum_{\omega} \K(\Profile)(\omega)\;\util(\omega)(i),
 \end{equation}
-a finite sum under the finite-outcome hypotheses used by the major
-theorems.  At the core API level the implementation is mathlib's
-unordered-sum expectation for $\PMF{\cdot}$, well-defined on
-bounded utilities over an arbitrary (countable) \Outcome; the
-finite-support lemmas recover the displayed formula, and a
+a finite sum when \Outcome\ is finite.  At the core API level the
+implementation is mathlib's unordered-sum expectation for
+$\PMF{\cdot}$, well-defined on bounded utilities over an arbitrary
+(countable) \Outcome; the finite-support lemmas recover the
+displayed formula, and a
 parallel family of \TT{\_of\_bounded} lemmas replays the same
 algebra without a \TT{[Finite \Outcome]} hypothesis.  Expected utility is the only place
 where utility enters a numerical inequality.
@@ -103,7 +103,8 @@ $\Outcome$ may be countably infinite.  The mixed extension is
 itself a kernel game, indexed by the same $\Players$, and serves
 as the carrier of mixed strategies in Nash existence
 (\S\ref{sec:theorems:nash-mixed}), where the existence proof
-adds finiteness back as a hypothesis on $\Strat_i$ and $\Outcome$.
+adds finiteness back as a hypothesis on $\Strat_i$ and a
+bounded-utility hypothesis on outcomes.
 
 \leancorr{\TT{Core/KernelGame.lean} (\TT{KernelGame},
 \TT{KernelGame.eu}, \TT{KernelGame.mixedExtension}, \TT{reindex});
