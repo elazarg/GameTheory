@@ -113,6 +113,52 @@ theorem expect_pushforward_of_bounded
   congr 1
   simp [Math.Probability.expect_pure]
 
+/-- `expect` along a pushforward when the observable is bounded on the source
+image of the pushed distribution. This is weaker than bounding `φ` on all of
+the target type. -/
+theorem expect_pushforward_of_bounded_on_source
+    {Ω Ξ : Type*}
+    (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) {C : ℝ}
+    (hbd : ∀ ω, |φ (f ω)| ≤ C) :
+    Math.Probability.expect (pushforward μ f) φ =
+      Math.Probability.expect μ (fun ω => φ (f ω)) := by
+  classical
+  let ψ : Ξ → ℝ := fun x =>
+    if ∃ ω, μ ω ≠ 0 ∧ f ω = x then φ x else 0
+  obtain ⟨ω₀, _hω₀⟩ := μ.support_nonempty
+  have hC_nonneg : 0 ≤ C := le_trans (abs_nonneg (φ (f ω₀))) (hbd ω₀)
+  have hψ_bounded : ∀ x, |ψ x| ≤ C := by
+    intro x
+    by_cases hx : ∃ ω, μ ω ≠ 0 ∧ f ω = x
+    · rcases hx with ⟨ω, _hω, rfl⟩
+      have hx_self : ∃ ω', μ ω' ≠ 0 ∧ f ω' = f ω := ⟨ω, _hω, rfl⟩
+      simpa [ψ, hx_self] using hbd ω
+    · simp [ψ, hx, hC_nonneg]
+  have hleft :
+      Math.Probability.expect (pushforward μ f) φ =
+        Math.Probability.expect (pushforward μ f) ψ := by
+    refine expect_congr_on_support (pushforward μ f) φ ψ ?_
+    intro x hx
+    have hx' : ∃ ω, μ ω ≠ 0 ∧ f ω = x := by
+      rcases (PMF.mem_support_map_iff (f := f) (p := μ) (b := x)).1
+          (by simpa [pushforward] using hx) with ⟨ω, hω, hfx⟩
+      exact ⟨ω, by simpa [PMF.mem_support_iff] using hω, hfx⟩
+    simp [ψ, hx']
+  have hright :
+      Math.Probability.expect μ (fun ω => ψ (f ω)) =
+        Math.Probability.expect μ (fun ω => φ (f ω)) := by
+    refine expect_congr_on_support μ (fun ω => ψ (f ω)) (fun ω => φ (f ω)) ?_
+    intro ω hω
+    have hx : ∃ ω', μ ω' ≠ 0 ∧ f ω' = f ω :=
+      ⟨ω, by simpa [PMF.mem_support_iff] using hω, rfl⟩
+    simp [ψ, hx]
+  calc
+    Math.Probability.expect (pushforward μ f) φ
+        = Math.Probability.expect (pushforward μ f) ψ := hleft
+    _ = Math.Probability.expect μ (fun ω => ψ (f ω)) := by
+          exact expect_pushforward_of_bounded μ f ψ hψ_bounded
+    _ = Math.Probability.expect μ (fun ω => φ (f ω)) := hright
+
 theorem expect_bind_congr_on_support
     {Ω Ξ : Type*}
     (μ : PMF Ω) (k₁ k₂ : Ω → PMF Ξ) (φ : Ξ → ℝ)

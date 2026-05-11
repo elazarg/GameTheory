@@ -175,43 +175,68 @@ theorem Morphism.udistPlayer_preserved {G H : KernelGame ι} (f : Morphism G H)
   simpa [KernelGame.udistPlayer_eq_udist_bind] using h
 
 /-- Expected utility is the expectation of the corresponding coordinate of
+the utility-vector distribution under a bounded utility hypothesis. -/
+theorem expect_udist_eq_eu_of_bounded (G : KernelGame ι)
+    (σ : Profile G) (who : ι)
+    {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+    Math.Probability.expect (G.udist σ) (fun u => u who) =
+      G.eu σ who := by
+  rw [KernelGame.udist, KernelGame.eu]
+  rw [Math.ProbabilityMassFunction.bind_pure_eq_pushforward]
+  exact Math.ProbabilityMassFunction.expect_pushforward_of_bounded_on_source
+    (G.outcomeKernel σ) G.utility (fun u => u who) hbd
+
+/-- Expected utility is the expectation of the corresponding coordinate of
 the utility-vector distribution, when the outcome carrier is finite. -/
 theorem expect_udist_eq_eu (G : KernelGame ι) [Finite G.Outcome]
     (σ : Profile G) (who : ι) :
     Math.Probability.expect (G.udist σ) (fun u => u who) =
       G.eu σ who := by
-  classical
-  letI : Fintype G.Outcome := Fintype.ofFinite G.Outcome
-  rw [KernelGame.udist, KernelGame.eu]
-  change
-    Math.Probability.expect
-        ((G.outcomeKernel σ).bind (PMF.pure ∘ G.utility))
-        (fun u => u who) =
-      Math.Probability.expect (G.outcomeKernel σ)
-        (fun ω => G.utility ω who)
-  rw [← PMF.bind_map]
-  rw [PMF.bind_pure]
-  rw [Math.Probability.expect_map_fintype_source]
-  rw [Math.Probability.expect_eq_sum]
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  exact G.expect_udist_eq_eu_of_bounded σ who hbd
 
 /-- A utility-distribution preserving morphism also preserves expected utility
-when both outcome carriers are finite. The finiteness restriction is only for
-the local `expect` API; the semantic content is already `udist_preserved`. -/
-theorem Morphism.eu_preserved_of_fintype_outcome {G H : KernelGame ι}
-    [Finite G.Outcome] [Finite H.Outcome] (f : Morphism G H)
+under bounded utilities. The semantic content is already `udist_preserved`;
+boundedness only justifies reading expectations of utility coordinates. -/
+theorem Morphism.eu_preserved_of_bounded {G H : KernelGame ι}
+    (f : Morphism G H)
+    {C_G C_H : ι → ℝ}
+    (hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who)
+    (hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who)
     (σ : Profile G) (who : ι) :
     H.eu (fun i => f.stratMap i (σ i)) who = G.eu σ who := by
   calc
     H.eu (fun i => f.stratMap i (σ i)) who =
         Math.Probability.expect
           (H.udist (fun i => f.stratMap i (σ i))) (fun u => u who) := by
-          exact (expect_udist_eq_eu H
-            (fun i => f.stratMap i (σ i)) who).symm
+          exact (expect_udist_eq_eu_of_bounded H
+            (fun i => f.stratMap i (σ i)) who (hbdH who)).symm
     _ =
         Math.Probability.expect (G.udist σ) (fun u => u who) := by
           rw [f.udist_preserved σ]
     _ = G.eu σ who := by
-          exact expect_udist_eq_eu G σ who
+          exact expect_udist_eq_eu_of_bounded G σ who (hbdG who)
+
+/-- A utility-distribution preserving morphism also preserves expected utility
+when both outcome carriers are finite. -/
+theorem Morphism.eu_preserved_of_fintype_outcome {G H : KernelGame ι}
+    [Finite G.Outcome] [Finite H.Outcome] (f : Morphism G H)
+    (σ : Profile G) (who : ι) :
+    H.eu (fun i => f.stratMap i (σ i)) who = G.eu σ who := by
+  let C_G : ι → ℝ := fun who =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω who)).choose
+  have hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who := fun who =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω who)).choose_spec
+  let C_H : ι → ℝ := fun who =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => H.utility ω who)).choose
+  have hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who := fun who =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => H.utility ω who)).choose_spec
+  exact f.eu_preserved_of_bounded hbdG hbdH σ who
 
 -- ============================================================================
 -- EU-specialized morphisms
@@ -230,6 +255,17 @@ def Morphism.toEUMorphismOfFintypeOutcome {G H : KernelGame ι}
     EUMorphism G H where
   toMorphism := f
   eu_preserved := f.eu_preserved_of_fintype_outcome
+
+/-- Upgrade a bounded utility-distribution morphism to the EU-specialized
+morphism expected by solution-concept transport theorems. -/
+def Morphism.toEUMorphismOfBounded {G H : KernelGame ι}
+    (f : Morphism G H)
+    {C_G C_H : ι → ℝ}
+    (hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who)
+    (hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who) :
+    EUMorphism G H where
+  toMorphism := f
+  eu_preserved := f.eu_preserved_of_bounded hbdG hbdH
 
 namespace EUMorphism
 
