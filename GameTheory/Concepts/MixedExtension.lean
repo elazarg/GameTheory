@@ -75,7 +75,7 @@ open Classical in
 /-- EU under a unilateral mixed-strategy update equals the expectation, under the
 new mixed strategy `τ`, of EUs under the corresponding pure deviations. -/
 theorem mixedExtension_eu_update_of_bounded (G : KernelGame ι)
-    [Fintype ι] [∀ i, Fintype (G.Strategy i)]
+    [Fintype ι]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι) (τ : PMF (G.Strategy who))
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
     G.mixedExtension.eu (Function.update σ who τ) who =
@@ -83,13 +83,7 @@ theorem mixedExtension_eu_update_of_bounded (G : KernelGame ι)
         G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who) := by
   change expect ((pmfPi (Function.update σ who τ)).bind G.outcomeKernel)
       (fun ω => G.utility ω who) = _
-  have hprod : pmfPi (Function.update σ who τ) =
-      τ.bind (fun a => pmfPi (Function.update σ who (PMF.pure a))) := by
-    ext s
-    simp only [PMF.bind_apply, tsum_fintype]
-    simp only [pmfPi_apply_update_family, PMF.pure_apply, ite_mul, one_mul, zero_mul,
-      mul_ite, mul_zero, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
-  rw [hprod, PMF.bind_bind]
+  rw [pmfPi_update_bind, PMF.bind_bind]
   rw [expect_bind_of_bounded τ
       (fun a => (pmfPi (Function.update σ who (PMF.pure a))).bind G.outcomeKernel)
       (fun ω => G.utility ω who) hbd]
@@ -150,7 +144,6 @@ variable (G : KernelGame ι)
 open Classical in
 /-- Expected pure-deviation gain under the current mixed strategy is zero. -/
 theorem weighted_gain_sum_zero_of_bounded
-    [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
     expect (σ who)
@@ -189,7 +182,6 @@ open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive,
     under bounded utility. -/
 theorem isNash_iff_gains_nonpos_of_bounded
-    [∀ i, Fintype (G.Strategy i)]
     (σ : ∀ i, PMF (G.Strategy i))
     {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
     G.mixedExtension.IsNash σ ↔

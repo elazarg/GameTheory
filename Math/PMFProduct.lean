@@ -877,7 +877,7 @@ open Classical in
     (Function.update σ j τ) i = σ i := by
   simp [Function.update, h]
 
-variable [Fintype ι] [∀ i, Fintype (A i)]
+variable [Fintype ι]
 
 open Classical in
 /-- Pointwise: updating the *factor family* at `j` only changes that coordinate's factor. -/
@@ -917,6 +917,8 @@ theorem pmfPi_update_bind (σ : ∀ i, PMF (A i)) (j : ι) (d : PMF (A j)) :
   rw [tsum_eq_single (s j)]
   · simp
   · intro b hb; simp [Ne.symm hb]
+
+variable [∀ i, Fintype (A i)]
 
 open Classical in
 /-- When `f` ignores coordinate `j`, the bind of a deterministic
