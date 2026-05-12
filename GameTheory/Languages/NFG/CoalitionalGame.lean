@@ -180,6 +180,148 @@ theorem shapleyValue_symmetric (G : CoalGame ι) {i j : ι} (hne : i ≠ j)
     · congr 1
       exact G.marginalContribution_eq_of_symmetric hsym hS hj
 
+/-- **Efficiency of the Shapley value**: the Shapley payouts of all players
+sum to the value of the grand coalition. This is one of Shapley's four
+axioms and is the property that makes the Shapley value an *allocation*
+of `v(N)` among the players. -/
+theorem shapleyValue_efficient (G : CoalGame ι) :
+    ∑ i, G.shapleyValue i = G.v Finset.univ := by
+  classical
+  -- Handle the degenerate empty-type case first.
+  rcases isEmpty_or_nonempty ι with hempty | hnonempty
+  · haveI := hempty
+    simp only [Finset.univ_eq_empty, Finset.sum_empty, G.v_empty]
+  set n := Fintype.card ι with hn_def
+  have hn_pos : 0 < n := by rw [hn_def]; exact Fintype.card_pos
+  -- Coefficient appearing inside the Shapley sum.
+  let w : ℕ → ℝ := fun s =>
+    ((s.factorial * (n - s - 1).factorial : ℕ) : ℝ) / (n.factorial : ℝ)
+  -- Step 1: rewrite Σ_i ϕ_i with the filter pushed inside as an indicator,
+  -- so we can swap Σ_i and Σ_S freely.
+  have hindic : ∀ i : ι, G.shapleyValue i =
+      ∑ S : Finset ι, (if i ∉ S then w S.card * (G.v (insert i S) - G.v S) else 0) := by
+    intro i
+    rw [shapleyValue]
+    simp only [marginalContribution, w]
+    rw [← Finset.sum_filter]
+  rw [Finset.sum_congr rfl (fun i _ => hindic i)]
+  -- Step 2: swap Σ_i and Σ_S.
+  rw [Finset.sum_comm]
+  -- Step 3: split each inner sum into a positive (v(S∪{i})) and negative (v(S)) half.
+  have hinner : ∀ S : Finset ι,
+      (∑ i, if i ∉ S then w S.card * (G.v (insert i S) - G.v S) else 0) =
+        (∑ i ∈ Sᶜ, w S.card * G.v (insert i S))
+        - w S.card * G.v S * (Sᶜ.card : ℝ) := by
+    intro S
+    have hfilter : (Finset.univ.filter (fun i : ι => i ∉ S)) = Sᶜ := by
+      ext i; simp [Finset.mem_compl]
+    rw [← Finset.sum_filter, hfilter]
+    simp_rw [mul_sub]
+    rw [Finset.sum_sub_distrib, Finset.sum_const, nsmul_eq_mul]
+    ring
+  rw [Finset.sum_congr rfl (fun S _ => hinner S)]
+  rw [Finset.sum_sub_distrib]
+  -- Step 4: reindex the positive part using (S, i ∉ S) ↔ (T = S∪{i}, i ∈ T).
+  have hpos : (∑ S : Finset ι, ∑ i ∈ Sᶜ, w S.card * G.v (insert i S)) =
+      ∑ T : Finset ι, (T.card : ℝ) * w (T.card - 1) * G.v T := by
+    let σ : Finset ι → Type := fun _ => ι
+    let fL : Sigma σ → ℝ := fun p => w p.1.card * G.v (insert p.2 p.1)
+    let fR : Sigma σ → ℝ := fun p => w (p.1.card - 1) * G.v p.1
+    -- LHS as a sigma sum.
+    have hLHS : (∑ S : Finset ι, ∑ i ∈ Sᶜ, w S.card * G.v (insert i S)) =
+        ∑ p ∈ (Finset.univ : Finset (Finset ι)).sigma
+            (fun S : Finset ι => (Sᶜ : Finset ι)), fL p :=
+      (Finset.sum_sigma (σ := σ) _ _ fL).symm
+    -- RHS as a sigma sum: first expand T.card as a sum-of-1s, then apply sum_sigma.
+    have hRHS_nest : (∑ T : Finset ι, (T.card : ℝ) * w (T.card - 1) * G.v T) =
+        ∑ T : Finset ι, ∑ _ ∈ T, w (T.card - 1) * G.v T := by
+      refine Finset.sum_congr rfl (fun T _ => ?_)
+      rw [Finset.sum_const, nsmul_eq_mul]; ring
+    have hRHS_sigma : (∑ T : Finset ι, ∑ _ ∈ T, w (T.card - 1) * G.v T) =
+        ∑ p ∈ (Finset.univ : Finset (Finset ι)).sigma (fun T : Finset ι => T), fR p :=
+      (Finset.sum_sigma (σ := σ) _ _ fR).symm
+    rw [hLHS, hRHS_nest, hRHS_sigma]
+    refine Finset.sum_nbij'
+      (i := fun p : Sigma σ => ⟨insert p.2 p.1, p.2⟩)
+      (j := fun p : Sigma σ => ⟨p.1.erase p.2, p.2⟩)
+      ?_ ?_ ?_ ?_ ?_
+    · rintro ⟨S, i⟩ hp
+      simp only [Finset.mem_sigma, Finset.mem_univ, Finset.mem_compl, true_and] at hp
+      simp only [Finset.mem_sigma, Finset.mem_univ, true_and]
+      exact Finset.mem_insert_self i S
+    · rintro ⟨T, i⟩ hp
+      simp only [Finset.mem_sigma, Finset.mem_univ, true_and] at hp
+      simp only [Finset.mem_sigma, Finset.mem_univ, Finset.mem_compl, true_and]
+      exact Finset.notMem_erase i T
+    · rintro ⟨S, i⟩ hp
+      simp only [Finset.mem_sigma, Finset.mem_univ, Finset.mem_compl, true_and] at hp
+      simp [Finset.erase_insert hp]
+    · rintro ⟨T, i⟩ hp
+      simp only [Finset.mem_sigma, Finset.mem_univ, true_and] at hp
+      simp [Finset.insert_erase hp]
+    · rintro ⟨S, i⟩ hp
+      simp only [Finset.mem_sigma, Finset.mem_univ, Finset.mem_compl, true_and] at hp
+      simp only [fL, fR, Finset.card_insert_of_notMem hp, Nat.add_sub_cancel]
+  -- Step 5: combine the two sums into a single Σ_T coeff(T) · v(T).
+  rw [hpos]
+  rw [show (∑ T : Finset ι, (T.card : ℝ) * w (T.card - 1) * G.v T) -
+      (∑ T : Finset ι, w T.card * G.v T * (Tᶜ.card : ℝ)) =
+      ∑ T : Finset ι, ((T.card : ℝ) * w (T.card - 1) - w T.card * (Tᶜ.card : ℝ)) * G.v T from by
+    rw [← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl (fun T _ => ?_)
+    ring]
+  -- Step 6: only T = Finset.univ contributes; everything else is 0.
+  rw [Finset.sum_eq_single Finset.univ]
+  · -- Value at T = univ: coefficient is 1.
+    have h_univ_card : (Finset.univ : Finset ι).card = n := Finset.card_univ.trans hn_def.symm
+    have h_complc : (Finset.univᶜ : Finset ι).card = 0 := by
+      simp [Finset.compl_univ]
+    rw [h_univ_card, h_complc]
+    simp only [Nat.cast_zero, mul_zero, sub_zero, w]
+    obtain ⟨m, hm⟩ : ∃ m, n = m + 1 := Nat.exists_eq_succ_of_ne_zero hn_pos.ne'
+    have h_sub : n - 1 = m := by omega
+    have h_sub2 : n - (n - 1) - 1 = 0 := by omega
+    rw [h_sub2, Nat.factorial_zero, mul_one]
+    rw [h_sub, hm, Nat.factorial_succ]
+    field_simp
+    push_cast
+    ring
+  · -- For T ≠ univ: term is 0, by cases on T = ∅ or 0 < |T| < n.
+    intro T _ hT_ne
+    rcases Finset.eq_empty_or_nonempty T with hempty | hT_nonempty
+    · subst hempty
+      simp [G.v_empty]
+    · -- T ≠ ∅, T ≠ univ ⇒ 1 ≤ |T| < n. The coefficient is 0.
+      have hcard_pos : 0 < T.card := Finset.card_pos.mpr hT_nonempty
+      have hcard_lt : T.card < n := by
+        rw [hn_def]
+        exact Finset.card_lt_card (Finset.ssubset_univ_iff.mpr hT_ne)
+      suffices hcoeff_eq : (T.card : ℝ) * w (T.card - 1) = w T.card * (Tᶜ.card : ℝ) by
+        rw [hcoeff_eq, sub_self, zero_mul]
+      -- Numerator identity in ℕ.
+      have hsub_eq : n - (T.card - 1) - 1 = n - T.card := by omega
+      have hfact_self : ∀ k, 0 < k → k * (k - 1).factorial = k.factorial := by
+        intro k hk
+        obtain ⟨j, rfl⟩ : ∃ j, k = j + 1 := Nat.exists_eq_succ_of_ne_zero hk.ne'
+        rw [Nat.add_sub_cancel, Nat.factorial_succ]
+      have hfact1 := hfact_self T.card hcard_pos
+      have hfact2 := hfact_self (n - T.card) (by omega)
+      have hkey : T.card * ((T.card - 1).factorial * (n - T.card).factorial) =
+          T.card.factorial * (n - T.card - 1).factorial * (n - T.card) := by
+        rw [show T.card * ((T.card - 1).factorial * (n - T.card).factorial) =
+            (T.card * (T.card - 1).factorial) * (n - T.card).factorial from by ring,
+          hfact1, show T.card.factorial * (n - T.card - 1).factorial * (n - T.card) =
+            T.card.factorial * ((n - T.card) * (n - T.card - 1).factorial) from by ring,
+          hfact2]
+      -- Lift to ℝ.
+      simp only [w]
+      rw [Finset.card_compl, ← hn_def, hsub_eq]
+      rw [mul_div_assoc', div_mul_eq_mul_div]
+      congr 1
+      exact_mod_cast hkey
+  · intro h
+    exact absurd (Finset.mem_univ _) h
+
 end CoalGame
 
 end GameTheory
