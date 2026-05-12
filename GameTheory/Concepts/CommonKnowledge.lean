@@ -89,5 +89,89 @@ theorem posterior_zero_outside_self_evident (μ : Ω → ℝ) (_hμ : ∀ s, μ 
   unfold posterior
   rw [cell_disjoint_of_not_in_self_evident P E s hs hse, Finset.sum_empty, zero_div]
 
+/-! ### The knowledge operator
+
+For a partition-based information structure, the *knowledge operator*
+`Knows P E` returns the event "the agent knows `E`": the set of states at
+which the agent's information cell is contained in `E`. The operator
+satisfies the S5 axioms of partition-based knowledge: veridicality (T),
+positive introspection (4), and negative introspection (5). -/
+
+/-- The set of states at which an agent with partition `P` knows event `E`. -/
+def Knows (P : InfoPartition Ω) (E : Finset Ω) : Finset Ω :=
+  Finset.univ.filter (fun s => P.cell s ⊆ E)
+
+@[simp]
+theorem mem_Knows_iff (P : InfoPartition Ω) (E : Finset Ω) (s : Ω) :
+    s ∈ Knows P E ↔ P.cell s ⊆ E := by
+  simp [Knows]
+
+/-- **Veridicality (Axiom T)**: knowing implies truth. -/
+theorem Knows_subset (P : InfoPartition Ω) (E : Finset Ω) : Knows P E ⊆ E := by
+  intro s hs
+  rw [mem_Knows_iff] at hs
+  exact hs (P.reflexive s)
+
+/-- **Positive introspection (Axiom 4)**: knowing implies knowing that you
+know. The fixed-point form `Knows (Knows P E) = Knows P E` follows since
+the converse direction is just veridicality applied to `Knows P E`. -/
+theorem Knows_idem (P : InfoPartition Ω) (E : Finset Ω) :
+    Knows P (Knows P E) = Knows P E := by
+  apply Finset.Subset.antisymm
+  · exact Knows_subset P (Knows P E)
+  · intro s hs
+    rw [mem_Knows_iff] at hs ⊢
+    intro t ht
+    rw [mem_Knows_iff, P.coherent s t ht]
+    exact hs
+
+/-- **Negative introspection (Axiom 5)**: not knowing implies knowing that
+you don't know. Stated as: the complement of `Knows P E` is itself known
+at every point of that complement. -/
+theorem Knows_not_Knows (P : InfoPartition Ω) (E : Finset Ω) :
+    (Finset.univ \ Knows P E) ⊆ Knows P (Finset.univ \ Knows P E) := by
+  intro s hs
+  rw [mem_Knows_iff]
+  rw [Finset.mem_sdiff, mem_Knows_iff] at hs
+  intro t ht
+  rw [Finset.mem_sdiff, mem_Knows_iff]
+  refine ⟨Finset.mem_univ t, ?_⟩
+  rw [P.coherent s t ht]
+  exact hs.2
+
+/-- Knowledge is *monotone*: knowing a larger event follows from knowing a
+smaller one. -/
+theorem Knows_mono (P : InfoPartition Ω) {E F : Finset Ω} (hEF : E ⊆ F) :
+    Knows P E ⊆ Knows P F := by
+  intro s hs
+  rw [mem_Knows_iff] at hs ⊢
+  exact hs.trans hEF
+
+/-- Knowledge distributes over intersection (the *conjunction axiom*). -/
+theorem Knows_inter (P : InfoPartition Ω) (E F : Finset Ω) :
+    Knows P (E ∩ F) = Knows P E ∩ Knows P F := by
+  ext s
+  simp only [Finset.mem_inter, mem_Knows_iff, Finset.subset_inter_iff]
+
+/-- An event is self-evident iff it equals "the event is known". -/
+theorem isSelfEvident_iff_subset_Knows (P : InfoPartition Ω) (E : Finset Ω) :
+    IsSelfEvident P E ↔ E ⊆ Knows P E := by
+  constructor
+  · intro hse s hs
+    rw [mem_Knows_iff]
+    exact hse s hs
+  · intro h s hs
+    have := h hs
+    rw [mem_Knows_iff] at this
+    exact this
+
+/-- Self-evident events are exactly the fixed points of the knowledge
+operator: `IsSelfEvident P E ↔ Knows P E = E`. -/
+theorem isSelfEvident_iff_Knows_eq (P : InfoPartition Ω) (E : Finset Ω) :
+    IsSelfEvident P E ↔ Knows P E = E := by
+  rw [isSelfEvident_iff_subset_Knows]
+  exact ⟨fun h => Finset.Subset.antisymm (Knows_subset P E) h,
+    fun h => h.ge⟩
+
 end GameTheory
 
