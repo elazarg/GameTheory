@@ -91,4 +91,103 @@ noncomputable def toKernelGame (G : StackelbergGame) : KernelGame (Fin 2) :=
 
 end StackelbergGame
 
+/-! ## Entry-deterrence Stackelberg example
+
+Two actions per player. The leader is an incumbent committing publicly
+to *fight* or *accommodate*; the follower is a potential entrant
+choosing *enter* or *stay out*.
+
+  ╭──────────────╮  enter         stay out
+  │ fight        │  (0, -1)       (2,  0)
+  │ accommodate  │  (1,  1)       (2,  0)
+  ╰──────────────╯
+
+The follower's best response is *stay out* against *fight* (0 > -1)
+and *enter* against *accommodate* (1 > 0). The Stackelberg leader
+therefore commits to *fight*, forcing the entrant to stay out, and
+collects payoff 2. The simultaneous game also has a Nash equilibrium
+at *(accommodate, enter)* with leader payoff 1, so the leader strictly
+benefits from commitment over that Nash. -/
+
+namespace EntryDeterrence
+
+/-- Leader and follower actions, both binary. We reuse `Bool` so that
+the structure remains a plain 2×2 game; `true` is *fight*/*enter* and
+`false` is *accommodate*/*stay out*. -/
+def fight : Bool := true
+def accommodate : Bool := false
+def enter : Bool := true
+def stayOut : Bool := false
+
+/-- Leader (incumbent) payoff. -/
+def uL : Bool → Bool → ℝ
+  | true,  true  => 0   -- fight, enter
+  | true,  false => 2   -- fight, stay out
+  | false, true  => 1   -- accommodate, enter
+  | false, false => 2   -- accommodate, stay out
+
+/-- Follower (entrant) payoff. -/
+def uF : Bool → Bool → ℝ
+  | true,  true  => -1  -- fight, enter
+  | true,  false => 0   -- fight, stay out
+  | false, true  => 1   -- accommodate, enter
+  | false, false => 0   -- accommodate, stay out
+
+/-- The Stackelberg instance. -/
+def game : StackelbergGame where
+  L := Bool
+  F := Bool
+  uL := uL
+  uF := uF
+
+/-- The follower's best-response function:\ stay out against fight,
+enter against accommodate. -/
+def br : Bool → Bool
+  | true  => false  -- BR(fight) = stay out
+  | false => true   -- BR(accommodate) = enter
+
+/-- `br` is indeed a best-response function. -/
+theorem br_isBR : game.followerBR br := by
+  intro l f'
+  cases l <;> cases f' <;> simp [game, br, uF]
+
+/-- *(fight, stay out)* is the Stackelberg outcome: leader's payoff 2
+is the maximum over committed-leader payoffs `uL(l, br l)`. -/
+theorem game_stackelberg_eq_fight :
+    game.IsStackelbergEq fight br := by
+  refine ⟨br_isBR, ?_⟩
+  intro l'
+  cases l' <;> simp [game, fight, br, uL]
+
+/-- The simultaneous *(accommodate, enter)* is a Nash equilibrium of
+the underlying 2×2 game. -/
+theorem game_simNash_accommodate :
+    game.IsSimNash accommodate enter := by
+  refine ⟨?_, ?_⟩
+  · intro l'
+    cases l' <;> simp [game, accommodate, enter, uL]
+  · intro f'
+    cases f' <;> simp [game, accommodate, enter, uF]
+
+/-- The follower's BR at the *accommodate* Nash matches the Nash
+follower action (= enter). -/
+theorem game_br_at_accommodate :
+    br accommodate = enter := rfl
+
+/-- **Stackelberg leader-advantage on this instance**: the leader's
+Stackelberg payoff (`uL(fight, stay out) = 2`) is at least the
+simultaneous-Nash payoff at the *(accommodate, enter)* Nash
+(`uL(accommodate, enter) = 1`) — strictly larger, in fact. -/
+theorem leader_advantage :
+    game.uL fight (br fight) ≥ game.uL accommodate enter := by
+  have := game.stackelberg_leader_ge_nash fight br accommodate enter
+    game_stackelberg_eq_fight game_simNash_accommodate game_br_at_accommodate
+  exact this
+
+theorem leader_advantage_strict :
+    game.uL fight (br fight) > game.uL accommodate enter := by
+  simp [game, fight, accommodate, enter, br, uL]
+
+end EntryDeterrence
+
 end GameTheory
