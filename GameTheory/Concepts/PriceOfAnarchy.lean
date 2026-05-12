@@ -154,6 +154,16 @@ theorem one_le_priceOfStability (hN : ∃ σ : Profile G, G.IsNash σ)
   rw [priceOfStability, le_div_iff₀ hbest, one_mul]
   exact hbest_le_opt
 
+open Classical in
+/-- The Price of Anarchy is at least `1` whenever it is well-defined and
+the worst Nash welfare does not exceed the optimal welfare. -/
+theorem one_le_priceOfAnarchy (hN : ∃ σ : Profile G, G.IsNash σ)
+    (hworst : 0 < G.worstNashWelfare hN)
+    (hworst_le_opt : G.worstNashWelfare hN ≤ G.optimalWelfare) :
+    1 ≤ G.priceOfAnarchy hN := by
+  rw [priceOfAnarchy, le_div_iff₀ hworst, one_mul]
+  exact hworst_le_opt
+
 /-- In a team game with finitely many profiles, the best Nash welfare equals
 the optimal welfare: the welfare-maximizing profile is itself Nash (by
 `IsTeamGame.welfareMax_isNash`). -/
