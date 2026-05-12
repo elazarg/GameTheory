@@ -94,3 +94,26 @@ import GameTheory.Auctions.AllPay
 
 -- Cooperative game theory and non-strategic-form game models
 import GameTheory.Cooperative
+
+/-!
+# GameTheory
+
+This library formalizes **non-cooperative game theory** as its main
+content. The load-bearing abstraction is `KernelGame` (player strategies
++ outcome kernel + utility); the `Languages/` layer compiles various
+syntactic game descriptions (NFG, EFG, MAID, FOSG, MultiRound, …) into
+`KernelGame`; `Concepts/`, `Theorems/`, `Auctions/`, and `Mechanism/`
+are all built over `KernelGame`-derived structures. Strategies, best
+responses, Nash equilibrium, and the rest are strategy-centric notions
+that presuppose the non-cooperative formalism.
+
+`GameTheory.Cooperative` is a **separate, parallel branch** for the
+cooperative-game-theory tradition (TU coalitional games and the Shapley
+value, axiomatic bargaining, two-sided matching markets). These
+formalisms do *not* go through `KernelGame`: their primitives are
+coalition value functions, feasible payoff sets, or preference rankings
+rather than per-player strategies. Apart from sharing the player-index
+type `ι` and the real line `ℝ`, the cooperative branch and the
+non-cooperative core share no load-bearing abstractions — they live in
+the same library only for packaging convenience.
+-/

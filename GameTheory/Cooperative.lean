@@ -5,11 +5,24 @@ import GameTheory.Cooperative.Matching
 /-!
 # GameTheory.Cooperative
 
-Cooperative and non-strategic-form game-theoretic models. These describe
-problems whose game-theoretic content is not captured by the strategic
-form (simultaneous-move action choices with payoffs), but rather by
-coalition values, axiomatic bargaining over feasible payoff sets, or
-combinatorial matching markets.
+The **cooperative game theory** branch — a separate paradigm from the
+rest of `GameTheory`, which formalizes non-cooperative game theory
+(strategies, best responses, Nash equilibrium, all built over
+`KernelGame`).
+
+The cooperative tradition takes *coalitions*, *feasible payoff sets*, or
+*preference rankings* as primitive rather than per-player strategies. As
+a consequence, none of the files in this folder go through `KernelGame`
+or import `Concepts.SolutionConcepts` / `Theorems.NashExistence` / etc.
+Apart from the player-index type and `ℝ`, this branch shares no
+load-bearing abstractions with the non-cooperative core; it lives under
+the same package only for packaging convenience.
+
+Caveat on the word "cooperative": in this library it refers to the
+formalism (coalition-value functions, axiomatic solution concepts) and
+NOT to "strategic games whose players have aligned interests" — the
+latter is *non-cooperative content* in the cooperative-behavior sense
+and lives in the strategic branch as `IsTeamGame`, `SymmetricGame`, etc.
 
 - `CoalitionalGame` — TU coalitional games, the Shapley value, Banzhaf
   index, convex (supermodular) games, the core, and worked examples.
