@@ -413,6 +413,111 @@ theorem cournot_q2_q2_is_nash : IsNashPure cournotDuopoly cournot_q2_q2 := by
     (simp [cournotDuopoly, cournot_q2_q2, cournotProfit, deviate, Function.update];
      try linarith)
 
+/-! ## Braess's Paradox (toy 2x2 / 2x3 instance)
+
+Braess (1968): adding an extra strategy to a strategic game can
+*lower* the Nash-equilibrium welfare. Below is the smallest
+self-contained 2-player instance illustrating the effect:
+
+  Restricted game (2 actions, `BraessRestricted`):
+                  A     B
+            A   (3,3) (0,0)
+            B   (0,0) (3,3)
+  Two pure Nash equilibria, both with payoff `(3,3)`.
+
+  Augmented game (3 actions, `BraessAugmented`) — adds a "shortcut"
+  action `C` that strictly dominates both `A` and `B`:
+                  A     B     C
+            A   (3,3) (0,0) (1,5)
+            B   (0,0) (3,3) (1,5)
+            C   (5,1) (5,1) (2,2)
+  `C` strictly dominates `A` and `B` for each player (5>3>1>0 against
+  every opponent action), so the unique pure Nash is `(C,C)` with
+  payoff `(2,2)` — strictly worse than the restricted-game Nash
+  payoff `(3,3)`. Adding a dominant strategy made everyone worse off. -/
+
+/-- Restricted-game actions. -/
+inductive BraessRAction where | a | b
+deriving DecidableEq, Repr, Fintype
+
+/-- Augmented-game actions (with the Braess "shortcut" `c`). -/
+inductive BraessAAction where | a | b | c
+deriving DecidableEq, Repr, Fintype
+
+open BraessRAction in
+/-- The Braess restricted game. -/
+def braessRestricted : NFGGame Bool (fun _ => BraessRAction) where
+  Outcome := ∀ _ : Bool, BraessRAction
+  outcome := id
+  utility s _ :=
+    match s true, s false with
+    | a, a => 3
+    | b, b => 3
+    | _, _ => 0
+
+open BraessAAction in
+/-- The Braess augmented game. -/
+def braessAugmented : NFGGame Bool (fun _ => BraessAAction) where
+  Outcome := ∀ _ : Bool, BraessAAction
+  outcome := id
+  utility s p :=
+    match s true, s false, p with
+    | a, a, _     => 3
+    | b, b, _     => 3
+    | a, b, _     => 0
+    | b, a, _     => 0
+    | a, c, true  => 1
+    | a, c, false => 5
+    | b, c, true  => 1
+    | b, c, false => 5
+    | c, a, true  => 5
+    | c, a, false => 1
+    | c, b, true  => 5
+    | c, b, false => 1
+    | c, c, _     => 2
+
+/-- `(a, a)` is a Nash equilibrium of the restricted game. -/
+theorem braessRestricted_aa_is_nash :
+    IsNashPure braessRestricted (fun _ : Bool => BraessRAction.a) := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [braessRestricted, deviate, Function.update]
+
+/-- `(c, c)` is a Nash equilibrium of the augmented game (the
+"Braess equilibrium"). -/
+theorem braessAugmented_cc_is_nash :
+    IsNashPure braessAugmented (fun _ : Bool => BraessAAction.c) := by
+  intro i a'
+  cases i <;> cases a' <;>
+    (simp [braessAugmented, deviate, Function.update]; try linarith)
+
+/-- `(a, a)` is NOT Nash in the augmented game: each player strictly
+prefers `c` (payoff 5) to `a` (payoff 3). -/
+theorem braessAugmented_aa_not_nash :
+    ¬ IsNashPure braessAugmented (fun _ : Bool => BraessAAction.a) := by
+  intro h
+  have h1 := h true BraessAAction.c
+  unfold IsNashPure braessAugmented deviate at h1
+  simp [Function.update] at h1
+  linarith
+
+/-- **Braess's paradox on this instance**: the welfare-maximizing
+Nash of the restricted game (`a, a`, total welfare 6) is strictly
+better than the unique pure Nash of the augmented game (`c, c`,
+total welfare 4). The "shortcut" action `c` strictly dominates
+`a` and `b` for every player, but driving them all to it costs
+everyone two units of payoff. -/
+theorem braess_welfare_decreases :
+    (braessRestricted.utility
+        (fun _ : Bool => BraessRAction.a) true
+      + braessRestricted.utility
+        (fun _ : Bool => BraessRAction.a) false) >
+    (braessAugmented.utility
+        (fun _ : Bool => BraessAAction.c) true
+      + braessAugmented.utility
+        (fun _ : Bool => BraessAAction.c) false) := by
+  simp [braessRestricted, braessAugmented]; norm_num
+
 /-! ## Distributional API examples -/
 
 open GameTheory
