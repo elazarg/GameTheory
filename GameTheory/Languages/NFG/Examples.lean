@@ -4,8 +4,12 @@ import Mathlib.Tactic.Linarith
 /-!
 # Normal-Form Game Examples
 
-Prisoner's Dilemma, Matching Pennies, and Stag Hunt with Nash equilibrium
-proofs.
+Canonical 2×2 games with Nash equilibrium proofs:
+- Prisoner's Dilemma (unique pure equilibrium, Pareto-dominated)
+- Matching Pennies (no pure equilibrium)
+- Stag Hunt (two coordination equilibria)
+- Hawk–Dove / Chicken (two anti-coordination equilibria)
+- Battle of the Sexes (two coordination equilibria with conflicting prefs)
 -/
 
 namespace NFG
@@ -177,6 +181,116 @@ theorem sh_stag_hare_not_nash :
   have h1 := h true SHAction.hare
   simp [stagHunt, deviate, Function.update] at h1
   linarith
+
+/-! ## Hawk–Dove (Chicken)
+
+An anti-coordination game (Maynard Smith & Price 1973, also called *Chicken*
+in driving-style narrative). Aggressive `hawk` and accommodating `dove`.
+When both escalate, both lose; if exactly one escalates, the hawk wins the
+prize. Two asymmetric pure Nash equilibria. -/
+
+/-- Actions in Hawk–Dove. -/
+inductive HDAction where
+  | hawk
+  | dove
+deriving DecidableEq, Repr
+
+instance : Fintype HDAction where
+  elems := {HDAction.hawk, HDAction.dove}
+  complete x := by cases x <;> simp
+
+open HDAction in
+/-- Hawk–Dove game.
+  Payoff matrix:
+  - (H,H) = (-1,-1) -- mutual escalation, both injured
+  - (H,D) = (3, 0)  -- hawk wins prize, dove backs off
+  - (D,H) = (0, 3)
+  - (D,D) = (1, 1)  -- peaceful split -/
+def hawkDove : NFGGame Bool (fun _ => HDAction) where
+  Outcome := ∀ _ : Bool, HDAction
+  outcome := id
+  utility s p :=
+    match s true, s false, p with
+    | hawk, hawk, _     => -1
+    | hawk, dove, true  =>  3
+    | hawk, dove, false =>  0
+    | dove, hawk, true  =>  0
+    | dove, hawk, false =>  3
+    | dove, dove, _     =>  1
+
+/-- The profile where P1 plays hawk, P2 plays dove. -/
+def hd_hawk_dove : StrategyProfile (fun _ : Bool => HDAction) :=
+  fun b => if b then HDAction.hawk else HDAction.dove
+
+/-- The profile where P1 plays dove, P2 plays hawk. -/
+def hd_dove_hawk : StrategyProfile (fun _ : Bool => HDAction) :=
+  fun b => if b then HDAction.dove else HDAction.hawk
+
+/-- (Hawk, Dove) is a Nash equilibrium. -/
+theorem hd_hawk_dove_is_nash : IsNashPure hawkDove hd_hawk_dove := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [hawkDove, hd_hawk_dove, deviate, Function.update]
+
+/-- (Dove, Hawk) is a Nash equilibrium. -/
+theorem hd_dove_hawk_is_nash : IsNashPure hawkDove hd_dove_hawk := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [hawkDove, hd_dove_hawk, deviate, Function.update]
+
+/-! ## Battle of the Sexes
+
+A coordination game with conflict (Luce & Raiffa 1957). Both players want to
+be together but disagree on the activity. Two pure Nash equilibria, each
+favoring one player. -/
+
+/-- Actions in Battle of the Sexes. -/
+inductive BoSAction where
+  | opera
+  | football
+deriving DecidableEq, Repr
+
+instance : Fintype BoSAction where
+  elems := {BoSAction.opera, BoSAction.football}
+  complete x := by cases x <;> simp
+
+open BoSAction in
+/-- Battle of the Sexes game.
+  Payoff matrix (P1 prefers opera, P2 prefers football):
+  - (O,O) = (3, 1)
+  - (O,F) = (0, 0) -- miscoordination
+  - (F,O) = (0, 0)
+  - (F,F) = (1, 3) -/
+def battleOfTheSexes : NFGGame Bool (fun _ => BoSAction) where
+  Outcome := ∀ _ : Bool, BoSAction
+  outcome := id
+  utility s p :=
+    match s true, s false, p with
+    | opera,    opera,    true  => 3
+    | opera,    opera,    false => 1
+    | football, football, true  => 1
+    | football, football, false => 3
+    | _,        _,        _     => 0
+
+/-- The profile where both go to the opera. -/
+def bos_opera_opera : StrategyProfile (fun _ : Bool => BoSAction) :=
+  fun _ => BoSAction.opera
+
+/-- The profile where both go to football. -/
+def bos_football_football : StrategyProfile (fun _ : Bool => BoSAction) :=
+  fun _ => BoSAction.football
+
+/-- (Opera, Opera) is a Nash equilibrium. -/
+theorem bos_opera_is_nash : IsNashPure battleOfTheSexes bos_opera_opera := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [battleOfTheSexes, bos_opera_opera, deviate, Function.update]
+
+/-- (Football, Football) is a Nash equilibrium. -/
+theorem bos_football_is_nash : IsNashPure battleOfTheSexes bos_football_football := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [battleOfTheSexes, bos_football_football, deviate, Function.update]
 
 /-! ## Distributional API examples -/
 
