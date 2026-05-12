@@ -1,5 +1,6 @@
 import GameTheory.Core.KernelGame
 import Mathlib.Algebra.BigOperators.Ring.Finset
+import Mathlib.Data.Nat.Choose.Sum
 import Math.Probability
 
 /-!
@@ -379,6 +380,120 @@ theorem unanimityGame_v_univ (S : Finset ι) (hS : S.Nonempty) :
     (unanimityGame S hS).v Finset.univ = 1 := by
   have : S ⊆ Finset.univ := S.subset_univ
   simp [unanimityGame, this]
+
+/-- Möbius coefficient of `S` in the unanimity-basis decomposition of `G`:
+`c_S = Σ_{R ⊆ S} (-1)^{|S| - |R|} · G.v R`. Together with the unanimity
+games these recover `G` (see `unanimity_decomposition`). -/
+def unanimityCoeff (G : CoalGame ι) (S : Finset ι) : ℝ :=
+  ∑ R ∈ S.powerset, (-1 : ℝ) ^ (S.card - R.card) * G.v R
+
+/-- **Unanimity basis decomposition** (Möbius inversion on subsets): for any
+coalition `T`,
+`G.v T = Σ_{S ⊆ T} unanimityCoeff G S`.
+Combined with linearity of `φ`, this reduces uniqueness of `φ` on `G`
+to its values on the unanimity games. -/
+theorem unanimity_decomposition (G : CoalGame ι) (T : Finset ι) :
+    G.v T = ∑ S ∈ T.powerset, G.unanimityCoeff S := by
+  classical
+  simp only [unanimityCoeff]
+  -- Swap the double sum: outer becomes R ∈ T.powerset.
+  rw [show
+    (∑ S ∈ T.powerset, ∑ R ∈ S.powerset, (-1 : ℝ) ^ (S.card - R.card) * G.v R)
+      = ∑ R ∈ T.powerset, ∑ S ∈ T.powerset.filter (R ⊆ ·),
+          (-1 : ℝ) ^ (S.card - R.card) * G.v R from ?swap]
+  rotate_left
+  · apply Finset.sum_comm'
+    intro S R
+    simp only [Finset.mem_powerset, Finset.mem_filter]
+    refine ⟨fun ⟨hST, hRS⟩ => ⟨⟨hST, hRS⟩, hRS.trans hST⟩, fun ⟨⟨hST, hRS⟩, _⟩ => ⟨hST, hRS⟩⟩
+  -- For each R, factor out G.v R and reindex S = R ∪ X with X ⊆ T \ R.
+  have hinner : ∀ R ∈ T.powerset,
+      (∑ S ∈ T.powerset.filter (R ⊆ ·),
+        (-1 : ℝ) ^ (S.card - R.card) * G.v R) =
+      G.v R * (if R = T then 1 else 0) := by
+    intro R hR
+    rw [Finset.mem_powerset] at hR
+    rw [show (∑ S ∈ T.powerset.filter (R ⊆ ·),
+        (-1 : ℝ) ^ (S.card - R.card) * G.v R) =
+        G.v R * ∑ S ∈ T.powerset.filter (R ⊆ ·),
+          (-1 : ℝ) ^ (S.card - R.card) by
+      rw [Finset.mul_sum]; refine Finset.sum_congr rfl (fun S _ => ?_); ring]
+    -- Reindex via X = S \ R; inverse via X ↦ R ∪ X. Convert filtered powerset
+    -- on T to the powerset of T \ R, then evaluate via the alternating-sum identity.
+    have hreindex :
+        T.powerset.filter (R ⊆ ·) = (T \ R).powerset.image (fun X => R ∪ X) := by
+      ext S
+      simp only [Finset.mem_filter, Finset.mem_powerset, Finset.mem_image]
+      refine ⟨fun ⟨hST, hRS⟩ => ⟨S \ R, ?_, ?_⟩, ?_⟩
+      · intro x hx
+        simp only [Finset.mem_sdiff] at hx
+        exact Finset.mem_sdiff.mpr ⟨hST hx.1, hx.2⟩
+      · ext x
+        simp only [Finset.mem_union, Finset.mem_sdiff]
+        refine ⟨fun h => h.elim (fun a => hRS a) (fun ⟨a, _⟩ => a), fun hxS => ?_⟩
+        by_cases hxR : x ∈ R
+        · exact Or.inl hxR
+        · exact Or.inr ⟨hxS, hxR⟩
+      · rintro ⟨X, hX, rfl⟩
+        refine ⟨?_, Finset.subset_union_left⟩
+        intro x hx
+        rcases Finset.mem_union.mp hx with hxR | hxX
+        · exact hR hxR
+        · exact (Finset.mem_sdiff.mp (hX hxX)).1
+    rw [hreindex]
+    have hinj : Set.InjOn (fun X => R ∪ X) ((T \ R).powerset : Set (Finset ι)) := by
+      intro X hX Y hY hXY
+      simp only [Finset.coe_powerset] at hX hY
+      have hXdisj : Disjoint R X := Finset.disjoint_left.mpr fun x hxR hxX => by
+        have : x ∈ T \ R := hX hxX
+        exact (Finset.mem_sdiff.mp this).2 hxR
+      have hYdisj : Disjoint R Y := Finset.disjoint_left.mpr fun x hxR hxY => by
+        have : x ∈ T \ R := hY hxY
+        exact (Finset.mem_sdiff.mp this).2 hxR
+      have := congrArg (· \ R) hXY
+      simp only [Finset.union_sdiff_left,
+        Finset.sdiff_eq_self_of_disjoint hXdisj.symm,
+        Finset.sdiff_eq_self_of_disjoint hYdisj.symm] at this
+      exact this
+    rw [Finset.sum_image (fun X hX Y hY => hinj hX hY)]
+    -- The exponent simplifies because R and X are disjoint.
+    have hcard_eq : ∀ X ∈ (T \ R).powerset,
+        (R ∪ X).card - R.card = X.card := by
+      intro X hX
+      simp only [Finset.mem_powerset] at hX
+      have hdisj : Disjoint R X := Finset.disjoint_left.mpr fun x hxR hxX => by
+        exact (Finset.mem_sdiff.mp (hX hxX)).2 hxR
+      rw [Finset.card_union_of_disjoint hdisj, Nat.add_sub_cancel_left]
+    rw [Finset.sum_congr rfl (fun X hX => by rw [hcard_eq X hX])]
+    -- Apply the alternating-sum identity (cast from the ℤ-valued lemma).
+    have h_alt_int : (∑ X ∈ (T \ R).powerset, ((-1 : ℤ) ^ X.card)) =
+        if T \ R = ∅ then 1 else 0 :=
+      Finset.sum_powerset_neg_one_pow_card
+    have h_alt_real : (∑ X ∈ (T \ R).powerset, ((-1 : ℝ) ^ X.card)) =
+        if T \ R = ∅ then (1 : ℝ) else 0 := by
+      have hcast : (∑ X ∈ (T \ R).powerset, ((-1 : ℝ) ^ X.card)) =
+          (((∑ X ∈ (T \ R).powerset, ((-1 : ℤ) ^ X.card)) : ℤ) : ℝ) := by
+        push_cast; rfl
+      rw [hcast, h_alt_int]
+      split_ifs <;> simp
+    rw [h_alt_real]
+    -- T \ R = ∅ ↔ R = T (since R ⊆ T).
+    have hempty_iff : T \ R = ∅ ↔ R = T := by
+      constructor
+      · intro h
+        exact Finset.Subset.antisymm hR (Finset.sdiff_eq_empty_iff_subset.mp h)
+      · rintro rfl; exact Finset.sdiff_self _
+    by_cases hRT : R = T
+    · rw [if_pos hRT, if_pos (hempty_iff.mpr hRT)]
+    · rw [if_neg hRT, if_neg (fun h => hRT (hempty_iff.mp h))]
+  rw [Finset.sum_congr rfl hinner]
+  -- Only R = T contributes.
+  rw [Finset.sum_eq_single T]
+  · simp
+  · intro R hR hRne
+    simp [hRne]
+  · intro hT
+    exact absurd (Finset.mem_powerset.mpr (Finset.Subset.refl T)) hT
 
 /-- **Value on unanimity games**: any allocation `φ` satisfying *efficiency*,
 *symmetry*, and the *null-player* axioms must split the unit of value of
