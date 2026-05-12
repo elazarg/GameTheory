@@ -121,12 +121,8 @@ theorem nash_fp_is_nash
       (σ who a).toReal * (1 + G.gainSum σ who) =
         (σ who a).toReal + pospart (G.mixedGain σ who a)) :
     G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.nash_fp_is_nash_of_bounded σ hbd hfp
 
 end NashMapAlgebra
@@ -552,12 +548,8 @@ variable [Finite G.Outcome]
 /-- Unconditional continuity of Nash's map on mixed simplex (game-side closure). -/
 theorem continuous_nashMapOnMixedSimplex :
     Continuous (G.nashMapOnMixedSimplex) := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact continuous_nashMapOnMixedSimplex_of_bounded (G := G) hbd
 
 /--
@@ -623,12 +615,8 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point
     [Finite G.Outcome]
     (hfix : ∃ x, Function.IsFixedPt (G.nashMapOnMixedSimplex) x) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point_of_bounded hbd hfix
 
 /--
@@ -653,12 +641,8 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approx
     (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approx_of_bounded hbd hcont happrox
 
 /--
@@ -679,12 +663,8 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly
     (happrox : ∀ n : ℕ, ∃ x : MixedSimplex ι (fun i => G.Strategy i),
       dist (G.nashMapOnMixedSimplex x) x ≤ (1 : ℝ) / (n + 1)) :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly_of_bounded hbd happrox
 
 end  -- [Nonempty] section
@@ -717,12 +697,8 @@ theorem mixed_nash_exists (G : KernelGame ι)
     [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     [Finite G.Outcome] :
     ∃ σ : ∀ i, PMF (G.Strategy i), G.mixedExtension.IsNash σ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_exists_of_bounded hbd
 
 end KernelGame

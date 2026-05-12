@@ -42,12 +42,8 @@ theorem correlatedEq_exists
     [Finite ι] [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     [Finite G.Outcome] :
     ∃ μ : PMF (Profile G), G.IsCorrelatedEq μ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.correlatedEq_exists_of_bounded hbd
 
 open Classical in
@@ -71,12 +67,8 @@ theorem mixed_nash_isCoarseCorrelatedEq
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ) :
     G.IsCoarseCorrelatedEq (pmfPi σ) := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_isCoarseCorrelatedEq_of_bounded σ hN hbd
 
 open Classical in
@@ -98,12 +90,8 @@ theorem coarseCorrelatedEq_exists
     [Finite ι] [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     [Finite G.Outcome] :
     ∃ μ : PMF (Profile G), G.IsCoarseCorrelatedEq μ := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.coarseCorrelatedEq_exists_of_bounded hbd
 
 end KernelGame

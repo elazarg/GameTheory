@@ -140,12 +140,8 @@ theorem mixed_nash_isCorrelatedEq
     (σ : ∀ i, PMF (G.Strategy i))
     (hN : G.mixedExtension.IsNash σ) :
     G.IsCorrelatedEq (pmfPi σ) := by
-  let C : ι → ℝ := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose
-  have hbd : ∀ who ω, |G.utility ω who| ≤ C who := fun who =>
-    (Math.Probability.exists_abs_bound_of_finite
-      (fun ω => G.utility ω who)).choose_spec
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_isCorrelatedEq_of_bounded σ hN hbd
 
 end KernelGame
