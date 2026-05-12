@@ -91,3 +91,6 @@ import GameTheory.Auctions.Vickrey
 import GameTheory.Auctions.FirstPrice
 import GameTheory.Auctions.VCG
 import GameTheory.Auctions.AllPay
+
+-- Cooperative game theory and non-strategic-form game models
+import GameTheory.Cooperative
