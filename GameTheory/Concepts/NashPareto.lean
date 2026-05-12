@@ -56,30 +56,10 @@ theorem ParetoDominatesFor.trans
 theorem ParetoDominates.trans {σ τ υ : Profile G}
     (h1 : G.ParetoDominates σ τ) (h2 : G.ParetoDominates τ υ) :
     G.ParetoDominates σ υ := by
-  have h1' : G.ParetoDominatesFor
-      (fun who d₁ d₂ => expect d₁ (fun ω => G.utility ω who) ≥ expect d₂ (fun ω => G.utility ω who))
-      (fun who d₁ d₂ => expect d₁ (fun ω => G.utility ω who) > expect d₂ (fun ω => G.utility ω who))
-      σ τ := (G.ParetoDominates_iff_ParetoDominatesFor_eu σ τ).mp h1
-  have h2' : G.ParetoDominatesFor
-      (fun who d₁ d₂ => expect d₁ (fun ω => G.utility ω who) ≥ expect d₂ (fun ω => G.utility ω who))
-      (fun who d₁ d₂ => expect d₁ (fun ω => G.utility ω who) > expect d₂ (fun ω => G.utility ω who))
-      τ υ := (G.ParetoDominates_iff_ParetoDominatesFor_eu τ υ).mp h2
-  have htrans :
-      ∀ i x y z,
-        (expect x (fun ω => G.utility ω i) ≥ expect y (fun ω => G.utility ω i)) →
-        (expect y (fun ω => G.utility ω i) ≥ expect z (fun ω => G.utility ω i)) →
-        (expect x (fun ω => G.utility ω i) ≥ expect z (fun ω => G.utility ω i)) := by
-    intro i x y z hxy hyz
-    linarith
-  have hstrict_left :
-      ∀ i x y z,
-        (expect x (fun ω => G.utility ω i) > expect y (fun ω => G.utility ω i)) →
-        (expect y (fun ω => G.utility ω i) ≥ expect z (fun ω => G.utility ω i)) →
-        (expect x (fun ω => G.utility ω i) > expect z (fun ω => G.utility ω i)) := by
-    intro i x y z hxy hyz
-    linarith
-  exact (G.ParetoDominates_iff_ParetoDominatesFor_eu σ υ).mpr
-    (KernelGame.ParetoDominatesFor.trans (G := G) htrans hstrict_left h1' h2')
+  obtain ⟨hweak1, i, hi⟩ := h1
+  obtain ⟨hweak2, _⟩ := h2
+  refine ⟨fun j => le_trans (hweak2 j) (hweak1 j), i, ?_⟩
+  exact lt_of_le_of_lt (hweak2 i) hi
 
 end KernelGame
 
