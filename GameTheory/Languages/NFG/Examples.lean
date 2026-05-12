@@ -397,6 +397,53 @@ theorem td_claim2_is_nash : IsNashPure travelersDilemma td_claim2_claim2 := by
   cases i <;> cases a' <;>
     (simp [travelersDilemma, td_claim2_claim2, deviate, Function.update]; try linarith)
 
+/-! ## Cournot Duopoly (3-action version)
+
+Cournot (1838): two firms simultaneously choose production quantities;
+market price is a decreasing function of total output and each firm's
+profit is `quantity × price`. With quantities `{1, 2, 3}` and inverse
+demand `price = max(5 - Q, 0)`, the unique pure Nash is `(2, 2)` with
+profit `4` each — both firms over-produce relative to monopoly. -/
+
+/-- Available quantities for the Cournot duopoly. -/
+inductive CournotQty where
+  | qty1
+  | qty2
+  | qty3
+deriving DecidableEq, Repr
+
+instance : Fintype CournotQty where
+  elems := {CournotQty.qty1, CournotQty.qty2, CournotQty.qty3}
+  complete x := by cases x <;> simp
+
+open CournotQty in
+/-- Cournot profit table for `(q_self, q_other) ∈ {1,2,3}²` with inverse
+demand `price = max(5 - q_self - q_other, 0)`. Tabulated rather than
+computed to keep equilibrium proofs simp-friendly. -/
+def cournotProfit : CournotQty → CournotQty → ℝ
+  | qty1, qty1 => 3   | qty1, qty2 => 2   | qty1, qty3 => 1
+  | qty2, qty1 => 4   | qty2, qty2 => 2   | qty2, qty3 => 0
+  | qty3, qty1 => 3   | qty3, qty2 => 0   | qty3, qty3 => 0
+
+/-- The Cournot duopoly NFG. -/
+def cournotDuopoly : NFGGame Bool (fun _ => CournotQty) where
+  Outcome := ∀ _ : Bool, CournotQty
+  outcome := id
+  utility s p :=
+    if p then cournotProfit (s true) (s false)
+    else cournotProfit (s false) (s true)
+
+/-- Both firms playing `qty2` (the unique pure Nash). -/
+def cournot_q2_q2 : StrategyProfile (fun _ : Bool => CournotQty) :=
+  fun _ => CournotQty.qty2
+
+/-- `(qty2, qty2)` is a Nash equilibrium of the Cournot duopoly. -/
+theorem cournot_q2_q2_is_nash : IsNashPure cournotDuopoly cournot_q2_q2 := by
+  intro i a'
+  cases i <;> cases a' <;>
+    (simp [cournotDuopoly, cournot_q2_q2, cournotProfit, deviate, Function.update];
+     try linarith)
+
 /-! ## Distributional API examples -/
 
 open GameTheory
