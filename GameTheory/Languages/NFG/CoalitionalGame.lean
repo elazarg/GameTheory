@@ -717,6 +717,25 @@ theorem banzhafIndex_null (G : CoalGame ι) {i : ι} (h : G.IsNull i) :
   simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hS
   exact h S hS
 
+/-- The set of coalitions not containing player `i` (a Finset of Finsets)
+equals the powerset of `univ \ {i}`: the elements are exactly the
+subsets of the other players. -/
+theorem filter_notMem_eq_powerset_compl (i : ι) :
+    (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S) =
+    ((Finset.univ : Finset ι) \ {i}).powerset := by
+  ext S
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and, Finset.mem_powerset,
+    Finset.subset_sdiff, Finset.disjoint_singleton_right]
+  refine ⟨fun hi => ⟨Finset.subset_univ S, hi⟩, fun ⟨_, hi⟩ => hi⟩
+
+/-- The number of coalitions not containing `i` is `2^(n-1)`. -/
+theorem card_filter_notMem (i : ι) :
+    ((Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S)).card =
+      2 ^ (Fintype.card ι - 1) := by
+  rw [filter_notMem_eq_powerset_compl, Finset.card_powerset,
+    Finset.card_sdiff_of_subset (Finset.subset_univ ({i} : Finset ι)),
+    Finset.card_univ, Finset.card_singleton]
+
 /-- Banzhaf is additive across coalitional games, like Shapley. -/
 theorem banzhafIndex_additive (G₁ G₂ : CoalGame ι) (i : ι) :
     (gameAdd G₁ G₂).banzhafIndex i = G₁.banzhafIndex i + G₂.banzhafIndex i := by
@@ -769,6 +788,33 @@ theorem shapleyShubikIndex_sum_eq_one (G : CoalGame ι) (h : G.IsSimpleGame) :
 theorem shapleyShubikIndex_null (G : CoalGame ι) (h : G.IsSimpleGame) {i : ι}
     (hnull : G.IsNull i) : G.shapleyShubikIndex h i = 0 :=
   shapleyValue_null G hnull
+
+/-- **Banzhaf index of the singleton unanimity game**: player `i` has
+Banzhaf index `1` in `unanimityGame {i}` — they are pivotal in every
+coalition since the game wins iff they join. -/
+theorem unanimityGame_singleton_banzhafIndex [Nonempty ι] (i : ι) :
+    (unanimityGame ({i} : Finset ι) (Finset.singleton_nonempty i)).banzhafIndex i
+      = 1 := by
+  classical
+  simp only [banzhafIndex, marginalContribution, unanimityGame]
+  -- For each S with i ∉ S: the marginal contribution is 1.
+  have hMC : ∀ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
+      (if ({i} : Finset ι) ⊆ insert i S then (1 : ℝ) else 0)
+        - (if ({i} : Finset ι) ⊆ S then 1 else 0) = 1 := by
+    intro S hS
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hS
+    have h1 : ({i} : Finset ι) ⊆ insert i S := by
+      simp [Finset.singleton_subset_iff]
+    have h2 : ¬ ({i} : Finset ι) ⊆ S := by
+      simp [Finset.singleton_subset_iff, hS]
+    simp [h1, h2]
+  rw [Finset.sum_congr rfl hMC, Finset.sum_const, nsmul_eq_mul,
+    card_filter_notMem, mul_one]
+  -- 2^(n-1) / 2^(n-1) = 1.
+  have hpos : (2 : ℝ) ^ (Fintype.card ι - 1) ≠ 0 := by
+    positivity
+  push_cast
+  rw [div_self hpos]
 
 /-! ### Convex (supermodular) coalitional games
 
@@ -1018,6 +1064,40 @@ theorem additiveGame_eq_gameSum (α : ι → ℝ) :
     ext j
     simp [Finset.singleton_subset_iff]
   rw [hfilter]
+
+/-- **Banzhaf index of an additive game**: each player receives exactly
+their own weight, like the Shapley value. Same decomposition trick:
+`additiveGame α = Σ_j (α j) · u_{j}`, and Banzhaf is linear with
+`banzhafIndex (unanimityGame {j}) i = 1[i = j]`. -/
+theorem additiveGame_banzhafIndex [Nonempty ι] (α : ι → ℝ) (i : ι) :
+    (additiveGame α).banzhafIndex i = α i := by
+  classical
+  rw [additiveGame_eq_gameSum,
+    gameSum_allocation_eq banzhafIndex
+      (fun G₁ G₂ k => banzhafIndex_additive G₁ G₂ k)]
+  -- shapleyValue (gameScalar (α j) (unanimityGame {j})) i = α j * (1[i = j])
+  have hterm : ∀ j : ι,
+      banzhafIndex (gameScalar (α j)
+        (unanimityGame ({j} : Finset ι) (Finset.singleton_nonempty j))) i =
+      if i = j then α j else 0 := by
+    intro j
+    rw [banzhafIndex_scalar]
+    by_cases hij : i = j
+    · subst hij
+      rw [unanimityGame_singleton_banzhafIndex, mul_one]
+      simp
+    · have hnull : (unanimityGame ({j} : Finset ι) (Finset.singleton_nonempty j)).IsNull i := by
+        apply unanimityGame_isNull_of_notMem
+        simp [Finset.mem_singleton, hij]
+      rw [banzhafIndex_null _ hnull, mul_zero]
+      simp [hij]
+  rw [Finset.sum_congr rfl (fun j _ => hterm j)]
+  rw [Finset.sum_eq_single i]
+  · simp
+  · intro j _ hji
+    simp [hji.symm]
+  · intro h
+    exact absurd (Finset.mem_univ i) h
 
 /-- **Shapley value of an additive game**: each player receives exactly
 their own weight. Combines linearity of Shapley with the explicit Shapley
