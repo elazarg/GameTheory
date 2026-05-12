@@ -968,6 +968,73 @@ theorem unanimityGame_isConvex (S : Finset ι) (hS : S.Nonempty) :
       · simp [h1, h2, hu, hni]
       · simp [h1, h2, hu, hni]
 
+/-! ### 3-player majority game (worked example) -/
+
+/-- The 3-player simple majority game: a coalition wins iff it has at
+least two members. -/
+def majorityGame3 : CoalGame (Fin 3) where
+  v := fun S => if 2 ≤ S.card then 1 else 0
+  v_empty := by simp
+
+theorem majorityGame3_isSimple : majorityGame3.IsSimpleGame where
+  boolean := by
+    intro S
+    simp only [majorityGame3]
+    by_cases h : 2 ≤ S.card
+    · right; rw [if_pos h]
+    · left; rw [if_neg h]
+  monotone := by
+    intro S T hST hS
+    simp only [majorityGame3] at *
+    by_cases h2 : 2 ≤ T.card
+    · rw [if_pos h2]
+    · exfalso
+      have hScard : 2 ≤ S.card := by
+        by_contra hne
+        rw [if_neg hne] at hS
+        exact zero_ne_one hS
+      have : S.card ≤ T.card := Finset.card_le_card hST
+      omega
+  grandWinning := by
+    simp only [majorityGame3, Finset.card_univ, Fintype.card_fin]
+    rfl
+
+/-- All three players are pairwise symmetric in the majority game (the
+game depends only on coalition size). -/
+theorem majorityGame3_areSymmetric (i j : Fin 3) :
+    majorityGame3.AreSymmetric i j := by
+  intro S hi hj
+  simp only [majorityGame3, Finset.card_insert_of_notMem hi,
+    Finset.card_insert_of_notMem hj]
+
+/-- The Shapley value of the 3-player majority game is `1/3` for every
+player: by symmetry all three values are equal, and they sum to `v(univ) = 1`. -/
+theorem majorityGame3_shapleyValue (i : Fin 3) :
+    majorityGame3.shapleyValue i = 1 / 3 := by
+  classical
+  -- All players have the same Shapley value by symmetry.
+  have hsym : ∀ j k : Fin 3, j ≠ k →
+      majorityGame3.shapleyValue j = majorityGame3.shapleyValue k :=
+    fun j k hne => shapleyValue_symmetric majorityGame3 hne
+      (majorityGame3_areSymmetric j k)
+  -- The values sum to v(univ) = 1.
+  have hsum : ∑ k : Fin 3, majorityGame3.shapleyValue k = 1 := by
+    rw [shapleyValue_efficient]
+    exact majorityGame3_isSimple.grandWinning
+  -- Each value equals 1/3.
+  have hconst : ∀ k : Fin 3, majorityGame3.shapleyValue k =
+      majorityGame3.shapleyValue i := by
+    intro k
+    by_cases hki : k = i
+    · subst hki; rfl
+    · exact hsym k i hki
+  rw [Finset.sum_congr rfl (fun k _ => hconst k), Finset.sum_const,
+    Finset.card_univ, Fintype.card_fin, nsmul_eq_mul] at hsum
+  -- hsum : ↑3 * shapleyValue i = 1; normalize the coercion and divide.
+  have hsum' : (3 : ℝ) * majorityGame3.shapleyValue i = 1 := by
+    push_cast at hsum; exact hsum
+  linarith
+
 end CoalGame
 
 end GameTheory
