@@ -935,6 +935,15 @@ theorem IsCore.individually_rational (G : CoalGame ι) {x : ι → ℝ}
   have := IsCore.coalition_rational G h {i}
   simpa using this
 
+/-- **Shapley value of a unanimity game**: the unit value is split equally
+among the members of `S`, and non-members get zero. Immediate corollary
+of `allocation_on_unanimityGame` applied to `shapleyValue` itself (which
+satisfies the three required axioms via `shapleyValue_efficient/symmetric/null`). -/
+theorem unanimityGame_shapleyValue (S : Finset ι) (hS : S.Nonempty) (i : ι) :
+    (unanimityGame S hS).shapleyValue i = if i ∈ S then (1 : ℝ) / S.card else 0 :=
+  allocation_on_unanimityGame shapleyValue
+    shapleyValue_efficient shapleyValue_symmetric shapleyValue_null S hS i
+
 /-- **Unanimity games are convex**. The value function jumps from `0` to
 `1` exactly when `S` becomes a subset, and `S ⊆ A ∩ B ↔ S ⊆ A ∧ S ⊆ B`,
 which is exactly the supermodular inequality on `{0,1}`-valued games. -/
