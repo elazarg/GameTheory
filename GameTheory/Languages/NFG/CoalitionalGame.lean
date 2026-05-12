@@ -968,6 +968,37 @@ theorem unanimityGame_isConvex (S : Finset ι) (hS : S.Nonempty) :
       · simp [h1, h2, hu, hni]
       · simp [h1, h2, hu, hni]
 
+/-! ### Additive games
+
+An *additive* coalitional game has `v(S) = ∑_{i ∈ S} α i` for some
+per-player vector `α`. These are degenerate from a cooperative-game
+standpoint (no synergy from cooperation), but they form a natural class
+on which the Shapley value, Banzhaf index, and core all collapse to the
+identity allocation. -/
+
+/-- The additive game with weights `α`: `v(S) = ∑_{i ∈ S} α i`. -/
+def additiveGame (α : ι → ℝ) : CoalGame ι where
+  v := fun S => ∑ i ∈ S, α i
+  v_empty := Finset.sum_empty
+
+@[simp]
+theorem additiveGame_v (α : ι → ℝ) (S : Finset ι) :
+    (additiveGame α).v S = ∑ i ∈ S, α i := rfl
+
+/-- In an additive game, the weight vector `α` itself is in the core
+(with equality on every coalition). -/
+theorem additiveGame_isCore (α : ι → ℝ) : (additiveGame α).IsCore α :=
+  ⟨rfl, fun _ => le_refl _⟩
+
+/-- A player's marginal contribution in an additive game is exactly
+their own weight `α i`, independent of the coalition. -/
+theorem additiveGame_marginalContribution (α : ι → ℝ) (i : ι)
+    {S : Finset ι} (hi : i ∉ S) :
+    (additiveGame α).marginalContribution i S = α i := by
+  simp only [marginalContribution, additiveGame_v,
+    Finset.sum_insert hi]
+  ring
+
 /-! ### 3-player majority game (worked example) -/
 
 /-- The 3-player simple majority game: a coalition wins iff it has at
