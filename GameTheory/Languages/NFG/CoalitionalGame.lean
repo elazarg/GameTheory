@@ -65,6 +65,48 @@ def IsCore (G : CoalGame ι) (x : ι → ℝ) : Prop :=
   (∑ i, x i = G.v Finset.univ) ∧
   ∀ S : Finset ι, ∑ i ∈ S, x i ≥ G.v S
 
+/-- Core allocations are efficient: their components sum to `v(N)`. -/
+theorem IsCore.efficient (G : CoalGame ι) {x : ι → ℝ} (h : G.IsCore x) :
+    ∑ i, x i = G.v Finset.univ := h.1
+
+/-- Core allocations satisfy *coalition rationality*: every coalition gets
+at least its own value. -/
+theorem IsCore.coalition_rational (G : CoalGame ι) {x : ι → ℝ}
+    (h : G.IsCore x) (S : Finset ι) : ∑ i ∈ S, x i ≥ G.v S := h.2 S
+
+/-- **The core is convex (as a set)**: a convex combination of two core
+allocations is still in the core. -/
+theorem IsCore.convex_combination (G : CoalGame ι) {x y : ι → ℝ}
+    (hx : G.IsCore x) (hy : G.IsCore y)
+    {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1) :
+    G.IsCore (fun i => a * x i + b * y i) := by
+  refine ⟨?_, ?_⟩
+  · -- Efficiency: a · v(univ) + b · v(univ) = (a+b) · v(univ) = v(univ).
+    have heq : (∑ i, (a * x i + b * y i)) =
+        a * (∑ i, x i) + b * (∑ i, y i) := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    rw [heq, IsCore.efficient G hx, IsCore.efficient G hy,
+      ← add_mul, hab, one_mul]
+  · -- Coalition rationality: weighted sum dominates v(S).
+    intro S
+    have heq : (∑ i ∈ S, (a * x i + b * y i)) =
+        a * (∑ i ∈ S, x i) + b * (∑ i ∈ S, y i) := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    have hxS := IsCore.coalition_rational G hx S
+    have hyS := IsCore.coalition_rational G hy S
+    have hsplit : G.v S = a * G.v S + b * G.v S := by
+      rw [← add_mul, hab, one_mul]
+    rw [heq, hsplit]
+    exact add_le_add (mul_le_mul_of_nonneg_left hxS ha)
+      (mul_le_mul_of_nonneg_left hyS hb)
+
+/-- **Core dominates singleton values**: if `x` is in the core, every
+player gets at least their stand-alone value. -/
+theorem IsCore.individually_rational (G : CoalGame ι) {x : ι → ℝ}
+    (h : G.IsCore x) (i : ι) : x i ≥ G.v ({i} : Finset ι) := by
+  have := IsCore.coalition_rational G h {i}
+  simpa using this
+
 /-- A null player gets Shapley value 0. -/
 theorem shapleyValue_null (G : CoalGame ι) {i : ι} (h : G.IsNull i) :
     G.shapleyValue i = 0 := by
@@ -491,13 +533,10 @@ theorem unanimity_decomposition (G : CoalGame ι) (T : Finset ι) :
     · rw [if_pos hRT, if_pos (hempty_iff.mpr hRT)]
     · rw [if_neg hRT, if_neg (fun h => hRT (hempty_iff.mp h))]
   rw [Finset.sum_congr rfl hinner]
-  -- Only R = T contributes.
-  rw [Finset.sum_eq_single T]
-  · simp
-  · intro R hR hRne
-    simp [hRne]
-  · intro hT
-    exact absurd (Finset.mem_powerset.mpr (Finset.Subset.refl T)) hT
+  -- Only R = T contributes; collapse via `Finset.sum_ite_eq'`.
+  simp_rw [mul_ite, mul_one, mul_zero]
+  rw [Finset.sum_ite_eq' T.powerset T G.v,
+    if_pos (Finset.mem_powerset.mpr Finset.Subset.rfl)]
 
 /-- **Value on unanimity games**: any allocation `φ` satisfying *efficiency*,
 *symmetry*, and the *null-player* axioms must split the unit of value of
@@ -935,52 +974,6 @@ theorem IsConvex.gameScalar {G : CoalGame ι} (h : G.IsConvex)
   have h_ineq := h S T
   nlinarith
 
-/-! ### Properties of the core -/
-
-/-- Core allocations are efficient: their components sum to `v(N)`. This is
-just the first conjunct of `IsCore`, restated for ergonomic use. -/
-theorem IsCore.efficient (G : CoalGame ι) {x : ι → ℝ} (h : G.IsCore x) :
-    ∑ i, x i = G.v Finset.univ := h.1
-
-/-- Core allocations satisfy *coalition rationality*: every coalition gets
-at least its own value. This is the second conjunct, restated. -/
-theorem IsCore.coalition_rational (G : CoalGame ι) {x : ι → ℝ}
-    (h : G.IsCore x) (S : Finset ι) : ∑ i ∈ S, x i ≥ G.v S := h.2 S
-
-/-- **The core is convex (as a set)**: a convex combination of two core
-allocations is still in the core. -/
-theorem IsCore.convex_combination (G : CoalGame ι) {x y : ι → ℝ}
-    (hx : G.IsCore x) (hy : G.IsCore y)
-    {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1) :
-    G.IsCore (fun i => a * x i + b * y i) := by
-  refine ⟨?_, ?_⟩
-  · -- Efficiency: a · v(univ) + b · v(univ) = (a+b) · v(univ) = v(univ).
-    have heq : (∑ i, (a * x i + b * y i)) =
-        a * (∑ i, x i) + b * (∑ i, y i) := by
-      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
-    rw [heq, IsCore.efficient G hx, IsCore.efficient G hy,
-      ← add_mul, hab, one_mul]
-  · -- Coalition rationality: weighted sum of two coalition-rational
-    -- allocations dominates v(S).
-    intro S
-    have heq : (∑ i ∈ S, (a * x i + b * y i)) =
-        a * (∑ i ∈ S, x i) + b * (∑ i ∈ S, y i) := by
-      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
-    have hxS := IsCore.coalition_rational G hx S
-    have hyS := IsCore.coalition_rational G hy S
-    have hsplit : G.v S = a * G.v S + b * G.v S := by
-      rw [← add_mul, hab, one_mul]
-    rw [heq, hsplit]
-    exact add_le_add (mul_le_mul_of_nonneg_left hxS ha)
-      (mul_le_mul_of_nonneg_left hyS hb)
-
-/-- **Core dominates singleton values**: if `x` is in the core, every
-player gets at least their stand-alone value. -/
-theorem IsCore.individually_rational (G : CoalGame ι) {x : ι → ℝ}
-    (h : G.IsCore x) (i : ι) : x i ≥ G.v ({i} : Finset ι) := by
-  have := IsCore.coalition_rational G h {i}
-  simpa using this
-
 /-- **Shapley value of a unanimity game**: the unit value is split equally
 among the members of `S`, and non-members get zero. Immediate corollary
 of `allocation_on_unanimityGame` applied to `shapleyValue` itself (which
@@ -1092,12 +1085,7 @@ theorem additiveGame_banzhafIndex [Nonempty ι] (α : ι → ℝ) (i : ι) :
       rw [banzhafIndex_null _ hnull, mul_zero]
       simp [hij]
   rw [Finset.sum_congr rfl (fun j _ => hterm j)]
-  rw [Finset.sum_eq_single i]
-  · simp
-  · intro j _ hji
-    simp [hji.symm]
-  · intro h
-    exact absurd (Finset.mem_univ i) h
+  simp [Finset.sum_ite_eq]
 
 /-- **Shapley value of an additive game**: each player receives exactly
 their own weight. Combines linearity of Shapley with the explicit Shapley
@@ -1123,13 +1111,7 @@ theorem additiveGame_shapleyValue (α : ι → ℝ) (i : ι) :
         simp [Finset.mem_singleton, hij]
       simp [hni, hij]
   rw [Finset.sum_congr rfl (fun j _ => hterm j)]
-  -- Σ_j (if i = j then α j else 0) = α i
-  rw [Finset.sum_eq_single i]
-  · simp
-  · intro j _ hji
-    simp [hji.symm]
-  · intro h
-    exact absurd (Finset.mem_univ i) h
+  simp [Finset.sum_ite_eq]
 
 /-- **Sum of Shapley weights**: for every player `i`, the Shapley
 combinatorial weights over coalitions not containing `i` sum to `1`.

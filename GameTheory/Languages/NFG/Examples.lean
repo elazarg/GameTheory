@@ -1,4 +1,5 @@
 import GameTheory.Languages.NFG.Compile
+import Mathlib.Tactic.DeriveFintype
 import Mathlib.Tactic.Linarith
 
 /-!
@@ -20,11 +21,7 @@ namespace NFG
 inductive PDAction where
   | cooperate
   | defect
-deriving DecidableEq, Repr
-
-instance : Fintype PDAction where
-  elems := {PDAction.cooperate, PDAction.defect}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open PDAction in
 /-- The Prisoner's Dilemma game.
@@ -72,11 +69,7 @@ theorem pd_coop_not_nash : ¬ IsNashPure prisonersDilemma pd_coop_coop := by
 inductive MPAction where
   | heads
   | tails
-deriving DecidableEq, Repr
-
-instance : Fintype MPAction where
-  elems := {MPAction.heads, MPAction.tails}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open MPAction in
 /-- Matching Pennies game.
@@ -128,11 +121,7 @@ problems. -/
 inductive SHAction where
   | stag
   | hare
-deriving DecidableEq, Repr
-
-instance : Fintype SHAction where
-  elems := {SHAction.stag, SHAction.hare}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open SHAction in
 /-- The Stag Hunt game.
@@ -193,11 +182,7 @@ prize. Two asymmetric pure Nash equilibria. -/
 inductive HDAction where
   | hawk
   | dove
-deriving DecidableEq, Repr
-
-instance : Fintype HDAction where
-  elems := {HDAction.hawk, HDAction.dove}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open HDAction in
 /-- Hawk–Dove game.
@@ -248,11 +233,7 @@ favoring one player. -/
 inductive BoSAction where
   | opera
   | football
-deriving DecidableEq, Repr
-
-instance : Fintype BoSAction where
-  elems := {BoSAction.opera, BoSAction.football}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open BoSAction in
 /-- Battle of the Sexes game.
@@ -304,11 +285,7 @@ inductive DGAction where
   | keepAll
   | giveHalf
   | giveAll
-deriving DecidableEq, Repr
-
-instance : Fintype DGAction where
-  elems := {DGAction.keepAll, DGAction.giveHalf, DGAction.giveAll}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open DGAction in
 /-- Dictator Game. Player `true` is the dictator and chooses one of three
@@ -360,11 +337,7 @@ strict Nash equilibrium. -/
 inductive TDAction where
   | claim2
   | claim3
-deriving DecidableEq, Repr
-
-instance : Fintype TDAction where
-  elems := {TDAction.claim2, TDAction.claim3}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open TDAction in
 /-- Two-action Traveler's Dilemma.
@@ -410,11 +383,7 @@ inductive CournotQty where
   | qty1
   | qty2
   | qty3
-deriving DecidableEq, Repr
-
-instance : Fintype CournotQty where
-  elems := {CournotQty.qty1, CournotQty.qty2, CournotQty.qty3}
-  complete x := by cases x <;> simp
+deriving DecidableEq, Repr, Fintype
 
 open CournotQty in
 /-- Cournot profit table for `(q_self, q_other) ∈ {1,2,3}²` with inverse
