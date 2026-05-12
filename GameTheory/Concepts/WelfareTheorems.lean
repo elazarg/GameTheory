@@ -1,3 +1,4 @@
+import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Core.GameProperties
 import Math.Probability
 
@@ -12,6 +13,8 @@ Welfare theorems relating social welfare to individual expected utilities.
   social welfare equals `n * eu σ i` for any player `i`
 - `socialWelfare_nonneg_of_nonneg_eu` — if all players have non-negative EU,
   social welfare is non-negative
+- `IsTeamGame.welfareMax_isNash` — in a team game, any welfare-maximizing
+  profile is a Nash equilibrium
 -/
 
 open scoped BigOperators
@@ -48,6 +51,23 @@ theorem socialWelfare_nonneg_of_nonneg_eu [Fintype ι]
     {G : KernelGame ι} {σ : Profile G}
     (h : ∀ i, G.eu σ i ≥ 0) : G.socialWelfare σ ≥ 0 :=
   Finset.sum_nonneg (fun i _ => h i)
+
+/-- In a team game with finite players, any social-welfare-maximizing profile
+is a Nash equilibrium. Since every player shares the social welfare equally
+(via `IsTeamGame.socialWelfare_eq`), no unilateral deviation can improve a
+single player's payoff without raising total welfare. -/
+theorem IsTeamGame.welfareMax_isNash [Fintype ι] [Inhabited ι] [DecidableEq ι]
+    {G : KernelGame ι} (hteam : G.IsTeamGame) {σ : Profile G}
+    (hmax : ∀ τ : Profile G, G.socialWelfare τ ≤ G.socialWelfare σ) :
+    G.IsNash σ := by
+  intro who s'
+  have hσ := hteam.socialWelfare_eq σ who
+  have hσ' := hteam.socialWelfare_eq (Function.update σ who s') who
+  have hcard_pos : (0 : ℝ) < (Fintype.card ι : ℝ) := by
+    exact_mod_cast Fintype.card_pos
+  have hle := hmax (Function.update σ who s')
+  rw [hσ, hσ'] at hle
+  exact le_of_mul_le_mul_left hle hcard_pos
 
 end KernelGame
 
