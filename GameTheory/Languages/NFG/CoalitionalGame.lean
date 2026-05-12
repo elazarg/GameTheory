@@ -935,6 +935,30 @@ theorem IsCore.individually_rational (G : CoalGame ι) {x : ι → ℝ}
   have := IsCore.coalition_rational G h {i}
   simpa using this
 
+/-- **Unanimity games are convex**. The value function jumps from `0` to
+`1` exactly when `S` becomes a subset, and `S ⊆ A ∩ B ↔ S ⊆ A ∧ S ⊆ B`,
+which is exactly the supermodular inequality on `{0,1}`-valued games. -/
+theorem unanimityGame_isConvex (S : Finset ι) (hS : S.Nonempty) :
+    (unanimityGame S hS).IsConvex := by
+  intro T₁ T₂
+  simp only [unanimityGame]
+  by_cases h1 : S ⊆ T₁
+  · by_cases h2 : S ⊆ T₂
+    · have hu : S ⊆ T₁ ∪ T₂ := h1.trans Finset.subset_union_left
+      have hi : S ⊆ T₁ ∩ T₂ := Finset.subset_inter h1 h2
+      simp [h1, h2, hu, hi]
+    · have hu : S ⊆ T₁ ∪ T₂ := h1.trans Finset.subset_union_left
+      have hni : ¬ S ⊆ T₁ ∩ T₂ := fun h => h2 (h.trans Finset.inter_subset_right)
+      simp [h1, h2, hu, hni]
+  · by_cases h2 : S ⊆ T₂
+    · have hu : S ⊆ T₁ ∪ T₂ := h2.trans Finset.subset_union_right
+      have hni : ¬ S ⊆ T₁ ∩ T₂ := fun h => h1 (h.trans Finset.inter_subset_left)
+      simp [h1, h2, hu, hni]
+    · have hni : ¬ S ⊆ T₁ ∩ T₂ := fun h => h1 (h.trans Finset.inter_subset_left)
+      by_cases hu : S ⊆ T₁ ∪ T₂
+      · simp [h1, h2, hu, hni]
+      · simp [h1, h2, hu, hni]
+
 end CoalGame
 
 end GameTheory
