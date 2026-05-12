@@ -292,6 +292,61 @@ theorem bos_football_is_nash : IsNashPure battleOfTheSexes bos_football_football
   cases i <;> cases a' <;>
     simp [battleOfTheSexes, bos_football_football, deviate, Function.update]
 
+/-! ## Dictator Game
+
+The dictator splits a fixed pie between themselves and a passive receiver
+(Kahneman–Knetsch–Thaler 1986). The receiver has no strategic choice —
+their action is irrelevant to the payoffs — so any profile in which the
+dictator keeps the maximum share is a Nash equilibrium. -/
+
+/-- Actions in the Dictator Game (only the proposer's action matters). -/
+inductive DGAction where
+  | keepAll
+  | giveHalf
+  | giveAll
+deriving DecidableEq, Repr
+
+instance : Fintype DGAction where
+  elems := {DGAction.keepAll, DGAction.giveHalf, DGAction.giveAll}
+  complete x := by cases x <;> simp
+
+open DGAction in
+/-- Dictator Game. Player `true` is the dictator and chooses one of three
+splits of a pie of size 10. Player `false`'s action is ignored.
+Payoffs: keepAll = (10, 0), giveHalf = (5, 5), giveAll = (0, 10). -/
+def dictatorGame : NFGGame Bool (fun _ => DGAction) where
+  Outcome := ∀ _ : Bool, DGAction
+  outcome := id
+  utility s p :=
+    match s true, p with
+    | keepAll,  true  => 10
+    | keepAll,  false => 0
+    | giveHalf, true  => 5
+    | giveHalf, false => 5
+    | giveAll,  true  => 0
+    | giveAll,  false => 10
+
+/-- The profile in which the dictator keeps all. -/
+def dg_keep_all : StrategyProfile (fun _ : Bool => DGAction) :=
+  fun b => if b then DGAction.keepAll else DGAction.keepAll
+
+/-- The dictator keeping all is a Nash equilibrium. (The receiver's
+strategy doesn't matter; the dictator strictly prefers `keepAll`.) -/
+theorem dg_keep_is_nash : IsNashPure dictatorGame dg_keep_all := by
+  intro i a'
+  cases i <;> cases a' <;>
+    (simp [dictatorGame, dg_keep_all, deviate, Function.update]; try linarith)
+
+/-- The dictator giving all is NOT a Nash equilibrium (the dictator can
+strictly improve by deviating to `keepAll`). -/
+theorem dg_giveAll_not_nash :
+    ¬ IsNashPure dictatorGame (fun _ : Bool => DGAction.giveAll) := by
+  intro h
+  have := h true DGAction.keepAll
+  unfold IsNashPure dictatorGame deviate at this
+  simp [Function.update] at this
+  linarith
+
 /-! ## Distributional API examples -/
 
 open GameTheory
