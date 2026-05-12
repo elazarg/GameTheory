@@ -1,6 +1,7 @@
 import Math.Probability
 import GameTheory.Core.GameProperties
 import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.WelfareTheorems
 
 /-!
 # Price of Anarchy and Price of Stability
@@ -152,6 +153,41 @@ theorem one_le_priceOfStability (hN : ∃ σ : Profile G, G.IsNash σ)
     1 ≤ G.priceOfStability hN := by
   rw [priceOfStability, le_div_iff₀ hbest, one_mul]
   exact hbest_le_opt
+
+/-- In a team game with finitely many profiles, the best Nash welfare equals
+the optimal welfare: the welfare-maximizing profile is itself Nash (by
+`IsTeamGame.welfareMax_isNash`). -/
+theorem IsTeamGame.bestNashWelfare_eq_optimalWelfare {G : KernelGame ι}
+    [Fintype (Profile G)] [Inhabited ι]
+    (hteam : G.IsTeamGame) (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.bestNashWelfare hN = G.optimalWelfare := by
+  classical
+  obtain ⟨σ₀, _⟩ := hN
+  haveI : Nonempty (Profile G) := ⟨σ₀⟩
+  obtain ⟨σ_max, _, hmax⟩ :=
+    Finset.exists_max_image Finset.univ G.socialWelfare Finset.univ_nonempty
+  have hmax' : ∀ τ : Profile G, G.socialWelfare τ ≤ G.socialWelfare σ_max :=
+    fun τ => hmax τ (Finset.mem_univ τ)
+  have hN_max : G.IsNash σ_max := hteam.welfareMax_isNash hmax'
+  have h_ge : G.socialWelfare σ_max ≤ G.bestNashWelfare ⟨σ₀, ‹_›⟩ := by
+    simp only [bestNashWelfare]
+    exact Finset.le_sup' _ (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hN_max⟩)
+  have h_opt_le : G.optimalWelfare ≤ G.socialWelfare σ_max := by
+    simp only [optimalWelfare]
+    exact ciSup_le hmax'
+  have hbdd : BddAbove (Set.range (fun τ : Profile G => G.socialWelfare τ)) :=
+    ⟨G.socialWelfare σ_max, by rintro _ ⟨σ, rfl⟩; exact hmax' σ⟩
+  linarith [G.bestNashWelfare_le_optimalWelfare ⟨σ₀, ‹_›⟩ hbdd]
+
+/-- In a team game with positive optimal welfare, the Price of Stability is
+exactly `1`: selfish play loses no efficiency in the best equilibrium. -/
+theorem IsTeamGame.priceOfStability_eq_one {G : KernelGame ι}
+    [Fintype (Profile G)] [Inhabited ι]
+    (hteam : G.IsTeamGame) (hN : ∃ σ : Profile G, G.IsNash σ)
+    (hopt_pos : 0 < G.optimalWelfare) :
+    G.priceOfStability hN = 1 := by
+  rw [priceOfStability, hteam.bestNashWelfare_eq_optimalWelfare hN,
+    div_self hopt_pos.ne']
 
 end FiniteNash
 
