@@ -103,6 +103,18 @@ hypothesis on $\sigma$ rules out profitable deviations.
 \TT{IsBNE}, \TT{toDirect}, \TT{revelation\_principle}).
 Supplement~§7.2.}
 
+\paragraph{Vocabulary and surrounding lemmas.}\
+The library exposes \TT{isStrategyProof} as a synonym for
+\TT{isIC} (the literature uses the two interchangeably).
+\TT{Mechanism.socialWelfare} is the utilitarian aggregate of
+per-player payoffs on a report profile, and
+\TT{IsIndividuallyRational} is the participation constraint
+parameterized by an outside-option function $o : \Players \to
+\RR$:\ every player gets at least $o_i$ at every type profile.
+The standard zero-outside-option normalization is exposed as
+\TT{IsNonNegative}.  These are scaffolding for downstream
+welfare-vs-truthfulness analyses.
+
 \subsection{Social choice}
 \label{sec:mech:social}
 

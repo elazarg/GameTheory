@@ -122,6 +122,32 @@ $\Rightarrow$ Nash, asymmetry under a strict preference that is
 incompatible with reverse weak preference, and uniqueness in
 ordinal-potential games.
 
+\paragraph{Strong Nash equilibrium.}\
+A \emph{strong Nash equilibrium}~\citep{Aumann1959} strengthens
+the deviation menu from singleton (unilateral) deviations to
+arbitrary coalitions:\ a profile $\Profile$ is strong Nash when no
+coalition $C \subseteq \Players$ has a joint deviation $\tau$ that
+weakly improves every member of $C$ and strictly improves at
+least one.  The library encodes the coalitional deviation as
+$\mathrm{coalitionDeviation}(C, \Profile, \tau)_i =
+\tau_i\ \text{if}\ i \in C,\ \Profile_i\ \text{otherwise}$, and
+proves the equivalence
+\[
+  \IsStrongNash(\Profile) \;\Longleftrightarrow\;
+    \neg \exists C, \tau.\;
+    (\forall i \in C, \EU_C \ge \EU_\Profile) \land
+    (\exists i \in C, \EU_C > \EU_\Profile)
+\]
+where $\EU_C$ is the EU under $\mathrm{coalitionDeviation}(C,
+\Profile, \tau)$.  Specializing $C$ to a singleton recovers Nash,
+and specializing $C$ to the grand coalition $\Players$ recovers
+Pareto efficiency (\S\ref{sec:solution-concepts:welfare}):\ strong
+Nash $\Rightarrow$ Nash $\land$ Pareto efficient.
+
+\leancorr{\TT{Concepts/StrongNash.lean} (\TT{coalitionDeviation},
+\TT{IsStrongNash}, \TT{IsStrongNash.isNash},
+\TT{IsStrongNash.isParetoEfficient}).}
+
 \subsection{Dominance}
 \label{sec:solution-concepts:dominance}
 
@@ -218,12 +244,33 @@ with the dual \emph{price of stability}
 $\sup_\Profile \Welfare / \sup_{\Profile \in \Nash} \Welfare$.
 The library formalizes the welfare quantities the ratios are built
 from — optimal welfare, worst Nash welfare, best Nash welfare —
-plus the comparison lemmas between them.  It does not yet package
-the ratio-valued PoA/PoS definitions; those require explicit
-positivity and non-empty-Nash hypotheses.
+the comparison lemmas between them, and the ratio-valued ratios
+themselves (\TT{priceOfAnarchy}, \TT{priceOfStability}) packaged
+against a nonempty-Nash hypothesis.  Both ratios are at least $1$
+when the corresponding welfare denominator is positive and at
+most the optimum (\TT{one\_le\_priceOfAnarchy},
+\TT{one\_le\_priceOfStability}), and
+$\PoS \le \PoA$ whenever the worst Nash welfare is positive
+(\TT{priceOfStability\_le\_priceOfAnarchy}).  In a team game
+(\S\ref{sec:solution-concepts:team}), the welfare-maximizing
+profile is itself Nash, so the best Nash welfare equals the
+optimal welfare and $\PoS = 1$
+(\TT{IsTeamGame.priceOfStability\_eq\_one}).
 
-\leancorr{Welfare quantities in \TT{Concepts/PriceOfAnarchy.lean}
-(\TT{optimalWelfare}, \TT{worstNashWelfare}, \TT{bestNashWelfare}).}
+A small structural bridge connects welfare to Pareto efficiency:\
+Pareto dominance strictly raises social welfare
+(\TT{ParetoDominates.socialWelfare\_lt}); hence any
+welfare-maximizing profile is Pareto-efficient
+(\TT{welfareMax\_isParetoEfficient}), and a finite game
+admits both a welfare-maximizing and a Pareto-efficient profile
+(\TT{exists\_welfareMax}, \TT{exists\_paretoEfficient}).
+
+\leancorr{Welfare quantities and ratios in
+\TT{Concepts/PriceOfAnarchy.lean}
+(\TT{optimalWelfare}, \TT{worstNashWelfare}, \TT{bestNashWelfare},
+\TT{priceOfAnarchy}, \TT{priceOfStability});
+welfare/Pareto bridges in \TT{Concepts/NashPareto.lean} and
+\TT{Concepts/WelfareTheorems.lean}.}
 
 \subsection{Security strategies and minimax value}
 \label{sec:solution-concepts:security}
@@ -360,19 +407,51 @@ game.
 \label{sec:solution-concepts:misc}
 
 Two further behavioral concepts are formalized for downstream
-use.  An event is \emph{common knowledge} among a group of agents
-when everyone knows it, everyone knows everyone knows it, and so
-on for every finite depth of nested knowledge.  Aumann's
-operator~\citep{Aumann1976} captures this fixed point on a finite
-partition structure (each agent has an information partition over
-the state space; common knowledge of an event $E$ at state $s$
-holds iff $E$ contains the smallest set in the meet of all
-partitions that contains $s$).  \emph{Individual rationality},
-the second concept, is a participation constraint:\ a profile is
-individually rational for player $i$ when $i$'s payoff is at least
-their security level (\S\ref{sec:solution-concepts:security}).
-Both are formal scaffolding for the mechanism-design layer
+use.  The first is partition-based knowledge.  Each agent has an
+\emph{information partition} $P$ of a finite state space, with
+$P.\mathrm{cell}(s)$ the set of states $s$ considers possible at
+$s$ (reflexive at $s$; partition-coherent).  The \emph{knowledge
+operator}
+\[
+  \Knows(P, E) \;=\; \{\,s : P.\mathrm{cell}(s) \subseteq E\,\}
+\]
+returns the event "the agent knows $E$", and the library proves
+the S5 axioms it satisfies:\ veridicality $\Knows(P, E) \subseteq
+E$ (T), positive introspection $\Knows(P, \Knows(P, E)) = \Knows(P,
+E)$ (4), negative introspection — the complement of $\Knows(P, E)$
+is itself known at every state in that complement (5) —
+monotonicity in $E$, and conjunction $\Knows(P, E \cap F) =
+\Knows(P, E) \cap \Knows(P, F)$.  Self-evident events are
+characterized as the fixed points of $\Knows$.  Posterior
+probability of $E$ given the cell at $s$ is the conditional
+$\mu$-mass; the library proves Aumann's \emph{agreeing-to-disagree}
+lemma~\citep{Aumann1976} that agents sharing the same cell at $s$
+and the same prior $\mu$ assign the same posterior to every event,
+and that the posterior on a self-evident $E$ is $1$ at every $s \in
+E$ and $0$ at every $s \notin E$.
+
+For a finite family $P_1, \dots, P_n$ of partitions,
+\emph{mutual knowledge} is $\bigcap_i \Knows(P_i, E)$, and
+\emph{common knowledge} of $E$ at $s$ is the existence of a
+\emph{public event} $F \ni s$ with $F \subseteq E$ that is
+self-evident for every $P_i$~\citep{Aumann1976}.  The library
+records that common knowledge implies mutual knowledge (each
+agent's $\mathrm{cell}(s)$ sits inside the public event $F$, which
+in turn sits in $E$), and is itself common knowledge at the same
+state (positive introspection at the group level, witnessed by the
+same public event).
+
+\emph{Individual rationality}, the second concept, is a
+participation constraint:\ a profile is individually rational for
+player $i$ when $i$'s payoff is at least their security level
+(\S\ref{sec:solution-concepts:security}).  Both are formal
+scaffolding for the mechanism-design layer
 (\S\ref{sec:mechanism-auctions}).
 
-\leancorr{\TT{Concepts/CommonKnowledge.lean};
+\leancorr{\TT{Concepts/CommonKnowledge.lean} (\TT{InfoPartition},
+\TT{Knows}, \TT{Knows\_subset} (T), \TT{Knows\_idem} (4),
+\TT{Knows\_not\_Knows} (5), \TT{Knows\_mono}, \TT{Knows\_inter},
+\TT{isSelfEvident\_iff\_Knows\_eq}, \TT{posterior},
+\TT{agree\_to\_disagree}, \TT{mutualKnowledge},
+\TT{CommonKnowledgeAt}, \TT{CommonKnowledgeAt.idem});
 \TT{Concepts/IndividualRationality.lean}.}

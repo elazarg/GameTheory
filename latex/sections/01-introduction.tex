@@ -118,6 +118,21 @@ It is, finally, not a stand-alone proof assistant for
 game-theoretic claims:\ it is a mechanized library, designed to be
 imported, depended on, and extended.
 
+The library's main content is \emph{non-cooperative} game theory
+— strategies, best responses, equilibria, and the language layer
+that compiles into kernel games.  The \emph{cooperative}
+tradition (TU coalitional games, axiomatic bargaining, two-sided
+matching) is collected in a parallel \TT{Cooperative/} branch:\
+its primitives are coalition value functions, feasible payoff
+sets, or preference rankings rather than per-player strategies,
+and it does not go through \TT{KernelGame}.  The two branches
+share the player-index type and $\RR$ but no load-bearing
+abstractions; they live in the same package only for packaging
+convenience.  The Shapley value uniqueness theorem
+(\Cref{thm:shapley-unique}) is the flagship of the cooperative
+branch and is the only theorem from that branch we surface in
+the main text.
+
 A separate \emph{Definitional Supplement} accompanies this chapter.
 The supplement documents the Lean signatures of every major object
 and theorem with explicit textbook correspondence, so a reader

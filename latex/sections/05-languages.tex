@@ -35,27 +35,55 @@ utility to be the input function.  The kernel-game image is
 deterministic; randomness in NFGs enters only through the mixed
 extension (\S\ref{sec:semantic-core:kernelgame}).
 
-The library's NFG layer also formalizes several worked subclasses
-as named structures:\ \emph{congestion games} with Rosenthal's
-potential~\citep{Rosenthal1973}, \emph{TU coalitional games} with
-the Shapley value~\citep{Shapley1953}, \emph{Nash bargaining}
-\citep{Nash1950bargaining}, \emph{stable matching} (predicates and
-structural lemmas)~\citep{GaleShapley1962}, \emph{public goods},
-and \emph{Stackelberg leader-follower}.  Each subclass states the
-content of its theorems at the formalized level:\ a congestion
-game is an exact potential game; the
-Shapley value comes with null-player, additivity, linearity, and
-symmetry lemmas; for stable matching, the predicates
-$\mathsf{IsMatching}$, $\mathsf{IsBlockingPair}$, $\mathsf{IsStable}$
-and supporting structural lemmas — the Gale–Shapley algorithm and
-existence of a stable matching are listed in \S\ref{sec:future} as
-natural extensions.  Each subclass is a direct consumer of the
-solution-concept catalogue (\S\ref{sec:solution-concepts}).
+The library's NFG layer also formalizes two specialized
+strategic-form structures whose form is a refinement of NFG and
+whose theorems are about that refinement:\ \emph{congestion
+games}~\citep{Rosenthal1973}, where a strategy is a subset of
+shared resources and a player's payoff sums per-resource delays
+that depend only on congestion (and Rosenthal's potential makes
+every congestion game an exact potential game, hence yields pure
+Nash existence and the finite improvement property); and
+\emph{public goods}, two free-standing theorems on the
+parameterized payoff $e + \mathrm{mpcr} \cdot \sum_j c_j - c_i$
+(free-riding is dominant when $\mathrm{mpcr} < 1$, full
+cooperation Pareto-dominates full defection when $\mathrm{mpcr}
+\cdot n > 1$).  A \emph{Stackelberg leader-follower} structure
+sits in the same directory, although strictly speaking it is
+sequential rather than strategic-form:\ the leader commits, the
+follower best-responds, and the leader-advantage theorem
+(Stackelberg payoff $\ge$ simultaneous Nash payoff) is proved
+against the follower-BR function.
+
+Beyond these specialized structures, the NFG layer carries a
+catalogue of canonical 2-player worked examples:\ Prisoner's
+Dilemma, Matching Pennies, Stag Hunt, Hawk–Dove (Chicken), Battle
+of the Sexes, Dictator Game, Traveler's Dilemma (two-action
+fragment), and Cournot duopoly with three quantities.  Each
+defines an action type with \TT{deriving Fintype, DecidableEq},
+a payoff table by pattern match, and one or two pure-Nash facts
+discharged by case analysis (\TT{cases i <;> cases a' <;> simp;
+try linarith}).  These serve both as reader-facing examples and
+as smoke tests for the NFG$\to$\KG\ compilation pipeline.
+
+The cooperative-flavored game-theoretic models that used to live
+in \TT{Languages/NFG/} — TU coalitional games with the Shapley
+value~\citep{Shapley1953}, Nash bargaining
+\citep{Nash1950bargaining}, and stable matching predicates and
+structural lemmas~\citep{GaleShapley1962} — are not strategic-form
+formalisms (they take coalitions, feasible payoff sets, or
+preference rankings as primitive rather than per-player
+strategies) and have been moved to a separate
+\TT{Cooperative/} branch outside the \texttt{Languages/NFG/}
+hierarchy.  See \S\ref{sec:future:cooperative} for what they
+contain.
 
 \leancorr{\TT{Languages/NFG/} contains \TT{Syntax}, \TT{Compile},
-plus the worked-subclass files \TT{CongestionGame},
-\TT{CoalitionalGame}, \TT{Bargaining}, \TT{Matching},
-\TT{PublicGoods}, \TT{Stackelberg}.  Supplement~§4.1.}
+\TT{Examples} (canonical 2-player games), \TT{Tests},
+\TT{Theorems}, plus the strategic-form subclass files
+\TT{CongestionGame}, \TT{PublicGoods}, \TT{Stackelberg}.
+The cooperative models live under \TT{Cooperative/} as
+\TT{CoalitionalGame}, \TT{Bargaining}, \TT{Matching}.
+Supplement~§4.1.}
 
 \subsection{Extensive-form games}
 \label{sec:languages:efg}

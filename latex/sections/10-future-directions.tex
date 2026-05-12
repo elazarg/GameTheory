@@ -106,16 +106,38 @@ instantiation).
 \subsection{Cooperative game theory}
 \label{sec:future:cooperative}
 
-The Shapley value definition and its basic null-player,
-additivity, linearity, and symmetry lemmas
-(\TT{NFG/CoalitionalGame.lean}) are in the library.  Natural
-extensions:\ the full uniqueness axiomatization, the core, balanced
-collections~\citep{Bondareva1963, Shapley1967}, the nucleolus
-\citep{Schmeidler1969}, the Aumann–Shapley value for
-non-atomic games~\citep{AumannShapley1974}, and bargaining
-solutions beyond Nash's~\citep{KalaiSmorodinsky1975, Kalai1977}.
-The TU coalitional structure is already there; only the
-solution-concept layer needs to be filled in.
+The cooperative branch lives at \TT{Cooperative/} (a parallel
+paradigm to the non-cooperative core occupying the rest of the
+library; see \S\ref{sec:theorems:shapley-uniqueness} for the
+framing).  Already formalized:\ TU coalitional games with the
+Shapley value~\citep{Shapley1953} and all four classical axioms,
+the unanimity-basis decomposition (Möbius inversion on the subset
+lattice), the full Shapley uniqueness theorem
+(\Cref{thm:shapley-unique}), the Banzhaf~\citep{Banzhaf1965} and
+Shapley–Shubik~\citep{ShapleyShubik1954} power indices, simple
+(voting) games, convex (supermodular) games with the
+$\IsConvex \Leftrightarrow$ monotone-marginals characterization
+\citep{Shapley1971} and closure under sum and nonnegative scalar,
+the core (efficient $\land$ coalition-rational) with the
+convex-set closure property and individual rationality, additive
+games (the identity allocation), and the 3-player majority game
+as a worked example.  Nash bargaining
+\citep{Nash1950bargaining} is formalized through the IR/Pareto
+characterization, with symmetric and affine-invariant variants;
+stable matching~\citep{GaleShapley1962} is formalized through
+\TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} predicates and
+structural lemmas.
+
+Natural extensions:\ Bondareva–Shapley balanced collections
+\citep{Bondareva1963, Shapley1967} characterizing core-nonempty
+games (a flagship LP-duality result); the nucleolus
+\citep{Schmeidler1969}; the Aumann–Shapley value for non-atomic
+games~\citep{AumannShapley1974}; NTU coalitional games; Shapley's
+1971 theorem that convex games have nonempty cores (and the
+Shapley value is in the core); Kalai–Smorodinsky
+\citep{KalaiSmorodinsky1975} and other bargaining solutions; the
+Gale–Shapley deferred-acceptance algorithm to construct a stable
+matching from arbitrary preferences.
 
 \subsection{Information design and signaling}
 \label{sec:future:info-design}
@@ -173,15 +195,15 @@ the strategic-form definitions they need are already in place.
 \subsection{Stable matching and Gale–Shapley}
 \label{sec:future:matching}
 
-The library's NFG layer formalizes the matching predicates
-(\TT{IsMatching}, \TT{IsBlockingPair}, \TT{IsStable}) and a few
-structural lemmas, but not the Gale–Shapley deferred-acceptance
-algorithm itself nor the existence of a stable matching from an
-arbitrary preference profile~\citep{GaleShapley1962}.  The
-algorithm is constructive, terminates in $O(n^2)$ steps, and is a
-natural target for a Lean implementation paired with a
-correctness proof.  Bertot's Coq formalization
-\citep{Bertot2016} is a useful reference point.
+The library's \TT{Cooperative/Matching.lean} formalizes the
+matching predicates (\TT{IsMatching}, \TT{IsBlockingPair},
+\TT{IsStable}) and a few structural lemmas, but not the
+Gale–Shapley deferred-acceptance algorithm itself nor the
+existence of a stable matching from an arbitrary preference
+profile~\citep{GaleShapley1962}.  The algorithm is constructive,
+terminates in $O(n^2)$ steps, and is a natural target for a Lean
+implementation paired with a correctness proof.  Bertot's Coq
+formalization \citep{Bertot2016} is a useful reference point.
 
 \subsection{Symmetric Nash existence}
 \label{sec:future:symmetric-nash}

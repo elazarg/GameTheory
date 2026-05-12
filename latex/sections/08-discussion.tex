@@ -262,12 +262,22 @@ formalized; PPAD-completeness~\citep{DaskalakisGoldbergPapadimitriou2009}
 is not.  Approximate-equilibrium algorithmic results are not
 formalized.
 
-\item \emph{Cooperative game theory beyond Shapley values.}  The
-library defines the Shapley value and proves null-player,
-additivity, linearity, and symmetry lemmas.  The full uniqueness
-axiomatization, the core, the nucleolus, balanced collections, and
-the Bondareva–Shapley theorem~\citep{Bondareva1963, Shapley1967}
-are not formalized.
+\item \emph{Cooperative game theory beyond the basic apparatus.}
+The cooperative branch (\TT{Cooperative/}, parallel to the
+non-cooperative core) defines the Shapley value with all four
+classical axioms, the unanimity-basis decomposition, and the full
+Shapley uniqueness theorem (\Cref{thm:shapley-unique});\ it also
+includes the Banzhaf and Shapley–Shubik power indices, simple
+games, convex (supermodular) games with the
+$\IsConvex \Leftrightarrow$ monotone-marginals
+characterization, the core (efficient $\land$ coalition-rational)
+with convex-set closure, and additive games.  The remaining
+classical cooperative landmarks are not formalized:\ the nucleolus
+\citep{Schmeidler1969}, the Bondareva–Shapley balanced-collections
+theorem~\citep{Bondareva1963, Shapley1967} characterizing
+core-nonempty games, the kernel and bargaining set, NTU games, and
+the Aumann–Shapley value for non-atomic games
+\citep{AumannShapley1974}.
 
 \item \emph{Impossibility theorems in social choice.}  Arrow,
 Gibbard–Satterthwaite, and Sen's liberal paradox are formalizable

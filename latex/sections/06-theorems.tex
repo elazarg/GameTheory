@@ -310,10 +310,73 @@ alternative $M \to B$ route).  The hypothesis predicates
 \label{sec:theorems:welfare}
 
 The library packages the basic welfare analysis:\ social welfare
-is well-defined under finiteness, every
-team-game welfare maximizer is Nash, and the price of stability
-in a team game is $1$.  We do not formalize the deeper welfare
-theorems of mechanism design here — they live in
-\S\ref{sec:mechanism-auctions}.
+is well-defined under finiteness, every team-game welfare
+maximizer is Nash, the price of stability in a team game is $1$,
+and the welfare ↔ Pareto bridge — Pareto dominance strictly
+raises social welfare, so every welfare-maximizing profile is
+Pareto-efficient.  In finite games, both a welfare-maximizing
+and a Pareto-efficient profile exist
+(\TT{exists\_welfareMax}, \TT{exists\_paretoEfficient}).  We do
+not formalize the deeper welfare theorems of mechanism design
+here — they live in \S\ref{sec:mechanism-auctions}.
 
-\leancorr{\TT{Concepts/WelfareTheorems.lean}.}
+\leancorr{\TT{Concepts/WelfareTheorems.lean};
+\TT{Concepts/NashPareto.lean}.}
+
+\subsection{Shapley value uniqueness}
+\label{sec:theorems:shapley-uniqueness}
+
+This theorem belongs to the cooperative branch
+(\TT{Cooperative/CoalitionalGame.lean}) — formally a parallel
+paradigm to the non-cooperative core that occupies the rest of
+the library (see \S\ref{sec:future:cooperative} for the framing).
+We state it here because it has the standing of a flagship
+finite-game-theory theorem and because the proof technique it
+uses (unanimity-basis decomposition, an instance of Möbius
+inversion on the subset lattice) is the same Mathlib-style finite
+combinatorics that powers \S\ref{sec:theorems:nash-mixed}
+on the non-cooperative side.
+
+A TU coalitional game on a finite player set $\Players$ is a
+characteristic function $v : 2^{\Players} \to \RR$ with
+$v(\emptyset) = 0$.  An \emph{allocation} is a function
+$\phi : \mathrm{CoalGame} \to \Players \to \RR$.
+
+\begin{theorem}[Shapley uniqueness, after \citealp{Shapley1953}]
+\label{thm:shapley-unique}
+Let $\phi$ be any allocation rule satisfying:
+\emph{(efficiency)} $\sum_i \phi(G)_i = G.v(\Players)$;
+\emph{(symmetry)} symmetric players receive equal value;
+\emph{(null player)} a player whose marginal contribution is
+identically zero receives $0$;
+\emph{(additivity)} $\phi(G_1 + G_2) = \phi(G_1) + \phi(G_2)$;
+and \emph{(scalar homogeneity)} $\phi(c \cdot G)_i = c \cdot
+\phi(G)_i$.
+Then $\phi$ coincides with the Shapley value on every $G$.
+\end{theorem}
+
+The proof first establishes \emph{value on unanimity games}:\ the
+three axioms (efficiency, symmetry, null) determine $\phi$ on the
+indicator games $u_S$ (where $u_S(T) = 1$ iff $S \subseteq T$).
+Then the unanimity-basis decomposition expresses every $G$ as
+$\sum_{S \subseteq \Players} c_S \cdot u_S$ (sum of TU games) with Möbius
+coefficients $c_S = \sum_{R \subseteq S} (-1)^{|S \setminus R|}
+G.v(R)$.  Linearity of $\phi$ (additivity + scalar) then propagates
+the value from unanimity games to all of $G$.
+
+\paragraph{Modern axiom set.}\
+The classical theorem uses additivity alone and recovers scalar
+homogeneity for rationals via the $n \cdot \phi(G) = \phi(n \cdot
+G)$ argument.  Extending from $\mathbb{Q}$ to $\mathbb{R}$ requires
+either a continuity hypothesis or full scalar homogeneity as a
+primitive axiom.  The library adopts the modern formulation with
+linearity (= additivity + scalar) as a primitive — this is the
+formulation in most current textbook treatments and lets the proof
+stay purely combinatorial.
+
+\leancorr{\TT{Cooperative/CoalitionalGame.lean}
+(\TT{shapleyValue}, \TT{shapleyValue\_unique}); supporting
+infrastructure \TT{unanimityGame}, \TT{unanimityCoeff},
+\TT{unanimity\_decomposition}, \TT{allocation\_on\_unanimityGame},
+\TT{gameSum}, \TT{gameSum\_allocation\_eq},
+\TT{eq\_gameSum\_decompTerm}.}
