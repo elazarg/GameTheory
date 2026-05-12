@@ -4,7 +4,8 @@ import Mathlib.Tactic.Linarith
 /-!
 # Normal-Form Game Examples
 
-Prisoner's Dilemma and Matching Pennies with Nash equilibrium proofs.
+Prisoner's Dilemma, Matching Pennies, and Stag Hunt with Nash equilibrium
+proofs.
 -/
 
 namespace NFG
@@ -110,6 +111,72 @@ theorem matchingPennies_no_pure_nash :
   · have := h false MPAction.heads
     simp [matchingPennies, deviate, Function.update, hs1, hs2] at this
     linarith
+
+/-! ## Stag Hunt
+
+A 2×2 coordination game (Rousseau 1755 / Skyrms 2004). Two pure Nash
+equilibria coexist: `(stag, stag)` is Pareto-dominant, while `(hare, hare)`
+is risk-dominant (safer when partners are untrusted). The game illustrates
+that Nash equilibrium does not single out a unique outcome in coordination
+problems. -/
+
+/-- Actions in the Stag Hunt. -/
+inductive SHAction where
+  | stag
+  | hare
+deriving DecidableEq, Repr
+
+instance : Fintype SHAction where
+  elems := {SHAction.stag, SHAction.hare}
+  complete x := by cases x <;> simp
+
+open SHAction in
+/-- The Stag Hunt game.
+  Payoff matrix:
+  - (S,S) = (3,3) -- successful joint stag hunt
+  - (S,H) = (0,1) -- stag hunter goes hungry; hare hunter eats
+  - (H,S) = (1,0)
+  - (H,H) = (1,1) -- both eat hare -/
+def stagHunt : NFGGame Bool (fun _ => SHAction) where
+  Outcome := ∀ _ : Bool, SHAction
+  outcome := id
+  utility s p :=
+    match s true, s false, p with
+    | stag, stag, _     => 3
+    | stag, hare, true  => 0
+    | stag, hare, false => 1
+    | hare, stag, true  => 1
+    | hare, stag, false => 0
+    | hare, hare, _     => 1
+
+/-- The profile where both players hunt stag. -/
+def sh_stag_stag : StrategyProfile (fun _ : Bool => SHAction) :=
+  fun _ => SHAction.stag
+
+/-- The profile where both players hunt hare. -/
+def sh_hare_hare : StrategyProfile (fun _ : Bool => SHAction) :=
+  fun _ => SHAction.hare
+
+/-- (Stag, Stag) is a Nash equilibrium (Pareto-dominant). -/
+theorem sh_stag_is_nash : IsNashPure stagHunt sh_stag_stag := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [stagHunt, sh_stag_stag, deviate, Function.update]
+
+/-- (Hare, Hare) is a Nash equilibrium (risk-dominant). -/
+theorem sh_hare_is_nash : IsNashPure stagHunt sh_hare_hare := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [stagHunt, sh_hare_hare, deviate, Function.update]
+
+/-- The mismatched profile `(Stag, Hare)` is **not** a Nash equilibrium: the
+stag hunter prefers to switch to hare. -/
+theorem sh_stag_hare_not_nash :
+    ¬ IsNashPure stagHunt (fun b => if b then SHAction.stag else SHAction.hare) := by
+  intro h
+  have h1 := h true SHAction.hare
+  simp [stagHunt, deviate, Function.update] at h1
+  linarith
 
 /-! ## Distributional API examples -/
 
