@@ -118,6 +118,41 @@ theorem bestNashWelfare_le_optimalWelfare (hN : ∃ σ : Profile G, G.IsNash σ)
   intro σ _
   exact welfare_le_optimal G σ hbdd
 
+open Classical in
+/-- **Price of Anarchy** (Koutsoupias–Papadimitriou): the ratio of optimal
+welfare to the *worst* Nash welfare. Measures the inefficiency loss from
+selfish play in the worst case. -/
+noncomputable def priceOfAnarchy (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
+  G.optimalWelfare / G.worstNashWelfare hN
+
+open Classical in
+/-- **Price of Stability** (Anshelevich et al.): the ratio of optimal welfare
+to the *best* Nash welfare. Equals `1` when the social optimum is itself
+Nash. -/
+noncomputable def priceOfStability (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
+  G.optimalWelfare / G.bestNashWelfare hN
+
+open Classical in
+/-- The Price of Stability is bounded above by the Price of Anarchy whenever
+the worst Nash welfare is positive (so that both ratios are nonnegative). -/
+theorem priceOfStability_le_priceOfAnarchy (hN : ∃ σ : Profile G, G.IsNash σ)
+    (hopt_nn : 0 ≤ G.optimalWelfare) (hworst : 0 < G.worstNashWelfare hN) :
+    G.priceOfStability hN ≤ G.priceOfAnarchy hN := by
+  have hbest : 0 < G.bestNashWelfare hN :=
+    lt_of_lt_of_le hworst (G.worstNashWelfare_le_bestNashWelfare hN)
+  exact div_le_div_of_nonneg_left hopt_nn hworst
+    (G.worstNashWelfare_le_bestNashWelfare hN)
+
+open Classical in
+/-- The Price of Stability is at least `1` whenever it is well-defined and
+the best Nash welfare does not exceed the optimal welfare. -/
+theorem one_le_priceOfStability (hN : ∃ σ : Profile G, G.IsNash σ)
+    (hbest : 0 < G.bestNashWelfare hN)
+    (hbest_le_opt : G.bestNashWelfare hN ≤ G.optimalWelfare) :
+    1 ≤ G.priceOfStability hN := by
+  rw [priceOfStability, le_div_iff₀ hbest, one_mul]
+  exact hbest_le_opt
+
 end FiniteNash
 
 end KernelGame
