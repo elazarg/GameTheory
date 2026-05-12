@@ -47,12 +47,7 @@ def pospart (x : ℝ) : ℝ := max x 0
 theorem pospart_nonneg (x : ℝ) : 0 ≤ pospart x := le_max_right x 0
 
 theorem pospart_eq_zero_iff (x : ℝ) : pospart x = 0 ↔ x ≤ 0 := by
-  simp only [pospart]
-  constructor
-  · intro h; by_contra hgt; push Not at hgt
-    have : max x 0 = x := max_eq_left (le_of_lt hgt)
-    linarith
-  · intro h; exact max_eq_right h
+  simp [pospart]
 
 theorem pospart_mul_self (x : ℝ) : x * pospart x = pospart x ^ 2 := by
   simp only [pospart]
@@ -62,8 +57,8 @@ theorem pospart_mul_self (x : ℝ) : x * pospart x = pospart x ^ 2 := by
     have : max x 0 = x := max_eq_left (le_of_lt h)
     simp [this, sq]
 
-theorem continuous_pospart : Continuous pospart := by
-  simpa [pospart] using (continuous_id.max continuous_const)
+theorem continuous_pospart : Continuous pospart :=
+  continuous_id.max continuous_const
 
 -- ============================================================================
 -- Fixed point of Nash's map implies Nash equilibrium

@@ -57,11 +57,8 @@ constants cancel in any utility comparison within a single player's deviations. 
 theorem ofEU_nash_shift (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (b : ι → ℝ)
     (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsNash σ ↔
-    (KernelGame.ofEU S (fun τ i => u τ i + b i)).IsNash σ := by
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy]
-  constructor
-  · intro hN who s'; have := hN who s'; linarith
-  · intro hN who s'; have := hN who s'; linarith
+    (KernelGame.ofEU S (fun τ i => u τ i + b i)).IsNash σ :=
+  ofEU_nash_affine S u 1 one_pos b _ (fun _ _ => by ring) σ
 
 /-- Positive scaling of utilities preserves Nash equilibria.
 
@@ -70,10 +67,7 @@ utilities by a positive constant preserves the direction of every inequality. -/
 theorem ofEU_nash_scale (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     (a : ℝ) (ha : a > 0) (σ : ∀ i, S i) :
     (KernelGame.ofEU S u).IsNash σ ↔
-    (KernelGame.ofEU S (fun τ i => a * u τ i)).IsNash σ := by
-  simp only [KernelGame.IsNash, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy]
-  constructor
-  · intro hN who s'; have := hN who s'; nlinarith
-  · intro hN who s'; have := hN who s'; nlinarith
+    (KernelGame.ofEU S (fun τ i => a * u τ i)).IsNash σ :=
+  ofEU_nash_affine S u a ha (fun _ => 0) _ (fun _ _ => by ring) σ
 
 end GameTheory
