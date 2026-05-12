@@ -1,4 +1,5 @@
 import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.NashPareto
 import GameTheory.Core.GameProperties
 import Math.Probability
 
@@ -68,6 +69,19 @@ theorem IsTeamGame.welfareMax_isNash [Fintype ι] [Inhabited ι] [DecidableEq ι
   have hle := hmax (Function.update σ who s')
   rw [hσ, hσ'] at hle
   exact le_of_mul_le_mul_left hle hcard_pos
+
+/-- **Welfare maximizers are Pareto-efficient**: if `σ` maximizes social
+welfare over all profiles, then `σ` is Pareto-efficient. A Pareto-dominating
+profile would strictly raise total welfare, contradicting maximality. -/
+theorem welfareMax_isParetoEfficient [Fintype ι]
+    {G : KernelGame ι} {σ : Profile G}
+    (hmax : ∀ τ : Profile G, G.socialWelfare τ ≤ G.socialWelfare σ) :
+    G.IsParetoEfficient σ := by
+  rintro ⟨τ, hpd⟩
+  have hlt : G.socialWelfare σ < G.socialWelfare τ :=
+    KernelGame.ParetoDominates.socialWelfare_lt hpd
+  have hle := hmax τ
+  linarith
 
 end KernelGame
 
