@@ -1131,6 +1131,43 @@ theorem additiveGame_shapleyValue (α : ι → ℝ) (i : ι) :
   · intro h
     exact absurd (Finset.mem_univ i) h
 
+/-- **Sum of Shapley weights**: for every player `i`, the Shapley
+combinatorial weights over coalitions not containing `i` sum to `1`.
+This is the standard normalization, derived here from
+`additiveGame_shapleyValue` applied to the unit vector at `i` (Shapley
+of the resulting additive game must equal `1`, and the formula computes
+to the desired sum). -/
+theorem sum_shapleyWeights [Nonempty ι] (i : ι) :
+    ∑ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
+      ((S.card.factorial * (Fintype.card ι - S.card - 1).factorial : ℕ) : ℝ) /
+        ((Fintype.card ι).factorial : ℝ) = 1 := by
+  classical
+  -- Unit vector at i.
+  let α : ι → ℝ := fun j => if j = i then 1 else 0
+  have hα_eq : (additiveGame α).shapleyValue i = 1 := by
+    rw [additiveGame_shapleyValue]
+    simp [α]
+  -- Expand and replace marginal contribution with constant 1.
+  rw [shapleyValue] at hα_eq
+  have hMC : ∀ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
+      (additiveGame α).marginalContribution i S = 1 := by
+    intro S hS
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hS
+    rw [additiveGame_marginalContribution _ _ hS]
+    simp [α]
+  have hα_simp :
+      (∑ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
+        ((S.card.factorial * (Fintype.card ι - S.card - 1).factorial : ℕ) : ℝ) /
+        ((Fintype.card ι).factorial : ℝ) *
+        (additiveGame α).marginalContribution i S) =
+      (∑ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
+        ((S.card.factorial * (Fintype.card ι - S.card - 1).factorial : ℕ) : ℝ) /
+        ((Fintype.card ι).factorial : ℝ)) := by
+    refine Finset.sum_congr rfl (fun S hS => ?_)
+    rw [hMC S hS, mul_one]
+  rw [hα_simp] at hα_eq
+  exact hα_eq
+
 /-! ### 3-player majority game (worked example) -/
 
 /-- The 3-player simple majority game: a coalition wins iff it has at
