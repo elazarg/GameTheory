@@ -21,37 +21,11 @@ namespace KernelGame
 variable {ι : Type} [DecidableEq ι]
 
 /-- An exact potential game is an ordinal potential game.
-    Proof: the exact potential property gives `eu_diff = Φ_diff`,
-    so `eu_diff > 0 ↔ Φ_diff > 0` follows immediately. -/
+    The exact-potential identity `eu_diff = Φ_diff` implies `eu_diff > 0 ↔ Φ_diff > 0`. -/
 theorem IsExactPotential.toOrdinal {G : KernelGame ι} {Φ : Profile G → ℝ}
     (hΦ : G.IsExactPotential Φ) : G.IsOrdinalPotential Φ := by
   intro who σ s'
-  have h := hΦ who σ s'
-  constructor
-  · intro heu
-    have : G.eu (Function.update σ who s') who - G.eu σ who > 0 := by
-      exact sub_pos.mpr (by simpa [gt_iff_lt] using heu)
-    linarith
-  · intro hphi
-    have : Φ (Function.update σ who s') - Φ σ > 0 := by
-      exact sub_pos.mpr (by simpa [gt_iff_lt] using hphi)
-    linarith
-
-/-- If `Φ` is an exact potential for `G` and `σ` maximizes `Φ`, then `σ` is Nash.
-    Proof: for any deviation `(who, s')`, the potential property gives
-    `eu(update) - eu(σ) = Φ(update) - Φ(σ) ≤ 0`, so `eu(σ) ≥ eu(update)`. -/
-theorem IsExactPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G → ℝ}
-    (hΦ : G.IsExactPotential Φ) {σ : Profile G}
-    (hmax : ∀ τ : Profile G, Φ σ ≥ Φ τ) : G.IsNash σ := by
-  intro who s'
-  have hle := hmax (Function.update σ who s')
-  by_contra hnot
-  have hgt : G.eu (Function.update σ who s') who > G.eu σ who := by
-    linarith
-  have hphi : Φ (Function.update σ who s') > Φ σ := by
-    have hpot := hΦ who σ s'
-    linarith
-  linarith
+  constructor <;> intro h <;> linarith [hΦ who σ s']
 
 /-- If `Φ` is an ordinal potential for `G` and `σ` maximizes `Φ`, then `σ` is Nash.
     Proof: by contradiction. If `σ` is not Nash, some player has a profitable
@@ -66,6 +40,12 @@ theorem IsOrdinalPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G
   have hphi := (hΦ who σ s').mp (by simpa [gt_iff_lt] using hdev)
   have hle := hmax (Function.update σ who s')
   linarith
+
+/-- If `Φ` is an exact potential for `G` and `σ` maximizes `Φ`, then `σ` is Nash. -/
+theorem IsExactPotential.nash_of_maximizer {G : KernelGame ι} {Φ : Profile G → ℝ}
+    (hΦ : G.IsExactPotential Φ) {σ : Profile G}
+    (hmax : ∀ τ : Profile G, Φ σ ≥ Φ τ) : G.IsNash σ :=
+  IsOrdinalPotential.nash_of_maximizer hΦ.toOrdinal hmax
 
 open Classical in
 /-- In an ordinal potential game, `σ` is Nash iff `σ` is a local maximizer of `Φ`
