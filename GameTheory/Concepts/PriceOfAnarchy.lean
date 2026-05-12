@@ -48,37 +48,27 @@ theorem welfare_le_optimal (σ : Profile G)
 
 variable [DecidableEq ι]
 
-/-- In a team game, every Pareto-optimal profile is Nash. -/
+omit [Fintype ι] in
+/-- In a team game, every Pareto-efficient profile is Nash. -/
 theorem IsTeamGame.pareto_isNash (hteam : G.IsTeamGame) [Inhabited ι]
-    {σ : Profile G} (hpareto : G.IsParetoEfficient σ)
-    (_ : ∀ τ : Profile G, G.socialWelfare σ ≥ G.socialWelfare τ) :
+    {σ : Profile G} (hpareto : G.IsParetoEfficient σ) :
     G.IsNash σ := by
   classical
   by_contra hnn
   simp only [IsNash, not_forall, not_le] at hnn
   obtain ⟨who, s', hdev⟩ := hnn
   apply hpareto
-  use Function.update σ who s'
-  constructor
-  · intro i
-    -- In a team game, all players have the same utility
-    -- If who's EU increased, then player i (who has the same utility) also benefits
-    by_cases hi : i = who
-    · subst hi; exact le_of_lt hdev
-    · -- For other players: team game means utility is the same for all players
-      -- So eu σ i = eu σ who and eu (update σ who s') i = eu (update σ who s') who
-      have h1 : G.eu σ i = G.eu σ who := by
-        simp only [eu]
-        congr 1
-        ext ω
-        exact hteam ω i who
-      have h2 : G.eu (Function.update σ who s') i = G.eu (Function.update σ who s') who := by
-        simp only [eu]
-        congr 1
-        ext ω
-        exact hteam ω i who
-      linarith
-  · exact ⟨who, hdev⟩
+  refine ⟨Function.update σ who s', fun i => ?_, who, hdev⟩
+  -- Team-game payoffs are all equal, so any single-player improvement benefits all.
+  by_cases hi : i = who
+  · subst hi; exact le_of_lt hdev
+  · have eu_i_who : ∀ τ : Profile G, G.eu τ i = G.eu τ who := fun τ => by
+      simp only [eu]
+      congr 1
+      ext ω
+      exact hteam ω i who
+    rw [eu_i_who σ, eu_i_who (Function.update σ who s')]
+    exact le_of_lt hdev
 
 section FiniteNash
 

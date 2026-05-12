@@ -83,6 +83,21 @@ def truthful (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i)) :
   fun _ θ => θ
 
 open Classical in
+/-- Auxiliary: applying an update of the truthful strategy at `who` to a
+type profile `θ` is the same as updating `θ` itself at `who` with the
+corresponding image. -/
+theorem update_truthful_apply (M : Mechanism ι)
+    (μ : PMF (∀ i, M.Θ i))
+    (who : ι) (s' : M.Θ who → M.Θ who) (θ : ∀ j, M.Θ j) :
+    (fun i => Function.update (M.truthful μ) who s' i (θ i)) =
+    Function.update θ who (s' (θ who)) := by
+  classical
+  ext i
+  by_cases hi : i = who
+  · subst hi; simp [Function.update]
+  · simp [truthful, Function.update_of_ne hi]
+
+open Classical in
 /-- Dominant-strategy IC implies truthful reporting is a Bayes-Nash
     equilibrium of the induced game (for any prior). -/
 theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
@@ -93,18 +108,9 @@ theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
   simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful, ge_iff_le]
   apply Math.ProbabilityMassFunction.expect_mono_of_pointwise
   intro θ
-  -- Need: M.outcome (fun i => update (truthful) who s' i (θ i)) who ≤ M.outcome θ who
-  -- update (truthful) who s' i (θ i) = if i = who then s'(θ who) else θ i
-  -- This matches Function.update θ who (s' (θ who))
-  have : (fun i => Function.update (M.truthful μ) who s' i (θ i)) =
-      Function.update θ who (s' (θ who)) := by
-    ext i
-    by_cases hi : i = who
-    · subst hi
-      simp [Function.update]
-    · simp [truthful, Function.update, hi]
-  simp only [inducedBayesianGame] at this
-  rw [this]
+  have happ := M.update_truthful_apply μ who s' θ
+  simp only [inducedBayesianGame] at happ
+  rw [happ]
   exact hIC who θ (s' (θ who))
 
 /-- *Strategy-proofness* is a synonym for dominant-strategy incentive
@@ -144,16 +150,10 @@ theorem isBIC_of_truthful_bayesNash (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i)
   intro who θ'
   have h := hBN who (fun _ => θ')
   simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful] at h
-  -- The LHS of h matches, need to show RHS matches
-  -- update (fun θ => θ) who (fun _ => θ') applied to θ gives update θ who θ'
   convert h using 2
-  ext θ
+  funext θ
   congr 1
-  ext i
-  by_cases hi : i = who
-  · subst hi
-    simp [Function.update]
-  · simp [truthful, Function.update, hi]
+  exact (M.update_truthful_apply μ who (fun _ => θ') θ).symm
 
 end Mechanism
 
