@@ -322,6 +322,118 @@ theorem shapleyValue_efficient (G : CoalGame ι) :
   · intro h
     exact absurd (Finset.mem_univ _) h
 
+/-! ### Unanimity games and Shapley uniqueness
+
+The unanimity game on a nonempty coalition `S` pays `1` whenever the
+present coalition contains all of `S`, and `0` otherwise. These games
+are the building blocks: every coalitional game decomposes uniquely as
+a linear combination of unanimity games (Shapley 1953). -/
+
+/-- Unanimity game on coalition `S`: `v T = 1` if `S ⊆ T`, else `0`. -/
+def unanimityGame (S : Finset ι) (hS : S.Nonempty) : CoalGame ι where
+  v := fun T => if S ⊆ T then 1 else 0
+  v_empty := by
+    rw [if_neg]
+    intro hsub
+    obtain ⟨i, hi⟩ := hS
+    exact Finset.notMem_empty i (hsub hi)
+
+/-- A player outside `S` is null in the unanimity game on `S`:
+adding them never crosses the `S ⊆ ·` threshold. -/
+theorem unanimityGame_isNull_of_notMem (S : Finset ι) (hS : S.Nonempty)
+    {i : ι} (hi : i ∉ S) :
+    (unanimityGame S hS).IsNull i := by
+  intro T _
+  simp only [marginalContribution, unanimityGame]
+  have hequiv : S ⊆ insert i T ↔ S ⊆ T := by
+    refine ⟨fun h x hx => ?_, fun h => h.trans (Finset.subset_insert i T)⟩
+    rcases Finset.mem_insert.mp (h hx) with rfl | hxT
+    · exact absurd hx hi
+    · exact hxT
+  by_cases hST : S ⊆ T
+  · simp [hST, hequiv.mpr hST]
+  · have hnST' : ¬ S ⊆ insert i T := fun h => hST (hequiv.mp h)
+    simp [hST, hnST']
+
+/-- Two distinct members of `S` are symmetric in the unanimity game on `S`:
+neither `insert i T` nor `insert j T` can contain `S` when the other
+required member sits outside `T`, so both marginal coalitions miss `S`. -/
+theorem unanimityGame_areSymmetric (S : Finset ι) (hS : S.Nonempty)
+    {i j : ι} (hne : i ≠ j) (hi : i ∈ S) (hj : j ∈ S) :
+    (unanimityGame S hS).AreSymmetric i j := by
+  intro T hiT hjT
+  simp only [unanimityGame]
+  have hni : ¬ S ⊆ insert i T := fun h => hjT <| by
+    rcases Finset.mem_insert.mp (h hj) with hji | hjT'
+    · exact absurd hji.symm hne
+    · exact hjT'
+  have hnj : ¬ S ⊆ insert j T := fun h => hiT <| by
+    rcases Finset.mem_insert.mp (h hi) with hij | hiT'
+    · exact absurd hij hne
+    · exact hiT'
+  simp [hni, hnj]
+
+/-- The grand coalition contains every nonempty `S`, so the unanimity
+game on `S` has value `1` on `univ`. -/
+theorem unanimityGame_v_univ (S : Finset ι) (hS : S.Nonempty) :
+    (unanimityGame S hS).v Finset.univ = 1 := by
+  have : S ⊆ Finset.univ := S.subset_univ
+  simp [unanimityGame, this]
+
+/-- **Value on unanimity games**: any allocation `φ` satisfying *efficiency*,
+*symmetry*, and the *null-player* axioms must split the unit of value of
+`unanimityGame S` equally among the members of `S`, and pay zero to
+non-members. This is the inductive base case for Shapley uniqueness:
+combined with additivity and the unanimity-basis decomposition, it pins
+down `φ` on every coalitional game. -/
+theorem allocation_on_unanimityGame
+    (φ : CoalGame ι → ι → ℝ)
+    (h_eff : ∀ G : CoalGame ι, ∑ i, φ G i = G.v Finset.univ)
+    (h_sym : ∀ (G : CoalGame ι) {i j : ι},
+        i ≠ j → G.AreSymmetric i j → φ G i = φ G j)
+    (h_null : ∀ (G : CoalGame ι) {i : ι}, G.IsNull i → φ G i = 0)
+    (S : Finset ι) (hS : S.Nonempty) (i : ι) :
+    φ (unanimityGame S hS) i = if i ∈ S then (1 : ℝ) / S.card else 0 := by
+  classical
+  set G := unanimityGame S hS
+  by_cases hiS : i ∈ S
+  · -- Non-members get zero by the null axiom.
+    have hnull_outside : ∀ k ∉ S, φ G k = 0 := fun k hk =>
+      h_null G (unanimityGame_isNull_of_notMem S hS hk)
+    -- Members of S are pairwise symmetric, hence get the same value c.
+    obtain ⟨c, hc⟩ : ∃ c : ℝ, ∀ k ∈ S, φ G k = c := by
+      refine ⟨φ G i, fun k hk => ?_⟩
+      by_cases hki : k = i
+      · subst hki; rfl
+      · exact h_sym G hki (unanimityGame_areSymmetric S hS hki hk hiS)
+    -- Sum-splitting and efficiency: |S| · c = 1.
+    have hsum_split : ∑ k, φ G k = ∑ k ∈ S, φ G k := by
+      rw [← Finset.sum_filter_add_sum_filter_not Finset.univ (· ∈ S) (φ G)]
+      have h_in : Finset.univ.filter (· ∈ S) = S := by
+        ext k; simp
+      have h_out :
+          ∑ k ∈ Finset.univ.filter (¬ · ∈ S), φ G k = 0 := by
+        apply Finset.sum_eq_zero
+        intro k hk
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk
+        exact hnull_outside k hk
+      rw [h_in, h_out, add_zero]
+    have hsum_const : ∑ k ∈ S, φ G k = S.card * c := by
+      rw [Finset.sum_congr rfl (fun k hk => hc k hk),
+        Finset.sum_const, nsmul_eq_mul]
+    have heff := h_eff G
+    rw [hsum_split, hsum_const, unanimityGame_v_univ] at heff
+    -- |S| ≠ 0 since S is nonempty.
+    have hSpos : 0 < (S.card : ℝ) := by
+      exact_mod_cast Finset.card_pos.mpr hS
+    have hc_val : c = 1 / S.card := by
+      field_simp at heff ⊢
+      linarith
+    rw [if_pos hiS, hc i hiS, hc_val]
+  · -- i ∉ S: null axiom gives φ = 0.
+    rw [if_neg hiS]
+    exact h_null G (unanimityGame_isNull_of_notMem S hS hiS)
+
 end CoalGame
 
 end GameTheory
