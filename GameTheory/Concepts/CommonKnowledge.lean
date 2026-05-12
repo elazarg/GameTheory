@@ -173,5 +173,79 @@ theorem isSelfEvident_iff_Knows_eq (P : InfoPartition Ω) (E : Finset Ω) :
   exact ⟨fun h => Finset.Subset.antisymm (Knows_subset P E) h,
     fun h => h.ge⟩
 
+/-! ### Mutual knowledge and common knowledge -/
+
+/-- *Mutual knowledge*: every agent in the family knows `E`. -/
+def mutualKnowledge {ι : Type} [Fintype ι] (P : ι → InfoPartition Ω)
+    (E : Finset Ω) : Finset Ω :=
+  Finset.univ.filter (fun s => ∀ i : ι, s ∈ Knows (P i) E)
+
+@[simp]
+theorem mem_mutualKnowledge_iff {ι : Type} [Fintype ι]
+    (P : ι → InfoPartition Ω) (E : Finset Ω) (s : Ω) :
+    s ∈ mutualKnowledge P E ↔ ∀ i, s ∈ Knows (P i) E := by
+  simp [mutualKnowledge]
+
+/-- Mutual knowledge implies truth (veridicality lifted to families). -/
+theorem mutualKnowledge_subset {ι : Type} [Fintype ι]
+    [Nonempty ι] (P : ι → InfoPartition Ω) (E : Finset Ω) :
+    mutualKnowledge P E ⊆ E := by
+  intro s hs
+  rw [mem_mutualKnowledge_iff] at hs
+  exact Knows_subset (P (Classical.arbitrary ι)) E (hs (Classical.arbitrary ι))
+
+/-- An event `E` is *common knowledge* at state `s` (under the family `P`)
+if there exists a "public event" `F`: a self-evident-for-everyone event
+that contains `s` and is contained in `E`. This is Aumann's (1976) standard
+characterization, which is equivalent to iterated mutual knowledge in the
+finite setting. -/
+def CommonKnowledgeAt {ι : Type} (P : ι → InfoPartition Ω) (E : Finset Ω)
+    (s : Ω) : Prop :=
+  ∃ F : Finset Ω, F ⊆ E ∧ s ∈ F ∧ ∀ i, IsSelfEvident (P i) F
+
+/-- The set of states at which `E` is common knowledge. -/
+noncomputable def CommonKnowledge {ι : Type} (P : ι → InfoPartition Ω)
+    (E : Finset Ω) : Finset Ω := by
+  classical
+  exact Finset.univ.filter (fun s => CommonKnowledgeAt P E s)
+
+omit [DecidableEq Ω] in
+theorem mem_CommonKnowledge_iff {ι : Type} (P : ι → InfoPartition Ω)
+    (E : Finset Ω) (s : Ω) :
+    s ∈ CommonKnowledge P E ↔ CommonKnowledgeAt P E s := by
+  classical
+  simp [CommonKnowledge]
+
+omit [DecidableEq Ω] in
+/-- Common knowledge implies truth: if `E` is common knowledge at `s`, then
+`s ∈ E`. -/
+theorem CommonKnowledgeAt.implies_mem {ι : Type} {P : ι → InfoPartition Ω}
+    {E : Finset Ω} {s : Ω} (h : CommonKnowledgeAt P E s) : s ∈ E := by
+  obtain ⟨F, hFE, hsF, _⟩ := h
+  exact hFE hsF
+
+/-- Common knowledge implies mutual knowledge: if `E` is common knowledge,
+then every agent knows `E`. -/
+theorem CommonKnowledgeAt.implies_Knows {ι : Type} {P : ι → InfoPartition Ω}
+    {E : Finset Ω} {s : Ω} (h : CommonKnowledgeAt P E s) (i : ι) :
+    s ∈ Knows (P i) E := by
+  obtain ⟨F, hFE, hsF, hse⟩ := h
+  rw [mem_Knows_iff]
+  exact ((hse i) s hsF).trans hFE
+
+omit [DecidableEq Ω] in
+/-- Common knowledge is itself common knowledge (positive introspection at
+the group level): if `E` is CK at `s`, then "`E` is CK" is CK at `s`. The
+witness is the same public event `F`. -/
+theorem CommonKnowledgeAt.idem {ι : Type} {P : ι → InfoPartition Ω}
+    {E : Finset Ω} {s : Ω} (h : CommonKnowledgeAt P E s) :
+    CommonKnowledgeAt P (CommonKnowledge P E) s := by
+  classical
+  obtain ⟨F, hFE, hsF, hse⟩ := h
+  refine ⟨F, ?_, hsF, hse⟩
+  intro t htF
+  rw [mem_CommonKnowledge_iff]
+  exact ⟨F, hFE, htF, hse⟩
+
 end GameTheory
 
