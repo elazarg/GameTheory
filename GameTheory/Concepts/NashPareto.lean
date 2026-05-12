@@ -26,6 +26,12 @@ theorem ParetoDominates.not_paretoEfficient {σ τ : Profile G}
     (hpd : G.ParetoDominates τ σ) : ¬ G.IsParetoEfficient σ :=
   fun hpe => hpe ⟨τ, hpd⟩
 
+/-- Pareto dominance strictly increases social welfare. -/
+theorem ParetoDominates.socialWelfare_lt [Fintype ι] {σ τ : Profile G}
+    (hpd : G.ParetoDominates τ σ) : G.socialWelfare σ < G.socialWelfare τ := by
+  obtain ⟨hweak, i, hstrict⟩ := hpd
+  exact Finset.sum_lt_sum (fun j _ => hweak j) ⟨i, Finset.mem_univ i, hstrict⟩
+
 /-- Preference-parametric analogue: if `τ` Pareto-dominates `σ` w.r.t.
     `pref`/`spref`, then `σ` is not Pareto-efficient w.r.t. these preferences. -/
 theorem ParetoDominatesFor.not_paretoEfficientFor
