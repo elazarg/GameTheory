@@ -85,16 +85,8 @@ open Classical in
 theorem IsExactPotential.isNash_iff_local_maximizer
     {G : KernelGame ι} {Φ : Profile G → ℝ} (hΦ : G.IsExactPotential Φ)
     {σ : Profile G} :
-    G.IsNash σ ↔ ∀ who (s' : G.Strategy who), Φ σ ≥ Φ (Function.update σ who s') := by
-  constructor
-  · intro hN who s'
-    have hpot := hΦ who σ s'
-    have hge := hN who s'
-    linarith
-  · intro hmax who s'
-    have hpot := hΦ who σ s'
-    have hge := hmax who s'
-    linarith
+    G.IsNash σ ↔ ∀ who (s' : G.Strategy who), Φ σ ≥ Φ (Function.update σ who s') :=
+  IsOrdinalPotential.isNash_iff_local_maximizer hΦ.toOrdinal
 
 open Classical in
 /-- **Nash existence for finite exact potential games.**
