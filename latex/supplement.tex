@@ -1094,15 +1094,31 @@ that a kernel-game-level theorem applies uniformly to NFGs and to
 languages with non-trivial outcome types.
 
 \Variants
-\TT{Languages/NFG/} also packages worked subclasses, each as its
-own \TT{NFGGame} construction:\ \TT{CongestionGame.lean}
-(Rosenthal's potential), \TT{CoalitionalGame.lean} (the Shapley
-value definition plus null-player, additivity, linearity, and
-symmetry lemmas),
-\TT{Bargaining.lean} (Nash bargaining), \TT{Matching.lean}
-(stable-matching predicates), \TT{PublicGoods.lean},
-\TT{Stackelberg.lean}.  Each subclass lives in its own namespace
-and exposes its characteristic theorem.
+\TT{Languages/NFG/} also packages worked strategic-form
+subclasses:\ \TT{CongestionGame.lean} (Rosenthal's potential
+\citep{Rosenthal1973} — exact potential, pure Nash existence,
+and FIP), \TT{PublicGoods.lean} (free-ride dominance and
+full-cooperation Pareto-dominance lemmas), \TT{Stackelberg.lean}
+(leader-follower form with Stackelberg-leader-advantage theorem).
+Each subclass lives in its own namespace and exposes its
+characteristic theorem; the canonical 2-player examples
+(Prisoner's Dilemma, Matching Pennies, Stag Hunt, Hawk--Dove,
+Battle of the Sexes, Dictator, Traveler, Cournot duopoly) are
+collected in \TT{Languages/NFG/Examples.lean} as direct
+\TT{NFGGame} constructions with pure-Nash facts.
+
+The cooperative-tradition formalisms — TU coalitional games with
+the Shapley value, Banzhaf, Shapley--Shubik, convex games, the
+core, additive games, and the Shapley uniqueness theorem
+(\TT{Cooperative/CoalitionalGame.lean}); Nash bargaining
+(\TT{Cooperative/Bargaining.lean}); two-sided matching markets
+(\TT{Cooperative/Matching.lean}) — sit in a separate
+\TT{Cooperative/} branch parallel to \TT{Languages/}.  They do
+not compile to \TT{KernelGame}; their primitives are coalition
+values, feasible payoff sets, or preference rankings rather than
+per-player strategies, so they form a different game-theoretic
+paradigm and share no load-bearing abstractions with the
+non-cooperative core.
 
 \subsection{EFG: \texttt{Languages/EFG/}}
 \label{sec:supp:efg}\label{def:EFG.InfoStructure}\label{def:EFG.GameTree}\label{def:EFG.EFGGame}\label{def:EFG.evalDist}
