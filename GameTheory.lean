@@ -40,6 +40,7 @@ import GameTheory.Theorems.NashExistenceMixed
 import GameTheory.Concepts.MixedSupport
 import GameTheory.Concepts.BestResponseDynamics
 import GameTheory.Concepts.NashProperties
+import GameTheory.Concepts.StrongNash
 
 -- Game properties and welfare
 import GameTheory.Core.GameProperties
