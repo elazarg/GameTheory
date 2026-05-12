@@ -691,6 +691,85 @@ theorem shapleyValue_unique
     rw [h_null zeroGame hnull_all,
       shapleyValue_null zeroGame hnull_all]
 
+/-! ### Banzhaf power index and simple games
+
+The *Banzhaf index* (Penrose 1946, Banzhaf 1965) is an alternative power
+index that weights every coalition equally instead of by Shapley's
+arrival-order weights. On *simple games* — coalitional games whose values
+lie in `{0, 1}`, modeling voting bodies — the Shapley value is known as
+the **Shapley–Shubik power index** (Shapley–Shubik 1954). -/
+
+/-- **Banzhaf power index**: an unweighted average of player `i`'s
+marginal contributions to all coalitions not containing them.
+Equals `(1/2^{n-1}) · Σ_{S : i ∉ S} (v(S ∪ {i}) - v(S))`. -/
+noncomputable def banzhafIndex (G : CoalGame ι) (i : ι) : ℝ :=
+  (∑ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
+      G.marginalContribution i S) / (2 ^ (Fintype.card ι - 1) : ℝ)
+
+/-- A null player receives Banzhaf index `0`. -/
+theorem banzhafIndex_null (G : CoalGame ι) {i : ι} (h : G.IsNull i) :
+    G.banzhafIndex i = 0 := by
+  simp only [banzhafIndex]
+  rw [show (∑ S ∈ Finset.univ.filter (fun S : Finset ι => i ∉ S),
+      G.marginalContribution i S) = 0 from ?_, zero_div]
+  apply Finset.sum_eq_zero
+  intro S hS
+  simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hS
+  exact h S hS
+
+/-- Banzhaf is additive across coalitional games, like Shapley. -/
+theorem banzhafIndex_additive (G₁ G₂ : CoalGame ι) (i : ι) :
+    (gameAdd G₁ G₂).banzhafIndex i = G₁.banzhafIndex i + G₂.banzhafIndex i := by
+  simp only [banzhafIndex, gameAdd, marginalContribution]
+  rw [← add_div, ← Finset.sum_add_distrib]
+  congr 1
+  refine Finset.sum_congr rfl (fun S _ => ?_)
+  ring
+
+/-- Banzhaf scales with scalar multiplication. -/
+theorem banzhafIndex_scalar (c : ℝ) (G : CoalGame ι) (i : ι) :
+    (gameScalar c G).banzhafIndex i = c * G.banzhafIndex i := by
+  simp only [banzhafIndex, gameScalar, marginalContribution]
+  rw [show
+    (∑ S ∈ Finset.univ.filter (fun S : Finset ι => i ∉ S),
+      (c * G.v (insert i S) - c * G.v S)) =
+    c * ∑ S ∈ Finset.univ.filter (fun S : Finset ι => i ∉ S),
+      (G.v (insert i S) - G.v S) from ?_]
+  · rw [mul_div_assoc]
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun S _ => ?_)
+  ring
+
+/-- A *simple game* (or *voting game*): values are restricted to `{0, 1}`
+and the game is *monotone* — adding players to a winning coalition keeps
+it winning. These are the natural arena for political power indices. -/
+structure IsSimpleGame (G : CoalGame ι) : Prop where
+  /-- Values are `0` or `1`. -/
+  boolean : ∀ S, G.v S = 0 ∨ G.v S = 1
+  /-- Monotonicity: supersets of winning coalitions remain winning. -/
+  monotone : ∀ {S T : Finset ι}, S ⊆ T → G.v S = 1 → G.v T = 1
+  /-- The grand coalition is winning. -/
+  grandWinning : G.v Finset.univ = 1
+
+/-- **Shapley–Shubik power index**: the Shapley value applied to a simple
+(voting) game. It measures the probability that a uniformly random
+ordering makes player `i` *pivotal* — i.e., the predecessors of `i`
+form a losing coalition but together with `i` they form a winning one. -/
+noncomputable def shapleyShubikIndex (G : CoalGame ι) (_h : G.IsSimpleGame)
+    (i : ι) : ℝ := G.shapleyValue i
+
+/-- For simple games, the Shapley–Shubik index sums to `1` — the unit of
+power is split among the players. -/
+theorem shapleyShubikIndex_sum_eq_one (G : CoalGame ι) (h : G.IsSimpleGame) :
+    ∑ i, G.shapleyShubikIndex h i = 1 := by
+  simp only [shapleyShubikIndex]
+  rw [shapleyValue_efficient, h.grandWinning]
+
+/-- A null player has Shapley–Shubik index `0` (no power). -/
+theorem shapleyShubikIndex_null (G : CoalGame ι) (h : G.IsSimpleGame) {i : ι}
+    (hnull : G.IsNull i) : G.shapleyShubikIndex h i = 0 :=
+  shapleyValue_null G hnull
+
 end CoalGame
 
 end GameTheory
