@@ -999,6 +999,58 @@ theorem additiveGame_marginalContribution (α : ι → ℝ) (i : ι)
     Finset.sum_insert hi]
   ring
 
+/-- An additive game decomposes as a sum of scaled singleton-unanimity games. -/
+theorem additiveGame_eq_gameSum (α : ι → ℝ) :
+    additiveGame α = gameSum (Finset.univ : Finset ι)
+      (fun j => gameScalar (α j)
+        (unanimityGame {j} (Finset.singleton_nonempty j))) := by
+  ext S
+  simp only [gameSum_v, gameScalar, unanimityGame, additiveGame_v]
+  -- Convert `α j * if p j then 1 else 0` to `if p j then α j else 0`.
+  have hmul : ∀ j : ι, α j * (if ({j} : Finset ι) ⊆ S then (1 : ℝ) else 0) =
+      if ({j} : Finset ι) ⊆ S then α j else 0 := by
+    intro j
+    split_ifs <;> simp
+  rw [Finset.sum_congr rfl (fun j _ => hmul j)]
+  rw [← Finset.sum_filter]
+  -- The filter `{j} ⊆ S` is `j ∈ S`, and `univ.filter (· ∈ S) = S`.
+  have hfilter : Finset.univ.filter (fun j : ι => ({j} : Finset ι) ⊆ S) = S := by
+    ext j
+    simp [Finset.singleton_subset_iff]
+  rw [hfilter]
+
+/-- **Shapley value of an additive game**: each player receives exactly
+their own weight. Combines linearity of Shapley with the explicit Shapley
+formula on unanimity games. -/
+theorem additiveGame_shapleyValue (α : ι → ℝ) (i : ι) :
+    (additiveGame α).shapleyValue i = α i := by
+  classical
+  rw [additiveGame_eq_gameSum, gameSum_allocation_eq shapleyValue
+    (fun G₁ G₂ k => shapleyValue_additive G₁ G₂ k)]
+  -- Each j-th term: shapleyValue (gameScalar (α j) (unanimityGame {j})) i
+  --              = α j * (if i ∈ {j} then 1/|{j}| else 0)
+  --              = α j * (if i = j then 1 else 0)
+  have hterm : ∀ j : ι,
+      shapleyValue (gameScalar (α j)
+        (unanimityGame ({j} : Finset ι) (Finset.singleton_nonempty j))) i =
+      if i = j then α j else 0 := by
+    intro j
+    rw [shapleyValue_scalar, unanimityGame_shapleyValue]
+    by_cases hij : i = j
+    · subst hij
+      simp [Finset.card_singleton]
+    · have hni : i ∉ ({j} : Finset ι) := by
+        simp [Finset.mem_singleton, hij]
+      simp [hni, hij]
+  rw [Finset.sum_congr rfl (fun j _ => hterm j)]
+  -- Σ_j (if i = j then α j else 0) = α i
+  rw [Finset.sum_eq_single i]
+  · simp
+  · intro j _ hji
+    simp [hji.symm]
+  · intro h
+    exact absurd (Finset.mem_univ i) h
+
 /-! ### 3-player majority game (worked example) -/
 
 /-- The 3-player simple majority game: a coalition wins iff it has at
