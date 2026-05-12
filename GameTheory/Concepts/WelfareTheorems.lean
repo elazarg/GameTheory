@@ -83,6 +83,27 @@ theorem welfareMax_isParetoEfficient [Fintype ι]
   have hle := hmax τ
   linarith
 
+set_option linter.unusedFintypeInType false in
+/-- **Existence of welfare maximizers**: any finite game admits a profile
+that maximizes social welfare. Follows from `Finset.exists_max_image` on
+the finite profile space. -/
+theorem exists_welfareMax [Fintype ι]
+    (G : KernelGame ι) [Fintype (Profile G)] [Nonempty (Profile G)] :
+    ∃ σ : Profile G, ∀ τ : Profile G, G.socialWelfare τ ≤ G.socialWelfare σ := by
+  obtain ⟨σ, _, hσ⟩ :=
+    Finset.exists_max_image Finset.univ G.socialWelfare
+      (Finset.univ_nonempty (α := Profile G))
+  exact ⟨σ, fun τ => hσ τ (Finset.mem_univ τ)⟩
+
+set_option linter.unusedFintypeInType false in
+/-- **Existence of a Pareto-efficient profile** in finite games. Follows
+from `exists_welfareMax` + `welfareMax_isParetoEfficient`. -/
+theorem exists_paretoEfficient [Fintype ι]
+    (G : KernelGame ι) [Fintype (Profile G)] [Nonempty (Profile G)] :
+    ∃ σ : Profile G, G.IsParetoEfficient σ := by
+  obtain ⟨σ, hmax⟩ := exists_welfareMax G
+  exact ⟨σ, welfareMax_isParetoEfficient hmax⟩
+
 end KernelGame
 
 end GameTheory
