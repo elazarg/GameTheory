@@ -107,6 +107,33 @@ theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
   rw [this]
   exact hIC who θ (s' (θ who))
 
+/-- *Strategy-proofness* is a synonym for dominant-strategy incentive
+compatibility (DSIC), the standard term in mechanism design literature. -/
+def isStrategyProof (M : Mechanism ι) : Prop := M.isIC
+
+/-- Strategy-proofness and DSIC are definitionally the same. -/
+theorem isStrategyProof_iff_isIC (M : Mechanism ι) :
+    M.isStrategyProof ↔ M.isIC := Iff.rfl
+
+/-- *Social welfare* of a mechanism on a report profile is the sum of
+players' payoffs (utilitarian aggregate). -/
+def socialWelfare (M : Mechanism ι) (θ : ∀ i, M.Θ i) : ℝ :=
+  ∑ i, M.outcome θ i
+
+/-- A mechanism is *(weakly) individually rational* w.r.t. an outside-option
+function `o : ι → ℝ` if every player gets at least `o i` under truthful
+reporting, regardless of others' types. -/
+def IsIndividuallyRational (M : Mechanism ι) (o : ι → ℝ) : Prop :=
+  ∀ (i : ι) (θ : ∀ j, M.Θ j), M.outcome θ i ≥ o i
+
+/-- A mechanism is *(weakly) non-negative* (a standard normalization of
+IR with outside option `0`): truthful reporting never costs a player. -/
+def IsNonNegative (M : Mechanism ι) : Prop := M.IsIndividuallyRational (fun _ => 0)
+
+/-- Non-negativity is exactly IR with zero outside option. -/
+theorem IsNonNegative_iff (M : Mechanism ι) :
+    M.IsNonNegative ↔ M.IsIndividuallyRational (fun _ => 0) := Iff.rfl
+
 open Classical in
 /-- BIC is implied by BayesNash of truthful reporting (BayesNash is stronger
     since it covers type-dependent deviations, not just constant ones). -/
