@@ -889,6 +889,52 @@ theorem IsConvex.gameScalar {G : CoalGame ι} (h : G.IsConvex)
   have h_ineq := h S T
   nlinarith
 
+/-! ### Properties of the core -/
+
+/-- Core allocations are efficient: their components sum to `v(N)`. This is
+just the first conjunct of `IsCore`, restated for ergonomic use. -/
+theorem IsCore.efficient (G : CoalGame ι) {x : ι → ℝ} (h : G.IsCore x) :
+    ∑ i, x i = G.v Finset.univ := h.1
+
+/-- Core allocations satisfy *coalition rationality*: every coalition gets
+at least its own value. This is the second conjunct, restated. -/
+theorem IsCore.coalition_rational (G : CoalGame ι) {x : ι → ℝ}
+    (h : G.IsCore x) (S : Finset ι) : ∑ i ∈ S, x i ≥ G.v S := h.2 S
+
+/-- **The core is convex (as a set)**: a convex combination of two core
+allocations is still in the core. -/
+theorem IsCore.convex_combination (G : CoalGame ι) {x y : ι → ℝ}
+    (hx : G.IsCore x) (hy : G.IsCore y)
+    {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hab : a + b = 1) :
+    G.IsCore (fun i => a * x i + b * y i) := by
+  refine ⟨?_, ?_⟩
+  · -- Efficiency: a · v(univ) + b · v(univ) = (a+b) · v(univ) = v(univ).
+    have heq : (∑ i, (a * x i + b * y i)) =
+        a * (∑ i, x i) + b * (∑ i, y i) := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    rw [heq, IsCore.efficient G hx, IsCore.efficient G hy,
+      ← add_mul, hab, one_mul]
+  · -- Coalition rationality: weighted sum of two coalition-rational
+    -- allocations dominates v(S).
+    intro S
+    have heq : (∑ i ∈ S, (a * x i + b * y i)) =
+        a * (∑ i ∈ S, x i) + b * (∑ i ∈ S, y i) := by
+      rw [Finset.sum_add_distrib, ← Finset.mul_sum, ← Finset.mul_sum]
+    have hxS := IsCore.coalition_rational G hx S
+    have hyS := IsCore.coalition_rational G hy S
+    have hsplit : G.v S = a * G.v S + b * G.v S := by
+      rw [← add_mul, hab, one_mul]
+    rw [heq, hsplit]
+    exact add_le_add (mul_le_mul_of_nonneg_left hxS ha)
+      (mul_le_mul_of_nonneg_left hyS hb)
+
+/-- **Core dominates singleton values**: if `x` is in the core, every
+player gets at least their stand-alone value. -/
+theorem IsCore.individually_rational (G : CoalGame ι) {x : ι → ℝ}
+    (h : G.IsCore x) (i : ι) : x i ≥ G.v ({i} : Finset ι) := by
+  have := IsCore.coalition_rational G h {i}
+  simpa using this
+
 end CoalGame
 
 end GameTheory
