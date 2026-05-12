@@ -41,6 +41,10 @@ namespace CoalGame
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
+@[ext]
+theorem ext {G₁ G₂ : CoalGame ι} (h : ∀ S, G₁.v S = G₂.v S) : G₁ = G₂ := by
+  cases G₁; cases G₂; congr; funext S; exact h S
+
 /-- Marginal contribution of player `i` to coalition `S`. -/
 def marginalContribution (G : CoalGame ι) (i : ι) (S : Finset ι) : ℝ :=
   G.v (insert i S) - G.v S
@@ -548,6 +552,144 @@ theorem allocation_on_unanimityGame
   · -- i ∉ S: null axiom gives φ = 0.
     rw [if_neg hiS]
     exact h_null G (unanimityGame_isNull_of_notMem S hS hiS)
+
+/-- Indexed sum of coalitional games: `(gameSum s f).v T = Σ_{a ∈ s} (f a).v T`. -/
+noncomputable def gameSum {α : Type*} (s : Finset α) (f : α → CoalGame ι) :
+    CoalGame ι where
+  v := fun T => ∑ a ∈ s, (f a).v T
+  v_empty := by
+    apply Finset.sum_eq_zero
+    intro a _
+    exact (f a).v_empty
+
+@[simp]
+lemma gameSum_v {α : Type*} (s : Finset α) (f : α → CoalGame ι) (T : Finset ι) :
+    (gameSum s f).v T = ∑ a ∈ s, (f a).v T := rfl
+
+/-- An allocation `φ` that is additive and zero on the empty-index gameSum
+factors over arbitrary `gameSum`s. The zero hypothesis is derivable from
+additivity alone (`φ(0 + 0) = 2·φ(0)`), but it is kept as an explicit
+hypothesis so the lemma is usable when the underlying type lacks
+`Nonempty`. -/
+theorem gameSum_allocation_eq
+    (φ : CoalGame ι → ι → ℝ)
+    (h_add : ∀ (G₁ G₂ : CoalGame ι) (i : ι),
+        φ (gameAdd G₁ G₂) i = φ G₁ i + φ G₂ i)
+    {α : Type*} (s : Finset α) (f : α → CoalGame ι) (i : ι) :
+    φ (gameSum s f) i = ∑ a ∈ s, φ (f a) i := by
+  classical
+  induction s using Finset.induction with
+  | empty =>
+    rw [Finset.sum_empty]
+    -- φ on the zero game: from additivity, 0 + 0 = 0 so φ(0) = 2·φ(0), i.e. φ(0) = 0.
+    have hself : gameAdd (gameSum (∅ : Finset α) f) (gameSum (∅ : Finset α) f) =
+        gameSum (∅ : Finset α) f := by
+      ext T
+      simp [gameAdd]
+    have := h_add (gameSum (∅ : Finset α) f) (gameSum (∅ : Finset α) f) i
+    rw [hself] at this
+    linarith
+  | insert a s ha ih =>
+    have hext : gameSum (insert a s) f =
+        gameAdd (f a) (gameSum s f) := by
+      ext T
+      simp [gameAdd, Finset.sum_insert ha]
+    rw [hext, h_add, ih, Finset.sum_insert ha]
+
+/-- The constant-zero coalitional game. -/
+noncomputable def zeroGame : CoalGame ι where
+  v := fun _ => 0
+  v_empty := rfl
+
+/-- The S-th term in the unanimity-basis decomposition of `G`:
+`c_S · u_S` for nonempty S, and the zero game when `S = ∅`. -/
+noncomputable def decompTerm (G : CoalGame ι) (S : Finset ι) : CoalGame ι :=
+  if hS : S.Nonempty then gameScalar (G.unanimityCoeff S) (unanimityGame S hS)
+  else zeroGame
+
+/-- **Sum-game form of the unanimity decomposition**: every coalitional
+game `G` equals the `gameSum` over all subsets of `univ` of its
+unanimity-decomposition terms. -/
+theorem eq_gameSum_decompTerm (G : CoalGame ι) :
+    G = gameSum (Finset.univ : Finset (Finset ι)) G.decompTerm := by
+  ext T
+  simp only [gameSum_v]
+  -- Pair each S with its v-contribution.
+  have hterm : ∀ S : Finset ι,
+      (G.decompTerm S).v T =
+        G.unanimityCoeff S * (if S ⊆ T then 1 else 0) := by
+    intro S
+    simp only [decompTerm]
+    by_cases hS : S.Nonempty
+    · simp only [hS, dif_pos, gameScalar, unanimityGame]
+    · simp only [hS, dif_neg, zeroGame, not_false_iff]
+      have hSe : S = ∅ := Finset.not_nonempty_iff_eq_empty.mp hS
+      have h_coeff : G.unanimityCoeff S = 0 := by
+        subst hSe
+        simp [unanimityCoeff, G.v_empty]
+      rw [h_coeff, zero_mul]
+  rw [Finset.sum_congr rfl (fun S _ => hterm S)]
+  -- Convert `c * (if ... then 1 else 0)` to `if ... then c else 0`, then filter.
+  have hmul : ∀ S : Finset ι, G.unanimityCoeff S * (if S ⊆ T then (1 : ℝ) else 0) =
+      if S ⊆ T then G.unanimityCoeff S else 0 := by
+    intro S; split_ifs <;> simp
+  rw [Finset.sum_congr rfl (fun S _ => hmul S)]
+  rw [← Finset.sum_filter]
+  rw [show (Finset.univ.filter (fun S : Finset ι => S ⊆ T)) = T.powerset by
+    ext S; simp [Finset.mem_powerset]]
+  exact G.unanimity_decomposition T
+
+/-- **Shapley uniqueness** (Shapley 1953): any allocation `φ` satisfying
+*efficiency*, *symmetry*, the *null-player* axiom, *additivity*, and
+*scalar-homogeneity* (jointly, linearity) coincides with the Shapley value
+on every coalitional game.
+
+Note: the classical statement uses only additivity (not full scalar
+homogeneity), and recovers scalar homogeneity for rationals via additivity.
+Extending to ℝ requires either continuity or full linearity; we adopt the
+modern formulation with linearity as a primitive axiom. -/
+theorem shapleyValue_unique
+    (φ : CoalGame ι → ι → ℝ)
+    (h_eff : ∀ G : CoalGame ι, ∑ i, φ G i = G.v Finset.univ)
+    (h_sym : ∀ (G : CoalGame ι) {i j : ι},
+        i ≠ j → G.AreSymmetric i j → φ G i = φ G j)
+    (h_null : ∀ (G : CoalGame ι) {i : ι}, G.IsNull i → φ G i = 0)
+    (h_add : ∀ (G₁ G₂ : CoalGame ι) (i : ι),
+        φ (gameAdd G₁ G₂) i = φ G₁ i + φ G₂ i)
+    (h_scalar : ∀ (c : ℝ) (G : CoalGame ι) (i : ι),
+        φ (gameScalar c G) i = c * φ G i)
+    (G : CoalGame ι) (i : ι) :
+    φ G i = G.shapleyValue i := by
+  classical
+  -- Both φ and shapleyValue factor over the gameSum decomposition into a
+  -- combination of values on unanimity games. Pin both to the same formula.
+  have hφ_sum : φ G i = ∑ S : Finset ι, φ (G.decompTerm S) i := by
+    nth_rewrite 1 [G.eq_gameSum_decompTerm]
+    exact gameSum_allocation_eq φ h_add _ _ i
+  have hs_sum : G.shapleyValue i =
+      ∑ S : Finset ι, (G.decompTerm S).shapleyValue i := by
+    nth_rewrite 1 [G.eq_gameSum_decompTerm]
+    exact gameSum_allocation_eq shapleyValue
+      (fun G₁ G₂ j => shapleyValue_additive G₁ G₂ j) _ _ i
+  rw [hφ_sum, hs_sum]
+  -- Show termwise equality.
+  refine Finset.sum_congr rfl (fun S _ => ?_)
+  simp only [decompTerm]
+  by_cases hS : S.Nonempty
+  · -- Nonempty S: both sides equal c_S · (1/|S| if i ∈ S else 0).
+    simp only [hS, dif_pos]
+    rw [h_scalar,
+      allocation_on_unanimityGame φ h_eff h_sym h_null S hS i,
+      shapleyValue_scalar,
+      allocation_on_unanimityGame shapleyValue
+        shapleyValue_efficient shapleyValue_symmetric shapleyValue_null S hS i]
+  · -- Empty S: both sides are zero (zero game).
+    simp only [hS, dif_neg, not_false_iff]
+    have hnull_all : (zeroGame (ι := ι)).IsNull i := by
+      intro T _
+      simp [marginalContribution, zeroGame]
+    rw [h_null zeroGame hnull_all,
+      shapleyValue_null zeroGame hnull_all]
 
 end CoalGame
 
