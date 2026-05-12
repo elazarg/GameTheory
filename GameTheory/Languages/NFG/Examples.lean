@@ -347,6 +347,56 @@ theorem dg_giveAll_not_nash :
   simp [Function.update] at this
   linarith
 
+/-! ## Traveler's Dilemma (small version)
+
+Basu (1994): two travelers claim a reimbursement value; the lower claim
+is paid to both, with a small bonus/penalty for the lower/higher claimer.
+The classical paradox arises with many actions and iterated weak
+dominance; with only two actions the structure is already visible —
+`claim2` weakly dominates `claim3`, and `(claim2, claim2)` is the
+strict Nash equilibrium. -/
+
+/-- Two-action Traveler's Dilemma claims. -/
+inductive TDAction where
+  | claim2
+  | claim3
+deriving DecidableEq, Repr
+
+instance : Fintype TDAction where
+  elems := {TDAction.claim2, TDAction.claim3}
+  complete x := by cases x <;> simp
+
+open TDAction in
+/-- Two-action Traveler's Dilemma.
+  Payoff: the lower claim is paid to both; the lower claimer gets +1, the
+  higher claimer gets -1.
+  - `(claim2, claim2)`: both get 2
+  - `(claim2, claim3)`: P1 gets 3, P2 gets 1
+  - `(claim3, claim2)`: P1 gets 1, P2 gets 3
+  - `(claim3, claim3)`: both get 3 -/
+def travelersDilemma : NFGGame Bool (fun _ => TDAction) where
+  Outcome := ∀ _ : Bool, TDAction
+  outcome := id
+  utility s p :=
+    match s true, s false, p with
+    | claim2, claim2, _     => 2
+    | claim2, claim3, true  => 3
+    | claim2, claim3, false => 1
+    | claim3, claim2, true  => 1
+    | claim3, claim2, false => 3
+    | claim3, claim3, _     => 3
+
+/-- The profile where both claim 2. -/
+def td_claim2_claim2 : StrategyProfile (fun _ : Bool => TDAction) :=
+  fun _ => TDAction.claim2
+
+/-- `(claim2, claim2)` is a strict Nash equilibrium of the Traveler's
+Dilemma: any deviation strictly worsens the deviator's payoff. -/
+theorem td_claim2_is_nash : IsNashPure travelersDilemma td_claim2_claim2 := by
+  intro i a'
+  cases i <;> cases a' <;>
+    (simp [travelersDilemma, td_claim2_claim2, deviate, Function.update]; try linarith)
+
 /-! ## Distributional API examples -/
 
 open GameTheory
