@@ -174,19 +174,16 @@ theorem IsTeamGame.bestNashWelfare_eq_optimalWelfare {G : KernelGame ι}
   classical
   obtain ⟨σ₀, _⟩ := hN
   haveI : Nonempty (Profile G) := ⟨σ₀⟩
-  obtain ⟨σ_max, _, hmax⟩ :=
-    Finset.exists_max_image Finset.univ G.socialWelfare Finset.univ_nonempty
-  have hmax' : ∀ τ : Profile G, G.socialWelfare τ ≤ G.socialWelfare σ_max :=
-    fun τ => hmax τ (Finset.mem_univ τ)
-  have hN_max : G.IsNash σ_max := hteam.welfareMax_isNash hmax'
+  obtain ⟨σ_max, hmax⟩ := exists_welfareMax G
+  have hN_max : G.IsNash σ_max := hteam.welfareMax_isNash hmax
   have h_ge : G.socialWelfare σ_max ≤ G.bestNashWelfare ⟨σ₀, ‹_›⟩ := by
     simp only [bestNashWelfare]
     exact Finset.le_sup' _ (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hN_max⟩)
   have h_opt_le : G.optimalWelfare ≤ G.socialWelfare σ_max := by
     simp only [optimalWelfare]
-    exact ciSup_le hmax'
+    exact ciSup_le hmax
   have hbdd : BddAbove (Set.range (fun τ : Profile G => G.socialWelfare τ)) :=
-    ⟨G.socialWelfare σ_max, by rintro _ ⟨σ, rfl⟩; exact hmax' σ⟩
+    ⟨G.socialWelfare σ_max, by rintro _ ⟨σ, rfl⟩; exact hmax σ⟩
   linarith [G.bestNashWelfare_le_optimalWelfare ⟨σ₀, ‹_›⟩ hbdd]
 
 /-- In a team game with positive optimal welfare, the Price of Stability is

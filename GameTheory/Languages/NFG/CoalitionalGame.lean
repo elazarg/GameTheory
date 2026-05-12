@@ -470,46 +470,32 @@ theorem unanimity_decomposition (G : CoalGame ι) (T : Finset ι) :
         T.powerset.filter (R ⊆ ·) = (T \ R).powerset.image (fun X => R ∪ X) := by
       ext S
       simp only [Finset.mem_filter, Finset.mem_powerset, Finset.mem_image]
-      refine ⟨fun ⟨hST, hRS⟩ => ⟨S \ R, ?_, ?_⟩, ?_⟩
-      · intro x hx
-        simp only [Finset.mem_sdiff] at hx
-        exact Finset.mem_sdiff.mpr ⟨hST hx.1, hx.2⟩
-      · ext x
-        simp only [Finset.mem_union, Finset.mem_sdiff]
-        refine ⟨fun h => h.elim (fun a => hRS a) (fun ⟨a, _⟩ => a), fun hxS => ?_⟩
-        by_cases hxR : x ∈ R
-        · exact Or.inl hxR
-        · exact Or.inr ⟨hxS, hxR⟩
-      · rintro ⟨X, hX, rfl⟩
-        refine ⟨?_, Finset.subset_union_left⟩
-        intro x hx
-        rcases Finset.mem_union.mp hx with hxR | hxX
-        · exact hR hxR
-        · exact (Finset.mem_sdiff.mp (hX hxX)).1
+      refine ⟨fun ⟨hST, hRS⟩ => ⟨S \ R,
+          Finset.subset_sdiff.mpr ⟨Finset.sdiff_subset.trans hST, Finset.sdiff_disjoint⟩,
+          Finset.union_sdiff_of_subset hRS⟩, ?_⟩
+      rintro ⟨X, hX, rfl⟩
+      exact ⟨Finset.union_subset hR ((Finset.subset_sdiff.mp hX).1),
+        Finset.subset_union_left⟩
     rw [hreindex]
+    -- `X ⊆ T \ R` directly implies `Disjoint R X`.
+    have hdisj : ∀ {X : Finset ι}, X ⊆ T \ R → Disjoint R X := fun hX =>
+      ((Finset.subset_sdiff.mp hX).2).symm
     have hinj : Set.InjOn (fun X => R ∪ X) ((T \ R).powerset : Set (Finset ι)) := by
       intro X hX Y hY hXY
-      simp only [Finset.coe_powerset] at hX hY
-      have hXdisj : Disjoint R X := Finset.disjoint_left.mpr fun x hxR hxX => by
-        have : x ∈ T \ R := hX hxX
-        exact (Finset.mem_sdiff.mp this).2 hxR
-      have hYdisj : Disjoint R Y := Finset.disjoint_left.mpr fun x hxR hxY => by
-        have : x ∈ T \ R := hY hxY
-        exact (Finset.mem_sdiff.mp this).2 hxR
+      simp only [Finset.coe_powerset, Set.mem_preimage, Set.mem_powerset_iff,
+        Finset.coe_subset] at hX hY
       have := congrArg (· \ R) hXY
       simp only [Finset.union_sdiff_left,
-        Finset.sdiff_eq_self_of_disjoint hXdisj.symm,
-        Finset.sdiff_eq_self_of_disjoint hYdisj.symm] at this
+        Finset.sdiff_eq_self_of_disjoint (hdisj hX).symm,
+        Finset.sdiff_eq_self_of_disjoint (hdisj hY).symm] at this
       exact this
     rw [Finset.sum_image (fun X hX Y hY => hinj hX hY)]
     -- The exponent simplifies because R and X are disjoint.
     have hcard_eq : ∀ X ∈ (T \ R).powerset,
         (R ∪ X).card - R.card = X.card := by
       intro X hX
-      simp only [Finset.mem_powerset] at hX
-      have hdisj : Disjoint R X := Finset.disjoint_left.mpr fun x hxR hxX => by
-        exact (Finset.mem_sdiff.mp (hX hxX)).2 hxR
-      rw [Finset.card_union_of_disjoint hdisj, Nat.add_sub_cancel_left]
+      rw [Finset.card_union_of_disjoint (hdisj (Finset.mem_powerset.mp hX)),
+        Nat.add_sub_cancel_left]
     rw [Finset.sum_congr rfl (fun X hX => by rw [hcard_eq X hX])]
     -- Apply the alternating-sum identity (cast from the ℤ-valued lemma).
     have h_alt_int : (∑ X ∈ (T \ R).powerset, ((-1 : ℤ) ^ X.card)) =
