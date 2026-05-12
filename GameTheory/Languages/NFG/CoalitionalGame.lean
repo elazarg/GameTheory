@@ -770,6 +770,125 @@ theorem shapleyShubikIndex_null (G : CoalGame ι) (h : G.IsSimpleGame) {i : ι}
     (hnull : G.IsNull i) : G.shapleyShubikIndex h i = 0 :=
   shapleyValue_null G hnull
 
+/-! ### Convex (supermodular) coalitional games
+
+A coalitional game is **convex** (Shapley 1971) if
+`v(S ∪ T) + v(S ∩ T) ≥ v(S) + v(T)` for every pair of coalitions. The
+equivalent characterization is that marginal contributions are *monotone*:
+joining a larger coalition is at least as valuable. Convex games have
+nonempty cores (and the Shapley value is in the core); we develop the
+monotone-marginals characterization here. -/
+
+/-- A coalitional game is *convex* (supermodular) when value enjoys the
+inclusion-exclusion inequality. -/
+def IsConvex (G : CoalGame ι) : Prop :=
+  ∀ S T : Finset ι, G.v (S ∪ T) + G.v (S ∩ T) ≥ G.v S + G.v T
+
+/-- A game has *monotone marginals* if joining a larger coalition yields a
+weakly larger marginal contribution: `S ⊆ T, i ∉ T ⇒ MC(i, S) ≤ MC(i, T)`. -/
+def HasMonotoneMarginals (G : CoalGame ι) : Prop :=
+  ∀ {i : ι} {S T : Finset ι}, S ⊆ T → i ∉ T →
+    G.marginalContribution i S ≤ G.marginalContribution i T
+
+/-- **Convexity → monotone marginals**: in a convex game, the marginal
+contribution of a player to a coalition is weakly increasing as the
+coalition grows. -/
+theorem IsConvex.hasMonotoneMarginals (G : CoalGame ι) (h : G.IsConvex) :
+    G.HasMonotoneMarginals := by
+  intro i S T hST hiT
+  simp only [marginalContribution]
+  -- Apply convexity to the pair A = insert i S, B = T.
+  -- Then A ∪ B = insert i T and A ∩ B = S (since S ⊆ T and i ∉ T).
+  have hiS : i ∉ S := fun hi => hiT (hST hi)
+  have hunion : (insert i S) ∪ T = insert i T := by
+    ext x
+    simp only [Finset.mem_union, Finset.mem_insert]
+    refine ⟨fun h => h.elim (fun h => h.elim Or.inl (fun a => Or.inr (hST a))) Or.inr,
+      fun h => h.elim (fun h => Or.inl (Or.inl h)) Or.inr⟩
+  have hinter : (insert i S) ∩ T = S := by
+    ext x
+    simp only [Finset.mem_inter, Finset.mem_insert]
+    refine ⟨fun ⟨hx, hxT⟩ => hx.elim (fun hxi => absurd (hxi ▸ hxT) hiT) id,
+      fun hxS => ⟨Or.inr hxS, hST hxS⟩⟩
+  have hconvex := h (insert i S) T
+  rw [hunion, hinter] at hconvex
+  linarith
+
+/-- Helper: in a game with monotone marginals, augmenting any coalition `B`
+with a disjoint set `A` is more valuable when starting from a larger
+coalition. Telescoping along `A` gives the inequality used to deduce
+convexity. -/
+private theorem augment_monotone (G : CoalGame ι) (h : G.HasMonotoneMarginals)
+    (T₁ T₂ : Finset ι) (hT : T₁ ⊆ T₂) (A : Finset ι) (hdisj : Disjoint A T₂) :
+    G.v (T₂ ∪ A) - G.v T₂ ≥ G.v (T₁ ∪ A) - G.v T₁ := by
+  induction A using Finset.induction with
+  | empty => simp
+  | insert a A' haA' ih =>
+    have ha_not_T₂ : a ∉ T₂ := by
+      have := Finset.disjoint_left.mp hdisj (Finset.mem_insert_self a A')
+      exact this
+    have ha_not_T₁ : a ∉ T₁ := fun h' => ha_not_T₂ (hT h')
+    have hdisj' : Disjoint A' T₂ :=
+      Finset.disjoint_of_subset_left (Finset.subset_insert a A') hdisj
+    have ha_not_T₂A' : a ∉ T₂ ∪ A' := by
+      simp [ha_not_T₂, haA']
+    have ha_not_T₁A' : a ∉ T₁ ∪ A' := by
+      simp [ha_not_T₁, haA']
+    have hT_ext : T₁ ∪ A' ⊆ T₂ ∪ A' := Finset.union_subset_union_left hT
+    have hMC := h (i := a) hT_ext ha_not_T₂A'
+    simp only [marginalContribution] at hMC
+    have hU₂ : T₂ ∪ insert a A' = insert a (T₂ ∪ A') := by
+      ext x; simp
+    have hU₁ : T₁ ∪ insert a A' = insert a (T₁ ∪ A') := by
+      ext x; simp
+    rw [hU₂, hU₁]
+    have ihA := ih hdisj'
+    linarith
+
+/-- **Monotone marginals → convexity**: the reverse implication, completing
+the equivalence. The proof telescopes marginal contributions along the
+elements of `S \ T`. -/
+theorem HasMonotoneMarginals.isConvex (G : CoalGame ι) (h : G.HasMonotoneMarginals) :
+    G.IsConvex := by
+  intro S T
+  -- Decompose S = (S ∩ T) ∪ (S \ T) and apply augment_monotone with A = S \ T.
+  have hdecomp : (S ∩ T) ∪ (S \ T) = S := by
+    ext x; simp [Finset.mem_inter, Finset.mem_sdiff]; tauto
+  have hsuT : T ∪ (S \ T) = S ∪ T := by
+    ext x
+    simp only [Finset.mem_union, Finset.mem_sdiff]
+    tauto
+  have hsub : S ∩ T ⊆ T := Finset.inter_subset_right
+  have hdisj : Disjoint (S \ T) T := Finset.sdiff_disjoint
+  have key := G.augment_monotone h (S ∩ T) T hsub (S \ T) hdisj
+  rw [hsuT, hdecomp] at key
+  linarith
+
+/-- **Convexity ↔ monotone marginals** (Shapley 1971). -/
+theorem isConvex_iff_hasMonotoneMarginals (G : CoalGame ι) :
+    G.IsConvex ↔ G.HasMonotoneMarginals :=
+  ⟨IsConvex.hasMonotoneMarginals G, HasMonotoneMarginals.isConvex G⟩
+
+/-- The sum of two convex games is convex. -/
+theorem IsConvex.gameAdd {G₁ G₂ : CoalGame ι}
+    (h₁ : G₁.IsConvex) (h₂ : G₂.IsConvex) :
+    (gameAdd G₁ G₂).IsConvex := by
+  intro S T
+  change G₁.v (S ∪ T) + G₂.v (S ∪ T) + (G₁.v (S ∩ T) + G₂.v (S ∩ T)) ≥
+    G₁.v S + G₂.v S + (G₁.v T + G₂.v T)
+  have := h₁ S T
+  have := h₂ S T
+  linarith
+
+/-- A nonnegative scalar multiple of a convex game is convex. -/
+theorem IsConvex.gameScalar {G : CoalGame ι} (h : G.IsConvex)
+    {c : ℝ} (hc : 0 ≤ c) :
+    (gameScalar c G).IsConvex := by
+  intro S T
+  change c * G.v (S ∪ T) + c * G.v (S ∩ T) ≥ c * G.v S + c * G.v T
+  have h_ineq := h S T
+  nlinarith
+
 end CoalGame
 
 end GameTheory
