@@ -362,7 +362,7 @@ noncomputable def toValueProcess
       (by simpa [PMF.mem_support_iff] using hdst)
 
 theorem runDistFrom_eq_run
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {σ : G.LegalBehavioralProfile} (R : OutcomeValue (G := G) σ Ω) :
     ∀ n h,
@@ -397,7 +397,7 @@ theorem runDistFrom_eq_run
 
 /-- FOSG history outcome-closure theorem from an arbitrary prefix history. -/
 theorem map_observe_runDistFrom_eq_value
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {σ : G.LegalBehavioralProfile} (R : OutcomeValue (G := G) σ Ω)
     (n : Nat) (h : G.History) (hn : R.rank h ≤ n) :
@@ -407,7 +407,7 @@ theorem map_observe_runDistFrom_eq_value
 
 /-- FOSG history outcome-closure theorem from the initial history. -/
 theorem map_observe_runDist_eq_value
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {σ : G.LegalBehavioralProfile} (R : OutcomeValue (G := G) σ Ω)
     (n : Nat) (hn : R.rank (History.nil G) ≤ n) :
