@@ -58,12 +58,22 @@ Beyond these specialized structures, the NFG layer carries a
 catalogue of canonical 2-player worked examples:\ Prisoner's
 Dilemma, Matching Pennies, Stag Hunt, Hawk–Dove (Chicken), Battle
 of the Sexes, Dictator Game, Traveler's Dilemma (two-action
-fragment), and Cournot duopoly with three quantities.  Each
-defines an action type with \TT{deriving Fintype, DecidableEq},
-a payoff table by pattern match, and one or two pure-Nash facts
+fragment), Cournot duopoly with three quantities,
+Bertrand price competition with three discrete prices (which has
+both a strict undercut-resistant Nash and a weak price-floor Nash
+under discrete pricing), and a two-game Braess paradox instance
+(\TT{braessRestricted}/\TT{braessAugmented} showing welfare
+strictly decreases when a dominant strategy is added).  Each
+defines an action type with \TT{deriving Fintype, DecidableEq}, a
+payoff table by pattern match, and one or two pure-Nash facts
 discharged by case analysis (\TT{cases i <;> cases a' <;> simp;
-try linarith}).  These serve both as reader-facing examples and
-as smoke tests for the NFG$\to$\KG\ compilation pipeline.
+try linarith}). These serve both as reader-facing examples and as
+smoke tests for the NFG$\to$\KG\ compilation pipeline. The
+Stackelberg leader-follower file additionally carries an
+entry-deterrence instance (\TT{EntryDeterrence.game}) where the
+leader's fight-commitment strictly dominates their
+accommodate-and-Nash payoff of 1, illustrating the abstract
+leader-advantage theorem on a concrete payoff matrix.
 
 The cooperative-flavored game-theoretic models that used to live
 in \TT{Languages/NFG/} — TU coalitional games with the Shapley
@@ -198,11 +208,23 @@ decision nodes for the acting player; the augmentation lifts this
 to all of history space and is the carrier on which the FOSG/EFG
 bridge (\S\ref{sec:languages:bridges}) is most naturally stated.
 
+The EFG \TT{Examples} file carries two canonical sequential games:
+the 2-stage \emph{Centipede game} (Rosenthal 1981; payoffs (1,0)
+/ (0,2) / (3,1) with backward-induction prediction `(p0 takes)`
+leaving the welfare-max (3,1) on the table), and the
+\emph{Ultimatum game} (Güth--Schmittberger--Schwarze 1982; a
+proposer offers one of three splits to a responder who
+accepts/rejects). Each ships with the four `evalPure` outcome
+identities plus the textbook backward-induction comparison
+inequalities; the full
+\TT{EFGGame.IsSubgamePerfectEq} witnesses are not packaged.
+
 \leancorr{\TT{Languages/EFG/} contains \TT{Syntax}, \TT{SOS},
 \TT{Compile}, \TT{CompileObs} (compilation to ObsModelCore for
 Kuhn), \TT{Augmented} (the augmented EFG), \TT{Kuhn},
 \TT{Refinements} (subgame perfection,
-\TT{EFGGame.IsSubgamePerfectEq}), \TT{Examples}, \TT{Tests}.
+\TT{EFGGame.IsSubgamePerfectEq}), \TT{Examples} (binary choice
+plus the centipede and ultimatum), \TT{Tests}.
 Supplement~§4.2.}
 
 \subsection{Multi-agent influence diagrams}
@@ -322,12 +344,22 @@ on top of the multi-round skeleton:
 \item \emph{Repeated games}:\ identical rounds, single payoff
 aggregation function (sum, discounted sum).  This is the carrier
 for the standard formalizations of trigger strategies, tit-for-tat,
-and finite-horizon repeated-game examples.  The infinite discounted
-repeated-game folk theorem is not built through this bounded
-multi-round syntax; it is formalized directly on \TT{KernelGame}
-streams in \TT{Concepts/FolkTheorem.lean}.  The theorem proves
-that every strictly individually rational feasible payoff vector
-is approximated by Nash payoffs of sufficiently patient discounted
+and finite-horizon repeated-game examples.  The bounded
+finite-horizon side records the forward direction of
+\emph{finitely-repeated convergence}:\ if \TT{a} is a stage-game
+Nash, the constant repetition profile is a Nash of the repeated
+game (\TT{constStrategy\_isNash}) and its average payoff equals
+the stage payoff (\TT{avgPayoff\_constStrategy}). The deeper
+reverse direction (under a unique stage Nash, every SPE of the
+repeated game plays the stage Nash every round) requires SPE on
+repeated-game subgames and remains future work.
+
+The infinite discounted repeated-game folk theorem is not built
+through this bounded multi-round syntax; it is formalized
+directly on \TT{KernelGame} streams in
+\TT{Concepts/FolkTheorem.lean}.  The theorem proves that every
+strictly individually rational feasible payoff vector is
+approximated by Nash payoffs of sufficiently patient discounted
 repeated games (\Cref{thm:folk-discounted}).
 
 \item \emph{Stochastic games}~\citep{Shapley1953stochastic}:\

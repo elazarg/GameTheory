@@ -126,7 +126,10 @@ games (the identity allocation), and the 3-player majority game
 as a worked example.  Nash bargaining
 \citep{Nash1950bargaining} is formalized through the IR/Pareto
 characterization, with symmetric and affine-invariant variants;
-stable matching~\citep{GaleShapley1962} is formalized through
+the \emph{egalitarian} bargaining solution (Kalai 1977) is also
+formalized as \TT{IsEgalitarian} with the equal-gain accessor and
+the agreement-with-Nash-on-symmetric-problems sanity check.
+Stable matching~\citep{GaleShapley1962} is formalized through
 \TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} predicates and
 structural lemmas.
 

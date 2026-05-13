@@ -265,12 +265,28 @@ welfare-maximizing profile is Pareto-efficient
 admits both a welfare-maximizing and a Pareto-efficient profile
 (\TT{exists\_welfareMax}, \TT{exists\_paretoEfficient}).
 
+\paragraph{Braess's paradox.}\
+A concrete 2-player witness that adding a strategy can lower the
+Nash welfare lives in \TT{Languages/NFG/Examples.lean}:\
+\TT{braessRestricted} is a 2$\times$2 coordination game with two
+pure Nash at welfare 6, and \TT{braessAugmented} extends both
+players' action sets by a "shortcut" action \TT{c} that strictly
+dominates the original two; the augmented game has the unique
+pure Nash $(\TT{c}, \TT{c})$ with welfare 4. The companion theorem
+\TT{braess\_welfare\_decreases} records the strict inequality. The
+classical 4-edge network instance with congestion-dependent delays
+would compile through the \TT{CongestionGame} infrastructure but
+is not yet packaged.
+
 \leancorr{Welfare quantities and ratios in
 \TT{Concepts/PriceOfAnarchy.lean}
 (\TT{optimalWelfare}, \TT{worstNashWelfare}, \TT{bestNashWelfare},
 \TT{priceOfAnarchy}, \TT{priceOfStability});
 welfare/Pareto bridges in \TT{Concepts/NashPareto.lean} and
-\TT{Concepts/WelfareTheorems.lean}.}
+\TT{Concepts/WelfareTheorems.lean};
+Braess instance in \TT{Languages/NFG/Examples.lean}
+(\TT{braessRestricted}, \TT{braessAugmented},
+\TT{braess\_welfare\_decreases}).}
 
 \subsection{Security strategies and minimax value}
 \label{sec:solution-concepts:security}
@@ -318,6 +334,19 @@ library proves the structural fact that a profile distribution
 $\mu$ has zero average external regret iff it is a CCE, and zero
 average internal regret iff it is a CE — the standard
 regret-equilibrium duality~\citep{HartMasColell2000}.
+
+\paragraph{Savage minimax regret.}\
+A separate, decision-theoretic regret notion (Savage 1951) lives
+in the \TT{Savage} namespace of the same file. Given a finite
+action set $A$ and a finite state space $\Omega$ with utility
+$u : A \times \Omega \to \RR$, the *regret* of action $a$ at state
+$\omega$ is $\mathrm{regret}(a, \omega) = \sup_b u(b, \omega) -
+u(a, \omega)$; the *maximum regret* is the worst case over states;
+a *minimax-regret action* minimizes the maximum regret. The
+library proves that regret is non-negative, equals zero exactly at
+the per-state argmaxes, and that any uniformly best action is
+minimax-regret. Unlike CE/CCE regret these are properties of a
+single decision-maker against Nature, not equilibrium concepts.
 
 \subsection{Approximate equilibria}
 \label{sec:solution-concepts:approx}
@@ -441,6 +470,24 @@ in turn sits in $E$), and is itself common knowledge at the same
 state (positive introspection at the group level, witnessed by the
 same public event).
 
+\paragraph{Aumann's full agreement.}\
+The flagship epistemic-game-theory result built on this
+infrastructure is Aumann's (1976) full agreement: when two agents
+share the same strictly-positive prior and have a common public
+self-evident event $F$ on which each agent's posterior of an event
+$E$ is constant, the two constants must be equal. The proof rests
+on a cell-decomposition lemma (\TT{selfEvident\_sum\_decomp}):\
+a self-evident event is the disjoint union of its contained
+$P$-cells, so any $\mu$-sum over $F$ decomposes into per-cell
+sums. Since the posterior is constant per cell (by the partition
+structure) and constant on $F$ (by hypothesis), every cell-sum is
+the same multiple of its $\mu$-mass, and the two agents both
+recover the marginal $\mu(E \mid F)$. This is the operationally
+useful form of "agents with common knowledge of posteriors must
+agree":\ in any common-knowledge situation about posteriors the
+posteriors are constant on the public event, and the result
+applies.
+
 \emph{Individual rationality}, the second concept, is a
 participation constraint:\ a profile is individually rational for
 player $i$ when $i$'s payoff is at least their security level
@@ -453,5 +500,7 @@ scaffolding for the mechanism-design layer
 \TT{Knows\_not\_Knows} (5), \TT{Knows\_mono}, \TT{Knows\_inter},
 \TT{isSelfEvident\_iff\_Knows\_eq}, \TT{posterior},
 \TT{agree\_to\_disagree}, \TT{mutualKnowledge},
-\TT{CommonKnowledgeAt}, \TT{CommonKnowledgeAt.idem});
+\TT{CommonKnowledgeAt}, \TT{CommonKnowledgeAt.idem},
+\TT{cells\_disjoint}, \TT{selfEvident\_eq\_biUnion\_cells},
+\TT{selfEvident\_sum\_decomp}, \TT{aumann\_full\_agreement});
 \TT{Concepts/IndividualRationality.lean}.}

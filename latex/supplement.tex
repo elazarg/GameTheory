@@ -1036,9 +1036,17 @@ inf over $n$.  \TT{IsNash.isRationalizable} and
 surviving profile (when one exists) is Nash.
 
 \paragraph{Common knowledge.}\
-\TT{Concepts/CommonKnowledge.lean}.  Aumann's common-knowledge
-operator on a finite partition structure
-(\citep{Aumann1976}); used as scaffolding for the mechanism layer.
+\TT{Concepts/CommonKnowledge.lean}.  Partition-based knowledge
+operator \TT{Knows} with the S5 axioms (T, 4, 5), \TT{IsSelfEvident}
+characterised as fixed points, posteriors, \TT{mutualKnowledge}
+and the Aumann public-event \TT{CommonKnowledgeAt}, plus the
+cell-decomposition triple
+(\TT{cells_disjoint},
+\TT{selfEvident_eq_biUnion_cells},
+\TT{selfEvident_sum_decomp}) and Aumann's full agreement
+\TT{aumann_full_agreement}:\ same prior plus self-evident event
+with constant posteriors per agent forces the two constants to
+agree.
 
 % =====================================================================
 \section{Languages}
