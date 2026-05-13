@@ -2357,7 +2357,7 @@ theorem liftReachableHistoryMixedProfile_joint
   rfl
 
 private theorem reachableHistoryPureStepDist_eq_runDistFrom_one
-    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (π : _root_.GameTheory.FOSG.ReachableLegalPureProfile G)
@@ -2450,7 +2450,7 @@ private theorem reachableHistoryPureStepDist_eq_runDistFrom_one
     congr 1
 
 theorem reachableHistoryOutcomeDistPureProfile_eq_runDist
-    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (hLeg : G.LegalObservable) (k : Nat)
     (π : _root_.GameTheory.FOSG.ReachableLegalPureProfile G) :
@@ -2556,7 +2556,7 @@ private theorem reachableHistoryBehavioralJointActionDist_map_val
   exact hmarg i
 
 private theorem reachableHistoryBehavioralStepDist_eq_runDistFrom_one
-    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (βcore : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile)
@@ -2663,7 +2663,7 @@ private theorem reachableHistoryBehavioralStepDist_eq_runDistFrom_one
     rw [dif_pos a.2]
 
 theorem reachableHistoryOutcomeDist_eq_runDist
-    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (hLeg : G.LegalObservable) (k : Nat)
     (βcore : (toReachableHistoryObsModelCore G hLeg).BehavioralProfile)
@@ -3510,7 +3510,7 @@ theorem legalPureMixedProfileRestrictReachable_joint
 /-- Extending the reachable restriction of a total legal pure profile is
 run-equivalent to the original total pure profile. -/
 theorem legalPureProfileRestrictReachable_extend_runDist
-    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (π : G.LegalPureProfile) (k : Nat) :
     G.runDist k
@@ -3530,7 +3530,7 @@ theorem legalPureProfileRestrictReachable_extend_runDist
     (G := G) ((π i).restrictReachable).1 h
 
 theorem legalBehavioralProfileRestrictReachable_extend_runDist
-    [Fintype ι] [Fintype W] [∀ i, Fintype (Option (Act i))]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (β : G.LegalBehavioralProfile) (k : Nat) :
     G.runDist k (legalBehavioralProfileRestrictReachable (G := G) β).extend =
