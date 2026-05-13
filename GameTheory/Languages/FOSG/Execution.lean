@@ -345,44 +345,33 @@ theorem legalBehavioralProfile_jointStepMass_eq_one
     _ = 1 := G.legalBehavioralProfile_legalJointMass_eq_one σ h hterm
 
 /-- One-step next-state law induced by a legal behavioral profile at a
-nonterminal realized history. This exists as a genuine `PMF` exactly because
-legal profiles now place total mass `1` on legal joint moves. -/
+nonterminal realized history. -/
 noncomputable def nextStateLaw
     (G : FOSG ι W Act PrivObs PubObs)
-    [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [∀ i, Fintype (Option (Act i))]
     (σ : G.LegalBehavioralProfile) (h : G.History)
-    (hterm : ¬ G.terminal h.lastState) : PMF W := by
-  classical
-  exact PMF.ofFintype
-    (fun dst => ∑ a : G.LegalAction h.lastState,
-      G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst)
-    (by
-      rw [Finset.sum_comm]
-      exact G.legalBehavioralProfile_jointStepMass_eq_one σ h hterm)
+    (hterm : ¬ G.terminal h.lastState) : PMF W :=
+  (G.legalActionLaw σ h hterm).bind fun a => G.transition h.lastState a
 
 open Classical in
 theorem nextStateLaw_apply
     (G : FOSG ι W Act PrivObs PubObs)
-    [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [∀ i, Fintype (Option (Act i))]
     (σ : G.LegalBehavioralProfile) (h : G.History)
     (hterm : ¬ G.terminal h.lastState) (dst : W) :
     G.nextStateLaw σ h hterm dst =
       ∑ a : G.LegalAction h.lastState,
         G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst := by
-  rw [nextStateLaw, PMF.ofFintype_apply]
+  rw [nextStateLaw, PMF.bind_apply, tsum_fintype]
+  simp [G.legalActionLaw_apply σ h hterm]
 
 theorem nextStateLaw_eq_bind_legalActionLaw
     (G : FOSG ι W Act PrivObs PubObs)
-    [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [∀ i, Fintype (Option (Act i))]
     (σ : G.LegalBehavioralProfile) (h : G.History)
     (hterm : ¬ G.terminal h.lastState) :
     G.nextStateLaw σ h hterm =
-      (G.legalActionLaw σ h hterm).bind (fun a => G.transition h.lastState a) := by
-  classical
-  ext dst
-  rw [G.nextStateLaw_apply σ h hterm dst, PMF.bind_apply]
-  rw [tsum_fintype]
-  simp [G.legalActionLaw_apply σ h hterm]
+      (G.legalActionLaw σ h hterm).bind (fun a => G.transition h.lastState a) := rfl
 
 /-- Two behavioral profiles agree off player `i` if all other players have the
 same behavioral strategy. -/
