@@ -117,7 +117,7 @@ theorem initialSegment_length
 behavioral profile. Terminal histories absorb. -/
 noncomputable def runDistFrom
     (G : FOSG ι W Act PrivObs PubObs)
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) : Nat → G.History → PMF G.History
   | 0, h => PMF.pure h
@@ -131,14 +131,14 @@ noncomputable def runDistFrom
 
 @[simp] theorem runDistFrom_zero
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) (h : G.History) :
     runDistFrom G σ 0 h = PMF.pure h := rfl
 
 @[simp] theorem runDistFrom_succ_terminal
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) (n : Nat) (h : G.History)
     (hterm : G.terminal h.lastState) :
@@ -147,7 +147,7 @@ noncomputable def runDistFrom
 
 @[simp] theorem runDistFrom_terminal
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) (n : Nat) (h : G.History)
     (hterm : G.terminal h.lastState) :
@@ -158,7 +158,7 @@ noncomputable def runDistFrom
 
 @[simp] theorem runDistFrom_succ_nonterminal
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) (n : Nat) (h : G.History)
     (hterm : ¬ G.terminal h.lastState) :
@@ -170,7 +170,7 @@ noncomputable def runDistFrom
 
 theorem runDistFrom_congr
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ τ : G.LegalBehavioralProfile)
     (hσ : ∀ (h : G.History) i, σ.toProfile i (h.playerView i) =
@@ -193,7 +193,7 @@ theorem runDistFrom_congr
 
 theorem runDistFrom_bind_runDistFrom
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) (m n : Nat) (h : G.History) :
     (History.runDistFrom G σ m h).bind (fun h' => History.runDistFrom G σ n h') =
@@ -221,7 +221,7 @@ theorem runDistFrom_bind_runDistFrom
 
 theorem runDistFrom_succ_active_empty
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) (n : Nat) (h : G.History)
     (hterm : ¬ G.terminal h.lastState)
@@ -466,14 +466,14 @@ theorem runDistFrom_eq_zero_of_exactHorizon_length_ne
 history. -/
 noncomputable def runDist
     (G : FOSG ι W Act PrivObs PubObs)
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (k : Nat) (σ : G.LegalBehavioralProfile) : PMF G.History :=
   History.runDistFrom G σ k (History.nil G)
 
 theorem runDist_congr
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (k : Nat) (σ τ : G.LegalBehavioralProfile)
     (hσ : ∀ (h : G.History) i, σ.toProfile i (h.playerView i) =
@@ -483,7 +483,7 @@ theorem runDist_congr
 
 @[simp] theorem runDist_zero
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) :
     G.runDist 0 σ = PMF.pure (History.nil G) := rfl
