@@ -545,7 +545,7 @@ theorem runDist_support_isTerminal_of_boundedHorizon
 open Classical in
 theorem runDistFrom_eq_zero_of_terminal_not_prefix
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (σ : G.LegalBehavioralProfile) :
     ∀ (n : Nat) (pref target : G.History),
@@ -571,15 +571,15 @@ theorem runDistFrom_eq_zero_of_terminal_not_prefix
         rw [PMF.bind_apply, tsum_fintype]
         refine Finset.sum_eq_zero ?_
         intro a _
-        rw [PMF.bind_apply, tsum_fintype]
+        rw [PMF.bind_apply]
         suffices hinner :
-            ∑ dst : W,
+            ∑' dst : W,
               (G.transition pref.lastState a) dst *
                 History.runDistFrom G σ n (pref.extendByOutcome a dst) target = 0 by
           rw [hinner]
           simp
-        refine Finset.sum_eq_zero ?_
-        intro dst _
+        refine (ENNReal.tsum_eq_zero).2 ?_
+        intro dst
         by_cases hsupp : G.transition pref.lastState a dst = 0
         · simp [hsupp]
         · have hnot' : ¬ (pref.extendByOutcome a dst).IsPrefix target := by
