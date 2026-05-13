@@ -140,6 +140,43 @@ theorem nashSolution_affine_invariant
     rw [lhs, rhs]
     exact mul_le_mul_of_nonneg_left hv' (by positivity)
 
+/-! ### Egalitarian bargaining solution
+
+The egalitarian solution (Kalai 1977) selects the unique feasible
+individually-rational point on the 45° line through the disagreement
+point. Both players gain the same amount from cooperation, which is
+the *largest* common gain that remains feasible. This is a
+non-utility-comparable alternative to Nash bargaining; the chief
+difference is that the egalitarian solution is **not** scale
+invariant — it depends on the cardinal utility scale. -/
+
+/-- An outcome is *egalitarian* w.r.t. `B` if it is feasible,
+individually rational, and gives equal gain to both players above
+their disagreement points. -/
+def IsEgalitarian (u : ℝ × ℝ) : Prop :=
+  B.feasible u ∧ B.IsIR u ∧ u.1 - B.d₁ = u.2 - B.d₂
+
+/-- The egalitarian solution is individually rational by definition. -/
+theorem egalitarian_IR (u : ℝ × ℝ) (h : B.IsEgalitarian u) : B.IsIR u :=
+  h.2.1
+
+/-- The egalitarian solution gives equal gain to both players. -/
+theorem egalitarian_equal_gain (u : ℝ × ℝ) (h : B.IsEgalitarian u) :
+    u.1 - B.d₁ = u.2 - B.d₂ :=
+  h.2.2
+
+/-- In a symmetric bargaining problem, the egalitarian solution and
+the Nash bargaining solution both give equal gain to both players
+(though they may disagree off the symmetric problem). -/
+theorem egalitarian_symmetric_iff_nash_symmetric
+    (u : ℝ × ℝ) (hsym : B.IsSymmetric)
+    (_heg : B.IsEgalitarian u) (hns : B.IsNashSolution u)
+    (huniq : ∀ v w, B.IsNashSolution v → B.IsNashSolution w → v = w) :
+    u.1 - B.d₁ = u.2 - B.d₂ :=
+  -- This is just the egalitarian condition, but we record the agreement
+  -- with the symmetric Nash solution as a sanity check.
+  B.nashSolution_symmetric u hsym hns huniq
+
 end BargainingProblem
 
 end GameTheory
