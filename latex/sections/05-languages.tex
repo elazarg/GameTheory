@@ -338,25 +338,21 @@ structure imposed externally as analysis-layer concerns.
 The library's compilation $\MR \compileTo \KG$ generates the
 outcome kernel by folding the round list and threading the state
 through the chain of observations and transitions.  A bounded
-horizon ensures termination.  Two specializations are formalized
-on top of the multi-round skeleton:
+horizon ensures termination.  Around this layer the library also
+provides two standard variants:
 \begin{itemize}\itemsep2pt
-\item \emph{Repeated games}:\ identical rounds, single payoff
-aggregation function (sum, discounted sum).  This is the carrier
-for the standard formalizations of trigger strategies, tit-for-tat,
-and finite-horizon repeated-game examples.  The bounded
-finite-horizon side records the forward direction of
-\emph{finitely-repeated convergence}:\ if \TT{a} is a stage-game
-Nash, the constant repetition profile is a Nash of the repeated
-game (\TT{constStrategy\_isNash}) and its average payoff equals
-the stage payoff (\TT{avgPayoff\_constStrategy}). The deeper
-reverse direction (under a unique stage Nash, every SPE of the
-repeated game plays the stage Nash every round) requires SPE on
-repeated-game subgames and remains future work.
+\item \emph{Repeated games}:\ identical rounds with public
+observation of past action profiles.  \TT{RepeatedGame.lean}
+provides an infinite-horizon discounted repeated-game helper:
+strategies map finite public histories to the next stage action,
+payoffs are normalized discounted sums, and
+\TT{constStrategy\_isDiscountedNash} records the forward direction
+that a stage-game Nash action profile remains Nash under constant
+repetition, assuming bounded stage payoffs.
 
 The infinite discounted repeated-game folk theorem is not built
-through this bounded multi-round syntax; it is formalized
-directly on public \TT{KernelGame} profile streams in
+through the finite-list protocol syntax; it is formalized directly
+on public \TT{KernelGame} profile streams in
 \TT{Concepts/FolkTheorem.lean}.  In the main theorem the repeated
 game is taken over the mixed extension, so period actions are
 publicly observed mixed stage strategies.  In that observable

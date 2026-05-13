@@ -1271,8 +1271,9 @@ by folding the round list and threading the state through the
 chain of observations and transitions.
 
 \Variants
-\TT{Languages/MultiRound/RepeatedGame.lean} restricts to identical
-rounds; \TT{StochasticGame.lean}~\citep{Shapley1953stochastic}
+\TT{Languages/MultiRound/RepeatedGame.lean} gives the
+infinite-horizon public-action specialization with identical rounds
+and discounted payoffs; \TT{StochasticGame.lean}~\citep{Shapley1953stochastic}
 specializes the transition to be itself stochastic and
 state-conditioned.  \TT{CompileObs.lean} and its linearizations
 (\TT{CompileObsLin.lean}, \TT{CompileObsLinAdequacy.lean},
