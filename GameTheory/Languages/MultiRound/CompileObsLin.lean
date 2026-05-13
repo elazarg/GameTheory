@@ -77,7 +77,7 @@ abbrev RoundView (G : MultiRoundGame n S V A Sig) := Fin G.rounds.length × V
 /-- Player-local observation in the linearized model.
 Only the currently acting player has a nontrivial observation, which includes
 the round number. -/
-def linObserve (G : MultiRoundGame n S V A Sig) [DecidableEq (Fin n)]
+def linObserve (G : MultiRoundGame n S V A Sig)
     (i : Fin n) : LinConfig G → Option (RoundView G)
   | .signal _ _ => none
   | .terminal _ => none
@@ -121,7 +121,7 @@ noncomputable def advancePlayerTurn (G : MultiRoundGame n S V A Sig)
 /-- Extract the effective `Option A` action for the acting player from a
 dependent action tuple at a `playerTurn` configuration. The `cast` resolves
 the dependent type to `Option A`. -/
-def extractPlayerAction [DecidableEq (Fin n)] (G : MultiRoundGame n S V A Sig)
+def extractPlayerAction (G : MultiRoundGame n S V A Sig)
     (k : Nat) (s : S) (sig : Fin n → Sig) (p : Fin n) (accActs : Fin n → Option A)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i (.playerTurn k s sig p accActs)))
     : Option A :=
@@ -141,7 +141,7 @@ def extractPlayerAction [DecidableEq (Fin n)] (G : MultiRoundGame n S V A Sig)
   player or to `applyTransition`.
 - **Apply transition**: fire the round's transition, advance to next round or terminal.
 - **Terminal**: absorbing. -/
-noncomputable def linConfigStepPMF [DecidableEq (Fin n)] (G : MultiRoundGame n S V A Sig)
+noncomputable def linConfigStepPMF (G : MultiRoundGame n S V A Sig)
     (cfg : LinConfig G)
     (acts : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg)) :
     PMF (LinConfig G) :=
@@ -186,7 +186,7 @@ action sub-phases. At each step, at most one player has a nontrivial action.
 - **Observations**: `Option (RoundView G)` (nontrivial only for the acting player)
 - **Actions**: `LinAct (RoundView G) A` (nontrivial only when active)
 - **InfoState**: identity — observation = info state -/
-noncomputable def compileObsModelCoreLin [DecidableEq (Fin n)]
+noncomputable def compileObsModelCoreLin
     (G : MultiRoundGame n S V A Sig) :
     ObsModelCore (Fin n) (LinConfig G)
       (fun _ => Option (RoundView G))
@@ -199,7 +199,7 @@ noncomputable def compileObsModelCoreLin [DecidableEq (Fin n)]
   }
 
 /-- Abbreviation for the linearized compiled model. -/
-noncomputable abbrev compiledLinObs [DecidableEq (Fin n)]
+noncomputable abbrev compiledLinObs
     (G : MultiRoundGame n S V A Sig) :=
   compileObsModelCoreLin G
 
@@ -207,17 +207,17 @@ noncomputable abbrev compiledLinObs [DecidableEq (Fin n)]
 -- Fintype instances for the compiled model
 -- ============================================================================
 
-noncomputable instance compiledLinObs_infoState_fintype [DecidableEq (Fin n)]
+noncomputable instance compiledLinObs_infoState_fintype
     [Fintype V] (G : MultiRoundGame n S V A Sig) (i : Fin n) :
     Fintype ((compiledLinObs G).InfoState i) :=
   inferInstanceAs (Fintype (Option (Fin G.rounds.length × V)))
 
-noncomputable instance compiledLinObs_infoState_decidableEq [DecidableEq (Fin n)]
+noncomputable instance compiledLinObs_infoState_decidableEq
     [DecidableEq V] (G : MultiRoundGame n S V A Sig) (i : Fin n) :
     DecidableEq ((compiledLinObs G).InfoState i) :=
   inferInstanceAs (DecidableEq (Option (Fin G.rounds.length × V)))
 
-noncomputable instance compiledLinObs_localStrategy_fintype [DecidableEq (Fin n)]
+noncomputable instance compiledLinObs_localStrategy_fintype
     [DecidableEq V] [Fintype V] [Fintype A] (G : MultiRoundGame n S V A Sig) (i : Fin n) :
     Fintype ((compiledLinObs G).LocalStrategy i) :=
   Pi.instFintype
@@ -230,7 +230,7 @@ section Properties
 
 /-- At every playerTurn state, only the acting player has a nontrivial
 observation — all others see `none`. -/
-theorem linObserve_ne_acting [DecidableEq (Fin n)] {G : MultiRoundGame n S V A Sig}
+theorem linObserve_ne_acting {G : MultiRoundGame n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n}
     {accActs : Fin n → Option A} {i : Fin n} (hi : i ≠ p) :
     linObserve G i (.playerTurn k s sig p accActs) = none := by
@@ -285,7 +285,6 @@ nonzero probability to the same successor, the step probabilities are equal.
 - **PlayerTurn**: `advancePlayerTurn` is `PMF.pure`; equal at `t` by purity
 - **Terminal**: absorbing, action-independent -/
 private theorem linConfigStepPMF_mass_invariant (G : MultiRoundGame n S V A Sig)
-    [DecidableEq (Fin n)]
     (cfg : LinConfig G)
     (acts₁ acts₂ : (i : Fin n) → LinAct (RoundView G) A (linObserve G i cfg))
     (t : LinConfig G)
@@ -306,7 +305,7 @@ private theorem linConfigStepPMF_mass_invariant (G : MultiRoundGame n S V A Sig)
 /-- The linearized model satisfies `StepMassInvariant`.
 Signal phases ignore actions entirely. PlayerTurn phases are deterministic
 (the step is `PMF.pure` of a single successor). Terminal is absorbing. -/
-theorem stepMassInvariant_compiledLin [DecidableEq (Fin n)] [Fintype A]
+theorem stepMassInvariant_compiledLin [Fintype A]
     (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepMassInvariant (compiledLinObs G) := by
   intro ss t π₁ π₂ h₁ h₂
@@ -345,7 +344,7 @@ private theorem linConfigStepPMF_playerTurn_congr
     exact extractPlayerAction_congr G k s sig p accActs acts₁ acts₂ hp
   | none => rfl
 
-private theorem linAct_eq_punit_of_ne [DecidableEq (Fin n)]
+private theorem linAct_eq_punit_of_ne
     {G : MultiRoundGame n S V A Sig}
     {k : Nat} {s : S} {sig : Fin n → Sig} {p : Fin n} {accActs : Fin n → Option A}
     {i : Fin n} (hi : i ≠ p)
@@ -368,7 +367,7 @@ private theorem cast_dep_apply {α : Type} {P : α → Type}
 
 /-- Closed form of pure one-step execution in the linearized compilation.
 Eliminates all dependent-type casts from `pureStep_eq`. -/
-theorem pureStep_compiledLin_eq [DecidableEq (Fin n)] [Fintype A]
+theorem pureStep_compiledLin_eq [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (ss : List (LinConfig G)) :
     (compiledLinObs G).pureStep π ss =
@@ -382,7 +381,7 @@ theorem pureStep_compiledLin_eq [DecidableEq (Fin n)] [Fintype A]
 /-- Two profiles producing the same observation-dependent actions at a given
 configuration have equal pure steps. Takes the last state as a parameter
 to avoid matching issues with `lastState ss`. -/
-private theorem pureStep_congr_compiledLin [DecidableEq (Fin n)] [Fintype A]
+private theorem pureStep_congr_compiledLin [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π₁ π₂ : (compiledLinObs G).PureProfile) (ss : List (LinConfig G))
     (cfg : LinConfig G) (hlast : (compiledLinObs G).lastState ss = cfg)
@@ -395,7 +394,7 @@ private theorem pureStep_congr_compiledLin [DecidableEq (Fin n)] [Fintype A]
 At each step, at most one player has a nontrivial action (the acting player
 at a `playerTurn` phase). Changing any other player's strategy does not
 affect the step, so the per-player update condition holds trivially. -/
-theorem stepSupportFactorization_compiledLin [DecidableEq (Fin n)] [Fintype A]
+theorem stepSupportFactorization_compiledLin [Fintype A]
     (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepSupportFactorization (compiledLinObs G) := by
   intro ss t π₀ π h₀
@@ -477,7 +476,7 @@ open Math.ParameterizedChain in
 /-- Under the linearized model, if `πᵢ` agrees with `(π i)` at every intermediate
 observation along the trace, then `pureRun` under the player-i update equals the
 original `pureRun`. -/
-theorem pureRun_update_eq_of_obs_agree [DecidableEq (Fin n)] [Fintype A]
+theorem pureRun_update_eq_of_obs_agree [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
@@ -527,7 +526,7 @@ theorem pureRun_update_eq_of_obs_agree [DecidableEq (Fin n)] [Fintype A]
       rw [hpre_eq, hstep_eq]
 
 theorem lastState_take_eq_getElem
-    [DecidableEq (Fin n)] {G : MultiRoundGame n S V A Sig}
+    {G : MultiRoundGame n S V A Sig}
     (ss : List (LinConfig G)) (j : Nat) (hj : j + 1 < ss.length) :
     (compiledLinObs G).lastState (ss.take (j + 1)) = ss[j] := by
   simp [ObsModelCore.lastState, List.getLast?_eq_getElem?,
@@ -540,7 +539,7 @@ player-i update, then `πᵢ` must agree with `(π i)` at all observations along
 the trace. At non-i steps this is trivial (PUnit). At i-steps, the step is
 deterministic and injective in the action, so both hitting the same target forces
 the actions to agree. -/
-theorem pureRun_update_nonzero_agree [DecidableEq (Fin n)] [Fintype A]
+theorem pureRun_update_nonzero_agree [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
@@ -644,7 +643,7 @@ end ViewRound
 
 section Profiles
 
-variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
+variable {G : MultiRoundGame n S V A Sig}
 
 /-- Lift a protocol-level pure strategy to a compiled local strategy.
 At `some (k, v)` (active), uses the strategy's action on `v`; at `none`

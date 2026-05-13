@@ -89,7 +89,6 @@ end KuhnCore
 
 section KuhnLinearized
 
-variable [DecidableEq (Fin n)]
 variable (G : MultiRoundGame n S V A Sig)
 
 /-- The compiled linearized ObsModelCore for a sequential protocol. -/
@@ -203,7 +202,6 @@ theorem kuhn_mixed_to_behavioral_native
 -- Fully native M→B: stated entirely on MultiRoundGame types
 -- ============================================================================
 
-omit [DecidableEq (Fin n)] in
 /-- **Kuhn M→B (fully native)**: under full recall and view-determines-round,
 every product mixed strategy profile can be realized by a behavioral strategy
 profile with the same outcome distribution.
@@ -270,7 +268,6 @@ theorem kuhn_behavioral_to_mixed_compiledLin
   ObsModelCore.kuhn_behavioral_to_mixed
     (noNontrivialInfoStateRepeat_compiledLin G) β k
 
-omit [DecidableEq (Fin n)] in
 /-- **Kuhn B→M (fully native)**: under `ViewDeterminesRound`, every behavioral
 strategy profile can be realized by a product mixed strategy with the same
 outcome distribution.

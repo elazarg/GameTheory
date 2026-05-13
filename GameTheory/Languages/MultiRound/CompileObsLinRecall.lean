@@ -29,7 +29,6 @@ section OLFBridge
 
 open Math.ParameterizedChain
 
-variable [DecidableEq (Fin n)]
 variable [Fintype A] [Nonempty A]
 variable (G : MultiRoundGame n S V A Sig)
 
@@ -609,7 +608,7 @@ end OLFBridge
 
 section VRDAgreement
 
-variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
+variable {G : MultiRoundGame n S V A Sig}
 variable [Fintype A] [Nonempty A] [Nonempty (Fin G.rounds.length)]
 
 /- Under `ViewDeterminesRound`, the lifted VRD-descended profile agrees with `β` at all
@@ -664,7 +663,6 @@ end VRDAgreement
 
 section PureVRDDescent
 
-variable [DecidableEq (Fin n)]
 variable [Fintype A] [Nonempty A]
 variable {G : MultiRoundGame n S V A Sig}
 
