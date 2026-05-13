@@ -2864,7 +2864,7 @@ An independent mixed profile over legal reachable pure strategies is realized
 by a legal reachable behavioral profile with the same finite-horizon
 distribution over FOSG histories. -/
 theorem reachable_mixed_to_legal_behavioral_runDist
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (μ : ReachableMixedProfile (G := G))
@@ -2887,7 +2887,7 @@ theorem reachable_mixed_to_legal_behavioral_runDist
 open Classical in
 /-- Native finite-horizon law for the canonical legal reachable M→B witness. -/
 theorem reachableMixedToLegalBehavioral_runDist
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (μ : ReachableMixedProfile (G := G))
@@ -2921,7 +2921,7 @@ component by the induced mixed pure strategy and realize the resulting mixed
 profile by the canonical reachable M→B witness. This is the constructive
 source-side law used by the intended unilateral hybrid theorem. -/
 theorem reachable_mixed_to_canonical_behavioral_unilateral_deviation_runDist
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (k : Nat)
@@ -3132,7 +3132,7 @@ The mixed pure deviation is explicitly
 their original mixed components, while the target side updates only `who`'s
 canonical behavioral realization. -/
 theorem reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (k : Nat)
@@ -3203,7 +3203,7 @@ theorem reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
 open Classical in
 /-- Existential form of `reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq`. -/
 theorem reachable_mixed_to_behavioral_unilateral_deviation_runDist
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (k : Nat)
@@ -3451,7 +3451,7 @@ noncomputable def reachableKuhnCorrelatedDeviationSimulation
         (devH (reachableMixedToLegalBehavioral (G := G) hLeg μ who))
 
 theorem reachable_mixed_to_legal_behavioral_mapped_runDist
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable)
     (μ : ReachableMixedProfile (G := G))
@@ -3551,7 +3551,7 @@ FOSG histories. Internally the proof restricts to reachable information states,
 uses `reachable_mixed_to_legal_behavioral_runDist`, and extends the behavioral
 witness back to the ordinary total FOSG strategy space. -/
 theorem mixed_legalPure_to_legalBehavioral_runDist
-    [Fintype ι] [Fintype W] [Finite G.History]
+    [Fintype ι] [Finite G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     [∀ i, Finite (G.LegalPureStrategy i)]
     (hLeg : G.LegalObservable)
