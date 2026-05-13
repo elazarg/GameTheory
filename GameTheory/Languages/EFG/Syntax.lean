@@ -19,6 +19,10 @@ Design:
 - Chance nodes use `Fin k` with a proof `0 < k`
 - Distributional semantics only (`evalDist`); EU is external via `KernelGame`
 
+`InfoStructure` includes finite infosets because this EFG API exposes finite
+pure-strategy spaces and mixed profiles over them.  The tree evaluator itself
+only consumes behavioral profiles.
+
 -/
 
 namespace EFG
