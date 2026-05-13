@@ -247,5 +247,126 @@ theorem CommonKnowledgeAt.idem {ι : Type} {P : ι → InfoPartition Ω}
   rw [mem_CommonKnowledge_iff]
   exact ⟨F, hFE, htF, hse⟩
 
+/-! ### Cell decomposition and Aumann's full agreement theorem
+
+For a self-evident event `F`, the partition `P` decomposes `F` into
+disjoint cells (the equivalence classes induced by `cell`). Summing any
+function over `F` therefore equals the sum over the distinct cells of
+sums-over-each-cell, which is the technical ingredient for Aumann's
+full agreement: if two agents with the same prior have constant
+posteriors on a common self-evident event `F`, those constants must
+both equal the marginal conditional probability `P(E | F)` and hence
+each other. -/
+
+omit [DecidableEq Ω] in
+/-- Cells of a partition are pairwise disjoint: if `cell s ≠ cell t`,
+the two cells share no element. -/
+theorem cells_disjoint (P : InfoPartition Ω) {s t : Ω}
+    (hne : P.cell s ≠ P.cell t) :
+    Disjoint (P.cell s) (P.cell t) := by
+  rw [Finset.disjoint_left]
+  intro x hxs hxt
+  apply hne
+  rw [← P.coherent s x hxs, P.coherent t x hxt]
+
+/-- A self-evident event decomposes as the disjoint union of its
+contained cells: every state in `F` lives in `cell s` for some `s ∈ F`,
+and every such cell is fully contained in `F`. -/
+theorem selfEvident_eq_biUnion_cells (P : InfoPartition Ω)
+    {F : Finset Ω} (hF : IsSelfEvident P F) :
+    F = (F.image P.cell).biUnion id := by
+  ext t
+  simp only [Finset.mem_biUnion, Finset.mem_image, id]
+  refine ⟨fun htF => ?_, ?_⟩
+  · refine ⟨P.cell t, ⟨t, htF, rfl⟩, P.reflexive t⟩
+  · rintro ⟨C, ⟨s, hsF, rfl⟩, htC⟩
+    exact hF s hsF htC
+
+/-- Sum decomposition over the cells of a self-evident event:\ summing
+any real-valued function over `F` equals the sum over distinct cells of
+the sum over each cell. -/
+theorem selfEvident_sum_decomp (P : InfoPartition Ω)
+    {F : Finset Ω} (hF : IsSelfEvident P F) (f : Ω → ℝ) :
+    ∑ t ∈ F, f t = ∑ C ∈ F.image P.cell, ∑ t ∈ C, f t := by
+  -- Establish disjointness of distinct cells in `F.image P.cell`.
+  have hdisj : (F.image P.cell : Set (Finset Ω)).PairwiseDisjoint id := by
+    intro C₁ hC₁ C₂ hC₂ hne
+    simp only [Finset.coe_image, Set.mem_image, Finset.mem_coe] at hC₁ hC₂
+    obtain ⟨s₁, _, rfl⟩ := hC₁
+    obtain ⟨s₂, _, rfl⟩ := hC₂
+    exact cells_disjoint P (fun h => hne h)
+  conv_lhs => rw [selfEvident_eq_biUnion_cells P hF]
+  rw [Finset.sum_biUnion hdisj]
+  rfl
+
+/-- **Aumann (1976) full agreement, on a public self-evident event**:\
+if two agents share the same prior, both have a self-evident event `F`,
+and each agent's posterior of `E` is constant on `F`, then the two
+constant posteriors are equal.
+
+This is the operationally-useful form of Aumann's theorem: in a
+common-knowledge situation about posteriors (which would force them to
+be constant on the public event), agents cannot agree to disagree. -/
+theorem aumann_full_agreement
+    (μ : Ω → ℝ) (hμ_pos : ∀ s, μ s > 0)
+    (P₁ P₂ : InfoPartition Ω) (E : Finset Ω) {F : Finset Ω}
+    (hFne : F.Nonempty)
+    (hF1 : IsSelfEvident P₁ F) (hF2 : IsSelfEvident P₂ F)
+    {p₁ p₂ : ℝ}
+    (hp1 : ∀ s ∈ F, posterior μ P₁ E s = p₁)
+    (hp2 : ∀ s ∈ F, posterior μ P₂ E s = p₂) :
+    p₁ = p₂ := by
+  -- For each agent, show p_i = (∑_{F ∩ E} μ) / (∑_F μ).
+  have hF_pos : 0 < ∑ t ∈ F, μ t :=
+    Finset.sum_pos (fun t _ => hμ_pos t) hFne
+  -- Per-cell: posterior = p_i implies the per-cell sum identity.
+  have h_cell : ∀ {P : InfoPartition Ω} {p : ℝ}
+      (hF : IsSelfEvident P F)
+      (hp : ∀ s ∈ F, posterior μ P E s = p)
+      {C : Finset Ω}, C ∈ F.image P.cell →
+      ∑ t ∈ C ∩ E, μ t = p * ∑ t ∈ C, μ t := by
+    intro P p hF hp C hC
+    rw [Finset.mem_image] at hC
+    obtain ⟨s, hsF, hCs⟩ := hC
+    have hpost_s := hp s hsF
+    -- posterior at s = (∑_{cell s ∩ E} μ) / (∑_{cell s} μ) = p
+    -- So ∑_{cell s ∩ E} μ = p · ∑_{cell s} μ.
+    have hcell_pos : 0 < ∑ t ∈ P.cell s, μ t :=
+      Finset.sum_pos (fun t _ => hμ_pos t) ⟨s, P.reflexive s⟩
+    have : (∑ t ∈ P.cell s ∩ E, μ t) / ∑ t ∈ P.cell s, μ t = p := hpost_s
+    field_simp at this
+    rw [← hCs]; linarith
+  -- Sum over cells in F: ∑_{F ∩ E} μ = p_i · ∑_F μ for each i.
+  have h_total : ∀ {P : InfoPartition Ω} {p : ℝ}
+      (hF : IsSelfEvident P F)
+      (hp : ∀ s ∈ F, posterior μ P E s = p),
+      ∑ t ∈ F ∩ E, μ t = p * ∑ t ∈ F, μ t := by
+    intro P p hF hp
+    -- Decompose ∑_F μ via cells.
+    rw [selfEvident_sum_decomp P hF μ, Finset.mul_sum]
+    -- Decompose ∑_{F ∩ E} μ via cells.
+    have hFE : F ∩ E = (F.image P.cell).biUnion (fun C => C ∩ E) := by
+      conv_lhs => rw [selfEvident_eq_biUnion_cells P hF]
+      rw [Finset.biUnion_inter]
+      rfl
+    rw [hFE]
+    have hdisj : (F.image P.cell : Set (Finset Ω)).PairwiseDisjoint
+        (fun C => C ∩ E) := by
+      intro C₁ hC₁ C₂ hC₂ hne
+      simp only [Finset.coe_image, Set.mem_image, Finset.mem_coe] at hC₁ hC₂
+      obtain ⟨s₁, _, rfl⟩ := hC₁
+      obtain ⟨s₂, _, rfl⟩ := hC₂
+      exact (cells_disjoint P (fun h => hne h)).mono
+        Finset.inter_subset_left Finset.inter_subset_left
+    rw [Finset.sum_biUnion hdisj]
+    refine Finset.sum_congr rfl (fun C hC => ?_)
+    exact h_cell hF hp hC
+  have h1 := h_total hF1 hp1
+  have h2 := h_total hF2 hp2
+  -- Both p_i · (∑ F μ) equal ∑_{F ∩ E} μ; divide.
+  have : p₁ * ∑ t ∈ F, μ t = p₂ * ∑ t ∈ F, μ t := by
+    rw [← h1, ← h2]
+  exact mul_right_cancel₀ hF_pos.ne' this
+
 end GameTheory
 
