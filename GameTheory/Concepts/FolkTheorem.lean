@@ -9,14 +9,31 @@ import GameTheory.Concepts.MixedExtension
 import GameTheory.Concepts.SecurityStrategy
 
 /-!
-# Folk Theorem Machinery
+# Observable-Mixed-Action Discounted Folk Theorem Machinery
 
-This file prepares the payoff-set side of the Folk Theorem for kernel games:
-feasible payoffs, security vectors, individually-rational payoff regions, and
-basic convex/topological facts about those regions.
+This file develops the payoff-set and repeated-game ingredients used for a
+discounted Folk theorem over `KernelGame`s:
+feasible payoffs, opponent minmax punishment values, individually-rational
+payoff regions, finite-cycle approximation, periodic discounted payoffs, and
+trigger strategies.
 
-It also proves the discounted repeated-game Folk Theorem target from the
-finite-cycle approximation and trigger-strategy machinery below.
+The repeated-game semantics in this file are intentionally direct.  A period
+action profile is a `Profile G`, public histories record the realized sequence
+of such profiles, and a repeated strategy chooses its next `G.Strategy i` from
+that public profile history.  For a normal-form stage game this is the usual
+perfect-public-monitoring action-history model.  For a `KernelGame` obtained by
+compiling a richer language, `G.Strategy i` may already be a contingent
+strategy or policy; then this construction repeats and publicly observes those
+semantic stage strategies, not the source-language internal histories.
+
+The main theorem below is stated for the repeated game over `G.mixedExtension`.
+Thus each period action is a mixed stage strategy, `PMF (G.Strategy i)`, and the
+mixed-action profile itself is publicly observed.  This is an observable
+mixed-action formulation of the discounted Folk theorem.  It deliberately avoids
+adding sampled action histories, private randomization histories, or public
+correlation devices to the language layer.  Within that model, every strictly
+individually-rational feasible payoff of the original stage game is approached
+by Nash payoffs of sufficiently patient discounted repeated games.
 -/
 
 noncomputable section
@@ -394,12 +411,18 @@ theorem exists_pos_margin_of_mem_strictIndividuallyRationalPayoffSet
     ∃ η : ℝ, 0 < η ∧ ∀ i, r i + η ≤ v i :=
   exists_pos_margin_of_mem_strictReservationSet hv.2
 
-/-- Public histories of realized stage profiles before period `t`. -/
+/-- Public histories of realized period profiles before period `t`.
+
+This is a perfect-public-monitoring profile-history model.  In ordinary
+normal-form stage games these profiles are action profiles.  In compiled
+`KernelGame`s they may instead be profiles of semantic strategies or policies.
+In the final theorem, where `G` is a mixed extension, these public observations
+are mixed-action profiles. -/
 abbrev PublicHistory (G : KernelGame ι) (t : ℕ) : Type :=
   Fin t → Profile G
 
-/-- A discounted repeated-game strategy: choose a stage-game action after every
-finite public history. -/
+/-- A discounted repeated-game strategy: choose the next period's `G.Strategy i`
+after every finite public profile history. -/
 abbrev DiscountedRepeatedStrategy (G : KernelGame ι) (i : ι) : Type :=
   (t : ℕ) → G.PublicHistory t → G.Strategy i
 
@@ -439,13 +462,20 @@ decreasing_by exact k.isLt
   funext i
   simp [discountedRepeatedPlay, periodicDiscountedRepeatedProfile]
 
-/-- Normalized discounted average payoff in the repeated game. -/
+/-- Normalized discounted average payoff in the repeated game.
+
+The definition is total for any real `δ`, as is customary in Lean, but the
+mathematical discounted-payoff interpretation and all convergence/Nash lemmas
+use the explicit hypotheses `0 ≤ δ` and `δ < 1`. -/
 def discountedAveragePayoff (G : KernelGame ι) (δ : ℝ)
     (σ : G.DiscountedRepeatedProfile) (who : ι) : ℝ :=
   (1 - δ) * ∑' t : ℕ, δ ^ t * G.eu (G.discountedRepeatedPlay σ t) who
 
 /-- Normalized discounted continuation payoff of an explicit stage-profile
-stream, starting at period `start`. -/
+stream, starting at period `start`.
+
+As with `discountedAveragePayoff`, this is intended as a discounted payoff under
+the side conditions `0 ≤ δ` and `δ < 1`. -/
 def discountedContinuationPayoff (G : KernelGame ι) (δ : ℝ)
     (play : ℕ → Profile G) (start : ℕ) (who : ι) : ℝ :=
   (1 - δ) * ∑' k : ℕ, δ ^ k * G.eu (play (start + k)) who
@@ -648,7 +678,12 @@ theorem discountedRepeatedPlay_update_stationaryDiscountedRepeatedProfile
     simp [Function.update]
   · simp [discountedRepeatedPlay, stationaryDiscountedRepeatedProfile, Function.update, hi]
 
-/-- Nash equilibrium of the normalized discounted repeated game. -/
+/-- Nash equilibrium of the normalized discounted repeated game.
+
+The equilibrium concept allows a unilateral deviation in the repeated-strategy
+space: a player may replace their whole history-dependent repeated strategy.
+Results using this predicate supply the discount-factor assumptions needed for
+the payoff comparison. -/
 def IsDiscountedRepeatedNash (G : KernelGame ι) [DecidableEq ι] (δ : ℝ)
     (σ : G.DiscountedRepeatedProfile) : Prop :=
   ∀ who (dev : G.DiscountedRepeatedStrategy who),
@@ -1021,7 +1056,14 @@ def triggerStatus (G : KernelGame ι) (path : ℕ → Profile G) :
             if h : hist ⟨t, Nat.lt_succ_self t⟩ = path t then none
             else some (G.profileMismatchPlayer h)
 
-/-- The one-period profile prescribed by the trigger automaton. -/
+/-- The one-period profile prescribed by the trigger automaton.
+
+In punishment state, all players other than the identified deviator play the
+chosen punishment opponent profile.  The identified deviator's own coordinate is
+filled by an arbitrary action, because unilateral-deviation comparisons replace
+that coordinate by the deviator's strategy.  This is enough for the Nash trigger
+argument below; it is not meant to encode a sequentially credible punishment
+assessment for every off-path subgame. -/
 def triggerProfileAt (G : KernelGame ι) [DecidableEq ι]
     [∀ i, Nonempty (G.Strategy i)] (path : ℕ → Profile G)
     (punish : ∀ who, G.OpponentProfile who) (t : ℕ)
@@ -1763,16 +1805,25 @@ def ApproximableByDiscountedRepeatedNashPayoffs (G : KernelGame ι) [DecidableEq
       ∃ w : Payoff ι, G.IsDiscountedRepeatedNashPayoff δ w ∧
         ∀ who, |w who - v who| < ε
 
-/-- Approximate discounted Folk Theorem target.
+/-- Approximate discounted Folk theorem for the observable mixed-action repeated
+game.
 
 This is stated for the infinite discounted repeated game, not the existing
-finite-horizon multi-round language. The repeated game is taken over the mixed
-extension, so period actions are observable mixed stage-game actions. A later
-behavioral model with sampled histories can refine this target without changing
-the payoff-set side below.
+finite-horizon multi-round language.  The repeated game is taken over
+`G.mixedExtension`, so a period action for player `i` is a mixed stage strategy
+`PMF (G.Strategy i)`, and public histories observe the mixed-action profile
+itself.
 
-The conclusion is approximate: strictly individually-rational feasible payoff
-vectors are approached by Nash payoffs as `δ → 1`. -/
+This is a genuine discounted Folk theorem for that public mixed-action model:
+given any payoff vector `v` that is feasible in the original stage game and
+strictly above the mixed-extension opponent-minmax vector, Nash payoff vectors
+of the mixed-action repeated game approach `v` as `δ → 1`.
+
+What is not modeled here is the sampled-history behavioral implementation where
+players privately randomize, realized pure actions or public signals are
+observed, and strategies condition on those sampled histories.  Such a layer can
+refine the interface later; the payoff-set approximation and trigger-incentive
+argument here are isolated from that extra sampling semantics. -/
 theorem discounted_folk_theorem_approx (G : KernelGame ι) [Fintype ι] [DecidableEq ι]
     [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)] [Finite G.Outcome]
     {v : Payoff ι}

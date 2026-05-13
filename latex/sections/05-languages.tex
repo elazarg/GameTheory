@@ -356,11 +356,13 @@ repeated-game subgames and remains future work.
 
 The infinite discounted repeated-game folk theorem is not built
 through this bounded multi-round syntax; it is formalized
-directly on \TT{KernelGame} streams in
-\TT{Concepts/FolkTheorem.lean}.  The theorem proves that every
-strictly individually rational feasible payoff vector is
-approximated by Nash payoffs of sufficiently patient discounted
-repeated games (\Cref{thm:folk-discounted}).
+directly on public \TT{KernelGame} profile streams in
+\TT{Concepts/FolkTheorem.lean}.  In the main theorem the repeated
+game is taken over the mixed extension, so period actions are
+publicly observed mixed stage strategies.  In that observable
+mixed-action model, every strictly individually rational feasible
+payoff vector is approximated by Nash payoffs of sufficiently
+patient discounted repeated games (\Cref{thm:folk-discounted}).
 
 \item \emph{Stochastic games}~\citep{Shapley1953stochastic}:\
 rounds chosen by state, with a stochastic transition.  Bounded
