@@ -322,28 +322,6 @@ theorem legalActionLaw_eq_pure_noop_of_active_empty
       (σ i).2 h hi
   simp [a₀, noopAction, hnone]
 
-open Classical in
-theorem legalBehavioralProfile_jointStepMass_eq_one
-    (G : FOSG ι W Act PrivObs PubObs)
-    [∀ i, Fintype (Option (Act i))] [Fintype W]
-    (σ : G.LegalBehavioralProfile) (h : G.History)
-    (hterm : ¬ G.terminal h.lastState) :
-    ∑ a : G.LegalAction h.lastState,
-      ∑ dst : W, G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst = 1 := by
-  classical
-  calc
-    ∑ a : G.LegalAction h.lastState,
-        ∑ dst : W, G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst
-      = ∑ a : G.LegalAction h.lastState, G.jointActionDist σ h a.1 := by
-          refine Finset.sum_congr rfl ?_
-          intro a _
-          rw [← Finset.mul_sum]
-          have htrans : ∑ dst : W, (G.transition h.lastState a) dst = 1 := by
-            have := PMF.tsum_coe (G.transition h.lastState a)
-            rwa [tsum_fintype] at this
-          simp [htrans]
-    _ = 1 := G.legalBehavioralProfile_legalJointMass_eq_one σ h hterm
-
 /-- One-step next-state law induced by a legal behavioral profile at a
 nonterminal realized history. -/
 noncomputable def nextStateLaw
@@ -364,6 +342,18 @@ theorem nextStateLaw_apply
         G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst := by
   rw [nextStateLaw, PMF.bind_apply, tsum_fintype]
   simp [G.legalActionLaw_apply σ h hterm]
+
+theorem legalBehavioralProfile_jointStepMass_eq_one
+    (G : FOSG ι W Act PrivObs PubObs)
+    [∀ i, Fintype (Option (Act i))]
+    (σ : G.LegalBehavioralProfile) (h : G.History)
+    (hterm : ¬ G.terminal h.lastState) :
+    ∑' dst : W,
+      ∑ a : G.LegalAction h.lastState,
+        G.jointActionDist σ h a.1 * (G.transition h.lastState a) dst = 1 := by
+  have hmass := PMF.tsum_coe (G.nextStateLaw σ h hterm)
+  change (∑' dst : W, G.nextStateLaw σ h hterm dst) = 1 at hmass
+  simpa [G.nextStateLaw_apply σ h hterm] using hmass
 
 theorem nextStateLaw_eq_bind_legalActionLaw
     (G : FOSG ι W Act PrivObs PubObs)
