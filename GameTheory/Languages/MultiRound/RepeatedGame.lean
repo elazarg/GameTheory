@@ -92,6 +92,23 @@ theorem totalPayoff_constStrategy (R : RepeatedGame ι) (a : ∀ i, R.Act i) (wh
   rw [Finset.sum_const, Finset.card_fin, nsmul_eq_mul]
 
 open Classical in
+/-- Average payoff under a constant strategy equals the stage payoff —
+the time-average converges trivially when each round plays the same
+action. This is the analog of "play stage Nash every round → per-round
+payoff is the stage Nash payoff", the canonical Finitely Repeated Game
+Convergence statement for the forward direction. -/
+theorem avgPayoff_constStrategy (R : RepeatedGame ι) (a : ∀ i, R.Act i)
+    (hpos : 0 < R.rounds) (who : ι) :
+    R.avgPayoff (R.constStrategy a) who = R.stageUtil a who := by
+  simp only [avgPayoff, if_neg hpos.ne']
+  rw [show (∑ t : Fin R.rounds, R.stageUtil (R.play (R.constStrategy a) t) who) =
+      R.rounds * R.stageUtil a who by
+    rw [Finset.sum_congr rfl (fun t _ => by rw [play_constStrategy])]
+    rw [Finset.sum_const, Finset.card_fin, nsmul_eq_mul]]
+  have hne : (R.rounds : ℝ) ≠ 0 := by exact_mod_cast hpos.ne'
+  field_simp
+
+open Classical in
 /-- In a finitely repeated game, if the stage game has a unique Nash equilibrium `σ*`,
     then playing `σ*` at every round is a Nash equilibrium of the repeated game.
 
