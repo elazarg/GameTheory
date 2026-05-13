@@ -15,7 +15,11 @@ re-exported here.
 
 ## Headline theorems
 
-Native FOSG semantics (`FOSG/Compile`):
+Native FOSG terminal-law semantics (`FOSG/Compile`):
+- `FOSG.toKernelGame_outcomeKernel`
+- `FOSG.toKernelGame_eu_eq`
+
+Bounded/exact-horizon sufficient conditions for native terminal-law semantics:
 - `FOSG.toKernelGameOfBoundedHorizon_outcomeKernel`
 - `FOSG.toKernelGameOfBoundedHorizon_eu_eq`
 
