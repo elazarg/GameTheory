@@ -32,6 +32,11 @@ Formal proofs of standard results in finite game theory:
   deviations
 - **Correlated equilibrium existence** — every finite game has a correlated
   equilibrium
+- **Folk theorem (discounted, approximate)** — every strictly
+  individually-rational feasible payoff vector of the mixed extension is
+  approachable by Nash equilibrium payoffs of the infinite discounted repeated
+  game as δ → 1, via an explicit trigger-strategy construction with finite
+  cycle approximation and minmax punishment
 - **MAID → EFG perfect recall preservation** — a MAID with perfect recall
   produces an EFG tree with perfect recall, using DAG topological ordering
 
