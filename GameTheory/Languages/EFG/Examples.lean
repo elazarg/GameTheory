@@ -140,4 +140,104 @@ theorem centipede_p0_prefers_take_given_p1_takes :
     centipede.utility CentipedeOutcome.p1Takes cent_p0 := by
   simp [centipede, cent_p0]
 
+/-! ## Ultimatum game (3-action proposer, accept/reject responder)
+
+Güth, Schmittberger & Schwarze (1982): one player (proposer) offers a
+split of a fixed pie; the other (responder) either accepts (the split
+happens) or rejects (both get 0). Backward induction predicts the
+proposer keeps almost everything, since the responder weakly prefers
+any non-negative offer to nothing.
+
+We give the proposer three coarse offers — keepAll, half, giveAll —
+so the responder has three distinct decision points. Each subtree is a
+binary accept/reject choice for the responder. -/
+
+/-- Information structure for the ultimatum game:\ both players use
+`Fin 3` as their infoset type (the same shape across players keeps
+Fintype synthesis cheap). The proposer's arity is 3 at every infoset
+(but only one is actually reached), and the responder's arity is 2
+(accept/reject). -/
+def ultimatumInfo : InfoStructure where
+  n := 2
+  Infoset := fun _ => Fin 3
+  arity := fun p _ => if p.val = 0 then 3 else 2
+  arity_pos := by intro p _; split_ifs <;> decide
+
+def ult_p0 : ultimatumInfo.Player := ⟨0, by decide⟩
+def ult_p1 : ultimatumInfo.Player := ⟨1, by decide⟩
+
+/-- Outcomes of the ultimatum game: each of three offers paired with
+accept/reject. -/
+inductive UltimatumOutcome where
+  | keepAllAccept | keepAllReject
+  | halfAccept    | halfReject
+  | giveAllAccept | giveAllReject
+deriving DecidableEq, Repr
+
+/-- The ultimatum tree:\ proposer (at infoset 0) chooses one of three
+offers; in each case the responder (at the corresponding infoset)
+chooses accept (action 0) or reject (action 1). -/
+def ultimatumTree : GameTree ultimatumInfo UltimatumOutcome :=
+  .decision (p := ult_p0) (0 : Fin 3)
+    (fun a =>
+      .decision (p := ult_p1) (a : Fin 3)
+        (fun b =>
+          match a.val, b.val with
+          | 0, 0 => .terminal UltimatumOutcome.keepAllAccept
+          | 0, _ => .terminal UltimatumOutcome.keepAllReject
+          | 1, 0 => .terminal UltimatumOutcome.halfAccept
+          | 1, _ => .terminal UltimatumOutcome.halfReject
+          | 2, 0 => .terminal UltimatumOutcome.giveAllAccept
+          | 2, _ => .terminal UltimatumOutcome.giveAllReject
+          | _, _ => .terminal UltimatumOutcome.keepAllReject))
+
+/-- The ultimatum game: proposer offers, responder accepts/rejects.
+Accept payoffs follow the offer; reject gives (0, 0). -/
+def ultimatum : EFGGame where
+  inf := ultimatumInfo
+  Outcome := UltimatumOutcome
+  tree := ultimatumTree
+  utility := fun o p =>
+    match o, p.val with
+    -- proposer (p.val = 0):
+    | UltimatumOutcome.keepAllAccept,  0 => 10
+    | UltimatumOutcome.keepAllReject,  0 => 0
+    | UltimatumOutcome.halfAccept,     0 => 5
+    | UltimatumOutcome.halfReject,     0 => 0
+    | UltimatumOutcome.giveAllAccept,  0 => 0
+    | UltimatumOutcome.giveAllReject,  0 => 0
+    -- responder (p.val ≠ 0):
+    | UltimatumOutcome.keepAllAccept,  _ => 0
+    | UltimatumOutcome.keepAllReject,  _ => 0
+    | UltimatumOutcome.halfAccept,     _ => 5
+    | UltimatumOutcome.halfReject,     _ => 0
+    | UltimatumOutcome.giveAllAccept,  _ => 10
+    | UltimatumOutcome.giveAllReject,  _ => 0
+
+/-- The responder weakly prefers to accept any non-negative offer.
+For the *half* offer this is strict (5 > 0); for `keepAll` the
+responder is indifferent (both 0 = 0), illustrating the textbook
+subtlety that the SPE relies on tie-breaking. -/
+theorem ultimatum_responder_strict_half :
+    ultimatum.utility UltimatumOutcome.halfAccept ult_p1 >
+    ultimatum.utility UltimatumOutcome.halfReject ult_p1 := by
+  simp [ultimatum, ult_p1]
+
+theorem ultimatum_responder_strict_giveAll :
+    ultimatum.utility UltimatumOutcome.giveAllAccept ult_p1 >
+    ultimatum.utility UltimatumOutcome.giveAllReject ult_p1 := by
+  simp [ultimatum, ult_p1]
+
+/-- Conditional on acceptance, the proposer strictly prefers
+`keepAll` to `half`, and `half` to `giveAll` — the SPE-driving
+backward-induction inequalities. -/
+theorem ultimatum_proposer_prefers_keepAll :
+    ultimatum.utility UltimatumOutcome.keepAllAccept ult_p0 >
+    ultimatum.utility UltimatumOutcome.halfAccept ult_p0 ∧
+    ultimatum.utility UltimatumOutcome.halfAccept ult_p0 >
+    ultimatum.utility UltimatumOutcome.giveAllAccept ult_p0 := by
+  refine ⟨?_, ?_⟩
+  · simp [ultimatum, ult_p0]; norm_num
+  · simp [ultimatum, ult_p0]
+
 end GameTheory.EFG.Examples
