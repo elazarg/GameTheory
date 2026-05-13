@@ -25,7 +25,6 @@ variable {ι W : Type} [DecidableEq ι] [Fintype ι]
 variable {Act : ι → Type} [∀ i, Fintype (Option (Act i))]
 variable {PrivObs : ι → Type} {PubObs : Type}
 variable (G : FOSG ι W Act PrivObs PubObs)
-variable [Fintype W]
 variable [DecidablePred G.terminal]
 
 /-- The canonical bridge execution state is a native FOSG history.
