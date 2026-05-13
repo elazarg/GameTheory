@@ -76,4 +76,88 @@ theorem noSwapRegret_imp_noExternalRegret {μ : PMF (Profile G)}
 
 end KernelGame
 
+/-! ## Savage minimax-regret decision rule
+
+A decision-theoretic regret notion (Savage 1951): a single decision
+maker picks an action `a : A` knowing one of finitely many states
+`ω : Ω` obtains. The *regret* of `a` at `ω` is what the agent would
+have foregone relative to the best fixed action against `ω`:
+`regret(a, ω) = max_b u(b, ω) - u(a, ω)`. The *minimax-regret rule*
+selects an action minimizing the worst-case regret.
+
+This is not a game-theoretic equilibrium notion but a decision
+criterion under uncertainty about the state of nature; we record it
+here for symmetry with the equilibrium-style regrets above. -/
+
+namespace Savage
+
+variable {A Ω : Type} [Fintype A] [Fintype Ω] [Nonempty A]
+
+/-- Best attainable utility against state `ω` over the finite action
+set `A` (a finite maximum). -/
+noncomputable def bestUtility (u : A → Ω → ℝ) (ω : Ω) : ℝ :=
+  Finset.univ.sup' (Finset.univ_nonempty (α := A)) (fun a => u a ω)
+
+/-- *Savage regret* of action `a` against state `ω`: how much utility
+the decision maker foregoes by choosing `a` rather than the best
+action for `ω`. -/
+noncomputable def regret (u : A → Ω → ℝ) (a : A) (ω : Ω) : ℝ :=
+  bestUtility u ω - u a ω
+
+omit [Fintype Ω] in
+theorem regret_nonneg (u : A → Ω → ℝ) (a : A) (ω : Ω) :
+    0 ≤ regret u a ω := by
+  simp only [regret, sub_nonneg, bestUtility]
+  exact Finset.le_sup' (fun a => u a ω) (Finset.mem_univ a)
+
+omit [Fintype Ω] in
+theorem regret_eq_zero_iff_best (u : A → Ω → ℝ) (a : A) (ω : Ω) :
+    regret u a ω = 0 ↔ u a ω = bestUtility u ω := by
+  unfold regret
+  constructor
+  · intro h; linarith
+  · intro h; linarith
+
+/-- *Worst-case regret* (max over states) of action `a`. -/
+noncomputable def maxRegret [Nonempty Ω] (u : A → Ω → ℝ) (a : A) : ℝ :=
+  Finset.univ.sup' (Finset.univ_nonempty (α := Ω)) (fun ω => regret u a ω)
+
+/-- An action is *minimax-regret* if it minimizes the worst-case
+regret over states. -/
+def IsMinimaxRegret [Nonempty Ω] (u : A → Ω → ℝ) (a : A) : Prop :=
+  ∀ b : A, maxRegret u a ≤ maxRegret u b
+
+/-- An action with zero regret at every state (a *uniformly best*
+action) is minimax-regret. -/
+theorem isMinimaxRegret_of_uniformlyBest [Nonempty Ω] (u : A → Ω → ℝ) (a : A)
+    (h : ∀ ω, u a ω = bestUtility u ω) :
+    IsMinimaxRegret u a := by
+  intro b
+  have ha_zero : maxRegret u a = 0 := by
+    simp only [maxRegret, regret]
+    apply le_antisymm
+    · apply Finset.sup'_le
+      intro ω _
+      simp [h ω]
+    · have : (0 : ℝ) ≤ bestUtility u (Classical.arbitrary Ω) - u a (Classical.arbitrary Ω) := by
+        simp [h]
+      have hpos := regret_nonneg u a (Classical.arbitrary Ω)
+      have := Finset.le_sup' (fun ω => bestUtility u ω - u a ω) (Finset.mem_univ
+        (Classical.arbitrary Ω))
+      simp only [regret] at hpos
+      have h_zero_at : bestUtility u (Classical.arbitrary Ω) -
+          u a (Classical.arbitrary Ω) = 0 := by
+        rw [h]; ring
+      linarith
+  have hb_nn : 0 ≤ maxRegret u b := by
+    simp only [maxRegret]
+    have h_some : (0 : ℝ) ≤ regret u b (Classical.arbitrary Ω) :=
+      regret_nonneg u b _
+    have := Finset.le_sup' (fun ω => regret u b ω) (Finset.mem_univ
+      (Classical.arbitrary Ω))
+    linarith
+  rw [ha_zero]; exact hb_nn
+
+end Savage
+
 end GameTheory
