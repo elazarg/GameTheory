@@ -365,7 +365,7 @@ private theorem lastState_snoc [DecidableEq (Fin n)]
     (compiledLinObs G).lastState (ss ++ [t]) = t := by
   simp [ObsModelCore.lastState, List.getLast?_append_of_ne_nil _ (List.cons_ne_nil t [])]
 
-theorem runDistPure_bind_evalFromCfg [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+theorem runDistPure_bind_evalFromCfg [DecidableEq (Fin n)] [Fintype A]
     (σ : PureProfile n V A) (k : Nat) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
         (fun ss => evalFromCfg G σ ((compiledLinObs G).lastState ss)) =
@@ -569,7 +569,7 @@ private theorem PMF.bind_congr_support {α β : Type*} (p : PMF α) (f g : α �
   · rw [PMF.mem_support_iff, not_not] at ha; simp [ha]
 
 /-- After `k ≥ rounds.length * (n+1)` steps, all reachable last states are done. -/
-private theorem isDone_of_reachable [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+private theorem isDone_of_reachable [DecidableEq (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (σ : PureProfile n V A) (k : Nat) (ss : List (LinConfig G))
     (hss : ss ∈ ((compiledLinObs G).runDistPure k (liftPureProfile σ)).support) :
@@ -620,7 +620,7 @@ private theorem isDone_of_reachable [DecidableEq (Fin n)] [Fintype (Fin n)] [Fin
 `liftPureProfile σ` for enough steps, and extracting the terminal state, gives
 the same distribution as `MultiRoundGame.eval G σ`. -/
 theorem runDistPure_eq_eval (G : MultiRoundGame n S V A Sig)
-    [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+    [DecidableEq (Fin n)] [Fintype A]
     (σ : PureProfile n V A) (k : Nat) (hk : k ≥ G.rounds.length * (n + 2)) :
     ((compiledLinObs G).runDistPure k (liftPureProfile σ)).bind
         (fun ss => PMF.pure ((compiledLinObs G).lastState ss).state) =
@@ -657,7 +657,7 @@ noncomputable def resolveActionsMixed
     PMF.pure accActs
   termination_by (n - pVal)
 
-private theorem resolveActionsMixed_gen [Fintype (Fin n)]
+private theorem resolveActionsMixed_gen
     (σ : BehavioralProfile n V A) (r : Round n S V A Sig)
     (s : S) (sig : Fin n → Sig) (pVal : Nat) (accActs : Fin n → Option A) :
     resolveActionsMixed σ r s sig pVal accActs =
@@ -721,7 +721,7 @@ private theorem resolveActionsMixed_gen [Fintype (Fin n)]
 
 /-- Resolving from player 0 with default actions equals the joint behavioral
 sampling `pmfPi (fun i => σ i (r.view i s (sig i)))`. -/
-theorem resolveActionsMixed_eq_pmfPi [Fintype (Fin n)]
+theorem resolveActionsMixed_eq_pmfPi
     (σ : BehavioralProfile n V A) (r : Round n S V A Sig)
     (s : S) (sig : Fin n → Sig) :
     resolveActionsMixed σ r s sig 0 (fun _ => none) =
@@ -795,7 +795,7 @@ end BehavioralAdequacy
 section BehavioralReachability
 
 variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
-variable [Fintype (Fin n)] [Fintype A]
+variable [Fintype A]
 
 /-- Any config reachable via `stepDist` is in the support of `linConfigStepPMF`
 for some action choice. -/
@@ -850,7 +850,7 @@ end BehavioralReachability
 section BehavioralAdequacyStep
 
 variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
-variable [Fintype (Option A)] [Fintype (Fin n)] [Fintype A]
+variable [Fintype (Option A)] [Fintype A]
 
 private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
     (σ : BehavioralProfile n V A) (ss : List (LinConfig G)) :
@@ -926,7 +926,7 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
           Round.evalMixed, PMF.bind_bind]
         congr 1; funext sig'
         conv_rhs => rw [PMF.bind_map]; simp only [Function.comp_def]
-        rw [resolveActionsMixed_eq_pmfPi]; convert rfl using 3
+        rw [resolveActionsMixed_eq_pmfPi]
       case isFalse hn =>
         rw [PMF.bind_map]
         simp only [Function.comp_def, evalFromCfgMixed, hr, hdrop, evalRoundsMixed_cons,

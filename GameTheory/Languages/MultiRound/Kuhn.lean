@@ -89,7 +89,7 @@ end KuhnCore
 
 section KuhnLinearized
 
-variable [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable [DecidableEq (Fin n)]
 variable (G : MultiRoundGame n S V A Sig)
 
 /-- The compiled linearized ObsModelCore for a sequential protocol. -/

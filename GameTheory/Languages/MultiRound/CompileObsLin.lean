@@ -306,7 +306,7 @@ private theorem linConfigStepPMF_mass_invariant (G : MultiRoundGame n S V A Sig)
 /-- The linearized model satisfies `StepMassInvariant`.
 Signal phases ignore actions entirely. PlayerTurn phases are deterministic
 (the step is `PMF.pure` of a single successor). Terminal is absorbing. -/
-theorem stepMassInvariant_compiledLin [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+theorem stepMassInvariant_compiledLin [DecidableEq (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepMassInvariant (compiledLinObs G) := by
   intro ss t π₁ π₂ h₁ h₂
@@ -368,7 +368,7 @@ private theorem cast_dep_apply {α : Type} {P : α → Type}
 
 /-- Closed form of pure one-step execution in the linearized compilation.
 Eliminates all dependent-type casts from `pureStep_eq`. -/
-theorem pureStep_compiledLin_eq [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+theorem pureStep_compiledLin_eq [DecidableEq (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (ss : List (LinConfig G)) :
     (compiledLinObs G).pureStep π ss =
@@ -382,7 +382,7 @@ theorem pureStep_compiledLin_eq [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype
 /-- Two profiles producing the same observation-dependent actions at a given
 configuration have equal pure steps. Takes the last state as a parameter
 to avoid matching issues with `lastState ss`. -/
-private theorem pureStep_congr_compiledLin [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+private theorem pureStep_congr_compiledLin [DecidableEq (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π₁ π₂ : (compiledLinObs G).PureProfile) (ss : List (LinConfig G))
     (cfg : LinConfig G) (hlast : (compiledLinObs G).lastState ss = cfg)
@@ -395,7 +395,7 @@ private theorem pureStep_congr_compiledLin [DecidableEq (Fin n)] [Fintype (Fin n
 At each step, at most one player has a nontrivial action (the acting player
 at a `playerTurn` phase). Changing any other player's strategy does not
 affect the step, so the per-player update condition holds trivially. -/
-theorem stepSupportFactorization_compiledLin [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+theorem stepSupportFactorization_compiledLin [DecidableEq (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig) :
     ObsModelCore.StepSupportFactorization (compiledLinObs G) := by
   intro ss t π₀ π h₀
@@ -477,7 +477,7 @@ open Math.ParameterizedChain in
 /-- Under the linearized model, if `πᵢ` agrees with `(π i)` at every intermediate
 observation along the trace, then `pureRun` under the player-i update equals the
 original `pureRun`. -/
-theorem pureRun_update_eq_of_obs_agree [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+theorem pureRun_update_eq_of_obs_agree [DecidableEq (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
@@ -540,7 +540,7 @@ player-i update, then `πᵢ` must agree with `(π i)` at all observations along
 the trace. At non-i steps this is trivial (PUnit). At i-steps, the step is
 deterministic and injective in the action, so both hitting the same target forces
 the actions to agree. -/
-theorem pureRun_update_nonzero_agree [DecidableEq (Fin n)] [Fintype (Fin n)] [Fintype A]
+theorem pureRun_update_nonzero_agree [DecidableEq (Fin n)] [Fintype A]
     (G : MultiRoundGame n S V A Sig)
     (π : (compiledLinObs G).PureProfile) (i : Fin n)
     (πᵢ : (compiledLinObs G).LocalStrategy i)
@@ -753,7 +753,7 @@ noncomputable def liftMixedProfile
 
 /-- The joint product of lifted mixed profiles equals the pushforward of the native
 joint product through `liftPureProfile`. -/
-theorem liftMixedProfile_joint [Fintype (Fin n)]
+theorem liftMixedProfile_joint
     (μ : (i : Fin n) → PMF (PureStrategy V A)) :
     Math.PMFProduct.pmfPi (liftMixedProfile (G := G) μ) =
       Math.ProbabilityMassFunction.pushforward

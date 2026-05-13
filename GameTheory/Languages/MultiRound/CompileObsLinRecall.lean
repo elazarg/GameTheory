@@ -29,13 +29,13 @@ section OLFBridge
 
 open Math.ParameterizedChain
 
-variable [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable [DecidableEq (Fin n)]
 variable [Fintype A] [Nonempty A]
 variable (G : MultiRoundGame n S V A Sig)
 
 /- `linObserve G i cfg = some obs` implies cfg is a playerTurn for player i
 at a valid round, and extracts the state, signals, and accumulated actions. -/
-omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [Fintype A] [Nonempty A] in
 theorem linObserve_some_playerTurn (cfg : LinConfig G) (i : Fin n)
     (obs : RoundView G)
     (h : linObserve G i cfg = some obs) :
@@ -63,7 +63,7 @@ theorem linObserve_some_playerTurn (cfg : LinConfig G) (i : Fin n)
     · simp at h
 
 /- `linObserve G i cfg = some obs` implies `cfg` is not done. -/
-omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [Fintype A] [Nonempty A] in
 private theorem not_isDone_of_linObserve_some
     (cfg : LinConfig G) (i : Fin n) (obs : RoundView G)
     (h : linObserve G i cfg = some obs) : ¬ cfg.isDone G := by
@@ -75,7 +75,7 @@ private theorem not_isDone_of_linObserve_some
   exact Option.some_ne_none _
 
 /- Phase of a config where `linObserve G i cfg = some (⟨r, hr⟩, v)`. -/
-omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [Fintype A] [Nonempty A] in
 private theorem phase_of_linObserve_some
     (cfg : LinConfig G) (i : Fin n) (r : Fin G.rounds.length) (v : V)
     (h : linObserve G i cfg = some (r, v)) :
@@ -209,7 +209,7 @@ private theorem phase_eq_index
 
 /- A config with phase `r*(n+2) + i.val + 1` (where `r < G.rounds.length` and `i < n`)
 is a `playerTurn` for player `i` at round `r`, so `linObserve G i` returns `some`. -/
-omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [Fintype A] [Nonempty A] in
 private theorem linObserve_of_phase_eq
     (cfg : LinConfig G) (p : Fin n)
     (r : Nat) (hr : r < G.rounds.length)
@@ -450,7 +450,7 @@ private theorem fullRecall_view_action_match
   · intro o ho; subst ho; exact haction_match
 
 /- projectStates for the compiled model equals the last observation. -/
-omit [Fintype (Fin n)] [Fintype A] [Nonempty A] in
+omit [Fintype A] [Nonempty A] in
 theorem projectStates_eq_lastObs
     (i : Fin n) (ss : List (LinConfig G)) (hne : ss ≠ []) :
     (compiledLinObs G).projectStates i ss =
@@ -609,7 +609,7 @@ end OLFBridge
 
 section VRDAgreement
 
-variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable {G : MultiRoundGame n S V A Sig} [DecidableEq (Fin n)]
 variable [Fintype A] [Nonempty A] [Nonempty (Fin G.rounds.length)]
 
 /- Under `ViewDeterminesRound`, the lifted VRD-descended profile agrees with `β` at all
@@ -664,7 +664,7 @@ end VRDAgreement
 
 section PureVRDDescent
 
-variable [DecidableEq (Fin n)] [Fintype (Fin n)]
+variable [DecidableEq (Fin n)]
 variable [Fintype A] [Nonempty A]
 variable {G : MultiRoundGame n S V A Sig}
 
