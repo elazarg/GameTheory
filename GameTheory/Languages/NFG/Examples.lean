@@ -518,6 +518,76 @@ theorem braess_welfare_decreases :
         (fun _ : Bool => BraessAAction.c) false) := by
   simp [braessRestricted, braessAugmented]; norm_num
 
+/-! ## Bertrand Competition (3-price version)
+
+Bertrand (1883): two firms simultaneously set prices for a
+homogeneous good; the lower-priced firm captures the entire market,
+ties split it. With marginal cost `c = 1` and discrete price
+choices `{1, 2, 3}`, the per-firm profit at `(p_i, p_j)` is
+
+  - `p_i - 1` if `p_i < p_j` (undercut and capture all demand),
+  - `(p_i - 1) / 2` if `p_i = p_j` (split the market),
+  - `0` if `p_i > p_j` (priced out).
+
+In the continuous-price version, the unique Nash drives both prices
+to marginal cost. The discrete version is multi-equilibrium:
+`(2, 2)` is a *strict* Nash (deviations strictly lose customer or
+strictly forgo margin), while `(1, 1)` is *weak* — undercutting is
+impossible at the price floor and overcutting is payoff-equivalent
+(both yield 0). We prove both Nash facts. -/
+
+/-- Bertrand price choices. -/
+inductive BertrandPrice where
+  | p1 | p2 | p3
+deriving DecidableEq, Repr, Fintype
+
+/-- Numeric value of a price. -/
+def BertrandPrice.toReal : BertrandPrice → ℝ
+  | p1 => 1 | p2 => 2 | p3 => 3
+
+open BertrandPrice in
+/-- Per-firm Bertrand profit table given marginal cost `c = 1`. -/
+noncomputable def bertrandProfit : BertrandPrice → BertrandPrice → ℝ
+  | p1, p1 => 0
+  | p1, p2 => 0       -- price-floor undercut: revenue 0
+  | p1, p3 => 0
+  | p2, p1 => 0       -- priced out
+  | p2, p2 => 1/2     -- shared monopoly profit at p=2
+  | p2, p3 => 1       -- undercuts p3, captures market at p=2
+  | p3, p1 => 0
+  | p3, p2 => 0
+  | p3, p3 => 1       -- shared at p=3
+
+/-- The Bertrand duopoly NFG. -/
+noncomputable def bertrandDuopoly : NFGGame Bool (fun _ => BertrandPrice) where
+  Outcome := ∀ _ : Bool, BertrandPrice
+  outcome := id
+  utility s p :=
+    if p then bertrandProfit (s true) (s false)
+    else bertrandProfit (s false) (s true)
+
+/-- Both firms playing `p2` (the strict undercut-resistant Nash). -/
+def bertrand_p2_p2 : StrategyProfile (fun _ : Bool => BertrandPrice) :=
+  fun _ => BertrandPrice.p2
+
+/-- Both firms playing `p1` (the weak competitive-floor Nash). -/
+def bertrand_p1_p1 : StrategyProfile (fun _ : Bool => BertrandPrice) :=
+  fun _ => BertrandPrice.p1
+
+/-- `(p2, p2)` is a Nash equilibrium of the Bertrand duopoly. -/
+theorem bertrand_p2_is_nash : IsNashPure bertrandDuopoly bertrand_p2_p2 := by
+  intro i a'
+  cases i <;> cases a' <;>
+    (simp [bertrandDuopoly, bertrand_p2_p2, bertrandProfit, deviate, Function.update];
+     try linarith)
+
+/-- `(p1, p1)` is a (weak) Nash equilibrium: at the price floor,
+undercutting is impossible and overcutting yields zero (no profit). -/
+theorem bertrand_p1_is_nash : IsNashPure bertrandDuopoly bertrand_p1_p1 := by
+  intro i a'
+  cases i <;> cases a' <;>
+    simp [bertrandDuopoly, bertrand_p1_p1, bertrandProfit, deviate, Function.update]
+
 /-! ## Distributional API examples -/
 
 open GameTheory
