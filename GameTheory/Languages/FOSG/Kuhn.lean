@@ -3267,7 +3267,7 @@ noncomputable def reachableMixedToLegalBehavioralStrategy
   simp
 
 noncomputable def reachableMixedPureGameFormAtHorizon
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (k : Nat) : GameForm ι where
   Strategy := fun i => PMF (G.ReachableLegalPureStrategy i)
@@ -3277,7 +3277,7 @@ noncomputable def reachableMixedPureGameFormAtHorizon
       (fun π => G.runDist k (G.legalPureToBehavioral π.extend))
 
 noncomputable def reachableBehavioralGameFormAtHorizon
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (k : Nat) : GameForm ι where
   Strategy := fun i => G.ReachableLegalBehavioralStrategy i
@@ -3294,7 +3294,7 @@ This is the Nash-specific wrapper around
 behavioral unilateral deviation is matched by the constructive mixed pure
 deviation `reachableLegalBehavioralToMixed`. -/
 noncomputable def reachableKuhnNashDeviationSimulation
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable) (k : Nat) :
     GameForm.NashDeviationSimulation
@@ -3326,7 +3326,7 @@ open Classical in
 /-- Ready-made Nash transport for the finite-horizon reachable Kuhn
 mixed-pure-to-behavioral presentation. -/
 theorem reachableKuhn_target_nashFor_of_source_nashFor
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable) (k : Nat)
     (μ : (reachableMixedPureGameFormAtHorizon (G := G) k).Profile)
@@ -3348,7 +3348,7 @@ open Classical in
 /-- FOSG Kuhn simulation for coarse-correlated deviations from mixed pure
 recommendations to behavioral recommendations. -/
 noncomputable def reachableKuhnCoarseCorrelatedDeviationSimulation
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable) (k : Nat) :
     GameForm.DeviationFamilySimulation
@@ -3396,7 +3396,7 @@ open Classical in
 /-- FOSG Kuhn simulation for correlated recommendation-dependent deviations
 from mixed pure recommendations to behavioral recommendations. -/
 noncomputable def reachableKuhnCorrelatedDeviationSimulation
-    [Fintype ι] [Fintype W] [Fintype G.History]
+    [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
     (hLeg : G.LegalObservable) (k : Nat) :
     GameForm.DeviationFamilySimulation
