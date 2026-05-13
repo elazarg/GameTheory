@@ -782,7 +782,7 @@ theorem runDistFrom_eq_probFrom_of_terminal_target
 
 theorem runDist_support_isTerminal_of_exactHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History)
@@ -798,7 +798,7 @@ theorem runDist_support_isTerminal_of_exactHorizon
 open Classical in
 theorem runDistFrom_eq_probFrom_of_exactHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) :
@@ -833,16 +833,16 @@ theorem runDistFrom_eq_probFrom_of_exactHorizon
       rw [History.runDistFrom_succ_nonterminal
         (G := G) (σ := σ) (n := es.length) (h := pref) hprefNotTerm]
       rw [PMF.bind_apply, tsum_fintype]
-      simp_rw [PMF.bind_apply, tsum_fintype]
+      simp_rw [PMF.bind_apply]
       have houter_zero :
           ∀ a : G.LegalAction pref.lastState, a ≠ a₀ →
-            ∑ dst : W,
+            ∑' dst : W,
               (G.transition pref.lastState a) dst *
                 History.runDistFrom G σ es.length (pref.extendByOutcome a dst)
                   (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) = 0 := by
         intro a hne
-        refine Finset.sum_eq_zero ?_
-        intro dst _
+        refine (ENNReal.tsum_eq_zero).2 ?_
+        intro dst
         by_cases hsupp : G.transition pref.lastState a dst = 0
         · simp [hsupp]
         · have hnotPrefix : ¬ (pref.extendByOutcome a dst).IsPrefix
@@ -866,7 +866,7 @@ theorem runDistFrom_eq_probFrom_of_exactHorizon
             (target := pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) hk' hnotPrefix]
           simp
       have hinner_a₀ :
-          ∑ dst : W,
+          ∑' dst : W,
             (G.transition pref.lastState a₀) dst *
               History.runDistFrom G σ es.length (pref.extendByOutcome a₀ dst)
                 (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
@@ -878,13 +878,13 @@ theorem runDistFrom_eq_probFrom_of_exactHorizon
           (G.transition pref.lastState a₀) dst *
             History.runDistFrom G σ es.length (pref.extendByOutcome a₀ dst)
               (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
-        change ∑ dst : W, f dst = (G.transition pref.lastState a₀) e.dst *
+        change ∑' dst : W, f dst = (G.transition pref.lastState a₀) e.dst *
           History.runDistFrom G σ es.length pref' (History.extendBySteps pref' es htail')
         have hsum :
-            ∑ dst : W, f dst = f e.dst := by
-          refine Finset.sum_eq_single e.dst ?_ ?_
-          · intro dst _ hdst
-            by_cases hsupp : G.transition pref.lastState a₀ dst = 0
+            ∑' dst : W, f dst = f e.dst := by
+          rw [tsum_eq_single e.dst]
+          intro dst hdst
+          · by_cases hsupp : G.transition pref.lastState a₀ dst = 0
             · simp [f, hsupp]
             · have hnotPrefix : ¬ (pref.extendByOutcome a₀ dst).IsPrefix
                   (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) := by
@@ -910,7 +910,6 @@ theorem runDistFrom_eq_probFrom_of_exactHorizon
                   (target := pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) hk' hnotPrefix
               simpa [f, History.extendBySteps, pref'] using
                 congrArg (fun x => (G.transition pref.lastState a₀) dst * x) hzero
-          · simp [f]
         rw [hsum]
         unfold f
         rw [History.extendByOutcome_eq_appendStep_of_head
@@ -919,13 +918,13 @@ theorem runDistFrom_eq_probFrom_of_exactHorizon
       have houter_single :
           ∑ a : G.LegalAction pref.lastState,
             (G.legalActionLaw σ pref hprefNotTerm) a *
-              ∑ dst : W,
+              ∑' dst : W,
                 (G.transition pref.lastState a) dst *
                   History.runDistFrom G σ es.length (pref.extendByOutcome a dst)
                     (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
           =
           (G.legalActionLaw σ pref hprefNotTerm) a₀ *
-            ∑ dst : W,
+            ∑' dst : W,
               (G.transition pref.lastState a₀) dst *
                 History.runDistFrom G σ es.length (pref.extendByOutcome a₀ dst)
                   (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) := by
@@ -937,13 +936,13 @@ theorem runDistFrom_eq_probFrom_of_exactHorizon
       calc
         ∑ a : G.LegalAction pref.lastState,
             (G.legalActionLaw σ pref hprefNotTerm) a *
-              ∑ dst : W,
+              ∑' dst : W,
                 (G.transition pref.lastState a) dst *
                   History.runDistFrom G σ es.length (pref.extendByOutcome a dst)
                     (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩)
           =
           (G.legalActionLaw σ pref hprefNotTerm) a₀ *
-            ∑ dst : W,
+            ∑' dst : W,
               (G.transition pref.lastState a₀) dst *
                 History.runDistFrom G σ es.length (pref.extendByOutcome a₀ dst)
                   (pref.extendBySteps (e :: es) ⟨hsrc, htail⟩) := houter_single
