@@ -248,11 +248,14 @@ pick one for itself.
 For honesty's sake we list what is missing.
 
 \begin{itemize}\itemsep2pt
-\item \emph{Repeated and stochastic games at infinite horizon.}
-The library's repeated games are bounded.  The folk-theorem-style
-results (Friedman, Fudenberg–Maskin) require infinite or
-discounted horizons, which interact with measure theory and
-which we have not formalized.
+\item \emph{Language-level infinite-horizon stochastic games.}
+The library now proves an approximate discounted folk theorem
+directly on \TT{KernelGame} streams
+(\Cref{thm:folk-discounted}), but the concrete repeated- and
+stochastic-game language layers remain bounded-horizon.  We have
+not formalized infinite-horizon stochastic games with state
+recursion, sampled action histories, or measure-theoretic
+strategy/outcome spaces.
 
 \item \emph{Continuous strategy / type / outcome spaces.}  See
 \S\ref{sec:discussion:finite}.

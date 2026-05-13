@@ -322,12 +322,13 @@ on top of the multi-round skeleton:
 \item \emph{Repeated games}:\ identical rounds, single payoff
 aggregation function (sum, discounted sum).  This is the carrier
 for the standard formalizations of trigger strategies, tit-for-tat,
-and folk-theorem fragments.  (A \emph{folk theorem} says that any
-feasible, individually rational payoff vector can be sustained as
-an equilibrium average payoff of a sufficiently patient
-infinitely-repeated game; the classical Friedman / Fudenberg–Maskin
-versions \citep{Friedman1971, FudenbergMaskin1986} are
-infinite-horizon and out of scope here.)
+and finite-horizon repeated-game examples.  The infinite discounted
+repeated-game folk theorem is not built through this bounded
+multi-round syntax; it is formalized directly on \TT{KernelGame}
+streams in \TT{Concepts/FolkTheorem.lean}.  The theorem proves
+that every strictly individually rational feasible payoff vector
+is approximated by Nash payoffs of sufficiently patient discounted
+repeated games (\Cref{thm:folk-discounted}).
 
 \item \emph{Stochastic games}~\citep{Shapley1953stochastic}:\
 rounds chosen by state, with a stochastic transition.  Bounded
