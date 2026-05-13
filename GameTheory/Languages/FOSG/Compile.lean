@@ -985,7 +985,7 @@ theorem runDistFrom_eq_probFrom_of_exactHorizon
 
 theorem runDist_eq_terminalWeight_of_exactHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History) :
@@ -1102,7 +1102,7 @@ noncomputable def historyFintypeOfBoundedHorizon
 
 theorem runDist_eq_terminalWeight_of_boundedHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History) :
@@ -1133,7 +1133,7 @@ def HasNormalizedTerminalLaw
     ∑ h : G.History, History.terminalWeight (G := G) σ.toProfile h = 1
 
 section
-variable [∀ i, Finite (Option (Act i))] [Finite W]
+variable [∀ i, Finite (Option (Act i))]
 
 theorem hasNormalizedTerminalLaw_of_exactHorizon
     {G : FOSG ι W Act PrivObs PubObs}
@@ -1141,7 +1141,6 @@ theorem hasNormalizedTerminalLaw_of_exactHorizon
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k) :
     G.HasNormalizedTerminalLaw := by
-  let _ : Fintype W := Fintype.ofFinite W
   let _ : ∀ i, Fintype (Option (Act i)) := fun i => Fintype.ofFinite (Option (Act i))
   intro σ
   calc
@@ -1161,7 +1160,6 @@ theorem hasNormalizedTerminalLaw_of_boundedHorizon
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k) :
     G.HasNormalizedTerminalLaw := by
-  let _ : Fintype W := Fintype.ofFinite W
   let _ : ∀ i, Fintype (Option (Act i)) := fun i => Fintype.ofFinite (Option (Act i))
   intro σ
   calc
@@ -1199,7 +1197,7 @@ noncomputable def terminalLawPMF
 
 theorem terminalLawPMF_eq_runDist_of_boundedHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k)
     (σ : G.LegalBehavioralProfile) :
@@ -1209,7 +1207,7 @@ theorem terminalLawPMF_eq_runDist_of_boundedHorizon
 
 theorem terminalLawPMF_eq_runDist_of_exactHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) :
@@ -1256,7 +1254,7 @@ cutoff. For theorem-facing use, prefer `toKernelGameOfBoundedHorizon` or
 `toKernelGameOfExactHorizon`. -/
 noncomputable def toKernelGameAtHorizon
     (G : FOSG ι W Act PrivObs PubObs)
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (k : Nat) : KernelGame ι where
   Strategy := fun i => G.LegalBehavioralStrategy i
@@ -1266,14 +1264,14 @@ noncomputable def toKernelGameAtHorizon
 
 @[simp] theorem toKernelGameAtHorizon_outcomeKernel
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (k : Nat) (σ : G.LegalBehavioralProfile) :
     (G.toKernelGameAtHorizon k).outcomeKernel σ = G.runDist k σ := rfl
 
 theorem toKernelGameAtHorizon_eu_eq
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal] [Fintype G.History]
     (k : Nat) (σ : G.LegalBehavioralProfile) (i : ι) :
     (G.toKernelGameAtHorizon k).eu σ i =
@@ -1286,14 +1284,14 @@ depth `k`. This keeps the horizon run law as the outcome kernel and packages
 terminal support as a theorem. -/
 noncomputable abbrev toKernelGameOfBoundedHorizon
     (G : FOSG ι W Act PrivObs PubObs)
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k) : KernelGame ι :=
   G.toKernelGame (G.hasNormalizedTerminalLaw_of_boundedHorizon hBound)
 
 @[simp] theorem toKernelGameOfBoundedHorizon_outcomeKernel
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k) (σ : G.LegalBehavioralProfile) :
     (G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ = G.runDist k σ := by
@@ -1302,7 +1300,7 @@ noncomputable abbrev toKernelGameOfBoundedHorizon
 
 theorem toKernelGameOfBoundedHorizon_support_isTerminal
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History)
@@ -1317,7 +1315,7 @@ theorem toKernelGameOfBoundedHorizon_support_isTerminal
 
 theorem toKernelGameAtHorizon_eq_toKernelGameOfBoundedHorizon_outcomeKernel
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k) (σ : G.LegalBehavioralProfile) :
     (G.toKernelGameAtHorizon k).outcomeKernel σ =
@@ -1326,7 +1324,7 @@ theorem toKernelGameAtHorizon_eq_toKernelGameOfBoundedHorizon_outcomeKernel
 
 theorem toKernelGameOfBoundedHorizon_eu_eq
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k)
     (σ : G.LegalBehavioralProfile) (i : ι) :
@@ -1342,14 +1340,14 @@ terminal-law compile together with the derived normalization proof from
 `ExactHorizon`. -/
 noncomputable abbrev toKernelGameOfExactHorizon
     (G : FOSG ι W Act PrivObs PubObs)
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k) : KernelGame ι :=
   G.toKernelGame (G.hasNormalizedTerminalLaw_of_exactHorizon hExact)
 
 @[simp] theorem toKernelGameOfExactHorizon_outcomeKernel
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k) (σ : G.LegalBehavioralProfile) :
     (G.toKernelGameOfExactHorizon hExact).outcomeKernel σ = G.runDist k σ := by
@@ -1358,7 +1356,7 @@ noncomputable abbrev toKernelGameOfExactHorizon
 
 theorem toKernelGameOfExactHorizon_support_isTerminal
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History)
@@ -1373,7 +1371,7 @@ theorem toKernelGameOfExactHorizon_support_isTerminal
 
 theorem toKernelGameOfExactHorizon_eu_eq
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal] [Fintype G.History]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) (i : ι) :
