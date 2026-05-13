@@ -49,6 +49,7 @@ import GameTheory.Concepts.WelfareTheorems
 import GameTheory.Concepts.PriceOfAnarchy
 import GameTheory.Concepts.IndividualRationality
 import GameTheory.Concepts.SecurityStrategy
+import GameTheory.Concepts.FolkTheorem
 
 -- Correlated equilibrium
 import GameTheory.Concepts.CorrelatedEqProperties

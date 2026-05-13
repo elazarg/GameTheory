@@ -159,6 +159,94 @@ guarantee form above.
 \TT{Concepts/ZeroSumNash.lean} (\TT{IsZeroSum.nash\_eu\_eq}).
 Supplement~§6.3.}
 
+\subsection{Discounted folk theorem approximation}
+\label{sec:theorems:folk}
+
+The library includes an infinite discounted repeated-game theorem
+separate from the bounded multi-round syntax of
+\S\ref{sec:languages:multiround}.  For a kernel game $\KG$, write
+$F(\KG)$ for the convex hull of pure-profile payoff vectors and
+write $m_i(\KG^{\mathrm{mix}})$ for the opponent-enforced mixed
+minmax value:
+\[
+  m_i(\KG^{\mathrm{mix}})
+    \;=\;
+  \inf_{\tau_{-i}}\; \sup_{\tau_i}\,
+    \EU(\KG^{\mathrm{mix}},(\tau_i,\tau_{-i}),i).
+\]
+The strict individually rational feasible region is
+\[
+  \{v \in F(\KG) : \forall i,\; m_i(\KG^{\mathrm{mix}}) < v_i\}.
+\]
+
+\begin{theorem}[Approximate discounted folk theorem]
+\label{thm:folk-discounted}
+Let $\KG$ have finitely many players, finite non-empty pure
+strategy spaces, and finite outcomes.  If
+\[
+  v \in F(\KG)
+  \quad\text{and}\quad
+  \forall i,\; m_i(\KG^{\mathrm{mix}}) < v_i,
+\]
+then $v$ is approachable by Nash equilibrium payoffs of the
+discounted repeated game over $\KG^{\mathrm{mix}}$:\ for every
+$\epsilon>0$ there is $\delta_0<1$ such that every
+$\delta\in(\delta_0,1)$ admits a discounted repeated-game Nash
+equilibrium $\Sigma^\delta$ with payoff $w^\delta$ satisfying
+\[
+  \forall i,\qquad |w^\delta_i - v_i| < \epsilon .
+\]
+\end{theorem}
+
+\noindent\emph{Proof structure.}\ The proof follows the classical
+Friedman/Fudenberg--Maskin trigger-strategy pattern
+\citep{Friedman1971,FudenbergMaskin1986}, with all approximation
+constants made explicit.
+\begin{itemize}\itemsep2pt
+\item A feasible payoff $v$ is represented as a finite convex
+combination of pure-profile payoffs.  The denominator-clearing
+lemma in \TT{Math/SimplexApproximation.lean} floors all weights
+except one residual coordinate and proves a uniform error bound.
+This yields a finite pure-profile cycle whose uniform average
+payoff is within a chosen tolerance of $v$.
+
+\item Strict individual rationality supplies a positive uniform
+margin $\eta$ above the opponent-enforced mixed minmax vector.
+For each player the proof chooses an approximate punishment
+opponent profile whose best response value is below
+$m_i(\KG^{\mathrm{mix}})+\eta/4$.
+
+\item The repeated-game strategy follows the finite cycle until a
+public deviation is detected; after that, every non-deviating
+player switches permanently to the deviator's punishment profile.
+The formal definition uses public histories and a recursive
+\TT{triggerStatus} detector, rather than finite-horizon
+multi-round syntax.
+
+\item Two discount-factor thresholds are combined: one makes every
+discounted continuation payoff of every phase of the periodic
+cycle close to the cycle average, and one ensures that the
+one-period deviation gain is dominated by the discounted
+continuation loss from punishment.  The trigger profile is then
+proved Nash for all $\delta$ above the common threshold, and its
+payoff is within $\epsilon$ of $v$.
+\end{itemize}
+
+\tradeoff{The theorem is stated for the repeated game over the
+mixed extension, so a period action is an observable mixed stage
+strategy.  This avoids adding sampled action histories or
+correlated public randomization to the language layer.  A richer
+behavioral repeated-game semantics could refine the interface
+later; the payoff-set and trigger-strategy proof already isolate
+the main analytic work.}
+
+\leancorr{\TT{Concepts/FolkTheorem.lean} defines feasible payoff
+sets, opponent minmax values, discounted repeated strategies,
+periodic paths, trigger strategies, and
+\TT{discounted\_folk\_theorem\_approx}.  The generic
+denominator-clearing estimate is in
+\TT{Math/SimplexApproximation.lean}.}
+
 \subsection{Backward induction (Zermelo) and the one-shot deviation principle}
 \label{sec:theorems:zermelo-odp}
 
