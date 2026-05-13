@@ -417,7 +417,7 @@ theorem runDistFrom_eq_zero_of_nonterminal_target_lt
 open Classical in
 theorem runDistFrom_eq_zero_of_exactHorizon_length_ne
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) :
@@ -441,15 +441,15 @@ theorem runDistFrom_eq_zero_of_exactHorizon_length_ne
       rw [PMF.bind_apply, tsum_fintype]
       refine Finset.sum_eq_zero ?_
       intro a _
-      rw [PMF.bind_apply, tsum_fintype]
+      rw [PMF.bind_apply]
       suffices hinner :
-          ∑ dst : W,
+          ∑' dst : W,
             (G.transition pref.lastState a) dst *
               History.runDistFrom G σ n (pref.extendByOutcome a dst) target = 0 by
         rw [hinner]
         simp
-      refine Finset.sum_eq_zero ?_
-      intro dst _
+      refine (ENNReal.tsum_eq_zero).2 ?_
+      intro dst
       by_cases hsupp : G.transition pref.lastState a dst = 0
       · simp [hsupp]
       · have hk' : (pref.extendByOutcome a dst).steps.length + n = k := by
@@ -490,7 +490,7 @@ theorem runDist_congr
 
 theorem runDist_eq_zero_of_exactHorizon_length_ne
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History)
@@ -502,7 +502,7 @@ theorem runDist_eq_zero_of_exactHorizon_length_ne
 
 theorem runDist_eq_zero_of_length_gt
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     (k : Nat) (σ : G.LegalBehavioralProfile) (h : G.History)
     (hlt : k < h.steps.length) :
@@ -513,7 +513,7 @@ theorem runDist_eq_zero_of_length_gt
 
 theorem runDist_eq_zero_of_nonterminal_of_boundedHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History)
@@ -532,7 +532,7 @@ theorem runDist_eq_zero_of_nonterminal_of_boundedHorizon
 
 theorem runDist_support_isTerminal_of_boundedHorizon
     {G : FOSG ι W Act PrivObs PubObs}
-    [Fintype ι] [∀ i, Fintype (Option (Act i))] [Fintype W]
+    [Fintype ι] [∀ i, Fintype (Option (Act i))]
     [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k)
     (σ : G.LegalBehavioralProfile) (h : G.History)
