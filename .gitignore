@@ -10,3 +10,4 @@ CLAUDE.md
 ephemeral/
 *.log
 .codex
+*.pdf
