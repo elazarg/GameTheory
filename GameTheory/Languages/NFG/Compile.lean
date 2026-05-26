@@ -1,6 +1,11 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-
 import GameTheory.Languages.NFG.Syntax
 import GameTheory.Core.KernelGame
 import GameTheory.Core.GameMorphism

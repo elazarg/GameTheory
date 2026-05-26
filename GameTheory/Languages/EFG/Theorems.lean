@@ -1,8 +1,18 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Theorems
 import GameTheory.Languages.EFG.Syntax
 import GameTheory.Languages.EFG.Compile
 import GameTheory.Languages.EFG.SOS
 import GameTheory.Languages.EFG.Kuhn
+
+/-!
+# GameTheory.Languages.EFG.Theorems
+-/
 
 namespace GameTheory.EFG
 

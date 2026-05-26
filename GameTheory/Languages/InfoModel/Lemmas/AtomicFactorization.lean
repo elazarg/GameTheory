@@ -1,7 +1,17 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Languages.InfoModel.Lemmas.Profiles
 import GameTheory.Languages.InfoModel.Lemmas.Coordinates
 import Math.PMFProduct
 import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
+
+/-!
+# GameTheory.Languages.InfoModel.Lemmas.AtomicFactorization
+-/
 
 namespace GameTheory
 namespace InfoModel

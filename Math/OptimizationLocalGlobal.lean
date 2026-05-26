@@ -1,9 +1,15 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Mathlib.Data.Set.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import Mathlib.Tactic
-
-set_option autoImplicit false
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.Ring
 
 /-!
 # Local Optimality and Fixed Points
@@ -11,6 +17,8 @@ set_option autoImplicit false
 Abstract fixed-point and local optimality theory: `IsFixedPoint`, `NoImprovement`,
 `LocallyOptimal`. Transfer lemmas for objectives and neighborhoods.
 -/
+
+set_option autoImplicit false
 
 namespace Math
 namespace Optimization

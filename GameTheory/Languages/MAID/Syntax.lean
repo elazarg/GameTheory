@@ -1,10 +1,15 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Mathlib.Data.List.Basic
 import Mathlib.Data.List.Induction
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Mathlib.Order.RelClasses
-
 import GameTheory.Core.KernelGame
 import Math.DAG
 

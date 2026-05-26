@@ -1,7 +1,17 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Languages.InfoModel.Lemmas.ExecutionSupport
 import GameTheory.Languages.InfoModel.Lemmas.Coordinates
 import GameTheory.Languages.InfoModel.Lemmas.ProjectStates
 import GameTheory.Languages.InfoModel.Lemmas.Profiles
+
+/-!
+# GameTheory.Languages.InfoModel.Lemmas.ExecutionLocality
+-/
 
 namespace GameTheory
 namespace InfoModel

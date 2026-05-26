@@ -1,5 +1,15 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Semantics.TraceLanguage
 import Math.Probability
+
+/-!
+# Semantics.Simulation
+-/
 
 set_option autoImplicit false
 

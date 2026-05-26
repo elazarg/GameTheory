@@ -1,7 +1,12 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Monad
-
 import Semantics.TransitionTrace
 import GameTheory.Core.KernelGame
 import GameTheory.Concepts.SolutionConcepts

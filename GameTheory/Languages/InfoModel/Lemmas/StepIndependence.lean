@@ -1,6 +1,16 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Languages.InfoModel.Lemmas.Profiles
 import GameTheory.Languages.InfoModel.Lemmas.AtomicFactorization
 import GameTheory.Languages.InfoModel.Lemmas.ExecutionLocality
+
+/-!
+# GameTheory.Languages.InfoModel.Lemmas.StepIndependence
+-/
 
 namespace GameTheory
 namespace InfoModel

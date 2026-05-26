@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Theorems.Kuhn.ObsModel
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 
@@ -86,7 +92,7 @@ theorem sum_mul_pmf_ne_top {α : Type*} [Fintype α] (d : PMF α) (w : α → EN
     (hw : ∀ a, w a ≤ 1) : ∑ a, d a * w a ≠ ⊤ :=
   ne_of_lt (calc
     ∑ a, d a * w a ≤ ∑ a, d a :=
-      Finset.sum_le_sum fun a _ => mul_le_of_le_one_right (zero_le _) (hw a)
+      Finset.sum_le_sum fun a _ => mul_le_of_le_one_right zero_le (hw a)
     _ = 1 := by have := PMF.tsum_coe d; rwa [tsum_fintype] at this
     _ < ⊤ := ENNReal.one_lt_top)
 
@@ -631,7 +637,7 @@ theorem pureRun_eq_const_mul_indicator
       else 0 := by
   split
   · exact pureRun_const_of_psar hPSAR n ‹_› h₀
-  · push Not at *; exact le_antisymm (le_of_eq ‹_›) (zero_le _)
+  · push Not at *; exact le_antisymm (le_of_eq ‹_›) zero_le
 
 /-- Under PSAR, `pureRun` nonzero is equivalent to matching the witness action
 at every prefix. Stated inductively: nonzero at `p ++ [t]` iff nonzero at `p`
@@ -918,7 +924,7 @@ theorem mediator_product_of_product
       apply ne_of_gt
       exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero (hμ_ne i) (hwi_ne i)))
         (Finset.single_le_sum (f := fun a => μ i a * wᵢ i a)
-          (fun _ _ => zero_le _) (Finset.mem_univ (π_w i)))
+          (fun _ _ => zero_le) (Finset.mem_univ (π_w i)))
     have hCwit : ∀ i, ∑ a, μ i a * wᵢ i a ≠ ⊤ := fun i =>
       sum_mul_pmf_ne_top (μ i) _ fun a => PMF.coe_le_one _ ss
     -- Non-degeneracy for the product weight ∏ wᵢ
@@ -1013,7 +1019,7 @@ theorem conditioning_preserves_product
       exact lt_of_lt_of_le
         (pos_iff_ne_zero.mpr (mul_ne_zero (hμ_ne i) (hwi_ne i)))
         (Finset.single_le_sum (f := fun a => μ i a * wᵢ i a)
-          (fun _ _ => zero_le _) (Finset.mem_univ (π_w i)))
+          (fun _ _ => zero_le) (Finset.mem_univ (π_w i)))
     have hCwit : ∀ i, ∑ a, μ i a * wᵢ i a ≠ ⊤ := fun i =>
       sum_mul_pmf_ne_top (μ i) _ fun a => PMF.coe_le_one _ ss
     -- Product weight sum factorization

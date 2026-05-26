@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Languages.FOSG.Information
 import GameTheory.Languages.FOSG.Execution
 import GameTheory.Languages.FOSG.Values
@@ -1498,4 +1504,3 @@ end Ordered
 end FOSG
 
 end GameTheory
-

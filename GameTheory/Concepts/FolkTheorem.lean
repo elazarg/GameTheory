@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Mathlib.Analysis.Convex.Topology
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SumOverResidueClass
@@ -879,9 +885,9 @@ theorem exists_discountFactor_threshold_weighted_cycle_average
   have hcont : ContinuousAt F 1 := by
     dsimp [F]
     apply ContinuousAt.div
-    · exact (continuous_finset_sum (Finset.univ : Finset (Fin n)) (fun j _ =>
+    · exact (continuous_finsetSum (Finset.univ : Finset (Fin n)) (fun j _ =>
         (continuous_id.pow (j : ℕ)).mul continuous_const)).continuousAt
-    · exact (continuous_finset_sum (Finset.univ : Finset (Fin n)) (fun j _ =>
+    · exact (continuous_finsetSum (Finset.univ : Finset (Fin n)) (fun j _ =>
         continuous_id.pow (j : ℕ))).continuousAt
     · exact hden1
   have hF1 : F 1 = (n : ℝ)⁻¹ * ∑ j : Fin n, a j := by

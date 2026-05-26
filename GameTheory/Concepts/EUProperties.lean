@@ -1,7 +1,11 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
-
-open scoped BigOperators
 
 /-!
 # GameTheory.Concepts.EUProperties
@@ -14,6 +18,8 @@ Provides:
 - `eu_pure_outcome` — EU under a deterministic outcome kernel
 - `eu_nonneg_of_utility_nonneg` — non-negative utilities imply non-negative EU
 -/
+
+open scoped BigOperators
 
 namespace GameTheory
 

@@ -1,10 +1,13 @@
 /-
 Copyright (c) 2025 GameTheory contributors. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
 -/
+
 import Mathlib.Analysis.Convex.StdSimplex
 import Mathlib.Analysis.Convex.Topology
 import Mathlib.Analysis.Normed.Module.FiniteDimension
+import Mathlib.Dynamics.FixedPoints.Basic
 import Mathlib.Topology.MetricSpace.Pseudo.Basic
 import Mathlib.Topology.Sequences
 import FixedPointTheorems.brouwer
@@ -88,7 +91,7 @@ lemma bumpSum_nonneg (ε : ℝ) (y : Fin m → X) (x : X) : 0 ≤ bumpSum ε y x
 
 omit [NormedSpace ℝ X] in
 lemma continuous_bumpSum (ε : ℝ) (y : Fin m → X) : Continuous (bumpSum ε y) :=
-  continuous_finset_sum _ fun i _ => continuous_bump ε (y i)
+  continuous_finsetSum _ fun i _ => continuous_bump ε (y i)
 
 omit [NormedSpace ℝ X] in
 /-- If `x` lies within `ε` of some `y i`, the bump sum is strictly positive at `x`. -/
@@ -103,7 +106,7 @@ convex combination of points `y : Fin m → X`. -/
 noncomputable def bary (y : Fin m → X) (w : Fin m → ℝ) : X := ∑ i, w i • y i
 
 lemma continuous_bary (y : Fin m → X) : Continuous (bary y) :=
-  continuous_finset_sum _ fun i _ => (continuous_apply i).smul continuous_const
+  continuous_finsetSum _ fun i _ => (continuous_apply i).smul continuous_const
 
 /-- A convex combination of points in a convex set `K` stays in `K`. -/
 lemma bary_mem_of_simplex {K : Set X} (hK : Convex ℝ K) {y : Fin m → X}
@@ -260,5 +263,17 @@ theorem schauder_fixed_point {K : Set X}
       tendsto_one_div_add_atTop_nhds_zero_nat.comp hφ_mono.tendsto_atTop
     exact squeeze_zero (fun _ => norm_nonneg _) (fun n => hx (φ n)) h_bound
   exact Subtype.ext (sub_eq_zero.mp (tendsto_nhds_unique h_diff_a h_diff_zero))
+
+/-- Schauder's fixed-point theorem stated with mathlib's `Function.IsFixedPt` vocabulary. -/
+theorem schauder_fixed_point_isFixedPt {K : Set X}
+    (hK_cvx : Convex ℝ K) (hK_cpt : IsCompact K) (hK_ne : K.Nonempty) (f : C(K, K)) :
+    ∃ x : K, Function.IsFixedPt f x := by
+  simpa [Function.IsFixedPt] using schauder_fixed_point hK_cvx hK_cpt hK_ne f
+
+/-- The fixed-point set of a continuous self-map on a Schauder domain is nonempty. -/
+theorem schauder_fixedPoints_nonempty {K : Set X}
+    (hK_cvx : Convex ℝ K) (hK_cpt : IsCompact K) (hK_ne : K.Nonempty) (f : C(K, K)) :
+    (Function.fixedPoints f).Nonempty := by
+  exact schauder_fixed_point_isFixedPt hK_cvx hK_cpt hK_ne f
 
 end Math.Schauder

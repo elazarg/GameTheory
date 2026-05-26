@@ -1,8 +1,12 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Core.GameProperties
 import Math.Probability
-
-open scoped BigOperators
 
 /-!
 # GameTheory.Concepts.OfEUProperties
@@ -15,6 +19,8 @@ push `simp` through the solution-concept definitions so that Nash equilibrium,
 dominance, best response, strict Nash, and social welfare all reduce to
 plain inequalities (or sums) on the underlying utility function.
 -/
+
+open scoped BigOperators
 
 namespace GameTheory
 

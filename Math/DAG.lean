@@ -1,8 +1,12 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Mathlib.Data.Fintype.Card
 import Mathlib.Data.List.Nodup
 import Mathlib.Order.WellFoundedSet
-
-set_option autoImplicit false
 
 /-!
 # Directed Acyclic Graphs
@@ -27,6 +31,8 @@ topological order.
 - `DAG.acyclic_of_topologicalOrder` — a topological order witnesses acyclicity
 - `DAG.topologicalOrder_of_acyclic` — acyclicity implies a topological order exists
 -/
+
+set_option autoImplicit false
 
 namespace DAG
 

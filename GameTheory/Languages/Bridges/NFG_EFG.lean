@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Languages.NFG.Syntax
 import GameTheory.Languages.NFG.Compile
 import GameTheory.Languages.EFG.Syntax
@@ -18,6 +24,7 @@ info set (imperfect information — no one observes previous moves).
 ### Theorems
 - `nfgTree_evalDist_pure` — evalDist under pure behavioral profile equals the NFG outcome
 -/
+
 namespace NFG
 
 open EFG

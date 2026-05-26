@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Basic
 import Math.Probability

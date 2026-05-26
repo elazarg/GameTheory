@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Math.ProbabilityMassFunction
 import Math.OptimizationLocalGlobal
 import GameTheory.Concepts.MixedExtension
@@ -378,9 +384,9 @@ theorem continuous_mixedExtension_eu_profileFromMixedSimplex_of_bounded
       simp [pmfPi_apply, profileFromMixedSimplex, profileFromWeights, realToPmf_toReal]
     rw [hcoef]
   rw [hsum]
-  refine continuous_finset_sum (s := (Finset.univ : Finset (∀ i, G.Strategy i))) ?_
+  refine continuous_finsetSum (s := (Finset.univ : Finset (∀ i, G.Strategy i))) ?_
   intro s hs
-  refine (continuous_finset_prod (s := (Finset.univ : Finset ι)) ?_).mul continuous_const
+  refine (continuous_finsetProd (s := (Finset.univ : Finset ι)) ?_).mul continuous_const
   intro i hi
   exact (continuous_apply (s i)).comp (continuous_subtype_val.comp (continuous_apply i))
 
@@ -430,12 +436,12 @@ theorem continuous_mixedExtension_eu_update_profileFromMixedSimplex_of_bounded
       · simp [PMF.pure_apply, hsa]
     exact congrArg (· * G.eu s who) hcoef
   rw [hsum]
-  refine continuous_finset_sum (s := (Finset.univ : Finset (∀ i, G.Strategy i))) ?_
+  refine continuous_finsetSum (s := (Finset.univ : Finset (∀ i, G.Strategy i))) ?_
   intro s hs
   have hprod :
       Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         ∏ i ∈ (Finset.univ.erase who), x i (s i)) := by
-    refine continuous_finset_prod (s := (Finset.univ.erase who)) ?_
+    refine continuous_finsetProd (s := (Finset.univ.erase who)) ?_
     intro i hi
     exact (continuous_apply (s i)).comp (continuous_subtype_val.comp (continuous_apply i))
   exact (continuous_const.mul hprod).mul continuous_const
@@ -485,7 +491,7 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedGainOnMixedSimplex
         Continuous (fun x : MixedSimplex ι (fun j => G.Strategy j) =>
           G.gainSumOnMixedSimplex x i) := by
       simpa [gainSumOnMixedSimplex, gainSum] using
-        (continuous_finset_sum (s := (Finset.univ : Finset (G.Strategy i)))
+        (continuous_finsetSum (s := (Finset.univ : Finset (G.Strategy i)))
           (fun a _ => continuous_pospart.comp (hmg i a)))
     have hden_nz :
         ∀ x : MixedSimplex ι (fun j => G.Strategy j),

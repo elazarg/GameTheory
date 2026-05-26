@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Theorems.Kuhn.KuhnModel
 import Math.PMFProduct
 
@@ -56,7 +62,7 @@ theorem sum_mul_pmf_ne_top {α : Type*} [Fintype α] (d : PMF α) (w : α → EN
     ∑ a, d a * w a ≤ ∑ a, d a := by
       refine Finset.sum_le_sum ?_
       intro a _
-      exact mul_le_of_le_one_right (zero_le _) (hw a)
+      exact mul_le_of_le_one_right zero_le (hw a)
     _ = 1 := by
       have := PMF.tsum_coe d
       rwa [tsum_fintype] at this
@@ -809,14 +815,14 @@ theorem mixedToMediator_eq_pmfPi_factor
     apply ne_of_gt
     exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero (hμ_ne i) (hwi_ne i)))
       (Finset.single_le_sum (f := fun a => μ i a * wᵢ i a)
-        (fun _ _ => zero_le _) (Finset.mem_univ (π₀ i)))
+        (fun _ _ => zero_le) (Finset.mem_univ (π₀ i)))
   have hCwit : ∀ i, ∑ a, μ i a * wᵢ i a ≠ ⊤ := fun i =>
     sum_mul_pmf_ne_top (μ i) _ fun a => PMF.coe_le_one _ ss
   have hCw0 : ∑ π, ν π * w π ≠ 0 := by
     apply ne_of_gt
     exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero hν₀ h₀))
       (Finset.single_le_sum (f := fun π => ν π * w π)
-        (fun _ _ => zero_le _) (Finset.mem_univ π₀))
+        (fun _ _ => zero_le) (Finset.mem_univ π₀))
   have hCwt : ∑ π, ν π * w π ≠ ⊤ := sum_mul_pmf_ne_top ν _ fun π => PMF.coe_le_one _ ss
   have hsum_eq : ∑ π, ν π * ∏ i, wᵢ i (π i) = ∏ i, ∑ a, μ i a * wᵢ i a := by
     rw [hν_def]
@@ -998,14 +1004,14 @@ theorem mixedToMediator_eq_pmfPi_factor_of_run
     apply ne_of_gt
     exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero (hμ_ne i) (hwi_ne i)))
       (Finset.single_le_sum (f := fun a => μ i a * wᵢ i a)
-        (fun _ _ => zero_le _) (Finset.mem_univ (π₀ i)))
+        (fun _ _ => zero_le) (Finset.mem_univ (π₀ i)))
   have hCwit : ∀ i, ∑ a, μ i a * wᵢ i a ≠ ⊤ := fun i =>
     sum_mul_pmf_ne_top (μ i) _ fun a => PMF.coe_le_one _ ss
   have hCw0 : ∑ π, ν π * w π ≠ 0 := by
     apply ne_of_gt
     exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero hν₀ h₀))
       (Finset.single_le_sum (f := fun π => ν π * w π)
-        (fun _ _ => zero_le _) (Finset.mem_univ π₀))
+        (fun _ _ => zero_le) (Finset.mem_univ π₀))
   have hCwt : ∑ π, ν π * w π ≠ ⊤ := sum_mul_pmf_ne_top ν _ fun π => PMF.coe_le_one _ ss
   have hsum_eq : ∑ π, ν π * ∏ i, wᵢ i (π i) = ∏ i, ∑ a, μ i a * wᵢ i a := by
     rw [hν_def]

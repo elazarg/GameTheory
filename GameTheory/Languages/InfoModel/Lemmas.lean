@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Languages.InfoModel.Lemmas.ProjectStates
 import GameTheory.Languages.InfoModel.Lemmas.ReachStateTrace
 import GameTheory.Languages.InfoModel.Lemmas.PerfectRecall
@@ -11,3 +17,7 @@ import GameTheory.Languages.InfoModel.Lemmas.Profiles
 import GameTheory.Languages.InfoModel.Lemmas.AtomicFactorization
 import GameTheory.Languages.InfoModel.Lemmas.StepIndependence
 import GameTheory.Languages.InfoModel.Lemmas.Disintegration
+
+/-!
+# GameTheory.Languages.InfoModel.Lemmas
+-/

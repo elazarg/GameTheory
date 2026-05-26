@@ -1,5 +1,15 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Languages.EFG.Compile
 import GameTheory.Languages.EFG.SOS
+
+/-!
+# GameTheory.Languages.EFG.Tests
+-/
 
 namespace GameTheory.EFG.Tests
 

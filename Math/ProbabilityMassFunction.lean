@@ -1,7 +1,11 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Math.Probability
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-
-set_option autoImplicit false
 
 /-!
 # PMF Utilities
@@ -10,6 +14,8 @@ Canonical home for generic PMF utilities: pushforward, bind congruence, support
 extensionality, conditioning (`condOn`), and sequential fold/bind composition.
 Does not cover product structure (see `PMFProduct.lean`).
 -/
+
+set_option autoImplicit false
 
 namespace Math
 namespace ProbabilityMassFunction

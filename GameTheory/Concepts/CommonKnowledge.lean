@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import Math.Probability
 
 /-!
@@ -369,4 +375,3 @@ theorem aumann_full_agreement
   exact mul_right_cancel₀ hF_pos.ne' this
 
 end GameTheory
-

@@ -1,3 +1,9 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 /-! # Pointed labeled state machine
 
 A generic state machine with label type `α`, state type `σ`, an initial state,

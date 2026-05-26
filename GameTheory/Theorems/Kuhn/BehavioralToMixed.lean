@@ -1,5 +1,12 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
 import GameTheory.Theorems.Kuhn.ObsModel
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
+
 /-! # Behavioral -> Mixed direction of Kuhn's theorem for `ObsModel`
 
 This file provides the `ObsModel` wrapper around the core behavioral-to-mixed
