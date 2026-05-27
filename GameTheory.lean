@@ -37,6 +37,7 @@ import GameTheory.Concepts.DominanceSolvability
 import GameTheory.Concepts.StrictNashProperties
 import GameTheory.Concepts.ApproximateNash
 import GameTheory.Concepts.MixedExtension
+import GameTheory.Concepts.TremblingHand
 import GameTheory.Theorems.NashExistence
 import GameTheory.Concepts.ProductSimplexBrouwer
 import GameTheory.Theorems.NashExistenceMixed

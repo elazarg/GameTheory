@@ -17,6 +17,18 @@ weights in `ENNReal`. Higher-level objects then assemble their own pointwise
 convergence from component convergence relations.
 -/
 
+namespace PMF
+
+/-- A PMF has full support when every point receives nonzero probability. -/
+def FullSupport {α : Type*} (μ : PMF α) : Prop :=
+  ∀ a : α, μ a ≠ 0
+
+theorem FullSupport.apply {α : Type*} {μ : PMF α}
+    (h : PMF.FullSupport μ) (a : α) : μ a ≠ 0 :=
+  h a
+
+end PMF
+
 namespace GameTheory
 
 open Filter
