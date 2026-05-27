@@ -61,6 +61,7 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Correlated and coarse correlated equilibrium
 - Observable cheap-talk extensions and babbling-equilibrium transport
 - Best response, best-response dynamics
+- Mixed-extension gain tests, including uniform mixed balance ⇒ Nash
 - Security strategies (maximin), minimax guarantees, saddle points
 - Potential games (exact, ordinal, weighted), finite improvement property
 - Rationalizability, dominance solvability
@@ -89,6 +90,10 @@ The library treats game representations as *languages* with a uniform pipeline:
 | **Sequential** | Protocol-based sequential games, repeated games, stochastic games |
 | **FOSG** | Factored-observation stochastic games: state-based, simultaneous moves, factored private/public observations, optional participation per player |
 | **Intrinsic** | Witsenhausen's intrinsic model — information as equivalence relations on a product configuration space |
+
+The NFG layer also includes canonical worked examples. For Matching Pennies it
+now records both the absence of pure Nash equilibria and the exact fair mixed
+Nash characterization.
 
 Bridges connect representations: MAID → EFG (topological unrolling, preserving
 perfect recall and evaluation semantics), EFG ↔ NFG (strategic form extraction

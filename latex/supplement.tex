@@ -1585,6 +1585,16 @@ gain to vanish at $\Profile^*$.
 \Textbook
 Nash 1951 Theorem 1; Osborne–Rubinstein Proposition 33.1.
 
+\paragraph{Uniform-balance corollary.}\
+The same mixed-extension gain API also records a small finite-strategy
+criterion:\ \TT{uniformMixedProfile} is the independent uniform profile,
+\TT{IsUniformMixedBalanced} says that every pure unilateral deviation
+has zero gain at that profile, and
+\TT{IsUniformMixedBalanced.uniformMixedProfile\_isNash} proves that
+such a balanced uniform profile is Nash.  This captures the row/column
+``balanced payoff matrix'' calculation used by Matching Pennies without
+making any zero-sum or symmetry assumption.
+
 \Faithfulness
 Faithful.  The library is honest about non-constructivity:\
 \TT{mixed_nash_exists_of_bounded} is \TT{noncomputable} because Brouwer is.
@@ -1987,9 +1997,12 @@ to $T$ and gains $+2$; at $(H, T)$ player $T$ deviates to $T$ and
 gains $+2$; the four pure profiles are similarly checked.  The
 textbook mixed equilibrium is the symmetric uniform profile
 $\Profile^*_T = \Profile^*_F = \tfrac12 \Dirac_H + \tfrac12 \Dirac_T$,
-at which both players' EU is $0$.  The Lean example records
-the no-pure-Nash result; it does not package the mixed-equilibrium
-calculation as a theorem in \TT{Languages/NFG/Examples.lean}.
+at which both players' EU is $0$.  Lean records both facts:\
+\TT{matchingPennies\_no\_pure\_nash} lives in
+\TT{Languages/NFG/Examples.lean}, while
+\TT{matchingPennies\_mixed\_nash\_iff\_half} in
+\TT{Languages/NFG/MatchingPenniesMixed.lean} states that a mixed
+profile is Nash iff each player's probability of heads is $1/2$.
 
 \subsection{A two-step centipede in EFG}
 \label{sec:supp:examples:centipede}

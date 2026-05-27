@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Math.PMFProduct
 import Math.Probability
+import Mathlib.Probability.Distributions.Uniform
 import GameTheory.Concepts.SolutionConcepts
 
 /-!
@@ -266,6 +267,66 @@ theorem isNash_iff_gains_nonpos
     (C := C) (fun who => hC who)
 
 end NashGain
+
+-- ============================================================================
+-- Uniform mixed profiles
+-- ============================================================================
+
+section UniformMixed
+
+variable [Fintype ι]
+variable (G : KernelGame ι)
+variable [∀ i, Fintype (G.Strategy i)]
+variable [∀ i, Nonempty (G.Strategy i)]
+
+/-- The independent profile where every player uses the uniform distribution on
+their finite strategy set. -/
+def uniformMixedProfile : Profile G.mixedExtension :=
+  fun i => PMF.uniformOfFintype (G.Strategy i)
+
+/-- A game is balanced at the uniform mixed profile if every pure unilateral
+deviation gives the same expected utility as the uniform profile itself.
+
+For a two-player matrix game, this is the semantic version of every row and
+column having the same average payoff against uniform play. -/
+def IsUniformMixedBalanced : Prop :=
+  ∀ who (a : G.Strategy who),
+    G.mixedExtension.eu (Function.update G.uniformMixedProfile who (PMF.pure a)) who =
+      G.mixedExtension.eu G.uniformMixedProfile who
+
+open Classical in
+/-- Under bounded utility, balance at the uniform mixed profile implies that the
+uniform mixed profile is Nash. -/
+theorem IsUniformMixedBalanced.uniformMixedProfile_isNash_of_bounded
+    (hbal : G.IsUniformMixedBalanced)
+    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
+    G.mixedExtension.IsNash G.uniformMixedProfile := by
+  rw [G.isNash_iff_gains_nonpos_of_bounded G.uniformMixedProfile (C := C) hbd]
+  intro who a
+  rw [hbal who a]
+  simp
+
+/-- For finite-outcome games, uniform balance is equivalently zero pure-deviation
+gain at the uniform mixed profile. -/
+theorem isUniformMixedBalanced_iff_mixedGain_eq_zero :
+    G.IsUniformMixedBalanced ↔
+      ∀ who (a : G.Strategy who), G.mixedGain G.uniformMixedProfile who a = 0 := by
+  simp [IsUniformMixedBalanced, mixedGain, sub_eq_zero]
+
+variable [Finite G.Outcome]
+
+/-- With finite outcomes, balance at the uniform mixed profile implies that the
+uniform mixed profile is Nash. -/
+theorem IsUniformMixedBalanced.uniformMixedProfile_isNash
+    (hbal : G.IsUniformMixedBalanced) :
+    G.mixedExtension.IsNash G.uniformMixedProfile := by
+  rw [G.isNash_iff_gains_nonpos G.uniformMixedProfile]
+  intro who a
+  unfold mixedGain
+  rw [hbal who a]
+  simp
+
+end UniformMixed
 
 end KernelGame
 

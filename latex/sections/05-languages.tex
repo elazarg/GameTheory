@@ -67,7 +67,10 @@ strictly decreases when a dominant strategy is added).  Each
 defines an action type with \TT{deriving Fintype, DecidableEq}, a
 payoff table by pattern match, and one or two pure-Nash facts
 discharged by case analysis (\TT{cases i <;> cases a' <;> simp;
-try linarith}). These serve both as reader-facing examples and as
+try linarith}); Matching Pennies additionally has an exact mixed
+characterization in \TT{Languages/NFG/MatchingPenniesMixed.lean},
+showing that both players put probability $1/2$ on heads. These serve
+both as reader-facing examples and as
 smoke tests for the NFG$\to$\KG\ compilation pipeline. The
 Stackelberg leader-follower file additionally carries an
 entry-deterrence instance (\TT{EntryDeterrence.game}) where the
