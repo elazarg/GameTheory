@@ -146,6 +146,10 @@ noncomputable abbrev toAssessmentForm : AssessmentForm G.inf.Player where
 /-- Generic assessment object associated with the EFG assessment form. -/
 abbrev GenericAssessment := G.toAssessmentForm.Assessment
 
+/-- Generic assessment-deviation family associated with the EFG assessment
+form. -/
+abbrev AssessmentDeviationFamily := G.toAssessmentForm.AssessmentDeviationFamily
+
 /-- Convert the existing EFG assessment structure to the generic assessment
 structure. -/
 def Assessment.toGeneric (A : G.Assessment) : G.GenericAssessment where
@@ -210,6 +214,22 @@ section StrategicDeviation
 
 variable [DecidableEq G.inf.Player]
 
+/-- Preference-parametric sequential rationality at one EFG information set,
+relative to an explicit deviation family. -/
+noncomputable def SequentiallyRationalAtForFamily
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Δ : G.AssessmentDeviationFamily)
+    (A : G.Assessment) {p : G.inf.Player} (I : G.inf.Infoset p) : Prop :=
+  G.toAssessmentForm.SequentiallyRationalAtForFamily pref Δ (A.toGeneric G) I
+
+/-- Preference-parametric sequential rationality at every EFG information set,
+relative to an explicit deviation family. -/
+noncomputable def SequentiallyRationalForFamily
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Δ : G.AssessmentDeviationFamily)
+    (A : G.Assessment) : Prop :=
+  G.toAssessmentForm.SequentiallyRationalForFamily pref Δ (A.toGeneric G)
+
 /-- Preference-parametric sequential rationality at one EFG information set. -/
 noncomputable def SequentiallyRationalAtFor
     (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
@@ -238,6 +258,14 @@ noncomputable def SequentiallyRational (A : G.Assessment) : Prop :=
 
 /-- Concrete perfect-Bayesian equilibrium with a supplied preference relation on
 outcome distributions. -/
+noncomputable def IsPerfectBayesianEqForFamily
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Δ : G.AssessmentDeviationFamily)
+    (A : G.Assessment) : Prop :=
+  G.SequentiallyRationalForFamily pref Δ A ∧ G.WeaklyConsistentAssessment A
+
+/-- Concrete perfect-Bayesian equilibrium with a supplied preference relation on
+outcome distributions and the default full-strategy deviation family. -/
 noncomputable def IsPerfectBayesianEqForPref
     (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
     (A : G.Assessment) : Prop :=
@@ -253,6 +281,15 @@ noncomputable def IsPerfectBayesianEq (A : G.Assessment) : Prop :=
 /-- Concrete sequential-equilibrium shape with an explicit consistency
 predicate. This is the reusable hook for stronger notions such as
 Kreps-Wilson consistency as a limit of fully mixed assessments. -/
+noncomputable def IsSequentialEqWithConsistencyForFamily
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Δ : G.AssessmentDeviationFamily)
+    (Consistent : G.Assessment → Prop)
+    (A : G.Assessment) : Prop :=
+  G.SequentiallyRationalForFamily pref Δ A ∧ Consistent A
+
+/-- Concrete sequential-equilibrium shape with an explicit consistency predicate
+and the default full-strategy deviation family. -/
 noncomputable def IsSequentialEqWithConsistencyFor
     (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
     (Consistent : G.Assessment → Prop)
@@ -277,6 +314,25 @@ theorem isPerfectBayesianEqForPref_iff
     (A : G.Assessment) :
     G.IsPerfectBayesianEqForPref pref A ↔
       G.SequentiallyRationalFor pref A ∧ G.WeaklyConsistentAssessment A := by
+  rfl
+
+omit [DecidableEq G.inf.Player] in
+theorem isPerfectBayesianEqForFamily_iff
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Δ : G.AssessmentDeviationFamily)
+    (A : G.Assessment) :
+    G.IsPerfectBayesianEqForFamily pref Δ A ↔
+      G.SequentiallyRationalForFamily pref Δ A ∧ G.WeaklyConsistentAssessment A := by
+  rfl
+
+omit [DecidableEq G.inf.Player] in
+theorem isSequentialEqWithConsistencyForFamily_iff
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Δ : G.AssessmentDeviationFamily)
+    (Consistent : G.Assessment → Prop)
+    (A : G.Assessment) :
+    G.IsSequentialEqWithConsistencyForFamily pref Δ Consistent A ↔
+      G.SequentiallyRationalForFamily pref Δ A ∧ Consistent A := by
   rfl
 
 theorem isSequentialEqForPref_iff

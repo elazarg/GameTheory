@@ -93,9 +93,73 @@ predicate without changing sequential rationality. -/
 noncomputable def WeaklyConsistentAssessment (A : F.Assessment) : Prop :=
   F.BeliefsSupported A ∧ F.BayesConsistentOnPath A
 
+/-- A family of allowed continuation deviations at information states.
+
+The family receives the full assessment, since useful deviation classes may
+depend on the current strategy or belief system. A deviation returns the whole
+post-deviation profile; this keeps the abstraction independent of whether a
+language represents strategies as behavioral policies, plans, automata, or some
+other object. -/
+structure AssessmentDeviationFamily where
+  Dev : ∀ i : ι, F.Info i → Type
+  deviate : F.Assessment → ∀ i : ι, ∀ I : F.Info i, Dev i I → F.Profile
+
+namespace AssessmentDeviationFamily
+
+variable {F}
+
+/-- Pointwise inclusion of assessment-deviation families. -/
+def Subfamily (Δ₁ Δ₂ : F.AssessmentDeviationFamily) : Prop :=
+  ∀ (A : F.Assessment) (i : ι) (I : F.Info i) (d₁ : Δ₁.Dev i I),
+    ∃ d₂ : Δ₂.Dev i I, Δ₁.deviate A i I d₁ = Δ₂.deviate A i I d₂
+
+theorem Subfamily.refl (Δ : F.AssessmentDeviationFamily) : Δ.Subfamily Δ := by
+  intro A i I d
+  exact ⟨d, rfl⟩
+
+end AssessmentDeviationFamily
+
+/-- Preference-parametric sequential rationality at one information state,
+relative to an explicit family of allowed deviations. -/
+noncomputable def SequentiallyRationalAtForFamily
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (Δ : F.AssessmentDeviationFamily)
+    (A : F.Assessment) {i : ι} (I : F.Info i) : Prop :=
+  ∀ d : Δ.Dev i I,
+    pref i
+      (F.continuationOutcome (A.beliefs I) A.strategy)
+      (F.continuationOutcome (A.beliefs I) (Δ.deviate A i I d))
+
+/-- Preference-parametric sequential rationality at every information state,
+relative to an explicit family of allowed deviations. -/
+noncomputable def SequentiallyRationalForFamily
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (Δ : F.AssessmentDeviationFamily)
+    (A : F.Assessment) : Prop :=
+  ∀ (i : ι) (I : F.Info i), F.SequentiallyRationalAtForFamily pref Δ A I
+
+/-- If a strategy is rational against a larger deviation family, it is rational
+against any included subfamily. -/
+theorem sequentiallyRationalForFamily_mono
+    {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
+    {Δ₁ Δ₂ : F.AssessmentDeviationFamily}
+    (hsub : Δ₁.Subfamily Δ₂)
+    {A : F.Assessment}
+    (h : F.SequentiallyRationalForFamily pref Δ₂ A) :
+    F.SequentiallyRationalForFamily pref Δ₁ A := by
+  intro i I d₁
+  obtain ⟨d₂, hd⟩ := hsub A i I d₁
+  simpa [SequentiallyRationalAtForFamily, hd] using h i I d₂
+
 section StrategicDeviation
 
 variable [DecidableEq ι]
+
+/-- Full replacement of the active player's strategy at any information state.
+This is the default deviation family for behavioral EFG-style assessments. -/
+noncomputable def fullStrategyDeviationFamily : F.AssessmentDeviationFamily where
+  Dev := fun i _I => F.Strategy i
+  deviate := fun A i _I τ => Function.update A.strategy i τ
 
 /-- Preference-parametric sequential rationality at one information state.
 
@@ -106,16 +170,38 @@ are semantically ignored. -/
 noncomputable def SequentiallyRationalAtFor
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (A : F.Assessment) {i : ι} (I : F.Info i) : Prop :=
-  ∀ τ : F.Strategy i,
-    pref i
-      (F.continuationOutcome (A.beliefs I) A.strategy)
-      (F.continuationOutcome (A.beliefs I) (Function.update A.strategy i τ))
+  F.SequentiallyRationalAtForFamily pref F.fullStrategyDeviationFamily A I
 
 /-- Preference-parametric sequential rationality at every information state. -/
 noncomputable def SequentiallyRationalFor
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (A : F.Assessment) : Prop :=
-  ∀ (i : ι) (I : F.Info i), F.SequentiallyRationalAtFor pref A I
+  F.SequentiallyRationalForFamily pref F.fullStrategyDeviationFamily A
+
+theorem sequentiallyRationalAtFor_iff
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (A : F.Assessment) {i : ι} (I : F.Info i) :
+    F.SequentiallyRationalAtFor pref A I ↔
+      ∀ τ : F.Strategy i,
+        pref i
+          (F.continuationOutcome (A.beliefs I) A.strategy)
+          (F.continuationOutcome (A.beliefs I) (Function.update A.strategy i τ)) := by
+  rfl
+
+theorem sequentiallyRationalFor_iff
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (A : F.Assessment) :
+    F.SequentiallyRationalFor pref A ↔
+      ∀ (i : ι) (I : F.Info i), F.SequentiallyRationalAtFor pref A I := by
+  rfl
+
+/-- Concrete perfect-Bayesian equilibrium for a supplied preference relation and
+an explicit family of allowed deviations. -/
+noncomputable def IsPerfectBayesianEqForFamily
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (Δ : F.AssessmentDeviationFamily)
+    (A : F.Assessment) : Prop :=
+  F.SequentiallyRationalForFamily pref Δ A ∧ F.WeaklyConsistentAssessment A
 
 /-- Concrete perfect-Bayesian equilibrium for a supplied preference relation. -/
 noncomputable def IsPerfectBayesianEqFor
@@ -130,6 +216,15 @@ noncomputable def IsSequentialEqWithConsistencyFor
     (Consistent : F.Assessment → Prop)
     (A : F.Assessment) : Prop :=
   F.SequentiallyRationalFor pref A ∧ Consistent A
+
+/-- Sequential-equilibrium shape with explicit consistency and deviation
+family parameters. -/
+noncomputable def IsSequentialEqWithConsistencyForFamily
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (Δ : F.AssessmentDeviationFamily)
+    (Consistent : F.Assessment → Prop)
+    (A : F.Assessment) : Prop :=
+  F.SequentiallyRationalForFamily pref Δ A ∧ Consistent A
 
 /-- The on-path/Bayes concrete specialization. Full Kreps-Wilson sequential
 equilibrium can be obtained by replacing `WeaklyConsistentAssessment` above with
@@ -154,6 +249,25 @@ noncomputable def IsPerfectBayesianEq
 noncomputable def IsSequentialEq
     (utility : F.Outcome → Payoff ι) (A : F.Assessment) : Prop :=
   F.IsSequentialEqFor (F.euOutcomePref utility) A
+
+omit [DecidableEq ι] in
+theorem isPerfectBayesianEqForFamily_iff
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (Δ : F.AssessmentDeviationFamily)
+    (A : F.Assessment) :
+    F.IsPerfectBayesianEqForFamily pref Δ A ↔
+      F.SequentiallyRationalForFamily pref Δ A ∧ F.WeaklyConsistentAssessment A := by
+  rfl
+
+omit [DecidableEq ι] in
+theorem isSequentialEqWithConsistencyForFamily_iff
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (Δ : F.AssessmentDeviationFamily)
+    (Consistent : F.Assessment → Prop)
+    (A : F.Assessment) :
+    F.IsSequentialEqWithConsistencyForFamily pref Δ Consistent A ↔
+      F.SequentiallyRationalForFamily pref Δ A ∧ Consistent A := by
+  rfl
 
 theorem isPerfectBayesianEqFor_iff
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
@@ -192,6 +306,22 @@ theorem IsPerfectBayesianEqFor.bayesConsistentOnPath
     {A : F.Assessment} (h : F.IsPerfectBayesianEqFor pref A) :
     F.BayesConsistentOnPath A :=
   h.2.2
+
+omit [DecidableEq ι] in
+theorem IsPerfectBayesianEqForFamily.sequentiallyRational
+    {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
+    {Δ : F.AssessmentDeviationFamily}
+    {A : F.Assessment} (h : F.IsPerfectBayesianEqForFamily pref Δ A) :
+    F.SequentiallyRationalForFamily pref Δ A :=
+  h.1
+
+omit [DecidableEq ι] in
+theorem IsPerfectBayesianEqForFamily.weaklyConsistent
+    {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
+    {Δ : F.AssessmentDeviationFamily}
+    {A : F.Assessment} (h : F.IsPerfectBayesianEqForFamily pref Δ A) :
+    F.WeaklyConsistentAssessment A :=
+  h.2
 
 end StrategicDeviation
 
