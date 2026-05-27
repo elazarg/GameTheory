@@ -80,7 +80,7 @@ $\mathcal{D}^{\mathrm{const}}$ instance; CE and CCE use the same
 statement at the profile-distribution level.
 \end{itemize}
 
-\leancorr{Schema in \TT{Core/GameForm.lean};
+\leancorr{Schema in \TT{Concepts/GameFormSolutionConcepts.lean};
 transport in \TT{Concepts/DeviationSimulation.lean}; full Lean text
 in supplement~§3.1 and §3.2.}
 
@@ -147,6 +147,30 @@ Nash $\Rightarrow$ Nash $\land$ Pareto efficient.
 \leancorr{\TT{Concepts/StrongNash.lean} (\TT{coalitionDeviation},
 \TT{IsStrongNash}, \TT{IsStrongNash.isNash},
 \TT{IsStrongNash.isParetoEfficient}).}
+
+\subsection{Babbling and cheap talk}
+\label{sec:solution-concepts:babbling}
+
+The library also records the standard babbling-equilibrium argument
+for observable cheap talk.  A cheap-talk extension of a game form
+adds, for each player, a message and a contingent action plan from
+the realized message profile to a base-game strategy.  The canonical
+\emph{babbling} embedding sends a fixed default message and ignores
+all messages when choosing the base action.
+
+The theorem is deliberately one-way.  It does not say that cheap talk
+preserves all equilibria: observable messages may introduce additional
+coordination equilibria.  Instead, it assumes only the local condition
+needed for babbling: around an embedded base profile, every unilateral
+enriched deviation projects to a base unilateral deviation with the
+same preference comparison.  Therefore every base Nash equilibrium
+embeds as a babbling Nash equilibrium of the cheap-talk game.
+
+\leancorr{\TT{Core/Babbling.lean} defines the protocol-level
+\TT{CheapTalkExtension} and local preservation condition;
+\TT{Concepts/Babbling.lean} proves the \TT{GameForm} and
+\TT{KernelGame} Nash corollaries; \TT{Languages/NFG/CheapTalkExamples.lean}
+instantiates the result for Battle of the Sexes.}
 
 \subsection{Dominance}
 \label{sec:solution-concepts:dominance}

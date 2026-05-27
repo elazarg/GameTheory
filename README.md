@@ -44,8 +44,8 @@ Formal proofs of standard results in finite game theory:
 
 | Abstraction | Role |
 |---|---|
-| `GameForm` | Utility-free game: strategies, outcomes, stochastic kernel. Solution concept templates (`IsNashFor`, `WeaklyDominatesFor`, …) live here. |
-| `KernelGame` | `GameForm` + utility function. All EU-based solution concepts (`IsNash`, `IsDominant`, …) are defined here. |
+| `GameForm` | Utility-free game: strategies, outcomes, stochastic kernel. Protocol-level constructions live in `Core/`; preference-parametric solution concepts over game forms live in `Concepts/GameFormSolutionConcepts.lean`. |
+| `KernelGame` | `GameForm` + utility function. EU-based solution concepts (`IsNash`, `IsDominant`, …) live in `Concepts/SolutionConcepts.lean`. |
 | `ObsModel` | Observation-indexed actions over a `DSMachine`. Canonical model for Kuhn's theorem. |
 | `InfoModel` | State-based sequential game model with observations, actions, and signals. ODP and other sequential theorems are stated at this level. |
 
@@ -59,6 +59,7 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Nash equilibrium, strict Nash, approximate (ε-)Nash
 - Dominant strategies, strict/weak dominance, iterated elimination
 - Correlated and coarse correlated equilibrium
+- Observable cheap-talk extensions and babbling-equilibrium transport
 - Best response, best-response dynamics
 - Security strategies (maximin), minimax guarantees, saddle points
 - Potential games (exact, ordinal, weighted), finite improvement property
@@ -70,6 +71,10 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 Key relationships are proved: dominant strategies are Nash, Nash EU dominates
 the security level, ESS implies Nash, Nash equilibria are correlated equilibria,
 potential game maximizers are Nash.
+
+The library keeps `Core/` dependency-light: it contains semantic structures and
+protocol/distribution constructions. `Concepts/` contains preference-dependent
+and EU-dependent predicates and transport theorems.
 
 ## Representations and bridges
 

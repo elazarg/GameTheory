@@ -215,13 +215,14 @@ Folder & Contents \\
   \TT{Math.Schauder.schauder_fixed_point} theorem. \\
 \TT{Core/} &
   \DefRef{GameForm}, \DefRef{KernelGame}, the \DefRef{ProtocolMap}
-  morphism vocabulary, simulations, isomorphisms, utility-invariance
-  results. \\
+  morphism vocabulary, simulations, isomorphisms, inert extensions,
+  and protocol-level babbling/cheap-talk constructions. \\
 \TT{Concepts/} &
   Solution concepts:\ Nash, dominance, best response, correlated /
   coarse correlated, Pareto, security, regret, approximate Nash,
-  potential, zero-sum, team, symmetric, rationalizability, common
-  knowledge, EU/preference properties. \\
+  babbling equilibria, potential, zero-sum, team, symmetric,
+  rationalizability, common knowledge, EU/preference properties,
+  and solution-concept transport theorems. \\
 \TT{Theorems/} &
   Major theorems:\ \DefRef{mixed_nash_exists},
   \DefRef{correlatedEq_exists}, \DefRef{von_neumann_minimax},
@@ -627,13 +628,13 @@ monad.  Identity and composition exist and satisfy the standard
 laws (\TT{ProtocolMap.id_comp}, \TT{comp_id}, \TT{comp_assoc}).
 
 \Variants
-\TT{KernelGame.Morphism} (\TT{Core/GameMorphism.lean}) is a protocol
-map together with utility-preservation
-$\util'(\outcomeMap(\omega))(i) = \util(\omega)(i)$.  A
+\TT{KernelGame.Morphism} (\TT{Core/GameMorphism.lean}) is the
+kernel-game analogue:\ a per-player strategy map preserving the
+induced joint utility distribution \TT{udist}.  \TT{EUMorphism}
+adds pointwise expected-utility preservation.  A
 \TT{KernelGame.Simulation} is a kernel-game morphism (the names
-coincide).  A \TT{KernelGame.Bisimulation} is a simulation whose
-strategy and outcome maps are bijective with simulation inverse;
-it expresses an EU-isomorphism.  A
+coincide).  A \TT{KernelGame.Bisimulation} is a game isomorphism;
+the EU-preserving version is \TT{EUGameIsomorphism}.  A
 \TT{GameForm.ProtocolIsomorphism} is the analogous bijective
 protocol-only version.  All of these come with \TT{id} and
 \TT{comp} together with the corresponding identity/associativity
@@ -644,8 +645,8 @@ bounded-utility hypotheses via \TT{toEUMorphismOfBounded}.
 \Faithfulness
 The morphism vocabulary is project-internal:\ no textbook canonizes
 "protocol map between strategic-form games."  The categorical laws
-are proved as \TT{simp}-lemmas (\TT{Core/GameForm.lean:307–349},
-\TT{Core/GameMorphism.lean:67–77}); their content is the
+are proved as \TT{simp}-lemmas in \TT{Core/GameForm.lean} and
+\TT{Core/GameMorphism.lean}; their content is the
 distributional analogue of a coalgebra homomorphism.
 
 % =====================================================================
@@ -660,7 +661,7 @@ $\mathcal{D}$.  We anchor at $\IsNash$ (\S\ref{sec:supp:isNash})
 and $\IsCorrelatedEq$ (\S\ref{sec:supp:isCE}); other concepts are
 bunched.
 
-\subsection{Deviation-family schema: \texttt{Core/GameForm.lean}}
+\subsection{Deviation-family schema: \texttt{Concepts/GameFormSolutionConcepts.lean}}
 \label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:ProfileDeviationFamily}\label{def:IsDeviationEqFamilyFor}
 
 \begin{leanbox}
@@ -811,6 +812,58 @@ use only exact equality of pushed-forward \TT{PMF} laws.  Finite
 outcome hypotheses remain localized to existence theorems and to
 expected-value lemmas that need finite sums.
 
+\subsection{Babbling and cheap-talk extensions}
+\label{sec:supp:babbling}
+\label{def:CheapTalkExtension}\label{def:BabblingDeviationPreservingFor}
+
+\begin{leanbox}
+structure CheapTalkExtension (F : GameForm $\iota$) where\\
+\bd Msg      : $\iota \to$ Type\\
+\bd default  : $\forall$ i, Msg i\\[3pt]
+def CheapTalkExtension.Strategy' (C : CheapTalkExtension F) (i : $\iota$) : Type :=\\
+\bdd C.Msg i $\times$ (($\forall$ j : $\iota$, C.Msg j) $\to$ F.Strategy i)\\[3pt]
+def BabblingDeviationPreservingFor (F H : GameForm $\iota$)\\
+\bd (prefF : $\iota \to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop)\\
+\bd (prefH : $\iota \to$ PMF H.Outcome $\to$ PMF H.Outcome $\to$ Prop)\\
+\bd (proj : $\forall$ i, H.Strategy i $\to$ F.Strategy i)\\
+\bd (embed : $\forall$ i, F.Strategy i $\to$ H.Strategy i) : Prop
+\end{leanbox}
+
+\Mathematical
+An observable cheap-talk strategy is a message together with a
+contingent action plan, evaluated after all messages are observed.
+The canonical babbling embedding sends the default message and
+uses a constant action plan.  The projection of a unilateral
+enriched deviation is the base action induced when all other
+players babble at their defaults.
+
+The preservation predicate is local around babbling profiles: it
+does not require global equality of payoffs or outcome laws between
+the base and enriched games.  This distinction matters because
+observable cheap talk can create additional non-babbling
+coordination equilibria.  The theorem proves only the standard
+one-way implication:
+\[
+  \GF.\IsNashFor(\Pref,\Profile)
+  \Longrightarrow
+  \GF^{\mathrm{ct}}.\IsNashFor(\Pref,\mathrm{embed}(\Profile)).
+\]
+
+\Textbook
+This is the babbling-equilibrium observation for cheap-talk games:
+if all players ignore the message channel, every unilateral
+deviation is payoff-equivalent to a base-game unilateral deviation.
+The library states the result at the \TT{GameForm} level for
+arbitrary preferences and then provides the EU-specialized
+\TT{KernelGame} corollary.
+
+\leancorr{\TT{Core/Babbling.lean} defines \TT{CheapTalkExtension},
+\TT{proj}, \TT{embed}, and \TT{BabblingDeviationPreservingFor};
+\TT{Concepts/Babbling.lean} proves \TT{babbling\_nashFor},
+\TT{KernelGame.babbling\_nash}, and the observable cheap-talk
+instance; \TT{Languages/NFG/CheapTalkExamples.lean} gives a Battle
+of the Sexes example.}
+
 % =====================================================================
 \subsection{Nash equilibrium: \texttt{KernelGame.IsNash}}
 \label{sec:supp:isNash}\label{def:KernelGame.IsNash}\label{def:IsNashFor}
@@ -838,7 +891,7 @@ has a strictly improving unilateral deviation:
     \EU(\KG, \Profile, i) \;\ge\; \EU(\KG, \Profile[i \mapsto s'], i).
 \end{equation}
 The library's \TT{IsNashFor} variant
-(\TT{Core/GameForm.lean}) generalizes \eqref{eq:supp:isNash} to
+(\TT{Concepts/GameFormSolutionConcepts.lean}) generalizes \eqref{eq:supp:isNash} to
 take an arbitrary preorder $\Pref$ on $\PMF{\Outcome}$:
 \[
   \forall i,\,\forall s'.\quad \Pref_i\bigl(\K(\Profile),\;\K(\Profile[i \mapsto s'])\bigr).
@@ -1454,7 +1507,8 @@ as an FOSG.  Soundness at the game-form simulation level.
 \label{sec:supp:transport}
 
 The main chapter's map-based transport theorem
-(\TT{Core/UtilityInvariance.lean}) states that a protocol map with
+(\TT{Concepts/GameMorphism.lean} and
+\TT{Concepts/UtilityInvariance.lean}) states that a protocol map with
 bijective \TT{stratMap} and bijective \TT{outcomeMap} transports the
 preference-parameterized Nash, best-response, dominance,
 weak/strict dominance, correlated-equilibrium, and
