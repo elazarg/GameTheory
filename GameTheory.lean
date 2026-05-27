@@ -8,7 +8,7 @@ import GameTheory.Core.KernelGame
 import GameTheory.Core.GameForm
 
 -- Solution concepts and properties
-import GameTheory.Concepts.GameForm
+import GameTheory.Concepts.GameFormSolutionConcepts
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.Convergence
 import GameTheory.Concepts.SequentialAssessment

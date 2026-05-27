@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.GameForm
+import GameTheory.Concepts.GameFormSolutionConcepts
 import GameTheory.Concepts.Deviation
 import Math.Probability
 

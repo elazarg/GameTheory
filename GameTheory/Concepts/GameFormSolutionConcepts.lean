@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Core.GameForm
 
 /-!
-# Preference-Parameterized Game-Form Concepts
+# Preference-Parameterized Game-Form Solution Concepts
 
 This file contains the composed layer for game forms: protocol plus preferences.
 The protocol-only definitions live in `GameTheory.Core.GameForm`.
