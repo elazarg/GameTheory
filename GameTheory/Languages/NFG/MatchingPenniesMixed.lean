@@ -4,22 +4,23 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.MixedExtension
+import GameTheory.Concepts.BinaryMixed
 import GameTheory.Languages.NFG.Examples
 import Mathlib.Probability.Distributions.Uniform
-import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.NormNum
 
 /-!
 # Mixed Matching Pennies
 
-This file proves the exact mixed Nash equilibrium of the normal-form matching
-pennies example: both players assign probability `1 / 2` to heads.
+This file instantiates the language-independent binary mixed-game calculus for
+the normal-form matching-pennies example.  The exact half/half mixed Nash theorem
+is proved in `GameTheory.Concepts.BinaryMixed` for any matching-pennies-like
+`KernelGame Bool`; this file only supplies the `heads`/`tails` labels and the
+four semantic payoff equations.
 -/
 
 open scoped BigOperators
 open Math.Probability
-open Math.PMFProduct
 
 namespace NFG
 
@@ -48,141 +49,44 @@ private instance matchingPenniesStrategyFintype :
     change Fintype MPAction
     infer_instance
 
-private def mpHH : Bool → MPAction := fun _ => heads
-private def mpHT : Bool → MPAction := fun b => if b then heads else tails
-private def mpTH : Bool → MPAction := fun b => if b then tails else heads
-private def mpTT : Bool → MPAction := fun _ => tails
+/-- The binary action labels for the compiled matching-pennies kernel game:
+`true` is heads and `false` is tails. -/
+private def matchingPenniesLabels :
+    GameTheory.KernelGame.BinaryActionLabels matchingPennies.toKernelGame where
+  toBool := fun _ =>
+    { toFun := fun
+        | heads => true
+        | tails => false
+      invFun := fun
+        | true => heads
+        | false => tails
+      left_inv := by
+        intro a
+        cases a <;> rfl
+      right_inv := by
+        intro b
+        cases b <;> rfl }
 
-private lemma mpHH_ne_mpHT : mpHH ≠ mpHT := by
-  intro h
-  have := congrFun h false
-  simp [mpHH, mpHT] at this
-
-private lemma mpHH_ne_mpTH : mpHH ≠ mpTH := by
-  intro h
-  have := congrFun h true
-  simp [mpHH, mpTH] at this
-
-private lemma mpHH_ne_mpTT : mpHH ≠ mpTT := by
-  intro h
-  have := congrFun h true
-  simp [mpHH, mpTT] at this
-
-private lemma mpHT_ne_mpTH : mpHT ≠ mpTH := by
-  intro h
-  have := congrFun h true
-  simp [mpHT, mpTH] at this
-
-private lemma mpHT_ne_mpTT : mpHT ≠ mpTT := by
-  intro h
-  have := congrFun h true
-  simp [mpHT, mpTT] at this
-
-private lemma mpTH_ne_mpTT : mpTH ≠ mpTT := by
-  intro h
-  have := congrFun h false
-  simp [mpTH, mpTT] at this
-
-private lemma univ_bool_mp_profile :
-    (Finset.univ : Finset (Bool → MPAction)) = {mpHH, mpHT, mpTH, mpTT} := by
-  ext f
-  constructor
-  · intro _
-    cases hf : f true <;> cases ht : f false
-    · simp [mpHH, hf, ht, funext_iff]
-    · simp [mpHT, hf, ht, funext_iff]
-    · simp [mpTH, hf, ht, funext_iff]
-    · simp [mpTT, hf, ht, funext_iff]
-  · intro _
-    simp
-
-private lemma mp_tails_toReal (μ : PMF MPAction) :
-    (μ tails).toReal = 1 - (μ heads).toReal := by
-  have h := Math.Probability.pmf_toReal_sum_one μ
-  have hfin : (Finset.univ : Finset MPAction) = {heads, tails} := by
-    ext a
-    cases a <;> simp
-  rw [hfin] at h
-  simp at h
-  linarith
-
-private lemma matchingPennies_mixedEu_true (σ : ∀ _ : Bool, PMF MPAction) :
-    matchingPennies.toKernelGame.mixedExtension.eu σ true =
-      (2 * (σ true heads).toReal - 1) * (2 * (σ false heads).toReal - 1) := by
-  rw [GameTheory.KernelGame.mixedExtension_eu]
-  simp [GameTheory.KernelGame.eu, NFGGame.toKernelGame, matchingPennies,
-    Math.Probability.expect_eq_sum, Math.PMFProduct.pmfPi_apply,
-    univ_bool_mp_profile, mpHH, mpHT, mpTH, mpTT, mp_tails_toReal,
-    mpHH_ne_mpHT, mpHH_ne_mpTH, mpHH_ne_mpTT,
-    mpHT_ne_mpTH, mpHT_ne_mpTT, mpTH_ne_mpTT,
-    Ne.symm mpHH_ne_mpHT, Ne.symm mpHH_ne_mpTH, Ne.symm mpHH_ne_mpTT,
-    Ne.symm mpHT_ne_mpTH, Ne.symm mpHT_ne_mpTT, Ne.symm mpTH_ne_mpTT]
-  ring_nf
-
-private lemma matchingPennies_mixedEu_false (σ : ∀ _ : Bool, PMF MPAction) :
-    matchingPennies.toKernelGame.mixedExtension.eu σ false =
-      -((2 * (σ true heads).toReal - 1) * (2 * (σ false heads).toReal - 1)) := by
-  rw [GameTheory.KernelGame.mixedExtension_eu]
-  simp [GameTheory.KernelGame.eu, NFGGame.toKernelGame, matchingPennies,
-    Math.Probability.expect_eq_sum, Math.PMFProduct.pmfPi_apply,
-    univ_bool_mp_profile, mpHH, mpHT, mpTH, mpTT, mp_tails_toReal,
-    mpHH_ne_mpHT, mpHH_ne_mpTH, mpHH_ne_mpTT,
-    mpHT_ne_mpTH, mpHT_ne_mpTT, mpTH_ne_mpTT,
-    Ne.symm mpHH_ne_mpHT, Ne.symm mpHH_ne_mpTH, Ne.symm mpHH_ne_mpTT,
-    Ne.symm mpHT_ne_mpTH, Ne.symm mpHT_ne_mpTT, Ne.symm mpTH_ne_mpTT]
-  ring_nf
-
-private lemma matchingPennies_mixedGain_true_heads (σ : ∀ _ : Bool, PMF MPAction) :
-    matchingPennies.toKernelGame.mixedGain σ true heads =
-      2 * (1 - (σ true heads).toReal) * (2 * (σ false heads).toReal - 1) := by
-  unfold GameTheory.KernelGame.mixedGain
-  rw [matchingPennies_mixedEu_true, matchingPennies_mixedEu_true]
-  rw [Function.update_self, Function.update_of_ne (by decide : false ≠ true)]
-  change (2 * ((PMF.pure heads : PMF MPAction) heads).toReal - 1) *
-        (2 * ((σ false) heads).toReal - 1) -
-      (2 * ((σ true) heads).toReal - 1) * (2 * ((σ false) heads).toReal - 1) =
-    2 * (1 - ((σ true) heads).toReal) * (2 * ((σ false) heads).toReal - 1)
-  simp [PMF.pure_apply]
-  ring_nf
-
-private lemma matchingPennies_mixedGain_true_tails (σ : ∀ _ : Bool, PMF MPAction) :
-    matchingPennies.toKernelGame.mixedGain σ true tails =
-      -2 * (σ true heads).toReal * (2 * (σ false heads).toReal - 1) := by
-  unfold GameTheory.KernelGame.mixedGain
-  rw [matchingPennies_mixedEu_true, matchingPennies_mixedEu_true]
-  rw [Function.update_self, Function.update_of_ne (by decide : false ≠ true)]
-  change (2 * ((PMF.pure tails : PMF MPAction) heads).toReal - 1) *
-        (2 * ((σ false) heads).toReal - 1) -
-      (2 * ((σ true) heads).toReal - 1) * (2 * ((σ false) heads).toReal - 1) =
-    -2 * ((σ true) heads).toReal * (2 * ((σ false) heads).toReal - 1)
-  simp [PMF.pure_apply]
-  ring_nf
-
-private lemma matchingPennies_mixedGain_false_heads (σ : ∀ _ : Bool, PMF MPAction) :
-    matchingPennies.toKernelGame.mixedGain σ false heads =
-      -2 * (1 - (σ false heads).toReal) * (2 * (σ true heads).toReal - 1) := by
-  unfold GameTheory.KernelGame.mixedGain
-  rw [matchingPennies_mixedEu_false, matchingPennies_mixedEu_false]
-  rw [Function.update_self, Function.update_of_ne (by decide : true ≠ false)]
-  change -((2 * ((σ true) heads).toReal - 1) *
-        (2 * ((PMF.pure heads : PMF MPAction) heads).toReal - 1)) -
-      -((2 * ((σ true) heads).toReal - 1) * (2 * ((σ false) heads).toReal - 1)) =
-    -2 * (1 - ((σ false) heads).toReal) * (2 * ((σ true) heads).toReal - 1)
-  simp [PMF.pure_apply]
-  ring_nf
-
-private lemma matchingPennies_mixedGain_false_tails (σ : ∀ _ : Bool, PMF MPAction) :
-    matchingPennies.toKernelGame.mixedGain σ false tails =
-      2 * (σ false heads).toReal * (2 * (σ true heads).toReal - 1) := by
-  unfold GameTheory.KernelGame.mixedGain
-  rw [matchingPennies_mixedEu_false, matchingPennies_mixedEu_false]
-  rw [Function.update_self, Function.update_of_ne (by decide : true ≠ false)]
-  change -((2 * ((σ true) heads).toReal - 1) *
-        (2 * ((PMF.pure tails : PMF MPAction) heads).toReal - 1)) -
-      -((2 * ((σ true) heads).toReal - 1) * (2 * ((σ false) heads).toReal - 1)) =
-    2 * ((σ false) heads).toReal * (2 * ((σ true) heads).toReal - 1)
-  simp [PMF.pure_apply]
-  ring_nf
+/-- Matching pennies satisfies the language-independent semantic payoff pattern
+for matching-pennies-like binary kernel games. -/
+private def matchingPennies_matchingPenniesLike :
+    matchingPennies.toKernelGame.MatchingPenniesLike matchingPenniesLabels where
+  scale := 1
+  scale_pos := by norm_num
+  eu_true := by
+    intro a b
+    cases a <;> cases b <;>
+      simp [GameTheory.KernelGame.BinaryActionLabels.profile,
+        GameTheory.KernelGame.BinaryActionLabels.action, matchingPenniesLabels,
+        GameTheory.KernelGame.eu, NFGGame.toKernelGame, matchingPennies,
+        Math.Probability.expect_pure]
+  eu_false := by
+    intro a b
+    cases a <;> cases b <;>
+      simp [GameTheory.KernelGame.BinaryActionLabels.profile,
+        GameTheory.KernelGame.BinaryActionLabels.action, matchingPenniesLabels,
+        GameTheory.KernelGame.eu, NFGGame.toKernelGame, matchingPennies,
+        Math.Probability.expect_pure]
 
 /-- The fair mixed profile for matching pennies. -/
 def matchingPenniesFairMixed : MixedProfile (fun _ : Bool => MPAction) :=
@@ -191,44 +95,9 @@ def matchingPenniesFairMixed : MixedProfile (fun _ : Bool => MPAction) :=
 /-- Matching pennies is balanced at the uniform mixed profile: every pure
 deviation has zero gain when both players are uniform. -/
 theorem matchingPennies_uniform_mixed_balanced :
-    matchingPennies.toKernelGame.IsUniformMixedBalanced := by
-  rw [GameTheory.KernelGame.isUniformMixedBalanced_iff_mixedGain_eq_zero]
-  intro who a
-  cases who
-  · cases a
-    · rw [matchingPennies_mixedGain_false_heads]
-      simp only [GameTheory.KernelGame.uniformMixedProfile]
-      change -2 * (1 - ((PMF.uniformOfFintype MPAction) heads).toReal) *
-        (2 * ((PMF.uniformOfFintype MPAction) heads).toReal - 1) = 0
-      rw [PMF.uniformOfFintype_apply]
-      have hcard : Fintype.card MPAction = 2 := by rfl
-      rw [hcard]
-      norm_num
-    · rw [matchingPennies_mixedGain_false_tails]
-      simp only [GameTheory.KernelGame.uniformMixedProfile]
-      change 2 * ((PMF.uniformOfFintype MPAction) heads).toReal *
-        (2 * ((PMF.uniformOfFintype MPAction) heads).toReal - 1) = 0
-      rw [PMF.uniformOfFintype_apply]
-      have hcard : Fintype.card MPAction = 2 := by rfl
-      rw [hcard]
-      norm_num
-  · cases a
-    · rw [matchingPennies_mixedGain_true_heads]
-      simp only [GameTheory.KernelGame.uniformMixedProfile]
-      change 2 * (1 - ((PMF.uniformOfFintype MPAction) heads).toReal) *
-        (2 * ((PMF.uniformOfFintype MPAction) heads).toReal - 1) = 0
-      rw [PMF.uniformOfFintype_apply]
-      have hcard : Fintype.card MPAction = 2 := by rfl
-      rw [hcard]
-      norm_num
-    · rw [matchingPennies_mixedGain_true_tails]
-      simp only [GameTheory.KernelGame.uniformMixedProfile]
-      change -2 * ((PMF.uniformOfFintype MPAction) heads).toReal *
-        (2 * ((PMF.uniformOfFintype MPAction) heads).toReal - 1) = 0
-      rw [PMF.uniformOfFintype_apply]
-      have hcard : Fintype.card MPAction = 2 := by rfl
-      rw [hcard]
-      norm_num
+    matchingPennies.toKernelGame.IsUniformMixedBalanced :=
+  GameTheory.KernelGame.MatchingPenniesLike.uniformMixed_balanced
+    matchingPennies_matchingPenniesLike
 
 /-- In the mixed matching-pennies game, Nash equilibrium is exactly the profile
 where both players assign probability `1 / 2` to heads. -/
@@ -236,34 +105,29 @@ theorem matchingPennies_mixed_nash_iff_half (σ : MixedProfile (fun _ : Bool => 
     IsNashMixed matchingPennies σ ↔
       (σ true heads).toReal = (1 / 2 : ℝ) ∧
         (σ false heads).toReal = (1 / 2 : ℝ) := by
-  constructor
-  · intro hN
-    have hg := (GameTheory.KernelGame.isNash_iff_gains_nonpos
-      (G := matchingPennies.toKernelGame) σ).mp hN
-    have hth := hg true heads
-    have htt := hg true tails
-    have hfh := hg false heads
-    have hft := hg false tails
-    rw [matchingPennies_mixedGain_true_heads] at hth
-    rw [matchingPennies_mixedGain_true_tails] at htt
-    rw [matchingPennies_mixedGain_false_heads] at hfh
-    rw [matchingPennies_mixedGain_false_tails] at hft
-    constructor <;> nlinarith
-  · rintro ⟨htrue, hfalse⟩
-    change matchingPennies.toKernelGame.mixedExtension.IsNash σ
-    rw [GameTheory.KernelGame.isNash_iff_gains_nonpos]
-    intro who a
-    cases who <;> cases a <;>
-      simp [matchingPennies_mixedGain_true_heads, matchingPennies_mixedGain_true_tails,
-        matchingPennies_mixedGain_false_heads, matchingPennies_mixedGain_false_tails,
-        htrue, hfalse]
+  change matchingPennies.toKernelGame.mixedExtension.IsNash σ ↔
+    (σ true heads).toReal = (1 / 2 : ℝ) ∧
+      (σ false heads).toReal = (1 / 2 : ℝ)
+  simpa [GameTheory.KernelGame.BinaryActionLabels.probTrue,
+    GameTheory.KernelGame.BinaryActionLabels.action, matchingPenniesLabels] using
+      GameTheory.KernelGame.MatchingPenniesLike.mixed_nash_iff_half
+        matchingPennies_matchingPenniesLike σ
 
 /-- The fair mixed profile is a mixed Nash equilibrium of matching pennies. -/
 theorem matchingPennies_fair_mixed_nash :
     IsNashMixed matchingPennies matchingPenniesFairMixed := by
-  change matchingPennies.toKernelGame.mixedExtension.IsNash matchingPenniesFairMixed
-  simpa [matchingPenniesFairMixed, GameTheory.KernelGame.uniformMixedProfile] using
-    matchingPennies_uniform_mixed_balanced.uniformMixedProfile_isNash
+  rw [matchingPennies_mixed_nash_iff_half]
+  constructor
+  · change ((PMF.uniformOfFintype MPAction) heads).toReal = (1 / 2 : ℝ)
+    rw [PMF.uniformOfFintype_apply]
+    have hcard : Fintype.card MPAction = 2 := by rfl
+    rw [hcard]
+    norm_num
+  · change ((PMF.uniformOfFintype MPAction) heads).toReal = (1 / 2 : ℝ)
+    rw [PMF.uniformOfFintype_apply]
+    have hcard : Fintype.card MPAction = 2 := by rfl
+    rw [hcard]
+    norm_num
 
 end
 

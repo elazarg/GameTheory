@@ -21,7 +21,7 @@ Public entrypoint for the normal-form game language layer.
 - `Syntax` defines the `NFGGame` structure, strategy profiles, and pure solution concepts
 - `Compile` maps the language into `KernelGame` and provides mixed strategy support
 - `Examples` demonstrates Prisoner's Dilemma and Matching Pennies
-- `MatchingPenniesMixed` proves the exact fair mixed Nash equilibrium of Matching Pennies
+- `MatchingPenniesMixed` instantiates the generic binary mixed-game theorem for Matching Pennies
 - `CheapTalkExamples` demonstrates babbling equilibria in observable cheap-talk extensions
 - `CongestionGame` defines congestion games with Rosenthal's potential
 - `PublicGoods` models voluntary contribution games

@@ -61,7 +61,8 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Correlated and coarse correlated equilibrium
 - Observable cheap-talk extensions and babbling-equilibrium transport
 - Best response, best-response dynamics
-- Mixed-extension gain tests, including uniform mixed balance ⇒ Nash
+- Mixed-extension gain tests, including uniform mixed balance ⇒ Nash and
+  binary matching-pennies-style exact mixed equilibrium characterizations
 - Security strategies (maximin), minimax guarantees, saddle points
 - Potential games (exact, ordinal, weighted), finite improvement property
 - Rationalizability, dominance solvability

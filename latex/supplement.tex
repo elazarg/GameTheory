@@ -1595,6 +1595,21 @@ such a balanced uniform profile is Nash.  This captures the row/column
 ``balanced payoff matrix'' calculation used by Matching Pennies without
 making any zero-sum or symmetry assumption.
 
+\paragraph{Binary matching-pennies calculus.}\
+\TT{Concepts/BinaryMixed.lean} factors out the reusable part of the
+Matching Pennies calculation.  \TT{BinaryActionLabels} labels each
+player's two pure strategies by \TT{Bool}; the file proves the binary
+PMF complement identity, expands mixed-extension EU over the four pure
+label profiles, and defines the bundled witness
+\TT{MatchingPenniesLike} (with Prop wrapper
+\TT{IsMatchingPenniesLike}) for the semantic payoff pattern ``matcher
+wins scale, mismatcher loses scale, opponent gets the negative.''  The theorem
+\TT{MatchingPenniesLike.mixed\_nash\_iff\_half} then states, at the
+\KG level, that a mixed profile is Nash iff both players put probability
+$1/2$ on the action labeled \TT{true}.  Language-specific examples only
+need to compile to \KG, provide labels, and prove the four payoff
+equations.
+
 \Faithfulness
 Faithful.  The library is honest about non-constructivity:\
 \TT{mixed_nash_exists_of_bounded} is \TT{noncomputable} because Brouwer is.
@@ -2001,8 +2016,10 @@ at which both players' EU is $0$.  Lean records both facts:\
 \TT{matchingPennies\_no\_pure\_nash} lives in
 \TT{Languages/NFG/Examples.lean}, while
 \TT{matchingPennies\_mixed\_nash\_iff\_half} in
-\TT{Languages/NFG/MatchingPenniesMixed.lean} states that a mixed
-profile is Nash iff each player's probability of heads is $1/2$.
+\TT{Languages/NFG/MatchingPenniesMixed.lean} instantiates the generic
+\TT{Concepts/BinaryMixed.lean} theorem by labeling heads as \TT{true}
+and tails as \TT{false}; it states that a mixed profile is Nash iff
+each player's probability of heads is $1/2$.
 
 \subsection{A two-step centipede in EFG}
 \label{sec:supp:examples:centipede}
