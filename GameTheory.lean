@@ -19,6 +19,7 @@ import GameTheory.Core.GameIsomorphism
 import GameTheory.Core.GameSimulation
 import GameTheory.Core.UtilityInvariance
 import GameTheory.Core.GameMorphism
+import GameTheory.Core.InertExtension
 
 -- Rationalizability
 import GameTheory.Concepts.Rationalizability
