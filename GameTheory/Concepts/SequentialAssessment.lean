@@ -87,11 +87,42 @@ noncomputable def BayesRuleAt (A : F.Assessment) {i : ι} (I : F.Info i) : Prop 
 noncomputable def BayesConsistentOnPath (A : F.Assessment) : Prop :=
   ∀ (i : ι) (I : F.Info i), F.IsOnPath A.strategy I → F.BayesRuleAt A I
 
+/-- Bayes consistency at every information state.
+
+This is most useful for fully mixed approximating assessments, where every
+information state that can be reached in the game is on path. -/
+noncomputable def BayesConsistentEverywhere (A : F.Assessment) : Prop :=
+  ∀ (i : ι) (I : F.Info i), F.BayesRuleAt A I
+
 /-- Weak consistency for PBE-style assessments: support everywhere and Bayes'
 rule on path. Stronger sequential-equilibrium consistency can replace this
 predicate without changing sequential rationality. -/
 noncomputable def WeaklyConsistentAssessment (A : F.Assessment) : Prop :=
   F.BeliefsSupported A ∧ F.BayesConsistentOnPath A
+
+/-- Strong pointwise consistency: support everywhere and Bayes' rule everywhere.
+For sequential-equilibrium consistency this is normally imposed on fully mixed
+approximating assessments, then transported to a limit assessment. -/
+noncomputable def FullyConsistentAssessment (A : F.Assessment) : Prop :=
+  F.BeliefsSupported A ∧ F.BayesConsistentEverywhere A
+
+/-- A generic limit-consistency scheme for assessments.
+
+The abstraction deliberately does not choose a topology. A language or theorem
+can provide:
+
+* an admissibility predicate, such as "fully mixed",
+* a per-approximant consistency predicate, such as Bayes' rule everywhere,
+* a convergence relation for sequences of assessments.
+
+Kreps-Wilson sequential consistency is an instance of this shape. -/
+noncomputable def IsLimitConsistentAssessment
+    (Admissible : F.Assessment → Prop)
+    (StepConsistent : F.Assessment → Prop)
+    (ConvergesTo : (ℕ → F.Assessment) → F.Assessment → Prop)
+    (A : F.Assessment) : Prop :=
+  ∃ As : ℕ → F.Assessment,
+    (∀ n, Admissible (As n) ∧ StepConsistent (As n)) ∧ ConvergesTo As A
 
 /-- A family of allowed continuation deviations at information states.
 
@@ -186,6 +217,33 @@ theorem WeaklyConsistentAssessment.bayesConsistentOnPath {A : F.Assessment}
     F.BayesConsistentOnPath A :=
   h.2
 
+theorem FullyConsistentAssessment.beliefsSupported {A : F.Assessment}
+    (h : F.FullyConsistentAssessment A) :
+    F.BeliefsSupported A :=
+  h.1
+
+theorem FullyConsistentAssessment.bayesConsistentEverywhere {A : F.Assessment}
+    (h : F.FullyConsistentAssessment A) :
+    F.BayesConsistentEverywhere A :=
+  h.2
+
+theorem FullyConsistentAssessment.weaklyConsistent {A : F.Assessment}
+    (h : F.FullyConsistentAssessment A) :
+    F.WeaklyConsistentAssessment A := by
+  constructor
+  · exact h.beliefsSupported F
+  · intro i I _hpath
+    exact h.bayesConsistentEverywhere F i I
+
+theorem IsLimitConsistentAssessment.exists_sequence
+    {Admissible StepConsistent : F.Assessment → Prop}
+    {ConvergesTo : (ℕ → F.Assessment) → F.Assessment → Prop}
+    {A : F.Assessment}
+    (h : F.IsLimitConsistentAssessment Admissible StepConsistent ConvergesTo A) :
+    ∃ As : ℕ → F.Assessment,
+      (∀ n, Admissible (As n) ∧ StepConsistent (As n)) ∧ ConvergesTo As A :=
+  h
+
 section StrategicDeviation
 
 variable [DecidableEq ι]
@@ -260,6 +318,18 @@ noncomputable def IsSequentialEqWithConsistencyForFamily
     (Consistent : F.Assessment → Prop)
     (A : F.Assessment) : Prop :=
   F.SequentiallyRationalForFamily pref Δ A ∧ Consistent A
+
+/-- Sequential-equilibrium shape where consistency is supplied by a generic
+limit of admissible, step-consistent assessments. -/
+noncomputable def IsSequentialEqWithLimitConsistencyForFamily
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (Δ : F.AssessmentDeviationFamily)
+    (Admissible : F.Assessment → Prop)
+    (StepConsistent : F.Assessment → Prop)
+    (ConvergesTo : (ℕ → F.Assessment) → F.Assessment → Prop)
+    (A : F.Assessment) : Prop :=
+  F.IsSequentialEqWithConsistencyForFamily pref Δ
+    (F.IsLimitConsistentAssessment Admissible StepConsistent ConvergesTo) A
 
 /-- The on-path/Bayes concrete specialization. Full Kreps-Wilson sequential
 equilibrium can be obtained by replacing `WeaklyConsistentAssessment` above with

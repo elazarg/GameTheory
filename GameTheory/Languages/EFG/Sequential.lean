@@ -146,6 +146,22 @@ theorem historyProb_eq_zero_of_not_reachable (σ : BehavioralProfile S)
 
 end GameTree
 
+namespace BehavioralProfile
+
+variable {S : InfoStructure}
+
+/-- A behavioral profile is fully mixed when every local action at every
+information set receives nonzero probability. -/
+def FullyMixed (σ : BehavioralProfile S) : Prop :=
+  ∀ (p : S.Player) (I : S.Infoset p) (a : S.Act I), σ p I a ≠ 0
+
+theorem FullyMixed.apply {σ : BehavioralProfile S} (h : σ.FullyMixed)
+    (p : S.Player) (I : S.Infoset p) (a : S.Act I) :
+    σ p I a ≠ 0 :=
+  h p I a
+
+end BehavioralProfile
+
 namespace EFGGame
 
 variable (G : EFGGame)
@@ -255,6 +271,10 @@ def Assessment.ofGeneric (A : G.GenericAssessment) : G.Assessment where
   cases A
   rfl
 
+/-- An EFG assessment has a fully mixed behavioral strategy profile. -/
+def Assessment.FullyMixed (A : G.Assessment) : Prop :=
+  A.strategy.FullyMixed
+
 /-- Total probability mass of histories reaching an EFG information set. -/
 noncomputable def infoSetMass (σ : BehavioralProfile G.inf)
     {p : G.inf.Player} (I : G.inf.Infoset p) : ENNReal :=
@@ -302,9 +322,70 @@ noncomputable def BayesRuleAt (A : G.Assessment)
 noncomputable def BayesConsistentOnPath (A : G.Assessment) : Prop :=
   G.toAssessmentForm.BayesConsistentOnPath (A.toGeneric G)
 
+/-- Bayes consistency at all EFG information sets. This is the usual
+per-approximant consistency condition for fully mixed assessments. -/
+noncomputable def BayesConsistentEverywhere (A : G.Assessment) : Prop :=
+  G.toAssessmentForm.BayesConsistentEverywhere (A.toGeneric G)
+
 /-- Weak consistency for EFG PBE-style assessments. -/
 noncomputable def WeaklyConsistentAssessment (A : G.Assessment) : Prop :=
   G.toAssessmentForm.WeaklyConsistentAssessment (A.toGeneric G)
+
+/-- Strong pointwise consistency for EFG assessments: support everywhere and
+Bayes' rule everywhere. -/
+noncomputable def FullyConsistentAssessment (A : G.Assessment) : Prop :=
+  G.toAssessmentForm.FullyConsistentAssessment (A.toGeneric G)
+
+/-- Generic limit consistency specialized to EFG assessments.
+
+The convergence relation is intentionally supplied by the caller, so this
+definition can be used with product-topology convergence, coordinatewise
+convergence, or a finite-game metric without changing the equilibrium layer. -/
+noncomputable def IsLimitConsistentAssessment
+    (Admissible : G.Assessment → Prop)
+    (StepConsistent : G.Assessment → Prop)
+    (ConvergesTo : (ℕ → G.Assessment) → G.Assessment → Prop)
+    (A : G.Assessment) : Prop :=
+  G.toAssessmentForm.IsLimitConsistentAssessment
+    (fun A' => Admissible (Assessment.ofGeneric G A'))
+    (fun A' => StepConsistent (Assessment.ofGeneric G A'))
+    (fun As A' =>
+      ConvergesTo
+        (fun n => Assessment.ofGeneric G (As n))
+        (Assessment.ofGeneric G A'))
+    (A.toGeneric G)
+
+theorem isLimitConsistentAssessment_iff
+    (Admissible : G.Assessment → Prop)
+    (StepConsistent : G.Assessment → Prop)
+    (ConvergesTo : (ℕ → G.Assessment) → G.Assessment → Prop)
+    (A : G.Assessment) :
+    G.IsLimitConsistentAssessment Admissible StepConsistent ConvergesTo A ↔
+      ∃ As : ℕ → G.Assessment,
+        (∀ n, Admissible (As n) ∧ StepConsistent (As n)) ∧ ConvergesTo As A := by
+  constructor
+  · intro h
+    rcases h with ⟨As, hstep, hconv⟩
+    refine ⟨fun n => Assessment.ofGeneric G (As n), ?_, ?_⟩
+    · intro n
+      exact hstep n
+    · change ConvergesTo
+        (fun n => Assessment.ofGeneric G (As n))
+        (Assessment.ofGeneric G (A.toGeneric G)) at hconv
+      simpa using hconv
+  · rintro ⟨As, hstep, hconv⟩
+    refine ⟨fun n => (As n).toGeneric G, ?_, ?_⟩
+    · intro n
+      simpa using hstep n
+    · change ConvergesTo
+        (fun n => Assessment.ofGeneric G ((As n).toGeneric G))
+        (Assessment.ofGeneric G (A.toGeneric G))
+      simpa using hconv
+
+theorem FullyConsistentAssessment.weaklyConsistent {A : G.Assessment}
+    (h : G.FullyConsistentAssessment A) :
+    G.WeaklyConsistentAssessment A :=
+  GameTheory.AssessmentForm.FullyConsistentAssessment.weaklyConsistent G.toAssessmentForm h
 
 /-- Expected continuation utility from a belief over histories. -/
 noncomputable def continuationEU
@@ -390,6 +471,18 @@ noncomputable def IsSequentialEqWithConsistencyForFamily
     (A : G.Assessment) : Prop :=
   G.SequentiallyRationalForFamily pref Δ A ∧ Consistent A
 
+/-- EFG sequential-equilibrium shape with generic limit consistency and an
+explicit deviation family. -/
+noncomputable def IsSequentialEqWithLimitConsistencyForFamily
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Δ : G.AssessmentDeviationFamily)
+    (Admissible : G.Assessment → Prop)
+    (StepConsistent : G.Assessment → Prop)
+    (ConvergesTo : (ℕ → G.Assessment) → G.Assessment → Prop)
+    (A : G.Assessment) : Prop :=
+  G.IsSequentialEqWithConsistencyForFamily pref Δ
+    (G.IsLimitConsistentAssessment Admissible StepConsistent ConvergesTo) A
+
 /-- Concrete sequential-equilibrium shape with an explicit consistency predicate
 and the default full-strategy deviation family. -/
 noncomputable def IsSequentialEqWithConsistencyFor
@@ -397,6 +490,17 @@ noncomputable def IsSequentialEqWithConsistencyFor
     (Consistent : G.Assessment → Prop)
     (A : G.Assessment) : Prop :=
   G.IsSequentialEqFor (G.SequentiallyRationalFor pref) Consistent A
+
+/-- EFG sequential-equilibrium shape with generic limit consistency and the
+default full-strategy deviation family. -/
+noncomputable def IsSequentialEqWithLimitConsistencyFor
+    (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
+    (Admissible : G.Assessment → Prop)
+    (StepConsistent : G.Assessment → Prop)
+    (ConvergesTo : (ℕ → G.Assessment) → G.Assessment → Prop)
+    (A : G.Assessment) : Prop :=
+  G.IsSequentialEqWithConsistencyFor pref
+    (G.IsLimitConsistentAssessment Admissible StepConsistent ConvergesTo) A
 
 /-- The on-path/Bayes concrete specialization of sequential equilibrium. Full
 Kreps-Wilson sequential equilibrium can be obtained by replacing
