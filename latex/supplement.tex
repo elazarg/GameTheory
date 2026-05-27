@@ -1598,9 +1598,10 @@ making any zero-sum or symmetry assumption.
 \paragraph{Binary matching-pennies calculus.}\
 \TT{Concepts/BinaryMixed.lean} factors out the reusable part of the
 Matching Pennies calculation.  \TT{BinaryActionLabels} labels each
-player's two pure strategies by \TT{Bool}; the file proves the binary
-PMF complement identity, expands mixed-extension EU over the four pure
-label profiles, and defines the bundled witness
+of the two players by \TT{Bool}, and also labels each player's two pure
+strategies by \TT{Bool}; the file proves the binary PMF complement
+identity, expands mixed-extension EU over the four pure label profiles,
+and defines the bundled witness
 \TT{MatchingPenniesLike} (with Prop wrapper
 \TT{IsMatchingPenniesLike}) for the semantic payoff pattern ``matcher
 wins scale, mismatcher loses scale, opponent gets the negative.''  The theorem

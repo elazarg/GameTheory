@@ -15,8 +15,8 @@ import Mathlib.Tactic.NormNum
 This file instantiates the language-independent binary mixed-game calculus for
 the normal-form matching-pennies example.  The exact half/half mixed Nash theorem
 is proved in `GameTheory.Concepts.BinaryMixed` for any matching-pennies-like
-`KernelGame Bool`; this file only supplies the `heads`/`tails` labels and the
-four semantic payoff equations.
+two-player `KernelGame` with Boolean player/action labels; this file only
+supplies the `heads`/`tails` labels and the four semantic payoff equations.
 -/
 
 open scoped BigOperators
@@ -53,6 +53,7 @@ private instance matchingPenniesStrategyFintype :
 `true` is heads and `false` is tails. -/
 private def matchingPenniesLabels :
     GameTheory.KernelGame.BinaryActionLabels matchingPennies.toKernelGame where
+  player := Equiv.refl Bool
   toBool := fun _ =>
     { toFun := fun
         | heads => true
@@ -77,14 +78,16 @@ private def matchingPennies_matchingPenniesLike :
     intro a b
     cases a <;> cases b <;>
       simp [GameTheory.KernelGame.BinaryActionLabels.profile,
-        GameTheory.KernelGame.BinaryActionLabels.action, matchingPenniesLabels,
+        GameTheory.KernelGame.BinaryActionLabels.action,
+        GameTheory.KernelGame.BinaryActionLabels.playerOf, matchingPenniesLabels,
         GameTheory.KernelGame.eu, NFGGame.toKernelGame, matchingPennies,
         Math.Probability.expect_pure]
   eu_false := by
     intro a b
     cases a <;> cases b <;>
       simp [GameTheory.KernelGame.BinaryActionLabels.profile,
-        GameTheory.KernelGame.BinaryActionLabels.action, matchingPenniesLabels,
+        GameTheory.KernelGame.BinaryActionLabels.action,
+        GameTheory.KernelGame.BinaryActionLabels.playerOf, matchingPenniesLabels,
         GameTheory.KernelGame.eu, NFGGame.toKernelGame, matchingPennies,
         Math.Probability.expect_pure]
 
@@ -109,7 +112,8 @@ theorem matchingPennies_mixed_nash_iff_half (σ : MixedProfile (fun _ : Bool => 
     (σ true heads).toReal = (1 / 2 : ℝ) ∧
       (σ false heads).toReal = (1 / 2 : ℝ)
   simpa [GameTheory.KernelGame.BinaryActionLabels.probTrue,
-    GameTheory.KernelGame.BinaryActionLabels.action, matchingPenniesLabels] using
+    GameTheory.KernelGame.BinaryActionLabels.action,
+    GameTheory.KernelGame.BinaryActionLabels.playerOf, matchingPenniesLabels] using
       GameTheory.KernelGame.MatchingPenniesLike.mixed_nash_iff_half
         matchingPennies_matchingPenniesLike σ
 
