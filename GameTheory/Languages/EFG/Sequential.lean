@@ -84,6 +84,66 @@ noncomputable def historyProb (σ : BehavioralProfile S) :
         σ p I a * (next a).historyProb σ rest := by
   simp [historyProb]
 
+/-- A history with nonzero probability must be a syntactically valid path in
+the tree. Zero-probability branches may still be reachable; this lemma only
+rules out malformed histories. -/
+theorem historyProb_ne_zero_reachable (σ : BehavioralProfile S)
+    (t : GameTree S Outcome) (h : List (HistoryStep S))
+    (hp : t.historyProb σ h ≠ 0) :
+    ∃ u : GameTree S Outcome, ReachBy h t u := by
+  induction t generalizing h with
+  | terminal z =>
+      cases h with
+      | nil => exact ⟨.terminal z, ReachBy.here _⟩
+      | cons step rest =>
+          simp at hp
+  | chance k μ hk next ih =>
+      cases h with
+      | nil =>
+          exact ⟨.chance k μ hk next, ReachBy.here _⟩
+      | cons step rest =>
+          cases step with
+          | chance k' b =>
+              by_cases hk' : k' = k
+              · subst hk'
+                have hmul : μ b * (next b).historyProb σ rest ≠ 0 := by
+                  simpa [historyProb] using hp
+                have hrest : (next b).historyProb σ rest ≠ 0 := right_ne_zero_of_mul hmul
+                obtain ⟨u, hu⟩ := ih b rest hrest
+                exact ⟨u, ReachBy.chance b hu⟩
+              · simp [historyProb, hk'] at hp
+          | action p I a =>
+              simp [historyProb] at hp
+  | @decision p I next ih =>
+      cases h with
+      | nil =>
+          exact ⟨.decision I next, ReachBy.here _⟩
+      | cons step rest =>
+          cases step with
+          | chance k b =>
+              simp [historyProb] at hp
+          | action q J a =>
+              by_cases hq : q = p
+              · subst hq
+                by_cases hI : J = I
+                · subst hI
+                  have hmul : σ q J a * (next a).historyProb σ rest ≠ 0 := by
+                    simpa [historyProb] using hp
+                  have hrest : (next a).historyProb σ rest ≠ 0 := right_ne_zero_of_mul hmul
+                  obtain ⟨u, hu⟩ := ih a rest hrest
+                  exact ⟨u, ReachBy.action a hu⟩
+                · simp [historyProb, hI] at hp
+              · simp [historyProb, hq] at hp
+
+/-- Contrapositive of `historyProb_ne_zero_reachable`: malformed histories have
+zero probability. -/
+theorem historyProb_eq_zero_of_not_reachable (σ : BehavioralProfile S)
+    (t : GameTree S Outcome) (h : List (HistoryStep S))
+    (hnot : ¬ ∃ u : GameTree S Outcome, ReachBy h t u) :
+    t.historyProb σ h = 0 := by
+  by_contra hp
+  exact hnot (historyProb_ne_zero_reachable σ t h hp)
+
 end GameTree
 
 namespace EFGGame
@@ -125,6 +185,29 @@ theorem continuationTree_spec {h : List (HistoryStep G.inf)}
   unfold continuationTree
   rw [dif_pos hreach]
   exact Classical.choose_spec hreach
+
+theorem historyProb_ne_zero_reachesTree {σ : BehavioralProfile G.inf}
+    {h : List (HistoryStep G.inf)} (hp : G.historyProb σ h ≠ 0) :
+    ∃ t : GameTree G.inf G.Outcome, G.ReachesTree h t := by
+  exact G.tree.historyProb_ne_zero_reachable σ h hp
+
+theorem historyProb_eq_zero_of_not_reachesTree {σ : BehavioralProfile G.inf}
+    {h : List (HistoryStep G.inf)}
+    (hnot : ¬ ∃ t : GameTree G.inf G.Outcome, G.ReachesTree h t) :
+    G.historyProb σ h = 0 := by
+  exact G.tree.historyProb_eq_zero_of_not_reachable σ h hnot
+
+theorem continuationTree_spec_of_reachesTree {h : List (HistoryStep G.inf)}
+    {t : GameTree G.inf G.Outcome} (hr : G.ReachesTree h t) :
+    ReachBy h G.tree (G.continuationTree h) :=
+  G.continuationTree_spec ⟨t, hr⟩
+
+theorem continuationTree_spec_of_reachesInfoSet {p : G.inf.Player}
+    {I : G.inf.Infoset p} {h : List (HistoryStep G.inf)}
+    (hr : G.ReachesInfoSet I h) :
+    ReachBy h G.tree (G.continuationTree h) := by
+  obtain ⟨next, hnext⟩ := hr
+  exact G.continuationTree_spec ⟨.decision I next, hnext⟩
 
 /-- Outcome distribution obtained by first sampling a history from a belief and
 then continuing from the reached subtree under `σ`. -/
@@ -190,6 +273,25 @@ def BeliefSupportedAt (A : G.Assessment)
 /-- Belief support at all EFG information sets. -/
 def BeliefsSupported (A : G.Assessment) : Prop :=
   G.toAssessmentForm.BeliefsSupported (A.toGeneric G)
+
+theorem BeliefsSupported.at {A : G.Assessment}
+    (h : G.BeliefsSupported A) {p : G.inf.Player} (I : G.inf.Infoset p) :
+    G.BeliefSupportedAt A I :=
+  h p I
+
+theorem BeliefSupportedAt.reachesInfoSet {A : G.Assessment}
+    {p : G.inf.Player} {I : G.inf.Infoset p}
+    (h : G.BeliefSupportedAt A I)
+    {hist : List (HistoryStep G.inf)} (hhist : A.beliefs I hist ≠ 0) :
+    G.ReachesInfoSet I hist :=
+  h hist hhist
+
+theorem BeliefSupportedAt.continuationTree_spec {A : G.Assessment}
+    {p : G.inf.Player} {I : G.inf.Infoset p}
+    (h : G.BeliefSupportedAt A I)
+    {hist : List (HistoryStep G.inf)} (hhist : A.beliefs I hist ≠ 0) :
+    ReachBy hist G.tree (G.continuationTree hist) :=
+  G.continuationTree_spec_of_reachesInfoSet (h.reachesInfoSet G hhist)
 
 /-- Pointwise Bayes rule at an EFG information set. -/
 noncomputable def BayesRuleAt (A : G.Assessment)

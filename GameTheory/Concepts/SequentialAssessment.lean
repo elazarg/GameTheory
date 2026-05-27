@@ -117,6 +117,14 @@ theorem Subfamily.refl (Δ : F.AssessmentDeviationFamily) : Δ.Subfamily Δ := b
   intro A i I d
   exact ⟨d, rfl⟩
 
+theorem Subfamily.trans {Δ₁ Δ₂ Δ₃ : F.AssessmentDeviationFamily}
+    (h₁₂ : Δ₁.Subfamily Δ₂) (h₂₃ : Δ₂.Subfamily Δ₃) :
+    Δ₁.Subfamily Δ₃ := by
+  intro A i I d₁
+  obtain ⟨d₂, hd₂⟩ := h₁₂ A i I d₁
+  obtain ⟨d₃, hd₃⟩ := h₂₃ A i I d₂
+  exact ⟨d₃, hd₂.trans hd₃⟩
+
 end AssessmentDeviationFamily
 
 /-- Preference-parametric sequential rationality at one information state,
@@ -150,6 +158,33 @@ theorem sequentiallyRationalForFamily_mono
   intro i I d₁
   obtain ⟨d₂, hd⟩ := hsub A i I d₁
   simpa [SequentiallyRationalAtForFamily, hd] using h i I d₂
+
+/-- Pointwise version of `sequentiallyRationalForFamily_mono`. -/
+theorem sequentiallyRationalAtForFamily_mono
+    {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
+    {Δ₁ Δ₂ : F.AssessmentDeviationFamily}
+    (hsub : Δ₁.Subfamily Δ₂)
+    {A : F.Assessment} {i : ι} {I : F.Info i}
+    (h : F.SequentiallyRationalAtForFamily pref Δ₂ A I) :
+    F.SequentiallyRationalAtForFamily pref Δ₁ A I := by
+  intro d₁
+  obtain ⟨d₂, hd⟩ := hsub A i I d₁
+  simpa [SequentiallyRationalAtForFamily, hd] using h d₂
+
+theorem BeliefsSupported.at {A : F.Assessment}
+    (h : F.BeliefsSupported A) {i : ι} (I : F.Info i) :
+    F.BeliefSupportedAt A I :=
+  h i I
+
+theorem WeaklyConsistentAssessment.beliefsSupported {A : F.Assessment}
+    (h : F.WeaklyConsistentAssessment A) :
+    F.BeliefsSupported A :=
+  h.1
+
+theorem WeaklyConsistentAssessment.bayesConsistentOnPath {A : F.Assessment}
+    (h : F.WeaklyConsistentAssessment A) :
+    F.BayesConsistentOnPath A :=
+  h.2
 
 section StrategicDeviation
 
