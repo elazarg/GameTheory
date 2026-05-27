@@ -8,7 +8,7 @@ import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
 
 /-!
-# GameTheory.Core.UtilityInvariance
+# Utility Invariance
 
 Utility transformations that preserve Nash equilibria.
 
@@ -16,15 +16,6 @@ An affine transformation of utilities (positive scaling plus per-player shift)
 does not change which strategy profiles are Nash equilibria. This is a
 fundamental invariance property: solution concepts depend on the ordinal
 ranking of outcomes, not on the cardinal utility scale.
-
-## Main results
-
-- `ofEU_nash_affine` -- affine transformation `u' σ i = a * u σ i + b i` with
-  `a > 0` preserves Nash equilibria
-- `ofEU_nash_shift` -- adding a per-player constant preserves Nash equilibria
-  (special case of affine with `a = 1`)
-- `ofEU_nash_scale` -- positive scaling preserves Nash equilibria
-  (special case of affine with `b = 0`)
 -/
 
 namespace GameTheory

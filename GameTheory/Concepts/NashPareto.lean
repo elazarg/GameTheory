@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Core.GameProperties
+import GameTheory.Concepts.GameProperties
 import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.StrictNashProperties

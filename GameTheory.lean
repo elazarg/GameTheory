@@ -8,9 +8,13 @@ import GameTheory.Core.KernelGame
 import GameTheory.Core.GameForm
 
 -- Solution concepts and properties
+import GameTheory.Concepts.GameForm
 import GameTheory.Concepts.SolutionConcepts
 import GameTheory.Concepts.Convergence
 import GameTheory.Concepts.SequentialAssessment
+import GameTheory.Concepts.GameMorphism
+import GameTheory.Concepts.InertExtension
+import GameTheory.Concepts.Babbling
 import GameTheory.Concepts.DeviationSimulation
 import GameTheory.Concepts.Deviation
 import GameTheory.Concepts.BestResponse
@@ -19,9 +23,7 @@ import GameTheory.Concepts.EUProperties
 import GameTheory.Concepts.OfEUProperties
 import GameTheory.Core.GameIsomorphism
 import GameTheory.Core.GameSimulation
-import GameTheory.Core.UtilityInvariance
-import GameTheory.Core.GameMorphism
-import GameTheory.Core.InertExtension
+import GameTheory.Concepts.UtilityInvariance
 
 -- Rationalizability
 import GameTheory.Concepts.Rationalizability
@@ -47,7 +49,7 @@ import GameTheory.Concepts.NashProperties
 import GameTheory.Concepts.StrongNash
 
 -- Game properties and welfare
-import GameTheory.Core.GameProperties
+import GameTheory.Concepts.GameProperties
 import GameTheory.Concepts.NashPareto
 import GameTheory.Concepts.WelfareTheorems
 import GameTheory.Concepts.PriceOfAnarchy
