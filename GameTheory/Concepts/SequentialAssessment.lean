@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Core.KernelGame
+import GameTheory.Concepts.Convergence
 
 /-!
 # Sequential Assessments
@@ -89,8 +90,10 @@ noncomputable def BayesConsistentOnPath (A : F.Assessment) : Prop :=
 
 /-- Bayes consistency at every information state.
 
-This is most useful for fully mixed approximating assessments, where every
-information state that can be reached in the game is on path. -/
+This is a strong pointwise condition. In languages with chance moves it is
+usually appropriate only under assumptions ensuring the relevant information
+states have positive reach probability; otherwise `BayesConsistentOnPath` is the
+safer default. -/
 noncomputable def BayesConsistentEverywhere (A : F.Assessment) : Prop :=
   ∀ (i : ι) (I : F.Info i), F.BayesRuleAt A I
 
@@ -123,6 +126,27 @@ noncomputable def IsLimitConsistentAssessment
     (A : F.Assessment) : Prop :=
   ∃ As : ℕ → F.Assessment,
     (∀ n, Admissible (As n) ∧ StepConsistent (As n)) ∧ ConvergesTo As A
+
+/-- Pointwise convergence of assessments, given a convergence relation for each
+player's strategy type. Beliefs converge pointwise as PMFs over histories. -/
+def AssessmentConvergesPointwiseWith
+    (StrategyConverges : ∀ i : ι, (ℕ → F.Strategy i) → F.Strategy i → Prop)
+    (As : ℕ → F.Assessment) (A : F.Assessment) : Prop :=
+  ProfileConvergesWith StrategyConverges
+      (fun n => (As n).strategy) A.strategy ∧
+    ∀ (i : ι) (I : F.Info i),
+      PMFConvergesPointwise (fun n => (As n).beliefs I) (A.beliefs I)
+
+/-- Limit consistency using the standard pointwise assessment convergence
+assembled from per-player strategy convergence and pointwise PMF convergence of
+beliefs. -/
+noncomputable def IsPointwiseLimitConsistentAssessment
+    (StrategyConverges : ∀ i : ι, (ℕ → F.Strategy i) → F.Strategy i → Prop)
+    (Admissible : F.Assessment → Prop)
+    (StepConsistent : F.Assessment → Prop)
+    (A : F.Assessment) : Prop :=
+  F.IsLimitConsistentAssessment Admissible StepConsistent
+    (F.AssessmentConvergesPointwiseWith StrategyConverges) A
 
 /-- A family of allowed continuation deviations at information states.
 
@@ -243,6 +267,34 @@ theorem IsLimitConsistentAssessment.exists_sequence
     ∃ As : ℕ → F.Assessment,
       (∀ n, Admissible (As n) ∧ StepConsistent (As n)) ∧ ConvergesTo As A :=
   h
+
+theorem AssessmentConvergesPointwiseWith.strategy
+    {StrategyConverges : ∀ i : ι, (ℕ → F.Strategy i) → F.Strategy i → Prop}
+    {As : ℕ → F.Assessment} {A : F.Assessment}
+    (h : F.AssessmentConvergesPointwiseWith StrategyConverges As A) :
+    ProfileConvergesWith StrategyConverges
+      (fun n => (As n).strategy) A.strategy :=
+  h.1
+
+theorem AssessmentConvergesPointwiseWith.beliefs
+    {StrategyConverges : ∀ i : ι, (ℕ → F.Strategy i) → F.Strategy i → Prop}
+    {As : ℕ → F.Assessment} {A : F.Assessment}
+    (h : F.AssessmentConvergesPointwiseWith StrategyConverges As A)
+    (i : ι) (I : F.Info i) :
+    PMFConvergesPointwise (fun n => (As n).beliefs I) (A.beliefs I) :=
+  h.2 i I
+
+theorem isPointwiseLimitConsistentAssessment_iff
+    (StrategyConverges : ∀ i : ι, (ℕ → F.Strategy i) → F.Strategy i → Prop)
+    (Admissible : F.Assessment → Prop)
+    (StepConsistent : F.Assessment → Prop)
+    (A : F.Assessment) :
+    F.IsPointwiseLimitConsistentAssessment
+        StrategyConverges Admissible StepConsistent A ↔
+      ∃ As : ℕ → F.Assessment,
+        (∀ n, Admissible (As n) ∧ StepConsistent (As n)) ∧
+          F.AssessmentConvergesPointwiseWith StrategyConverges As A := by
+  rfl
 
 section StrategicDeviation
 

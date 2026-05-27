@@ -27,6 +27,7 @@ specializations are provided as corollaries of those generic predicates.
 
 namespace EFG
 
+open Filter
 open GameTheory
 open Math.Probability
 
@@ -146,6 +147,24 @@ theorem historyProb_eq_zero_of_not_reachable (σ : BehavioralProfile S)
 
 end GameTree
 
+namespace BehavioralStrategy
+
+variable {S : InfoStructure} {p : S.Player}
+
+/-- Pointwise convergence of behavioral strategies: for every information set,
+the local mixed action converges pointwise as a PMF. -/
+def ConvergesPointwise
+    (σs : ℕ → BehavioralStrategy S p) (σ : BehavioralStrategy S p) : Prop :=
+  ∀ I : S.Infoset p, PMFConvergesPointwise (fun n => σs n I) (σ I)
+
+theorem ConvergesPointwise.apply {σs : ℕ → BehavioralStrategy S p}
+    {σ : BehavioralStrategy S p} (h : ConvergesPointwise σs σ)
+    (I : S.Infoset p) (a : S.Act I) :
+    Tendsto (fun n : ℕ => σs n I a) atTop (nhds (σ I a)) :=
+  (h I).apply a
+
+end BehavioralStrategy
+
 namespace BehavioralProfile
 
 variable {S : InfoStructure}
@@ -159,6 +178,20 @@ theorem FullyMixed.apply {σ : BehavioralProfile S} (h : σ.FullyMixed)
     (p : S.Player) (I : S.Infoset p) (a : S.Act I) :
     σ p I a ≠ 0 :=
   h p I a
+
+/-- Pointwise convergence of behavioral profiles, player by player and then
+information-set/action by information-set/action. -/
+def ConvergesPointwise
+    (σs : ℕ → BehavioralProfile S) (σ : BehavioralProfile S) : Prop :=
+  ProfileConvergesWith
+    (fun p : S.Player => BehavioralStrategy.ConvergesPointwise (S := S) (p := p))
+    σs σ
+
+theorem ConvergesPointwise.apply {σs : ℕ → BehavioralProfile S}
+    {σ : BehavioralProfile S} (h : ConvergesPointwise σs σ)
+    (p : S.Player) (I : S.Infoset p) (a : S.Act I) :
+    Tendsto (fun n : ℕ => σs n p I a) atTop (nhds (σ p I a)) :=
+  (h p).apply I a
 
 end BehavioralProfile
 
@@ -387,6 +420,50 @@ theorem FullyConsistentAssessment.weaklyConsistent {A : G.Assessment}
     G.WeaklyConsistentAssessment A :=
   GameTheory.AssessmentForm.FullyConsistentAssessment.weaklyConsistent G.toAssessmentForm h
 
+/-- Pointwise convergence of EFG assessments: behavioral strategies converge
+pointwise and every belief PMF converges pointwise over histories. -/
+def AssessmentConvergesPointwise
+    (As : ℕ → G.Assessment) (A : G.Assessment) : Prop :=
+  BehavioralProfile.ConvergesPointwise (fun n => (As n).strategy) A.strategy ∧
+    ∀ (p : G.inf.Player) (I : G.inf.Infoset p),
+      PMFConvergesPointwise (fun n => (As n).beliefs I) (A.beliefs I)
+
+/-- Generic assessment pointwise convergence agrees with the concrete EFG
+componentwise spelling. -/
+theorem assessmentConvergesPointwise_iff_generic
+    (As : ℕ → G.Assessment) (A : G.Assessment) :
+    G.AssessmentConvergesPointwise As A ↔
+      G.toAssessmentForm.AssessmentConvergesPointwiseWith
+        (fun p : G.inf.Player =>
+          BehavioralStrategy.ConvergesPointwise (S := G.inf) (p := p))
+        (fun n => (As n).toGeneric G)
+        (A.toGeneric G) := by
+  rfl
+
+/-- Kreps-Wilson-style consistency shape for EFG assessments: the assessment is
+a pointwise limit of fully mixed, weakly consistent assessments.
+
+The per-approximant consistency condition is weak/on-path consistency rather
+than Bayes everywhere because chance moves may have zero-probability branches;
+fully mixed player behavior alone does not make those histories reachable. -/
+noncomputable def SequentiallyConsistentAssessment (A : G.Assessment) : Prop :=
+  G.IsLimitConsistentAssessment
+    (fun A' => A'.FullyMixed G)
+    G.WeaklyConsistentAssessment
+    G.AssessmentConvergesPointwise
+    A
+
+theorem sequentiallyConsistentAssessment_iff (A : G.Assessment) :
+    G.SequentiallyConsistentAssessment A ↔
+      ∃ As : ℕ → G.Assessment,
+        (∀ n, (As n).FullyMixed G ∧ G.WeaklyConsistentAssessment (As n)) ∧
+          G.AssessmentConvergesPointwise As A := by
+  exact G.isLimitConsistentAssessment_iff
+    (fun A' => A'.FullyMixed G)
+    G.WeaklyConsistentAssessment
+    G.AssessmentConvergesPointwise
+    A
+
 /-- Expected continuation utility from a belief over histories. -/
 noncomputable def continuationEU
     (β : PMF (List (HistoryStep G.inf))) (σ : BehavioralProfile G.inf)
@@ -502,16 +579,16 @@ noncomputable def IsSequentialEqWithLimitConsistencyFor
   G.IsSequentialEqWithConsistencyFor pref
     (G.IsLimitConsistentAssessment Admissible StepConsistent ConvergesTo) A
 
-/-- The on-path/Bayes concrete specialization of sequential equilibrium. Full
-Kreps-Wilson sequential equilibrium can be obtained by replacing
-`WeaklyConsistentAssessment` with a stronger limit-consistency predicate. -/
+/-- Concrete sequential equilibrium: sequential rationality plus
+Kreps-Wilson-style pointwise limit consistency. The weaker on-path/Bayes notion
+is `IsPerfectBayesianEqForPref`. -/
 noncomputable def IsSequentialEqForPref
     (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
     (A : G.Assessment) : Prop :=
-  G.IsSequentialEqWithConsistencyFor pref G.WeaklyConsistentAssessment A
+  G.IsSequentialEqWithConsistencyFor pref G.SequentiallyConsistentAssessment A
 
-/-- EU-specialized concrete sequential-equilibrium predicate using the same
-weak consistency condition as `IsPerfectBayesianEq`. -/
+/-- EU-specialized concrete sequential-equilibrium predicate using pointwise
+limit consistency. -/
 noncomputable def IsSequentialEq (A : G.Assessment) : Prop :=
   G.IsSequentialEqForPref G.euOutcomePref A
 
@@ -545,7 +622,7 @@ theorem isSequentialEqForPref_iff
     (pref : G.inf.Player → PMF G.Outcome → PMF G.Outcome → Prop)
     (A : G.Assessment) :
     G.IsSequentialEqForPref pref A ↔
-      G.SequentiallyRationalFor pref A ∧ G.WeaklyConsistentAssessment A := by
+      G.SequentiallyRationalFor pref A ∧ G.SequentiallyConsistentAssessment A := by
   rfl
 
 theorem isPerfectBayesianEq_iff (A : G.Assessment) :
@@ -555,7 +632,7 @@ theorem isPerfectBayesianEq_iff (A : G.Assessment) :
 
 theorem isSequentialEq_iff (A : G.Assessment) :
     G.IsSequentialEq A ↔
-      G.SequentiallyRational A ∧ G.WeaklyConsistentAssessment A := by
+      G.SequentiallyRational A ∧ G.SequentiallyConsistentAssessment A := by
   rfl
 
 theorem IsPerfectBayesianEq.sequentiallyRational {A : G.Assessment}
@@ -578,8 +655,8 @@ theorem IsSequentialEq.sequentiallyRational {A : G.Assessment}
     (h : G.IsSequentialEq A) : G.SequentiallyRational A :=
   h.1
 
-theorem IsSequentialEq.weaklyConsistent {A : G.Assessment}
-    (h : G.IsSequentialEq A) : G.WeaklyConsistentAssessment A :=
+theorem IsSequentialEq.sequentiallyConsistent {A : G.Assessment}
+    (h : G.IsSequentialEq A) : G.SequentiallyConsistentAssessment A :=
   h.2
 
 end StrategicDeviation
