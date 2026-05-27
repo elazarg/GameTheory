@@ -12,6 +12,7 @@ import GameTheory.Languages.EFG.CompileObs
 import GameTheory.Languages.EFG.Kuhn
 import GameTheory.Languages.EFG.Theorems
 import GameTheory.Languages.EFG.Examples
+import GameTheory.Languages.EFG.Sequential
 import GameTheory.Languages.EFG.Refinements
 import GameTheory.Theorems.OneShotDeviation
 import GameTheory.Theorems.Zermelo
