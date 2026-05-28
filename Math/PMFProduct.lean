@@ -1170,53 +1170,6 @@ theorem pmfPi_cond_coord_other_marginal
     σ q := by
   exact pmfPi_cond_coord_push_other σ hq E hE
 
--- ---- Event mass under product PMFs --------------------------------------
-
-open Classical in
-/-- The "event mass" of a predicate under a product PMF (sum form). -/
-noncomputable def pmfPiMass (σ : ∀ i, PMF (A i))
-    (P : (∀ i, A i) → Prop) : ENNReal :=
-  ∑ s : (∀ i, A i), if P s then pmfPi (A := A) σ s else 0
-
-lemma pmfPiMass_eq_pmfMass (σ : ∀ i, PMF (A i))
-    (P : (∀ i, A i) → Prop) :
-    pmfPiMass (A := A) σ P = pmfMass (μ := pmfPi (A := A) σ) P := by
-  classical
-  simp [pmfPiMass, pmfMass, pmfMask]
-
-/-- Basic bound: event mass ≤ 1 (hence never `⊤`). -/
-lemma pmfPiMass_le_one (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
-    pmfPiMass (A := A) σ P ≤ 1 := by
-  classical
-  -- pointwise: ite ≤ μ s
-  have hle : ∀ s : (∀ i, A i),
-      (if P s then pmfPi (A := A) σ s else 0) ≤ (pmfPi (A := A) σ s) := by
-    intro s; by_cases h : P s <;> simp [h]
-  have hsum :
-      (∑ s : (∀ i, A i), if P s then pmfPi (A := A) σ s else 0)
-        ≤
-      (∑ s : (∀ i, A i), pmfPi (A := A) σ s) := by
-    -- `Finset.sum_le_sum` on `univ`
-    simpa using
-      (Finset.sum_le_sum (s := (Finset.univ : Finset (∀ i, A i)))
-        (fun s _hs => hle s))
-  -- rewrite the RHS sum to `1`
-  have htot : (∑ s : (∀ i, A i), pmfPi (A := A) σ s) = 1 :=
-    sum_coe_fintype (pmfPi (A := A) σ)
-  -- finish
-  exact le_of_le_of_eq hsum htot
-
-lemma pmfPiMass_ne_top (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
-    pmfPiMass (A := A) σ P ≠ (⊤ : ENNReal) := by
-  simpa [pmfPiMass_eq_pmfMass (A := A) σ P] using
-    pmfMass_ne_top (μ := pmfPi (A := A) σ) P
-
-/-- Mass of the always-true event is 1. -/
-lemma pmfPiMass_true (σ : ∀ i, PMF (A i)) :
-    pmfPiMass (A := A) σ (fun _ : (∀ i, A i) => True) = 1 := by
-  simpa [pmfPiMass_eq_pmfMass (A := A) σ (fun _ : (∀ i, A i) => True)] using
-    pmfMass_true (pmfPi (A := A) σ)
-
 -- ---- Cross-multiplication & mass invariance ------------------------------
 
 open Classical in
@@ -1308,16 +1261,18 @@ theorem pmfPi_event_ratio_invariant_of_ignores
         apply Finset.sum_congr rfl; intro s1 _
         rw [Finset.mul_sum]
 
+omit [∀ i, Fintype (A i)] in
 open Classical in
 /-- Mass is invariant under updating coordinate `j`, if the event ignores `j`. -/
-theorem pmfPi_mass_invariant_of_ignores
+theorem pmfPi_mass_invariant_of_ignores [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
     (P : (∀ i, A i) → Prop)
     (hP : Ignores (A := A) j P) :
-    pmfPiMass (A := A) (Function.update σ j τ) P
+    pmfMass (μ := pmfPi (A := A) (Function.update σ j τ)) P
       =
-    pmfPiMass (A := A) σ P := by
+    pmfMass (μ := pmfPi (A := A) σ) P := by
   classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   have h :=
     pmfPi_event_ratio_invariant_of_ignores
       (A := A) (σ := σ) (j := j) (τ := τ)
@@ -1327,9 +1282,9 @@ theorem pmfPi_mass_invariant_of_ignores
   -- h : mU * mass(True under old) = mO * mass(True under updated)
   -- rewrite both True-masses to 1, then simp
   have h' :
-      pmfPiMass (A := A) (Function.update σ j τ) P * 1
+      pmfMass (μ := pmfPi (A := A) (Function.update σ j τ)) P * 1
         =
-      pmfPiMass (A := A) σ P * 1 := by
+      pmfMass (μ := pmfPi (A := A) σ) P * 1 := by
     -- first rewrite the two True-masses in `h` to `1`
     have hT_old :
         (∑ s : (∀ i, A i), if (fun _ => True) s then (pmfPi (A := A) σ) s else 0) = 1 := by
@@ -1340,29 +1295,31 @@ theorem pmfPi_mass_invariant_of_ignores
           then (pmfPi (A := A) (Function.update σ j τ)) s else 0) = 1 := by
       simpa using (sum_coe_fintype (pmfPi (A := A) (Function.update σ j τ)))
     -- now `simp` actually has concrete rewrite rules for those factors
-    simp_all only [pmfPi_apply, ↓reduceIte, mul_one]
-    exact h
+    simp_all only [pmfMass, pmfMask, tsum_fintype, pmfPi_apply, ↓reduceIte, mul_one]
   simpa [mul_one] using h'
 
+omit [∀ i, Fintype (A i)] in
 open Classical in
 /-- Conditional probability (ratio of masses) is invariant under updating coordinate `j`,
     provided both events ignore `j` and the denominator has nonzero mass. -/
-theorem pmfPi_cond_prob_invariant_of_ignores
+theorem pmfPi_cond_prob_invariant_of_ignores [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
     (Num Denom : (∀ i, A i) → Prop)
     (hNum : Ignores (A := A) j Num)
     (hDen : Ignores (A := A) j Denom)
-    (hDO : pmfPiMass (A := A) σ Denom ≠ 0) :
-    (pmfPiMass (A := A) (Function.update σ j τ) Num)
-     / (pmfPiMass (A := A) (Function.update σ j τ) Denom)
+    (hDO : pmfMass (μ := pmfPi (A := A) σ) Denom ≠ 0) :
+    (pmfMass (μ := pmfPi (A := A) (Function.update σ j τ)) Num)
+     / (pmfMass (μ := pmfPi (A := A) (Function.update σ j τ)) Denom)
       =
-    (pmfPiMass (A := A) σ Num) / (pmfPiMass (A := A) σ Denom) := by
+    (pmfMass (μ := pmfPi (A := A) σ) Num) /
+      (pmfMass (μ := pmfPi (A := A) σ) Denom) := by
   classical
+  letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   -- abbreviate the four masses
-  set mNU : ENNReal := pmfPiMass (A := A) (Function.update σ j τ) Num
-  set mDU : ENNReal := pmfPiMass (A := A) (Function.update σ j τ) Denom
-  set mNO : ENNReal := pmfPiMass (A := A) σ Num
-  set mDO : ENNReal := pmfPiMass (A := A) σ Denom
+  set mNU : ENNReal := pmfMass (μ := pmfPi (A := A) (Function.update σ j τ)) Num
+  set mDU : ENNReal := pmfMass (μ := pmfPi (A := A) (Function.update σ j τ)) Denom
+  set mNO : ENNReal := pmfMass (μ := pmfPi (A := A) σ) Num
+  set mDO : ENNReal := pmfMass (μ := pmfPi (A := A) σ) Denom
   have hDU : mDU ≠ 0 := by
     have hm := pmfPi_mass_invariant_of_ignores
       (A := A) (σ := σ) (j := j) (τ := τ) (P := Denom) hDen
@@ -1370,16 +1327,17 @@ theorem pmfPi_cond_prob_invariant_of_ignores
   have hcross :
       mNU * mDO = mNO * mDU := by
     -- your cross-multiplication lemma, just unfolded
-    simpa [mNU, mDU, mNO, mDO, pmfPiMass]
+    simpa [mNU, mDU, mNO, mDO, pmfMass, pmfMask, tsum_fintype]
       using
         (pmfPi_event_ratio_invariant_of_ignores
           (A := A) (σ := σ) (j := j) (τ := τ)
           (Num := Num) (Denom := Denom) hNum hDen)
   -- non-top facts (needed for ENNReal.mul_inv_cancel)
   have hDO_top : mDO ≠ (⊤ : ENNReal) := by
-    simpa [mDO] using pmfPiMass_ne_top (A := A) (σ := σ) (P := Denom)
+    simpa [mDO] using pmfMass_ne_top (μ := pmfPi (A := A) σ) Denom
   have hDU_top : mDU ≠ (⊤ : ENNReal) := by
-    simpa [mDU] using pmfPiMass_ne_top (A := A) (σ := Function.update σ j τ) (P := Denom)
+    simpa [mDU] using
+      pmfMass_ne_top (μ := pmfPi (A := A) (Function.update σ j τ)) Denom
   have : mNU * mDU⁻¹ = mNO * mDO⁻¹ := by
     -- Step 1: cancel mDU on the RHS of hcross
     have h1 : (mNU * mDO) * mDU⁻¹ = mNO := by
