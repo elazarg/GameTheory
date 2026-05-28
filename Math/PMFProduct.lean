@@ -11,6 +11,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.BigOperators.Fin
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.ProbabilityMassFunction
+import Math.Reindex
 
 /-!
 # Independent Product Distributions
@@ -126,18 +127,6 @@ lemma swapJA_involutive (j : ι) : Function.Involutive (swapJA (A := A) j) := by
   · funext i; by_cases h : i = j
     · subst h; simp [swapJA]
     · simp [swapJA, Function.update]
-
-lemma sum_univ_eq_sum_univ_of_involutive
-    {α : Type _} [Fintype α] {δ : Type _} [AddCommMonoid δ]
-    (e : α → α) (he : Function.Involutive e) (f : α → δ) :
-    (∑ x : α, f (e x)) = ∑ x : α, f x := by
-  simpa [Function.Involutive.coe_toPerm] using Equiv.sum_comp (he.toPerm e) f
-
-/-- Reindex an `ENNReal` `tsum` by an involution. -/
-lemma tsum_eq_tsum_of_involutive
-    {α : Type _} (e : α → α) (he : Function.Involutive e) (f : α → ENNReal) :
-    (∑' x : α, f (e x)) = ∑' x : α, f x := by
-  simpa [Function.Involutive.coe_toPerm] using (he.toPerm e).tsum_eq f
 
 end Aux
 
@@ -436,7 +425,7 @@ theorem tsum_pmfPi_factor
     _ = ∑' p : A j × (∀ i, A i), W (e p) := by
         rw [ENNReal.tsum_prod']
     _ = ∑' p : A j × (∀ i, A i), W p :=
-        tsum_eq_tsum_of_involutive e he W
+        Math.Reindex.tsum_eq_tsum_of_involutive e he W
     _ = ∑' a : A j, σ j a *
           (∑' s : (∀ i, A i), (∏ i, σ i (s i)) * F a s) := by
         rw [ENNReal.tsum_prod']
@@ -486,7 +475,7 @@ theorem sum_pmfPi_factor
     _ = ∑ p : A j × (∀ i, A i), W (e p) :=
         (Fintype.sum_prod_type fun x ↦ W (e x)).symm
     _ = ∑ p : A j × (∀ i, A i), W p :=
-        sum_univ_eq_sum_univ_of_involutive e he W
+        Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he W
     _ = ∑ a, σ j a * ∑ s, (∏ i, σ i (s i)) * F a s := by
         simp [W, Fintype.sum_prod_type, Finset.mul_sum,
           prod_factor_erase σ j, mul_left_comm, mul_comm]
@@ -943,7 +932,7 @@ theorem pmfPi_bind_update_pure_eq_of_ignores [∀ i, Finite (A i)]
     by_cases hi : i = j
     · subst hi; simp [e]
     · simp [e, hi]
-  rw [← tsum_eq_tsum_of_involutive e he]
+  rw [← Math.Reindex.tsum_eq_tsum_of_involutive e he]
   -- Show the summands match pointwise after the swap.
   refine tsum_congr fun acts => ?_
   have hej : e acts j = Equiv.swap a a' (acts j) := by simp [e]
@@ -1250,7 +1239,8 @@ theorem pmfPi_event_ratio_invariant_of_ignores
         apply Finset.sum_congr rfl; intro s1 _
         rw [Finset.mul_sum]
     _ = ∑ p : (∀ i, A i) × (∀ i, A i), W p := (Fintype.sum_prod_type W).symm
-    _ = ∑ p : (∀ i, A i) × (∀ i, A i), W (e p) := (sum_univ_eq_sum_univ_of_involutive e he W).symm
+    _ = ∑ p : (∀ i, A i) × (∀ i, A i), W (e p) :=
+        (Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he W).symm
     _ = ∑ p : (∀ i, A i) × (∀ i, A i), W_CD p := by
         apply Finset.sum_congr rfl; intro p _
         exact hW p
@@ -1518,7 +1508,7 @@ theorem pmfPi_bind_indep [Fintype ι] [∀ i, Finite (A i)]
         apply Finset.sum_congr rfl
         intro p hp
         exact hpoint p
-      _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
+      _ = ∑ p, Fsame p := Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he Fsame
   have hsumP : (∑ t : (∀ i, A i), P t) = 1 := by
     simpa [P] using (sum_coe_fintype (pmfPi (A := A) σ))
   have hL :
@@ -1648,7 +1638,7 @@ theorem pmfPi_expect_indep [Fintype ι] [DecidableEq ι] [∀ i, Fintype (A i)]
         apply Finset.sum_congr rfl
         intro p hp
         exact hpoint p
-      _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
+      _ = ∑ p, Fsame p := Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he Fsame
   have hsumP : (∑ t : (∀ i, A i), P t) = 1 := by
     simpa [P] using (sum_coe_fintype (pmfPi (A := A) σ))
   have hL :

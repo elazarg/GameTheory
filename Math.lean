@@ -1,4 +1,5 @@
 import Math.Probability
+import Math.Reindex
 import Math.ProbabilityMassFunction
 import Math.PMFProduct
 import Math.Coupling

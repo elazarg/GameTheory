@@ -381,7 +381,7 @@ theorem scalar_indep
       ∑ p : PureProfile O × PureProfile O, Fcross p := by
     calc
       ∑ p, Fsame p = ∑ p, Fsame (e p) :=
-        (Math.PMFProduct.sum_univ_eq_sum_univ_of_involutive e he Fsame).symm
+        (Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he Fsame).symm
       _ = ∑ p, Fcross p := by
         congr 1
         funext p

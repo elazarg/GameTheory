@@ -90,7 +90,7 @@ theorem behavioralToMixed_scalar_indep
   have hpair : (∑ p, Fcross p) = ∑ p, Fsame p := by
     calc (∑ p, Fcross p) = ∑ p, Fsame (e p) :=
             Finset.sum_congr rfl (fun p _ => hpoint p)
-      _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
+      _ = ∑ p, Fsame p := Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he Fsame
   have hsumP : (∑ π, P π) = 1 := by
     simp only [P]
     exact (tsum_fintype (fun π => μ π)).symm.trans μ.tsum_coe
@@ -196,7 +196,7 @@ theorem restrictedBehavioralToMixed_scalar_indep
   have hpair : (∑ p, Fcross p) = ∑ p, Fsame p := by
     calc (∑ p, Fcross p) = ∑ p, Fsame (e p) :=
             Finset.sum_congr rfl (fun p _ => hpoint p)
-      _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
+      _ = ∑ p, Fsame p := Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he Fsame
   have hsumP : (∑ π, P π) = 1 := by
     simp only [P]
     exact (tsum_fintype (fun π => μ π)).symm.trans μ.tsum_coe
