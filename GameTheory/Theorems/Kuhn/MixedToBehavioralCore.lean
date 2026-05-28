@@ -491,63 +491,23 @@ theorem obsLocalFeasibilityFull_of_localSupportSignatureFull
   intro n₁ n₂ π₀ π₀' ss₁ ss₂ hobs h₁ h₂ πᵢ
   rw [S.support_iff n₁ π₀ ss₁ h₁ πᵢ, S.support_iff n₂ π₀' ss₂ h₂ πᵢ, hobs]
 
-/-- Profile that agrees with `π` on players in `S` and with `π₀` elsewhere. -/
-private noncomputable def multiUpdate [DecidableEq ι]
-    (π₀ π : ObsModelCore.PureProfile O) (S : Finset ι) :
-    ObsModelCore.PureProfile O :=
-  fun i => if i ∈ S then π i else π₀ i
-
-omit [Fintype ι] [∀ i o, Fintype (Act i o)] in
-private theorem multiUpdate_empty (π₀ π : ObsModelCore.PureProfile O) :
-    multiUpdate π₀ π ∅ = π₀ := by
-  ext i; simp [multiUpdate]
-
-omit [∀ i o, Fintype (Act i o)] in
-private theorem multiUpdate_univ (π₀ π : ObsModelCore.PureProfile O) :
-    multiUpdate π₀ π Finset.univ = π := by
-  ext i; simp [multiUpdate]
-
-omit [Fintype ι] [∀ i o, Fintype (Act i o)] in
-private theorem multiUpdate_insert {j : ι} {S : Finset ι} (hj : j ∉ S)
-    (π₀ π : ObsModelCore.PureProfile O) :
-    multiUpdate π₀ π (insert j S) =
-      Function.update (multiUpdate π₀ π S) j (π j) := by
-  ext i
-  simp only [multiUpdate, Finset.mem_insert, Function.update]
-  split
-  next h =>
-    rcases h with rfl | h
-    · simp
-    · simp [h, show i ≠ j from fun he => hj (he ▸ h)]
-  next h =>
-    push Not at h
-    simp [h.1, h.2]
-
-omit [Fintype ι] [∀ i o, Fintype (Act i o)] in
-private theorem multiUpdate_singleton (π₀ π : ObsModelCore.PureProfile O) (i : ι) :
-    multiUpdate π₀ π {i} = Function.update π₀ i (π i) := by
-  ext j
-  simp only [multiUpdate, Finset.mem_singleton, Function.update]
-  split
-  · next h => subst h; simp
-  · next h => simp
-
 /-- **Chaining lemma**: If `ObsLocalFeasibilityFull` holds for all players and
 all single-player updates of the witness reach `ss`, then any multi-player
 update also reaches `ss`. -/
-private theorem multiUpdate_reach_of_obsLocal
+private theorem replaceOn_reach_of_obsLocal
     (hOLF : ∀ i, ObsLocalFeasibilityFull O i)
     {n : Nat} {ss : List σ} {π₀ π : ObsModelCore.PureProfile O}
     (h₀ : pureRun (O.pureStep) O.init n π₀ ss ≠ 0)
     (hall : ∀ i, pureRun (O.pureStep) O.init n
       (Function.update π₀ i (π i)) ss ≠ 0)
     (S : Finset ι) :
-    pureRun (O.pureStep) O.init n (multiUpdate π₀ π S) ss ≠ 0 := by
+    pureRun (O.pureStep) O.init n (replaceOn (A := O.LocalStrategy) S π₀ π) ss ≠ 0 := by
   induction S using Finset.induction with
-  | empty => rwa [multiUpdate_empty]
+  | empty => rwa [replaceOn_empty]
   | insert j S hj ih =>
-      rw [multiUpdate_insert hj]
-      exact (hOLF j n n π₀ (multiUpdate π₀ π S) ss ss rfl h₀ ih (π j)).mp (hall j)
+      rw [replaceOn_insert (A := O.LocalStrategy) S j hj π₀ π]
+      exact (hOLF j n n π₀ (replaceOn (A := O.LocalStrategy) S π₀ π)
+        ss ss rfl h₀ ih (π j)).mp (hall j)
 
 /-- `ObsLocalFeasibilityFull` for all players implies `RunSupportFactorization`. -/
 theorem obsLocalFeasibilityFull_toRunSupportFactorization
@@ -562,9 +522,8 @@ theorem obsLocalFeasibilityFull_toRunSupportFactorization
       (by rwa [Function.update_eq_self])
   · -- Backward: all single-player updates reach ⟹ π reaches
     intro hall
-    -- Chain updates: multiUpdate π₀ π univ = π
-    have := multiUpdate_reach_of_obsLocal hOLF h₀ hall Finset.univ
-    rwa [multiUpdate_univ] at this
+    have := replaceOn_reach_of_obsLocal hOLF h₀ hall Finset.univ
+    rwa [replaceOn_univ_snd] at this
 
 end ObsLocalKuhn
 
