@@ -2265,7 +2265,7 @@ theorem reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
         reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β πᵢ *
           Math.ParameterizedChain.pureRun O.pureStep O.init n
             (Function.update π₀ i πᵢ) ss) ≠ ⊤ := by
-    exact ObsModelCore.sum_mul_pmf_ne_top
+    exact Math.ProbabilityMassFunction.sum_mul_pmf_ne_top
       (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β)
       (fun πᵢ : O.LocalStrategy i =>
         Math.ParameterizedChain.pureRun O.pureStep O.init n

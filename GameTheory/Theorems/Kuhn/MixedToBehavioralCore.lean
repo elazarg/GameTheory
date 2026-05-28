@@ -33,20 +33,6 @@ attribute [local instance] Fintype.ofFinite
 variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}
 variable {O : ObsModelCore ι σ Obs Act}
 
-/-- When `d` is a PMF and `w x ≤ 1` for all `x`, the sum `∑ x, d x * w x` is
-not `⊤`. -/
-theorem sum_mul_pmf_ne_top {α : Type*} [Fintype α] (d : PMF α) (w : α → ENNReal)
-    (hw : ∀ a, w a ≤ 1) : ∑ a, d a * w a ≠ ⊤ :=
-  ne_of_lt (calc
-    ∑ a, d a * w a ≤ ∑ a, d a := by
-      refine Finset.sum_le_sum ?_
-      intro a _
-      exact mul_le_of_le_one_right zero_le (hw a)
-    _ = 1 := by
-      have := PMF.tsum_coe d
-      rwa [tsum_fintype] at this
-    _ < ⊤ := ENNReal.one_lt_top)
-
 section
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]

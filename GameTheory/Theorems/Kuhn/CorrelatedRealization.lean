@@ -85,17 +85,6 @@ Under **per-step action recall** (the observation transition determines the
 action), the state-trace mediator factors through observations, giving a
 `BehavioralProfileCorr O` witness. -/
 
-/-- When `d` is a PMF and `w x ≤ 1` for all `x`, the sum `∑ x, d x * w x` is
-not `⊤`. This is used throughout the correlated-realization proofs whenever
-`reweightPMF` needs its `ne_top` premise. -/
-theorem sum_mul_pmf_ne_top {α : Type*} [Fintype α] (d : PMF α) (w : α → ENNReal)
-    (hw : ∀ a, w a ≤ 1) : ∑ a, d a * w a ≠ ⊤ :=
-  ne_of_lt (calc
-    ∑ a, d a * w a ≤ ∑ a, d a :=
-      Finset.sum_le_sum fun a _ => mul_le_of_le_one_right zero_le (hw a)
-    _ = 1 := by have := PMF.tsum_coe d; rwa [tsum_fintype] at this
-    _ < ⊤ := ENNReal.one_lt_top)
-
 section ObsLevel
 
 variable [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]

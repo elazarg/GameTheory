@@ -64,6 +64,21 @@ theorem sum_coe_fintype [Fintype α] (μ : PMF α) :
   rwa [tsum_eq_sum (s := Finset.univ)
     (fun x hx => absurd (Finset.mem_univ x) hx)] at h
 
+theorem sum_mul_pmf_le_one {α : Type*} [Fintype α]
+    (d : PMF α) (w : α → ENNReal) (hw : ∀ a, w a ≤ 1) :
+    ∑ a, d a * w a ≤ 1 := by
+  calc
+    ∑ a, d a * w a ≤ ∑ a, d a := by
+      refine Finset.sum_le_sum ?_
+      intro a _
+      exact mul_le_of_le_one_right zero_le (hw a)
+    _ = 1 := sum_coe_fintype d
+
+theorem sum_mul_pmf_ne_top {α : Type*} [Fintype α]
+    (d : PMF α) (w : α → ENNReal) (hw : ∀ a, w a ≤ 1) :
+    ∑ a, d a * w a ≠ ⊤ :=
+  ne_of_lt ((sum_mul_pmf_le_one d w hw).trans_lt ENNReal.one_lt_top)
+
 /-- Binary independent product of two PMFs. -/
 noncomputable def prod (μ : PMF α) (ν : PMF β) : PMF (α × β) :=
   μ.bind (fun a => ν.map (fun b => (a, b)))
