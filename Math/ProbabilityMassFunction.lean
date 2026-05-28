@@ -79,6 +79,30 @@ theorem sum_mul_pmf_ne_top {α : Type*} [Fintype α]
     ∑ a, d a * w a ≠ ⊤ :=
   ne_of_lt ((sum_mul_pmf_le_one d w hw).trans_lt ENNReal.one_lt_top)
 
+theorem sum_mul_pmf_eq_zero_iff_of_weight_ne_zero_iff
+    {α : Type*} [Fintype α] (d : PMF α) {w₁ w₂ : α → ENNReal}
+    (hiff : ∀ a, w₁ a ≠ 0 ↔ w₂ a ≠ 0) :
+    (∑ a, d a * w₁ a = 0) ↔ (∑ a, d a * w₂ a = 0) := by
+  simp only [Finset.sum_eq_zero_iff, Finset.mem_univ, true_implies, mul_eq_zero]
+  constructor
+  · intro h a
+    rcases h a with hda | hw
+    · exact Or.inl hda
+    · exact Or.inr (of_not_not (mt (hiff a).mpr (not_not.mpr hw)))
+  · intro h a
+    rcases h a with hda | hw
+    · exact Or.inl hda
+    · exact Or.inr (of_not_not (mt (hiff a).mp (not_not.mpr hw)))
+
+theorem sum_mul_pmf_ne_zero_of_ne_zero
+    {α : Type*} [Fintype α] (d : PMF α) (w : α → ENNReal) {a : α}
+    (hd : d a ≠ 0) (hw : w a ≠ 0) :
+    ∑ x, d x * w x ≠ 0 := by
+  apply ne_of_gt
+  exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero hd hw))
+    (Finset.single_le_sum (f := fun x => d x * w x)
+      (fun _ _ => zero_le) (Finset.mem_univ a))
+
 /-- Binary independent product of two PMFs. -/
 noncomputable def prod (μ : PMF α) (ν : PMF β) : PMF (α × β) :=
   μ.bind (fun a => ν.map (fun b => (a, b)))

@@ -895,11 +895,8 @@ theorem mediator_product_of_product
       exact Finset.prod_eq_zero (Finset.mem_univ i) hi
     have hwi_ne : ∀ i, wᵢ i (π_w i) ≠ 0 := by
       intro i; exact ((pureRun_nonzero_iff_update hPSAR n h₀ π_w).mp hw_ne) i
-    have hCwi0 : ∀ i, ∑ a, μ i a * wᵢ i a ≠ 0 := fun i => by
-      apply ne_of_gt
-      exact lt_of_lt_of_le (pos_iff_ne_zero.mpr (mul_ne_zero (hμ_ne i) (hwi_ne i)))
-        (Finset.single_le_sum (f := fun a => μ i a * wᵢ i a)
-          (fun _ _ => zero_le) (Finset.mem_univ (π_w i)))
+    have hCwi0 : ∀ i, ∑ a, μ i a * wᵢ i a ≠ 0 := fun i =>
+      sum_mul_pmf_ne_zero_of_ne_zero (μ i) (wᵢ i) (hμ_ne i) (hwi_ne i)
     have hCwit : ∀ i, ∑ a, μ i a * wᵢ i a ≠ ⊤ := fun i =>
       sum_mul_pmf_ne_top (μ i) _ fun a => PMF.coe_le_one _ ss
     -- Non-degeneracy for the product weight ∏ wᵢ
@@ -989,12 +986,8 @@ theorem conditioning_preserves_product
     have hwi_ne : ∀ i, wᵢ i (π_w i) ≠ 0 := by
       intro i
       exact ((pureRun_nonzero_iff_update hPSAR n h₀ π_w).mp hw_ne) i
-    have hCwi0 : ∀ i, ∑ a, μ i a * wᵢ i a ≠ 0 := fun i => by
-      apply ne_of_gt
-      exact lt_of_lt_of_le
-        (pos_iff_ne_zero.mpr (mul_ne_zero (hμ_ne i) (hwi_ne i)))
-        (Finset.single_le_sum (f := fun a => μ i a * wᵢ i a)
-          (fun _ _ => zero_le) (Finset.mem_univ (π_w i)))
+    have hCwi0 : ∀ i, ∑ a, μ i a * wᵢ i a ≠ 0 := fun i =>
+      sum_mul_pmf_ne_zero_of_ne_zero (μ i) (wᵢ i) (hμ_ne i) (hwi_ne i)
     have hCwit : ∀ i, ∑ a, μ i a * wᵢ i a ≠ ⊤ := fun i =>
       sum_mul_pmf_ne_top (μ i) _ fun a => PMF.coe_le_one _ ss
     -- Product weight sum factorization
@@ -1167,15 +1160,9 @@ theorem reweightPMF_update_obs_local_of
       (fun πᵢ => pureRun (O.pureStep) O.init n₂ (Function.update π₀' i πᵢ) ss₂) := by
   set w₁ := fun πᵢ => pureRun (O.pureStep) O.init n₁ (Function.update π₀ i πᵢ) ss₁
   set w₂ := fun πᵢ => pureRun (O.pureStep) O.init n₂ (Function.update π₀' i πᵢ) ss₂
-  have hsum_zero_iff : (∑ πᵢ, b_i πᵢ * w₁ πᵢ) = 0 ↔ (∑ πᵢ, b_i πᵢ * w₂ πᵢ) = 0 := by
-    simp only [Finset.sum_eq_zero_iff, Finset.mem_univ, true_implies, mul_eq_zero]
-    constructor
-    · intro h πᵢ; rcases h πᵢ with h | h
-      · exact Or.inl h
-      · exact Or.inr (of_not_not (mt (hiff πᵢ).mpr (not_not.mpr h)))
-    · intro h πᵢ; rcases h πᵢ with h | h
-      · exact Or.inl h
-      · exact Or.inr (of_not_not (mt (hiff πᵢ).mp (not_not.mpr h)))
+  have hsum_zero_iff :
+      (∑ πᵢ, b_i πᵢ * w₁ πᵢ) = 0 ↔ (∑ πᵢ, b_i πᵢ * w₂ πᵢ) = 0 :=
+    sum_mul_pmf_eq_zero_iff_of_weight_ne_zero_iff b_i hiff
   have htop₁ : (∑ πᵢ, b_i πᵢ * w₁ πᵢ) ≠ ⊤ :=
     sum_mul_pmf_ne_top b_i _ fun πᵢ => PMF.coe_le_one _ ss₁
   have htop₂ : (∑ πᵢ, b_i πᵢ * w₂ πᵢ) ≠ ⊤ :=
