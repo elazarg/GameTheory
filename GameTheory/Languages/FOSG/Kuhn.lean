@@ -3292,13 +3292,7 @@ noncomputable def reachableBehavioralGameFormAtHorizon
     G.runDist k (GameTheory.FOSG.ReachableLegalBehavioralProfile.extend β)
 
 open Classical in
-/-- FOSG Kuhn unilateral-deviation simulation from mixed pure strategies to
-behavioral strategies at a finite horizon.
-
-This is the Nash-specific wrapper around
-`reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq`: every legal
-behavioral unilateral deviation is matched by the constructive mixed pure
-deviation `reachableLegalBehavioralToMixed`. -/
+/-- Reachable Kuhn simulation for unilateral deviations. -/
 noncomputable def reachableKuhnNashDeviationSimulation
     [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
@@ -3306,27 +3300,25 @@ noncomputable def reachableKuhnNashDeviationSimulation
     GameForm.NashDeviationSimulation
       (reachableMixedPureGameFormAtHorizon (G := G) k)
       (reachableBehavioralGameFormAtHorizon (G := G) k)
-      G.History where
-  viewG := { observe := id }
-  viewH := { observe := id }
-  rel := fun μ β =>
-    β = reachableMixedToLegalBehavioral (G := G) hLeg μ
-  law_eq := by
-    intro μ β hrel
-    rw [hrel]
-    simp only [GameForm.OutcomeView.law, reachableMixedPureGameFormAtHorizon,
-      reachableBehavioralGameFormAtHorizon]
-    rw [PMF.map_id, PMF.map_id]
-    exact (reachableMixedToLegalBehavioral_runDist (G := G) hLeg μ k).symm
-  simulate_target_deviation := by
-    intro μ β hrel who βwho'
-    refine ⟨reachableLegalBehavioralToMixed (G := G) hLeg who βwho', ?_⟩
-    rw [hrel]
-    simp only [GameForm.OutcomeView.law, reachableMixedPureGameFormAtHorizon,
-      reachableBehavioralGameFormAtHorizon]
-    rw [PMF.map_id, PMF.map_id]
-    exact reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
-      (G := G) hLeg k μ who βwho'
+      G.History :=
+  GameForm.NashDeviationSimulation.ofFunctionalRealization
+    ({ observe := id })
+    ({ observe := id })
+    (fun μ => reachableMixedToLegalBehavioral (G := G) hLeg μ)
+    (by
+      intro μ
+      simp only [GameForm.OutcomeView.law, reachableMixedPureGameFormAtHorizon,
+        reachableBehavioralGameFormAtHorizon]
+      rw [PMF.map_id, PMF.map_id]
+      exact (reachableMixedToLegalBehavioral_runDist (G := G) hLeg μ k).symm)
+    (by
+      intro μ who βwho'
+      refine ⟨reachableLegalBehavioralToMixed (G := G) hLeg who βwho', ?_⟩
+      simp only [GameForm.OutcomeView.law, reachableMixedPureGameFormAtHorizon,
+        reachableBehavioralGameFormAtHorizon]
+      rw [PMF.map_id, PMF.map_id]
+      exact reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
+        (G := G) hLeg k μ who βwho')
 
 open Classical in
 /-- Ready-made Nash transport for the finite-horizon reachable Kuhn
@@ -3351,8 +3343,7 @@ theorem reachableKuhn_target_nashFor_of_source_nashFor
     (reachableKuhnNashDeviationSimulation (G := G) hLeg k) rfl hN
 
 open Classical in
-/-- FOSG Kuhn simulation for coarse-correlated deviations from mixed pure
-recommendations to behavioral recommendations. -/
+/-- Reachable Kuhn simulation for coarse-correlated deviations. -/
 noncomputable def reachableKuhnCoarseCorrelatedDeviationSimulation
     [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
@@ -3362,45 +3353,41 @@ noncomputable def reachableKuhnCoarseCorrelatedDeviationSimulation
       (reachableBehavioralGameFormAtHorizon (G := G) k)
       G.History
       (reachableMixedPureGameFormAtHorizon (G := G) k).constantDeviationProfileFamily
-      (reachableBehavioralGameFormAtHorizon (G := G) k).constantDeviationProfileFamily where
-  viewG := { observe := id }
-  viewH := { observe := id }
-  rel := fun μG μH =>
-    μH = PMF.map
+      (reachableBehavioralGameFormAtHorizon (G := G) k).constantDeviationProfileFamily :=
+  GameForm.DeviationFamilySimulation.ofFunctionalRealization
+    ({ observe := id })
+    ({ observe := id })
+    (PMF.map
       (fun μ : (reachableMixedPureGameFormAtHorizon (G := G) k).Profile =>
         (reachableMixedToLegalBehavioral (G := G) hLeg μ :
-          (reachableBehavioralGameFormAtHorizon (G := G) k).Profile))
-      μG
-  law_eq := by
-    intro μG μH hrel
-    rw [hrel]
-    simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
-      Math.Probability.Kernel.pushforward, reachableMixedPureGameFormAtHorizon,
-      reachableBehavioralGameFormAtHorizon, PMF.bind_map]
-    rw [PMF.map_id, PMF.map_id]
-    apply Math.ProbabilityMassFunction.bind_congr_on_support
-    intro μ _hμ
-    exact (reachableMixedToLegalBehavioral_runDist (G := G) hLeg μ k).symm
-  simulate_target_deviation := by
-    intro μG μH hrel who βwho'Dev
-    let βwho' : G.ReachableLegalBehavioralStrategy who := βwho'Dev
-    let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
-    refine ⟨μwho', ?_⟩
-    rw [hrel]
-    simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
-      Math.Probability.Kernel.pushforward, GameForm.constantDeviationProfileFamily,
-      GameForm.constDeviateDistributionFn, reachableMixedPureGameFormAtHorizon,
-      reachableBehavioralGameFormAtHorizon, PMF.bind_map, PMF.bind_bind,
-      PMF.pure_bind, Function.comp_apply, μwho']
-    rw [PMF.map_id, PMF.map_id]
-    apply Math.ProbabilityMassFunction.bind_congr_on_support
-    intro μ _hμ
-    exact reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
-      (G := G) hLeg k μ who βwho'
+          (reachableBehavioralGameFormAtHorizon (G := G) k).Profile)))
+    (by
+      intro μG
+      simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
+        Math.Probability.Kernel.pushforward, reachableMixedPureGameFormAtHorizon,
+        reachableBehavioralGameFormAtHorizon, PMF.bind_map]
+      rw [PMF.map_id, PMF.map_id]
+      apply Math.ProbabilityMassFunction.bind_congr_on_support
+      intro μ _hμ
+      exact (reachableMixedToLegalBehavioral_runDist (G := G) hLeg μ k).symm)
+    (by
+      intro μG who βwho'Dev
+      let βwho' : G.ReachableLegalBehavioralStrategy who := βwho'Dev
+      let μwho' := reachableLegalBehavioralToMixed (G := G) hLeg who βwho'
+      refine ⟨μwho', ?_⟩
+      simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
+        Math.Probability.Kernel.pushforward, GameForm.constantDeviationProfileFamily,
+        GameForm.constDeviateDistributionFn, reachableMixedPureGameFormAtHorizon,
+        reachableBehavioralGameFormAtHorizon, PMF.bind_map, PMF.bind_bind,
+        PMF.pure_bind, Function.comp_apply, μwho']
+      rw [PMF.map_id, PMF.map_id]
+      apply Math.ProbabilityMassFunction.bind_congr_on_support
+      intro μ _hμ
+      exact reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
+        (G := G) hLeg k μ who βwho')
 
 open Classical in
-/-- FOSG Kuhn simulation for correlated recommendation-dependent deviations
-from mixed pure recommendations to behavioral recommendations. -/
+/-- Reachable Kuhn simulation for correlated deviations. -/
 noncomputable def reachableKuhnCorrelatedDeviationSimulation
     [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
@@ -3410,51 +3397,48 @@ noncomputable def reachableKuhnCorrelatedDeviationSimulation
       (reachableBehavioralGameFormAtHorizon (G := G) k)
       G.History
       (reachableMixedPureGameFormAtHorizon (G := G) k).recommendationDeviationFamily
-      (reachableBehavioralGameFormAtHorizon (G := G) k).recommendationDeviationFamily where
-  viewG := { observe := id }
-  viewH := { observe := id }
-  rel := fun μG μH =>
-    μH = PMF.map
+      (reachableBehavioralGameFormAtHorizon (G := G) k).recommendationDeviationFamily :=
+  GameForm.DeviationFamilySimulation.ofFunctionalRealization
+    ({ observe := id })
+    ({ observe := id })
+    (PMF.map
       (fun μ : (reachableMixedPureGameFormAtHorizon (G := G) k).Profile =>
         (reachableMixedToLegalBehavioral (G := G) hLeg μ :
-          (reachableBehavioralGameFormAtHorizon (G := G) k).Profile))
-      μG
-  law_eq := by
-    intro μG μH hrel
-    rw [hrel]
-    simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
-      Math.Probability.Kernel.pushforward, reachableMixedPureGameFormAtHorizon,
-      reachableBehavioralGameFormAtHorizon, PMF.bind_map]
-    rw [PMF.map_id, PMF.map_id]
-    apply Math.ProbabilityMassFunction.bind_congr_on_support
-    intro μ _hμ
-    exact (reachableMixedToLegalBehavioral_runDist (G := G) hLeg μ k).symm
-  simulate_target_deviation := by
-    intro μG μH hrel who devH
-    let devG : PMF (G.ReachableLegalPureStrategy who) →
-        PMF (G.ReachableLegalPureStrategy who) := fun μwho =>
-      let βrec : (reachableBehavioralGameFormAtHorizon (G := G) k).Strategy who :=
-        reachableMixedToLegalBehavioralStrategy (G := G) hLeg who μwho
-      let βdev : G.ReachableLegalBehavioralStrategy who := devH βrec
-      reachableLegalBehavioralToMixed (G := G) hLeg who βdev
-    refine ⟨devG, ?_⟩
-    rw [hrel]
-    simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
-      Math.Probability.Kernel.pushforward, GameForm.recommendationDeviationFamily,
-      GameForm.deviateDistributionFn, GameForm.deviateProfileFn,
-      reachableMixedPureGameFormAtHorizon, reachableBehavioralGameFormAtHorizon,
-      PMF.bind_map, PMF.bind_bind, devG]
-    rw [PMF.map_id, PMF.map_id]
-    apply Math.ProbabilityMassFunction.bind_congr_on_support
-    intro μ _hμ
-    have hrec :
-        reachableMixedToLegalBehavioralStrategy (G := G) hLeg who (μ who) =
-          reachableMixedToLegalBehavioral (G := G) hLeg μ who :=
-      reachableMixedToLegalBehavioralStrategy_eq_component (G := G) hLeg μ who
-    simpa [hrec] using
-      reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
-        (G := G) hLeg k μ who
-        (devH (reachableMixedToLegalBehavioral (G := G) hLeg μ who))
+          (reachableBehavioralGameFormAtHorizon (G := G) k).Profile)))
+    (by
+      intro μG
+      simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
+        Math.Probability.Kernel.pushforward, reachableMixedPureGameFormAtHorizon,
+        reachableBehavioralGameFormAtHorizon, PMF.bind_map]
+      rw [PMF.map_id, PMF.map_id]
+      apply Math.ProbabilityMassFunction.bind_congr_on_support
+      intro μ _hμ
+      exact (reachableMixedToLegalBehavioral_runDist (G := G) hLeg μ k).symm)
+    (by
+      intro μG who devH
+      let devG : PMF (G.ReachableLegalPureStrategy who) →
+          PMF (G.ReachableLegalPureStrategy who) := fun μwho =>
+        let βrec : (reachableBehavioralGameFormAtHorizon (G := G) k).Strategy who :=
+          reachableMixedToLegalBehavioralStrategy (G := G) hLeg who μwho
+        let βdev : G.ReachableLegalBehavioralStrategy who := devH βrec
+        reachableLegalBehavioralToMixed (G := G) hLeg who βdev
+      refine ⟨devG, ?_⟩
+      simp only [GameForm.OutcomeView.correlatedLaw, GameForm.correlatedOutcome,
+        Math.Probability.Kernel.pushforward, GameForm.recommendationDeviationFamily,
+        GameForm.deviateDistributionFn, GameForm.deviateProfileFn,
+        reachableMixedPureGameFormAtHorizon, reachableBehavioralGameFormAtHorizon,
+        PMF.bind_map, PMF.bind_bind, devG]
+      rw [PMF.map_id, PMF.map_id]
+      apply Math.ProbabilityMassFunction.bind_congr_on_support
+      intro μ _hμ
+      have hrec :
+          reachableMixedToLegalBehavioralStrategy (G := G) hLeg who (μ who) =
+            reachableMixedToLegalBehavioral (G := G) hLeg μ who :=
+        reachableMixedToLegalBehavioralStrategy_eq_component (G := G) hLeg μ who
+      simpa [hrec] using
+        reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
+          (G := G) hLeg k μ who
+          (devH (reachableMixedToLegalBehavioral (G := G) hLeg μ who)))
 
 theorem reachable_mixed_to_legal_behavioral_mapped_runDist
     [Fintype ι] [Fintype G.History]
