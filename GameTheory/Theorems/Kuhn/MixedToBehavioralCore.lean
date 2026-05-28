@@ -868,6 +868,40 @@ noncomputable def mixedToBehavioralProfileWithFallback
       h.choose_spec.choose_spec.choose
   else fallback i v_i
 
+/-- A player update to the mixed profile does not change any other player's
+posterior action factor in the mixed-to-behavioral construction. -/
+theorem mixedToBehavioralFactorAt_update_ne
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    {who i : ι} (hne : i ≠ who)
+    (τ : PMF (O.LocalStrategy who))
+    (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O) :
+    mixedToBehavioralFactorAt (O := O)
+        (Function.update μ who τ) i n ss π₀ =
+      mixedToBehavioralFactorAt (O := O) μ i n ss π₀ := by
+  simp [mixedToBehavioralFactorAt, Function.update_of_ne hne]
+
+/-- A player update to the mixed profile does not change another player's
+behavioral strategy produced by the mixed-to-behavioral construction, provided
+the fallback profile is unchanged. -/
+theorem mixedToBehavioralProfileWithFallback_update_ne
+    (μ : ∀ i, PMF (O.LocalStrategy i))
+    (fallback : ObsModelCore.BehavioralProfile O)
+    {who i : ι} (hne : i ≠ who)
+    (τ : PMF (O.LocalStrategy who))
+    (v : O.InfoState i) :
+    mixedToBehavioralProfileWithFallback (O := O)
+        (Function.update μ who τ) fallback i v =
+      mixedToBehavioralProfileWithFallback (O := O) μ fallback i v := by
+  classical
+  unfold mixedToBehavioralProfileWithFallback
+  by_cases h :
+      ∃ (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
+        O.projectStates i ss = v ∧
+        pureRun (O.pureStep) O.init n π₀ ss ≠ 0
+  · rw [dif_pos h, dif_pos h]
+    simp [mixedToBehavioralFactorAt_update_ne (O := O) μ hne τ]
+  · rw [dif_neg h, dif_neg h]
+
 theorem mixedToBehavioralProfileWithFallback_eq_factorAt
     (hLocal : ∀ i, ActionPosteriorLocal O i)
     (μ : ∀ i, PMF (O.LocalStrategy i))

@@ -97,6 +97,38 @@ structure NashDeviationSimulation (G H : GameForm ι) (Ω : Type)
         viewG.law (Function.update σ who sG) =
           viewH.law (Function.update τ who sH)
 
+namespace NashDeviationSimulation
+
+/-- Build a one-way deviation simulation from a functional realization map.
+
+This is the common case for compiler and language bridges: every source
+profile has a canonical target realization, and target-side unilateral
+deviations can be matched by source-side unilateral deviations. -/
+def ofFunctionalRealization
+    {G H : GameForm ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, viewG.law σ = viewH.law (realize σ))
+    (simulate_target_deviation :
+      ∀ (σ : G.Profile) (who : ι) (sH : H.Strategy who),
+        ∃ sG : G.Strategy who,
+          viewG.law (Function.update σ who sG) =
+            viewH.law (Function.update (realize σ) who sH)) :
+    NashDeviationSimulation G H Ω where
+  viewG := viewG
+  viewH := viewH
+  rel := fun σ τ => τ = realize σ
+  law_eq := by
+    intro σ τ hrel
+    subst τ
+    exact law_eq σ
+  simulate_target_deviation := by
+    intro σ τ hrel who sH
+    subst τ
+    exact simulate_target_deviation σ who sH
+
+end NashDeviationSimulation
+
 /-- Transport Nash equilibrium along a one-way deviation simulation. -/
 theorem NashDeviationSimulation.target_nash_of_source_nash
     {G H : GameForm ι} {Ω : Type}
@@ -396,6 +428,21 @@ abbrev DeviationFamilySimulation
 section Nash
 
 variable [DecidableEq ι]
+
+/-- Kernel-game wrapper for the functional-realization constructor. -/
+def NashDeviationSimulation.ofFunctionalRealization
+    {G H : KernelGame ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, viewG.law σ = viewH.law (realize σ))
+    (simulate_target_deviation :
+      ∀ (σ : G.Profile) (who : ι) (sH : H.Strategy who),
+        ∃ sG : G.Strategy who,
+          viewG.law (Function.update σ who sG) =
+            viewH.law (Function.update (realize σ) who sH)) :
+    NashDeviationSimulation G H Ω :=
+  GameForm.NashDeviationSimulation.ofFunctionalRealization
+    viewG viewH realize law_eq simulate_target_deviation
 
 /-- Kernel-game wrapper for preference-parametric Nash transport. -/
 theorem NashDeviationSimulation.target_nashFor_of_source_nashFor
