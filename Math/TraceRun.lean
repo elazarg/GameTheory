@@ -50,6 +50,22 @@ theorem traceRun_succ (step : List σ → PMF σ) (s₀ : σ) (k : Nat) :
       (traceRun step s₀ k).bind
         (fun ss => (step ss).bind (fun t => PMF.pure (ss ++ [t]))) := rfl
 
+/-- Run a Markov chain with step-index-dependent transition functions,
+recording the full state trace. -/
+noncomputable def seqRun (steps : Nat → List σ → PMF σ) (s₀ : σ) :
+    Nat → PMF (List σ)
+  | 0 => PMF.pure [s₀]
+  | k + 1 => (seqRun steps s₀ k).bind
+      (fun ss => pushforward (steps k ss) (fun t => ss ++ [t]))
+
+@[simp] theorem seqRun_zero (steps : Nat → List σ → PMF σ) (s₀ : σ) :
+    seqRun steps s₀ 0 = PMF.pure [s₀] := rfl
+
+theorem seqRun_succ (steps : Nat → List σ → PMF σ) (s₀ : σ) (k : Nat) :
+    seqRun steps s₀ (k + 1) =
+      (seqRun steps s₀ k).bind
+        (fun ss => pushforward (steps k ss) (fun t => ss ++ [t])) := rfl
+
 -- ============================================================================
 -- Probabilistic bisimulation on trace kernels
 -- ============================================================================
@@ -241,6 +257,43 @@ theorem traceRun_step_nonzero (step : List σ → PMF σ) (s₀ : σ)
       rw [List.take_append_of_le_length (by omega)]
       rw [List.getElem_append_left hjpre]
       exact ih pre hpre j hjpre hplen
+
+open Classical in
+/-- Every time-prefix of a supported trace is itself supported at the
+corresponding shorter horizon. -/
+theorem traceRun_take_nonzero (step : List σ → PMF σ) (s₀ : σ)
+    (k : Nat) (ss : List σ)
+    (h : traceRun step s₀ k ss ≠ 0)
+    (m : Nat) (hm : m ≤ k) :
+    traceRun step s₀ m (ss.take (m + 1)) ≠ 0 := by
+  induction k generalizing ss m with
+  | zero =>
+      have hm0 : m = 0 := by omega
+      subst hm0
+      have hss : ss = [s₀] := by
+        by_contra hne
+        exact h (by simp [traceRun, PMF.pure_apply, hne])
+      simp [hss, traceRun]
+  | succ k ih =>
+      rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
+      · exact absurd (traceRun_succ_nil step s₀ k) h
+      rw [List.concat_eq_append] at h ⊢
+      by_cases hm_last : m = k + 1
+      · subst hm_last
+        have hlen := traceRun_length step s₀ (k + 1) (p ++ [t]) h
+        have htake : (p ++ [t]).take (k + 1 + 1) = p ++ [t] := by
+          rw [show k + 1 + 1 = (p ++ [t]).length by omega]
+          exact List.take_length
+        simpa [htake] using h
+      · have hmle : m ≤ k := by omega
+        have hp : traceRun step s₀ k p ≠ 0 := by
+          exact left_ne_zero_of_mul (traceRun_succ_append step s₀ k p t ▸ h)
+        have hplen : p.length = k + 1 :=
+          traceRun_length step s₀ k p hp
+        have htake : (p ++ [t]).take (m + 1) = p.take (m + 1) := by
+          rw [List.take_append_of_le_length]
+          omega
+        simpa [htake] using ih p hp m hmle
 
 end TraceRun
 end Math

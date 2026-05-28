@@ -76,44 +76,13 @@ theorem pureRun_take_nonzero (step : P → List S → PMF S) (s₀ : S)
     (k : Nat) (π : P) (ss : List S)
     (h : pureRun step s₀ k π ss ≠ 0)
     (m : Nat) (hm : m ≤ k) :
-    pureRun step s₀ m π (ss.take (m + 1)) ≠ 0 := by
-  induction k generalizing ss m with
-  | zero =>
-      have hm0 : m = 0 := by omega
-      subst hm0
-      have hss : ss = [s₀] := by
-        by_contra hne
-        exact h (by simp [pureRun, Math.TraceRun.traceRun, PMF.pure_apply, hne])
-      simp [hss, pureRun, Math.TraceRun.traceRun]
-  | succ k ih =>
-      rcases List.eq_nil_or_concat ss with rfl | ⟨p, t, rfl⟩
-      · exact absurd (pureRun_succ_nil step s₀ k π) h
-      rw [List.concat_eq_append] at h ⊢
-      by_cases hm_last : m = k + 1
-      · subst hm_last
-        have hlen := pureRun_length step s₀ (k + 1) π (p ++ [t]) h
-        have htake : (p ++ [t]).take (k + 1 + 1) = p ++ [t] := by
-          rw [show k + 1 + 1 = (p ++ [t]).length by omega]
-          exact List.take_length
-        simpa [htake] using h
-      · have hmle : m ≤ k := by omega
-        have hp : pureRun step s₀ k π p ≠ 0 := by
-          exact left_ne_zero_of_mul (pureRun_succ_append step s₀ k π p t ▸ h)
-        have hplen : p.length = k + 1 :=
-          pureRun_length step s₀ k π p hp
-        have htake : (p ++ [t]).take (m + 1) = p.take (m + 1) := by
-          rw [List.take_append_of_le_length]
-          omega
-        simpa [htake] using ih p hp m hmle
+    pureRun step s₀ m π (ss.take (m + 1)) ≠ 0 :=
+  Math.TraceRun.traceRun_take_nonzero (step π) s₀ k ss h m hm
 
 /-- Run a Markov chain with step-index-dependent transition functions. -/
 noncomputable def seqRun (steps : Nat → List S → PMF S) (s₀ : S)
     (k : Nat) : PMF (List S) :=
-  Nat.rec (PMF.pure [s₀])
-    (fun n rec =>
-      rec.bind (fun ss =>
-        pushforward (steps n ss) (fun t => ss ++ [t])))
-    k
+  Math.TraceRun.seqRun steps s₀ k
 
 section ReweightPMF
 
@@ -479,7 +448,7 @@ theorem condRun_eq_mixedRun (ν : PMF P) (step : P → List S → PMF S)
           = (seqRun (condStep ν step s₀) s₀ n).bind (fun ss =>
               pushforward (condStep ν step s₀ n ss)
                 (fun t => ss ++ [t])) := by
-            simp [seqRun]
+            simp only [seqRun, Math.TraceRun.seqRun_succ]
       _ = (ν.bind (pureRun step s₀ n)).bind (fun ss =>
               pushforward (condStep ν step s₀ n ss)
                 (fun t => ss ++ [t])) := by
