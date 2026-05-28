@@ -83,6 +83,12 @@ theorem comp_assoc {G H K L : KernelGame ι}
 
 end Morphism
 
+/-- Forget invertibility and view a game isomorphism as a morphism. -/
+def GameIsomorphism.toMorphism {G H : KernelGame ι}
+    (e : GameIsomorphism G H) : Morphism G H where
+  stratMap := fun i => e.stratEquiv i
+  udist_preserved := e.udist_preserved
+
 /-- Build a `Morphism` from an outcome embedding: when `G`'s outcome
 distribution pushes forward to `H`'s under `embed`, and utilities agree
 along the embedding, the embedding witnesses that `G` refines into `H`.
@@ -174,6 +180,13 @@ theorem Morphism.udistPlayer_preserved {G H : KernelGame ι} (f : Morphism G H)
   have h :=
     congrArg (fun d : PMF (Payoff ι) => d.bind (fun u => PMF.pure (u who))) (f.udist_preserved σ)
   simpa [KernelGame.udistPlayer_eq_udist_bind] using h
+
+/-- Utility-distribution preservation for an isomorphism implies per-player
+utility-distribution preservation through its underlying morphism. -/
+theorem GameIsomorphism.udistPlayer_preserved {G H : KernelGame ι}
+    (e : GameIsomorphism G H) (σ : Profile G) (who : ι) :
+    H.udistPlayer (fun i => e.stratEquiv i (σ i)) who = G.udistPlayer σ who :=
+  e.toMorphism.udistPlayer_preserved σ who
 
 /-- Expected utility is the expectation of the corresponding coordinate of
 the utility-vector distribution under a bounded utility hypothesis. -/
@@ -319,8 +332,7 @@ variable {G H : KernelGame ι}
 
 /-- An EU-preserving game isomorphism induces an EU-preserving morphism. -/
 def toEUMorphism (e : EUGameIsomorphism G H) : EUMorphism G H where
-  stratMap := fun i => e.stratEquiv i
-  udist_preserved := e.udist_preserved
+  toMorphism := e.toGameIsomorphism.toMorphism
   eu_preserved := e.eu_preserved
 
 /-- Inverse EU-preserving game isomorphism. -/

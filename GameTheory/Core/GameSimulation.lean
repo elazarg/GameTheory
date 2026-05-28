@@ -70,9 +70,8 @@ def comp {G H K : KernelGame ι}
     (g : Bisimulation H K) (f : Bisimulation G H) : Bisimulation G K :=
   GameIsomorphism.comp g f
 
-def toSimulation {G H : KernelGame ι} (e : Bisimulation G H) : Simulation G H where
-  stratMap := fun i => e.stratEquiv i
-  udist_preserved := e.udist_preserved
+def toSimulation {G H : KernelGame ι} (e : Bisimulation G H) : Simulation G H :=
+  e.toMorphism
 
 theorem udistPlayer_preserved {G H : KernelGame ι} (e : Bisimulation G H)
     (σ : Profile G) (who : ι) :

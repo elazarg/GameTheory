@@ -149,15 +149,6 @@ theorem comp_assoc {G H K L : KernelGame ι}
 
 end GameIsomorphism
 
-/-- Utility-distribution preservation implies per-player utility-distribution
-    preservation. -/
-theorem GameIsomorphism.udistPlayer_preserved {G H : KernelGame ι}
-    (e : GameIsomorphism G H) (σ : Profile G) (who : ι) :
-    H.udistPlayer (fun i => e.stratEquiv i (σ i)) who = G.udistPlayer σ who := by
-  have h :=
-    congrArg (fun d : PMF (Payoff ι) => d.bind (fun u => PMF.pure (u who))) (e.udist_preserved σ)
-  simpa [KernelGame.udistPlayer_eq_udist_bind] using h
-
 /-- Protocol isomorphism between underlying game forms. -/
 abbrev ProtocolIsomorphism (G H : KernelGame ι) : Type :=
   GameForm.ProtocolIsomorphism G.toGameForm H.toGameForm
