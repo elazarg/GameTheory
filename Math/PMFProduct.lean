@@ -98,20 +98,21 @@ section Aux
 variable {ι : Type uι} [DecidableEq ι]
 variable {A : ι → Type uA}
 
-/-- Factor the product weight into the `j`-coordinate and the rest. -/
-lemma prod_factor_erase [Fintype ι] (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) :
-    (∏ i : ι, σ i (s i))
-      = (σ j) (s j) * (∏ i ∈ (Finset.univ.erase j), σ i (s i)) := by
+/-- Factor a product weight into the `j`-coordinate and the rest. -/
+lemma prod_factor_erase [Fintype ι] {M : Type*} [CommMonoid M]
+    (w : ∀ i, A i → M) (j : ι) (s : ∀ i, A i) :
+    (∏ i : ι, w i (s i))
+      = (w j) (s j) * (∏ i ∈ (Finset.univ.erase j), w i (s i)) := by
   classical
   simpa [Finset.mem_univ] using
     (Finset.mul_prod_erase (s := (Finset.univ : Finset ι))
-      (f := fun i => σ i (s i)) (a := j) (by simp)).symm
+      (f := fun i => w i (s i)) (a := j) (by simp)).symm
 
 /-- Updating at coordinate `j` does not change the product over `univ.erase j`. -/
-lemma prod_erase_update_eq [Fintype ι]
-    (σ : ∀ i, PMF (A i)) (j : ι) (s : ∀ i, A i) (a : A j) :
-    (∏ i ∈ Finset.univ.erase j, σ i ((Function.update s j a) i))
-      = (∏ i ∈ Finset.univ.erase j, σ i (s i)) := by
+lemma prod_erase_update_eq [Fintype ι] {M : Type*} [CommMonoid M]
+    (w : ∀ i, A i → M) (j : ι) (s : ∀ i, A i) (a : A j) :
+    (∏ i ∈ Finset.univ.erase j, w i ((Function.update s j a) i))
+      = (∏ i ∈ Finset.univ.erase j, w i (s i)) := by
   apply Finset.prod_congr rfl
   intro i hi
   simp [Function.update, Finset.ne_of_mem_erase hi]
@@ -405,8 +406,8 @@ theorem tsum_pmfPi_factor
     have hF_upd : F (s j) (@Function.update ι A (inferInstance) s j a) = F (s j) s := by
       simpa [update] using (hF (s j) s a)
     dsimp [W, e, swapJA]
-    rw [prod_erase_update_eq σ j s a, hF_upd]
-    simp_rw [prod_factor_erase σ j s]
+    rw [prod_erase_update_eq (fun i x => σ i x) j s a, hF_upd]
+    simp_rw [prod_factor_erase (fun i x => σ i x) j s]
     simp [mul_left_comm, mul_comm]
   calc
     (∑' s : (∀ i, A i), (∏ i, σ i (s i)) * F (s j) s)
@@ -436,7 +437,7 @@ theorem tsum_pmfPi_factor
         congr 1
         apply tsum_congr
         intro s
-        rw [prod_factor_erase σ j s]
+        rw [prod_factor_erase (fun i x => σ i x) j s]
 
 /-- ENNReal-sum version: "Fubini" for product weights with an `Ignores₂` condition. -/
 theorem sum_pmfPi_factor
@@ -460,8 +461,8 @@ theorem sum_pmfPi_factor
     have hF_upd : F (s j) (@Function.update ι A (inferInstance) s j a) = F (s j) s := by
       simpa [update] using (hF (s j) s a)
     dsimp [W, e, swapJA]
-    rw [prod_erase_update_eq σ j s a, hF_upd]
-    simp_rw [prod_factor_erase σ j s]
+    rw [prod_erase_update_eq (fun i x => σ i x) j s a, hF_upd]
+    simp_rw [prod_factor_erase (fun i x => σ i x) j s]
     simp [mul_left_comm, mul_comm]
   calc (∑ s, (∏ i, σ i (s i)) * F (s j) s)
       = (∑ s, (∏ i, σ i (s i)) * F (s j) s) * 1 := by simp
@@ -478,7 +479,7 @@ theorem sum_pmfPi_factor
         Math.Reindex.sum_univ_eq_sum_univ_of_involutive e he W
     _ = ∑ a, σ j a * ∑ s, (∏ i, σ i (s i)) * F a s := by
         simp [W, Fintype.sum_prod_type, Finset.mul_sum,
-          prod_factor_erase σ j, mul_left_comm, mul_comm]
+          prod_factor_erase (fun i x => σ i x) j, mul_left_comm, mul_comm]
 
 /-- Bind factorization over a coordinate when the continuation ignores that coordinate. -/
 theorem pmfPi_bind_factor [∀ i, Finite (A i)]
@@ -647,7 +648,8 @@ theorem pmfPi_cond_coord
   ext s
   simp only [pmfCond_apply, pmfPi_apply, pmfMask, pmfMass_pmfPi_coord]
   -- Factor the RHS product at j
-  rw [prod_factor_erase (Function.update σ j (pmfCond (μ := σ j) E hE)) j s]
+  rw [prod_factor_erase
+    (fun i x => (Function.update σ j (pmfCond (μ := σ j) E hE)) i x) j s]
   -- The j-th factor
   have hj : (Function.update σ j (pmfCond (μ := σ j) E hE)) j (s j)
       = (if E (s j) then σ j (s j) else 0) / pmfMass (μ := σ j) E := by
@@ -659,7 +661,7 @@ theorem pmfPi_cond_coord
       = ∏ i ∈ Finset.univ.erase j, σ i (s i) := by
     apply Finset.prod_congr rfl; intro i hi
     simp [Function.update, Finset.ne_of_mem_erase hi]
-  rw [h_rest, prod_factor_erase σ j s]
+  rw [h_rest, prod_factor_erase (fun i x => σ i x) j s]
   -- Now algebra: LHS = (if E then σj*rest else 0) / mass
   --              RHS = ((if E then σj else 0) / mass) * rest
   by_cases hE_s : E (s j)
@@ -877,7 +879,7 @@ open Classical in
     (τ (s j)) * (∏ i ∈ Finset.univ.erase j, σ i (s i)) := by
   classical
   simp only [pmfPi_apply]
-  rw [prod_factor_erase (Function.update σ j τ) j s]
+  rw [prod_factor_erase (fun i x => (Function.update σ j τ) i x) j s]
   congr 1
   · simp [Function.update]
   · apply Finset.prod_congr rfl; intro i hi
@@ -890,7 +892,7 @@ lemma pmfPi_update_family_mul (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
     pmfPi (A := A) (Function.update σ j τ) s * σ j (s j)
       =
     pmfPi (A := A) σ s * τ (s j) := by
-  rw [pmfPi_apply_update_family, pmfPi_apply, prod_factor_erase σ j s]
+  rw [pmfPi_apply_update_family, pmfPi_apply, prod_factor_erase (fun i x => σ i x) j s]
   -- LHS: (τ (s j) * rest) * σ j (s j)
   -- RHS: (σ j (s j) * rest) * τ (s j)
   simp [mul_comm, mul_left_comm]
@@ -1211,13 +1213,14 @@ theorem pmfPi_event_ratio_invariant_of_ignores
         simp [Finset.ne_of_mem_erase hi]
     have h2 : pmfPi (A := A) σ (update (A := A) s2 j (s1 j)) = σ j (s1 j)
               * ∏ i ∈ Finset.univ.erase j, σ i (s2 i) := by
-      rw [pmfPi_apply, prod_factor_erase σ j (update (A := A) s2 j (s1 j))]
+      rw [pmfPi_apply, prod_factor_erase (fun i x => σ i x) j
+        (update (A := A) s2 j (s1 j))]
       congr 1
       · simp
       · apply Finset.prod_congr rfl; intro i hi
         simp [Finset.ne_of_mem_erase hi]
     have h3 : pmfPi (A := A) σ s1 = σ j (s1 j) * ∏ i ∈ Finset.univ.erase j, σ i (s1 i) := by
-      rw [pmfPi_apply, prod_factor_erase σ j s1]
+      rw [pmfPi_apply, prod_factor_erase (fun i x => σ i x) j s1]
     have h4 : pmfPi (A := A) (Function.update σ j τ) s2 = τ (s2 j)
               * ∏ i ∈ Finset.univ.erase j, σ i (s2 i) := by
       rw [pmfPi_apply_update_family]
