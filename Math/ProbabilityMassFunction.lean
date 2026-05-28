@@ -471,6 +471,34 @@ theorem bind_congr_of_ne_zero
     μ.bind f = μ.bind g := by
   exact bind_congr_on_support μ f g (fun a ha => hfg a (by simpa [PMF.mem_support_iff] using ha))
 
+theorem pmf_eq_of_subsingleton
+    {α : Type*} [Subsingleton α] (p q : PMF α) : p = q := by
+  classical
+  rcases p.support_nonempty with ⟨a, ha⟩
+  have hp_support : p.support = ({a} : Set α) := by
+    refine Set.Subset.antisymm ?_ ?_
+    · intro x hx
+      simpa using (Subsingleton.elim x a)
+    · intro x hx
+      have hx' : x = a := by simpa using hx
+      exact hx' ▸ ha
+  have hq_support : q.support = ({a} : Set α) := by
+    refine Set.Subset.antisymm ?_ ?_
+    · intro x hx
+      simpa using (Subsingleton.elim x a)
+    · intro x hx
+      have hx' : x = a := by simpa using hx
+      rcases q.support_nonempty with ⟨b, hb⟩
+      have hba : b = a := Subsingleton.elim b a
+      exact hx' ▸ (hba.symm ▸ hb)
+  have hp : p a = 1 := (p.apply_eq_one_iff a).2 hp_support
+  have hq : q a = 1 := (q.apply_eq_one_iff a).2 hq_support
+  refine PMF.ext ?_
+  intro x
+  have hx : x = a := Subsingleton.elim x a
+  subst hx
+  exact hp.trans hq.symm
+
 theorem expect_congr_on_support
     {Ω : Type*} (μ : PMF Ω) (f g : Ω → ℝ)
     (hfg : ∀ a, a ∈ μ.support → f a = g a) :

@@ -630,34 +630,6 @@ def ActionPosteriorLocal (O : ObsModelCore ι σ Obs Act) (i : ι)
               (Function.update π₀' i πᵢ) ss₂))
           (fun πᵢ => πᵢ (O.projectStates i ss₂)))
 
-private theorem pmf_eq_of_subsingleton
-    {α : Type} [Subsingleton α] (p q : PMF α) : p = q := by
-  classical
-  rcases p.support_nonempty with ⟨a, ha⟩
-  have hp_support : p.support = ({a} : Set α) := by
-    refine Set.Subset.antisymm ?_ ?_
-    · intro x hx
-      simpa using (Subsingleton.elim x a)
-    · intro x hx
-      have hx' : x = a := by simpa using hx
-      exact hx' ▸ ha
-  have hq_support : q.support = ({a} : Set α) := by
-    refine Set.Subset.antisymm ?_ ?_
-    · intro x hx
-      simpa using (Subsingleton.elim x a)
-    · intro x hx
-      have hx' : x = a := by simpa using hx
-      rcases q.support_nonempty with ⟨b, hb⟩
-      have hba : b = a := Subsingleton.elim b a
-      exact hx' ▸ (hba.symm ▸ hb)
-  have hp : p a = 1 := (p.apply_eq_one_iff a).2 hp_support
-  have hq : q a = 1 := (q.apply_eq_one_iff a).2 hq_support
-  refine PMF.ext ?_
-  intro x
-  have hx : x = a := Subsingleton.elim x a
-  subst hx
-  exact hp.trans hq.symm
-
 /-- Core obs-locality of `reweightPMF`. -/
 theorem reweightPMF_update_obs_local_of
     (hMass : StepMassInvariant O) (n₁ n₂ : Nat)
