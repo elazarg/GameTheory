@@ -25,7 +25,7 @@ set_option autoImplicit false
 
 namespace ObsModelCore
 
-open Math.PMFProduct Math.ProbabilityMassFunction Math.ParameterizedChain
+open Math.PMFProduct Math.ProbabilityMassFunction Math.ParameterizedChain Math.TraceRun
 
 attribute [local instance] Fintype.ofFinite
 

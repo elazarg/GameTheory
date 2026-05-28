@@ -24,6 +24,7 @@ namespace Math
 namespace PMFProduct
 
 open scoped BigOperators
+open Math.ProbabilityMassFunction
 
 universe uι uA uα uβ uγ
 
@@ -1836,6 +1837,134 @@ theorem pmfPi_bind_pmfPi_of_disjoint_coords
                 (ne_of_mem_of_not_mem hk hk₀) i' hck)
         exact pt k j (h_single k i' hck j (Ne.symm hne))
     exact pmfPi_expect_indep σ _ _ J hf hg
+
+/-- Reweighting a product PMF by product weights gives a product of reweighted
+marginals. This is the multiplicative Fubini identity for `reweightPMF`. -/
+theorem reweightPMF_pmfPi
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {A : ι → Type*} [∀ i, Fintype (A i)]
+    (σ : ∀ i, PMF (A i)) (w : ∀ i, A i → ENNReal)
+    (hC : ∀ i, ∑ a, σ i a * w i a ≠ 0)
+    (hCt : ∀ i, ∑ a, σ i a * w i a ≠ ⊤) :
+    reweightPMF (pmfPi σ) (fun f => ∏ i, w i (f i)) =
+      pmfPi (fun i => reweightPMF (σ i) (w i)) := by
+  have hfub : ∑ f : ∀ i, A i, (pmfPi σ) f * ∏ i, w i (f i) =
+      ∏ i, ∑ a, σ i a * w i a := by
+    simp only [pmfPi_apply, ← Finset.prod_mul_distrib]
+    exact (Fintype.prod_sum (fun i a => σ i a * w i a)).symm
+  have hCL : ∑ f, (pmfPi σ) f * ∏ i, w i (f i) ≠ 0 := by
+    rw [hfub]; exact (Finset.prod_ne_zero_iff.mpr (fun i _ => hC i))
+  have hCLt : ∑ f, (pmfPi σ) f * ∏ i, w i (f i) ≠ ⊤ := by
+    rw [hfub]; exact ne_of_lt (ENNReal.prod_lt_top (fun i _ => (hCt i).lt_top))
+  ext f
+  rw [reweightPMF_apply _ _ _ hCL hCLt, pmfPi_apply, pmfPi_apply, hfub]
+  simp_rw [reweightPMF_apply _ _ _ (hC _) (hCt _)]
+  rw [← Finset.prod_mul_distrib]
+  simp only [ENNReal.div_eq_inv_mul]
+  conv_lhs =>
+    rw [ENNReal.prod_inv_distrib (by
+      intro i _ j _ _; exact Or.inl (hC i))]
+  rw [← Finset.prod_mul_distrib]
+
+open Classical in
+/-- Reweighting a product distribution by a scalar weight that ignores
+coordinate `j` preserves the `j`-marginal.
+
+This is the product-measure independence calculation used when a reach event
+depends only on the other coordinates: conditioning/reweighting on that event
+does not change the unused coordinate's law. -/
+theorem reweightPMF_pmfPi_push_coord_of_ignores
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {A : ι → Type*} [∀ i, Fintype (A i)]
+    (σ : ∀ i, PMF (A i)) (j : ι)
+    (w : (∀ i, A i) → ENNReal)
+    (hign : Ignores (A := A) j w)
+    (hC0 : ∑ s, pmfPi (A := A) σ s * w s ≠ 0)
+    (hCtop : ∑ s, pmfPi (A := A) σ s * w s ≠ ⊤) :
+    pushforward
+        (reweightPMF (pmfPi (A := A) σ) w) (fun s => s j) =
+      σ j := by
+  classical
+  ext a
+  set C : ENNReal := ∑ s, pmfPi (A := A) σ s * w s
+  have hC0' : C ≠ 0 := by simpa [C] using hC0
+  have hCtop' : C ≠ ⊤ := by simpa [C] using hCtop
+  have hf :
+      ∀ q, q ∉ ({j} : Finset ι) →
+        Ignores (A := A) q
+          (fun s : (∀ i, A i) => if s j = a then (1 : ENNReal) else 0) := by
+    intro q hq s b
+    have hqj : q ≠ j := by
+      intro h
+      exact hq (by simp [h])
+    have hneq : j ≠ q := Ne.symm hqj
+    simp [Function.update, hneq]
+  have hg :
+      ∀ q, q ∈ ({j} : Finset ι) →
+        Ignores (A := A) q w := by
+    intro q hq
+    have hqj : q = j := by simpa using hq
+    subst q
+    exact hign
+  have hindep :
+      (∑ s : (∀ i, A i),
+        pmfPi (A := A) σ s *
+          (((if s j = a then (1 : ENNReal) else 0) * w s))) =
+        (∑ s : (∀ i, A i),
+          pmfPi (A := A) σ s *
+            (if s j = a then (1 : ENNReal) else 0)) * C := by
+    simpa [C, mul_assoc, mul_left_comm, mul_comm] using
+      pmfPi_expect_indep
+        (A := A) σ
+        (fun s : (∀ i, A i) => if s j = a then (1 : ENNReal) else 0)
+        w ({j} : Finset ι) hf hg
+  have hcoord :
+      (∑ s : (∀ i, A i),
+        pmfPi (A := A) σ s *
+          (if s j = a then (1 : ENNReal) else 0)) = σ j a := by
+    simpa [mul_ite, mul_one, mul_zero] using
+      pmfPi_coord_mass (A := A) σ j a
+  rw [pushforward, PMF.map_apply]
+  simp only [tsum_fintype]
+  simp_rw [@eq_comm _ a]
+  calc
+    (∑ s : (∀ i, A i),
+        if s j = a then reweightPMF (pmfPi (A := A) σ) w s else 0)
+        =
+      (∑ s : (∀ i, A i),
+        pmfPi (A := A) σ s *
+          (((if s j = a then (1 : ENNReal) else 0) * w s))) * C⁻¹ := by
+        rw [Finset.sum_mul]
+        refine Finset.sum_congr rfl ?_
+        intro s _
+        rw [reweightPMF_apply (pmfPi (A := A) σ) w s hC0 hCtop]
+        by_cases hs : s j = a
+        · simp [hs, C, div_eq_mul_inv, mul_assoc, mul_comm]
+        · simp [hs]
+    _ = (σ j a * C) * C⁻¹ := by rw [hindep, hcoord]
+    _ = σ j a := by
+      rw [mul_assoc, ENNReal.mul_inv_cancel hC0' hCtop', mul_one]
+
+open Classical in
+/-- Reweighting a product distribution by a scalar weight that ignores
+coordinate `j` preserves the `j`-marginal, including the zero-total-weight
+fallback case of `reweightPMF`. -/
+theorem reweightPMF_pmfPi_push_coord_of_ignores'
+    {ι : Type*} [Fintype ι] [DecidableEq ι]
+    {A : ι → Type*} [∀ i, Fintype (A i)]
+    (σ : ∀ i, PMF (A i)) (j : ι)
+    (w : (∀ i, A i) → ENNReal)
+    (hign : Ignores (A := A) j w)
+    (hCtop : ∑ s, pmfPi (A := A) σ s * w s ≠ ⊤) :
+    pushforward
+        (reweightPMF (pmfPi (A := A) σ) w) (fun s => s j) =
+      σ j := by
+  classical
+  by_cases hC0 : ∑ s, pmfPi (A := A) σ s * w s = 0
+  · rw [reweightPMF_degenerate _ _ (Or.inl hC0)]
+    exact pmfPi_push_coord (A := A) σ j
+  · exact reweightPMF_pmfPi_push_coord_of_ignores
+      (A := A) σ j w hign hC0 hCtop
 
 /-- Product of mapped marginals distributes over bind:
 `(pmfPi (fun i => (σ i).map (f i))).bind g = (pmfPi σ).bind (fun s => g (fun i => f i (s i)))`. -/

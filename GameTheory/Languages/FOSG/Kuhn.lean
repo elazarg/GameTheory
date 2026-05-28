@@ -801,14 +801,14 @@ private theorem legalHistoryMixedToBehavioral_isLegal
           i n ss π₀).support := by
       rwa [hEq'] at hoi
     rcases Math.PMFProduct.pushforward_support_fibre
-        (Math.ParameterizedChain.reweightPMF (liftHistoryMixedProfile (G := G) μ i)
+        (Math.ProbabilityMassFunction.reweightPMF (liftHistoryMixedProfile (G := G) μ i)
           (fun πᵢ => Math.ParameterizedChain.pureRun ((toHistoryObsModelCore G).pureStep)
             (toHistoryObsModelCore G).init n (Function.update π₀ i πᵢ) ss))
         (fun πᵢ => πᵢ ((toHistoryObsModelCore G).projectStates i ss)) oi hfactor with
       ⟨πiCore, hπiAction, hπiReweight⟩
     have hπiCoreSupp :
         πiCore ∈ (liftHistoryMixedProfile (G := G) μ i).support :=
-      Math.ParameterizedChain.reweightPMF_support_subset _ _ hπiReweight
+      Math.ProbabilityMassFunction.reweightPMF_support_subset _ _ hπiReweight
     rcases Math.PMFProduct.pushforward_support_fibre
         (μ i) (liftHistoryPureStrategy (G := G) i) πiCore hπiCoreSupp with
       ⟨πi, hπiLift, hπiSupp⟩
@@ -2242,7 +2242,7 @@ theorem reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
             (toReachableHistoryObsModelCore G hLeg).init n
             (Function.update π₀ i πᵢ) ss)) :
     Math.ProbabilityMassFunction.pushforward
-        (Math.ParameterizedChain.reweightPMF
+        (Math.ProbabilityMassFunction.reweightPMF
           (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β)
           (fun πᵢ : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i =>
             Math.ParameterizedChain.pureRun
@@ -2272,7 +2272,7 @@ theorem reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
           (Function.update π₀ i πᵢ) ss)
       (fun πᵢ => PMF.coe_le_one _ ss)
   simpa [reachableHistoryBehavioralToMixedStrategy, O] using
-    Math.ParameterizedChain.reweightPMF_pmfPi_push_coord_of_ignores'
+    Math.PMFProduct.reweightPMF_pmfPi_push_coord_of_ignores'
       (A := fun s : G.ReachableInfoState i => ReachableInfoLegalMove G i s)
       (σ := liftReachableHistoryBehavioralStrategy (G := G) hLeg i β)
       (j := (O.projectStates i ss))
@@ -2294,7 +2294,7 @@ theorem reachableHistoryBehavioralToMixedStrategy_factorAt
         ((toReachableHistoryObsModelCore G hLeg).pureStep)
         (toReachableHistoryObsModelCore G hLeg).init n π₀ ss ≠ 0) :
     Math.ProbabilityMassFunction.pushforward
-        (Math.ParameterizedChain.reweightPMF
+        (Math.ProbabilityMassFunction.reweightPMF
           (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β)
           (fun πᵢ : (toReachableHistoryObsModelCore G hLeg).LocalStrategy i =>
             Math.ParameterizedChain.pureRun

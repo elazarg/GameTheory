@@ -23,7 +23,7 @@ set_option autoImplicit false
 
 namespace ObsModel
 
-open Math.ProbabilityMassFunction Math.ParameterizedChain
+open Math.ProbabilityMassFunction Math.ParameterizedChain Math.TraceRun
 
 attribute [local instance] Fintype.ofFinite
 
@@ -326,7 +326,7 @@ theorem reweightPMF_pureRun_obs_invariant
     sum_mul_pmf_ne_top ν _ fun π => PMF.coe_le_one _ _
   have hCtop₂ : ∑ π, ν π * pureRun (O.pureStep) O.init n π ss₂ ≠ ⊤ :=
     sum_mul_pmf_ne_top ν _ fun π => PMF.coe_le_one _ _
-  apply Math.ParameterizedChain.reweightPMF_eq_of_cross_mul ν _ _ hreach₁ hCtop₁ hreach₂ hCtop₂
+  apply Math.ProbabilityMassFunction.reweightPMF_eq_of_cross_mul ν _ _ hreach₁ hCtop₁ hreach₂ hCtop₂
   intro π
   rw [Finset.mul_sum, Finset.mul_sum]
   apply Finset.sum_congr rfl

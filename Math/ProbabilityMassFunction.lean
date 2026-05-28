@@ -58,6 +58,109 @@ theorem pushforward_bind
     pushforward (μ.bind k) f = μ.bind (fun a => pushforward (k a) f) := by
   exact PMF.map_bind (p := μ) (q := k) f
 
+section ReweightPMF
+
+variable [Fintype α]
+
+open Classical in
+/-- Reweight a finitely-supported PMF by an `ENNReal` weight function.
+Falls back to `μ` when the total weight is zero or infinite. -/
+noncomputable def reweightPMF (μ : PMF α) (w : α → ENNReal) : PMF α :=
+  let C := ∑ a : α, μ a * w a
+  if h : C = 0 ∨ C = ⊤ then μ
+  else
+    have hne0 : C ≠ 0 := fun h0 => h (Or.inl h0)
+    have hneTop : C ≠ ⊤ := fun ht => h (Or.inr ht)
+    PMF.ofFintype (fun a => μ a * w a / C) (by
+      simp only [div_eq_mul_inv]
+      rw [← Finset.sum_mul]
+      exact ENNReal.mul_inv_cancel hne0 hneTop)
+
+open Classical in
+theorem reweightPMF_apply (μ : PMF α) (w : α → ENNReal) (a : α)
+    (hC : ∑ a' : α, μ a' * w a' ≠ 0)
+    (hCtop : ∑ a' : α, μ a' * w a' ≠ ⊤) :
+    reweightPMF μ w a = μ a * w a / (∑ a' : α, μ a' * w a') := by
+  unfold reweightPMF
+  dsimp only
+  split_ifs with h
+  · exact absurd h (not_or.mpr ⟨hC, hCtop⟩)
+  · exact PMF.ofFintype_apply _ a
+
+open Classical in
+theorem reweightPMF_support_subset (μ : PMF α) (w : α → ENNReal) :
+    (reweightPMF μ w).support ⊆ μ.support := by
+  intro a ha
+  rw [PMF.mem_support_iff] at ha ⊢
+  intro hμ
+  unfold reweightPMF at ha
+  dsimp only at ha
+  split_ifs at ha with hdeg
+  · exact ha hμ
+  · apply ha
+    rw [PMF.ofFintype_apply, hμ]
+    simp
+
+theorem reweightPMF_fallback (μ : PMF α) (w : α → ENNReal)
+    (hC : ∑ a : α, μ a * w a = 0) :
+    reweightPMF μ w = μ := by
+  unfold reweightPMF
+  dsimp only
+  split_ifs with h
+  · rfl
+  · exact absurd (Or.inl hC) h
+
+theorem reweightPMF_degenerate (μ : PMF α) (w : α → ENNReal)
+    (hC : (∑ a : α, μ a * w a) = 0 ∨ (∑ a : α, μ a * w a) = ⊤) :
+    reweightPMF μ w = μ := by
+  unfold reweightPMF
+  exact dif_pos hC
+
+open Classical in
+/-- Scaling the weight function by a finite nonzero constant doesn't change
+the reweighted PMF because the constant cancels in the normalization. -/
+theorem reweightPMF_scale (μ : PMF α) (w : α → ENNReal) (c : ENNReal)
+    (hc0 : c ≠ 0) (hctop : c ≠ ⊤) :
+    reweightPMF μ (fun a => c * w a) = reweightPMF μ w := by
+  have hfact : ∀ a', μ a' * (c * w a') = c * (μ a' * w a') := fun a' => by ring
+  have hCeq : ∑ a' : α, μ a' * (c * w a') = c * ∑ a' : α, μ a' * w a' := by
+    simp_rw [hfact, ← Finset.mul_sum]
+  by_cases hC0 : ∑ a' : α, μ a' * w a' = 0
+  · exact (reweightPMF_degenerate μ _ (Or.inl (by rw [hCeq, hC0, mul_zero]))).trans
+      (reweightPMF_degenerate μ _ (Or.inl hC0)).symm
+  by_cases hCtop : ∑ a' : α, μ a' * w a' = ⊤
+  · exact (reweightPMF_degenerate μ _ (Or.inr (by rw [hCeq, hCtop, ENNReal.mul_top hc0]))).trans
+      (reweightPMF_degenerate μ _ (Or.inr hCtop)).symm
+  · have hC0' : ∑ a' : α, μ a' * (c * w a') ≠ 0 := by
+      rw [hCeq]; exact mul_ne_zero hc0 hC0
+    have hCtop' : ∑ a' : α, μ a' * (c * w a') ≠ ⊤ := by
+      rw [hCeq]; exact ENNReal.mul_ne_top hctop.lt_top.ne hCtop
+    ext a
+    rw [reweightPMF_apply μ _ a hC0' hCtop', reweightPMF_apply μ _ a hC0 hCtop]
+    rw [show μ a * (c * w a) = c * (μ a * w a) from by ring, hCeq]
+    exact ENNReal.mul_div_mul_left _ _ hc0 hctop
+
+open Classical in
+/-- If weights satisfy a cross-multiplication identity
+`∀ a, w₁ a * C₂ = w₂ a * C₁`, the reweighted PMFs are equal. -/
+theorem reweightPMF_eq_of_cross_mul (μ : PMF α) (w₁ w₂ : α → ENNReal)
+    (hC₁ : ∑ a' : α, μ a' * w₁ a' ≠ 0)
+    (hC₁top : ∑ a' : α, μ a' * w₁ a' ≠ ⊤)
+    (hC₂ : ∑ a' : α, μ a' * w₂ a' ≠ 0)
+    (hC₂top : ∑ a' : α, μ a' * w₂ a' ≠ ⊤)
+    (hcross : ∀ a, w₁ a * (∑ a' : α, μ a' * w₂ a') =
+                    w₂ a * (∑ a' : α, μ a' * w₁ a')) :
+    reweightPMF μ w₁ = reweightPMF μ w₂ := by
+  ext a
+  rw [reweightPMF_apply μ w₁ a hC₁ hC₁top, reweightPMF_apply μ w₂ a hC₂ hC₂top]
+  rw [ENNReal.div_eq_div_iff hC₂ hC₂top hC₁ hC₁top]
+  calc (∑ a', μ a' * w₂ a') * (μ a * w₁ a)
+      = μ a * (w₁ a * (∑ a', μ a' * w₂ a')) := by ac_rfl
+    _ = μ a * (w₂ a * (∑ a', μ a' * w₁ a')) := by rw [hcross a]
+    _ = (∑ a', μ a' * w₁ a') * (μ a * w₂ a) := by ac_rfl
+
+end ReweightPMF
+
 open Classical in
 /-- Mask a PMF by an event, as an `ENNReal`-valued function. -/
 noncomputable def pmfMask (μ : PMF α) (E : α → Prop) : α → ENNReal :=
