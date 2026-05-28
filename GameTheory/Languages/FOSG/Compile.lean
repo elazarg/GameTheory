@@ -233,13 +233,9 @@ theorem runDistFrom_succ_active_empty
     (hterm : ¬ G.terminal h.lastState)
     (hactive : G.active h.lastState = ∅) :
     runDistFrom G σ (n + 1) h =
-      (G.transition h.lastState
-          ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
-            hactive hterm⟩).bind fun dst =>
+      (G.transition h.lastState (G.noopLegalAction hactive hterm)).bind fun dst =>
         runDistFrom G σ n
-          (h.extendByOutcome
-            ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
-              hactive hterm⟩ dst) := by
+          (h.extendByOutcome (G.noopLegalAction hactive hterm) dst) := by
   rw [runDistFrom_succ_nonterminal (G := G) (σ := σ) (n := n) (h := h) hterm]
   rw [G.legalActionLaw_eq_pure_noop_of_active_empty σ h hterm hactive]
   simp [PMF.pure_bind]

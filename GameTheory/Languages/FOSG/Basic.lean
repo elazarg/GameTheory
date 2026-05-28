@@ -205,6 +205,11 @@ noncomputable def noopLegalAction
     G.LegalAction w :=
   ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal hactive hterm⟩
 
+@[simp] theorem noopLegalAction_val
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (hactive : G.active w = ∅) (hterm : ¬ G.terminal w) :
+    (G.noopLegalAction hactive hterm).1 = noopAction Act := rfl
+
 end FOSG
 
 end GameTheory

@@ -163,11 +163,12 @@ theorem playerLegal_other_none
 /-- A legal original-world action at a base chance node of the original FOSG. -/
 noncomputable def baseChanceLegalAction
     (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) : G.LegalAction w := by
-  exact ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal h hNotTerm⟩
+  exact G.noopLegalAction h hNotTerm
 
 @[simp] theorem baseChanceLegalAction_val
     (w : W) (h : G.active w = ∅) (hNotTerm : ¬ G.terminal w) :
-    (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := rfl
+    (baseChanceLegalAction (G := G) w h hNotTerm).1 = noopAction Act := by
+  simp [baseChanceLegalAction]
 
 /-- The original action chosen by an active player inside a legal joint action. -/
 noncomputable def actionAtActive

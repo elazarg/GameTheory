@@ -299,12 +299,9 @@ theorem legalActionLaw_eq_pure_noop_of_active_empty
     (hterm : ¬ G.terminal h.lastState)
     (hactive : G.active h.lastState = ∅) :
     G.legalActionLaw σ h hterm =
-      PMF.pure
-        ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
-          hactive hterm⟩ := by
+      PMF.pure (G.noopLegalAction hactive hterm) := by
   let a₀ : G.LegalAction h.lastState :=
-    ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal
-      hactive hterm⟩
+    G.noopLegalAction hactive hterm
   apply PMF.ext
   intro a
   have haVal : a.1 = noopAction Act := by
