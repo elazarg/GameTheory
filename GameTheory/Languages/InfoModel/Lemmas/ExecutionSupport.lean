@@ -45,39 +45,9 @@ theorem runDist_support_stateLength
     (n : Nat)
     (σ : BehavioralProfile I) (ss : List _) :
     (D.runDist n σ) ss ≠ 0 → ss.length = n + 1 := by
-  induction n generalizing ss with
-  | zero =>
-      intro h
-      have hmem : ss ∈ (PMF.pure [I.init] : PMF _).support := by
-        rwa [runDist_zero (I := I) (D := D)] at h
-      rw [PMF.support_pure, Set.mem_singleton_iff] at hmem
-      subst hmem
-      rfl
-  | succ n ih =>
-      intro h
-      rw [runDist_succ (I := I) (D := D), PMF.bind_apply] at h
-      by_contra hlen
-      apply h
-      rw [ENNReal.tsum_eq_zero]
-      intro ss'
-      by_cases hss' : (D.runDist n σ) ss' = 0
-      · simp [hss']
-      · have hlen' := ih ss' hss'
-        suffices hsuff :
-            (Math.ProbabilityMassFunction.pushforward
-              (D.stepDist σ ss') (fun t => ss' ++ [t])) ss = 0 by
-          simp [hsuff]
-        change ((D.stepDist σ ss').bind (fun t => PMF.pure (ss' ++ [t]))) ss = 0
-        rw [PMF.bind_apply]
-        rw [ENNReal.tsum_eq_zero]
-        intro t
-        suffices hne : ss ≠ ss' ++ [t] by
-          simp [PMF.pure_apply, hne]
-        intro heq
-        apply hlen
-        have : ss.length = ss'.length + 1 := by
-          simpa [List.length_append] using congrArg List.length heq
-        omega
+  intro h
+  exact Math.TraceRun.traceRun_length (D.stepDist σ) I.init n ss (by
+    simpa [Execution.Dynamics.runDist] using h)
 
 private theorem exists_action_of_stepDist_ne_zero
     [DecidableEq ι]
