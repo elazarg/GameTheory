@@ -22,6 +22,15 @@ namespace KernelGame
 
 variable {ι : Type}
 
+private theorem map_profile_update [DecidableEq ι]
+    {A B : ι → Type*} (f : ∀ i, A i → B i)
+    (σ : ∀ i, A i) (who : ι) (s' : A who) :
+    (fun i => f i (Function.update σ who s' i)) =
+      Function.update (fun i => f i (σ i)) who (f who s') := by
+  funext j
+  simpa using
+    (Function.apply_update (f := f) (g := σ) (i := who) (v := s') (j := j))
+
 /-- EU corollary: if a morphism preserves EU values, Nash pulls back. -/
 theorem EUMorphism.nash_of_nash [DecidableEq ι]
     {G H : KernelGame ι} (f : EUMorphism G H)
@@ -33,12 +42,8 @@ theorem EUMorphism.nash_of_nash [DecidableEq ι]
   have h1 := f.eu_preserved σ who
   have h2 : H.eu (Function.update (fun i => f.stratMap i (σ i)) who (f.stratMap who s')) who =
       G.eu (Function.update σ who s') who := by
-    rw [← f.eu_preserved (Function.update σ who s') who]
-    congr 2
-    funext j
-    simpa using
-      (Function.apply_update
-        (f := f.stratMap) (g := σ) (i := who) (v := s') (j := j)).symm
+    simpa [map_profile_update (f := f.stratMap) σ who s'] using
+      f.eu_preserved (Function.update σ who s') who
   linarith
 
 namespace EUGameIsomorphism
@@ -57,12 +62,8 @@ theorem nash_iff [DecidableEq ι] (e : EUGameIsomorphism G H) (σ : Profile G) :
       have h1 := e.eu_preserved σ who
       have h2 := e.eu_preserved (Function.update σ who ((e.stratEquiv who).symm s')) who
       linarith
-    congr 2
-    funext j
-    simpa using
-      (Function.apply_update
-        (f := fun i => e.stratEquiv i) (g := σ) (i := who)
-        (v := (e.stratEquiv who).symm s') (j := j)).symm
+    simp [map_profile_update (f := fun i => e.stratEquiv i) σ who
+        ((e.stratEquiv who).symm s')]
   · exact e.toEUMorphism.nash_of_nash
 
 open Classical in
@@ -75,17 +76,13 @@ theorem dominant_iff (e : EUGameIsomorphism G H)
     set τ := fun i => (e.stratEquiv i).symm (σ i) with hτ
     have key1 : Function.update σ who (e.stratEquiv who s) =
         fun i => e.stratEquiv i (Function.update τ who s i) := by
-      funext j
       simpa [hτ] using
-        (Function.apply_update (f := fun i => e.stratEquiv i) (g := τ)
-          (i := who) (v := s) (j := j)).symm
+        (map_profile_update (f := fun i => e.stratEquiv i) τ who s).symm
     have key2 : Function.update σ who s' =
         fun i => e.stratEquiv i (Function.update τ who ((e.stratEquiv who).symm s') i) := by
-      funext j
       simpa [hτ] using
-        (Function.apply_update
-          (f := fun i => e.stratEquiv i) (g := τ) (i := who)
-          (v := (e.stratEquiv who).symm s') (j := j)).symm
+        (map_profile_update (f := fun i => e.stratEquiv i) τ who
+          ((e.stratEquiv who).symm s')).symm
     rw [key1, key2]
     have h1 := e.eu_preserved (Function.update τ who s) who
     have h2 := e.eu_preserved (Function.update τ who ((e.stratEquiv who).symm s')) who
@@ -97,17 +94,11 @@ theorem dominant_iff (e : EUGameIsomorphism G H)
     have hmap_s :
         (fun i => e.stratEquiv i (Function.update σ who s i)) =
           Function.update (fun i => e.stratEquiv i (σ i)) who (e.stratEquiv who s) := by
-      funext j
-      simpa using
-        (Function.apply_update (f := fun i => e.stratEquiv i) (g := σ)
-          (i := who) (v := s) (j := j))
+      exact map_profile_update (fun i => e.stratEquiv i) σ who s
     have hmap_s' :
         (fun i => e.stratEquiv i (Function.update σ who s' i)) =
           Function.update (fun i => e.stratEquiv i (σ i)) who (e.stratEquiv who s') := by
-      funext j
-      simpa using
-        (Function.apply_update (f := fun i => e.stratEquiv i) (g := σ)
-          (i := who) (v := s') (j := j))
+      exact map_profile_update (fun i => e.stratEquiv i) σ who s'
     rw [hmap_s] at h1
     rw [hmap_s'] at h2
     linarith
