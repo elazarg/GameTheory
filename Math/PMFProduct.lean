@@ -924,7 +924,7 @@ omit [∀ i, Fintype (A i)] in
 /-- When `f` ignores coordinate `j`, the bind of a deterministic
     product (with `pure a` at `j`) through `f` is independent of `a`.
     This is the core step for marginalizing an irrelevant coordinate. -/
-private theorem pmfPi_pure_bind_ignores [∀ i, Finite (A i)]
+theorem pmfPi_bind_update_pure_eq_of_ignores [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (a a' : A j)
     {β : Type*}
     (f : (∀ i, A i) → PMF β)
@@ -985,13 +985,13 @@ theorem pmfPi_bind_ignores_coord [∀ i, Finite (A i)]
       · simp [Function.update_of_ne h]]
     rw [pmfPi_update_bind, PMF.bind_bind]
   -- Both: d.bind g where g a = pmfPi(update σ j (pure a)).bind f
-  -- g is constant by pmfPi_pure_bind_ignores, so d doesn't matter.
+  -- g is constant by `pmfPi_bind_update_pure_eq_of_ignores`, so d doesn't matter.
   -- Pick a₀ from τ's support (PMF is nonempty).
   obtain ⟨a₀, _⟩ := τ.support_nonempty
   have hconst : ∀ a,
       (pmfPi (Function.update σ j (PMF.pure a))).bind f =
       (pmfPi (Function.update σ j (PMF.pure a₀))).bind f :=
-    fun a => pmfPi_pure_bind_ignores σ j a a₀ f hf
+    fun a => pmfPi_bind_update_pure_eq_of_ignores σ j a a₀ f hf
   simp_rw [hconst]; simp [PMF.bind_const]
 
 omit [∀ i, Fintype (A i)] in
