@@ -56,7 +56,7 @@ variable [DecidableEq ι]
 
 omit [Fintype ι] in
 /-- In a team game, every Pareto-efficient profile is Nash. -/
-theorem IsTeamGame.pareto_isNash (hteam : G.IsTeamGame) [Inhabited ι]
+theorem IsTeamGame.pareto_isNash (hteam : G.IsTeamGame)
     {σ : Profile G} (hpareto : G.IsParetoEfficient σ) :
     G.IsNash σ := by
   classical

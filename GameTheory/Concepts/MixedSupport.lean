@@ -30,8 +30,7 @@ namespace KernelGame
 attribute [local instance] Fintype.ofFinite
 
 variable {ι : Type} [Fintype ι]
-  (G : KernelGame ι) [∀ i, Nonempty (G.Strategy i)]
-  [Finite G.Outcome]
+  (G : KernelGame ι) [Finite G.Outcome]
 
 open Classical in
 /-- **Support lemma**: in a mixed Nash equilibrium, any pure strategy
@@ -110,7 +109,7 @@ open Classical in
     strategy played with positive probability has zero EU gain. -/
 theorem mixedNash_support_gain_zero_of_bounded
     {ι : Type} [Fintype ι]
-    (G : KernelGame ι) [∀ i, Nonempty (G.Strategy i)]
+    (G : KernelGame ι)
     {σ : ∀ i, PMF (G.Strategy i)}
     (hN : G.mixedExtension.IsNash σ)
     {who : ι} {a : G.Strategy who} (hpos : (σ who) a ≠ 0)
@@ -170,7 +169,7 @@ open Classical in
     equilibrium yield the same expected utility. -/
 theorem mixedNash_support_eu_eq_of_bounded
     {ι : Type} [Fintype ι]
-    (G : KernelGame ι) [∀ i, Nonempty (G.Strategy i)]
+    (G : KernelGame ι)
     {σ : ∀ i, PMF (G.Strategy i)}
     (hN : G.mixedExtension.IsNash σ)
     {who : ι} {a b : G.Strategy who}

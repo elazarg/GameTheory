@@ -161,7 +161,7 @@ theorem expect_summable_of_bounded {Ω : Type*}
   · intro ω' hne; simp [hne]
 
 /-- Expected value of a constant function. -/
-@[simp] theorem expect_const {Ω : Type*} [Nonempty Ω] (d : PMF Ω) (c : ℝ) :
+@[simp] theorem expect_const {Ω : Type*} (d : PMF Ω) (c : ℝ) :
     expect d (fun _ => c) = c := by
   simp only [expect]
   have hfact : (fun ω => (d ω).toReal * c) = (fun ω => c * (d ω).toReal) := by ext; ring
@@ -264,19 +264,13 @@ theorem expect_bind_of_bounded {α β : Type*}
   change F a b = (p a).toReal * ((q a b).toReal * f b)
   simp [hF, mul_assoc]
 
-/-- Expected value distributes over `PMF.bind` for finite types. -/
-theorem expect_bind {α β : Type*} [Finite α] [Finite β]
+/-- Expected value distributes over `PMF.bind` for finite target types. -/
+theorem expect_bind {α β : Type*} [Finite β]
     (p : PMF α) (q : α → PMF β) (f : β → ℝ) :
     expect (p.bind q) f = expect p (fun a => expect (q a) f) := by
   classical
-  letI : Fintype α := Fintype.ofFinite α
-  letI : Fintype β := Fintype.ofFinite β
-  simp only [expect, PMF.bind_apply, tsum_fintype]
-  have hne : ∀ (a : α) (b : β), p a * q a b ≠ ⊤ := fun a b =>
-    ENNReal.mul_ne_top (PMF.apply_ne_top p a) (PMF.apply_ne_top (q a) b)
-  simp_rw [ENNReal.toReal_sum (fun a _ => hne a _), ENNReal.toReal_mul,
-    Finset.sum_mul, Finset.mul_sum, mul_assoc]
-  exact Finset.sum_comm
+  obtain ⟨C, hC⟩ := exists_abs_bound_of_finite f
+  exact expect_bind_of_bounded p q f hC
 
 /-- Expected value over a pushforward from a finite source.
 

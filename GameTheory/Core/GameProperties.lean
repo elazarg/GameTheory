@@ -47,6 +47,10 @@ def IsOrdinalPotential (G : KernelGame ι) [DecidableEq ι] (Φ : Profile G → 
     (G.eu (Function.update σ who s') who > G.eu σ who) ↔
       (Φ (Function.update σ who s') > Φ σ)
 
+/-- Team game / identical-interest property at the outcome-utility level. -/
+def IsTeamGame (G : KernelGame ι) : Prop :=
+  ∀ (ω : G.Outcome) (i j : ι), G.utility ω i = G.utility ω j
+
 section FinitePlayers
 
 variable [Fintype ι]
@@ -62,10 +66,6 @@ def IsConstantSum (G : KernelGame ι) (c : ℝ) : Prop :=
 /-- Zero-sum game property at the outcome-utility level. -/
 def IsZeroSum (G : KernelGame ι) : Prop :=
   G.IsConstantSum 0
-
-/-- Team game / identical-interest property at the outcome-utility level. -/
-def IsTeamGame (G : KernelGame ι) : Prop :=
-  ∀ (ω : G.Outcome) (i j : ι), G.utility ω i = G.utility ω j
 
 end FinitePlayers
 

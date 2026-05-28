@@ -176,6 +176,35 @@ theorem legal_noopAction_of_active_empty_of_not_terminal
   intro i
   simp [noopAction, hactive]
 
+theorem legal_iff_active_eq_empty
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} {a : JointAction Act} (hactive : G.active w = ∅) :
+    G.legal w a ↔ ¬ G.terminal w ∧ a = noopAction Act := by
+  constructor
+  · intro h
+    refine ⟨h.1, ?_⟩
+    funext i
+    cases ha : a i with
+    | none => rfl
+    | some ai =>
+        have hi : i ∈ G.active w ∧ ai ∈ G.availableActions w i := by
+          simpa [ha] using h.2 i
+        exact False.elim (by simpa [hactive] using hi.1)
+  · intro h
+    exact h.2 ▸ G.legal_noopAction_of_active_empty_of_not_terminal hactive h.1
+
+theorem LegalAction.val_eq_noop_of_active_empty
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (a : G.LegalAction w) (hactive : G.active w = ∅) :
+    a.1 = noopAction Act :=
+  ((G.legal_iff_active_eq_empty hactive).mp a.2).2
+
+noncomputable def noopLegalAction
+    (G : FOSG ι W Act PrivObs PubObs)
+    {w : W} (hactive : G.active w = ∅) (hterm : ¬ G.terminal w) :
+    G.LegalAction w :=
+  ⟨noopAction Act, G.legal_noopAction_of_active_empty_of_not_terminal hactive hterm⟩
+
 end FOSG
 
 end GameTheory

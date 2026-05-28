@@ -19,7 +19,8 @@ namespace InfoModel
 open Execution
 
 export Math.BoundedLists (listsOfLength listsUpToLength
-  mem_listsOfLength_of_forall_mem mem_listsUpToLength_of_forall_mem)
+  mem_listsOfLength_of_forall_mem mem_listsOfLength_iff
+  mem_listsUpToLength_of_forall_mem mem_listsUpToLength_iff)
 
 variable {ι : Type}
 variable {σ : Type} {Act : ι → Type} (I : InfoModel ι σ Act)

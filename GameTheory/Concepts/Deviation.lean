@@ -67,6 +67,32 @@ noncomputable def constantDeviationDistribution (G : KernelGame ι)
     G.deviationDistribution μ _root_.id = μ := by
   simp [deviationDistribution]
 
+section Unilateral
+
+variable [DecidableEq ι]
+
+open Classical in
+@[simp] theorem constantDeviationDistribution_pure (G : KernelGame ι)
+    (σ : Profile G) (who : ι) (s' : G.Strategy who) :
+    G.constantDeviationDistribution (PMF.pure σ) who s' =
+      PMF.pure (Function.update σ who s') := by
+  simp [constantDeviationDistribution, deviationDistribution, constantDeviation]
+
+open Classical in
+@[simp] theorem unilateralDeviationDistribution_pure (G : KernelGame ι)
+    (σ : Profile G) (who : ι) (dev : G.Strategy who → G.Strategy who) :
+    G.unilateralDeviationDistribution (PMF.pure σ) who dev =
+      PMF.pure (G.unilateralDeviation who dev σ) := by
+  simp [unilateralDeviationDistribution, deviationDistribution, unilateralDeviation]
+
+open Classical in
+@[simp] theorem unilateralDeviationDistribution_id
+    (G : KernelGame ι) (μ : PMF (Profile G)) (who : ι) :
+    G.unilateralDeviationDistribution μ who _root_.id = μ := by
+  simp [unilateralDeviationDistribution, unilateralDeviation]
+
+end Unilateral
+
 end KernelGame
 
 end GameTheory

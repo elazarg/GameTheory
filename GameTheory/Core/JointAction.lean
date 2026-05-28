@@ -33,11 +33,54 @@ def JointActionLegal {ι W : Type}
       | some ai => i ∈ active w ∧ ai ∈ availableActions w i
       | none => i ∉ active w
 
+theorem JointActionLegal.not_terminal {ι W : Type}
+    {Act : ι → Type}
+    {active : W → Finset ι}
+    {terminal : W → Prop}
+    {availableActions : W → (i : ι) → Set (Act i)}
+    {w : W} {a : JointAction Act}
+    (h : JointActionLegal Act active terminal availableActions w a) :
+    ¬ terminal w :=
+  h.1
+
+theorem JointActionLegal.some {ι W : Type}
+    {Act : ι → Type}
+    {active : W → Finset ι}
+    {terminal : W → Prop}
+    {availableActions : W → (i : ι) → Set (Act i)}
+    {w : W} {a : JointAction Act} {i : ι} {ai : Act i}
+    (h : JointActionLegal Act active terminal availableActions w a)
+    (hai : a i = some ai) :
+    i ∈ active w ∧ ai ∈ availableActions w i := by
+  simpa [hai] using h.2 i
+
+theorem JointActionLegal.none {ι W : Type}
+    {Act : ι → Type}
+    {active : W → Finset ι}
+    {terminal : W → Prop}
+    {availableActions : W → (i : ι) → Set (Act i)}
+    {w : W} {a : JointAction Act} {i : ι}
+    (h : JointActionLegal Act active terminal availableActions w a)
+    (hai : a i = none) :
+    i ∉ active w := by
+  simpa [hai] using h.2 i
+
 /-- The all-`none` joint action. -/
 def noopAction {ι : Type} (Act : ι → Type) : JointAction Act :=
   fun _ => none
 
 @[simp] theorem noopAction_apply {ι : Type} (Act : ι → Type) (i : ι) :
     noopAction Act i = none := rfl
+
+theorem eq_noopAction_iff {ι : Type} {Act : ι → Type}
+    {a : JointAction Act} :
+    a = noopAction Act ↔ ∀ i, a i = none := by
+  constructor
+  · intro h i
+    rw [h]
+    rfl
+  · intro h
+    funext i
+    exact h i
 
 end GameTheory

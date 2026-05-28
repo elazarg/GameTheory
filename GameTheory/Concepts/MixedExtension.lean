@@ -178,8 +178,6 @@ theorem weighted_gain_sum_zero_of_bounded
   simp_rw [mul_sub]
   rw [h_summable_eu.tsum_sub h_summable_const, hdecomp, hconst, sub_self]
 
-variable [∀ i, Nonempty (G.Strategy i)]
-
 open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive,
     under bounded utility. -/
@@ -250,8 +248,6 @@ theorem weighted_gain_sum_zero
   obtain ⟨C, hC⟩ : BddAbove (Set.range fun ω => |G.utility ω who|) :=
     Finite.bddAbove_range _
   exact G.weighted_gain_sum_zero_of_bounded σ who (fun ω => hC ⟨ω, rfl⟩)
-
-variable [∀ i, Nonempty (G.Strategy i)]
 
 open Classical in
 /-- A mixed profile is Nash iff all pure-deviation gains are non-positive. -/

@@ -258,8 +258,18 @@ noncomputable def product (F₁ F₂ : GameForm ι) : GameForm ι where
       (F₂.outcomeKernel (fun i => (σ i).2)).bind (fun ω₂ =>
         PMF.pure (ω₁, ω₂)))
 
+@[simp] theorem product_Strategy (F₁ F₂ : GameForm ι) :
+    (F₁.product F₂).Strategy = fun i => F₁.Strategy i × F₂.Strategy i := rfl
+
 @[simp] theorem product_Outcome (F₁ F₂ : GameForm ι) :
     (F₁.product F₂).Outcome = (F₁.Outcome × F₂.Outcome) := rfl
+
+theorem product_outcomeKernel (F₁ F₂ : GameForm ι)
+    (σ : (F₁.product F₂).Profile) :
+    (F₁.product F₂).outcomeKernel σ =
+      (F₁.outcomeKernel (fun i => (σ i).1)).bind (fun ω₁ =>
+        (F₂.outcomeKernel (fun i => (σ i).2)).bind (fun ω₂ =>
+          PMF.pure (ω₁, ω₂))) := rfl
 
 /-- Left projection of a product game form recovers the first form's outcome distribution. -/
 theorem product_map_fst (F₁ F₂ : GameForm ι) (σ : (F₁.product F₂).Profile) :

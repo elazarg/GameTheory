@@ -52,6 +52,35 @@ theorem mem_listsOfLength_of_forall_mem [DecidableEq α]
       refine ⟨(x, xs), ?_, by simp⟩
       simp [hx, hrec]
 
+theorem mem_listsOfLength_iff [DecidableEq α]
+    {s : Finset α} :
+    ∀ {xs : List α} {n : Nat},
+      xs ∈ listsOfLength s n ↔ xs.length = n ∧ ∀ x ∈ xs, x ∈ s
+  | [], 0 => by
+      simp [listsOfLength]
+  | [], n + 1 => by
+      simp [listsOfLength]
+  | x :: xs, 0 => by
+      simp [listsOfLength]
+  | x :: xs, n + 1 => by
+      constructor
+      · intro h
+        rcases Finset.mem_image.mp h with ⟨⟨y, ys⟩, hpair, hcons⟩
+        simp only at hcons
+        cases hcons
+        have hpair' := Finset.mem_product.mp hpair
+        have hx : x ∈ s := by simpa using hpair'.1
+        have hxs : xs ∈ listsOfLength s n := by simpa using hpair'.2
+        have hrec := (mem_listsOfLength_iff (s := s) (xs := xs) (n := n)).mp hxs
+        constructor
+        · simpa using congrArg Nat.succ hrec.1
+        · intro y hy
+          rcases List.mem_cons.mp hy with rfl | hy'
+          · exact hx
+          · exact hrec.2 y hy'
+      · intro h
+        exact mem_listsOfLength_of_forall_mem (s := s) h.1 h.2
+
 theorem mem_listsUpToLength_of_forall_mem [DecidableEq α]
     {s : Finset α} {xs : List α} {n : Nat}
     (hlen : xs.length ≤ n)
@@ -61,5 +90,19 @@ theorem mem_listsUpToLength_of_forall_mem [DecidableEq α]
   refine ⟨xs.length, ?_, ?_⟩
   · exact Finset.mem_range.mpr (Nat.lt_succ_of_le hlen)
   · exact mem_listsOfLength_of_forall_mem (s := s) rfl hmem
+
+theorem mem_listsUpToLength_iff [DecidableEq α]
+    {s : Finset α} {xs : List α} {n : Nat} :
+    xs ∈ listsUpToLength s n ↔ xs.length ≤ n ∧ ∀ x ∈ xs, x ∈ s := by
+  constructor
+  · intro h
+    rw [listsUpToLength] at h
+    rcases Finset.mem_biUnion.mp h with ⟨k, hk, hxs⟩
+    have hxs' := (mem_listsOfLength_iff (s := s) (xs := xs) (n := k)).mp hxs
+    exact ⟨by
+      rw [hxs'.1]
+      exact Nat.lt_succ_iff.mp (Finset.mem_range.mp hk), hxs'.2⟩
+  · intro h
+    exact mem_listsUpToLength_of_forall_mem (s := s) h.1 h.2
 
 end Math.BoundedLists

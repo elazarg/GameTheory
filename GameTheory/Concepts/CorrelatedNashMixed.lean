@@ -65,25 +65,6 @@ theorem correlatedEu_eq_expect_eu [Finite G.Outcome]
 variable [DecidableEq ι]
 
 open Classical in
-/-- Constant deviation under a point-mass distribution yields a point mass at
-the deviated profile. -/
-theorem constantDeviationDistribution_pure (σ : Profile G)
-    (who : ι) (s' : G.Strategy who) :
-    G.constantDeviationDistribution (PMF.pure σ) who s' =
-      PMF.pure (Function.update σ who s') := by
-  simp [KernelGame.constantDeviationDistribution,
-    KernelGame.deviationDistribution, KernelGame.constantDeviation]
-
-/-- Recommendation-dependent deviation under a point-mass distribution yields a
-point mass at the deviated profile. -/
-theorem unilateralDeviationDistribution_pure (σ : Profile G)
-    (who : ι) (dev : G.Strategy who → G.Strategy who) :
-    G.unilateralDeviationDistribution (PMF.pure σ) who dev =
-      PMF.pure (G.unilateralDeviation who dev σ) := by
-  simp [KernelGame.unilateralDeviationDistribution,
-    KernelGame.deviationDistribution, KernelGame.unilateralDeviation]
-
-open Classical in
 /-- Deviation of a product distribution equals the product with the deviated
     component replaced by the pushforward of the original through `dev`. -/
 theorem unilateralDeviationDistribution_pmfPi

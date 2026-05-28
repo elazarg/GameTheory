@@ -326,12 +326,11 @@ theorem expect_congr_of_ne_zero
   exact expect_congr_on_support μ f g (fun a ha => hfg a (by simpa [PMF.mem_support_iff] using ha))
 
 theorem expect_pushforward
-    {Ω Ξ : Type*} [Finite Ω] [Finite Ξ]
+    {Ω Ξ : Type*} [Finite Ξ]
     (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) :
     Math.Probability.expect (pushforward μ f) φ =
       Math.Probability.expect μ (fun a => φ (f a)) := by
   classical
-  letI : Fintype Ω := Fintype.ofFinite Ω
   letI : Fintype Ξ := Fintype.ofFinite Ξ
   exact Math.Probability.expect_map_fintype_target μ f φ
 

@@ -86,8 +86,6 @@ theorem gainSum_nonneg (σ : ∀ i, PMF (G.Strategy i)) (who : ι) :
     0 ≤ G.gainSum σ who :=
   Finset.sum_nonneg (fun _ _ => pospart_nonneg _)
 
-variable [∀ i, Nonempty (G.Strategy i)]
-
 open Classical in
 /-- If σ satisfies the Nash map fixed-point identity under bounded utilities,
     then σ is Nash. This is the core algebraic content of Nash's existence
@@ -587,8 +585,7 @@ theorem nashMap_weightFixedPoint_of_nashMapOnMixedSimplex_approxOnly
 
 end  -- [Fintype Outcome] game-side closure
 
-section  -- Full continuity and existence theorems
-variable [∀ i, Nonempty (G.Strategy i)]
+section  -- Fixed-point and existence theorems
 
 /-- A fixed point of `nashMapOnMixedSimplex` yields a mixed Nash equilibrium
     under bounded utilities. -/
@@ -673,7 +670,7 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly
     Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_exists_of_nashMapOnMixedSimplex_approxOnly_of_bounded hbd happrox
 
-end  -- [Nonempty] section
+end  -- fixed-point and existence section
 
 end NashMapMixedSimplex
 

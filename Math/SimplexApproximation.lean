@@ -96,7 +96,7 @@ theorem abs_floor_sub_le_one {a : ℝ} (ha : 0 ≤ a) :
   rw [abs_of_nonpos (sub_nonpos.mpr hle)]
   linarith
 
-theorem residualFloorCounts_self_abs_error_le_card [Nonempty κ] (k₀ : κ) {w : κ → ℝ}
+theorem residualFloorCounts_self_abs_error_le_card (k₀ : κ) {w : κ → ℝ}
     (hw_nonneg : ∀ k, 0 ≤ w k) (hw_sum : ∑ k, w k = 1) (N : ℕ) :
     |(residualFloorCounts k₀ w N k₀ : ℝ) - (N : ℝ) * w k₀| ≤
       (Fintype.card κ : ℝ) := by
@@ -133,7 +133,7 @@ theorem residualFloorCounts_self_abs_error_le_card [Nonempty κ] (k₀ : κ) {w 
     _ ≤ (Fintype.card κ : ℝ) := by
       exact_mod_cast Finset.card_le_univ (Finset.univ.erase k₀)
 
-theorem residualFloorCounts_abs_error_le_card [Nonempty κ] (k₀ : κ) {w : κ → ℝ}
+theorem residualFloorCounts_abs_error_le_card (k₀ : κ) {w : κ → ℝ}
     (hw_nonneg : ∀ k, 0 ≤ w k) (hw_sum : ∑ k, w k = 1) (N : ℕ) (k : κ) :
     |(residualFloorCounts k₀ w N k : ℝ) - (N : ℝ) * w k| ≤
       (Fintype.card κ : ℝ) := by
@@ -144,7 +144,7 @@ theorem residualFloorCounts_abs_error_le_card [Nonempty κ] (k₀ : κ) {w : κ 
     have hle1 : |(⌊(N : ℝ) * w k⌋₊ : ℝ) - (N : ℝ) * w k| ≤ 1 :=
       abs_floor_sub_le_one (mul_nonneg (Nat.cast_nonneg N) (hw_nonneg k))
     have hcard : (1 : ℝ) ≤ (Fintype.card κ : ℝ) := by
-      exact_mod_cast (Fintype.card_pos_iff.mpr inferInstance : 0 < Fintype.card κ)
+      exact_mod_cast (Fintype.card_pos_iff.mpr ⟨k₀⟩ : 0 < Fintype.card κ)
     exact hle1.trans hcard
 
 end SimplexApproximation

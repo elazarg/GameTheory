@@ -36,7 +36,7 @@ variable {ι : Type}
 
 /-- In a team game, social welfare equals `card ι * eu σ i` for any player `i`,
     since all players share the same expected utility. -/
-theorem IsTeamGame.socialWelfare_eq [Fintype ι] [Inhabited ι]
+theorem IsTeamGame.socialWelfare_eq [Fintype ι]
     {G : KernelGame ι} (hteam : G.IsTeamGame) (σ : Profile G) (i : ι) :
     G.socialWelfare σ = Fintype.card ι * G.eu σ i := by
   simp only [KernelGame.socialWelfare]
@@ -63,7 +63,7 @@ theorem socialWelfare_nonneg_of_nonneg_eu [Fintype ι]
 is a Nash equilibrium. Since every player shares the social welfare equally
 (via `IsTeamGame.socialWelfare_eq`), no unilateral deviation can improve a
 single player's payoff without raising total welfare. -/
-theorem IsTeamGame.welfareMax_isNash [Fintype ι] [Inhabited ι] [DecidableEq ι]
+theorem IsTeamGame.welfareMax_isNash [Fintype ι] [DecidableEq ι]
     {G : KernelGame ι} (hteam : G.IsTeamGame) {σ : Profile G}
     (hmax : ∀ τ : Profile G, G.socialWelfare τ ≤ G.socialWelfare σ) :
     G.IsNash σ := by
@@ -71,7 +71,7 @@ theorem IsTeamGame.welfareMax_isNash [Fintype ι] [Inhabited ι] [DecidableEq ι
   have hσ := hteam.socialWelfare_eq σ who
   have hσ' := hteam.socialWelfare_eq (Function.update σ who s') who
   have hcard_pos : (0 : ℝ) < (Fintype.card ι : ℝ) := by
-    exact_mod_cast Fintype.card_pos
+    exact_mod_cast (Fintype.card_pos_iff.mpr ⟨who⟩ : 0 < Fintype.card ι)
   have hle := hmax (Function.update σ who s')
   rw [hσ, hσ'] at hle
   exact le_of_mul_le_mul_left hle hcard_pos
