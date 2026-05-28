@@ -77,7 +77,6 @@ theorem guarantees_iff_worstCaseEUInf_ge
     worst-case EU being at least `v`. -/
 theorem guarantees_iff_worstCaseEU_ge
     (G : KernelGame ι) [Fintype (Profile G)]
-    [∀ i, Nonempty (G.Strategy i)]
     [Nonempty (Profile G)]
     (who : ι) (s : G.Strategy who) (v : ℝ) :
     G.Guarantees who s v ↔ G.worstCaseEU who s ≥ v := by

@@ -10,15 +10,15 @@ import Math.Probability
 import GameTheory.Concepts.SolutionConcepts
 
 /-!
-# Zero-Sum Nash Properties
+# Zero-Sum Expected-Utility Properties
 
 Interactions between zero-sum / constant-sum structure and Nash equilibria
 in 2-player kernel games.
 
 Provides:
-- `IsZeroSum.nash_eu_sum_zero` — at any Nash equilibrium of a 2-player zero-sum game,
+- `IsZeroSum.eu_sum_zero` — at any profile of a 2-player zero-sum game,
   the sum of expected utilities is zero
-- `IsConstantSum.nash_eu_sum` — at any profile of a 2-player constant-sum game,
+- `IsConstantSum.eu_sum` — at any profile of a 2-player constant-sum game,
   the sum of expected utilities equals the constant
 - `IsZeroSum.eu_nonneg_iff_nonpos` — in a 2-player zero-sum game, player 0 has
   non-negative EU iff player 1 has non-positive EU
@@ -33,28 +33,28 @@ namespace KernelGame
 
 variable {ι : Type}
 
-/-- In a 2-player zero-sum game with bounded utility, the sum of expected utilities
-    at any Nash equilibrium is zero. -/
-theorem IsZeroSum.nash_eu_sum_zero_of_bounded {G : KernelGame (Fin 2)}
-    (hzs : G.IsZeroSum) {σ : Profile G} (_hN : G.IsNash σ)
+/-- In a 2-player zero-sum game with bounded utility, the sum of expected
+    utilities at any profile is zero. -/
+theorem IsZeroSum.eu_sum_zero_of_bounded {G : KernelGame (Fin 2)}
+    (hzs : G.IsZeroSum) (σ : Profile G)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
     G.eu σ 0 + G.eu σ 1 = 0 := by
   have h := hzs.eu_neg_of_bounded σ hbd
   linarith
 
-/-- In a 2-player zero-sum game, at any Nash equilibrium the sum of expected
-    utilities is zero. -/
-theorem IsZeroSum.nash_eu_sum_zero {G : KernelGame (Fin 2)} [Finite G.Outcome]
-    (hzs : G.IsZeroSum) {σ : Profile G} (hN : G.IsNash σ) :
+/-- In a 2-player zero-sum game, at any profile the sum of expected utilities
+    is zero. -/
+theorem IsZeroSum.eu_sum_zero {G : KernelGame (Fin 2)} [Finite G.Outcome]
+    (hzs : G.IsZeroSum) (σ : Profile G) :
     G.eu σ 0 + G.eu σ 1 = 0 := by
   classical
   choose C hbd using fun i =>
     Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
-  exact hzs.nash_eu_sum_zero_of_bounded hN hbd
+  exact hzs.eu_sum_zero_of_bounded σ hbd
 
 /-- In a 2-player constant-sum game with bounded utility, the sum of expected
     utilities at any profile equals `c`. -/
-theorem IsConstantSum.nash_eu_sum_of_bounded {G : KernelGame (Fin 2)}
+theorem IsConstantSum.eu_sum_of_bounded {G : KernelGame (Fin 2)}
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
     G.eu σ 0 + G.eu σ 1 = c := by
@@ -63,13 +63,13 @@ theorem IsConstantSum.nash_eu_sum_of_bounded {G : KernelGame (Fin 2)}
 
 /-- In a 2-player constant-sum game, at any profile the sum of expected
     utilities equals the constant `c`. -/
-theorem IsConstantSum.nash_eu_sum {G : KernelGame (Fin 2)} [Finite G.Outcome]
+theorem IsConstantSum.eu_sum {G : KernelGame (Fin 2)} [Finite G.Outcome]
     {c : ℝ} (hcs : G.IsConstantSum c) (σ : Profile G) :
     G.eu σ 0 + G.eu σ 1 = c := by
   classical
   choose C hbd using fun i =>
     Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
-  exact hcs.nash_eu_sum_of_bounded σ hbd
+  exact hcs.eu_sum_of_bounded σ hbd
 
 /-- In a 2-player zero-sum game with bounded utility, player 0 has non-negative EU
     iff player 1 has non-positive EU. -/

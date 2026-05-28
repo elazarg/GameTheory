@@ -59,11 +59,8 @@ theorem exact_potential_nash_exists {G : KernelGame ι}
 /-- For `ofEU` games: if every player has a dominant strategy, a Nash equilibrium exists. -/
 theorem ofEU_nash_of_dominant (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     (h : ∀ i, ∃ s : S i, (KernelGame.ofEU S u).IsDominant i s) :
-    ∃ σ : ∀ i, S i, (KernelGame.ofEU S u).IsNash σ := by
-  classical
-  let G := KernelGame.ofEU S u
-  let σ : Profile G := fun i => (h i).choose
-  exact ⟨σ, KernelGame.dominant_is_nash G σ (fun i => (h i).choose_spec)⟩
+    ∃ σ : ∀ i, S i, (KernelGame.ofEU S u).IsNash σ :=
+  nash_of_all_have_dominant (G := KernelGame.ofEU S u) h
 
 end KernelGame
 end GameTheory

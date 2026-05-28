@@ -92,19 +92,31 @@ theorem IsNash.isRationalizable {G : KernelGame ι} {σ : Profile G}
     (hN : G.IsNash σ) (who : ι) : G.IsRationalizable who (σ who) :=
   fun n => hN.survives n who
 
-/-- A dominant strategy survives all rounds of elimination.
+/-- Every strategy in a dominant-strategy profile survives all rounds of
+iterated strict dominance elimination. -/
+theorem dominantProfile_survives {G : KernelGame ι} (σ : Profile G)
+    (hdom_all : ∀ j, G.IsDominant j (σ j)) :
+    ∀ n who, G.Survives n who (σ who) := by
+  have hN : G.IsNash σ := dominant_is_nash G σ hdom_all
+  exact hN.survives
 
-    Requires that every player has at least one strategy (so that
-    round-`n` surviving profiles exist for applying dominance). -/
-theorem IsDominant.survives {G : KernelGame ι} {who : ι} {s : G.Strategy who}
-    (_hdom : G.IsDominant who s)
-    (σ₀ : Profile G) (hσ₀ : σ₀ who = s)
-    (hdom_all : ∀ j, G.IsDominant j (σ₀ j)) :
-    ∀ n, G.Survives n who s := by
-  have hN : G.IsNash σ₀ := dominant_is_nash G σ₀ hdom_all
-  intro n
-  rw [← hσ₀]
-  exact hN.survives n who
+/-- A dominant strategy is rationalizable when the other players have a
+dominant-strategy profile. -/
+theorem IsDominant.isRationalizable {G : KernelGame ι}
+    {who : ι} {s : G.Strategy who} (hdom : G.IsDominant who s)
+    (σ₀ : Profile G)
+    (hdom_other : ∀ j, j ≠ who → G.IsDominant j (σ₀ j)) :
+    G.IsRationalizable who s :=
+  fun n => by
+    let σ : Profile G := Function.update σ₀ who s
+    have hdom_all : ∀ j, G.IsDominant j (σ j) := by
+      intro j
+      by_cases hj : j = who
+      · subst hj
+        simpa [σ] using hdom
+      · simpa [σ, Function.update, hj] using hdom_other j hj
+    have hsurv := dominantProfile_survives (G := G) σ hdom_all n who
+    simpa [σ] using hsurv
 
 open Classical in
 /-- A rationalizable strategy survives the first round: it is not strictly
