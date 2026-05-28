@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.EFG.Syntax
+import GameTheory.Languages.EFG.TreeShape
 import GameTheory.Languages.EFG.Augmented
 import GameTheory.Languages.EFG.SOS
 import GameTheory.Languages.EFG.Compile

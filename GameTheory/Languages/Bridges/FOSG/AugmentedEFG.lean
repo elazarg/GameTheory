@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.Bridges.FOSG.SerialExec
 import GameTheory.Languages.EFG.Augmented
+import GameTheory.Languages.EFG.TreeShape
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 /-!
@@ -331,24 +332,10 @@ theorem tree_fromHistory_succ_nonterminal
               Tree.fromHistory (G := G) k n h')) := by
   simp [Tree.fromHistory, hnot]
 
-/-- A generated EFG subtree presents a simultaneous FOSG step as a spine of
-serialized player decisions followed by the original stochastic transition. -/
-inductive DecisionSpineThenChance {S : EFG.InfoStructure}
-    {Outcome : Type} :
-    Nat → GameTree S Outcome → Prop where
-  | chance {k : Nat} {μ : PMF (Fin k)} {hk : 0 < k}
-      {next : Fin k → GameTree S Outcome} :
-      DecisionSpineThenChance 0 (GameTree.chance k μ hk next)
-  | decision {n : Nat} {p : S.Player} {I : S.Infoset p}
-      {next : S.Act I → GameTree S Outcome}
-      (tail : ∀ action, DecisionSpineThenChance n (next action)) :
-      DecisionSpineThenChance (n + 1) (GameTree.decision I next)
+namespace Tree
 
-namespace DecisionSpineThenChance
-
-/-- The serialized-player inner loop of the FOSG-to-EFG bridge has exactly
-one decision node for each remaining player, then reaches the continuation. -/
-theorem choosePlayersFrom
+/-- `choosePlayersFrom` forms a decision spine before the continuation. -/
+theorem choosePlayersFrom_decisionSpineThenChance
     {ι W : Type} [DecidableEq ι] [Fintype ι]
     {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
     (G : FOSG ι W Act PrivObs PubObs)
@@ -359,21 +346,21 @@ theorem choosePlayersFrom
     (cont : JointAction Act → GameTree (infoStructure (G := G) k)
       (SerialExec.State G))
     (hcont : ∀ chosen,
-      DecisionSpineThenChance 0 (cont chosen)) :
-    DecisionSpineThenChance (Fintype.card ι - pVal)
-      (Tree.choosePlayersFrom (G := G) k h pVal chosen cont) := by
+      EFG.DecisionSpineThenChance 0 (cont chosen)) :
+    EFG.DecisionSpineThenChance (Fintype.card ι - pVal)
+      (choosePlayersFrom (G := G) k h pVal chosen cont) := by
   classical
-  unfold Tree.choosePlayersFrom
+  unfold choosePlayersFrom
   by_cases hp : pVal < Fintype.card ι
   · rw [dif_pos hp]
     have hsub : Fintype.card ι - pVal =
         (Fintype.card ι - (pVal + 1)) + 1 := by
       omega
     rw [hsub]
-    apply DecisionSpineThenChance.decision
+    apply EFG.DecisionSpineThenChance.decision
     intro action
-    exact choosePlayersFrom (G := G) k h (pVal + 1)
-      (Tree.recordOption (Act := Act) chosen
+    exact choosePlayersFrom_decisionSpineThenChance (G := G) k h (pVal + 1)
+      (recordOption (Act := Act) chosen
         (origPlayer (ι := ι) ⟨pVal, hp⟩)
         (actionOfIndex (G := G)
           (encodePlayerView (G := G) h
@@ -387,9 +374,8 @@ theorem choosePlayersFrom
 termination_by Fintype.card ι - pVal
 decreasing_by omega
 
-/-- Every nonterminal original FOSG step becomes a full decision spine, one
-decision opportunity per player, followed by a chance node for the transition. -/
-theorem fromHistory_succ_nonterminal
+/-- A nonterminal `fromHistory` step starts with one full player spine, then chance. -/
+theorem fromHistory_succ_nonterminal_decisionSpineThenChance
     {ι W : Type} [DecidableEq ι] [Fintype ι]
     {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
     (G : FOSG ι W Act PrivObs PubObs)
@@ -398,14 +384,14 @@ theorem fromHistory_succ_nonterminal
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
     [Fintype PubObs] [DecidableEq PubObs]
     (k n : Nat) (h : G.History) (hnot : ¬ G.terminal h.lastState) :
-    DecisionSpineThenChance (Fintype.card ι)
-      (Tree.fromHistory (G := G) k (n + 1) h) := by
+    EFG.DecisionSpineThenChance (Fintype.card ι)
+      (fromHistory (G := G) k (n + 1) h) := by
   classical
   rw [tree_fromHistory_succ_nonterminal (G := G) k n h hnot]
   simpa using
-    choosePlayersFrom (G := G) k h 0 (noopAction Act)
+    choosePlayersFrom_decisionSpineThenChance (G := G) k h 0 (noopAction Act)
       (fun chosen =>
-        let a := Tree.legalize (G := G) h hnot chosen
+        let a := legalize (G := G) h hnot chosen
         let μ := G.transition h.lastState a
         GameTree.chance (Fintype.card W)
           (PMF.map (Fintype.equivFin W) μ)
@@ -413,47 +399,11 @@ theorem fromHistory_succ_nonterminal
           (fun b =>
             let dst := (Fintype.equivFin W).symm b
             let h' := h.extendByOutcome a dst
-            Tree.fromHistory (G := G) k n h'))
-      (fun _ => DecisionSpineThenChance.chance)
+            fromHistory (G := G) k n h'))
+      (fun _ => EFG.DecisionSpineThenChance.chance)
 
-end DecisionSpineThenChance
-
-mutual
-
-/-- Whole-tree structural certificate for the generated FOSG-to-EFG bridge.
-A certified tree is either terminal or begins with a full serialized player
-decision spine followed by the original chance transition, whose successors
-are recursively certified. -/
-inductive FullTreeShape {S : EFG.InfoStructure} {Outcome : Type}
-    (players : Nat) : GameTree S Outcome → Prop where
-  | terminal {outcome : Outcome} :
-      FullTreeShape players (GameTree.terminal outcome)
-  | round {tree : GameTree S Outcome}
-      (spine : RoundSpineShape players players tree) :
-      FullTreeShape players tree
-
-/-- Inner serialized-player spine used by `FullTreeShape`. At depth zero the
-spine must be the chance transition of the original FOSG step, and every
-successor subtree must satisfy `FullTreeShape`. -/
-inductive RoundSpineShape {S : EFG.InfoStructure} {Outcome : Type}
-    (players : Nat) : Nat → GameTree S Outcome → Prop where
-  | chance {k : Nat} {μ : PMF (Fin k)} {hk : 0 < k}
-      {next : Fin k → GameTree S Outcome}
-      (tail : ∀ outcome, FullTreeShape players (next outcome)) :
-      RoundSpineShape players 0 (GameTree.chance k μ hk next)
-  | decision {n : Nat} {p : S.Player} {I : S.Infoset p}
-      {next : S.Act I → GameTree S Outcome}
-      (tail : ∀ action, RoundSpineShape players n (next action)) :
-      RoundSpineShape players (n + 1) (GameTree.decision I next)
-
-end
-
-namespace RoundSpineShape
-
-/-- The serialized-player inner loop preserves the recursive whole-tree shape:
-one decision node for each remaining player, then a shape-certified
-continuation. -/
-theorem choosePlayersFrom
+/-- `choosePlayersFrom` preserves the recursive round shape. -/
+theorem choosePlayersFrom_roundSpineShape
     {ι W : Type} [DecidableEq ι] [Fintype ι]
     {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
     (G : FOSG ι W Act PrivObs PubObs)
@@ -464,21 +414,21 @@ theorem choosePlayersFrom
     (cont : JointAction Act → GameTree (infoStructure (G := G) k)
       (SerialExec.State G))
     (hcont : ∀ chosen,
-      RoundSpineShape (Fintype.card ι) 0 (cont chosen)) :
-    RoundSpineShape (Fintype.card ι) (Fintype.card ι - pVal)
-      (Tree.choosePlayersFrom (G := G) k h pVal chosen cont) := by
+      EFG.RoundSpineShape (Fintype.card ι) 0 (cont chosen)) :
+    EFG.RoundSpineShape (Fintype.card ι) (Fintype.card ι - pVal)
+      (choosePlayersFrom (G := G) k h pVal chosen cont) := by
   classical
-  unfold Tree.choosePlayersFrom
+  unfold choosePlayersFrom
   by_cases hp : pVal < Fintype.card ι
   · rw [dif_pos hp]
     have hsub : Fintype.card ι - pVal =
         (Fintype.card ι - (pVal + 1)) + 1 := by
       omega
     rw [hsub]
-    apply RoundSpineShape.decision
+    apply EFG.RoundSpineShape.decision
     intro action
-    exact choosePlayersFrom (G := G) k h (pVal + 1)
-      (Tree.recordOption (Act := Act) chosen
+    exact choosePlayersFrom_roundSpineShape (G := G) k h (pVal + 1)
+      (recordOption (Act := Act) chosen
         (origPlayer (ι := ι) ⟨pVal, hp⟩)
         (actionOfIndex (G := G)
           (encodePlayerView (G := G) h
@@ -492,13 +442,8 @@ theorem choosePlayersFrom
 termination_by Fintype.card ι - pVal
 decreasing_by omega
 
-end RoundSpineShape
-
-namespace FullTreeShape
-
-/-- Every FOSG-to-EFG bridge subtree produced by `Tree.fromHistory` has the
-whole-tree serialized-round shape. -/
-theorem fromHistory
+/-- `fromHistory` has the generic round-tree shape. -/
+theorem fromHistory_fullTreeShape
     {ι W : Type} [DecidableEq ι] [Fintype ι]
     {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
     (G : FOSG ι W Act PrivObs PubObs)
@@ -507,38 +452,38 @@ theorem fromHistory
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
     [Fintype PubObs] [DecidableEq PubObs]
     (k remaining : Nat) (h : G.History) :
-    FullTreeShape (Fintype.card ι)
-      (Tree.fromHistory (G := G) k remaining h) := by
+    EFG.FullTreeShape (Fintype.card ι)
+      (fromHistory (G := G) k remaining h) := by
   classical
   induction remaining generalizing h with
   | zero =>
-      rw [tree_fromHistory_zero]
-      exact FullTreeShape.terminal
+    rw [tree_fromHistory_zero]
+    exact EFG.FullTreeShape.terminal
   | succ remaining ih =>
-      by_cases hterm : G.terminal h.lastState
-      · rw [tree_fromHistory_succ_terminal (G := G) k remaining h hterm]
-        exact FullTreeShape.terminal
-      · rw [tree_fromHistory_succ_nonterminal (G := G) k remaining h hterm]
-        apply FullTreeShape.round
-        simpa using
-          RoundSpineShape.choosePlayersFrom (G := G) k h 0 (noopAction Act)
-            (fun chosen =>
-              let a := Tree.legalize (G := G) h hterm chosen
-              let μ := G.transition h.lastState a
-              GameTree.chance (Fintype.card W)
-                (PMF.map (Fintype.equivFin W) μ)
-                (fintype_card_pos_of_pmf μ)
-                (fun b =>
-                  let dst := (Fintype.equivFin W).symm b
-                  let h' := h.extendByOutcome a dst
-                  Tree.fromHistory (G := G) k remaining h'))
-            (by
-              intro chosen
-              apply RoundSpineShape.chance
-              intro b
-              exact ih _)
+    by_cases hterm : G.terminal h.lastState
+    · rw [tree_fromHistory_succ_terminal (G := G) k remaining h hterm]
+      exact EFG.FullTreeShape.terminal
+    · rw [tree_fromHistory_succ_nonterminal (G := G) k remaining h hterm]
+      apply EFG.FullTreeShape.round
+      simpa using
+        choosePlayersFrom_roundSpineShape (G := G) k h 0 (noopAction Act)
+          (fun chosen =>
+            let a := legalize (G := G) h hterm chosen
+            let μ := G.transition h.lastState a
+            GameTree.chance (Fintype.card W)
+              (PMF.map (Fintype.equivFin W) μ)
+              (fintype_card_pos_of_pmf μ)
+              (fun b =>
+                let dst := (Fintype.equivFin W).symm b
+                let h' := h.extendByOutcome a dst
+                fromHistory (G := G) k remaining h'))
+          (by
+            intro chosen
+            apply EFG.RoundSpineShape.chance
+            intro b
+            exact ih _)
 
-end FullTreeShape
+end Tree
 
 @[simp] theorem tree_eval_zero
     [∀ i, Fintype (PrivObs i)] [∀ i, DecidableEq (PrivObs i)]
