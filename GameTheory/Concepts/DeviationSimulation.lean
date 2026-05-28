@@ -79,6 +79,25 @@ structure ProfileRealization (G H : GameForm ι) (Ω : Type) where
   law_eq : ∀ {σ : G.Profile} {τ : H.Profile}, rel σ τ →
     viewG.law σ = viewH.law τ
 
+namespace ProfileRealization
+
+/-- Build a profile-realization relation from a functional realization map. -/
+def ofFunctionalRealization
+    {G H : GameForm ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, viewG.law σ = viewH.law (realize σ)) :
+    ProfileRealization G H Ω where
+  viewG := viewG
+  viewH := viewH
+  rel := fun σ τ => τ = realize σ
+  law_eq := by
+    intro σ τ hrel
+    subst τ
+    exact law_eq σ
+
+end ProfileRealization
+
 section Nash
 
 variable [DecidableEq ι]
@@ -115,13 +134,8 @@ def ofFunctionalRealization
           viewG.law (Function.update σ who sG) =
             viewH.law (Function.update (realize σ) who sH)) :
     NashDeviationSimulation G H Ω where
-  viewG := viewG
-  viewH := viewH
-  rel := fun σ τ => τ = realize σ
-  law_eq := by
-    intro σ τ hrel
-    subst τ
-    exact law_eq σ
+  toProfileRealization :=
+    ProfileRealization.ofFunctionalRealization viewG viewH realize law_eq
   simulate_target_deviation := by
     intro σ τ hrel who sH
     subst τ
@@ -222,6 +236,26 @@ structure ProfileDistributionRealization (G H : GameForm ι) (Ω : Type) where
   law_eq : ∀ {μG : PMF G.Profile} {μH : PMF H.Profile}, rel μG μH →
     viewG.correlatedLaw μG = viewH.correlatedLaw μH
 
+namespace ProfileDistributionRealization
+
+/-- Build a profile-distribution realization relation from a functional
+realization map on profile distributions. -/
+def ofFunctionalRealization
+    {G H : GameForm ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : PMF G.Profile → PMF H.Profile)
+    (law_eq : ∀ μ, viewG.correlatedLaw μ = viewH.correlatedLaw (realize μ)) :
+    ProfileDistributionRealization G H Ω where
+  viewG := viewG
+  viewH := viewH
+  rel := fun μG μH => μH = realize μG
+  law_eq := by
+    intro μG μH hrel
+    subst μH
+    exact law_eq μG
+
+end ProfileDistributionRealization
+
 /-- One-way simulation for arbitrary profile-deviation families.
 
 To transport a deviation-family equilibrium from `G` to `H`, every allowed
@@ -237,6 +271,31 @@ structure DeviationFamilySimulation
       ∃ dG : ΔG.Dev who,
         viewG.correlatedLaw (ΔG.deviate μG who dG) =
           viewH.correlatedLaw (ΔH.deviate μH who dH)
+
+namespace DeviationFamilySimulation
+
+/-- Build a one-way deviation-family simulation from a functional realization
+map on profile distributions. -/
+def ofFunctionalRealization
+    {G H : GameForm ι} {Ω : Type}
+    {ΔG : ProfileDeviationFamily G} {ΔH : ProfileDeviationFamily H}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : PMF G.Profile → PMF H.Profile)
+    (law_eq : ∀ μ, viewG.correlatedLaw μ = viewH.correlatedLaw (realize μ))
+    (simulate_target_deviation :
+      ∀ (μG : PMF G.Profile) (who : ι) (dH : ΔH.Dev who),
+        ∃ dG : ΔG.Dev who,
+          viewG.correlatedLaw (ΔG.deviate μG who dG) =
+            viewH.correlatedLaw (ΔH.deviate (realize μG) who dH)) :
+    DeviationFamilySimulation G H Ω ΔG ΔH where
+  toProfileDistributionRealization :=
+    ProfileDistributionRealization.ofFunctionalRealization viewG viewH realize law_eq
+  simulate_target_deviation := by
+    intro μG μH hrel who dH
+    subst μH
+    exact simulate_target_deviation μG who dH
+
+end DeviationFamilySimulation
 
 /-- Transport a generic deviation-family equilibrium along a one-way
 deviation-family simulation. -/
@@ -397,6 +456,15 @@ abbrev OutcomeView (G : KernelGame ι) (Ω : Type) :=
 abbrev ProfileRealization (G H : KernelGame ι) (Ω : Type) :=
   GameForm.ProfileRealization G.toGameForm H.toGameForm Ω
 
+/-- Kernel-game wrapper for the functional profile-realization constructor. -/
+def ProfileRealization.ofFunctionalRealization
+    {G H : KernelGame ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, viewG.law σ = viewH.law (realize σ)) :
+    ProfileRealization G H Ω :=
+  GameForm.ProfileRealization.ofFunctionalRealization viewG viewH realize law_eq
+
 /-- Kernel-game convenience alias for Nash deviation simulations on underlying
 game forms. -/
 abbrev NashDeviationSimulation (G H : KernelGame ι) (Ω : Type) [DecidableEq ι] :=
@@ -417,6 +485,17 @@ def IsDeviationEqFamilyFor (G : KernelGame ι)
 underlying game forms. -/
 abbrev ProfileDistributionRealization (G H : KernelGame ι) (Ω : Type) :=
   GameForm.ProfileDistributionRealization G.toGameForm H.toGameForm Ω
+
+/-- Kernel-game wrapper for the functional profile-distribution realization
+constructor. -/
+def ProfileDistributionRealization.ofFunctionalRealization
+    {G H : KernelGame ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : PMF G.Profile → PMF H.Profile)
+    (law_eq : ∀ μ, viewG.correlatedLaw μ = viewH.correlatedLaw (realize μ)) :
+    ProfileDistributionRealization G H Ω :=
+  GameForm.ProfileDistributionRealization.ofFunctionalRealization
+    viewG viewH realize law_eq
 
 /-- Kernel-game convenience alias for deviation-family simulations on
 underlying game forms. -/
@@ -494,6 +573,23 @@ theorem NashDeviationSimulation.target_isNash_of_source_isNash
 end Nash
 
 section DeviationFamilies
+
+/-- Kernel-game wrapper for the functional deviation-family simulation
+constructor. -/
+def DeviationFamilySimulation.ofFunctionalRealization
+    {G H : KernelGame ι} {Ω : Type}
+    {ΔG : ProfileDeviationFamily G} {ΔH : ProfileDeviationFamily H}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : PMF G.Profile → PMF H.Profile)
+    (law_eq : ∀ μ, viewG.correlatedLaw μ = viewH.correlatedLaw (realize μ))
+    (simulate_target_deviation :
+      ∀ (μG : PMF G.Profile) (who : ι) (dH : ΔH.Dev who),
+        ∃ dG : ΔG.Dev who,
+          viewG.correlatedLaw (ΔG.deviate μG who dG) =
+            viewH.correlatedLaw (ΔH.deviate (realize μG) who dH)) :
+    DeviationFamilySimulation G H Ω ΔG ΔH :=
+  GameForm.DeviationFamilySimulation.ofFunctionalRealization
+    viewG viewH realize law_eq simulate_target_deviation
 
 /-- Kernel-game wrapper for generic deviation-family equilibrium transport. -/
 theorem DeviationFamilySimulation.target_eqFor_of_source_eqFor

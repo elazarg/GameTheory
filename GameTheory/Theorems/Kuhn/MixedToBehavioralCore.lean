@@ -851,6 +851,16 @@ noncomputable def mixedToBehavioralFactorAt
         (Function.update π₀ i πᵢ) ss))
     (fun πᵢ => πᵢ (O.projectStates i ss))
 
+/-- The posterior action factor in the mixed-to-behavioral construction depends
+only on the mixed strategy of the queried player. -/
+theorem mixedToBehavioralFactorAt_congr_coord
+    {μ μ' : ∀ i, PMF (O.LocalStrategy i)}
+    {i : ι} (hμ : μ i = μ' i)
+    (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O) :
+    mixedToBehavioralFactorAt (O := O) μ i n ss π₀ =
+      mixedToBehavioralFactorAt (O := O) μ' i n ss π₀ := by
+  simp [mixedToBehavioralFactorAt, hμ]
+
 open Classical in
 /-- Core mixed-to-behavioral witness with an explicit fallback at information
 states not reached by any pure profile. The run-equality proof only uses the
@@ -878,7 +888,29 @@ theorem mixedToBehavioralFactorAt_update_ne
     mixedToBehavioralFactorAt (O := O)
         (Function.update μ who τ) i n ss π₀ =
       mixedToBehavioralFactorAt (O := O) μ i n ss π₀ := by
-  simp [mixedToBehavioralFactorAt, Function.update_of_ne hne]
+  exact (mixedToBehavioralFactorAt_congr_coord (O := O)
+    (μ := μ) (μ' := Function.update μ who τ)
+    (i := i) (by simp [Function.update_of_ne hne]) n ss π₀).symm
+
+/-- The mixed-to-behavioral profile with fixed fallback depends on a player's
+own mixed strategy only at that player's behavioral strategy. -/
+theorem mixedToBehavioralProfileWithFallback_congr_coord
+    {μ μ' : ∀ i, PMF (O.LocalStrategy i)}
+    (fallback : ObsModelCore.BehavioralProfile O)
+    {i : ι} (hμ : μ i = μ' i)
+    (v : O.InfoState i) :
+    mixedToBehavioralProfileWithFallback (O := O) μ fallback i v =
+      mixedToBehavioralProfileWithFallback (O := O) μ' fallback i v := by
+  classical
+  unfold mixedToBehavioralProfileWithFallback
+  by_cases h : ∃ (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
+      O.projectStates i ss = v ∧
+      pureRun (O.pureStep) O.init n π₀ ss ≠ 0
+  · rw [dif_pos h, dif_pos h]
+    exact congrArg (fun x => h.choose_spec.choose_spec.choose_spec.1 ▸ x)
+      (mixedToBehavioralFactorAt_congr_coord (O := O) (μ := μ) (μ' := μ')
+        hμ h.choose h.choose_spec.choose h.choose_spec.choose_spec.choose)
+  · rw [dif_neg h, dif_neg h]
 
 /-- A player update to the mixed profile does not change another player's
 behavioral strategy produced by the mixed-to-behavioral construction, provided
@@ -892,15 +924,9 @@ theorem mixedToBehavioralProfileWithFallback_update_ne
     mixedToBehavioralProfileWithFallback (O := O)
         (Function.update μ who τ) fallback i v =
       mixedToBehavioralProfileWithFallback (O := O) μ fallback i v := by
-  classical
-  unfold mixedToBehavioralProfileWithFallback
-  by_cases h :
-      ∃ (n : Nat) (ss : List σ) (π₀ : ObsModelCore.PureProfile O),
-        O.projectStates i ss = v ∧
-        pureRun (O.pureStep) O.init n π₀ ss ≠ 0
-  · rw [dif_pos h, dif_pos h]
-    simp [mixedToBehavioralFactorAt_update_ne (O := O) μ hne τ]
-  · rw [dif_neg h, dif_neg h]
+  exact (mixedToBehavioralProfileWithFallback_congr_coord (O := O)
+    (μ := μ) (μ' := Function.update μ who τ) fallback
+    (i := i) (by simp [Function.update_of_ne hne]) v).symm
 
 theorem mixedToBehavioralProfileWithFallback_eq_factorAt
     (hLocal : ∀ i, ActionPosteriorLocal O i)
