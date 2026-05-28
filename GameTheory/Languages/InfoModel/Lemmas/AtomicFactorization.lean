@@ -63,7 +63,6 @@ theorem mixedJoint_behavioralToMixed_eq_map_reassemble
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [DecidableEq I.CoordIdx]
     (κ : ∀ i, I.LocalTrace i → PMF (Option (Act i))) :
     mixedJoint (I := I) (behavioralToMixed (I := I) κ) =
       PMF.map (I.reassemblePolicy) (pmfPi (fun k : I.CoordIdx => κ k.1 k.2)) := by
@@ -106,7 +105,6 @@ theorem atomicFactorization_of_localKernels
     [∀ i, Fintype (I.LocalTrace i)]
     [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [DecidableEq I.CoordIdx]
     (κ : ∀ i, I.LocalTrace i → PMF (Option (Act i))) :
     ∃ τ : ∀ k : I.CoordIdx, PMF (Option (Act k.1)),
       mixedJoint (I := I) (behavioralToMixed (I := I) κ) =
@@ -115,8 +113,6 @@ theorem atomicFactorization_of_localKernels
   simpa using mixedJoint_behavioralToMixed_eq_map_reassemble (I := I) κ
 
 section Restricted
-
-variable [∀ i, DecidableEq (I.LocalTrace i)]
 
 /-- Each player's restricted behavioral-to-mixed PMF decomposes as a product
 over the covered coordinates. -/
@@ -152,7 +148,6 @@ theorem restrictedMixedJointRaw_behavioralToMixed_eq_map_reassemble
     [∀ i, Fintype (I.RestrictedLocalCoord H i)]
     [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
-    [DecidableEq (Σ i, I.RestrictedLocalCoord H i)]
     (κ : ∀ i, RestrictedLocalCoord (I := I) H i → PMF (Option (Act i))) :
     restrictedMixedJointRaw (I := I) H
       (restrictedBehavioralToMixed (I := I) H κ) =

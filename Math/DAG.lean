@@ -136,34 +136,10 @@ end TopologicalOrder
 order, then the predecessor relation has no directed cycles. -/
 theorem acyclic_of_topologicalOrder {n : Nat} {preds : Fin n → Finset (Fin n)}
     (σ : TopologicalOrder preds) : Acyclic (fun a b => a ∈ preds b) := by
-  -- We show: TransGen R x y implies any order index of x is less than
-  -- any order index of y. Then TransGen R a a is impossible.
-  suffices ∀ x y, Relation.TransGen (fun a b => a ∈ preds b) x y →
-      ∀ (ix iy : Fin σ.order.length),
-      σ.order[ix] = x → σ.order[iy] = y →
-      ix.val < iy.val by
-    intro a ha
-    obtain ⟨ia, hia, hia_eq⟩ := List.mem_iff_getElem.mp (σ.mem a)
-    exact Nat.lt_irrefl _ (this a a ha ⟨ia, hia⟩ ⟨ia, hia⟩ hia_eq hia_eq)
-  -- In a Nodup list, equal values ⟹ equal Fin indices
-  have idx_eq : ∀ (i j : Fin σ.order.length),
-      σ.order[i] = σ.order[j] → i = j :=
-    fun i j h => σ.nodup.get_inj_iff.mp h
-  intro x y hxy
-  induction hxy with
-  | single hstep =>
-    intro ix iy hix hiy
-    subst hix; subst hiy
-    obtain ⟨j, hj_lt, hj_eq⟩ := σ.respects iy _ hstep
-    have := idx_eq ix j hj_eq.symm; omega
-  | tail hab hbc ih =>
-    intro ix iy hix hiy
-    subst hiy
-    obtain ⟨ib, hib, hib_eq⟩ := List.mem_iff_getElem.mp (σ.mem _)
-    have hxb : ix.val < (⟨ib, hib⟩ : Fin σ.order.length).val :=
-      ih ix ⟨ib, hib⟩ hix hib_eq
-    obtain ⟨jb, hjb_lt, hjb_eq⟩ := σ.respects iy _ hbc
-    have := idx_eq ⟨ib, hib⟩ jb (hib_eq.trans hjb_eq.symm); omega
+  intro a ha
+  obtain ⟨ia, hia, hia_eq⟩ := List.mem_iff_getElem.mp (σ.mem a)
+  let i : Fin σ.order.length := ⟨ia, hia⟩
+  exact Nat.lt_irrefl _ (σ.ancestor_lt ha (ix := i) (iy := i) hia_eq hia_eq)
 
 /-- Acyclicity implies existence of a topological order.
 

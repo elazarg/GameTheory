@@ -113,7 +113,7 @@ omit [DecidableEq ι] in
     C.form.outcomeKernel (C.embedProfile σ) = F.outcomeKernel σ := by
   rfl
 
-theorem messageProfile_update_embedProfile (C : CheapTalkExtension F)
+@[simp] theorem messageProfile_update_embedProfile (C : CheapTalkExtension F)
     (σ : F.Profile) (who : ι) (s' : C.form.Strategy who) :
     C.messageProfile (Function.update (C.embedProfile σ) who s') =
       Function.update C.default who s'.1 := by
@@ -123,7 +123,7 @@ theorem messageProfile_update_embedProfile (C : CheapTalkExtension F)
     simp [messageProfile]
   · simp [messageProfile, embedProfile, embed, Function.update, h]
 
-theorem actionProfile_update_embedProfile (C : CheapTalkExtension F)
+@[simp] theorem actionProfile_update_embedProfile (C : CheapTalkExtension F)
     (σ : F.Profile) (who : ι) (s' : C.form.Strategy who) :
     C.actionProfile (Function.update (C.embedProfile σ) who s') =
       Function.update σ who (C.proj who s') := by

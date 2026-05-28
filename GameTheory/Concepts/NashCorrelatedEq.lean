@@ -40,8 +40,6 @@ theorem nash_pure_isCorrelatedEq {G : KernelGame ι} {σ : Profile G}
     (hN : G.IsNash σ) : G.IsCorrelatedEq (PMF.pure σ) := by
   intro who dev
   simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
-    KernelGame.unilateralDeviationDistribution, KernelGame.deviationDistribution,
-    KernelGame.unilateralDeviation,
     KernelGame.eu, Math.Probability.expect_pure]
     using (hN who (dev (σ who)))
 
@@ -53,8 +51,6 @@ theorem nash_pure_isCoarseCorrelatedEq {G : KernelGame ι} {σ : Profile G}
     (hN : G.IsNash σ) : G.IsCoarseCorrelatedEq (PMF.pure σ) := by
   intro who s'
   simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
-    KernelGame.constantDeviationDistribution, KernelGame.deviationDistribution,
-    KernelGame.constantDeviation,
     KernelGame.eu, Math.Probability.expect_pure]
     using (hN who s')
 

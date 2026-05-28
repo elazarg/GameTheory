@@ -123,6 +123,20 @@ theorem pmfCond_ne_zero_implies
     simp [pmfMask, hEa]
   exact ha this
 
+theorem pmfCond_ne_zero_iff
+    (μ : PMF α) (E : α → Prop)
+    (h : pmfMass (μ := μ) E ≠ 0) {a : α} :
+    pmfCond (μ := μ) E h a ≠ 0 ↔ E a ∧ μ a ≠ 0 := by
+  classical
+  constructor
+  · intro ha
+    refine ⟨pmfCond_ne_zero_implies μ E h ha, ?_⟩
+    by_contra hμ
+    exact ha (by simp [pmfMask, hμ])
+  · rintro ⟨hEa, hμ⟩
+    rw [pmfCond_apply]
+    simp [pmfMask, hEa, hμ, pmfMass_ne_top μ E]
+
 open Classical in
 theorem pmfMass_true (μ : PMF α) :
     pmfMass (μ := μ) (fun _ : α => True) = 1 := by

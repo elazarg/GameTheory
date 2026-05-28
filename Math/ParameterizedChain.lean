@@ -40,6 +40,10 @@ theorem append_singleton_inj {α : Type*} {as bs : List α} {a b : α}
     (h : as ++ [a] = bs ++ [b]) : as = bs ∧ a = b :=
   Math.TraceRun.append_singleton_inj h
 
+theorem append_singleton_inj_iff {α : Type*} {as bs : List α} {a b : α} :
+    as ++ [a] = bs ++ [b] ↔ as = bs ∧ a = b :=
+  Math.TraceRun.append_singleton_inj_iff
+
 /-- At successor step, `pureRun` decomposes as prefix reach times one-step transition. -/
 theorem pureRun_succ_append (step : P → List S → PMF S) (s₀ : S)
     (k : Nat) (π : P) (ss : List S) (t : S) :

@@ -35,6 +35,28 @@ theorem CoversHistoriesUpTo.mono
   intro i ss hr hlen
   exact hsub i (hCover i hr hlen)
 
+/-- The canonical finite cover containing every local trace whose public and
+private components both have length at most `k + 1`. -/
+noncomputable def localTracesUpToLength
+    [Fintype I.Public] [DecidableEq I.Public]
+    [∀ i, Fintype (I.Obs i)] [∀ i, DecidableEq (I.Obs i)]
+    (k : Nat) : ∀ i, Finset (I.LocalTrace i) :=
+  fun i =>
+    (listsUpToLength (Finset.univ : Finset I.Public) (k + 1)).product
+      (listsUpToLength (Finset.univ : Finset (I.Obs i)) (k + 1))
+
+/-- The canonical bounded local-trace set covers all reachable histories up to
+the corresponding horizon. -/
+theorem coversHistoriesUpTo_localTracesUpToLength
+    [Fintype I.Public] [DecidableEq I.Public]
+    [∀ i, Fintype (I.Obs i)] [∀ i, DecidableEq (I.Obs i)]
+    (k : Nat) :
+    I.CoversHistoriesUpTo (I.localTracesUpToLength k) k := by
+  intro i ss _ hlen
+  simp [localTracesUpToLength, InfoModel.projectStates,
+    InfoModel.projectPublic, InfoModel.projectPrivate,
+    mem_listsUpToLength_iff, hlen]
+
 variable [Fintype ι]
 
 /-- Any state trace in the support of a `k`-step run is covered by `H` when `H`
@@ -93,7 +115,7 @@ theorem runDist_eq_of_agreeOnCover
             = (D.runDist n b).bind (fun ss =>
                 Math.ProbabilityMassFunction.pushforward (D.stepDist b ss)
                   (fun t => ss ++ [t])) := by
-                    simp [Execution.Dynamics.runDist]
+                    rw [runDist_succ]
         _ = (D.runDist n τ).bind (fun ss =>
               Math.ProbabilityMassFunction.pushforward (D.stepDist b ss)
                 (fun t => ss ++ [t])) := by
@@ -123,7 +145,7 @@ theorem runDist_eq_of_agreeOnCover
                 (fun ν =>
                   Math.ProbabilityMassFunction.pushforward ν (fun t => ss ++ [t])) hstep
         _ = D.runDist (n + 1) τ := by
-              simp [Execution.Dynamics.runDist]
+              rw [runDist_succ]
 
 /-- Pure-run corollary of `runDist_eq_of_agreeOnCover`. -/
 theorem runDistPure_eq_of_agreeOnCover

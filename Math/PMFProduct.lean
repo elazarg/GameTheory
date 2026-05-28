@@ -545,7 +545,8 @@ variable {α : Type uα} {β : Type uβ}
 -- so existing `PMFProduct.pushforward` references continue to resolve.
 export Math.ProbabilityMassFunction
   (pushforward pushforward_comp pmfMask pmfMass pmfMass_ne_top pmfMass_pushforward
-    pushforward_apply_eq_pmfMass pmfCond pmfCond_apply pmfCond_ne_zero_implies)
+    pushforward_apply_eq_pmfMass pmfMass_true pmfCond pmfCond_apply pmfCond_ne_zero_implies
+    pmfCond_ne_zero_iff pushforward_support_fibre)
 
 omit [DecidableEq ι] in
 open Classical in
@@ -715,15 +716,6 @@ section Disintegration
 
 variable {α : Type*} {β : Type*} {γ : Type*}
 
-/-- If `b` is in the support of `pushforward μ proj`, then the fibre
-    `{a | proj a = b}` meets the support of `μ`. -/
-lemma pushforward_support_fibre
-    (μ : PMF α) (proj : α → β) (b : β)
-    (hb : b ∈ (pushforward μ proj).support) :
-    ∃ a ∈ ({a | proj a = b} : Set α), a ∈ μ.support := by
-  change b ∈ (PMF.map proj μ).support at hb
-  rcases (PMF.mem_support_map_iff proj μ b).1 hb with ⟨a, ha, hab⟩
-  exact ⟨a, hab, ha⟩
 /-- **Disintegration / law of total probability for PMF.bind.**
     Decompose `μ.bind g` by first projecting via `proj`, then conditioning on
     the projected value:
@@ -1195,6 +1187,12 @@ noncomputable def pmfPiMass (σ : ∀ i, PMF (A i))
     (P : (∀ i, A i) → Prop) : ENNReal :=
   ∑ s : (∀ i, A i), if P s then pmfPi (A := A) σ s else 0
 
+lemma pmfPiMass_eq_pmfMass (σ : ∀ i, PMF (A i))
+    (P : (∀ i, A i) → Prop) :
+    pmfPiMass (A := A) σ P = pmfMass (μ := pmfPi (A := A) σ) P := by
+  classical
+  simp [pmfPiMass, pmfMass, pmfMask]
+
 /-- Basic bound: event mass ≤ 1 (hence never `⊤`). -/
 lemma pmfPiMass_le_one (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
     pmfPiMass (A := A) σ P ≤ 1 := by
@@ -1219,13 +1217,14 @@ lemma pmfPiMass_le_one (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
 
 lemma pmfPiMass_ne_top (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
     pmfPiMass (A := A) σ P ≠ (⊤ : ENNReal) := by
-  exact ne_of_lt (lt_of_le_of_lt (pmfPiMass_le_one (A := A) σ P) (by simp))
+  simpa [pmfPiMass_eq_pmfMass (A := A) σ P] using
+    pmfMass_ne_top (μ := pmfPi (A := A) σ) P
 
 /-- Mass of the always-true event is 1. -/
 lemma pmfPiMass_true (σ : ∀ i, PMF (A i)) :
     pmfPiMass (A := A) σ (fun _ : (∀ i, A i) => True) = 1 := by
-  classical
-  simpa [pmfPiMass] using (pmf_sum_eq_one (pmfPi (A := A) σ))
+  simpa [pmfPiMass_eq_pmfMass (A := A) σ (fun _ : (∀ i, A i) => True)] using
+    pmfMass_true (pmfPi (A := A) σ)
 
 -- ---- Cross-multiplication & mass invariance ------------------------------
 
@@ -1356,14 +1355,13 @@ theorem pmfPi_mass_invariant_of_ignores
 
 open Classical in
 /-- Conditional probability (ratio of masses) is invariant under updating coordinate `j`,
-    provided both events ignore `j` and both denominators have nonzero mass. -/
+    provided both events ignore `j` and the denominator has nonzero mass. -/
 theorem pmfPi_cond_prob_invariant_of_ignores
     (σ : ∀ i, PMF (A i)) (j : ι) (τ : PMF (A j))
     (Num Denom : (∀ i, A i) → Prop)
     (hNum : Ignores (A := A) j Num)
     (hDen : Ignores (A := A) j Denom)
-    (hDO : pmfPiMass (A := A) σ Denom ≠ 0)
-    (hDU : pmfPiMass (A := A) (Function.update σ j τ) Denom ≠ 0) :
+    (hDO : pmfPiMass (A := A) σ Denom ≠ 0) :
     (pmfPiMass (A := A) (Function.update σ j τ) Num)
      / (pmfPiMass (A := A) (Function.update σ j τ) Denom)
       =
@@ -1374,6 +1372,10 @@ theorem pmfPi_cond_prob_invariant_of_ignores
   set mDU : ENNReal := pmfPiMass (A := A) (Function.update σ j τ) Denom
   set mNO : ENNReal := pmfPiMass (A := A) σ Num
   set mDO : ENNReal := pmfPiMass (A := A) σ Denom
+  have hDU : mDU ≠ 0 := by
+    have hm := pmfPi_mass_invariant_of_ignores
+      (A := A) (σ := σ) (j := j) (τ := τ) (P := Denom) hDen
+    simpa [mDU, hm] using hDO
   have hcross :
       mNU * mDO = mNO * mDU := by
     -- your cross-multiplication lemma, just unfolded

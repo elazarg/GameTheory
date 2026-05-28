@@ -164,7 +164,7 @@ theorem one_le_priceOfAnarchy (hN : ∃ σ : Profile G, G.IsNash σ)
 the optimal welfare: the welfare-maximizing profile is itself Nash (by
 `IsTeamGame.welfareMax_isNash`). -/
 theorem IsTeamGame.bestNashWelfare_eq_optimalWelfare {G : KernelGame ι}
-    [Fintype (Profile G)] [Inhabited ι]
+    [Fintype (Profile G)]
     (hteam : G.IsTeamGame) (hN : ∃ σ : Profile G, G.IsNash σ) :
     G.bestNashWelfare hN = G.optimalWelfare := by
   classical
@@ -185,7 +185,7 @@ theorem IsTeamGame.bestNashWelfare_eq_optimalWelfare {G : KernelGame ι}
 /-- In a team game with positive optimal welfare, the Price of Stability is
 exactly `1`: selfish play loses no efficiency in the best equilibrium. -/
 theorem IsTeamGame.priceOfStability_eq_one {G : KernelGame ι}
-    [Fintype (Profile G)] [Inhabited ι]
+    [Fintype (Profile G)]
     (hteam : G.IsTeamGame) (hN : ∃ σ : Profile G, G.IsNash σ)
     (hopt_pos : 0 < G.optimalWelfare) :
     G.priceOfStability hN = 1 := by

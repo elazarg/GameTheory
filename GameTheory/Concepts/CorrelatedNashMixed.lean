@@ -12,14 +12,11 @@ import GameTheory.Concepts.CorrelatedEqProperties
 
 Relates correlated expected utility under point-mass distributions to standard
 expected utility, and establishes how deviation distributions simplify under
-point-mass (pure) and product (mixed) profile distributions.
+product (mixed) profile distributions. Point-mass deviation simplifications
+live in `GameTheory.Concepts.Deviation`.
 
 Provides:
 - `correlatedEu_pure` — correlated EU under `PMF.pure σ` equals `eu σ`
-- `constantDeviationDistribution_pure` — constant deviation under a point mass
-  yields a point mass at the deviated profile
-- `unilateralDeviationDistribution_pure` — recommendation-dependent deviation under a
-  point mass yields a point mass at the deviated profile
 - `unilateralDeviationDistribution_pmfPi` — deviation of a product distribution equals
   the product with the deviated component's pushforward
 - `correlatedEu_eq_expect_eu` — correlated EU is the expectation of EU

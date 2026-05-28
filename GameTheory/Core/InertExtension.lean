@@ -115,7 +115,7 @@ theorem projectDistribution_bind_pure
           rw [hmap]
 
 /-- Outcome kernels in the extension are the base kernels at projected profiles. -/
-theorem outcomeKernel_form (σ' : E.form.Profile) :
+@[simp] theorem outcomeKernel_form (σ' : E.form.Profile) :
     E.form.outcomeKernel σ' = F.outcomeKernel (E.projectProfile σ') := by
   exact E.outcome_inert σ'
 

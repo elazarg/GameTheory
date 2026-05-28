@@ -125,6 +125,32 @@ theorem append_singleton_inj {α : Type*} {as bs : List α} {a b : α}
   ⟨List.append_inj_left' h (by simp),
    by have := List.append_inj_right' h (by simp); simpa using this⟩
 
+theorem append_singleton_inj_iff {α : Type*} {as bs : List α} {a b : α} :
+    as ++ [a] = bs ++ [b] ↔ as = bs ∧ a = b := by
+  constructor
+  · exact append_singleton_inj
+  · rintro ⟨rfl, rfl⟩
+    rfl
+
+theorem pushforward_append_ne_zero_iff (μ : PMF σ) (ss hs : List σ) :
+    (pushforward μ (fun t => ss ++ [t])) hs ≠ 0 ↔
+      ∃ t, hs = ss ++ [t] ∧ μ t ≠ 0 := by
+  classical
+  constructor
+  · intro hpush
+    have hmemPush : hs ∈ (pushforward μ (fun t => ss ++ [t])).support := by
+      simpa [PMF.mem_support_iff] using hpush
+    have hmem : hs ∈ (PMF.map (fun t => ss ++ [t]) μ).support := by
+      simpa [pushforward] using hmemPush
+    rw [PMF.mem_support_map_iff] at hmem
+    rcases hmem with ⟨t, ht, hts⟩
+    exact ⟨t, hts.symm, by simpa [PMF.mem_support_iff] using ht⟩
+  · rintro ⟨t, rfl, hμ⟩
+    have hmem : ss ++ [t] ∈ (PMF.map (fun u => ss ++ [u]) μ).support := by
+      rw [PMF.mem_support_map_iff]
+      exact ⟨t, by simpa [PMF.mem_support_iff] using hμ, rfl⟩
+    simpa [pushforward, PMF.mem_support_iff] using hmem
+
 open Classical in
 /-- At successor step, `traceRun` decomposes as prefix-reach times one-step
 transition. -/

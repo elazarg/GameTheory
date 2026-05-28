@@ -8,6 +8,7 @@ import GameTheory.Languages.InfoModel.Lemmas.Profiles
 import GameTheory.Languages.InfoModel.Lemmas.ExecutionLocality
 import GameTheory.Languages.InfoModel.Lemmas.LocalConditioning
 import GameTheory.Languages.InfoModel.Lemmas.PerfectRecall
+import Math.TraceRun
 
 /-!
 # GameTheory.Languages.InfoModel.Lemmas.ReachFactorization
@@ -65,22 +66,6 @@ private theorem actionTrace_eq_of_projectActions_eq
             funext i
             exact hheadAct i
           simp [hfun, htail]
-
-private theorem pushforward_append_nonzero_exists
-    (μ : PMF σ)
-    (ss hs : List σ)
-    (hpush : (Math.ProbabilityMassFunction.pushforward μ
-      (fun t => ss ++ [t])) hs ≠ 0) :
-    ∃ t, hs = ss ++ [t] ∧ μ t ≠ 0 := by
-  classical
-  have hmemPush :
-      hs ∈ (Math.ProbabilityMassFunction.pushforward μ (fun t => ss ++ [t])).support := by
-    simpa [PMF.mem_support_iff] using hpush
-  have hmem : hs ∈ (PMF.map (fun t => ss ++ [t]) μ).support := by
-    simpa [Math.ProbabilityMassFunction.pushforward] using hmemPush
-  rw [PMF.mem_support_map_iff] at hmem
-  rcases hmem with ⟨t, ht, hts⟩
-  exact ⟨t, hts.symm, by simpa [PMF.mem_support_iff] using ht⟩
 
 private theorem pushforward_append_apply_same
     (μ : PMF σ)
@@ -183,9 +168,9 @@ theorem exists_reachActionTrace_of_runDistPure_ne_zero
         exists_prev_of_runDistPure_succ_ne_zero (I := I) (D := D) π n ss hss
       obtain ⟨haPrev, hrPrev, hcompatPrev⟩ := ih ssPrev hprev
       obtain ⟨t, hEq, hstep⟩ :=
-        pushforward_append_nonzero_exists
+        (Math.TraceRun.pushforward_append_ne_zero_iff
           (μ := D.stepDist (pureToBehavioral I π) ssPrev)
-          ssPrev ss hpush
+          ssPrev ss).mp hpush
       subst hEq
       let s : σ := (ssPrev.getLast?).getD I.init
       let aCur : I.JointAction := fun i => π i (I.projectStates i ssPrev)

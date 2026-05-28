@@ -115,8 +115,6 @@ theorem behavioralToMixed_scalar_indep
 
 section Restricted
 
-variable [∀ i, DecidableEq (I.LocalTrace i)]
-
 /-- Scalar independence under the restricted behavioral product measure. The
 proof is the same as the full-coordinate version, but only the coordinates in
 the finite cover `H` are present. -/
@@ -223,6 +221,7 @@ theorem restrictedBehavioralToMixed_scalar_indep
         ring
     _ = (∑ π, μ π * f π) * ∑ π, μ π * g π := (Finset.sum_mul_sum ..).symm
 
+open Classical in
 /-- Restricted step-independence equality used in the bounded finite-cover Kuhn
 run induction. Execution still happens on the full machine semantics; the pure
 and behavioral profiles are obtained by extending restricted profiles outside
@@ -247,6 +246,7 @@ def RestrictedStepIndependence
             (extendRestrictedPureProfile (I := I) H π)) ss)
           (fun t => ss ++ [t])))
 
+open Classical in
 /-- Restricted bridge reduction: if a restricted mixed profile satisfies
 step-independence at every depth, then run distributions factor through
 sampling a restricted pure profile and executing its full extension. -/
@@ -275,7 +275,7 @@ theorem restricted_run_factorization
                   Math.ProbabilityMassFunction.pushforward
                     (D.stepDist (restrictedRealizeBehavioralCanonical (I := I) H μ) ss)
                     (fun t => ss ++ [t])) := by
-              simp [Execution.Dynamics.runDist]
+              rw [runDist_succ]
         _ = ((restrictedMixedJointRaw (I := I) H μ).bind
               (fun π => D.runDistPure n (extendRestrictedPureProfile (I := I) H π))).bind
                 (fun ss =>
@@ -298,7 +298,7 @@ theorem restricted_run_factorization
               simpa using hStepIndep μ n
         _ = (restrictedMixedJointRaw (I := I) H μ).bind
               (fun π => D.runDistPure (n + 1) (extendRestrictedPureProfile (I := I) H π)) := by
-              simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure]
+              simp [Execution.Dynamics.runDistPure, runDist_succ]
 
 end Restricted
 
@@ -560,7 +560,7 @@ theorem run_factorization
                   Math.ProbabilityMassFunction.pushforward
                     (D.stepDist (realizeBehavioralCanonical (I := I) μ) ss)
                     (fun t => ss ++ [t])) := by
-              simp [Execution.Dynamics.runDist]
+              rw [runDist_succ]
         _ = ((mixedJoint (I := I) μ).bind (fun π => D.runDistPure n π)).bind
               (fun ss =>
                 Math.ProbabilityMassFunction.pushforward
@@ -580,7 +580,7 @@ theorem run_factorization
                   (fun t => ss ++ [t]))) := by
               simpa using hStepIndep μ n
         _ = (mixedJoint (I := I) μ).bind (fun π => D.runDistPure (n + 1) π) := by
-              simp [Execution.Dynamics.runDist, Execution.Dynamics.runDistPure]
+              simp [Execution.Dynamics.runDistPure, runDist_succ]
 
 theorem reduce_atomicFactorization_bridge
     (D : Execution.Dynamics I)
