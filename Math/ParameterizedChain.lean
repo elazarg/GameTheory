@@ -119,7 +119,7 @@ theorem condStep_weighted_eq (ν : PMF P) (step : P → List S → PMF S)
           _ = ν π := mul_one _
     rw [hCtop] at hle
     have hone : (∑ π : P, (ν π : ENNReal)) = 1 := by
-      have := PMF.tsum_coe ν; rwa [tsum_fintype] at this
+      exact sum_coe_fintype ν
     rw [hone] at hle
     exact absurd hle (by simp)
   · -- C > 0 and C < ⊤: the interesting case

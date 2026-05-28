@@ -58,6 +58,38 @@ theorem pushforward_bind
     pushforward (μ.bind k) f = μ.bind (fun a => pushforward (k a) f) := by
   exact PMF.map_bind (p := μ) (q := k) f
 
+theorem sum_coe_fintype [Fintype α] (μ : PMF α) :
+    ∑ a : α, μ a = 1 := by
+  have h := PMF.tsum_coe μ
+  rwa [tsum_eq_sum (s := Finset.univ)
+    (fun x hx => absurd (Finset.mem_univ x) hx)] at h
+
+/-- Binary independent product of two PMFs. -/
+noncomputable def prod (μ : PMF α) (ν : PMF β) : PMF (α × β) :=
+  μ.bind (fun a => ν.map (fun b => (a, b)))
+
+theorem prod_map_fst (μ : PMF α) (ν : PMF β) :
+    (prod μ ν).map Prod.fst = μ := by
+  unfold prod
+  rw [PMF.map_bind]
+  conv_lhs =>
+    enter [2, a]
+    rw [PMF.map_comp]
+    rw [show (Prod.fst ∘ fun b : β => (a, b)) = Function.const β a from rfl]
+    rw [PMF.map_const]
+  rw [PMF.bind_pure]
+
+theorem prod_map_snd (μ : PMF α) (ν : PMF β) :
+    (prod μ ν).map Prod.snd = ν := by
+  unfold prod
+  rw [PMF.map_bind]
+  conv_lhs =>
+    enter [2, a]
+    rw [PMF.map_comp]
+    rw [show (Prod.snd ∘ fun b : β => (a, b)) = (id : β → β) from rfl]
+    rw [PMF.map_id]
+  exact PMF.bind_const _ _
+
 section ReweightPMF
 
 variable [Fintype α]

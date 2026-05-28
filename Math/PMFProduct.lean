@@ -31,16 +31,6 @@ universe uι uA uα uβ uγ
 set_option autoImplicit false
 
 -- ============================================================================
--- Auxiliary Helpers
--- ============================================================================
-
-private lemma pmf_sum_eq_one {α : Type*} [Fintype α] (μ : PMF α) :
-    ∑ a : α, μ a = 1 := by
-  have h := PMF.tsum_coe μ
-  rwa [tsum_eq_sum (s := Finset.univ)
-    (fun x hx => absurd (Finset.mem_univ x) hx)] at h
-
--- ============================================================================
 -- Prod-tsum commutation for ENNReal (foundation for countable factors)
 -- ============================================================================
 
@@ -468,7 +458,7 @@ theorem sum_pmfPi_factor
     (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * F (s j) s)
       =
     ∑ a : A j, (σ j a) * (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * F a s) := by
-  have h_one : (∑ a : A j, σ j a) = 1 := pmf_sum_eq_one (σ j)
+  have h_one : (∑ a : A j, σ j a) = 1 := sum_coe_fintype (σ j)
   let W : (A j × (∀ i, A i)) → ENNReal := fun p =>
     σ j p.1 * ((σ j (p.2 j) * ∏ i ∈ Finset.univ.erase j, σ i (p.2 i)) * F p.1 p.2)
   let e := swapJA (A := A) j
@@ -1212,7 +1202,7 @@ lemma pmfPiMass_le_one (σ : ∀ i, PMF (A i)) (P : (∀ i, A i) → Prop) :
         (fun s _hs => hle s))
   -- rewrite the RHS sum to `1`
   have htot : (∑ s : (∀ i, A i), pmfPi (A := A) σ s) = 1 :=
-    pmf_sum_eq_one (pmfPi (A := A) σ)
+    sum_coe_fintype (pmfPi (A := A) σ)
   -- finish
   exact le_of_le_of_eq hsum htot
 
@@ -1343,12 +1333,12 @@ theorem pmfPi_mass_invariant_of_ignores
     -- first rewrite the two True-masses in `h` to `1`
     have hT_old :
         (∑ s : (∀ i, A i), if (fun _ => True) s then (pmfPi (A := A) σ) s else 0) = 1 := by
-      simpa using (pmf_sum_eq_one (pmfPi (A := A) σ))
+      simpa using (sum_coe_fintype (pmfPi (A := A) σ))
     have hT_upd :
         (∑ s : (∀ i, A i),
           if (fun _ => True) s
           then (pmfPi (A := A) (Function.update σ j τ)) s else 0) = 1 := by
-      simpa using (pmf_sum_eq_one (pmfPi (A := A) (Function.update σ j τ)))
+      simpa using (sum_coe_fintype (pmfPi (A := A) (Function.update σ j τ)))
     -- now `simp` actually has concrete rewrite rules for those factors
     simp_all only [pmfPi_apply, ↓reduceIte, mul_one]
     exact h
@@ -1572,7 +1562,7 @@ theorem pmfPi_bind_indep [Fintype ι] [∀ i, Finite (A i)]
         exact hpoint p
       _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
   have hsumP : (∑ t : (∀ i, A i), P t) = 1 := by
-    simpa [P] using (pmf_sum_eq_one (pmfPi (A := A) σ))
+    simpa [P] using (sum_coe_fintype (pmfPi (A := A) σ))
   have hL :
       (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * ∑ b : β, f s b * g b s y)
       = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := by
@@ -1702,7 +1692,7 @@ theorem pmfPi_expect_indep [Fintype ι] [DecidableEq ι] [∀ i, Fintype (A i)]
         exact hpoint p
       _ = ∑ p, Fsame p := sum_univ_eq_sum_univ_of_involutive e he Fsame
   have hsumP : (∑ t : (∀ i, A i), P t) = 1 := by
-    simpa [P] using (pmf_sum_eq_one (pmfPi (A := A) σ))
+    simpa [P] using (sum_coe_fintype (pmfPi (A := A) σ))
   have hL :
       (∑ s : (∀ i, A i), (∏ i, σ i (s i)) * (f s * g s))
       = ∑ p : ((∀ i, A i) × (∀ i, A i)), Fsame p := by
@@ -1798,7 +1788,7 @@ theorem pmfPi_bind_pmfPi_of_disjoint_coords
   induction S using Finset.induction_on with
   | empty =>
     simp only [pmfPi_apply, Finset.prod_empty, mul_one]
-    exact pmf_sum_eq_one (pmfPi σ)
+    exact sum_coe_fintype (pmfPi σ)
   | insert k₀ S' hk₀ ih =>
     have hS' : ∀ k₁ k₂, k₁ ∈ S' → k₂ ∈ S' → k₁ ≠ k₂ →
         ∀ i, coord k₁ = some i → coord k₂ ≠ some i :=

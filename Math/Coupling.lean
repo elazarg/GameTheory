@@ -90,33 +90,6 @@ noncomputable def map {R : α → β → Prop} {R' : α' → β' → Prop}
     rw [← heq]
     exact hR q.1 q.2 (c.rel_holds q hq)
 
-/-- Product coupling: when no relational constraint holds, pair samples
-independently. Used as the "off-support" filler in `bind`. -/
-private noncomputable def product (μ : PMF γ) (ν : PMF δ) : PMF (γ × δ) :=
-  μ.bind (fun c => ν.map (fun d => (c, d)))
-
-private theorem product_marginal_fst (μ : PMF γ) (ν : PMF δ) :
-    (product μ ν).map Prod.fst = μ := by
-  unfold product
-  rw [PMF.map_bind]
-  conv_lhs =>
-    enter [2, c]
-    rw [PMF.map_comp]
-    rw [show (Prod.fst ∘ fun d : δ => (c, d)) = Function.const δ c from rfl]
-    rw [PMF.map_const]
-  rw [PMF.bind_pure]
-
-private theorem product_marginal_snd (μ : PMF γ) (ν : PMF δ) :
-    (product μ ν).map Prod.snd = ν := by
-  unfold product
-  rw [PMF.map_bind]
-  conv_lhs =>
-    enter [2, c]
-    rw [PMF.map_comp]
-    rw [show (Prod.snd ∘ fun d : δ => (c, d)) = (id : δ → δ) from rfl]
-    rw [PMF.map_id]
-  exact PMF.bind_const _ _
-
 /-- Bind-coherence: if `R` lifts to a coupling of `μ`, `ν` and `R'`
 lifts to couplings of `k₁ a`, `k₂ b` for every `R`-related pair, then
 `R'` lifts to a coupling of the binds. The killer compositional
@@ -129,21 +102,21 @@ noncomputable def bind {R : α → β → Prop} {R' : γ → δ → Prop}
   classical
   let chooser : α × β → PMF (γ × δ) := fun p =>
     if h : R p.1 p.2 then (k p.1 p.2 h).joint
-    else product (k₁ p.1) (k₂ p.2)
+    else ProbabilityMassFunction.prod (k₁ p.1) (k₂ p.2)
   have h_fst : ∀ p, (chooser p).map Prod.fst = k₁ p.1 := by
     intro p
     by_cases h : R p.1 p.2
     · simp only [chooser, h, dif_pos]
       exact (k p.1 p.2 h).marginal_fst
     · simp only [chooser, h, dif_neg, not_false_eq_true]
-      exact product_marginal_fst _ _
+      exact ProbabilityMassFunction.prod_map_fst _ _
   have h_snd : ∀ p, (chooser p).map Prod.snd = k₂ p.2 := by
     intro p
     by_cases h : R p.1 p.2
     · simp only [chooser, h, dif_pos]
       exact (k p.1 p.2 h).marginal_snd
     · simp only [chooser, h, dif_neg, not_false_eq_true]
-      exact product_marginal_snd _ _
+      exact ProbabilityMassFunction.prod_map_snd _ _
   refine
     { joint := c.joint.bind chooser
       marginal_fst := ?_
