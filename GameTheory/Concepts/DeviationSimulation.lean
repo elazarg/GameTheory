@@ -47,6 +47,41 @@ noncomputable def correlatedLaw {F : GameForm ι}
     V.law σ = V.correlatedLaw (PMF.pure σ) := by
   simp [law, correlatedLaw]
 
+/-- Pointwise equal observed laws lift through a common recommendation distribution. -/
+theorem correlatedLaw_map_eq_map_of_law_eq {α : Type} {G H : GameForm ι}
+    (VG : OutcomeView G Ω) (VH : OutcomeView H Ω)
+    (μ : PMF α) (source : α → G.Profile) (target : α → H.Profile)
+    (law_eq : ∀ a, VG.law (source a) = VH.law (target a)) :
+    VG.correlatedLaw (PMF.map source μ) = VH.correlatedLaw (PMF.map target μ) := by
+  simpa [correlatedLaw, law, GameForm.correlatedOutcome,
+    Math.Probability.Kernel.pushforward, PMF.map_bind, PMF.bind_map] using
+    Math.ProbabilityMassFunction.bind_congr_on_support μ
+      (fun a => PMF.map VG.observe (G.outcomeKernel (source a)))
+      (fun a => PMF.map VH.observe (H.outcomeKernel (target a)))
+      (fun a _ => law_eq a)
+
+/-- A pointwise profile realization induces the same correlated observed law. -/
+theorem correlatedLaw_map_of_law {G H : GameForm ι}
+    (VG : OutcomeView G Ω) (VH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, VG.law σ = VH.law (realize σ))
+    (μ : PMF G.Profile) :
+    VG.correlatedLaw μ = VH.correlatedLaw (PMF.map realize μ) := by
+  have h := correlatedLaw_map_eq_map_of_law_eq VG VH μ id realize law_eq
+  rwa [PMF.map_id] at h
+
+/-- Pointwise law equality after profile transforms lifts to correlated laws. -/
+theorem correlatedLaw_bind_profile_map_of_law {G H : GameForm ι}
+    (VG : OutcomeView G Ω) (VH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (source : G.Profile → G.Profile) (target : H.Profile → H.Profile)
+    (law_eq : ∀ σ, VG.law (source σ) = VH.law (target (realize σ)))
+    (μ : PMF G.Profile) :
+    VG.correlatedLaw (μ.bind (fun σ => PMF.pure (source σ))) =
+      VH.correlatedLaw ((PMF.map realize μ).bind (fun τ => PMF.pure (target τ))) := by
+  simpa [PMF.bind_pure_comp, PMF.map_comp, Function.comp_apply] using
+    correlatedLaw_map_eq_map_of_law_eq VG VH μ source (target ∘ realize) law_eq
+
 end OutcomeView
 
 /-- Equality of observed outcome laws through two views. -/
@@ -254,6 +289,16 @@ def ofFunctionalRealization
     subst μH
     exact law_eq μG
 
+/-- Build a profile-distribution realization from a pointwise profile map. -/
+noncomputable def ofProfileMap
+    {G H : GameForm ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, viewG.law σ = viewH.law (realize σ)) :
+    ProfileDistributionRealization G H Ω :=
+  ofFunctionalRealization viewG viewH (PMF.map realize)
+    (OutcomeView.correlatedLaw_map_of_law viewG viewH realize law_eq)
+
 end ProfileDistributionRealization
 
 /-- One-way simulation for arbitrary profile-deviation families.
@@ -413,6 +458,62 @@ noncomputable def NashDeviationSimulation.toConstantDeviationFamilySimulation
     rcases S.simulate_target_deviation hστ who sH with ⟨sG, hdev⟩
     refine ⟨sG, ?_⟩
     simpa [OutcomeView.correlatedLaw] using hdev
+
+/-- Build a constant-deviation-family simulation from a pointwise profile map. -/
+noncomputable def DeviationFamilySimulation.ofConstantProfileMap
+    {G H : GameForm ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, viewG.law σ = viewH.law (realize σ))
+    (simulate_target_deviation :
+      ∀ (who : ι) (sH : H.Strategy who),
+        ∃ sG : G.Strategy who,
+          ∀ σ : G.Profile,
+            viewG.law (Function.update σ who sG) =
+              viewH.law (Function.update (realize σ) who sH)) :
+    DeviationFamilySimulation G H Ω
+      G.constantDeviationProfileFamily H.constantDeviationProfileFamily where
+  toProfileDistributionRealization :=
+    ProfileDistributionRealization.ofProfileMap viewG viewH realize law_eq
+  simulate_target_deviation := by
+    intro μG μH hrel who sH
+    subst μH
+    rcases simulate_target_deviation who sH with ⟨sG, hdev⟩
+    refine ⟨sG, ?_⟩
+    simpa [GameForm.constantDeviationProfileFamily_deviate,
+      GameForm.constDeviateDistributionFn] using
+      OutcomeView.correlatedLaw_bind_profile_map_of_law
+        viewG viewH realize
+        (fun σ => Function.update σ who sG)
+        (fun τ => Function.update τ who sH) hdev μG
+
+/-- Build a recommendation-deviation-family simulation from a pointwise profile map. -/
+noncomputable def DeviationFamilySimulation.ofRecommendationProfileMap
+    {G H : GameForm ι} {Ω : Type}
+    (viewG : OutcomeView G Ω) (viewH : OutcomeView H Ω)
+    (realize : G.Profile → H.Profile)
+    (law_eq : ∀ σ, viewG.law σ = viewH.law (realize σ))
+    (simulate_target_deviation :
+      ∀ (who : ι) (dH : H.Strategy who → H.Strategy who),
+        ∃ dG : G.Strategy who → G.Strategy who,
+          ∀ σ : G.Profile,
+            viewG.law (G.deviateProfileFn σ who dG) =
+              viewH.law (H.deviateProfileFn (realize σ) who dH)) :
+    DeviationFamilySimulation G H Ω
+      G.recommendationDeviationFamily H.recommendationDeviationFamily where
+  toProfileDistributionRealization :=
+    ProfileDistributionRealization.ofProfileMap viewG viewH realize law_eq
+  simulate_target_deviation := by
+    intro μG μH hrel who dH
+    subst μH
+    rcases simulate_target_deviation who dH with ⟨dG, hdev⟩
+    refine ⟨dG, ?_⟩
+    simpa [GameForm.recommendationDeviationFamily_deviate,
+      GameForm.deviateDistributionFn] using
+      OutcomeView.correlatedLaw_bind_profile_map_of_law
+        viewG viewH realize
+        (fun σ => G.deviateProfileFn σ who dG)
+        (fun τ => H.deviateProfileFn τ who dH) hdev μG
 
 /-- Correlated-equilibrium transport as the recommendation-deviation-family
 instance of the generic theorem. -/
