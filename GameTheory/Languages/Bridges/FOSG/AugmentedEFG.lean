@@ -254,6 +254,21 @@ noncomputable def legalize
   · let a0 := Classical.choose (G.nonterminal_exists_legal hnot)
     exact ⟨a0, Classical.choose_spec (G.nonterminal_exists_legal hnot)⟩
 
+/-- The chance part of one FOSG step after the EFG decisions choose a joint
+action. -/
+noncomputable def transitionChance
+    (k : Nat) (h : G.History) (hnot : ¬ G.terminal h.lastState)
+    (chosen : JointAction Act)
+    (next : G.History → GameTree (infoStructure (G := G) k) (SerialExec.State G)) :
+    GameTree (infoStructure (G := G) k) (SerialExec.State G) :=
+  let a := legalize (G := G) h hnot chosen
+  let μ := G.transition h.lastState a
+  .chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
+    (fintype_card_pos_of_pmf μ)
+    (fun b =>
+      let dst := (Fintype.equivFin W).symm b
+      next (h.extendByOutcome a dst))
+
 /-- Present the simultaneous move as sequential EFG decisions, then continue
 with the assembled partial joint action.  The `pVal` index is the next EFG
 player index to resolve. -/
@@ -286,14 +301,7 @@ noncomputable def fromHistory
       else
         choosePlayersFrom (G := G) k h 0 (noopAction Act)
           (fun chosen =>
-            let a := legalize (G := G) h hterm chosen
-            let μ := G.transition h.lastState a
-            .chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
-              (fintype_card_pos_of_pmf μ)
-              (fun b =>
-                let dst := (Fintype.equivFin W).symm b
-                let h' := h.extendByOutcome a dst
-                fromHistory k remaining h'))
+            transitionChance (G := G) k h hterm chosen (fromHistory k remaining))
 
 end Tree
 
@@ -322,14 +330,8 @@ theorem tree_fromHistory_succ_nonterminal
     Tree.fromHistory (G := G) k (n + 1) h =
       Tree.choosePlayersFrom (G := G) k h 0 (noopAction Act)
         (fun chosen =>
-          let a := Tree.legalize (G := G) h hnot chosen
-          let μ := G.transition h.lastState a
-          GameTree.chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
-            (fintype_card_pos_of_pmf μ)
-            (fun b =>
-              let dst := (Fintype.equivFin W).symm b
-              let h' := h.extendByOutcome a dst
-              Tree.fromHistory (G := G) k n h')) := by
+          Tree.transitionChance (G := G) k h hnot chosen
+            (Tree.fromHistory (G := G) k n)) := by
   simp [Tree.fromHistory, hnot]
 
 namespace Tree
@@ -391,16 +393,11 @@ theorem fromHistory_succ_nonterminal_decisionSpineThenChance
   simpa using
     choosePlayersFrom_decisionSpineThenChance (G := G) k h 0 (noopAction Act)
       (fun chosen =>
-        let a := legalize (G := G) h hnot chosen
-        let μ := G.transition h.lastState a
-        GameTree.chance (Fintype.card W)
-          (PMF.map (Fintype.equivFin W) μ)
-          (fintype_card_pos_of_pmf μ)
-          (fun b =>
-            let dst := (Fintype.equivFin W).symm b
-            let h' := h.extendByOutcome a dst
-            fromHistory (G := G) k n h'))
-      (fun _ => EFG.DecisionSpineThenChance.chance)
+        transitionChance (G := G) k h hnot chosen (fromHistory (G := G) k n))
+      (by
+        intro chosen
+        unfold transitionChance
+        exact EFG.DecisionSpineThenChance.chance)
 
 /-- `choosePlayersFrom` preserves the recursive round shape. -/
 theorem choosePlayersFrom_roundSpineShape
@@ -468,17 +465,10 @@ theorem fromHistory_fullTreeShape
       simpa using
         choosePlayersFrom_roundSpineShape (G := G) k h 0 (noopAction Act)
           (fun chosen =>
-            let a := legalize (G := G) h hterm chosen
-            let μ := G.transition h.lastState a
-            GameTree.chance (Fintype.card W)
-              (PMF.map (Fintype.equivFin W) μ)
-              (fintype_card_pos_of_pmf μ)
-              (fun b =>
-                let dst := (Fintype.equivFin W).symm b
-                let h' := h.extendByOutcome a dst
-                fromHistory (G := G) k remaining h'))
+            transitionChance (G := G) k h hterm chosen (fromHistory (G := G) k remaining))
           (by
             intro chosen
+            unfold transitionChance
             apply EFG.RoundSpineShape.chance
             intro b
             exact ih _)
@@ -595,14 +585,8 @@ theorem tree_eval_succ_nonterminal_unfold
         (translateBehavioralProfile (G := G) σ) =
       (Tree.choosePlayersFrom (G := G) k h 0 (noopAction Act)
         (fun chosen =>
-          let a := Tree.legalize (G := G) h hnot chosen
-          let μ := G.transition h.lastState a
-          GameTree.chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
-            (fintype_card_pos_of_pmf μ)
-            (fun b =>
-              let dst := (Fintype.equivFin W).symm b
-              let h' := h.extendByOutcome a dst
-              Tree.fromHistory (G := G) k n h'))).evalDist
+          Tree.transitionChance (G := G) k h hnot chosen
+            (Tree.fromHistory (G := G) k n))).evalDist
         (translateBehavioralProfile (G := G) σ) := by
   rw [tree_fromHistory_succ_nonterminal (G := G) k n h hnot]
 
@@ -999,15 +983,10 @@ theorem tree_eval_eq_runDistFrom_of_length_add_le
         rw [choosePlayersFrom_zero_evalDist_eq_efgJointActionDist_bind
           (G := G) σ h (noopAction Act)
           (fun chosen =>
-            let a := Tree.legalize (G := G) h hterm chosen
-            let μ := G.transition h.lastState a
-            GameTree.chance (Fintype.card W) (PMF.map (Fintype.equivFin W) μ)
-              (fintype_card_pos_of_pmf μ)
-              (fun b =>
-                let dst := (Fintype.equivFin W).symm b
-                let h' := h.extendByOutcome a dst
-                Tree.fromHistory (G := G) k n h')) hview]
+            Tree.transitionChance (G := G) k h hterm chosen
+              (Tree.fromHistory (G := G) k n)) hview]
         rw [efgJointActionDist_bind_eq_jointActionDist_bind (G := G) σ h]
+        simp only [Tree.transitionChance]
         change (G.jointActionDist σ h).bind
             (fun chosen =>
               (fun a : G.LegalAction h.lastState =>
@@ -1536,6 +1515,7 @@ private theorem fromHistory_evalDist_eq_translate_efgToFOSG
           (G := G) hBound τ hτ h hview 0 (noopAction Act)
         intro chosen
         -- chance node + recurse
+        unfold Tree.transitionChance
         simp only [evalDist_chance]
         congr 1
         funext b
