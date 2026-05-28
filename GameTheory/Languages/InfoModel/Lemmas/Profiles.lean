@@ -8,6 +8,7 @@ import GameTheory.Languages.InfoModel.SemanticForm
 import GameTheory.Languages.InfoModel.Lemmas.ExecutionSupport
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
+import Mathlib.Data.Fintype.Sets
 
 /-!
 # GameTheory.Languages.InfoModel.Lemmas.Profiles
@@ -240,7 +241,7 @@ full pure profiles via extension outside the finite cover. -/
 noncomputable def restrictedMixedJointRaw
     (H : ∀ i, Finset (I.LocalTrace i))
     [Fintype ι]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) :
     PMF (RestrictedPureProfile (I := I) H) := by
   classical
@@ -252,7 +253,7 @@ full pure profiles via extension outside the finite cover. -/
 noncomputable def restrictedMixedJoint
     (H : ∀ i, Finset (I.LocalTrace i))
     [Fintype ι]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) :
     PMF (PureProfile I) := by
   exact Math.ProbabilityMassFunction.pushforward
@@ -265,7 +266,7 @@ theorem mixedJoint_extendRestrictedMixedProfile_eq_restrictedMixedJoint
     (H : ∀ i, Finset (I.LocalTrace i))
     [Fintype ι]
     [∀ i, Fintype (LocalPure (I := I) i)]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) :
     mixedJoint (I := I) (extendRestrictedMixedProfile (I := I) H μ) =
       restrictedMixedJoint (I := I) H μ := by
@@ -280,7 +281,7 @@ evaluation after pushing the raw restricted joint law forward along
 theorem restrictedMixedJointRaw_bind_eq_restrictedMixedJoint_bind
     (H : ∀ i, Finset (I.LocalTrace i))
     [Fintype ι]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
+    [∀ i, Fintype (Option (Act i))]
     {β : Type*}
     (μ : RestrictedMixedProfile (I := I) H)
     (f : PureProfile I → PMF β) :
@@ -358,7 +359,6 @@ theorem mixedJoint_extendRestrict_eq_pushforward
 outside the cover by the deterministic `none` action. -/
 noncomputable def restrictedRealizeBehavioralCanonical
     (H : ∀ i, Finset (I.LocalTrace i))
-    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) :
     BehavioralProfile I :=
@@ -369,7 +369,6 @@ noncomputable def restrictedRealizeBehavioralCanonical
 /-- Behavioral-to-mixed lifting over a restricted finite local-history cover. -/
 noncomputable def restrictedBehavioralToMixed
     (H : ∀ i, Finset (I.LocalTrace i))
-    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (Option (Act i))]
     (b : RestrictedBehavioralProfile (I := I) H) :
     RestrictedMixedProfile (I := I) H := by
@@ -425,7 +424,6 @@ theorem extendRestrictedBehavioralProfile_apply_mem
 profile produced from `restrictedBehavioralToMixed` recovers the original. -/
 theorem restricted_realize_behavioralToMixed
     (H : ∀ i, Finset (I.LocalTrace i))
-    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
     [∀ i, Fintype (Option (Act i))]
     (b : RestrictedBehavioralProfile (I := I) H) :
     restrictBehavioralProfile (I := I) H

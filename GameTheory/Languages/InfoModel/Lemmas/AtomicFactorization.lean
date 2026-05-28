@@ -118,7 +118,6 @@ section Restricted
 over the covered coordinates. -/
 theorem restrictedBehavioralToMixed_apply_prod
     (H : ∀ i, Finset (I.LocalTrace i))
-    [∀ i, Fintype (I.RestrictedLocalCoord H i)]
     [∀ i, Fintype (Option (Act i))]
     (b : RestrictedBehavioralProfile (I := I) H) (i : ι)
     (fi : RestrictedLocalCoord (I := I) H i → Option (Act i)) :
@@ -131,9 +130,7 @@ controllers and covered coordinates. -/
 theorem restrictedMixedJointRaw_behavioralToMixed_apply_prod
     (H : ∀ i, Finset (I.LocalTrace i))
     [Fintype ι]
-    [∀ i, Fintype (I.RestrictedLocalCoord H i)]
     [∀ i, Fintype (Option (Act i))]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
     (b : RestrictedBehavioralProfile (I := I) H)
     (π : RestrictedPureProfile (I := I) H) :
     (restrictedMixedJointRaw (I := I) H
@@ -145,9 +142,7 @@ theorem restrictedMixedJointRaw_behavioralToMixed_apply_prod
 theorem restrictedMixedJointRaw_behavioralToMixed_eq_map_reassemble
     (H : ∀ i, Finset (I.LocalTrace i))
     [Fintype ι]
-    [∀ i, Fintype (I.RestrictedLocalCoord H i)]
     [∀ i, Fintype (Option (Act i))]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
     (κ : ∀ i, RestrictedLocalCoord (I := I) H i → PMF (Option (Act i))) :
     restrictedMixedJointRaw (I := I) H
       (restrictedBehavioralToMixed (I := I) H κ) =

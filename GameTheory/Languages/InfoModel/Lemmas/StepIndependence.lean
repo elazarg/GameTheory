@@ -115,15 +115,14 @@ theorem behavioralToMixed_scalar_indep
 
 section Restricted
 
+open Classical in
 /-- Scalar independence under the restricted behavioral product measure. The
 proof is the same as the full-coordinate version, but only the coordinates in
 the finite cover `H` are present. -/
 theorem restrictedBehavioralToMixed_scalar_indep
     (H : ∀ i, Finset (I.LocalTrace i))
     [DecidableEq ι]
-    [∀ i, Fintype (I.RestrictedLocalCoord H i)]
     [∀ i, Fintype (Option (Act i))]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
     (b : RestrictedBehavioralProfile (I := I) H) (n : Nat)
     (f g : RestrictedPureProfile (I := I) H → ENNReal)
     (hf : ∀ π π' : RestrictedPureProfile (I := I) H,
@@ -230,8 +229,6 @@ def RestrictedStepIndependence
     (D : Execution.Dynamics I)
     (H : ∀ i, Finset (I.LocalTrace i))
     [DecidableEq ι]
-    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
     [∀ i, Fintype (Option (Act i))]
     (μ : RestrictedMixedProfile (I := I) H) (n : Nat) : Prop :=
     (restrictedMixedJointRaw (I := I) H μ).bind (fun π =>
@@ -254,8 +251,6 @@ theorem restricted_run_factorization
     (D : Execution.Dynamics I)
     (H : ∀ i, Finset (I.LocalTrace i))
     [DecidableEq ι]
-    [∀ i, Fintype (RestrictedLocalCoord (I := I) H i)]
-    [∀ i, Fintype (RestrictedLocalPure (I := I) H i)]
     [∀ i, Fintype (Option (Act i))]
     (hStepIndep : ∀ μ n, RestrictedStepIndependence (I := I) D H μ n)
     (μ : RestrictedMixedProfile (I := I) H) :
