@@ -152,44 +152,16 @@ theorem pureStep_action_eq_of_psar
     h1 h2
     (fun j => O.obsEq_of_projectStates_getLast j (hobs j)) hobst i
 
-/-- Two composed transports to the same target type are equal when the source values are HEq. -/
+omit [DecidableEq ι] [Fintype ι] [(i : ι) → (o : Obs i) → Fintype (Act i o)] in
+/-- Compare two composed transports with the same target. -/
 private theorem transport_composed {α : Type} {P : α → Type} {a₁ a₂ b₁ b₂ : α}
     (h₁ : a₁ = b₁) (h₂ : a₂ = b₂) (hb : b₁ = b₂)
     (x₁ : P a₁) (x₂ : P a₂) (hx : HEq x₁ x₂) :
     (h₁ ▸ x₁ : P b₁) = (hb ▸ (h₂ ▸ x₂ : P b₂) : P b₁) := by
-  subst h₁; subst h₂; subst hb; exact eq_of_heq hx
-
-/-- `▸`-transport is HEq to the original value. -/
-private theorem subst_heq' {α : Type} {P : α → Type} {a b : α}
-    (h : a = b) (x : P b) : HEq (h ▸ x : P a) x := by subst h; rfl
-
-/-- Forward `▸`-transport is HEq to the original value. -/
-private theorem fwd_subst_heq {α : Type} {P : α → Type} {a b : α}
-    (h : a = b) (x : P a) : HEq x (h ▸ x : P b) := by subst h; rfl
-
-/-- `▸`-transport is injective. -/
-private theorem transport_inj {α : Type} {P : α → Type} {a b : α}
-    (h : a = b) {x y : P b} (hxy : (h ▸ x : P a) = h ▸ y) : x = y :=
-  eq_of_heq ((subst_heq' h x).symm.trans (hxy ▸ subst_heq' h y))
-
-/-- A dependent function applied to equal arguments yields a transported result. -/
-private theorem dep_congr_subst {α : Type} {P : α → Type}
-    (f : (a : α) → P a) {a₁ a₂ : α} (h : a₁ = a₂) :
-    f a₁ = h ▸ f a₂ := by subst h; rfl
-
-/-- `PMF.bind` is HEq-compatible when binding functions are pointwise HEq. -/
-private theorem pmf_bind_heq {α β₁ β₂ : Type} (hβ : β₁ = β₂)
-    (p : PMF α) (f₁ : α → PMF β₁) (f₂ : α → PMF β₂)
-    (hf : ∀ a, HEq (f₁ a) (f₂ a)) :
-    HEq (p.bind f₁) (p.bind f₂) := by
-  subst hβ; exact heq_of_eq (congrArg p.bind (funext fun a => eq_of_heq (hf a)))
-
-/-- `PMF.bind` HEq when both base measure and binding function change. -/
-private theorem pmf_bind_heq' {α β₁ β₂ : Type} (hβ : β₁ = β₂)
-    (p₁ p₂ : PMF α) (hp : p₁ = p₂) (f₁ : α → PMF β₁) (f₂ : α → PMF β₂)
-    (hf : ∀ a, HEq (f₁ a) (f₂ a)) :
-    HEq (p₁.bind f₁) (p₂.bind f₂) := by
-  subst hp; exact pmf_bind_heq hβ p₁ f₁ f₂ hf
+  subst h₁
+  subst h₂
+  subst hb
+  exact eq_of_heq hx
 
 omit [DecidableEq ι] [Fintype ι] [(i : ι) → (o : Obs i) → Fintype (Act i o)] in
 /-- The cast action from a profile at obs-equivalent traces are related by transport. -/
@@ -233,9 +205,13 @@ theorem pureStep_cross_ratio
   have hb_rel : ∀ i, b₁ i = (hobss i) ▸ b₂ i := castJointAction_obs_eq O π₂ hobs
   -- Helper: a₁ i ≅ a₂ i and b₁ i ≅ b₂ i (from castJointAction_obs_eq)
   have ha_heq : ∀ i, HEq (a₁ i) (a₂ i) := fun i => by
-    have := ha_rel i; rw [this]; exact subst_heq' (hobss i) (a₂ i)
+    have := ha_rel i
+    rw [this]
+    exact rec_heq_of_heq (hobss i).symm HEq.rfl
   have hb_heq : ∀ i, HEq (b₁ i) (b₂ i) := fun i => by
-    have := hb_rel i; rw [this]; exact subst_heq' (hobss i) (b₂ i)
+    have := hb_rel i
+    rw [this]
+    exact rec_heq_of_heq (hobss i).symm HEq.rfl
   by_cases hab : a₁ = b₁
   · -- Same action at s₁ implies same action at s₂ (by HEq)
     have hab₂ : a₂ = b₂ := funext fun i =>
@@ -249,13 +225,15 @@ theorem pureStep_cross_ratio
       -- Chain: a₁ i ≅ fwd(a₁ i) = b₂ i ≅ b₁ i  →  a₁ i = b₁ i
       have hpsar := fun i => hPSAR s₁ s₂ t₁ t₂ a₁ b₂ h.1 h.2 hobss hobst i
       exact hab (funext fun i => eq_of_heq
-        ((fwd_subst_heq (hobss i) (a₁ i)).trans (heq_of_eq (hpsar i)) |>.trans (hb_heq i).symm))
+        (((rec_heq_of_heq (hobss i) HEq.rfl).symm).trans
+          (heq_of_eq (hpsar i)) |>.trans (hb_heq i).symm))
     have hR : (O.step s₁ b₁) t₁ * (O.step s₂ a₂) t₂ = 0 := by
       by_contra h
       rw [mul_eq_zero, not_or] at h
       have hpsar := fun i => hPSAR s₁ s₂ t₁ t₂ b₁ a₂ h.1 h.2 hobss hobst i
-      exact hab (funext fun i => eq_of_heq ((fwd_subst_heq (hobss i) (b₁ i)).trans
-        (heq_of_eq (hpsar i)) |>.trans (ha_heq i).symm).symm)
+      exact hab (funext fun i => eq_of_heq
+        (((rec_heq_of_heq (hobss i) HEq.rfl).symm).trans
+          (heq_of_eq (hpsar i)) |>.trans (ha_heq i).symm).symm)
     rw [hL, hR]
 
 /-- Under PSAR, pureRun satisfies the pairwise cross-ratio for
@@ -350,7 +328,7 @@ theorem mixedToMediator_obs_heq
     (hreach₂ : ∑ π : PureProfile O, ν π * pureRun (O.pureStep) O.init n π ss₂ ≠ 0) :
     HEq (O.mixedToMediator ν n ss₁) (O.mixedToMediator ν n ss₂) := by
   unfold ObsModel.mixedToMediator ObsModelCore.mixedToMediator
-  exact pmf_bind_heq'
+  exact bind_heq_of_eq
     (congrArg (fun f => ∀ i, Act i (O.currentObs i (f i))) (funext hobs))
     _ _
     (by
@@ -446,9 +424,11 @@ theorem obs_correlated_realization [Inhabited ι] [∀ i o, Nonempty (Act i o)]
         (by rwa [hn'] at hreach') hreach
     apply eq_of_heq
     apply HEq.trans
-    · exact (fwd_subst_heq (P := fun f => PMF (∀ i, Act i (O.currentObs i (f i))))
-        (funext hobs')
-        (O.mixedToMediator ν (ss'.length - 1) ss')).symm
+    · exact rec_heq_of_heq
+        (C := fun f => PMF ((i : ι) → Act i (O.currentObs i (f i))))
+        (x := O.mixedToMediator ν (ss'.length - 1) ss')
+        (y := O.mixedToMediator ν (ss'.length - 1) ss')
+        (funext hobs') HEq.rfl
     · exact hmed_heq
   -- 4. stepDistCorr bc ss = condStep ... n ss
   calc O.stepDistCorr bc ss
@@ -593,8 +573,8 @@ theorem pureStep_nonzero_iff_action_eq
       have hi : (O.currentObs_projectStates i ss ▸ π i (O.projectStates i ss)) =
           O.currentObs_projectStates i ss ▸ π₀ i (O.projectStates i ss) := h i
       -- Use HEq chain: π i ... ≅ ▸ π i ... = ▸ π₀ i ... ≅ π₀ i ...
-      exact eq_of_heq ((fwd_subst_heq _ _).trans
-        ((heq_of_eq hi).trans (fwd_subst_heq _ _).symm))
+      exact eq_of_heq (((rec_heq_of_heq _ HEq.rfl).symm).trans
+        ((heq_of_eq hi).trans (rec_heq_of_heq _ HEq.rfl)))
   · intro heq
     have : O.pureStep π ss = O.pureStep π₀ ss := by
       simp only [pureStep_eq]; congr 1; funext i
@@ -758,11 +738,14 @@ theorem pureStep_component_eq_of_pspr
   apply eq_of_heq
   -- Chain: π i ... ≅ ▸π i... ≅ obsEq▸▸π i... = ▸π' i... ≅ π' i... ≅ hobs_i▸π' i...
   have h1' : HEq (π i (O.projectStates i ss)) (π' i (O.projectStates i ss')) :=
-    (fwd_subst_heq _ (π i _)).trans
-      ((fwd_subst_heq _ (O.currentObs_projectStates i ss ▸ π i _)).trans
-        ((heq_of_eq hpspr).trans (fwd_subst_heq _ (π' i _)).symm))
-  exact h1'.trans (subst_heq' (P := fun v => Act i (O.currentObs i v))
-    hobs_i (π' i (O.projectStates i ss'))).symm
+    ((rec_heq_of_heq _ HEq.rfl).symm).trans
+      (((rec_heq_of_heq _ HEq.rfl).symm).trans
+        ((heq_of_eq hpspr).trans (rec_heq_of_heq _ HEq.rfl)))
+  exact h1'.trans ((rec_heq_of_heq
+    (C := fun v => Act i (O.currentObs i v))
+    (x := π' i (O.projectStates i ss'))
+    (y := π' i (O.projectStates i ss'))
+    hobs_i.symm HEq.rfl).symm)
 
 /-- Per-player version of `pureStep_component_eq_of_pspr`:
 only needs `PlayerStepRecall O i` for the specific player `i`,
@@ -778,11 +761,14 @@ theorem pureStep_component_eq_of_playerRecall
     (O.obsEq_of_projectStates_getLast i hobs_i) hobst_i
   apply eq_of_heq
   have h1' : HEq (π i (O.projectStates i ss)) (π' i (O.projectStates i ss')) :=
-    (fwd_subst_heq _ (π i _)).trans
-      ((fwd_subst_heq _ (O.currentObs_projectStates i ss ▸ π i _)).trans
-        ((heq_of_eq hpspr).trans (fwd_subst_heq _ (π' i _)).symm))
-  exact h1'.trans (subst_heq' (P := fun v => Act i (O.currentObs i v))
-    hobs_i (π' i (O.projectStates i ss'))).symm
+    ((rec_heq_of_heq _ HEq.rfl).symm).trans
+      (((rec_heq_of_heq _ HEq.rfl).symm).trans
+        ((heq_of_eq hpspr).trans (rec_heq_of_heq _ HEq.rfl)))
+  exact h1'.trans ((rec_heq_of_heq
+    (C := fun v => Act i (O.currentObs i v))
+    (x := π' i (O.projectStates i ss'))
+    (y := π' i (O.projectStates i ss'))
+    hobs_i.symm HEq.rfl).symm)
 
 end Decentralization
 
@@ -1116,8 +1102,11 @@ theorem pureRun_update_obs_local_of
           have h_i := h i; rw [Function.update_self] at h_i
           exact eq_of_heq ((congr_arg_heq πᵢ hobs_p).symm.trans
             (heq_of_eq h_i |>.trans (heq_of_eq hforced |>.trans
-              (subst_heq' (P := fun v => Act i (O.currentObs i v))
-                hobs_p (π₀' i (O.projectStates i p₂))))))
+              (rec_heq_of_heq
+                (C := fun v => Act i (O.currentObs i v))
+                (x := π₀' i (O.projectStates i p₂))
+                (y := π₀' i (O.projectStates i p₂))
+                hobs_p.symm HEq.rfl))))
         · rw [Function.update_of_ne hij]
       · intro j; by_cases hij : j = i
         · rw [hij, Function.update_self]
@@ -1126,8 +1115,11 @@ theorem pureRun_update_obs_local_of
           -- Chain: πᵢ(p₁) ≅ πᵢ(p₂) = π₀'(p₂) ≅ hobs_p▸π₀'(p₂) = π₀(p₁)
           exact eq_of_heq ((congr_arg_heq πᵢ hobs_p).trans
             (heq_of_eq h_i |>.trans
-              ((subst_heq' (P := fun v => Act i (O.currentObs i v))
-                hobs_p (π₀' i (O.projectStates i p₂))).symm |>.trans
+              ((rec_heq_of_heq
+                (C := fun v => Act i (O.currentObs i v))
+                (x := π₀' i (O.projectStates i p₂))
+                (y := π₀' i (O.projectStates i p₂))
+                hobs_p.symm HEq.rfl).symm |>.trans
               (heq_of_eq hforced).symm)))
         · rw [Function.update_of_ne hij]
     constructor
@@ -1150,10 +1142,17 @@ theorem pureRun_update_obs_local
     (h₁ : pureRun (O.pureStep) O.init n π₀ ss₁ ≠ 0)
     (h₂ : pureRun (O.pureStep) O.init n π₀ ss₂ ≠ 0)
     (πᵢ : O.LocalStrategy i) :
-    pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
-    pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₂ ≠ 0 :=
-  pureRun_update_obs_local_of hPSAR n i hobs_i h₁ h₂
-    (fun _ _ _ _ _ hobs_p _ _ _ _ _ => dep_congr_subst (π₀ i) hobs_p) πᵢ
+  pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₁ ≠ 0 ↔
+  pureRun (O.pureStep) O.init n (Function.update π₀ i πᵢ) ss₂ ≠ 0 :=
+    pureRun_update_obs_local_of hPSAR n i hobs_i h₁ h₂
+      (fun _ _ p₂ _ _ hobs_p _ _ _ _ _ => by
+        apply eq_of_heq
+        exact (congr_arg_heq (π₀ i) hobs_p).trans
+          ((rec_heq_of_heq
+            (C := fun v => Act i (O.currentObs i v))
+            (x := π₀ i (O.projectStates i p₂))
+            (y := π₀ i (O.projectStates i p₂))
+            hobs_p.symm HEq.rfl).symm)) πᵢ
 
 open Classical in
 /-- Generic obs-locality of `reweightPMF`, parameterized by a support-equivalence
@@ -1563,11 +1562,14 @@ theorem pureStep_component_eq_of_reachablePlayerRecall
   have hpspr := hRPSR_i.action_eq h1 h2
     (O.obsEq_of_projectStates_getLast i hobs_i) hobst_i hreach_s hreach_s'
   apply eq_of_heq
-  exact (fwd_subst_heq _ (π i _)).trans
-    ((fwd_subst_heq _ (O.currentObs_projectStates i ss ▸ π i _)).trans
-      ((heq_of_eq hpspr).trans (fwd_subst_heq _ (π' i _)).symm)) |>.trans
-    (subst_heq' (P := fun v => Act i (O.currentObs i v))
-      hobs_i (π' i (O.projectStates i ss'))).symm
+  exact ((rec_heq_of_heq _ HEq.rfl).symm).trans
+    (((rec_heq_of_heq _ HEq.rfl).symm).trans
+      ((heq_of_eq hpspr).trans (rec_heq_of_heq _ HEq.rfl))) |>.trans
+    (rec_heq_of_heq
+      (C := fun v => Act i (O.currentObs i v))
+      (x := π' i (O.projectStates i ss'))
+      (y := π' i (O.projectStates i ss'))
+      hobs_i.symm HEq.rfl).symm
 
 open Classical in
 /-- **Weakest syntactic → semantic**: PSAR + `ReachablePlayerStepRecall O i`
@@ -1620,11 +1622,14 @@ theorem pureStep_component_eq_of_tracePlayerRecall
     (hlast_eq (rat_ne hreach)) (hlast_eq (rat_ne hreach')) hproj h1 h2 hobst
     (O.obsEq_of_projectStates_getLast i hproj)
   apply eq_of_heq
-  exact (fwd_subst_heq _ (π i _)).trans
-    ((fwd_subst_heq _ (O.currentObs_projectStates i ss ▸ π i _)).trans
-      ((heq_of_eq hpspr).trans (fwd_subst_heq _ (π' i _)).symm)) |>.trans
-    (subst_heq' (P := fun v => Act i (O.currentObs i v))
-      hproj (π' i (O.projectStates i ss'))).symm
+  exact ((rec_heq_of_heq _ HEq.rfl).symm).trans
+    (((rec_heq_of_heq _ HEq.rfl).symm).trans
+      ((heq_of_eq hpspr).trans (rec_heq_of_heq _ HEq.rfl))) |>.trans
+    (rec_heq_of_heq
+      (C := fun v => Act i (O.currentObs i v))
+      (x := π' i (O.projectStates i ss'))
+      (y := π' i (O.projectStates i ss'))
+      hproj.symm HEq.rfl).symm
 
 open Classical in
 /-- **Tightest syntactic → semantic**: PSAR + `TracePlayerStepRecall O i`

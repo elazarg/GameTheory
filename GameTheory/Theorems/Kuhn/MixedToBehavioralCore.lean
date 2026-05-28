@@ -25,34 +25,13 @@ set_option autoImplicit false
 
 namespace ObsModelCore
 
-open Math.PMFProduct Math.ProbabilityMassFunction Math.ParameterizedChain Math.TraceRun
+open Math.PMFProduct Math.ProbabilityMassFunction
+open Math.ParameterizedChain Math.TraceRun
 
 attribute [local instance] Fintype.ofFinite
 
 variable {ι σ : Type} {Obs : ι → Type} {Act : (i : ι) → Obs i → Type}
 variable {O : ObsModelCore ι σ Obs Act}
-
-/-- Forward `▸`-transport is HEq to the original value. -/
-private theorem fwd_subst_heq {α : Type} {P : α → Type} {a b : α}
-    (h : a = b) (x : P a) : HEq x (h ▸ x : P b) := by
-  subst h
-  rfl
-
-/-- `PMF.bind` is HEq-compatible when binding functions are pointwise HEq. -/
-private theorem pmf_bind_heq {α β₁ β₂ : Type} (hβ : β₁ = β₂)
-    (p : PMF α) (f₁ : α → PMF β₁) (f₂ : α → PMF β₂)
-    (hf : ∀ a, HEq (f₁ a) (f₂ a)) :
-    HEq (p.bind f₁) (p.bind f₂) := by
-  subst hβ
-  exact heq_of_eq (congrArg p.bind (funext fun a => eq_of_heq (hf a)))
-
-/-- `PMF.bind` HEq when both base measure and binding function change. -/
-private theorem pmf_bind_heq' {α β₁ β₂ : Type} (hβ : β₁ = β₂)
-    (p₁ p₂ : PMF α) (hp : p₁ = p₂) (f₁ : α → PMF β₁) (f₂ : α → PMF β₂)
-    (hf : ∀ a, HEq (f₁ a) (f₂ a)) :
-    HEq (p₁.bind f₁) (p₂.bind f₂) := by
-  subst hp
-  exact pmf_bind_heq hβ p₁ f₁ f₂ hf
 
 /-- When `d` is a PMF and `w x ≤ 1` for all `x`, the sum `∑ x, d x * w x` is
 not `⊤`. -/
@@ -219,8 +198,8 @@ theorem pureStep_nonzero_iff_action_eq
       have hi : (O.currentObs_projectStates i ss ▸ π i (O.projectStates i ss)) =
           O.currentObs_projectStates i ss ▸ π₀ i (O.projectStates i ss) :=
         congrArg (fun a => a i) h
-      exact eq_of_heq ((fwd_subst_heq _ _).trans
-        ((heq_of_eq hi).trans (fwd_subst_heq _ _).symm))
+      exact eq_of_heq ((rec_heq_of_heq _ HEq.rfl).symm.trans
+        ((heq_of_eq hi).trans (rec_heq_of_heq _ HEq.rfl)))
   · intro heq
     have : O.pureStep π ss = O.pureStep π₀ ss := by
       simp only [pureStep_eq]
@@ -774,7 +753,7 @@ theorem actionPosteriorLocal_of_obsLocalFeasibility
           (fun πᵢ => πᵢ (O.projectStates i ss₂)) := by
       exact pmf_eq_of_subsingleton _ _
     exact (cast_heq hPMF _).symm.trans (heq_of_eq hEq)
-  · exact pmf_bind_heq'
+  · exact bind_heq_of_eq
       (congrArg (fun v => Act i (O.currentObs i v)) hobs)
       _ _
       (reweightPMF_update_obs_local_of hMass n₁ n₂ i b_i h₁ h₂
@@ -954,8 +933,15 @@ theorem mixedToBehavioralProfileWithFallback_eq_factorAt
   rw [dif_pos hexist]
   have hps := hexist.choose_spec.choose_spec.choose_spec.1
   have hreach' := hexist.choose_spec.choose_spec.choose_spec.2
-  exact eq_of_heq ((fwd_subst_heq (P := fun v => PMF (Act i (O.currentObs i v)))
-    hps (mixedToBehavioralFactorAt (O := O) μ i _ _ _)).symm.trans
+  have htransport :
+      HEq (hps ▸ mixedToBehavioralFactorAt (O := O) μ i
+          hexist.choose hexist.choose_spec.choose
+          hexist.choose_spec.choose_spec.choose)
+        (mixedToBehavioralFactorAt (O := O) μ i
+          hexist.choose hexist.choose_spec.choose
+          hexist.choose_spec.choose_spec.choose) := by
+    exact eqRec_heq_iff_heq.mpr HEq.rfl
+  exact eq_of_heq (htransport.trans
     (factorAt_obs_local i _ n _ ss _ π₀ hps hreach' hreach))
 
 /-- Core semantic mixed-to-behavioral theorem with an explicit fallback for
@@ -1138,8 +1124,13 @@ theorem kuhn_mixed_to_behavioral_of_runSupport [∀ i o, Nonempty (Act i o)]
     rw [dif_pos hexist]
     have hps := hexist.choose_spec.choose_spec.choose_spec.1
     have hreach' := hexist.choose_spec.choose_spec.choose_spec.2
-    exact eq_of_heq ((fwd_subst_heq (P := fun v => PMF (Act i (O.currentObs i v)))
-      hps (factorAt i _ _ _)).symm.trans
+    have htransport :
+        HEq (hps ▸ factorAt i hexist.choose hexist.choose_spec.choose
+            hexist.choose_spec.choose_spec.choose)
+          (factorAt i hexist.choose hexist.choose_spec.choose
+            hexist.choose_spec.choose_spec.choose) := by
+      exact eqRec_heq_iff_heq.mpr HEq.rfl
+    exact eq_of_heq (htransport.trans
       (factorAt_obs_local i _ n _ ss _ π₀ hps hreach' hreach))
   refine ⟨β, ?_⟩
   suffices hfn : ∀ (n : Nat) (ss : List σ),

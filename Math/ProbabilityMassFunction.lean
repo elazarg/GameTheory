@@ -817,5 +817,14 @@ theorem bind_heq {α : Type*} {β γ : Type u} (μ : PMF α)
   subst htype
   exact heq_of_eq (congrArg (μ.bind ·) (funext fun a => eq_of_heq (h a)))
 
+universe u in
+theorem bind_heq_of_eq {α : Type*} {β γ : Type u} (htype : β = γ)
+    (μ ν : PMF α) (hμ : μ = ν)
+    (f : α → PMF β) (g : α → PMF γ)
+    (h : ∀ a, HEq (f a) (g a)) :
+    HEq (μ.bind f) (ν.bind g) := by
+  subst hμ
+  exact bind_heq μ htype h
+
 end ProbabilityMassFunction
 end Math
