@@ -3,7 +3,7 @@
 
 This section catalogues the solution concepts the library
 formalizes.  All of them sit on top of \TT{KernelGame} or
-\TT{GameForm}; concrete language layers (\S\ref{sec:languages})
+\TT{GameForm}; concrete language layers (\Cref{sec:languages})
 inherit them via $\toKG$.  The presentation is grouped by the
 \emph{deviation family} the concept quantifies over, which is the
 underlying organizing principle of the library and makes
@@ -113,7 +113,7 @@ and the standard equivalence
 \]
 holds at the $\GF.\IsNashFor$/$\IsBRfor$ level for any
 preference and is propagated to the EU level by the bridge of
-\S\ref{sec:semantic-core:for-style}.
+\Cref{sec:semantic-core:for-style}.
 
 A \emph{strict Nash equilibrium} requires the inequality to be
 strict for every $s' \neq \Profile_i$.  The library's
@@ -131,46 +131,28 @@ weakly improves every member of $C$ and strictly improves at
 least one.  The library encodes the coalitional deviation as
 $\mathrm{coalitionDeviation}(C, \Profile, \tau)_i =
 \tau_i\ \text{if}\ i \in C,\ \Profile_i\ \text{otherwise}$, and
-proves the equivalence
+for the display below we abbreviate
+\[
+  \EU_C(i) \coloneqq
+    \EU\bigl(\KG, \mathrm{coalitionDeviation}(C,\Profile,\tau), i\bigr),
+  \qquad
+  \EU_\Profile(i) \coloneqq \EU(\KG,\Profile,i).
+\]
+The predicate unfolds to
 \[
   \IsStrongNash(\Profile) \;\Longleftrightarrow\;
     \neg \exists C, \tau.\;
-    (\forall i \in C, \EU_C \ge \EU_\Profile) \land
-    (\exists i \in C, \EU_C > \EU_\Profile)
+    (\forall i \in C, \EU_C(i) \ge \EU_\Profile(i)) \land
+    (\exists i \in C, \EU_C(i) > \EU_\Profile(i))
 \]
-where $\EU_C$ is the EU under $\mathrm{coalitionDeviation}(C,
-\Profile, \tau)$.  Specializing $C$ to a singleton recovers Nash,
-and specializing $C$ to the grand coalition $\Players$ recovers
-Pareto efficiency (\S\ref{sec:solution-concepts:welfare}):\ strong
+Specializing $C$ to a singleton recovers Nash, and specializing $C$
+to the grand coalition $\Players$ recovers
+Pareto efficiency (\Cref{sec:solution-concepts:welfare}):\ strong
 Nash $\Rightarrow$ Nash $\land$ Pareto efficient.
 
 \leancorr{\TT{Concepts/StrongNash.lean} (\TT{coalitionDeviation},
 \TT{IsStrongNash}, \TT{IsStrongNash.isNash},
 \TT{IsStrongNash.isParetoEfficient}).}
-
-\subsection{Babbling and cheap talk}
-\label{sec:solution-concepts:babbling}
-
-The library also records the standard babbling-equilibrium argument
-for observable cheap talk.  A cheap-talk extension of a game form
-adds, for each player, a message and a contingent action plan from
-the realized message profile to a base-game strategy.  The canonical
-\emph{babbling} embedding sends a fixed default message and ignores
-all messages when choosing the base action.
-
-The theorem is deliberately one-way.  It does not say that cheap talk
-preserves all equilibria: observable messages may introduce additional
-coordination equilibria.  Instead, it assumes only the local condition
-needed for babbling: around an embedded base profile, every unilateral
-enriched deviation projects to a base unilateral deviation with the
-same preference comparison.  Therefore every base Nash equilibrium
-embeds as a babbling Nash equilibrium of the cheap-talk game.
-
-\leancorr{\TT{Core/Babbling.lean} defines the protocol-level
-\TT{CheapTalkExtension} and local preservation condition;
-\TT{Concepts/Babbling.lean} proves the \TT{GameForm} and
-\TT{KernelGame} Nash corollaries; \TT{Languages/NFG/CheapTalkExamples.lean}
-instantiates the result for Battle of the Sexes.}
 
 \subsection{Dominance}
 \label{sec:solution-concepts:dominance}
@@ -222,7 +204,8 @@ profile is Nash.
 
 Aumann's correlated equilibrium~\citep{Aumann1974} interprets
 $\mu \in \PMF{\prod_i \Strat_i}$ as a public correlation device
-that recommends a private action $s = \mu_i$ to each player.  The
+that samples a profile $s \sim \mu$ and privately recommends $s_i$ to
+player $i$.  The
 device is incentive-compatible when no player gains in expectation
 by ignoring the recommendation in favor of any function of it.
 This is exactly $\mathcal{D}^{\mathrm{dep}}$-equilibrium under EU.
@@ -240,7 +223,7 @@ Here \TT{IsCorrelatedEqFor.toCoarseCorrelatedEqFor} records the CE
 $\Rightarrow$ CCE inclusion; the Nash-to-CCE statement is the schema
 instance $\mu = \Dirac_\Profile$.  In the EU-specific layer, existence of
 correlated and coarse correlated equilibria for any finite
-$\KG$ is the content of \S\ref{sec:theorems:correlated-existence}.
+$\KG$ is the content of \Cref{sec:theorems:correlated-existence}.
 
 \subsection{Pareto efficiency, social welfare, and price of anarchy}
 \label{sec:solution-concepts:welfare}
@@ -276,7 +259,7 @@ most the optimum (\TT{one\_le\_priceOfAnarchy},
 \TT{one\_le\_priceOfStability}), and
 $\PoS \le \PoA$ whenever the worst Nash welfare is positive
 (\TT{priceOfStability\_le\_priceOfAnarchy}).  In a team game
-(\S\ref{sec:solution-concepts:team}), the welfare-maximizing
+(\Cref{sec:solution-concepts:team}), the welfare-maximizing
 profile is itself Nash, so the best Nash welfare equals the
 optimal welfare and $\PoS = 1$
 (\TT{IsTeamGame.priceOfStability\_eq\_one}).
@@ -294,7 +277,7 @@ A concrete 2-player witness that adding a strategy can lower the
 Nash welfare lives in \TT{Languages/NFG/Examples.lean}:\
 \TT{braessRestricted} is a 2$\times$2 coordination game with two
 pure Nash at welfare 6, and \TT{braessAugmented} extends both
-players' action sets by a "shortcut" action \TT{c} that strictly
+players' action sets by a ``shortcut'' action \TT{c} that strictly
 dominates the original two; the augmented game has the unique
 pure Nash $(\TT{c}, \TT{c})$ with welfare 4. The companion theorem
 \TT{braess\_welfare\_decreases} records the strict inequality. The
@@ -319,19 +302,19 @@ Player $i$'s \emph{security level}~\citep{vNM1944} is the
 guarantee value over a worst-case opponent profile,
 \begin{equation}
 \label{eq:security}
-  \Sec(\KG, i) \;=\; \sup_{s \in \Strat_i}\;
+  \mathrm{sec}(\KG, i) \;=\; \sup_{s \in \Strat_i}\;
     \inf_{\Profile_{-i}}\;
-      \EU\bigl(\KG, \Profile_{-i}[i \mapsto s], i\bigr),
+      \EU\bigl(\KG, (s,\Profile_{-i}), i\bigr),
 \end{equation}
 and a \emph{security strategy} for $i$ achieves this supremum.
-The library formalizes both finite attained versions
+The library formalizes both finite-attained versions
 (\TT{worstCaseEU}, \TT{securityLevel}) and order-theoretic sup/inf
 versions (\TT{worstCaseEUInf}, \TT{securityLevelSup}).  It proves
-that a security strategy exists in the finite attained case, and that
+that a security strategy exists in the finite-attained case, and that
 Nash payoffs are at least the corresponding security level under the
 boundedness hypotheses needed for the sup/inf API.  The two-player
 zero-sum theorem in
-\S\ref{sec:theorems:minimax} is stated through a mixed Nash profile
+\Cref{sec:theorems:minimax} is stated through a mixed Nash profile
 with saddle-style guarantee inequalities.
 
 \leancorr{Definitions and the IR/Nash bound in
@@ -360,17 +343,20 @@ average internal regret iff it is a CE — the standard
 regret-equilibrium duality~\citep{HartMasColell2000}.
 
 \paragraph{Savage minimax regret.}\
-A separate, decision-theoretic regret notion (Savage 1951) lives
-in the \TT{Savage} namespace of the same file. Given a finite
+A separate, decision-theoretic regret notion due to
+\citet{Savage1951} lives in the \TT{Savage} namespace. Given a finite
 action set $A$ and a finite state space $\Omega$ with utility
-$u : A \times \Omega \to \RR$, the *regret* of action $a$ at state
+$u : A \times \Omega \to \RR$, the \emph{regret} of action $a$ at state
 $\omega$ is $\mathrm{regret}(a, \omega) = \sup_b u(b, \omega) -
-u(a, \omega)$; the *maximum regret* is the worst case over states;
-a *minimax-regret action* minimizes the maximum regret. The
+u(a, \omega)$; the \emph{maximum regret} is the worst case over states;
+a \emph{minimax-regret action} minimizes the maximum regret. The
 library proves that regret is non-negative, equals zero exactly at
 the per-state argmaxes, and that any uniformly best action is
 minimax-regret. Unlike CE/CCE regret these are properties of a
 single decision-maker against Nature, not equilibrium concepts.
+
+\leancorr{\TT{Concepts/Regret.lean} contains the EU-regret
+definitions and the \TT{Savage} namespace for minimax regret.}
 
 \subsection{Approximate equilibria}
 \label{sec:solution-concepts:approx}
@@ -391,7 +377,7 @@ downstream complexity-theoretic work.
 \label{sec:solution-concepts:potential}
 
 A function $\Pot : \prod_i \Strat_i \to \RR$ is an \emph{exact
-potential}~\citep{MonderShapley1996} when, for every player $i$
+potential}~\citep{MondererShapley1996} when, for every player $i$
 and unilateral deviation $\Profile \to \Profile[i \mapsto s']$,
 \begin{equation}
 \label{eq:potential}
@@ -411,7 +397,7 @@ the finite product $\prod_i \Strat_i$ is Nash).
 \item Best-response dynamics terminates in finitely many steps in
 a finite ordinal potential game.
 \end{itemize}
-Team games (\S\ref{sec:solution-concepts:team}) are an instance:\
+Team games (\Cref{sec:solution-concepts:team}) are an instance:\
 they are exact potential games with $\Pot = u_{\mathrm{any}}$.
 
 \leancorr{\TT{Concepts/PotentialGame.lean} (\TT{IsExactPotential},
@@ -445,7 +431,7 @@ Existence of a \emph{symmetric} mixed Nash equilibrium (i.e.\ a
 fixed point of the gain map within the symmetric subspace) is a
 classical corollary of mixed Nash existence~\citep{Nash1951}; the
 corollary is not packaged in the library and is listed in
-\S\ref{sec:future} as a natural next step.  \emph{Evolutionary
+\Cref{sec:future} as a natural next step.  \emph{Evolutionary
 stability}~\citep{MaynardSmithPrice1973} is formalized as the
 appropriate strict-dominance condition on a symmetric two-player
 game.
@@ -456,19 +442,20 @@ game.
 (\TT{isSymmetricEU\_nash\_perm}, \TT{isSymmetricEU\_eu\_eq}),
 \TT{Concepts/EvolutionaryStability.lean}.}
 
-\subsection{Common knowledge and individual rationality}
-\label{sec:solution-concepts:misc}
+\subsection{Common knowledge}
+\label{sec:solution-concepts:common-knowledge}
 
-Two further behavioral concepts are formalized for downstream
-use.  The first is partition-based knowledge.  Each agent has an
+The library also formalizes partition-based knowledge for downstream
+use.  Each agent has an
 \emph{information partition} $P$ of a finite state space, with
-$P.\mathrm{cell}(s)$ the set of states $s$ considers possible at
-$s$ (reflexive at $s$; partition-coherent).  The \emph{knowledge
+$P.\mathrm{cell}(s)$ the set of states the agent considers possible
+when the true state is $s$ (reflexive at $s$; partition-coherent).
+The \emph{knowledge
 operator}
 \[
   \Knows(P, E) \;=\; \{\,s : P.\mathrm{cell}(s) \subseteq E\,\}
 \]
-returns the event "the agent knows $E$", and the library proves
+returns the event ``the agent knows $E$'', and the library proves
 the S5 axioms it satisfies:\ veridicality $\Knows(P, E) \subseteq
 E$ (T), positive introspection $\Knows(P, \Knows(P, E)) = \Knows(P,
 E)$ (4), negative introspection — the complement of $\Knows(P, E)$
@@ -496,7 +483,8 @@ same public event).
 
 \paragraph{Aumann's full agreement.}\
 The flagship epistemic-game-theory result built on this
-infrastructure is Aumann's (1976) full agreement: when two agents
+infrastructure is the full-agreement theorem of \citet{Aumann1976}:
+when two agents
 share the same strictly-positive prior and have a common public
 self-evident event $F$ on which each agent's posterior of an event
 $E$ is constant, the two constants must be equal. The proof rests
@@ -507,17 +495,10 @@ sums. Since the posterior is constant per cell (by the partition
 structure) and constant on $F$ (by hypothesis), every cell-sum is
 the same multiple of its $\mu$-mass, and the two agents both
 recover the marginal $\mu(E \mid F)$. This is the operationally
-useful form of "agents with common knowledge of posteriors must
-agree":\ in any common-knowledge situation about posteriors the
+useful form of ``agents with common knowledge of posteriors must
+agree'':\ in any common-knowledge situation about posteriors the
 posteriors are constant on the public event, and the result
 applies.
-
-\emph{Individual rationality}, the second concept, is a
-participation constraint:\ a profile is individually rational for
-player $i$ when $i$'s payoff is at least their security level
-(\S\ref{sec:solution-concepts:security}).  Both are formal
-scaffolding for the mechanism-design layer
-(\S\ref{sec:mechanism-auctions}).
 
 \leancorr{\TT{Concepts/CommonKnowledge.lean} (\TT{InfoPartition},
 \TT{Knows}, \TT{Knows\_subset} (T), \TT{Knows\_idem} (4),
@@ -526,5 +507,46 @@ scaffolding for the mechanism-design layer
 \TT{agree\_to\_disagree}, \TT{mutualKnowledge},
 \TT{CommonKnowledgeAt}, \TT{CommonKnowledgeAt.idem},
 \TT{cells\_disjoint}, \TT{selfEvident\_eq\_biUnion\_cells},
-\TT{selfEvident\_sum\_decomp}, \TT{aumann\_full\_agreement});
-\TT{Concepts/IndividualRationality.lean}.}
+\TT{selfEvident\_sum\_decomp}, \TT{aumann\_full\_agreement}).}
+
+\subsection{Individual rationality}
+\label{sec:solution-concepts:ir}
+
+A profile is \emph{individually rational} for player $i$ when $i$'s
+payoff is at least their security level
+(\Cref{sec:solution-concepts:security}).  This participation
+constraint is formal scaffolding for the mechanism-design layer
+(\Cref{sec:mechanism-auctions}).  The repeated-game folk theorem uses
+the related opponent-enforced mixed minmax vector
+$m_i(\KG^{\mathrm{mix}})$, defined in \Cref{sec:theorems:folk}, as
+its strict individual-rationality threshold.
+
+\leancorr{\TT{Concepts/IndividualRationality.lean}.}
+
+\subsection{Babbling and cheap talk}
+\label{sec:solution-concepts:babbling}
+
+The library also records the standard babbling-equilibrium argument
+for observable cheap talk.  A cheap-talk extension of a game form
+adds, for each player, a message and a contingent action plan from
+the realized message profile to a base-game strategy.  The canonical
+\emph{babbling} embedding sends a fixed default message and ignores
+all messages when choosing the base action.
+
+The packaged theorem is deliberately one-way: every base Nash
+equilibrium embeds as a babbling Nash equilibrium of the cheap-talk
+extension.  It does not say that cheap talk preserves all equilibria:
+observable messages may introduce additional coordination equilibria.
+The proof assumes only the local condition needed for babbling, namely
+that around an embedded base profile every unilateral enriched
+deviation projects to a base unilateral deviation with the same
+preference comparison.  Concretely, if a deviator changes both their
+message and their message-contingent plan, the local condition extracts
+the base action that would actually be played after the fixed babbling
+message profile and compares that base deviation instead.
+
+\leancorr{\TT{Core/Babbling.lean} defines the protocol-level
+\TT{CheapTalkExtension} and local preservation condition;
+\TT{Concepts/Babbling.lean} proves the \TT{GameForm} and
+\TT{KernelGame} Nash corollaries; \TT{Languages/NFG/CheapTalkExamples.lean}
+instantiates the result for Battle of the Sexes.}

@@ -53,7 +53,7 @@ on finite sums and Dirac/Bind compositions.
 \paragraph{Lost.}\ The cost of mechanizing measure theory and
 the catalogue of classical results that fall outside the discrete
 contract are described in detail in
-\S\ref{sec:prelim:pmf}; we do not repeat them here.  What §8 adds
+\Cref{sec:prelim:pmf}; we do not repeat them here.  What this section adds
 is the consequence for downstream consumers:\ a protocol or
 auction layer that builds on this library inherits the discrete
 contract and must either rephrase its objects in finite/discrete
@@ -63,7 +63,7 @@ mathlib and accept the corresponding proof obligations.  In
 practice this is a hard contract:\ existing downstream users of
 the library work in the discrete idiom uniformly, and the
 library's design does not provide an automatic bridge to a
-continuous version.  An honest reading of \S\ref{sec:prelim:pmf}
+continuous version.  An honest reading of \Cref{sec:prelim:pmf}
 should leave the consumer with a sense of which classical
 theorems they can call into and which they cannot.
 
@@ -73,37 +73,29 @@ theorems they can call into and which they cannot.
 \paragraph{Choice.}\ \TT{GameForm} is utility-free; \TT{KernelGame}
 adds utility.  Solution concepts exist in two forms:\ EU-specific
 predicates on \TT{KernelGame} and preference-parameterized
-predicates (\TT{*For}) on \TT{GameForm}.
+predicates (\TT{*For}) on \TT{GameForm}.  The detailed API shape is
+given in \Cref{sec:semantic-core:for-style}; here we record the
+design tradeoff.
 
-\paragraph{Gained.}\ Theorems about strategic structure (Kuhn,
-information-set machinery, the deviation hierarchy) state and
-prove once at the \TT{GameForm} layer, parametric in any
-preference preorder.  EU is one preference preorder; lexicographic,
-maximin, or non-EU preferences are other preorders that get the
-same theorems.  The library is therefore reusable for, e.g.,
-ordinal-preference solution concepts without rewriting the
-strategic skeleton.
+\paragraph{Gained.}\ Strategic results that do not depend on
+cardinal utility — Kuhn-style structure, transport, and the
+deviation hierarchy — can be stated once at the \TT{GameForm} layer
+and reused for the EU preorder, ordinal preferences, maximin
+attitudes, or other preference preorders.
 
 \paragraph{Lost.}\ One additional indirection for \emph{generic}
 users.  A user who only ever cares about expected utility writes
 \TT{G.IsNash $\sigma$} and is done; a user who wants to state a
 generic theorem parametric in the preference must write
 \TT{G.IsNashFor pref $\sigma$} and supply the preference
-explicitly.  Two versions of every solution concept exist
-(\TT{IsNash}, \TT{IsNashFor}, etc.), connected by \TT{\_iff\_}
-bridges; the \TT{simp} set has to know about both.  In practice the
-EU-only ergonomics dominates daily use and the generic version is
-visible only to library authors stating preference-parametric
-theorems.
+explicitly.  The corresponding bridge lemmas and \TT{simp} rules
+are extra library surface, but the EU-only interface stays short.
 
-\paragraph{Why.}\ The split is motivated by classical
-mechanism-design practice~\citep{Myerson1991}, where the
-``social-choice rule + payment scheme = mechanism'' decomposition
-is exactly the protocol/preference split made structural.  Once we
-saw that several classical theorems (dominance $\Rightarrow$ Nash;
-correlated $\Rightarrow$ coarse correlated; the deviation hierarchy)
-were preference-agnostic, building them at the \TT{GameForm} layer
-became the natural design.
+\paragraph{Why.}\ The split is the mechanized version of the
+mechanism-design separation between a protocol and the preferences
+used to evaluate it~\citep{Myerson1991}.  Once enough theorems were
+preference-agnostic, keeping them below \TT{KernelGame} became the
+least repetitive design.
 
 \subsection{The \texttt{*For} style versus typeclass overloading}
 \label{sec:discussion:for-style}
@@ -116,7 +108,7 @@ are not registered as typeclass instances on \TT{KernelGame}.
 preferences at once (monotonicity of $\IsNashFor$ in the
 preference; Pareto dominance, which takes a $(\Pref, \sPref)$
 pair; strict-implies-weak bridges; the
-transport theorems of \S\ref{sec:semantic-core:transport}, which
+transport theorems of \Cref{sec:semantic-core:transport}, which
 relate a preference either to its pullback along an outcome
 bijection or to its projection through a common observed outcome
 view).
@@ -151,8 +143,9 @@ issues.
 \paragraph{Choice.}\ \TT{IsNash}, \TT{IsDominant}, \TT{IsBR},
 \TT{IsCorrelatedEq}, etc.\ are defined on \TT{KernelGame} and on
 \TT{GameForm}.  They are \emph{not} re-defined on each
-representation (NFG, EFG, MAID, MultiRound, FOSG); concrete
-representations bridge to the central definitions via $\toKG$.
+representation (NFG, EFG, MAID, MultiRound, FOSG, Intrinsic);
+concrete representations bridge to the central definitions via
+$\toKG$.
 
 \paragraph{Gained.}\ The library has one canonical
 ``\texttt{IsNash} of an EFG game'' — the \TT{IsNash} of its
@@ -160,7 +153,7 @@ compiled kernel game.  Theorems about Nash on EFGs do not have to
 be re-proved each time a new EFG-like representation is added;
 they are corollaries of the core theorems via composition with
 $\compileTo$.  This is the workhorse of the bridge architecture
-of \S\ref{sec:languages:bridges}.
+of \Cref{sec:languages:bridges}.
 
 \paragraph{Lost.}\ Concrete representations occasionally have a
 representation-specific solution concept that is more natural in
@@ -169,16 +162,18 @@ equilibrium for EFGs, perfect Bayesian equilibrium for Bayesian
 games).  These exist as separate definitions (e.g.\
 \TT{EFG.IsSubgamePerfectEq}); the library proves their relation
 to the central \TT{IsNash} as a theorem rather than building it
-into the definition.
+into the definition.  The EFG examples instantiate evaluation and
+backward-induction inequalities, but do not yet package full
+\TT{EFG.IsSubgamePerfectEq} witnesses.
 
 \subsection{Noncomputable definitions and classical reasoning}
 \label{sec:discussion:noncomputable}
 
 \paragraph{Choice.}\ Many definitions are \TT{noncomputable},
 particularly those that invoke real-number operations, the
-classical disjunction \TT{Function.update} on abstract index types,
-or fixed-point theorems.  We do not attempt to expose computable
-witnesses for, e.g., \TT{mixed\_nash\_exists}.
+classical decidability used by \TT{Function.update} on abstract
+index types, or fixed-point theorems.  We do not attempt to expose
+computable witnesses for, e.g., \TT{mixed\_nash\_exists}.
 
 \paragraph{Gained.}\ Proofs are shorter and more uniform.  Classical
 reasoning is locally invoked via \TT{open Classical in} and is
@@ -237,7 +232,7 @@ $\mathrm{Bool}$ for two-player games) must be transported across
 an equivalence \TT{Bool $\simeq$ Fin 2} to use the bridge.
 
 \paragraph{Why.}\ \TT{KernelGame.reindex}
-(\S\ref{sec:semantic-core:reindex}) makes the transport a
+(\Cref{sec:semantic-core:reindex}) makes the transport a
 one-line operation.  Treating $\mathrm{Fin}\,n$ as the canonical
 finite-cardinality witness lets every bridge avoid having to
 pick one for itself.
@@ -258,7 +253,7 @@ recursion, sampled action histories, or measure-theoretic
 strategy/outcome spaces.
 
 \item \emph{Continuous strategy / type / outcome spaces.}  See
-\S\ref{sec:discussion:finite}.
+\Cref{sec:discussion:finite}.
 
 \item \emph{Computational complexity.}  Nash existence is
 formalized; PPAD-completeness~\citep{DaskalakisGoldbergPapadimitriou2009}
@@ -267,12 +262,13 @@ formalized.
 
 \item \emph{Cooperative game theory beyond the basic apparatus.}
 The cooperative branch (\TT{Cooperative/}, parallel to the
-non-cooperative core) defines the Shapley value with all four
-classical axioms, the unanimity-basis decomposition, and the full
-Shapley uniqueness theorem (\Cref{thm:shapley-unique});\ it also
+non-cooperative core) defines the Shapley value with the four classical
+axioms, with linearity represented in Lean by additivity plus scalar
+homogeneity, the unanimity-basis decomposition, and the full Shapley
+uniqueness theorem (\Cref{thm:shapley-unique}), and it also
 includes the Banzhaf and Shapley–Shubik power indices, simple
 games, convex (supermodular) games with the
-$\IsConvex \Leftrightarrow$ monotone-marginals
+$\mathrm{IsConvex} \Leftrightarrow$ monotone-marginals
 characterization, the core (efficient $\land$ coalition-rational)
 with convex-set closure, and additive games.  The remaining
 classical cooperative landmarks are not formalized:\ the nucleolus

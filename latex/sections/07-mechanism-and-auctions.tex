@@ -24,15 +24,18 @@ contingent plan $\Theta_i \to \Act_i$ that prescribes an action
 for every type the player might turn out to be.  Concretely, a
 finite Bayesian game is the tuple
 $(\Theta, \Act, \mu, u)$ with finite $\Theta_i, \Act_i$ and a
-payoff $u : \prod_i \Theta_i \times \prod_i \Act_i \to \Players \to
-\RR$ depending on both the realized type vector and the chosen
-joint action.  Behavioral strategies replace the pure version by
+payoff $u : (\prod_i \Theta_i) \times (\prod_i \Act_i) \to
+(\Players \to \RR)$ depending on both the realized type vector and
+the chosen joint action.  Behavioral strategies replace the pure
+version by
 $\Theta_i \to \PMF{\Act_i}$.
 
 The Bayesian game compiles to a kernel game via the \TT{ofEU}
-adapter (\S\ref{sec:semantic-core:kernelgame}):\ the strategy type
-is $\Theta_i \to \Act_i$, and the outcome kernel is the
-deterministic point mass at the \emph{ex-ante} expected utility
+adapter (\Cref{sec:semantic-core:kernelgame}), which packages an
+EU-only specification as a kernel game whose point-mass outcome
+carries the expected-utility payoff vector.  The strategy type is
+$\Theta_i \to \Act_i$, and the outcome kernel is the deterministic
+point mass at the \emph{ex-ante} expected utility
 \[
   \mathrm{exAnteEU}(B, \Profile, i)
     \;=\; \sum_{\theta} \mu(\theta)\;
@@ -61,7 +64,7 @@ on the deviating player's own type.
 \tradeoff{Continuous type spaces and continuous action spaces are
 the natural setting for much of auction theory beyond
 sealed-bid mechanisms with discrete bid grids.  As discussed in
-\S\ref{sec:prelim:pmf}, this falls outside the discrete-PMF
+\Cref{sec:prelim:pmf}, this falls outside the discrete-PMF
 discipline and is not in scope.  All Bayesian-game results in the
 library hold for finite type and action spaces.}
 
@@ -74,8 +77,8 @@ library hold for finite type and action spaces.}
 
 A \emph{general mechanism}~\citep{Myerson1981} is a
 type-space-and-action-rule
-$M = (\Theta, \Act, g : \prod_i \Act_i \to \Players \to \RR)$;
-a strategy profile is a tuple $\sigma_i : \Theta_i \to \Act_i$.
+$M = (\Theta, \Act, g : ({\textstyle\prod_i}\Act_i) \to (\Players \to \RR))$;
+a strategy profile is a family $(\sigma_i : \Theta_i \to \Act_i)_i$.
 A \emph{direct mechanism} is a mechanism with $\Act_i = \Theta_i$;
 the canonical strategy is the identity.  The Lean definition
 of Bayesian incentive compatibility is an ex-ante finite condition
@@ -89,7 +92,7 @@ a common prior over types, and $\sigma$ a Bayesian Nash equilibrium
 of $M$.  Then the direct mechanism
 $M^{\mathrm{direct}}$ obtained by composing each player's report with
 $\sigma_i$ — i.e.\ $M^{\mathrm{direct}}(\theta) = g(\sigma(\theta))$ —
-is BIC in the library's constant-misreport sense.
+is BIC against constant misreports.
 \end{theorem}
 
 \noindent The proof is the textbook argument restricted to the
@@ -126,7 +129,7 @@ function.  It proves the structural fragments needed downstream
 alternative under utilitarian aggregation), but does not formalize
 the impossibility-theorem chain (Arrow~\citep{Arrow1951},
 Gibbard–Satterthwaite~\citep{Gibbard1973, Satterthwaite1975});
-these are flagged in \S\ref{sec:future} as the natural next step.
+these are flagged in \Cref{sec:future} as the natural next step.
 
 \leancorr{\TT{Mechanism/SocialChoice.lean}.}
 
@@ -167,7 +170,7 @@ Vickrey and first-price are direct kernel-game constructions via
 the \TT{ofEU} adapter.  VCG is packaged as a finite setup with an
 efficient allocation rule and a payment function; all-pay is
 packaged as a collection of real-valued payoff lemmas.  Solution
-concepts come from \S\ref{sec:solution-concepts} wherever a full
+concepts come from \Cref{sec:solution-concepts} wherever a full
 kernel game has been constructed.
 
 \tradeoff{Auctions are typically formalized in the literature

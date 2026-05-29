@@ -22,9 +22,10 @@ the bottom and pays the cost of plumbing every other notion through
 it.  At the bottom is a finite, discrete-probability, utility-aware
 object — the \emph{kernel game}.  Every other representation in the
 library — normal-form, extensive-form, multi-agent influence
-diagrams, multi-round games, factored-observation stochastic games
-— is a \emph{language} whose semantics is a kernel game.  Solution
-concepts are defined once on the kernel-game (and game-form) layer
+diagrams, multi-round games, factored-observation stochastic games,
+and intrinsic-form games — is a \emph{language} whose semantics is a
+kernel game.  Solution concepts are defined once on the kernel-game
+(and game-form) layer
 and inherited by every language.  Theorems about specific
 representations are stated either as theorems about their kernel
 games or as theorems about commuting compilations between languages.
@@ -34,7 +35,7 @@ games or as theorems about commuting compilations between languages.
 \begin{enumerate}[leftmargin=*]
 
 \item \emph{A semantic core that is small enough to share.}  The
-\TT{KernelGame} record (\S\ref{sec:semantic-core}) and its
+\TT{KernelGame} record (\Cref{sec:semantic-core}) and its
 utility-free shadow \TT{GameForm} are tiny:\ a strategy family, an
 outcome type, a stochastic kernel, and (for kernel games) a utility.
 Solution concepts are defined as predicates on this carrier and on
@@ -45,36 +46,32 @@ schema.
 
 \item \emph{A protocol/preference split that pays for itself.}
 Following classical mechanism-design practice~\citep{Myerson1991},
-we separate the strategy-and-outcome structure (the \emph{game
-form}) from the payoff function.  Lean lets us make the split
-structural rather than rhetorical:\ \TT{GameForm} is a record without
-\TT{utility}, and \TT{KernelGame} = \TT{GameForm} + \TT{utility} via
-a definitional adjunction.  This lets us state Kuhn's theorem,
-information-set machinery, and unilateral deviation as game-form
-results — independent of preferences — and instantiate Nash,
-dominance, correlated equilibrium, and Pareto efficiency for any
-preference relation on outcome distributions.  Expected-utility
-preferences come for free as a special case.
+we make the split between protocol and preferences structural:
+\TT{GameForm} carries the strategy-and-outcome structure, while
+\TT{KernelGame} adjoins utility.  The preference-parameterized
+\TT{*For} predicates let structural theorems live below expected
+utility, with the EU-specific predicates recovered as wrappers
+(\Cref{sec:semantic-core:for-style}).
 
 \item \emph{Languages and bridges as commuting compilations.}  Each
-language layer (NFG, EFG, MAID, MultiRound, FOSG) ships with
+language layer (NFG, EFG, MAID, MultiRound, FOSG, Intrinsic) ships with
 syntax, an SOS-style operational semantics, and a denotational
 \TT{toKernelGame} that is the official semantic anchor.  Bridges
 between languages are not merely translations between syntactic
 objects but theorems that two compilation paths to the same kernel
 game agree.  This is what lets, for example, an EFG strategy theorem
 be transported to a MAID by composing two bridges, without
-re-proving anything strategic.  When a bridge enriches outcomes with
-traces or changes the strategy representation, the transport
-condition is phrased as observed-law deviation simulation:\ every
-target-side deviation must be matched by a source-side deviation with
-the same observed outcome law.
+re-proving anything strategic.  Richer bridges may also add traces or
+change the strategy representation; in those cases the theorem carries
+an explicit deviation-transport condition.  Informally, deviations
+after translation have to be matched before translation with the same
+observable behavior.
 
 \item \emph{Classical theorems, mechanized.}  Existence of mixed
 Nash equilibria (via Brouwer on the product simplex, lifted from
-mathlib's fixed-point theory), of correlated and coarse correlated
-equilibria, the minimax theorem, the one-shot deviation principle,
-Zermelo's backward induction, and Kuhn's
+the standalone \TT{fixed-point-theorems-lean4} package), of correlated
+and coarse correlated equilibria, the minimax theorem, the one-shot
+deviation principle, Zermelo's backward induction, and Kuhn's
 behavioral-vs-mixed-strategy equivalence are all stated and proved
 on the \TT{KernelGame} / \TT{GameForm} layer.  Their statements live
 once; their consequences for any specific language layer are
@@ -86,13 +83,13 @@ framework}:\ a comparison between two languages is a translation
 on syntax paired with a soundness theorem stating that the
 compiled kernel games agree under a chosen relation $R$
 (EU-isomorphism, simulation, refinement, etc.;
-\S\ref{sec:languages:expressiveness}).  This is what gives
+\Cref{sec:languages:expressiveness}).  This is what gives
 substantive content to claims like ``every finite NFG is a
 one-shot FOSG'' or ``every bounded MAID is an EFG up to
 strategic-form refinement,'' both of which are mechanized as
 $R$-reductions in this framework; comparisons that are not in the
 library (e.g., MAID directly to multi-round) appear as targets in
-\S\ref{sec:future}.
+\Cref{sec:future}.
 
 \item \emph{Mechanism-design and auction worked examples.}  Bayesian
 games, a finite revelation-principle formulation, social-choice
@@ -107,7 +104,7 @@ result, and all-pay consists of format-specific payoff lemmas.
 
 It is not a measure-theoretic foundation.  All probability is
 discrete, encoded by mathlib's \TT{PMF}~\citep{mathlib2020} (we
-explain in \S\ref{sec:preliminaries} what is gained and lost by this
+explain in \Cref{sec:preliminaries} what is gained and lost by this
 choice).  It is not a computational engine:\ many definitions are
 \TT{noncomputable}, depending on classical choice for irrelevant
 case splits, and we are explicit about where a constructive
@@ -117,6 +114,8 @@ the core expectation operator reduces to finite sums in those cases.
 It is, finally, not a stand-alone proof assistant for
 game-theoretic claims:\ it is a mechanized library, designed to be
 imported, depended on, and extended.
+
+\subsection{The cooperative branch}
 
 The library's main content is \emph{non-cooperative} game theory
 — strategies, best responses, equilibria, and the language layer
@@ -133,7 +132,8 @@ convenience.  The Shapley value uniqueness theorem
 branch and is the only theorem from that branch we surface in
 the main text.
 
-A separate \emph{Definitional Supplement} accompanies this chapter.
+A separate \emph{Definitional Supplement} accompanies this chapter
+as a companion document rather than as part of the main article build.
 The supplement documents the Lean signatures of every major object
 and theorem with explicit textbook correspondence, so a reader
 who wants to verify that ``what the library calls Nash equilibrium

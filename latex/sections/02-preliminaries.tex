@@ -14,8 +14,9 @@ Every distribution in the library is a probability mass function
 in mathlib's sense:\ a function $\PMF{X}$ assigning to each $x \in
 X$ a non-negative extended real number whose total mass equals
 one.  The relevant API is monadic — $\PMF{\cdot}$ is the discrete
-Giry monad — with \TT{pure}, \TT{bind}, \TT{map}, and a Dirac
-embedding $\Dirac_x \in \PMF{X}$.  Expected value of a function
+Giry monad — with \TT{pure} (the Dirac embedding
+$\Dirac_x \in \PMF{X}$), \TT{bind}, and \TT{map}.  Expected value of
+a function
 $f : X \to \RR$ under $\mu \in \PMF{X}$ is the (countable) sum
 $\sum_{x} \mu(x)\,f(x)$, formalized as
 \TT{Math.Probability.expect}.  When $X$ is finite, this is a
@@ -112,27 +113,27 @@ the tsum-based expectation, well-defined on bounded utilities.
 Most \emph{existence theorems} carry finite hypotheses where the
 proof genuinely needs them — Brouwer's fixed point on a finite
 product of simplices, \TT{Finite.exists\_max}, or an enumeration of
-pure strategies.  Several of these theorems also have bounded-utility
-forms that remove finite outcome carriers while retaining the finite
-strategy/tree hypotheses used by the proof.
-A parallel family of \TT{\_of\_bounded} lemmas in
-\TT{Math.Probability} and \TT{Concepts/MixedExtension} replays
-the algebra of expected utility under a $|u| \le C$ hypothesis
-without \TT{[Finite \Outcome]}.  Finite hypotheses on the player
-type $\Players$ are nearly always present, since the product
-$\prod_i \Strat_i$ and the independent product distribution
-\TT{pmfPi} are defined over a finite index.  Some declarations
-also require \TT{DecidableEq}, e.g.\ everything that uses
+pure strategies.  A parallel family of bounded-utility
+\TT{\_of\_bounded} lemmas in \TT{Math.Probability} and
+\TT{Concepts/MixedExtension} removes finite outcome carriers while
+retaining the finite strategy/tree hypotheses used by the proof, and
+replays the algebra of expected utility under a $|u| \le C$ hypothesis
+without \TT{[Finite \Outcome]}.  The dependent product
+$\prod_i \Strat_i$ is defined for any index type, but finite
+hypotheses on $\Players$ are nearly always present because
+\TT{pmfPi}, finite products of simplices, and the main enumeration
+arguments need a finite player index.  Some declarations also require
+\TT{DecidableEq}, e.g.\ everything that uses
 \TT{Function.update} for unilateral deviation.
 
-Decidability assumptions enter through \TT{open Classical in},
-which turns on the law of excluded middle for the duration of a
-single declaration.  This is a benign use of classical reasoning
-when it is invoked only to make \TT{Function.update} compute on
-abstract index types; on concrete finite types like \TT{Fin n} the
-decision is constructive and the classical instance is
-definitionally redundant.  We collect these uses in
-\S\ref{sec:discussion:noncomputable} and explain why they do
+These decidability requirements are discharged by
+\TT{open Classical in}, which turns on the law of excluded middle for
+the duration of a single declaration.  This is a benign use of
+classical reasoning when it is invoked only to make
+\TT{Function.update} compute on abstract index types.  On concrete
+finite types like \TT{Fin n} the decision is constructive, so the
+classical instance is definitionally redundant.  We collect these uses in
+\Cref{sec:discussion:noncomputable} and explain why they do
 not preclude a future computational refinement.
 
 \subsection{Type-theoretic conventions}
@@ -156,8 +157,9 @@ profile.  The library uses this throughout as the
 \item \emph{Records / structures.}  A record is a labeled product;
 \TT{KernelGame}~$\iota$ bundles four fields into a single value.
 Definitional unfolding of structure projections (e.g.\ ``the
-\TT{utility} field of $\KG$ is $\util$'') is propositional in Lean
-and is freely used in proofs by simp-rewriting.
+\TT{utility} field of $\KG$ is $\util$'') reduces by computation; the
+corresponding equality goals are discharged by \TT{rfl} and are freely
+used by \TT{simp}/\TT{unfold}.
 
 \item \emph{\TT{Prop} vs.\ \TT{Type}.}  Propositions live in the
 sort \TT{Prop} and are proof-irrelevant; data types live in
@@ -188,18 +190,17 @@ The library depends on mathlib~\citep{mathlib2020} for finite-type
 infrastructure, the simplex (\TT{stdSimplex} and convex-combination
 machinery), product topology, fixed-point theorems (Brouwer in
 particular), the discrete Giry monad \TT{PMF}, and a substantial
-amount of $\sum$-and-tsum API.  Two non-trivial dependencies
+amount of $\sum$-and-tsum API.  Three non-trivial dependencies
 deserve explicit mention:
 
 \begin{itemize}
 \item \emph{Brouwer's fixed-point theorem.}  Mixed Nash existence
-(\S\ref{sec:theorems:nash-mixed}) is reduced to Brouwer applied to
-the product of standard simplices.  Mathlib supplies the
-continuous-map and topology infrastructure; the Brouwer theorem
-itself is imported from the standalone \TT{fixed-point-theorems-lean4}
-package~\citep{harfeFixedPointTheorems}, a Lean~4 mechanization of
-Brouwer (and Kakutani) for nonempty compact convex subsets of
-finite-dimensional normed spaces.  We use it as a black box.
+uses Brouwer on the product of standard simplices; the proof shape
+and nonconstructive tradeoff are discussed in
+\Cref{sec:theorems:nash-mixed}.  For dependencies, the important
+point is that the theorem itself comes from the standalone
+\TT{fixed-point-theorems-lean4} package~\citep{harfeFixedPointTheorems};
+we use it as a black box.
 
 \item \emph{Schauder's fixed-point theorem.}  The companion file
 \TT{Math/SchauderFixedPoint.lean} proves a Schauder fixed-point

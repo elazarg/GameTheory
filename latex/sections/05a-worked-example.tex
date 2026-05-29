@@ -1,9 +1,9 @@
 \section{A worked example end-to-end: Prisoner's Dilemma}
 \label{sec:worked-example}
 
-To anchor the abstractions of \S\ref{sec:semantic-core}--%
-\S\ref{sec:languages}, we trace one small game through the full
-syntax-to-theorem pipeline.  The example is deliberately the
+To anchor the abstractions of
+\Crefrange{sec:semantic-core}{sec:languages}, we trace one small game
+through the full syntax-to-theorem pipeline.  The example is deliberately the
 smallest non-trivial one — Prisoner's Dilemma in NFG form — and
 the corresponding Lean is in
 \TT{Languages/NFG/Examples.lean}.
@@ -21,25 +21,25 @@ $\prod_{i:\mathrm{Bool}} \Act$, the identity outcome map, and the
 $\mathrm{Bool} \times \Act \times \Act \to \RR$ utility table.
 
 \paragraph{Compilation to a kernel game.}\
-The NFG compiler (\S\ref{sec:languages:nfg}) sets the strategy type
+The NFG compiler (\Cref{sec:languages:nfg}) sets the strategy type
 to $\Act$ for each player, the outcome type to
 $\prod_i \Act$, the kernel to the Dirac evaluation
 $\Profile \mapsto \Dirac_\Profile$, and the utility to the input
 table.  The resulting \TT{KernelGame} is deterministic; randomness
 enters only when we lift to its mixed extension
-(\S\ref{sec:semantic-core:kernelgame}).
+(\Cref{sec:semantic-core:kernelgame}).
 
 \paragraph{Solution-concept instantiation.}\
 The library's $\IsNash$ predicate
-(\S\ref{sec:solution-concepts:nash}) on the compiled kernel game
+(\Cref{sec:solution-concepts:nash}) on the compiled kernel game
 unfolds to
 \[
-  \forall i \in \{T, F\},\,\forall a' \in \Act.\quad
+  \forall i : \Players,\,\forall a' \in \Act.\quad
     u_i(\Profile) \;\ge\; u_i(\Profile[i \mapsto a']),
 \]
 which on Prisoner's Dilemma reduces to four inequality checks per
 profile.  The Lean proof
-$\TT{pd\_defect\_is\_nash}$:\
+\TT{pd\_defect\_is\_nash}:\
 \TT{IsNashPure prisonersDilemma pd\_defect\_defect} is a single
 \TT{intro/cases/cases/simp} that discharges the four inequalities
 by direct evaluation of the utility table.  The corresponding
@@ -55,10 +55,10 @@ returns some mixed equilibrium of the extension.  Separately, the
 worked example proves that defect is dominant, so the pure
 (defect, defect) profile is Nash by the
 dominance$\,\Rightarrow\,$Nash chain
-(\S\ref{sec:solution-concepts:dominance}) without invoking Brouwer.
+(\Cref{sec:solution-concepts:dominance}) without invoking Brouwer.
 
 \paragraph{Bridging to FOSG.}\
-The NFG$\to$FOSG bridge of \S\ref{sec:languages:bridges} maps
+The NFG$\to$FOSG bridge of \Cref{sec:languages:bridges} maps
 Prisoner's Dilemma to a one-shot FOSG with two world states
 ($\mathsf{init}, \mathsf{terminal}$), every player active at
 $\mathsf{init}$, no observations, and a single deterministic
@@ -83,16 +83,8 @@ object in two languages (NFG and FOSG) but with definitionally
 equal expected utility, so any equilibrium-level theorem proved
 on one of them transports to the other.
 
-The same trace works for any NFG of finite cardinality.  The
-\TT{Examples.lean} file in \TT{Languages/NFG/} carries the
-analogous one-paragraph treatments for Matching Pennies (no pure
-equilibrium), Stag Hunt and Battle of the Sexes (two pure
-coordination equilibria), Hawk–Dove (two anti-coordination
-equilibria), Dictator and Traveler's Dilemma (asymmetric
-contents), Cournot duopoly (a richer payoff matrix with
-discrete quantities and a $\textsf{q}_2{=}\textsf{q}_2$ Nash),
-Bertrand price competition, and the Braess-paradox welfare
-inequality.  The analogous EFG examples — a two-stage centipede
-illustrating backward induction with the welfare-paradoxical
-$(1,0)$ outcome, and the three-offer Ultimatum game — are
-recorded in \TT{Languages/EFG/Examples.lean}.
+\paragraph{Other small examples.}\
+The same trace works for the other finite examples in
+\TT{Languages/NFG/Examples.lean} and \TT{Languages/EFG/Examples.lean}:
+each example follows the same pattern of source syntax, compilation,
+and one or two solution-concept facts on the compiled game.

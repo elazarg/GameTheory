@@ -4,7 +4,7 @@
 The library proves the central existence and structural theorems
 of finite non-cooperative game theory.  The proofs are stated on
 the kernel-game/game-form layer (or on layered information-model
-abstractions; see \S\ref{sec:theorems:kuhn}), and inherited by
+abstractions; see \Cref{sec:theorems:kuhn}), and inherited by
 every language via $\compileTo$.  This section sketches their
 content; full proofs are in the cited Lean files.
 
@@ -51,33 +51,30 @@ facts for expected utility; the finite-outcome theorem
 \TT{KernelGame.mixed\_nash\_exists} is the wrapper that obtains
 such a bound automatically.
 
-\paragraph{Why mathlib's Brouwer.}  The continuity content of the
+\paragraph{Why a topological route.}  The continuity content of the
 proof — that the Nash map is continuous on a compact convex
 polytope — is genuinely topological, and mechanizing the topology
-of the simplex from scratch would dwarf the rest of the proof.
-mathlib already provides a Brouwer-on-the-disk theorem and the
-infrastructure to lift it across homeomorphisms; we use the
-standard simplex's homeomorphism to a closed ball.  The product
-of simplices step is handled by an explicit product-fixed-point
-lemma rather than by appealing to the product theorem in topology.
+of the simplex from scratch would dwarf the rest of the proof.  The
+\TT{fixed-point-theorems-lean4} package supplies the Brouwer theorem;
+mathlib supplies the surrounding finite-dimensional topology,
+compactness/convexity infrastructure, and continuity API needed to
+instantiate it on the product of simplices.  The product-of-simplices
+step is handled by an explicit product-fixed-point lemma rather than
+by appealing to the product theorem in topology.
 
-\tradeoff{Brouwer is non-constructive, so mixed Nash existence is
-\TT{noncomputable}.  A constructive existence proof would require
-either an explicit algorithmic construction
-(Lemke–Howson~\citep{LemkeHowson1964} for two-player games, or
-the support-enumeration class for finite games more generally) or
-a constructive fixed-point theorem on a finite simplicial
-structure (Sperner's lemma~\citep{Sperner1928} suffices for
-two-player games but the multi-player extension is not as clean).
-The topological route keeps the game-theoretic proof small: the
+\tradeoff{The imported Brouwer theorem is exposed through classical
+topology, so mixed Nash existence is \TT{noncomputable}.  Although the
 standalone \TT{fixed-point-theorems-lean4}
-package~\citep{harfeFixedPointTheorems} proves Brouwer for
-nonempty compact convex subsets of finite-dimensional normed
-spaces via a cubical Sperner's-lemma route (Kuhn 1960), which has
-the right shape for arbitrary $n$ players and lets the library
-focus on the strategic-form content of the proof.  Algorithm-level
-Nash existence is independent enough to live in a downstream
-module.}
+package~\citep{harfeFixedPointTheorems} proves Brouwer via a cubical
+Sperner's-lemma route~\citep{Kuhn1960}, the surrounding compactness,
+continuity, and fixed-point API does not extract an algorithmic
+witness.  A constructive existence theorem in the computational sense
+would require either an explicit equilibrium algorithm
+(Lemke–Howson~\citep{LemkeHowson1964} for two-player games, or
+support enumeration for finite games more generally) or a separate
+constructive fixed-point development tailored to finite strategy
+simplices.  Algorithm-level Nash existence is independent enough to
+live in a downstream module.}
 
 \leancorr{Statements \TT{KernelGame.mixed\_nash\_exists\_of\_bounded}
 and \TT{KernelGame.mixed\_nash\_exists} in
@@ -101,9 +98,12 @@ $\bigotimes_i \Profile^*_i$ over the mixed Nash profile
 $\Profile^*$ of \Cref{thm:nash-mixed} is a correlated equilibrium
 of the original $\KG$ (every recommendation-dependent deviation
 factors through a constant-strategy unilateral deviation in
-$\KG^{\mathrm{mix}}$).  CCE existence is the corollary
+$\KG^{\mathrm{mix}}$).  The reason is that, after a recommendation
+$s_i$ is drawn from the product distribution, replacing it by
+$d_i(s_i)$ is exactly the mixed-game unilateral deviation that samples
+$s_i$ and then plays $d_i(s_i)$.  CCE existence is the corollary
 $\Pref\text{-CE}\subseteq\Pref\text{-CCE}$
-(\S\ref{sec:solution-concepts:correlated}).
+(\Cref{sec:solution-concepts:correlated}).
 
 \tradeoff{This route gives CE existence as a corollary of
 mixed Nash existence and is the cleanest path through the
@@ -128,8 +128,9 @@ inverts trivially.}
 \begin{theorem}[Von Neumann's minimax; \TT{KernelGame.von\_neumann\_minimax\_of\_bounded}]
 \label{thm:minimax}
 Let $\KG$ be a two-player zero-sum kernel game with finite
-non-empty strategy spaces and bounded utilities.  There exist a
-real value $v$ and a mixed Nash profile $\sigma$ of
+non-empty strategy spaces and bounded utilities, and write the two
+players as $0$ and $1$.  There exist a real value $v$ and a mixed
+Nash profile $\sigma$ of
 $\KG^{\mathrm{mix}}$ such that player $1$ cannot push player $0$'s
 payoff below $v$ by deviating from $\sigma_1$, and player $0$ cannot
 push their payoff above $v$ by deviating from $\sigma_0$:
@@ -164,7 +165,7 @@ Supplement~§6.3.}
 
 The library includes an infinite discounted repeated-game theorem
 separate from the bounded multi-round syntax of
-\S\ref{sec:languages:multiround}.  It uses a public profile-history
+\Cref{sec:languages:multiround}.  It uses a public profile-history
 semantics:\ a period observation is the realized \TT{KernelGame}
 profile.  In the main theorem below the repeated game is formed over
 the mixed extension, so those public observations are mixed-action
@@ -329,7 +330,7 @@ genuine.
 
 The library proves Kuhn's theorem on a representation-neutral
 substrate, the \emph{observation model}:\ a tuple
-$(\sigma, \mathrm{Obs}, \Act)$ recording the world state, each
+$(W, \mathrm{Obs}, \Act)$ recording the world-state type, each
 player's observation type, and the per-observation action arity.
 A behavioral profile is a per-player function
 $\InfoState_i \to \PMF{\Act_i}$; a mixed profile is a per-player
@@ -377,10 +378,11 @@ locality.
 
 The snapshot-refined information-state structure is packaged as a
 derived layer on top of an arbitrary observation model.  A second
-proof of the $M \to B$ direction is given via the mixed-Nash-induced
-correlated distribution.  Language-specific Kuhn theorems for EFG,
-MAID, MR, and FOSG follow by composing the language's compilation
-to the observation-model layer with the generic theorem.
+proof of the $M \to B$ direction avoids the snapshot-refined
+infrastructure by deriving the behavioral strategy from the correlated
+distribution induced by a mixed Nash profile.  Language-specific Kuhn
+theorems for EFG, MAID, MR, and FOSG follow by composing the language's
+compilation to the observation-model layer with the generic theorem.
 
 \tradeoff{Stating Kuhn on the observation-model layer rather than
 on a specific syntactic class of EFGs is the single largest piece
@@ -404,16 +406,13 @@ alternative $M \to B$ route).  The hypothesis predicates
 \subsection{Welfare and welfare theorems}
 \label{sec:theorems:welfare}
 
-The library packages the basic welfare analysis:\ social welfare
-is well-defined under finiteness, every team-game welfare
-maximizer is Nash, the price of stability in a team game is $1$,
-and the welfare ↔ Pareto bridge — Pareto dominance strictly
-raises social welfare, so every welfare-maximizing profile is
-Pareto-efficient.  In finite games, both a welfare-maximizing
-and a Pareto-efficient profile exist
-(\TT{exists\_welfareMax}, \TT{exists\_paretoEfficient}).  We do
-not formalize the deeper welfare theorems of mechanism design
-here — they live in \S\ref{sec:mechanism-auctions}.
+The definitions and basic welfare/Pareto bridge are in
+\Cref{sec:solution-concepts:welfare}.  This theorem layer packages
+the finite existence wrappers
+(\TT{exists\_welfareMax}, \TT{exists\_paretoEfficient}) and the
+team-game corollaries used by the price-of-stability result.  We do
+not formalize the deeper welfare theorems of mechanism design here
+— they live in \Cref{sec:mechanism-auctions}.
 
 \leancorr{\TT{Concepts/WelfareTheorems.lean};
 \TT{Concepts/NashPareto.lean}.}
@@ -424,12 +423,12 @@ here — they live in \S\ref{sec:mechanism-auctions}.
 This theorem belongs to the cooperative branch
 (\TT{Cooperative/CoalitionalGame.lean}) — formally a parallel
 paradigm to the non-cooperative core that occupies the rest of
-the library (see \S\ref{sec:future:cooperative} for the framing).
+the library (see \Cref{sec:future:cooperative} for the framing).
 We state it here because it has the standing of a flagship
 finite-game-theory theorem and because the proof technique it
 uses (unanimity-basis decomposition, an instance of Möbius
 inversion on the subset lattice) is the same Mathlib-style finite
-combinatorics that powers \S\ref{sec:theorems:nash-mixed}
+combinatorics that powers \Cref{sec:theorems:nash-mixed}
 on the non-cooperative side.
 
 A TU coalitional game on a finite player set $\Players$ is a

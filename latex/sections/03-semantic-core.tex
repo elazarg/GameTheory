@@ -7,7 +7,7 @@ which every other representation compiles, and the universal
 domain on which every solution concept is defined.  This section
 introduces them, the morphisms between them, and the
 deviation-family schema that unifies the equilibrium notions of
-\S\ref{sec:solution-concepts}.
+\Cref{sec:solution-concepts}.
 
 \subsection{Game forms}
 \label{sec:semantic-core:gameform}
@@ -59,7 +59,7 @@ single point at which the difference between Nash, coarse
 correlated equilibrium, and correlated equilibrium becomes
 visible:\ Nash and CCE quantify over $\mathrm{constDev}$, CE
 quantifies over $\mathrm{depDev}$.  We exploit this in
-\S\ref{sec:solution-concepts:family} by stating monotonicity
+\Cref{sec:solution-concepts:family} by stating monotonicity
 results once on the schema.}
 
 \leancorr{\TT{Core/GameForm.lean} for the record and derived
@@ -71,7 +71,7 @@ operations; supplement~§2.1 has the full Lean signatures.}
 A \emph{kernel game} adds a utility to a game form,
 \begin{equation}
 \label{eq:kernelgame}
-  \KG \;=\; \bigl(\,\Strat,\;\Outcome,\;\util : \Outcome \to \Payoff{\Players},\;\K\,\bigr),
+  \KG \;=\; \bigl(\,\Strat,\;\Outcome,\;\K,\;\util : \Outcome \to \Payoff{\Players}\,\bigr),
 \end{equation}
 where $\Payoff{\Players} \coloneqq \Players \to \RR$.  The
 \emph{expected utility} of player $i$ under profile $\Profile$ is
@@ -83,14 +83,17 @@ a finite sum when \Outcome\ is finite.  At the core API level the
 implementation is mathlib's unordered-sum expectation for
 $\PMF{\cdot}$, well-defined on bounded utilities over an arbitrary
 (countable) \Outcome; the finite-support lemmas recover the
-displayed formula, and a
-parallel family of \TT{\_of\_bounded} lemmas replays the same
-algebra without a \TT{[Finite \Outcome]} hypothesis.  Expected utility is the only place
-where utility enters a numerical inequality.
+displayed formula, and a parallel family of
+\TT{\_of\_bounded} lemmas replays the same algebra without a
+\TT{[Finite \Outcome]} hypothesis.  This is why expected utility is
+the only API point where the utility field enters a numerical
+solution-concept inequality.
 
 The conversion $\toGF : \KG \mapsto \GF$ forgets utility; the
-inverse $\toKG_u : \GF \mapsto \KG$ adjoins a utility $u$.  These
-are mutual inverses up to record equality.
+construction $\toKG_u : \GF \mapsto \KG$ adjoins a chosen utility
+$u$.  They satisfy the expected one-sided identities:
+$\toKG_{\KG.\util}(\KG.\toGF) = \KG$ and
+$(\toKG_u(\GF)).\toGF = \GF$, up to record equality.
 
 A kernel game admits an explicit \emph{mixed extension}:\ each
 player's strategy type is replaced by $\PMF{\Strat_i}$, and the
@@ -102,7 +105,7 @@ per-player strategy types $\Strat_i$ and the outcome type
 $\Outcome$ may be countably infinite.  The mixed extension is
 itself a kernel game, indexed by the same $\Players$, and serves
 as the carrier of mixed strategies in Nash existence
-(\S\ref{sec:theorems:nash-mixed}), where the existence proof
+(\Cref{sec:theorems:nash-mixed}), where the existence proof
 adds finiteness back as a hypothesis on $\Strat_i$ and a
 bounded-utility hypothesis on outcomes.
 
@@ -174,18 +177,18 @@ simultaneously, and typeclasses fit such theorems poorly:
   explicitly.
 
 \item The transport theorems of
-  \S\ref{sec:semantic-core:transport} relate preferences across
+  \Cref{sec:semantic-core:transport} relate preferences across
   two presentations of a game, either by pullback along an outcome
   bijection or by comparison after both outcome laws are projected
   to a common observation space.  In both cases two preferences
   appear in the same statement, one a function of the other.
 
 \item Strict-from-weak / weak-from-strict bridges of
-  \S\ref{sec:solution-concepts:dominance} relate a strict preference
+  \Cref{sec:solution-concepts:dominance} relate a strict preference
   to a weak preference under a hypothesis $\sPref \Rightarrow \Pref$.
 \end{itemize}
 
-Each of these binds two preferences at once.  A typeclass-based
+Each of these ties together two preferences at once.  A typeclass-based
 design would either force users to construct ad-hoc local instances
 for every multi-preference argument and switch between them by
 \TT{let} bindings (noisy and error-prone), or fall back to
@@ -218,17 +221,20 @@ map closed under composition with identities, with the standard
 identity- and associativity laws proved in the library.  We treat
 them as ordinary categories of presentation but do not exploit
 further categorical structure in the chapter.  At the game-form
-level, a \emph{protocol map} from $\GF \to \GF'$ is a triple
+level, a \emph{protocol map} from $\GF \to \GF'$ is a pair
 \[
-  (\stratMap, \outcomeMap, \mathrm{preserved})
+  (\stratMap, \outcomeMap)
   \quad\text{with}\quad
   \stratMap : \forall i, \Strat_i \to \Strat'_i,\;
   \outcomeMap : \Outcome \to \Outcome',
 \]
-satisfying the \emph{outcome-kernel preservation} law
+together with a proof of the \emph{outcome-kernel preservation} law.
+Writing
+$(\stratMap\,\Profile)_i \coloneqq \stratMap_i(\Profile_i)$ for
+componentwise profile translation, the law is
 \begin{equation}
 \label{eq:protocolmap}
-  \K'(\stratMap \circ \Profile) \;=\;
+  \K'(\stratMap\,\Profile) \;=\;
     \K(\Profile) \mathbin{\bind} \bigl(\omega \mapsto \Dirac_{\,\outcomeMap(\omega)}\bigr).
 \end{equation}
 This is the discrete-Giry analogue of a coalgebra homomorphism,
@@ -264,13 +270,14 @@ $\mathrm{reindex} : (\Players \simeq \kappa) \to \KG_\kappa \to
 outcome kernel along an equivalence.  This is presentation
 bookkeeping, but it is the kind of bookkeeping that, omitted, leaks
 $\mathrm{Fin}\,n$ assumptions into every downstream consumer.  The
-chapter writes $\KG[e]$ informally for the reindexed game.
+chapter writes $\KG[e]$ informally for the game reindexed along
+$e$.
 
 \subsection{Transport of solution concepts under bridges}
 \label{sec:semantic-core:transport}
 
 The use we make of protocol maps and EU-isomorphisms in
-\S\ref{sec:languages:bridges} relies on transport theorems that
+\Cref{sec:languages:bridges} relies on transport theorems that
 turn semantic preservation into equilibrium preservation.  There
 are two levels.  The first is the familiar map-based case: a
 bijective relabeling of strategies and outcomes preserves every
@@ -292,8 +299,8 @@ denote its pullback along the outcome bijection.  Then for every
 profile $\Profile$,
 \[
   \GF.\IsNashFor(\Pref, \Profile)
-  \;\Longleftrightarrow\;
-  \GF'.\IsNashFor\bigl(\Pref',\,\stratMap \circ \Profile\bigr).
+\;\Longleftrightarrow\;
+\GF'.\IsNashFor\bigl(\Pref',\,\stratMap\,\Profile\bigr).
 \]
 The analogous statements hold for $\IsBRfor$, $\IsDomFor$,
 $\WDomFor$, $\SDomFor$, $\IsCorrelatedEqFor$, and
@@ -346,11 +353,11 @@ counterfactual unilateral deviations.
 
 \noindent
 This is the operational content of contributions 3 and 5 in
-\S\ref{sec:introduction}:\ a bridge between two languages, viewed
+\Cref{sec:introduction}:\ a bridge between two languages, viewed
 as a protocol-preserving (resp.\ EU-preserving) map between the
 compiled game forms (resp.\ kernel games), automatically
 transports solution concepts.  Concrete bridges
-(\S\ref{sec:languages:bridges}) instantiate the theorem with
+(\Cref{sec:languages:bridges}) instantiate the theorem with
 specific maps and inherit a Nash/dominance/correlated-eq
 preservation law for free.
 
@@ -380,9 +387,9 @@ correlated equilibrium is a coarse correlated equilibrium.
 None of these depends on EU; they hold for any preference
 preorder.  The EU-specific versions are corollaries of the
 generic statements via the EU/preference iff-bridges of
-\S\ref{sec:semantic-core:for-style}.
+\Cref{sec:semantic-core:for-style}.
 
 \leancorr{All three in \TT{Concepts/GameFormSolutionConcepts.lean}
 (\TT{dominant\_is\_nash\_for},
 \TT{isNashFor\_iff\_bestResponseFor},
-\TT{IsCorrelatedEqFor.toCoarseCorrelatedEqFor}).}
+\TT{IsCorrelatedEqFor.}\allowbreak\TT{toCoarseCorrelatedEqFor}).}

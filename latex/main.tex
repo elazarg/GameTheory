@@ -31,8 +31,9 @@ outcome type, a stochastic transition $\K : \prod_i \Strat_i \to
 \RR)$.  Solution concepts are defined once on this carrier and on
 its utility-free shadow, the \emph{game form}; concrete
 representations — normal-form games, extensive-form games,
-multi-agent influence diagrams, multi-round games, and
-factored-observation stochastic games — are presented as
+multi-agent influence diagrams, multi-round games,
+factored-observation stochastic games, and intrinsic-form games —
+are presented as
 syntax-and-semantics packages that compile to a kernel game, and
 relationships between representations are stated as bridge theorems
 about the resulting kernel games.  The classical theorems of finite
@@ -40,10 +41,11 @@ non-cooperative game theory live in this layer, often in
 bounded-utility forms that do not require finite outcome carriers:
 existence of mixed Nash equilibria via Brouwer on the product
 simplex, existence of correlated and coarse correlated equilibria,
-the minimax theorem, an observable mixed-action approximate
-discounted folk theorem via trigger strategies, backward induction
-(Zermelo), the one-shot deviation principle, and Kuhn's
-behavioral/mixed equivalence.  We discuss the design choices
+and the minimax theorem.  The theorem layer also includes an
+observable mixed-action approximate discounted folk theorem via
+trigger strategies, backward induction (Zermelo), the one-shot
+deviation principle, and Kuhn's behavioral/mixed equivalence.  We
+discuss the design choices
 that make the library reusable — finiteness, discrete probability,
 the protocol/preference split, and the deviation-family schema for
 equilibrium notions — and we are explicit about what each choice

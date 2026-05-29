@@ -40,7 +40,7 @@ strategy carrier (alongside pure, behavioral, mixed) would let
 the library state and prove correctness of the standard solving
 algorithms (LP duality$\Rightarrow$two-player zero-sum value;
 sequence-form quadratic program for general-sum games).  The
-Kuhn-theorem infrastructure of \S\ref{sec:theorems:kuhn} already
+Kuhn-theorem infrastructure of \Cref{sec:theorems:kuhn} already
 supplies the recall layer.
 
 \subsection{Counterfactual regret minimization}
@@ -54,10 +54,10 @@ set, the cumulative regret for not having played each action,
 counterfactually weighted by the probability of reaching that
 information set under the opponents' play.  The regret-equilibrium
 duality is already formalized in the library
-(\S\ref{sec:solution-concepts:regret}), making the CFR convergence
+(\Cref{sec:solution-concepts:regret}), making the CFR convergence
 proof a natural consumer.  This would also produce a
 constructive CCE existence theorem
-(\S\ref{sec:theorems:correlated-existence}) without going through
+(\Cref{sec:theorems:correlated-existence}) without going through
 Brouwer.
 
 \subsection{Imperfect-recall extensions}
@@ -66,7 +66,7 @@ Brouwer.
 The Kuhn theorem in the library handles a recall hypothesis
 weaker than perfect recall (per-step ActionPosteriorLocal).  A
 natural extension is to formalize the
-\emph{absent-minded-driver} phenomenon~\citep{PiccionePiccione1997}
+\emph{absent-minded-driver} phenomenon~\citep{PiccioneRubinstein1997}
 — a single-player imperfect-recall puzzle where a player who
 forgets whether they have already made one decision faces a
 time-consistency problem (the ex-ante optimal mixed strategy is
@@ -111,15 +111,16 @@ instantiation).
 
 The cooperative branch lives at \TT{Cooperative/} (a parallel
 paradigm to the non-cooperative core occupying the rest of the
-library; see \S\ref{sec:theorems:shapley-uniqueness} for the
+library; see \Cref{sec:theorems:shapley-uniqueness} for the
 framing).  Already formalized:\ TU coalitional games with the
-Shapley value~\citep{Shapley1953} and all four classical axioms,
+Shapley value~\citep{Shapley1953} and the four classical axioms, with
+linearity represented in Lean by additivity plus scalar homogeneity,
 the unanimity-basis decomposition (Möbius inversion on the subset
 lattice), the full Shapley uniqueness theorem
 (\Cref{thm:shapley-unique}), the Banzhaf~\citep{Banzhaf1965} and
 Shapley–Shubik~\citep{ShapleyShubik1954} power indices, simple
 (voting) games, convex (supermodular) games with the
-$\IsConvex \Leftrightarrow$ monotone-marginals characterization
+$\mathrm{IsConvex} \Leftrightarrow$ monotone-marginals characterization
 \citep{Shapley1971} and closure under sum and nonnegative scalar,
 the core (efficient $\land$ coalition-rational) with the
 convex-set closure property and individual rationality, additive
@@ -127,7 +128,7 @@ games (the identity allocation), and the 3-player majority game
 as a worked example.  Nash bargaining
 \citep{Nash1950bargaining} is formalized through the IR/Pareto
 characterization, with symmetric and affine-invariant variants;
-the \emph{egalitarian} bargaining solution (Kalai 1977) is also
+the \emph{egalitarian} bargaining solution~\citep{Kalai1977} is also
 formalized as \TT{IsEgalitarian} with the equal-gain accessor and
 the agreement-with-Nash-on-symmetric-problems sanity check.
 Stable matching~\citep{GaleShapley1962} is formalized through
@@ -138,12 +139,10 @@ Natural extensions:\ Bondareva–Shapley balanced collections
 \citep{Bondareva1963, Shapley1967} characterizing core-nonempty
 games (a flagship LP-duality result); the nucleolus
 \citep{Schmeidler1969}; the Aumann–Shapley value for non-atomic
-games~\citep{AumannShapley1974}; NTU coalitional games; Shapley's
-1971 theorem that convex games have nonempty cores (and the
-Shapley value is in the core); Kalai–Smorodinsky
-\citep{KalaiSmorodinsky1975} and other bargaining solutions; the
-Gale–Shapley deferred-acceptance algorithm to construct a stable
-matching from arbitrary preferences.
+games~\citep{AumannShapley1974}; NTU coalitional games;
+Shapley's~\citeyear{Shapley1971} theorem that convex games have
+nonempty cores (and the Shapley value is in the core); Kalai–Smorodinsky
+\citep{KalaiSmorodinsky1975} and other bargaining solutions.
 
 \subsection{Information design and signaling}
 \label{sec:future:info-design}
@@ -160,7 +159,7 @@ cost may itself depend on type.  \emph{Information
 design}~\citep{Bergemann2019} generalizes the persuasion setup to
 multiple receivers and richer outcome rules.  All three sit on
 top of the Bayesian-game infrastructure of
-\S\ref{sec:mech:bayesian} and would benefit from a continuous-type
+\Cref{sec:mech:bayesian} and would benefit from a continuous-type
 extension, but admit interesting finite-grid formalizations
 directly.
 
