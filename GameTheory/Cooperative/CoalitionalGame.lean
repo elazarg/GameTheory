@@ -4,7 +4,6 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Core.KernelGame
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Nat.Choose.Sum
 import Math.Probability

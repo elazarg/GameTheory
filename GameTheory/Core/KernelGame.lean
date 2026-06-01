@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
+import GameTheory.Basic
 import Math.Probability
 import Math.PMFProduct
 
@@ -23,9 +24,6 @@ Provides:
 namespace GameTheory
 
 open Math.Probability
-
-/-- A payoff vector for `ι` players. -/
-abbrev Payoff (ι : Type) : Type := ι → ℝ
 
 -- ============================================================================
 -- Kernel-based game (strategies + outcome kernel → EU)
