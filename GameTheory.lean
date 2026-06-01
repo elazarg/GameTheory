@@ -86,6 +86,7 @@ import GameTheory.Concepts.Minimax
 
 -- Mechanism design
 import GameTheory.Mechanism.BayesianGame
+import GameTheory.Mechanism.InformationDesign
 import GameTheory.Mechanism.MechanismDesign
 import GameTheory.Mechanism.RevelationPrinciple
 

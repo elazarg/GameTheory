@@ -72,6 +72,55 @@ library hold for finite type and action spaces.}
 \TT{exAnteEU}, \TT{toKernelGame}, \TT{BayesNash},
 \TT{bayesNash\_iff\_exAnteEU}).  Supplement~§7.1.}
 
+\subsection{Finite information design}
+\label{sec:mech:info-design}
+
+The information-design layer packages the finite Bayesian-persuasion
+substrate used by signaling and disclosure examples.  A
+\emph{signal structure} is a finite stochastic kernel
+$S : \Omega \to \PMF{M}$ from states to public messages.  Given a
+prior $\mu \in \PMF{\Omega}$, it induces the joint law
+\[
+  \nu_S(\omega,m) = \mu(\omega) S(m \mid \omega)
+\]
+over states and messages, together with the message marginal
+$\nu_S^M$, whose finite-sum form is recorded as
+\TT{messageMarginal\_apply}.  The predicate \TT{BayesPlausible}
+says that a joint state-message distribution has state marginal
+$\mu$; the basic theorem \TT{joint\_bayesPlausible} proves that
+every signal structure satisfies this identity.  The library also
+exposes two canonical signals:\ \TT{uninformative}, which sends the
+unique message regardless of the state, and \TT{fullInformation},
+which reports the realized state.
+
+A finite persuasion problem fixes a prior, a signal structure, a
+sender payoff, and a receiver payoff.  A decision rule maps public
+messages to receiver actions.  Receiver optimality is written with
+the unnormalized message weights
+\[
+  \sum_{\omega \in \Omega}
+    \mu(\omega) S(m \mid \omega) u_R(\omega,a),
+\]
+which is equivalent to posterior expected utility whenever message
+$m$ has positive probability and remains meaningful at zero-probability
+messages.  A rule is \TT{IsPersuasive} when every induced action is
+receiver-optimal at its message.  Sender welfare is the expected
+sender utility under the induced joint distribution, with the
+finite-sum form recorded as \TT{senderEU\_eq\_sum}; equivalently,
+it is the sum of message-contingent sender scores
+(\TT{senderEU\_eq\_sum\_senderScore}).
+
+This is intentionally a substrate, not a concavification theorem:
+it gives the finite objects, Bayes-plausibility invariant, persuasion
+predicate, and sender objective on which finite persuasion examples
+and later optimal-design theorems can be stated.
+
+\leancorr{\TT{Mechanism/InformationDesign.lean}
+(\TT{SignalStructure}, \TT{joint}, \TT{BayesPlausible},
+\TT{joint\_bayesPlausible}, \TT{messageMarginal\_apply},
+\TT{PersuasionProblem}, \TT{IsPersuasive},
+\TT{senderEU\_eq\_sum}, \TT{senderEU\_eq\_sum\_senderScore}).}
+
 \subsection{Mechanism design and the revelation principle}
 \label{sec:mech:revelation}
 

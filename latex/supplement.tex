@@ -233,8 +233,8 @@ Folder & Contents \\
   Intrinsic), each with its own \TT{Syntax}, \TT{Compile}, and
   worked-example files; bridges in \TT{Languages/Bridges/}. \\
 \TT{Mechanism/} &
-  Bayesian games, mechanism design, the revelation principle,
-  social-choice fragments. \\
+  Bayesian games, finite information design, mechanism design,
+  the revelation principle, social-choice fragments. \\
 \TT{Auctions/} &
   Vickrey, FirstPrice, AllPay, VCG. \\
 \bottomrule
@@ -1870,6 +1870,55 @@ formulation, where a deviation is a function $\Theta_i \to
 \mathrm{Act}_i$ replacing the player's strategy globally.  The
 ex-post and interim variants are derived definitions.
 \emph{Restriction:}\ finite type and action spaces.
+
+\subsection{Finite information design: \texttt{Mechanism/InformationDesign.lean}}
+\label{sec:supp:info-design}\label{def:SignalStructure}\label{def:BayesPlausible}\label{def:PersuasionProblem}
+
+\Anchor{SignalStructure, BayesPlausible, PersuasionProblem}
+\begin{leanbox}
+structure SignalStructure ($\Omega$ Msg : Type) where\\
+\bd kernel : $\Omega \to$ PMF Msg\\[3pt]
+noncomputable def joint (S : SignalStructure $\Omega$ Msg) (prior : PMF $\Omega$) : PMF ($\Omega \times$ Msg) :=\\
+\bd prior.bind (fun $\omega$ $\Rightarrow$ (S.kernel $\omega$).map (fun m $\Rightarrow$ ($\omega$, m)))\\[3pt]
+def BayesPlausible (prior : PMF $\Omega$) ($\nu$ : PMF ($\Omega \times$ Msg)) : Prop :=\\
+\bd $\nu$.map Prod.fst = prior\\[3pt]
+theorem joint\_bayesPlausible (S : SignalStructure $\Omega$ Msg) (prior : PMF $\Omega$) :\\
+\bd BayesPlausible prior (S.joint prior)\\[3pt]
+theorem messageMarginal\_apply [Fintype $\Omega$] [Finite Msg]\\
+\bd (S : SignalStructure $\Omega$ Msg) (prior : PMF $\Omega$) (m : Msg) :\\
+\bd S.messageMarginal prior m = $\sum\ \omega : \Omega,$ prior $\omega$ * S.kernel $\omega$ m\\[3pt]
+structure PersuasionProblem ($\Omega$ Msg Act : Type) where\\
+\bd prior : PMF $\Omega$ ; signal : SignalStructure $\Omega$ Msg\\
+\bd senderUtility receiverUtility : $\Omega \to$ Act $\to \mathbb{R}$\\[3pt]
+def IsPersuasive (P : PersuasionProblem $\Omega$ Msg Act) (r : Msg $\to$ Act) : Prop\\[3pt]
+noncomputable def senderEU (P : PersuasionProblem $\Omega$ Msg Act) (r : Msg $\to$ Act) : $\mathbb{R}$\\[3pt]
+theorem senderEU\_eq\_sum\_senderScore (P : PersuasionProblem $\Omega$ Msg Act) (r : Msg $\to$ Act) :\\
+\bd P.senderEU r = $\sum\ m :$ Msg, P.senderScore m (r m)
+\end{leanbox}
+
+\Mathematical
+A signal structure is a finite stochastic kernel from states to
+messages.  With prior $\mu$, it induces the joint law
+$\nu_S(\omega,m)=\mu(\omega)S(m\mid\omega)$ and the message marginal
+$\nu_S^M(m)=\sum_\omega \mu(\omega)S(m\mid\omega)$.  Bayes
+plausibility is the state-marginal identity $\nu_S^\Omega=\mu$.
+A persuasion problem adds sender and receiver utility functions and
+evaluates a message-contingent decision rule.  Receiver optimality
+is expressed using unnormalized message weights, so
+zero-probability messages do not require a special posterior
+convention.
+
+\Textbook
+Kamenica--Gentzkow Bayesian persuasion
+\citep{KamenicaGentzkow2011}; finite signal structures and
+Bayes-plausible distributions are the discrete version of the
+standard information-design primitives.
+
+\Faithfulness
+Faithful finite substrate.  The file does not prove concavification,
+optimal signal existence, or signaling-game refinement theorems; it
+provides the reusable finite definitions and the basic marginal
+identity on which those results can be built.
 
 \subsection{General mechanisms and the revelation principle}
 \label{sec:supp:revelation}\label{def:GeneralMechanism}\label{def:revelation_principle}

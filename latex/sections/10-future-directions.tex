@@ -161,11 +161,28 @@ signal mechanism subject to the receiver's Bayesian rationality.
 analogue with an informed sender choosing a costly signal whose
 cost may itself depend on type.  \emph{Information
 design}~\citep{Bergemann2019} generalizes the persuasion setup to
-multiple receivers and richer outcome rules.  All three sit on
-top of the Bayesian-game infrastructure of
-\Cref{sec:mech:bayesian} and would benefit from a continuous-type
-extension, but admit interesting finite-grid formalizations
-directly.
+multiple receivers and richer outcome rules.
+
+The finite substrate is now formalized in
+\TT{Mechanism/InformationDesign.lean}:\ finite signal structures
+$\Omega \to \PMF{M}$, induced joint state-message laws, the
+message marginal formula, the Bayes-plausibility invariant,
+uninformative and full-information signals, finite sender/receiver
+persuasion problems, persuasive decision rules, and finite-sum
+expressions for sender expected utility.  This is the right layer
+for discrete persuasion examples and for connecting disclosure
+problems back to the Bayesian-game infrastructure of
+\Cref{sec:mech:bayesian}.
+
+Natural extensions are substantive theorems over this substrate:
+finite concavification and value-of-information results, optimal
+signal existence on a bounded finite message alphabet, explicit
+finite signaling-game refinements, multi-receiver information
+design, and bridges from persuasive decision rules to direct
+mechanisms.  Continuous type spaces and compact belief simplices
+would require the measure-theoretic extension discussed in
+\Cref{sec:future:infinite}; the finite layer is useful independently
+and should remain separate from that analytic generalization.
 
 \subsection{Social choice impossibility theorems}
 \label{sec:future:social-choice}
