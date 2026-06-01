@@ -378,11 +378,20 @@ at which a per-round full-recall hypothesis becomes a per-round
 \emph{ActionPosteriorLocal} hypothesis sufficient for the
 mixed-to-behavioral direction.
 
+The same file family contains a compact absent-minded-driver example:
+two rounds produce the same player view, so the protocol violates
+\TT{ViewDeterminesRound}, the MultiRound no-absent-mindedness
+condition.  The example also records the standard payoff calculus:
+the ex-ante optimal probability of continuing is $2/3$, while
+re-optimizing at the indistinguishable decision point under those
+arrival odds chooses $1/3$.
+
 \leancorr{\TT{Languages/MultiRound/} contains \TT{Syntax},
 \TT{SOS}, \TT{Compile}, \TT{CompileObs} and its linearizations
 (\TT{CompileObsLin}, \TT{CompileObsLinAdequacy},
 \TT{CompileObsLinRecall}), \TT{RepeatedGame}, \TT{StochasticGame},
-\TT{Kuhn}, \TT{Theorems}.  Supplement~§4.4.}
+\TT{AbsentMindedDriver}, \TT{Kuhn}, \TT{Theorems}.
+Supplement~§4.4.}
 
 \subsection{Factored-observation stochastic games}
 \label{sec:languages:fosg}
