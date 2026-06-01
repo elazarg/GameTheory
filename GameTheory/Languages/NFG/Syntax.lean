@@ -32,7 +32,7 @@ finiteness where genuinely required.
   - `Outcome` is the type of game outcomes
   - `outcome` maps a strategy profile to its outcome
   - `utility` maps an outcome to per-player payoffs -/
-structure NFGGame (ι : Type) [Fintype ι] [DecidableEq ι]
+structure NFGGame (ι : Type) [DecidableEq ι]
     (A : ι → Type) where
   Outcome : Type
   outcome : (∀ i, A i) → Outcome
@@ -58,8 +58,6 @@ theorem deviate_same (s : StrategyProfile A) (i : ι) (a : A i) :
 theorem deviate_other (s : StrategyProfile A) (i j : ι) (a : A i) (h : j ≠ i) :
     deviate s i a j = s j := by
   simp [deviate, h]
-
-variable [Fintype ι]
 
 /-- A pure Nash equilibrium: no player can improve by unilateral deviation. -/
 def IsNashPure (G : NFGGame ι A) (s : StrategyProfile A) : Prop :=

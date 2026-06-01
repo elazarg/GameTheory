@@ -4,8 +4,6 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Finset.Basic
 import Math.Probability
 
 /-!
@@ -33,8 +31,8 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
-variable {A : Type} [DecidableEq A]
+variable {ι : Type}
+variable {A : Type}
 
 /-- A preference relation on alternatives: `pref a b` means `a` is
     weakly preferred to `b`. -/

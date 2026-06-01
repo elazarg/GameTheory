@@ -26,7 +26,7 @@ Provides:
 namespace NFG
 open Math.PMFProduct
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [DecidableEq ι]
 variable {A : ι → Type}
 
 /-! ## NFG → KernelGame bridge -/
@@ -62,6 +62,8 @@ theorem IsDominant_iff_kernelGame (G : NFGGame ι A) (i : ι) (a : A i) :
   simp [GameTheory.KernelGame.udist, NFGGame.toKernelGame]
 
 /-! ## Mixed strategies -/
+
+variable [Fintype ι]
 
 /-- A mixed strategy profile: each player independently randomizes over actions. -/
 abbrev MixedProfile (A : ι → Type) := ∀ i, PMF (A i)

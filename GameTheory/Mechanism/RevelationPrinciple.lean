@@ -29,28 +29,21 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type}
 
 /-- A general mechanism: players have types (private info) and actions
     (what they report/do). The outcome depends on actions, not types directly. -/
-structure GeneralMechanism (ι : Type) [Fintype ι] where
+structure GeneralMechanism (ι : Type) where
   /-- Type space for each player (private information). -/
   Θ : ι → Type
-  [instFintypeΘ : ∀ i, Fintype (Θ i)]
-  [instNonemptyΘ : ∀ i, Nonempty (Θ i)]
   /-- Action space for each player. -/
   Act : ι → Type
-  [instFintypeAct : ∀ i, Fintype (Act i)]
-  [instNonemptyAct : ∀ i, Nonempty (Act i)]
   /-- Outcome rule: maps actions to per-player payoff. -/
   outcome : (∀ i, Act i) → ι → ℝ
 
-attribute [instance] GeneralMechanism.instFintypeΘ GeneralMechanism.instNonemptyΘ
-  GeneralMechanism.instFintypeAct GeneralMechanism.instNonemptyAct
-
 namespace GeneralMechanism
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type}
 
 /-- A strategy profile: each player maps their type to an action. -/
 def StrategyProfile (M : GeneralMechanism ι) := ∀ i, M.Θ i → M.Act i
