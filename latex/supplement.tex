@@ -1487,9 +1487,11 @@ Each finite NFG is presented as a one-shot FOSG with two world
 states ($\mathsf{init}, \mathsf{terminal}$), every player active
 at $\mathsf{init}$, no observations, and a single deterministic
 transition delivering the NFG payoff as the FOSG reward.
-Soundness:\
-\TT{NFGGame.toFOSG_terminal_iff} and the corresponding EU
-equivalence.
+The embedding is payoff-faithful by construction, and the file
+proves the structural facts (\TT{toFOSG\_terminal\_iff},
+\TT{toFOSG\_active\_init}, \TT{toFOSG\_boundedHorizon}); a packaged
+EU- or utility-distribution-equivalence theorem against the compiled
+kernel game is not yet recorded.
 
 \paragraph{EFG → NFG (\TT{Languages/Bridges/EFG_NFG.lean}).}\
 The strategic form of a finite EFG:\ pure strategy = function from
@@ -1499,8 +1501,12 @@ EU-equivalence level.
 
 \paragraph{MAID → EFG (\TT{Languages/Bridges/MAID_EFG.lean}).}\
 A bounded MAID compiles to an EFG via a topological scheduling of
-its decision nodes; soundness at the strategic-form refinement
-level (information sets preserved).
+its decision nodes.  Soundness is at the utility-distribution level:\
+\TT{maidToEFGAt\_bisimulation} is a full kernel-game bisimulation
+whose outcome kernels agree on the nose
+(\TT{maidToEFGAt\_outcomeKernel}), and \TT{buildTree\_perfectRecall}
+shows perfect recall is preserved, which transfers the Kuhn
+behavioral$\leftrightarrow$mixed equivalence to MAIDs.
 
 \paragraph{EFG → FOSG (\TT{Languages/Bridges/FOSG/}).}\
 \TT{ObsModelCore.lean}, \TT{AugmentedEFG.lean},

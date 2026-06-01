@@ -84,10 +84,11 @@ on syntax paired with a soundness theorem stating that the
 compiled kernel games agree under a chosen relation $R$
 (protocol equivalence, utility-distribution equivalence, EU-equivalence, refinement, etc.;
 \Cref{sec:languages:expressiveness}).  This is what gives
-substantive content to claims like ``every finite NFG is a
-one-shot FOSG'' or ``every bounded MAID is an EFG up to
-strategic-form refinement,'' both of which are mechanized as
-$R$-reductions in this framework; comparisons that are not in the
+substantive content to claims like ``every bounded MAID is an EFG
+up to utility-distribution equivalence,'' which is mechanized as an
+$R$-reduction in this framework; the companion ``every finite NFG is
+a one-shot FOSG'' is realized as a compiled embedding whose soundness
+reduction is not yet packaged; comparisons that are not in the
 library (e.g., MAID directly to multi-round) appear as targets in
 \Cref{sec:future}.
 
