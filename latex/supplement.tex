@@ -1487,11 +1487,14 @@ Each finite NFG is presented as a one-shot FOSG with two world
 states ($\mathsf{init}, \mathsf{terminal}$), every player active
 at $\mathsf{init}$, no observations, and a single deterministic
 transition delivering the NFG payoff as the FOSG reward.
-The embedding is payoff-faithful by construction, and the file
-proves the structural facts (\TT{toFOSG\_terminal\_iff},
-\TT{toFOSG\_active\_init}, \TT{toFOSG\_boundedHorizon}); a packaged
-EU- or utility-distribution-equivalence theorem against the compiled
-kernel game is not yet recorded.
+Soundness is at the utility-distribution level:\
+\TT{toFOSG\_morphism} lifts each pure NFG strategy to the behavioral
+strategy that plays it at the initial information state (and the
+forced no-op afterwards), yielding a \TT{KernelGame.Morphism} into
+the bounded-horizon compiled FOSG that preserves the joint utility
+distribution at every profile (\TT{toFOSG\_udist\_eq}:\ the horizon-$1$
+run law collapses to the point mass on the single one-step history
+carrying the NFG payoff).
 
 \paragraph{EFG → NFG (\TT{Languages/Bridges/EFG_NFG.lean}).}\
 The strategic form of a finite EFG:\ pure strategy = function from
