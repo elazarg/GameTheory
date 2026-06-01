@@ -93,6 +93,7 @@ import GameTheory.Mechanism.RevelationPrinciple
 -- Social choice and information
 import GameTheory.Mechanism.SocialChoice
 import GameTheory.Concepts.CommonKnowledge
+import GameTheory.Concepts.ApproximateCommonKnowledge
 
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic
