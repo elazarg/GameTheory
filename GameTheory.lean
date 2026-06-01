@@ -64,6 +64,7 @@ import GameTheory.Concepts.Regret
 import GameTheory.Concepts.CorrelatedNashMixed
 import GameTheory.Concepts.NashCorrelatedEq
 import GameTheory.Concepts.CorrelationRegimes
+import GameTheory.Concepts.CheapTalkPublicRandomness
 
 -- Zero-sum and constant-sum
 import GameTheory.Concepts.ZeroSum
@@ -71,6 +72,7 @@ import GameTheory.Concepts.ConstantSum
 import GameTheory.Concepts.ZeroSumNash
 import GameTheory.Concepts.ConstantSumNash
 import GameTheory.Concepts.ConstantSumCorrelated
+import GameTheory.Concepts.CheapTalkPublicRandomnessConstantSum
 
 -- Potential games
 import GameTheory.Concepts.PotentialGame
