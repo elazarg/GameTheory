@@ -8,86 +8,86 @@ import GameTheory.Core.KernelGame
 import GameTheory.Core.GameForm
 
 -- Solution concepts and properties
-import GameTheory.Concepts.GameFormSolutionConcepts
-import GameTheory.Concepts.SolutionConcepts
-import GameTheory.Concepts.Convergence
-import GameTheory.Concepts.SequentialAssessment
-import GameTheory.Concepts.GameMorphism
-import GameTheory.Concepts.InertExtension
-import GameTheory.Concepts.Babbling
-import GameTheory.Concepts.DeviationSimulation
-import GameTheory.Concepts.Deviation
-import GameTheory.Concepts.BestResponse
-import GameTheory.Concepts.PrefPreorderProperties
-import GameTheory.Concepts.EUProperties
-import GameTheory.Concepts.OfEUProperties
+import GameTheory.Concepts.Equilibrium.GameFormSolutionConcepts
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Foundations.Convergence
+import GameTheory.Concepts.Mixed.SequentialAssessment
+import GameTheory.Concepts.Foundations.GameMorphism
+import GameTheory.Concepts.Foundations.InertExtension
+import GameTheory.Concepts.Communication.Babbling
+import GameTheory.Concepts.Foundations.DeviationSimulation
+import GameTheory.Concepts.Foundations.Deviation
+import GameTheory.Concepts.Foundations.BestResponse
+import GameTheory.Concepts.Foundations.PrefPreorderProperties
+import GameTheory.Concepts.Foundations.EUProperties
+import GameTheory.Concepts.Foundations.OfEUProperties
 import GameTheory.Core.GameIsomorphism
 import GameTheory.Core.GameSimulation
-import GameTheory.Concepts.UtilityInvariance
+import GameTheory.Concepts.Foundations.UtilityInvariance
 
 -- Rationalizability
-import GameTheory.Concepts.Rationalizability
+import GameTheory.Concepts.Dominance.Rationalizability
 
 -- Dominance
-import GameTheory.Concepts.StrictDominance
-import GameTheory.Concepts.DominanceRelations
-import GameTheory.Concepts.DominanceSolvable
-import GameTheory.Concepts.DominanceNash
-import GameTheory.Concepts.DominanceSolvability
+import GameTheory.Concepts.Dominance.StrictDominance
+import GameTheory.Concepts.Dominance.DominanceRelations
+import GameTheory.Concepts.Dominance.DominanceSolvable
+import GameTheory.Concepts.Dominance.DominanceNash
+import GameTheory.Concepts.Dominance.DominanceSolvability
 
 -- Nash equilibrium
-import GameTheory.Concepts.StrictNashProperties
-import GameTheory.Concepts.ApproximateNash
-import GameTheory.Concepts.MixedExtension
-import GameTheory.Concepts.BinaryMixed
-import GameTheory.Concepts.TremblingHand
+import GameTheory.Concepts.Equilibrium.StrictNashProperties
+import GameTheory.Concepts.Equilibrium.ApproximateNash
+import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.Mixed.BinaryMixed
+import GameTheory.Concepts.Mixed.TremblingHand
 import GameTheory.Theorems.NashExistence
-import GameTheory.Concepts.ProductSimplexBrouwer
+import GameTheory.Concepts.Existence.ProductSimplexBrouwer
 import GameTheory.Theorems.NashExistenceMixed
-import GameTheory.Concepts.MixedSupport
-import GameTheory.Concepts.BestResponseDynamics
-import GameTheory.Concepts.NashProperties
-import GameTheory.Concepts.StrongNash
+import GameTheory.Concepts.Mixed.MixedSupport
+import GameTheory.Concepts.Foundations.BestResponseDynamics
+import GameTheory.Concepts.Equilibrium.NashProperties
+import GameTheory.Concepts.Equilibrium.StrongNash
 
 -- Game properties and welfare
-import GameTheory.Concepts.GameProperties
-import GameTheory.Concepts.NashPareto
-import GameTheory.Concepts.WelfareTheorems
-import GameTheory.Concepts.PriceOfAnarchy
-import GameTheory.Concepts.IndividualRationality
-import GameTheory.Concepts.SecurityStrategy
-import GameTheory.Concepts.FolkTheorem
+import GameTheory.Concepts.Foundations.GameProperties
+import GameTheory.Concepts.Equilibrium.NashPareto
+import GameTheory.Concepts.Welfare.WelfareTheorems
+import GameTheory.Concepts.Welfare.PriceOfAnarchy
+import GameTheory.Concepts.Welfare.IndividualRationality
+import GameTheory.Concepts.ZeroSum.SecurityStrategy
+import GameTheory.Concepts.Welfare.FolkTheorem
 
 -- Correlated equilibrium
-import GameTheory.Concepts.CorrelatedEqProperties
-import GameTheory.Concepts.Regret
-import GameTheory.Concepts.CorrelatedNashMixed
-import GameTheory.Concepts.NashCorrelatedEq
-import GameTheory.Concepts.CorrelationRegimes
-import GameTheory.Concepts.CheapTalkPublicRandomness
+import GameTheory.Concepts.Correlation.CorrelatedEqProperties
+import GameTheory.Concepts.Correlation.Regret
+import GameTheory.Concepts.Correlation.CorrelatedNashMixed
+import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
+import GameTheory.Concepts.Correlation.CorrelationRegimes
+import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
 -- Zero-sum and constant-sum
-import GameTheory.Concepts.ZeroSum
-import GameTheory.Concepts.ConstantSum
-import GameTheory.Concepts.ZeroSumNash
-import GameTheory.Concepts.ConstantSumNash
-import GameTheory.Concepts.ConstantSumCorrelated
-import GameTheory.Concepts.ConstantSumCounterexamples
-import GameTheory.Concepts.CheapTalkPublicRandomnessConstantSum
+import GameTheory.Concepts.ZeroSum.ZeroSum
+import GameTheory.Concepts.ZeroSum.ConstantSum
+import GameTheory.Concepts.ZeroSum.ZeroSumNash
+import GameTheory.Concepts.ZeroSum.ConstantSumNash
+import GameTheory.Concepts.ZeroSum.ConstantSumCorrelated
+import GameTheory.Concepts.ZeroSum.ConstantSumCounterexamples
+import GameTheory.Concepts.Communication.CheapTalkPublicRandomnessConstantSum
 
 -- Potential games
-import GameTheory.Concepts.PotentialGame
-import GameTheory.Concepts.PotentialFIP
-import GameTheory.Concepts.PotentialWellFounded
-import GameTheory.Concepts.PotentialTeam
+import GameTheory.Concepts.Potential.PotentialGame
+import GameTheory.Concepts.Potential.PotentialFIP
+import GameTheory.Concepts.Potential.PotentialWellFounded
+import GameTheory.Concepts.Potential.PotentialTeam
 
 -- Team games and symmetric games
-import GameTheory.Concepts.TeamGame
-import GameTheory.Concepts.SymmetricGame
-import GameTheory.Concepts.EvolutionaryStability
+import GameTheory.Concepts.Classes.TeamGame
+import GameTheory.Concepts.Classes.SymmetricGame
+import GameTheory.Concepts.Classes.EvolutionaryStability
 
 -- Minimax
-import GameTheory.Concepts.Minimax
+import GameTheory.Concepts.ZeroSum.Minimax
 
 -- Mechanism design
 import GameTheory.Mechanism.BayesianGame
@@ -98,8 +98,8 @@ import GameTheory.Mechanism.RevelationPrinciple
 
 -- Social choice and information
 import GameTheory.Mechanism.SocialChoice
-import GameTheory.Concepts.CommonKnowledge
-import GameTheory.Concepts.ApproximateCommonKnowledge
+import GameTheory.Concepts.Knowledge.CommonKnowledge
+import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
 
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic

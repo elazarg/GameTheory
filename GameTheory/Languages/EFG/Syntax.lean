@@ -9,7 +9,7 @@ import Mathlib.Data.NNReal.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Monad
 import Semantics.TransitionTrace
 import GameTheory.Core.KernelGame
-import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
 
 /-!
 # Extensive-Form Games (EFG)

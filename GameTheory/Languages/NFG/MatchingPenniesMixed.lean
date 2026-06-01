@@ -4,8 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.BinaryMixed
-import GameTheory.Concepts.ConstantSumCorrelated
+import GameTheory.Concepts.Mixed.BinaryMixed
+import GameTheory.Concepts.ZeroSum.ConstantSumCorrelated
 import GameTheory.Languages.NFG.Examples
 import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Tactic.NormNum
@@ -15,7 +15,7 @@ import Mathlib.Tactic.NormNum
 
 This file instantiates the language-independent binary mixed-game calculus for
 the normal-form matching-pennies example.  The exact half/half mixed Nash theorem
-is proved in `GameTheory.Concepts.BinaryMixed` for any matching-pennies-like
+is proved in `GameTheory.Concepts.Mixed.BinaryMixed` for any matching-pennies-like
 two-player `KernelGame` with Boolean player/action labels; this file only
 supplies the `heads`/`tails` labels and the four semantic payoff equations.
 -/

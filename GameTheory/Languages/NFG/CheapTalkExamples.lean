@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Babbling
+import GameTheory.Concepts.Communication.Babbling
 import GameTheory.Languages.NFG.Examples
 
 /-!

@@ -6,8 +6,8 @@ Authors: GameTheory contributors
 
 import Math.ProbabilityMassFunction
 import Math.OptimizationLocalGlobal
-import GameTheory.Concepts.MixedExtension
-import GameTheory.Concepts.ProductSimplexBrouwer
+import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.Existence.ProductSimplexBrouwer
 
 /-!
 # Mixed-Strategy Nash Equilibrium Existence

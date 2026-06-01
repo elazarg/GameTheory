@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Languages.Bridges.FOSG.ObsModelCore
 import GameTheory.Languages.FOSG.Compile
 import GameTheory.Languages.FOSG.Execution
-import GameTheory.Concepts.DeviationSimulation
+import GameTheory.Concepts.Foundations.DeviationSimulation
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
 

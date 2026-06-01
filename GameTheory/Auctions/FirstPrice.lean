@@ -5,8 +5,8 @@ Authors: GameTheory contributors
 -/
 
 import Math.Probability
-import GameTheory.Concepts.SolutionConcepts
-import GameTheory.Concepts.OfEUProperties
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Foundations.OfEUProperties
 
 /-!
 # First-Price Auction

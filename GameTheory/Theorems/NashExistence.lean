@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
 import GameTheory.Core.GameProperties
 import Mathlib.Data.Finset.Max
 import Math.Probability

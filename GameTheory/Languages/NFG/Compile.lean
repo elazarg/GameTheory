@@ -11,7 +11,7 @@ import GameTheory.Core.KernelGame
 import GameTheory.Core.GameMorphism
 import Math.Probability
 import Math.PMFProduct
-import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
 
 /-!
 # NFG → KernelGame Bridge

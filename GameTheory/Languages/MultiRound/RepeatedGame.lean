@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import Mathlib.Analysis.Normed.Group.InfiniteSum
 import Mathlib.Analysis.SpecificLimits.Basic
 import Math.Probability
-import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
 
 /-!
 # Infinite Repeated Games

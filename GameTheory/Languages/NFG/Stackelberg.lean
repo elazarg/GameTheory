@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.Probability
-import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
 
 /-!
 # Stackelberg (Leader-Follower) Games

@@ -14,7 +14,7 @@ extensions.
 
 The central condition is deliberately local: it only talks about preference
 comparisons at embedded base profiles and their unilateral enriched deviations.
-Nash/EU corollaries live in `GameTheory.Concepts.Babbling`.
+Nash/EU corollaries live in `GameTheory.Concepts.Communication.Babbling`.
 -/
 
 namespace GameTheory

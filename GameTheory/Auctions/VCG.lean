@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Math.Probability
-import GameTheory.Concepts.SolutionConcepts
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
 
 /-!
 # Vickrey-Clarke-Groves (VCG) Mechanism

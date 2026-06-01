@@ -16,7 +16,7 @@ payoff-irrelevant protocol enrichments are instances of this pattern.
 
 The primary construction is stated for `GameForm`, since inertness is a
 protocol property: it mentions strategies and outcome kernels, but not utility.
-Solution-concept consequences live in `GameTheory.Concepts.InertExtension`.
+Solution-concept consequences live in `GameTheory.Concepts.Foundations.InertExtension`.
 -/
 
 namespace GameTheory

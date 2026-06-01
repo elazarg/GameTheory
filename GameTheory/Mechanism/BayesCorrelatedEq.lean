@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Mechanism.InformationDesign
-import GameTheory.Concepts.CorrelatedNashMixed
+import GameTheory.Concepts.Correlation.CorrelatedNashMixed
 
 /-!
 # Bayes Correlated Equilibrium

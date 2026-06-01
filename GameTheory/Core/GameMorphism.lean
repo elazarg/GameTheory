@@ -24,7 +24,7 @@ This file is distribution-first:
 * `KernelGame.EUMorphism` -- morphism with additional EU preservation
 * `KernelGame.EUGameIsomorphism` -- game isomorphism with additional EU preservation
 
-Solution-concept corollaries live in `GameTheory.Concepts.GameMorphism`.
+Solution-concept corollaries live in `GameTheory.Concepts.Foundations.GameMorphism`.
 -/
 
 namespace GameTheory

@@ -1,0 +1,132 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
+import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.Correlation.CorrelatedEqProperties
+
+/-!
+# GameTheory.Concepts.Correlation.CorrelatedNashMixed
+
+Relates correlated expected utility under point-mass distributions to standard
+expected utility, and establishes how deviation distributions simplify under
+product (mixed) profile distributions. Point-mass deviation simplifications
+live in `GameTheory.Concepts.Foundations.Deviation`.
+
+Provides:
+- `correlatedEu_pure` — correlated EU under `PMF.pure σ` equals `eu σ`
+- `unilateralDeviationDistribution_pmfPi` — deviation of a product distribution equals
+  the product with the deviated component's pushforward
+- `correlatedEu_eq_expect_eu` — correlated EU is the expectation of EU
+  over the profile distribution
+- `mixed_nash_isCorrelatedEq` — a mixed Nash profile induces a CE
+- `correlatedEq_exists` — every finite game has a correlated equilibrium
+- `coarseCorrelatedEq_exists` — corollary: every finite game has a CCE
+-/
+
+namespace GameTheory
+
+open Math.Probability
+namespace KernelGame
+open Math.PMFProduct
+
+attribute [local instance] Fintype.ofFinite
+
+variable {ι : Type} {G : KernelGame ι}
+
+/-- Correlated EU under a point-mass distribution equals the standard EU. -/
+theorem correlatedEu_pure (σ : Profile G) (who : ι) :
+    G.correlatedEu (PMF.pure σ) who = G.eu σ who := by
+  simp [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
+
+/-- Correlated EU equals the expectation of standard EU over the profile distribution,
+    under bounded utility. -/
+theorem correlatedEu_eq_expect_eu_of_bounded
+    (μ : PMF (Profile G)) (who : ι)
+    {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+    G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
+  simp only [correlatedEu, eu, correlatedOutcome, Kernel.pushforward]
+  exact expect_bind_of_bounded μ G.outcomeKernel (fun ω => G.utility ω who) hbd
+
+/-- Correlated EU is the expectation of standard EU over the profile
+    distribution. -/
+theorem correlatedEu_eq_expect_eu [Finite G.Outcome]
+    (μ : PMF (Profile G)) (who : ι) :
+    G.correlatedEu μ who = expect μ (fun σ => G.eu σ who) := by
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  exact G.correlatedEu_eq_expect_eu_of_bounded μ who hbd
+
+variable [DecidableEq ι]
+
+open Classical in
+/-- Deviation of a product distribution equals the product with the deviated
+    component replaced by the pushforward of the original through `dev`. -/
+theorem unilateralDeviationDistribution_pmfPi
+    {G : KernelGame ι}
+    [Fintype ι]
+    (σ : ∀ i, PMF (G.Strategy i)) (who : ι)
+    (dev : G.Strategy who → G.Strategy who) :
+    G.unilateralDeviationDistribution (pmfPi σ) who dev =
+      pmfPi (Function.update σ who (PMF.map dev (σ who))) := by
+  unfold KernelGame.unilateralDeviationDistribution KernelGame.deviationDistribution
+  unfold KernelGame.unilateralDeviation
+  exact pmfPi_bind_update_map σ who dev
+
+open Classical in
+/-- A mixed Nash profile induces a correlated equilibrium under bounded utility.
+
+This assumes only a finite player index and bounded utility. Strategy carriers
+may be countable, since `unilateralDeviationDistribution_pmfPi` is now proved
+directly for product PMFs over arbitrary coordinate carriers. -/
+theorem mixed_nash_isCorrelatedEq_of_bounded
+    {G : KernelGame ι}
+    [Fintype ι]
+    (σ : ∀ i, PMF (G.Strategy i))
+    (hN : G.mixedExtension.IsNash σ)
+    {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
+    G.IsCorrelatedEq (pmfPi σ) := by
+  intro who dev
+  have hN' : G.mixedExtension.eu σ who ≥
+      G.mixedExtension.eu (Function.update σ who (PMF.map dev (σ who))) who :=
+    hN who (PMF.map dev (σ who))
+  have hbase :
+      G.correlatedEu (pmfPi σ) who = G.mixedExtension.eu σ who := by
+    rw [G.correlatedEu_eq_expect_eu_of_bounded (μ := pmfPi σ) who (hbd who)]
+    symm; exact G.mixedExtension_eu_of_bounded σ who (hbd who)
+  have hdev :
+      G.correlatedEu (G.unilateralDeviationDistribution (pmfPi σ) who dev) who =
+      G.mixedExtension.eu
+        (Function.update σ who (PMF.map dev (σ who))) who := by
+    rw [G.correlatedEu_eq_expect_eu_of_bounded
+      (μ := G.unilateralDeviationDistribution (pmfPi σ) who dev) who (hbd who)]
+    rw [G.unilateralDeviationDistribution_pmfPi σ who dev]
+    symm
+    exact G.mixedExtension_eu_of_bounded
+      (Function.update σ who (PMF.map dev (σ who))) who (hbd who)
+  rw [hbase, hdev]
+  exact hN'
+
+open Classical in
+/-- A mixed Nash profile induces a correlated equilibrium on pure profiles
+    via the independent product distribution `pmfPi σ`.
+
+    For any deviation function `dev`, the deviated distribution
+    `unilateralDeviationDistribution (pmfPi σ) who dev` equals
+    `pmfPi (update σ who (PMF.map dev (σ who)))`. By Nash optimality,
+    the pushforward mixed strategy `PMF.map dev (σ who)` cannot improve
+    player `who`'s EU. -/
+theorem mixed_nash_isCorrelatedEq
+    {G : KernelGame ι}
+    [Fintype ι] [Finite G.Outcome]
+    (σ : ∀ i, PMF (G.Strategy i))
+    (hN : G.mixedExtension.IsNash σ) :
+    G.IsCorrelatedEq (pmfPi σ) := by
+  choose C hbd using fun i =>
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
+  exact G.mixed_nash_isCorrelatedEq_of_bounded σ hN hbd
+
+end KernelGame
+end GameTheory

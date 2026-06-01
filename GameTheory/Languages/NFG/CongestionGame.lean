@@ -5,9 +5,9 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Core.GameProperties
-import GameTheory.Concepts.SolutionConcepts
-import GameTheory.Concepts.PotentialFIP
-import GameTheory.Concepts.PotentialWellFounded
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Potential.PotentialFIP
+import GameTheory.Concepts.Potential.PotentialWellFounded
 import Math.Probability
 
 /-!
