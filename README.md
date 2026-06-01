@@ -39,6 +39,10 @@ Formal proofs of standard results in finite game theory:
   cycle approximation and minmax punishment
 - **MAID → EFG perfect recall preservation** — a MAID with perfect recall
   produces an EFG tree with perfect recall, using DAG topological ordering
+- **Aumann's agreement theorem** — agents with a common prior who share an
+  information-partition cell have equal posteriors ("agreeing to disagree" is
+  impossible), with the full-agreement version on common self-evident events
+  and an S5 knowledge operator (`Concepts/CommonKnowledge.lean`)
 
 ## Core abstractions
 
@@ -157,7 +161,35 @@ than as tree-based information sets. Key results:
 - Bayesian games with type spaces
 - Incentive compatibility (dominant-strategy and Bayesian)
 - Revelation principle
-- Social choice and aggregation
+- Finite information design / Bayesian persuasion (signal structures, Bayes
+  plausibility, sender/receiver persuasion primitives)
+- Social choice and aggregation, including one direction of **Arrow's
+  impossibility theorem** (a dictatorial social welfare function satisfies
+  Pareto and independence of irrelevant alternatives)
+
+## Cooperative game theory
+
+A parallel `Cooperative/` branch formalizes the cooperative tradition, whose
+primitives are coalition value functions, feasible payoff sets, and preference
+rankings rather than per-player strategies. It does **not** go through
+`KernelGame` — apart from the player-index type and `ℝ` it shares no
+load-bearing abstractions with the non-cooperative core, and lives in the same
+package only for packaging convenience.
+
+- **Coalitional (TU) games** — the **Shapley value** and its uniqueness via
+  unanimity-game decomposition (efficiency, symmetry, dummy, additivity), the
+  Banzhaf index and the Shapley–Shubik power index on simple games, convex
+  (supermodular) games with the monotone-marginals characterization, and the
+  core (with nonemptiness for convex games)
+- **Nash bargaining** — the Nash bargaining solution for two-player problems
+  (Pareto optimality, symmetry, affine invariance) and the egalitarian (Kalai)
+  solution
+- **Stable matching** — two-sided matching markets, blocking pairs, and
+  Gale–Shapley stability
+
+Note: "cooperative" here refers to the *formalism* (coalition-value functions,
+axiomatic solutions), not to strategic games with aligned interests — those
+(`IsTeamGame`, symmetric games) live in the non-cooperative `Concepts/` layer.
 
 ## Mathematical infrastructure
 
