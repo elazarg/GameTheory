@@ -11,7 +11,7 @@ import Math.ProbabilityMassFunction
 /-!
 # Correlation Regimes
 
-Public correlation is weaker than mediated correlation.  A public signal can
+Public-signal Nash is weaker than mediated correlation.  A public signal can
 select a mixed Nash equilibrium, but because the signal is common knowledge,
 players condition on the signal before choosing actions.  The induced profile
 law is therefore a mixture of product distributions coming from Nash profiles.
@@ -19,7 +19,7 @@ law is therefore a mixture of product distributions coming from Nash profiles.
 This file records the basic ladder:
 
 * mixtures of correlated equilibria are correlated equilibria;
-* every public-correlated equilibrium induces a correlated equilibrium;
+* every public-signal Nash regime induces a correlated equilibrium;
 * public-regime payoffs are PMF-supported mixtures of mixed-Nash payoffs.
 -/
 
@@ -172,7 +172,7 @@ theorem isCorrelatedEq_bind
     Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
   exact G.isCorrelatedEq_bind_of_bounded ν κ hκ hbd
 
-/-! ## Public correlation -/
+/-! ## Public-signal Nash -/
 
 /-- The law over pure profiles induced by a public signal that selects a mixed
 profile.  Conditional on signal `z`, players independently sample actions from
@@ -183,9 +183,9 @@ noncomputable def publicCorrelatedLaw
     PMF (Profile G) :=
   ν.bind fun z => pmfPi (play z)
 
-/-- Public-correlated equilibrium: every public signal selects a mixed Nash
-equilibrium of the base game. -/
-def IsPublicCorrelatedEq
+/-- Public-signal Nash: every positive-probability public signal selects a
+mixed Nash equilibrium of the base game. -/
+def PublicSignalNash
     (G : KernelGame ι) [Fintype ι] [DecidableEq ι] (ν : PMF Signal)
     (play : Signal → Profile G.mixedExtension) : Prop :=
   ∀ z, ν z ≠ 0 → G.mixedExtension.IsNash (play z)
@@ -207,10 +207,10 @@ theorem correlatedEu_pmfPi_eq_mixedExtension_eu
     (fun ω => G.utility ω who)
   exact G.correlatedEu_pmfPi_eq_mixedExtension_eu_of_bounded σ who hbd
 
-theorem IsPublicCorrelatedEq.isCorrelatedEq_of_bounded
+theorem PublicSignalNash.isCorrelatedEq_of_bounded
     [Fintype ι] [DecidableEq ι] {G : KernelGame ι}
     {ν : PMF Signal} {play : Signal → Profile G.mixedExtension}
-    (hpub : G.IsPublicCorrelatedEq ν play)
+    (hpub : G.PublicSignalNash ν play)
     {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
     G.IsCorrelatedEq (G.publicCorrelatedLaw ν play) := by
   unfold publicCorrelatedLaw
@@ -218,10 +218,10 @@ theorem IsPublicCorrelatedEq.isCorrelatedEq_of_bounded
   intro z hz
   exact G.mixed_nash_isCorrelatedEq_of_bounded (play z) (hpub z hz) hbd
 
-theorem IsPublicCorrelatedEq.isCorrelatedEq
+theorem PublicSignalNash.isCorrelatedEq
     [Fintype ι] [DecidableEq ι] {G : KernelGame ι} [Finite G.Outcome]
     {ν : PMF Signal} {play : Signal → Profile G.mixedExtension}
-    (hpub : G.IsPublicCorrelatedEq ν play) :
+    (hpub : G.PublicSignalNash ν play) :
     G.IsCorrelatedEq (G.publicCorrelatedLaw ν play) := by
   classical
   choose C hbd using fun who =>
@@ -243,10 +243,10 @@ noncomputable def publicRegimePayoff
     (play : Signal → Profile G.mixedExtension) : ι → ℝ :=
   fun i => expect ν (fun z => G.mixedExtension.eu (play z) i)
 
-theorem IsPublicCorrelatedEq.publicRegimePayoff_isMixedNashPayoffMixture
+theorem PublicSignalNash.publicRegimePayoff_isMixedNashPayoffMixture
     [Fintype ι] [DecidableEq ι] {G : KernelGame ι} {ν : PMF Signal}
     {play : Signal → Profile G.mixedExtension}
-    (hpub : G.IsPublicCorrelatedEq ν play) :
+    (hpub : G.PublicSignalNash ν play) :
     G.IsMixedNashPayoffMixture (G.publicRegimePayoff ν play) :=
   ⟨Signal, ν, play, hpub, fun _ => rfl⟩
 
@@ -273,10 +273,10 @@ theorem correlatedEu_publicCorrelatedLaw_eq_publicRegimePayoff
   exact G.correlatedEu_publicCorrelatedLaw_eq_publicRegimePayoff_of_bounded
     ν play who hbd
 
-theorem IsPublicCorrelatedEq.correlatedPayoff_isMixedNashPayoffMixture_of_bounded
+theorem PublicSignalNash.correlatedPayoff_isMixedNashPayoffMixture_of_bounded
     [Fintype ι] [DecidableEq ι] {G : KernelGame ι}
     {ν : PMF Signal} {play : Signal → Profile G.mixedExtension}
-    (hpub : G.IsPublicCorrelatedEq ν play)
+    (hpub : G.PublicSignalNash ν play)
     {C : ι → ℝ} (hbd : ∀ who ω, |G.utility ω who| ≤ C who) :
     G.IsMixedNashPayoffMixture
       (fun i => G.correlatedEu (G.publicCorrelatedLaw ν play) i) := by
@@ -285,10 +285,10 @@ theorem IsPublicCorrelatedEq.correlatedPayoff_isMixedNashPayoffMixture_of_bounde
   exact G.correlatedEu_publicCorrelatedLaw_eq_publicRegimePayoff_of_bounded
     ν play i (hbd i)
 
-theorem IsPublicCorrelatedEq.correlatedPayoff_isMixedNashPayoffMixture
+theorem PublicSignalNash.correlatedPayoff_isMixedNashPayoffMixture
     [Fintype ι] [DecidableEq ι] {G : KernelGame ι} [Finite G.Outcome]
     {ν : PMF Signal} {play : Signal → Profile G.mixedExtension}
-    (hpub : G.IsPublicCorrelatedEq ν play) :
+    (hpub : G.PublicSignalNash ν play) :
     G.IsMixedNashPayoffMixture
       (fun i => G.correlatedEu (G.publicCorrelatedLaw ν play) i) := by
   classical

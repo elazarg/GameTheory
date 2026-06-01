@@ -24,13 +24,13 @@ namespace CheapTalkExtension
 variable {G : KernelGame (Fin 2)}
 
 /-- In a two-player constant-sum game, any cheap-talk profile whose induced
-public regime is a public-correlated equilibrium has the base Nash value. -/
-theorem InducesPublicCorrelatedEq.constantSum_mixedExtension_eu_eq_base_nash
+public regime is public-signal Nash has the base Nash value. -/
+theorem InducesPublicSignalNash.constantSum_mixedExtension_eu_eq_base_nash
     (C : G.CheapTalkExtension) [Finite G.Outcome]
     [∀ i, Finite (C.Msg i)] [∀ i, Finite (C.game.Strategy i)]
     {c : ℝ} (hcs : G.IsConstantSum c)
     {τ : Profile C.game.mixedExtension}
-    (hpub : C.InducesPublicCorrelatedEq τ)
+    (hpub : C.InducesPublicSignalNash τ)
     {σ : Profile G} (hN : G.IsNash σ) :
     C.game.mixedExtension.eu τ 0 = G.eu σ 0 := by
   rw [C.mixedExtension_eu_eq_correlatedEu_mixedActionLaw τ 0]
@@ -52,12 +52,12 @@ theorem mixedNash_constantSum_mixedExtension_eu_eq_base_nash
 
 /-- Zero-sum specialization of
 `constantSum_mixedExtension_eu_eq_base_nash`. -/
-theorem InducesPublicCorrelatedEq.zeroSum_mixedExtension_eu_eq_base_nash
+theorem InducesPublicSignalNash.zeroSum_mixedExtension_eu_eq_base_nash
     (C : G.CheapTalkExtension) [Finite G.Outcome]
     [∀ i, Finite (C.Msg i)] [∀ i, Finite (C.game.Strategy i)]
     (hzs : G.IsZeroSum)
     {τ : Profile C.game.mixedExtension}
-    (hpub : C.InducesPublicCorrelatedEq τ)
+    (hpub : C.InducesPublicSignalNash τ)
     {σ : Profile G} (hN : G.IsNash σ) :
     C.game.mixedExtension.eu τ 0 = G.eu σ 0 :=
   hpub.constantSum_mixedExtension_eu_eq_base_nash C (c := 0) hzs hN
