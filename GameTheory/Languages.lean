@@ -10,6 +10,7 @@ import GameTheory.Languages.EFG
 import GameTheory.Languages.NFG
 import GameTheory.Languages.MultiRound
 import GameTheory.Languages.MAID
+import GameTheory.Languages.ElectronicMailGame
 import GameTheory.Languages.Intrinsic.Compile
 import GameTheory.Languages.Intrinsic.Examples
 import GameTheory.Languages.Intrinsic.PerfectRecall
