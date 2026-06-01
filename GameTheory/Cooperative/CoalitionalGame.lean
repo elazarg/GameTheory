@@ -37,7 +37,7 @@ namespace GameTheory
 open Math.Probability
 
 /-- A transferable-utility coalitional game: `v S` is the value of coalition `S`. -/
-structure CoalGame (ι : Type) [Fintype ι] [DecidableEq ι] where
+structure CoalGame (ι : Type) [DecidableEq ι] where
   /-- Characteristic function: value of each coalition. -/
   v : Finset ι → ℝ
   /-- Empty coalition has zero value. -/
@@ -46,6 +46,11 @@ structure CoalGame (ι : Type) [Fintype ι] [DecidableEq ι] where
 namespace CoalGame
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+-- Coalition-level notions (marginal contribution, null players, game algebra)
+-- depend only on finite coalitions, never on enumerating the player universe.
+-- `Fintype ι` is re-introduced only for the Shapley/core/Banzhaf results below.
+omit [Fintype ι]
 
 @[ext]
 theorem ext {G₁ G₂ : CoalGame ι} (h : ∀ S, G₁.v S = G₂.v S) : G₁ = G₂ := by
@@ -59,6 +64,8 @@ def marginalContribution (G : CoalGame ι) (i : ι) (S : Finset ι) : ℝ :=
     every coalition is zero. -/
 def IsNull (G : CoalGame ι) (i : ι) : Prop :=
   ∀ S : Finset ι, i ∉ S → G.marginalContribution i S = 0
+
+variable [Fintype ι]
 
 /-- The Shapley value: player `i`'s share. -/
 noncomputable def shapleyValue (G : CoalGame ι) (i : ι) : ℝ :=
@@ -122,10 +129,14 @@ theorem shapleyValue_null (G : CoalGame ι) {i : ι} (h : G.IsNull i) :
   simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hS
   rw [h S hS, mul_zero]
 
+omit [Fintype ι]
+
 /-- Sum of two coalitional games. -/
 def gameAdd (G₁ G₂ : CoalGame ι) : CoalGame ι where
   v := fun S => G₁.v S + G₂.v S
   v_empty := by simp [G₁.v_empty, G₂.v_empty]
+
+variable [Fintype ι]
 
 /-- Shapley value is additive across games. -/
 theorem shapleyValue_additive (G₁ G₂ : CoalGame ι) (i : ι) :
@@ -135,6 +146,8 @@ theorem shapleyValue_additive (G₁ G₂ : CoalGame ι) (i : ι) :
   congr 1
   ext S
   ring
+
+omit [Fintype ι]
 
 /-- Two players are symmetric if swapping them in any coalition
     preserves the value. -/
@@ -154,6 +167,8 @@ theorem marginalContribution_eq_of_symmetric (G : CoalGame ι) {i j : ι}
 def gameScalar (c : ℝ) (G : CoalGame ι) : CoalGame ι where
   v := fun S => c * G.v S
   v_empty := by simp [G.v_empty]
+
+variable [Fintype ι]
 
 /-- Shapley value is linear: scales with scalar multiplication. -/
 theorem shapleyValue_scalar (c : ℝ) (G : CoalGame ι) (i : ι) :
@@ -408,6 +423,8 @@ present coalition contains all of `S`, and `0` otherwise. These games
 are the building blocks: every coalitional game decomposes uniquely as
 a linear combination of unanimity games (Shapley 1953). -/
 
+omit [Fintype ι]
+
 /-- Unanimity game on coalition `S`: `v T = 1` if `S ⊆ T`, else `0`. -/
 def unanimityGame (S : Finset ι) (hS : S.Nonempty) : CoalGame ι where
   v := fun T => if S ⊆ T then 1 else 0
@@ -452,12 +469,16 @@ theorem unanimityGame_areSymmetric (S : Finset ι) (hS : S.Nonempty)
     · exact hiT'
   simp [hni, hnj]
 
+variable [Fintype ι]
+
 /-- The grand coalition contains every nonempty `S`, so the unanimity
 game on `S` has value `1` on `univ`. -/
 theorem unanimityGame_v_univ (S : Finset ι) (hS : S.Nonempty) :
     (unanimityGame S hS).v Finset.univ = 1 := by
   have : S ⊆ Finset.univ := S.subset_univ
   simp [unanimityGame, this]
+
+omit [Fintype ι]
 
 /-- Möbius coefficient of `S` in the unanimity-basis decomposition of `G`:
 `c_S = Σ_{R ⊆ S} (-1)^{|S| - |R|} · G.v R`. Together with the unanimity
@@ -556,6 +577,8 @@ theorem unanimity_decomposition (G : CoalGame ι) (T : Finset ι) :
   rw [Finset.sum_ite_eq' T.powerset T G.v,
     if_pos (Finset.mem_powerset.mpr Finset.Subset.rfl)]
 
+variable [Fintype ι]
+
 /-- **Value on unanimity games**: any allocation `φ` satisfying *efficiency*,
 *symmetry*, and the *null-player* axioms must split the unit of value of
 `unanimityGame S` equally among the members of `S`, and pay zero to
@@ -610,6 +633,8 @@ theorem allocation_on_unanimityGame
     rw [if_neg hiS]
     exact h_null G (unanimityGame_isNull_of_notMem S hS hiS)
 
+omit [Fintype ι]
+
 /-- Indexed sum of coalitional games: `(gameSum s f).v T = Σ_{a ∈ s} (f a).v T`. -/
 noncomputable def gameSum {α : Type*} (s : Finset α) (f : α → CoalGame ι) :
     CoalGame ι where
@@ -653,6 +678,8 @@ theorem gameSum_allocation_eq
       simp [gameAdd, Finset.sum_insert ha]
     rw [hext, h_add, ih, Finset.sum_insert ha]
 
+variable [Fintype ι]
+
 /-- A finite sum of games has a core allocation obtained by summing core
 allocations termwise. -/
 theorem gameSum_isCore
@@ -680,10 +707,14 @@ theorem gameSum_isCore
               IsCore.coalition_rational (f a) (hx a ha) T)
       _ = (gameSum s f).v T := rfl
 
+omit [Fintype ι]
+
 /-- The constant-zero coalitional game. -/
 noncomputable def zeroGame : CoalGame ι where
   v := fun _ => 0
   v_empty := rfl
+
+variable [Fintype ι]
 
 /-- The Shapley value of the zero game is in its core. -/
 theorem zeroGame_shapleyValue_isCore :
@@ -698,11 +729,15 @@ theorem zeroGame_shapleyValue_isCore :
       simp [marginalContribution, zeroGame]
     rw [shapleyValue_null _ hnull]
 
+omit [Fintype ι]
+
 /-- The S-th term in the unanimity-basis decomposition of `G`:
 `c_S · u_S` for nonempty S, and the zero game when `S = ∅`. -/
 noncomputable def decompTerm (G : CoalGame ι) (S : Finset ι) : CoalGame ι :=
   if hS : S.Nonempty then gameScalar (G.unanimityCoeff S) (unanimityGame S hS)
   else zeroGame
+
+variable [Fintype ι]
 
 /-- **Sum-game form of the unanimity decomposition**: every coalitional
 game `G` equals the `gameSum` over all subsets of `univ` of its
@@ -922,6 +957,10 @@ joining a larger coalition is at least as valuable. Convex games have
 nonempty cores (and the Shapley value is in the core); we develop the
 monotone-marginals characterization here. -/
 
+-- The convexity / monotone-marginals theory is about finite coalitions only;
+-- it needs no enumeration of the player universe, so `Fintype ι` is dropped here.
+omit [Fintype ι]
+
 /-- A coalitional game is *convex* (supermodular) when value enjoys the
 inclusion-exclusion inequality. -/
 def IsConvex (G : CoalGame ι) : Prop :=
@@ -1032,6 +1071,8 @@ theorem IsConvex.gameScalar {G : CoalGame ι} (h : G.IsConvex)
   have h_ineq := h S T
   nlinarith
 
+variable [Fintype ι]
+
 /-- **Shapley value of a unanimity game**: the unit value is split equally
 among the members of `S`, and non-members get zero. Immediate corollary
 of `allocation_on_unanimityGame` applied to `shapleyValue` itself (which
@@ -1127,6 +1168,8 @@ theorem shapleyValue_isCore_of_nonneg_unanimityCoeff
   ext i
   exact halloc_sum i
 
+omit [Fintype ι]
+
 /-- **Unanimity games are convex**. The value function jumps from `0` to
 `1` exactly when `S` becomes a subset, and `S ⊆ A ∩ B ↔ S ⊆ A ∧ S ⊆ B`,
 which is exactly the supermodular inequality on `{0,1}`-valued games. -/
@@ -1168,10 +1211,14 @@ def additiveGame (α : ι → ℝ) : CoalGame ι where
 theorem additiveGame_v (α : ι → ℝ) (S : Finset ι) :
     (additiveGame α).v S = ∑ i ∈ S, α i := rfl
 
+variable [Fintype ι]
+
 /-- In an additive game, the weight vector `α` itself is in the core
 (with equality on every coalition). -/
 theorem additiveGame_isCore (α : ι → ℝ) : (additiveGame α).IsCore α :=
   ⟨rfl, fun _ => le_refl _⟩
+
+omit [Fintype ι]
 
 /-- A player's marginal contribution in an additive game is exactly
 their own weight `α i`, independent of the coalition. -/
@@ -1181,6 +1228,8 @@ theorem additiveGame_marginalContribution (α : ι → ℝ) (i : ι)
   simp only [marginalContribution, additiveGame_v,
     Finset.sum_insert hi]
   ring
+
+variable [Fintype ι]
 
 /-- An additive game decomposes as a sum of scaled singleton-unanimity games. -/
 theorem additiveGame_eq_gameSum (α : ι → ℝ) :
