@@ -133,6 +133,28 @@ omit [DecidableEq ι] in
     simp [actionProfile, proj, C.messageProfile_update_embedProfile σ i s']
   · simp [actionProfile, embedProfile, embed, Function.update, h]
 
+@[simp] theorem messageProfile_update_sameMessage (C : CheapTalkExtension F)
+    (σ' : C.form.Profile) (who : ι)
+    (plan : (∀ j : ι, C.Msg j) → F.Strategy who) :
+    C.messageProfile (Function.update σ' who ((σ' who).1, plan)) =
+      C.messageProfile σ' := by
+  funext i
+  by_cases h : i = who
+  · subst h
+    simp [messageProfile]
+  · simp [messageProfile, Function.update, h]
+
+@[simp] theorem actionProfile_update_sameMessage_constPlan
+    (C : CheapTalkExtension F) (σ' : C.form.Profile) (who : ι)
+    (s : F.Strategy who) :
+    C.actionProfile (Function.update σ' who ((σ' who).1, fun _ => s)) =
+      Function.update (C.actionProfile σ') who s := by
+  funext i
+  by_cases h : i = who
+  · subst h
+    simp [actionProfile]
+  · simp [actionProfile, Function.update, h]
+
 @[simp] theorem outcomeKernel_update_embedProfile (C : CheapTalkExtension F)
     (σ : F.Profile) (who : ι) (s' : C.form.Strategy who) :
     C.form.outcomeKernel (Function.update (C.embedProfile σ) who s') =
