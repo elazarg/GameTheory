@@ -30,19 +30,15 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type} [Fintype ι]
+variable {ι : Type}
 
 /-- A (direct) mechanism: players report types, the mechanism maps
     reported types to payoffs for each player. -/
-structure Mechanism (ι : Type) [Fintype ι] where
+structure Mechanism (ι : Type) where
   /-- Type space for each player. -/
   Θ : ι → Type
-  [instFintypeΘ : ∀ i, Fintype (Θ i)]
-  [instNonemptyΘ : ∀ i, Nonempty (Θ i)]
   /-- Outcome rule: maps reported types to per-player payoff. -/
   outcome : (∀ i, Θ i) → ι → ℝ
-
-attribute [instance] Mechanism.instFintypeΘ Mechanism.instNonemptyΘ
 
 namespace Mechanism
 
@@ -64,7 +60,8 @@ def isBIC (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i)) : Prop :=
 
 open Classical in
 /-- Dominant-strategy IC implies Bayesian IC for any prior. -/
-theorem isIC_implies_isBIC (M : Mechanism ι) (hIC : M.isIC) (μ : PMF (∀ i, M.Θ i)) :
+theorem isIC_implies_isBIC (M : Mechanism ι) [Finite (∀ i, M.Θ i)]
+    (hIC : M.isIC) (μ : PMF (∀ i, M.Θ i)) :
     M.isBIC μ := by
   intro who θ'
   rw [ge_iff_le]
@@ -106,8 +103,8 @@ theorem update_truthful_apply (M : Mechanism ι)
 open Classical in
 /-- Dominant-strategy IC implies truthful reporting is a Bayes-Nash
     equilibrium of the induced game (for any prior). -/
-theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) (hIC : M.isIC)
-    (μ : PMF (∀ i, M.Θ i)) :
+theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) [Finite (∀ i, M.Θ i)]
+    (hIC : M.isIC) (μ : PMF (∀ i, M.Θ i)) :
     (M.inducedBayesianGame μ).BayesNash (M.truthful μ) := by
   rw [BayesianGame.bayesNash_iff_exAnteEU]
   intro who s'
@@ -129,7 +126,7 @@ theorem isStrategyProof_iff_isIC (M : Mechanism ι) :
 
 /-- *Social welfare* of a mechanism on a report profile is the sum of
 players' payoffs (utilitarian aggregate). -/
-def socialWelfare (M : Mechanism ι) (θ : ∀ i, M.Θ i) : ℝ :=
+def socialWelfare [Fintype ι] (M : Mechanism ι) (θ : ∀ i, M.Θ i) : ℝ :=
   ∑ i, M.outcome θ i
 
 /-- A mechanism is *(weakly) individually rational* w.r.t. an outside-option

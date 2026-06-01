@@ -39,26 +39,19 @@ open Math.Probability
   - A utility function depending on the joint type and joint action
 
   The common prior `μ` is a joint distribution over all types. -/
-structure BayesianGame (ι : Type) [Fintype ι] where
+structure BayesianGame (ι : Type) where
   /-- Type space for each player. -/
   Θ : ι → Type
-  [instFintypeΘ : ∀ i, Fintype (Θ i)]
-  [instNonemptyΘ : ∀ i, Nonempty (Θ i)]
   /-- Action set for each player. -/
   Act : ι → Type
-  [instFintypeAct : ∀ i, Fintype (Act i)]
-  [instNonemptyAct : ∀ i, Nonempty (Act i)]
   /-- Common prior over joint types. -/
   prior : PMF (∀ i, Θ i)
   /-- Type-and-action-dependent payoff. -/
   utility : (∀ i, Θ i) → (∀ i, Act i) → ι → ℝ
 
-attribute [instance] BayesianGame.instFintypeΘ BayesianGame.instNonemptyΘ
-  BayesianGame.instFintypeAct BayesianGame.instNonemptyAct
-
 namespace BayesianGame
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [DecidableEq ι]
 
 /-- A (pure) strategy in a Bayesian game: a map from own type to action. -/
 abbrev Strategy (B : BayesianGame ι) (i : ι) := B.Θ i → B.Act i
