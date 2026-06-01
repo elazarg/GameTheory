@@ -162,6 +162,32 @@ theorem shapleyValue_scalar (c : ℝ) (G : CoalGame ι) (i : ι) :
   rw [Finset.mul_sum]
   congr 1; ext S; ring
 
+/-! ### Core closure under linear game operations -/
+
+/-- The sum of two core allocations is a core allocation of the sum game. -/
+theorem IsCore.gameAdd {G₁ G₂ : CoalGame ι} {x y : ι → ℝ}
+    (hx : G₁.IsCore x) (hy : G₂.IsCore y) :
+    (gameAdd G₁ G₂).IsCore (fun i => x i + y i) := by
+  refine ⟨?_, ?_⟩
+  · rw [Finset.sum_add_distrib, IsCore.efficient G₁ hx, IsCore.efficient G₂ hy]
+    rfl
+  · intro S
+    rw [Finset.sum_add_distrib]
+    exact add_le_add (IsCore.coalition_rational G₁ hx S)
+      (IsCore.coalition_rational G₂ hy S)
+
+/-- A nonnegative scalar multiple of a core allocation is a core allocation
+of the scaled game. -/
+theorem IsCore.gameScalar {G : CoalGame ι} {x : ι → ℝ}
+    (hx : G.IsCore x) {c : ℝ} (hc : 0 ≤ c) :
+    (gameScalar c G).IsCore (fun i => c * x i) := by
+  refine ⟨?_, ?_⟩
+  · rw [← Finset.mul_sum, IsCore.efficient G hx]
+    rfl
+  · intro S
+    rw [← Finset.mul_sum]
+    exact mul_le_mul_of_nonneg_left (IsCore.coalition_rational G hx S) hc
+
 open Classical in
 /-- Symmetric players have the same Shapley value. -/
 theorem shapleyValue_symmetric (G : CoalGame ι) {i j : ι} (hne : i ≠ j)
@@ -627,10 +653,50 @@ theorem gameSum_allocation_eq
       simp [gameAdd, Finset.sum_insert ha]
     rw [hext, h_add, ih, Finset.sum_insert ha]
 
+/-- A finite sum of games has a core allocation obtained by summing core
+allocations termwise. -/
+theorem gameSum_isCore
+    {α : Type*} (s : Finset α) (f : α → CoalGame ι) (x : α → ι → ℝ)
+    (hx : ∀ a ∈ s, (f a).IsCore (x a)) :
+    (gameSum s f).IsCore (fun i => ∑ a ∈ s, x a i) := by
+  classical
+  refine ⟨?_, ?_⟩
+  · calc
+      ∑ i, (∑ a ∈ s, x a i)
+          = ∑ a ∈ s, ∑ i, x a i := by
+            rw [Finset.sum_comm]
+      _ = ∑ a ∈ s, (f a).v Finset.univ := by
+            refine Finset.sum_congr rfl ?_
+            intro a ha
+            exact (IsCore.efficient (f a) (hx a ha))
+      _ = (gameSum s f).v Finset.univ := rfl
+  · intro T
+    calc
+      ∑ i ∈ T, (∑ a ∈ s, x a i)
+          = ∑ a ∈ s, ∑ i ∈ T, x a i := by
+            rw [Finset.sum_comm]
+      _ ≥ ∑ a ∈ s, (f a).v T := by
+            exact Finset.sum_le_sum (fun a ha =>
+              IsCore.coalition_rational (f a) (hx a ha) T)
+      _ = (gameSum s f).v T := rfl
+
 /-- The constant-zero coalitional game. -/
 noncomputable def zeroGame : CoalGame ι where
   v := fun _ => 0
   v_empty := rfl
+
+/-- The Shapley value of the zero game is in its core. -/
+theorem zeroGame_shapleyValue_isCore :
+    (zeroGame (ι := ι)).IsCore (fun i => (zeroGame (ι := ι)).shapleyValue i) := by
+  constructor
+  · exact shapleyValue_efficient (zeroGame (ι := ι))
+  · intro S
+    apply Finset.sum_nonneg
+    intro i _
+    have hnull : (zeroGame (ι := ι)).IsNull i := by
+      intro T _
+      simp [marginalContribution, zeroGame]
+    rw [shapleyValue_null _ hnull]
 
 /-- The S-th term in the unanimity-basis decomposition of `G`:
 `c_S · u_S` for nonempty S, and the zero game when `S = ∅`. -/
@@ -974,6 +1040,92 @@ theorem unanimityGame_shapleyValue (S : Finset ι) (hS : S.Nonempty) (i : ι) :
     (unanimityGame S hS).shapleyValue i = if i ∈ S then (1 : ℝ) / S.card else 0 :=
   allocation_on_unanimityGame shapleyValue
     shapleyValue_efficient shapleyValue_symmetric shapleyValue_null S hS i
+
+/-- The Shapley value of a unanimity game is in its core. -/
+theorem unanimityGame_shapleyValue_isCore (S : Finset ι) (hS : S.Nonempty) :
+    (unanimityGame S hS).IsCore (fun i => (unanimityGame S hS).shapleyValue i) := by
+  classical
+  refine ⟨shapleyValue_efficient _, ?_⟩
+  intro T
+  by_cases hST : S ⊆ T
+  · have hsum :
+        (∑ i ∈ T, (unanimityGame S hS).shapleyValue i) = 1 := by
+      have hfilter : T.filter (fun i => i ∈ S) = S := by
+        ext i
+        simp [hST]
+      calc
+        ∑ i ∈ T, (unanimityGame S hS).shapleyValue i
+            = ∑ i ∈ T, if i ∈ S then (1 : ℝ) / S.card else 0 := by
+              refine Finset.sum_congr rfl ?_
+              intro i _
+              rw [unanimityGame_shapleyValue]
+        _ = ∑ i ∈ T.filter (fun i => i ∈ S), (1 : ℝ) / S.card := by
+              rw [← Finset.sum_filter]
+        _ = ∑ i ∈ S, (1 : ℝ) / S.card := by rw [hfilter]
+        _ = 1 := by
+              rw [Finset.sum_const, nsmul_eq_mul]
+              have hcard_ne : (S.card : ℝ) ≠ 0 := by
+                exact_mod_cast (Finset.card_ne_zero.mpr hS)
+              field_simp [hcard_ne]
+    rw [hsum]
+    simp [unanimityGame, hST]
+  · have hnonneg :
+        0 ≤ ∑ i ∈ T, (unanimityGame S hS).shapleyValue i := by
+      apply Finset.sum_nonneg
+      intro i _
+      rw [unanimityGame_shapleyValue]
+      split_ifs
+      · exact div_nonneg zero_le_one (by exact_mod_cast Nat.zero_le S.card)
+      · exact le_refl 0
+    simpa [unanimityGame, hST] using hnonneg
+
+/-- A scalar multiple of a game whose Shapley value is in the core still has
+its Shapley value in the core, provided the scalar is nonnegative. -/
+theorem gameScalar_shapleyValue_isCore {G : CoalGame ι} {c : ℝ} (hc : 0 ≤ c)
+    (hcore : G.IsCore (fun i => G.shapleyValue i)) :
+    (gameScalar c G).IsCore (fun i => (gameScalar c G).shapleyValue i) := by
+  convert hcore.gameScalar hc using 1
+  ext i
+  rw [shapleyValue_scalar]
+
+/-- If every unanimity-basis coefficient is nonnegative, then each term in the
+unanimity decomposition has its Shapley value in the core. -/
+theorem decompTerm_shapleyValue_isCore_of_nonneg_unanimityCoeff
+    (G : CoalGame ι) (hcoeff : ∀ S : Finset ι, 0 ≤ G.unanimityCoeff S)
+    (S : Finset ι) :
+    (G.decompTerm S).IsCore (fun i => (G.decompTerm S).shapleyValue i) := by
+  classical
+  simp only [decompTerm]
+  by_cases hS : S.Nonempty
+  · simp only [hS, dif_pos]
+    exact gameScalar_shapleyValue_isCore (hcoeff S)
+      (unanimityGame_shapleyValue_isCore S hS)
+  · simp only [hS, dif_neg, not_false_iff]
+    exact zeroGame_shapleyValue_isCore
+
+/-- Games with nonnegative unanimity-basis coefficients have the Shapley value
+in the core. This covers the positive cone generated by unanimity games. -/
+theorem shapleyValue_isCore_of_nonneg_unanimityCoeff
+    (G : CoalGame ι) (hcoeff : ∀ S : Finset ι, 0 ≤ G.unanimityCoeff S) :
+    G.IsCore (fun i => G.shapleyValue i) := by
+  classical
+  let terms := (Finset.univ : Finset (Finset ι))
+  let alloc : Finset ι → ι → ℝ := fun S i => (G.decompTerm S).shapleyValue i
+  have hterm : ∀ S ∈ terms, (G.decompTerm S).IsCore (alloc S) := by
+    intro S _
+    exact G.decompTerm_shapleyValue_isCore_of_nonneg_unanimityCoeff hcoeff S
+  have hsum_core :
+      (gameSum terms G.decompTerm).IsCore (fun i => ∑ S ∈ terms, alloc S i) :=
+    gameSum_isCore terms G.decompTerm alloc hterm
+  have halloc_sum : ∀ i,
+      (gameSum terms G.decompTerm).shapleyValue i = ∑ S ∈ terms, alloc S i := by
+    intro i
+    exact gameSum_allocation_eq shapleyValue
+      (fun G₁ G₂ j => shapleyValue_additive G₁ G₂ j) terms G.decompTerm i
+  rw [G.eq_gameSum_decompTerm]
+  convert hsum_core using 1
+  ext i
+  exact halloc_sum i
 
 /-- **Unanimity games are convex**. The value function jumps from `0` to
 `1` exactly when `S` becomes a subset, and `S ⊆ A ∩ B ↔ S ⊆ A ∧ S ⊆ B`,

@@ -430,8 +430,9 @@ and that all players obtain equal EU at a symmetric profile.
 Existence of a \emph{symmetric} mixed Nash equilibrium (i.e.\ a
 fixed point of the gain map within the symmetric subspace) is a
 classical corollary of mixed Nash existence~\citep{Nash1951}; the
-corollary is not packaged in the library and is listed in
-\Cref{sec:future} as a natural next step.  \emph{Evolutionary
+library packages this corollary for finite symmetric games by
+restricting the Nash gain map to the diagonal mixed-strategy
+simplex.  \emph{Evolutionary
 stability}~\citep{MaynardSmithPrice1973} is formalized as the
 appropriate strict-dominance condition on a symmetric two-player
 game.
@@ -439,7 +440,8 @@ game.
 \leancorr{\TT{Concepts/ZeroSum.lean}, \TT{Concepts/ConstantSum.lean},
 \TT{Concepts/ZeroSumNash.lean}, \TT{Concepts/ConstantSumNash.lean},
 \TT{Concepts/TeamGame.lean}, \TT{Concepts/SymmetricGame.lean}
-(\TT{isSymmetricEU\_nash\_perm}, \TT{isSymmetricEU\_eu\_eq}),
+(\TT{isSymmetricEU\_nash\_perm}, \TT{isSymmetricEU\_eu\_eq},
+\TT{symmetric\_mixed\_nash\_exists}),
 \TT{Concepts/EvolutionaryStability.lean}.}
 
 \subsection{Common knowledge}
