@@ -243,9 +243,17 @@ faithful (i.e.\ Nash equilibria pull back, dominance pulls back,
 etc., under hypotheses on $\stratMap$).  At the \TT{KernelGame}
 level we add the utility-preservation condition
 $\util'(\outcomeMap(\omega))(i) = \util(\omega)(i)$, yielding a
-\emph{kernel-game simulation}, and call the morphism an
-\emph{EU-isomorphism} when both $\stratMap$ and $\outcomeMap$ are
-bijective and the inverse is also a simulation.
+\emph{kernel-game simulation} (the code's \TT{KernelGame.Morphism},
+which preserves the full joint utility distribution \TT{udist}), and
+call the morphism a \emph{utility-preserving isomorphism}
+(\TT{KernelGame.GameIsomorphism} / \TT{Bisimulation}) when both
+$\stratMap$ and $\outcomeMap$ are bijective and the inverse is also a
+simulation.  Preserving the joint payoff law transports \emph{any}
+preference over outcome distributions; expected-utility preservation
+is the mean-functional corollary, not the definition.  The genuinely
+EU-only variants — which preserve each player's mean but not the full
+payoff law — are the explicitly specialized \TT{EUMorphism} and
+\TT{EUGameIsomorphism}.
 
 \leancorr{Morphism records in \TT{Core/GameMorphism.lean}
 (\TT{ProtocolMap}, \TT{KernelGame.Morphism}, with the
@@ -276,7 +284,7 @@ $e$.
 \subsection{Transport of solution concepts under bridges}
 \label{sec:semantic-core:transport}
 
-The use we make of protocol maps and EU-isomorphisms in
+The use we make of protocol maps and utility-preserving isomorphisms in
 \Cref{sec:languages:bridges} relies on transport theorems that
 turn semantic preservation into equilibrium preservation.  There
 are two levels.  The first is the familiar map-based case: a
@@ -354,7 +362,7 @@ counterfactual unilateral deviations.
 \noindent
 This is the operational content of contributions 3 and 5 in
 \Cref{sec:introduction}:\ a bridge between two languages, viewed
-as a protocol-preserving (resp.\ EU-preserving) map between the
+as a protocol-preserving (resp.\ utility-distribution--preserving) map between the
 compiled game forms (resp.\ kernel games), automatically
 transports solution concepts.  Concrete bridges
 (\Cref{sec:languages:bridges}) instantiate the theorem with
