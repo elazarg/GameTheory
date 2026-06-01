@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Correlation.CorrelatedNashMixed
-import GameTheory.Theorems.NashExistenceMixed
+import GameTheory.Concepts.Existence.NashExistenceMixed
 
 /-!
 # Correlated Equilibrium Existence

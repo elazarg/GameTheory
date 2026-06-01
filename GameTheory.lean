@@ -41,9 +41,9 @@ import GameTheory.Concepts.Equilibrium.ApproximateNash
 import GameTheory.Concepts.Mixed.MixedExtension
 import GameTheory.Concepts.Mixed.BinaryMixed
 import GameTheory.Concepts.Mixed.TremblingHand
-import GameTheory.Theorems.NashExistence
+import GameTheory.Concepts.Existence.NashExistence
 import GameTheory.Concepts.Existence.ProductSimplexBrouwer
-import GameTheory.Theorems.NashExistenceMixed
+import GameTheory.Concepts.Existence.NashExistenceMixed
 import GameTheory.Concepts.Mixed.MixedSupport
 import GameTheory.Concepts.Foundations.BestResponseDynamics
 import GameTheory.Concepts.Equilibrium.NashProperties

@@ -1,6 +1,6 @@
 import FixedPointTheorems.brouwer
 import FixedPointTheorems.kakutani
-import GameTheory.Theorems.NashExistenceMixed
+import GameTheory.Concepts.Existence.NashExistenceMixed
 import Math.SchauderFixedPoint
 
 #print axioms brouwer_fixed_point

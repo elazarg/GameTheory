@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import Math.Probability
 import Math.PMFProduct
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
-import GameTheory.Theorems.NashExistenceMixed
+import GameTheory.Concepts.Existence.NashExistenceMixed
 
 /-!
 # Symmetric Games

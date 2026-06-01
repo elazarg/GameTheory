@@ -16,7 +16,7 @@ Basic properties of the mixed extension of a kernel game: EU decomposition,
 gain characterization, and the Nash gain-sum identity.
 
 These are definitions and properties of the mixed extension concept, not
-the existence theorem (which lives in `Theorems.NashExistenceMixed`).
+the existence theorem (which lives in `Concepts.Existence.NashExistenceMixed`).
 -/
 
 noncomputable section

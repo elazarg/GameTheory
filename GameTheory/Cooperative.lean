@@ -19,7 +19,7 @@ rest of `GameTheory`, which formalizes non-cooperative game theory
 The cooperative tradition takes *coalitions*, *feasible payoff sets*, or
 *preference rankings* as primitive rather than per-player strategies. As
 a consequence, none of the files in this folder go through `KernelGame`
-or import `Concepts.SolutionConcepts` / `Theorems.NashExistence` / etc.
+or import `Concepts.Equilibrium.SolutionConcepts` / `Concepts.Existence.NashExistence` / etc.
 Apart from the player-index type and `ℝ`, this branch shares no
 load-bearing abstractions with the non-cooperative core; it lives under
 the same package only for packaging convenience.

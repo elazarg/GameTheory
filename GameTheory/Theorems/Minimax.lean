@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.ZeroSum.Minimax
 import GameTheory.Concepts.ZeroSum.ZeroSumNash
-import GameTheory.Theorems.NashExistenceMixed
+import GameTheory.Concepts.Existence.NashExistenceMixed
 import Math.Probability
 
 /-!
