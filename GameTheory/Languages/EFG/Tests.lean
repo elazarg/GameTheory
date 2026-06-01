@@ -43,7 +43,7 @@ example :
 
 example :
     obsOfState (S := oneInfo) (Outcome := Bool) p0 decisionTree = some PUnit.unit := by
-  simp [obsOfState, decisionTree, p0]
+  rfl
 
 example :
     obsOfState (S := oneInfo) (Outcome := Bool) p0 chanceDecisionTree = none := by

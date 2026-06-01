@@ -1,7 +1,7 @@
 name = "GameTheory"
 version = "0.1.0"
 keywords = ["math", "game-theory"]
-defaultTargets = ["GameTheory", "Math", "Semantics"]
+defaultTargets = ["GameTheory", "Math", "Semantics", "GameTheoryTest"]
 fixedToolchain = true
 
 [[require]]
@@ -46,6 +46,38 @@ maxSynthPendingDepth = 3
 
 [[lean_lib]]
 name = "Math"
+srcDir = "."
+[lean_lib.leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+weak.linter.flexible = true
+weak.linter.hashCommand = true
+weak.linter.oldObtain = true
+weak.linter.privateModule = true
+weak.linter.style.cases = true
+weak.linter.style.induction = true
+weak.linter.style.refine = true
+weak.linter.style.cdot = true
+weak.linter.style.docString = true
+weak.linter.style.dollarSyntax = true
+weak.linter.style.emptyLine = true
+weak.linter.style.lambdaSyntax = true
+weak.linter.style.longLine = true
+weak.linter.style.longFile = true
+weak.linter.style.multiGoal = true
+weak.linter.style.nativeDecide = true
+weak.linter.style.openClassical = true
+weak.linter.style.maxHeartbeats = true
+weak.linter.style.missingEnd = true
+weak.linter.style.setOption = true
+weak.linter.style.show = true
+weak.linter.style.whitespace = true
+weak.linter.unusedDecidableInType = true
+weak.linter.unusedFintypeInType = true
+maxSynthPendingDepth = 3
+
+[[lean_lib]]
+name = "GameTheoryTest"
 srcDir = "."
 [lean_lib.leanOptions]
 pp.unicode.fun = true
