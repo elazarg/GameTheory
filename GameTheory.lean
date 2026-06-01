@@ -69,6 +69,7 @@ import GameTheory.Concepts.ZeroSum
 import GameTheory.Concepts.ConstantSum
 import GameTheory.Concepts.ZeroSumNash
 import GameTheory.Concepts.ConstantSumNash
+import GameTheory.Concepts.ConstantSumCorrelated
 
 -- Potential games
 import GameTheory.Concepts.PotentialGame
