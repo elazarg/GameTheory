@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.BinaryMixed
+import GameTheory.Concepts.ConstantSumCorrelated
 import GameTheory.Languages.NFG.Examples
 import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Tactic.NormNum
@@ -132,6 +133,52 @@ theorem matchingPennies_fair_mixed_nash :
     have hcard : Fintype.card MPAction = 2 := by rfl
     rw [hcard]
     norm_num
+
+private theorem matchingPenniesLabels_uniform_eq_fair :
+    matchingPenniesLabels.uniformMixedProfile = matchingPenniesFairMixed := by
+  funext i
+  apply PMF.ext
+  intro a
+  simp only [matchingPenniesFairMixed]
+  change (PMF.uniformOfFintype (matchingPennies.toKernelGame.Strategy i)) a =
+    (PMF.uniformOfFintype MPAction) a
+  rw [PMF.uniformOfFintype_apply, PMF.uniformOfFintype_apply]
+  have hcard_left : Fintype.card (matchingPennies.toKernelGame.Strategy i) = 2 := by
+    change Fintype.card MPAction = 2
+    rfl
+  have hcard_right : Fintype.card MPAction = 2 := by
+    rfl
+  rw [hcard_left, hcard_right]
+
+/-- The fair mixed Nash distribution is a correlated equilibrium of matching pennies. -/
+theorem matchingPennies_fair_correlated_eq :
+    matchingPennies.toKernelGame.IsCorrelatedEq
+      (Math.PMFProduct.pmfPi matchingPenniesFairMixed) := by
+  exact matchingPennies.toKernelGame.mixed_nash_isCorrelatedEq
+    matchingPenniesFairMixed matchingPennies_fair_mixed_nash
+
+/-- Any correlated equilibrium of matching pennies is the independent uniform
+mixed Nash distribution. -/
+theorem matchingPennies_correlated_eq_unique
+    {μ : PMF (GameTheory.KernelGame.Profile matchingPennies.toKernelGame)}
+    (hCE : matchingPennies.toKernelGame.IsCorrelatedEq μ) :
+    μ = Math.PMFProduct.pmfPi matchingPenniesFairMixed := by
+  have h :=
+    GameTheory.KernelGame.MatchingPenniesLike.correlated_eq_unique
+      matchingPennies_matchingPenniesLike hCE
+  simpa [matchingPenniesLabels_uniform_eq_fair] using h
+
+/-- Matching pennies has a unique correlated equilibrium: the independent
+uniform mixed Nash distribution. -/
+theorem matchingPennies_correlated_eq_iff
+    (μ : PMF (GameTheory.KernelGame.Profile matchingPennies.toKernelGame)) :
+    matchingPennies.toKernelGame.IsCorrelatedEq μ ↔
+      μ = Math.PMFProduct.pmfPi matchingPenniesFairMixed := by
+  constructor
+  · exact matchingPennies_correlated_eq_unique
+  · intro hμ
+    rw [hμ]
+    exact matchingPennies_fair_correlated_eq
 
 end
 
