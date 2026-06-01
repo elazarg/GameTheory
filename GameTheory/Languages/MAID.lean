@@ -9,7 +9,6 @@ import GameTheory.Languages.MAID.SOS
 import GameTheory.Languages.MAID.FrontierEval
 import GameTheory.Languages.MAID.Compile
 import GameTheory.Languages.MAID.Theorems
-import GameTheory.Languages.MAID.Examples
 
 /-!
 # GameTheory.Languages.MAID

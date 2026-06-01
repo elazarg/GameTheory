@@ -8,7 +8,6 @@ import GameTheory.Languages.MultiRound.Syntax
 import GameTheory.Languages.MultiRound.SOS
 import GameTheory.Languages.MultiRound.Compile
 import GameTheory.Languages.MultiRound.Theorems
-import GameTheory.Languages.MultiRound.Examples
 
 /-!
 # GameTheory.Languages.MultiRound

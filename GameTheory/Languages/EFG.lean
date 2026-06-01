@@ -12,7 +12,6 @@ import GameTheory.Languages.EFG.Compile
 import GameTheory.Languages.EFG.CompileObs
 import GameTheory.Languages.EFG.Kuhn
 import GameTheory.Languages.EFG.Theorems
-import GameTheory.Languages.EFG.Examples
 import GameTheory.Languages.EFG.Sequential
 import GameTheory.Languages.EFG.Refinements
 import GameTheory.Theorems.OneShotDeviation
@@ -28,5 +27,6 @@ This surface is intentionally textbook-facing:
 - `SOS` exposes the structural execution view
 - `Compile` maps the language into generic semantic targets
 - `Theorems` packages language-level reductions
-- `Examples` stays separate from `Tests`
+
+Reader-facing examples live in the separate `GameTheoryExamples` target.
 -/
