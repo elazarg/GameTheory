@@ -1476,7 +1476,11 @@ The bridges of the next subsection are reductions in this lens.
 \paragraph{NFG → EFG (\TT{Languages/Bridges/NFG_EFG.lean}).}\
 Each finite NFG is presented as a depth-1 EFG with a single
 information set per player and a flat tree of $|\Act_i|$ branches
-at each.  Soundness at the EU-isomorphism level.
+at each.  Soundness at the outcome-law level:\
+\TT{nfgTree\_evalDist\_pure} shows the EFG's \TT{evalDist} on each
+pure profile is the Dirac on the corresponding NFG outcome, so the
+compiled kernel games are utility-distribution equivalent, not merely
+EU-equivalent.
 
 \paragraph{NFG → FOSG (\TT{Languages/Bridges/NFG_FOSG.lean}).}\
 Each finite NFG is presented as a one-shot FOSG with two world
