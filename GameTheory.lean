@@ -63,6 +63,7 @@ import GameTheory.Concepts.CorrelatedEqProperties
 import GameTheory.Concepts.Regret
 import GameTheory.Concepts.CorrelatedNashMixed
 import GameTheory.Concepts.NashCorrelatedEq
+import GameTheory.Concepts.CorrelationRegimes
 
 -- Zero-sum and constant-sum
 import GameTheory.Concepts.ZeroSum
