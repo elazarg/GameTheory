@@ -17,6 +17,7 @@ Provides:
 - `eu` — expected utility for a player under a strategy profile
 - `Profile`, `correlatedOutcome` — standard game-theoretic notions
 - `KernelGame.ofEU` — constructs a kernel game from a direct EU function
+- `KernelGame.ofPureEU` — deterministic strategic-form kernel whose outcomes are pure profiles
 -/
 
 namespace GameTheory
@@ -63,6 +64,30 @@ noncomputable def reindex {ι κ : Type} (e : ι ≃ κ)
 /-- Expected utility of player `who` under strategy profile `σ`. -/
 noncomputable def eu (G : KernelGame ι) (σ : Profile G) (who : ι) : ℝ :=
   expect (G.outcomeKernel σ) (fun ω => G.utility ω who)
+
+open Classical in
+/-- Deterministic strategic-form kernel from a direct payoff function.
+
+Unlike `KernelGame.ofEU`, this keeps the realized pure profile as the outcome.
+For finite strategy spaces this gives a finite outcome carrier, which is useful
+for mixed-extension existence theorems. -/
+noncomputable def ofPureEU
+    (Strategy : ι → Type) (u : (∀ i, Strategy i) → Payoff ι) : KernelGame ι where
+  Strategy := Strategy
+  Outcome := ∀ i, Strategy i
+  utility := fun σ i => u σ i
+  outcomeKernel := fun σ => PMF.pure σ
+
+/-- EU of `ofPureEU` is just the supplied payoff function. -/
+@[simp] theorem eu_ofPureEU
+    (S : ι → Type) (u : (∀ i, S i) → Payoff ι) (σ : ∀ i, S i) (i : ι) :
+    (ofPureEU S u).eu σ i = u σ i := by
+  simp [eu, ofPureEU, expect_pure]
+
+/-- The Strategy field of `ofPureEU S u` is `S` by definition. -/
+@[simp] theorem ofPureEU_Strategy
+    (S : ι → Type) (u : (∀ i, S i) → Payoff ι) :
+    (ofPureEU S u).Strategy = S := rfl
 
 /-- Outcome distribution under a correlated profile distribution (correlation device). -/
 noncomputable def correlatedOutcome (G : KernelGame ι)
