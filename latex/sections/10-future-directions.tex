@@ -64,17 +64,26 @@ Brouwer.
 \label{sec:future:absent-mind}
 
 The Kuhn theorem in the library handles a recall hypothesis
-weaker than perfect recall (per-step ActionPosteriorLocal).  A
-natural extension is to formalize the
-\emph{absent-minded-driver} phenomenon~\citep{PiccioneRubinstein1997}
-— a single-player imperfect-recall puzzle where a player who
-forgets whether they have already made one decision faces a
-time-consistency problem (the ex-ante optimal mixed strategy is
-not the same as the strategy the player would choose at the
-decision point if they could) — and the broader family of
-imperfect-recall pathologies it generates.  These require exactly
-the representation-neutral observation model the library already
-exposes.
+weaker than perfect recall (per-step ActionPosteriorLocal).  The
+basic \emph{absent-minded-driver}
+phenomenon~\citep{PiccioneRubinstein1997} is now formalized in
+\TT{Languages/MultiRound/AbsentMindedDriver.lean}.  The protocol
+has one player and two indistinguishable decision rounds; it
+violates \TT{ViewDeterminesRound}, the MultiRound
+no-absent-mindedness condition.  The payoff calculation is also
+mechanized:\ with payoffs $0$ for the first exit, $4$ for the
+second exit, and $1$ for missing both exits, the ex-ante optimal
+continuation probability is $2/3$, while decision-time
+re-optimization at the single information set under those arrival
+odds chooses $1/3$ and strictly improves the decision-time value.
+
+Natural extensions are the broader imperfect-recall pathologies
+around this example:\ general conditions for time consistency,
+relations between information-set revisitation and behavioral
+optimality, and representation-neutral EFG/FOSG versions of the
+same construction.  These should live on the observation-model
+layer already used by Kuhn's theorem, with the MultiRound example
+serving as the finite sanity check.
 
 \subsection{Infinite and continuous games}
 \label{sec:future:infinite}

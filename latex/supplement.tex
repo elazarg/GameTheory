@@ -1308,6 +1308,7 @@ structure Round (n : Nat) (S V A Sig : Type) where\\
 structure MultiRoundGame (n : Nat) (S V A Sig : Type) where\\
 \bd init   : S\\
 \bd rounds : List (Round n S V A Sig)\\[3pt]
+def MultiRoundGame.ViewDeterminesRound (G : MultiRoundGame n S V A Sig) : Prop\\[3pt]
 noncomputable def MultiRoundGame.toKernelGame
 \end{leanbox}
 
@@ -1328,7 +1329,13 @@ chain of observations and transitions.
 infinite-horizon public-action specialization with identical rounds
 and discounted payoffs; \TT{StochasticGame.lean}~\citep{Shapley1953stochastic}
 specializes the transition to be itself stochastic and
-state-conditioned.  \TT{CompileObs.lean} and its linearizations
+state-conditioned.  \TT{AbsentMindedDriver.lean} gives a two-round
+single-player protocol in which both rounds produce the same view,
+proves failure of \TT{ViewDeterminesRound}, and records the
+standard payoff inconsistency:
+\TT{exAnteOptimalContinue = 2/3} but
+\TT{decisionOptimalContinue exAnteOptimalContinue = 1/3}.
+\TT{CompileObs.lean} and its linearizations
 (\TT{CompileObsLin.lean}, \TT{CompileObsLinAdequacy.lean},
 \TT{CompileObsLinRecall.lean}) compile to the
 \DefRef{ObsModelCore} substrate that the Kuhn theorem

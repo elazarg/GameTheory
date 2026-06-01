@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.MultiRound.RepeatedGame
 import GameTheory.Languages.MultiRound.StochasticGame
+import GameTheory.Languages.MultiRound.AbsentMindedDriver
 
 /-!
 # MultiRound Examples
