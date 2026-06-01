@@ -123,9 +123,12 @@ Shapley–Shubik~\citep{ShapleyShubik1954} power indices, simple
 $\mathrm{IsConvex} \Leftrightarrow$ monotone-marginals characterization
 \citep{Shapley1971} and closure under sum and nonnegative scalar,
 the core (efficient $\land$ coalition-rational) with the
-convex-set closure property and individual rationality, additive
-games (the identity allocation), and the 3-player majority game
-as a worked example.  Nash bargaining
+convex-set closure property and individual rationality, core
+closure under finite sums and nonnegative scalar multiplication,
+the Shapley-in-core theorem for games with nonnegative
+unanimity-basis coefficients, additive games (the identity
+allocation), and the 3-player majority game as a worked example.
+Nash bargaining
 \citep{Nash1950bargaining} is formalized through the IR/Pareto
 characterization, with symmetric and affine-invariant variants;
 the \emph{egalitarian} bargaining solution~\citep{Kalai1977} is also
@@ -140,8 +143,9 @@ Natural extensions:\ Bondareva–Shapley balanced collections
 games (a flagship LP-duality result); the nucleolus
 \citep{Schmeidler1969}; the Aumann–Shapley value for non-atomic
 games~\citep{AumannShapley1974}; NTU coalitional games;
-Shapley's~\citeyear{Shapley1971} theorem that convex games have
-nonempty cores (and the Shapley value is in the core); Kalai–Smorodinsky
+the full Shapley~\citeyear{Shapley1971} theorem that every convex
+game has a nonempty core and that the Shapley value lies in it;
+Kalai–Smorodinsky
 \citep{KalaiSmorodinsky1975} and other bargaining solutions.
 
 \subsection{Information design and signaling}
@@ -209,16 +213,6 @@ profile~\citep{GaleShapley1962}.  The algorithm is constructive,
 terminates in $O(n^2)$ steps, and is a natural target for a Lean
 implementation paired with a correctness proof.  Bertot's Coq
 formalization \citep{Bertot2016} is a useful reference point.
-
-\subsection{Symmetric Nash existence}
-\label{sec:future:symmetric-nash}
-
-Existence of a \emph{symmetric} mixed Nash equilibrium in a
-finite symmetric game~\citep{Nash1951} is a classical corollary of
-mixed Nash existence (\Cref{thm:nash-mixed}) by restricting the
-gain map to the symmetric subspace of the product simplex.  The
-restriction step is straightforward but is not packaged on top
-of \TT{SymmetricGame.lean}.
 
 \subsection{Type-theoretic refactoring opportunities}
 \label{sec:future:refactor}

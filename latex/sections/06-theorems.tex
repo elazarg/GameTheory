@@ -474,3 +474,16 @@ infrastructure \TT{unanimityGame}, \TT{unanimityCoeff},
 \TT{unanimity\_decomposition}, \TT{allocation\_on\_unanimityGame},
 \TT{gameSum}, \TT{gameSum\_allocation\_eq},
 \TT{eq\_gameSum\_decompTerm}.}
+
+\paragraph{Core certificates from the unanimity basis.}\
+The same decomposition also supports core-membership proofs.  The
+library proves that the core is closed under sums of games and
+under nonnegative scalar multiplication of both games and
+allocations.  Since the Shapley value of a unanimity game lies in
+that unanimity game's core, any game whose unanimity-basis
+coefficients are all nonnegative has its Shapley value in the
+core.  This is the positive-cone statement exposed by
+\TT{shapleyValue\_isCore\_of\_nonneg\_unanimityCoeff}; it is
+deliberately stated at the coefficient level, so later convex-game
+arguments can reuse the closure layer without duplicating the
+Möbius-decomposition proof.
