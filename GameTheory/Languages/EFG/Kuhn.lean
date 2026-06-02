@@ -1209,13 +1209,8 @@ private theorem decisionNodeIn_of_obsOfState_some
 /-- `lastState` of a take-prefix equals the corresponding element. -/
 private theorem lastState_take_eq
     (ss : List (GameTree S Outcome)) (j : Nat) (hj : j < ss.length) :
-    (compiledCoreObs t).lastState (ss.take (j + 1)) = ss[j] := by
-  simp only [ObsModelCore.lastState]
-  have hlen : (ss.take (j + 1)).length = j + 1 :=
-    List.length_take_of_le (by omega)
-  rw [List.getLast?_eq_getElem?, hlen]
-  simp only [show j + 1 - 1 = j from by omega, List.getElem?_take_of_succ,
-    show ss[j]? = some ss[j] from List.getElem?_eq_getElem hj, Option.getD_some]
+    (compiledCoreObs t).lastState (ss.take (j + 1)) = ss[j] :=
+  (compiledCoreObs t).lastState_take_eq_getElem ss j hj
 
 /-- On a nonzero trace, the first element is the tree root. -/
 private theorem pureRun_getElem_zero
@@ -1225,21 +1220,8 @@ private theorem pureRun_getElem_zero
     (h0 : 0 < ss.length) :
     ss[0] = t := by
   rw [ObsModelCore.runDistPure_eq_pureRun] at h
-  induction k generalizing ss with
-  | zero =>
-    have : ss = [(compiledCoreObs t).init] := by
-      by_contra hne; exact h (by simp [Math.ParameterizedChain.pureRun, PMF.pure_apply, hne])
-    simp [this, compiledCoreObs, compileObsModelCore]
-  | succ m ih =>
-    rcases List.eq_nil_or_concat ss with rfl | ⟨pre, last, hcat⟩
-    · simp at h0
-    · rw [List.concat_eq_append] at hcat; subst hcat
-      have hpre := left_ne_zero_of_mul
-        (Math.ParameterizedChain.pureRun_succ_append .. ▸ h)
-      have hlen_pre : 0 < pre.length := by
-        have := Math.ParameterizedChain.pureRun_length _ _ m π pre hpre; omega
-      simp only [List.getElem_append_left hlen_pre]
-      exact ih hpre hlen_pre
+  simpa [compiledCoreObs, compileObsModelCore] using
+    Math.ParameterizedChain.pureRun_head_eq_init _ _ k π ss h h0
 
 /-- `ReachBy` between positions on a nonzero compiled trace, using
 `pureRun_step_nonzero` from `Math.ParameterizedChain`. -/

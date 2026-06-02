@@ -79,6 +79,32 @@ theorem pureRun_take_nonzero (step : P → List S → PMF S) (s₀ : S)
     pureRun step s₀ m π (ss.take (m + 1)) ≠ 0 :=
   Math.TraceRun.traceRun_take_nonzero (step π) s₀ k ss h m hm
 
+/-- The first element of a nonzero `pureRun` trace is the initial state. -/
+theorem pureRun_head_eq_init (step : P → List S → PMF S) (s₀ : S)
+    (m : Nat) (π : P) (ss : List S)
+    (h : pureRun step s₀ m π ss ≠ 0) (h0 : 0 < ss.length) :
+    ss[0] = s₀ := by
+  induction m generalizing ss with
+  | zero =>
+    have hss : ss = [s₀] := by
+      by_contra hne; exact h (by simp [pureRun, PMF.pure_apply, hne])
+    subst hss; rfl
+  | succ m ih =>
+    have hne : ss ≠ [] := by intro he; subst he; simp at h0
+    have hsplit := (List.dropLast_append_getLast hne).symm
+    have h_pre : pureRun step s₀ m π ss.dropLast ≠ 0 := by
+      rw [hsplit] at h; rw [pureRun_succ_append] at h; exact left_ne_zero_of_mul h
+    have hlen_pre : 0 < ss.dropLast.length := by
+      have := pureRun_length step s₀ m π ss.dropLast h_pre; omega
+    have hih := ih ss.dropLast h_pre hlen_pre
+    have h_eq : ss[0] = ss.dropLast[0]'hlen_pre := by
+      rcases ss with _ | ⟨hd, tl⟩
+      · exact absurd rfl hne
+      · cases tl with
+        | nil => simp at hlen_pre
+        | cons h t => rfl
+    rw [h_eq, hih]
+
 /-- Conditioned step at depth `n`: reweight `ν` by the probability of each
 parameter reaching state trace `ss` after `n` steps, then average the
 parameterized step function. -/

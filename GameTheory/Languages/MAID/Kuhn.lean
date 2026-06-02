@@ -863,31 +863,14 @@ private theorem pureRun_getElem_zero
     (k : Nat) (ss : List (FrontierCfg S))
     (hss : pureRun (compiledPRObs S sem).pureStep (compiledPRObs S sem).init k π ss ≠ 0)
     (h0 : 0 < ss.length) :
-    ss[0] = (compiledPRObs S sem).init := by
-  induction k generalizing ss with
-  | zero =>
-    have : ss = [(compiledPRObs S sem).init] := by
-      by_contra hne; exact hss (by simp [pureRun, PMF.pure_apply, hne])
-    simp [this]
-  | succ m ih =>
-    rcases List.eq_nil_or_concat ss with rfl | ⟨pre, t, hcat⟩
-    · simp at h0
-    · rw [List.concat_eq_append] at hcat; subst hcat
-      have hpre := left_ne_zero_of_mul (pureRun_succ_append .. ▸ hss)
-      have hlen_pre : pre.length = m + 1 := pureRun_length _ _ m π pre hpre
-      simp only [List.getElem_append_left (show 0 < pre.length by omega)]
-      exact ih pre hpre (by omega)
+    ss[0] = (compiledPRObs S sem).init :=
+  pureRun_head_eq_init _ _ k π ss hss h0
 
-/-- On a feasible trace, `assigned` at step `j+1` equals `assigned ∪ frontier` at step `j`. -/
+/-- `lastState` of a take-prefix equals the corresponding element. -/
 private theorem lastState_take_eq
     (ss : List (FrontierCfg S)) (j : Nat) (hj : j < ss.length) :
-    (compiledPRObs S sem).lastState (ss.take (j + 1)) = ss[j] := by
-  simp only [ObsModelCore.lastState]
-  have hlen : (ss.take (j + 1)).length = j + 1 :=
-    List.length_take_of_le (by omega)
-  rw [List.getLast?_eq_getElem?, hlen]
-  simp only [show j + 1 - 1 = j from by omega, List.getElem?_take_of_succ,
-    show ss[j]? = some ss[j] from List.getElem?_eq_getElem hj, Option.getD_some]
+    (compiledPRObs S sem).lastState (ss.take (j + 1)) = ss[j] :=
+  (compiledPRObs S sem).lastState_take_eq_getElem ss j hj
 
 /-- Any state in the support of `frontierStepPMF_PR` has assigned = old ∪ frontier. -/
 private theorem assigned_eq_stepPR

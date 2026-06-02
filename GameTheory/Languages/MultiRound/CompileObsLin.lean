@@ -534,10 +534,8 @@ theorem pureRun_update_eq_of_obs_agree [Fintype A]
 theorem lastState_take_eq_getElem
     {G : MultiRoundGame n S V A Sig}
     (ss : List (LinConfig G)) (j : Nat) (hj : j + 1 < ss.length) :
-    (compiledLinObs G).lastState (ss.take (j + 1)) = ss[j] := by
-  simp [ObsModelCore.lastState, List.getLast?_eq_getElem?,
-    List.length_take_of_le (by omega : j + 1 ≤ ss.length),
-    show j + 1 - 1 = j from by omega, Option.getD_some]
+    (compiledLinObs G).lastState (ss.take (j + 1)) = ss[j] :=
+  (compiledLinObs G).lastState_take_eq_getElem ss j (by omega)
 
 open Math.ParameterizedChain in
 /-- Converse: if `pureRun` is nonzero under both the original profile and a

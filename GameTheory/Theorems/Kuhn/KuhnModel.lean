@@ -97,6 +97,17 @@ abbrev JointActionAt (O : ObsModelCore ι σ Obs Act) (s : σ) := ∀ i, Act i (
 def lastState (O : ObsModelCore ι σ Obs Act) (ss : List σ) : σ :=
   ss.getLast?.getD O.init
 
+/-- `lastState` of a `(j+1)`-prefix is the element at index `j`. -/
+theorem lastState_take_eq_getElem (O : ObsModelCore ι σ Obs Act)
+    (ss : List σ) (j : Nat) (hj : j < ss.length) :
+    O.lastState (ss.take (j + 1)) = ss[j] := by
+  simp only [ObsModelCore.lastState]
+  have hlen : (ss.take (j + 1)).length = j + 1 :=
+    List.length_take_of_le (by omega)
+  rw [List.getLast?_eq_getElem?, hlen]
+  simp only [show j + 1 - 1 = j from by omega, List.getElem?_take_of_succ,
+    show ss[j]? = some ss[j] from List.getElem?_eq_getElem hj, Option.getD_some]
+
 /-- Player-local strategic information state. -/
 abbrev InfoState (O : ObsModelCore ι σ Obs Act) (i : ι) := (O.infoState i).Carrier
 

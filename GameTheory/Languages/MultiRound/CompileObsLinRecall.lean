@@ -143,35 +143,6 @@ private theorem phase_strict_mono_of_not_done
     · have hab'eq : a = b' := by omega
       subst hab'eq; omega
 
-/-- The first element of a nonzero `pureRun` trace is the initial state. -/
-private theorem pureRun_head_eq_init
-    {T P : Type} (step : P → List T → PMF T) (s₀ : T)
-    (m : Nat) (π : P) (ss : List T)
-    (h : pureRun step s₀ m π ss ≠ 0)
-    (h0 : 0 < ss.length) :
-    ss[0] = s₀ := by
-  induction m generalizing ss with
-  | zero =>
-    have hss : ss = [s₀] := by
-      by_contra hne; exact h (by simp [pureRun, PMF.pure_apply, hne])
-    subst hss; rfl
-  | succ m ih =>
-    have hne : ss ≠ [] := by intro he; subst he; simp at h0
-    have hsplit := (List.dropLast_append_getLast hne).symm
-    have h_pre : pureRun step s₀ m π ss.dropLast ≠ 0 := by
-      rw [hsplit] at h; rw [pureRun_succ_append] at h; exact left_ne_zero_of_mul h
-    have hlen_pre : 0 < ss.dropLast.length := by
-      have := pureRun_length step s₀ m π ss.dropLast h_pre; omega
-    have hih := ih ss.dropLast h_pre hlen_pre
-    -- ss[0] = ss.dropLast[0] since dropLast is a prefix
-    have h_eq : ss[0] = ss.dropLast[0]'hlen_pre := by
-      rcases ss with _ | ⟨hd, tl⟩
-      · exact absurd rfl hne
-      · cases tl with
-        | nil => simp at hlen_pre
-        | cons h t => rfl
-    rw [h_eq, hih]
-
 /- On a nonzero trace where `ss[last]` is not done, `phase(ss[j]) = j` for all j. -/
 omit [Nonempty A] in
 private theorem phase_eq_index
