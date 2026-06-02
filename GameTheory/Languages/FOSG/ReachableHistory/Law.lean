@@ -9,7 +9,7 @@ import GameTheory.Languages.FOSG.Execution
 import GameTheory.Concepts.Foundations.DeviationSimulation
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
-import GameTheory.Languages.FOSG.Kuhn.ReachableHistoryLemmas
+import GameTheory.Languages.FOSG.ReachableHistory.ObsModelFacts
 
 namespace GameTheory
 
@@ -28,11 +28,11 @@ variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
 variable (G : FOSG ι W Act PrivObs PubObs)
 
 open Classical in
-/-- Local posterior for the constructive B→M strategy, assuming the reach
-weight ignores the current information-state coordinate.
-
-The remaining semantic work in the unilateral deviation theorem is exactly to
-show this ignore hypothesis for reachable FOSG histories. -/
+/-- If a pure-run trace weight is insensitive to player `i`'s action at the
+current projected reachable information state, then reweighting the
+reachable-history behavioral-to-mixed product law by that trace weight leaves
+the marginal distribution at the projected information state equal to the
+original behavioral law. -/
 theorem reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
     [Fintype ι] [Fintype G.History] [∀ j, Fintype (Option (Act j))]
     (hLeg : G.LegalObservable) (i : ι)
@@ -726,13 +726,10 @@ theorem reachableMixedToLegalBehavioral_runDist
   exact reachableHistoryOutcomeDistPureProfile_eq_runDist (G := G) hLeg k π
 
 open Classical in
-/-- Constructive canonical unilateral deviation law at the finite-horizon
-history-law level.
-
-Given a legal reachable behavioral deviation by `who`, replace `who`'s mixed
-component by the induced mixed pure strategy and realize the resulting mixed
-profile by the canonical reachable M→B witness. This is the constructive
-source-side law used by the intended unilateral hybrid theorem. -/
+/-- Replacing `who`'s reachable mixed component by the mixed pure strategy
+induced by a legal behavioral strategy gives the same finite-horizon native run
+law as the canonical reachable M→B behavioral realization of the updated mixed
+profile. -/
 theorem reachable_mixed_to_canonical_behavioral_unilateral_deviation_runDist
     [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]
@@ -937,13 +934,11 @@ theorem reachable_unilateral_target_toProfile
       (reachableMixedToLegalBehavioral_toProfile (G := G) hLeg μ) i) s
 
 open Classical in
-/-- Constructive unilateral Kuhn deviation simulation at the native FOSG
-history-law level.
-
-The mixed pure deviation is explicitly
-`reachableLegalBehavioralToMixed hLeg who βwho'`. Opponents remain exactly at
-their original mixed components, while the target side updates only `who`'s
-canonical behavioral realization. -/
+/-- A unilateral reachable behavioral deviation by `who` is simulated on the
+mixed side by replacing only `who`'s mixed component with
+`reachableLegalBehavioralToMixed hLeg who βwho'`. The resulting mixed profile
+and the behavioral profile obtained by updating only `who` have the same
+finite-horizon native run law. -/
 theorem reachable_mixed_to_behavioral_unilateral_deviation_runDist_eq
     [Fintype ι] [Fintype G.History]
     [∀ i, Fintype (Option (Act i))] [DecidablePred G.terminal]

@@ -16,7 +16,7 @@ open Math.Probability
 
 namespace CoalGame
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [DecidableEq ι]
 
 /-! ### Additive games
 
@@ -35,14 +35,17 @@ def additiveGame (α : ι → ℝ) : CoalGame ι where
 theorem additiveGame_v (α : ι → ℝ) (S : Finset ι) :
     (additiveGame α).v S = ∑ i ∈ S, α i := rfl
 
-variable [Fintype ι]
+section Core
+
+noncomputable local instance finiteFintype {α : Type} [Finite α] : Fintype α :=
+  Fintype.ofFinite α
 
 /-- In an additive game, the weight vector `α` itself is in the core
 (with equality on every coalition). -/
-theorem additiveGame_isCore (α : ι → ℝ) : (additiveGame α).IsCore α :=
-  ⟨rfl, fun _ => le_refl _⟩
+theorem additiveGame_isCore [Finite ι] (α : ι → ℝ) : (additiveGame α).IsCore α := by
+  exact ⟨rfl, fun _ => le_refl _⟩
 
-omit [Fintype ι]
+end Core
 
 /-- A player's marginal contribution in an additive game is exactly
 their own weight `α i`, independent of the coalition. -/

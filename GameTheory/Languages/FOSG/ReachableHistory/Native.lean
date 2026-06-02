@@ -9,7 +9,7 @@ import GameTheory.Languages.FOSG.Execution
 import GameTheory.Concepts.Foundations.DeviationSimulation
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
-import GameTheory.Languages.FOSG.Kuhn.HistoryNative
+import GameTheory.Languages.FOSG.Native.History
 
 namespace GameTheory
 

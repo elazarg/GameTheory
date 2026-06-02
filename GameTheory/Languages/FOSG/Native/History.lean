@@ -9,7 +9,6 @@ import GameTheory.Languages.FOSG.Execution
 import GameTheory.Concepts.Foundations.DeviationSimulation
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
-import GameTheory.Languages.FOSG.Kuhn.Bridge
 
 namespace GameTheory
 
@@ -27,34 +26,44 @@ variable {ι W : Type} [DecidableEq ι]
 variable {Act : ι → Type} {PrivObs : ι → Type} {PubObs : Type}
 variable (G : FOSG ι W Act PrivObs PubObs)
 
+noncomputable local instance infoStateFintype_toObsModelCore
+    [∀ i, Fintype (G.InfoState i)] :
+    ∀ i, Fintype ((toObsModelCore G).InfoState i) := by
+  intro i
+  simpa [ObsModelCoreBridge.toObsModelCore, ObsModelCore.InfoState] using
+    (inferInstance : Fintype (G.InfoState i))
+
 
 /-- Execution states for the FOSG Kuhn semantics: current world plus current
 player information states. -/
-abbrev ExecutionState : Type := Bridge.State G
+abbrev ExecutionState : Type := ObsModelCoreBridge.State G
 
 /-- Pure local strategy type used by the FOSG Kuhn execution semantics. `none`
 denotes inactivity. -/
-abbrev KuhnLocalStrategy (i : ι) : Type := Bridge.LocalStrategy G i
+abbrev KuhnLocalStrategy (i : ι) : Type :=
+  (toObsModelCore G).LocalStrategy i
 
 /-- Pure profile type used by the FOSG Kuhn execution semantics. -/
-abbrev KuhnPureProfile : Type := Bridge.PureProfile G
+abbrev KuhnPureProfile : Type :=
+  (toObsModelCore G).PureProfile
 
 /-- Behavioral profile type used by the FOSG Kuhn execution semantics. -/
-abbrev KuhnBehavioralProfile : Type := Bridge.BehavioralProfile G
+abbrev KuhnBehavioralProfile : Type :=
+  (toObsModelCore G).BehavioralProfile
 
 /-- Bounded run distribution on FOSG execution-state traces. -/
 noncomputable abbrev runDist
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
     (k : Nat) (β : KuhnBehavioralProfile (G := G)) :
     PMF (List (ExecutionState (G := G))) :=
-  Bridge.runDist G k β
+  (toObsModelCore G).runDist k β
 
 /-- Bounded pure-profile run distribution on FOSG execution-state traces. -/
 noncomputable abbrev runDistPure
     [Fintype ι] [∀ i, Fintype (Option (Act i))]
     (k : Nat) (π : KuhnPureProfile (G := G)) :
     PMF (List (ExecutionState (G := G))) :=
-  Bridge.runDistPure G k π
+  (toObsModelCore G).runDistPure k π
 
 /-- Independent product mixed strategy induced by a Kuhn-semantic behavioral
 profile. -/
@@ -64,7 +73,38 @@ noncomputable abbrev executionBehavioralToMixedJoint
     [∀ i, Fintype (KuhnLocalStrategy (G := G) i)]
     (β : KuhnBehavioralProfile (G := G)) :
     PMF (KuhnPureProfile (G := G)) :=
-  Bridge.behavioralToMixedJoint G β
+  (toObsModelCore G).behavioralToMixedJoint β
+
+/-- Nonrepetition condition used in the behavioral-to-mixed direction. -/
+abbrev NoNontrivialInfoStateRepeat
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
+  (toObsModelCore G).NoNontrivialInfoStateRepeat
+
+/-- Semantic step-mass invariance condition used in the mixed-to-behavioral
+direction. -/
+abbrev StepMassInvariant
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
+  ObsModelCore.StepMassInvariant (toObsModelCore G)
+
+/-- Semantic step-support factorization condition used in the
+mixed-to-behavioral direction. -/
+abbrev StepSupportFactorization
+    [Fintype ι] [∀ i, Fintype (Option (Act i))] : Prop :=
+  ObsModelCore.StepSupportFactorization (toObsModelCore G)
+
+/-- Semantic posterior-locality condition used in the mixed-to-behavioral
+direction. -/
+abbrev ActionPosteriorLocal
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (i : ι) : Prop :=
+  ObsModelCore.ActionPosteriorLocal (toObsModelCore G) i
+
+/-- Stronger semantic obs-locality condition that implies both support
+factorization and posterior locality. -/
+abbrev ObsLocalFeasibilityFull
+    [Fintype ι] [∀ i, Fintype (G.InfoState i)] [∀ i, Fintype (Option (Act i))]
+    (i : ι) : Prop :=
+  ObsModelCore.ObsLocalFeasibilityFull (toObsModelCore G) i
 
 /-- **Kuhn's theorem, behavioral -> mixed direction for FOSGs, at the bounded
 execution semantics.**
@@ -78,12 +118,15 @@ theorem behavioral_to_mixed_runDist
     [∀ i, Fintype (G.InfoState i)]
     [∀ i, Fintype (Option (Act i))]
     [∀ i, Fintype (KuhnLocalStrategy (G := G) i)]
-    (hNontriv : Bridge.NoNontrivialInfoStateRepeat G)
+    (hNontriv : NoNontrivialInfoStateRepeat (G := G))
     (β : KuhnBehavioralProfile (G := G)) (k : Nat) :
     runDist (G := G) k β =
       (executionBehavioralToMixedJoint (G := G) β).bind
-        (fun π => runDistPure (G := G) k π) :=
-  Bridge.behavioral_to_mixed G hNontriv β k
+        (fun π => runDistPure (G := G) k π) := by
+  simpa [runDist, runDistPure, executionBehavioralToMixedJoint,
+    NoNontrivialInfoStateRepeat] using
+    (ObsModelCore.kuhn_behavioral_to_mixed (O := toObsModelCore G)
+      (hNontriv := hNontriv) β k)
 
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, under semantic
 step conditions.**
@@ -96,15 +139,21 @@ theorem mixed_to_behavioral_semantic
     [Fintype ι]
     [∀ i, Fintype (G.InfoState i)]
     [∀ i, Fintype (Option (Act i))]
-    (hMass : Bridge.StepMassInvariant G)
-    (hFactor : Bridge.StepSupportFactorization G)
-    (hLocal : ∀ i, Bridge.ActionPosteriorLocal G i)
+    (hMass : StepMassInvariant (G := G))
+    (hFactor : StepSupportFactorization (G := G))
+    (hLocal : ∀ i, ActionPosteriorLocal (G := G) i)
     (μ : ∀ i, PMF (KuhnLocalStrategy (G := G) i))
     (k : Nat) :
     ∃ β : KuhnBehavioralProfile (G := G),
       runDist (G := G) k β =
-        (Math.PMFProduct.pmfPi μ).bind (fun π => runDistPure (G := G) k π) :=
-  Bridge.mixed_to_behavioral_semantic G hMass hFactor hLocal μ k
+        (Math.PMFProduct.pmfPi μ).bind (fun π => runDistPure (G := G) k π) := by
+  simpa [runDist, runDistPure, StepMassInvariant, StepSupportFactorization,
+    ActionPosteriorLocal] using
+    let hLocalCore : ∀ i, (toObsModelCore G).ActionPosteriorLocal i := by
+      intro i
+      simpa [ActionPosteriorLocal] using hLocal i
+    (ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := toObsModelCore G)
+      hMass hFactor hLocalCore μ k)
 
 /-- **Kuhn's theorem, mixed -> behavioral direction for FOSGs, via full
 semantic obs-locality.**
@@ -117,14 +166,19 @@ theorem mixed_to_behavioral_of_obsLocal
     [Fintype ι]
     [∀ i, Fintype (G.InfoState i)]
     [∀ i, Fintype (Option (Act i))]
-    (hMass : Bridge.StepMassInvariant G)
-    (hObsLocal : ∀ i, Bridge.ObsLocalFeasibilityFull G i)
+    (hMass : StepMassInvariant (G := G))
+    (hObsLocal : ∀ i, ObsLocalFeasibilityFull (G := G) i)
     (μ : ∀ i, PMF (KuhnLocalStrategy (G := G) i))
     (k : Nat) :
     ∃ β : KuhnBehavioralProfile (G := G),
       runDist (G := G) k β =
-        (Math.PMFProduct.pmfPi μ).bind (fun π => runDistPure (G := G) k π) :=
-  Bridge.mixed_to_behavioral_of_obsLocal G hMass hObsLocal μ k
+        (Math.PMFProduct.pmfPi μ).bind (fun π => runDistPure (G := G) k π) := by
+  simpa [runDist, runDistPure, StepMassInvariant, ObsLocalFeasibilityFull] using
+    let hObsLocalCore : ∀ i, (toObsModelCore G).ObsLocalFeasibilityFull i := by
+      intro i
+      simpa [ObsLocalFeasibilityFull] using hObsLocal i
+    (ObsModelCore.kuhn_mixed_to_behavioral_of_obsLocal (O := toObsModelCore G)
+      hMass hObsLocalCore μ k)
 
 /-- Native FOSG pure-strategy type. -/
 abbrev PureStrategy (i : ι) : Type :=
@@ -214,9 +268,9 @@ theorem mixed_to_behavioral_runDist
     [Fintype ι]
     [∀ i, Fintype (G.InfoState i)]
     [∀ i, Fintype (Option (Act i))]
-    (hMass : Bridge.StepMassInvariant G)
-    (hFactor : Bridge.StepSupportFactorization G)
-    (hLocal : ∀ i, Bridge.ActionPosteriorLocal G i)
+    (hMass : StepMassInvariant (G := G))
+    (hFactor : StepSupportFactorization (G := G))
+    (hLocal : ∀ i, ActionPosteriorLocal (G := G) i)
     (μ : MixedProfile (G := G))
     (k : Nat) :
     ∃ β : KuhnBehavioralProfile (G := G),
@@ -240,8 +294,8 @@ theorem mixed_to_behavioral_runDist_of_obsLocal
     [Fintype ι]
     [∀ i, Fintype (G.InfoState i)]
     [∀ i, Fintype (Option (Act i))]
-    (hMass : Bridge.StepMassInvariant G)
-    (hObsLocal : ∀ i, Bridge.ObsLocalFeasibilityFull G i)
+    (hMass : StepMassInvariant (G := G))
+    (hObsLocal : ∀ i, ObsLocalFeasibilityFull (G := G) i)
     (μ : MixedProfile (G := G))
     (k : Nat) :
     ∃ β : KuhnBehavioralProfile (G := G),

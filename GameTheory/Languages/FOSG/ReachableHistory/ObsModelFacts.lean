@@ -9,7 +9,7 @@ import GameTheory.Languages.FOSG.Execution
 import GameTheory.Concepts.Foundations.DeviationSimulation
 import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
 import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
-import GameTheory.Languages.FOSG.Kuhn.ReachableHistory
+import GameTheory.Languages.FOSG.ReachableHistory.Native
 
 namespace GameTheory
 
@@ -1228,8 +1228,8 @@ noncomputable def reachableHistoryBehavioralToMixedStrategy
   exact Math.PMFProduct.pmfPi
     (liftReachableHistoryBehavioralStrategy (G := G) hLeg i β)
 
-/-- The constructive mixed pure deviation induced by a legal reachable
-behavioral deviation. -/
+/-- Push the reachable-history behavioral-to-mixed law back to legal reachable
+pure strategies by erasing the core local-strategy wrapper. -/
 noncomputable def reachableLegalBehavioralToMixed
     [Fintype G.History]
     (hLeg : G.LegalObservable) (i : ι) [Fintype (Option (Act i))]
