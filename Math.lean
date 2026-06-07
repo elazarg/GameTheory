@@ -5,6 +5,7 @@ import Math.PMFProduct
 import Math.Coupling
 import Math.PMFIter
 import Math.OutcomeClosure
+import Math.Knowledge
 import Math.TraceRun
 import Math.ParameterizedChain
 import Math.OptimizationLocalGlobal
