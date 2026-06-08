@@ -123,6 +123,38 @@ theorem map_eq_of_nonempty_rel {R : α → β → Prop} {μ : PMF α} {ν : PMF 
   rcases c with ⟨coupling⟩
   exact coupling.map_eq_of_rel f g hR
 
+/-- If coupled prefixes have equal suffix kernels on related states, the
+resulting bind laws are equal. -/
+theorem bind_eq_of_rel {R : α → β → Prop} {μ : PMF α} {ν : PMF β}
+    (c : HasCoupling R μ ν)
+    (k₁ : α → PMF γ) (k₂ : β → PMF γ)
+    (hR : ∀ a b, R a b → k₁ a = k₂ b) :
+    μ.bind k₁ = ν.bind k₂ := by
+  calc
+    μ.bind k₁ = (c.joint.map Prod.fst).bind k₁ := by
+      rw [c.marginal_fst]
+    _ = c.joint.bind (fun p => k₁ p.1) := by
+      rw [PMF.bind_map]
+      rfl
+    _ = c.joint.bind (fun p => k₂ p.2) := by
+      apply Math.ProbabilityMassFunction.bind_congr_on_support
+      intro p hp
+      exact hR p.1 p.2 (c.rel_holds p hp)
+    _ = (c.joint.map Prod.snd).bind k₂ := by
+      rw [PMF.bind_map]
+      rfl
+    _ = ν.bind k₂ := by
+      rw [c.marginal_snd]
+
+/-- Nonempty version of `bind_eq_of_rel`. -/
+theorem bind_eq_of_nonempty_rel {R : α → β → Prop} {μ : PMF α} {ν : PMF β}
+    (c : Nonempty (HasCoupling R μ ν))
+    (k₁ : α → PMF γ) (k₂ : β → PMF γ)
+    (hR : ∀ a b, R a b → k₁ a = k₂ b) :
+    μ.bind k₁ = ν.bind k₂ := by
+  rcases c with ⟨coupling⟩
+  exact coupling.bind_eq_of_rel k₁ k₂ hR
+
 /-- Bind-coherence: if `R` lifts to a coupling of `μ`, `ν` and `R'`
 lifts to couplings of `k₁ a`, `k₂ b` for every `R`-related pair, then
 `R'` lifts to a coupling of the binds. The killer compositional
