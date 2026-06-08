@@ -90,6 +90,39 @@ noncomputable def map {R : α → β → Prop} {R' : α' → β' → Prop}
     rw [← heq]
     exact hR q.1 q.2 (c.rel_holds q hq)
 
+/-- If a coupling relation preserves an observation, the pushed-forward laws of
+that observation are equal. -/
+theorem map_eq_of_rel {R : α → β → Prop} {μ : PMF α} {ν : PMF β}
+    (c : HasCoupling R μ ν)
+    (f : α → γ) (g : β → γ)
+    (hR : ∀ a b, R a b → f a = g b) :
+    μ.map f = ν.map g := by
+  calc
+    μ.map f = (c.joint.map Prod.fst).map f := by
+      rw [c.marginal_fst]
+    _ = c.joint.map (f ∘ Prod.fst) := by
+      rw [PMF.map_comp]
+    _ = c.joint.map (g ∘ Prod.snd) := by
+      change
+        c.joint.bind (fun p => PMF.pure (f p.1)) =
+          c.joint.bind (fun p => PMF.pure (g p.2))
+      apply ProbabilityMassFunction.bind_congr_on_support
+      intro p hp
+      rw [hR p.1 p.2 (c.rel_holds p hp)]
+    _ = (c.joint.map Prod.snd).map g := by
+      rw [PMF.map_comp]
+    _ = ν.map g := by
+      rw [c.marginal_snd]
+
+/-- Nonempty version of `map_eq_of_rel`. -/
+theorem map_eq_of_nonempty_rel {R : α → β → Prop} {μ : PMF α} {ν : PMF β}
+    (c : Nonempty (HasCoupling R μ ν))
+    (f : α → γ) (g : β → γ)
+    (hR : ∀ a b, R a b → f a = g b) :
+    μ.map f = ν.map g := by
+  rcases c with ⟨coupling⟩
+  exact coupling.map_eq_of_rel f g hR
+
 /-- Bind-coherence: if `R` lifts to a coupling of `μ`, `ν` and `R'`
 lifts to couplings of `k₁ a`, `k₂ b` for every `R`-related pair, then
 `R'` lifts to a coupling of the binds. The killer compositional
