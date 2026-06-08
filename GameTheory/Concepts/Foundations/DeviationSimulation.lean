@@ -153,6 +153,46 @@ structure NashDeviationSimulation (G H : GameForm ι) (Ω : Type)
 
 namespace NashDeviationSimulation
 
+/-- Reflexive deviation simulation for a fixed observed view. -/
+def refl {G : GameForm ι} (view : OutcomeView G Ω) :
+    NashDeviationSimulation G G Ω where
+  viewG := view
+  viewH := view
+  rel := fun σ τ => σ = τ
+  law_eq := by
+    intro σ τ hrel
+    subst τ
+    rfl
+  simulate_target_deviation := by
+    intro σ τ hrel who sG
+    subst τ
+    exact ⟨sG, rfl⟩
+
+/-- Identity deviation simulation for a fixed observed view. -/
+abbrev id {G : GameForm ι} (view : OutcomeView G Ω) :
+    NashDeviationSimulation G G Ω :=
+  refl view
+
+/-- Compose one-way deviation simulations whose middle observed views induce
+the same laws on every middle-game profile. Applies `S` first, then `T`. -/
+def comp {G H K : GameForm ι}
+    (T : NashDeviationSimulation H K Ω) (S : NashDeviationSimulation G H Ω)
+    (hmid : ∀ τ : H.Profile, S.viewH.law τ = T.viewG.law τ) :
+    NashDeviationSimulation G K Ω where
+  viewG := S.viewG
+  viewH := T.viewH
+  rel := fun σ ρ => ∃ τ : H.Profile, S.rel σ τ ∧ T.rel τ ρ
+  law_eq := by
+    intro σ ρ hrel
+    rcases hrel with ⟨τ, hS, hT⟩
+    exact (S.law_eq hS).trans ((hmid τ).trans (T.law_eq hT))
+  simulate_target_deviation := by
+    intro σ ρ hrel who sK
+    rcases hrel with ⟨τ, hS, hT⟩
+    rcases T.simulate_target_deviation hT who sK with ⟨sH, hdevT⟩
+    rcases S.simulate_target_deviation hS who sH with ⟨sG, hdevS⟩
+    exact ⟨sG, hdevS.trans ((hmid (Function.update τ who sH)).trans hdevT)⟩
+
 /-- Build a one-way deviation simulation from a functional realization map.
 
 This is the common case for compiler and language bridges: every source
@@ -220,6 +260,30 @@ structure NashDeviationBisimulation (G H : GameForm ι) (Ω : Type)
 
 namespace NashDeviationBisimulation
 
+/-- Reflexive two-way deviation simulation for a fixed observed view. -/
+def refl {G : GameForm ι} (view : OutcomeView G Ω) :
+    NashDeviationBisimulation G G Ω where
+  viewG := view
+  viewH := view
+  rel := fun σ τ => σ = τ
+  law_eq := by
+    intro σ τ hrel
+    subst τ
+    rfl
+  simulate_target_deviation := by
+    intro σ τ hrel who sG
+    subst τ
+    exact ⟨sG, rfl⟩
+  simulate_source_deviation := by
+    intro σ τ hrel who sG
+    subst τ
+    exact ⟨sG, rfl⟩
+
+/-- Identity two-way deviation simulation for a fixed observed view. -/
+abbrev id {G : GameForm ι} (view : OutcomeView G Ω) :
+    NashDeviationBisimulation G G Ω :=
+  refl view
+
 /-- Forget a two-way simulation to the forward one-way simulation. -/
 def toForwardSimulation {G H : GameForm ι} {Ω : Type}
     (S : NashDeviationBisimulation G H Ω) :
@@ -227,10 +291,10 @@ def toForwardSimulation {G H : GameForm ι} {Ω : Type}
   toProfileRealization := S.toProfileRealization
   simulate_target_deviation := S.simulate_target_deviation
 
-/-- Reverse a two-way simulation. -/
-def toReverseSimulation {G H : GameForm ι} {Ω : Type}
+/-- Reverse a two-way deviation simulation. -/
+def symm {G H : GameForm ι} {Ω : Type}
     (S : NashDeviationBisimulation G H Ω) :
-    NashDeviationSimulation H G Ω where
+    NashDeviationBisimulation H G Ω where
   viewG := S.viewH
   viewH := S.viewG
   rel := fun τ σ => S.rel σ τ
@@ -241,6 +305,42 @@ def toReverseSimulation {G H : GameForm ι} {Ω : Type}
     intro τ σ hrel who sG
     rcases S.simulate_source_deviation hrel who sG with ⟨sH, hdev⟩
     exact ⟨sH, hdev.symm⟩
+  simulate_source_deviation := by
+    intro τ σ hrel who sH
+    rcases S.simulate_target_deviation hrel who sH with ⟨sG, hdev⟩
+    exact ⟨sG, hdev.symm⟩
+
+/-- Reverse a two-way simulation. -/
+def toReverseSimulation {G H : GameForm ι} {Ω : Type}
+    (S : NashDeviationBisimulation G H Ω) :
+    NashDeviationSimulation H G Ω :=
+  (S.symm).toForwardSimulation
+
+/-- Compose two-way deviation simulations whose middle observed views induce
+the same laws on every middle-game profile. Applies `S` first, then `T`. -/
+def comp {G H K : GameForm ι} {Ω : Type}
+    (T : NashDeviationBisimulation H K Ω) (S : NashDeviationBisimulation G H Ω)
+    (hmid : ∀ τ : H.Profile, S.viewH.law τ = T.viewG.law τ) :
+    NashDeviationBisimulation G K Ω where
+  viewG := S.viewG
+  viewH := T.viewH
+  rel := fun σ ρ => ∃ τ : H.Profile, S.rel σ τ ∧ T.rel τ ρ
+  law_eq := by
+    intro σ ρ hrel
+    rcases hrel with ⟨τ, hS, hT⟩
+    exact (S.law_eq hS).trans ((hmid τ).trans (T.law_eq hT))
+  simulate_target_deviation := by
+    intro σ ρ hrel who sK
+    rcases hrel with ⟨τ, hS, hT⟩
+    rcases T.simulate_target_deviation hT who sK with ⟨sH, hdevT⟩
+    rcases S.simulate_target_deviation hS who sH with ⟨sG, hdevS⟩
+    exact ⟨sG, hdevS.trans ((hmid (Function.update τ who sH)).trans hdevT)⟩
+  simulate_source_deviation := by
+    intro σ ρ hrel who sG
+    rcases hrel with ⟨τ, hS, hT⟩
+    rcases S.simulate_source_deviation hS who sG with ⟨sH, hdevS⟩
+    rcases T.simulate_source_deviation hT who sH with ⟨sK, hdevT⟩
+    exact ⟨sK, hdevS.trans ((hmid (Function.update τ who sH)).trans hdevT)⟩
 
 /-- Nash equilibrium is invariant across a two-way deviation simulation. -/
 theorem nash_iff {G H : GameForm ι} {Ω : Type}
@@ -571,6 +671,11 @@ game forms. -/
 abbrev NashDeviationSimulation (G H : KernelGame ι) (Ω : Type) [DecidableEq ι] :=
   GameForm.NashDeviationSimulation G.toGameForm H.toGameForm Ω
 
+/-- Kernel-game convenience alias for Nash deviation bisimulations on
+underlying game forms. -/
+abbrev NashDeviationBisimulation (G H : KernelGame ι) (Ω : Type) [DecidableEq ι] :=
+  GameForm.NashDeviationBisimulation G.toGameForm H.toGameForm Ω
+
 /-- Kernel-game convenience alias for profile-deviation families on the
 underlying game form. -/
 abbrev ProfileDeviationFamily (G : KernelGame ι) :=
@@ -609,6 +714,28 @@ section Nash
 
 variable [DecidableEq ι]
 
+/-- Kernel-game reflexive deviation simulation for a fixed observed view. -/
+def NashDeviationSimulation.refl
+    {G : KernelGame ι} {Ω : Type} (view : OutcomeView G Ω) :
+    NashDeviationSimulation G G Ω :=
+  GameForm.NashDeviationSimulation.refl view
+
+/-- Kernel-game identity deviation simulation for a fixed observed view. -/
+abbrev NashDeviationSimulation.id
+    {G : KernelGame ι} {Ω : Type} (view : OutcomeView G Ω) :
+    NashDeviationSimulation G G Ω :=
+  GameForm.NashDeviationSimulation.id view
+
+/-- Kernel-game composition of one-way deviation simulations whose middle
+observed views induce the same laws on every middle-game profile. Applies `S`
+first, then `T`. -/
+def NashDeviationSimulation.comp
+    {G H K : KernelGame ι} {Ω : Type}
+    (T : NashDeviationSimulation H K Ω) (S : NashDeviationSimulation G H Ω)
+    (hmid : ∀ τ : H.Profile, S.viewH.law τ = T.viewG.law τ) :
+    NashDeviationSimulation G K Ω :=
+  GameForm.NashDeviationSimulation.comp T S hmid
+
 /-- Kernel-game wrapper for the functional-realization constructor. -/
 def NashDeviationSimulation.ofFunctionalRealization
     {G H : KernelGame ι} {Ω : Type}
@@ -624,6 +751,52 @@ def NashDeviationSimulation.ofFunctionalRealization
   GameForm.NashDeviationSimulation.ofFunctionalRealization
     viewG viewH realize law_eq simulate_target_deviation
 
+/-- Kernel-game reflexive two-way deviation simulation for a fixed observed
+view. -/
+def NashDeviationBisimulation.refl
+    {G : KernelGame ι} {Ω : Type} (view : OutcomeView G Ω) :
+    NashDeviationBisimulation G G Ω :=
+  GameForm.NashDeviationBisimulation.refl view
+
+/-- Kernel-game identity two-way deviation simulation for a fixed observed
+view. -/
+abbrev NashDeviationBisimulation.id
+    {G : KernelGame ι} {Ω : Type} (view : OutcomeView G Ω) :
+    NashDeviationBisimulation G G Ω :=
+  GameForm.NashDeviationBisimulation.id view
+
+/-- Forget a kernel-game two-way deviation simulation to the forward direction. -/
+def NashDeviationBisimulation.toForwardSimulation
+    {G H : KernelGame ι} {Ω : Type}
+    (S : NashDeviationBisimulation G H Ω) :
+    NashDeviationSimulation G H Ω :=
+  GameForm.NashDeviationBisimulation.toForwardSimulation S
+
+/-- Reverse a kernel-game two-way deviation simulation. -/
+def NashDeviationBisimulation.symm
+    {G H : KernelGame ι} {Ω : Type}
+    (S : NashDeviationBisimulation G H Ω) :
+    NashDeviationBisimulation H G Ω :=
+  GameForm.NashDeviationBisimulation.symm S
+
+/-- Forget a kernel-game two-way deviation simulation to the reverse
+direction. -/
+def NashDeviationBisimulation.toReverseSimulation
+    {G H : KernelGame ι} {Ω : Type}
+    (S : NashDeviationBisimulation G H Ω) :
+    NashDeviationSimulation H G Ω :=
+  GameForm.NashDeviationBisimulation.toReverseSimulation S
+
+/-- Kernel-game composition of two-way deviation simulations whose middle
+observed views induce the same laws on every middle-game profile. Applies `S`
+first, then `T`. -/
+def NashDeviationBisimulation.comp
+    {G H K : KernelGame ι} {Ω : Type}
+    (T : NashDeviationBisimulation H K Ω) (S : NashDeviationBisimulation G H Ω)
+    (hmid : ∀ τ : H.Profile, S.viewH.law τ = T.viewG.law τ) :
+    NashDeviationBisimulation G K Ω :=
+  GameForm.NashDeviationBisimulation.comp T S hmid
+
 /-- Kernel-game wrapper for preference-parametric Nash transport. -/
 theorem NashDeviationSimulation.target_nashFor_of_source_nashFor
     {G H : KernelGame ι} {Ω : Type}
@@ -634,6 +807,18 @@ theorem NashDeviationSimulation.target_nashFor_of_source_nashFor
     (hN : G.IsNashFor (GameForm.observedPref S.viewG prefΩ) σ) :
     H.IsNashFor (GameForm.observedPref S.viewH prefΩ) τ :=
   GameForm.NashDeviationSimulation.target_nash_of_source_nash S hrel hN
+
+/-- Kernel-game preference-parametric Nash invariance across a two-way
+deviation simulation. -/
+theorem NashDeviationBisimulation.nashFor_iff
+    {G H : KernelGame ι} {Ω : Type}
+    (S : NashDeviationBisimulation G H Ω)
+    {σ : G.Profile} {τ : H.Profile}
+    (hrel : S.rel σ τ)
+    {prefΩ : ι → PMF Ω → PMF Ω → Prop} :
+    G.IsNashFor (GameForm.observedPref S.viewG prefΩ) σ ↔
+      H.IsNashFor (GameForm.observedPref S.viewH prefΩ) τ :=
+  GameForm.NashDeviationBisimulation.nash_iff S hrel
 
 /-- EU Nash transport when both games' EU preferences are compatible with the
 same observed-law preference. The compatibility assumptions are intentionally
