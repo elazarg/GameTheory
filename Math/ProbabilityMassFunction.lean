@@ -761,6 +761,41 @@ theorem bind_pushforward_condOn_pure
     bind_pushforward_condOn (μ := μ) (proj := proj)
       (g := fun a => PMF.pure a)
 
+/-- Two-step self-disintegration.  A finite PMF can be sampled by first
+sampling one finite projection, then sampling a second finite projection from
+the conditioned remainder, then sampling the twice-conditioned remainder.
+
+This is the basic serialisation law used when one simultaneous frontier action
+is replayed by two source-order observations. -/
+theorem bind_pushforward_condOn_pure_two
+    {β γ : Type*} [Finite α] [Finite β] [Finite γ]
+    (μ : PMF α) (first : α → β) (second : α → γ) :
+    μ =
+      (pushforward μ first).bind fun firstValue =>
+        (pushforward (condOn μ first firstValue) second).bind
+          fun secondValue =>
+            condOn (condOn μ first firstValue) second secondValue := by
+  calc
+    μ = (pushforward μ first).bind fun firstValue =>
+        condOn μ first firstValue :=
+      bind_pushforward_condOn_pure (μ := μ) (proj := first)
+    _ =
+      (pushforward μ first).bind fun firstValue =>
+        (pushforward (condOn μ first firstValue) second).bind
+          fun secondValue =>
+            condOn (condOn μ first firstValue) second secondValue := by
+        ext a
+        simp only [PMF.bind_apply]
+        apply tsum_congr
+        intro firstValue
+        have h :=
+          bind_pushforward_condOn_pure
+            (μ := condOn μ first firstValue) (proj := second)
+        exact
+          congrArg
+            (fun dist : PMF α => (pushforward μ first) firstValue * dist a)
+            h
+
 /-- Conditioning on a projected value restricts support to the corresponding
 fiber whenever that projected value has positive mass. -/
 theorem condOn_support_project
