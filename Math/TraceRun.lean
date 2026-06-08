@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.Coupling
 import Math.ProbabilityMassFunction
+import Math.NondeterministicRefinement
 
 /-!
 # State-trace run
@@ -294,6 +295,66 @@ theorem traceRun_take_nonzero (step : List σ → PMF σ) (s₀ : σ)
           rw [List.take_append_of_le_length]
           omega
         simpa [htake] using ih p hp m hmle
+
+-- ============================================================================
+-- Trace lift of nondeterministic refinement
+-- ============================================================================
+
+/-! When a step kernel is selected by an unweighted resolution, the trace law
+becomes a `NondetRefinement.LawFamily`. `traceRun` lifts the two law-family
+questions from the per-step level to the whole-trace level:
+
+* if every resolution's step kernel is a hom onto one common base kernel, the
+  trace family is invariant under the corresponding trace projection — the
+  nondeterminism disappears at the boundary (`traceRunFam_invariantUnder_map_of_hom`);
+* if a fixed trace relation is step-compatible for every implementation
+  resolution against its resolved specification, the implementation trace family
+  refines the specification trace family (`traceRunFam_refinesRel_of_stepCompat`).
+
+`TraceRun` is a concrete producer of law families, so it imports the abstract
+`NondetRefinement` vocabulary and shows it satisfies the interface. -/
+
+variable {R S : Type*}
+
+/-- A resolution-indexed family of trace laws: each resolution `r` selects a
+step kernel `step r`, and the family records the `k`-step trace law. This is a
+`NondetRefinement.LawFamily R (List σ)`. -/
+noncomputable def traceRunFam (step : R → List σ → PMF σ) (s₀ : σ) (k : Nat) :
+    R → PMF (List σ) :=
+  fun r => traceRun (step r) s₀ k
+
+/-- Invariant nondeterminism lift: if every resolution's step kernel is a
+functional trace-kernel hom onto one common `base` kernel via `f`, then all
+resolutions induce the *same* projected trace law, i.e. the trace family is
+invariant under `List.map f`. -/
+theorem traceRunFam_invariantUnder_map_of_hom
+    {f : τ → σ} {base : List σ → PMF σ} {step : R → List τ → PMF τ}
+    (h : ∀ r, IsTraceKernelHom f base (step r)) (t₀ : τ) (k : Nat) :
+    NondetRefinement.InvariantUnder (List.map f) (traceRunFam step t₀ k) := by
+  intro r r'
+  change (traceRun (step r) t₀ k).map (List.map f)
+      = (traceRun (step r') t₀ k).map (List.map f)
+  rw [← traceRun_map_of_hom (h r) t₀ k, ← traceRun_map_of_hom (h r') t₀ k]
+
+/-- Local relational refinement lift: fix a trace relation `Rel` and a
+resolution map `resolve`. If, for every implementation resolution `r`, the
+implementation step kernel and its resolved specification kernel are
+step-compatible for `Rel` (related traces have `Rel`-coupled extended next
+states), then the implementation trace family refines the specification trace
+family relationally. Generalizes `traceRun_HasCoupling_of_bisim` to resolution
+families. -/
+theorem traceRunFam_refinesRel_of_stepCompat
+    {Rel : List σ → List τ → Prop}
+    {istep : R → List σ → PMF σ} {sstep : S → List τ → PMF τ}
+    (resolve : R → S)
+    (hstep : ∀ r ss ts, Rel ss ts →
+        HasCoupling (fun s t => Rel (ss ++ [s]) (ts ++ [t]))
+          (istep r ss) (sstep (resolve r) ts))
+    (s₀ : σ) (t₀ : τ) (hstart : Rel [s₀] [t₀]) (k : Nat) :
+    NondetRefinement.RefinesRel Rel
+      (traceRunFam istep s₀ k) (traceRunFam sstep t₀ k) :=
+  fun r => ⟨resolve r, ⟨traceRun_HasCoupling_of_bisim
+    { rel := Rel, step_compat := hstep r } s₀ t₀ hstart k⟩⟩
 
 end TraceRun
 end Math
