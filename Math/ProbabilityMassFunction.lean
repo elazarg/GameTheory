@@ -870,6 +870,39 @@ theorem condOn_support_project
       hne]
   exact hmass hzero
 
+/-- Conditioning on a projection never creates support outside the original
+PMF.  In the zero-mass fallback branch `condOn` is definitionally the original
+PMF. -/
+theorem condOn_support_subset
+    {β : Type*}
+    (μ : PMF α) (proj : α → β) (b : β) :
+    (condOn μ proj b).support ⊆ μ.support := by
+  classical
+  intro a ha
+  unfold condOn at ha
+  split_ifs at ha with h
+  · exact (PMF.mem_support_filter_iff _).1 ha |>.2
+  · exact ha
+
+/-- Iterated disintegration by finite projections never creates support
+outside the original carrier law. -/
+theorem iterCondOn_support_subset
+    [Finite α] (μ : PMF α) :
+    ∀ projections : List (FiniteProjection α),
+      (iterCondOn μ projections).support ⊆ μ.support
+  | [] => by
+      intro a ha
+      exact ha
+  | projection :: rest => by
+      letI : Finite projection.β := projection.finite
+      intro a ha
+      rw [iterCondOn, PMF.mem_support_bind_iff] at ha
+      rcases ha with ⟨value, _hvalue, haRest⟩
+      exact
+        condOn_support_subset μ projection.project value
+          (iterCondOn_support_subset
+            (condOn μ projection.project value) rest haRest)
+
 theorem foldl_bind_append
     {δ : Type*}
     (l₁ l₂ : List δ) (μ : PMF α) (k : δ → α → PMF α) :
