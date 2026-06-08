@@ -750,6 +750,33 @@ theorem bind_pushforward_condOn
       · simp [hab, mul_comm]
     exact hterm.symm
 
+/-- Self-disintegration: a finite PMF can be sampled by first sampling the law
+of a projection, then sampling the original law conditioned on that projected
+value. -/
+theorem bind_pushforward_condOn_pure
+    {β : Type*} [Finite α] [Finite β]
+    (μ : PMF α) (proj : α → β) :
+    μ = (pushforward μ proj).bind (fun b => condOn μ proj b) := by
+  simpa [PMF.bind_pure] using
+    bind_pushforward_condOn (μ := μ) (proj := proj)
+      (g := fun a => PMF.pure a)
+
+/-- Conditioning on a projected value restricts support to the corresponding
+fiber whenever that projected value has positive mass. -/
+theorem condOn_support_project
+    {β : Type*}
+    (μ : PMF α) (proj : α → β) (b : β)
+    (hb : pushforward μ proj b ≠ 0)
+    {a : α} (ha : a ∈ (condOn μ proj b).support) :
+    proj a = b := by
+  have hmass : condOn μ proj b a ≠ 0 := by
+    simpa [PMF.mem_support_iff] using ha
+  by_contra hne
+  have hzero : condOn μ proj b a = 0 := by
+    simp [condOn_apply (μ := μ) (proj := proj) (b := b) (a := a) hb,
+      hne]
+  exact hmass hzero
+
 theorem foldl_bind_append
     {δ : Type*}
     (l₁ l₂ : List δ) (μ : PMF α) (k : δ → α → PMF α) :
