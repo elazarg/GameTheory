@@ -796,6 +796,64 @@ theorem bind_pushforward_condOn_pure_two
             (fun dist : PMF α => (pushforward μ first) firstValue * dist a)
             h
 
+/-- A finite projection of a PMF carrier.
+
+This packages the projection codomain with the finiteness instance needed for
+conditioning/disintegration. -/
+structure FiniteProjection (α : Type*) where
+  β : Type*
+  finite : Finite β
+  project : α → β
+
+/-- Iterated self-disintegration by a list of finite projections.
+
+Each projection is sampled from the current conditioned remainder; the final
+result is a PMF on the original carrier. -/
+noncomputable def iterCondOn
+    [Finite α] (μ : PMF α) :
+    List (FiniteProjection α) → PMF α
+  | [] => μ
+  | projection :: rest =>
+      letI : Finite projection.β := projection.finite
+      (pushforward μ projection.project).bind fun value =>
+        iterCondOn (condOn μ projection.project value) rest
+
+/-- List-valued self-disintegration.  A finite PMF can be serialized by any
+finite list of projections, conditioning the remaining carrier law after each
+sampled projection. -/
+theorem bind_pushforward_condOn_pure_list
+    [Finite α] (μ : PMF α) :
+    ∀ projections : List (FiniteProjection α),
+      μ = iterCondOn μ projections
+  | [] => rfl
+  | projection :: rest => by
+      letI : Finite projection.β := projection.finite
+      calc
+        μ =
+            (pushforward μ projection.project).bind fun value =>
+              condOn μ projection.project value :=
+          bind_pushforward_condOn_pure
+            (μ := μ) (proj := projection.project)
+        _ =
+            (pushforward μ projection.project).bind fun value =>
+              iterCondOn
+                (condOn μ projection.project value) rest := by
+          ext a
+          simp only [PMF.bind_apply]
+          apply tsum_congr
+          intro value
+          have htail :
+              condOn μ projection.project value =
+                iterCondOn
+                  (condOn μ projection.project value) rest :=
+            bind_pushforward_condOn_pure_list
+              (condOn μ projection.project value) rest
+          exact
+            congrArg
+              (fun dist : PMF α =>
+                pushforward μ projection.project value * dist a)
+              htail
+
 /-- Conditioning on a projected value restricts support to the corresponding
 fiber whenever that projected value has positive mass. -/
 theorem condOn_support_project
