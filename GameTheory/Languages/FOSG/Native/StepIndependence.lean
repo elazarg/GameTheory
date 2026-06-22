@@ -90,11 +90,18 @@ theorem marginal_stepActionProb_raw
       ∏ i, ∑ πi : PureStrategy (G := G) i,
         (behavioralToMixed (G := G) β i) πi *
           (if πi (pref.playerView i) = e.ownAction? i then 1 else 0) by
-      simpa [PureProfile] using
-        (@Fintype.prod_sum ι ENNReal _ _ _ (fun i => PureStrategy (G := G) i) _
+      exact
+        (show (∏ i, ∑ πi : PureStrategy (G := G) i,
+            (behavioralToMixed (G := G) β i) πi *
+              (if πi (pref.playerView i) = e.ownAction? i then 1 else 0)) =
+            ∑ ρ : ((i : ι) → PureStrategy (G := G) i),
+              ∏ i,
+                (behavioralToMixed (G := G) β i) (ρ i) *
+                  (if ρ i (pref.playerView i) = e.ownAction? i then 1 else 0) from
+          (@Fintype.prod_sum ι ENNReal _ _ _ (fun i => PureStrategy (G := G) i) _
           (fun i πi =>
             (behavioralToMixed (G := G) β i) πi *
-              (if πi (pref.playerView i) = e.ownAction? i then 1 else 0))).symm]
+              (if πi (pref.playerView i) = e.ownAction? i then 1 else 0)))).symm]
   unfold FOSG.stepActionProb
   refine Finset.prod_congr rfl ?_
   intro i _
@@ -103,8 +110,12 @@ theorem marginal_stepActionProb_raw
         (behavioralToMixed (G := G) β i) πi *
           (if πi (pref.playerView i) = e.ownAction? i then 1 else 0) =
             β i (pref.playerView i) (e.ownAction? i) := by
-    simpa [behavioralToMixed, mul_ite, mul_one, mul_zero] using
-      Math.PMFProduct.pmfPi_coord_mass (β i) (pref.playerView i) (e.ownAction? i)
+    change (∑ πi : G.InfoState i → Option (Act i),
+        (Math.PMFProduct.pmfPi (β i)) πi *
+          (if πi (pref.playerView i) = e.ownAction? i then 1 else 0)) =
+      β i (pref.playerView i) (e.ownAction? i)
+    exact Math.PMFProduct.pmfPi_coord_mass_mul_indicator (β i) (pref.playerView i)
+      (e.ownAction? i)
   simpa using hcoord
 
 end Raw

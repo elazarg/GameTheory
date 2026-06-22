@@ -143,7 +143,7 @@ theorem currentObs_projectStatesFrom (O : ObsModelCore ι σ Obs Act) (i : ι)
       | nil =>
           simp [projectStatesFrom, currentObs, (O.infoState i).current_push]
       | cons t ts =>
-          simpa [projectStatesFrom] using
+          simpa [projectStatesFrom, List.getLast?] using
             ih ((O.infoState i).push v (O.observe i s))
 
 /-- Observation equivalence: two states look the same to player `i`. -/

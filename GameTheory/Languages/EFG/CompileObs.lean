@@ -254,8 +254,9 @@ noncomputable def canonicalInfoState (t : GameTree S Outcome)
 @[simp] theorem currentObs_canonicalInfoState (t : GameTree S Outcome)
     (i : S.Player) (o : Option (S.Infoset i)) :
     (compileObsModel t).currentObs i (canonicalInfoState t i o) = o := by
-  simpa [canonicalInfoState, ObsModel.currentObs] using
-    (((compileObsModel t).infoState i).current_start o)
+  change ((compileObsModel t).infoState i).current
+    (((compileObsModel t).infoState i).start o) = o
+  exact ((compileObsModel t).infoState i).current_start o
 
 /-- Native EFG pure actions viewed as compiled actions at a fixed observation. -/
 noncomputable def compiledPureAtObs (π : PureProfile S) (i : S.Player)

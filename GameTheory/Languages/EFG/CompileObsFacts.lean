@@ -209,7 +209,10 @@ private theorem compiledCore_step_of_decision
               (obsOfState_decision_eq_some I next))
             (hs ▸ a p))) := by
   cases hs
-  simp [ObsModelCore.step, compileObsModelCore, InfoStateCore.identity, treeStepPMF, obsOfState]
+  change treeStepPMF (S := S) (Outcome := Outcome) (.decision I next) a =
+    PMF.pure (next (cast
+      (compiledAct_eq_of_some S p (obsOfState_decision_eq_some I next)) (a p)))
+  rfl
 
 private theorem compiledCore_step_of_terminal
     {s : GameTree S Outcome} {z : Outcome}
@@ -240,19 +243,18 @@ current step just evaluates it at the current observation cell. -/
           ((compiledCoreObs t).lastState ss)) := by
   induction ss with
   | nil =>
-      simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
-        ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-        compileObsModelCore, InfoStateCore.identity, obsOfState]
+      change π i (obsOfState i t) = π i (obsOfState i t)
+      rfl
   | cons s ss ih =>
       cases ss with
       | nil =>
-          simp [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
-            ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compileObsModelCore, InfoStateCore.identity, obsOfState]
+          change π i (obsOfState i s) = π i (obsOfState i s)
+          rfl
       | cons t ts =>
-          simpa [ObsModelCore.castProfileAction, ObsModelCore.projectStates,
+          simpa [compiledCoreObs, compileObsModelCore, InfoStateCore.identity,
+            ObsModelCore.castProfileAction, ObsModelCore.projectStates,
             ObsModelCore.projectStatesFrom, ObsModelCore.lastState,
-            compileObsModelCore, InfoStateCore.identity, obsOfState] using ih
+            ObsModelCore.currentObs, obsOfState, List.getLast?] using ih
 
 @[simp] theorem castJointAction_compiledCore
     (π : ObsModelCore.PureProfile (compiledCoreObs t))
@@ -398,19 +400,32 @@ private theorem stepDist_compiledCore_eq_decision
             cast
               (compiledAct_eq_of_some S p
                 (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
-              (a p)))
+          (a p)))
         next := by
-    simpa [Function.comp] using
-      (Math.ProbabilityMassFunction.pushforward_comp
-        (pmfPi (fun i =>
-          liftBehavioralProfileCore t σ i
-            (O.projectStates i ss)))
-        (fun a =>
+    change Math.ProbabilityMassFunction.pushforward
+        (pmfPi (fun i => liftBehavioralProfileCore t σ i (O.projectStates i ss)))
+        (next ∘ fun a =>
           cast
             (compiledAct_eq_of_some S p
               (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
-            (a p))
-        next).symm
+            (a p)) =
+      Math.ProbabilityMassFunction.pushforward
+        (Math.ProbabilityMassFunction.pushforward
+          (pmfPi (fun i =>
+            liftBehavioralProfileCore t σ i (O.projectStates i ss)))
+          (fun a =>
+            cast
+              (compiledAct_eq_of_some S p
+                (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
+              (a p))) next
+    exact (Math.ProbabilityMassFunction.pushforward_comp
+      (pmfPi (fun i => liftBehavioralProfileCore t σ i (O.projectStates i ss)))
+      (fun a =>
+        cast
+          (compiledAct_eq_of_some S p
+            (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
+          (a p))
+      next).symm
   rw [hcomp]
   have hpush :
       Math.ProbabilityMassFunction.pushforward
@@ -444,17 +459,33 @@ private theorem stepDist_compiledCore_eq_decision
               (compiledAct_eq_of_some S p
                 (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
               x) := by
-      simpa [Function.comp] using
-        (Math.ProbabilityMassFunction.pushforward_comp
+      change Math.ProbabilityMassFunction.pushforward
           (pmfPi (fun i =>
-            liftBehavioralProfileCore t σ i
-              (O.projectStates i ss)))
-          (fun a => a p)
+            liftBehavioralProfileCore t σ i (O.projectStates i ss)))
+          ((fun x =>
+            cast
+              (compiledAct_eq_of_some S p
+                (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
+              x) ∘ fun a => a p) =
+        Math.ProbabilityMassFunction.pushforward
+          (Math.ProbabilityMassFunction.pushforward
+            (pmfPi (fun i =>
+              liftBehavioralProfileCore t σ i (O.projectStates i ss)))
+            (fun a => a p))
           (fun x =>
             cast
+              (compiledAct_eq_of_some S p
+                (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
+              x)
+      exact (Math.ProbabilityMassFunction.pushforward_comp
+        (pmfPi (fun i =>
+          liftBehavioralProfileCore t σ i (O.projectStates i ss)))
+        (fun a => a p)
+        (fun x =>
+          cast
             (compiledAct_eq_of_some S p
               (show O.projectStates p ss = some I by simp [O, hs, obsOfState]))
-              x)).symm
+            x)).symm
     rw [hcomp', Math.PMFProduct.pmfPi_push_coord]
     have hproj : O.projectStates p ss = some I := by
       simp [O, hs, obsOfState]
@@ -467,8 +498,8 @@ private theorem stepDist_compiledCore_eq_decision
             σ p I := by
       intro v h
       cases h
-      simpa [liftBehavioralProfileCore] using
-        (Math.ProbabilityMassFunction.pushforward_id (σ p I))
+      change Math.ProbabilityMassFunction.pushforward (σ p I) id = σ p I
+      exact Math.ProbabilityMassFunction.pushforward_id (σ p I)
     exact hlocal _ hproj
   rw [hpush, Math.ProbabilityMassFunction.bind_pure_eq_pushforward]
 
@@ -933,13 +964,17 @@ private theorem infoState_some_of_not_subsingleton
   | terminal z =>
       exfalso
       apply hsub
-      simpa [projectStates_compiledCore, hlast, obsOfState, CompiledAct] using
-        (inferInstance : Subsingleton PUnit)
+      rw [show (compiledCoreObs t).projectStates i ss = none by
+        simp [projectStates_compiledCore, hlast, obsOfState]]
+      change Subsingleton PUnit
+      exact inferInstance
   | chance k μ hk next =>
       exfalso
       apply hsub
-      simpa [projectStates_compiledCore, hlast, obsOfState, CompiledAct] using
-        (inferInstance : Subsingleton PUnit)
+      rw [show (compiledCoreObs t).projectStates i ss = none by
+        simp [projectStates_compiledCore, hlast, obsOfState]]
+      change Subsingleton PUnit
+      exact inferInstance
   | @decision p J next =>
       by_cases hp : p = i
       · subst hp
@@ -947,8 +982,10 @@ private theorem infoState_some_of_not_subsingleton
         simp [projectStates_compiledCore, hlast, obsOfState]
       · exfalso
         apply hsub
-        simpa [projectStates_compiledCore, hlast, obsOfState, hp, CompiledAct] using
-          (inferInstance : Subsingleton PUnit)
+        rw [show (compiledCoreObs t).projectStates i ss = none by
+          simp [projectStates_compiledCore, hlast, obsOfState, hp]]
+        change Subsingleton PUnit
+        exact inferInstance
 
 theorem obsLocalFeasibility_compiledCore
     (hpr : PerfectRecall t) (i : S.Player) :

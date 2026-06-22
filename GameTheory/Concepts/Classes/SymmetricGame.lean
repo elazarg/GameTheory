@@ -269,8 +269,9 @@ theorem symmetric_mixed_nash_exists_ofPureEU
           (x () b + KernelGame.pospart (G.mixedGain σ i₀ b)) /
               (1 + G.gainSum σ i₀) =
             x () b := by
-        simpa [f, xdiag, σ, diag, KernelGame.nashMapOnMixedSimplex_apply,
-          KernelGame.mixedGainOnMixedSimplex, KernelGame.gainSumOnMixedSimplex] using hxb
+        change ((G.nashMapOnMixedSimplex (fun _ => x ()) i₀ : stdSimplex ℝ S) b) =
+          x () b
+        exact hxb
       have hden_pos : 0 < 1 + G.gainSum σ i₀ := by
         have hnonneg := G.gainSum_nonneg σ i₀
         linarith
@@ -294,7 +295,10 @@ theorem symmetric_mixed_nash_exists_ofPureEU
     exact Math.Optimization.LocalGlobal.all_nonpos_of_weighted_pospart_fixedPoint
       (w := fun a : S => (σ i₀ a).toReal)
       (g := fun a : S => G.mixedGain σ i₀ a)
-      (fun a => by simpa [KernelGame.pospart, KernelGame.gainSum] using hfp_all a) hwg a
+      (fun a => by
+        change (σ i₀ a).toReal * (1 + G.gainSum σ i₀) =
+          (σ i₀ a).toReal + KernelGame.pospart (G.mixedGain σ i₀ a)
+        exact hfp_all a) hwg a
   have hmixedSymm :
       IsSymmetricEU
         (fun τ : ι → PMF S =>

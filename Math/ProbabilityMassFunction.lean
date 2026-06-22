@@ -245,8 +245,8 @@ noncomputable def pmfMass (μ : PMF α) (E : α → Prop) : ENNReal :=
 theorem pmfMass_ne_top (μ : PMF α) (E : α → Prop) :
     pmfMass (μ := μ) E ≠ ⊤ := by
   classical
-  simpa [pmfMass, pmfMask, Set.indicator, Set.mem_setOf_eq] using
-    μ.tsum_coe_indicator_ne_top {a | E a}
+  change (∑' a : α, ({a : α | E a}.indicator μ a)) ≠ ⊤
+  exact μ.tsum_coe_indicator_ne_top {a | E a}
 
 theorem pmfMass_eq_toOuterMeasure (μ : PMF α) (E : α → Prop) :
     pmfMass (μ := μ) E = μ.toOuterMeasure {a | E a} := by

@@ -145,9 +145,9 @@ theorem pmfPi_bind_factor [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι)
     (g : A j → (∀ i, A i) → PMF β)
     (hg : Ignores₂ (A := A) j g) :
-    (pmfPi (A := A) σ).bind (fun s => g (s j) s)
+    (pmfPi σ).bind (fun s => g (s j) s)
       =
-    (σ j).bind (fun a => (pmfPi (A := A) σ).bind (fun s => g a s)) := by
+    (σ j).bind (fun a => (pmfPi σ).bind (fun s => g a s)) := by
   classical
   letI (i : ι) : Fintype (A i) := Fintype.ofFinite (A i)
   ext b
@@ -160,11 +160,11 @@ omit [DecidableEq ι] in
 equals binding directly from the `j`-th marginal. -/
 theorem pmfPi_bind_eval [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) {β : Type*} (f : A j → PMF β) :
-    (pmfPi (A := A) σ).bind (fun s => f (s j)) = (σ j).bind f := by
+    (pmfPi σ).bind (fun s => f (s j)) = (σ j).bind f := by
   classical
   have hg : Ignores₂ (A := A) j (fun a (_ : ∀ i, A i) => f a) :=
     fun _ _ _ => rfl
-  change (pmfPi (A := A) σ).bind
+  change (pmfPi σ).bind
     (fun s => (fun a (_ : ∀ i, A i) => f a) (s j) s) = _
   rw [pmfPi_bind_factor σ j _ hg]
   simp only [PMF.bind_const]
@@ -195,7 +195,7 @@ open Classical in
 theorem pmfPi_push_coordwise
     {B : ι → Type*}
     (μ : ∀ i, PMF (A i)) (g : ∀ i, A i → B i) :
-    pushforward (pmfPi (A := A) μ) (fun f => fun i => g i (f i))
+    pushforward (pmfPi μ) (fun f => fun i => g i (f i))
       = pmfPi (A := B) (fun i => pushforward (μ i) (g i)) := by
   ext b
   simp only [pushforward, PMF.map_apply, pmfPi_apply]
@@ -219,10 +219,10 @@ open Classical in
     is the factor at that coordinate. -/
 theorem pmfPi_push_coord [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) :
-    pushforward (pmfPi (A := A) σ) (fun s => s j) = σ j := by
-  change PMF.map (fun s : (∀ i, A i) => s j) (pmfPi (A := A) σ) = σ j
-  rw [← PMF.bind_pure_comp (fun s : (∀ i, A i) => s j) (pmfPi (A := A) σ)]
-  change (pmfPi (A := A) σ).bind (fun s => PMF.pure (s j)) = σ j
+    pushforward (pmfPi σ) (fun s => s j) = σ j := by
+  change PMF.map (fun s : (∀ i, A i) => s j) (pmfPi σ) = σ j
+  rw [← PMF.bind_pure_comp (fun s : (∀ i, A i) => s j) (pmfPi σ)]
+  change (pmfPi σ).bind (fun s => PMF.pure (s j)) = σ j
   rw [pmfPi_bind_eval σ j (fun a => PMF.pure a)]
   simp
 
@@ -232,7 +232,7 @@ open Classical in
 theorem pmfPi_coord_mass_tsum
     [∀ i, Finite (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (a : A j) :
-    (∑' s : (∀ i, A i), if s j = a then (pmfPi (A := A) σ) s else 0) = σ j a := by
+    (∑' s : (∀ i, A i), if s j = a then (pmfPi σ) s else 0) = σ j a := by
   have h := congrFun (congrArg DFunLike.coe (pmfPi_push_coord σ j)) a
   simpa [pushforward, PMF.map_apply, pmfPi_apply, eq_comm] using h
 
@@ -241,8 +241,17 @@ open Classical in
 theorem pmfPi_coord_mass
     [∀ i, Fintype (A i)]
     (σ : ∀ i, PMF (A i)) (j : ι) (a : A j) :
-    (∑ s : (∀ i, A i), if s j = a then (pmfPi (A := A) σ) s else 0) = σ j a := by
+    (∑ s : (∀ i, A i), if s j = a then (pmfPi σ) s else 0) = σ j a := by
   simpa [tsum_fintype] using pmfPi_coord_mass_tsum σ j a
+
+/-- Pointwise marginal, written with a multiplicative `0`/`1` indicator. -/
+theorem pmfPi_coord_mass_mul_indicator
+    [∀ i, Fintype (A i)]
+    [∀ i, DecidableEq (A i)]
+    (σ : ∀ i, PMF (A i)) (j : ι) (a : A j) :
+    (∑ s : (∀ i, A i),
+      (pmfPi σ) s * (if s j = a then 1 else 0)) = σ j a := by
+  simpa [mul_ite] using pmfPi_coord_mass σ j a
 
 end Pushforward
 

@@ -105,7 +105,7 @@ theorem availableMoves_nonempty
       ⟨a, ha⟩
     refine ⟨a i, ?_⟩
     rw [FOSG.mem_availableMoves_iff]
-    simpa [FOSG.locallyLegalAtState] using ha.2 i
+    exact (G.legal_iff_forall.mp ha).2 i
 
 theorem availableMoves_eq_availableMovesAtState
     {G : FOSG ι W Act PrivObs PubObs}

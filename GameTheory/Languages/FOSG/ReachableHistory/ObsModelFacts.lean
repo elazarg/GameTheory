@@ -309,7 +309,10 @@ theorem playerViewFrom_append_singleton_eq
           have hres := playerViewFrom_cons_eq_cons_action (G := G) i h'
           exact False.elim
             (playerViewFrom_append_singleton_ne_nil (G := G) i es' e'
-              (by simpa using hres.2.symm))
+              (by
+                change History.playerViewFrom (G := G) i (es' ++ [e']) =
+                  History.playerViewFrom (G := G) i []
+                exact hres.2.symm))
   | cons e₀ es ih =>
       intro es' h
       cases es' with
@@ -321,7 +324,10 @@ theorem playerViewFrom_append_singleton_eq
           have hres := playerViewFrom_cons_eq_cons_action (G := G) i h'
           exact False.elim
             (playerViewFrom_append_singleton_ne_nil (G := G) i es e
-              (by simpa using hres.2))
+              (by
+                change History.playerViewFrom (G := G) i (es ++ [e]) =
+                  History.playerViewFrom (G := G) i []
+                exact hres.2))
       | cons e₀' es' =>
           have h' :
               History.playerViewFrom (G := G) i (e₀ :: (es ++ [e])) =
@@ -526,8 +532,9 @@ theorem reachableHistory_pureStep_snoc
     simpa [FOSG.mem_availableMoves_iff, raw] using haj
   have hstepO : O.step h aStep t ≠ 0 := by
     have h' := hstep
-    rw [ObsModelCore.pureStep_eq] at h'
-    simpa [O, h, aStep] using h'
+    change (O.stepDist (O.pureToBehavioral π) ss) t ≠ 0 at h'
+    rw [ObsModelCore.stepDist_pureToBehavioral_m2b] at h'
+    simpa [h, aStep] using h'
   have hmap : ((G.transition h.lastState ⟨raw, hraw⟩).map
       (fun dst => h.extendByOutcome ⟨raw, hraw⟩ dst)) t ≠ 0 := by
     have hstepEq :
@@ -574,8 +581,9 @@ theorem reachableHistory_source_nonterminal_of_target_nonterminal
   have hstepO : O.step h
       (O.castJointAction ss (fun j => π j (O.projectStates j ss))) t ≠ 0 := by
     have h' := hstep
-    rw [ObsModelCore.pureStep_eq] at h'
-    simpa [O, h] using h'
+    change (O.stepDist (O.pureToBehavioral π) ss) t ≠ 0 at h'
+    rw [ObsModelCore.stepDist_pureToBehavioral_m2b] at h'
+    simpa [h] using h'
   have hpure : O.step h
       (O.castJointAction ss (fun j => π j (O.projectStates j ss))) = PMF.pure h := by
     change (if hterm' : G.terminal h.lastState then PMF.pure h else _) = PMF.pure h
@@ -623,8 +631,9 @@ theorem reachableHistory_pureRun_last_steps_length_le
       · have hstepO : O.step (O.lastState p)
             (O.castJointAction p (fun j => π j (O.projectStates j p))) t ≠ 0 := by
           have ht' := ht
-          rw [ObsModelCore.pureStep_eq] at ht'
-          simpa [O] using ht'
+          change (O.stepDist (O.pureToBehavioral π) p) t ≠ 0 at ht'
+          rw [ObsModelCore.stepDist_pureToBehavioral_m2b] at ht'
+          exact ht'
         have hpure : O.step (O.lastState p)
             (O.castJointAction p (fun j => π j (O.projectStates j p))) =
               PMF.pure (O.lastState p) := by
@@ -676,7 +685,8 @@ theorem reachableHistory_pureStep_component_eq
         G.reachableInfoStateOfHistory i t' := by
     have h₁ := reachableHistory_projectStates_eq_last (G := G) hLeg i (p ++ [t])
     have h₂ := reachableHistory_projectStates_eq_last (G := G) hLeg i (p' ++ [t'])
-    simpa [O, ObsModelCore.lastState] using h₁.symm.trans (hobs_t.trans h₂)
+    simpa [O, ObsModelCore.lastState, toReachableHistoryObsModelCore] using
+      h₁.symm.trans (hobs_t.trans h₂)
   have htargetView : t.playerView i = t'.playerView i :=
     congrArg Subtype.val htargetInfo
   have hsrcOwn := sourceView_and_ownAction_eq_of_target_view_eq (G := G)
@@ -980,7 +990,8 @@ theorem reachableHistory_current_coord_ignores_of_reachable
   have hrun :=
     ObsModelCore.runDistPure_congr_on_trace
       (O := O) (π₁ := π₁) (π₂ := π₂) (n := n) (ss := ss) hlen hagree
-  simpa [π₁, π₂, πᵢ', v, ObsModelCore.runDistPure_eq_pureRun] using hrun
+  change (O.runDistPure n π₁) ss = (O.runDistPure n π₂) ss
+  exact hrun
 
 theorem reachableHistory_obsLocalFeasibility
     [Fintype ι] [Finite G.History] [∀ i, Fintype (Option (Act i))]
@@ -994,8 +1005,12 @@ theorem reachableHistory_obsLocalFeasibility
     have hsub' :
         Subsingleton (ReachableInfoLegalMove G i (O.currentObs i (O.projectStates i ss₁))) := by
       have hps := reachableHistory_projectStates_eq_last (G := G) hLeg i ss₁
-      simpa [O, hps] using
-        reachableInfoLegalMove_subsingleton_of_terminal (G := G) hLeg hterm i
+      rw [show O.projectStates i ss₁ =
+          G.reachableInfoStateOfHistory i (O.lastState ss₁) by
+        simpa [O] using hps]
+      change Subsingleton
+        (ReachableInfoLegalMove G i (G.reachableInfoStateOfHistory i (O.lastState ss₁)))
+      exact reachableInfoLegalMove_subsingleton_of_terminal (G := G) hLeg hterm i
     exact hsub hsub'
   have hinfo :
       G.reachableInfoStateOfHistory i (O.lastState ss₁) =
@@ -1020,7 +1035,12 @@ theorem reachableHistory_obsLocalFeasibility
             reachableInfoLegalMove_eq_none_of_terminal_view_eq
               (G := G) hLeg hterm i hview.symm b]
       have hps := reachableHistory_projectStates_eq_last (G := G) hLeg i ss₁
-      simpa [O, hps] using hsubLast
+      rw [show O.projectStates i ss₁ =
+          G.reachableInfoStateOfHistory i (O.lastState ss₁) by
+        simpa [O] using hps]
+      change Subsingleton
+        (ReachableInfoLegalMove G i (G.reachableInfoStateOfHistory i (O.lastState ss₁)))
+      exact hsubLast
     exact hsub hsub'
   have hsteps₁ :=
     reachableHistory_pureRun_nonterminal_last_steps_length (G := G) hLeg n₁ h₁ hnt₁
@@ -1113,7 +1133,7 @@ noncomputable def liftReachableHistoryPureStrategy
   refine ⟨π.1 s, ?_⟩
   have hat : π.1 s ∈ G.availableMovesAtInfoState i (h.playerView i) :=
     G.mem_availableMovesAtInfoState_of_history h hraw
-  simpa [hs] using hat
+  simpa [hs, toReachableHistoryObsModelCore, ObsModelCore.currentObs] using hat
 
 /-- Lift a legal reachable FOSG behavioral strategy into the legal
 reachable-history Kuhn model. -/
@@ -1209,6 +1229,7 @@ noncomputable def eraseReachableHistoryPureStrategy
       π := by
   funext s
   apply Subtype.ext
+  change (eraseReachableHistoryPureStrategy (G := G) hLeg i π).1 s = (π s).1
   rfl
 
 /-- The single-player mixed pure strategy induced by a legal reachable
@@ -1248,11 +1269,6 @@ noncomputable def reachableLegalBehavioralToMixed
   classical
   unfold reachableLegalBehavioralToMixed
   rw [PMF.map_comp]
-  change PMF.map
-      ((liftReachableHistoryPureStrategy (G := G) hLeg i) ∘
-        (eraseReachableHistoryPureStrategy (G := G) hLeg i))
-      (reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β) =
-    reachableHistoryBehavioralToMixedStrategy (G := G) hLeg i β
   have hfun :
       ((liftReachableHistoryPureStrategy (G := G) hLeg i) ∘
         (eraseReachableHistoryPureStrategy (G := G) hLeg i)) = id := by

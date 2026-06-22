@@ -87,7 +87,7 @@ theorem vickrey_truthful_isDominant (v : Fin n → ℝ) (who : Fin n) :
     (vickreyGame v).IsDominant who (v who) := by
   intro σ s'
   simp only [vickreyGame, KernelGame.eu_ofEU]
-  convert vickrey_truthful_dominant v who σ s'
+  exact vickrey_truthful_dominant v who σ s'
 
 open Classical in
 /-- Truthful bidding is a Nash equilibrium of the Vickrey game. -/

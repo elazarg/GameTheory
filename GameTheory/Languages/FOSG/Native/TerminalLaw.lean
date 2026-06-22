@@ -196,7 +196,7 @@ theorem marginal_terminalUtilitySum
           (terminalWeightClassical (G := G) β h).toReal * History.utility h i := by
                 refine Finset.sum_congr rfl ?_
                 intro h _
-                simpa using
+                simpa [terminalWeightClassical] using
                   congrArg (fun x => x * History.utility h i)
                     (marginal_terminalWeight_toReal (G := G) β h)
 

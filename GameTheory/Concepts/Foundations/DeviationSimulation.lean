@@ -79,8 +79,27 @@ theorem correlatedLaw_bind_profile_map_of_law {G H : GameForm ι}
     (μ : PMF G.Profile) :
     VG.correlatedLaw (μ.bind (fun σ => PMF.pure (source σ))) =
       VH.correlatedLaw ((PMF.map realize μ).bind (fun τ => PMF.pure (target τ))) := by
-  simpa [PMF.bind_pure_comp, PMF.map_comp, Function.comp_apply] using
-    correlatedLaw_map_eq_map_of_law_eq VG VH μ source (target ∘ realize) law_eq
+  change VG.correlatedLaw (μ.bind (PMF.pure ∘ source)) =
+    VH.correlatedLaw ((PMF.map realize μ).bind (PMF.pure ∘ target))
+  have hsource :
+      μ.bind (PMF.pure ∘ source) = PMF.map source μ :=
+    PMF.bind_pure_comp source μ
+  have htarget :
+      (PMF.map realize μ).bind (PMF.pure ∘ target) =
+        PMF.map (target ∘ realize) μ := by
+    calc
+      (PMF.map realize μ).bind (PMF.pure ∘ target)
+          = PMF.map target (PMF.map realize μ) := by
+              exact PMF.bind_pure_comp target (PMF.map realize μ)
+      _ = PMF.map (target ∘ realize) μ := by
+              exact PMF.map_comp realize μ target
+  calc
+    VG.correlatedLaw (μ.bind (PMF.pure ∘ source))
+        = VG.correlatedLaw (PMF.map source μ) := by rw [hsource]
+    _ = VH.correlatedLaw (PMF.map (target ∘ realize) μ) :=
+        correlatedLaw_map_eq_map_of_law_eq VG VH μ source (target ∘ realize) law_eq
+    _ = VH.correlatedLaw ((PMF.map realize μ).bind (PMF.pure ∘ target)) := by
+        rw [htarget]
 
 end OutcomeView
 
@@ -580,7 +599,9 @@ noncomputable def DeviationFamilySimulation.ofConstantProfileMap
     subst μH
     rcases simulate_target_deviation who sH with ⟨sG, hdev⟩
     refine ⟨sG, ?_⟩
-    simpa [GameForm.constantDeviationProfileFamily_deviate,
+    simpa [ProfileDistributionRealization.ofProfileMap,
+      ProfileDistributionRealization.ofFunctionalRealization,
+      GameForm.constantDeviationProfileFamily_deviate,
       GameForm.constDeviateDistributionFn] using
       OutcomeView.correlatedLaw_bind_profile_map_of_law
         viewG viewH realize
@@ -608,7 +629,9 @@ noncomputable def DeviationFamilySimulation.ofRecommendationProfileMap
     subst μH
     rcases simulate_target_deviation who dH with ⟨dG, hdev⟩
     refine ⟨dG, ?_⟩
-    simpa [GameForm.recommendationDeviationFamily_deviate,
+    simpa [ProfileDistributionRealization.ofProfileMap,
+      ProfileDistributionRealization.ofFunctionalRealization,
+      GameForm.recommendationDeviationFamily_deviate,
       GameForm.deviateDistributionFn] using
       OutcomeView.correlatedLaw_bind_profile_map_of_law
         viewG viewH realize

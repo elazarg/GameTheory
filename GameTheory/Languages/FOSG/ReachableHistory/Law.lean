@@ -78,15 +78,22 @@ theorem reachableHistoryBehavioralToMixedStrategy_factorAt_of_ignores
         Math.ParameterizedChain.pureRun O.pureStep O.init n
           (Function.update π₀ i πᵢ) ss)
       (fun πᵢ => PMF.coe_le_one _ ss)
-  simpa [reachableHistoryBehavioralToMixedStrategy, O] using
-    Math.PMFProduct.reweightPMF_pmfPi_push_coord_of_ignores'
-      (A := fun s : G.ReachableInfoState i => ReachableInfoLegalMove G i s)
-      (σ := liftReachableHistoryBehavioralStrategy (G := G) hLeg i β)
-      (j := (O.projectStates i ss))
-      (w := fun πᵢ : O.LocalStrategy i =>
-        Math.ParameterizedChain.pureRun O.pureStep O.init n
-          (Function.update π₀ i πᵢ) ss)
-      hign hCtop
+  change Math.ProbabilityMassFunction.pushforward
+      (Math.ProbabilityMassFunction.reweightPMF
+        (Math.PMFProduct.pmfPi (liftReachableHistoryBehavioralStrategy (G := G) hLeg i β))
+        (fun πᵢ : O.LocalStrategy i =>
+          Math.ParameterizedChain.pureRun O.pureStep O.init n
+            (Function.update π₀ i πᵢ) ss))
+      (fun s => s (O.projectStates i ss)) =
+    liftReachableHistoryBehavioralStrategy (G := G) hLeg i β (O.projectStates i ss)
+  exact Math.PMFProduct.reweightPMF_pmfPi_push_coord_of_ignores'
+    (A := fun s : G.ReachableInfoState i => ReachableInfoLegalMove G i s)
+    (σ := liftReachableHistoryBehavioralStrategy (G := G) hLeg i β)
+    (j := (O.projectStates i ss))
+    (w := fun πᵢ : O.LocalStrategy i =>
+      Math.ParameterizedChain.pureRun O.pureStep O.init n
+        (Function.update π₀ i πᵢ) ss)
+    hign hCtop
 
 /-- Local posterior for the constructive B→M strategy on a supported
 reachable-history trace. -/
@@ -286,8 +293,10 @@ theorem reachableHistoryOutcomeDistPureProfile_eq_runDist
       have ih' :
           (O.runDist k β).bind (fun ss => PMF.pure (O.lastState ss)) =
             History.runDistFrom G σ k (History.nil G) := by
-        simpa [reachableHistoryOutcomeDistPureProfile, reachableHistoryOutcomeDistPure,
-          FOSG.runDist, O, β, σ] using ih
+        change ((O.runDistPure k (liftReachableHistoryPureProfile (G := G) hLeg π)).bind
+            fun ss => PMF.pure (O.lastState ss)) =
+          History.runDistFrom G σ k (History.nil G)
+        exact ih
       rw [← ih']
       simp only [ObsModelCore.runDist, Math.TraceRun.traceRun]
       rw [PMF.bind_bind, PMF.bind_bind]

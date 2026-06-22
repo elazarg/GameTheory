@@ -65,8 +65,8 @@ theorem runOriginal_erases_to_native
     (k : Nat) (σ : G.LegalBehavioralProfile) :
     PMF.map (erase (G := G)) (runOriginal (G := G) k σ) =
       G.runDist k σ := by
-  simpa [runOriginal, erase] using
-    (PMF.map_id (p := G.runDist k σ))
+  change PMF.map id (G.runDist k σ) = G.runDist k σ
+  exact PMF.map_id (p := G.runDist k σ)
 
 end SerialExec
 end AugmentedEFGBridge

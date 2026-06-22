@@ -22,12 +22,7 @@ structure CoalGame (ι : Type) [DecidableEq ι] where
 
 namespace CoalGame
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
-
--- Coalition-level notions (marginal contribution, null players, game algebra)
--- depend only on finite coalitions, never on enumerating the player universe.
--- `Fintype ι` is re-introduced only for the Shapley/core/Banzhaf results below.
-omit [Fintype ι]
+variable {ι : Type} [DecidableEq ι]
 
 @[ext]
 theorem ext {G₁ G₂ : CoalGame ι} (h : ∀ S, G₁.v S = G₂.v S) : G₁ = G₂ := by
@@ -41,6 +36,8 @@ def marginalContribution (G : CoalGame ι) (i : ι) (S : Finset ι) : ℝ :=
     every coalition is zero. -/
 def IsNull (G : CoalGame ι) (i : ι) : Prop :=
   ∀ S : Finset ι, i ∉ S → G.marginalContribution i S = 0
+
+section FinitePlayers
 
 variable [Fintype ι]
 
@@ -106,12 +103,14 @@ theorem shapleyValue_null (G : CoalGame ι) {i : ι} (h : G.IsNull i) :
   simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hS
   rw [h S hS, mul_zero]
 
-omit [Fintype ι]
+end FinitePlayers
 
 /-- Sum of two coalitional games. -/
 def gameAdd (G₁ G₂ : CoalGame ι) : CoalGame ι where
   v := fun S => G₁.v S + G₂.v S
   v_empty := by simp [G₁.v_empty, G₂.v_empty]
+
+section FinitePlayers
 
 variable [Fintype ι]
 
@@ -124,7 +123,7 @@ theorem shapleyValue_additive (G₁ G₂ : CoalGame ι) (i : ι) :
   ext S
   ring
 
-omit [Fintype ι]
+end FinitePlayers
 
 /-- Two players are symmetric if swapping them in any coalition
     preserves the value. -/
@@ -144,6 +143,8 @@ theorem marginalContribution_eq_of_symmetric (G : CoalGame ι) {i j : ι}
 def gameScalar (c : ℝ) (G : CoalGame ι) : CoalGame ι where
   v := fun S => c * G.v S
   v_empty := by simp [G.v_empty]
+
+section FinitePlayers
 
 variable [Fintype ι]
 
@@ -393,6 +394,7 @@ theorem shapleyValue_efficient (G : CoalGame ι) :
   · intro h
     exact absurd (Finset.mem_univ _) h
 
+end FinitePlayers
 
 end CoalGame
 

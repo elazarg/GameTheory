@@ -126,9 +126,9 @@ theorem mixedOutcomeAt_apply_eq_prod (G : WGame)
         apply congrArg
         funext strats
         exact propext (solutionMap_eq_iff_profileSolutionEvent G hsolv strats ω u)]
-  simpa [mixedJoint, profileSolutionEvent] using
-    (pmfMass_pmfPi_forall (A := fun p : G.P => PlayerStrategySpace G p)
-      (σ := μ) (E := fun p strat => playerSolutionEvent G p ω u strat))
+  exact
+    pmfMass_pmfPi_forall (A := fun p : G.P => PlayerStrategySpace G p)
+      (σ := μ) (E := fun p strat => playerSolutionEvent G p ω u strat)
 
 /-- Player-level event-mass equivalence. This is the exact local condition
     needed to replace player `p`'s mixed strategy by a product-mixed strategy

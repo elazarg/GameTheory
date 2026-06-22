@@ -120,11 +120,19 @@ theorem reachable_marginal_stepActionProb
       ∏ i, ∑ πi : ReachablePureStrategy (G := G) i,
         (reachableBehavioralToMixed (G := G) β i) πi *
           (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0) by
-      simpa [_root_.GameTheory.FOSG.ReachablePureProfile] using
-        (@Fintype.prod_sum ι ENNReal _ _ _ (fun i => ReachablePureStrategy (G := G) i) _
+      exact
+        (show (∏ i, ∑ πi : ReachablePureStrategy (G := G) i,
+            (reachableBehavioralToMixed (G := G) β i) πi *
+              (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0)) =
+            ∑ ρ : ((i : ι) → ReachablePureStrategy (G := G) i),
+              ∏ i,
+                (reachableBehavioralToMixed (G := G) β i) (ρ i) *
+                  (if ρ i (G.reachableInfoStateOfHistory i pref) = e.ownAction? i
+                    then 1 else 0) from
+          (@Fintype.prod_sum ι ENNReal _ _ _ (fun i => ReachablePureStrategy (G := G) i) _
           (fun i πi =>
             (reachableBehavioralToMixed (G := G) β i) πi *
-              (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0))).symm]
+              (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0)))).symm]
   unfold FOSG.stepActionProb
   refine Finset.prod_congr rfl ?_
   intro i _
@@ -133,9 +141,12 @@ theorem reachable_marginal_stepActionProb
         (reachableBehavioralToMixed (G := G) β i) πi *
           (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0) =
             β i (G.reachableInfoStateOfHistory i pref) (e.ownAction? i) := by
-    simpa [reachableBehavioralToMixed, mul_ite, mul_one, mul_zero] using
-      Math.PMFProduct.pmfPi_coord_mass (β i) (G.reachableInfoStateOfHistory i pref)
-        (e.ownAction? i)
+    change (∑ πi : G.ReachableInfoState i → Option (Act i),
+        (Math.PMFProduct.pmfPi (β i)) πi *
+          (if πi (G.reachableInfoStateOfHistory i pref) = e.ownAction? i then 1 else 0)) =
+      β i (G.reachableInfoStateOfHistory i pref) (e.ownAction? i)
+    exact Math.PMFProduct.pmfPi_coord_mass_mul_indicator (β i)
+      (G.reachableInfoStateOfHistory i pref) (e.ownAction? i)
   simpa [_root_.GameTheory.FOSG.ReachableBehavioralProfile.extend] using hcoord
 
 theorem reachable_marginal_stepProb

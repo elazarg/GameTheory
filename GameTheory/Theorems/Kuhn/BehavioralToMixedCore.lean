@@ -104,7 +104,7 @@ theorem jointActionDist_pureToBehavioral
     have hprod :
         (∏ x, if a x = π x (O.projectStates x ss) then (1 : ENNReal) else 0) = 0 := by
       exact Finset.prod_eq_zero (Finset.mem_univ i) (by simp [hi])
-    simpa only [ObsModelCore.jointActionDist, ObsModelCore.pureToBehavioral,
+    simpa [ObsModelCore.jointActionDist, ObsModelCore.pureToBehavioral,
       Math.PMFProduct.pmfPi_apply, PMF.pure_apply, h] using hprod
 
 /-- Under a pure behavioral profile, `stepDist` is a deterministic step. -/

@@ -81,7 +81,7 @@ abbrev ObsLocalFeasibilityFull (i : ι) : Prop :=
 /-- Minimal semantic locality on `ObsModel`, viewed as the corresponding core
 posterior-local condition on `O.toCore`. -/
 abbrev ActionPosteriorLocal (O : ObsModel ι σ Obs Act)
-    [∀ i, Fintype (O.InfoState i)] [∀ i o, Fintype (Act i o)] (i : ι) : Prop :=
+    [∀ i, Fintype (O.InfoState i)] (i : ι) : Prop :=
   ObsModelCore.ActionPosteriorLocal O.toCore i
 
 /-- **Semantic condition**: At any reachable transition `(s, a, t)`, the joint action `a`
@@ -468,23 +468,14 @@ theorem kuhn_mixed_to_behavioral_semantic [∀ i o, Nonempty (Act i o)]
     (hLocal : ∀ i, ObsModel.ActionPosteriorLocal O i)
     (μ : ∀ i, PMF (O.LocalStrategy i))
     (k : Nat) :
-    ∃ β : BehavioralProfile O,
+  ∃ β : BehavioralProfile O,
       O.runDist k β = (pmfPi μ).bind (O.runDistPure k) := by
   have hDet : ObsModelCore.StepActionDeterminism O.toCore := hPSAR.toStepActionDeterminism
-  simpa [ObsModel.toCore, ObsModelCore.runDist, ObsModel.runDist,
-    ObsModelCore.runDistPure, ObsModel.runDistPure,
-    ObsModelCore.stepDist, ObsModel.stepDist,
-    ObsModelCore.jointActionDist, ObsModel.jointActionDist,
-    ObsModelCore.castJointAction, ObsModel.castJointAction,
-    ObsModelCore.projectStates, ObsModel.projectStates,
-    ObsModelCore.projectStatesFrom, ObsModel.projectStatesFrom,
-    ObsModelCore.currentObs, ObsModel.currentObs,
-    ObsModelCore.pureToBehavioral, ObsModel.pureToBehavioral,
-    ObsModelCore.pureStep, ObsModel.pureStep,
-    ObsModelCore.init, ObsModel.init] using
-    (ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := O.toCore)
-      hDet.toMassInvariant hDet.toSupportFactorization
-      (fun i => by simpa [ObsModel.ActionPosteriorLocal] using hLocal i) μ k)
+  change ∃ β : BehavioralProfile O,
+    O.toCore.runDist k β = (pmfPi μ).bind (O.toCore.runDistPure k)
+  exact ObsModelCore.kuhn_mixed_to_behavioral_semantic (O := O.toCore)
+    hDet.toMassInvariant hDet.toSupportFactorization
+    (fun i => by simpa [ObsModel.ActionPosteriorLocal] using hLocal i) μ k
 
 omit [∀ i, Fintype (O.InfoState i)] in
 /-- **Kuhn M→B under the weakest current syntactic condition**:
@@ -507,24 +498,15 @@ theorem kuhn_mixed_to_behavioral_trace
     intro j
     simpa [ObsModel.toCore, ObsModelCore.InfoState] using
       Fintype.ofFinite (O.InfoState j)
-  simpa [ObsModel.toCore, ObsModelCore.runDist, ObsModel.runDist,
-    ObsModelCore.runDistPure, ObsModel.runDistPure,
-    ObsModelCore.stepDist, ObsModel.stepDist,
-    ObsModelCore.jointActionDist, ObsModel.jointActionDist,
-    ObsModelCore.castJointAction, ObsModel.castJointAction,
-    ObsModelCore.projectStates, ObsModel.projectStates,
-    ObsModelCore.projectStatesFrom, ObsModel.projectStatesFrom,
-    ObsModelCore.currentObs, ObsModel.currentObs,
-    ObsModelCore.pureToBehavioral, ObsModel.pureToBehavioral,
-    ObsModelCore.pureStep, ObsModel.pureStep,
-    ObsModelCore.init, ObsModel.init] using
-    (ObsModelCore.kuhn_mixed_to_behavioral_of_obsLocal
-      (O := O.toCore) hMass
-      (obsLocalFeasibilityFull_toCore
-        (O := O)
-        (fun i => obsLocalFeasibilityFull_of_tracePlayerStepRecall
-          hPSAR i (hTPSR i)))
-      μ k)
+  change ∃ β : BehavioralProfile O,
+    O.toCore.runDist k β = (pmfPi μ).bind (O.toCore.runDistPure k)
+  exact ObsModelCore.kuhn_mixed_to_behavioral_of_obsLocal
+    (O := O.toCore) hMass
+    (obsLocalFeasibilityFull_toCore
+      (O := O)
+      (fun i => obsLocalFeasibilityFull_of_tracePlayerStepRecall
+        hPSAR i (hTPSR i)))
+    μ k
 
 omit [∀ i, Fintype (O.InfoState i)] in
 /-- **Generalized Kuhn (M→B) under PSPR**: For any product distribution over

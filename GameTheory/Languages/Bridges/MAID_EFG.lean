@@ -425,8 +425,10 @@ theorem maidToEFGAt_udist {S : MAID.Struct (Fin m) n}
   have hBind := congrArg
     (fun d => d.bind (fun ω => PMF.pure (MAID.utilityOf S sem ω)))
     (maid_efg_evalDist_at sem pol σ)
-  simpa [GameTheory.KernelGame.udist, EFG.EFGGame.toKernelGame,
-    MAID.toKernelGame, toEFGProfile] using hBind
+  change (EFG.GameTree.evalDist (toEFGProfile pol) (maidToEFGAt S sem pol σ).tree).bind
+      (fun ω => PMF.pure (MAID.utilityOf S sem ω)) =
+    (MAID.evalAssignDist S sem pol).bind (fun ω => PMF.pure (MAID.utilityOf S sem ω))
+  exact hBind
 
 /-- Per-player strategy equivalence: `PMF (S.Val I.1.val) ≃ PMF (Fin (S.domainSize I.1.val))`. -/
 private noncomputable def strategyEquivPlayer {S : MAID.Struct (Fin m) n}

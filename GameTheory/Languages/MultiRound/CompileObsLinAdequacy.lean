@@ -872,14 +872,22 @@ private theorem stepDist_liftBehavioral_bind_evalFromCfgMixed
       evalFromCfgMixed G σ cfg by
     convert helper ((compiledLinObs G).lastState ss)
       (fun i => (compiledLinObs G).projectStates i ss) hps using 2
-    rename_i a
-    funext j; congr 1; congr 1
-    funext i
-    -- Both sides transport j i along propositionally equal proofs.
-    -- castJointAction uses currentObs_projectStates, the other uses hps.
-    simp only [ObsModelCore.castJointAction, compileObsModelCoreLin]
-    simp [eqRec_eq_cast]
-    rfl
+    · rfl
+    · rfl
+    · rename_i htype
+      cases htype
+      apply heq_of_eq
+      funext a
+      congr 1
+      change linConfigStepPMF G ((compiledLinObs G).lastState ss)
+          ((compiledLinObs G).castJointAction ss a) =
+        linConfigStepPMF G ((compiledLinObs G).lastState ss)
+          (fun i => cast (congrArg (LinAct (RoundView G) A) (hps i)) (a i))
+      congr 1
+      funext i
+      simp only [ObsModelCore.castJointAction, eqRec_eq_cast]
+      apply congrArg
+      rfl
   -- Now prove the helper by cases on cfg.
   intro cfg obs hobs
   cases cfg with

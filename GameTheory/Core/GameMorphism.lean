@@ -296,7 +296,7 @@ def comp {G H K : KernelGame ι} (g : EUMorphism H K) (f : EUMorphism G H) : EUM
     let τ : Profile H := fun i => f.stratMap i (σ i)
     have hg : K.eu (fun i => g.stratMap i (τ i)) who = H.eu τ who := g.eu_preserved τ who
     have hf : H.eu τ who = G.eu σ who := by simpa [τ] using f.eu_preserved σ who
-    simpa [τ, Function.comp] using hg.trans hf
+    exact hg.trans hf
 
 @[simp] theorem id_comp {G H : KernelGame ι} (f : EUMorphism G H) :
     comp (id H) f = f := by
@@ -341,6 +341,8 @@ def symm (e : EUGameIsomorphism G H) : EUGameIsomorphism H G where
   eu_preserved := by
     intro σ who
     have h := e.eu_preserved (fun i => (e.stratEquiv i).symm (σ i)) who
+    change G.eu (fun i => (e.stratEquiv i).symm (σ i)) who =
+      H.eu (fun i => σ i) who
     simpa using h.symm
 
 end EUGameIsomorphism

@@ -117,7 +117,8 @@ theorem mediator_product_of_product
       have hρ' :
           reweightPMF ν (fun π => pureRun O.toCore.pureStep O.toCore.init n π ss) =
             pmfPi ρ := by
-        simpa [w, ObsModel.pureStep, ObsModel.init, ObsModel.toCore] using hρ
+        change reweightPMF ν w = pmfPi ρ
+        exact hρ
       have hbind := congrArg (fun q =>
         q.bind (fun π => O.toCore.jointActionDist (O.toCore.pureToBehavioral π) ss)) hρ'
       calc

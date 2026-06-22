@@ -251,7 +251,8 @@ theorem binaryChoiceBoundedHorizon : binaryChoice.BoundedHorizon 1 := by
           cases es with
           | nil =>
               have hsrc : e.src = SoloState.start := by
-                simpa using chain.1
+                change e.src = binaryChoice.init
+                exact chain.1
               have hterm : binaryChoiceTerminal e.dst :=
                 binaryChoice_step_from_start_isTerminal e hsrc
               simpa [History.IsTerminal, History.lastState, binaryChoice, hterm]
@@ -443,7 +444,8 @@ theorem boundedHorizon : game.BoundedHorizon 1 := by
           cases es with
           | nil =>
               have hsrc : e.src = State.start := by
-                simpa using chain.1
+                change e.src = game.init
+                exact chain.1
               have hterm : terminal e.dst := step_from_start_isTerminal e hsrc
               simpa [History.IsTerminal, History.lastState, hterm]
           | cons e' es' =>

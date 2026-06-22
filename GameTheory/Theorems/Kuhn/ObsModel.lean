@@ -143,7 +143,7 @@ theorem stateSnapshot_projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι)
       simp [projectStatesFrom, ObsModelCore.projectStatesFrom, stateSnapshot]
   | cons s ss ih =>
       simpa [projectStatesFrom, ObsModelCore.projectStatesFrom, stateSnapshot,
-        (O.infoState i).snapshot_push, List.map]
+        ObsModel.toCore, (O.infoState i).snapshot_push, List.map]
         using ih ((O.infoState i).push v (O.observe i s))
 
 /-- The snapshot view of `projectStates` prepends the initial observation and then
@@ -170,8 +170,11 @@ theorem currentObs_projectStatesFrom (O : ObsModel ι σ Obs Act) (i : ι)
       match ss.getLast? with
       | some s => O.observe i s
       | none => O.currentObs i v := by
-  simpa [ObsModel.currentObs, ObsModel.projectStatesFrom, ObsModel.toCore] using
-    O.toCore.currentObs_projectStatesFrom i v ss
+  change O.toCore.currentObs i (O.toCore.projectStatesFrom i v ss) =
+    match ss.getLast? with
+    | some s => O.observe i s
+    | none => O.toCore.currentObs i v
+  exact O.toCore.currentObs_projectStatesFrom i v ss
 
 /-- Observation equivalence: two states look the same to player `i`. -/
 def obsEq (O : ObsModel ι σ Obs Act) (i : ι) (s t : σ) : Prop :=
@@ -497,7 +500,6 @@ end NoFintype
 
 /-- One stochastic step under a correlated behavioral profile. -/
 noncomputable abbrev stepDistCorr (O : ObsModel ι σ Obs Act)
-    [Fintype ι] [∀ i o, Fintype (Act i o)]
     (b : BehavioralProfileCorr O) (ss : List σ) : PMF σ :=
   O.toCore.stepDistCorr b ss
 
@@ -572,7 +574,6 @@ end NoFintype2
 /-- Mediator construction: condition `ν` on the probability of reaching
 the current state trace, then extract joint actions in profile-world types. -/
 noncomputable def mixedToMediator (O : ObsModel ι σ Obs Act)
-    [DecidableEq ι] [Fintype ι] [∀ i o, Fintype (Act i o)]
     [Fintype (PureProfile O)]
     (ν : PMF (PureProfile O))
     (n : Nat) (ss : List σ) :

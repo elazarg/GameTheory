@@ -331,12 +331,16 @@ theorem actionProfile_map_conditional_eq_pmfPi_publicPlay
           funext i
           simp [GameForm.CheapTalkExtension.actionProfile, hmsg]
     _ = pmfPi (A := fun i => G.Strategy i) (C.publicPlay τ m) := by
-          simpa [pushforward, publicPlay] using
-            pmfPi_push_coordwise
-              (A := fun i => C.game.Strategy i)
-              (B := fun i => G.Strategy i)
-              (μ := C.conditionalCheapTalkProfile τ m)
-              (g := fun i (s : C.game.Strategy i) => s.2 m)
+          change PMF.map (fun σ' : C.game.Profile => fun i => (σ' i).2 m)
+              (pmfPi (A := fun i => C.game.Strategy i) (C.conditionalCheapTalkProfile τ m)) =
+            pmfPi (A := fun i => G.Strategy i)
+              (fun i => PMF.map (fun s : C.game.Strategy i => s.2 m)
+                (C.conditionalCheapTalkProfile τ m i))
+          exact pmfPi_push_coordwise
+            (A := fun i => C.game.Strategy i)
+            (B := fun i => G.Strategy i)
+            (μ := C.conditionalCheapTalkProfile τ m)
+            (g := fun i (s : C.game.Strategy i) => s.2 m)
 
 omit [DecidableEq ι] in
 /-- **Mixed cheap-talk play induces a public-randomness representation.**
@@ -365,8 +369,7 @@ theorem mixedActionLaw_eq_publicCorrelatedLaw
         (C.conditionalCheapTalkProfile τ m)))
     (fun m => pmfPi (A := fun i => G.Strategy i) (C.publicPlay τ m))
     (fun m hm => by
-      simpa [pushforward] using
-        C.actionProfile_map_conditional_eq_pmfPi_publicPlay τ hm)
+      exact C.actionProfile_map_conditional_eq_pmfPi_publicPlay τ hm)
 
 /-- The induced public regime is public-signal Nash: after every
 positive-probability public message, the selected base mixed profile is Nash. -/

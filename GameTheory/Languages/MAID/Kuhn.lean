@@ -162,7 +162,8 @@ theorem kuhn_mixed_to_behavioral
         change (β p none : PMF PUnit) PUnit.unit =
           (PMF.pure PUnit.unit : PMF PUnit) PUnit.unit
         have := PMF.tsum_coe (show PMF PUnit from β p none)
-        simpa [PMF.pure_apply] using this
+        change (∑' a : PUnit, (β p none : PMF PUnit) a) = 1 at this
+        simpa [tsum_fintype] using this
     | some I => rfl
   rw [hcongr, hβ, PMF.bind_bind]
   -- 6. RHS: connect frontierEval with (pmfPi μ').bind ...

@@ -64,7 +64,7 @@ theorem obsLocalFeasibility_of_localSupportSignature
 player `i`'s recommended action, after conditioning on reaching the current
 trace, depends only on player `i`'s information state. -/
 def ActionPosteriorLocal (O : ObsModelCore ι σ Obs Act) (i : ι)
-    [∀ i, Fintype (O.InfoState i)] [∀ i o, Fintype (Act i o)] : Prop :=
+    [∀ i, Fintype (O.InfoState i)] : Prop :=
   ∀ (n₁ n₂ : Nat) (π₀ π₀' : ObsModelCore.PureProfile O) (ss₁ ss₂ : List σ),
     O.projectStates i ss₁ = O.projectStates i ss₂ →
     pureRun (O.pureStep) O.init n₁ π₀ ss₁ ≠ 0 →

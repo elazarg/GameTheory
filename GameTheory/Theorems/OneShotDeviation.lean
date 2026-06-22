@@ -69,8 +69,7 @@ theorem spe_hasNoOneShotDeviation (G : EFGGame)
     have h' := ((G.withTree (.decision I next)).toStrategicKernelGame.toGameForm.isNashFor_iff
       (KernelGame.euPref G.toStrategicKernelGame) σ).1 (hspe _ hSub)
     have h := h' p (Function.update (σ p) I a')
-    simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-      evalDist_decision, pureToBehavioral] using h
+    exact h
   -- Simplify both sides
   have hEvalL : (.decision I next : GameTree G.inf G.Outcome).evalDist (pureToBehavioral σ) =
       (next (σ p I)).evalDist (pureToBehavioral σ) := by
@@ -144,7 +143,7 @@ theorem nash_of_noOSD_of_bounded (G : EFGGame)
         have hNnext' := ((G.withTree (next b)).toStrategicKernelGame.toGameForm.isNashFor_iff
           (KernelGame.euPref G.toStrategicKernelGame) σ).1 (hNnext b)
         have hb := hNnext' who s'
-        simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] using hb
+        exact hb
       have hbind_base :
           expect (μ.bind fun b => (next b).evalDist (pureToBehavioral σ))
               (fun ω => G.utility ω who) =
@@ -179,9 +178,12 @@ theorem nash_of_noOSD_of_bounded (G : EFGGame)
               (fun ω => G.utility ω who) := by
         rw [hbind_dev, hbind_base]
         exact hmono
-      simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+      convert hroot using 1
+      simp [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
         evalDist_chance, GameForm.correlatedOutcome_pure,
-        KernelGame.toGameForm, ge_iff_le] using hroot
+        GameForm.constantDeviationProfileFamily_deviate,
+        KernelGame.toGameForm, ge_iff_le]
+      rfl
     | @cons a _ _ _ _ hstep hr' =>
       cases a with
       | chance _k b =>
@@ -225,7 +227,7 @@ theorem nash_of_noOSD_of_bounded (G : EFGGame)
           have hNashSub' := ((G.withTree (next aDev)).toStrategicKernelGame.toGameForm.isNashFor_iff
             (KernelGame.euPref G.toStrategicKernelGame) σ).1 hNashSub
           have hb := hNashSub' p s'p
-          simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree] using hb
+          exact hb
         -- Step 3: Evaluation at root and with deviation
         have hRootL :
             expect ((GameTree.decision I next).evalDist (pureToBehavioral σ))
@@ -259,20 +261,32 @@ theorem nash_of_noOSD_of_bounded (G : EFGGame)
               (fun a => (next a).evalDist (pureToBehavioral σ)))
               (fun ω => G.utility ω p) := by
           simpa [hUpd] using hMain
-        simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree, hwho,
-          GameForm.correlatedOutcome_pure, KernelGame.toGameForm]
-          using hMain'
+        convert hMain' using 1
+        simp [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+          hwho, GameForm.correlatedOutcome_pure,
+          GameForm.constantDeviationProfileFamily_deviate,
+          KernelGame.toGameForm, ge_iff_le]
+        rfl
       · -- Deviator is NOT the deciding player
         have hNashOpt :
             (G.withTree (next (σ p I))).toStrategicKernelGame.IsNashFor
               (KernelGame.euPref G.toStrategicKernelGame) σ :=
           ih (σ p I) (hpi_next (σ p I)) _
             (ReachBy_append hreach_root (.action (σ p I) (.here _))) (.here _)
-        have hOpt := hNashOpt who s'
+        have hNashOpt' :=
+          ((G.withTree (next (σ p I))).toStrategicKernelGame.toGameForm.isNashFor_iff
+            (KernelGame.euPref G.toStrategicKernelGame) σ).1 hNashOpt
+        have hOpt := hNashOpt' who s'
         have hpw : p ≠ who := Ne.symm hwho
-        simpa [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
-          evalDist_decision, pureToBehavioral, Function.update, hpw,
-          GameForm.correlatedOutcome_pure, KernelGame.toGameForm] using hOpt
+        convert hOpt using 1
+        · simp [EFGGame.toStrategicKernelGame, EFGGame.withTree,
+            evalDist_decision, pureToBehavioral,
+            GameForm.correlatedOutcome_pure, KernelGame.toGameForm]
+        · simp [EFGGame.toStrategicKernelGame, EFGGame.withTree,
+            evalDist_decision, pureToBehavioral, Function.update, hpw,
+            GameForm.correlatedOutcome_pure, GameForm.constantDeviationProfileFamily_deviate,
+            KernelGame.toGameForm]
+          rfl
     | @cons a _ _ _ _ hstep hr' =>
       cases a with
       | chance k b =>

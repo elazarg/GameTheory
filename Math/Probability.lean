@@ -391,8 +391,8 @@ theorem expect_map_fintype_target {α β : Type*} [Finite β]
   · intro b _
     have hs :
         Summable fun a : α => if b = f a then (p a).toReal else 0 := by
-      simpa [Set.indicator, eq_comm] using
-        (hp.indicator {a : α | f a = b})
+      change Summable ({a : α | b = f a}.indicator (fun a => (p a).toReal))
+      exact hp.indicator {a : α | b = f a}
     exact hs.mul_right (u b)
 
 end Probability

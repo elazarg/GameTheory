@@ -320,7 +320,8 @@ theorem pmfPi_bind_update_map
   rw [show (pmfPi σ).bind (fun s => PMF.pure (Function.update s j (f (s j)))) =
       PMF.map (fun s => Function.update s j (f (s j))) (pmfPi σ) from
         PMF.bind_pure_comp (fun s => Function.update s j (f (s j))) (pmfPi σ)]
-  simpa [hmap, hfamily] using hpush
+  rw [← hfamily]
+  simpa [hmap, pushforward] using hpush
 
 omit [∀ i, Fintype (A i)] in
 /-- Binding a product PMF with a constant coordinate update equals the product

@@ -77,7 +77,7 @@ def extendBySteps (pref : G.History) :
 @[simp] theorem extendBySteps_eq
     (h : G.History) :
     extendBySteps (History.nil G) h.steps (by
-      simpa [History.lastState, History.nil] using h.chain) = h := by
+      exact h.chain) = h := by
   apply History.ext
   simp [steps_extendBySteps]
 
@@ -630,7 +630,7 @@ theorem counterfactualProbFrom_eq_of_agreeOff
 noncomputable def prob
     (σ : BehavioralProfile G) (h : G.History) : ENNReal :=
   probFrom σ (History.nil G) h.steps (by
-    simpa [History.lastState, History.nil] using h.chain)
+    exact h.chain)
 
 @[simp] theorem prob_nil
     (σ : BehavioralProfile G) :
@@ -655,7 +655,7 @@ theorem prob_ne_top
   simpa [prob] using
     probFrom_ne_top (G := G) (σ := σ) (pref := History.nil G)
       (es := h.steps) (hchain := by
-        simpa [History.lastState, History.nil] using h.chain)
+        exact h.chain)
 
 theorem probFrom_eq_playerProbFrom_mul_counterfactualProbFrom
     (σ : BehavioralProfile G) (i : ι) (pref : G.History)
@@ -727,7 +727,7 @@ theorem probFrom_append_singleton
     (probFrom_append_singleton (G := G) (σ := σ) (pref := History.nil G)
       (es := h.steps)
       (hchain := by
-        simpa [History.lastState, History.nil] using h.chain)
+        exact h.chain)
       (e := ⟨h.lastState, a, dst, support⟩)
       (hsrc := by
         simp [History.lastState, History.nil, FOSG.lastStateFrom]))
@@ -736,14 +736,14 @@ theorem probFrom_append_singleton
 noncomputable def playerProb
     (σ : BehavioralProfile G) (i : ι) (h : G.History) : ENNReal :=
   playerProbFrom σ i (History.nil G) h.steps (by
-    simpa [History.lastState, History.nil] using h.chain)
+    exact h.chain)
 
 /-- Counterfactual-style realized-history weight for player `i`: everyone
 except `i`, together with transition probabilities. -/
 noncomputable def counterfactualProb
     (σ : BehavioralProfile G) (i : ι) (h : G.History) : ENNReal :=
   counterfactualProbFrom σ i (History.nil G) h.steps (by
-    simpa [History.lastState, History.nil] using h.chain)
+    exact h.chain)
 
 theorem counterfactualProb_eq_of_agreeOff
     {σ τ : BehavioralProfile G} {i : ι} (hag : G.AgreeOff σ τ i)
@@ -752,7 +752,7 @@ theorem counterfactualProb_eq_of_agreeOff
   simpa [History.counterfactualProb] using
     counterfactualProbFrom_eq_of_agreeOff (G := G) hag (pref := History.nil G)
       (es := h.steps) (hchain := by
-        simpa [History.lastState, History.nil] using h.chain)
+        exact h.chain)
 
 theorem prob_eq_playerProb_mul_counterfactualProb
     (σ : BehavioralProfile G) (i : ι) (h : G.History) :
@@ -762,7 +762,7 @@ theorem prob_eq_playerProb_mul_counterfactualProb
     probFrom_eq_playerProbFrom_mul_counterfactualProbFrom
       (G := G) (σ := σ) (i := i) (pref := History.nil G)
       (es := h.steps) (hchain := by
-        simpa [History.lastState, History.nil] using h.chain)
+        exact h.chain)
 
 theorem prob_extendBySteps
     (σ : BehavioralProfile G) (pref : G.History)
@@ -773,7 +773,7 @@ theorem prob_extendBySteps
     (probFrom_append (G := G) (σ := σ) (pref := History.nil G)
       (es₁ := pref.steps) (es₂ := es)
       (h₁ := by
-        simpa [History.lastState, History.nil] using pref.chain)
+        exact pref.chain)
       (h₂ := by
         simpa [History.lastState_extendBySteps, History.lastState, History.nil] using hchain))
 

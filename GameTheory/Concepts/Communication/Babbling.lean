@@ -51,8 +51,8 @@ theorem babbling_nashFor (C : F.CheapTalkExtension)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {σ : F.Profile} (hN : F.IsNashFor pref σ) :
     C.form.IsNashFor pref (C.embedProfile σ) := by
-  simpa [CheapTalkExtension.embedProfile] using
-    GameForm.babbling_nashFor (C.babblingDeviationPreservingFor pref) hN
+  change C.form.IsNashFor pref (fun i => C.embed i (σ i))
+  exact GameForm.babbling_nashFor (C.babblingDeviationPreservingFor pref) hN
 
 end CheapTalkExtension
 

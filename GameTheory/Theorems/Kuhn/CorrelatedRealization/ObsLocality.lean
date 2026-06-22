@@ -413,9 +413,14 @@ private theorem mixedToMediator_eq_pmfPi_factor
   have hDet : ObsModelCore.StepActionDeterminism O.toCore := by
     intro s t a a' hs hs'
     exact funext fun i => hPSAR s s t t a a' hs hs' (fun _ => rfl) (fun _ => rfl) i
-  simpa [ObsModel.mixedToMediator, ObsModel.toCore] using
-    (ObsModelCore.mixedToMediator_eq_pmfPi_factor
-      (O := O.toCore) hDet.toMassInvariant hDet.toSupportFactorization μ n ss h₀ hν₀)
+  change O.toCore.mixedToMediator (pmfPi μ) n ss = pmfPi (fun i =>
+    Math.ProbabilityMassFunction.pushforward
+      (reweightPMF (μ i)
+        (fun πᵢ => pureRun O.toCore.pureStep O.toCore.init n
+          (Function.update π₀ i πᵢ) ss))
+      (fun πᵢ => πᵢ (O.toCore.projectStates i ss)))
+  exact ObsModelCore.mixedToMediator_eq_pmfPi_factor
+    (O := O.toCore) hDet.toMassInvariant hDet.toSupportFactorization μ n ss h₀ hν₀
 
 end KuhnMtoB
 

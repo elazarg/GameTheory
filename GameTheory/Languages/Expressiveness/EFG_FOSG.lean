@@ -187,7 +187,8 @@ theorem toPlainEFGKernelGame_udist_eq_native
   simp [toPlainEFGKernelGame, KernelGame.reindex, toPlainEFG, toKernelGame,
     FOSG.AugmentedEFGBridge.toPlainEFGOfBoundedHorizon,
     FOSG.AugmentedEFGBridge.toPlainEFGAtHorizon,
-    EFG.EFGGame.toKernelGame, FOSG.toKernelGame]
+    EFG.EFGGame.toKernelGame, FOSG.toKernelGameOfBoundedHorizon]
+  rfl
 
 end BoundedFOSGPresentation
 

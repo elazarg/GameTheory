@@ -193,8 +193,8 @@ theorem IsZeroSum.nash_interchangeable_of_bounded {G : KernelGame (Fin 2)}
     linarith
   intro who s'
   fin_cases who
-  · convert hN0 s'
-  · convert hN1 s'
+  · exact hN0 s'
+  · exact hN1 s'
 
 open Classical in
 /-- **Interchangeability**: in a 2-player zero-sum game, if `σ` and `τ` are

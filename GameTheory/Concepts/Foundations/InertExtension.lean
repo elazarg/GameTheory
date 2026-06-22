@@ -333,7 +333,7 @@ theorem nash_of_projected_nash
     E.game.IsNash σ' := by
   rw [KernelGame.IsNash_iff_IsNashFor_eu] at hN ⊢
   have h := E.isNashFor_of_projected_isNashFor G.euPref hN
-  simpa [KernelGame.IsNashFor, KernelGame.euPref, game] using h
+  exact h
 
 /-- Nash equilibria in the inert extension project to Nash equilibria in the
 base game. -/
@@ -343,8 +343,8 @@ theorem projected_nash_of_nash
     G.IsNash (E.projectProfile σ') := by
   rw [KernelGame.IsNash_iff_IsNashFor_eu] at hN ⊢
   have h := E.projected_isNashFor_of_isNashFor G.euPref
-    (by simpa [KernelGame.IsNashFor, KernelGame.euPref, game] using hN)
-  simpa [KernelGame.IsNashFor, KernelGame.euPref] using h
+    (by exact hN)
+  exact h
 
 /-- Nash is invariant under inert extensions at projected profiles. -/
 theorem nash_iff

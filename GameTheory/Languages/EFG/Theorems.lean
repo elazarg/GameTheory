@@ -100,9 +100,11 @@ theorem kuhn_complete
     kuhn_behavioral_to_mixed_pure G hpr,
     fun μ =>
       by
-        simpa [evalBehavioral, evalPure] using
-          (_root_.EFG.kuhn_mixed_to_behavioral
-            (S := G.inf) (Outcome := G.Outcome) G.tree hpr μ)
+        change ∃ σ, _root_.EFG.GameTree.evalDist σ G.tree =
+          (_root_.EFG.mixedProfileJoint μ).bind
+            (fun π => _root_.EFG.GameTree.evalDist (_root_.EFG.pureToBehavioral π) G.tree)
+        exact _root_.EFG.kuhn_mixed_to_behavioral
+          (S := G.inf) (Outcome := G.Outcome) G.tree hpr μ
   ⟩
 
 /-- Bundle both EFG Kuhn directions at the outcome-distribution level. -/

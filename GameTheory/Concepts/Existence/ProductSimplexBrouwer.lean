@@ -73,7 +73,8 @@ theorem exists_fixedPoint_of_approx_on_compact
     intro n; rcases happrox n with ⟨x, hxS, hxdist⟩; exact ⟨x, hxS, hxdist⟩
   have hclosed : ∀ n, IsClosed (t n) := by
     intro n
-    simpa [t] using hScompact.isClosed.inter
+    change IsClosed (S ∩ {x | dist (f x) x ≤ (1 : ℝ) / (n + 1)})
+    exact hScompact.isClosed.inter
       (isClosed_le (hcont.dist continuous_id) continuous_const)
   have ht0_compact : IsCompact (t 0) :=
     hScompact.of_isClosed_subset (hclosed 0) (fun x hx => hx.1)

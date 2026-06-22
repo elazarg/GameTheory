@@ -292,17 +292,22 @@ theorem IsCorrelatedEq_iff_IsCorrelatedEqFor_eu (G : KernelGame ι)
     G.IsCorrelatedEq μ ↔ G.IsCorrelatedEqFor G.euPref μ := by
   constructor
   · intro h who dev
-    simpa [IsCorrelatedEq, IsCorrelatedEqFor, KernelGame.euPref, KernelGame.correlatedEu,
+    change (expect ((μ.bind fun σ => PMF.pure (Function.update σ who (dev (σ who)))).bind
+        G.outcomeKernel) (fun ω => G.utility ω who)) ≤
+      expect (μ.bind G.outcomeKernel) (fun ω => G.utility ω who)
+    rw [PMF.bind_bind]
+    simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
       KernelGame.unilateralDeviationDistribution, KernelGame.deviationDistribution,
-      GameForm.IsCorrelatedEqFor,
-      GameForm.deviateDistributionFn, GameForm.deviateProfileFn]
-      using h who dev
+      KernelGame.unilateralDeviation] using h who dev
   · intro h who dev
-    simpa [IsCorrelatedEq, IsCorrelatedEqFor, KernelGame.euPref, KernelGame.correlatedEu,
+    have hh := h who dev
+    change (expect ((μ.bind fun σ => PMF.pure (Function.update σ who (dev (σ who)))).bind
+        G.outcomeKernel) (fun ω => G.utility ω who)) ≤
+      expect (μ.bind G.outcomeKernel) (fun ω => G.utility ω who) at hh
+    rw [PMF.bind_bind] at hh
+    simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
       KernelGame.unilateralDeviationDistribution, KernelGame.deviationDistribution,
-      GameForm.IsCorrelatedEqFor,
-      GameForm.deviateDistributionFn, GameForm.deviateProfileFn]
-      using h who dev
+      KernelGame.unilateralDeviation] using hh
 
 /-- EU CCE is exactly CCE with `euPref`. -/
 theorem IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu (G : KernelGame ι)
@@ -310,17 +315,22 @@ theorem IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu (G : KernelGame ι)
     G.IsCoarseCorrelatedEq μ ↔ G.IsCoarseCorrelatedEqFor G.euPref μ := by
   constructor
   · intro h who s'
-    simpa [IsCoarseCorrelatedEq, IsCoarseCorrelatedEqFor, KernelGame.euPref,
-      KernelGame.correlatedEu, KernelGame.constantDeviationDistribution,
-      KernelGame.deviationDistribution,
-      GameForm.IsCoarseCorrelatedEqFor, GameForm.constDeviateDistributionFn]
-      using h who s'
+    change (expect ((μ.bind fun σ => PMF.pure (Function.update σ who s')).bind
+        G.outcomeKernel) (fun ω => G.utility ω who)) ≤
+      expect (μ.bind G.outcomeKernel) (fun ω => G.utility ω who)
+    rw [PMF.bind_bind]
+    simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
+      KernelGame.constantDeviationDistribution, KernelGame.deviationDistribution,
+      KernelGame.constantDeviation] using h who s'
   · intro h who s'
-    simpa [IsCoarseCorrelatedEq, IsCoarseCorrelatedEqFor, KernelGame.euPref,
-      KernelGame.correlatedEu, KernelGame.constantDeviationDistribution,
-      KernelGame.deviationDistribution,
-      GameForm.IsCoarseCorrelatedEqFor, GameForm.constDeviateDistributionFn]
-      using h who s'
+    have hh := h who s'
+    change (expect ((μ.bind fun σ => PMF.pure (Function.update σ who s')).bind
+        G.outcomeKernel) (fun ω => G.utility ω who)) ≤
+      expect (μ.bind G.outcomeKernel) (fun ω => G.utility ω who) at hh
+    rw [PMF.bind_bind] at hh
+    simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
+      KernelGame.constantDeviationDistribution, KernelGame.deviationDistribution,
+      KernelGame.constantDeviation] using hh
 
 end KernelGame
 

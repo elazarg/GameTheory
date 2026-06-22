@@ -34,9 +34,10 @@ theorem mediator_step_eq_condStep [Fintype (PureProfile O)]
       ObsModelCore.InfoState, InfoState,
       ObsModelCore.currentObs, currentObs] using
       (inferInstance : Fintype (PureProfile O))
-  simpa [ObsModel.mixedToMediator, ObsModel.pureStep, ObsModel.castJointAction,
-    ObsModel.stepDist, ObsModel.runDistPure, ObsModel.toCore] using
-    (ObsModelCore.mediator_step_eq_condStep (O := O.toCore) ν n ss)
+  change (O.toCore.mixedToMediator ν n ss).bind
+      (fun a => O.toCore.step (O.toCore.lastState ss) (O.toCore.castJointAction ss a)) =
+      condStep ν O.toCore.pureStep O.toCore.init n ss
+  exact ObsModelCore.mediator_step_eq_condStep (O := O.toCore) ν n ss
 
 /-- **Correlated realization theorem**: for any joint distribution `ν` over
 pure profiles, there exists a mediator `m` — producing correlated action
@@ -60,9 +61,14 @@ theorem correlated_realization [Finite (PureProfile O)]
       ObsModelCore.InfoState, InfoState,
       ObsModelCore.currentObs, currentObs] using
       (inferInstance : Fintype (PureProfile O))
-  simpa [ObsModel.mixedToMediator, ObsModel.pureStep, ObsModel.castJointAction,
-    ObsModel.stepDist, ObsModel.runDist, ObsModel.runDistPure, ObsModel.toCore] using
-    (ObsModelCore.correlated_realization (O := O.toCore) ν k)
+  change ∃ m : (n : Nat) → (ss : List σ) →
+        PMF (∀ i, Act i (O.toCore.currentObs i (O.toCore.projectStates i ss))),
+      seqRun (fun n ss =>
+        (m n ss).bind (fun a =>
+          O.toCore.step (O.toCore.lastState ss) (O.toCore.castJointAction ss a)))
+        O.toCore.init k =
+      ν.bind (pureRun O.toCore.pureStep O.toCore.init k)
+  exact ObsModelCore.correlated_realization (O := O.toCore) ν k
 
 end
 
@@ -96,9 +102,11 @@ theorem pureStep_eq (π : PureProfile O) (ss : List σ) :
     O.pureStep π ss =
       O.step (O.lastState ss)
         (fun i => O.currentObs_projectStates i ss ▸ π i (O.projectStates i ss)) := by
-  simpa [ObsModel.pureStep, ObsModel.toCore, ObsModel.castJointAction,
-    ObsModel.stepDist, ObsModel.jointActionDist, ObsModel.pureToBehavioral] using
-    (ObsModelCore.pureStep_eq (O := O.toCore) π ss)
+  change O.toCore.pureStep π ss =
+      O.toCore.step (O.toCore.lastState ss)
+        (fun i => O.toCore.currentObs_projectStates i ss ▸
+          π i (O.toCore.projectStates i ss))
+  exact ObsModelCore.pureStep_eq (O := O.toCore) π ss
 
 /-- Under PSAR, if two profiles produce nonzero transition at the same state
 trace and target, their step distributions are equal. -/

@@ -294,9 +294,9 @@ theorem runDist_eq_of_stepIndependence
           pushforward (O.stepDist (O.pureToBehavioral π) ss)
             (fun t => ss ++ [t])))) (k : Nat) :
     O.runDist k b = ν.bind (fun π => O.runDistPure k π) := by
-  simpa [ObsModel.runDist, ObsModel.runDistPure, ObsModel.stepDist,
-    ObsModel.pureToBehavioral, ObsModel.toCore] using
-    (ObsModelCore.runDist_eq_of_correlatedStepIndependence (O := O.toCore) ν b hStep k)
+  change O.toCore.runDist k b =
+    ν.bind (fun π => O.toCore.runDistPure k π)
+  exact ObsModelCore.runDist_eq_of_correlatedStepIndependence (O := O.toCore) ν b hStep k
 
 /-- Under `PerStepPlayerRecall`, the pure-step action component for player `i`
 depends only on player `i`'s observation at obs-equivalent traces. -/

@@ -53,10 +53,10 @@ theorem isSaddlePoint_iff_isNash (G : KernelGame (Fin 2)) (σ : Profile G) :
   constructor
   · intro ⟨h0, h1⟩ who s'
     fin_cases who
-    · convert h0 s'
-    · convert h1 s'
+    · exact h0 s'
+    · exact h1 s'
   · intro hN
-    exact ⟨fun s₀ => by convert hN 0 s₀, fun s₁ => by convert hN 1 s₁⟩
+    exact ⟨fun s₀ => hN 0 s₀, fun s₁ => hN 1 s₁⟩
 
 open Classical in
 /-- `Guarantees` is equivalent to order-theoretic worst-case EU being at least

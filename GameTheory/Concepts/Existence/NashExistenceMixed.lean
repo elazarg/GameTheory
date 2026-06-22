@@ -348,7 +348,7 @@ theorem nashMap_weightFixedPoint_of_mixedSimplexFixedPoint
         G.Strategy who → ℝ) = (x who : G.Strategy who → ℝ) := by
       exact congrArg Subtype.val (congr_fun hfx who)
     have h := congr_fun hwho a
-    simpa [nashMapOnMixedSimplex, w, hw_nn, hw_sum] using h
+    exact h
   exact ⟨w, hw_nn, hw_sum, hfp_weights⟩
 
 section
@@ -488,9 +488,8 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedGainOnMixedSimplex
     have hsum :
         Continuous (fun x : MixedSimplex ι (fun j => G.Strategy j) =>
           G.gainSumOnMixedSimplex x i) := by
-      simpa [gainSumOnMixedSimplex, gainSum] using
-        (continuous_finsetSum (s := (Finset.univ : Finset (G.Strategy i)))
-          (fun a _ => continuous_pospart.comp (hmg i a)))
+      exact continuous_finsetSum (s := (Finset.univ : Finset (G.Strategy i)))
+        (fun a _ => continuous_pospart.comp (hmg i a))
     have hden_nz :
         ∀ x : MixedSimplex ι (fun j => G.Strategy j),
           (1 + G.gainSumOnMixedSimplex x i) ≠ 0 := by
@@ -501,11 +500,13 @@ theorem continuous_nashMapOnMixedSimplex_of_continuous_mixedGainOnMixedSimplex
       (continuous_const.add hsum) hden_nz
   -- Lift coordinate continuity to continuity into product of simplices.
   refine continuous_pi (fun i => ?_)
-  exact Continuous.subtype_mk
-    (by
-      simpa [nashMapOnMixedSimplex_apply] using
-        (continuous_pi (fun a => hcoord i a)))
+  refine Continuous.subtype_mk ?_
     (fun x => (G.nashMapOnMixedSimplex x i).property)
+  change Continuous (fun x : MixedSimplex ι (fun j => G.Strategy j) =>
+    fun a : G.Strategy i =>
+      (x i a + pospart (G.mixedGainOnMixedSimplex x i a)) /
+        (1 + G.gainSumOnMixedSimplex x i))
+  exact continuous_pi (fun a => hcoord i a)
 
 /-- Approximate fixed points imply a weight-level fixed-point witness for `nashMap`. -/
 theorem nashMap_weightFixedPoint_of_nashMapOnMixedSimplex_approx
@@ -607,7 +608,7 @@ theorem mixed_nash_exists_of_nashMapOnMixedSimplex_fixed_point_of_bounded
         G.Strategy who → ℝ) = (x who : G.Strategy who → ℝ) := by
       exact congrArg Subtype.val (congr_fun hfx who)
     have h := congr_fun hwho a
-    simpa [nashMapOnMixedSimplex, w, hw_nn, hw_sum] using h
+    exact h
   exact ⟨G.profileFromWeights w hw_nn hw_sum,
     G.nash_fp_is_nash_of_bounded _
       hbd (G.nashMap_fp_identity w hw_nn hw_sum hfp_weights)⟩

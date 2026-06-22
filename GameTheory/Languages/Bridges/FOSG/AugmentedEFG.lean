@@ -1209,7 +1209,7 @@ noncomputable def efgToFOSGProfile
     rw [hI_eq]
     have hw := word_toList_cast_eq (n := 2 * k) (xs := h.playerView i)
       (h := hPE) hlen
-    convert hw using 2
+    exact hw
   -- hview required by hτ
   have hview : h.playerView (origPlayer (ι := ι) p) = Word.toList I := by
     rw [hview_cast, hWordTo]

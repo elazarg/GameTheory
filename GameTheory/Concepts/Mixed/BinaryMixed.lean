@@ -130,22 +130,22 @@ def profileBoolEquiv : Profile G ≃ (Bool → Bool) :=
     L.profileBoolEquiv.symm b i = L.action i (b (L.player i)) := by
   simp [profileBoolEquiv, action, Equiv.piCongr_symm_apply]
 
-@[simp] theorem profile_const_true :
+theorem profile_const_true :
     (fun i => L.action i true) = L.profile true true := by
   funext i
   simp [profile]
 
-@[simp] theorem profile_const_false :
+theorem profile_const_false :
     (fun i => L.action i false) = L.profile false false := by
   funext i
   simp [profile]
 
-@[simp] theorem profile_self :
+theorem profile_self :
     (fun i => L.action i (L.player i)) = L.profile true false := by
   funext i
   by_cases h : L.player i <;> simp [profile, h]
 
-@[simp] theorem profile_not :
+theorem profile_not :
     (fun i => L.action i (!(L.player i))) = L.profile false true := by
   funext i
   by_cases h : L.player i <;> simp [profile, h]
@@ -282,12 +282,6 @@ theorem mixedExtension_eu_binary_of_bounded [Fintype ι]
         G.eu (fun i => L.action i (b (L.player i))) who)
     (by
       intro x
-      change ((pmfPi σ) x).toReal * G.eu x who =
-        (((σ (L.playerOf true))
-              (L.action (L.playerOf true) (L.profileBoolEquiv x true))).toReal *
-          ((σ (L.playerOf false))
-              (L.action (L.playerOf false) (L.profileBoolEquiv x false))).toReal) *
-          G.eu (fun i => L.action i (L.profileBoolEquiv x (L.player i))) who
       have hprod := prod_profile_weight_eq L σ x
       have hprof : (fun i => L.action i (L.profileBoolEquiv x (L.player i))) = x := by
         exact L.profileBoolEquiv.left_inv x
@@ -413,6 +407,7 @@ theorem mixedEu_true_formula_of_bounded [Fintype ι]
   simp [boolProfile_univ, boolProfileHH, boolProfileHT, boolProfileTH, boolProfileTT,
     boolProfileHH_ne_HT, boolProfileHH_ne_TH, boolProfileHH_ne_TT,
     boolProfileHT_ne_TH, boolProfileHT_ne_TT, boolProfileTH_ne_TT,
+    L.profile_const_true, L.profile_const_false, L.profile_self, L.profile_not,
     h.eu_true, BinaryActionLabels.prob_false_toReal, BinaryActionLabels.probTrue]
   ring_nf
 
@@ -426,6 +421,7 @@ theorem mixedEu_false_formula_of_bounded [Fintype ι]
   simp [boolProfile_univ, boolProfileHH, boolProfileHT, boolProfileTH, boolProfileTT,
     boolProfileHH_ne_HT, boolProfileHH_ne_TH, boolProfileHH_ne_TT,
     boolProfileHT_ne_TH, boolProfileHT_ne_TT, boolProfileTH_ne_TT,
+    L.profile_const_true, L.profile_const_false, L.profile_self, L.profile_not,
     h.eu_false, BinaryActionLabels.prob_false_toReal, BinaryActionLabels.probTrue]
   ring_nf
 

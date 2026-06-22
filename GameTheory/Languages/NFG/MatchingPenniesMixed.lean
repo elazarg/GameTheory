@@ -112,11 +112,13 @@ theorem matchingPennies_mixed_nash_iff_half (σ : MixedProfile (fun _ : Bool => 
   change matchingPennies.toKernelGame.mixedExtension.IsNash σ ↔
     (σ true heads).toReal = (1 / 2 : ℝ) ∧
       (σ false heads).toReal = (1 / 2 : ℝ)
-  simpa [GameTheory.KernelGame.BinaryActionLabels.probTrue,
-    GameTheory.KernelGame.BinaryActionLabels.action,
-    GameTheory.KernelGame.BinaryActionLabels.playerOf, matchingPenniesLabels] using
-      GameTheory.KernelGame.MatchingPenniesLike.mixed_nash_iff_half
-        matchingPennies_matchingPenniesLike σ
+  have h :=
+    GameTheory.KernelGame.MatchingPenniesLike.mixed_nash_iff_half
+      matchingPennies_matchingPenniesLike σ
+  change matchingPennies.toKernelGame.mixedExtension.IsNash σ ↔
+    matchingPenniesLabels.probTrue σ (matchingPenniesLabels.playerOf true) = (1 / 2 : ℝ) ∧
+      matchingPenniesLabels.probTrue σ (matchingPenniesLabels.playerOf false) = (1 / 2 : ℝ)
+  exact h
 
 /-- The fair mixed profile is a mixed Nash equilibrium of matching pennies. -/
 theorem matchingPennies_fair_mixed_nash :
@@ -166,7 +168,7 @@ theorem matchingPennies_correlated_eq_unique
   have h :=
     GameTheory.KernelGame.MatchingPenniesLike.correlated_eq_unique
       matchingPennies_matchingPenniesLike hCE
-  simpa [matchingPenniesLabels_uniform_eq_fair] using h
+  exact h
 
 /-- Matching pennies has a unique correlated equilibrium: the independent
 uniform mixed Nash distribution. -/

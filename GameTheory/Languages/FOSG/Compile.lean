@@ -93,7 +93,7 @@ theorem extendByOutcome_eq_appendStep_of_head
       rcases hchain with ⟨hsrc, htail⟩
       cases hsrc
       have hsupp : G.transition pref.lastState act dst ≠ 0 := by
-        simpa using support
+        exact support
       rw [History.extendByOutcome_of_support (h := pref) (a := act) (dst := dst) hsupp]
       rfl
 
@@ -1001,7 +1001,7 @@ theorem runDist_eq_terminalWeight_of_exactHorizon
         (G := G) hExact σ (History.nil G) h.steps
         (by
           have hchain0 := h.chain
-          simpa [History.lastState, History.nil] using hchain0)
+          exact hchain0)
         (by simp [hlen])
   · rw [History.terminalWeight_of_not_terminal (σ := σ.toProfile)]
     · exact G.runDist_eq_zero_of_exactHorizon_length_ne hExact σ h hlen
@@ -1120,7 +1120,7 @@ theorem runDist_eq_terminalWeight_of_boundedHorizon
         (G := G) (σ := σ) (pref := History.nil G) (es := h.steps)
         (hchain := by
           have hchain0 := h.chain
-          simpa [History.lastState, History.nil] using hchain0)
+          exact hchain0)
         (slack := slack) (by simpa [History.extendBySteps_eq] using hterm)
   · rw [History.terminalWeight_of_not_terminal (σ := σ.toProfile) hterm]
     exact G.runDist_eq_zero_of_nonterminal_of_boundedHorizon hBound σ h hterm
@@ -1297,8 +1297,9 @@ noncomputable abbrev toKernelGameOfBoundedHorizon
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hBound : G.BoundedHorizon k) (σ : G.LegalBehavioralProfile) :
     (G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ = G.runDist k σ := by
-  simpa [toKernelGameOfBoundedHorizon] using
-    G.terminalLawPMF_eq_runDist_of_boundedHorizon hBound σ
+  change G.terminalLawPMF (G.hasNormalizedTerminalLaw_of_boundedHorizon hBound) σ =
+    G.runDist k σ
+  exact G.terminalLawPMF_eq_runDist_of_boundedHorizon hBound σ
 
 theorem toKernelGameOfBoundedHorizon_support_isTerminal
     {G : FOSG ι W Act PrivObs PubObs}
@@ -1309,7 +1310,7 @@ theorem toKernelGameOfBoundedHorizon_support_isTerminal
     (hsupp : h ∈ ((G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ).support) :
     h.IsTerminal := by
   have hsupp0 : ((G.toKernelGameOfBoundedHorizon hBound).outcomeKernel σ) h ≠ 0 := by
-    simpa [PMF.mem_support_iff] using hsupp
+    exact (PMF.mem_support_iff _ _).1 hsupp
   have hsupp' : (G.runDist k σ) h ≠ 0 := by
     rw [← G.toKernelGameOfBoundedHorizon_outcomeKernel hBound σ]
     exact hsupp0
@@ -1353,8 +1354,9 @@ noncomputable abbrev toKernelGameOfExactHorizon
     [Fintype G.History] [DecidablePred G.terminal]
     {k : Nat} (hExact : G.ExactHorizon k) (σ : G.LegalBehavioralProfile) :
     (G.toKernelGameOfExactHorizon hExact).outcomeKernel σ = G.runDist k σ := by
-  simpa [toKernelGameOfExactHorizon] using
-    G.terminalLawPMF_eq_runDist_of_exactHorizon hExact σ
+  change G.terminalLawPMF (G.hasNormalizedTerminalLaw_of_exactHorizon hExact) σ =
+    G.runDist k σ
+  exact G.terminalLawPMF_eq_runDist_of_exactHorizon hExact σ
 
 theorem toKernelGameOfExactHorizon_support_isTerminal
     {G : FOSG ι W Act PrivObs PubObs}
@@ -1365,10 +1367,10 @@ theorem toKernelGameOfExactHorizon_support_isTerminal
     (hsupp : h ∈ ((G.toKernelGameOfExactHorizon hExact).outcomeKernel σ).support) :
     h.IsTerminal := by
   have hsupp0 : ((G.toKernelGameOfExactHorizon hExact).outcomeKernel σ) h ≠ 0 := by
-    simpa [PMF.mem_support_iff] using hsupp
+    exact (PMF.mem_support_iff _ _).1 hsupp
   have hsupp' : (G.runDist k σ) h ≠ 0 := by
-    rw [← G.terminalLawPMF_eq_runDist_of_exactHorizon hExact σ]
-    simpa [toKernelGameOfExactHorizon] using hsupp0
+    rw [← G.toKernelGameOfExactHorizon_outcomeKernel hExact σ]
+    exact hsupp0
   exact G.runDist_support_isTerminal_of_exactHorizon hExact σ h hsupp'
 
 theorem toKernelGameOfExactHorizon_eu_eq

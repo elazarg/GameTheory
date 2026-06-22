@@ -16,7 +16,7 @@ open Math.Probability
 
 namespace CoalGame
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
+variable {ι : Type} [DecidableEq ι]
 
 /-! ### Unanimity games and Shapley uniqueness
 
@@ -24,8 +24,6 @@ The unanimity game on a nonempty coalition `S` pays `1` whenever the
 present coalition contains all of `S`, and `0` otherwise. These games
 are the building blocks: every coalitional game decomposes uniquely as
 a linear combination of unanimity games (Shapley 1953). -/
-
-omit [Fintype ι]
 
 /-- Unanimity game on coalition `S`: `v T = 1` if `S ⊆ T`, else `0`. -/
 def unanimityGame (S : Finset ι) (hS : S.Nonempty) : CoalGame ι where
@@ -71,6 +69,8 @@ theorem unanimityGame_areSymmetric (S : Finset ι) (hS : S.Nonempty)
     · exact hiT'
   simp [hni, hnj]
 
+section FinitePlayers
+
 variable [Fintype ι]
 
 /-- The grand coalition contains every nonempty `S`, so the unanimity
@@ -80,7 +80,7 @@ theorem unanimityGame_v_univ (S : Finset ι) (hS : S.Nonempty) :
   have : S ⊆ Finset.univ := S.subset_univ
   simp [unanimityGame, this]
 
-omit [Fintype ι]
+end FinitePlayers
 
 /-- Möbius coefficient of `S` in the unanimity-basis decomposition of `G`:
 `c_S = Σ_{R ⊆ S} (-1)^{|S| - |R|} · G.v R`. Together with the unanimity
@@ -179,6 +179,8 @@ theorem unanimity_decomposition (G : CoalGame ι) (T : Finset ι) :
   rw [Finset.sum_ite_eq' T.powerset T G.v,
     if_pos (Finset.mem_powerset.mpr Finset.Subset.rfl)]
 
+section FinitePlayers
+
 variable [Fintype ι]
 
 /-- **Value on unanimity games**: any allocation `φ` satisfying *efficiency*,
@@ -235,7 +237,7 @@ theorem allocation_on_unanimityGame
     rw [if_neg hiS]
     exact h_null G (unanimityGame_isNull_of_notMem S hS hiS)
 
-omit [Fintype ι]
+end FinitePlayers
 
 /-- Indexed sum of coalitional games: `(gameSum s f).v T = Σ_{a ∈ s} (f a).v T`. -/
 noncomputable def gameSum {α : Type*} (s : Finset α) (f : α → CoalGame ι) :
@@ -280,6 +282,8 @@ theorem gameSum_allocation_eq
       simp [gameAdd, Finset.sum_insert ha]
     rw [hext, h_add, ih, Finset.sum_insert ha]
 
+section FinitePlayers
+
 variable [Fintype ι]
 
 /-- A finite sum of games has a core allocation obtained by summing core
@@ -309,12 +313,14 @@ theorem gameSum_isCore
               IsCore.coalition_rational (f a) (hx a ha) T)
       _ = (gameSum s f).v T := rfl
 
-omit [Fintype ι]
+end FinitePlayers
 
 /-- The constant-zero coalitional game. -/
 noncomputable def zeroGame : CoalGame ι where
   v := fun _ => 0
   v_empty := rfl
+
+section FinitePlayers
 
 variable [Fintype ι]
 
@@ -331,13 +337,15 @@ theorem zeroGame_shapleyValue_isCore :
       simp [marginalContribution, zeroGame]
     rw [shapleyValue_null _ hnull]
 
-omit [Fintype ι]
+end FinitePlayers
 
 /-- The S-th term in the unanimity-basis decomposition of `G`:
 `c_S · u_S` for nonempty S, and the zero game when `S = ∅`. -/
 noncomputable def decompTerm (G : CoalGame ι) (S : Finset ι) : CoalGame ι :=
   if hS : S.Nonempty then gameScalar (G.unanimityCoeff S) (unanimityGame S hS)
   else zeroGame
+
+section FinitePlayers
 
 variable [Fintype ι]
 
@@ -425,6 +433,7 @@ theorem shapleyValue_unique
     rw [h_null zeroGame hnull_all,
       shapleyValue_null zeroGame hnull_all]
 
+end FinitePlayers
 
 end CoalGame
 

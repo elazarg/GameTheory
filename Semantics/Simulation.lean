@@ -143,10 +143,13 @@ theorem pushforward_comm
       (Math.Probability.Kernel.ofFun f) μ) =
       Math.Probability.Kernel.pushforward (Math.Probability.Kernel.ofFun f)
         (Math.Probability.Kernel.pushforward K μ) := by
-  have hfun : (fun s => K' (f s)) = (fun s => (K s).bind (fun s' => PMF.pure (f s'))) :=
-    funext sim.step
-  simpa [Math.Probability.Kernel.pushforward, Math.Probability.Kernel.ofFun, PMF.bind_bind]
-    using congrArg (fun g => μ.bind g) hfun
+  have hfun :
+      (fun s => K' (f s)) =
+        (fun s => (K s).bind (Math.Probability.Kernel.ofFun f)) := by
+    funext s
+    exact sim.step s
+  simpa [Math.Probability.Kernel.pushforward, Math.Probability.Kernel.ofFun,
+    PMF.bind_bind] using congrArg (fun g => μ.bind g) hfun
 
 end MapSimulation
 

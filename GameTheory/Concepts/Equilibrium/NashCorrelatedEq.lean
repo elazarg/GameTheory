@@ -40,7 +40,7 @@ theorem nash_pure_isCorrelatedEq {G : KernelGame ι} {σ : Profile G}
     (hN : G.IsNash σ) : G.IsCorrelatedEq (PMF.pure σ) := by
   intro who dev
   simpa [KernelGame.correlatedEu, KernelGame.correlatedOutcome,
-    KernelGame.eu, Math.Probability.expect_pure]
+    KernelGame.eu, KernelGame.unilateralDeviation, Math.Probability.expect_pure]
     using (hN who (dev (σ who)))
 
 /-- A pure Nash equilibrium, embedded as a point-mass distribution, is a coarse

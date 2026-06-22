@@ -362,8 +362,8 @@ theorem isClosed_weakReservationSet (r : Payoff ι) :
   have hclosed : IsClosed (⋂ i, {v : Payoff ι | r i ≤ v i}) := by
     refine isClosed_iInter ?_
     intro i
-    simpa using
-      (isClosed_Ici.preimage (continuous_apply i : Continuous fun v : Payoff ι => v i))
+    change IsClosed ((fun v : Payoff ι => v i) ⁻¹' Set.Ici (r i))
+    exact isClosed_Ici.preimage (continuous_apply i : Continuous fun v : Payoff ι => v i)
   have hset : weakReservationSet r = ⋂ i, {v : Payoff ι | r i ≤ v i} := by
     ext v
     simp [weakReservationSet]

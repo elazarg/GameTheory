@@ -113,10 +113,10 @@ theorem kuhn_behavioral_to_mixed
     (β : BehavioralProfile O) (k : Nat) :
     O.runDist k β =
       (O.behavioralToMixedJoint β).bind (fun π => O.runDistPure k π) := by
-  simpa [ObsModel.runDist, ObsModel.runDistPure, ObsModel.behavioralToMixedJoint,
-    ObsModel.behavioralToMixed, ObsModel.toCore] using
-    (ObsModelCore.kuhn_behavioral_to_mixed (O := O.toCore)
-      (hNontriv := O.noNontrivialInfoStateRepeat_toCore) β k)
+  change O.toCore.runDist k β =
+    (O.toCore.behavioralToMixedJoint β).bind (fun π => O.toCore.runDistPure k π)
+  exact ObsModelCore.kuhn_behavioral_to_mixed (O := O.toCore)
+    (hNontriv := O.noNontrivialInfoStateRepeat_toCore) β k
 
 end MainTheorem
 
