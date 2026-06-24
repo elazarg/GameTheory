@@ -83,6 +83,13 @@ private theorem expect_nonneg (d : PMF Outcome) (f : Outcome → ℝ)
   rw [expect_eq_sum]
   exact Finset.sum_nonneg (fun o _ => mul_nonneg ENNReal.toReal_nonneg (hf o))
 
+private theorem expect_mono (d : PMF Outcome) (f g : Outcome → ℝ)
+    (h : ∀ o, f o ≤ g o) : expect d f ≤ expect d g := by
+  letI : Fintype Outcome := Fintype.ofFinite Outcome
+  rw [expect_eq_sum, expect_eq_sum]
+  exact Finset.sum_le_sum
+    (fun o _ => mul_le_mul_of_nonneg_left (h o) ENNReal.toReal_nonneg)
+
 end ExpectHelpers
 
 variable {Action Outcome : Type} [Finite Outcome] (I : PrincipalAgent Action Outcome)
@@ -112,6 +119,10 @@ def LimitedLiability (t : Outcome → ℝ) : Prop := ∀ o, 0 ≤ t o
 agent's expected utility. -/
 def IsIncentivized (t : Outcome → ℝ) (a : Action) : Prop :=
   ∀ a', I.agentUtility t a' ≤ I.agentUtility t a
+
+/-- Individual rationality (participation): the agent weakly prefers taking
+action `a` under `t` to its outside option, normalized to `0`. -/
+def IsIR (t : Outcome → ℝ) (a : Action) : Prop := 0 ≤ I.agentUtility t a
 
 /-- **Welfare identity.** The principal's and the agent's expected utilities sum
 to the realized social surplus (expected reward minus effort cost), regardless of
@@ -154,6 +165,52 @@ theorem exists_incentivized [Finite Action] [Nonempty Action] (t : Outcome → �
     ∃ a, I.IsIncentivized t a := by
   obtain ⟨a, ha⟩ := Finite.exists_max (I.agentUtility t)
   exact ⟨a, ha⟩
+
+/-- The social surplus of action `a`: expected reward net of effort cost — the
+total payoff that the principal and agent split (`principalUtility_add_agentUtility`),
+independent of the contract. -/
+noncomputable def socialSurplus (a : Action) : ℝ :=
+  I.expectedReward a - I.cost a
+
+/-- Under the full-commission linear contract `α = 1` ("selling the firm to the
+agent") the agent becomes the residual claimant: its utility equals the social
+surplus. -/
+theorem agentUtility_linearPayment_one (a : Action) :
+    I.agentUtility (I.linearPayment 1) a = I.socialSurplus a := by
+  simp only [agentUtility_linearPayment, socialSurplus, one_mul]
+
+omit [Finite Outcome] in
+/-- Under the full-commission contract the principal retains nothing. -/
+theorem principalUtility_linearPayment_one (a : Action) :
+    I.principalUtility (I.linearPayment 1) a = 0 := by
+  simp only [principalUtility, linearPayment, one_mul, sub_self, expect_const]
+
+/-- **First best by selling the firm.** Under the full-commission contract the
+agent's privately optimal action is exactly a social-surplus maximizer, so the
+principal implements the first best (while extracting no rent). -/
+theorem isIncentivized_linearPayment_one_iff (a : Action) :
+    I.IsIncentivized (I.linearPayment 1) a ↔
+      ∀ a', I.socialSurplus a' ≤ I.socialSurplus a := by
+  simp only [IsIncentivized, agentUtility_linearPayment_one]
+
+/-- A pointwise-larger payment scheme weakly raises the agent's expected utility
+for a fixed action. -/
+theorem agentUtility_mono (t t' : Outcome → ℝ) (h : ∀ o, t o ≤ t' o) (a : Action) :
+    I.agentUtility t a ≤ I.agentUtility t' a := by
+  have := expect_mono (I.outcomeDist a) t t' h
+  simp only [agentUtility]; linarith
+
+/-- **Participation under limited liability.** If some action is costless and the
+contract satisfies limited liability, then every incentive-compatible action is
+individually rational: the agent can secure a nonnegative payoff with the free
+action, so its optimal action does at least as well. -/
+theorem isIR_of_isIncentivized (t : Outcome → ℝ) (ht : LimitedLiability t)
+    {a₀ : Action} (h₀ : I.cost a₀ = 0) {a : Action} (ha : I.IsIncentivized t a) :
+    I.IsIR t a := by
+  have hfree : 0 ≤ I.agentUtility t a₀ := by
+    have := I.agentUtility_ge t ht a₀
+    rwa [h₀, neg_zero] at this
+  exact le_trans hfree (ha a₀)
 
 end PrincipalAgent
 
