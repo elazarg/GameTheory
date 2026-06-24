@@ -287,6 +287,16 @@ theorem kalaiSmorodinsky_affine_invariant
         α₁ * α₂ * ((u.2 - B.d₂) * (a.1 - B.d₁)) := by ring
     rw [lhs, rhs, hprop]
 
+/-- Relative to a genuine ideal point, the Kalai–Smorodinsky solution is
+dominated by the ideal point: neither player can exceed its maximal feasible
+(utopia) payoff. Together with individual rationality this places each player's
+gain in `[0, ideal gain]`. -/
+theorem kalaiSmorodinsky_le_ideal (a u : ℝ × ℝ)
+    (hideal : B.IsIdealPoint a) (h : B.IsKalaiSmorodinsky a u) :
+    u.1 ≤ a.1 ∧ u.2 ≤ a.2 := by
+  obtain ⟨hfeas, hIR, _, _⟩ := h
+  exact ⟨hideal.1.1 ⟨u, hfeas, hIR, rfl⟩, hideal.2.1 ⟨u, hfeas, hIR, rfl⟩⟩
+
 end BargainingProblem
 
 end GameTheory
