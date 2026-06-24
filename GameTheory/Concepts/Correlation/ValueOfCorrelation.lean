@@ -174,6 +174,92 @@ theorem valueOfCorrelation_le_valueOfCoarseCorrelation
 
 end ValueOfCorrelation
 
+/-! ### An upper bound: correlation cannot beat the social optimum -/
+
+/-- Monotonicity of `expect` over a finite sample space. -/
+private theorem expect_mono' {Ω : Type*} [Finite Ω] (μ : PMF Ω) (f g : Ω → ℝ)
+    (h : ∀ x, f x ≤ g x) : expect μ f ≤ expect μ g := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum, expect_eq_sum]
+  exact Finset.sum_le_sum (fun x _ => mul_le_mul_of_nonneg_left (h x) ENNReal.toReal_nonneg)
+
+/-- `expect` commutes with a finite sum of integrands. -/
+private theorem expect_finsum' {Ω κ : Type*} [Finite Ω] [Fintype κ]
+    (μ : PMF Ω) (f : κ → Ω → ℝ) :
+    ∑ i, expect μ (fun x => f i x) = expect μ (fun x => ∑ i, f i x) := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  simp only [expect_eq_sum]
+  rw [Finset.sum_comm]
+  exact Finset.sum_congr rfl
+    (fun x _ => (Finset.mul_sum Finset.univ (fun i => f i x) ((μ x).toReal)).symm)
+
+section OptimalBound
+
+variable [Finite G.Outcome] [Finite (Profile G)]
+
+omit [Finite (Profile G)] in
+/-- Social welfare is bounded above across all profiles (each player's expected
+utility is bounded since outcomes are finite). -/
+theorem socialWelfare_bddAbove :
+    BddAbove (Set.range (fun σ : Profile G => G.socialWelfare σ)) := by
+  refine ⟨∑ i, Classical.choose
+      (Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)), ?_⟩
+  rintro x ⟨σ, rfl⟩
+  simp only [socialWelfare]
+  refine Finset.sum_le_sum (fun i _ => le_trans (le_abs_self _) ?_)
+  exact G.eu_abs_le_of_bounded i
+    (Classical.choose_spec (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω i))) σ
+
+/-- Correlated social welfare is the expected social welfare of the recommended
+profile. -/
+theorem correlatedSocialWelfare_eq_expect (μ : PMF (Profile G)) :
+    G.correlatedSocialWelfare μ = expect μ (fun σ => G.socialWelfare σ) := by
+  simp only [correlatedSocialWelfare, socialWelfare]
+  rw [← expect_finsum' μ (fun i σ => G.eu σ i)]
+  exact Finset.sum_congr rfl (fun i _ => correlatedEu_eq_expect_eu μ i)
+
+/-- No correlated play beats the social optimum: its expected welfare is at most
+the best welfare achievable by any single profile. -/
+theorem correlatedSocialWelfare_le_optimalWelfare (μ : PMF (Profile G)) :
+    G.correlatedSocialWelfare μ ≤ G.optimalWelfare := by
+  rw [correlatedSocialWelfare_eq_expect]
+  calc expect μ (fun σ => G.socialWelfare σ)
+      ≤ expect μ (fun _ => G.optimalWelfare) :=
+        expect_mono' μ _ _ (fun σ => welfare_le_optimal G σ G.socialWelfare_bddAbove)
+    _ = G.optimalWelfare := expect_const μ _
+
+variable [DecidableEq ι]
+
+/-- The best correlated-equilibrium welfare is at most the social optimum. -/
+theorem bestCorrelatedWelfare_le_optimalWelfare (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.bestCorrelatedWelfare ≤ G.optimalWelfare := by
+  obtain ⟨σ, hσ⟩ := hN
+  haveI : Nonempty {μ : PMF (Profile G) // G.IsCorrelatedEq μ} :=
+    ⟨⟨PMF.pure σ, nash_pure_isCorrelatedEq hσ⟩⟩
+  exact ciSup_le (fun μ => G.correlatedSocialWelfare_le_optimalWelfare μ.1)
+
+end OptimalBound
+
+section TeamGameValue
+
+variable [DecidableEq ι] [Finite G.Outcome] [Fintype (Profile G)]
+
+/-- **Correlation has no value in team games.** When all players share the same
+utility the welfare-optimal profile is itself a Nash equilibrium, and no
+correlated equilibrium can beat it, so the value of correlation is zero. -/
+theorem IsTeamGame.valueOfCorrelation_eq_zero (hteam : G.IsTeamGame)
+    (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.valueOfCorrelation hN = 0 := by
+  have hcorr_eq : G.bestCorrelatedWelfare = G.bestNashWelfare hN :=
+    le_antisymm
+      (by rw [hteam.bestNashWelfare_eq_optimalWelfare hN]
+          exact G.bestCorrelatedWelfare_le_optimalWelfare hN)
+      (G.bestNashWelfare_le_bestCorrelatedWelfare hN)
+  rw [valueOfCorrelation, hcorr_eq, sub_self]
+
+end TeamGameValue
+
 end KernelGame
 
 end GameTheory
