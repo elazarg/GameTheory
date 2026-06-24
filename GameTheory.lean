@@ -64,6 +64,7 @@ import GameTheory.Concepts.Correlation.Regret
 import GameTheory.Concepts.Correlation.CorrelatedNashMixed
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelationRegimes
+import GameTheory.Concepts.Correlation.ValueOfCorrelation
 import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
 -- Zero-sum and constant-sum

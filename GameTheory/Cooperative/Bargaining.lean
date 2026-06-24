@@ -183,6 +183,110 @@ theorem egalitarian_symmetric_iff_nash_symmetric
   -- with the symmetric Nash solution as a sanity check.
   B.nashSolution_symmetric u hsym hns huniq
 
+/-! ### Kalai–Smorodinsky bargaining solution
+
+The Kalai–Smorodinsky solution (1975) replaces Nash's *independence of
+irrelevant alternatives* with a *monotonicity* axiom. It selects the
+Pareto-optimal outcome at which both players' gains are **proportional to
+their maximal feasible gains** — the gains at the *ideal* (utopia) point
+`a = (a₁, a₂)`, where `aᵢ` is the most player `i` could obtain among
+individually-rational feasible outcomes. Unlike the egalitarian solution it
+**is** scale invariant; unlike the Nash solution it is monotone. -/
+
+/-- `a` is an *ideal* (utopia) point of `B`: each coordinate is the least
+upper bound of that player's payoff over individually-rational feasible
+outcomes. The Kalai–Smorodinsky solution is defined relative to such a point. -/
+def IsIdealPoint (a : ℝ × ℝ) : Prop :=
+  IsLUB {x | ∃ u, B.feasible u ∧ B.IsIR u ∧ u.1 = x} a.1 ∧
+  IsLUB {x | ∃ u, B.feasible u ∧ B.IsIR u ∧ u.2 = x} a.2
+
+/-- The Kalai–Smorodinsky solution relative to an ideal point `a`: a
+Pareto-optimal, individually-rational, feasible outcome whose gains over the
+disagreement point are proportional to the ideal gains, i.e.
+`(u₁ - d₁) / (a₁ - d₁) = (u₂ - d₂) / (a₂ - d₂)`, written here in the
+division-free form `(u₁ - d₁)(a₂ - d₂) = (u₂ - d₂)(a₁ - d₁)`.
+
+The results below hold for any `a`; supply `B.IsIdealPoint a` for the genuine
+Kalai–Smorodinsky interpretation (proportionality is then measured against each
+player's maximal feasible gain). -/
+def IsKalaiSmorodinsky (a u : ℝ × ℝ) : Prop :=
+  B.feasible u ∧ B.IsIR u ∧ B.IsPareto u ∧
+    (u.1 - B.d₁) * (a.2 - B.d₂) = (u.2 - B.d₂) * (a.1 - B.d₁)
+
+/-- The Kalai–Smorodinsky solution is individually rational by definition. -/
+theorem kalaiSmorodinsky_IR (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinsky a u) :
+    B.IsIR u :=
+  h.2.1
+
+/-- The Kalai–Smorodinsky solution is Pareto optimal by definition. -/
+theorem kalaiSmorodinsky_pareto (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinsky a u) :
+    B.IsPareto u :=
+  h.2.2.1
+
+/-- The Kalai–Smorodinsky solution equalizes the ratio of each player's gain
+to their maximal (ideal) gain. -/
+theorem kalaiSmorodinsky_proportional (a u : ℝ × ℝ)
+    (h : B.IsKalaiSmorodinsky a u) :
+    (u.1 - B.d₁) * (a.2 - B.d₂) = (u.2 - B.d₂) * (a.1 - B.d₁) :=
+  h.2.2.2
+
+/-- In a symmetric problem with a symmetric ideal point (`a₁ = a₂`), the
+Kalai–Smorodinsky solution gives equal gains to both players, provided the
+problem is nondegenerate (`a₁ ≠ d₁`). -/
+theorem kalaiSmorodinsky_symmetric (a u : ℝ × ℝ)
+    (hsym : B.IsSymmetric) (ha : a.1 = a.2) (hnd : a.1 - B.d₁ ≠ 0)
+    (h : B.IsKalaiSmorodinsky a u) :
+    u.1 - B.d₁ = u.2 - B.d₂ := by
+  have hd : B.d₂ = B.d₁ := hsym.1.symm
+  have hprop := h.2.2.2
+  rw [← ha, hd] at hprop
+  have hcancel : u.1 - B.d₁ = u.2 - B.d₁ := mul_right_cancel₀ hnd hprop
+  rw [hd]
+  exact hcancel
+
+/-- **Scale invariance.** The Kalai–Smorodinsky solution is preserved under
+independent positive-affine rescaling of the two players' utilities, with the
+ideal point rescaled along with the problem. This is the axiom distinguishing
+KS from the (scale-dependent) egalitarian solution. -/
+theorem kalaiSmorodinsky_affine_invariant
+    (α₁ α₂ : ℝ) (hα₁ : α₁ > 0) (hα₂ : α₂ > 0) (β₁ β₂ : ℝ)
+    (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinsky a u) :
+    let B' : BargainingProblem := {
+      feasible := fun v => B.feasible ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂)
+      d₁ := α₁ * B.d₁ + β₁
+      d₂ := α₂ * B.d₂ + β₂
+      d_feasible := by simp [hα₁.ne', hα₂.ne', B.d_feasible]
+    }
+    B'.IsKalaiSmorodinsky (α₁ * a.1 + β₁, α₂ * a.2 + β₂)
+      (α₁ * u.1 + β₁, α₂ * u.2 + β₂) := by
+  intro B'
+  obtain ⟨hfu, hiru, hpu, hprop⟩ := h
+  have hfeq₁ : (α₁ * u.1 + β₁ - β₁) / α₁ = u.1 := by
+    rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.1 hα₁.ne'
+  have hfeq₂ : (α₂ * u.2 + β₂ - β₂) / α₂ = u.2 := by
+    rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.2 hα₂.ne'
+  refine ⟨?_, ?_, ?_, ?_⟩
+  · -- feasibility transports back to the original point
+    simp only [B']; rw [hfeq₁, hfeq₂]; exact hfu
+  · -- individual rationality
+    refine ⟨?_, ?_⟩
+    · simp only [B']; nlinarith [hiru.1]
+    · simp only [B']; nlinarith [hiru.2]
+  · -- Pareto optimality: a dominating image would give a dominating preimage
+    refine ⟨by simp only [B']; rw [hfeq₁, hfeq₂]; exact hfu, ?_⟩
+    rintro ⟨w, hfw, hw1, hw2⟩
+    apply hpu.2
+    refine ⟨((w.1 - β₁) / α₁, (w.2 - β₂) / α₂), hfw, ?_, ?_⟩
+    · rw [gt_iff_lt, lt_div_iff₀ hα₁]; nlinarith [hw1]
+    · rw [gt_iff_lt, lt_div_iff₀ hα₂]; nlinarith [hw2]
+  · -- proportionality is preserved: both sides scale by α₁ * α₂
+    simp only [B']
+    have lhs : (α₁ * u.1 + β₁ - (α₁ * B.d₁ + β₁)) * (α₂ * a.2 + β₂ - (α₂ * B.d₂ + β₂)) =
+        α₁ * α₂ * ((u.1 - B.d₁) * (a.2 - B.d₂)) := by ring
+    have rhs : (α₂ * u.2 + β₂ - (α₂ * B.d₂ + β₂)) * (α₁ * a.1 + β₁ - (α₁ * B.d₁ + β₁)) =
+        α₁ * α₂ * ((u.2 - B.d₂) * (a.1 - B.d₁)) := by ring
+    rw [lhs, rhs, hprop]
+
 end BargainingProblem
 
 end GameTheory
