@@ -31,7 +31,9 @@ and emit the pair `(state, b)` — so the public signal *is* the posterior it in
 * `posteriorCoupling_snd` — the experiment's signal marginal is exactly `τ` (it realizes `τ`)
 * `posteriorCoupling_fst` — the experiment's state marginal is the mean posterior
 * `posteriorCoupling_apply` — the joint law factors as `τ(b) · b(ω)`
-* `isBayesPlausible_iff_coupling_fst` — **feasibility (via the canonical experiment) ⟺ Bayes plausibility**
+* `isBayesPlausible_iff_coupling_fst` — the splitting characterization:
+  feasibility via the canonical experiment ⟺ Bayes plausibility
+* `isBayesPlausible_bind` — the feasible set is convex (mixtures preserve Bayes plausibility)
 * `isBayesPlausible_uninformative` / `isBayesPlausible_fullRevelation` — the two extremes
 -/
 
@@ -134,5 +136,17 @@ theorem isBayesPlausible_fullRevelation (prior : PMF Ω) :
     IsBayesPlausible prior (prior.map fun ω => PMF.pure ω) := by
   unfold IsBayesPlausible meanPosterior
   simp only [PMF.bind_map, Function.id_comp, PMF.bind_pure]
+
+/-- **The feasible set is convex.** Any mixture of Bayes-plausible distributions
+over posteriors is itself Bayes plausible: randomizing over which experiment to
+run preserves the prior. Two-point mixtures (and hence ordinary convex
+combinations) are the special case `I = Bool`. -/
+theorem isBayesPlausible_bind {I : Type} (prior : PMF Ω) (ρ : PMF I)
+    (τ : I → PMF (PMF Ω)) (h : ∀ i, IsBayesPlausible prior (τ i)) :
+    IsBayesPlausible prior (ρ.bind τ) := by
+  unfold IsBayesPlausible meanPosterior
+  rw [PMF.bind_bind]
+  conv_lhs => enter [2, i]; rw [show (τ i).bind id = prior from h i]
+  exact PMF.bind_const ρ prior
 
 end GameTheory
