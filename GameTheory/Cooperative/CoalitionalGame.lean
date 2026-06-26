@@ -8,6 +8,7 @@ import GameTheory.Cooperative.CoalitionalGame.Shapley
 import GameTheory.Cooperative.CoalitionalGame.Banzhaf
 import GameTheory.Cooperative.CoalitionalGame.Convex
 import GameTheory.Cooperative.CoalitionalGame.Additive
+import GameTheory.Cooperative.CoalitionalGame.CostOfStability
 
 /-!
 # Coalitional Games and the Shapley Value
@@ -20,4 +21,5 @@ Umbrella module. Split across `CoalitionalGame/`:
 - `Banzhaf` — the Banzhaf power index and simple games.
 - `Convex` — convex (supermodular) coalitional games.
 - `Additive` — additive games and the 3-player majority worked example.
+- `CostOfStability` — the least subsidy that makes the core nonempty.
 -/
