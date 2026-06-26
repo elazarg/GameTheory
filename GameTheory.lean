@@ -93,6 +93,7 @@ import GameTheory.Concepts.ZeroSum.Minimax
 -- Mechanism design
 import GameTheory.Mechanism.BayesianGame
 import GameTheory.Mechanism.InformationDesign
+import GameTheory.Mechanism.FeasiblePosteriors
 import GameTheory.Mechanism.BayesCorrelatedEq
 import GameTheory.Mechanism.MechanismDesign
 import GameTheory.Mechanism.RevelationPrinciple
