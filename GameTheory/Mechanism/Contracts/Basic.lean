@@ -212,6 +212,36 @@ theorem isIR_of_isIncentivized (t : Outcome → ℝ) (ht : LimitedLiability t)
     rwa [h₀, neg_zero] at this
   exact le_trans hfree (ha a₀)
 
+/-- Under participation (individual rationality), the principal's payoff cannot
+exceed the social surplus of the agent's action: the agent's nonnegative utility
+is surplus it retains. -/
+theorem principalUtility_le_socialSurplus_of_isIR (t : Outcome → ℝ) {a : Action}
+    (hir : I.IsIR t a) : I.principalUtility t a ≤ I.socialSurplus a := by
+  have h := I.principalUtility_add_agentUtility t a
+  have hir' : (0 : ℝ) ≤ I.agentUtility t a := hir
+  rw [socialSurplus]
+  linarith [h, hir']
+
+/-- The principal captures the entire social surplus exactly when the agent's
+utility is driven down to its participation floor (zero). -/
+theorem principalUtility_eq_socialSurplus_iff (t : Outcome → ℝ) (a : Action) :
+    I.principalUtility t a = I.socialSurplus a ↔ I.agentUtility t a = 0 := by
+  have h := I.principalUtility_add_agentUtility t a
+  rw [socialSurplus]
+  constructor
+  · intro he; linarith [h, he]
+  · intro he; linarith [h, he]
+
+/-- **Moral hazard cannot beat the first best.** With finitely many actions and a
+participating (individually rational) agent, the principal's payoff under any
+contract is bounded by the maximal social surplus — the first-best value. -/
+theorem principalUtility_le_firstBest [Finite Action] [Nonempty Action]
+    (t : Outcome → ℝ) {a : Action} (hir : I.IsIR t a) :
+    ∃ a' : Action, (∀ a'', I.socialSurplus a'' ≤ I.socialSurplus a') ∧
+      I.principalUtility t a ≤ I.socialSurplus a' := by
+  obtain ⟨a', ha'⟩ := Finite.exists_max I.socialSurplus
+  exact ⟨a', ha', le_trans (I.principalUtility_le_socialSurplus_of_isIR t hir) (ha' a)⟩
+
 end PrincipalAgent
 
 end GameTheory
