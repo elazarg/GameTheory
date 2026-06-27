@@ -34,6 +34,7 @@ and emit the pair `(state, b)` — so the public signal *is* the posterior it in
 * `isBayesPlausible_iff_coupling_fst` — the splitting characterization:
   feasibility via the canonical experiment ⟺ Bayes plausibility
 * `isBayesPlausible_bind` — the feasible set is convex (mixtures preserve Bayes plausibility)
+* `isBayesPlausible_bind_pointwise` — sequential splitting / refinement preserves feasibility
 * `isBayesPlausible_uninformative` / `isBayesPlausible_fullRevelation` — the two extremes
 -/
 
@@ -148,5 +149,19 @@ theorem isBayesPlausible_bind {I : Type} (prior : PMF Ω) (ρ : PMF I)
   rw [PMF.bind_bind]
   conv_lhs => enter [2, i]; rw [show (τ i).bind id = prior from h i]
   exact PMF.bind_const ρ prior
+
+/-- **Sequential splitting preserves feasibility.** If `τ` is Bayes plausible for
+the prior and each belief `b` is then further split into a distribution `σ b` that
+is Bayes plausible *for `b`*, the composite `τ.bind σ` is Bayes plausible for the
+prior. This is the martingale-composition / refinement property: running a second
+experiment after the first never breaks consistency with the prior. -/
+theorem isBayesPlausible_bind_pointwise (prior : PMF Ω) (τ : PMF (PMF Ω))
+    (σ : PMF Ω → PMF (PMF Ω)) (hτ : IsBayesPlausible prior τ)
+    (hσ : ∀ b, IsBayesPlausible b (σ b)) :
+    IsBayesPlausible prior (τ.bind σ) := by
+  unfold IsBayesPlausible meanPosterior at hτ ⊢
+  rw [PMF.bind_bind]
+  conv_lhs => enter [2, b]; rw [show (σ b).bind id = b from hσ b]
+  exact hτ
 
 end GameTheory
