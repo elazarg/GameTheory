@@ -179,11 +179,19 @@ theorem agentUtility_linearPayment_one (a : Action) :
     I.agentUtility (I.linearPayment 1) a = I.socialSurplus a := by
   simp only [agentUtility_linearPayment, socialSurplus, one_mul]
 
-omit [Finite Outcome] in
+/-- Under a linear contract the principal keeps the complementary `(1 − α)` share
+of the expected reward. -/
+theorem principalUtility_linearPayment (α : ℝ) (a : Action) :
+    I.principalUtility (I.linearPayment α) a = (1 - α) * I.expectedReward a := by
+  simp only [principalUtility, linearPayment, expectedReward]
+  rw [show (fun o => I.reward o - α * I.reward o) = (fun o => (1 - α) * I.reward o) from
+        funext fun o => by ring]
+  rw [expect_const_mul]
+
 /-- Under the full-commission contract the principal retains nothing. -/
 theorem principalUtility_linearPayment_one (a : Action) :
     I.principalUtility (I.linearPayment 1) a = 0 := by
-  simp only [principalUtility, linearPayment, one_mul, sub_self, expect_const]
+  rw [principalUtility_linearPayment]; ring
 
 /-- **First best by selling the firm.** Under the full-commission contract the
 agent's privately optimal action is exactly a social-surplus maximizer, so the
