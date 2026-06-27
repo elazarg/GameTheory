@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Cooperative.CoalitionalGame
 import GameTheory.Cooperative.Bargaining
 import GameTheory.Cooperative.Matching
+import GameTheory.Cooperative.GaleShapley
 
 /-!
 # GameTheory.Cooperative
@@ -36,4 +37,6 @@ and lives in the strategic branch as `IsTeamGame`, `SymmetricGame`, etc.
   problems.
 - `Matching` — two-sided matching markets and Gale-Shapley-style
   stability concepts.
+- `GaleShapley` — deferred acceptance and existence of a stable matching
+  under strict preferences.
 -/
