@@ -62,7 +62,8 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 
 - Nash equilibrium, strict Nash, approximate (ε-)Nash
 - Dominant strategies, strict/weak dominance, iterated elimination
-- Correlated and coarse correlated equilibrium
+- Correlated and coarse correlated equilibrium, and the value of correlation
+  (the welfare gap across the Nash ⊆ CE ⊆ CCE ladder)
 - Observable cheap-talk extensions and babbling-equilibrium transport
 - Best response, best-response dynamics
 - Mixed-extension gain tests, including uniform mixed balance ⇒ Nash and
@@ -71,7 +72,9 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Potential games (exact, ordinal, weighted), finite improvement property
 - Rationalizability, dominance solvability
 - Evolutionary stable strategies (ESS)
-- Price of anarchy, individual rationality, social welfare
+- Price of anarchy — including smoothness and the robust PoA bound that extends
+  from Nash to coarse correlated equilibria — individual rationality, social
+  welfare
 - Zero-sum, constant-sum, symmetric, and team game properties
 
 Key relationships are proved: dominant strategies are Nash, Nash EU dominates
@@ -161,8 +164,14 @@ than as tree-based information sets. Key results:
 - Bayesian games with type spaces
 - Incentive compatibility (dominant-strategy and Bayesian)
 - Revelation principle
+- Dominant-strategy implementability: weak monotonicity is necessary for
+  truthfulness, and affine maximizers — with VCG as the canonical case — are
+  sufficient
+- Hidden-action principal–agent contracts (moral hazard, linear contracts,
+  the first-best benchmark)
 - Finite information design / Bayesian persuasion (signal structures, Bayes
-  plausibility, sender/receiver persuasion primitives)
+  plausibility, sender/receiver persuasion primitives), and feasible posteriors
+  via the canonical splitting coupling (single- and multi-receiver)
 - Social choice and aggregation, including one direction of **Arrow's
   impossibility theorem** (a dictatorial social welfare function satisfies
   Pareto and independence of irrelevant alternatives)
@@ -179,13 +188,13 @@ package only for packaging convenience.
 - **Coalitional (TU) games** — the **Shapley value** and its uniqueness via
   unanimity-game decomposition (efficiency, symmetry, dummy, additivity), the
   Banzhaf index and the Shapley–Shubik power index on simple games, convex
-  (supermodular) games with the monotone-marginals characterization, and the
-  core (with nonemptiness for convex games)
-- **Nash bargaining** — the Nash bargaining solution for two-player problems
-  (Pareto optimality, symmetry, affine invariance) and the egalitarian (Kalai)
-  solution
+  (supermodular) games with the monotone-marginals characterization, the
+  core (with nonemptiness for convex games), and the cost of stability
+- **Bargaining** — the Nash bargaining solution for two-player problems
+  (Pareto optimality, symmetry, affine invariance), the egalitarian (Kalai)
+  solution, and the Kalai–Smorodinsky solution
 - **Stable matching** — two-sided matching markets, blocking pairs, and
-  Gale–Shapley stability
+  **Gale–Shapley existence** of a stable matching via deferred acceptance
 
 Note: "cooperative" here refers to the *formalism* (coalition-value functions,
 axiomatic solutions), not to strategic games with aligned interests — those

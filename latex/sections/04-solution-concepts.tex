@@ -225,6 +225,25 @@ instance $\mu = \Dirac_\Profile$.  In the EU-specific layer, existence of
 correlated and coarse correlated equilibria for any finite
 $\KG$ is the content of \Cref{sec:theorems:correlated-existence}.
 
+\paragraph{The value of correlation.}\
+Summing equilibrium expected utilities gives the \emph{correlated
+social welfare} of a device, and maximizing it over correlated
+(resp.\ coarse correlated) equilibria gives the best welfare each
+regime can support.  Because a Nash equilibrium is a CE and a CE is a
+CCE, these optima form an increasing ladder — best Nash welfare
+$\le$ best CE welfare $\le$ best CCE welfare — and the \emph{value of
+correlation} is the nonnegative gap between the ends.  In a team game
+it collapses to zero
+(\TT{IsTeamGame.valueOfCorrelation\_eq\_zero}):\ with aligned
+interests the welfare-optimal profile is already Nash, so correlation
+buys nothing.
+
+\leancorr{\TT{Concepts/Correlation/ValueOfCorrelation.lean}
+(\TT{correlatedSocialWelfare}, \TT{bestCorrelatedWelfare},
+\TT{bestCoarseCorrelatedWelfare}, \TT{valueOfCorrelation},
+\TT{valueOfCorrelation\_nonneg},
+\TT{IsTeamGame.valueOfCorrelation\_eq\_zero}).}
+
 \subsection{Pareto efficiency, social welfare, and price of anarchy}
 \label{sec:solution-concepts:welfare}
 
@@ -263,6 +282,26 @@ $\PoS \le \PoA$ whenever the worst Nash welfare is positive
 profile is itself Nash, so the best Nash welfare equals the
 optimal welfare and $\PoS = 1$
 (\TT{IsTeamGame.priceOfStability\_eq\_one}).
+
+\paragraph{Smoothness and the robust price of anarchy.}\
+The library formalizes Roughgarden's \emph{smoothness}
+technique~\citep{Roughgarden2015} for bounding the price of anarchy
+uniformly.  A game is \emph{$(\lambda,\mu)$-smooth} when, for any two
+profiles $s, t$, the total utility from each player unilaterally
+deviating toward $t$ against $s$ is at least
+$\lambda\,\Welfare(t) - \mu\,\Welfare(s)$.  Smoothness at once bounds
+every Nash equilibrium, $\lambda\,\Welfare(t) \le
+(1+\mu)\,\Welfare(s)$ (\TT{IsSmooth.nash\_bound}), and — this is the
+\emph{robust} price of anarchy — the same bound holds for every
+\emph{coarse correlated equilibrium}, lifting the deviation argument
+through the equilibrium distribution
+(\TT{IsSmooth.coarseCorrelated\_bound}).  A single smoothness
+certificate therefore caps the inefficiency not only of Nash play but
+of the whole no-regret/correlated hierarchy.
+
+\leancorr{\TT{Concepts/Welfare/Smoothness.lean}
+(\TT{KernelGame.IsSmooth}, \TT{IsSmooth.nash\_bound},
+\TT{IsSmooth.coarseCorrelated\_bound}).}
 
 A small structural bridge connects welfare to Pareto efficiency:\
 Pareto dominance strictly raises social welfare

@@ -487,3 +487,56 @@ core.  This is the positive-cone statement exposed by
 deliberately stated at the coefficient level, so later convex-game
 arguments can reuse the closure layer without duplicating the
 Möbius-decomposition proof.
+
+\subsection{Gale–Shapley stable-matching existence}
+\label{sec:theorems:gale-shapley}
+
+Like \Cref{sec:theorems:shapley-uniqueness}, this result belongs to
+the cooperative branch (\TT{Cooperative/GaleShapley.lean}); we state
+it among the major theorems because stable-matching existence is a
+flagship constructive result of finite game theory.  A
+\emph{two-sided matching market} on finite sides $\alpha$ and $\beta$
+gives each agent a strict (injective) ranking of the opposite side; a
+matching is \emph{stable} when no \emph{blocking pair} exists — two
+agents who each prefer the other to their assigned partner.
+
+\begin{theorem}[Gale–Shapley existence, after \citealp{GaleShapley1962}]
+\label{thm:gale-shapley}
+Every finite matching market with strict preferences admits a stable
+matching.
+\end{theorem}
+
+\noindent\emph{Proof structure.}\ Deferred acceptance is formalized
+not as well-founded recursion but as an \emph{inflationary rejection
+operator} on the proposal state
+$R : \alpha \to \mathrm{Finset}\,\beta$ recording, for each proposer,
+the recipients that have already rejected it.  One round \TT{daStep}
+has every not-currently-held proposer approach its favourite remaining
+recipient, and every recipient tentatively hold its best suitor while
+rejecting the rest; the rejection sets only grow.  Because the total
+rejection count is bounded by $|\alpha|\cdot|\beta|$ and is monotone,
+a pigeonhole argument produces a \emph{fixed point} $R^\star$ — a
+round that rejects nobody.  The matching read off from $R^\star$'s
+holders is shown to be a matching, individually rational, and free of
+blocking pairs via the \emph{deferred-acceptance invariant}:\
+whenever a recipient has rejected a proposer, it currently holds
+someone it strictly prefers.  Strictness of preferences is
+load-bearing exactly in maintaining that invariant; the
+no-blocking-pair conclusion then needs no further hypothesis.
+
+\tradeoff{The construction is fully constructive on the finite market,
+but the library's \TT{exists\_stable} is \TT{noncomputable} because
+the argmax over remaining choices and the fixed-point extraction route
+through classical choice.  Extracting the $O(n^2)$ algorithm as a
+computable function with the same correctness proof is a natural
+refinement.  The theorem fixes the proposing side; the companion
+optimality results (the proposing side receives its best stable
+partner, the lattice structure of stable matchings) are not yet
+formalized.}
+
+\leancorr{\TT{Cooperative/GaleShapley.lean}
+(\TT{MatchingMarket}, \TT{daStep},
+\TT{exists\_daStep\_iterate\_fixed}, \TT{fixedPoint\_isMatching},
+\TT{fixedPoint\_ir}, \TT{exists\_stable}); the stability predicates
+\TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} are reused from
+\TT{Cooperative/Matching.lean}.}

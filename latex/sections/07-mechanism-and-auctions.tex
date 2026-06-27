@@ -110,16 +110,54 @@ finite-sum form recorded as \TT{senderEU\_eq\_sum}; equivalently,
 it is the sum of message-contingent sender scores
 (\TT{senderEU\_eq\_sum\_senderScore}).
 
-This is intentionally a substrate, not a concavification theorem:
-it gives the finite objects, Bayes-plausibility invariant, persuasion
-predicate, and sender objective on which finite persuasion examples
-and later optimal-design theorems can be stated.
+The signal-structure layer is intentionally a substrate, not yet the
+concavification (optimal-value) theorem:\ it gives the finite objects,
+Bayes-plausibility invariant, persuasion predicate, and sender
+objective on which finite persuasion examples and later optimal-design
+theorems can be stated.
 
 \leancorr{\TT{Mechanism/InformationDesign.lean}
 (\TT{SignalStructure}, \TT{joint}, \TT{BayesPlausible},
 \TT{joint\_bayesPlausible}, \TT{messageMarginal\_apply},
 \TT{PersuasionProblem}, \TT{IsPersuasive},
 \TT{senderEU\_eq\_sum}, \TT{senderEU\_eq\_sum\_senderScore}).}
+
+\paragraph{Feasible posteriors and the splitting characterization.}\
+A complementary, belief-based view of disclosure is packaged in
+\TT{Mechanism/FeasiblePosteriors.lean}, stated fully generally with no
+finiteness hypotheses.  An \emph{experiment} is a distribution
+$\tau \in \PMF{\PMF{\Omega}}$ over posterior beliefs; its
+\emph{mean posterior} $\overline{\tau} = \tau \mathbin{\bind}
+\mathrm{id}$ averages those beliefs back to a prior.  The experiment
+is \emph{Bayes-plausible} for $\mu$ exactly when
+$\overline{\tau} = \mu$ — the splitting/martingale condition of
+\citet{KamenicaGentzkow2011}.  Rather than route through
+measure-theoretic conditioning, the file builds the canonical coupling
+that realizes a Bayes-plausible experiment (the joint law
+$\tau(b)\,b(\omega)$ whose belief marginal is $\tau$ and whose state
+marginal is $\overline{\tau}$), proves the splitting direction
+(\TT{isBayesPlausible\_iff\_coupling\_fst}), and records that the
+feasible set is convex (\TT{isBayesPlausible\_bind}) and closed under
+sequential composition (\TT{isBayesPlausible\_bind\_pointwise}), with
+the uninformative and fully-revealing experiments as the extremes.
+
+The multi-receiver generalization
+(\TT{Mechanism/JointFeasiblePosteriors.lean}) calls a joint experiment
+over profiles of posteriors \emph{feasible} when a single common-prior
+coupling induces every agent's beliefs at once.  The library proves
+the necessary direction — every feasible joint experiment has each
+agent's marginal Bayes-plausible
+(\TT{IsJointFeasible.bayesPlausible\_agentMarginal}) — and is
+deliberately honest that the converse fails for two or more agents
+\citep{Arieli2021}, so no full characterization is claimed.
+
+\leancorr{\TT{Mechanism/FeasiblePosteriors.lean}
+(\TT{meanPosterior}, \TT{IsBayesPlausible}, \TT{posteriorCoupling},
+\TT{isBayesPlausible\_iff\_coupling\_fst},
+\TT{isBayesPlausible\_bind});
+\TT{Mechanism/JointFeasiblePosteriors.lean}
+(\TT{IsJointFeasible},
+\TT{IsJointFeasible.bayesPlausible\_agentMarginal}).}
 
 \subsection{Mechanism design and the revelation principle}
 \label{sec:mech:revelation}
@@ -166,6 +204,79 @@ parameterized by an outside-option function $o : \Players \to
 The standard zero-outside-option normalization is exposed as
 \TT{IsNonNegative}.  These are scaffolding for downstream
 welfare-vs-truthfulness analyses.
+
+\subsection{Dominant-strategy implementability}
+\label{sec:mech:implementability}
+
+The Bayesian mechanism above is payoff-only:\ its rule returns a
+payoff vector and never names a chosen alternative.  A second
+mechanism layer, \TT{SCFWithPayments}, makes the \emph{allocation}
+explicit — agents have type-dependent valuations
+$v_i : \Theta_i \to A \to \RR$ over a shared alternative set $A$, a
+choice rule selects an alternative, and a payment rule charges each
+agent — so that quasilinear utility
+$v_i(\theta_i, \mathrm{choice}(\theta)) - p_i(\theta)$ is defined and
+implementability acquires structural content.
+
+\paragraph{Necessity:\ weak monotonicity.}\
+A choice rule is \emph{weakly monotone} when, holding the others'
+reports fixed, an agent's value gain from the alternative chosen at one
+of its types over the alternative chosen at another is larger under the
+first type.  Every dominant-strategy incentive-compatible mechanism has
+a weakly monotone choice rule:\ adding the two truthfulness
+constraints — type $\theta_i$ not wishing to report $\theta'_i$, and
+$\theta'_i$ not wishing to report $\theta_i$ — cancels the payments and
+leaves exactly weak monotonicity.  This is the multi-dimensional
+analogue of Myerson's monotonicity~\citep{Bikhchandani2006,
+Myerson1981} and the necessary half of the implementability
+characterization; the converse (weak monotonicity suffices on convex
+domains) is not formalized.
+
+\paragraph{Sufficiency:\ affine maximizers and VCG.}\
+An \emph{affine maximizer} fixes positive weights $w_i$ and an
+alternative bias $\kappa : A \to \RR$ and selects the alternative
+maximizing $\sum_i w_i\,v_i(\theta_i, \cdot) + \kappa$, paired with
+Clarke externality payments.  Scaling agent $i$'s utility by $w_i$
+recovers the entire affine objective evaluated at the chosen
+alternative — which the choice rule maximizes — so no misreport can
+help and the mechanism is dominant-strategy truthful.  By Roberts'
+theorem~\citep{Roberts1979} affine maximizers are essentially the only
+dominant-strategy rules on unrestricted domains; the library proves the
+truthful direction, with \emph{VCG} (unit weights, no bias:\ efficient
+allocation with Clarke pivot payments) as the canonical special case,
+recovering the auction-layer VCG result of \Cref{sec:mech:auctions} at
+the abstract level.
+
+\leancorr{\TT{Mechanism/Monotonicity.lean}
+(\TT{SCFWithPayments}, \TT{IsDSIC}, \TT{IsWeaklyMonotone},
+\TT{weaklyMonotone\_of\_dsic}); \TT{Mechanism/AffineMaximizer.lean}
+(\TT{affineMaximizer}, \TT{affineMaximizer\_isDSIC}, \TT{vcg},
+\TT{vcg\_isDSIC}).}
+
+\subsection{Hidden-action contracts}
+\label{sec:mech:contracts}
+
+The principal–agent layer \TT{Mechanism/Contracts/Basic.lean}
+formalizes the moral-hazard problem~\citep{Holmstrom1979}:\ a
+risk-neutral agent privately chooses a costly action that
+stochastically determines an outcome, and the principal designs a
+payment schedule on outcomes.  The library records the agent's expected
+utility (expected payment minus action cost), the principal's (expected
+outcome reward minus expected payment), the welfare identity that the
+two sum to social surplus
+(\TT{principalUtility\_add\_agentUtility}), limited-liability and
+incentive predicates, and \emph{linear contracts}
+$t \mapsto \alpha\,r(t)$ with the principal-share formula
+$(1-\alpha)\,\mathbb{E}[\mathrm{reward}]$
+(\TT{principalUtility\_linearPayment}).  The \emph{first-best} benchmark
+is the headline:\ moral hazard cannot beat the full-information surplus
+(\TT{principalUtility\_le\_firstBest}), with the ``sell the firm'' case
+($\alpha = 1$, the agent becomes residual claimant) attaining it.
+
+\leancorr{\TT{Mechanism/Contracts/Basic.lean}
+(\TT{PrincipalAgent}, \TT{agentUtility}, \TT{principalUtility},
+\TT{linearPayment}, \TT{principalUtility\_add\_agentUtility},
+\TT{principalUtility\_le\_firstBest}).}
 
 \subsection{Social choice}
 \label{sec:mech:social}
