@@ -88,4 +88,16 @@ theorem affineMaximizer_isDSIC (hw : ∀ i, 0 < w i) :
   exact le_of_mul_le_mul_left
     (le_trans (le_of_eq hm) (le_trans hmax (le_of_eq ht.symm))) (hw i)
 
+/-- The **VCG (efficient) mechanism**: the affine maximizer with unit weights and no
+bias, i.e. it maximizes utilitarian welfare `∑ᵢ valueᵢ(θᵢ, ·)` and charges Clarke
+pivot payments. -/
+noncomputable def vcg : SCFWithPayments ι Alt :=
+  affineMaximizer Θ value (fun _ => 1) (fun _ => 0)
+
+/-- **Vickrey–Clarke–Groves is truthful.** The efficient (utilitarian-welfare-
+maximizing) allocation with Clarke payments is dominant-strategy incentive
+compatible — the special case of `affineMaximizer_isDSIC` with unit weights. -/
+theorem vcg_isDSIC : (vcg Θ value).IsDSIC :=
+  affineMaximizer_isDSIC Θ value (fun _ => 1) (fun _ => 0) (fun _ => one_pos)
+
 end GameTheory
