@@ -54,6 +54,7 @@ import GameTheory.Concepts.Foundations.GameProperties
 import GameTheory.Concepts.Equilibrium.NashPareto
 import GameTheory.Concepts.Welfare.WelfareTheorems
 import GameTheory.Concepts.Welfare.PriceOfAnarchy
+import GameTheory.Concepts.Welfare.Smoothness
 import GameTheory.Concepts.Welfare.IndividualRationality
 import GameTheory.Concepts.ZeroSum.SecurityStrategy
 import GameTheory.Concepts.Welfare.FolkTheorem
