@@ -4,6 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Cooperative.CoalitionalGame.Core
+import GameTheory.Cooperative.CoalitionalGame.Convex
+import GameTheory.Cooperative.CoalitionalGame.Additive
 import Mathlib.Order.ConditionallyCompleteLattice.Basic
 
 /-!
@@ -28,6 +30,8 @@ nonempty: with a supplement of `Δ` paid to the players, can they divide
 * `costOfStability_nonneg` — the cost of stability is nonnegative
 * `costOfStability_le` — any nonnegative stabilizing subsidy bounds it
 * `costOfStability_eq_zero_of_core` — a nonempty core means zero cost of stability
+* `costOfStability_eq_zero_of_nonneg_unanimityCoeff` / `costOfStability_additiveGame_eq_zero`
+  — stable classes (nonnegative Harsanyi dividends; additive games) need no subsidy
 
 Only the direction *nonempty core ⇒ zero cost* is formalized here. The converse
 (*zero cost ⇒ nonempty core*) requires an infimum-attainment / LP-duality
@@ -138,6 +142,18 @@ theorem costOfStability_eq_zero_of_core [Nonempty ι] {G : CoalGame ι}
     (h : ∃ x, G.IsCore x) : G.costOfStability = 0 := by
   have h0 : G.IsStabilizable 0 := (isStabilizable_zero_iff_core G).2 h
   exact le_antisymm (G.costOfStability_le le_rfl h0) (G.costOfStability_nonneg)
+
+/-- A game with nonnegative unanimity-basis (Harsanyi-dividend) coefficients has
+zero cost of stability: its Shapley value already lies in the core. -/
+theorem costOfStability_eq_zero_of_nonneg_unanimityCoeff [Nonempty ι] {G : CoalGame ι}
+    (hcoeff : ∀ S : Finset ι, 0 ≤ G.unanimityCoeff S) : G.costOfStability = 0 :=
+  costOfStability_eq_zero_of_core ⟨_, G.shapleyValue_isCore_of_nonneg_unanimityCoeff hcoeff⟩
+
+/-- An additive game has zero cost of stability: the weight vector is itself in the
+core (with equality on every coalition). -/
+theorem costOfStability_additiveGame_eq_zero [Nonempty ι] (α : ι → ℝ) :
+    (additiveGame α).costOfStability = 0 :=
+  costOfStability_eq_zero_of_core ⟨α, rfl, fun _ => le_refl _⟩
 
 end CoalGame
 
