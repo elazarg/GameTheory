@@ -100,6 +100,7 @@ import GameTheory.Mechanism.BayesCorrelatedEq
 import GameTheory.Mechanism.MechanismDesign
 import GameTheory.Mechanism.RevelationPrinciple
 import GameTheory.Mechanism.Monotonicity
+import GameTheory.Mechanism.AffineMaximizer
 import GameTheory.Mechanism.Contracts.Basic
 
 -- Social choice and information
