@@ -23,6 +23,8 @@ hypothesis.
 * `BargainingProblem.IsNashSolution` — the Nash bargaining solution
 * `BargainingProblem.IsPareto` — Pareto optimality (strong) in the feasible set,
   with the weaker `IsWeaklyPareto`
+* `BargainingProblem.posAffineMap` — the positive-affine image of a problem (the
+  shared transform behind the Nash and Kalai–Smorodinsky scale-invariance results)
 
 ## Main results
 
@@ -129,44 +131,66 @@ theorem nashSolution_symmetric (u : ℝ × ℝ) (hsym : B.IsSymmetric)
   simp at h1
   linarith [hsym.1]
 
-/-- Scale invariance: affine transformations preserve the Nash solution. -/
+/-- The **positive-affine image** of a bargaining problem: rescale player `i`'s
+utility by `αᵢ > 0` and shift by `βᵢ`. Feasibility pulls back along the inverse
+transform; the disagreement point maps forward. The Nash and Kalai–Smorodinsky
+solutions are invariant under this map (scale invariance). -/
+def posAffineMap (α₁ α₂ : ℝ) (hα₁ : 0 < α₁) (hα₂ : 0 < α₂) (β₁ β₂ : ℝ) :
+    BargainingProblem where
+  feasible := fun v => B.feasible ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂)
+  d₁ := α₁ * B.d₁ + β₁
+  d₂ := α₂ * B.d₂ + β₂
+  d_feasible := by simp [hα₁.ne', hα₂.ne', B.d_feasible]
+
+/-- Feasibility transports along `posAffineMap`: the affine image of `u` is feasible
+in the image problem iff `u` is feasible in the original. -/
+theorem posAffineMap_feasible_image {α₁ α₂ : ℝ} (hα₁ : 0 < α₁) (hα₂ : 0 < α₂)
+    {β₁ β₂ : ℝ} (u : ℝ × ℝ) :
+    (B.posAffineMap α₁ α₂ hα₁ hα₂ β₁ β₂).feasible (α₁ * u.1 + β₁, α₂ * u.2 + β₂)
+      ↔ B.feasible u := by
+  have e₁ : (α₁ * u.1 + β₁ - β₁) / α₁ = u.1 := by
+    rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.1 hα₁.ne'
+  have e₂ : (α₂ * u.2 + β₂ - β₂) / α₂ = u.2 := by
+    rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.2 hα₂.ne'
+  simp only [posAffineMap, e₁, e₂]
+
+/-- Individual rationality transports along `posAffineMap`. -/
+theorem posAffineMap_isIR_image {α₁ α₂ : ℝ} (hα₁ : 0 < α₁) (hα₂ : 0 < α₂)
+    {β₁ β₂ : ℝ} (u : ℝ × ℝ) :
+    (B.posAffineMap α₁ α₂ hα₁ hα₂ β₁ β₂).IsIR (α₁ * u.1 + β₁, α₂ * u.2 + β₂)
+      ↔ B.IsIR u := by
+  simp only [posAffineMap, IsIR]
+  constructor
+  · rintro ⟨h1, h2⟩
+    exact ⟨le_of_mul_le_mul_left (by linarith) hα₁,
+      le_of_mul_le_mul_left (by linarith) hα₂⟩
+  · rintro ⟨h1, h2⟩
+    exact ⟨by nlinarith [mul_le_mul_of_nonneg_left h1 hα₁.le],
+      by nlinarith [mul_le_mul_of_nonneg_left h2 hα₂.le]⟩
+
+/-- Scale invariance: positive-affine transformations preserve the Nash solution. -/
 theorem nashSolution_affine_invariant
     (α₁ α₂ : ℝ) (hα₁ : α₁ > 0) (hα₂ : α₂ > 0) (β₁ β₂ : ℝ)
     (u : ℝ × ℝ) (hns : B.IsNashSolution u) :
-    let B' : BargainingProblem := {
-      feasible := fun v => B.feasible ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂)
-      d₁ := α₁ * B.d₁ + β₁
-      d₂ := α₂ * B.d₂ + β₂
-      d_feasible := by simp [hα₁.ne', hα₂.ne', B.d_feasible]
-    }
-    B'.IsNashSolution (α₁ * u.1 + β₁, α₂ * u.2 + β₂) := by
-  intro B'
-  refine ⟨?_, ?_, ?_⟩
-  · simp only [B']
-    have h1 : (α₁ * u.1 + β₁ - β₁) / α₁ = u.1 := by
-      rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.1 hα₁.ne'
-    have h2 : (α₂ * u.2 + β₂ - β₂) / α₂ = u.2 := by
-      rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.2 hα₂.ne'
-    rw [h1, h2]
-    exact hns.1
-  · constructor
-    · simp only [B']; nlinarith [hns.2.1.1]
-    · simp only [B']; nlinarith [hns.2.1.2]
-  · intro v hfv hirv
-    simp only [B'] at hfv hirv ⊢
-    have hv := hns.2.2 ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂) hfv
-    have hirv_orig : B.IsIR ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂) := by
-      constructor
-      · rw [ge_iff_le]; rw [le_div_iff₀ hα₁]; nlinarith [hirv.1]
-      · rw [ge_iff_le]; rw [le_div_iff₀ hα₂]; nlinarith [hirv.2]
-    have hv' := hv hirv_orig
-    have lhs : (α₁ * u.1 + β₁ - (α₁ * B.d₁ + β₁)) * (α₂ * u.2 + β₂ - (α₂ * B.d₂ + β₂)) =
-        α₁ * α₂ * ((u.1 - B.d₁) * (u.2 - B.d₂)) := by ring
-    have rhs : (v.1 - (α₁ * B.d₁ + β₁)) * (v.2 - (α₂ * B.d₂ + β₂)) =
-        α₁ * α₂ * (((v.1 - β₁) / α₁ - B.d₁) * ((v.2 - β₂) / α₂ - B.d₂)) := by
-      field_simp; ring
-    rw [lhs, rhs]
-    exact mul_le_mul_of_nonneg_left hv' (by positivity)
+    (B.posAffineMap α₁ α₂ hα₁ hα₂ β₁ β₂).IsNashSolution
+      (α₁ * u.1 + β₁, α₂ * u.2 + β₂) := by
+  refine ⟨(B.posAffineMap_feasible_image hα₁ hα₂ u).mpr hns.1,
+    (B.posAffineMap_isIR_image hα₁ hα₂ u).mpr hns.2.1, ?_⟩
+  intro v hfv hirv
+  simp only [posAffineMap] at hfv hirv ⊢
+  have hv := hns.2.2 ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂) hfv
+  have hirv_orig : B.IsIR ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂) := by
+    constructor
+    · rw [ge_iff_le]; rw [le_div_iff₀ hα₁]; nlinarith [hirv.1]
+    · rw [ge_iff_le]; rw [le_div_iff₀ hα₂]; nlinarith [hirv.2]
+  have hv' := hv hirv_orig
+  have lhs : (α₁ * u.1 + β₁ - (α₁ * B.d₁ + β₁)) * (α₂ * u.2 + β₂ - (α₂ * B.d₂ + β₂)) =
+      α₁ * α₂ * ((u.1 - B.d₁) * (u.2 - B.d₂)) := by ring
+  have rhs : (v.1 - (α₁ * B.d₁ + β₁)) * (v.2 - (α₂ * B.d₂ + β₂)) =
+      α₁ * α₂ * (((v.1 - β₁) / α₁ - B.d₁) * ((v.2 - β₂) / α₂ - B.d₂)) := by
+    field_simp; ring
+  rw [lhs, rhs]
+  exact mul_le_mul_of_nonneg_left hv' (by positivity)
 
 /-! ### Egalitarian bargaining solution
 
@@ -281,30 +305,15 @@ KS from the (scale-dependent) egalitarian solution. -/
 theorem kalaiSmorodinskyRelativeTo_affine_invariant
     (α₁ α₂ : ℝ) (hα₁ : α₁ > 0) (hα₂ : α₂ > 0) (β₁ β₂ : ℝ)
     (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinskyRelativeTo a u) :
-    let B' : BargainingProblem := {
-      feasible := fun v => B.feasible ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂)
-      d₁ := α₁ * B.d₁ + β₁
-      d₂ := α₂ * B.d₂ + β₂
-      d_feasible := by simp [hα₁.ne', hα₂.ne', B.d_feasible]
-    }
-    B'.IsKalaiSmorodinskyRelativeTo (α₁ * a.1 + β₁, α₂ * a.2 + β₂)
-      (α₁ * u.1 + β₁, α₂ * u.2 + β₂) := by
-  intro B'
+    (B.posAffineMap α₁ α₂ hα₁ hα₂ β₁ β₂).IsKalaiSmorodinskyRelativeTo
+      (α₁ * a.1 + β₁, α₂ * a.2 + β₂) (α₁ * u.1 + β₁, α₂ * u.2 + β₂) := by
   obtain ⟨hfu, hiru, hpu, hprop⟩ := h
-  have hfeq₁ : (α₁ * u.1 + β₁ - β₁) / α₁ = u.1 := by
-    rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.1 hα₁.ne'
-  have hfeq₂ : (α₂ * u.2 + β₂ - β₂) / α₂ = u.2 := by
-    rw [add_sub_cancel_right]; exact mul_div_cancel_left₀ u.2 hα₂.ne'
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · -- feasibility transports back to the original point
-    simp only [B']; rw [hfeq₁, hfeq₂]; exact hfu
-  · -- individual rationality
-    refine ⟨?_, ?_⟩
-    · simp only [B']; nlinarith [hiru.1]
-    · simp only [B']; nlinarith [hiru.2]
+  refine ⟨(B.posAffineMap_feasible_image hα₁ hα₂ u).mpr hfu,
+    (B.posAffineMap_isIR_image hα₁ hα₂ u).mpr hiru,
+    ⟨(B.posAffineMap_feasible_image hα₁ hα₂ u).mpr hfu, ?_⟩, ?_⟩
   · -- strong Pareto: a weakly-dominating image gives a weakly-dominating preimage
-    refine ⟨by simp only [B']; rw [hfeq₁, hfeq₂]; exact hfu, ?_⟩
     rintro ⟨w, hfw, hw1, hw2, hwstrict⟩
+    simp only [posAffineMap] at hfw
     apply hpu.2
     refine ⟨((w.1 - β₁) / α₁, (w.2 - β₂) / α₂), hfw, ?_, ?_, ?_⟩
     · rw [ge_iff_le, le_div_iff₀ hα₁]; nlinarith [hw1]
@@ -313,7 +322,7 @@ theorem kalaiSmorodinskyRelativeTo_affine_invariant
       · exact Or.inl (by rw [gt_iff_lt, lt_div_iff₀ hα₁]; nlinarith [hs])
       · exact Or.inr (by rw [gt_iff_lt, lt_div_iff₀ hα₂]; nlinarith [hs])
   · -- proportionality is preserved: both sides scale by α₁ * α₂
-    simp only [B']
+    simp only [posAffineMap]
     have lhs : (α₁ * u.1 + β₁ - (α₁ * B.d₁ + β₁)) * (α₂ * a.2 + β₂ - (α₂ * B.d₂ + β₂)) =
         α₁ * α₂ * ((u.1 - B.d₁) * (a.2 - B.d₂)) := by ring
     have rhs : (α₂ * u.2 + β₂ - (α₂ * B.d₂ + β₂)) * (α₁ * a.1 + β₁ - (α₁ * B.d₁ + β₁)) =
