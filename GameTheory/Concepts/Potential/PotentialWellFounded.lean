@@ -21,8 +21,11 @@ is no infinite improving path.
   profiles where each step is a single-player improving deviation
 * `WeaklyAcyclic` — from every profile some finite improving path reaches a Nash
   equilibrium
+* `weaklyAcyclic_of_wellFounded` — weak acyclicity from well-founded improvement
+  alone (no finiteness or potential)
 * `IsOrdinalPotential.weaklyAcyclic` — every finite ordinal potential game is
-  weakly acyclic (with `IsExactPotential.weaklyAcyclic` as the exact special case)
+  weakly acyclic (via well-foundedness of the potential-rank measure), with
+  `IsExactPotential.weaklyAcyclic` as the exact special case
 -/
 
 namespace GameTheory
@@ -125,29 +128,44 @@ theorem IsOrdinalPotential.improvingStep_filter_card_lt
   exact ⟨τ, by simp [hpot], by simp⟩
 
 open Classical in
-/-- **Potential games are weakly acyclic.** In a finite *ordinal* potential game,
-from every profile a finite sequence of improving deviations reaches a Nash
-equilibrium: follow improving steps — each raises the potential, so the number of
-higher-potential profiles strictly drops — until none remains, i.e. a Nash
-equilibrium. -/
-theorem IsOrdinalPotential.weaklyAcyclic {G : KernelGame ι} [Finite (Profile G)]
-    {Φ : Profile G → ℝ} (hΦ : G.IsOrdinalPotential Φ) : G.WeaklyAcyclic := by
-  haveI : Fintype (Profile G) := Fintype.ofFinite _
-  suffices H : ∀ n (σ : Profile G),
-      (Finset.univ.filter (fun q => Φ σ < Φ q)).card = n →
-      ∃ τ, Relation.ReflTransGen G.ImprovingStep σ τ ∧ G.IsNash τ from
-    fun σ => H _ σ rfl
-  intro n
-  induction n using Nat.strong_induction_on with
-  | _ n ih =>
-    intro σ hσ
+/-- **Weak acyclicity from well-founded improvement.** If the improvement relation
+(`τ` reachable from `σ` by one improving step) has no infinite forward chain — i.e.
+it is well-founded — then the game is weakly acyclic: from every profile, follow
+improving steps until reaching a Nash equilibrium. This needs neither finiteness nor
+a potential; those only serve to establish well-foundedness. -/
+theorem weaklyAcyclic_of_wellFounded {G : KernelGame ι}
+    (hwf : WellFounded (fun τ σ : Profile G => G.ImprovingStep σ τ)) :
+    G.WeaklyAcyclic := by
+  intro σ
+  induction σ using hwf.induction with
+  | _ σ ih =>
     by_cases hnash : G.IsNash σ
     · exact ⟨σ, Relation.ReflTransGen.refl, hnash⟩
     · obtain ⟨τ', hstep⟩ := (not_isNash_iff_exists_improvingStep σ).mp hnash
-      have hlt := hΦ.improvingStep_filter_card_lt hstep
-      rw [hσ] at hlt
-      obtain ⟨τ, hreach, hτ⟩ := ih _ hlt τ' rfl
+      obtain ⟨τ, hreach, hτ⟩ := ih τ' hstep
       exact ⟨τ, Relation.ReflTransGen.head hstep hreach, hτ⟩
+
+open Classical in
+/-- In a finite ordinal potential game the improvement relation is well-founded:
+each improving step strictly drops the (finite, `ℕ`-valued) count of
+higher-potential profiles, so improvement is a subrelation of that measure's order. -/
+theorem IsOrdinalPotential.improvement_wellFounded {G : KernelGame ι}
+    [Finite (Profile G)] {Φ : Profile G → ℝ} (hΦ : G.IsOrdinalPotential Φ) :
+    WellFounded (fun τ σ : Profile G => G.ImprovingStep σ τ) := by
+  haveI : Fintype (Profile G) := Fintype.ofFinite _
+  have hsub : Subrelation (fun τ σ : Profile G => G.ImprovingStep σ τ)
+      (InvImage Nat.lt (fun σ => (Finset.univ.filter (fun q => Φ σ < Φ q)).card)) := by
+    intro τ σ hstep
+    exact hΦ.improvingStep_filter_card_lt hstep
+  exact hsub.wf (InvImage.wf _ Nat.lt_wfRel.wf)
+
+open Classical in
+/-- **Potential games are weakly acyclic.** Every finite ordinal potential game is
+weakly acyclic — improvement is well-founded (each step raises the potential), so
+`weaklyAcyclic_of_wellFounded` applies. -/
+theorem IsOrdinalPotential.weaklyAcyclic {G : KernelGame ι} [Finite (Profile G)]
+    {Φ : Profile G → ℝ} (hΦ : G.IsOrdinalPotential Φ) : G.WeaklyAcyclic :=
+  weaklyAcyclic_of_wellFounded hΦ.improvement_wellFounded
 
 open Classical in
 /-- Exact potential games are weakly acyclic (the exact-potential special case of
