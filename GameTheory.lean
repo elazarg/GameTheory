@@ -73,6 +73,7 @@ import Math.OnlineLearning
 import GameTheory.Concepts.Learning.ApproximateCorrelatedEq
 import GameTheory.Concepts.Learning.NoRegretToCCE
 import GameTheory.Concepts.Learning.SelfPlay
+import GameTheory.Concepts.Learning.MWSelfPlay
 
 -- Zero-sum and constant-sum
 import GameTheory.Concepts.ZeroSum.ZeroSum
