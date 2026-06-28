@@ -24,7 +24,7 @@ profile `t`, and the same bound for every **coarse correlated equilibrium**. Whe
 
 ## Main results
 
-* `IsSmooth.nash_bound` — Nash welfare is at least `λ/(1+μ)` of any profile's welfare
+* `IsSmooth.nash_bound` — `λ · W(t) ≤ (1 + μ) · W(s)` for any Nash equilibrium `s` and profile `t`
 * `IsSmooth.coarseCorrelated_bound` — the same bound holds for coarse correlated equilibria
 -/
 

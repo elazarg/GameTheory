@@ -18,11 +18,12 @@ solution maximizes the product of utility gains.
 
 * `BargainingProblem` — a two-player bargaining problem
 * `BargainingProblem.IsNashSolution` — the Nash bargaining solution
-* `BargainingProblem.IsPareto` — Pareto optimality in the feasible set
+* `BargainingProblem.IsPareto` — Pareto optimality (strong) in the feasible set,
+  with the weaker `IsWeaklyPareto`
 
 ## Main results
 
-* `nashSolution_pareto` — Nash bargaining solution is Pareto optimal
+* `nashSolution_weaklyPareto` — Nash bargaining solution is weakly Pareto optimal
 * `nashSolution_symmetric` — symmetric bargaining yields equal gains
 * `nashSolution_affine_invariant` — invariance under affine transformations
 -/
@@ -49,10 +50,22 @@ variable (B : BargainingProblem)
 /-- Individual rationality: both players get at least their disagreement payoff. -/
 def IsIR (u : ℝ × ℝ) : Prop := u.1 ≥ B.d₁ ∧ u.2 ≥ B.d₂
 
-/-- An outcome is Pareto optimal if no feasible outcome is strictly better
-    for both players. -/
+/-- An outcome is *Pareto optimal* if no feasible outcome is at least as good for
+    both players and strictly better for at least one. This is the standard
+    (strong) notion that the unqualified name denotes; the weaker variant is
+    `IsWeaklyPareto`. -/
 def IsPareto (u : ℝ × ℝ) : Prop :=
+  B.feasible u ∧ ¬∃ v, B.feasible v ∧ v.1 ≥ u.1 ∧ v.2 ≥ u.2 ∧ (v.1 > u.1 ∨ v.2 > u.2)
+
+/-- An outcome is *weakly* Pareto optimal if no feasible outcome is strictly
+    better for both players (a weaker condition than `IsPareto`). -/
+def IsWeaklyPareto (u : ℝ × ℝ) : Prop :=
   B.feasible u ∧ ¬∃ v, B.feasible v ∧ v.1 > u.1 ∧ v.2 > u.2
+
+/-- Pareto optimality implies the weak form. -/
+theorem isWeaklyPareto_of_isPareto {u : ℝ × ℝ} (h : B.IsPareto u) :
+    B.IsWeaklyPareto u :=
+  ⟨h.1, fun ⟨v, hfv, h1, h2⟩ => h.2 ⟨v, hfv, le_of_lt h1, le_of_lt h2, Or.inl h1⟩⟩
 
 /-- The Nash bargaining solution: a feasible, individually rational outcome
     that maximizes the Nash product `(u₁ - d₁) * (u₂ - d₂)`. -/
@@ -65,8 +78,10 @@ def IsNashSolution (u : ℝ × ℝ) : Prop :=
 theorem nashSolution_IR (u : ℝ × ℝ) (h : B.IsNashSolution u) : B.IsIR u :=
   h.2.1
 
-/-- The Nash bargaining solution is Pareto optimal among IR-feasible outcomes. -/
-theorem nashSolution_pareto (u : ℝ × ℝ) (h : B.IsNashSolution u) :
+/-- The Nash bargaining solution is weakly Pareto optimal among IR-feasible
+    outcomes (in this general non-convex setting the strong form can fail on the
+    disagreement boundary). -/
+theorem nashSolution_weaklyPareto (u : ℝ × ℝ) (h : B.IsNashSolution u) :
     ¬∃ v, B.feasible v ∧ B.IsIR v ∧ v.1 > u.1 ∧ v.2 > u.2 := by
   intro ⟨v, hfv, hir, h1, h2⟩
   have hiu := h.2.1
@@ -206,7 +221,7 @@ disagreement point are proportional to the ideal gains, i.e.
 `(u₁ - d₁) / (a₁ - d₁) = (u₂ - d₂) / (a₂ - d₂)`, written here in the
 division-free form `(u₁ - d₁)(a₂ - d₂) = (u₂ - d₂)(a₁ - d₁)`.
 
-The results below hold for any `a`; supply `B.IsIdealPoint a` for the genuine
+The results below hold for any `a`; supply `B.IsIdealPoint a` for the
 Kalai–Smorodinsky interpretation (proportionality is then measured against each
 player's maximal feasible gain). -/
 def IsKalaiSmorodinsky (a u : ℝ × ℝ) : Prop :=
@@ -272,13 +287,16 @@ theorem kalaiSmorodinsky_affine_invariant
     refine ⟨?_, ?_⟩
     · simp only [B']; nlinarith [hiru.1]
     · simp only [B']; nlinarith [hiru.2]
-  · -- Pareto optimality: a dominating image would give a dominating preimage
+  · -- strong Pareto: a weakly-dominating image gives a weakly-dominating preimage
     refine ⟨by simp only [B']; rw [hfeq₁, hfeq₂]; exact hfu, ?_⟩
-    rintro ⟨w, hfw, hw1, hw2⟩
+    rintro ⟨w, hfw, hw1, hw2, hwstrict⟩
     apply hpu.2
-    refine ⟨((w.1 - β₁) / α₁, (w.2 - β₂) / α₂), hfw, ?_, ?_⟩
-    · rw [gt_iff_lt, lt_div_iff₀ hα₁]; nlinarith [hw1]
-    · rw [gt_iff_lt, lt_div_iff₀ hα₂]; nlinarith [hw2]
+    refine ⟨((w.1 - β₁) / α₁, (w.2 - β₂) / α₂), hfw, ?_, ?_, ?_⟩
+    · rw [ge_iff_le, le_div_iff₀ hα₁]; nlinarith [hw1]
+    · rw [ge_iff_le, le_div_iff₀ hα₂]; nlinarith [hw2]
+    · rcases hwstrict with hs | hs
+      · exact Or.inl (by rw [gt_iff_lt, lt_div_iff₀ hα₁]; nlinarith [hs])
+      · exact Or.inr (by rw [gt_iff_lt, lt_div_iff₀ hα₂]; nlinarith [hs])
   · -- proportionality is preserved: both sides scale by α₁ * α₂
     simp only [B']
     have lhs : (α₁ * u.1 + β₁ - (α₁ * B.d₁ + β₁)) * (α₂ * a.2 + β₂ - (α₂ * B.d₂ + β₂)) =
@@ -287,10 +305,10 @@ theorem kalaiSmorodinsky_affine_invariant
         α₁ * α₂ * ((u.2 - B.d₂) * (a.1 - B.d₁)) := by ring
     rw [lhs, rhs, hprop]
 
-/-- Relative to a genuine ideal point, the Kalai–Smorodinsky solution is
-dominated by the ideal point: neither player can exceed its maximal feasible
-(utopia) payoff. Together with individual rationality this places each player's
-gain in `[0, ideal gain]`. -/
+/-- Relative to an ideal point, the Kalai–Smorodinsky solution is dominated by
+the ideal point: neither player can exceed its maximal feasible (utopia) payoff.
+Together with individual rationality this places each player's gain in
+`[0, ideal gain]`. -/
 theorem kalaiSmorodinsky_le_ideal (a u : ℝ × ℝ)
     (hideal : B.IsIdealPoint a) (h : B.IsKalaiSmorodinsky a u) :
     u.1 ≤ a.1 ∧ u.2 ≤ a.2 := by

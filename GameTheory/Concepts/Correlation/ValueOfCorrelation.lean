@@ -17,9 +17,11 @@ The *value of correlation* (Ashlagi–Monderer–Tennenholtz, *On the Value of
 Correlation*, JAIR 2008) measures how much social welfare a correlation device
 can add over the best Nash equilibrium. The benchmark is `bestNashWelfare`, the
 best welfare among **pure** Nash equilibria (matching the library's
-price-of-anarchy convention), so the comparison requires a pure Nash to exist;
-the classical notion compares against the best mixed Nash, which the pure-Nash
-benchmark upper-bounds. Because every pure Nash equilibrium, viewed as a
+price-of-anarchy convention), so the comparison requires a pure Nash to exist.
+The classical notion compares against the best mixed Nash; since the best
+mixed-Nash welfare is at least the best pure-Nash welfare, the pure-Nash *value*
+upper-bounds the classical mixed-Nash value. Because every pure Nash
+equilibrium, viewed as a
 point-mass recommendation, is a correlated equilibrium of equal welfare, the
 value of correlation is always nonnegative: correlation never hurts. The same
 comparison against *coarse* correlated equilibria gives an even larger value,
