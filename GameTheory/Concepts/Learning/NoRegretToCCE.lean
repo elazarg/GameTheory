@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Learning.ApproximateCorrelatedEq
+import GameTheory.Concepts.Correlation.ApproximateCorrelatedEq
 import GameTheory.Concepts.ZeroSum.ConstantSumCorrelated
 
 /-!

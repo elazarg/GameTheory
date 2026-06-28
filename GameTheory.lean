@@ -62,6 +62,7 @@ import GameTheory.Concepts.Welfare.FolkTheorem
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
 import GameTheory.Concepts.Correlation.Regret
+import GameTheory.Concepts.Correlation.ApproximateCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelatedNashMixed
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelationRegimes
@@ -70,7 +71,6 @@ import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
 -- Learning dynamics
 import Math.OnlineLearning
-import GameTheory.Concepts.Learning.ApproximateCorrelatedEq
 import GameTheory.Concepts.Learning.NoRegretToCCE
 import GameTheory.Concepts.Learning.SelfPlay
 import GameTheory.Concepts.Learning.MWSelfPlay

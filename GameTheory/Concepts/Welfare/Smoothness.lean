@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Welfare.PriceOfAnarchy
 import GameTheory.Concepts.Correlation.CorrelatedNashMixed
+import GameTheory.Concepts.Correlation.ApproximateCorrelatedEq
 import GameTheory.Concepts.ZeroSum.ConstantSumCorrelated
 
 /-!
@@ -61,26 +62,31 @@ theorem IsSmooth.nash_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
 
 variable [Finite (Profile G)] [Finite G.Outcome]
 
-/-- **Robust price of anarchy.** Smoothness bounds the welfare not only of Nash
-equilibria but of every **coarse correlated equilibrium** `ν`: the expected welfare
-`∑ᵢ correlatedEu ν i` satisfies `λ · W(t) ≤ (1 + μ) · E[W]` for every profile `t`.
-This is Roughgarden's "the price of anarchy is robust" theorem. -/
-theorem IsSmooth.coarseCorrelated_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
-    {ν : PMF (Profile G)} (hν : G.IsCoarseCorrelatedEq ν) (t : Profile G) :
-    lam * G.socialWelfare t ≤ (1 + mu) * (∑ i, G.correlatedEu ν i) := by
+/-- **Robust price of anarchy, approximate form.** Smoothness bounds the welfare of every
+`ε`-coarse correlated equilibrium `ν` up to an additive `(card ι)·ε` — one `ε` of slack per
+player: `λ · W(t) ≤ (1 + μ) · E[W] + (card ι)·ε` for every profile `t`. This is the level at
+which a no-regret learning time-average (an `ε`-CCE) inherits the robust price-of-anarchy bound. -/
+theorem IsSmooth.epsilonCoarseCorrelated_bound {lam mu ε : ℝ} (hsmooth : G.IsSmooth lam mu)
+    {ν : PMF (Profile G)} (hν : G.IsεCoarseCorrelatedEq ε ν) (t : Profile G) :
+    lam * G.socialWelfare t
+      ≤ (1 + mu) * (∑ i, G.correlatedEu ν i) + (Fintype.card ι) * ε := by
   set CW := ∑ i, G.correlatedEu ν i with hCW
   have hCW_eq : CW = expect ν (fun s => G.socialWelfare s) := by
     rw [hCW, show (∑ i, G.correlatedEu ν i) = ∑ i, expect ν (fun s => G.eu s i) from
       Finset.sum_congr rfl fun i _ => G.correlatedEu_eq_expect_eu ν i, expect_sum_comm]
     simp only [socialWelfare]
-  have hdev_sum : ∑ i, expect ν (fun s => G.eu (Function.update s i (t i)) i) ≤ CW := by
-    rw [hCW]
-    refine Finset.sum_le_sum fun i _ => ?_
-    have hcce := hν i (t i)
-    rwa [G.correlatedEu_constantDeviationDistribution_eq_expect_update ν i (t i)] at hcce
-  have hsmooth_exp :
-      lam * G.socialWelfare t - mu * CW ≤
-        ∑ i, expect ν (fun s => G.eu (Function.update s i (t i)) i) := by
+  have hdev_sum : ∑ i, expect ν (fun s => G.eu (Function.update s i (t i)) i)
+      ≤ CW + (Fintype.card ι : ℝ) * ε := by
+    have hstep : ∑ i, expect ν (fun s => G.eu (Function.update s i (t i)) i)
+        ≤ ∑ i : ι, (G.correlatedEu ν i + ε) := by
+      refine Finset.sum_le_sum (fun i _ => ?_)
+      have hcce := hν i (t i)
+      rw [G.correlatedEu_constantDeviationDistribution_eq_expect_update ν i (t i)] at hcce
+      linarith
+    rw [Finset.sum_add_distrib, Finset.sum_const, Finset.card_univ, nsmul_eq_mul] at hstep
+    rw [hCW]; linarith
+  have hsmooth_exp : lam * G.socialWelfare t - mu * CW
+      ≤ ∑ i, expect ν (fun s => G.eu (Function.update s i (t i)) i) := by
     rw [hCW_eq, expect_sum_comm]
     have heq : expect ν (fun s => lam * G.socialWelfare t - mu * G.socialWelfare s)
         = lam * G.socialWelfare t - mu * expect ν (fun s => G.socialWelfare s) := by
@@ -89,6 +95,18 @@ theorem IsSmooth.coarseCorrelated_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam
     rw [← heq]
     exact expect_mono ν _ _ fun s => hsmooth s t
   nlinarith [hdev_sum, hsmooth_exp]
+
+/-- **Robust price of anarchy.** Smoothness bounds the welfare not only of Nash
+equilibria but of every **coarse correlated equilibrium** `ν`: the expected welfare
+`∑ᵢ correlatedEu ν i` satisfies `λ · W(t) ≤ (1 + μ) · E[W]` for every profile `t`.
+This is Roughgarden's "the price of anarchy is robust" theorem — the `ε = 0` case of
+`IsSmooth.epsilonCoarseCorrelated_bound`. -/
+theorem IsSmooth.coarseCorrelated_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
+    {ν : PMF (Profile G)} (hν : G.IsCoarseCorrelatedEq ν) (t : Profile G) :
+    lam * G.socialWelfare t ≤ (1 + mu) * (∑ i, G.correlatedEu ν i) := by
+  have h := IsSmooth.epsilonCoarseCorrelated_bound G hsmooth
+    ((G.isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero).1 hν) t
+  simpa using h
 
 end KernelGame
 

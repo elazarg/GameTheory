@@ -84,10 +84,10 @@ theorem mwProfile_eq_mwDist (t : ℕ) (i : ι) :
 
 /-- **Multiplicative-weights self-play is an ε-coarse correlated equilibrium.** With utilities in
     the per-player band `[lo i, lo i + W]`, a fixed learning rate `η > 0`, and `L` a uniform upper
-    bound on `log |Aᵢ|`, the time-average of independent MW self-play over horizon `T` is an ε-coarse
-    correlated equilibrium with the explicit `ε = W·(L/η + (eᵑ−1−η)/η·T)/T`. For fixed `η` this `ε`
-    does not vanish (it tends to `W·(eᵑ−1−η)/η`); the horizon-dependent tuning `η ≈ √(L/T)` that
-    sends it to `0` is not formalized here. -/
+    bound on `log |Aᵢ|`, the time-average of independent MW self-play over horizon `T` is an
+    ε-coarse correlated equilibrium with the explicit `ε = W·(L/η + (eᵑ−1−η)/η·T)/T`. For fixed `η`
+    this `ε` does not vanish (it tends to `W·(eᵑ−1−η)/η`); the horizon-dependent tuning `η ≈ √(L/T)`
+    that sends it to `0` is not formalized here. -/
 theorem mwSelfPlay_timeAverage_isεCCE {L : ℝ} (hη : 0 < η) (hW : 0 < W)
     (hbd : ∀ i ω, G.utility ω i ∈ Set.Icc (lo i) (lo i + W))
     (hL : ∀ i, Real.log (Fintype.card (G.Strategy i)) ≤ L)
