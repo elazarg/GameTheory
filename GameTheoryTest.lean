@@ -1,3 +1,4 @@
+import GameTheory.Concepts.Learning.Tests
 import GameTheory.Languages.EFG.Tests
 import GameTheory.Languages.Expressiveness.Tests
 import GameTheory.Languages.FOSG.Tests
