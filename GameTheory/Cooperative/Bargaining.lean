@@ -78,13 +78,17 @@ def IsNashSolution (u : ℝ × ℝ) : Prop :=
 theorem nashSolution_IR (u : ℝ × ℝ) (h : B.IsNashSolution u) : B.IsIR u :=
   h.2.1
 
-/-- The Nash bargaining solution is weakly Pareto optimal among IR-feasible
-    outcomes (in this general non-convex setting the strong form can fail on the
-    disagreement boundary). -/
+/-- The Nash bargaining solution is weakly Pareto optimal: no feasible outcome is
+    strictly better for both players. (In this general non-convex setting the
+    strong form can fail on the disagreement boundary.) A strict improvement over
+    the IR Nash solution is itself IR, so no IR restriction on the dominator is
+    needed. -/
 theorem nashSolution_weaklyPareto (u : ℝ × ℝ) (h : B.IsNashSolution u) :
-    ¬∃ v, B.feasible v ∧ B.IsIR v ∧ v.1 > u.1 ∧ v.2 > u.2 := by
-  intro ⟨v, hfv, hir, h1, h2⟩
+    B.IsWeaklyPareto u := by
+  refine ⟨h.1, ?_⟩
+  rintro ⟨v, hfv, h1, h2⟩
   have hiu := h.2.1
+  have hir : B.IsIR v := ⟨by linarith [hiu.1], by linarith [hiu.2]⟩
   have hmax := h.2.2 v hfv hir
   have hu1 : u.1 - B.d₁ ≥ 0 := by linarith [hiu.1]
   have hv2 : v.2 - B.d₂ > u.2 - B.d₂ := by linarith
@@ -221,42 +225,44 @@ def IsIdealPoint (a : ℝ × ℝ) : Prop :=
   IsLUB {x | ∃ u, B.feasible u ∧ B.IsIR u ∧ u.1 = x} a.1 ∧
   IsLUB {x | ∃ u, B.feasible u ∧ B.IsIR u ∧ u.2 = x} a.2
 
-/-- The Kalai–Smorodinsky solution relative to an ideal point `a`: a
-Pareto-optimal, individually-rational, feasible outcome whose gains over the
-disagreement point are proportional to the ideal gains, i.e.
-`(u₁ - d₁) / (a₁ - d₁) = (u₂ - d₂) / (a₂ - d₂)`, written here in the
-division-free form `(u₁ - d₁)(a₂ - d₂) = (u₂ - d₂)(a₁ - d₁)`.
-
-The results below hold for any `a`; supply `B.IsIdealPoint a` for the
-Kalai–Smorodinsky interpretation (proportionality is then measured against each
-player's maximal feasible gain). -/
-def IsKalaiSmorodinsky (a u : ℝ × ℝ) : Prop :=
+/-- The Kalai–Smorodinsky outcome *relative to* a point `a`: a Pareto-optimal,
+individually-rational, feasible outcome whose gains over the disagreement point
+are proportional to the `a`-gains, i.e.
+`(u₁ - d₁) / (a₁ - d₁) = (u₂ - d₂) / (a₂ - d₂)`, written in the division-free form
+`(u₁ - d₁)(a₂ - d₂) = (u₂ - d₂)(a₁ - d₁)`. The properties below hold for any `a`;
+the Kalai–Smorodinsky *solution* additionally fixes `a` to be the ideal point. -/
+def IsKalaiSmorodinskyRelativeTo (a u : ℝ × ℝ) : Prop :=
   B.feasible u ∧ B.IsIR u ∧ B.IsPareto u ∧
     (u.1 - B.d₁) * (a.2 - B.d₂) = (u.2 - B.d₂) * (a.1 - B.d₁)
 
-/-- The Kalai–Smorodinsky solution is individually rational by definition. -/
-theorem kalaiSmorodinsky_IR (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinsky a u) :
-    B.IsIR u :=
+/-- The **Kalai–Smorodinsky solution**: the Kalai–Smorodinsky outcome relative to
+the *ideal* (utopia) point `a`, so proportionality is measured against each
+player's maximal feasible gain. -/
+def IsKalaiSmorodinsky (a u : ℝ × ℝ) : Prop :=
+  B.IsIdealPoint a ∧ B.IsKalaiSmorodinskyRelativeTo a u
+
+/-- The Kalai–Smorodinsky outcome is individually rational by definition. -/
+theorem kalaiSmorodinskyRelativeTo_IR (a u : ℝ × ℝ)
+    (h : B.IsKalaiSmorodinskyRelativeTo a u) : B.IsIR u :=
   h.2.1
 
-/-- The Kalai–Smorodinsky solution is Pareto optimal by definition. -/
-theorem kalaiSmorodinsky_pareto (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinsky a u) :
-    B.IsPareto u :=
+/-- The Kalai–Smorodinsky outcome is Pareto optimal by definition. -/
+theorem kalaiSmorodinskyRelativeTo_pareto (a u : ℝ × ℝ)
+    (h : B.IsKalaiSmorodinskyRelativeTo a u) : B.IsPareto u :=
   h.2.2.1
 
-/-- The Kalai–Smorodinsky solution equalizes the ratio of each player's gain
-to their maximal (ideal) gain. -/
-theorem kalaiSmorodinsky_proportional (a u : ℝ × ℝ)
-    (h : B.IsKalaiSmorodinsky a u) :
+/-- The Kalai–Smorodinsky outcome equalizes the ratio of each player's gain
+to their `a`-gain. -/
+theorem kalaiSmorodinskyRelativeTo_proportional (a u : ℝ × ℝ)
+    (h : B.IsKalaiSmorodinskyRelativeTo a u) :
     (u.1 - B.d₁) * (a.2 - B.d₂) = (u.2 - B.d₂) * (a.1 - B.d₁) :=
   h.2.2.2
 
-/-- In a symmetric problem with a symmetric ideal point (`a₁ = a₂`), the
-Kalai–Smorodinsky solution gives equal gains to both players, provided the
-problem is nondegenerate (`a₁ ≠ d₁`). -/
-theorem kalaiSmorodinsky_symmetric (a u : ℝ × ℝ)
+/-- With a symmetric point (`a₁ = a₂`), the Kalai–Smorodinsky outcome gives equal
+gains to both players, provided the problem is nondegenerate (`a₁ ≠ d₁`). -/
+theorem kalaiSmorodinskyRelativeTo_symmetric (a u : ℝ × ℝ)
     (hsym : B.IsSymmetric) (ha : a.1 = a.2) (hnd : a.1 - B.d₁ ≠ 0)
-    (h : B.IsKalaiSmorodinsky a u) :
+    (h : B.IsKalaiSmorodinskyRelativeTo a u) :
     u.1 - B.d₁ = u.2 - B.d₂ := by
   have hd : B.d₂ = B.d₁ := hsym.1.symm
   have hprop := h.2.2.2
@@ -265,20 +271,20 @@ theorem kalaiSmorodinsky_symmetric (a u : ℝ × ℝ)
   rw [hd]
   exact hcancel
 
-/-- **Scale invariance.** The Kalai–Smorodinsky solution is preserved under
+/-- **Scale invariance.** The Kalai–Smorodinsky outcome is preserved under
 independent positive-affine rescaling of the two players' utilities, with the
-ideal point rescaled along with the problem. This is the axiom distinguishing
+reference point rescaled along with the problem. This is the axiom distinguishing
 KS from the (scale-dependent) egalitarian solution. -/
-theorem kalaiSmorodinsky_affine_invariant
+theorem kalaiSmorodinskyRelativeTo_affine_invariant
     (α₁ α₂ : ℝ) (hα₁ : α₁ > 0) (hα₂ : α₂ > 0) (β₁ β₂ : ℝ)
-    (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinsky a u) :
+    (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinskyRelativeTo a u) :
     let B' : BargainingProblem := {
       feasible := fun v => B.feasible ((v.1 - β₁) / α₁, (v.2 - β₂) / α₂)
       d₁ := α₁ * B.d₁ + β₁
       d₂ := α₂ * B.d₂ + β₂
       d_feasible := by simp [hα₁.ne', hα₂.ne', B.d_feasible]
     }
-    B'.IsKalaiSmorodinsky (α₁ * a.1 + β₁, α₂ * a.2 + β₂)
+    B'.IsKalaiSmorodinskyRelativeTo (α₁ * a.1 + β₁, α₂ * a.2 + β₂)
       (α₁ * u.1 + β₁, α₂ * u.2 + β₂) := by
   intro B'
   obtain ⟨hfu, hiru, hpu, hprop⟩ := h
@@ -311,14 +317,12 @@ theorem kalaiSmorodinsky_affine_invariant
         α₁ * α₂ * ((u.2 - B.d₂) * (a.1 - B.d₁)) := by ring
     rw [lhs, rhs, hprop]
 
-/-- Relative to an ideal point, the Kalai–Smorodinsky solution is dominated by
-the ideal point: neither player can exceed its maximal feasible (utopia) payoff.
-Together with individual rationality this places each player's gain in
-`[0, ideal gain]`. -/
-theorem kalaiSmorodinsky_le_ideal (a u : ℝ × ℝ)
-    (hideal : B.IsIdealPoint a) (h : B.IsKalaiSmorodinsky a u) :
+/-- The Kalai–Smorodinsky solution is dominated by the ideal point: neither player
+can exceed its maximal feasible (utopia) payoff. Together with individual
+rationality this places each player's gain in `[0, ideal gain]`. -/
+theorem kalaiSmorodinsky_le_ideal (a u : ℝ × ℝ) (h : B.IsKalaiSmorodinsky a u) :
     u.1 ≤ a.1 ∧ u.2 ≤ a.2 := by
-  obtain ⟨hfeas, hIR, _, _⟩ := h
+  obtain ⟨hideal, hfeas, hIR, _, _⟩ := h
   exact ⟨hideal.1.1 ⟨u, hfeas, hIR, rfl⟩, hideal.2.1 ⟨u, hfeas, hIR, rfl⟩⟩
 
 end BargainingProblem

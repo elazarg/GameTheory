@@ -225,30 +225,29 @@ instance $\mu = \Dirac_\Profile$.  In the EU-specific layer, existence of
 correlated and coarse correlated equilibria for any finite
 $\KG$ is the content of \Cref{sec:theorems:correlated-existence}.
 
-\paragraph{The value of correlation.}\
+\paragraph{The welfare gain from correlation.}\
 Summing equilibrium expected utilities gives the \emph{correlated
 social welfare} of a device, and maximizing it over correlated
 (resp.\ coarse correlated) equilibria gives the best welfare each
 regime can support.  Because a pure Nash equilibrium is a CE and a CE
 is a CCE, these optima form an increasing ladder — best pure-Nash
 welfare $\le$ best CE welfare $\le$ best CCE welfare — and the
-\emph{value of correlation} is the nonnegative gap between the ends.
-The Nash benchmark is the best \emph{pure} Nash welfare, matching the
-price-of-anarchy convention of
-\Cref{sec:solution-concepts:welfare}.  The classical
-Ashlagi–Monderer–Tennenholtz value compares instead against the best
-mixed Nash; since the best mixed-Nash welfare is at least the best
-pure-Nash welfare, the pure-Nash value here upper-bounds the classical
-one.  In a team game it collapses to zero
-(\TT{IsTeamGame.valueOfCorrelation\_eq\_zero}):\ with aligned
+\emph{correlation welfare gap} is the nonnegative difference between the
+ends.  The Nash benchmark is the best \emph{pure} Nash welfare, matching
+the price-of-anarchy convention of
+\Cref{sec:solution-concepts:welfare}.  This is the additive analogue of
+the Ashlagi–Monderer–Tennenholtz \emph{value of correlation}, which is a
+welfare \emph{ratio} against the best mixed Nash; the additive gap here
+needs no positivity assumption.  In a team game it collapses to zero
+(\TT{IsTeamGame.correlationWelfareGap\_eq\_zero}):\ with aligned
 interests the welfare-optimal profile is already Nash, so correlation
 buys nothing.
 
 \leancorr{\TT{Concepts/Correlation/ValueOfCorrelation.lean}
 (\TT{correlatedSocialWelfare}, \TT{bestCorrelatedWelfare},
-\TT{bestCoarseCorrelatedWelfare}, \TT{valueOfCorrelation},
-\TT{valueOfCorrelation\_nonneg},
-\TT{IsTeamGame.valueOfCorrelation\_eq\_zero}).}
+\TT{bestCoarseCorrelatedWelfare}, \TT{correlationWelfareGap},
+\TT{correlationWelfareGap\_nonneg},
+\TT{IsTeamGame.correlationWelfareGap\_eq\_zero}).}
 
 \subsection{Pareto efficiency, social welfare, and price of anarchy}
 \label{sec:solution-concepts:welfare}

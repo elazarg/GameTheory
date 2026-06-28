@@ -11,37 +11,37 @@ import GameTheory.Concepts.Correlation.CorrelatedEqProperties
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 
 /-!
-# Value of correlation
+# Welfare gain from correlation
 
-The *value of correlation* (Ashlagi–Monderer–Tennenholtz, *On the Value of
-Correlation*, JAIR 2008) measures how much social welfare a correlation device
-can add over the best Nash equilibrium. The benchmark is `bestNashWelfare`, the
-best welfare among **pure** Nash equilibria (matching the library's
-price-of-anarchy convention), so the comparison requires a pure Nash to exist.
-The classical notion compares against the best mixed Nash; since the best
-mixed-Nash welfare is at least the best pure-Nash welfare, the pure-Nash *value*
-upper-bounds the classical mixed-Nash value. Because every pure Nash
-equilibrium, viewed as a
-point-mass recommendation, is a correlated equilibrium of equal welfare, the
-value of correlation is always nonnegative: correlation never hurts. The same
-comparison against *coarse* correlated equilibria gives an even larger value,
-yielding the welfare ladder best pure Nash ≤ best correlated ≤ best coarse
-correlated.
+The additive **correlation welfare gap**: how much social welfare the best
+correlated equilibrium adds over the best Nash equilibrium. (Ashlagi–Monderer–
+Tennenholtz, *On the Value of Correlation*, JAIR 2008, define the *value of
+correlation* multiplicatively — the ratio of these welfares, for nonnegative-payoff
+games; the additive gap formalized here is the analogous quantity that needs no
+positivity assumption.) The Nash benchmark is `bestNashWelfare`, the best welfare
+among **pure** Nash equilibria (matching the library's price-of-anarchy
+convention), so the comparison requires a pure Nash to exist. Because every pure
+Nash equilibrium, viewed as a point-mass recommendation, is a correlated
+equilibrium of equal welfare, the gap is always nonnegative: correlation never
+hurts. The same comparison against *coarse* correlated equilibria gives an even
+larger gap, yielding the welfare ladder best pure Nash ≤ best correlated ≤ best
+coarse correlated.
 
 ## Main definitions
 
 * `KernelGame.correlatedSocialWelfare` — social welfare of a correlated play `μ`
-* `KernelGame.bestCorrelatedWelfare` — best welfare over all correlated equilibria
-* `KernelGame.bestCoarseCorrelatedWelfare` — best welfare over all coarse correlated equilibria
-* `KernelGame.valueOfCorrelation` — `bestCorrelatedWelfare - bestNashWelfare`
-* `KernelGame.valueOfCoarseCorrelation` — `bestCoarseCorrelatedWelfare - bestNashWelfare`
+* `KernelGame.bestCorrelatedWelfare` — best welfare over correlated equilibria
+  (a `⨆`, defaulting to `0` when none exists; a supplied pure Nash rules this out)
+* `KernelGame.bestCoarseCorrelatedWelfare` — best welfare over coarse correlated equilibria
+* `KernelGame.correlationWelfareGap` — `bestCorrelatedWelfare - bestNashWelfare`
+* `KernelGame.coarseCorrelationWelfareGap` — `bestCoarseCorrelatedWelfare - bestNashWelfare`
 
 ## Main results
 
 * `correlatedSocialWelfare_pure` — for a pure profile it reduces to `socialWelfare`
 * `bestNashWelfare_le_bestCorrelatedWelfare` — correlation never lowers welfare
 * `bestCorrelatedWelfare_le_bestCoarseCorrelatedWelfare` — coarsening never lowers it further
-* `valueOfCorrelation_nonneg`, `valueOfCoarseCorrelation_nonneg` — both values are nonnegative
+* `correlationWelfareGap_nonneg`, `coarseCorrelationWelfareGap_nonneg` — both gaps are nonnegative
 -/
 
 open scoped BigOperators
@@ -93,11 +93,16 @@ theorem coarseCorrelatedSocialWelfare_bddAbove :
       G.correlatedSocialWelfare μ.1)) :=
   ⟨_, by rintro x ⟨μ, rfl⟩; exact G.correlatedSocialWelfare_le μ.1⟩
 
-/-- The best social welfare achievable by a correlated equilibrium. -/
+/-- The best social welfare achievable by a correlated equilibrium, as a supremum
+over the correlated-equilibrium subtype. If no correlated equilibrium exists the
+supremum is the `sSup ∅ = 0` default; the welfare-gap results below supply a
+pure-Nash witness, so the subtype is nonempty there. -/
 noncomputable def bestCorrelatedWelfare : ℝ :=
   ⨆ μ : {μ : PMF (Profile G) // G.IsCorrelatedEq μ}, G.correlatedSocialWelfare μ.1
 
-/-- The best social welfare achievable by a coarse correlated equilibrium. -/
+/-- The best social welfare achievable by a coarse correlated equilibrium, as a
+supremum over the coarse-correlated-equilibrium subtype (the `sSup ∅ = 0` default
+when none exists; ruled out wherever a pure-Nash witness is supplied). -/
 noncomputable def bestCoarseCorrelatedWelfare : ℝ :=
   ⨆ μ : {μ : PMF (Profile G) // G.IsCoarseCorrelatedEq μ}, G.correlatedSocialWelfare μ.1
 
@@ -147,36 +152,36 @@ theorem bestNashWelfare_le_bestCoarseCorrelatedWelfare
   le_trans (G.bestNashWelfare_le_bestCorrelatedWelfare hN)
     (G.bestCorrelatedWelfare_le_bestCoarseCorrelatedWelfare hN)
 
-/-- The **value of correlation** (Ashlagi–Monderer–Tennenholtz): the welfare
-gain obtainable from a correlation device over the best pure Nash equilibrium. -/
-noncomputable def valueOfCorrelation (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
+/-- The **correlation welfare gap**: the welfare gain obtainable from a
+correlation device over the best pure Nash equilibrium (the additive analogue of
+the Ashlagi–Monderer–Tennenholtz value of correlation). -/
+noncomputable def correlationWelfareGap (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
   G.bestCorrelatedWelfare - G.bestNashWelfare hN
 
-/-- The **value of coarse correlation**: the welfare gain obtainable from a
+/-- The **coarse correlation welfare gap**: the welfare gain obtainable from a
 coarse correlation device (e.g. a public signal / no-external-regret play) over
-the best Nash equilibrium. -/
-noncomputable def valueOfCoarseCorrelation (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
+the best pure Nash equilibrium. -/
+noncomputable def coarseCorrelationWelfareGap (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
   G.bestCoarseCorrelatedWelfare - G.bestNashWelfare hN
 
-/-- The value of correlation is nonnegative: correlation never hurts welfare. -/
-theorem valueOfCorrelation_nonneg (hN : ∃ σ : Profile G, G.IsNash σ) :
-    0 ≤ G.valueOfCorrelation hN := by
-  rw [valueOfCorrelation, sub_nonneg]
+/-- The correlation welfare gap is nonnegative: correlation never hurts welfare. -/
+theorem correlationWelfareGap_nonneg (hN : ∃ σ : Profile G, G.IsNash σ) :
+    0 ≤ G.correlationWelfareGap hN := by
+  rw [correlationWelfareGap, sub_nonneg]
   exact G.bestNashWelfare_le_bestCorrelatedWelfare hN
 
-/-- The value of coarse correlation is nonnegative, and at least the value of
-correlation. -/
-theorem valueOfCoarseCorrelation_nonneg (hN : ∃ σ : Profile G, G.IsNash σ) :
-    0 ≤ G.valueOfCoarseCorrelation hN := by
-  rw [valueOfCoarseCorrelation, sub_nonneg]
+/-- The coarse correlation welfare gap is nonnegative. -/
+theorem coarseCorrelationWelfareGap_nonneg (hN : ∃ σ : Profile G, G.IsNash σ) :
+    0 ≤ G.coarseCorrelationWelfareGap hN := by
+  rw [coarseCorrelationWelfareGap, sub_nonneg]
   exact G.bestNashWelfare_le_bestCoarseCorrelatedWelfare hN
 
-/-- The value of correlation never exceeds the value of coarse correlation
+/-- The correlation welfare gap never exceeds the coarse correlation welfare gap
 (the coarse-correlated equilibria form a superset). -/
-theorem valueOfCorrelation_le_valueOfCoarseCorrelation
+theorem correlationWelfareGap_le_coarse
     (hN : ∃ σ : Profile G, G.IsNash σ) :
-    G.valueOfCorrelation hN ≤ G.valueOfCoarseCorrelation hN := by
-  rw [valueOfCorrelation, valueOfCoarseCorrelation, sub_le_sub_iff_right]
+    G.correlationWelfareGap hN ≤ G.coarseCorrelationWelfareGap hN := by
+  rw [correlationWelfareGap, coarseCorrelationWelfareGap, sub_le_sub_iff_right]
   exact G.bestCorrelatedWelfare_le_bestCoarseCorrelatedWelfare hN
 
 end ValueOfCorrelation
@@ -254,16 +259,16 @@ variable [DecidableEq ι] [Finite G.Outcome] [Fintype (Profile G)]
 
 /-- **Correlation has no value in team games.** When all players share the same
 utility the welfare-optimal profile is itself a Nash equilibrium, and no
-correlated equilibrium can beat it, so the value of correlation is zero. -/
-theorem IsTeamGame.valueOfCorrelation_eq_zero (hteam : G.IsTeamGame)
+correlated equilibrium can beat it, so the correlation welfare gap is zero. -/
+theorem IsTeamGame.correlationWelfareGap_eq_zero (hteam : G.IsTeamGame)
     (hN : ∃ σ : Profile G, G.IsNash σ) :
-    G.valueOfCorrelation hN = 0 := by
+    G.correlationWelfareGap hN = 0 := by
   have hcorr_eq : G.bestCorrelatedWelfare = G.bestNashWelfare hN :=
     le_antisymm
       (by rw [hteam.bestNashWelfare_eq_optimalWelfare hN]
           exact G.bestCorrelatedWelfare_le_optimalWelfare hN)
       (G.bestNashWelfare_le_bestCorrelatedWelfare hN)
-  rw [valueOfCorrelation, hcorr_eq, sub_self]
+  rw [correlationWelfareGap, hcorr_eq, sub_self]
 
 end TeamGameValue
 

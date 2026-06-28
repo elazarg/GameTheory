@@ -152,8 +152,11 @@ formalized as \TT{IsEgalitarian} (the maximal feasible equal-gain
 point), together with the fact that it gives at least the common gain
 of the symmetric Nash solution, and the
 \emph{Kalai–Smorodinsky} solution~\citep{KalaiSmorodinsky1975} through
-its proportionality characterization (\TT{IsKalaiSmorodinsky}) with IR,
-(strong) Pareto, symmetry, affine invariance, and the ideal-point bound.
+its proportionality characterization
+(\TT{IsKalaiSmorodinskyRelativeTo}, carrying IR, strong Pareto,
+symmetry, and affine invariance for any reference point), with the
+solution proper (\TT{IsKalaiSmorodinsky}) fixing the ideal point and
+bounding each player's gain by it.
 Stable matching~\citep{GaleShapley1962} is formalized through the
 \TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} predicates, with the
 existence of a stable matching now proved via the Gale–Shapley
