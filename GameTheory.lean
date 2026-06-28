@@ -68,6 +68,9 @@ import GameTheory.Concepts.Correlation.CorrelationRegimes
 import GameTheory.Concepts.Correlation.ValueOfCorrelation
 import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
+-- Learning dynamics
+import GameTheory.Concepts.Learning.ApproximateCorrelatedEq
+
 -- Zero-sum and constant-sum
 import GameTheory.Concepts.ZeroSum.ZeroSum
 import GameTheory.Concepts.ZeroSum.ConstantSum
