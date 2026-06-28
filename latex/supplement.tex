@@ -2012,9 +2012,12 @@ alternative.  \TT{Mechanism/Arrow.lean} provides the
 strict-linear-order (\TT{IsRanking}) layer, collective rationality
 (\TT{IsSWO}), the domain-restricted Pareto/IIA axioms, and proves
 \emph{Arrow's impossibility theorem} via Geanakoplos's pivotal-voter
-argument (with an exact biconditional-dictator companion).  The
-remaining classical impossibilities (Gibbard–Satterthwaite, Sen) are
-not formalized; see chapter §10.
+argument (with an exact biconditional-dictator companion).
+\TT{Mechanism/GibbardSatterthwaite.lean} adds social choice
+functions, strategy-proofness, and proves the
+\emph{Gibbard–Satterthwaite theorem} by the reduction to Arrow
+through a monotonicity-based induced social-welfare function.  Sen's
+liberal paradox is not formalized; see chapter §10.
 
 % =====================================================================
 \section{Worked examples}

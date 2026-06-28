@@ -177,7 +177,9 @@ than as tree-based information sets. Key results:
   theorem** (with ≥3 alternatives and a nonempty finite electorate, every
   collectively rational social welfare function satisfying weak Pareto and
   independence of irrelevant alternatives is dictatorial), via Geanakoplos's
-  pivotal-voter argument
+  pivotal-voter argument, and the **Gibbard–Satterthwaite theorem** (a
+  strategy-proof social choice function with full range is dictatorial), by
+  the reduction to Arrow
 
 ## Cooperative game theory
 

@@ -219,18 +219,17 @@ over $\ge 3$ alternatives can simultaneously satisfy unanimity,
 non-dictatorship, and independence of irrelevant alternatives — is
 formalized (\Cref{sec:mech:social}, \TT{Mechanism/Arrow.lean}),
 via Geanakoplos's pivotal-voter argument on a strict-linear-order
-rationality layer.  Two classical companions remain open.
+rationality layer.  Its strategic analogue
 \emph{Gibbard–Satterthwaite} \citep{Gibbard1973, Satterthwaite1975}
-is the strategic analogue:\ any non-dictatorial social choice
-function with full range over $\ge 3$ alternatives is manipulable;
-it reduces to Arrow through an induced social-welfare function, the
-natural next step on the existing rationality layer.
-\emph{Sen's liberal paradox}~\citep{Sen1970} shows that even a
+— any non-dictatorial social choice function with full range over
+$\ge 3$ alternatives is manipulable — is formalized as well
+(\TT{Mechanism/GibbardSatterthwaite.lean}), by the reduction to
+Arrow through an induced social-welfare function.
+\emph{Sen's liberal paradox}~\citep{Sen1970}, showing that even a
 minimal individual-rights condition is inconsistent with Pareto
-efficiency plus universal domain.  Both remaining results are
-statable on the existing social-choice setup, the proofs are
-combinatorial and do not require probability, and they would fit
-the library cleanly.
+efficiency plus universal domain, remains open;\ it is statable on
+the existing social-choice setup, its proof is combinatorial and
+does not require probability, and it would fit the library cleanly.
 
 \subsection{Multi-agent learning}
 \label{sec:future:learning}
