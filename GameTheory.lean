@@ -69,8 +69,10 @@ import GameTheory.Concepts.Correlation.ValueOfCorrelation
 import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
 -- Learning dynamics
+import Math.OnlineLearning.MultiplicativeWeights
 import GameTheory.Concepts.Learning.ApproximateCorrelatedEq
 import GameTheory.Concepts.Learning.NoRegretToCCE
+import GameTheory.Concepts.Learning.SelfPlay
 
 -- Zero-sum and constant-sum
 import GameTheory.Concepts.ZeroSum.ZeroSum
