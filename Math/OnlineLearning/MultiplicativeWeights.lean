@@ -203,6 +203,25 @@ theorem mw_externalRegret_le {η : ℝ} (hη : 0 < η) {g : ℕ → A → ℝ}
   rw [onlineExternalRegret]
   linarith [hbest, hmul, hsplit]
 
+/-- The exponential-weights distribution induced by a cumulative-score vector: probability of
+    action `a` proportional to `exp (η · score a)`. This is the score-based view of `mwDist`,
+    used to define multiplicative-weights self-play without referring to a gain sequence. -/
+noncomputable def expWeights (η : ℝ) (score : A → ℝ) : PMF A :=
+  PMF.ofFintype (fun a => ENNReal.ofReal (Real.exp (η * score a))
+      / ENNReal.ofReal (∑ b, Real.exp (η * score b)))
+    (by
+      have hpos : 0 < ∑ b, Real.exp (η * score b) :=
+        Finset.sum_pos (fun b _ => Real.exp_pos _) Finset.univ_nonempty
+      have hsum : ∑ a, ENNReal.ofReal (Real.exp (η * score a))
+          = ENNReal.ofReal (∑ b, Real.exp (η * score b)) :=
+        (ENNReal.ofReal_sum_of_nonneg (fun a _ => (Real.exp_pos _).le)).symm
+      simp_rw [div_eq_mul_inv, ← Finset.sum_mul, hsum]
+      exact ENNReal.mul_inv_cancel (ENNReal.ofReal_pos.2 hpos).ne' ENNReal.ofReal_ne_top)
+
+/-- `mwDist` is exponential weighting applied to the cumulative-gain score. -/
+theorem mwDist_eq_expWeights (η : ℝ) (g : ℕ → A → ℝ) (t : ℕ) :
+    mwDist η g t = expWeights η (fun a => cumGain g t a) := rfl
+
 /-- Any single fixed action's regret is bounded by the external regret: the gap between one
     action's cumulative gain and the algorithm's gain is at most the best action's gap. -/
 theorem fixedActionRegret_le_onlineExternalRegret (η : ℝ) (g : ℕ → A → ℝ) (T : ℕ) (a : A) :
