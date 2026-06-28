@@ -16,14 +16,17 @@ update their strategies to best-respond to the current profile.
 
 ## Main definitions
 
-* `ImprovementPath` — a sequence of profiles where each step is a
-  single-player improving deviation
-* `IsBetterResponse` — a strategy that strictly improves EU
+* `ImprovingDeviation` — a single-player deviation that strictly improves EU
+  (structural view)
+* `ImprovingStep` — the relational view: `τ` is one improving deviation away from `σ`
 
 ## Main results
 
-* `improvementPath_nash_stable` — Nash equilibria are fixed points of BR dynamics
+* `no_improving_deviation_iff_nash` — no improving deviation ⇔ Nash equilibrium
+* `improvingStep_iff` — the relational and structural views agree
+* `not_isNash_iff_exists_improvingStep` — non-Nash ⇔ an improving step exists
 * `strictNash_absorbing` — strict Nash equilibria are absorbing states
+* `εNash_bounded_improvement` — in an ε-Nash profile, deviations improve by ≤ ε
 -/
 
 namespace GameTheory
@@ -55,6 +58,37 @@ theorem no_improving_deviation_iff_nash {σ : Profile G} :
     intro ⟨who, s', himprove⟩
     have := hN who s'
     linarith
+
+open Classical in
+/-- An **improving step**: `τ` is obtained from `σ` by a single player's improving
+deviation. The relational counterpart of `ImprovingDeviation`, convenient for
+reasoning about better-response dynamics as a relation (paths, well-foundedness). -/
+def ImprovingStep (σ τ : Profile G) : Prop :=
+  ∃ (who : ι) (s' : G.Strategy who),
+    τ = Function.update σ who s' ∧ G.eu τ who > G.eu σ who
+
+/-- The relational and structural views agree: an improving step out of `σ` is
+exactly an improving deviation applied to `σ`. -/
+theorem improvingStep_iff {σ τ : Profile G} :
+    G.ImprovingStep σ τ ↔
+      ∃ d : G.ImprovingDeviation σ, τ = Function.update σ d.who d.newStrategy := by
+  constructor
+  · rintro ⟨who, s', rfl, h⟩
+    exact ⟨⟨who, s', h⟩, rfl⟩
+  · rintro ⟨⟨who, s', h⟩, rfl⟩
+    exact ⟨who, s', rfl, h⟩
+
+open Classical in
+/-- A profile fails to be Nash exactly when an improving step leaves it. -/
+theorem not_isNash_iff_exists_improvingStep {σ : Profile G} :
+    ¬ G.IsNash σ ↔ ∃ τ, G.ImprovingStep σ τ := by
+  unfold IsNash ImprovingStep
+  push Not
+  constructor
+  · rintro ⟨who, s', h⟩
+    exact ⟨Function.update σ who s', who, s', rfl, h⟩
+  · rintro ⟨τ, who, s', rfl, h⟩
+    exact ⟨who, s', h⟩
 
 open Classical in
 /-- A strict Nash equilibrium is absorbing: any single-player deviation

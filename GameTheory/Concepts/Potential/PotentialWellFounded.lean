@@ -37,14 +37,6 @@ namespace KernelGame
 variable {ι : Type}
 
 open Classical in
-/-- An improving step: `τ` is obtained from `σ` by a single player's
-    improving deviation. -/
-def ImprovingStep (G : KernelGame ι) (σ τ : Profile G) : Prop :=
-  ∃ (who : ι) (s' : G.Strategy who),
-    τ = Function.update σ who s' ∧
-    G.eu τ who > G.eu σ who
-
-open Classical in
 /-- Each improving step strictly increases the exact potential. -/
 theorem IsExactPotential.improvingStep_increases_potential
     {G : KernelGame ι} {Φ : Profile G → ℝ} (hΦ : G.IsExactPotential Φ)
@@ -85,18 +77,6 @@ open Classical in
 improving deviations reaches a Nash equilibrium. -/
 def WeaklyAcyclic (G : KernelGame ι) : Prop :=
   ∀ σ : Profile G, ∃ τ, Relation.ReflTransGen G.ImprovingStep σ τ ∧ G.IsNash τ
-
-open Classical in
-/-- A profile fails to be Nash exactly when an improving step leaves it. -/
-theorem not_isNash_iff_exists_improvingStep {G : KernelGame ι} (σ : Profile G) :
-    ¬ G.IsNash σ ↔ ∃ τ, G.ImprovingStep σ τ := by
-  unfold IsNash ImprovingStep
-  push Not
-  constructor
-  · rintro ⟨who, s', h⟩
-    exact ⟨Function.update σ who s', who, s', rfl, h⟩
-  · rintro ⟨τ, who, s', rfl, h⟩
-    exact ⟨who, s', h⟩
 
 open Classical in
 /-- An improving step strictly increases an ordinal potential (the forward
@@ -141,7 +121,7 @@ theorem weaklyAcyclic_of_wellFounded {G : KernelGame ι}
   | _ σ ih =>
     by_cases hnash : G.IsNash σ
     · exact ⟨σ, Relation.ReflTransGen.refl, hnash⟩
-    · obtain ⟨τ', hstep⟩ := (not_isNash_iff_exists_improvingStep σ).mp hnash
+    · obtain ⟨τ', hstep⟩ := (G.not_isNash_iff_exists_improvingStep).mp hnash
       obtain ⟨τ, hreach, hτ⟩ := ih τ' hstep
       exact ⟨τ, Relation.ReflTransGen.head hstep hreach, hτ⟩
 
