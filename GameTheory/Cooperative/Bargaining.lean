@@ -171,11 +171,12 @@ non-utility-comparable alternative to Nash bargaining; the chief
 difference is that the egalitarian solution is **not** scale
 invariant — it depends on the cardinal utility scale. -/
 
-/-- An outcome is *egalitarian* w.r.t. `B` if it is feasible,
-individually rational, and gives equal gain to both players above
-their disagreement points. -/
+/-- An outcome is the *egalitarian* (Kalai) solution of `B` if it is feasible,
+individually rational, gives both players equal gain over the disagreement point,
+and is the feasible equal-gain point with the *largest* common gain. -/
 def IsEgalitarian (u : ℝ × ℝ) : Prop :=
-  B.feasible u ∧ B.IsIR u ∧ u.1 - B.d₁ = u.2 - B.d₂
+  B.feasible u ∧ B.IsIR u ∧ u.1 - B.d₁ = u.2 - B.d₂ ∧
+    ∀ v, B.feasible v → v.1 - B.d₁ = v.2 - B.d₂ → v.1 ≤ u.1
 
 /-- The egalitarian solution is individually rational by definition. -/
 theorem egalitarian_IR (u : ℝ × ℝ) (h : B.IsEgalitarian u) : B.IsIR u :=
@@ -184,19 +185,24 @@ theorem egalitarian_IR (u : ℝ × ℝ) (h : B.IsEgalitarian u) : B.IsIR u :=
 /-- The egalitarian solution gives equal gain to both players. -/
 theorem egalitarian_equal_gain (u : ℝ × ℝ) (h : B.IsEgalitarian u) :
     u.1 - B.d₁ = u.2 - B.d₂ :=
-  h.2.2
+  h.2.2.1
 
-/-- In a symmetric bargaining problem, the egalitarian solution and
-the Nash bargaining solution both give equal gain to both players
-(though they may disagree off the symmetric problem). -/
-theorem egalitarian_symmetric_iff_nash_symmetric
-    (u : ℝ × ℝ) (hsym : B.IsSymmetric)
-    (_heg : B.IsEgalitarian u) (hns : B.IsNashSolution u)
-    (huniq : ∀ v w, B.IsNashSolution v → B.IsNashSolution w → v = w) :
-    u.1 - B.d₁ = u.2 - B.d₂ :=
-  -- This is just the egalitarian condition, but we record the agreement
-  -- with the symmetric Nash solution as a sanity check.
-  B.nashSolution_symmetric u hsym hns huniq
+/-- The egalitarian solution gives the largest common gain among feasible
+equal-gain outcomes. -/
+theorem egalitarian_maximal (u : ℝ × ℝ) (h : B.IsEgalitarian u)
+    {v : ℝ × ℝ} (hfv : B.feasible v) (hv : v.1 - B.d₁ = v.2 - B.d₂) :
+    v.1 ≤ u.1 :=
+  h.2.2.2 v hfv hv
+
+/-- In a symmetric problem the egalitarian solution gives each player at least the
+common gain of the (unique) symmetric Nash solution: the latter also lies on the
+equal-gains line, where the egalitarian solution maximizes the common gain. -/
+theorem nashSolution_le_egalitarian
+    (u v : ℝ × ℝ) (hsym : B.IsSymmetric)
+    (heg : B.IsEgalitarian u) (hns : B.IsNashSolution v)
+    (huniq : ∀ x w, B.IsNashSolution x → B.IsNashSolution w → x = w) :
+    v.1 ≤ u.1 :=
+  heg.2.2.2 v hns.1 (B.nashSolution_symmetric v hsym hns huniq)
 
 /-! ### Kalai–Smorodinsky bargaining solution
 

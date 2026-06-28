@@ -192,8 +192,9 @@ package only for packaging convenience.
   (supermodular) games with the monotone-marginals characterization, the
   core (with nonemptiness for convex games), and the cost of stability
 - **Bargaining** — the Nash bargaining solution for two-player problems
-  (Pareto optimality, symmetry, affine invariance), the egalitarian (Kalai)
-  solution, and the Kalai–Smorodinsky solution
+  (weak Pareto optimality, symmetry, affine invariance), the egalitarian (Kalai)
+  solution (the maximal equal-gain point), and the Kalai–Smorodinsky solution
+  (with strong Pareto optimality)
 - **Stable matching** — two-sided matching markets, blocking pairs, and
   **Gale–Shapley existence** of a stable matching via deferred acceptance
 

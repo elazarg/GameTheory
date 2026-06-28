@@ -143,14 +143,17 @@ subsidy that makes the grand coalition stable — is formalized
 vanishing of the cost on games with a nonempty core, and zero-cost
 classes (nonnegative unanimity coefficients, additive games).
 Nash bargaining
-\citep{Nash1950bargaining} is formalized through the IR/Pareto
-characterization, with symmetric and affine-invariant variants;
+\citep{Nash1950bargaining} is formalized through the IR / weak-Pareto
+characterization (the Nash maximizer is only weakly Pareto on the
+disagreement boundary in this general non-convex setting), with
+symmetric and affine-invariant variants;
 the \emph{egalitarian} bargaining solution~\citep{Kalai1977} is also
-formalized as \TT{IsEgalitarian} with the equal-gain accessor and
-the agreement-with-Nash-on-symmetric-problems sanity check, and the
+formalized as \TT{IsEgalitarian} (the maximal feasible equal-gain
+point), together with the fact that it gives at least the common gain
+of the symmetric Nash solution, and the
 \emph{Kalai–Smorodinsky} solution~\citep{KalaiSmorodinsky1975} through
 its proportionality characterization (\TT{IsKalaiSmorodinsky}) with IR,
-Pareto, symmetry, affine invariance, and the ideal-point bound.
+(strong) Pareto, symmetry, affine invariance, and the ideal-point bound.
 Stable matching~\citep{GaleShapley1962} is formalized through the
 \TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} predicates, with the
 existence of a stable matching now proved via the Gale–Shapley
