@@ -383,12 +383,15 @@ theorem exists_stable (hA : ∀ a, Function.Injective (M.prefA a))
 
 /-! ### Man-optimality
 
-Men-proposing deferred acceptance is *man-optimal*: every man is matched to a woman
-he weakly prefers to his partner in **any** stable matching. The classical argument
-is that no man is ever rejected by a woman who is *achievable* for him (paired with
-him in some stable matching). Besides strict preferences, this needs that no man is
-exactly indifferent between an acceptable woman and remaining single (`hAne`), so
-that an achievable block is a *strict* block. -/
+Men-proposing deferred acceptance is *man-optimal*: whenever a man is matched in
+some stable matching, deferred acceptance matches him to a woman he weakly prefers
+to that partner. (This is the substantive content in the outside-option model, where
+a man may be unmatched in a given stable matching; a man unmatched everywhere is left
+unmatched by deferred acceptance too.) The classical argument is that no man is ever
+rejected by a woman who is *achievable* for him (paired with him in some stable
+matching). Besides strict preferences, this needs that no man is exactly indifferent
+between an acceptable woman and remaining single (`hAne`), so that an achievable
+block is a *strict* block. -/
 
 /-- Woman `b` is *achievable* for man `a` if some stable matching pairs them. -/
 def IsAchievable (a : α) (b : β) : Prop :=
@@ -455,10 +458,11 @@ theorem machInv_iterate (hA : ∀ a, Function.Injective (M.prefA a))
     exact M.machInv_step hA hB hAne ih
 
 /-- **Gale–Shapley is man-optimal.** Under strict preferences, with no man exactly
-indifferent between an acceptable woman and remaining single, every man's
-deferred-acceptance partner is weakly preferred to his partner in *any* stable
-matching: for any stable `μ'` pairing `a` with `b'`, `a`'s `daMatching` partner
-exists and is `prefA`-at-least `b'`. -/
+indifferent between an acceptable woman and remaining single: whenever a man `a` is
+matched in *some* stable matching `μ'` (to `b'`), his deferred-acceptance partner
+exists and is weakly preferred — `a`'s `daMatching` partner `b` satisfies
+`prefA a b' ≤ prefA a b`. (A man unmatched in `μ'` imposes no constraint, the honest
+content of man-optimality in this outside-option model.) -/
 theorem daMatching_man_optimal (hA : ∀ a, Function.Injective (M.prefA a))
     (hB : ∀ b, Function.Injective (M.prefB b))
     (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)

@@ -160,13 +160,15 @@ theorem costOfStability_additiveGame_eq_zero [Nonempty ι] (α : ι → ℝ) :
 
 /-! ### The converse: zero cost of stability implies a nonempty core
 
-The infimum defining the cost of stability is *attained*. If every positive subsidy
-stabilizes, the coalition-rational allocations needing subsidy at most `1/(n+1)`
-form a nested sequence of nonempty compact sets; by Cantor's intersection theorem
-their intersection — the core — is nonempty. -/
+When the cost of stability is `0`, that value is *attained* — i.e. `0` itself
+stabilizes, so the core is nonempty. (Only this zero-cost attainment is proved here,
+not attainment of the infimum at an arbitrary positive cost.) If every positive
+subsidy stabilizes, the coalition-rational allocations needing subsidy at most
+`1/(n+1)` form a nested sequence of nonempty compact sets; by Cantor's intersection
+theorem their intersection — the core — is nonempty. -/
 
 /-- Coalition-rational allocations whose total payout exceeds `v(N)` by at most `Δ`
-(the feasible set behind the cost-of-stability infimum-attainment argument). -/
+(the feasible set behind the zero-cost attainment argument). -/
 private def feasibleSub (G : CoalGame ι) (Δ : ℝ) : Set (ι → ℝ) :=
   {x | (∀ S : Finset ι, G.v S ≤ ∑ i ∈ S, x i) ∧ ∑ i, x i ≤ G.v Finset.univ + Δ}
 
