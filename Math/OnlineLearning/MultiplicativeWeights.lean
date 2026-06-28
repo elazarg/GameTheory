@@ -203,4 +203,13 @@ theorem mw_externalRegret_le {η : ℝ} (hη : 0 < η) {g : ℕ → A → ℝ}
   rw [onlineExternalRegret]
   linarith [hbest, hmul, hsplit]
 
+/-- Any single fixed action's regret is bounded by the external regret: the gap between one
+    action's cumulative gain and the algorithm's gain is at most the best action's gap. -/
+theorem fixedActionRegret_le_onlineExternalRegret (η : ℝ) (g : ℕ → A → ℝ) (T : ℕ) (a : A) :
+    cumGain g T a - algGain η g T ≤ onlineExternalRegret η g T := by
+  have hle : cumGain g T a ≤ bestGain g T :=
+    Finset.le_sup' (fun a => cumGain g T a) (Finset.mem_univ a)
+  rw [onlineExternalRegret]
+  linarith
+
 end Math.OnlineLearning
