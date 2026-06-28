@@ -13,9 +13,10 @@ import GameTheory.Concepts.ZeroSum.ConstantSumCorrelated
 Roughgarden's **smoothness** framework for bounding the price of anarchy of
 welfare-maximization games. A game is `(λ, μ)`-smooth if for any two profiles the
 total utility from each player unilaterally best-deviating toward the second is at
-least `λ · W(s*) − μ · W(s)`. The fundamental consequence — the *robust* price of
-anarchy — is that the welfare of any Nash equilibrium, and indeed any **coarse
-correlated equilibrium**, is at least `λ / (1 + μ)` of the optimum.
+least `λ · W(s*) − μ · W(s)`. The consequence — the *robust* price of anarchy — is
+the inequality `λ · W(t) ≤ (1 + μ) · W(s)` for any Nash equilibrium `s` and any
+profile `t`, and the same bound for every **coarse correlated equilibrium**. When
+`1 + μ > 0` this rearranges to the welfare ratio `λ / (1 + μ)`.
 
 ## Main definitions
 
@@ -91,8 +92,7 @@ set_option linter.unusedFintypeInType false in
 /-- **Robust price of anarchy.** Smoothness bounds the welfare not only of Nash
 equilibria but of every **coarse correlated equilibrium** `ν`: the expected welfare
 `∑ᵢ correlatedEu ν i` satisfies `λ · W(t) ≤ (1 + μ) · E[W]` for every profile `t`.
-This is Roughgarden's "the price of anarchy is robust" theorem. (`Fintype (Profile G)`
-is used by the proof.) -/
+This is Roughgarden's "the price of anarchy is robust" theorem. -/
 theorem IsSmooth.coarseCorrelated_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
     {ν : PMF (Profile G)} (hν : G.IsCoarseCorrelatedEq ν) (t : Profile G) :
     lam * G.socialWelfare t ≤ (1 + mu) * (∑ i, G.correlatedEu ν i) := by

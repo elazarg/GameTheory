@@ -63,7 +63,8 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Nash equilibrium, strict Nash, approximate (ε-)Nash
 - Dominant strategies, strict/weak dominance, iterated elimination
 - Correlated and coarse correlated equilibrium, and the value of correlation
-  (the welfare gap across the Nash ⊆ CE ⊆ CCE ladder)
+  (the welfare gap from the best pure Nash to the best correlated / coarse
+  correlated equilibrium)
 - Observable cheap-talk extensions and babbling-equilibrium transport
 - Best response, best-response dynamics
 - Mixed-extension gain tests, including uniform mixed balance ⇒ Nash and

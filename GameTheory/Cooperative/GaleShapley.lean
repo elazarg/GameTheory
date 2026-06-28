@@ -353,7 +353,7 @@ theorem no_blocking {R : α → Finset β}
 set_option linter.unusedFintypeInType false in
 /-- **Gale–Shapley: stable matchings exist.** Every finite two-sided market with
 strict preferences admits a stable matching, produced by men-proposing deferred
-acceptance. (`Fintype` is genuinely used by the constructive algorithm.) -/
+acceptance. -/
 theorem exists_stable (hA : ∀ a, Function.Injective (M.prefA a))
     (hB : ∀ b, Function.Injective (M.prefB b)) :
     ∃ μ : α → Option β, M.IsStable μ := by

@@ -90,7 +90,7 @@ theorem posteriorCoupling_apply (τ : PMF (PMF Ω)) (ω : Ω) (b : PMF Ω) :
     rw [hzero, mul_zero]
 
 /-- The signal marginal of the canonical coupling is exactly `τ`: the experiment
-genuinely realizes the distribution over posteriors. -/
+realizes the distribution over posteriors. -/
 theorem posteriorCoupling_snd (τ : PMF (PMF Ω)) :
     (posteriorCoupling τ).map Prod.snd = τ := by
   unfold posteriorCoupling

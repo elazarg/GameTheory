@@ -236,9 +236,12 @@ domains) is not formalized.
 An \emph{affine maximizer} fixes positive weights $w_i$ and an
 alternative bias $\kappa : A \to \RR$ and selects the alternative
 maximizing $\sum_i w_i\,v_i(\theta_i, \cdot) + \kappa$, paired with
-Clarke externality payments.  Scaling agent $i$'s utility by $w_i$
-recovers the entire affine objective evaluated at the chosen
-alternative — which the choice rule maximizes — so no misreport can
+Clarke pivot payments:\ each agent is charged the externality it
+imposes on the others — their best attainable weighted welfare minus
+their welfare at the chosen alternative — a nonnegative transfer.
+Scaling agent $i$'s utility by $w_i$ recovers the entire affine
+objective at the chosen alternative — which the choice rule maximizes —
+minus a charge independent of $i$'s own report, so no misreport can
 help and the mechanism is dominant-strategy truthful.  By Roberts'
 theorem~\citep{Roberts1979} affine maximizers are essentially the only
 dominant-strategy rules on unrestricted domains; the library proves the
@@ -250,8 +253,8 @@ the abstract level.
 \leancorr{\TT{Mechanism/Monotonicity.lean}
 (\TT{SCFWithPayments}, \TT{IsDSIC}, \TT{IsWeaklyMonotone},
 \TT{weaklyMonotone\_of\_dsic}); \TT{Mechanism/AffineMaximizer.lean}
-(\TT{affineMaximizer}, \TT{affineMaximizer\_isDSIC}, \TT{vcg},
-\TT{vcg\_isDSIC}).}
+(\TT{affineMaximizer}, \TT{affineMaximizer\_isDSIC},
+\TT{affineMaximizer\_payment\_nonneg}, \TT{vcg}, \TT{vcg\_isDSIC}).}
 
 \subsection{Hidden-action contracts}
 \label{sec:mech:contracts}
@@ -270,8 +273,12 @@ $t \mapsto \alpha\,r(t)$ with the principal-share formula
 $(1-\alpha)\,\mathbb{E}[\mathrm{reward}]$
 (\TT{principalUtility\_linearPayment}).  The \emph{first-best} benchmark
 is the headline:\ moral hazard cannot beat the full-information surplus
-(\TT{principalUtility\_le\_firstBest}), with the ``sell the firm'' case
-($\alpha = 1$, the agent becomes residual claimant) attaining it.
+(\TT{principalUtility\_le\_firstBest}).  The ``sell the firm'' contract
+($\alpha = 1$) makes the agent the residual claimant, so its privately
+optimal action is a surplus-maximizer
+(\TT{isIncentivized\_linearPayment\_one\_iff}) — first-best
+\emph{efficiency} — though the principal then extracts none of it, its
+payoff falling to zero (\TT{principalUtility\_linearPayment\_one}).
 
 \leancorr{\TT{Mechanism/Contracts/Basic.lean}
 (\TT{PrincipalAgent}, \TT{agentUtility}, \TT{principalUtility},

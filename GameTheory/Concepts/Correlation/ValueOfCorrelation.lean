@@ -15,11 +15,16 @@ import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 
 The *value of correlation* (Ashlagi–Monderer–Tennenholtz, *On the Value of
 Correlation*, JAIR 2008) measures how much social welfare a correlation device
-can add over the best Nash equilibrium. Because every Nash equilibrium, viewed
-as a point-mass recommendation, is a correlated equilibrium of equal welfare,
-the value of correlation is always nonnegative: correlation never hurts. The
-same comparison against *coarse* correlated equilibria gives an even larger
-value, yielding the welfare ladder Nash ≤ correlated ≤ coarse correlated.
+can add over the best Nash equilibrium. The benchmark is `bestNashWelfare`, the
+best welfare among **pure** Nash equilibria (matching the library's
+price-of-anarchy convention), so the comparison requires a pure Nash to exist;
+the classical notion compares against the best mixed Nash, which the pure-Nash
+benchmark upper-bounds. Because every pure Nash equilibrium, viewed as a
+point-mass recommendation, is a correlated equilibrium of equal welfare, the
+value of correlation is always nonnegative: correlation never hurts. The same
+comparison against *coarse* correlated equilibria gives an even larger value,
+yielding the welfare ladder best pure Nash ≤ best correlated ≤ best coarse
+correlated.
 
 ## Main definitions
 
@@ -141,7 +146,7 @@ theorem bestNashWelfare_le_bestCoarseCorrelatedWelfare
     (G.bestCorrelatedWelfare_le_bestCoarseCorrelatedWelfare hN)
 
 /-- The **value of correlation** (Ashlagi–Monderer–Tennenholtz): the welfare
-gain obtainable from a correlation device over the best Nash equilibrium. -/
+gain obtainable from a correlation device over the best pure Nash equilibrium. -/
 noncomputable def valueOfCorrelation (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
   G.bestCorrelatedWelfare - G.bestNashWelfare hN
 
