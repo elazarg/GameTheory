@@ -59,33 +59,6 @@ theorem IsSmooth.nash_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
 
 /-! ### Robust price of anarchy: the bound extends to coarse correlated equilibria -/
 
-private theorem expect_sub'' {Ω : Type*} [Finite Ω] (μ : PMF Ω) (f g : Ω → ℝ) :
-    expect μ (fun x => f x - g x) = expect μ f - expect μ g := by
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  rw [expect_eq_sum, expect_eq_sum, expect_eq_sum, ← Finset.sum_sub_distrib]
-  exact Finset.sum_congr rfl fun x _ => by ring
-
-private theorem expect_const_mul'' {Ω : Type*} [Finite Ω] (μ : PMF Ω) (c : ℝ) (f : Ω → ℝ) :
-    expect μ (fun x => c * f x) = c * expect μ f := by
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  rw [expect_eq_sum, expect_eq_sum, Finset.mul_sum]
-  exact Finset.sum_congr rfl fun x _ => by ring
-
-private theorem expect_finsum'' {Ω κ : Type*} [Finite Ω] [Fintype κ]
-    (μ : PMF Ω) (f : κ → Ω → ℝ) :
-    ∑ i, expect μ (fun x => f i x) = expect μ (fun x => ∑ i, f i x) := by
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  simp only [expect_eq_sum]
-  rw [Finset.sum_comm]
-  exact Finset.sum_congr rfl fun x _ =>
-    (Finset.mul_sum Finset.univ (fun i => f i x) ((μ x).toReal)).symm
-
-private theorem expect_mono'' {Ω : Type*} [Finite Ω] (μ : PMF Ω) (f g : Ω → ℝ)
-    (h : ∀ x, f x ≤ g x) : expect μ f ≤ expect μ g := by
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  rw [expect_eq_sum, expect_eq_sum]
-  exact Finset.sum_le_sum fun x _ => mul_le_mul_of_nonneg_left (h x) ENNReal.toReal_nonneg
-
 variable [Fintype (Profile G)] [Finite G.Outcome]
 
 set_option linter.unusedFintypeInType false in
@@ -99,7 +72,7 @@ theorem IsSmooth.coarseCorrelated_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam
   set CW := ∑ i, G.correlatedEu ν i with hCW
   have hCW_eq : CW = expect ν (fun s => G.socialWelfare s) := by
     rw [hCW, show (∑ i, G.correlatedEu ν i) = ∑ i, expect ν (fun s => G.eu s i) from
-      Finset.sum_congr rfl fun i _ => G.correlatedEu_eq_expect_eu ν i, expect_finsum'']
+      Finset.sum_congr rfl fun i _ => G.correlatedEu_eq_expect_eu ν i, expect_sum_comm]
     simp only [socialWelfare]
   have hdev_sum : ∑ i, expect ν (fun s => G.eu (Function.update s i (t i)) i) ≤ CW := by
     rw [hCW]
@@ -109,13 +82,13 @@ theorem IsSmooth.coarseCorrelated_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam
   have hsmooth_exp :
       lam * G.socialWelfare t - mu * CW ≤
         ∑ i, expect ν (fun s => G.eu (Function.update s i (t i)) i) := by
-    rw [hCW_eq, expect_finsum'']
+    rw [hCW_eq, expect_sum_comm]
     have heq : expect ν (fun s => lam * G.socialWelfare t - mu * G.socialWelfare s)
         = lam * G.socialWelfare t - mu * expect ν (fun s => G.socialWelfare s) := by
-      rw [expect_sub'', expect_const ν (lam * G.socialWelfare t),
-        expect_const_mul'' ν mu (fun s => G.socialWelfare s)]
+      rw [expect_sub, expect_const ν (lam * G.socialWelfare t),
+        expect_const_mul ν mu (fun s => G.socialWelfare s)]
     rw [← heq]
-    exact expect_mono'' ν _ _ fun s => hsmooth s t
+    exact expect_mono ν _ _ fun s => hsmooth s t
   nlinarith [hdev_sum, hsmooth_exp]
 
 end KernelGame

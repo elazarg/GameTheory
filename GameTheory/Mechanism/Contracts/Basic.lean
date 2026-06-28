@@ -61,37 +61,6 @@ structure PrincipalAgent (Action Outcome : Type) where
 
 namespace PrincipalAgent
 
-section ExpectHelpers
-
-variable {Outcome : Type} [Finite Outcome]
-
-private theorem expect_sub (d : PMF Outcome) (f g : Outcome → ℝ) :
-    expect d (fun o => f o - g o) = expect d f - expect d g := by
-  letI : Fintype Outcome := Fintype.ofFinite Outcome
-  rw [expect_eq_sum, expect_eq_sum, expect_eq_sum, ← Finset.sum_sub_distrib]
-  exact Finset.sum_congr rfl (fun o _ => by ring)
-
-private theorem expect_const_mul (d : PMF Outcome) (c : ℝ) (f : Outcome → ℝ) :
-    expect d (fun o => c * f o) = c * expect d f := by
-  letI : Fintype Outcome := Fintype.ofFinite Outcome
-  rw [expect_eq_sum, expect_eq_sum, Finset.mul_sum]
-  exact Finset.sum_congr rfl (fun o _ => by ring)
-
-private theorem expect_nonneg (d : PMF Outcome) (f : Outcome → ℝ)
-    (hf : ∀ o, 0 ≤ f o) : 0 ≤ expect d f := by
-  letI : Fintype Outcome := Fintype.ofFinite Outcome
-  rw [expect_eq_sum]
-  exact Finset.sum_nonneg (fun o _ => mul_nonneg ENNReal.toReal_nonneg (hf o))
-
-private theorem expect_mono (d : PMF Outcome) (f g : Outcome → ℝ)
-    (h : ∀ o, f o ≤ g o) : expect d f ≤ expect d g := by
-  letI : Fintype Outcome := Fintype.ofFinite Outcome
-  rw [expect_eq_sum, expect_eq_sum]
-  exact Finset.sum_le_sum
-    (fun o _ => mul_le_mul_of_nonneg_left (h o) ENNReal.toReal_nonneg)
-
-end ExpectHelpers
-
 variable {Action Outcome : Type} [Finite Outcome] (I : PrincipalAgent Action Outcome)
 
 /-- The agent's expected utility from action `a` under payment scheme `t`:

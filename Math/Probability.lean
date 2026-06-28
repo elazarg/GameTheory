@@ -168,6 +168,57 @@ theorem expect_summable_of_bounded {Ω : Type*}
   rw [hfact, tsum_mul_left]
   rw [pmf_toReal_tsum_one d, mul_one]
 
+/-! ### Finite-sample expectation algebra
+
+`expect` is linear and monotone. On a finite sample space it is a finite sum, so
+these are immediate; they are collected here so concept-level files do not re-prove
+them privately. -/
+
+/-- `expect` is additive. -/
+theorem expect_add {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ) :
+    expect d (fun ω => f ω + g ω) = expect d f + expect d g := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum, expect_eq_sum, expect_eq_sum, ← Finset.sum_add_distrib]
+  exact Finset.sum_congr rfl fun ω _ => by ring
+
+/-- `expect` commutes with subtraction. -/
+theorem expect_sub {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ) :
+    expect d (fun ω => f ω - g ω) = expect d f - expect d g := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum, expect_eq_sum, expect_eq_sum, ← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun ω _ => by ring
+
+/-- `expect` pulls out a scalar factor. -/
+theorem expect_const_mul {Ω : Type*} [Finite Ω] (d : PMF Ω) (c : ℝ) (f : Ω → ℝ) :
+    expect d (fun ω => c * f ω) = c * expect d f := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum, expect_eq_sum, Finset.mul_sum]
+  exact Finset.sum_congr rfl fun ω _ => by ring
+
+/-- A nonnegative integrand has nonnegative expectation. -/
+theorem expect_nonneg {Ω : Type*} [Finite Ω] (d : PMF Ω) (f : Ω → ℝ)
+    (hf : ∀ ω, 0 ≤ f ω) : 0 ≤ expect d f := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum]
+  exact Finset.sum_nonneg fun ω _ => mul_nonneg ENNReal.toReal_nonneg (hf ω)
+
+/-- `expect` is monotone in the integrand. -/
+theorem expect_mono {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ)
+    (h : ∀ ω, f ω ≤ g ω) : expect d f ≤ expect d g := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum, expect_eq_sum]
+  exact Finset.sum_le_sum fun ω _ => mul_le_mul_of_nonneg_left (h ω) ENNReal.toReal_nonneg
+
+/-- A finite sum of integrands commutes with `expect`. -/
+theorem expect_sum_comm {Ω κ : Type*} [Finite Ω] [Fintype κ]
+    (d : PMF Ω) (f : κ → Ω → ℝ) :
+    ∑ i, expect d (fun ω => f i ω) = expect d (fun ω => ∑ i, f i ω) := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  simp only [expect_eq_sum]
+  rw [Finset.sum_comm]
+  exact Finset.sum_congr rfl fun ω _ =>
+    (Finset.mul_sum Finset.univ (fun i => f i ω) ((d ω).toReal)).symm
+
 /-- The joint integrand `(p a).toReal * (q a b).toReal * f b` is summable when `f` is bounded.
     This is the absolute-summability hypothesis behind Fubini for `expect_bind`. -/
 theorem expect_bind_summable_of_bounded {α β : Type*}
