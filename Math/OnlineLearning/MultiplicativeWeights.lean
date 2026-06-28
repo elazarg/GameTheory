@@ -225,6 +225,19 @@ noncomputable def expWeights (η : ℝ) (score : A → ℝ) : PMF A :=
 theorem mwDist_eq_expWeights (η : ℝ) (g : ℕ → A → ℝ) (t : ℕ) :
     mwDist η g t = expWeights η (fun a => cumGain g t a) := rfl
 
+/-- On `[0,1]`, `exp η − 1 − η ≤ η²` (a second-order Taylor remainder bound). This lets the
+    fixed-`η` regret coefficient `(eᵑ−1−η)/η` be bounded by `η`, so the per-round regret can be
+    driven to `0` by taking `η` small. -/
+theorem exp_sub_one_sub_self_le_sq {η : ℝ} (h0 : 0 ≤ η) (h1 : η ≤ 1) :
+    Real.exp η - 1 - η ≤ η ^ 2 := by
+  have hx : |η| ≤ 1 := abs_le.mpr ⟨by linarith, h1⟩
+  have hb := Real.exp_bound hx (n := 2) (by norm_num)
+  have hsum : (∑ m ∈ Finset.range 2, η ^ m / (m.factorial : ℝ)) = 1 + η := by
+    norm_num [Finset.sum_range_succ]
+  rw [hsum, sq_abs] at hb
+  norm_num [Nat.factorial] at hb
+  nlinarith [hb, le_abs_self (Real.exp η - (1 + η)), sq_nonneg η]
+
 /-- Any single fixed action's regret is bounded by the external regret: the gap between one
     action's cumulative gain and the algorithm's gain is at most the best action's gap. -/
 theorem fixedActionRegret_le_onlineExternalRegret (η : ℝ) (g : ℕ → A → ℝ) (T : ℕ) (a : A) :

@@ -57,17 +57,17 @@ open KernelGame
 noncomputable def coordinationGame : KernelGame (Fin 2) :=
   KernelGame.ofPureEU (fun _ => Bool) (fun σ _ => if σ 0 = σ 1 then 1 else 0)
 
-/-- The full Tier-A pipeline instantiates on a concrete game: multiplicative-weights self-play
-    over the coordination game yields an explicit ε-coarse correlated equilibrium for every
-    horizon (here learning rate `η = 1`, band `[0,1]`). -/
-example {T : ℕ} [NeZero T] :
-    ∃ μ, coordinationGame.IsεCoarseCorrelatedEq
-      (1 * (Real.log 2 / 1 + (Real.exp 1 - 1 - 1) / 1 * (T : ℝ)) / (T : ℝ)) μ := by
+/-- The full Tier-A pipeline on a concrete game: for **every** `ε > 0`, multiplicative-weights
+    self-play over the coordination game reaches an `ε`-coarse correlated equilibrium (band `[0,1]`,
+    `L = log 2`). This exercises the whole path — MW construction → regret bound → self-play →
+    time-average → convergence — and witnesses an arbitrarily good ε, not just one fixed bound. -/
+example {ε : ℝ} (hε : 0 < ε) :
+    ∃ μ, coordinationGame.IsεCoarseCorrelatedEq ε μ := by
   haveI : ∀ i, Fintype (coordinationGame.Strategy i) := fun _ => inferInstanceAs (Fintype Bool)
   haveI : ∀ i, Nonempty (coordinationGame.Strategy i) := fun _ => inferInstanceAs (Nonempty Bool)
   haveI : Finite coordinationGame.Outcome := inferInstanceAs (Finite (∀ _ : Fin 2, Bool))
-  refine coordinationGame.exists_mwSelfPlay_isεCCE 1 (fun _ => 0) 1 (by norm_num) (by norm_num)
-    ?_ ?_ T
+  refine coordinationGame.mwSelfPlay_exists_isεCCE_of_pos (fun _ => 0) 1 (L := Real.log 2)
+    (by norm_num) ?_ ?_ hε
   · intro i ω
     change (if ω 0 = ω 1 then (1 : ℝ) else 0) ∈ Set.Icc (0 : ℝ) (0 + 1)
     by_cases h : ω 0 = ω 1 <;> simp [h]

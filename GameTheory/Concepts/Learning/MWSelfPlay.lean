@@ -144,6 +144,56 @@ theorem exists_mwSelfPlay_isεCCE {L : ℝ} (hη : 0 < η) (hW : 0 < W)
       G.IsεCoarseCorrelatedEq (W * (L / η + (Real.exp η - 1 - η) / η * T) / T) μ :=
   ⟨_, G.mwSelfPlay_timeAverage_isεCCE η lo W hη hW hbd hL T⟩
 
+-- `[Fintype ι]` is load-bearing in the proof but hidden by the existential conclusion.
+set_option linter.unusedFintypeInType false in
+/-- **Learning reaches arbitrarily good coarse correlated equilibria.** For every `ε > 0`, a small
+    enough fixed learning rate (`η ≈ ε`) and a long enough horizon `T` make the time-average of
+    multiplicative-weights self-play an `ε`-coarse correlated equilibrium. This is the convergence
+    form of the capstone: decentralized no-regret learning reaches the set of coarse correlated
+    equilibria to any precision. (Existence of *some* CCE is already known via Brouwer; the content
+    here is that a concrete learning process realizes it, to any `ε`.) -/
+theorem mwSelfPlay_exists_isεCCE_of_pos {L : ℝ} (hW : 0 < W)
+    (hbd : ∀ i ω, G.utility ω i ∈ Set.Icc (lo i) (lo i + W))
+    (hL : ∀ i, Real.log (Fintype.card (G.Strategy i)) ≤ L)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ μ : PMF (Profile G), G.IsεCoarseCorrelatedEq ε μ := by
+  have hWpos : (0 : ℝ) < 2 * W := by linarith
+  set η₀ : ℝ := min 1 (ε / (2 * W)) with hη₀
+  have hηpos : 0 < η₀ := lt_min one_pos (by positivity)
+  have hη1 : η₀ ≤ 1 := min_le_left _ _
+  have hηε : η₀ ≤ ε / (2 * W) := min_le_right _ _
+  have hηε' : η₀ * (2 * W) ≤ ε := (le_div_iff₀ hWpos).1 hηε
+  obtain ⟨T', hT'⟩ := exists_nat_ge (2 * W * L / (η₀ * ε))
+  haveI : NeZero (T' + 1) := ⟨Nat.succ_ne_zero _⟩
+  have hn : (0 : ℝ) < ((T' + 1 : ℕ) : ℝ) := by exact_mod_cast Nat.succ_pos T'
+  refine ⟨G.timeAverage (fun t : Fin (T' + 1) => pmfPi (G.mwProfile η₀ lo W (t : ℕ))), ?_⟩
+  refine IsεCoarseCorrelatedEq.mono G
+    (G.mwSelfPlay_timeAverage_isεCCE η₀ lo W hηpos hW hbd hL (T' + 1)) ?_
+  have hC : (Real.exp η₀ - 1 - η₀) / η₀ ≤ η₀ := by
+    rw [div_le_iff₀ hηpos]
+    have hh := exp_sub_one_sub_self_le_sq hηpos.le hη1
+    rw [pow_two] at hh
+    linarith
+  have hnge : 2 * W * L ≤ ((T' + 1 : ℕ) : ℝ) * (η₀ * ε) := by
+    have h1 : 2 * W * L / (η₀ * ε) ≤ ((T' + 1 : ℕ) : ℝ) :=
+      le_trans hT' (by exact_mod_cast Nat.le_succ T')
+    rwa [div_le_iff₀ (by positivity)] at h1
+  have hterm1 : W * L / (η₀ * ((T' + 1 : ℕ) : ℝ)) ≤ ε / 2 := by
+    rw [div_le_iff₀ (by positivity)]
+    nlinarith [hnge]
+  have hterm2 : W * η₀ ≤ ε / 2 := by nlinarith [hηε']
+  have hsplit :
+      W * (L / η₀ + (Real.exp η₀ - 1 - η₀) / η₀ * ((T' + 1 : ℕ) : ℝ)) / ((T' + 1 : ℕ) : ℝ)
+        = W * L / (η₀ * ((T' + 1 : ℕ) : ℝ)) + W * ((Real.exp η₀ - 1 - η₀) / η₀) := by
+    have hηne : η₀ ≠ 0 := hηpos.ne'
+    have hnne : ((T' + 1 : ℕ) : ℝ) ≠ 0 := hn.ne'
+    field_simp
+  rw [hsplit]
+  have hWC : W * ((Real.exp η₀ - 1 - η₀) / η₀) ≤ W * η₀ :=
+    mul_le_mul_of_nonneg_left hC hW.le
+  linarith [hterm1, hterm2, hWC]
+
 end KernelGame
 
 end GameTheory
+
