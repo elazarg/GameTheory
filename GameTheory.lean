@@ -70,6 +70,7 @@ import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
 -- Learning dynamics
 import GameTheory.Concepts.Learning.ApproximateCorrelatedEq
+import GameTheory.Concepts.Learning.NoRegretToCCE
 
 -- Zero-sum and constant-sum
 import GameTheory.Concepts.ZeroSum.ZeroSum
