@@ -19,8 +19,13 @@ equilibrium, and Roughgarden smoothness then bounds its social welfare — the *
 of learning**.
 
 The per-player gain sequence to which a no-regret algorithm (e.g. `Math.OnlineLearning.mwDist`)
-is applied is `g_t a = mixedExtension.eu (update (p t) who (pure a)) who`; multiplicative weights
-guarantees the cumulative bound assumed by `selfPlay_timeAverage_isεCCE` below.
+is applied is `g_t a = mixedExtension.eu (update (p t) who (pure a)) who`. Multiplicative weights
+discharges the cumulative bound `B` assumed by `selfPlay_timeAverage_isεCCE` below **after the gains
+are affinely rescaled into `[0,1]`** (`mw_externalRegret_le` requires `[0,1]` gains): for utilities
+bounded with range `W`, the rescaling multiplies the regret bound by `W`, giving
+`B = O(W·√(T log|A|))`. That coupled, normalized self-play construction is not built here —
+`selfPlay_timeAverage_isεCCE` takes `B` as a hypothesis, which `mw_externalRegret_le` supplies per
+player on the rescaled gains.
 
 ## Main results
 
@@ -56,7 +61,8 @@ open Classical in
 /-- **Independent no-regret play converges to coarse correlated equilibrium.** If every player's
     cumulative mixed-extension deviation gain (against the realized independent play) is at most
     `B` over horizon `T`, then the time-average of play is a `(B/T)`-coarse correlated equilibrium.
-    With a no-regret learner (`mw_externalRegret_le`), `B` is sublinear, so `B/T → 0`. -/
+    A no-regret learner (`mw_externalRegret_le`, applied to the gains rescaled into `[0,1]`) makes
+    `B` sublinear, so `B/T → 0`. -/
 theorem selfPlay_timeAverage_isεCCE [Finite (Profile G)] {T : ℕ} [NeZero T]
     (p : Fin T → Profile G.mixedExtension) {B : ℝ}
     (hreg : ∀ who s', (∑ t, (G.mixedExtension.eu (Function.update (p t) who (PMF.pure s')) who

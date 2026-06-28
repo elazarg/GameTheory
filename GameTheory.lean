@@ -69,7 +69,7 @@ import GameTheory.Concepts.Correlation.ValueOfCorrelation
 import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
 -- Learning dynamics
-import Math.OnlineLearning.MultiplicativeWeights
+import Math.OnlineLearning
 import GameTheory.Concepts.Learning.ApproximateCorrelatedEq
 import GameTheory.Concepts.Learning.NoRegretToCCE
 import GameTheory.Concepts.Learning.SelfPlay
