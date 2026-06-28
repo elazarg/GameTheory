@@ -8,13 +8,17 @@ import GameTheory.Concepts.Learning.SelfPlay
 import Math.OnlineLearning
 
 /-!
-# Multiplicative-weights self-play converges to coarse correlated equilibrium
+# Multiplicative-weights self-play and coarse correlated equilibrium
 
 The constructive capstone of Tier A: every player runs multiplicative weights on their own
 normalized pure-deviation gains, and the time-average of the resulting independent play is an
-ε-coarse correlated equilibrium with ε = O(W·(log|A| + T) / T) → 0 (for a learning rate
-schedule η → 0). This turns the conditional `selfPlay_timeAverage_isεCCE` into an *existence*
-theorem: decentralized no-regret learning reaches the set of coarse correlated equilibria.
+ε-coarse correlated equilibrium with an explicit `ε = W·(L/η + (eᵑ−1−η)/η·T)/T` for any fixed
+learning rate `η`. This turns the conditional `selfPlay_timeAverage_isεCCE` into a *witnessed*
+bound: a concrete decentralized learning process whose time-average is an ε-CCE. For a *fixed* `η`
+this `ε` does not tend to `0` (it tends to `W·(eᵑ−1−η)/η`); driving it to `0` needs the
+horizon-dependent tuning `η ≈ √(L/T)`, which (like the matching `mw_externalRegret_le` asymptotics)
+is not formalized here — so "reaches the set of CCE" is exhibited as an explicit per-horizon bound,
+not a convergence theorem.
 
 The construction tracks the **cumulative score** rather than the payoff sequence, which makes it
 a plain structural recursion (no circular definition): `mwScore` accumulates the current round's
@@ -78,10 +82,12 @@ theorem mwProfile_eq_mwDist (t : ℕ) (i : ι) :
   funext a
   exact G.mwScore_eq_cumGain η lo W t i a
 
-/-- **Multiplicative-weights self-play reaches coarse correlated equilibrium.** With utilities in
-    the per-player band `[lo i, lo i + W]`, learning rate `η > 0`, and `L` a uniform upper bound on
-    `log |Aᵢ|`, the time-average of independent MW self-play over horizon `T` is an ε-coarse
-    correlated equilibrium with ε = `W·(L/η + (eᵑ−1−η)/η·T)/T`. For `η ≈ 1/√T` this `→ 0`. -/
+/-- **Multiplicative-weights self-play is an ε-coarse correlated equilibrium.** With utilities in
+    the per-player band `[lo i, lo i + W]`, a fixed learning rate `η > 0`, and `L` a uniform upper
+    bound on `log |Aᵢ|`, the time-average of independent MW self-play over horizon `T` is an ε-coarse
+    correlated equilibrium with the explicit `ε = W·(L/η + (eᵑ−1−η)/η·T)/T`. For fixed `η` this `ε`
+    does not vanish (it tends to `W·(eᵑ−1−η)/η`); the horizon-dependent tuning `η ≈ √(L/T)` that
+    sends it to `0` is not formalized here. -/
 theorem mwSelfPlay_timeAverage_isεCCE {L : ℝ} (hη : 0 < η) (hW : 0 < W)
     (hbd : ∀ i ω, G.utility ω i ∈ Set.Icc (lo i) (lo i + W))
     (hL : ∀ i, Real.log (Fintype.card (G.Strategy i)) ≤ L)

@@ -11,14 +11,16 @@ import Mathlib.Analysis.SpecialFunctions.Log.Basic
 /-!
 # Multiplicative weights: a no-regret online learning algorithm
 
-The multiplicative-weights (Hedge) algorithm and its sublinear external-regret guarantee,
-stated game-free over a finite action set `A`. This is the explicit no-regret rule that makes
-the no-regret ⇒ coarse correlated equilibrium reduction non-vacuous and constructive.
+The multiplicative-weights (Hedge) algorithm and its explicit external-regret bound, stated
+game-free over a finite action set `A`. This is the no-regret rule that makes the no-regret ⇒
+coarse correlated equilibrium reduction non-vacuous and constructive.
 
 At each round `t` the learner plays each action with probability proportional to
-`exp (η · cumulative-gain)`. The external regret — the gap between the best fixed action in
-hindsight and the algorithm's expected gain — is bounded by `log |A| / η + (eᵑ−1−η)/η · T`,
-which is `O(√(T log |A|))` for the tuning `η ≈ √(log|A| / T)`: sublinear in `T`.
+`exp (η · cumulative-gain)`. For a *fixed* learning rate `η`, the external regret — the gap
+between the best fixed action in hindsight and the algorithm's expected gain — is bounded by
+`log |A| / η + (eᵑ−1−η)/η · T`, which is linear in `T`. Choosing `η` as a function of the horizon,
+`η ≈ √(log|A| / T)`, makes it `O(√(T log |A|))` — sublinear — but that horizon-dependent tuning is
+not formalized here (every result below takes `η` as a fixed parameter).
 
 ## Main definitions
 
@@ -27,14 +29,14 @@ which is `O(√(T log |A|))` for the tuning `η ≈ √(log|A| / T)`: sublinear 
 
 ## Main results
 
-* `Math.OnlineLearning.mw_externalRegret_le` — the sublinear external-regret bound
+* `Math.OnlineLearning.mw_externalRegret_le` — the explicit fixed-`η` external-regret bound
 -/
 
 namespace Math.OnlineLearning
 
 open Math.Probability
 
-variable {A : Type}
+variable {A : Type*}
 
 /-- Cumulative gain of action `a` over the first `t` rounds. -/
 def cumGain (g : ℕ → A → ℝ) (t : ℕ) (a : A) : ℝ := ∑ s ∈ Finset.range t, g s a
@@ -160,9 +162,10 @@ theorem exp_bestGain_le_mwDenom (η : ℝ) (g : ℕ → A → ℝ) (T : ℕ) :
   rw [heq]
   exact Finset.single_le_sum (fun b _ => (mwWeight_pos η g T b).le) (Finset.mem_univ a)
 
-/-- **Multiplicative-weights external-regret bound.** With gains in `[0,1]` and learning rate
-    `η > 0`, the external regret over `T` rounds is at most `log |A| / η + (eᵑ−1−η)/η · T`. For
-    `η ≈ √(log |A| / T)` this is `O(√(T log |A|))` — sublinear, so the per-round regret → 0. -/
+/-- **Multiplicative-weights external-regret bound.** With gains in `[0,1]` and a fixed learning
+    rate `η > 0`, the external regret over `T` rounds is at most `log |A| / η + (eᵑ−1−η)/η · T`
+    (linear in `T`). Under the horizon-dependent tuning `η ≈ √(log |A| / T)` — not formalized here —
+    this becomes `O(√(T log |A|))`, so the per-round regret → 0. -/
 theorem mw_externalRegret_le {η : ℝ} (hη : 0 < η) {g : ℕ → A → ℝ}
     (hg : ∀ s a, g s a ∈ Set.Icc (0 : ℝ) 1) (T : ℕ) :
     onlineExternalRegret η g T

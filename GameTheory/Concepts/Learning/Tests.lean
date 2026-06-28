@@ -27,8 +27,8 @@ example (T : ℕ) :
       ≤ Real.log (Fintype.card Bool) / 1 + (Real.exp 1 - 1 - 1) / 1 * T :=
   mw_externalRegret_le (by norm_num) (fun _ _ => Set.mem_Icc.mpr ⟨le_refl _, zero_le_one⟩) T
 
-/-- Multiplicative weights is a genuine no-regret rule: at the optimal tuning the bound is
-    finite for every horizon (sanity check that the bound is a real number, not `⊤`). -/
+/-- The regret bound instantiates for an arbitrary positive learning rate (a non-vacuity check
+    that the hypotheses are satisfiable for any `η > 0`). -/
 example (T : ℕ) (η : ℝ) (hη : 0 < η) :
     onlineExternalRegret (A := Bool) η (fun _ _ => 0) T
       ≤ Real.log (Fintype.card Bool) / η + (Real.exp η - 1 - η) / η * T :=

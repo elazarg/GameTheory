@@ -26,7 +26,7 @@ equilibrium, so sublinear regret gives an ε-equilibrium with ε → 0.
 * `IsεCoarseCorrelatedEq.mono` / `IsεCorrelatedEq.mono` — monotone in ε
 * `isCoarseCorrelatedEq_iff_isεCoarseCorrelatedEq_zero` / `isCorrelatedEq_iff_isεCorrelatedEq_zero`
   — the exact equilibrium is the 0-approximate one
-* `IsεCorrelatedEq.toCoarse` — an ε-CE is an ε-CCE (the ε-level analogue of CE ⇒ CCE)
+* `IsεCorrelatedEq.toCoarseCorrelatedEq` — an ε-CE is an ε-CCE (the ε-level analogue of CE ⇒ CCE)
 -/
 
 namespace GameTheory
@@ -99,7 +99,7 @@ theorem IsεCorrelatedEq.of_isCorrelatedEq {μ : PMF (Profile G)}
 
 /-- An `ε`-correlated equilibrium is an `ε`-coarse correlated equilibrium (the `ε`-level
     analogue of CE ⇒ CCE, since external regret is a special case of swap regret). -/
-theorem IsεCorrelatedEq.toCoarse {ε : ℝ} {μ : PMF (Profile G)}
+theorem IsεCorrelatedEq.toCoarseCorrelatedEq {ε : ℝ} {μ : PMF (Profile G)}
     (h : G.IsεCorrelatedEq ε μ) : G.IsεCoarseCorrelatedEq ε μ := by
   rw [isεCoarseCorrelatedEq_iff_externalRegret_le]
   rw [isεCorrelatedEq_iff_swapRegret_le] at h
