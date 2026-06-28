@@ -55,7 +55,9 @@ theorem meanPosterior_apply (τ : PMF (PMF Ω)) (ω : Ω) :
   simp only [id_eq]
 
 /-- A distribution over posteriors is **Bayes plausible** for `prior` when its mean
-posterior is the prior — the martingale condition characterizing feasibility. -/
+posterior is the prior — the martingale condition characterizing feasibility. This
+is the canonical (posterior-law) form; cf. `InformationDesign.HasPriorMarginal` (the
+joint state-message form) and `IsJointBayesPlausible` (the multi-agent form). -/
 def IsBayesPlausible (prior : PMF Ω) (τ : PMF (PMF Ω)) : Prop :=
   meanPosterior τ = prior
 

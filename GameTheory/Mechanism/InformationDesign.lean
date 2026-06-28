@@ -19,13 +19,14 @@ measure-theoretic type spaces.
 
 * `SignalStructure` — a Markov kernel from states to public messages
 * `SignalStructure.joint` — the induced joint law over states and messages
-* `BayesPlausible` — a joint state-message law whose state marginal is the prior
+* `HasPriorMarginal` — a joint state-message law whose state marginal is the prior
+  (the information-design form of Bayes plausibility)
 * `PersuasionProblem` — finite sender/receiver persuasion primitives
 * `PersuasionProblem.IsPersuasive` — message-contingent receiver optimality
 
 ## Main results
 
-* `SignalStructure.joint_bayesPlausible` — every signal structure is Bayes plausible
+* `joint_hasPriorMarginal` — every signal structure's joint law has the prior as state marginal
 * `SignalStructure.messageMarginal_apply` — finite-sum form of message marginals
 * `PersuasionProblem.senderEU_eq_sum` — finite-sum form of sender value
 * `PersuasionProblem.senderEU_eq_sum_senderScore` — sender value as a sum of scores
@@ -53,15 +54,17 @@ noncomputable def joint (S : SignalStructure Ω Msg) (prior : PMF Ω) : PMF (Ω 
 noncomputable def messageMarginal (S : SignalStructure Ω Msg) (prior : PMF Ω) : PMF Msg :=
   (S.joint prior).map Prod.snd
 
-/-- A joint distribution is Bayes plausible for `prior` when its state
-marginal is exactly `prior`. -/
-def BayesPlausible (prior : PMF Ω) (ν : PMF (Ω × Msg)) : Prop :=
+/-- A joint state-message law **has the prior as its state marginal**: the
+information-design form of Bayes plausibility (cf. `FeasiblePosteriors.IsBayesPlausible`,
+the posterior-law/mean form, and `BayesCorrelatedEq.BayesPlausible`, the
+recommendation-law form). -/
+def HasPriorMarginal (prior : PMF Ω) (ν : PMF (Ω × Msg)) : Prop :=
   ν.map Prod.fst = prior
 
-/-- Every signal structure induces a Bayes-plausible joint distribution. -/
-theorem joint_bayesPlausible (S : SignalStructure Ω Msg) (prior : PMF Ω) :
-    BayesPlausible prior (S.joint prior) := by
-  unfold BayesPlausible joint
+/-- Every signal structure induces a joint law with the prior as its state marginal. -/
+theorem joint_hasPriorMarginal (S : SignalStructure Ω Msg) (prior : PMF Ω) :
+    HasPriorMarginal prior (S.joint prior) := by
+  unfold HasPriorMarginal joint
   rw [PMF.map_bind]
   conv_lhs =>
     enter [2, ω]
