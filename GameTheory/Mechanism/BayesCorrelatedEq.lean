@@ -44,9 +44,10 @@ actions. -/
 abbrev RecommendationLaw (B : BayesianGame ι) :=
   PMF (B.TypeProfile × B.ActionProfile)
 
-/-- Bayes plausibility for a direct recommendation law. -/
+/-- Bayes plausibility for a direct recommendation law: its type-profile marginal is
+the prior (the recommendation-law instance of `SignalStructure.HasPriorMarginal`). -/
 def BayesPlausible (B : BayesianGame ι) (ψ : B.RecommendationLaw) : Prop :=
-  SignalStructure.BayesPlausible B.prior ψ
+  SignalStructure.HasPriorMarginal B.prior ψ
 
 /-- A player can condition a deviation on their own type and recommended action. -/
 abbrev ObedienceDeviation (B : BayesianGame ι) (who : ι) :=
@@ -65,7 +66,7 @@ noncomputable def strategyRecommendationLaw (B : BayesianGame ι)
 theorem strategyRecommendationLaw_bayesPlausible
     (B : BayesianGame ι) (σ : B.BProfile) :
     B.BayesPlausible (B.strategyRecommendationLaw σ) := by
-  unfold BayesPlausible strategyRecommendationLaw SignalStructure.BayesPlausible
+  unfold BayesPlausible strategyRecommendationLaw SignalStructure.HasPriorMarginal
   rw [PMF.map_comp]
   change PMF.map id B.prior = B.prior
   rw [PMF.map_id]
@@ -82,7 +83,7 @@ theorem recommendedEU_strategyRecommendationLaw
 and private signal profiles whose state marginal is the game's prior. -/
 structure InformationStructure (B : BayesianGame ι) (Sig : ι → Type) where
   law : PMF (B.TypeProfile × (∀ i, Sig i))
-  bayesPlausible : SignalStructure.BayesPlausible B.prior law
+  bayesPlausible : SignalStructure.HasPriorMarginal B.prior law
 
 namespace InformationStructure
 
@@ -107,7 +108,7 @@ theorem outcomeLaw_bayesPlausible
     (S : InformationStructure B Sig)
     (ρ : (S.inducedBayesianGame).BProfile) :
     B.BayesPlausible (S.outcomeLaw ρ) := by
-  unfold BayesianGame.BayesPlausible outcomeLaw SignalStructure.BayesPlausible
+  unfold BayesianGame.BayesPlausible outcomeLaw SignalStructure.HasPriorMarginal
   rw [PMF.map_comp]
   change PMF.map Prod.fst S.law = B.prior
   exact S.bayesPlausible
@@ -263,7 +264,7 @@ theorem completeInfoRecommendationLaw_bayesPlausible
     (G.toCompleteInfoBayesianGame).BayesPlausible
       (G.completeInfoRecommendationLaw μ) := by
   unfold BayesianGame.BayesPlausible completeInfoRecommendationLaw
-  unfold SignalStructure.BayesPlausible toCompleteInfoBayesianGame
+  unfold SignalStructure.HasPriorMarginal toCompleteInfoBayesianGame
   rw [PMF.map_comp]
   change PMF.map (Function.const (Profile G) (fun _ : ι => ())) μ =
     PMF.pure (fun _ : ι => ())
