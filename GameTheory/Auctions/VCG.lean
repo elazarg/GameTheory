@@ -53,8 +53,7 @@ structure VCGSetup (ι : Type) [Fintype ι] [DecidableEq ι] where
   /-- The h-function for player `i`: depends only on others' reports. -/
   h : (i : ι) → (∀ j, Θ j) → ℝ
   /-- The h-function ignores player `i`'s own report. -/
-  h_indep : ∀ (i : ι) (θ : ∀ j, Θ j) (θ'_i : Θ i),
-    h i θ = h i (Function.update θ i θ'_i)
+  h_indep : ∀ i, Math.Probability.IndependentOfCoordinate i (h i)
 
 namespace VCGSetup
 

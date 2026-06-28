@@ -126,6 +126,31 @@ theorem exists_abs_bound_of_finite {Ω : Type*} [Finite Ω] (f : Ω → ℝ) :
   intro ω
   exact Finset.single_le_sum (fun x _ => abs_nonneg (f x)) (Finset.mem_univ ω)
 
+/-! ### Coordinate independence
+
+A general utility (not probability-specific), collected here as the common base of
+the mechanism-design files: a function on a product type is *independent of
+coordinate `i`* when changing the `i`-th component never changes its value. This
+names the recurring "does not depend on agent `i`'s own report/bid" condition. -/
+
+/-- `F` is **independent of coordinate `i`** if updating the `i`-th argument never
+changes its value. -/
+def IndependentOfCoordinate {ι : Type*} [DecidableEq ι] {α : ι → Type*} {β : Type*}
+    (i : ι) (F : (∀ j, α j) → β) : Prop :=
+  ∀ (θ : ∀ j, α j) (θᵢ : α i), F θ = F (Function.update θ i θᵢ)
+
+/-- An independent-of-`i` function agrees on any two inputs that agree off `i`. -/
+theorem IndependentOfCoordinate.eq_of_agree {ι : Type*} [DecidableEq ι]
+    {α : ι → Type*} {β : Type*} {i : ι} {F : (∀ j, α j) → β}
+    (hF : IndependentOfCoordinate i F) {θ θ' : ∀ j, α j}
+    (h : ∀ j, j ≠ i → θ j = θ' j) : F θ = F θ' := by
+  rw [hF θ (θ' i)]
+  congr 1
+  funext j
+  by_cases hj : j = i
+  · subst hj; simp
+  · rw [Function.update_of_ne hj]; exact h j hj
+
 /-- A PMF's real-valued weight function is summable. The summability comes
     from `PMF.tsum_coe = 1` in `ENNReal` plus `ENNReal.summable_toReal`. -/
 theorem pmf_toReal_summable {Ω : Type*} (d : PMF Ω) :

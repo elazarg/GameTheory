@@ -75,15 +75,24 @@ noncomputable def affineMaximizer : SCFWithPayments ι Alt where
       - othersWelfare Θ value w κ θ i (affineChoice Θ value w κ θ))
 
 omit [Fintype Alt] [Nonempty Alt] in
+/-- `othersWelfare … i` is **independent of agent `i`'s own report**: it sums only
+over the others. -/
+theorem othersWelfare_independentOfCoordinate (i : ι) :
+    Math.Probability.IndependentOfCoordinate i (fun θ => othersWelfare Θ value w κ θ i) := by
+  intro θ θᵢ
+  funext alt
+  simp only [othersWelfare]
+  congr 1
+  exact Finset.sum_congr rfl fun j hj => by
+    rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
+
+omit [Fintype Alt] [Nonempty Alt] in
 /-- The Clarke charge `pivotWelfare` against agent `i` depends only on the *others'*
 reports, so it is unchanged between the truthful profile and `i`'s misreport. -/
 theorem othersWelfare_eq_of_agree {i : ι} {report : ∀ j, Θ j} {θ : ∀ j, Θ j}
     (hrep : ∀ j, j ≠ i → report j = θ j) :
-    othersWelfare Θ value w κ report i = othersWelfare Θ value w κ θ i := by
-  funext alt
-  simp only [othersWelfare]
-  congr 1
-  exact Finset.sum_congr rfl fun j hj => by rw [hrep j (Finset.ne_of_mem_erase hj)]
+    othersWelfare Θ value w κ report i = othersWelfare Θ value w κ θ i :=
+  (othersWelfare_independentOfCoordinate Θ value w κ i).eq_of_agree hrep
 
 /-- Scaling an agent's quasilinear utility by its (positive) weight recovers the full
 affine objective at the chosen alternative *minus the report-independent Clarke
