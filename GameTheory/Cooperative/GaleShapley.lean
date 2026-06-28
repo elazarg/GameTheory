@@ -350,17 +350,129 @@ theorem no_blocking {R : α → Finset β}
     have := hBpref a'' hmatch
     omega
 
+/-! ### The deferred-acceptance matching -/
+
+/-- The rejection state at the deferred-acceptance fixed point (iterating the round
+operator from `∅`). -/
+noncomputable def daFixedPoint : α → Finset β :=
+  M.daStep^[Classical.choose M.exists_daStep_iterate_fixed] (fun _ => ∅)
+
+theorem daStep_daFixedPoint : M.daStep M.daFixedPoint = M.daFixedPoint :=
+  Classical.choose_spec M.exists_daStep_iterate_fixed
+
+/-- The matching produced by men-proposing deferred acceptance: each man is assigned
+his top remaining choice at the fixed point. -/
+noncomputable def daMatching : α → Option β := fun a => M.topChoice M.daFixedPoint a
+
+set_option linter.unusedFintypeInType false in
+/-- **The deferred-acceptance matching is stable.** -/
+theorem daMatching_isStable (hA : ∀ a, Function.Injective (M.prefA a))
+    (hB : ∀ b, Function.Injective (M.prefB b)) : M.IsStable M.daMatching :=
+  ⟨M.fixedPoint_isMatching M.daStep_daFixedPoint,
+    fun a b h => M.fixedPoint_ir M.daStep_daFixedPoint a b h,
+    M.no_blocking M.daStep_daFixedPoint (M.inv_iterate hA hB _)⟩
+
 set_option linter.unusedFintypeInType false in
 /-- **Gale–Shapley: stable matchings exist.** Every finite two-sided market with
 strict preferences admits a stable matching, produced by men-proposing deferred
 acceptance. -/
 theorem exists_stable (hA : ∀ a, Function.Injective (M.prefA a))
     (hB : ∀ b, Function.Injective (M.prefB b)) :
-    ∃ μ : α → Option β, M.IsStable μ := by
-  obtain ⟨n, hn⟩ := M.exists_daStep_iterate_fixed
-  refine ⟨fun a => M.topChoice (M.daStep^[n] (fun _ => ∅)) a,
-    M.fixedPoint_isMatching hn, fun a b h => M.fixedPoint_ir hn a b h,
-    M.no_blocking hn (M.inv_iterate hA hB n)⟩
+    ∃ μ : α → Option β, M.IsStable μ :=
+  ⟨M.daMatching, M.daMatching_isStable hA hB⟩
+
+/-! ### Man-optimality
+
+Men-proposing deferred acceptance is *man-optimal*: every man is matched to a woman
+he weakly prefers to his partner in **any** stable matching. The classical argument
+is that no man is ever rejected by a woman who is *achievable* for him (paired with
+him in some stable matching). Besides strict preferences, this needs that no man is
+exactly indifferent between an acceptable woman and remaining single (`hAne`), so
+that an achievable block is a *strict* block. -/
+
+/-- Woman `b` is *achievable* for man `a` if some stable matching pairs them. -/
+def IsAchievable (a : α) (b : β) : Prop :=
+  ∃ μ : α → Option β, M.IsStable μ ∧ μ a = some b
+
+/-- **Man-optimality invariant.** No woman who has rejected `a` is achievable for
+him: deferred acceptance never discards a stable partner. -/
+def MAchInv (R : α → Finset β) : Prop :=
+  ∀ a b, b ∈ R a → ¬ M.IsAchievable a b
+
+omit [Fintype α] [Fintype β] in
+theorem machInv_empty : M.MAchInv (fun _ => ∅) := by
+  intro a b hb; simp at hb
+
+/-- The man-optimality invariant is preserved by a deferred-acceptance round. The
+heart is a blocking-pair contradiction: if `b` rejects `a` in favour of the man `a'`
+she holds, and `b` were achievable for `a` via a stable `μ'`, then `(a', b)` blocks
+`μ'` — `a'` prefers `b` to his (achievable, hence still-available) `μ'`-partner, and
+`b` prefers `a'` to her `μ'`-partner `a`. -/
+theorem machInv_step (hA : ∀ a, Function.Injective (M.prefA a))
+    (hB : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b) {R : α → Finset β}
+    (hInv : M.MAchInv R) : M.MAchInv (M.daStep R) := by
+  classical
+  intro a b hb
+  simp only [daStep, Finset.mem_union, Finset.mem_filter, Finset.mem_univ, true_and] at hb
+  rcases hb with hb_old | ⟨htop, hne⟩
+  · exact hInv a b hb_old
+  · rintro ⟨μ', hstable, hμ'⟩
+    by_cases hacc : M.accM b a
+    · have ha_suit : a ∈ M.suitors R b := M.mem_suitors.mpr ⟨htop, hacc⟩
+      obtain ⟨a', ha'⟩ : ∃ a', M.holder R b = some a' :=
+        Option.isSome_iff_exists.mp (M.holder_isSome_of_suitors ⟨a, ha_suit⟩)
+      have ha'_ne : a' ≠ a := fun he => hne (he ▸ ha')
+      have hpref_a' : M.prefB b a < M.prefB b a' :=
+        lt_of_le_of_ne ((M.holder_spec ha').2 a ha_suit) (fun he => ha'_ne (hB b he).symm)
+      obtain ⟨htop_a', _⟩ := M.mem_suitors.mp (M.holder_spec ha').1
+      apply hstable.2.2
+      refine ⟨a', b, ?_, ?_, ?_, ?_⟩
+      · intro b'' hb''
+        have hb''_notin : b'' ∉ R a' := fun hin => hInv a' b'' hin ⟨μ', hstable, hb''⟩
+        have hb''_avail : b'' ∈ M.available R a' :=
+          M.mem_available.mpr ⟨hb''_notin, (hstable.2.1 a' b'' hb'').1⟩
+        have hle : M.prefA a' b'' ≤ M.prefA a' b := (M.topChoice_spec htop_a').2 b'' hb''_avail
+        have hbne : b'' ≠ b := fun he => ha'_ne (hstable.1 a' a b'' hb'' (he ▸ hμ'))
+        exact lt_of_le_of_ne hle (fun he => hbne (hA a' he))
+      · intro _
+        exact lt_of_le_of_ne (M.accW_of_topChoice htop_a') (hAne a' b)
+      · intro a'' ha''
+        have hmatch : a'' = a := hstable.1 a'' a b ha'' hμ'
+        rw [hmatch]; exact hpref_a'
+      · intro hcon
+        exact absurd hμ' (hcon a)
+    · exact hacc (hstable.2.1 a b hμ').2
+
+theorem machInv_iterate (hA : ∀ a, Function.Injective (M.prefA a))
+    (hB : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b) (n : ℕ) :
+    M.MAchInv (M.daStep^[n] (fun _ => ∅)) := by
+  induction n with
+  | zero => exact M.machInv_empty
+  | succ k ih =>
+    rw [Function.iterate_succ_apply']
+    exact M.machInv_step hA hB hAne ih
+
+/-- **Gale–Shapley is man-optimal.** Under strict preferences, with no man exactly
+indifferent between an acceptable woman and remaining single, every man's
+deferred-acceptance partner is weakly preferred to his partner in *any* stable
+matching: for any stable `μ'` pairing `a` with `b'`, `a`'s `daMatching` partner
+exists and is `prefA`-at-least `b'`. -/
+theorem daMatching_man_optimal (hA : ∀ a, Function.Injective (M.prefA a))
+    (hB : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
+    {μ' : α → Option β} (hμ'stable : M.IsStable μ') {a : α} {b' : β}
+    (h : μ' a = some b') :
+    ∃ b, M.daMatching a = some b ∧ M.prefA a b' ≤ M.prefA a b := by
+  classical
+  have hInv : M.MAchInv M.daFixedPoint := M.machInv_iterate hA hB hAne _
+  have hb'_notin : b' ∉ M.daFixedPoint a := fun hin => hInv a b' hin ⟨μ', hμ'stable, h⟩
+  have hb'_avail : b' ∈ M.available M.daFixedPoint a :=
+    M.mem_available.mpr ⟨hb'_notin, (hμ'stable.2.1 a b' h).1⟩
+  obtain ⟨b, hb⟩ : ∃ b, M.topChoice M.daFixedPoint a = some b := by
+    unfold topChoice; rw [dif_pos ⟨b', hb'_avail⟩]; exact ⟨_, rfl⟩
+  exact ⟨b, hb, (M.topChoice_spec hb).2 b' hb'_avail⟩
 
 end MatchingMarket
 
