@@ -211,7 +211,7 @@ optimization.
 
 ## Build
 
-Requires Lean 4 (`v4.30.0`) and Mathlib (`v4.30.0`). Also depends on
+Requires Lean 4 (`v4.31.0`) and Mathlib (`v4.31.0`). Also depends on
 [`fixed-point-theorems-lean4`](https://github.com/ldct/fixed-point-theorems-lean4)
 for Brouwer/Kakutani.
 

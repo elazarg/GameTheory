@@ -10,9 +10,12 @@ import Math.Probability
 /-!
 # Nash Bargaining Solution
 
-The Nash bargaining solution (1950) selects a unique outcome for two-player
-bargaining problems. Given a feasible set and a disagreement point, the
-solution maximizes the product of utility gains.
+The Nash bargaining solution (1950) characterizes the outcome of a two-player
+bargaining problem as the feasible, individually-rational point maximizing the
+product of utility gains. This file formalizes that characterization as a
+predicate `IsNashSolution` over arbitrary bargaining problems; uniqueness is not
+asserted, and theorems that need it (e.g. symmetry) take it as an explicit
+hypothesis.
 
 ## Main definitions
 
@@ -100,8 +103,8 @@ theorem nashSolution_weaklyPareto (u : ℝ × ℝ) (h : B.IsNashSolution u) :
 def IsSymmetric : Prop :=
   B.d₁ = B.d₂ ∧ ∀ u : ℝ × ℝ, B.feasible u → B.feasible (u.2, u.1)
 
-/-- In a symmetric bargaining problem, the Nash solution gives equal gains
-    to both players. -/
+/-- In a symmetric bargaining problem, a Nash solution that is unique (the
+    explicit `huniq` hypothesis) gives equal gains to both players. -/
 theorem nashSolution_symmetric (u : ℝ × ℝ) (hsym : B.IsSymmetric)
     (hns : B.IsNashSolution u)
     (huniq : ∀ v w, B.IsNashSolution v → B.IsNashSolution w → v = w) :

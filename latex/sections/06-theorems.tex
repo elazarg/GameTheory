@@ -511,14 +511,16 @@ not as well-founded recursion but as an \emph{inflationary rejection
 operator} on the proposal state
 $R : \alpha \to \mathrm{Finset}\,\beta$ recording, for each proposer,
 the recipients that have already rejected it.  One round \TT{daStep}
-has every not-currently-held proposer approach its favourite remaining
-recipient, and every recipient tentatively hold its best suitor while
-rejecting the rest; the rejection sets only grow.  Because the total
-rejection count is bounded by $|\alpha|\cdot|\beta|$ and is monotone,
-a pigeonhole argument produces a \emph{fixed point} $R^\star$ — a
-round that rejects nobody.  The matching read off from $R^\star$'s
-holders is shown to be a matching, individually rational, and free of
-blocking pairs via the \emph{deferred-acceptance invariant}:\
+has every proposer with a remaining acceptable recipient point at its
+favourite among them; each recipient tentatively holds its best current
+suitor, and the proposers it turns down add it to their rejection sets,
+so the rejection sets only grow.  Because the total rejection count is
+bounded by $|\alpha|\cdot|\beta|$ and is monotone, a pigeonhole argument
+produces a \emph{fixed point} $R^\star$ — a round that rejects nobody.
+The matching — sending each proposer to its final top choice
+(\TT{topChoice} at $R^\star$) — is shown to be a matching, individually
+rational, and free of blocking pairs via the \emph{deferred-acceptance
+invariant}:\
 whenever a recipient has rejected a proposer, it currently holds
 someone it strictly prefers.  Strictness of preferences is
 load-bearing exactly in maintaining that invariant; the
