@@ -82,7 +82,6 @@ def KernelGame.IsDominant (G : KernelGame ι) (who : ι) (s : G.Strategy who) : 
     strategies is a Nash equilibrium. -/
 theorem KernelGame.dominant_is_nash (G : KernelGame ι) (σ : KernelGame.Profile G)
     (hdom : ∀ i, G.IsDominant i (σ i)) : G.IsNash σ := by
-  classical
   intro who s'
   have h := hdom who σ s'
   simp only [Function.update_eq_self, ge_iff_le] at h
