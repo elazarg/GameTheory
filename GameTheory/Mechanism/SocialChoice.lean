@@ -34,8 +34,10 @@ open Math.Probability
 variable {ι : Type}
 variable {A : Type}
 
-/-- A preference relation on alternatives: `pref a b` means `a` is
-    weakly preferred to `b`. -/
+/-- A preference relation on alternatives: a binary relation on `A`. In this file `pref a b`
+    is read as "`a` is *weakly* preferred to `b`" (strict preference being `pref a b ∧ ¬ pref b a`).
+    `Mechanism/Arrow.lean` reuses the same type but reads `pref a b` as *strict* preference
+    (see `IsRanking`); which reading applies is fixed by each result's axioms. -/
 abbrev PrefRel (A : Type) := A → A → Prop
 
 /-- A preference profile: each voter has a preference relation. -/

@@ -291,14 +291,21 @@ payoff falling to zero (\TT{principalUtility\_linearPayment\_one}).
 The library formalizes the basic social-choice setup:\ a finite
 set of alternatives, a finite set of voters with strict
 preferences, and a social welfare function or social choice
-function.  It proves the structural fragments needed downstream
+function, together with the structural fragments needed downstream
 (preference profiles, the existence of a social-welfare-maximizing
-alternative under utilitarian aggregation), but does not formalize
-the impossibility-theorem chain (Arrow~\citep{Arrow1951},
-Gibbard–Satterthwaite~\citep{Gibbard1973, Satterthwaite1975});
-these are flagged in \Cref{sec:future} as the natural next step.
+alternative under utilitarian aggregation).  On top of this it
+proves \emph{Arrow's impossibility theorem}~\citep{Arrow1951}:\
+with at least three alternatives and a nonempty finite electorate,
+every collectively rational social-welfare function satisfying weak
+Pareto and independence of irrelevant alternatives (on the domain of
+strict rankings) is dictatorial.  The proof follows Geanakoplos's
+pivotal-voter argument, and a companion statement records the
+dictator's strict preference as coinciding with society's on every
+ranking profile.  The strategic analogue, Gibbard–Satterthwaite
+~\citep{Gibbard1973, Satterthwaite1975}, is flagged in
+\Cref{sec:future} as the natural next step.
 
-\leancorr{\TT{Mechanism/SocialChoice.lean}.}
+\leancorr{\TT{Mechanism/SocialChoice.lean}, \TT{Mechanism/Arrow.lean}.}
 
 \subsection{Auctions}
 \label{sec:mech:auctions}

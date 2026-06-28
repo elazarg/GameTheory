@@ -2008,8 +2008,13 @@ and proves truthful reporting is dominant
 alternatives, a finite set of voters with strict preferences over
 alternatives, and structural notions:\ preference profiles,
 utilitarian aggregation, the existence of a welfare-maximizing
-alternative.  The classical impossibility theorems (Arrow,
-Gibbard–Satterthwaite, Sen) are not formalized; see chapter §10.
+alternative.  \TT{Mechanism/Arrow.lean} provides the
+strict-linear-order (\TT{IsRanking}) layer, collective rationality
+(\TT{IsSWO}), the domain-restricted Pareto/IIA axioms, and proves
+\emph{Arrow's impossibility theorem} via Geanakoplos's pivotal-voter
+argument (with an exact biconditional-dictator companion).  The
+remaining classical impossibilities (Gibbard–Satterthwaite, Sen) are
+not formalized; see chapter §10.
 
 % =====================================================================
 \section{Worked examples}

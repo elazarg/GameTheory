@@ -173,9 +173,11 @@ than as tree-based information sets. Key results:
 - Finite information design / Bayesian persuasion (signal structures, Bayes
   plausibility, sender/receiver persuasion primitives), and feasible posteriors
   via the canonical splitting coupling (single- and multi-receiver)
-- Social choice and aggregation, including one direction of **Arrow's
-  impossibility theorem** (a dictatorial social welfare function satisfies
-  Pareto and independence of irrelevant alternatives)
+- Social choice and aggregation, including **Arrow's impossibility
+  theorem** (with ≥3 alternatives and a nonempty finite electorate, every
+  collectively rational social welfare function satisfying weak Pareto and
+  independence of irrelevant alternatives is dictatorial), via Geanakoplos's
+  pivotal-voter argument
 
 ## Cooperative game theory
 

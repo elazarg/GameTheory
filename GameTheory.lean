@@ -105,6 +105,7 @@ import GameTheory.Mechanism.Contracts.Basic
 
 -- Social choice and information
 import GameTheory.Mechanism.SocialChoice
+import GameTheory.Mechanism.Arrow
 import GameTheory.Concepts.Knowledge.CommonKnowledge
 import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
 

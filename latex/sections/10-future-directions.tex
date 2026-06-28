@@ -66,7 +66,7 @@ Brouwer.
 The Kuhn theorem in the library handles a recall hypothesis
 weaker than perfect recall (per-step ActionPosteriorLocal).  The
 basic \emph{absent-minded-driver}
-phenomenon~\citep{PiccioneRubinstein1997} is now formalized in
+phenomenon~\citep{PiccioneRubinstein1997} is formalized in
 \TT{Languages/MultiRound/AbsentMindedDriver.lean}.  The protocol
 has one player and two indistinguishable decision rounds; it
 violates \TT{ViewDeterminesRound}, the MultiRound
@@ -159,7 +159,7 @@ solution proper (\TT{IsKalaiSmorodinsky}) fixing the ideal point and
 bounding each player's gain by it.
 Stable matching~\citep{GaleShapley1962} is formalized through the
 \TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} predicates, with the
-existence of a stable matching now proved via the Gale–Shapley
+existence of a stable matching proved via the Gale–Shapley
 deferred-acceptance algorithm (\Cref{thm:gale-shapley}).
 
 Natural extensions:\ Bondareva–Shapley balanced collections
@@ -186,7 +186,7 @@ cost may itself depend on type.  \emph{Information
 design}~\citep{Bergemann2019} generalizes the persuasion setup to
 multiple receivers and richer outcome rules.
 
-The finite substrate is now formalized in
+The finite substrate is formalized in
 \TT{Mechanism/InformationDesign.lean}:\ finite signal structures
 $\Omega \to \PMF{M}$, induced joint state-message laws, the
 message marginal formula, the Bayes-plausibility invariant,
@@ -196,7 +196,7 @@ expressions for sender expected utility.  This is the right layer
 for discrete persuasion examples and for connecting disclosure
 problems back to the Bayesian-game infrastructure of
 \Cref{sec:mech:bayesian}.  A complementary belief-based layer
-(\Cref{sec:mech:info-design}) now adds the Bayes-plausibility
+(\Cref{sec:mech:info-design}) provides the Bayes-plausibility
 \emph{splitting} characterization via the canonical posterior coupling
 and its multi-receiver necessary direction~\citep{Arieli2021}.
 
@@ -213,16 +213,21 @@ and should remain separate from that analytic generalization.
 \subsection{Social choice impossibility theorems}
 \label{sec:future:social-choice}
 
-\emph{Arrow's impossibility theorem}~\citep{Arrow1951} says no
+\emph{Arrow's impossibility theorem}~\citep{Arrow1951} — no
 social-welfare function aggregating individual ordinal preferences
 over $\ge 3$ alternatives can simultaneously satisfy unanimity,
-non-dictatorship, and independence of irrelevant alternatives.
+non-dictatorship, and independence of irrelevant alternatives — is
+formalized (\Cref{sec:mech:social}, \TT{Mechanism/Arrow.lean}),
+via Geanakoplos's pivotal-voter argument on a strict-linear-order
+rationality layer.  Two classical companions remain open.
 \emph{Gibbard–Satterthwaite} \citep{Gibbard1973, Satterthwaite1975}
 is the strategic analogue:\ any non-dictatorial social choice
-function with full range over $\ge 3$ alternatives is
-manipulable.  \emph{Sen's liberal paradox}~\citep{Sen1970} shows
-that even a minimal individual-rights condition is inconsistent
-with Pareto efficiency plus universal domain.  All three are
+function with full range over $\ge 3$ alternatives is manipulable;
+it reduces to Arrow through an induced social-welfare function, the
+natural next step on the existing rationality layer.
+\emph{Sen's liberal paradox}~\citep{Sen1970} shows that even a
+minimal individual-rights condition is inconsistent with Pareto
+efficiency plus universal domain.  Both remaining results are
 statable on the existing social-choice setup, the proofs are
 combinatorial and do not require probability, and they would fit
 the library cleanly.
@@ -249,7 +254,7 @@ the strategic-form definitions they need are already in place.
 
 The Gale–Shapley deferred-acceptance algorithm and the existence of a
 stable matching from an arbitrary strict preference
-profile~\citep{GaleShapley1962} are now formalized
+profile~\citep{GaleShapley1962} are formalized
 (\Cref{thm:gale-shapley}, \TT{Cooperative/GaleShapley.lean}).  The
 natural extensions are the finer structural results:\ proposing-side
 optimality (the proposer-optimal stable matching), the lattice

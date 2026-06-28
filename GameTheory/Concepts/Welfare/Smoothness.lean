@@ -59,9 +59,8 @@ theorem IsSmooth.nash_bound {lam mu : ℝ} (hsmooth : G.IsSmooth lam mu)
 
 /-! ### Robust price of anarchy: the bound extends to coarse correlated equilibria -/
 
-variable [Fintype (Profile G)] [Finite G.Outcome]
+variable [Finite (Profile G)] [Finite G.Outcome]
 
-set_option linter.unusedFintypeInType false in
 /-- **Robust price of anarchy.** Smoothness bounds the welfare not only of Nash
 equilibria but of every **coarse correlated equilibrium** `ν`: the expected welfare
 `∑ᵢ correlatedEu ν i` satisfies `λ · W(t) ≤ (1 + μ) · E[W]` for every profile `t`.

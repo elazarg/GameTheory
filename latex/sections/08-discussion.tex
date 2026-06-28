@@ -35,7 +35,7 @@ that space, and continuity of expected utility.  The library's
 fixed-point principle for compact convex subsets of real normed
 spaces, but the game-theoretic compactness and continuity layer is
 separate work.
-Security levels now have sup/inf definitions, but existence of an
+Security levels have sup/inf definitions, but existence of an
 attaining security strategy still needs finite or compact attainment.
 Backward induction and the one-shot-deviation principle use finite
 trees and finite action sets, but not finite outcomes in their
@@ -244,7 +244,7 @@ For honesty's sake we list what is missing.
 
 \begin{itemize}\itemsep2pt
 \item \emph{Language-level infinite-horizon stochastic games.}
-The library now proves an observable mixed-action approximate
+The library proves an observable mixed-action approximate
 discounted folk theorem directly on public \TT{KernelGame} profile
 streams (\Cref{thm:folk-discounted}), but the concrete repeated-
 and stochastic-game language layers remain bounded-horizon.  We
@@ -278,9 +278,10 @@ core-nonempty games, the kernel and bargaining set, NTU games, and
 the Aumann–Shapley value for non-atomic games
 \citep{AumannShapley1974}.
 
-\item \emph{Impossibility theorems in social choice.}  Arrow,
-Gibbard–Satterthwaite, and Sen's liberal paradox are formalizable
-in this framework but are not formalized here.
+\item \emph{Impossibility theorems in social choice.}  Arrow's
+impossibility theorem is formalized (\Cref{sec:mech:social}); the
+strategic analogue Gibbard–Satterthwaite and Sen's liberal paradox
+are formalizable in the same framework but are not formalized here.
 
 \item \emph{Bayesian persuasion and information design.}
 The finite signal-structure and persuasion predicates are present
