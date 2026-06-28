@@ -32,11 +32,14 @@ nonempty: with a supplement of `Δ` paid to the players, can they divide
 * `costOfStability_eq_zero_of_core` — a nonempty core means zero cost of stability
 * `costOfStability_eq_zero_of_nonneg_unanimityCoeff` / `costOfStability_additiveGame_eq_zero`
   — stable classes (nonnegative Harsanyi dividends; additive games) need no subsidy
+* `core_nonempty_of_costOfStability_eq_zero` — the converse: zero cost ⇒ nonempty core
+* `costOfStability_eq_zero_iff_core` — cost of stability is zero iff the core is nonempty
 
-Only the direction *nonempty core ⇒ zero cost* is formalized here. The converse
-(*zero cost ⇒ nonempty core*) requires an infimum-attainment / LP-duality
-argument — the infimum could a priori be `0` without `0` lying in the set — and
-is left to follow-on work.
+The converse (*zero cost ⇒ nonempty core*) is an infimum-attainment fact: the
+infimum could a priori be `0` without `0` lying in the set, but the coalition-rational
+allocations needing subsidy at most `1/(n+1)` form a nested sequence of nonempty
+compact sets, so by Cantor's intersection theorem their intersection — the core — is
+nonempty.
 -/
 
 open scoped BigOperators
@@ -154,6 +157,102 @@ core (with equality on every coalition). -/
 theorem costOfStability_additiveGame_eq_zero [Nonempty ι] (α : ι → ℝ) :
     (additiveGame α).costOfStability = 0 :=
   costOfStability_eq_zero_of_core ⟨α, rfl, fun _ => le_refl _⟩
+
+/-! ### The converse: zero cost of stability implies a nonempty core
+
+The infimum defining the cost of stability is *attained*. If every positive subsidy
+stabilizes, the coalition-rational allocations needing subsidy at most `1/(n+1)`
+form a nested sequence of nonempty compact sets; by Cantor's intersection theorem
+their intersection — the core — is nonempty. -/
+
+/-- Coalition-rational allocations whose total payout exceeds `v(N)` by at most `Δ`
+(the feasible set behind the cost-of-stability infimum-attainment argument). -/
+private def feasibleSub (G : CoalGame ι) (Δ : ℝ) : Set (ι → ℝ) :=
+  {x | (∀ S : Finset ι, G.v S ≤ ∑ i ∈ S, x i) ∧ ∑ i, x i ≤ G.v Finset.univ + Δ}
+
+private theorem mem_feasibleSub {G : CoalGame ι} {Δ : ℝ} {x : ι → ℝ} :
+    x ∈ G.feasibleSub Δ ↔
+      (∀ S : Finset ι, G.v S ≤ ∑ i ∈ S, x i) ∧ ∑ i, x i ≤ G.v Finset.univ + Δ :=
+  Iff.rfl
+
+private theorem isClosed_feasibleSub (G : CoalGame ι) (Δ : ℝ) :
+    IsClosed (G.feasibleSub Δ) := by
+  have hcont : ∀ S : Finset ι, Continuous (fun x : ι → ℝ => ∑ i ∈ S, x i) :=
+    fun S => continuous_finsetSum S (fun i _ => continuous_apply i)
+  unfold feasibleSub
+  rw [Set.setOf_and]
+  refine IsClosed.inter ?_ (isClosed_le (hcont Finset.univ) continuous_const)
+  rw [show {x : ι → ℝ | ∀ S : Finset ι, G.v S ≤ ∑ i ∈ S, x i}
+        = ⋂ S : Finset ι, {x : ι → ℝ | G.v S ≤ ∑ i ∈ S, x i} by
+      ext x; simp only [Set.mem_iInter, Set.mem_setOf_eq]]
+  exact isClosed_iInter (fun S => isClosed_le continuous_const (hcont S))
+
+private theorem isCompact_feasibleSub (G : CoalGame ι) (Δ : ℝ) :
+    IsCompact (G.feasibleSub Δ) := by
+  have hbox : IsCompact (Set.univ.pi (fun i : ι =>
+      Set.Icc (G.v {i}) (G.v Finset.univ + Δ + ∑ j, |G.v {j}|))) :=
+    isCompact_univ_pi (fun _ => isCompact_Icc)
+  refine hbox.of_isClosed_subset (G.isClosed_feasibleSub Δ) ?_
+  intro x hx i _
+  obtain ⟨hcr, hsum⟩ := (mem_feasibleSub).mp hx
+  have hlb : ∀ j, G.v {j} ≤ x j := fun j => by simpa using hcr {j}
+  refine ⟨hlb i, ?_⟩
+  have hsplit : x i + ∑ j ∈ Finset.univ.erase i, x j = ∑ j, x j :=
+    Finset.add_sum_erase Finset.univ x (Finset.mem_univ i)
+  have herase : ∑ j ∈ Finset.univ.erase i, G.v {j} ≤ ∑ j ∈ Finset.univ.erase i, x j :=
+    Finset.sum_le_sum (fun j _ => hlb j)
+  have key : -(∑ j ∈ Finset.univ.erase i, G.v {j}) ≤ ∑ j, |G.v {j}| :=
+    le_trans (neg_le_abs _)
+      (le_trans (Finset.abs_sum_le_sum_abs (fun j => G.v {j}) (Finset.univ.erase i))
+        (Finset.sum_le_sum_of_subset_of_nonneg (Finset.subset_univ _)
+          (fun j _ _ => abs_nonneg _)))
+  linarith
+
+/-- Every positive subsidy stabilizes a game of zero cost of stability. -/
+theorem isStabilizable_of_costOfStability_eq_zero [Nonempty ι] {G : CoalGame ι}
+    (h : G.costOfStability = 0) {Δ : ℝ} (hΔ : 0 < Δ) : G.IsStabilizable Δ := by
+  have hne : {Δ : ℝ | 0 ≤ Δ ∧ G.IsStabilizable Δ}.Nonempty := by
+    obtain ⟨Δ₀, hΔ₀, hst⟩ := G.exists_stabilizable
+    exact ⟨Δ₀, hΔ₀, hst⟩
+  have hlt : sInf {Δ : ℝ | 0 ≤ Δ ∧ G.IsStabilizable Δ} < Δ := by
+    change G.costOfStability < Δ
+    rw [h]; exact hΔ
+  obtain ⟨Δ', ⟨_, hΔ'st⟩, hΔ'lt⟩ := exists_lt_of_csInf_lt hne hlt
+  exact hΔ'st.mono (le_of_lt hΔ'lt)
+
+/-- **The converse of `costOfStability_eq_zero_of_core`: zero cost of stability
+implies a nonempty core.** No subsidy is needed exactly when the core is nonempty;
+the cost-`0` infimum is attained (Cantor's theorem on the nested feasible sets). -/
+theorem core_nonempty_of_costOfStability_eq_zero [Nonempty ι] {G : CoalGame ι}
+    (h : G.costOfStability = 0) : ∃ x, G.IsCore x := by
+  have hnonempty : ∀ n : ℕ, (G.feasibleSub (1 / ((n : ℝ) + 1))).Nonempty := by
+    intro n
+    obtain ⟨x, hsum, hcr⟩ :=
+      isStabilizable_of_costOfStability_eq_zero h (Δ := 1 / ((n : ℝ) + 1)) (by positivity)
+    exact ⟨x, (mem_feasibleSub).mpr ⟨hcr, le_of_eq hsum⟩⟩
+  have hanti : ∀ n : ℕ, G.feasibleSub (1 / ((↑(n + 1) : ℝ) + 1)) ⊆
+      G.feasibleSub (1 / ((n : ℝ) + 1)) := by
+    intro n x hx
+    obtain ⟨hcr, hsum⟩ := (mem_feasibleSub).mp hx
+    have hle : (1 : ℝ) / ((↑(n + 1) : ℝ) + 1) ≤ 1 / ((n : ℝ) + 1) :=
+      one_div_le_one_div_of_le (by positivity) (by push_cast; linarith)
+    exact (mem_feasibleSub).mpr ⟨hcr, by linarith⟩
+  obtain ⟨x, hx⟩ :=
+    (G.isCompact_feasibleSub _).nonempty_iInter_of_sequence_nonempty_isCompact_isClosed
+      (fun n => G.feasibleSub (1 / ((n : ℝ) + 1))) hanti hnonempty
+      (fun n => G.isClosed_feasibleSub _)
+  rw [Set.mem_iInter] at hx
+  have hcr : ∀ S : Finset ι, G.v S ≤ ∑ i ∈ S, x i := ((mem_feasibleSub).mp (hx 0)).1
+  have hsum_le : ∑ i, x i ≤ G.v Finset.univ := by
+    refine le_of_forall_pos_le_add (fun ε hε => ?_)
+    obtain ⟨n, hn⟩ := exists_nat_one_div_lt hε
+    exact le_trans ((mem_feasibleSub).mp (hx n)).2 (by linarith)
+  exact ⟨x, le_antisymm hsum_le (by simpa using hcr Finset.univ), fun S => hcr S⟩
+
+/-- **Cost of stability is zero iff the core is nonempty.** -/
+theorem costOfStability_eq_zero_iff_core [Nonempty ι] {G : CoalGame ι} :
+    G.costOfStability = 0 ↔ ∃ x, G.IsCore x :=
+  ⟨core_nonempty_of_costOfStability_eq_zero, costOfStability_eq_zero_of_core⟩
 
 end CoalGame
 
