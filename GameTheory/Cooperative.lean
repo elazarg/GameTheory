@@ -33,8 +33,8 @@ and lives in the strategic branch as `IsTeamGame`, `SymmetricGame`, etc.
 
 - `CoalitionalGame` — TU coalitional games, the Shapley value, Banzhaf
   index, convex (supermodular) games, the core, and worked examples.
-- `Bargaining` — Nash bargaining solution for two-player bargaining
-  problems.
+- `Bargaining` — Nash, egalitarian, and Kalai–Smorodinsky bargaining
+  solutions for `n`-player bargaining problems.
 - `Matching` — two-sided matching markets and Gale-Shapley-style
   stability concepts.
 - `GaleShapley` — deferred acceptance and existence of a stable matching
