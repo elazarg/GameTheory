@@ -50,25 +50,28 @@ def isIC (M : Mechanism ι) : Prop :=
     M.outcome θ who ≥ M.outcome (Function.update θ who θ') who
 
 open Classical in
-/-- Bayesian incentive compatibility given a common prior `μ`:
-    for every player and every pair of types, truthfully reporting is
-    weakly better in expectation (weighted by prior probability of that type). -/
+/-- Bayesian incentive compatibility given a common prior `μ`: truthful
+    reporting is a Bayes–Nash equilibrium of the induced game. For every player
+    and every **type-contingent** misreport `s' : M.Θ who → M.Θ who` (reporting a
+    function of one's true type), truthful reporting is weakly better in ex-ante
+    expectation. Quantifying over `s'` (not just constant misreports) is the
+    standard notion; the constant case `s' = fun _ => θ'` is the special case. -/
 def isBIC (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i)) : Prop :=
-  ∀ (who : ι) (θ' : M.Θ who),
+  ∀ (who : ι) (s' : M.Θ who → M.Θ who),
     expect μ (fun θ => M.outcome θ who) ≥
-    expect μ (fun θ => M.outcome (Function.update θ who θ') who)
+    expect μ (fun θ => M.outcome (Function.update θ who (s' (θ who))) who)
 
 open Classical in
 /-- Dominant-strategy IC implies Bayesian IC for any prior. -/
 theorem isIC_implies_isBIC (M : Mechanism ι) [Finite (∀ i, M.Θ i)]
     (hIC : M.isIC) (μ : PMF (∀ i, M.Θ i)) :
     M.isBIC μ := by
-  intro who θ'
+  intro who s'
   rw [ge_iff_le]
   exact Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
-    (fun θ => M.outcome (Function.update θ who θ') who)
+    (fun θ => M.outcome (Function.update θ who (s' (θ who))) who)
     (fun θ => M.outcome θ who)
-    (fun θ => hIC who θ θ')
+    (fun θ => hIC who θ (s' (θ who)))
 
 open Classical in
 /-- The Bayesian game induced by a mechanism with prior `μ`:
@@ -144,19 +147,19 @@ theorem IsNonNegative_iff (M : Mechanism ι) :
     M.IsNonNegative ↔ M.IsIndividuallyRational (fun _ => 0) := Iff.rfl
 
 open Classical in
-/-- BIC is implied by BayesNash of truthful reporting (BayesNash is stronger
-    since it covers type-dependent deviations, not just constant ones). -/
+/-- BIC is exactly BayesNash of truthful reporting: both quantify over
+    type-contingent deviations. -/
 theorem isBIC_of_truthful_bayesNash (M : Mechanism ι) (μ : PMF (∀ i, M.Θ i))
     (hBN : (M.inducedBayesianGame μ).BayesNash (M.truthful μ)) :
     M.isBIC μ := by
   rw [BayesianGame.bayesNash_iff_exAnteEU] at hBN
-  intro who θ'
-  have h := hBN who (fun _ => θ')
+  intro who s'
+  have h := hBN who s'
   simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful] at h
   convert h using 2
   funext θ
   congr 1
-  exact (M.update_truthful_apply μ who (fun _ => θ') θ).symm
+  exact (M.update_truthful_apply μ who s' θ).symm
 
 end Mechanism
 

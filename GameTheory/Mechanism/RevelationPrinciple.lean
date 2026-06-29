@@ -75,21 +75,20 @@ open Classical in
     then the direct mechanism `M.toDirect σ` is Bayesian incentive compatible.
 
     Proof: In the direct mechanism, truthful reporting gives the same payoff
-    as playing `σ` in `M`. Any deviation `θ'_who` in the direct mechanism
-    corresponds to a deviation `σ_who ∘ (fun _ => θ'_who)` in `M`, which
+    as playing `σ` in `M`. Any type-contingent misreport `s'` in the direct
+    mechanism corresponds to the deviation `fun t => σ_who (s' t)` in `M`, which
     cannot improve payoff since `σ` is a BNE. -/
 theorem revelation_principle (M : GeneralMechanism ι)
     (μ : PMF (∀ i, M.Θ i))
     (σ : M.StrategyProfile)
     (hBNE : M.IsBNE μ σ) :
     (M.toDirect σ).isBIC μ := by
-  intro who θ'
+  intro who s'
   simp only [toDirect]
-  -- The deviation in the direct mechanism: reporting θ' instead of θ_who
-  -- corresponds to action σ_who(θ') in the general mechanism
-  -- We need: E[outcome(σ(θ))] ≥ E[outcome(update σ(θ) who (σ_who(θ')))]
-  -- This follows from BNE with the deviation σ'_who = fun _ => σ_who(θ')
-  have h := hBNE who (fun _ => σ who θ')
+  -- A type-contingent misreport `s'` in the direct mechanism corresponds to the
+  -- deviation `fun t => σ who (s' t)` in `M`, which cannot improve payoff since
+  -- `σ` is a BNE (whose deviations are themselves type-contingent).
+  have h := hBNE who (fun t => σ who (s' t))
   simp only [payoff] at h
   simpa only [Function.apply_update] using h
 
