@@ -16,7 +16,10 @@ open Math.Probability
 
 namespace CoalGame
 
-variable {ι : Type} [Fintype ι] [DecidableEq ι]
+-- `Fintype ι` is introduced only later (before the Shapley-value results that
+-- enumerate the player universe); the convexity / monotone-marginals theory
+-- needs only finite coalitions, so it is developed without it.
+variable {ι : Type} [DecidableEq ι]
 
 /-! ### Convex (supermodular) coalitional games
 
@@ -26,10 +29,6 @@ equivalent characterization is that marginal contributions are *monotone*:
 joining a larger coalition is at least as valuable. Convex games have
 nonempty cores (and the Shapley value is in the core); we develop the
 monotone-marginals characterization here. -/
-
--- The convexity / monotone-marginals theory is about finite coalitions only;
--- it needs no enumeration of the player universe, so `Fintype ι` is dropped here.
-omit [Fintype ι]
 
 /-- A coalitional game is *convex* (supermodular) when value enjoys the
 inclusion-exclusion inequality. -/
@@ -274,12 +273,6 @@ game every marginal vector lies in the core, and the core is convex, so the
 Shapley value lies in the core. -/
 
 section MarginalVector
-
--- Both the namespace-level `[Fintype ι]` (declared with `ι`) and the
--- section-level `[Fintype ι]` reintroduced for the finite-player results are
--- in scope here, so the definitions below carry two identical `Fintype ι`
--- instances. The duplication is harmless; silence the linter for the section.
-set_option linter.overlappingInstances false
 
 /-- Players arriving strictly before `i` under the arrival order `e`. -/
 def predOrder (e : Fin (Fintype.card ι) ≃ ι) (i : ι) : Finset ι :=
