@@ -273,7 +273,6 @@ section MixedExtensionConvergence
 
 variable [Fintype ι]
 variable (G : KernelGame ι)
-variable [∀ i, Finite (G.Strategy i)]
 variable [Finite G.Outcome]
 
 open Filter
@@ -302,8 +301,12 @@ theorem mixedExtension_eu_tendsto_of_forall_pmfConvergesPointwise
         atTop
         (nhds (expect (pmfPi (A := G.Strategy) σ)
           (fun s : Profile G => G.eu s who))) :=
-    Math.Probability.expect_tendsto_of_forall_tendsto
-      (fun s : Profile G => G.eu s who) hprod
+    by
+      obtain ⟨C, hC⟩ :=
+        Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+      exact Math.Probability.expect_tendsto_of_forall_tendsto_of_bounded
+        (fun s : Profile G => G.eu s who)
+        (fun s => G.eu_abs_le_of_bounded who hC s) hprod
   rw [show (fun n : ℕ => G.mixedExtension.eu (σs n) who) =
       fun n : ℕ => expect (pmfPi (A := G.Strategy) (σs n))
         (fun s : Profile G => G.eu s who) by

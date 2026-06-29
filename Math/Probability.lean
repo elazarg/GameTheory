@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.NNReal.Basic
+import Mathlib.Analysis.Normed.Group.Tannery
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Probability.ProbabilityMassFunction.Monad
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
@@ -210,6 +211,177 @@ theorem expect_summable_of_bounded {Ω : Type*}
     rw [abs_mul, abs_of_nonneg hd]
     exact mul_le_mul_of_nonneg_left (hbd ω) hd
   · exact (pmf_toReal_summable d).mul_right C
+
+/--
+The overlap mass `∑ min μₙ μ` converges to `1` when `μₙ` converges pointwise to `μ`.
+This is the dominated-convergence core of Scheffé's lemma for PMFs.
+-/
+theorem pmf_overlap_tendsto_of_forall_toReal_tendsto {Ω : Type*}
+    {μs : ℕ → PMF Ω} {μ : PMF Ω}
+    (h : ∀ ω : Ω,
+      Tendsto (fun n : ℕ => (μs n ω).toReal) atTop (nhds ((μ ω).toReal))) :
+    Tendsto (fun n : ℕ => ∑' ω : Ω, min ((μs n ω).toReal) ((μ ω).toReal)) atTop
+      (nhds 1) := by
+  have hsum : Summable (fun ω : Ω => (μ ω).toReal) := pmf_toReal_summable μ
+  have ht := tendsto_tsum_of_dominated_convergence
+    (𝓕 := atTop)
+    (f := fun n ω => min ((μs n ω).toReal) ((μ ω).toReal))
+    (g := fun ω => (μ ω).toReal)
+    (bound := fun ω => (μ ω).toReal)
+    hsum
+    (fun ω => by
+      have hconst : Tendsto (fun _ : ℕ => (μ ω).toReal) atTop (nhds ((μ ω).toReal)) :=
+        tendsto_const_nhds
+      have hmin := (h ω).min hconst
+      simpa using hmin)
+    (Eventually.of_forall (fun n ω => by
+      have hnonneg : 0 ≤ min ((μs n ω).toReal) ((μ ω).toReal) :=
+        le_min ENNReal.toReal_nonneg ENNReal.toReal_nonneg
+      have hle : min ((μs n ω).toReal) ((μ ω).toReal) ≤ (μ ω).toReal := min_le_right _ _
+      simp [Real.norm_eq_abs, abs_of_nonneg hnonneg, hle]))
+  simpa [pmf_toReal_tsum_one μ] using ht
+
+/--
+The difference of expectations of a bounded function is controlled by the
+non-overlap mass of the two PMFs.
+-/
+theorem abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap {Ω : Type*}
+    (μ ν : PMF Ω) (f : Ω → ℝ) {C : ℝ} (hbd : ∀ ω, |f ω| ≤ C) :
+    |expect μ f - expect ν f| ≤
+      2 * C * (1 - ∑' ω : Ω, min ((μ ω).toReal) ((ν ω).toReal)) := by
+  let r : Ω → ℝ := fun ω => min ((μ ω).toReal) ((ν ω).toReal)
+  have hr_nonneg : ∀ ω, 0 ≤ r ω := fun ω => le_min ENNReal.toReal_nonneg ENNReal.toReal_nonneg
+  have hr_le_μ : ∀ ω, r ω ≤ (μ ω).toReal := fun ω => min_le_left _ _
+  have hr_le_ν : ∀ ω, r ω ≤ (ν ω).toReal := fun ω => min_le_right _ _
+  have hμ_sum : Summable (fun ω : Ω => (μ ω).toReal) := pmf_toReal_summable μ
+  have hν_sum : Summable (fun ω : Ω => (ν ω).toReal) := pmf_toReal_summable ν
+  have hr_sum_μ : Summable r := by
+    refine Summable.of_norm_bounded hμ_sum ?_
+    intro ω
+    simp [r, Real.norm_eq_abs, abs_of_nonneg (hr_nonneg ω), hr_le_μ ω]
+  have hr_sum_ν : Summable r := by
+    refine Summable.of_norm_bounded hν_sum ?_
+    intro ω
+    simp [r, Real.norm_eq_abs, abs_of_nonneg (hr_nonneg ω), hr_le_ν ω]
+  have hrf_sum : Summable (fun ω : Ω => r ω * f ω) := by
+    refine Summable.of_norm_bounded (hr_sum_μ.mul_left C) ?_
+    intro ω
+    have hr0 := hr_nonneg ω
+    have hf_abs := hbd ω
+    calc ‖r ω * f ω‖
+        = |r ω * f ω| := Real.norm_eq_abs _
+      _ = r ω * |f ω| := by rw [abs_mul, abs_of_nonneg hr0]
+      _ ≤ r ω * C := mul_le_mul_of_nonneg_left hf_abs hr0
+      _ = C * r ω := by ring
+  have hμf_sum : Summable (fun ω : Ω => (μ ω).toReal * f ω) :=
+    expect_summable_of_bounded μ f hbd
+  have hνf_sum : Summable (fun ω : Ω => (ν ω).toReal * f ω) :=
+    expect_summable_of_bounded ν f hbd
+  have hμ_tail_hasSum : HasSum (fun ω : Ω => ((μ ω).toReal - r ω) * f ω)
+      (expect μ f - ∑' ω : Ω, r ω * f ω) := by
+    have h := hμf_sum.hasSum.sub hrf_sum.hasSum
+    have hfun : (fun b : Ω => (μ b).toReal * f b - r b * f b) =
+        (fun ω : Ω => ((μ ω).toReal - r ω) * f ω) := by
+      funext ω
+      ring
+    rw [hfun] at h
+    simpa [expect] using h
+  have hν_tail_hasSum : HasSum (fun ω : Ω => ((ν ω).toReal - r ω) * f ω)
+      (expect ν f - ∑' ω : Ω, r ω * f ω) := by
+    have h := hνf_sum.hasSum.sub hrf_sum.hasSum
+    have hfun : (fun b : Ω => (ν b).toReal * f b - r b * f b) =
+        (fun ω : Ω => ((ν ω).toReal - r ω) * f ω) := by
+      funext ω
+      ring
+    rw [hfun] at h
+    simpa [expect] using h
+  have hμ_tail_mass : HasSum (fun ω : Ω => C * ((μ ω).toReal - r ω))
+      (C * (1 - ∑' ω : Ω, r ω)) := by
+    have hbase := hμ_sum.hasSum.sub hr_sum_μ.hasSum
+    have hbase' : HasSum (fun ω : Ω => (μ ω).toReal - r ω)
+        (1 - ∑' ω : Ω, r ω) := by
+      simpa [pmf_toReal_tsum_one μ] using hbase
+    simpa [mul_sub] using hbase'.mul_left C
+  have hν_tail_mass : HasSum (fun ω : Ω => C * ((ν ω).toReal - r ω))
+      (C * (1 - ∑' ω : Ω, r ω)) := by
+    have hbase := hν_sum.hasSum.sub hr_sum_ν.hasSum
+    have hbase' : HasSum (fun ω : Ω => (ν ω).toReal - r ω)
+        (1 - ∑' ω : Ω, r ω) := by
+      simpa [pmf_toReal_tsum_one ν] using hbase
+    simpa [mul_sub] using hbase'.mul_left C
+  have hμ_tail_bound : |expect μ f - ∑' ω : Ω, r ω * f ω| ≤
+      C * (1 - ∑' ω : Ω, r ω) := by
+    have hle := hμ_tail_hasSum.norm_le_of_bounded hμ_tail_mass ?_
+    · simpa [Real.norm_eq_abs] using hle
+    intro ω
+    have htail_nonneg : 0 ≤ (μ ω).toReal - r ω := sub_nonneg.2 (hr_le_μ ω)
+    calc ‖(((μ ω).toReal - r ω) * f ω)‖
+        = |((μ ω).toReal - r ω) * f ω| := Real.norm_eq_abs _
+      _ = ((μ ω).toReal - r ω) * |f ω| := by rw [abs_mul, abs_of_nonneg htail_nonneg]
+      _ ≤ ((μ ω).toReal - r ω) * C := mul_le_mul_of_nonneg_left (hbd ω) htail_nonneg
+      _ = C * ((μ ω).toReal - r ω) := by ring
+  have hν_tail_bound : |expect ν f - ∑' ω : Ω, r ω * f ω| ≤
+      C * (1 - ∑' ω : Ω, r ω) := by
+    have hle := hν_tail_hasSum.norm_le_of_bounded hν_tail_mass ?_
+    · simpa [Real.norm_eq_abs] using hle
+    intro ω
+    have htail_nonneg : 0 ≤ (ν ω).toReal - r ω := sub_nonneg.2 (hr_le_ν ω)
+    calc ‖(((ν ω).toReal - r ω) * f ω)‖
+        = |((ν ω).toReal - r ω) * f ω| := Real.norm_eq_abs _
+      _ = ((ν ω).toReal - r ω) * |f ω| := by rw [abs_mul, abs_of_nonneg htail_nonneg]
+      _ ≤ ((ν ω).toReal - r ω) * C := mul_le_mul_of_nonneg_left (hbd ω) htail_nonneg
+      _ = C * ((ν ω).toReal - r ω) := by ring
+  calc |expect μ f - expect ν f|
+      = |(expect μ f - ∑' ω : Ω, r ω * f ω) -
+          (expect ν f - ∑' ω : Ω, r ω * f ω)| := by ring_nf
+    _ ≤ |expect μ f - ∑' ω : Ω, r ω * f ω| +
+          |expect ν f - ∑' ω : Ω, r ω * f ω| := abs_sub _ _
+    _ ≤ C * (1 - ∑' ω : Ω, r ω) + C * (1 - ∑' ω : Ω, r ω) :=
+      add_le_add hμ_tail_bound hν_tail_bound
+    _ = 2 * C * (1 - ∑' ω : Ω, r ω) := by ring
+
+/--
+Expectations of a bounded real-valued function are continuous under pointwise
+convergence of PMF weights. This is the PMF/Scheffé bridge for arbitrary sample
+spaces; no finiteness or countability assumption on `Ω` is needed.
+-/
+theorem expect_tendsto_of_forall_toReal_tendsto_of_bounded {Ω : Type*}
+    {μs : ℕ → PMF Ω} {μ : PMF Ω} (f : Ω → ℝ) {C : ℝ}
+    (hbd : ∀ ω : Ω, |f ω| ≤ C)
+    (h : ∀ ω : Ω,
+      Tendsto (fun n : ℕ => (μs n ω).toReal) atTop (nhds ((μ ω).toReal))) :
+    Tendsto (fun n : ℕ => expect (μs n) f) atTop (nhds (expect μ f)) := by
+  have hoverlap :=
+    pmf_overlap_tendsto_of_forall_toReal_tendsto (μs := μs) (μ := μ) h
+  have hgap : Tendsto
+      (fun n : ℕ => 2 * C *
+        (1 - ∑' ω : Ω, min ((μs n ω).toReal) ((μ ω).toReal)))
+      atTop (nhds 0) := by
+    have hsub : Tendsto
+        (fun n : ℕ => 1 - ∑' ω : Ω, min ((μs n ω).toReal) ((μ ω).toReal))
+        atTop (nhds 0) := by
+      have hconst : Tendsto (fun _ : ℕ => (1 : ℝ)) atTop (nhds 1) := tendsto_const_nhds
+      have h := hconst.sub hoverlap
+      simpa using h
+    simpa [mul_assoc] using hsub.const_mul (2 * C)
+  have habs : Tendsto (fun n : ℕ => |expect (μs n) f - expect μ f|) atTop (nhds 0) := by
+    refine squeeze_zero (fun n => abs_nonneg _) ?_ hgap
+    intro n
+    exact abs_expect_sub_le_two_mul_bound_mul_one_sub_overlap (μs n) μ f hbd
+  rw [tendsto_iff_norm_sub_tendsto_zero]
+  simpa [Real.norm_eq_abs] using habs
+
+/--
+Expectations of a bounded real-valued function are continuous under pointwise
+convergence of PMF weights in `ENNReal`.
+-/
+theorem expect_tendsto_of_forall_tendsto_of_bounded {Ω : Type*}
+    {μs : ℕ → PMF Ω} {μ : PMF Ω} (f : Ω → ℝ) {C : ℝ}
+    (hbd : ∀ ω : Ω, |f ω| ≤ C)
+    (h : ∀ ω : Ω, Tendsto (fun n : ℕ => μs n ω) atTop (nhds (μ ω))) :
+    Tendsto (fun n : ℕ => expect (μs n) f) atTop (nhds (expect μ f)) :=
+  expect_tendsto_of_forall_toReal_tendsto_of_bounded f hbd
+    (fun ω => pmf_apply_toReal_tendsto_of_tendsto (h ω))
 
 -- ============================================================================
 -- Utility lemmas for expect
