@@ -238,8 +238,7 @@ theorem shapleyValue_isCore_of_nonneg_unanimityCoeff
   ext i
   exact halloc_sum i
 
-omit [Fintype ι]
-
+omit [Fintype ι] in
 /-- **Unanimity games are convex**. The value function jumps from `0` to
 `1` exactly when `S` becomes a subset, and `S ⊆ A ∩ B ↔ S ⊆ A ∧ S ⊆ B`,
 which is exactly the supermodular inequality on `{0,1}`-valued games. -/
@@ -264,6 +263,312 @@ theorem unanimityGame_isConvex (S : Finset ι) (hS : S.Nonempty) :
       · simp [h1, h2, hu, hni]
       · simp [h1, h2, hu, hni]
 
+
+/-! ### Marginal vectors and the Shapley value of a convex game
+
+For an *arrival order* `e : Fin n ≃ ι` (player `e k` arrives at step `k`),
+the **marginal vector** assigns each player the marginal contribution they
+make on joining the coalition of their predecessors. The Shapley value is the
+average of these marginal vectors over all `n!` arrival orders. For a convex
+game every marginal vector lies in the core, and the core is convex, so the
+Shapley value lies in the core. -/
+
+section MarginalVector
+
+-- Both the namespace-level `[Fintype ι]` (declared with `ι`) and the
+-- section-level `[Fintype ι]` reintroduced for the finite-player results are
+-- in scope here, so the definitions below carry two identical `Fintype ι`
+-- instances. The duplication is harmless; silence the linter for the section.
+set_option linter.overlappingInstances false
+
+/-- Players arriving strictly before `i` under the arrival order `e`. -/
+def predOrder (e : Fin (Fintype.card ι) ≃ ι) (i : ι) : Finset ι :=
+  Finset.univ.filter (fun x => e.symm x < e.symm i)
+
+/-- The marginal vector of the arrival order `e`: player `i` receives the
+marginal contribution made on joining the coalition of their predecessors. -/
+def margVec (G : CoalGame ι) (e : Fin (Fintype.card ι) ≃ ι) (i : ι) : ℝ :=
+  G.marginalContribution i (predOrder e i)
+
+omit [DecidableEq ι] in
+/-- A player is never among their own predecessors. -/
+theorem notMem_predOrder (e : Fin (Fintype.card ι) ≃ ι) (i : ι) :
+    i ∉ predOrder e i := by
+  simp [predOrder]
+
+/-- **Telescoping identity.** Summing, over the players of a coalition `W`,
+the marginal contribution each makes on joining their `W`-predecessors
+(in the arrival order `e`) recovers `v W`. The proof removes the
+`e`-last player of `W` and inducts. -/
+theorem telescope (G : CoalGame ι) (e : Fin (Fintype.card ι) ≃ ι)
+    (W : Finset ι) :
+    ∑ i ∈ W, G.marginalContribution i (W.filter (fun x => e.symm x < e.symm i))
+      = G.v W := by
+  induction W using Finset.strongInductionOn with
+  | _ W ih =>
+    rcases W.eq_empty_or_nonempty with rfl | hW
+    · simp [G.v_empty]
+    · -- Extract the `e`-maximal player `m` of `W`.
+      have hne : (W.image e.symm).Nonempty := hW.image _
+      set M := (W.image e.symm).max' hne with hM_def
+      have hM_mem : M ∈ W.image e.symm := (W.image e.symm).max'_mem hne
+      obtain ⟨m, hmW, hmM⟩ := Finset.mem_image.mp hM_mem
+      have hmax : ∀ x ∈ W, x ≠ m → e.symm x < e.symm m := by
+        intro x hxW hxm
+        have hle : e.symm x ≤ M :=
+          Finset.le_max' _ _ (Finset.mem_image.mpr ⟨x, hxW, rfl⟩)
+        rw [← hmM] at hle
+        refine lt_of_le_of_ne hle ?_
+        intro hcontra
+        exact hxm (e.symm.injective hcontra)
+      -- Fact 1: predecessors of `m` in `W` are everyone else.
+      have hpredm : W.filter (fun x => e.symm x < e.symm m) = W.erase m := by
+        ext x
+        simp only [Finset.mem_filter, Finset.mem_erase]
+        constructor
+        · rintro ⟨hxW, hlt⟩
+          exact ⟨fun h => by rw [h] at hlt; exact absurd hlt (lt_irrefl _), hxW⟩
+        · rintro ⟨hxm, hxW⟩
+          exact ⟨hxW, hmax x hxW hxm⟩
+      -- Fact 2: for `i ∈ W.erase m`, predecessors in `W` and in `W.erase m` agree.
+      have hpred_erase : ∀ i ∈ W.erase m,
+          W.filter (fun x => e.symm x < e.symm i)
+            = (W.erase m).filter (fun x => e.symm x < e.symm i) := by
+        intro i hi
+        obtain ⟨him, hiW⟩ := Finset.mem_erase.mp hi
+        have hilt : e.symm i < e.symm m := hmax i hiW him
+        ext x
+        simp only [Finset.mem_filter, Finset.mem_erase]
+        constructor
+        · rintro ⟨hxW, hlt⟩
+          exact ⟨⟨fun h => by rw [h] at hlt; exact absurd (hlt.trans hilt) (lt_irrefl _),
+            hxW⟩, hlt⟩
+        · rintro ⟨⟨_, hxW⟩, hlt⟩
+          exact ⟨hxW, hlt⟩
+      -- Split the sum at `m` and apply the induction hypothesis to `W.erase m`.
+      rw [← Finset.add_sum_erase W _ hmW]
+      have hterm_m :
+          G.marginalContribution m (W.filter (fun x => e.symm x < e.symm m))
+            = G.v W - G.v (W.erase m) := by
+        rw [hpredm, marginalContribution, Finset.insert_erase hmW]
+      rw [hterm_m]
+      rw [Finset.sum_congr rfl (fun i hi => by rw [hpred_erase i hi])]
+      rw [ih (W.erase m) (Finset.erase_ssubset hmW)]
+      ring
+
+/-- **Efficiency of a marginal vector**: the components of the marginal
+vector of any arrival order sum to `v(N)`. This is the telescoping identity
+applied to the grand coalition. -/
+theorem margVec_sum (G : CoalGame ι) (e : Fin (Fintype.card ι) ≃ ι) :
+    ∑ i, G.margVec e i = G.v Finset.univ := by
+  have h := G.telescope e Finset.univ
+  simpa only [margVec, predOrder] using h
+
+/-- There is at least one arrival order, so the number of arrival orders is
+positive. -/
+theorem card_orderings_pos :
+    0 < Fintype.card (Fin (Fintype.card ι) ≃ ι) := by
+  have hne : Nonempty (Fin (Fintype.card ι) ≃ ι) :=
+    Fintype.card_eq.mp (by simp)
+  exact Fintype.card_pos_iff.mpr hne
+
+/-- **The Shapley value as an average of marginal vectors.** `orderingAvg`
+averages the marginal vector over all `n!` arrival orders; it will be shown
+to coincide with `shapleyValue`. -/
+noncomputable def orderingAvg (G : CoalGame ι) (i : ι) : ℝ :=
+  (∑ e : Fin (Fintype.card ι) ≃ ι, G.margVec e i)
+    / (Fintype.card (Fin (Fintype.card ι) ≃ ι) : ℝ)
+
+/-- The average-of-marginal-vectors allocation is efficient. -/
+theorem orderingAvg_efficient (G : CoalGame ι) :
+    ∑ i, G.orderingAvg i = G.v Finset.univ := by
+  have hC : (Fintype.card (Fin (Fintype.card ι) ≃ ι) : ℝ) ≠ 0 := by
+    exact_mod_cast card_orderings_pos.ne'
+  simp only [orderingAvg]
+  rw [← Finset.sum_div, Finset.sum_comm]
+  rw [Finset.sum_congr rfl (fun e _ => G.margVec_sum e)]
+  rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_comm, mul_div_assoc,
+    div_self hC, mul_one]
+
+/-- The average-of-marginal-vectors allocation gives null players `0`. -/
+theorem orderingAvg_null (G : CoalGame ι) {i : ι} (h : G.IsNull i) :
+    G.orderingAvg i = 0 := by
+  simp only [orderingAvg]
+  rw [show (∑ e : Fin (Fintype.card ι) ≃ ι, G.margVec e i) = 0 from ?_, zero_div]
+  apply Finset.sum_eq_zero
+  intro e _
+  simp only [margVec]
+  exact h (predOrder e i) (notMem_predOrder e i)
+
+/-- The average-of-marginal-vectors allocation is additive across games. -/
+theorem orderingAvg_additive (G₁ G₂ : CoalGame ι) (i : ι) :
+    (gameAdd G₁ G₂).orderingAvg i = G₁.orderingAvg i + G₂.orderingAvg i := by
+  simp only [orderingAvg]
+  rw [← add_div]
+  congr 1
+  rw [← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl (fun e _ => ?_)
+  simp only [margVec, marginalContribution, gameAdd]
+  ring
+
+/-- The average-of-marginal-vectors allocation scales with the game. -/
+theorem orderingAvg_scalar (c : ℝ) (G : CoalGame ι) (i : ι) :
+    (gameScalar c G).orderingAvg i = c * G.orderingAvg i := by
+  simp only [orderingAvg]
+  rw [← mul_div_assoc]
+  congr 1
+  rw [Finset.mul_sum]
+  refine Finset.sum_congr rfl (fun e _ => ?_)
+  simp only [margVec, marginalContribution, gameScalar]
+  ring
+
+omit [Fintype ι] in
+/-- **Swap-invariance of value under symmetry.** If players `i` and `j` are
+symmetric, then transposing them leaves the value of every coalition
+unchanged. (The pairwise-symmetry axiom upgrades to full invariance under
+the transposition `swap i j`.) -/
+theorem v_image_swap (G : CoalGame ι) {i j : ι} (hsym : G.AreSymmetric i j)
+    (T : Finset ι) : G.v (T.image (Equiv.swap i j)) = G.v T := by
+  classical
+  -- A coalition avoiding both `i` and `j` is fixed pointwise by the swap.
+  have himg_fix : ∀ U : Finset ι, i ∉ U → j ∉ U →
+      U.image (Equiv.swap i j) = U := by
+    intro U hiU hjU
+    ext y
+    simp only [Finset.mem_image]
+    constructor
+    · rintro ⟨x, hx, rfl⟩
+      rwa [Equiv.swap_apply_of_ne_of_ne (ne_of_mem_of_not_mem hx hiU)
+        (ne_of_mem_of_not_mem hx hjU)]
+    · intro hy
+      exact ⟨y, hy, Equiv.swap_apply_of_ne_of_ne (ne_of_mem_of_not_mem hy hiU)
+        (ne_of_mem_of_not_mem hy hjU)⟩
+  by_cases hi : i ∈ T <;> by_cases hj : j ∈ T
+  · -- both present: the swap permutes `T` onto itself.
+    have hsub : T.image (Equiv.swap i j) ⊆ T := by
+      rw [Finset.image_subset_iff]
+      intro x hx
+      rcases eq_or_ne x i with rfl | hxi
+      · rw [Equiv.swap_apply_left]; exact hj
+      rcases eq_or_ne x j with rfl | hxj
+      · rw [Equiv.swap_apply_right]; exact hi
+      · rw [Equiv.swap_apply_of_ne_of_ne hxi hxj]; exact hx
+    have hcard : T.card ≤ (T.image (Equiv.swap i j)).card :=
+      (Finset.card_image_of_injective T (Equiv.injective _)).ge
+    rw [Finset.eq_of_subset_of_card_le hsub hcard]
+  · -- `i ∈ T`, `j ∉ T`: the swap sends `i ↦ j`.
+    have hiU : i ∉ T.erase i := Finset.notMem_erase i T
+    have hjU : j ∉ T.erase i := fun h => hj (Finset.mem_of_mem_erase h)
+    have himg : T.image (Equiv.swap i j) = insert j (T.erase i) := by
+      conv_lhs => rw [← Finset.insert_erase hi]
+      rw [Finset.image_insert, Equiv.swap_apply_left, himg_fix (T.erase i) hiU hjU]
+    rw [himg, ← hsym (T.erase i) hiU hjU, Finset.insert_erase hi]
+  · -- `i ∉ T`, `j ∈ T`: the swap sends `j ↦ i`.
+    have hiU : i ∉ T.erase j := fun h => hi (Finset.mem_of_mem_erase h)
+    have hjU : j ∉ T.erase j := Finset.notMem_erase j T
+    have himg : T.image (Equiv.swap i j) = insert i (T.erase j) := by
+      conv_lhs => rw [← Finset.insert_erase hj]
+      rw [Finset.image_insert, Equiv.swap_apply_right, himg_fix (T.erase j) hiU hjU]
+    rw [himg, hsym (T.erase j) hiU hjU, Finset.insert_erase hj]
+  · -- neither present: the swap fixes `T`.
+    rw [himg_fix T hi hj]
+
+/-- **Relabelling marginal vectors under a symmetry.** When `i` and `j` are
+symmetric, post-composing the arrival order with the transposition `swap i j`
+turns `j`'s marginal-vector component into `i`'s. -/
+theorem margVec_trans_swap (G : CoalGame ι) {i j : ι} (hsym : G.AreSymmetric i j)
+    (e : Fin (Fintype.card ι) ≃ ι) :
+    G.margVec (e.trans (Equiv.swap i j)) j = G.margVec e i := by
+  have htrans_symm : ∀ x, (e.trans (Equiv.swap i j)).symm x
+      = e.symm (Equiv.swap i j x) := by
+    intro x
+    simp only [Equiv.symm_trans_apply, Equiv.symm_swap]
+  have hτj : (Equiv.swap i j) j = i := Equiv.swap_apply_right i j
+  have hP : predOrder (e.trans (Equiv.swap i j)) j
+      = (predOrder e i).image (Equiv.swap i j) := by
+    ext x
+    simp only [predOrder, Finset.mem_filter, Finset.mem_univ, true_and,
+      Finset.mem_image, htrans_symm, hτj]
+    constructor
+    · intro hx
+      exact ⟨Equiv.swap i j x, hx, Equiv.swap_apply_self i j x⟩
+    · rintro ⟨y, hy, rfl⟩
+      rwa [Equiv.swap_apply_self]
+  rw [margVec, margVec, marginalContribution, marginalContribution, hP,
+    G.v_image_swap hsym (predOrder e i),
+    show insert j ((predOrder e i).image (Equiv.swap i j))
+        = (insert i (predOrder e i)).image (Equiv.swap i j) from by
+      rw [Finset.image_insert, Equiv.swap_apply_left],
+    G.v_image_swap hsym (insert i (predOrder e i))]
+
+/-- The average-of-marginal-vectors allocation treats symmetric players
+identically. -/
+theorem orderingAvg_symmetric (G : CoalGame ι) {i j : ι} (_hne : i ≠ j)
+    (hsym : G.AreSymmetric i j) : G.orderingAvg i = G.orderingAvg j := by
+  simp only [orderingAvg]
+  congr 1
+  have hττ : (Equiv.swap i j).trans (Equiv.swap i j) = Equiv.refl ι :=
+    Equiv.ext (fun x => Equiv.swap_apply_self i j x)
+  let Φ : (Fin (Fintype.card ι) ≃ ι) ≃ (Fin (Fintype.card ι) ≃ ι) :=
+    { toFun := fun e => e.trans (Equiv.swap i j)
+      invFun := fun e => e.trans (Equiv.swap i j)
+      left_inv := fun e => by
+        change (e.trans (Equiv.swap i j)).trans (Equiv.swap i j) = e
+        rw [Equiv.trans_assoc, hττ, Equiv.trans_refl]
+      right_inv := fun e => by
+        change (e.trans (Equiv.swap i j)).trans (Equiv.swap i j) = e
+        rw [Equiv.trans_assoc, hττ, Equiv.trans_refl] }
+  rw [← Equiv.sum_comp Φ (fun e => G.margVec e j)]
+  refine Finset.sum_congr rfl (fun e _ => ?_)
+  exact (margVec_trans_swap G hsym e).symm
+
+/-- **The Shapley value is the average of marginal vectors.** Both satisfy
+efficiency, symmetry, the null-player axiom, additivity, and homogeneity, so
+they coincide by Shapley's uniqueness theorem. -/
+theorem orderingAvg_eq_shapleyValue (G : CoalGame ι) (i : ι) :
+    G.orderingAvg i = G.shapleyValue i :=
+  shapleyValue_unique orderingAvg orderingAvg_efficient orderingAvg_symmetric
+    orderingAvg_null orderingAvg_additive orderingAvg_scalar G i
+
+/-- **Key lemma: marginal vectors of a convex game are coalition-rational.**
+For a convex game, the marginal vector of any arrival order gives every
+coalition at least its own value. The telescoping identity expresses `v S`
+as a sum of marginal contributions to `S`-predecessor coalitions, each of
+which is dominated by the corresponding full-predecessor marginal
+contribution by monotonicity of marginals. -/
+theorem margVec_coalition_ge (G : CoalGame ι) (h : G.IsConvex)
+    (e : Fin (Fintype.card ι) ≃ ι) (S : Finset ι) :
+    ∑ i ∈ S, G.margVec e i ≥ G.v S := by
+  rw [ge_iff_le, ← G.telescope e S]
+  apply Finset.sum_le_sum
+  intro i _
+  simp only [margVec, predOrder]
+  apply IsConvex.hasMonotoneMarginals G h
+  · exact Finset.filter_subset_filter _ (Finset.subset_univ S)
+  · simp
+
+/-- **Shapley (1971): the Shapley value of a convex game is in the core.**
+Each marginal vector lies in the core (efficiency by telescoping, coalition
+rationality by `margVec_coalition_ge`), the Shapley value is their average,
+and the core is convex. -/
+theorem shapleyValue_isCore_of_isConvex (G : CoalGame ι) (h : G.IsConvex) :
+    G.IsCore (fun i => G.shapleyValue i) := by
+  refine ⟨shapleyValue_efficient G, ?_⟩
+  intro S
+  have hCpos : (0 : ℝ) < (Fintype.card (Fin (Fintype.card ι) ≃ ι) : ℝ) := by
+    exact_mod_cast card_orderings_pos
+  have hrw : ∑ i ∈ S, G.shapleyValue i = ∑ i ∈ S, G.orderingAvg i :=
+    Finset.sum_congr rfl (fun i _ => (orderingAvg_eq_shapleyValue G i).symm)
+  rw [ge_iff_le, hrw]
+  simp only [orderingAvg]
+  rw [← Finset.sum_div, Finset.sum_comm, le_div_iff₀ hCpos]
+  calc G.v S * (Fintype.card (Fin (Fintype.card ι) ≃ ι) : ℝ)
+      = ∑ _e : Fin (Fintype.card ι) ≃ ι, G.v S := by
+        rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_comm]
+    _ ≤ ∑ e : Fin (Fintype.card ι) ≃ ι, ∑ i ∈ S, G.margVec e i :=
+        Finset.sum_le_sum (fun e _ => margVec_coalition_ge G h e S)
+
+end MarginalVector
 
 end CoalGame
 
