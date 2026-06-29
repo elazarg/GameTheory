@@ -18,6 +18,8 @@ achieves this guarantee.
 
 * `worstCaseEUInf` — infimum EU over opponent profiles for a fixed strategy
 * `securityLevelSup` — supremum over own strategies of `worstCaseEUInf`
+* `mixedWorstCaseEUInf` / `mixedSecurityLevel` — the same with a *mixed* own
+  strategy (the mixed maximin value)
 * `worstCaseEU` — minimum EU over opponent profiles for a fixed strategy
 * `securityLevel` — the max over own strategies of `worstCaseEU`
 
@@ -25,6 +27,8 @@ achieves this guarantee.
 
 * `nash_eu_ge_securityLevel` — Nash equilibrium EU ≥ security level
 * `IsDominant.eu_ge_securityLevel` — a dominant strategy guarantees ≥ security level
+* `securityLevelSup_le_mixedSecurityLevel` — randomizing only raises the
+  guaranteed payoff (pure security level ≤ mixed security level)
 -/
 
 open scoped BigOperators
@@ -128,6 +132,34 @@ theorem le_securityLevelSup_of_forall_eu_ge (who : ι) [Nonempty (Profile G)]
           exact le_ciInf hg
      _ ≤ G.securityLevelSup who :=
           le_ciSup hbddSec s
+
+open Classical in
+/-- Worst-case EU of a *mixed* own strategy `p`: the infimum, over opponent
+    profiles, of the expected payoff when `who` randomizes according to `p`.
+    Opponents stay pure; by linearity the worst mixed opponent is no worse. -/
+noncomputable def mixedWorstCaseEUInf (who : ι) (p : PMF (G.Strategy who)) : ℝ :=
+  ⨅ σ : Profile G, expect p (fun a => G.eu (Function.update σ who a) who)
+
+open Classical in
+/-- The **mixed security level** (mixed maximin value): the best worst-case
+    expected payoff `who` can guarantee by randomizing their own strategy. -/
+noncomputable def mixedSecurityLevel (who : ι) : ℝ :=
+  ⨆ p : PMF (G.Strategy who), G.mixedWorstCaseEUInf who p
+
+open Classical in
+/-- Randomizing can only raise the guaranteed payoff: the pure security level is
+    at most the mixed security level, since a pure strategy is the point-mass
+    mixed strategy. -/
+theorem securityLevelSup_le_mixedSecurityLevel (who : ι) [Nonempty (G.Strategy who)]
+    (hbdd : BddAbove (Set.range (fun p : PMF (G.Strategy who) =>
+      G.mixedWorstCaseEUInf who p))) :
+    G.securityLevelSup who ≤ G.mixedSecurityLevel who := by
+  apply ciSup_le
+  intro s
+  have heq : G.worstCaseEUInf who s = G.mixedWorstCaseEUInf who (PMF.pure s) := by
+    simp only [worstCaseEUInf, mixedWorstCaseEUInf, expect_pure]
+  rw [heq]
+  exact le_ciSup hbdd (PMF.pure s)
 
 end Order
 
