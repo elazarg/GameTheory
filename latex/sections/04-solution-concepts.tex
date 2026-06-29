@@ -546,14 +546,38 @@ agree'':\ in any common-knowledge situation about posteriors the
 posteriors are constant on the public event, and the result
 applies.
 
-\leancorr{\TT{Concepts/CommonKnowledge.lean} (\TT{InfoPartition},
+\paragraph{Approximate common belief.}\
+The approximate layer \TT{ApproximateCommonKnowledge.lean} adds
+common $p$-belief in the Monderer--Samet style.  The event
+\TT{PBelief} records states where an agent assigns posterior at
+least $p$ to an event, \TT{IsPEvident} says that a support event is
+$p$-believed whenever true, and \TT{CommonPBeliefAt} packages the
+usual finite witness: a $p$-evident event containing the state and
+contained in mutual $p$-belief of the target event.  Exact common
+knowledge implies common $p$-belief for every $p \le 1$ under a
+strictly positive prior.  The file also ports the quantitative
+agreement bound formalized by
+\citet{ChenEtAl2026AgreeDisagreeFormal}: if it is common $p$-belief
+that each player $i$ reports posterior $r_i$ for event $E$, then
+any two reports satisfy
+\[
+  |r_i - r_j| \le 2(1-p).
+\]
+The Lean theorem is
+\TT{commonPBelief\_posterior\_reports\_close}.
+
+\leancorr{\TT{Concepts/Knowledge/CommonKnowledge.lean} (\TT{InfoPartition},
 \TT{Knows}, \TT{Knows\_subset} (T), \TT{Knows\_idem} (4),
 \TT{Knows\_not\_Knows} (5), \TT{Knows\_mono}, \TT{Knows\_inter},
 \TT{isSelfEvident\_iff\_Knows\_eq}, \TT{posterior},
 \TT{agree\_to\_disagree}, \TT{mutualKnowledge},
 \TT{CommonKnowledgeAt}, \TT{CommonKnowledgeAt.idem},
 \TT{cells\_disjoint}, \TT{selfEvident\_eq\_biUnion\_cells},
-\TT{selfEvident\_sum\_decomp}, \TT{aumann\_full\_agreement}).}
+\TT{selfEvident\_sum\_decomp}, \TT{aumann\_full\_agreement});
+\TT{Concepts/Knowledge/ApproximateCommonKnowledge.lean} (\TT{PBelief},
+\TT{mutualPBelief}, \TT{IsPEvident}, \TT{CommonPBeliefAt},
+\TT{CommonKnowledgeAt.commonPBeliefAt},
+\TT{commonPBelief\_posterior\_reports\_close}).}
 
 \subsection{Individual rationality}
 \label{sec:solution-concepts:ir}
