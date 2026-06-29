@@ -30,11 +30,13 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {Ω : Type} [Fintype Ω] [DecidableEq Ω]
+variable {Ω : Type} [DecidableEq Ω]
 
 /-- An information partition: for each state, the set of states the agent
-    considers possible. -/
-structure InfoPartition (Ω : Type) [Fintype Ω] where
+    considers possible. The state space `Ω` need not be finite — only each
+    information cell `cell s` is a finite set — so the posterior and agreement
+    results below apply to infinite state spaces. -/
+structure InfoPartition (Ω : Type) where
   /-- The cell of states considered possible at state `s`. -/
   cell : Ω → Finset Ω
   /-- The true state is in its own cell. -/
@@ -101,7 +103,12 @@ For a partition-based information structure, the *knowledge operator*
 `Knows P E` returns the event "the agent knows `E`": the set of states at
 which the agent's information cell is contained in `E`. The operator
 satisfies the S5 axioms of partition-based knowledge: veridicality (T),
-positive introspection (4), and negative introspection (5). -/
+positive introspection (4), and negative introspection (5).
+
+The knowledge operator enumerates the whole state space, so this cluster
+requires `Ω` finite; the posterior/agreement results above and below do not. -/
+
+variable [Fintype Ω]
 
 /-- The set of states at which an agent with partition `P` knows event `E`. -/
 def Knows (P : InfoPartition Ω) (E : Finset Ω) : Finset Ω :=
@@ -225,7 +232,7 @@ theorem mem_CommonKnowledge_iff {ι : Type} (P : ι → InfoPartition Ω)
   classical
   simp [CommonKnowledge]
 
-omit [DecidableEq Ω] in
+omit [DecidableEq Ω] [Fintype Ω] in
 /-- Common knowledge implies truth: if `E` is common knowledge at `s`, then
 `s ∈ E`. -/
 theorem CommonKnowledgeAt.implies_mem {ι : Type} {P : ι → InfoPartition Ω}
@@ -267,7 +274,7 @@ posteriors on a common self-evident event `F`, those constants must
 both equal the marginal conditional probability `P(E | F)` and hence
 each other. -/
 
-omit [DecidableEq Ω] in
+omit [DecidableEq Ω] [Fintype Ω] in
 /-- Cells of a partition are pairwise disjoint: if `cell s ≠ cell t`,
 the two cells share no element. -/
 theorem cells_disjoint (P : InfoPartition Ω) {s t : Ω}
@@ -278,6 +285,7 @@ theorem cells_disjoint (P : InfoPartition Ω) {s t : Ω}
   apply hne
   rw [← P.coherent s x hxs, P.coherent t x hxt]
 
+omit [Fintype Ω] in
 /-- A self-evident event decomposes as the disjoint union of its
 contained cells: every state in `F` lives in `cell s` for some `s ∈ F`,
 and every such cell is fully contained in `F`. -/
@@ -291,6 +299,7 @@ theorem selfEvident_eq_biUnion_cells (P : InfoPartition Ω)
   · rintro ⟨C, ⟨s, hsF, rfl⟩, htC⟩
     exact hF s hsF htC
 
+omit [Fintype Ω] in
 /-- Sum decomposition over the cells of a self-evident event:\ summing
 any real-valued function over `F` equals the sum over distinct cells of
 the sum over each cell. -/
@@ -308,6 +317,7 @@ theorem selfEvident_sum_decomp (P : InfoPartition Ω)
   rw [Finset.sum_biUnion hdisj]
   rfl
 
+omit [Fintype Ω] in
 /-- **Aumann (1976) full agreement, on a public self-evident event**:\
 if two agents share the same prior, both have a self-evident event `F`,
 and each agent's posterior of `E` is constant on `F`, then the two

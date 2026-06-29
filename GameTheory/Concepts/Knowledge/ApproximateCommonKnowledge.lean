@@ -495,6 +495,7 @@ theorem commonPBelief_posterior_reports_close [Fintype ι]
 
 /-! ## Bridges from exact common knowledge -/
 
+omit [Fintype Ω] in
 theorem posterior_eq_one_of_cell_subset
     (μ : Ω → ℝ) (hμ : ∀ s, μ s > 0)
     (P : InfoPartition Ω) {E : Finset Ω} {s : Ω}
