@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Learning.Approachability
 import Mathlib.Analysis.InnerProductSpace.PiL2
+import Math.Probability
 
 /-!
 # Approachability ⇒ no external regret (the nonpositive orthant)
@@ -89,5 +90,74 @@ theorem infDist_eq_norm_sub_orthantProj (x : EuclideanSpace ℝ ι) :
       · rw [max_eq_right h]; nlinarith [sq_nonneg (x.ofLp i - y.ofLp i)]
       · rw [max_eq_left h]; nlinarith [hyi, h]
     nlinarith [hsq, norm_nonneg (x - orthantProj x), norm_nonneg (x - y)]
+
+/-! ### The regret payoff and regret-matching witness -/
+
+open Math.Probability
+
+variable {Q : Type*}
+
+/-- The (mixed) external-regret payoff vector against environment action `q`: coordinate `i` is the
+    regret `u i q − 𝔼_{a∼p}[u a q]` of not having committed to action `i`. -/
+noncomputable def regretPayoff (u : ι → Q → ℝ) (p : PMF ι) (q : Q) : EuclideanSpace ℝ ι :=
+  WithLp.toLp 2 (fun i => u i q - expect p (fun a => u a q))
+
+omit [Fintype ι] in
+@[simp] theorem regretPayoff_ofLp (u : ι → Q → ℝ) (p : PMF ι) (q : Q) (i : ι) :
+    (regretPayoff u p q).ofLp i = u i q - expect p (fun a => u a q) := rfl
+
+open Classical in
+/-- **Regret matching** (Hart–Mas-Colell): play proportionally to the positive part `(x)₊` of the
+    cumulative-regret vector `x`. On the orthant (`(x)₊ = 0`) the value is irrelevant — the steering
+    inner product is taken against `(x)₊` — so it falls back to an arbitrary action. -/
+noncomputable def regretMatch [Nonempty ι] (x : EuclideanSpace ℝ ι) : PMF ι :=
+  if h : 0 < ∑ i, max (x.ofLp i) 0 then
+    PMF.ofFintype (fun i => ENNReal.ofReal (max (x.ofLp i) 0 / ∑ j, max (x.ofLp j) 0))
+      (by
+        have hnn : ∀ i, (0 : ℝ) ≤ max (x.ofLp i) 0 / ∑ j, max (x.ofLp j) 0 :=
+          fun i => div_nonneg (le_max_right _ _) (Finset.sum_nonneg fun j _ => le_max_right _ _)
+        rw [← ENNReal.ofReal_sum_of_nonneg (fun i _ => hnn i), ← Finset.sum_div, div_self h.ne',
+          ENNReal.ofReal_one])
+  else PMF.pure (Classical.arbitrary ι)
+
+/-- Under regret matching with a positive cumulative regret, the expected utility is the
+    `(x)₊`-weighted average of the per-action utilities. -/
+theorem expect_regretMatch_pos [Nonempty ι] {x : EuclideanSpace ℝ ι}
+    (h : 0 < ∑ i, max (x.ofLp i) 0) (g : ι → ℝ) :
+    expect (regretMatch x) g = (∑ i, max (x.ofLp i) 0 * g i) / ∑ i, max (x.ofLp i) 0 := by
+  rw [expect_eq_sum, regretMatch, dif_pos h, Finset.sum_div]
+  refine Finset.sum_congr rfl (fun i _ => ?_)
+  rw [PMF.ofFintype_apply, ENNReal.toReal_ofReal
+    (div_nonneg (le_max_right _ _) (Finset.sum_nonneg fun j _ => le_max_right _ _))]
+  ring
+
+/-- **The nonpositive orthant is a B-set for the regret payoff.** Regret matching keeps the expected
+    regret vector on the far side of the supporting hyperplane through the projection: the steering
+    inner product vanishes. This is the Blackwell condition that makes external regret vanish. -/
+theorem regretMatch_steering [Nonempty ι] (u : ι → Q → ℝ) (x : EuclideanSpace ℝ ι) (q : Q) :
+    inner ℝ (regretPayoff u (regretMatch x) q - orthantProj x) (x - orthantProj x) ≤ 0 := by
+  have hmaxmin : ∀ i, max (x.ofLp i) 0 * min (x.ofLp i) 0 = 0 := fun i => by
+    rcases le_total (x.ofLp i) 0 with h | h
+    · rw [max_eq_right h, zero_mul]
+    · rw [min_eq_right h, mul_zero]
+  have key : inner ℝ (regretPayoff u (regretMatch x) q - orthantProj x) (x - orthantProj x)
+      = (∑ i, max (x.ofLp i) 0 * u i q)
+        - expect (regretMatch x) (fun a => u a q) * (∑ i, max (x.ofLp i) 0) := by
+    rw [PiLp.inner_apply, Finset.mul_sum, ← Finset.sum_sub_distrib]
+    refine Finset.sum_congr rfl (fun i _ => ?_)
+    simp only [RCLike.inner_apply, starRingEnd_apply, star_trivial, WithLp.ofLp_sub, Pi.sub_apply,
+      regretPayoff_ofLp, orthantProj_ofLp, sub_orthantProj_ofLp]
+    linear_combination -(hmaxmin i)
+  rw [key]
+  rcases eq_or_lt_of_le (Finset.sum_nonneg fun i _ => le_max_right (x.ofLp i) 0) with hz | hz
+  · -- ∑ (x)₊ = 0: every positive part is zero, both terms vanish
+    have hall : ∀ i, max (x.ofLp i) 0 = 0 := fun i =>
+      (Finset.sum_eq_zero_iff_of_nonneg fun j _ => le_max_right _ _).1 hz.symm i (Finset.mem_univ i)
+    have hsq : (∑ i, max (x.ofLp i) 0 * u i q) = 0 :=
+      Finset.sum_eq_zero fun i _ => by rw [hall i, zero_mul]
+    rw [hsq, ← hz]; simp
+  · -- ∑ (x)₊ > 0: regret matching makes the average regret exactly zero
+    rw [expect_regretMatch_pos hz, div_mul_cancel₀ _ hz.ne']
+    simp
 
 end Math.Approachability
