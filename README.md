@@ -76,7 +76,10 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Security strategies (maximin), minimax guarantees, saddle points
 - Potential games (exact, ordinal, weighted), finite improvement property, and
   the Monderer–Shapley mixed (multilinear) extension of an exact potential
-- Rationalizability, dominance solvability
+- Rationalizability via iterated elimination of **mixed**-strictly-dominated
+  strategies (the standard Bernheim–Pearce notion; the weaker pure-dominator
+  variant is retained), strict dominance by a mixed strategy, dominance
+  solvability
 - Evolutionary stable strategies (ESS)
 - Price of anarchy — including smoothness and the robust PoA bound that extends
   from Nash to coarse correlated equilibria — individual rationality, social

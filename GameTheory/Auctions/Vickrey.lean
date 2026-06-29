@@ -28,18 +28,18 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {n : ℕ}
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 open Classical in
 /-- The maximum bid among all players other than `who`.
     Returns 0 if `who` is the only player. -/
-noncomputable def maxOtherBid (bids : Fin n → ℝ) (who : Fin n) : ℝ :=
+noncomputable def maxOtherBid (bids : ι → ℝ) (who : ι) : ℝ :=
   let others := Finset.univ.filter (· ≠ who)
   if h : others.Nonempty then others.sup' h bids else 0
 
 open Classical in
 /-- The max-other-bid is independent of `who`'s own bid. -/
-theorem maxOtherBid_update_self (bids : Fin n → ℝ) (who : Fin n) (b : ℝ) :
+theorem maxOtherBid_update_self (bids : ι → ℝ) (who : ι) (b : ℝ) :
     maxOtherBid (Function.update bids who b) who = maxOtherBid bids who := by
   simp only [maxOtherBid]
   split <;> simp_all only [ne_eq]
@@ -53,13 +53,13 @@ open Classical in
 /-- Payoff in a second-price auction with valuations `v`.
     If your bid exceeds the max other bid, you get `v(who) - maxOtherBid`;
     otherwise you get 0. -/
-noncomputable def vickreyPayoff (v : Fin n → ℝ) (bids : Fin n → ℝ) (who : Fin n) : ℝ :=
+noncomputable def vickreyPayoff (v : ι → ℝ) (bids : ι → ℝ) (who : ι) : ℝ :=
   if bids who > maxOtherBid bids who then v who - maxOtherBid bids who else 0
 
 open Classical in
 /-- Truthful bidding is weakly dominant in a Vickrey auction. -/
-theorem vickrey_truthful_dominant (v : Fin n → ℝ)
-    (who : Fin n) (bids : Fin n → ℝ) (b' : ℝ) :
+theorem vickrey_truthful_dominant (v : ι → ℝ)
+    (who : ι) (bids : ι → ℝ) (b' : ℝ) :
     vickreyPayoff v (Function.update bids who (v who)) who ≥
     vickreyPayoff v (Function.update bids who b') who := by
   simp only [vickreyPayoff, Function.update_self,
@@ -78,12 +78,12 @@ theorem vickrey_truthful_dominant (v : Fin n → ℝ)
 open Classical in
 /-- The Vickrey auction as a `KernelGame`: strategies are bids (ℝ),
     utility is the Vickrey payoff. -/
-noncomputable def vickreyGame (v : Fin n → ℝ) : KernelGame (Fin n) :=
+noncomputable def vickreyGame (v : ι → ℝ) : KernelGame (ι) :=
   KernelGame.ofEU (fun _ => ℝ) (vickreyPayoff v)
 
 open Classical in
 /-- Truthful bidding is a dominant strategy in the Vickrey game. -/
-theorem vickrey_truthful_isDominant (v : Fin n → ℝ) (who : Fin n) :
+theorem vickrey_truthful_isDominant (v : ι → ℝ) (who : ι) :
     (vickreyGame v).IsDominant who (v who) := by
   intro σ s'
   simp only [vickreyGame, KernelGame.eu_ofEU]
@@ -91,7 +91,7 @@ theorem vickrey_truthful_isDominant (v : Fin n → ℝ) (who : Fin n) :
 
 open Classical in
 /-- Truthful bidding is a Nash equilibrium of the Vickrey game. -/
-theorem vickrey_truthful_isNash (v : Fin n → ℝ) :
+theorem vickrey_truthful_isNash (v : ι → ℝ) :
     (vickreyGame v).IsNash v := by
   exact KernelGame.dominant_is_nash _ _ (fun i => vickrey_truthful_isDominant v i)
 

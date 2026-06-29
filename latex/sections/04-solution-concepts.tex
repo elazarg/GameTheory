@@ -181,23 +181,41 @@ proposition, with no hidden EU dependence.
 Iterated elimination of strictly dominated strategies is encoded
 as a sequence $\mathrm{Survives}_n$ of decreasing predicates: round
 $0$ is true of every strategy, and round $n+1$ requires that the
-strategy both survived round $n$ and is not strictly dominated,
-restricted to round-$n$ survivors of all opponents.  A strategy is
-\emph{rationalizable} when it survives every round.  The library
-proves:
+strategy both survived round $n$ and is not strictly dominated by a
+\emph{mixed} strategy supported on round-$n$ survivors, against every
+round-$n$ survivor profile.  A strategy is \emph{rationalizable}
+when it survives every round.  Following Bernheim and Pearce, the
+standard notion eliminates by mixed dominators — a pure strategy can
+be strictly dominated by a mixed strategy even when no single pure
+strategy dominates it — so the expected payoff of a mixed deviation
+$p \in \PMF{\Strat_i}$ against a pure profile is
+$\mathbb{E}_{a \sim p}\,\EU(\KG, \Profile[i \mapsto a], i)$.  The
+pure-dominator variant ($\mathrm{SurvivesPure}$,
+$\mathrm{IsPureRationalizable}$) eliminates strictly less and so
+over-approximates the rationalizable set;\ it is retained as the
+weaker notion.  The library proves (the mixed statements over finite
+pure-strategy spaces):
 \begin{itemize}
 \item Survival is monotone decreasing in rounds.
 \item Every Nash strategy survives every round, hence is
-rationalizable.
+rationalizable:\ a best response is not strictly beaten in
+expectation by any mixed deviation.
 \item Every dominant strategy is rationalizable.
+\item A strategy strictly dominated by a mixed strategy
+($\mathrm{StrictlyDominatedByMixed}$) is never a best response, and a
+rationalizable strategy is not globally mixed-dominated.
 \item In a \emph{dominance-solvable} game, the unique surviving
 profile is Nash.
 \end{itemize}
 
 \leancorr{Predicates and theorems in \TT{Concepts/Dominance/Rationalizability.lean}
-(\TT{Survives}, \TT{IsNash.survives}, \TT{IsNash.isRationalizable},
-\TT{IsDominant.isRationalizable}); the dominance-solvable case in
-\TT{Concepts/Dominance/DominanceSolvable.lean}.}
+(\TT{Survives}, \TT{IsRationalizable}, \TT{IsNash.survives},
+\TT{IsNash.isRationalizable}, \TT{IsDominant.isRationalizable},
+\TT{IsRationalizable.not\_globally\_dominated}; pure variants
+\TT{SurvivesPure}, \TT{IsPureRationalizable}); mixed dominance and the
+dominance-solvable case in
+\TT{Concepts/Dominance/DominanceSolvable.lean}
+(\TT{StrictlyDominatedByMixed}, \TT{StrictlyDominatedByMixed.not\_best\_response}).}
 
 \subsection{Correlated and coarse correlated equilibria}
 \label{sec:solution-concepts:correlated}
