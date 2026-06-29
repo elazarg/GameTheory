@@ -89,6 +89,106 @@ theorem empiricalMarginal_apply_toReal
     · simp [hks, NeZero.ne t]
     · simp [hks]
 
+omit [DecidableEq ι] [Fintype ι] in
+open Classical in
+/-- The empirical marginal weight can equivalently be counted over `Finset.range t`. -/
+theorem empiricalMarginal_apply_toReal_range
+    (a : ℕ → M.Profile) (j : ι) (t : ℕ) [NeZero t] (s : M.Strategy j) :
+    ((M.empiricalMarginal a j t) s).toReal =
+      (((Finset.range t).filter fun k : ℕ => a k j = s).card : ℝ) / t := by
+  rw [M.empiricalMarginal_apply_toReal a j t s]
+  congr 1
+  norm_num
+  have himage :
+      (Finset.univ.filter fun k : Fin t => a (k : ℕ) j = s).image Fin.val =
+        (Finset.range t).filter fun k : ℕ => a k j = s := by
+    ext k
+    simp [Fin.exists_iff, and_comm]
+  have hcard := congrArg Finset.card himage
+  rw [Finset.card_image_of_injective _ Fin.val_injective] at hcard
+  exact_mod_cast hcard
+
+omit [DecidableEq ι] [Fintype ι] in
+open Classical in
+/-- Successor recursion for empirical marginal weights, stated pointwise after
+coercion to `ℝ`. -/
+theorem empiricalMarginal_succ_apply_toReal
+    (a : ℕ → M.Profile) (j : ι) (t : ℕ) (s : M.Strategy j) :
+    ((M.empiricalMarginal a j (t + 2)) s).toReal =
+      ((t + 1 : ℝ) / (t + 2 : ℝ)) *
+          ((M.empiricalMarginal a j (t + 1)) s).toReal +
+        (if a (t + 1) j = s then (1 : ℝ) / (t + 2 : ℝ) else 0) := by
+  rw [M.empiricalMarginal_apply_toReal_range a j (t + 2) s,
+    M.empiricalMarginal_apply_toReal_range a j (t + 1) s]
+  let c := ((Finset.range (t + 1)).filter fun k : ℕ => a k j = s).card
+  have hcard :
+      ((Finset.range (t + 2)).filter fun k : ℕ => a k j = s).card =
+        c + if a (t + 1) j = s then 1 else 0 := by
+    dsimp [c]
+    rw [show t + 2 = (t + 1) + 1 by omega, Finset.range_add_one]
+    by_cases hlast : a (t + 1) j = s
+    · have hfilter :
+          (insert (t + 1) (Finset.range (t + 1))).filter (fun k : ℕ => a k j = s) =
+            insert (t + 1) ((Finset.range (t + 1)).filter fun k : ℕ => a k j = s) := by
+        rw [Finset.filter_insert]
+        exact if_pos hlast
+      have hnot :
+          t + 1 ∉ ((Finset.range (t + 1)).filter fun k : ℕ => a k j = s) := by
+        simp [Finset.mem_range]
+      rw [hfilter, Finset.card_insert_of_notMem hnot]
+      simp [hlast]
+    · have hfilter :
+          (insert (t + 1) (Finset.range (t + 1))).filter (fun k : ℕ => a k j = s) =
+            (Finset.range (t + 1)).filter fun k : ℕ => a k j = s := by
+        rw [Finset.filter_insert]
+        exact if_neg hlast
+      rw [hfilter]
+      simp [hlast]
+  have ht1 : (t + 1 : ℝ) ≠ 0 := by positivity
+  have ht2 : (t + 2 : ℝ) ≠ 0 := by positivity
+  by_cases hlast : a (t + 1) j = s
+  · have hcard' :
+        (((Finset.range (t + 2)).filter fun k : ℕ => a k j = s).card : ℝ) =
+          (c : ℝ) + 1 := by
+      have hcard_nat :
+          ((Finset.range (t + 2)).filter fun k : ℕ => a k j = s).card = c + 1 := by
+        simpa [hlast] using hcard
+      exact_mod_cast hcard_nat
+    simp [hlast, hcard', c]
+    field_simp [ht1, ht2]
+  · have hcard' :
+        (((Finset.range (t + 2)).filter fun k : ℕ => a k j = s).card : ℝ) =
+          (c : ℝ) := by
+      have hcard_nat :
+          ((Finset.range (t + 2)).filter fun k : ℕ => a k j = s).card = c := by
+        simpa [hlast] using hcard
+      exact_mod_cast hcard_nat
+    simp [hlast, hcard', c]
+    field_simp [ht1, ht2]
+
+omit [DecidableEq ι] [Fintype ι] in
+open Classical in
+/-- Successor recursion for expectations under empirical marginals. -/
+theorem empiricalMarginal_succ_expect
+    (a : ℕ → M.Profile) (j : ι) [Finite (M.Strategy j)]
+    (t : ℕ) (f : M.Strategy j → ℝ) :
+    expect (M.empiricalMarginal a j (t + 2)) f =
+      ((t + 1 : ℝ) / (t + 2 : ℝ)) *
+          expect (M.empiricalMarginal a j (t + 1)) f +
+        (1 / (t + 2 : ℝ)) * f (a (t + 1) j) := by
+  letI : Fintype (M.Strategy j) := Fintype.ofFinite (M.Strategy j)
+  rw [expect_eq_sum, expect_eq_sum]
+  simp_rw [M.empiricalMarginal_succ_apply_toReal a j t]
+  simp_rw [add_mul, mul_assoc]
+  rw [Finset.sum_add_distrib, ← Finset.mul_sum]
+  have hδ :
+      (∑ s : M.Strategy j,
+          (if a (t + 1) j = s then (1 : ℝ) / (t + 2 : ℝ) else 0) * f s) =
+        (1 / (t + 2 : ℝ)) * f (a (t + 1) j) := by
+    simp_rw [ite_mul, zero_mul]
+    rw [Fintype.sum_ite_eq]
+  rw [hδ]
+
 /-- The belief profile entering round `t`: each player's empirical marginal over the first `t`
     rounds, viewed as a mixed-strategy profile. -/
 noncomputable def belief (a : ℕ → M.Profile) (t : ℕ) [NeZero t] : M.mixedExtension.Profile :=

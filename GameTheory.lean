@@ -39,6 +39,7 @@ import GameTheory.Concepts.Dominance.DominanceSolvability
 import GameTheory.Concepts.Equilibrium.StrictNashProperties
 import GameTheory.Concepts.Equilibrium.ApproximateNash
 import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.Mixed.MixedImprovement
 import GameTheory.Concepts.Mixed.BinaryMixed
 import GameTheory.Concepts.Mixed.TremblingHand
 import GameTheory.Concepts.Existence.NashExistence
@@ -75,6 +76,7 @@ import GameTheory.Concepts.Learning.NoRegretToCCE
 import GameTheory.Concepts.Learning.SelfPlay
 import GameTheory.Concepts.Learning.MWSelfPlay
 import GameTheory.Concepts.Learning.FictitiousPlay
+import GameTheory.Concepts.Learning.FictitiousPlayPotential
 import GameTheory.Concepts.Learning.Approachability
 import GameTheory.Concepts.Learning.ApproachabilityRegret
 
@@ -92,6 +94,7 @@ import GameTheory.Concepts.Potential.PotentialGame
 import GameTheory.Concepts.Potential.PotentialFIP
 import GameTheory.Concepts.Potential.PotentialWellFounded
 import GameTheory.Concepts.Potential.PotentialTeam
+import GameTheory.Concepts.Potential.MixedPotential
 
 -- Team games and symmetric games
 import GameTheory.Concepts.Classes.TeamGame

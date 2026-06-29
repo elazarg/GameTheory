@@ -41,6 +41,27 @@ def IsExactPotential (G : KernelGame ι) [DecidableEq ι] (Φ : Profile G → �
     G.eu (Function.update σ who s') who - G.eu σ who =
       (Φ (Function.update σ who s') - Φ σ)
 
+/-- Weighted exact potential game (in expected-utility form).
+
+The positive weight `w who` scales player `who`'s utility difference relative to
+the common potential difference. -/
+def IsWeightedExactPotential (G : KernelGame ι) [DecidableEq ι]
+    (Φ : Profile G → ℝ) (w : ι → ℝ) : Prop :=
+  (∀ who : ι, 0 < w who) ∧
+    ∀ (who : ι) (σ : Profile G) (s' : G.Strategy who),
+      G.eu (Function.update σ who s') who - G.eu σ who =
+        w who * (Φ (Function.update σ who s') - Φ σ)
+
+/-- Exact potentials are weighted exact potentials with all weights equal to
+one. -/
+theorem IsExactPotential.toWeightedExactPotential
+    {G : KernelGame ι} [DecidableEq ι] {Φ : Profile G → ℝ}
+    (hΦ : G.IsExactPotential Φ) :
+    G.IsWeightedExactPotential Φ (fun _ => 1) := by
+  refine ⟨fun _ => zero_lt_one, ?_⟩
+  intro who σ s'
+  simpa using hΦ who σ s'
+
 /-- Ordinal potential game (in expected-utility form). -/
 def IsOrdinalPotential (G : KernelGame ι) [DecidableEq ι] (Φ : Profile G → ℝ) : Prop :=
   ∀ (who : ι) (σ : Profile G) (s' : G.Strategy who),
