@@ -204,18 +204,22 @@ expectation by any mixed deviation.
 \item A strategy strictly dominated by a mixed strategy
 ($\mathrm{StrictlyDominatedByMixed}$) is never a best response, and a
 rationalizable strategy is not globally mixed-dominated.
-\item In a \emph{dominance-solvable} game, the unique surviving
-profile is Nash.
+\item In a \emph{dominant-strategy solvable} game — one in which every
+player has a strictly dominant strategy, a strictly stronger condition
+than textbook dominance solvability — that dominant profile is the unique
+Nash equilibrium.
 \end{itemize}
 
 \leancorr{Predicates and theorems in \TT{Concepts/Dominance/Rationalizability.lean}
 (\TT{Survives}, \TT{IsRationalizable}, \TT{IsNash.survives},
 \TT{IsNash.isRationalizable}, \TT{IsDominant.isRationalizable},
 \TT{IsRationalizable.not\_globally\_dominated}; pure variants
-\TT{SurvivesPure}, \TT{IsPureRationalizable}); mixed dominance and the
-dominance-solvable case in
+\TT{SurvivesPure}, \TT{IsPureRationalizable}); mixed dominance in
 \TT{Concepts/Dominance/DominanceSolvable.lean}
-(\TT{StrictlyDominatedByMixed}, \TT{StrictlyDominatedByMixed.not\_best\_response}).}
+(\TT{StrictlyDominatedByMixed}, \TT{StrictlyDominatedByMixed.not\_best\_response});
+dominant-strategy solvability in
+\TT{Concepts/Dominance/DominanceSolvability.lean}
+(\TT{IsDominantStrategySolvable}, \TT{IsDominantStrategySolvable.exists\_unique\_nash}).}
 
 \subsection{Correlated and coarse correlated equilibria}
 \label{sec:solution-concepts:correlated}
