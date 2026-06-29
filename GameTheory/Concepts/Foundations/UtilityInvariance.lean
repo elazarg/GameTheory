@@ -47,6 +47,26 @@ theorem ofEU_nash_affine (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     rw [htrans σ who, htrans (Function.update σ who s') who] at this
     nlinarith
 
+/-- Affine transformation of utilities preserves dominant strategies, by the
+same argument as `ofEU_nash_affine`: positive scaling preserves the direction of
+every within-player comparison and per-player shifts cancel. -/
+theorem ofEU_isDominant_affine (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
+    (a : ℝ) (ha : a > 0) (b : ι → ℝ)
+    (u' : (∀ i, S i) → Payoff ι)
+    (htrans : ∀ σ i, u' σ i = a * u σ i + b i) (who : ι) (s : S who) :
+    (KernelGame.ofEU S u).IsDominant who s ↔ (KernelGame.ofEU S u').IsDominant who s := by
+  classical
+  simp only [KernelGame.IsDominant, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy]
+  constructor
+  · intro hd σ s'
+    have := hd σ s'
+    rw [htrans (Function.update σ who s) who, htrans (Function.update σ who s') who]
+    nlinarith
+  · intro hd σ s'
+    have := hd σ s'
+    rw [htrans (Function.update σ who s) who, htrans (Function.update σ who s') who] at this
+    nlinarith
+
 /-- Adding a per-player constant to utilities preserves Nash equilibria.
 
 This is the special case of `ofEU_nash_affine` with `a = 1`: player-specific

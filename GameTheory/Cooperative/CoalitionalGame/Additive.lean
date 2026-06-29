@@ -101,7 +101,7 @@ theorem additiveGame_eq_gameSum (α : ι → ℝ) :
 their own weight, like the Shapley value. Same decomposition trick:
 `additiveGame α = Σ_j (α j) · u_{j}`, and Banzhaf is linear with
 `banzhafIndex (unanimityGame {j}) i = 1[i = j]`. -/
-theorem additiveGame_banzhafIndex [Nonempty ι] (α : ι → ℝ) (i : ι) :
+theorem additiveGame_banzhafIndex (α : ι → ℝ) (i : ι) :
     (additiveGame α).banzhafIndex i = α i := by
   classical
   rw [additiveGame_eq_gameSum,
@@ -158,7 +158,7 @@ This is the standard normalization, derived here from
 `additiveGame_shapleyValue` applied to the unit vector at `i` (Shapley
 of the resulting additive game must equal `1`, and the formula computes
 to the desired sum). -/
-theorem sum_shapleyWeights [Nonempty ι] (i : ι) :
+theorem sum_shapleyWeights (i : ι) :
     ∑ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
       ((S.card.factorial * (Fintype.card ι - S.card - 1).factorial : ℕ) : ℝ) /
         ((Fintype.card ι).factorial : ℝ) = 1 := by

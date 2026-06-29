@@ -116,11 +116,12 @@ theorem affineMaximizer_wUtil {i : ι} (hwi : w i ≠ 0) {report : ∀ j, Θ j}
   ring
 
 /-- **The Clarke pivot payment is nonnegative.** Each agent pays the (nonnegative)
-externality it imposes on the others, never receiving a subsidy. -/
-theorem affineMaximizer_payment_nonneg (hw : ∀ i, 0 < w i) (θ : ∀ j, Θ j) (i : ι) :
+externality it imposes on the others, never receiving a subsidy. Only the
+weight of player `i` need be positive. -/
+theorem affineMaximizer_payment_nonneg (θ : ∀ j, Θ j) (i : ι) (hwi : 0 < w i) :
     0 ≤ (affineMaximizer Θ value w κ).payment θ i := by
   simp only [affineMaximizer]
-  refine mul_nonneg (le_of_lt (div_pos one_pos (hw i))) ?_
+  refine mul_nonneg (le_of_lt (div_pos one_pos hwi)) ?_
   rw [sub_nonneg]
   exact Finset.le_sup' (othersWelfare Θ value w κ θ i) (Finset.mem_univ _)
 

@@ -119,7 +119,7 @@ theorem shapleyShubikIndex_null (G : CoalGame ι) (h : G.IsSimpleGame) {i : ι}
 /-- **Banzhaf index of the singleton unanimity game**: player `i` has
 Banzhaf index `1` in `unanimityGame {i}` — they are pivotal in every
 coalition since the game wins iff they join. -/
-theorem unanimityGame_singleton_banzhafIndex [Nonempty ι] (i : ι) :
+theorem unanimityGame_singleton_banzhafIndex (i : ι) :
     (unanimityGame ({i} : Finset ι) (Finset.singleton_nonempty i)).banzhafIndex i
       = 1 := by
   classical
