@@ -12,8 +12,9 @@ import GameTheory.Concepts.Equilibrium.SolutionConcepts
 
 A Stackelberg game is a two-player sequential game where the leader
 commits to a strategy first, and the follower best-responds. The main
-result is that the leader's Stackelberg payoff is at least as good as
-their Nash payoff in the simultaneous-move game.
+result is that the leader's Stackelberg payoff is at least their payoff
+under any commitment; specialized to a simultaneous Nash equilibrium, this
+is the classic first-mover advantage (see the entry-deterrence example).
 
 ## Main definitions
 
@@ -24,7 +25,8 @@ their Nash payoff in the simultaneous-move game.
 
 ## Main results
 
-* `stackelberg_leader_ge_nash` — leader's Stackelberg payoff ≥ Nash payoff
+* `stackelberg_leader_ge_commitment` — leader's Stackelberg payoff ≥ payoff at
+  any commitment (≥ the Nash payoff as a special case)
 -/
 
 namespace GameTheory
@@ -62,16 +64,18 @@ def IsStackelbergEq (l : G.L) (br : G.L → G.F) : Prop :=
 def IsSimNash (l : G.L) (f : G.F) : Prop :=
   (∀ l', G.uL l f ≥ G.uL l' f) ∧ (∀ f', G.uF l f ≥ G.uF l f')
 
-/-- The Stackelberg leader advantage theorem. -/
-theorem stackelberg_leader_ge_nash
+/-- The Stackelberg leader's payoff is at least their payoff under any
+commitment `l_N` whose follower best-response is `f_N` (`br l_N = f_N`). The
+classic leader advantage over a simultaneous Nash equilibrium is the special
+case where `(l_N, f_N)` is Nash (see the entry-deterrence example below). -/
+theorem stackelberg_leader_ge_commitment
     (l_S : G.L) (br : G.L → G.F)
     (l_N : G.L) (f_N : G.F)
     (hStack : G.IsStackelbergEq l_S br)
-    (_hNash : G.IsSimNash l_N f_N)
-    (hbr_nash : br l_N = f_N) :
+    (hbr : br l_N = f_N) :
     G.uL l_S (br l_S) ≥ G.uL l_N f_N := by
   calc G.uL l_S (br l_S) ≥ G.uL l_N (br l_N) := hStack.2 l_N
-    _ = G.uL l_N f_N := by rw [hbr_nash]
+    _ = G.uL l_N f_N := by rw [hbr]
 
 /-- If the follower has a unique best response at the Nash action,
     then `br l_N = f_N` follows automatically from Nash. -/
@@ -185,10 +189,9 @@ Stackelberg payoff (`uL(fight, stay out) = 2`) is at least the
 simultaneous-Nash payoff at the *(accommodate, enter)* Nash
 (`uL(accommodate, enter) = 1`) — strictly larger, in fact. -/
 theorem leader_advantage :
-    game.uL fight (br fight) ≥ game.uL accommodate enter := by
-  have := game.stackelberg_leader_ge_nash fight br accommodate enter
-    game_stackelberg_eq_fight game_simNash_accommodate game_br_at_accommodate
-  exact this
+    game.uL fight (br fight) ≥ game.uL accommodate enter :=
+  game.stackelberg_leader_ge_commitment fight br accommodate enter
+    game_stackelberg_eq_fight game_br_at_accommodate
 
 theorem leader_advantage_strict :
     game.uL fight (br fight) > game.uL accommodate enter := by

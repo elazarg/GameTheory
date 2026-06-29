@@ -103,6 +103,7 @@ theorem principalUtility_add_agentUtility (t : Outcome → ℝ) (a : Action) :
   rw [expect_sub (I.outcomeDist a) I.reward t]
   ring
 
+omit [Finite Outcome] in
 /-- **Limited liability protects the agent.** Under a nonnegative payment scheme
 the agent's utility is at least `-cost a`: its expected payment is nonnegative, so
 it can lose at most its effort cost. -/
@@ -119,6 +120,7 @@ theorem linearPayment_limitedLiability {α : ℝ} (hα : 0 ≤ α)
     (hr : ∀ o, 0 ≤ I.reward o) : LimitedLiability (I.linearPayment α) :=
   fun o => mul_nonneg hα (hr o)
 
+omit [Finite Outcome] in
 /-- Under a linear contract the agent's expected utility is
 `α · (expected reward) − cost`. -/
 theorem agentUtility_linearPayment (α : ℝ) (a : Action) :
@@ -141,6 +143,7 @@ independent of the contract. -/
 noncomputable def socialSurplus (a : Action) : ℝ :=
   I.expectedReward a - I.cost a
 
+omit [Finite Outcome] in
 /-- Under the full-commission linear contract `α = 1` ("selling the firm to the
 agent") the agent becomes the residual claimant: its utility equals the social
 surplus. -/
@@ -148,6 +151,7 @@ theorem agentUtility_linearPayment_one (a : Action) :
     I.agentUtility (I.linearPayment 1) a = I.socialSurplus a := by
   simp only [agentUtility_linearPayment, socialSurplus, one_mul]
 
+omit [Finite Outcome] in
 /-- Under a linear contract the principal keeps the complementary `(1 − α)` share
 of the expected reward. -/
 theorem principalUtility_linearPayment (α : ℝ) (a : Action) :
@@ -157,11 +161,13 @@ theorem principalUtility_linearPayment (α : ℝ) (a : Action) :
         funext fun o => by ring]
   rw [expect_const_mul]
 
+omit [Finite Outcome] in
 /-- Under the full-commission contract the principal retains nothing. -/
 theorem principalUtility_linearPayment_one (a : Action) :
     I.principalUtility (I.linearPayment 1) a = 0 := by
   rw [principalUtility_linearPayment]; ring
 
+omit [Finite Outcome] in
 /-- **First best by selling the firm.** Under the full-commission contract the
 agent's privately optimal action is exactly a social-surplus maximizer, so the
 principal implements the first best (while extracting no rent). -/
@@ -177,6 +183,7 @@ theorem agentUtility_mono (t t' : Outcome → ℝ) (h : ∀ o, t o ≤ t' o) (a 
   have := expect_mono (I.outcomeDist a) t t' h
   simp only [agentUtility]; linarith
 
+omit [Finite Outcome] in
 /-- **Participation under limited liability.** If some action is costless and the
 contract satisfies limited liability, then every incentive-compatible action is
 individually rational: the agent can secure a nonnegative payoff with the free

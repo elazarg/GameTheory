@@ -76,8 +76,10 @@ theorem noImprovement_of_move_family
 
 section Additive
 
+variable [Add β] [AddLeftMono β] [AddRightMono β]
+
 theorem noImprovement_add
-    (obj₁ obj₂ : α → ℝ) (step : α → α)
+    (obj₁ obj₂ : α → β) (step : α → α)
     (h₁ : NoImprovement obj₁ step)
     (h₂ : NoImprovement obj₂ step) :
     NoImprovement (fun x => obj₁ x + obj₂ x) step := by
@@ -85,7 +87,7 @@ theorem noImprovement_add
   exact add_le_add (h₁ x) (h₂ x)
 
 theorem locallyOptimal_add
-    (nbr : α → α → Prop) (obj₁ obj₂ : α → ℝ) (x : α)
+    (nbr : α → α → Prop) (obj₁ obj₂ : α → β) (x : α)
     (h₁ : LocallyOptimal nbr obj₁ x)
     (h₂ : LocallyOptimal nbr obj₂ x) :
     LocallyOptimal nbr (fun y => obj₁ y + obj₂ y) x := by
@@ -94,23 +96,25 @@ theorem locallyOptimal_add
 
 end Additive
 
-section OrderedRing
+section OrderedMul
+
+variable [Zero β] [Mul β] [PosMulMono β]
 
 theorem noImprovement_smul_nonneg
-    (obj : α → ℝ) (step : α → α) {c : ℝ}
+    (obj : α → β) (step : α → α) {c : β}
     (hc : 0 ≤ c) (h : NoImprovement obj step) :
     NoImprovement (fun x => c * obj x) step := by
   intro x
   exact mul_le_mul_of_nonneg_left (h x) hc
 
 theorem locallyOptimal_smul_nonneg
-    (nbr : α → α → Prop) (obj : α → ℝ) (x : α) {c : ℝ}
+    (nbr : α → α → Prop) (obj : α → β) (x : α) {c : β}
     (hc : 0 ≤ c) (h : LocallyOptimal nbr obj x) :
     LocallyOptimal nbr (fun y => c * obj y) x := by
   intro y hy
   exact mul_le_mul_of_nonneg_left (h y hy) hc
 
-end OrderedRing
+end OrderedMul
 
 section PositivePart
 

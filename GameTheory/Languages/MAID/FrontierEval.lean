@@ -39,12 +39,11 @@ variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
 -- Step 1: Frontier independence
 -- ============================================================================
 
-/-- Two distinct frontier nodes have no direct edge between them.  Frontier
-membership requires all parents assigned; a frontier node is unassigned.
-So a frontier node cannot be a parent of another frontier node. -/
+/-- Two frontier nodes have no direct edge between them.  Frontier membership
+requires all parents assigned; a frontier node is unassigned. So a frontier
+node cannot be a parent of another frontier node. -/
 theorem frontier_noDirectEdge (S : Struct Player n) (cfg : FrontierCfg S)
-    (u v : Fin n) (hu : u ∈ frontier S cfg) (hv : v ∈ frontier S cfg)
-    (_hne : u ≠ v) :
+    (u v : Fin n) (hu : u ∈ frontier S cfg) (hv : v ∈ frontier S cfg) :
     NoDirectEdge S u v := by
   have heu : enabled S cfg u := by simpa [frontier] using hu
   have hev : enabled S cfg v := by simpa [frontier] using hv
