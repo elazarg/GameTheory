@@ -147,7 +147,7 @@ theorem nashSolution_symmetric (u : ι → ℝ) (hsym : B.IsSymmetric)
         _ = ∏ i, (u i - B.d i) := Equiv.prod_comp σ (fun j => u j - B.d j)
     refine ⟨hinv σ u hns.1, ?_, ?_⟩
     · intro i
-      show u (σ i) ≥ B.d i
+      change u (σ i) ≥ B.d i
       rw [hdconst i (σ i)]
       exact hns.2.1 (σ i)
     · intro v hfv hirv
@@ -169,7 +169,7 @@ def posAffineMap (α : ι → ℝ) (hα : ∀ i, 0 < α i) (β : ι → ℝ) :
   feasible := fun v => B.feasible (fun i => (v i - β i) / α i)
   d := fun i => α i * B.d i + β i
   d_feasible := by
-    show B.feasible (fun i => (α i * B.d i + β i - β i) / α i)
+    change B.feasible (fun i => (α i * B.d i + β i - β i) / α i)
     have h : (fun i => (α i * B.d i + β i - β i) / α i) = B.d := by
       funext i
       rw [add_sub_cancel_right, mul_div_cancel_left₀ (B.d i) (hα i).ne']
