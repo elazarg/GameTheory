@@ -87,9 +87,10 @@ open Classical in
 noncomputable def firstPriceGame (v : ι → ℝ) : KernelGame (ι) :=
   KernelGame.ofEU (fun _ => ℝ) (firstPricePayoff v)
 
-/-- No single bid is dominant in first-price auction (finite, nontrivial bidder set). -/
+/-- No single bid is dominant in a first-price auction: any bid `b` is beaten by
+bidding slightly less, since the winner's payoff `v - b` strictly decreases. -/
 theorem firstPrice_no_dominant_strategy_ofEU
-    [DecidableEq ι] [Nontrivial ι]
+    [DecidableEq ι]
     (v : ι → ℝ) (who : ι) (b : ℝ) :
     ¬ (KernelGame.ofEU (fun _ : ι => ℝ) (firstPricePayoff v)).IsDominant who b := by
   intro hdom
@@ -123,9 +124,9 @@ theorem firstPrice_no_dominant_strategy_ofEU
       _ = v who - b := hL
   linarith [hnum]
 
-/-- No single bid is dominant in first-price auction (finite, nontrivial bidder set). -/
+/-- No single bid is dominant in a first-price auction. -/
 theorem firstPrice_no_dominant_strategy
-    [DecidableEq ι] [Nontrivial ι]
+    [DecidableEq ι]
     (v : ι → ℝ) (who : ι) (b : ℝ) :
     ¬ (firstPriceGame v).IsDominant who b := by
   simpa [firstPriceGame] using firstPrice_no_dominant_strategy_ofEU v who b

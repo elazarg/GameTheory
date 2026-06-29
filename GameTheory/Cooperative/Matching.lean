@@ -70,10 +70,10 @@ def IsStable (M : MatchingMarket α β) (μ : α → Option β) : Prop :=
 theorem empty_isMatching : IsMatching (fun (_ : α) => (none : Option β)) := by
   intro _ _ b h₁; exact absurd h₁ (by simp)
 
-/-- If all agents prefer being unmatched, the empty matching is stable. -/
+/-- If every agent on the proposing side prefers being unmatched, the empty
+matching is stable: no agent on that side is willing to form a blocking pair. -/
 theorem empty_stable_if_all_prefer_unmatched (M : MatchingMarket α β)
-    (hA : ∀ a b, M.reserveA a > M.prefA a b)
-    (_hB : ∀ b a, M.reserveB b > M.prefB b a) :
+    (hA : ∀ a b, M.reserveA a > M.prefA a b) :
     M.IsStable (fun _ => none) := by
   refine ⟨empty_isMatching, ?_, ?_⟩
   · intro _ _ h; exact absurd h (by simp)
