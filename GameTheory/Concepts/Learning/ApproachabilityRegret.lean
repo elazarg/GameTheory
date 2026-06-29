@@ -91,6 +91,17 @@ theorem infDist_eq_norm_sub_orthantProj (x : EuclideanSpace ℝ ι) :
       · rw [max_eq_left h]; nlinarith [hyi, h]
     nlinarith [hsq, norm_nonneg (x - orthantProj x), norm_nonneg (x - y)]
 
+/-- Clamping at `0` is nonexpansive: `‖orthantProj z‖ ≤ ‖z‖`. -/
+theorem norm_orthantProj_le (z : EuclideanSpace ℝ ι) : ‖orthantProj z‖ ≤ ‖z‖ := by
+  have h : ‖orthantProj z‖ ^ 2 ≤ ‖z‖ ^ 2 := by
+    rw [norm_sq_eq_sum, norm_sq_eq_sum]
+    refine Finset.sum_le_sum (fun i _ => ?_)
+    rw [orthantProj_ofLp]
+    rcases le_total (z.ofLp i) 0 with h | h
+    · simp [min_eq_left h]
+    · rw [min_eq_right h]; nlinarith [sq_nonneg (z.ofLp i)]
+  nlinarith [h, norm_nonneg (orthantProj z), norm_nonneg z]
+
 /-! ### The regret payoff and regret-matching witness -/
 
 open Math.Probability
@@ -159,5 +170,29 @@ theorem regretMatch_steering [Nonempty ι] (u : ι → Q → ℝ) (x : Euclidean
   · -- ∑ (x)₊ > 0: regret matching makes the average regret exactly zero
     rw [expect_regretMatch_pos hz, div_mul_cancel₀ _ hz.ne']
     simp
+
+/-! ### No external regret via approachability -/
+
+open Filter in
+/-- **Regret matching achieves no external regret.** Playing regret matching against any sequence of
+    environment actions drives the average external-regret vector to the nonpositive orthant: the
+    realised average regret against every fixed action vanishes. This is the loop-closer — the
+    learning guarantee of Tier A obtained from Blackwell approachability (`regretMatch_steering` is
+    the B-set condition; `infDist_avg_tendsto_zero` turns it into convergence). The payoff bound `M`
+    is finite since `regretPayoff` is bounded whenever the utilities are. -/
+theorem regretMatch_approaches [Nonempty ι] (u : ι → Q → ℝ) {M : ℝ} (hM0 : 0 ≤ M)
+    (hM : ∀ p q, ‖regretPayoff u p q‖ ≤ M) (qseq : ℕ → Q) :
+    Tendsto (fun t => Metric.infDist (avgVec (regretPayoff u) regretMatch qseq t) nonposOrthant)
+      atTop (nhds 0) := by
+  refine infDist_avg_tendsto_zero (C := 2 * M) (avgVec_succ (regretPayoff u) regretMatch qseq)
+    (fun t => ?_)
+  refine ⟨orthantProj (avgVec (regretPayoff u) regretMatch qseq t), orthantProj_mem _,
+    (infDist_eq_norm_sub_orthantProj _).symm, regretMatch_steering u _ (qseq t), ?_⟩
+  set z := avgVec (regretPayoff u) regretMatch qseq t with hz_def
+  have hz : ‖z‖ ≤ M := avgVec_norm_le (regretPayoff u) regretMatch qseq hM0 hM t
+  calc ‖regretPayoff u (regretMatch z) (qseq t) - orthantProj z‖
+      ≤ ‖regretPayoff u (regretMatch z) (qseq t)‖ + ‖orthantProj z‖ := norm_sub_le _ _
+    _ ≤ M + ‖z‖ := add_le_add (hM _ _) (norm_orthantProj_le z)
+    _ ≤ 2 * M := by linarith
 
 end Math.Approachability
