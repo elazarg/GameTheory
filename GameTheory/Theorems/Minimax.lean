@@ -69,39 +69,23 @@ theorem nash_p0_cap {G : KernelGame (Fin 2)}
     G.eu σ 0 ≥ G.eu (Function.update σ 0 s₀) 0 := by
   convert hN 0 s₀
 
-open Classical in
 /-- Under bounded utility: all Nash equilibria of a 2-player zero-sum game yield
-    the same EU for player 0 (uniqueness of the value). -/
+    the same EU for player 0 (uniqueness of the value). The zero-sum value
+    uniqueness is the `c = 0` case of the constant-sum result. -/
 theorem IsZeroSum.nash_eu_eq_of_bounded {G : KernelGame (Fin 2)}
     (hzs : G.IsZeroSum) {σ τ : Profile G}
     (hNσ : G.IsNash σ) (hNτ : G.IsNash τ)
     {C : Fin 2 → ℝ} (hbd : ∀ i ω, |G.utility ω i| ≤ C i) :
-    G.eu σ 0 = G.eu τ 0 := by
-  apply le_antisymm
-  · have hopt := hzs.nash_p0_optimal_of_bounded hNσ (τ 1) hbd
-    have hcap : G.eu τ 0 ≥ G.eu (Function.update τ 0 (σ 0)) 0 := by convert hNτ 0 (σ 0)
-    have heq : Function.update σ 1 (τ 1) = Function.update τ 0 (σ 0) := by
-      funext i
-      fin_cases i <;> simp [Function.update]
-    rw [heq] at hopt; linarith
-  · have hopt := hzs.nash_p0_optimal_of_bounded hNτ (σ 1) hbd
-    have hcap : G.eu σ 0 ≥ G.eu (Function.update σ 0 (τ 0)) 0 := by convert hNσ 0 (τ 0)
-    have heq : Function.update τ 1 (σ 1) = Function.update σ 0 (τ 0) := by
-      funext i
-      fin_cases i <;> simp [Function.update]
-    rw [heq] at hopt; linarith
+    G.eu σ 0 = G.eu τ 0 :=
+  IsConstantSum.nash_eu_eq_of_bounded (c := 0) hzs hNσ hNτ hbd
 
-open Classical in
 /-- All Nash equilibria of a 2-player zero-sum game yield the same EU for player 0.
     This establishes the uniqueness of the game's value. -/
 theorem IsZeroSum.nash_eu_eq {G : KernelGame (Fin 2)} [Finite G.Outcome]
     (hzs : G.IsZeroSum) {σ τ : Profile G}
     (hNσ : G.IsNash σ) (hNτ : G.IsNash τ) :
-    G.eu σ 0 = G.eu τ 0 := by
-  classical
-  choose C hbd using fun i =>
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
-  exact hzs.nash_eu_eq_of_bounded hNσ hNτ hbd
+    G.eu σ 0 = G.eu τ 0 :=
+  IsConstantSum.nash_eu_eq (c := 0) hzs hNσ hNτ
 
 open Classical in
 /-- **Von Neumann's Minimax Theorem**, bounded-utility form.

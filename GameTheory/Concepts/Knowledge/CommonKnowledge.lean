@@ -131,19 +131,22 @@ theorem Knows_idem (P : InfoPartition Ω) (E : Finset Ω) :
     rw [mem_Knows_iff, P.coherent s t ht]
     exact hs
 
-/-- **Negative introspection (Axiom 5)**: not knowing implies knowing that
-you don't know. Stated as: the complement of `Knows P E` is itself known
-at every point of that complement. -/
+/-- **Negative introspection (Axiom 5)**: not knowing implies knowing that you
+don't know. The complement of `Knows P E` is a `Knows` fixed point
+(`Knows P (univ \ Knows P E) = univ \ Knows P E`); the `⊇` direction is the
+substance, and `⊆` is veridicality (`Knows_subset`), parallel to `Knows_idem`. -/
 theorem Knows_not_Knows (P : InfoPartition Ω) (E : Finset Ω) :
-    (Finset.univ \ Knows P E) ⊆ Knows P (Finset.univ \ Knows P E) := by
-  intro s hs
-  rw [mem_Knows_iff]
-  rw [Finset.mem_sdiff, mem_Knows_iff] at hs
-  intro t ht
-  rw [Finset.mem_sdiff, mem_Knows_iff]
-  refine ⟨Finset.mem_univ t, ?_⟩
-  rw [P.coherent s t ht]
-  exact hs.2
+    Knows P (Finset.univ \ Knows P E) = Finset.univ \ Knows P E := by
+  apply Finset.Subset.antisymm
+  · exact Knows_subset P (Finset.univ \ Knows P E)
+  · intro s hs
+    rw [mem_Knows_iff]
+    rw [Finset.mem_sdiff, mem_Knows_iff] at hs
+    intro t ht
+    rw [Finset.mem_sdiff, mem_Knows_iff]
+    refine ⟨Finset.mem_univ t, ?_⟩
+    rw [P.coherent s t ht]
+    exact hs.2
 
 /-- Knowledge is *monotone*: knowing a larger event follows from knowing a
 smaller one. -/

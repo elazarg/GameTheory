@@ -45,6 +45,25 @@ noncomputable local instance finiteFintype {α : Type} [Finite α] : Fintype α 
 theorem additiveGame_isCore [Finite ι] (α : ι → ℝ) : (additiveGame α).IsCore α := by
   exact ⟨rfl, fun _ => le_refl _⟩
 
+/-- The core of an additive game is exactly `{α}`: every core allocation equals
+the weight vector. Coalition-rationality on `{i}` gives `x i ≥ α i`; on `{i}ᶜ`
+together with efficiency it gives `x i ≤ α i`. (Existence is `additiveGame_isCore`.) -/
+theorem additiveGame_core_eq [Finite ι] (α x : ι → ℝ)
+    (hx : (additiveGame α).IsCore x) : x = α := by
+  classical
+  funext i
+  have heff : ∑ j, x j = ∑ j, α j := by
+    simpa [additiveGame_v] using IsCore.efficient _ hx
+  have hcompl : ∑ j ∈ ({i}ᶜ : Finset ι), α j ≤ ∑ j ∈ ({i}ᶜ : Finset ι), x j := by
+    simpa [additiveGame_v] using IsCore.coalition_rational _ hx ({i}ᶜ)
+  have hsing : α i ≤ x i := by
+    simpa [additiveGame_v, Finset.sum_singleton] using IsCore.individually_rational _ hx i
+  have hsplit_x : x i + ∑ j ∈ ({i}ᶜ : Finset ι), x j = ∑ j, x j := by
+    rw [← Finset.sum_add_sum_compl {i} x, Finset.sum_singleton]
+  have hsplit_α : α i + ∑ j ∈ ({i}ᶜ : Finset ι), α j = ∑ j, α j := by
+    rw [← Finset.sum_add_sum_compl {i} α, Finset.sum_singleton]
+  linarith
+
 end Core
 
 /-- A player's marginal contribution in an additive game is exactly
