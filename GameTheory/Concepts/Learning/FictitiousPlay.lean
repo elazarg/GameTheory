@@ -103,6 +103,117 @@ def IsFictitiousPlay (a : ℕ → M.Profile) : Prop :=
     M.mixedExtension.eu (Function.update (M.belief a (t + 1)) i (PMF.pure (a (t + 1) i))) i
       ≥ M.mixedExtension.eu (Function.update (M.belief a (t + 1)) i (PMF.pure s')) i
 
+open Filter in
+omit [DecidableEq ι] [Fintype ι] in
+/-- If the empirical marginal of player `who` converges to `x` and `x` assigns positive probability
+to a pure action `b`, then `b` is played in infinitely many rounds. (If it were played only finitely
+often, its empirical frequency `≤ (N+1)/(t+1) → 0` would contradict the positive limit.) -/
+theorem frequently_play_eq_of_belief_converges
+    (a : ℕ → M.Profile) (who : ι) (b : M.Strategy who) {x : PMF (M.Strategy who)}
+    (hconv : PMFConvergesPointwise (fun t => M.empiricalMarginal a who (t + 1)) x) (hb : x b ≠ 0) :
+    ∃ᶠ t in atTop, a (t + 1) who = b := by
+  classical
+  have hc : (0 : ℝ) < (x b).toReal := ENNReal.toReal_pos hb (PMF.apply_ne_top x b)
+  have htend : Tendsto (fun t => ((M.empiricalMarginal a who (t + 1)) b).toReal) atTop
+      (nhds ((x b).toReal)) :=
+    Math.Probability.pmf_apply_toReal_tendsto_of_tendsto (hconv.apply b)
+  by_contra hcon
+  rw [not_frequently] at hcon
+  obtain ⟨N, hN⟩ := eventually_atTop.1 hcon
+  have hbound : ∀ t : ℕ,
+      ((M.empiricalMarginal a who (t + 1)) b).toReal ≤ ((N : ℝ) + 1) / ((t + 1 : ℕ) : ℝ) := by
+    intro t
+    have hcard :
+        (Finset.univ.filter fun k : Fin (t + 1) => a (k : ℕ) who = b).card ≤ N + 1 := by
+      have hsub : (Finset.univ.filter fun k : Fin (t + 1) => a (k : ℕ) who = b) ⊆
+          (Finset.univ.filter fun k : Fin (t + 1) => (k : ℕ) < N + 1) := by
+        intro k hk
+        rw [Finset.mem_filter] at hk ⊢
+        refine ⟨hk.1, ?_⟩
+        by_contra hge
+        have hge' : N + 1 ≤ (k : ℕ) := not_lt.1 hge
+        have hk1 : N ≤ (k : ℕ) - 1 := by omega
+        have hne := hN _ hk1
+        rw [Nat.sub_add_cancel (by omega)] at hne
+        exact hne hk.2
+      refine (Finset.card_le_card hsub).trans ?_
+      have : (Finset.univ.filter fun k : Fin (t + 1) => (k : ℕ) < N + 1).card
+          ≤ (Finset.range (N + 1)).card :=
+        Finset.card_le_card_of_injOn (fun k => (k : ℕ))
+          (fun k hk => Finset.mem_range.2 (Finset.mem_filter.1 hk).2)
+          (fun k1 _ k2 _ h => Fin.val_injective h)
+      simpa using this
+    rw [M.empiricalMarginal_apply_toReal a who (t + 1) b]
+    gcongr
+    exact_mod_cast hcard
+  have hzero : Tendsto (fun t : ℕ => ((N : ℝ) + 1) / ((t + 1 : ℕ) : ℝ)) atTop (nhds 0) :=
+    (tendsto_const_div_atTop_nhds_zero_nat ((N : ℝ) + 1)).comp (tendsto_add_atTop_nat 1)
+  have hle : (x b).toReal ≤ 0 :=
+    le_of_tendsto_of_tendsto htend hzero (Eventually.of_forall hbound)
+  linarith
+
+open Filter in
+/-- **Limits of fictitious play are Nash.** If the empirical beliefs of a fictitious-play sequence
+converge (pointwise as PMFs) to a mixed profile `x`, then `x` is a Nash equilibrium of the mixed
+extension. Fictitious play need not converge in general (Shapley), but *when it does* the limit is a
+Nash equilibrium: every action in the support of `x` is played infinitely often, hence (by EU
+continuity in the converging beliefs) is a best response to `x`, so `x` mixes only over best
+responses. -/
+theorem isFictitiousPlay_limit_isNash [∀ i, Finite (M.Strategy i)] [Finite M.Outcome]
+    {a : ℕ → M.Profile} (hfp : M.IsFictitiousPlay a) {x : ∀ i, PMF (M.Strategy i)}
+    (hconv : ∀ i, PMFConvergesPointwise (fun t => M.belief a (t + 1) i) (x i)) :
+    M.mixedExtension.IsNash x := by
+  -- every action in the support of `x who` is a best response to `x`
+  have hbr : ∀ (who : ι) (b : M.Strategy who), x who b ≠ 0 → ∀ a' : M.Strategy who,
+      M.mixedExtension.eu (Function.update x who (PMF.pure a')) who
+        ≤ M.mixedExtension.eu (Function.update x who (PMF.pure b)) who := by
+    intro who b hb a'
+    have hfreq : ∃ᶠ t in atTop, a (t + 1) who = b :=
+      M.frequently_play_eq_of_belief_converges a who b (hconv who) hb
+    have htb := M.mixedExtension_eu_update_pure_tendsto_of_forall_pmfConvergesPointwise
+      (σs := fun t => M.belief a (t + 1)) (σ := x) hconv who b
+    have hta := M.mixedExtension_eu_update_pure_tendsto_of_forall_pmfConvergesPointwise
+      (σs := fun t => M.belief a (t + 1)) (σ := x) hconv who a'
+    by_contra hlt
+    rw [not_le] at hlt
+    have hDtend := htb.sub hta
+    have hneg : M.mixedExtension.eu (Function.update x who (PMF.pure b)) who
+        - M.mixedExtension.eu (Function.update x who (PMF.pure a')) who < 0 := by linarith
+    have hev := hDtend.eventually (eventually_lt_nhds hneg)
+    have hfr : ∃ᶠ t in atTop,
+        0 ≤ M.mixedExtension.eu (Function.update (M.belief a (t + 1)) who (PMF.pure b)) who
+          - M.mixedExtension.eu (Function.update (M.belief a (t + 1)) who (PMF.pure a')) who := by
+      refine hfreq.mono (fun t ht => ?_)
+      have hf := hfp t who a'
+      rw [ht] at hf
+      linarith
+    obtain ⟨t, h1, h2⟩ := (hfr.and_eventually hev).exists
+    linarith
+  -- own-strategy linearity: `eu x who` is the `x who`-average of pure-deviation payoffs
+  rw [M.isNash_iff_gains_nonpos]
+  intro who a'
+  letI : Fintype (M.Strategy who) := Fintype.ofFinite _
+  have heu : expect (x who)
+      (fun b => M.mixedExtension.eu (Function.update x who (PMF.pure b)) who)
+      = M.mixedExtension.eu x who := by
+    have h := M.weighted_gain_sum_zero x who
+    simp only [mixedGain] at h
+    rw [expect_sub, expect_const] at h
+    linarith
+  rw [mixedGain]
+  have hge : M.mixedExtension.eu (Function.update x who (PMF.pure a')) who
+      ≤ M.mixedExtension.eu x who := by
+    rw [← heu, expect_eq_sum,
+      show M.mixedExtension.eu (Function.update x who (PMF.pure a')) who
+          = ∑ b, (x who b).toReal *
+              M.mixedExtension.eu (Function.update x who (PMF.pure a')) who from by
+        rw [← Finset.sum_mul, pmf_toReal_sum_one, one_mul]]
+    refine Finset.sum_le_sum (fun b _ => ?_)
+    rcases eq_or_ne (x who b) 0 with h0 | h0
+    · simp [h0]
+    · exact mul_le_mul_of_nonneg_left (hbr who b h0 a') ENNReal.toReal_nonneg
+  linarith
+
 end KernelGame
 
 end GameTheory
