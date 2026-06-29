@@ -410,6 +410,24 @@ theorem shapleyValue_efficient (G : CoalGame ι) :
   · intro h
     exact absurd (Finset.mem_univ _) h
 
+/-- In a game where all players are pairwise symmetric, each player's Shapley
+value is the grand-coalition value split equally, `v(N) / n`. -/
+theorem shapleyValue_eq_of_all_symmetric (G : CoalGame ι)
+    (hsym : ∀ i j : ι, i ≠ j → G.AreSymmetric i j) (i : ι) :
+    G.shapleyValue i = G.v Finset.univ / Fintype.card ι := by
+  classical
+  have hconst : ∀ k : ι, G.shapleyValue k = G.shapleyValue i := fun k => by
+    by_cases hki : k = i
+    · subst hki; rfl
+    · exact shapleyValue_symmetric G hki (hsym k i hki)
+  have hsum := shapleyValue_efficient G
+  rw [Finset.sum_congr rfl (fun k _ => hconst k), Finset.sum_const,
+    Finset.card_univ, nsmul_eq_mul] at hsum
+  have hcard : (Fintype.card ι : ℝ) ≠ 0 := by
+    exact_mod_cast (Fintype.card_pos_iff.mpr ⟨i⟩).ne'
+  rw [eq_div_iff hcard, mul_comm]
+  exact hsum
+
 end FinitePlayers
 
 end CoalGame

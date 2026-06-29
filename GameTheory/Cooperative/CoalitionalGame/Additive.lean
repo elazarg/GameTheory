@@ -232,29 +232,10 @@ theorem majorityGame3_areSymmetric (i j : Fin 3) :
 player: by symmetry all three values are equal, and they sum to `v(univ) = 1`. -/
 theorem majorityGame3_shapleyValue (i : Fin 3) :
     majorityGame3.shapleyValue i = 1 / 3 := by
-  classical
-  -- All players have the same Shapley value by symmetry.
-  have hsym : ∀ j k : Fin 3, j ≠ k →
-      majorityGame3.shapleyValue j = majorityGame3.shapleyValue k :=
-    fun j k hne => shapleyValue_symmetric majorityGame3 hne
-      (majorityGame3_areSymmetric j k)
-  -- The values sum to v(univ) = 1.
-  have hsum : ∑ k : Fin 3, majorityGame3.shapleyValue k = 1 := by
-    rw [shapleyValue_efficient]
-    exact majorityGame3_isSimple.grandWinning
-  -- Each value equals 1/3.
-  have hconst : ∀ k : Fin 3, majorityGame3.shapleyValue k =
-      majorityGame3.shapleyValue i := by
-    intro k
-    by_cases hki : k = i
-    · subst hki; rfl
-    · exact hsym k i hki
-  rw [Finset.sum_congr rfl (fun k _ => hconst k), Finset.sum_const,
-    Finset.card_univ, Fintype.card_fin, nsmul_eq_mul] at hsum
-  -- hsum : ↑3 * shapleyValue i = 1; normalize the coercion and divide.
-  have hsum' : (3 : ℝ) * majorityGame3.shapleyValue i = 1 := by
-    push_cast at hsum; exact hsum
-  linarith
+  rw [shapleyValue_eq_of_all_symmetric majorityGame3
+      (fun j k _ => majorityGame3_areSymmetric j k) i,
+    majorityGame3_isSimple.grandWinning, Fintype.card_fin]
+  norm_num
 
 
 end CoalGame
