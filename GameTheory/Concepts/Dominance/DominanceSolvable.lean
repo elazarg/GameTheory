@@ -61,7 +61,7 @@ def StrictlyDominatedByMixed (G : KernelGame ι) (who : ι) (t : G.Strategy who)
     were a best response, it would weakly beat every pure action, hence beat the
     mixture, contradicting strict mixed dominance. -/
 theorem StrictlyDominatedByMixed.not_best_response {G : KernelGame ι}
-    [∀ i, Finite (G.Strategy i)] {who : ι} {t : G.Strategy who}
+    {who : ι} [Finite (G.Strategy who)] {t : G.Strategy who}
     (hsd : G.StrictlyDominatedByMixed who t) :
     ∀ σ : Profile G, ¬ G.IsBestResponse who σ t := by
   obtain ⟨p, hp⟩ := hsd
