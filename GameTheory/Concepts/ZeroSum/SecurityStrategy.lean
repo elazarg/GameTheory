@@ -29,6 +29,7 @@ achieves this guarantee.
 * `IsDominant.eu_ge_securityLevel` — a dominant strategy guarantees ≥ security level
 * `securityLevelSup_le_mixedSecurityLevel` — randomizing only raises the
   guaranteed payoff (pure security level ≤ mixed security level)
+* `nash_eu_ge_mixedSecurityLevel` — Nash EU ≥ mixed security level
 -/
 
 open scoped BigOperators
@@ -160,6 +161,29 @@ theorem securityLevelSup_le_mixedSecurityLevel (who : ι) [Nonempty (G.Strategy 
     simp only [worstCaseEUInf, mixedWorstCaseEUInf, expect_pure]
   rw [heq]
   exact le_ciSup hbdd (PMF.pure s)
+
+open Classical in
+/-- In a Nash equilibrium, each player's EU is at least their mixed security
+    level: at equilibrium a player does at least as well as the best they could
+    guarantee by randomizing. Strengthens `nash_eu_ge_securityLevelSup`, since
+    the mixed security level dominates the pure one. -/
+theorem nash_eu_ge_mixedSecurityLevel {σ : Profile G} (hN : G.IsNash σ)
+    (who : ι) [Nonempty (G.Strategy who)] [Finite (G.Strategy who)]
+    (hbddMixed : ∀ p : PMF (G.Strategy who),
+      BddBelow (Set.range (fun τ : Profile G =>
+        expect p (fun a => G.eu (Function.update τ who a) who)))) :
+    G.eu σ who ≥ G.mixedSecurityLevel who := by
+  haveI : Nonempty (PMF (G.Strategy who)) := ⟨PMF.pure (Classical.arbitrary _)⟩
+  apply ciSup_le
+  intro p
+  have h1 : G.mixedWorstCaseEUInf who p ≤
+      expect p (fun a => G.eu (Function.update σ who a) who) :=
+    ciInf_le (hbddMixed p) σ
+  have h2 : expect p (fun a => G.eu (Function.update σ who a) who) ≤ G.eu σ who := by
+    have hmono := expect_mono p (fun a => G.eu (Function.update σ who a) who)
+      (fun _ => G.eu σ who) (fun a => hN who a)
+    simpa using hmono
+  exact le_trans h1 h2
 
 end Order
 
