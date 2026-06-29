@@ -76,6 +76,7 @@ import GameTheory.Concepts.Learning.SelfPlay
 import GameTheory.Concepts.Learning.MWSelfPlay
 import GameTheory.Concepts.Learning.FictitiousPlay
 import GameTheory.Concepts.Learning.Approachability
+import GameTheory.Concepts.Learning.ApproachabilityRegret
 
 -- Zero-sum and constant-sum
 import GameTheory.Concepts.ZeroSum.ZeroSum
