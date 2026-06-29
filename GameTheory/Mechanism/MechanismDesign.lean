@@ -68,7 +68,7 @@ theorem isIC_implies_isBIC (M : Mechanism ι) [Finite (∀ i, M.Θ i)]
     M.isBIC μ := by
   intro who s'
   rw [ge_iff_le]
-  exact Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
+  exact Math.Probability.expect_mono μ
     (fun θ => M.outcome (Function.update θ who (s' (θ who))) who)
     (fun θ => M.outcome θ who)
     (fun θ => hIC who θ (s' (θ who)))
@@ -112,7 +112,7 @@ theorem isIC_implies_truthful_bayesNash (M : Mechanism ι) [Finite (∀ i, M.Θ 
   rw [BayesianGame.bayesNash_iff_exAnteEU]
   intro who s'
   simp only [BayesianGame.exAnteEU, inducedBayesianGame, truthful, ge_iff_le]
-  apply Math.ProbabilityMassFunction.expect_mono_of_pointwise
+  apply Math.Probability.expect_mono
   intro θ
   have happ := M.update_truthful_apply μ who s' θ
   simp only [inducedBayesianGame] at happ

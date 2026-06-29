@@ -163,7 +163,7 @@ theorem nash_of_noOSD_of_bounded (G : EFGGame)
             (pureToBehavioral (Function.update σ who s')))
           (fun ω => G.utility ω who) (hbd who)
       have hmono :=
-        (Math.ProbabilityMassFunction.expect_mono_of_pointwise μ
+        (Math.Probability.expect_mono μ
           (fun b => expect ((next b).evalDist
             (pureToBehavioral (Function.update σ who s')))
             (fun ω => G.utility ω who))

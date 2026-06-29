@@ -424,18 +424,17 @@ theorem expect_sub {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ) :
   exact Finset.sum_congr rfl fun ω _ => by ring
 
 /-- `expect` pulls out a scalar factor. -/
-theorem expect_const_mul {Ω : Type*} [Finite Ω] (d : PMF Ω) (c : ℝ) (f : Ω → ℝ) :
+theorem expect_const_mul {Ω : Type*} (d : PMF Ω) (c : ℝ) (f : Ω → ℝ) :
     expect d (fun ω => c * f ω) = c * expect d f := by
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  rw [expect_eq_sum, expect_eq_sum, Finset.mul_sum]
-  exact Finset.sum_congr rfl fun ω _ => by ring
+  unfold expect
+  rw [← tsum_mul_left]
+  exact tsum_congr fun ω => by ring
 
 /-- A nonnegative integrand has nonnegative expectation. -/
-theorem expect_nonneg {Ω : Type*} [Finite Ω] (d : PMF Ω) (f : Ω → ℝ)
+theorem expect_nonneg {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ)
     (hf : ∀ ω, 0 ≤ f ω) : 0 ≤ expect d f := by
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  rw [expect_eq_sum]
-  exact Finset.sum_nonneg fun ω _ => mul_nonneg ENNReal.toReal_nonneg (hf ω)
+  unfold expect
+  exact tsum_nonneg fun ω => mul_nonneg ENNReal.toReal_nonneg (hf ω)
 
 /-- `expect` is monotone in the integrand. -/
 theorem expect_mono {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ)

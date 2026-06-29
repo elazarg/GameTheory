@@ -944,15 +944,6 @@ theorem foldl_bind_eq_bind_foldl_pure
       funext a
       simpa using (ih (k b a)).symm
 
-theorem expect_mono_of_pointwise
-    {Ω : Type*} [Finite Ω]
-    (d : PMF Ω) (f g : Ω → ℝ)
-    (hfg : ∀ ω, f ω ≤ g ω) :
-    Math.Probability.expect d f ≤ Math.Probability.expect d g := by
-  letI : Fintype Ω := Fintype.ofFinite Ω
-  simpa [Math.Probability.expect_eq_sum] using
-    (Finset.sum_le_sum (fun ω _ => mul_le_mul_of_nonneg_left (hfg ω) ENNReal.toReal_nonneg))
-
 /-- Pointwise monotonicity of `expect` for countable types: integrand on either side
     must be summable (sufficient when `f`, `g` are bounded). -/
 theorem expect_mono_of_pointwise_summable
