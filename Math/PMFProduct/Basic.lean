@@ -8,6 +8,7 @@ import Mathlib.Data.Finset.Piecewise
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Algebra.BigOperators.Fin
+import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.ProbabilityMassFunction
 import Math.Reindex
@@ -16,6 +17,7 @@ namespace Math
 namespace PMFProduct
 
 open scoped BigOperators
+open Filter
 open Math.ProbabilityMassFunction
 
 universe uι uA uα uβ uγ
@@ -146,6 +148,36 @@ omit [DecidableEq ι] in
 @[simp] lemma pmfPi_apply [Fintype ι]
     (σ : ∀ i, PMF (A i)) (s : ∀ i, A i) :
     pmfPi (A := A) σ s = ∏ i, σ i (s i) := rfl
+
+omit [DecidableEq ι] in
+/--
+For a fixed pure profile, the independent-product PMF weight is continuous
+under pointwise convergence of the selected marginal weights.
+-/
+theorem pmfPi_apply_tendsto [Fintype ι]
+    {σs : ℕ → ∀ i, PMF (A i)} {σ : ∀ i, PMF (A i)} (s : ∀ i, A i)
+    (h : ∀ i, Tendsto (fun n : ℕ => σs n i (s i)) atTop (nhds (σ i (s i)))) :
+    Tendsto (fun n : ℕ => pmfPi (A := A) (σs n) s) atTop
+      (nhds (pmfPi (A := A) σ s)) := by
+  simpa [pmfPi_apply] using
+    (ENNReal.tendsto_finsetProd_of_ne_top (s := Finset.univ)
+      (f := fun i n => σs n i (s i))
+      (a := fun i => σ i (s i))
+      (fun i _ => h i)
+      (fun i _ => PMF.apply_ne_top (σ i) (s i)))
+
+omit [DecidableEq ι] in
+/--
+The real-valued weight of a fixed pure profile in the independent product is
+continuous under pointwise convergence of the selected marginal weights.
+-/
+theorem pmfPi_apply_toReal_tendsto [Fintype ι]
+    {σs : ℕ → ∀ i, PMF (A i)} {σ : ∀ i, PMF (A i)} (s : ∀ i, A i)
+    (h : ∀ i, Tendsto (fun n : ℕ => σs n i (s i)) atTop (nhds (σ i (s i)))) :
+    Tendsto (fun n : ℕ => (pmfPi (A := A) (σs n) s).toReal) atTop
+      (nhds ((pmfPi (A := A) σ s).toReal)) :=
+  (ENNReal.continuousAt_toReal (PMF.apply_ne_top (pmfPi (A := A) σ) s)).tendsto.comp
+    (pmfPi_apply_tendsto (A := A) s h)
 
 omit [DecidableEq ι] in
 /-- Product of point masses is a point mass at the joint assignment. -/

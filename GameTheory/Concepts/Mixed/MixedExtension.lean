@@ -8,6 +8,7 @@ import Math.PMFProduct
 import Math.Probability
 import Mathlib.Probability.Distributions.Uniform
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Foundations.Convergence
 
 /-!
 # Mixed Extension Properties
@@ -263,6 +264,107 @@ theorem isNash_iff_gains_nonpos
     (C := C) (fun who => hC who)
 
 end NashGain
+
+-- ============================================================================
+-- Convergence of mixed-extension expected utility
+-- ============================================================================
+
+section MixedExtensionConvergence
+
+variable [Fintype ι]
+variable (G : KernelGame ι)
+variable [∀ i, Finite (G.Strategy i)]
+variable [Finite G.Outcome]
+
+open Filter
+
+omit [DecidableEq ι] in
+/--
+If each marginal mixed strategy converges pointwise as a PMF, then mixed
+expected utility converges.
+-/
+theorem mixedExtension_eu_tendsto_of_forall_pmfConvergesPointwise
+    {σs : ℕ → Profile G.mixedExtension} {σ : Profile G.mixedExtension}
+    (hσ : ∀ i, PMFConvergesPointwise (fun n : ℕ => σs n i) (σ i))
+    (who : ι) :
+    Tendsto (fun n : ℕ => G.mixedExtension.eu (σs n) who) atTop
+      (nhds (G.mixedExtension.eu σ who)) := by
+  have hprod : ∀ s : Profile G,
+      Tendsto (fun n : ℕ => pmfPi (A := G.Strategy) (σs n) s) atTop
+        (nhds (pmfPi (A := G.Strategy) σ s)) := by
+    intro s
+    exact Math.PMFProduct.pmfPi_apply_tendsto (A := G.Strategy) s
+      (fun i => (hσ i).apply (s i))
+  have hexpect :
+      Tendsto
+        (fun n : ℕ => expect (pmfPi (A := G.Strategy) (σs n))
+          (fun s : Profile G => G.eu s who))
+        atTop
+        (nhds (expect (pmfPi (A := G.Strategy) σ)
+          (fun s : Profile G => G.eu s who))) :=
+    Math.Probability.expect_tendsto_of_forall_tendsto
+      (fun s : Profile G => G.eu s who) hprod
+  rw [show (fun n : ℕ => G.mixedExtension.eu (σs n) who) =
+      fun n : ℕ => expect (pmfPi (A := G.Strategy) (σs n))
+        (fun s : Profile G => G.eu s who) by
+        funext n
+        rw [G.mixedExtension_eu]]
+  rw [G.mixedExtension_eu σ who]
+  exact hexpect
+
+omit [DecidableEq ι] in
+/--
+Version of `mixedExtension_eu_tendsto_of_forall_pmfConvergesPointwise` phrased
+with the library's generic profile-convergence predicate.
+-/
+theorem mixedExtension_eu_tendsto_of_profileConvergesPointwise
+    {σs : ℕ → Profile G.mixedExtension} {σ : Profile G.mixedExtension}
+    (hσ : ProfileConvergesWith
+      (fun i => @PMFConvergesPointwise (G.Strategy i)) σs σ)
+    (who : ι) :
+    Tendsto (fun n : ℕ => G.mixedExtension.eu (σs n) who) atTop
+      (nhds (G.mixedExtension.eu σ who)) :=
+  G.mixedExtension_eu_tendsto_of_forall_pmfConvergesPointwise hσ who
+
+/--
+Pure-deviation expected utility is continuous under pointwise convergence of
+the ambient mixed profile.
+-/
+theorem mixedExtension_eu_update_pure_tendsto_of_forall_pmfConvergesPointwise
+    {σs : ℕ → Profile G.mixedExtension} {σ : Profile G.mixedExtension}
+    (hσ : ∀ i, PMFConvergesPointwise (fun n : ℕ => σs n i) (σ i))
+    (who : ι) (a : G.Strategy who) :
+    Tendsto
+      (fun n : ℕ =>
+        G.mixedExtension.eu (Function.update (σs n) who (PMF.pure a)) who)
+      atTop
+      (nhds (G.mixedExtension.eu (Function.update σ who (PMF.pure a)) who)) := by
+  refine G.mixedExtension_eu_tendsto_of_forall_pmfConvergesPointwise
+    (σs := fun n : ℕ => Function.update (σs n) who (PMF.pure a))
+    (σ := Function.update σ who (PMF.pure a)) ?_ who
+  intro i b
+  by_cases hi : i = who
+  · subst hi
+    simp
+  · simpa [hi] using (hσ i).apply b
+
+/--
+Pure-deviation gains are continuous under pointwise convergence of the mixed
+profile.
+-/
+theorem mixedGain_tendsto_of_forall_pmfConvergesPointwise
+    {σs : ℕ → Profile G.mixedExtension} {σ : Profile G.mixedExtension}
+    (hσ : ∀ i, PMFConvergesPointwise (fun n : ℕ => σs n i) (σ i))
+    (who : ι) (a : G.Strategy who) :
+    Tendsto (fun n : ℕ => G.mixedGain (σs n) who a) atTop
+      (nhds (G.mixedGain σ who a)) := by
+  unfold mixedGain
+  exact
+    (G.mixedExtension_eu_update_pure_tendsto_of_forall_pmfConvergesPointwise
+      hσ who a).sub
+    (G.mixedExtension_eu_tendsto_of_forall_pmfConvergesPointwise hσ who)
+
+end MixedExtensionConvergence
 
 -- ============================================================================
 -- Uniform mixed profiles

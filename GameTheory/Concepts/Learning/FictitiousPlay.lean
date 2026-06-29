@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Mixed.MixedExtension
 import GameTheory.Concepts.Foundations.Convergence
+import Mathlib.Algebra.BigOperators.Ring.Finset
 
 /-!
 # Fictitious play
@@ -32,6 +33,7 @@ Monderer–Shapley for potential games) are separate, harder developments; what 
 namespace GameTheory
 
 open Math.Probability
+open scoped BigOperators
 
 namespace KernelGame
 
@@ -42,6 +44,50 @@ variable {ι : Type} [DecidableEq ι] [Fintype ι] (M : KernelGame ι)
 noncomputable def empiricalMarginal (a : ℕ → M.Profile) (j : ι) (t : ℕ) [NeZero t] :
     PMF (M.Strategy j) :=
   (PMF.uniformOfFintype (Fin t)).bind (fun s => PMF.pure (a (s : ℕ) j))
+
+omit [DecidableEq ι] [Fintype ι] in
+open Classical in
+/-- The empirical marginal weight is the count of matching past plays divided by
+the averaging horizon. -/
+theorem empiricalMarginal_apply_toReal
+    (a : ℕ → M.Profile) (j : ι) (t : ℕ) [NeZero t] (s : M.Strategy j) :
+    ((M.empiricalMarginal a j t) s).toReal =
+      ((Finset.univ.filter fun k : Fin t => a (k : ℕ) j = s).card : ℝ) / t := by
+  classical
+  rw [empiricalMarginal, PMF.bind_apply, tsum_fintype]
+  simp only [PMF.uniformOfFintype_apply, Fintype.card_fin, PMF.pure_apply]
+  rw [ENNReal.toReal_sum]
+  · simp only [ENNReal.toReal_mul, ENNReal.toReal_inv, ENNReal.toReal_natCast]
+    rw [← Finset.mul_sum]
+    have hsum :
+        (∑ x : Fin t, (if s = a (x : ℕ) j then (1 : ENNReal) else 0).toReal) =
+          ((Finset.univ.filter fun k : Fin t => s = a (k : ℕ) j).card : ℝ) := by
+      have htoReal :
+          (∑ x : Fin t, (if s = a (x : ℕ) j then (1 : ENNReal) else 0).toReal) =
+            ∑ x : Fin t, if s = a (x : ℕ) j then (1 : ℝ) else 0 := by
+        refine Finset.sum_congr rfl ?_
+        intro x hx
+        by_cases hxs : s = a (x : ℕ) j <;> simp [hxs]
+      rw [htoReal]
+      simp
+    change (↑t)⁻¹ *
+        (∑ x : Fin t, (if s = a (x : ℕ) j then (1 : ENNReal) else 0).toReal) =
+      ((Finset.univ.filter fun k : Fin t => a (k : ℕ) j = s).card : ℝ) / t
+    rw [hsum]
+    have hcard :
+        ((Finset.univ.filter fun k : Fin t => s = a (k : ℕ) j).card : ℝ) =
+          ((Finset.univ.filter fun k : Fin t => a (k : ℕ) j = s).card : ℝ) := by
+      have hfilter :
+          (Finset.univ.filter fun k : Fin t => s = a (k : ℕ) j) =
+            (Finset.univ.filter fun k : Fin t => a (k : ℕ) j = s) := by
+        ext k
+        simp [eq_comm]
+      rw [hfilter]
+    rw [hcard, div_eq_inv_mul]
+  · intro k hk
+    by_cases hks : s = a (k : ℕ) j
+    · simp [hks, NeZero.ne t]
+    · simp [hks]
 
 /-- The belief profile entering round `t`: each player's empirical marginal over the first `t`
     rounds, viewed as a mixed-strategy profile. -/

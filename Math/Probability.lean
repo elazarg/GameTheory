@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.NNReal.Basic
+import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Probability.ProbabilityMassFunction.Monad
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
@@ -25,6 +26,8 @@ Provides:
 
 namespace Math
 namespace Probability
+
+open Filter
 
 -- ============================================================================
 -- Kernels (using Mathlib's PMF)
@@ -101,6 +104,41 @@ This is a *huge* simplification for many game models (EFG/NFG/MAID with finite o
 theorem expect_eq_sum {Ω : Type*} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
     expect d f = (∑ ω : Ω, (d ω).toReal * f ω) := by
   simp [expect]
+
+theorem pmf_apply_toReal_tendsto_of_tendsto {Ω : Type*}
+    {μs : ℕ → PMF Ω} {μ : PMF Ω} {ω : Ω}
+    (h : Tendsto (fun n : ℕ => μs n ω) atTop (nhds (μ ω))) :
+    Tendsto (fun n : ℕ => (μs n ω).toReal) atTop (nhds ((μ ω).toReal)) :=
+  (ENNReal.continuousAt_toReal (PMF.apply_ne_top μ ω)).tendsto.comp h
+
+/--
+Finite expectations are continuous under pointwise convergence of real-valued
+PMF weights.
+-/
+theorem expect_tendsto_of_forall_toReal_tendsto {Ω : Type*} [Finite Ω]
+    {μs : ℕ → PMF Ω} {μ : PMF Ω} (f : Ω → ℝ)
+    (h : ∀ ω : Ω,
+      Tendsto (fun n : ℕ => (μs n ω).toReal) atTop (nhds ((μ ω).toReal))) :
+    Tendsto (fun n : ℕ => expect (μs n) f) atTop (nhds (expect μ f)) := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [show (fun n : ℕ => expect (μs n) f) =
+      fun n : ℕ => ∑ ω : Ω, (μs n ω).toReal * f ω by
+        funext n
+        rw [expect_eq_sum]]
+  rw [expect_eq_sum]
+  exact tendsto_finsetSum (s := Finset.univ)
+    (fun ω _ => (h ω).mul_const (f ω))
+
+/--
+Finite expectations are continuous under pointwise convergence of PMF weights
+in `ENNReal`.
+-/
+theorem expect_tendsto_of_forall_tendsto {Ω : Type*} [Finite Ω]
+    {μs : ℕ → PMF Ω} {μ : PMF Ω} (f : Ω → ℝ)
+    (h : ∀ ω : Ω, Tendsto (fun n : ℕ => μs n ω) atTop (nhds (μ ω))) :
+    Tendsto (fun n : ℕ => expect (μs n) f) atTop (nhds (expect μ f)) :=
+  expect_tendsto_of_forall_toReal_tendsto f
+    (fun ω => pmf_apply_toReal_tendsto_of_tendsto (h ω))
 
 -- ============================================================================
 -- PMF utility lemmas
