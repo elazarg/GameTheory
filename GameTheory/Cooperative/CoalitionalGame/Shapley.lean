@@ -193,7 +193,7 @@ theorem allocation_on_unanimityGame
     (φ : CoalGame ι → ι → ℝ)
     (h_eff : ∀ G : CoalGame ι, ∑ i, φ G i = G.v Finset.univ)
     (h_sym : ∀ (G : CoalGame ι) {i j : ι},
-        i ≠ j → G.AreSymmetric i j → φ G i = φ G j)
+        G.AreSymmetric i j → φ G i = φ G j)
     (h_null : ∀ (G : CoalGame ι) {i : ι}, G.IsNull i → φ G i = 0)
     (S : Finset ι) (hS : S.Nonempty) (i : ι) :
     φ (unanimityGame S hS) i = if i ∈ S then (1 : ℝ) / S.card else 0 := by
@@ -208,7 +208,7 @@ theorem allocation_on_unanimityGame
       refine ⟨φ G i, fun k hk => ?_⟩
       by_cases hki : k = i
       · subst hki; rfl
-      · exact h_sym G hki (unanimityGame_areSymmetric S hS hki hk hiS)
+      · exact h_sym G (unanimityGame_areSymmetric S hS hki hk hiS)
     -- Sum-splitting and efficiency: |S| · c = 1.
     have hsum_split : ∑ k, φ G k = ∑ k ∈ S, φ G k := by
       rw [← Finset.sum_filter_add_sum_filter_not Finset.univ (· ∈ S) (φ G)]
@@ -245,7 +245,7 @@ theorem allocation_on_scalar_unanimityGame
     (φ : CoalGame ι → ι → ℝ)
     (h_eff : ∀ G : CoalGame ι, ∑ i, φ G i = G.v Finset.univ)
     (h_sym : ∀ (G : CoalGame ι) {i j : ι},
-        i ≠ j → G.AreSymmetric i j → φ G i = φ G j)
+        G.AreSymmetric i j → φ G i = φ G j)
     (h_null : ∀ (G : CoalGame ι) {i : ι}, G.IsNull i → φ G i = 0)
     (S : Finset ι) (hS : S.Nonempty) (c : ℝ) (i : ι) :
     φ (gameScalar c (unanimityGame S hS)) i = if i ∈ S then c / S.card else 0 := by
@@ -258,7 +258,7 @@ theorem allocation_on_scalar_unanimityGame
       refine ⟨φ G i, fun k hk => ?_⟩
       by_cases hki : k = i
       · subst hki; rfl
-      · exact h_sym G hki
+      · exact h_sym G
           (gameScalar_areSymmetric (unanimityGame_areSymmetric S hS hki hk hiS))
     have hsum_split : ∑ k, φ G k = ∑ k ∈ S, φ G k := by
       rw [← Finset.sum_filter_add_sum_filter_not Finset.univ (· ∈ S) (φ G)]
@@ -434,7 +434,7 @@ theorem shapleyValue_unique
     (φ : CoalGame ι → ι → ℝ)
     (h_eff : ∀ G : CoalGame ι, ∑ i, φ G i = G.v Finset.univ)
     (h_sym : ∀ (G : CoalGame ι) {i j : ι},
-        i ≠ j → G.AreSymmetric i j → φ G i = φ G j)
+        G.AreSymmetric i j → φ G i = φ G j)
     (h_null : ∀ (G : CoalGame ι) {i : ι}, G.IsNull i → φ G i = 0)
     (h_add : ∀ (G₁ G₂ : CoalGame ι) (i : ι),
         φ (gameAdd G₁ G₂) i = φ G₁ i + φ G₂ i)

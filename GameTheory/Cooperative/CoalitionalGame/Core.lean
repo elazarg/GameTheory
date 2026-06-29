@@ -199,9 +199,11 @@ theorem IsCore.gameScalar {G : CoalGame ι} {x : ι → ℝ}
 
 open Classical in
 /-- Symmetric players have the same Shapley value. -/
-theorem shapleyValue_symmetric (G : CoalGame ι) {i j : ι} (hne : i ≠ j)
+theorem shapleyValue_symmetric (G : CoalGame ι) {i j : ι}
     (hsym : G.AreSymmetric i j) :
     G.shapleyValue i = G.shapleyValue j := by
+  rcases eq_or_ne i j with rfl | hne
+  · rfl
   simp only [shapleyValue]
   set Si := (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S)
   set Sj := (Finset.univ : Finset (Finset ι)).filter (fun S => j ∉ S)
@@ -419,7 +421,7 @@ theorem shapleyValue_eq_of_all_symmetric (G : CoalGame ι)
   have hconst : ∀ k : ι, G.shapleyValue k = G.shapleyValue i := fun k => by
     by_cases hki : k = i
     · subst hki; rfl
-    · exact shapleyValue_symmetric G hki (hsym k i hki)
+    · exact shapleyValue_symmetric G (hsym k i hki)
   have hsum := shapleyValue_efficient G
   rw [Finset.sum_congr rfl (fun k _ => hconst k), Finset.sum_const,
     Finset.card_univ, nsmul_eq_mul] at hsum

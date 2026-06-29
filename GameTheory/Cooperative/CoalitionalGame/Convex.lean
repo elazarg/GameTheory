@@ -485,7 +485,7 @@ theorem margVec_trans_swap (G : CoalGame ι) {i j : ι} (hsym : G.AreSymmetric i
 
 /-- The average-of-marginal-vectors allocation treats symmetric players
 identically. -/
-theorem orderingAvg_symmetric (G : CoalGame ι) {i j : ι} (_hne : i ≠ j)
+theorem orderingAvg_symmetric (G : CoalGame ι) {i j : ι}
     (hsym : G.AreSymmetric i j) : G.orderingAvg i = G.orderingAvg j := by
   simp only [orderingAvg]
   congr 1
