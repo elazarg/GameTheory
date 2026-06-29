@@ -597,7 +597,7 @@ to be $\Profile \mapsto \Dirac_{\mathrm{eu}(\Profile)}$, and the
 utility to be the identity.  The \TT{ofEU}-form is the natural
 target of the Bayesian-game compilation
 (\S\ref{sec:supp:bayesian}); structural lemmas in
-\TT{Concepts/OfEUProperties.lean} record that
+\TT{Concepts/Foundations/OfEUProperties.lean} record that
 $\TT{eu}\,(\TT{ofEU}\,\TT{S}\,\TT{u})\,\sigma\,i = \TT{u}\,\sigma\,i$
 and that solution-concept predicates on \TT{ofEU}-games unfold to
 direct EU comparisons.
@@ -661,7 +661,7 @@ $\mathcal{D}$.  We anchor at $\IsNash$ (\S\ref{sec:supp:isNash})
 and $\IsCorrelatedEq$ (\S\ref{sec:supp:isCE}); other concepts are
 bunched.
 
-\subsection{Deviation-family schema: \texttt{Concepts/GameFormSolutionConcepts.lean}}
+\subsection{Deviation-family schema: \texttt{Concepts/Equilibrium/GameFormSolutionConcepts.lean}}
 \label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:ProfileDeviationFamily}\label{def:IsDeviationEqFamilyFor}
 
 \begin{leanbox}
@@ -706,7 +706,7 @@ families are textbook:\ unilateral deviation by a fixed strategy
 (Nash, CCE) and recommendation-dependent deviation
 (Aumann's correlated equilibrium~\citep{Aumann1974}).
 
-\subsection{Deviation-simulation transport: \texttt{Concepts/DeviationSimulation.lean}}
+\subsection{Deviation-simulation transport: \texttt{Concepts/Foundations/DeviationSimulation.lean}}
 \label{sec:supp:deviation-simulation}
 \label{def:OutcomeView}\label{def:NashDeviationSimulation}\label{def:DeviationFamilySimulation}
 
@@ -859,7 +859,7 @@ arbitrary preferences and then provides the EU-specialized
 
 \leancorr{\TT{Core/Babbling.lean} defines \TT{CheapTalkExtension},
 \TT{proj}, \TT{embed}, and \TT{BabblingDeviationPreservingFor};
-\TT{Concepts/Babbling.lean} proves \TT{babbling\_nashFor},
+\TT{Concepts/Communication/Babbling.lean} proves \TT{babbling\_nashFor},
 \TT{KernelGame.babbling\_nash}, and the observable cheap-talk
 instance; \TT{Languages/NFG/CheapTalkExamples.lean} gives a Battle
 of the Sexes example.}
@@ -891,7 +891,7 @@ has a strictly improving unilateral deviation:
     \EU(\KG, \Profile, i) \;\ge\; \EU(\KG, \Profile[i \mapsto s'], i).
 \end{equation}
 The library's \TT{IsNashFor} variant
-(\TT{Concepts/GameFormSolutionConcepts.lean}) generalizes \eqref{eq:supp:isNash} to
+(\TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean}) generalizes \eqref{eq:supp:isNash} to
 take an arbitrary preorder $\Pref$ on $\PMF{\Outcome}$:
 \[
   \forall i,\,\forall s'.\quad \Pref_i\bigl(\K(\Profile),\;\K(\Profile[i \mapsto s'])\bigr).
@@ -993,7 +993,7 @@ that act as the identity outside the conditioning event.
 \Faithfulness
 Faithful, with reformulation.  The library's
 $\IsCorrelatedEq$ is the ex-ante form; the equivalent
-ex-post (conditional) form is \TT{Concepts/CorrelatedEqProperties.lean}'s
+ex-post (conditional) form is \TT{Concepts/Correlation/CorrelatedEqProperties.lean}'s
 \TT{isCorrelatedEq_iff_pointwise} (and similarly for the
 preference-parameterized variant).  Existence is the content of the
 main chapter's CE existence theorem
@@ -1017,8 +1017,8 @@ its anchor textbook reference; the structural relation to
 \IsNash\ or \IsCorrelatedEq\ is recorded in the prose.
 
 \paragraph{Pareto and welfare.}\
-\TT{Concepts/NashPareto.lean}, \TT{Concepts/WelfareTheorems.lean},
-\TT{Concepts/PriceOfAnarchy.lean}.  \TT{ParetoDominatesFor} is the
+\TT{Concepts/Equilibrium/NashPareto.lean}, \TT{Concepts/Welfare/WelfareTheorems.lean},
+\TT{Concepts/Welfare/PriceOfAnarchy.lean}.  \TT{ParetoDominatesFor} is the
 binary preference-parameterized predicate "$\Profile$ Pareto-dominates
 $\tau$"; \TT{IsParetoEfficient(For)} is its ¬∃-closure.
 \TT{socialWelfare} is $\sum_i \EU(\KG, \Profile, i)$, requiring a
@@ -1029,7 +1029,7 @@ the Lean library does not yet package the ratio-valued
 (\citep{Koutsoupias1999, Roughgarden2005}).
 
 \paragraph{Security and individual rationality.}\
-\TT{Concepts/SecurityStrategy.lean}, \TT{Concepts/IndividualRationality.lean}.
+\TT{Concepts/ZeroSum/SecurityStrategy.lean}, \TT{Concepts/Welfare/IndividualRationality.lean}.
 \TT{securityLevel} is the finite attained version of
 $\sup_s \inf_{\sigma_{-i}}
 \EU(\KG, \sigma_{-i}[i \mapsto s], i)$, while
@@ -1040,7 +1040,7 @@ rationality says no Nash payoff is below the relevant security level
 (Maschler–Solan–Zamir §5.4).
 
 \paragraph{Regret.}\
-\TT{Concepts/Regret.lean}.  External regret of $\Profile$ for $i$
+\TT{Concepts/Correlation/Regret.lean}.  External regret of $\Profile$ for $i$
 is $\max_{s'}(\EU(\Profile[i\mapsto s'],i) - \EU(\Profile,i))^+$;
 internal regret replaces $s'$ by a function of $\Profile_i$.  The
 regret-equilibrium duality (zero average external regret iff CCE;
@@ -1048,14 +1048,14 @@ zero average internal regret iff CE) is recorded as
 \TT{regret_zero_iff_isCoarseCorrelatedEq} and its CE analogue.
 
 \paragraph{Approximate equilibria.}\
-\TT{Concepts/ApproximateNash.lean}.  \TT{IsEpsilonNash $\varepsilon$}
+\TT{Concepts/Equilibrium/ApproximateNash.lean}.  \TT{IsEpsilonNash $\varepsilon$}
 relaxes the Nash inequality by an additive $\varepsilon$ slack;
 $\varepsilon = 0$ recovers \TT{IsNash}.  Closure under
 $\varepsilon$-relaxation extends to the deviation-family schema,
 hence applies to $\varepsilon$-CCE and $\varepsilon$-CE.
 
 \paragraph{Potential games.}\
-\TT{Concepts/PotentialGame.lean}, \TT{PotentialFIP.lean},
+\TT{Concepts/Potential/PotentialGame.lean}, \TT{PotentialFIP.lean},
 \TT{PotentialWellFounded.lean}, \TT{PotentialTeam.lean}.
 \TT{IsExactPotential $\Phi$} requires $\EU(\sigma',i) - \EU(\sigma,i) =
 \Phi(\sigma') - \Phi(\sigma)$ for every unilateral deviation
@@ -1067,7 +1067,7 @@ team games are exact potential games with $\Phi = u_{\mathrm{any}}$
 (\citep{MondererShapley1996}).
 
 \paragraph{Zero-sum, constant-sum, team, symmetric, evolutionary.}\
-\TT{Concepts/ZeroSum.lean}, \TT{ConstantSum.lean},
+\TT{Concepts/ZeroSum/ZeroSum.lean}, \TT{ConstantSum.lean},
 \TT{TeamGame.lean}, \TT{SymmetricGame.lean},
 \TT{EvolutionaryStability.lean}.  \TT{IsZeroSum}:\ $\sum_i \util(\omega)(i)
 = 0$ for all $\omega$.  Constant-sum, team-game, and symmetric
@@ -1078,14 +1078,14 @@ strict-dominance condition on a symmetric two-player game
 (\citep{MaynardSmithPrice1973}).
 
 \paragraph{Rationalizability and dominance solvability.}\
-\TT{Concepts/Rationalizability.lean},
-\TT{Concepts/DominanceSolvable.lean},
-\TT{Concepts/DominanceSolvability.lean}.  \TT{Survives n} is the
+\TT{Concepts/Dominance/Rationalizability.lean},
+\TT{Concepts/Dominance/DominanceSolvable.lean},
+\TT{Concepts/Dominance/DominanceSolvability.lean}.  \TT{Survives n} is the
 predicate "survives $n$ rounds of iterated strict dominance
 elimination," defined inductively;  \TT{IsRationalizable} is the
 inf over $n$.  \TT{IsNash.isRationalizable} and
 \TT{IsDominant.isRationalizable} are the expected implications.
-\TT{Concepts/DominanceSolvable.lean} records that the unique
+\TT{Concepts/Dominance/DominanceSolvable.lean} records that the unique
 surviving profile (when one exists) is Nash.
 
 \paragraph{Common knowledge.}\
@@ -1531,8 +1531,8 @@ as an FOSG.  Soundness at the game-form simulation level.
 \label{sec:supp:transport}
 
 The main chapter's map-based transport theorem
-(\TT{Concepts/GameMorphism.lean} and
-\TT{Concepts/UtilityInvariance.lean}) states that a protocol map with
+(\TT{Concepts/Foundations/GameMorphism.lean} and
+\TT{Concepts/Foundations/UtilityInvariance.lean}) states that a protocol map with
 bijective \TT{stratMap} and bijective \TT{outcomeMap} transports the
 preference-parameterized Nash, best-response, dominance,
 weak/strict dominance, correlated-equilibrium, and
@@ -1541,7 +1541,7 @@ bijection on profiles.  Specializing to a kernel-game simulation
 (utility-preserving) yields the EU-specific transport laws.
 
 The observed-law transport layer
-(\TT{Concepts/DeviationSimulation.lean}) removes the need for an
+(\TT{Concepts/Foundations/DeviationSimulation.lean}) removes the need for an
 outcome bijection.  It compares two games through views into a
 common observed carrier $\Omega$, relates profiles or profile
 distributions by equality of the pushed-forward outcome law, and
@@ -1599,9 +1599,9 @@ $\Phi$ is a continuous self-map of the product simplex
 $\prod_i \Delta(\Strat_i)$.  Brouwer's fixed-point theorem (mathlib's
 \TT{brouwerFixedPoint} on a closed disk, lifted to the product
 simplex via the homeomorphism in
-\TT{Concepts/ProductSimplexBrouwer.lean}) gives a fixed point
+\TT{Concepts/Existence/ProductSimplexBrouwer.lean}) gives a fixed point
 $\Profile^*$.  The algebraic step in
-\TT{Theorems/NashExistenceMixed.lean} (section
+\TT{Concepts/Existence/NashExistenceMixed.lean} (section
 \TT{NashMapAlgebra}) shows that a fixed point of $\Phi$ is a Nash
 equilibrium:\ the positive-part bracketing forces every player's
 gain to vanish at $\Profile^*$.
@@ -1620,7 +1620,7 @@ such a balanced uniform profile is Nash.  This captures the row/column
 making any zero-sum or symmetry assumption.
 
 \paragraph{Binary matching-pennies calculus.}\
-\TT{Concepts/BinaryMixed.lean} factors out the reusable part of the
+\TT{Concepts/Mixed/BinaryMixed.lean} factors out the reusable part of the
 Matching Pennies calculation.  \TT{BinaryActionLabels} labels each
 of the two players by \TT{Bool}, and also labels each player's two pure
 strategies by \TT{Bool}; the file proves the binary PMF complement
@@ -1656,10 +1656,30 @@ $\bigotimes_i \Profile^*_i$ over the mixed Nash profile supplied by
 the main chapter's mixed-existence theorem is a correlated equilibrium
 of the original \KG;\ this is the route taken by
 \TT{Theorems/CorrelatedEqExistence.lean}.  CCE existence is the
-corollary $\Pref$-CE $\subseteq$ $\Pref$-CCE.  See chapter §6.2
-for the alternative no-regret-learning route, not formalized.  The
+corollary $\Pref$-CE $\subseteq$ $\Pref$-CCE.  The
 \TT{\_of\_bounded} statements require finite strategy spaces but
 not finite outcomes.
+
+\paragraph{Constructive route:\ no-regret learning.}\
+The complementary constructive route — the main chapter's
+learning-dynamics theorems — is formalized.  The time-average of a
+play sequence with cumulative external regret $R$ over horizon $T$
+is an $(R/T)$-coarse correlated equilibrium
+(\TT{KernelGame.timeAverage\_isεCCE\_of\_regret\_le} in
+\TT{Concepts/Learning/NoRegretToCCE.lean}), and multiplicative-weights
+self-play supplies a concrete such sequence with an explicit
+$\varepsilon$
+(\TT{KernelGame.mwSelfPlay\_timeAverage\_isεCCE},
+\TT{KernelGame.exists\_mwSelfPlay\_isεCCE} in
+\TT{Concepts/Learning/MWSelfPlay.lean}), built on the game-free
+multiplicative-weights regret bound
+\TT{Math.OnlineLearning.mw\_externalRegret\_le}.  The same set is
+reached geometrically by regret matching, via Blackwell
+approachability
+(\TT{Math.Approachability.blackwell\_approaches},
+\TT{regretMatch\_approaches}).  Unlike the Brouwer route this is a
+per-horizon $\varepsilon$-bound, not an exact existence statement:\
+for a fixed learning rate the residual $\varepsilon$ does not vanish.
 
 \subsection{Minimax theorem: \texttt{KernelGame.von\_neumann\_minimax\_of\_bounded}}
 \label{sec:supp:minimax}\label{def:von_neumann_minimax}
@@ -2099,7 +2119,7 @@ at which both players' EU is $0$.  Lean records both facts:\
 \TT{Languages/NFG/Examples.lean}, while
 \TT{matchingPennies\_mixed\_nash\_iff\_half} in
 \TT{Languages/NFG/MatchingPenniesMixed.lean} instantiates the generic
-\TT{Concepts/BinaryMixed.lean} theorem by labeling heads as \TT{true}
+\TT{Concepts/Mixed/BinaryMixed.lean} theorem by labeling heads as \TT{true}
 and tails as \TT{false}; it states that a mixed profile is Nash iff
 each player's probability of heads is $1/2$.
 

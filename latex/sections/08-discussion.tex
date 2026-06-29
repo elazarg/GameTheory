@@ -260,29 +260,15 @@ formalized; PPAD-completeness~\citep{DaskalakisGoldbergPapadimitriou2009}
 is not.  Approximate-equilibrium algorithmic results are not
 formalized.
 
-\item \emph{Cooperative game theory beyond the basic apparatus.}
-The cooperative branch (\TT{Cooperative/}, parallel to the
-non-cooperative core) defines the Shapley value with the four classical
-axioms, with linearity represented in Lean by additivity plus scalar
-homogeneity, the unanimity-basis decomposition, and the full Shapley
-uniqueness theorem (\Cref{thm:shapley-unique}), and it also
-includes the Banzhaf and Shapley–Shubik power indices, simple
-games, convex (supermodular) games with the
-$\mathrm{IsConvex} \Leftrightarrow$ monotone-marginals
-characterization, the core (efficient $\land$ coalition-rational)
-with convex-set closure, and additive games.  The remaining
-classical cooperative landmarks are not formalized:\ the nucleolus
-\citep{Schmeidler1969}, the Bondareva–Shapley balanced-collections
-theorem~\citep{Bondareva1963, Shapley1967} characterizing
-core-nonempty games, the kernel and bargaining set, NTU games, and
-the Aumann–Shapley value for non-atomic games
-\citep{AumannShapley1974}.
-
-\item \emph{Impossibility theorems in social choice.}  Arrow's
-impossibility theorem and its strategic analogue
-Gibbard–Satterthwaite are formalized (\Cref{sec:mech:social}); Sen's
-liberal paradox is formalizable in the same framework but is not
-formalized here.
+\item \emph{Cooperative game theory beyond the core apparatus.}
+Beyond the Shapley value and its uniqueness (\Cref{thm:shapley-unique}),
+the Banzhaf and Shapley–Shubik indices, convex games, the core, and
+the easy direction of Bondareva–Shapley, the classical landmarks are
+not formalized:\ the \emph{converse} Bondareva–Shapley direction
+(balancedness $\Rightarrow$ nonempty core, the LP-duality content),
+the nucleolus~\citep{Schmeidler1969}, the kernel and bargaining set,
+NTU games, and the Aumann–Shapley value for non-atomic
+games~\citep{AumannShapley1974}.
 
 \item \emph{Bayesian persuasion and information design.}
 The finite signal-structure and persuasion predicates are present

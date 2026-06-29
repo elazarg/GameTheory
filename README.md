@@ -42,14 +42,18 @@ Formal proofs of standard results in finite game theory:
 - **Aumann's agreement theorem** — agents with a common prior who share an
   information-partition cell have equal posteriors ("agreeing to disagree" is
   impossible), with the full-agreement version on common self-evident events
-  and an S5 knowledge operator (`Concepts/CommonKnowledge.lean`)
+  and an S5 knowledge operator (`Concepts/Knowledge/CommonKnowledge.lean`)
+- **Monderer–Samet approximate agreement** — the common-*p*-belief
+  generalization: when posteriors are common *p*-belief, agents' reports differ
+  by at most `2(1 − p)`, recovering exact agreement as `p → 1`
+  (`Concepts/Knowledge/ApproximateCommonKnowledge.lean`)
 
 ## Core abstractions
 
 | Abstraction | Role |
 |---|---|
-| `GameForm` | Utility-free game: strategies, outcomes, stochastic kernel. Protocol-level constructions live in `Core/`; preference-parametric solution concepts over game forms live in `Concepts/GameFormSolutionConcepts.lean`. |
-| `KernelGame` | `GameForm` + utility function. EU-based solution concepts (`IsNash`, `IsDominant`, …) live in `Concepts/SolutionConcepts.lean`. |
+| `GameForm` | Utility-free game: strategies, outcomes, stochastic kernel. Protocol-level constructions live in `Core/`; preference-parametric solution concepts over game forms live in `Concepts/Equilibrium/GameFormSolutionConcepts.lean`. |
+| `KernelGame` | `GameForm` + utility function. EU-based solution concepts (`IsNash`, `IsDominant`, …) live in `Concepts/Equilibrium/SolutionConcepts.lean`. |
 | `ObsModel` | Observation-indexed actions over a `DSMachine`. Canonical model for Kuhn's theorem. |
 | `InfoModel` | State-based sequential game model with observations, actions, and signals. ODP and other sequential theorems are stated at this level. |
 
@@ -70,7 +74,8 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Mixed-extension gain tests, including uniform mixed balance ⇒ Nash and
   binary-labeled matching-pennies-style exact mixed equilibrium characterizations
 - Security strategies (maximin), minimax guarantees, saddle points
-- Potential games (exact, ordinal, weighted), finite improvement property
+- Potential games (exact, ordinal, weighted), finite improvement property, and
+  the Monderer–Shapley mixed (multilinear) extension of an exact potential
 - Rationalizability, dominance solvability
 - Evolutionary stable strategies (ESS)
 - Price of anarchy — including smoothness and the robust PoA bound that extends
@@ -85,6 +90,30 @@ potential game maximizers are Nash.
 The library keeps `Core/` dependency-light: it contains semantic structures and
 protocol/distribution constructions. `Concepts/` contains preference-dependent
 and EU-dependent predicates and transport theorems.
+
+## Learning dynamics
+
+Repeated-play learning rules and their convergence to equilibrium, built on the
+strategic-form definitions (`Concepts/Learning/`, `Math/OnlineLearning/`):
+
+- **Multiplicative weights (Hedge)** — the no-regret online-learning algorithm,
+  stated game-free over a finite action set, with an explicit fixed-rate
+  external-regret bound `log|A|/η + (eᵑ−1−η)/η·T`
+- **No-regret ⇒ coarse correlated equilibrium** — the time-average of a play
+  sequence with cumulative external regret `R` over horizon `T` is an
+  `(R/T)`-coarse correlated equilibrium; multiplicative-weights self-play
+  realizes an explicit per-horizon ε-CCE (the horizon-dependent `η ≈ √(L/T)`
+  tuning that drives ε → 0 is left as a parameter, not yet formalized)
+- **Blackwell approachability** — the squared-distance approachability theorem
+  (a B-set is approached at rate O(1/√t)), with its game-theoretic corollary
+  that **regret matching achieves no external regret**: external-regret
+  minimization is exactly approachability of the nonpositive orthant in
+  `ℝ^A` (one coordinate per fixed action)
+- **Fictitious play** — empirical-belief best-response dynamics, with the
+  "limits of fictitious play are Nash" direction, and the Monderer–Shapley
+  reduction giving fictitious-play convergence in exact potential games
+- **ε-relaxations** of (coarse) correlated equilibrium, characterized by
+  bounded external / swap regret — the equilibrium targets of the above
 
 ## Representations and bridges
 
@@ -194,7 +223,9 @@ package only for packaging convenience.
   unanimity-game decomposition (efficiency, symmetry, dummy, additivity), the
   Banzhaf index and the Shapley–Shubik power index on simple games, convex
   (supermodular) games with the monotone-marginals characterization, the
-  core (with nonemptiness for convex games), and the cost of stability
+  core (with nonemptiness for convex games), the cost of stability, and
+  balanced collections with the **Bondareva–Shapley** theorem in its easy
+  direction (a nonempty core implies balancedness)
 - **Bargaining** — the Nash bargaining solution for two-player problems
   (weak Pareto optimality, symmetry, affine invariance), the egalitarian (Kalai)
   solution (the maximal equal-gain point), and the Kalai–Smorodinsky solution
@@ -209,9 +240,10 @@ axiomatic solutions), not to strategic games with aligned interests — those
 ## Mathematical infrastructure
 
 The `Math/` directory provides supporting libraries for discrete probability
-(`PMF` products, marginals, conditioning), directed acyclic graphs (acyclicity,
-topological orders), function/finset update lemmas, and local-to-global
-optimization.
+(`PMF` products, marginals, conditioning, and bounded-expectation convergence),
+directed acyclic graphs (acyclicity, topological orders), function/finset update
+lemmas, local-to-global optimization, and online learning (`Math/OnlineLearning/`,
+the multiplicative-weights algorithm and its regret bound).
 
 ## Build
 

@@ -53,12 +53,13 @@ extensive-form games; it works by tracking, at each information
 set, the cumulative regret for not having played each action,
 counterfactually weighted by the probability of reaching that
 information set under the opponents' play.  The regret-equilibrium
-duality is already formalized in the library
-(\Cref{sec:solution-concepts:regret}), making the CFR convergence
-proof a natural consumer.  This would also produce a
-constructive CCE existence theorem
-(\Cref{sec:theorems:correlated-existence}) without going through
-Brouwer.
+duality and the no-regret learning machinery a CFR proof would
+consume are already formalized (\Cref{sec:solution-concepts:regret},
+\Cref{sec:theorems:learning}) — including the constructive CCE
+existence that no-regret self-play yields without going through
+Brouwer.  What remains specific to CFR is the counterfactual,
+information-set-local regret decomposition for extensive-form games
+and its convergence proof on top of that base.
 
 \subsection{Imperfect-recall extensions}
 \label{sec:future:absent-mind}
@@ -142,6 +143,12 @@ subsidy that makes the grand coalition stable — is formalized
 (\TT{IsStabilizable}, \TT{costOfStability}) with its monotonicity, the
 vanishing of the cost on games with a nonempty core, and zero-cost
 classes (nonnegative unanimity coefficients, additive games).
+Balanced collections and the easy direction of the
+\emph{Bondareva–Shapley} theorem~\citep{Bondareva1963, Shapley1967}
+— a nonempty core implies balancedness — are formalized
+(\TT{IsBalancedCollection}, \TT{CoalGame.IsBalanced},
+\TT{IsCore.isBalanced}) by the double-counting swap over a core
+allocation.
 Nash bargaining
 \citep{Nash1950bargaining} is formalized through the IR / weak-Pareto
 characterization (the Nash maximizer is only weakly Pareto on the
@@ -162,10 +169,11 @@ Stable matching~\citep{GaleShapley1962} is formalized through the
 existence of a stable matching proved via the Gale–Shapley
 deferred-acceptance algorithm (\Cref{thm:gale-shapley}).
 
-Natural extensions:\ Bondareva–Shapley balanced collections
-\citep{Bondareva1963, Shapley1967} characterizing core-nonempty
-games (a flagship LP-duality result); the nucleolus
-\citep{Schmeidler1969}; the Aumann–Shapley value for non-atomic
+Natural extensions:\ the converse (hard) direction of
+Bondareva–Shapley \citep{Bondareva1963, Shapley1967} — balancedness
+implies a nonempty core — which closes the characterization of
+core-nonempty games and is the flagship LP-duality (Farkas) result;
+the nucleolus \citep{Schmeidler1969}; the Aumann–Shapley value for non-atomic
 games~\citep{AumannShapley1974}; NTU coalitional games;
 the full Shapley~\citeyear{Shapley1971} theorem that every convex
 game has a nonempty core and that the Shapley value lies in it; and
@@ -234,19 +242,20 @@ does not require probability, and it would fit the library cleanly.
 \subsection{Multi-agent learning}
 \label{sec:future:learning}
 
-The FOSG and observation-model layers are built precisely so that
-multi-agent reinforcement-learning algorithms — \emph{fictitious
-play} (each player best-responds to the empirical distribution of
-opponents' past actions), self-play, MCTS, regret matching — can
-be formalized as strategy-update rules on top of an existing
-game.  \emph{No-regret learning} is the central convergence
-notion:\ an algorithm has \emph{vanishing average regret} when
-its average per-round payoff approaches that of the best fixed
-action in hindsight; the classical theorems
-\citep{Cesa-BianchiLugosi2006, BlumMansour2007} link no-regret
-play of a repeated game to convergence to CCE (external regret)
-or CE (internal regret).  These are the natural formal targets;
-the strategic-form definitions they need are already in place.
+With the no-regret core in place (\Cref{sec:theorems:learning}), the
+open directions are the asymptotic and internal-regret refinements.
+The multiplicative-weights and self-play bounds are stated for a
+\emph{fixed} learning rate, where the residual error does not
+vanish; the horizon-dependent tuning $\eta \approx \sqrt{\log|A|/T}$
+that makes external regret sublinear — and so turns the per-horizon
+$\varepsilon$-bound into a genuine \emph{convergence} statement — is
+the natural next step \citep{Cesa-BianchiLugosi2006,
+BlumMansour2007}.  Beyond it:\ internal-regret minimization driving
+play to \emph{correlated} (not merely coarse correlated)
+equilibrium; Robinson's theorem that fictitious play converges in
+two-player zero-sum games; and the reinforcement-learning algorithms
+(self-play with function approximation, MCTS) that the FOSG and
+observation-model layers were built to host.
 
 \subsection{Stable matching beyond existence}
 \label{sec:future:matching}

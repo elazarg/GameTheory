@@ -73,7 +73,7 @@ discharged by small case-analysis scripts.  Matching Pennies
 additionally has an exact mixed
 characterization in \TT{Languages/NFG/MatchingPenniesMixed.lean};
 that file instantiates the language-independent
-\TT{Concepts/BinaryMixed.lean} theorem for binary
+\TT{Concepts/Mixed/BinaryMixed.lean} theorem for binary
 matching-pennies-like \KG{}s, showing that both players put probability
 $1/2$ on heads.  These serve both as reader-facing examples and as
 smoke tests for the NFG$\to$\KG\ compilation pipeline.  The
@@ -358,7 +358,7 @@ repetition, assuming bounded stage payoffs.
 The infinite discounted repeated-game folk theorem is not built
 through the finite-list protocol syntax; it is formalized directly
 on public \TT{KernelGame} profile streams in
-\TT{Concepts/FolkTheorem.lean}.  In the main theorem the repeated
+\TT{Concepts/Welfare/FolkTheorem.lean}.  In the main theorem the repeated
 game is taken over the mixed extension, so period actions are
 publicly observed mixed stage strategies.  In that observable
 mixed-action model, every strictly individually rational feasible

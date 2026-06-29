@@ -80,8 +80,8 @@ $\mathcal{D}^{\mathrm{const}}$ instance; CE and CCE use the same
 statement at the profile-distribution level.
 \end{itemize}
 
-\leancorr{Schema in \TT{Concepts/GameFormSolutionConcepts.lean};
-transport in \TT{Concepts/DeviationSimulation.lean}; full Lean text
+\leancorr{Schema in \TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean};
+transport in \TT{Concepts/Foundations/DeviationSimulation.lean}; full Lean text
 in supplement~§3.1 and §3.2.}
 
 \subsection{Nash equilibrium and best response}
@@ -150,7 +150,7 @@ to the grand coalition $\Players$ recovers
 Pareto efficiency (\Cref{sec:solution-concepts:welfare}):\ strong
 Nash $\Rightarrow$ Nash $\land$ Pareto efficient.
 
-\leancorr{\TT{Concepts/StrongNash.lean} (\TT{coalitionDeviation},
+\leancorr{\TT{Concepts/Equilibrium/StrongNash.lean} (\TT{coalitionDeviation},
 \TT{IsStrongNash}, \TT{IsStrongNash.isNash},
 \TT{IsStrongNash.isParetoEfficient}).}
 
@@ -194,10 +194,10 @@ rationalizable.
 profile is Nash.
 \end{itemize}
 
-\leancorr{Predicates and theorems in \TT{Concepts/Rationalizability.lean}
+\leancorr{Predicates and theorems in \TT{Concepts/Dominance/Rationalizability.lean}
 (\TT{Survives}, \TT{IsNash.survives}, \TT{IsNash.isRationalizable},
 \TT{IsDominant.isRationalizable}); the dominance-solvable case in
-\TT{Concepts/DominanceSolvable.lean}.}
+\TT{Concepts/Dominance/DominanceSolvable.lean}.}
 
 \subsection{Correlated and coarse correlated equilibria}
 \label{sec:solution-concepts:correlated}
@@ -330,11 +330,11 @@ would compile through the \TT{CongestionGame} infrastructure but
 is not yet packaged.
 
 \leancorr{Welfare quantities and ratios in
-\TT{Concepts/PriceOfAnarchy.lean}
+\TT{Concepts/Welfare/PriceOfAnarchy.lean}
 (\TT{optimalWelfare}, \TT{worstNashWelfare}, \TT{bestNashWelfare},
 \TT{priceOfAnarchy}, \TT{priceOfStability});
-welfare/Pareto bridges in \TT{Concepts/NashPareto.lean} and
-\TT{Concepts/WelfareTheorems.lean};
+welfare/Pareto bridges in \TT{Concepts/Equilibrium/NashPareto.lean} and
+\TT{Concepts/Welfare/WelfareTheorems.lean};
 Braess instance in \TT{Languages/NFG/Examples.lean}
 (\TT{braessRestricted}, \TT{braessAugmented},
 \TT{braess\_welfare\_decreases}).}
@@ -362,10 +362,10 @@ zero-sum theorem in
 with saddle-style guarantee inequalities.
 
 \leancorr{Definitions and the IR/Nash bound in
-\TT{Concepts/SecurityStrategy.lean} (\TT{worstCaseEU},
+\TT{Concepts/ZeroSum/SecurityStrategy.lean} (\TT{worstCaseEU},
 \TT{securityLevel}, \TT{worstCaseEUInf}, \TT{securityLevelSup});
 individual-rationality interface in
-\TT{Concepts/IndividualRationality.lean}.}
+\TT{Concepts/Welfare/IndividualRationality.lean}.}
 
 \subsection{Regret}
 \label{sec:solution-concepts:regret}
@@ -399,7 +399,7 @@ the per-state argmaxes, and that any uniformly best action is
 minimax-regret. Unlike CE/CCE regret these are properties of a
 single decision-maker against Nature, not equilibrium concepts.
 
-\leancorr{\TT{Concepts/Regret.lean} contains the EU-regret
+\leancorr{\TT{Concepts/Correlation/Regret.lean} contains the EU-regret
 definitions and the \TT{Savage} namespace for minimax regret.}
 
 \subsection{Approximate equilibria}
@@ -410,12 +410,24 @@ inequality by an additive $\varepsilon$ slack:\ every unilateral
 deviation is at most $\varepsilon$-profitable.  Closure under
 $\varepsilon$-relaxation is recorded for the deviation-family
 schema, so the same definition applies to $\varepsilon$-CCE and
-$\varepsilon$-CE.  We do not prove approximation theorems (e.g.,
-LP-duality bounds for $\varepsilon$-CE in succinct games) in this
-layer; we expose the definitions as the natural targets for
-downstream complexity-theoretic work.
+$\varepsilon$-CE.  These approximate correlated notions carry
+quantitative regret characterizations:\ a profile distribution is
+an $\varepsilon$-CCE iff every player's external regret is at most
+$\varepsilon$, and an $\varepsilon$-CE iff every swap regret is at
+most $\varepsilon$; the exact equilibrium is the $\varepsilon=0$
+instance, and the inclusion $\varepsilon$-CE $\subseteq$
+$\varepsilon$-CCE lifts CE $\subseteq$ CCE to the approximate
+level.  These are exactly the equilibria reached by no-regret
+learning (\Cref{sec:theorems:learning}):\ the time-average of play
+with cumulative regret $R$ over horizon $T$ is an
+$(R/T)$-equilibrium.
 
-\leancorr{\TT{Concepts/ApproximateNash.lean}.}
+\leancorr{\TT{Concepts/Equilibrium/ApproximateNash.lean} for
+$\varepsilon$-Nash;\
+\TT{Concepts/Correlation/ApproximateCorrelatedEq.lean} for
+$\varepsilon$-CCE/$\varepsilon$-CE and their regret
+characterizations (\TT{isεCoarseCorrelatedEq\_iff\_externalRegret\_le},
+\TT{isεCorrelatedEq\_iff\_swapRegret\_le}).}
 
 \subsection{Potential games}
 \label{sec:solution-concepts:potential}
@@ -440,16 +452,25 @@ equilibria as a direct consequence (any maximizer of $\Pot$ on
 the finite product $\prod_i \Strat_i$ is Nash).
 \item Best-response dynamics terminates in finitely many steps in
 a finite ordinal potential game.
+\item (\emph{Monderer–Shapley}) The expected (multilinear)
+extension of an exact potential is an exact potential for the mixed
+extension; hence the mixed extension of an exact potential game is
+itself an exact potential game.  This is the reusable infrastructure
+behind the fictitious-play convergence result of
+\Cref{sec:theorems:learning}.
 \end{itemize}
 Team games (\Cref{sec:solution-concepts:team}) are an instance:\
 they are exact potential games with $\Pot = u_{\mathrm{any}}$.
 
-\leancorr{\TT{Concepts/PotentialGame.lean} (\TT{IsExactPotential},
+\leancorr{\TT{Concepts/Potential/PotentialGame.lean} (\TT{IsExactPotential},
 \TT{IsOrdinalPotential}, \TT{IsExactPotential.toOrdinal},
 \TT{IsOrdinalPotential.nash\_of\_maximizer});
-\TT{Concepts/PotentialFIP.lean} and
-\TT{Concepts/PotentialWellFounded.lean} for the dynamics;
-\TT{Concepts/PotentialTeam.lean} for the team-game corollary
+\TT{Concepts/Potential/PotentialFIP.lean} and
+\TT{Concepts/Potential/PotentialWellFounded.lean} for the dynamics;
+\TT{Concepts/Potential/MixedPotential.lean} for the mixed-extension
+potential (\TT{mixedPotential},
+\TT{IsExactPotential.mixedExtension\_isExactPotential});
+\TT{Concepts/Potential/PotentialTeam.lean} for the team-game corollary
 (\TT{IsTeamGame.isExactPotential}).}
 
 \subsection{Zero-sum, constant-sum, team, and symmetric games}
@@ -481,12 +502,12 @@ stability}~\citep{MaynardSmithPrice1973} is formalized as the
 appropriate strict-dominance condition on a symmetric two-player
 game.
 
-\leancorr{\TT{Concepts/ZeroSum.lean}, \TT{Concepts/ConstantSum.lean},
-\TT{Concepts/ZeroSumNash.lean}, \TT{Concepts/ConstantSumNash.lean},
-\TT{Concepts/TeamGame.lean}, \TT{Concepts/SymmetricGame.lean}
+\leancorr{\TT{Concepts/ZeroSum/ZeroSum.lean}, \TT{Concepts/ZeroSum/ConstantSum.lean},
+\TT{Concepts/ZeroSum/ZeroSumNash.lean}, \TT{Concepts/ZeroSum/ConstantSumNash.lean},
+\TT{Concepts/Classes/TeamGame.lean}, \TT{Concepts/Classes/SymmetricGame.lean}
 (\TT{isSymmetricEU\_nash\_perm}, \TT{isSymmetricEU\_eu\_eq},
 \TT{symmetric\_mixed\_nash\_exists}),
-\TT{Concepts/EvolutionaryStability.lean}.}
+\TT{Concepts/Classes/EvolutionaryStability.lean}.}
 
 \subsection{Common knowledge}
 \label{sec:solution-concepts:common-knowledge}
@@ -591,7 +612,7 @@ the related opponent-enforced mixed minmax vector
 $m_i(\KG^{\mathrm{mix}})$, defined in \Cref{sec:theorems:folk}, as
 its strict individual-rationality threshold.
 
-\leancorr{\TT{Concepts/IndividualRationality.lean}.}
+\leancorr{\TT{Concepts/Welfare/IndividualRationality.lean}.}
 
 \subsection{Babbling and cheap talk}
 \label{sec:solution-concepts:babbling}
@@ -617,6 +638,6 @@ message profile and compares that base deviation instead.
 
 \leancorr{\TT{Core/Babbling.lean} defines the protocol-level
 \TT{CheapTalkExtension} and local preservation condition;
-\TT{Concepts/Babbling.lean} proves the \TT{GameForm} and
+\TT{Concepts/Communication/Babbling.lean} proves the \TT{GameForm} and
 \TT{KernelGame} Nash corollaries; \TT{Languages/NFG/CheapTalkExamples.lean}
 instantiates the result for Battle of the Sexes.}

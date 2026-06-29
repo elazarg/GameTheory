@@ -260,10 +260,10 @@ payoff law — are the explicitly specialized \TT{EUMorphism} and
 \TT{id\_comp}/\TT{comp\_id}/\TT{comp\_assoc} laws);
 \TT{Core/GameSimulation.lean} for kernel-game simulations and
 bisimulations; \TT{Core/GameIsomorphism.lean} for isomorphisms;
-\TT{Concepts/GameMorphism.lean} and
-\TT{Concepts/UtilityInvariance.lean} package the standard
-solution-concept transport results; \TT{Concepts/EUProperties.lean}
-and \TT{Concepts/OfEUProperties.lean} record EU structural
+\TT{Concepts/Foundations/GameMorphism.lean} and
+\TT{Concepts/Foundations/UtilityInvariance.lean} package the standard
+solution-concept transport results; \TT{Concepts/Foundations/EUProperties.lean}
+and \TT{Concepts/Foundations/OfEUProperties.lean} record EU structural
 properties and the \TT{ofEU} round-trip.  Supplement~§2.6.}
 
 \subsection{Reindexing and the player type}
@@ -369,10 +369,10 @@ transports solution concepts.  Concrete bridges
 specific maps and inherit a Nash/dominance/correlated-eq
 preservation law for free.
 
-\leancorr{\TT{Concepts/GameMorphism.lean},
-\TT{Concepts/UtilityInvariance.lean}, and
+\leancorr{\TT{Concepts/Foundations/GameMorphism.lean},
+\TT{Concepts/Foundations/UtilityInvariance.lean}, and
 \TT{Core/GameSimulation.lean} for the map-based transport layer;
-\TT{Concepts/DeviationSimulation.lean} for
+\TT{Concepts/Foundations/DeviationSimulation.lean} for
 \TT{OutcomeView}, \TT{NashDeviationSimulation}, and
 \TT{DeviationFamilySimulation}.}
 
@@ -397,7 +397,7 @@ preorder.  The EU-specific versions are corollaries of the
 generic statements via the EU/preference iff-bridges of
 \Cref{sec:semantic-core:for-style}.
 
-\leancorr{All three in \TT{Concepts/GameFormSolutionConcepts.lean}
+\leancorr{All three in \TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean}
 (\TT{dominant\_is\_nash\_for},
 \TT{isNashFor\_iff\_bestResponseFor},
 \TT{IsCorrelatedEqFor.}\allowbreak\TT{toCoarseCorrelatedEqFor}).}

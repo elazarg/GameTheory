@@ -104,7 +104,12 @@ theory.}
 The library uses Lean's \TT{Fintype} typeclass, which carries a
 finite enumeration of a type's elements.  ``Finite'' means
 \TT{Fintype}, equivalently:\ in bijection with $\{0, \dots, n-1\}$
-for some $n$.  The \emph{definitions} of the core objects —
+for some $n$.  Throughout the chapter, a \emph{finite game} means a
+kernel game $\KG$ with $\Players$, each $\Strat_i$, and $\Outcome$
+finite; the language layer adds further structural finiteness — a
+finite extensive-form tree, finitely many information sets, a
+bounded horizon — and each theorem states explicitly which subset
+of these assumptions it uses.  The \emph{definitions} of the core objects —
 $\PMF{\cdot}$, \TT{KernelGame}, the mixed extension, \TT{pmfPi},
 the EU operator, the solution-concept predicates — do not
 require \TT{Fintype} on $\Strat_i$ or $\Outcome$:\ strategy and
@@ -226,20 +231,3 @@ index but otherwise arbitrary per-coordinate types, used in the
 mixed extension of a kernel game; and the bounded-utility tsum
 identities used to lift expected-utility reasoning past
 \TT{[Finite \Outcome]}).
-
-\subsection{What we mean by ``finite game''}
-\label{sec:prelim:finite-game}
-
-We will treat a finite game as a kernel game $\KG$ with $\Players$
-finite, each $\Strat_i$ finite, and $\Outcome$ finite.  The
-language layer adds further structural finiteness — a finite
-extensive-form tree, finitely many information sets, a bounded
-horizon.  All theorems in the chapter are stated under (some
-subset of) these assumptions, made explicit in each statement.
-The underlying definitions in the Lean library are stated more
-generally — countable $\Strat_i$ and $\Outcome$ are admitted, and
-many concept-layer lemmas have bounded-utility variants without a
-finite-outcome hypothesis — so a downstream user who needs a
-countable-but-not-finite carrier can reuse the definitions and
-the algebra; only the major existence theorems are gated by the
-finite-game assumptions stated below.

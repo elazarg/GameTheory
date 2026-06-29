@@ -78,8 +78,8 @@ live in a downstream module.}
 
 \leancorr{Statements \TT{KernelGame.mixed\_nash\_exists\_of\_bounded}
 and \TT{KernelGame.mixed\_nash\_exists} in
-\TT{Theorems/NashExistenceMixed.lean}; the product-simplex
-Brouwer wrapper in \TT{Concepts/ProductSimplexBrouwer.lean}.
+\TT{Concepts/Existence/NashExistenceMixed.lean}; the product-simplex
+Brouwer wrapper in \TT{Concepts/Existence/ProductSimplexBrouwer.lean}.
 Supplement~§6.1.}
 
 \subsection{Existence of correlated and coarse correlated equilibria}
@@ -107,20 +107,125 @@ $\Pref\text{-CE}\subseteq\Pref\text{-CCE}$
 
 \tradeoff{This route gives CE existence as a corollary of
 mixed Nash existence and is the cleanest path through the
-finite-strategy machinery used by the proof.  Hart and
-Mas-Colell's regret-matching no-regret learning
-construction~\citep{HartMasColell2000} produces CCE existence
-constructively without going through Brouwer.  We have not
-formalized regret-matching itself, but the existence theorem is
-still available as a corollary of Nash existence; if a future
-constructive Nash-existence proof becomes available the dependency
-inverts trivially.}
+finite-strategy machinery used by the proof.  The complementary
+\emph{constructive} route, which produces a CCE without going
+through Brouwer, is the no-regret learning of
+\Cref{sec:theorems:learning}:\ the time-average of any no-regret
+play sequence is a coarse correlated equilibrium, and regret
+matching~\citep{HartMasColell2000} or multiplicative weights
+supplies a concrete such sequence.  We formalize that route, so the
+existence statement is now available both as a corollary of Nash
+existence and (per-horizon, with explicit error) as a learning
+limit.}
 
 \leancorr{\TT{KernelGame.correlatedEq\_exists\_of\_bounded},
 \TT{KernelGame.correlatedEq\_exists},
 \TT{KernelGame.coarseCorrelatedEq\_exists\_of\_bounded}, and
 \TT{KernelGame.coarseCorrelatedEq\_exists} in
 \TT{Theorems/CorrelatedEqExistence.lean}.  Supplement~§6.2.}
+
+\subsection{Learning dynamics and no-regret convergence}
+\label{sec:theorems:learning}
+
+The library formalizes the constructive, learning-theoretic route
+to correlated equilibrium that complements the Brouwer existence
+proof of \Cref{sec:theorems:correlated-existence}.  The development
+is layered:\ a game-free online-learning core, a no-regret
+$\Rightarrow$ CCE reduction, a constructive self-play instantiation,
+Blackwell approachability with regret matching as its corollary, and
+belief-based fictitious play.
+
+\paragraph{Multiplicative weights.}\
+The Hedge algorithm is stated game-free over a finite action set
+$A$:\ at round $t$ the learner plays action $a$ with probability
+proportional to $\exp(\eta \cdot G_t(a))$, where $G_t(a)$ is the
+cumulative gain of $a$.  For a fixed learning rate $\eta$ the
+external regret — best fixed action in hindsight minus the
+algorithm's expected gain — is bounded by
+\[
+  \frac{\log|A|}{\eta} \;+\; \frac{e^{\eta}-1-\eta}{\eta}\,T,
+\]
+which is linear in $T$.  The horizon-tuned choice
+$\eta \approx \sqrt{\log|A|/T}$ makes this $O(\sqrt{T\log|A|})$ —
+sublinear — but that tuning is not formalized; every statement takes
+$\eta$ as a fixed parameter.
+
+\paragraph{No-regret $\Rightarrow$ CCE.}\
+On the equilibrium side, external regret is linear in the
+recommendation distribution, so the regret of an average of
+distributions is the average of their regrets.  Hence the
+time-average of a play sequence whose cumulative external regret
+over horizon $T$ is $R$ is an $(R/T)$-coarse correlated equilibrium
+(\Cref{sec:solution-concepts:approx}).  Composed with any no-regret
+rule this gives convergence of the empirical play to the set of CCE.
+
+\begin{theorem}[Multiplicative-weights self-play yields an
+$\varepsilon$-CCE; \TT{KernelGame.mwSelfPlay\_timeAverage\_isεCCE}]
+\label{thm:mw-selfplay}
+Let $\KG$ have finitely many players, finite non-empty strategy
+spaces, and finite outcomes.  If every player runs multiplicative
+weights on their own normalized pure-deviation gains with a fixed
+rate $\eta$, then the time-average of the resulting independent play
+over horizon $T$ is an $\varepsilon$-coarse correlated equilibrium
+with an explicit
+$\varepsilon = W\bigl(L/\eta + \tfrac{e^{\eta}-1-\eta}{\eta}T\bigr)/T$.
+\end{theorem}
+
+\tradeoff{For a \emph{fixed} $\eta$ this $\varepsilon$ does not tend
+to $0$ (it tends to $W(e^{\eta}-1-\eta)/\eta$); driving it to $0$
+needs the horizon-dependent tuning $\eta \approx \sqrt{L/T}$, which
+is not formalized.  So the result is an explicit \emph{per-horizon}
+$\varepsilon$-CCE bound realized by a concrete decentralized
+process, not an asymptotic convergence theorem.}
+
+\paragraph{Blackwell approachability and regret matching.}\
+The geometric foundation is Blackwell's approachability
+theorem~\citep{Blackwell1956}, stated game-free in a real
+inner-product space:\ if at each step the
+new payoff vector lies on the far side of the supporting hyperplane
+through the nearest point of the current running average in a closed
+target set $S$ (the \emph{B-set} / steering condition), then the
+average approaches $S$ at rate $O(1/\sqrt{t})$.  Its game-theoretic
+corollary closes the loop with no-regret learning:\ external-regret
+minimization is exactly approachability of the nonpositive orthant
+in $\RR^{A}$, the space of regret vectors carrying one coordinate
+per fixed action $a \in A$, and the regret-matching strategy — play
+in proportion to the positive part of the cumulative regret vector —
+realizes the steering condition, so regret matching drives the
+average external-regret vector into the orthant.  Thus regret
+matching achieves no external regret, obtained geometrically.
+
+\paragraph{Fictitious play.}\
+The belief-learning counterpart is fictitious play~\citep{Brown1951}:\
+each player best-responds to the empirical frequency of opponents'
+past pure actions.  Two convergence facts are proved.  First, any
+limit of the empirical beliefs of a fictitious-play sequence is a
+mixed Nash equilibrium.  Second (Monderer–Shapley), in a finite
+exact-potential game the empirical beliefs along fictitious play are
+eventually $\varepsilon$-Nash for every $\varepsilon>0$, via the
+mixed-extension potential of \Cref{sec:solution-concepts:potential}
+and the reduction to the identical-interest game the potential
+generates.
+
+\leancorr{Game-free core in
+\TT{Math/OnlineLearning/MultiplicativeWeights.lean}
+(\TT{mwDist}, \TT{onlineExternalRegret},
+\TT{mw\_externalRegret\_le}).  No-regret reduction in
+\TT{Concepts/Learning/NoRegretToCCE.lean}
+(\TT{timeAverage\_isεCCE\_of\_regret\_le}); self-play in
+\TT{Concepts/Learning/MWSelfPlay.lean}
+(\TT{mwSelfPlay\_timeAverage\_isεCCE},
+\TT{exists\_mwSelfPlay\_isεCCE}).  Approachability in
+\TT{Concepts/Learning/Approachability.lean}
+(\TT{sq\_infDist\_avg\_le}, \TT{infDist\_avg\_tendsto\_zero},
+\TT{blackwell\_approaches}) and regret matching in
+\TT{Concepts/Learning/ApproachabilityRegret.lean}
+(\TT{regretMatch\_steering}, \TT{regretMatch\_approaches}).
+Fictitious play in \TT{Concepts/Learning/FictitiousPlay.lean}
+(\TT{isFictitiousPlay\_limit\_isNash}) and
+\TT{Concepts/Learning/FictitiousPlayPotential.lean}
+(\TT{IsExactPotential.eventually\_isεNash\_of\_isFictitiousPlay}).
+Supplement~§6.2.}
 
 \subsection{The minimax theorem}
 \label{sec:theorems:minimax}
@@ -157,7 +262,7 @@ guarantee form above.
 \leancorr{Statements \TT{KernelGame.von\_neumann\_minimax} and
 \TT{KernelGame.von\_neumann\_minimax\_of\_bounded} in
 \TT{Theorems/Minimax.lean}; supporting zero-sum-Nash equality in
-\TT{Concepts/ZeroSumNash.lean} (\TT{IsZeroSum.nash\_eu\_eq}).
+\TT{Concepts/ZeroSum/ZeroSumNash.lean} (\TT{IsZeroSum.nash\_eu\_eq}).
 Supplement~§6.3.}
 
 \subsection{Discounted folk theorem approximation}
@@ -248,7 +353,7 @@ repeated-game semantics could refine the interface later; the
 payoff-set approximation and trigger-incentive proof already
 isolate the main analytic work.}
 
-\leancorr{\TT{Concepts/FolkTheorem.lean} defines feasible payoff
+\leancorr{\TT{Concepts/Welfare/FolkTheorem.lean} defines feasible payoff
 sets, opponent minmax values, discounted repeated strategies,
 periodic paths, trigger strategies, and
 \TT{discounted\_folk\_theorem\_approx}.  The generic
@@ -414,8 +519,8 @@ team-game corollaries used by the price-of-stability result.  We do
 not formalize the deeper welfare theorems of mechanism design here
 — they live in \Cref{sec:mechanism-auctions}.
 
-\leancorr{\TT{Concepts/WelfareTheorems.lean};
-\TT{Concepts/NashPareto.lean}.}
+\leancorr{\TT{Concepts/Welfare/WelfareTheorems.lean};
+\TT{Concepts/Equilibrium/NashPareto.lean}.}
 
 \subsection{Shapley value uniqueness}
 \label{sec:theorems:shapley-uniqueness}
