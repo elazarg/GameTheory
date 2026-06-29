@@ -16,9 +16,16 @@ Tier A: external-regret minimization is exactly approachability of the **nonposi
 `ℝ^ι`. A learner's average regret vector approaches the orthant iff its external regret against
 every fixed action vanishes.
 
-This file develops the orthant geometry. The full reduction (orthant is a B-set with the
-regret-matching witness `p* ∝ (x)₊`, hence external regret minimization is approachable) builds on
-`blackwell_approaches`.
+## Main results
+
+* `orthantProj` / `infDist_eq_norm_sub_orthantProj` — the orthant projection (clamp at `0`) and the
+  fact that it realises the distance to the orthant, with displacement `(x)₊`.
+* `regretPayoff` / `regretMatch` — the external-regret vector and the regret-matching strategy
+  (play `∝ (x)₊`).
+* `regretMatch_steering` — the orthant is a **B-set** for the regret payoff (the steering inner
+  product vanishes).
+* `regretMatch_approaches` — regret matching drives the average external-regret vector to the
+  orthant against any environment sequence: no external regret, obtained geometrically.
 -/
 
 namespace Math.Approachability
