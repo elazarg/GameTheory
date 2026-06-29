@@ -45,10 +45,12 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type*} [Fintype ι]
+variable {ι : Type*}
 
-/-- An `n`-player bargaining problem over a finite player type `ι`. -/
-structure BargainingProblem (ι : Type*) [Fintype ι] where
+/-- An `n`-player bargaining problem over a player type `ι`. The disagreement
+point and feasible set are unconstrained; only the Nash-product results below
+require `ι` finite. -/
+structure BargainingProblem (ι : Type*) where
   /-- Feasible utility profiles. -/
   feasible : (ι → ℝ) → Prop
   /-- Disagreement point: each player's fallback utility. -/
@@ -84,13 +86,13 @@ theorem isWeaklyPareto_of_isPareto [Nonempty ι] {u : ι → ℝ} (h : B.IsParet
 
 /-- The Nash bargaining solution: a feasible, individually rational outcome
     that maximizes the Nash product `∏ i, (u i - d i)`. -/
-def IsNashSolution (u : ι → ℝ) : Prop :=
+def IsNashSolution [Fintype ι] (u : ι → ℝ) : Prop :=
   B.feasible u ∧ B.IsIR u ∧
   ∀ v, B.feasible v → B.IsIR v →
     ∏ i, (u i - B.d i) ≥ ∏ i, (v i - B.d i)
 
 /-- The Nash bargaining solution is individually rational. -/
-theorem nashSolution_IR (u : ι → ℝ) (h : B.IsNashSolution u) : B.IsIR u :=
+theorem nashSolution_IR [Fintype ι] (u : ι → ℝ) (h : B.IsNashSolution u) : B.IsIR u :=
   h.2.1
 
 /-- The Nash bargaining solution is weakly Pareto optimal: no feasible outcome is
@@ -98,7 +100,7 @@ theorem nashSolution_IR (u : ι → ℝ) (h : B.IsNashSolution u) : B.IsIR u :=
     strong form can fail on the disagreement boundary.) A strict improvement over
     the IR Nash solution is itself IR, so no IR restriction on the dominator is
     needed. -/
-theorem nashSolution_weaklyPareto [Nonempty ι] (u : ι → ℝ) (h : B.IsNashSolution u) :
+theorem nashSolution_weaklyPareto [Fintype ι] [Nonempty ι] (u : ι → ℝ) (h : B.IsNashSolution u) :
     B.IsWeaklyPareto u := by
   refine ⟨h.1, ?_⟩
   rintro ⟨v, hfv, hstrict⟩
@@ -128,7 +130,7 @@ def IsSymmetric : Prop :=
 
 /-- In a symmetric bargaining problem, a Nash solution that is unique (the
 explicit `huniq` hypothesis) gives equal gains to all players. -/
-theorem nashSolution_symmetric (u : ι → ℝ) (hsym : B.IsSymmetric)
+theorem nashSolution_symmetric [Fintype ι] (u : ι → ℝ) (hsym : B.IsSymmetric)
     (hns : B.IsNashSolution u)
     (huniq : ∀ v w, B.IsNashSolution v → B.IsNashSolution w → v = w) :
     ∀ i j, u i - B.d i = u j - B.d j := by
@@ -197,7 +199,7 @@ theorem posAffineMap_isIR_image {α : ι → ℝ} (hα : ∀ i, 0 < α i) {β : 
     nlinarith [mul_le_mul_of_nonneg_left (h i) (hα i).le]
 
 /-- Scale invariance: positive-affine transformations preserve the Nash solution. -/
-theorem nashSolution_affine_invariant
+theorem nashSolution_affine_invariant [Fintype ι]
     (α : ι → ℝ) (hα : ∀ i, 0 < α i) (β : ι → ℝ)
     (u : ι → ℝ) (hns : B.IsNashSolution u) :
     (B.posAffineMap α hα β).IsNashSolution (fun i => α i * u i + β i) := by
@@ -261,7 +263,7 @@ theorem egalitarian_maximal (u : ι → ℝ) (h : B.IsEgalitarian u)
 /-- In a symmetric problem the egalitarian solution dominates the (unique)
 symmetric Nash solution coordinatewise: the latter also lies on the
 equal-gains diagonal, where the egalitarian solution maximizes the common gain. -/
-theorem nashSolution_le_egalitarian
+theorem nashSolution_le_egalitarian [Fintype ι]
     (u v : ι → ℝ) (hsym : B.IsSymmetric)
     (heg : B.IsEgalitarian u) (hns : B.IsNashSolution v)
     (huniq : ∀ x w, B.IsNashSolution x → B.IsNashSolution w → x = w) :
