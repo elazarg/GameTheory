@@ -1008,10 +1008,10 @@ theorem runDist_eq_terminalWeight_of_exactHorizon
     · intro hterm
       exact hlen ((hExact h).1 hterm)
 
-theorem terminal_length_le_of_boundedHorizon
+theorem length_le_of_boundedHorizon
     {G : FOSG ι W Act PrivObs PubObs}
     {k : Nat} (hBound : G.BoundedHorizon k)
-    (h : G.History) (_hterm : h.IsTerminal) :
+    (h : G.History) :
     h.steps.length ≤ k := by
   by_contra hgt
   have hgt' : k < h.steps.length := Nat.lt_of_not_ge hgt
@@ -1111,7 +1111,7 @@ theorem runDist_eq_terminalWeight_of_boundedHorizon
     G.runDist k σ h = History.terminalWeight (G := G) σ.toProfile h := by
   by_cases hterm : h.IsTerminal
   · rw [History.terminalWeight_of_terminal (σ := σ.toProfile) hterm]
-    have hle : h.steps.length ≤ k := G.terminal_length_le_of_boundedHorizon hBound h hterm
+    have hle : h.steps.length ≤ k := G.length_le_of_boundedHorizon hBound h
     let slack : Nat := k - h.steps.length
     have hk : h.steps.length + slack = k := Nat.add_sub_of_le hle
     rw [← hk, runDist]
