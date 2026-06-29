@@ -404,17 +404,6 @@ theorem orderingAvg_additive (G₁ G₂ : CoalGame ι) (i : ι) :
   simp only [margVec, marginalContribution, gameAdd]
   ring
 
-/-- The average-of-marginal-vectors allocation scales with the game. -/
-theorem orderingAvg_scalar (c : ℝ) (G : CoalGame ι) (i : ι) :
-    (gameScalar c G).orderingAvg i = c * G.orderingAvg i := by
-  simp only [orderingAvg]
-  rw [← mul_div_assoc]
-  congr 1
-  rw [Finset.mul_sum]
-  refine Finset.sum_congr rfl (fun e _ => ?_)
-  simp only [margVec, marginalContribution, gameScalar]
-  ring
-
 omit [Fintype ι] in
 /-- **Swap-invariance of value under symmetry.** If players `i` and `j` are
 symmetric, then transposing them leaves the value of every coalition
@@ -516,12 +505,12 @@ theorem orderingAvg_symmetric (G : CoalGame ι) {i j : ι} (_hne : i ≠ j)
   exact (margVec_trans_swap G hsym e).symm
 
 /-- **The Shapley value is the average of marginal vectors.** Both satisfy
-efficiency, symmetry, the null-player axiom, additivity, and homogeneity, so
-they coincide by Shapley's uniqueness theorem. -/
+efficiency, symmetry, the null-player axiom, and additivity, so they coincide by
+Shapley's uniqueness theorem. -/
 theorem orderingAvg_eq_shapleyValue (G : CoalGame ι) (i : ι) :
     G.orderingAvg i = G.shapleyValue i :=
   shapleyValue_unique orderingAvg orderingAvg_efficient orderingAvg_symmetric
-    orderingAvg_null orderingAvg_additive orderingAvg_scalar G i
+    orderingAvg_null orderingAvg_additive G i
 
 /-- **Key lemma: marginal vectors of a convex game are coalition-rational.**
 For a convex game, the marginal vector of any arrival order gives every

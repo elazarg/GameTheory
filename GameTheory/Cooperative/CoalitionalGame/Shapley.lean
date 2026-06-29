@@ -237,6 +237,52 @@ theorem allocation_on_unanimityGame
     rw [if_neg hiS]
     exact h_null G (unanimityGame_isNull_of_notMem S hS hiS)
 
+/-- Allocation on a scaled unanimity game `c · u_S`: members split `c`, others
+get zero. Same eff/sym/null argument as `allocation_on_unanimityGame`, now with
+`v(univ) = c`. This is what makes the scalar-homogeneity axiom unnecessary for
+Shapley uniqueness. -/
+theorem allocation_on_scalar_unanimityGame
+    (φ : CoalGame ι → ι → ℝ)
+    (h_eff : ∀ G : CoalGame ι, ∑ i, φ G i = G.v Finset.univ)
+    (h_sym : ∀ (G : CoalGame ι) {i j : ι},
+        i ≠ j → G.AreSymmetric i j → φ G i = φ G j)
+    (h_null : ∀ (G : CoalGame ι) {i : ι}, G.IsNull i → φ G i = 0)
+    (S : Finset ι) (hS : S.Nonempty) (c : ℝ) (i : ι) :
+    φ (gameScalar c (unanimityGame S hS)) i = if i ∈ S then c / S.card else 0 := by
+  classical
+  set G := gameScalar c (unanimityGame S hS) with hG
+  by_cases hiS : i ∈ S
+  · have hnull_outside : ∀ k ∉ S, φ G k = 0 := fun k hk =>
+      h_null G (gameScalar_isNull (unanimityGame_isNull_of_notMem S hS hk))
+    obtain ⟨d, hc⟩ : ∃ d : ℝ, ∀ k ∈ S, φ G k = d := by
+      refine ⟨φ G i, fun k hk => ?_⟩
+      by_cases hki : k = i
+      · subst hki; rfl
+      · exact h_sym G hki
+          (gameScalar_areSymmetric (unanimityGame_areSymmetric S hS hki hk hiS))
+    have hsum_split : ∑ k, φ G k = ∑ k ∈ S, φ G k := by
+      rw [← Finset.sum_filter_add_sum_filter_not Finset.univ (· ∈ S) (φ G)]
+      have h_in : Finset.univ.filter (· ∈ S) = S := by ext k; simp
+      have h_out : ∑ k ∈ Finset.univ.filter (¬ · ∈ S), φ G k = 0 := by
+        apply Finset.sum_eq_zero
+        intro k hk
+        simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hk
+        exact hnull_outside k hk
+      rw [h_in, h_out, add_zero]
+    have hsum_const : ∑ k ∈ S, φ G k = S.card * d := by
+      rw [Finset.sum_congr rfl (fun k hk => hc k hk), Finset.sum_const, nsmul_eq_mul]
+    have hv_univ : G.v Finset.univ = c := by
+      rw [hG]; simp only [gameScalar]; rw [unanimityGame_v_univ]; ring
+    have heff := h_eff G
+    rw [hsum_split, hsum_const, hv_univ] at heff
+    have hSpos : 0 < (S.card : ℝ) := by exact_mod_cast Finset.card_pos.mpr hS
+    have hd_val : d = c / S.card := by
+      field_simp at heff ⊢
+      linarith
+    rw [if_pos hiS, hc i hiS, hd_val]
+  · rw [if_neg hiS]
+    exact h_null G (gameScalar_isNull (unanimityGame_isNull_of_notMem S hS hiS))
+
 end FinitePlayers
 
 /-- Indexed sum of coalitional games: `(gameSum s f).v T = Σ_{a ∈ s} (f a).v T`. -/
@@ -382,14 +428,8 @@ theorem eq_gameSum_decompTerm (G : CoalGame ι) :
   exact G.unanimity_decomposition T
 
 /-- **Shapley uniqueness** (Shapley 1953): any allocation `φ` satisfying
-*efficiency*, *symmetry*, the *null-player* axiom, *additivity*, and
-*scalar-homogeneity* (jointly, linearity) coincides with the Shapley value
-on every coalitional game.
-
-Note: the classical statement uses only additivity (not full scalar
-homogeneity), and recovers scalar homogeneity for rationals via additivity.
-Extending to ℝ requires either continuity or full linearity; we adopt the
-modern formulation with linearity as a primitive axiom. -/
+*efficiency*, *symmetry*, the *null-player* axiom, and *additivity* coincides
+with the Shapley value on every coalitional game. -/
 theorem shapleyValue_unique
     (φ : CoalGame ι → ι → ℝ)
     (h_eff : ∀ G : CoalGame ι, ∑ i, φ G i = G.v Finset.univ)
@@ -398,8 +438,6 @@ theorem shapleyValue_unique
     (h_null : ∀ (G : CoalGame ι) {i : ι}, G.IsNull i → φ G i = 0)
     (h_add : ∀ (G₁ G₂ : CoalGame ι) (i : ι),
         φ (gameAdd G₁ G₂) i = φ G₁ i + φ G₂ i)
-    (h_scalar : ∀ (c : ℝ) (G : CoalGame ι) (i : ι),
-        φ (gameScalar c G) i = c * φ G i)
     (G : CoalGame ι) (i : ι) :
     φ G i = G.shapleyValue i := by
   classical
@@ -420,11 +458,9 @@ theorem shapleyValue_unique
   by_cases hS : S.Nonempty
   · -- Nonempty S: both sides equal c_S · (1/|S| if i ∈ S else 0).
     simp only [hS, dif_pos]
-    rw [h_scalar,
-      allocation_on_unanimityGame φ h_eff h_sym h_null S hS i,
-      shapleyValue_scalar,
-      allocation_on_unanimityGame shapleyValue
-        shapleyValue_efficient shapleyValue_symmetric shapleyValue_null S hS i]
+    rw [allocation_on_scalar_unanimityGame φ h_eff h_sym h_null S hS _ i,
+      allocation_on_scalar_unanimityGame shapleyValue
+        shapleyValue_efficient shapleyValue_symmetric shapleyValue_null S hS _ i]
   · -- Empty S: both sides are zero (zero game).
     simp only [hS, dif_neg, not_false_iff]
     have hnull_all : (zeroGame (ι := ι)).IsNull i := by

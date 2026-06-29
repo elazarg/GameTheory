@@ -144,6 +144,22 @@ def gameScalar (c : ℝ) (G : CoalGame ι) : CoalGame ι where
   v := fun S => c * G.v S
   v_empty := by simp [G.v_empty]
 
+/-- `gameScalar` preserves null players. -/
+theorem gameScalar_isNull {c : ℝ} {G : CoalGame ι} {i : ι} (h : G.IsNull i) :
+    (gameScalar c G).IsNull i := by
+  intro S hS
+  have hmc := h S hS
+  simp only [marginalContribution, gameScalar] at hmc ⊢
+  have hv : G.v (insert i S) = G.v S := by linarith
+  rw [hv]; ring
+
+/-- `gameScalar` preserves symmetry of players. -/
+theorem gameScalar_areSymmetric {c : ℝ} {G : CoalGame ι} {i j : ι}
+    (h : G.AreSymmetric i j) : (gameScalar c G).AreSymmetric i j := by
+  intro S hi hj
+  simp only [gameScalar]
+  rw [h S hi hj]
+
 section FinitePlayers
 
 variable [Fintype ι]
