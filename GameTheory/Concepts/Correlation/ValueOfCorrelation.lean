@@ -234,6 +234,15 @@ theorem bestCorrelatedWelfare_le_optimalWelfare (hN : ∃ σ : Profile G, G.IsNa
     ⟨⟨PMF.pure σ, nash_pure_isCorrelatedEq hσ⟩⟩
   exact ciSup_le (fun μ => G.correlatedSocialWelfare_le_optimalWelfare μ.1)
 
+/-- The best coarse-correlated-equilibrium welfare is at most the social optimum. -/
+theorem bestCoarseCorrelatedWelfare_le_optimalWelfare
+    (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.bestCoarseCorrelatedWelfare ≤ G.optimalWelfare := by
+  obtain ⟨σ, hσ⟩ := hN
+  haveI : Nonempty {μ : PMF (Profile G) // G.IsCoarseCorrelatedEq μ} :=
+    ⟨⟨PMF.pure σ, (nash_pure_isCorrelatedEq hσ).toCoarseCorrelatedEq⟩⟩
+  exact ciSup_le (fun μ => G.correlatedSocialWelfare_le_optimalWelfare μ.1)
+
 end OptimalBound
 
 section TeamGameValue
@@ -252,6 +261,19 @@ theorem IsTeamGame.correlationWelfareGap_eq_zero (hteam : G.IsTeamGame)
           exact G.bestCorrelatedWelfare_le_optimalWelfare hN)
       (G.bestNashWelfare_le_bestCorrelatedWelfare hN)
   rw [correlationWelfareGap, hcorr_eq, sub_self]
+
+/-- **Coarse correlation has no value in team games either.** Same argument as
+`correlationWelfareGap_eq_zero`: the welfare-optimal profile is Nash, and no
+coarse correlated equilibrium beats the social optimum. -/
+theorem IsTeamGame.coarseCorrelationWelfareGap_eq_zero (hteam : G.IsTeamGame)
+    (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.coarseCorrelationWelfareGap hN = 0 := by
+  have hcce_eq : G.bestCoarseCorrelatedWelfare = G.bestNashWelfare hN :=
+    le_antisymm
+      (by rw [hteam.bestNashWelfare_eq_optimalWelfare hN]
+          exact G.bestCoarseCorrelatedWelfare_le_optimalWelfare hN)
+      (G.bestNashWelfare_le_bestCoarseCorrelatedWelfare hN)
+  rw [coarseCorrelationWelfareGap, hcce_eq, sub_self]
 
 end TeamGameValue
 

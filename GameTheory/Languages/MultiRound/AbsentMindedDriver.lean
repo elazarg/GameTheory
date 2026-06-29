@@ -130,6 +130,19 @@ theorem exAnteValue_le_optimal (p : ℝ) :
     exact hsq
   linarith
 
+/-- `2/3` is the *unique* ex-ante maximizer: any other continuation probability is
+strictly worse (the optimality gap is `3·(p − 2/3)²`). -/
+theorem exAnteValue_lt_optimal {p : ℝ} (hp : p ≠ exAnteOptimalContinue) :
+    exAnteValue p < exAnteValue exAnteOptimalContinue := by
+  have hdiff :
+      exAnteValue exAnteOptimalContinue - exAnteValue p =
+        3 * (p - exAnteOptimalContinue) ^ 2 := by
+    unfold exAnteValue exAnteOptimalContinue
+    ring_nf
+  have hne : p - exAnteOptimalContinue ≠ 0 := sub_ne_zero.mpr hp
+  have hpos : 0 < 3 * (p - exAnteOptimalContinue) ^ 2 := by positivity
+  linarith
+
 @[simp] theorem exAnteValue_optimal_value :
     exAnteValue exAnteOptimalContinue = 4 / 3 := by
   norm_num [exAnteValue, exAnteOptimalContinue]
@@ -174,6 +187,23 @@ theorem decisionValue_le_optimal {p q : ℝ} (hp : -1 < p) :
     linarith
   unfold decisionValue
   exact div_le_div_of_nonneg_right hnum hden
+
+/-- For positive arrival denominator, `decisionOptimalContinue p` is the *unique*
+decision-time maximizer: any other `q` is strictly worse. -/
+theorem decisionValue_lt_optimal {p q : ℝ} (hp : -1 < p)
+    (hq : q ≠ decisionOptimalContinue p) :
+    decisionValue p q < decisionValue p (decisionOptimalContinue p) := by
+  have hden : 0 < 1 + p := by linarith
+  have hden0 : (1 + p) ≠ 0 := ne_of_gt hden
+  have hne : q - decisionOptimalContinue p ≠ 0 := sub_ne_zero.mpr hq
+  have hsq : 0 < 3 * (q - decisionOptimalContinue p) ^ 2 := by positivity
+  have key : decisionValue p (decisionOptimalContinue p) - decisionValue p q
+      = 3 * (q - decisionOptimalContinue p) ^ 2 / (1 + p) := by
+    unfold decisionValue exAnteValue decisionOptimalContinue
+    field_simp
+    ring
+  have hpos : 0 < 3 * (q - decisionOptimalContinue p) ^ 2 / (1 + p) := div_pos hsq hden
+  linarith
 
 @[simp] theorem decisionOptimalContinue_at_exAnteOptimal :
     decisionOptimalContinue exAnteOptimalContinue = 1 / 3 := by
