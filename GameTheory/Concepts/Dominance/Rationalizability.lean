@@ -48,6 +48,8 @@ agrees with deviating in the mixed extension.
 * `KernelGame.IsDominant.isRationalizable` — dominant strategies are rationalizable
 * `KernelGame.IsRationalizable.not_globally_dominated` — a rationalizable strategy
   is not `StrictlyDominatedByMixed`
+* `KernelGame.IsStrictDominant.not_rationalizable_of_ne` — under a strictly
+  dominant strategy, no other strategy is rationalizable
 -/
 
 namespace GameTheory
@@ -154,6 +156,18 @@ theorem IsRationalizable.not_globally_dominated {G : KernelGame ι}
   obtain ⟨p, hdom⟩ := h
   have hs1 := hs 1
   exact hs1.2 ⟨p, fun a _ => trivial, fun σ _ => hdom σ⟩
+
+/-- If player `who` has a strictly dominant strategy `s`, then no *other* pure
+    strategy is rationalizable: each is strictly dominated by `s` (equivalently
+    by the point mass at `s`) and eliminated in the first round. Combined with
+    the dominant strategy's own survival, `s` is the unique rationalizable
+    strategy of a strict-dominance game. -/
+theorem IsStrictDominant.not_rationalizable_of_ne {G : KernelGame ι}
+    {who : ι} {s t : G.Strategy who} (hdom : G.IsStrictDominant who s)
+    (hne : t ≠ s) : ¬ G.IsRationalizable who t := by
+  intro hr
+  exact (hr 1).2 ⟨PMF.pure s, fun a _ => trivial, fun σ _ => by
+    simpa [expect_pure] using hdom σ t hne⟩
 
 /-! ## The weaker pure-domination variant
 

@@ -18,6 +18,8 @@ Provides:
 - `StrictlyDominatedByMixed` — a pure strategy strictly dominated by a *mixed* strategy
 - `StrictlyDominatedByMixed.not_best_response` — the mixed generalization: a
   mixed-dominated strategy is never a best response
+- `StrictlyDominates.toStrictlyDominatedByMixed` — pure dominance is the
+  point-mass case of mixed dominance
 - `WeaklyDominates.best_response_of_best_response` — weak dominance preserves best-response status
 - `nash_never_strictly_dominated` — Nash equilibrium strategies are never strictly dominated
 - `IsDominant.isBestResponse` — a dominant strategy is a best response against every profile
@@ -71,6 +73,15 @@ theorem StrictlyDominatedByMixed.not_best_response {G : KernelGame ι}
       (fun _ => G.eu (Function.update σ who t) who) (fun a => hbr a)
     simpa using hmono
   linarith
+
+/-- Pure strict dominance is the point-mass case of mixed dominance: if `s`
+    strictly dominates `t`, the point mass at `s` strictly mixed-dominates `t`.
+    Hence eliminating by mixed dominators removes at least as much as eliminating
+    by pure ones. -/
+theorem StrictlyDominates.toStrictlyDominatedByMixed {G : KernelGame ι} {who : ι}
+    {s t : G.Strategy who} (hsd : G.StrictlyDominates who s t) :
+    G.StrictlyDominatedByMixed who t :=
+  ⟨PMF.pure s, fun σ => by simpa [expect_pure] using hsd σ⟩
 
 /-- If `s` weakly dominates `t` and `t` is a best response against `σ`,
     then `s` is also a best response against `σ`. -/
