@@ -67,6 +67,26 @@ def mono {R R' : α → β → Prop} {μ : PMF α} {ν : PMF β}
     HasCoupling R' μ ν :=
   { c with rel_holds := fun p hp => hR p.1 p.2 (c.rel_holds p hp) }
 
+/-- Swap the two marginals of a coupling, reversing the lifted relation. -/
+noncomputable def symm {R : α → β → Prop} {μ : PMF α} {ν : PMF β}
+    (c : HasCoupling R μ ν) :
+    HasCoupling (fun b a => R a b) ν μ where
+  joint := c.joint.map Prod.swap
+  marginal_fst := by
+    rw [PMF.map_comp]
+    change c.joint.map Prod.snd = ν
+    exact c.marginal_snd
+  marginal_snd := by
+    rw [PMF.map_comp]
+    change c.joint.map Prod.fst = μ
+    exact c.marginal_fst
+  rel_holds := by
+    intro p hp
+    simp only [PMF.support_map, Set.mem_image] at hp
+    obtain ⟨q, hq, heq⟩ := hp
+    rw [← heq]
+    exact c.rel_holds q hq
+
 /-- Functorial action: maps respecting the relation lift the coupling. -/
 noncomputable def map {R : α → β → Prop} {R' : α' → β' → Prop}
     {μ : PMF α} {ν : PMF β}
@@ -207,6 +227,23 @@ end HasCoupling
 -- ============================================================================
 -- Functional special case
 -- ============================================================================
+
+/-- Graph coupling: `μ` couples to its pushforward along `f`. -/
+noncomputable def HasCoupling.ofMap (μ : PMF α) (f : α → β) :
+    HasCoupling (fun a b => f a = b) μ (μ.map f) where
+  joint := μ.map (fun a => (a, f a))
+  marginal_fst := by
+    rw [PMF.map_comp]
+    change μ.map id = μ
+    exact PMF.map_id μ
+  marginal_snd := by
+    rw [PMF.map_comp]
+    rfl
+  rel_holds := by
+    intro p hp
+    simp only [PMF.support_map, Set.mem_image] at hp
+    obtain ⟨a, _ha, heq⟩ := hp
+    rw [← heq]
 
 /-- Functional projection coupling: when `μ = ν.map f`, the relation
 `fun a b => a = f b` lifts via the diagonal. -/
