@@ -61,6 +61,68 @@ theorem correlatedEu_eq_expect_eu [Finite G.Outcome]
 
 variable [DecidableEq ι]
 
+/-! ### Correlated EU after a deviation distribution
+
+These express the correlated EU of a (constant or recommendation-dependent)
+deviation distribution as the expectation of the deviated per-recommendation EU.
+They are general facts about `correlatedEu`, used wherever deviation incentives
+are reasoned about (constant-sum value, signal timing, …). -/
+
+theorem correlatedEu_constantDeviationDistribution_eq_expect_update_of_bounded
+    {G : KernelGame ι} (μ : PMF (Profile G)) (who : ι) (s' : G.Strategy who)
+    {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+    G.correlatedEu (G.constantDeviationDistribution μ who s') who =
+      expect μ (fun σ => G.eu (Function.update σ who s') who) := by
+  rw [G.correlatedEu_eq_expect_eu_of_bounded
+    (μ := G.constantDeviationDistribution μ who s') who hbd]
+  unfold constantDeviationDistribution deviationDistribution constantDeviation
+  rw [expect_bind_of_bounded μ (fun σ => PMF.pure (Function.update σ who s'))
+    (fun τ => G.eu τ who)
+    (fun τ => G.eu_abs_le_of_bounded who hbd τ)]
+  apply tsum_congr
+  intro σ
+  simp [expect_pure]
+
+theorem correlatedEu_constantDeviationDistribution_eq_expect_update
+    {G : KernelGame ι} [Finite G.Outcome]
+    (μ : PMF (Profile G)) (who : ι) (s' : G.Strategy who) :
+    G.correlatedEu (G.constantDeviationDistribution μ who s') who =
+      expect μ (fun σ => G.eu (Function.update σ who s') who) := by
+  classical
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  exact correlatedEu_constantDeviationDistribution_eq_expect_update_of_bounded
+    (G := G) μ who s' hbd
+
+theorem correlatedEu_unilateralDeviationDistribution_eq_expect_update_of_bounded
+    {G : KernelGame ι} (μ : PMF (Profile G)) (who : ι)
+    (dev : G.Strategy who → G.Strategy who)
+    {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C) :
+    G.correlatedEu (G.unilateralDeviationDistribution μ who dev) who =
+      expect μ (fun σ => G.eu (Function.update σ who (dev (σ who))) who) := by
+  rw [G.correlatedEu_eq_expect_eu_of_bounded
+    (μ := G.unilateralDeviationDistribution μ who dev) who hbd]
+  unfold unilateralDeviationDistribution deviationDistribution unilateralDeviation
+  rw [expect_bind_of_bounded μ
+    (fun σ => PMF.pure (Function.update σ who (dev (σ who))))
+    (fun τ => G.eu τ who)
+    (fun τ => G.eu_abs_le_of_bounded who hbd τ)]
+  apply tsum_congr
+  intro σ
+  simp [expect_pure]
+
+theorem correlatedEu_unilateralDeviationDistribution_eq_expect_update
+    {G : KernelGame ι} [Finite G.Outcome]
+    (μ : PMF (Profile G)) (who : ι)
+    (dev : G.Strategy who → G.Strategy who) :
+    G.correlatedEu (G.unilateralDeviationDistribution μ who dev) who =
+      expect μ (fun σ => G.eu (Function.update σ who (dev (σ who))) who) := by
+  classical
+  obtain ⟨C, hbd⟩ :=
+    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
+  exact correlatedEu_unilateralDeviationDistribution_eq_expect_update_of_bounded
+    (G := G) μ who dev hbd
+
 open Classical in
 /-- Deviation of a product distribution equals the product with the deviated
     component replaced by the pushforward of the original through `dev`. -/

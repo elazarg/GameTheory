@@ -271,6 +271,99 @@ buys nothing.
 \TT{correlationWelfareGap\_nonneg},
 \TT{IsTeamGame.correlationWelfareGap\_eq\_zero}).}
 
+\subsection{Equilibrium payoff sets and the timing of information}
+\label{sec:solution-concepts:signal-timing}
+
+The deviation-family schema presents Nash (on point profiles, embedded
+as Dirac profile distributions), correlated, and coarse correlated
+equilibria as instances of one schema.  Collecting the player payoff
+vectors they realize gives three \emph{equilibrium payoff sets}, nested
+by the hierarchy of \Cref{sec:solution-concepts:family},
+\[
+  \mathrm{nashPayoffSet}(\KG)
+  \;\subseteq\;
+  \mathrm{correlatedPayoffSet}(\KG)
+  \;\subseteq\;
+  \mathrm{coarseCorrelatedPayoffSet}(\KG)
+  \;\subseteq\; \Payoff{\Players}.
+\]
+These are the payoff-level counterpart of the welfare ladder above and
+the natural objects for comparing what an equilibrium concept — or an
+information structure — can achieve.
+
+\paragraph{A finite signal-timing separation.}\
+The library includes a two-player witness that these sets depend on
+\emph{when} exogenous randomness is revealed, not only on its
+distribution.  A fair public coin precedes a coordination game:\
+player~$0$ chooses whether to \textsf{enter}, after which both players
+pick a continuation action.  If both continuation actions match the
+coin, entry pays $(4,3)$ on heads and $(1,3)$ on tails; opting out pays
+$(2,2)$; entering and miscoordinating pays $(0,0)$.  Two kernel games
+differ \emph{only} in player~$0$'s strategy type:\ in the
+\emph{late-signal} game the entry decision is coin-blind (the coin is
+revealed only afterwards), while in the \emph{early-signal} game
+player~$0$ may condition entry on the coin.
+
+Revealing the coin later \emph{enlarges} player~$1$'s achievable
+equilibrium value.  Entering blind pools the two branches into an
+ex-ante-attractive average ($\tfrac{4+1}{2} = \tfrac52 > 2$), so the
+late-signal game has a Nash equilibrium of value $3$ for player~$1$.
+Early revelation instead lets player~$0$ opt out in the bad branch —
+individually rational, but it destroys the arrangement:\ every
+early-signal Nash \emph{and} correlated equilibrium caps player~$1$ at
+$\tfrac52$, attained.  Coarse correlation does strictly better yet still
+cannot reach $3$:\ the early-signal coarse-correlated cap is exactly
+$\tfrac{11}{4}$, also attained.  For player~$1$,
+\[
+  \underbrace{\tfrac52}_{\text{early Nash}}
+  = \underbrace{\tfrac52}_{\text{early CE}}
+  \;<\; \underbrace{\tfrac{11}{4}}_{\text{early CCE}}
+  \;<\; \underbrace{3}_{\text{late Nash}},
+\]
+each cap tight.  The middle inequality is a genuine strictness of the
+payoff-set hierarchy on a single game,
+$\mathrm{correlatedPayoffSet} \subsetneq
+\mathrm{coarseCorrelatedPayoffSet}$, witnessed by a coarse-correlated
+device that — being open only to \emph{constant} disobedience — keeps
+player~$0$ entering on the bad branch, where the
+recommendation-dependent deviation available against a correlated device
+would not.
+
+This is a finite witness to a classical phenomenon:\ the value of
+information is not monotone in games.  For a single decision-maker
+earlier information is weakly valuable (the example includes the
+one-player Blackwell comparison $3 \ge \tfrac52$
+\citep{Blackwell1953}); in the two-player game the very deviation a lone
+agent would use to exploit early information is what collapses the other
+player's equilibrium — the Hirshleifer effect \citep{Hirshleifer1971}.
+That the value of information can be \emph{negative} in games, in
+contrast to the single-agent monotonicity, is the subject of a
+literature characterizing when it nonetheless stays positive
+\citep{Bassan2003}.  The correlated/coarse-correlated gap is the finite
+normal-form shadow of the extensive-form mediated-recommendation gap
+\citep{vonStengelForges2008} and of the solution-concept-dependence of
+outcome equivalence of information structures
+\citep{LehrerRosenbergShmaya2010, LehrerRosenbergShmaya2013}, and the
+payoff-set comparison is an instance of the comparison of information
+structures \citep{BergemannMorris2016}.  At the representation level the same
+contrast says that swapping a chance node across a decision node — a
+move that preserves the outcome law under a fixed behavioral profile —
+is \emph{not} strategically inessential once it changes what the
+decision observes, the boundary case of the interchange-of-moves
+transformation \citep{Thompson1952, ElmesReny1994}.
+
+\leancorr{Payoff sets in
+\TT{Concepts/Equilibrium/SolutionConcepts.lean} (\TT{nashPayoffSet},
+\TT{correlatedPayoffSet}, \TT{coarseCorrelatedPayoffSet}); the example,
+the caps with tightness witnesses, and the separations in
+\TT{Concepts/Correlation/SignalTiming.lean}
+(\TT{late\_not\_covered\_by\_early\_nash},
+\TT{late\_not\_covered\_by\_early\_correlated},
+\TT{late\_not\_covered\_by\_early\_coarseCorrelated},
+\TT{early\_coarseCorrelated\_p1\_cap},
+\TT{early\_correlatedPayoffSet\_ssub\_coarse},
+\TT{single\_agent\_early\_ge\_late}).}
+
 \subsection{Pareto efficiency, social welfare, and price of anarchy}
 \label{sec:solution-concepts:welfare}
 

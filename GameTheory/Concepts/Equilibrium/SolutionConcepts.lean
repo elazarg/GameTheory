@@ -273,6 +273,23 @@ def IsCoarseCorrelatedEq (G : KernelGame ι) (μ : PMF (Profile G)) : Prop :=
     exact ∀ (who : ι) (s' : G.Strategy who),
       G.correlatedEu μ who ≥ G.correlatedEu (G.constantDeviationDistribution μ who s') who
 
+-- ============================================================================
+-- Equilibrium payoff sets
+-- ============================================================================
+
+/-- The set of player payoff vectors realized at some Nash equilibrium. -/
+def nashPayoffSet (G : KernelGame ι) : Set (Payoff ι) :=
+  {v | ∃ σ : Profile G, G.IsNash σ ∧ (fun i => G.eu σ i) = v}
+
+/-- The set of player payoff vectors realized at some correlated equilibrium. -/
+def correlatedPayoffSet (G : KernelGame ι) : Set (Payoff ι) :=
+  {v | ∃ μ : PMF (Profile G), G.IsCorrelatedEq μ ∧ (fun i => G.correlatedEu μ i) = v}
+
+/-- The set of player payoff vectors realized at some coarse correlated
+equilibrium. -/
+def coarseCorrelatedPayoffSet (G : KernelGame ι) : Set (Payoff ι) :=
+  {v | ∃ μ : PMF (Profile G), G.IsCoarseCorrelatedEq μ ∧ (fun i => G.correlatedEu μ i) = v}
+
 /-- `KernelGame.IsCorrelatedEqFor` delegates to `GameForm.IsCorrelatedEqFor`. -/
 def IsCorrelatedEqFor (G : KernelGame ι)
     (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop)

@@ -69,6 +69,16 @@ The `Concepts/` directory defines ~40 interrelated notions, including:
 - Correlated and coarse correlated equilibrium, and the correlation welfare gap
   (the welfare gain from the best pure Nash to the best correlated / coarse
   correlated equilibrium — the additive analogue of the value of correlation)
+- Equilibrium payoff sets (`nashPayoffSet` / `correlatedPayoffSet` /
+  `coarseCorrelatedPayoffSet`) and a finite **signal-timing separation**
+  (`Concepts/Correlation/SignalTiming.lean`): revealing a public coin before vs
+  after an irreversible decision changes the equilibrium payoff set. In the
+  witness, player 1's achievable value is `5/2` at Nash and correlated
+  equilibrium, `11/4` at coarse correlated (all three caps tight), but `3` when
+  the signal arrives late — so coarse correlation strictly beats correlation
+  here (`correlatedPayoffSet ⊊ coarseCorrelatedPayoffSet`). A finite instance of
+  the non-monotone value of information in games, with the single-agent
+  Blackwell contrast (`3 ≥ 5/2`) as a foil
 - Observable cheap-talk extensions and babbling-equilibrium transport
 - Best response, best-response dynamics
 - Mixed-extension gain tests, including uniform mixed balance ⇒ Nash and

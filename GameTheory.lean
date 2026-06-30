@@ -68,6 +68,7 @@ import GameTheory.Concepts.Correlation.CorrelatedNashMixed
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelationRegimes
 import GameTheory.Concepts.Correlation.ValueOfCorrelation
+import GameTheory.Concepts.Correlation.SignalTiming
 import GameTheory.Concepts.Communication.CheapTalkPublicRandomness
 
 -- Learning dynamics
