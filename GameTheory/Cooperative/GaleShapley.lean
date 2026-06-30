@@ -478,6 +478,54 @@ theorem daMatching_man_optimal (hA : ∀ a, Function.Injective (M.prefA a))
     unfold topChoice; rw [dif_pos ⟨b', hb'_avail⟩]; exact ⟨_, rfl⟩
   exact ⟨b, hb, (M.topChoice_spec hb).2 b' hb'_avail⟩
 
+/-! ### Woman-pessimality
+
+The dual of man-optimality: men-proposing deferred acceptance is *woman-pessimal*.
+A woman matched by deferred acceptance is paired, in every stable matching, with a
+partner she likes at least as well — her deferred-acceptance partner is the worst
+she receives across all stable matchings. The proof is a single blocking-pair
+argument: if a woman `b` strictly preferred her deferred-acceptance partner `a` to
+her partner `a'` in some stable `μ'`, then man-optimality forces `a` to strictly
+prefer `b` to his `μ'`-partner (or to remaining single), so `(a, b)` would block
+`μ'`. -/
+
+/-- **Gale–Shapley is woman-pessimal.** Under strict preferences (with no man
+indifferent between an acceptable woman and remaining single): if woman `b` is
+matched to `a` by deferred acceptance and to `a'` in some stable matching `μ'`, then
+`b` weakly prefers her stable partner `a'` to her deferred-acceptance partner `a`. -/
+theorem daMatching_woman_pessimal (hA : ∀ a, Function.Injective (M.prefA a))
+    (hB : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
+    {μ' : α → Option β} (hμ'stable : M.IsStable μ')
+    {a a' : α} {b : β} (hab : M.daMatching a = some b) (ha'b : μ' a' = some b) :
+    M.prefB b a ≤ M.prefB b a' := by
+  classical
+  by_contra hlt
+  push Not at hlt
+  -- `(a, b)` would block the stable matching `μ'`
+  apply hμ'stable.2.2
+  refine ⟨a, b, ?_, ?_, ?_, ?_⟩
+  · -- `a` strictly prefers `b` to his `μ'`-partner `b''`
+    intro b'' hb''
+    obtain ⟨b0, hb0, hle⟩ := M.daMatching_man_optimal hA hB hAne hμ'stable hb''
+    have hbeq : b0 = b := by rw [hab] at hb0; exact (Option.some.inj hb0).symm
+    rw [hbeq] at hle
+    rcases eq_or_ne b'' b with hbb | hbne
+    · -- `b'' = b` makes `a` and `a'` the same man, contradicting `hlt`
+      have haa : a' = a := hμ'stable.1 a' a b ha'b (hbb ▸ hb'')
+      rw [haa] at hlt; exact absurd hlt (lt_irrefl _)
+    · exact lt_of_le_of_ne hle (fun he => hbne (hA a he))
+  · -- `a` is unmatched in `μ'`: he still prefers his stable DA partner `b` to staying single
+    intro _
+    exact lt_of_le_of_ne ((M.daMatching_isStable hA hB).2.1 a b hab).1 (hAne a b)
+  · -- `b` strictly prefers `a` to her `μ'`-partner `a'`
+    intro a'' ha''
+    have ha'' : a'' = a' := hμ'stable.1 a'' a' b ha'' ha'b
+    rw [ha'']; exact hlt
+  · -- `b` is matched in `μ'` (to `a'`), so this case is vacuous
+    intro hcon
+    exact absurd ha'b (hcon a')
+
 end MatchingMarket
 
 end GameTheory
