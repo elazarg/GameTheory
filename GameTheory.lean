@@ -121,6 +121,7 @@ import GameTheory.Mechanism.Contracts.Basic
 import GameTheory.Mechanism.SocialChoice
 import GameTheory.Mechanism.Arrow
 import GameTheory.Mechanism.GibbardSatterthwaite
+import GameTheory.Mechanism.SenParetianLiberal
 import GameTheory.Concepts.Knowledge.CommonKnowledge
 import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
 
