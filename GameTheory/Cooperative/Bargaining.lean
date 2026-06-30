@@ -370,6 +370,51 @@ theorem kalaiSmorodinsky_le_ideal (a u : ι → ℝ) (h : B.IsKalaiSmorodinsky a
   intro i
   exact (hideal i).1 ⟨u, hfeas, hIR, rfl⟩
 
+/-- **Monotonicity of the Kalai–Smorodinsky solution** — the axiom distinguishing it
+from the Nash solution. Expanding the feasible set while keeping the disagreement
+point `d` and the reference (utopia) point `a` fixed makes *every* player weakly
+better off. Concretely: if `T` enlarges `S` (`S.feasible ⊆ T.feasible`, same
+disagreement point) and `a` is a common reference strictly above the disagreement
+point for every player, then the `S`-solution `u` is dominated coordinatewise by the
+`T`-solution `v`.
+
+Taking `a` to be the (shared) ideal point recovers the classical individual /
+restricted-monotonicity axiom of Kalai and Smorodinsky (1975). The proof is geometric:
+both solutions lie on the ray from `d` through `a`, so they are coordinatewise
+comparable; were `u` ahead of `v`, it would strictly dominate `v` while remaining
+feasible in `T`, contradicting Pareto optimality of `v`. -/
+theorem kalaiSmorodinsky_monotone (S T : BargainingProblem ι)
+    (hd : S.d = T.d) (hST : ∀ w, S.feasible w → T.feasible w)
+    (a u v : ι → ℝ) (hpos : ∀ i, S.d i < a i)
+    (hu : S.IsKalaiSmorodinskyRelativeTo a u)
+    (hv : T.IsKalaiSmorodinskyRelativeTo a v) :
+    ∀ i, u i ≤ v i := by
+  intro k
+  by_contra hk
+  rw [not_le] at hk
+  -- if `u` is ahead of `v` at `k`, proportionality forces it ahead everywhere
+  have hdom : ∀ j, v j < u j := by
+    intro j
+    have hu_p := hu.2.2.2 j k
+    have hv_p := hv.2.2.2 j k
+    rw [← hd] at hv_p
+    have hak : 0 < a k - S.d k := sub_pos.2 (hpos k)
+    have haj : 0 < a j - S.d j := sub_pos.2 (hpos j)
+    nlinarith [hu_p, hv_p, hak, mul_pos (sub_pos.2 hk) haj]
+  -- `u` is feasible in `T` and strictly dominates `v`, contradicting `v`'s Pareto optimality
+  exact hv.2.2.1.2 ⟨u, hST u hu.1, fun j => (hdom j).le, k, hdom k⟩
+
+/-- **Uniqueness of the Kalai–Smorodinsky outcome relative to a reference point.** For a
+fixed problem and reference point `a` strictly above the disagreement point, there is at
+most one Kalai–Smorodinsky outcome. It is the immediate two-sided consequence of
+monotonicity applied to the problem against itself. -/
+theorem kalaiSmorodinsky_relativeTo_unique (a u v : ι → ℝ) (hpos : ∀ i, B.d i < a i)
+    (hu : B.IsKalaiSmorodinskyRelativeTo a u) (hv : B.IsKalaiSmorodinskyRelativeTo a v) :
+    u = v :=
+  funext fun i => le_antisymm
+    (kalaiSmorodinsky_monotone B B rfl (fun _ h => h) a u v hpos hu hv i)
+    (kalaiSmorodinsky_monotone B B rfl (fun _ h => h) a v u hpos hv hu i)
+
 end BargainingProblem
 
 end GameTheory
