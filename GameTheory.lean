@@ -123,6 +123,7 @@ import GameTheory.Mechanism.Arrow
 import GameTheory.Mechanism.GibbardSatterthwaite
 import GameTheory.Mechanism.SenParetianLiberal
 import GameTheory.Mechanism.Condorcet
+import GameTheory.Mechanism.MedianVoter
 import GameTheory.Concepts.Knowledge.CommonKnowledge
 import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
 
