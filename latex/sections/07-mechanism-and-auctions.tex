@@ -56,10 +56,9 @@ unfolded as
     \mathrm{exAnteEU}(B, \Profile, i) \;\ge\;
     \mathrm{exAnteEU}(B, \Profile[i \mapsto s'], i).
 \]
-Ex-post and interim variants are exposed as separate derived
-definitions:\ ex-post, no profitable deviation conditional on the
-realized type vector; interim, no profitable deviation conditional
-on the deviating player's own type.
+This is the ex-ante Bayes-Nash condition used by the current
+library API; ex-post and interim variants are not separate packaged
+definitions in this file.
 
 \tradeoff{Continuous type spaces and continuous action spaces are
 the natural setting for much of auction theory beyond
@@ -110,7 +109,7 @@ finite-sum form recorded as \TT{senderEU\_eq\_sum}; equivalently,
 it is the sum of message-contingent sender scores
 (\TT{senderEU\_eq\_sum\_senderScore}).
 
-The signal-structure layer is intentionally a substrate, not yet the
+The signal-structure layer is intentionally a substrate rather than the
 concavification (optimal-value) theorem:\ it gives the finite objects,
 Bayes-plausibility invariant, persuasion predicate, and sender
 objective on which finite persuasion examples and later optimal-design
@@ -168,9 +167,10 @@ $M = (\Theta, \Act, g : ({\textstyle\prod_i}\Act_i) \to (\Players \to \RR))$;
 a strategy profile is a family $(\sigma_i : \Theta_i \to \Act_i)_i$.
 A \emph{direct mechanism} is a mechanism with $\Act_i = \Theta_i$;
 the canonical strategy is the identity.  The Lean definition
-of Bayesian incentive compatibility is an ex-ante finite condition
-against constant misreports $\theta'_i$, not the full interim
-textbook condition against arbitrary type-dependent reporting rules.
+of Bayesian incentive compatibility is the ex-ante finite condition
+that truthful reporting is a Bayes-Nash equilibrium, quantified over
+type-contingent misreport functions
+$s'_i : \Theta_i \to \Theta_i$.
 
 \begin{theorem}[Revelation principle]
 \label{thm:revelation}
@@ -179,13 +179,13 @@ a common prior over types, and $\sigma$ a Bayesian Nash equilibrium
 of $M$.  Then the direct mechanism
 $M^{\mathrm{direct}}$ obtained by composing each player's report with
 $\sigma_i$ — i.e.\ $M^{\mathrm{direct}}(\theta) = g(\sigma(\theta))$ —
-is BIC against constant misreports.
+is BIC against type-contingent misreports.
 \end{theorem}
 
-\noindent The proof is the textbook argument restricted to the
-formalized deviation class:\ a constant report $\theta'_i$ in
-$M^{\mathrm{direct}}$ corresponds to the type-independent deviation
-$\theta_i \mapsto \sigma_i(\theta'_i)$ in $M$, and the Nash
+\noindent The proof is the textbook argument in finite, ex-ante
+form:\ a type-contingent report $s'_i$ in $M^{\mathrm{direct}}$
+corresponds to the type-contingent deviation
+$\theta_i \mapsto \sigma_i(s'_i(\theta_i))$ in $M$, and the Nash
 hypothesis on $\sigma$ rules out profitable deviations.
 
 \leancorr{\TT{Mechanism/MechanismDesign.lean} and

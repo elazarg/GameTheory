@@ -19,9 +19,11 @@ sources for the existence theorem in the form proved in
 \Cref{thm:nash-mixed}.  \citet{Aumann1974, Aumann1987} introduce
 correlated equilibrium and its EU equivalence with
 incentive-compatibility under a correlation device.
-\citet{Selten1965, Selten1975} introduce subgame perfection and
-the trembling-hand variants the one-shot deviation principle
-formalizes.  \citet{Harsanyi1967} formalizes Bayesian games and
+\citet{Selten1965} introduces subgame perfection, the refinement
+connected here to the one-shot deviation principle;
+\citet{Selten1975} introduces trembling-hand perfection, which is
+not one of the theorem statements formalized in this chapter.
+\citet{Harsanyi1967} formalizes Bayesian games and
 type-conditional strategies.  \citet{Kuhn1953} is the source of
 the behavioral-vs-mixed equivalence, originally proved under
 perfect recall;~\citet{Aumann1964} sharpened the recall hypothesis.
@@ -54,10 +56,10 @@ from the library; we discuss this in \Cref{sec:future}.
 Multi-agent influence diagrams are due
 to~\citet{KollerMilch2003} and have been further developed
 in~\citet{PfefferGal2007} and~\citet{HammondEtAl2023}.  The
-strategic-relevance / d-separation analyses of MAIDs are partly
-formalized in our library (\TT{MAID/FrontierLemmas.lean}, the
-order-independence content), and partly left as an explicit
-extension target.
+order-independence and frontier-commutation lemmas for MAID
+compilation are partly formalized in our library
+(\TT{MAID/FrontierLemmas.lean}); strategic-relevance and
+d-separation analyses remain extension targets.
 
 \subsection{Prior formalizations of game theory}
 \label{sec:rw:formalization}
@@ -86,8 +88,7 @@ game-theoretic equilibria.
 standard simplex and its convex/topological API, finite-type
 infrastructure, and the surrounding analysis the library depends
 on are all in mathlib~\citep{mathlib2020}; the Brouwer fixed-point
-theorem itself, however, is not in mathlib at the time of writing,
-and is supplied by the standalone \TT{fixed-point-theorems-lean4}
+theorem itself is supplied by the standalone \TT{fixed-point-theorems-lean4}
 package~\citep{harfeFixedPointTheorems}.  Outside the present
 library, scattered Lean game-theory developments exist (mostly in
 the form of self-contained proofs of Nash existence for finite

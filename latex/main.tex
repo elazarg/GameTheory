@@ -7,6 +7,8 @@
 \usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,
                 decorations.pathreplacing}
 \usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+\usepackage{cleveref}
 
 \sloppy
 \emergencystretch=3em
@@ -20,39 +22,39 @@
 \maketitle
 
 \begin{abstract}
-This chapter describes a Lean~4 library, built on top of
-mathlib~\citep{mathlib2020}, that formalizes the finite-game core
-of game theory in a general discrete kernel-game form suited to use
-as a downstream dependency.  The library takes a
-deliberately uniform stance on what a game \emph{is}: a
-\emph{kernel game} consisting of per-player strategy types, an
-outcome type, a stochastic transition $\K : \prod_i \Strat_i \to
-\PMF{\Outcome}$, and a utility $\util : \Outcome \to (\Players \to
-\RR)$.  Solution concepts are defined once on this carrier and on
-its utility-free shadow, the \emph{game form}; concrete
-representations — normal-form games, extensive-form games,
+This paper presents a Lean~4 project, built on top of
+mathlib~\citep{mathlib2020}, that formalizes a broad finite-game
+library around a reusable discrete semantic core.  The central
+carrier is the \emph{kernel game}:\ per-player strategy types, an
+outcome type, a stochastic transition
+$\K : \prod_i \Strat_i \to \PMF{\Outcome}$, and a utility
+$\util : \Outcome \to (\Players \to \RR)$.  Its utility-free shadow,
+the \emph{game form}, supports preference-parameterized solution
+concepts; the kernel-game layer recovers the expected-utility
+specializations.  Normal-form games, extensive-form games,
 multi-agent influence diagrams, multi-round games,
-factored-observation stochastic games, and intrinsic-form games —
-are presented as
-syntax-and-semantics packages that compile to a kernel game, and
-relationships between representations are stated as bridge theorems
-about the resulting kernel games.  The classical theorems of finite
-non-cooperative game theory live in this layer, often in
-bounded-utility forms that do not require finite outcome carriers:
-existence of mixed Nash equilibria via Brouwer on the product
-simplex, existence of correlated and coarse correlated equilibria,
-and the minimax theorem.  The theorem layer also includes an
-observable mixed-action approximate discounted folk theorem via
-trigger strategies, backward induction (Zermelo), the one-shot
-deviation principle, and Kuhn's behavioral/mixed equivalence.  We
-discuss the design choices
-that make the library reusable — finiteness, discrete probability,
-the protocol/preference split, and the deviation-family schema for
-equilibrium notions — and we are explicit about what each choice
-gains and what it costs.  The chapter is intended as the
-self-contained foundation on which more specialized theories
-(visibility-aware protocol semantics, mechanism design pipelines,
-multi-agent learning models) can be built.
+factored-observation stochastic games, and intrinsic-form games are
+implemented as language layers that compile to this semantic core,
+with bridge theorems stating when compiled games preserve protocol
+structure, utility distributions, or expected utilities.
+
+Beyond this substrate, the flagship theorem layer covers mixed Nash
+existence via Brouwer,
+correlated and coarse-correlated equilibrium existence,
+learning-to-$\varepsilon$-CCE results, von Neumann minimax,
+an observable mixed-action approximate discounted folk theorem,
+Zermelo/backward induction, the one-shot deviation principle, Kuhn's
+behavioral/mixed equivalence, Shapley-value uniqueness, and
+Gale--Shapley stable matching.  Mechanism-design, social-choice, and
+auction developments sit on top of the same infrastructure, including
+Bayesian games, a finite revelation principle, Arrow and
+Gibbard--Satterthwaite, Sen's liberal paradox, Vickrey/VCG
+truthfulness, and contract-theory examples.  We explain the design
+choices that make the library reusable — finiteness, discrete
+probability, the protocol/preference split, relation-parameterized
+expressiveness, and the deviation-family schema for equilibrium
+notions — and make explicit what each choice gains and what it
+costs.
 \end{abstract}
 
 \tableofcontents

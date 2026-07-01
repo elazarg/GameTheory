@@ -29,8 +29,8 @@ profitable deviation in $\mathcal{D}$:
     \Pref_i\;\bigl(\GF.\mathrm{correlatedOutcome}(\mu),\;
                    \GF.\mathrm{correlatedOutcome}(\mathrm{deviate}_i(\mu, d))\bigr).
 \end{equation}
-The library identifies exactly two deviation families that matter
-for the standard solution-concept inventory:
+The library identifies two deviation families that organize the
+standard Nash/CE/CCE profile-distribution inventory:
 
 \begin{itemize}\itemsep2pt
 \item $\mathcal{D}^{\mathrm{const}}$:\ $D_i = \Strat_i$, with
@@ -42,7 +42,7 @@ with $\mathrm{deviate}_i(\mu, \mathrm{dev})$ replacing $i$'s
 coordinate $s$ by $\mathrm{dev}(s)$ on every sample.
 \end{itemize}
 
-The four ``profile-distribution'' equilibria of the library are
+The three ``profile-distribution'' equilibria in this inventory are
 then schema instances:
 \[
   \begin{array}{lcl}
@@ -58,8 +58,8 @@ Several library-wide consequences follow:
 \begin{itemize}
 \item \emph{Hierarchy}.  $\mathcal{D}^{\mathrm{const}}$ embeds into
 $\mathcal{D}^{\mathrm{dep}}$ via constant deviation functions, so
-every $\Pref$-CE is a $\Pref$-CCE.  Setting $\mu = \Dirac_\Profile$
-recovers $\Pref$-Nash from $\Pref$-CCE.  Thus pure Nash point masses
+every $\Pref$-CE is a $\Pref$-CCE\@.  Setting $\mu = \Dirac_\Profile$
+recovers $\Pref$-Nash from $\Pref$-CCE\@.  Thus pure Nash point masses
 are CCEs, and CE distributions are CCE distributions; CE and CCE are
 both predicates on profile distributions, while Nash is a predicate
 on point profiles.
@@ -230,7 +230,7 @@ that samples a profile $s \sim \mu$ and privately recommends $s_i$ to
 player $i$.  The
 device is incentive-compatible when no player gains in expectation
 by ignoring the recommendation in favor of any function of it.
-This is exactly $\mathcal{D}^{\mathrm{dep}}$-equilibrium under EU.
+This is exactly $\mathcal{D}^{\mathrm{dep}}$-equilibrium under EU\@.
 Coarse correlated equilibrium~\citep{HartMasColell2000} weakens the
 deviation menu from arbitrary functions to constant strategies,
 which yields $\mathcal{D}^{\mathrm{const}}$-equilibrium under EU.
@@ -253,9 +253,10 @@ social welfare} of a device, and maximizing it over correlated
 (resp.\ coarse correlated) equilibria gives the best welfare each
 regime can support.  Because a pure Nash equilibrium is a CE and a CE
 is a CCE, these optima form an increasing ladder — best pure-Nash
-welfare $\le$ best CE welfare $\le$ best CCE welfare — and the
-\emph{correlation welfare gap} is the nonnegative difference between the
-ends.  The Nash benchmark is the best \emph{pure} Nash welfare, matching
+welfare $\le$ best CE welfare $\le$ best CCE welfare.  The
+\emph{correlation welfare gap} is CE minus Nash; the
+\emph{coarse correlation welfare gap} is CCE minus Nash.  The Nash
+benchmark is the best \emph{pure} Nash welfare, matching
 the price-of-anarchy convention of
 \Cref{sec:solution-concepts:welfare}.  This is the additive analogue of
 the Ashlagi–Monderer–Tennenholtz \emph{value of correlation}, which is a
@@ -265,11 +266,12 @@ needs no positivity assumption.  In a team game it collapses to zero
 interests the welfare-optimal profile is already Nash, so correlation
 buys nothing.
 
-\leancorr{\TT{Concepts/Correlation/ValueOfCorrelation.lean}
-(\TT{correlatedSocialWelfare}, \TT{bestCorrelatedWelfare},
-\TT{bestCoarseCorrelatedWelfare}, \TT{correlationWelfareGap},
-\TT{correlationWelfareGap\_nonneg},
-\TT{IsTeamGame.correlationWelfareGap\_eq\_zero}).}
+\leancorr{\TT{Concepts/Correlation/ValueOfCorrelation.lean}.
+Welfare declarations:\ \TT{correlatedSocialWelfare},
+\TT{bestCorrelatedWelfare}, \TT{bestCoarseCorrelatedWelfare}.
+Gap declarations:\ \TT{correlationWelfareGap},
+\TT{coarseCorrelationWelfareGap}, their nonnegativity lemmas, and
+the team-game zero-gap lemmas.}
 
 \subsection{Equilibrium payoff sets and the timing of information}
 \label{sec:solution-concepts:signal-timing}
@@ -393,8 +395,8 @@ from — optimal welfare, worst Nash welfare, best Nash welfare —
 the comparison lemmas between them, and the ratio-valued ratios
 themselves (\TT{priceOfAnarchy}, \TT{priceOfStability}) packaged
 against a nonempty-Nash hypothesis.  Both ratios are at least $1$
-when the corresponding welfare denominator is positive and at
-most the optimum (\TT{one\_le\_priceOfAnarchy},
+when the corresponding welfare denominator is positive
+(\TT{one\_le\_priceOfAnarchy},
 \TT{one\_le\_priceOfStability}), and
 $\PoS \le \PoA$ whenever the worst Nash welfare is positive
 (\TT{priceOfStability\_le\_priceOfAnarchy}).  In a team game
@@ -442,7 +444,7 @@ pure Nash $(\TT{c}, \TT{c})$ with welfare 4. The companion theorem
 \TT{braess\_welfare\_decreases} records the strict inequality. The
 classical 4-edge network instance with congestion-dependent delays
 would compile through the \TT{CongestionGame} infrastructure but
-is not yet packaged.
+is outside the packaged example set.
 
 \leancorr{Welfare quantities and ratios in
 \TT{Concepts/Welfare/PriceOfAnarchy.lean}
@@ -471,7 +473,7 @@ The library formalizes both finite-attained versions
 versions (\TT{worstCaseEUInf}, \TT{securityLevelSup}).  It proves
 that a security strategy exists in the finite-attained case, and that
 Nash payoffs are at least the corresponding security level under the
-boundedness hypotheses needed for the sup/inf API.  The two-player
+boundedness hypotheses needed for the sup/inf API\@.  The two-player
 zero-sum theorem in
 \Cref{sec:theorems:minimax} is stated through a mixed Nash profile
 with saddle-style guarantee inequalities.
@@ -485,20 +487,22 @@ individual-rationality interface in
 \subsection{Regret}
 \label{sec:solution-concepts:regret}
 
-Internal and external regret are recorded as positive parts of
-EU differences.  External regret of $\Profile$ for player $i$ is
+Internal and external regret are recorded as deviation gains, with
+equilibrium corresponding to all such gains being nonpositive.
+External regret of a profile distribution $\mu$ for player $i$ and
+constant deviation $s'$ is
 \begin{equation}
 \label{eq:regret}
-  \Regret^{\mathrm{ext}}(\KG, \Profile, i) \;=\;
-    \max_{s' \in \Strat_i}\,
-    \bigl(\EU(\KG, \Profile[i \mapsto s'], i) - \EU(\KG, \Profile, i)\bigr)^{+};
+  \Regret^{\mathrm{ext}}(\KG, \mu, i, s') \;=\;
+    \EU(\KG, \mathrm{deviate}_i(\mu,s'), i)
+    - \EU(\KG,\mu,i);
 \end{equation}
 internal regret replaces the constant $s'$ by a function of
 $\Profile_i$ and is the dual of the $\mathcal{D}^{\mathrm{dep}}$
 deviation family that defines correlated equilibrium.  The
 library proves the structural fact that a profile distribution
-$\mu$ has zero average external regret iff it is a CCE, and zero
-average internal regret iff it is a CE — the standard
+$\mu$ is a CCE iff every external-regret gain is at most $0$, and
+is a CE iff every swap-regret gain is at most $0$ — the standard
 regret-equilibrium duality~\citep{HartMasColell2000}.
 
 \paragraph{Savage minimax regret.}\
@@ -525,7 +529,7 @@ inequality by an additive $\varepsilon$ slack:\ every unilateral
 deviation is at most $\varepsilon$-profitable.  Closure under
 $\varepsilon$-relaxation is recorded for the deviation-family
 schema, so the same definition applies to $\varepsilon$-CCE and
-$\varepsilon$-CE.  These approximate correlated notions carry
+$\varepsilon$-CE\@.  These approximate correlated notions carry
 quantitative regret characterizations:\ a profile distribution is
 an $\varepsilon$-CCE iff every player's external regret is at most
 $\varepsilon$, and an $\varepsilon$-CE iff every swap regret is at

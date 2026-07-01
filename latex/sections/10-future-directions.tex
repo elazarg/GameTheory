@@ -55,9 +55,9 @@ counterfactually weighted by the probability of reaching that
 information set under the opponents' play.  The regret-equilibrium
 duality and the no-regret learning machinery a CFR proof would
 consume are already formalized (\Cref{sec:solution-concepts:regret},
-\Cref{sec:theorems:learning}) — including the constructive CCE
-existence that no-regret self-play yields without going through
-Brouwer.  What remains specific to CFR is the counterfactual,
+\Cref{sec:theorems:learning}) — including explicit routes to
+$\varepsilon$-CCE via no-regret self-play without going through
+Brouwer at each finite horizon.  What remains specific to CFR is the counterfactual,
 information-set-local regret decomposition for extensive-form games
 and its convergence proof on top of that base.
 
@@ -123,8 +123,8 @@ The cooperative branch lives at \TT{Cooperative/} (a parallel
 paradigm to the non-cooperative core occupying the rest of the
 library; see \Cref{sec:theorems:shapley-uniqueness} for the
 framing).  Already formalized:\ TU coalitional games with the
-Shapley value~\citep{Shapley1953} and the four classical axioms, with
-linearity represented in Lean by additivity plus scalar homogeneity,
+Shapley value~\citep{Shapley1953} and the four classical axioms
+used by the Lean uniqueness theorem,
 the unanimity-basis decomposition (Möbius inversion on the subset
 lattice), the full Shapley uniqueness theorem
 (\Cref{thm:shapley-unique}), the Banzhaf~\citep{Banzhaf1965} and
@@ -135,7 +135,8 @@ $\mathrm{IsConvex} \Leftrightarrow$ monotone-marginals characterization
 the core (efficient $\land$ coalition-rational) with the
 convex-set closure property and individual rationality, core
 closure under finite sums and nonnegative scalar multiplication,
-the Shapley-in-core theorem for games with nonnegative
+the Shapley-in-core theorem for convex games (hence nonempty core),
+the positive-cone specialization through nonnegative
 unanimity-basis coefficients, additive games (the identity
 allocation), and the 3-player majority game as a worked example.
 The \emph{cost of stability}~\citep{Bachrach2009} — the least external
@@ -174,10 +175,8 @@ Bondareva–Shapley \citep{Bondareva1963, Shapley1967} — balancedness
 implies a nonempty core — which closes the characterization of
 core-nonempty games and is the flagship LP-duality (Farkas) result;
 the nucleolus \citep{Schmeidler1969}; the Aumann–Shapley value for non-atomic
-games~\citep{AumannShapley1974}; NTU coalitional games;
-the full Shapley~\citeyear{Shapley1971} theorem that every convex
-game has a nonempty core and that the Shapley value lies in it; and
-further bargaining solutions.
+games~\citep{AumannShapley1974}; NTU coalitional games; and further
+bargaining solutions.
 
 \subsection{Information design and signaling}
 \label{sec:future:info-design}
@@ -211,9 +210,9 @@ and its multi-receiver necessary direction~\citep{Arieli2021}.
 Natural extensions are substantive theorems over this substrate:
 finite concavification of the optimal sender value, value-of-information
 results, optimal signal existence on a bounded finite message alphabet,
-explicit finite signaling-game refinements, the converse (sufficiency)
-direction of multi-receiver feasibility, and bridges from persuasive
-decision rules to direct mechanisms.  Continuous type spaces and compact belief simplices
+explicit finite signaling-game refinements, positive characterizations
+or counterexample libraries for multi-receiver feasibility, and bridges
+from persuasive decision rules to direct mechanisms.  Continuous type spaces and compact belief simplices
 would require the measure-theoretic extension discussed in
 \Cref{sec:future:infinite}; the finite layer is useful independently
 and should remain separate from that analytic generalization.

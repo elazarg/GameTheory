@@ -6,6 +6,8 @@
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,fit,calc,shapes.geometric,decorations.pathreplacing}
 \usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+\usepackage{cleveref}
 
 \sloppy
 \emergencystretch=3em
@@ -59,7 +61,9 @@ Each definition appears as a shaded \emph{Lean box} containing the
 declaration shape used in the code.  Universe-polymorphism
 boilerplate, routine implicit binders, and \TT{Fintype}/\TT{DecidableEq}
 typeclass arguments are suppressed when they would obscure the
-content; the file:line reference points to the verbatim source.
+content; the accompanying file/path reference identifies the
+verbatim source, and declaration anchors link back to the local
+summary.
 Defined names link to their declaration via
 \DefRef{KernelGame}-style hyperlinks; the linked anchor is the
 real definition site of the name (here, \S\ref{sec:supp:kernelgame}).
@@ -227,7 +231,9 @@ Folder & Contents \\
   Major theorems:\ \DefRef{mixed_nash_exists},
   \DefRef{correlatedEq_exists}, \DefRef{von_neumann_minimax},
   \DefRef{zermelo}, \DefRef{oneShotDeviation_iff_spe}, the
-  \DefRef{ObsModelCore} Kuhn theorems. \\
+  \DefRef{ObsModelCore} Kuhn theorems, learning-to-CCE results,
+  the discounted folk theorem, Shapley uniqueness, and
+  Gale--Shapley stable matching. \\
 \TT{Languages/} &
   Six syntactic languages (NFG, EFG, MAID, MultiRound, FOSG,
   Intrinsic), each with its own \TT{Syntax}, \TT{Compile}, and
@@ -442,8 +448,10 @@ $\util : \Outcome \to \Players \to \RR$:
   \qquad \util(\omega) \in \RR^\Players \text{ for each } \omega.
 \]
 The forgetful map $\toGF$ takes a kernel game to its game form;
-its right adjoint \TT{withUtility} adjoins a utility back, and the
-two compose to the identity in both directions.
+\TT{withUtility} adjoins a chosen utility to a game form.  The
+expected round-trip equalities hold with that chosen utility:
+forgetting after adjoining recovers the game form, and adjoining a
+kernel game's own utility after forgetting recovers the kernel game.
 
 \Textbook
 This is the strategic-form game with stochastic outcome
@@ -661,8 +669,10 @@ $\mathcal{D}$.  We anchor at $\IsNash$ (\S\ref{sec:supp:isNash})
 and $\IsCorrelatedEq$ (\S\ref{sec:supp:isCE}); other concepts are
 bunched.
 
-\subsection{Deviation-family schema: \texttt{Concepts/Equilibrium/GameFormSolutionConcepts.lean}}
+\subsection{Deviation-family schema}
 \label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:ProfileDeviationFamily}\label{def:IsDeviationEqFamilyFor}
+
+\noindent\TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean}
 
 \begin{leanbox}
 namespace GameForm\\[1pt]
@@ -706,9 +716,11 @@ families are textbook:\ unilateral deviation by a fixed strategy
 (Nash, CCE) and recommendation-dependent deviation
 (Aumann's correlated equilibrium~\citep{Aumann1974}).
 
-\subsection{Deviation-simulation transport: \texttt{Concepts/Foundations/DeviationSimulation.lean}}
+\subsection{Deviation-simulation transport}
 \label{sec:supp:deviation-simulation}
 \label{def:OutcomeView}\label{def:NashDeviationSimulation}\label{def:DeviationFamilySimulation}
+
+\noindent\TT{Concepts/Foundations/DeviationSimulation.lean}
 
 \Anchor{OutcomeView}
 \begin{leanbox}
@@ -1024,8 +1036,9 @@ $\tau$"; \TT{IsParetoEfficient(For)} is its ¬∃-closure.
 \TT{socialWelfare} is $\sum_i \EU(\KG, \Profile, i)$, requiring a
 finite player set.  \TT{optimalWelfare}, \TT{worstNashWelfare},
 \TT{bestNashWelfare} are the standard sup/inf over profile sets;
-the Lean library does not yet package the ratio-valued
-\TT{PoA}/\TT{PoS} definitions
+the ratio-valued \TT{priceOfAnarchy} and
+\TT{priceOfStability} definitions are packaged against a
+nonempty-Nash hypothesis
 (\citep{Koutsoupias1999, Roughgarden2005}).
 
 \paragraph{Security and individual rationality.}\
@@ -1036,16 +1049,16 @@ $\sup_s \inf_{\sigma_{-i}}
 \TT{securityLevelSup} and \TT{worstCaseEUInf} are the
 order-theoretic sup/inf versions for non-enumerated carriers.  A
 security strategy attains the finite supremum.  Individual
-rationality says no Nash payoff is below the relevant security level
-(Maschler–Solan–Zamir §5.4).
+rationality says the relevant profile payoff meets the player's
+reservation/security threshold (Maschler–Solan–Zamir §5.4).
 
 \paragraph{Regret.}\
-\TT{Concepts/Correlation/Regret.lean}.  External regret of $\Profile$ for $i$
-is $\max_{s'}(\EU(\Profile[i\mapsto s'],i) - \EU(\Profile,i))^+$;
-internal regret replaces $s'$ by a function of $\Profile_i$.  The
-regret-equilibrium duality (zero average external regret iff CCE;
-zero average internal regret iff CE) is recorded as
-\TT{regret_zero_iff_isCoarseCorrelatedEq} and its CE analogue.
+\TT{Concepts/Correlation/Regret.lean}.  External regret is the raw
+gain from a constant deviation; swap regret replaces the constant
+deviation by a function of the recommendation.  The
+regret-equilibrium duality says CCE is equivalent to all external
+regret gains being nonpositive, and CE is equivalent to all swap
+regret gains being nonpositive.
 
 \paragraph{Approximate equilibria.}\
 \TT{Concepts/Equilibrium/ApproximateNash.lean}.  \TT{IsEpsilonNash $\varepsilon$}
@@ -1078,12 +1091,13 @@ strict-dominance condition on a symmetric two-player game
 (\citep{MaynardSmithPrice1973}).
 
 \paragraph{Rationalizability and dominance solvability.}\
-\TT{Concepts/Dominance/Rationalizability.lean},
-\TT{Concepts/Dominance/DominanceSolvable.lean},
-\TT{Concepts/Dominance/DominanceSolvability.lean}.  \TT{Survives n} is the
+\TT{Concepts/Dominance/} contains \TT{Rationalizability.lean},
+\TT{DominanceSolvable.lean}, and \TT{DominanceSolvability.lean}.
+\TT{Survives n} is the
 predicate "survives $n$ rounds of iterated strict dominance
-elimination," defined inductively;  \TT{IsRationalizable} is the
-inf over $n$.  \TT{IsNash.isRationalizable} and
+elimination," defined inductively;  \TT{IsRationalizable} is
+survival for every round, i.e.\ the intersection over all $n$.
+\TT{IsNash.isRationalizable} and
 \TT{IsDominant.isRationalizable} are the expected implications.
 \TT{Concepts/Dominance/DominanceSolvable.lean} records that the unique
 surviving profile (when one exists) is Nash.
@@ -1204,9 +1218,9 @@ structure EFGGame where\\
 \bd tree : GameTree inf Outcome ; utility : Outcome $\to$ Payoff inf.Player\\[3pt]
 noncomputable def GameTree.evalDist \{S : InfoStructure\} \{Outcome : Type\}\\
 \bd ($\sigma$ : BehavioralProfile S) : GameTree S Outcome $\to$ PMF Outcome\\
-\bd $\mid$ .terminal z $\Rightarrow$ PMF.pure z\\
-\bd $\mid$ .chance \_ $\mu$ \_ next $\Rightarrow$ $\mu$.bind (fun b $\Rightarrow$ (next b).evalDist $\sigma$)\\
-\bd $\mid$ .decision (p := p) I next $\Rightarrow$ ($\sigma$ p I).bind (fun a $\Rightarrow$ (next a).evalDist $\sigma$)
+\bd $\mid$ \TT{.terminal} z $\Rightarrow$ PMF.pure z\\
+\bd $\mid$ \TT{.chance} \_ $\mu$ \_ next $\Rightarrow$ $\mu$.bind (fun b $\Rightarrow$ (next b).evalDist $\sigma$)\\
+\bd $\mid$ \TT{.decision} (p := p) I next $\Rightarrow$ ($\sigma$ p I).bind (fun a $\Rightarrow$ (next a).evalDist $\sigma$)
 \end{leanbox}
 
 \Mathematical
@@ -1264,7 +1278,7 @@ structure MAIDGame where\\
 \bd parents      : Node $\to$ Finset Node\\
 \bd nodeKind     : Node $\to$ NodeKind  -- chance, decision, utility\\
 \bd domain       : Node $\to$ Type ; chanceDist, decisionInfo, utilityFn fields\\
-\bd acyclic      : ...\\[3pt]
+\bd acyclic      : $\ldots$\\[3pt]
 noncomputable def MAIDGame.toKernelGame (G : MAIDGame) : KernelGame G.Players
 \end{leanbox}
 
@@ -1355,10 +1369,10 @@ structure FOSG ($\iota$ W A : Type) (Obs : $\iota \to$ Type) (Pub : Type) where\
 \bd active           : W $\to$ Finset $\iota$\\
 \bd availableActions : (w : W) $\to \iota \to$ Set A\\
 \bd terminal         : W $\to$ Prop\\
-\bd transition       : ...\\
-\bd reward, privObs, pubObs : ...\\
-\bd terminal\_active\_eq\_empty : ...\\
-\bd terminal\_no\_legal, nonterminal\_exists\_legal : ...\\[3pt]
+\bd transition       : $\ldots$\\
+\bd reward, privObs, pubObs : $\ldots$\\
+\bd terminal\_active\_eq\_empty : $\ldots$\\
+\bd terminal\_no\_legal, nonterminal\_exists\_legal : $\ldots$\\[3pt]
 noncomputable def FOSG.toKernelGame (G : FOSG \dots) [BoundedHorizon] : KernelGame $\iota$
 \end{leanbox}
 
@@ -1391,8 +1405,8 @@ structure WGame where\\
 \bd P : Type ; owner : A $\to$ P\\
 \bd owner\_nonempty : $\forall$ p : P, $\exists$ a : A, owner a = p\\
 \bd pref : P $\to$ OutcomeLaw toWModel $\to$ OutcomeLaw toWModel $\to$ Prop\\[3pt]
-noncomputable def productMixedToBehavioral (G : WGame) : ...\\
-theorem behavioral\_realizes\_productMixed (G : WGame) : ...\\[3pt]
+noncomputable def productMixedToBehavioral (G : WGame) : $\ldots$\\
+theorem behavioral\_realizes\_productMixed (G : WGame) : $\ldots$\\[3pt]
 def PerfectRecall (G : WGame) ($\varphi$ : ConfigOrdering G.toWModel)\\
 \bd (p : G.P) : Prop -- HDLC Definition 14\\[3pt]
 theorem kuhn\_equivalence \\
@@ -1525,7 +1539,7 @@ behavioral$\leftrightarrow$mixed equivalence to MAIDs.
 \paragraph{EFG → FOSG (\TT{Languages/Bridges/FOSG/}).}\
 \TT{ObsModelCore.lean}, \TT{AugmentedEFG.lean},
 \TT{SerialExec.lean}.  An EFG with serial execution is presented
-as an FOSG.  Soundness at the game-form simulation level.
+as an FOSG\@.  Soundness at the game-form simulation level.
 
 \subsection{Solution-concept transport}
 \label{sec:supp:transport}
@@ -1596,10 +1610,10 @@ the gain to player $i$ from deviating to pure $s$, and
          {1 + \sum_{s'} (\mathrm{gain}_i(\Profile, s'))^+}.
 \]
 $\Phi$ is a continuous self-map of the product simplex
-$\prod_i \Delta(\Strat_i)$.  Brouwer's fixed-point theorem (mathlib's
-\TT{brouwerFixedPoint} on a closed disk, lifted to the product
-simplex via the homeomorphism in
-\TT{Concepts/Existence/ProductSimplexBrouwer.lean}) gives a fixed point
+$\prod_i \Delta(\Strat_i)$.  Brouwer's fixed-point theorem from the
+standalone \TT{fixed-point-theorems-lean4} package is lifted to the
+product simplex by the wrapper in
+\TT{Concepts/Existence/ProductSimplexBrouwer.lean}, giving a fixed point
 $\Profile^*$.  The algebraic step in
 \TT{Concepts/Existence/NashExistenceMixed.lean} (section
 \TT{NashMapAlgebra}) shows that a fixed point of $\Phi$ is a Nash
@@ -1645,10 +1659,10 @@ A constructive route via Sperner's lemma is listed in chapter
 \label{sec:supp:ce-exists}\label{def:correlatedEq_exists}
 
 \begin{leanbox}
-theorem KernelGame.correlatedEq\_exists\_of\_bounded       (G : KernelGame $\iota$) [...]
-theorem KernelGame.correlatedEq\_exists                   (G : KernelGame $\iota$) [...]
-theorem KernelGame.coarseCorrelatedEq\_exists\_of\_bounded (G : KernelGame $\iota$) [...]
-theorem KernelGame.coarseCorrelatedEq\_exists             (G : KernelGame $\iota$) [...]
+theorem KernelGame.correlatedEq\_exists\_of\_bounded       (G : KernelGame $\iota$) [$\ldots$]
+theorem KernelGame.correlatedEq\_exists                   (G : KernelGame $\iota$) [$\ldots$]
+theorem KernelGame.coarseCorrelatedEq\_exists\_of\_bounded (G : KernelGame $\iota$) [$\ldots$]
+theorem KernelGame.coarseCorrelatedEq\_exists             (G : KernelGame $\iota$) [$\ldots$]
 \end{leanbox}
 
 The independent product
@@ -1656,7 +1670,7 @@ $\bigotimes_i \Profile^*_i$ over the mixed Nash profile supplied by
 the main chapter's mixed-existence theorem is a correlated equilibrium
 of the original \KG;\ this is the route taken by
 \TT{Theorems/CorrelatedEqExistence.lean}.  CCE existence is the
-corollary $\Pref$-CE $\subseteq$ $\Pref$-CCE.  The
+corollary $\Pref$-CE $\subseteq$ $\Pref$-CCE\@.  The
 \TT{\_of\_bounded} statements require finite strategy spaces but
 not finite outcomes.
 
@@ -1774,16 +1788,16 @@ modern statement).
 \begin{leanbox}
 structure ObsModelCore ($\iota\,\sigma$ : Type) (Obs : $\iota \to$ Type)\\
 \bd (Act : (i : $\iota$) $\to$ Obs i $\to$ Type) where\\
-\bd  -- world state, transition kernel, per-player observation, ...\\[3pt]
-def NoNontrivialInfoStateRepeat (O : ObsModelCore ...) : Prop\\
-def HorizonSeparation                (O : ObsModelCore ...) : Prop\\
-def ActionPosteriorLocal            (O : ObsModelCore ...) : Prop\\
-def PerStepPlayerRecall             (O : ObsModelCore ...) : Prop\\[3pt]
+\bd  -- world state, transition kernel, per-player observation, $\ldots$\\[3pt]
+def NoNontrivialInfoStateRepeat (O : ObsModelCore $\ldots$) : Prop\\
+def HorizonSeparation                (O : ObsModelCore $\ldots$) : Prop\\
+def ActionPosteriorLocal            (O : ObsModelCore $\ldots$) : Prop\\
+def PerStepPlayerRecall             (O : ObsModelCore $\ldots$) : Prop\\[3pt]
 theorem ObsModelCore.kuhn\_behavioral\_to\_mixed\\
-\bd (O : ObsModelCore ...) [...] (hH : HorizonSeparation O) (hR : NoNontrivialInfoStateRepeat O) :\\
+\bd (O : ObsModelCore $\ldots$) [$\ldots$] (hH : HorizonSeparation O) (hR : NoNontrivialInfoStateRepeat O) :\\
 \bd $\forall$ $\beta$ : BehavioralProfile O,\ runDist O $\beta$ = (behavioralToMixedJoint $\beta$).bind (runDistPure O)\\[3pt]
 theorem ObsModelCore.kuhn\_mixed\_to\_behavioral\_semantic\\
-\bd (O : ObsModelCore ...) [...] (hL : ActionPosteriorLocal O) :\\
+\bd (O : ObsModelCore $\ldots$) [$\ldots$] (hL : ActionPosteriorLocal O) :\\
 \bd $\forall$ $\mu$ : PMF (PureProfile O), $\exists$ $\beta$, runDist O $\beta$ = $\mu$.bind (runDistPure O)
 \end{leanbox}
 
@@ -1842,8 +1856,8 @@ the rationale.
 \TT{ObsModel.lean} (the snapshot-refined wrapper),
 \TT{KuhnModel.lean} (alternative carrier),
 \TT{BehavioralToMixedCore.lean}
-(the $B \to M$ proof, ~613 lines),
-\TT{MixedToBehavioralCore.lean} (the $M \to B$ proof, ~951 lines),
+(the $B \to M$ proof, 613 lines),
+\TT{MixedToBehavioralCore.lean} (the $M \to B$ proof, 951 lines),
 \TT{CorrelatedRealization.lean} (an alternative
 $M \to B$ proof via the correlated-equilibrium realization formula).
 The package also exposes generic outcome-equality schemas
@@ -2040,8 +2054,9 @@ argument (with an exact biconditional-dictator companion).
 \TT{Mechanism/GibbardSatterthwaite.lean} adds social choice
 functions, strategy-proofness, and proves the
 \emph{Gibbard–Satterthwaite theorem} by the reduction to Arrow
-through a monotonicity-based induced social-welfare function.  Sen's
-liberal paradox is not formalized; see chapter §10.
+through a monotonicity-based induced social-welfare function.
+\TT{Mechanism/SenParetianLiberal.lean} formalizes Sen's liberal
+paradox as \TT{sen\_paretian\_liberal}.
 
 % =====================================================================
 \section{Worked examples}
@@ -2067,7 +2082,7 @@ def prisonersDilemma : NFGGame Bool (fun \_ $\Rightarrow$ PDAction) where\\
 \bdd $\mid$ cooperate, defect, true $\Rightarrow$ 0\\
 \bdd $\mid$ defect, cooperate, true $\Rightarrow$ 3\\
 \bdd $\mid$ cooperate, cooperate, true $\Rightarrow$ 2\\
-\bdd $\mid$ ...\\[3pt]
+\bdd $\mid$ $\ldots$\\[3pt]
 def pd\_defect\_defect : StrategyProfile (fun \_ : Bool $\Rightarrow$ PDAction) :=\\
 \bd fun \_ $\Rightarrow$ PDAction.defect\\[3pt]
 theorem pd\_defect\_is\_nash : IsNashPure prisonersDilemma pd\_defect\_defect := by\\
@@ -2105,7 +2120,7 @@ inductive MPAction where $\mid$ heads $\mid$ tails\\[3pt]
 def matchingPennies : NFGGame Bool (fun \_ $\Rightarrow$ MPAction) where\\
 \bd Outcome := $\forall$ \_ : Bool, MPAction\\
 \bd outcome := id\\
-\bd utility := -- (H,H) = (1,-1), (H,T) = (-1,1), ...
+\bd utility := -- (H,H) = (1,-1), (H,T) = (-1,1), $\ldots$
 \end{leanbox}
 
 \paragraph{Faithfulness check.}\
@@ -2174,7 +2189,7 @@ Three suggested traversals.
 \S\ref{sec:supp:expressiveness} (Language/Reduction abstraction)
 to register the language for bridges.  The
 worked subclass files inside \TT{Languages/NFG/} (CongestionGame,
-Bargaining, Stackelberg) are useful as additional templates.
+PublicGoods, Stackelberg) are useful as additional templates.
 
 \paragraph{(c)~"I want to follow the Kuhn theorem proof end-to-end."}\
 \S\ref{sec:supp:probability} → \S\ref{sec:supp:gameform},

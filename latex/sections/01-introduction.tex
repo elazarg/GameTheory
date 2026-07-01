@@ -17,18 +17,18 @@ device.  The textbook style routinely picks the most convenient
 answer locally, then quietly switches when the next theorem
 benefits from a different one.
 
-This chapter describes a Lean~4 library that picks one answer at
-the bottom and pays the cost of plumbing every other notion through
-it.  At the bottom is a finite, discrete-probability, utility-aware
-object — the \emph{kernel game}.  Every other representation in the
-library — normal-form, extensive-form, multi-agent influence
-diagrams, multi-round games, factored-observation stochastic games,
-and intrinsic-form games — is a \emph{language} whose semantics is a
+This paper presents a Lean~4 library that picks one answer at the
+bottom and pays the cost of plumbing every other notion through it.
+At the bottom is a discrete-probability, utility-aware object — the
+\emph{kernel game}.  Every other representation in the library —
+normal-form, extensive-form, multi-agent influence diagrams,
+multi-round games, factored-observation stochastic games, and
+intrinsic-form games — is a \emph{language} whose semantics is a
 kernel game.  Solution concepts are defined once on the kernel-game
-(and game-form) layer
-and inherited by every language.  Theorems about specific
-representations are stated either as theorems about their kernel
-games or as theorems about commuting compilations between languages.
+(and game-form) layer and inherited by every language.  Theorems
+about specific representations are stated either as theorems about
+their kernel games or as theorems about commuting compilations
+between languages.
 
 \subsection{Contributions}
 
@@ -67,15 +67,18 @@ an explicit deviation-transport condition.  Informally, deviations
 after translation have to be matched before translation with the same
 observable behavior.
 
-\item \emph{Classical theorems, mechanized.}  Existence of mixed
-Nash equilibria (via Brouwer on the product simplex, lifted from
-the standalone \TT{fixed-point-theorems-lean4} package), of correlated
-and coarse correlated equilibria, the minimax theorem, the one-shot
-deviation principle, Zermelo's backward induction, and Kuhn's
-behavioral-vs-mixed-strategy equivalence are all stated and proved
-on the \TT{KernelGame} / \TT{GameForm} layer.  Their statements live
-once; their consequences for any specific language layer are
-corollaries.
+\item \emph{A flagship theorem layer.}  The mechanized theorem suite
+includes mixed Nash existence via Brouwer on the product simplex,
+correlated and coarse-correlated equilibrium existence, no-regret
+routes to $\varepsilon$-CCE, von Neumann minimax, an observable
+mixed-action approximate discounted folk theorem, Zermelo's backward
+induction, the one-shot deviation principle, Kuhn's behavioral/mixed
+equivalence, Shapley-value uniqueness, and Gale--Shapley stable
+matching.  Each theorem is stated on the appropriate semantic layer:
+some live directly on \TT{KernelGame} / \TT{GameForm}; others, such
+as Kuhn's theorem and extensive-form backward induction, live on the
+observation-model or EFG substrate and are exported through the
+language compilers.
 
 \item \emph{An expressiveness layer.}  Beyond raw compilation, the
 library exposes a \emph{relation-parameterized expressiveness
@@ -86,21 +89,22 @@ compiled kernel games agree under a chosen relation $R$
 \Cref{sec:languages:expressiveness}).  This is what gives
 substantive content to claims like ``every bounded MAID is an EFG
 up to utility-distribution equivalence,'' which is mechanized as an
-$R$-reduction in this framework; the companion ``every finite NFG is
-a one-shot FOSG'' is mechanized as a utility-distribution-preserving
-kernel-game morphism (\TT{NFGGame.toFOSG\_morphism}), though not yet
-packaged as an \TT{Expressiveness} reduction; comparisons that are not in the
-library (e.g., MAID directly to multi-round) appear as targets in
-\Cref{sec:future}.
+$R$-reduction in this framework.  The companion ``every finite NFG is
+a one-shot FOSG'' is exposed at the kernel-morphism layer as
+\TT{NFGGame.toFOSG\_morphism}, rather than as an
+\TT{Expressiveness} reduction.  Comparisons outside the library's
+formalized bridge set (e.g., MAID directly to multi-round) appear as
+targets in \Cref{sec:future}.
 
-\item \emph{Mechanism-design and auction worked examples.}  Bayesian
-games, finite information-design primitives, a finite
-revelation-principle formulation, social-choice machinery, and
-auction fragments (Vickrey, first-price, all-pay, VCG) are
-formalized as consumers of the library.  The auction layer is
-deliberately uneven:\ Vickrey and VCG carry dominant-strategy
-truthfulness theorems, first-price records a no-dominant-strategy
-result, and all-pay consists of format-specific payoff lemmas.
+\item \emph{Mechanism-design, social-choice, and auction consumers.}
+Bayesian games, finite information-design primitives, a finite
+revelation principle, social-choice machinery, contract-theory
+examples, and auction fragments (Vickrey, first-price, all-pay, VCG)
+are formalized as consumers of the library.  The consumer layer
+includes Arrow, Gibbard--Satterthwaite, Sen's liberal paradox,
+Vickrey and VCG dominant-strategy truthfulness, first-price
+no-dominant-strategy results, and format-specific all-pay payoff
+lemmas.
 \end{enumerate}
 
 \subsection{What this library is not}
@@ -130,20 +134,22 @@ sets, or preference rankings rather than per-player strategies,
 and it does not go through \TT{KernelGame}.  The two branches
 share the player-index type and $\RR$ but no load-bearing
 abstractions; they live in the same package only for packaging
-convenience.  The Shapley value uniqueness theorem
-(\Cref{thm:shapley-unique}) is the flagship of the cooperative
-branch and is the only theorem from that branch we surface in
-the main text.
+convenience.  We state two representative major theorems from this
+branch in the paper: Shapley value uniqueness
+(\Cref{thm:shapley-unique}) and Gale--Shapley stable matching
+(\Cref{thm:gale-shapley}).  The remaining cooperative material is
+summarized with the extension targets in
+\Cref{sec:future:cooperative}.
 
-A separate \emph{Definitional Supplement} accompanies this chapter
-as a companion document rather than as part of the main article build.
-The supplement documents the Lean signatures of every major object
-and theorem with explicit textbook correspondence, so a reader
-who wants to verify that ``what the library calls Nash equilibrium
-is the textbook Nash equilibrium'' can do so by inspection.  The
-chapter is the narrative; the supplement is the faithfulness
-certificate.  Cross-references throughout this chapter point to
-the relevant supplement section.
+A separate \emph{Definitional Supplement} accompanies the paper as a
+reference document rather than as part of the main article build.  It
+documents the Lean signatures of every major object and theorem with
+explicit textbook correspondence, so a reader who wants to verify
+that ``what the library calls Nash equilibrium is the textbook Nash
+equilibrium'' can do so by inspection.  The main article is the
+narrative; the supplement is the faithfulness certificate.
+Cross-references throughout the paper point to the relevant
+supplement section.
 
 \subsection{Reading guide}
 

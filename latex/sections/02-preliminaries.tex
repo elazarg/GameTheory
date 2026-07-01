@@ -16,13 +16,13 @@ X$ a non-negative extended real number whose total mass equals
 one.  The relevant API is monadic — $\PMF{\cdot}$ is the discrete
 Giry monad — with \TT{pure} (the Dirac embedding
 $\Dirac_x \in \PMF{X}$), \TT{bind}, and \TT{map}.  Expected value of
-a function
-$f : X \to \RR$ under $\mu \in \PMF{X}$ is the (countable) sum
-$\sum_{x} \mu(x)\,f(x)$, formalized as
+a function $f : X \to \RR$ under $\mu \in \PMF{X}$ is the unordered
+sum $\sum_x \mu(x)\,f(x)$, formalized as
 \TT{Math.Probability.expect}.  When $X$ is finite, this is a
-finite sum; when $X$ is countably infinite, it is a tsum that
-converges by the unit-mass condition together with
-non-negativity of $\mu$.
+finite sum.  On infinite discrete carriers the API uses a tsum;
+algebraic and continuity lemmas assume the needed
+boundedness/summability hypotheses, usually discharged in the
+library by bounded utilities.
 
 A \emph{kernel} (in the library's sense, \TT{Math.Probability.Kernel})
 is a function $\K : A \to \PMF{B}$.  This is not a kernel in the
@@ -193,9 +193,8 @@ them when they do.
 
 The library depends on mathlib~\citep{mathlib2020} for finite-type
 infrastructure, the simplex (\TT{stdSimplex} and convex-combination
-machinery), product topology, fixed-point theorems (Brouwer in
-particular), the discrete Giry monad \TT{PMF}, and a substantial
-amount of $\sum$-and-tsum API.  Three non-trivial dependencies
+machinery), product topology, the discrete Giry monad \TT{PMF}, and a
+substantial amount of $\sum$-and-tsum API\@.  Three non-trivial dependencies
 deserve explicit mention:
 
 \begin{itemize}

@@ -93,9 +93,9 @@ are extra library surface, but the EU-only interface stays short.
 
 \paragraph{Why.}\ The split is the mechanized version of the
 mechanism-design separation between a protocol and the preferences
-used to evaluate it~\citep{Myerson1991}.  Once enough theorems were
-preference-agnostic, keeping them below \TT{KernelGame} became the
-least repetitive design.
+used to evaluate it~\citep{Myerson1991}.  For preference-agnostic
+theorems, keeping them below \TT{KernelGame} is the least repetitive
+design.
 
 \subsection{The \texttt{*For} style versus typeclass overloading}
 \label{sec:discussion:for-style}
@@ -119,7 +119,7 @@ and \TT{let}-binding tricks at the call site.
 \paragraph{Lost.}\ Slight verbosity at the call site for the
 \emph{generic} user:\ they write \TT{G.IsNashFor G.euPref}~\Profile\
 instead of \TT{G.IsNash}~\Profile\ whenever they instantiate the
-generic version at EU.  The EU-only user is unaffected — the
+generic version at EU\@.  The EU-only user is unaffected — the
 EU-specific predicates (\TT{IsNash}, \TT{IsBestResponse},
 \TT{IsCorrelatedEq}, …) are exposed directly and the
 \TT{\_iff\_} bridges make round-tripping free for the EU case.
@@ -163,7 +163,7 @@ games).  These exist as separate definitions (e.g.\
 \TT{EFG.IsSubgamePerfectEq}); the library proves their relation
 to the central \TT{IsNash} as a theorem rather than building it
 into the definition.  The EFG examples instantiate evaluation and
-backward-induction inequalities, but do not yet package full
+backward-induction inequalities rather than full
 \TT{EFG.IsSubgamePerfectEq} witnesses.
 
 \subsection{Noncomputable definitions and classical reasoning}

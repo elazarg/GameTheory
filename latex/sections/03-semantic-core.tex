@@ -145,15 +145,18 @@ where $\Pref^{\EU}_{\KG,\,i}\,d_1\,d_2 \coloneqq \mathbb{E}_{d_1}[\util(\cdot)(i
 preference induced by $\KG$.
 
 \paragraph{Why two layers?}  Two reasons.  First, several
-classical results — Kuhn's theorem, the existence of correlated
-equilibria, the dominance$\,\Rightarrow\,$Nash chain — are
-\emph{purely structural}: they hold whenever players have a
-preorder on outcome distributions, regardless of whether that
-preorder comes from expected utility, lexicographic preferences,
-or maximin attitudes.  Stating them at the $\GF.\IsNashFor$ layer
-keeps them generic and stops them from masquerading as
-EU-specific theorems.  Second, the EU-specific layer keeps the
-common case ergonomic:\ users who care only about expected
+transport and implication results — CE implies CCE under the
+deviation-family schema, best-response/Nash reformulations, and
+dominance-to-best-response lemmas — are \emph{purely structural}:
+they hold whenever players have a preorder on outcome
+distributions, regardless of whether that preorder comes from
+expected utility, lexicographic preferences, or maximin attitudes.
+Stating them at the $\GF.\IsNashFor$ layer keeps them generic and
+stops them from masquerading as EU-specific theorems.  Existence
+theorems such as CE/CCE existence are different: in this library
+they use the finite, bounded-utility expected-utility machinery.
+Second, the EU-specific layer keeps the common case ergonomic:\
+users who care only about expected
 utility never have to mention preference relations.
 
 \paragraph{Why explicit-argument preferences and not a typeclass?}
@@ -240,20 +243,20 @@ componentwise profile translation, the law is
 This is the discrete-Giry analogue of a coalgebra homomorphism,
 and is what makes a bridge between two languages strategically
 faithful (i.e.\ Nash equilibria pull back, dominance pulls back,
-etc., under hypotheses on $\stratMap$).  At the \TT{KernelGame}
-level we add the utility-preservation condition
-$\util'(\outcomeMap(\omega))(i) = \util(\omega)(i)$, yielding a
-\emph{kernel-game simulation} (the code's \TT{KernelGame.Morphism},
-which preserves the full joint utility distribution \TT{udist}), and
-call the morphism a \emph{utility-preserving isomorphism}
-(\TT{KernelGame.GameIsomorphism} / \TT{Bisimulation}) when both
-$\stratMap$ and $\outcomeMap$ are bijective and the inverse is also a
-simulation.  Preserving the joint payoff law transports \emph{any}
-preference over outcome distributions; expected-utility preservation
-is the mean-functional corollary, not the definition.  The genuinely
-EU-only variants — which preserve each player's mean but not the full
-payoff law — are the explicitly specialized \TT{EUMorphism} and
-\TT{EUGameIsomorphism}.
+etc., under hypotheses on $\stratMap$).  When a protocol map also
+satisfies the pointwise utility-preservation equation
+$\util'(\outcomeMap(\omega))(i)=\util(\omega)(i)$, helper
+constructors turn it into the code's distribution-level
+\TT{KernelGame.Morphism}.  The \TT{KernelGame.Morphism} record
+itself stores only a componentwise strategy map and the equation
+that the translated profile has the same joint payoff law
+\TT{udist}.  Its isomorphism/bisimulation variants require inverse
+strategy translations preserving the same payoff law.  Thus
+utility-distribution morphisms transport payoff-law preferences;
+protocol maps transport preferences over protocol outcomes.  The
+genuinely EU-only variants — which preserve each player's mean but
+not the full payoff law — are the explicitly specialized
+\TT{EUMorphism} and \TT{EUGameIsomorphism}.
 
 \leancorr{Morphism records in \TT{Core/GameMorphism.lean}
 (\TT{ProtocolMap}, \TT{KernelGame.Morphism}, with the
@@ -336,7 +339,8 @@ $\Profile[i \mapsto s_i]$ with the same observed outcome law:
   =
   V'_*\,\K'(\Profile'[i \mapsto s'_i]).
 \]
-Then, for every preference $\Pref^\Omega$ on $\PMF{\Omega}$,
+If $R(\Profile,\Profile')$ holds, then for every preference
+$\Pref^\Omega$ on $\PMF{\Omega}$,
 \[
   \GF.\IsNashFor(V^*\Pref^\Omega,\Profile)
   \;\Longrightarrow\;

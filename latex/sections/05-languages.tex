@@ -21,9 +21,9 @@ that relates them
 \subsection{Normal-form games}
 \label{sec:languages:nfg}
 
-The normal-form layer is the simplest:\ a normal-form game over a
-finite player type $\Players$ and a finite action family
-$\Act_i$ is the data
+The normal-form layer is the simplest.  In the finite fragment used
+by the main theorem statements, a normal-form game over a finite
+player type $\Players$ and finite action family $\Act_i$ is the data
 \[
   \NFG = \bigl(\,\Players,\,\{\Act_i\}_i,\,\util : ({\textstyle\prod_i}\Act_i)
                   \to \Payoff{\Players}\,\bigr),
@@ -225,8 +225,9 @@ three splits to a responder who
 accepts/rejects). Each ships with the four \TT{evalPure} outcome
 identities plus the textbook backward-induction comparison
 inequalities; the full \TT{EFGGame.IsSubgamePerfectEq} witnesses are
-not packaged.  \Cref{sec:worked-example} revisits these examples in
-the worked-example tour.
+not packaged.  The worked-example tour in \Cref{sec:worked-example}
+uses Prisoner's Dilemma as its running trace and briefly points back
+to these EFG examples.
 
 \leancorr{\TT{Languages/EFG/} contains \TT{Syntax}, \TT{SOS},
 \TT{Compile}, \TT{CompileObs} (compilation to ObsModelCore for
@@ -445,9 +446,9 @@ In the library, an FOSG carries a state space, an active-set
 function, per-player available actions, a transition kernel, a
 reward vector, per-player private observations, and a public
 observation.  Histories are recorded by an explicit history type.
-The finite-horizon FOSG kernel game is the canonical native
-carrier on which the bounded Kuhn theorem
-(\Cref{sec:theorems:kuhn}) is proved.
+The finite-horizon FOSG kernel game is the canonical native carrier
+that instantiates the representation-neutral observation-model Kuhn
+theorem of \Cref{sec:theorems:kuhn}.
 
 \leancorr{\TT{Languages/FOSG/} contains \TT{Basic}, \TT{History},
 \TT{Information}, \TT{Strategy}, \TT{Values}, \TT{Execution},
@@ -488,7 +489,7 @@ The intrinsic layer is a separate syntactic root from
 EFG/MAID/MR/FOSG, used as a target by representations that prefer
 order-independent reasoning.  It compiles to \KG\ when supplied with
 solvability and expected-utility data, but no cross-language bridge
-involving the Intrinsic layer is currently packaged in
+involving the Intrinsic layer is part of
 \TT{Languages/Bridges/}.
 
 \leancorr{\TT{Languages/Intrinsic/} contains the strategy
@@ -508,23 +509,22 @@ specified semantic relation:
   R\bigl(\,L_1.\compileTo(x),\;L_2.\compileTo(\tau(x))\,\bigr).
 \end{equation}
 Different relations $R$ correspond to different bridge strengths:
-EU-isomorphism (\Cref{sec:semantic-core:morphisms}) is the
-strongest; protocol simulation (utility-preserving but not
-necessarily strategy-bijective) is intermediate;
-EU-equivalence-of-equilibria is the minimum useful target.  The
-library exposes the following packaged bridges; the Intrinsic layer
-currently has a compiler but no packaged bridge row:
+protocol equivalence preserves the game form; utility-distribution
+equivalence or simulation preserves the joint payoff law; and
+expected-utility simulation preserves only the mean utilities needed
+for EU solution concepts.  The library exposes the following packaged
+bridges; the Intrinsic layer has a compiler but no bridge row:
 
 \begin{center}\small
 \begin{tabular}{@{}llp{0.42\textwidth}@{}}
 \toprule
-Source & Target & Relation \\
+Source & Target & Packaged relation \\
 \midrule
-NFG  & EFG  & EU-isomorphism (NFG as a depth-1 EFG) \\
-NFG  & FOSG & EU-isomorphism (NFG as a one-shot FOSG) \\
-EFG  & NFG  & EU-equivalence on the realized strategic form \\
-MAID & EFG  & strategic-form refinement (information sets preserved) \\
-EFG  & FOSG & game-form simulation (FOSG view of an EFG with serial execution) \\
+NFG  & EFG  & kernel-game morphism from the NFG game to its depth-1 EFG image \\
+NFG  & FOSG & kernel-game morphism from the NFG game to its one-shot FOSG image \\
+EFG  & NFG  & kernel-game morphism for the deterministic strategic-form image \\
+MAID & EFG  & utility-distribution equivalence for the generated EFG \\
+EFG  & FOSG & profile-map utility-distribution simulation for serial execution \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -586,26 +586,28 @@ $\mathrm{EUSimulation}$ &
 \end{center}
 
 \noindent
-The bridges of \Cref{sec:languages:bridges} are reductions in
-this framework for the relation in their column.  Context-aware
+Some bridges of \Cref{sec:languages:bridges} have also been
+registered as reductions in this framework; others remain
+bridge lemmas or \TT{KernelGame.Morphism} packages.  Context-aware
 extensions of the framework support languages whose compilation
 depends on a typing/visibility context — the natural target for
 downstream protocol-language formalizations.
 
 \paragraph{Worked theorems.}\
-Two concrete worked expressiveness theorems are packaged in this
-form.  An expressiveness claim like ``every finite NFG is
-a one-shot FOSG up to EU-isomorphism'' becomes the statement that
-$\NFG \to \FOSG$ is a reduction over the EU-isomorphism relation;
-``every bounded MAID is an EFG up to strategic-form refinement''
-becomes the analogous reduction over the refinement relation.
+Concrete worked expressiveness theorems include the
+utility-distribution equivalence for generated MAID/causal-context
+compilations and the EFG-to-FOSG profile-map utility-distribution
+simulation.  The finite NFG-to-FOSG theorem is exposed as
+\TT{NFGGame.toFOSG\_morphism}; it is a bridge target for the
+expressiveness layer rather than a registered \TT{Expressiveness}
+reduction.
 
 \designnote{Expressiveness comparisons in the protocol-language
 literature are notoriously informal.  By making the relation $R$
 explicit, the library forces every comparison statement to commit
 to which structural information is preserved and which is not.
 The resulting lattice of bridges (NFG, EFG, MAID, MR, FOSG, with
-Intrinsic currently an unbridged syntactic root) is itself a
+Intrinsic as an unbridged syntactic root) is itself a
 contribution.}
 
 \leancorr{\TT{Languages/Expressiveness/} contains \TT{Basic}

@@ -108,15 +108,14 @@ $\Pref\text{-CE}\subseteq\Pref\text{-CCE}$
 \tradeoff{This route gives CE existence as a corollary of
 mixed Nash existence and is the cleanest path through the
 finite-strategy machinery used by the proof.  The complementary
-\emph{constructive} route, which produces a CCE without going
-through Brouwer, is the no-regret learning of
-\Cref{sec:theorems:learning}:\ the time-average of any no-regret
-play sequence is a coarse correlated equilibrium, and regret
+learning route, which avoids Brouwer at each finite horizon, is the
+no-regret machinery of \Cref{sec:theorems:learning}:\ the
+time-average of a play sequence with small external regret is an
+$\varepsilon$-coarse correlated equilibrium, and regret
 matching~\citep{HartMasColell2000} or multiplicative weights
-supplies a concrete such sequence.  We formalize that route, so the
-existence statement is now available both as a corollary of Nash
-existence and (per-horizon, with explicit error) as a learning
-limit.}
+supplies concrete regret bounds.  We formalize that approximate,
+per-horizon route; exact CE/CCE existence still follows from the
+finite mixed-Nash existence theorem above.}
 
 \leancorr{\TT{KernelGame.correlatedEq\_exists\_of\_bounded},
 \TT{KernelGame.correlatedEq\_exists},
@@ -305,7 +304,7 @@ $\epsilon>0$ there is $\delta_0<1$ such that every
 $\delta\in(\delta_0,1)$ admits a discounted repeated-game Nash
 equilibrium $\Sigma^\delta$ with payoff $w^\delta$ satisfying
 \[
-  \forall i,\qquad |w^\delta_i - v_i| < \epsilon .
+  \forall i,\qquad |w^\delta_i - v_i| < \epsilon.
 \]
 \end{theorem}
 
@@ -422,7 +421,7 @@ and \TT{EFG.zermelo} in \TT{Theorems/OneShotDeviation.lean} and
 \TT{perfectInfo\_disjoint\_subtrees}; the reachability relation
 is \TT{EFG.ReachBy}.  Supplement~§6.4.}
 
-\subsection{Kuhn's theorem: \texorpdfstring{behavioral $\leftrightarrow$ mixed strategies}{behavioral vs. mixed strategies}}
+\subsection{Kuhn's theorem: \texorpdfstring{behavioral $\leftrightarrow$ mixed strategies}{behavioral vs.\ mixed strategies}}
 \label{sec:theorems:kuhn}
 
 Kuhn's theorem~\citep{Kuhn1953} relates two carriers of randomness
@@ -548,9 +547,7 @@ Let $\phi$ be any allocation rule satisfying:
 \emph{(symmetry)} symmetric players receive equal value;
 \emph{(null player)} a player whose marginal contribution is
 identically zero receives $0$;
-\emph{(additivity)} $\phi(G_1 + G_2) = \phi(G_1) + \phi(G_2)$;
-and \emph{(scalar homogeneity)} $\phi(c \cdot G)_i = c \cdot
-\phi(G)_i$.
+\emph{(additivity)} $\phi(G_1 + G_2) = \phi(G_1) + \phi(G_2)$.
 Then $\phi$ coincides with the Shapley value on every $G$.
 \end{theorem}
 
@@ -560,18 +557,16 @@ indicator games $u_S$ (where $u_S(T) = 1$ iff $S \subseteq T$).
 Then the unanimity-basis decomposition expresses every $G$ as
 $\sum_{S \subseteq \Players} c_S \cdot u_S$ (sum of TU games) with Möbius
 coefficients $c_S = \sum_{R \subseteq S} (-1)^{|S \setminus R|}
-G.v(R)$.  Linearity of $\phi$ (additivity + scalar) then propagates
-the value from unanimity games to all of $G$.
+G.v(R)$.  Additivity propagates the value across the finite sum;
+the value-on-unanimity-games lemma is applied to the scalar
+multiples that occur in the decomposition.
 
-\paragraph{Modern axiom set.}\
-The classical theorem uses additivity alone and recovers scalar
-homogeneity for rationals via the $n \cdot \phi(G) = \phi(n \cdot
-G)$ argument.  Extending from $\mathbb{Q}$ to $\mathbb{R}$ requires
-either a continuity hypothesis or full scalar homogeneity as a
-primitive axiom.  The library adopts the modern formulation with
-linearity (= additivity + scalar) as a primitive — this is the
-formulation in most current textbook treatments and lets the proof
-stay purely combinatorial.
+\paragraph{Axiom set.}\
+Some textbook presentations package additivity and scalar
+homogeneity together as linearity.  The Lean theorem deliberately
+uses the four classical assumptions above: efficiency, symmetry,
+the null-player axiom, and additivity.  Scalar homogeneity is not a
+separate hypothesis of \TT{shapleyValue\_unique}.
 
 \leancorr{\TT{Cooperative/CoalitionalGame.lean}
 (\TT{shapleyValue}, \TT{shapleyValue\_unique}); supporting
@@ -626,7 +621,7 @@ The matching — sending each proposer to its final top choice
 (\TT{topChoice} at $R^\star$) — is shown to be a matching, individually
 rational, and free of blocking pairs via the \emph{deferred-acceptance
 invariant}:\
-whenever a recipient has rejected a proposer, it currently holds
+whenever a recipient has rejected a proposer, it holds
 someone it strictly prefers.  Strictness of preferences is
 load-bearing exactly in maintaining that invariant; the
 no-blocking-pair conclusion then needs no further hypothesis.
@@ -638,8 +633,8 @@ through classical choice.  Extracting the $O(n^2)$ algorithm as a
 computable function with the same correctness proof is a natural
 refinement.  The theorem fixes the proposing side; the companion
 optimality results (the proposing side receives its best stable
-partner, the lattice structure of stable matchings) are not yet
-formalized.}
+partner, the lattice structure of stable matchings) are outside this
+theorem package.}
 
 \leancorr{\TT{Cooperative/GaleShapley.lean}
 (\TT{MatchingMarket}, \TT{daStep},
