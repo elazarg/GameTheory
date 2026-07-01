@@ -481,19 +481,18 @@ theorem daMatching_man_optimal (hA : ∀ a, Function.Injective (M.prefA a))
 /-! ### Woman-pessimality
 
 The dual of man-optimality: men-proposing deferred acceptance is *woman-pessimal*.
-A woman matched by deferred acceptance is paired, in every stable matching, with a
-partner she likes at least as well — her deferred-acceptance partner is the worst
-she receives across all stable matchings. The proof is a single blocking-pair
-argument: if a woman `b` strictly preferred her deferred-acceptance partner `a` to
-her partner `a'` in some stable `μ'`, then man-optimality forces `a` to strictly
-prefer `b` to his `μ'`-partner (or to remaining single), so `(a, b)` would block
-`μ'`. -/
+Conditionally, if a woman `b` is matched in another stable matching, her partner
+there is at least as good for her as her deferred-acceptance partner. With the
+additional non-indifference assumption that no woman is exactly indifferent between
+any man and remaining unmatched, a DA-matched woman is matched in every stable
+matching, giving the usual unconditional existential statement. -/
 
-/-- **Gale–Shapley is woman-pessimal.** Under strict preferences (with no man
+/-- **Conditional woman-pessimality.** Under strict preferences (with no man
 indifferent between an acceptable woman and remaining single): if woman `b` is
-matched to `a` by deferred acceptance and to `a'` in some stable matching `μ'`, then
-`b` weakly prefers her stable partner `a'` to her deferred-acceptance partner `a`. -/
-theorem daMatching_woman_pessimal (hA : ∀ a, Function.Injective (M.prefA a))
+matched to `a` by deferred acceptance and is also matched to `a'` in some stable
+matching `μ'`, then `b` weakly prefers her stable partner `a'` to her
+deferred-acceptance partner `a`. -/
+theorem daMatching_woman_pessimal_of_matched (hA : ∀ a, Function.Injective (M.prefA a))
     (hB : ∀ b, Function.Injective (M.prefB b))
     (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
     {μ' : α → Option β} (hμ'stable : M.IsStable μ')
@@ -525,6 +524,48 @@ theorem daMatching_woman_pessimal (hA : ∀ a, Function.Injective (M.prefA a))
   · -- `b` is matched in `μ'` (to `a'`), so this case is vacuous
     intro hcon
     exact absurd ha'b (hcon a')
+
+/-- A woman matched by deferred acceptance is also matched in every stable matching,
+provided neither side is exactly indifferent between any possible partner and the
+outside option. -/
+theorem daMatching_woman_matched_in_stable (hA : ∀ a, Function.Injective (M.prefA a))
+    (hB : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
+    (hBne : ∀ b a, M.reserveB b ≠ M.prefB b a)
+    {μ' : α → Option β} (hμ'stable : M.IsStable μ')
+    {a : α} {b : β} (hab : M.daMatching a = some b) :
+    ∃ a', μ' a' = some b := by
+  classical
+  by_contra hnone
+  apply hμ'stable.2.2
+  refine ⟨a, b, ?_, ?_, ?_, ?_⟩
+  · intro b'' hb''
+    obtain ⟨b0, hb0, hle⟩ := M.daMatching_man_optimal hA hB hAne hμ'stable hb''
+    have hbeq : b0 = b := by rw [hab] at hb0; exact (Option.some.inj hb0).symm
+    rw [hbeq] at hle
+    have hbne : b'' ≠ b := fun hbb => hnone ⟨a, hbb ▸ hb''⟩
+    exact lt_of_le_of_ne hle (fun he => hbne (hA a he))
+  · intro _
+    exact lt_of_le_of_ne ((M.daMatching_isStable hA hB).2.1 a b hab).1 (hAne a b)
+  · intro a'' ha''
+    exact False.elim (hnone ⟨a'', ha''⟩)
+  · intro _
+    exact lt_of_le_of_ne ((M.daMatching_isStable hA hB).2.1 a b hab).2 (hBne b a)
+
+/-- **Gale-Shapley is woman-pessimal, strong form.** Under strict preferences and no
+outside-option indifference on either side: if woman `b` is matched to `a` by
+deferred acceptance, then in every stable matching `b` is matched to some `a'` whom
+she weakly prefers to her deferred-acceptance partner `a`. -/
+theorem daMatching_woman_pessimal (hA : ∀ a, Function.Injective (M.prefA a))
+    (hB : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
+    (hBne : ∀ b a, M.reserveB b ≠ M.prefB b a)
+    {μ' : α → Option β} (hμ'stable : M.IsStable μ')
+    {a : α} {b : β} (hab : M.daMatching a = some b) :
+    ∃ a', μ' a' = some b ∧ M.prefB b a ≤ M.prefB b a' := by
+  obtain ⟨a', ha'b⟩ :=
+    M.daMatching_woman_matched_in_stable hA hB hAne hBne hμ'stable hab
+  exact ⟨a', ha'b, M.daMatching_woman_pessimal_of_matched hA hB hAne hμ'stable hab ha'b⟩
 
 end MatchingMarket
 
