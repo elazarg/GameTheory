@@ -1,0 +1,145 @@
+\section{The project-local Math layer}
+\label{sec:math-layer}
+
+The library has a project-local \TT{Math/} namespace between
+mathlib and the game-theoretic development.  It packages
+mathematical infrastructure that is needed repeatedly by the game
+library but is not itself game theory.  A declaration belongs here
+when it can be stated without players, utilities, equilibria,
+strategies, or mechanisms.  Once those words become part of the
+statement, the result belongs in \TT{GameTheory/}.
+
+This separation keeps the kernel-game API small.  The game-theory
+files can speak in terms of expected utility, mixed profiles, traces,
+or information states, while the reusable algebra about PMFs,
+products, couplings, finite traces, DAGs, denominator clearing, and
+online regret remains available to every language layer.
+
+\subsection{Discrete probability infrastructure}
+\label{sec:math-layer:probability}
+
+The largest part of \TT{Math/} is the discrete-probability layer.
+\TT{Math.Probability} introduces the library's notation for kernels
+and expected values over mathlib's \TT{PMF}.  It contains the finite
+sum wrappers used throughout the paper and the bounded-tsum lemmas
+that let expected utility remain meaningful on infinite outcome
+carriers when utilities are bounded.  \TT{Math.ProbabilityMassFunction}
+adds pushforward, bind-congruence, support, conditioning, and
+monotonicity lemmas for PMFs.
+
+Product distributions are factored into \TT{Math.PMFProduct}.  The
+basic operation is \TT{pmfPi}, the independent product of finitely
+many player-indexed PMFs.  The companion files record the algebra
+needed by mixed extensions and information-model proofs:\ coordinate
+projection, coordinate update, bind/factorization laws,
+conditioning, and independence from a coordinate.  This is why the
+same \TT{pmfPi} facts can support normal-form mixed extensions,
+correlation regimes, observation models, MAID compilation, and
+FOSG/MultiRound execution.
+
+The probabilistic relation layer is \TT{Math.Coupling}.  It defines
+relation lifting for PMFs by a joint distribution with prescribed
+marginals and support contained in the relation.  This is not a game
+notion, but it is the right vocabulary for bisimulation-style
+arguments:\ equality of laws, projection through a view, and
+one-step relational simulation are all special cases.  The companion
+\TT{Math.NondeterministicRefinement} file lifts the same discipline
+from single laws to families of laws indexed by an unweighted
+resolution type.
+
+\subsection{Runs, traces, and finite process closure}
+\label{sec:math-layer:runs}
+
+Several language compilers need to iterate stochastic transitions.
+\TT{Math.PMFIter} provides state-only Kleisli iteration:\ starting
+from a state and a transition kernel, it returns the law of the state
+after a fixed number of steps.  \TT{Math.TraceRun} records the entire
+finite state trace instead of only the final state.  The
+parameterized version, \TT{Math.ParameterizedChain}, proves the
+tower-property calculation used by Kuhn-style arguments:\ averaging
+over hidden pure strategies can be represented by a single sequential
+chain with local conditioning.
+
+\TT{Math.OutcomeClosure} packages a common finite-process argument.
+If a continuation value is preserved by every nonterminal step, and
+the process has a rank that decreases on supported transitions, then
+running the stopped process for enough fuel and projecting terminal
+states recovers the initial value.  FOSG outcome closure uses this
+as a game-neutral lemma; the game-specific file only supplies the
+state type, terminal predicate, transition kernel, rank, and
+observation map.
+
+\subsection{Finite combinatorics and ordered structure}
+\label{sec:math-layer:combinatorics}
+
+The language layer also uses finite combinatorics that is independent
+of payoffs.  \TT{Math.DAG} formalizes acyclic binary relations and
+topological orders, including the equivalence between acyclicity and
+existence of a topological order for finite predecessor-set DAGs.
+The MAID syntax uses this to separate graph well-formedness from
+strategic interpretation.  \TT{Math.BoundedLists} enumerates lists of
+bounded length over a finite alphabet, a small combinatorial tool
+used by finite-horizon trace and history constructions.
+
+\TT{Math.Reindex} contains generic finite-sum and \TT{ENNReal}
+tsum reindexing lemmas.  \TT{Math.SimplexApproximation} contains
+the denominator-clearing estimates for finite probability vectors.
+Those estimates are the arithmetic substrate for turning a feasible
+mixed payoff vector into a finite periodic path in the discounted
+folk-theorem development.
+
+\subsection{Analysis, optimization, and learning}
+\label{sec:math-layer:analysis}
+
+Some infrastructure is analytic rather than combinatorial.
+\TT{Math.OptimizationLocalGlobal} states a small abstract vocabulary
+for fixed points, no-improvement maps, and local optimality.  The
+mixed-Nash proof uses this style to isolate the algebraic step that
+turns a fixed point of the Nash map into a no-profitable-deviation
+profile.
+
+\TT{Math.OnlineLearning} is the game-free online-learning component.
+Its multiplicative-weights file defines the distribution updated by
+exponential weights and proves the finite-horizon external-regret
+bound.  The game-theoretic self-play theorem imports that result and
+then identifies each player's online losses with external-regret
+gains in the kernel game.  This prevents the no-regret proof from
+being entangled with equilibrium terminology.
+
+\TT{Math.SchauderFixedPoint} proves a Schauder fixed-point theorem
+for nonempty compact convex subsets of real normed spaces, using the
+standalone Brouwer theorem through a finite-net approximation.  The
+main mixed-Nash theorem uses the finite-dimensional Brouwer wrapper,
+not Schauder.  Schauder is included because it marks the mathematical
+shape of a compact-strategy extension:\ the missing layer is the
+game-theoretic compactness and continuity API, not the abstract
+fixed-point theorem.
+
+\subsection{Epistemic and semantic utilities}
+\label{sec:math-layer:semantic}
+
+Finally, \TT{Math.Knowledge} records the S5 knowledge operator
+induced by a view function.  It is deliberately stated without
+players, priors, or payoffs:\ indistinguishability is equality of
+views, knowledge is truth on the equivalence class, and coarsening is
+postcomposition by a projection.  The common-knowledge files in
+\TT{Concepts/Knowledge/} add the game-theoretic and probabilistic
+structure on top.
+
+The same pattern appears throughout the Math layer.  It supplies
+small, reusable mathematical contracts; the game library supplies
+the interpretations.  That boundary is one reason the same semantic
+core can support normal-form games, extensive-form games,
+information models, stochastic games, mechanisms, auctions,
+cooperative games, and learning dynamics without re-proving the
+underlying probability and finite-process algebra in each setting.
+
+\leancorr{\TT{Math/Probability.lean},
+\TT{Math/ProbabilityMassFunction.lean}, \TT{Math/PMFProduct/},
+\TT{Math/Coupling.lean}, \TT{Math/NondeterministicRefinement.lean},
+\TT{Math/PMFIter.lean}, \TT{Math/TraceRun.lean},
+\TT{Math/ParameterizedChain.lean}, \TT{Math/OutcomeClosure.lean},
+\TT{Math/DAG.lean}, \TT{Math/BoundedLists.lean},
+\TT{Math/Reindex.lean}, \TT{Math/SimplexApproximation.lean},
+\TT{Math/OptimizationLocalGlobal.lean}, \TT{Math/OnlineLearning/},
+\TT{Math/SchauderFixedPoint.lean}, and \TT{Math/Knowledge.lean}.}

@@ -1,11 +1,12 @@
 \section{Related work}
 \label{sec:related-work}
 
-We organize related work along three axes:\ the textbook tradition
+We organize related work along several axes:\ the textbook tradition
 the library mechanizes, prior efforts to mechanize fragments of
-game theory in interactive theorem provers, and adjacent
-formalizations in dependent type theory or higher-order logic that
-could plausibly serve as alternative platforms.
+game theory in interactive theorem provers, current Lean projects in
+the same neighborhood, and adjacent formalizations in dependent type
+theory or higher-order logic that could plausibly serve as alternative
+platforms.
 
 \subsection{Textbook game theory}
 \label{sec:rw:textbooks}
@@ -88,16 +89,72 @@ game-theoretic equilibria.
 standard simplex and its convex/topological API, finite-type
 infrastructure, and the surrounding analysis the library depends
 on are all in mathlib~\citep{mathlib2020}; the Brouwer fixed-point
-theorem itself is supplied by the standalone \TT{fixed-point-theorems-lean4}
-package~\citep{harfeFixedPointTheorems}.  Outside the present
-library, scattered Lean game-theory developments exist (mostly in
-the form of self-contained proofs of Nash existence for finite
-games and zero-sum minimax), but to our knowledge none constitute a
-library on the scale of the present chapter.  We are not aware of
-another Lean library covering the
-protocol/preference split, the language layer, the bridges, the
-Kuhn theorem at the observation-model level, or the
-mechanism-design layer at the level we have.
+theorem itself is supplied by the standalone
+\TT{fixed-point-theorems-lean4}
+package~\citep{harfeFixedPointTheorems}.
+
+The closest neighboring project is
+\TT{EconCSLib}~\citep{EconCSLib2026}, a public Lean~4 library and
+knowledge base for computational economics.  Its current scope
+includes strategic, extensive, and coalitional games; social choice
+and fair division; matching; auctions and mechanism design; and
+supporting fixed-point, minimax, and linear-programming material.
+The overlap with the present library is therefore substantial:
+equilibrium concepts, zero-sum games, mechanism design, voting,
+auctions, matching, and cooperative-game primitives all appear in
+both developments.
+
+The projects nevertheless have different design centers.
+\TT{EconCSLib} is organized as a broad computational-economics
+library, with lightweight domain-specific APIs, locally stated
+assumptions, and a large blueprint/knowledge-base layer.  The
+present library is organized around semantic interoperability:
+\TT{GameForm} and \TT{KernelGame} are the common stochastic targets,
+and the language layer proves compilation and bridge theorems from
+NFG, EFG, MAID, FOSG, multi-round, and intrinsic presentations into
+that target.  The two code bases are not API-compatible at the
+moment, but the mathematical overlap is large enough that a shared
+crosswalk of definitions, theorem statements, and intended adapters
+would be valuable.  Such coordination would reduce duplicated proof
+engineering and clarify which results should be shared, ported, or
+kept deliberately separate because they serve different interfaces.
+
+Several Lean developments focus on the Nash-existence slice.
+\TT{math-xmum/Brouwer}~\citep{MathXMUMBrouwer2026} and the
+\TT{Solo-ary/Game-Theory-Formalization}
+artifact~\citep{SoloAryGameTheoryFormalization2026} both formalize
+a Scarf/Brouwer route to mixed Nash equilibria in finite games.
+These are directly relevant to our \Cref{thm:nash-mixed} proof
+route, but their stated endpoint is narrower:\ fixed-point
+infrastructure and Nash existence, not a multi-language semantic
+library with theorem transport across representations.
+\TT{MixedMatched/formalizing-game-theory}
+~\citep{MixedMatchedFormalizingGameTheory} is an exploratory Lean
+formalization of game-theoretic structures, including heterogeneous
+strategy types and pure/mixed strategy profiles.  It is useful as a
+modeling comparison, but it does not try to provide the language
+layer, representation bridges, or theorem suite developed here.
+
+Other Lean projects overlap with specific subfields rather than with
+the whole library.  \TT{lean-social-choice}
+~\citep{LeanSocialChoice} formalizes social-choice results including
+Arrow's theorem; \TT{apportionmentlib}~\citep{Apportionmentlib2026}
+formalizes apportionment theory, including Balinski--Young-style
+impossibility results.  The combinatorial-games library
+\citep{LeanCombinatorialGames} develops Conway-style terminating
+two-player perfect-information games, nimbers, and surreal-number
+connections.  It is deep game theory, but it is a different
+formalism from the stochastic, expected-utility, partial-information
+games treated here.
+
+Among the Lean projects we found, the feature combination emphasized
+in this paper remains distinctive:\ a protocol/preference split, a
+multi-language layer, FOSG and MAID/EFG bridges, the Kuhn theorem at
+an observation-model level, and mechanism-design constructions all
+inside one semantic framework.  This is the comparison that matters
+for the claims made here; it is not a claim that other Lean
+formalizations are merely isolated or that future coordination is
+unnecessary.
 
 \paragraph{Other systems.}\ ACL2, HOL4, and Mizar each have
 isolated game-theoretic results we are aware of but no substantial
@@ -160,9 +217,24 @@ A different line of work mechanizes
 equilibrium reasoning about cryptographic and economic protocols
 directly.  \citet{HalpernPass2008, AbrahamDolevGonenHalpern2006}
 and successors formalize rationality-based protocol analysis and
-incentive-compatible distributed algorithms.  These are downstream consumers of a
-library like ours; they typically commit to one specific
-representation of a game (often a payoff matrix or an EFG-like
-tree) and prove protocol-specific results.  Our library is meant
-to make their job easier by supplying the strategic-form
-infrastructure they would otherwise build by hand.
+incentive-compatible distributed algorithms.
+
+Recent Lean case studies are in the same spirit.  The
+\TT{VerifiedHandshake} artifact~\citep{VerifiedHandshake2026}
+mechanizes a commitment wrapper for Stag-Hunt-ordered games and
+audits the axiom footprint of the proved statements.  It is not a
+general game-theory library; it is a sharp example of a
+protocol-specific equilibrium theorem.  Lean AMM work is similarly
+specific:\ \citet{PuscedduBartoletti2024AMM} and the associated
+\TT{lean4-amm} repository~\citep{Lean4AMM} formalize automated
+market-maker state and economic properties, while
+\TT{amm-axioms-lean}~\citep{AMMAxiomsLean2026} derives
+constant-product and weighted-geometric-mean AMM behavior from swap
+axioms.  These projects should be viewed as downstream or adjacent
+economic-protocol formalizations, not as substitutes for a reusable
+library of game representations.  They typically commit to one
+domain model and prove protocol-specific results.  Our library is
+meant to make that style of work less bespoke by supplying the
+strategic-form infrastructure, equilibrium predicates, stochastic
+semantics, and representation bridges that such developments would
+otherwise build by hand.
