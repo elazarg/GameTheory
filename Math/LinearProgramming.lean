@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.LinearProgramming.Basic
+import Math.LinearProgramming.Standard
 
 /-!
 # Linear Programming
