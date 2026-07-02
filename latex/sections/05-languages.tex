@@ -101,7 +101,7 @@ contain.
 \TT{CongestionGame}, \TT{PublicGoods}, \TT{Stackelberg}.
 The cooperative models live under \TT{Cooperative/} as
 \TT{CoalitionalGame}, \TT{Bargaining}, \TT{Matching}.
-Supplement~§4.1.}
+Supplement~§5.1.}
 
 \subsection{Extensive-form games}
 \label{sec:languages:efg}
@@ -235,7 +235,7 @@ Kuhn), \TT{Augmented} (the augmented EFG), \TT{Kuhn},
 \TT{Refinements} (subgame perfection,
 \TT{EFGGame.IsSubgamePerfectEq}), \TT{Examples} (binary choice
 plus the centipede and ultimatum), \TT{Tests}.
-Supplement~§4.2.}
+Supplement~§5.2.}
 
 \subsection{Multi-agent influence diagrams}
 \label{sec:languages:maid}
@@ -326,7 +326,7 @@ formal object does not depend on an arbitrary evaluation order.}
 \leancorr{\TT{Languages/MAID/} contains \TT{Syntax}, \TT{SOS},
 \TT{FrontierEval}, \TT{FrontierLemmas} (the diamond properties),
 \TT{FoldEval}, \TT{Prefix}, \TT{Compile}, \TT{CompileObs},
-\TT{Kuhn}, \TT{Theorems}.  Supplement~§4.3.}
+\TT{Kuhn}, \TT{Theorems}.  Supplement~§5.3.}
 
 \subsection{Multi-round games, repeated games, stochastic games}
 \label{sec:languages:multiround}
@@ -392,7 +392,7 @@ arrival odds chooses $1/3$.
 (\TT{CompileObsLin}, \TT{CompileObsLinAdequacy},
 \TT{CompileObsLinRecall}), \TT{RepeatedGame}, \TT{StochasticGame},
 \TT{AbsentMindedDriver}, \TT{Kuhn}, \TT{Theorems}.
-Supplement~§4.4.}
+Supplement~§5.4.}
 
 \subsection{Factored-observation stochastic games}
 \label{sec:languages:fosg}
@@ -453,7 +453,7 @@ theorem of \Cref{sec:theorems:kuhn}.
 \leancorr{\TT{Languages/FOSG/} contains \TT{Basic}, \TT{History},
 \TT{Information}, \TT{Strategy}, \TT{Values}, \TT{Execution},
 \TT{OutcomeClosure}, \TT{Serial}, \TT{Compile}, \TT{Kuhn},
-\TT{Theorems}.  Supplement~§4.5.}
+\TT{Theorems}.  Supplement~§5.5.}
 
 \subsection{Intrinsic-form games}
 \label{sec:languages:intrinsic}
@@ -495,7 +495,7 @@ involving the Intrinsic layer is part of
 \leancorr{\TT{Languages/Intrinsic/} contains the strategy
 carriers, causal-order and perfect-recall predicates, and the
 formal outcome-law equivalence for solvable models.  The
-definition and theorem anchors are listed in Supplement~§4.6.}
+definition and theorem anchors are listed in Supplement~§5.6.}
 
 \subsection{Bridges as commuting compilations}
 \label{sec:languages:bridges}
@@ -539,7 +539,7 @@ strategic-form theorem on the EFG side.
 \TT{NFG\_FOSG}, \TT{EFG\_NFG}, \TT{MAID\_EFG}, and \TT{FOSG/}
 (\TT{ObsModelCore}, \TT{AugmentedEFG}, \TT{SerialExec}); for example,
 \TT{MAID\_EFG} packages the MAID$\to$EFG bridge as a reduction.
-Supplement~§5.2.}
+Supplement~§6.2.}
 
 \subsection{Relation-parameterized expressiveness}
 \label{sec:languages:expressiveness}
@@ -575,10 +575,10 @@ $\mathrm{UtilityDistributionEquivalent}$ &
   distribution preserved at every profile. \\
 $\mathrm{UtilityDistributionSimulation}$ &
   One-way version of the above; the directed reduction. \\
-$\mathrm{EUEquivalent}$ &
+$\mathrm{ExpectedUtilityEquivalent}$ &
   Equal expected utility for each player at corresponding profiles
   (the equilibrium-relevant relation). \\
-$\mathrm{EUSimulation}$ &
+$\mathrm{ExpectedUtilitySimulation}$ &
   Directed EU-comparison; equilibria of the source pull back to
   the target. \\
 \bottomrule
@@ -613,4 +613,4 @@ contribution.}
 \leancorr{\TT{Languages/Expressiveness/} contains \TT{Basic}
 (\TT{Language}, \TT{Reduction}), \TT{Relations} (the relation
 taxonomy), \TT{CausalContext}, \TT{MAID\_EFG}, \TT{EFG\_FOSG}.
-Supplement~§5.1.}
+Supplement~§6.1.}

@@ -1061,7 +1061,7 @@ regret gains being nonpositive, and CE is equivalent to all swap
 regret gains being nonpositive.
 
 \paragraph{Approximate equilibria.}\
-\TT{Concepts/Equilibrium/ApproximateNash.lean}.  \TT{IsEpsilonNash $\varepsilon$}
+\TT{Concepts/Equilibrium/ApproximateNash.lean}.  \TT{Is}$\varepsilon$\TT{Nash}
 relaxes the Nash inequality by an additive $\varepsilon$ slack;
 $\varepsilon = 0$ recovers \TT{IsNash}.  Closure under
 $\varepsilon$-relaxation extends to the deviation-family schema,
@@ -1084,11 +1084,12 @@ team games are exact potential games with $\Phi = u_{\mathrm{any}}$
 \TT{TeamGame.lean}, \TT{SymmetricGame.lean},
 \TT{EvolutionaryStability.lean}.  \TT{IsZeroSum}:\ $\sum_i \util(\omega)(i)
 = 0$ for all $\omega$.  Constant-sum, team-game, and symmetric
-predicates are similar.  \TT{ZeroSumNash}, \TT{ConstantSumNash}
-record that two-player zero/constant-sum Nash profiles are exactly
-the maximin/security profiles.  \TT{IsEvolutionarilyStable} is the
-strict-dominance condition on a symmetric two-player game
-(\citep{MaynardSmithPrice1973}).
+predicates are similar.  \TT{ZeroSumNash.lean}, \TT{ConstantSumNash.lean}
+record payoff-sum and deviation identities for two-player zero- and
+constant-sum Nash profiles.  \TT{IsESS} is the evolutionary-stability
+condition --- a Nash condition together with a stability inequality ---
+on a symmetric two-player game, with strict Nash sufficient for it
+(\TT{isESS\_of\_strict\_nash})~\citep{MaynardSmithPrice1973}.
 
 \paragraph{Rationalizability and dominance solvability.}\
 \TT{Concepts/Dominance/} contains \TT{Rationalizability.lean},
@@ -1138,11 +1139,11 @@ top-level record is bunched.
 structure NFGGame ($\iota$ : Type) (A : $\iota \to$ Type) where\\
 \bd Outcome  : Type\\
 \bd outcome  : ($\forall$ i, A i) $\to$ Outcome\\
-\bd utility  : ($\forall$ i, A i) $\to$ $\iota \to \mathbb{R}$\\[3pt]
+\bd utility  : Outcome $\to$ $\iota \to \mathbb{R}$\\[3pt]
 noncomputable def NFGGame.toKernelGame (G : NFGGame $\iota$ A) : KernelGame $\iota$ where\\
 \bd Strategy := A\\
 \bd Outcome  := G.Outcome\\
-\bd utility  := fun $\omega$ i $\Rightarrow$ \dots\\
+\bd utility  := G.utility\\
 \bd outcomeKernel := fun $\sigma$ $\Rightarrow$ PMF.pure (G.outcome $\sigma$)
 \end{leanbox}
 
@@ -1252,7 +1253,7 @@ per-player history partitions (\TT{Languages/EFG/Augmented.lean}).
 
 \Faithfulness
 Faithful, with reformulation:\ distributional semantics rather
-than deterministic-with-lift.  See chapter §3.2 for the
+than deterministic-with-lift.  See chapter §10.6 for the
 rationale.  Subgame-perfect equilibrium
 (\TT{EFG.EFGGame.IsSubgamePerfectEq} in
 \TT{Languages/EFG/Refinements.lean}) is defined as a Nash
@@ -1268,18 +1269,20 @@ specialization), \TT{Refinements.lean} (subgame perfection,
 behavioral/pure refinements), \TT{Examples.lean}, \TT{Tests.lean}.
 
 \subsection{MAID: \texttt{Languages/MAID/}}
-\label{sec:supp:maid}\label{def:MAID.MAIDGame}
+\label{sec:supp:maid}\label{def:MAID.toKernelGame}
 
-\Anchor{MAID.MAIDGame.toKernelGame}
+\Anchor{MAID.toKernelGame}
 \begin{leanbox}
-structure MAIDGame where\\
-\bd Players      : Type ; [fin : Fintype Players]\\
-\bd Node         : Type\\
-\bd parents      : Node $\to$ Finset Node\\
-\bd nodeKind     : Node $\to$ NodeKind  -- chance, decision, utility\\
-\bd domain       : Node $\to$ Type ; chanceDist, decisionInfo, utilityFn fields\\
-\bd acyclic      : $\ldots$\\[3pt]
-noncomputable def MAIDGame.toKernelGame (G : MAIDGame) : KernelGame G.Players
+structure Struct (Player : Type) (n : Nat) where\\
+\bd kind       : Fin n $\to$ NodeKind Player  -- chance / decision / utility\\
+\bd parents    : Fin n $\to$ Finset (Fin n)\\
+\bd obsParents : Fin n $\to$ Finset (Fin n)\\
+\bd Val        : Fin n $\to$ Type             -- finite node domains\\
+\bd acyclic    : DAG.Acyclic ($\cdot \in$ parents $\cdot$)\\[3pt]
+structure Sem (S : Struct Player n) where\\
+\bd chanceCPD : (c : ChanceNode S) $\to$ Cfg S (S.parents c.val) $\to$ PMF (S.Val c.val)\\
+\bd utilityFn : (p) $\to$ (u : UtilityNode S p) $\to$ Cfg S (S.parents u.val) $\to \mathbb{R}$\\[3pt]
+noncomputable def toKernelGame (S : Struct Player n) (sem : Sem S) : KernelGame Player
 \end{leanbox}
 
 \Mathematical
@@ -1303,7 +1306,7 @@ the order-independence content is.
 
 \Faithfulness
 Faithful, with restriction to finite-domain nodes.  See chapter
-§5.4 for the rationale on why we accepted the proof obligations of
+§5.3 for the rationale on why we accepted the proof obligations of
 order-independent compilation rather than fixing a topological
 order.
 
@@ -1364,16 +1367,18 @@ standard payoff inconsistency:
 
 \Anchor{FOSG.toKernelGame}
 \begin{leanbox}
-structure FOSG ($\iota$ W A : Type) (Obs : $\iota \to$ Type) (Pub : Type) where\\
+structure FOSG ($\iota$ W : Type) [DecidableEq $\iota$]\\
+\bd (Act : $\iota \to$ Type) (PrivObs : $\iota \to$ Type) (PubObs : Type) where\\
 \bd init             : W\\
 \bd active           : W $\to$ Finset $\iota$\\
-\bd availableActions : (w : W) $\to \iota \to$ Set A\\
+\bd availableActions : (w : W) $\to$ (i : $\iota$) $\to$ Set (Act i)\\
 \bd terminal         : W $\to$ Prop\\
 \bd transition       : $\ldots$\\
 \bd reward, privObs, pubObs : $\ldots$\\
 \bd terminal\_active\_eq\_empty : $\ldots$\\
 \bd terminal\_no\_legal, nonterminal\_exists\_legal : $\ldots$\\[3pt]
-noncomputable def FOSG.toKernelGame (G : FOSG \dots) [BoundedHorizon] : KernelGame $\iota$
+noncomputable def FOSG.toKernelGame (G : FOSG \dots) (hNorm : G.HasNormalizedTerminalLaw) : KernelGame $\iota$\\
+noncomputable abbrev FOSG.toKernelGameOfBoundedHorizon (G : FOSG \dots) (hBound : G.BoundedHorizon k) : KernelGame $\iota$
 \end{leanbox}
 
 \Mathematical
@@ -1579,12 +1584,12 @@ some source-side unilateral deviation.
 \Anchor{mixed_nash_exists_of_bounded, mixed_nash_exists}
 \begin{leanbox}
 theorem KernelGame.mixed\_nash\_exists\_of\_bounded (G : KernelGame $\iota$)\\
-\bd [Fintype $\iota$] [DecidableEq $\iota$]\\
+\bd [Fintype $\iota$]\\
 \bd [$\forall$ i, Finite (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
 \bd \{$C$ : $\iota \to \mathbb{R}$\} (hbd : $\forall$ who $\omega$, |G.utility $\omega$ who| $\le$ C who) :\\
 \bd $\exists$ $\sigma$ : $\forall$ i, PMF (G.Strategy i),\ G.mixedExtension.IsNash $\sigma$\\[3pt]
 theorem KernelGame.mixed\_nash\_exists (G : KernelGame $\iota$)\\
-\bd [Fintype $\iota$] [DecidableEq $\iota$]\\
+\bd [Fintype $\iota$]\\
 \bd [$\forall$ i, Finite (G.Strategy i)] [$\forall$ i, Nonempty (G.Strategy i)]\\
 \bd [Finite G.Outcome] :\\
 \bd $\exists$ $\sigma$ : $\forall$ i, PMF (G.Strategy i),\ G.mixedExtension.IsNash $\sigma$
@@ -1593,7 +1598,7 @@ theorem KernelGame.mixed\_nash\_exists (G : KernelGame $\iota$)\\
 \Mathematical
 Every finite-strategy game with bounded player utilities has a
 mixed Nash equilibrium.  Hypotheses:\ finite player type,
-decidable equality on players, finite non-empty strategy space per
+finite non-empty strategy space per
 player, and a playerwise bound $|\util(\omega,i)| \le C_i$.
 The outcome carrier need not be finite.  The theorem
 \TT{mixed_nash_exists} is the finite-outcome wrapper that derives
@@ -1653,7 +1658,7 @@ equations.
 Faithful.  The library is honest about non-constructivity:\
 \TT{mixed_nash_exists_of_bounded} is \TT{noncomputable} because Brouwer is.
 A constructive route via Sperner's lemma is listed in chapter
-§10 as a future direction.
+§12.1 as a future direction.
 
 \subsection{Correlated and coarse correlated equilibrium existence}
 \label{sec:supp:ce-exists}\label{def:correlatedEq_exists}
@@ -1791,14 +1796,16 @@ structure ObsModelCore ($\iota\,\sigma$ : Type) (Obs : $\iota \to$ Type)\\
 \bd  -- world state, transition kernel, per-player observation, $\ldots$\\[3pt]
 def NoNontrivialInfoStateRepeat (O : ObsModelCore $\ldots$) : Prop\\
 def HorizonSeparation                (O : ObsModelCore $\ldots$) : Prop\\
-def ActionPosteriorLocal            (O : ObsModelCore $\ldots$) : Prop\\
-def PerStepPlayerRecall             (O : ObsModelCore $\ldots$) : Prop\\[3pt]
+def ActionPosteriorLocal            (O : ObsModelCore $\ldots$) (i : $\iota$) : Prop\\
+def PerStepPlayerRecall             (O : ObsModel $\ldots$) : Prop\\[3pt]
 theorem ObsModelCore.kuhn\_behavioral\_to\_mixed\\
-\bd (O : ObsModelCore $\ldots$) [$\ldots$] (hH : HorizonSeparation O) (hR : NoNontrivialInfoStateRepeat O) :\\
-\bd $\forall$ $\beta$ : BehavioralProfile O,\ runDist O $\beta$ = (behavioralToMixedJoint $\beta$).bind (runDistPure O)\\[3pt]
+\bd (O : ObsModelCore $\ldots$) [$\ldots$] (hR : NoNontrivialInfoStateRepeat O)\\
+\bd ($\beta$ : BehavioralProfile O) (k : Nat) :\\
+\bd runDist O k $\beta$ = (behavioralToMixedJoint $\beta$).bind (runDistPure O k)\\[3pt]
 theorem ObsModelCore.kuhn\_mixed\_to\_behavioral\_semantic\\
-\bd (O : ObsModelCore $\ldots$) [$\ldots$] (hL : ActionPosteriorLocal O) :\\
-\bd $\forall$ $\mu$ : PMF (PureProfile O), $\exists$ $\beta$, runDist O $\beta$ = $\mu$.bind (runDistPure O)
+\bd (O : ObsModelCore $\ldots$) (hMass : StepMassInvariant O) (hFactor : StepSupportFactorization O)\\
+\bd (hL : $\forall$ i, ActionPosteriorLocal O i) ($\mu$ : $\forall$ i, PMF (LocalStrategy O i)) (k : Nat) :\\
+\bd $\exists$ $\beta$, runDist O k $\beta$ = (pmfPi $\mu$).bind (runDistPure O k)
 \end{leanbox}
 
 \Mathematical
@@ -1811,23 +1818,26 @@ $\InfoState_i \to \PMF{\Act_i}$; mixed profiles are per-player
 distributions over the deterministic functions
 $\InfoState_i \to \Act_i$.
 
-The four hypothesis predicates control which direction of Kuhn
-applies:
+The predicates that govern the two directions:
 \begin{itemize}\itemsep1pt
 \item \emph{NoNontrivialInfoStateRepeat}:\ no information state
   is visited twice along any trace (except at trivially-arity
   states).  This enforces tree-shaped reachability and is needed
   for the $B \to M$ direction's product-of-information-states
   construction to be well-defined.
-\item \emph{HorizonSeparation}:\ a sequential separation of
-  histories by depth, also needed for $B \to M$.
+\item \emph{HorizonSeparation}:\ a structural separation of
+  information states by horizon; it holds automatically on
+  snapshot-refined models and is not a separate hypothesis of the
+  $B \to M$ theorem.
 \item \emph{ActionPosteriorLocal}:\ the conditional distribution
   of an action given an information state does not depend on
-  information outside the player's recall.  Sufficient for $M \to
-  B$.  Strictly weaker than perfect recall in the textbook sense.
-\item \emph{PerStepPlayerRecall}:\ the syntactic version of
-  ActionPosteriorLocal that is automatic for snapshot-refined
-  information states.
+  information outside the player's recall.  Together with the
+  step-level regularity conditions \TT{StepMassInvariant} and
+  \TT{StepSupportFactorization}, it drives the $M \to B$ direction.
+  Strictly weaker than perfect recall in the textbook sense.
+\item \emph{PerStepPlayerRecall}:\ an \TT{ObsModel}-level recall
+  property that implies \TT{ActionPosteriorLocal} and is automatic
+  for snapshot-refined information states.
 \end{itemize}
 
 The $B \to M$ direction (\TT{kuhn_behavioral_to_mixed}) constructs
@@ -1848,7 +1858,7 @@ strictly weaker hypotheses.  The $B \to M$ direction needs no
 recall at all; the $M \to B$ direction needs only
 ActionPosteriorLocal, which holds whenever the information
 structure has the per-step locality property — a condition
-strictly weaker than full perfect recall.  See chapter §6.5 for
+strictly weaker than full perfect recall.  See chapter §7.7 for
 the rationale.
 
 \Variants
@@ -1875,9 +1885,9 @@ language-specific Kuhn instantiations.
 
 \Anchor{BayesianGame, BayesianGame.toKernelGame}
 \begin{leanbox}
-structure BayesianGame ($\iota$ : Type) [Fintype $\iota$] where\\
-\bd $\Theta$       : $\iota \to$ Type ; [Fintype, Nonempty]\\
-\bd Act     : $\iota \to$ Type ; [Fintype, Nonempty]\\
+structure BayesianGame ($\iota$ : Type) where\\
+\bd $\Theta$       : $\iota \to$ Type\\
+\bd Act     : $\iota \to$ Type\\
 \bd prior   : PMF ($\forall$ i, $\Theta$ i)\\
 \bd utility : ($\forall$ i, $\Theta$ i) $\to$ ($\forall$ i, Act i) $\to \iota \to \mathbb{R}$\\[3pt]
 abbrev Strategy (B : BayesianGame $\iota$) (i : $\iota$) := B.$\Theta$ i $\to$ B.Act i\\[3pt]
@@ -1912,23 +1922,23 @@ Osborne–Rubinstein Chapter 24.
 Reformulation.  The textbook Bayesian Nash equilibrium quantifies
 over type-conditional deviations; we use the equivalent ex-ante
 formulation, where a deviation is a function $\Theta_i \to
-\mathrm{Act}_i$ replacing the player's strategy globally.  The
-ex-post and interim variants are derived definitions.
-\emph{Restriction:}\ finite type and action spaces.
+\mathrm{Act}_i$ replacing the player's strategy globally.  The type
+and action spaces are arbitrary; the only discreteness is the
+\TT{PMF} prior.
 
 \subsection{Finite information design: \texttt{Mechanism/InformationDesign.lean}}
-\label{sec:supp:info-design}\label{def:SignalStructure}\label{def:BayesPlausible}\label{def:PersuasionProblem}
+\label{sec:supp:info-design}\label{def:SignalStructure}\label{def:HasPriorMarginal}\label{def:PersuasionProblem}
 
-\Anchor{SignalStructure, BayesPlausible, PersuasionProblem}
+\Anchor{SignalStructure, HasPriorMarginal, PersuasionProblem}
 \begin{leanbox}
 structure SignalStructure ($\Omega$ Msg : Type) where\\
 \bd kernel : $\Omega \to$ PMF Msg\\[3pt]
 noncomputable def joint (S : SignalStructure $\Omega$ Msg) (prior : PMF $\Omega$) : PMF ($\Omega \times$ Msg) :=\\
 \bd prior.bind (fun $\omega$ $\Rightarrow$ (S.kernel $\omega$).map (fun m $\Rightarrow$ ($\omega$, m)))\\[3pt]
-def BayesPlausible (prior : PMF $\Omega$) ($\nu$ : PMF ($\Omega \times$ Msg)) : Prop :=\\
+def HasPriorMarginal (prior : PMF $\Omega$) ($\nu$ : PMF ($\Omega \times$ Msg)) : Prop :=\\
 \bd $\nu$.map Prod.fst = prior\\[3pt]
-theorem joint\_bayesPlausible (S : SignalStructure $\Omega$ Msg) (prior : PMF $\Omega$) :\\
-\bd BayesPlausible prior (S.joint prior)\\[3pt]
+theorem joint\_hasPriorMarginal (S : SignalStructure $\Omega$ Msg) (prior : PMF $\Omega$) :\\
+\bd HasPriorMarginal prior (S.joint prior)\\[3pt]
 theorem messageMarginal\_apply [Fintype $\Omega$] [Finite Msg]\\
 \bd (S : SignalStructure $\Omega$ Msg) (prior : PMF $\Omega$) (m : Msg) :\\
 \bd S.messageMarginal prior m = $\sum\ \omega : \Omega,$ prior $\omega$ * S.kernel $\omega$ m\\[3pt]
@@ -1970,7 +1980,7 @@ identity on which those results can be built.
 
 \Anchor{GeneralMechanism, revelation_principle}
 \begin{leanbox}
-structure GeneralMechanism ($\iota$ : Type) [Fintype $\iota$] where\\
+structure GeneralMechanism ($\iota$ : Type) where\\
 \bd $\Theta$       : $\iota \to$ Type ; Act : $\iota \to$ Type\\
 \bd outcome : ($\forall$ i, Act i) $\to \iota \to \mathbb{R}$\\[3pt]
 def StrategyProfile (M : GeneralMechanism $\iota$) := $\forall$ i, M.$\Theta$ i $\to$ M.Act i\\[3pt]
@@ -2007,9 +2017,10 @@ type-dependent reporting strategies.  The library includes
 
 \Anchor{vickrey_truthful_dominant}
 \begin{leanbox}
-noncomputable def vickreyPayoff (v : Fin n $\to \mathbb{R}$) (bids : Fin n $\to \mathbb{R}$) (who : Fin n) : $\mathbb{R}$ :=\\
+variable \{$\iota$ : Type\} [Fintype $\iota$] [DecidableEq $\iota$]\\
+noncomputable def vickreyPayoff (v : $\iota \to \mathbb{R}$) (bids : $\iota \to \mathbb{R}$) (who : $\iota$) : $\mathbb{R}$ :=\\
 \bd if bids who > maxOtherBid bids who then v who - maxOtherBid bids who else 0\\[3pt]
-theorem vickrey\_truthful\_dominant (v : Fin n $\to \mathbb{R}$) (who : Fin n) :\\
+theorem vickrey\_truthful\_dominant (v : $\iota \to \mathbb{R}$) (who : $\iota$) :\\
 \bd $\forall$ bids b', vickreyPayoff v (Function.update bids who (v who)) who $\ge$\\
 \bdd vickreyPayoff v (Function.update bids who b') who
 \end{leanbox}
@@ -2160,13 +2171,16 @@ separate Lean theorem.
 \subsection{A small Bayesian game}
 \label{sec:supp:examples:bayesian}
 
-A two-player coordination game with binary types:\ each player has
-type $\theta_i \in \{0, 1\}$ drawn independently uniform; actions
-are $a_i \in \{L, R\}$; payoffs are $u_i(\theta, a) = [\![ a_T = a_F ]\!]
-\cdot [\![ a_T = \theta_T ]\!]$.  The Bayes-Nash equilibrium has
-each player play $a_i = \theta_i$;\ the Lean proof unfolds
-\TT{bayesNash_iff_exAnteEU} and verifies the four-deviation
-inequality directly under the uniform prior.
+Rubinstein's \emph{electronic mail game}~\citep{Rubinstein1989}
+(\TT{Languages/ElectronicMailGame.lean}) is a two-player
+coordinated-attack game with Boolean players, a finite email chain of
+endpoint worlds, and a uniform prior over them.  The tempting rule
+\TT{attackOnMessage} --- attack as soon as any message is observed ---
+is \emph{not} a Bayes-Nash equilibrium:\
+\TT{attackOnMessage\_not\_bayesNash} refutes
+\TT{game.BayesNash attackOnMessage} by unfolding
+\TT{bayesNash\_iff\_exAnteEU} and exhibiting the profitable deviation
+in which player \TT{true} never attacks.
 
 % =====================================================================
 \section{Reading order}

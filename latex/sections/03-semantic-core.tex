@@ -63,7 +63,7 @@ quantifies over $\mathrm{depDev}$.  We exploit this in
 results once on the schema.}
 
 \leancorr{\TT{Core/GameForm.lean} for the record and derived
-operations; supplement~§2.1 has the full Lean signatures.}
+operations; supplement~§3.1 has the full Lean signatures.}
 
 \subsection{Kernel games}
 \label{sec:semantic-core:kernelgame}
@@ -112,8 +112,8 @@ bounded-utility hypothesis on outcomes.
 \leancorr{\TT{Core/KernelGame.lean} (\TT{KernelGame},
 \TT{KernelGame.eu}, \TT{KernelGame.mixedExtension}, \TT{reindex});
 \TT{Core/GameForm.lean} (\TT{toGameForm}, \TT{withUtility} and the
-round-trip lemmas); \TT{Math/PMFProduct.lean} (\TT{pmfPi});
-supplement~§2.2--2.4.}
+round-trip lemmas); \TT{Math/PMFProduct/Basic.lean} (\TT{pmfPi});
+supplement~§3.2--3.4.}
 
 \subsection{Solution concepts as predicates: the \texttt{*For} style}
 \label{sec:semantic-core:for-style}
@@ -129,7 +129,7 @@ $\WDom$, $\SDom$, $\IsCorrelatedEq$, $\IsCoarseCorrelatedEq$:
 
 \item \emph{Preference-parameterized.} $\IsNashFor$,
   $\IsBRfor$, $\WDomFor$, $\SDomFor$,
-  $\IsCorrelatedEq_{\mathit{For}}$, $\ldots$:\ predicates on $\GF$
+  $\IsCorrelatedEqFor$, $\ldots$:\ predicates on $\GF$
   taking an additional argument, a preference relation
   $\Pref : \Players \to \PMF{\Outcome} \to \PMF{\Outcome} \to \mathsf{Prop}$
   on outcome distributions.  ``$\Pref_i \,d_1\,d_2$'' means
@@ -254,20 +254,23 @@ that the translated profile has the same joint payoff law
 strategy translations preserving the same payoff law.  Thus
 utility-distribution morphisms transport payoff-law preferences;
 protocol maps transport preferences over protocol outcomes.  The
-genuinely EU-only variants — which preserve each player's mean but
-not the full payoff law — are the explicitly specialized
-\TT{EUMorphism} and \TT{EUGameIsomorphism}.
+specialized \TT{EUMorphism} and \TT{EUGameIsomorphism} extend the
+\TT{Morphism} and \TT{GameIsomorphism} records with an explicit
+expected-utility-preservation field:\ payoff-law preservation already
+entails EU preservation for bounded or finite-outcome games, so these
+variants package that corollary as a ready-made input to the EU-level
+transport theorems rather than a weaker mean-only notion.
 
-\leancorr{Morphism records in \TT{Core/GameMorphism.lean}
-(\TT{ProtocolMap}, \TT{KernelGame.Morphism}, with the
-\TT{id\_comp}/\TT{comp\_id}/\TT{comp\_assoc} laws);
+\leancorr{The \TT{ProtocolMap} record is in \TT{Core/GameForm.lean};
+\TT{KernelGame.Morphism} and its
+\TT{id\_comp}/\TT{comp\_id}/\TT{comp\_assoc} laws are in \TT{Core/GameMorphism.lean};
 \TT{Core/GameSimulation.lean} for kernel-game simulations and
 bisimulations; \TT{Core/GameIsomorphism.lean} for isomorphisms;
 \TT{Concepts/Foundations/GameMorphism.lean} and
 \TT{Concepts/Foundations/UtilityInvariance.lean} package the standard
 solution-concept transport results; \TT{Concepts/Foundations/EUProperties.lean}
 and \TT{Concepts/Foundations/OfEUProperties.lean} record EU structural
-properties and the \TT{ofEU} round-trip.  Supplement~§2.6.}
+properties and the \TT{ofEU} round-trip.  Supplement~§3.6.}
 
 \subsection{Reindexing and the player type}
 \label{sec:semantic-core:reindex}

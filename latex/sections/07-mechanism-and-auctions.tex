@@ -4,10 +4,12 @@
 The mechanism-design and auction layers are direct consumers of
 the kernel-game core.  They serve a dual role:\ they formalize
 classical results that belong in any game-theory library, and
-they smoke-test the reusability of the core (every definition
-below is built on the kernel-game/game-form layer or the
-solution-concept catalogue, with no representation-specific
-machinery re-introduced).
+they smoke-test the reusability of the core.  Bayesian games and the
+auction payoff layers build on the kernel-game/game-form layer and the
+solution-concept catalogue; the quasilinear mechanism and
+social-choice layers introduce their own finite structures (payments,
+contracts, signal structures, bargaining, social-welfare functions)
+while reusing the preference and solution-concept vocabulary.
 
 \subsection{Bayesian games}
 \label{sec:mech:bayesian}
@@ -69,7 +71,7 @@ library hold for finite type and action spaces.}
 
 \leancorr{\TT{Mechanism/BayesianGame.lean} (\TT{BayesianGame},
 \TT{exAnteEU}, \TT{toKernelGame}, \TT{BayesNash},
-\TT{bayesNash\_iff\_exAnteEU}).  Supplement~§7.1.}
+\TT{bayesNash\_iff\_exAnteEU}).  Supplement~§8.1.}
 
 \subsection{Finite information design}
 \label{sec:mech:info-design}
@@ -84,9 +86,9 @@ prior $\mu \in \PMF{\Omega}$, it induces the joint law
 \]
 over states and messages, together with the message marginal
 $\nu_S^M$, whose finite-sum form is recorded as
-\TT{messageMarginal\_apply}.  The predicate \TT{BayesPlausible}
+\TT{messageMarginal\_apply}.  The predicate \TT{HasPriorMarginal}
 says that a joint state-message distribution has state marginal
-$\mu$; the basic theorem \TT{joint\_bayesPlausible} proves that
+$\mu$; the basic theorem \TT{joint\_hasPriorMarginal} proves that
 every signal structure satisfies this identity.  The library also
 exposes two canonical signals:\ \TT{uninformative}, which sends the
 unique message regardless of the state, and \TT{fullInformation},
@@ -116,8 +118,8 @@ objective on which finite persuasion examples and later optimal-design
 theorems can be stated.
 
 \leancorr{\TT{Mechanism/InformationDesign.lean}
-(\TT{SignalStructure}, \TT{joint}, \TT{BayesPlausible},
-\TT{joint\_bayesPlausible}, \TT{messageMarginal\_apply},
+(\TT{SignalStructure}, \TT{joint}, \TT{HasPriorMarginal},
+\TT{joint\_hasPriorMarginal}, \TT{messageMarginal\_apply},
 \TT{PersuasionProblem}, \TT{IsPersuasive},
 \TT{senderEU\_eq\_sum}, \TT{senderEU\_eq\_sum\_senderScore}).}
 
@@ -191,7 +193,7 @@ hypothesis on $\sigma$ rules out profitable deviations.
 \leancorr{\TT{Mechanism/MechanismDesign.lean} and
 \TT{Mechanism/RevelationPrinciple.lean} (\TT{GeneralMechanism},
 \TT{IsBNE}, \TT{toDirect}, \TT{revelation\_principle}).
-Supplement~§7.2.}
+Supplement~§8.3.}
 
 \paragraph{Vocabulary and surrounding lemmas.}\
 The library exposes \TT{isStrategyProof} as a synonym for
@@ -308,8 +310,29 @@ alternatives in its range and a nonempty finite electorate is
 dictatorial — is also formalized, by the classical reduction to
 Arrow through an induced social-welfare function.
 
+The library also formalizes the classical results around majority
+rule.  \emph{May's theorem}~\citep{May1952} characterizes the rule
+axiomatically:\ over two alternatives, and for an arbitrary finite
+electorate in which voters may be indifferent, a social decision
+function agrees with majority rule --- the sign of the vote tally ---
+on every profile if and only if it is anonymous, neutral, and
+positively responsive (\TT{may\_theorem}).  \emph{Condorcet's paradox}
+--- pairwise majority preference can
+cycle even when every voter has a strict ranking --- is recorded as
+the acyclicity failure of the majority relation
+(\TT{condorcetMajority\_not\_acyclic}).  Its positive counterpart is
+\emph{Black's median-voter theorem}~\citep{Black1948}:\ when
+preferences are single-peaked, the median voter's ideal point is a
+Condorcet winner (\TT{median\_is\_condorcet\_winner}).  \emph{Sen's
+liberal paradox}~\citep{Sen1970} completes the impossibility group:\
+no social decision function is simultaneously Paretian and minimally
+liberal --- each of two individuals decisive over some pair of
+alternatives (\TT{sen\_paretian\_liberal}).
+
 \leancorr{\TT{Mechanism/SocialChoice.lean}, \TT{Mechanism/Arrow.lean},
-\TT{Mechanism/GibbardSatterthwaite.lean}.}
+\TT{Mechanism/GibbardSatterthwaite.lean}, \TT{Mechanism/Condorcet.lean},
+\TT{Mechanism/MedianVoter.lean}, \TT{Mechanism/May.lean},
+\TT{Mechanism/SenParetianLiberal.lean}.}
 
 \subsection{Auctions}
 \label{sec:mech:auctions}
@@ -321,14 +344,14 @@ levels of completeness:
 \item \emph{Vickrey (second-price)}~\citep{Vickrey1961}.  The
 highest bidder wins and pays the second-highest bid; truthful
 bidding is a weakly dominant strategy.  The proof is by case
-analysis on whether $i$'s bid exceeds the maximum other bid; in
+analysis on whether $i$'s valuation exceeds the maximum other bid; in
 each case, the EU of bidding $v_i$ matches or exceeds the EU of
 any other bid.
 
 \item \emph{First-price sealed bid}~\citep{Vickrey1961}.  The
 highest bidder pays their own bid.  The file defines the
 deterministic first-price game and proves that no single bid is a
-dominant strategy under the stated non-triviality hypotheses.
+dominant strategy for any bidder.
 
 \item \emph{All-pay auction}~\citep{KrishnaMorgan1997}.  Every
 bidder pays their own bid regardless of winning.  The
@@ -340,8 +363,9 @@ profit, rent dissipation, and a symmetric negative-payoff lemma.
 Groves1973}.  Generalizes Vickrey to multi-item, combinatorial
 settings:\ each agent's payment equals the externality they impose
 on others.  The library proves dominant-strategy incentive
-compatibility on a finite set of allocations and finite type
-spaces.
+compatibility for finitely many players, with the efficient
+allocation supplied as a hypothesis and no finiteness imposed on the
+allocation or type spaces.
 \end{itemize}
 
 Vickrey and first-price are direct kernel-game constructions via
@@ -366,4 +390,4 @@ would be the natural next step.}
 
 \leancorr{\TT{Auctions/Vickrey.lean} (\TT{vickrey\_truthful\_dominant}),
 \TT{Auctions/FirstPrice.lean}, \TT{Auctions/AllPay.lean},
-\TT{Auctions/VCG.lean}.  Supplement~§7.3.}
+\TT{Auctions/VCG.lean}.  Supplement~§8.4.}

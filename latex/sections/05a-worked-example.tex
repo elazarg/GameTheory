@@ -31,8 +31,8 @@ enters only when we lift to its mixed extension
 
 \paragraph{Solution-concept instantiation.}\
 The library's $\IsNash$ predicate
-(\Cref{sec:solution-concepts:nash}) on the compiled kernel game
-unfolds to
+(\Cref{sec:solution-concepts:nash}) on the compiled kernel game,
+whose NFG-level form is \TT{IsNashPure}, unfolds to
 \[
   \forall i : \Players,\,\forall a' \in \Act.\quad
     u_i(\Profile) \;\ge\; u_i(\Profile[i \mapsto a']),
@@ -63,12 +63,13 @@ Prisoner's Dilemma to a one-shot FOSG with two world states
 ($\mathsf{init}, \mathsf{terminal}$), every player active at
 $\mathsf{init}$, no observations, and a single deterministic
 transition delivering the NFG payoff as the FOSG reward.  The
-bridge theorem
-\TT{NFG\_FOSG.NFGGame.toFOSG\_terminal\_iff} closes the
-expressiveness contract:\ the EU of any pure profile in the FOSG
-agrees with the EU in the NFG, so $\Profile^*$ remains a Nash
-equilibrium under the utility-distribution-preserving morphism
-transport (\Cref{thm:transport}).
+bridge lemma
+\TT{NFG.NFGGame.toFOSG\_udist\_eq} makes the joint payoff law of
+every pure profile in the FOSG agree with that of the NFG; packaged
+as the utility-distribution-preserving morphism
+\TT{NFGGame.toFOSG\_morphism}, it transports the Nash property, so
+$\Profile^*$ remains an equilibrium of the FOSG image
+(\Cref{thm:transport}).
 
 \paragraph{What this trace illustrates.}\
 \emph{(i)} The NFG syntax is a $\sim$30-line Lean record;

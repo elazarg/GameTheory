@@ -20,14 +20,17 @@ sources for the existence theorem in the form proved in
 \Cref{thm:nash-mixed}.  \citet{Aumann1974, Aumann1987} introduce
 correlated equilibrium and its EU equivalence with
 incentive-compatibility under a correlation device.
-\citet{Selten1965} introduces subgame perfection, the refinement
-connected here to the one-shot deviation principle;
-\citet{Selten1975} introduces trembling-hand perfection, which is
-not one of the theorem statements formalized in this chapter.
+\citet{Selten1965} introduces subgame perfection and
+\citet{Selten1975} trembling-hand perfection, both of which the
+library formalizes.  The one-shot deviation principle---the
+standard characterization of subgame-perfect equilibrium in
+finite perfect-information games---is the form proved in
+\Cref{thm:odp}.
 \citet{Harsanyi1967} formalizes Bayesian games and
 type-conditional strategies.  \citet{Kuhn1953} is the source of
 the behavioral-vs-mixed equivalence, originally proved under
-perfect recall;~\citet{Aumann1964} sharpened the recall hypothesis.
+perfect recall;~\citet{Aumann1964} extended it to infinite
+extensive games.
 \citet{Friedman1971} and~\citet{FudenbergMaskin1986} are the
 classical references for the discounted repeated-game folk theorem
 formalized in \Cref{thm:folk-discounted}.
@@ -40,9 +43,10 @@ Myerson's revelation-principle exposition;
 the auction layer follows~\citet{Krishna2010}.  Algorithmic
 game theory, including the price of anarchy, is treated
 in~\citet{NisanRoughgardenTardosVazirani2007}, with Roughgarden's
-smoothness framework~\citep{Roughgarden2005,Roughgarden2015} and
+smoothness framework~\citep{Roughgarden2015}, his selfish-routing
+analysis of the price of anarchy~\citep{Roughgarden2005}, and
 Koutsoupias–Papadimitriou's original
-PoA~\citep{Koutsoupias1999} both relevant.
+PoA~\citep{Koutsoupias1999} all relevant.
 
 The factored-observation stochastic-game
 formalism~\citep{Kovarik2022} unifies extensive-form games,
@@ -112,8 +116,8 @@ present library is organized around semantic interoperability:
 \TT{GameForm} and \TT{KernelGame} are the common stochastic targets,
 and the language layer proves compilation and bridge theorems from
 NFG, EFG, MAID, FOSG, multi-round, and intrinsic presentations into
-that target.  The two code bases are not API-compatible at the
-moment, but the mathematical overlap is large enough that a shared
+that target.  The two code bases are not API-compatible, but the
+mathematical overlap is large enough that a shared
 crosswalk of definitions, theorem statements, and intended adapters
 would be valuable.  Such coordination would reduce duplicated proof
 engineering and clarify which results should be shared, ported, or
@@ -165,11 +169,12 @@ library; we omit them for space.
 
 The library's reliance on \TT{PMF} places it in a tradition of
 discrete probability formalizations.  \citet{HurdMcIverMorgan2005}
-and \citet{Audebaud2009} formalized discrete probabilistic
-programs in Coq with semantic foundations that anticipate the
-discrete Giry monad.  \citet{Tassarotti2019} mechanized the
-formal-semantics side of higher-order probabilistic programming
-in Lean and Coq.  \citet{Lochbihler2016} (CryptHOL) does similar
+mechanized probabilistic guarded commands in HOL, and
+\citet{Audebaud2009} formalized proofs of randomized algorithms
+in Coq, both with semantic foundations that anticipate the
+discrete Giry monad.  \citet{Tassarotti2019} developed a
+separation logic for concurrent randomized programs in Coq.
+\citet{Lochbihler2016} (CryptHOL) does similar
 work in Isabelle, with cryptographic applications.  Mathlib's
 \TT{PMF}~\citep{mathlib2020} provides the API on which our
 library builds.

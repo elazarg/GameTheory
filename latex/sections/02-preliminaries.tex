@@ -120,7 +120,7 @@ proof genuinely needs them — Brouwer's fixed point on a finite
 product of simplices, \TT{Finite.exists\_max}, or an enumeration of
 pure strategies.  A parallel family of bounded-utility
 \TT{\_of\_bounded} lemmas in \TT{Math.Probability} and
-\TT{Concepts/MixedExtension} removes finite outcome carriers while
+\TT{Concepts/Mixed/MixedExtension} removes finite outcome carriers while
 retaining the finite strategy/tree hypotheses used by the proof, and
 replays the algebra of expected utility under a $|u| \le C$ hypothesis
 without \TT{[Finite \Outcome]}.  The dependent product
@@ -222,11 +222,11 @@ left/right unit, and pushforward laws.  These are mathlib lemmas
 we use as black boxes.
 \end{itemize}
 
-A small companion file \TT{Math.Probability} adds the few
-discrete-probability constructions mathlib does not already
-contain (notably \TT{Math.PMFProduct.pmfPi}, the independent
-product of an indexed family of $\PMF{\cdot}$'s over a finite
-index but otherwise arbitrary per-coordinate types, used in the
-mixed extension of a kernel game; and the bounded-utility tsum
+A few small companion files add the discrete-probability
+constructions mathlib does not already contain:\ \TT{Math.PMFProduct}
+provides \TT{pmfPi}, the independent product of an indexed family of
+$\PMF{\cdot}$'s over a finite index but otherwise arbitrary
+per-coordinate types, used in the mixed extension of a kernel game;
+and \TT{Math.Probability} provides the bounded-utility tsum
 identities used to lift expected-utility reasoning past
-\TT{[Finite \Outcome]}).
+\TT{[Finite \Outcome]}.

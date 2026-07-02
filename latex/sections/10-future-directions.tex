@@ -234,9 +234,13 @@ $\ge 3$ alternatives is manipulable — is formalized as well
 Arrow through an induced social-welfare function.
 \emph{Sen's liberal paradox}~\citep{Sen1970}, showing that even a
 minimal individual-rights condition is inconsistent with Pareto
-efficiency plus universal domain, remains open;\ it is statable on
-the existing social-choice setup, its proof is combinatorial and
-does not require probability, and it would fit the library cleanly.
+efficiency plus universal domain, is formalized as well
+(\Cref{sec:mech:social}, \TT{Mechanism/SenParetianLiberal.lean}), on
+the same strict-ranking social-choice layer.  With the ordinal
+impossibility results in place, the natural extensions are the
+randomized and quantitative refinements — probabilistic social choice
+and manipulation-robustness bounds — that would build on the library's
+discrete-probability layer.
 
 \subsection{Multi-agent learning}
 \label{sec:future:learning}
@@ -262,9 +266,10 @@ observation-model layers were built to host.
 The Gale–Shapley deferred-acceptance algorithm and the existence of a
 stable matching from an arbitrary strict preference
 profile~\citep{GaleShapley1962} are formalized
-(\Cref{thm:gale-shapley}, \TT{Cooperative/GaleShapley.lean}).  The
-natural extensions are the finer structural results:\ proposing-side
-optimality (the proposer-optimal stable matching), the lattice
+(\Cref{thm:gale-shapley}, \TT{Cooperative/GaleShapley.lean}), together
+with proposer-optimality and receiver-pessimality
+(\TT{daMatching\_man\_optimal}, \TT{daMatching\_woman\_pessimal}).  The
+natural extensions are the remaining structural results:\ the lattice
 structure of the set of stable matchings, strategy-proofness for the
 proposing side, and the many-to-one (hospitals/residents)
 generalization with the rural-hospitals theorem.  A computable

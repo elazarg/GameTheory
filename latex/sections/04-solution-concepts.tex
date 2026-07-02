@@ -82,7 +82,7 @@ statement at the profile-distribution level.
 
 \leancorr{Schema in \TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean};
 transport in \TT{Concepts/Foundations/DeviationSimulation.lean}; full Lean text
-in supplement~§3.1 and §3.2.}
+in supplement~§4.1 and §4.2.}
 
 \subsection{Nash equilibrium and best response}
 \label{sec:solution-concepts:nash}
@@ -117,10 +117,10 @@ preference and is propagated to the EU level by the bridge of
 
 A \emph{strict Nash equilibrium} requires the inequality to be
 strict for every $s' \neq \Profile_i$.  The library's
-\TT{StrictNashProperties.lean} records the implication strict
-$\Rightarrow$ Nash, asymmetry under a strict preference that is
-incompatible with reverse weak preference, and uniqueness in
-ordinal-potential games.
+\TT{StrictNashProperties.lean} records that a strictly dominant
+profile is a strict Nash equilibrium, that a strict Nash equilibrium
+is a Nash equilibrium, and that each player's strategy at a strict
+Nash equilibrium is the unique best response to the rest.
 
 \paragraph{Strong Nash equilibrium.}\
 A \emph{strong Nash equilibrium}~\citep{Aumann1959} strengthens
@@ -257,9 +257,9 @@ welfare $\le$ best CE welfare $\le$ best CCE welfare.  The
 \emph{correlation welfare gap} is CE minus Nash; the
 \emph{coarse correlation welfare gap} is CCE minus Nash.  The Nash
 benchmark is the best \emph{pure} Nash welfare, matching
-the price-of-anarchy convention of
+the best-Nash-welfare (price-of-stability) convention of
 \Cref{sec:solution-concepts:welfare}.  This is the additive analogue of
-the Ashlagi–Monderer–Tennenholtz \emph{value of correlation}, which is a
+the Ashlagi–Monderer–Tennenholtz \emph{value of correlation}~\citep{AshlagiMondererTennenholtz2008}, which is a
 welfare \emph{ratio} against the best mixed Nash; the additive gap here
 needs no positivity assumption.  In a team game it collapses to zero
 (\TT{IsTeamGame.correlationWelfareGap\_eq\_zero}):\ with aligned
@@ -392,13 +392,14 @@ with the dual \emph{price of stability}
 $\sup_\Profile \Welfare / \sup_{\Profile \in \Nash} \Welfare$.
 The library formalizes the welfare quantities the ratios are built
 from — optimal welfare, worst Nash welfare, best Nash welfare —
-the comparison lemmas between them, and the ratio-valued ratios
+the comparison lemmas between them, and the ratios
 themselves (\TT{priceOfAnarchy}, \TT{priceOfStability}) packaged
 against a nonempty-Nash hypothesis.  Both ratios are at least $1$
 when the corresponding welfare denominator is positive
 (\TT{one\_le\_priceOfAnarchy},
 \TT{one\_le\_priceOfStability}), and
-$\PoS \le \PoA$ whenever the worst Nash welfare is positive
+$\PoS \le \PoA$ whenever the worst Nash welfare is positive and
+the optimal welfare is nonnegative
 (\TT{priceOfStability\_le\_priceOfAnarchy}).  In a team game
 (\Cref{sec:solution-concepts:team}), the welfare-maximizing
 profile is itself Nash, so the best Nash welfare equals the
@@ -408,7 +409,8 @@ optimal welfare and $\PoS = 1$
 \paragraph{Smoothness and the robust price of anarchy.}\
 The library formalizes Roughgarden's \emph{smoothness}
 technique~\citep{Roughgarden2015} for bounding the price of anarchy
-uniformly.  A game is \emph{$(\lambda,\mu)$-smooth} when, for any two
+uniformly.  A game is \emph{$(\lambda,\mu)$-smooth} (with nonnegative scalar
+smoothness parameters $\lambda,\mu$) when, for any two
 profiles $s, t$, the total utility from each player unilaterally
 deviating toward $t$ against $s$ is at least
 $\lambda\,\Welfare(t) - \mu\,\Welfare(s)$.  Smoothness at once bounds
@@ -487,7 +489,7 @@ individual-rationality interface in
 \subsection{Regret}
 \label{sec:solution-concepts:regret}
 
-Internal and external regret are recorded as deviation gains, with
+Swap (internal) and external regret are recorded as deviation gains, with
 equilibrium corresponding to all such gains being nonpositive.
 External regret of a profile distribution $\mu$ for player $i$ and
 constant deviation $s'$ is
@@ -497,7 +499,7 @@ constant deviation $s'$ is
     \EU(\KG, \mathrm{deviate}_i(\mu,s'), i)
     - \EU(\KG,\mu,i);
 \end{equation}
-internal regret replaces the constant $s'$ by a function of
+swap regret replaces the constant $s'$ by a function of
 $\Profile_i$ and is the dual of the $\mathcal{D}^{\mathrm{dep}}$
 deviation family that defines correlated equilibrium.  The
 library proves the structural fact that a profile distribution

@@ -80,7 +80,7 @@ live in a downstream module.}
 and \TT{KernelGame.mixed\_nash\_exists} in
 \TT{Concepts/Existence/NashExistenceMixed.lean}; the product-simplex
 Brouwer wrapper in \TT{Concepts/Existence/ProductSimplexBrouwer.lean}.
-Supplement~§6.1.}
+Supplement~§7.1.}
 
 \subsection{Existence of correlated and coarse correlated equilibria}
 \label{sec:theorems:correlated-existence}
@@ -121,7 +121,7 @@ finite mixed-Nash existence theorem above.}
 \TT{KernelGame.correlatedEq\_exists},
 \TT{KernelGame.coarseCorrelatedEq\_exists\_of\_bounded}, and
 \TT{KernelGame.coarseCorrelatedEq\_exists} in
-\TT{Theorems/CorrelatedEqExistence.lean}.  Supplement~§6.2.}
+\TT{Theorems/CorrelatedEqExistence.lean}.  Supplement~§7.2.}
 
 \subsection{Learning dynamics and no-regret convergence}
 \label{sec:theorems:learning}
@@ -224,7 +224,7 @@ Fictitious play in \TT{Concepts/Learning/FictitiousPlay.lean}
 (\TT{isFictitiousPlay\_limit\_isNash}) and
 \TT{Concepts/Learning/FictitiousPlayPotential.lean}
 (\TT{IsExactPotential.eventually\_isεNash\_of\_isFictitiousPlay}).
-Supplement~§6.2.}
+Supplement~§7.2.}
 
 \subsection{The minimax theorem}
 \label{sec:theorems:minimax}
@@ -259,10 +259,9 @@ the finite saddle inequalities; the Lean theorem is stated in the
 guarantee form above.
 
 \leancorr{Statements \TT{KernelGame.von\_neumann\_minimax} and
-\TT{KernelGame.von\_neumann\_minimax\_of\_bounded} in
-\TT{Theorems/Minimax.lean}; supporting zero-sum-Nash equality in
-\TT{Concepts/ZeroSum/ZeroSumNash.lean} (\TT{IsZeroSum.nash\_eu\_eq}).
-Supplement~§6.3.}
+\TT{KernelGame.von\_neumann\_minimax\_of\_bounded}, together with the
+supporting zero-sum-Nash equality \TT{IsZeroSum.nash\_eu\_eq}, in
+\TT{Theorems/Minimax.lean}.  Supplement~§7.3.}
 
 \subsection{Discounted folk theorem approximation}
 \label{sec:theorems:folk}
@@ -300,11 +299,11 @@ strategy spaces, and finite outcomes.  If
 then $v$ is approachable by Nash equilibrium payoffs of the
 observable mixed-action discounted repeated game over
 $\KG^{\mathrm{mix}}$:\ for every
-$\epsilon>0$ there is $\delta_0<1$ such that every
+$\varepsilon>0$ there is $\delta_0<1$ such that every
 $\delta\in(\delta_0,1)$ admits a discounted repeated-game Nash
 equilibrium $\Sigma^\delta$ with payoff $w^\delta$ satisfying
 \[
-  \forall i,\qquad |w^\delta_i - v_i| < \epsilon.
+  \forall i,\qquad |w^\delta_i - v_i| < \varepsilon.
 \]
 \end{theorem}
 
@@ -339,7 +338,7 @@ cycle close to the cycle average, and one ensures that the
 one-period deviation gain is dominated by the discounted
 continuation loss from punishment.  The trigger profile is then
 proved Nash for all $\delta$ above the common threshold, and its
-payoff is within $\epsilon$ of $v$.
+payoff is within $\varepsilon$ of $v$.
 \end{itemize}
 
 \tradeoff{The theorem is stated for the repeated game over the
@@ -352,10 +351,11 @@ repeated-game semantics could refine the interface later; the
 payoff-set approximation and trigger-incentive proof already
 isolate the main analytic work.}
 
-\leancorr{\TT{Concepts/Welfare/FolkTheorem.lean} defines feasible payoff
+\leancorr{\TT{Concepts/Welfare/FolkTheorem/} defines feasible payoff
 sets, opponent minmax values, discounted repeated strategies,
-periodic paths, trigger strategies, and
-\TT{discounted\_folk\_theorem\_approx}.  The generic
+periodic paths, and trigger strategies across
+\TT{Feasible}/\TT{Discounting}/\TT{Periodic}/\TT{Trigger}, with
+\TT{discounted\_folk\_theorem\_approx} in \TT{Main.lean}.  The generic
 denominator-clearing estimate is in
 \TT{Math/SimplexApproximation.lean}.}
 
@@ -419,7 +419,7 @@ rational utilities would compile but is not packaged.}
 and \TT{EFG.zermelo} in \TT{Theorems/OneShotDeviation.lean} and
 \TT{Theorems/Zermelo.lean}; the subtree disjointness lemma is
 \TT{perfectInfo\_disjoint\_subtrees}; the reachability relation
-is \TT{EFG.ReachBy}.  Supplement~§6.4.}
+is \TT{EFG.ReachBy}.  Supplement~§7.4.}
 
 \subsection{Kuhn's theorem: \texorpdfstring{behavioral $\leftrightarrow$ mixed strategies}{behavioral vs.\ mixed strategies}}
 \label{sec:theorems:kuhn}
@@ -448,9 +448,9 @@ specialized to the relevant carrier.}
 
 \begin{theorem}[Kuhn behavioral $\to$ mixed]
 \label{thm:kuhn-bm}
-Under the bounded-horizon hypothesis (no infinite traces) and the
-\emph{no-non-trivial info-state repeat} hypothesis, every
-behavioral profile $\beta$ admits an equivalent mixed profile
+Provided nontrivial information states do not recur at different
+horizons (the \emph{no-non-trivial info-state repeat} hypothesis),
+every behavioral profile $\beta$ admits an equivalent mixed profile
 $\mu(\beta)$ in the sense
 \[
   \evalDist(\beta) \;=\; \mu(\beta) \mathbin{\bind} \evalPure.
@@ -470,8 +470,9 @@ admits an equivalent behavioral profile $\beta(\mu)$ in the sense
 \noindent The two directions are not symmetric.  $B \to M$ does
 not need recall — the mixed lottery can be constructed
 ex-ante by independent product across information states — but
-does need horizon-separation (which holds on snapshot-refined
-$\InfoState$'s).  $M \to B$ requires the per-step recall property
+does need the no-non-trivial info-state repeat condition, a
+horizon-separation property that holds on snapshot-refined
+$\InfoState$'s.  $M \to B$ requires the per-step recall property
 that, given a player's information state, the conditional
 distribution of their action under $\mu$ does not depend on
 information \emph{outside} the player's recall.  This is
@@ -499,13 +500,14 @@ positive:\ language-specific Kuhn theorems become single-line
 corollaries of a single core result.}
 
 \leancorr{\TT{Theorems/Kuhn/} contains \TT{ObsModel} (the
-snapshot-refined wrapper), \TT{ObsModelCore}, \TT{KuhnModel}, the
-two proof files \TT{BehavioralToMixedCore} and
-\TT{MixedToBehavioralCore}, and \TT{CorrelatedRealization} (the
-alternative $M \to B$ route).  The hypothesis predicates
-\TT{NoNontrivialInfoStateRepeat}, \TT{HorizonSeparation},
-\TT{ActionPosteriorLocal}, \TT{PerStepPlayerRecall} live on
-\TT{ObsModelCore}.  Supplement~§6.5.}
+snapshot-refined wrapper) and \TT{KuhnModel} (which defines the
+\TT{ObsModelCore} structure), the two proof files
+\TT{BehavioralToMixedCore} and \TT{MixedToBehavioralCore}, and
+\TT{CorrelatedRealization} (the alternative $M \to B$ route).  The
+predicates \TT{NoNontrivialInfoStateRepeat}, \TT{HorizonSeparation},
+and \TT{ActionPosteriorLocal} are defined on \TT{ObsModelCore};
+\TT{PerStepPlayerRecall} is defined on the \TT{ObsModel} wrapper.
+Supplement~§7.5.}
 
 \subsection{Welfare and welfare theorems}
 \label{sec:theorems:welfare}
@@ -568,12 +570,14 @@ uses the four classical assumptions above: efficiency, symmetry,
 the null-player axiom, and additivity.  Scalar homogeneity is not a
 separate hypothesis of \TT{shapleyValue\_unique}.
 
-\leancorr{\TT{Cooperative/CoalitionalGame.lean}
-(\TT{shapleyValue}, \TT{shapleyValue\_unique}); supporting
-infrastructure \TT{unanimityGame}, \TT{unanimityCoeff},
+\leancorr{\TT{shapleyValue} is in
+\TT{Cooperative/CoalitionalGame/Core.lean};
+\TT{shapleyValue\_unique} and the supporting infrastructure
+(\TT{unanimityGame}, \TT{unanimityCoeff},
 \TT{unanimity\_decomposition}, \TT{allocation\_on\_unanimityGame},
 \TT{gameSum}, \TT{gameSum\_allocation\_eq},
-\TT{eq\_gameSum\_decompTerm}.}
+\TT{eq\_gameSum\_decompTerm}) are in
+\TT{Cooperative/CoalitionalGame/Shapley.lean}.}
 
 \paragraph{Core certificates from the unanimity basis.}\
 The same decomposition also supports core-membership proofs.  The
@@ -631,14 +635,17 @@ but the library's \TT{exists\_stable} is \TT{noncomputable} because
 the argmax over remaining choices and the fixed-point extraction route
 through classical choice.  Extracting the $O(n^2)$ algorithm as a
 computable function with the same correctness proof is a natural
-refinement.  The theorem fixes the proposing side; the companion
-optimality results (the proposing side receives its best stable
-partner, the lattice structure of stable matchings) are outside this
-theorem package.}
+refinement.  Deferred acceptance designates one side as proposers; the companion
+optimality results — that the proposing side receives its best stable
+partner (\TT{daMatching\_man\_optimal}) and the receiving side its
+worst (\TT{daMatching\_woman\_pessimal}) — are proved, while the
+lattice structure of stable matchings remains outside the current
+development.}
 
 \leancorr{\TT{Cooperative/GaleShapley.lean}
-(\TT{MatchingMarket}, \TT{daStep},
-\TT{exists\_daStep\_iterate\_fixed}, \TT{fixedPoint\_isMatching},
-\TT{fixedPoint\_ir}, \TT{exists\_stable}); the stability predicates
-\TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} are reused from
+(\TT{daStep}, \TT{exists\_daStep\_iterate\_fixed},
+\TT{fixedPoint\_isMatching}, \TT{fixedPoint\_ir}, \TT{exists\_stable},
+\TT{daMatching\_man\_optimal}, \TT{daMatching\_woman\_pessimal}); the
+\TT{MatchingMarket} structure and the stability predicates
+\TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} are in
 \TT{Cooperative/Matching.lean}.}
