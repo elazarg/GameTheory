@@ -6,6 +6,8 @@ Authors: GameTheory contributors
 
 import Math.LinearProgramming.Basic
 import Math.LinearProgramming.Standard
+import Math.LinearProgramming.StrongDuality
+import Math.LinearProgramming.StrongComplementarity
 
 /-!
 # Linear Programming
