@@ -7,7 +7,12 @@ Authors: GameTheory contributors
 import GameTheory.Cooperative.CoalitionalGame
 import GameTheory.Cooperative.Bargaining
 import GameTheory.Cooperative.Matching
+import GameTheory.Cooperative.MatchingSymmetry
 import GameTheory.Cooperative.GaleShapley
+import GameTheory.Cooperative.GaleShapley.RuralHospitals
+import GameTheory.Cooperative.GaleShapley.OptionalOrder
+import GameTheory.Cooperative.GaleShapley.Perfect
+import GameTheory.Cooperative.GaleShapley.OptionalLattice
 
 /-!
 # GameTheory.Cooperative
@@ -37,6 +42,16 @@ and lives in the strategic branch as `IsTeamGame`, `SymmetricGame`, etc.
   solutions for `n`-player bargaining problems.
 - `Matching` — two-sided matching markets and Gale-Shapley-style
   stability concepts.
+- `MatchingSymmetry` — side-swapping and inverse matching facts.
 - `GaleShapley` — deferred acceptance and existence of a stable matching
   under strict preferences.
+- `GaleShapley.RuralHospitals` — matched-agent invariance for stable matchings
+  with outside options.
+- `GaleShapley.OptionalOrder` — stable-matching order with outside options,
+  including Gale-Shapley greatest-element optimality without balance or
+  complete acceptability.
+- `GaleShapley.Perfect` — perfection and partner extraction in balanced
+  complete-acceptability stable markets.
+- `GaleShapley.OptionalLattice` — optional-market stable join, meet, and
+  lattice laws.
 -/

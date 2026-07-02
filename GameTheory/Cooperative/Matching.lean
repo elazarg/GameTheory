@@ -66,6 +66,21 @@ def IsStable (M : MatchingMarket α β) (μ : α → Option β) : Prop :=
     M.prefB b a ≥ M.reserveB b) ∧
   ¬∃ a b, M.IsBlockingPair μ a b
 
+/-- Stable matchings of a market, bundled as a subtype. -/
+abbrev StableMatching (M : MatchingMarket α β) : Type :=
+  { μ : α → Option β // M.IsStable μ }
+
+namespace StableMatching
+
+instance (M : MatchingMarket α β) : CoeFun M.StableMatching (fun _ => α → Option β) where
+  coe μ := μ.1
+
+theorem ext {M : MatchingMarket α β} {μ ν : M.StableMatching} (h : ∀ a, μ a = ν a) :
+    μ = ν :=
+  Subtype.ext (funext h)
+
+end StableMatching
+
 /-- The empty matching is a valid matching. -/
 theorem empty_isMatching : IsMatching (fun (_ : α) => (none : Option β)) := by
   intro _ _ b h₁; exact absurd h₁ (by simp)
