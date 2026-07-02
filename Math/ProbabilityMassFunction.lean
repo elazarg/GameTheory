@@ -495,6 +495,14 @@ theorem bind_congr_of_ne_zero
     μ.bind f = μ.bind g := by
   exact bind_congr_on_support μ f g (fun a ha => hfg a (by simpa [PMF.mem_support_iff] using ha))
 
+/-- PMFs are extensional in their real-valued coordinate weights. -/
+theorem eq_of_forall_toReal_eq
+    (μ ν : PMF α) (h : ∀ a, (μ a).toReal = (ν a).toReal) :
+    μ = ν := by
+  ext a
+  exact (ENNReal.toReal_eq_toReal_iff' (PMF.apply_ne_top μ a) (PMF.apply_ne_top ν a)).1
+    (h a)
+
 theorem pmf_eq_of_subsingleton
     {α : Type*} [Subsingleton α] (p q : PMF α) : p = q := by
   classical
