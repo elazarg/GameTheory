@@ -21,3 +21,4 @@ import Math.SimplexApproximation
 import Math.OnlineLearning
 import Math.MeasureTheory.UnitInterval
 import Math.FixedPoint.KKM
+import Math.LinearProgramming
