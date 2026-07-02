@@ -1,6 +1,10 @@
 import Math.Probability
+import Math.Fin
+import Math.Fintype
+import Math.Fintype.Transport
 import Math.Reindex
 import Math.ProbabilityMassFunction
+import Math.ProbabilityMassFunction.Simplex
 import Math.PMFProduct
 import Math.Coupling
 import Math.PMFIter
@@ -15,3 +19,5 @@ import Math.DAG
 import Math.SchauderFixedPoint
 import Math.SimplexApproximation
 import Math.OnlineLearning
+import Math.MeasureTheory.UnitInterval
+import Math.FixedPoint.KKM

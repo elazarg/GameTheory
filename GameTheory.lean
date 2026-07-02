@@ -21,6 +21,7 @@ import GameTheory.Concepts.Foundations.BestResponse
 import GameTheory.Concepts.Foundations.PrefPreorderProperties
 import GameTheory.Concepts.Foundations.EUProperties
 import GameTheory.Concepts.Foundations.OfEUProperties
+import GameTheory.Concepts.Foundations.VNM
 import GameTheory.Core.GameIsomorphism
 import GameTheory.Core.GameSimulation
 import GameTheory.Concepts.Foundations.UtilityInvariance
@@ -104,6 +105,8 @@ import GameTheory.Concepts.Classes.EvolutionaryStability
 
 -- Minimax
 import GameTheory.Concepts.ZeroSum.Minimax
+import GameTheory.Concepts.ZeroSum.MatrixGame
+import GameTheory.Concepts.ZeroSum.MatrixGame.Geometry
 
 -- Mechanism design
 import GameTheory.Mechanism.BayesianGame
@@ -115,24 +118,29 @@ import GameTheory.Mechanism.MechanismDesign
 import GameTheory.Mechanism.RevelationPrinciple
 import GameTheory.Mechanism.Monotonicity
 import GameTheory.Mechanism.AffineMaximizer
+import GameTheory.Mechanism.Myerson
 import GameTheory.Mechanism.Contracts.Basic
 
 -- Social choice and information
 import GameTheory.Mechanism.SocialChoice
+import GameTheory.Mechanism.FairDivision
 import GameTheory.Mechanism.Arrow
 import GameTheory.Mechanism.GibbardSatterthwaite
 import GameTheory.Mechanism.SenParetianLiberal
 import GameTheory.Mechanism.Condorcet
 import GameTheory.Mechanism.MedianVoter
+import GameTheory.Mechanism.May
 import GameTheory.Concepts.Knowledge.CommonKnowledge
 import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
 
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic
 import GameTheory.Auctions.Vickrey
+import GameTheory.Auctions.ReserveVickrey
 import GameTheory.Auctions.FirstPrice
 import GameTheory.Auctions.VCG
 import GameTheory.Auctions.AllPay
+import GameTheory.Auctions.Knapsack
 
 -- Cooperative game theory and non-strategic-form game models
 import GameTheory.Cooperative
