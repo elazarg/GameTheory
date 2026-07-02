@@ -1,268 +1,135 @@
 # GameTheory (Lean 4)
 
-A formalization of finite game theory in Lean 4 / Mathlib, covering normal-form
-games, extensive-form games, multi-agent influence diagrams (MAIDs),
-factored-observation stochastic games (FOSGs), and their interconnections.
+`GameTheory` is a Lean 4/mathlib library for finite and discrete game theory.
+It formalizes strategic-form games, sequential games, mechanism design,
+auctions, social choice, fair division, cooperative games, and the mathematical
+infrastructure needed to connect them.
 
-The library is organized around a single semantic target — `KernelGame` — that
-packages strategy spaces, stochastic outcomes, and utility. Solution concepts
-like Nash equilibrium, dominance, and correlated equilibrium are defined once on
-this shared abstraction, then inherited by every concrete representation through
-compilation and bridging.
+The main organizing idea is a common semantic target, `KernelGame`: strategy
+spaces for each player, a stochastic outcome kernel, and utilities on outcomes.
+Concrete representations such as normal-form games, extensive-form games,
+multi-agent influence diagrams, multi-round games, factored-observation
+stochastic games, and intrinsic-form games compile into this target. Solution
+concepts are then stated once on the semantic core and reused across languages.
 
-## Theorems
+## Highlights
 
-Formal proofs of standard results in finite game theory:
+The library contains mechanized versions of several standard finite-game
+theory results.
 
-- **Nash existence** — every finite game has a mixed Nash equilibrium
-  (via Brouwer fixed point on product simplices)
-- **Minimax** — von Neumann's minimax theorem for finite two-player zero-sum games
-- **Kuhn's theorem** — equivalence of mixed and behavioral strategies under
-  perfect recall, proved at a semantic model layer and instantiated for four
-  game representations:
-  - **EFG** — behavioral ↔ mixed for extensive-form games with information sets
-  - **MAID** — behavioral policy ↔ product mixed strategy for multi-agent
-    influence diagrams under DAG perfect recall
-  - **Sequential** — behavioral ↔ mixed for protocol-based sequential games
-  - **FOSG** — behavioral ↔ mixed for factored-observation stochastic games,
-    via the bridge to `ObsModelCore` and natively in terms of FOSG histories
-- **Zermelo / backward induction** — finite perfect-information games have
-  pure subgame-perfect equilibria
-- **One-shot deviation principle** — SPE characterization via single-step
-  deviations
-- **Correlated equilibrium existence** — every finite game has a correlated
-  equilibrium
-- **Folk theorem (discounted, approximate)** — every strictly
-  individually-rational feasible payoff vector of the mixed extension is
-  approachable by Nash equilibrium payoffs of the infinite discounted repeated
-  game as δ → 1, via an explicit trigger-strategy construction with finite
-  cycle approximation and minmax punishment
-- **MAID → EFG perfect recall preservation** — a MAID with perfect recall
-  produces an EFG tree with perfect recall, using DAG topological ordering
-- **Aumann's agreement theorem** — agents with a common prior who share an
-  information-partition cell have equal posteriors ("agreeing to disagree" is
-  impossible), with the full-agreement version on common self-evident events
-  and an S5 knowledge operator (`Concepts/Knowledge/CommonKnowledge.lean`)
-- **Monderer–Samet approximate agreement** — the common-*p*-belief
-  generalization: when posteriors are common *p*-belief, agents' reports differ
-  by at most `2(1 − p)`, recovering exact agreement as `p → 1`
-  (`Concepts/Knowledge/ApproximateCommonKnowledge.lean`)
+**Equilibrium and zero-sum games**
 
-## Core abstractions
+- Mixed Nash equilibrium existence for finite games, via Brouwer on product
+  simplices.
+- Correlated and coarse-correlated equilibrium existence.
+- Von Neumann minimax for finite two-player zero-sum games.
+- Security levels, saddle-point vocabulary, zero-sum and constant-sum structure.
 
-| Abstraction | Role |
+**Sequential games**
+
+- Zermelo/backward induction for finite perfect-information extensive games.
+- The one-shot deviation principle for subgame-perfect equilibrium.
+- Kuhn's behavioral/mixed equivalence, proved on an observation-model layer and
+  instantiated for several concrete game representations.
+- Perfect-recall preservation results for language bridges such as MAID to EFG.
+
+**Learning and repeated games**
+
+- Multiplicative weights with an explicit finite-horizon regret bound.
+- No-regret play implies approximate coarse correlated equilibrium.
+- Blackwell approachability and regret matching.
+- Fictitious-play convergence facts, including the exact-potential-game route.
+- An approximate discounted folk theorem for observable mixed-action repeated
+  games.
+
+**Mechanism design, auctions, and social choice**
+
+- Bayesian games, finite information-design primitives, and a finite revelation
+  principle.
+- Dominant-strategy implementability: weak monotonicity, affine maximizers, and
+  VCG as the canonical case.
+- Single-parameter Myerson payments: monotonicity, envelope payments, DSIC, and
+  uniqueness for zero-normalized continuous-slice payments.
+- Vickrey, reserve Vickrey, first-price, all-pay, VCG, and knapsack auctions.
+- Arrow, Gibbard-Satterthwaite, May's theorem, Condorcet, median voter, and
+  Sen's liberal paradox.
+
+**Fair division**
+
+- Indivisible-goods EF, EF1, EFX, proportionality, and maximin-share
+  definitions and existence results.
+- EF1 allocations via envy-cycle and round-robin rules.
+- Two-agent EFX for indivisible goods.
+- Divisible cake-cutting on `[0,1]`: cut-and-choose, Dubins-Spanier
+  proportionality, and Stromquist envy-free existence via KKM.
+
+**Cooperative game theory and matching**
+
+- TU coalitional games, the Shapley value, and Shapley uniqueness through the
+  unanimity-game basis.
+- Banzhaf and Shapley-Shubik power indices, convex games, core facts, cost of
+  stability, and the easy direction of Bondareva-Shapley.
+- Nash, egalitarian, and Kalai-Smorodinsky bargaining solutions.
+- Gale-Shapley stable matching via deferred acceptance, proposer optimality,
+  receiver pessimality, rural-hospitals invariants, and the lattice of stable
+  matchings.
+
+**Expected utility and mathematical support**
+
+- A finite von Neumann-Morgenstern expected-utility representation theorem.
+- Discrete probability support for `PMF`, products, conditioning, couplings, and
+  bounded expected utility.
+- Finite combinatorics, DAGs, finite-carrier transport, KKM covers, unit
+  interval measure/cut lemmas, online learning, and fixed-point support.
+
+## Architecture
+
+The non-cooperative part of the library is organized as:
+
+```text
+Languages  ──compile──▶  KernelGame / GameForm  ──theorems──▶  solution concepts
+```
+
+`GameForm` is the utility-free protocol layer. `KernelGame` adds utilities and
+expected-utility solution concepts. Preference-parametric versions of the
+solution concepts live on `GameForm`; expected-utility specializations live on
+`KernelGame`.
+
+The language layer treats concrete presentations as syntax plus semantics:
+
+| Layer | Presentation |
 |---|---|
-| `GameForm` | Utility-free game: strategies, outcomes, stochastic kernel. Protocol-level constructions live in `Core/`; preference-parametric solution concepts over game forms live in `Concepts/Equilibrium/GameFormSolutionConcepts.lean`. |
-| `KernelGame` | `GameForm` + utility function. EU-based solution concepts (`IsNash`, `IsDominant`, …) live in `Concepts/Equilibrium/SolutionConcepts.lean`. |
-| `ObsModel` | Observation-indexed actions over a `DSMachine`. Canonical model for Kuhn's theorem. |
-| `InfoModel` | State-based sequential game model with observations, actions, and signals. ODP and other sequential theorems are stated at this level. |
+| NFG | Simultaneous strategic choice |
+| EFG | Extensive-form games with information sets |
+| MAID | Graph-structured decisions and utilities |
+| MultiRound | Protocol-based sequential and repeated games |
+| FOSG | Factored-observation stochastic games |
+| Intrinsic | Witsenhausen-style intrinsic information structures |
 
-`Payoff ι` is just `ι → ℝ`. Probabilities are `PMF` (discrete distributions).
-There are no continuous strategy spaces or measure-theoretic foundations.
+The cooperative branch is intentionally separate. Coalitional games, bargaining,
+and matching do not compile to `KernelGame`; their primitives are coalition
+values, feasible payoff sets, and preference rankings rather than strategic
+profiles.
 
-## Solution concepts
+## Scope
 
-The `Concepts/` directory defines ~40 interrelated notions, including:
+The library is finite/discrete by design.
 
-- Nash equilibrium, strict Nash, approximate (ε-)Nash
-- Dominant strategies, strict/weak dominance, iterated elimination
-- Correlated and coarse correlated equilibrium, and the correlation welfare gap
-  (the welfare gain from the best pure Nash to the best correlated / coarse
-  correlated equilibrium — the additive analogue of the value of correlation)
-- Equilibrium payoff sets (`nashPayoffSet` / `correlatedPayoffSet` /
-  `coarseCorrelatedPayoffSet`) and a finite **signal-timing separation**
-  (`Concepts/Correlation/SignalTiming.lean`): revealing a public coin before vs
-  after an irreversible decision changes the equilibrium payoff set. In the
-  witness, player 1's achievable value is `5/2` at Nash and correlated
-  equilibrium, `11/4` at coarse correlated (all three caps tight), but `3` when
-  the signal arrives late — so coarse correlation strictly beats correlation
-  here (`correlatedPayoffSet ⊊ coarseCorrelatedPayoffSet`). A finite instance of
-  the non-monotone value of information in games, with the single-agent
-  Blackwell contrast (`3 ≥ 5/2`) as a foil
-- Observable cheap-talk extensions and babbling-equilibrium transport
-- Best response, best-response dynamics
-- Mixed-extension gain tests, including uniform mixed balance ⇒ Nash and
-  binary-labeled matching-pennies-style exact mixed equilibrium characterizations
-- Security strategies (maximin), minimax guarantees, saddle points
-- Potential games (exact, ordinal, weighted), finite improvement property, and
-  the Monderer–Shapley mixed (multilinear) extension of an exact potential
-- Rationalizability via iterated elimination of **mixed**-strictly-dominated
-  strategies (the standard Bernheim–Pearce notion; the weaker pure-dominator
-  variant is retained), strict dominance by a mixed strategy, dominance
-  solvability
-- Evolutionary stable strategies (ESS)
-- Price of anarchy — including smoothness and the robust PoA bound that extends
-  from Nash to coarse correlated equilibria — individual rationality, social
-  welfare
-- Zero-sum, constant-sum, symmetric, and team game properties
-
-Key relationships are proved: dominant strategies are Nash, Nash EU dominates
-the security level, ESS implies Nash, Nash equilibria are correlated equilibria,
-potential game maximizers are Nash.
-
-The library keeps `Core/` dependency-light: it contains semantic structures and
-protocol/distribution constructions. `Concepts/` contains preference-dependent
-and EU-dependent predicates and transport theorems.
-
-## Learning dynamics
-
-Repeated-play learning rules and their convergence to equilibrium, built on the
-strategic-form definitions (`Concepts/Learning/`, `Math/OnlineLearning/`):
-
-- **Multiplicative weights (Hedge)** — the no-regret online-learning algorithm,
-  stated game-free over a finite action set, with an explicit fixed-rate
-  external-regret bound `log|A|/η + (eᵑ−1−η)/η·T`
-- **No-regret ⇒ coarse correlated equilibrium** — the time-average of a play
-  sequence with cumulative external regret `R` over horizon `T` is an
-  `(R/T)`-coarse correlated equilibrium; multiplicative-weights self-play
-  realizes an explicit per-horizon ε-CCE (the horizon-dependent `η ≈ √(L/T)`
-  tuning that drives ε → 0 is left as a parameter, not yet formalized)
-- **Blackwell approachability** — the squared-distance approachability theorem
-  (a B-set is approached at rate O(1/√t)), with its game-theoretic corollary
-  that **regret matching achieves no external regret**: external-regret
-  minimization is exactly approachability of the nonpositive orthant in
-  `ℝ^A` (one coordinate per fixed action)
-- **Fictitious play** — empirical-belief best-response dynamics, with the
-  "limits of fictitious play are Nash" direction, and the Monderer–Shapley
-  reduction giving fictitious-play convergence in exact potential games
-- **ε-relaxations** of (coarse) correlated equilibrium, characterized by
-  bounded external / swap regret — the equilibrium targets of the above
-
-## Representations and bridges
-
-The library treats game representations as *languages* with a uniform pipeline:
-`Syntax → SOS → Compile → KernelGame`.
-
-| Language | What it models |
-|---|---|
-| **NFG** | Simultaneous strategic choice (normal form) |
-| **EFG** | Sequential play with information sets (extensive form) |
-| **MAID** | Graph-structured decisions with chance, decision, and utility nodes |
-| **Sequential** | Protocol-based sequential games, repeated games, stochastic games |
-| **FOSG** | Factored-observation stochastic games: state-based, simultaneous moves, factored private/public observations, optional participation per player |
-| **Intrinsic** | Witsenhausen's intrinsic model — information as equivalence relations on a product configuration space |
-
-The NFG layer also includes canonical worked examples. For Matching Pennies it
-now records both the absence of pure Nash equilibria and the exact fair mixed
-Nash characterization.
-
-Bridges connect representations: MAID → EFG (topological unrolling, preserving
-perfect recall and evaluation semantics), EFG ↔ NFG (strategic form extraction
-and simultaneous-game embedding), FOSG → augmented-EFG (bounded-horizon
-presentation with two-way distributional transport — a respectful EFG profile
-maps back to a legal FOSG profile via `efgToFOSGProfile`, and outcome kernels /
-expected utilities agree in both directions), NFG → FOSG (one-shot embedding),
-and all languages compile to `KernelGame`.
-
-## Kuhn's theorem — proof architecture
-
-Kuhn's equivalence theorem (behavioral ↔ mixed strategies) is proved at the
-`ObsModel` level — a multi-player observation model over a deterministic
-stochastic machine (`DSMachine`). This is the canonical abstraction: players
-observe state through per-player observation functions, and actions are
-indexed by observations.
-
-The proof decomposes into two independent directions:
-
-- **B→M** (`BehavioralToMixed.lean`): constructs a joint distribution over
-  pure profiles by taking products of per-step marginals. An involution/swap
-  argument establishes scalar independence. **No recall conditions needed.**
-
-- **M→B** (`CorrelatedRealization.lean`): starts with a correlated mediator
-  realization (always exists), then decentralizes under progressively weaker
-  recall conditions. The weakest sufficient condition is
-  `TracePlayerStepRecall` (weaker than classical perfect recall).
-
-Each concrete language compiles to `ObsModel` and applies the generic
-theorems:
-
-- **EFG**: Both directions proved for the outcome distribution and
-  expected utility.
-- **MAID**: Both directions proved for the native frontier evaluation
-  semantics under DAG perfect recall (Koller & Milch).
-- **Sequential**: Both directions proved for the native sequential
-  evaluation semantics.
-- **FOSG**: Both directions proved natively in terms of FOSG histories,
-  legal behavioral profiles, terminal weights, and run distributions, plus
-  re-exposed through the `ObsModelCore` bridge.
-
-The Intrinsic form (`Languages/Intrinsic/`) formalizes Witsenhausen's intrinsic
-model following Heymann, De Lara, and Chancelier (2020), where information is
-represented as equivalence relations on a product configuration space rather
-than as tree-based information sets. Key results:
-
-- **Proposition 12**: product-mixed → behavioral (unconditional)
-- **Proposition 13**: behavioral → product-mixed via product PMF over
-  information classes, with the marginal identity proved using an equivalence
-  `PureStrategy ≃ (InfoClass → Decision)`
-- **Kuhn outcome-equivalence reduction**: the Intrinsic API proves full
-  outcome-law equivalence from the player-local event-mass realization
-  condition; the old behavioral-marginal statement is not exposed as Kuhn's
-  theorem.
-
-## Auctions and mechanism design
-
-- First-price, second-price (Vickrey), all-pay, and VCG auctions
-- Quasi-linear utility decomposition (allocation + payment)
-- Bayesian games with type spaces
-- Incentive compatibility (dominant-strategy and Bayesian)
-- Revelation principle
-- Dominant-strategy implementability: weak monotonicity is necessary for
-  truthfulness, and affine maximizers — with VCG as the canonical case — are
-  sufficient
-- Hidden-action principal–agent contracts (moral hazard, linear contracts,
-  the first-best benchmark)
-- Finite information design / Bayesian persuasion (signal structures, Bayes
-  plausibility, sender/receiver persuasion primitives), and feasible posteriors
-  via the canonical splitting coupling (single- and multi-receiver)
-- Social choice and aggregation, including **Arrow's impossibility
-  theorem** (with ≥3 alternatives and a nonempty finite electorate, every
-  collectively rational social welfare function satisfying weak Pareto and
-  independence of irrelevant alternatives is dictatorial), via Geanakoplos's
-  pivotal-voter argument, and the **Gibbard–Satterthwaite theorem** (a
-  strategy-proof social choice function with full range is dictatorial), by
-  the reduction to Arrow
-
-## Cooperative game theory
-
-A parallel `Cooperative/` branch formalizes the cooperative tradition, whose
-primitives are coalition value functions, feasible payoff sets, and preference
-rankings rather than per-player strategies. It does **not** go through
-`KernelGame` — apart from the player-index type and `ℝ` it shares no
-load-bearing abstractions with the non-cooperative core, and lives in the same
-package only for packaging convenience.
-
-- **Coalitional (TU) games** — the **Shapley value** and its uniqueness via
-  unanimity-game decomposition (efficiency, symmetry, dummy, additivity), the
-  Banzhaf index and the Shapley–Shubik power index on simple games, convex
-  (supermodular) games with the monotone-marginals characterization, the
-  core (with nonemptiness for convex games), the cost of stability, and
-  balanced collections with the **Bondareva–Shapley** theorem in its easy
-  direction (a nonempty core implies balancedness)
-- **Bargaining** — the Nash bargaining solution for two-player problems
-  (weak Pareto optimality, symmetry, affine invariance), the egalitarian (Kalai)
-  solution (the maximal equal-gain point), and the Kalai–Smorodinsky solution
-  (with strong Pareto optimality)
-- **Stable matching** — two-sided matching markets, blocking pairs, and
-  **Gale–Shapley existence** of a stable matching via deferred acceptance
-
-Note: "cooperative" here refers to the *formalism* (coalition-value functions,
-axiomatic solutions), not to strategic games with aligned interests — those
-(`IsTeamGame`, symmetric games) live in the non-cooperative `Concepts/` layer.
-
-## Mathematical infrastructure
-
-The `Math/` directory provides supporting libraries for discrete probability
-(`PMF` products, marginals, conditioning, and bounded-expectation convergence),
-directed acyclic graphs (acyclicity, topological orders), function/finset update
-lemmas, local-to-global optimization, and online learning (`Math/OnlineLearning/`,
-the multiplicative-weights algorithm and its regret bound).
+- Probability is represented by mathlib's `PMF`.
+- Major existence theorems typically assume finite player and strategy/action
+  carriers.
+- Many expected-utility lemmas also have bounded-utility versions that do not
+  require finite outcome types.
+- Continuous strategy spaces, measure-theoretic mixed strategies, and
+  continuous auction models are outside the current scope.
+- Existence theorems using Brouwer or classical choice are generally
+  `noncomputable`; this is a theorem library, not an equilibrium solver.
 
 ## Build
 
-Requires Lean 4 (`v4.31.0`) and Mathlib (`v4.31.0`). Also depends on
+Requires Lean 4 (`v4.31.0`) and Mathlib (`v4.31.0`). The project also depends on
 [`fixed-point-theorems-lean4`](https://github.com/ldct/fixed-point-theorems-lean4)
-for Brouwer/Kakutani.
+for Brouwer/Kakutani-style fixed-point support.
 
 ```bash
 lake exe cache get
@@ -270,52 +137,33 @@ lake build GameTheory Math Semantics
 lake env lean scripts/AxiomAudit.lean
 ```
 
-## Non-goals
+## Repository Map
 
-- Continuous strategy spaces with non-discrete distributions
-- Measure-theoretic probability
-- Algorithmic equilibrium computation
+```text
+GameTheory/Core/          semantic structures, morphisms, simulations
+GameTheory/Concepts/      solution concepts, welfare, learning, knowledge
+GameTheory/Languages/     NFG, EFG, MAID, MultiRound, FOSG, Intrinsic
+GameTheory/Theorems/      high-level theorem packages
+GameTheory/Mechanism/     mechanisms, social choice, information design, fair division
+GameTheory/Auctions/      auction formats and truthfulness results
+GameTheory/Cooperative/   coalitional games, bargaining, matching
+Math/                     project-local mathematical infrastructure
+Semantics/                generic transition-system and trace infrastructure
+latex/                    paper and definitional supplement
+```
 
-## Countable-support PMFs
+## Relation to EconCSLib
 
-Strategy and outcome types can be countably infinite. `pmfPi` is defined
-for any per-coordinate PMF family over a finite player index, and
-`KernelGame.mixedExtension` inherits that generality. Expected-utility
-lemmas (`expect_bind`, `expect_pushforward`, `expect_mono_of_pointwise`)
-have bounded/countable siblings in `Math.Probability`; the pushforward API
-also has an image-bounded variant for utility-distribution morphisms.
-Concept-layer theorems such as `mixedExtension_eu`,
-`weighted_gain_sum_zero`, `isNash_iff_gains_nonpos`, the mixed-Nash support
-lemma, CE/CCE transport from mixed Nash, correlated-EU identities, OSD,
-Zermelo, and EU morphism wrappers no longer need finite outcome carriers
-when a bounded-utility hypothesis is supplied. Finite outcomes remain as
-convenient wrappers that derive boundedness automatically.
+Several theorem packages are ports from
+[`EconCSLib`](https://github.com/gametheoryinlean/EconCSLib), reworked against
+this library's APIs and sometimes generalized or moved under `Math/` when the
+result is not game-theoretic. Important examples include KKM covers, reserve
+Vickrey auctions, zero-sum matrix games, the stable-matching lattice,
+single-parameter Myerson payments, finite VNM representation, fair division, and
+knapsack auctions.
 
-Remaining finite assumptions are intentional proof boundaries:
+## Paper
 
-- `mixed_nash_exists_of_bounded`, `correlatedEq_exists_of_bounded`, and
-  `coarseCorrelatedEq_exists_of_bounded` remove finite outcomes but still
-  require finite nonempty strategy spaces because the current proof is
-  Brouwer-on-product-simplices. Removing that would require a different
-  compactness/fixed-point theorem and continuity hypotheses for
-  infinite-dimensional mixed spaces.
-- Security levels now have sup/inf definitions (`worstCaseEUInf`,
-  `securityLevelSup`) without finite profile/strategy enumerations. Existence
-  of an attaining security strategy still requires finite/compact attainment
-  hypotheses.
-- `zermelo_of_bounded` and `oneShotDeviation_iff_spe_of_bounded` remove finite
-  outcomes. They still rely on the finite game-tree/action structure for
-  backward induction and local action maximization.
-- Kuhn wrappers keep finiteness where they enumerate pure strategies,
-  histories, or reachable information/action carriers. Removing those would
-  require countable/integrable versions of the reweighting and pure-strategy
-  product arguments.
-- The CE/CCE theorem “mixed Nash induces CE/CCE” is now finite-strategy-free;
-  the product-deviation identity is proved directly for arbitrary coordinate
-  carriers over a finite player index.
-- Von Neumann minimax and zero-sum interchangeability have bounded-utility
-  variants without finite outcomes, but still depend on mixed Nash existence,
-  hence on finite nonempty pure strategy spaces in the current development.
-
-See `Languages/NFG/CountableExample.lean` for a smoke test exercising
-`NFGGame` over `ℕ`-valued actions.
+The `latex/` directory contains the paper source and definitional supplement.
+The paper gives the narrative and proof architecture; the supplement is the
+declaration-level map of the main definitions and theorems.

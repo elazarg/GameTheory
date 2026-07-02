@@ -168,7 +168,10 @@ bounding each player's gain by it.
 Stable matching~\citep{GaleShapley1962} is formalized through the
 \TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} predicates, with the
 existence of a stable matching proved via the Gale–Shapley
-deferred-acceptance algorithm (\Cref{thm:gale-shapley}).
+deferred-acceptance algorithm (\Cref{thm:gale-shapley}), proposer
+optimality and receiver pessimality, the rural-hospitals invariants,
+and the lattice structure of stable matchings
+(\Cref{thm:stable-matching-lattice}).
 
 Natural extensions:\ the converse (hard) direction of
 Bondareva–Shapley \citep{Bondareva1963, Shapley1967} — balancedness
@@ -268,13 +271,14 @@ stable matching from an arbitrary strict preference
 profile~\citep{GaleShapley1962} are formalized
 (\Cref{thm:gale-shapley}, \TT{Cooperative/GaleShapley.lean}), together
 with proposer-optimality and receiver-pessimality
-(\TT{daMatching\_man\_optimal}, \TT{daMatching\_woman\_pessimal}).  The
-natural extensions are the remaining structural results:\ the lattice
-structure of the set of stable matchings, strategy-proofness for the
-proposing side, and the many-to-one (hospitals/residents)
-generalization with the rural-hospitals theorem.  A computable
-extraction of the $O(n^2)$ algorithm paired with the existing
-correctness proof is a further refinement; Bertot's Coq
+(\TT{daMatching\_man\_optimal}, \TT{daMatching\_woman\_pessimal}), the
+rural-hospitals matched-agent invariants, and the lattice structure of
+stable matchings ordered by optional partners
+(\TT{Cooperative/GaleShapley/OptionalLattice.lean}).  The natural
+extensions are now the strategy-proofness theorem for the proposing
+side, many-to-one hospitals/residents matching, ties and weak
+preferences, rotations, and a computable extraction of the $O(n^2)$
+algorithm paired with the existing correctness proof.  Bertot's Coq
 formalization \citep{Bertot2016} is a useful reference point.
 
 \subsection{Type-theoretic refactoring opportunities}

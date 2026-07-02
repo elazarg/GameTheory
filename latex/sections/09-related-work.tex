@@ -117,11 +117,27 @@ present library is organized around semantic interoperability:
 and the language layer proves compilation and bridge theorems from
 NFG, EFG, MAID, FOSG, multi-round, and intrinsic presentations into
 that target.  The two code bases are not API-compatible, but the
-mathematical overlap is large enough that a shared
-crosswalk of definitions, theorem statements, and intended adapters
-would be valuable.  Such coordination would reduce duplicated proof
-engineering and clarify which results should be shared, ported, or
-kept deliberately separate because they serve different interfaces.
+mathematical overlap is large enough that a shared crosswalk of
+definitions, theorem statements, and intended adapters is valuable.
+Indeed, many theorem packages in the present library were ported from
+\TT{EconCSLib}, with proofs reworked against this library's local
+interfaces and, where appropriate, generalized or moved into the
+project-local \TT{Math/} layer.  A non-exhaustive list of important
+ported names includes the KKM covering lemmas
+\TT{kkm\_closed\_cover} and \TT{kkm\_open\_cover}; reserve-Vickrey
+truthfulness; zero-sum matrix-game saddle-point, value, and geometry
+results; the optional-partner stable-matching lattice
+\TT{optionalStableJoin\_isStable} / \TT{lattice}; single-parameter
+Myerson payment identities and implementability
+(\TT{withMyersonPayment\_isDSIC\_of\_isMonotone},
+\TT{existsUnique\_zeroNormalized\_payment\_of\_isMonotone}); finite
+vNM lottery representation
+(\TT{vnmAxioms\_iff\_exists\_representsExpectedUtility}); indivisible
+and divisible fair-division theorems; and knapsack-auction DSIC and
+dynamic-programming/greedy approximation results.  The porting work is
+therefore not merely conceptual influence: substantial theorem content
+is shared, while the surrounding definitions and proof boundaries are
+adapted to the semantic-core design of this library.
 
 Several Lean developments focus on the Nash-existence slice.
 \TT{math-xmum/Brouwer}~\citep{MathXMUMBrouwer2026} and the

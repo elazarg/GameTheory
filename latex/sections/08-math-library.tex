@@ -88,6 +88,13 @@ Those estimates are the arithmetic substrate for turning a feasible
 mixed payoff vector into a finite periodic path in the discounted
 folk-theorem development.
 
+\TT{Math.Fintype}, \TT{Math.Fin}, and
+\TT{Math/Fintype/Transport.lean} package finite-cardinality and
+\TT{Fin n} transport lemmas used to move theorem statements between
+arbitrary finite carrier types and canonical \TT{Fin} indices.  These
+are intentionally game-free: their statements mention only functions,
+subtypes, finite cardinalities, and finite sums.
+
 \subsection{Analysis, optimization, and learning}
 \label{sec:math-layer:analysis}
 
@@ -115,6 +122,26 @@ shape of a compact-strategy extension:\ the missing layer is the
 game-theoretic compactness and continuity API, not the abstract
 fixed-point theorem.
 
+\TT{Math.FixedPoint.KKM} proves the finite
+Knaster--Kuratowski--Mazurkiewicz covering lemma~\citep{KKM1929} for
+closed covers of the standard simplex, plus an open-cover variant.  It
+is used by the Stromquist fair-division proof, but the theorem itself
+is stated without agents, utilities, or cake-cutting language:
+
+\begin{theorem}[KKM covering lemma; \TT{kkm\_closed\_cover}]
+\label{thm:kkm}
+Let $F_i$ be closed subsets of the standard simplex indexed by
+$i : \mathrm{Fin}\,n$.  If every face of the simplex is covered by the
+sets whose indices belong to that face, then all the $F_i$ have a
+common point.
+\end{theorem}
+
+\TT{Math.MeasureTheory.UnitInterval} supplies the measure-theoretic
+unit-interval facts consumed by divisible fair division: pushforward of
+a non-atomic measure along the subtype embedding, continuity of the
+cumulative distribution function, interval-measure identities, and the
+existence of cuts realizing a target measure value in $[0,1]$.
+
 \subsection{Epistemic and semantic utilities}
 \label{sec:math-layer:semantic}
 
@@ -141,5 +168,8 @@ underlying probability and finite-process algebra in each setting.
 \TT{Math/ParameterizedChain.lean}, \TT{Math/OutcomeClosure.lean},
 \TT{Math/DAG.lean}, \TT{Math/BoundedLists.lean},
 \TT{Math/Reindex.lean}, \TT{Math/SimplexApproximation.lean},
+\TT{Math/Fintype.lean}, \TT{Math/Fintype/Transport.lean},
+\TT{Math/Fin.lean}, \TT{Math/FixedPoint/KKM.lean},
+\TT{Math/MeasureTheory/UnitInterval.lean},
 \TT{Math/OptimizationLocalGlobal.lean}, \TT{Math/OnlineLearning/},
 \TT{Math/SchauderFixedPoint.lean}, and \TT{Math/Knowledge.lean}.}

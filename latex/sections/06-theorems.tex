@@ -1,12 +1,14 @@
 \section{Major theorems}
 \label{sec:theorems}
 
-The library proves the central existence and structural theorems
-of finite non-cooperative game theory.  The proofs are stated on
-the kernel-game/game-form layer (or on layered information-model
-abstractions; see \Cref{sec:theorems:kuhn}), and inherited by
-every language via $\compileTo$.  This section sketches their
-content; full proofs are in the cited Lean files.
+The library proves central existence and structural theorems across
+the finite non-cooperative core, expected-utility foundations, and the
+cooperative branch.  Non-cooperative proofs are stated on the
+kernel-game/game-form layer (or on layered information-model
+abstractions; see \Cref{sec:theorems:kuhn}) and inherited by every
+language via $\compileTo$; cooperative and decision-theoretic results
+use their own native carriers.  This section sketches their content;
+full proofs are in the cited Lean files.
 
 \subsection{Existence of mixed Nash equilibria}
 \label{sec:theorems:nash-mixed}
@@ -509,6 +511,48 @@ and \TT{ActionPosteriorLocal} are defined on \TT{ObsModelCore};
 \TT{PerStepPlayerRecall} is defined on the \TT{ObsModel} wrapper.
 Supplement~§7.5.}
 
+\subsection{Finite von Neumann--Morgenstern representation}
+\label{sec:theorems:vnm}
+
+The library includes the finite lottery-theoretic expected-utility
+foundation used by the EU-specific game predicates.  A lottery is a
+\TT{PMF} over a finite outcome carrier $\Omega$; a weak preference
+relation $\succeq$ on lotteries is axiomatized by completeness,
+transitivity, independence, and the binary-mixture continuity axiom.
+
+\begin{theorem}[Finite vNM representation; \TT{vnmAxioms\_iff\_exists\_representsExpectedUtility}]
+\label{thm:vnm-representation}
+For a finite nonempty outcome type $\Omega$, a weak preference
+relation on lotteries over $\Omega$ satisfies the vNM axioms iff
+there exists a utility index $u : \Omega \to \RR$ such that, for all
+lotteries $L$ and $M$,
+\[
+  L \succeq M
+  \quad\Longleftrightarrow\quad
+  \mathbb{E}_{\omega\sim L}[u(\omega)]
+    \ge
+  \mathbb{E}_{\omega\sim M}[u(\omega)].
+\]
+\end{theorem}
+
+\noindent\emph{Proof structure.}\ The soundness direction is
+linear algebra over finite expectations:\ expected utility is
+complete, transitive, independent under common binary mixtures, and
+continuous.  The converse constructs certainty-equivalent
+probabilities against a chosen best and worst outcome, proves their
+order properties using independence and compound-lottery
+indifference, and then represents every lottery by the expected value
+of those outcome indices.  The theorem is finite and binary-mixture
+based; it deliberately avoids the measure-theoretic uniqueness and
+almost-everywhere differentiability issues of more general
+representation theorems.
+
+\leancorr{\TT{Concepts/Foundations/VNM/Basic.lean}
+(\TT{expectedValue}, \TT{RepresentsExpectedUtility},
+\TT{RepresentsExpectedUtility.vnmAxioms},
+\TT{exists\_representsExpectedUtility\_of\_vnmAxioms}, and
+\TT{vnmAxioms\_iff\_exists\_representsExpectedUtility}).}
+
 \subsection{Welfare and welfare theorems}
 \label{sec:theorems:welfare}
 
@@ -635,12 +679,10 @@ but the library's \TT{exists\_stable} is \TT{noncomputable} because
 the argmax over remaining choices and the fixed-point extraction route
 through classical choice.  Extracting the $O(n^2)$ algorithm as a
 computable function with the same correctness proof is a natural
-refinement.  Deferred acceptance designates one side as proposers; the companion
-optimality results — that the proposing side receives its best stable
-partner (\TT{daMatching\_man\_optimal}) and the receiving side its
-worst (\TT{daMatching\_woman\_pessimal}) — are proved, while the
-lattice structure of stable matchings remains outside the current
-development.}
+refinement.  Deferred acceptance designates one side as proposers; the
+companion optimality results — that the proposing side receives its
+best stable partner (\TT{daMatching\_man\_optimal}) and the receiving
+side its worst (\TT{daMatching\_woman\_pessimal}) — are proved.}
 
 \leancorr{\TT{Cooperative/GaleShapley.lean}
 (\TT{daStep}, \TT{exists\_daStep\_iterate\_fixed},
@@ -649,3 +691,42 @@ development.}
 \TT{MatchingMarket} structure and the stability predicates
 \TT{IsMatching}/\TT{IsBlockingPair}/\TT{IsStable} are in
 \TT{Cooperative/Matching.lean}.}
+
+\subsection{Stable-matching lattice}
+\label{sec:theorems:stable-lattice}
+
+The stable matchings of a two-sided market carry more structure than
+mere nonemptiness.  Ordering stable matchings by the $\alpha$-side's
+optional partners — unmatched is compared at the agent's reservation
+value — gives a lattice under pointwise $\alpha$-side improvement and
+its dual operation.  The formal statement is for strict finite
+markets with outside options; it does not require the sides to be
+balanced or every pair to be mutually acceptable.
+
+\begin{theorem}[Stable-matching lattice]
+\label{thm:stable-matching-lattice}
+Let $M$ be a finite two-sided matching market with strict preferences
+and outside options, with all opposite-side partners distinct from the
+reservation value in each agent's ranking scale.  The type
+\TT{M.StableMatching} of stable matchings, ordered by the
+$\alpha$-side's weak preference over optional partners, is a lattice.
+The join of two stable matchings assigns each $\alpha$-agent the
+better of its two optional partners and is again stable; the meet is
+the corresponding dual operation obtained by swapping the two sides.
+\end{theorem}
+
+\noindent\emph{Proof structure.}\ The main combinatorial step proves
+that the pointwise $\alpha$-side join of two stable matchings is a
+matching and has no blocking pair.  The proof uses the rural-hospitals
+invariant that all stable matchings match the same agents, so optional
+partners can be compared even in incomplete and unbalanced markets.
+Injectivity of ranking scores and separation from reservation values
+make equality of optional preference values reflect equality of
+partners.  The meet is obtained by applying the join construction in
+the swapped market and inverting the result back.
+
+\leancorr{\TT{Cooperative/GaleShapley/OptionalOrder.lean},
+\TT{Cooperative/GaleShapley/RuralHospitals.lean}, and
+\TT{Cooperative/GaleShapley/OptionalLattice.lean}
+(\TT{optionalStableJoin\_isStable}, \TT{join}, \TT{meet},
+\TT{semilatticeSup}, and \TT{lattice}).}

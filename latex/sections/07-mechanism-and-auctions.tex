@@ -234,6 +234,45 @@ Myerson1981} and the necessary half of the implementability
 characterization; the converse (weak monotonicity suffices on convex
 domains) is not formalized.
 
+\paragraph{Single-parameter Myerson payments.}\
+For real single-parameter direct mechanisms, the library proves the
+one-dimensional implementability theorem in the envelope-payment form.
+An allocation rule $x_i(\theta)$ is monotone in agent $i$'s own report
+when increasing $\theta_i$ weakly increases $x_i$.  The Myerson
+payment rule is
+\[
+  p_i(\theta)
+    =
+  \theta_i x_i(\theta)
+    -
+  \int_{0}^{\theta_i}
+      x_i(z,\theta_{-i})\,dz .
+\]
+
+\begin{theorem}[Myerson payment formula and implementability]
+\label{thm:myerson-payments}
+Every DSIC single-parameter mechanism has a monotone allocation rule.
+Conversely, every monotone allocation rule whose one-dimensional slices
+are interval-integrable is implemented in dominant strategies by the
+Myerson payment rule.  If the mechanism is zero-normalized and the
+allocation slices are continuous, then DSIC payments are uniquely
+given by the same envelope formula.
+\end{theorem}
+
+\noindent The necessity proof is the standard payment-sandwich
+argument: truthfulness at reports $\theta_i$ and $b_i$ gives upper and
+lower bounds on the payment difference, and their compatibility forces
+monotonicity.  The sufficiency proof integrates the monotone
+allocation slice and uses the envelope identity to show that every
+misreport loses weakly relative to truth-telling.
+
+\leancorr{\TT{Mechanism/Myerson.lean}
+(\TT{SingleParameterMechanism}, \TT{payment\_sandwich},
+\TT{isMonotone\_of\_isDSIC},
+\TT{withMyersonPayment\_isDSIC\_of\_isMonotone},
+\TT{payment\_eq\_myersonPayment\_of\_isDSIC\_of\_zeroNormalized}, and
+\TT{existsUnique\_zeroNormalized\_payment\_of\_isMonotone}).}
+
 \paragraph{Sufficiency:\ affine maximizers and VCG.}\
 An \emph{affine maximizer} fixes positive weights $w_i$ and an
 alternative bias $\kappa : A \to \RR$ and selects the alternative
@@ -334,10 +373,88 @@ alternatives (\TT{sen\_paretian\_liberal}).
 \TT{Mechanism/MedianVoter.lean}, \TT{Mechanism/May.lean},
 \TT{Mechanism/SenParetianLiberal.lean}.}
 
+\subsection{Fair division}
+\label{sec:mech:fair-division}
+
+Fair division is organized under the mechanism/social-choice branch
+because its objects are allocations and fairness predicates rather
+than strategic equilibria.  The library has separate indivisible and
+divisible packages.
+
+\paragraph{Indivisible goods.}\
+For finite additive valuations over indivisible goods, the library
+defines envy-freeness, EF1, EFX, proportionality, and maximin-share
+guarantees.  It proves the standard implications
+envy-free $\Rightarrow$ EFX $\Rightarrow$ EF1 under nonnegative
+valuations, and envy-free $\Rightarrow$ proportionality when all goods
+are allocated.
+
+\begin{theorem}[EF1 for indivisible goods]
+\label{thm:indivisible-ef1}
+For any finite set of agents and finite set of indivisible goods with
+additive valuations, the envy-cycle allocation rule and the
+round-robin allocation rule both return allocations that are EF1.
+\end{theorem}
+
+\begin{theorem}[Two-agent EFX]
+\label{thm:indivisible-efx-two}
+For two agents with additive nonnegative valuations over finitely many
+indivisible goods, there exists an EFX allocation.
+\end{theorem}
+
+\begin{theorem}[MMS upper bound]
+\label{thm:mms-average}
+For additive nonnegative valuations, each agent's maximin share is at
+most its proportional average value for the whole set of goods.
+Consequently every proportional allocation is a maximin-share
+allocation.
+\end{theorem}
+
+\leancorr{\TT{Mechanism/FairDivision/Indivisible/Basic.lean}
+(\TT{IsEnvyFree}, \TT{IsEF1}, \TT{IsEFX},
+\TT{IsEnvyFree.isProportional}, \TT{exists\_efx\_two\_agents});
+\TT{Indivisible/EnvyCycle.lean}
+(\TT{envyCycleAllocation\_isEF1});
+\TT{Indivisible/RoundRobin.lean}
+(\TT{roundRobinAllocation\_isEF1});
+\TT{Indivisible/MaximinShare.lean}
+(\TT{maximinShare\_le\_average}, \TT{IsProportional.isMaxminShare}).}
+
+\paragraph{Divisible goods.}\
+The divisible package treats cake-cutting on the unit interval with
+finite non-atomic measure valuations.  The two-agent theorem is
+cut-and-choose in the Steinhaus tradition~\citep{Steinhaus1948};
+proportionality for any finite number of agents is proved by a
+Dubins--Spanier-style moving-knife construction
+\citep{DubinsSpanier1961}; envy-free existence for any finite number
+of agents is proved through Stromquist's KKM/compactness route
+\citep{Stromquist1980}.
+
+\begin{theorem}[Divisible fair division]
+\label{thm:divisible-fair-division}
+Let $N$ be a nonempty finite set of agents, and let each agent have a
+finite non-atomic measure on the unit interval.  Then there exists a
+measurable allocation of the interval that is envy-free.  There also
+exists a proportional allocation, and every envy-free allocation is
+proportional under the library's finite-agent proportionality
+predicate.
+\end{theorem}
+
+\leancorr{\TT{Mechanism/FairDivision/Divisible/CutAndChoose.lean}
+(\TT{cutAndChoose\_ef\_exists}, \TT{cutAndChooseRule\_isEnvyFree});
+\TT{Divisible/DubinsSpanier.lean}
+(\TT{dubinsSpanierProportional},
+\TT{dubinsSpanierRule\_isProportional});
+\TT{Divisible/Stromquist.lean}
+(\TT{stromquist\_envyFree\_exists});
+\TT{Divisible/Existence.lean}
+(\TT{proportional\_exists}, \TT{ef\_exists},
+\TT{ef\_and\_proportional\_exists}).}
+
 \subsection{Auctions}
 \label{sec:mech:auctions}
 
-The auction directory contains four formats at different
+The auction directory contains six formats at different
 levels of completeness:
 
 \begin{itemize}\itemsep4pt
@@ -359,6 +476,12 @@ formalization does not build a kernel game; it records elementary
 payoff facts such as overbidding being unprofitable, winner
 profit, rent dissipation, and a symmetric negative-payoff lemma.
 
+\item \emph{Reserve Vickrey}.  A second-price auction with a reserve
+price is packaged as a kernel game via the principled auction-game
+interface.  The library proves dominant-strategy truthfulness and
+records the usual utility identities for winners, losers, and
+allocation.
+
 \item \emph{Vickrey–Clarke–Groves (VCG)}~\citep{Vickrey1961, Clarke1971,
 Groves1973}.  Generalizes Vickrey to multi-item, combinatorial
 settings:\ each agent's payment equals the externality they impose
@@ -366,6 +489,15 @@ on others.  The library proves dominant-strategy incentive
 compatibility for finitely many players, with the efficient
 allocation supplied as a hypothesis and no finiteness imposed on the
 allocation or type spaces.
+
+\item \emph{Knapsack auctions}.  Agents have public weights and
+single-parameter values; feasible binary allocations are subsets whose
+total weight is at most capacity.  The welfare-maximizing allocation
+rule is monotone in each agent's reported value, so the Myerson
+payment rule makes the mechanism DSIC.  The same file also includes a
+finite dynamic-programming optimal allocation for natural weights and
+values, and a half-approximation theorem for the integral greedy rule
+against the dynamic-programming optimum.
 \end{itemize}
 
 Vickrey and first-price are direct kernel-game constructions via
@@ -374,6 +506,15 @@ efficient allocation rule and a payment function; all-pay is
 packaged as a collection of real-valued payoff lemmas.  Solution
 concepts come from \Cref{sec:solution-concepts} wherever a full
 kernel game has been constructed.
+
+\begin{theorem}[Knapsack DSIC and approximation]
+\label{thm:knapsack-auction}
+For a nonnegative-capacity binary knapsack auction, the
+welfare-maximizing allocation rule is monotone and the mechanism using
+Myerson payments is DSIC.  For natural weights and values, the dynamic
+programming allocation is feasible and optimal, and the integral
+greedy value is at least one half of the dynamic-programming optimum.
+\end{theorem}
 
 \tradeoff{Auctions are typically formalized in the literature
 under continuous bid spaces and continuous valuations; this gives
@@ -389,5 +530,11 @@ extension to continuous auctions over mathlib's measure theory
 would be the natural next step.}
 
 \leancorr{\TT{Auctions/Vickrey.lean} (\TT{vickrey\_truthful\_dominant}),
-\TT{Auctions/FirstPrice.lean}, \TT{Auctions/AllPay.lean},
-\TT{Auctions/VCG.lean}.  Supplement~§8.4.}
+\TT{Auctions/ReserveVickrey.lean}, \TT{Auctions/FirstPrice.lean},
+\TT{Auctions/AllPay.lean}, \TT{Auctions/VCG.lean}, and
+\TT{Auctions/Knapsack/Basic.lean}
+(\TT{welfareMaximizingAllocationRule\_isMonotone},
+\TT{welfareMaximizingMechanism\_isDSIC},
+\TT{dynamicProgrammingOptimalAllocation\_feasible},
+\TT{dynamicProgrammingOptimalAllocation\_optimal}, and
+\TT{integralGreedy\_halfApprox\_dpOptimal}).  Supplement~§8.4.}

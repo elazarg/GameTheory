@@ -73,12 +73,13 @@ correlated and coarse-correlated equilibrium existence, no-regret
 routes to $\varepsilon$-CCE, von Neumann minimax, an observable
 mixed-action approximate discounted folk theorem, Zermelo's backward
 induction, the one-shot deviation principle, Kuhn's behavioral/mixed
-equivalence, Shapley-value uniqueness, and Gale--Shapley stable
-matching.  Each theorem is stated on the appropriate semantic layer:
-some live directly on \TT{KernelGame} / \TT{GameForm}; others, such
-as Kuhn's theorem and extensive-form backward induction, live on the
-observation-model or EFG substrate and are exported through the
-language compilers.
+equivalence, a finite von Neumann--Morgenstern expected-utility
+representation theorem, Shapley-value uniqueness, Gale--Shapley stable
+matching, and the lattice structure of stable matchings.  Each theorem
+is stated on the appropriate semantic layer: some live directly on
+\TT{KernelGame} / \TT{GameForm}; others, such as Kuhn's theorem and
+extensive-form backward induction, live on the observation-model or EFG
+substrate and are exported through the language compilers.
 
 \item \emph{An expressiveness layer.}  Beyond raw compilation, the
 library exposes a \emph{relation-parameterized expressiveness
@@ -99,13 +100,15 @@ targets in \Cref{sec:future}.
 
 \item \emph{Mechanism-design, social-choice, and auction consumers.}
 Bayesian games, finite information-design primitives, a finite
-revelation principle, social-choice machinery, contract-theory
-examples, and auction fragments (Vickrey, first-price, all-pay, VCG)
+revelation principle, social-choice machinery, fair-division modules,
+contract-theory examples, and auction fragments (Vickrey, first-price,
+all-pay, VCG, reserve Vickrey, knapsack)
 are formalized as consumers of the library.  The consumer layer
 includes Arrow, Gibbard--Satterthwaite, Sen's liberal paradox,
-Vickrey and VCG dominant-strategy truthfulness, first-price
-no-dominant-strategy results, and format-specific all-pay payoff
-lemmas.
+single-parameter Myerson payment identities, Vickrey and VCG
+dominant-strategy truthfulness, first-price no-dominant-strategy
+results, knapsack DSIC via Myerson payments, fair-division existence
+theorems, and format-specific all-pay payoff lemmas.
 \end{enumerate}
 
 \subsection{What this library is not}
@@ -135,11 +138,12 @@ sets, or preference rankings rather than per-player strategies,
 and it does not go through \TT{KernelGame}.  The two branches
 share the player-index type and $\RR$ but no load-bearing
 abstractions; they live in the same package only for packaging
-convenience.  We state two representative major theorems from this
+convenience.  We state representative major theorems from this
 branch in the paper: Shapley value uniqueness
-(\Cref{thm:shapley-unique}) and Gale--Shapley stable matching
-(\Cref{thm:gale-shapley}).  The remaining cooperative material is
-summarized with the extension targets in
+(\Cref{thm:shapley-unique}), Gale--Shapley stable matching
+(\Cref{thm:gale-shapley}), and the stable-matching lattice
+(\Cref{thm:stable-matching-lattice}).  The remaining cooperative
+material is summarized with the extension targets in
 \Cref{sec:future:cooperative}.
 
 \subsection{Reading guide}

@@ -215,7 +215,8 @@ Folder & Contents \\
   Discrete-probability infrastructure that mathlib does not already
   provide:\ \DefRef{expect},
   \TT{Math.PMFProduct.pmfPi}, finsupp/finset update lemmas,
-  optimization primitives, and the standalone
+  finite-carrier transport, KKM covers, unit-interval measure/cut
+  lemmas, optimization primitives, and the standalone
   \TT{Math.Schauder.schauder_fixed_point} theorem. \\
 \TT{Core/} &
   \DefRef{GameForm}, \DefRef{KernelGame}, the \DefRef{ProtocolMap}
@@ -232,17 +233,19 @@ Folder & Contents \\
   \DefRef{correlatedEq_exists}, \DefRef{von_neumann_minimax},
   \DefRef{zermelo}, \DefRef{oneShotDeviation_iff_spe}, the
   \DefRef{ObsModelCore} Kuhn theorems, learning-to-CCE results,
-  the discounted folk theorem, Shapley uniqueness, and
-  Gale--Shapley stable matching. \\
+  the discounted folk theorem, finite vNM representation, Shapley
+  uniqueness, Gale--Shapley stable matching, and the stable-matching
+  lattice. \\
 \TT{Languages/} &
   Six syntactic languages (NFG, EFG, MAID, MultiRound, FOSG,
   Intrinsic), each with its own \TT{Syntax}, \TT{Compile}, and
   worked-example files; bridges in \TT{Languages/Bridges/}. \\
 \TT{Mechanism/} &
   Bayesian games, finite information design, mechanism design,
-  the revelation principle, social-choice fragments. \\
+  the revelation principle, Myerson payments, social-choice fragments,
+  and fair division. \\
 \TT{Auctions/} &
-  Vickrey, FirstPrice, AllPay, VCG. \\
+  Vickrey, ReserveVickrey, FirstPrice, AllPay, VCG, and Knapsack. \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -351,6 +354,15 @@ Schauder's fixed-point theorem for nonempty compact convex subsets
 of real normed spaces.  It is not part of the finite-dimensional
 mixed-Nash proof, but it provides a reusable analytic fixed-point
 principle for compact-convex equilibrium arguments.
+\TT{Math/FixedPoint/KKM.lean} proves \TT{kkm\_closed\_cover} and
+\TT{kkm\_open\_cover} for covers of the standard simplex.
+\TT{Math/MeasureTheory/UnitInterval.lean} supplies
+\TT{unitInterval\_cut\_exists} and the subtype-pushforward/CDF
+continuity lemmas used by divisible fair division.
+\TT{Math/Fintype.lean}, \TT{Math/Fin.lean}, and
+\TT{Math/Fintype/Transport.lean} package finite-cardinality and
+\TT{Fin n} transport lemmas used to state finite-agent theorems over
+arbitrary finite carriers.
 
 % =====================================================================
 \section{The semantic core}
@@ -1876,6 +1888,35 @@ The package also exposes generic outcome-equality schemas
 \TT{KuhnCompleteViaOutcome} in \TT{Theorems/Kuhn.lean}) for
 language-specific Kuhn instantiations.
 
+\subsection{Additional theorem packages}
+\label{sec:supp:additional-theorems}\label{def:vnmAxioms_iff_exists_representsExpectedUtility}\label{def:optionalStableJoin_isStable}
+
+\paragraph{Finite vNM representation.}
+\TT{Concepts/Foundations/VNM/Basic.lean} defines lotteries as
+\TT{PMF} values and proves the finite binary-mixture representation
+theorem.
+\begin{leanbox}
+def RepresentsExpectedUtility (pref : Lottery $\Omega \to$ Lottery $\Omega \to$ Prop) (u : $\Omega \to \mathbb{R}$) : Prop\\
+\bd := $\forall$ L M, pref L M $\leftrightarrow$ expectedValue u L $\ge$ expectedValue u M\\[3pt]
+theorem vnmAxioms\_iff\_exists\_representsExpectedUtility\\
+\bd [Finite $\Omega$] [Nonempty $\Omega$] (pref : Lottery $\Omega \to$ Lottery $\Omega \to$ Prop) :\\
+\bd Completeness pref $\wedge$ Transitivity pref $\wedge$ Independence pref $\wedge$ Continuity pref\\
+\bdd $\leftrightarrow$ $\exists$ u : $\Omega \to \mathbb{R}$, RepresentsExpectedUtility pref u
+\end{leanbox}
+
+\paragraph{Stable-matching lattice.}
+\TT{Cooperative/GaleShapley/OptionalLattice.lean} proves that the
+pointwise optional-partner join of two stable matchings is stable and
+packages the resulting lattice.
+\begin{leanbox}
+theorem optionalStableJoin\_isStable : M.IsStable (M.optionalStableJoin (μ := μ) (ν := ν))\\[3pt]
+noncomputable def lattice : Lattice M.StableMatching
+\end{leanbox}
+The hypotheses are finite sides, strict/injective rankings, and
+reservation values separated from all opposite-side partner scores.
+The result is not restricted to balanced or complete-acceptability
+markets.
+
 % =====================================================================
 \section{Mechanism design and auctions}
 \label{sec:supp:mechanism}
@@ -2012,6 +2053,51 @@ over the induced Bayesian game quantifies over arbitrary
 type-dependent reporting strategies.  The library includes
 \TT{isBIC_of_truthful_bayesNash} to relate the two levels.
 
+\subsection{Single-parameter Myerson payments}
+\label{sec:supp:myerson}\label{def:withMyersonPayment_isDSIC_of_isMonotone}
+
+\TT{Mechanism/Myerson.lean} specializes quasilinear mechanism design
+to real single-parameter reports.
+\begin{leanbox}
+structure SingleParameterMechanism ($\iota$ : Type) where\\
+\bd allocation : ($\iota \to \mathbb{R}$) $\to \iota \to \mathbb{R}$\\
+\bd payment    : ($\iota \to \mathbb{R}$) $\to \iota \to \mathbb{R}$\\[3pt]
+def AllocationIsMonotone (allocation : ($\iota \to \mathbb{R}$) $\to \iota \to \mathbb{R}$) : Prop\\[3pt]
+noncomputable def myersonPayment (allocation : ($\iota \to \mathbb{R}$) $\to \iota \to \mathbb{R}$) :\\
+\bd ($\iota \to \mathbb{R}$) $\to \iota \to \mathbb{R}$\\[3pt]
+theorem isMonotone\_of\_isDSIC : M.IsDSIC $\to$ M.IsMonotone\\[3pt]
+theorem withMyersonPayment\_isDSIC\_of\_isMonotone\\
+\bd (allocation : ($\iota \to \mathbb{R}$) $\to \iota \to \mathbb{R}$)
+   (hmono : AllocationIsMonotone allocation)
+   (hint : IsEnvelopeIntegrable allocation) :\\
+\bd (withMyersonPayment allocation).IsDSIC\\[3pt]
+theorem existsUnique\_zeroNormalized\_payment\_of\_isMonotone $\ldots$
+\end{leanbox}
+The unique-payment theorem assumes monotonicity and continuity of
+one-dimensional allocation slices; the DSIC construction needs only
+monotonicity plus interval integrability.
+
+\subsection{Fair division}
+\label{sec:supp:fair-division}\label{def:envyCycleAllocation_isEF1}\label{def:stromquist_envyFree_exists}
+
+\TT{Mechanism/FairDivision/Indivisible/} defines additive valuations
+over finite indivisible goods and proves the EF/EF1/EFX/proportionality
+and MMS facts used in the main chapter:
+\begin{leanbox}
+theorem envyCycleAllocation\_isEF1 $\ldots$\\
+theorem roundRobinAllocation\_isEF1 $\ldots$\\
+theorem exists\_efx\_two\_agents $\ldots$\\
+theorem maximinShare\_le\_average $\ldots$
+\end{leanbox}
+\TT{Mechanism/FairDivision/Divisible/} works over measurable
+allocations of the unit interval:
+\begin{leanbox}
+theorem cutAndChoose\_ef\_exists $\ldots$\\
+theorem dubinsSpanierProportional $\ldots$\\
+theorem stromquist\_envyFree\_exists $\ldots$\\
+theorem ef\_and\_proportional\_exists $\ldots$
+\end{leanbox}
+
 \subsection{Auctions: bunched}
 \label{sec:supp:auctions}\label{def:vickrey_truthful_dominant}
 
@@ -2043,12 +2129,21 @@ payoff under truthful bidding matches or exceeds.
 
 \Variants
 \TT{Auctions/FirstPrice.lean}, \TT{Auctions/AllPay.lean},
-\TT{Auctions/VCG.lean}.  First-price constructs the deterministic
+\TT{Auctions/ReserveVickrey.lean}, \TT{Auctions/VCG.lean}, and
+\TT{Auctions/Knapsack/Basic.lean}.  First-price constructs the deterministic
 first-price payoff game and proves that no single bid is dominant.
 All-pay records payoff facts such as overbidding being unprofitable
-and rent dissipation.  VCG packages the efficient-allocation setup
+and rent dissipation.  Reserve Vickrey proves truthfulness for the
+second-price auction with a reserve.  VCG packages the efficient-allocation setup
 and proves truthful reporting is dominant
-(Clarke 1971, Groves 1973).
+(Clarke 1971, Groves 1973).  Knapsack auctions use the Myerson-payment
+layer:
+\begin{leanbox}
+theorem welfareMaximizingAllocationRule\_isMonotone $\ldots$\\
+theorem welfareMaximizingMechanism\_isDSIC $\ldots$\\
+theorem dynamicProgrammingOptimalAllocation\_optimal $\ldots$\\
+theorem integralGreedy\_halfApprox\_dpOptimal $\ldots$
+\end{leanbox}
 
 \subsection{Social choice}
 \label{sec:supp:social-choice}
