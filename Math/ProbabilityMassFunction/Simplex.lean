@@ -43,6 +43,15 @@ theorem toVector_injective [Fintype α] :
   have hreal : (μ a).toReal = (ν a).toReal := congrFun h a
   exact (ENNReal.toReal_eq_toReal_iff' (PMF.apply_ne_top μ a) (PMF.apply_ne_top ν a)).mp hreal
 
+@[simp]
+theorem toVector_pos_iff_ne_zero [Fintype α] (μ : PMF α) (a : α) :
+    0 < toVector μ a ↔ μ a ≠ 0 := by
+  constructor
+  · intro h hzero
+    simp [toVector, hzero] at h
+  · intro h
+    exact ENNReal.toReal_pos h (PMF.apply_ne_top μ a)
+
 /-- Turn a point of the finite standard simplex into a `PMF`. -/
 def ofVector [Fintype α] (w : α → ℝ) (hw : w ∈ stdSimplex ℝ α) : PMF α :=
   ⟨fun a => ENNReal.ofReal (w a), by
@@ -61,6 +70,19 @@ theorem ofVector_toReal [Fintype α] {w : α → ℝ} (hw : w ∈ stdSimplex ℝ
     ((ofVector w hw) a).toReal = w a := by
   rw [ofVector_apply]
   exact ENNReal.toReal_ofReal (hw.1 a)
+
+@[simp]
+theorem ofVector_ne_zero_iff [Fintype α] {w : α → ℝ} (hw : w ∈ stdSimplex ℝ α)
+    (a : α) :
+    ofVector w hw a ≠ 0 ↔ 0 < w a := by
+  constructor
+  · intro h
+    have hpos := ENNReal.toReal_pos h (PMF.apply_ne_top (ofVector w hw) a)
+    rwa [ofVector_toReal hw a] at hpos
+  · intro h hzero
+    have hreal : ((ofVector w hw) a).toReal = 0 := by simp [hzero]
+    rw [ofVector_toReal hw a] at hreal
+    linarith
 
 /-- Converting a simplex vector to a `PMF` and back recovers the vector. -/
 theorem toVector_ofVector [Fintype α] {w : α → ℝ} (hw : w ∈ stdSimplex ℝ α) :
