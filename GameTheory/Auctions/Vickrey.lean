@@ -4,8 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import Math.Probability
-import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Auctions.Basic
 
 /-!
 # Vickrey (Second-Price) Auction
@@ -16,7 +15,6 @@ the second-highest bid. Vickrey (1961) proved that truthful bidding
 
 ## Main definitions
 
-* `maxOtherBid` — maximum bid among opponents
 * `vickreyPayoff` — payoff function for a second-price auction
 
 ## Main results
@@ -29,25 +27,6 @@ namespace GameTheory
 open Math.Probability
 
 variable {ι : Type} [Fintype ι] [DecidableEq ι]
-
-open Classical in
-/-- The maximum bid among all players other than `who`.
-    Returns 0 if `who` is the only player. -/
-noncomputable def maxOtherBid (bids : ι → ℝ) (who : ι) : ℝ :=
-  let others := Finset.univ.filter (· ≠ who)
-  if h : others.Nonempty then others.sup' h bids else 0
-
-open Classical in
-/-- The max-other-bid is independent of `who`'s own bid. -/
-theorem maxOtherBid_update_self (bids : ι → ℝ) (who : ι) (b : ℝ) :
-    maxOtherBid (Function.update bids who b) who = maxOtherBid bids who := by
-  simp only [maxOtherBid]
-  split <;> simp_all only [ne_eq]
-  rename_i h
-  refine Finset.sup'_congr h rfl ?_
-  intro i hi
-  have hiw : i ≠ who := (Finset.mem_filter.mp hi).2
-  simp [Function.update_of_ne hiw]
 
 open Classical in
 /-- Payoff in a second-price auction with valuations `v`.

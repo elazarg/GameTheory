@@ -10,7 +10,7 @@ import GameTheory.Concepts.Equilibrium.SolutionConcepts
 /-!
 # Quasi-Linear Games and Auctions
 
-An auction is a `KernelGame` whose utility admits a **quasi-linear
+An auction is a `KernelGame` whose utility has a **quasi-linear
 decomposition**: `u_i(ω) = v_i(allocation(ω)) − payment(ω, i)`.
 
 This quasi-linear structure is additional data on a `KernelGame`, not a
@@ -35,6 +35,27 @@ with this structure.
 namespace GameTheory
 
 open Math.Probability
+
+variable {ι : Type} [Fintype ι] [DecidableEq ι]
+
+open Classical in
+/-- The maximum bid among all players other than `who`.
+Returns `0` if `who` is the only player. -/
+noncomputable def maxOtherBid (bids : ι → ℝ) (who : ι) : ℝ :=
+  let others := Finset.univ.filter (· ≠ who)
+  if h : others.Nonempty then others.sup' h bids else 0
+
+open Classical in
+/-- The max-other-bid is independent of `who`'s own bid. -/
+theorem maxOtherBid_update_self (bids : ι → ℝ) (who : ι) (b : ℝ) :
+    maxOtherBid (Function.update bids who b) who = maxOtherBid bids who := by
+  simp only [maxOtherBid]
+  split <;> simp_all only [ne_eq]
+  rename_i h
+  refine Finset.sup'_congr h rfl ?_
+  intro i hi
+  have hiw : i ≠ who := (Finset.mem_filter.mp hi).2
+  simp [Function.update_of_ne hiw]
 
 namespace KernelGame
 
