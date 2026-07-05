@@ -3,7 +3,9 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
+import GameTheory.Mechanism.EuclideanPreference
 import Math.Probability
+import Math.WeightedMedian
 
 /-!
 # The Median Voter Theorem
@@ -23,6 +25,10 @@ ideal point at most `m`, and at least half have ideal point at least `m`.
 
 * `median_is_condorcet_winner` — a median ideal point beats every alternative
   (weakly) in pairwise majority
+* `medianIdeal_is_condorcet_winner` — the canonical median of the ideal points
+  is a Condorcet winner
+* `medianIdeal_strategyproof` / `medianIdeal_no_manipulation` — the canonical
+  median rule is strategyproof (Moulin 1980)
 -/
 
 namespace GameTheory
@@ -30,10 +36,6 @@ namespace GameTheory
 open Finset
 
 variable {ι : Type*} [Fintype ι]
-
-/-- Euclidean single-peaked preference: voter `i` with ideal point `peak i` strictly
-prefers alternative `a` to `b` exactly when `a` is closer to the ideal point. -/
-def Prefers (peak : ι → ℝ) (i : ι) (a b : ℝ) : Prop := |a - peak i| < |b - peak i|
 
 open Classical in
 /-- **Median Voter Theorem** (Black 1948). Under Euclidean single-peaked preferences,
@@ -97,5 +99,50 @@ theorem median_is_condorcet_winner (peak : ι → ℝ) (m x : ℝ)
         + (univ.filter (fun i => ¬ peak i ≤ m)).card = Fintype.card ι := by
       rw [Finset.card_filter_add_card_filter_not, card_univ]
     omega
+
+section CanonicalMedian
+
+variable [Nonempty ι] (peak : ι → ℝ)
+
+/-- The canonical median of the ideal points. -/
+noncomputable def medianIdeal : ℝ := Math.weightedMedian peak (fun _ => 1)
+
+open Classical in
+/-- The canonical median of the ideal points is a Condorcet winner. -/
+theorem medianIdeal_is_condorcet_winner (x : ℝ) :
+    (univ.filter (fun i => Prefers peak i x (medianIdeal peak))).card
+      ≤ (univ.filter (fun i => Prefers peak i (medianIdeal peak) x)).card := by
+  apply median_is_condorcet_winner
+  · have h := Math.totalWeight_le_two_mul_cumWeight_weightedMedian peak
+      (fun _ => 1)
+    rw [Math.totalWeight_one, Math.cumWeight_one] at h
+    exact h
+  · have h := (Math.isWeightedMedian_weightedMedian peak (fun _ => 1)).1
+    rw [Math.totalWeight_one, Math.leftWeight_one] at h
+    have hsplit := Finset.card_filter_add_card_filter_not (s := univ)
+      (p := fun i => peak i < medianIdeal peak)
+    simp only [not_lt, card_univ] at hsplit
+    have : (univ.filter fun i => peak i < medianIdeal peak).card
+        = (univ.filter fun a => peak a < Math.weightedMedian peak fun _ => 1).card :=
+      rfl
+    omega
+
+/-- **Median strategyproofness** (Moulin 1980).  Reporting the true ideal point
+is optimal against the canonical median rule: no misreport moves the median
+strictly closer to a voter's ideal point. -/
+theorem medianIdeal_strategyproof [DecidableEq ι] (i : ι) (x : ℝ) :
+    |medianIdeal peak - peak i|
+      ≤ |medianIdeal (Function.update peak i x) - peak i| := by
+  refine Math.abs_weightedMedian_sub_le_update ?_ i x
+  rw [Math.totalWeight_one]
+  exact Fintype.card_pos
+
+/-- Median strategyproofness in preference form: no voter strictly prefers the
+median of a misreported profile. -/
+theorem medianIdeal_no_manipulation [DecidableEq ι] (i : ι) (x : ℝ) :
+    ¬ Prefers peak i (medianIdeal (Function.update peak i x)) (medianIdeal peak) :=
+  not_lt.mpr (medianIdeal_strategyproof peak i x)
+
+end CanonicalMedian
 
 end GameTheory
