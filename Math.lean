@@ -16,6 +16,8 @@ import Math.ParameterizedChain
 import Math.OptimizationLocalGlobal
 import Math.BoundedLists
 import Math.DAG
+import Math.WeightedMedian
+import Math.WindowedContraction
 import Math.SchauderFixedPoint
 import Math.SimplexApproximation
 import Math.OnlineLearning
