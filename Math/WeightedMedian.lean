@@ -423,6 +423,39 @@ theorem exists_weightedMedian_lt_ge_of_weightedMedian_lt
   have hstrict := two_mul_cumWeight_lt_of_lt_weightedMedian hW h
   omega
 
+/-- With positive total weight, the canonical weighted median is attained at a
+position of positive weight: zero-weight members never determine it. -/
+theorem exists_pos_weight_eq_weightedMedian {pos : α → ℝ} {w : α → ℕ}
+    (hW : 0 < totalWeight w) :
+    ∃ a, 0 < w a ∧ pos a = weightedMedian pos w := by
+  classical
+  have hcum : totalWeight w ≤ 2 * cumWeight pos w (weightedMedian pos w) :=
+    totalWeight_le_two_mul_cumWeight_weightedMedian pos w
+  have hcpos : 0 < cumWeight pos w (weightedMedian pos w) := by omega
+  have hne : (univ.filter fun a =>
+      0 < w a ∧ pos a ≤ weightedMedian pos w).Nonempty := by
+    obtain ⟨a, ha, hwa⟩ := Finset.exists_ne_zero_of_sum_ne_zero hcpos.ne'
+    simp only [mem_filter, mem_univ, true_and] at ha
+    exact ⟨a, mem_filter.mpr ⟨mem_univ a, Nat.pos_of_ne_zero hwa, ha⟩⟩
+  obtain ⟨b, hb, hmax⟩ := Finset.exists_max_image _ pos hne
+  simp only [mem_filter, mem_univ, true_and] at hb
+  obtain ⟨hwb, hbm⟩ := hb
+  have hcumeq : cumWeight pos w (pos b)
+      = cumWeight pos w (weightedMedian pos w) := by
+    unfold cumWeight
+    refine Finset.sum_subset ?_ ?_
+    · intro a ha
+      simp only [mem_filter, mem_univ, true_and] at ha ⊢
+      exact le_trans ha hbm
+    · intro a ha hna
+      simp only [mem_filter, mem_univ, true_and] at ha hna
+      by_contra hwa0
+      exact hna (hmax a (mem_filter.mpr
+        ⟨mem_univ a, Nat.pos_of_ne_zero hwa0, ha⟩))
+  have hle : weightedMedian pos w ≤ pos b :=
+    weightedMedian_le (mem_image_of_mem pos (mem_univ b)) (by omega)
+  exact ⟨b, hwb, le_antisymm hbm hle⟩
+
 end Median
 
 section UpdateBounds

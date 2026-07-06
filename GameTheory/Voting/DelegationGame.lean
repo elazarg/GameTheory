@@ -30,8 +30,8 @@ equilibrium definitions per voting model.
 * `isBestResponse_cast_iff_of_resolves` — copy lemma, strategic form: a voter
   best-responds with a delegative ballot iff they best-respond by casting the
   ballot it resolves to
-* `KernelGame.IsNash.isBestResponse_cast` — in a Nash profile, every voter is
-  also best-responding by casting their resolved ballot directly
+* `isBestResponse_cast_of_isNash` — in a Nash profile, every voter is also
+  best-responding by casting their resolved ballot directly
 * `isNash_directVotingGame_of_isNash_delegationGame` — an all-cast Nash profile
   of the delegation game restricts to a Nash profile of direct voting
 -/

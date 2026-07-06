@@ -45,7 +45,13 @@ theorem sum_weight_univ (d : DelegationProfile ι β) :
 variable [DecidableEq ι]
 
 /-- The delegation power game: coalitions of voters win when their accumulated
-guru weight meets the quota `q`. -/
+guru weight meets the quota `q`.
+
+Delegations are held fixed: a coalition benefits from a delegator only through
+that delegator's guru, so voters who delegate are null players. This is the
+guru-power reading, which measures how a delegation structure concentrates
+influence; treating delegations as revocable would instead give every voter
+control of one vote, a majority game independent of the delegation profile. -/
 noncomputable def delegationPowerGame (d : DelegationProfile ι β) (q : ℕ)
     (hq : 0 < q) : CoalGame ι :=
   CoalGame.weightedMajority d.weight q hq

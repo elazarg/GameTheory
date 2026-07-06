@@ -57,6 +57,16 @@ example (b : Bool) : ¬ cyclic.Resolves 0 b :=
 /-- The caster outside the cycle still resolves. -/
 example : cyclic.Resolves 2 false := Casts.resolves rfl
 
+/-- A tail into a two-cycle: `0` delegates to `1`, while `1` and `2` delegate
+to each other. -/
+def tailCycle : DelegationProfile (Fin 3) Bool :=
+  ![Sum.inl 1, Sum.inl 2, Sum.inl 1]
+
+/-- A voter who merely reaches a cycle also abstains. -/
+example (b : Bool) : ¬ tailCycle.Resolves 0 b :=
+  not_resolves_of_reflTransGen_cycle (Relation.ReflTransGen.single rfl)
+    (Relation.TransGen.head rfl (Relation.TransGen.single rfl))
+
 /-- Star delegation: `0` delegates to `2`; `1` casts `1`; `2` casts `-1`.
 The caster `2` carries weight two, so liquid majority elects `-1` even though
 the cast ballots alone are tied. -/

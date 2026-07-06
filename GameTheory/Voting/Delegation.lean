@@ -35,13 +35,14 @@ composition with anonymous voting rules live in
 ## Main results
 
 * `Resolves.unique`, `IsGuruOf.unique` — delegation chains are deterministic
-* `Resolves.congr` — resolution is local: profiles that agree away from `i` and
+* `resolves_congr` — resolution is local: profiles that agree away from `i` and
   resolve `i` alike resolve every voter alike
 * `resolves_update_cast_iff` (copy lemma) — replacing a voter's delegative ballot
   by a direct cast of its resolved ballot changes no voter's resolution
 * `resolves_total_of_wellFounded` — if delegation chains are well-founded, every
   voter resolves (no finiteness needed)
-* `not_resolves_of_cycle` — voters on delegation cycles abstain
+* `not_resolves_of_cycle`, `not_resolves_of_reflTransGen_cycle` — voters on, or
+  whose chains reach, a delegation cycle abstain
 * `resolves_total_iff_acyclic` — over a finite electorate, full participation is
   exactly acyclicity of the delegation graph
 -/
@@ -112,6 +113,18 @@ theorem resolves_iff :
   · rintro (h | ⟨j, hstep, hres⟩)
     · exact h.resolves
     · exact hres.delegate hstep
+
+/-- Resolution transports down the delegation chain: every voter a resolving
+voter's chain passes through resolves to the same ballot. -/
+theorem Resolves.of_reflTransGen (hic : Relation.ReflTransGen d.DelegatesTo i k)
+    (h : d.Resolves i b) : d.Resolves k b := by
+  induction hic with
+  | refl => exact h
+  | tail _ hstep ih =>
+    rcases resolves_iff.mp ih with hcast | ⟨j', hj', hres⟩
+    · exact (hstep.not_casts hcast).elim
+    · obtain rfl := hstep.eq hj'
+      exact hres
 
 /-- Delegation chains are deterministic: from a fixed voter, any two chains ending
 at casters end at the same caster. -/
@@ -347,6 +360,12 @@ theorem not_resolves_of_cycle (hcyc : Relation.TransGen d.DelegatesTo i i) :
     ¬ d.Resolves i b :=
   fun ⟨_, hchain, hcast⟩ =>
     not_cycle_of_reachable_caster hchain hcast.isCaster hcyc
+
+/-- Voters whose delegation chain reaches a cycle abstain. -/
+theorem not_resolves_of_reflTransGen_cycle
+    (hik : Relation.ReflTransGen d.DelegatesTo i k)
+    (hcyc : Relation.TransGen d.DelegatesTo k k) : ¬ d.Resolves i b :=
+  fun h => not_resolves_of_cycle hcyc (h.of_reflTransGen hik)
 
 /-- Over a finite electorate, every voter resolves iff the delegation graph is
 acyclic. -/
