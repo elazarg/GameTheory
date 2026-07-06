@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 import GameTheory.Cooperative.CoalitionalGame.Core
 import GameTheory.Cooperative.CoalitionalGame.Shapley
 import GameTheory.Cooperative.CoalitionalGame.Banzhaf
+import GameTheory.Cooperative.CoalitionalGame.WeightedMajority
 import GameTheory.Cooperative.CoalitionalGame.Convex
 import GameTheory.Cooperative.CoalitionalGame.Additive
 import GameTheory.Cooperative.CoalitionalGame.CostOfStability

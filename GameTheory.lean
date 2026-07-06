@@ -132,6 +132,15 @@ import GameTheory.Mechanism.Condorcet
 import GameTheory.Mechanism.EuclideanPreference
 import GameTheory.Mechanism.MedianVoter
 import GameTheory.Mechanism.May
+
+-- Voting and fluid democracy
+import GameTheory.Voting.Delegation
+import GameTheory.Voting.LiquidDemocracy
+import GameTheory.Voting.DelegationGame
+import GameTheory.Voting.Majority
+import GameTheory.Voting.Median
+import GameTheory.Voting.Power
+
 import GameTheory.Concepts.Knowledge.CommonKnowledge
 import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
 
