@@ -144,6 +144,11 @@ import GameTheory.Voting.Power
 import GameTheory.Concepts.Knowledge.CommonKnowledge
 import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
 
+-- Congestion games
+import GameTheory.Congestion.Basic
+import GameTheory.Congestion.Rosenthal
+import GameTheory.Congestion.AffinePoA
+
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic
 import GameTheory.Auctions.Vickrey

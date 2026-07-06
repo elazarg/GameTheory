@@ -36,14 +36,12 @@ utility to be the input function.  The kernel-game image is
 deterministic; randomness in NFGs enters only through the mixed
 extension (\Cref{sec:semantic-core:kernelgame}).
 
-The library's NFG layer also formalizes two specialized
-strategic-form structures whose form is a refinement of NFG and
-whose theorems are about that refinement:\ \emph{congestion
-games}~\citep{Rosenthal1973}, where a strategy is a subset of
-shared resources and a player's payoff sums per-resource delays
-that depend only on congestion (and Rosenthal's potential makes
-every congestion game an exact potential game, hence yields pure
-Nash existence and the finite improvement property); and
+The library's NFG layer also formalizes a specialized
+strategic-form structure whose form is a refinement of NFG and
+whose theorems are about that refinement (congestion games,
+formerly presented here, now occupy the dedicated top-level
+\TT{Congestion/} directory with Rosenthal's potential and
+price-of-anarchy bounds):\
 \emph{public goods}, two free-standing theorems on the
 parameterized payoff $e + \mathrm{mpcr} \cdot \sum_j c_j - c_i$
 (free-riding is dominant when $\mathrm{mpcr} < 1$, full
@@ -98,7 +96,8 @@ contain.
 \leancorr{\TT{Languages/NFG/} contains \TT{Syntax}, \TT{Compile},
 \TT{Examples} (canonical 2-player games), \TT{Tests},
 \TT{Theorems}, plus the strategic-form subclass files
-\TT{CongestionGame}, \TT{PublicGoods}, \TT{Stackelberg}.
+\TT{PublicGoods}, \TT{Stackelberg}; congestion games live in the
+top-level \TT{Congestion/} directory.
 The cooperative models live under \TT{Cooperative/} as
 \TT{CoalitionalGame}, \TT{Bargaining}, \TT{Matching}.
 Supplement~§5.1.}

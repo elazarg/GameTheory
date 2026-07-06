@@ -3,30 +3,38 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-
-import GameTheory.Core.GameProperties
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
-import GameTheory.Concepts.Potential.PotentialFIP
-import GameTheory.Concepts.Potential.PotentialWellFounded
 import Math.Probability
 
 /-!
-# Congestion Games
+# Congestion games
 
 A congestion game has a finite set of resources. Each player chooses a
-subset of resources (their strategy), and the cost/payoff for each resource
-depends only on how many players use it (congestion). Rosenthal (1973)
-proved that every congestion game admits an exact potential function.
+strategy that occupies a set of resources, and the cost of each resource
+depends only on how many players use it (its congestion). Player costs sum
+the delays of the occupied resources.
+
+This file provides the model and its congestion-counting toolkit. Rosenthal's
+potential and its consequences live in `GameTheory.Congestion.Rosenthal`,
+smoothness and price-of-anarchy bounds in `GameTheory.Congestion.AffinePoA`,
+and the Pigou/Braess routing instances in `GameTheory.Congestion.Examples`.
 
 ## Main definitions
 
-* `CongestionGame` — congestion game structure
-* `CongestionGame.toKernelGame` — embedding into `KernelGame`
-* `CongestionGame.potential` — Rosenthal's potential function
+* `CongestionGame` — resources, per-player strategy sets, occupied resources,
+  and congestion-dependent delays
+* `CongestionGame.congestion` / `congestionWithout` — resource load counting
+* `CongestionGame.playerCost` — sum of delays on the chosen resources
+* `CongestionGame.socialCost` — total cost over all players
+* `CongestionGame.toKernelGame` — the induced strategic game
+  (utility = negative cost)
 
 ## Main results
 
-* `CongestionGame.isExactPotential` — Rosenthal's theorem: the potential is exact
+* `congestion_decompose` / `congestion_update` — the deviation calculus of
+  resource loads underlying both Rosenthal's potential and smoothness bounds
+* `socialCost_eq_sum_load_delay` — social cost aggregates by resource:
+  each resource contributes its load times its delay
 -/
 
 open scoped BigOperators
@@ -69,14 +77,18 @@ noncomputable def playerCost (C : CongestionGame ι) (σ : C.Profile) (who : ι)
   ∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r)
 
 open Classical in
+/-- The social cost of a profile: total cost over all players. -/
+noncomputable def socialCost (C : CongestionGame ι) (σ : C.Profile) : ℝ :=
+  ∑ i, C.playerCost σ i
+
+open Classical in
 /-- Convert to a `KernelGame` with utility = negative cost. -/
 noncomputable def toKernelGame (C : CongestionGame ι) : KernelGame ι :=
   KernelGame.ofEU C.StrategySet (fun σ i => -C.playerCost σ i)
 
-open Classical in
-/-- Rosenthal's potential function: negative sum over resources of cumulative delay. -/
-noncomputable def potential (C : CongestionGame ι) (σ : C.Profile) : ℝ :=
-  - ∑ r : C.Resource, ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1)
+@[simp] theorem eu_toKernelGame (C : CongestionGame ι) (σ : C.Profile) (i : ι) :
+    C.toKernelGame.eu σ i = -C.playerCost σ i := by
+  simp [toKernelGame]
 
 open Classical in
 /-- Congestion excluding player `who`: count of other players using resource `r`. -/
@@ -108,7 +120,7 @@ theorem congestion_decompose (C : CongestionGame ι) (σ : C.Profile)
 
 open Classical in
 /-- Other players' congestion is invariant under `Function.update` for `who`. -/
-theorem congestionWithout_update (C : CongestionGame ι) (σ : C.Profile)
+theorem congestionWithout_update [DecidableEq ι] (C : CongestionGame ι) (σ : C.Profile)
     (who : ι) (s' : C.StrategySet who) (r : C.Resource) :
     C.congestionWithout (Function.update σ who s') who r =
     C.congestionWithout σ who r := by
@@ -120,7 +132,7 @@ theorem congestionWithout_update (C : CongestionGame ι) (σ : C.Profile)
 
 open Classical in
 /-- Congestion after `Function.update`: others' congestion + new indicator. -/
-theorem congestion_update (C : CongestionGame ι) (σ : C.Profile)
+theorem congestion_update [DecidableEq ι] (C : CongestionGame ι) (σ : C.Profile)
     (who : ι) (s' : C.StrategySet who) (r : C.Resource) :
     C.congestion (Function.update σ who s') r =
     C.congestionWithout σ who r +
@@ -130,55 +142,48 @@ theorem congestion_update (C : CongestionGame ι) (σ : C.Profile)
   rw [h, congestionWithout_update]
 
 open Classical in
-/-- Rosenthal's theorem: the potential function is an exact potential
-    for the congestion game. -/
-theorem isExactPotential (C : CongestionGame ι) :
-    C.toKernelGame.IsExactPotential C.potential := by
-  intro who (σ : C.Profile) (s' : C.StrategySet who)
-  simp only [toKernelGame, KernelGame.eu_ofEU, playerCost, potential, Function.update_self]
-  set σ' := Function.update σ who s'
-  suffices h : ∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r) -
-      ∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r) =
-      ∑ r, ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1) -
-      ∑ r, ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1) by
-    change -(∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r)) -
-          -(∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r)) =
-        -(∑ r, ∑ k ∈ Finset.range (C.congestion σ' r), C.delay r (k + 1)) -
-          -(∑ r, ∑ k ∈ Finset.range (C.congestion σ r), C.delay r (k + 1))
-    linarith
-  have h_sum_eq : ∀ (S : Finset C.Resource) (f : C.Resource → ℝ),
-      ∑ r ∈ S, f r = ∑ r, if r ∈ S then f r else 0 := by
-    intro S f; conv_rhs => rw [Finset.sum_ite_mem, Finset.univ_inter]
-  rw [h_sum_eq (C.resources who (σ who)), h_sum_eq (C.resources who s')]
-  rw [← Finset.sum_sub_distrib, ← Finset.sum_sub_distrib]
-  apply Finset.sum_congr rfl
-  intro r _
-  set n := C.congestionWithout σ who r
-  rw [C.congestion_decompose σ who r, C.congestion_update σ who s' r]
-  by_cases hold : r ∈ C.resources who (σ who) <;> by_cases hnew : r ∈ C.resources who s'
-  · simp [hold, hnew]
-  · simp only [hold, hnew, ite_true, ite_false, add_zero]
-    rw [Finset.sum_range_succ]; ring
-  · simp only [hold, hnew, ite_true, ite_false, add_zero]
-    rw [Finset.sum_range_succ]; ring
-  · simp [hold, hnew]
+/-- Loads never exceed the other players' load by more than one. -/
+theorem congestion_le_congestionWithout_add_one (C : CongestionGame ι)
+    (σ : C.Profile) (who : ι) (r : C.Resource) :
+    C.congestion σ r ≤ C.congestionWithout σ who r + 1 := by
+  rw [congestion_decompose C σ who r]
+  split_ifs <;> omega
 
 open Classical in
-/-- Congestion games have Nash equilibria (via Rosenthal's potential). -/
-theorem nash_exists (C : CongestionGame ι) [∀ i, Nonempty (C.StrategySet i)] :
-    ∃ σ : C.Profile, C.toKernelGame.IsNash σ := by
-  haveI (i : ι) : Fintype (C.toKernelGame.Strategy i) := C.instFintypeStrategy i
-  haveI (i : ι) : Nonempty (C.toKernelGame.Strategy i) := ‹∀ i, Nonempty (C.StrategySet i)› i
-  exact C.isExactPotential.nash_exists
+/-- Other players' loads are bounded by the full load. -/
+theorem congestionWithout_le_congestion (C : CongestionGame ι)
+    (σ : C.Profile) (who : ι) (r : C.Resource) :
+    C.congestionWithout σ who r ≤ C.congestion σ r := by
+  rw [congestion_decompose C σ who r]
+  split_ifs <;> omega
 
 open Classical in
-/-- Congestion games have the finite improvement property. -/
-theorem no_infinite_improving_path (C : CongestionGame ι) :
-    ¬ ∃ (path : ℕ → C.Profile),
-        ∀ n, C.toKernelGame.ImprovingStep (path n) (path (n + 1)) := by
-  haveI (i : ι) : Finite (C.toKernelGame.Strategy i) :=
-    @Fintype.finite _ (C.instFintypeStrategy i)
-  exact C.isExactPotential.no_infinite_improving_path
+/-- Per-resource quantities summed over each player's chosen resources
+aggregate by load: resource `r` is counted `congestion σ r` times. -/
+theorem sum_players_sum_resources (C : CongestionGame ι) (σ : C.Profile)
+    (f : C.Resource → ℝ) :
+    ∑ i, ∑ r ∈ C.resources i (σ i), f r
+      = ∑ r : C.Resource, (C.congestion σ r : ℝ) * f r := by
+  have h : ∀ i, ∑ r ∈ C.resources i (σ i), f r
+      = ∑ r : C.Resource, if r ∈ C.resources i (σ i) then f r else 0 := by
+    intro i
+    conv_rhs => rw [Finset.sum_ite_mem, Finset.univ_inter]
+  simp only [h]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun r _ => ?_
+  rw [Finset.sum_ite, Finset.sum_const, Finset.sum_const_zero, add_zero,
+    nsmul_eq_mul]
+  rfl
+
+open Classical in
+/-- Social cost aggregates by resource: each resource contributes its delay
+taken with multiplicity its load. -/
+theorem socialCost_eq_sum_load_delay (C : CongestionGame ι) (σ : C.Profile) :
+    C.socialCost σ
+      = ∑ r : C.Resource, (C.congestion σ r : ℝ) * C.delay r (C.congestion σ r) := by
+  rw [socialCost]
+  simp only [playerCost]
+  exact C.sum_players_sum_resources σ _
 
 end CongestionGame
 

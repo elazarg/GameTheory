@@ -1187,11 +1187,14 @@ languages with non-trivial outcome types.
 
 \Variants
 \TT{Languages/NFG/} also packages worked strategic-form
-subclasses:\ \TT{CongestionGame.lean} (Rosenthal's potential
-\citep{Rosenthal1973} — exact potential, pure Nash existence,
-and FIP), \TT{PublicGoods.lean} (free-ride dominance and
+subclasses:\ \TT{PublicGoods.lean} (free-ride dominance and
 full-cooperation Pareto-dominance lemmas), \TT{Stackelberg.lean}
 (leader-follower form with Stackelberg-leader-advantage theorem).
+Congestion games live in the dedicated top-level \TT{Congestion/}
+directory (\TT{Basic}, \TT{Rosenthal} — exact potential
+\citep{Rosenthal1973}, pure Nash existence, FIP, weak acyclicity —
+\TT{AffinePoA} with the smoothness-based $5/2$ price-of-anarchy
+bound, and the Pigou/Braess instances in \TT{Examples}).
 Each subclass lives in its own namespace and exposes its
 characteristic theorem; the canonical 2-player examples
 (Prisoner's Dilemma, Matching Pennies, Stag Hunt, Hawk--Dove,
@@ -2297,8 +2300,9 @@ Three suggested traversals.
 \S\ref{sec:supp:nfg} or \S\ref{sec:supp:efg} as a template →
 \S\ref{sec:supp:expressiveness} (Language/Reduction abstraction)
 to register the language for bridges.  The
-worked subclass files inside \TT{Languages/NFG/} (CongestionGame,
-PublicGoods, Stackelberg) are useful as additional templates.
+worked subclass files inside \TT{Languages/NFG/} (PublicGoods,
+Stackelberg) and the \TT{Congestion/} directory are useful as
+additional templates.
 
 \paragraph{(c)~"I want to follow the Kuhn theorem proof end-to-end."}\
 \S\ref{sec:supp:probability} → \S\ref{sec:supp:gameform},
