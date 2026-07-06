@@ -48,7 +48,8 @@ structure CongestionGame (ι : Type) [Fintype ι] where
   /-- The type of resources. -/
   Resource : Type
   [instFintypeResource : Fintype Resource]
-  /-- Each player's strategy is a `Finset` of resources. -/
+  /-- Abstract per-player strategy types; the resources a strategy occupies
+  are given by `resources`. -/
   StrategySet : ι → Type
   [instFintypeStrategy : ∀ i, Fintype (StrategySet i)]
   /-- Which resources a strategy uses. -/
@@ -82,9 +83,12 @@ noncomputable def socialCost (C : CongestionGame ι) (σ : C.Profile) : ℝ :=
   ∑ i, C.playerCost σ i
 
 open Classical in
-/-- Convert to a `KernelGame` with utility = negative cost. -/
+/-- Convert to a `KernelGame` with utility = negative cost. The outcome
+carrier is the pure profile, so it is finite whenever the strategy sets are —
+which lets finite-outcome results (mixed extensions, robust price-of-anarchy
+bounds for coarse correlated equilibria) instantiate directly. -/
 noncomputable def toKernelGame (C : CongestionGame ι) : KernelGame ι :=
-  KernelGame.ofEU C.StrategySet (fun σ i => -C.playerCost σ i)
+  KernelGame.ofPureEU C.StrategySet (fun σ i => -C.playerCost σ i)
 
 @[simp] theorem eu_toKernelGame (C : CongestionGame ι) (σ : C.Profile) (i : ι) :
     C.toKernelGame.eu σ i = -C.playerCost σ i := by

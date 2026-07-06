@@ -45,7 +45,8 @@ theorem isExactPotential (C : CongestionGame ι) :
     C.toKernelGame.IsExactPotential C.potential := by
   classical
   intro who (σ : C.Profile) (s' : C.StrategySet who)
-  simp only [toKernelGame, KernelGame.eu_ofEU, playerCost, potential, Function.update_self]
+  simp only [toKernelGame, KernelGame.eu_ofPureEU, playerCost, potential,
+    Function.update_self]
   set σ' := Function.update σ who s'
   suffices h : ∑ r ∈ C.resources who (σ who), C.delay r (C.congestion σ r) -
       ∑ r ∈ C.resources who s', C.delay r (C.congestion σ' r) =

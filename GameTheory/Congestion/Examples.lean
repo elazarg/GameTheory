@@ -15,18 +15,21 @@ infrastructure with two atomic players.
 
 **Pigou**: two parallel edges, one with load-proportional delay and one with
 constant delay `2`. Sending both players on the variable edge is a Nash
-equilibrium of social cost `4`, while the optimum splits at cost `3` — a
-price-of-anarchy witness of `4/3`, inside the affine `5/2` guarantee.
+equilibrium of social cost `4`, while the socially optimal profile splits at
+cost `3` (`pigou_split_optimal`) — a price-of-anarchy witness of `4/3`,
+inside the affine `5/2` guarantee.
 
 **Braess**: the classical 4-edge diamond (plus zero-cost shortcut). In the
 restricted network the split profile is a Nash equilibrium of social cost `7`.
 Adding the free shortcut creates a Nash equilibrium in which both players use
-it at social cost `8`, and destroys the split equilibrium: adding capacity
-degrades equilibrium welfare.
+it at social cost `8`, while the split profile stops being an equilibrium:
+the shortcut equilibrium exhibited costs strictly more than the equilibrium
+it displaces.
 
 ## Main results
 
-* `pigou_both_isNash`, `pigou_poa_witness` — the `4/3` lower-bound instance
+* `pigou_both_isNash`, `pigou_split_optimal`, `pigou_poa_witness` — the `4/3`
+  lower-bound instance
 * `braessRestricted_split_isNash`, `braessAugmented_both_isNash`,
   `braessAugmented_split_not_isNash`, `braess_socialCost_increases` —
   Braess's paradox on the 4-edge network
@@ -93,7 +96,18 @@ theorem pigou_socialCost_split : pigou.socialCost ![0, 1] = 3 := by
   simp [socialCost, Fin.sum_univ_two, playerCost, congestion_two, pigou]
   norm_num
 
-/-- Pigou witnesses a price of anarchy of `4/3`. -/
+/-- The split profile is socially optimal. -/
+theorem pigou_split_optimal (τ : pigou.Profile) :
+    pigou.socialCost ![0, 1] ≤ pigou.socialCost τ := by
+  rw [pigou_socialCost_split]
+  obtain ⟨t0, h0⟩ : ∃ x, τ 0 = x := ⟨_, rfl⟩
+  obtain ⟨t1, h1⟩ : ∃ x, τ 1 = x := ⟨_, rfl⟩
+  fin_cases t0 <;> fin_cases t1 <;>
+    simp [socialCost, Fin.sum_univ_two, playerCost, congestion_two, pigou,
+      h0, h1] <;> norm_num
+
+/-- Pigou witnesses a price of anarchy of `4/3`: the all-variable equilibrium
+costs `4/3` times the optimum. -/
 theorem pigou_poa_witness :
     pigou.socialCost ![0, 0] = 4 / 3 * pigou.socialCost ![0, 1] := by
   rw [pigou_socialCost_both, pigou_socialCost_split]
@@ -184,8 +198,9 @@ theorem braessAugmented_split_not_isNash :
     Finset.mem_insert, Finset.mem_singleton] at h
   norm_num at h
 
-/-- **Braess's paradox**: adding the free shortcut raises equilibrium social
-cost from `7` to `8`. -/
+/-- **Braess's paradox**: the shortcut equilibrium of the augmented network
+costs strictly more than the split equilibrium of the restricted network —
+which the shortcut destroys (`braessAugmented_split_not_isNash`). -/
 theorem braess_socialCost_increases :
     braessRestricted.socialCost ![0, 1] < braessAugmented.socialCost ![2, 2] := by
   rw [braessRestricted_socialCost_split, braessAugmented_socialCost_both]

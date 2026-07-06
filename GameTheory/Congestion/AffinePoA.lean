@@ -16,15 +16,14 @@ smoothness argument: affine congestion games are `(5/3, -1/3)`-smooth in the
 utility form of `Concepts/Welfare/Smoothness` (equivalently `(5/3, 1/3)`-cost
 smooth), driven by the integer inequality `y(z+1) ≤ (5/3)y² + (1/3)z²`.
 
-Via `IsSmooth.coarseCorrelated_bound` the same constant automatically extends
-to coarse correlated equilibria (robust price of anarchy).
-
 ## Main results
 
 * `CongestionGame.ck_inequality` — the Christodoulou–Koutsoupias pairing bound
 * `CongestionGame.sum_deviation_cost_le` — cost-form `(5/3, 1/3)`-smoothness
 * `CongestionGame.isSmooth_of_isAffine` — the `KernelGame.IsSmooth` instance
 * `CongestionGame.socialCost_nash_le` — pure price of anarchy `≤ 5/2`
+* `CongestionGame.correlated_socialCost_le` — robust price of anarchy: the
+  same constant for every coarse correlated equilibrium
 -/
 
 open scoped BigOperators
@@ -139,6 +138,25 @@ theorem socialCost_nash_le [DecidableEq ι] (C : CongestionGame ι)
   have hb := KernelGame.IsSmooth.nash_bound C.toKernelGame
     (C.isSmooth_of_isAffine h) hσ τ
   rw [socialWelfare_toKernelGame, socialWelfare_toKernelGame] at hb
+  linarith
+
+/-- **Robust price of anarchy** (Roughgarden): the affine `5/2` bound extends
+beyond pure Nash equilibria to every coarse correlated equilibrium — the
+expected total cost `-(∑ i, correlatedEu ν i)` is at most `5/2` times the
+social cost of any profile. In particular no-regret learning dynamics inherit
+the bound in the limit. -/
+theorem correlated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
+    {a b : C.Resource → ℝ} (h : C.IsAffine a b)
+    {ν : PMF (KernelGame.Profile C.toKernelGame)}
+    (hν : C.toKernelGame.IsCoarseCorrelatedEq ν) (τ : C.Profile) :
+    -(∑ i, C.toKernelGame.correlatedEu ν i) ≤ 5 / 2 * C.socialCost τ := by
+  haveI (i : ι) : Fintype (C.toKernelGame.Strategy i) := C.instFintypeStrategy i
+  haveI : Finite (KernelGame.Profile C.toKernelGame) := Pi.finite
+  haveI : Finite C.toKernelGame.Outcome :=
+    (Pi.finite : Finite (∀ i, C.StrategySet i))
+  have hb := KernelGame.IsSmooth.coarseCorrelated_bound C.toKernelGame
+    (C.isSmooth_of_isAffine h) hν τ
+  rw [socialWelfare_toKernelGame] at hb
   linarith
 
 end CongestionGame

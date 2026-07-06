@@ -445,8 +445,14 @@ dominates the original two; the augmented game has the unique
 pure Nash $(\TT{c}, \TT{c})$ with welfare 4. The companion theorem
 \TT{braess\_welfare\_decreases} records the strict inequality. The
 classical 4-edge network instance with congestion-dependent delays
-would compile through the \TT{CongestionGame} infrastructure but
-is outside the packaged example set.
+is formalized through the congestion infrastructure in
+\TT{Congestion/Examples.lean}:\ \TT{braessRestricted} has the split
+Nash equilibrium of social cost 7
+(\TT{braessRestricted\_split\_isNash}), while adding the free
+shortcut (\TT{braessAugmented}) yields a Nash equilibrium of social
+cost 8 (\TT{braessAugmented\_both\_isNash}) and destroys the split
+equilibrium (\TT{braessAugmented\_split\_not\_isNash},
+\TT{braess\_socialCost\_increases}).
 
 \leancorr{Welfare quantities and ratios in
 \TT{Concepts/Welfare/PriceOfAnarchy.lean}
