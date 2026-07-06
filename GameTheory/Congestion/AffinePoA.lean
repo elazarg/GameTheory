@@ -77,6 +77,7 @@ theorem sum_deviation_cost_le [DecidableEq ι] (C : CongestionGame ι) {a b : C.
     (h : C.IsAffine a b) (σ τ : C.Profile) :
     ∑ i, C.playerCost (Function.update σ i (τ i)) i
       ≤ 5 / 3 * C.socialCost τ + 1 / 3 * C.socialCost σ := by
+  classical
   have hstep : ∀ i, C.playerCost (Function.update σ i (τ i)) i
       ≤ ∑ r ∈ C.resources i (τ i), C.delay r (C.congestion σ r + 1) := by
     intro i
@@ -88,11 +89,20 @@ theorem sum_deviation_cost_le [DecidableEq ι] (C : CongestionGame ι) {a b : C.
   calc ∑ i, C.playerCost (Function.update σ i (τ i)) i
       ≤ ∑ i, ∑ r ∈ C.resources i (τ i), C.delay r (C.congestion σ r + 1) :=
         Finset.sum_le_sum fun i _ => hstep i
-    _ = ∑ r : C.Resource,
+    _ = ∑ r ∈ C.usedResources τ,
           (C.congestion τ r : ℝ) * C.delay r (C.congestion σ r + 1) :=
         C.sum_players_sum_resources τ _
+    _ = ∑ r ∈ C.usedResources σ ∪ C.usedResources τ,
+          (C.congestion τ r : ℝ) * C.delay r (C.congestion σ r + 1) :=
+        C.sum_congestion_mul_subset τ Finset.subset_union_right _
     _ ≤ 5 / 3 * C.socialCost τ + 1 / 3 * C.socialCost σ := by
         rw [C.socialCost_eq_sum_load_delay τ, C.socialCost_eq_sum_load_delay σ,
+          C.sum_congestion_mul_subset τ
+            (Finset.subset_union_right :
+              C.usedResources τ ⊆ C.usedResources σ ∪ C.usedResources τ),
+          C.sum_congestion_mul_subset σ
+            (Finset.subset_union_left :
+              C.usedResources σ ⊆ C.usedResources σ ∪ C.usedResources τ),
           Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
         refine Finset.sum_le_sum fun r _ => ?_
         rw [h.delay_eq, h.delay_eq, h.delay_eq]
@@ -146,11 +156,12 @@ expected total cost `-(∑ i, correlatedEu ν i)` is at most `5/2` times the
 social cost of any profile. In particular no-regret learning dynamics inherit
 the bound in the limit. -/
 theorem correlated_socialCost_le [DecidableEq ι] (C : CongestionGame ι)
+    [∀ i, Finite (C.StrategySet i)]
     {a b : C.Resource → ℝ} (h : C.IsAffine a b)
     {ν : PMF (KernelGame.Profile C.toKernelGame)}
     (hν : C.toKernelGame.IsCoarseCorrelatedEq ν) (τ : C.Profile) :
     -(∑ i, C.toKernelGame.correlatedEu ν i) ≤ 5 / 2 * C.socialCost τ := by
-  haveI (i : ι) : Fintype (C.toKernelGame.Strategy i) := C.instFintypeStrategy i
+  haveI : ∀ i, Finite (C.toKernelGame.Strategy i) := ‹∀ i, Finite (C.StrategySet i)›
   haveI : Finite (KernelGame.Profile C.toKernelGame) := Pi.finite
   haveI : Finite C.toKernelGame.Outcome :=
     (Pi.finite : Finite (∀ i, C.StrategySet i))
