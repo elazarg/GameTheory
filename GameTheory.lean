@@ -6,6 +6,7 @@ import GameTheory.Theorems
 import Math.Probability
 import GameTheory.Core.KernelGame
 import GameTheory.Core.GameForm
+import GameTheory.Core.Subsidy
 
 -- Solution concepts and properties
 import GameTheory.Concepts.Equilibrium.GameFormSolutionConcepts
@@ -32,6 +33,7 @@ import GameTheory.Concepts.Dominance.Rationalizability
 -- Dominance
 import GameTheory.Concepts.Dominance.StrictDominance
 import GameTheory.Concepts.Dominance.DominanceRelations
+import GameTheory.Concepts.Dominance.Undominated
 import GameTheory.Concepts.Dominance.DominanceSolvable
 import GameTheory.Concepts.Dominance.DominanceNash
 import GameTheory.Concepts.Dominance.DominanceSolvability
@@ -40,6 +42,7 @@ import GameTheory.Concepts.Dominance.DominanceSolvability
 import GameTheory.Concepts.Equilibrium.StrictNashProperties
 import GameTheory.Concepts.Equilibrium.ApproximateNash
 import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.Mixed.MixedDominance
 import GameTheory.Concepts.Mixed.MixedImprovement
 import GameTheory.Concepts.Mixed.BinaryMixed
 import GameTheory.Concepts.Mixed.TremblingHand
@@ -111,6 +114,7 @@ import GameTheory.Concepts.ZeroSum.MatrixGame.StrongComplementarity
 
 -- Mechanism design
 import GameTheory.Mechanism.BayesianGame
+import GameTheory.Mechanism.InformationalGame
 import GameTheory.Mechanism.InformationDesign
 import GameTheory.Mechanism.FeasiblePosteriors
 import GameTheory.Mechanism.JointFeasiblePosteriors
@@ -151,6 +155,7 @@ import GameTheory.Congestion.AffinePoA
 
 -- Auctions, mechanism design, and contests
 import GameTheory.Auctions.Basic
+import GameTheory.Auctions.Combinatorial
 import GameTheory.Auctions.Vickrey
 import GameTheory.Auctions.ReserveVickrey
 import GameTheory.Auctions.FirstPrice

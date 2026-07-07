@@ -236,27 +236,6 @@ theorem nonempty_mixedExtension_strategy (G : KernelGame ι) [Fintype ι]
   classical
   exact ⟨PMF.pure (Classical.arbitrary (G.Strategy i))⟩
 
-/-- Embed a pure stage-game profile as a mixed profile of the mixed extension. -/
-def pureMixedProfile (G : KernelGame ι) [Fintype ι] (σ : Profile G) :
-    Profile G.mixedExtension :=
-  fun i => PMF.pure (σ i)
-
-@[simp] theorem pureMixedProfile_apply (G : KernelGame ι) [Fintype ι]
-    (σ : Profile G) (i : ι) :
-    G.pureMixedProfile σ i = PMF.pure (σ i) :=
-  rfl
-
-/-- Pure profiles embedded in the mixed extension preserve expected utility. -/
-theorem mixedExtension_eu_pureMixedProfile (G : KernelGame ι) [Fintype ι]
-    (σ : Profile G) (who : ι) :
-    G.mixedExtension.eu (G.pureMixedProfile σ) who = G.eu σ who := by
-  simp only [mixedExtension, eu]
-  change Math.Probability.expect
-      ((Math.PMFProduct.pmfPi (fun i => (PMF.pure (σ i) : PMF (G.Strategy i)))).bind
-        G.outcomeKernel) (fun ω => G.utility ω who) =
-    Math.Probability.expect (G.outcomeKernel σ) (fun ω => G.utility ω who)
-  rw [Math.PMFProduct.pmfPi_pure, PMF.pure_bind]
-
 /-- Payoff vectors are preserved by embedding pure profiles into the mixed
 extension as Dirac mixed profiles. -/
 theorem mixedExtension_payoffVector_pureMixedProfile (G : KernelGame ι) [Fintype ι]

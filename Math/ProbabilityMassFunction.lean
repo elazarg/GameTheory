@@ -276,6 +276,23 @@ theorem pushforward_apply_eq_pmfMass
       simpa using pmfMass_pushforward μ f (fun x => x = b)
 
 open Classical in
+theorem le_pmfMass_of_mem (μ : PMF α) {E : α → Prop} {a : α}
+    (ha : E a) :
+    μ a ≤ pmfMass (μ := μ) E := by
+  calc
+    μ a = pmfMask (μ := μ) E a := by simp [pmfMask, ha]
+    _ ≤ ∑' x : α, pmfMask (μ := μ) E x := ENNReal.le_tsum a
+    _ = pmfMass (μ := μ) E := rfl
+
+theorem pmfMass_ne_zero_of_mem_ne_zero (μ : PMF α) {E : α → Prop} {a : α}
+    (ha : E a) (hμ : μ a ≠ 0) :
+    pmfMass (μ := μ) E ≠ 0 := by
+  intro hzero
+  have hle : μ a ≤ 0 := by
+    simpa [hzero] using le_pmfMass_of_mem (μ := μ) (E := E) (a := a) ha
+  exact hμ (bot_unique hle)
+
+open Classical in
 /-- Condition a PMF on an event with nonzero mass. -/
 noncomputable def pmfCond (μ : PMF α) (E : α → Prop)
     (h : pmfMass (μ := μ) E ≠ 0) : PMF α :=
@@ -531,6 +548,37 @@ theorem pmf_eq_of_subsingleton
   subst hx
   exact hp.trans hq.symm
 
+/-- A PMF different from a point mass gives positive mass to some different
+point. -/
+theorem exists_ne_of_ne_pure
+    {α : Type*} (p : PMF α) {a : α} (h : p ≠ PMF.pure a) :
+    ∃ b : α, b ≠ a ∧ p b ≠ 0 := by
+  classical
+  by_contra hnone
+  apply h
+  have hsupp_subset : p.support ⊆ ({a} : Set α) := by
+    intro b hb
+    by_contra hba
+    exact hnone ⟨b, hba, by simpa [PMF.mem_support_iff] using hb⟩
+  have ha : a ∈ p.support := by
+    rcases p.support_nonempty with ⟨b, hb⟩
+    have hba : b = a := by simpa using hsupp_subset hb
+    exact hba ▸ hb
+  have hsupp_eq : p.support = ({a} : Set α) := by
+    refine Set.Subset.antisymm hsupp_subset ?_
+    intro b hb
+    have hba : b = a := by simpa using hb
+    exact hba ▸ ha
+  have hpa : p a = 1 := (p.apply_eq_one_iff a).2 hsupp_eq
+  ext b
+  by_cases hba : b = a
+  · subst b
+    simp [hpa]
+  · have hpb : p b = 0 := by
+      by_contra hpb
+      exact hnone ⟨b, hba, hpb⟩
+    rw [hpb, PMF.pure_apply_of_ne (a := a) (a' := b) hba]
+
 theorem expect_congr_on_support
     {Ω : Type*} (μ : PMF Ω) (f g : Ω → ℝ)
     (hfg : ∀ a, a ∈ μ.support → f a = g a) :
@@ -557,6 +605,146 @@ theorem expect_pushforward
   classical
   letI : Fintype Ξ := Fintype.ofFinite Ξ
   exact Math.Probability.expect_map_fintype_target μ f φ
+
+open Classical in
+/-- Finite law of total expectation over the fibers of an observation map. -/
+theorem expect_eq_sum_fiber_cond
+    {Ω Ξ : Type*} [Finite Ω] [Fintype Ξ]
+    (μ : PMF Ω) (proj : Ω → Ξ) (f : Ω → ℝ) :
+    Math.Probability.expect μ f =
+      ∑ x : Ξ, (pmfMass (μ := μ) (fun ω => x = proj ω)).toReal *
+        if hx : pmfMass (μ := μ) (fun ω => x = proj ω) ≠ 0 then
+          Math.Probability.expect (pmfCond (μ := μ) (fun ω => x = proj ω) hx) f
+        else 0 := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [Math.Probability.expect_eq_sum]
+  calc
+    (∑ ω : Ω, (μ ω).toReal * f ω)
+        = ∑ ω : Ω, ∑ x : Ξ,
+            if x = proj ω then (μ ω).toReal * f ω else 0 := by
+          refine Finset.sum_congr rfl ?_
+          intro ω _
+          simp
+    _ = ∑ x : Ξ, ∑ ω : Ω,
+        if x = proj ω then (μ ω).toReal * f ω else 0 := by
+          rw [Finset.sum_comm]
+    _ = ∑ x : Ξ, (pmfMass (μ := μ) (fun ω => x = proj ω)).toReal *
+        if hx : pmfMass (μ := μ) (fun ω => x = proj ω) ≠ 0 then
+          Math.Probability.expect (pmfCond (μ := μ) (fun ω => x = proj ω) hx) f
+        else 0 := by
+          refine Finset.sum_congr rfl ?_
+          intro x _
+          by_cases hx : pmfMass (μ := μ) (fun ω => x = proj ω) ≠ 0
+          · simp only [dif_pos hx]
+            rw [Math.Probability.expect_eq_sum]
+            rw [Finset.mul_sum]
+            refine Eq.symm (Finset.sum_congr rfl ?_)
+            intro ω _
+            by_cases hω : x = proj ω
+            · have hmass_ne :
+                  (pmfMass (μ := μ) (fun ω => x = proj ω)).toReal ≠ 0 :=
+                ENNReal.toReal_ne_zero.mpr
+                  ⟨hx, pmfMass_ne_top μ (fun ω => x = proj ω)⟩
+              have hmass_ne' :
+                  (pmfMass (μ := μ) (fun ω' => proj ω = proj ω')).toReal ≠ 0 := by
+                simpa [hω] using hmass_ne
+              simp [pmfCond_apply, pmfMask, hω, ENNReal.toReal_div]
+              field_simp [hmass_ne']
+            · simp [pmfCond_apply, pmfMask, hω]
+          · have hx0 : pmfMass (μ := μ) (fun ω => x = proj ω) = 0 := by
+              exact not_not.mp hx
+            simp only [dif_neg hx, mul_zero]
+            refine Finset.sum_eq_zero ?_
+            intro ω _
+            by_cases hω : x = proj ω
+            · have hterm_le :
+                  μ ω ≤ pmfMass (μ := μ) (fun ω => x = proj ω) := by
+                change μ ω ≤ ∑' a : Ω, pmfMask (μ := μ) (fun ω => x = proj ω) a
+                rw [tsum_fintype]
+                have hsingle :
+                    (if x = proj ω then μ ω else 0) ≤
+                      ∑ a : Ω, if x = proj a then μ a else 0 := by
+                  exact Finset.single_le_sum
+                    (s := Finset.univ)
+                    (f := fun a : Ω => if x = proj a then (μ a : ENNReal) else 0)
+                    (fun a _ => by by_cases ha : x = proj a <;> simp [ha])
+                    (Finset.mem_univ ω)
+                simpa [pmfMask, hω] using hsingle
+              have hμ0 : μ ω = 0 := le_antisymm (by simpa [hx0] using hterm_le) bot_le
+              simp [hω, hμ0]
+            · simp [hω]
+
+open Classical in
+/-- Multiplying an expectation under a conditional PMF by the event mass gives
+the finite masked expectation over the event. -/
+theorem pmfMass_toReal_mul_expect_cond
+    {Ω : Type*} [Fintype Ω] (μ : PMF Ω) (E : Ω → Prop)
+    (hE : pmfMass (μ := μ) E ≠ 0) (f : Ω → ℝ) :
+    (pmfMass (μ := μ) E).toReal *
+        Math.Probability.expect (pmfCond (μ := μ) E hE) f =
+      ∑ ω : Ω, if E ω then (μ ω).toReal * f ω else 0 := by
+  rw [Math.Probability.expect_eq_sum, Finset.mul_sum]
+  refine Finset.sum_congr rfl ?_
+  intro ω _
+  by_cases hω : E ω
+  · have hmass_ne : (pmfMass (μ := μ) E).toReal ≠ 0 :=
+      ENNReal.toReal_ne_zero.mpr ⟨hE, pmfMass_ne_top μ E⟩
+    simp [pmfCond_apply, pmfMask, hω, ENNReal.toReal_div]
+    field_simp [hmass_ne]
+  · simp [pmfCond_apply, pmfMask, hω]
+
+open Classical in
+/-- If two functions agree off an event, an unconditional expectation inequality
+implies the corresponding conditional expectation inequality on that event. -/
+theorem expect_cond_le_of_expect_le_of_eq_off
+    {Ω : Type*} [Finite Ω] (μ : PMF Ω) (E : Ω → Prop)
+    (hE : pmfMass (μ := μ) E ≠ 0) {f g : Ω → ℝ}
+    (hle : Math.Probability.expect μ g ≤ Math.Probability.expect μ f)
+    (hoff : ∀ ω, ¬ E ω → g ω = f ω) :
+    Math.Probability.expect (pmfCond (μ := μ) E hE) g ≤
+      Math.Probability.expect (pmfCond (μ := μ) E hE) f := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  have hmass_pos : 0 < (pmfMass (μ := μ) E).toReal :=
+    ENNReal.toReal_pos hE (pmfMass_ne_top μ E)
+  have hsplit_g :
+      Math.Probability.expect μ g =
+        (∑ ω : Ω, if E ω then (μ ω).toReal * g ω else 0) +
+          ∑ ω : Ω, if E ω then 0 else (μ ω).toReal * g ω := by
+    rw [Math.Probability.expect_eq_sum, ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl ?_
+    intro ω _
+    by_cases hω : E ω <;> simp [hω]
+  have hsplit_f :
+      Math.Probability.expect μ f =
+        (∑ ω : Ω, if E ω then (μ ω).toReal * f ω else 0) +
+          ∑ ω : Ω, if E ω then 0 else (μ ω).toReal * f ω := by
+    rw [Math.Probability.expect_eq_sum, ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl ?_
+    intro ω _
+    by_cases hω : E ω <;> simp [hω]
+  have hoff_sum :
+      (∑ ω : Ω, if E ω then 0 else (μ ω).toReal * g ω) =
+        ∑ ω : Ω, if E ω then 0 else (μ ω).toReal * f ω := by
+    refine Finset.sum_congr rfl ?_
+    intro ω _
+    by_cases hω : E ω
+    · simp [hω]
+    · simp [hω, hoff ω hω]
+  have hmasked :
+      (∑ ω : Ω, if E ω then (μ ω).toReal * g ω else 0) ≤
+        ∑ ω : Ω, if E ω then (μ ω).toReal * f ω else 0 := by
+    rw [hsplit_g, hsplit_f] at hle
+    rw [hoff_sum] at hle
+    linarith
+  have hscaled :
+      (pmfMass (μ := μ) E).toReal *
+          Math.Probability.expect (pmfCond (μ := μ) E hE) g ≤
+        (pmfMass (μ := μ) E).toReal *
+          Math.Probability.expect (pmfCond (μ := μ) E hE) f := by
+    rw [pmfMass_toReal_mul_expect_cond μ E hE g,
+      pmfMass_toReal_mul_expect_cond μ E hE f]
+    exact hmasked
+  exact le_of_mul_le_mul_left hscaled hmass_pos
 
 /-- `expect` along a pushforward, under a bounded-`φ` hypothesis (countable source/target). -/
 theorem expect_pushforward_of_bounded

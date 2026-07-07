@@ -443,6 +443,55 @@ theorem expect_mono {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ)
   rw [expect_eq_sum, expect_eq_sum]
   exact Finset.sum_le_sum fun ω _ => mul_le_mul_of_nonneg_left (h ω) ENNReal.toReal_nonneg
 
+/-- If `f ≤ g` everywhere and `f < g` at a positive-probability point, then
+the expectation of `f` is strictly less than the expectation of `g`. -/
+theorem expect_lt_of_le_of_exists_lt {Ω : Type*} [Finite Ω]
+    (d : PMF Ω) (f g : Ω → ℝ)
+    (hle : ∀ ω, f ω ≤ g ω)
+    (hlt : ∃ ω, d ω ≠ 0 ∧ f ω < g ω) :
+    expect d f < expect d g := by
+  classical
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  obtain ⟨ω₀, hdω₀, hltω₀⟩ := hlt
+  have hpos :
+      0 < ∑ ω : Ω, (d ω).toReal * (g ω - f ω) := by
+    refine Finset.sum_pos' ?_ ?_
+    · intro ω _
+      exact mul_nonneg ENNReal.toReal_nonneg (sub_nonneg.mpr (hle ω))
+    · refine ⟨ω₀, Finset.mem_univ ω₀, ?_⟩
+      exact mul_pos
+        (ENNReal.toReal_pos hdω₀ (PMF.apply_ne_top d ω₀))
+        (sub_pos.mpr hltω₀)
+  have hdiff :
+      expect d g - expect d f =
+        ∑ ω : Ω, (d ω).toReal * (g ω - f ω) := by
+    rw [expect_eq_sum, expect_eq_sum, ← Finset.sum_sub_distrib]
+    apply Finset.sum_congr rfl
+    intro ω _
+    ring
+  linarith
+
+/-- A pointwise strict inequality gives a strict expectation inequality. -/
+theorem expect_lt_of_forall_lt {Ω : Type*} [Finite Ω]
+    (d : PMF Ω) (f g : Ω → ℝ) (hlt : ∀ ω, f ω < g ω) :
+    expect d f < expect d g := by
+  classical
+  obtain ⟨ω₀, hω₀⟩ := d.support_nonempty
+  exact expect_lt_of_le_of_exists_lt d f g
+    (fun ω => le_of_lt (hlt ω))
+    ⟨ω₀, by simpa [PMF.mem_support_iff] using hω₀, hlt ω₀⟩
+
+/-- If a function is bounded above by a constant everywhere and strictly below
+it at a positive-probability point, then its expectation is strictly below that
+constant. -/
+theorem expect_lt_const_of_le_of_exists_lt {Ω : Type*} [Finite Ω]
+    (d : PMF Ω) (f : Ω → ℝ) {c : ℝ}
+    (hle : ∀ ω, f ω ≤ c)
+    (hlt : ∃ ω, d ω ≠ 0 ∧ f ω < c) :
+    expect d f < c := by
+  have h := expect_lt_of_le_of_exists_lt d f (fun _ => c) hle hlt
+  simpa using h
+
 /-- A finite sum of integrands commutes with `expect`. -/
 theorem expect_sum_comm {Ω κ : Type*} [Finite Ω] [Fintype κ]
     (d : PMF Ω) (f : κ → Ω → ℝ) :

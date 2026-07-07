@@ -44,6 +44,49 @@ theorem subtype_of_card_eq_of_imp {α : Type} [Fintype α] {p q : α → Prop}
   rw [hcard] at hlt
   exact (lt_irrefl _ hlt)
 
+/-- For a finite transitive irreflexive relation, every point is either already
+maximal or lies below a maximal point. Here `r x y` means that `x` is above
+`y`; maximality is therefore `∀ b, ¬ r b m`. -/
+theorem exists_maximal_or_rel_of_finite_trans_irrefl {α : Type u} [Finite α]
+    (r : α → α → Prop)
+    (htrans : ∀ a b c, r a b → r b c → r a c)
+    (hirrefl : ∀ a, ¬ r a a) (a : α) :
+    ∃ m : α, (∀ b : α, ¬ r b m) ∧ (m = a ∨ r m a) := by
+  classical
+  haveI : IsTrans α r := ⟨htrans⟩
+  haveI : Std.Irrefl r := ⟨hirrefl⟩
+  have hwf : WellFounded r := Finite.wellFounded_of_trans_of_irrefl r
+  let P : α → Prop := fun a =>
+    ∃ m : α, (∀ b : α, ¬ r b m) ∧ (m = a ∨ r m a)
+  change P a
+  exact hwf.induction (C := P) a fun x ih => by
+    by_cases hdominated : ∃ b : α, r b x
+    · obtain ⟨b, hbx⟩ := hdominated
+      obtain ⟨m, hmmax, hmcand⟩ := ih b hbx
+      refine ⟨m, hmmax, ?_⟩
+      rcases hmcand with rfl | hmb
+      · exact Or.inr hbx
+      · exact Or.inr (htrans m b x hmb hbx)
+    · refine ⟨x, ?_, Or.inl rfl⟩
+      intro b hbx
+      exact hdominated ⟨b, hbx⟩
+
+/-- If a point in a finite transitive irreflexive relation is dominated, then it
+is dominated by a maximal point. -/
+theorem exists_maximal_rel_of_finite_trans_irrefl {α : Type u} [Finite α]
+    (r : α → α → Prop)
+    (htrans : ∀ a b c, r a b → r b c → r a c)
+    (hirrefl : ∀ a, ¬ r a a) {a : α}
+    (hdominated : ∃ b : α, r b a) :
+    ∃ m : α, (∀ b : α, ¬ r b m) ∧ r m a := by
+  obtain ⟨m, hmmax, hmcand⟩ :=
+    exists_maximal_or_rel_of_finite_trans_irrefl r htrans hirrefl a
+  refine ⟨m, hmmax, ?_⟩
+  rcases hmcand with rfl | hma
+  · obtain ⟨b, hba⟩ := hdominated
+    exact False.elim (hmmax b hba)
+  · exact hma
+
 /-- A complete transitive relation on a nonempty finite type has a greatest
 element. -/
 theorem exists_greatest_of_complete_transitive {α : Type u} [Finite α] [Nonempty α]

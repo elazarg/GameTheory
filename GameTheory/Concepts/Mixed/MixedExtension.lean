@@ -61,6 +61,42 @@ theorem mixedExtension_eu (G : KernelGame ι) [Fintype ι] [Finite G.Outcome]
     Finite.bddAbove_range _
   exact G.mixedExtension_eu_of_bounded σ who (fun ω => hC ⟨ω, rfl⟩)
 
+omit [DecidableEq ι] in
+/-- Embed a pure stage-game profile as a mixed profile of the mixed extension. -/
+def pureMixedProfile (G : KernelGame ι) [Fintype ι] (σ : Profile G) :
+    Profile G.mixedExtension :=
+  fun i => PMF.pure (σ i)
+
+omit [DecidableEq ι] in
+@[simp] theorem pureMixedProfile_apply (G : KernelGame ι) [Fintype ι]
+    (σ : Profile G) (i : ι) :
+    G.pureMixedProfile σ i = PMF.pure (σ i) :=
+  rfl
+
+/-- Updating a pure profile before embedding is the same as embedding first and
+updating the mixed profile by the corresponding point mass. -/
+@[simp] theorem pureMixedProfile_update (G : KernelGame ι) [Fintype ι]
+    (σ : Profile G) (who : ι) (a : G.Strategy who) :
+    G.pureMixedProfile (Function.update σ who a) =
+      Function.update (G.pureMixedProfile σ) who (PMF.pure a) := by
+  funext i
+  by_cases hi : i = who
+  · subst hi
+    simp [pureMixedProfile]
+  · simp [pureMixedProfile, Function.update_of_ne hi]
+
+omit [DecidableEq ι] in
+/-- Pure profiles embedded in the mixed extension preserve expected utility. -/
+theorem mixedExtension_eu_pureMixedProfile (G : KernelGame ι) [Fintype ι]
+    (σ : Profile G) (who : ι) :
+    G.mixedExtension.eu (G.pureMixedProfile σ) who = G.eu σ who := by
+  simp only [mixedExtension, eu]
+  change expect
+      ((pmfPi (fun i => (PMF.pure (σ i) : PMF (G.Strategy i)))).bind
+        G.outcomeKernel) (fun ω => G.utility ω who) =
+    expect (G.outcomeKernel σ) (fun ω => G.utility ω who)
+  rw [pmfPi_pure, PMF.pure_bind]
+
 open Classical in
 /-- EU under a unilateral mixed-strategy update equals the expectation, under the
 new mixed strategy `τ`, of EUs under the corresponding pure deviations. -/

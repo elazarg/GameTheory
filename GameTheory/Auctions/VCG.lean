@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Math.Probability
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Mechanism.InformationalGame
 
 /-!
 # Vickrey-Clarke-Groves (VCG) Mechanism
@@ -110,6 +111,35 @@ theorem vcg_truthful (θ : ∀ i, V.Θ i) (i : ι) (θ'_i : V.Θ i) :
     ext j; simp [Finset.mem_erase, Finset.mem_filter]
   rw [hsplit, hsplit] at heff
   linarith
+
+/-! ## Informational-game view -/
+
+/-- The direct VCG mechanism as a prior-free informational game: signals are
+true types, actions are reports, and payoff is true quasi-linear VCG utility. -/
+noncomputable def toInformationalGame : InformationalGame ι where
+  Signal := V.Θ
+  Act := V.Θ
+  utility := fun θ report => fun i => V.trueUtility i (θ i) report
+
+/-- Truthful reporting in the informational-game view of a VCG setup. -/
+def truthfulStrategy : V.toInformationalGame.StrategyProfile :=
+  fun _ θi => θi
+
+@[simp] theorem toInformationalGame_play_truthful (θ : V.toInformationalGame.SignalProfile) :
+    V.toInformationalGame.play V.truthfulStrategy θ = θ := by
+  funext i
+  simp [InformationalGame.play, truthfulStrategy, toInformationalGame]
+
+/-- VCG truthfulness as ex-post equilibrium of the direct informational game. -/
+theorem truthfulStrategy_isExPostEq :
+    V.toInformationalGame.IsExPostEq V.truthfulStrategy := by
+  intro θ i report
+  change V.trueUtility i (θ i)
+      (V.toInformationalGame.play V.truthfulStrategy θ) ≥
+    V.trueUtility i (θ i)
+      (Function.update (V.toInformationalGame.play V.truthfulStrategy θ) i report)
+  rw [V.toInformationalGame_play_truthful]
+  exact V.vcg_truthful θ i report
 
 end VCGSetup
 

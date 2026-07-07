@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Mixed.MixedExtension
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
+import Math.ProbabilityMassFunction
 
 /-!
 # GameTheory.Concepts.Correlation.CorrelatedNashMixed
@@ -29,6 +30,7 @@ Provides:
 namespace GameTheory
 
 open Math.Probability
+open Math.ProbabilityMassFunction
 namespace KernelGame
 open Math.PMFProduct
 
@@ -122,6 +124,51 @@ theorem correlatedEu_unilateralDeviationDistribution_eq_expect_update
     Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
   exact correlatedEu_unilateralDeviationDistribution_eq_expect_update_of_bounded
     (G := G) μ who dev hbd
+
+open Classical in
+/-- Conditional obedience form of correlated equilibrium: after any
+positive-probability recommendation, obeying that recommendation beats any
+fixed replacement action in conditional expected utility. -/
+theorem IsCorrelatedEq.conditional_obedience [Finite (Profile G)] [Finite G.Outcome]
+    {μ : PMF (Profile G)} (hce : G.IsCorrelatedEq μ)
+    (who : ι) [Finite (G.Strategy who)] (s t : G.Strategy who)
+    (hs : pmfMass (μ := μ) (fun σ => σ who = s) ≠ 0) :
+    expect (pmfCond (μ := μ) (fun σ => σ who = s) hs)
+        (fun σ => G.eu σ who) ≥
+      expect (pmfCond (μ := μ) (fun σ => σ who = s) hs)
+        (fun σ => G.eu (Function.update σ who t) who) := by
+  letI : Fintype (Profile G) := Fintype.ofFinite (Profile G)
+  let dev : G.Strategy who → G.Strategy who := fun a => if a = s then t else a
+  have hle : expect μ
+      (fun σ => G.eu (Function.update σ who (dev (σ who))) who) ≤
+        expect μ (fun σ => G.eu σ who) := by
+    have hce' := hce who dev
+    rw [G.correlatedEu_eq_expect_eu μ who] at hce'
+    rw [G.correlatedEu_unilateralDeviationDistribution_eq_expect_update μ who dev] at hce'
+    exact hce'
+  have hcond := expect_cond_le_of_expect_le_of_eq_off
+    (μ := μ) (E := fun σ => σ who = s) (hE := hs)
+    (f := fun σ => G.eu σ who)
+    (g := fun σ => G.eu (Function.update σ who (dev (σ who))) who)
+    hle ?_
+  · have hdev_eq :
+        expect (pmfCond (μ := μ) (fun σ => σ who = s) hs)
+            (fun σ => G.eu (Function.update σ who (dev (σ who))) who) =
+          expect (pmfCond (μ := μ) (fun σ => σ who = s) hs)
+            (fun σ => G.eu (Function.update σ who t) who) := by
+      exact expect_congr_of_ne_zero
+        (pmfCond (μ := μ) (fun σ => σ who = s) hs)
+        (fun σ => G.eu (Function.update σ who (dev (σ who))) who)
+        (fun σ => G.eu (Function.update σ who t) who)
+        (by
+          intro σ hσ
+          have hσs := pmfCond_ne_zero_implies μ (fun σ => σ who = s) hs hσ
+          simp [dev, hσs])
+    simpa [hdev_eq] using hcond
+  · intro σ hσ
+    have hdev : dev (σ who) = σ who := by
+      simp [dev, hσ]
+    simp [hdev, Function.update_eq_self]
 
 open Classical in
 /-- Deviation of a product distribution equals the product with the deviated
