@@ -502,6 +502,175 @@ theorem expect_sum_comm {Ω κ : Type*} [Finite Ω] [Fintype κ]
   exact Finset.sum_congr rfl fun ω _ =>
     (Finset.mul_sum Finset.univ (fun i => f i ω) ((d ω).toReal)).symm
 
+/-! ### Finite total-variation duality -/
+
+/-- Positive total variation between two finite PMFs, in the convention
+`∑ω max (μ ω - ν ω) 0`. For probability measures this is also
+`(1 / 2) * ∑ω |μ ω - ν ω|`, but the positive-part convention is the one whose
+dual statement is literally `sup_{0≤u≤1} (E_μ u - E_ν u)`. -/
+noncomputable def pmfPositiveVariation {Ω : Type*} [Fintype Ω]
+    (μ ν : PMF Ω) : ℝ :=
+  ∑ ω : Ω, max ((μ ω).toReal - (ν ω).toReal) 0
+
+theorem pmfPositiveVariation_nonneg {Ω : Type*} [Fintype Ω]
+    (μ ν : PMF Ω) :
+    0 ≤ pmfPositiveVariation μ ν := by
+  unfold pmfPositiveVariation
+  exact Finset.sum_nonneg fun _ _ => le_max_right _ _
+
+theorem max_eq_abs_add_self_div_two (x : ℝ) :
+    max x 0 = (|x| + x) / 2 := by
+  by_cases hx : 0 ≤ x
+  · rw [max_eq_left hx, abs_of_nonneg hx]
+    ring
+  · have hxle : x ≤ 0 := le_of_not_ge hx
+    rw [max_eq_right hxle, abs_of_nonpos hxle]
+    ring
+
+/-- On finite probability spaces, positive variation is the usual
+half-`L¹` total variation distance. -/
+theorem pmfPositiveVariation_eq_half_sum_abs {Ω : Type*} [Fintype Ω]
+    (μ ν : PMF Ω) :
+    pmfPositiveVariation μ ν =
+      (1 / 2 : ℝ) * ∑ ω : Ω, |(μ ω).toReal - (ν ω).toReal| := by
+  have hsumdiff :
+      (∑ ω : Ω, ((μ ω).toReal - (ν ω).toReal)) = 0 := by
+    rw [Finset.sum_sub_distrib, pmf_toReal_sum_one, pmf_toReal_sum_one]
+    ring
+  calc
+    pmfPositiveVariation μ ν
+        = ∑ ω : Ω,
+            (|((μ ω).toReal - (ν ω).toReal)| +
+              ((μ ω).toReal - (ν ω).toReal)) / 2 := by
+          unfold pmfPositiveVariation
+          exact Finset.sum_congr rfl fun ω _ =>
+            max_eq_abs_add_self_div_two ((μ ω).toReal - (ν ω).toReal)
+    _ = (1 / 2 : ℝ) *
+          (∑ ω : Ω, |(μ ω).toReal - (ν ω).toReal| +
+            ∑ ω : Ω, ((μ ω).toReal - (ν ω).toReal)) := by
+          rw [show
+              (∑ ω : Ω,
+                (|((μ ω).toReal - (ν ω).toReal)| +
+                  ((μ ω).toReal - (ν ω).toReal)) / 2) =
+                ∑ ω : Ω,
+                  (1 / 2 : ℝ) *
+                    (|((μ ω).toReal - (ν ω).toReal)| +
+                      ((μ ω).toReal - (ν ω).toReal)) from by
+                exact Finset.sum_congr rfl fun _ _ => by ring]
+          rw [← Finset.mul_sum, Finset.sum_add_distrib]
+    _ = (1 / 2 : ℝ) * ∑ ω : Ω, |(μ ω).toReal - (ν ω).toReal| := by
+          rw [hsumdiff]
+          ring
+
+theorem expect_sub_le_mul_pmfPositiveVariation {Ω : Type*} [Fintype Ω]
+    (μ ν : PMF Ω) (f : Ω → ℝ) {U : ℝ}
+    (hf_nonneg : ∀ ω, 0 ≤ f ω) (hf_le : ∀ ω, f ω ≤ U) :
+    expect μ f - expect ν f ≤ U * pmfPositiveVariation μ ν := by
+  rw [expect_eq_sum, expect_eq_sum, pmfPositiveVariation, Finset.mul_sum,
+    ← Finset.sum_sub_distrib]
+  refine Finset.sum_le_sum ?_
+  intro ω _
+  set d : ℝ := (μ ω).toReal - (ν ω).toReal
+  have hdiff :
+      (μ ω).toReal * f ω - (ν ω).toReal * f ω = d * f ω := by
+    simp [d]
+    ring
+  by_cases hd : 0 ≤ d
+  · have hterm : d * f ω ≤ d * U := mul_le_mul_of_nonneg_left (hf_le ω) hd
+    have hmax : max d 0 = d := max_eq_left hd
+    calc
+      (μ ω).toReal * f ω - (ν ω).toReal * f ω = d * f ω := hdiff
+      _ ≤ d * U := hterm
+      _ = U * max d 0 := by rw [hmax]; ring
+  · have hdle : d ≤ 0 := le_of_not_ge hd
+    have hterm : d * f ω ≤ 0 := mul_nonpos_of_nonpos_of_nonneg hdle (hf_nonneg ω)
+    have hmax : max d 0 = 0 := max_eq_right hdle
+    calc
+      (μ ω).toReal * f ω - (ν ω).toReal * f ω = d * f ω := hdiff
+      _ ≤ 0 := hterm
+      _ = U * max d 0 := by rw [hmax]; ring
+
+/-- The indicator of the positive part of `μ - ν`, scaled by `U`. -/
+noncomputable def pmfPositiveVariationWitness {Ω : Type*}
+    (μ ν : PMF Ω) (U : ℝ) : Ω → ℝ :=
+  fun ω => if 0 < (μ ω).toReal - (ν ω).toReal then U else 0
+
+theorem pmfPositiveVariationWitness_nonneg {Ω : Type*}
+    (μ ν : PMF Ω) {U : ℝ} (hU : 0 ≤ U) :
+    ∀ ω, 0 ≤ pmfPositiveVariationWitness μ ν U ω := by
+  intro ω
+  unfold pmfPositiveVariationWitness
+  split_ifs <;> linarith
+
+theorem pmfPositiveVariationWitness_le {Ω : Type*}
+    (μ ν : PMF Ω) {U : ℝ} (hU : 0 ≤ U) :
+    ∀ ω, pmfPositiveVariationWitness μ ν U ω ≤ U := by
+  intro ω
+  unfold pmfPositiveVariationWitness
+  split_ifs <;> linarith
+
+theorem expect_sub_pmfPositiveVariationWitness {Ω : Type*} [Fintype Ω]
+    (μ ν : PMF Ω) (U : ℝ) :
+    expect μ (pmfPositiveVariationWitness μ ν U) -
+        expect ν (pmfPositiveVariationWitness μ ν U) =
+      U * pmfPositiveVariation μ ν := by
+  rw [expect_eq_sum, expect_eq_sum, pmfPositiveVariation, Finset.mul_sum,
+    ← Finset.sum_sub_distrib]
+  refine Finset.sum_congr rfl ?_
+  intro ω _
+  set d : ℝ := (μ ω).toReal - (ν ω).toReal
+  unfold pmfPositiveVariationWitness
+  by_cases hd : 0 < d
+  · have hmax : max d 0 = d := max_eq_left hd.le
+    have hcond : (ν ω).toReal < (μ ω).toReal := by simpa [d] using hd
+    simp [hcond, hmax]
+    ring
+  · have hdle : d ≤ 0 := le_of_not_gt hd
+    have hmax : max d 0 = 0 := max_eq_right hdle
+    have hcond : ¬ (ν ω).toReal < (μ ω).toReal := by
+      simpa [d, sub_pos] using hd
+    simp [hcond, hmax]
+
+theorem expect_le_mul_expect_iff_pmf_le_mul {Ω : Type*} [Finite Ω]
+    (μ ν : PMF Ω) {c : ℝ} :
+    (∀ f : Ω → ℝ, (∀ ω, 0 ≤ f ω) → expect μ f ≤ c * expect ν f) ↔
+      ∀ ω, (μ ω).toReal ≤ c * (ν ω).toReal := by
+  classical
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  constructor
+  · intro h ω
+    have hnonneg : ∀ x, 0 ≤ (if x = ω then (1 : ℝ) else 0) := by
+      intro x
+      split_ifs <;> norm_num
+    have hw := h (fun x => if x = ω then (1 : ℝ) else 0) hnonneg
+    rw [expect_eq_sum, expect_eq_sum] at hw
+    have hμ :
+        (∑ x : Ω, (μ x).toReal * (if x = ω then (1 : ℝ) else 0)) =
+          (μ ω).toReal := by
+      rw [Finset.sum_eq_single ω]
+      · simp
+      · intro x _ hx
+        simp [hx]
+      · intro hnot
+        exact (hnot (Finset.mem_univ ω)).elim
+    have hν :
+        (∑ x : Ω, (ν x).toReal * (if x = ω then (1 : ℝ) else 0)) =
+          (ν ω).toReal := by
+      rw [Finset.sum_eq_single ω]
+      · simp
+      · intro x _ hx
+        simp [hx]
+      · intro hnot
+        exact (hnot (Finset.mem_univ ω)).elim
+    rwa [hμ, hν] at hw
+  · intro h f hf
+    rw [expect_eq_sum, expect_eq_sum, Finset.mul_sum]
+    exact Finset.sum_le_sum fun ω _ =>
+      calc
+        (μ ω).toReal * f ω ≤ (c * (ν ω).toReal) * f ω :=
+          mul_le_mul_of_nonneg_right (h ω) (hf ω)
+        _ = c * ((ν ω).toReal * f ω) := by ring
+
 /-- The joint integrand `(p a).toReal * (q a b).toReal * f b` is summable when `f` is bounded.
     This is the absolute-summability hypothesis behind Fubini for `expect_bind`. -/
 theorem expect_bind_summable_of_bounded {α β : Type*}

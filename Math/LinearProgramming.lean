@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.LinearProgramming.Basic
+import Math.LinearProgramming.Certificates
 import Math.LinearProgramming.Standard
 import Math.LinearProgramming.StrongDuality
 import Math.LinearProgramming.StrongComplementarity

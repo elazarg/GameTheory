@@ -242,6 +242,49 @@ theorem WeaklyStrictlyDominatesWithTransfer.trans
     have hbc_weak := hbc.1 θ σ
     linarith
 
+/-- Replacing the dominated strategy by a transfer-equivalent one preserves
+weak dominance with a strict witness. -/
+theorem WeaklyStrictlyDominatesWithTransfer.congr_dominated_strategyEquivalent
+    {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
+    {a b c : G.Strategy i}
+    (hbc : G.StrategyEquivalentWithTransfer V i b c) :
+    G.WeaklyStrictlyDominatesWithTransfer V i a b ↔
+      G.WeaklyStrictlyDominatesWithTransfer V i a c := by
+  constructor
+  · intro h
+    refine ⟨?_, ?_⟩
+    · intro θ σ
+      have hweak := h.1 θ σ
+      have heq := hbc θ σ
+      linarith
+    · obtain ⟨θ, σ, hstrict⟩ := h.2
+      have heq := hbc θ σ
+      exact ⟨θ, σ, by linarith⟩
+  · intro h
+    refine ⟨?_, ?_⟩
+    · intro θ σ
+      have hweak := h.1 θ σ
+      have heq := hbc θ σ
+      linarith
+    · obtain ⟨θ, σ, hstrict⟩ := h.2
+      have heq := hbc θ σ
+      exact ⟨θ, σ, by linarith⟩
+
+/-- Undominatedness is saturated by transfer-equivalence. -/
+theorem StrategyEquivalentWithTransfer.isUndominated_iff
+    {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
+    {b c : G.Strategy i}
+    (hbc : G.StrategyEquivalentWithTransfer V i b c) :
+    G.IsUndominatedWithTransfer V i b ↔
+      G.IsUndominatedWithTransfer V i c := by
+  constructor
+  · intro hb a hac
+    exact hb a ((WeaklyStrictlyDominatesWithTransfer.congr_dominated_strategyEquivalent
+      (G := G) (V := V) (i := i) (a := a) hbc).mpr hac)
+  · intro hc a hab
+    exact hc a ((WeaklyStrictlyDominatesWithTransfer.congr_dominated_strategyEquivalent
+      (G := G) (V := V) (i := i) (a := a) hbc).mp hab)
+
 /-- On a finite signal-contingent strategy set, every strategy is either
 undominated or dominated by an undominated strategy. -/
 theorem exists_undominated_or_dominator_withTransfer
@@ -424,6 +467,109 @@ theorem IsSignalBlindImplementation.subset
     ∀ σ : G.StrategyProfile,
       σ ∈ G.undominatedStrategyProfilesWithTransfer V → σ ∈ O :=
   h.2.2
+
+/-! ## Transfer-class saturation -/
+
+/-- Two signal-contingent strategies are equivalent relative to a class of
+signal-blind transfers when every transfer in the class gives them the same
+subsidized utility row. -/
+def TransferClassStrategyEquivalent (G : InformationalGame ι)
+    (C : Set G.ActionTransfer) (i : ι) (b c : G.Strategy i) : Prop :=
+  ∀ V ∈ C, G.StrategyEquivalentWithTransfer V i b c
+
+/-- Coordinatewise transfer-class equivalence of informational strategy
+profiles. -/
+def TransferClassStrategyProfileEquivalent (G : InformationalGame ι)
+    (C : Set G.ActionTransfer) (σ τ : G.StrategyProfile) : Prop :=
+  ∀ i, G.TransferClassStrategyEquivalent C i (σ i) (τ i)
+
+theorem TransferClassStrategyEquivalent.refl
+    {G : InformationalGame ι} {C : Set G.ActionTransfer} {i : ι}
+    (b : G.Strategy i) :
+    G.TransferClassStrategyEquivalent C i b b := by
+  intro V _hV
+  exact StrategyEquivalentWithTransfer.refl (G := G) (V := V) (i := i) b
+
+theorem TransferClassStrategyEquivalent.symm
+    {G : InformationalGame ι} {C : Set G.ActionTransfer} {i : ι}
+    {b c : G.Strategy i}
+    (h : G.TransferClassStrategyEquivalent C i b c) :
+    G.TransferClassStrategyEquivalent C i c b := by
+  intro V hV
+  exact (h V hV).symm
+
+theorem TransferClassStrategyEquivalent.trans
+    {G : InformationalGame ι} {C : Set G.ActionTransfer} {i : ι}
+    {b c d : G.Strategy i}
+    (hbc : G.TransferClassStrategyEquivalent C i b c)
+    (hcd : G.TransferClassStrategyEquivalent C i c d) :
+    G.TransferClassStrategyEquivalent C i b d := by
+  intro V hV
+  exact (hbc V hV).trans (hcd V hV)
+
+theorem TransferClassStrategyProfileEquivalent.refl
+    {G : InformationalGame ι} {C : Set G.ActionTransfer}
+    (σ : G.StrategyProfile) :
+    G.TransferClassStrategyProfileEquivalent C σ σ :=
+  fun i => TransferClassStrategyEquivalent.refl (G := G) (C := C) (σ i)
+
+theorem TransferClassStrategyProfileEquivalent.symm
+    {G : InformationalGame ι} {C : Set G.ActionTransfer}
+    {σ τ : G.StrategyProfile}
+    (h : G.TransferClassStrategyProfileEquivalent C σ τ) :
+    G.TransferClassStrategyProfileEquivalent C τ σ :=
+  fun i => (h i).symm
+
+theorem TransferClassStrategyProfileEquivalent.trans
+    {G : InformationalGame ι} {C : Set G.ActionTransfer}
+    {σ τ υ : G.StrategyProfile}
+    (hστ : G.TransferClassStrategyProfileEquivalent C σ τ)
+    (hτυ : G.TransferClassStrategyProfileEquivalent C τ υ) :
+    G.TransferClassStrategyProfileEquivalent C σ υ :=
+  fun i => (hστ i).trans (hτυ i)
+
+/-- For any transfer from the class, transfer-class equivalent informational
+profiles are simultaneously undominated. -/
+theorem TransferClassStrategyProfileEquivalent.mem_undominatedProfiles_iff_of_mem
+    {G : InformationalGame ι} {C : Set G.ActionTransfer} {V : G.ActionTransfer}
+    (hV : V ∈ C) {σ τ : G.StrategyProfile}
+    (hστ : G.TransferClassStrategyProfileEquivalent C σ τ) :
+    σ ∈ G.undominatedStrategyProfilesWithTransfer V ↔
+      τ ∈ G.undominatedStrategyProfilesWithTransfer V := by
+  constructor
+  · intro hσ i
+    exact ((hστ i V hV).isUndominated_iff).mp (hσ i)
+  · intro hτ i
+    exact ((hστ i V hV).isUndominated_iff).mpr (hτ i)
+
+/-- Any signal-blind implementation using an allowed transfer contains a
+nonempty subset saturated under the informational transfer class. -/
+theorem IsSignalBlindImplementation.exists_transferClassSaturated_subset
+    {G : InformationalGame ι} {C : Set G.ActionTransfer}
+    {V : G.ActionTransfer} {O : Set G.StrategyProfile}
+    (h : G.IsSignalBlindImplementation V O) (hV : V ∈ C) :
+    ∃ S : Set G.StrategyProfile, S.Nonempty ∧ S ⊆ O ∧
+      ∀ σ ∈ S, ∀ τ : G.StrategyProfile,
+        G.TransferClassStrategyProfileEquivalent C σ τ → τ ∈ S := by
+  refine ⟨G.undominatedStrategyProfilesWithTransfer V, h.nonempty, h.subset, ?_⟩
+  intro σ hσ τ hστ
+  exact (hστ.mem_undominatedProfiles_iff_of_mem hV).mp hσ
+
+/-- A singleton can be signal-blind implemented by a restricted transfer class
+only if the target's transfer-class equivalence class is trivial. -/
+theorem IsSignalBlindImplementation.eq_of_transferClassStrategyProfileEquivalent_singleton
+    {G : InformationalGame ι} {C : Set G.ActionTransfer}
+    {V : G.ActionTransfer} {σ τ : G.StrategyProfile}
+    (h : G.IsSignalBlindImplementation V ({σ} : Set G.StrategyProfile))
+    (hV : V ∈ C)
+    (hτσ : G.TransferClassStrategyProfileEquivalent C τ σ) :
+    τ = σ := by
+  obtain ⟨ρ, hρ⟩ := h.nonempty
+  have hρσ : ρ = σ := Set.mem_singleton_iff.mp (h.subset ρ hρ)
+  subst hρσ
+  have hτ : τ ∈ G.undominatedStrategyProfilesWithTransfer V := by
+    exact (hτσ.mem_undominatedProfiles_iff_of_mem hV).mpr hρ
+  exact Set.mem_singleton_iff.mp (h.subset τ hτ)
 
 theorem IsSignalBlindKImplementation.implementation
     {G : InformationalGame ι} [Fintype ι] {V : G.ActionTransfer}

@@ -61,6 +61,46 @@ theorem UtilityEquivalent.trans {who : ι} {s t u : G.Strategy who}
   intro σ
   exact (hst σ).trans (htu σ)
 
+/-- Replacing the dominated strategy by a utility-equivalent one preserves
+weak dominance with a strict witness. -/
+theorem WeaklyStrictlyDominates.congr_dominated_utilityEquivalent
+    {who : ι} {u s t : G.Strategy who}
+    (hst : G.UtilityEquivalent who s t) :
+    G.WeaklyStrictlyDominates who u s ↔
+      G.WeaklyStrictlyDominates who u t := by
+  constructor
+  · intro h
+    refine ⟨?_, ?_⟩
+    · intro σ
+      have hweak := h.1 σ
+      have heq := hst σ
+      linarith
+    · obtain ⟨σ, hstrict⟩ := h.strict_witness
+      have heq := hst σ
+      exact ⟨σ, by linarith⟩
+  · intro h
+    refine ⟨?_, ?_⟩
+    · intro σ
+      have hweak := h.1 σ
+      have heq := hst σ
+      linarith
+    · obtain ⟨σ, hstrict⟩ := h.strict_witness
+      have heq := hst σ
+      exact ⟨σ, by linarith⟩
+
+/-- Undominatedness is saturated by utility equivalence. -/
+theorem UtilityEquivalent.isUndominated_iff
+    {who : ι} {s t : G.Strategy who}
+    (hst : G.UtilityEquivalent who s t) :
+    G.IsUndominated who s ↔ G.IsUndominated who t := by
+  constructor
+  · intro hs u hut
+    exact hs u ((WeaklyStrictlyDominates.congr_dominated_utilityEquivalent
+      (G := G) (who := who) (u := u) hst).mpr hut)
+  · intro ht u hus
+    exact ht u ((WeaklyStrictlyDominates.congr_dominated_utilityEquivalent
+      (G := G) (who := who) (u := u) hst).mp hus)
+
 theorem IsUndominated.not_dominated {who : ι} {s t : G.Strategy who}
     (h : G.IsUndominated who s) : ¬ G.WeaklyStrictlyDominates who t s :=
   h t
@@ -171,6 +211,19 @@ theorem undominatedProfiles_eq_singleton_iff_utilityEquivalent_eq
 
 @[simp] theorem mem_undominatedProfiles {σ : Profile G} :
     σ ∈ G.undominatedProfiles ↔ ∀ i, G.IsUndominated i (σ i) := Iff.rfl
+
+/-- The undominated-profile set is saturated by coordinatewise utility
+equivalence. This is the generic observation-quotient principle behind the
+device and VCG nonredundancy obstructions. -/
+theorem undominatedProfiles_utilityEquivalent_iff
+    {σ τ : Profile G}
+    (h : ∀ i, G.UtilityEquivalent i (σ i) (τ i)) :
+    σ ∈ G.undominatedProfiles ↔ τ ∈ G.undominatedProfiles := by
+  constructor
+  · intro hσ i
+    exact ((h i).isUndominated_iff (G := G)).mp (hσ i)
+  · intro hτ i
+    exact ((h i).isUndominated_iff (G := G)).mpr (hτ i)
 
 /-- On a finite strategy set, every strategy is either itself undominated or is
 dominated by an undominated strategy. -/

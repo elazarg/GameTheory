@@ -694,6 +694,178 @@ theorem pmfMass_toReal_mul_expect_cond
   · simp [pmfCond_apply, pmfMask, hω]
 
 open Classical in
+/-- Conditional expectation commutes with finite pushforward when the
+conditioning event is stated on the pushed-forward value. -/
+theorem expect_pmfCond_pushforward
+    {Ω Ξ : Type*} [Finite Ω] [Finite Ξ]
+    (μ : PMF Ω) (proj : Ω → Ξ) (E : Ξ → Prop)
+    (hE : pmfMass (μ := pushforward μ proj) E ≠ 0) (f : Ξ → ℝ) :
+    Math.Probability.expect (pmfCond (μ := pushforward μ proj) E hE) f =
+      Math.Probability.expect
+        (pmfCond (μ := μ) (fun ω => E (proj ω))
+          (by simpa [pmfMass_pushforward] using hE)) (fun ω => f (proj ω)) := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  letI : Fintype Ξ := Fintype.ofFinite Ξ
+  let hpre : pmfMass (μ := μ) (fun ω => E (proj ω)) ≠ 0 := by
+    simpa [pmfMass_pushforward] using hE
+  have hmass_eq :
+      pmfMass (μ := pushforward μ proj) E =
+        pmfMass (μ := μ) (fun ω => E (proj ω)) := by
+    exact pmfMass_pushforward μ proj E
+  have hmask :
+      (∑ x : Ξ, if E x then ((pushforward μ proj) x).toReal * f x else 0) =
+        ∑ ω : Ω, if E (proj ω) then (μ ω).toReal * f (proj ω) else 0 := by
+    have h := expect_pushforward μ proj (fun x => if E x then f x else 0)
+    rw [Math.Probability.expect_eq_sum] at h
+    rw [Math.Probability.expect_eq_sum] at h
+    simpa [mul_ite] using h
+  have hleft :=
+    pmfMass_toReal_mul_expect_cond (pushforward μ proj) E hE f
+  have hright :=
+    pmfMass_toReal_mul_expect_cond μ (fun ω => E (proj ω)) hpre
+      (fun ω => f (proj ω))
+  have hscaled :
+      (pmfMass (μ := pushforward μ proj) E).toReal *
+          Math.Probability.expect (pmfCond (μ := pushforward μ proj) E hE) f =
+        (pmfMass (μ := pushforward μ proj) E).toReal *
+          Math.Probability.expect
+            (pmfCond (μ := μ) (fun ω => E (proj ω)) hpre)
+            (fun ω => f (proj ω)) := by
+    rw [hleft]
+    rw [hmass_eq, hright]
+    exact hmask
+  have hmass_ne :
+      (pmfMass (μ := pushforward μ proj) E).toReal ≠ 0 :=
+    ENNReal.toReal_ne_zero.mpr
+      ⟨hE, pmfMass_ne_top (pushforward μ proj) E⟩
+  exact mul_left_cancel₀ hmass_ne hscaled
+
+open Classical in
+/-- Conditional expectation commutes with finite pushforward after replacing a
+target value by the conditional expectation over its fiber. -/
+theorem expect_pmfCond_pushforward_fiberCond
+    {Ω Ξ : Type*} [Finite Ω] [Finite Ξ]
+    (μ : PMF Ω) (proj : Ω → Ξ) (E : Ξ → Prop)
+    (hE : pmfMass (μ := pushforward μ proj) E ≠ 0) (f : Ω → ℝ) :
+    Math.Probability.expect (pmfCond (μ := pushforward μ proj) E hE)
+        (fun x =>
+          if hx : pmfMass (μ := μ) (fun ω => proj ω = x) ≠ 0 then
+            Math.Probability.expect
+              (pmfCond (μ := μ) (fun ω => proj ω = x) hx) f
+          else 0) =
+      Math.Probability.expect
+        (pmfCond (μ := μ) (fun ω => E (proj ω))
+          (by simpa [pmfMass_pushforward] using hE)) f := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  letI : Fintype Ξ := Fintype.ofFinite Ξ
+  let pooled : Ξ → ℝ := fun x =>
+    if hx : pmfMass (μ := μ) (fun ω => proj ω = x) ≠ 0 then
+      Math.Probability.expect (pmfCond (μ := μ) (fun ω => proj ω = x) hx) f
+    else 0
+  have hfiber :
+      ∀ x : Ξ,
+        ((pushforward μ proj) x).toReal * pooled x =
+          ∑ ω : Ω, if proj ω = x then (μ ω).toReal * f ω else 0 := by
+    intro x
+    have hpushx :
+        (pushforward μ proj) x = pmfMass (μ := μ) (fun ω => proj ω = x) :=
+      pushforward_apply_eq_pmfMass μ proj x
+    by_cases hx : pmfMass (μ := μ) (fun ω => proj ω = x) ≠ 0
+    · have hscaled :=
+        pmfMass_toReal_mul_expect_cond μ (fun ω => proj ω = x) hx f
+      simpa [pooled, hx, hpushx] using hscaled
+    · have hmass0 : pmfMass (μ := μ) (fun ω => proj ω = x) = 0 := not_not.mp hx
+      have hsum0 :
+          (∑ ω : Ω, if proj ω = x then (μ ω).toReal * f ω else 0) = 0 := by
+        refine Finset.sum_eq_zero ?_
+        intro ω _
+        by_cases hω : proj ω = x
+        · have hμ0 : μ ω = 0 := by
+            have hle : μ ω ≤ pmfMass (μ := μ) (fun ω => proj ω = x) :=
+              le_pmfMass_of_mem (μ := μ) (E := fun ω => proj ω = x) hω
+            exact le_antisymm (by simpa [hmass0] using hle) bot_le
+          simp [hω, hμ0]
+        · simp [hω]
+      simp [pooled, hpushx, hmass0, hsum0]
+  let hpre : pmfMass (μ := μ) (fun ω => E (proj ω)) ≠ 0 := by
+    simpa [pmfMass_pushforward] using hE
+  have hmass_eq :
+      pmfMass (μ := pushforward μ proj) E =
+        pmfMass (μ := μ) (fun ω => E (proj ω)) :=
+    pmfMass_pushforward μ proj E
+  have hmask :
+      (∑ x : Ξ,
+          if E x then
+            ∑ ω : Ω, if proj ω = x then (μ ω).toReal * f ω else 0
+          else 0) =
+        ∑ ω : Ω, if E (proj ω) then (μ ω).toReal * f ω else 0 := by
+    calc
+      (∑ x : Ξ,
+          if E x then
+            ∑ ω : Ω, if proj ω = x then (μ ω).toReal * f ω else 0
+          else 0)
+          =
+        ∑ x : Ξ, ∑ ω : Ω,
+          if E x then
+            if proj ω = x then (μ ω).toReal * f ω else 0
+          else 0 := by
+            refine Finset.sum_congr rfl ?_
+            intro x _
+            by_cases hx : E x <;> simp [hx]
+      _ =
+        ∑ ω : Ω, ∑ x : Ξ,
+          if E x then
+            if proj ω = x then (μ ω).toReal * f ω else 0
+          else 0 := by
+            rw [Finset.sum_comm]
+      _ = ∑ ω : Ω, if E (proj ω) then (μ ω).toReal * f ω else 0 := by
+            refine Finset.sum_congr rfl ?_
+            intro ω _
+            by_cases hEω : E (proj ω)
+            · rw [if_pos hEω]
+              rw [Finset.sum_eq_single (proj ω)]
+              · simp [hEω]
+              · intro x _ hxne
+                by_cases hxE : E x <;> simp [hxE, hxne.symm]
+              · intro hnot
+                exact absurd (Finset.mem_univ (proj ω)) hnot
+            · rw [if_neg hEω]
+              refine Finset.sum_eq_zero ?_
+              intro x _
+              by_cases hxE : E x
+              · have hxne : proj ω ≠ x := by
+                  intro hx
+                  exact hEω (by simpa [hx] using hxE)
+                simp [hxE, hxne]
+              · simp [hxE]
+  have hleft :=
+    pmfMass_toReal_mul_expect_cond (pushforward μ proj) E hE pooled
+  have hright := pmfMass_toReal_mul_expect_cond μ (fun ω => E (proj ω)) hpre f
+  have hscaled :
+      (pmfMass (μ := pushforward μ proj) E).toReal *
+          Math.Probability.expect (pmfCond (μ := pushforward μ proj) E hE) pooled =
+        (pmfMass (μ := pushforward μ proj) E).toReal *
+          Math.Probability.expect (pmfCond (μ := μ) (fun ω => E (proj ω)) hpre) f := by
+    rw [hleft]
+    rw [hmass_eq, hright]
+    calc
+      (∑ x : Ξ, if E x then ((pushforward μ proj) x).toReal * pooled x else 0)
+          =
+        ∑ x : Ξ,
+          if E x then
+            ∑ ω : Ω, if proj ω = x then (μ ω).toReal * f ω else 0
+          else 0 := by
+            refine Finset.sum_congr rfl ?_
+            intro x _
+            by_cases hxE : E x <;> simp [hxE, hfiber x]
+      _ = ∑ ω : Ω, if E (proj ω) then (μ ω).toReal * f ω else 0 := hmask
+  have hmass_ne :
+      (pmfMass (μ := pushforward μ proj) E).toReal ≠ 0 :=
+    ENNReal.toReal_ne_zero.mpr
+      ⟨hE, pmfMass_ne_top (pushforward μ proj) E⟩
+  exact mul_left_cancel₀ hmass_ne (by simpa [pooled, hpre] using hscaled)
+
+open Classical in
 /-- If two functions agree off an event, an unconditional expectation inequality
 implies the corresponding conditional expectation inequality on that event. -/
 theorem expect_cond_le_of_expect_le_of_eq_off
