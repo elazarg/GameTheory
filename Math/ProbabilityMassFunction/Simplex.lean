@@ -90,5 +90,29 @@ theorem toVector_ofVector [Fintype α] {w : α → ℝ} (hw : w ∈ stdSimplex �
   funext a
   exact ofVector_toReal hw a
 
+/-- Converting a finite `PMF` to its coordinate vector and back recovers the
+original `PMF`. -/
+theorem ofVector_toVector [Fintype α] (μ : PMF α) :
+    ofVector (toVector μ) (toVector_mem_stdSimplex μ) = μ := by
+  exact toVector_injective (toVector_ofVector (toVector_mem_stdSimplex μ))
+
+/-- A simplex point represents a given finite `PMF` exactly when its coordinate
+vector is that PMF's coordinate vector. -/
+theorem ofVector_eq_iff_eq_toVector [Fintype α]
+    (x : stdSimplex ℝ α) (μ : PMF α) :
+    ofVector (x : α → ℝ) x.property = μ ↔
+      x = ⟨toVector μ, toVector_mem_stdSimplex μ⟩ := by
+  constructor
+  · intro h
+    apply Subtype.ext
+    have hx :
+        toVector (ofVector (x : α → ℝ) x.property) = toVector μ :=
+      congrArg toVector h
+    change (x : α → ℝ) = toVector μ
+    simpa [toVector_ofVector] using hx
+  · intro h
+    subst h
+    exact ofVector_toVector μ
+
 end ProbabilityMassFunction
 end Math

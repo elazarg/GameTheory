@@ -115,6 +115,15 @@ def WeaklyStrictlyDominatesWithTransfer (G : InformationalGame ι)
       G.subsidizedUtility V θ (Function.update a i (b (θ i))) i >
         G.subsidizedUtility V θ (Function.update a i (c (θ i))) i
 
+/-- Two signal-contingent strategies are equivalent after transfers when they
+give the player identical subsidized utility at every signal and opponent
+action context. -/
+def StrategyEquivalentWithTransfer (G : InformationalGame ι)
+    (V : G.ActionTransfer) (i : ι) (b c : G.Strategy i) : Prop :=
+  ∀ (θ : G.SignalProfile) (a : G.ActionProfile),
+    G.subsidizedUtility V θ (Function.update a i (b (θ i))) i =
+      G.subsidizedUtility V θ (Function.update a i (c (θ i))) i
+
 /-- Undominated signal-contingent strategies under signal-blind weak dominance
 with a strict witness. -/
 def IsUndominatedWithTransfer (G : InformationalGame ι)
@@ -179,6 +188,39 @@ theorem IsSignalBlindExPostDominantKImplementation.cost_bound
     ∀ θ : G.SignalProfile, (∑ i, V (G.play σ θ) i) ≤ k :=
   h.2.2
 
+theorem StrategyEquivalentWithTransfer.refl
+    {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
+    (b : G.Strategy i) :
+    G.StrategyEquivalentWithTransfer V i b b := by
+  intro θ a
+  rfl
+
+theorem StrategyEquivalentWithTransfer.symm
+    {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
+    {b c : G.Strategy i}
+    (h : G.StrategyEquivalentWithTransfer V i b c) :
+    G.StrategyEquivalentWithTransfer V i c b := by
+  intro θ a
+  exact (h θ a).symm
+
+theorem StrategyEquivalentWithTransfer.trans
+    {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
+    {b c d : G.Strategy i}
+    (hbc : G.StrategyEquivalentWithTransfer V i b c)
+    (hcd : G.StrategyEquivalentWithTransfer V i c d) :
+    G.StrategyEquivalentWithTransfer V i b d := by
+  intro θ a
+  exact (hbc θ a).trans (hcd θ a)
+
+theorem IsExPostDominantStrategyWithTransfer.weaklyDominatesWithTransfer
+    {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
+    {b : G.Strategy i}
+    (h : G.IsExPostDominantStrategyWithTransfer V i b)
+    (c : G.Strategy i) :
+    G.WeaklyDominatesWithTransfer V i b c := by
+  intro θ a
+  exact h θ a (c (θ i))
+
 theorem WeaklyStrictlyDominatesWithTransfer.irrefl
     {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
     (b : G.Strategy i) :
@@ -231,6 +273,138 @@ theorem exists_undominated_dominator_withTransfer
       WeaklyStrictlyDominatesWithTransfer.trans hab hbc)
     (fun a => WeaklyStrictlyDominatesWithTransfer.irrefl a)
     hdominated
+
+/-- If `b` weakly dominates every signal-contingent strategy of player `i`,
+then the undominated strategies are exactly those equivalent to `b` after the
+transfer. -/
+theorem isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominates
+    {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
+    {b c : G.Strategy i}
+    (hdom : ∀ d : G.Strategy i, G.WeaklyDominatesWithTransfer V i b d) :
+    G.IsUndominatedWithTransfer V i c ↔
+      G.StrategyEquivalentWithTransfer V i c b := by
+  classical
+  constructor
+  · intro hc
+    by_contra hne
+    have hnot : ¬ ∀ (θ : G.SignalProfile) (a : G.ActionProfile),
+        G.subsidizedUtility V θ (Function.update a i (c (θ i))) i =
+          G.subsidizedUtility V θ (Function.update a i (b (θ i))) i := hne
+    push Not at hnot
+    obtain ⟨θ, a, hneq⟩ := hnot
+    have hle := hdom c θ a
+    have hstrict :
+        G.subsidizedUtility V θ (Function.update a i (b (θ i))) i >
+          G.subsidizedUtility V θ (Function.update a i (c (θ i))) i := by
+      exact lt_of_le_of_ne hle hneq
+    exact hc b ⟨hdom c, θ, a, hstrict⟩
+  · intro heq d hdc
+    obtain ⟨_, θ, a, hstrict⟩ := hdc
+    have hbd := hdom d θ a
+    have hcb := heq θ a
+    linarith
+
+/-- Profile form of the informational equivalence-class characterization. -/
+theorem undominatedStrategyProfilesWithTransfer_eq_strategyEquivalentClass
+    {G : InformationalGame ι} {V : G.ActionTransfer} {σ : G.StrategyProfile}
+    (hdom :
+      ∀ i (c : G.Strategy i), G.WeaklyDominatesWithTransfer V i (σ i) c) :
+    G.undominatedStrategyProfilesWithTransfer V =
+      {τ : G.StrategyProfile |
+        ∀ i, G.StrategyEquivalentWithTransfer V i (τ i) (σ i)} := by
+  ext τ
+  constructor
+  · intro hτ i
+    exact
+      (isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominates
+        (G := G) (V := V) (i := i) (b := σ i) (c := τ i) (hdom i)).mp (hτ i)
+  · intro hτ i
+    exact
+      (isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominates
+        (G := G) (V := V) (i := i) (b := σ i) (c := τ i) (hdom i)).mpr (hτ i)
+
+/-- Ex-post dominance gives the equivalence-class form of the undominated
+signal-contingent profiles. -/
+theorem IsExPostDominantProfileWithTransfer.undominatedStrategyProfiles_eq
+    {G : InformationalGame ι} {V : G.ActionTransfer} {σ : G.StrategyProfile}
+    (h : G.IsExPostDominantProfileWithTransfer V σ) :
+    G.undominatedStrategyProfilesWithTransfer V =
+      {τ : G.StrategyProfile |
+        ∀ i, G.StrategyEquivalentWithTransfer V i (τ i) (σ i)} := by
+  exact undominatedStrategyProfilesWithTransfer_eq_strategyEquivalentClass
+    (G := G) (V := V) (σ := σ)
+    (fun i c => (h i).weaklyDominatesWithTransfer c)
+
+theorem undominatedStrategyProfilesWithTransfer_eq_singleton_iff_strategyEquivalent_eq
+    {G : InformationalGame ι} {V : G.ActionTransfer} {σ : G.StrategyProfile}
+    (hdom :
+      ∀ i (c : G.Strategy i), G.WeaklyDominatesWithTransfer V i (σ i) c) :
+    G.undominatedStrategyProfilesWithTransfer V =
+        ({σ} : Set G.StrategyProfile) ↔
+      ∀ i (c : G.Strategy i),
+        G.StrategyEquivalentWithTransfer V i c (σ i) → c = σ i := by
+  classical
+  constructor
+  · intro hsingle i c hc
+    have hmem :
+        Function.update σ i c ∈ G.undominatedStrategyProfilesWithTransfer V := by
+      rw [undominatedStrategyProfilesWithTransfer_eq_strategyEquivalentClass
+        (G := G) (V := V) (σ := σ) hdom]
+      intro j
+      by_cases hji : j = i
+      · subst hji
+        simpa using hc
+      · simpa [Function.update_of_ne hji] using
+          (StrategyEquivalentWithTransfer.refl
+            (G := G) (V := V) (i := j) (σ j))
+    have heq : Function.update σ i c = σ := Set.mem_singleton_iff.mp (by
+      simpa [hsingle] using hmem)
+    simpa using congrFun heq i
+  · intro htriv
+    rw [undominatedStrategyProfilesWithTransfer_eq_strategyEquivalentClass
+      (G := G) (V := V) (σ := σ) hdom]
+    ext τ
+    constructor
+    · intro hτ
+      exact Set.mem_singleton_iff.mpr (by
+        funext i
+        exact htriv i (τ i) (hτ i))
+    · intro hτ
+      have hτeq : τ = σ := Set.mem_singleton_iff.mp hτ
+      subst τ
+      intro i
+      exact StrategyEquivalentWithTransfer.refl
+        (G := G) (V := V) (i := i) (σ i)
+
+theorem IsExPostDominantProfileWithTransfer.undominatedStrategyProfiles_eq_singleton_iff
+    {G : InformationalGame ι} {V : G.ActionTransfer} {σ : G.StrategyProfile}
+    (h : G.IsExPostDominantProfileWithTransfer V σ) :
+    G.undominatedStrategyProfilesWithTransfer V =
+        ({σ} : Set G.StrategyProfile) ↔
+      ∀ i (c : G.Strategy i),
+        G.StrategyEquivalentWithTransfer V i c (σ i) → c = σ i :=
+  undominatedStrategyProfilesWithTransfer_eq_singleton_iff_strategyEquivalent_eq
+    (G := G) (V := V) (σ := σ)
+    (fun i c => (h i).weaklyDominatesWithTransfer c)
+
+theorem IsSignalBlindExPostDominantKImplementation.undominatedStrategyProfiles_eq
+    {G : InformationalGame ι} [Fintype ι] {V : G.ActionTransfer}
+    {σ : G.StrategyProfile} {k : ℝ}
+    (h : G.IsSignalBlindExPostDominantKImplementation V σ k) :
+    G.undominatedStrategyProfilesWithTransfer V =
+      {τ : G.StrategyProfile |
+        ∀ i, G.StrategyEquivalentWithTransfer V i (τ i) (σ i)} :=
+  h.exPostDominantProfile.undominatedStrategyProfiles_eq
+
+theorem IsSignalBlindExPostDominantKImplementation.undominatedStrategyProfiles_eq_singleton_iff
+    {G : InformationalGame ι} [Fintype ι] {V : G.ActionTransfer}
+    {σ : G.StrategyProfile} {k : ℝ}
+    (h : G.IsSignalBlindExPostDominantKImplementation V σ k) :
+    G.undominatedStrategyProfilesWithTransfer V =
+        ({σ} : Set G.StrategyProfile) ↔
+      ∀ i (c : G.Strategy i),
+        G.StrategyEquivalentWithTransfer V i c (σ i) → c = σ i :=
+  h.exPostDominantProfile.undominatedStrategyProfiles_eq_singleton_iff
 
 theorem IsSignalBlindImplementation.nonneg
     {G : InformationalGame ι} {V : G.ActionTransfer} {O : Set G.StrategyProfile}

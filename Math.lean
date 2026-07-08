@@ -26,3 +26,4 @@ import Math.FixedPoint.KKM
 import Math.LinearAlgebra.FourierMotzkin
 import Math.LinearAlgebra.Farkas
 import Math.LinearProgramming
+import Math.Topology.WeakDominance

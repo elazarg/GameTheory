@@ -340,7 +340,11 @@ section QuasiField
 variable [Fintype A] [DecidableEq A]
 
 /-- A quasi-field of bundles: contains the empty bundle, is closed under
-complement relative to all goods, and under disjoint union. -/
+complement relative to all goods, and under disjoint union.
+
+The VCG implementation layer currently needs only the empty-bundle projection;
+additional accessor lemmas should be added when a theorem consumes the closure
+fields directly. -/
 def IsQuasiField (Q : Finset (Finset A)) : Prop :=
   (∅ : Finset A) ∈ Q ∧
     (∀ B ∈ Q, (Finset.univ \ B : Finset A) ∈ Q) ∧
@@ -351,26 +355,7 @@ theorem IsQuasiField.empty_mem {Q : Finset (Finset A)}
     (∅ : Finset A) ∈ Q :=
   hQ.1
 
-theorem IsQuasiField.compl_mem {Q : Finset (Finset A)}
-    (hQ : IsQuasiField (A := A) Q) {B : Finset A} (hB : B ∈ Q) :
-    (Finset.univ \ B : Finset A) ∈ Q :=
-  hQ.2.1 B hB
-
-theorem IsQuasiField.union_mem_of_disjoint {Q : Finset (Finset A)}
-    (hQ : IsQuasiField (A := A) Q) {B C : Finset A}
-    (hB : B ∈ Q) (hC : C ∈ Q) (hdisj : Disjoint B C) :
-    B ∪ C ∈ Q :=
-  hQ.2.2 B hB C hC hdisj
-
 end QuasiField
-
-variable [DecidableEq A]
-
-/-- Valuation profile obtained by bundling every buyer's valuation through the
-same quasi-field. -/
-noncomputable def bundledProfile (Q : Finset (Finset A)) (hQempty : ∅ ∈ Q)
-    (v : ι → Valuation A) : ι → Valuation A :=
-  fun i => Valuation.bundling Q hQempty (v i)
 
 end CombinatorialAuction
 

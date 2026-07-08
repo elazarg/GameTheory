@@ -17,7 +17,6 @@ Provides:
 - `WeaklyDominates.refl` -- weak dominance is reflexive
 - `WeaklyDominates.trans` -- weak dominance is transitive
 - `WeaklyDominates.instIsPreorder` -- weak dominance is a preorder
-- `WeaklyIrreflexivelyDominates` -- weak dominance between distinct strategies
 - `WeaklyStrictlyDominates` -- weak dominance with a strict witness
 - `WeaklyStrictlyDominates.instIsStrictOrder` -- weak dominance with a strict
   witness is a strict order
@@ -58,28 +57,6 @@ instance WeaklyDominates.instIsPreorder (who : ι) :
   refl := WeaklyDominates.refl who
   trans := fun _ _ _ => WeaklyDominates.trans
 
-/-- Weak dominance made irreflexive by requiring distinct strategies. This is
-the non-strict dominance convention used in some algorithmic papers: it is
-weaker than `WeaklyStrictlyDominates` because it does not require any payoff
-profile with strict improvement. It is not transitive in general, since payoff-
-equivalent distinct strategies can weakly dominate each other. -/
-def WeaklyIrreflexivelyDominates (G : KernelGame ι) (who : ι)
-    (s t : G.Strategy who) : Prop :=
-  s ≠ t ∧ G.WeaklyDominates who s t
-
-theorem WeaklyIrreflexivelyDominates.ne {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyIrreflexivelyDominates who s t) : s ≠ t :=
-  h.1
-
-theorem WeaklyIrreflexivelyDominates.toWeaklyDominates
-    {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyIrreflexivelyDominates who s t) : G.WeaklyDominates who s t :=
-  h.2
-
-theorem WeaklyIrreflexivelyDominates.irrefl {who : ι} (s : G.Strategy who) :
-    ¬ G.WeaklyIrreflexivelyDominates who s s := by
-  exact fun h => h.ne rfl
-
 /-- Weak dominance with at least one strict witness. This is the textbook
 "weak dominance" relation used by Monderer--Tennenholtz for undominated-strategy
 rationality. It is distinct from `WeaklyDominates`, which is the reflexive
@@ -113,12 +90,6 @@ theorem WeaklyStrictlyDominates.ne {who : ι} {s t : G.Strategy who}
   intro hst
   subst hst
   exact WeaklyStrictlyDominates.irrefl s h
-
-theorem WeaklyStrictlyDominates.toWeaklyIrreflexivelyDominates
-    {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyStrictlyDominates who s t) :
-    G.WeaklyIrreflexivelyDominates who s t :=
-  ⟨h.ne, h.toWeaklyDominates⟩
 
 theorem WeaklyStrictlyDominates.trans {who : ι} {s t u : G.Strategy who}
     (hst : G.WeaklyStrictlyDominates who s t)
@@ -184,12 +155,6 @@ theorem StrictlyDominates.toWeaklyStrictlyDominates
   refine ⟨h.toWeaklyDominates, ?_⟩
   obtain ⟨σ⟩ := hprof
   exact ⟨σ, h σ⟩
-
-theorem StrictlyDominates.toWeaklyIrreflexivelyDominates
-    (hprof : Nonempty (Profile G)) {who : ι} {s t : G.Strategy who}
-    (h : G.StrictlyDominates who s t) :
-    G.WeaklyIrreflexivelyDominates who s t :=
-  (h.toWeaklyStrictlyDominates hprof).toWeaklyIrreflexivelyDominates
 
 /-- Strong strict dominance is a strict order on nonempty profile spaces. -/
 instance StrictlyDominates.instIsStrictOrder (who : ι) [hprof : Nonempty (Profile G)] :
