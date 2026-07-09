@@ -46,8 +46,9 @@ def strip_comments_and_strings(text: str) -> str:
         if block_depth:
             if c == "/" and nxt == "-":
                 block_depth += 1
-                out.extend("  ")
-                i += 2
+                extra = 1 if i + 2 < len(text) and text[i + 2] in {"!", "-"} else 0
+                out.extend(" " * (2 + extra))
+                i += 2 + extra
             elif c == "-" and nxt == "/":
                 block_depth -= 1
                 out.extend("  ")
@@ -85,8 +86,9 @@ def strip_comments_and_strings(text: str) -> str:
             i += 2
         elif c == "/" and nxt == "-":
             block_depth = 1
-            out.extend("  ")
-            i += 2
+            extra = 1 if i + 2 < len(text) and text[i + 2] in {"!", "-"} else 0
+            out.extend(" " * (2 + extra))
+            i += 2 + extra
         elif c == '"':
             in_string = True
             out.append(" ")
