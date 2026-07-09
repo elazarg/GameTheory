@@ -1,5 +1,9 @@
 import GameTheory.Auctions.Tests
+import GameTheory.Concepts.Correlation.Tests
+import GameTheory.Concepts.Dominance.Tests
 import GameTheory.Concepts.Learning.Tests
+import GameTheory.Concepts.Welfare.Tests
+import GameTheory.Concepts.ZeroSum.Tests
 import GameTheory.Cooperative.Tests
 import GameTheory.Core.Tests
 import GameTheory.Languages.EFG.Tests
