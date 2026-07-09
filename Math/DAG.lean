@@ -22,18 +22,19 @@ topological order.
 
 ## Main definitions
 
-- `DAG.Acyclic R` — `R` has no directed cycles
-- `DAG.TopologicalOrder preds` — a topological ordering of `Fin n`
+- `Math.DAG.Acyclic R` — `R` has no directed cycles
+- `Math.DAG.TopologicalOrder preds` — a topological ordering of `Fin n`
 
 ## Main results
 
-- `DAG.Acyclic.wellFounded` — an acyclic relation on a finite type is well-founded
-- `DAG.acyclic_of_topologicalOrder` — a topological order witnesses acyclicity
-- `DAG.topologicalOrder_of_acyclic` — acyclicity implies a topological order exists
+- `Math.DAG.Acyclic.wellFounded` — an acyclic relation on a finite type is well-founded
+- `Math.DAG.acyclic_of_topologicalOrder` — a topological order witnesses acyclicity
+- `Math.DAG.topologicalOrder_of_acyclic` — acyclicity implies a topological order exists
 -/
 
 set_option autoImplicit false
 
+namespace Math
 namespace DAG
 
 variable {α : Type*}
@@ -207,3 +208,4 @@ theorem topologicalOrder_of_acyclic {n : Nat} {preds : Fin n → Finset (Fin n)}
         fun ⟨i, hi⟩ => absurd hi (by simp)⟩
 
 end DAG
+end Math

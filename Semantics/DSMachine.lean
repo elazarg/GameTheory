@@ -14,6 +14,8 @@ available actions varies with state — e.g., observation-indexed actions in gam
 theory.
 -/
 
+namespace Semantics
+
 /-- Dependent-alphabet stochastic machine. The label type may vary with the state. -/
 structure DSMachine (σ : Type) (Label : σ → Type) where
   /-- Initial state. -/
@@ -21,3 +23,5 @@ structure DSMachine (σ : Type) (Label : σ → Type) where
   /-- Stochastic transition: given state `s` and label `l : Label s`,
   produce a distribution over next states. -/
   step : (s : σ) → Label s → PMF σ
+
+end Semantics

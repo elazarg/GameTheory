@@ -74,7 +74,7 @@ structure ObsModelCore
   /-- Per-player observation function on states. -/
   observe : (i : ι) → σ → Obs i
   /-- Underlying dependent stochastic machine. -/
-  machine : DSMachine σ (fun s => ∀ i, Act i (observe i s))
+  machine : Semantics.DSMachine σ (fun s => ∀ i, Act i (observe i s))
 
 /-- Preferred conceptual name for the semantic core of Kuhn's theorem. -/
 abbrev KuhnModel := ObsModelCore

@@ -78,7 +78,7 @@ structure CausalContextFreeForm (m : Nat) where
   contribution is stored in `utilityFn`. -/
   utility_unique : ∀ nd p, kind nd = .utility p → Unique (Val nd)
   /-- Causal parenthood is acyclic. -/
-  acyclic : DAG.Acyclic (· ∈ parents ·)
+  acyclic : Math.DAG.Acyclic (· ∈ parents ·)
   /-- Context-free chance law: a chance coordinate's distribution is a function
   of a fixed parent projection, not of the whole history. -/
   chanceCPD :

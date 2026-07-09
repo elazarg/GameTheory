@@ -23,7 +23,7 @@ open GameTheory
 /-- Parent relation for the tiny MAID. -/
 private def tinyParents : Fin 2 → Finset (Fin 2) := fun | 0 => ∅ | 1 => {0}
 
-private theorem tinyParents_acyclic : DAG.Acyclic (· ∈ tinyParents ·) := by
+private theorem tinyParents_acyclic : Math.DAG.Acyclic (· ∈ tinyParents ·) := by
   intro nd hnd
   -- On Fin 2 with parents 1 → {0} and 0 → ∅, the only edge is 0 → 1.
   -- TransGen can only go 0 → 1, never back.

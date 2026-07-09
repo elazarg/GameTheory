@@ -65,7 +65,7 @@ structure Struct (Player : Type) [DecidableEq Player] [Fintype Player]
   obs_sub        : ∀ nd, obsParents nd ⊆ parents nd
   obs_eq_nondec  : ∀ nd, (¬ ∃ a, kind nd = .decision a) → obsParents nd = parents nd
   utility_unique : ∀ nd a, kind nd = .utility a → Unique (Val nd)
-  acyclic        : DAG.Acyclic (· ∈ parents ·)
+  acyclic        : Math.DAG.Acyclic (· ∈ parents ·)
 
 variable {Player : Type} [DecidableEq Player] [Fintype Player] {n : Nat}
 
@@ -99,12 +99,12 @@ theorem Struct.isAncestor_trans (S : Struct Player n) {a b c : Fin n}
 
 /-- A topological order for a MAID: a permutation of all nodes that respects the
 parent relation (every parent appears before its child). -/
-abbrev TopologicalOrder (S : Struct Player n) := DAG.TopologicalOrder S.parents
+abbrev TopologicalOrder (S : Struct Player n) := Math.DAG.TopologicalOrder S.parents
 
 /-- Acyclicity guarantees at least one topological order exists. -/
 theorem topologicalOrder_exists (S : Struct Player n) :
     Nonempty (TopologicalOrder S) :=
-  DAG.topologicalOrder_of_acyclic S.acyclic
+  Math.DAG.topologicalOrder_of_acyclic S.acyclic
 
 -- ============================================================================
 -- Node subtypes and assignments
@@ -278,7 +278,7 @@ private theorem Struct.self_not_parent (S : Struct Player n) (nd : Fin n) :
 
 /-- In a topological order, a later node cannot be a parent of an earlier node. -/
 private theorem topo_later_not_parent {S : Struct Player n}
-    (σ : DAG.TopologicalOrder S.parents) {i k : Fin σ.order.length}
+    (σ : Math.DAG.TopologicalOrder S.parents) {i k : Fin σ.order.length}
     (hik : i.val < k.val) :
     σ.order[k] ∉ S.parents σ.order[i] := by
   intro hp
