@@ -24,6 +24,7 @@ import Math.OnlineLearning
 import Math.OnlineAlgorithms
 import Math.MeasureTheory.UnitInterval
 import Math.FixedPoint.KKM
+import Math.FixedPoint.Scarf
 import Math.LinearAlgebra.FourierMotzkin
 import Math.LinearAlgebra.Farkas
 import Math.LinearProgramming
