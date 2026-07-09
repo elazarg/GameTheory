@@ -74,7 +74,7 @@ structure ObsModel (ι σ : Type) (Obs : ι → Type) (Act : (i : ι) → Obs i 
   /-- Per-player observation function on states. -/
   observe : (i : ι) → σ → Obs i
   /-- Underlying dependent stochastic machine. -/
-  machine : Semantics.DSMachine σ (fun s => ∀ i, Act i (observe i s))
+  machine : KuhnMachine σ (fun s => ∀ i, Act i (observe i s))
 
 namespace ObsModel
 

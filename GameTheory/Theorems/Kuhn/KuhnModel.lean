@@ -6,7 +6,6 @@ Authors: GameTheory contributors
 
 import Math.ParameterizedChain
 import Math.TraceRun
-import Semantics.DSMachine
 
 /-! # KuhnModel
 
@@ -64,7 +63,17 @@ the old state and returns the new observation. -/
 @[simp] theorem InfoStateCore.identity_current (α : Type) :
     (InfoStateCore.identity α).current = id := rfl
 
-/-- Multi-player information-state model over a `DSMachine` with
+/-- Dependent-alphabet stochastic machine used by Kuhn observation models.
+
+The label type may vary with the state; in Kuhn models this is the joint
+observation-indexed action type at the current state. -/
+structure KuhnMachine (σ : Type) (Label : σ → Type) where
+  /-- Initial state. -/
+  init : σ
+  /-- Stochastic transition from a state and a state-indexed label. -/
+  step : (s : σ) → Label s → PMF σ
+
+/-- Multi-player information-state model over a `KuhnMachine` with
 observation-indexed actions. The label at state `s` is the joint action
 `∀ i, Act i (observe i s)`. -/
 structure ObsModelCore
@@ -74,7 +83,7 @@ structure ObsModelCore
   /-- Per-player observation function on states. -/
   observe : (i : ι) → σ → Obs i
   /-- Underlying dependent stochastic machine. -/
-  machine : Semantics.DSMachine σ (fun s => ∀ i, Act i (observe i s))
+  machine : KuhnMachine σ (fun s => ∀ i, Act i (observe i s))
 
 /-- Preferred conceptual name for the semantic core of Kuhn's theorem. -/
 abbrev KuhnModel := ObsModelCore
