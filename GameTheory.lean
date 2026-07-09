@@ -26,6 +26,7 @@ import GameTheory.Concepts.Foundations.VNM
 import GameTheory.Core.GameIsomorphism
 import GameTheory.Core.GameSimulation
 import GameTheory.Concepts.Foundations.UtilityInvariance
+import GameTheory.Concepts.Foundations.StrategicEquivalence
 
 -- Rationalizability
 import GameTheory.Concepts.Dominance.Rationalizability

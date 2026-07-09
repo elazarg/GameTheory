@@ -1,5 +1,6 @@
 import GameTheory.Congestion.Examples
 import GameTheory.Languages.NFG.Examples
+import GameTheory.Languages.NFG.CountableExample
 import GameTheory.Languages.NFG.MatchingPenniesMixed
 import GameTheory.Languages.NFG.CheapTalkExamples
 import GameTheory.Languages.EFG.Examples

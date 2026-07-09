@@ -290,7 +290,7 @@ theorem restricted_run_factorization
                   (D.stepDist (pureToBehavioral I
                     (extendRestrictedPureProfile (I := I) H π)) ss)
                   (fun t => ss ++ [t]))) := by
-              simpa using hStepIndep μ n
+              simpa [RestrictedStepIndependence] using hStepIndep μ n
         _ = (restrictedMixedJointRaw (I := I) H μ).bind
               (fun π => D.runDistPure (n + 1) (extendRestrictedPureProfile (I := I) H π)) := by
               simp [Execution.Dynamics.runDistPure, runDist_succ]
@@ -373,7 +373,14 @@ theorem behavioralToMixed_stepIndependence_bridge
         D.runDistPure n (I.reassemblePolicy ω₁) =
           D.runDistPure n (I.reassemblePolicy ω₂) :=
       runDistPure_depends_on_len_le (I := I) (D := D) n ω₁ ω₂ hagFlat
-    simpa [ω₁, ω₂] using congrArg (fun ν => ν ss) hEq
+    have hπ : I.reassemblePolicy ω₁ = π := by
+      funext i v
+      rfl
+    have hπ' : I.reassemblePolicy ω₂ = π' := by
+      funext i v
+      rfl
+    rw [hπ, hπ'] at hEq
+    exact congrArg (fun ν => ν ss) hEq
   ext y
   let Lfun : List σ → ENNReal :=
     fun ss =>
@@ -449,12 +456,19 @@ theorem behavioralToMixed_stepIndependence_bridge
             D.stepDist (pureToBehavioral I (I.reassemblePolicy ω₁)) ss =
               D.stepDist (pureToBehavioral I (I.reassemblePolicy ω₂)) ss :=
           stepDist_depends_on_current_context (I := I) (D := D) ω₁ ω₂ ss hagNow
+        have hπ : I.reassemblePolicy ω₁ = π := by
+          funext i v
+          rfl
+        have hπ' : I.reassemblePolicy ω₂ = π' := by
+          funext i v
+          rfl
+        rw [hπ, hπ'] at hstepEq
         have hpushEq := congrArg
           (fun ν =>
             (Math.ProbabilityMassFunction.pushforward ν
               (fun t => ss ++ [t])) y)
           hstepEq
-        simpa [g, Gfun, ω₁, ω₂] using hpushEq
+        simpa [g, Gfun] using hpushEq
       have hind :
           ∑ π, μ π * (f π * g π) =
             (∑ π, μ π * f π) * (∑ π, μ π * g π) := by
@@ -573,7 +587,7 @@ theorem run_factorization
                 Math.ProbabilityMassFunction.pushforward
                   (D.stepDist (pureToBehavioral I π) ss)
                   (fun t => ss ++ [t]))) := by
-              simpa using hStepIndep μ n
+              simpa [StepIndependence] using hStepIndep μ n
         _ = (mixedJoint (I := I) μ).bind (fun π => D.runDistPure (n + 1) π) := by
               simp [Execution.Dynamics.runDistPure, runDist_succ]
 

@@ -59,11 +59,8 @@ theorem evalBehavioral_realize_eq_evalMixed
       evalMixedCanonical (I := I) D k μ := by
   unfold Execution.Dynamics.evalBehavioral evalMixedCanonical
   rw [hRun]
-  simpa [Execution.Dynamics.evalPure] using
-    (Math.ProbabilityMassFunction.pushforward_bind
-      (μ := mixedJoint (I := I) μ)
-      (k := fun π => D.runDistPure k π)
-      (f := I.outcomeOfStates))
+  rw [Math.ProbabilityMassFunction.pushforward_bind]
+  rfl
 
 end InfoModel
 end GameTheory

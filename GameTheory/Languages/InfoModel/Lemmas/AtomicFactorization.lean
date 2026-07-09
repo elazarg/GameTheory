@@ -167,10 +167,12 @@ theorem restrictedMixedJointRaw_behavioralToMixed_eq_map_reassemble
         = ∏ i, ∏ p : RestrictedLocalCoord (I := I) H i, (κ i p) (π i p) := by
             exact restrictedMixedJointRaw_behavioralToMixed_apply_prod (I := I) H κ π
     _ = ∏ k : Sigma (fun i => I.RestrictedLocalCoord H i), (κ k.1 k.2) (π k.1 k.2) := by
-          simpa [Finset.univ_sigma_univ (κ := fun i => I.RestrictedLocalCoord H i)] using
+          have h :=
             (Finset.prod_sigma' (s := (Finset.univ : Finset ι))
               (t := fun i => (Finset.univ : Finset (I.RestrictedLocalCoord H i)))
               (f := fun i p => (κ i p) (π i p)))
+          rw [Finset.univ_sigma_univ] at h
+          simpa [RestrictedLocalCoord] using h
     _ = (pmfPi τ) (e.symm π) := by
           simp [τ, e, pmfPi_apply]
     _ = (PMF.map e (pmfPi τ)) π := by
