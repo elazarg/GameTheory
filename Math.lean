@@ -20,12 +20,16 @@ import Math.WeightedMedian
 import Math.WindowedContraction
 import Math.SchauderFixedPoint
 import Math.SimplexApproximation
+import Math.Simplex
 import Math.OnlineLearning
 import Math.OnlineAlgorithms
 import Math.MeasureTheory.UnitInterval
 import Math.FixedPoint.KKM
 import Math.FixedPoint.Scarf
+import Math.Minimax.MinimaxLoomis
+import Math.Minimax.Loomis
 import Math.LinearAlgebra.FourierMotzkin
 import Math.LinearAlgebra.Farkas
+import Math.LinearAlgebra.PerronFrobenius
 import Math.LinearProgramming
 import Math.Topology.WeakDominance

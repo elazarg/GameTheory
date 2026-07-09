@@ -7,6 +7,8 @@ Authors: GameTheory contributors
 import Math.Probability
 import Math.PMFProduct
 import Math.OnlineAlgorithms
+import Math.Minimax.Loomis
+import Math.LinearAlgebra.PerronFrobenius
 
 /-!
 # Math.Tests
@@ -49,5 +51,34 @@ example : stopOnTrue.runAll () [false, true, true] = [true, true] := by
   rfl
 
 end OnlineAlgorithms
+
+namespace Minimax
+
+example : Loomis.IsPositive (fun (_ : Unit) (_ : Unit) => (1 : ℝ)) :=
+  Loomis.IsPositive.one
+
+example :
+    ∃ (x : stdSimplex ℝ Unit) (y : stdSimplex ℝ Unit) (v : ℝ),
+      (∀ j, v * Loomis.xB (fun (_ : Unit) (_ : Unit) => (1 : ℝ)) x j
+          ≤ Loomis.xA (fun (_ : Unit) (_ : Unit) => (1 : ℝ)) x j) ∧
+      (∀ i, Loomis.Ay (fun (_ : Unit) (_ : Unit) => (1 : ℝ)) y i
+          ≤ v * Loomis.By (fun (_ : Unit) (_ : Unit) => (1 : ℝ)) y i) :=
+  Loomis.loomis_theorem
+    (fun (_ : Unit) (_ : Unit) => (1 : ℝ))
+    (fun (_ : Unit) (_ : Unit) => (1 : ℝ))
+    Loomis.IsPositive.one
+
+example :
+    ∃ (x y : stdSimplex ℝ (Fin 1)) (lam : ℝ),
+      0 < lam ∧
+      (∀ i, 0 < x.val i) ∧
+      (∀ i, 0 < y.val i) ∧
+      (∀ j, wsum x (fun _ => (1 : ℝ)) = lam * x.val j) ∧
+      (∀ i, wsum y (fun _ => (1 : ℝ)) = lam * y.val i) :=
+  Math.LinearAlgebra.perron_frobenius
+    (n := 1) (fun (_ : Fin 1) (_ : Fin 1) => (1 : ℝ))
+    (by intro i j; norm_num)
+
+end Minimax
 
 end Math.Tests
