@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.MultiRound.SOS
-import GameTheory.Theorems.Kuhn.ObsModel
+import GameTheory.Languages.Kuhn.ObsModel
 
 /-!
 # GameTheory.Languages.MultiRound.CompileObs

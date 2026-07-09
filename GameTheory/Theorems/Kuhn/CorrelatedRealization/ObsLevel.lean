@@ -3,8 +3,8 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Theorems.Kuhn.ObsModel
-import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
+import GameTheory.Languages.Kuhn.ObsModel
+import GameTheory.Languages.Kuhn.MixedToBehavioralCore
 
 set_option autoImplicit false
 

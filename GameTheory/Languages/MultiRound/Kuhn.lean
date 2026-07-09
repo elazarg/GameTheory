@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.MultiRound.CompileObs
 import GameTheory.Languages.MultiRound.CompileObsLinRecall
-import GameTheory.Theorems.Kuhn
+import GameTheory.Languages.Kuhn
 
 /-!
 # GameTheory.Languages.MultiRound.Kuhn

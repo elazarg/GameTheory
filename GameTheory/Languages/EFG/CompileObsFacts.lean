@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import Math.PMFProduct
 import GameTheory.Languages.EFG.CompileObs
-import GameTheory.Theorems.Kuhn
+import GameTheory.Languages.Kuhn
 
 /-!
 # EFG compiled ObsModelCore facts

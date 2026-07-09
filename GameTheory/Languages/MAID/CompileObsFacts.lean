@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.PMFProduct
-import GameTheory.Theorems.Kuhn
+import GameTheory.Languages.Kuhn
 import GameTheory.Languages.MAID.CompileObs
 import GameTheory.Languages.MAID.FrontierLemmas
 

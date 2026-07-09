@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.FOSG.Information
-import GameTheory.Theorems.Kuhn.KuhnModel
+import GameTheory.Languages.Kuhn.KuhnModel
 
 /-!
 # FOSG -> ObsModelCore bridge

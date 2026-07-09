@@ -7,8 +7,8 @@ import GameTheory.Languages.Bridges.FOSG.ObsModelCore
 import GameTheory.Languages.FOSG.Compile
 import GameTheory.Languages.FOSG.Execution
 import GameTheory.Concepts.Foundations.DeviationSimulation
-import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
-import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
+import GameTheory.Languages.Kuhn.BehavioralToMixedCore
+import GameTheory.Languages.Kuhn.MixedToBehavioralCore
 import GameTheory.Languages.FOSG.ReachableHistory.ObsModelFacts
 
 namespace GameTheory

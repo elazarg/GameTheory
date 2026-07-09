@@ -5,11 +5,8 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Theorems.Kuhn.BehavioralToMixed
-import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
+import GameTheory.Languages.Kuhn
 import GameTheory.Theorems.Kuhn.CorrelatedRealization
-import GameTheory.Theorems.Kuhn.KuhnModel
-import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
-import GameTheory.Theorems.Kuhn.ObsModel
 
 /-!
 # GameTheory.Theorems.Kuhn
@@ -34,35 +31,3 @@ This file re-exports the Kuhn model, the core theorems, the migration wrappers,
 and the generic outcome-equality schema types used by language-specific Kuhn
 reductions.
 -/
-
-namespace GameTheory
-namespace Theorems
-
-/-- Generic behavioral -> mixed outcome-equality schema. -/
-def KuhnBehavioralToMixedOutcome
-    (Behavioral Pure Outcome : Type)
-    (mixedOfBehavioral : Behavioral → PMF Pure)
-    (evalBehavioral : Behavioral → PMF Outcome)
-    (evalPure : Pure → PMF Outcome) : Prop :=
-  ∀ σ : Behavioral, (mixedOfBehavioral σ).bind evalPure = evalBehavioral σ
-
-/-- Generic mixed -> behavioral realization schema. -/
-def KuhnMixedToBehavioralViaOutcome
-    (Behavioral Mixed Pure Outcome : Type)
-    (joint : Mixed → PMF Pure)
-    (evalBehavioral : Behavioral → PMF Outcome)
-    (evalPure : Pure → PMF Outcome) : Prop :=
-  ∀ μ : Mixed, ∃ σ : Behavioral, evalBehavioral σ = (joint μ).bind evalPure
-
-/-- Complete Kuhn statement (both directions) at outcome-distribution level. -/
-def KuhnCompleteViaOutcome
-    (Behavioral Mixed Pure Outcome : Type)
-    (mixedOfBehavioral : Behavioral → PMF Pure)
-    (joint : Mixed → PMF Pure)
-    (evalBehavioral : Behavioral → PMF Outcome)
-    (evalPure : Pure → PMF Outcome) : Prop :=
-  (∀ σ : Behavioral, (mixedOfBehavioral σ).bind evalPure = evalBehavioral σ) ∧
-  (∀ μ : Mixed, ∃ σ : Behavioral, evalBehavioral σ = (joint μ).bind evalPure)
-
-end Theorems
-end GameTheory

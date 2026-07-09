@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import Math.PMFProduct
 import GameTheory.Languages.MAID.SOS
-import GameTheory.Theorems.Kuhn.ObsModel
+import GameTheory.Languages.Kuhn.ObsModel
 
 /-!
 # GameTheory.Languages.MAID.CompileObs

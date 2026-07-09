@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.MultiRound.SOS
-import GameTheory.Theorems.Kuhn.MixedToBehavioralCore
+import GameTheory.Languages.Kuhn.MixedToBehavioralCore
 import Mathlib.Data.List.TakeDrop
 
 /-!

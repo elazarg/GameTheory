@@ -4,8 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Theorems.Kuhn.ObsModel
-import GameTheory.Theorems.Kuhn.BehavioralToMixedCore
+import GameTheory.Languages.Kuhn.ObsModel
+import GameTheory.Languages.Kuhn.BehavioralToMixedCore
 
 /-! # Behavioral -> Mixed direction of Kuhn's theorem for `ObsModel`
 

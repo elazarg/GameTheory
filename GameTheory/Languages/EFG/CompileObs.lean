@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.EFG.SOS
-import GameTheory.Theorems.Kuhn
+import GameTheory.Languages.Kuhn
 
 /-!
 # GameTheory.Languages.EFG.CompileObs
