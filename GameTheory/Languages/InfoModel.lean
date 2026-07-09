@@ -7,7 +7,6 @@ Authors: GameTheory contributors
 import GameTheory.Languages.InfoModel.SemanticForm
 import GameTheory.Languages.InfoModel.InfoGame
 import GameTheory.Languages.InfoModel.Simulation
-import GameTheory.Languages.InfoModel.Lemmas
 
 /-!
 # GameTheory.Languages.InfoModel
