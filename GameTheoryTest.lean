@@ -5,6 +5,7 @@ import GameTheory.Languages.FOSG.Tests
 import GameTheory.Languages.Intrinsic.Tests
 import GameTheory.Languages.MAID.Tests
 import GameTheory.Languages.MultiRound.Tests
+import GameTheory.Languages.NFG.Tests
 import GameTheory.Voting.Tests
 
 /-!
