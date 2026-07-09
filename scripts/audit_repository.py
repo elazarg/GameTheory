@@ -33,7 +33,7 @@ DEFAULT_ROOTS = {
     "GameTheoryTest",
     "GameTheoryExamples",
 }
-STANDALONE_LEAN_MODULES = {"scripts.AxiomAudit"}
+STANDALONE_LEAN_MODULES = {"lakefile", "scripts.AxiomAudit"}
 
 
 def static_escape_hatch_audit() -> list[str]:
