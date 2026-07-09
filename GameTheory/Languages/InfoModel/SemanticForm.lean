@@ -8,14 +8,13 @@ import Math.Probability
 import Math.PMFProduct
 import Math.ProbabilityMassFunction
 import Math.TraceRun
-import Semantics.SM
 import Semantics.TransitionTrace
 
 /-!
 # GameTheory.Languages.InfoModel.SemanticForm
 
 Semantics-first model decomposition:
-- `InfoModel`: public and player-local visibility, extending `Semantics.SM`
+- `InfoModel`: pointed relational machine plus public and player-local visibility
 - `ControlModel`: common-knowledge controller specifications (separate layer)
 
 `ObsRecall`, `ActionRecall`, `PerfectRecall`, and `FiniteHorizon` are predicates,
@@ -27,12 +26,16 @@ namespace GameTheory
 open Math.Probability
 
 /-- Information structure extending a multi-agent state machine.
-Inherits `init` and `step` from `SM`; adds public/private observation structure.
+Packages an initial state, transition relation, and public/private observation
+structure.
 
 `publicView` is the common visible component of a state.
 `observe i` is player `i`'s private/local visible component. -/
-structure InfoModel (ι σ : Type) (Act : ι → Type)
-    extends Semantics.SM (∀ i, Option (Act i)) σ where
+structure InfoModel (ι σ : Type) (Act : ι → Type) where
+  /-- Initial latent state. -/
+  init : σ
+  /-- Joint-action transition relation. -/
+  step : (∀ i, Option (Act i)) → σ → σ → Prop
   Public : Type
   publicView : σ → Public
   Obs : ι → Type
