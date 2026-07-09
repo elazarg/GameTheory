@@ -3,7 +3,7 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Mechanism.FeasiblePosteriors
+import GameTheory.Mechanism.Bayesian.FeasiblePosteriors
 
 /-!
 # Feasible joint posterior beliefs

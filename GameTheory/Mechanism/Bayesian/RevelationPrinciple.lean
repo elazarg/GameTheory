@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Mechanism.MechanismDesign
+import GameTheory.Mechanism.Bayesian.MechanismDesign
 import Math.Probability
 
 /-!

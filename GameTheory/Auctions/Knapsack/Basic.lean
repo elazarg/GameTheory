@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Mechanism.Myerson
+import GameTheory.Mechanism.Bayesian.Myerson
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Fintype.Pi
 import Mathlib.Data.Finset.Max

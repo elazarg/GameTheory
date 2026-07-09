@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Math.Probability
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
-import GameTheory.Mechanism.InformationalGame
+import GameTheory.Mechanism.Bayesian.InformationalGame
 
 /-!
 # Vickrey-Clarke-Groves (VCG) Mechanism

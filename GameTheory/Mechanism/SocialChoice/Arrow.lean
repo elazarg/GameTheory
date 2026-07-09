@@ -3,12 +3,12 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Mechanism.SocialChoice
+import GameTheory.Mechanism.SocialChoice.Basic
 
 /-!
 # Arrow's impossibility theorem
 
-The social-choice layer (`SocialChoice.lean`) defines a social welfare function on an
+The social-choice layer (`SocialChoice/Basic.lean`) defines a social welfare function on an
 *unconstrained* `PrefRel`. Arrow's theorem is not even statable there: it needs the
 preferences to be **rankings** (strict linear orders) and the social welfare function to
 return a ranking ("collective rationality"). This file adds that rationality layer and
@@ -17,7 +17,7 @@ proves Arrow's impossibility theorem via Geanakoplos's pivotal-voter argument.
 Throughout, a `PrefRel` is read as a **strict** preference: `r a b` means "`a` is
 strictly preferred to `b`". Arrow's domain is the profiles of *rankings*, so the Pareto and
 IIA axioms are taken on that domain (`SWF.IsParetoOnRankings`, `SWF.IsIIAOnRankings`). The
-unconstrained `SWF.IsPareto` / `SWF.IsIIA` of `SocialChoice.lean` imply these restrictions
+unconstrained `SWF.IsPareto` / `SWF.IsIIA` of `SocialChoice/Basic.lean` imply these restrictions
 (`IsPareto.onRankings`, `IsIIA.onRankings`), so the theorem also applies under the global axioms.
 
 ## Main definitions

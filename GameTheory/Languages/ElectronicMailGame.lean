@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Knowledge.ApproximateCommonKnowledge
-import GameTheory.Mechanism.BayesianGame
+import GameTheory.Mechanism.Bayesian.BayesianGame
 import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Tactic.NormNum
 

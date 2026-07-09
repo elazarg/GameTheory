@@ -3,7 +3,7 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Mechanism.Arrow
+import GameTheory.Mechanism.SocialChoice.Arrow
 
 /-!
 # The Gibbard–Satterthwaite theorem
@@ -12,7 +12,8 @@ A **social choice function** (SCF) selects a single alternative from each profil
 The Gibbard–Satterthwaite theorem says that, with at least three alternatives in its range, a
 strategy-proof SCF over the full domain of rankings must be dictatorial.
 
-The proof is the classical reduction to Arrow's impossibility theorem (`Mechanism/Arrow.lean`):
+The proof is the classical reduction to Arrow's impossibility theorem
+(`Mechanism/SocialChoice/Arrow.lean`):
 from a strategy-proof, onto SCF `g` we build an *induced social welfare function* — society
 prefers `a` to `b` exactly when `g` chooses `a` from the profile that lifts `a, b` to the top —
 show it is collectively rational, Paretian, and IIA, and transfer Arrow's dictator back to `g`.

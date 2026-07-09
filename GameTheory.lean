@@ -114,29 +114,12 @@ import GameTheory.Concepts.ZeroSum.MatrixGame.Geometry
 import GameTheory.Concepts.ZeroSum.MatrixGame.StrongComplementarity
 
 -- Mechanism design
-import GameTheory.Mechanism.BayesianGame
-import GameTheory.Mechanism.InformationalGame
-import GameTheory.Mechanism.InformationDesign
-import GameTheory.Mechanism.FeasiblePosteriors
-import GameTheory.Mechanism.JointFeasiblePosteriors
-import GameTheory.Mechanism.BayesCorrelatedEq
-import GameTheory.Mechanism.MechanismDesign
-import GameTheory.Mechanism.RevelationPrinciple
-import GameTheory.Mechanism.Monotonicity
-import GameTheory.Mechanism.AffineMaximizer
-import GameTheory.Mechanism.Myerson
+import GameTheory.Mechanism.Bayesian
 import GameTheory.Mechanism.Contracts.Basic
 
 -- Social choice and information
 import GameTheory.Mechanism.SocialChoice
 import GameTheory.Mechanism.FairDivision
-import GameTheory.Mechanism.Arrow
-import GameTheory.Mechanism.GibbardSatterthwaite
-import GameTheory.Mechanism.SenParetianLiberal
-import GameTheory.Mechanism.Condorcet
-import GameTheory.Mechanism.EuclideanPreference
-import GameTheory.Mechanism.MedianVoter
-import GameTheory.Mechanism.May
 
 -- Voting and fluid democracy
 import GameTheory.Voting.Delegation

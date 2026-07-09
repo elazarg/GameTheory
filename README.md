@@ -146,7 +146,7 @@ GameTheory/Core/          semantic structures, morphisms, simulations
 GameTheory/Concepts/      solution concepts, welfare, learning, knowledge
 GameTheory/Languages/     NFG, EFG, MAID, MultiRound, FOSG, Intrinsic
 GameTheory/Theorems/      high-level theorem packages
-GameTheory/Mechanism/     mechanisms, social choice, information design, fair division
+GameTheory/Mechanism/     mechanisms; Bayesian, SocialChoice, FairDivision, Contracts
 GameTheory/Auctions/      auction formats and truthfulness results
 GameTheory/Cooperative/   coalitional games, bargaining, matching
 Math/                     project-local mathematical infrastructure

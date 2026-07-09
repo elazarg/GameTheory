@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Voting.LiquidDemocracy
-import GameTheory.Mechanism.MedianVoter
+import GameTheory.Mechanism.SocialChoice.MedianVoter
 
 /-!
 # Liquid median
