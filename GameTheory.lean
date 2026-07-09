@@ -17,6 +17,7 @@ import GameTheory.Concepts.Foundations.GameMorphism
 import GameTheory.Concepts.Foundations.InertExtension
 import GameTheory.Concepts.Communication.Babbling
 import GameTheory.Concepts.Foundations.DeviationSimulation
+import GameTheory.Concepts.Foundations.SerializationObliviousness
 import GameTheory.Concepts.Foundations.Deviation
 import GameTheory.Concepts.Foundations.BestResponse
 import GameTheory.Concepts.Foundations.PrefPreorderProperties

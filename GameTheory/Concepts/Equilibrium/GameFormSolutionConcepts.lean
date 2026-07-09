@@ -68,8 +68,8 @@ theorem noProfitableProfileDeviationFor_iff (F : GameForm ι)
       ∀ d : D, pref who (F.correlatedOutcome μ) (F.correlatedOutcome (deviate d)) := by
   rfl
 
-/-- A family of profile-distribution deviations, indexed by player and optionally
-    depending on the current profile distribution. -/
+/-- A family of profile-distribution deviations, indexed by a single deviating
+    player `who : ι`, optionally depending on the current profile distribution. -/
 structure ProfileDeviationFamily (F : GameForm ι) where
   Dev : ι → Type
   deviate : PMF F.Profile → ∀ who : ι, Dev who → PMF F.Profile

@@ -27,7 +27,9 @@ namespace GameForm
 
 variable {ι Ω : Type}
 
-/-- A view of a game form's outcomes into a common observed carrier. -/
+/-- A view of a game form's outcomes into a common observed carrier `Ω`, shared
+across players. Observations depend only on the realized outcome, not on the
+player evaluating it. -/
 structure OutcomeView (F : GameForm ι) (Ω : Type) where
   observe : F.Outcome → Ω
 
