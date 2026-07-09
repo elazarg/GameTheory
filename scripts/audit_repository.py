@@ -26,6 +26,14 @@ FORBIDDEN_PATTERNS = [
     (re.compile(r"\bnative_decide\b"), "native_decide proof"),
 ]
 AXIOM_LINE_RE = re.compile(r"^'([^']+)' depends on axioms: \[(.*)\]$")
+DEFAULT_ROOTS = {
+    "GameTheory",
+    "Math",
+    "Semantics",
+    "GameTheoryTest",
+    "GameTheoryExamples",
+}
+STANDALONE_LEAN_MODULES = {"scripts.AxiomAudit"}
 
 
 def static_escape_hatch_audit() -> list[str]:
@@ -67,8 +75,46 @@ def run_axiom_audit() -> tuple[list[str], str]:
     return failures, result.stdout
 
 
+def module_name(path: pathlib.Path) -> str:
+    return ".".join(path.with_suffix("").parts)
+
+
+def import_reachability_audit() -> list[str]:
+    tracked_modules = {module_name(path): path for path in tracked_lean_files()}
+    missing_roots = sorted(root for root in DEFAULT_ROOTS if root not in tracked_modules)
+    failures = [f"default target root {root}.lean is not tracked" for root in missing_roots]
+
+    imports: dict[str, list[str]] = {}
+    for mod, path in tracked_modules.items():
+        deps: list[str] = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("import "):
+                parts = line.split()
+                if len(parts) >= 2:
+                    deps.append(parts[1])
+        imports[mod] = deps
+
+    reachable: set[str] = set()
+    stack = list(DEFAULT_ROOTS)
+    while stack:
+        mod = stack.pop()
+        if mod in reachable:
+            continue
+        reachable.add(mod)
+        stack.extend(dep for dep in imports.get(mod, []) if dep in tracked_modules)
+
+    orphaned = sorted(
+        mod for mod in tracked_modules
+        if mod not in reachable and mod not in STANDALONE_LEAN_MODULES
+    )
+    failures.extend(f"{tracked_modules[mod]}: tracked Lean module is not reachable from default targets"
+                    for mod in orphaned)
+    return failures
+
+
 def main() -> int:
     failures = static_escape_hatch_audit()
+    failures.extend(import_reachability_audit())
     axiom_failures, axiom_output = run_axiom_audit()
     failures.extend(axiom_failures)
 
