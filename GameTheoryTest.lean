@@ -9,6 +9,7 @@ import GameTheory.Languages.MAID.Tests
 import GameTheory.Languages.MultiRound.Tests
 import GameTheory.Languages.NFG.Tests
 import GameTheory.Mechanism.Tests
+import GameTheory.Theorems.Tests
 import GameTheory.Voting.Tests
 
 /-!
