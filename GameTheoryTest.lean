@@ -1,4 +1,6 @@
+import GameTheory.Auctions.Tests
 import GameTheory.Concepts.Learning.Tests
+import GameTheory.Cooperative.Tests
 import GameTheory.Languages.EFG.Tests
 import GameTheory.Languages.Expressiveness.Tests
 import GameTheory.Languages.FOSG.Tests
@@ -6,6 +8,7 @@ import GameTheory.Languages.Intrinsic.Tests
 import GameTheory.Languages.MAID.Tests
 import GameTheory.Languages.MultiRound.Tests
 import GameTheory.Languages.NFG.Tests
+import GameTheory.Mechanism.Tests
 import GameTheory.Voting.Tests
 
 /-!
