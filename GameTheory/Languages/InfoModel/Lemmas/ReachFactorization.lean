@@ -580,10 +580,21 @@ private theorem mixedJoint_stepDist_eq_realizeBehavioralCanonical
                 (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
               Execution.Dynamics.jointActionDist (I := I)
                 (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
-            simpa [Math.ProbabilityMassFunction.pushforward, InfoModel.mixedJoint,
-              Execution.Dynamics.jointActionDist, InfoModel.realizeBehavioralCanonical] using
-              (Math.PMFProduct.pmfPi_push_coordwise
-                (μ := μ) (g := fun i fi => fi (I.projectStates i ss)))
+            calc
+              (InfoModel.mixedJoint (I := I) μ).bind
+                  (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))
+                  =
+                Math.ProbabilityMassFunction.pushforward
+                  (InfoModel.mixedJoint (I := I) μ)
+                  (fun π i => π i (I.projectStates i ss)) :=
+                    Math.ProbabilityMassFunction.bind_pure_eq_pushforward _ _
+              _ =
+                Execution.Dynamics.jointActionDist (I := I)
+                  (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
+                    simpa [InfoModel.mixedJoint, Execution.Dynamics.jointActionDist,
+                      InfoModel.realizeBehavioralCanonical] using
+                      (Math.PMFProduct.pmfPi_push_coordwise
+                        (μ := μ) (g := fun i fi => fi (I.projectStates i ss)))
           rw [hJA]
     _ = D.stepDist (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
           simp [Execution.Dynamics.stepDist, s]

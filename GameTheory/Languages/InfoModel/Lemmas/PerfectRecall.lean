@@ -194,13 +194,17 @@ theorem localHistTokens_eq_of_projectStates_actions_eq
           have hproj' : I.projectStates i ss₁.dropLast = I.projectStates i ss₂.dropLast := by
             have hdrop1 := congrArg Prod.fst hproj
             have hdrop2 := congrArg Prod.snd hproj
+            have hdrop1' : I.projectPublic ss₁ = I.projectPublic ss₂ := by
+              simpa [InfoModel.projectStates] using hdrop1
+            have hdrop2' : I.projectPrivate i ss₁ = I.projectPrivate i ss₂ := by
+              simpa [InfoModel.projectStates] using hdrop2
             apply Prod.ext
             · calc
                 I.projectPublic ss₁.dropLast = List.dropLast (I.projectPublic ss₁) := by
                   rw [← hss₁decomp, I.projectPublic_snoc]
                   simp
                 _ = List.dropLast (I.projectPublic ss₂) := by
-                  simpa using congrArg List.dropLast hdrop1
+                  simpa using congrArg List.dropLast hdrop1'
                 _ = I.projectPublic ss₂.dropLast := by
                   rw [← hss₂decomp, I.projectPublic_snoc]
                   simp
@@ -209,7 +213,7 @@ theorem localHistTokens_eq_of_projectStates_actions_eq
                   rw [← hss₁decomp, I.projectPrivate_snoc]
                   simp
                 _ = List.dropLast (I.projectPrivate i ss₂) := by
-                  simpa using congrArg List.dropLast hdrop2
+                  simpa using congrArg List.dropLast hdrop2'
                 _ = I.projectPrivate i ss₂.dropLast := by
                   rw [← hss₂decomp, I.projectPrivate_snoc]
                   simp

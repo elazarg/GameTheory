@@ -119,12 +119,22 @@ theorem pure_step_pushforward_depends_on_query
       D.stepDist (pureToBehavioral I (I.reassemblePolicy ω)) hs =
         D.stepDist (pureToBehavioral I (I.reassemblePolicy ω')) hs :=
     stepDist_depends_on_current_context (I := I) (D := D) ω ω' hs hnow
+  have hstep' :
+      D.stepDist (pureToBehavioral I π) hs =
+        D.stepDist (pureToBehavioral I π') hs := by
+    have hπω : I.reassemblePolicy ω = π := by
+      funext i v
+      rfl
+    have hπ'ω' : I.reassemblePolicy ω' = π' := by
+      funext i v
+      rfl
+    simpa [hπω, hπ'ω'] using hstep
   have hpush := congrArg
     (fun ν =>
       (Math.ProbabilityMassFunction.pushforward ν
         (fun t => hs ++ [t])) y)
-    hstep
-  simpa [ω, ω'] using hpush
+    hstep'
+  exact hpush
 
 /-- Prefix execution up to round `n` depends only on coordinates whose private
 visible-history length is at most `n`. -/
@@ -215,8 +225,6 @@ theorem jointAction_marginal
   rw [Math.PMFProduct.pmfPi_push_coordwise]
   congr 1
   funext i
-  change Math.ProbabilityMassFunction.pushforward (behavioralToMixed I b i) (g i) =
-    b i (I.projectStates i ss)
   have h := congr_fun (congr_fun
     (realize_behavioralToMixed (I := I) b) i) (I.projectStates i ss)
   simpa [realizeBehavioralCanonical] using h
@@ -265,8 +273,16 @@ theorem marginal_stepDist
               (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
                 (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
               Execution.Dynamics.jointActionDist (I := I) b ss := by
-            simpa [Math.ProbabilityMassFunction.pushforward] using
-              (jointAction_marginal (I := I) b ss)
+            calc
+              (mixedJoint (I := I) (behavioralToMixed (I := I) b)).bind
+                  (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))
+                  =
+                Math.ProbabilityMassFunction.pushforward
+                  (mixedJoint (I := I) (behavioralToMixed (I := I) b))
+                  (fun π i => π i (I.projectStates i ss)) :=
+                    Math.ProbabilityMassFunction.bind_pure_eq_pushforward _ _
+              _ = Execution.Dynamics.jointActionDist (I := I) b ss :=
+                    jointAction_marginal (I := I) b ss
           rw [hJA]
     _ = D.stepDist b ss := by
           simp [Execution.Dynamics.stepDist, s]
@@ -328,10 +344,21 @@ theorem mixedJoint_stepActionStateDist_eq_realizeBehavioralCanonical
                 (fun π => PMF.pure (fun i => π i (I.projectStates i ss))) =
               Execution.Dynamics.jointActionDist (I := I)
                 (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
-            simpa [Math.ProbabilityMassFunction.pushforward, InfoModel.mixedJoint,
-              Execution.Dynamics.jointActionDist, InfoModel.realizeBehavioralCanonical] using
-              (Math.PMFProduct.pmfPi_push_coordwise
-                (μ := μ) (g := fun i fi => fi (I.projectStates i ss)))
+            calc
+              (mixedJoint (I := I) μ).bind
+                  (fun π => PMF.pure (fun i => π i (I.projectStates i ss)))
+                  =
+                Math.ProbabilityMassFunction.pushforward
+                  (mixedJoint (I := I) μ)
+                  (fun π i => π i (I.projectStates i ss)) :=
+                    Math.ProbabilityMassFunction.bind_pure_eq_pushforward _ _
+              _ =
+                Execution.Dynamics.jointActionDist (I := I)
+                  (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by
+                    simpa [InfoModel.mixedJoint, Execution.Dynamics.jointActionDist,
+                      InfoModel.realizeBehavioralCanonical] using
+                      (Math.PMFProduct.pmfPi_push_coordwise
+                        (μ := μ) (g := fun i fi => fi (I.projectStates i ss)))
           rw [hJA]
     _ =
       D.stepActionStateDist (InfoModel.realizeBehavioralCanonical (I := I) μ) ss := by

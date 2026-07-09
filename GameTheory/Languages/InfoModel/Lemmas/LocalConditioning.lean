@@ -29,10 +29,7 @@ noncomputable def condMixedLocal
     (v : I.LocalTrace i)
     (a : Option (Act i)) :
     PMF (InfoModel.LocalPure (I := I) i) :=
-  if _ : Math.ProbabilityMassFunction.pushforward μi (fun f => f v) a ≠ 0 then
-    Math.ProbabilityMassFunction.condOn μi (fun f => f v) a
-  else
-    μi
+  Math.ProbabilityMassFunction.condOn μi (fun f => f v) a
 
 /-- Iterated local conditioning. -/
 noncomputable def iterCondMixedLocal
@@ -79,29 +76,11 @@ theorem pushforward_bind_condMixedLocal
     (v : I.LocalTrace i) :
     (Math.ProbabilityMassFunction.pushforward μi (fun f => f v)).bind
       (condMixedLocal (I := I) i μi v) = μi := by
-  classical
-  have hcond :
-      ∀ a, (Math.ProbabilityMassFunction.pushforward μi (fun f => f v)) a ≠ 0 →
-        condMixedLocal (I := I) i μi v a =
-          Math.ProbabilityMassFunction.condOn μi (fun f => f v) a := by
-    intro a ha
-    simp [condMixedLocal, ha]
-  calc
-    (Math.ProbabilityMassFunction.pushforward μi (fun f => f v)).bind
-        (condMixedLocal (I := I) i μi v)
-        =
-      (Math.ProbabilityMassFunction.pushforward μi (fun f => f v)).bind
-        (fun a =>
-          Math.ProbabilityMassFunction.condOn μi (fun f => f v) a) := by
-            exact Math.ProbabilityMassFunction.bind_congr_of_ne_zero
-              (μ := Math.ProbabilityMassFunction.pushforward μi (fun f => f v))
-              (f := condMixedLocal (I := I) i μi v)
-              (g := fun a => Math.ProbabilityMassFunction.condOn μi (fun f => f v) a)
-              hcond
-    _ = μi := by
-          simpa using
-            (Math.ProbabilityMassFunction.bind_pushforward_condOn
-              (μ := μi) (proj := fun f => f v) (g := fun f => PMF.pure f)).symm
+  change (Math.ProbabilityMassFunction.pushforward μi (fun f => f v)).bind
+      (fun a => Math.ProbabilityMassFunction.condOn μi (fun f => f v) a) = μi
+  simpa [PMF.bind_pure] using
+    (Math.ProbabilityMassFunction.bind_pushforward_condOn_pure
+      (μ := μi) (proj := fun f => f v)).symm
 
 open Classical in
 /-- Decompose a product-measure bind by sampling queried actions first,
@@ -202,14 +181,10 @@ theorem localHistMass_mul_iterCondMixedLocal_apply
               apply Math.ProbabilityMassFunction.eq_zero_of_pushforward_eq_zero
                 (μ := μi) (proj := fun g => g v) (b := a) hp
               simpa using hfa
-            simp [p, hp, condMixedLocal, hfa, hf0]
-          · simp [p, hp, condMixedLocal, hfa]
+            simp [p, hp, hfa, hf0]
+          · simp [p, hp, hfa]
         · have hp' : p ≠ 0 := hp
-          have hcond :
-              condMixedLocal (I := I) i μi v a =
-                Math.ProbabilityMassFunction.condOn μi (fun g => g v) a := by
-            simp [condMixedLocal, p, hp']
-          rw [hcond]
+          rw [condMixedLocal]
           rw [Math.ProbabilityMassFunction.condOn_apply
             (μ := μi) (proj := fun g => g v) (b := a) (a := f) hp']
           by_cases hfa : f v = a
