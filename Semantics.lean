@@ -1,2 +1,4 @@
 import Semantics.TransitionTrace
-import Semantics.TraceLanguage
+import Semantics.Simulation
+import Semantics.SM
+import Semantics.DSMachine

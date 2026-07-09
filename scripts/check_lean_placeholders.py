@@ -19,7 +19,7 @@ def tracked_lean_files() -> list[pathlib.Path]:
         text=True,
         stdout=subprocess.PIPE,
     )
-    return [pathlib.Path(line) for line in result.stdout.splitlines() if line]
+    return [path for line in result.stdout.splitlines() if (path := pathlib.Path(line)).exists()]
 
 
 def strip_comments_and_strings(text: str) -> str:
