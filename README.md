@@ -128,13 +128,15 @@ The library is finite/discrete by design.
 ## Build
 
 Requires Lean 4 (`v4.31.0`) and Mathlib (`v4.31.0`). The project also depends on
-[`fixed-point-theorems-lean4`](https://github.com/ldct/fixed-point-theorems-lean4)
-for Brouwer/Kakutani-style fixed-point support.
+the pinned [`fixed-point-theorems-lean4`](https://github.com/elazarg/fixed-point-theorems-lean4)
+fork for Brouwer/Kakutani-style fixed-point support.
 
 ```bash
+git submodule update --init
 lake exe cache get
-lake build GameTheory Math Semantics
-lake env lean scripts/AxiomAudit.lean
+lake build
+python scripts/check_lean_placeholders.py
+python scripts/audit_repository.py
 ```
 
 ## Repository Map
