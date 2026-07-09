@@ -256,6 +256,69 @@ def shrink (i : ι) (B : Finset A) (hB : B ⊆ γ.bundle i) : Allocation ι A wh
     (γ.shrink i B hB).bundle j = γ.bundle j := by
   simp [shrink, hji]
 
+section Residual
+
+variable [Fintype ι]
+variable [Fintype A]
+
+/-- The goods left after all buyers other than `i` keep their allocated bundles. -/
+noncomputable def residualAfterOpponents (i : ι) : Finset A :=
+  Finset.univ \ ((Finset.univ.filter fun j => j ≠ i).biUnion γ.bundle)
+
+/-- Give buyer `i` every good not allocated to the other buyers, leaving all
+other buyers' bundles unchanged. -/
+noncomputable def giveResidualTo (i : ι) : Allocation ι A where
+  bundle j := if j = i then γ.residualAfterOpponents i else γ.bundle j
+  pairwise_disjoint := by
+    classical
+    intro j k hjk
+    by_cases hji : j = i
+    · have hki : k ≠ i := by
+        intro hk
+        exact hjk (hji.trans hk.symm)
+      rw [if_pos hji, if_neg hki]
+      change Disjoint (γ.residualAfterOpponents i) (γ.bundle k)
+      rw [Finset.disjoint_left]
+      intro x hx hxk
+      simp only [residualAfterOpponents, Finset.mem_sdiff] at hx
+      have hkOpp : k ∈ Finset.univ.filter fun j => j ≠ i :=
+        Finset.mem_filter.mpr ⟨Finset.mem_univ k, hki⟩
+      exact hx.2 (Finset.mem_biUnion.mpr ⟨k, hkOpp, hxk⟩)
+    · by_cases hki : k = i
+      · rw [if_neg hji, if_pos hki]
+        rw [Finset.disjoint_left]
+        intro x hxj hx
+        simp only [residualAfterOpponents, Finset.mem_sdiff] at hx
+        have hjOpp : j ∈ Finset.univ.filter fun j => j ≠ i :=
+          Finset.mem_filter.mpr ⟨Finset.mem_univ j, hji⟩
+        exact hx.2 (Finset.mem_biUnion.mpr ⟨j, hjOpp, hxj⟩)
+      · rw [if_neg hji, if_neg hki]
+        exact γ.pairwise_disjoint hjk
+
+@[simp] theorem giveResidualTo_bundle_self (i : ι) :
+    (γ.giveResidualTo i).bundle i = γ.residualAfterOpponents i := by
+  simp [giveResidualTo]
+
+@[simp] theorem giveResidualTo_bundle_ne {i j : ι} (hji : j ≠ i) :
+    (γ.giveResidualTo i).bundle j = γ.bundle j := by
+  simp [giveResidualTo, hji]
+
+/-- Buyer `i`'s original bundle is contained in the residual after the other
+buyers keep their bundles. -/
+theorem bundle_subset_residualAfterOpponents (i : ι) :
+    γ.bundle i ⊆ γ.residualAfterOpponents i := by
+  classical
+  intro x hx
+  simp only [residualAfterOpponents, Finset.mem_sdiff]
+  constructor
+  · exact Finset.mem_univ x
+  · intro hxUnion
+    rcases Finset.mem_biUnion.mp hxUnion with ⟨j, hj, hxj⟩
+    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hj
+    exact (Finset.disjoint_left.mp (γ.pairwise_disjoint hj.symm)) hx hxj
+
+end Residual
+
 end Allocation
 
 /-- Empty allocation: every buyer receives the empty bundle. -/
@@ -492,6 +555,66 @@ theorem IsQuasiField.empty_mem {Q : Finset (Finset A)}
     (hQ : IsQuasiField (A := A) Q) :
     (∅ : Finset A) ∈ Q :=
   hQ.1
+
+theorem IsQuasiField.compl_mem {Q : Finset (Finset A)}
+    (hQ : IsQuasiField (A := A) Q) {B : Finset A}
+    (hB : B ∈ Q) :
+    (Finset.univ \ B : Finset A) ∈ Q :=
+  hQ.2.1 B hB
+
+theorem IsQuasiField.disjoint_union_mem {Q : Finset (Finset A)}
+    (hQ : IsQuasiField (A := A) Q) {B C : Finset A}
+    (hB : B ∈ Q) (hC : C ∈ Q) (hdisj : Disjoint B C) :
+    B ∪ C ∈ Q :=
+  hQ.2.2 B hB C hC hdisj
+
+/-- A quasi-field contains finite unions of pairwise-disjoint member bundles. -/
+theorem IsQuasiField.biUnion_mem_of_pairwise_disjoint
+    {Q : Finset (Finset A)}
+    (hQ : IsQuasiField (A := A) Q)
+    {ι : Type}
+    (s : Finset ι) (B : ι → Finset A)
+    (hmem : ∀ i, i ∈ s → B i ∈ Q)
+    (hdisj : ∀ i, i ∈ s → ∀ j, j ∈ s → i ≠ j → Disjoint (B i) (B j)) :
+    s.biUnion B ∈ Q := by
+  classical
+  induction s using Finset.induction_on with
+  | empty =>
+      simpa using hQ.empty_mem
+  | insert a s has ih =>
+      rw [Finset.biUnion_insert]
+      apply hQ.disjoint_union_mem
+      · exact hmem a (by simp)
+      · apply ih
+        · intro i hi
+          exact hmem i (by simp [hi])
+        · intro i hi j hj hij
+          exact hdisj i (by simp [hi]) j (by simp [hj]) hij
+      · rw [Finset.disjoint_biUnion_right]
+        intro j hj
+        have haj : a ≠ j := by
+          intro h
+          subst h
+          exact has hj
+        exact hdisj a (by simp) j (by simp [hj]) haj
+
+/-- The residual bundle after a family of `Q`-bundles is again in `Q`. -/
+theorem IsQuasiField.residualAfterOpponents_mem
+    {Q : Finset (Finset A)}
+    (hQ : IsQuasiField (A := A) Q)
+    {ι : Type} [Fintype ι] [DecidableEq ι]
+    (γ : Allocation ι A) (i : ι)
+    (hmem : ∀ j, j ≠ i → γ.bundle j ∈ Q) :
+    γ.residualAfterOpponents i ∈ Q := by
+  classical
+  change (Finset.univ \
+      ((Finset.univ.filter fun j => j ≠ i).biUnion γ.bundle) : Finset A) ∈ Q
+  apply hQ.compl_mem
+  apply hQ.biUnion_mem_of_pairwise_disjoint
+  · intro j hj
+    exact hmem j (by simpa using hj)
+  · intro j hj k hk hjk
+    exact γ.pairwise_disjoint hjk
 
 end QuasiField
 
