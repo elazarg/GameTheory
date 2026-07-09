@@ -126,6 +126,9 @@ import GameTheory.Mechanism.AffineMaximizer
 import GameTheory.Mechanism.Myerson
 import GameTheory.Mechanism.Contracts.Basic
 
+-- Implementation theory
+import GameTheory.Implementation
+
 -- Social choice and information
 import GameTheory.Mechanism.SocialChoice
 import GameTheory.Mechanism.FairDivision

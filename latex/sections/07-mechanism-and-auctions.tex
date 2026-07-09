@@ -297,6 +297,337 @@ the abstract level.
 (\TT{affineMaximizer}, \TT{affineMaximizer\_isDSIC},
 \TT{affineMaximizer\_payment\_nonneg}, \TT{vcg}, \TT{vcg\_isDSIC}).}
 
+\subsection{K-implementation:\ influencing a game by nonnegative
+transfers}
+\label{sec:mech:kimplementation}
+
+Mechanism design creates a game; \emph{k-implementation}
+\citep{MondererTennenholtz2004} starts from a game that already
+exists.  An interested party — unable to redesign the game, prohibit
+strategies, or charge the players — observes the realized strategy
+profile and commits to nonnegative transfers
+$V : \prod_i X_i \to \RR_{\ge 0}^{\Players}$ on top of the players'
+utilities.  Rationality is one-round dominance:\ players avoid
+dominated strategies, where throughout this layer ``dominates'' means
+weak dominance with a strict witness.  A transfer scheme
+\emph{implements} a target set $O$ when the subsidized game has at
+least one undominated profile and every undominated profile lies in
+$O$; it is a \emph{$k$-implementation} when in addition the total
+transfer at every surviving profile is at most $k$; the
+\emph{implementation price} of $O$ is the infimum of feasible budgets.
+The point of the notion is that promises off the desired path cost
+nothing, so desirable outcomes are often implementable far below the
+face value of the promises.  The library defines subsidies and
+implementation on arbitrary kernel games — no finiteness enters the
+definitions — and proves the singleton theory in a strengthened form.
+
+\begin{theorem}[Singleton implementation price]
+\label{thm:kimpl-singleton}
+For a kernel game with finitely many players and finite nonempty
+strategy sets, the implementation price of a singleton target
+$\{z\}$ is
+\[
+  k(z) \;=\; \sum_{i}\; \max_{x_i \in X_i}
+      \bigl( u_i(x_i, z_{-i}) - u_i(z) \bigr).
+\]
+The formula holds as a greatest lower bound with no further
+hypotheses; the infimum is attained — and consequently $z$ is Nash iff
+$\{z\}$ is 0-implementable — under the nondegeneracy condition that
+every player has \emph{another} player with an alternative to its
+target action.
+\end{theorem}
+
+\noindent Both refinements sharpen the original paper, which imposes
+nondegeneracy on the whole statement.  An
+$\varepsilon$-bump construction shows the greatest-lower-bound form is
+unconditional, and a machine-checked one-player counterexample shows
+where nondegeneracy is genuinely load-bearing:\ in a one-player game
+with a payoff tie the target is Nash and yet no zero-budget
+implementation exists, because without an opponent no strict witness
+can dominate the off-target action.  Only the direction
+``0-implementable $\Rightarrow$ Nash'' is hypothesis-free.  A second
+subtlety justifies the finiteness:\ in infinite games a dominated
+strategy need not be dominated by any \emph{undominated} strategy
+(the paper's infinite-ascent example, mechanized both as an
+order-theoretic core and as a concrete game), so the nonemptiness
+clause of implementation can fail catastrophically.  The finite case
+is repaired once and for all by a reusable maximal-element lemma for
+transitive irreflexive relations on finite types.
+
+\leancorr{\TT{Core/Subsidy.lean}; \TT{Implementation/Basic.lean}
+(\TT{IsImplementation}, \TT{IsKImplementation}, \TT{implPrice});
+\TT{Implementation/Singleton.lean} (\TT{implementationGap},
+\TT{singletonTransfer\_isKImplementation}, \TT{implPrice\_singleton},
+\TT{exists\_zero\_singletonKImplementation\_iff\_isNash});
+\TT{Implementation/Examples.lean}
+(\TT{onePlayerTie\_zero\_not\_mem\_implementationCosts});
+\TT{Concepts/Dominance/Undominated.lean}
+(\TT{InfiniteAscentCounterexample}); \TT{Math/Fintype.lean}
+(\TT{exists\_maximal\_rel\_of\_finite\_trans\_irrefl}).}
+
+\paragraph{A price calculus.}\
+Because the singleton price is a closed-form functional of the
+deviation gaps, structural corollaries come cheaply.  In an exact
+potential game~\citep{MondererShapley1996} the gaps telescope through
+the potential $\Phi$:\ the price of $\{z\}$ equals
+$\sum_i \max_{x_i} (\Phi(x_i,z_{-i}) - \Phi(z))$, is bounded by
+$n\,(\max \Phi - \Phi(z))$, and vanishes exactly at the local maxima
+of $\Phi$ under unilateral moves — the Nash-iff-free-implementation
+equivalence becomes a discrete first-order condition.  In a different
+direction, if the game's outcome kernel is
+$\varepsilon$-differentially private — a unilateral strategy change
+multiplies every outcome probability by at most $e^{\varepsilon}$ —
+and utilities lie in $[0,U]$, then every deviation gain is at most
+$(e^{\varepsilon}-1)U$, so \emph{every} singleton target has price at
+most $n\,(e^{\varepsilon}-1)\,U$.  This recasts the
+approximate-truthfulness argument of
+\citet{McSherryTalwar2007} as a uniform implementation-price bound; a
+zero-utility game with a fully revealing kernel witnesses that the
+converse fails.
+
+\leancorr{\TT{Implementation/Singleton.lean}
+(\TT{implPrice\_singleton\_eq\_sum\_potentialGaps},
+\TT{implPrice\_singleton\_le\_card\_mul\_potentialGap},
+\TT{implPrice\_singleton\_eq\_zero\_iff\_potential\_localMax});
+\TT{Implementation/DifferentialPrivacy.lean}
+(\TT{IsEpsilonDifferentiallyPrivate},
+\TT{implPrice\_singleton\_le\_card\_mul\_dp\_bound});
+\TT{Implementation/Examples.lean}
+(\TT{revealingZeroUtilityGame\_not\_zeroDifferentiallyPrivate}).}
+
+\paragraph{Mixed extensions, and a corrected Theorem 3.}\
+When the interested party can observe mixed strategies themselves —
+the paper's ``algorithm observability'' — transfers attach to mixed
+profiles, and the paper's Theorem~3 asserts that a mixed profile is a
+mixed equilibrium \emph{iff} it is 0-implementable in the mixed
+extension, deriving both directions from its (unproved) regular-games
+Theorem~2.  The library proves the constructive direction:\ every
+observable mixed Nash profile is 0-implementable.  The converse is
+\emph{false} as stated:
+
+\begin{theorem}[Failure of the converse for unrestricted transfers]
+\label{thm:kimpl-mixed-converse}
+There is a two-player $2\times2$ game and a non-Nash profile $z$ of
+its mixed extension together with nonnegative transfers on mixed
+profiles under which the subsidized mixed extension has exactly one
+undominated profile, namely $z$, at zero transfer — a
+0-implementation of a non-equilibrium.
+\end{theorem}
+
+\noindent The construction rewards proximity to the target uniformly
+across opponent strategies, so every non-target mix is strictly
+dominated by the mix halfway closer to the target — an infinite
+ascent with no maximum below the target — while a separate
+off-column bonus protects the target itself and vanishes on the
+desired path.  The transfer is necessarily discontinuous at the
+target; the diagnosis is that the paper's Theorem~2 (and hence the
+converse half of Theorem~3) requires an implicit admissibility class
+for transfers.  To our knowledge this correction is new:\ the
+published corrections to the paper
+\citep{Eidenbenz2007, Eidenbenz2011, DengTangZheng2016} concern its
+algorithmic claims only.
+
+The \emph{corrected} converse is then proved under a semantic
+admissibility hypothesis — for each player, the subsidized mixed game
+must admit an \emph{undominated best response} to the target
+opponents, which is exactly the selection property whose finite-game
+analogue is the finite-ascent lemma.  Under it, the implementation
+price of a mixed singleton equals the sum of pure-deviation gaps (the
+affine-in-own-strategy structure collapses mixed deviations to a
+finite maximum), the infimum is attained under the mixed
+nondegeneracy condition via a distance-bump transfer whose strict
+witnesses avoid the counterexample's discontinuous jump, and
+zero-cost admissible implementation is equivalent to mixed Nash.  The
+counterexample's transfer is proven to violate the selection
+hypothesis, so the two results fit together exactly.  A concrete
+\emph{analytic} sufficient condition is also formalized, resting on a
+game-free compactness lemma of independent interest:\ on a compact
+own-strategy space, upper-semicontinuity of every payoff column
+implies that every strategy has an undominated weak dominator (Zorn's
+lemma plus the finite-intersection property — no continuity in the
+column variable is needed).  Consequently columnwise own
+upper-semicontinuity of the subsidized payoff on the finite mixed
+simplex alone implies the selection property, and the same analytic
+price formula holds.  Budgets strictly above the formula are realized
+by continuous positive-slack distance-penalty transfers; under the
+same mixed nondegeneracy condition as above, exact attainment is by
+the distance-bump transfer, whose subsidized own-payoff is a
+continuous base function with a single upper-semicontinuous spike at
+the target.  The regular-game interface packaging itself is also
+formalized; what remains is a Theorem~2-style price statement for
+arbitrary compact strategy spaces.
+
+\leancorr{\TT{Math/Topology/WeakDominance.lean}
+(\TT{exists\_pointwiseUndominated\_dominator\_of\_compact\_usc},
+\TT{UpperSemicontinuous.update\_of\_le});
+\TT{Implementation/Mixed.lean}
+(\TT{mixedNash\_exists\_zero\_singletonKImplementation},
+\TT{MixedSelectionAdmissibleAt}, \TT{mixedAdmissibleImplPrice\_singleton},
+\TT{mixedSingletonDistanceTransfer},
+\TT{exists\_zero\_mixedAdmissibleKImplementation\_iff\_isNash},
+\TT{MixedOwnUpperSemicontinuous},
+\TT{MixedOwnUpperSemicontinuous.selectionAdmissible},
+\TT{mixedAnalyticImplPrice\_singleton},
+\TT{mixedAnalyticImplPrice\_singleton\_of\_nondegenerate},
+\TT{exists\_zero\_mixedAnalyticKImplementation\_iff\_isNash},
+\TT{mixedSingletonDistanceTransfer\_analyticAdmissible},
+\TT{mixedSingletonContinuousApproxTransfer});
+\TT{Implementation/Regular.lean}
+(\TT{RegularOwnUpperSemicontinuous},
+\TT{RegularOwnUpperSemicontinuous.selectionAdmissibleAt});
+\TT{Implementation/Examples.lean}
+(\TT{mixedConverse\_zeroKImplementation\_and\_not\_nash},
+\TT{mixedConverse\_implPrice\_singleton\_eq\_zero},
+\TT{mixedConverseTransfer\_not\_selectionAdmissible}).}
+
+\paragraph{Implementation devices and correlated equilibria.}\
+Without algorithm observability the paper's Section~6 interposes a
+\emph{recommendation device}:\ signals are drawn from a target
+distribution $\mu$, each player privately receives its coordinate,
+and transfers may depend on the signal profile and the realized
+actions.  The library compiles the device and game into a kernel game
+whose strategies are signal-contingent rules, relates the paper's
+per-signal (interim) dominance to ex-ante dominance of the compiled
+game by a law-of-total-expectation bridge, and proves the paper's
+Theorems~7 and~8:\ for a correlated equilibrium $\mu$ (in particular,
+for the product law of a mixed Nash profile), the obedient profile is
+implemented \emph{exactly}, at zero transfer on every supported
+signal, with obedience the unique undominated rule profile.
+Uniqueness needs full support of $\mu$ — a rule deviating only at a
+never-drawn signal is observationally obedient — and an available
+non-conforming opponent action; both hypotheses are discharged on a
+concrete uniform-correlated example.  The bonus that enforces
+obedience is paid only when some opponent deviates, hence never on
+path.
+
+Beyond the paper, the layer distinguishes the pointwise realized
+budget from the mediator's \emph{expected} outlay and proves a
+quantitative generalization to arbitrary target laws:\ any device
+whose obedient profile is interim dominant for $\mu$ pays in
+expectation at least $\sum_i \max_{d_i}
+\operatorname{swapRegret}_i(\mu,d_i)$ — so expected-zero-cost
+implementation forces $\mu$ to be a correlated equilibrium — while a
+regret-paying device (conditional swap-regret payments on path, the
+usual bonus off path) implements every finite $\mu$ at exactly that
+expected budget.  Thus the formal expected-cost device theorem has the
+closed regret expression \(\sum_i \max_{d_i}
+\operatorname{swapRegret}_i(\mu,d_i)\), and the zero-cost correlated
+equilibrium theorem is the regret-zero case, connecting the device
+layer to the regret characterization of correlated equilibria in
+\Cref{sec:solution-concepts}.  Under the paper's \emph{pointwise}
+budget the price is instead sandwiched between the largest one-signal
+conditional regret and the largest supported sum of conditional
+regrets, with equality at the lower end when regret obligations do
+not overlap on the support; the general pointwise optimum is a finite
+linear program, not a closed regret expression.  The linear program
+itself is formalized (budget rows plus conditional-incentive rows over
+on-path payments), with reusable weighted dual certificates for price
+lower bounds, and a concrete overlapping instance whose exact price
+$4/3$ is machine-checked to lie strictly inside the sandwich $[1,2]$.
+
+\leancorr{\TT{Implementation/Device.lean}
+(\TT{InterimDominantKImplementsDistribution},
+\TT{exists\_recommendationDevice\_obedient\_zeroTransfer\_exactKImplementation},
+\TT{InterimWeaklyDominates.toWeaklyDominates});
+\TT{Implementation/Examples.lean}
+(\TT{deviceTie\_exists\_strictRecommendationDevice\_exactKImplementation});
+\TT{Implementation/Device.lean}
+(expected-cost side:\ \TT{expectedRealizedTransfer},
+\TT{sum\_maxSwapRegret\_le\_expectedRealizedTransfer\_of\_interimDominant},
+\TT{isCorrelatedEq\_of\_interimDominantExpectedKImplDist\_zero},
+\TT{regretRecommendationDevice\_obedient\_interimDominantExpectedKImplDist};
+pointwise side:\ \TT{recommendationDevicePointwiseImplPrice\_sandwich},
+\TT{recommendationDevicePointwiseImplPrice\_eq\_recommendationPaymentImplPrice},
+\TT{le\_recommendationPaymentImplPrice\_of\_weighted\_certificate});
+\TT{Implementation/DeviceLP.lean}
+(\TT{recommendationPaymentFeasible\_iff\_lpFeasible},
+\TT{le\_recommendationPaymentImplPrice\_of\_dual\_certificates});
+\TT{Implementation/Examples.lean}
+(\TT{OverlappingRegretPaymentExample.recommendationPaymentImplPrice\_strict\_between\_sandwich});
+\TT{Concepts/Correlation/Regret.lean} (\TT{maxSwapRegret},
+\TT{maxConditionalSwapRegret}).}
+
+\paragraph{Signal-blind transfers, VCG, and dominance rigidity.}\
+For incomplete-information (informational) games the party may see
+actions but not the realized signals, so transfers are
+\emph{signal-blind}.  Zero-cost implementation is then impossible in
+general:\ the paper's Figure~4 game, transcribed payoff-by-payoff, has
+an ex-post equilibrium that no signal-blind transfer scheme
+$k$-implements for \emph{any} $k$.  The positive result (the paper's
+Theorem~6) concerns VCG:\ in a combinatorial auction whose valuations
+range over a quasi-field, a frugal surplus-maximizing VCG mechanism
+admits a conformance bonus making the bundled truthful profile
+ex-post dominant at zero cost — the library proves the underlying
+Lemma~1 outright and shows by two further counterexamples that its
+hypotheses are necessary (frugality, via a four-good example where a
+$\Sigma$-based cheat strictly gains; bounded valuations, via a
+scaling argument).  The paper's stronger claim that the truthful
+profile is the \emph{unique} undominated one is governed by a general
+rigidity fact:
+
+\begin{theorem}[Dominance rigidity]
+\label{thm:kimpl-rigidity}
+If a strategy weakly dominates every strategy of a player, then that
+player's undominated strategies are exactly those with identical
+payoff against every opponent context.  Consequently, when each
+coordinate of a profile weakly dominates everything, the undominated
+profiles form the product of these payoff-equivalence classes, and
+the target is uniquely undominated iff every class is trivial.
+\end{theorem}
+
+\noindent This turns the paper's uniqueness claim into an explicit
+non-redundancy condition on the mechanism — two reports that induce
+the same allocation and payments against every opponent report are
+necessarily \emph{both} undominated, witnessed on a concrete
+redundant-report auction — and replaces bespoke strictness
+hypotheses in the device and VCG capstones by an unconditional
+characterization of the undominated set.
+
+\leancorr{\TT{Mechanism/InformationalGame.lean}
+(\TT{StrategyEquivalentWithTransfer},
+\TT{IsExPostDominantProfileWithTransfer.undominatedStrategyProfiles\_eq});
+\TT{Implementation/Informational.lean}
+(\TT{figure4\_no\_signalBlind\_kImplementation},
+\TT{conformanceBonusTransfer\_isSignalBlindKImplementation\_of\_strict},
+\TT{conformanceBonusTransfer\_undominatedStrategyProfiles\_eq});
+\TT{Implementation/VCG.lean}
+(\TT{frugal\_vcg\_bundled\_report\_ge\_qBased\_report},
+\TT{conformanceBonusTransfer\_bundledTruthful\_undominatedStrategyProfiles\_eq},
+\TT{lemma1\_fails\_without\_frugality\_trueUtility},
+\TT{not\_exists\_uniform\_bound\_informationalGame});
+\TT{Concepts/Dominance/Undominated.lean} (\TT{UtilityEquivalent},
+\TT{undominatedProfiles\_eq\_utilityEquivalentClass\_of\_forall\_weaklyDominates}).}
+
+\paragraph{The corrections literature.}\
+Two of the paper's algorithmic claims were corrected later, and the
+library mechanizes the corrected picture where it can be
+self-contained.  The exact-implementation algorithm~OP is not
+optimal~\citep{Eidenbenz2007, Eidenbenz2011}:\ on the published
+counterexample the library proves \emph{both} sides — the optimal
+exact cost is~$3$, and the OP-shaped transfer family has minimum
+cost exactly~$5$ — so the suboptimality of the algorithm's output,
+not merely of one transfer, is machine-checked.  The paper's
+NP-hardness proof by a two-player SAT reduction is incorrect
+\citep{Eidenbenz2007}; the corrected reductions of
+\citet{DengTangZheng2016} (six players for pure dominance, two
+players for dominance by mixed strategies) are the natural target for
+a future \TT{SATReduction} module and are not yet formalized, as they
+depend on the external constructions.
+
+\tradeoff{Three observability regimes are deliberately distinguished:\
+transfers on realized pure profiles (the base theory), transfers on
+mixed profiles (Theorem~3's ``algorithm observability,'' where the
+corrected converse above lives), and signal-blind transfers on
+actions (devices, Figure~4, VCG).  The paper's Theorem~2 for
+compact-continuous ``regular'' games is formalized in the part needed
+for the mixed-extension theorem:\ the semantic selection hypothesis,
+the compact upper-semicontinuity bridge that implies it, and the
+regular-game interface packaging.  What is not formalized is a full
+Theorem~2-style price statement for arbitrary compact strategy
+spaces.  The mixed-extension counterexample above is exactly the
+witness that the paper's omitted proof needs an admissibility class
+for transfers; unrestricted transfers make the converse false.}
+
 \subsection{Hidden-action contracts}
 \label{sec:mech:contracts}
 
