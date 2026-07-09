@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Foundations.VNM.Basic
+import GameTheory.Concepts.Foundations.VNM.AxiomIndependence
 
 /-!
 # von Neumann-Morgenstern Utility
