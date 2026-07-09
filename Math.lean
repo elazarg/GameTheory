@@ -21,6 +21,7 @@ import Math.WindowedContraction
 import Math.SchauderFixedPoint
 import Math.SimplexApproximation
 import Math.OnlineLearning
+import Math.OnlineAlgorithms
 import Math.MeasureTheory.UnitInterval
 import Math.FixedPoint.KKM
 import Math.LinearAlgebra.FourierMotzkin

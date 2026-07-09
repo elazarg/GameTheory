@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Math.Probability
 import Math.PMFProduct
+import Math.OnlineAlgorithms
 
 /-!
 # Math.Tests
@@ -32,5 +33,21 @@ example (σ : Bool → Bool) :
   pmfPi_pure σ
 
 end
+
+namespace OnlineAlgorithms
+
+open Math.OnlineAlgorithms
+
+def stopOnTrue : OnlineAlgorithm Bool Unit Bool where
+  init := ()
+  step _ r := ((), r.bind fun b => if b then some true else none)
+
+example : stopOnTrue.runResult () [false, true, false] = some true := by
+  rfl
+
+example : stopOnTrue.runAll () [false, true, true] = [true, true] := by
+  rfl
+
+end OnlineAlgorithms
 
 end Math.Tests
