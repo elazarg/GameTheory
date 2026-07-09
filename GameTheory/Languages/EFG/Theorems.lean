@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Theorems
+import GameTheory.Languages.Kuhn
 import GameTheory.Languages.EFG.Syntax
 import GameTheory.Languages.EFG.Compile
 import GameTheory.Languages.EFG.SOS
