@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Math.LinearAlgebra.FourierMotzkin
 import Math.LinearProgramming.Basic
+import Math.LinearProgramming.Standard
 
 /-!
 # Infeasibility certificates for finite packing LPs
@@ -235,6 +236,73 @@ theorem exists_dual_certificate_of_not_exists_primalFeasible
     ∃ y : Row → ℝ,
       DualFeasible A (fun _ : Col => 0) y ∧ dualValue b y < 0 :=
   not_exists_primalFeasible_iff_exists_dual_certificate.mp h
+
+omit [Fintype Row] in
+private theorem rowEval_neg (A : Row → Col → ℝ) (x : Col → ℝ) (i : Row) :
+    rowEval (fun i j => -A i j) x i = -rowEval A x i := by
+  simp [rowEval, Finset.sum_neg_distrib]
+
+omit [Fintype Col] in
+private theorem colEval_neg (A : Row → Col → ℝ) (y : Row → ℝ) (j : Col) :
+    colEval (fun i j => -A i j) y j = -colEval A y j := by
+  simp [colEval, Finset.sum_neg_distrib]
+
+private theorem dualValue_neg (b : Row → ℝ) (y : Row → ℝ) :
+    dualValue (fun i => -b i) y = -dot b y := by
+  simp [dualValue, dot, Finset.sum_neg_distrib]
+
+omit [Fintype Row] in
+theorem minPrimalFeasible_iff_primalFeasible_neg
+    (A : Row → Col → ℝ) (b : Row → ℝ) (x : Col → ℝ) :
+    MinPrimalFeasible A b x ↔
+      PrimalFeasible (fun i j => -A i j) (fun i => -b i) x := by
+  constructor
+  · intro hx
+    refine ⟨hx.1, ?_⟩
+    intro i
+    rw [rowEval_neg]
+    linarith [hx.2 i]
+  · intro hx
+    refine ⟨hx.1, ?_⟩
+    intro i
+    have hi := hx.2 i
+    rw [rowEval_neg] at hi
+    linarith
+
+/-- Farkas-style infeasibility certificate for the standard min-primal
+orientation `Ax ≥ b`, `x ≥ 0`.  It is the packing-form certificate applied to
+the negated matrix. -/
+theorem not_exists_minPrimalFeasible_iff_exists_dual_certificate
+    {A : Row → Col → ℝ} {b : Row → ℝ} :
+    (¬ ∃ x : Col → ℝ, MinPrimalFeasible A b x) ↔
+      ∃ y : Row → ℝ,
+        Nonnegative y ∧ (∀ j : Col, colEval A y j ≤ 0) ∧ 0 < dot b y := by
+  rw [show (¬ ∃ x : Col → ℝ, MinPrimalFeasible A b x) ↔
+      ¬ ∃ x : Col → ℝ, PrimalFeasible (fun i j => -A i j) (fun i => -b i) x by
+    constructor
+    · intro h hpack
+      rcases hpack with ⟨x, hx⟩
+      exact h ⟨x, (minPrimalFeasible_iff_primalFeasible_neg A b x).mpr hx⟩
+    · intro h hmin
+      rcases hmin with ⟨x, hx⟩
+      exact h ⟨x, (minPrimalFeasible_iff_primalFeasible_neg A b x).mp hx⟩]
+  rw [not_exists_primalFeasible_iff_exists_dual_certificate]
+  constructor
+  · rintro ⟨y, hy, hval⟩
+    refine ⟨y, hy.1, ?_, ?_⟩
+    · intro j
+      have hj := hy.2 j
+      rw [colEval_neg] at hj
+      linarith
+    · rw [dualValue_neg] at hval
+      linarith
+  · rintro ⟨y, hy_nonneg, hy_col, hy_val⟩
+    refine ⟨y, ⟨hy_nonneg, ?_⟩, ?_⟩
+    · intro j
+      rw [colEval_neg]
+      linarith [hy_col j]
+    · rw [dualValue_neg]
+      linarith
 
 end LinearProgramming
 end Math
