@@ -90,7 +90,7 @@ def CoversHistoriesUpTo
     (H : ∀ i, Finset (I.LocalTrace i))
     (k : Nat) : Prop :=
   ∀ (i : ι) {ss : List σ},
-    Semantics.SM.ReachStateTrace I.toSM ss →
+    Semantics.Transition.ReachStateTraceFrom I.step I.init ss →
     ss.length ≤ k + 1 →
     I.projectStates i ss ∈ H i
 
@@ -212,8 +212,8 @@ theorem localHistTokensFrom_snoc
 player-local visible histories on the corresponding reaches. -/
 def ObsRecall (I : InfoModel ι σ Act) : Prop :=
   ∀ (i : ι) (ss₁ ss₂ : List σ) (s₁ s₂ : σ),
-    Semantics.SM.ReachStateTrace I.toSM ss₁ →
-    Semantics.SM.ReachStateTrace I.toSM ss₂ →
+    Semantics.Transition.ReachStateTraceFrom I.step I.init ss₁ →
+    Semantics.Transition.ReachStateTraceFrom I.step I.init ss₂ →
     ss₁.getLast? = some s₁ →
     ss₂.getLast? = some s₂ →
     I.obsEq i s₁ s₂ →
@@ -225,8 +225,8 @@ def ActionRecall (I : InfoModel ι σ Act) : Prop :=
   ∀ (i : ι)
     (ha₁ ha₂ : List I.JointAction)
     (ss₁ ss₂ : List σ) (s₁ s₂ : σ),
-    Semantics.SM.ReachActionTrace I.toSM ha₁ ss₁ →
-    Semantics.SM.ReachActionTrace I.toSM ha₂ ss₂ →
+    Semantics.Transition.ReachActionTraceFrom I.step I.init ha₁ ss₁ →
+    Semantics.Transition.ReachActionTraceFrom I.step I.init ha₂ ss₂ →
     ss₁.getLast? = some s₁ →
     ss₂.getLast? = some s₂ →
     I.obsEq i s₁ s₂ →

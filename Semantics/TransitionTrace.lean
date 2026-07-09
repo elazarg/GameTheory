@@ -25,6 +25,25 @@ inductive ReachBy {σ α : Type*} (step : α → σ → σ → Prop) :
   | cons {a : α} {rest : List α} {s u t : σ} :
       step a s u → ReachBy step rest u t → ReachBy step (a :: rest) s t
 
+/-- A labeled finite trace witness carrying the visited states.
+
+`ReachActionTraceFrom step init ha ss` means that starting at `init`, following
+labels `ha` produces the state trace `ss`. The state trace includes the initial
+state, so it has one more state than there are labels. -/
+inductive ReachActionTraceFrom {σ α : Type*} (step : α → σ → σ → Prop)
+    (init : σ) : List α → List σ → Prop
+  | nil : ReachActionTraceFrom step init [] [init]
+  | snoc {ha : List α} {ss : List σ} {s t : σ} {a : α} :
+      ReachActionTraceFrom step init ha ss →
+      ss.getLast? = some s →
+      step a s t →
+      ReachActionTraceFrom step init (ha ++ [a]) (ss ++ [t])
+
+/-- State-only finite trace witness from an initial state. -/
+def ReachStateTraceFrom {σ α : Type*} (step : α → σ → σ → Prop)
+    (init : σ) (ss : List σ) : Prop :=
+  ∃ ha : List α, ReachActionTraceFrom step init ha ss
+
 variable {σ α β : Type*}
 variable {step : α → σ → σ → Prop}
 
@@ -33,6 +52,21 @@ variable {step : α → σ → σ → Prop}
 @[simp] theorem reachBy_singleton {a : α} {s t : σ}
     (h : step a s t) : ReachBy step [a] s t := by
   exact ReachBy.cons h (ReachBy.nil _)
+
+theorem ReachActionTraceFrom.length_states_eq_succ_actions
+    {init : σ} {ha : List α} {ss : List σ}
+    (h : ReachActionTraceFrom step init ha ss) :
+    ss.length = ha.length + 1 := by
+  induction h with
+  | nil => simp
+  | snoc _ _ _ ih => simp [List.length_append, ih, Nat.add_comm]
+
+/-- Forget labels from an action/state trace. -/
+theorem ReachActionTraceFrom.toReachStateTrace
+    {init : σ} {ha : List α} {ss : List σ}
+    (h : ReachActionTraceFrom step init ha ss) :
+    ReachStateTraceFrom step init ss :=
+  ⟨ha, h⟩
 
 /-- Concatenate trace witnesses. -/
 theorem reachBy_append {w1 w2 : List α} {s u t : σ}
@@ -62,6 +96,24 @@ theorem reachBy_append_singleton {w : List α} {a : α} {s t u : σ}
     (h : ReachBy step w s t) (ht : step a t u) :
     ReachBy step (w ++ [a]) s u := by
   exact reachBy_append h (reachBy_singleton ht)
+
+/-- Forgetting intermediate states yields the compact `ReachBy` witness. -/
+theorem ReachActionTraceFrom.toReachBy
+    {init : σ} {ha : List α} {ss : List σ} {s : σ}
+    (h : ReachActionTraceFrom step init ha ss)
+    (hlast : ss.getLast? = some s) :
+    ReachBy step ha init s := by
+  induction h generalizing s with
+  | nil =>
+      have hs : s = init := by
+        simpa using hlast.symm
+      subst s
+      exact ReachBy.nil init
+  | @snoc ha ss u t a hprev hlastPrev hstep ih =>
+      have hs : s = t := by
+        simpa using hlast.symm
+      subst s
+      exact reachBy_append_singleton (ih hlastPrev) hstep
 
 /-- Unlabeled one-step relation induced by existence of a label. -/
 def StepExists (step : α → σ → σ → Prop) : σ → σ → Prop :=
