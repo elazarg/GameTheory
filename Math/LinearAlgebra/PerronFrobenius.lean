@@ -5,8 +5,6 @@ Released under the MIT license as described in the file LICENSE.
 
 import Math.Minimax.Loomis
 
-set_option linter.style.show false
-
 /-!
 # Math.LinearAlgebra.PerronFrobenius
 
@@ -44,8 +42,6 @@ Loomis produces `(x, y, v)` with `v · (xM)_j ≤ x_j` and `y_i ≤ v · (My)_i`
 
 open Finset BigOperators Loomis
 
-set_option linter.unusedSectionVars false
-
 namespace Math.LinearAlgebra
 
 variable {n : ℕ} [NeZero n]
@@ -55,16 +51,18 @@ variable {n : ℕ} [NeZero n]
 /-- The identity matrix on `Fin n`. -/
 private def idMat : Fin n → Fin n → ℝ := fun i j => if i = j then 1 else 0
 
+omit [NeZero n] in
 private theorem xA_idMat (x : stdSimplex ℝ (Fin n)) (j : Fin n) :
     Loomis.xA idMat x j = x.val j := by
   classical
-  show ∑ i, x.val i * (if i = j then (1 : ℝ) else 0) = x.val j
+  change ∑ i, x.val i * (if i = j then (1 : ℝ) else 0) = x.val j
   simp only [mul_ite, mul_one, mul_zero, Fintype.sum_ite_eq']
 
+omit [NeZero n] in
 private theorem Ay_idMat (y : stdSimplex ℝ (Fin n)) (i : Fin n) :
     Loomis.Ay idMat y i = y.val i := by
   classical
-  show ∑ j, y.val j * (if i = j then (1 : ℝ) else 0) = y.val i
+  change ∑ j, y.val j * (if i = j then (1 : ℝ) else 0) = y.val i
   simp only [mul_ite, mul_one, mul_zero, Fintype.sum_ite_eq]
 
 /-! ### Perron-Frobenius theorem -/
@@ -126,7 +124,7 @@ theorem perron_frobenius (M : Fin n → Fin n → ℝ) (hM_pos : ∀ i j, 0 < M 
       = ∑ i, x.val i * Loomis.By M y i := by
     -- ∑_j (xM)_j · y_j = ∑_j ∑_i x_i M_ij y_j = ∑_i ∑_j x_i M_ij y_j
     --                  = ∑_i x_i · (My)_i
-    show (∑ j, (∑ i, x.val i * M i j) * y.val j)
+    change (∑ j, (∑ i, x.val i * M i j) * y.val j)
         = ∑ i, x.val i * (∑ j, y.val j * M i j)
     have h1 : (∑ j, (∑ i, x.val i * M i j) * y.val j)
         = ∑ j, ∑ i, x.val i * M i j * y.val j := by
@@ -251,13 +249,13 @@ theorem perron_frobenius (M : Fin n → Fin n → ℝ) (hM_pos : ∀ i j, 0 < M 
   · intro j
     have h := hx_eq j
     -- xM j = (1/v) * x_j follows from x_j = v * xM_j
-    show Loomis.xB M x j = 1/v * x.val j
+    change Loomis.xB M x j = 1/v * x.val j
     have hv_ne : v ≠ 0 := hv_pos.ne'
     field_simp
     linarith
   · intro i
     have h := hy_eq i
-    show Loomis.By M y i = 1/v * y.val i
+    change Loomis.By M y i = 1/v * y.val i
     have hv_ne : v ≠ 0 := hv_pos.ne'
     field_simp
     linarith

@@ -52,8 +52,6 @@ open Finset BigOperators Matrix
 variable {𝕜 : Type*} [Field 𝕜] [LinearOrder 𝕜] [IsStrictOrderedRing 𝕜]
 variable {I : Type*} [Fintype I]
 
-set_option linter.unusedSectionVars false
-
 namespace stdSimplex
 
 /-- Affine combination of a finite family of points using simplex weights.
@@ -87,6 +85,7 @@ end stdSimplex
 abbrev wsum (x : stdSimplex 𝕜 I) (f : I → 𝕜) : 𝕜 :=
   x ⬝ᵥ f
 
+omit [IsStrictOrderedRing 𝕜] in
 /-- Weighted sum of a constant equals the constant. -/
 theorem wsum_const (x : stdSimplex 𝕜 I) (c : 𝕜) :
     wsum x (fun _ => c) = c := by
@@ -134,11 +133,13 @@ theorem wsum_ge_wsum (x : stdSimplex 𝕜 I) {f g : I → 𝕜}
     (h : ∀ i, f i ≥ g i) : wsum x f ≥ wsum x g :=
   wsum_le_wsum x h
 
+omit [IsStrictOrderedRing 𝕜] in
 /-- Weighted sum is linear over addition. -/
 theorem wsum_add (x : stdSimplex 𝕜 I) (f g : I → 𝕜) :
     wsum x (f + g) = wsum x f + wsum x g := by
   simp [wsum, dotProduct, mul_add, Finset.sum_add_distrib]
 
+omit [IsStrictOrderedRing 𝕜] in
 /-- Weighted sum commutes with scalar multiplication. -/
 theorem wsum_smul (x : stdSimplex 𝕜 I) (c : 𝕜) (f : I → 𝕜) :
     wsum x (c • f) = c * wsum x f := by
@@ -291,6 +292,7 @@ theorem mix_lt_of_lt_nbh (x y c : 𝕜) (H : x < c) :
   rw [hneg] at hgt
   linarith
 
+omit [IsStrictOrderedRing 𝕜] in
 /-- Exchange order of double weighted sums. -/
 theorem wsum_wsum_comm {J : Type*} [Fintype J]
     (x : stdSimplex 𝕜 I) (y : stdSimplex 𝕜 J)
@@ -393,6 +395,7 @@ def expectedPayoffMatrix (A : I → J → 𝕜) [Fintype J]
     (x : stdSimplex 𝕜 I) (y : stdSimplex 𝕜 J) : 𝕜 :=
   x ⬝ᵥ fun i => y ⬝ᵥ A i
 
+omit [IsStrictOrderedRing 𝕜] in
 /-- Expected payoff is commutative in the summation order. -/
 theorem expectedPayoffMatrix_comm {J : Type*} [Fintype J]
     (A : I → J → 𝕜) (x : stdSimplex 𝕜 I) (y : stdSimplex 𝕜 J) :

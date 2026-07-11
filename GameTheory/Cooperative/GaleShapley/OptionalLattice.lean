@@ -8,8 +8,6 @@ import GameTheory.Cooperative.GaleShapley.OptionalOrder
 import GameTheory.Cooperative.GaleShapley.RuralHospitals
 import GameTheory.Cooperative.GaleShapley.Perfect
 
-set_option linter.unusedFintypeInType false
-
 /-!
 # Optional-market stable-matching lattice construction
 
@@ -22,7 +20,10 @@ namespace GameTheory
 
 namespace MatchingMarket
 
-variable {α β : Type} [Fintype α] [Fintype β] (M : MatchingMarket α β)
+variable {α β : Type} [Finite α] [Finite β] (M : MatchingMarket α β)
+
+noncomputable local instance : Fintype α := Fintype.ofFinite α
+noncomputable local instance : Fintype β := Fintype.ofFinite β
 
 noncomputable local instance {γ : Type} [Fintype γ] (P : γ → Prop) : Fintype {x // P x} :=
   Fintype.ofFinite _
@@ -47,12 +48,12 @@ noncomputable def optionalJoinPartner (a : α) : Option β :=
 noncomputable def optionalStableJoin : α → Option β :=
   fun a => M.optionalJoinPartner (μ := μ) (ν := ν) a
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 theorem optionalStableJoin_apply (a : α) :
     M.optionalStableJoin (μ := μ) (ν := ν) a = M.optionalJoinPartner (μ := μ) (ν := ν) a :=
   rfl
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 theorem optionalJoinPartner_eq_left_or_right (a : α) :
     M.optionalJoinPartner (μ := μ) (ν := ν) a = μ a ∨
       M.optionalJoinPartner (μ := μ) (ν := ν) a = ν a := by
@@ -61,7 +62,7 @@ theorem optionalJoinPartner_eq_left_or_right (a : α) :
   · exact Or.inl rfl
   · exact Or.inr rfl
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 theorem optionalJoinPartner_some_source {a : α} {b : β}
     (h : M.optionalJoinPartner (μ := μ) (ν := ν) a = some b) :
     μ a = some b ∨ ν a = some b := by
@@ -69,7 +70,7 @@ theorem optionalJoinPartner_some_source {a : α} {b : β}
   · exact Or.inl (hleft.symm.trans h)
   · exact Or.inr (hright.symm.trans h)
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 theorem pref_leftOption_le_optionalJoin (a : α) :
     M.prefAOption a (μ a) ≤
       M.prefAOption a (M.optionalJoinPartner (μ := μ) (ν := ν) a) := by
@@ -78,7 +79,7 @@ theorem pref_leftOption_le_optionalJoin (a : α) :
   · rfl
   · exact le_of_lt (lt_of_not_ge hle)
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 theorem pref_rightOption_le_optionalJoin (a : α) :
     M.prefAOption a (ν a) ≤
       M.prefAOption a (M.optionalJoinPartner (μ := μ) (ν := ν) a) := by
@@ -87,7 +88,7 @@ theorem pref_rightOption_le_optionalJoin (a : α) :
   · exact hle
   · rfl
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 private theorem pref_other_lt_optionalJoin_of_join_left {a : α}
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
@@ -101,7 +102,7 @@ private theorem pref_other_lt_optionalJoin_of_join_left {a : α}
     exact hne (M.prefAOption_injective hAinj hAne a heq)
   · exact False.elim (hne hjoin)
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 private theorem pref_other_lt_optionalJoin_of_join_right {a : α}
     (hjoin : M.optionalJoinPartner (μ := μ) (ν := ν) a = ν a)
     (hne : μ a ≠ ν a) :
@@ -244,7 +245,7 @@ private theorem optionalStableJoin_matchedB_left_of_left {b : β}
               Matched.card_matchedA_eq_card_matchedB hμ.1)
     hb
 
-omit [Fintype α] [Fintype β] hμ hν hAinj hBinj hAne hBne in
+omit [Finite α] [Finite β] hμ hν hAinj hBinj hAne hBne in
 private theorem optionalJoin_pref_lt_of_blocks
     {a : α} {b : β}
     (hblock : M.IsBlockingPair (M.optionalStableJoin (μ := μ) (ν := ν)) a b) :
@@ -342,7 +343,7 @@ market. -/
 noncomputable def inverseStable (μ : M.StableMatching) : M.swap.StableMatching :=
   ⟨inverseMatching μ, M.inverseMatching_isStable μ.2⟩
 
-omit [Fintype α] [Fintype β] in
+omit [Finite α] [Finite β] in
 theorem inverse_inverse_apply (μ : M.StableMatching) (a : α) :
     inverseMatching (inverseMatching μ) a = μ a := by
   cases hμa : μ a with

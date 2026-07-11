@@ -184,8 +184,6 @@ variable [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
 
 -- `DecidableEq (A i)` is needed to define the behavioral lift (the `if v = []`
 -- branch), so it appears only in proof terms, not in some lemma statements.
-set_option linter.unusedDecidableInType false
-
 /-- Per-player behavioral lift of an NFG action into the one-shot FOSG: play
 `some a` at the empty information state (the initial decision point) and `none`
 thereafter (where the player is inactive at the terminal state). -/
@@ -243,6 +241,7 @@ noncomputable def liftProfile (G : NFGGame ι A) (s : ∀ i, A i) :
     (G.toFOSG).LegalBehavioralProfile :=
   fun i => G.liftBehavioral i (s i)
 
+omit [∀ i, DecidableEq (A i)] in
 /-- At the initial history, the induced legal-action law of a lifted pure
 profile is the point mass on the corresponding all-`some` joint action. -/
 theorem toFOSG_legalActionLaw_nil (G : NFGGame ι A) (s : ∀ i, A i)
@@ -250,6 +249,7 @@ theorem toFOSG_legalActionLaw_nil (G : NFGGame ι A) (s : ∀ i, A i)
     (G.toFOSG).legalActionLaw (G.liftProfile s)
         (GameTheory.FOSG.History.nil (G.toFOSG)) hterm =
       PMF.pure (G.jointActionOf s) := by
+  classical
   apply PMF.ext
   intro a
   rw [(G.toFOSG).legalActionLaw_apply (G.liftProfile s) _ hterm]
@@ -317,10 +317,12 @@ noncomputable def oneStepHistory (G : NFGGame ι A) (s : ∀ i, A i) :
       have h := G.toFOSG_transition_init_support (G.jointActionOf s)
       exact h)
 
+omit [∀ i, DecidableEq (A i)] in
 /-- The horizon-1 run distribution of a lifted pure profile is the point mass
 on the corresponding one-step history. -/
 theorem toFOSG_runDist_one (G : NFGGame ι A) (s : ∀ i, A i) :
     (G.toFOSG).runDist 1 (G.liftProfile s) = PMF.pure (G.oneStepHistory s) := by
+  classical
   have hterm : ¬ (G.toFOSG).terminal (GameTheory.FOSG.History.nil (G.toFOSG)).lastState := by
     rw [GameTheory.FOSG.History.lastState_nil]
     exact G.toFOSG_not_terminal_init
@@ -370,6 +372,7 @@ theorem toFOSG_oneStepHistory_utility (G : NFGGame ι A) (s : ∀ i, A i) (i : �
     G.utility (G.outcome s) i
   rw [G.actionsOfJoint_jointActionOf s, zero_add]
 
+omit [∀ i, DecidableEq (A i)] in
 /-- Utility-distribution soundness of the one-shot FOSG embedding: the bounded
 horizon kernel game of `G.toFOSG`, played by lifted pure strategies, has the
 same joint utility distribution as the NFG's own kernel game. -/
@@ -377,6 +380,7 @@ theorem toFOSG_udist_eq (G : NFGGame ι A) (s : ∀ i, A i) :
     ((G.toFOSG).toKernelGameOfBoundedHorizon G.toFOSG_boundedHorizon).udist
         (G.liftProfile s) =
       PMF.pure (G.utility (G.outcome s)) := by
+  classical
   rw [GameTheory.KernelGame.udist,
     GameTheory.FOSG.toKernelGameOfBoundedHorizon_outcomeKernel,
     toFOSG_runDist_one]

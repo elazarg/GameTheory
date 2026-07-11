@@ -364,7 +364,6 @@ theorem daStep_daFixedPoint : M.daStep M.daFixedPoint = M.daFixedPoint :=
 his top remaining choice at the fixed point. -/
 noncomputable def daMatching : α → Option β := fun a => M.topChoice M.daFixedPoint a
 
-set_option linter.unusedFintypeInType false in
 /-- **The deferred-acceptance matching is stable.** -/
 theorem daMatching_isStable (hA : ∀ a, Function.Injective (M.prefA a))
     (hB : ∀ b, Function.Injective (M.prefB b)) : M.IsStable M.daMatching :=
@@ -372,14 +371,16 @@ theorem daMatching_isStable (hA : ∀ a, Function.Injective (M.prefA a))
     fun a b h => M.fixedPoint_ir M.daStep_daFixedPoint a b h,
     M.no_blocking M.daStep_daFixedPoint (M.inv_iterate hA hB _)⟩
 
-set_option linter.unusedFintypeInType false in
+omit [Fintype α] [Fintype β] in
 /-- **Gale–Shapley: stable matchings exist.** Every finite two-sided market with
 strict preferences admits a stable matching, produced by men-proposing deferred
 acceptance. -/
-theorem exists_stable (hA : ∀ a, Function.Injective (M.prefA a))
+theorem exists_stable [Finite α] [Finite β] (hA : ∀ a, Function.Injective (M.prefA a))
     (hB : ∀ b, Function.Injective (M.prefB b)) :
-    ∃ μ : α → Option β, M.IsStable μ :=
-  ⟨M.daMatching, M.daMatching_isStable hA hB⟩
+    ∃ μ : α → Option β, M.IsStable μ := by
+  letI := Fintype.ofFinite α
+  letI := Fintype.ofFinite β
+  exact ⟨M.daMatching, M.daMatching_isStable hA hB⟩
 
 /-! ### Man-optimality
 

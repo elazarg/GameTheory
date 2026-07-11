@@ -131,32 +131,31 @@ theorem mwSelfPlay_timeAverage_isεCCE {L : ℝ} (hη : 0 < η) (hW : 0 < W)
           linarith
   exact mul_le_mul_of_nonneg_left hbound hW.le
 
--- `[Fintype ι]` is load-bearing in the proof (via `mwSelfPlay_timeAverage_isεCCE`) but the
--- existential conclusion hides the witnessing time-average, so it does not appear in the type.
-set_option linter.unusedFintypeInType false in
+omit [Fintype ι] in
 /-- **Existence of an ε-coarse correlated equilibrium via learning.** The time-average of
     multiplicative-weights self-play exhibits an ε-CCE for the explicit `ε` above. -/
-theorem exists_mwSelfPlay_isεCCE {L : ℝ} (hη : 0 < η) (hW : 0 < W)
+theorem exists_mwSelfPlay_isεCCE [Finite ι] {L : ℝ} (hη : 0 < η) (hW : 0 < W)
     (hbd : ∀ i ω, G.utility ω i ∈ Set.Icc (lo i) (lo i + W))
     (hL : ∀ i, Real.log (Fintype.card (G.Strategy i)) ≤ L)
     (T : ℕ) [NeZero T] :
     ∃ μ : PMF (Profile G),
-      G.IsεCoarseCorrelatedEq (W * (L / η + (Real.exp η - 1 - η) / η * T) / T) μ :=
-  ⟨_, G.mwSelfPlay_timeAverage_isεCCE η lo W hη hW hbd hL T⟩
+      G.IsεCoarseCorrelatedEq (W * (L / η + (Real.exp η - 1 - η) / η * T) / T) μ := by
+  letI := Fintype.ofFinite ι
+  exact ⟨_, G.mwSelfPlay_timeAverage_isεCCE η lo W hη hW hbd hL T⟩
 
--- `[Fintype ι]` is load-bearing in the proof but hidden by the existential conclusion.
-set_option linter.unusedFintypeInType false in
+omit [Fintype ι] in
 /-- **Learning reaches arbitrarily good coarse correlated equilibria.** For every `ε > 0`, a small
     enough fixed learning rate (`η ≈ ε`) and a long enough horizon `T` make the time-average of
     multiplicative-weights self-play an `ε`-coarse correlated equilibrium. This is the convergence
     form of the capstone: decentralized no-regret learning reaches the set of coarse correlated
     equilibria to any precision. (Existence of *some* CCE is already known via Brouwer; the content
     here is that a concrete learning process realizes it, to any `ε`.) -/
-theorem mwSelfPlay_exists_isεCCE_of_pos {L : ℝ} (hW : 0 < W)
+theorem mwSelfPlay_exists_isεCCE_of_pos [Finite ι] {L : ℝ} (hW : 0 < W)
     (hbd : ∀ i ω, G.utility ω i ∈ Set.Icc (lo i) (lo i + W))
     (hL : ∀ i, Real.log (Fintype.card (G.Strategy i)) ≤ L)
     {ε : ℝ} (hε : 0 < ε) :
     ∃ μ : PMF (Profile G), G.IsεCoarseCorrelatedEq ε μ := by
+  letI := Fintype.ofFinite ι
   have hWpos : (0 : ℝ) < 2 * W := by linarith
   set η₀ : ℝ := min 1 (ε / (2 * W)) with hη₀
   have hηpos : 0 < η₀ := lt_min one_pos (by positivity)
@@ -196,4 +195,3 @@ theorem mwSelfPlay_exists_isεCCE_of_pos {L : ℝ} (hW : 0 < W)
 end KernelGame
 
 end GameTheory
-

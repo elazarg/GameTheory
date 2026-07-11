@@ -10,8 +10,6 @@ import GameTheory.Concepts.Correlation.CorrelatedNashMixed
 import Math.ProbabilityMassFunction
 import Mathlib.Tactic.Linarith
 
-set_option linter.unusedFintypeInType false
-
 /-!
 # Constant-Sum Correlated Equilibria
 
@@ -234,10 +232,11 @@ def profilePairEquiv : Profile G ≃ Bool × Bool where
     simp [profile]
 
 theorem expect_eq_sum_profilePair
-    [Fintype ι]
+    [Finite ι]
     (μ : PMF (Profile G)) (f : Profile G → ℝ) :
     expect μ f =
       ∑ p : Bool × Bool, (μ (L.profile p.1 p.2)).toReal * f (L.profile p.1 p.2) := by
+  letI := Fintype.ofFinite ι
   letI : DecidableEq ι := L.decidableEqPlayer
   letI : ∀ i : ι, Fintype (G.Strategy i) := fun i => L.fintypeStrategy i
   rw [expect_eq_sum]
@@ -257,11 +256,12 @@ theorem expect_eq_sum_profilePair
       rw [hσ])
 
 theorem correlatedEu_eq_sum_profilePair
-    [Fintype ι] [Finite G.Outcome]
+    [Finite ι] [Finite G.Outcome]
     (μ : PMF (Profile G)) (who : ι) :
     G.correlatedEu μ who =
       ∑ p : Bool × Bool, (μ (L.profile p.1 p.2)).toReal *
         G.eu (L.profile p.1 p.2) who := by
+  letI := Fintype.ofFinite ι
   rw [G.correlatedEu_eq_expect_eu μ who]
   exact L.expect_eq_sum_profilePair μ (fun σ => G.eu σ who)
 
@@ -300,10 +300,11 @@ namespace MatchingPenniesLike
 variable {ι : Type} {G : KernelGame ι} {L : BinaryActionLabels G}
 
 private theorem ce_prob_true_true_ge_true_false
-    [Fintype ι] [DecidableEq ι] [Finite G.Outcome]
+    [Finite ι] [DecidableEq ι] [Finite G.Outcome]
     (h : G.MatchingPenniesLike L) {μ : PMF (Profile G)}
     (hCE : G.IsCorrelatedEq μ) :
     (μ (L.profile true true)).toReal ≥ (μ (L.profile true false)).toReal := by
+  letI := Fintype.ofFinite ι
   let p0 := L.playerOf true
   let dev : G.Strategy p0 → G.Strategy p0 := fun s =>
     if L.toBool p0 s then L.action p0 false else s
@@ -317,10 +318,11 @@ private theorem ce_prob_true_true_ge_true_false
   nlinarith [h.scale_pos]
 
 private theorem ce_prob_true_false_ge_false_false
-    [Fintype ι] [DecidableEq ι] [Finite G.Outcome]
+    [Finite ι] [DecidableEq ι] [Finite G.Outcome]
     (h : G.MatchingPenniesLike L) {μ : PMF (Profile G)}
     (hCE : G.IsCorrelatedEq μ) :
     (μ (L.profile true false)).toReal ≥ (μ (L.profile false false)).toReal := by
+  letI := Fintype.ofFinite ι
   let p1 := L.playerOf false
   let dev : G.Strategy p1 → G.Strategy p1 := fun s =>
     if L.toBool p1 s then s else L.action p1 true
@@ -334,10 +336,11 @@ private theorem ce_prob_true_false_ge_false_false
   nlinarith [h.scale_pos]
 
 private theorem ce_prob_false_false_ge_false_true
-    [Fintype ι] [DecidableEq ι] [Finite G.Outcome]
+    [Finite ι] [DecidableEq ι] [Finite G.Outcome]
     (h : G.MatchingPenniesLike L) {μ : PMF (Profile G)}
     (hCE : G.IsCorrelatedEq μ) :
     (μ (L.profile false false)).toReal ≥ (μ (L.profile false true)).toReal := by
+  letI := Fintype.ofFinite ι
   let p0 := L.playerOf true
   let dev : G.Strategy p0 → G.Strategy p0 := fun s =>
     if L.toBool p0 s then s else L.action p0 true
@@ -351,10 +354,11 @@ private theorem ce_prob_false_false_ge_false_true
   nlinarith [h.scale_pos]
 
 private theorem ce_prob_false_true_ge_true_true
-    [Fintype ι] [DecidableEq ι] [Finite G.Outcome]
+    [Finite ι] [DecidableEq ι] [Finite G.Outcome]
     (h : G.MatchingPenniesLike L) {μ : PMF (Profile G)}
     (hCE : G.IsCorrelatedEq μ) :
     (μ (L.profile false true)).toReal ≥ (μ (L.profile true true)).toReal := by
+  letI := Fintype.ofFinite ι
   let p1 := L.playerOf false
   let dev : G.Strategy p1 → G.Strategy p1 := fun s =>
     if L.toBool p1 s then L.action p1 false else s
@@ -368,10 +372,11 @@ private theorem ce_prob_false_true_ge_true_true
   nlinarith [h.scale_pos]
 
 theorem correlated_eq_profile_prob_eq_quarter
-    [Fintype ι] [DecidableEq ι] [Finite G.Outcome]
+    [Finite ι] [DecidableEq ι] [Finite G.Outcome]
     (h : G.MatchingPenniesLike L) {μ : PMF (Profile G)}
     (hCE : G.IsCorrelatedEq μ) (a b : Bool) :
     (μ (L.profile a b)).toReal = (1 / 4 : ℝ) := by
+  letI := Fintype.ofFinite ι
   have hHH_HT := ce_prob_true_true_ge_true_false h hCE
   have hHT_TT := ce_prob_true_false_ge_false_false h hCE
   have hTT_TH := ce_prob_false_false_ge_false_true h hCE

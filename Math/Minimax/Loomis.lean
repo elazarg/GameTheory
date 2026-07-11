@@ -8,10 +8,6 @@ import Math.Minimax.MinimaxLoomis
 import Mathlib.Topology.Order.Lattice
 import Mathlib.Topology.Order.Compact
 
-set_option linter.unusedFintypeInType false
-set_option linter.unnecessarySimpa false
-set_option linter.style.show false
-
 /-!
 # Math.Minimax.Loomis
 
@@ -45,8 +41,6 @@ threaded through where the simplified-Loomis route had `1`.
 
 open Finset BigOperators
 
-set_option linter.unusedSectionVars false
-
 namespace Loomis
 
 variable {I J : Type*} [Fintype I] [Fintype J] [Nonempty I] [Nonempty J]
@@ -60,6 +54,7 @@ def IsPositive (B : I → J → ℝ) : Prop := ∀ i j, 0 < B i j
 
 namespace IsPositive
 
+omit [Fintype I] [Fintype J] [Nonempty I] [Nonempty J] in
 /-- The all-ones matrix is positive; the simplified-Loomis specialisation
 plugs `B := fun _ _ => 1` into the general theorem. -/
 theorem one : IsPositive (fun (_ : I) (_ : J) => (1 : ℝ)) := fun _ _ => one_pos
@@ -87,16 +82,19 @@ noncomputable def Ay (A : I → J → ℝ) (y : stdSimplex ℝ J) (i : I) : ℝ 
 noncomputable def By (B : I → J → ℝ) (y : stdSimplex ℝ J) (i : I) : ℝ :=
   wsum y (fun j => B i j)
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 /-- Positivity of the row aggregate when `B` is entrywise positive. -/
 theorem xB_pos {B : I → J → ℝ} (hB : IsPositive B)
     (x : stdSimplex ℝ I) (j : J) : 0 < xB B x j :=
   wsum_pos x (fun i => hB i j)
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 /-- Positivity of the column aggregate when `B` is entrywise positive. -/
 theorem By_pos {B : I → J → ℝ} (hB : IsPositive B)
     (y : stdSimplex ℝ J) (i : I) : 0 < By B y i :=
   wsum_pos y (fun j => hB i j)
 
+omit [Nonempty I] [Nonempty J] in
 /-- Positivity of the bilinear pairing `xBy = ∑ᵢⱼ xᵢ Bᵢⱼ yⱼ`. -/
 theorem xBy_pos {B : I → J → ℝ} (hB : IsPositive B)
     (x : stdSimplex ℝ I) (y : stdSimplex ℝ J) :
@@ -129,11 +127,13 @@ noncomputable def lamB0 (A B : I → J → ℝ) : ℝ := iSup (lamB.aux A B)
 /-- Minmax Loomis scalar `μ₀ = inf_y μ_aux(y)`. -/
 noncomputable def muB0 (A B : I → J → ℝ) : ℝ := iInf (muB.aux A B)
 
+omit [Nonempty I] in
 /-- Characterisation: `lamB.aux A B x > c` iff every column ratio exceeds `c`. -/
 theorem lamB.aux_gt_iff_gt (A B : I → J → ℝ) (c : ℝ) (x : stdSimplex ℝ I) :
     c < lamB.aux A B x ↔ ∀ j, c < colRatio A B x j := by
   simp [lamB.aux, Finset.lt_inf'_iff]
 
+omit [Nonempty J] in
 /-- Characterisation: `muB.aux A B y < c` iff every row ratio is below `c`. -/
 theorem muB.aux_lt_iff_lt (A B : I → J → ℝ) (c : ℝ) (y : stdSimplex ℝ J) :
     muB.aux A B y < c ↔ ∀ i, rowRatio A B y i < c := by
@@ -145,6 +145,7 @@ The Loomis ratios are continuous on the compact simplex (positive denominators b
 `xB_pos` / `By_pos`), so the inf'/sup' aggregates are continuous and
 their extrema `lamB0` / `muB0` are attained. -/
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 /-- Each column ratio `(xA)_j / (xB)_j` is continuous on `Δ(I)`. -/
 theorem colRatio.continuous {A B : I → J → ℝ} (hB : IsPositive B) (j : J) :
     Continuous (fun x : stdSimplex ℝ I => colRatio A B x j) := by
@@ -153,6 +154,7 @@ theorem colRatio.continuous {A B : I → J → ℝ} (hB : IsPositive B) (j : J) 
     (wsum_continuous (fun i => B i j))
     (fun x => (xB_pos hB x j).ne')
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 /-- Each row ratio `(Ay)_i / (By)_i` is continuous on `Δ(J)`. -/
 theorem rowRatio.continuous {A B : I → J → ℝ} (hB : IsPositive B) (i : I) :
     Continuous (fun y : stdSimplex ℝ J => rowRatio A B y i) := by
@@ -161,6 +163,7 @@ theorem rowRatio.continuous {A B : I → J → ℝ} (hB : IsPositive B) (i : I) 
     (wsum_continuous (fun j => B i j))
     (fun y => (By_pos hB y i).ne')
 
+omit [Nonempty I] in
 /-- `lamB.aux A B` is continuous on the simplex. -/
 theorem lamB.aux.continuous {A B : I → J → ℝ} (hB : IsPositive B) :
     Continuous (lamB.aux A B) := by
@@ -168,6 +171,7 @@ theorem lamB.aux.continuous {A B : I → J → ℝ} (hB : IsPositive B) :
   intro j _
   exact colRatio.continuous hB j
 
+omit [Nonempty J] in
 /-- `muB.aux A B` is continuous on the simplex. -/
 theorem muB.aux.continuous {A B : I → J → ℝ} (hB : IsPositive B) :
     Continuous (muB.aux A B) := by
@@ -175,6 +179,7 @@ theorem muB.aux.continuous {A B : I → J → ℝ} (hB : IsPositive B) :
   intro i _
   exact rowRatio.continuous hB i
 
+omit [Nonempty I] in
 /-- `lamB.aux A B` is bounded above on the simplex (continuous function on a
 compact set). -/
 theorem lamB.aux.bddAbove {A B : I → J → ℝ} (hB : IsPositive B) :
@@ -183,6 +188,7 @@ theorem lamB.aux.bddAbove {A B : I → J → ℝ} (hB : IsPositive B) :
     (isCompact_univ.image (lamB.aux.continuous hB)).bddAbove
   refine ⟨C, fun x => hC ⟨x, Set.mem_univ _, rfl⟩⟩
 
+omit [Nonempty J] in
 /-- `muB.aux A B` is bounded below on the simplex. -/
 theorem muB.aux.bddBelow {A B : I → J → ℝ} (hB : IsPositive B) :
     ∃ C, ∀ y, C ≤ muB.aux A B y := by
@@ -190,6 +196,7 @@ theorem muB.aux.bddBelow {A B : I → J → ℝ} (hB : IsPositive B) :
     (isCompact_univ.image (muB.aux.continuous hB)).bddBelow
   refine ⟨C, fun y => hC ⟨y, Set.mem_univ _, rfl⟩⟩
 
+omit [Nonempty I] in
 /-- Every `lamB.aux` value is bounded by the supremum `lamB0`. -/
 theorem lamB.aux.le_lamB0 {A B : I → J → ℝ} (hB : IsPositive B)
     (x : stdSimplex ℝ I) :
@@ -198,6 +205,7 @@ theorem lamB.aux.le_lamB0 {A B : I → J → ℝ} (hB : IsPositive B)
     obtain ⟨C, hC⟩ := lamB.aux.bddAbove hB
     exact ⟨C, by rintro r ⟨x, rfl⟩; exact hC x⟩)) x
 
+omit [Nonempty J] in
 /-- Every `muB.aux` value dominates the infimum `muB0`. -/
 theorem muB.aux.ge_muB0 {A B : I → J → ℝ} (hB : IsPositive B)
     (y : stdSimplex ℝ J) :
@@ -245,6 +253,7 @@ theorem exists_yy_muB0 (A B : I → J → ℝ) (hB : IsPositive B) :
 
 /-! ### Weak duality `lamB0 ≤ muB0` -/
 
+omit [Nonempty I] [Nonempty J] in
 /-- The bilinear pairing `xBy` and its symmetric variants. -/
 private theorem xBy_swap (B : I → J → ℝ)
     (x : stdSimplex ℝ I) (y : stdSimplex ℝ J) :
@@ -379,6 +388,7 @@ private noncomputable def rowOffset (A B : I → J → ℝ) (mu : ℝ)
     (y : stdSimplex ℝ J) (i : I) : ℝ :=
   mu * By B y i - Ay A y i
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 /-- `colOffset` is a `wsum` of `A i j - λ B i j` over `i`. -/
 private theorem colOffset_eq_wsum (A B : I → J → ℝ) (lam : ℝ)
     (x : stdSimplex ℝ I) (j : J) :
@@ -391,6 +401,7 @@ private theorem colOffset_eq_wsum (A B : I → J → ℝ) (lam : ℝ)
   intro i _
   ring
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 /-- `rowOffset` is a `wsum` of `μ B i j - A i j` over `j`. -/
 private theorem rowOffset_eq_wsum (A B : I → J → ℝ) (mu : ℝ)
     (y : stdSimplex ℝ J) (i : I) :
@@ -403,6 +414,7 @@ private theorem rowOffset_eq_wsum (A B : I → J → ℝ) (mu : ℝ)
   intro j _
   ring
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 /-- Convex combination linearity for `colOffset` in the simplex argument. -/
 private theorem colOffset_mix (A B : I → J → ℝ) (lam : ℝ)
     (x y : stdSimplex ℝ I) (t : ℝ) (ht₀ : 0 ≤ t) (ht₁ : t ≤ 1) (j : J) :
@@ -411,6 +423,7 @@ private theorem colOffset_mix (A B : I → J → ℝ) (lam : ℝ)
   simp only [colOffset_eq_wsum]
   exact wsum_mix t ht₀ ht₁ x y _
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 /-- Convex combination linearity for `rowOffset` in the simplex argument. -/
 private theorem rowOffset_mix (A B : I → J → ℝ) (mu : ℝ)
     (x y : stdSimplex ℝ J) (t : ℝ) (ht₀ : 0 ≤ t) (ht₁ : t ≤ 1) (i : I) :
@@ -421,6 +434,7 @@ private theorem rowOffset_mix (A B : I → J → ℝ) (mu : ℝ)
 
 /-! ### Equivalence of the ratio form and the offset form -/
 
+omit [Nonempty I] in
 /-- `lamB.aux A B x` strictly exceeds `lam` iff every offset `colOffset` is
 strictly positive at `x`. -/
 private theorem lamB.aux_gt_of_colOffset_pos {A B : I → J → ℝ}
@@ -436,6 +450,7 @@ private theorem lamB.aux_gt_of_colOffset_pos {A B : I → J → ℝ}
   unfold colOffset at this
   linarith
 
+omit [Nonempty J] in
 /-- `muB.aux A B y` is strictly below `mu` iff every offset `rowOffset` is
 strictly positive at `y`. -/
 private theorem muB.aux_lt_of_rowOffset_pos {A B : I → J → ℝ}
@@ -462,16 +477,19 @@ private noncomputable def dropRow [DecidableEq I] (A : I → J → ℝ) (i₀ : 
     {i : I // i ≠ i₀} → J → ℝ :=
   fun i' j => A i'.val j
 
+omit [Fintype I] [Fintype J] [Nonempty I] [Nonempty J] in
 /-- Dropping a column preserves entrywise positivity. -/
 private theorem dropCol.IsPositive [DecidableEq J] {B : I → J → ℝ}
     (hB : IsPositive B) (j₀ : J) : IsPositive (dropCol B j₀) :=
   fun i j' => hB i j'.val
 
+omit [Fintype I] [Fintype J] [Nonempty I] [Nonempty J] in
 /-- Dropping a row preserves entrywise positivity. -/
 private theorem dropRow.IsPositive [DecidableEq I] {B : I → J → ℝ}
     (hB : IsPositive B) (i₀ : I) : IsPositive (dropRow B i₀) :=
   fun i' j => hB i'.val j
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 /-- Extending `y' ∈ Δ(J')` to `Δ(J)` by zero at `j₀` recovers the same row
 aggregates from `A` (and `B`). -/
 private theorem Ay_extendDropColumn [DecidableEq J] (i : I) (A : I → J → ℝ)
@@ -481,6 +499,7 @@ private theorem Ay_extendDropColumn [DecidableEq J] (i : I) (A : I → J → ℝ
   rw [MinimaxLoomis.wsum_extendDropColumn]
   rfl
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 private theorem By_extendDropColumn [DecidableEq J] (i : I) (B : I → J → ℝ)
     (j₀ : J) (y' : stdSimplex ℝ {j : J // j ≠ j₀}) :
     By B (MinimaxLoomis.extendDropColumn j₀ y') i = By (dropCol B j₀) y' i := by
@@ -488,6 +507,7 @@ private theorem By_extendDropColumn [DecidableEq J] (i : I) (B : I → J → ℝ
   rw [MinimaxLoomis.wsum_extendDropColumn]
   rfl
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 private theorem xA_extendDropRow [DecidableEq I] (j : J) (A : I → J → ℝ)
     (i₀ : I) (x' : stdSimplex ℝ {i : I // i ≠ i₀}) :
     xA A (MinimaxLoomis.extendDropRow i₀ x') j = xA (dropRow A i₀) x' j := by
@@ -495,6 +515,7 @@ private theorem xA_extendDropRow [DecidableEq I] (j : J) (A : I → J → ℝ)
   rw [MinimaxLoomis.wsum_extendDropRow]
   rfl
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 private theorem xB_extendDropRow [DecidableEq I] (j : J) (B : I → J → ℝ)
     (i₀ : I) (x' : stdSimplex ℝ {i : I // i ≠ i₀}) :
     xB B (MinimaxLoomis.extendDropRow i₀ x') j = xB (dropRow B i₀) x' j := by
@@ -552,7 +573,7 @@ private theorem loomis_value_eq_aux :
           exact wsum_wsum_comm xx yy A
         have h_xxByy_swap :
             wsum yy (fun j => xB B xx j) = xxByy := by
-          show wsum yy (fun j => xB B xx j) = wsum xx (fun i => By B yy i)
+          change wsum yy (fun j => xB B xx j) = wsum xx (fun i => By B yy i)
           exact (xBy_swap B xx yy).symm
         -- From HxxZero: wsum yy (xA xx ·) = lamB0 * wsum yy (xB xx ·)
         have h_lhs : wsum yy (fun j => xA A xx j) = lamB0 A B * xxByy := by
@@ -587,7 +608,7 @@ private theorem loomis_value_eq_aux :
         have cardJ_ne_one : Fintype.card J ≠ 1 := by
           intro hcardJ
           have hcardJ' : (Finset.univ : Finset J).card = 1 := by
-            simpa using hcardJ
+            exact hcardJ
           obtain ⟨j, hj⟩ := Finset.card_eq_one.1 hcardJ'
           have hj0_eq : j₀ = j := by
             have hmem : j₀ ∈ (Finset.univ : Finset J) := Finset.mem_univ _
@@ -613,7 +634,7 @@ private theorem loomis_value_eq_aux :
             push Not at H1
             have hsubsing : Fintype.card J ≤ 1 := by
               have hsingle : (Finset.univ : Finset J) = {j₀} := by ext; simp [H1]
-              simpa [← Finset.card_univ, hsingle]
+              simp [← Finset.card_univ, hsingle]
             omega
           exact ⟨⟨j, hj⟩⟩
         haveI : Nonempty {j : J // j ≠ j₀} := nonempty_J'
@@ -704,7 +725,7 @@ private theorem loomis_value_eq_aux :
         have cardI_ne_one : Fintype.card I ≠ 1 := by
           intro hcardI
           have hcardI' : (Finset.univ : Finset I).card = 1 := by
-            simpa using hcardI
+            exact hcardI
           obtain ⟨i, hi⟩ := Finset.card_eq_one.1 hcardI'
           have hi0_eq : i₀ = i := by
             have hmem : i₀ ∈ (Finset.univ : Finset I) := Finset.mem_univ _
@@ -729,7 +750,7 @@ private theorem loomis_value_eq_aux :
             push Not at H1
             have hsubsing : Fintype.card I ≤ 1 := by
               have hsingle : (Finset.univ : Finset I) = {i₀} := by ext; simp [H1]
-              simpa [← Finset.card_univ, hsingle]
+              simp [← Finset.card_univ, hsingle]
             omega
           exact ⟨⟨i, hi⟩⟩
         haveI : Nonempty {i : I // i ≠ i₀} := nonempty_I'
@@ -850,16 +871,19 @@ positive-`B` Loomis theorem above, validating the
 `minimax_from_loomis` blueprint node's "all-ones specialisation"
 claim. -/
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 private theorem xB_one (x : stdSimplex ℝ I) (j : J) :
     xB (fun (_ : I) (_ : J) => (1 : ℝ)) x j = 1 := by
   unfold xB
   exact wsum_const x 1
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 private theorem By_one (y : stdSimplex ℝ J) (i : I) :
     By (fun (_ : I) (_ : J) => (1 : ℝ)) y i = 1 := by
   unfold By
   exact wsum_const y 1
 
+omit [Fintype J] [Nonempty I] [Nonempty J] in
 private theorem colRatio_one (A : I → J → ℝ) (x : stdSimplex ℝ I) (j : J) :
     colRatio A (fun _ _ => 1) x j = wsum x (fun i => A i j) := by
   unfold colRatio
@@ -867,6 +891,7 @@ private theorem colRatio_one (A : I → J → ℝ) (x : stdSimplex ℝ I) (j : J
   unfold xA
   exact div_one _
 
+omit [Fintype I] [Nonempty I] [Nonempty J] in
 private theorem rowRatio_one (A : I → J → ℝ) (y : stdSimplex ℝ J) (i : I) :
     rowRatio A (fun _ _ => 1) y i = wsum y (fun j => A i j) := by
   unfold rowRatio
@@ -874,23 +899,27 @@ private theorem rowRatio_one (A : I → J → ℝ) (y : stdSimplex ℝ J) (i : I
   unfold Ay
   exact div_one _
 
+omit [Nonempty I] in
 private theorem lamB.aux_one (A : I → J → ℝ) (x : stdSimplex ℝ I) :
     lamB.aux A (fun _ _ => 1) x = MinimaxLoomis.lam.aux A x := by
   unfold lamB.aux MinimaxLoomis.lam.aux
   congr 1; ext j
   exact colRatio_one A x j
 
+omit [Nonempty J] in
 private theorem muB.aux_one (A : I → J → ℝ) (y : stdSimplex ℝ J) :
     muB.aux A (fun _ _ => 1) y = MinimaxLoomis.mu.aux A y := by
   unfold muB.aux MinimaxLoomis.mu.aux
   congr 1; ext i
   exact rowRatio_one A y i
 
+omit [Nonempty I] in
 theorem lamB0_one (A : I → J → ℝ) :
     lamB0 A (fun _ _ => 1) = MinimaxLoomis.lam0 A := by
   unfold lamB0 MinimaxLoomis.lam0
   exact iSup_congr (lamB.aux_one A)
 
+omit [Nonempty J] in
 theorem muB0_one (A : I → J → ℝ) :
     muB0 A (fun _ _ => 1) = MinimaxLoomis.mu0 A := by
   unfold muB0 MinimaxLoomis.mu0

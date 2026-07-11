@@ -41,8 +41,6 @@ Ported from `GameTheory/Zerosum.lean` in
 
 open Finset BigOperators
 
-set_option linter.unusedSectionVars false
-
 namespace MinimaxLoomis
 
 variable {I J : Type*} [Fintype I] [Fintype J] [Nonempty I] [Nonempty J]
@@ -64,11 +62,13 @@ noncomputable def lam.aux (A : I → J → ℝ) (x : stdSimplex ℝ I) : ℝ :=
 /-- Player I's maxmin value (the row player's best guarantee). -/
 noncomputable def lam0 (A : I → J → ℝ) : ℝ := iSup (lam.aux A)
 
+omit [Nonempty I] in
 /-- `lam.aux A x > c` iff every pure-column expected payoff exceeds `c`. -/
 theorem lam.aux_gt_iff_gt (A : I → J → ℝ) (c : ℝ) (x : stdSimplex ℝ I) :
     c < lam.aux A x ↔ ∀ j, c < wsum x (fun i => A i j) := by
   simp [lam.aux, Finset.lt_inf'_iff]
 
+omit [Nonempty I] in
 /-- `lam.aux A` is continuous as a function of the simplex point. -/
 theorem lam.aux.continuous (A : I → J → ℝ) :
     Continuous (lam.aux A) := by
@@ -133,11 +133,13 @@ noncomputable def mu.aux (A : I → J → ℝ) (y : stdSimplex ℝ J) : ℝ :=
 /-- Player II's minmax value (the column player's best cap). -/
 noncomputable def mu0 (A : I → J → ℝ) : ℝ := iInf (mu.aux A)
 
+omit [Nonempty J] in
 /-- `mu.aux A y < c` iff every pure-row expected payoff is below `c`. -/
 theorem mu.aux_lt_iff_lt (A : I → J → ℝ) (c : ℝ) (y : stdSimplex ℝ J) :
     mu.aux A y < c ↔ ∀ i, wsum y (fun j => A i j) < c := by
   simp [mu.aux, Finset.sup'_lt_iff]
 
+omit [Nonempty J] in
 /-- `mu.aux A` is continuous as a function of the simplex point. -/
 theorem mu.aux.continuous (A : I → J → ℝ) :
     Continuous (mu.aux A) := by
@@ -226,6 +228,7 @@ noncomputable def dropEquiv [DecidableEq J] (j₀ : J) : J ≃ Option {j : J // 
     | none => simp
     | some j => simp [j.property]
 
+omit [Nonempty J] in
 /-- Sum-splitting lemma: any function on `J` decomposes as the value at `j₀`
 plus the sum over `{j // j ≠ j₀}`. -/
 theorem sum_split_at [DecidableEq J] (j₀ : J) (f : J → ℝ) :
@@ -263,6 +266,7 @@ noncomputable def extendDropRow [DecidableEq I] (i₀ : I)
     stdSimplex ℝ I :=
   extendDropColumn (J := I) i₀ x'
 
+omit [Nonempty J] in
 /-- `wsum (extendDropColumn j₀ y') f` equals the `wsum` of `y'` restricted
 to the corresponding sub-function on `{j // j ≠ j₀}`. -/
 theorem wsum_extendDropColumn [DecidableEq J] (j₀ : J)
@@ -281,6 +285,7 @@ theorem wsum_extendDropColumn [DecidableEq J] (j₀ : J)
   congr 1
   simp [j'.property]
 
+omit [Nonempty I] in
 /-- Companion for row extension. -/
 theorem wsum_extendDropRow [DecidableEq I] (i₀ : I)
     (x' : stdSimplex ℝ {i : I // i ≠ i₀}) (f : I → ℝ) :
