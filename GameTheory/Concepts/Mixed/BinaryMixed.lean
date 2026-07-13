@@ -111,7 +111,7 @@ def decidableEqPlayer : DecidableEq ι :=
   Fintype.ofEquiv Bool (L.toBool i).symm
 
 /-- The nonemptiness instance induced by binary labels. -/
-@[reducible] def nonemptyStrategy (i : ι) : Nonempty (G.Strategy i) :=
+theorem nonemptyStrategy (L : BinaryActionLabels G) (i : ι) : Nonempty (G.Strategy i) :=
   ⟨L.action i true⟩
 
 /-- The decidable equality instance induced by binary labels. -/
