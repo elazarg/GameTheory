@@ -60,7 +60,7 @@ private theorem ennreal_prop_step (n : ℕ) (hn : 0 < n)
 private def DubinsSpanierProp (n : ℕ) : Prop :=
   ∀ (μ : Fin n → Measure I),
     (∀ i, IsFiniteMeasure (μ i)) →
-    (∀ i, NoAtoms (μ i)) →
+    (∀ i, NullSingletonClass (μ i)) →
     ∃ A : Allocation (Fin n) I,
       IsAllocation A ∧ IsProportional n (MeasureValuation μ) A
 
@@ -126,7 +126,7 @@ private theorem ds_step (n : ℕ) (hn : 0 < n) (ih : DubinsSpanierProp n) :
   let μ_rem : Fin n → Measure I :=
     fun j => (μ (i_star.succAbove j)).restrict (Set.Ioi (t i_star))
   haveI hfin_rem : ∀ j : Fin n, IsFiniteMeasure (μ_rem j) := fun _ => inferInstance
-  haveI hnoatoms_rem : ∀ j : Fin n, NoAtoms (μ_rem j) := fun _ => inferInstance
+  haveI hnoatoms_rem : ∀ j : Fin n, NullSingletonClass (μ_rem j) := fun _ => inferInstance
   obtain ⟨A_rem, hA_rem, hprop_rem⟩ :=
     ih μ_rem (fun j => hfin_rem j) (fun j => hnoatoms_rem j)
   let A : Allocation (Fin (n + 1)) I :=
@@ -206,7 +206,7 @@ private theorem dubinsSpanierFin : ∀ (n : ℕ), 0 < n → DubinsSpanierProp n 
 
 /-- Dubins-Spanier proportional existence for `n ≥ 1` agents indexed by `Fin n`. -/
 theorem dubinsSpanierProportional (n : ℕ) (hn : 0 < n)
-    (μ : Fin n → Measure I) [∀ i, IsFiniteMeasure (μ i)] [∀ i, NoAtoms (μ i)] :
+    (μ : Fin n → Measure I) [∀ i, IsFiniteMeasure (μ i)] [∀ i, NullSingletonClass (μ i)] :
     ∃ A : Allocation (Fin n) I,
       IsAllocation A ∧ IsProportional n (MeasureValuation μ) A :=
   dubinsSpanierFin n hn μ (fun _ => inferInstance) (fun _ => inferInstance)
@@ -214,7 +214,7 @@ theorem dubinsSpanierProportional (n : ℕ) (hn : 0 < n)
 /-- Bundled-instance form of Dubins-Spanier proportional existence. -/
 theorem dubinsSpanier_exists_proportional_allocation (n : ℕ) (hn : 0 < n)
     (M : MeasureInstance (Fin n) I)
-    [∀ i, IsFiniteMeasure (M.measure i)] [∀ i, NoAtoms (M.measure i)] :
+    [∀ i, IsFiniteMeasure (M.measure i)] [∀ i, NullSingletonClass (M.measure i)] :
     ∃ A : Allocation (Fin n) I,
       IsAllocation A ∧ M.IsProportional n A :=
   dubinsSpanierProportional n hn M.measure
@@ -222,7 +222,7 @@ theorem dubinsSpanier_exists_proportional_allocation (n : ℕ) (hn : 0 < n)
 /-- The Dubins-Spanier rule chooses a proportional allocation from the existence theorem. -/
 noncomputable def dubinsSpanierRule (n : ℕ) (hn : 0 < n)
     (M : MeasureInstance (Fin n) I)
-    [∀ i, IsFiniteMeasure (M.measure i)] [∀ i, NoAtoms (M.measure i)] :
+    [∀ i, IsFiniteMeasure (M.measure i)] [∀ i, NullSingletonClass (M.measure i)] :
     {A : Allocation (Fin n) I // IsAllocation A} :=
   let A := Classical.choose (dubinsSpanier_exists_proportional_allocation n hn M)
   ⟨A, (Classical.choose_spec (dubinsSpanier_exists_proportional_allocation n hn M)).1⟩
@@ -230,7 +230,7 @@ noncomputable def dubinsSpanierRule (n : ℕ) (hn : 0 < n)
 /-- The bundled Dubins-Spanier rule is proportional. -/
 theorem dubinsSpanierRule_isProportional (n : ℕ) (hn : 0 < n)
     (M : MeasureInstance (Fin n) I)
-    [∀ i, IsFiniteMeasure (M.measure i)] [∀ i, NoAtoms (M.measure i)] :
+    [∀ i, IsFiniteMeasure (M.measure i)] [∀ i, NullSingletonClass (M.measure i)] :
     M.IsProportional n (dubinsSpanierRule n hn M).1 := by
   unfold dubinsSpanierRule
   exact (Classical.choose_spec (dubinsSpanier_exists_proportional_allocation n hn M)).2

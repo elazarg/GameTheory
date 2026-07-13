@@ -37,7 +37,7 @@ package GameTheory where
   keywords := #["math", "game-theory"]
   fixedToolchain := true
 
-require "leanprover-community" / "mathlib" @ git "v4.31.0"
+require "leanprover-community" / "mathlib" @ git "v4.32.0"
 require FixedPointTheorems from "fixed-point-theorems-lean4"
 
 @[default_target]

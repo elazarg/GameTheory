@@ -27,7 +27,7 @@ namespace Divisible
 cut-and-choose theorem in existential form. -/
 theorem ef_exists_two_agents
     (μ : Fin 2 → Measure I)
-    [IsFiniteMeasure (μ 0)] [NoAtoms (μ 0)] :
+    [IsFiniteMeasure (μ 0)] [NullSingletonClass (μ 0)] :
     ∃ A : Allocation (Fin 2) I,
       IsAllocation A ∧ IsEnvyFree (MeasureValuation μ) A :=
   cutAndChoose_ef_exists μ
@@ -38,7 +38,7 @@ theorem proportional_exists
     {N : Type*} [Fintype N] [Nonempty N]
     (μ : N → Measure I)
     [∀ i, IsFiniteMeasure (μ i)]
-    [∀ i, NoAtoms (μ i)] :
+    [∀ i, NullSingletonClass (μ i)] :
     ∃ A : Allocation N I,
       IsAllocation A ∧
       IsProportional (Fintype.card N) (MeasureValuation μ) A := by
@@ -48,8 +48,8 @@ theorem proportional_exists
   let μ' : Fin n → Measure I := Math.Fintype.toFin μ
   haveI hfin' : ∀ j : Fin n, IsFiniteMeasure (μ' j) := fun j =>
     show IsFiniteMeasure (μ (e.symm j)) from inferInstance
-  haveI hnoatoms' : ∀ j : Fin n, NoAtoms (μ' j) := fun j =>
-    show NoAtoms (μ (e.symm j)) from inferInstance
+  haveI hnoatoms' : ∀ j : Fin n, NullSingletonClass (μ' j) := fun j =>
+    show NullSingletonClass (μ (e.symm j)) from inferInstance
   obtain ⟨A', hA', hprop'⟩ := dubinsSpanierProportional n hn μ'
   refine ⟨Math.Fintype.fromFin A', ?_, ?_⟩
   · refine ⟨fun i => hA'.measurable (e i), fun i j hij => ?_, ?_⟩
@@ -73,7 +73,7 @@ theorem ef_exists
     {N : Type*} [Fintype N] [Nonempty N]
     (μ : N → Measure I)
     [∀ i, IsFiniteMeasure (μ i)]
-    [∀ i, NoAtoms (μ i)] :
+    [∀ i, NullSingletonClass (μ i)] :
     ∃ A : Allocation N I,
       IsAllocation A ∧ IsEnvyFree (MeasureValuation μ) A := by
   let n := Fintype.card N
@@ -82,9 +82,9 @@ theorem ef_exists
   let μ' : Fin n → Measure ℝ := fun j => (Math.Fintype.toFin μ j).map Subtype.val
   haveI hfin' : ∀ j : Fin n, IsFiniteMeasure (μ' j) := fun j =>
     show IsFiniteMeasure ((μ (e.symm j)).map Subtype.val) from inferInstance
-  haveI hnoatoms' : ∀ j : Fin n, NoAtoms (μ' j) := fun j =>
-    show NoAtoms ((μ (e.symm j)).map Subtype.val) from
-      Math.MeasureTheory.noAtomsMapSubtypeVal (μ (e.symm j))
+  haveI hnoatoms' : ∀ j : Fin n, NullSingletonClass (μ' j) := fun j =>
+    show NullSingletonClass ((μ (e.symm j)).map Subtype.val) from
+      Math.MeasureTheory.nullSingletonMapSubtypeVal (μ (e.symm j))
   have hsupp' : ∀ j : Fin n, μ' j = (μ' j).restrict (Set.Ico 0 1) := fun j => by
     exact Math.MeasureTheory.mapSubtypeVal_eq_restrict_Ico (μ (e.symm j))
   obtain ⟨A', hA', hef'⟩ := stromquist_envyFree_exists n μ' hn hsupp'
@@ -112,7 +112,7 @@ theorem ef_and_proportional_exists
     {N : Type*} [Fintype N] [Nonempty N]
     (μ : N → Measure I)
     [∀ i, IsFiniteMeasure (μ i)]
-    [∀ i, NoAtoms (μ i)] :
+    [∀ i, NullSingletonClass (μ i)] :
     ∃ A : Allocation N I,
       IsAllocation A ∧ IsEnvyFree (MeasureValuation μ) A ∧
       IsProportional (Fintype.card N) (MeasureValuation μ) A := by
@@ -124,7 +124,7 @@ theorem MeasureInstance.proportional_exists
     {N : Type*} [Fintype N] [Nonempty N]
     (M : MeasureInstance N I)
     [∀ i, IsFiniteMeasure (M.measure i)]
-    [∀ i, NoAtoms (M.measure i)] :
+    [∀ i, NullSingletonClass (M.measure i)] :
     ∃ A : Allocation N I,
       IsAllocation A ∧
       M.IsProportional (Fintype.card N) A :=
@@ -136,7 +136,7 @@ theorem MeasureInstance.envyFree_exists
     {N : Type*} [Fintype N] [Nonempty N]
     (M : MeasureInstance N I)
     [∀ i, IsFiniteMeasure (M.measure i)]
-    [∀ i, NoAtoms (M.measure i)] :
+    [∀ i, NullSingletonClass (M.measure i)] :
     ∃ A : Allocation N I,
       IsAllocation A ∧ M.IsEnvyFree A :=
   Divisible.ef_exists M.measure
@@ -147,7 +147,7 @@ theorem MeasureInstance.envyFree_and_proportional_exists
     {N : Type*} [Fintype N] [Nonempty N]
     (M : MeasureInstance N I)
     [∀ i, IsFiniteMeasure (M.measure i)]
-    [∀ i, NoAtoms (M.measure i)] :
+    [∀ i, NullSingletonClass (M.measure i)] :
     ∃ A : Allocation N I,
       IsAllocation A ∧ M.IsEnvyFree A ∧ M.IsProportional (Fintype.card N) A :=
   Divisible.ef_and_proportional_exists M.measure

@@ -326,7 +326,7 @@ theorem continuous_mixedGainOnMixedSimplex_of_continuous_mixedEu
       Continuous (fun x : MixedSimplex ι (fun i => G.Strategy i) =>
         G.mixedGainOnMixedSimplex x who a) := by
   intro who a
-  simpa [mixedGainOnMixedSimplex, mixedGain] using (hdev who a).sub (hbase who)
+  exact (hdev who a).sub (hbase who) |>.congr (fun x => rfl)
 
 /-- Weight-level fixed-point witness extracted from a mixed-simplex fixed point. -/
 theorem nashMap_weightFixedPoint_of_mixedSimplexFixedPoint

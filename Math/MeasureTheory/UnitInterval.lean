@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import Mathlib.Data.ENNReal.Real
 import Mathlib.MeasureTheory.Constructions.UnitInterval
 import Mathlib.MeasureTheory.Measure.MeasureSpace
-import Mathlib.MeasureTheory.Measure.Typeclasses.NoAtoms
+import Mathlib.MeasureTheory.Measure.Typeclasses.NullSingletonClass
 import Mathlib.Topology.Order.IsLUB
 import Mathlib.Topology.Order.LeftRightLim
 import Mathlib.Topology.Order.OrderClosed
@@ -27,8 +27,8 @@ namespace MeasureTheory
 
 /-- Non-atomicity is preserved when a measure on the unit interval is pushed
 forward along the subtype inclusion into `ℝ`. -/
-instance noAtomsMapSubtypeVal (μ : Measure I) [NoAtoms μ] :
-    NoAtoms (μ.map Subtype.val) where
+instance nullSingletonMapSubtypeVal (μ : Measure I) [NullSingletonClass μ] :
+    NullSingletonClass (μ.map Subtype.val) where
   measure_singleton x := by
     rw [Measure.map_apply measurable_subtype_coe (measurableSet_singleton x)]
     exact Set.Subsingleton.measure_zero
@@ -40,7 +40,7 @@ instance noAtomsMapSubtypeVal (μ : Measure I) [NoAtoms μ] :
 /-- A non-atomic measure on the unit interval, pushed forward to `ℝ`, is
 supported on `[0,1)`. The right endpoint can be removed because it is a
 singleton. -/
-theorem mapSubtypeVal_eq_restrict_Ico (μ : Measure I) [NoAtoms μ] :
+theorem mapSubtypeVal_eq_restrict_Ico (μ : Measure I) [NullSingletonClass μ] :
     μ.map Subtype.val = (μ.map Subtype.val).restrict (Set.Ico 0 1) := by
   apply Measure.ext
   intro s hs
@@ -61,7 +61,7 @@ theorem mapSubtypeVal_eq_restrict_Ico (μ : Measure I) [NoAtoms μ] :
 
 /-- The CDF `t ↦ (ν (Iic t)).toReal` is continuous for a non-atomic finite
 measure on `ℝ`. -/
-theorem cdfRealContinuous (ν : Measure ℝ) [IsFiniteMeasure ν] [NoAtoms ν] :
+theorem cdfRealContinuous (ν : Measure ℝ) [IsFiniteMeasure ν] [NullSingletonClass ν] :
     Continuous (fun t : ℝ => (ν (Set.Iic t)).toReal) := by
   have hf_mono : Monotone (fun t : ℝ => (ν (Set.Iic t)).toReal) := fun a b hab =>
     (ENNReal.toReal_le_toReal (measure_ne_top _ _) (measure_ne_top _ _)).mpr
@@ -115,7 +115,7 @@ theorem cdfRealContinuous (ν : Measure ℝ) [IsFiniteMeasure ν] [NoAtoms ν] :
 
 /-- For a finite non-atomic measure on `ℝ`, the real value of `Ico l r` is
 the positive part of the CDF difference. -/
-theorem measure_Ico_toReal (ν : Measure ℝ) [IsFiniteMeasure ν] [NoAtoms ν] (l r : ℝ) :
+theorem measure_Ico_toReal (ν : Measure ℝ) [IsFiniteMeasure ν] [NullSingletonClass ν] (l r : ℝ) :
     (ν (Set.Ico l r)).toReal =
       max ((ν (Set.Iic r)).toReal - (ν (Set.Iic l)).toReal) 0 := by
   by_cases hlr : l ≤ r
@@ -168,7 +168,7 @@ private theorem map_univ_eq (μ : Measure I) :
   rw [Measure.map_apply measurable_subtype_coe MeasurableSet.univ]
   simp
 
-private theorem cut_exists_real (μ : Measure ℝ) [IsFiniteMeasure μ] [NoAtoms μ]
+private theorem cut_exists_real (μ : Measure ℝ) [IsFiniteMeasure μ] [NullSingletonClass μ]
     (c : ℝ) (hc_pos : 0 < c) (hc_lt : c < (μ Set.univ).toReal) :
     ∃ t : ℝ, (μ (Set.Iic t)).toReal = c := by
   let f : ℝ → ℝ := fun t => (μ (Set.Iic t)).toReal
@@ -201,14 +201,14 @@ private theorem cut_exists_real (μ : Measure ℝ) [IsFiniteMeasure μ] [NoAtoms
 
 /-- Intermediate value theorem for finite non-atomic measures on `[0,1]`: every
 target strictly between `0` and the total mass is attained by an initial segment. -/
-theorem unitInterval_cut_exists (μ : Measure I) [IsFiniteMeasure μ] [NoAtoms μ]
+theorem unitInterval_cut_exists (μ : Measure I) [IsFiniteMeasure μ] [NullSingletonClass μ]
     (c : ℝ) (hc_pos : 0 < c) (hc_lt : c < (μ Set.univ).toReal) :
     ∃ t : I, (μ (Set.Iic t)).toReal = c := by
   let ν : Measure ℝ := μ.map Subtype.val
   haveI : IsFiniteMeasure ν := by
     dsimp [ν]
     infer_instance
-  haveI : NoAtoms ν := noAtomsMapSubtypeVal μ
+  haveI : NullSingletonClass ν := nullSingletonMapSubtypeVal μ
   have hc_lt' : c < (ν Set.univ).toReal := by
     simpa [ν, map_univ_eq] using hc_lt
   obtain ⟨t, ht⟩ := cut_exists_real ν c hc_pos hc_lt'

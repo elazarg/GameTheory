@@ -131,7 +131,7 @@ theorem cutAndChoose_ef_exists_of_fairCutPoint_exists
 
 /-- A fair cut exists for finite non-atomic cutter measure. -/
 theorem fairCutPoint_exists
-    (μ : Fin 2 → Measure I) [IsFiniteMeasure (μ 0)] [NoAtoms (μ 0)] :
+    (μ : Fin 2 → Measure I) [IsFiniteMeasure (μ 0)] [NullSingletonClass (μ 0)] :
     ∃ t : I, IsFairCutPoint μ t := by
   set M := (μ 0 univ).toReal with hM_def
   have hM_nonneg : 0 ≤ M := ENNReal.toReal_nonneg
@@ -181,7 +181,7 @@ theorem fairCutPoint_exists
 /-- Cut-and-choose gives an envy-free allocation for two finite non-atomic
 measure agents. -/
 theorem cutAndChoose_ef_exists
-    (μ : Fin 2 → Measure I) [IsFiniteMeasure (μ 0)] [NoAtoms (μ 0)] :
+    (μ : Fin 2 → Measure I) [IsFiniteMeasure (μ 0)] [NullSingletonClass (μ 0)] :
     ∃ A : Allocation (Fin 2) I,
       IsAllocation A ∧ IsEnvyFree (MeasureValuation μ) A :=
   cutAndChoose_ef_exists_of_fairCutPoint_exists μ (fairCutPoint_exists μ)
@@ -189,7 +189,7 @@ theorem cutAndChoose_ef_exists
 /-- Bundled-instance form of cut-and-choose envy-free existence. -/
 theorem cutAndChoose_exists_envyFree_allocation
     (M : MeasureInstance (Fin 2) I)
-    [IsFiniteMeasure (M.measure 0)] [NoAtoms (M.measure 0)] :
+    [IsFiniteMeasure (M.measure 0)] [NullSingletonClass (M.measure 0)] :
     ∃ A : Allocation (Fin 2) I,
       IsAllocation A ∧ M.IsEnvyFree A :=
   cutAndChoose_ef_exists M.measure
@@ -197,7 +197,7 @@ theorem cutAndChoose_exists_envyFree_allocation
 /-- Cut-and-choose as a feasible rule on bundled two-agent measure instances. -/
 noncomputable def cutAndChooseRule
     (M : MeasureInstance (Fin 2) I)
-    [IsFiniteMeasure (M.measure 0)] [NoAtoms (M.measure 0)] :
+    [IsFiniteMeasure (M.measure 0)] [NullSingletonClass (M.measure 0)] :
     {A : Allocation (Fin 2) I // M.feasible A} :=
   let t := Classical.choose (fairCutPoint_exists M.measure)
   ⟨cutAndChooseAlloc M.measure t, cutAndChooseAlloc_isAllocation M.measure t⟩
@@ -205,7 +205,7 @@ noncomputable def cutAndChooseRule
 /-- The bundled cut-and-choose rule is envy-free. -/
 theorem cutAndChooseRule_isEnvyFree
     (M : MeasureInstance (Fin 2) I)
-    [IsFiniteMeasure (M.measure 0)] [NoAtoms (M.measure 0)] :
+    [IsFiniteMeasure (M.measure 0)] [NullSingletonClass (M.measure 0)] :
     M.IsEnvyFree (cutAndChooseRule M).1 := by
   unfold cutAndChooseRule
   exact cutAndChoose_isEnvyFree M.measure
