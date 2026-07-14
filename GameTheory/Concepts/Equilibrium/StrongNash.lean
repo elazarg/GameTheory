@@ -100,6 +100,36 @@ theorem isStrongNash_iff_no_profitableCoalitionDeviation [DecidableEq ι]
     refine h C τ ⟨hweak, i, hi, ?_⟩
     exact lt_of_le_of_ne (hweak i hi) (Ne.symm hne)
 
+/-- Strong Nash is the coalition-constant deviation-family equilibrium under the
+Pareto (no-Pareto-block) coalition aggregator of the expected-utility preferences.
+This identifies `IsStrongNash` as an instance of the generic `IsDeviationEqFor`
+schema at the coalition deviating units, so it transports along coalition
+transports like any other solution concept. -/
+theorem isStrongNash_iff_isDeviationEqFor [DecidableEq ι] (G : KernelGame ι)
+    (σ : Profile G) :
+    G.IsStrongNash σ ↔
+      G.toGameForm.IsDeviationEqFor
+        (noParetoBlock G.euPref G.euStrictPref)
+        (PMF.pure σ) G.toGameForm.coalitionConstantDeviationFamily := by
+  rw [isStrongNash_iff_no_profitableCoalitionDeviation]
+  simp only [GameForm.IsDeviationEqFor, noParetoBlock, ParetoBlocks,
+    GameForm.coalitionConstantDeviationFamily_deviate_pure, GameForm.correlatedOutcome_pure,
+    KernelGame.euPref, KernelGame.euStrictPref, KernelGame.toGameForm_outcomeKernel, KernelGame.eu]
+  constructor
+  · intro h u d
+    have key : G.coalitionDeviation u.val σ (fun i => if hi : i ∈ u.val then d i hi else σ i)
+        = (fun i => if hi : i ∈ u.val then d i hi else σ i) := by
+      funext i
+      by_cases hi : i ∈ u.val <;> simp [KernelGame.coalitionDeviation, hi]
+    have hh := h u.val (fun i => if hi : i ∈ u.val then d i hi else σ i)
+    rw [key] at hh
+    exact hh
+  · intro h C τ
+    rcases C.eq_empty_or_nonempty with rfl | hC
+    · rintro ⟨-, i, hi, -⟩
+      exact absurd hi (Finset.notMem_empty i)
+    · exact h ⟨C, hC⟩ (fun i _ => τ i)
+
 namespace IsStrongNash
 
 variable [DecidableEq ι]

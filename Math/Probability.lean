@@ -898,5 +898,127 @@ theorem expect_map_fintype_target {α β : Type*} [Finite β]
       exact hp.indicator {a : α | b = f a}
     exact hs.mul_right (u b)
 
+/-- Pushforward identity for weighted `ℝ≥0∞`-sums: summing `v` weighted by the
+pushforward `PMF.map f p` equals summing `v ∘ f` weighted by `p`. This is the
+finiteness-free engine behind `expect_map`: it holds unconditionally because
+`ℝ≥0∞`-sums are reindexed without any summability side-condition. -/
+theorem tsum_map_mul {α β : Type*} (f : α → β) (p : PMF α) (v : β → ENNReal) :
+    ∑' b, (PMF.map f p) b * v b = ∑' a, p a * v (f a) := by
+  simp_rw [PMF.map_apply, ← ENNReal.tsum_mul_right]
+  rw [ENNReal.tsum_comm]
+  refine tsum_congr (fun a => ?_)
+  rw [tsum_eq_single (f a) (fun b hb => by simp [hb])]
+  simp
+
+/-- For a nonnegative integrand, `expect` is the real part of the `ℝ≥0∞`-valued
+sum. This bridges `expect` to the unconditional `ℝ≥0∞` calculus. -/
+theorem expect_eq_toReal_of_nonneg {Ω : Type*} (d : PMF Ω) (g : Ω → ℝ)
+    (hg : ∀ ω, 0 ≤ g ω) :
+    expect d g = (∑' ω, d ω * ENNReal.ofReal (g ω)).toReal := by
+  rw [expect, ENNReal.tsum_toReal_eq
+    (fun ω => ENNReal.mul_ne_top (PMF.apply_ne_top d ω) ENNReal.ofReal_ne_top)]
+  refine tsum_congr (fun ω => ?_)
+  rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hg ω)]
+
+/-- Change of variables for `expect` along a pushforward, for a nonnegative
+integrand. The finiteness-free special case of `expect_map`. -/
+theorem expect_map_of_nonneg {α β : Type*} (f : α → β) (p : PMF α) (u : β → ℝ)
+    (hu : ∀ b, 0 ≤ u b) :
+    expect (PMF.map f p) u = expect p (fun a => u (f a)) := by
+  rw [expect_eq_toReal_of_nonneg _ _ hu,
+    expect_eq_toReal_of_nonneg _ _ (fun a => hu (f a))]
+  congr 1
+  exact tsum_map_mul f p (fun b => ENNReal.ofReal (u b))
+
+/-- A family of finite `ℝ≥0∞` values has real-summable `toReal` parts iff its
+`ℝ≥0∞`-sum is finite. -/
+theorem summable_toReal_iff {γ : Type*} (H : γ → ENNReal) (hH : ∀ x, H x ≠ ⊤) :
+    Summable (fun x => (H x).toReal) ↔ (∑' x, H x) ≠ ⊤ := by
+  constructor
+  · intro hs
+    rw [show (∑' x, H x) = ∑' x, ENNReal.ofReal ((H x).toReal) from
+      tsum_congr (fun x => (ENNReal.ofReal_toReal (hH x)).symm)]
+    rw [← ENNReal.ofReal_tsum_of_nonneg (fun _ => ENNReal.toReal_nonneg) hs]
+    exact ENNReal.ofReal_ne_top
+  · exact fun hne => ENNReal.summable_toReal hne
+
+/-- Summability of a nonnegative weighted pushforward transfers across the map;
+the summability counterpart of `tsum_map_mul`. -/
+theorem summable_map_mul_iff_of_nonneg {α β : Type*} (f : α → β) (p : PMF α)
+    (g : β → ℝ) (hg : ∀ b, 0 ≤ g b) :
+    Summable (fun b => (PMF.map f p b).toReal * g b) ↔
+      Summable (fun a => (p a).toReal * g (f a)) := by
+  have hmap : (fun b => (PMF.map f p b).toReal * g b)
+      = (fun b => (PMF.map f p b * ENNReal.ofReal (g b)).toReal) := by
+    funext b; rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hg b)]
+  have hp : (fun a => (p a).toReal * g (f a))
+      = (fun a => (p a * ENNReal.ofReal (g (f a))).toReal) := by
+    funext a; rw [ENNReal.toReal_mul, ENNReal.toReal_ofReal (hg (f a))]
+  rw [hmap, hp,
+    summable_toReal_iff (fun b => PMF.map f p b * ENNReal.ofReal (g b))
+      (fun b => ENNReal.mul_ne_top (PMF.apply_ne_top _ b) ENNReal.ofReal_ne_top),
+    summable_toReal_iff (fun a => p a * ENNReal.ofReal (g (f a)))
+      (fun a => ENNReal.mul_ne_top (PMF.apply_ne_top _ a) ENNReal.ofReal_ne_top),
+    tsum_map_mul f p (fun b => ENNReal.ofReal (g b))]
+
+/-- When both nonnegative parts have summable weights, `expect` splits as the
+difference of the expectations of the positive and negative parts. -/
+theorem expect_split {Ω : Type*} (d : PMF Ω) (u : Ω → ℝ)
+    (hpos : Summable (fun ω => (d ω).toReal * max (u ω) 0))
+    (hneg : Summable (fun ω => (d ω).toReal * max (-(u ω)) 0)) :
+    expect d u
+      = expect d (fun ω => max (u ω) 0) - expect d (fun ω => max (-(u ω)) 0) := by
+  simp only [expect]
+  rw [← Summable.tsum_sub hpos hneg]
+  refine tsum_congr (fun ω => ?_)
+  rw [← mul_sub]
+  congr 1
+  rcases le_total 0 (u ω) with h | h
+  · rw [max_eq_left h, max_eq_right (by linarith), sub_zero]
+  · rw [max_eq_right h, max_eq_left (by linarith), sub_neg_eq_add, zero_add]
+
+/-- **Change of variables for `expect` along a pushforward.** The expectation of
+`u` under the pushforward `PMF.map f p` equals the expectation of `u ∘ f` under
+`p`. This holds with no finiteness or boundedness hypotheses: the positive and
+negative parts are handled through the unconditional `ℝ≥0∞` calculus, and the
+non-summable case makes both sides vanish. -/
+theorem expect_map {α β : Type*} (f : α → β) (p : PMF α) (u : β → ℝ) :
+    expect (PMF.map f p) u = expect p (fun a => u (f a)) := by
+  by_cases hsum : Summable (fun a => (p a).toReal * u (f a))
+  · have habs : Summable (fun a => (p a).toReal * |u (f a)|) :=
+      (summable_abs_iff.mpr hsum).congr
+        (fun a => by rw [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg])
+    have hpos_p : Summable (fun a => (p a).toReal * max (u (f a)) 0) :=
+      Summable.of_nonneg_of_le
+        (fun a => mul_nonneg ENNReal.toReal_nonneg (le_max_right _ _))
+        (fun a => mul_le_mul_of_nonneg_left
+          (max_le (le_abs_self _) (abs_nonneg _)) ENNReal.toReal_nonneg) habs
+    have hneg_p : Summable (fun a => (p a).toReal * max (-(u (f a))) 0) :=
+      Summable.of_nonneg_of_le
+        (fun a => mul_nonneg ENNReal.toReal_nonneg (le_max_right _ _))
+        (fun a => mul_le_mul_of_nonneg_left
+          (max_le (neg_le_abs _) (abs_nonneg _)) ENNReal.toReal_nonneg) habs
+    have hpos_map : Summable (fun b => (PMF.map f p b).toReal * max (u b) 0) :=
+      (summable_map_mul_iff_of_nonneg f p (fun b => max (u b) 0)
+        (fun b => le_max_right _ _)).mpr hpos_p
+    have hneg_map : Summable (fun b => (PMF.map f p b).toReal * max (-(u b)) 0) :=
+      (summable_map_mul_iff_of_nonneg f p (fun b => max (-(u b)) 0)
+        (fun b => le_max_right _ _)).mpr hneg_p
+    rw [expect_split (PMF.map f p) u hpos_map hneg_map,
+      expect_split p (fun a => u (f a)) hpos_p hneg_p,
+      expect_map_of_nonneg f p (fun b => max (u b) 0) (fun b => le_max_right _ _),
+      expect_map_of_nonneg f p (fun b => max (-(u b)) 0) (fun b => le_max_right _ _)]
+  · simp only [expect]
+    rw [tsum_eq_zero_of_not_summable hsum]
+    refine tsum_eq_zero_of_not_summable (fun hmapsum => hsum ?_)
+    have habsmap : Summable (fun b => (PMF.map f p b).toReal * |u b|) :=
+      (summable_abs_iff.mpr hmapsum).congr
+        (fun b => by rw [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg])
+    have habsp : Summable (fun a => (p a).toReal * |u (f a)|) :=
+      (summable_map_mul_iff_of_nonneg f p (fun b => |u b|)
+        (fun b => abs_nonneg _)).mp habsmap
+    exact summable_abs_iff.mp
+      (habsp.congr (fun a => by rw [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg]))
+
 end Probability
 end Math

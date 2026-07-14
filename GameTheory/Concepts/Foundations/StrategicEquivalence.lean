@@ -31,12 +31,12 @@ variable {ι Ω : Type}
 
 /-- A per-player strategy bijection preserving the observed outcome law. -/
 structure StrategicEquivalence (G H : GameForm ι) (Ω : Type) where
-  viewG : OutcomeView G Ω
-  viewH : OutcomeView H Ω
+  viewG : ViewFamily G ι (fun _ => Ω)
+  viewH : ViewFamily H ι (fun _ => Ω)
   equivStrategy : (i : ι) → G.Strategy i ≃ H.Strategy i
   law_eq :
-    ∀ σ : G.Profile,
-      viewG.law σ = viewH.law (fun i => equivStrategy i (σ i))
+    ∀ (σ : G.Profile) (i : ι),
+      viewG.plaw i σ = viewH.plaw i (fun j => equivStrategy j (σ j))
 
 namespace StrategicEquivalence
 
@@ -58,15 +58,15 @@ def realizeSymm (E : StrategicEquivalence G H Ω) (τ : H.Profile) : G.Profile :
     (τ : H.Profile) : E.realize (E.realizeSymm τ) = τ := by
   funext i; simp [realize, realizeSymm]
 
-theorem law_eq_realize (E : StrategicEquivalence G H Ω) (σ : G.Profile) :
-    E.viewG.law σ = E.viewH.law (E.realize σ) :=
-  E.law_eq σ
+theorem law_eq_realize (E : StrategicEquivalence G H Ω) (σ : G.Profile) (i : ι) :
+    E.viewG.plaw i σ = E.viewH.plaw i (E.realize σ) :=
+  E.law_eq σ i
 
-theorem law_eq_realizeSymm (E : StrategicEquivalence G H Ω) (τ : H.Profile) :
-    E.viewG.law (E.realizeSymm τ) = E.viewH.law τ := by
-  rw [E.law_eq (E.realizeSymm τ)]
+theorem law_eq_realizeSymm (E : StrategicEquivalence G H Ω) (τ : H.Profile) (i : ι) :
+    E.viewG.plaw i (E.realizeSymm τ) = E.viewH.plaw i τ := by
+  rw [E.law_eq (E.realizeSymm τ) i]
   congr 1
-  funext i
+  funext j
   simp [realizeSymm]
 
 variable [DecidableEq ι]
@@ -93,9 +93,9 @@ theorem realizeSymm_update (E : StrategicEquivalence G H Ω) (τ : H.Profile)
 is matched by the source deviation `(equivStrategy who).symm sH`. -/
 theorem law_update_realizeSymm (E : StrategicEquivalence G H Ω) (σ : G.Profile)
     (who : ι) (sH : H.Strategy who) :
-    E.viewG.law (Function.update σ who ((E.equivStrategy who).symm sH)) =
-      E.viewH.law (Function.update (E.realize σ) who sH) := by
-  rw [E.law_eq (Function.update σ who ((E.equivStrategy who).symm sH))]
+    E.viewG.plaw who (Function.update σ who ((E.equivStrategy who).symm sH)) =
+      E.viewH.plaw who (Function.update (E.realize σ) who sH) := by
+  rw [E.law_eq (Function.update σ who ((E.equivStrategy who).symm sH)) who]
   congr 1
   funext i
   by_cases h : i = who
@@ -106,9 +106,9 @@ theorem law_update_realizeSymm (E : StrategicEquivalence G H Ω) (σ : G.Profile
 is matched by the target deviation `equivStrategy who sG`. -/
 theorem law_update_realize (E : StrategicEquivalence G H Ω) (σ : G.Profile)
     (who : ι) (sG : G.Strategy who) :
-    E.viewG.law (Function.update σ who sG) =
-      E.viewH.law (Function.update (E.realize σ) who (E.equivStrategy who sG)) := by
-  rw [E.law_eq (Function.update σ who sG)]
+    E.viewG.plaw who (Function.update σ who sG) =
+      E.viewH.plaw who (Function.update (E.realize σ) who (E.equivStrategy who sG)) := by
+  rw [E.law_eq (Function.update σ who sG) who]
   congr 1
   funext i
   by_cases h : i = who
@@ -122,7 +122,7 @@ def toNashDeviationBisimulation (E : StrategicEquivalence G H Ω) :
   viewH := E.viewH
   rel := fun σ τ => τ = E.realize σ
   law_eq := by
-    intro σ τ h; subst h; exact E.law_eq σ
+    intro σ τ h i; subst h; exact E.law_eq σ i
   simulate_target_deviation := by
     intro σ τ h who sH; subst h
     exact ⟨(E.equivStrategy who).symm sH, E.law_update_realizeSymm σ who sH⟩
@@ -148,25 +148,25 @@ def symm (E : StrategicEquivalence G H Ω) : StrategicEquivalence H G Ω where
   viewG := E.viewH
   viewH := E.viewG
   equivStrategy := fun i => (E.equivStrategy i).symm
-  law_eq := fun τ => (E.law_eq_realizeSymm τ).symm
+  law_eq := fun τ i => (E.law_eq_realizeSymm τ i).symm
 
-/-- Forward constant-deviation-family simulation: matches a target constant
+/-- Forward constant-deviation-family transport: matches a target constant
 deviation by player `who` with the source deviation through `(equivStrategy who).symm`. -/
 noncomputable def toCoarseCorrelatedSimulation (E : StrategicEquivalence G H Ω) :
-    DeviationFamilySimulation G H Ω
+    Transport G H E.viewG E.viewH
       G.constantDeviationProfileFamily H.constantDeviationProfileFamily :=
-  DeviationFamilySimulation.ofConstantProfileMap E.viewG E.viewH E.realize
-    E.law_eq_realize
+  Transport.ofConstantProfileMap E.viewG E.viewH E.realize
+    (fun i σ => E.law_eq_realize σ i)
     (fun who sH =>
       ⟨(E.equivStrategy who).symm sH, fun σ => E.law_update_realizeSymm σ who sH⟩)
 
-/-- Forward recommendation-deviation-family simulation: matches a target
+/-- Forward recommendation-deviation-family transport: matches a target
 recommendation deviation by player `who` with the conjugated source deviation. -/
 noncomputable def toCorrelatedSimulation (E : StrategicEquivalence G H Ω) :
-    DeviationFamilySimulation G H Ω
+    Transport G H E.viewG E.viewH
       G.recommendationDeviationFamily H.recommendationDeviationFamily :=
-  DeviationFamilySimulation.ofRecommendationProfileMap E.viewG E.viewH E.realize
-    E.law_eq_realize
+  Transport.ofRecommendationProfileMap E.viewG E.viewH E.realize
+    (fun i σ => E.law_eq_realize σ i)
     (fun who dH =>
       ⟨fun s => (E.equivStrategy who).symm (dH (E.equivStrategy who s)),
         fun σ => by

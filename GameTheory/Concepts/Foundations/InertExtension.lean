@@ -30,7 +30,7 @@ variable {F : GameForm ι} (E : F.InertExtension)
 /-- One-way compatibility of deviation families: every enriched deviation
 projects to some allowed base deviation at the projected distribution. -/
 def ProjectsDeviationFamily
-    (Δ' : ProfileDeviationFamily E.form) (Δ : ProfileDeviationFamily F) : Prop :=
+    (Δ' : DeviationFamily E.form ι) (Δ : DeviationFamily F ι) : Prop :=
   ∀ (μ' : PMF E.form.Profile) (who : ι) (d' : Δ'.Dev who),
     ∃ d : Δ.Dev who,
       E.projectDistribution (Δ'.deviate μ' who d') =
@@ -39,7 +39,7 @@ def ProjectsDeviationFamily
 /-- One-way lift compatibility of deviation families: every base deviation can
 be represented by some enriched deviation after projection. -/
 def LiftsDeviationFamily
-    (Δ' : ProfileDeviationFamily E.form) (Δ : ProfileDeviationFamily F) : Prop :=
+    (Δ' : DeviationFamily E.form ι) (Δ : DeviationFamily F ι) : Prop :=
   ∀ (μ' : PMF E.form.Profile) (who : ι) (d : Δ.Dev who),
     ∃ d' : Δ'.Dev who,
       E.projectDistribution (Δ'.deviate μ' who d') =
@@ -47,13 +47,13 @@ def LiftsDeviationFamily
 
 /-- If every enriched deviation projects to an allowed base deviation, then any
 base deviation-family equilibrium pulls back to the inert extension. -/
-theorem isDeviationEqFamilyFor_of_projected_isDeviationEqFamilyFor
+theorem isDeviationEqFor_of_projected_isDeviationEqFor
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {μ' : PMF E.form.Profile}
-    {Δ' : ProfileDeviationFamily E.form} {Δ : ProfileDeviationFamily F}
+    {Δ' : DeviationFamily E.form ι} {Δ : DeviationFamily F ι}
     (hΔ : E.ProjectsDeviationFamily Δ' Δ)
-    (hEq : F.IsDeviationEqFamilyFor pref (E.projectDistribution μ') Δ) :
-    E.form.IsDeviationEqFamilyFor pref μ' Δ' := by
+    (hEq : F.IsDeviationEqFor pref (E.projectDistribution μ') Δ) :
+    E.form.IsDeviationEqFor pref μ' Δ' := by
   intro who d'
   obtain ⟨d, hd⟩ := hΔ μ' who d'
   have h := hEq who d
@@ -66,13 +66,13 @@ theorem isDeviationEqFamilyFor_of_projected_isDeviationEqFamilyFor
 
 /-- If every base deviation lifts to an enriched deviation, then any enriched
 deviation-family equilibrium projects to the base game form. -/
-theorem projected_isDeviationEqFamilyFor_of_isDeviationEqFamilyFor
+theorem projected_isDeviationEqFor_of_isDeviationEqFor
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {μ' : PMF E.form.Profile}
-    {Δ' : ProfileDeviationFamily E.form} {Δ : ProfileDeviationFamily F}
+    {Δ' : DeviationFamily E.form ι} {Δ : DeviationFamily F ι}
     (hΔ : E.LiftsDeviationFamily Δ' Δ)
-    (hEq : E.form.IsDeviationEqFamilyFor pref μ' Δ') :
-    F.IsDeviationEqFamilyFor pref (E.projectDistribution μ') Δ := by
+    (hEq : E.form.IsDeviationEqFor pref μ' Δ') :
+    F.IsDeviationEqFor pref (E.projectDistribution μ') Δ := by
   intro who d
   obtain ⟨d', hd⟩ := hΔ μ' who d
   have h := hEq who d'
@@ -85,16 +85,16 @@ theorem projected_isDeviationEqFamilyFor_of_isDeviationEqFamilyFor
 
 /-- Deviation-family equilibria are equivalent across an inert extension when
 the enriched and base deviation families project to each other. -/
-theorem isDeviationEqFamilyFor_iff
+theorem isDeviationEqFor_iff
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {μ' : PMF E.form.Profile}
-    {Δ' : ProfileDeviationFamily E.form} {Δ : ProfileDeviationFamily F}
+    {Δ' : DeviationFamily E.form ι} {Δ : DeviationFamily F ι}
     (hproj : E.ProjectsDeviationFamily Δ' Δ)
     (hlift : E.LiftsDeviationFamily Δ' Δ) :
-    E.form.IsDeviationEqFamilyFor pref μ' Δ' ↔
-      F.IsDeviationEqFamilyFor pref (E.projectDistribution μ') Δ :=
-  ⟨E.projected_isDeviationEqFamilyFor_of_isDeviationEqFamilyFor pref hlift,
-    E.isDeviationEqFamilyFor_of_projected_isDeviationEqFamilyFor pref hproj⟩
+    E.form.IsDeviationEqFor pref μ' Δ' ↔
+      F.IsDeviationEqFor pref (E.projectDistribution μ') Δ :=
+  ⟨E.projected_isDeviationEqFor_of_isDeviationEqFor pref hlift,
+    E.isDeviationEqFor_of_projected_isDeviationEqFor pref hproj⟩
 
 section PreferenceUpdate
 
@@ -139,7 +139,7 @@ theorem coarseCorrelatedEqFor_of_projected_coarseCorrelatedEqFor
     {μ' : PMF E.form.Profile}
     (hEq : F.IsCoarseCorrelatedEqFor pref (E.projectDistribution μ')) :
     E.form.IsCoarseCorrelatedEqFor pref μ' :=
-  E.isDeviationEqFamilyFor_of_projected_isDeviationEqFamilyFor pref
+  E.isDeviationEqFor_of_projected_isDeviationEqFor pref
     E.projects_constantDeviationProfileFamily hEq
 
 /-- Coarse-correlated equilibria project along inert extensions. -/
@@ -148,7 +148,7 @@ theorem projected_coarseCorrelatedEqFor_of_coarseCorrelatedEqFor
     {μ' : PMF E.form.Profile}
     (hEq : E.form.IsCoarseCorrelatedEqFor pref μ') :
     F.IsCoarseCorrelatedEqFor pref (E.projectDistribution μ') :=
-  E.projected_isDeviationEqFamilyFor_of_isDeviationEqFamilyFor pref
+  E.projected_isDeviationEqFor_of_isDeviationEqFor pref
     E.lifts_constantDeviationProfileFamily hEq
 
 /-- Coarse-correlated equilibrium is invariant under inert extensions. -/
@@ -157,7 +157,7 @@ theorem coarseCorrelatedEqFor_iff
     {μ' : PMF E.form.Profile} :
     E.form.IsCoarseCorrelatedEqFor pref μ' ↔
       F.IsCoarseCorrelatedEqFor pref (E.projectDistribution μ') :=
-  E.isDeviationEqFamilyFor_iff pref E.projects_constantDeviationProfileFamily
+  E.isDeviationEqFor_iff pref E.projects_constantDeviationProfileFamily
     E.lifts_constantDeviationProfileFamily
 
 /-- A recommendation-dependent base deviation lifts to the enriched game by
@@ -193,7 +193,7 @@ theorem projected_correlatedEqFor_of_correlatedEqFor
     {μ' : PMF E.form.Profile}
     (hEq : E.form.IsCorrelatedEqFor pref μ') :
     F.IsCorrelatedEqFor pref (E.projectDistribution μ') :=
-  E.projected_isDeviationEqFamilyFor_of_isDeviationEqFamilyFor pref
+  E.projected_isDeviationEqFor_of_isDeviationEqFor pref
     E.lifts_recommendationDeviationFamily hEq
 
 /-- Preference-parameterized best responses pull back along inert extensions. -/

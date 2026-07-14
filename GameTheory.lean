@@ -16,8 +16,15 @@ import GameTheory.Concepts.Mixed.SequentialAssessment
 import GameTheory.Concepts.Foundations.GameMorphism
 import GameTheory.Concepts.Foundations.InertExtension
 import GameTheory.Concepts.Communication.Babbling
+import GameTheory.Concepts.Foundations.Transport.Deviation
+import GameTheory.Concepts.Foundations.Transport.View
+import GameTheory.Concepts.Foundations.Transport.Simulation
+import GameTheory.Concepts.Foundations.Transport.Transfer
+import GameTheory.Concepts.Foundations.Transport.Order
+import GameTheory.Concepts.Foundations.Transport.Characterize
 import GameTheory.Concepts.Foundations.DeviationSimulation
-import GameTheory.Concepts.Foundations.SerializationObliviousness
+import GameTheory.Concepts.Foundations.Transport.Oblivious
+import GameTheory.Concepts.Foundations.Transport.Separations
 import GameTheory.Concepts.Foundations.Deviation
 import GameTheory.Concepts.Foundations.BestResponse
 import GameTheory.Concepts.Foundations.PrefPreorderProperties

@@ -676,15 +676,16 @@ distributional analogue of a coalgebra homomorphism.
 This section catalogues the solution-concept predicates.  The
 deviation-family schema of \S\ref{sec:supp:deviation-schema} is
 the organizing principle:\ every equilibrium notion is an instance
-of \TT{IsDeviationEqFamilyFor} for an explicit choice of
-$\mathcal{D}$.  We anchor at $\IsNash$ (\S\ref{sec:supp:isNash})
-and $\IsCorrelatedEq$ (\S\ref{sec:supp:isCE}); other concepts are
-bunched.
+of \TT{IsDeviationEqFor} for an explicit choice of deviation family
+$\Delta$ over a type $U$ of deviating units.  We anchor at $\IsNash$
+(\S\ref{sec:supp:isNash}) and $\IsCorrelatedEq$
+(\S\ref{sec:supp:isCE}); other concepts are bunched.
 
 \subsection{Deviation-family schema}
-\label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:ProfileDeviationFamily}\label{def:IsDeviationEqFamilyFor}
+\label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:DeviationFamily}\label{def:IsDeviationEqFor}
 
-\noindent\TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean}
+\noindent\TT{Concepts/Foundations/Transport/Deviation.lean} and
+\TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean}
 
 \begin{leanbox}
 namespace GameForm\\[1pt]
@@ -693,148 +694,210 @@ def NoProfitableDeviationFor (F : GameForm $\iota$)\\
 \bd (who : $\iota$) (statusQuo : PMF F.Outcome)\\
 \bd \{D : Type\} (deviate : D $\to$ PMF F.Outcome) : Prop :=\\
 \bdd $\forall$ d : D, pref who statusQuo (deviate d)\\[3pt]
-structure ProfileDeviationFamily (F : GameForm $\iota$) where\\
-\bd Dev      : $\iota \to$ Type\\
-\bd deviate  : PMF F.Profile $\to$ ($\forall$ who : $\iota$, Dev who $\to$ PMF F.Profile)\\[3pt]
-def IsDeviationEqFamilyFor (F : GameForm $\iota$)\\
-\bd (pref : $\iota \to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop)\\
-\bd ($\mu$ : PMF F.Profile) ($\Delta$ : ProfileDeviationFamily F) : Prop :=\\
-\bdd $\forall$ who : $\iota$, F.NoProfitableProfileDeviationFor pref who $\mu$ ($\Delta$.deviate $\mu$ who)\\[3pt]
-noncomputable def constantDeviationProfileFamily (F : GameForm $\iota$) : ProfileDeviationFamily F\\
-noncomputable def recommendationDeviationFamily   (F : GameForm $\iota$) : ProfileDeviationFamily F
+structure DeviationFamily (F : GameForm $\iota$) (U : Type) where\\
+\bd Dev      : U $\to$ Type\\
+\bd deviate  : PMF F.Profile $\to$ $\forall$ u : U, Dev u $\to$ PMF F.Profile\\[3pt]
+def IsDeviationEqFor (F : GameForm $\iota$) \{U : Type\}\\
+\bd (pref : U $\to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop)\\
+\bd ($\mu$ : PMF F.Profile) ($\Delta$ : DeviationFamily F U) : Prop :=\\
+\bdd $\forall$ u : U, $\forall$ d : $\Delta$.Dev u,\\
+\bdd \bd pref u (F.correlatedOutcome $\mu$) (F.correlatedOutcome ($\Delta$.deviate $\mu$ u d))\\[3pt]
+noncomputable def constantDeviationProfileFamily  (F : GameForm $\iota$) : DeviationFamily F $\iota$\\
+noncomputable def recommendationDeviationFamily    (F : GameForm $\iota$) : DeviationFamily F $\iota$\\
+noncomputable def coalitionConstantDeviationFamily (F : GameForm $\iota$) : DeviationFamily F (Coalition $\iota$)
 \end{leanbox}
 
 \Mathematical
-A \emph{deviation family} for player $i$ is a type $D_i$ of
-deviations and a function transforming a profile distribution into
-a deviated profile distribution given a deviation.  A profile
-distribution $\mu$ is a $\mathcal{D}$-equilibrium for preference
-$\Pref$ when no player has a profitable deviation in
-$\mathcal{D}$:\
+A \emph{deviation family} over a type $U$ of \emph{deviating units}
+assigns to each unit $u$ a type $\mathrm{Dev}(u)$ of deviations and a
+function transforming a status-quo profile distribution into a
+post-deviation profile distribution given a chosen deviation.  Taking
+$U = \Players$ recovers unilateral (single-player) deviations; taking
+$U = \mathrm{Coalition}\,\Players$ (a nonempty finite set of players)
+gives coalitional ones.  A profile distribution $\mu$ is a
+$\Delta$-equilibrium for the per-unit preference $\Pref$ when no unit
+has a profitable deviation:
 \[
-  \forall i,\,\forall d \in D_i.\quad
-    \Pref_i\bigl(\GF.\mathrm{correlatedOutcome}(\mu),\,
-                 \GF.\mathrm{correlatedOutcome}(\mathrm{deviate}_i(\mu, d))\bigr).
+  \forall u \in U,\,\forall d \in \mathrm{Dev}(u).\quad
+    \Pref_u\bigl(\GF.\mathrm{correlatedOutcome}(\mu),\,
+                 \GF.\mathrm{correlatedOutcome}(\Delta.\mathrm{deviate}(\mu, u, d))\bigr).
 \]
-The two named families are
-$\mathcal{D}^{\mathrm{const}}$ (deviations are constant
-strategies; \TT{constantDeviationProfileFamily}) and
-$\mathcal{D}^{\mathrm{dep}}$ (deviations are functions of the
-recommendation; \TT{recommendationDeviationFamily}).
+The three named families are $\mathcal{D}^{\mathrm{const}}$ (unilateral
+deviation by a fixed strategy; \TT{constantDeviationProfileFamily}),
+$\mathcal{D}^{\mathrm{dep}}$ (unilateral deviation as a function of the
+recommendation; \TT{recommendationDeviationFamily}), and
+$\mathcal{D}^{\mathrm{coal}}$ (a coalition's joint fixed-strategy
+substitution; \TT{coalitionConstantDeviationFamily}), the first two over
+$U = \Players$ and the last over $U = \mathrm{Coalition}\,\Players$.
+
+A \emph{family morphism} \TT{DeviationFamily.Hom}~$m$ reindexes
+deviating units along $m : U' \to U$, mapping each source deviation to a
+target deviation of the image unit that induces the \emph{same}
+post-deviation distribution; equilibrium transports along it
+(\TT{DeviationFamily.Hom.isDeviationEqFor}).  The singleton-coalition
+morphism \TT{constantToCoalitionHom} embeds the unilateral constant
+family into the coalition constant family, making ``a unilateral
+deviation is a singleton-coalition deviation'' a theorem.
 
 \Textbook
-The deviation-family schema is project-internal but the two
-families are textbook:\ unilateral deviation by a fixed strategy
-(Nash, CCE) and recommendation-dependent deviation
-(Aumann's correlated equilibrium~\citep{Aumann1974}).
+The deviation-family schema is project-internal but the named families
+are textbook:\ unilateral deviation by a fixed strategy (Nash, CCE),
+recommendation-dependent deviation (Aumann's correlated
+equilibrium~\citep{Aumann1974}), and coalitional deviation
+(strong Nash / the core).  With the coalition Pareto-block aggregator
+\TT{noParetoBlock} of the expected-utility preferences, strong Nash is
+exactly the coalition-constant $\Delta$-equilibrium
+(\TT{KernelGame.isStrongNash_iff_isDeviationEqFor}).
 
 \subsection{Deviation-simulation transport}
 \label{sec:supp:deviation-simulation}
-\label{def:OutcomeView}\label{def:NashDeviationSimulation}\label{def:DeviationFamilySimulation}
+\label{def:ViewFamily}\label{def:Realization}\label{def:Transport}\label{def:NashDeviationSimulation}
 
-\noindent\TT{Concepts/Foundations/DeviationSimulation.lean}
+\noindent\TT{Concepts/Foundations/Transport/} (general theory) and
+\TT{Concepts/Foundations/DeviationSimulation.lean} (pure-profile Nash corner)
 
-\Anchor{OutcomeView}
+\Anchor{ViewFamily}
 \begin{leanbox}
-structure OutcomeView (F : GameForm $\iota$) ($\Omega$ : Type) where\\
-\bd observe : F.Outcome $\to$ $\Omega$\\[3pt]
-def observedPref (V : OutcomeView F $\Omega$)\\
-\bd (prefOmega : $\iota \to$ PMF $\Omega \to$ PMF $\Omega \to$ Prop) :\\
-\bd $\iota \to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop :=\\
-\bdd fun who d e $\Rightarrow$ prefOmega who (PMF.map V.observe d) (PMF.map V.observe e)
+structure ViewFamily (F : GameForm $\iota$) (U : Type) ($\Omega$ : U $\to$ Type) where\\
+\bd observe : $\forall$ u, F.Outcome $\to$ $\Omega$ u\\[3pt]
+noncomputable def ViewFamily.claw (V : ViewFamily F U $\Omega$)\\
+\bd (u : U) ($\mu$ : PMF F.Profile) : PMF ($\Omega$ u) :=\\
+\bdd PMF.map (V.observe u) (F.correlatedOutcome $\mu$)\\[3pt]
+def observedPref (V : ViewFamily F U $\Omega$)\\
+\bd (prefOmega : $\forall$ u, PMF ($\Omega$ u) $\to$ PMF ($\Omega$ u) $\to$ Prop) :\\
+\bd U $\to$ PMF F.Outcome $\to$ PMF F.Outcome $\to$ Prop :=\\
+\bdd fun u d e $\Rightarrow$ prefOmega u (PMF.map (V.observe u) d) (PMF.map (V.observe u) e)
 \end{leanbox}
 
 \Mathematical
-An \emph{outcome view} records what part of a game's native outcome
-is behaviorally relevant for a transport theorem.  If one
-presentation returns terminal payoffs and another returns a richer
-execution trace, both can be compared after projection to a common
-carrier $\Omega$.  The induced preference
-\TT{observedPref V prefOmega} compares native outcome laws only
-through their pushforwards along \TT{V.observe}.  This is deliberately
-more general than expected utility; the EU convenience
-\TT{observedEuPref} is just the instance where \TT{prefOmega}
-orders laws by expectation of a payoff function on $\Omega$.
+A \emph{view family} records, for each deviating unit $u$, a
+deterministic observation $\mathrm{observe}\,u : \Outcome \to \Omega\,u$
+of the game's outcome — what unit $u$ sees of realized play.  Its
+\emph{observed correlated law} $\mathrm{claw}\,u\,\mu$ is the pushforward
+of the correlated outcome under $\mu$ along that observation; the
+pure-profile version $\mathrm{plaw}\,u\,\sigma$ uses $\K(\sigma)$ in
+place of $\mathrm{correlatedOutcome}(\mu)$.  The induced preference
+\TT{observedPref V prefOmega} compares native outcome laws only through
+these per-unit pushforwards.  This is deliberately more general than
+expected utility.  The EU corner is the \emph{utility-law view}
+\TT{KernelGame.utilityView} (carrier $\Omega\,u = \RR$, observing the
+outcome's utility), under which \TT{observedPref} at the expectation
+preference \TT{expectationPref} is exactly the expected-utility
+preference \TT{euPref} (\TT{KernelGame.observedPref_utilityView}); it
+lives at the \KG\ level because a \GF\ carries no utility.  A
+unit-independent \emph{global view} is \TT{ViewFamily.const}; coarsening
+a view along a deterministic map is \TT{ViewFamily.garble}.
 
 \begin{leanbox}
-structure ProfileRealization (G H : GameForm $\iota$) ($\Omega$ : Type) where\\
-\bd viewG : OutcomeView G $\Omega$\\
-\bd viewH : OutcomeView H $\Omega$\\
+structure Realization (G H : GameForm $\iota$)\\
+\bd (VG : ViewFamily G U $\Omega$) (VH : ViewFamily H U $\Omega$) where\\
+\bd rel    : PMF G.Profile $\to$ PMF H.Profile $\to$ Prop\\
+\bd law\_eq : $\forall$ \{$\mu_G$\} \{$\mu_H$\}, rel $\mu_G$ $\mu_H$ $\to$\\
+\bdd $\forall$ u, VG.claw u $\mu_G$ = VH.claw u $\mu_H$\\[3pt]
+def Realization.Simulates (R : Realization G H VG VH)\\
+\bd ($\Delta_G$ : DeviationFamily G U) ($\Delta_H$ : DeviationFamily H U) : Prop :=\\
+\bdd $\forall$ \{$\mu_G$\} \{$\mu_H$\}, R.rel $\mu_G$ $\mu_H$ $\to$\\
+\bdd $\forall$ u (dH : $\Delta_H$.Dev u), $\exists$ dG : $\Delta_G$.Dev u,\\
+\bdd \bd VG.claw u ($\Delta_G$.deviate $\mu_G$ u dG) = VH.claw u ($\Delta_H$.deviate $\mu_H$ u dH)\\[3pt]
+structure Transport (G H : GameForm $\iota$)\\
+\bd (VG : ViewFamily G U $\Omega$) (VH : ViewFamily H U $\Omega$)\\
+\bd ($\Delta_G$ : DeviationFamily G U) ($\Delta_H$ : DeviationFamily H U)\\
+\bd extends Realization G H VG VH where\\
+\bd simulate : toRealization.Simulates $\Delta_G$ $\Delta_H$
+\end{leanbox}
+
+\Mathematical
+A \emph{realization} is a law-preserving correspondence on profile
+\emph{distributions}:\ a relation \TT{rel} whose related pairs induce
+the same observed correlated law at every unit (\TT{law_eq}).  It is a
+relation, not a map, because bridges may be existential or
+many-to-many:\ a behavioral profile may be realized by several mixed
+profiles, and a compiled trace profile may forget administrative
+choices.  \emph{Backtranslation} is asserted separately:\
+\TT{R.Simulates}~$\Delta_G$~$\Delta_H$ says every target-side deviation
+in $\Delta_H$ is matched by a source-side deviation in $\Delta_G$
+inducing the same observed law.  Because backtranslation is
+existential, which family pairs a realization simulates cannot be read
+off \TT{rel} and must be asserted; a single realization typically
+simulates several pairs.  A \emph{transport} bundles a realization with
+one chosen simulated pair.  Realizations and transports compose through
+a shared middle game (\TT{Realization.comp}, \TT{Transport.comp},
+\TT{Transport.compOfHom}); restricting the target family, enlarging the
+source family, or coarsening the view all preserve simulation
+(\TT{Simulates.mono_target}, \TT{Simulates.mono_source},
+\TT{Simulates.garble}).
+
+\begin{leanbox}
+theorem Transport.target\_eq\_of\_source\_eq\\
+\bd (T : Transport G H VG VH $\Delta_G$ $\Delta_H$) (hrel : T.rel $\mu_G$ $\mu_H$)\\
+\bd (hEq : G.IsDeviationEqFor (observedPref VG prefOmega) $\mu_G$ $\Delta_G$) :\\
+\bdd H.IsDeviationEqFor (observedPref VH prefOmega) $\mu_H$ $\Delta_H$\\[3pt]
+theorem TransportBisimulation.eq\_iff\\
+\bd (B : TransportBisimulation G H VG VH $\Delta_G$ $\Delta_H$) (hrel : B.rel $\mu_G$ $\mu_H$) :\\
+\bdd G.IsDeviationEqFor (observedPref VG prefOmega) $\mu_G$ $\Delta_G$ $\leftrightarrow$\\
+\bdd \bd H.IsDeviationEqFor (observedPref VH prefOmega) $\mu_H$ $\Delta_H$
+\end{leanbox}
+
+\Mathematical
+There is a \emph{single} generic transfer theorem:\ along a transport
+that simulates the family pair, a source deviation-family equilibrium
+under observed preferences is a target one under the corresponding
+observed preferences.  Every named solution-concept transport is an
+instantiation of it — no concept keeps a bespoke transfer proof.  The
+argument is per unit:\ backtranslate the target deviation
+(\TT{simulate}) to a source one with equal observed law, then carry the
+source inequality across by rewriting along the base \TT{law_eq} and the
+backtranslation equality.  A \TT{TransportBisimulation} simulates the
+pair in both directions and yields the iff (\TT{eq_iff}).
+
+\begin{leanbox}
+structure NashDeviationSimulation (G H : GameForm $\iota$) ($\Omega$ : Type) where\\
+\bd viewG : ViewFamily G $\iota$ (fun \_ $\Rightarrow$ $\Omega$)\\
+\bd viewH : ViewFamily H $\iota$ (fun \_ $\Rightarrow$ $\Omega$)\\
 \bd rel   : G.Profile $\to$ H.Profile $\to$ Prop\\
-\bd law\_eq : $\forall$ \{$\sigma$ : G.Profile\} \{$\tau$ : H.Profile\}, rel $\sigma$ $\tau$ $\to$\\
-\bdd viewG.law $\sigma$ = viewH.law $\tau$\\[3pt]
-structure NashDeviationSimulation (G H : GameForm $\iota$) ($\Omega$ : Type)\\
-\bd extends ProfileRealization G H $\Omega$ where\\
+\bd law\_eq : $\forall$ \{$\sigma$\} \{$\tau$\}, rel $\sigma$ $\tau$ $\to$ $\forall$ i, viewG.plaw i $\sigma$ = viewH.plaw i $\tau$\\
 \bd simulate\_target\_deviation :\\
-\bdd $\forall$ \{$\sigma$ : G.Profile\} \{$\tau$ : H.Profile\}, rel $\sigma$ $\tau$ $\to$\\
-\bdd $\forall$ (who : $\iota$) (sH : H.Strategy who),\\
-\bdd $\exists$ sG : G.Strategy who,\\
-\bdd viewG.law (Function.update $\sigma$ who sG) =\\
-\bdd viewH.law (Function.update $\tau$ who sH)
-\end{leanbox}
-
-\Mathematical
-\TT{ProfileRealization} is a relation, not a map, because many
-semantic bridges are existential or many-to-many: a behavioral
-profile may be realized by several mixed profiles, and a compiled
-trace profile may forget administrative choices.  The base law
-\TT{law_eq} says only that related profiles induce the same observed
-status-quo law.  \TT{NashDeviationSimulation} adds the missing
-equilibrium-relevant hypothesis: every unilateral deviation available
-in the target presentation must be matched by some unilateral
-deviation in the source presentation with the same observed law.
-
-\begin{leanbox}
+\bdd $\forall$ \{$\sigma$\} \{$\tau$\}, rel $\sigma$ $\tau$ $\to$ $\forall$ (who : $\iota$) (sH : H.Strategy who),\\
+\bdd \bd $\exists$ sG : G.Strategy who,\\
+\bdd \bd viewG.plaw who (Function.update $\sigma$ who sG) =\\
+\bdd \bd \bd viewH.plaw who (Function.update $\tau$ who sH)\\[3pt]
 theorem NashDeviationSimulation.target\_nash\_of\_source\_nash\\
-\bd (S : NashDeviationSimulation G H $\Omega$)\\
-\bd (hrel : S.rel $\sigma$ $\tau$)\\
+\bd (S : NashDeviationSimulation G H $\Omega$) (hrel : S.rel $\sigma$ $\tau$)\\
 \bd (hN : G.IsNashFor (observedPref S.viewG prefOmega) $\sigma$) :\\
 \bdd H.IsNashFor (observedPref S.viewH prefOmega) $\tau$
 \end{leanbox}
 
 \Mathematical
-The proof is the two-line argument one expects.  Given a target
-deviation $s_H$, use \TT{simulate_target_deviation} to obtain a
-source deviation $s_G$.  The source Nash hypothesis compares the
-source status quo with $s_G$; \TT{law_eq} rewrites the status quo to
-the target law, and the simulation law rewrites the deviated law to
-the target deviation.
-
-\begin{leanbox}
-structure ProfileDistributionRealization (G H : GameForm $\iota$) ($\Omega$ : Type) where\\
-\bd viewG : OutcomeView G $\Omega$\\
-\bd viewH : OutcomeView H $\Omega$\\
-\bd rel   : PMF G.Profile $\to$ PMF H.Profile $\to$ Prop\\
-\bd law\_eq : $\forall$ \{$\mu_G$ : PMF G.Profile\} \{$\mu_H$ : PMF H.Profile\}, rel $\mu_G$ $\mu_H$ $\to$\\
-\bdd viewG.correlatedLaw $\mu_G$ = viewH.correlatedLaw $\mu_H$\\[3pt]
-structure DeviationFamilySimulation\\
-\bd (G H : GameForm $\iota$) ($\Omega$ : Type)\\
-\bd ($\Delta_G$ : ProfileDeviationFamily G) ($\Delta_H$ : ProfileDeviationFamily H)\\
-\bd extends ProfileDistributionRealization G H $\Omega$ where\\
-\bd simulate\_target\_deviation :\\
-\bdd $\forall$ \{$\mu_G$ : PMF G.Profile\} \{$\mu_H$ : PMF H.Profile\}, rel $\mu_G$ $\mu_H$ $\to$\\
-\bdd $\forall$ (who : $\iota$) (dH : $\Delta_H$.Dev who),\\
-\bdd $\exists$ dG : $\Delta_G$.Dev who,\\
-\bdd viewG.correlatedLaw ($\Delta_G$.deviate $\mu_G$ who dG) =\\
-\bdd viewH.correlatedLaw ($\Delta_H$.deviate $\mu_H$ who dH)
-\end{leanbox}
-
-\Mathematical
-The family-level version moves from profiles to profile
-distributions, because correlated and coarse correlated equilibrium
-are predicates on a correlation device $\mu$.  The theorem
-\TT{DeviationFamilySimulation.target_eq_of_source_eq} transports
-\TT{IsDeviationEqFamilyFor}; the CE and CCE wrappers instantiate
-$\Delta$ with \TT{recommendationDeviationFamily} and
-\TT{constantDeviationProfileFamily}.  A two-way
-\TT{DeviationFamilyBisimulation} packages simulations in both
-directions and yields an iff.
+The pure-profile, unilateral corner is where the theory reads most
+naturally.  \TT{NashDeviationSimulation} fixes $U = \Players$ and a
+single shared carrier $\Omega$ (a global view), relates \emph{pure}
+profiles, and phrases \TT{law_eq} and \TT{simulate_target_deviation}
+with the pure-profile law \TT{plaw} and \TT{Function.update}.  Nash
+transport \TT{target_nash_of_source_nash} is the instantiation of the
+generic transfer theorem at the constant-deviation family evaluated at a
+point mass, since \TT{IsNashFor} unfolds to exactly that; the two-way
+\TT{NashDeviationBisimulation} yields \TT{nash_iff}.  The correlated and
+coarse-correlated corners are built from a pointwise profile map by
+\TT{Transport.ofRecommendationProfileMap} and
+\TT{Transport.ofConstantProfileMap}, and transported by
+\TT{Transport.target_correlatedEq_of_source_correlatedEq} and
+\TT{Transport.target_coarseCorrelatedEq_of_source_coarseCorrelatedEq}.
+At the \KG\ level, with both views the utility-law view,
+\TT{KernelGame.NashDeviationSimulation.target_isNash_of_source_isNash}
+specializes to the \TT{eu}-based \TT{IsNash}.
 
 \Faithfulness
-No finiteness assumptions appear in these transport theorems.  They
-use only exact equality of pushed-forward \TT{PMF} laws.  Finite
-outcome hypotheses remain localized to existence theorems and to
-expected-value lemmas that need finite sums.
+No finiteness assumptions appear in these transport theorems; they use
+only exact equality of pushed-forward \TT{PMF} laws, so finite-outcome
+hypotheses remain localized to existence theorems and expected-value
+lemmas.  The coalition instantiation
+\TT{Transport.target_strongNashEq_of_source_strongNashEq} (via
+\TT{observedPref_noParetoBlock_const}) transports strong-Nash
+equilibria, and a serialization order is not a new structure but a
+quantifier:\ an index type of orders and a shared-source family of
+transports whose observed law is index-independent
+(\TT{Transport.ofIndexIndependent}, \TT{transport_under_every_index},
+\TT{claw_index_independent} in \TT{Transport/Oblivious.lean}).
 
 \subsection{Babbling and cheap-talk extensions}
 \label{sec:supp:babbling}
@@ -1575,19 +1638,26 @@ bijection on profiles.  Specializing to a kernel-game simulation
 (utility-preserving) yields the EU-specific transport laws.
 
 The observed-law transport layer
-(\TT{Concepts/Foundations/DeviationSimulation.lean}) removes the need for an
-outcome bijection.  It compares two games through views into a
-common observed carrier $\Omega$, relates profiles or profile
-distributions by equality of the pushed-forward outcome law, and
-requires one-way simulation of target deviations by source
-deviations.  Under these hypotheses, Nash and arbitrary
-\TT{ProfileDeviationFamily} equilibria transfer from source to
-target; a two-way simulation gives an iff.  These results are the
-operational content of bridges whose target presentation contains
-extra trace data or serialized administrative structure:\ a Nash
-equilibrium of the abstract source remains Nash after compilation
-provided all compiled unilateral deviations are observed already by
-some source-side unilateral deviation.
+(\TT{Concepts/Foundations/Transport/}, with the pure-profile Nash corner
+and canonical-family corollaries in
+\TT{Concepts/Foundations/DeviationSimulation.lean}) removes the need for
+an outcome bijection.  It compares two games through view families into
+per-unit observed carriers $\Omega$, relates profile distributions by
+equality of the pushed-forward observed law at every deviating unit
+(\TT{Realization}), and separately requires one-way simulation of
+target-family deviations by source-family ones
+(\TT{Realization.Simulates}); a \TT{Transport} bundles the two.  The
+single generic transfer theorem \TT{Transport.target_eq_of_source_eq}
+then transfers \TT{IsDeviationEqFor} for an arbitrary
+\TT{DeviationFamily} from source to target, and
+\TT{TransportBisimulation.eq_iff} gives an iff.  Nash, correlated,
+coarse-correlated, and strong-Nash transport are all instantiations at
+specific families.  These results are the operational content of bridges
+whose target presentation contains extra trace data or serialized
+administrative structure:\ a Nash equilibrium of the abstract source
+remains Nash after compilation provided all compiled unilateral
+deviations are observed already by some source-side unilateral
+deviation.
 
 % =====================================================================
 \section{Major theorems}
