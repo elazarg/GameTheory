@@ -684,7 +684,7 @@ $\Delta$ over a type $U$ of deviating units.  We anchor at $\IsNash$
 \subsection{Deviation-family schema}
 \label{sec:supp:deviation-schema}\label{def:NoProfitableDeviationFor}\label{def:DeviationFamily}\label{def:IsDeviationEqFor}
 
-\noindent\TT{Concepts/Foundations/Transport/Deviation.lean} and
+\noindent\TT{Concepts/Transport/Deviation.lean} and
 \TT{Concepts/Equilibrium/GameFormSolutionConcepts.lean}
 
 \begin{leanbox}
@@ -753,8 +753,8 @@ exactly the coalition-constant $\Delta$-equilibrium
 \label{sec:supp:deviation-simulation}
 \label{def:ViewFamily}\label{def:Realization}\label{def:Transport}\label{def:NashDeviationSimulation}
 
-\noindent\TT{Concepts/Foundations/Transport/} (general theory) and
-\TT{Concepts/Foundations/DeviationSimulation.lean} (pure-profile Nash corner)
+\noindent\TT{Concepts/Transport/} (general theory) and
+\TT{Concepts/Transport/Corners.lean} (pure-profile Nash corner)
 
 \Anchor{ViewFamily}
 \begin{leanbox}
@@ -1638,9 +1638,9 @@ bijection on profiles.  Specializing to a kernel-game simulation
 (utility-preserving) yields the EU-specific transport laws.
 
 The observed-law transport layer
-(\TT{Concepts/Foundations/Transport/}, with the pure-profile Nash corner
+(\TT{Concepts/Transport/}, with the pure-profile Nash corner
 and canonical-family corollaries in
-\TT{Concepts/Foundations/DeviationSimulation.lean}) removes the need for
+\TT{Concepts/Transport/Corners.lean}) removes the need for
 an outcome bijection.  It compares two games through view families into
 per-unit observed carriers $\Omega$, relates profile distributions by
 equality of the pushed-forward observed law at every deviating unit

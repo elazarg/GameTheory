@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Foundations.DeviationSimulation
+import GameTheory.Concepts.Transport.Corners
 
 /-!
 # Serialization-oblivious realizations as index-quantified transports
@@ -88,7 +88,7 @@ def Transport.ofIndexIndependent {G H : GameForm ι} {U : Type} {Ω : U → Type
 
 namespace ObliviousExamples
 
-open DeviationSimulationExamples
+open TransportExamples
 
 /-- A target presentation whose outcome records the serialization order alongside
 the Boolean value: strategies and outcomes are `(value, order)` pairs. -/

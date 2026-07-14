@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Foundations.Transport.Simulation
+import GameTheory.Concepts.Transport.Simulation
 
 /-!
 # Characterization: simulation as preservation of a class of observation properties
@@ -38,7 +38,8 @@ preserve **arbitrary** predicates of the achievable-law *set* is strictly more:
 and `bisim_bodies_iff_range_eq` identifies that with two-sided backtranslation
 (the `TransportBisimulation` bodies at the pair). This ∀-fragment /
 arbitrary-predicate split is where the Clarkson–Schneider distinction between
-properties of laws and properties of law-*sets* becomes formal.
+properties of laws and properties of law-*sets* — trace properties versus
+hyperproperties — becomes formal.
 
 The refined interpolation between these two classes — safety-like/closure
 subclasses of law-set predicates and the correspondingly weaker

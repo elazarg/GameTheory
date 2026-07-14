@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Foundations.Transport.Transfer
+import GameTheory.Concepts.Transport.Transfer
 
 /-!
 # Composition of realizations and transports

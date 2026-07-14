@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Core.GameForm
-import GameTheory.Concepts.Foundations.Transport.Deviation
+import GameTheory.Concepts.Transport.Deviation
 
 /-!
 # Preference-Parameterized Game-Form Solution Concepts
@@ -72,7 +72,8 @@ theorem noProfitableProfileDeviationFor_iff (F : GameForm ι)
 section PreferenceUpdate
 variable [DecidableEq ι]
 
-/-- Recommendation-dependent unilateral deviations (CE family). -/
+/-- Recommendation-dependent unilateral deviations — the family of Aumann's
+correlated equilibrium. -/
 noncomputable def recommendationDeviationFamily (F : GameForm ι) : DeviationFamily F ι where
   Dev := fun who => F.Strategy who → F.Strategy who
   deviate := fun μ who dev => F.deviateDistributionFn μ who dev

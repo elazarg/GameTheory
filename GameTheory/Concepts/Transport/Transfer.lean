@@ -4,7 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Foundations.Transport.Simulation
+import GameTheory.Concepts.Transport.Simulation
+import GameTheory.Concepts.Transport.Pref
 
 /-!
 # Generic transfer of deviation-family equilibrium
@@ -24,7 +25,10 @@ coalition Pareto aggregator through a global view.
 The argument is per unit: the target-side deviation is backtranslated (`simulate`)
 to a source-side one with the same observed law, and the source equilibrium's
 inequality is carried across by rewriting along the base `law_eq` and the
-backtranslation equality.
+backtranslation equality. This is packaged as `Transport.prefSimulates`, which
+exhibits a law-based transport as a preference-level backtranslation
+(`GameForm.PrefSimulates`); `target_eq_of_source_eq` is then its `transfer`, so the
+library keeps a single root transfer argument.
 -/
 
 namespace GameTheory
@@ -35,9 +39,27 @@ namespace GameForm
 
 variable {ι : Type}
 
+/-- **A law-based transport is a preference-level backtranslation.** Equal
+observed laws (the base `law_eq` at the status quo, the `simulate` witness at the
+deviation) give equal verdicts for any observation-shaped preference, exhibiting
+the transport as a `GameForm.PrefSimulates` over `T.rel`. -/
+theorem Transport.prefSimulates {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (T : Transport G H VG VH ΔG ΔH)
+    (prefΩ : ∀ u, PMF (Ω u) → PMF (Ω u) → Prop) :
+    PrefSimulates T.rel (observedPref VG prefΩ) (observedPref VH prefΩ) ΔG ΔH := by
+  intro μG μH hrel u dH
+  obtain ⟨dG, hdev⟩ := T.simulate hrel u dH
+  refine ⟨dG, fun hsrc => ?_⟩
+  have hsrc' : prefΩ u (VG.claw u μG) (VG.claw u (ΔG.deviate μG u dG)) := hsrc
+  rw [T.law_eq hrel u, hdev] at hsrc'
+  exact hsrc'
+
 /-- **Generic transfer.** A source deviation-family equilibrium under observed
 preferences transports to a target one along a transport that simulates the
-family pair. -/
+family pair. This is the preference-level `transfer` of `Transport.prefSimulates`,
+the single root transfer argument of the library. -/
 theorem Transport.target_eq_of_source_eq {G H : GameForm ι} {U : Type} {Ω : U → Type}
     {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
     {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
@@ -45,12 +67,8 @@ theorem Transport.target_eq_of_source_eq {G H : GameForm ι} {U : Type} {Ω : U 
     {μG : PMF G.Profile} {μH : PMF H.Profile} (hrel : T.rel μG μH)
     {prefΩ : ∀ u, PMF (Ω u) → PMF (Ω u) → Prop}
     (hEq : G.IsDeviationEqFor (observedPref VG prefΩ) μG ΔG) :
-    H.IsDeviationEqFor (observedPref VH prefΩ) μH ΔH := by
-  intro u dH
-  obtain ⟨dG, hdev⟩ := T.simulate hrel u dH
-  have hsrc : prefΩ u (VG.claw u μG) (VG.claw u (ΔG.deviate μG u dG)) := hEq u dG
-  rw [T.law_eq hrel u, hdev] at hsrc
-  exact hsrc
+    H.IsDeviationEqFor (observedPref VH prefΩ) μH ΔH :=
+  PrefSimulates.transfer (T.prefSimulates prefΩ) hrel hEq
 
 /-- **Generic invariance.** A deviation-family equilibrium is preserved in both
 directions along a bisimulation. -/

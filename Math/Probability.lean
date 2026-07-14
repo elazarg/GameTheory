@@ -416,6 +416,19 @@ theorem expect_add {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ) :
   rw [expect_eq_sum, expect_eq_sum, expect_eq_sum, ← Finset.sum_add_distrib]
   exact Finset.sum_congr rfl fun ω _ => by ring
 
+/-- `expect` is additive whenever both weighted integrands are (absolutely)
+summable. This is the weakest natural hypothesis: with the tsum convention that a
+non-summable family sums to `0`, additivity can genuinely fail when a summand is not
+summable, since the individual expectations collapse to `0` while their combination
+need not. -/
+theorem expect_add_of_summable {Ω : Type*} (d : PMF Ω) (f g : Ω → ℝ)
+    (hf : Summable fun ω => (d ω).toReal * f ω)
+    (hg : Summable fun ω => (d ω).toReal * g ω) :
+    expect d (fun ω => f ω + g ω) = expect d f + expect d g := by
+  simp only [expect]
+  rw [← hf.tsum_add hg]
+  exact tsum_congr fun ω => by ring
+
 /-- `expect` commutes with subtraction. -/
 theorem expect_sub {Ω : Type*} [Finite Ω] (d : PMF Ω) (f g : Ω → ℝ) :
     expect d (fun ω => f ω - g ω) = expect d f - expect d g := by

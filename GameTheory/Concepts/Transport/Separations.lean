@@ -4,8 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Foundations.Transport.Order
-import GameTheory.Concepts.Foundations.Transport.Oblivious
+import GameTheory.Concepts.Transport.Order
+import GameTheory.Concepts.Transport.Oblivious
 import Mathlib.Probability.Distributions.Uniform
 
 /-!
@@ -67,7 +67,7 @@ theorem pmf_pure_ne_pure {α : Type} {x y : α} (h : x ≠ y) :
 
 namespace SeparationsO
 
-open DeviationSimulationExamples ObliviousExamples
+open TransportExamples ObliviousExamples
 
 /-- The **order-observing** view on the order-traced target: it observes the full
 `(value, order)` pair rather than discarding the order component. -/

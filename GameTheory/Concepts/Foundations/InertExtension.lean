@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Core.InertExtension
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Transport.Pref
 
 /-!
 # Solution-Concept Transport for Inert Extensions
@@ -45,46 +46,72 @@ def LiftsDeviationFamily
       E.projectDistribution (Δ'.deviate μ' who d') =
         Δ.deviate (E.projectDistribution μ') who d
 
+/-- Projection compatibility is a preference-level backtranslation from the base
+game into the inert extension: over the projection relation, each enriched
+deviation is matched by the base deviation it projects to, and since the inert
+extension leaves outcomes fixed the two games share the preference and the
+verdict carries verbatim. -/
+theorem prefSimulates_of_projects
+    {Δ' : DeviationFamily E.form ι} {Δ : DeviationFamily F ι}
+    (hΔ : E.ProjectsDeviationFamily Δ' Δ)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop) :
+    GameForm.PrefSimulates (fun μF μ' => μF = E.projectDistribution μ') pref pref Δ Δ' := by
+  intro μF μ' hrel u d'
+  obtain ⟨d, hd⟩ := hΔ μ' u d'
+  refine ⟨d, ?_⟩
+  subst hrel
+  intro h
+  rw [E.correlatedOutcome_projectDistribution μ',
+    E.correlatedOutcome_projectDistribution (Δ'.deviate μ' u d'), hd]
+  exact h
+
+/-- Lift compatibility is the opposite preference-level backtranslation, from the
+inert extension into the base game: over the projection relation, each base
+deviation is matched by an enriched deviation lifting it, and the shared
+preference carries the verdict verbatim. -/
+theorem prefSimulates_of_lifts
+    {Δ' : DeviationFamily E.form ι} {Δ : DeviationFamily F ι}
+    (hΔ : E.LiftsDeviationFamily Δ' Δ)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop) :
+    GameForm.PrefSimulates (fun μ' μF => μF = E.projectDistribution μ') pref pref Δ' Δ := by
+  intro μ' μF hrel u d
+  obtain ⟨d', hd⟩ := hΔ μ' u d
+  refine ⟨d', ?_⟩
+  subst hrel
+  intro h
+  rw [E.correlatedOutcome_projectDistribution μ'] at h
+  rw [E.correlatedOutcome_projectDistribution (Δ'.deviate μ' u d')] at h
+  rw [hd] at h
+  exact h
+
 /-- If every enriched deviation projects to an allowed base deviation, then any
-base deviation-family equilibrium pulls back to the inert extension. -/
+base deviation-family equilibrium pulls back to the inert extension. An
+instantiation of the preference-level transfer along `prefSimulates_of_projects`. -/
 theorem isDeviationEqFor_of_projected_isDeviationEqFor
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {μ' : PMF E.form.Profile}
     {Δ' : DeviationFamily E.form ι} {Δ : DeviationFamily F ι}
     (hΔ : E.ProjectsDeviationFamily Δ' Δ)
     (hEq : F.IsDeviationEqFor pref (E.projectDistribution μ') Δ) :
-    E.form.IsDeviationEqFor pref μ' Δ' := by
-  intro who d'
-  obtain ⟨d, hd⟩ := hΔ μ' who d'
-  have h := hEq who d
-  change pref who (E.form.correlatedOutcome μ')
-    (E.form.correlatedOutcome (Δ'.deviate μ' who d'))
-  rw [E.correlatedOutcome_projectDistribution μ']
-  rw [E.correlatedOutcome_projectDistribution (Δ'.deviate μ' who d')]
-  rw [hd]
-  exact h
+    E.form.IsDeviationEqFor pref μ' Δ' :=
+  GameForm.PrefSimulates.transfer (E.prefSimulates_of_projects hΔ pref) rfl hEq
 
 /-- If every base deviation lifts to an enriched deviation, then any enriched
-deviation-family equilibrium projects to the base game form. -/
+deviation-family equilibrium projects to the base game form. An instantiation of
+the preference-level transfer along `prefSimulates_of_lifts`. -/
 theorem projected_isDeviationEqFor_of_isDeviationEqFor
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {μ' : PMF E.form.Profile}
     {Δ' : DeviationFamily E.form ι} {Δ : DeviationFamily F ι}
     (hΔ : E.LiftsDeviationFamily Δ' Δ)
     (hEq : E.form.IsDeviationEqFor pref μ' Δ') :
-    F.IsDeviationEqFor pref (E.projectDistribution μ') Δ := by
-  intro who d
-  obtain ⟨d', hd⟩ := hΔ μ' who d
-  have h := hEq who d'
-  change pref who (E.form.correlatedOutcome μ')
-    (E.form.correlatedOutcome (Δ'.deviate μ' who d')) at h
-  rw [E.correlatedOutcome_projectDistribution μ'] at h
-  rw [E.correlatedOutcome_projectDistribution (Δ'.deviate μ' who d')] at h
-  rw [hd] at h
-  exact h
+    F.IsDeviationEqFor pref (E.projectDistribution μ') Δ :=
+  GameForm.PrefSimulates.transfer (E.prefSimulates_of_lifts hΔ pref) rfl hEq
 
 /-- Deviation-family equilibria are equivalent across an inert extension when
-the enriched and base deviation families project to each other. -/
+the enriched and base deviation families project to each other. The two
+directions are the opposite preference-level backtranslations assembled by
+`PrefSimulates.transfer_iff`. -/
 theorem isDeviationEqFor_iff
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {μ' : PMF E.form.Profile}
@@ -93,8 +120,9 @@ theorem isDeviationEqFor_iff
     (hlift : E.LiftsDeviationFamily Δ' Δ) :
     E.form.IsDeviationEqFor pref μ' Δ' ↔
       F.IsDeviationEqFor pref (E.projectDistribution μ') Δ :=
-  ⟨E.projected_isDeviationEqFor_of_isDeviationEqFor pref hlift,
-    E.isDeviationEqFor_of_projected_isDeviationEqFor pref hproj⟩
+  GameForm.PrefSimulates.transfer_iff
+    (E.prefSimulates_of_lifts hlift pref)
+    (E.prefSimulates_of_projects hproj pref) rfl
 
 section PreferenceUpdate
 

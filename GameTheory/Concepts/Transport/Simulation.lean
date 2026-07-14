@@ -4,8 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Foundations.Transport.View
-import GameTheory.Concepts.Foundations.Transport.Deviation
+import GameTheory.Concepts.Transport.View
+import GameTheory.Concepts.Transport.Deviation
 
 /-!
 # Realizations, simulation, and transports
@@ -23,7 +23,10 @@ backtranslation is existential there is no canonical produced witness to inspect
 so which family pairs a realization simulates cannot be read off `rel` — it must
 be asserted. A single realization typically simulates several family pairs; the
 factoring records each such fact independently. A `Transport` bundles a
-realization with one chosen simulated pair.
+realization with one chosen simulated pair. This is the game-theoretic form of
+the robust (secure) compilation criteria of the property-preserving-compilation
+literature (Abate et al., CSF 2019), with deviations in the role of attacks and
+observed outcome laws in the role of behaviors.
 
 The two componentwise variance lemmas (`Simulates.mono_target`,
 `Simulates.mono_source`) and view garbling (`Realization.garble`,

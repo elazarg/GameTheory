@@ -5,12 +5,12 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
-import GameTheory.Concepts.Foundations.Transport.Transfer
+import GameTheory.Concepts.Transport.Transfer
 
 /-!
 # The pure-profile Nash corner of transport
 
-The general transport theory lives in `Concepts/Foundations/Transport/`:
+The general transport theory lives in `Concepts/Transport/`:
 `ViewFamily` and `observedPref` in `Transport.View`, `Realization`/`Simulates`/
 `Transport` in `Transport.Simulation`, and the generic transfer theorem in
 `Transport.Transfer`.
@@ -431,7 +431,7 @@ end KernelGame
 
 namespace GameForm
 
-namespace DeviationSimulationExamples
+namespace TransportExamples
 
 /-- A one-player toy form whose outcome is the chosen Boolean strategy. -/
 noncomputable def boolOutcomeForm : GameForm Unit where
@@ -480,7 +480,7 @@ example {σ : boolOutcomeForm.Profile} {τ : tracedOutcomeForm.Profile}
       (observedPref boolToTracedNashSimulation.viewH prefΩ) τ :=
   boolToTracedNashSimulation.target_nash_of_source_nash hrel hN
 
-end DeviationSimulationExamples
+end TransportExamples
 
 end GameForm
 

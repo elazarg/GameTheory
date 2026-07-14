@@ -20,7 +20,7 @@ open Semantics.Transition
 def incStep (_ : PUnit) (s t : Nat) : Prop :=
   t = s + 1
 
-def incTrace : ReachActionTraceFrom incStep 0 [PUnit.unit, PUnit.unit] [0, 1, 2] :=
+theorem incTrace : ReachActionTraceFrom incStep 0 [PUnit.unit, PUnit.unit] [0, 1, 2] :=
   ReachActionTraceFrom.snoc
     (ReachActionTraceFrom.snoc ReachActionTraceFrom.nil rfl rfl)
     rfl

@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Foundations.DeviationSimulation
+import GameTheory.Concepts.Transport.Corners
 
 /-!
 # GameTheory.Concepts.Foundations.StrategicEquivalence
