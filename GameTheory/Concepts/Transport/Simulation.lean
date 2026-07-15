@@ -33,6 +33,10 @@ The two componentwise variance lemmas (`Simulates.mono_target`,
 `Simulates.garble`) are the order structure on this data: restricting the target
 family, enlarging the source family, or coarsening the view all preserve
 simulation, and none of them relates the two families along a common morphism.
+
+`RelEquivalent` compares profile-law relations extensionally while ignoring
+proof fields. Composition and its normalization laws live in
+`GameTheory.Concepts.Transport.Order`.
 -/
 
 namespace GameTheory
@@ -78,16 +82,34 @@ namespace Realization
 
 variable {G H : GameForm ι} {U : Type} {Ω : U → Type}
 
+/-- Two realizations are extensionally equivalent when they relate exactly the
+same pairs of profile laws. Their law-preservation proofs are intentionally not
+part of this comparison. -/
+def RelEquivalent
+    {VG VG' : ViewFamily G U Ω} {VH VH' : ViewFamily H U Ω}
+    (R : Realization G H VG VH) (S : Realization G H VG' VH') : Prop :=
+  R.rel = S.rel
+
 /-- The identity realization on a single game and view family. -/
 def refl (V : ViewFamily G U Ω) : Realization G G V V where
   rel := Eq
   law_eq := by intro μG μH h _; rw [h]
+
+@[simp] theorem refl_rel (V : ViewFamily G U Ω)
+    (μ ν : PMF G.Profile) :
+    (refl V).rel μ ν ↔ μ = ν :=
+  Iff.rfl
 
 /-- Swap the two sides of a realization. -/
 def flip {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
     (R : Realization G H VG VH) : Realization H G VH VG where
   rel := fun μH μG => R.rel μG μH
   law_eq := by intro μH μG h u; exact (R.law_eq h u).symm
+
+theorem flip_flip {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    (R : Realization G H VG VH) :
+    R.flip.flip.RelEquivalent R :=
+  rfl
 
 /-- Build a realization from a functional realization map on profile
 distributions. -/
@@ -107,6 +129,19 @@ def garble {Ω' : U → Type} {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
   law_eq := by
     intro μG μH h u
     rw [ViewFamily.claw_garble, ViewFamily.claw_garble, R.law_eq h u]
+
+theorem garble_id {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    (R : Realization G H VG VH) :
+    (R.garble (fun _ => _root_.id)).RelEquivalent R :=
+  rfl
+
+theorem garble_comp {Ω' Ω'' : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    (R : Realization G H VG VH)
+    (g : ∀ u, Ω u → Ω' u) (h : ∀ u, Ω' u → Ω'' u) :
+    ((R.garble g).garble h).RelEquivalent
+      (R.garble (fun u => h u ∘ g u)) :=
+  rfl
 
 end Realization
 
@@ -178,6 +213,36 @@ def Transport.refl {G : GameForm ι} {U : Type} {Ω : U → Type}
   toRealization := Realization.refl V
   simulate := Realization.Simulates.refl V Δ
 
+namespace Transport
+
+/-- Extensional equivalence of transports, comparing the profile-law relation
+and treating the backtranslation proofs as implementation details. -/
+def RelEquivalent {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG VG' : ViewFamily G U Ω} {VH VH' : ViewFamily H U Ω}
+    {ΔG ΔG' : DeviationFamily G U} {ΔH ΔH' : DeviationFamily H U}
+    (T : Transport G H VG VH ΔG ΔH)
+    (S : Transport G H VG' VH' ΔG' ΔH') : Prop :=
+  T.rel = S.rel
+
+theorem garble_id {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (T : Transport G H VG VH ΔG ΔH) :
+    (T.garble (fun _ => _root_.id)).RelEquivalent T :=
+  Realization.garble_id T.toRealization
+
+theorem garble_comp {G H : GameForm ι} {U : Type}
+    {Ω Ω' Ω'' : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (T : Transport G H VG VH ΔG ΔH)
+    (g : ∀ u, Ω u → Ω' u) (h : ∀ u, Ω' u → Ω'' u) :
+    ((T.garble g).garble h).RelEquivalent
+      (T.garble (fun u => h u ∘ g u)) :=
+  Realization.garble_comp T.toRealization g h
+
+end Transport
+
 /-- A **transport bisimulation**: a realization that simulates a family pair in
 both directions. It bundles the two transfers that make an equilibrium notion
 *invariant* rather than merely preserved. -/
@@ -195,6 +260,15 @@ namespace TransportBisimulation
 variable {G H : GameForm ι} {U : Type} {Ω : U → Type}
 variable {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
 variable {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+
+/-- Extensional equivalence of transport bisimulations, comparing only their
+underlying profile-law relations. -/
+def RelEquivalent
+    {VG VG' : ViewFamily G U Ω} {VH VH' : ViewFamily H U Ω}
+    {ΔG ΔG' : DeviationFamily G U} {ΔH ΔH' : DeviationFamily H U}
+    (B : TransportBisimulation G H VG VH ΔG ΔH)
+    (C : TransportBisimulation G H VG' VH' ΔG' ΔH') : Prop :=
+  B.rel = C.rel
 
 /-- The forward transport of a bisimulation. -/
 def toTransport (B : TransportBisimulation G H VG VH ΔG ΔH) :
@@ -228,6 +302,10 @@ def symm (B : TransportBisimulation G H VG VH ΔG ΔH) :
   simulate_flip := by
     intro μG μH hrel u dH
     exact B.simulate hrel u dH
+
+theorem symm_symm (B : TransportBisimulation G H VG VH ΔG ΔH) :
+    B.symm.symm.RelEquivalent B :=
+  Realization.flip_flip B.toRealization
 
 end TransportBisimulation
 

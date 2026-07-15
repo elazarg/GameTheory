@@ -40,6 +40,8 @@ transports and standard game constructors. In the quantitative setting,
 composition should expose additive error bounds so multi-step reductions can be
 proved as short algebraic calculations.
 
+Status: implemented on `feature/transformation-algebra`; awaiting review.
+
 ## 5. A separate interactive-game layer
 
 If adaptive protocols become a project goal, introduce a new stateful,

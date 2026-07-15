@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.ProbabilityMassFunction.TotalVariation
-import GameTheory.Concepts.Transport.Simulation
+import GameTheory.Concepts.Transport.Order
 
 /-!
 # Approximate Law Transport
@@ -29,6 +29,8 @@ transport for bounded observation utilities.
 * `ApproxTransport.comp` — approximate transports compose and their errors add
 * `ApproxTransport.garble` — deterministic observation loses no accuracy
 * `Transport.toApprox` — every exact transport has zero error
+* `ApproxTransport.RelEquivalent` — extensional unit, associativity, and
+  normalization laws across different error bounds
 * `ApproxTransport.target_eq_of_source_eq` — bounded-utility approximate
   equilibrium transfer
 -/
@@ -59,6 +61,15 @@ namespace ApproxRealization
 variable {G H : GameForm ι} {U : Type} {Ω : U → Type}
 variable [∀ u, Fintype (Ω u)]
 
+/-- Extensional equivalence of approximate realizations, ignoring their chosen
+error bounds and comparing only the related profile-law pairs. -/
+def RelEquivalent
+    {VG VG' : ViewFamily G U Ω} {VH VH' : ViewFamily H U Ω}
+    {ε δ : ℝ}
+    (R : ApproxRealization G H VG VH ε)
+    (S : ApproxRealization G H VG' VH' δ) : Prop :=
+  R.rel = S.rel
+
 /-- Identity realization has zero error. -/
 noncomputable def refl (V : ViewFamily G U Ω) :
     ApproxRealization G G V V 0 where
@@ -68,6 +79,70 @@ noncomputable def refl (V : ViewFamily G U Ω) :
     intro μG μH hrel u
     subst μH
     exact le_of_eq (pmfTV_self (V.claw u μG))
+
+/-- Approximate realizations compose and their errors add. -/
+noncomputable def comp {K : GameForm ι}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω} {ε δ : ℝ}
+    (RGH : ApproxRealization G H VG VH ε)
+    (RHK : ApproxRealization H K VH VK δ) :
+    ApproxRealization G K VG VK (ε + δ) where
+  rel := fun μG μK => ∃ μH, RGH.rel μG μH ∧ RHK.rel μH μK
+  error_nonneg := add_nonneg RGH.error_nonneg RHK.error_nonneg
+  law_le := by
+    rintro μG μK ⟨μH, hGH, hHK⟩ u
+    exact le_trans
+      (pmfTV_triangle (VG.claw u μG) (VH.claw u μH) (VK.claw u μK))
+      (add_le_add (RGH.law_le hGH u) (RHK.law_le hHK u))
+
+@[simp] theorem comp_rel {K : GameForm ι}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω} {ε δ : ℝ}
+    (RGH : ApproxRealization G H VG VH ε)
+    (RHK : ApproxRealization H K VH VK δ)
+    (μG : PMF G.Profile) (μK : PMF K.Profile) :
+    (RGH.comp RHK).rel μG μK ↔
+      ∃ μH, RGH.rel μG μH ∧ RHK.rel μH μK :=
+  Iff.rfl
+
+theorem refl_comp {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ε : ℝ} (R : ApproxRealization G H VG VH ε) :
+    (refl VG).comp R |>.RelEquivalent R := by
+  funext μG μH
+  apply propext
+  constructor
+  · rintro ⟨μG', rfl, h⟩
+    exact h
+  · intro h
+    exact ⟨μG, rfl, h⟩
+
+theorem comp_refl {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ε : ℝ} (R : ApproxRealization G H VG VH ε) :
+    R.comp (refl VH) |>.RelEquivalent R := by
+  funext μG μH
+  apply propext
+  constructor
+  · rintro ⟨μH', h, rfl⟩
+    exact h
+  · intro h
+    exact ⟨μH, h, rfl⟩
+
+theorem comp_assoc {K L : GameForm ι}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω} {VL : ViewFamily L U Ω}
+    {ε δ ζ : ℝ}
+    (RGH : ApproxRealization G H VG VH ε)
+    (RHK : ApproxRealization H K VH VK δ)
+    (RKL : ApproxRealization K L VK VL ζ) :
+    (RGH.comp RHK).comp RKL |>.RelEquivalent
+      (RGH.comp (RHK.comp RKL)) := by
+  funext μG μL
+  apply propext
+  constructor
+  · rintro ⟨μK, ⟨μH, hGH, hHK⟩, hKL⟩
+    exact ⟨μH, hGH, μK, hHK, hKL⟩
+  · rintro ⟨μH, hGH, μK, hHK, hKL⟩
+    exact ⟨μK, ⟨μH, hGH, hHK⟩, hKL⟩
 
 /-- Deterministic coarsening of observations cannot increase realization error. -/
 noncomputable def garble {Ω' : U → Type} [∀ u, Fintype (Ω' u)]
@@ -81,6 +156,31 @@ noncomputable def garble {Ω' : U → Type} [∀ u, Fintype (Ω' u)]
     rw [ViewFamily.claw_garble, ViewFamily.claw_garble]
     exact le_trans (pmfTV_map_le (g u) (VG.claw u μG) (VH.claw u μH))
       (R.law_le hrel u)
+
+theorem garble_id {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {ε : ℝ}
+    (R : ApproxRealization G H VG VH ε) :
+    (R.garble (fun _ => _root_.id)).RelEquivalent R :=
+  rfl
+
+theorem garble_comp {Ω' Ω'' : U → Type}
+    [∀ u, Fintype (Ω' u)] [∀ u, Fintype (Ω'' u)]
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {ε : ℝ}
+    (R : ApproxRealization G H VG VH ε)
+    (g : ∀ u, Ω u → Ω' u) (h : ∀ u, Ω' u → Ω'' u) :
+    ((R.garble g).garble h).RelEquivalent
+      (R.garble (fun u => h u ∘ g u)) :=
+  rfl
+
+theorem comp_garble {K : GameForm ι} {Ω' : U → Type}
+    [∀ u, Fintype (Ω' u)]
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω} {ε δ : ℝ}
+    (RGH : ApproxRealization G H VG VH ε)
+    (RHK : ApproxRealization H K VH VK δ)
+    (g : ∀ u, Ω u → Ω' u) :
+    ((RGH.comp RHK).garble g).RelEquivalent
+      ((RGH.garble g).comp (RHK.garble g)) :=
+  rfl
 
 end ApproxRealization
 
@@ -103,6 +203,16 @@ variable {G H K : GameForm ι} {U : Type} {Ω : U → Type}
 variable [∀ u, Fintype (Ω u)]
 variable {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
 variable {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+
+/-- Extensional equivalence of approximate transports, comparing only their
+profile-law relations across possibly different error bounds. -/
+def RelEquivalent
+    {VG VG' : ViewFamily G U Ω} {VH VH' : ViewFamily H U Ω}
+    {ΔG ΔG' : DeviationFamily G U} {ΔH ΔH' : DeviationFamily H U}
+    {ε δ : ℝ}
+    (T : ApproxTransport G H VG VH ΔG ΔH ε)
+    (S : ApproxTransport G H VG' VH' ΔG' ΔH' δ) : Prop :=
+  T.rel = S.rel
 
 /-- Identity transport has zero error. -/
 noncomputable def refl (V : ViewFamily G U Ω) (Δ : DeviationFamily G U) :
@@ -148,13 +258,7 @@ noncomputable def comp {VK : ViewFamily K U Ω}
     (TGH : ApproxTransport G H VG VH ΔG ΔH ε)
     (THK : ApproxTransport H K VH VK ΔH ΔK δ) :
     ApproxTransport G K VG VK ΔG ΔK (ε + δ) where
-  rel := fun μG μK => ∃ μH, TGH.rel μG μH ∧ THK.rel μH μK
-  error_nonneg := add_nonneg TGH.error_nonneg THK.error_nonneg
-  law_le := by
-    rintro μG μK ⟨μH, hGH, hHK⟩ u
-    exact le_trans
-      (pmfTV_triangle (VG.claw u μG) (VH.claw u μH) (VK.claw u μK))
-      (add_le_add (TGH.law_le hGH u) (THK.law_le hHK u))
+  toApproxRealization := TGH.toApproxRealization.comp THK.toApproxRealization
   simulate := by
     rintro μG μK ⟨μH, hGH, hHK⟩ u dK
     obtain ⟨dH, hdHK⟩ := THK.simulate hHK u dK
@@ -166,6 +270,66 @@ noncomputable def comp {VK : ViewFamily K U Ω}
         (VH.claw u (ΔH.deviate μH u dH))
         (VK.claw u (ΔK.deviate μK u dK)))
       (add_le_add hdGH hdHK)
+
+@[simp] theorem comp_rel {VK : ViewFamily K U Ω}
+    {ΔK : DeviationFamily K U} {ε δ : ℝ}
+    (TGH : ApproxTransport G H VG VH ΔG ΔH ε)
+    (THK : ApproxTransport H K VH VK ΔH ΔK δ)
+    (μG : PMF G.Profile) (μK : PMF K.Profile) :
+    (TGH.comp THK).rel μG μK ↔
+      ∃ μH, TGH.rel μG μH ∧ THK.rel μH μK :=
+  Iff.rfl
+
+theorem refl_comp {ε : ℝ}
+    (T : ApproxTransport G H VG VH ΔG ΔH ε) :
+    (refl VG ΔG).comp T |>.RelEquivalent T :=
+  ApproxRealization.refl_comp T.toApproxRealization
+
+theorem comp_refl {ε : ℝ}
+    (T : ApproxTransport G H VG VH ΔG ΔH ε) :
+    T.comp (refl VH ΔH) |>.RelEquivalent T :=
+  ApproxRealization.comp_refl T.toApproxRealization
+
+theorem comp_assoc {L : GameForm ι}
+    {VK : ViewFamily K U Ω} {VL : ViewFamily L U Ω}
+    {ΔK : DeviationFamily K U} {ΔL : DeviationFamily L U}
+    {ε δ ζ : ℝ}
+    (TGH : ApproxTransport G H VG VH ΔG ΔH ε)
+    (THK : ApproxTransport H K VH VK ΔH ΔK δ)
+    (TKL : ApproxTransport K L VK VL ΔK ΔL ζ) :
+    (TGH.comp THK).comp TKL |>.RelEquivalent
+      (TGH.comp (THK.comp TKL)) :=
+  ApproxRealization.comp_assoc TGH.toApproxRealization
+    THK.toApproxRealization TKL.toApproxRealization
+
+theorem mono_relEquivalent {ε δ : ℝ}
+    (T : ApproxTransport G H VG VH ΔG ΔH ε) (hεδ : ε ≤ δ) :
+    (T.mono hεδ).RelEquivalent T :=
+  rfl
+
+theorem garble_id {ε : ℝ}
+    (T : ApproxTransport G H VG VH ΔG ΔH ε) :
+    (T.garble (fun _ => _root_.id)).RelEquivalent T :=
+  ApproxRealization.garble_id T.toApproxRealization
+
+theorem garble_comp {Ω' Ω'' : U → Type}
+    [∀ u, Fintype (Ω' u)] [∀ u, Fintype (Ω'' u)]
+    {ε : ℝ} (T : ApproxTransport G H VG VH ΔG ΔH ε)
+    (g : ∀ u, Ω u → Ω' u) (h : ∀ u, Ω' u → Ω'' u) :
+    ((T.garble g).garble h).RelEquivalent
+      (T.garble (fun u => h u ∘ g u)) :=
+  ApproxRealization.garble_comp T.toApproxRealization g h
+
+theorem comp_garble {Ω' : U → Type} [∀ u, Fintype (Ω' u)]
+    {VK : ViewFamily K U Ω} {ΔK : DeviationFamily K U}
+    {ε δ : ℝ}
+    (TGH : ApproxTransport G H VG VH ΔG ΔH ε)
+    (THK : ApproxTransport H K VH VK ΔH ΔK δ)
+    (g : ∀ u, Ω u → Ω' u) :
+    ((TGH.comp THK).garble g).RelEquivalent
+      ((TGH.garble g).comp (THK.garble g)) :=
+  ApproxRealization.comp_garble TGH.toApproxRealization
+    THK.toApproxRealization g
 
 end ApproxTransport
 
@@ -188,6 +352,36 @@ noncomputable def Transport.toApprox {G H : GameForm ι} {U : Type}
     refine ⟨dG, ?_⟩
     rw [hd]
     exact le_of_eq (pmfTV_self _)
+
+namespace Transport
+
+theorem toApprox_refl {G : GameForm ι} {U : Type} {Ω : U → Type}
+    [∀ u, Fintype (Ω u)]
+    (V : ViewFamily G U Ω) (Δ : DeviationFamily G U) :
+    (Transport.refl V Δ).toApprox.RelEquivalent (ApproxTransport.refl V Δ) :=
+  rfl
+
+theorem toApprox_comp {G H K : GameForm ι} {U : Type} {Ω : U → Type}
+    [∀ u, Fintype (Ω u)]
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    {ΔK : DeviationFamily K U}
+    (TGH : Transport G H VG VH ΔG ΔH)
+    (THK : Transport H K VH VK ΔH ΔK) :
+    (TGH.compSameMiddle THK).toApprox.RelEquivalent
+      (TGH.toApprox.comp THK.toApprox) :=
+  rfl
+
+theorem toApprox_garble {G H : GameForm ι} {U : Type}
+    {Ω Ω' : U → Type} [∀ u, Fintype (Ω u)] [∀ u, Fintype (Ω' u)]
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (T : Transport G H VG VH ΔG ΔH) (g : ∀ u, Ω u → Ω' u) :
+    (T.garble g).toApprox.RelEquivalent (T.toApprox.garble g) :=
+  rfl
+
+end Transport
 
 /-- Expected-utility preference on observed laws with unit-dependent additive
 slack. `approxExpectedPref payoff η u old new` says the deviation from `old` to

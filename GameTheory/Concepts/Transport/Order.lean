@@ -47,6 +47,76 @@ def Realization.comp {G H K : GameForm ι} {U : Type} {Ω : U → Type}
     rintro μG μK ⟨μH, h₁, h₂⟩ u
     rw [R₁.law_eq h₁ u, R₂.law_eq h₂ u]
 
+namespace Realization
+
+@[simp] theorem comp_rel {G H K : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {VK : ViewFamily K U Ω}
+    (R₁ : Realization G H VG VH) (R₂ : Realization H K VH VK)
+    (μG : PMF G.Profile) (μK : PMF K.Profile) :
+    (R₁.comp R₂).rel μG μK ↔ ∃ μH, R₁.rel μG μH ∧ R₂.rel μH μK :=
+  Iff.rfl
+
+theorem refl_comp {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    (R : Realization G H VG VH) :
+    (refl VG).comp R |>.RelEquivalent R := by
+  funext μG μH
+  apply propext
+  constructor
+  · rintro ⟨μG', rfl, h⟩
+    exact h
+  · intro h
+    exact ⟨μG, rfl, h⟩
+
+theorem comp_refl {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    (R : Realization G H VG VH) :
+    R.comp (refl VH) |>.RelEquivalent R := by
+  funext μG μH
+  apply propext
+  constructor
+  · rintro ⟨μH', h, rfl⟩
+    exact h
+  · intro h
+    exact ⟨μH, h, rfl⟩
+
+theorem comp_assoc {G H K L : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω} {VL : ViewFamily L U Ω}
+    (R₁ : Realization G H VG VH) (R₂ : Realization H K VH VK)
+    (R₃ : Realization K L VK VL) :
+    (R₁.comp R₂).comp R₃ |>.RelEquivalent (R₁.comp (R₂.comp R₃)) := by
+  funext μG μL
+  apply propext
+  constructor
+  · rintro ⟨μK, ⟨μH, h₁, h₂⟩, h₃⟩
+    exact ⟨μH, h₁, μK, h₂, h₃⟩
+  · rintro ⟨μH, h₁, μK, h₂, h₃⟩
+    exact ⟨μK, ⟨μH, h₁, h₂⟩, h₃⟩
+
+theorem comp_flip {G H K : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {VK : ViewFamily K U Ω}
+    (R₁ : Realization G H VG VH) (R₂ : Realization H K VH VK) :
+    (R₁.comp R₂).flip.RelEquivalent (R₂.flip.comp R₁.flip) := by
+  funext μK μG
+  apply propext
+  constructor
+  · rintro ⟨μH, h₁, h₂⟩
+    exact ⟨μH, h₂, h₁⟩
+  · rintro ⟨μH, h₂, h₁⟩
+    exact ⟨μH, h₁, h₂⟩
+
+theorem comp_garble {G H K : GameForm ι} {U : Type}
+    {Ω Ω' : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {VK : ViewFamily K U Ω}
+    (R₁ : Realization G H VG VH) (R₂ : Realization H K VH VK)
+    (g : ∀ u, Ω u → Ω' u) :
+    ((R₁.comp R₂).garble g).RelEquivalent
+      ((R₁.garble g).comp (R₂.garble g)) :=
+  rfl
+
+end Realization
+
 /-- **Composition of transports at the interface.** The composite realization
 chains `T₁` and `T₂`; its backtranslation obligation is discharged by routing a
 target `ΔK` deviation through the interface condition `hMid : T₂.Simulates ΔH₁ ΔK`
@@ -81,6 +151,64 @@ def Transport.compOfHom {G H K : GameForm ι} {U : Type} {Ω : U → Type}
     (φ : DeviationFamily.Hom id ΔH₂ ΔH₁) :
     Transport G K VG VK ΔG ΔK :=
   T₁.comp T₂ (Realization.Simulates.mono_source φ T₂.simulate)
+
+/-- Composition of transports sharing the same middle deviation family. -/
+def Transport.compSameMiddle {G H K : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {VK : ViewFamily K U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U} {ΔK : DeviationFamily K U}
+    (T₁ : Transport G H VG VH ΔG ΔH) (T₂ : Transport H K VH VK ΔH ΔK) :
+    Transport G K VG VK ΔG ΔK :=
+  T₁.comp T₂ T₂.simulate
+
+namespace Transport
+
+@[simp] theorem comp_rel {G H K : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {VK : ViewFamily K U Ω}
+    {ΔG : DeviationFamily G U} {ΔH₁ ΔH₂ : DeviationFamily H U}
+    {ΔK : DeviationFamily K U}
+    (T₁ : Transport G H VG VH ΔG ΔH₁) (T₂ : Transport H K VH VK ΔH₂ ΔK)
+    (hMid : T₂.toRealization.Simulates ΔH₁ ΔK)
+    (μG : PMF G.Profile) (μK : PMF K.Profile) :
+    (T₁.comp T₂ hMid).rel μG μK ↔ ∃ μH, T₁.rel μG μH ∧ T₂.rel μH μK :=
+  Iff.rfl
+
+theorem refl_comp {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (T : Transport G H VG VH ΔG ΔH) :
+    (Transport.refl VG ΔG).compSameMiddle T |>.RelEquivalent T :=
+  Realization.refl_comp T.toRealization
+
+theorem comp_refl {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (T : Transport G H VG VH ΔG ΔH) :
+    T.compSameMiddle (Transport.refl VH ΔH) |>.RelEquivalent T :=
+  Realization.comp_refl T.toRealization
+
+theorem comp_assoc {G H K L : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω} {VL : ViewFamily L U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    {ΔK : DeviationFamily K U} {ΔL : DeviationFamily L U}
+    (T₁ : Transport G H VG VH ΔG ΔH) (T₂ : Transport H K VH VK ΔH ΔK)
+    (T₃ : Transport K L VK VL ΔK ΔL) :
+    (T₁.compSameMiddle T₂).compSameMiddle T₃ |>.RelEquivalent
+      (T₁.compSameMiddle (T₂.compSameMiddle T₃)) :=
+  Realization.comp_assoc T₁.toRealization T₂.toRealization T₃.toRealization
+
+theorem comp_garble {G H K : GameForm ι} {U : Type}
+    {Ω Ω' : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {VK : ViewFamily K U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    {ΔK : DeviationFamily K U}
+    (T₁ : Transport G H VG VH ΔG ΔH) (T₂ : Transport H K VH VK ΔH ΔK)
+    (g : ∀ u, Ω u → Ω' u) :
+    (T₁.compSameMiddle T₂).garble g |>.RelEquivalent
+      ((T₁.garble g).compSameMiddle (T₂.garble g)) :=
+  Realization.comp_garble T₁.toRealization T₂.toRealization g
+
+end Transport
 
 /-- **Composition of transport bisimulations at the interface.** The composite
 realization chains `B₁` and `B₂` through the middle game `H`, and both backtranslation
@@ -128,6 +256,46 @@ def TransportBisimulation.compSameMiddle {G H K : GameForm ι} {U : Type} {Ω : 
     (B₂ : TransportBisimulation H K VH VK ΔH ΔK) :
     TransportBisimulation G K VG VK ΔG ΔK :=
   B₁.comp B₂ B₂.simulate B₁.simulate_flip
+
+namespace TransportBisimulation
+
+theorem refl_comp {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (B : TransportBisimulation G H VG VH ΔG ΔH) :
+    (refl VG ΔG).compSameMiddle B |>.RelEquivalent B :=
+  Realization.refl_comp B.toRealization
+
+theorem comp_refl {G H : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    (B : TransportBisimulation G H VG VH ΔG ΔH) :
+    B.compSameMiddle (refl VH ΔH) |>.RelEquivalent B :=
+  Realization.comp_refl B.toRealization
+
+theorem comp_assoc {G H K L : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω}
+    {VK : ViewFamily K U Ω} {VL : ViewFamily L U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    {ΔK : DeviationFamily K U} {ΔL : DeviationFamily L U}
+    (B₁ : TransportBisimulation G H VG VH ΔG ΔH)
+    (B₂ : TransportBisimulation H K VH VK ΔH ΔK)
+    (B₃ : TransportBisimulation K L VK VL ΔK ΔL) :
+    (B₁.compSameMiddle B₂).compSameMiddle B₃ |>.RelEquivalent
+      (B₁.compSameMiddle (B₂.compSameMiddle B₃)) :=
+  Realization.comp_assoc B₁.toRealization B₂.toRealization B₃.toRealization
+
+theorem comp_symm {G H K : GameForm ι} {U : Type} {Ω : U → Type}
+    {VG : ViewFamily G U Ω} {VH : ViewFamily H U Ω} {VK : ViewFamily K U Ω}
+    {ΔG : DeviationFamily G U} {ΔH : DeviationFamily H U}
+    {ΔK : DeviationFamily K U}
+    (B₁ : TransportBisimulation G H VG VH ΔG ΔH)
+    (B₂ : TransportBisimulation H K VH VK ΔH ΔK) :
+    (B₁.compSameMiddle B₂).symm.RelEquivalent
+      (B₂.symm.compSameMiddle B₁.symm) :=
+  Realization.comp_flip B₁.toRealization B₂.toRealization
+
+end TransportBisimulation
 
 end GameForm
 

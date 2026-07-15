@@ -82,6 +82,21 @@ def garble {Ω' : U → Type} (V : ViewFamily F U Ω) (g : ∀ u, Ω u → Ω' u
     ViewFamily F U Ω' where
   observe := fun u => g u ∘ V.observe u
 
+@[simp] theorem garble_observe {Ω' : U → Type} (V : ViewFamily F U Ω)
+    (g : ∀ u, Ω u → Ω' u) (u : U) :
+    (V.garble g).observe u = g u ∘ V.observe u := rfl
+
+@[simp] theorem garble_id (V : ViewFamily F U Ω) :
+    V.garble (fun _ => _root_.id) = V := by
+  cases V
+  rfl
+
+theorem garble_comp {Ω' Ω'' : U → Type} (V : ViewFamily F U Ω)
+    (g : ∀ u, Ω u → Ω' u) (h : ∀ u, Ω' u → Ω'' u) :
+    (V.garble g).garble h = V.garble (fun u => h u ∘ g u) := by
+  cases V
+  rfl
+
 /-- Garbling commutes with the observed correlated law. -/
 @[simp] theorem claw_garble {Ω' : U → Type} (V : ViewFamily F U Ω)
     (g : ∀ u, Ω u → Ω' u) (u : U) (μ : PMF F.Profile) :

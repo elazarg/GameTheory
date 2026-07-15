@@ -118,6 +118,70 @@ structure DeviationFamily.Hom {F : GameForm ι} {U U' : Type} (m : U' → U)
   /-- The reindexed deviation acts identically on every status-quo distribution. -/
   deviate_eq : ∀ μ u' d', Δ.deviate μ (m u') (map u' d') = Δ'.deviate μ u' d'
 
+namespace DeviationFamily.Hom
+
+/-- Identity morphism of a deviation family. -/
+def id {F : GameForm ι} {U : Type} (Δ : DeviationFamily F U) :
+    DeviationFamily.Hom _root_.id Δ Δ where
+  map := fun _ d => d
+  deviate_eq := by intros; rfl
+
+/-- Composition of deviation-family morphisms. -/
+def comp {F : GameForm ι} {U U' U'' : Type}
+    {m : U' → U} {n : U'' → U'}
+    {Δ : DeviationFamily F U} {Δ' : DeviationFamily F U'}
+    {Δ'' : DeviationFamily F U''}
+    (φ : DeviationFamily.Hom m Δ' Δ)
+    (ψ : DeviationFamily.Hom n Δ'' Δ') :
+    DeviationFamily.Hom (m ∘ n) Δ'' Δ where
+  map := fun u d => φ.map (n u) (ψ.map u d)
+  deviate_eq := by
+    intro μ u d
+    change Δ.deviate μ (m (n u)) (φ.map (n u) (ψ.map u d)) =
+      Δ''.deviate μ u d
+    rw [φ.deviate_eq, ψ.deviate_eq]
+
+@[simp] theorem id_map {F : GameForm ι} {U : Type}
+    (Δ : DeviationFamily F U) (u : U) (d : Δ.Dev u) :
+    (id Δ).map u d = d := rfl
+
+@[simp] theorem comp_map {F : GameForm ι} {U U' U'' : Type}
+    {m : U' → U} {n : U'' → U'}
+    {Δ : DeviationFamily F U} {Δ' : DeviationFamily F U'}
+    {Δ'' : DeviationFamily F U''}
+    (φ : DeviationFamily.Hom m Δ' Δ)
+    (ψ : DeviationFamily.Hom n Δ'' Δ') (u : U'') (d : Δ''.Dev u) :
+    (φ.comp ψ).map u d = φ.map (n u) (ψ.map u d) := rfl
+
+@[simp] theorem id_comp {F : GameForm ι} {U U' : Type}
+    {m : U' → U} {Δ : DeviationFamily F U} {Δ' : DeviationFamily F U'}
+    (φ : DeviationFamily.Hom m Δ' Δ) :
+    (id Δ).comp φ = φ := by
+  cases φ
+  rfl
+
+@[simp] theorem comp_id {F : GameForm ι} {U U' : Type}
+    {m : U' → U} {Δ : DeviationFamily F U} {Δ' : DeviationFamily F U'}
+    (φ : DeviationFamily.Hom m Δ' Δ) :
+    φ.comp (id Δ') = φ := by
+  cases φ
+  rfl
+
+theorem comp_assoc {F : GameForm ι} {U₀ U₁ U₂ U₃ : Type}
+    {m₁ : U₁ → U₀} {m₂ : U₂ → U₁} {m₃ : U₃ → U₂}
+    {Δ₀ : DeviationFamily F U₀} {Δ₁ : DeviationFamily F U₁}
+    {Δ₂ : DeviationFamily F U₂} {Δ₃ : DeviationFamily F U₃}
+    (φ₁ : DeviationFamily.Hom m₁ Δ₁ Δ₀)
+    (φ₂ : DeviationFamily.Hom m₂ Δ₂ Δ₁)
+    (φ₃ : DeviationFamily.Hom m₃ Δ₃ Δ₂) :
+    (φ₁.comp φ₂).comp φ₃ = φ₁.comp (φ₂.comp φ₃) := by
+  cases φ₁
+  cases φ₂
+  cases φ₃
+  rfl
+
+end DeviationFamily.Hom
+
 /-- Equilibrium transports along a family morphism: a `Δ`-equilibrium under
 `pref` is a `Δ'`-equilibrium under the reindexed preference `pref ∘ m`.
 Restricting the target arsenal to the image of `map` can only make the
