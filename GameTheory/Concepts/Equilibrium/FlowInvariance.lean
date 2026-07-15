@@ -229,8 +229,7 @@ distribution itself. -/
 @[simp] theorem ofPureEU_correlatedOutcome (S : ι → Type) (u : (∀ i, S i) → Payoff ι)
     (ν : PMF (∀ i, S i)) :
     (ofPureEU S u).toGameForm.correlatedOutcome ν = ν := by
-  simp only [GameForm.correlatedOutcome, KernelGame.toGameForm_outcomeKernel, ofPureEU,
-    Kernel.pushforward]
+  simp only [GameForm.correlatedOutcome, ofPureEU, Kernel.pushforward]
   exact PMF.bind_pure ν
 
 /-- The nonstrategic expectation is unmoved by any profile-update that keeps

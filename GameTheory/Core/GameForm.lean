@@ -4,8 +4,9 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Core.KernelGame
+import GameTheory.Basic
 import Math.Probability
+import Math.PMFProduct
 
 /-!
 # GameTheory.Core.GameForm
@@ -24,8 +25,11 @@ This decomposition makes explicit a key structural observation:
 - `GameForm` -- strategy-indexed outcome kernel without utility
 - `GameForm.Profile`, `GameForm.outcomeDist`, `GameForm.correlatedOutcome`
 - `GameForm.deviateProfile` -- unilateral deviation (derivable, not primitive)
-- `GameForm.withUtility` -- attach utility to recover a `KernelGame`
-- `KernelGame.toGameForm` -- strip utility
+- `GameForm.mixedExtension` -- utility-free independent randomization
+
+The bridges `GameForm.withUtility` and `KernelGame.toGameForm` are defined in
+`GameTheory.Core.KernelGame`, keeping this raw semantic module independent of
+the utility-bearing structure.
 
 ## Classification of game-theoretic concepts
 
@@ -153,64 +157,28 @@ open Classical in
 end UpdateOps
 
 -- ============================================================================
--- Bridge to KernelGame
+-- Mixed extension
 -- ============================================================================
 
-/-- Attach a utility function to a game form to get a full kernel game. -/
-def withUtility (F : GameForm ι) (u : F.Outcome → Payoff ι) : KernelGame ι where
-  Strategy := F.Strategy
+open Classical in
+/-- The utility-free mixed extension of a game form. Each player's strategy is
+lifted to a probability distribution, independently sampled, and then evaluated
+by the original outcome kernel. -/
+noncomputable def mixedExtension (F : GameForm ι) [Fintype ι] : GameForm ι where
+  Strategy := fun i => PMF (F.Strategy i)
   Outcome := F.Outcome
-  utility := u
-  outcomeKernel := F.outcomeKernel
+  outcomeKernel := fun σ => (Math.PMFProduct.pmfPi σ).bind F.outcomeKernel
 
-end GameForm
+@[simp] theorem mixedExtension_Strategy (F : GameForm ι) [Fintype ι] :
+    F.mixedExtension.Strategy = fun i => PMF (F.Strategy i) := rfl
 
-namespace KernelGame
+@[simp] theorem mixedExtension_Outcome (F : GameForm ι) [Fintype ι] :
+    F.mixedExtension.Outcome = F.Outcome := rfl
 
-variable {ι : Type}
-
-/-- Strip utility from a kernel game to get its underlying game form. -/
-def toGameForm (G : KernelGame ι) : GameForm ι where
-  Strategy := G.Strategy
-  Outcome := G.Outcome
-  outcomeKernel := G.outcomeKernel
-
-@[simp] theorem toGameForm_Strategy (G : KernelGame ι) :
-    G.toGameForm.Strategy = G.Strategy := rfl
-
-@[simp] theorem toGameForm_Outcome (G : KernelGame ι) :
-    G.toGameForm.Outcome = G.Outcome := rfl
-
-@[simp] theorem toGameForm_outcomeKernel (G : KernelGame ι) :
-    G.toGameForm.outcomeKernel = G.outcomeKernel := rfl
-
-/-- Round-trip: stripping utility then reattaching recovers the original game. -/
-@[simp] theorem toGameForm_withUtility (G : KernelGame ι) :
-    G.toGameForm.withUtility G.utility = G := by
-  cases G; rfl
-
-end KernelGame
-
-namespace GameForm
-
-variable {ι : Type}
-
-@[simp] theorem withUtility_Strategy (F : GameForm ι) (u : F.Outcome → Payoff ι) :
-    (F.withUtility u).Strategy = F.Strategy := rfl
-
-@[simp] theorem withUtility_Outcome (F : GameForm ι) (u : F.Outcome → Payoff ι) :
-    (F.withUtility u).Outcome = F.Outcome := rfl
-
-@[simp] theorem withUtility_outcomeKernel (F : GameForm ι) (u : F.Outcome → Payoff ι) :
-    (F.withUtility u).outcomeKernel = F.outcomeKernel := rfl
-
-@[simp] theorem withUtility_utility (F : GameForm ι) (u : F.Outcome → Payoff ι) :
-    (F.withUtility u).utility = u := rfl
-
-/-- Round-trip: attaching utility then stripping recovers the original form. -/
-@[simp] theorem withUtility_toGameForm (F : GameForm ι) (u : F.Outcome → Payoff ι) :
-    (F.withUtility u).toGameForm = F := by
-  cases F; rfl
+theorem mixedExtension_outcomeKernel (F : GameForm ι) [Fintype ι]
+    (σ : F.mixedExtension.Profile) :
+    F.mixedExtension.outcomeKernel σ =
+      (Math.PMFProduct.pmfPi σ).bind F.outcomeKernel := rfl
 
 -- ============================================================================
 -- Functorial operations

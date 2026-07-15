@@ -34,6 +34,7 @@ DEFAULT_ROOTS = {
     "GameTheoryExamples",
 }
 STANDALONE_LEAN_MODULES = {"lakefile", "scripts.AxiomAudit"}
+RAW_SEMANTIC_MODULES = {"GameTheory.Core.GameForm"}
 
 
 def static_escape_hatch_audit() -> list[str]:
@@ -79,20 +80,58 @@ def module_name(path: pathlib.Path) -> str:
     return ".".join(path.with_suffix("").parts)
 
 
-def import_reachability_audit() -> list[str]:
+def module_imports(path: pathlib.Path) -> list[str]:
+    deps: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("import "):
+            parts = line.split()
+            if len(parts) >= 2:
+                deps.append(parts[1])
+    return deps
+
+
+def tracked_import_graph() -> tuple[dict[str, pathlib.Path], dict[str, list[str]]]:
     tracked_modules = {module_name(path): path for path in tracked_lean_files()}
+    imports = {mod: module_imports(path) for mod, path in tracked_modules.items()}
+    return tracked_modules, imports
+
+
+def semantic_layer_audit(
+    tracked_modules: dict[str, pathlib.Path], imports: dict[str, list[str]]
+) -> list[str]:
+    """Keep raw/core semantics independent of downstream game-theory layers."""
+    failures: list[str] = []
+    for mod, path in tracked_modules.items():
+        if not mod.startswith("GameTheory.Core.") and mod not in RAW_SEMANTIC_MODULES:
+            continue
+
+        deps = imports[mod]
+        for dep in deps:
+            allowed = (
+                dep == "GameTheory.Basic"
+                or dep.startswith("GameTheory.Core.")
+                or dep == "Math"
+                or dep.startswith("Math.")
+                or dep.startswith("Mathlib")
+            )
+            if not allowed:
+                failures.append(
+                    f"{path}: core module imports downstream/non-core module {dep}"
+                )
+
+        if mod in RAW_SEMANTIC_MODULES and "GameTheory.Core.KernelGame" in deps:
+            failures.append(
+                f"{path}: raw semantic module imports utility-bearing KernelGame"
+            )
+
+    return failures
+
+
+def import_reachability_audit(
+    tracked_modules: dict[str, pathlib.Path], imports: dict[str, list[str]]
+) -> list[str]:
     missing_roots = sorted(root for root in DEFAULT_ROOTS if root not in tracked_modules)
     failures = [f"default target root {root}.lean is not tracked" for root in missing_roots]
-
-    imports: dict[str, list[str]] = {}
-    for mod, path in tracked_modules.items():
-        deps: list[str] = []
-        for line in path.read_text(encoding="utf-8").splitlines():
-            if line.startswith("import "):
-                parts = line.split()
-                if len(parts) >= 2:
-                    deps.append(parts[1])
-        imports[mod] = deps
 
     reachable: set[str] = set()
     stack = list(DEFAULT_ROOTS)
@@ -113,8 +152,10 @@ def import_reachability_audit() -> list[str]:
 
 
 def main() -> int:
+    tracked_modules, imports = tracked_import_graph()
     failures = static_escape_hatch_audit()
-    failures.extend(import_reachability_audit())
+    failures.extend(semantic_layer_audit(tracked_modules, imports))
+    failures.extend(import_reachability_audit(tracked_modules, imports))
     axiom_failures, axiom_output = run_axiom_audit()
     failures.extend(axiom_failures)
 

@@ -31,6 +31,8 @@ level whenever utilities are irrelevant. Lift them to `KernelGame` only for
 utility-aware statements. Record and enforce the dependency direction from
 core semantic laws to solution-concept corollaries.
 
+Status: merged.
+
 ## 4. Algebraic APIs for game transformations
 
 Complete identity, composition, congruence, and normalization laws for

@@ -5,7 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Mathlib.Algebra.BigOperators.Ring.Finset
-import GameTheory.Core.GameForm
+import GameTheory.Core.KernelGame
 import Math.Probability
 
 /-!

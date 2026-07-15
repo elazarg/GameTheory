@@ -351,7 +351,6 @@ theorem observedPref_utilityView (G : KernelGame ι) :
   funext i d e
   simp only [GameForm.observedPref, utilityView, expectationPref, KernelGame.euPref,
     expect_map, id_eq]
-  rfl
 
 /-- The strict analogue of `observedPref_utilityView`: the utility-law view under
 `expectationStrictPref` is exactly the strict expected-utility preference. -/
@@ -360,7 +359,6 @@ theorem observedStrictPref_utilityView (G : KernelGame ι) :
   funext i d e
   simp only [GameForm.observedPref, utilityView, expectationStrictPref, KernelGame.euStrictPref,
     expect_map, id_eq]
-  rfl
 
 /-- Kernel-game convenience alias for deviation families over a unit type `U`. -/
 abbrev DeviationFamily (G : KernelGame ι) (U : Type) :=

@@ -175,7 +175,6 @@ def toMorphism : Morphism E.game G where
         (fun ω => PMF.pure (G.utility ω)) =
       (E.outcomeKernel' σ').bind (fun ω => PMF.pure (G.utility ω))
     rw [E.outcome_inert σ']
-    rfl
 
 /-- The projection from the inert extension to the base game preserves expected
 utilities. -/
@@ -187,7 +186,6 @@ def toEUMorphism : EUMorphism E.game G where
         (fun ω => G.utility ω who) =
       expect (E.outcomeKernel' σ') (fun ω => G.utility ω who)
     rw [E.outcome_inert σ']
-    rfl
 
 end InertExtension
 

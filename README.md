@@ -95,6 +95,14 @@ expected-utility solution concepts. Preference-parametric versions of the
 solution concepts live on `GameForm`; expected-utility specializations live on
 `KernelGame`.
 
+The dependency is directional: `GameTheory.Basic → GameForm → KernelGame →
+Concepts`. Utility-independent constructors originate on `GameForm`; a
+`KernelGame` version is a utility-preserving lift of that constructor. For
+example, mixed extension is defined by `GameForm.mixedExtension`, while
+`KernelGame.mixedExtension` reattaches the original utility. The repository
+audit rejects imports from `GameTheory/Core` into downstream layers and keeps
+the raw `GameForm` module independent of `KernelGame`.
+
 The language layer treats concrete presentations as syntax plus semantics:
 
 | Layer | Presentation |

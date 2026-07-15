@@ -123,7 +123,7 @@ theorem isStrongNash_iff_isDeviationEqFor [DecidableEq ι] (G : KernelGame ι)
   rw [isStrongNash_iff_no_profitableCoalitionDeviation]
   simp only [GameForm.IsDeviationEqFor, noParetoBlock, ParetoBlocks,
     GameForm.coalitionConstantDeviationFamily_deviate_pure, GameForm.correlatedOutcome_pure,
-    KernelGame.euPref, KernelGame.euStrictPref, KernelGame.toGameForm_outcomeKernel, KernelGame.eu]
+    KernelGame.euPref, KernelGame.euStrictPref, KernelGame.eu]
   constructor
   · intro h u d
     have key : G.coalitionDeviation u.val σ (fun i => if hi : i ∈ u.val then d i hi else σ i)

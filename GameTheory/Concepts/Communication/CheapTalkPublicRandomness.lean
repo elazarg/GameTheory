@@ -117,20 +117,12 @@ theorem actionProfile_update_liftActionDeviation
           (C.liftActionDeviation who dev (σ' who))) =
       G.unilateralDeviation who dev (C.actionProfile σ') := by
   classical
-  have hmsg :
-      C.messageProfile
-          (Function.update σ' who
-            (C.liftActionDeviation who dev (σ' who))) =
-        C.messageProfile σ' := by
-    simpa [liftActionDeviation] using
-      C.messageProfile_update_sameMessage σ' who
-        (fun m => dev ((σ' who).2 m))
   have hmsg' :
       C.messageProfile
           (Function.update σ' who
             ((σ' who).1, fun m => dev ((σ' who).2 m))) =
         C.messageProfile σ' := by
-    simpa [liftActionDeviation] using hmsg
+    simp
   funext i
   by_cases hi : i = who
   · subst hi

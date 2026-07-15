@@ -152,7 +152,7 @@ theorem IsZeroSum.isSecureEq_iff_isNash {G : KernelGame (Fin 2)}
     have hNfor := (G.IsNash_iff_IsNashFor_eu σ).mp hN
     have hbest := (G.toGameForm.isNashFor_iff G.euPref σ).mp hNfor who s
     simp only [SecurelyProfitableLawDeviation, lawEU] at hprof
-    simp only [euPref, KernelGame.toGameForm_outcomeKernel] at hbest
+    simp only [euPref] at hbest
     rcases hprof with himprove | ⟨htie, _hall, other, hother, hharm⟩
     · exact (not_lt_of_ge hbest himprove)
     · fin_cases who

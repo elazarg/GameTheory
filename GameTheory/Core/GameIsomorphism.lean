@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Core.GameForm
+import GameTheory.Core.KernelGame
 import Math.Probability
 
 /-!

@@ -4,9 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Basic
+import GameTheory.Core.GameForm
 import Math.Probability
-import Math.PMFProduct
 
 /-!
 # GameTheory.Core.KernelGame
@@ -15,6 +14,8 @@ Kernel-based game structure: the semantic core for finite/discrete game models.
 
 Provides:
 - `KernelGame` — a game with player-indexed strategies, stochastic outcome kernel, and utility
+- `GameForm.withUtility`, `KernelGame.toGameForm` — bridge to raw semantics
+- `KernelGame.mixedExtension` — utility-preserving lift of `GameForm.mixedExtension`
 - `eu` — expected utility for a player under a strategy profile
 - `Profile`, `correlatedOutcome` — standard game-theoretic notions
 - `KernelGame.ofEU` — constructs a kernel game from a direct EU function
@@ -44,6 +45,86 @@ namespace KernelGame
 variable {ι : Type}
 
 abbrev Profile (G : KernelGame ι) := ∀ i, G.Strategy i
+
+end KernelGame
+
+namespace GameForm
+
+variable {ι : Type}
+
+/-- Attach a utility function to a game form to get a full kernel game. -/
+def withUtility (F : GameForm ι) (u : F.Outcome → Payoff ι) : KernelGame ι where
+  Strategy := F.Strategy
+  Outcome := F.Outcome
+  utility := u
+  outcomeKernel := F.outcomeKernel
+
+@[simp] theorem withUtility_Strategy (F : GameForm ι) (u : F.Outcome → Payoff ι) :
+    (F.withUtility u).Strategy = F.Strategy := rfl
+
+@[simp] theorem withUtility_Outcome (F : GameForm ι) (u : F.Outcome → Payoff ι) :
+    (F.withUtility u).Outcome = F.Outcome := rfl
+
+@[simp] theorem withUtility_outcomeKernel (F : GameForm ι) (u : F.Outcome → Payoff ι) :
+    (F.withUtility u).outcomeKernel = F.outcomeKernel := rfl
+
+@[simp] theorem withUtility_utility (F : GameForm ι) (u : F.Outcome → Payoff ι) :
+    (F.withUtility u).utility = u := rfl
+
+end GameForm
+
+namespace KernelGame
+
+variable {ι : Type}
+
+/-- Strip utility from a kernel game to get its underlying game form. -/
+@[reducible] def toGameForm (G : KernelGame ι) : GameForm ι where
+  Strategy := G.Strategy
+  Outcome := G.Outcome
+  outcomeKernel := G.outcomeKernel
+
+@[simp] theorem toGameForm_Strategy (G : KernelGame ι) :
+    G.toGameForm.Strategy = G.Strategy := rfl
+
+@[simp] theorem toGameForm_Outcome (G : KernelGame ι) :
+    G.toGameForm.Outcome = G.Outcome := rfl
+
+@[simp] theorem toGameForm_outcomeKernel (G : KernelGame ι) :
+    G.toGameForm.outcomeKernel = G.outcomeKernel := rfl
+
+/-- Round-trip: stripping utility then reattaching recovers the original game. -/
+@[simp] theorem toGameForm_withUtility (G : KernelGame ι) :
+    G.toGameForm.withUtility G.utility = G := by
+  cases G; rfl
+
+end KernelGame
+
+namespace GameForm
+
+@[simp] theorem withUtility_toGameForm
+    (F : GameForm ι) (u : F.Outcome → Payoff ι) :
+    (F.withUtility u).toGameForm = F := by
+  cases F; rfl
+
+end GameForm
+
+namespace KernelGame
+
+open Classical in
+/-- Lift the utility-free mixed extension to a kernel game, retaining the
+original utility function. -/
+noncomputable def mixedExtension (G : KernelGame ι) [Fintype ι] : KernelGame ι :=
+  G.toGameForm.mixedExtension.withUtility G.utility
+
+/-- The Strategy field of `G.mixedExtension` is `fun i => PMF (G.Strategy i)`.
+Marked `@[simp]` so `Function.update` terms reduce uniformly (see `ofEU_Strategy`
+in `SolutionConcepts` for background on why v4.29 needs this). -/
+@[simp] theorem mixedExtension_Strategy (G : KernelGame ι) [Fintype ι] :
+    G.mixedExtension.Strategy = fun i => PMF (G.Strategy i) := rfl
+
+@[simp] theorem mixedExtension_toGameForm (G : KernelGame ι) [Fintype ι] :
+    G.mixedExtension.toGameForm = G.toGameForm.mixedExtension :=
+  GameForm.withUtility_toGameForm _ _
 
 /-- Reindex the player type of a kernel game along an equivalence.
 
@@ -124,23 +205,6 @@ theorem udistPlayer_eq_udist_bind (G : KernelGame ι) (σ : Profile G) (who : ι
     (who : ι) (h : G.outcomeKernel σ = PMF.pure ω) :
     G.udistPlayer σ who = PMF.pure (G.utility ω who) := by
   simp [udistPlayer, h]
-
-open Classical in
-/-- The mixed extension of a kernel game. Each player's strategy is lifted from
-    `G.Strategy i` to `PMF (G.Strategy i)` (a mixed strategy). The outcome kernel
-    samples from the independent product distribution over pure strategy profiles,
-    then applies the original outcome kernel. -/
-noncomputable def mixedExtension (G : KernelGame ι) [Fintype ι] : KernelGame ι where
-  Strategy := fun i => PMF (G.Strategy i)
-  Outcome := G.Outcome
-  utility := G.utility
-  outcomeKernel := fun σ => (Math.PMFProduct.pmfPi σ).bind G.outcomeKernel
-
-/-- The Strategy field of `G.mixedExtension` is `fun i => PMF (G.Strategy i)`.
-Marked `@[simp]` so `Function.update` terms reduce uniformly (see `ofEU_Strategy`
-in `SolutionConcepts` for background on why v4.29 needs this). -/
-@[simp] theorem mixedExtension_Strategy (G : KernelGame ι) [Fintype ι] :
-    G.mixedExtension.Strategy = fun i => PMF (G.Strategy i) := rfl
 
 end KernelGame
 

@@ -68,16 +68,14 @@ variable [Fintype ι]
 /-- A mixed strategy profile: each player independently randomizes over actions. -/
 abbrev MixedProfile (A : ι → Type) := ∀ i, PMF (A i)
 
-/-- NFG as a kernel-based game with mixed strategies.
-    The outcome kernel maps independent per-player PMFs to a joint distribution
-    over pure action profiles via the product PMF construction. Works for
-    arbitrary action types (the product PMF accepts countable factors). -/
+/-- NFG as a kernel-based game with mixed strategies. This is the standard
+utility-preserving mixed extension of the compiled pure game. -/
 noncomputable def NFGGame.toMixedKernelGame
-    (G : NFGGame ι A) : GameTheory.KernelGame ι where
-  Strategy := fun i => PMF (A i)
-  Outcome := G.Outcome
-  utility := G.utility
-  outcomeKernel := fun σ => (pmfPi σ).bind (fun s => PMF.pure (G.outcome s))
+    (G : NFGGame ι A) : GameTheory.KernelGame ι :=
+  G.toKernelGame.mixedExtension
+
+@[simp] theorem NFGGame.toMixedKernelGame_eq_mixedExtension (G : NFGGame ι A) :
+    G.toMixedKernelGame = G.toKernelGame.mixedExtension := rfl
 
 /-- A mixed Nash equilibrium: no player can improve expected payoff by
     changing their marginal distribution. -/
