@@ -6,6 +6,7 @@ import GameTheory.Theorems
 import Math.Probability
 import GameTheory.Core.KernelGame
 import GameTheory.Core.GameForm
+import GameTheory.Core.Coalition
 import GameTheory.Core.Subsidy
 
 -- Solution concepts and properties
@@ -52,6 +53,7 @@ import GameTheory.Concepts.Dominance.DominanceSolvability
 
 -- Nash equilibrium
 import GameTheory.Concepts.Equilibrium.StrictNashProperties
+import GameTheory.Concepts.Equilibrium.SecureEquilibrium
 import GameTheory.Concepts.Equilibrium.ApproximateNash
 import GameTheory.Concepts.Mixed.MixedExtension
 import GameTheory.Concepts.Mixed.MixedDominance
@@ -75,6 +77,7 @@ import GameTheory.Concepts.Welfare.PriceOfAnarchy
 import GameTheory.Concepts.Welfare.Smoothness
 import GameTheory.Concepts.Welfare.IndividualRationality
 import GameTheory.Concepts.ZeroSum.SecurityStrategy
+import GameTheory.Concepts.ZeroSum.CoalitionSecurity
 import GameTheory.Concepts.Welfare.FolkTheorem
 
 -- Correlated equilibrium

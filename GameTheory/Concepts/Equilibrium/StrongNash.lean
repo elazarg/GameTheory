@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
 import GameTheory.Core.GameProperties
+import GameTheory.Core.Coalition
 
 /-!
 # GameTheory.Concepts.Equilibrium.StrongNash
@@ -72,6 +73,14 @@ theorem coalitionDeviation_singleton (G : KernelGame ι) (who : ι)
   by_cases hi : i = who
   · subst hi; simp [coalitionDeviation]
   · simp [coalitionDeviation, hi]
+
+/-- `coalitionDeviation` agrees with the protocol-level partial-profile
+override used by coalition forceability. -/
+theorem coalitionDeviation_eq_overrideCoalition (G : KernelGame ι)
+    (C : Finset ι) (σ τ : Profile G) :
+    G.coalitionDeviation C σ τ =
+      G.toGameForm.overrideCoalition C (fun i => τ i) σ := by
+  rfl
 
 end CoalitionDeviation
 

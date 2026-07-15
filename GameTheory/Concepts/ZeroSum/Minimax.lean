@@ -6,7 +6,9 @@ Authors: GameTheory contributors
 
 import Math.Probability
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Equilibrium.SecureEquilibrium
 import GameTheory.Concepts.ZeroSum.SecurityStrategy
+import GameTheory.Concepts.ZeroSum.CoalitionSecurity
 import GameTheory.Concepts.ZeroSum.ZeroSumNash
 import GameTheory.Concepts.Existence.NashExistenceMixed
 
@@ -31,18 +33,6 @@ namespace KernelGame
 variable {ι : Type}
 
 attribute [local instance] Fintype.ofFinite
-
-open Classical in
-/-- Player `who` playing strategy `s` guarantees at least payoff `v`:
-    for every profile `σ`, replacing `who`'s strategy with `s` yields EU ≥ `v`. -/
-def Guarantees (G : KernelGame ι) (who : ι) (s : G.Strategy who) (v : ℝ) : Prop :=
-  ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥ v
-
-/-- If `s` guarantees `v` and `v' ≤ v`, then `s` also guarantees `v'`. -/
-theorem Guarantees.mono {G : KernelGame ι} {who : ι} {s : G.Strategy who}
-    {v v' : ℝ} (hv : v' ≤ v) (hg : G.Guarantees who s v) :
-    G.Guarantees who s v' :=
-  fun σ => le_trans hv (hg σ)
 
 open Classical in
 /-- A profile `σ` is a saddle point for a 2-player game if neither player can
@@ -77,6 +67,7 @@ theorem guarantees_iff_worstCaseEUInf_ge
   · intro hge σ
     exact le_trans hge (G.worstCaseEUInf_le who s hbdd σ)
 
+open Classical in
 /-- Finite-profile specialization: `Guarantees` is equivalent to finite
     worst-case EU being at least `v`. -/
 theorem guarantees_iff_worstCaseEU_ge
@@ -91,6 +82,110 @@ theorem guarantees_iff_worstCaseEU_ge
     exact hg σ
   · intro hge σ
     exact le_trans hge (G.worstCaseEU_le who s σ)
+
+open Classical in
+/-- A singleton coalition can guarantee `v` exactly when some strategy's
+order-theoretic worst-case expected utility is at least `v`. -/
+theorem coalitionGuaranteesEU_singleton_iff_exists_worstCaseEUInf_ge
+    (G : KernelGame ι) [Nonempty (Profile G)]
+    (who : ι) (v : ℝ)
+    (hbdd : ∀ s : G.Strategy who,
+      BddBelow (Set.range (fun σ : Profile G =>
+        G.eu (Function.update σ who s) who))) :
+    G.CoalitionGuaranteesEU {who} (fun ω => G.utility ω who) v ↔
+      ∃ s : G.Strategy who, G.worstCaseEUInf who s ≥ v := by
+  rw [G.coalitionGuaranteesEU_singleton_iff]
+  constructor
+  · rintro ⟨s, hs⟩
+    exact ⟨s, (G.guarantees_iff_worstCaseEUInf_ge who s v (hbdd s)).mp hs⟩
+  · rintro ⟨s, hs⟩
+    exact ⟨s, (G.guarantees_iff_worstCaseEUInf_ge who s v (hbdd s)).mpr hs⟩
+
+open Classical in
+/-- Any singleton-coalition EU guarantee is below the order-theoretic security
+level, under the usual bounded-above hypothesis for `iSup`. -/
+theorem coalitionGuaranteesEU_singleton_le_securityLevelSup
+    (G : KernelGame ι) [Nonempty (Profile G)]
+    (who : ι) (v : ℝ)
+    (h : G.CoalitionGuaranteesEU {who} (fun ω => G.utility ω who) v)
+    (hbddSec : BddAbove (Set.range (fun s : G.Strategy who =>
+      G.worstCaseEUInf who s))) :
+    v ≤ G.securityLevelSup who := by
+  rw [G.coalitionGuaranteesEU_singleton_iff] at h
+  rcases h with ⟨s, hs⟩
+  exact G.le_securityLevelSup_of_forall_eu_ge who s v hs hbddSec
+
+open Classical in
+/-- In a finite game, singleton-coalition EU forceability exactly characterizes
+thresholds below the player's security level. -/
+theorem coalitionGuaranteesEU_singleton_iff_le_securityLevel
+    (G : KernelGame ι)
+    [Fintype (Profile G)] [Nonempty (Profile G)]
+    [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    (who : ι) (v : ℝ) :
+    G.CoalitionGuaranteesEU {who} (fun ω => G.utility ω who) v ↔
+      v ≤ G.securityLevel who := by
+  rw [G.coalitionGuaranteesEU_singleton_iff]
+  constructor
+  · rintro ⟨s, hs⟩
+    exact G.le_securityLevel_of_forall_eu_ge who s v hs
+  · intro hv
+    obtain ⟨s, hs⟩ := G.exists_securityStrategy who
+    refine ⟨s, fun σ => ?_⟩
+    calc
+      v ≤ G.securityLevel who := hv
+      _ = G.worstCaseEU who s := hs.symm
+      _ ≤ G.eu (Function.update σ who s) who := G.worstCaseEU_le who s σ
+
+open Classical in
+/-- In a two-player zero-sum game, secure equilibrium and Nash equilibrium
+coincide: an own-payoff tie also fixes the opponent's payoff. -/
+theorem IsZeroSum.isSecureEq_iff_isNash {G : KernelGame (Fin 2)}
+    [Finite G.Outcome] (hzs : G.IsZeroSum) (σ : Profile G) :
+    G.IsSecureEq σ ↔ G.IsNash σ := by
+  constructor
+  · intro h
+    exact h.isNash
+  · intro hN
+    rw [G.isSecureEq_iff_no_securelyProfitableDeviation]
+    intro who s hprof
+    have hNfor := (G.IsNash_iff_IsNashFor_eu σ).mp hN
+    have hbest := (G.toGameForm.isNashFor_iff G.euPref σ).mp hNfor who s
+    simp only [SecurelyProfitableLawDeviation, lawEU] at hprof
+    simp only [euPref, KernelGame.toGameForm_outcomeKernel] at hbest
+    rcases hprof with himprove | ⟨htie, _hall, other, hother, hharm⟩
+    · exact (not_lt_of_ge hbest himprove)
+    · fin_cases who
+      · have ho : other = 1 := by
+          fin_cases other
+          · exact (hother rfl).elim
+          · rfl
+        subst other
+        change expect (G.outcomeKernel (Function.update σ 0 s))
+          (fun ω => G.utility ω 0) =
+            expect (G.outcomeKernel σ) (fun ω => G.utility ω 0) at htie
+        change expect (G.outcomeKernel (Function.update σ 0 s))
+          (fun ω => G.utility ω 1) <
+            expect (G.outcomeKernel σ) (fun ω => G.utility ω 1) at hharm
+        have hcurrent := hzs.eu_neg σ
+        have hdeviated := hzs.eu_neg (Function.update σ 0 s)
+        simp only [eu] at hcurrent hdeviated
+        linarith
+      · have ho : other = 0 := by
+          fin_cases other
+          · rfl
+          · exact (hother rfl).elim
+        subst other
+        change expect (G.outcomeKernel (Function.update σ 1 s))
+          (fun ω => G.utility ω 1) =
+            expect (G.outcomeKernel σ) (fun ω => G.utility ω 1) at htie
+        change expect (G.outcomeKernel (Function.update σ 1 s))
+          (fun ω => G.utility ω 0) <
+            expect (G.outcomeKernel σ) (fun ω => G.utility ω 0) at hharm
+        have hcurrent := hzs.eu_neg σ
+        have hdeviated := hzs.eu_neg (Function.update σ 1 s)
+        simp only [eu] at hcurrent hdeviated
+        linarith
 
 /-! ## Zero-sum minimax facts -/
 

@@ -18,10 +18,14 @@ achieves this guarantee.
 
 * `worstCaseEUInf` — infimum EU over opponent profiles for a fixed strategy
 * `securityLevelSup` — supremum over own strategies of `worstCaseEUInf`
+* `IsSecurityStrategySup` / `IsSecurityProfileSup` — attained
+  order-theoretic security strategies and profiles
 * `mixedWorstCaseEUInf` / `mixedSecurityLevel` — the same with a *mixed* own
   strategy (the mixed maximin value)
 * `worstCaseEU` — minimum EU over opponent profiles for a fixed strategy
 * `securityLevel` — the max over own strategies of `worstCaseEU`
+* `IsSecurityStrategy` / `IsSecurityProfile` — finite-game maximin strategies
+  and profiles
 
 ## Main results
 
@@ -30,6 +34,7 @@ achieves this guarantee.
 * `securityLevelSup_le_mixedSecurityLevel` — randomizing only raises the
   guaranteed payoff (pure security level ≤ mixed security level)
 * `nash_eu_ge_mixedSecurityLevel` — Nash EU ≥ mixed security level
+* `exists_securityProfile` — finite games admit a profile of security strategies
 -/
 
 open scoped BigOperators
@@ -41,6 +46,19 @@ open Math.Probability
 namespace KernelGame
 
 variable {ι : Type}
+
+/-- Player `who` playing strategy `s` guarantees expected payoff at least `v`
+against every profile of the other players. -/
+def Guarantees [DecidableEq ι]
+    (G : KernelGame ι) (who : ι) (s : G.Strategy who) (v : ℝ) : Prop :=
+  ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥ v
+
+/-- Lowering the threshold preserves an expected-utility guarantee. -/
+theorem Guarantees.mono [DecidableEq ι]
+    {G : KernelGame ι} {who : ι} {s : G.Strategy who}
+    {v v' : ℝ} (hv : v' ≤ v) (hg : G.Guarantees who s v) :
+    G.Guarantees who s v' :=
+  fun σ => le_trans hv (hg σ)
 
 section Order
 
@@ -63,6 +81,15 @@ lemmas additionally require the displayed range to be bounded above. -/
 noncomputable def securityLevelSup (who : ι) : ℝ :=
   ⨆ s : G.Strategy who, G.worstCaseEUInf who s
 
+/-- An order-theoretic security strategy attains the supremal security level.
+Such a strategy need not exist without an attainment hypothesis. -/
+def IsSecurityStrategySup (who : ι) (s : G.Strategy who) : Prop :=
+  G.worstCaseEUInf who s = G.securityLevelSup who
+
+/-- A profile consists entirely of order-theoretic security strategies. -/
+def IsSecurityProfileSup (σ : Profile G) : Prop :=
+  ∀ i, G.IsSecurityStrategySup i (σ i)
+
 open Classical in
 /-- The infimum worst-case EU is below every profile payoff when the payoff
     range is bounded below. -/
@@ -82,6 +109,18 @@ theorem worstCaseEUInf_guarantees (who : ι) (s : G.Strategy who)
     ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥
       G.worstCaseEUInf who s :=
   fun σ => G.worstCaseEUInf_le who s hbdd σ
+
+open Classical in
+/-- An attained order-theoretic security strategy guarantees the security
+level against every opponent profile. -/
+theorem IsSecurityStrategySup.guarantees {who : ι} {s : G.Strategy who}
+    (h : G.IsSecurityStrategySup who s)
+    (hbdd : BddBelow (Set.range (fun σ : Profile G =>
+      G.eu (Function.update σ who s) who))) :
+    G.Guarantees who s (G.securityLevelSup who) := by
+  intro σ
+  rw [← h]
+  exact G.worstCaseEUInf_le who s hbdd σ
 
 open Classical in
 /-- In a Nash equilibrium, each player's EU is at least their order-theoretic
@@ -220,6 +259,34 @@ noncomputable def securityLevel (who : ι) : ℝ :=
   Finset.sup' Finset.univ ⟨Classical.arbitrary _, Finset.mem_univ _⟩
     (fun s => G.worstCaseEU who s)
 
+/-- A finite-game security strategy attains the player's security level. -/
+def IsSecurityStrategy (who : ι) (s : G.Strategy who) : Prop :=
+  G.worstCaseEU who s = G.securityLevel who
+
+/-- A security profile consists of a security strategy for every player.
+
+This is intentionally not called an equilibrium: outside special classes such
+as two-player zero-sum games with a value, it need not be Nash. -/
+def IsSecurityProfile (σ : Profile G) : Prop :=
+  ∀ i, G.IsSecurityStrategy i (σ i)
+
+open Classical in
+/-- A finite-game security strategy guarantees its security level. -/
+theorem IsSecurityStrategy.guarantees {who : ι} {s : G.Strategy who}
+    (h : G.IsSecurityStrategy who s) :
+    G.Guarantees who s (G.securityLevel who) := by
+  intro σ
+  rw [← h]
+  exact G.worstCaseEU_le who s σ
+
+open Classical in
+/-- Every coordinate of a security profile guarantees that player's security
+level independently of the other coordinates. -/
+theorem IsSecurityProfile.guarantees {σ : Profile G}
+    (h : G.IsSecurityProfile σ) (who : ι) :
+    G.Guarantees who (σ who) (G.securityLevel who) :=
+  (h who).guarantees
+
 open Classical in
 /-- In a Nash equilibrium, each player's EU is at least their security level. -/
 theorem nash_eu_ge_securityLevel {σ : Profile G} (hN : G.IsNash σ) (who : ι) :
@@ -267,6 +334,19 @@ theorem exists_securityStrategy (who : ι) :
     (fun s => G.worstCaseEU who s) ⟨Classical.arbitrary _, Finset.mem_univ _⟩
   exact ⟨s, le_antisymm (Finset.le_sup' _ (Finset.mem_univ s))
     (Finset.sup'_le _ _ (fun t _ => hs t (Finset.mem_univ t)))⟩
+
+open Classical in
+/-- Predicate-form version of `exists_securityStrategy`. -/
+theorem exists_isSecurityStrategy (who : ι) :
+    ∃ s : G.Strategy who, G.IsSecurityStrategy who s :=
+  G.exists_securityStrategy who
+
+open Classical in
+/-- Every finite game has a profile made from independently selected security
+strategies.  This profile is not necessarily a Nash equilibrium. -/
+theorem exists_securityProfile : ∃ σ : Profile G, G.IsSecurityProfile σ := by
+  choose σ hσ using fun i => G.exists_isSecurityStrategy i
+  exact ⟨σ, hσ⟩
 
 end Finite
 

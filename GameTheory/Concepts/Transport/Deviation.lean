@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Core.GameForm
+import GameTheory.Core.Coalition
 
 /-!
 # Deviating units, deviation families, and family morphisms
@@ -158,6 +158,17 @@ noncomputable def coalitionConstantDeviationFamily (F : GameForm ι) :
     F.coalitionConstantDeviationFamily.deviate (PMF.pure σ) C d =
       PMF.pure (fun i => if h : i ∈ C.val then d i h else σ i) := by
   simp [coalitionConstantDeviationFamily_deviate, PMF.pure_bind]
+
+/-- A pure coalition deviation is the shared coalition-profile override. -/
+theorem coalitionConstantDeviationFamily_deviate_pure_eq_override
+    (F : GameForm ι) (σ : F.Profile) (C : Coalition ι)
+    (d : ∀ i ∈ C.val, F.Strategy i) :
+    F.coalitionConstantDeviationFamily.deviate (PMF.pure σ) C d =
+      PMF.pure (F.overrideCoalition C.val (fun i => d i i.2) σ) := by
+  rw [coalitionConstantDeviationFamily_deviate_pure]
+  change PMF.pure (fun i => if h : i ∈ C.val then d i h else σ i) =
+    PMF.pure (fun i => if h : i ∈ C.val then d i h else σ i)
+  rfl
 
 end Coalition
 

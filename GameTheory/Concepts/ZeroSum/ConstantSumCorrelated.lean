@@ -91,13 +91,6 @@ theorem IsConstantSum.coarseCorrelated_eq_eu_eq_nash_of_bounded
       (f := fun _ : Profile G => G.eu σ 0)
       (g := fun τ : Profile G => G.eu (Function.update τ 0 (σ 0)) 0)
       (hfg := fun τ => by
-        have hupd :
-            @Function.update (Fin 2) G.Strategy (Classical.decEq (Fin 2)) τ 0 (σ 0) =
-              @Function.update (Fin 2) G.Strategy (instDecidableEqFin 2) τ 0 (σ 0) := by
-          funext i
-          fin_cases i <;> simp [Function.update]
-        change G.eu σ 0 ≤ G.eu (Function.update τ 0 (σ 0)) 0
-        rw [← hupd]
         simpa only [ge_iff_le] using hgar τ)
       (C := C 0)
       (hf := fun _ => G.eu_abs_le_of_bounded 0 (hbd 0) σ)
@@ -116,13 +109,6 @@ theorem IsConstantSum.coarseCorrelated_eq_eu_eq_nash_of_bounded
       (f := fun _ : Profile G => G.eu σ 1)
       (g := fun τ : Profile G => G.eu (Function.update τ 1 (σ 1)) 1)
       (hfg := fun τ => by
-        have hupd :
-            @Function.update (Fin 2) G.Strategy (Classical.decEq (Fin 2)) τ 1 (σ 1) =
-              @Function.update (Fin 2) G.Strategy (instDecidableEqFin 2) τ 1 (σ 1) := by
-          funext i
-          fin_cases i <;> simp [Function.update]
-        change G.eu σ 1 ≤ G.eu (Function.update τ 1 (σ 1)) 1
-        rw [← hupd]
         simpa only [ge_iff_le] using hgar τ)
       (C := C 1)
       (hf := fun _ => G.eu_abs_le_of_bounded 1 (hbd 1) σ)
