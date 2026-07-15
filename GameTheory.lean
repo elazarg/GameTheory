@@ -24,6 +24,7 @@ import GameTheory.Concepts.Transport.Pref
 import GameTheory.Concepts.Transport.View
 import GameTheory.Concepts.Transport.Simulation
 import GameTheory.Concepts.Transport.Approximate
+import GameTheory.Concepts.Transport.Distinguishing
 import GameTheory.Concepts.Transport.Transfer
 import GameTheory.Concepts.Transport.Order
 import GameTheory.Concepts.Transport.Characterize

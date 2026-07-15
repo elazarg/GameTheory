@@ -13,7 +13,7 @@ realizations and deviation backtranslations, with errors adding under
 composition. Connect the resulting approximate transport to bounded-utility
 approximate equilibrium.
 
-Status: implemented on `feature/approximate-law-transport`; awaiting review.
+Status: merged in commit `1372308`.
 
 ## 2. Contextual distinguishing advantage
 
@@ -21,6 +21,8 @@ Define observer-relative distinguishing advantage through `ViewFamily`. Prove
 that deterministic garbling cannot increase advantage and relate finite Boolean
 tests, bounded tests, and total variation. This should remain an observational
 layer rather than introduce cryptographic adversaries into `KernelGame`.
+
+Status: merged.
 
 ## 3. Preserve the raw-semantics / structured-concepts split
 

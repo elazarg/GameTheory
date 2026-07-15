@@ -5,6 +5,7 @@ import Math.Fintype.Transport
 import Math.Reindex
 import Math.ProbabilityMassFunction
 import Math.ProbabilityMassFunction.TotalVariation
+import Math.ProbabilityMassFunction.Distinguishing
 import Math.ProbabilityMassFunction.Simplex
 import Math.PMFProduct
 import Math.Coupling

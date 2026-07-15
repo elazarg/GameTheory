@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.Probability
+import Math.ProbabilityMassFunction.Distinguishing
 import Math.PMFProduct
 import Math.OnlineAlgorithms
 import Math.Minimax.Loomis
@@ -25,6 +26,10 @@ noncomputable section
 
 example : expect (PMF.pure true) (fun b => if b then (3 : ℝ) else 0) = 3 := by
   simp
+
+example :
+    pmfBooleanAdvantage (PMF.pure false) (PMF.pure true) id = 1 := by
+  simp [pmfBooleanAdvantage]
 
 example :
     Kernel.comp (Kernel.id Bool) (Kernel.ofFun not) = Kernel.ofFun not := by
