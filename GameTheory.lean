@@ -107,6 +107,12 @@ import GameTheory.Concepts.ZeroSum.ConstantSumCorrelated
 import GameTheory.Concepts.ZeroSum.ConstantSumCounterexamples
 import GameTheory.Concepts.Communication.CheapTalkPublicRandomnessConstantSum
 
+-- Flow decomposition
+import GameTheory.Concepts.Potential.Flow
+import GameTheory.Concepts.Potential.Harmonic
+import GameTheory.Concepts.Potential.Decomposition
+import GameTheory.Concepts.Equilibrium.FlowDecomposition
+
 -- Potential games
 import GameTheory.Concepts.Potential.PotentialGame
 import GameTheory.Concepts.Potential.PotentialFIP
