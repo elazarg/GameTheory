@@ -237,5 +237,65 @@ theorem mixed_nash_isCorrelatedEq
     Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω i)
   exact G.mixed_nash_isCorrelatedEq_of_bounded σ hN hbd
 
+open Classical in
+/-- **Correlated equilibrium support avoids relatively dominated actions.** If
+`t` beats `s` in expected utility for player `who` at every profile satisfying
+`S`, and `μ`'s support satisfies `S`, then no positive-probability profile in
+`μ` recommends `s` to `who`. The relativization to `S` is what makes this the
+right building block for an induction over rounds of iterated dominance (`S` =
+"every player plays a round-`n` survivor"); the unrestricted case
+(`S := fun _ => True`) recovers "CE support avoids a globally strictly
+dominated action". -/
+theorem IsCorrelatedEq.support_avoids_dominated_relative
+    {G : KernelGame ι} [Finite (Profile G)] [Finite G.Outcome]
+    {μ : PMF (Profile G)} (hce : G.IsCorrelatedEq μ)
+    (S : Profile G → Prop) (hS : ∀ σ, μ σ ≠ 0 → S σ)
+    (who : ι) {s t : G.Strategy who}
+    (hdom : ∀ σ, S σ →
+      G.eu (Function.update σ who t) who > G.eu (Function.update σ who s) who) :
+    ∀ σ, μ σ ≠ 0 → σ who ≠ s := by
+  intro σ0 hσ0 hσ0eq
+  set dev : G.Strategy who → G.Strategy who := fun a => if a = s then t else a with hdev_def
+  have hce' := hce who dev
+  rw [G.correlatedEu_eq_expect_eu μ who] at hce'
+  rw [G.correlatedEu_unilateralDeviationDistribution_eq_expect_update μ who dev] at hce'
+  have hle : ∀ σ, G.eu σ who ≤
+      (if S σ then G.eu (Function.update σ who (dev (σ who))) who else G.eu σ who) := by
+    intro σ
+    by_cases hSσ : S σ
+    · rw [if_pos hSσ]
+      by_cases h : σ who = s
+      · have hdevσ : dev (σ who) = t := by simp [hdev_def, h]
+        have heq : Function.update σ who s = σ := by rw [← h]; exact Function.update_eq_self _ _
+        rw [hdevσ]
+        have hd := hdom σ hSσ
+        have heu : G.eu σ who = G.eu (Function.update σ who s) who := by rw [heq]
+        rw [heu]
+        exact le_of_lt hd
+      · have hdevσ : dev (σ who) = σ who := by simp [hdev_def, h]
+        rw [hdevσ, Function.update_eq_self]
+    · rw [if_neg hSσ]
+  have hlt0 : G.eu σ0 who <
+      (if S σ0 then G.eu (Function.update σ0 who (dev (σ0 who))) who else G.eu σ0 who) := by
+    rw [if_pos (hS σ0 hσ0)]
+    have hdevσ0 : dev (σ0 who) = t := by simp [hdev_def, hσ0eq]
+    have heq : Function.update σ0 who s = σ0 := by rw [← hσ0eq]; exact Function.update_eq_self _ _
+    rw [hdevσ0]
+    have hd := hdom σ0 (hS σ0 hσ0)
+    calc G.eu σ0 who = G.eu (Function.update σ0 who s) who := by rw [heq]
+      _ < G.eu (Function.update σ0 who t) who := hd
+  have hstrict := Math.Probability.expect_lt_of_le_of_exists_lt μ
+    (fun σ => G.eu σ who)
+    (fun σ => if S σ then G.eu (Function.update σ who (dev (σ who))) who else G.eu σ who)
+    hle ⟨σ0, hσ0, hlt0⟩
+  have hcongr : Math.Probability.expect μ
+      (fun σ => if S σ then G.eu (Function.update σ who (dev (σ who))) who else G.eu σ who) =
+      Math.Probability.expect μ (fun σ => G.eu (Function.update σ who (dev (σ who))) who) := by
+    apply Math.ProbabilityMassFunction.expect_congr_of_ne_zero
+    intro σ hσ
+    rw [if_pos (hS σ hσ)]
+  rw [hcongr] at hstrict
+  linarith
+
 end KernelGame
 end GameTheory

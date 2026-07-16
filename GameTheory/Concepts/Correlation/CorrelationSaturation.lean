@@ -9,6 +9,7 @@ import GameTheory.Concepts.Correlation.CorrelatedNashMixed
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 import GameTheory.Concepts.Dominance.StrictDominance
+import GameTheory.Concepts.Dominance.DominanceSolvability
 
 /-!
 # GameTheory.Concepts.Correlation.CorrelationSaturation
@@ -222,6 +223,34 @@ theorem strictDominant_isCorrelationSaturated [Fintype ι] [Finite G.Outcome]
     {σ : Profile G} (hdom : ∀ i, G.IsStrictDominant i (σ i)) :
     G.IsCorrelationSaturated :=
   (G.strictDominant_isCoarseCorrelationSaturated hdom).isCorrelationSaturated
+
+/-- **Dominance-solvable games are correlation saturated**, given the surviving
+profile is Nash: the unique correlated equilibrium is the point mass at `σ`
+(`IsIESDSSolvable.correlatedEq_eq_pure`), trivially realized by the constant
+public signal on `σ`. Strictly more general than
+`strictDominant_isCorrelationSaturated`, since iterated elimination only ever
+tests domination relative to surviving opponent actions, not against every
+profile in one round.
+
+The `IsNash σ` hypothesis is not derived from `hsolv` here: for the iterated
+notion this needs mixed Nash existence plus "no mixed Nash puts weight on a
+dominated action", which is not yet formalized (see the module docstring). For
+`IsDominantStrategySolvable`, by contrast, `dominant_is_nash` gives it for
+free — that is why `strictDominant_isCorrelationSaturated` needs no such
+hypothesis. -/
+theorem IsIESDSSolvable.isCorrelationSaturated
+    [Fintype ι] [Finite (Profile G)] [Finite G.Outcome]
+    {σ : Profile G} (hsolv : G.IsIESDSSolvable σ) (hNash : G.IsNash σ) :
+    G.IsCorrelationSaturated := by
+  intro μ hCE
+  have hμ : μ = PMF.pure σ := hsolv.correlatedEq_eq_pure hCE
+  refine ⟨PUnit, PMF.pure PUnit.unit, fun _ => G.pureMixedProfile σ, ?_, ?_⟩
+  · intro _ _
+    exact hNash.pureMixedProfile_isNash
+  · rw [hμ]
+    unfold publicCorrelatedLaw
+    rw [PMF.pure_bind]
+    exact (Math.PMFProduct.pmfPi_pure σ).symm
 
 end KernelGame
 
