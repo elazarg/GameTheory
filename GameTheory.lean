@@ -88,6 +88,7 @@ import GameTheory.Concepts.Correlation.CorrelatedEqProperties
 import GameTheory.Concepts.Correlation.Regret
 import GameTheory.Concepts.Correlation.ApproximateCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelatedNashMixed
+import GameTheory.Concepts.Correlation.DominantCorrelatedEq
 import GameTheory.Concepts.Correlation.GameMorphism
 import GameTheory.Concepts.Equilibrium.NashCorrelatedEq
 import GameTheory.Concepts.Correlation.CorrelationRegimes
