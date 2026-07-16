@@ -201,14 +201,18 @@ theorem expect_udist_eq_eu_of_bounded (G : KernelGame ι)
     (G.outcomeKernel σ) G.utility (fun u => u who) hbd
 
 /-- Expected utility is the expectation of the corresponding coordinate of
-the utility-vector distribution, when the outcome carrier is finite. -/
-theorem expect_udist_eq_eu (G : KernelGame ι) [Finite G.Outcome]
+the utility-vector distribution. Unconditional: `udist` is a deterministic
+pushforward of `outcomeKernel` through `utility`, and the pushforward
+change-of-variables `Math.Probability.expect_map` carries no finiteness or
+boundedness hypotheses. This strictly generalizes
+`expect_udist_eq_eu_of_bounded`. -/
+theorem expect_udist_eq_eu (G : KernelGame ι)
     (σ : Profile G) (who : ι) :
     Math.Probability.expect (G.udist σ) (fun u => u who) =
       G.eu σ who := by
-  obtain ⟨C, hbd⟩ :=
-    Math.Probability.exists_abs_bound_of_finite (fun ω => G.utility ω who)
-  exact G.expect_udist_eq_eu_of_bounded σ who hbd
+  rw [KernelGame.udist, KernelGame.eu]
+  rw [Math.ProbabilityMassFunction.bind_pure_eq_pushforward]
+  exact Math.Probability.expect_map G.utility (G.outcomeKernel σ) (fun u => u who)
 
 /-- A utility-distribution preserving morphism also preserves expected utility
 under bounded utilities. The semantic content is already `udist_preserved`;
@@ -252,6 +256,23 @@ theorem Morphism.eu_preserved_of_fintype_outcome {G H : KernelGame ι}
       (fun ω => H.utility ω who)).choose_spec
   exact f.eu_preserved_of_bounded hbdG hbdH σ who
 
+/-- A utility-distribution preserving morphism preserves expected utility,
+unconditionally. Special case of `eu_preserved_of_bounded`/
+`eu_preserved_of_fintype_outcome` made possible by the unconditional
+`expect_udist_eq_eu`: no boundedness or finiteness hypothesis on either
+game's utility is needed. -/
+theorem Morphism.eu_preserved {G H : KernelGame ι}
+    (f : Morphism G H) (σ : Profile G) (who : ι) :
+    H.eu (fun i => f.stratMap i (σ i)) who = G.eu σ who := by
+  calc
+    H.eu (fun i => f.stratMap i (σ i)) who =
+        Math.Probability.expect
+          (H.udist (fun i => f.stratMap i (σ i))) (fun u => u who) :=
+          (expect_udist_eq_eu H (fun i => f.stratMap i (σ i)) who).symm
+    _ = Math.Probability.expect (G.udist σ) (fun u => u who) := by
+          rw [f.udist_preserved σ]
+    _ = G.eu σ who := expect_udist_eq_eu G σ who
+
 -- ============================================================================
 -- EU-specialized morphisms
 -- ============================================================================
@@ -280,6 +301,15 @@ def Morphism.toEUMorphismOfBounded {G H : KernelGame ι}
     EUMorphism G H where
   toMorphism := f
   eu_preserved := f.eu_preserved_of_bounded hbdG hbdH
+
+/-- Upgrade any utility-distribution morphism to the EU-specialized morphism
+expected by solution-concept transport theorems, unconditionally. Special
+case of `toEUMorphismOfBounded`/`toEUMorphismOfFintypeOutcome` made possible
+by the unconditional `Morphism.eu_preserved`. -/
+def Morphism.toEUMorphism {G H : KernelGame ι} (f : Morphism G H) :
+    EUMorphism G H where
+  toMorphism := f
+  eu_preserved := f.eu_preserved
 
 namespace EUMorphism
 
