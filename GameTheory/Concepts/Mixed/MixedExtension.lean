@@ -299,6 +299,19 @@ theorem isNash_iff_gains_nonpos
   simpa [mixedGain] using G.isNash_iff_gains_nonpos_of_bounded σ
     (C := C) (fun who => hC who)
 
+/-- A pure Nash equilibrium, embedded as a point-mass mixed profile, is a Nash
+    equilibrium of the mixed extension: no pure deviation can gain, since pure
+    deviations at the point mass are exactly the pure-game deviations. -/
+theorem IsNash.pureMixedProfile_isNash {σ : Profile G} (hN : G.IsNash σ) :
+    G.mixedExtension.IsNash (G.pureMixedProfile σ) := by
+  rw [G.isNash_iff_gains_nonpos]
+  intro who a
+  unfold mixedGain
+  rw [← G.pureMixedProfile_update σ who a, G.mixedExtension_eu_pureMixedProfile,
+    G.mixedExtension_eu_pureMixedProfile]
+  have := hN who a
+  linarith
+
 end NashGain
 
 -- ============================================================================
