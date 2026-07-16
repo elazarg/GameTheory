@@ -560,4 +560,57 @@ theorem asym_uniform_nash :
       (fun i => PMF.uniformOfFintype (asymS i)) :=
   uniformlyMixed_nash_of_harmonic asymGame asym_isHarmonic
 
+/-! ### Zero-sum does not imply harmonic
+
+Matching pennies is both zero-sum and harmonic, but this is a special feature of
+its payoff table (each player's payoff depends only on whether the two actions
+agree), not a consequence of zero-sum alone. A generic zero-sum `2 × 2` table is
+a machine-checked counterexample to "zero-sum ⇒ harmonic". -/
+
+section ZeroSumNotHarmonic
+
+/-- An arbitrary payoff table on `Fin 2 × Fin 2`, with no special structure. -/
+def zsWitness : Fin 2 → Fin 2 → ℝ
+  | 0, 0 => 1
+  | 1, 0 => 2
+  | 0, 1 => 3
+  | 1, 1 => 4
+
+/-- The zero-sum game built from `zsWitness`: player `1`'s payoff is the negation
+of player `0`'s. -/
+def zsGame : (Fin 2 → Fin 2) → Payoff (Fin 2) :=
+  fun σ i => if i = 0 then zsWitness (σ 0) (σ 1) else - zsWitness (σ 0) (σ 1)
+
+/-- `zsGame` is zero-sum at every profile. -/
+theorem zsGame_isZeroSum (σ : Fin 2 → Fin 2) : zsGame σ 0 + zsGame σ 1 = 0 := by
+  simp [zsGame]
+
+theorem zsGame_update_zero (σ : Fin 2 → Fin 2) (s : Fin 2) :
+    zsGame (Function.update σ 0 s) 0 = zsWitness s (σ 1) := by
+  simp [zsGame]
+
+theorem zsGame_update_one (σ : Fin 2 → Fin 2) (s : Fin 2) :
+    zsGame (Function.update σ 1 s) 1 = - zsWitness (σ 0) s := by
+  simp [zsGame]
+
+/-- **Zero-sum does not imply harmonic.** A generic `2 × 2` zero-sum game need not
+be divergence-free: `zsGame` violates the harmonic balance at `σ = (0, 0)`, where
+player `0`'s outgoing flow is `1` and player `1`'s is `-2`, summing to `-1 ≠ 0`. -/
+theorem zsGame_not_isHarmonic : ¬ IsHarmonic zsGame := by
+  rw [isHarmonic_iff_sum_flow]
+  push Not
+  refine ⟨![0, 0], ?_⟩
+  have h0 : ∑ s' : Fin 2, flow zsGame ![0, 0] 0 s' = 1 := by
+    rw [Fin.sum_univ_two]
+    simp only [flow, zsGame, zsWitness]
+    norm_num
+  have h1 : ∑ s' : Fin 2, flow zsGame ![0, 0] 1 s' = -2 := by
+    rw [Fin.sum_univ_two]
+    simp only [flow, zsGame, zsWitness]
+    norm_num
+  rw [Fin.sum_univ_two, h0, h1]
+  norm_num
+
+end ZeroSumNotHarmonic
+
 end GameTheory.FlowDecomposition
