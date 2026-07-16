@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
 import Math.Coupling
+import Math.PMFIter
 import Math.ProbabilityMassFunction
 import Math.NondeterministicRefinement
 
@@ -31,6 +32,7 @@ namespace Math
 namespace TraceRun
 
 open Math.Coupling
+open Math.Probability
 open Math.ProbabilityMassFunction (pushforward)
 
 variable {σ τ : Type*}
@@ -67,6 +69,21 @@ theorem seqRun_succ (steps : Nat → List σ → PMF σ) (s₀ : σ) (k : Nat) :
       (seqRun steps s₀ k).bind
         (fun ss => pushforward (steps k ss) (fun t => ss ++ [t])) := rfl
 
+/-- The state kernel on traces induced by appending one sampled next state. -/
+noncomputable def appendKernel (step : List σ → PMF σ) :
+    Kernel (List σ) (List σ) :=
+  fun ss => pushforward (step ss) fun t => ss ++ [t]
+
+/-- Trace execution is ordinary kernel iteration on the append kernel. This
+bridge lets generic relational iteration rules serve trace semantics as well. -/
+theorem traceRun_eq_iter (step : List σ → PMF σ) (s₀ : σ) (k : Nat) :
+    traceRun step s₀ k = PMFIter.iter (appendKernel step) k [s₀] := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    rw [traceRun_succ, ih, PMFIter.iter_succ']
+    rfl
+
 -- ============================================================================
 -- Probabilistic bisimulation on trace kernels
 -- ============================================================================
@@ -80,6 +97,19 @@ structure TraceKernelBisim (step₁ : List σ → PMF σ) (step₂ : List τ →
   step_compat : ∀ ss ts, rel ss ts →
     HasCoupling (fun s t => rel (ss ++ [s]) (ts ++ [t])) (step₁ ss) (step₂ ts)
 
+/-- A trace-kernel bisimulation induces the general relational judgment on its
+append kernels. The specialized `step_compat` field is convenient for clients;
+all iteration reasoning proceeds through this consolidated interface. -/
+theorem TraceKernelBisim.appendKernel_relates
+    {step₁ : List σ → PMF σ} {step₂ : List τ → PMF τ}
+    (bs : TraceKernelBisim step₁ step₂) :
+    Kernel.Relates bs.rel bs.rel (appendKernel step₁) (appendKernel step₂) := by
+  intro ss ts hst
+  refine ⟨(bs.step_compat ss ts hst).map
+    (fun s => ss ++ [s]) (fun t => ts ++ [t]) ?_⟩
+  intro s t h
+  exact h
+
 /-- Trace-run lifts probabilistic bisimulation: if `bs.rel [s₀] [t₀]`
 holds, the `k`-step trace distributions admit a coupling supported on
 `bs.rel`. -/
@@ -88,15 +118,9 @@ noncomputable def traceRun_HasCoupling_of_bisim
     (bs : TraceKernelBisim step₁ step₂) (s₀ : σ) (t₀ : τ)
     (h : bs.rel [s₀] [t₀]) (k : Nat) :
     HasCoupling bs.rel (traceRun step₁ s₀ k) (traceRun step₂ t₀ k) := by
-  induction k with
-  | zero =>
-    simp only [traceRun_zero]
-    exact HasCoupling.pure [s₀] [t₀] h
-  | succ k ih =>
-    rw [traceRun_succ, traceRun_succ]
-    refine ih.bind (fun ss ts h_st => ?_)
-    refine (bs.step_compat ss ts h_st).bind (fun s t h_inner => ?_)
-    exact HasCoupling.pure (ss ++ [s]) (ts ++ [t]) h_inner
+  rw [traceRun_eq_iter, traceRun_eq_iter]
+  exact PMFIter.iter_HasCoupling_of_relates
+    bs.appendKernel_relates [s₀] [t₀] h k
 
 -- ============================================================================
 -- Functional special case

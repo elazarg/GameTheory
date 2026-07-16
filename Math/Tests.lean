@@ -6,6 +6,8 @@ Authors: GameTheory contributors
 
 import Math.Probability
 import Math.ProbabilityMassFunction.Distinguishing
+import Math.RelationalKernel
+import Math.PMFIter
 import Math.PMFProduct
 import Math.OnlineAlgorithms
 import Math.Minimax.Loomis
@@ -34,6 +36,16 @@ example :
 example :
     Kernel.comp (Kernel.id Bool) (Kernel.ofFun not) = Kernel.ofFun not := by
   simp
+
+example :
+    Kernel.Relates Eq Eq (Kernel.ofFun not) (Kernel.ofFun not) :=
+  Kernel.Relates.refl _
+
+example (n : Nat) :
+    Kernel.Relates Eq Eq
+      (PMFIter.iter (Kernel.ofFun not) n)
+      (PMFIter.iter (Kernel.ofFun not) n) :=
+  PMFIter.iter_relates (Kernel.Relates.refl _) n
 
 example (σ : Bool → Bool) :
     pmfPi (fun i => (PMF.pure (σ i) : PMF Bool)) = PMF.pure σ :=

@@ -5,8 +5,8 @@ Authors: GameTheory contributors
 -/
 
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Math.Coupling
 import Math.ProbabilityMassFunction
+import Math.RelationalKernel
 
 /-!
 # Iterated PMF kernel
@@ -118,15 +118,41 @@ theorem iter_stable_after_terminal
 -- ============================================================================
 
 open Math.Coupling
+open Math.Probability
 
 variable {A : Type*}
+
+/-- A relation preserved by one pair of kernels is preserved by every finite
+iterate. This is the generic invariant rule; `KernelBisim` below only packages
+the relation together with this one-step judgment. -/
+noncomputable def iter_HasCoupling_of_relates
+    {R : A → B → Prop} {step₁ : A → PMF A} {step₂ : B → PMF B}
+    (hstep : Kernel.Relates R R step₁ step₂)
+    (a : A) (b : B) (h : R a b) (n : Nat) :
+    HasCoupling R (iter step₁ n a) (iter step₂ n b) := by
+  induction n generalizing a b with
+  | zero =>
+    simp only [iter_zero]
+    exact HasCoupling.pure a b h
+  | succ n ih =>
+    rw [iter_succ, iter_succ]
+    let c := Classical.choice (hstep a b h)
+    exact c.bind fun a' b' h' => ih a' b' h'
+
+/-- Kernel relation lifting is closed under bounded iteration. -/
+theorem iter_relates
+    {R : A → B → Prop} {step₁ : A → PMF A} {step₂ : B → PMF B}
+    (hstep : Kernel.Relates R R step₁ step₂) (n : Nat) :
+    Kernel.Relates R R (iter step₁ n) (iter step₂ n) := by
+  intro a b hab
+  exact ⟨iter_HasCoupling_of_relates hstep a b hab n⟩
 
 /-- Probabilistic bisimulation between two PMF kernels: a relation on
 states such that for every related pair, the next-state distributions
 admit a coupling supported on the relation. -/
 structure KernelBisim (step₁ : A → PMF A) (step₂ : B → PMF B) where
   rel : A → B → Prop
-  step_compat : ∀ a b, rel a b → HasCoupling rel (step₁ a) (step₂ b)
+  step_compat : Kernel.Relates rel rel step₁ step₂
 
 /-- Iteration lifts probabilistic bisimulation: if `bs.rel a b` holds,
 the `n`-step iterated distributions admit a coupling supported on
@@ -135,14 +161,8 @@ noncomputable def iter_HasCoupling_of_bisim
     {step₁ : A → PMF A} {step₂ : B → PMF B}
     (bs : KernelBisim step₁ step₂) (a : A) (b : B) (h : bs.rel a b)
     (n : Nat) :
-    HasCoupling bs.rel (iter step₁ n a) (iter step₂ n b) := by
-  induction n generalizing a b with
-  | zero =>
-    simp only [iter_zero]
-    exact HasCoupling.pure a b h
-  | succ n ih =>
-    rw [iter_succ, iter_succ]
-    exact (bs.step_compat a b h).bind (fun a' b' h' => ih a' b' h')
+    HasCoupling bs.rel (iter step₁ n a) (iter step₂ n b) :=
+  iter_HasCoupling_of_relates bs.step_compat a b h n
 
 -- ============================================================================
 -- Functional special case
@@ -161,10 +181,9 @@ noncomputable def KernelBisim.ofKernelHom {f : B → A}
     (h : IsKernelHom f step₁ step₂) :
     KernelBisim step₁ step₂ where
   rel := fun a b => a = f b
-  step_compat := fun a b h_ab => by
-    subst h_ab
-    rw [h b]
-    exact HasCoupling.ofProj (step₂ b)
+  step_compat := Kernel.Relates.of_map_eq f fun a b h_ab => by
+    subst a
+    exact h b
 
 /-- Iteration commutes with a functional kernel homomorphism. Corollary
 of `iter_HasCoupling_of_bisim` via the projection bridge

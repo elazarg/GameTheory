@@ -40,7 +40,7 @@ transports and standard game constructors. In the quantitative setting,
 composition should expose additive error bounds so multi-step reductions can be
 proved as short algebraic calculations.
 
-Status: implemented on `feature/transformation-algebra`; awaiting review.
+Status: merged in commit `388315e`.
 
 ## 5. A separate interactive-game layer
 
@@ -50,11 +50,16 @@ procedure-based semantic layer with explicit composition. Do not enlarge
 subprobability semantics rather than silently turning it into an ordinary
 outcome.
 
+Status: deferred pending a concrete adaptive-protocol use case.
+
 ## 6. Relational rules over probabilistic kernels
 
 Build on `Math.Coupling` with relational kernel judgments and compositional
 rules for sequencing, sampling, iteration, and invariants. Apply this first to
 repeated or stochastic games, where a program-logic layer has concrete value.
+
+Status: consolidation implemented on `feature/relational-kernel-rules`;
+awaiting review. Game-specific applications remain follow-up work.
 
 ## 7. Paper-to-library traceability
 

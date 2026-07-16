@@ -245,6 +245,12 @@ noncomputable def HasCoupling.ofMap (μ : PMF α) (f : α → β) :
     obtain ⟨a, _ha, heq⟩ := hp
     rw [← heq]
 
+/-- Diagonal coupling of a probability law with itself. -/
+noncomputable def HasCoupling.refl (μ : PMF α) : HasCoupling Eq μ μ := by
+  have h := HasCoupling.ofMap μ (id : α → α)
+  rw [PMF.map_id] at h
+  exact h
+
 /-- Functional projection coupling: when `μ = ν.map f`, the relation
 `fun a b => a = f b` lifts via the diagonal. -/
 noncomputable def HasCoupling.ofProj {f : β → α} (ν : PMF β) :

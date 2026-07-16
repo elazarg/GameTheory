@@ -35,12 +35,12 @@ open Filter
 -- ============================================================================
 
 /-- A stochastic kernel from `α` to `β`: maps each input to a PMF over outputs. -/
-abbrev Kernel (α β : Type) : Type := α → PMF β
+abbrev Kernel (α β : Type*) := α → PMF β
 
 namespace Kernel
 
 /-- Identity kernel. -/
-noncomputable def id (α : Type) : Kernel α α := PMF.pure
+noncomputable def id (α : Type*) : Kernel α α := PMF.pure
 
 /-- Kernel composition (Kleisli composition). -/
 noncomputable def comp (k₁ : Kernel α β) (k₂ : Kernel β γ) : Kernel α γ :=

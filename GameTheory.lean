@@ -4,6 +4,7 @@ import GameTheory.Theorems
 
 -- Probability and core
 import Math.Probability
+import Math.RelationalKernel
 import GameTheory.Core.KernelGame
 import GameTheory.Core.GameForm
 import GameTheory.Core.Coalition
