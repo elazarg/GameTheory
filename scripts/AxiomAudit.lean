@@ -32,3 +32,33 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.CoalGame.shapleyValue_unique
 #print axioms GameTheory.VNM.exists_representsExpectedUtility_of_vnmAxioms
 #print axioms GameTheory.VNM.vnmAxioms_iff_exists_representsExpectedUtility
+
+-- Repeated games and online learning.
+#print axioms GameTheory.KernelGame.discounted_folk_theorem_approx
+#print axioms Math.OnlineLearning.mw_externalRegret_le
+#print axioms GameTheory.KernelGame.timeAverage_isεCCE_of_regret_le
+#print axioms Math.Approachability.blackwell_approaches
+#print axioms Math.Approachability.regretMatch_approaches
+
+-- Auction and mechanism-design headline results.
+#print axioms GameTheory.VCGSetup.vcg_truthful
+#print axioms GameTheory.vickrey_truthful_dominant
+#print axioms GameTheory.ReserveVickrey.mechanism_isDSIC
+#print axioms GameTheory.KnapsackAuction.welfareMaximizingMechanism_isDSIC
+#print axioms GameTheory.SingleParameterMechanism.existsUnique_zeroNormalized_payment_of_isMonotone
+
+-- Social choice, matching, and cooperative games.
+#print axioms GameTheory.sen_paretian_liberal
+#print axioms GameTheory.median_is_condorcet_winner
+#print axioms GameTheory.MatchingMarket.exists_stable
+#print axioms GameTheory.MatchingMarket.OptionalOrder.lattice
+#print axioms GameTheory.CoalGame.IsCore.isBalanced
+#print axioms GameTheory.CoalGame.costOfStability_eq_zero_iff_core
+#print axioms GameTheory.CoalGame.banzhafIndex_additive
+#print axioms GameTheory.CoalGame.shapleyShubikIndex_sum_eq_one
+
+-- Indivisible fair division and correlation saturation.
+#print axioms GameTheory.SocialChoice.FairDivision.Indivisible.roundRobinAllocation_isEF1
+#print axioms GameTheory.SocialChoice.FairDivision.Indivisible.exists_efx_two_agents
+#print axioms GameTheory.KernelGame.strictDominant_isCoarseCorrelationSaturated
+#print axioms GameTheory.KernelGame.IsIESDSSolvable.isCorrelationSaturated

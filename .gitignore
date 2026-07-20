@@ -11,3 +11,4 @@ ephemeral/
 *.log
 .codex
 *.pdf
+scripts/__pycache__

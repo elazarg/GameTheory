@@ -15,12 +15,12 @@ Kuhn's theorem: behavioral and mixed strategy equivalence.
 
 The semantic core lives on `KuhnModel`/`ObsModelCore`:
 - **B→M** (`ObsModelCore.kuhn_behavioral_to_mixed` in
-  `BehavioralToMixedCore.lean`): no recall needed, but requires the semantic
-  horizon-separation condition used to fold sequential randomization into an
-  ex-ante product distribution.
+  `GameTheory/Languages/Kuhn/BehavioralToMixedCore.lean`): no recall needed,
+  but requires the semantic horizon-separation condition used to fold
+  sequential randomization into an ex-ante product distribution.
 - **M→B** (`ObsModelCore.kuhn_mixed_to_behavioral_semantic` in
-  `MixedToBehavioralCore.lean`): stated over semantic step/locality
-  assumptions.
+  `GameTheory/Languages/Kuhn/MixedToBehavioralCore.lean`): stated over semantic
+  step/locality assumptions.
 
 `ObsModel` is the stronger snapshot-refined compatibility layer. It is
 useful when a client naturally has faithful observation-history snapshots and

@@ -15,9 +15,13 @@ LRS-style "simplified Loomis" proof of the finite minimax theorem.
 This file ports the layered scaffolding from
 [math-xmum/gametheory](https://github.com/math-xmum/gametheory)'s
 `GameTheory/Zerosum.lean`. It is specialised to `ℝ` because the strategy
-spaces use compactness + continuity for the existence of optimisers — the
-ordered-field generalisation (any linearly ordered field) is
-`Minimax.minimax`, proved separately by von Neumann symmetrisation.
+spaces use compactness and continuity for the existence of optimisers.
+
+This is deliberately an independent mathematical route to finite matrix
+minimax. The game-theory layer proves `KernelGame.von_neumann_minimax` via
+Brouwer for arbitrary finite two-player zero-sum kernel games; neither theorem
+depends on the other because they serve different abstractions and proof
+architectures.
 
 This file provides the **foundational layer** for the simplified-Loomis
 (von Neumann) minimax theorem: the mixed-strategy aggregates
@@ -26,12 +30,9 @@ optimisers via compactness, weak duality `lam0 ≤ mu0`, and the
 column/row dropping infrastructure (`extendDropColumn` / `extendDropRow`)
 reused by the general development.
 
-The scalar equality `lam0 A = mu0 A` is **not** re-proved here by a
-standalone induction. It is the `B = 𝟙` specialisation of the general
-(positive-`B`) Loomis theorem, exported as
-`Loomis.minmax_from_general`. (Earlier revisions carried an inlined
-copy of that induction, `minmax'`; it was removed as redundant once the
-general proof subsumed it.)
+The scalar equality `lam0 A = mu0 A` is the `B = 𝟙` specialisation of the
+general positive-`B` Loomis theorem, exported as
+`Loomis.minmax_from_general`.
 
 ## Attribution
 

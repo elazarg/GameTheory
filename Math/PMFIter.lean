@@ -77,10 +77,8 @@ theorem iter_add (step : B → PMF B) (n m : Nat) (b : B) :
     funext b'
     exact (iter_succ' step b' m).symm
 
-/-- The Nat-iterate of `bind step` from a Dirac at `b` equals iter from
-`b`. The bridge that lets call sites previously written as
-`Nat.iterate (· >>= step) k (pure b)` route through the central
-`PMFIter.iter`. -/
+/-- The Nat-iterate of `bind step` from a Dirac at `b` equals `PMFIter.iter`
+from `b`. -/
 theorem nat_iterate_bind_pure_eq_iter (step : B → PMF B) (k : Nat) (b : B) :
     Nat.iterate (fun d => d.bind step) k (PMF.pure b) = iter step k b := by
   induction k with

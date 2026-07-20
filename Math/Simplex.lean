@@ -323,9 +323,8 @@ theorem wsum_pure_apply [DecidableEq I] (i₀ : I) (f : I → 𝕜) :
   change (∑ i, (if i = i₀ then (1 : 𝕜) else 0) * f i) = f i₀
   simp
 
-/-- Weighted sum with point mass at `i₀` equals `f i₀`. Legacy form using
-the inline anonymous-structure point mass. New code should prefer
-`stdSimplex.pure` together with `wsum_pure_apply`. -/
+/-- Weighted sum at the explicit anonymous-structure point mass on `i₀`
+evaluates to `f i₀`. -/
 theorem wsum_pure [DecidableEq I] (i₀ : I) (f : I → 𝕜) :
     wsum ⟨fun i => if i = i₀ then 1 else 0,
           fun i => by simp only; split_ifs <;> norm_num,
@@ -382,9 +381,9 @@ end Topology
 
 /-! ### Matrix-game expected payoff
 
-`expectedPayoffMatrix` was previously in `StrategicGame.Simplex`. It is placed
-here because it is a purely arithmetic definition (bilinear evaluation on the
-simplex) with no strategic-game vocabulary. -/
+`expectedPayoffMatrix` belongs here because it is a purely arithmetic
+definition (bilinear evaluation on the simplex) with no strategic-game
+vocabulary. -/
 
 variable {J : Type*}
 

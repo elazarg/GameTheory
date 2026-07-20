@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Core.GameMorphism
 import GameTheory.Concepts.Correlation.CorrelatedNashMixed
+import GameTheory.Concepts.Foundations.StrategicEquivalence
 
 /-!
 # GameTheory.Concepts.Correlation.GameMorphism
@@ -18,18 +19,18 @@ Provides:
 - `Morphism.realizeLaw` -- push a profile-law through a morphism's strategy map
 - `Morphism.correlatedEu_preserved_of_bounded` -- correlated EU is preserved
   along a realized profile-law, under bounded utility
+- `EUGameIsomorphism.toUtilityStrategicEquivalence` -- the utility-law
+  strategic equivalence induced by a game isomorphism
 - `EUGameIsomorphism.correlatedEq_iff` -- correlated equilibrium is invariant
-  across a bijective, EU-preserving relabeling, under bounded utility
+  across a bijective, utility-distribution-preserving relabeling
 - `EUGameIsomorphism.coarseCorrelatedEq_iff` -- likewise for coarse correlated
   equilibrium
 
-Unlike Nash and dominance, which are stated directly in terms of `eu` and so
-transfer along an `EUGameIsomorphism` with no further hypotheses, correlated
-and coarse correlated equilibrium are stated in terms of `correlatedEu`
-(an expectation over a profile *law*, not a single profile). Relating
-`correlatedEu` back to `eu` requires the same bounded-utility hypothesis
-`correlatedEu_eq_expect_eu_of_bounded` already needs, so the corollaries here
-carry that hypothesis even though `eu_preserved` itself does not. -/
+The equilibrium invariance theorems are instances of the generic transport
+corner: an isomorphism induces a `GameForm.StrategicEquivalence` between the
+two utility-law views, and CE/CCE transfer through its recommendation/constant
+deviation transports. The standalone `correlatedEu` lemma retains its bounded
+form because it explicitly factors through profile-level expected utilities. -/
 
 namespace GameTheory
 
@@ -73,106 +74,108 @@ theorem realize_eq_toMorphism_realizeLaw (e : EUGameIsomorphism G H)
     (μ : PMF (Profile G)) :
     e.realize μ = e.toGameIsomorphism.toMorphism.realizeLaw μ := rfl
 
-/-- Pushing a unilateral (recommendation-dependent) deviation of the realized
-profile-law backtranslates exactly to the corresponding source-side deviation,
-via the isomorphism's per-player bijection. -/
-private theorem unilateralDeviationDistribution_realize (e : EUGameIsomorphism G H)
-    (μ : PMF (Profile G)) (who : ι) (dH : H.Strategy who → H.Strategy who) :
-    H.unilateralDeviationDistribution (e.realize μ) who dH =
-      e.realize
-        (G.unilateralDeviationDistribution μ who
-          ((e.stratEquiv who).symm ∘ dH ∘ e.stratEquiv who)) := by
-  unfold unilateralDeviationDistribution deviationDistribution unilateralDeviation realize
-  rw [PMF.bind_map, PMF.map_bind]
-  refine congrArg μ.bind (funext fun σ => ?_)
-  simp only [Function.comp_apply, PMF.pure_map]
-  congr 1
-  funext i
-  rcases eq_or_ne i who with rfl | hne
-  · simp
-  · simp [Function.update_of_ne hne]
+/-- The utility-law strategic equivalence induced by a game isomorphism.
 
-/-- Pushing a constant deviation of the realized profile-law backtranslates
-exactly to the corresponding source-side constant deviation. -/
-private theorem constantDeviationDistribution_realize (e : EUGameIsomorphism G H)
-    (μ : PMF (Profile G)) (who : ι) (s'' : H.Strategy who) :
-    H.constantDeviationDistribution (e.realize μ) who s'' =
-      e.realize
-        (G.constantDeviationDistribution μ who ((e.stratEquiv who).symm s'')) := by
-  unfold constantDeviationDistribution deviationDistribution constantDeviation realize
-  rw [PMF.bind_map, PMF.map_bind]
-  refine congrArg μ.bind (funext fun σ => ?_)
-  simp only [Function.comp_apply, PMF.pure_map]
-  congr 1
-  funext i
-  rcases eq_or_ne i who with rfl | hne
-  · simp
-  · simp [Function.update_of_ne hne]
+Pointwise law preservation is the per-player projection of the isomorphism's
+joint utility-distribution preservation. This is the common transport object
+from which the CE and CCE invariance theorems below are derived. -/
+noncomputable def toUtilityStrategicEquivalence (e : EUGameIsomorphism G H) :
+    GameForm.StrategicEquivalence G.toGameForm H.toGameForm ℝ where
+  viewG := G.utilityView
+  viewH := H.utilityView
+  equivStrategy := e.stratEquiv
+  law_eq := by
+    intro σ who
+    change Math.ProbabilityMassFunction.pushforward (G.outcomeKernel σ)
+        (fun o => G.utility o who) =
+      Math.ProbabilityMassFunction.pushforward
+        (H.outcomeKernel (fun j => e.stratEquiv j (σ j)))
+        (fun o => H.utility o who)
+    rw [← Math.ProbabilityMassFunction.bind_pure_eq_pushforward,
+      ← Math.ProbabilityMassFunction.bind_pure_eq_pushforward]
+    exact (e.toGameIsomorphism.udistPlayer_preserved σ who).symm
 
-/-- Correlated equilibrium is invariant across a bijective, EU-preserving
-relabeling, under bounded utility on both games. -/
-theorem correlatedEq_iff (e : EUGameIsomorphism G H)
-    {C_G C_H : ι → ℝ}
-    (hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who)
-    (hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who)
-    (μ : PMF (Profile G)) :
+/-- Correlated equilibrium is invariant across a bijective,
+utility-distribution-preserving relabeling.
+
+This is the correlated-deviation-family instance of generic strategic-
+equivalence transport. -/
+theorem correlatedEq_iff (e : EUGameIsomorphism G H) (μ : PMF (Profile G)) :
     G.IsCorrelatedEq μ ↔ H.IsCorrelatedEq (e.realize μ) := by
-  have hbase : ∀ who, H.correlatedEu (e.realize μ) who = G.correlatedEu μ who := by
-    intro who
-    rw [realize_eq_toMorphism_realizeLaw]
-    exact e.toGameIsomorphism.toMorphism.correlatedEu_preserved_of_bounded hbdG hbdH μ who
-  have hdevEu : ∀ (who : ι) (dG : G.Strategy who → G.Strategy who),
-      H.correlatedEu (e.realize (G.unilateralDeviationDistribution μ who dG)) who =
-        G.correlatedEu (G.unilateralDeviationDistribution μ who dG) who := by
-    intro who dG
-    rw [realize_eq_toMorphism_realizeLaw]
-    exact e.toGameIsomorphism.toMorphism.correlatedEu_preserved_of_bounded hbdG hbdH
-      (G.unilateralDeviationDistribution μ who dG) who
+  rw [G.IsCorrelatedEq_iff_IsCorrelatedEqFor_eu,
+    H.IsCorrelatedEq_iff_IsCorrelatedEqFor_eu]
+  rw [← observedPref_utilityView G, ← observedPref_utilityView H]
+  change G.toGameForm.IsCorrelatedEqFor
+      (GameForm.observedPref G.utilityView (fun _ => expectationPref)) μ ↔
+    H.toGameForm.IsCorrelatedEqFor
+      (GameForm.observedPref H.utilityView (fun _ => expectationPref)) (e.realize μ)
+  let E := e.toUtilityStrategicEquivalence
+  have hmap : PMF.map E.realize μ = e.realize μ := by
+    congr 1
+  have hbackmap : PMF.map E.symm.realize (e.realize μ) = μ := by
+    rw [← hmap, PMF.map_comp]
+    rw [show E.symm.realize ∘ E.realize = id from ?_, PMF.map_id]
+    funext σ
+    exact E.realizeSymm_realize σ
   constructor
-  · intro hCE who dH
-    rw [hbase who, unilateralDeviationDistribution_realize,
-      hdevEu who ((e.stratEquiv who).symm ∘ dH ∘ e.stratEquiv who)]
-    exact hCE who _
-  · intro hCE who dG
-    have hkey := hCE who (e.stratEquiv who ∘ dG ∘ (e.stratEquiv who).symm)
-    rw [hbase who] at hkey
-    rw [unilateralDeviationDistribution_realize] at hkey
-    have hdG : (e.stratEquiv who).symm ∘ (e.stratEquiv who ∘ dG ∘ (e.stratEquiv who).symm) ∘
-        e.stratEquiv who = dG := by
-      funext s; simp
-    rw [hdG, hdevEu who dG] at hkey
-    exact hkey
+  · intro h
+    have h' : G.toGameForm.IsCorrelatedEqFor
+        (GameForm.observedPref E.viewG (fun _ => expectationPref)) μ := by
+      simpa [E, toUtilityStrategicEquivalence] using h
+    have ht := E.target_correlatedEq μ h'
+    rw [hmap] at ht
+    simpa [E, toUtilityStrategicEquivalence] using ht
+  · intro h
+    have h' : H.toGameForm.IsCorrelatedEqFor
+        (GameForm.observedPref E.symm.viewG (fun _ => expectationPref))
+        (e.realize μ) := by
+      simpa [E, toUtilityStrategicEquivalence,
+        GameForm.StrategicEquivalence.symm] using h
+    have hback := E.symm.target_correlatedEq (e.realize μ) h'
+    rw [hbackmap] at hback
+    simpa [E, toUtilityStrategicEquivalence,
+      GameForm.StrategicEquivalence.symm] using hback
 
 /-- Coarse correlated equilibrium is invariant across a bijective,
-EU-preserving relabeling, under bounded utility on both games. -/
-theorem coarseCorrelatedEq_iff (e : EUGameIsomorphism G H)
-    {C_G C_H : ι → ℝ}
-    (hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who)
-    (hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who)
-    (μ : PMF (Profile G)) :
+utility-distribution-preserving relabeling.
+
+This is the constant-deviation-family instance of generic strategic-
+equivalence transport. -/
+theorem coarseCorrelatedEq_iff (e : EUGameIsomorphism G H) (μ : PMF (Profile G)) :
     G.IsCoarseCorrelatedEq μ ↔ H.IsCoarseCorrelatedEq (e.realize μ) := by
-  have hbase : ∀ who, H.correlatedEu (e.realize μ) who = G.correlatedEu μ who := by
-    intro who
-    rw [realize_eq_toMorphism_realizeLaw]
-    exact e.toGameIsomorphism.toMorphism.correlatedEu_preserved_of_bounded hbdG hbdH μ who
-  have hdevEu : ∀ (who : ι) (s' : G.Strategy who),
-      H.correlatedEu (e.realize (G.constantDeviationDistribution μ who s')) who =
-        G.correlatedEu (G.constantDeviationDistribution μ who s') who := by
-    intro who s'
-    rw [realize_eq_toMorphism_realizeLaw]
-    exact e.toGameIsomorphism.toMorphism.correlatedEu_preserved_of_bounded hbdG hbdH
-      (G.constantDeviationDistribution μ who s') who
+  rw [G.IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu,
+    H.IsCoarseCorrelatedEq_iff_IsCoarseCorrelatedEqFor_eu]
+  rw [← observedPref_utilityView G, ← observedPref_utilityView H]
+  change G.toGameForm.IsCoarseCorrelatedEqFor
+      (GameForm.observedPref G.utilityView (fun _ => expectationPref)) μ ↔
+    H.toGameForm.IsCoarseCorrelatedEqFor
+      (GameForm.observedPref H.utilityView (fun _ => expectationPref)) (e.realize μ)
+  let E := e.toUtilityStrategicEquivalence
+  have hmap : PMF.map E.realize μ = e.realize μ := by
+    congr 1
+  have hbackmap : PMF.map E.symm.realize (e.realize μ) = μ := by
+    rw [← hmap, PMF.map_comp]
+    rw [show E.symm.realize ∘ E.realize = id from ?_, PMF.map_id]
+    funext σ
+    exact E.realizeSymm_realize σ
   constructor
-  · intro hCCE who s''
-    rw [hbase who, constantDeviationDistribution_realize, hdevEu who ((e.stratEquiv who).symm s'')]
-    exact hCCE who _
-  · intro hCCE who s'
-    have hkey := hCCE who (e.stratEquiv who s')
-    rw [hbase who] at hkey
-    rw [constantDeviationDistribution_realize] at hkey
-    simp only [Equiv.symm_apply_apply] at hkey
-    rw [hdevEu who s'] at hkey
-    exact hkey
+  · intro h
+    have h' : G.toGameForm.IsCoarseCorrelatedEqFor
+        (GameForm.observedPref E.viewG (fun _ => expectationPref)) μ := by
+      simpa [E, toUtilityStrategicEquivalence] using h
+    have ht := E.target_coarseCorrelatedEq μ h'
+    rw [hmap] at ht
+    simpa [E, toUtilityStrategicEquivalence] using ht
+  · intro h
+    have h' : H.toGameForm.IsCoarseCorrelatedEqFor
+        (GameForm.observedPref E.symm.viewG (fun _ => expectationPref))
+        (e.realize μ) := by
+      simpa [E, toUtilityStrategicEquivalence,
+        GameForm.StrategicEquivalence.symm] using h
+    have hback := E.symm.target_coarseCorrelatedEq (e.realize μ) h'
+    rw [hbackmap] at hback
+    simpa [E, toUtilityStrategicEquivalence,
+      GameForm.StrategicEquivalence.symm] using hback
 
 end EUGameIsomorphism
 

@@ -39,8 +39,8 @@ theory results.
 - No-regret play implies approximate coarse correlated equilibrium.
 - Blackwell approachability and regret matching.
 - Fictitious-play convergence facts, including the exact-potential-game route.
-- An approximate discounted folk theorem for observable mixed-action repeated
-  games.
+- An approximate discounted Nash folk theorem for strictly individually
+  rational feasible payoffs in observable mixed-action repeated games.
 
 **Mechanism design, auctions, and social choice**
 
@@ -58,7 +58,7 @@ theory results.
 
 - Indivisible-goods EF, EF1, EFX, proportionality, and maximin-share
   definitions and existence results.
-- EF1 allocations via envy-cycle and round-robin rules.
+- EF1 allocations via round-robin rules.
 - Two-agent EFX for indivisible goods.
 - Divisible cake-cutting on `[0,1]`: cut-and-choose, Dubins-Spanier
   proportionality, and Stromquist envy-free existence via KKM.
@@ -135,7 +135,7 @@ The library is finite/discrete by design.
 
 ## Build
 
-Requires Lean 4 (`v4.31.0`) and Mathlib (`v4.31.0`). The project also depends on
+Requires Lean 4 (`v4.32.0`) and Mathlib (`v4.32.0`). The project also depends on
 the pinned [`fixed-point-theorems-lean4`](https://github.com/elazarg/fixed-point-theorems-lean4)
 fork for Brouwer/Kakutani-style fixed-point support.
 
