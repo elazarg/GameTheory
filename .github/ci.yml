@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Lean libraries
+        uses: leanprover/lean-action@v1
+        with:
+          build: true
+          test: false
+          use-mathlib-cache: true
+
+      - name: Check for proof placeholders
+        run: python3 scripts/check_lean_placeholders.py
+
+      - name: Audit repository and theorem axioms
+        run: python3 scripts/audit_repository.py
