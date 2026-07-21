@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Core.KernelGame
+import Mathlib.Data.List.OfFn
 import Math.ProbabilityMassFunction
 
 /-!
@@ -79,13 +80,6 @@ def stationaryMonitoredProfile (M : G.PublicMonitoring) (σ : Profile G) :
     M.MonitoredProfile :=
   fun i _ _ => σ i
 
-/-- Continuation of a monitored profile after a specified public history.
-The continuation is defined even after zero-probability histories, as required
-for perfect-public equilibrium. -/
-def after (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
-    {t : ℕ} (h : M.SignalHistory t) : M.MonitoredProfile :=
-  fun i n k => σ i (t + n) (h.append M k)
-
 /-- Continuation after observing one next public signal.  Unlike general
 prefix concatenation, this uses `Fin.cons` and therefore keeps the successor
 time index definitionally aligned with `n + 1`. -/
@@ -99,6 +93,93 @@ def afterSignal (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     M.afterSignal σ y i n h = σ i (n + 1) (Fin.cons y h) :=
   rfl
 
+@[simp] theorem afterSignal_stationaryMonitoredProfile
+    (M : G.PublicMonitoring) (σ : Profile G) (y : M.Signal) :
+    M.afterSignal (M.stationaryMonitoredProfile σ) y =
+      M.stationaryMonitoredProfile σ :=
+  rfl
+
+/-- Iterate one-signal continuation along a list of public signals. -/
+def afterSignals (M : G.PublicMonitoring) (σ : M.MonitoredProfile) :
+    List M.Signal → M.MonitoredProfile
+  | [] => σ
+  | y :: ys => M.afterSignals (M.afterSignal σ y) ys
+
+/-- Continuation of a monitored profile after a specified public history.
+The continuation is defined even after zero-probability histories, as required
+for perfect-public equilibrium.  Iterating one-signal continuations makes the
+sequential algebra definitionally well behaved, without casts between equal
+`Fin` index types. -/
+def after (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    {t : ℕ} (h : M.SignalHistory t) : M.MonitoredProfile :=
+  M.afterSignals σ (List.ofFn h)
+
+@[simp] theorem afterSignals_nil
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile) :
+    M.afterSignals σ [] = σ :=
+  rfl
+
+@[simp] theorem afterSignals_cons
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (y : M.Signal) (ys : List M.Signal) :
+    M.afterSignals σ (y :: ys) =
+      M.afterSignals (M.afterSignal σ y) ys :=
+  rfl
+
+/-- Sequential continuation respects concatenation of signal lists. -/
+theorem afterSignals_append
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (xs ys : List M.Signal) :
+    M.afterSignals σ (xs ++ ys) =
+      M.afterSignals (M.afterSignals σ xs) ys := by
+  induction xs generalizing σ with
+  | nil => rfl
+  | cons x xs ih =>
+      exact ih (M.afterSignal σ x)
+
+@[simp] theorem ofFn_snoc
+    (M : G.PublicMonitoring) {t : ℕ}
+    (h : M.SignalHistory t) (y : M.Signal) :
+    List.ofFn (Fin.snoc h y) = List.ofFn h ++ [y] := by
+  simpa using List.ofFn_succ' (Fin.snoc h y)
+
+/-- Taking a one-signal continuation after an existing prefix is the same as
+continuing after the prefix with that signal appended. -/
+theorem afterSignal_after
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    {t : ℕ} (h : M.SignalHistory t) (y : M.Signal) :
+    M.afterSignal (M.after σ h) y = M.after σ (Fin.snoc h y) := by
+  rw [after, after, M.ofFn_snoc, M.afterSignals_append]
+  rfl
+
+/-- Continuing after two successive public histories is continuation after
+their concatenation. -/
+theorem after_after
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    {t n : ℕ} (h : M.SignalHistory t) (k : M.SignalHistory n) :
+    M.after (M.after σ h) k = M.after σ (Fin.append h k) := by
+  rw [after, after, after, List.ofFn_fin_append, M.afterSignals_append]
+
+/-- A one-element history gives the corresponding one-signal continuation. -/
+@[simp] theorem after_singleton
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile) (y : M.Signal) :
+    M.after σ (Fin.cons y (fun k : Fin 0 => k.elim0)) =
+      M.afterSignal σ y := by
+  change M.afterSignals σ
+      (List.ofFn (Fin.cons y (fun k : Fin 0 => k.elim0))) = _
+  simp [List.ofFn_succ]
+
+/-- A continuation after the first signal and a remaining history is the
+continuation after the history obtained by adjoining that signal at the
+front. -/
+theorem after_afterSignal
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile) (y : M.Signal)
+    {t : ℕ} (h : M.SignalHistory t) :
+    M.after (M.afterSignal σ y) h = M.after σ (Fin.cons y h) := by
+  change M.afterSignals (M.afterSignal σ y) (List.ofFn h) =
+    M.afterSignals σ (List.ofFn (Fin.cons y h))
+  simp [List.ofFn_succ]
+
 /-- Deviate only at the current period, then return to the prescribed public
 strategy.  Applied to a continuation profile, this is the standard one-shot
 deviation after the corresponding public history. -/
@@ -106,6 +187,18 @@ def oneShotDeviation (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     (who : ι) (a : G.Strategy who) : M.MonitoredStrategy who
   | 0, _ => a
   | n + 1, h => σ who (n + 1) h
+
+/-- Continuation of one player's monitored strategy after a next public
+signal. -/
+def strategyAfterSignal (M : G.PublicMonitoring) {who : ι}
+    (s : M.MonitoredStrategy who) (y : M.Signal) : M.MonitoredStrategy who :=
+  fun n h => s (n + 1) (Fin.cons y h)
+
+/-- Follow `dev` for the first `N` periods and return to `σ` thereafter. -/
+def truncatedDeviation (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (who : ι) (dev : M.MonitoredStrategy who) (N : ℕ) :
+    M.MonitoredStrategy who :=
+  fun n h => if n < N then dev n h else σ who n h
 
 @[simp] theorem oneShotDeviation_zero
     (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
@@ -120,12 +213,55 @@ def oneShotDeviation (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     M.oneShotDeviation σ who a (n + 1) h = σ who (n + 1) h :=
   rfl
 
-@[simp] theorem after_apply
+@[simp] theorem truncatedDeviation_zero
     (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
-    {t : ℕ} (h : M.SignalHistory t) (i : ι)
-    (n : ℕ) (k : M.SignalHistory n) :
-    M.after σ h i n k = σ i (t + n) (h.append M k) :=
-  rfl
+    (who : ι) (dev : M.MonitoredStrategy who) :
+    M.truncatedDeviation σ who dev 0 = σ who := by
+  funext n h
+  simp [truncatedDeviation]
+
+@[simp] theorem truncatedDeviation_succ_zero
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (who : ι) (dev : M.MonitoredStrategy who) (N : ℕ)
+    (h : M.SignalHistory 0) :
+    M.truncatedDeviation σ who dev (N + 1) 0 h = dev 0 h := by
+  simp [truncatedDeviation]
+
+/-- Continuing a truncated deviation removes its first deviation period. -/
+theorem strategyAfterSignal_truncatedDeviation_succ
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (who : ι) (dev : M.MonitoredStrategy who) (N : ℕ) (y : M.Signal) :
+    M.strategyAfterSignal (M.truncatedDeviation σ who dev (N + 1)) y =
+      M.truncatedDeviation (M.afterSignal σ y) who
+        (M.strategyAfterSignal dev y) N := by
+  funext n h
+  simp [strategyAfterSignal, truncatedDeviation]
+
+/-- Continuation commutes with a unilateral strategy update. -/
+theorem afterSignal_update
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (σ : M.MonitoredProfile) (who : ι) (dev : M.MonitoredStrategy who)
+    (y : M.Signal) :
+    M.afterSignal (Function.update σ who dev) y =
+      Function.update (M.afterSignal σ y) who
+        (M.strategyAfterSignal dev y) := by
+  funext i n h
+  by_cases hi : i = who
+  · subst hi
+    simp [afterSignal, strategyAfterSignal]
+  · simp [afterSignal, Function.update_of_ne hi]
+
+/-- After the signal following a one-shot deviation, play returns to the
+prescribed continuation profile. -/
+@[simp] theorem afterSignal_update_oneShotDeviation
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (σ : M.MonitoredProfile) (who : ι) (a : G.Strategy who)
+    (y : M.Signal) :
+    M.afterSignal
+        (Function.update σ who (M.oneShotDeviation σ who a)) y =
+      M.afterSignal σ y := by
+  rw [M.afterSignal_update σ who (M.oneShotDeviation σ who a) y]
+  apply Function.update_eq_self
 
 /-- Every continuation of stationary monitored play is the same stationary
 profile. -/
@@ -134,7 +270,12 @@ profile. -/
     {t : ℕ} (h : M.SignalHistory t) :
     M.after (M.stationaryMonitoredProfile σ) h =
       M.stationaryMonitoredProfile σ := by
-  rfl
+  unfold after
+  induction List.ofFn h with
+  | nil => rfl
+  | cons y ys ih =>
+      simpa only [afterSignals_cons,
+        afterSignal_stationaryMonitoredProfile] using ih
 
 /-- Post-process every public signal through a stochastic kernel.  This is the
 standard garbling operation on a public monitoring structure. -/
@@ -311,6 +452,23 @@ theorem stageEU_congr_before_succ
     funext i
     exact h t (by omega) hist i
   rw [hprofile]
+
+/-- Before its cutoff, a truncated unilateral deviation induces exactly the
+same expected stage payoff as the full deviation. -/
+theorem stageEU_update_truncatedDeviation_eq_of_lt
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (σ : M.MonitoredProfile) (who : ι)
+    (dev : M.MonitoredStrategy who) {t N : ℕ} (htN : t < N) :
+    M.stageEU
+        (Function.update σ who (M.truncatedDeviation σ who dev N)) t who =
+      M.stageEU (Function.update σ who dev) t who := by
+  apply M.stageEU_congr_before_succ
+  intro s hs hist i
+  have hsN : s < N := by omega
+  by_cases hi : i = who
+  · subst hi
+    simp [truncatedDeviation, hsN]
+  · simp [hi]
 
 /-- The expected stage payoff of stationary monitored play is the stage-game
 expected utility, independently of the monitoring structure. -/

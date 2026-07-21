@@ -80,6 +80,16 @@ example {t : ℕ}
     PublicMonitoring.stageEU_stationaryMonitoredProfile]
   simp [KernelGame.eu, allTrueProfile]
 
+/-- One-signal and arbitrary-history continuation compose without dependent
+index casts. -/
+example (σ : coordinationGame.outcomeMonitoring.MonitoredProfile)
+    {t : ℕ} (h : coordinationGame.outcomeMonitoring.SignalHistory t)
+    (y : coordinationGame.outcomeMonitoring.Signal) :
+    coordinationGame.outcomeMonitoring.afterSignal
+        (coordinationGame.outcomeMonitoring.after σ h) y =
+      coordinationGame.outcomeMonitoring.after σ (Fin.snoc h y) :=
+  coordinationGame.outcomeMonitoring.afterSignal_after σ h y
+
 /-- The checked stage Nash profile gives a monitored uniform equilibrium. -/
 example :
     coordinationGame.outcomeMonitoring.IsUniformEquilibrium
@@ -137,6 +147,41 @@ example :
   exact PublicMonitoring.stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash
     coordinationGame.outcomeMonitoring (by norm_num) (by norm_num)
       allTrueProfile_isNash
+
+/-- The one-shot-deviation test is equivalent to PPE in the finite-outcome
+coordination example. -/
+example :
+    coordinationGame.outcomeMonitoring.IsPerfectPublicEquilibrium (1 / 2)
+        (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+          allTrueProfile) ↔
+      coordinationGame.outcomeMonitoring.HasNoProfitableOneShotDeviationAfterEveryHistory
+        (1 / 2)
+        (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+          allTrueProfile) := by
+  letI : Finite coordinationGame.Outcome := by
+    change Finite (Bool → Bool)
+    infer_instance
+  exact PublicMonitoring.isPerfectPublicEquilibrium_iff_noProfitableOneShotDeviation
+    coordinationGame.outcomeMonitoring (by norm_num) (by norm_num) _
+
+/-- Finiteness is not essential: the bounded-payoff statement exposes the
+actual hypothesis used by the one-shot-deviation principle. -/
+example :
+    coordinationGame.outcomeMonitoring.IsPerfectPublicEquilibrium (1 / 2)
+        (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+          allTrueProfile) ↔
+      coordinationGame.outcomeMonitoring.HasNoProfitableOneShotDeviationAfterEveryHistory
+        (1 / 2)
+        (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+          allTrueProfile) := by
+  apply PublicMonitoring.isPerfectPublicEquilibrium_iff_noProfitableOneShotDeviation_of_bounded
+    coordinationGame.outcomeMonitoring (by norm_num) (by norm_num)
+  intro who
+  refine ⟨1, ?_⟩
+  intro ρ
+  simp only [coordinationGame, KernelGame.eu,
+    Math.Probability.expect_pure]
+  split <;> norm_num
 
 end RepeatedMonitoringTests
 
