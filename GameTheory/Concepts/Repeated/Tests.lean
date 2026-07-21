@@ -7,6 +7,7 @@ import GameTheory.Concepts.Repeated.MonitoringPublicDraw
 import GameTheory.Concepts.Repeated.MonitoringRank
 import GameTheory.Concepts.Repeated.MonitoringRankInstances
 import GameTheory.Concepts.Repeated.MonitoringPureDeviations
+import GameTheory.Concepts.Repeated.MonitoringIncentives
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -497,6 +498,24 @@ example :
   exact purePairwiseDeviationRank_garble_le
     coordinationGame.realizedActionMonitoring PMF.pure
       allTrueProfile false true
+
+/-- Pure individual full rank is exactly surjectivity of the continuation-to-
+incentive-effect map. -/
+example :
+    Function.Surjective
+      (coordinationGame.realizedActionMonitoring.pureIndividualIncentiveEffectMap
+        allTrueProfile false) := by
+  rw [pureIndividualIncentiveEffectMap_surjective_iff]
+  exact pureIndividualFullRank_realizedActionMonitoring coordinationGame
+    allTrueProfile false
+
+/-- Constant public continuation transfers do not change deviation
+incentives. -/
+example (c : ℝ) :
+    coordinationGame.realizedActionMonitoring.purePairwiseIncentiveEffectMap
+        allTrueProfile false true (fun _ => c) = 0 := by
+  exact purePairwiseIncentiveEffectMap_const
+    coordinationGame.realizedActionMonitoring allTrueProfile false true c
 
 /-- An arbitrary behavioral deviation induces the probability-weighted sum
 of the pure-deviation signal vectors. -/

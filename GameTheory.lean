@@ -97,6 +97,7 @@ import GameTheory.Concepts.Repeated.MonitoringPublicDraw
 import GameTheory.Concepts.Repeated.MonitoringRank
 import GameTheory.Concepts.Repeated.MonitoringRankInstances
 import GameTheory.Concepts.Repeated.MonitoringPureDeviations
+import GameTheory.Concepts.Repeated.MonitoringIncentives
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
