@@ -68,6 +68,36 @@ proof: outside every (possibly repeated) pair there is a third alternative. -/
 def HasAtLeastThree (A : Type v) : Prop :=
   Nonempty A ∧ ∀ a b : A, ∃ c, c ≠ a ∧ c ≠ b
 
+/-- The proof-oriented definition of `HasAtLeastThree` is equivalent to the usual existence of
+three pairwise distinct alternatives. -/
+theorem hasAtLeastThree_iff_exists : HasAtLeastThree A ↔
+    ∃ a b c : A, a ≠ b ∧ a ≠ c ∧ b ≠ c := by
+  classical
+  constructor
+  · rintro ⟨⟨a⟩, hthird⟩
+    obtain ⟨b, hba, _⟩ := hthird a a
+    obtain ⟨c, hca, hcb⟩ := hthird a b
+    exact ⟨a, b, c, Ne.symm hba, Ne.symm hca, Ne.symm hcb⟩
+  · rintro ⟨a, b, c, hab, hac, hbc⟩
+    refine ⟨⟨a⟩, fun u v => ?_⟩
+    by_contra h
+    push Not at h
+    have hsub : ({a, b, c} : Finset A) ⊆ {u, v} := by
+      intro w hw
+      simp only [Finset.mem_insert, Finset.mem_singleton] at hw ⊢
+      rcases hw with hwa | hwb | hwc
+      · subst w
+        exact (eq_or_ne a u).elim Or.inl (fun hau => Or.inr (h a hau))
+      · subst w
+        exact (eq_or_ne b u).elim Or.inl (fun hbu => Or.inr (h b hbu))
+      · subst w
+        exact (eq_or_ne c u).elim Or.inl (fun hcu => Or.inr (h c hcu))
+    have hle := Finset.card_le_card hsub
+    have h3 : ({a, b, c} : Finset A).card = 3 := by
+      simp [hab, hac, hbc]
+    have h2 : ({u, v} : Finset A).card ≤ 2 := (Finset.card_insert_le _ _).trans (by simp)
+    omega
+
 /-- A finite type of cardinality at least three has at least three alternatives. -/
 theorem hasAtLeastThree_of_natCard [Finite A] (hcard : 2 < Nat.card A) :
     HasAtLeastThree A := by
@@ -89,6 +119,22 @@ theorem hasAtLeastThree_of_natCard [Finite A] (hcard : 2 < Nat.card A) :
     rw [Finset.card_univ] at hle
     have h2 : ({u, v} : Finset A).card ≤ 2 := (Finset.card_insert_le _ _).trans (by simp)
     omega
+
+/-- On finite types, `HasAtLeastThree` is equivalent to the expected cardinal inequality. -/
+theorem hasAtLeastThree_iff_natCard [Finite A] :
+    HasAtLeastThree A ↔ 2 < Nat.card A := by
+  constructor
+  · intro hA
+    classical
+    letI : Fintype A := Fintype.ofFinite A
+    obtain ⟨a, b, c, hab, hac, hbc⟩ := hasAtLeastThree_iff_exists.mp hA
+    have hsub : ({a, b, c} : Finset A) ⊆ Finset.univ := fun _ _ => Finset.mem_univ _
+    have hle := Finset.card_le_card hsub
+    have h3 : ({a, b, c} : Finset A).card = 3 := by
+      simp [hab, hac, hbc]
+    rw [h3, Finset.card_univ, ← Nat.card_eq_fintype_card] at hle
+    omega
+  · exact hasAtLeastThree_of_natCard
 
 namespace IsRanking
 
