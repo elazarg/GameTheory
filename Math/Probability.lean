@@ -426,6 +426,44 @@ theorem expect_tendsto_of_forall_tendsto_of_bounded {Ω : Type*}
   rw [hfact, tsum_mul_left]
   rw [pmf_toReal_tsum_one d, mul_one]
 
+/-- The expectation of a uniformly absolutely bounded real function obeys
+the same absolute bound. No finiteness assumption on the sample type is
+needed. -/
+theorem abs_expect_le_of_abs_le {Ω : Type*} (d : PMF Ω) (f : Ω → ℝ)
+    {C : ℝ} (hbd : ∀ omega, |f omega| ≤ C) :
+    |expect d f| ≤ C := by
+  have h_summable := expect_summable_of_bounded d f hbd
+  have h_summable_bd : Summable (fun omega => (d omega).toReal * C) :=
+    (pmf_toReal_summable d).mul_right C
+  have h_sum_one : ∑' omega, (d omega).toReal * C = C := by
+    rw [tsum_mul_right, pmf_toReal_tsum_one, one_mul]
+  have h_upper : expect d f ≤ C := by
+    have h_le : ∀ omega, (d omega).toReal * f omega ≤
+        (d omega).toReal * C := by
+      intro omega
+      exact mul_le_mul_of_nonneg_left
+        (le_of_abs_le (hbd omega)) ENNReal.toReal_nonneg
+    calc
+      expect d f = ∑' omega, (d omega).toReal * f omega := rfl
+      _ ≤ ∑' omega, (d omega).toReal * C :=
+        h_summable.tsum_le_tsum h_le h_summable_bd
+      _ = C := h_sum_one
+  have h_lower : -C ≤ expect d f := by
+    have h_le : ∀ omega, -((d omega).toReal * C) ≤
+        (d omega).toReal * f omega := by
+      intro omega
+      have hd : 0 ≤ (d omega).toReal := ENNReal.toReal_nonneg
+      have h := mul_le_mul_of_nonneg_left
+        (neg_le_of_abs_le (hbd omega)) hd
+      linarith
+    calc
+      (-C : ℝ) = -∑' omega, (d omega).toReal * C := by rw [h_sum_one]
+      _ = ∑' omega, -((d omega).toReal * C) := (tsum_neg).symm
+      _ ≤ ∑' omega, (d omega).toReal * f omega :=
+        h_summable_bd.neg.tsum_le_tsum h_le h_summable
+      _ = expect d f := rfl
+  exact abs_le.mpr ⟨h_lower, h_upper⟩
+
 /-! ### Finite-sample expectation algebra
 
 `expect` is linear and monotone. On a finite sample space it is a finite sum, so

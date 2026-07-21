@@ -794,6 +794,51 @@ theorem deviationSignalVector_mixedExtension_eq_sum_pure
   rw [Finset.sum_sub_distrib, ← Finset.sum_mul,
     Math.Probability.pmf_toReal_sum_one, one_mul]
 
+/-- Every behavioral mixed-deviation signal effect lies in the span of the
+pure-deviation effects. Thus indexing a rank condition by all mixed actions
+adds affine redundancies rather than new signal directions. -/
+theorem deviationSignalVector_mixedExtension_mem_span_pure
+    (M : G.PublicMonitoring) [Fintype ι] [DecidableEq ι]
+    (a : Profile G) (who : ι) [Finite (G.Strategy who)]
+    (tau : PMF (G.Strategy who)) :
+    M.mixedExtension.deviationSignalVector
+        (G.pureMixedProfile a) who tau ∈
+      Submodule.span ℝ (Set.range (M.deviationSignalMatrix a who)) := by
+  letI := Fintype.ofFinite (G.Strategy who)
+  rw [M.deviationSignalVector_mixedExtension_eq_sum_pure a who tau]
+  apply Submodule.sum_mem
+  intro dev _
+  apply Submodule.smul_mem
+  by_cases hdev : dev = a who
+  · subst dev
+    have hz : M.deviationSignalVector a who (a who) = 0 := by
+      funext y
+      simp only [deviationSignalVector]
+      rw [Function.update_eq_self]
+      simp
+    rw [hz]
+    exact Submodule.zero_mem _
+  · apply Submodule.subset_span
+    exact ⟨⟨dev, hdev⟩, rfl⟩
+
+/-- Every linear statistic of a mixed deviation's signal effect is the
+probability-weighted sum of that statistic on pure deviations. -/
+theorem deviationSignalVector_mixedExtension_map_eq_sum_pure
+    (M : G.PublicMonitoring) [Fintype ι] [DecidableEq ι]
+    (a : Profile G) (who : ι) [Fintype (G.Strategy who)]
+    {V : Type*} [AddCommMonoid V] [Module ℝ V]
+    (L : (M.Signal → ℝ) →ₗ[ℝ] V)
+    (tau : PMF (G.Strategy who)) :
+    L (M.mixedExtension.deviationSignalVector
+        (G.pureMixedProfile a) who tau) =
+      ∑ dev, (tau dev).toReal •
+        L (M.deviationSignalVector a who dev) := by
+  rw [M.deviationSignalVector_mixedExtension_eq_sum_pure a who tau,
+    map_sum]
+  apply Finset.sum_congr rfl
+  intro dev _
+  rw [map_smul]
+
 end PublicMonitoring
 
 end KernelGame

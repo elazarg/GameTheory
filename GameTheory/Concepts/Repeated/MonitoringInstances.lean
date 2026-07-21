@@ -38,12 +38,13 @@ deterministically after every period. -/
 /-- Perfect outcome monitoring: the signal marginal is the stage outcome law.
 For the additive expected-payoff semantics this represents announcing the
 realized stage outcome. -/
-def outcomeMonitoring (G : KernelGame ι) : G.PublicMonitoring where
+@[reducible] def outcomeMonitoring (G : KernelGame ι) : G.PublicMonitoring where
   Signal := G.Outcome
   signalKernel := G.outcomeKernel
 
 /-- Monitor a deterministic public function of the realized stage outcome. -/
-def mapMonitoring (G : KernelGame ι) {S : Type} (f : G.Outcome → S) :
+@[reducible] def mapMonitoring (G : KernelGame ι) {S : Type}
+    (f : G.Outcome → S) :
     G.PublicMonitoring where
   Signal := S
   signalKernel := fun σ => (G.outcomeKernel σ).map f

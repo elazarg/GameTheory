@@ -148,39 +148,9 @@ noncomputable def eu (G : KernelGame ι) (σ : Profile G) (who : ι) : ℝ :=
 every profile is bounded by the same constant. -/
 theorem eu_abs_le_of_bounded (G : KernelGame ι) (who : ι)
     {C : ℝ} (hbd : ∀ ω, |G.utility ω who| ≤ C)
-    (σ : Profile G) : |G.eu σ who| ≤ C := by
-  have h_summable :=
-    Math.Probability.expect_summable_of_bounded (G.outcomeKernel σ)
-      (fun ω => G.utility ω who) hbd
-  have h_summable_bd : Summable (fun ω => (G.outcomeKernel σ ω).toReal * C) :=
-    (Math.Probability.pmf_toReal_summable (G.outcomeKernel σ)).mul_right C
-  have h_sum_one : ∑' ω, (G.outcomeKernel σ ω).toReal * C = C := by
-    rw [tsum_mul_right, Math.Probability.pmf_toReal_tsum_one, one_mul]
-  have h_upper : G.eu σ who ≤ C := by
-    have h_le : ∀ ω, (G.outcomeKernel σ ω).toReal * G.utility ω who ≤
-        (G.outcomeKernel σ ω).toReal * C := by
-      intro ω
-      exact mul_le_mul_of_nonneg_left (le_of_abs_le (hbd ω)) ENNReal.toReal_nonneg
-    calc G.eu σ who
-        = ∑' ω, (G.outcomeKernel σ ω).toReal * G.utility ω who := rfl
-      _ ≤ ∑' ω, (G.outcomeKernel σ ω).toReal * C :=
-          h_summable.tsum_le_tsum h_le h_summable_bd
-      _ = C := h_sum_one
-  have h_lower : -C ≤ G.eu σ who := by
-    have h_le : ∀ ω, -((G.outcomeKernel σ ω).toReal * C) ≤
-        (G.outcomeKernel σ ω).toReal * G.utility ω who := by
-      intro ω
-      have hd : 0 ≤ (G.outcomeKernel σ ω).toReal := ENNReal.toReal_nonneg
-      have h_neg_le : -C ≤ G.utility ω who := neg_le_of_abs_le (hbd ω)
-      have h := mul_le_mul_of_nonneg_left h_neg_le hd
-      linarith
-    calc (-C : ℝ)
-        = -∑' ω, (G.outcomeKernel σ ω).toReal * C := by rw [h_sum_one]
-      _ = ∑' ω, -((G.outcomeKernel σ ω).toReal * C) := (tsum_neg).symm
-      _ ≤ ∑' ω, (G.outcomeKernel σ ω).toReal * G.utility ω who :=
-          h_summable_bd.neg.tsum_le_tsum h_le h_summable
-      _ = G.eu σ who := rfl
-  exact abs_le.mpr ⟨h_lower, h_upper⟩
+    (σ : Profile G) : |G.eu σ who| ≤ C :=
+  Math.Probability.abs_expect_le_of_abs_le
+    (G.outcomeKernel σ) (fun ω => G.utility ω who) hbd
 
 /-- For a finite outcome carrier, each player's expected utility is uniformly
 bounded over profiles. -/
