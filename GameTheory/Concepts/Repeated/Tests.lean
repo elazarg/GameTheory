@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Repeated.MonitoringPublicDraw
+import GameTheory.Concepts.Repeated.MonitoringRank
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -316,6 +317,29 @@ example :
   exact stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash
       (coordinationGame.outcomeMonitoring.withPublicDraw (PMF.pure true))
       (by norm_num) (by norm_num) allTrueProfile_isNash
+
+/-- A unilateral deviation only redistributes public signal probability
+mass. -/
+example (who : Bool) (dev : Bool) :
+    ∑ y,
+      coordinationGame.profileMonitoring.deviationSignalVector
+        allTrueProfile who dev y = 0 := by
+  exact coordinationGame.profileMonitoring.sum_deviationSignalVector_eq_zero
+    allTrueProfile who dev
+
+/-- The basis-free pairwise-rank API has the standard decomposition into two
+individual rank conditions and disjoint deviation spans. -/
+example :
+    coordinationGame.profileMonitoring.PairwiseFullRank
+        allTrueProfile false true ↔
+      coordinationGame.profileMonitoring.IndividualFullRank
+          allTrueProfile false ∧
+        coordinationGame.profileMonitoring.IndividualFullRank
+            allTrueProfile true ∧
+          coordinationGame.profileMonitoring.PairwiseIdentifiable
+            allTrueProfile false true := by
+  exact coordinationGame.profileMonitoring.pairwiseFullRank_iff
+    allTrueProfile false true
 
 end RepeatedMonitoringTests
 
