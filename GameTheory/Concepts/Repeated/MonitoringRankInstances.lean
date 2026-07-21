@@ -198,6 +198,16 @@ def PureIndividualFullRank
     (a : Profile G) (who : ι) : Prop :=
   LinearIndependent ℝ (M.pureDeviationSignalMatrix a who)
 
+/-- The spans of two players' pure-deviation signal effects intersect only
+at zero. -/
+def PurePairwiseIdentifiable
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    (a : Profile G) (i j : ι) : Prop :=
+  Disjoint
+    (Submodule.span ℝ (Set.range (M.pureDeviationSignalMatrix a i)))
+    (Submodule.span ℝ (Set.range (M.pureDeviationSignalMatrix a j)))
+
 /-- Combined pure-deviation signal family for two players. -/
 def purePairwiseDeviationSignalFamily
     [Fintype ι] [DecidableEq ι]
@@ -213,6 +223,41 @@ def PurePairwiseFullRank
     (M : G.mixedExtension.PublicMonitoring)
     (a : Profile G) (i j : ι) : Prop :=
   LinearIndependent ℝ (M.purePairwiseDeviationSignalFamily a i j)
+
+/-- Pure pairwise full rank is exactly pure individual full rank for both
+players plus identifiability of their pure-deviation subspaces. -/
+theorem purePairwiseFullRank_iff
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    (a : Profile G) (i j : ι) :
+    M.PurePairwiseFullRank a i j ↔
+      M.PureIndividualFullRank a i ∧
+        M.PureIndividualFullRank a j ∧
+          M.PurePairwiseIdentifiable a i j := by
+  simpa only [PurePairwiseFullRank, PureIndividualFullRank,
+    PurePairwiseIdentifiable, purePairwiseDeviationSignalFamily,
+    Function.comp_def, Sum.elim_inl, Sum.elim_inr] using
+      (linearIndependent_sum (R := ℝ)
+        (v := M.purePairwiseDeviationSignalFamily a i j))
+
+/-- Pure pairwise identifiability is symmetric in the two players. -/
+theorem PurePairwiseIdentifiable.symm
+    [Fintype ι] [DecidableEq ι]
+    {M : G.mixedExtension.PublicMonitoring}
+    {a : Profile G} {i j : ι}
+    (h : M.PurePairwiseIdentifiable a i j) :
+    M.PurePairwiseIdentifiable a j i :=
+  Disjoint.symm h
+
+/-- Pure pairwise full rank is symmetric in the two players. -/
+theorem PurePairwiseFullRank.symm
+    [Fintype ι] [DecidableEq ι]
+    {M : G.mixedExtension.PublicMonitoring}
+    {a : Profile G} {i j : ι}
+    (h : M.PurePairwiseFullRank a i j) :
+    M.PurePairwiseFullRank a j i := by
+  rw [M.purePairwiseFullRank_iff] at h ⊢
+  exact ⟨h.2.1, h.1, h.2.2.symm⟩
 
 /-- The pure-deviation matrix under realized-action monitoring is exactly the
 perfect-profile-monitoring deviation matrix of the underlying pure game. -/
@@ -270,6 +315,15 @@ theorem purePairwiseFullRank_realizedActionMonitoring
   rw [PurePairwiseFullRank,
     purePairwiseDeviationSignalFamily_realizedActionMonitoring G]
   exact pairwiseFullRank_profileMonitoring G a hij
+
+/-- Realized-action monitoring separates the pure-deviation subspaces of
+distinct players. -/
+theorem purePairwiseIdentifiable_realizedActionMonitoring
+    (G : KernelGame ι) [Fintype ι] [DecidableEq ι]
+    (a : Profile G) {i j : ι} (hij : i ≠ j) :
+    G.realizedActionMonitoring.PurePairwiseIdentifiable a i j :=
+  (G.realizedActionMonitoring.purePairwiseFullRank_iff a i j).1
+    (purePairwiseFullRank_realizedActionMonitoring G a hij) |>.2.2
 
 /-- An arbitrary mixed deviation's signal vector is the probability-weighted
 sum of the pure-deviation signal vectors. -/

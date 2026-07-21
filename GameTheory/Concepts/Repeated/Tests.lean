@@ -426,6 +426,20 @@ example :
   purePairwiseFullRank_realizedActionMonitoring coordinationGame
     allTrueProfile Bool.false_ne_true
 
+/-- Pure pairwise full rank has the same individual-rank plus identifiability
+decomposition as the unrestricted basis-free rank condition. -/
+example :
+    coordinationGame.realizedActionMonitoring.PurePairwiseFullRank
+        allTrueProfile false true ↔
+      coordinationGame.realizedActionMonitoring.PureIndividualFullRank
+          allTrueProfile false ∧
+        coordinationGame.realizedActionMonitoring.PureIndividualFullRank
+            allTrueProfile true ∧
+          coordinationGame.realizedActionMonitoring.PurePairwiseIdentifiable
+            allTrueProfile false true := by
+  exact purePairwiseFullRank_iff coordinationGame.realizedActionMonitoring
+    allTrueProfile false true
+
 /-- An arbitrary behavioral deviation induces the probability-weighted sum
 of the pure-deviation signal vectors. -/
 example (τ : PMF Bool) :
