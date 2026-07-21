@@ -28,6 +28,83 @@ namespace PublicMonitoring
 
 variable {ι : Type} {G : KernelGame ι}
 
+set_option maxHeartbeats 800000 in
+-- The double-series domination and `tsum_comm'` elaboration is inference-heavy.
+/-- Exchange expectation and a geometrically weighted sum under a uniform
+bound.  This is the discrete Fubini step used by the Bellman equation. -/
+theorem expect_tsum_geometric_of_bounded
+    {Y : Type} (p : PMF Y) {δ C : ℝ}
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hC0 : 0 ≤ C)
+    (f : Y → ℕ → ℝ) (hbd : ∀ y n, |f y n| ≤ C) :
+    Math.Probability.expect p (fun y => ∑' n : ℕ, δ ^ n * f y n) =
+      ∑' n : ℕ, δ ^ n * Math.Probability.expect p (fun y => f y n) := by
+  let F : Y × ℕ → ℝ := fun yn =>
+    (p yn.1).toReal * (δ ^ yn.2 * f yn.1 yn.2)
+  have hp : Summable fun y => (p y).toReal :=
+    Math.Probability.pmf_toReal_summable p
+  have hg : Summable fun n : ℕ => C * δ ^ n :=
+    (summable_geometric_of_lt_one hδ0 hδ1).mul_left C
+  have hmajor : Summable fun yn : Y × ℕ =>
+      (p yn.1).toReal * (C * δ ^ yn.2) :=
+    hp.mul_of_nonneg hg (fun _ => ENNReal.toReal_nonneg)
+      (fun n => mul_nonneg hC0 (pow_nonneg hδ0 n))
+  have hF : Summable F := by
+    refine Summable.of_norm_bounded hmajor ?_
+    intro yn
+    rw [Real.norm_eq_abs]
+    dsimp [F]
+    rw [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg, abs_mul,
+      abs_of_nonneg (pow_nonneg hδ0 yn.2)]
+    calc
+      (p yn.1).toReal * (δ ^ yn.2 * |f yn.1 yn.2|) ≤
+          (p yn.1).toReal * (δ ^ yn.2 * C) := by
+        gcongr
+        exact hbd yn.1 yn.2
+      _ = (p yn.1).toReal * (C * δ ^ yn.2) := by ring
+  have hrow : ∀ y, Summable fun n => F (y, n) := by
+    intro y
+    have hs : Summable fun n : ℕ => δ ^ n * f y n := by
+      have hgeom : Summable fun n : ℕ => C * δ ^ n :=
+        (summable_geometric_of_lt_one hδ0 hδ1).mul_left C
+      refine Summable.of_norm_bounded hgeom ?_
+      intro n
+      rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (pow_nonneg hδ0 n)]
+      calc
+        δ ^ n * |f y n| ≤ δ ^ n * C :=
+          mul_le_mul_of_nonneg_left (hbd y n) (pow_nonneg hδ0 n)
+        _ = C * δ ^ n := by ring
+    simpa [F, mul_assoc] using hs.mul_left (p y).toReal
+  have hcol : ∀ n, Summable fun y => F (y, n) := by
+    intro n
+    exact Math.Probability.expect_summable_of_bounded p
+      (fun y => δ ^ n * f y n)
+      (fun y => by
+        rw [abs_mul, abs_of_nonneg (pow_nonneg hδ0 n)]
+        exact mul_le_mul_of_nonneg_left (hbd y n) (pow_nonneg hδ0 n))
+  unfold Math.Probability.expect
+  calc
+    (∑' y, (p y).toReal * ∑' n, δ ^ n * f y n) =
+        ∑' y, ∑' n, F (y, n) := by
+      apply tsum_congr
+      intro y
+      change (p y).toReal * (∑' n, δ ^ n * f y n) =
+        ∑' n, (p y).toReal * (δ ^ n * f y n)
+      rw [tsum_mul_left]
+    _ = ∑' n, ∑' y, F (y, n) :=
+      (hF.tsum_comm' hrow hcol).symm
+    _ = ∑' n, δ ^ n * ∑' y, (p y).toReal * f y n := by
+      apply tsum_congr
+      intro n
+      calc
+        (∑' y, F (y, n)) =
+            ∑' y, δ ^ n * ((p y).toReal * f y n) := by
+          apply tsum_congr
+          intro y
+          simp [F]
+          ring
+        _ = δ ^ n * ∑' y, (p y).toReal * f y n := by
+          rw [tsum_mul_left]
+
 /-- Normalized discounted expected payoff under public monitoring. -/
 def discountedAveragePayoff (M : G.PublicMonitoring) (δ : ℝ)
     (σ : M.MonitoredProfile) (who : ι) : ℝ :=
@@ -78,6 +155,81 @@ theorem discountedAveragePayoff_le_of_forall_stageEU_le
     exact hsσ.tsum_le_tsum
       (fun t => mul_le_mul_of_nonneg_left (hle t) (pow_nonneg hδ0 t)) hsτ
   exact mul_le_mul_of_nonneg_left hsum (sub_nonneg.mpr hδ1.le)
+
+/-- Bellman equation for normalized discounted payoff: current expected
+utility plus the expected discounted value after the next public signal. -/
+theorem discountedAveragePayoff_eq_head_add_expected
+    (M : G.PublicMonitoring) {δ C : ℝ}
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hC0 : 0 ≤ C)
+    (σ : M.MonitoredProfile) (who : ι)
+    (hbd : ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    M.discountedAveragePayoff δ σ who =
+      (1 - δ) * G.eu (fun i => σ i 0 (fun k => k.elim0)) who +
+        δ * Math.Probability.expect
+          (M.signalKernel (fun i => σ i 0 (fun k => k.elim0)))
+          (fun y => M.discountedAveragePayoff δ (M.afterSignal σ y) who) := by
+  let p : PMF M.Signal :=
+    M.signalKernel (fun i => σ i 0 (fun k => k.elim0))
+  let f : ℕ → ℝ := fun n => δ ^ n * M.stageEU σ n who
+  have hstage : ∀ n, |M.stageEU σ n who| ≤ C :=
+    fun n => M.abs_stageEU_le_of_forall_eu_abs_le σ n who hC0 hbd
+  have hs : Summable f := by
+    simpa [f] using M.summable_discounted_stageEU_of_abs_bound
+      hδ0 hδ1 who hstage
+  have hsplit : f 0 + (∑' n : ℕ, f (n + 1)) = ∑' n : ℕ, f n := by
+    simpa using hs.sum_add_tsum_nat_add 1
+  have hinterchange :
+      (∑' n : ℕ, δ ^ n * M.stageEU σ (n + 1) who) =
+        Math.Probability.expect p (fun y =>
+          ∑' n : ℕ, δ ^ n * M.stageEU (M.afterSignal σ y) n who) := by
+    rw [expect_tsum_geometric_of_bounded p hδ0 hδ1 hC0
+      (fun y n => M.stageEU (M.afterSignal σ y) n who)
+      (fun y n => M.abs_stageEU_le_of_forall_eu_abs_le
+        (M.afterSignal σ y) n who hC0 hbd)]
+    apply tsum_congr
+    intro n
+    rw [M.stageEU_succ_eq_expect_afterSignal σ n who hbd]
+  have htail : (∑' n : ℕ, f (n + 1)) =
+      δ * Math.Probability.expect p (fun y =>
+        ∑' n : ℕ, δ ^ n * M.stageEU (M.afterSignal σ y) n who) := by
+    calc
+      (∑' n : ℕ, f (n + 1)) =
+          ∑' n : ℕ, δ * (δ ^ n * M.stageEU σ (n + 1) who) := by
+        apply tsum_congr
+        intro n
+        dsimp [f]
+        rw [pow_succ]
+        ring
+      _ = δ * ∑' n : ℕ, δ ^ n * M.stageEU σ (n + 1) who := by
+        rw [tsum_mul_left]
+      _ = δ * Math.Probability.expect p (fun y =>
+          ∑' n : ℕ, δ ^ n * M.stageEU (M.afterSignal σ y) n who) := by
+        rw [hinterchange]
+  unfold discountedAveragePayoff
+  change (1 - δ) * ∑' n : ℕ, f n = _
+  rw [← hsplit, htail]
+  simp only [f, pow_zero, one_mul, M.stageEU_zero]
+  rw [Math.Probability.expect_const_mul]
+  dsimp [p]
+  ring
+
+/-- Bellman equation expressed as a continuation value after an arbitrary
+public history. -/
+theorem discountedContinuationPayoff_eq_head_add_expected
+    (M : G.PublicMonitoring) {δ C : ℝ}
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hC0 : 0 ≤ C)
+    (σ : M.MonitoredProfile) {t : ℕ} (h : M.SignalHistory t) (who : ι)
+    (hbd : ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    M.discountedContinuationPayoff δ σ h who =
+      (1 - δ) * G.eu
+        (fun i => M.after σ h i 0 (fun k => k.elim0)) who +
+        δ * Math.Probability.expect
+          (M.signalKernel
+            (fun i => M.after σ h i 0 (fun k => k.elim0)))
+          (fun y => M.discountedAveragePayoff δ
+            (M.afterSignal (M.after σ h) y) who) := by
+  exact M.discountedAveragePayoff_eq_head_add_expected
+    hδ0 hδ1 hC0 (M.after σ h) who hbd
 
 /-- Discounted payoff of stationary monitored play equals its stage payoff. -/
 @[simp] theorem discountedAveragePayoff_stationaryMonitoredProfile

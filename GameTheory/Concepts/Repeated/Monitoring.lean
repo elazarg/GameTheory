@@ -86,6 +86,19 @@ def after (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     {t : ℕ} (h : M.SignalHistory t) : M.MonitoredProfile :=
   fun i n k => σ i (t + n) (h.append M k)
 
+/-- Continuation after observing one next public signal.  Unlike general
+prefix concatenation, this uses `Fin.cons` and therefore keeps the successor
+time index definitionally aligned with `n + 1`. -/
+def afterSignal (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (y : M.Signal) : M.MonitoredProfile :=
+  fun i n h => σ i (n + 1) (Fin.cons y h)
+
+@[simp] theorem afterSignal_apply
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile) (y : M.Signal)
+    (i : ι) (n : ℕ) (h : M.SignalHistory n) :
+    M.afterSignal σ y i n h = σ i (n + 1) (Fin.cons y h) :=
+  rfl
+
 /-- Deviate only at the current period, then return to the prescribed public
 strategy.  Applied to a continuation profile, this is the standard one-shot
 deviation after the corresponding public history. -/
@@ -184,6 +197,46 @@ def signalHistoryDist (M : G.PublicMonitoring)
         (M.signalKernel (fun i => σ i t h)).map (Fin.snoc h) :=
   rfl
 
+/-- Decompose a public history by its first signal: sample the current signal,
+then generate the remaining history from the corresponding continuation
+profile. -/
+theorem signalHistoryDist_succ_eq_bind_first
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile) : ∀ n : ℕ,
+    M.signalHistoryDist σ (n + 1) =
+      (M.signalKernel (fun i => σ i 0 (fun k => k.elim0))).bind fun y =>
+        (M.signalHistoryDist (M.afterSignal σ y) n).map
+          (Fin.cons (α := fun _ => M.Signal) y)
+  | 0 => by
+      rw [signalHistoryDist_succ, signalHistoryDist_zero]
+      simp only [signalHistoryDist_zero, PMF.pure_bind, PMF.pure_map]
+      have hf :
+          Fin.snoc (α := fun _ => M.Signal) (fun k : Fin 0 => k.elim0) =
+            (fun y : M.Signal =>
+              Fin.cons (α := fun _ => M.Signal) y
+                (fun k : Fin 0 => k.elim0)) := by
+        funext y j
+        exact Fin.eq_zero j ▸ rfl
+      rw [hf]
+      exact (PMF.bind_pure_comp _ _).symm
+  | n + 1 => by
+      rw [signalHistoryDist_succ, signalHistoryDist_succ_eq_bind_first M σ n]
+      rw [PMF.bind_bind]
+      congr 1
+      funext y
+      rw [PMF.bind_map]
+      rw [signalHistoryDist_succ]
+      rw [PMF.map_bind]
+      congr 1
+      funext h
+      change (M.signalKernel (fun i => σ i (n + 1) (Fin.cons y h))).map
+          (Fin.snoc (Fin.cons y h)) =
+        ((M.signalKernel (fun i => σ i (n + 1) (Fin.cons y h))).map
+          (Fin.snoc h)).map (Fin.cons (α := fun _ => M.Signal) y)
+      rw [PMF.map_comp]
+      congr 1
+      funext z
+      exact (Fin.cons_snoc_eq_snoc_cons y h z).symm
+
 /-- The law of histories through time `t` depends only on actions prescribed
 strictly before `t`. -/
 theorem signalHistoryDist_congr_before
@@ -210,6 +263,37 @@ def stageEU (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     (t : ℕ) (who : ι) : ℝ :=
   Math.Probability.expect (M.signalHistoryDist σ t)
     (fun h => G.eu (fun i => σ i t h) who)
+
+/-- At the initial stage there is a unique empty public history. -/
+@[simp] theorem stageEU_zero
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile) (who : ι) :
+    M.stageEU σ 0 who = G.eu (fun i => σ i 0 (fun k => k.elim0)) who := by
+  simp [stageEU]
+
+/-- Tower property for monitored stage payoff: condition first on the current
+public signal, then evaluate the corresponding continuation profile. -/
+theorem stageEU_succ_eq_expect_afterSignal
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (n : ℕ) (who : ι) {C : ℝ}
+    (hbd : ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    M.stageEU σ (n + 1) who =
+      Math.Probability.expect
+        (M.signalKernel (fun i => σ i 0 (fun k => k.elim0)))
+        (fun y => M.stageEU (M.afterSignal σ y) n who) := by
+  unfold stageEU
+  rw [M.signalHistoryDist_succ_eq_bind_first σ n]
+  rw [Math.Probability.expect_bind_of_bounded
+    (hbd := fun h => hbd (fun i => σ i (n + 1) h))]
+  apply congrArg
+  funext y
+  rw [show (M.signalHistoryDist (M.afterSignal σ y) n).map
+      (Fin.cons (α := fun _ => M.Signal) y) =
+      Math.ProbabilityMassFunction.pushforward
+        (M.signalHistoryDist (M.afterSignal σ y) n)
+        (Fin.cons (α := fun _ => M.Signal) y) by rfl]
+  rw [Math.ProbabilityMassFunction.expect_pushforward_of_bounded
+    (hbd := fun h => hbd (fun i => σ i (n + 1) h))]
+  rfl
 
 /-- Expected utility at time `t` depends only on prescribed play through
 time `t`. -/
