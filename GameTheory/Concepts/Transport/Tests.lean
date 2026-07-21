@@ -42,6 +42,16 @@ example (e : EUGameIsomorphism G H) (who : ι) (s : G.Strategy who) :
       H.IsPureRationalizable who (e.stratEquiv who s) :=
   e.isPureRationalizable_iff who s
 
+example (e : EUGameIsomorphism G H) (n : ℕ) (who : ι)
+    (s : G.Strategy who) :
+    G.Survives n who s ↔ H.Survives n who (e.stratEquiv who s) :=
+  e.survives_iff n who s
+
+example (e : EUGameIsomorphism G H) (who : ι) (s : G.Strategy who) :
+    G.IsRationalizable who s ↔
+      H.IsRationalizable who (e.stratEquiv who s) :=
+  e.isRationalizable_iff who s
+
 example (e : EUGameIsomorphism G H) (σ τ : Profile G) :
     G.ParetoDominates σ τ ↔
       H.ParetoDominates (e.profileEquiv σ) (e.profileEquiv τ) :=
