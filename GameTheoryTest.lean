@@ -1,6 +1,7 @@
 import GameTheory.Auctions.Tests
 import GameTheory.Concepts.Correlation.Tests
 import GameTheory.Concepts.Dominance.Tests
+import GameTheory.Concepts.Foundations.Tests
 import GameTheory.Concepts.Learning.Tests
 import GameTheory.Concepts.Mixed.Tests
 import GameTheory.Concepts.Repeated.Tests

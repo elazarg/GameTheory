@@ -67,6 +67,69 @@ noncomputable def profileEquiv (e : EUGameIsomorphism G H) : Profile G ≃ Profi
 @[simp] theorem profileEquiv_apply (e : EUGameIsomorphism G H) (σ : Profile G) (i : ι) :
     e.profileEquiv σ i = e.stratEquiv i (σ i) := rfl
 
+@[simp] theorem profileEquiv_id (G : KernelGame ι) :
+    (EUGameIsomorphism.id G).profileEquiv = Equiv.refl (Profile G) := by
+  apply Equiv.ext
+  intro σ
+  rfl
+
+@[simp] theorem profileEquiv_symm (e : EUGameIsomorphism G H) :
+    e.symm.profileEquiv = e.profileEquiv.symm := by
+  apply Equiv.ext
+  intro σ
+  rfl
+
+theorem profileEquiv_comp {K : KernelGame ι}
+    (g : EUGameIsomorphism H K) (e : EUGameIsomorphism G H) :
+    (EUGameIsomorphism.comp g e).profileEquiv =
+      e.profileEquiv.trans g.profileEquiv := by
+  apply Equiv.ext
+  intro σ
+  rfl
+
+/-- Reindex profile-dependent data along a game isomorphism. This is an
+equivalence, not merely a forward transport operation. -/
+noncomputable def profileFunctionEquiv {α : Sort*}
+    (e : EUGameIsomorphism G H) :
+    (Profile G → α) ≃ (Profile H → α) :=
+  e.profileEquiv.arrowCongr (Equiv.refl α)
+
+@[simp] theorem profileFunctionEquiv_apply {α : Sort*}
+    (e : EUGameIsomorphism G H) (f : Profile G → α) (τ : Profile H) :
+    e.profileFunctionEquiv f τ = f (e.profileEquiv.symm τ) := rfl
+
+@[simp] theorem profileFunctionEquiv_apply_profileEquiv {α : Sort*}
+    (e : EUGameIsomorphism G H) (f : Profile G → α) (σ : Profile G) :
+    e.profileFunctionEquiv f (e.profileEquiv σ) = f σ := by
+  simp
+
+@[simp] theorem profileFunctionEquiv_id {α : Sort*} (G : KernelGame ι) :
+    EUGameIsomorphism.profileFunctionEquiv (α := α) (EUGameIsomorphism.id G) =
+      Equiv.refl (Profile G → α) := by
+  rw [profileFunctionEquiv, profileEquiv_id]
+  rfl
+
+@[simp] theorem profileFunctionEquiv_symm {α : Sort*}
+    (e : EUGameIsomorphism G H) :
+    EUGameIsomorphism.profileFunctionEquiv (α := α) e.symm =
+      e.profileFunctionEquiv.symm := by
+  rw [profileFunctionEquiv, profileEquiv_symm]
+  change e.profileEquiv.symm.arrowCongr (Equiv.refl α) =
+    (e.profileEquiv.arrowCongr (Equiv.refl α)).symm
+  rw [Equiv.arrowCongr_symm]
+  rfl
+
+theorem profileFunctionEquiv_comp {K : KernelGame ι} {α : Sort*}
+    (g : EUGameIsomorphism H K) (e : EUGameIsomorphism G H) :
+    EUGameIsomorphism.profileFunctionEquiv (α := α) (EUGameIsomorphism.comp g e) =
+      e.profileFunctionEquiv.trans g.profileFunctionEquiv := by
+  rw [profileFunctionEquiv, profileEquiv_comp]
+  change (e.profileEquiv.trans g.profileEquiv).arrowCongr (Equiv.refl α) =
+    (e.profileEquiv.arrowCongr (Equiv.refl α)).trans
+      (g.profileEquiv.arrowCongr (Equiv.refl α))
+  rw [← Equiv.arrowCongr_trans]
+  rfl
+
 /-- **The atomic fact underlying every solution-concept transport in this
 file.** Updating a single player's strategy commutes with the isomorphism:
 the EU of a target profile obtained by updating the realized source profile

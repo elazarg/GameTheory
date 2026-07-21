@@ -390,6 +390,25 @@ namespace EUGameIsomorphism
 
 variable {G H : KernelGame ι}
 
+/-- Two EU game isomorphisms are equal when their strategy equivalences agree
+pointwise. Expected-utility preservation is proof data. -/
+@[ext]
+theorem ext {e f : EUGameIsomorphism G H}
+    (h : ∀ who strategy,
+      e.stratEquiv who strategy = f.stratEquiv who strategy) :
+    e = f := by
+  cases e with
+  | mk eGame _ =>
+      cases f with
+      | mk fGame _ =>
+          have hGame : eGame = fGame := GameIsomorphism.ext h
+          cases hGame
+          rfl
+
+/-- Identity EU-preserving game isomorphism. -/
+def id (G : KernelGame ι) : EUGameIsomorphism G G :=
+  (GameIsomorphism.id G).toEUGameIsomorphism
+
 /-- An EU-preserving game isomorphism induces an EU-preserving morphism. -/
 def toEUMorphism (e : EUGameIsomorphism G H) : EUMorphism G H where
   toMorphism := e.toGameIsomorphism.toMorphism
@@ -404,6 +423,45 @@ def symm (e : EUGameIsomorphism G H) : EUGameIsomorphism H G where
     change G.eu (fun i => (e.stratEquiv i).symm (σ i)) who =
       H.eu (fun i => σ i) who
     simpa using h.symm
+
+/-- Composition of EU-preserving game isomorphisms. -/
+def comp {G H K : KernelGame ι}
+    (g : EUGameIsomorphism H K) (f : EUGameIsomorphism G H) :
+    EUGameIsomorphism G K :=
+  (GameIsomorphism.comp g.toGameIsomorphism f.toGameIsomorphism).toEUGameIsomorphism
+
+@[simp] theorem id_comp (e : EUGameIsomorphism G H) :
+    comp (id H) e = e := by
+  apply ext
+  intro who strategy
+  rfl
+
+@[simp] theorem comp_id (e : EUGameIsomorphism G H) :
+    comp e (id G) = e := by
+  apply ext
+  intro who strategy
+  rfl
+
+theorem comp_assoc {G H K L : KernelGame ι}
+    (h : EUGameIsomorphism K L) (g : EUGameIsomorphism H K)
+    (f : EUGameIsomorphism G H) :
+    comp h (comp g f) = comp (comp h g) f := by
+  apply ext
+  intro who strategy
+  rfl
+
+@[simp] theorem symm_symm (e : EUGameIsomorphism G H) :
+    e.symm.symm = e := by
+  apply ext
+  intro who strategy
+  change (e.stratEquiv who).symm.symm strategy = e.stratEquiv who strategy
+  simp
+
+@[simp] theorem id_symm (G : KernelGame ι) :
+    (id G).symm = id G := by
+  apply ext
+  intro who strategy
+  rfl
 
 end EUGameIsomorphism
 
