@@ -51,6 +51,20 @@ theorem map_equiv_apply (μ : PMF α) (e : α ≃ β) (b : β) :
       exact e.injective (by simpa using h.symm)
     simp [hne]
 
+/-- Real coordinate formula for a PMF bind with finite source. -/
+theorem bind_apply_toReal_eq_sum [Fintype α]
+    (μ : PMF α) (K : α → PMF β) (b : β) :
+    ((μ.bind K) b).toReal =
+      ∑ a, (μ a).toReal * (K a b).toReal := by
+  classical
+  rw [PMF.bind_apply, tsum_fintype, ENNReal.toReal_sum]
+  · apply Finset.sum_congr rfl
+    intro a _
+    exact ENNReal.toReal_mul
+  · intro a _
+    exact ENNReal.mul_ne_top (PMF.apply_ne_top μ a)
+      (PMF.apply_ne_top (K a) b)
+
 theorem pushforward_pure (a : α) (f : α → β) :
     pushforward (PMF.pure a) f = PMF.pure (f a) := by
   exact PMF.pure_map f a

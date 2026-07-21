@@ -391,6 +391,25 @@ example :
   pairwiseFullRank_profileMonitoring coordinationGame allTrueProfile
     Bool.false_ne_true
 
+/-- A stochastic coarsening cannot manufacture pairwise full rank. -/
+example {S : Type}
+    (K : Math.Probability.Kernel (Profile coordinationGame) S)
+    (h : (coordinationGame.profileMonitoring.garble K).PairwiseFullRank
+      allTrueProfile false true) :
+    coordinationGame.profileMonitoring.PairwiseFullRank
+      allTrueProfile false true :=
+  h.of_garble
+
+/-- The numerical pairwise deviation rank is nonincreasing under finite
+stochastic garbling. -/
+example :
+    (coordinationGame.profileMonitoring.garble PMF.pure).pairwiseDeviationRank
+        allTrueProfile false true ≤
+      coordinationGame.profileMonitoring.pairwiseDeviationRank
+        allTrueProfile false true :=
+  pairwiseDeviationRank_garble_le coordinationGame.profileMonitoring
+    PMF.pure allTrueProfile false true
+
 end RepeatedMonitoringTests
 
 end GameTheory

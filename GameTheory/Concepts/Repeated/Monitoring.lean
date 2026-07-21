@@ -314,7 +314,7 @@ profile. -/
 
 /-- Post-process every public signal through a stochastic kernel.  This is the
 standard garbling operation on a public monitoring structure. -/
-def garble (M : G.PublicMonitoring) {S : Type}
+@[reducible] def garble (M : G.PublicMonitoring) {S : Type}
     (K : Math.Probability.Kernel M.Signal S) : G.PublicMonitoring where
   Signal := S
   signalKernel := fun σ => (M.signalKernel σ).bind K

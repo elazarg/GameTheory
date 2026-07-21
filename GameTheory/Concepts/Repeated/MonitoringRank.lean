@@ -254,6 +254,149 @@ theorem PairwiseFullRank.card_deviations_le_card_signal_sub_one
   rw [← h]
   exact M.pairwiseDeviationRank_le_card_signal_sub_one a i j
 
+/-! ## Monotonicity under stochastic garbling -/
+
+/-- Linear pushforward of real signal weights through a stochastic kernel
+with finite source. -/
+def garblingLinearMap {Y S : Type} [Fintype Y]
+    (K : Math.Probability.Kernel Y S) : (Y → ℝ) →ₗ[ℝ] (S → ℝ) :=
+  { toFun := fun v s => ∑ y, v y * (K y s).toReal
+    map_add' := fun v w => by
+      funext s
+      simp only [Pi.add_apply, add_mul, Finset.sum_add_distrib]
+    map_smul' := fun c v => by
+      funext s
+      change (∑ y, (c * v y) * (K y s).toReal) =
+        c * ∑ y, v y * (K y s).toReal
+      simp only [mul_assoc, Finset.mul_sum] }
+
+@[simp]
+theorem garblingLinearMap_apply {Y S : Type} [Fintype Y]
+    (K : Math.Probability.Kernel Y S) (v : Y → ℝ) (s : S) :
+    garblingLinearMap K v s = ∑ y, v y * (K y s).toReal :=
+  rfl
+
+/-- Garbling applies the stochastic pushforward linear map to every
+deviation-signal vector. -/
+theorem deviationSignalVector_garble
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (who : ι) (dev : G.Strategy who) :
+    (M.garble K).deviationSignalVector a who dev =
+      garblingLinearMap K (M.deviationSignalVector a who dev) := by
+  funext s
+  change S at s
+  change
+    (((M.signalKernel (Function.update a who dev)).bind K) s).toReal -
+        (((M.signalKernel a).bind K) s).toReal =
+      ∑ y,
+        ((M.signalKernel (Function.update a who dev) y).toReal -
+            (M.signalKernel a y).toReal) * (K y s).toReal
+  rw [Math.ProbabilityMassFunction.bind_apply_toReal_eq_sum,
+    Math.ProbabilityMassFunction.bind_apply_toReal_eq_sum]
+  rw [← Finset.sum_sub_distrib]
+  apply Finset.sum_congr rfl
+  intro y _
+  ring
+
+/-- Garbling applies the same linear map to every row of an individual
+deviation matrix. -/
+theorem deviationSignalMatrix_garble
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (who : ι) :
+    (M.garble K).deviationSignalMatrix a who =
+      fun dev => garblingLinearMap K (M.deviationSignalMatrix a who dev) := by
+  funext dev
+  exact M.deviationSignalVector_garble K a who dev.1
+
+/-- Garbling applies the same linear map to the combined pairwise deviation
+family. -/
+theorem pairwiseDeviationSignalFamily_garble
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (i j : ι) :
+    (M.garble K).pairwiseDeviationSignalFamily a i j =
+      fun dev => garblingLinearMap K
+        (M.pairwiseDeviationSignalFamily a i j dev) := by
+  funext dev
+  cases dev with
+  | inl dev =>
+      exact congrFun (M.deviationSignalMatrix_garble K a i) dev
+  | inr dev =>
+      exact congrFun (M.deviationSignalMatrix_garble K a j) dev
+
+/-- Stochastic garbling cannot create individual full rank. -/
+theorem IndividualFullRank.of_garble
+    {M : G.PublicMonitoring} [DecidableEq ι] [Finite M.Signal]
+    {S : Type} {K : Math.Probability.Kernel M.Signal S}
+    {a : Profile G} {who : ι}
+    (h : (M.garble K).IndividualFullRank a who) :
+    M.IndividualFullRank a who := by
+  letI := Fintype.ofFinite M.Signal
+  rw [IndividualFullRank, M.deviationSignalMatrix_garble K] at h
+  exact LinearIndependent.of_comp (garblingLinearMap K) h
+
+/-- Stochastic garbling cannot create pairwise full rank. -/
+theorem PairwiseFullRank.of_garble
+    {M : G.PublicMonitoring} [DecidableEq ι] [Finite M.Signal]
+    {S : Type} {K : Math.Probability.Kernel M.Signal S}
+    {a : Profile G} {i j : ι}
+    (h : (M.garble K).PairwiseFullRank a i j) :
+    M.PairwiseFullRank a i j := by
+  letI := Fintype.ofFinite M.Signal
+  rw [PairwiseFullRank, M.pairwiseDeviationSignalFamily_garble K] at h
+  exact LinearIndependent.of_comp (garblingLinearMap K) h
+
+/-- Stochastic garbling cannot increase the numerical individual deviation
+rank when both signal spaces are finite. -/
+theorem individualDeviationRank_garble_le
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    {S : Type} [Fintype S]
+    (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (who : ι)
+    [Finite (NontrivialDeviation a who)] :
+    (M.garble K).individualDeviationRank a who ≤
+      M.individualDeviationRank a who := by
+  rw [individualDeviationRank, individualDeviationRank,
+    Matrix.rank_eq_finrank_span_row, Matrix.rank_eq_finrank_span_row,
+    M.deviationSignalMatrix_garble K]
+  change Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (garblingLinearMap K ∘
+          M.deviationSignalMatrix a who))) ≤
+    Module.finrank ℝ
+      (Submodule.span ℝ (Set.range (M.deviationSignalMatrix a who)))
+  rw [Set.range_comp, ← LinearMap.map_span]
+  exact Submodule.finrank_map_le (garblingLinearMap K)
+    (Submodule.span ℝ (Set.range (M.deviationSignalMatrix a who)))
+
+/-- Stochastic garbling cannot increase the numerical pairwise deviation
+rank when both signal spaces are finite. -/
+theorem pairwiseDeviationRank_garble_le
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    {S : Type} [Fintype S]
+    (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (i j : ι)
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)] :
+    (M.garble K).pairwiseDeviationRank a i j ≤
+      M.pairwiseDeviationRank a i j := by
+  rw [pairwiseDeviationRank, pairwiseDeviationRank,
+    Matrix.rank_eq_finrank_span_row, Matrix.rank_eq_finrank_span_row,
+    M.pairwiseDeviationSignalFamily_garble K]
+  change Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (garblingLinearMap K ∘
+          M.pairwiseDeviationSignalFamily a i j))) ≤
+    Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (M.pairwiseDeviationSignalFamily a i j)))
+  rw [Set.range_comp, ← LinearMap.map_span]
+  exact Submodule.finrank_map_le (garblingLinearMap K)
+    (Submodule.span ℝ
+      (Set.range (M.pairwiseDeviationSignalFamily a i j)))
+
 /-- Every deviation-signal vector has coordinate sum zero because both signal
 laws are probability distributions. -/
 theorem sum_deviationSignalVector_eq_zero
