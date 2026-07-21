@@ -20,7 +20,53 @@ set_option autoImplicit false
 namespace Math
 namespace ProbabilityMassFunction
 
+universe u₁ u₂ u₃
+
 variable {α β γ : Type*}
+
+/-- Push probability mass functions along an equivalence. -/
+noncomputable def mapEquiv {α : Type u₁} {β : Type u₂} (e : α ≃ β) :
+    PMF α ≃ PMF β where
+  toFun μ := μ.map e
+  invFun μ := μ.map e.symm
+  left_inv μ := by
+    change (μ.map e).map e.symm = μ
+    rw [PMF.map_comp]
+    simp only [Equiv.symm_comp_self, PMF.map_id]
+  right_inv μ := by
+    change (μ.map e.symm).map e = μ
+    rw [PMF.map_comp]
+    simp only [Equiv.self_comp_symm, PMF.map_id]
+
+@[simp]
+theorem mapEquiv_apply {α : Type u₁} {β : Type u₂} (e : α ≃ β) (μ : PMF α) :
+    mapEquiv e μ = μ.map e :=
+  rfl
+
+@[simp]
+theorem mapEquiv_symm_apply {α : Type u₁} {β : Type u₂}
+    (e : α ≃ β) (μ : PMF β) :
+    (mapEquiv e).symm μ = μ.map e.symm :=
+  rfl
+
+@[simp]
+theorem mapEquiv_symm {α : Type u₁} {β : Type u₂} (e : α ≃ β) :
+    (mapEquiv e).symm = mapEquiv e.symm :=
+  rfl
+
+@[simp]
+theorem mapEquiv_refl (α : Type u₁) :
+    mapEquiv (Equiv.refl α) = Equiv.refl (PMF α) := by
+  apply Equiv.ext
+  intro μ
+  exact PMF.map_id μ
+
+theorem mapEquiv_trans {α : Type u₁} {β : Type u₂} {γ : Type u₃}
+    (e : α ≃ β) (f : β ≃ γ) :
+    (mapEquiv e).trans (mapEquiv f) = mapEquiv (e.trans f) := by
+  apply Equiv.ext
+  intro μ
+  exact PMF.map_comp (p := μ) (f := e) f
 
 noncomputable def pushforward (μ : PMF α) (f : α → β) : PMF β :=
   μ.map f

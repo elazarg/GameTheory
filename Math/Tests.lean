@@ -31,6 +31,16 @@ noncomputable section
 example : expect (PMF.pure true) (fun b => if b then (3 : ℝ) else 0) = 3 := by
   simp
 
+example (μ : PMF Bool) :
+    (Math.ProbabilityMassFunction.mapEquiv Equiv.ulift.symm).symm
+        (Math.ProbabilityMassFunction.mapEquiv Equiv.ulift.symm μ) = μ := by
+  exact (Math.ProbabilityMassFunction.mapEquiv Equiv.ulift.symm).symm_apply_apply μ
+
+example :
+    Math.ProbabilityMassFunction.mapEquiv (Equiv.refl Bool) =
+      Equiv.refl (PMF Bool) := by
+  simp
+
 example :
     pmfBooleanAdvantage (PMF.pure false) (PMF.pure true) id = 1 := by
   simp [pmfBooleanAdvantage]
