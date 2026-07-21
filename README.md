@@ -9,8 +9,9 @@ The main organizing idea is a common semantic target, `KernelGame`: strategy
 spaces for each player, a stochastic outcome kernel, and utilities on outcomes.
 Concrete representations such as normal-form games, extensive-form games,
 multi-agent influence diagrams, multi-round games, factored-observation
-stochastic games, and intrinsic-form games compile into this target. Solution
-concepts are then stated once on the semantic core and reused across languages.
+stochastic games, intrinsic-form games, and canonical open-game shapes compile
+into this target. Solution concepts are then stated once on the semantic core
+and reused across languages.
 
 ## Highlights
 
@@ -32,6 +33,9 @@ theory results.
 - Kuhn's behavioral/mixed equivalence, proved on an observation-model layer and
   instantiated for several concrete game representations.
 - Perfect-recall preservation results for language bridges such as MAID to EFG.
+- A deterministic open-game calculus with sequential/tensor laws up to
+  boundary isomorphism, context-parametric Nash recovery, explicit
+  subgame-conditioning, and CE/CCE recovery for closed recommendation devices.
 
 **Learning and repeated games**
 
@@ -113,6 +117,7 @@ The language layer treats concrete presentations as syntax plus semantics:
 | MultiRound | Protocol-based sequential and repeated games |
 | FOSG | Factored-observation stochastic games |
 | Intrinsic | Witsenhausen-style intrinsic information structures |
+| OpenGame | Compositional games with forward play and backward cooutcomes |
 
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition
@@ -152,7 +157,7 @@ python scripts/audit_repository.py
 ```text
 GameTheory/Core/          semantic structures, morphisms, simulations
 GameTheory/Concepts/      solution concepts, welfare, learning, knowledge
-GameTheory/Languages/     NFG, EFG, MAID, MultiRound, FOSG, Intrinsic
+GameTheory/Languages/     NFG, EFG, MAID, MultiRound, FOSG, Intrinsic, OpenGame
 GameTheory/Theorems/      high-level theorem packages
 GameTheory/Mechanism/     mechanisms; Bayesian, SocialChoice, FairDivision, Contracts
 GameTheory/Auctions/      auction formats and truthfulness results
