@@ -289,6 +289,82 @@ theorem PurePairwiseFullRank.exists_bounded_incentiveEffect_rightInverse
   intro b
   exact Rc.le_opNorm b
 
+/-- Over any finite family of profile-player pairs satisfying individual full
+rank, the right inverses can be chosen with one common operator-norm bound.
+The indexing type only needs to be finite; it need not enumerate all action
+profiles or all players. -/
+theorem exists_uniform_bounded_individualIncentiveEffect_rightInverses
+    [Fintype iota] [DecidableEq iota]
+    {K : Type*} [Finite K]
+    (M : G.mixedExtension.PublicMonitoring) [Fintype M.Signal]
+    (a : K → Profile G) (who : K → iota)
+    [∀ k, Fintype (NontrivialDeviation (a k) (who k))]
+    (h : ∀ k, M.PureIndividualFullRank (a k) (who k)) :
+    ∃ (R : ∀ k,
+          (NontrivialDeviation (a k) (who k) → ℝ) →ₗ[ℝ]
+            (M.Signal → ℝ))
+        (C : ℝ),
+      0 ≤ C ∧
+        ∀ k,
+          (M.pureIndividualIncentiveEffectMap (a k) (who k)).comp (R k) =
+              LinearMap.id ∧
+            ∀ b, ‖R k b‖ ≤ C * ‖b‖ := by
+  letI := Fintype.ofFinite K
+  have hex : ∀ k, ∃ (R :
+        (NontrivialDeviation (a k) (who k) → ℝ) →ₗ[ℝ]
+          (M.Signal → ℝ)) (C : ℝ),
+      0 ≤ C ∧
+        (M.pureIndividualIncentiveEffectMap (a k) (who k)).comp R =
+            LinearMap.id ∧
+          ∀ b, ‖R b‖ ≤ C * ‖b‖ := fun k =>
+    (h k).exists_bounded_incentiveEffect_rightInverse
+  choose R C hC using hex
+  refine ⟨R, ∑ k, C k, Finset.sum_nonneg (fun k _ => (hC k).1), ?_⟩
+  intro k
+  refine ⟨(hC k).2.1, fun b => (hC k).2.2 b |>.trans ?_⟩
+  exact mul_le_mul_of_nonneg_right
+    (Finset.single_le_sum (fun k' _ => (hC k').1) (Finset.mem_univ k))
+    (norm_nonneg b)
+
+/-- Over any finite family of profile-player-pair triples satisfying pairwise
+full rank, the simultaneous-incentive right inverses admit one common
+operator-norm bound. -/
+theorem exists_uniform_bounded_pairwiseIncentiveEffect_rightInverses
+    [Fintype iota] [DecidableEq iota]
+    {K : Type*} [Finite K]
+    (M : G.mixedExtension.PublicMonitoring) [Fintype M.Signal]
+    (a : K → Profile G) (i j : K → iota)
+    [∀ k, Fintype (NontrivialDeviation (a k) (i k))]
+    [∀ k, Fintype (NontrivialDeviation (a k) (j k))]
+    (h : ∀ k, M.PurePairwiseFullRank (a k) (i k) (j k)) :
+    ∃ (R : ∀ k,
+          (NontrivialDeviation (a k) (i k) ⊕
+              NontrivialDeviation (a k) (j k) → ℝ) →ₗ[ℝ]
+            (M.Signal → ℝ))
+        (C : ℝ),
+      0 ≤ C ∧
+        ∀ k,
+          (M.purePairwiseIncentiveEffectMap (a k) (i k) (j k)).comp (R k) =
+              LinearMap.id ∧
+            ∀ b, ‖R k b‖ ≤ C * ‖b‖ := by
+  letI := Fintype.ofFinite K
+  have hex : ∀ k, ∃ (R :
+        (NontrivialDeviation (a k) (i k) ⊕
+            NontrivialDeviation (a k) (j k) → ℝ) →ₗ[ℝ]
+          (M.Signal → ℝ)) (C : ℝ),
+      0 ≤ C ∧
+        (M.purePairwiseIncentiveEffectMap (a k) (i k) (j k)).comp R =
+            LinearMap.id ∧
+          ∀ b, ‖R b‖ ≤ C * ‖b‖ := fun k =>
+    (h k).exists_bounded_incentiveEffect_rightInverse
+  choose R C hC using hex
+  refine ⟨R, ∑ k, C k, Finset.sum_nonneg (fun k _ => (hC k).1), ?_⟩
+  intro k
+  refine ⟨(hC k).2.1, fun b => (hC k).2.2 b |>.trans ?_⟩
+  exact mul_le_mul_of_nonneg_right
+    (Finset.single_le_sum (fun k' _ => (hC k').1) (Finset.mem_univ k))
+    (norm_nonneg b)
+
 end PublicMonitoring
 end KernelGame
 end GameTheory

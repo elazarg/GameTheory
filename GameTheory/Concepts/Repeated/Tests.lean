@@ -524,6 +524,23 @@ example :
     (pureIndividualFullRank_realizedActionMonitoring coordinationGame
       allTrueProfile false).exists_bounded_incentiveEffect_rightInverse
 
+/-- One continuation-solver bound can cover a finite family of relevant
+profile-player constraints without assuming that every profile is finite. -/
+example :
+    ∃ (R : ∀ who : Bool,
+          (PublicMonitoring.NontrivialDeviation allTrueProfile who → ℝ) →ₗ[ℝ]
+            (Profile coordinationGame → ℝ))
+        (C : ℝ),
+      0 ≤ C ∧
+        ∀ who,
+          (coordinationGame.realizedActionMonitoring.pureIndividualIncentiveEffectMap
+            allTrueProfile who).comp (R who) = LinearMap.id ∧
+          ∀ b, ‖R who b‖ ≤ C * ‖b‖ := by
+  exact exists_uniform_bounded_individualIncentiveEffect_rightInverses
+    coordinationGame.realizedActionMonitoring (fun _ => allTrueProfile) id
+      (fun who => pureIndividualFullRank_realizedActionMonitoring
+        coordinationGame allTrueProfile who)
+
 /-- Constant public continuation transfers do not change deviation
 incentives. -/
 example (c : ℝ) :
