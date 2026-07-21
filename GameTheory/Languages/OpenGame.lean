@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Languages.OpenGame.Syntax
 import GameTheory.Languages.OpenGame.Compile
 import GameTheory.Languages.OpenGame.Theorems
+import GameTheory.Languages.OpenGame.Correlation
 import GameTheory.Languages.OpenGame.Examples
 
 /-!

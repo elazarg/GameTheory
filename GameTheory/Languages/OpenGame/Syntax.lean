@@ -253,6 +253,60 @@ def refl (g : OpenGame X S Y R) : OpenGameIso g g :=
   ofStrat (Equiv.refl _) (fun _ _ => rfl) (fun _ _ _ => rfl)
     fun _ _ _ => Iff.rfl
 
+/-- Symmetry of open-game isomorphism. -/
+def symm
+    {X' S' Y' R' : Type*}
+    {g : OpenGame X S Y R} {g' : OpenGame X' S' Y' R'}
+    (e : OpenGameIso g g') : OpenGameIso g' g where
+  eX := e.eX.symm
+  eS := e.eS.symm
+  eY := e.eY.symm
+  eR := e.eR.symm
+  stratEquiv := e.stratEquiv.symm
+  play_preserved := by
+    intro σ x
+    have h := e.play_preserved (e.stratEquiv.symm σ) (e.eX.symm x)
+    simpa using (congrArg e.eY.symm h).symm
+  coplay_preserved := by
+    intro σ x r
+    have h := e.coplay_preserved (e.stratEquiv.symm σ) (e.eX.symm x) (e.eR r)
+    simpa using (congrArg e.eS.symm h).symm
+  equilibrium_preserved := by
+    intro x k σ
+    simpa using (e.equilibrium_preserved (e.eX.symm x)
+      (fun y => e.eR (k (e.eY.symm y))) (e.stratEquiv.symm σ)).symm
+
+/-- Transitivity of open-game isomorphism. -/
+def trans
+    {X' S' Y' R' X'' S'' Y'' R'' : Type*}
+    {g : OpenGame X S Y R} {g' : OpenGame X' S' Y' R'}
+    {g'' : OpenGame X'' S'' Y'' R''}
+    (e : OpenGameIso g g') (f : OpenGameIso g' g'') : OpenGameIso g g'' where
+  eX := e.eX.trans f.eX
+  eS := e.eS.trans f.eS
+  eY := e.eY.trans f.eY
+  eR := e.eR.trans f.eR
+  stratEquiv := e.stratEquiv.trans f.stratEquiv
+  play_preserved := by
+    intro σ x
+    calc
+      g''.play (f.stratEquiv (e.stratEquiv σ)) (f.eX (e.eX x))
+          = f.eY (g'.play (e.stratEquiv σ) (e.eX x)) :=
+            f.play_preserved (e.stratEquiv σ) (e.eX x)
+      _ = f.eY (e.eY (g.play σ x)) := congrArg f.eY (e.play_preserved σ x)
+  coplay_preserved := by
+    intro σ x r
+    calc
+      g''.coplay (f.stratEquiv (e.stratEquiv σ)) (f.eX (e.eX x)) r
+          = f.eS (g'.coplay (e.stratEquiv σ) (e.eX x) (f.eR.symm r)) :=
+            f.coplay_preserved (e.stratEquiv σ) (e.eX x) r
+      _ = f.eS (e.eS (g.coplay σ x (e.eR.symm (f.eR.symm r)))) :=
+            congrArg f.eS (e.coplay_preserved σ x (f.eR.symm r))
+  equilibrium_preserved := by
+    intro x k σ
+    exact (f.equilibrium_preserved (e.eX x) k (e.stratEquiv σ)).trans
+      (e.equilibrium_preserved x (fun y => f.eR.symm (k (f.eY y))) σ)
+
 /-- Left identity for sequential composition. -/
 def seqIdLeft (g : OpenGame X S Y R) :
     OpenGameIso (OpenGame.idWire X S ;ₒ g) g :=

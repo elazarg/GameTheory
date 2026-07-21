@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Languages.OpenGame.Syntax
+import GameTheory.Languages.OpenGame.Correlation
 
 /-!
 # Tests for Deterministic Open Games
@@ -44,5 +44,23 @@ theorem twoMove_equilibrium_iff {A B : Type*} (u : A × B → ℝ × ℝ)
   simp [twoMove, twoMoveStrategy, OpenGame.seq, OpenGame.tensor,
     OpenGame.decision, OpenGame.copyWire, OpenGame.idWire, OpenGame.costate,
     OpenGame.ofLens, Lens.toOpenGame]
+
+noncomputable section
+
+open GameTheory
+
+variable {ι : Type} [DecidableEq ι]
+variable {G : KernelGame ι}
+
+example (μ : PMF G.Profile) :
+    (PrivateDevice.canonical G μ).IsEquilibrium ↔ G.IsCorrelatedEq μ :=
+  PrivateDevice.canonical_isEquilibrium_iff_isCorrelatedEq μ
+
+example (μ : PMF G.Profile) :
+    (PrivateDevice.canonical G μ).IsExAnteEquilibrium ↔
+      G.IsCoarseCorrelatedEq μ :=
+  PrivateDevice.canonical_isExAnteEquilibrium_iff_isCoarseCorrelatedEq μ
+
+end
 
 end OpenGames.Tests
