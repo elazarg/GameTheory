@@ -52,6 +52,10 @@ example (e : EUGameIsomorphism G H) (who : ι) (s : G.Strategy who) :
       H.IsRationalizable who (e.stratEquiv who s) :=
   e.isRationalizable_iff who s
 
+example (e : EUGameIsomorphism G H) (who : ι) (s : G.Strategy who) (v : ℝ) :
+    G.Guarantees who s v ↔ H.Guarantees who (e.stratEquiv who s) v :=
+  e.guarantees_iff who s v
+
 example (e : EUGameIsomorphism G H) (σ τ : Profile G) :
     G.ParetoDominates σ τ ↔
       H.ParetoDominates (e.profileEquiv σ) (e.profileEquiv τ) :=
@@ -68,6 +72,27 @@ example [Fintype ι] (e : EUGameIsomorphism G H) (σ : Profile G) :
 example {G H : KernelGame (Fin 2)} (e : EUGameIsomorphism G H) (σ : Profile G) :
     G.IsSaddlePoint σ ↔ H.IsSaddlePoint (e.profileEquiv σ) :=
   e.isSaddlePoint_iff σ
+
+-- These order-theoretic transports deliberately require no decidable
+-- equality, finiteness, boundedness, or attainment assumptions.
+variable {κ : Type} {A B : KernelGame κ}
+
+example (e : EUGameIsomorphism A B) (who : κ) (s : A.Strategy who) :
+    A.worstCaseEUInf who s = B.worstCaseEUInf who (e.stratEquiv who s) :=
+  e.worstCaseEUInf_eq who s
+
+example (e : EUGameIsomorphism A B) (who : κ) :
+    A.securityLevelSup who = B.securityLevelSup who :=
+  e.securityLevelSup_eq who
+
+example (e : EUGameIsomorphism A B) (who : κ) (p : PMF (A.Strategy who)) :
+    A.mixedWorstCaseEUInf who p =
+      B.mixedWorstCaseEUInf who (e.strategyPMFEquiv who p) :=
+  e.mixedWorstCaseEUInf_eq who p
+
+example (e : EUGameIsomorphism A B) (who : κ) :
+    A.mixedSecurityLevel who = B.mixedSecurityLevel who :=
+  e.mixedSecurityLevel_eq who
 
 end
 

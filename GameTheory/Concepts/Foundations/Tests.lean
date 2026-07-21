@@ -36,6 +36,11 @@ example (g : EUGameIsomorphism H K) (e : EUGameIsomorphism G H) :
       e.profileFunctionEquiv.trans g.profileFunctionEquiv :=
   profileFunctionEquiv_comp g e
 
+example (g : EUGameIsomorphism H K) (e : EUGameIsomorphism G H) (who : ι) :
+    (EUGameIsomorphism.comp g e).strategyPMFEquiv who =
+      (e.strategyPMFEquiv who).trans (g.strategyPMFEquiv who) :=
+  strategyPMFEquiv_comp g e who
+
 end
 
 end GameTheory.KernelGame.EUGameIsomorphism.Tests

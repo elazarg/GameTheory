@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Core.GameMorphism
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import Math.ProbabilityMassFunction
 
 /-!
 # Solution-Concept Corollaries for Game Morphisms
@@ -169,6 +170,36 @@ theorem profileFunctionEquiv_comp {K : KernelGame ι} {α : Sort*}
       (g.profileEquiv.arrowCongr (Equiv.refl α))
   rw [← Equiv.arrowCongr_trans]
   rfl
+
+/-- Push probability mass functions on one player's strategies through the
+strategy equivalence. -/
+noncomputable def strategyPMFEquiv (e : EUGameIsomorphism G H) (who : ι) :
+    PMF (G.Strategy who) ≃ PMF (H.Strategy who) :=
+  Math.ProbabilityMassFunction.mapEquiv (e.stratEquiv who)
+
+@[simp] theorem strategyPMFEquiv_apply (e : EUGameIsomorphism G H)
+    (who : ι) (p : PMF (G.Strategy who)) :
+    e.strategyPMFEquiv who p = p.map (e.stratEquiv who) := rfl
+
+@[simp] theorem strategyPMFEquiv_symm_apply (e : EUGameIsomorphism G H)
+    (who : ι) (q : PMF (H.Strategy who)) :
+    (e.strategyPMFEquiv who).symm q = q.map (e.stratEquiv who).symm := rfl
+
+@[simp] theorem strategyPMFEquiv_id (G : KernelGame ι) (who : ι) :
+    (EUGameIsomorphism.id G).strategyPMFEquiv who =
+      Equiv.refl (PMF (G.Strategy who)) := by
+  exact Math.ProbabilityMassFunction.mapEquiv_refl _
+
+@[simp] theorem strategyPMFEquiv_symm (e : EUGameIsomorphism G H)
+    (who : ι) :
+    e.symm.strategyPMFEquiv who = (e.strategyPMFEquiv who).symm := rfl
+
+theorem strategyPMFEquiv_comp {K : KernelGame ι}
+    (g : EUGameIsomorphism H K) (e : EUGameIsomorphism G H) (who : ι) :
+    (EUGameIsomorphism.comp g e).strategyPMFEquiv who =
+      (e.strategyPMFEquiv who).trans (g.strategyPMFEquiv who) := by
+  symm
+  exact Math.ProbabilityMassFunction.mapEquiv_trans _ _
 
 /-- **The atomic fact underlying every solution-concept transport in this
 file.** Updating a single player's strategy commutes with the isomorphism:
