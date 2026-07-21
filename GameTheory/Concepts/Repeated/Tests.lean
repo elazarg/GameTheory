@@ -86,6 +86,22 @@ example :
       PMF.pure allTrueProfile := by
   exact coordinationGame.realizedActionMonitoring_signalKernel_pure allTrueProfile
 
+/-- The general behavioral lift preserves the original signal law on Dirac
+mixed actions. -/
+example :
+    coordinationGame.outcomeMonitoring.mixedExtension.signalKernel
+        (coordinationGame.pureMixedProfile allTrueProfile) =
+      coordinationGame.outcomeMonitoring.signalKernel allTrueProfile := by
+  exact coordinationGame.outcomeMonitoring.mixedExtension_signalKernel_pure
+    allTrueProfile
+
+/-- Lifting observable pure profiles agrees with the dedicated
+realized-action monitoring instance. -/
+example (σ : Profile coordinationGame.mixedExtension) :
+    coordinationGame.profileMonitoring.mixedExtension.signalKernel σ =
+      coordinationGame.realizedActionMonitoring.signalKernel σ := by
+  exact coordinationGame.profileMonitoring_mixedExtension_signalKernel σ
+
 end RepeatedMonitoringTests
 
 end GameTheory

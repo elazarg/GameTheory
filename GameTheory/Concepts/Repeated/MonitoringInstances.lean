@@ -57,6 +57,15 @@ def realizedActionMonitoring (G : KernelGame ι) [Fintype ι] :
   Signal := Profile G
   signalKernel := Math.PMFProduct.pmfPi
 
+/-- Lift a public monitoring structure to behavioral mixed stage actions.
+The independently sampled pure action profile is fed into the original signal
+kernel and only the resulting public signal is exposed. -/
+def PublicMonitoring.mixedExtension {G : KernelGame ι}
+    (M : G.PublicMonitoring) [Fintype ι] :
+    G.mixedExtension.PublicMonitoring where
+  Signal := M.Signal
+  signalKernel := fun σ => (Math.PMFProduct.pmfPi σ).bind M.signalKernel
+
 @[simp] theorem profileMonitoring_signalKernel
     (G : KernelGame ι) (σ : Profile G) :
     G.profileMonitoring.signalKernel σ = PMF.pure σ :=
@@ -76,6 +85,31 @@ def realizedActionMonitoring (G : KernelGame ι) [Fintype ι] :
     (G : KernelGame ι) [Fintype ι] (σ : Profile G.mixedExtension) :
     G.realizedActionMonitoring.signalKernel σ = Math.PMFProduct.pmfPi σ :=
   rfl
+
+@[simp] theorem PublicMonitoring.mixedExtension_signalKernel
+    {G : KernelGame ι} (M : G.PublicMonitoring) [Fintype ι]
+    (σ : Profile G.mixedExtension) :
+    M.mixedExtension.signalKernel σ =
+      (Math.PMFProduct.pmfPi σ).bind M.signalKernel :=
+  rfl
+
+/-- Dirac mixed actions recover the original conditional signal law. -/
+@[simp] theorem PublicMonitoring.mixedExtension_signalKernel_pure
+    {G : KernelGame ι} (M : G.PublicMonitoring) [Fintype ι] (σ : Profile G) :
+    M.mixedExtension.signalKernel (G.pureMixedProfile σ) = M.signalKernel σ := by
+  change (Math.PMFProduct.pmfPi
+    (fun i => (PMF.pure (σ i) : PMF (G.Strategy i)))).bind M.signalKernel = _
+  rw [Math.PMFProduct.pmfPi_pure, PMF.pure_bind]
+
+/-- Behavioral lifting of observable pure profiles is exactly realized-action
+monitoring of the mixed extension. -/
+theorem profileMonitoring_mixedExtension_signalKernel
+    (G : KernelGame ι) [Fintype ι] (σ : Profile G.mixedExtension) :
+    G.profileMonitoring.mixedExtension.signalKernel σ =
+      G.realizedActionMonitoring.signalKernel σ := by
+  change (Math.PMFProduct.pmfPi σ).bind PMF.pure =
+    Math.PMFProduct.pmfPi σ
+  exact PMF.bind_pure _
 
 /-- Pure mixed actions generate the corresponding pure public action profile
 under realized-action monitoring. -/
