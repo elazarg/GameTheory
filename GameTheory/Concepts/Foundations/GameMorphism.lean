@@ -245,6 +245,29 @@ theorem nash_iff [DecidableEq ι] (e : EUGameIsomorphism G H) (σ : Profile G) :
   rw [hcur, ← e.eu_update_preserved σ who ((e.stratEquiv who).symm s'')]
   simp
 
+/-- Restrict the profile equivalence to Nash equilibria. -/
+noncomputable def nashProfileEquiv [DecidableEq ι]
+    (e : EUGameIsomorphism G H) :
+    {σ : Profile G // G.IsNash σ} ≃ {τ : Profile H // H.IsNash τ} where
+  toFun σ := ⟨e.profileEquiv σ, (e.nash_iff σ).mp σ.property⟩
+  invFun τ := ⟨e.profileEquiv.symm τ, by
+    apply (e.nash_iff (e.profileEquiv.symm τ)).mpr
+    simpa using τ.property⟩
+  left_inv σ := by ext; simp
+  right_inv τ := by ext; simp
+
+/-- Isomorphic expected-utility games have equivalent existence of pure Nash
+equilibrium. -/
+theorem exists_isNash_iff [DecidableEq ι] (e : EUGameIsomorphism G H) :
+    (∃ σ : Profile G, G.IsNash σ) ↔ ∃ τ : Profile H, H.IsNash τ := by
+  constructor
+  · rintro ⟨σ, hσ⟩
+    exact ⟨e.profileEquiv σ, (e.nash_iff σ).mp hσ⟩
+  · rintro ⟨τ, hτ⟩
+    refine ⟨e.profileEquiv.symm τ, ?_⟩
+    apply (e.nash_iff (e.profileEquiv.symm τ)).mpr
+    simpa using hτ
+
 /-- EU corollary: dominance is preserved in both directions. `IsDominant who
 s` universally quantifies over both the ambient profile and the alternative,
 so this reindexes profiles along `e.profileEquiv` and, at each profile,

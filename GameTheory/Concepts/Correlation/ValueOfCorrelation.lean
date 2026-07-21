@@ -110,7 +110,7 @@ end FiniteOutcome
 
 section ValueOfCorrelation
 
-variable [DecidableEq ι] [Finite G.Outcome] [Fintype (Profile G)]
+variable [DecidableEq ι] [Finite G.Outcome] [Finite (Profile G)]
 
 /-- **Correlation never lowers welfare.** The best Nash welfare is at most the
 best correlated-equilibrium welfare: every Nash equilibrium, as a point-mass
@@ -119,17 +119,18 @@ theorem bestNashWelfare_le_bestCorrelatedWelfare
     (hN : ∃ σ : Profile G, G.IsNash σ) :
     G.bestNashWelfare hN ≤ G.bestCorrelatedWelfare := by
   classical
-  simp only [bestNashWelfare]
-  apply Finset.sup'_le
-  intro σ hσmem
-  have hσ : G.IsNash σ := (Finset.mem_filter.mp hσmem).2
-  have hce : G.IsCorrelatedEq (PMF.pure σ) := nash_pure_isCorrelatedEq hσ
+  letI : Nonempty {σ : Profile G // G.IsNash σ} :=
+    ⟨⟨hN.choose, hN.choose_spec⟩⟩
+  rw [G.bestNashWelfare_eq_iSup hN]
+  apply ciSup_le
+  intro σ
+  have hce : G.IsCorrelatedEq (PMF.pure σ) := nash_pure_isCorrelatedEq σ.property
   have hle : G.correlatedSocialWelfare (PMF.pure σ) ≤ G.bestCorrelatedWelfare :=
     le_ciSup (G.correlatedSocialWelfare_bddAbove)
       (⟨PMF.pure σ, hce⟩ : {μ : PMF (Profile G) // G.IsCorrelatedEq μ})
   rwa [G.correlatedSocialWelfare_pure σ] at hle
 
-omit [Fintype (Profile G)] in
+omit [Finite (Profile G)] in
 /-- **Coarsening never lowers the best welfare.** Every correlated equilibrium
 is a coarse correlated equilibrium, so the best coarse-correlated welfare is at
 least the best correlated welfare. -/
@@ -247,7 +248,7 @@ end OptimalBound
 
 section TeamGameValue
 
-variable [DecidableEq ι] [Finite G.Outcome] [Fintype (Profile G)]
+variable [DecidableEq ι] [Finite G.Outcome] [Finite (Profile G)]
 
 /-- **Correlation has no value in team games.** When all players share the same
 utility the welfare-optimal profile is itself a Nash equilibrium, and no

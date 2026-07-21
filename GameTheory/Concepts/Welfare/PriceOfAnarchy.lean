@@ -78,41 +78,74 @@ theorem IsTeamGame.pareto_isNash (hteam : G.IsTeamGame)
 
 section FiniteNash
 
-variable [Fintype (Profile G)]
+variable [Finite (Profile G)]
 
 open Classical in
 /-- The best social welfare achievable by any Nash equilibrium. -/
 noncomputable def bestNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
-  Finset.sup' (Finset.univ.filter (fun σ => G.IsNash σ))
-    (by obtain ⟨σ, hσ⟩ := hN
-        exact ⟨σ, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩⟩)
-    G.socialWelfare
+  letI := Fintype.ofFinite {σ : Profile G // G.IsNash σ}
+  Finset.sup' (Finset.univ : Finset {σ : Profile G // G.IsNash σ})
+    ⟨⟨hN.choose, hN.choose_spec⟩, Finset.mem_univ _⟩
+    (fun σ => G.socialWelfare σ)
 
 open Classical in
 /-- The worst social welfare among all Nash equilibria. -/
 noncomputable def worstNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
-  Finset.inf' (Finset.univ.filter (fun σ => G.IsNash σ))
-    (by obtain ⟨σ, hσ⟩ := hN
-        exact ⟨σ, Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩⟩)
-    G.socialWelfare
+  letI := Fintype.ofFinite {σ : Profile G // G.IsNash σ}
+  Finset.inf' (Finset.univ : Finset {σ : Profile G // G.IsNash σ})
+    ⟨⟨hN.choose, hN.choose_spec⟩, Finset.mem_univ _⟩
+    (fun σ => G.socialWelfare σ)
+
+open Classical in
+/-- On a finite profile space, best Nash welfare is the indexed supremum over
+the subtype of Nash profiles. -/
+theorem bestNashWelfare_eq_iSup (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.bestNashWelfare hN =
+      ⨆ σ : {σ : Profile G // G.IsNash σ}, G.socialWelfare σ := by
+  letI := Fintype.ofFinite {σ : Profile G // G.IsNash σ}
+  letI : Nonempty {σ : Profile G // G.IsNash σ} :=
+    ⟨⟨hN.choose, hN.choose_spec⟩⟩
+  unfold bestNashWelfare
+  exact Finset.sup'_univ_eq_ciSup (fun σ : {σ : Profile G // G.IsNash σ} =>
+    G.socialWelfare σ)
+
+open Classical in
+/-- On a finite profile space, worst Nash welfare is the indexed infimum over
+the subtype of Nash profiles. -/
+theorem worstNashWelfare_eq_iInf (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.worstNashWelfare hN =
+      ⨅ σ : {σ : Profile G // G.IsNash σ}, G.socialWelfare σ := by
+  letI := Fintype.ofFinite {σ : Profile G // G.IsNash σ}
+  letI : Nonempty {σ : Profile G // G.IsNash σ} :=
+    ⟨⟨hN.choose, hN.choose_spec⟩⟩
+  unfold worstNashWelfare
+  exact Finset.inf'_univ_eq_ciInf (fun σ : {σ : Profile G // G.IsNash σ} =>
+    G.socialWelfare σ)
 
 open Classical in
 /-- Worst Nash welfare ≤ best Nash welfare. -/
 theorem worstNashWelfare_le_bestNashWelfare (hN : ∃ σ : Profile G, G.IsNash σ) :
     G.worstNashWelfare hN ≤ G.bestNashWelfare hN := by
+  letI := Fintype.ofFinite {σ : Profile G // G.IsNash σ}
   simp only [worstNashWelfare, bestNashWelfare]
   have ⟨σ, hσ⟩ := hN
-  have hmem : σ ∈ Finset.univ.filter (fun σ => G.IsNash σ) :=
-    Finset.mem_filter.mpr ⟨Finset.mem_univ _, hσ⟩
-  exact le_trans (Finset.inf'_le _ hmem) (Finset.le_sup' _ hmem)
+  let nashσ : {σ : Profile G // G.IsNash σ} := ⟨σ, hσ⟩
+  exact le_trans
+    (Finset.inf'_le (fun τ : {σ : Profile G // G.IsNash σ} => G.socialWelfare τ)
+      (Finset.mem_univ nashσ))
+    (Finset.le_sup' (fun τ : {σ : Profile G // G.IsNash σ} => G.socialWelfare τ)
+      (Finset.mem_univ nashσ))
 
 open Classical in
 /-- The best Nash welfare is at most the optimal welfare (when bounded). -/
 theorem bestNashWelfare_le_optimalWelfare (hN : ∃ σ : Profile G, G.IsNash σ)
     (hbdd : BddAbove (Set.range (fun τ => G.socialWelfare τ))) :
     G.bestNashWelfare hN ≤ G.optimalWelfare := by
-  apply Finset.sup'_le
-  intro σ _
+  letI : Nonempty {σ : Profile G // G.IsNash σ} :=
+    ⟨⟨hN.choose, hN.choose_spec⟩⟩
+  rw [G.bestNashWelfare_eq_iSup hN]
+  apply ciSup_le
+  intro σ
   exact welfare_le_optimal G σ hbdd
 
 open Classical in
@@ -164,17 +197,22 @@ theorem one_le_priceOfAnarchy (hN : ∃ σ : Profile G, G.IsNash σ)
 the optimal welfare: the welfare-maximizing profile is itself Nash (by
 `IsTeamGame.welfareMax_isNash`). -/
 theorem IsTeamGame.bestNashWelfare_eq_optimalWelfare {G : KernelGame ι}
-    [Fintype (Profile G)]
+    [Finite (Profile G)]
     (hteam : G.IsTeamGame) (hN : ∃ σ : Profile G, G.IsNash σ) :
     G.bestNashWelfare hN = G.optimalWelfare := by
   classical
   obtain ⟨σ₀, _⟩ := hN
   haveI : Nonempty (Profile G) := ⟨σ₀⟩
+  letI := Fintype.ofFinite (Profile G)
   obtain ⟨σ_max, hmax⟩ := exists_welfareMax G
   have hN_max : G.IsNash σ_max := hteam.welfareMax_isNash hmax
   have h_ge : G.socialWelfare σ_max ≤ G.bestNashWelfare ⟨σ₀, ‹_›⟩ := by
+    letI := Fintype.ofFinite {σ : Profile G // G.IsNash σ}
     simp only [bestNashWelfare]
-    exact Finset.le_sup' _ (Finset.mem_filter.mpr ⟨Finset.mem_univ _, hN_max⟩)
+    let nashσ : {σ : Profile G // G.IsNash σ} := ⟨σ_max, hN_max⟩
+    exact Finset.le_sup'
+      (fun τ : {σ : Profile G // G.IsNash σ} => G.socialWelfare τ)
+      (Finset.mem_univ nashσ)
   have h_opt_le : G.optimalWelfare ≤ G.socialWelfare σ_max := by
     simp only [optimalWelfare]
     exact ciSup_le hmax
@@ -185,7 +223,7 @@ theorem IsTeamGame.bestNashWelfare_eq_optimalWelfare {G : KernelGame ι}
 /-- In a team game with positive optimal welfare, the Price of Stability is
 exactly `1`: selfish play loses no efficiency in the best equilibrium. -/
 theorem IsTeamGame.priceOfStability_eq_one {G : KernelGame ι}
-    [Fintype (Profile G)]
+    [Finite (Profile G)]
     (hteam : G.IsTeamGame) (hN : ∃ σ : Profile G, G.IsNash σ)
     (hopt_pos : 0 < G.optimalWelfare) :
     G.priceOfStability hN = 1 := by

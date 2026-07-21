@@ -41,6 +41,10 @@ example (g : EUGameIsomorphism H K) (e : EUGameIsomorphism G H) (who : ι) :
       (e.strategyPMFEquiv who).trans (g.strategyPMFEquiv who) :=
   strategyPMFEquiv_comp g e who
 
+example [DecidableEq ι] (e : EUGameIsomorphism G H) :
+    (∃ σ : Profile G, G.IsNash σ) ↔ ∃ τ : Profile H, H.IsNash τ :=
+  e.exists_isNash_iff
+
 end
 
 end GameTheory.KernelGame.EUGameIsomorphism.Tests

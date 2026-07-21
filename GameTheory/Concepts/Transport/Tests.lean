@@ -69,6 +69,34 @@ example [Fintype ι] (e : EUGameIsomorphism G H) (σ : Profile G) :
     G.socialWelfare σ = H.socialWelfare (e.profileEquiv σ) :=
   e.socialWelfare_eq σ
 
+example [Fintype ι] (e : EUGameIsomorphism G H) :
+    G.optimalWelfare = H.optimalWelfare :=
+  e.optimalWelfare_eq
+
+example [Fintype ι] [Finite (Profile G)] [Finite (Profile H)]
+    (e : EUGameIsomorphism G H) (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.bestNashWelfare hN =
+      H.bestNashWelfare ((e.exists_isNash_iff).mp hN) := by
+  simpa using e.bestNashWelfare_eq hN
+
+example [Fintype ι] [Finite (Profile G)] [Finite (Profile H)]
+    (e : EUGameIsomorphism G H) (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.worstNashWelfare hN =
+      H.worstNashWelfare ((e.exists_isNash_iff).mp hN) := by
+  simpa using e.worstNashWelfare_eq hN
+
+example [Fintype ι] [Finite (Profile G)] [Finite (Profile H)]
+    (e : EUGameIsomorphism G H) (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.priceOfAnarchy hN =
+      H.priceOfAnarchy ((e.exists_isNash_iff).mp hN) := by
+  simpa using e.priceOfAnarchy_eq hN
+
+example [Fintype ι] [Finite (Profile G)] [Finite (Profile H)]
+    (e : EUGameIsomorphism G H) (hN : ∃ σ : Profile G, G.IsNash σ) :
+    G.priceOfStability hN =
+      H.priceOfStability ((e.exists_isNash_iff).mp hN) := by
+  simpa using e.priceOfStability_eq hN
+
 example {G H : KernelGame (Fin 2)} (e : EUGameIsomorphism G H) (σ : Profile G) :
     G.IsSaddlePoint σ ↔ H.IsSaddlePoint (e.profileEquiv σ) :=
   e.isSaddlePoint_iff σ
