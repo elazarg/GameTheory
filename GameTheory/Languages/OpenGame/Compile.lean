@@ -166,4 +166,131 @@ theorem closed_isEquilibriumIn_iff_isNash
 
 end ShapeN
 
+/-! ## Two-stage sequential shapes -/
+
+/-- The direct two-stage sequential shape with one decision per player.
+
+The follower chooses a contingent plan `A → B`, but plain open-game
+composition checks that plan only at the leader's realized action. -/
+def ShapeS (A B : Type) : OpenGame Unit Unit (A × B) (ℝ × ℝ) where
+  Strategy := A × (A → B)
+  play σ _ := (σ.1, σ.2 σ.1)
+  coplay _ _ _ := ()
+  IsEquilibriumIn _ k σ :=
+    (∀ a, (k (a, σ.2 a)).1 ≤ (k (σ.1, σ.2 σ.1)).1) ∧
+    (∀ b, (k (σ.1, b)).2 ≤ (k (σ.1, σ.2 σ.1)).2)
+
+namespace ShapeS
+
+open scoped OpenGames
+
+/-- The two-stage shape expressed entirely in the core wiring calculus. -/
+def wiring (A B : Type) : OpenGame Unit Unit (A × B) (ℝ × ℝ) :=
+  OpenGame.decision Unit A ;ₒ
+    OpenGame.copyWire A ℝ ;ₒ
+    (OpenGame.idWire A ℝ ⊗ₒ OpenGame.decision A B)
+
+/-- Remove the strategically trivial witnesses introduced by `wiring`. -/
+def wiringStrategyEquiv (A B : Type) :
+    (A × (A → B)) ≃ (wiring A B).Strategy where
+  toFun σ := (fun _u => σ.1, ((), ((), σ.2)))
+  invFun σ := (σ.1 (), σ.2.2.2)
+  left_inv _ := rfl
+  right_inv σ := by
+    rcases σ with ⟨first, u, v, second⟩
+    cases u
+    cases v
+    congr
+
+/-- The direct two-stage representation is isomorphic to its typed wiring
+diagram. -/
+def wiringIso (A B : Type) : OpenGameIso (ShapeS A B) (wiring A B) :=
+  OpenGameIso.ofStrat (wiringStrategyEquiv A B)
+    (by rintro σ ⟨⟩; rfl)
+    (by rintro σ ⟨⟩ r; rfl)
+    (by
+      rintro ⟨⟩ k σ
+      simp [wiring, wiringStrategyEquiv, ShapeS, OpenGame.seq,
+        OpenGame.tensor, OpenGame.decision, OpenGame.copyWire,
+        OpenGame.idWire, OpenGame.ofLens, Lens.toOpenGame]
+      rfl)
+
+/-- Strategic-form strategy family for the two players. -/
+def PlayerStrategy (A B : Type) : Bool → Type
+  | false => A
+  | true => A → B
+
+/-- Translate the direct pair presentation into a player-indexed profile. -/
+def toProfile {A B : Type} (σ : A × (A → B)) :
+    ∀ i, PlayerStrategy A B i
+  | false => σ.1
+  | true => σ.2
+
+/-- Translate a player-indexed sequential profile back to a pair. -/
+def ofProfile {A B : Type} (σ : ∀ i, PlayerStrategy A B i) :
+    A × (A → B) :=
+  (σ false, σ true)
+
+/-- Pair and player-indexed presentations of sequential strategies agree. -/
+def profileEquiv (A B : Type) :
+    (A × (A → B)) ≃ (∀ i, PlayerStrategy A B i) where
+  toFun := toProfile
+  invFun := ofProfile
+  left_inv _ := rfl
+  right_inv σ := by
+    funext i
+    cases i <;> rfl
+
+/-- Convert a utility pair into the Bool-indexed payoff convention. -/
+def pairUtility {A B : Type} (k : A × B → ℝ × ℝ)
+    (outcome : A × B) (i : Bool) : ℝ :=
+  if i then (k outcome).2 else (k outcome).1
+
+/-- Strategic-form NFG for the two-stage shape. -/
+def actionNFG (A B : Type) (k : A × B → ℝ × ℝ) :
+    NFG.NFGGame Bool (PlayerStrategy A B) where
+  Outcome := A × B
+  outcome σ := (σ false, σ true (σ false))
+  utility := pairUtility k
+
+/-- Compile a two-stage shape for a closing continuation. -/
+noncomputable def compileAction (A B : Type) (k : A × B → ℝ × ℝ) :
+    GameTheory.KernelGame Bool :=
+  (actionNFG A B k).toKernelGame
+
+/-- Plain sequential equilibrium is exactly Nash equilibrium in the strategic
+form with a contingent follower plan. -/
+theorem isEquilibriumIn_iff_isNashPure {A B : Type}
+    (k : A × B → ℝ × ℝ) (σ : A × (A → B)) :
+    (ShapeS A B).IsEquilibriumIn () k σ ↔
+      NFG.IsNashPure (actionNFG A B k) (toProfile σ) := by
+  constructor
+  · rintro ⟨hleader, hfollower⟩ i deviation
+    cases i with
+    | false =>
+        simpa [NFG.IsNashPure, actionNFG, pairUtility, NFG.deviate,
+          toProfile, Function.update] using hleader deviation
+    | true =>
+        simpa [NFG.IsNashPure, actionNFG, pairUtility, NFG.deviate,
+          toProfile, Function.update] using hfollower (deviation σ.1)
+  · intro hn
+    constructor
+    · intro a
+      simpa [NFG.IsNashPure, actionNFG, pairUtility, NFG.deviate,
+        toProfile, Function.update] using hn false a
+    · intro b
+      let deviation : A → B := fun _a => b
+      simpa [NFG.IsNashPure, actionNFG, pairUtility, NFG.deviate,
+        toProfile, Function.update, deviation] using hn true deviation
+
+/-- Kernel-level Nash recovery for a two-stage sequential shape. -/
+theorem isEquilibriumIn_iff_isNash {A B : Type}
+    (k : A × B → ℝ × ℝ) (σ : A × (A → B)) :
+    (ShapeS A B).IsEquilibriumIn () k σ ↔
+      (compileAction A B k).IsNash (toProfile σ) := by
+  rw [isEquilibriumIn_iff_isNashPure]
+  exact NFG.IsNashPure_iff_kernelGame (actionNFG A B k) (toProfile σ)
+
+end ShapeS
+
 end OpenGames

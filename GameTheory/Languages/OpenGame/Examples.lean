@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Languages.OpenGame.Compile
+import GameTheory.Languages.OpenGame.Theorems
 
 /-!
 # Open-Game Examples
@@ -59,5 +59,49 @@ theorem defect_is_kernelNash :
     prisonersDilemmaUtility (constantClosedStrategy true)).mp
       defect_is_equilibrium
   simpa [ShapeN.closedStrategyEquiv, constantClosedStrategy] using hn
+
+/-! ## Entry deterrence and non-credible threats -/
+
+/-- Entry-deterrence payoffs.  For the leader, `false` is Out and `true` is
+Enter.  For the follower, `false` is Accommodate and `true` is Fight. -/
+def entryDeterrencePayoff : Bool × Bool → ℝ × ℝ
+  | (false, false) => (1, 1)
+  | (false, true) => (1, 1)
+  | (true, false) => (2, 2)
+  | (true, true) => (0, 0)
+
+/-- The non-credible deterrence profile: stay out, with a contingent threat to
+fight. -/
+def deterrenceThreat : Bool × (Bool → Bool) :=
+  (false, fun _entry => true)
+
+/-- The threat is a plain sequential equilibrium. -/
+theorem deterrenceThreat_is_plainEquilibrium :
+    (ShapeS Bool Bool).IsEquilibriumIn () entryDeterrencePayoff
+      deterrenceThreat := by
+  simp [ShapeS, entryDeterrencePayoff, deterrenceThreat]
+
+/-- The same profile fails the conditioned predicate because fighting after
+entry is not optimal. -/
+theorem deterrenceThreat_not_subgamePerfect :
+    ¬ShapeS.IsSubgamePerfect entryDeterrencePayoff deterrenceThreat := by
+  simp [ShapeS.IsSubgamePerfect, entryDeterrencePayoff, deterrenceThreat]
+
+/-- Enter followed by accommodation is subgame perfect (the off-path Out
+subgame leaves the follower indifferent). -/
+def entryAccommodation : Bool × (Bool → Bool) :=
+  (true, fun _entry => false)
+
+theorem entryAccommodation_is_subgamePerfect :
+    ShapeS.IsSubgamePerfect entryDeterrencePayoff entryAccommodation := by
+  simp [ShapeS.IsSubgamePerfect, entryDeterrencePayoff, entryAccommodation]
+
+/-- The non-credible threat is nevertheless Nash in the compiled sequential
+strategic form. -/
+theorem deterrenceThreat_is_kernelNash :
+    (ShapeS.compileAction Bool Bool entryDeterrencePayoff).IsNash
+      (ShapeS.toProfile deterrenceThreat) :=
+  (ShapeS.isEquilibriumIn_iff_isNash entryDeterrencePayoff deterrenceThreat).mp
+    deterrenceThreat_is_plainEquilibrium
 
 end OpenGames.Examples
