@@ -59,6 +59,12 @@ variable {G : KernelGame ι}
 abbrev SignalHistory (M : G.PublicMonitoring) (t : ℕ) : Type :=
   Fin t → M.Signal
 
+/-- Concatenate a realized public prefix with a future public history. -/
+def SignalHistory.append (M : G.PublicMonitoring) {t n : ℕ}
+    (h : M.SignalHistory t) (k : M.SignalHistory n) :
+    M.SignalHistory (t + n) :=
+  Fin.append h k
+
 /-- A public monitored strategy chooses a stage strategy after each realized
 public-signal history. -/
 abbrev MonitoredStrategy (M : G.PublicMonitoring) (i : ι) : Type :=
@@ -72,6 +78,29 @@ abbrev MonitoredProfile (M : G.PublicMonitoring) : Type :=
 def stationaryMonitoredProfile (M : G.PublicMonitoring) (σ : Profile G) :
     M.MonitoredProfile :=
   fun i _ _ => σ i
+
+/-- Continuation of a monitored profile after a specified public history.
+The continuation is defined even after zero-probability histories, as required
+for perfect-public equilibrium. -/
+def after (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    {t : ℕ} (h : M.SignalHistory t) : M.MonitoredProfile :=
+  fun i n k => σ i (t + n) (h.append M k)
+
+@[simp] theorem after_apply
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    {t : ℕ} (h : M.SignalHistory t) (i : ι)
+    (n : ℕ) (k : M.SignalHistory n) :
+    M.after σ h i n k = σ i (t + n) (h.append M k) :=
+  rfl
+
+/-- Every continuation of stationary monitored play is the same stationary
+profile. -/
+@[simp] theorem after_stationaryMonitoredProfile
+    (M : G.PublicMonitoring) (σ : Profile G)
+    {t : ℕ} (h : M.SignalHistory t) :
+    M.after (M.stationaryMonitoredProfile σ) h =
+      M.stationaryMonitoredProfile σ := by
+  rfl
 
 /-- Post-process every public signal through a stochastic kernel.  This is the
 standard garbling operation on a public monitoring structure. -/
@@ -134,12 +163,49 @@ def signalHistoryDist (M : G.PublicMonitoring)
         (M.signalKernel (fun i => σ i t h)).map (Fin.snoc h) :=
   rfl
 
+/-- The law of histories through time `t` depends only on actions prescribed
+strictly before `t`. -/
+theorem signalHistoryDist_congr_before
+    (M : G.PublicMonitoring) (σ τ : M.MonitoredProfile) (t : ℕ)
+    (h : ∀ s, s < t → ∀ hist i, σ i s hist = τ i s hist) :
+    M.signalHistoryDist σ t = M.signalHistoryDist τ t := by
+  induction t with
+  | zero => simp
+  | succ t ih =>
+      rw [signalHistoryDist_succ, signalHistoryDist_succ]
+      have hprefix : M.signalHistoryDist σ t = M.signalHistoryDist τ t :=
+        ih (fun s hs => h s (by omega))
+      rw [hprefix]
+      congr 1
+      funext hist
+      have hprofile : (fun i => σ i t hist) = (fun i => τ i t hist) := by
+        funext i
+        exact h t (by omega) hist i
+      rw [hprofile]
+
 /-- Expected stage payoff in period `t`, integrating the stage expected utility
 over the distribution of realized public histories. -/
 def stageEU (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     (t : ℕ) (who : ι) : ℝ :=
   Math.Probability.expect (M.signalHistoryDist σ t)
     (fun h => G.eu (fun i => σ i t h) who)
+
+/-- Expected utility at time `t` depends only on prescribed play through
+time `t`. -/
+theorem stageEU_congr_before_succ
+    (M : G.PublicMonitoring) (σ τ : M.MonitoredProfile)
+    (t : ℕ) (who : ι)
+    (h : ∀ s, s < t + 1 → ∀ hist i, σ i s hist = τ i s hist) :
+    M.stageEU σ t who = M.stageEU τ t who := by
+  unfold stageEU
+  rw [M.signalHistoryDist_congr_before σ τ t
+    (fun s hs => h s (by omega))]
+  congr 1
+  funext hist
+  have hprofile : (fun i => σ i t hist) = (fun i => τ i t hist) := by
+    funext i
+    exact h t (by omega) hist i
+  rw [hprofile]
 
 /-- The expected stage payoff of stationary monitored play is the stage-game
 expected utility, independently of the monitoring structure. -/
@@ -167,6 +233,22 @@ theorem stageEU_le_const_of_forall
 def finiteAveragePayoff (M : G.PublicMonitoring) (T : ℕ)
     (σ : M.MonitoredProfile) (who : ι) : ℝ :=
   (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, M.stageEU σ t who
+
+/-- A finite-horizon payoff depends only on prescribed play before the
+horizon. -/
+theorem finiteAveragePayoff_congr_before
+    (M : G.PublicMonitoring) (σ τ : M.MonitoredProfile)
+    (T : ℕ) (who : ι)
+    (h : ∀ t, t < T → ∀ hist i, σ i t hist = τ i t hist) :
+    M.finiteAveragePayoff T σ who = M.finiteAveragePayoff T τ who := by
+  unfold finiteAveragePayoff
+  congr 1
+  apply Finset.sum_congr rfl
+  intro t ht
+  exact M.stageEU_congr_before_succ σ τ t who
+    (fun s hs => h s (by
+      have htT : t < T := Finset.mem_range.mp ht
+      omega))
 
 @[simp] theorem finiteAveragePayoff_zero
     (M : G.PublicMonitoring) (σ : M.MonitoredProfile) (who : ι) :

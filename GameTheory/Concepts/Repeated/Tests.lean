@@ -67,6 +67,19 @@ example (t : ℕ) :
   rw [PublicMonitoring.stageEU_stationaryMonitoredProfile]
   simp [KernelGame.eu, allTrueProfile]
 
+/-- Stationary monitored play remains stationary after every public history,
+including histories that have zero probability. -/
+example {t : ℕ}
+    (h : coordinationGame.outcomeMonitoring.SignalHistory t) (n : ℕ) :
+    coordinationGame.outcomeMonitoring.stageEU
+        (coordinationGame.outcomeMonitoring.after
+          (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+            allTrueProfile) h)
+        n false = 1 := by
+  rw [PublicMonitoring.after_stationaryMonitoredProfile,
+    PublicMonitoring.stageEU_stationaryMonitoredProfile]
+  simp [KernelGame.eu, allTrueProfile]
+
 /-- The checked stage Nash profile gives a monitored uniform equilibrium. -/
 example :
     coordinationGame.outcomeMonitoring.IsUniformEquilibrium
