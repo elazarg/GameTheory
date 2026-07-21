@@ -88,6 +88,7 @@ import GameTheory.Concepts.Repeated.Basic
 import GameTheory.Concepts.Repeated.Monitoring
 import GameTheory.Concepts.Repeated.Uniform
 import GameTheory.Concepts.Repeated.MonitoringInstances
+import GameTheory.Concepts.Repeated.MonitoringDiscounted
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties

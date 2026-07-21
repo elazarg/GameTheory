@@ -3,7 +3,7 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Concepts.Repeated.MonitoringInstances
+import GameTheory.Concepts.Repeated.MonitoringDiscounted
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -114,6 +114,29 @@ example (σ : Profile coordinationGame.mixedExtension) :
     coordinationGame.profileMonitoring.mixedExtension.signalKernel σ =
       coordinationGame.realizedActionMonitoring.signalKernel σ := by
   exact coordinationGame.profileMonitoring_mixedExtension_signalKernel σ
+
+/-- Stationary monitored play has its stage payoff under normalized
+discounting. -/
+example :
+    coordinationGame.outcomeMonitoring.discountedAveragePayoff (1 / 2)
+        (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+          allTrueProfile) false = 1 := by
+  rw [coordinationGame.outcomeMonitoring.discountedAveragePayoff_stationaryMonitoredProfile
+    (δ := (1 / 2 : ℝ)) (by norm_num) (by norm_num)]
+  simp [KernelGame.eu, allTrueProfile]
+
+/-- The coordination equilibrium is sequentially rational after every public
+history under discounted outcome monitoring. -/
+example :
+    coordinationGame.outcomeMonitoring.IsPerfectPublicEquilibrium (1 / 2)
+      (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+        allTrueProfile) := by
+  letI : Finite coordinationGame.Outcome := by
+    change Finite (Bool → Bool)
+    infer_instance
+  exact PublicMonitoring.stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash
+    coordinationGame.outcomeMonitoring (by norm_num) (by norm_num)
+      allTrueProfile_isNash
 
 end RepeatedMonitoringTests
 

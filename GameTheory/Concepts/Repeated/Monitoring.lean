@@ -229,6 +229,26 @@ theorem stageEU_le_const_of_forall
     (M.signalHistoryDist σ t)
     (fun h => G.eu (fun i => σ i t h) who) (fun _ => B) hle habs (fun _ => hB)
 
+/-- A uniform absolute bound on stage-game expected utility also bounds the
+expected utility at every monitored stage. -/
+theorem abs_stageEU_le_of_forall_eu_abs_le
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile) (t : ℕ) (who : ι)
+    {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    |M.stageEU σ t who| ≤ C := by
+  apply abs_le.mpr
+  constructor
+  · rw [stageEU, ← Math.Probability.expect_const
+      (M.signalHistoryDist σ t) (-C)]
+    exact Math.ProbabilityMassFunction.expect_mono_of_pointwise_bounded
+      (M.signalHistoryDist σ t) (fun _ => -C)
+      (fun h => G.eu (fun i => σ i t h) who)
+      (fun h => (abs_le.mp (hC (fun i => σ i t h))).1)
+      (fun _ => by rw [abs_neg, abs_of_nonneg hC0])
+      (fun h => hC (fun i => σ i t h))
+  · exact M.stageEU_le_const_of_forall σ t who
+      (fun h => (abs_le.mp (hC (fun i => σ i t h))).2)
+      (fun h => hC (fun i => σ i t h)) (by rw [abs_of_nonneg hC0])
+
 /-- Average expected payoff over the first `T` periods. -/
 def finiteAveragePayoff (M : G.PublicMonitoring) (T : ℕ)
     (σ : M.MonitoredProfile) (who : ι) : ℝ :=
