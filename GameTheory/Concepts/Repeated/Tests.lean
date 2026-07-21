@@ -20,6 +20,7 @@ namespace GameTheory
 namespace RepeatedMonitoringTests
 
 open KernelGame
+open KernelGame.PublicMonitoring.SelfGenerating
 
 /-- A two-player coordination game whose outcome records the pure profile. -/
 abbrev coordinationGame : KernelGame Bool :=
@@ -227,6 +228,29 @@ example :
         Set (Payoff Bool)) :=
   coordinationGame.outcomeMonitoring.selfGenerating_singleton_eu_of_isNash
     (by norm_num) allTrueProfile_isNash
+
+/-- The APS self-generation theorem converts the stationary singleton into a
+PPE payoff. -/
+example :
+    (fun who => coordinationGame.eu allTrueProfile who) ∈
+      coordinationGame.outcomeMonitoring.perfectPublicEquilibriumPayoffs
+        (1 / 2) := by
+  letI : Finite coordinationGame.Outcome := by
+    change Finite (Bool → Bool)
+    infer_instance
+  let W : Set (Payoff Bool) :=
+    {fun who => coordinationGame.eu allTrueProfile who}
+  have hW : PublicMonitoring.IsBoundedPayoffSet W := by
+    intro who
+    refine ⟨|coordinationGame.eu allTrueProfile who|, ?_⟩
+    intro v hv
+    rw [Set.mem_singleton_iff.mp hv]
+  have hself : coordinationGame.outcomeMonitoring.SelfGenerating (1 / 2) W :=
+    coordinationGame.outcomeMonitoring.selfGenerating_singleton_eu_of_isNash
+      (by norm_num) allTrueProfile_isNash
+  exact (selfGenerating_subset_perfectPublicEquilibriumPayoffs_of_finite_outcome
+      coordinationGame.outcomeMonitoring (by norm_num) (by norm_num)
+      hW hself) (Set.mem_singleton _)
 
 end RepeatedMonitoringTests
 

@@ -140,6 +140,282 @@ theorem after_generatedProfile
       h.generatedProfile (h.stateAfterSignals v (List.ofFn hist)) := by
   exact h.afterSignals_generatedProfile v (List.ofFn hist)
 
+/-- The generated strategy realizes its current promised payoff.  The proof
+uses Bellman contraction: after `N` recursive substitutions, the discrepancy
+is at most `δ ^ N * (Cstage + Cpromise)`. -/
+theorem generatedProfile_realizesPromise_of_bounds
+    (h : M.SelfGenerating δ W)
+    {who : ι} {Cstage Cpromise : ℝ}
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ a : Profile G, |G.eu a who| ≤ Cstage)
+    (hpromise : ∀ q ∈ W, |q who| ≤ Cpromise)
+    (v : W) :
+    M.discountedAveragePayoff δ (h.generatedProfile v) who = v.1 who := by
+  have hCstage0 : 0 ≤ Cstage :=
+    le_trans (abs_nonneg _) (hstage (h.action v))
+  have hCpromise0 : 0 ≤ Cpromise :=
+    le_trans (abs_nonneg _) (hpromise v.1 v.2)
+  have herror : ∀ N (q : W),
+      |M.discountedAveragePayoff δ (h.generatedProfile q) who - q.1 who| ≤
+        δ ^ N * (Cstage + Cpromise) := by
+    intro N
+    induction N with
+    | zero =>
+        intro q
+        rw [pow_zero, one_mul]
+        calc
+          |M.discountedAveragePayoff δ (h.generatedProfile q) who - q.1 who| ≤
+              |M.discountedAveragePayoff δ (h.generatedProfile q) who| +
+                |q.1 who| := abs_sub _ _
+          _ ≤ Cstage + Cpromise := by
+            exact add_le_add
+              (M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le
+                hδ0 hδ1 hCstage0 (h.generatedProfile q) who hstage)
+              (hpromise q.1 q.2)
+    | succ N ih =>
+        intro q
+        let B : ℝ := δ ^ N * (Cstage + Cpromise)
+        let V : W → ℝ := fun r =>
+          M.discountedAveragePayoff δ (h.generatedProfile r) who
+        let Q : W → ℝ := fun r => r.1 who
+        let p : PMF M.Signal := M.signalKernel (h.action q)
+        have hVbound (y : M.Signal) : |V (h.nextState q y)| ≤
+            Cstage + Cpromise := by
+          exact (M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le
+            hδ0 hδ1 hCstage0 (h.generatedProfile (h.nextState q y))
+            who hstage).trans (le_add_of_nonneg_right hCpromise0)
+        have hQbound (y : M.Signal) : |Q (h.nextState q y)| ≤
+            Cstage + Cpromise := by
+          exact (hpromise _ (h.nextState q y).2).trans
+            (le_add_of_nonneg_left hCstage0)
+        have hpointUpper (y : M.Signal) :
+            V (h.nextState q y) ≤ Q (h.nextState q y) + B := by
+          have := abs_le.mp (ih (h.nextState q y))
+          dsimp only [V, Q, B]
+          linarith
+        have hpointLower (y : M.Signal) :
+            Q (h.nextState q y) ≤ V (h.nextState q y) + B := by
+          have := abs_le.mp (ih (h.nextState q y))
+          dsimp only [V, Q, B]
+          linarith
+        have hexpectUpper :
+            Math.Probability.expect p (fun y => V (h.nextState q y)) ≤
+              Math.Probability.expect p (fun y => Q (h.nextState q y)) + B :=
+          expect_le_expect_add_const_of_pointwise_bounded
+            p _ _ B hVbound hQbound hpointUpper
+        have hexpectLower :
+            Math.Probability.expect p (fun y => Q (h.nextState q y)) ≤
+              Math.Probability.expect p (fun y => V (h.nextState q y)) + B :=
+          expect_le_expect_add_const_of_pointwise_bounded
+            p _ _ B hQbound hVbound hpointLower
+        have hbell := M.discountedAveragePayoff_eq_head_add_expected
+          hδ0 hδ1 hCstage0 (h.generatedProfile q) who hstage
+        simp only [generatedProfile_zero,
+          h.afterSignal_generatedProfile] at hbell
+        have hbellV : V q = (1 - δ) * G.eu (h.action q) who +
+            δ * Math.Probability.expect p
+              (fun y => V (h.nextState q y)) := by
+          simpa only [V, p] using hbell
+        have hkeep :
+            (1 - δ) * G.eu (h.action q) who +
+                δ * Math.Probability.expect p
+                  (fun y => Q (h.nextState q y)) = Q q := by
+          have hcoord := congrFun (h.promiseKeeping q) who
+          simpa only [IsPromiseKeeping, decomposedPayoff,
+            p, Q, nextState_val] using hcoord
+        have hupper : V q ≤ Q q + δ * B := by
+          calc
+            V q = (1 - δ) * G.eu (h.action q) who +
+                δ * Math.Probability.expect p
+                  (fun y => V (h.nextState q y)) := by
+              simpa only [V, p] using hbell
+            _ ≤ (1 - δ) * G.eu (h.action q) who +
+                δ * (Math.Probability.expect p
+                  (fun y => Q (h.nextState q y)) + B) := by
+              exact add_le_add_right
+                (mul_le_mul_of_nonneg_left hexpectUpper hδ0) _
+            _ = Q q + δ * B := by rw [← hkeep]; ring
+        have hlower : Q q ≤ V q + δ * B := by
+          calc
+            Q q = (1 - δ) * G.eu (h.action q) who +
+                δ * Math.Probability.expect p
+                  (fun y => Q (h.nextState q y)) := hkeep.symm
+            _ ≤ (1 - δ) * G.eu (h.action q) who +
+                δ * (Math.Probability.expect p
+                  (fun y => V (h.nextState q y)) + B) := by
+              exact add_le_add_right
+                (mul_le_mul_of_nonneg_left hexpectLower hδ0) _
+            _ = ((1 - δ) * G.eu (h.action q) who +
+                δ * Math.Probability.expect p
+                  (fun y => V (h.nextState q y))) + δ * B := by ring
+            _ = V q + δ * B := by rw [← hbellV]
+        have hB : δ * B = δ ^ (N + 1) * (Cstage + Cpromise) := by
+          simp only [B, pow_succ]
+          ring
+        rw [← hB]
+        apply abs_le.mpr
+        constructor <;> dsimp only [V, Q] at hupper hlower ⊢ <;> linarith
+  have hlimit : Filter.Tendsto
+      (fun N => δ ^ N * (Cstage + Cpromise)) Filter.atTop (nhds 0) :=
+    by
+      simpa only [zero_mul] using
+        (tendsto_pow_atTop_nhds_zero_of_lt_one hδ0 hδ1).mul_const
+          (Cstage + Cpromise)
+  have hzero :
+      |M.discountedAveragePayoff δ (h.generatedProfile v) who - v.1 who| ≤ 0 :=
+    ge_of_tendsto' hlimit (fun N => herror N v)
+  have heq :
+      M.discountedAveragePayoff δ (h.generatedProfile v) who - v.1 who = 0 :=
+    abs_eq_zero.mp (le_antisymm hzero (abs_nonneg _))
+  exact sub_eq_zero.mp heq
+
+/-- Coordinatewise-bounded payoff sets and bounded stage payoffs suffice for
+every promise state to be realized by its generated strategy. -/
+theorem generatedProfile_realizesPromise
+    (h : M.SelfGenerating δ W)
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C)
+    (hW : IsBoundedPayoffSet W) (v : W) (who : ι) :
+    M.discountedAveragePayoff δ (h.generatedProfile v) who = v.1 who := by
+  obtain ⟨Cstage, hCstage⟩ := hstage who
+  obtain ⟨Cpromise, hCpromise⟩ := hW who
+  exact h.generatedProfile_realizesPromise_of_bounds
+    hδ0 hδ1 hCstage hCpromise v
+
+/-- The actual payoff from a one-shot deviation in the generated strategy is
+the APS decomposed deviation payoff selected at the current promise state. -/
+theorem discountedAveragePayoff_oneShotDeviation_eq_decomposedDeviationPayoff
+    (h : M.SelfGenerating δ W)
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C)
+    (hW : IsBoundedPayoffSet W) (v : W)
+    (who : ι) (dev : G.Strategy who) :
+    M.discountedAveragePayoff δ
+        (Function.update (h.generatedProfile v) who
+          (M.oneShotDeviation (h.generatedProfile v) who dev)) who =
+      M.decomposedDeviationPayoff δ (h.action v) (h.continuation v)
+        who dev := by
+  obtain ⟨C, hC⟩ := hstage who
+  have hC0 : 0 ≤ C :=
+    le_trans (abs_nonneg _) (hC (h.action v))
+  let τ : M.MonitoredProfile :=
+    Function.update (h.generatedProfile v) who
+      (M.oneShotDeviation (h.generatedProfile v) who dev)
+  have hroot :
+      (fun i => τ i 0 (fun k => k.elim0)) =
+        Function.update (h.action v) who dev := by
+    funext i
+    by_cases hi : i = who
+    · subst hi
+      simp [τ]
+    · simp [τ, hi]
+  have hbell := M.discountedAveragePayoff_eq_head_add_expected
+    hδ0 hδ1 hC0 τ who hC
+  have hcont (y : M.Signal) :
+      M.afterSignal τ y = h.generatedProfile (h.nextState v y) := by
+    dsimp only [τ]
+    rw [M.afterSignal_update_oneShotDeviation,
+      h.afterSignal_generatedProfile]
+  rw [hroot] at hbell
+  simp_rw [hcont] at hbell
+  simp_rw [h.generatedProfile_realizesPromise hδ0 hδ1 hstage hW] at hbell
+  simpa only [τ, decomposedDeviationPayoff, nextState_val] using hbell
+
+/-- The generated strategy has no profitable one-shot deviation at its
+current promise state. -/
+theorem generatedProfile_hasNoProfitableOneShotDeviation
+    (h : M.SelfGenerating δ W)
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C)
+    (hW : IsBoundedPayoffSet W) (v : W) :
+    M.HasNoProfitableOneShotDeviation δ (h.generatedProfile v) := by
+  intro who dev
+  calc
+    M.discountedAveragePayoff δ
+        (Function.update (h.generatedProfile v) who
+          (M.oneShotDeviation (h.generatedProfile v) who dev)) who =
+        M.decomposedDeviationPayoff δ (h.action v) (h.continuation v)
+          who dev :=
+      h.discountedAveragePayoff_oneShotDeviation_eq_decomposedDeviationPayoff
+        hδ0 hδ1 hstage hW v who dev
+    _ ≤ M.decomposedPayoff δ (h.action v) (h.continuation v) who :=
+      h.enforceable v who dev
+    _ = v.1 who := congrFun (h.promiseKeeping v) who
+    _ = M.discountedAveragePayoff δ (h.generatedProfile v) who :=
+      (h.generatedProfile_realizesPromise hδ0 hδ1 hstage hW v who).symm
+
+/-- One-shot optimality of the generated strategy holds after every public
+history, including zero-probability histories. -/
+theorem generatedProfile_hasNoProfitableOneShotDeviationAfterEveryHistory
+    (h : M.SelfGenerating δ W)
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C)
+    (hW : IsBoundedPayoffSet W) (v : W) :
+    M.HasNoProfitableOneShotDeviationAfterEveryHistory δ
+      (h.generatedProfile v) := by
+  constructor
+  · exact h.generatedProfile_hasNoProfitableOneShotDeviation
+      hδ0 hδ1 hstage hW v
+  · intro t hist
+    rw [h.after_generatedProfile]
+    exact h.generatedProfile_hasNoProfitableOneShotDeviation
+      hδ0 hδ1 hstage hW _
+
+/-- The public strategy generated from a bounded self-generating set is a
+perfect-public equilibrium. -/
+theorem generatedProfile_isPerfectPublicEquilibrium
+    (h : M.SelfGenerating δ W)
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C)
+    (hW : IsBoundedPayoffSet W) (v : W) :
+    M.IsPerfectPublicEquilibrium δ (h.generatedProfile v) := by
+  exact (h.generatedProfile_hasNoProfitableOneShotDeviationAfterEveryHistory
+    hδ0 hδ1 hstage hW v).isPerfectPublicEquilibrium_of_bounded
+      hδ0 hδ1 hstage
+
+/-- Finite-outcome convenience form of the generated-strategy PPE theorem. -/
+theorem generatedProfile_isPerfectPublicEquilibrium_of_finite_outcome
+    [Finite G.Outcome]
+    (h : M.SelfGenerating δ W)
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hW : IsBoundedPayoffSet W) (v : W) :
+    M.IsPerfectPublicEquilibrium δ (h.generatedProfile v) := by
+  apply h.generatedProfile_isPerfectPublicEquilibrium hδ0 hδ1 _ hW
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
+/-- **APS self-generation theorem.** Every payoff in a coordinatewise-bounded
+self-generating set is delivered by a perfect-public equilibrium. -/
+theorem selfGenerating_subset_perfectPublicEquilibriumPayoffs
+    (M : G.PublicMonitoring)
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C)
+    {W : Set (Payoff ι)} (hW : IsBoundedPayoffSet W)
+    (h : M.SelfGenerating δ W) :
+    W ⊆ M.perfectPublicEquilibriumPayoffs δ := by
+  intro v hv
+  let q : W := ⟨v, hv⟩
+  exact ⟨h.generatedProfile q,
+    h.generatedProfile_isPerfectPublicEquilibrium hδ0 hδ1 hstage hW q,
+    fun who => h.generatedProfile_realizesPromise
+      hδ0 hδ1 hstage hW q who⟩
+
+/-- Finite-outcome convenience form of the APS self-generation theorem. -/
+theorem selfGenerating_subset_perfectPublicEquilibriumPayoffs_of_finite_outcome
+    (M : G.PublicMonitoring) [Finite G.Outcome]
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    {W : Set (Payoff ι)} (hW : IsBoundedPayoffSet W)
+    (h : M.SelfGenerating δ W) :
+    W ⊆ M.perfectPublicEquilibriumPayoffs δ := by
+  apply selfGenerating_subset_perfectPublicEquilibriumPayoffs
+    M hδ0 hδ1 _ hW h
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
 end SelfGenerating
 
 end PublicMonitoring
