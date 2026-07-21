@@ -574,9 +574,10 @@ theorem isBlockingPair_iff_of_isProposerReport_of_prefA_eq
 least one report, then some proposer whose report changed does not strictly
 improve over truthful deferred acceptance.
 
-True and reported proposer preferences must be strict, including relative to
-the true outside option. Lists may be incomplete and reports may reorder or
-truncate them; receiver preferences and both outside options remain fixed. -/
+True proposer preferences must be strict, including relative to the outside
+option. Reported partner scores need only be injective among partners, so
+reports may reorder or truncate lists; receiver preferences and both outside
+options remain fixed. -/
 theorem deferredAcceptance_groupStrategyproof
     {M' : MatchingMarket α β}
     (hAinj : ∀ a, Function.Injective (M.prefA a))
