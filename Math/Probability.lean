@@ -10,6 +10,7 @@ import Mathlib.Analysis.Normed.Group.Tannery
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.Probability.ProbabilityMassFunction.Monad
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
+import Mathlib.LinearAlgebra.Pi
 
 /-!
 # Math.Probability
@@ -19,7 +20,7 @@ Stochastic kernels and expected-value infrastructure for discrete game theory.
 Provides:
 - `Kernel α β` — stochastic kernels (Markov kernels) using Mathlib's `PMF`
 - `Kernel.id`, `Kernel.comp`, `Kernel.pushforward`,
-  `Kernel.ofFun` — basic operations
+  `Kernel.ofFun`, `Kernel.pushforwardLinearMap` — basic operations
 - `expect` — expected value of a real-valued function under a `PMF`
 - Utility lemmas: `expect_pure`, `expect_bind`, `expect_const`, `expect_eq_sum`
 
@@ -29,6 +30,7 @@ namespace Math
 namespace Probability
 
 open Filter
+open scoped BigOperators
 
 -- ============================================================================
 -- Kernels (using Mathlib's PMF)
@@ -49,6 +51,27 @@ noncomputable def comp (k₁ : Kernel α β) (k₂ : Kernel β γ) : Kernel α �
 /-- Pushforward of a kernel to input distributions. -/
 noncomputable def pushforward (k : Kernel α β) : PMF α → PMF β :=
   fun μ => μ.bind k
+
+/-- Linear pushforward of real weights through a stochastic kernel with
+finite source. Unlike `Kernel.pushforward`, the input may be an arbitrary
+signed real vector rather than a probability distribution. -/
+noncomputable def pushforwardLinearMap [Fintype α]
+    (k : Kernel α β) : (α → ℝ) →ₗ[ℝ] (β → ℝ) :=
+  { toFun := fun v b => ∑ a, v a * (k a b).toReal
+    map_add' := fun v w => by
+      funext b
+      simp only [Pi.add_apply, add_mul, Finset.sum_add_distrib]
+    map_smul' := fun c v => by
+      funext b
+      change (∑ a, (c * v a) * (k a b).toReal) =
+        c * ∑ a, v a * (k a b).toReal
+      simp only [mul_assoc, Finset.mul_sum] }
+
+@[simp]
+theorem pushforwardLinearMap_apply [Fintype α]
+    (k : Kernel α β) (v : α → ℝ) (b : β) :
+    k.pushforwardLinearMap v b = ∑ a, v a * (k a b).toReal :=
+  rfl
 
 /-- Pushforward along a pure function (deterministic kernel). -/
 noncomputable def ofFun (f : α → β) : Kernel α β := fun a => PMF.pure (f a)

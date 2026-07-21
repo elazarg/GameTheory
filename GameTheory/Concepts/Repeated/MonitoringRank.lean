@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 import Mathlib.LinearAlgebra.LinearIndependent.Basic
 import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.LinearAlgebra.Pi
+import Math.LinearAlgebra.ZeroSum
 import GameTheory.Concepts.Repeated.Monitoring
 
 /-!
@@ -142,52 +143,13 @@ theorem pairwiseFullRank_iff_pairwiseDeviationRank_eq_card
     rw [← Matrix.rank_eq_finrank_span_row, Fintype.card_sum]
     simpa only [Fintype.card_sum] using h.symm
 
-/-- Sum of the coordinates of a finite real vector, as a linear map. -/
-def signalSumLinearMap (S : Type) [Fintype S] : (S → ℝ) →ₗ[ℝ] ℝ :=
-  { toFun := fun v => ∑ s, v s
-    map_add' := fun v w => by
-      change (∑ s, (v s + w s)) = (∑ s, v s) + ∑ s, w s
-      exact Finset.sum_add_distrib
-    map_smul' := fun c v => by
-      change (∑ s, c * v s) = c * ∑ s, v s
-      simpa using
-        (Finset.mul_sum Finset.univ (fun s => v s) c).symm }
-
-/-- The subspace of real signal vectors whose coordinates sum to zero. -/
-def zeroSumSignalSubspace (S : Type) [Fintype S] : Submodule ℝ (S → ℝ) :=
-  LinearMap.ker (signalSumLinearMap S)
-
-@[simp]
-theorem mem_zeroSumSignalSubspace_iff
-    {S : Type} [Fintype S] (v : S → ℝ) :
-    v ∈ zeroSumSignalSubspace S ↔ ∑ s, v s = 0 :=
-  by simp [zeroSumSignalSubspace, signalSumLinearMap]
-
-/-- The zero-sum signal subspace has the expected codimension one. -/
-theorem finrank_zeroSumSignalSubspace
-    (S : Type) [Fintype S] [Nonempty S] :
-    Module.finrank ℝ (zeroSumSignalSubspace S) = Fintype.card S - 1 := by
-  classical
-  let L : (S → ℝ) →ₗ[ℝ] ℝ := signalSumLinearMap S
-  have hrange : LinearMap.range L = ⊤ := by
-    apply Submodule.eq_top_iff'.2
-    intro x
-    let s : S := Classical.choice inferInstance
-    refine ⟨Pi.single s x, ?_⟩
-    simp [L, signalSumLinearMap]
-  have hdim := L.finrank_range_add_finrank_ker
-  rw [hrange, finrank_top,
-    Module.finrank_self, Module.finrank_fintype_fun_eq_card] at hdim
-  change Module.finrank ℝ (LinearMap.ker L) = Fintype.card S - 1
-  omega
-
 /-- Every deviation row belongs to the zero-sum signal subspace. -/
-theorem deviationSignalMatrix_mem_zeroSumSignalSubspace
+theorem deviationSignalMatrix_mem_zeroSumSubspace
     (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
     (a : Profile G) (who : ι) (dev : NontrivialDeviation a who) :
     M.deviationSignalMatrix a who dev ∈
-      zeroSumSignalSubspace M.Signal := by
-  rw [mem_zeroSumSignalSubspace_iff]
+      Math.LinearAlgebra.zeroSumSubspace ℝ M.Signal := by
+  rw [Math.LinearAlgebra.mem_zeroSumSubspace_iff]
   simp only [deviationSignalMatrix, deviationSignalVector,
     Finset.sum_sub_distrib, Math.Probability.pmf_toReal_sum_one, sub_self]
 
@@ -200,11 +162,11 @@ theorem individualDeviationRank_le_card_signal_sub_one
     [Finite (NontrivialDeviation a who)] :
     M.individualDeviationRank a who ≤ Fintype.card M.Signal - 1 := by
   rw [individualDeviationRank, Matrix.rank_eq_finrank_span_row,
-    ← finrank_zeroSumSignalSubspace M.Signal]
+    ← Math.LinearAlgebra.finrank_zeroSumSubspace ℝ M.Signal]
   apply Submodule.finrank_mono
   apply Submodule.span_le.2
   rintro _ ⟨dev, rfl⟩
-  exact M.deviationSignalMatrix_mem_zeroSumSignalSubspace a who dev
+  exact M.deviationSignalMatrix_mem_zeroSumSubspace a who dev
 
 /-- Individual full rank therefore requires at least one independent signal
 direction per nontrivial deviation. -/
@@ -228,15 +190,15 @@ theorem pairwiseDeviationRank_le_card_signal_sub_one
     [Finite (NontrivialDeviation a j)] :
     M.pairwiseDeviationRank a i j ≤ Fintype.card M.Signal - 1 := by
   rw [pairwiseDeviationRank, Matrix.rank_eq_finrank_span_row,
-    ← finrank_zeroSumSignalSubspace M.Signal]
+    ← Math.LinearAlgebra.finrank_zeroSumSubspace ℝ M.Signal]
   apply Submodule.finrank_mono
   apply Submodule.span_le.2
   rintro _ ⟨dev, rfl⟩
   cases dev with
   | inl dev =>
-      exact M.deviationSignalMatrix_mem_zeroSumSignalSubspace a i dev
+      exact M.deviationSignalMatrix_mem_zeroSumSubspace a i dev
   | inr dev =>
-      exact M.deviationSignalMatrix_mem_zeroSumSignalSubspace a j dev
+      exact M.deviationSignalMatrix_mem_zeroSumSubspace a j dev
 
 /-- Pairwise full rank requires enough public-signal directions to distinguish
 all nontrivial deviations by the two players. -/
@@ -256,26 +218,6 @@ theorem PairwiseFullRank.card_deviations_le_card_signal_sub_one
 
 /-! ## Monotonicity under stochastic garbling -/
 
-/-- Linear pushforward of real signal weights through a stochastic kernel
-with finite source. -/
-def garblingLinearMap {Y S : Type} [Fintype Y]
-    (K : Math.Probability.Kernel Y S) : (Y → ℝ) →ₗ[ℝ] (S → ℝ) :=
-  { toFun := fun v s => ∑ y, v y * (K y s).toReal
-    map_add' := fun v w => by
-      funext s
-      simp only [Pi.add_apply, add_mul, Finset.sum_add_distrib]
-    map_smul' := fun c v => by
-      funext s
-      change (∑ y, (c * v y) * (K y s).toReal) =
-        c * ∑ y, v y * (K y s).toReal
-      simp only [mul_assoc, Finset.mul_sum] }
-
-@[simp]
-theorem garblingLinearMap_apply {Y S : Type} [Fintype Y]
-    (K : Math.Probability.Kernel Y S) (v : Y → ℝ) (s : S) :
-    garblingLinearMap K v s = ∑ y, v y * (K y s).toReal :=
-  rfl
-
 /-- Garbling applies the stochastic pushforward linear map to every
 deviation-signal vector. -/
 theorem deviationSignalVector_garble
@@ -283,7 +225,7 @@ theorem deviationSignalVector_garble
     {S : Type} (K : Math.Probability.Kernel M.Signal S)
     (a : Profile G) (who : ι) (dev : G.Strategy who) :
     (M.garble K).deviationSignalVector a who dev =
-      garblingLinearMap K (M.deviationSignalVector a who dev) := by
+      K.pushforwardLinearMap (M.deviationSignalVector a who dev) := by
   funext s
   change S at s
   change
@@ -306,7 +248,8 @@ theorem deviationSignalMatrix_garble
     {S : Type} (K : Math.Probability.Kernel M.Signal S)
     (a : Profile G) (who : ι) :
     (M.garble K).deviationSignalMatrix a who =
-      fun dev => garblingLinearMap K (M.deviationSignalMatrix a who dev) := by
+      fun dev => K.pushforwardLinearMap
+        (M.deviationSignalMatrix a who dev) := by
   funext dev
   exact M.deviationSignalVector_garble K a who dev.1
 
@@ -317,7 +260,7 @@ theorem pairwiseDeviationSignalFamily_garble
     {S : Type} (K : Math.Probability.Kernel M.Signal S)
     (a : Profile G) (i j : ι) :
     (M.garble K).pairwiseDeviationSignalFamily a i j =
-      fun dev => garblingLinearMap K
+      fun dev => K.pushforwardLinearMap
         (M.pairwiseDeviationSignalFamily a i j dev) := by
   funext dev
   cases dev with
@@ -335,7 +278,7 @@ theorem IndividualFullRank.of_garble
     M.IndividualFullRank a who := by
   letI := Fintype.ofFinite M.Signal
   rw [IndividualFullRank, M.deviationSignalMatrix_garble K] at h
-  exact LinearIndependent.of_comp (garblingLinearMap K) h
+  exact LinearIndependent.of_comp K.pushforwardLinearMap h
 
 /-- Stochastic garbling cannot create pairwise full rank. -/
 theorem PairwiseFullRank.of_garble
@@ -346,7 +289,7 @@ theorem PairwiseFullRank.of_garble
     M.PairwiseFullRank a i j := by
   letI := Fintype.ofFinite M.Signal
   rw [PairwiseFullRank, M.pairwiseDeviationSignalFamily_garble K] at h
-  exact LinearIndependent.of_comp (garblingLinearMap K) h
+  exact LinearIndependent.of_comp K.pushforwardLinearMap h
 
 /-- Stochastic garbling cannot increase the numerical individual deviation
 rank when both signal spaces are finite. -/
@@ -363,12 +306,12 @@ theorem individualDeviationRank_garble_le
     M.deviationSignalMatrix_garble K]
   change Module.finrank ℝ
       (Submodule.span ℝ
-        (Set.range (garblingLinearMap K ∘
+        (Set.range (K.pushforwardLinearMap ∘
           M.deviationSignalMatrix a who))) ≤
     Module.finrank ℝ
       (Submodule.span ℝ (Set.range (M.deviationSignalMatrix a who)))
   rw [Set.range_comp, ← LinearMap.map_span]
-  exact Submodule.finrank_map_le (garblingLinearMap K)
+  exact Submodule.finrank_map_le K.pushforwardLinearMap
     (Submodule.span ℝ (Set.range (M.deviationSignalMatrix a who)))
 
 /-- Stochastic garbling cannot increase the numerical pairwise deviation
@@ -387,13 +330,13 @@ theorem pairwiseDeviationRank_garble_le
     M.pairwiseDeviationSignalFamily_garble K]
   change Module.finrank ℝ
       (Submodule.span ℝ
-        (Set.range (garblingLinearMap K ∘
+        (Set.range (K.pushforwardLinearMap ∘
           M.pairwiseDeviationSignalFamily a i j))) ≤
     Module.finrank ℝ
       (Submodule.span ℝ
         (Set.range (M.pairwiseDeviationSignalFamily a i j)))
   rw [Set.range_comp, ← LinearMap.map_span]
-  exact Submodule.finrank_map_le (garblingLinearMap K)
+  exact Submodule.finrank_map_le K.pushforwardLinearMap
     (Submodule.span ℝ
       (Set.range (M.pairwiseDeviationSignalFamily a i j)))
 

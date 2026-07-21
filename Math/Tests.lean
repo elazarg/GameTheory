@@ -12,6 +12,7 @@ import Math.PMFProduct
 import Math.OnlineAlgorithms
 import Math.Minimax.Loomis
 import Math.LinearAlgebra.PerronFrobenius
+import Math.LinearAlgebra.ZeroSum
 
 /-!
 # Math.Tests
@@ -23,6 +24,7 @@ namespace Math.Tests
 
 open Math.Probability
 open Math.PMFProduct
+open scoped BigOperators
 
 noncomputable section
 
@@ -36,6 +38,17 @@ example :
 example :
     Kernel.comp (Kernel.id Bool) (Kernel.ofFun not) = Kernel.ofFun not := by
   simp
+
+example (v : Bool → ℝ) :
+    (Kernel.ofFun (id : Bool → Bool)).pushforwardLinearMap v = v := by
+  funext b
+  cases b <;> simp [Kernel.pushforwardLinearMap_apply, Kernel.ofFun]
+
+example :
+    Module.finrank ℝ
+        (Math.LinearAlgebra.zeroSumSubspace ℝ (Fin 3)) = 2 := by
+  simpa using
+    (Math.LinearAlgebra.finrank_zeroSumSubspace ℝ (Fin 3))
 
 example :
     Kernel.Relates Eq Eq (Kernel.ofFun not) (Kernel.ofFun not) :=
