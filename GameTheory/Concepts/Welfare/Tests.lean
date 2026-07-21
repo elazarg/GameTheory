@@ -47,6 +47,16 @@ example (G : KernelGame Bool) (r : Payoff Bool) :
         G.individuallyRationalInnerApproximation r margin :=
   G.strictIndividuallyRationalPayoffSet_eq_iUnion_innerApproximations r
 
+example (G : KernelGame Bool) :
+    G.HasFullDimensionalFeasibleSet ↔
+      (interior G.feasibleSet).Nonempty :=
+  G.hasFullDimensionalFeasibleSet_iff_interior_nonempty
+
+example (G : KernelGame Bool) (r : Payoff Bool) :
+    (intrinsicInterior ℝ (G.strictIndividuallyRationalPayoffSet r)).Nonempty ↔
+      (G.strictIndividuallyRationalPayoffSet r).Nonempty :=
+  G.intrinsicInterior_strictIndividuallyRationalPayoffSet_nonempty_iff r
+
 end
 
 end GameTheory.Concepts.Welfare.Tests

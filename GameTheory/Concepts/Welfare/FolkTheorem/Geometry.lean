@@ -4,6 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
+import Mathlib.Analysis.Convex.Intrinsic
+import Mathlib.Analysis.Normed.Affine.AddTorsorBases
 import GameTheory.Concepts.Welfare.FolkTheorem.Discounting
 
 /-!
@@ -38,6 +40,33 @@ theorem nonempty_feasibleSet (G : KernelGame ι) [Nonempty (Profile G)] :
 theorem convex_feasibleSet (G : KernelGame ι) :
     Convex ℝ G.feasibleSet := by
   exact convex_convexHull ℝ G.purePayoffSet
+
+/-- The affine hull of feasible payoffs is already determined by pure stage
+payoffs. -/
+theorem affineSpan_feasibleSet (G : KernelGame ι) :
+    affineSpan ℝ G.feasibleSet = affineSpan ℝ G.purePayoffSet := by
+  exact affineSpan_convexHull G.purePayoffSet
+
+/-- The feasible payoff set is full dimensional in the ambient payoff space. -/
+def HasFullDimensionalFeasibleSet (G : KernelGame ι) : Prop :=
+  affineSpan ℝ G.feasibleSet = ⊤
+
+/-- For finitely many players, full dimensionality is equivalent to nonempty
+ambient interior of the feasible payoff set. -/
+theorem hasFullDimensionalFeasibleSet_iff_interior_nonempty
+    (G : KernelGame ι) [Finite ι] :
+    G.HasFullDimensionalFeasibleSet ↔ (interior G.feasibleSet).Nonempty := by
+  letI := Fintype.ofFinite ι
+  exact G.convex_feasibleSet.interior_nonempty_iff_affineSpan_eq_top.symm
+
+/-- The relative, or intrinsic, interior of a finite-dimensional feasible set
+is nonempty exactly when the feasible set itself is nonempty; no
+full-dimensionality assumption is needed. -/
+theorem intrinsicInterior_feasibleSet_nonempty_iff
+    (G : KernelGame ι) [Finite ι] :
+    (intrinsicInterior ℝ G.feasibleSet).Nonempty ↔ G.feasibleSet.Nonempty := by
+  letI := Fintype.ofFinite ι
+  exact intrinsicInterior_nonempty G.convex_feasibleSet
 
 theorem isCompact_feasibleSet (G : KernelGame ι) [Finite (Profile G)] :
     IsCompact G.feasibleSet := by
@@ -101,6 +130,17 @@ theorem convex_individuallyRationalPayoffSet (G : KernelGame ι) (r : Payoff ι)
 theorem convex_strictIndividuallyRationalPayoffSet (G : KernelGame ι) (r : Payoff ι) :
     Convex ℝ (G.strictIndividuallyRationalPayoffSet r) :=
   (G.convex_feasibleSet).inter (convex_strictReservationSet r)
+
+/-- The strictly individually rational feasible region has nonempty relative
+interior exactly when it is nonempty, even if feasible payoffs lie in a proper
+affine subspace. -/
+theorem intrinsicInterior_strictIndividuallyRationalPayoffSet_nonempty_iff
+    (G : KernelGame ι) [Finite ι] (r : Payoff ι) :
+    (intrinsicInterior ℝ (G.strictIndividuallyRationalPayoffSet r)).Nonempty ↔
+      (G.strictIndividuallyRationalPayoffSet r).Nonempty := by
+  letI := Fintype.ofFinite ι
+  exact intrinsicInterior_nonempty
+    (G.convex_strictIndividuallyRationalPayoffSet r)
 
 theorem isClosed_individuallyRationalPayoffSet (G : KernelGame ι)
     [Finite (Profile G)] (r : Payoff ι) :
