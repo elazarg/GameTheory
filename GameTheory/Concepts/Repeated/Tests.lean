@@ -3,7 +3,7 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Concepts.Repeated.MonitoringPublicRandomization
+import GameTheory.Concepts.Repeated.MonitoringPublicDraw
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -20,6 +20,7 @@ namespace GameTheory
 namespace RepeatedMonitoringTests
 
 open KernelGame
+open KernelGame.PublicMonitoring
 open KernelGame.PublicMonitoring.SelfGenerating
 
 /-- A two-player coordination game whose outcome records the pure profile. -/
@@ -289,6 +290,32 @@ example :
     coordinationGame.outcomeMonitoring.selfGenerating_singleton_eu_of_isNash
       (by norm_num) allTrueProfile_isNash
   exact hself.publicSelfGenerating
+
+/-- Adding an independent public draw preserves the original monitoring
+signal marginal. -/
+example (a : Profile coordinationGame) :
+    ((coordinationGame.outcomeMonitoring.withPublicDraw (PMF.pure true)).signalKernel
+      a).map Prod.snd =
+        coordinationGame.outcomeMonitoring.signalKernel a := by
+  exact withPublicDraw_signalKernel_map_snd
+    coordinationGame.outcomeMonitoring (PMF.pure true) a
+
+/-- A stationary stage Nash equilibrium remains a seeded PPE when a public
+draw is observed before play. -/
+example :
+    coordinationGame.outcomeMonitoring.IsSeededPerfectPublicEquilibrium
+      (PMF.pure true) (1 / 2)
+      (fun _ =>
+        (coordinationGame.outcomeMonitoring.withPublicDraw
+          (PMF.pure true)).stationaryMonitoredProfile allTrueProfile) := by
+  letI : Finite coordinationGame.Outcome := by
+    change Finite (Bool → Bool)
+    infer_instance
+  apply isSeededPerfectPublicEquilibrium_const
+    coordinationGame.outcomeMonitoring (PMF.pure true)
+  exact stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash
+      (coordinationGame.outcomeMonitoring.withPublicDraw (PMF.pure true))
+      (by norm_num) (by norm_num) allTrueProfile_isNash
 
 end RepeatedMonitoringTests
 
