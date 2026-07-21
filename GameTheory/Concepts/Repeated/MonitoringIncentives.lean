@@ -365,6 +365,194 @@ theorem exists_uniform_bounded_pairwiseIncentiveEffect_rightInverses
     (Finset.single_le_sum (fun k' _ => (hC k').1) (Finset.mem_univ k))
     (norm_nonneg b)
 
+/-! ## Tangent continuation transfers -/
+
+/-- Embed a scalar signal-contingent transfer in one player's payoff
+coordinate, leaving every other coordinate zero. -/
+def singleCoordinateIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) (who : iota)
+    (z : M.Signal → ℝ) : M.Signal → Payoff iota :=
+  fun y other => if other = who then z y else 0
+
+@[simp]
+theorem singleCoordinateIncentiveTransfer_apply_self
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) (who : iota)
+    (z : M.Signal → ℝ) (y : M.Signal) :
+    M.singleCoordinateIncentiveTransfer who z y who = z y := by
+  simp [singleCoordinateIncentiveTransfer]
+
+theorem singleCoordinateIncentiveTransfer_apply_of_ne
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) {who other : iota}
+    (hother : other ≠ who) (z : M.Signal → ℝ) (y : M.Signal) :
+    M.singleCoordinateIncentiveTransfer who z y other = 0 := by
+  simp [singleCoordinateIncentiveTransfer, hother]
+
+/-- A transfer supported on a coordinate where the normal vanishes is tangent
+to that normal's hyperplane. -/
+theorem singleCoordinateIncentiveTransfer_mem_normalHyperplane
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) (normal : Payoff iota)
+    {who : iota} (hzero : normal who = 0)
+    (z : M.Signal → ℝ) (y : M.Signal) :
+    M.singleCoordinateIncentiveTransfer who z y ∈
+      Math.LinearAlgebra.normalHyperplane normal := by
+  simp [Math.LinearAlgebra.mem_normalHyperplane_iff,
+    singleCoordinateIncentiveTransfer, hzero]
+
+/-- Embed a scalar transfer in two coordinates with opposite normal-weighted
+coefficients.  Its pointwise pairing with the normal is identically zero. -/
+def pairwiseTangentIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) (normal : Payoff iota)
+    (i j : iota) (z : M.Signal → ℝ) : M.Signal → Payoff iota :=
+  fun y who =>
+    if who = i then normal j * z y
+    else if who = j then -(normal i) * z y
+    else 0
+
+@[simp]
+theorem pairwiseTangentIncentiveTransfer_apply_left
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) (normal : Payoff iota)
+    (i j : iota) (z : M.Signal → ℝ) (y : M.Signal) :
+    M.pairwiseTangentIncentiveTransfer normal i j z y i =
+      normal j * z y := by
+  simp [pairwiseTangentIncentiveTransfer]
+
+@[simp]
+theorem pairwiseTangentIncentiveTransfer_apply_right
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) (normal : Payoff iota)
+    {i j : iota} (hij : i ≠ j) (z : M.Signal → ℝ) (y : M.Signal) :
+    M.pairwiseTangentIncentiveTransfer normal i j z y j =
+      -(normal i) * z y := by
+  simp [pairwiseTangentIncentiveTransfer, hij.symm]
+
+/-- The paired transfer lies in the normal hyperplane for every signal. -/
+theorem pairwiseTangentIncentiveTransfer_mem_normalHyperplane
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) (normal : Payoff iota)
+    {i j : iota} (hij : i ≠ j) (z : M.Signal → ℝ) (y : M.Signal) :
+    M.pairwiseTangentIncentiveTransfer normal i j z y ∈
+      Math.LinearAlgebra.normalHyperplane normal := by
+  rw [Math.LinearAlgebra.mem_normalHyperplane_iff]
+  simp only [pairwiseTangentIncentiveTransfer]
+  calc
+    (∑ x, normal x *
+        (if x = i then normal j * z y
+        else if x = j then -(normal i) * z y else 0)) =
+        (∑ x, if x = i then normal x * (normal j * z y) else 0) +
+          ∑ x, if x = j then normal x * (-(normal i) * z y) else 0 := by
+      rw [← Finset.sum_add_distrib]
+      apply Finset.sum_congr rfl
+      intro x _
+      by_cases hxi : x = i
+      · subst x
+        simp [hij]
+      · by_cases hxj : x = j
+        · simp [hxj, hij.symm]
+        · simp [hxi, hxj]
+    _ = normal i * (normal j * z y) +
+        normal j * (-(normal i) * z y) := by simp
+    _ = 0 := by ring
+
+/-- Individual full rank realizes any incentive target by a transfer supported
+on the affected player's coordinate.  If the normal vanishes there, every
+realized transfer remains tangent to its hyperplane. -/
+theorem PureIndividualFullRank.exists_singleCoordinateIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G} {who : iota}
+    [Finite (NontrivialDeviation a who)]
+    (h : M.PureIndividualFullRank a who)
+    (normal : Payoff iota) (hzero : normal who = 0)
+    (target : NontrivialDeviation a who → ℝ) :
+    ∃ w : M.Signal → Payoff iota,
+      (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+        M.pureIndividualIncentiveEffectMap a who (fun y => w y who) =
+          target := by
+  have hsurj : Function.Surjective
+      (M.pureIndividualIncentiveEffectMap a who) :=
+    (M.pureIndividualIncentiveEffectMap_surjective_iff a who).2 h
+  obtain ⟨z, hz⟩ := hsurj target
+  refine ⟨M.singleCoordinateIncentiveTransfer who z,
+    fun y => M.singleCoordinateIncentiveTransfer_mem_normalHyperplane
+      normal hzero z y, ?_⟩
+  simpa only [singleCoordinateIncentiveTransfer_apply_self] using hz
+
+/-- Pairwise full rank realizes arbitrary incentive targets for two players
+with a continuation transfer that is pointwise tangent to any normal having
+nonzero coordinates on those players. -/
+theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G} {i j : iota}
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)]
+    (h : M.PurePairwiseFullRank a i j) (hij : i ≠ j)
+    (normal : Payoff iota) (hi : normal i ≠ 0) (hj : normal j ≠ 0)
+    (targetI : NontrivialDeviation a i → ℝ)
+    (targetJ : NontrivialDeviation a j → ℝ) :
+    ∃ w : M.Signal → Payoff iota,
+      (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+        M.pureIndividualIncentiveEffectMap a i (fun y => w y i) = targetI ∧
+        M.pureIndividualIncentiveEffectMap a j (fun y => w y j) = targetJ := by
+  letI := Fintype.ofFinite (NontrivialDeviation a i)
+  letI := Fintype.ofFinite (NontrivialDeviation a j)
+  let target : NontrivialDeviation a i ⊕ NontrivialDeviation a j → ℝ :=
+    Sum.elim (fun dev => targetI dev / normal j)
+      (fun dev => -(targetJ dev) / normal i)
+  obtain ⟨R, hR⟩ := h.exists_incentiveEffect_rightInverse
+  let z := R target
+  have hz : M.purePairwiseIncentiveEffectMap a i j z = target := by
+    calc
+      M.purePairwiseIncentiveEffectMap a i j z =
+          ((M.purePairwiseIncentiveEffectMap a i j).comp R) target := rfl
+      _ = LinearMap.id target := congrArg (fun L => L target) hR
+      _ = target := rfl
+  refine ⟨M.pairwiseTangentIncentiveTransfer normal i j z,
+    fun y => M.pairwiseTangentIncentiveTransfer_mem_normalHyperplane
+      normal hij z y, ?_, ?_⟩
+  · have hzI : M.pureIndividualIncentiveEffectMap a i z =
+        fun dev => targetI dev / normal j := by
+      funext dev
+      simpa [purePairwiseIncentiveEffectMap,
+        pureIndividualIncentiveEffectMap,
+        purePairwiseDeviationSignalFamily, Matrix.mulVec, dotProduct,
+        target] using
+          congrFun hz (Sum.inl dev)
+    rw [show (fun y =>
+        M.pairwiseTangentIncentiveTransfer normal i j z y i) =
+          normal j • z by
+      funext y
+      simp [smul_eq_mul]]
+    rw [map_smul, hzI]
+    funext dev
+    exact mul_div_cancel₀ _ hj
+  · have hzJ : M.pureIndividualIncentiveEffectMap a j z =
+        fun dev => -(targetJ dev) / normal i := by
+      funext dev
+      simpa [purePairwiseIncentiveEffectMap,
+        pureIndividualIncentiveEffectMap,
+        purePairwiseDeviationSignalFamily, Matrix.mulVec, dotProduct,
+        target] using
+          congrFun hz (Sum.inr dev)
+    rw [show (fun y =>
+        M.pairwiseTangentIncentiveTransfer normal i j z y j) =
+          (-(normal i)) • z by
+      funext y
+      simp [hij, smul_eq_mul]]
+    rw [map_smul, hzJ]
+    funext dev
+    change -(normal i) * (-(targetJ dev) / normal i) = targetJ dev
+    calc
+      -(normal i) * (-(targetJ dev) / normal i) =
+          normal i * (targetJ dev / normal i) := by ring
+      _ = targetJ dev := mul_div_cancel₀ _ hi
+
 end PublicMonitoring
 end KernelGame
 end GameTheory

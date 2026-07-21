@@ -541,6 +541,33 @@ example :
       (fun who => pureIndividualFullRank_realizedActionMonitoring
         coordinationGame allTrueProfile who)
 
+/-- Every nonzero payoff normal is either coordinate or has two distinct
+nonzero coordinates; the classification itself is not finiteness-dependent. -/
+example (normal : Bool → ℝ) (hnormal : normal ≠ 0) :
+    Math.LinearAlgebra.IsCoordinateDirection normal ∨
+      Math.LinearAlgebra.HasTwoNonzeroCoordinates normal :=
+  Math.LinearAlgebra.isCoordinateDirection_or_hasTwoNonzeroCoordinates hnormal
+
+/-- Pairwise rank can meet arbitrary incentive targets while keeping every
+signal-contingent transfer tangent to a non-coordinate payoff normal. -/
+example
+    (targetFalse :
+      PublicMonitoring.NontrivialDeviation allTrueProfile false → ℝ)
+    (targetTrue :
+      PublicMonitoring.NontrivialDeviation allTrueProfile true → ℝ) :
+    ∃ w : Profile coordinationGame → Payoff Bool,
+      (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane
+        (fun _ : Bool => (1 : ℝ))) ∧
+      coordinationGame.realizedActionMonitoring.pureIndividualIncentiveEffectMap
+          allTrueProfile false (fun y => w y false) = targetFalse ∧
+      coordinationGame.realizedActionMonitoring.pureIndividualIncentiveEffectMap
+          allTrueProfile true (fun y => w y true) = targetTrue := by
+  exact
+    (purePairwiseFullRank_realizedActionMonitoring coordinationGame
+      allTrueProfile Bool.false_ne_true).exists_pairwiseTangentIncentiveTransfer
+        Bool.false_ne_true (fun _ => (1 : ℝ)) (by norm_num) (by norm_num)
+          targetFalse targetTrue
+
 /-- Constant public continuation transfers do not change deviation
 incentives. -/
 example (c : ℝ) :
