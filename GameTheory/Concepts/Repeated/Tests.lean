@@ -463,6 +463,40 @@ example
       Nat.card (Profile coordinationGame) - 1 := by
   exact h.card_deviations_le_card_signal_sub_one
 
+/-- Pure individual rank is invariant under a bijective relabeling of public
+signals. -/
+example :
+    (coordinationGame.realizedActionMonitoring.mapSignal
+        (Equiv.refl (Profile coordinationGame))).PureIndividualFullRank
+          allTrueProfile false ↔
+      coordinationGame.realizedActionMonitoring.PureIndividualFullRank
+        allTrueProfile false := by
+  exact pureIndividualFullRank_mapSignal_equiv_iff
+    coordinationGame.realizedActionMonitoring allTrueProfile false
+      (Equiv.refl _)
+
+/-- Numerical pure pairwise rank is also unchanged by signal relabeling. -/
+example :
+    (coordinationGame.realizedActionMonitoring.mapSignal
+        (Equiv.refl (Profile coordinationGame))).purePairwiseDeviationRank
+          allTrueProfile false true =
+      coordinationGame.realizedActionMonitoring.purePairwiseDeviationRank
+        allTrueProfile false true := by
+  exact purePairwiseDeviationRank_mapSignal_equiv
+    coordinationGame.realizedActionMonitoring allTrueProfile false true
+      (Equiv.refl _)
+
+/-- Stochastic coarsening cannot increase numerical pure pairwise deviation
+rank. -/
+example :
+    (coordinationGame.realizedActionMonitoring.garble PMF.pure).purePairwiseDeviationRank
+        allTrueProfile false true ≤
+      coordinationGame.realizedActionMonitoring.purePairwiseDeviationRank
+        allTrueProfile false true := by
+  exact purePairwiseDeviationRank_garble_le
+    coordinationGame.realizedActionMonitoring PMF.pure
+      allTrueProfile false true
+
 /-- An arbitrary behavioral deviation induces the probability-weighted sum
 of the pure-deviation signal vectors. -/
 example (τ : PMF Bool) :

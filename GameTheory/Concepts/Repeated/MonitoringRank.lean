@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 import Mathlib.LinearAlgebra.LinearIndependent.Basic
 import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.LinearAlgebra.Pi
+import Math.LinearAlgebra.Pi
 import Math.LinearAlgebra.ZeroSum
 import GameTheory.Concepts.Repeated.Monitoring
 
@@ -414,22 +415,6 @@ theorem IndividualFullRank.signalKernel_update_injective
 
 /-! ## Invariance under signal relabeling -/
 
-private theorem linearIndependent_relabel_iff
-    {Y S κ : Type} [Ring κ]
-    {I : Type} {v : I → Y → κ} (e : Y ≃ S) :
-    LinearIndependent κ (fun i =>
-      LinearEquiv.piCongrLeft κ (fun _ : S => κ) e (v i)) ↔
-      LinearIndependent κ v := by
-  let E : (Y → κ) ≃ₗ[κ] (S → κ) :=
-    LinearEquiv.piCongrLeft κ (fun _ : S => κ) e
-  constructor
-  · intro h
-    change LinearIndependent κ (E.toLinearMap ∘ v) at h
-    exact LinearIndependent.of_comp E.toLinearMap h
-  · intro h
-    change LinearIndependent κ (E.toLinearMap ∘ v)
-    exact h.map' E.toLinearMap E.ker
-
 /-- Relabeling public signals by an equivalence applies the corresponding
 coordinate linear equivalence to every deviation row. -/
 theorem deviationSignalMatrix_mapSignal_equiv
@@ -460,7 +445,7 @@ theorem individualFullRank_mapSignal_equiv_iff
     (M.mapSignal e).IndividualFullRank a who ↔
       M.IndividualFullRank a who := by
   rw [IndividualFullRank, M.deviationSignalMatrix_mapSignal_equiv]
-  exact linearIndependent_relabel_iff e
+  exact Math.LinearAlgebra.linearIndependent_piCongrLeft_iff e
 
 /-- Relabeling public signals applies the same coordinate equivalence to the
 combined pairwise deviation family. -/
@@ -487,7 +472,7 @@ theorem pairwiseFullRank_mapSignal_equiv_iff
     (M.mapSignal e).PairwiseFullRank a i j ↔
       M.PairwiseFullRank a i j := by
   rw [PairwiseFullRank, M.pairwiseDeviationSignalFamily_mapSignal_equiv]
-  exact linearIndependent_relabel_iff e
+  exact Math.LinearAlgebra.linearIndependent_piCongrLeft_iff e
 
 /-- Under the individual-rank hypotheses, pairwise identifiability is also
 invariant under bijective signal relabeling. -/

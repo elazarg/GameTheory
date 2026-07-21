@@ -420,6 +420,290 @@ theorem PurePairwiseFullRank.card_deviations_le_card_signal_sub_one
     a i j).1 h]
   exact M.purePairwiseDeviationRank_le_card_signal_sub_one a i j
 
+/-! ### Invariance under signal relabeling -/
+
+/-- Relabeling public signals applies the corresponding coordinate linear
+equivalence to every pure-deviation row. -/
+theorem pureDeviationSignalMatrix_mapSignal_equiv
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    (a : Profile G) (who : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).pureDeviationSignalMatrix a who =
+      fun dev => LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+        (M.pureDeviationSignalMatrix a who dev) := by
+  funext dev y
+  change S at y
+  simp only [pureDeviationSignalMatrix]
+  rw [show LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+      (M.deviationSignalVector (G.pureMixedProfile a) who
+        (PMF.pure dev.1)) y =
+        M.deviationSignalVector (G.pureMixedProfile a) who
+          (PMF.pure dev.1) (e.symm y) by
+    simp [LinearEquiv.piCongrLeft, LinearEquiv.piCongrLeft']]
+  simp only [deviationSignalVector]
+  change
+    ((M.signalKernel
+          (Function.update (G.pureMixedProfile a) who
+            (PMF.pure dev.1))).map e y).toReal -
+        ((M.signalKernel (G.pureMixedProfile a)).map e y).toReal = _
+  rw [Math.ProbabilityMassFunction.map_equiv_apply,
+    Math.ProbabilityMassFunction.map_equiv_apply]
+
+/-- Pure individual full rank is invariant under bijective public-signal
+relabeling. -/
+theorem pureIndividualFullRank_mapSignal_equiv_iff
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    (a : Profile G) (who : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).PureIndividualFullRank a who ↔
+      M.PureIndividualFullRank a who := by
+  rw [PureIndividualFullRank,
+    M.pureDeviationSignalMatrix_mapSignal_equiv a who e]
+  exact Math.LinearAlgebra.linearIndependent_piCongrLeft_iff e
+
+/-- Relabeling public signals applies the same coordinate equivalence to the
+combined pure-deviation family. -/
+theorem purePairwiseDeviationSignalFamily_mapSignal_equiv
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    (a : Profile G) (i j : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).purePairwiseDeviationSignalFamily a i j =
+      fun dev => LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+        (M.purePairwiseDeviationSignalFamily a i j dev) := by
+  funext dev y
+  cases dev with
+  | inl dev =>
+      exact congrFun
+        (congrFun
+          (M.pureDeviationSignalMatrix_mapSignal_equiv a i e) dev) y
+  | inr dev =>
+      exact congrFun
+        (congrFun
+          (M.pureDeviationSignalMatrix_mapSignal_equiv a j e) dev) y
+
+/-- Pure pairwise full rank is invariant under bijective public-signal
+relabeling. -/
+theorem purePairwiseFullRank_mapSignal_equiv_iff
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    (a : Profile G) (i j : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).PurePairwiseFullRank a i j ↔
+      M.PurePairwiseFullRank a i j := by
+  rw [PurePairwiseFullRank,
+    M.purePairwiseDeviationSignalFamily_mapSignal_equiv a i j e]
+  exact Math.LinearAlgebra.linearIndependent_piCongrLeft_iff e
+
+/-- Bijective public-signal relabeling preserves numerical pure individual
+deviation rank. -/
+theorem pureIndividualDeviationRank_mapSignal_equiv
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G) (who : ι) {S : Type} [Finite S]
+    [Finite (NontrivialDeviation a who)]
+    (e : M.Signal ≃ S) :
+    (M.mapSignal e).pureIndividualDeviationRank a who =
+      M.pureIndividualDeviationRank a who := by
+  letI := Fintype.ofFinite M.Signal
+  letI := Fintype.ofFinite S
+  let E : (M.Signal → ℝ) ≃ₗ[ℝ] (S → ℝ) :=
+    LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+  rw [pureIndividualDeviationRank, pureIndividualDeviationRank,
+    M.pureDeviationSignalMatrix_mapSignal_equiv a who e,
+    Matrix.rank_eq_finrank_span_row, Matrix.rank_eq_finrank_span_row]
+  change Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (E.toLinearMap ∘ M.pureDeviationSignalMatrix a who))) =
+    Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (M.pureDeviationSignalMatrix a who)))
+  rw [Set.range_comp, ← LinearMap.map_span]
+  exact E.finrank_map_eq _
+
+/-- Bijective public-signal relabeling preserves numerical pure pairwise
+deviation rank. -/
+theorem purePairwiseDeviationRank_mapSignal_equiv
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G) (i j : ι) {S : Type} [Finite S]
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)]
+    (e : M.Signal ≃ S) :
+    (M.mapSignal e).purePairwiseDeviationRank a i j =
+      M.purePairwiseDeviationRank a i j := by
+  letI := Fintype.ofFinite M.Signal
+  letI := Fintype.ofFinite S
+  let E : (M.Signal → ℝ) ≃ₗ[ℝ] (S → ℝ) :=
+    LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+  rw [purePairwiseDeviationRank, purePairwiseDeviationRank,
+    M.purePairwiseDeviationSignalFamily_mapSignal_equiv a i j e,
+    Matrix.rank_eq_finrank_span_row, Matrix.rank_eq_finrank_span_row]
+  change Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range
+          (E.toLinearMap ∘ M.purePairwiseDeviationSignalFamily a i j))) =
+    Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (M.purePairwiseDeviationSignalFamily a i j)))
+  rw [Set.range_comp, ← LinearMap.map_span]
+  exact E.finrank_map_eq _
+
+/-- Under pure individual full rank, pure pairwise identifiability is
+invariant under bijective signal relabeling. -/
+theorem purePairwiseIdentifiable_mapSignal_equiv_iff_of_individualFullRank
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    (a : Profile G) (i j : ι) {S : Type} (e : M.Signal ≃ S)
+    (hi : M.PureIndividualFullRank a i)
+    (hj : M.PureIndividualFullRank a j) :
+    (M.mapSignal e).PurePairwiseIdentifiable a i j ↔
+      M.PurePairwiseIdentifiable a i j := by
+  have hi' := (M.pureIndividualFullRank_mapSignal_equiv_iff a i e).2 hi
+  have hj' := (M.pureIndividualFullRank_mapSignal_equiv_iff a j e).2 hj
+  constructor
+  · intro hident
+    have hp' : (M.mapSignal e).PurePairwiseFullRank a i j :=
+      ((M.mapSignal e).purePairwiseFullRank_iff a i j).2
+        ⟨hi', hj', hident⟩
+    have hp := (M.purePairwiseFullRank_mapSignal_equiv_iff a i j e).1 hp'
+    exact (M.purePairwiseFullRank_iff a i j).1 hp |>.2.2
+  · intro hident
+    have hp : M.PurePairwiseFullRank a i j :=
+      (M.purePairwiseFullRank_iff a i j).2 ⟨hi, hj, hident⟩
+    have hp' := (M.purePairwiseFullRank_mapSignal_equiv_iff a i j e).2 hp
+    exact ((M.mapSignal e).purePairwiseFullRank_iff a i j).1 hp' |>.2.2
+
+/-! ### Monotonicity under stochastic garbling -/
+
+/-- Garbling applies the stochastic pushforward linear map to each
+pure-deviation signal row. -/
+theorem pureDeviationSignalMatrix_garble
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Fintype M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (who : ι) :
+    (M.garble K).pureDeviationSignalMatrix a who =
+      fun dev => K.pushforwardLinearMap
+        (M.pureDeviationSignalMatrix a who dev) := by
+  funext dev
+  simp only [pureDeviationSignalMatrix]
+  exact M.deviationSignalVector_garble K
+    (G.pureMixedProfile a) who (PMF.pure dev.1)
+
+/-- Garbling applies the same stochastic pushforward to the combined
+pure-deviation family. -/
+theorem purePairwiseDeviationSignalFamily_garble
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Fintype M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (i j : ι) :
+    (M.garble K).purePairwiseDeviationSignalFamily a i j =
+      fun dev => K.pushforwardLinearMap
+        (M.purePairwiseDeviationSignalFamily a i j dev) := by
+  funext dev
+  cases dev with
+  | inl dev =>
+      exact congrFun (M.pureDeviationSignalMatrix_garble K a i) dev
+  | inr dev =>
+      exact congrFun (M.pureDeviationSignalMatrix_garble K a j) dev
+
+/-- Stochastic garbling cannot create pure individual full rank. Only
+finiteness of the original signal carrier is required. -/
+theorem PureIndividualFullRank.of_garble
+    [Fintype ι] [DecidableEq ι]
+    {M : G.mixedExtension.PublicMonitoring} [Finite M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    {a : Profile G} {who : ι}
+    (h : (M.garble K).PureIndividualFullRank a who) :
+    M.PureIndividualFullRank a who := by
+  letI := Fintype.ofFinite M.Signal
+  rw [PureIndividualFullRank, M.pureDeviationSignalMatrix_garble K] at h
+  exact LinearIndependent.of_comp K.pushforwardLinearMap h
+
+/-- Stochastic garbling cannot create pure pairwise full rank. Only
+finiteness of the original signal carrier is required. -/
+theorem PurePairwiseFullRank.of_garble
+    [Fintype ι] [DecidableEq ι]
+    {M : G.mixedExtension.PublicMonitoring} [Finite M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    {a : Profile G} {i j : ι}
+    (h : (M.garble K).PurePairwiseFullRank a i j) :
+    M.PurePairwiseFullRank a i j := by
+  letI := Fintype.ofFinite M.Signal
+  rw [PurePairwiseFullRank,
+    M.purePairwiseDeviationSignalFamily_garble K] at h
+  exact LinearIndependent.of_comp K.pushforwardLinearMap h
+
+/-- If the garbled experiment retains pure individual rank for both players,
+its pure pairwise identifiability implies identifiability before garbling. -/
+theorem PurePairwiseIdentifiable.of_garble
+    [Fintype ι] [DecidableEq ι]
+    {M : G.mixedExtension.PublicMonitoring} [Finite M.Signal]
+    {S : Type} (K : Math.Probability.Kernel M.Signal S)
+    {a : Profile G} {i j : ι}
+    (hi : (M.garble K).PureIndividualFullRank a i)
+    (hj : (M.garble K).PureIndividualFullRank a j)
+    (hident : (M.garble K).PurePairwiseIdentifiable a i j) :
+    M.PurePairwiseIdentifiable a i j := by
+  have hp' : (M.garble K).PurePairwiseFullRank a i j :=
+    ((M.garble K).purePairwiseFullRank_iff a i j).2
+      ⟨hi, hj, hident⟩
+  exact (M.purePairwiseFullRank_iff a i j).1 hp'.of_garble |>.2.2
+
+/-- Stochastic garbling cannot increase numerical pure individual deviation
+rank when both signal carriers and the pure-deviation family are finite. -/
+theorem pureIndividualDeviationRank_garble_le
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    {S : Type} [Finite S] (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (who : ι)
+    [Finite (NontrivialDeviation a who)] :
+    (M.garble K).pureIndividualDeviationRank a who ≤
+      M.pureIndividualDeviationRank a who := by
+  letI := Fintype.ofFinite M.Signal
+  letI := Fintype.ofFinite S
+  rw [pureIndividualDeviationRank, pureIndividualDeviationRank,
+    Matrix.rank_eq_finrank_span_row, Matrix.rank_eq_finrank_span_row,
+    M.pureDeviationSignalMatrix_garble K]
+  change Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range
+          (K.pushforwardLinearMap ∘ M.pureDeviationSignalMatrix a who))) ≤
+    Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (M.pureDeviationSignalMatrix a who)))
+  rw [Set.range_comp, ← LinearMap.map_span]
+  exact Submodule.finrank_map_le K.pushforwardLinearMap
+    (Submodule.span ℝ (Set.range (M.pureDeviationSignalMatrix a who)))
+
+/-- Stochastic garbling cannot increase numerical pure pairwise deviation
+rank when both signal carriers and the pure-deviation families are finite. -/
+theorem purePairwiseDeviationRank_garble_le
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    {S : Type} [Finite S] (K : Math.Probability.Kernel M.Signal S)
+    (a : Profile G) (i j : ι)
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)] :
+    (M.garble K).purePairwiseDeviationRank a i j ≤
+      M.purePairwiseDeviationRank a i j := by
+  letI := Fintype.ofFinite M.Signal
+  letI := Fintype.ofFinite S
+  rw [purePairwiseDeviationRank, purePairwiseDeviationRank,
+    Matrix.rank_eq_finrank_span_row, Matrix.rank_eq_finrank_span_row,
+    M.purePairwiseDeviationSignalFamily_garble K]
+  change Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range
+          (K.pushforwardLinearMap ∘
+            M.purePairwiseDeviationSignalFamily a i j))) ≤
+    Module.finrank ℝ
+      (Submodule.span ℝ
+        (Set.range (M.purePairwiseDeviationSignalFamily a i j)))
+  rw [Set.range_comp, ← LinearMap.map_span]
+  exact Submodule.finrank_map_le K.pushforwardLinearMap
+    (Submodule.span ℝ
+      (Set.range (M.purePairwiseDeviationSignalFamily a i j)))
+
 /-- The pure-deviation matrix under realized-action monitoring is exactly the
 perfect-profile-monitoring deviation matrix of the underlying pure game. -/
 theorem pureDeviationSignalMatrix_realizedActionMonitoring

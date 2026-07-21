@@ -320,7 +320,8 @@ standard garbling operation on a public monitoring structure. -/
   signalKernel := fun σ => (M.signalKernel σ).bind K
 
 /-- Apply a deterministic relabeling or coarsening to every public signal. -/
-def mapSignal (M : G.PublicMonitoring) {S : Type} (f : M.Signal → S) :
+@[reducible] def mapSignal (M : G.PublicMonitoring) {S : Type}
+    (f : M.Signal → S) :
     G.PublicMonitoring :=
   M.garble (fun y => PMF.pure (f y))
 
