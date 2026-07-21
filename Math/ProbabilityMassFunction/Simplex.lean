@@ -96,6 +96,26 @@ theorem ofVector_toVector [Fintype α] (μ : PMF α) :
     ofVector (toVector μ) (toVector_mem_stdSimplex μ) = μ := by
   exact toVector_injective (toVector_ofVector (toVector_mem_stdSimplex μ))
 
+/-- Finite probability mass functions are equivalent to points of the real
+standard simplex. -/
+def stdSimplexEquiv [Fintype α] : PMF α ≃ stdSimplex ℝ α where
+  toFun μ := ⟨toVector μ, toVector_mem_stdSimplex μ⟩
+  invFun x := ofVector x x.property
+  left_inv := ofVector_toVector
+  right_inv x := by
+    apply Subtype.ext
+    exact toVector_ofVector x.property
+
+@[simp]
+theorem coe_stdSimplexEquiv_apply [Fintype α] (μ : PMF α) :
+    ((stdSimplexEquiv μ : stdSimplex ℝ α) : α → ℝ) = toVector μ :=
+  rfl
+
+@[simp]
+theorem stdSimplexEquiv_symm_apply [Fintype α] (x : stdSimplex ℝ α) :
+    (stdSimplexEquiv (α := α)).symm x = ofVector x x.property :=
+  rfl
+
 /-- A simplex point represents a given finite `PMF` exactly when its coordinate
 vector is that PMF's coordinate vector. -/
 theorem ofVector_eq_iff_eq_toVector [Fintype α]

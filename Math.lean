@@ -16,6 +16,7 @@ import Math.NondeterministicRefinement
 import Math.TraceRun
 import Math.ParameterizedChain
 import Math.OptimizationLocalGlobal
+import Math.AffineLowerEnvelope
 import Math.BoundedLists
 import Math.DAG
 import Math.WeightedMedian

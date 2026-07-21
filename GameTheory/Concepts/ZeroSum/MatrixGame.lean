@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.ZeroSum.Minimax
 import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.ZeroSum.MatrixGame.Rectangular
 
 /-!
 # Zero-Sum Matrix Games
@@ -35,9 +36,6 @@ open Math.Probability
 
 namespace MatrixGame
 
-/-- A square matrix game, represented by the row player's payoff. -/
-abbrev Square (S : Type) := S → S → ℝ
-
 /-- Antisymmetry of the row-player payoff matrix. -/
 def IsAntisymmetric {S : Type} (A : Square S) : Prop :=
   ∀ x y, A x y = - A y x
@@ -49,11 +47,6 @@ theorem IsAntisymmetric.diag_zero {A : Square S} (hA : IsAntisymmetric A) (x : S
     A x x = 0 := by
   have h := hA x x
   linarith
-
-open Classical in
-/-- Expected row-player payoff under independent mixed strategies. -/
-noncomputable def expectedPayoff [Fintype S] (A : Square S) (row col : PMF S) : ℝ :=
-  ∑ x : S, ∑ y : S, (row x).toReal * (col y).toReal * A x y
 
 open Classical in
 /-- The zero-sum `KernelGame` induced by a square payoff matrix. -/
@@ -179,40 +172,6 @@ theorem mixedExtension_eu_col_eq_neg_expectedPayoff (row col : PMF S) :
   linarith
 
 end MixedAdapter
-
-section ExpectedPayoffPure
-
-variable [Fintype S]
-
-open Classical in
-/-- Expected payoff when the row player uses a pure strategy. -/
-theorem expectedPayoff_pure_row (A : Square S) (x : S) (col : PMF S) :
-    expectedPayoff A (PMF.pure x) col =
-      ∑ y : S, (col y).toReal * A x y := by
-  unfold expectedPayoff
-  rw [Finset.sum_eq_single x]
-  · simp
-  · intro y _ hy
-    simp [PMF.pure_apply, hy]
-  · intro hx
-    exact (hx (Finset.mem_univ x)).elim
-
-open Classical in
-/-- Expected payoff when the column player uses a pure strategy. -/
-theorem expectedPayoff_pure_col (A : Square S) (row : PMF S) (y : S) :
-    expectedPayoff A row (PMF.pure y) =
-      ∑ x : S, (row x).toReal * A x y := by
-  unfold expectedPayoff
-  apply Finset.sum_congr rfl
-  intro x _
-  rw [Finset.sum_eq_single y]
-  · simp
-  · intro z _ hz
-    simp [PMF.pure_apply, hz]
-  · intro hy
-    exact (hy (Finset.mem_univ y)).elim
-
-end ExpectedPayoffPure
 
 section Saddle
 
