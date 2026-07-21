@@ -80,6 +80,13 @@ theorem individualFullRank_profileMonitoring
   rw [IndividualFullRank, deviationSignalMatrix_profileMonitoring]
   exact linearIndependent_single_sub_single a f hf hbase
 
+/-- Perfect profile monitoring has individual full rank for every player at
+every profile. -/
+theorem individualFullRankAtProfile_profileMonitoring
+    (G : KernelGame ι) [DecidableEq ι] (a : Profile G) :
+    G.profileMonitoring.IndividualFullRankAtProfile a :=
+  fun who => individualFullRank_profileMonitoring G a who
+
 /-- Updating distinct players to nontrivial deviations gives distinct
 profiles, including across the two deviation families. -/
 private theorem pairwise_update_injective
@@ -168,6 +175,13 @@ theorem pairwiseFullRank_profileMonitoring
         exact congrFun (deviationSignalMatrix_profileMonitoring G a j) dev]
   exact linearIndependent_single_sub_single a f hf hbase
 
+/-- Perfect profile monitoring has pairwise full rank for every pair of
+distinct players at every profile. -/
+theorem pairwiseFullRankAtProfile_profileMonitoring
+    (G : KernelGame ι) [DecidableEq ι] (a : Profile G) :
+    G.profileMonitoring.PairwiseFullRankAtProfile a :=
+  fun _ _ hij => pairwiseFullRank_profileMonitoring G a hij
+
 /-- The unilateral deviation subspaces of distinct players are disjoint under
 perfect profile monitoring. -/
 theorem pairwiseIdentifiable_profileMonitoring
@@ -224,6 +238,20 @@ def PurePairwiseFullRank
     (a : Profile G) (i j : ι) : Prop :=
   LinearIndependent ℝ (M.purePairwiseDeviationSignalFamily a i j)
 
+/-- Individual pure-deviation full rank for every player at one pure action
+profile. -/
+def PureIndividualFullRankAtProfile
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) (a : Profile G) : Prop :=
+  ∀ who, M.PureIndividualFullRank a who
+
+/-- Pairwise pure-deviation full rank for every pair of distinct players at
+one pure action profile. -/
+def PurePairwiseFullRankAtProfile
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) (a : Profile G) : Prop :=
+  ∀ i j, i ≠ j → M.PurePairwiseFullRank a i j
+
 /-- Pure pairwise full rank is exactly pure individual full rank for both
 players plus identifiability of their pure-deviation subspaces. -/
 theorem purePairwiseFullRank_iff
@@ -258,6 +286,81 @@ theorem PurePairwiseFullRank.symm
     M.PurePairwiseFullRank a j i := by
   rw [M.purePairwiseFullRank_iff] at h ⊢
   exact ⟨h.2.1, h.1, h.2.2.symm⟩
+
+/-! ### Compatibility with behavioral lifting -/
+
+/-- At an embedded pure profile, the pure-deviation signal matrix of a
+behaviorally lifted monitoring structure is exactly the original deviation
+matrix. -/
+theorem pureDeviationSignalMatrix_mixedExtension
+    [Fintype ι] [DecidableEq ι]
+    (M : G.PublicMonitoring) (a : Profile G) (who : ι) :
+    M.mixedExtension.pureDeviationSignalMatrix a who =
+      M.deviationSignalMatrix a who := by
+  funext dev y
+  simp only [pureDeviationSignalMatrix, deviationSignalMatrix,
+    deviationSignalVector]
+  rw [← G.pureMixedProfile_update]
+  simp only [Math.PMFProduct.pmfPi_pure, PMF.pure_bind]
+
+/-- Behavioral lifting preserves and reflects individual full rank when the
+lifted condition is indexed by pure deviations. -/
+theorem pureIndividualFullRank_mixedExtension_iff
+    [Fintype ι] [DecidableEq ι]
+    (M : G.PublicMonitoring) (a : Profile G) (who : ι) :
+    M.mixedExtension.PureIndividualFullRank a who ↔
+      M.IndividualFullRank a who := by
+  rw [PureIndividualFullRank, IndividualFullRank,
+    M.pureDeviationSignalMatrix_mixedExtension]
+
+/-- The combined pure-deviation family of a behavioral lift is the original
+combined deviation family. -/
+theorem purePairwiseDeviationSignalFamily_mixedExtension
+    [Fintype ι] [DecidableEq ι]
+    (M : G.PublicMonitoring) (a : Profile G) (i j : ι) :
+    M.mixedExtension.purePairwiseDeviationSignalFamily a i j =
+      M.pairwiseDeviationSignalFamily a i j := by
+  rw [purePairwiseDeviationSignalFamily, pairwiseDeviationSignalFamily,
+    M.pureDeviationSignalMatrix_mixedExtension,
+    M.pureDeviationSignalMatrix_mixedExtension]
+
+/-- Behavioral lifting preserves and reflects pairwise full rank when the
+lifted condition is indexed by pure deviations. -/
+theorem purePairwiseFullRank_mixedExtension_iff
+    [Fintype ι] [DecidableEq ι]
+    (M : G.PublicMonitoring) (a : Profile G) (i j : ι) :
+    M.mixedExtension.PurePairwiseFullRank a i j ↔
+      M.PairwiseFullRank a i j := by
+  rw [PurePairwiseFullRank, PairwiseFullRank,
+    M.purePairwiseDeviationSignalFamily_mixedExtension]
+
+/-- Behavioral lifting preserves and reflects the all-player individual-rank
+condition at a profile. -/
+theorem pureIndividualFullRankAtProfile_mixedExtension_iff
+    [Fintype ι] [DecidableEq ι]
+    (M : G.PublicMonitoring) (a : Profile G) :
+    M.mixedExtension.PureIndividualFullRankAtProfile a ↔
+      M.IndividualFullRankAtProfile a := by
+  simp only [PureIndividualFullRankAtProfile, IndividualFullRankAtProfile,
+    M.pureIndividualFullRank_mixedExtension_iff]
+
+/-- Behavioral lifting preserves and reflects the all-pairs pairwise-rank
+condition at a profile. -/
+theorem purePairwiseFullRankAtProfile_mixedExtension_iff
+    [Fintype ι] [DecidableEq ι]
+    (M : G.PublicMonitoring) (a : Profile G) :
+    M.mixedExtension.PurePairwiseFullRankAtProfile a ↔
+      M.PairwiseFullRankAtProfile a := by
+  simp only [PurePairwiseFullRankAtProfile, PairwiseFullRankAtProfile,
+    M.purePairwiseFullRank_mixedExtension_iff]
+
+/-- The behavioral lift of perfect profile monitoring satisfies pure
+pairwise full rank for every distinct player pair. -/
+theorem purePairwiseFullRankAtProfile_profileMonitoring_mixedExtension
+    (G : KernelGame ι) [Fintype ι] [DecidableEq ι] (a : Profile G) :
+    G.profileMonitoring.mixedExtension.PurePairwiseFullRankAtProfile a :=
+  (G.profileMonitoring.purePairwiseFullRankAtProfile_mixedExtension_iff a).2
+    (pairwiseFullRankAtProfile_profileMonitoring G a)
 
 /-! ### Numerical pure-deviation ranks -/
 

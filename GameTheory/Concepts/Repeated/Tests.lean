@@ -8,6 +8,7 @@ import GameTheory.Concepts.Repeated.MonitoringRank
 import GameTheory.Concepts.Repeated.MonitoringRankInstances
 import GameTheory.Concepts.Repeated.MonitoringPureDeviations
 import GameTheory.Concepts.Repeated.MonitoringIncentives
+import GameTheory.Concepts.Repeated.MonitoringHyperplanes
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -567,6 +568,18 @@ example
       allTrueProfile Bool.false_ne_true).exists_pairwiseTangentIncentiveTransfer
         Bool.false_ne_true (fun _ => (1 : ℝ)) (by norm_num) (by norm_num)
           targetFalse targetTrue
+
+/-- Perfect public profile monitoring enforces every pure profile on each
+non-coordinate normal hyperplane at every positive discount factor. -/
+example :
+    coordinationGame.profileMonitoring.IsEnforceableOnNormalHyperplane
+      (1 / 2) allTrueProfile (fun _ : Bool => (1 : ℝ)) := by
+  exact
+    (purePairwiseFullRankAtProfile_profileMonitoring_mixedExtension
+      coordinationGame allTrueProfile).isEnforceableOnNormalHyperplane
+        coordinationGame.profileMonitoring (by norm_num) allTrueProfile
+          (fun _ => (1 : ℝ))
+          ⟨false, true, Bool.false_ne_true, by norm_num, by norm_num⟩
 
 /-- Constant public continuation transfers do not change deviation
 incentives. -/

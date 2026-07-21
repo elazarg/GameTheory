@@ -83,6 +83,17 @@ def PairwiseFullRank
     (a : Profile G) (i j : ι) : Prop :=
   LinearIndependent ℝ (M.pairwiseDeviationSignalFamily a i j)
 
+/-- Individual deviation full rank for every player at one stage profile. -/
+def IndividualFullRankAtProfile
+    (M : G.PublicMonitoring) [DecidableEq ι] (a : Profile G) : Prop :=
+  ∀ who, M.IndividualFullRank a who
+
+/-- Pairwise deviation full rank for every pair of distinct players at one
+stage profile. -/
+def PairwiseFullRankAtProfile
+    (M : G.PublicMonitoring) [DecidableEq ι] (a : Profile G) : Prop :=
+  ∀ i j, i ≠ j → M.PairwiseFullRank a i j
+
 /-! ## Finite-dimensional rank presentation -/
 
 /-- Numerical row rank of one player's deviation-signal matrix. -/

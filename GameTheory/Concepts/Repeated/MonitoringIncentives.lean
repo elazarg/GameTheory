@@ -462,6 +462,32 @@ theorem pairwiseTangentIncentiveTransfer_mem_normalHyperplane
 /-- Individual full rank realizes any incentive target by a transfer supported
 on the affected player's coordinate.  If the normal vanishes there, every
 realized transfer remains tangent to its hyperplane. -/
+theorem PureIndividualFullRank.exists_singleCoordinateIncentiveTransfer_supported
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G} {who : iota}
+    [Finite (NontrivialDeviation a who)]
+    (h : M.PureIndividualFullRank a who)
+    (normal : Payoff iota) (hzero : normal who = 0)
+    (target : NontrivialDeviation a who → ℝ) :
+    ∃ w : M.Signal → Payoff iota,
+      (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+        M.pureIndividualIncentiveEffectMap a who (fun y => w y who) =
+          target ∧
+        ∀ y other, other ≠ who → w y other = 0 := by
+  have hsurj : Function.Surjective
+      (M.pureIndividualIncentiveEffectMap a who) :=
+    (M.pureIndividualIncentiveEffectMap_surjective_iff a who).2 h
+  obtain ⟨z, hz⟩ := hsurj target
+  refine ⟨M.singleCoordinateIncentiveTransfer who z,
+    fun y => M.singleCoordinateIncentiveTransfer_mem_normalHyperplane
+      normal hzero z y, ?_, ?_⟩
+  · simpa only [singleCoordinateIncentiveTransfer_apply_self] using hz
+  · intro y other hother
+    exact M.singleCoordinateIncentiveTransfer_apply_of_ne hother z y
+
+/-- Individual full rank realizes any one-player incentive target tangentially
+when that player's normal coordinate vanishes. -/
 theorem PureIndividualFullRank.exists_singleCoordinateIncentiveTransfer
     [Fintype iota] [DecidableEq iota]
     {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
@@ -474,19 +500,14 @@ theorem PureIndividualFullRank.exists_singleCoordinateIncentiveTransfer
       (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
         M.pureIndividualIncentiveEffectMap a who (fun y => w y who) =
           target := by
-  have hsurj : Function.Surjective
-      (M.pureIndividualIncentiveEffectMap a who) :=
-    (M.pureIndividualIncentiveEffectMap_surjective_iff a who).2 h
-  obtain ⟨z, hz⟩ := hsurj target
-  refine ⟨M.singleCoordinateIncentiveTransfer who z,
-    fun y => M.singleCoordinateIncentiveTransfer_mem_normalHyperplane
-      normal hzero z y, ?_⟩
-  simpa only [singleCoordinateIncentiveTransfer_apply_self] using hz
+  obtain ⟨w, htangent, heffect, _⟩ :=
+    h.exists_singleCoordinateIncentiveTransfer_supported normal hzero target
+  exact ⟨w, htangent, heffect⟩
 
 /-- Pairwise full rank realizes arbitrary incentive targets for two players
 with a continuation transfer that is pointwise tangent to any normal having
 nonzero coordinates on those players. -/
-theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer
+theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer_supported
     [Fintype iota] [DecidableEq iota]
     {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
     {a : Profile G} {i j : iota}
@@ -499,7 +520,8 @@ theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer
     ∃ w : M.Signal → Payoff iota,
       (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
         M.pureIndividualIncentiveEffectMap a i (fun y => w y i) = targetI ∧
-        M.pureIndividualIncentiveEffectMap a j (fun y => w y j) = targetJ := by
+        M.pureIndividualIncentiveEffectMap a j (fun y => w y j) = targetJ ∧
+        ∀ y who, who ≠ i → who ≠ j → w y who = 0 := by
   letI := Fintype.ofFinite (NontrivialDeviation a i)
   letI := Fintype.ofFinite (NontrivialDeviation a j)
   let target : NontrivialDeviation a i ⊕ NontrivialDeviation a j → ℝ :=
@@ -515,7 +537,7 @@ theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer
       _ = target := rfl
   refine ⟨M.pairwiseTangentIncentiveTransfer normal i j z,
     fun y => M.pairwiseTangentIncentiveTransfer_mem_normalHyperplane
-      normal hij z y, ?_, ?_⟩
+      normal hij z y, ?_, ?_, ?_⟩
   · have hzI : M.pureIndividualIncentiveEffectMap a i z =
         fun dev => targetI dev / normal j := by
       funext dev
@@ -552,6 +574,121 @@ theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer
       -(normal i) * (-(targetJ dev) / normal i) =
           normal i * (targetJ dev / normal i) := by ring
       _ = targetJ dev := mul_div_cancel₀ _ hi
+  · intro y who hwhoI hwhoJ
+    simp [pairwiseTangentIncentiveTransfer, hwhoI, hwhoJ]
+
+/-- Pairwise full rank realizes arbitrary two-player incentive targets by a
+pointwise tangent public continuation transfer. -/
+theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G} {i j : iota}
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)]
+    (h : M.PurePairwiseFullRank a i j) (hij : i ≠ j)
+    (normal : Payoff iota) (hi : normal i ≠ 0) (hj : normal j ≠ 0)
+    (targetI : NontrivialDeviation a i → ℝ)
+    (targetJ : NontrivialDeviation a j → ℝ) :
+    ∃ w : M.Signal → Payoff iota,
+      (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+        M.pureIndividualIncentiveEffectMap a i (fun y => w y i) = targetI ∧
+        M.pureIndividualIncentiveEffectMap a j (fun y => w y j) = targetJ := by
+  obtain ⟨w, htangent, heffectI, heffectJ, _⟩ :=
+    h.exists_pairwiseTangentIncentiveTransfer_supported hij normal hi hj
+      targetI targetJ
+  exact ⟨w, htangent, heffectI, heffectJ⟩
+
+/-- Pairwise full rank for every distinct pair at a profile realizes an
+arbitrary incentive target for every player while keeping every public
+continuation transfer in a prescribed non-coordinate normal hyperplane. -/
+theorem PurePairwiseFullRankAtProfile.exists_tangentIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G}
+    [∀ who, Finite (NontrivialDeviation a who)]
+    (h : M.PurePairwiseFullRankAtProfile a)
+    {normal : Payoff iota}
+    (hnormal : Math.LinearAlgebra.HasTwoNonzeroCoordinates normal)
+    (target : ∀ who, NontrivialDeviation a who → ℝ) :
+    ∃ w : M.Signal → Payoff iota,
+      (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+        ∀ who,
+          M.pureIndividualIncentiveEffectMap a who (fun y => w y who) =
+            target who := by
+  classical
+  obtain ⟨anchor, partner, hne, hanchor, hpartner⟩ := hnormal
+  have hexPart (k : iota) :
+      ∃ w : M.Signal → Payoff iota,
+        (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+          M.pureIndividualIncentiveEffectMap a k (fun y => w y k) =
+              target k ∧
+            ∀ who, who ≠ k →
+              M.pureIndividualIncentiveEffectMap a who
+                (fun y => w y who) = 0 := by
+    by_cases hk : k = anchor
+    · subst k
+      obtain ⟨w, htangent, heffect, hpartnerEffect, hsupport⟩ :=
+        (h anchor partner hne).exists_pairwiseTangentIncentiveTransfer_supported
+          hne normal hanchor hpartner (target anchor) 0
+      refine ⟨w, htangent, heffect, ?_⟩
+      intro who hwho
+      by_cases hwhoPartner : who = partner
+      · subst who
+        exact hpartnerEffect
+      · have hzero : (fun y => w y who) = 0 := by
+          funext y
+          exact hsupport y who hwho hwhoPartner
+        rw [hzero, map_zero]
+    · by_cases hkNormal : normal k = 0
+      · have hki : M.PureIndividualFullRank a k :=
+          ((M.purePairwiseFullRank_iff a k anchor).1
+            (h k anchor hk)).1
+        obtain ⟨w, htangent, heffect, hsupport⟩ :=
+          hki.exists_singleCoordinateIncentiveTransfer_supported
+            normal hkNormal (target k)
+        refine ⟨w, htangent, heffect, ?_⟩
+        intro who hwho
+        have hzero : (fun y => w y who) = 0 := by
+          funext y
+          exact hsupport y who hwho
+        rw [hzero, map_zero]
+      · obtain ⟨w, htangent, heffect, hanchorEffect, hsupport⟩ :=
+          (h k anchor hk).exists_pairwiseTangentIncentiveTransfer_supported
+            hk normal hkNormal hanchor (target k) 0
+        refine ⟨w, htangent, heffect, ?_⟩
+        intro who hwho
+        by_cases hwhoAnchor : who = anchor
+        · subst who
+          exact hanchorEffect
+        · have hzero : (fun y => w y who) = 0 := by
+            funext y
+            exact hsupport y who hwho hwhoAnchor
+          rw [hzero, map_zero]
+  choose part hpart using hexPart
+  refine ⟨fun y who => ∑ k, part k y who, ?_, ?_⟩
+  · intro y
+    change Math.LinearAlgebra.normalLinearMap normal
+      (fun who => ∑ k, part k y who) = 0
+    have hfun : (fun who => ∑ k, part k y who) = ∑ k, part k y := by
+      funext who
+      simp
+    rw [hfun, map_sum]
+    apply Finset.sum_eq_zero
+    intro k _
+    have hk := (hpart k).1 y
+    change Math.LinearAlgebra.normalLinearMap normal (part k y) = 0 at hk
+    exact hk
+  · intro who
+    have hfun : (fun y => ∑ k, part k y who) =
+        ∑ k, (fun y => part k y who) := by
+      funext y
+      simp
+    rw [hfun, map_sum, Finset.sum_eq_single who]
+    · exact (hpart who).2.1
+    · intro k _ hkwho
+      exact (hpart k).2.2 who hkwho.symm
+    · intro hnot
+      exact (hnot (Finset.mem_univ who)).elim
 
 end PublicMonitoring
 end KernelGame
