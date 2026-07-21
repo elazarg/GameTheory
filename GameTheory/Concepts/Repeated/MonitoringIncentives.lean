@@ -760,6 +760,118 @@ theorem PureIndividualFullRankAtProfile.exists_coordinateTangentIncentiveTransfe
     · intro hnot
       exact (hnot (Finset.mem_univ kWho)).elim
 
+/-! ## All-player tangent incentive operator -/
+
+/-- Map a vector-valued public continuation transfer to every player's pure
+deviation incentive effects at one profile. -/
+noncomputable def pureIncentiveEffectMapAtProfile
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) [Fintype M.Signal]
+    (a : Profile G) :
+    (M.Signal → Payoff iota) →ₗ[ℝ]
+      ((who : iota) → NontrivialDeviation a who → ℝ) where
+  toFun w who :=
+    M.pureIndividualIncentiveEffectMap a who (fun y => w y who)
+  map_add' w v := by
+    funext who
+    change M.pureIndividualIncentiveEffectMap a who
+      (fun y => w y who + v y who) = _
+    rw [show (fun y => w y who + v y who) =
+        (fun y => w y who) + (fun y => v y who) by rfl, map_add]
+    rfl
+  map_smul' c w := by
+    funext who
+    change M.pureIndividualIncentiveEffectMap a who
+      (fun y => c * w y who) = _
+    rw [show (fun y => c * w y who) = c • (fun y => w y who) by
+      funext y
+      simp [smul_eq_mul], map_smul]
+    rfl
+
+/-- Pointwise pairing of a vector-valued public continuation transfer with a
+fixed payoff normal. -/
+noncomputable def normalIncentiveTransferLinearMap
+    [Fintype iota]
+    (M : G.mixedExtension.PublicMonitoring) (normal : Payoff iota) :
+    (M.Signal → Payoff iota) →ₗ[ℝ] (M.Signal → ℝ) where
+  toFun w y := Math.LinearAlgebra.normalLinearMap normal (w y)
+  map_add' w v := by
+    funext y
+    exact map_add (Math.LinearAlgebra.normalLinearMap normal) (w y) (v y)
+  map_smul' c w := by
+    funext y
+    exact map_smul (Math.LinearAlgebra.normalLinearMap normal) c (w y)
+
+/-- The linear subspace of signal-contingent payoff transfers that are
+pointwise tangent to a payoff normal. -/
+noncomputable def tangentIncentiveTransferSubspace
+    [Fintype iota]
+    (M : G.mixedExtension.PublicMonitoring) (normal : Payoff iota) :
+    Submodule ℝ (M.Signal → Payoff iota) :=
+  LinearMap.ker (M.normalIncentiveTransferLinearMap normal)
+
+/-- The all-player incentive-effect map restricted to pointwise tangent
+continuation transfers. -/
+noncomputable def pureTangentIncentiveEffectMapAtProfile
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) [Fintype M.Signal]
+    (a : Profile G) (normal : Payoff iota) :
+    M.tangentIncentiveTransferSubspace normal →ₗ[ℝ]
+      ((who : iota) → NontrivialDeviation a who → ℝ) :=
+  (M.pureIncentiveEffectMapAtProfile a).domRestrict
+    (M.tangentIncentiveTransferSubspace normal)
+
+/-- At a non-coordinate normal, all-pairs full rank is exactly strong enough
+to make the tangent all-player incentive operator surjective. -/
+theorem PurePairwiseFullRankAtProfile.pureTangentIncentiveEffectMapAtProfile_surjective
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G}
+    [∀ who, Finite (NontrivialDeviation a who)]
+    (h : M.PurePairwiseFullRankAtProfile a)
+    {normal : Payoff iota}
+    (hnormal : Math.LinearAlgebra.HasTwoNonzeroCoordinates normal) :
+    Function.Surjective
+      (M.pureTangentIncentiveEffectMapAtProfile a normal) := by
+  intro target
+  obtain ⟨w, htangent, heffect⟩ :=
+    h.exists_tangentIncentiveTransfer hnormal target
+  have hw : w ∈ M.tangentIncentiveTransferSubspace normal := by
+    change M.normalIncentiveTransferLinearMap normal w = 0
+    funext y
+    have hy := htangent y
+    change Math.LinearAlgebra.normalLinearMap normal (w y) = 0 at hy
+    exact hy
+  refine ⟨⟨w, hw⟩, ?_⟩
+  funext who
+  exact heffect who
+
+/-- In finite coordinates, the all-player tangent incentive operator has a
+linear right inverse with a finite operator-norm bound. -/
+theorem PurePairwiseFullRankAtProfile.exists_bounded_tangentIncentiveEffect_rightInverse
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G}
+    [∀ who, Fintype (NontrivialDeviation a who)]
+    (h : M.PurePairwiseFullRankAtProfile a)
+    {normal : Payoff iota}
+    (hnormal : Math.LinearAlgebra.HasTwoNonzeroCoordinates normal) :
+    ∃ (R :
+          ((who : iota) → NontrivialDeviation a who → ℝ) →ₗ[ℝ]
+            M.tangentIncentiveTransferSubspace normal)
+        (C : ℝ),
+      0 ≤ C ∧
+        (M.pureTangentIncentiveEffectMapAtProfile a normal).comp R =
+          LinearMap.id ∧
+        ∀ b, ‖R b‖ ≤ C * ‖b‖ := by
+  have hsurj :=
+    h.pureTangentIncentiveEffectMapAtProfile_surjective hnormal
+  obtain ⟨R, hR⟩ :=
+    (M.pureTangentIncentiveEffectMapAtProfile a normal).exists_rightInverse_of_surjective
+      (LinearMap.range_eq_top.mpr hsurj)
+  let Rc := LinearMap.toContinuousLinearMap R
+  refine ⟨R, ‖Rc‖, Rc.opNorm_nonneg, hR, fun b => Rc.le_opNorm b⟩
+
 end PublicMonitoring
 end KernelGame
 end GameTheory

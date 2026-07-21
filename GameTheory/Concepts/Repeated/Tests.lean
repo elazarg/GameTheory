@@ -569,6 +569,22 @@ example
         Bool.false_ne_true (fun _ => (1 : ℝ)) (by norm_num) (by norm_num)
           targetFalse targetTrue
 
+/-- The complete tangent incentive operator is surjective at every
+non-coordinate normal under all-pairs full rank. -/
+example :
+    Function.Surjective
+      (coordinationGame.realizedActionMonitoring.pureTangentIncentiveEffectMapAtProfile
+        allTrueProfile
+          (fun _ : Bool => (1 : ℝ))) := by
+  have hpair :
+      coordinationGame.realizedActionMonitoring.PurePairwiseFullRankAtProfile
+        allTrueProfile := by
+    intro i j hij
+    exact purePairwiseFullRank_realizedActionMonitoring coordinationGame
+      allTrueProfile hij
+  exact hpair.pureTangentIncentiveEffectMapAtProfile_surjective
+    ⟨false, true, Bool.false_ne_true, by norm_num, by norm_num⟩
+
 /-- Perfect public profile monitoring enforces every pure profile on each
 non-coordinate normal hyperplane at every positive discount factor. -/
 example :
