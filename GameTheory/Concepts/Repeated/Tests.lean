@@ -3,7 +3,7 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Concepts.Repeated.MonitoringSelfGeneration
+import GameTheory.Concepts.Repeated.MonitoringPublicRandomization
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -262,6 +262,33 @@ example :
     infer_instance
   exact PublicMonitoring.perfectPublicEquilibriumPayoffs_selfGenerating
     coordinationGame.outcomeMonitoring (by norm_num) (by norm_num)
+
+/-- A finite public lottery has the expected convex-hull payoff. -/
+example :
+    (fun who => coordinationGame.eu allTrueProfile who) ∈
+      PublicMonitoring.publicRandomizationHull
+        ({fun who => coordinationGame.eu allTrueProfile who} :
+          Set (Payoff Bool)) := by
+  rw [PublicMonitoring.mem_publicRandomizationHull_iff]
+  refine ⟨Unit, inferInstance, PMF.pure (),
+    fun _ who => coordinationGame.eu allTrueProfile who, ?_, ?_⟩
+  · simp
+  · intro who
+    simp
+
+/-- Ordinary APS self-generation embeds into publicly randomized
+self-generation through degenerate lotteries. -/
+example :
+    coordinationGame.outcomeMonitoring.PublicSelfGenerating (1 / 2)
+      ({fun who => coordinationGame.eu allTrueProfile who} :
+        Set (Payoff Bool)) := by
+  have hself :
+      coordinationGame.outcomeMonitoring.SelfGenerating (1 / 2)
+        ({fun who => coordinationGame.eu allTrueProfile who} :
+          Set (Payoff Bool)) :=
+    coordinationGame.outcomeMonitoring.selfGenerating_singleton_eu_of_isNash
+      (by norm_num) allTrueProfile_isNash
+  exact hself.publicSelfGenerating
 
 end RepeatedMonitoringTests
 

@@ -92,6 +92,7 @@ import GameTheory.Concepts.Repeated.MonitoringInstances
 import GameTheory.Concepts.Repeated.MonitoringDiscounted
 import GameTheory.Concepts.Repeated.MonitoringDecomposition
 import GameTheory.Concepts.Repeated.MonitoringSelfGeneration
+import GameTheory.Concepts.Repeated.MonitoringPublicRandomization
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
