@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Welfare.FolkTheorem.Feasible
 import GameTheory.Concepts.Welfare.FolkTheorem.Discounting
+import GameTheory.Concepts.Welfare.FolkTheorem.Geometry
 import GameTheory.Concepts.Welfare.FolkTheorem.Periodic
 import GameTheory.Concepts.Welfare.FolkTheorem.Trigger
 import GameTheory.Concepts.Welfare.FolkTheorem.Main
@@ -18,6 +19,8 @@ Umbrella module. Split across `FolkTheorem/`:
   punishment values, security vectors.
 - `Discounting` — finite-cycle averages and patient-player margin lemmas; the
   generic discounted repeated game lives in `Concepts.Repeated.Discounted`.
+- `Geometry` — topology and compact inner approximations of feasible,
+  individually rational payoff sets.
 - `Periodic` — rotation equivalences and periodic discounted continuation bounds.
 - `Trigger` — trigger strategies and their discounted-repeated Nash property.
 - `Main` — finite-cycle approximation, the discounted Folk theorem, and

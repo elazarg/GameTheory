@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Welfare.WelfareTheorems
+import GameTheory.Concepts.Welfare.FolkTheorem.Geometry
 
 /-!
 # Welfare Concept Tests
@@ -34,6 +35,17 @@ example : teamGame.socialWelfare profile ≥ 0 := by
   apply KernelGame.socialWelfare_nonneg_of_nonneg_eu
   intro i
   simp [teamGame, profile]
+
+example {G : KernelGame Bool} [Finite (KernelGame.Profile G)]
+    (r : Payoff Bool) (margin : ℝ) :
+    IsCompact (G.individuallyRationalInnerApproximation r margin) :=
+  G.isCompact_individuallyRationalInnerApproximation r margin
+
+example (G : KernelGame Bool) (r : Payoff Bool) :
+    G.strictIndividuallyRationalPayoffSet r =
+      ⋃ margin : {x : ℝ // 0 < x},
+        G.individuallyRationalInnerApproximation r margin :=
+  G.strictIndividuallyRationalPayoffSet_eq_iUnion_innerApproximations r
 
 end
 
