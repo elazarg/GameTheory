@@ -298,6 +298,78 @@ theorem PurePairwiseFullRankAtProfile.exists_smallVariation_affine_enforcement
         rw [Real.norm_eq_abs, abs_neg]
         ring
 
+/-- Pairwise full rank supplies one affine-enforcement bound uniformly over
+all unit-bounded non-coordinate normals whose two witnessing coordinates are
+separated from zero by a common positive margin.  The witnessing pair may
+vary with the normal. -/
+theorem PurePairwiseFullRankAtProfile.exists_uniformlyBounded_smallVariation_affine_enforcement
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G)
+    [∀ who, Finite (NontrivialDeviation a who)]
+    (h : M.mixedExtension.PurePairwiseFullRankAtProfile a) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (normal : Payoff iota) (margin : ℝ), 0 < margin → ‖normal‖ ≤ 1 →
+        Math.LinearAlgebra.HasTwoCoordinatesWithAbsAtLeast margin normal →
+        ∀ (delta : ℝ), 0 < delta → ∀ center : Payoff iota,
+          ∃ w : M.ContinuationAssignment,
+            (∀ y, w y ∈ Math.LinearAlgebra.normalAffineHyperplane normal
+              (Math.LinearAlgebra.normalLinearMap normal center)) ∧
+            M.IsEnforceable delta a w ∧
+            ∀ y, ‖w y - center‖ ≤
+              C * margin⁻¹ * |(1 - delta) / delta| := by
+  letI := Fintype.ofFinite M.Signal
+  letI (who : iota) : Fintype (NontrivialDeviation a who) :=
+    Fintype.ofFinite (NontrivialDeviation a who)
+  obtain ⟨CR, hCR, hsolver⟩ :=
+    h.exists_uniformlyBounded_tangentIncentiveTransfer
+  let gain := pureDeviationGainVector G a
+  refine ⟨CR * ‖gain‖, mul_nonneg hCR (norm_nonneg gain), ?_⟩
+  intro normal margin hmargin hnormal hseparated delta hdelta center
+  let target : (who : iota) → NontrivialDeviation a who → ℝ :=
+    fun who => pureDeviationEnforcementTarget G delta a who
+  let B := |(1 - delta) / delta| * ‖gain‖
+  have hB : 0 ≤ B := mul_nonneg (abs_nonneg _) (norm_nonneg gain)
+  have htarget : ∀ who dev, ‖target who dev‖ ≤ B := by
+    intro who dev
+    have hgain : ‖gain who dev‖ ≤ ‖gain‖ :=
+      (norm_le_pi_norm (gain who) dev).trans (norm_le_pi_norm gain who)
+    calc
+      ‖target who dev‖ =
+          ‖-((1 - delta) / delta)‖ * ‖gain who dev‖ := by
+        change ‖-((1 - delta) / delta) * gain who dev‖ = _
+        rw [norm_mul]
+      _ = |(1 - delta) / delta| * ‖gain who dev‖ := by
+        rw [norm_neg, Real.norm_eq_abs]
+      _ ≤ |(1 - delta) / delta| * ‖gain‖ :=
+        mul_le_mul_of_nonneg_left hgain (abs_nonneg _)
+      _ = B := rfl
+  obtain ⟨z, hzTangent, hzEffect, hzBound⟩ :=
+    hsolver normal margin hmargin hnormal hseparated target B hB htarget
+  let w : M.ContinuationAssignment := M.translateContinuation z center
+  have hzEnforce : M.IsEnforceable delta a z :=
+    M.isEnforceable_of_pureIncentiveEffects hdelta a z hzEffect
+  refine ⟨w, ?_,
+    (M.isEnforceable_translateContinuation_iff delta a z center).2
+      hzEnforce, ?_⟩
+  · intro y
+    change Math.LinearAlgebra.normalLinearMap normal (z y + center) =
+      Math.LinearAlgebra.normalLinearMap normal center
+    rw [map_add]
+    have hy := hzTangent y
+    change Math.LinearAlgebra.normalLinearMap normal (z y) = 0 at hy
+    rw [hy, zero_add]
+  · intro y
+    have hdisplacement : w y - center = z y := by
+      funext who
+      simp [w, translateContinuation]
+    rw [hdisplacement]
+    calc
+      ‖z y‖ ≤ CR * margin⁻¹ * B := hzBound y
+      _ = (CR * ‖gain‖) * margin⁻¹ * |(1 - delta) / delta| := by
+        simp only [B]
+        ring
+
 /-- If the normal vanishes outside one player, individual full rank supplies
 tangent incentives for every other player.  The distinguished player must
 already be playing a stage best response because tangency fixes that player's

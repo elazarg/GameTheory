@@ -802,6 +802,155 @@ theorem PurePairwiseFullRankAtProfile.exists_tangentIncentiveTransfer
     · intro hnot
       exact (hnot (Finset.mem_univ who)).elim
 
+/-- All-pairs full rank gives one tangent-solver bound uniformly over every
+unit-bounded normal with two coordinates separated from zero by a common
+positive margin.  Neither the chosen coordinates nor the normal may affect
+the returned constant. -/
+theorem PurePairwiseFullRankAtProfile.exists_uniformlyBounded_tangentIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G}
+    [∀ who, Finite (NontrivialDeviation a who)]
+    (h : M.PurePairwiseFullRankAtProfile a) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (normal : Payoff iota) (margin : ℝ), 0 < margin → ‖normal‖ ≤ 1 →
+        Math.LinearAlgebra.HasTwoCoordinatesWithAbsAtLeast margin normal →
+        ∀ (target : (who : iota) → NontrivialDeviation a who → ℝ)
+          (B : ℝ), 0 ≤ B → (∀ who dev, ‖target who dev‖ ≤ B) →
+          ∃ w : M.Signal → Payoff iota,
+            (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+              (∀ who,
+                M.pureIndividualIncentiveEffectMap a who (fun y => w y who) =
+                  target who) ∧
+              ∀ y, ‖w y‖ ≤ C * margin⁻¹ * B := by
+  classical
+  let K := {p : iota × iota // p.1 ≠ p.2}
+  have hex : ∀ p : K, ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (normal : Payoff iota), normal p.1.2 ≠ 0 →
+        ∀ (target : NontrivialDeviation a p.1.1 → ℝ) (B : ℝ), 0 ≤ B →
+          (∀ dev, ‖target dev‖ ≤ B) →
+          ∃ w : M.Signal → Payoff iota,
+            (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+              M.pureIndividualIncentiveEffectMap a p.1.1
+                  (fun y => w y p.1.1) = target ∧
+              M.pureIndividualIncentiveEffectMap a p.1.2
+                  (fun y => w y p.1.2) = 0 ∧
+              (∀ y who, who ≠ p.1.1 → who ≠ p.1.2 → w y who = 0) ∧
+              ∀ y, ‖w y‖ ≤ C * ‖normal‖ * |normal p.1.2|⁻¹ * B := by
+    intro p
+    exact (h p.1.1 p.1.2 p.2
+      ).exists_bounded_leftTangentIncentiveTransfer_supported p.2
+  choose pairC hpairC hpairSolver using hex
+  let C₀ := ∑ p : K, pairC p
+  have hC₀ : 0 ≤ C₀ := Finset.sum_nonneg fun p _ => hpairC p
+  refine ⟨(Fintype.card iota : ℝ) * C₀,
+    mul_nonneg (Nat.cast_nonneg _) hC₀, ?_⟩
+  intro normal margin hmargin hnormal hseparated target B hB htarget
+  obtain ⟨anchor, partner, hne, hanchorMargin, hpartnerMargin⟩ := hseparated
+  have hanchor : normal anchor ≠ 0 := by
+    intro hzero
+    rw [hzero, abs_zero] at hanchorMargin
+    exact (not_le_of_gt hmargin) hanchorMargin
+  have hpartner : normal partner ≠ 0 := by
+    intro hzero
+    rw [hzero, abs_zero] at hpartnerMargin
+    exact (not_le_of_gt hmargin) hpartnerMargin
+  have hexPart (k : iota) :
+      ∃ w : M.Signal → Payoff iota,
+        (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+          M.pureIndividualIncentiveEffectMap a k (fun y => w y k) =
+              target k ∧
+          (∀ who, who ≠ k →
+            M.pureIndividualIncentiveEffectMap a who (fun y => w y who) = 0) ∧
+          ∀ y, ‖w y‖ ≤ C₀ * margin⁻¹ * B := by
+    by_cases hk : k = anchor
+    · subst k
+      let p : K := ⟨(anchor, partner), hne⟩
+      obtain ⟨w, htangent, heffect, hpartnerEffect, hsupport, hbound⟩ :=
+        hpairSolver p normal hpartner (target anchor) B hB (htarget anchor)
+      refine ⟨w, htangent, heffect, ?_, ?_⟩
+      · intro who hwho
+        by_cases hwhoPartner : who = partner
+        · subst who
+          exact hpartnerEffect
+        · have hzero : (fun y => w y who) = 0 := by
+            funext y
+            exact hsupport y who hwho hwhoPartner
+          rw [hzero, map_zero]
+      · intro y
+        calc
+          ‖w y‖ ≤ pairC p * ‖normal‖ * |normal partner|⁻¹ * B := hbound y
+          _ ≤ C₀ * 1 * margin⁻¹ * B := by
+            have hpairLe : pairC p ≤ C₀ :=
+              Finset.single_le_sum (fun p' _ => hpairC p') (Finset.mem_univ p)
+            have hinv : |normal partner|⁻¹ ≤ margin⁻¹ :=
+              (inv_le_inv₀ (hmargin.trans_le hpartnerMargin) hmargin).2
+                hpartnerMargin
+            gcongr
+          _ = C₀ * margin⁻¹ * B := by ring
+    · let p : K := ⟨(k, anchor), hk⟩
+      obtain ⟨w, htangent, heffect, hanchorEffect, hsupport, hbound⟩ :=
+        hpairSolver p normal hanchor (target k) B hB (htarget k)
+      refine ⟨w, htangent, heffect, ?_, ?_⟩
+      · intro who hwho
+        by_cases hwhoAnchor : who = anchor
+        · subst who
+          exact hanchorEffect
+        · have hzero : (fun y => w y who) = 0 := by
+            funext y
+            exact hsupport y who hwho hwhoAnchor
+          rw [hzero, map_zero]
+      · intro y
+        calc
+          ‖w y‖ ≤ pairC p * ‖normal‖ * |normal anchor|⁻¹ * B := hbound y
+          _ ≤ C₀ * 1 * margin⁻¹ * B := by
+            have hpairLe : pairC p ≤ C₀ :=
+              Finset.single_le_sum (fun p' _ => hpairC p') (Finset.mem_univ p)
+            have hinv : |normal anchor|⁻¹ ≤ margin⁻¹ :=
+              (inv_le_inv₀ (hmargin.trans_le hanchorMargin) hmargin).2
+                hanchorMargin
+            gcongr
+          _ = C₀ * margin⁻¹ * B := by ring
+  choose part hpart using hexPart
+  refine ⟨fun y who => ∑ k, part k y who, ?_, ?_, ?_⟩
+  · intro y
+    change Math.LinearAlgebra.normalLinearMap normal
+      (fun who => ∑ k, part k y who) = 0
+    have hfun : (fun who => ∑ k, part k y who) = ∑ k, part k y := by
+      funext who
+      simp
+    rw [hfun, map_sum]
+    apply Finset.sum_eq_zero
+    intro k _
+    have hk := (hpart k).1 y
+    change Math.LinearAlgebra.normalLinearMap normal (part k y) = 0 at hk
+    exact hk
+  · intro who
+    have hfun : (fun y => ∑ k, part k y who) =
+        ∑ k, (fun y => part k y who) := by
+      funext y
+      simp
+    rw [hfun, map_sum, Finset.sum_eq_single who]
+    · exact (hpart who).2.1
+    · intro k _ hkwho
+      exact (hpart k).2.2.1 who hkwho.symm
+    · intro hnot
+      exact (hnot (Finset.mem_univ who)).elim
+  · intro y
+    have hfun : (fun who => ∑ k, part k y who) = ∑ k, part k y := by
+      funext who
+      simp
+    change ‖fun who => ∑ k, part k y who‖ ≤
+      ((Fintype.card iota : ℝ) * C₀) * margin⁻¹ * B
+    rw [hfun]
+    calc
+      ‖∑ k, part k y‖ ≤ ∑ k, ‖part k y‖ := norm_sum_le _ _
+      _ ≤ ∑ _k : iota, C₀ * margin⁻¹ * B :=
+        Finset.sum_le_sum fun k _ => (hpart k).2.2.2 y
+      _ = ((Fintype.card iota : ℝ) * C₀) * margin⁻¹ * B := by
+        simp
+        ring
+
 /-- Individual full rank for every player realizes arbitrary targets in all
 zero-normal coordinates of a coordinate hyperplane.  The distinguished
 nonzero-normal coordinate remains identically zero. -/

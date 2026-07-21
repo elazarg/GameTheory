@@ -29,6 +29,29 @@ coordinates are nonzero. -/
 def HasTwoNonzeroCoordinates {I R : Type*} [Zero R] (x : I → R) : Prop :=
   ∃ i j, i ≠ j ∧ x i ≠ 0 ∧ x j ≠ 0
 
+/-- Two distinct coordinates have absolute value at least a prescribed
+margin.  This quantitative support condition is independent of finiteness. -/
+def HasTwoCoordinatesWithAbsAtLeast
+    {I R : Type*} [AddCommGroup R] [LinearOrder R] [IsOrderedAddMonoid R]
+    (margin : R) (x : I → R) : Prop :=
+  ∃ i j, i ≠ j ∧ margin ≤ |x i| ∧ margin ≤ |x j|
+
+/-- A positive quantitative support margin supplies two nonzero
+coordinates. -/
+theorem HasTwoCoordinatesWithAbsAtLeast.hasTwoNonzeroCoordinates
+    {I R : Type*} [AddCommGroup R] [LinearOrder R] [IsOrderedAddMonoid R]
+    {margin : R} {x : I → R}
+    (h : HasTwoCoordinatesWithAbsAtLeast margin x) (hmargin : 0 < margin) :
+    HasTwoNonzeroCoordinates x := by
+  obtain ⟨i, j, hij, hi, hj⟩ := h
+  refine ⟨i, j, hij, ?_, ?_⟩
+  · intro hzero
+    rw [hzero, abs_zero] at hi
+    exact (not_le_of_gt hmargin) hi
+  · intro hzero
+    rw [hzero, abs_zero] at hj
+    exact (not_le_of_gt hmargin) hj
+
 /-- Every nonzero function is either a coordinate direction or has two
 distinct nonzero coordinates. -/
 theorem isCoordinateDirection_or_hasTwoNonzeroCoordinates

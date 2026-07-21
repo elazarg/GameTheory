@@ -648,6 +648,16 @@ example : ∃ C : ℝ, 0 ≤ C := by
           ⟨false, true, Bool.false_ne_true, by norm_num, by norm_num⟩
   exact ⟨C, hC⟩
 
+/-- One quantitative enforcement constant works uniformly over separated
+unit-bounded non-coordinate normals. -/
+example : ∃ C : ℝ, 0 ≤ C := by
+  obtain ⟨C, hC, _⟩ :=
+    (purePairwiseFullRankAtProfile_profileMonitoring_mixedExtension
+      coordinationGame allTrueProfile
+    ).exists_uniformlyBounded_smallVariation_affine_enforcement
+      coordinationGame.profileMonitoring allTrueProfile
+  exact ⟨C, hC⟩
+
 /-- Constant public continuation transfers do not change deviation
 incentives. -/
 example (c : ℝ) :
