@@ -236,6 +236,19 @@ def IsPerfectPublicEquilibrium (M : G.PublicMonitoring) [DecidableEq ι]
     (δ : ℝ) (σ : M.MonitoredProfile) : Prop :=
   M.IsεPerfectPublicEquilibrium δ 0 σ
 
+/-- Perfect-public equilibrium is inherited after the next public signal,
+including signals that occur with probability zero. -/
+theorem IsεPerfectPublicEquilibrium.afterSignal
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} {σ : M.MonitoredProfile}
+    (h : M.IsεPerfectPublicEquilibrium δ ε σ) (y : M.Signal) :
+    M.IsεPerfectPublicEquilibrium δ ε (M.afterSignal σ y) := by
+  constructor
+  · simpa using h.2 0 (Fin.cons y fun k : Fin 0 => k.elim0)
+  · intro t hist
+    rw [M.after_afterSignal]
+    exact h.2 (t + 1) (Fin.cons y hist)
+
 /-- No player gains by changing only the current action and returning to the
 prescribed public strategy from the next period onward. -/
 def HasNoProfitableOneShotDeviation

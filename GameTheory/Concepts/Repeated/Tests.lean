@@ -252,6 +252,17 @@ example :
       coordinationGame.outcomeMonitoring (by norm_num) (by norm_num)
       hW hself) (Set.mem_singleton _)
 
+/-- Conversely, the complete PPE payoff set decomposes relative to itself. -/
+example :
+    coordinationGame.outcomeMonitoring.SelfGenerating (1 / 2)
+      (coordinationGame.outcomeMonitoring.perfectPublicEquilibriumPayoffs
+        (1 / 2)) := by
+  letI : Finite coordinationGame.Outcome := by
+    change Finite (Bool → Bool)
+    infer_instance
+  exact PublicMonitoring.perfectPublicEquilibriumPayoffs_selfGenerating
+    coordinationGame.outcomeMonitoring (by norm_num) (by norm_num)
+
 end RepeatedMonitoringTests
 
 end GameTheory

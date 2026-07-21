@@ -34,6 +34,60 @@ def perfectPublicEquilibriumPayoffs
     M.IsPerfectPublicEquilibrium δ σ ∧
       ∀ who, M.discountedAveragePayoff δ σ who = v who}
 
+/-- The continuation-payoff vector delivered after each possible next public
+signal. -/
+def continuationPayoffAssignment
+    (M : G.PublicMonitoring) (δ : ℝ) (σ : M.MonitoredProfile) :
+    M.ContinuationAssignment :=
+  fun y who => M.discountedAveragePayoff δ (M.afterSignal σ y) who
+
+/-- Continuation payoffs are bounded whenever stage expected payoffs are
+uniformly bounded. -/
+theorem isBoundedContinuationPayoffAssignment_of_bounded
+    (M : G.PublicMonitoring) {δ : ℝ}
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (σ : M.MonitoredProfile)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C) :
+    M.IsBoundedContinuationAssignment
+      (M.continuationPayoffAssignment δ σ) := by
+  intro who
+  obtain ⟨C, hC⟩ := hstage who
+  let C' := max C 0
+  have hC' : ∀ a : Profile G, |G.eu a who| ≤ C' :=
+    fun a => (hC a).trans (le_max_left C 0)
+  refine ⟨C', ?_⟩
+  intro y
+  exact M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le
+    hδ0 hδ1 (le_max_right C 0) (M.afterSignal σ y) who hC'
+
+/-- The PPE payoff set is coordinatewise bounded when stage expected payoffs
+are uniformly bounded. -/
+theorem isBoundedPayoffSet_perfectPublicEquilibriumPayoffs_of_bounded
+    (M : G.PublicMonitoring) [DecidableEq ι] {δ : ℝ}
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C) :
+    IsBoundedPayoffSet (M.perfectPublicEquilibriumPayoffs δ) := by
+  intro who
+  obtain ⟨C, hC⟩ := hstage who
+  let C' := max C 0
+  have hC' : ∀ a : Profile G, |G.eu a who| ≤ C' :=
+    fun a => (hC a).trans (le_max_left C 0)
+  refine ⟨C', ?_⟩
+  rintro v ⟨σ, _hσ, hv⟩
+  rw [← hv who]
+  exact M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le
+    hδ0 hδ1 (le_max_right C 0) σ who hC'
+
+/-- Finite-outcome convenience form of boundedness of the PPE payoff set. -/
+theorem isBoundedPayoffSet_perfectPublicEquilibriumPayoffs
+    (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) :
+    IsBoundedPayoffSet (M.perfectPublicEquilibriumPayoffs δ) := by
+  apply M.isBoundedPayoffSet_perfectPublicEquilibriumPayoffs_of_bounded
+    hδ0 hδ1
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
 namespace SelfGenerating
 
 variable {M : G.PublicMonitoring} [DecidableEq ι]
@@ -417,6 +471,96 @@ theorem selfGenerating_subset_perfectPublicEquilibriumPayoffs_of_finite_outcome
   exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
 
 end SelfGenerating
+
+/-- **APS decomposition of PPE payoffs.** Under bounded stage payoffs, the PPE
+payoff set decomposes relative to itself. -/
+theorem perfectPublicEquilibriumPayoffs_selfGenerating_of_bounded
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C) :
+    M.SelfGenerating δ (M.perfectPublicEquilibriumPayoffs δ) := by
+  intro v hv
+  obtain ⟨σ, hσ, hv⟩ := hv
+  let a : Profile G := fun i => σ i 0 (fun k => k.elim0)
+  let w : M.ContinuationAssignment :=
+    M.continuationPayoffAssignment δ σ
+  refine ⟨a, w,
+    M.isBoundedContinuationPayoffAssignment_of_bounded
+      hδ0 hδ1 σ hstage, ?_, ?_, ?_⟩
+  · intro y
+    exact ⟨M.afterSignal σ y, hσ.afterSignal y, fun _ => rfl⟩
+  · funext who
+    obtain ⟨C, hC⟩ := hstage who
+    let C' := max C 0
+    have hC' : ∀ ρ : Profile G, |G.eu ρ who| ≤ C' :=
+      fun ρ => (hC ρ).trans (le_max_left C 0)
+    have hbell := M.discountedAveragePayoff_eq_head_add_expected
+      hδ0 hδ1 (le_max_right C 0) σ who hC'
+    change M.decomposedPayoff δ a w who = v who
+    rw [← hv who]
+    simpa only [decomposedPayoff, a, w, continuationPayoffAssignment] using
+      hbell.symm
+  · intro who dev
+    obtain ⟨C, hC⟩ := hstage who
+    let C' := max C 0
+    have hC' : ∀ ρ : Profile G, |G.eu ρ who| ≤ C' :=
+      fun ρ => (hC ρ).trans (le_max_left C 0)
+    let τ : M.MonitoredProfile :=
+      Function.update σ who (M.oneShotDeviation σ who dev)
+    have hroot :
+        (fun i => τ i 0 (fun k => k.elim0)) =
+          Function.update a who dev := by
+      funext i
+      by_cases hi : i = who
+      · subst hi
+        simp [τ, a]
+      · simp [τ, a, hi]
+    have hcont (y : M.Signal) :
+        M.afterSignal τ y = M.afterSignal σ y := by
+      simp [τ]
+    have hτbell := M.discountedAveragePayoff_eq_head_add_expected
+      hδ0 hδ1 (le_max_right C 0) τ who hC'
+    rw [hroot] at hτbell
+    simp_rw [hcont] at hτbell
+    have hσbell := M.discountedAveragePayoff_eq_head_add_expected
+      hδ0 hδ1 (le_max_right C 0) σ who hC'
+    calc
+      M.decomposedDeviationPayoff δ a w who dev =
+          M.discountedAveragePayoff δ τ who := by
+        simpa only [decomposedDeviationPayoff, a, w,
+          continuationPayoffAssignment] using hτbell.symm
+      _ ≤ M.discountedAveragePayoff δ σ who :=
+        hσ.isDiscountedPublicNash.hasNoProfitableOneShotDeviation who dev
+      _ = M.decomposedPayoff δ a w who := by
+        simpa only [decomposedPayoff, a, w,
+          continuationPayoffAssignment] using hσbell
+
+/-- Finite-outcome convenience form of APS decomposition of the PPE payoff
+set. -/
+theorem perfectPublicEquilibriumPayoffs_selfGenerating
+    (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) :
+    M.SelfGenerating δ (M.perfectPublicEquilibriumPayoffs δ) := by
+  apply M.perfectPublicEquilibriumPayoffs_selfGenerating_of_bounded hδ0 hδ1
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
+/-- The PPE payoff set is the greatest coordinatewise-bounded self-generating
+set: it is self-generating, and every other such set consists of PPE payoffs. -/
+theorem perfectPublicEquilibriumPayoffs_greatest_bounded_selfGenerating
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    (hstage : ∀ who : ι, ∃ C : ℝ,
+      ∀ a : Profile G, |G.eu a who| ≤ C) :
+    M.SelfGenerating δ (M.perfectPublicEquilibriumPayoffs δ) ∧
+      ∀ W : Set (Payoff ι), IsBoundedPayoffSet W →
+        M.SelfGenerating δ W →
+          W ⊆ M.perfectPublicEquilibriumPayoffs δ := by
+  refine ⟨M.perfectPublicEquilibriumPayoffs_selfGenerating_of_bounded
+    hδ0 hδ1 hstage, ?_⟩
+  intro W hW hself
+  exact SelfGenerating.selfGenerating_subset_perfectPublicEquilibriumPayoffs
+    M hδ0 hδ1 hstage hW hself
 
 end PublicMonitoring
 
