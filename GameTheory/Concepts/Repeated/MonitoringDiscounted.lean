@@ -190,10 +190,12 @@ theorem discountedContinuationPayoff_eq_head_add_expected
         δ * Math.Probability.expect
           (M.signalKernel
             (fun i => M.after σ h i 0 (fun k => k.elim0)))
-          (fun y => M.discountedAveragePayoff δ
-            (M.afterSignal (M.after σ h) y) who) := by
-  exact M.discountedAveragePayoff_eq_head_add_expected
-    hδ0 hδ1 hC0 (M.after σ h) who hbd
+          (fun y => M.discountedContinuationPayoff δ σ
+            (Fin.snoc h y) who) := by
+  unfold discountedContinuationPayoff
+  simpa only [← M.afterSignal_after σ h] using
+    M.discountedAveragePayoff_eq_head_add_expected
+      hδ0 hδ1 hC0 (M.after σ h) who hbd
 
 /-- Discounted payoff of stationary monitored play equals its stage payoff. -/
 @[simp] theorem discountedAveragePayoff_stationaryMonitoredProfile
@@ -914,14 +916,16 @@ theorem isPerfectPublicEquilibrium_iff_noProfitableOneShotDeviation
     hδ0 hδ1 σ (fun who => G.exists_eu_abs_bound_of_finite_outcome who)
 
 /-- Stationary repetition of a stage Nash equilibrium is a discounted public
-Nash equilibrium under every public monitoring structure. -/
-theorem stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash
-    (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
+Nash equilibrium whenever stage expected payoffs are uniformly bounded. -/
+theorem stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash_of_bounded
+    (M : G.PublicMonitoring) [DecidableEq ι]
     {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
-    {σ : Profile G} (hN : G.IsNash σ) :
+    {σ : Profile G} (hN : G.IsNash σ)
+    (hbd : ∀ who : ι, ∃ C : ℝ,
+      ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
     M.IsDiscountedPublicNash δ (M.stationaryMonitoredProfile σ) := by
   intro who dev
-  obtain ⟨C, hC⟩ := G.exists_eu_abs_bound_of_finite_outcome who
+  obtain ⟨C, hC⟩ := hbd who
   have hC0 : 0 ≤ C := le_trans (abs_nonneg _) (hC σ)
   have hpay :
       M.discountedAveragePayoff δ
@@ -952,6 +956,34 @@ theorem stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash
       exact hC _
   simpa only [add_zero] using hpay
 
+/-- Finite-outcome convenience form of stationary public Nash equilibrium. -/
+theorem stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash
+    (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    {σ : Profile G} (hN : G.IsNash σ) :
+    M.IsDiscountedPublicNash δ (M.stationaryMonitoredProfile σ) := by
+  apply M.stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash_of_bounded
+    hδ0 hδ1 hN
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
+/-- Stationary repetition of a stage Nash equilibrium is a PPE whenever stage
+expected payoffs are uniformly bounded. -/
+theorem stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash_of_bounded
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    {σ : Profile G} (hN : G.IsNash σ)
+    (hbd : ∀ who : ι, ∃ C : ℝ,
+      ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    M.IsPerfectPublicEquilibrium δ (M.stationaryMonitoredProfile σ) := by
+  refine ⟨
+    M.stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash_of_bounded
+      hδ0 hδ1 hN hbd, ?_⟩
+  intro t hist
+  rw [M.after_stationaryMonitoredProfile σ hist]
+  exact
+    M.stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash_of_bounded
+      hδ0 hδ1 hN hbd
+
 /-- Stationary repetition of a stage Nash equilibrium is a PPE under every
 public monitoring structure. -/
 theorem stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash
@@ -959,12 +991,10 @@ theorem stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash
     {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
     {σ : Profile G} (hN : G.IsNash σ) :
     M.IsPerfectPublicEquilibrium δ (M.stationaryMonitoredProfile σ) := by
-  refine ⟨M.stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash
-    hδ0 hδ1 hN, ?_⟩
-  intro t hist
-  rw [M.after_stationaryMonitoredProfile σ hist]
-  exact M.stationaryMonitoredProfile_isDiscountedPublicNash_of_isNash
-    hδ0 hδ1 hN
+  apply
+    M.stationaryMonitoredProfile_isPerfectPublicEquilibrium_of_isNash_of_bounded
+      hδ0 hδ1 hN
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
 
 /-! ### Compatibility with deterministic profile monitoring -/
 
