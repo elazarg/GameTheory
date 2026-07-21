@@ -32,6 +32,21 @@ open Math.PMFProduct
 
 variable {ι : Type} [DecidableEq ι]
 
+omit [DecidableEq ι] in
+/-- The utility distribution of an independently mixed profile is the
+mixture of the base game's utility distributions over the product profile
+law. -/
+theorem mixedExtension_udist (G : KernelGame ι) [Fintype ι]
+    (σ : Profile G.mixedExtension) :
+    G.mixedExtension.udist σ = (pmfPi σ).bind G.udist := by
+  change
+    (((pmfPi σ).bind G.outcomeKernel).bind
+      (fun outcome => PMF.pure (G.utility outcome))) =
+    (pmfPi σ).bind fun profile =>
+      (G.outcomeKernel profile).bind
+        (fun outcome => PMF.pure (G.utility outcome))
+  rw [PMF.bind_bind]
+
 -- ============================================================================
 -- EU in the mixed extension
 -- ============================================================================

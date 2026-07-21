@@ -110,6 +110,25 @@ structure GameIsomorphism (G H : KernelGame ι) where
 
 namespace GameIsomorphism
 
+/-- Two game isomorphisms are equal when their strategy equivalences agree
+pointwise. -/
+@[ext]
+theorem ext {G H : KernelGame ι} {e f : GameIsomorphism G H}
+    (h : ∀ who strategy,
+      e.stratEquiv who strategy = f.stratEquiv who strategy) :
+    e = f := by
+  cases e with
+  | mk eStrat eUdist =>
+      cases f with
+      | mk fStrat fUdist =>
+          have hStrat : eStrat = fStrat := by
+            funext who
+            apply Equiv.ext
+            intro strategy
+            exact h who strategy
+          cases hStrat
+          rfl
+
 /-- Identity game isomorphism. -/
 def id (G : KernelGame ι) : GameIsomorphism G G where
   stratEquiv := fun _i => Equiv.refl _

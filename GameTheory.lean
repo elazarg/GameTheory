@@ -59,6 +59,7 @@ import GameTheory.Concepts.Equilibrium.StrictNashProperties
 import GameTheory.Concepts.Equilibrium.SecureEquilibrium
 import GameTheory.Concepts.Equilibrium.ApproximateNash
 import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.Mixed.GameMorphism
 import GameTheory.Concepts.Mixed.MixedDominance
 import GameTheory.Concepts.Mixed.MixedImprovement
 import GameTheory.Concepts.Mixed.BinaryMixed

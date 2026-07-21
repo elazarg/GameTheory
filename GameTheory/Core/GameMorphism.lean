@@ -50,6 +50,22 @@ structure Morphism (G H : KernelGame ι) where
 
 namespace Morphism
 
+/-- Two game morphisms are equal when their strategy maps agree pointwise. -/
+@[ext]
+theorem ext {G H : KernelGame ι} {f g : Morphism G H}
+    (h : ∀ who strategy,
+      f.stratMap who strategy = g.stratMap who strategy) :
+    f = g := by
+  cases f with
+  | mk fStrat fUdist =>
+      cases g with
+      | mk gStrat gUdist =>
+          have hStrat : fStrat = gStrat := by
+            funext who strategy
+            exact h who strategy
+          cases hStrat
+          rfl
+
 /-- Identity morphism. -/
 def id (G : KernelGame ι) : Morphism G G where
   stratMap := fun _i => _root_.id
@@ -355,6 +371,20 @@ structure EUGameIsomorphism (G H : KernelGame ι) extends GameIsomorphism G H wh
   /-- Expected-utility preservation under the isomorphism. -/
   eu_preserved : ∀ (σ : Profile G) (who : ι),
     H.eu (fun i => stratEquiv i (σ i)) who = G.eu σ who
+
+/-- Every utility-distribution-preserving game isomorphism preserves expected
+utility.  This is unconditional because expected utility is the expectation of
+the corresponding coordinate of `udist`. -/
+def GameIsomorphism.toEUGameIsomorphism {G H : KernelGame ι}
+    (e : GameIsomorphism G H) : EUGameIsomorphism G H where
+  toGameIsomorphism := e
+  eu_preserved := e.toMorphism.eu_preserved
+
+@[simp]
+theorem GameIsomorphism.toEUGameIsomorphism_toGameIsomorphism
+    {G H : KernelGame ι} (e : GameIsomorphism G H) :
+    e.toEUGameIsomorphism.toGameIsomorphism = e :=
+  rfl
 
 namespace EUGameIsomorphism
 
