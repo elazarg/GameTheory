@@ -19,7 +19,7 @@ stage-profile path and repeated payoffs aggregate stage expected utilities.
 
 Payoff aggregations over infinite play carrying extra data — discounting,
 limits — build on this module; see
-`GameTheory.Concepts.Welfare.FolkTheorem.Discounting` for the discounted
+`GameTheory.Concepts.Repeated.Discounted` for the discounted
 repeated game and `GameTheory.Concepts.Repeated.Uniform` for uniform
 equilibrium.
 

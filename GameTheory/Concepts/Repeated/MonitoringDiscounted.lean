@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Repeated.MonitoringInstances
-import GameTheory.Concepts.Welfare.FolkTheorem.Discounting
+import GameTheory.Concepts.Repeated.Discounted
 
 /-!
 # Discounted Repeated Games with Public Monitoring

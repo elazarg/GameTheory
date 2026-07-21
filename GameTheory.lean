@@ -85,6 +85,7 @@ import GameTheory.Concepts.Welfare.FolkTheorem
 
 -- Repeated games
 import GameTheory.Concepts.Repeated.Basic
+import GameTheory.Concepts.Repeated.Discounted
 import GameTheory.Concepts.Repeated.Monitoring
 import GameTheory.Concepts.Repeated.Uniform
 import GameTheory.Concepts.Repeated.MonitoringInstances

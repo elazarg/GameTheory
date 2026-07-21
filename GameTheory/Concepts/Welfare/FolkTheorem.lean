@@ -16,8 +16,8 @@ Umbrella module. Split across `FolkTheorem/`:
 
 - `Feasible` — feasible / individually-rational payoff sets, opponent minmax
   punishment values, security vectors.
-- `Discounting` — finite-cycle averages, stage-payoff bounds, the discounted
-  repeated game, continuation payoffs, and discounted-repeated Nash.
+- `Discounting` — finite-cycle averages and patient-player margin lemmas; the
+  generic discounted repeated game lives in `Concepts.Repeated.Discounted`.
 - `Periodic` — rotation equivalences and periodic discounted continuation bounds.
 - `Trigger` — trigger strategies and their discounted-repeated Nash property.
 - `Main` — finite-cycle approximation, the discounted Folk theorem, and
