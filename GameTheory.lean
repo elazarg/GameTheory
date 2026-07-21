@@ -89,6 +89,7 @@ import GameTheory.Concepts.Repeated.Monitoring
 import GameTheory.Concepts.Repeated.Uniform
 import GameTheory.Concepts.Repeated.MonitoringInstances
 import GameTheory.Concepts.Repeated.MonitoringDiscounted
+import GameTheory.Concepts.Repeated.MonitoringDecomposition
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties

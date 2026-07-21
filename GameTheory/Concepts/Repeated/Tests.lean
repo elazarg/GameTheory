@@ -3,7 +3,7 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Concepts.Repeated.MonitoringDiscounted
+import GameTheory.Concepts.Repeated.MonitoringDecomposition
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -210,6 +210,23 @@ example {ε : ℝ}
       (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
         allTrueProfile) :=
   h.hasNoProfitableOneShotDeviationWithinAfterEveryHistory
+
+/-- Constant continuation promises reduce APS enforceability to stage Nash. -/
+example :
+    coordinationGame.outcomeMonitoring.IsEnforceable (1 / 2)
+      allTrueProfile
+      (coordinationGame.outcomeMonitoring.constantContinuation
+        (fun who => coordinationGame.eu allTrueProfile who)) := by
+  exact (coordinationGame.outcomeMonitoring.isEnforceable_constant_iff_isNash
+    (by norm_num) allTrueProfile _).2 allTrueProfile_isNash
+
+/-- A stationary stage-Nash payoff is a self-generating singleton. -/
+example :
+    coordinationGame.outcomeMonitoring.SelfGenerating (1 / 2)
+      ({fun who => coordinationGame.eu allTrueProfile who} :
+        Set (Payoff Bool)) :=
+  coordinationGame.outcomeMonitoring.selfGenerating_singleton_eu_of_isNash
+    (by norm_num) allTrueProfile_isNash
 
 end RepeatedMonitoringTests
 
