@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Cooperative.CoalitionalGame.Additive
+import GameTheory.Cooperative.GaleShapley.Strategyproofness
 
 /-!
 # GameTheory.Cooperative.Tests
@@ -22,6 +23,34 @@ example (α : Fin 3 → ℝ) (i : Fin 3) :
 
 example (i : Fin 3) : CoalGame.majorityGame3.shapleyValue i = 1 / 3 :=
   CoalGame.majorityGame3_shapleyValue i
+
+namespace MatchingMarket
+
+variable {α β : Type} [Fintype α] [Fintype β]
+variable {M M' : MatchingMarket α β}
+
+example (a : α)
+    (hAinj : ∀ a, Function.Injective (M.prefA a))
+    (hAinj' : ∀ a, Function.Injective (M'.prefA a))
+    (hBinj : ∀ b, Function.Injective (M.prefB b))
+    (hcomplete : M.HasCompleteAcceptability)
+    (hreport : M.IsUnilateralProposerReport M' a) :
+    ¬M.StrictlyImprovesOnDA M'.daMatching a :=
+  M.deferredAcceptance_strategyproof a hAinj hAinj' hBinj hcomplete hreport
+
+example
+    (hAinj : ∀ a, Function.Injective (M.prefA a))
+    (hAinj' : ∀ a, Function.Injective (M'.prefA a))
+    (hBinj : ∀ b, Function.Injective (M.prefB b))
+    (hcomplete : M.HasCompleteAcceptability)
+    (hreport : M.IsProposerReport M')
+    (hchanged : M.prefA ≠ M'.prefA) :
+    ∃ a, M.prefA a ≠ M'.prefA a ∧
+      ¬M.StrictlyImprovesOnDA M'.daMatching a :=
+  M.deferredAcceptance_groupStrategyproof hAinj hAinj' hBinj
+    hcomplete hreport hchanged
+
+end MatchingMarket
 
 end
 

@@ -13,6 +13,7 @@ import GameTheory.Cooperative.GaleShapley.RuralHospitals
 import GameTheory.Cooperative.GaleShapley.OptionalOrder
 import GameTheory.Cooperative.GaleShapley.Perfect
 import GameTheory.Cooperative.GaleShapley.OptionalLattice
+import GameTheory.Cooperative.GaleShapley.Strategyproofness
 
 /-!
 # GameTheory.Cooperative
@@ -54,4 +55,6 @@ and lives in the strategic branch as `IsTeamGame`, `SymmetricGame`, etc.
   complete-acceptability stable markets.
 - `GaleShapley.OptionalLattice` — optional-market stable join, meet, and
   lattice laws.
+- `GaleShapley.Strategyproofness` — Hwang's blocking-pair theorem and
+  Dubins--Freedman group and unilateral strategyproofness for proposers.
 -/
