@@ -23,6 +23,25 @@ example (e : EUGameIsomorphism G H) (ε : ℝ) (σ : Profile G) :
     G.IsεNash ε σ ↔ H.IsεNash ε (e.profileEquiv σ) :=
   e.isεNash_iff ε σ
 
+example (e : EUGameIsomorphism G H) :
+    G.IsDominantStrategySolvable ↔ H.IsDominantStrategySolvable :=
+  e.isDominantStrategySolvable_iff
+
+example (e : EUGameIsomorphism G H) (n : ℕ) (who : ι)
+    (s : G.Strategy who) :
+    G.SurvivesStrictDominance n who s ↔
+      H.SurvivesStrictDominance n who (e.stratEquiv who s) :=
+  e.survivesStrictDominance_iff n who s
+
+example (e : EUGameIsomorphism G H) (σ : Profile G) :
+    G.IsIESDSSolvable σ ↔ H.IsIESDSSolvable (e.profileEquiv σ) :=
+  e.isIESDSSolvable_iff σ
+
+example (e : EUGameIsomorphism G H) (who : ι) (s : G.Strategy who) :
+    G.IsPureRationalizable who s ↔
+      H.IsPureRationalizable who (e.stratEquiv who s) :=
+  e.isPureRationalizable_iff who s
+
 example (e : EUGameIsomorphism G H) (σ τ : Profile G) :
     G.ParetoDominates σ τ ↔
       H.ParetoDominates (e.profileEquiv σ) (e.profileEquiv τ) :=

@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Equilibrium.ApproximateNashGameMorphism
+import GameTheory.Concepts.Dominance.GameMorphism
 import GameTheory.Concepts.Potential.GameMorphism
 import GameTheory.Concepts.Welfare.GameMorphism
 import GameTheory.Concepts.ZeroSum.GameMorphism

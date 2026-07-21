@@ -53,6 +53,7 @@ import GameTheory.Concepts.Dominance.Undominated
 import GameTheory.Concepts.Dominance.DominanceSolvable
 import GameTheory.Concepts.Dominance.DominanceNash
 import GameTheory.Concepts.Dominance.DominanceSolvability
+import GameTheory.Concepts.Dominance.GameMorphism
 
 -- Nash equilibrium
 import GameTheory.Concepts.Equilibrium.StrictNashProperties

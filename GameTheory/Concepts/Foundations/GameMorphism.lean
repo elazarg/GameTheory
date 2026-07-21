@@ -67,6 +67,10 @@ noncomputable def profileEquiv (e : EUGameIsomorphism G H) : Profile G ≃ Profi
 @[simp] theorem profileEquiv_apply (e : EUGameIsomorphism G H) (σ : Profile G) (i : ι) :
     e.profileEquiv σ i = e.stratEquiv i (σ i) := rfl
 
+@[simp] theorem profileEquiv_symm_apply (e : EUGameIsomorphism G H)
+    (τ : Profile H) (i : ι) :
+    e.profileEquiv.symm τ i = (e.stratEquiv i).symm (τ i) := rfl
+
 /-- Expected utility is preserved at the bundled profile equivalence. -/
 @[simp] theorem eu_profileEquiv (e : EUGameIsomorphism G H)
     (σ : Profile G) (who : ι) :
@@ -210,12 +214,11 @@ theorem nash_iff [DecidableEq ι] (e : EUGameIsomorphism G H) (σ : Profile G) :
   rw [hcur, ← e.eu_update_preserved σ who ((e.stratEquiv who).symm s'')]
   simp
 
-open Classical in
 /-- EU corollary: dominance is preserved in both directions. `IsDominant who
 s` universally quantifies over both the ambient profile and the alternative,
 so this reindexes profiles along `e.profileEquiv` and, at each profile,
 strategies along `e.stratEquiv who`. -/
-theorem dominant_iff (e : EUGameIsomorphism G H)
+theorem dominant_iff [DecidableEq ι] (e : EUGameIsomorphism G H)
     (who : ι) (s : G.Strategy who) :
     G.IsDominant who s ↔ H.IsDominant who (e.stratEquiv who s) := by
   unfold KernelGame.IsDominant
@@ -224,12 +227,11 @@ theorem dominant_iff (e : EUGameIsomorphism G H)
     ← e.eu_update_preserved (e.profileEquiv.symm τ) who ((e.stratEquiv who).symm s'')]
   simp
 
-open Classical in
 /-- EU corollary: weak dominance is preserved in both directions. Unlike
 `IsDominant`, the alternative strategy `t` is fixed rather than universally
 quantified, so only the ambient profile needs reindexing, along
 `e.profileEquiv`. -/
-theorem weaklyDominates_iff (e : EUGameIsomorphism G H)
+theorem weaklyDominates_iff [DecidableEq ι] (e : EUGameIsomorphism G H)
     (who : ι) (s t : G.Strategy who) :
     G.WeaklyDominates who s t ↔
       H.WeaklyDominates who (e.stratEquiv who s) (e.stratEquiv who t) := by
@@ -239,10 +241,9 @@ theorem weaklyDominates_iff (e : EUGameIsomorphism G H)
     ← e.eu_update_preserved (e.profileEquiv.symm τ) who t]
   simp
 
-open Classical in
 /-- EU corollary: strict dominance is preserved in both directions, the
 strict analogue of `weaklyDominates_iff`. -/
-theorem strictlyDominates_iff (e : EUGameIsomorphism G H)
+theorem strictlyDominates_iff [DecidableEq ι] (e : EUGameIsomorphism G H)
     (who : ι) (s t : G.Strategy who) :
     G.StrictlyDominates who s t ↔
       H.StrictlyDominates who (e.stratEquiv who s) (e.stratEquiv who t) := by
@@ -269,10 +270,9 @@ theorem isStrictNash_iff [DecidableEq ι] (e : EUGameIsomorphism G H) (σ : Prof
   rw [hcur, ← e.eu_update_preserved σ who ((e.stratEquiv who).symm s'')]
   simp
 
-open Classical in
 /-- EU corollary: strict dominance (as a strategy property) is preserved in
 both directions, the strict analogue of `dominant_iff`. -/
-theorem isStrictDominant_iff (e : EUGameIsomorphism G H)
+theorem isStrictDominant_iff [DecidableEq ι] (e : EUGameIsomorphism G H)
     (who : ι) (s : G.Strategy who) :
     G.IsStrictDominant who s ↔ H.IsStrictDominant who (e.stratEquiv who s) := by
   unfold KernelGame.IsStrictDominant
