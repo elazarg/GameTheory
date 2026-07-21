@@ -173,7 +173,7 @@ stage Nash inequality over the deviator's random public-history distribution;
 finite outcomes provide the boundedness needed for countable `expect`
 monotonicity. -/
 theorem stationaryMonitoredProfile_isUniformEquilibrium_of_isNash
-    (G : KernelGame ι) (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
+    {G : KernelGame ι} (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
     {σ : Profile G} (hN : G.IsNash σ) :
     M.IsUniformEquilibrium (M.stationaryMonitoredProfile σ) := by
   refine ⟨⟨G.eu σ, M.hasLongRunAveragePayoff_stationaryMonitoredProfile σ⟩,

@@ -113,13 +113,13 @@ theorem stageEU_le_const_of_forall
     (M : G.PublicMonitoring) (σ : M.MonitoredProfile) (t : ℕ) (who : ι)
     {B C : ℝ}
     (hle : ∀ h, G.eu (fun i => σ i t h) who ≤ B)
-    (hσ : ∀ h, |G.eu (fun i => σ i t h) who| ≤ C)
+    (habs : ∀ h, |G.eu (fun i => σ i t h) who| ≤ C)
     (hB : |B| ≤ C) :
     M.stageEU σ t who ≤ B := by
   rw [stageEU, ← Math.Probability.expect_const (M.signalHistoryDist σ t) B]
   exact Math.ProbabilityMassFunction.expect_mono_of_pointwise_bounded
     (M.signalHistoryDist σ t)
-    (fun h => G.eu (fun i => σ i t h) who) (fun _ => B) hle hσ (fun _ => hB)
+    (fun h => G.eu (fun i => σ i t h) who) (fun _ => B) hle habs (fun _ => hB)
 
 /-- Average expected payoff over the first `T` periods. -/
 def finiteAveragePayoff (M : G.PublicMonitoring) (T : ℕ)
@@ -197,7 +197,7 @@ def IsUniformEquilibrium (M : G.PublicMonitoring) [DecidableEq ι]
 
 /-- Finite-horizon approximate Nash is monotone in the error allowance. -/
 theorem IsεFiniteRepeatedNash.mono
-    (M : G.PublicMonitoring) [DecidableEq ι]
+    {M : G.PublicMonitoring} [DecidableEq ι]
     {T : ℕ} {ε ε' : ℝ} {σ : M.MonitoredProfile}
     (h : M.IsεFiniteRepeatedNash T ε σ) (hε : ε ≤ ε') :
     M.IsεFiniteRepeatedNash T ε' σ := by
@@ -207,12 +207,12 @@ theorem IsεFiniteRepeatedNash.mono
 
 /-- Uniform approximate equilibrium is monotone in the error allowance. -/
 theorem IsUniformεEquilibrium.mono
-    (M : G.PublicMonitoring) [DecidableEq ι]
+    {M : G.PublicMonitoring} [DecidableEq ι]
     {ε ε' : ℝ} {σ : M.MonitoredProfile}
     (h : M.IsUniformεEquilibrium ε σ) (hε : ε ≤ ε') :
     M.IsUniformεEquilibrium ε' σ := by
   obtain ⟨T₀, hT₀⟩ := h
-  exact ⟨T₀, fun T hT => (hT₀ T hT).mono M hε⟩
+  exact ⟨T₀, fun T hT => (hT₀ T hT).mono hε⟩
 
 end PublicMonitoring
 

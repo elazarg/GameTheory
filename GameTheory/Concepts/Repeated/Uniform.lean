@@ -63,6 +63,25 @@ def IsUniformEquilibrium (G : KernelGame ι) [DecidableEq ι]
   (∃ v : Payoff ι, G.HasLongRunAveragePayoff σ v) ∧
     ∀ ε : ℝ, 0 < ε → G.IsUniformεEquilibrium ε σ
 
+/-- Finite-horizon approximate Nash is monotone in the error allowance. -/
+theorem IsεFiniteRepeatedNash.mono
+    {G : KernelGame ι} [DecidableEq ι]
+    {T : ℕ} {ε ε' : ℝ} {σ : G.RepeatedProfile}
+    (h : G.IsεFiniteRepeatedNash T ε σ) (hε : ε ≤ ε') :
+    G.IsεFiniteRepeatedNash T ε' σ := by
+  intro who dev
+  have := h who dev
+  linarith
+
+/-- Uniform approximate equilibrium is monotone in the error allowance. -/
+theorem IsUniformεEquilibrium.mono
+    {G : KernelGame ι} [DecidableEq ι]
+    {ε ε' : ℝ} {σ : G.RepeatedProfile}
+    (h : G.IsUniformεEquilibrium ε σ) (hε : ε ≤ ε') :
+    G.IsUniformεEquilibrium ε' σ := by
+  obtain ⟨T₀, hT₀⟩ := h
+  exact ⟨T₀, fun T hT => (hT₀ T hT).mono hε⟩
+
 /-- Stationary repetition of a stage-game Nash equilibrium is a uniform
 equilibrium: its long-run average payoff is the stage payoff, and it is an
 exact Nash equilibrium of every nonempty finite truncation. -/

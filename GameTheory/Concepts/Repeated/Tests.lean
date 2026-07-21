@@ -76,7 +76,7 @@ example :
       change Finite (Bool → Bool)
       infer_instance
     exact PublicMonitoring.stationaryMonitoredProfile_isUniformEquilibrium_of_isNash
-      coordinationGame coordinationGame.outcomeMonitoring allTrueProfile_isNash
+      (M := coordinationGame.outcomeMonitoring) allTrueProfile_isNash
 
 /-- Dirac mixed actions expose the corresponding pure action profile under
 realized-action monitoring. -/
