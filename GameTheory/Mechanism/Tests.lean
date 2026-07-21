@@ -40,7 +40,7 @@ example {ι : Type u} {A : Type v} [Nonempty ι] [Finite ι] {f : SWF ι A}
     (hA : HasAtLeastThree A) : ∃ d, f.IsDictatorOnRankings d :=
   arrow_impossibility hswo hp hiia hA
 
-example {ι : Type u} [Nonempty ι] [Finite ι] [DecidableEq ι] {g : SCF ι ℕ}
+example {ι : Type u} [Nonempty ι] [Finite ι] {g : SCF ι ℕ}
     (hsp : g.IsStrategyProof) (honto : g.IsOnto) : ∃ d, g.IsDictator d :=
   SCF.gibbard_satterthwaite hsp honto (by
     refine ⟨inferInstance, fun a b => ⟨max a b + 1, ?_, ?_⟩⟩ <;> omega)

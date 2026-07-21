@@ -115,6 +115,28 @@ theorem raiseTop_congr {p p' : A → Prop} (h : ∀ z, p z ↔ p' z) (r : PrefRe
 /-- A **social choice function** picks a single alternative for each preference profile. -/
 abbrev SCF (ι : Type u) (A : Type v) := PrefProfile ι A → A
 
+/-- Replace voter `i`'s reported preference by `S`. Decidable equality is an implementation
+detail and is deliberately hidden from the social-choice API. -/
+noncomputable def replacePreference (R : PrefProfile ι A) (i : ι) (S : PrefRel A) :
+    PrefProfile ι A := by
+  classical
+  exact Function.update R i S
+
+@[simp] theorem replacePreference_self (R : PrefProfile ι A) (i : ι) (S : PrefRel A) :
+    replacePreference R i S i = S := by
+  classical
+  simp [replacePreference]
+
+theorem replacePreference_of_ne (R : PrefProfile ι A) {i j : ι} (hji : j ≠ i)
+    (S : PrefRel A) : replacePreference R i S j = R j := by
+  classical
+  simp [replacePreference, hji]
+
+@[simp] theorem replacePreference_restore (R : PrefProfile ι A) (i : ι) (S : PrefRel A) :
+    replacePreference (replacePreference R i S) i (R i) = R := by
+  classical
+  simp [replacePreference]
+
 section Mix
 variable [DecidableEq ι]
 
@@ -136,11 +158,11 @@ theorem mixProfile_univ [Fintype ι] (R R' : PrefProfile ι A) :
   funext j; simp [mixProfile]
 
 theorem mixProfile_insert {R R' : PrefProfile ι A} {T : Finset ι} {i : ι} (hiT : i ∉ T) :
-    mixProfile R R' (insert i T) = Function.update (mixProfile R R' T) i (R' i) := by
+    mixProfile R R' (insert i T) = replacePreference (mixProfile R R' T) i (R' i) := by
   funext j
   by_cases hj : j = i
-  · subst hj; rw [mixProfile_mem (Finset.mem_insert_self j T), Function.update_self]
-  · rw [Function.update_of_ne hj]
+  · subst hj; rw [mixProfile_mem (Finset.mem_insert_self j T), replacePreference_self]
+  · rw [replacePreference_of_ne _ hj]
     by_cases hjT : j ∈ T
     · rw [mixProfile_mem (Finset.mem_insert_of_mem hjT), mixProfile_mem hjT]
     · rw [mixProfile_not_mem fun h => (Finset.mem_insert.mp h).elim hj hjT,
@@ -150,14 +172,12 @@ end Mix
 
 namespace SCF
 
-variable [DecidableEq ι]
-
 /-- `g` is **strategy-proof**: under their true ranking, no voter strictly prefers the outcome
 obtained by misreporting some ranking `S` to the truthful outcome. -/
 def IsStrategyProof (g : SCF ι A) : Prop :=
   ∀ R : PrefProfile ι A, (∀ i, IsRanking (R i)) →
     ∀ (i : ι) (S : PrefRel A), IsRanking S →
-      ¬ R i (g (Function.update R i S)) (g R)
+      ¬ R i (g (replacePreference R i S)) (g R)
 
 /-- `g` has **full range** on rankings: every alternative is selected at some ranking profile. -/
 def IsOnto (g : SCF ι A) : Prop :=
@@ -169,7 +189,6 @@ not have a top alternative a priori. -/
 def IsDictator (g : SCF ι A) (d : ι) : Prop :=
   ∀ R : PrefProfile ι A, (∀ i, IsRanking (R i)) → IsTop (R d) (g R)
 
-omit [DecidableEq ι] in
 /-- A dictator's selected alternative equals any top alternative in the dictator's ranking. -/
 theorem IsDictator.eq_of_isTop {g : SCF ι A} {d : ι} (hd : g.IsDictator d)
     {R : PrefProfile ι A} (hR : ∀ i, IsRanking (R i)) {a : A} (ha : IsTop (R d) a) :
@@ -186,22 +205,22 @@ ranking so that `a` does not fall below anything it was above, then `g` still ch
 theorem monotone_step {g : SCF ι A} (hsp : g.IsStrategyProof) {R : PrefProfile ι A}
     (hR : ∀ j, IsRanking (R j)) {i : ι} {S : PrefRel A} (hS : IsRanking S)
     (hmono : ∀ b, R i (g R) b → S (g R) b) :
-    g (Function.update R i S) = g R := by
-  have hR'rank : ∀ j, IsRanking (Function.update R i S j) := by
+    g (replacePreference R i S) = g R := by
+  have hR'rank : ∀ j, IsRanking (replacePreference R i S j) := by
     intro j
     by_cases hj : j = i
-    · subst hj; rw [Function.update_self]; exact hS
-    · rw [Function.update_of_ne hj]; exact hR j
-  have hupd : Function.update (Function.update R i S) i (R i) = R := by
-    rw [Function.update_idem, Function.update_eq_self]
-  have hstar : ¬ S (g R) (g (Function.update R i S)) := by
-    have h := hsp (Function.update R i S) hR'rank i (R i) (hR i)
-    rw [Function.update_self, hupd] at h
+    · subst hj; rw [replacePreference_self]; exact hS
+    · rw [replacePreference_of_ne R hj S]; exact hR j
+  have hstar : ¬ S (g R) (g (replacePreference R i S)) := by
+    have h := hsp (replacePreference R i S) hR'rank i (R i) (hR i)
+    rw [replacePreference_self, replacePreference_restore] at h
     exact h
-  have hstarstar : ¬ R i (g (Function.update R i S)) (g R) := hsp R hR i S hS
+  have hstarstar : ¬ R i (g (replacePreference R i S)) (g R) := hsp R hR i S hS
   by_contra hne
-  have hS_ba : S (g (Function.update R i S)) (g R) := (hS.not_iff (Ne.symm hne)).mp hstar
-  have hR_ab : R i (g R) (g (Function.update R i S)) := ((hR i).not_iff hne).mp hstarstar
+  have hS_ba : S (g (replacePreference R i S)) (g R) :=
+    (hS.not_iff (Ne.symm hne)).mp hstar
+  have hR_ab : R i (g R) (g (replacePreference R i S)) :=
+    ((hR i).not_iff hne).mp hstarstar
   exact hS.asymm (hmono _ hR_ab) hS_ba
 
 /-- **Monotonicity.** If `g R = a` and every voter raises `a` weakly (keeps it above everything
@@ -210,6 +229,7 @@ theorem monotone {g : SCF ι A} [Finite ι] (hsp : g.IsStrategyProof) {R R' : Pr
     (hR : ∀ j, IsRanking (R j)) (hR' : ∀ j, IsRanking (R' j))
     (hmono : ∀ i b, R i (g R) b → R' i (g R) b) :
     g R' = g R := by
+  classical
   have : Fintype ι := Fintype.ofFinite ι
   have hmix_rank : ∀ (T : Finset ι) j, IsRanking (mixProfile R R' T j) := by
     intro T j
@@ -306,7 +326,6 @@ theorem induced_choice {g : SCF ι A} [Finite ι] (hsp : g.IsStrategyProof) (hon
     fun i => raiseTop_above (Or.inl rfl) (fun h => h.elim hna hnb)
   exact pareto hsp honto hLrank (Ne.symm hna) hdom rfl
 
-omit [DecidableEq ι] in
 /-- The pairwise lift of `{a, b}` and of `{b, a}` give the same outcome. -/
 theorem induced_lift_swap (g : SCF ι A) (R : PrefProfile ι A) (a b : A) :
     g (fun i => raiseTop (fun z => z = a ∨ z = b) (R i)) =
