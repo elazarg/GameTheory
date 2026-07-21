@@ -196,6 +196,30 @@ theorem abs_discountedAveragePayoff_le_of_forall_eu_abs_le
             C * ((1 - δ) * (1 - δ)⁻¹) := by ring
         _ = C := by rw [mul_inv_cancel₀ hne, mul_one]
 
+/-- If `f` is pointwise at most `g + A`, the same additive allowance bounds
+their expectations. Boundedness is used only to justify the countable sums. -/
+theorem expect_le_expect_add_const_of_pointwise_bounded
+    {Y : Type} (p : PMF Y) (f g : Y → ℝ) (A : ℝ) {C : ℝ}
+    (hf : ∀ y, |f y| ≤ C) (hg : ∀ y, |g y| ≤ C)
+    (hle : ∀ y, f y ≤ g y + A) :
+    Math.Probability.expect p f ≤ Math.Probability.expect p g + A := by
+  have hsf := Math.Probability.expect_summable_of_bounded p f hf
+  have hsg := Math.Probability.expect_summable_of_bounded p g hg
+  have hsc := Math.Probability.expect_summable_of_bounded p (fun _ => A)
+    (fun _ => le_rfl)
+  have hsgc : Summable fun y => (p y).toReal * (g y + A) := by
+    simpa only [mul_add] using hsg.add hsc
+  calc
+    Math.Probability.expect p f ≤
+        Math.Probability.expect p (fun y => g y + A) :=
+      Math.ProbabilityMassFunction.expect_mono_of_pointwise_summable
+        p f (fun y => g y + A) hle hsf hsgc
+    _ = Math.Probability.expect p g +
+        Math.Probability.expect p (fun _ => A) :=
+      Math.Probability.expect_add_of_summable p g (fun _ => A) hsg hsc
+    _ = Math.Probability.expect p g + A := by
+      rw [Math.Probability.expect_const]
+
 /-- Bellman equation for normalized discounted payoff: current expected
 utility plus the expected discounted value after the next public signal. -/
 theorem discountedAveragePayoff_eq_head_add_expected
@@ -329,6 +353,97 @@ def HasNoProfitableOneShotDeviationAfterEveryHistory
     ∀ t (h : M.SignalHistory (t + 1)),
       M.HasNoProfitableOneShotDeviation δ (M.after σ h)
 
+/-- Every one-shot deviation gains at most `ε` in normalized discounted
+payoff. -/
+def HasNoProfitableOneShotDeviationWithin
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (δ ε : ℝ) (σ : M.MonitoredProfile) : Prop :=
+  ∀ who (a : G.Strategy who),
+    M.discountedAveragePayoff δ σ who + ε ≥
+      M.discountedAveragePayoff δ
+        (Function.update σ who (M.oneShotDeviation σ who a)) who
+
+/-- Approximate one-shot sequential rationality at the root and after every
+nonempty public history. -/
+def HasNoProfitableOneShotDeviationWithinAfterEveryHistory
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (δ ε : ℝ) (σ : M.MonitoredProfile) : Prop :=
+  M.HasNoProfitableOneShotDeviationWithin δ ε σ ∧
+    ∀ t (h : M.SignalHistory (t + 1)),
+      M.HasNoProfitableOneShotDeviationWithin δ ε (M.after σ h)
+
+@[simp] theorem hasNoProfitableOneShotDeviationWithin_zero_iff
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (δ : ℝ) (σ : M.MonitoredProfile) :
+    M.HasNoProfitableOneShotDeviationWithin δ 0 σ ↔
+      M.HasNoProfitableOneShotDeviation δ σ := by
+  simp [HasNoProfitableOneShotDeviationWithin,
+    HasNoProfitableOneShotDeviation]
+
+@[simp] theorem hasNoProfitableOneShotDeviationWithinAfterEveryHistory_zero_iff
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (δ : ℝ) (σ : M.MonitoredProfile) :
+    M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ 0 σ ↔
+      M.HasNoProfitableOneShotDeviationAfterEveryHistory δ σ := by
+  simp [HasNoProfitableOneShotDeviationWithinAfterEveryHistory,
+    HasNoProfitableOneShotDeviationAfterEveryHistory]
+
+/-- Allowance accumulated by replacing at most `N` deviation periods when
+each one-shot replacement costs at most `ε`. -/
+def accumulatedOneShotDeviationAllowance (δ ε : ℝ) : ℕ → ℝ
+  | 0 => 0
+  | N + 1 => ε + δ * accumulatedOneShotDeviationAllowance δ ε N
+
+@[simp] theorem accumulatedOneShotDeviationAllowance_zero
+    (δ ε : ℝ) : accumulatedOneShotDeviationAllowance δ ε 0 = 0 :=
+  rfl
+
+@[simp] theorem accumulatedOneShotDeviationAllowance_succ
+    (δ ε : ℝ) (N : ℕ) :
+    accumulatedOneShotDeviationAllowance δ ε (N + 1) =
+      ε + δ * accumulatedOneShotDeviationAllowance δ ε N :=
+  rfl
+
+/-- Closed form as a finite geometric sum. -/
+theorem accumulatedOneShotDeviationAllowance_eq_geom_sum
+    (δ ε : ℝ) (N : ℕ) :
+    accumulatedOneShotDeviationAllowance δ ε N =
+      ε * ∑ k ∈ Finset.range N, δ ^ k := by
+  induction N with
+  | zero => simp
+  | succ N ih =>
+      rw [accumulatedOneShotDeviationAllowance_succ, ih, geom_sum_succ]
+      ring
+
+/-- The accumulated local allowance is nonnegative for nonnegative local
+allowance and discount factor. -/
+theorem accumulatedOneShotDeviationAllowance_nonneg
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hε0 : 0 ≤ ε) :
+    ∀ N, 0 ≤ accumulatedOneShotDeviationAllowance δ ε N
+  | 0 => le_rfl
+  | N + 1 => add_nonneg hε0
+      (mul_nonneg hδ0
+        (accumulatedOneShotDeviationAllowance_nonneg hδ0 hε0 N))
+
+/-- A geometric sequence of local allowances is uniformly bounded by
+`ε / (1 - δ)`. -/
+theorem accumulatedOneShotDeviationAllowance_le
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hε0 : 0 ≤ ε) (N : ℕ) :
+    accumulatedOneShotDeviationAllowance δ ε N ≤ ε / (1 - δ) := by
+  have hden : 0 < 1 - δ := sub_pos.mpr hδ1
+  have hne : 1 - δ ≠ 0 := ne_of_gt hden
+  induction N with
+  | zero => positivity
+  | succ N ih =>
+      rw [accumulatedOneShotDeviationAllowance_succ]
+      calc
+        ε + δ * accumulatedOneShotDeviationAllowance δ ε N ≤
+            ε + δ * (ε / (1 - δ)) := by
+          exact add_le_add_right (mul_le_mul_of_nonneg_left ih hδ0) ε
+        _ = ε / (1 - δ) := by
+          field_simp [hne]
+          ring
+
 /-- Sequential one-shot optimality is inherited by every one-signal
 continuation. -/
 theorem HasNoProfitableOneShotDeviationAfterEveryHistory.afterSignal
@@ -365,6 +480,45 @@ theorem HasNoProfitableOneShotDeviationAfterEveryHistory.after
     (h : M.HasNoProfitableOneShotDeviationAfterEveryHistory δ σ)
     {t : ℕ} (hist : M.SignalHistory t) :
     M.HasNoProfitableOneShotDeviationAfterEveryHistory δ (M.after σ hist) := by
+  exact h.afterSignals (List.ofFn hist)
+
+/-- Approximate sequential one-shot optimality is inherited by every
+one-signal continuation. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.afterSignal
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    (y : M.Signal) :
+    M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε
+      (M.afterSignal σ y) := by
+  constructor
+  · simpa using h.2 0 (Fin.cons y (fun k : Fin 0 => k.elim0))
+  · intro t hist
+    rw [M.after_afterSignal σ y hist]
+    exact h.2 (t + 1) (Fin.cons y hist)
+
+/-- Approximate sequential one-shot optimality is inherited after any finite
+list of public signals. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.afterSignals
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    (ys : List M.Signal) :
+    M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε
+      (M.afterSignals σ ys) := by
+  induction ys generalizing σ with
+  | nil => exact h
+  | cons y ys ih => exact ih (h.afterSignal y)
+
+/-- Approximate sequential one-shot optimality is inherited after every
+public history, including zero-probability histories. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.after
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    {t : ℕ} (hist : M.SignalHistory t) :
+    M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε
+      (M.after σ hist) := by
   exact h.afterSignals (List.ofFn hist)
 
 /-- If every one-shot deviation is unprofitable after every public history,
@@ -472,6 +626,125 @@ theorem truncatedDeviation_discountedAveragePayoff_le
   exact M.truncatedDeviation_discountedAveragePayoff_le_of_bounded
     hδ0 hδ1 hlocal who hC dev N
 
+/-- Approximate one-shot optimality gives the geometric accumulated allowance
+for every truncated deviation. -/
+theorem truncatedDeviation_discountedAveragePayoff_le_add_accumulated_of_bounded
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    {σ : M.MonitoredProfile}
+    (hlocal :
+      M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    (who : ι) {C : ℝ} (hC : ∀ ρ : Profile G, |G.eu ρ who| ≤ C)
+    (dev : M.MonitoredStrategy who) (N : ℕ) :
+    M.discountedAveragePayoff δ
+        (Function.update σ who (M.truncatedDeviation σ who dev N)) who ≤
+      M.discountedAveragePayoff δ σ who +
+        accumulatedOneShotDeviationAllowance δ ε N := by
+  have hC0 : 0 ≤ C :=
+    le_trans (abs_nonneg _) (hC (fun i => σ i 0 (fun k => k.elim0)))
+  induction N generalizing σ dev with
+  | zero => simp
+  | succ N ih =>
+      let a : G.Strategy who := dev 0 (fun k => k.elim0)
+      let τ : M.MonitoredProfile :=
+        Function.update σ who
+          (M.truncatedDeviation σ who dev (N + 1))
+      let ω : M.MonitoredProfile :=
+        Function.update σ who (M.oneShotDeviation σ who a)
+      let A : ℝ := accumulatedOneShotDeviationAllowance δ ε N
+      have hroot :
+          (fun i => τ i 0 (fun k => k.elim0)) =
+            (fun i => ω i 0 (fun k => k.elim0)) := by
+        funext i
+        by_cases hi : i = who
+        · subst hi
+          simp [τ, ω, a]
+        · simp [τ, ω, hi]
+      have hτcont (y : M.Signal) :
+          M.afterSignal τ y =
+            Function.update (M.afterSignal σ y) who
+              (M.truncatedDeviation (M.afterSignal σ y) who
+                (M.strategyAfterSignal dev y) N) := by
+        dsimp only [τ]
+        rw [M.afterSignal_update,
+          M.strategyAfterSignal_truncatedDeviation_succ]
+      have hωcont (y : M.Signal) :
+          M.afterSignal ω y = M.afterSignal σ y := by
+        simp [ω]
+      have hcontinuation (y : M.Signal) :
+          M.discountedAveragePayoff δ (M.afterSignal τ y) who ≤
+            M.discountedAveragePayoff δ (M.afterSignal ω y) who + A := by
+        rw [hτcont y, hωcont y]
+        exact ih (hlocal.afterSignal y) (M.strategyAfterSignal dev y)
+      have hexpect :
+          Math.Probability.expect
+              (M.signalKernel (fun i => τ i 0 (fun k => k.elim0)))
+              (fun y => M.discountedAveragePayoff δ
+                (M.afterSignal τ y) who) ≤
+            Math.Probability.expect
+              (M.signalKernel (fun i => τ i 0 (fun k => k.elim0)))
+              (fun y => M.discountedAveragePayoff δ
+                (M.afterSignal ω y) who) + A := by
+        exact expect_le_expect_add_const_of_pointwise_bounded _ _ _ A
+          (fun y => M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le
+            hδ0 hδ1 hC0 (M.afterSignal τ y) who hC)
+          (fun y => M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le
+            hδ0 hδ1 hC0 (M.afterSignal ω y) who hC)
+          hcontinuation
+      have hωbell := M.discountedAveragePayoff_eq_head_add_expected
+        hδ0 hδ1 hC0 ω who hC
+      have hfinite :
+          M.discountedAveragePayoff δ τ who ≤
+            M.discountedAveragePayoff δ ω who + δ * A := by
+        calc
+          M.discountedAveragePayoff δ τ who =
+              (1 - δ) * G.eu
+                  (fun i => τ i 0 (fun k => k.elim0)) who +
+                δ * Math.Probability.expect
+                  (M.signalKernel (fun i => τ i 0 (fun k => k.elim0)))
+                  (fun y => M.discountedAveragePayoff δ
+                    (M.afterSignal τ y) who) :=
+            M.discountedAveragePayoff_eq_head_add_expected
+              hδ0 hδ1 hC0 τ who hC
+          _ ≤ (1 - δ) * G.eu
+                  (fun i => τ i 0 (fun k => k.elim0)) who +
+                δ * (Math.Probability.expect
+                  (M.signalKernel (fun i => τ i 0 (fun k => k.elim0)))
+                  (fun y => M.discountedAveragePayoff δ
+                    (M.afterSignal ω y) who) + A) := by
+            exact add_le_add_right
+              (mul_le_mul_of_nonneg_left hexpect hδ0) _
+          _ = M.discountedAveragePayoff δ ω who + δ * A := by
+            rw [hroot, hωbell]
+            ring
+      change M.discountedAveragePayoff δ τ who ≤ _
+      calc
+        M.discountedAveragePayoff δ τ who ≤
+            M.discountedAveragePayoff δ ω who + δ * A := hfinite
+        _ ≤ (M.discountedAveragePayoff δ σ who + ε) + δ * A :=
+          add_le_add_left (hlocal.1 who a) (δ * A)
+        _ = M.discountedAveragePayoff δ σ who +
+            accumulatedOneShotDeviationAllowance δ ε (N + 1) := by
+          simp only [accumulatedOneShotDeviationAllowance_succ, A]
+          ring
+
+/-- Finite-outcome convenience form of the accumulated approximate-deviation
+bound. -/
+theorem truncatedDeviation_discountedAveragePayoff_le_add_accumulated
+    (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
+    {σ : M.MonitoredProfile}
+    (hlocal :
+      M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    (who : ι) (dev : M.MonitoredStrategy who) (N : ℕ) :
+    M.discountedAveragePayoff δ
+        (Function.update σ who (M.truncatedDeviation σ who dev N)) who ≤
+      M.discountedAveragePayoff δ σ who +
+        accumulatedOneShotDeviationAllowance δ ε N := by
+  obtain ⟨C, hC⟩ := G.exists_eu_abs_bound_of_finite_outcome who
+  exact M.truncatedDeviation_discountedAveragePayoff_le_add_accumulated_of_bounded
+    hδ0 hδ1 hlocal who hC dev N
+
 /-- Discounted payoffs of truncated deviations converge to the payoff of the
 full deviation.  This is continuity at infinity for bounded discounted
 repeated games. -/
@@ -541,6 +814,104 @@ theorem tendsto_discountedAveragePayoff_update_truncatedDeviation
   exact M.tendsto_discountedAveragePayoff_update_truncatedDeviation_of_bounded
     hδ0 hδ1 σ who dev hC
 
+/-- Approximate one-shot optimality rules out arbitrary deviations with the
+geometrically accumulated allowance `ε / (1 - δ)`. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.isεNash_div_one_sub_of_bounded
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hε0 : 0 ≤ ε)
+    {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    (hbd : ∀ who : ι, ∃ C : ℝ,
+      ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    M.IsεDiscountedPublicNash δ (ε / (1 - δ)) σ := by
+  intro who dev
+  obtain ⟨C, hC⟩ := hbd who
+  have hlim :=
+    M.tendsto_discountedAveragePayoff_update_truncatedDeviation_of_bounded
+      hδ0 hδ1 σ who dev hC
+  have hleN (N : ℕ) :
+      M.discountedAveragePayoff δ
+          (Function.update σ who (M.truncatedDeviation σ who dev N)) who ≤
+        M.discountedAveragePayoff δ σ who + ε / (1 - δ) := by
+    calc
+      M.discountedAveragePayoff δ
+          (Function.update σ who (M.truncatedDeviation σ who dev N)) who ≤
+          M.discountedAveragePayoff δ σ who +
+            accumulatedOneShotDeviationAllowance δ ε N :=
+        M.truncatedDeviation_discountedAveragePayoff_le_add_accumulated_of_bounded
+          hδ0 hδ1 h who hC dev N
+      _ ≤ M.discountedAveragePayoff δ σ who + ε / (1 - δ) :=
+        add_le_add_right
+          (accumulatedOneShotDeviationAllowance_le hδ0 hδ1 hε0 N) _
+  exact le_of_tendsto' hlim hleN
+
+/-- Finite-outcome convenience form of the approximate public-Nash result. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.isεNash_div_one_sub
+    {M : G.PublicMonitoring} [DecidableEq ι] [Finite G.Outcome]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hε0 : 0 ≤ ε)
+    {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ) :
+    M.IsεDiscountedPublicNash δ (ε / (1 - δ)) σ := by
+  apply h.isεNash_div_one_sub_of_bounded hδ0 hδ1 hε0
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
+/-- Approximate one-shot optimality after every public history implies
+approximate PPE with allowance `ε / (1 - δ)`. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.isεPPE_div_one_sub_of_bounded
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hε0 : 0 ≤ ε)
+    {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    (hbd : ∀ who : ι, ∃ C : ℝ,
+      ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    M.IsεPerfectPublicEquilibrium δ (ε / (1 - δ)) σ := by
+  constructor
+  · exact h.isεNash_div_one_sub_of_bounded
+      hδ0 hδ1 hε0 hbd
+  · intro t hist
+    exact (h.after hist).isεNash_div_one_sub_of_bounded
+      hδ0 hδ1 hε0 hbd
+
+/-- Finite-outcome convenience form of the approximate PPE result. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.isεPPE_div_one_sub
+    {M : G.PublicMonitoring} [DecidableEq ι] [Finite G.Outcome]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hε0 : 0 ≤ ε)
+    {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ) :
+    M.IsεPerfectPublicEquilibrium δ (ε / (1 - δ)) σ := by
+  apply h.isεPPE_div_one_sub_of_bounded
+    hδ0 hδ1 hε0
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
+/-- If the local one-shot allowance is scaled by `1 - δ`, the resulting PPE
+has the requested global allowance. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.isεPPE_of_scaled_of_bounded
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hε0 : 0 ≤ ε)
+    {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory
+      δ ((1 - δ) * ε) σ)
+    (hbd : ∀ who : ι, ∃ C : ℝ,
+      ∀ ρ : Profile G, |G.eu ρ who| ≤ C) :
+    M.IsεPerfectPublicEquilibrium δ ε σ := by
+  have hscaled0 : 0 ≤ (1 - δ) * ε :=
+    mul_nonneg (sub_nonneg.mpr hδ1.le) hε0
+  have hppe := h.isεPPE_div_one_sub_of_bounded
+    hδ0 hδ1 hscaled0 hbd
+  have hne : 1 - δ ≠ 0 := by linarith
+  simpa [mul_div_cancel_left₀ ε hne] using hppe
+
+/-- Finite-outcome convenience form of the scaled local-to-global theorem. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.isεPPE_of_scaled
+    {M : G.PublicMonitoring} [DecidableEq ι] [Finite G.Outcome]
+    {δ ε : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hε0 : 0 ≤ ε)
+    {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory
+      δ ((1 - δ) * ε) σ) :
+    M.IsεPerfectPublicEquilibrium δ ε σ := by
+  apply h.isεPPE_of_scaled_of_bounded hδ0 hδ1 hε0
+  exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
+
 /-- The converse direction of the one-shot-deviation principle at a fixed
 continuation: sequential one-shot optimality rules out arbitrary public
 deviations. -/
@@ -603,6 +974,25 @@ theorem HasNoProfitableOneShotDeviationAfterEveryHistory.isPerfectPublicEquilibr
   apply h.isPerfectPublicEquilibrium_of_bounded hδ0 hδ1
   exact fun who => G.exists_eu_abs_bound_of_finite_outcome who
 
+/-- Approximate one-shot optimality is monotone in its allowance. -/
+theorem HasNoProfitableOneShotDeviationWithin.mono
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε ε' : ℝ} {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithin δ ε σ) (hε : ε ≤ ε') :
+    M.HasNoProfitableOneShotDeviationWithin δ ε' σ := by
+  intro who a
+  have := h who a
+  linarith
+
+/-- Approximate sequential one-shot optimality is monotone in its allowance. -/
+theorem HasNoProfitableOneShotDeviationWithinAfterEveryHistory.mono
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε ε' : ℝ} {σ : M.MonitoredProfile}
+    (h : M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ)
+    (hε : ε ≤ ε') :
+    M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε' σ :=
+  ⟨h.1.mono hε, fun t hist => (h.2 t hist).mono hε⟩
+
 /-- Discounted public Nash is monotone in the approximation allowance. -/
 theorem IsεDiscountedPublicNash.mono
     {M : G.PublicMonitoring} [DecidableEq ι]
@@ -620,6 +1010,26 @@ theorem IsεPerfectPublicEquilibrium.mono
     (h : M.IsεPerfectPublicEquilibrium δ ε σ) (hε : ε ≤ ε') :
     M.IsεPerfectPublicEquilibrium δ ε' σ :=
   ⟨h.1.mono hε, fun t hist => (h.2 t hist).mono hε⟩
+
+/-- Approximate discounted public Nash rules out one-shot gains larger than
+the same allowance. -/
+theorem IsεDiscountedPublicNash.hasNoProfitableOneShotDeviationWithin
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} {σ : M.MonitoredProfile}
+    (h : M.IsεDiscountedPublicNash δ ε σ) :
+    M.HasNoProfitableOneShotDeviationWithin δ ε σ := by
+  intro who a
+  exact h who (M.oneShotDeviation σ who a)
+
+/-- Approximate PPE implies approximate one-shot optimality after every public
+history with the same allowance. -/
+theorem IsεPerfectPublicEquilibrium.hasNoProfitableOneShotDeviationWithinAfterEveryHistory
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ ε : ℝ} {σ : M.MonitoredProfile}
+    (h : M.IsεPerfectPublicEquilibrium δ ε σ) :
+    M.HasNoProfitableOneShotDeviationWithinAfterEveryHistory δ ε σ :=
+  ⟨h.1.hasNoProfitableOneShotDeviationWithin,
+    fun t hist => (h.2 t hist).hasNoProfitableOneShotDeviationWithin⟩
 
 /-- PPE implies discounted public Nash at the initial history. -/
 theorem IsPerfectPublicEquilibrium.isDiscountedPublicNash

@@ -183,6 +183,34 @@ example :
     Math.Probability.expect_pure]
   split <;> norm_num
 
+/-- A suitably scaled local one-shot allowance gives the requested global PPE
+allowance. -/
+example {ε : ℝ} (hε : 0 ≤ ε)
+    (h : PublicMonitoring.HasNoProfitableOneShotDeviationWithinAfterEveryHistory
+      coordinationGame.outcomeMonitoring (1 / 2) ((1 - 1 / 2) * ε)
+      (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+        allTrueProfile)) :
+    coordinationGame.outcomeMonitoring.IsεPerfectPublicEquilibrium
+      (1 / 2) ε
+      (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+        allTrueProfile) := by
+  letI : Finite coordinationGame.Outcome := by
+    change Finite (Bool → Bool)
+    infer_instance
+  exact h.isεPPE_of_scaled (by norm_num) (by norm_num) hε
+
+/-- Approximate PPE exposes the corresponding approximate one-shot checks. -/
+example {ε : ℝ}
+    (h : PublicMonitoring.IsεPerfectPublicEquilibrium
+      coordinationGame.outcomeMonitoring (1 / 2) ε
+      (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+        allTrueProfile)) :
+    PublicMonitoring.HasNoProfitableOneShotDeviationWithinAfterEveryHistory
+      coordinationGame.outcomeMonitoring (1 / 2) ε
+      (coordinationGame.outcomeMonitoring.stationaryMonitoredProfile
+        allTrueProfile) :=
+  h.hasNoProfitableOneShotDeviationWithinAfterEveryHistory
+
 end RepeatedMonitoringTests
 
 end GameTheory
