@@ -17,6 +17,8 @@ The proof is the classical reduction to Arrow's impossibility theorem
 from a strategy-proof, onto SCF `g` we build an *induced social welfare function* — society
 prefers `a` to `b` exactly when `g` chooses `a` from the profile that lifts `a, b` to the top —
 show it is collectively rational, Paretian, and IIA, and transfer Arrow's dictator back to `g`.
+This is the reduction used in Tobias Nipkow's AFP entry *Arrow and Gibbard-Satterthwaite*,
+adapted here to the library's full-domain function types.
 
 The workhorse is **monotonicity**: strategy-proofness implies that if `g` chooses `a` and every
 voter (weakly) raises `a`, then `g` still chooses `a`.
@@ -34,10 +36,18 @@ voter (weakly) raises `a`, then `g` still chooses `a`.
 
 namespace GameTheory
 
-variable {ι A : Type}
+universe u v
+
+variable {ι : Type u} {A : Type v}
 
 /-- `a` is the top alternative of the ranking `r`: strictly above every other alternative. -/
 def IsTop (r : PrefRel A) (a : A) : Prop := ∀ b, b ≠ a → r a b
+
+/-- A ranking has at most one top alternative. -/
+theorem IsTop.unique {r : PrefRel A} {a b : A} (hr : IsRanking r)
+    (ha : IsTop r a) (hb : IsTop r b) : a = b := by
+  by_contra hab
+  exact hr.asymm (ha b (Ne.symm hab)) (hb a hab)
 
 /-! ### Raising a set of alternatives to the top
 
@@ -103,7 +113,7 @@ theorem raiseTop_congr {p p' : A → Prop} (h : ∀ z, p z ↔ p' z) (r : PrefRe
   funext x y; simp only [raiseTop, h x, h y]
 
 /-- A **social choice function** picks a single alternative for each preference profile. -/
-abbrev SCF (ι A : Type) := PrefProfile ι A → A
+abbrev SCF (ι : Type u) (A : Type v) := PrefProfile ι A → A
 
 section Mix
 variable [DecidableEq ι]
@@ -153,9 +163,18 @@ def IsStrategyProof (g : SCF ι A) : Prop :=
 def IsOnto (g : SCF ι A) : Prop :=
   ∀ a : A, ∃ R : PrefProfile ι A, (∀ i, IsRanking (R i)) ∧ g R = a
 
-/-- Voter `d` is a **dictator** for `g`: `g` always returns `d`'s top alternative. -/
+/-- Voter `d` is a **dictator** for `g`: at every ranking profile, the selected alternative
+is top-ranked by `d`. This formulation remains substantive for infinite rankings, which need
+not have a top alternative a priori. -/
 def IsDictator (g : SCF ι A) (d : ι) : Prop :=
-  ∀ R : PrefProfile ι A, (∀ i, IsRanking (R i)) → ∀ a, IsTop (R d) a → g R = a
+  ∀ R : PrefProfile ι A, (∀ i, IsRanking (R i)) → IsTop (R d) (g R)
+
+omit [DecidableEq ι] in
+/-- A dictator's selected alternative equals any top alternative in the dictator's ranking. -/
+theorem IsDictator.eq_of_isTop {g : SCF ι A} {d : ι} (hd : g.IsDictator d)
+    {R : PrefProfile ι A} (hR : ∀ i, IsRanking (R i)) {a : A} (ha : IsTop (R d) a) :
+    g R = a :=
+  (hd R hR).unique (hR d) ha
 
 /-! ### Monotonicity
 
@@ -421,10 +440,10 @@ theorem induced_isIIAOnRankings {g : SCF ι A} [Finite ι] (hsp : g.IsStrategyPr
 governs society, then `g` always returns `d`'s top alternative. -/
 theorem dictator_transfer {g : SCF ι A} [Finite ι] (hsp : g.IsStrategyProof)
     {d : ι} (hd : (inducedSWF g).IsDictatorOnRankings d) : g.IsDictator d := by
-  intro R hR a hatop
-  by_contra hne
-  have hdac : R d a (g R) := hatop (g R) hne
-  obtain ⟨_, hgac⟩ := hd a (g R) R hR hdac
+  intro R hR a hca
+  rcases (hR d).total (g R) a hca.symm with hca' | hac
+  · exact hca'
+  obtain ⟨_, hgac⟩ := hd a (g R) R hR hac
   have hLac : ∀ i, IsRanking (raiseTop (fun z => z = a ∨ z = g R) (R i)) :=
     fun i => raiseTop_ranking (hR i)
   have hmono : ∀ i v, R i (g R) v → raiseTop (fun z => z = a ∨ z = g R) (R i) (g R) v := by
@@ -438,16 +457,23 @@ theorem dictator_transfer {g : SCF ι A} [Finite ι] (hsp : g.IsStrategyProof)
       · exact raiseTop_above (Or.inr rfl) (fun h => h.elim hva hvc)
   have hgR := monotone hsp hR hLac hmono
   rw [hgac] at hgR
-  exact hne hgR.symm
+  exact absurd hgR hca
 
 /-- **Gibbard–Satterthwaite theorem.** A strategy-proof social choice function with at least
-three alternatives in its range and a nonempty finite electorate is dictatorial. -/
-theorem gibbard_satterthwaite {g : SCF ι A} [Nonempty ι] [Finite ι] [Fintype A]
-    (hsp : g.IsStrategyProof) (honto : g.IsOnto) (hcard : 2 < Fintype.card A) :
+three alternatives in its range and a nonempty finite electorate is dictatorial. The
+alternative type itself need not be finite. -/
+theorem gibbard_satterthwaite {g : SCF ι A} [Nonempty ι] [Finite ι]
+    (hsp : g.IsStrategyProof) (honto : g.IsOnto) (hA : HasAtLeastThree A) :
     ∃ d, g.IsDictator d := by
   obtain ⟨d, hd⟩ := arrow_impossibility (induced_isSWO hsp honto)
-    (induced_isParetoOnRankings hsp honto) (induced_isIIAOnRankings hsp honto) hcard
+    (induced_isParetoOnRankings hsp honto) (induced_isIIAOnRankings hsp honto) hA
   exact ⟨d, dictator_transfer hsp hd⟩
+
+/-- Finite-cardinality convenience form of Gibbard–Satterthwaite. -/
+theorem gibbard_satterthwaite_of_natCard {g : SCF ι A} [Nonempty ι] [Finite ι] [Finite A]
+    (hsp : g.IsStrategyProof) (honto : g.IsOnto) (hcard : 2 < Nat.card A) :
+    ∃ d, g.IsDictator d :=
+  gibbard_satterthwaite hsp honto (hasAtLeastThree_of_natCard hcard)
 
 end SCF
 

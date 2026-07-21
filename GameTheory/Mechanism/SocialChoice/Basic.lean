@@ -31,25 +31,27 @@ namespace GameTheory
 
 open Math.Probability
 
-variable {ι : Type}
-variable {A : Type}
+universe u v
+
+variable {ι : Type u}
+variable {A : Type v}
 
 /-- A preference relation on alternatives: a binary relation on `A`. In this file `pref a b`
     is read as "`a` is *weakly* preferred to `b`" (strict preference being `pref a b ∧ ¬ pref b a`).
     `Mechanism/SocialChoice/Arrow.lean` reuses the same type but reads `pref a b`
     as *strict* preference
     (see `IsRanking`); which reading applies is fixed by each result's axioms. -/
-abbrev PrefRel (A : Type) := A → A → Prop
+abbrev PrefRel (A : Type u) := A → A → Prop
 
 /-- A preference profile: each voter has a preference relation. -/
-abbrev PrefProfile (ι A : Type) := ι → PrefRel A
+abbrev PrefProfile (ι : Type u) (A : Type v) := ι → PrefRel A
 
 /-- A social welfare function: maps preference profiles to a social ranking. -/
-abbrev SWF (ι A : Type) := PrefProfile ι A → PrefRel A
+abbrev SWF (ι : Type u) (A : Type v) := PrefProfile ι A → PrefRel A
 
 namespace SWF
 
-variable {ι A : Type}
+variable {ι : Type u} {A : Type v}
 
 /-- Weak Pareto condition: if all voters strictly prefer `a` to `b`,
     then society strictly prefers `a` to `b`.

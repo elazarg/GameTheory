@@ -13,6 +13,9 @@ The social-choice layer (`SocialChoice/Basic.lean`) defines a social welfare fun
 preferences to be **rankings** (strict linear orders) and the social welfare function to
 return a ranking ("collective rationality"). This file adds that rationality layer and
 proves Arrow's impossibility theorem via Geanakoplos's pivotal-voter argument.
+The proof architecture is the strict-order construction also mechanized by Tobias Nipkow in
+the AFP entry *Arrow and Gibbard-Satterthwaite*; this development is adapted to the library's
+relation-valued `SWF` interface.
 
 Throughout, a `PrefRel` is read as a **strict** preference: `r a b` means "`a` is
 strictly preferred to `b`". Arrow's domain is the profiles of *rankings*, so the Pareto and
@@ -23,6 +26,7 @@ unconstrained `SWF.IsPareto` / `SWF.IsIIA` of `SocialChoice/Basic.lean` imply th
 ## Main definitions
 
 * `IsRanking` — a strict linear order (irreflexive, transitive, total on distinct pairs)
+* `HasAtLeastThree` — an inhabited alternative type with an alternative outside every pair
 * `SWF.IsSWO` — collective rationality: the SWF maps ranking profiles to a ranking
 * `SWF.IsParetoOnRankings`, `SWF.IsIIAOnRankings` — weak Pareto and IIA on the domain of rankings
 * `SWF.IsDictatorOnRankings` — a voter whose strict preference society always follows on rankings
@@ -30,14 +34,17 @@ unconstrained `SWF.IsPareto` / `SWF.IsIIA` of `SocialChoice/Basic.lean` imply th
 ## Main results
 
 * `arrow_impossibility` — with ≥ 3 alternatives and a nonempty finite electorate, every
-  collectively rational SWF that is weakly Paretian and IIA on ranking profiles is dictatorial.
+  collectively rational SWF that is weakly Paretian and IIA on ranking profiles is dictatorial;
+  the alternative type may be infinite.
 * `arrow_impossibility_exact` — the same conclusion, with the dictator's strict preference shown
   to coincide with society's on every ranking profile.
 -/
 
 namespace GameTheory
 
-variable {ι A : Type}
+universe u v
+
+variable {ι : Type u} {A : Type v}
 
 /-- `r` is a **strict linear order** ("ranking") on `A`: irreflexive, transitive, and total
 on distinct elements. Together these give asymmetry and trichotomy, so this is exactly a
@@ -46,6 +53,42 @@ structure IsRanking (r : PrefRel A) : Prop where
   irrefl : ∀ a, ¬ r a a
   trans : ∀ {a b c}, r a b → r b c → r a c
   total : ∀ a b, a ≠ b → r a b ∨ r b a
+
+/-- The strict relation of any linear order is a ranking. -/
+theorem isRanking_lt [LinearOrder A] : IsRanking ((· < ·) : PrefRel A) :=
+  ⟨lt_irrefl, fun hab hbc => lt_trans hab hbc, fun _ _ hab => lt_or_gt_of_ne hab⟩
+
+/-- Every type admits a ranking. This is classical and uses a well-order of the type. -/
+theorem exists_ranking (A : Type v) : ∃ r : PrefRel A, IsRanking r := by
+  letI : LinearOrder A := WellOrderingRel.isWellOrder.linearOrder
+  exact ⟨(· < ·), isRanking_lt⟩
+
+/-- `A` has at least three alternatives. The second conjunct is the form used by Arrow's
+proof: outside every (possibly repeated) pair there is a third alternative. -/
+def HasAtLeastThree (A : Type v) : Prop :=
+  Nonempty A ∧ ∀ a b : A, ∃ c, c ≠ a ∧ c ≠ b
+
+/-- A finite type of cardinality at least three has at least three alternatives. -/
+theorem hasAtLeastThree_of_natCard [Finite A] (hcard : 2 < Nat.card A) :
+    HasAtLeastThree A := by
+  classical
+  letI : Fintype A := Fintype.ofFinite A
+  have hcard' : 2 < Fintype.card A := by
+    simpa only [Nat.card_eq_fintype_card] using hcard
+  constructor
+  · exact Fintype.card_pos_iff.mp (by omega)
+  · intro u v
+    by_contra h
+    push Not at h
+    have hsub : (Finset.univ : Finset A) ⊆ {u, v} := by
+      intro w _
+      rcases eq_or_ne w u with rfl | hwu
+      · exact Finset.mem_insert_self _ _
+      · exact Finset.mem_insert_of_mem (Finset.mem_singleton.mpr (h w hwu))
+    have hle := Finset.card_le_card hsub
+    rw [Finset.card_univ] at hle
+    have h2 : ({u, v} : Finset A).card ≤ 2 := (Finset.card_insert_le _ _).trans (by simp)
+    omega
 
 namespace IsRanking
 
@@ -555,38 +598,23 @@ omit [DecidableEq ι] in
 electorate, every collectively rational social welfare function satisfying weak Pareto and
 independence of irrelevant alternatives (both on the domain of rankings) is dictatorial.
 
+The alternative type need not be finite. `HasAtLeastThree` is exactly the cardinality property
+used by the proof, while finiteness is essential only for the pivotal-coalition argument over
+the electorate.
+
 `[Nonempty ι]` fixes the meaningful regime. With no voters the conclusion `∃ d` is
 unsatisfiable, and indeed `IsSWO` together with `IsParetoOnRankings` is then jointly
 inconsistent (Pareto vacuously forces `f R a a`, contradicting irreflexivity), so the statement
 would otherwise hold only vacuously. -/
-theorem arrow_impossibility [Nonempty ι] [Finite ι] [Fintype A] {f : SWF ι A} (hswo : f.IsSWO)
-    (hp : f.IsParetoOnRankings) (hiia : f.IsIIAOnRankings) (hcard : 2 < Fintype.card A) :
+theorem arrow_impossibility [Nonempty ι] [Finite ι] {f : SWF ι A} (hswo : f.IsSWO)
+    (hp : f.IsParetoOnRankings) (hiia : f.IsIIAOnRankings) (hA : HasAtLeastThree A) :
     ∃ d, f.IsDictatorOnRankings d := by
   classical
   have : Fintype ι := Fintype.ofFinite ι
-  -- a third alternative always exists
-  have hthird : ∀ u v : A, ∃ w, w ≠ u ∧ w ≠ v := by
-    intro u v
-    by_contra h
-    push Not at h
-    have hsub : (Finset.univ : Finset A) ⊆ {u, v} := by
-      intro w _
-      rcases eq_or_ne w u with rfl | hwu
-      · exact Finset.mem_insert_self _ _
-      · exact Finset.mem_insert_of_mem (Finset.mem_singleton.mpr (h w hwu))
-    have hle := Finset.card_le_card hsub
-    rw [Finset.card_univ] at hle
-    have h2 : ({u, v} : Finset A).card ≤ 2 := (Finset.card_insert_le _ _).trans (by simp)
-    omega
+  obtain ⟨hAne, hthird⟩ := hA
   -- a reference alternative `b` and a background ranking `ρ`
-  obtain ⟨b⟩ : Nonempty A := Fintype.card_pos_iff.mp (by omega)
-  let e := Fintype.equivFin A
-  let ρ : PrefRel A := fun s t => e s < e t
-  have hρ : IsRanking ρ := by
-    refine ⟨fun a => lt_irrefl _, fun hab hbc => lt_trans hab hbc, fun a c hac => ?_⟩
-    rcases lt_or_gt_of_ne (e.injective.ne hac) with h | h
-    · exact Or.inl h
-    · exact Or.inr h
+  obtain ⟨b⟩ := hAne
+  obtain ⟨ρ, hρ⟩ := exists_ranking A
   -- "society puts `b` at the top / bottom" as a predicate on coalitions
   let atTop : Finset ι → Prop := fun S => ∀ x, x ≠ b → f (piv b ρ S) b x
   let atBot : Finset ι → Prop := fun S => ∀ x, x ≠ b → f (piv b ρ S) x b
@@ -640,6 +668,14 @@ theorem arrow_impossibility [Nonempty ι] [Finite ι] [Fintype A] {f : SWF ι A}
       · exact hdict x y hxb hyb hxy
 
 omit [DecidableEq ι] in
+/-- Finite-cardinality convenience form of Arrow's theorem. The canonical theorem
+`arrow_impossibility` also applies to infinite alternative types. -/
+theorem arrow_impossibility_of_natCard [Nonempty ι] [Finite ι] [Finite A] {f : SWF ι A}
+    (hswo : f.IsSWO) (hp : f.IsParetoOnRankings) (hiia : f.IsIIAOnRankings)
+    (hcard : 2 < Nat.card A) : ∃ d, f.IsDictatorOnRankings d :=
+  arrow_impossibility hswo hp hiia (hasAtLeastThree_of_natCard hcard)
+
+omit [DecidableEq ι] in
 /-- A dictator on rankings determines society's strict preference **exactly**: on every ranking
 profile the social ranking coincides with the dictator's. Given collective rationality, the
 one-directional `IsDictatorOnRankings` already carries this full biconditional strength — the
@@ -657,11 +693,19 @@ theorem SWF.IsDictatorOnRankings.exact {f : SWF ι A} (hswo : f.IsSWO) {d : ι}
 omit [DecidableEq ι] in
 /-- **Arrow's impossibility theorem (exact form).** Under the same hypotheses there is a voter
 whose strict preference *coincides* with society's on every ranking profile. -/
-theorem arrow_impossibility_exact [Nonempty ι] [Finite ι] [Fintype A] {f : SWF ι A}
+theorem arrow_impossibility_exact [Nonempty ι] [Finite ι] {f : SWF ι A}
     (hswo : f.IsSWO) (hp : f.IsParetoOnRankings) (hiia : f.IsIIAOnRankings)
-    (hcard : 2 < Fintype.card A) :
+    (hA : HasAtLeastThree A) :
     ∃ d, ∀ Q : PrefProfile ι A, (∀ i, IsRanking (Q i)) → ∀ x y, f Q x y ↔ Q d x y := by
-  obtain ⟨d, hd⟩ := arrow_impossibility hswo hp hiia hcard
+  obtain ⟨d, hd⟩ := arrow_impossibility hswo hp hiia hA
   exact ⟨d, fun Q hQ x y => hd.exact hswo hQ x y⟩
+
+omit [DecidableEq ι] in
+/-- Finite-cardinality convenience form of exact Arrow dictatorship. -/
+theorem arrow_impossibility_exact_of_natCard [Nonempty ι] [Finite ι] [Finite A]
+    {f : SWF ι A} (hswo : f.IsSWO) (hp : f.IsParetoOnRankings)
+    (hiia : f.IsIIAOnRankings) (hcard : 2 < Nat.card A) :
+    ∃ d, ∀ Q : PrefProfile ι A, (∀ i, IsRanking (Q i)) → ∀ x y, f Q x y ↔ Q d x y :=
+  arrow_impossibility_exact hswo hp hiia (hasAtLeastThree_of_natCard hcard)
 
 end GameTheory
