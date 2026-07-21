@@ -77,6 +77,14 @@ def realizedActionMonitoring (G : KernelGame ι) [Fintype ι] :
     G.realizedActionMonitoring.signalKernel σ = Math.PMFProduct.pmfPi σ :=
   rfl
 
+/-- Pure mixed actions generate the corresponding pure public action profile
+under realized-action monitoring. -/
+@[simp] theorem realizedActionMonitoring_signalKernel_pure
+    (G : KernelGame ι) [Fintype ι] (σ : Profile G) :
+    G.realizedActionMonitoring.signalKernel
+        (fun i => (PMF.pure (σ i) : PMF (G.Strategy i))) = PMF.pure σ := by
+  exact Math.PMFProduct.pmfPi_pure σ
+
 namespace PublicMonitoring
 
 /-- Under observable-profile monitoring, the realized history distribution is
@@ -158,6 +166,49 @@ theorem isUniformEquilibrium_profileMonitoring
   simp only [PublicMonitoring.IsUniformEquilibrium,
     KernelGame.IsUniformEquilibrium, hasLongRunAveragePayoff_profileMonitoring,
     isUniformεEquilibrium_profileMonitoring]
+
+/-- Stationary repetition of a stage-game Nash equilibrium is a uniform
+equilibrium under every public monitoring structure.  The proof integrates the
+stage Nash inequality over the deviator's random public-history distribution;
+finite outcomes provide the boundedness needed for countable `expect`
+monotonicity. -/
+theorem stationaryMonitoredProfile_isUniformEquilibrium_of_isNash
+    (G : KernelGame ι) (M : G.PublicMonitoring) [DecidableEq ι] [Finite G.Outcome]
+    {σ : Profile G} (hN : G.IsNash σ) :
+    M.IsUniformEquilibrium (M.stationaryMonitoredProfile σ) := by
+  refine ⟨⟨G.eu σ, M.hasLongRunAveragePayoff_stationaryMonitoredProfile σ⟩,
+    fun ε hε => ?_⟩
+  refine ⟨1, fun T hT who dev => ?_⟩
+  have hT0 : T ≠ 0 := by omega
+  rw [M.finiteAveragePayoff_stationaryMonitoredProfile hT0]
+  obtain ⟨C, hC⟩ := G.exists_eu_abs_bound_of_finite_outcome who
+  have hstage : ∀ t,
+      M.stageEU
+        (Function.update (M.stationaryMonitoredProfile σ) who dev) t who ≤
+          G.eu σ who := by
+    intro t
+    refine M.stageEU_le_const_of_forall
+      (Function.update (M.stationaryMonitoredProfile σ) who dev) t who
+      (B := G.eu σ who) (C := C) ?_ ?_ (hC σ)
+    · intro hist
+      have hprofile :
+          (fun i => (Function.update (M.stationaryMonitoredProfile σ) who dev) i
+            t hist) = Function.update σ who (dev t hist) := by
+        funext i
+        by_cases hi : i = who
+        · subst hi
+          simp
+        · simp [Function.update, stationaryMonitoredProfile, hi]
+      rw [hprofile]
+      exact hN who _
+    · intro hist
+      exact hC _
+  have havg :
+      M.finiteAveragePayoff T
+        (Function.update (M.stationaryMonitoredProfile σ) who dev) who ≤
+          G.eu σ who :=
+    M.finiteAveragePayoff_le_of_forall_stageEU_le hstage hT0
+  linarith
 
 end PublicMonitoring
 

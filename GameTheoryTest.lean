@@ -2,6 +2,7 @@ import GameTheory.Auctions.Tests
 import GameTheory.Concepts.Correlation.Tests
 import GameTheory.Concepts.Dominance.Tests
 import GameTheory.Concepts.Learning.Tests
+import GameTheory.Concepts.Repeated.Tests
 import GameTheory.Concepts.Welfare.Tests
 import GameTheory.Concepts.ZeroSum.Tests
 import GameTheory.Cooperative.Tests
