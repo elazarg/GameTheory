@@ -94,6 +94,22 @@ example (e : EUGameIsomorphism A B) (who : κ) :
     A.mixedSecurityLevel who = B.mixedSecurityLevel who :=
   e.mixedSecurityLevel_eq who
 
+example [Finite (Profile A)] [Nonempty (Profile A)]
+    [∀ i, Finite (A.Strategy i)] [∀ i, Nonempty (A.Strategy i)]
+    [Finite (Profile B)] [Nonempty (Profile B)]
+    [∀ i, Finite (B.Strategy i)] [∀ i, Nonempty (B.Strategy i)]
+    (e : EUGameIsomorphism A B) (who : κ) :
+    A.securityLevel who = B.securityLevel who := by
+  simpa using e.securityLevel_eq who
+
+example [Finite (Profile A)] [Nonempty (Profile A)]
+    [∀ i, Finite (A.Strategy i)] [∀ i, Nonempty (A.Strategy i)]
+    [Finite (Profile B)] [Nonempty (Profile B)]
+    [∀ i, Finite (B.Strategy i)] [∀ i, Nonempty (B.Strategy i)]
+    (e : EUGameIsomorphism A B) (σ : Profile A) :
+    A.IsSecurityProfile σ ↔ B.IsSecurityProfile (e.profileEquiv σ) := by
+  simpa using e.isSecurityProfile_iff σ
+
 end
 
 end GameTheory.KernelGame.EUGameIsomorphism.Tests

@@ -144,6 +144,104 @@ theorem mixedSecurityLevel_eq
     _ = ⨆ q : PMF (H.Strategy who), H.mixedWorstCaseEUInf who q :=
       Math.Reindex.iSup_comp_equiv (e.strategyPMFEquiv who) _
 
+/-- The finite enumerated worst-case payoff is invariant under game
+isomorphism. Target finiteness and nonemptiness are derived from the source
+through the profile equivalence. -/
+theorem worstCaseEU_eq [Finite (Profile G)] [Nonempty (Profile G)]
+    (e : EUGameIsomorphism G H) (who : ι) (s : G.Strategy who) :
+    letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+    letI : Nonempty (Profile H) :=
+      e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+    G.worstCaseEU who s = H.worstCaseEU who (e.stratEquiv who s) := by
+  classical
+  letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+  letI : Nonempty (Profile H) :=
+    e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+  rw [G.worstCaseEU_eq_worstCaseEUInf, H.worstCaseEU_eq_worstCaseEUInf,
+    e.worstCaseEUInf_eq]
+
+/-- The finite enumerated security level is invariant under game isomorphism.
+All target-side finiteness and nonemptiness instances are transported from the
+source. -/
+theorem securityLevel_eq [Finite (Profile G)] [Nonempty (Profile G)]
+    [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    (e : EUGameIsomorphism G H) (who : ι) :
+    letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+    letI : Nonempty (Profile H) :=
+      e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+    letI : ∀ i, Finite (H.Strategy i) := fun i =>
+      Finite.of_equiv (G.Strategy i) (e.stratEquiv i)
+    letI : ∀ i, Nonempty (H.Strategy i) := fun i =>
+      (e.stratEquiv i).nonempty_congr.mp
+        (inferInstance : Nonempty (G.Strategy i))
+    G.securityLevel who = H.securityLevel who := by
+  classical
+  letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+  letI : Nonempty (Profile H) :=
+    e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+  letI : ∀ i, Finite (H.Strategy i) := fun i =>
+    Finite.of_equiv (G.Strategy i) (e.stratEquiv i)
+  letI : ∀ i, Nonempty (H.Strategy i) := fun i =>
+    (e.stratEquiv i).nonempty_congr.mp
+      (inferInstance : Nonempty (G.Strategy i))
+  rw [G.securityLevel_eq_securityLevelSup, H.securityLevel_eq_securityLevelSup,
+    e.securityLevelSup_eq]
+
+/-- Attainment of the finite security level is invariant under strategy
+relabeling, with target instances derived from source instances. -/
+theorem isSecurityStrategy_iff [Finite (Profile G)] [Nonempty (Profile G)]
+    [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    (e : EUGameIsomorphism G H) (who : ι) (s : G.Strategy who) :
+    letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+    letI : Nonempty (Profile H) :=
+      e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+    letI : ∀ i, Finite (H.Strategy i) := fun i =>
+      Finite.of_equiv (G.Strategy i) (e.stratEquiv i)
+    letI : ∀ i, Nonempty (H.Strategy i) := fun i =>
+      (e.stratEquiv i).nonempty_congr.mp
+        (inferInstance : Nonempty (G.Strategy i))
+    G.IsSecurityStrategy who s ↔
+      H.IsSecurityStrategy who (e.stratEquiv who s) := by
+  classical
+  letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+  letI : Nonempty (Profile H) :=
+    e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+  letI : ∀ i, Finite (H.Strategy i) := fun i =>
+    Finite.of_equiv (G.Strategy i) (e.stratEquiv i)
+  letI : ∀ i, Nonempty (H.Strategy i) := fun i =>
+    (e.stratEquiv i).nonempty_congr.mp
+      (inferInstance : Nonempty (G.Strategy i))
+  unfold KernelGame.IsSecurityStrategy
+  rw [G.worstCaseEU_eq_worstCaseEUInf, H.worstCaseEU_eq_worstCaseEUInf,
+    G.securityLevel_eq_securityLevelSup, H.securityLevel_eq_securityLevelSup,
+    e.worstCaseEUInf_eq, e.securityLevelSup_eq]
+
+/-- A finite security profile is preserved by profile relabeling, with all
+target instances derived from source instances. -/
+theorem isSecurityProfile_iff [Finite (Profile G)] [Nonempty (Profile G)]
+    [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    (e : EUGameIsomorphism G H) (σ : Profile G) :
+    letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+    letI : Nonempty (Profile H) :=
+      e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+    letI : ∀ i, Finite (H.Strategy i) := fun i =>
+      Finite.of_equiv (G.Strategy i) (e.stratEquiv i)
+    letI : ∀ i, Nonempty (H.Strategy i) := fun i =>
+      (e.stratEquiv i).nonempty_congr.mp
+        (inferInstance : Nonempty (G.Strategy i))
+    G.IsSecurityProfile σ ↔ H.IsSecurityProfile (e.profileEquiv σ) := by
+  classical
+  letI : Finite (Profile H) := Finite.of_equiv (Profile G) e.profileEquiv
+  letI : Nonempty (Profile H) :=
+    e.profileEquiv.nonempty_congr.mp (inferInstance : Nonempty (Profile G))
+  letI : ∀ i, Finite (H.Strategy i) := fun i =>
+    Finite.of_equiv (G.Strategy i) (e.stratEquiv i)
+  letI : ∀ i, Nonempty (H.Strategy i) := fun i =>
+    (e.stratEquiv i).nonempty_congr.mp
+      (inferInstance : Nonempty (G.Strategy i))
+  unfold KernelGame.IsSecurityProfile
+  exact forall_congr' fun i => e.isSecurityStrategy_iff i (σ i)
+
 variable {G H : KernelGame (Fin 2)}
 
 /-- Saddle points are invariant under expected-utility game isomorphism. -/

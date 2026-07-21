@@ -71,10 +71,11 @@ open Classical in
 /-- Finite-profile specialization: `Guarantees` is equivalent to finite
     worst-case EU being at least `v`. -/
 theorem guarantees_iff_worstCaseEU_ge
-    (G : KernelGame ι) [Fintype (Profile G)]
+    (G : KernelGame ι) [Finite (Profile G)]
     [Nonempty (Profile G)]
     (who : ι) (s : G.Strategy who) (v : ℝ) :
     G.Guarantees who s v ↔ G.worstCaseEU who s ≥ v := by
+  letI := Fintype.ofFinite (Profile G)
   constructor
   · intro hg
     apply Finset.le_inf'
@@ -120,8 +121,8 @@ open Classical in
 thresholds below the player's security level. -/
 theorem coalitionGuaranteesEU_singleton_iff_le_securityLevel
     (G : KernelGame ι)
-    [Fintype (Profile G)] [Nonempty (Profile G)]
-    [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+    [Finite (Profile G)] [Nonempty (Profile G)]
+    [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
     (who : ι) (v : ℝ) :
     G.CoalitionGuaranteesEU {who} (fun ω => G.utility ω who) v ↔
       v ≤ G.securityLevel who := by

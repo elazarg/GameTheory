@@ -228,12 +228,13 @@ end Order
 
 section Finite
 
-variable (G : KernelGame ι) [Fintype (Profile G)] [Nonempty (Profile G)]
+variable (G : KernelGame ι) [Finite (Profile G)] [Nonempty (Profile G)]
 
 open Classical in
 /-- Worst-case EU for player `who` when they play `s`:
     the minimum EU over all possible opponent profiles. -/
 noncomputable def worstCaseEU (who : ι) (s : G.Strategy who) : ℝ :=
+  letI := Fintype.ofFinite (Profile G)
   Finset.inf' Finset.univ ⟨Classical.arbitrary _, Finset.mem_univ _⟩
     (fun σ => G.eu (Function.update σ who s) who)
 
@@ -241,7 +242,9 @@ open Classical in
 /-- The worst-case EU is a lower bound on EU for any profile. -/
 theorem worstCaseEU_le (who : ι) (s : G.Strategy who) (σ : Profile G) :
     G.worstCaseEU who s ≤ G.eu (Function.update σ who s) who :=
-  Finset.inf'_le _ (Finset.mem_univ σ)
+  by
+    letI := Fintype.ofFinite (Profile G)
+    exact Finset.inf'_le _ (Finset.mem_univ σ)
 
 open Classical in
 /-- The worst-case EU is a lower bound: a strategy guarantees at least
@@ -250,14 +253,36 @@ theorem worstCaseEU_guarantees (who : ι) (s : G.Strategy who) :
     ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥ G.worstCaseEU who s :=
   fun σ => worstCaseEU_le G who s σ
 
-variable [∀ i, Fintype (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
+open Classical in
+/-- On a finite nonempty profile space, the enumerated worst-case payoff is
+the order-theoretic infimum. -/
+theorem worstCaseEU_eq_worstCaseEUInf (who : ι) (s : G.Strategy who) :
+    G.worstCaseEU who s = G.worstCaseEUInf who s := by
+  letI := Fintype.ofFinite (Profile G)
+  unfold worstCaseEU worstCaseEUInf
+  exact Finset.inf'_univ_eq_ciInf _
+
+variable [∀ i, Finite (G.Strategy i)] [∀ i, Nonempty (G.Strategy i)]
 
 open Classical in
 /-- The security level (maximin value) of player `who`:
     the best worst-case EU they can guarantee. -/
 noncomputable def securityLevel (who : ι) : ℝ :=
+  letI := Fintype.ofFinite (G.Strategy who)
   Finset.sup' Finset.univ ⟨Classical.arbitrary _, Finset.mem_univ _⟩
     (fun s => G.worstCaseEU who s)
+
+open Classical in
+/-- On finite nonempty strategy and profile spaces, the enumerated security
+level is the order-theoretic supremal security level. -/
+theorem securityLevel_eq_securityLevelSup (who : ι) :
+    G.securityLevel who = G.securityLevelSup who := by
+  letI := Fintype.ofFinite (G.Strategy who)
+  unfold securityLevel securityLevelSup
+  rw [Finset.sup'_univ_eq_ciSup]
+  apply iSup_congr
+  intro s
+  exact G.worstCaseEU_eq_worstCaseEUInf who s
 
 /-- A finite-game security strategy attains the player's security level. -/
 def IsSecurityStrategy (who : ι) (s : G.Strategy who) : Prop :=
@@ -291,6 +316,7 @@ open Classical in
 /-- In a Nash equilibrium, each player's EU is at least their security level. -/
 theorem nash_eu_ge_securityLevel {σ : Profile G} (hN : G.IsNash σ) (who : ι) :
     G.eu σ who ≥ G.securityLevel who := by
+  letI := Fintype.ofFinite (G.Strategy who)
   simp only [securityLevel]
   apply Finset.sup'_le
   intro s _
@@ -305,6 +331,7 @@ theorem IsDominant.eu_ge_securityLevel
     {who : ι} {s : G.Strategy who} (hdom : G.IsDominant who s)
     (σ : Profile G) :
     G.eu (Function.update σ who s) who ≥ G.securityLevel who := by
+  letI := Fintype.ofFinite (G.Strategy who)
   simp only [securityLevel]
   apply Finset.sup'_le
   intro t _
@@ -319,6 +346,7 @@ open Classical in
 theorem le_securityLevel_of_forall_eu_ge (who : ι) (s : G.Strategy who) (v : ℝ)
     (hg : ∀ σ : Profile G, G.eu (Function.update σ who s) who ≥ v) :
     v ≤ G.securityLevel who := by
+  letI := Fintype.ofFinite (G.Strategy who)
   calc v ≤ G.worstCaseEU who s := by
           apply Finset.le_inf'
           intro σ _
@@ -330,6 +358,7 @@ open Classical in
 /-- A security strategy exists: some strategy achieves the security level. -/
 theorem exists_securityStrategy (who : ι) :
     ∃ s : G.Strategy who, G.worstCaseEU who s = G.securityLevel who := by
+  letI := Fintype.ofFinite (G.Strategy who)
   obtain ⟨s, _, hs⟩ := Finset.exists_max_image Finset.univ
     (fun s => G.worstCaseEU who s) ⟨Classical.arbitrary _, Finset.mem_univ _⟩
   exact ⟨s, le_antisymm (Finset.le_sup' _ (Finset.mem_univ s))
