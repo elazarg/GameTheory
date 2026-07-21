@@ -352,6 +352,30 @@ example :
   exact individualFullRank_mapSignal_equiv_iff
     coordinationGame.profileMonitoring allTrueProfile false (Equiv.refl _)
 
+/-- On finite monitoring problems, basis-free individual full rank is exactly
+full numerical row rank. -/
+example :
+    coordinationGame.profileMonitoring.IndividualFullRank
+        allTrueProfile false ↔
+      coordinationGame.profileMonitoring.individualDeviationRank
+          allTrueProfile false =
+        Fintype.card
+          (PublicMonitoring.NontrivialDeviation allTrueProfile false) := by
+  exact individualFullRank_iff_individualDeviationRank_eq_card
+    coordinationGame.profileMonitoring allTrueProfile false
+
+/-- Probability normalization gives the sharp codimension-one necessary
+signal-count bound for pairwise full rank. -/
+example
+    (h : coordinationGame.profileMonitoring.PairwiseFullRank
+      allTrueProfile false true) :
+    Fintype.card
+          (PublicMonitoring.NontrivialDeviation allTrueProfile false) +
+        Fintype.card
+          (PublicMonitoring.NontrivialDeviation allTrueProfile true) ≤
+      Fintype.card (Profile coordinationGame) - 1 := by
+  exact h.card_deviations_le_card_signal_sub_one
+
 end RepeatedMonitoringTests
 
 end GameTheory

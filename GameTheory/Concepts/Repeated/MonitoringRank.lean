@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import Mathlib.LinearAlgebra.LinearIndependent.Basic
-import Mathlib.LinearAlgebra.Matrix.ToLin
+import Mathlib.LinearAlgebra.Matrix.Rank
 import Mathlib.LinearAlgebra.Pi
 import GameTheory.Concepts.Repeated.Monitoring
 
@@ -71,7 +71,7 @@ def PairwiseIdentifiable
 def pairwiseDeviationSignalFamily
     (M : G.PublicMonitoring) [DecidableEq ι]
     (a : Profile G) (i j : ι) :
-    NontrivialDeviation a i ⊕ NontrivialDeviation a j → M.Signal → ℝ :=
+    Matrix (NontrivialDeviation a i ⊕ NontrivialDeviation a j) M.Signal ℝ :=
   Sum.elim (M.deviationSignalMatrix a i) (M.deviationSignalMatrix a j)
 
 /-- Pairwise full rank: the combined deviation-difference rows for two players
@@ -80,6 +80,179 @@ def PairwiseFullRank
     (M : G.PublicMonitoring) [DecidableEq ι]
     (a : Profile G) (i j : ι) : Prop :=
   LinearIndependent ℝ (M.pairwiseDeviationSignalFamily a i j)
+
+/-! ## Finite-dimensional rank presentation -/
+
+/-- Numerical row rank of one player's deviation-signal matrix. -/
+noncomputable def individualDeviationRank
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    (a : Profile G) (who : ι) : ℕ :=
+  (M.deviationSignalMatrix a who).rank
+
+/-- Numerical row rank of the combined deviation-signal matrix for two
+players. -/
+noncomputable def pairwiseDeviationRank
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    (a : Profile G) (i j : ι) : ℕ :=
+  (M.pairwiseDeviationSignalFamily a i j).rank
+
+/-- For finitely many deviations, individual full rank says exactly that the
+matrix rank equals the number of nontrivial deviations. -/
+theorem individualFullRank_iff_individualDeviationRank_eq_card
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    (a : Profile G) (who : ι) [Fintype (NontrivialDeviation a who)] :
+    M.IndividualFullRank a who ↔
+      M.individualDeviationRank a who =
+        Fintype.card (NontrivialDeviation a who) := by
+  let A : Matrix (NontrivialDeviation a who) M.Signal ℝ :=
+    M.deviationSignalMatrix a who
+  change LinearIndependent ℝ A ↔ A.rank = _
+  constructor
+  · exact LinearIndependent.rank_matrix
+  · intro h
+    rw [linearIndependent_iff_card_eq_finrank_span]
+    change Fintype.card (NontrivialDeviation a who) =
+      Module.finrank ℝ (Submodule.span ℝ (Set.range A.row))
+    rw [← Matrix.rank_eq_finrank_span_row]
+    exact h.symm
+
+/-- For finitely many deviations, pairwise full rank says exactly that the
+combined matrix rank equals the total number of nontrivial deviations. -/
+theorem pairwiseFullRank_iff_pairwiseDeviationRank_eq_card
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    (a : Profile G) (i j : ι)
+    [Fintype (NontrivialDeviation a i)]
+    [Fintype (NontrivialDeviation a j)] :
+    M.PairwiseFullRank a i j ↔
+      M.pairwiseDeviationRank a i j =
+        Fintype.card (NontrivialDeviation a i) +
+          Fintype.card (NontrivialDeviation a j) := by
+  let A : Matrix (NontrivialDeviation a i ⊕ NontrivialDeviation a j)
+      M.Signal ℝ := M.pairwiseDeviationSignalFamily a i j
+  change LinearIndependent ℝ A ↔ A.rank = _
+  constructor
+  · intro h
+    dsimp [A] at h ⊢
+    simpa only [pairwiseDeviationSignalFamily, Fintype.card_sum] using
+      h.rank_matrix
+  · intro h
+    rw [linearIndependent_iff_card_eq_finrank_span]
+    change Fintype.card (NontrivialDeviation a i ⊕ NontrivialDeviation a j) =
+      Module.finrank ℝ (Submodule.span ℝ (Set.range A.row))
+    rw [← Matrix.rank_eq_finrank_span_row, Fintype.card_sum]
+    simpa only [Fintype.card_sum] using h.symm
+
+/-- Sum of the coordinates of a finite real vector, as a linear map. -/
+def signalSumLinearMap (S : Type) [Fintype S] : (S → ℝ) →ₗ[ℝ] ℝ :=
+  { toFun := fun v => ∑ s, v s
+    map_add' := fun v w => by
+      change (∑ s, (v s + w s)) = (∑ s, v s) + ∑ s, w s
+      exact Finset.sum_add_distrib
+    map_smul' := fun c v => by
+      change (∑ s, c * v s) = c * ∑ s, v s
+      simpa using
+        (Finset.mul_sum Finset.univ (fun s => v s) c).symm }
+
+/-- The subspace of real signal vectors whose coordinates sum to zero. -/
+def zeroSumSignalSubspace (S : Type) [Fintype S] : Submodule ℝ (S → ℝ) :=
+  LinearMap.ker (signalSumLinearMap S)
+
+@[simp]
+theorem mem_zeroSumSignalSubspace_iff
+    {S : Type} [Fintype S] (v : S → ℝ) :
+    v ∈ zeroSumSignalSubspace S ↔ ∑ s, v s = 0 :=
+  by simp [zeroSumSignalSubspace, signalSumLinearMap]
+
+/-- The zero-sum signal subspace has the expected codimension one. -/
+theorem finrank_zeroSumSignalSubspace
+    (S : Type) [Fintype S] [Nonempty S] :
+    Module.finrank ℝ (zeroSumSignalSubspace S) = Fintype.card S - 1 := by
+  classical
+  let L : (S → ℝ) →ₗ[ℝ] ℝ := signalSumLinearMap S
+  have hrange : LinearMap.range L = ⊤ := by
+    apply Submodule.eq_top_iff'.2
+    intro x
+    let s : S := Classical.choice inferInstance
+    refine ⟨Pi.single s x, ?_⟩
+    simp [L, signalSumLinearMap]
+  have hdim := L.finrank_range_add_finrank_ker
+  rw [hrange, finrank_top,
+    Module.finrank_self, Module.finrank_fintype_fun_eq_card] at hdim
+  change Module.finrank ℝ (LinearMap.ker L) = Fintype.card S - 1
+  omega
+
+/-- Every deviation row belongs to the zero-sum signal subspace. -/
+theorem deviationSignalMatrix_mem_zeroSumSignalSubspace
+    (M : G.PublicMonitoring) [DecidableEq ι] [Fintype M.Signal]
+    (a : Profile G) (who : ι) (dev : NontrivialDeviation a who) :
+    M.deviationSignalMatrix a who dev ∈
+      zeroSumSignalSubspace M.Signal := by
+  rw [mem_zeroSumSignalSubspace_iff]
+  simp only [deviationSignalMatrix, deviationSignalVector,
+    Finset.sum_sub_distrib, Math.Probability.pmf_toReal_sum_one, sub_self]
+
+/-- Individual deviation rank is at most the dimension of the normalized
+signal simplex's direction space. -/
+theorem individualDeviationRank_le_card_signal_sub_one
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    [Fintype M.Signal] [Nonempty M.Signal]
+    (a : Profile G) (who : ι)
+    [Finite (NontrivialDeviation a who)] :
+    M.individualDeviationRank a who ≤ Fintype.card M.Signal - 1 := by
+  rw [individualDeviationRank, Matrix.rank_eq_finrank_span_row,
+    ← finrank_zeroSumSignalSubspace M.Signal]
+  apply Submodule.finrank_mono
+  apply Submodule.span_le.2
+  rintro _ ⟨dev, rfl⟩
+  exact M.deviationSignalMatrix_mem_zeroSumSignalSubspace a who dev
+
+/-- Individual full rank therefore requires at least one independent signal
+direction per nontrivial deviation. -/
+theorem IndividualFullRank.card_deviations_le_card_signal_sub_one
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    [Fintype M.Signal] [Nonempty M.Signal]
+    {a : Profile G} {who : ι} [Fintype (NontrivialDeviation a who)]
+    (h : M.IndividualFullRank a who) :
+    Fintype.card (NontrivialDeviation a who) ≤
+      Fintype.card M.Signal - 1 := by
+  rw [M.individualFullRank_iff_individualDeviationRank_eq_card] at h
+  rw [← h]
+  exact M.individualDeviationRank_le_card_signal_sub_one a who
+
+/-- Pairwise deviation rank obeys the same sharp signal-dimension bound. -/
+theorem pairwiseDeviationRank_le_card_signal_sub_one
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    [Fintype M.Signal] [Nonempty M.Signal]
+    (a : Profile G) (i j : ι)
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)] :
+    M.pairwiseDeviationRank a i j ≤ Fintype.card M.Signal - 1 := by
+  rw [pairwiseDeviationRank, Matrix.rank_eq_finrank_span_row,
+    ← finrank_zeroSumSignalSubspace M.Signal]
+  apply Submodule.finrank_mono
+  apply Submodule.span_le.2
+  rintro _ ⟨dev, rfl⟩
+  cases dev with
+  | inl dev =>
+      exact M.deviationSignalMatrix_mem_zeroSumSignalSubspace a i dev
+  | inr dev =>
+      exact M.deviationSignalMatrix_mem_zeroSumSignalSubspace a j dev
+
+/-- Pairwise full rank requires enough public-signal directions to distinguish
+all nontrivial deviations by the two players. -/
+theorem PairwiseFullRank.card_deviations_le_card_signal_sub_one
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    [Fintype M.Signal] [Nonempty M.Signal]
+    {a : Profile G} {i j : ι}
+    [Fintype (NontrivialDeviation a i)]
+    [Fintype (NontrivialDeviation a j)]
+    (h : M.PairwiseFullRank a i j) :
+    Fintype.card (NontrivialDeviation a i) +
+        Fintype.card (NontrivialDeviation a j) ≤
+      Fintype.card M.Signal - 1 := by
+  rw [M.pairwiseFullRank_iff_pairwiseDeviationRank_eq_card] at h
+  rw [← h]
+  exact M.pairwiseDeviationRank_le_card_signal_sub_one a i j
 
 /-- Every deviation-signal vector has coordinate sum zero because both signal
 laws are probability distributions. -/
