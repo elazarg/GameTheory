@@ -118,6 +118,25 @@ def IsPerfectPublicEquilibrium (M : G.PublicMonitoring) [DecidableEq ι]
     (δ : ℝ) (σ : M.MonitoredProfile) : Prop :=
   M.IsεPerfectPublicEquilibrium δ 0 σ
 
+/-- No player gains by changing only the current action and returning to the
+prescribed public strategy from the next period onward. -/
+def HasNoProfitableOneShotDeviation
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (δ : ℝ) (σ : M.MonitoredProfile) : Prop :=
+  ∀ who (a : G.Strategy who),
+    M.discountedAveragePayoff δ σ who ≥
+      M.discountedAveragePayoff δ
+        (Function.update σ who (M.oneShotDeviation σ who a)) who
+
+/-- One-shot sequential rationality at the root and after every nonempty
+public history. -/
+def HasNoProfitableOneShotDeviationAfterEveryHistory
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (δ : ℝ) (σ : M.MonitoredProfile) : Prop :=
+  M.HasNoProfitableOneShotDeviation δ σ ∧
+    ∀ t (h : M.SignalHistory (t + 1)),
+      M.HasNoProfitableOneShotDeviation δ (M.after σ h)
+
 /-- Discounted public Nash is monotone in the approximation allowance. -/
 theorem IsεDiscountedPublicNash.mono
     {M : G.PublicMonitoring} [DecidableEq ι]
@@ -143,6 +162,28 @@ theorem IsPerfectPublicEquilibrium.isDiscountedPublicNash
     (h : M.IsPerfectPublicEquilibrium δ σ) :
     M.IsDiscountedPublicNash δ σ :=
   h.1
+
+/-- Discounted public Nash rules out every one-shot deviation. -/
+theorem IsDiscountedPublicNash.hasNoProfitableOneShotDeviation
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ : ℝ} {σ : M.MonitoredProfile}
+    (h : M.IsDiscountedPublicNash δ σ) :
+    M.HasNoProfitableOneShotDeviation δ σ := by
+  intro who a
+  simpa [IsDiscountedPublicNash, IsεDiscountedPublicNash] using
+    h who (M.oneShotDeviation σ who a)
+
+/-- Every PPE is sequentially rational against one-shot deviations.  The
+converse is the one-shot-deviation principle and requires a separate
+continuity-at-infinity proof. -/
+theorem IsPerfectPublicEquilibrium.hasNoProfitableOneShotDeviationAfterEveryHistory
+    {M : G.PublicMonitoring} [DecidableEq ι]
+    {δ : ℝ} {σ : M.MonitoredProfile}
+    (h : M.IsPerfectPublicEquilibrium δ σ) :
+    M.HasNoProfitableOneShotDeviationAfterEveryHistory δ σ :=
+  ⟨IsDiscountedPublicNash.hasNoProfitableOneShotDeviation h.1,
+    fun t hist => IsDiscountedPublicNash.hasNoProfitableOneShotDeviation
+      (h.2 t hist)⟩
 
 /-- Stationary repetition of a stage Nash equilibrium is a discounted public
 Nash equilibrium under every public monitoring structure. -/

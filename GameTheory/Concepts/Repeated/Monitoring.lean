@@ -86,6 +86,27 @@ def after (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     {t : ℕ} (h : M.SignalHistory t) : M.MonitoredProfile :=
   fun i n k => σ i (t + n) (h.append M k)
 
+/-- Deviate only at the current period, then return to the prescribed public
+strategy.  Applied to a continuation profile, this is the standard one-shot
+deviation after the corresponding public history. -/
+def oneShotDeviation (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (who : ι) (a : G.Strategy who) : M.MonitoredStrategy who
+  | 0, _ => a
+  | n + 1, h => σ who (n + 1) h
+
+@[simp] theorem oneShotDeviation_zero
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (who : ι) (a : G.Strategy who) (h : M.SignalHistory 0) :
+    M.oneShotDeviation σ who a 0 h = a :=
+  rfl
+
+@[simp] theorem oneShotDeviation_succ
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    (who : ι) (a : G.Strategy who) (n : ℕ)
+    (h : M.SignalHistory (n + 1)) :
+    M.oneShotDeviation σ who a (n + 1) h = σ who (n + 1) h :=
+  rfl
+
 @[simp] theorem after_apply
     (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     {t : ℕ} (h : M.SignalHistory t) (i : ι)
