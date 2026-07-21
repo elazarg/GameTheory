@@ -9,6 +9,7 @@ import GameTheory.Languages.Kuhn
 import GameTheory.Languages.InfoModel
 import GameTheory.Languages.EFG
 import GameTheory.Languages.NFG
+import GameTheory.Languages.OpenGame
 import GameTheory.Languages.MultiRound
 import GameTheory.Languages.MAID
 import GameTheory.Languages.ElectronicMailGame
