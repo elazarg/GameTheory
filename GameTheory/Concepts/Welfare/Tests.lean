@@ -57,6 +57,12 @@ example (G : KernelGame Bool) (r : Payoff Bool) :
       (G.strictIndividuallyRationalPayoffSet r).Nonempty :=
   G.intrinsicInterior_strictIndividuallyRationalPayoffSet_nonempty_iff r
 
+example (G : KernelGame Bool) (r : Payoff Bool) :
+    (interior (G.strictIndividuallyRationalPayoffSet r)).Nonempty ↔
+      G.HasFullDimensionalFeasibleSet ∧
+        (G.strictIndividuallyRationalPayoffSet r).Nonempty :=
+  G.interior_strictIndividuallyRationalPayoffSet_nonempty_iff r
+
 end
 
 end GameTheory.Concepts.Welfare.Tests

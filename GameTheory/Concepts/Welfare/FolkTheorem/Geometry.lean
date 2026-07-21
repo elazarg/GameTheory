@@ -110,6 +110,19 @@ theorem convex_strictReservationSet (r : Payoff ι) :
     linarith
   simpa [Pi.add_apply, Pi.smul_apply, smul_eq_mul] using hlt
 
+/-- With finitely many coordinates, strict coordinatewise domination is an
+open condition. -/
+theorem isOpen_strictReservationSet [Finite ι] (r : Payoff ι) :
+    IsOpen (strictReservationSet r) := by
+  have hopen : IsOpen (⋂ i, {v : Payoff ι | r i < v i}) := by
+    refine isOpen_iInter_of_finite fun i => ?_
+    change IsOpen ((fun v : Payoff ι => v i) ⁻¹' Set.Ioi (r i))
+    exact isOpen_Ioi.preimage (continuous_apply i)
+  have hset : strictReservationSet r = ⋂ i, {v : Payoff ι | r i < v i} := by
+    ext v
+    simp [strictReservationSet]
+  rwa [hset]
+
 theorem isClosed_weakReservationSet (r : Payoff ι) :
     IsClosed (weakReservationSet r) := by
   have hclosed : IsClosed (⋂ i, {v : Payoff ι | r i ≤ v i}) := by
@@ -141,6 +154,35 @@ theorem intrinsicInterior_strictIndividuallyRationalPayoffSet_nonempty_iff
   letI := Fintype.ofFinite ι
   exact intrinsicInterior_nonempty
     (G.convex_strictIndividuallyRationalPayoffSet r)
+
+/-- For finitely many players, the strictly individually rational feasible
+region has nonempty ambient interior exactly when it is both nonempty and the
+feasible payoff set is full dimensional. -/
+theorem interior_strictIndividuallyRationalPayoffSet_nonempty_iff
+    (G : KernelGame ι) [Finite ι] (r : Payoff ι) :
+    (interior (G.strictIndividuallyRationalPayoffSet r)).Nonempty ↔
+      G.HasFullDimensionalFeasibleSet ∧
+        (G.strictIndividuallyRationalPayoffSet r).Nonempty := by
+  letI := Fintype.ofFinite ι
+  constructor
+  · intro hinterior
+    refine ⟨(G.hasFullDimensionalFeasibleSet_iff_interior_nonempty).2 ?_, ?_⟩
+    · exact hinterior.mono (interior_mono Set.inter_subset_left)
+    · exact hinterior.mono interior_subset
+  · rintro ⟨hfull, ⟨v, hvFeasible, hvStrict⟩⟩
+    have hfeasibleInterior : (interior G.feasibleSet).Nonempty :=
+      (G.hasFullDimensionalFeasibleSet_iff_interior_nonempty).1 hfull
+    have hvClosure : v ∈ closure (interior G.feasibleSet) := by
+      rw [G.convex_feasibleSet.closure_interior_eq_closure_of_nonempty_interior
+        hfeasibleInterior]
+      exact subset_closure hvFeasible
+    obtain ⟨x, hxStrict, hxInterior⟩ :=
+      (mem_closure_iff.mp hvClosure) (strictReservationSet r)
+        (isOpen_strictReservationSet r) hvStrict
+    refine ⟨x, ?_⟩
+    rw [strictIndividuallyRationalPayoffSet, interior_inter,
+      (isOpen_strictReservationSet r).interior_eq]
+    exact ⟨hxInterior, hxStrict⟩
 
 theorem isClosed_individuallyRationalPayoffSet (G : KernelGame ι)
     [Finite (Profile G)] (r : Payoff ι) :
