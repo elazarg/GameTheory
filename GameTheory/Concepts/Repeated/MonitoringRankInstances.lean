@@ -362,6 +362,14 @@ theorem purePairwiseFullRankAtProfile_profileMonitoring_mixedExtension
   (G.profileMonitoring.purePairwiseFullRankAtProfile_mixedExtension_iff a).2
     (pairwiseFullRankAtProfile_profileMonitoring G a)
 
+/-- The behavioral lift of perfect profile monitoring satisfies pure
+individual full rank for every player. -/
+theorem pureIndividualFullRankAtProfile_profileMonitoring_mixedExtension
+    (G : KernelGame ι) [Fintype ι] [DecidableEq ι] (a : Profile G) :
+    G.profileMonitoring.mixedExtension.PureIndividualFullRankAtProfile a :=
+  (G.profileMonitoring.pureIndividualFullRankAtProfile_mixedExtension_iff a).2
+    (individualFullRankAtProfile_profileMonitoring G a)
+
 /-! ### Numerical pure-deviation ranks -/
 
 /-- Numerical row rank of one player's pure-deviation signal matrix. The

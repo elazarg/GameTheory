@@ -581,6 +581,23 @@ example :
           (fun _ => (1 : ℝ))
           ⟨false, true, Bool.false_ne_true, by norm_num, by norm_num⟩
 
+/-- Coordinate-normal enforcement uses a stage best response for the unique
+nonzero-normal player and individual rank for every other player. -/
+example :
+    coordinationGame.profileMonitoring.IsEnforceableOnNormalHyperplane
+      (1 / 2) allTrueProfile
+        (fun who : Bool => if who = false then (1 : ℝ) else 0) := by
+  apply
+    (pureIndividualFullRankAtProfile_profileMonitoring_mixedExtension
+      coordinationGame allTrueProfile).isEnforceableOnNormalHyperplane_of_bestResponse
+        coordinationGame.profileMonitoring (by norm_num) (by norm_num)
+          allTrueProfile _ false
+  · intro who hwho
+    simp [hwho]
+  · intro dev
+    rw [Function.update_eq_self]
+    exact allTrueProfile_isNash false dev
+
 /-- Constant public continuation transfers do not change deviation
 incentives. -/
 example (c : ℝ) :

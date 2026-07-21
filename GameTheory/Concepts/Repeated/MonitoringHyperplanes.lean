@@ -36,6 +36,41 @@ def IsEnforceableOnNormalHyperplane
     (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
       M.IsEnforceable delta a w
 
+/-- Under bounded utilities and finite public signals, hyperplane
+enforceability of a pure profile is equivalent before and after behavioral
+lifting. -/
+theorem isEnforceableOnNormalHyperplane_mixedExtension_iff_of_bounded
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    (delta : ℝ) (a : Profile G) (normal : Payoff iota)
+    (hu : ∀ who, ∃ C, ∀ omega, |G.utility omega who| ≤ C) :
+    M.mixedExtension.IsEnforceableOnNormalHyperplane delta
+        (G.pureMixedProfile a) normal ↔
+      M.IsEnforceableOnNormalHyperplane delta a normal := by
+  constructor
+  · rintro ⟨w, htangent, henforce⟩
+    refine ⟨w, htangent, ?_⟩
+    exact (M.isEnforceable_mixedExtension_pureMixedProfile_iff_of_bounded
+      delta a w hu (M.isBoundedContinuationAssignment_of_finite w)).1 henforce
+  · rintro ⟨w, htangent, henforce⟩
+    refine ⟨w, htangent, ?_⟩
+    exact (M.isEnforceable_mixedExtension_pureMixedProfile_iff_of_bounded
+      delta a w hu (M.isBoundedContinuationAssignment_of_finite w)).2 henforce
+
+/-- Finite outcomes discharge utility boundedness in the behavioral-lifting
+equivalence for hyperplane enforceability. -/
+theorem isEnforceableOnNormalHyperplane_mixedExtension_iff
+    [Fintype iota] [DecidableEq iota] [Finite G.Outcome]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    (delta : ℝ) (a : Profile G) (normal : Payoff iota) :
+    M.mixedExtension.IsEnforceableOnNormalHyperplane delta
+        (G.pureMixedProfile a) normal ↔
+      M.IsEnforceableOnNormalHyperplane delta a normal := by
+  apply M.isEnforceableOnNormalHyperplane_mixedExtension_iff_of_bounded
+  intro who
+  exact Math.Probability.exists_abs_bound_of_finite
+    (fun omega => G.utility omega who)
+
 /-- For finite public signals, the pure-deviation incentive-effect map is the
 difference between expected continuation transfers after deviating and after
 following the prescribed pure action. -/
@@ -109,6 +144,112 @@ theorem PurePairwiseFullRankAtProfile.isEnforceableOnNormalHyperplane
       ring
     simp only [decomposedDeviationPayoff, decomposedPayoff]
     linarith
+
+/-- If the normal vanishes outside one player, individual full rank supplies
+tangent incentives for every other player.  The distinguished player must
+already be playing a stage best response because tangency fixes that player's
+continuation coordinate. -/
+theorem PureIndividualFullRankAtProfile.isEnforceableOnNormalHyperplane_of_bestResponse
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    [∀ who, Finite (G.Strategy who)]
+    {delta : ℝ} (hdelta : 0 < delta) (hdeltaOne : delta ≤ 1)
+    (a : Profile G)
+    (h : M.mixedExtension.PureIndividualFullRankAtProfile a)
+    (normal : Payoff iota) (anchor : iota)
+    (hzero : ∀ who, who ≠ anchor → normal who = 0)
+    (hbest : G.IsBestResponse anchor a (a anchor)) :
+    M.IsEnforceableOnNormalHyperplane delta a normal := by
+  letI := Fintype.ofFinite M.Signal
+  obtain ⟨w, htangent, hanchorZero, heffect⟩ :=
+    h.exists_coordinateTangentIncentiveTransfer normal anchor hzero
+      (fun who => pureDeviationEnforcementTarget G delta a who)
+  refine ⟨w, htangent, ?_⟩
+  intro who dev
+  by_cases hwho : who = anchor
+  · subst who
+    have hstage := hbest dev
+    rw [Function.update_eq_self] at hstage
+    have hwzero : (fun y => w y anchor) = 0 := by
+      funext y
+      exact hanchorZero y
+    have hcontinuationDev :
+        expect (M.signalKernel (Function.update a anchor dev))
+          (fun y => w y anchor) = 0 := by
+      rw [hwzero]
+      exact expect_const _ 0
+    have hcontinuationBase :
+        expect (M.signalKernel a) (fun y => w y anchor) = 0 := by
+      rw [hwzero]
+      exact expect_const _ 0
+    simp only [decomposedDeviationPayoff, decomposedPayoff]
+    rw [hcontinuationDev, hcontinuationBase]
+    simp only [mul_zero, add_zero]
+    exact mul_le_mul_of_nonneg_left hstage (sub_nonneg.mpr hdeltaOne)
+  · by_cases hdev : dev = a who
+    · subst dev
+      simp [decomposedDeviationPayoff, decomposedPayoff]
+    · let d : NontrivialDeviation a who := ⟨dev, hdev⟩
+      have hcontinuation :
+          expect (M.signalKernel (Function.update a who dev))
+                (fun y => w y who) -
+              expect (M.signalKernel a) (fun y => w y who) =
+            pureDeviationEnforcementTarget G delta a who d := by
+        rw [← M.pureIndividualIncentiveEffectMap_mixedExtension_eq_expect_sub
+          a who (fun y => w y who) d]
+        exact congrFun (heffect who hwho) d
+      have hdeltaNe : delta ≠ 0 := ne_of_gt hdelta
+      have hcancel :
+          (1 - delta) *
+                (G.eu (Function.update a who dev) who - G.eu a who) +
+              delta *
+                (expect (M.signalKernel (Function.update a who dev))
+                    (fun y => w y who) -
+                  expect (M.signalKernel a) (fun y => w y who)) = 0 := by
+        rw [hcontinuation]
+        simp only [pureDeviationEnforcementTarget, d]
+        field_simp [hdeltaNe]
+        ring
+      simp only [decomposedDeviationPayoff, decomposedPayoff]
+      linarith
+
+/-- The coordinate-normal formulation packages the distinguished coordinate
+existentially and requests a stage best response wherever the normal is
+nonzero. -/
+theorem PureIndividualFullRankAtProfile.isEnforceableOnCoordinateNormalHyperplane
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    [∀ who, Finite (G.Strategy who)]
+    {delta : ℝ} (hdelta : 0 < delta) (hdeltaOne : delta ≤ 1)
+    (a : Profile G)
+    (h : M.mixedExtension.PureIndividualFullRankAtProfile a)
+    (normal : Payoff iota)
+    (hcoordinate : Math.LinearAlgebra.IsCoordinateDirection normal)
+    (hbest : ∀ who, normal who ≠ 0 →
+      G.IsBestResponse who a (a who)) :
+    M.IsEnforceableOnNormalHyperplane delta a normal := by
+  obtain ⟨anchor, hanchor, hzero⟩ := hcoordinate
+  exact h.isEnforceableOnNormalHyperplane_of_bestResponse M hdelta hdeltaOne
+    a normal anchor hzero (hbest anchor hanchor)
+
+/-- With finite outcomes, coordinate-normal enforcement also deters every
+behavioral mixed deviation from the embedded pure profile. -/
+theorem PureIndividualFullRankAtProfile.isEnforceableOnCoordinateNormalHyperplane_mixedExtension
+    [Fintype iota] [DecidableEq iota] [Finite G.Outcome]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    [∀ who, Finite (G.Strategy who)]
+    {delta : ℝ} (hdelta : 0 < delta) (hdeltaOne : delta ≤ 1)
+    (a : Profile G)
+    (h : M.mixedExtension.PureIndividualFullRankAtProfile a)
+    (normal : Payoff iota)
+    (hcoordinate : Math.LinearAlgebra.IsCoordinateDirection normal)
+    (hbest : ∀ who, normal who ≠ 0 →
+      G.IsBestResponse who a (a who)) :
+    M.mixedExtension.IsEnforceableOnNormalHyperplane delta
+      (G.pureMixedProfile a) normal := by
+  rw [M.isEnforceableOnNormalHyperplane_mixedExtension_iff]
+  exact h.isEnforceableOnCoordinateNormalHyperplane M hdelta hdeltaOne
+    a normal hcoordinate hbest
 
 /-- Under explicit utility boundedness, the same tangent continuation
 assignment enforces the embedded pure profile against every behavioral mixed

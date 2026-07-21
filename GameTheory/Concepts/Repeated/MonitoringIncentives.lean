@@ -690,6 +690,76 @@ theorem PurePairwiseFullRankAtProfile.exists_tangentIncentiveTransfer
     · intro hnot
       exact (hnot (Finset.mem_univ who)).elim
 
+/-- Individual full rank for every player realizes arbitrary targets in all
+zero-normal coordinates of a coordinate hyperplane.  The distinguished
+nonzero-normal coordinate remains identically zero. -/
+theorem PureIndividualFullRankAtProfile.exists_coordinateTangentIncentiveTransfer
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G}
+    [∀ who, Finite (NontrivialDeviation a who)]
+    (h : M.PureIndividualFullRankAtProfile a)
+    (normal : Payoff iota) (anchor : iota)
+    (hzero : ∀ who, who ≠ anchor → normal who = 0)
+    (target : ∀ who, NontrivialDeviation a who → ℝ) :
+    ∃ w : M.Signal → Payoff iota,
+      (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+        (∀ y, w y anchor = 0) ∧
+          ∀ who, who ≠ anchor →
+            M.pureIndividualIncentiveEffectMap a who (fun y => w y who) =
+              target who := by
+  classical
+  let K := {who : iota // who ≠ anchor}
+  have hexPart (k : K) :
+      ∃ w : M.Signal → Payoff iota,
+        (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+          M.pureIndividualIncentiveEffectMap a k.1 (fun y => w y k.1) =
+              target k.1 ∧
+            (∀ who, who ≠ k.1 →
+              M.pureIndividualIncentiveEffectMap a who
+                (fun y => w y who) = 0) ∧
+            ∀ y who, who ≠ k.1 → w y who = 0 := by
+    obtain ⟨w, htangent, heffect, hsupport⟩ :=
+      (h k.1).exists_singleCoordinateIncentiveTransfer_supported
+        normal (hzero k.1 k.2) (target k.1)
+    refine ⟨w, htangent, heffect, ?_, hsupport⟩
+    intro who hwho
+    have hfun : (fun y => w y who) = 0 := by
+      funext y
+      exact hsupport y who hwho
+    rw [hfun, map_zero]
+  choose part hpart using hexPart
+  refine ⟨fun y who => ∑ k : K, part k y who, ?_, ?_, ?_⟩
+  · intro y
+    change Math.LinearAlgebra.normalLinearMap normal
+      (fun who => ∑ k : K, part k y who) = 0
+    have hfun : (fun who => ∑ k : K, part k y who) =
+        ∑ k : K, part k y := by
+      funext who
+      simp
+    rw [hfun, map_sum]
+    apply Finset.sum_eq_zero
+    intro k _
+    have hk := (hpart k).1 y
+    change Math.LinearAlgebra.normalLinearMap normal (part k y) = 0 at hk
+    exact hk
+  · intro y
+    apply Finset.sum_eq_zero
+    intro k _
+    exact (hpart k).2.2.2 y anchor k.2.symm
+  · intro who hwho
+    let kWho : K := ⟨who, hwho⟩
+    have hfun : (fun y => ∑ k : K, part k y who) =
+        ∑ k : K, (fun y => part k y who) := by
+      funext y
+      simp
+    rw [hfun, map_sum, Finset.sum_eq_single kWho]
+    · exact (hpart kWho).2.1
+    · intro k _ hk
+      exact (hpart k).2.2.1 who (fun heq => hk (Subtype.ext heq.symm))
+    · intro hnot
+      exact (hnot (Finset.mem_univ kWho)).elim
+
 end PublicMonitoring
 end KernelGame
 end GameTheory
