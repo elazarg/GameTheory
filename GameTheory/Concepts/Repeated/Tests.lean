@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Repeated.MonitoringPublicDraw
 import GameTheory.Concepts.Repeated.MonitoringRank
+import GameTheory.Concepts.Repeated.MonitoringRankInstances
 
 /-!
 # Tests for Repeated Games with Public Monitoring
@@ -375,6 +376,20 @@ example
           (PublicMonitoring.NontrivialDeviation allTrueProfile true) ≤
       Fintype.card (Profile coordinationGame) - 1 := by
   exact h.card_deviations_le_card_signal_sub_one
+
+/-- Perfect profile monitoring satisfies individual full rank. -/
+example :
+    coordinationGame.profileMonitoring.IndividualFullRank
+      allTrueProfile false :=
+  individualFullRank_profileMonitoring coordinationGame allTrueProfile false
+
+/-- Perfect profile monitoring separates the deviations of distinct
+players, hence satisfies pairwise full rank. -/
+example :
+    coordinationGame.profileMonitoring.PairwiseFullRank
+      allTrueProfile false true :=
+  pairwiseFullRank_profileMonitoring coordinationGame allTrueProfile
+    Bool.false_ne_true
 
 end RepeatedMonitoringTests
 
