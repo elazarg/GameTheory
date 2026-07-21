@@ -509,6 +509,21 @@ example :
   exact pureIndividualFullRank_realizedActionMonitoring coordinationGame
     allTrueProfile false
 
+/-- At the realized-action benchmark, the continuation transfer solving any
+individual incentive target can be chosen with a uniform linear norm bound. -/
+example :
+    ∃ (R :
+          (PublicMonitoring.NontrivialDeviation allTrueProfile false → ℝ) →ₗ[ℝ]
+            (Profile coordinationGame → ℝ))
+        (C : ℝ),
+      0 ≤ C ∧
+        (coordinationGame.realizedActionMonitoring.pureIndividualIncentiveEffectMap
+          allTrueProfile false).comp R = LinearMap.id ∧
+        ∀ b, ‖R b‖ ≤ C * ‖b‖ := by
+  exact
+    (pureIndividualFullRank_realizedActionMonitoring coordinationGame
+      allTrueProfile false).exists_bounded_incentiveEffect_rightInverse
+
 /-- Constant public continuation transfers do not change deviation
 incentives. -/
 example (c : ℝ) :

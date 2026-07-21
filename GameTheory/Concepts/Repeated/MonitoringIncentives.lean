@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Mathlib.LinearAlgebra.FiniteDimensional.Basic
+import Mathlib.Topology.Algebra.Module.FiniteDimension
 import GameTheory.Concepts.Repeated.MonitoringRankInstances
 
 /-!
@@ -246,6 +247,47 @@ theorem PurePairwiseFullRank.exists_incentiveEffect_rightInverse
   exact (M.purePairwiseIncentiveEffectMap a i j).exists_rightInverse_of_surjective
     (LinearMap.range_eq_top.mpr
       ((M.purePairwiseIncentiveEffectMap_surjective_iff a i j).2 h))
+
+/-- In finite coordinates, an individual-rank right inverse can be chosen with
+a finite operator-norm bound. -/
+theorem PureIndividualFullRank.exists_bounded_incentiveEffect_rightInverse
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G} {who : iota}
+    [Fintype (NontrivialDeviation a who)]
+    (h : M.PureIndividualFullRank a who) :
+    ∃ (R : (NontrivialDeviation a who → ℝ) →ₗ[ℝ] (M.Signal → ℝ))
+        (C : ℝ),
+      0 ≤ C ∧
+        (M.pureIndividualIncentiveEffectMap a who).comp R = LinearMap.id ∧
+        ∀ b, ‖R b‖ ≤ C * ‖b‖ := by
+  obtain ⟨R, hR⟩ := h.exists_incentiveEffect_rightInverse
+  let Rc := LinearMap.toContinuousLinearMap R
+  refine ⟨R, ‖Rc‖, norm_nonneg _, hR, ?_⟩
+  intro b
+  exact Rc.le_opNorm b
+
+/-- In finite coordinates, a pairwise-rank right inverse can be chosen with a
+finite operator-norm bound for simultaneous incentive targets. -/
+theorem PurePairwiseFullRank.exists_bounded_incentiveEffect_rightInverse
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G} {i j : iota}
+    [Fintype (NontrivialDeviation a i)]
+    [Fintype (NontrivialDeviation a j)]
+    (h : M.PurePairwiseFullRank a i j) :
+    ∃ (R :
+          (NontrivialDeviation a i ⊕ NontrivialDeviation a j → ℝ) →ₗ[ℝ]
+            (M.Signal → ℝ))
+        (C : ℝ),
+      0 ≤ C ∧
+        (M.purePairwiseIncentiveEffectMap a i j).comp R = LinearMap.id ∧
+        ∀ b, ‖R b‖ ≤ C * ‖b‖ := by
+  obtain ⟨R, hR⟩ := h.exists_incentiveEffect_rightInverse
+  let Rc := LinearMap.toContinuousLinearMap R
+  refine ⟨R, ‖Rc‖, norm_nonneg _, hR, ?_⟩
+  intro b
+  exact Rc.le_opNorm b
 
 end PublicMonitoring
 end KernelGame
