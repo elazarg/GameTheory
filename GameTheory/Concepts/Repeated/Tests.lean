@@ -410,6 +410,33 @@ example :
   pairwiseDeviationRank_garble_le coordinationGame.profileMonitoring
     PMF.pure allTrueProfile false true
 
+/-- Realized-action monitoring satisfies the correct pure-deviation
+individual rank condition for the behavioral mixed extension. -/
+example :
+    coordinationGame.realizedActionMonitoring.PureIndividualFullRank
+      allTrueProfile false :=
+  pureIndividualFullRank_realizedActionMonitoring coordinationGame
+    allTrueProfile false
+
+/-- Distinct players' pure deviations also satisfy pairwise full rank under
+realized-action monitoring. -/
+example :
+    coordinationGame.realizedActionMonitoring.PurePairwiseFullRank
+      allTrueProfile false true :=
+  purePairwiseFullRank_realizedActionMonitoring coordinationGame
+    allTrueProfile Bool.false_ne_true
+
+/-- An arbitrary behavioral deviation induces the probability-weighted sum
+of the pure-deviation signal vectors. -/
+example (τ : PMF Bool) :
+    coordinationGame.profileMonitoring.mixedExtension.deviationSignalVector
+        (coordinationGame.pureMixedProfile allTrueProfile) false τ =
+      ∑ dev, (τ dev).toReal •
+        coordinationGame.profileMonitoring.deviationSignalVector
+          allTrueProfile false dev := by
+  exact deviationSignalVector_mixedExtension_eq_sum_pure
+    coordinationGame.profileMonitoring allTrueProfile false τ
+
 end RepeatedMonitoringTests
 
 end GameTheory

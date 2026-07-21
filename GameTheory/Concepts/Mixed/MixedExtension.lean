@@ -63,7 +63,7 @@ theorem mixedExtension_eu (G : KernelGame ι) [Fintype ι] [Finite G.Outcome]
 
 omit [DecidableEq ι] in
 /-- Embed a pure stage-game profile as a mixed profile of the mixed extension. -/
-def pureMixedProfile (G : KernelGame ι) [Fintype ι] (σ : Profile G) :
+@[reducible] def pureMixedProfile (G : KernelGame ι) [Fintype ι] (σ : Profile G) :
     Profile G.mixedExtension :=
   fun i => PMF.pure (σ i)
 

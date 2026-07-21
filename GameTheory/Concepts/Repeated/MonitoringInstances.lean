@@ -52,7 +52,7 @@ def mapMonitoring (G : KernelGame ι) {S : Type} (f : G.Outcome → S) :
 stage strategies and the independently sampled pure strategy profile is the
 public signal.  This re-exposes the intermediate product sample integrated out
 by `G.mixedExtension.outcomeKernel`. -/
-def realizedActionMonitoring (G : KernelGame ι) [Fintype ι] :
+@[reducible] def realizedActionMonitoring (G : KernelGame ι) [Fintype ι] :
     G.mixedExtension.PublicMonitoring where
   Signal := Profile G
   signalKernel := Math.PMFProduct.pmfPi
@@ -60,7 +60,7 @@ def realizedActionMonitoring (G : KernelGame ι) [Fintype ι] :
 /-- Lift a public monitoring structure to behavioral mixed stage actions.
 The independently sampled pure action profile is fed into the original signal
 kernel and only the resulting public signal is exposed. -/
-def PublicMonitoring.mixedExtension {G : KernelGame ι}
+@[reducible] def PublicMonitoring.mixedExtension {G : KernelGame ι}
     (M : G.PublicMonitoring) [Fintype ι] :
     G.mixedExtension.PublicMonitoring where
   Signal := M.Signal
@@ -100,6 +100,27 @@ def PublicMonitoring.mixedExtension {G : KernelGame ι}
   change (Math.PMFProduct.pmfPi
     (fun i => (PMF.pure (σ i) : PMF (G.Strategy i)))).bind M.signalKernel = _
   rw [Math.PMFProduct.pmfPi_pure, PMF.pure_bind]
+
+/-- At a pure opponents' profile, a unilateral mixed action generates the
+mixture of the original signal laws under the corresponding pure deviations. -/
+theorem PublicMonitoring.mixedExtension_signalKernel_update_pureMixedProfile
+    {G : KernelGame ι} (M : G.PublicMonitoring)
+    [Fintype ι] [DecidableEq ι]
+    (a : Profile G) (who : ι) (τ : PMF (G.Strategy who)) :
+    M.mixedExtension.signalKernel
+        (Function.update (G.pureMixedProfile a) who τ) =
+      τ.bind fun dev =>
+        M.signalKernel (Function.update a who dev) := by
+  change
+    (Math.PMFProduct.pmfPi
+      (Function.update (G.pureMixedProfile a) who τ)).bind M.signalKernel = _
+  rw [Math.PMFProduct.pmfPi_update_bind, PMF.bind_bind]
+  apply congrArg (fun k => τ.bind k)
+  funext dev
+  change M.mixedExtension.signalKernel
+      (Function.update (G.pureMixedProfile a) who (PMF.pure dev)) = _
+  rw [← G.pureMixedProfile_update]
+  exact M.mixedExtension_signalKernel_pure (Function.update a who dev)
 
 /-- Behavioral lifting of observable pure profiles is exactly realized-action
 monitoring of the mixed extension. -/
