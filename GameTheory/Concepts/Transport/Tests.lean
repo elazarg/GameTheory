@@ -138,6 +138,55 @@ example [Finite (Profile A)] [Nonempty (Profile A)]
     A.IsSecurityProfile σ ↔ B.IsSecurityProfile (e.profileEquiv σ) := by
   simpa using e.isSecurityProfile_iff σ
 
+example [Fintype κ] (e : ProtocolIsomorphism A B)
+    (hutil : ∀ ω : A.Outcome,
+      B.utility (e.outcomeEquiv ω) = A.utility ω) :
+    A.IsZeroSum ↔ B.IsZeroSum :=
+  e.isZeroSum_iff hutil
+
+/-! A strategic isomorphism alone cannot transport raw-outcome properties:
+the games below always realize `true`, so changing utility only at the
+unreachable outcome `false` preserves utility laws and expected utilities. -/
+
+private def zeroOnUnreachableGame : KernelGame (Fin 1) where
+  Strategy := fun _ => Unit
+  Outcome := Bool
+  utility := fun _ _ => 0
+  outcomeKernel := fun _ => PMF.pure true
+
+private def nonzeroOnUnreachableGame : KernelGame (Fin 1) where
+  Strategy := fun _ => Unit
+  Outcome := Bool
+  utility := fun ω _ => if ω then 0 else 1
+  outcomeKernel := fun _ => PMF.pure true
+
+private noncomputable def unreachableOutcomeEUGameIsomorphism :
+    EUGameIsomorphism zeroOnUnreachableGame nonzeroOnUnreachableGame where
+  toGameIsomorphism := {
+    stratEquiv := fun _ => Equiv.refl Unit
+    udist_preserved := by
+      intro σ
+      simp [KernelGame.udist, zeroOnUnreachableGame,
+        nonzeroOnUnreachableGame]
+  }
+  eu_preserved := by
+    intro σ who
+    simp [KernelGame.eu, zeroOnUnreachableGame, nonzeroOnUnreachableGame,
+      Math.Probability.expect_pure]
+
+example : zeroOnUnreachableGame.IsZeroSum := by
+  simp [KernelGame.IsZeroSum, KernelGame.IsConstantSum,
+    zeroOnUnreachableGame]
+
+example : ¬ nonzeroOnUnreachableGame.IsZeroSum := by
+  intro h
+  have hf := h false
+  simp [nonzeroOnUnreachableGame] at hf
+
+example : Nonempty
+    (EUGameIsomorphism zeroOnUnreachableGame nonzeroOnUnreachableGame) :=
+  ⟨unreachableOutcomeEUGameIsomorphism⟩
+
 end
 
 end GameTheory.KernelGame.EUGameIsomorphism.Tests

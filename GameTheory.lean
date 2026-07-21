@@ -30,6 +30,7 @@ import GameTheory.Concepts.Transport.Transfer
 import GameTheory.Concepts.Transport.Order
 import GameTheory.Concepts.Transport.Characterize
 import GameTheory.Concepts.Transport.Corners
+import GameTheory.Concepts.Transport.OutcomeProperties
 import GameTheory.Concepts.Transport.Oblivious
 import GameTheory.Concepts.Transport.Separations
 import GameTheory.Concepts.Foundations.Deviation
