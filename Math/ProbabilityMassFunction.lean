@@ -39,6 +39,18 @@ theorem pushforward_id (μ : PMF α) :
     pushforward μ id = μ := by
   exact PMF.map_id μ
 
+/-- Mapping a PMF along an equivalence only relabels its point masses. -/
+theorem map_equiv_apply (μ : PMF α) (e : α ≃ β) (b : β) :
+    μ.map e b = μ (e.symm b) := by
+  rw [PMF.map_apply, tsum_eq_single (e.symm b)]
+  · simp
+  · intro a ha
+    have hne : b ≠ e a := by
+      intro h
+      apply ha
+      exact e.injective (by simpa using h.symm)
+    simp [hne]
+
 theorem pushforward_pure (a : α) (f : α → β) :
     pushforward (PMF.pure a) f = PMF.pure (f a) := by
   exact PMF.pure_map f a

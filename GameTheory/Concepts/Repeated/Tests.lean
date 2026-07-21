@@ -341,6 +341,17 @@ example :
   exact coordinationGame.profileMonitoring.pairwiseFullRank_iff
     allTrueProfile false true
 
+/-- Individual rank is unchanged by a bijective relabeling of public
+signals. -/
+example :
+    (coordinationGame.profileMonitoring.mapSignal
+        (Equiv.refl (Profile coordinationGame))).IndividualFullRank
+          allTrueProfile false ↔
+      coordinationGame.profileMonitoring.IndividualFullRank
+        allTrueProfile false := by
+  exact individualFullRank_mapSignal_equiv_iff
+    coordinationGame.profileMonitoring allTrueProfile false (Equiv.refl _)
+
 end RepeatedMonitoringTests
 
 end GameTheory

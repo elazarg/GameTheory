@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 import Mathlib.LinearAlgebra.LinearIndependent.Basic
 import Mathlib.LinearAlgebra.Matrix.ToLin
+import Mathlib.LinearAlgebra.Pi
 import GameTheory.Concepts.Repeated.Monitoring
 
 /-!
@@ -151,6 +152,107 @@ theorem IndividualFullRank.signalKernel_update_injective
   change M.signalKernel (Function.update a who dev.1) =
     M.signalKernel (Function.update a who dev'.1) at heq
   rw [heq]
+
+/-! ## Invariance under signal relabeling -/
+
+private theorem linearIndependent_relabel_iff
+    {Y S κ : Type} [Ring κ]
+    {I : Type} {v : I → Y → κ} (e : Y ≃ S) :
+    LinearIndependent κ (fun i =>
+      LinearEquiv.piCongrLeft κ (fun _ : S => κ) e (v i)) ↔
+      LinearIndependent κ v := by
+  let E : (Y → κ) ≃ₗ[κ] (S → κ) :=
+    LinearEquiv.piCongrLeft κ (fun _ : S => κ) e
+  constructor
+  · intro h
+    change LinearIndependent κ (E.toLinearMap ∘ v) at h
+    exact LinearIndependent.of_comp E.toLinearMap h
+  · intro h
+    change LinearIndependent κ (E.toLinearMap ∘ v)
+    exact h.map' E.toLinearMap E.ker
+
+/-- Relabeling public signals by an equivalence applies the corresponding
+coordinate linear equivalence to every deviation row. -/
+theorem deviationSignalMatrix_mapSignal_equiv
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (a : Profile G) (who : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).deviationSignalMatrix a who =
+      fun dev => LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+        (M.deviationSignalMatrix a who dev) := by
+  funext dev y
+  change S at y
+  simp only [deviationSignalMatrix]
+  rw [show LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+      (M.deviationSignalVector a who dev.1) y =
+        M.deviationSignalVector a who dev.1 (e.symm y) by
+    simp [LinearEquiv.piCongrLeft, LinearEquiv.piCongrLeft']]
+  simp only [deviationSignalVector]
+  change
+    ((M.signalKernel (Function.update a who dev.1)).map e y).toReal -
+        ((M.signalKernel a).map e y).toReal = _
+  rw [Math.ProbabilityMassFunction.map_equiv_apply,
+    Math.ProbabilityMassFunction.map_equiv_apply]
+
+/-- Individual full rank is invariant under bijective public-signal
+relabeling. -/
+theorem individualFullRank_mapSignal_equiv_iff
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (a : Profile G) (who : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).IndividualFullRank a who ↔
+      M.IndividualFullRank a who := by
+  rw [IndividualFullRank, M.deviationSignalMatrix_mapSignal_equiv]
+  exact linearIndependent_relabel_iff e
+
+/-- Relabeling public signals applies the same coordinate equivalence to the
+combined pairwise deviation family. -/
+theorem pairwiseDeviationSignalFamily_mapSignal_equiv
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (a : Profile G) (i j : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).pairwiseDeviationSignalFamily a i j =
+      fun dev => LinearEquiv.piCongrLeft ℝ (fun _ : S => ℝ) e
+        (M.pairwiseDeviationSignalFamily a i j dev) := by
+  funext dev y
+  cases dev with
+  | inl dev =>
+      exact congrFun
+        (congrFun (M.deviationSignalMatrix_mapSignal_equiv a i e) dev) y
+  | inr dev =>
+      exact congrFun
+        (congrFun (M.deviationSignalMatrix_mapSignal_equiv a j e) dev) y
+
+/-- Pairwise full rank is invariant under bijective public-signal
+relabeling. -/
+theorem pairwiseFullRank_mapSignal_equiv_iff
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (a : Profile G) (i j : ι) {S : Type} (e : M.Signal ≃ S) :
+    (M.mapSignal e).PairwiseFullRank a i j ↔
+      M.PairwiseFullRank a i j := by
+  rw [PairwiseFullRank, M.pairwiseDeviationSignalFamily_mapSignal_equiv]
+  exact linearIndependent_relabel_iff e
+
+/-- Under the individual-rank hypotheses, pairwise identifiability is also
+invariant under bijective signal relabeling. -/
+theorem pairwiseIdentifiable_mapSignal_equiv_iff_of_individualFullRank
+    (M : G.PublicMonitoring) [DecidableEq ι]
+    (a : Profile G) (i j : ι) {S : Type} (e : M.Signal ≃ S)
+    (hi : M.IndividualFullRank a i)
+    (hj : M.IndividualFullRank a j) :
+    (M.mapSignal e).PairwiseIdentifiable a i j ↔
+      M.PairwiseIdentifiable a i j := by
+  have hi' := (M.individualFullRank_mapSignal_equiv_iff a i e).2 hi
+  have hj' := (M.individualFullRank_mapSignal_equiv_iff a j e).2 hj
+  constructor
+  · intro hident
+    have hp' : (M.mapSignal e).PairwiseFullRank a i j :=
+      ((M.mapSignal e).pairwiseFullRank_iff a i j).2
+        ⟨hi', hj', hident⟩
+    have hp := (M.pairwiseFullRank_mapSignal_equiv_iff a i j e).1 hp'
+    exact (M.pairwiseFullRank_iff a i j).1 hp |>.2.2
+  · intro hident
+    have hp : M.PairwiseFullRank a i j :=
+      (M.pairwiseFullRank_iff a i j).2 ⟨hi, hj, hident⟩
+    have hp' := (M.pairwiseFullRank_mapSignal_equiv_iff a i j e).2 hp
+    exact ((M.mapSignal e).pairwiseFullRank_iff a i j).1 hp' |>.2.2
 
 end PublicMonitoring
 
