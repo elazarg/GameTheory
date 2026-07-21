@@ -459,6 +459,28 @@ theorem pairwiseTangentIncentiveTransfer_mem_normalHyperplane
         normal j * (-(normal i) * z y) := by simp
     _ = 0 := by ring
 
+/-- A two-coordinate tangent transfer amplifies the scalar signal transfer by
+at most the norm of the payoff normal. -/
+theorem norm_pairwiseTangentIncentiveTransfer_le
+    [Fintype iota] [DecidableEq iota]
+    (M : G.mixedExtension.PublicMonitoring) [Fintype M.Signal]
+    (normal : Payoff iota) (i j : iota) (z : M.Signal → ℝ) :
+    ‖M.pairwiseTangentIncentiveTransfer normal i j z‖ ≤
+      ‖normal‖ * ‖z‖ := by
+  rw [pi_norm_le_iff_of_nonneg (mul_nonneg (norm_nonneg _) (norm_nonneg _))]
+  intro y
+  rw [pi_norm_le_iff_of_nonneg (mul_nonneg (norm_nonneg _) (norm_nonneg _))]
+  intro who
+  simp only [pairwiseTangentIncentiveTransfer]
+  split_ifs with hwhoI hwhoJ
+  · rw [norm_mul]
+    exact mul_le_mul (norm_le_pi_norm normal j) (norm_le_pi_norm z y)
+      (norm_nonneg _) (norm_nonneg _)
+  · rw [norm_mul, norm_neg]
+    exact mul_le_mul (norm_le_pi_norm normal i) (norm_le_pi_norm z y)
+      (norm_nonneg _) (norm_nonneg _)
+  · simpa using mul_nonneg (norm_nonneg normal) (norm_nonneg z)
+
 /-- Individual full rank realizes any incentive target by a transfer supported
 on the affected player's coordinate.  If the normal vanishes there, every
 realized transfer remains tangent to its hyperplane. -/
@@ -597,6 +619,96 @@ theorem PurePairwiseFullRank.exists_pairwiseTangentIncentiveTransfer
     h.exists_pairwiseTangentIncentiveTransfer_supported hij normal hi hj
       targetI targetJ
   exact ⟨w, htangent, heffectI, heffectJ⟩
+
+/-- Pairwise full rank admits a one-sided tangent incentive solver whose
+bound is uniform over the payoff normal.  The only normal-dependent loss is
+the reciprocal of the coordinate used to realize the target. -/
+theorem PurePairwiseFullRank.exists_bounded_leftTangentIncentiveTransfer_supported
+    [Fintype iota] [DecidableEq iota]
+    {M : G.mixedExtension.PublicMonitoring} [Fintype M.Signal]
+    {a : Profile G} {i j : iota}
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)]
+    (h : M.PurePairwiseFullRank a i j) (hij : i ≠ j) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (normal : Payoff iota), normal j ≠ 0 →
+        ∀ (target : NontrivialDeviation a i → ℝ) (B : ℝ), 0 ≤ B →
+          (∀ dev, ‖target dev‖ ≤ B) →
+          ∃ w : M.Signal → Payoff iota,
+            (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
+              M.pureIndividualIncentiveEffectMap a i (fun y => w y i) =
+                target ∧
+              M.pureIndividualIncentiveEffectMap a j (fun y => w y j) = 0 ∧
+              (∀ y who, who ≠ i → who ≠ j → w y who = 0) ∧
+              ∀ y, ‖w y‖ ≤ C * ‖normal‖ * |normal j|⁻¹ * B := by
+  letI := Fintype.ofFinite (NontrivialDeviation a i)
+  letI := Fintype.ofFinite (NontrivialDeviation a j)
+  obtain ⟨R, C, hC, hR, hRbound⟩ :=
+    h.exists_bounded_incentiveEffect_rightInverse
+  refine ⟨C, hC, ?_⟩
+  intro normal hj target B hB htarget
+  let b : NontrivialDeviation a i ⊕ NontrivialDeviation a j → ℝ :=
+    Sum.elim (fun dev => target dev / normal j) 0
+  let z := R b
+  let w := M.pairwiseTangentIncentiveTransfer normal i j z
+  have hz : M.purePairwiseIncentiveEffectMap a i j z = b := by
+    calc
+      M.purePairwiseIncentiveEffectMap a i j z =
+          ((M.purePairwiseIncentiveEffectMap a i j).comp R) b := rfl
+      _ = LinearMap.id b := congrArg (fun L => L b) hR
+      _ = b := rfl
+  have hzI : M.pureIndividualIncentiveEffectMap a i z =
+      fun dev => target dev / normal j := by
+    funext dev
+    simpa [purePairwiseIncentiveEffectMap,
+      pureIndividualIncentiveEffectMap,
+      purePairwiseDeviationSignalFamily, Matrix.mulVec, dotProduct, b] using
+        congrFun hz (Sum.inl dev)
+  have hzJ : M.pureIndividualIncentiveEffectMap a j z = 0 := by
+    funext dev
+    simpa [purePairwiseIncentiveEffectMap,
+      pureIndividualIncentiveEffectMap,
+      purePairwiseDeviationSignalFamily, Matrix.mulVec, dotProduct, b] using
+        congrFun hz (Sum.inr dev)
+  have hb : ‖b‖ ≤ |normal j|⁻¹ * B := by
+    rw [pi_norm_le_iff_of_nonneg
+      (mul_nonneg (inv_nonneg.mpr (abs_nonneg _)) hB)]
+    intro dev
+    cases dev with
+    | inl dev =>
+        calc
+          ‖b (Sum.inl dev)‖ = |normal j|⁻¹ * ‖target dev‖ := by
+            simp [b, Real.norm_eq_abs, div_eq_mul_inv, mul_comm]
+          _ ≤ |normal j|⁻¹ * B :=
+            mul_le_mul_of_nonneg_left (htarget dev)
+              (inv_nonneg.mpr (abs_nonneg _))
+    | inr dev =>
+        simpa [b] using mul_nonneg (inv_nonneg.mpr (abs_nonneg (normal j))) hB
+  refine ⟨w,
+    fun y => M.pairwiseTangentIncentiveTransfer_mem_normalHyperplane
+      normal hij z y, ?_, ?_, ?_, ?_⟩
+  · rw [show (fun y => w y i) = normal j • z by
+      funext y
+      simp [w, smul_eq_mul]]
+    rw [map_smul, hzI]
+    funext dev
+    exact mul_div_cancel₀ _ hj
+  · rw [show (fun y => w y j) = (-(normal i)) • z by
+      funext y
+      simp [w, hij, smul_eq_mul]]
+    rw [map_smul, hzJ, smul_zero]
+  · intro y who hwhoI hwhoJ
+    simp [w, pairwiseTangentIncentiveTransfer, hwhoI, hwhoJ]
+  · intro y
+    calc
+      ‖w y‖ ≤ ‖w‖ := norm_le_pi_norm w y
+      _ ≤ ‖normal‖ * ‖z‖ :=
+        M.norm_pairwiseTangentIncentiveTransfer_le normal i j z
+      _ ≤ ‖normal‖ * (C * ‖b‖) :=
+        mul_le_mul_of_nonneg_left (hRbound b) (norm_nonneg normal)
+      _ ≤ ‖normal‖ * (C * (|normal j|⁻¹ * B)) := by
+        gcongr
+      _ = C * ‖normal‖ * |normal j|⁻¹ * B := by ring
 
 /-- Pairwise full rank for every distinct pair at a profile realizes an
 arbitrary incentive target for every player while keeping every public

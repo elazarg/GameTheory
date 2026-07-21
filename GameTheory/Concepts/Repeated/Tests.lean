@@ -569,6 +569,16 @@ example
         Bool.false_ne_true (fun _ => (1 : ℝ)) (by norm_num) (by norm_num)
           targetFalse targetTrue
 
+/-- A one-sided pairwise solver has one quantitative constant uniform over
+all normals with the partner coordinate nonzero. -/
+example : ∃ C : ℝ, 0 ≤ C := by
+  obtain ⟨C, hC, _⟩ :=
+    (purePairwiseFullRank_realizedActionMonitoring coordinationGame
+      allTrueProfile Bool.false_ne_true
+    ).exists_bounded_leftTangentIncentiveTransfer_supported
+      Bool.false_ne_true
+  exact ⟨C, hC⟩
+
 /-- The complete tangent incentive operator is surjective at every
 non-coordinate normal under all-pairs full rank. -/
 example :
