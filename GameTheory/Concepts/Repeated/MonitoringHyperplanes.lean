@@ -136,6 +136,14 @@ theorem pureIndividualIncentiveEffectMap_mixedExtension_eq_expect_sub
   simp only [Math.PMFProduct.pmfPi_pure, PMF.pure_bind]
   ring
 
+/-- Current one-period payoff gains from nontrivial pure deviations. -/
+def pureDeviationGainVector
+    [DecidableEq iota]
+    (G : KernelGame iota) (a : Profile G) :
+    (who : iota) → NontrivialDeviation a who → ℝ :=
+  fun who dev =>
+    G.eu (Function.update a who dev.1) who - G.eu a who
+
 /-- The exact continuation-effect target that offsets the current gain from
 a nontrivial pure deviation at discount factor `delta`. -/
 def pureDeviationEnforcementTarget
@@ -145,23 +153,19 @@ def pureDeviationEnforcementTarget
   -((1 - delta) / delta) *
     (G.eu (Function.update a who dev.1) who - G.eu a who)
 
-/-- Pairwise full rank at a pure profile enforces that profile on every
-non-coordinate normal hyperplane.  Only the action carriers and public signal
-type need finite enumerations; no outcome-space finiteness is used. -/
-theorem PurePairwiseFullRankAtProfile.isEnforceableOnNormalHyperplane
+/-- Any tangent continuation assignment whose pure-deviation effects equal
+the exact enforcement targets enforces the pure stage profile.  This algebraic
+bridge does not require finite action carriers. -/
+theorem isEnforceable_of_pureIncentiveEffects
     [Fintype iota] [DecidableEq iota]
-    (M : G.PublicMonitoring) [Finite M.Signal]
-    [∀ who, Finite (G.Strategy who)]
+    (M : G.PublicMonitoring) [Fintype M.Signal]
     {delta : ℝ} (hdelta : 0 < delta) (a : Profile G)
-    (h : M.mixedExtension.PurePairwiseFullRankAtProfile a)
-    (normal : Payoff iota)
-    (hnormal : Math.LinearAlgebra.HasTwoNonzeroCoordinates normal) :
-    M.IsEnforceableOnNormalHyperplane delta a normal := by
-  letI := Fintype.ofFinite M.Signal
-  obtain ⟨w, htangent, heffect⟩ :=
-    h.exists_tangentIncentiveTransfer hnormal
-      (fun who => pureDeviationEnforcementTarget G delta a who)
-  refine ⟨w, htangent, ?_⟩
+    (w : M.ContinuationAssignment)
+    (heffect : ∀ who,
+      M.mixedExtension.pureIndividualIncentiveEffectMap a who
+          (fun y => w y who) =
+        fun dev => pureDeviationEnforcementTarget G delta a who dev) :
+    M.IsEnforceable delta a w := by
   intro who dev
   by_cases hdev : dev = a who
   · subst dev
@@ -190,6 +194,110 @@ theorem PurePairwiseFullRankAtProfile.isEnforceableOnNormalHyperplane
     simp only [decomposedDeviationPayoff, decomposedPayoff]
     linarith
 
+/-- Pairwise full rank at a pure profile enforces that profile on every
+non-coordinate normal hyperplane.  Only the relevant nontrivial-deviation
+types and public signal type must be finite; no outcome-space finiteness is
+used. -/
+theorem PurePairwiseFullRankAtProfile.isEnforceableOnNormalHyperplane
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    {delta : ℝ} (hdelta : 0 < delta) (a : Profile G)
+    [∀ who, Finite (NontrivialDeviation a who)]
+    (h : M.mixedExtension.PurePairwiseFullRankAtProfile a)
+    (normal : Payoff iota)
+    (hnormal : Math.LinearAlgebra.HasTwoNonzeroCoordinates normal) :
+    M.IsEnforceableOnNormalHyperplane delta a normal := by
+  letI := Fintype.ofFinite M.Signal
+  obtain ⟨w, htangent, heffect⟩ :=
+    h.exists_tangentIncentiveTransfer hnormal
+      (fun who => pureDeviationEnforcementTarget G delta a who)
+  exact ⟨w, htangent,
+    M.isEnforceable_of_pureIncentiveEffects hdelta a w heffect⟩
+
+/-- At a fixed non-coordinate normal, pairwise full rank gives affine
+hyperplane enforcement with continuation displacement bounded uniformly by a
+constant times `(1 - delta) / delta`.  The constant is independent of the
+discount factor and of the affine center. -/
+theorem PurePairwiseFullRankAtProfile.exists_smallVariation_affine_enforcement
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G)
+    [∀ who, Finite (NontrivialDeviation a who)]
+    (h : M.mixedExtension.PurePairwiseFullRankAtProfile a)
+    (normal : Payoff iota)
+    (hnormal : Math.LinearAlgebra.HasTwoNonzeroCoordinates normal) :
+    ∃ C : ℝ, 0 ≤ C ∧
+      ∀ (delta : ℝ), 0 < delta → ∀ center : Payoff iota,
+        ∃ w : M.ContinuationAssignment,
+          (∀ y, w y ∈ Math.LinearAlgebra.normalAffineHyperplane normal
+            (Math.LinearAlgebra.normalLinearMap normal center)) ∧
+          M.IsEnforceable delta a w ∧
+          ∀ y, ‖w y - center‖ ≤ C * |(1 - delta) / delta| := by
+  letI := Fintype.ofFinite M.Signal
+  letI (who : iota) : Fintype (NontrivialDeviation a who) :=
+    Fintype.ofFinite (NontrivialDeviation a who)
+  obtain ⟨R, CR, hCR, hR, hRbound⟩ :=
+    h.exists_bounded_tangentIncentiveEffect_rightInverse hnormal
+  let gain := pureDeviationGainVector G a
+  refine ⟨CR * ‖gain‖, mul_nonneg hCR (norm_nonneg gain), ?_⟩
+  intro delta hdelta center
+  let target : (who : iota) → NontrivialDeviation a who → ℝ :=
+    fun who => pureDeviationEnforcementTarget G delta a who
+  let zSub := R target
+  let z : M.Signal → Payoff iota := zSub.1
+  let w : M.ContinuationAssignment := M.translateContinuation z center
+  have hzTangent : ∀ y,
+      z y ∈ Math.LinearAlgebra.normalHyperplane normal := by
+    intro y
+    have hzKer := zSub.2
+    change M.mixedExtension.normalIncentiveTransferLinearMap normal z = 0 at hzKer
+    have hy := congrFun hzKer y
+    exact hy
+  have htargetRealized :
+      M.mixedExtension.pureTangentIncentiveEffectMapAtProfile a normal
+          zSub = target := by
+    calc
+      M.mixedExtension.pureTangentIncentiveEffectMapAtProfile a normal zSub =
+          ((M.mixedExtension.pureTangentIncentiveEffectMapAtProfile
+            a normal).comp R) target := rfl
+      _ = LinearMap.id target := congrArg (fun L => L target) hR
+      _ = target := rfl
+  have hzEffect : ∀ who,
+      M.mixedExtension.pureIndividualIncentiveEffectMap a who
+          (fun y => z y who) = target who := by
+    intro who
+    exact congrFun htargetRealized who
+  have hzEnforce : M.IsEnforceable delta a z :=
+    M.isEnforceable_of_pureIncentiveEffects hdelta a z hzEffect
+  refine ⟨w, ?_,
+    (M.isEnforceable_translateContinuation_iff delta a z center).2
+      hzEnforce, ?_⟩
+  · intro y
+    change Math.LinearAlgebra.normalLinearMap normal (z y + center) =
+      Math.LinearAlgebra.normalLinearMap normal center
+    rw [map_add]
+    have hy := hzTangent y
+    change Math.LinearAlgebra.normalLinearMap normal (z y) = 0 at hy
+    rw [hy, zero_add]
+  · intro y
+    have hdisplacement : (fun y => w y - center) = z := by
+      funext y who
+      simp [w, translateContinuation]
+    refine (norm_le_pi_norm (fun y => w y - center) y).trans ?_
+    rw [hdisplacement]
+    have htarget : target = (-((1 - delta) / delta)) • gain := by
+      funext who dev
+      simp [target, gain, pureDeviationEnforcementTarget,
+        pureDeviationGainVector, smul_eq_mul]
+    calc
+      ‖z‖ = ‖zSub‖ := rfl
+      _ ≤ CR * ‖target‖ := hRbound target
+      _ = CR * (‖-((1 - delta) / delta)‖ * ‖gain‖) := by
+        rw [htarget, norm_smul]
+      _ = (CR * ‖gain‖) * |(1 - delta) / delta| := by
+        rw [Real.norm_eq_abs, abs_neg]
+        ring
+
 /-- If the normal vanishes outside one player, individual full rank supplies
 tangent incentives for every other player.  The distinguished player must
 already be playing a stage best response because tangency fixes that player's
@@ -197,9 +305,9 @@ continuation coordinate. -/
 theorem PureIndividualFullRankAtProfile.isEnforceableOnNormalHyperplane_of_bestResponse
     [Fintype iota] [DecidableEq iota]
     (M : G.PublicMonitoring) [Finite M.Signal]
-    [∀ who, Finite (G.Strategy who)]
     {delta : ℝ} (hdelta : 0 < delta) (hdeltaOne : delta ≤ 1)
     (a : Profile G)
+    [∀ who, Finite (NontrivialDeviation a who)]
     (h : M.mixedExtension.PureIndividualFullRankAtProfile a)
     (normal : Payoff iota) (anchor : iota)
     (hzero : ∀ who, who ≠ anchor → normal who = 0)
@@ -264,9 +372,9 @@ nonzero. -/
 theorem PureIndividualFullRankAtProfile.isEnforceableOnCoordinateNormalHyperplane
     [Fintype iota] [DecidableEq iota]
     (M : G.PublicMonitoring) [Finite M.Signal]
-    [∀ who, Finite (G.Strategy who)]
     {delta : ℝ} (hdelta : 0 < delta) (hdeltaOne : delta ≤ 1)
     (a : Profile G)
+    [∀ who, Finite (NontrivialDeviation a who)]
     (h : M.mixedExtension.PureIndividualFullRankAtProfile a)
     (normal : Payoff iota)
     (hcoordinate : Math.LinearAlgebra.IsCoordinateDirection normal)

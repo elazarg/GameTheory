@@ -627,6 +627,17 @@ example :
   have hfalse := congrFun hzero false
   norm_num at hfalse
 
+/-- The non-coordinate enforcement construction has one affine
+small-variation constant, uniform over discount factors and affine centers. -/
+example : ∃ C : ℝ, 0 ≤ C := by
+  obtain ⟨C, hC, _⟩ :=
+    (purePairwiseFullRankAtProfile_profileMonitoring_mixedExtension
+      coordinationGame allTrueProfile).exists_smallVariation_affine_enforcement
+        coordinationGame.profileMonitoring allTrueProfile
+          (fun _ : Bool => (1 : ℝ))
+          ⟨false, true, Bool.false_ne_true, by norm_num, by norm_num⟩
+  exact ⟨C, hC⟩
+
 /-- Constant public continuation transfers do not change deviation
 incentives. -/
 example (c : ℝ) :
