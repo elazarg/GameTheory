@@ -259,6 +259,167 @@ theorem PurePairwiseFullRank.symm
   rw [M.purePairwiseFullRank_iff] at h ⊢
   exact ⟨h.2.1, h.1, h.2.2.symm⟩
 
+/-! ### Numerical pure-deviation ranks -/
+
+/-- Numerical row rank of one player's pure-deviation signal matrix. The
+chosen finite enumeration of signals is kept internal. -/
+noncomputable def pureIndividualDeviationRank
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G) (who : ι) : ℕ := by
+  letI := Fintype.ofFinite M.Signal
+  exact (M.pureDeviationSignalMatrix a who).rank
+
+/-- Numerical row rank of the combined pure-deviation signal matrix for two
+players. The chosen finite enumeration of signals is kept internal. -/
+noncomputable def purePairwiseDeviationRank
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G) (i j : ι) : ℕ := by
+  letI := Fintype.ofFinite M.Signal
+  exact (M.purePairwiseDeviationSignalFamily a i j).rank
+
+/-- With finitely many pure deviations, pure individual full rank is exactly
+full numerical row rank. -/
+theorem pureIndividualFullRank_iff_pureIndividualDeviationRank_eq_card
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G) (who : ι)
+    [Finite (NontrivialDeviation a who)] :
+    M.PureIndividualFullRank a who ↔
+      M.pureIndividualDeviationRank a who =
+        Nat.card (NontrivialDeviation a who) := by
+  letI := Fintype.ofFinite M.Signal
+  letI := Fintype.ofFinite (NontrivialDeviation a who)
+  let A : Matrix (NontrivialDeviation a who) M.Signal ℝ :=
+    M.pureDeviationSignalMatrix a who
+  change LinearIndependent ℝ A ↔ A.rank = _
+  constructor
+  · intro h
+    have hrank : A.rank = Fintype.card (NontrivialDeviation a who) :=
+      h.rank_matrix
+    simpa only [Nat.card_eq_fintype_card] using hrank
+  · intro h
+    rw [linearIndependent_iff_card_eq_finrank_span]
+    change Fintype.card (NontrivialDeviation a who) =
+      Module.finrank ℝ (Submodule.span ℝ (Set.range A.row))
+    rw [← Matrix.rank_eq_finrank_span_row]
+    simpa only [Nat.card_eq_fintype_card] using h.symm
+
+/-- With finitely many pure deviations, pure pairwise full rank is exactly
+full numerical row rank of the combined family. -/
+theorem purePairwiseFullRank_iff_purePairwiseDeviationRank_eq_card
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring) [Finite M.Signal]
+    (a : Profile G) (i j : ι)
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)] :
+    M.PurePairwiseFullRank a i j ↔
+      M.purePairwiseDeviationRank a i j =
+        Nat.card (NontrivialDeviation a i) +
+          Nat.card (NontrivialDeviation a j) := by
+  letI := Fintype.ofFinite M.Signal
+  letI := Fintype.ofFinite (NontrivialDeviation a i)
+  letI := Fintype.ofFinite (NontrivialDeviation a j)
+  let A : Matrix (NontrivialDeviation a i ⊕ NontrivialDeviation a j)
+      M.Signal ℝ := M.purePairwiseDeviationSignalFamily a i j
+  change LinearIndependent ℝ A ↔ A.rank = _
+  constructor
+  · intro h
+    dsimp [A] at h ⊢
+    simpa only [purePairwiseDeviationSignalFamily,
+      Nat.card_eq_fintype_card, Fintype.card_sum] using h.rank_matrix
+  · intro h
+    rw [linearIndependent_iff_card_eq_finrank_span]
+    change Fintype.card
+        (NontrivialDeviation a i ⊕ NontrivialDeviation a j) =
+      Module.finrank ℝ (Submodule.span ℝ (Set.range A.row))
+    rw [← Matrix.rank_eq_finrank_span_row, Fintype.card_sum]
+    simpa only [Nat.card_eq_fintype_card] using h.symm
+
+/-- Pure individual deviation rank is bounded by the dimension of the
+zero-sum signal subspace. -/
+theorem pureIndividualDeviationRank_le_card_signal_sub_one
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    [Finite M.Signal] [Nonempty M.Signal]
+    (a : Profile G) (who : ι)
+    [Finite (NontrivialDeviation a who)] :
+    M.pureIndividualDeviationRank a who ≤ Nat.card M.Signal - 1 := by
+  letI := Fintype.ofFinite M.Signal
+  rw [pureIndividualDeviationRank, Matrix.rank_eq_finrank_span_row,
+    Nat.card_eq_fintype_card,
+    ← Math.LinearAlgebra.finrank_zeroSumSubspace ℝ M.Signal]
+  apply Submodule.finrank_mono
+  apply Submodule.span_le.2
+  rintro _ ⟨dev, rfl⟩
+  change M.deviationSignalVector (G.pureMixedProfile a) who
+    (PMF.pure dev.1) ∈ Math.LinearAlgebra.zeroSumSubspace ℝ M.Signal
+  rw [Math.LinearAlgebra.mem_zeroSumSubspace_iff]
+  exact M.sum_deviationSignalVector_eq_zero
+    (G.pureMixedProfile a) who (PMF.pure dev.1)
+
+/-- Pure individual full rank requires at least one independent signal
+direction per nontrivial pure deviation. -/
+theorem PureIndividualFullRank.card_deviations_le_card_signal_sub_one
+    [Fintype ι] [DecidableEq ι]
+    {M : G.mixedExtension.PublicMonitoring}
+    [Finite M.Signal] [Nonempty M.Signal]
+    {a : Profile G} {who : ι}
+    [Finite (NontrivialDeviation a who)]
+    (h : M.PureIndividualFullRank a who) :
+    Nat.card (NontrivialDeviation a who) ≤ Nat.card M.Signal - 1 := by
+  rw [← (M.pureIndividualFullRank_iff_pureIndividualDeviationRank_eq_card
+    a who).1 h]
+  exact M.pureIndividualDeviationRank_le_card_signal_sub_one a who
+
+/-- Pure pairwise deviation rank is bounded by the dimension of the zero-sum
+signal subspace. -/
+theorem purePairwiseDeviationRank_le_card_signal_sub_one
+    [Fintype ι] [DecidableEq ι]
+    (M : G.mixedExtension.PublicMonitoring)
+    [Finite M.Signal] [Nonempty M.Signal]
+    (a : Profile G) (i j : ι)
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)] :
+    M.purePairwiseDeviationRank a i j ≤ Nat.card M.Signal - 1 := by
+  letI := Fintype.ofFinite M.Signal
+  rw [purePairwiseDeviationRank, Matrix.rank_eq_finrank_span_row,
+    Nat.card_eq_fintype_card,
+    ← Math.LinearAlgebra.finrank_zeroSumSubspace ℝ M.Signal]
+  apply Submodule.finrank_mono
+  apply Submodule.span_le.2
+  rintro _ ⟨dev, rfl⟩
+  cases dev with
+  | inl dev =>
+      change M.deviationSignalVector (G.pureMixedProfile a) i
+        (PMF.pure dev.1) ∈ Math.LinearAlgebra.zeroSumSubspace ℝ M.Signal
+      rw [Math.LinearAlgebra.mem_zeroSumSubspace_iff]
+      exact M.sum_deviationSignalVector_eq_zero
+        (G.pureMixedProfile a) i (PMF.pure dev.1)
+  | inr dev =>
+      change M.deviationSignalVector (G.pureMixedProfile a) j
+        (PMF.pure dev.1) ∈ Math.LinearAlgebra.zeroSumSubspace ℝ M.Signal
+      rw [Math.LinearAlgebra.mem_zeroSumSubspace_iff]
+      exact M.sum_deviationSignalVector_eq_zero
+        (G.pureMixedProfile a) j (PMF.pure dev.1)
+
+/-- Pure pairwise full rank requires enough signal directions for both
+players' nontrivial pure deviations. -/
+theorem PurePairwiseFullRank.card_deviations_le_card_signal_sub_one
+    [Fintype ι] [DecidableEq ι]
+    {M : G.mixedExtension.PublicMonitoring}
+    [Finite M.Signal] [Nonempty M.Signal]
+    {a : Profile G} {i j : ι}
+    [Finite (NontrivialDeviation a i)]
+    [Finite (NontrivialDeviation a j)]
+    (h : M.PurePairwiseFullRank a i j) :
+    Nat.card (NontrivialDeviation a i) +
+        Nat.card (NontrivialDeviation a j) ≤ Nat.card M.Signal - 1 := by
+  rw [← (M.purePairwiseFullRank_iff_purePairwiseDeviationRank_eq_card
+    a i j).1 h]
+  exact M.purePairwiseDeviationRank_le_card_signal_sub_one a i j
+
 /-- The pure-deviation matrix under realized-action monitoring is exactly the
 perfect-profile-monitoring deviation matrix of the underlying pure game. -/
 theorem pureDeviationSignalMatrix_realizedActionMonitoring

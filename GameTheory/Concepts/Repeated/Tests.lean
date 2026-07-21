@@ -440,6 +440,29 @@ example :
   exact purePairwiseFullRank_iff coordinationGame.realizedActionMonitoring
     allTrueProfile false true
 
+/-- Pure individual full rank is equivalent to full numerical row rank while
+requiring only finiteness, not a chosen enumeration, of signals and rows. -/
+example :
+    coordinationGame.realizedActionMonitoring.PureIndividualFullRank
+        allTrueProfile false ↔
+      coordinationGame.realizedActionMonitoring.pureIndividualDeviationRank
+          allTrueProfile false =
+        Nat.card
+          (PublicMonitoring.NontrivialDeviation allTrueProfile false) := by
+  exact pureIndividualFullRank_iff_pureIndividualDeviationRank_eq_card
+    coordinationGame.realizedActionMonitoring allTrueProfile false
+
+/-- Pure pairwise full rank obeys the sharp codimension-one signal bound. -/
+example
+    (h : coordinationGame.realizedActionMonitoring.PurePairwiseFullRank
+      allTrueProfile false true) :
+    Nat.card
+          (PublicMonitoring.NontrivialDeviation allTrueProfile false) +
+        Nat.card
+          (PublicMonitoring.NontrivialDeviation allTrueProfile true) ≤
+      Nat.card (Profile coordinationGame) - 1 := by
+  exact h.card_deviations_le_card_signal_sub_one
+
 /-- An arbitrary behavioral deviation induces the probability-weighted sum
 of the pure-deviation signal vectors. -/
 example (τ : PMF Bool) :
