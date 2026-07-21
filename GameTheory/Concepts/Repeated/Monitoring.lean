@@ -180,6 +180,47 @@ theorem after_afterSignal
     M.afterSignals σ (List.ofFn (Fin.cons y h))
   simp [List.ofFn_succ]
 
+/-- Pointwise characterization of continuation by prefix concatenation.  This
+recovers the direct `Fin.append` view while `after` itself uses cast-free
+one-signal iteration for compositional proofs. -/
+@[simp] theorem after_apply
+    (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
+    {t : ℕ} (h : M.SignalHistory t) (i : ι)
+    (n : ℕ) (k : M.SignalHistory n) :
+    M.after σ h i n k = σ i (t + n) (h.append M k) := by
+  induction t generalizing σ n with
+  | zero =>
+      have hh : h = Fin.elim0 := Subsingleton.elim _ _
+      subst h
+      simp only [after, List.ofFn_zero, afterSignals_nil,
+        SignalHistory.append, Fin.elim0_append]
+      change (fun p : Σ m, M.SignalHistory m => σ i p.1 p.2) ⟨n, k⟩ =
+        (fun p : Σ m, M.SignalHistory m => σ i p.1 p.2)
+          ⟨0 + n, k ∘ Fin.cast (Nat.zero_add n)⟩
+      apply congrArg (fun p : Σ m, M.SignalHistory m => σ i p.1 p.2)
+      apply Sigma.ext (Nat.zero_add n).symm
+      apply (Fin.heq_fun_iff (Nat.zero_add n).symm).2
+      intro j
+      rfl
+  | succ t ih =>
+      unfold after
+      rw [List.ofFn_succ]
+      simp only [afterSignals_cons]
+      change M.after (M.afterSignal σ (h 0)) (Fin.tail h) i n k = _
+      rw [ih]
+      change σ i ((t + n) + 1)
+          (Fin.cons (h 0) (Fin.append (Fin.tail h) k)) = _
+      change (fun p : Σ m, M.SignalHistory m => σ i p.1 p.2)
+          ⟨(t + n) + 1, Fin.cons (h 0) (Fin.append (Fin.tail h) k)⟩ =
+        (fun p : Σ m, M.SignalHistory m => σ i p.1 p.2)
+          ⟨(t + 1) + n, Fin.append h k⟩
+      apply congrArg (fun p : Σ m, M.SignalHistory m => σ i p.1 p.2)
+      apply Sigma.ext (Nat.add_right_comm t n 1)
+      apply (Fin.heq_fun_iff (Nat.add_right_comm t n 1)).2
+      intro j
+      rw [← Fin.cons_self_tail h, Fin.append_cons]
+      rfl
+
 /-- Deviate only at the current period, then return to the prescribed public
 strategy.  Applied to a continuation profile, this is the standard one-shot
 deviation after the corresponding public history. -/
