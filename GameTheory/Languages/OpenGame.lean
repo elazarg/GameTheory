@@ -5,9 +5,12 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.OpenGame.Syntax
+import GameTheory.Languages.OpenGame.Compile
+import GameTheory.Languages.OpenGame.Examples
 
 /-!
 # Open Games
 
-Public entrypoint for compositional deterministic open games.
+Public entrypoint for compositional deterministic open games and their
+context-indexed compilation to `KernelGame`.
 -/
