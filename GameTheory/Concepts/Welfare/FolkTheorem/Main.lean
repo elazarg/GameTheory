@@ -160,7 +160,7 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
 equilibrium. -/
 def IsDiscountedRepeatedNashPayoff (G : KernelGame ι) [DecidableEq ι] (δ : ℝ)
     (v : Payoff ι) : Prop :=
-  ∃ σ : G.DiscountedRepeatedProfile,
+  ∃ σ : G.RepeatedProfile,
     G.IsDiscountedRepeatedNash δ σ ∧
       ∀ who, G.discountedAveragePayoff δ σ who = v who
 
@@ -179,10 +179,10 @@ game.
 This is stated for the infinite discounted repeated game, not the existing
 finite-horizon multi-round language.  The repeated game is taken over
 `G.mixedExtension`, so a period action for player `i` is a mixed stage strategy
-`PMF (G.Strategy i)`, and public histories observe the mixed-action profile
+`PMF (G.Strategy i)`, and profile histories observe the mixed-action profile
 itself.
 
-This is a genuine discounted Folk theorem for that public mixed-action model:
+This is a discounted Folk theorem for that observable mixed-action model:
 given any payoff vector `v` that is feasible in the original stage game and
 strictly above the mixed-extension opponent-minmax vector, Nash payoff vectors
 of the mixed-action repeated game approach `v` as `δ → 1`.
@@ -280,17 +280,17 @@ theorem discounted_folk_theorem_approx (G : KernelGame ι) [Fintype ι] [Decidab
       rw [hbdef]
       nlinarith [hηIRpos, hα_le_eta, htail_lower, hcycle_lower, hmargin]
     have hNash :
-        H.IsDiscountedRepeatedNash δ (H.triggerDiscountedRepeatedProfile path punish) :=
-      H.triggerDiscountedRepeatedProfile_isDiscountedRepeatedNash hδnonneg hδlt path
+        H.IsDiscountedRepeatedNash δ (H.triggerRepeatedProfile path punish) :=
+      H.triggerRepeatedProfile_isDiscountedRepeatedNash hδnonneg hδlt path
         punish b hbd hbdd hpunish hpath_tail hpatient
     let w : Payoff ι := fun who =>
-      H.discountedAveragePayoff δ (H.triggerDiscountedRepeatedProfile path punish) who
+      H.discountedAveragePayoff δ (H.triggerRepeatedProfile path punish) who
     refine ⟨w, ?_, ?_⟩
-    · exact ⟨H.triggerDiscountedRepeatedProfile path punish, hNash, fun who => rfl⟩
+    · exact ⟨H.triggerRepeatedProfile path punish, hNash, fun who => rfl⟩
     · intro who
       have hpay_path : w who = H.discountedContinuationPayoff δ path 0 who := by
         simp [w, path, discountedAveragePayoff, discountedContinuationPayoff,
-          H.discountedRepeatedPlay_triggerDiscountedRepeatedProfile_eq_path]
+          H.repeatedPlay_triggerRepeatedProfile_eq_path]
       have h1 : |w who - H.cycleAveragePayoff cycleH who| < α := by
         simpa [hpay_path, path] using hcont_close who 0
       have h2 : |H.cycleAveragePayoff cycleH who - v who| < α := hcycleH_close who

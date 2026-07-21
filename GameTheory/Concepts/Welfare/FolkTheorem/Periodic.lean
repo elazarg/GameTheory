@@ -75,16 +75,16 @@ theorem sum_fin_rotate {n : ℕ} [NeZero n] (start : ℕ) (f : Fin n → ℝ) :
 
 /-- Exact normalized discounted payoff of a periodic repeated profile.  The
 discounted weights over the cycle phases are proportional to `δ ^ phase`. -/
-theorem discountedAveragePayoff_periodicDiscountedRepeatedProfile_eq
+theorem discountedAveragePayoff_periodicRepeatedProfile_eq
     (G : KernelGame ι) [Finite G.Outcome] {n : ℕ} [NeZero n]
     {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
     (cycle : Fin n → Profile G) (who : ι) :
-    G.discountedAveragePayoff δ (G.periodicDiscountedRepeatedProfile cycle) who =
+    G.discountedAveragePayoff δ (G.periodicRepeatedProfile cycle) who =
       (∑ j : Fin n, δ ^ (j : ℕ) * G.eu (cycle j) who) /
         (∑ j : Fin n, δ ^ (j : ℕ)) := by
   obtain ⟨C, hC⟩ := G.exists_stageEU_abs_bound_of_finite_outcome who
-  let σ : G.DiscountedRepeatedProfile := G.periodicDiscountedRepeatedProfile cycle
-  have hs : Summable fun t : ℕ => δ ^ t * G.eu (G.discountedRepeatedPlay σ t) who :=
+  let σ : G.RepeatedProfile := G.periodicRepeatedProfile cycle
+  have hs : Summable fun t : ℕ => δ ^ t * G.eu (G.repeatedPlay σ t) who :=
     G.summable_discounted_stageEU_of_abs_bound hδ0 hδ1 who hC (σ := σ)
   have hpow : δ ^ n < 1 := pow_lt_one₀ hδ0 hδ1 (NeZero.ne n)
   have hden_pos : 0 < ∑ j : Fin n, δ ^ (j : ℕ) := by
@@ -100,7 +100,7 @@ theorem discountedAveragePayoff_periodicDiscountedRepeatedProfile_eq
     simpa [Finset.sum_range] using (geom_sum_mul_of_le_one hδ1.le n)
   have hone : 1 - δ ≠ 0 := by linarith
   have hsplit :
-      (∑' t : ℕ, δ ^ t * G.eu (G.discountedRepeatedPlay σ t) who) =
+      (∑' t : ℕ, δ ^ t * G.eu (G.repeatedPlay σ t) who) =
         ∑ j : ZMod n, ∑' m : ℕ,
           δ ^ (j.val + n * m) * G.eu (cycle ⟨j.val, j.val_lt⟩) who := by
     rw [Nat.sumByResidueClasses hs n]
@@ -109,7 +109,7 @@ theorem discountedAveragePayoff_periodicDiscountedRepeatedProfile_eq
     apply tsum_congr
     intro m
     subst σ
-    rw [G.discountedRepeatedPlay_periodicDiscountedRepeatedProfile]
+    rw [G.repeatedPlay_periodicRepeatedProfile]
     congr 2
     ext
     simp [Fin.ofNat, Nat.mod_eq_of_lt j.val_lt]
@@ -139,11 +139,11 @@ theorem discountedAveragePayoff_periodicDiscountedRepeatedProfile_eq
       (fun j : Fin n => δ ^ (j : ℕ) * G.eu (cycle j) who)
       (fun j => rfl)
   calc
-    G.discountedAveragePayoff δ (G.periodicDiscountedRepeatedProfile cycle) who =
+    G.discountedAveragePayoff δ (G.periodicRepeatedProfile cycle) who =
         (1 - δ) * (∑ j : ZMod n,
           (δ ^ j.val * G.eu (cycle ⟨j.val, j.val_lt⟩) who) * (1 - δ ^ n)⁻¹) := by
       simp only [discountedAveragePayoff]
-      rw [show (G.periodicDiscountedRepeatedProfile cycle) = σ from rfl]
+      rw [show (G.periodicRepeatedProfile cycle) = σ from rfl]
       rw [hsplit]
       congr 1
       exact Finset.sum_congr rfl (fun j _ => hinner j)
@@ -169,7 +169,7 @@ theorem discountedContinuationPayoff_periodicPath_eq
   let rotated : Fin n → Profile G := fun j => cycle (Fin.ofNat n (start + j))
   have hcont_avg :
       G.discountedContinuationPayoff δ (fun t => cycle (Fin.ofNat n t)) start who =
-        G.discountedAveragePayoff δ (G.periodicDiscountedRepeatedProfile rotated) who := by
+        G.discountedAveragePayoff δ (G.periodicRepeatedProfile rotated) who := by
     simp only [discountedContinuationPayoff, discountedAveragePayoff]
     congr 1
     apply tsum_congr
@@ -179,7 +179,7 @@ theorem discountedContinuationPayoff_periodicPath_eq
     ext
     simp [Fin.ofNat, Nat.add_mod]
   rw [hcont_avg]
-  rw [G.discountedAveragePayoff_periodicDiscountedRepeatedProfile_eq hδ0 hδ1 rotated who]
+  rw [G.discountedAveragePayoff_periodicRepeatedProfile_eq hδ0 hδ1 rotated who]
 
 /-- Finite discounted phase weights converge to uniform cycle weights as
 `δ → 1` from below. -/

@@ -83,6 +83,10 @@ import GameTheory.Concepts.ZeroSum.SecurityStrategy
 import GameTheory.Concepts.ZeroSum.CoalitionSecurity
 import GameTheory.Concepts.Welfare.FolkTheorem
 
+-- Repeated games
+import GameTheory.Concepts.Repeated.Basic
+import GameTheory.Concepts.Repeated.Uniform
+
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
 import GameTheory.Concepts.Correlation.Regret

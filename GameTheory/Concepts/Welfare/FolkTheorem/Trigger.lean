@@ -36,9 +36,8 @@ theorem exists_profile_ne_coord (G : KernelGame ι) {σ τ : Profile G}
     intro hne
     exact hnone ⟨i, hne⟩)
 
-/-- A chosen coordinate at which two profiles differ.  This is the public
-deviator selected when the trigger strategy first observes an off-path
-profile. -/
+/-- A chosen coordinate at which two profiles differ.  This is the deviator
+selected when the trigger strategy first observes an off-path profile. -/
 def profileMismatchPlayer (G : KernelGame ι) {σ τ : Profile G}
     (h : σ ≠ τ) : ι :=
   Classical.choose (G.exists_profile_ne_coord h)
@@ -59,24 +58,24 @@ theorem profileMismatchPlayer_eq_of_forall_ne_eq
   by_contra hne
   exact G.profileMismatchPlayer_spec h (hothers _ hne)
 
-/-- Drop the last observation from a public history. -/
+/-- Drop the last observation from a profile history. -/
 def historyInit (G : KernelGame ι) {t : ℕ}
-    (hist : G.PublicHistory (t + 1)) : G.PublicHistory t :=
+    (hist : G.ProfileHistory (t + 1)) : G.ProfileHistory t :=
   fun k => hist ⟨k.1, Nat.lt_trans k.2 (Nat.lt_succ_self t)⟩
 
 @[simp] theorem historyInit_apply (G : KernelGame ι) {t : ℕ}
-    (hist : G.PublicHistory (t + 1)) (k : Fin t) :
+    (hist : G.ProfileHistory (t + 1)) (k : Fin t) :
     G.historyInit hist k =
       hist ⟨k.1, Nat.lt_trans k.2 (Nat.lt_succ_self t)⟩ :=
   rfl
 
-/-- Trigger-strategy automaton state computed from a public history.
+/-- Trigger-strategy automaton state computed from a profile history.
 
 `none` means no off-path profile has been observed.  `some who` means the
 first off-path profile was attributed to `who`, and punishments should continue
 against `who`. -/
 def triggerStatus (G : KernelGame ι) (path : ℕ → Profile G) :
-    (t : ℕ) → G.PublicHistory t → Option ι
+    (t : ℕ) → G.ProfileHistory t → Option ι
   | 0, _ => none
   | t + 1, hist => by
       classical
@@ -106,17 +105,17 @@ def triggerProfileAt (G : KernelGame ι) [DecidableEq ι]
         if h : i = who then Classical.arbitrary (G.Strategy i)
         else punish who ⟨i, h⟩
 
-/-- The trigger repeated profile: follow `path` until the first public
+/-- The trigger repeated profile: follow `path` until the first observed
 mismatch, then punish the selected deviator forever. -/
-def triggerDiscountedRepeatedProfile (G : KernelGame ι) [DecidableEq ι]
+def triggerRepeatedProfile (G : KernelGame ι) [DecidableEq ι]
     [∀ i, Nonempty (G.Strategy i)] (path : ℕ → Profile G)
     (punish : ∀ who, G.OpponentProfile who) :
-    G.DiscountedRepeatedProfile :=
+    G.RepeatedProfile :=
   fun i t hist => G.triggerProfileAt path punish t (G.triggerStatus path t hist) i
 
 theorem triggerStatus_eq_none_of_history_eq_path
     (G : KernelGame ι) (path : ℕ → Profile G) :
-    ∀ {t : ℕ} (hist : G.PublicHistory t),
+    ∀ {t : ℕ} (hist : G.ProfileHistory t),
       (∀ k : Fin t, hist k = path k) → G.triggerStatus path t hist = none
   | 0, _hist, _hhist => by
       simp [triggerStatus]
@@ -130,110 +129,110 @@ theorem triggerStatus_eq_none_of_history_eq_path
       simp [triggerStatus, hprev, hlast]
 
 /-- The trigger profile generates the intended path when nobody deviates. -/
-theorem discountedRepeatedPlay_triggerDiscountedRepeatedProfile_eq_path
+theorem repeatedPlay_triggerRepeatedProfile_eq_path
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who) :
     ∀ t : ℕ,
-      G.discountedRepeatedPlay
-          (G.triggerDiscountedRepeatedProfile path punish) t = path t := by
+      G.repeatedPlay
+          (G.triggerRepeatedProfile path punish) t = path t := by
   intro t
   induction t using Nat.strong_induction_on with
   | h t ih =>
       funext i
-      rw [discountedRepeatedPlay]
+      rw [repeatedPlay]
       have hstatus :
           G.triggerStatus path t
               (fun k =>
-                G.discountedRepeatedPlay
-                  (G.triggerDiscountedRepeatedProfile path punish) k) = none := by
+                G.repeatedPlay
+                  (G.triggerRepeatedProfile path punish) k) = none := by
         apply G.triggerStatus_eq_none_of_history_eq_path
         intro k
         exact ih k k.2
-      simp [triggerDiscountedRepeatedProfile, triggerProfileAt, hstatus]
+      simp [triggerRepeatedProfile, triggerProfileAt, hstatus]
 
 /-- The trigger profile's discounted payoff is the discounted payoff of its
 intended path, since no deviation occurs on its own generated play. -/
-theorem discountedAveragePayoff_triggerDiscountedRepeatedProfile_eq_path
+theorem discountedAveragePayoff_triggerRepeatedProfile_eq_path
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
     (δ : ℝ) (who : ι) :
-    G.discountedAveragePayoff δ (G.triggerDiscountedRepeatedProfile path punish) who =
+    G.discountedAveragePayoff δ (G.triggerRepeatedProfile path punish) who =
       (1 - δ) * ∑' t : ℕ, δ ^ t * G.eu (path t) who := by
   simp [discountedAveragePayoff,
-    G.discountedRepeatedPlay_triggerDiscountedRepeatedProfile_eq_path path punish]
+    G.repeatedPlay_triggerRepeatedProfile_eq_path path punish]
 
 /-- For a periodic intended path, the trigger profile has the same discounted
 payoff as the stationary periodic profile. -/
-theorem discountedAveragePayoff_triggerPeriodicDiscountedRepeatedProfile_eq
+theorem discountedAveragePayoff_triggerPeriodicRepeatedProfile_eq
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     {n : ℕ} [NeZero n] (cycle : Fin n → Profile G)
     (punish : ∀ who, G.OpponentProfile who) (δ : ℝ) (who : ι) :
     G.discountedAveragePayoff δ
-        (G.triggerDiscountedRepeatedProfile (fun t => cycle (Fin.ofNat n t)) punish) who =
-      G.discountedAveragePayoff δ (G.periodicDiscountedRepeatedProfile cycle) who := by
+        (G.triggerRepeatedProfile (fun t => cycle (Fin.ofNat n t)) punish) who =
+      G.discountedAveragePayoff δ (G.periodicRepeatedProfile cycle) who := by
   calc
     G.discountedAveragePayoff δ
-        (G.triggerDiscountedRepeatedProfile (fun t => cycle (Fin.ofNat n t)) punish) who =
+        (G.triggerRepeatedProfile (fun t => cycle (Fin.ofNat n t)) punish) who =
         (1 - δ) * ∑' t : ℕ, δ ^ t * G.eu (cycle (Fin.ofNat n t)) who := by
-      rw [G.discountedAveragePayoff_triggerDiscountedRepeatedProfile_eq_path]
-    _ = G.discountedAveragePayoff δ (G.periodicDiscountedRepeatedProfile cycle) who := by
+      rw [G.discountedAveragePayoff_triggerRepeatedProfile_eq_path]
+    _ = G.discountedAveragePayoff δ (G.periodicRepeatedProfile cycle) who := by
       simp [discountedAveragePayoff]
 
 /-- Before the trigger has fired, a unilateral deviation by `who` leaves every
 other player's realized action on the intended path. -/
-theorem discountedRepeatedPlay_update_triggerDiscountedRepeatedProfile_ne_of_status_none
+theorem repeatedPlay_update_triggerRepeatedProfile_ne_of_status_none
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {t : ℕ}
+    (who : ι) (dev : G.RepeatedStrategy who) {t : ℕ}
     (hstatus :
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) = none)
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) = none)
     {j : ι} (hj : j ≠ who) :
-    G.discountedRepeatedPlay
-        (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t j =
+    G.repeatedPlay
+        (Function.update (G.triggerRepeatedProfile path punish) who dev) t j =
       path t j := by
-  rw [discountedRepeatedPlay]
-  simp [triggerDiscountedRepeatedProfile, triggerProfileAt, Function.update, hj, hstatus]
+  rw [repeatedPlay]
+  simp [triggerRepeatedProfile, triggerProfileAt, Function.update, hj, hstatus]
 
 /-- If the trigger is still off both before and after period `t`, then the
 realized period-`t` profile is exactly the intended path profile. -/
-theorem discountedRepeatedPlay_update_trigger_eq_path_of_status_none_succ
+theorem repeatedPlay_update_trigger_eq_path_of_status_none_succ
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {t : ℕ}
+    (who : ι) (dev : G.RepeatedStrategy who) {t : ℕ}
     (hstatus :
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           none)
     (hstatus_succ :
       G.triggerStatus path (t + 1)
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           none) :
-    G.discountedRepeatedPlay
-        (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t =
+    G.repeatedPlay
+        (Function.update (G.triggerRepeatedProfile path punish) who dev) t =
       path t := by
-  let σdev : G.DiscountedRepeatedProfile :=
-    Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev
-  let ρ : Profile G := G.discountedRepeatedPlay σdev t
+  let σdev : G.RepeatedProfile :=
+    Function.update (G.triggerRepeatedProfile path punish) who dev
+  let ρ : Profile G := G.repeatedPlay σdev t
   by_contra hne
   have hs_ne : ρ ≠ path t := by
     intro heq
     exact hne (by
       subst ρ
       exact heq)
-  let hist : G.PublicHistory (t + 1) := fun k => G.discountedRepeatedPlay σdev k
+  let hist : G.ProfileHistory (t + 1) := fun k => G.repeatedPlay σdev k
   have hinit : G.historyInit hist =
-      (fun k : Fin t => G.discountedRepeatedPlay σdev k) := by
+      (fun k : Fin t => G.repeatedPlay σdev k) := by
     funext k
     rfl
   have hstatus' :
-      G.triggerStatus path t (fun k : Fin t => G.discountedRepeatedPlay σdev k) =
+      G.triggerStatus path t (fun k : Fin t => G.repeatedPlay σdev k) =
         none := by
     simpa [σdev] using hstatus
   have hsucc_some :
@@ -246,22 +245,22 @@ theorem discountedRepeatedPlay_update_trigger_eq_path_of_status_none_succ
 
 /-- If a unilateral deviation never fires the trigger, its realized play is the
 intended path at every period. -/
-theorem discountedRepeatedPlay_update_trigger_eq_path_of_forall_status_none
+theorem repeatedPlay_update_trigger_eq_path_of_forall_status_none
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who)
+    (who : ι) (dev : G.RepeatedStrategy who)
     (hstatus : ∀ t : ℕ,
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           none) :
     ∀ t : ℕ,
-      G.discountedRepeatedPlay
-          (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t =
+      G.repeatedPlay
+          (Function.update (G.triggerRepeatedProfile path punish) who dev) t =
         path t := by
   intro t
-  exact G.discountedRepeatedPlay_update_trigger_eq_path_of_status_none_succ
+  exact G.repeatedPlay_update_trigger_eq_path_of_status_none_succ
     path punish who dev (hstatus t) (hstatus (t + 1))
 
 /-- If a unilateral deviation never fires the trigger, its discounted payoff is
@@ -269,39 +268,39 @@ the same as the trigger profile's on-path payoff. -/
 theorem discountedAveragePayoff_update_trigger_eq_of_forall_status_none
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) (δ : ℝ)
+    (who : ι) (dev : G.RepeatedStrategy who) (δ : ℝ)
     (hstatus : ∀ t : ℕ,
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           none) :
     G.discountedAveragePayoff δ
-        (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) who =
-      G.discountedAveragePayoff δ (G.triggerDiscountedRepeatedProfile path punish) who := by
+        (Function.update (G.triggerRepeatedProfile path punish) who dev) who =
+      G.discountedAveragePayoff δ (G.triggerRepeatedProfile path punish) who := by
   rw [discountedAveragePayoff, discountedAveragePayoff]
   congr 1
   apply tsum_congr
   intro t
-  rw [G.discountedRepeatedPlay_update_trigger_eq_path_of_forall_status_none
+  rw [G.repeatedPlay_update_trigger_eq_path_of_forall_status_none
     path punish who dev hstatus t]
-  rw [G.discountedRepeatedPlay_triggerDiscountedRepeatedProfile_eq_path path punish t]
+  rw [G.repeatedPlay_triggerRepeatedProfile_eq_path path punish t]
 
 /-- Along a unilateral deviation by `who`, the trigger status is either still
 on-path or has identified `who` as the deviator. -/
-theorem triggerStatus_update_triggerDiscountedRepeatedProfile_eq_none_or_self
+theorem triggerStatus_update_triggerRepeatedProfile_eq_none_or_self
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) :
+    (who : ι) (dev : G.RepeatedStrategy who) :
     ∀ t : ℕ,
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) = none ∨
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) = none ∨
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who := by
   intro t
   induction t with
@@ -309,11 +308,11 @@ theorem triggerStatus_update_triggerDiscountedRepeatedProfile_eq_none_or_self
       left
       simp [triggerStatus]
   | succ t ih =>
-      let σdev : G.DiscountedRepeatedProfile :=
-        Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev
-      let hist : G.PublicHistory (t + 1) := fun k => G.discountedRepeatedPlay σdev k
+      let σdev : G.RepeatedProfile :=
+        Function.update (G.triggerRepeatedProfile path punish) who dev
+      let hist : G.ProfileHistory (t + 1) := fun k => G.repeatedPlay σdev k
       have hinit : G.historyInit hist =
-          (fun k : Fin t => G.discountedRepeatedPlay σdev k) := by
+          (fun k : Fin t => G.repeatedPlay σdev k) := by
         funext k
         rfl
       change G.triggerStatus path (t + 1) hist = none ∨
@@ -321,7 +320,7 @@ theorem triggerStatus_update_triggerDiscountedRepeatedProfile_eq_none_or_self
       rcases ih with hprev | hprev
       · have hprev' :
             G.triggerStatus path t
-              (fun k : Fin t => G.discountedRepeatedPlay σdev k) = none := by
+              (fun k : Fin t => G.repeatedPlay σdev k) = none := by
           simpa [σdev] using hprev
         by_cases hlast : hist ⟨t, Nat.lt_succ_self t⟩ = path t
         · left
@@ -330,14 +329,14 @@ theorem triggerStatus_update_triggerDiscountedRepeatedProfile_eq_none_or_self
           have hplayer : G.profileMismatchPlayer hlast = who := by
             apply G.profileMismatchPlayer_eq_of_forall_ne_eq who
             intro j hj
-            change G.discountedRepeatedPlay σdev t j = path t j
+            change G.repeatedPlay σdev t j = path t j
             subst σdev
-            exact G.discountedRepeatedPlay_update_triggerDiscountedRepeatedProfile_ne_of_status_none
+            exact G.repeatedPlay_update_triggerRepeatedProfile_ne_of_status_none
               path punish who dev hprev hj
           simp [triggerStatus, hinit, hprev', hlast, hplayer]
       · have hprev' :
             G.triggerStatus path t
-              (fun k : Fin t => G.discountedRepeatedPlay σdev k) = some who := by
+              (fun k : Fin t => G.repeatedPlay σdev k) = some who := by
           simpa [σdev] using hprev
         right
         simp [triggerStatus, hinit, hprev']
@@ -347,31 +346,31 @@ period at which the trigger status is `some who`. -/
 theorem triggerStatus_update_trigger_first_fire_or_never
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) :
+    (who : ι) (dev : G.RepeatedStrategy who) :
     (∀ t : ℕ,
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           none) ∨
     ∃ s : ℕ,
       G.triggerStatus path s
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who ∧
       ∀ t < s,
         G.triggerStatus path t
           (fun k =>
-            G.discountedRepeatedPlay
-              (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+            G.repeatedPlay
+              (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
             none := by
   classical
   let status : ℕ → Option ι := fun t =>
     G.triggerStatus path t
       (fun k =>
-        G.discountedRepeatedPlay
-          (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k)
+        G.repeatedPlay
+          (Function.update (G.triggerRepeatedProfile path punish) who dev) k)
   by_cases hnever : ∀ t, status t = none
   · left
     exact hnever
@@ -379,14 +378,14 @@ theorem triggerStatus_update_trigger_first_fire_or_never
     have hex : ∃ t, status t = some who := by
       push Not at hnever
       rcases hnever with ⟨t, ht⟩
-      rcases G.triggerStatus_update_triggerDiscountedRepeatedProfile_eq_none_or_self
+      rcases G.triggerStatus_update_triggerRepeatedProfile_eq_none_or_self
           path punish who dev t with hnone | hsome
       · exact False.elim (ht hnone)
       · exact ⟨t, hsome⟩
     refine ⟨Nat.find hex, Nat.find_spec hex, ?_⟩
     intro t ht
     have hnot : ¬ status t = some who := Nat.find_min hex ht
-    rcases G.triggerStatus_update_triggerDiscountedRepeatedProfile_eq_none_or_self
+    rcases G.triggerStatus_update_triggerRepeatedProfile_eq_none_or_self
         path punish who dev t with hnone | hsome
     · exact hnone
     · exact False.elim (hnot hsome)
@@ -396,38 +395,38 @@ remains `some who` forever. -/
 theorem triggerStatus_update_trigger_some_mono
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {t : ℕ}
+    (who : ι) (dev : G.RepeatedStrategy who) {t : ℕ}
     (hstatus :
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who) :
     ∀ k : ℕ,
       G.triggerStatus path (t + k)
         (fun m =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) m) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) m) =
         some who := by
   intro k
   induction k with
   | zero =>
       simpa using hstatus
   | succ k ih =>
-      let σdev : G.DiscountedRepeatedProfile :=
-        Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev
-      let hist : G.PublicHistory (t + k + 1) := fun m => G.discountedRepeatedPlay σdev m
+      let σdev : G.RepeatedProfile :=
+        Function.update (G.triggerRepeatedProfile path punish) who dev
+      let hist : G.ProfileHistory (t + k + 1) := fun m => G.repeatedPlay σdev m
       have hinit : G.historyInit hist =
-          (fun m : Fin (t + k) => G.discountedRepeatedPlay σdev m) := by
+          (fun m : Fin (t + k) => G.repeatedPlay σdev m) := by
         funext m
         rfl
       have ih' :
           G.triggerStatus path (t + k)
-            (fun m : Fin (t + k) => G.discountedRepeatedPlay σdev m) =
+            (fun m : Fin (t + k) => G.repeatedPlay σdev m) =
           some who := by
         simpa [σdev] using ih
       change G.triggerStatus path (t + (k + 1))
-          (fun m : Fin (t + (k + 1)) => G.discountedRepeatedPlay σdev m) =
+          (fun m : Fin (t + (k + 1)) => G.repeatedPlay σdev m) =
         some who
       have hnat : t + (k + 1) = t + k + 1 := by omega
       rw [hnat]
@@ -436,53 +435,53 @@ theorem triggerStatus_update_trigger_some_mono
 
 /-- After the trigger has identified `who`, every other player's realized action
 is the chosen punishment action against `who`. -/
-theorem discountedRepeatedPlay_update_triggerDiscountedRepeatedProfile_ne_of_status_some
+theorem repeatedPlay_update_triggerRepeatedProfile_ne_of_status_some
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {t : ℕ}
+    (who : ι) (dev : G.RepeatedStrategy who) {t : ℕ}
     (hstatus :
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who)
     {j : ι} (hj : j ≠ who) :
-    G.discountedRepeatedPlay
-        (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t j =
+    G.repeatedPlay
+        (Function.update (G.triggerRepeatedProfile path punish) who dev) t j =
       punish who ⟨j, hj⟩ := by
-  rw [discountedRepeatedPlay]
-  simp [triggerDiscountedRepeatedProfile, triggerProfileAt, Function.update, hj, hstatus]
+  rw [repeatedPlay]
+  simp [triggerRepeatedProfile, triggerProfileAt, Function.update, hj, hstatus]
 
 /-- Once the trigger has identified `who`, that player's realized stage payoff
 is bounded by the best-response value against the selected punishment
 opponents. -/
-theorem eu_discountedRepeatedPlay_update_trigger_lt_of_status_some
+theorem eu_repeatedPlay_update_trigger_lt_of_status_some
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {t : ℕ} {b : ℝ}
+    (who : ι) (dev : G.RepeatedStrategy who) {t : ℕ} {b : ℝ}
     (hbdd : BddAbove (Set.range fun own : G.Strategy who =>
       G.eu (G.profileWithOpponent who own (punish who)) who))
     (hpunish : G.bestResponseValueAgainstOpponents who (punish who) < b)
     (hstatus :
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who) :
     G.eu
-        (G.discountedRepeatedPlay
-          (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t) who <
+        (G.repeatedPlay
+          (Function.update (G.triggerRepeatedProfile path punish) who dev) t) who <
       b := by
   let ρ : Profile G :=
-    G.discountedRepeatedPlay
-      (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t
+    G.repeatedPlay
+      (Function.update (G.triggerRepeatedProfile path punish) who dev) t
   have hρ : ρ = G.profileWithOpponent who (ρ who) (punish who) := by
     apply G.eq_profileWithOpponent_of_forall_ne who ρ (punish who)
     intro j hj
-    exact G.discountedRepeatedPlay_update_triggerDiscountedRepeatedProfile_ne_of_status_some
+    exact G.repeatedPlay_update_triggerRepeatedProfile_ne_of_status_some
       path punish who dev hstatus hj
-  rw [show G.discountedRepeatedPlay
-          (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t = ρ from rfl]
+  rw [show G.repeatedPlay
+          (Function.update (G.triggerRepeatedProfile path punish) who dev) t = ρ from rfl]
   rw [hρ]
   exact G.eu_profileWithOpponent_lt_of_bestResponseValue_lt
     who (punish who) hbdd hpunish (ρ who)
@@ -493,7 +492,7 @@ theorem discountedContinuationPayoff_update_trigger_le_const_of_status_some
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     {δ C b : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {start : ℕ}
+    (who : ι) (dev : G.RepeatedStrategy who) {start : ℕ}
     (hbd : ∀ ρ : Profile G, |G.eu ρ who| ≤ C)
     (hbdd : BddAbove (Set.range fun own : G.Strategy who =>
       G.eu (G.profileWithOpponent who own (punish who)) who))
@@ -501,22 +500,22 @@ theorem discountedContinuationPayoff_update_trigger_le_const_of_status_some
     (hstatus :
       G.triggerStatus path start
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who) :
     G.discountedContinuationPayoff δ
         (fun t =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t)
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) t)
         start who ≤ b := by
   apply G.discountedContinuationPayoff_le_const_of_forall_stageEU_le hδ0 hδ1
       (fun t =>
-        G.discountedRepeatedPlay
-          (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t)
+        G.repeatedPlay
+          (Function.update (G.triggerRepeatedProfile path punish) who dev) t)
       start who hbd
   intro k
   have hkstatus := G.triggerStatus_update_trigger_some_mono path punish who dev hstatus k
-  exact le_of_lt (G.eu_discountedRepeatedPlay_update_trigger_lt_of_status_some
+  exact le_of_lt (G.eu_repeatedPlay_update_trigger_lt_of_status_some
     path punish who dev hbdd hpunish hkstatus)
 
 /-- Incentive comparison at the firing boundary.  If the deviation first puts
@@ -528,7 +527,7 @@ theorem discountedContinuationPayoff_update_trigger_le_path_of_fire
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     {δ C b η : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {q : ℕ}
+    (who : ι) (dev : G.RepeatedStrategy who) {q : ℕ}
     (hbd : ∀ ρ : Profile G, |G.eu ρ who| ≤ C)
     (hbdd : BddAbove (Set.range fun own : G.Strategy who =>
       G.eu (G.profileWithOpponent who own (punish who)) who))
@@ -536,20 +535,20 @@ theorem discountedContinuationPayoff_update_trigger_le_path_of_fire
     (hfire :
       G.triggerStatus path (q + 1)
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who)
     (hpath_tail : b + η ≤ G.discountedContinuationPayoff δ path (q + 1) who)
     (hpatient : (1 - δ) * (2 * C) ≤ δ * η) :
     G.discountedContinuationPayoff δ
         (fun t =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t)
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) t)
         q who ≤
       G.discountedContinuationPayoff δ path q who := by
   let playDev : ℕ → Profile G := fun t =>
-    G.discountedRepeatedPlay
-      (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t
+    G.repeatedPlay
+      (Function.update (G.triggerRepeatedProfile path punish) who dev) t
   have hdev_split := G.discountedContinuationPayoff_eq_head_add
     hδ0 hδ1 playDev q who hbd
   have hpath_split := G.discountedContinuationPayoff_eq_head_add
@@ -581,7 +580,7 @@ theorem discountedContinuationPayoff_update_trigger_le_path_of_first_fire
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     {δ C b η : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
-    (who : ι) (dev : G.DiscountedRepeatedStrategy who) {s : ℕ}
+    (who : ι) (dev : G.RepeatedStrategy who) {s : ℕ}
     (hbd : ∀ ρ : Profile G, |G.eu ρ who| ≤ C)
     (hbdd : BddAbove (Set.range fun own : G.Strategy who =>
       G.eu (G.profileWithOpponent who own (punish who)) who))
@@ -589,21 +588,21 @@ theorem discountedContinuationPayoff_update_trigger_le_path_of_first_fire
     (hfire :
       G.triggerStatus path s
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           some who)
     (hmin : ∀ t < s,
       G.triggerStatus path t
         (fun k =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) k) =
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) k) =
           none)
     (hpath_tail : b + η ≤ G.discountedContinuationPayoff δ path s who)
     (hpatient : (1 - δ) * (2 * C) ≤ δ * η) :
     G.discountedContinuationPayoff δ
         (fun t =>
-          G.discountedRepeatedPlay
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t)
+          G.repeatedPlay
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) t)
         0 who ≤
       G.discountedContinuationPayoff δ path 0 who := by
   cases s with
@@ -611,8 +610,8 @@ theorem discountedContinuationPayoff_update_trigger_le_path_of_first_fire
       simp [triggerStatus] at hfire
   | succ q =>
       let playDev : ℕ → Profile G := fun t =>
-        G.discountedRepeatedPlay
-          (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t
+        G.repeatedPlay
+          (Function.update (G.triggerRepeatedProfile path punish) who dev) t
       have htail : G.discountedContinuationPayoff δ playDev q who ≤
           G.discountedContinuationPayoff δ path q who := by
         apply G.discountedContinuationPayoff_update_trigger_le_path_of_fire
@@ -625,18 +624,18 @@ theorem discountedContinuationPayoff_update_trigger_le_path_of_first_fire
         have hstat_k :
             G.triggerStatus path k
               (fun m =>
-                G.discountedRepeatedPlay
-                  (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) m) =
+                G.repeatedPlay
+                  (Function.update (G.triggerRepeatedProfile path punish) who dev) m) =
               none :=
           hmin k (lt_trans hk (Nat.lt_succ_self q))
         have hstat_ksucc :
             G.triggerStatus path (k + 1)
               (fun m =>
-                G.discountedRepeatedPlay
-                  (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) m) =
+                G.repeatedPlay
+                  (Function.update (G.triggerRepeatedProfile path punish) who dev) m) =
               none :=
           hmin (k + 1) (Nat.succ_lt_succ hk)
-        have hplay := G.discountedRepeatedPlay_update_trigger_eq_path_of_status_none_succ
+        have hplay := G.repeatedPlay_update_trigger_eq_path_of_status_none_succ
           path punish who dev hstat_k hstat_ksucc
         simpa [playDev] using hplay
       have hres := G.discountedContinuationPayoff_le_of_prefix_eq_of_tail_le
@@ -648,7 +647,7 @@ theorem discountedContinuationPayoff_update_trigger_le_path_of_first_fire
 payoff uniformly above the punishment cap and the discount factor is patient
 enough to dominate a one-period gain, the trigger profile is a discounted
 repeated-game Nash equilibrium. -/
-theorem triggerDiscountedRepeatedProfile_isDiscountedRepeatedNash
+theorem triggerRepeatedProfile_isDiscountedRepeatedNash
     (G : KernelGame ι) [DecidableEq ι] [∀ i, Nonempty (G.Strategy i)]
     {δ C η : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
     (path : ℕ → Profile G) (punish : ∀ who, G.OpponentProfile who)
@@ -659,7 +658,7 @@ theorem triggerDiscountedRepeatedProfile_isDiscountedRepeatedNash
     (hpunish : ∀ who, G.bestResponseValueAgainstOpponents who (punish who) < b who)
     (hpath_tail : ∀ who s, b who + η ≤ G.discountedContinuationPayoff δ path s who)
     (hpatient : (1 - δ) * (2 * C) ≤ δ * η) :
-    G.IsDiscountedRepeatedNash δ (G.triggerDiscountedRepeatedProfile path punish) := by
+    G.IsDiscountedRepeatedNash δ (G.triggerRepeatedProfile path punish) := by
   intro who dev
   rcases G.triggerStatus_update_trigger_first_fire_or_never path punish who dev with
     hnever | hfirecase
@@ -667,21 +666,21 @@ theorem triggerDiscountedRepeatedProfile_isDiscountedRepeatedNash
       path punish who dev δ hnever]
   · rcases hfirecase with ⟨s, hs, hmin⟩
     let playDev : ℕ → Profile G := fun t =>
-      G.discountedRepeatedPlay
-        (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) t
+      G.repeatedPlay
+        (Function.update (G.triggerRepeatedProfile path punish) who dev) t
     have hdev_le_path : G.discountedContinuationPayoff δ playDev 0 who ≤
         G.discountedContinuationPayoff δ path 0 who := by
       exact G.discountedContinuationPayoff_update_trigger_le_path_of_first_fire
         hδ0 hδ1 path punish who dev (hbd who) (hbdd who) (hpunish who)
         hs hmin (hpath_tail who s) hpatient
     have hleft :
-        G.discountedAveragePayoff δ (G.triggerDiscountedRepeatedProfile path punish) who =
+        G.discountedAveragePayoff δ (G.triggerRepeatedProfile path punish) who =
           G.discountedContinuationPayoff δ path 0 who := by
       simp [discountedAveragePayoff, discountedContinuationPayoff,
-        G.discountedRepeatedPlay_triggerDiscountedRepeatedProfile_eq_path path punish]
+        G.repeatedPlay_triggerRepeatedProfile_eq_path path punish]
     have hright :
         G.discountedAveragePayoff δ
-            (Function.update (G.triggerDiscountedRepeatedProfile path punish) who dev) who =
+            (Function.update (G.triggerRepeatedProfile path punish) who dev) who =
           G.discountedContinuationPayoff δ playDev 0 who := by
       simp [discountedAveragePayoff, discountedContinuationPayoff, playDev]
     rw [hleft, hright]
