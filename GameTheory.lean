@@ -138,6 +138,7 @@ import GameTheory.Concepts.ZeroSum.Minimax
 import GameTheory.Concepts.ZeroSum.MatrixGame
 import GameTheory.Concepts.ZeroSum.MatrixGame.Geometry
 import GameTheory.Concepts.ZeroSum.MatrixGame.StrongComplementarity
+import GameTheory.Concepts.ZeroSum.SwitchingCost
 
 -- Mechanism design
 import GameTheory.Mechanism.Bayesian
