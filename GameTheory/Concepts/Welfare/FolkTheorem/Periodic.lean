@@ -82,7 +82,7 @@ theorem discountedAveragePayoff_periodicRepeatedProfile_eq
     G.discountedAveragePayoff δ (G.periodicRepeatedProfile cycle) who =
       (∑ j : Fin n, δ ^ (j : ℕ) * G.eu (cycle j) who) /
         (∑ j : Fin n, δ ^ (j : ℕ)) := by
-  obtain ⟨C, hC⟩ := G.exists_stageEU_abs_bound_of_finite_outcome who
+  obtain ⟨C, hC⟩ := G.exists_eu_abs_bound_of_finite_outcome who
   let σ : G.RepeatedProfile := G.periodicRepeatedProfile cycle
   have hs : Summable fun t : ℕ => δ ^ t * G.eu (G.repeatedPlay σ t) who :=
     G.summable_discounted_stageEU_of_abs_bound hδ0 hδ1 who hC (σ := σ)

@@ -65,7 +65,7 @@ theorem exists_cycleAveragePayoff_close_of_mem_feasibleSet
     haveI : IsEmpty κ := not_nonempty_iff.mp hne
     simp at hw_sum
   letI : Nonempty κ := hκ_nonempty
-  obtain ⟨C, hC⟩ := G.exists_uniform_stageEU_abs_bound_of_finite
+  obtain ⟨C, hC⟩ := G.exists_uniform_eu_abs_bound_of_finite
   let A : ℝ := max C 0
   have hA0 : 0 ≤ A := le_max_right C 0
   have hCA : ∀ (ρ : Profile G) (who : ι), |G.eu ρ who| ≤ A := by
@@ -225,7 +225,7 @@ theorem discounted_folk_theorem_approx (G : KernelGame ι) [Fintype ι] [Decidab
   have hηTpos : 0 < ηT := by positivity
   let b : Payoff ι := fun who => H.opponentMinmaxVector who + ηIR / 4
   obtain ⟨punish, hpunishApprox⟩ := H.exists_approx_punishmentProfiles hηTpos
-  obtain ⟨C0, hC0⟩ := H.exists_uniform_stageEU_abs_bound_of_finite
+  obtain ⟨C0, hC0⟩ := H.exists_uniform_eu_abs_bound_of_finite
   let C : ℝ := max C0 0
   have hbd : ∀ (who : ι) (ρ : Profile H), |H.eu ρ who| ≤ C := by
     intro who ρ

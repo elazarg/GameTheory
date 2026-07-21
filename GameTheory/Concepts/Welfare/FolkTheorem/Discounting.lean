@@ -61,39 +61,6 @@ theorem mixedExtension_cycleAveragePayoff_pureMixedCycle
   funext i
   simp [cycleAveragePayoff, pureMixedCycle, G.mixedExtension_eu_pureMixedProfile]
 
-/-- For a finite outcome carrier, each player's expected utility is uniformly
-bounded over profiles. -/
-theorem exists_stageEU_abs_bound_of_finite_outcome
-    (G : KernelGame ι) [Finite G.Outcome] (who : ι) :
-    ∃ C : ℝ, ∀ σ : Profile G, |G.eu σ who| ≤ C := by
-  obtain ⟨C, hC⟩ :=
-    Math.Probability.exists_abs_bound_of_finite (fun ω : G.Outcome => G.utility ω who)
-  exact ⟨C, fun σ => G.eu_abs_le_of_bounded who hC σ⟩
-
-/-- With finitely many players and finite outcomes, all stage expected utilities
-share a single absolute bound. -/
-theorem exists_uniform_stageEU_abs_bound_of_finite
-    (G : KernelGame ι) [Finite ι] [Finite G.Outcome] :
-    ∃ C : ℝ, ∀ (σ : Profile G) (who : ι), |G.eu σ who| ≤ C := by
-  letI : Fintype ι := Fintype.ofFinite ι
-  letI : Fintype G.Outcome := Fintype.ofFinite G.Outcome
-  let C : ℝ := ∑ who : ι, ∑ ω : G.Outcome, |G.utility ω who|
-  refine ⟨C, ?_⟩
-  intro σ who
-  have hbd : ∀ ω : G.Outcome,
-      |G.utility ω who| ≤ ∑ ω : G.Outcome, |G.utility ω who| := by
-    intro ω
-    exact Finset.single_le_sum (fun x _ => abs_nonneg (G.utility x who))
-      (Finset.mem_univ ω)
-  have heu : |G.eu σ who| ≤ ∑ ω : G.Outcome, |G.utility ω who| :=
-    G.eu_abs_le_of_bounded who hbd σ
-  have hcoord :
-      (∑ ω : G.Outcome, |G.utility ω who|) ≤ C := by
-    exact Finset.single_le_sum
-      (fun j _ => Finset.sum_nonneg fun ω _ => abs_nonneg (G.utility ω j))
-      (Finset.mem_univ who)
-  exact heu.trans hcoord
-
 /-- For sufficiently patient players, any fixed positive continuation margin
 dominates a bounded one-period gain. -/
 theorem exists_discountFactor_threshold_one_step
@@ -357,7 +324,7 @@ theorem stationaryRepeatedProfile_isDiscountedRepeatedNash_of_isNash
     {σ : Profile G} (hN : G.IsNash σ) :
     G.IsDiscountedRepeatedNash δ (G.stationaryRepeatedProfile σ) := by
   intro who dev
-  obtain ⟨C, hC⟩ := G.exists_stageEU_abs_bound_of_finite_outcome who
+  obtain ⟨C, hC⟩ := G.exists_eu_abs_bound_of_finite_outcome who
   exact G.discountedAveragePayoff_le_of_forall_stageEU_le
     (σ := Function.update (G.stationaryRepeatedProfile σ) who dev)
     (τ := G.stationaryRepeatedProfile σ)
