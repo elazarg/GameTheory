@@ -3,7 +3,7 @@ Copyright (c) 2025 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Concepts.Repeated.MonitoringDecomposition
+import GameTheory.Concepts.Repeated.MonitoringSelfGeneration
 
 /-!
 # Tests for Repeated Games with Public Monitoring
