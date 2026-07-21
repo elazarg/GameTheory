@@ -58,6 +58,7 @@ import GameTheory.Concepts.Dominance.DominanceSolvability
 import GameTheory.Concepts.Equilibrium.StrictNashProperties
 import GameTheory.Concepts.Equilibrium.SecureEquilibrium
 import GameTheory.Concepts.Equilibrium.ApproximateNash
+import GameTheory.Concepts.Equilibrium.ApproximateNashGameMorphism
 import GameTheory.Concepts.Mixed.MixedExtension
 import GameTheory.Concepts.Mixed.GameMorphism
 import GameTheory.Concepts.Mixed.MixedDominance
@@ -80,6 +81,7 @@ import GameTheory.Concepts.Welfare.WelfareTheorems
 import GameTheory.Concepts.Welfare.PriceOfAnarchy
 import GameTheory.Concepts.Welfare.Smoothness
 import GameTheory.Concepts.Welfare.IndividualRationality
+import GameTheory.Concepts.Welfare.GameMorphism
 import GameTheory.Concepts.ZeroSum.SecurityStrategy
 import GameTheory.Concepts.ZeroSum.CoalitionSecurity
 import GameTheory.Concepts.Welfare.FolkTheorem
@@ -141,6 +143,7 @@ import GameTheory.Concepts.Equilibrium.FlowDecomposition
 
 -- Potential games
 import GameTheory.Concepts.Potential.PotentialGame
+import GameTheory.Concepts.Potential.GameMorphism
 import GameTheory.Concepts.Potential.PotentialFIP
 import GameTheory.Concepts.Potential.PotentialWellFounded
 import GameTheory.Concepts.Potential.PotentialTeam
@@ -153,6 +156,7 @@ import GameTheory.Concepts.Classes.EvolutionaryStability
 
 -- Minimax
 import GameTheory.Concepts.ZeroSum.Minimax
+import GameTheory.Concepts.ZeroSum.GameMorphism
 import GameTheory.Concepts.ZeroSum.MatrixGame
 import GameTheory.Concepts.ZeroSum.MatrixGame.Geometry
 import GameTheory.Concepts.ZeroSum.MatrixGame.StrongComplementarity

@@ -114,7 +114,7 @@ theorem correlatedEq_iff (e : EUGameIsomorphism G H) (μ : PMF (Profile G)) :
     congr 1
   have hbackmap : PMF.map E.symm.realize (e.realize μ) = μ := by
     rw [← hmap, PMF.map_comp]
-    rw [show E.symm.realize ∘ E.realize = id from ?_, PMF.map_id]
+    rw [show E.symm.realize ∘ E.realize = _root_.id from ?_, PMF.map_id]
     funext σ
     exact E.realizeSymm_realize σ
   constructor
@@ -155,7 +155,7 @@ theorem coarseCorrelatedEq_iff (e : EUGameIsomorphism G H) (μ : PMF (Profile G)
     congr 1
   have hbackmap : PMF.map E.symm.realize (e.realize μ) = μ := by
     rw [← hmap, PMF.map_comp]
-    rw [show E.symm.realize ∘ E.realize = id from ?_, PMF.map_id]
+    rw [show E.symm.realize ∘ E.realize = _root_.id from ?_, PMF.map_id]
     funext σ
     exact E.realizeSymm_realize σ
   constructor

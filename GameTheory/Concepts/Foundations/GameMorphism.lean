@@ -67,6 +67,12 @@ noncomputable def profileEquiv (e : EUGameIsomorphism G H) : Profile G ≃ Profi
 @[simp] theorem profileEquiv_apply (e : EUGameIsomorphism G H) (σ : Profile G) (i : ι) :
     e.profileEquiv σ i = e.stratEquiv i (σ i) := rfl
 
+/-- Expected utility is preserved at the bundled profile equivalence. -/
+@[simp] theorem eu_profileEquiv (e : EUGameIsomorphism G H)
+    (σ : Profile G) (who : ι) :
+    H.eu (e.profileEquiv σ) who = G.eu σ who :=
+  e.eu_preserved σ who
+
 @[simp] theorem profileEquiv_id (G : KernelGame ι) :
     (EUGameIsomorphism.id G).profileEquiv = Equiv.refl (Profile G) := by
   apply Equiv.ext
@@ -87,6 +93,28 @@ theorem profileEquiv_comp {K : KernelGame ι}
   intro σ
   rfl
 
+/-- Relabeling a profile commutes with a unilateral strategy update. -/
+@[simp] theorem profileEquiv_update [DecidableEq ι]
+    (e : EUGameIsomorphism G H) (σ : Profile G) (who : ι)
+    (s : G.Strategy who) :
+    e.profileEquiv (Function.update σ who s) =
+      Function.update (e.profileEquiv σ) who (e.stratEquiv who s) := by
+  funext j
+  rcases eq_or_ne j who with rfl | hne
+  · simp
+  · simp [Function.update_of_ne hne]
+
+/-- Inverse profile relabeling also commutes with unilateral updates. -/
+@[simp] theorem profileEquiv_symm_update [DecidableEq ι]
+    (e : EUGameIsomorphism G H) (τ : Profile H) (who : ι)
+    (s : H.Strategy who) :
+    e.profileEquiv.symm (Function.update τ who s) =
+      Function.update (e.profileEquiv.symm τ) who ((e.stratEquiv who).symm s) := by
+  have h := e.symm.profileEquiv_update τ who s
+  change e.profileEquiv.symm (Function.update τ who s) =
+    Function.update (e.profileEquiv.symm τ) who ((e.stratEquiv who).symm s) at h
+  exact h
+
 /-- Reindex profile-dependent data along a game isomorphism. This is an
 equivalence, not merely a forward transport operation. -/
 noncomputable def profileFunctionEquiv {α : Sort*}
@@ -102,6 +130,14 @@ noncomputable def profileFunctionEquiv {α : Sort*}
     (e : EUGameIsomorphism G H) (f : Profile G → α) (σ : Profile G) :
     e.profileFunctionEquiv f (e.profileEquiv σ) = f σ := by
   simp
+
+@[simp] theorem profileFunctionEquiv_apply_update [DecidableEq ι] {α : Sort*}
+    (e : EUGameIsomorphism G H) (f : Profile G → α) (σ : Profile G)
+    (who : ι) (s : G.Strategy who) :
+    e.profileFunctionEquiv f
+        (Function.update (e.profileEquiv σ) who (e.stratEquiv who s)) =
+      f (Function.update σ who s) := by
+  rw [← profileEquiv_update, profileFunctionEquiv_apply_profileEquiv]
 
 @[simp] theorem profileFunctionEquiv_id {α : Sort*} (G : KernelGame ι) :
     EUGameIsomorphism.profileFunctionEquiv (α := α) (EUGameIsomorphism.id G) =
@@ -143,13 +179,7 @@ theorem eu_update_preserved [DecidableEq ι] (e : EUGameIsomorphism G H)
     (σ : Profile G) (who : ι) (s : G.Strategy who) :
     H.eu (Function.update (e.profileEquiv σ) who (e.stratEquiv who s)) who =
       G.eu (Function.update σ who s) who := by
-  have h : e.profileEquiv (Function.update σ who s) =
-      Function.update (e.profileEquiv σ) who (e.stratEquiv who s) := by
-    funext j
-    rcases eq_or_ne j who with rfl | hne
-    · simp
-    · simp [Function.update_of_ne hne]
-  rw [← h]
+  rw [← e.profileEquiv_update]
   exact e.eu_preserved (Function.update σ who s) who
 
 /-- EU corollary: best response is preserved in both directions. Every

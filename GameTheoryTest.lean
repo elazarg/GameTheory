@@ -5,6 +5,7 @@ import GameTheory.Concepts.Foundations.Tests
 import GameTheory.Concepts.Learning.Tests
 import GameTheory.Concepts.Mixed.Tests
 import GameTheory.Concepts.Repeated.Tests
+import GameTheory.Concepts.Transport.Tests
 import GameTheory.Concepts.Welfare.Tests
 import GameTheory.Concepts.ZeroSum.Tests
 import GameTheory.Cooperative.Tests
