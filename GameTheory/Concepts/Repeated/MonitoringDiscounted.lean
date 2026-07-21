@@ -28,83 +28,6 @@ namespace PublicMonitoring
 
 variable {ι : Type} {G : KernelGame ι}
 
-set_option maxHeartbeats 800000 in
--- The double-series domination and `tsum_comm'` elaboration is inference-heavy.
-/-- Exchange expectation and a geometrically weighted sum under a uniform
-bound.  This is the discrete Fubini step used by the Bellman equation. -/
-theorem expect_tsum_geometric_of_bounded
-    {Y : Type} (p : PMF Y) {δ C : ℝ}
-    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hC0 : 0 ≤ C)
-    (f : Y → ℕ → ℝ) (hbd : ∀ y n, |f y n| ≤ C) :
-    Math.Probability.expect p (fun y => ∑' n : ℕ, δ ^ n * f y n) =
-      ∑' n : ℕ, δ ^ n * Math.Probability.expect p (fun y => f y n) := by
-  let F : Y × ℕ → ℝ := fun yn =>
-    (p yn.1).toReal * (δ ^ yn.2 * f yn.1 yn.2)
-  have hp : Summable fun y => (p y).toReal :=
-    Math.Probability.pmf_toReal_summable p
-  have hg : Summable fun n : ℕ => C * δ ^ n :=
-    (summable_geometric_of_lt_one hδ0 hδ1).mul_left C
-  have hmajor : Summable fun yn : Y × ℕ =>
-      (p yn.1).toReal * (C * δ ^ yn.2) :=
-    hp.mul_of_nonneg hg (fun _ => ENNReal.toReal_nonneg)
-      (fun n => mul_nonneg hC0 (pow_nonneg hδ0 n))
-  have hF : Summable F := by
-    refine Summable.of_norm_bounded hmajor ?_
-    intro yn
-    rw [Real.norm_eq_abs]
-    dsimp [F]
-    rw [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg, abs_mul,
-      abs_of_nonneg (pow_nonneg hδ0 yn.2)]
-    calc
-      (p yn.1).toReal * (δ ^ yn.2 * |f yn.1 yn.2|) ≤
-          (p yn.1).toReal * (δ ^ yn.2 * C) := by
-        gcongr
-        exact hbd yn.1 yn.2
-      _ = (p yn.1).toReal * (C * δ ^ yn.2) := by ring
-  have hrow : ∀ y, Summable fun n => F (y, n) := by
-    intro y
-    have hs : Summable fun n : ℕ => δ ^ n * f y n := by
-      have hgeom : Summable fun n : ℕ => C * δ ^ n :=
-        (summable_geometric_of_lt_one hδ0 hδ1).mul_left C
-      refine Summable.of_norm_bounded hgeom ?_
-      intro n
-      rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (pow_nonneg hδ0 n)]
-      calc
-        δ ^ n * |f y n| ≤ δ ^ n * C :=
-          mul_le_mul_of_nonneg_left (hbd y n) (pow_nonneg hδ0 n)
-        _ = C * δ ^ n := by ring
-    simpa [F, mul_assoc] using hs.mul_left (p y).toReal
-  have hcol : ∀ n, Summable fun y => F (y, n) := by
-    intro n
-    exact Math.Probability.expect_summable_of_bounded p
-      (fun y => δ ^ n * f y n)
-      (fun y => by
-        rw [abs_mul, abs_of_nonneg (pow_nonneg hδ0 n)]
-        exact mul_le_mul_of_nonneg_left (hbd y n) (pow_nonneg hδ0 n))
-  unfold Math.Probability.expect
-  calc
-    (∑' y, (p y).toReal * ∑' n, δ ^ n * f y n) =
-        ∑' y, ∑' n, F (y, n) := by
-      apply tsum_congr
-      intro y
-      change (p y).toReal * (∑' n, δ ^ n * f y n) =
-        ∑' n, (p y).toReal * (δ ^ n * f y n)
-      rw [tsum_mul_left]
-    _ = ∑' n, ∑' y, F (y, n) :=
-      (hF.tsum_comm' hrow hcol).symm
-    _ = ∑' n, δ ^ n * ∑' y, (p y).toReal * f y n := by
-      apply tsum_congr
-      intro n
-      calc
-        (∑' y, F (y, n)) =
-            ∑' y, δ ^ n * ((p y).toReal * f y n) := by
-          apply tsum_congr
-          intro y
-          simp [F]
-          ring
-        _ = δ ^ n * ∑' y, (p y).toReal * f y n := by
-          rw [tsum_mul_left]
-
 /-- Normalized discounted expected payoff under public monitoring. -/
 def discountedAveragePayoff (M : G.PublicMonitoring) (δ : ℝ)
     (σ : M.MonitoredProfile) (who : ι) : ℝ :=
@@ -196,30 +119,6 @@ theorem abs_discountedAveragePayoff_le_of_forall_eu_abs_le
             C * ((1 - δ) * (1 - δ)⁻¹) := by ring
         _ = C := by rw [mul_inv_cancel₀ hne, mul_one]
 
-/-- If `f` is pointwise at most `g + A`, the same additive allowance bounds
-their expectations. Boundedness is used only to justify the countable sums. -/
-theorem expect_le_expect_add_const_of_pointwise_bounded
-    {Y : Type} (p : PMF Y) (f g : Y → ℝ) (A : ℝ) {C : ℝ}
-    (hf : ∀ y, |f y| ≤ C) (hg : ∀ y, |g y| ≤ C)
-    (hle : ∀ y, f y ≤ g y + A) :
-    Math.Probability.expect p f ≤ Math.Probability.expect p g + A := by
-  have hsf := Math.Probability.expect_summable_of_bounded p f hf
-  have hsg := Math.Probability.expect_summable_of_bounded p g hg
-  have hsc := Math.Probability.expect_summable_of_bounded p (fun _ => A)
-    (fun _ => le_rfl)
-  have hsgc : Summable fun y => (p y).toReal * (g y + A) := by
-    simpa only [mul_add] using hsg.add hsc
-  calc
-    Math.Probability.expect p f ≤
-        Math.Probability.expect p (fun y => g y + A) :=
-      Math.ProbabilityMassFunction.expect_mono_of_pointwise_summable
-        p f (fun y => g y + A) hle hsf hsgc
-    _ = Math.Probability.expect p g +
-        Math.Probability.expect p (fun _ => A) :=
-      Math.Probability.expect_add_of_summable p g (fun _ => A) hsg hsc
-    _ = Math.Probability.expect p g + A := by
-      rw [Math.Probability.expect_const]
-
 /-- Bellman equation for normalized discounted payoff: current expected
 utility plus the expected discounted value after the next public signal. -/
 theorem discountedAveragePayoff_eq_head_add_expected
@@ -246,7 +145,8 @@ theorem discountedAveragePayoff_eq_head_add_expected
       (∑' n : ℕ, δ ^ n * M.stageEU σ (n + 1) who) =
         Math.Probability.expect p (fun y =>
           ∑' n : ℕ, δ ^ n * M.stageEU (M.afterSignal σ y) n who) := by
-    rw [expect_tsum_geometric_of_bounded p hδ0 hδ1 hC0
+    rw [Math.ProbabilityMassFunction.expect_tsum_geometric_of_bounded
+      p hδ0 hδ1 hC0
       (fun y n => M.stageEU (M.afterSignal σ y) n who)
       (fun y n => M.abs_stageEU_le_of_forall_eu_abs_le
         (M.afterSignal σ y) n who hC0 hbd)]
@@ -580,7 +480,9 @@ theorem truncatedDeviation_discountedAveragePayoff_le_add_accumulated_of_bounded
               (M.signalKernel (fun i => τ i 0 (fun k => k.elim0)))
               (fun y => M.discountedAveragePayoff δ
                 (M.afterSignal ω y) who) + A := by
-        exact expect_le_expect_add_const_of_pointwise_bounded _ _ _ A
+        exact
+          Math.ProbabilityMassFunction.expect_le_expect_add_const_of_pointwise_bounded
+            _ _ _ A
           (fun y => M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le
             hδ0 hδ1 hC0 (M.afterSignal τ y) who hC)
           (fun y => M.abs_discountedAveragePayoff_le_of_forall_eu_abs_le

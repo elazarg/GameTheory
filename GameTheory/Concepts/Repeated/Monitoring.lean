@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Core.KernelGame
-import Mathlib.Data.List.OfFn
+import Math.List
 import Math.ProbabilityMassFunction
 
 /-!
@@ -137,19 +137,13 @@ theorem afterSignals_append
   | cons x xs ih =>
       exact ih (M.afterSignal σ x)
 
-@[simp] theorem ofFn_snoc
-    (M : G.PublicMonitoring) {t : ℕ}
-    (h : M.SignalHistory t) (y : M.Signal) :
-    List.ofFn (Fin.snoc h y) = List.ofFn h ++ [y] := by
-  simpa using List.ofFn_succ' (Fin.snoc h y)
-
 /-- Taking a one-signal continuation after an existing prefix is the same as
 continuing after the prefix with that signal appended. -/
 theorem afterSignal_after
     (M : G.PublicMonitoring) (σ : M.MonitoredProfile)
     {t : ℕ} (h : M.SignalHistory t) (y : M.Signal) :
     M.afterSignal (M.after σ h) y = M.after σ (Fin.snoc h y) := by
-  rw [after, after, M.ofFn_snoc, M.afterSignals_append]
+  rw [after, after, Math.List.ofFn_snoc, M.afterSignals_append]
   rfl
 
 /-- Continuing after two successive public histories is continuation after

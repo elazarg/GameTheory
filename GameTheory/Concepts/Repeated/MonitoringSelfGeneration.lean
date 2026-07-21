@@ -201,12 +201,12 @@ theorem generatedProfile_realizesPromise_of_bounds
         have hexpectUpper :
             Math.Probability.expect p (fun y => V (h.nextState q y)) ≤
               Math.Probability.expect p (fun y => Q (h.nextState q y)) + B :=
-          expect_le_expect_add_const_of_pointwise_bounded
+          Math.ProbabilityMassFunction.expect_le_expect_add_const_of_pointwise_bounded
             p _ _ B hVbound hQbound hpointUpper
         have hexpectLower :
             Math.Probability.expect p (fun y => Q (h.nextState q y)) ≤
               Math.Probability.expect p (fun y => V (h.nextState q y)) + B :=
-          expect_le_expect_add_const_of_pointwise_bounded
+          Math.ProbabilityMassFunction.expect_le_expect_add_const_of_pointwise_bounded
             p _ _ B hQbound hVbound hpointLower
         have hbell := M.discountedAveragePayoff_eq_head_add_expected
           hδ0 hδ1 hCstage0 (h.generatedProfile q) who hstage

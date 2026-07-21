@@ -1336,6 +1336,107 @@ theorem expect_mono_of_pointwise_bounded
     (Math.Probability.expect_summable_of_bounded d f hf)
     (Math.Probability.expect_summable_of_bounded d g hg)
 
+set_option maxHeartbeats 800000 in
+-- The double-series domination and `tsum_comm'` elaboration is inference-heavy.
+/-- Exchange expectation and a geometrically weighted sum under a uniform
+bound. -/
+theorem expect_tsum_geometric_of_bounded
+    {Ω : Type*} (d : PMF Ω) {δ C : ℝ}
+    (hδ0 : 0 ≤ δ) (hδ1 : δ < 1) (hC0 : 0 ≤ C)
+    (f : Ω → ℕ → ℝ) (hbd : ∀ ω n, |f ω n| ≤ C) :
+    Math.Probability.expect d (fun ω => ∑' n : ℕ, δ ^ n * f ω n) =
+      ∑' n : ℕ, δ ^ n * Math.Probability.expect d (fun ω => f ω n) := by
+  let F : Ω × ℕ → ℝ := fun ωn =>
+    (d ωn.1).toReal * (δ ^ ωn.2 * f ωn.1 ωn.2)
+  have hd : Summable fun ω => (d ω).toReal :=
+    Math.Probability.pmf_toReal_summable d
+  have hg : Summable fun n : ℕ => C * δ ^ n :=
+    (summable_geometric_of_lt_one hδ0 hδ1).mul_left C
+  have hmajor : Summable fun ωn : Ω × ℕ =>
+      (d ωn.1).toReal * (C * δ ^ ωn.2) :=
+    hd.mul_of_nonneg hg (fun _ => ENNReal.toReal_nonneg)
+      (fun n => mul_nonneg hC0 (pow_nonneg hδ0 n))
+  have hF : Summable F := by
+    refine Summable.of_norm_bounded hmajor ?_
+    intro ωn
+    rw [Real.norm_eq_abs]
+    dsimp [F]
+    rw [abs_mul, abs_of_nonneg ENNReal.toReal_nonneg, abs_mul,
+      abs_of_nonneg (pow_nonneg hδ0 ωn.2)]
+    calc
+      (d ωn.1).toReal * (δ ^ ωn.2 * |f ωn.1 ωn.2|) ≤
+          (d ωn.1).toReal * (δ ^ ωn.2 * C) := by
+        gcongr
+        exact hbd ωn.1 ωn.2
+      _ = (d ωn.1).toReal * (C * δ ^ ωn.2) := by ring
+  have hrow : ∀ ω, Summable fun n => F (ω, n) := by
+    intro ω
+    have hs : Summable fun n : ℕ => δ ^ n * f ω n := by
+      have hgeom : Summable fun n : ℕ => C * δ ^ n :=
+        (summable_geometric_of_lt_one hδ0 hδ1).mul_left C
+      refine Summable.of_norm_bounded hgeom ?_
+      intro n
+      rw [Real.norm_eq_abs, abs_mul, abs_of_nonneg (pow_nonneg hδ0 n)]
+      calc
+        δ ^ n * |f ω n| ≤ δ ^ n * C :=
+          mul_le_mul_of_nonneg_left (hbd ω n) (pow_nonneg hδ0 n)
+        _ = C * δ ^ n := by ring
+    simpa [F, mul_assoc] using hs.mul_left (d ω).toReal
+  have hcol : ∀ n, Summable fun ω => F (ω, n) := by
+    intro n
+    exact Math.Probability.expect_summable_of_bounded d
+      (fun ω => δ ^ n * f ω n)
+      (fun ω => by
+        rw [abs_mul, abs_of_nonneg (pow_nonneg hδ0 n)]
+        exact mul_le_mul_of_nonneg_left (hbd ω n) (pow_nonneg hδ0 n))
+  unfold Math.Probability.expect
+  calc
+    (∑' ω, (d ω).toReal * ∑' n, δ ^ n * f ω n) =
+        ∑' ω, ∑' n, F (ω, n) := by
+      apply tsum_congr
+      intro ω
+      change (d ω).toReal * (∑' n, δ ^ n * f ω n) =
+        ∑' n, (d ω).toReal * (δ ^ n * f ω n)
+      rw [tsum_mul_left]
+    _ = ∑' n, ∑' ω, F (ω, n) :=
+      (hF.tsum_comm' hrow hcol).symm
+    _ = ∑' n, δ ^ n * ∑' ω, (d ω).toReal * f ω n := by
+      apply tsum_congr
+      intro n
+      calc
+        (∑' ω, F (ω, n)) =
+            ∑' ω, δ ^ n * ((d ω).toReal * f ω n) := by
+          apply tsum_congr
+          intro ω
+          simp [F]
+          ring
+        _ = δ ^ n * ∑' ω, (d ω).toReal * f ω n := by
+          rw [tsum_mul_left]
+
+/-- If `f` is pointwise at most `g + A`, the same additive allowance bounds
+their expectations. Boundedness is used only to justify the countable sums. -/
+theorem expect_le_expect_add_const_of_pointwise_bounded
+    {Ω : Type*} (d : PMF Ω) (f g : Ω → ℝ) (A : ℝ) {C : ℝ}
+    (hf : ∀ ω, |f ω| ≤ C) (hg : ∀ ω, |g ω| ≤ C)
+    (hle : ∀ ω, f ω ≤ g ω + A) :
+    Math.Probability.expect d f ≤ Math.Probability.expect d g + A := by
+  have hsf := Math.Probability.expect_summable_of_bounded d f hf
+  have hsg := Math.Probability.expect_summable_of_bounded d g hg
+  have hsc := Math.Probability.expect_summable_of_bounded d (fun _ => A)
+    (fun _ => le_rfl)
+  have hsgc : Summable fun ω => (d ω).toReal * (g ω + A) := by
+    simpa only [mul_add] using hsg.add hsc
+  calc
+    Math.Probability.expect d f ≤
+        Math.Probability.expect d (fun ω => g ω + A) :=
+      expect_mono_of_pointwise_summable d f (fun ω => g ω + A)
+        hle hsf hsgc
+    _ = Math.Probability.expect d g +
+        Math.Probability.expect d (fun _ => A) :=
+      Math.Probability.expect_add_of_summable d g (fun _ => A) hsg hsc
+    _ = Math.Probability.expect d g + A := by
+      rw [Math.Probability.expect_const]
+
 /-- If a non-positive summable payoff has zero expectation, then every point
     receiving positive probability has zero payoff. -/
 theorem eq_zero_of_expect_eq_zero_of_nonpos_of_pos
