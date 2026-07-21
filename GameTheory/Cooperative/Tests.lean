@@ -33,22 +33,22 @@ example (a : α)
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hAinj' : ∀ a, Function.Injective (M'.prefA a))
     (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hcomplete : M.HasCompleteAcceptability)
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
     (hreport : M.IsUnilateralProposerReport M' a) :
     ¬M.StrictlyImprovesOnDA M'.daMatching a :=
-  M.deferredAcceptance_strategyproof a hAinj hAinj' hBinj hcomplete hreport
+  M.deferredAcceptance_strategyproof a hAinj hAinj' hBinj hAne hreport
 
 example
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hAinj' : ∀ a, Function.Injective (M'.prefA a))
     (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hcomplete : M.HasCompleteAcceptability)
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
     (hreport : M.IsProposerReport M')
     (hchanged : M.prefA ≠ M'.prefA) :
     ∃ a, M.prefA a ≠ M'.prefA a ∧
       ¬M.StrictlyImprovesOnDA M'.daMatching a :=
   M.deferredAcceptance_groupStrategyproof hAinj hAinj' hBinj
-    hcomplete hreport hchanged
+    hAne hreport hchanged
 
 end MatchingMarket
 

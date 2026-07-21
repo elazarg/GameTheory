@@ -133,39 +133,30 @@ def IsProposerReport (M' : MatchingMarket α β) : Prop :=
 def IsUnilateralProposerReport (M' : MatchingMarket α β) (a : α) : Prop :=
   M.IsProposerReport M' ∧ ∀ a', a' ≠ a → M'.prefA a' = M.prefA a'
 
-/-- Strict completeness of the true market: every possible partner is strictly
-preferred to remaining unmatched on both sides. -/
-def HasCompleteAcceptability : Prop :=
-  (∀ a b, M.reserveA a < M.prefA a b) ∧
-    ∀ b a, M.reserveB b < M.prefB b a
+/-- Truthful deferred acceptance gives every proposer at least the outside
+option. -/
+theorem reserveA_le_prefAOption_daMatching
+    (hAinj : ∀ a, Function.Injective (M.prefA a))
+    (hBinj : ∀ b, Function.Injective (M.prefB b)) (a : α) :
+    M.reserveA a ≤ M.prefAOption a (M.daMatching a) := by
+  cases hda : M.daMatching a with
+  | none => simp
+  | some b =>
+      simpa [hda] using
+        (M.daMatching_isStable hAinj hBinj).isIndividuallyRationalA a b hda
 
-omit [Fintype α] [Fintype β] in
-theorem hasCompleteAcceptability_reserveA_ne
-    (hcomplete : M.HasCompleteAcceptability) :
-    ∀ a b, M.reserveA a ≠ M.prefA a b :=
-  fun a b => ne_of_lt (hcomplete.1 a b)
-
-omit [Fintype α] [Fintype β] in
-theorem hasCompleteAcceptability_reserveB_ne
-    (hcomplete : M.HasCompleteAcceptability) :
-    ∀ b a, M.reserveB b ≠ M.prefB b a :=
-  fun b a => ne_of_lt (hcomplete.2 b a)
-
-/-- With complete true acceptability, strict improvement necessarily assigns
-the proposer an actual partner. -/
+/-- Strict improvement necessarily assigns the proposer an actual partner. -/
 theorem assigned_of_strictlyImprovesOnDA
-    (hcomplete : M.HasCompleteAcceptability)
+    (hAinj : ∀ a, Function.Injective (M.prefA a))
+    (hBinj : ∀ b, Function.Injective (M.prefB b))
     {μ : α → Option β} {a : α}
     (himprove : M.StrictlyImprovesOnDA μ a) :
     ∃ b, μ a = some b := by
   cases hμ : μ a with
   | none =>
-      cases hda : M.daMatching a with
-      | none => simp [StrictlyImprovesOnDA, hμ, hda] at himprove
-      | some b =>
-          have := hcomplete.1 a b
-          simp [StrictlyImprovesOnDA, hμ, hda] at himprove
-          omega
+      have hbase := M.reserveA_le_prefAOption_daMatching hAinj hBinj a
+      simp [StrictlyImprovesOnDA, hμ] at himprove
+      omega
   | some b => exact ⟨b, rfl⟩
 
 /-- The assigned partner of a proposer who improves on truthful deferred
@@ -173,27 +164,33 @@ acceptance is matched in the truthful DA outcome. -/
 theorem daMatching_partner_exists_of_strictlyImprovesOnDA
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hcomplete : M.HasCompleteAcceptability)
     {μ : α → Option β} {a : α} {b : β}
+    (hμirB : M.IsIndividuallyRationalB μ)
     (himprove : M.StrictlyImprovesOnDA μ a) (hμa : μ a = some b) :
     ∃ a', M.daMatching a' = some b := by
   classical
-  by_contra hnone
-  push Not at hnone
   have hpref : M.prefAOption a (M.daMatching a) < M.prefA a b := by
     simpa [StrictlyImprovesOnDA, hμa] using himprove
-  apply (M.daMatching_isStable hAinj hBinj).2.2
-  refine ⟨a, b, ?_, ?_, ?_, ?_⟩
-  · intro b' hb'
+  have haccA : M.accW a b :=
+    le_trans (M.reserveA_le_prefAOption_daMatching hAinj hBinj a)
+      (le_of_lt hpref)
+  have hbrejected : b ∈ M.daFixedPoint a := by
+    by_contra hb
+    have hbavail : b ∈ M.available M.daFixedPoint a :=
+      M.mem_available.mpr ⟨hb, haccA⟩
+    obtain ⟨b', hb'⟩ : ∃ b', M.daMatching a = some b' := by
+      unfold daMatching topChoice
+      rw [dif_pos ⟨b, hbavail⟩]
+      exact ⟨_, rfl⟩
+    have hle := (M.topChoice_spec hb').2 b hbavail
     rw [hb'] at hpref
-    simpa using hpref
-  · intro ha
-    rw [ha] at hpref
-    simpa using hpref
-  · intro a' ha'
-    exact False.elim (hnone a' ha')
-  · intro _
-    exact hcomplete.2 b a
+    simp only [prefAOption_some] at hpref
+    omega
+  rcases M.inv_iterate hAinj hBinj M.daFixedPointRound a b (by
+      simpa [daFixedPointRound, daFixedPoint] using hbrejected) with
+    hunacc | ⟨a', hholder, _⟩
+  · exact False.elim (hunacc (hμirB a b hμa))
+  · exact ⟨a', (M.mem_suitors.mp (M.holder_spec hholder).1).1⟩
 
 /-- If an arbitrary matching assigns `b` to a proposer who improves over DA,
 then `b` strictly prefers her truthful DA partner to that proposer. -/
@@ -238,7 +235,7 @@ blocks the arbitrary matching. -/
 theorem blockingPair_of_improver_spouse_daMatched_nonimprover
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hcomplete : M.HasCompleteAcceptability)
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
     {μ : α → Option β} (hμmatching : IsMatching μ)
     {a a' : α} {b : β}
     (himprove : M.StrictlyImprovesOnDA μ a)
@@ -263,7 +260,9 @@ theorem blockingPair_of_improver_spouse_daMatched_nonimprover
     have hb'ne : b' ≠ b := fun h => hμa'ne (h ▸ hμa')
     exact lt_of_le_of_ne hle' (fun he => hb'ne (hAinj a' he))
   · intro _
-    exact hcomplete.1 a' b
+    exact lt_of_le_of_ne
+      ((M.daMatching_isStable hAinj hBinj).isIndividuallyRationalA a' b hdaa')
+      (hAne a' b)
   · intro a'' hμa''
     have ha'' : a'' = a := hμmatching a'' a b hμa'' hμa
     simpa [ha''] using hbpref
@@ -275,13 +274,15 @@ proposer over the truthful deferred-acceptance outcome, then the arbitrary
 matching has a blocking pair consisting of a non-improved proposer and the
 assigned partner of an improved proposer.
 
-The true market is assumed complete and strict. The arbitrary matching need
-not be stable or individually rational. -/
+The true market is strict, including relative to the proposers' outside
+options. The arbitrary matching need not be stable; only receiver-side
+individual rationality is required. -/
 theorem hwang_blocking_pair
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hcomplete : M.HasCompleteAcceptability)
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
     {μ : α → Option β} (hμmatching : IsMatching μ)
+    (hμirB : M.IsIndividuallyRationalB μ)
     (hexists : ∃ a, M.StrictlyImprovesOnDA μ a) :
     ∃ a a' b, μ a = some b ∧ M.StrictlyImprovesOnDA μ a ∧
       ¬M.StrictlyImprovesOnDA μ a' ∧ M.IsBlockingPair μ a' b := by
@@ -292,7 +293,7 @@ theorem hwang_blocking_pair
   · obtain ⟨a, a', b, ha, hμa, hdaa', ha'⟩ := heasy
     exact ⟨a, a', b, hμa, ha, ha',
       M.blockingPair_of_improver_spouse_daMatched_nonimprover
-        hAinj hBinj hcomplete hμmatching ha hμa hdaa' ha'⟩
+        hAinj hBinj hAne hμmatching ha hμa hdaa' ha'⟩
   · have hdaSpouseImproves {a a' : α} {b : β}
         (ha : M.StrictlyImprovesOnDA μ a)
         (hμa : μ a = some b) (hdaa' : M.daMatching a' = some b) :
@@ -304,7 +305,7 @@ theorem hwang_blocking_pair
     letI : Fintype R := Fintype.ofFinite R
     letI : Fintype S := Fintype.ofFinite S
     have hμAssigned (r : R) : ∃ b, μ r.1 = some b :=
-      M.assigned_of_strictlyImprovesOnDA hcomplete r.2
+      M.assigned_of_strictlyImprovesOnDA hAinj hBinj r.2
     let μPartner : R → S := fun r =>
       ⟨Classical.choose (hμAssigned r), r.1, r.2,
         Classical.choose_spec (hμAssigned r)⟩
@@ -329,7 +330,7 @@ theorem hwang_blocking_pair
     have hdaAssigned (s : S) : ∃ a', M.daMatching a' = some s.1 := by
       obtain ⟨a, ha, hμa⟩ := s.2
       exact M.daMatching_partner_exists_of_strictlyImprovesOnDA
-        hAinj hBinj hcomplete ha hμa
+        hAinj hBinj hμirB ha hμa
     let daSource : S → R := fun s =>
       ⟨Classical.choose (hdaAssigned s), by
         obtain ⟨a, ha, hμa⟩ := s.2
@@ -417,13 +418,17 @@ theorem hwang_blocking_pair
     have htopr'n :
         M.topChoice (M.daRejections n) r'.1 = some (daPartner r').1 :=
       htop_at_n r' (hrmax' r')
+    have hr'pref : M.prefA r'.1 (daPartner r').1 < M.prefA r'.1 w := by
+      simpa [StrictlyImprovesOnDA, hdaPartner_spec r', r', hμr'] using r'.2
+    have hr'acc : M.accW r'.1 w := by
+      have hbase := M.reserveA_le_prefAOption_daMatching hAinj hBinj r'.1
+      rw [hdaPartner_spec r'] at hbase
+      exact le_trans hbase (le_of_lt hr'pref)
     have hwr' : w ∈ M.daRejections n r'.1 := by
       by_contra hw
       have hwavail : w ∈ M.available (M.daRejections n) r'.1 :=
-        M.mem_available.mpr ⟨hw, le_of_lt (hcomplete.1 r'.1 w)⟩
+        M.mem_available.mpr ⟨hw, hr'acc⟩
       have hle := (M.topChoice_spec htopr'n).2 w hwavail
-      have himprove : M.prefA r'.1 (daPartner r').1 < M.prefA r'.1 w := by
-        simpa [StrictlyImprovesOnDA, hdaPartner_spec r', r', hμr'] using r'.2
       omega
     have hnzero : n ≠ 0 := by
       intro hn
@@ -439,10 +444,10 @@ theorem hwang_blocking_pair
           M.prefB w r'.1 < M.prefB w m := by
       by_cases hwold : w ∈ M.daRejections k r'.1
       · rcases M.inv_iterate hAinj hBinj k r'.1 w hwold with hunacc | hholder
-        · exact False.elim (hunacc (le_of_lt (hcomplete.2 w r'.1)))
+        · exact False.elim (hunacc (hμirB r'.1 w hμr'))
         · exact hholder
       · exact M.exists_preferred_holder_of_mem_daStep_of_not_mem
-          (hBinj w) (le_of_lt (hcomplete.2 w r'.1)) hwstep hwold
+          (hBinj w) (hμirB r'.1 w hμr') hwstep hwold
     have htopn' :
         M.topChoice (M.daRejections (k + 1)) r.1 = some w := by
       simpa [hkarr] using htopn
@@ -450,7 +455,8 @@ theorem hwang_blocking_pair
       simpa [N, hkarr] using hnfixed
     have hrholder : M.holder (M.daRejections (k + 1)) w = some r.1 := by
       have hrsuit : r.1 ∈ M.suitors (M.daRejections (k + 1)) w :=
-        M.mem_suitors.mpr ⟨htopn', le_of_lt (hcomplete.2 w r.1)⟩
+        M.mem_suitors.mpr ⟨htopn',
+          (M.daMatching_isStable hAinj hBinj).isIndividuallyRationalB r.1 w hdar⟩
       obtain ⟨x, hx⟩ : ∃ x, M.holder (M.daRejections (k + 1)) w = some x :=
         Option.isSome_iff_exists.mp (M.holder_isSome_of_suitors ⟨r.1, hrsuit⟩)
       have hxr : x = r.1 := by
@@ -505,7 +511,11 @@ theorem hwang_blocking_pair
         (M.daRejections_succ_subset_fixedPoint hnfixed' m hmrejected)
     have hwpref : M.prefAOption m (M.daMatching m) < M.prefA m w := by
       cases hda : M.daMatching m with
-      | none => simpa [hda] using hcomplete.1 m w
+      | none =>
+          have hacc := M.accW_of_topChoice hmtop
+          have hlt : M.reserveA m < M.prefA m w :=
+            lt_of_le_of_ne hacc (hAne m w)
+          simpa [hda] using hlt
       | some b₀ =>
           have hb₀not : b₀ ∉ M.daRejections (k + 1) m := by
             intro hb₀
@@ -517,7 +527,8 @@ theorem hwang_blocking_pair
                 simpa [daMatching] using hda))).1
             exact this hb₀final
           have hb₀avail : b₀ ∈ M.available (M.daRejections (k + 1)) m :=
-            M.mem_available.mpr ⟨hb₀not, le_of_lt (hcomplete.1 m b₀)⟩
+            M.mem_available.mpr ⟨hb₀not,
+              (M.daMatching_isStable hAinj hBinj).isIndividuallyRationalA m b₀ hda⟩
           have hle := (M.topChoice_spec hmtop).2 b₀ hb₀avail
           have hb₀ne : b₀ ≠ w := by
             intro heq
@@ -563,15 +574,15 @@ theorem isBlockingPair_iff_of_isProposerReport_of_prefA_eq
 least one report, then some proposer whose report changed does not strictly
 improve over truthful deferred acceptance.
 
-The true market must be complete and strict. Reported proposer preferences
-may reorder or truncate the complete lists, but must remain strict; receiver
-preferences and both outside options remain fixed. -/
+True and reported proposer preferences must be strict, including relative to
+the true outside option. Lists may be incomplete and reports may reorder or
+truncate them; receiver preferences and both outside options remain fixed. -/
 theorem deferredAcceptance_groupStrategyproof
     {M' : MatchingMarket α β}
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hAinj' : ∀ a, Function.Injective (M'.prefA a))
     (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hcomplete : M.HasCompleteAcceptability)
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
     (hreport : M.IsProposerReport M')
     (hchanged : M.prefA ≠ M'.prefA) :
     ∃ a, M.prefA a ≠ M'.prefA a ∧
@@ -591,8 +602,12 @@ theorem deferredAcceptance_groupStrategyproof
     rw [hreport.1]
     exact hBinj b
   have hstable := M'.daMatching_isStable hAinj' hBinj'
+  have hμirB : M.IsIndividuallyRationalB M'.daMatching := by
+    intro a b hab
+    rw [← hreport.1, ← hreport.2.2]
+    exact hstable.isIndividuallyRationalB a b hab
   obtain ⟨a, a', b, hmatch, himprove, ha'not, hblock⟩ :=
-    M.hwang_blocking_pair hAinj hBinj hcomplete hstable.1 hexists
+    M.hwang_blocking_pair hAinj hBinj hAne hstable.1 hμirB hexists
   have ha'eq : M'.prefA a' = M.prefA a' := by
     by_contra ha'ne
     exact ha'not (hcon a' (Ne.symm ha'ne))
@@ -600,6 +615,24 @@ theorem deferredAcceptance_groupStrategyproof
     (M.isBlockingPair_iff_of_isProposerReport_of_prefA_eq
       hreport ha'eq).2 hblock
   exact hstable.2.2 ⟨a', b, hblock'⟩
+
+/-- Inequality form of proposer group strategyproofness: some liar weakly
+prefers the truthful DA outcome to the outcome under the joint report. -/
+theorem deferredAcceptance_groupStrategyproof_le
+    {M' : MatchingMarket α β}
+    (hAinj : ∀ a, Function.Injective (M.prefA a))
+    (hAinj' : ∀ a, Function.Injective (M'.prefA a))
+    (hBinj : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
+    (hreport : M.IsProposerReport M')
+    (hchanged : M.prefA ≠ M'.prefA) :
+    ∃ a, M.prefA a ≠ M'.prefA a ∧
+      M.prefAOption a (M'.daMatching a) ≤
+        M.prefAOption a (M.daMatching a) := by
+  obtain ⟨a, ha, hnot⟩ :=
+    M.deferredAcceptance_groupStrategyproof hAinj hAinj' hBinj
+      hAne hreport hchanged
+  exact ⟨a, ha, le_of_not_gt hnot⟩
 
 /-- **Proposer strategyproofness.** A single proposer cannot obtain a strictly
 better partner, according to the true preference, by changing only that
@@ -609,7 +642,7 @@ theorem deferredAcceptance_strategyproof
     (hAinj : ∀ a, Function.Injective (M.prefA a))
     (hAinj' : ∀ a, Function.Injective (M'.prefA a))
     (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hcomplete : M.HasCompleteAcceptability)
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
     (hreport : M.IsUnilateralProposerReport M' a) :
     ¬M.StrictlyImprovesOnDA M'.daMatching a := by
   classical
@@ -622,11 +655,25 @@ theorem deferredAcceptance_strategyproof
     exact lt_irrefl _
   · obtain ⟨a', ha'lie, ha'not⟩ :=
       M.deferredAcceptance_groupStrategyproof hAinj hAinj' hBinj
-        hcomplete hreport.1 hchanged
+        hAne hreport.1 hchanged
     have ha'eq : a' = a := by
       by_contra hne
       exact ha'lie (hreport.2 a' hne).symm
     simpa [ha'eq] using ha'not
+
+/-- Inequality form of unilateral proposer strategyproofness: truthful DA is
+weakly preferred to the outcome under any unilateral report. -/
+theorem deferredAcceptance_strategyproof_le
+    {M' : MatchingMarket α β} (a : α)
+    (hAinj : ∀ a, Function.Injective (M.prefA a))
+    (hAinj' : ∀ a, Function.Injective (M'.prefA a))
+    (hBinj : ∀ b, Function.Injective (M.prefB b))
+    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b)
+    (hreport : M.IsUnilateralProposerReport M' a) :
+    M.prefAOption a (M'.daMatching a) ≤
+      M.prefAOption a (M.daMatching a) :=
+  le_of_not_gt
+    (M.deferredAcceptance_strategyproof a hAinj hAinj' hBinj hAne hreport)
 
 end
 

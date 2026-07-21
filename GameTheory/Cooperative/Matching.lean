@@ -59,12 +59,50 @@ def IsBlockingPair (M : MatchingMarket α β) (μ : α → Option β)
   (∀ a', μ a' = some b → M.prefB b a > M.prefB b a') ∧
   ((∀ a', μ a' ≠ some b) → M.prefB b a > M.reserveB b)
 
+/-- Every assigned `α`-agent weakly prefers the assignment to remaining
+unmatched. -/
+def IsIndividuallyRationalA (M : MatchingMarket α β)
+    (μ : α → Option β) : Prop :=
+  ∀ a b, μ a = some b → M.reserveA a ≤ M.prefA a b
+
+/-- Every assigned `β`-agent weakly prefers the assignment to remaining
+unmatched. -/
+def IsIndividuallyRationalB (M : MatchingMarket α β)
+    (μ : α → Option β) : Prop :=
+  ∀ a b, μ a = some b → M.reserveB b ≤ M.prefB b a
+
+/-- Every possible partner is strictly preferred to remaining unmatched on
+both sides of the market. -/
+def HasCompleteAcceptability (M : MatchingMarket α β) : Prop :=
+  (∀ a b, M.reserveA a < M.prefA a b) ∧
+    ∀ b a, M.reserveB b < M.prefB b a
+
+theorem hasCompleteAcceptability_reserveA_ne
+    {M : MatchingMarket α β} (h : M.HasCompleteAcceptability) :
+    ∀ a b, M.reserveA a ≠ M.prefA a b :=
+  fun a b => ne_of_lt (h.1 a b)
+
+theorem hasCompleteAcceptability_reserveB_ne
+    {M : MatchingMarket α β} (h : M.HasCompleteAcceptability) :
+    ∀ b a, M.reserveB b ≠ M.prefB b a :=
+  fun b a => ne_of_lt (h.2 b a)
+
 /-- A stable matching: valid, individually rational, no blocking pairs. -/
 def IsStable (M : MatchingMarket α β) (μ : α → Option β) : Prop :=
   IsMatching μ ∧
   (∀ a b, μ a = some b → M.prefA a b ≥ M.reserveA a ∧
     M.prefB b a ≥ M.reserveB b) ∧
   ¬∃ a b, M.IsBlockingPair μ a b
+
+theorem IsStable.isIndividuallyRationalA {M : MatchingMarket α β}
+    {μ : α → Option β} (h : M.IsStable μ) :
+    M.IsIndividuallyRationalA μ :=
+  fun a b hab => (h.2.1 a b hab).1
+
+theorem IsStable.isIndividuallyRationalB {M : MatchingMarket α β}
+    {μ : α → Option β} (h : M.IsStable μ) :
+    M.IsIndividuallyRationalB μ :=
+  fun a b hab => (h.2.1 a b hab).2
 
 /-- Stable matchings of a market, bundled as a subtype. -/
 abbrev StableMatching (M : MatchingMarket α β) : Type :=
