@@ -101,6 +101,43 @@ theorem mem_normalHyperplane_iff
     v ∈ normalHyperplane normal ↔ ∑ i, normal i * v i = 0 :=
   Iff.rfl
 
+/-- The affine level set of the linear functional determined by `normal`. -/
+noncomputable def normalAffineHyperplane
+    {I R : Type*} [Fintype I] [CommSemiring R]
+    (normal : I → R) (level : R) : Set (I → R) :=
+  {v | normalLinearMap normal v = level}
+
+@[simp]
+theorem mem_normalAffineHyperplane_iff
+    {I R : Type*} [Fintype I] [CommSemiring R]
+    (normal v : I → R) (level : R) :
+    v ∈ normalAffineHyperplane normal level ↔
+      ∑ i, normal i * v i = level :=
+  Iff.rfl
+
+/-- Over a field, pairing with a nonzero finite normal is a surjective linear
+functional. -/
+theorem normalLinearMap_surjective_of_ne_zero
+    {I R : Type*} [Fintype I] [Field R]
+    {normal : I → R} (hnormal : normal ≠ 0) :
+    Function.Surjective (normalLinearMap normal) := by
+  classical
+  have hex : ∃ i, normal i ≠ 0 := by
+    by_contra h
+    apply hnormal
+    funext i
+    by_contra hi
+    exact h ⟨i, hi⟩
+  obtain ⟨i, hi⟩ := hex
+  intro level
+  refine ⟨Pi.single i (level / normal i), ?_⟩
+  rw [normalLinearMap_apply, Finset.sum_eq_single i]
+  · simp [mul_div_cancel₀ level hi]
+  · intro j _ hji
+    simp [hji]
+  · intro hnot
+    exact (hnot (Finset.mem_univ i)).elim
+
 /-- Relabeling the coordinates of a family of vectors by an equivalence
 preserves and reflects linear independence. -/
 theorem linearIndependent_piCongrLeft_iff

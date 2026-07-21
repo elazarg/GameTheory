@@ -598,6 +598,19 @@ example :
     rw [Function.update_eq_self]
     exact allTrueProfile_isNash false dev
 
+/-- Enforceability is invariant across affine translates of a nonzero normal
+hyperplane. -/
+example :
+    coordinationGame.profileMonitoring.IsEnforceableOnAffineNormalHyperplane
+          (1 / 2) allTrueProfile (fun _ : Bool => (1 : ℝ)) 3 ↔
+      coordinationGame.profileMonitoring.IsEnforceableOnNormalHyperplane
+        (1 / 2) allTrueProfile (fun _ : Bool => (1 : ℝ)) := by
+  apply
+    coordinationGame.profileMonitoring.isEnforceableOnAffineNormalHyperplane_iff
+  intro hzero
+  have hfalse := congrFun hzero false
+  norm_num at hfalse
+
 /-- Constant public continuation transfers do not change deviation
 incentives. -/
 example (c : ℝ) :

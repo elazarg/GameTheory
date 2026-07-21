@@ -36,6 +36,51 @@ def IsEnforceableOnNormalHyperplane
     (∀ y, w y ∈ Math.LinearAlgebra.normalHyperplane normal) ∧
       M.IsEnforceable delta a w
 
+/-- Enforceability with all public continuation payoffs in an affine level
+set of a normal functional. -/
+def IsEnforceableOnAffineNormalHyperplane
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) (delta : ℝ) (a : Profile G)
+    (normal : Payoff iota) (level : ℝ) : Prop :=
+  ∃ w : M.ContinuationAssignment,
+    (∀ y, w y ∈ Math.LinearAlgebra.normalAffineHyperplane normal level) ∧
+      M.IsEnforceable delta a w
+
+/-- For a nonzero normal, enforceability on its linear hyperplane is
+equivalent to enforceability on every affine translate. -/
+theorem isEnforceableOnAffineNormalHyperplane_iff
+    [Fintype iota] [DecidableEq iota]
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    (delta : ℝ) (a : Profile G) (normal : Payoff iota)
+    (hnormal : normal ≠ 0) (level : ℝ) :
+    M.IsEnforceableOnAffineNormalHyperplane delta a normal level ↔
+      M.IsEnforceableOnNormalHyperplane delta a normal := by
+  obtain ⟨center, hcenter⟩ :=
+    Math.LinearAlgebra.normalLinearMap_surjective_of_ne_zero hnormal level
+  constructor
+  · rintro ⟨w, haffine, henforce⟩
+    refine ⟨M.translateContinuation w (-center), ?_,
+      (M.isEnforceable_translateContinuation_iff delta a w (-center)).2
+        henforce⟩
+    intro y
+    change Math.LinearAlgebra.normalLinearMap normal
+      (w y + (-center)) = 0
+    rw [map_add, map_neg, hcenter]
+    have hy := haffine y
+    change Math.LinearAlgebra.normalLinearMap normal (w y) = level at hy
+    rw [hy]
+    ring
+  · rintro ⟨w, hlinear, henforce⟩
+    refine ⟨M.translateContinuation w center, ?_,
+      (M.isEnforceable_translateContinuation_iff delta a w center).2
+        henforce⟩
+    intro y
+    change Math.LinearAlgebra.normalLinearMap normal (w y + center) = level
+    rw [map_add, hcenter]
+    have hy := hlinear y
+    change Math.LinearAlgebra.normalLinearMap normal (w y) = 0 at hy
+    rw [hy, zero_add]
+
 /-- Under bounded utilities and finite public signals, hyperplane
 enforceability of a pure profile is equivalent before and after behavioral
 lifting. -/

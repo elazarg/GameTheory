@@ -151,6 +151,72 @@ theorem isBoundedContinuationAssignment_constant
   intro who
   exact ⟨|v who|, fun _ => le_rfl⟩
 
+/-- Translate every public continuation payoff by the same payoff vector. -/
+def translateContinuation (M : G.PublicMonitoring)
+    (w : M.ContinuationAssignment) (v : Payoff ι) :
+    M.ContinuationAssignment :=
+  fun y who => w y who + v who
+
+@[simp]
+theorem translateContinuation_apply
+    (M : G.PublicMonitoring) (w : M.ContinuationAssignment)
+    (v : Payoff ι) (y : M.Signal) (who : ι) :
+    M.translateContinuation w v y who = w y who + v who :=
+  rfl
+
+/-- Translating a bounded continuation assignment by a fixed payoff vector
+preserves boundedness. -/
+theorem IsBoundedContinuationAssignment.translate
+    (M : G.PublicMonitoring) {w : M.ContinuationAssignment}
+    (hw : M.IsBoundedContinuationAssignment w) (v : Payoff ι) :
+    M.IsBoundedContinuationAssignment (M.translateContinuation w v) := by
+  intro who
+  obtain ⟨C, hC⟩ := hw who
+  refine ⟨C + |v who|, fun y => ?_⟩
+  calc
+    |M.translateContinuation w v y who| ≤ |w y who| + |v who| :=
+      abs_add_le _ _
+    _ ≤ C + |v who| := add_le_add (hC y) le_rfl
+
+/-- A signal-independent continuation translation shifts the prescribed
+decomposed payoff by `delta` times the translation vector. -/
+theorem decomposedPayoff_translateContinuation
+    (M : G.PublicMonitoring) [Finite M.Signal]
+    (delta : ℝ) (a : Profile G) (w : M.ContinuationAssignment)
+    (v : Payoff ι) (who : ι) :
+    M.decomposedPayoff delta a (M.translateContinuation w v) who =
+      M.decomposedPayoff delta a w who + delta * v who := by
+  simp only [decomposedPayoff, translateContinuation]
+  rw [Math.Probability.expect_add]
+  simp
+  ring
+
+/-- The same translation shifts every unilateral-deviation decomposed payoff
+by exactly the same amount. -/
+theorem decomposedDeviationPayoff_translateContinuation
+    (M : G.PublicMonitoring) [DecidableEq ι] [Finite M.Signal]
+    (delta : ℝ) (a : Profile G) (w : M.ContinuationAssignment)
+    (v : Payoff ι) (who : ι) (dev : G.Strategy who) :
+    M.decomposedDeviationPayoff delta a (M.translateContinuation w v)
+        who dev =
+      M.decomposedDeviationPayoff delta a w who dev + delta * v who := by
+  simp only [decomposedDeviationPayoff, translateContinuation]
+  rw [Math.Probability.expect_add]
+  simp
+  ring
+
+/-- Signal-independent continuation translations preserve and reflect APS
+enforceability. -/
+theorem isEnforceable_translateContinuation_iff
+    (M : G.PublicMonitoring) [DecidableEq ι] [Finite M.Signal]
+    (delta : ℝ) (a : Profile G) (w : M.ContinuationAssignment)
+    (v : Payoff ι) :
+    M.IsEnforceable delta a (M.translateContinuation w v) ↔
+      M.IsEnforceable delta a w := by
+  simp only [IsEnforceable,
+    M.decomposedDeviationPayoff_translateContinuation,
+    M.decomposedPayoff_translateContinuation, add_le_add_iff_right]
+
 /-- Decomposition with a constant continuation has the expected affine
 form. -/
 @[simp] theorem decomposedPayoff_constant
