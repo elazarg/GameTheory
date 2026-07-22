@@ -586,6 +586,18 @@ theorem finkContinuationEU_smul (G : StochasticGame ι)
   unfold finkContinuationEU
   simp_rw [Pi.smul_apply, smul_eq_mul, expect_const_mul]
 
+/-- The on-profile continuation payoff respects subtraction of continuation
+vectors. -/
+theorem finkContinuationEU_sub (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) :
+    G.finkContinuationEU (W - K) z s who =
+      G.finkContinuationEU W z s who -
+        G.finkContinuationEU K z s who := by
+  unfold finkContinuationEU
+  simp_rw [Pi.sub_apply, expect_sub]
+
 /-- Continuation gain is homogeneous in its continuation vector. -/
 theorem finkContinuationGain_smul (G : StochasticGame ι)
     [Fintype G.State] [Fintype ι] [DecidableEq ι]
