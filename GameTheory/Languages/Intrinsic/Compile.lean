@@ -202,10 +202,15 @@ theorem kuhn_equivalence_of_player_event_mass (G : WGame)
 /-- Compile a solvable expected-utility W-game to a `KernelGame`.
 
     - Players are `G.P`
-    - Strategy for player `p` is `PlayerStrategySpace G.toWGame p`
+    - Strategy for player `p` is the pure `PlayerStrategySpace G.toWGame p`
     - Outcomes are full configurations `H = Ω × ∏ₐ Uₐ`
     - Utility is defined on configurations
-    - The kernel averages the solution map over the prior on Ω -/
+    - The kernel averages the solution map over the prior on Ω
+
+    Mixed and behavioral semantics are expressed separately by
+    `mixedOutcomeLaw` and the equivalence predicates above; this constructor
+    does not transport those strategy carriers into the compiled
+    `KernelGame`. -/
 noncomputable def EUWGame.toKernelGame (G : EUWGame) (hsolv : Solvable G.toWModel) :
     KernelGame G.P where
   Strategy := fun p => PlayerStrategySpace G.toWGame p

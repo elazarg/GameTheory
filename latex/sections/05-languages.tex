@@ -477,17 +477,21 @@ comparison, (b) versus (c), is unconditional:\ independent
 randomization by address and behavioral randomization by information
 atom induce the same local choice laws.  The mixed-plan-to-behavioral
 comparison, (a) versus the conditional strategy in (c), is the
-intrinsic analogue of Kuhn's theorem.  If the information structure
-admits a causal order and the player has perfect recall along that
-order, then the conditional behavioral strategy extracted from a
-mixed plan preserves the full outcome law against every opponent profile.
+intrinsic analogue of Kuhn's theorem.  Given a configuration ordering,
+if the player has perfect recall along that order, then the conditional
+behavioral strategy extracted from a mixed plan preserves the full
+outcome law against every opponent profile.  The formal theorem takes
+solvability directly; with that outcome map supplied, it does not require
+a separate causality hypothesis.
 The conclusion is equality of distributions over realized
 decision profiles, not just equality of one-address marginals.
 
 The intrinsic layer is a separate syntactic root from
 EFG/MAID/MR/FOSG, used as a target by representations that prefer
-order-independent reasoning.  It compiles to \KG\ when supplied with
-solvability and expected-utility data, but no cross-language bridge
+order-independent reasoning.  It compiles pure strategy profiles to \KG\
+when supplied with solvability and expected-utility data.  Mixed and
+behavioral profiles remain in the layer's outcome-law semantics rather
+than being transported by that constructor.  No cross-language bridge
 involving the Intrinsic layer is part of
 \TT{Languages/Bridges/}.
 

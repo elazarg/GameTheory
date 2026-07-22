@@ -1495,8 +1495,8 @@ def PerfectRecall (G : WGame) ($\varphi$ : ConfigOrdering G.toWModel)\\
 theorem kuhn\_equivalence \\
 \bd (G : WGame) (hsolv : Solvable G.toWModel)\\
 \bd ($\varphi$ : ConfigOrdering G.toWModel)\\
-\bd (\_hcausal : CausalWith G.toWModel $\varphi$) (p : G.P)\\
-\bd (hpr : PerfectRecall G $\varphi$ p) ($\mu_p$ : MixedStrategy G p) :\\
+\bd (p : G.P) (hpr : PerfectRecall G $\varphi$ p)\\
+\bd ($\mu_p$ : MixedStrategy G p) :\\
 \bd $\exists$ $\pi_p$, KuhnOutcomeEquivalent G hsolv p $\mu_p$ $\pi_p$
 \end{leanbox}
 
@@ -1513,7 +1513,7 @@ set).  The unconditional product-mixed/behavioral equivalence
 (Proposition 13) is the intrinsic-form analogue of one direction
 of Kuhn's theorem and holds without any recall hypothesis.
 
-For a solvable W-model equipped with a causal ordering, the full
+For a solvable W-model equipped with a configuration ordering, the full
 outcome-law equivalence (Theorem 16) holds under perfect recall:\ a
 player's mixed strategy and the induced product-mixed strategy
 produce the same outcome distribution against every opponent
@@ -1525,9 +1525,9 @@ derived from perfect recall rather than assumed as an additional
 hypothesis; the global helper
 \TT{orderInfoCompatibleWith\_of\_forall\_perfectRecall} packages the
 same consequence when all players satisfy perfect recall.  The
-final theorem statement therefore matches the paper at the
-information-structure level:\ causality plus perfect recall, with
-solvability supplied explicitly for the outcome map.
+formal theorem supplies solvability directly for the outcome map.  Under
+that stronger explicit assumption, no separate causality hypothesis is
+needed for the conclusion; this is stronger than the paper's presentation.
 
 \Textbook
 Heymann–De Lara–Chancelier 2020 Definitions 8, 10, 11, 14;
