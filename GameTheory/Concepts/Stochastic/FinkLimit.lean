@@ -6127,6 +6127,71 @@ theorem finkContinuationGain_le_positiveSum
         (Finset.mem_univ q)
     _ = G.finkPositiveContinuationGainSum C z := rfl
 
+/-- At a boundary node, the summed positive pure gains of the corrected
+reference are exactly the correction scale times those of the next reference. -/
+theorem finkPositiveContinuationGainSum_add_correction
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (J R K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (ha : a ≠ 0)
+    (hscale : 0 ≤ G.finkReferenceCorrectionScale a J) :
+    G.finkPositiveContinuationGainSum
+        (R + G.finkReferenceCorrection a J K) z =
+      G.finkReferenceCorrectionScale a J *
+        G.finkPositiveContinuationGainSum
+          (G.finkNextReferenceVector a J R K) z := by
+  classical
+  unfold finkPositiveContinuationGainSum
+  rw [Finset.mul_sum]
+  apply Finset.sum_congr rfl
+  intro p hp
+  have hgain := G.finkContinuationGain_add_correction
+    a J R K z ha p.1 p.2.1 p.2.2
+  rw [G.finkNextDeviationGain_eq_continuationGain] at hgain
+  rw [hgain]
+  let x := G.finkContinuationGain
+    (G.finkNextReferenceVector a J R K) z p.1 p.2.1 p.2.2
+  by_cases hx : 0 ≤ x
+  · rw [max_eq_left hx, max_eq_left (mul_nonneg hscale hx)]
+  · have hx' : x ≤ 0 := le_of_not_ge hx
+    rw [max_eq_right hx',
+      max_eq_right (mul_nonpos_of_nonneg_of_nonpos hscale hx')]
+    ring
+
+/-- Consequently the complete same-point hold error factors through one
+boundary by the same scalar.  This is the exact hierarchy-side rate identity
+needed by the block-length-weighted calendar condition. -/
+theorem finkCorrectedReferenceHoldError_eq_scale_mul
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (J R K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (ha : a ≠ 0)
+    (hscale : 0 ≤ G.finkReferenceCorrectionScale a J) :
+    ‖G.finkContinuationResidualVector
+        (R + G.finkReferenceCorrection a J K) z‖ +
+      G.finkPositiveContinuationGainSum
+        (R + G.finkReferenceCorrection a J K) z =
+      G.finkReferenceCorrectionScale a J *
+        (‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector a J R K) z‖ +
+          G.finkPositiveContinuationGainSum
+            (G.finkNextReferenceVector a J R K) z) := by
+  have hresidual := G.finkContinuationResidualVector_add_correction
+    a J R K z ha
+  rw [G.finkNextPoissonRemainderVector_eq_continuationResidualVector]
+    at hresidual
+  have hresidualNorm :
+      ‖G.finkContinuationResidualVector
+          (R + G.finkReferenceCorrection a J K) z‖ =
+        G.finkReferenceCorrectionScale a J *
+          ‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector a J R K) z‖ := by
+    rw [hresidual, norm_smul, Real.norm_eq_abs, abs_of_nonneg hscale]
+  rw [hresidualNorm,
+    G.finkPositiveContinuationGainSum_add_correction
+      a J R K z ha hscale]
+  ring
+
 /-- Uniform asymptotic nonpositivity of the finitely many pure gains is
 equivalent to vanishing of their summed positive parts in the direction used
 below. -/
@@ -6944,6 +7009,64 @@ theorem tendsto_finkDiscountScale_atTop (β : ℕ → ℝ)
     ring
   rw [hid]
   linarith
+
+/-- Exact root correction scale: inverse discount horizon plus the current
+value error.  Thus every boundary hold error is this scalar times its
+next-reference hold error. -/
+theorem finkReferenceCorrectionScale_relativeBias_eq
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℝ) (hβpos : 0 < β) (hβ1 : β < 1)
+    (W : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U) :
+    G.finkReferenceCorrectionScale (β / (1 - β))
+        (G.finkRelativeBias β W z) =
+      (1 - β) / β + ‖G.finkValue z - W‖ := by
+  let a : ℝ := β / (1 - β)
+  have haPos : 0 < a := div_pos hβpos (sub_pos.mpr hβ1)
+  have hrelative : G.finkRelativeBias β W z =
+      a • (G.finkValue z - W) := by
+    ext s who
+    simp only [finkRelativeBias, a, Pi.smul_apply, Pi.sub_apply,
+      smul_eq_mul]
+  change (1 + ‖G.finkRelativeBias β W z‖) / a =
+    (1 - β) / β + ‖G.finkValue z - W‖
+  rw [hrelative, norm_smul, Real.norm_eq_abs, abs_of_pos haPos]
+  dsimp only [a]
+  field_simp [ne_of_gt hβpos, ne_of_gt (sub_pos.mpr hβ1)]
+
+/-- Root specialization of the boundary hold-error factorization.  The only
+root rate is the inverse discount horizon plus the value error; all remaining
+size belongs to the next finite hierarchy layer. -/
+theorem finkRelativeBoundaryHoldError_eq
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (β : ℝ) (hβpos : 0 < β) (hβ1 : β < 1)
+    (W K : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U) :
+    ‖G.finkContinuationResidualVector
+        (W + G.finkReferenceCorrection (β / (1 - β))
+          (G.finkRelativeBias β W z) K) z‖ +
+      G.finkPositiveContinuationGainSum
+        (W + G.finkReferenceCorrection (β / (1 - β))
+          (G.finkRelativeBias β W z) K) z =
+      ((1 - β) / β + ‖G.finkValue z - W‖) *
+        (‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector (β / (1 - β))
+              (G.finkRelativeBias β W z) W K) z‖ +
+          G.finkPositiveContinuationGainSum
+            (G.finkNextReferenceVector (β / (1 - β))
+              (G.finkRelativeBias β W z) W K) z) := by
+  have ha : β / (1 - β) ≠ 0 :=
+    div_ne_zero (ne_of_gt hβpos) (ne_of_gt (sub_pos.mpr hβ1))
+  have hscale : 0 ≤ G.finkReferenceCorrectionScale (β / (1 - β))
+      (G.finkRelativeBias β W z) := by
+    unfold finkReferenceCorrectionScale
+    exact div_nonneg (by positivity)
+      (div_nonneg hβpos.le (sub_pos.mpr hβ1).le)
+  have hfactor := G.finkCorrectedReferenceHoldError_eq_scale_mul
+    (β / (1 - β)) (G.finkRelativeBias β W z) W K z ha hscale
+  rw [G.finkReferenceCorrectionScale_relativeBias_eq
+    β hβpos hβ1 W z] at hfactor
+  exact hfactor
 
 /-- For a relative Fink bias around its value limit, the coefficient of every
 unit boundary correction tends to zero.  Quantitatively it is exactly the
