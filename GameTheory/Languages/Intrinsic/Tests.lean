@@ -202,15 +202,16 @@ example (G : WGame) (p : G.P) (πp : ProductMixedStrategy G p)
   productMixed_playerSolutionEvent_mass_eq_prod G p πp ω u
 
 /-- `kuhn_equivalence` returns the full outcome-distribution statement from
-    perfect recall, without a separate event-realizability assumption. -/
+    solvability and perfect recall, without causality or a separate
+    event-realizability assumption. -/
 example (G : WGame) (hsolv : Solvable G.toWModel)
-    (ϕ : ConfigOrdering G.toWModel) (hc : CausalWith G.toWModel ϕ)
-    (p : G.P) (hpr : PerfectRecall G ϕ p) (μp : MixedStrategy G p) :
+    (ϕ : ConfigOrdering G.toWModel) (p : G.P)
+    (hpr : PerfectRecall G ϕ p) (μp : MixedStrategy G p) :
       ∃ πp : ProductMixedStrategy G p,
         ∀ (μminus : OpponentMixedProfile G p) (ω : G.Ω),
           mixedOutcomeAt G hsolv (assembleMixedProfile G p μp μminus) ω =
             mixedOutcomeAt G hsolv
               (assembleMixedProfile G p (productMixedAsMixed G p πp) μminus) ω := by
-  exact kuhn_equivalence G hsolv ϕ hc p hpr μp
+  exact kuhn_equivalence G hsolv ϕ p hpr μp
 
 end Intrinsic

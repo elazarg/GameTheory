@@ -22,9 +22,10 @@ did and knew those of their predecessors that also belong to player `p`.
 
 The paper's target equivalence says that, under causality and perfect recall,
 for any mixed strategy there exists a product-mixed strategy with the same full
-outcome distribution against every opponent mixed profile. This file proves the
-player-local conditional chain identity and combines it with the outcome-kernel
-expansion.
+outcome distribution against every opponent mixed profile. The formal theorem
+assumes closed-loop solvability directly. Under that explicit assumption, its
+proof needs perfect recall but no additional causality hypothesis: it combines
+the player-local conditional chain identity with the outcome-kernel expansion.
 
 ## Main definitions
 
@@ -1086,10 +1087,13 @@ theorem kuhn_equivalence_of_event_realizable (G : WGame)
     This is the paper's outcome-law equivalence, not a behavioral marginal
     equality: replacing player `p`'s mixed strategy by the product-mixed
     strategy must preserve the full distribution over all agents' decisions
-    against every opponent mixed profile, pointwise in nature. -/
+    against every opponent mixed profile, pointwise in nature.
+
+    Unlike the paper's presentation, solvability is an explicit hypothesis
+    here. Once it is supplied, causality is not needed for this conclusion. -/
 theorem kuhn_equivalence (G : WGame) (hsolv : Solvable G.toWModel)
-    (ϕ : ConfigOrdering G.toWModel) (_hcausal : CausalWith G.toWModel ϕ)
-    (p : G.P) (hpr : PerfectRecall G ϕ p) (μp : MixedStrategy G p) :
+    (ϕ : ConfigOrdering G.toWModel) (p : G.P)
+    (hpr : PerfectRecall G ϕ p) (μp : MixedStrategy G p) :
     ∃ πp : ProductMixedStrategy G p,
       KuhnOutcomeEquivalent G hsolv p μp πp := by
   classical
@@ -1110,8 +1114,8 @@ theorem kuhn_equivalence (G : WGame) (hsolv : Solvable G.toWModel)
     calculation over the realized player order. -/
 theorem kuhn_equivalence_of_mixedToBehavioral_identity
     (G : WGame) (hsolv : Solvable G.toWModel)
-    (ϕ : ConfigOrdering G.toWModel) (_hcausal : CausalWith G.toWModel ϕ)
-    (p : G.P) (hpr : PerfectRecall G ϕ p) (μp : MixedStrategy G p)
+    (ϕ : ConfigOrdering G.toWModel) (p : G.P)
+    (hpr : PerfectRecall G ϕ p) (μp : MixedStrategy G p)
     (fallback : BehavioralStrategy G p)
     (hid : MixedToBehavioralEventMassIdentity G ϕ p μp fallback
       (mixedToBehavioralMeasurable_of_perfectRecall G ϕ p hpr μp fallback)) :
