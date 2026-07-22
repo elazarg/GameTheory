@@ -75,6 +75,30 @@ example {n : Nat} {A : Fin n → Type}
       (ShapeSeqDep.compileAction A k).IsNash σ :=
   ShapeSeqDep.isEquilibriumIn_iff_isNash k σ
 
+/-- One-decision-per-player ownership makes agent and player deviations
+coincide. -/
+example {n : Nat} {ι : Type} [DecidableEq ι]
+    {A : Fin n → Type} {owner : Fin n → ι}
+    (howner : Function.Injective owner)
+    (u : (∀ i, A i) → ι → ℝ) (σ : ShapeSeqDep.Strategy A) :
+    ShapeSeqDep.IsAgentEquilibrium owner u σ ↔
+      ShapeSeqDep.IsPlayerNash owner u σ :=
+  ShapeSeqDep.isAgentEquilibrium_iff_isPlayerNash_of_injective
+    howner u σ
+
+/-- Two stages owned by one player strictly separate agent-form equilibrium
+from player-form Nash. -/
+example :
+    ShapeSeqDep.IsAgentEquilibrium
+        ShapeSeqDep.OwnershipExample.owner
+        ShapeSeqDep.OwnershipExample.utility
+        ShapeSeqDep.OwnershipExample.allFalse ∧
+      ¬ShapeSeqDep.IsPlayerNash
+        ShapeSeqDep.OwnershipExample.owner
+        ShapeSeqDep.OwnershipExample.utility
+        ShapeSeqDep.OwnershipExample.allFalse :=
+  ShapeSeqDep.OwnershipExample.agentForm_not_playerForm
+
 noncomputable section
 
 open GameTheory
