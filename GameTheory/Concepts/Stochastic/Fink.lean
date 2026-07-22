@@ -417,6 +417,22 @@ theorem continuous_finkMap (G : StochasticGame ι)
   · exact continuous_pi fun s => continuous_pi fun who =>
       G.continuous_finkAuxEU β s who
 
+/-- The value coordinate of a fixed point of Fink's map is exactly its
+auxiliary expected payoff.  Kept as a standalone projection lemma so limiting
+arguments need not repeatedly unfold the proof-carrying subtype map. -/
+theorem finkAuxEU_eq_finkValue_of_finkMap_fixedPoint
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β U : ℝ)
+    (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1 hpay z = z)
+    (s : G.State) (who : ι) :
+    G.finkAuxEU β z s who = G.finkValue z s who := by
+  have hcoord := congrArg (fun q : G.finkDomain U => q.1.2 s who) hfix
+  simpa [finkMap, finkAmbientUpdate, finkValueUpdate, finkValue] using hcoord
+
 /-- The discounted auxiliary normal-form game at state `s`. -/
 def discountedAuxGame (G : StochasticGame ι) (β : ℝ)
     (V : G.State → Payoff ι) (s : G.State) : KernelGame ι :=
