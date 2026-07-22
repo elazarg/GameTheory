@@ -8998,6 +8998,75 @@ theorem exists_finkRelativeAnnealingCalendar_with_valueError
     ring
   · simp
 
+/-- Replacing calendar time `T` by `T + S` does not change a normalized
+vanishing terminal cost. -/
+theorem tendsto_inv_mul_timeShift_zero (f : ℕ → ℝ) (S : ℕ)
+    (hf : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * f T)
+      atTop (nhds 0)) :
+    Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * f (T + S))
+      atTop (nhds 0) := by
+  have hratio : Tendsto (fun T : ℕ =>
+      (((T + S : ℕ) : ℝ) / (T : ℝ))) atTop (nhds 1) := by
+    have hsmall := tendsto_const_div_atTop_nhds_zero_nat (S : ℝ)
+    have hone := (tendsto_const_nhds (x := (1 : ℝ))).add hsmall
+    have hone' : Tendsto (fun T : ℕ => 1 + (S : ℝ) / (T : ℝ))
+        atTop (nhds 1) := by
+      simpa only [add_zero] using hone
+    apply hone'.congr'
+    filter_upwards [eventually_gt_atTop 0] with T hT
+    have hTreal : (T : ℝ) ≠ 0 := by exact_mod_cast (ne_of_gt hT)
+    rw [Nat.cast_add]
+    field_simp [hTreal]
+  have hcomp := hf.comp (tendsto_add_atTop_nat S)
+  have hprod := hratio.mul hcomp
+  have hprod' : Tendsto (fun T : ℕ =>
+      (((T + S : ℕ) : ℝ) / (T : ℝ)) *
+        (((T + S : ℕ) : ℝ)⁻¹ * f (T + S)))
+      atTop (nhds 0) := by
+    simpa only [Function.comp_def, one_mul] using hprod
+  apply hprod'.congr'
+  filter_upwards [eventually_gt_atTop 0] with T hT
+  have hTreal : (T : ℝ) ≠ 0 := by exact_mod_cast (ne_of_gt hT)
+  have hTSreal : (((T + S : ℕ) : ℝ)) ≠ 0 := by
+    exact_mod_cast (Nat.ne_of_gt (lt_of_lt_of_le hT (Nat.le_add_right T S)))
+  field_simp [hTreal, hTSreal]
+
+/-- A fixed time shift also preserves vanishing normalized prefix sums. -/
+theorem tendsto_inv_mul_sum_range_timeShift_zero (e : ℕ → ℝ) (S : ℕ)
+    (he : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, e t) atTop (nhds 0)) :
+    Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, e (t + S)) atTop (nhds 0) := by
+  let P : ℕ → ℝ := fun T => ∑ t ∈ Finset.range T, e t
+  have hP : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * P T)
+      atTop (nhds 0) := by
+    simpa only [P] using he
+  have hPshift := tendsto_inv_mul_timeShift_zero P S hP
+  have hconst : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * P S)
+      atTop (nhds 0) := by
+    have ht := tendsto_const_div_atTop_nhds_zero_nat (P S)
+    simpa only [div_eq_inv_mul] using ht
+  have hdiff := hPshift.sub hconst
+  have hsum : ∀ T, ∑ t ∈ Finset.range T, e (t + S) =
+      P (T + S) - P S := by
+    intro T
+    induction T with
+    | zero => simp [P]
+    | succ T ih =>
+        rw [Finset.sum_range_succ, ih]
+        rw [show T + 1 + S = (T + S) + 1 by omega]
+        simp only [P, Finset.sum_range_succ]
+        ring
+  have hdiffZero : Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ * P (T + S) - (T : ℝ)⁻¹ * P S)
+      atTop (nhds 0) := by
+    simpa only [sub_zero] using hdiff
+  apply hdiffZero.congr'
+  exact Filter.Eventually.of_forall fun T => by
+    simp only
+    rw [hsum T]
+    ring
+
 /-- Charge zero while an indexed schedule stays on one fixed point and the
 sum of the adjacent bias bounds when it switches. -/
 def indexedFinkSwitchError (β : ℕ → ℝ) (U : ℝ) (κ : ℕ → ℕ)
@@ -9187,6 +9256,85 @@ theorem isIndexedFinkCorrectedCalendarSelectable_of_summableStepError
       _ = η := by ring
   exact ⟨hTpos, hbiasLe, htarget⟩
 
+/-- One fixed annealing calendar with summable corrected drift already gives
+corrected calendar selectability.  For a requested error budget, start the
+same calendar sufficiently far in its summable tail; finite time shifts
+preserve all normalized annealing limits. -/
+theorem isIndexedFinkCorrectedCalendarSelectable_of_oneSummableCalendar
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (q : ℕ → ℝ)
+    (κ : ℕ → ℕ)
+    (hterminal : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U (κ T)) atTop (nhds 0))
+    (hswitch : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W κ t)
+      atTop (nhds 0))
+    (hq : Tendsto (q ∘ κ) atTop (nhds 0))
+    (hR : Tendsto (fun t => ‖R (κ t)‖) atTop (nhds 0))
+    (hstep : Summable (fun t => G.finkCorrectedTargetStepError W
+      (R ∘ κ) (z ∘ κ) t)) :
+    G.IsIndexedFinkCorrectedCalendarSelectable β U z W R q := by
+  apply G.isIndexedFinkCorrectedCalendarSelectable_of_summableStepError
+  intro ε hε
+  let r : ℕ → ℝ := fun t => G.finkCorrectedTargetStepError W
+    (R ∘ κ) (z ∘ κ) t
+  have hrsum : Summable r := by simpa only [r] using hstep
+  have htail : Tendsto (fun S : ℕ => ∑' t : ℕ, r (t + S))
+      atTop (nhds 0) := tendsto_sum_nat_add r
+  obtain ⟨NR, hNR⟩ := Metric.tendsto_atTop.mp hR ε hε
+  obtain ⟨Ne, hNe⟩ := Metric.tendsto_atTop.mp htail ε hε
+  let S := max NR Ne
+  have hRzero : ‖R (κ S)‖ ≤ ε := by
+    have ht := hNR S (le_max_left _ _)
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg (norm_nonneg _)] at ht
+    exact ht.le
+  have htailTotal : (∑' t : ℕ, r (t + S)) ≤ ε := by
+    have ht := hNe S (le_max_right _ _)
+    rw [Real.dist_eq, sub_zero] at ht
+    exact (le_abs_self _).trans ht.le
+  let κS : ℕ → ℕ := fun t => κ (t + S)
+  have hterminalS : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U (κS T)) atTop (nhds 0) := by
+    simpa only [κS] using
+      (tendsto_inv_mul_timeShift_zero
+        (fun n => finkScaledBiasBound β U (κ n)) S hterminal)
+  let e : ℕ → ℝ := fun t =>
+    G.indexedFinkRelativeSwitchError β U z W κ t
+  have hswitchTail : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, e (t + S)) atTop (nhds 0) :=
+    tendsto_inv_mul_sum_range_timeShift_zero e S (by
+      simpa only [e] using hswitch)
+  have hswitchS : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W κS t)
+      atTop (nhds 0) := by
+    simpa only [e, κS, indexedFinkRelativeSwitchError,
+      Nat.add_assoc, Nat.add_comm, Nat.add_left_comm] using hswitchTail
+  have hqS : Tendsto (q ∘ κS) atTop (nhds 0) := by
+    simpa only [κS, Function.comp_def] using
+      hq.comp (tendsto_add_atTop_nat S)
+  have hRS : Tendsto (fun t => ‖R (κS t)‖) atTop (nhds 0) := by
+    simpa only [κS, Function.comp_def] using
+      hR.comp (tendsto_add_atTop_nat S)
+  have hstepEq : ∀ t,
+      G.finkCorrectedTargetStepError W (R ∘ κS) (z ∘ κS) t =
+        r (t + S) := by
+    intro t
+    simp only [r, κS, finkCorrectedTargetStepError, Function.comp_apply,
+      Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+  have htailSummable : Summable (fun t => r (t + S)) :=
+    (summable_nat_add_iff S).mpr hrsum
+  refine ⟨κS, hterminalS, hswitchS, hqS, hRS, ?_, ?_, ?_⟩
+  · simpa only [κS, zero_add] using hRzero
+  · exact htailSummable.congr (fun t => (hstepEq t).symm)
+  · rw [tsum_congr hstepEq]
+    exact htailTotal
+
 /-- Slow-calendar sufficient criterion for corrected selectability.  It joins
 a fast hierarchy subsequence to the concrete wait/advance calendar: the only
 drift budget required is the weighted repeated hold bill plus the fast edge
@@ -9237,6 +9385,76 @@ theorem isIndexedFinkCorrectedCalendarSelectable_of_slowCalendar
   · simpa only [κ, ν, Function.comp_def] using hslow.1
   · have hbound := hslow.2.trans htotal
     simpa only [κ, ν, Function.comp_def] using hbound
+
+/-- Global bounded-dilation form of the root criterion.  Unlike the
+error-budgeted criterion below, this needs only one annealing branch: its
+summable slowed drift can be made arbitrarily small by starting in a late
+tail of that same branch. -/
+theorem isIndexedFinkCorrectedCalendarSelectable_of_oneBoundedDilationBranch
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1))
+    (U : ℝ) {U₀ : ℝ} (z : ℕ → G.finkDomain U₀)
+    (W K : G.State → Payoff ι) (q : ℕ → ℝ)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hq : Tendsto q atTop (nhds 0))
+    (θ : ℕ → ℕ) (B : ℕ → ℝ) (C : ℝ)
+    (hκ : Tendsto (θ ∘ slowUnitStepCalendar B) atTop atTop)
+    (hterminal : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U ((θ ∘ slowUnitStepCalendar B) T))
+        atTop (nhds 0))
+    (hswitch : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, G.indexedFinkRelativeSwitchError
+        β U z W (θ ∘ slowUnitStepCalendar B) t) atTop (nhds 0))
+    (hfast : Summable (fun n => G.finkCorrectedTargetStepError W
+      (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n))
+    (hnext : Summable (G.finkNextReferenceHoldError β W K z ∘ θ))
+    (hdilation : ∀ n, (slowCalendarBlockLength B n : ℝ) *
+      ((1 - β (θ n)) / β (θ n) +
+        ‖G.finkValue (z (θ n)) - W‖) ≤ C) :
+    G.IsIndexedFinkCorrectedCalendarSelectable β U z W
+      (G.finkRootCorrection β W K z) q := by
+  let ν := slowUnitStepCalendar B
+  let κ := θ ∘ ν
+  have hnext' : Summable (fun n =>
+      ‖G.finkContinuationResidualVector
+          (G.finkNextReferenceVector
+            ((β ∘ θ) n / (1 - (β ∘ θ) n))
+            (G.finkRelativeBias ((β ∘ θ) n) W ((z ∘ θ) n)) W K)
+          ((z ∘ θ) n)‖ +
+        G.finkPositiveContinuationGainSum
+          (G.finkNextReferenceVector
+            ((β ∘ θ) n / (1 - (β ∘ θ) n))
+            (G.finkRelativeBias ((β ∘ θ) n) W ((z ∘ θ) n)) W K)
+          ((z ∘ θ) n)) := by
+    simpa only [finkNextReferenceHoldError, Function.comp_def] using hnext
+  have hfast' : Summable (fun n => G.finkCorrectedTargetStepError W
+      (fun m => G.finkReferenceCorrection
+        ((β ∘ θ) m / (1 - (β ∘ θ) m))
+        (G.finkRelativeBias ((β ∘ θ) m) W ((z ∘ θ) m)) K)
+      (z ∘ θ) n) := by
+    simpa only [finkRootCorrection, Function.comp_def] using hfast
+  have hslow :=
+    G.summable_finkRelativeBoundaryStepError_slowCalendar_of_boundedDilation
+      B (β ∘ θ) (fun n => hβpos (θ n)) (fun n => hβ1 (θ n))
+      W K (z ∘ θ) hfast' hnext' C hdilation
+  have hslow' : Summable (fun t => G.finkCorrectedTargetStepError W
+      (G.finkRootCorrection β W K z ∘ κ) (z ∘ κ) t) := by
+    simpa only [κ, ν, finkRootCorrection, Function.comp_def] using hslow
+  have hroot := G.tendsto_finkReferenceCorrection_relativeBias_zero
+    β hβpos hβ1 hβlim z W K hV
+  have hrootNorm : Tendsto (fun n => ‖G.finkRootCorrection β W K z n‖)
+      atTop (nhds 0) := by
+    simpa only [finkRootCorrection, norm_zero] using hroot.norm
+  apply G.isIndexedFinkCorrectedCalendarSelectable_of_oneSummableCalendar
+    β U z W (G.finkRootCorrection β W K z) q κ
+  · simpa only [κ, ν] using hterminal
+  · simpa only [κ, ν] using hswitch
+  · exact hq.comp (by simpa only [κ, ν] using hκ)
+  · exact hrootNorm.comp (by simpa only [κ, ν] using hκ)
+  · exact hslow'
 
 /-- Root-rate form of the slow-calendar criterion.  A rate-compatible root
 boundary branch is enough for corrected calendar selectability: its fast edge
