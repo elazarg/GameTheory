@@ -1292,6 +1292,96 @@ theorem positiveFinkActionIndices_disjoint_finkSupportIndices
   have hplayed := (G.mem_finkSupportIndices z p).mp hsupportp
   exact (not_lt_of_ge (le_of_eq (hsupport p.1 p.2.1 p.2.2 hplayed))) hpos
 
+/-- Zero the coordinates already assigned to earlier pruning layers. -/
+noncomputable def maskFinkActionVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : G.FinkPureActionVector) :
+    G.FinkPureActionVector := by
+  classical
+  exact fun s who d => if ⟨s, ⟨who, d⟩⟩ ∈ P then 0 else L s who d
+
+@[simp] theorem maskFinkActionVector_apply_of_mem
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : G.FinkPureActionVector)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hmem : ⟨s, ⟨who, d⟩⟩ ∈ P) :
+    G.maskFinkActionVector P L s who d = 0 := by
+  classical
+  simp [maskFinkActionVector, hmem]
+
+@[simp] theorem maskFinkActionVector_apply_of_not_mem
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : G.FinkPureActionVector)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hmem : ⟨s, ⟨who, d⟩⟩ ∉ P) :
+    G.maskFinkActionVector P L s who d = L s who d := by
+  classical
+  simp [maskFinkActionVector, hmem]
+
+theorem maskFinkActionVector_nonneg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : G.FinkPureActionVector)
+    (hL : ∀ s who (d : G.Act who), 0 ≤ L s who d) :
+    ∀ s who (d : G.Act who), 0 ≤ G.maskFinkActionVector P L s who d := by
+  classical
+  intro s who d
+  by_cases hmem : ⟨s, ⟨who, d⟩⟩ ∈ P
+  · simp [hmem]
+  · simpa [G.maskFinkActionVector_apply_of_not_mem P L s who d hmem]
+      using hL s who d
+
+theorem positiveFinkActionIndices_disjoint_of_masked_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (K : G.FinkPureActionVector)
+    (hzero : ∀ p ∈ P, K p.1 p.2.1 p.2.2 = 0) :
+    Disjoint P (G.positiveFinkActionIndices K) := by
+  rw [Finset.disjoint_left]
+  intro p hp hpositive
+  have hpos := (G.mem_positiveFinkActionIndices K p).mp hpositive
+  exact (not_lt_of_ge (le_of_eq (hzero p hp))) hpos
+
+/-- Enlarge a pruning mask by all coordinates selected by the next positive
+direction. -/
+noncomputable def extendFinkActionMask (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (K : G.FinkPureActionVector) :
+    Finset G.FinkPureActionIndex := by
+  classical
+  exact P ∪ G.positiveFinkActionIndices K
+
+theorem strictSubset_union_positiveFinkActionIndices_of_nonempty_disjoint
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (K : G.FinkPureActionVector)
+    (hnonempty : (G.positiveFinkActionIndices K).Nonempty)
+    (hdisjoint : Disjoint P (G.positiveFinkActionIndices K)) :
+    P ⊂ G.extendFinkActionMask P K := by
+  classical
+  unfold extendFinkActionMask
+  refine Finset.ssubset_iff_subset_ne.mpr ⟨Finset.subset_union_left, ?_⟩
+  intro heq
+  obtain ⟨p, hp⟩ := hnonempty
+  have hpP : p ∈ P := by
+    rw [heq]
+    exact Finset.mem_union_right P hp
+  exact Finset.disjoint_left.mp hdisjoint hpP hp
+
+theorem extendFinkActionMask_disjoint
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P S : Finset G.FinkPureActionIndex) (K : G.FinkPureActionVector)
+    (hPS : Disjoint P S)
+    (hKS : Disjoint (G.positiveFinkActionIndices K) S) :
+    Disjoint (G.extendFinkActionMask P K) S := by
+  classical
+  unfold extendFinkActionMask
+  rw [Finset.disjoint_union_left]
+  exact ⟨hPS, hKS⟩
+
 /-- The first boundary-layer gain in every pure-action coordinate. -/
 def finkProjectiveGainVector (G : StochasticGame ι)
     [Fintype G.State] [Fintype ι] [DecidableEq ι]
@@ -1421,6 +1511,40 @@ theorem eventually_all_finkProjectiveGainVector_le_of_boundary
   have hcorr := (abs_le.mp (hKn s who d)).2
   unfold finkProjectiveGainVector
   linarith
+
+/-- The current-profile projective loss tends to zero on every action in the
+limiting support. -/
+theorem tendsto_finkProjectiveLossVector_zero_of_limit_support
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hpos : G.finkProfile zlim s who d ≠ 0) :
+    Tendsto (fun n =>
+      G.finkProjectiveLossVector (β n) W K (z n) s who d)
+      atTop (nhds 0) := by
+  have hmain :=
+    G.tendsto_finkProjectiveBiasScale_mul_continuationGain_of_limit_support
+      hβ0 hβ1 hpay hz hfix W K hKlim hKnorm s who d hpos
+  have hKcurrent := G.tendsto_finkContinuationGain hz K s who d
+  have hgain : Tendsto (fun n =>
+      G.finkProjectiveGainVector (β n) W K (z n) s who d)
+      atTop (nhds 0) := by
+    have ht := hmain.add hKcurrent
+    simpa only [finkProjectiveGainVector, neg_add_cancel] using ht
+  have hloss := hgain.neg.max
+    (tendsto_const_nhds : Tendsto (fun _ : ℕ => (0 : ℝ))
+      atTop (nhds 0))
+  simpa only [finkProjectiveLossVector, neg_zero, max_self] using hloss
 
 /-- At a projective boundary, the expected current-profile loss vanishes for
 every state and player. -/
@@ -1711,6 +1835,399 @@ theorem exists_finkActionVector_subsequence_interior_or_direction
     apply G.tendsto_norm_finkActionVector_atTop_of_compactify_tendsto_norm_eq_one
       (L := L ∘ φ) (K := K) _ hKeq
     simpa only [Function.comp_def] using hlim
+
+/-- A limit of radially compactified masked vectors is zero on every masked
+coordinate. -/
+theorem finkActionVector_limit_apply_eq_zero_of_mem_mask
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : ℕ → G.FinkPureActionVector)
+    (K : G.FinkPureActionVector)
+    (hlim : Tendsto (fun n =>
+      G.compactifyFinkActionVector (G.maskFinkActionVector P (L n)))
+        atTop (nhds K))
+    (p : G.FinkPureActionIndex) (hp : p ∈ P) :
+    K p.1 p.2.1 p.2.2 = 0 := by
+  have hc : Continuous (fun Q : G.FinkPureActionVector =>
+      Q p.1 p.2.1 p.2.2) := by
+    fun_prop
+  have hcoord := (hc.tendsto K).comp hlim
+  have hzero : Tendsto (fun n =>
+      G.compactifyFinkActionVector
+        (G.maskFinkActionVector P (L n)) p.1 p.2.1 p.2.2)
+      atTop (nhds 0) := by
+    have heq : (fun n => G.compactifyFinkActionVector
+        (G.maskFinkActionVector P (L n)) p.1 p.2.1 p.2.2) =
+        (fun _ : ℕ => (0 : ℝ)) := by
+      funext n
+      simp [compactifyFinkActionVector,
+        G.maskFinkActionVector_apply_of_mem P (L n)
+          p.1 p.2.1 p.2.2 hp]
+    rw [heq]
+    exact tendsto_const_nhds
+  exact tendsto_nhds_unique hcoord hzero
+
+/-- Nonnegativity is closed under masked radial limits. -/
+theorem finkActionVector_limit_nonneg_of_masked_nonneg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : ℕ → G.FinkPureActionVector)
+    (hL : ∀ n s who (d : G.Act who), 0 ≤ L n s who d)
+    (K : G.FinkPureActionVector)
+    (hlim : Tendsto (fun n =>
+      G.compactifyFinkActionVector (G.maskFinkActionVector P (L n)))
+        atTop (nhds K)) :
+    ∀ s who (d : G.Act who), 0 ≤ K s who d := by
+  intro s who d
+  have hc : Continuous (fun Q : G.FinkPureActionVector => Q s who d) := by
+    fun_prop
+  have hcoord := (hc.tendsto K).comp hlim
+  apply ge_of_tendsto' hcoord
+  intro n
+  apply G.compactifyFinkActionVector_apply_nonneg
+  exact G.maskFinkActionVector_nonneg P (L n) (hL n)
+
+/-- A protected coordinate which already tends to zero remains zero in every
+masked radial limit. -/
+theorem finkActionVector_limit_apply_eq_zero_of_tendsto_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : ℕ → G.FinkPureActionVector)
+    (hL : ∀ n s who (d : G.Act who), 0 ≤ L n s who d)
+    (K : G.FinkPureActionVector)
+    (hlim : Tendsto (fun n =>
+      G.compactifyFinkActionVector (G.maskFinkActionVector P (L n)))
+        atTop (nhds K))
+    (p : G.FinkPureActionIndex)
+    (hzero : Tendsto (fun n => L n p.1 p.2.1 p.2.2) atTop (nhds 0)) :
+    K p.1 p.2.1 p.2.2 = 0 := by
+  by_cases hp : p ∈ P
+  · exact G.finkActionVector_limit_apply_eq_zero_of_mem_mask
+      P L K hlim p hp
+  · have hmaskedZero : Tendsto (fun n =>
+        G.maskFinkActionVector P (L n) p.1 p.2.1 p.2.2)
+        atTop (nhds 0) := by
+      have heq : (fun n =>
+          G.maskFinkActionVector P (L n) p.1 p.2.1 p.2.2) =
+          (fun n => L n p.1 p.2.1 p.2.2) := by
+        funext n
+        exact G.maskFinkActionVector_apply_of_not_mem
+          P (L n) p.1 p.2.1 p.2.2 hp
+      rw [heq]
+      exact hzero
+    have hcompactZero :=
+      G.tendsto_compactifyFinkActionVector_apply_zero
+        (L := fun n => G.maskFinkActionVector P (L n))
+        (fun n => G.maskFinkActionVector_nonneg P (L n) (hL n))
+        p.1 p.2.1 p.2.2 hmaskedZero
+    have hc : Continuous (fun Q : G.FinkPureActionVector =>
+        Q p.1 p.2.1 p.2.2) := by
+      fun_prop
+    have hcoord := (hc.tendsto K).comp hlim
+    exact tendsto_nhds_unique hcoord hcompactZero
+
+/-- One masked action-face step.  The bounded branch converges in the
+remaining coordinates.  In the boundary branch a nonempty positive face,
+disjoint from the old mask, strictly enlarges that mask. -/
+theorem exists_maskedFinkActionVector_subsequence_interior_or_strictExtension
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P : Finset G.FinkPureActionIndex) (L : ℕ → G.FinkPureActionVector)
+    (hL : ∀ n s who (d : G.Act who), 0 ≤ L n s who d) :
+    ∃ (K : G.FinkPureActionVector) (φ : ℕ → ℕ),
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkActionVector ∘
+        (fun n => G.maskFinkActionVector P (L n)) ∘ φ)
+          atTop (nhds K) ∧
+      ((‖K‖ < 1 ∧ Tendsto
+          ((fun n => G.maskFinkActionVector P (L n)) ∘ φ) atTop
+            (nhds (G.decompactifyFinkActionVector K))) ∨
+        (‖K‖ = 1 ∧ Tendsto (fun n =>
+            ‖G.maskFinkActionVector P (L (φ n))‖) atTop atTop ∧
+          (∀ s who (d : G.Act who), 0 ≤ K s who d) ∧
+          (∀ p ∈ P, K p.1 p.2.1 p.2.2 = 0) ∧
+          (G.positiveFinkActionIndices K).Nonempty ∧
+          Disjoint P (G.positiveFinkActionIndices K) ∧
+          P ⊂ G.extendFinkActionMask P K)) := by
+  let M : ℕ → G.FinkPureActionVector := fun n =>
+    G.maskFinkActionVector P (L n)
+  obtain ⟨K, φ, hφ, hlim, halternative⟩ :=
+    G.exists_finkActionVector_subsequence_interior_or_direction M
+  refine ⟨K, φ, hφ, ?_, ?_⟩
+  · simpa only [M, Function.comp_def] using hlim
+  rcases halternative with hinterior | hboundary
+  · exact Or.inl (by simpa only [M, Function.comp_def] using hinterior)
+  · right
+    have hlim' : Tendsto (fun n =>
+        G.compactifyFinkActionVector
+          (G.maskFinkActionVector P (L (φ n)))) atTop (nhds K) := by
+      simpa only [M, Function.comp_def] using hlim
+    have hnonneg := G.finkActionVector_limit_nonneg_of_masked_nonneg
+      P (L ∘ φ) (fun n => hL (φ n)) K
+        (by simpa only [Function.comp_def] using hlim')
+    have hzero : ∀ p ∈ P, K p.1 p.2.1 p.2.2 = 0 := by
+      intro p hp
+      exact G.finkActionVector_limit_apply_eq_zero_of_mem_mask
+        P (L ∘ φ) K (by simpa only [Function.comp_def] using hlim') p hp
+    have hpositive :=
+      G.positiveFinkActionIndices_nonempty_of_norm_eq_one_of_nonneg
+        K hboundary.1 hnonneg
+    have hdisjoint :=
+      G.positiveFinkActionIndices_disjoint_of_masked_zero P K hzero
+    have hstrict :=
+      G.strictSubset_union_positiveFinkActionIndices_of_nonempty_disjoint
+        P K hpositive hdisjoint
+    refine ⟨hboundary.1, ?_, hnonneg, hzero,
+      hpositive, hdisjoint, hstrict⟩
+    simpa only [M, Function.comp_def] using hboundary.2
+
+/-- Protected-coordinate refinement of one masked step.  If every coordinate
+in `S` tends to zero and the old mask is disjoint from `S`, the enlarged mask
+in the boundary branch remains disjoint from `S`. -/
+theorem exists_maskedFinkActionVector_subsequence_interior_or_protectedExtension
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P S : Finset G.FinkPureActionIndex)
+    (L : ℕ → G.FinkPureActionVector)
+    (hL : ∀ n s who (d : G.Act who), 0 ≤ L n s who d)
+    (hPS : Disjoint P S)
+    (hprotected : ∀ p ∈ S,
+      Tendsto (fun n => L n p.1 p.2.1 p.2.2) atTop (nhds 0)) :
+    ∃ (K : G.FinkPureActionVector) (φ : ℕ → ℕ),
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkActionVector ∘
+        (fun n => G.maskFinkActionVector P (L n)) ∘ φ)
+          atTop (nhds K) ∧
+      ((‖K‖ < 1 ∧ Tendsto
+          ((fun n => G.maskFinkActionVector P (L n)) ∘ φ) atTop
+            (nhds (G.decompactifyFinkActionVector K))) ∨
+        (‖K‖ = 1 ∧ Tendsto (fun n =>
+            ‖G.maskFinkActionVector P (L (φ n))‖) atTop atTop ∧
+          (∀ s who (d : G.Act who), 0 ≤ K s who d) ∧
+          (∀ p ∈ P, K p.1 p.2.1 p.2.2 = 0) ∧
+          (G.positiveFinkActionIndices K).Nonempty ∧
+          Disjoint P (G.positiveFinkActionIndices K) ∧
+          P ⊂ G.extendFinkActionMask P K ∧
+          Disjoint (G.extendFinkActionMask P K) S)) := by
+  obtain ⟨K, φ, hφ, hlim, halternative⟩ :=
+    G.exists_maskedFinkActionVector_subsequence_interior_or_strictExtension
+      P L hL
+  refine ⟨K, φ, hφ, hlim, ?_⟩
+  rcases halternative with hinterior | hboundary
+  · exact Or.inl hinterior
+  · right
+    have hlim' : Tendsto (fun n =>
+        G.compactifyFinkActionVector
+          (G.maskFinkActionVector P (L (φ n)))) atTop (nhds K) := by
+      simpa only [Function.comp_def] using hlim
+    have hSzero : ∀ p ∈ S, K p.1 p.2.1 p.2.2 = 0 := by
+      intro p hp
+      apply G.finkActionVector_limit_apply_eq_zero_of_tendsto_zero
+        P (L ∘ φ) (fun n => hL (φ n)) K
+          (by simpa only [Function.comp_def] using hlim') p
+      exact (hprotected p hp).comp hφ.tendsto_atTop
+    have hpositiveS : Disjoint (G.positiveFinkActionIndices K) S :=
+      (G.positiveFinkActionIndices_disjoint_of_masked_zero S K hSzero).symm
+    have hextendS := G.extendFinkActionMask_disjoint
+      P S K hPS hpositiveS
+    exact ⟨hboundary.1, hboundary.2.1, hboundary.2.2.1,
+      hboundary.2.2.2.1, hboundary.2.2.2.2.1,
+      hboundary.2.2.2.2.2.1, hboundary.2.2.2.2.2.2,
+      hextendS⟩
+
+/-- Finite termination of masked radial extraction.  Starting from any mask
+and any nonnegative finite action-vector sequence, repeated boundary steps
+can occur only finitely often because each one strictly enlarges the mask.
+Along a final subsequence, every unmasked coordinate therefore has an
+ordinary finite limit. -/
+theorem exists_subsequence_maskedFinkActionVector_tendsto
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P₀ : Finset G.FinkPureActionIndex)
+    (L₀ : ℕ → G.FinkPureActionVector)
+    (hL₀ : ∀ n s who (d : G.Act who), 0 ≤ L₀ n s who d) :
+    ∃ (P : Finset G.FinkPureActionIndex) (φ : ℕ → ℕ)
+      (Llim : G.FinkPureActionVector),
+      P₀ ⊆ P ∧ StrictMono φ ∧
+      Tendsto ((fun n => G.maskFinkActionVector P (L₀ n)) ∘ φ)
+        atTop (nhds Llim) := by
+  classical
+  let total : ℕ := Finset.card (Finset.univ : Finset G.FinkPureActionIndex)
+  have aux : ∀ N : ℕ, ∀ (P : Finset G.FinkPureActionIndex)
+      (L : ℕ → G.FinkPureActionVector),
+      total - P.card = N →
+      (∀ n s who (d : G.Act who), 0 ≤ L n s who d) →
+      ∃ (P' : Finset G.FinkPureActionIndex) (φ : ℕ → ℕ)
+        (Llim : G.FinkPureActionVector),
+        P ⊆ P' ∧ StrictMono φ ∧
+        Tendsto ((fun n => G.maskFinkActionVector P' (L n)) ∘ φ)
+          atTop (nhds Llim) := by
+    intro N
+    induction N using Nat.strong_induction_on with
+    | h N ih =>
+        intro P L hN hL
+        obtain ⟨K, φ, hφ, hcompact, hinterior | hboundary⟩ :=
+          G.exists_maskedFinkActionVector_subsequence_interior_or_strictExtension
+            P L hL
+        · exact ⟨P, φ, G.decompactifyFinkActionVector K,
+            Finset.Subset.rfl, hφ, hinterior.2⟩
+        · let P' := G.extendFinkActionMask P K
+          have hstrict : P ⊂ P' := by
+            exact hboundary.2.2.2.2.2.2
+          have hcard : P.card < P'.card := Finset.card_lt_card hstrict
+          have hP'le : P'.card ≤ total := by
+            dsimp [total]
+            exact Finset.card_le_card (Finset.subset_univ P')
+          have hremain : total - P'.card < N := by omega
+          let L' : ℕ → G.FinkPureActionVector := L ∘ φ
+          have hL' : ∀ n s who (d : G.Act who), 0 ≤ L' n s who d := by
+            intro n s who d
+            exact hL (φ n) s who d
+          obtain ⟨Pfinal, ψ, Llim, hP'final, hψ, hlim⟩ :=
+            ih (total - P'.card) hremain P' L' rfl hL'
+          refine ⟨Pfinal, φ ∘ ψ, Llim,
+            Finset.Subset.trans (Finset.ssubset_iff_subset_ne.mp hstrict).1
+              hP'final,
+            hφ.comp hψ, ?_⟩
+          simpa only [L', Function.comp_def] using hlim
+  exact aux (total - P₀.card) P₀ L₀ rfl hL₀
+
+/-- Finite termination while protecting a set of coordinates known to tend
+to zero.  No protected coordinate is ever added to the pruning mask. -/
+theorem exists_subsequence_maskedFinkActionVector_tendsto_protected
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (P₀ S : Finset G.FinkPureActionIndex)
+    (L₀ : ℕ → G.FinkPureActionVector)
+    (hL₀ : ∀ n s who (d : G.Act who), 0 ≤ L₀ n s who d)
+    (hP₀S : Disjoint P₀ S)
+    (hprotected₀ : ∀ p ∈ S,
+      Tendsto (fun n => L₀ n p.1 p.2.1 p.2.2) atTop (nhds 0)) :
+    ∃ (P : Finset G.FinkPureActionIndex) (φ : ℕ → ℕ)
+      (Llim : G.FinkPureActionVector),
+      P₀ ⊆ P ∧ Disjoint P S ∧ StrictMono φ ∧
+      Tendsto ((fun n => G.maskFinkActionVector P (L₀ n)) ∘ φ)
+        atTop (nhds Llim) := by
+  classical
+  let total : ℕ := Finset.card (Finset.univ : Finset G.FinkPureActionIndex)
+  have aux : ∀ N : ℕ, ∀ (P : Finset G.FinkPureActionIndex)
+      (L : ℕ → G.FinkPureActionVector),
+      total - P.card = N →
+      (∀ n s who (d : G.Act who), 0 ≤ L n s who d) →
+      Disjoint P S →
+      (∀ p ∈ S, Tendsto (fun n => L n p.1 p.2.1 p.2.2)
+        atTop (nhds 0)) →
+      ∃ (P' : Finset G.FinkPureActionIndex) (φ : ℕ → ℕ)
+        (Llim : G.FinkPureActionVector),
+        P ⊆ P' ∧ Disjoint P' S ∧ StrictMono φ ∧
+        Tendsto ((fun n => G.maskFinkActionVector P' (L n)) ∘ φ)
+          atTop (nhds Llim) := by
+    intro N
+    induction N using Nat.strong_induction_on with
+    | h N ih =>
+        intro P L hN hL hPS hprotected
+        obtain ⟨K, φ, hφ, hcompact, hinterior | hboundary⟩ :=
+          G.exists_maskedFinkActionVector_subsequence_interior_or_protectedExtension
+            P S L hL hPS hprotected
+        · exact ⟨P, φ, G.decompactifyFinkActionVector K,
+            Finset.Subset.rfl, hPS, hφ, hinterior.2⟩
+        · rcases hboundary with
+            ⟨hnorm, hnormdiv, hnonneg, hzero, hpositive,
+              hdisjoint, hstrict, hextendS⟩
+          let P' := G.extendFinkActionMask P K
+          have hcard : P.card < P'.card := Finset.card_lt_card hstrict
+          have hP'le : P'.card ≤ total := by
+            dsimp [total]
+            exact Finset.card_le_card (Finset.subset_univ P')
+          have hremain : total - P'.card < N := by omega
+          let L' : ℕ → G.FinkPureActionVector := L ∘ φ
+          have hL' : ∀ n s who (d : G.Act who), 0 ≤ L' n s who d := by
+            intro n s who d
+            exact hL (φ n) s who d
+          have hprotected' : ∀ p ∈ S,
+              Tendsto (fun n => L' n p.1 p.2.1 p.2.2)
+                atTop (nhds 0) := by
+            intro p hp
+            exact (hprotected p hp).comp hφ.tendsto_atTop
+          obtain ⟨Pfinal, ψ, Llim, hP'final, hfinalS, hψ, hlim⟩ :=
+            ih (total - P'.card) hremain P' L' rfl hL'
+              hextendS hprotected'
+          refine ⟨Pfinal, φ ∘ ψ, Llim,
+            Finset.Subset.trans (Finset.ssubset_iff_subset_ne.mp hstrict).1
+              hP'final,
+            hfinalS, hφ.comp hψ, ?_⟩
+          simpa only [L', Function.comp_def] using hlim
+  exact aux (total - P₀.card) P₀ L₀ rfl hL₀ hP₀S hprotected₀
+
+/-- Finite-termination specialization to the projective loss family of a
+convergent Fink sequence. -/
+theorem exists_subsequence_maskedFinkProjectiveLoss_tendsto
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℕ → ℝ)
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (hz : Tendsto z atTop (nhds zlim)) :
+    ∃ (P : Finset G.FinkPureActionIndex) (φ : ℕ → ℕ)
+      (Llim : G.FinkPureActionVector),
+      StrictMono φ ∧ Tendsto (z ∘ φ) atTop (nhds zlim) ∧
+      Tendsto ((fun n => G.maskFinkActionVector P
+        (G.finkProjectiveLossVector (β n) W K (z n))) ∘ φ)
+          atTop (nhds Llim) := by
+  obtain ⟨P, φ, Llim, hempty, hφ, hlim⟩ :=
+    G.exists_subsequence_maskedFinkActionVector_tendsto
+      ∅ (fun n => G.finkProjectiveLossVector (β n) W K (z n))
+        (fun n s who d => G.finkProjectiveLossVector_nonneg
+          (β n) W K (z n) s who d)
+  refine ⟨P, φ, Llim, hφ, hz.comp hφ.tendsto_atTop, ?_⟩
+  simpa only [Function.comp_def] using hlim
+
+/-- Boundary-certificate specialization with the limiting support protected.
+After finitely many action-loss scales, all remaining losses have a finite
+vector limit, while the accumulated pruning mask is disjoint from every
+action played by the limiting profile. -/
+theorem exists_terminal_maskedFinkProjectiveLoss_subsequence
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1) :
+    ∃ (P : Finset G.FinkPureActionIndex) (φ : ℕ → ℕ)
+      (Llim : G.FinkPureActionVector),
+      Disjoint P (G.finkSupportIndices zlim) ∧ StrictMono φ ∧
+      Tendsto (z ∘ φ) atTop (nhds zlim) ∧
+      Tendsto ((G.compactifyFinkBias ∘
+        fun n => G.finkRelativeBias (β n) W (z n)) ∘ φ)
+          atTop (nhds K) ∧
+      Tendsto ((fun n => G.maskFinkActionVector P
+        (G.finkProjectiveLossVector (β n) W K (z n))) ∘ φ)
+          atTop (nhds Llim) := by
+  let L : ℕ → G.FinkPureActionVector := fun n =>
+    G.finkProjectiveLossVector (β n) W K (z n)
+  let S := G.finkSupportIndices zlim
+  have hprotected : ∀ p ∈ S,
+      Tendsto (fun n => L n p.1 p.2.1 p.2.2) atTop (nhds 0) := by
+    intro p hp
+    have hpos : G.finkProfile zlim p.1 p.2.1 p.2.2 ≠ 0 := by
+      exact (G.mem_finkSupportIndices zlim p).mp hp
+    exact G.tendsto_finkProjectiveLossVector_zero_of_limit_support
+      hβ0 hβ1 hpay hz hfix W K hKlim hKnorm
+        p.1 p.2.1 p.2.2 hpos
+  obtain ⟨P, φ, Llim, hempty, hPS, hφ, hlim⟩ :=
+    G.exists_subsequence_maskedFinkActionVector_tendsto_protected
+      ∅ S L (fun n s who d => G.finkProjectiveLossVector_nonneg
+        (β n) W K (z n) s who d)
+      (Finset.disjoint_empty_left S) hprotected
+  refine ⟨P, φ, Llim, hPS, hφ, hz.comp hφ.tendsto_atTop, ?_, ?_⟩
+  · have ht := hKlim.comp hφ.tendsto_atTop
+    simpa only [Function.comp_def] using ht
+  · simpa only [L, Function.comp_def] using hlim
 
 /-- The next finite action-face extraction.  Either all first-layer losses
 are bounded along a subsequence, or their projective boundary direction is a
