@@ -7470,6 +7470,31 @@ theorem slowCalendarStart_add_blockLength (B : ℕ → ℝ) (n : ℕ) :
   exact Nat.add_sub_of_le
     (strictMono_slowCalendarStart B (Nat.lt_succ_self n)).le
 
+/-- A block cannot be longer than one plus the next layer's raw activation
+threshold.  This removes the recursively defined activation time from rate
+estimates for the concrete slow calendar. -/
+theorem slowCalendarBlockLength_le_ceil_add_one (B : ℕ → ℝ) (n : ℕ) :
+    slowCalendarBlockLength B n ≤
+      Nat.ceil ((((n + 1 : ℕ) : ℝ) * |B (n + 1)|)) + 1 := by
+  rw [slowCalendarBlockLength, slowCalendarStart]
+  omega
+
+/-- Real-valued version of `slowCalendarBlockLength_le_ceil_add_one`, with
+the ceiling absorbed into an explicit additive constant. -/
+theorem slowCalendarBlockLength_cast_le (B : ℕ → ℝ) (n : ℕ) :
+    (slowCalendarBlockLength B n : ℝ) ≤
+      ((n + 1 : ℕ) : ℝ) * |B (n + 1)| + 2 := by
+  let x : ℝ := ((n + 1 : ℕ) : ℝ) * |B (n + 1)|
+  have hx : 0 ≤ x := mul_nonneg (Nat.cast_nonneg _) (abs_nonneg _)
+  have hnat := slowCalendarBlockLength_le_ceil_add_one B n
+  have hcast : (slowCalendarBlockLength B n : ℝ) ≤
+      (Nat.ceil x : ℝ) + 1 := by
+    exact_mod_cast hnat
+  have hceil : (Nat.ceil x : ℝ) ≤ x + 1 :=
+    (Nat.ceil_lt_add_one hx).le
+  dsimp only [x] at hcast hceil ⊢
+  linarith
+
 /-- At activation times, the total repeated cost is exactly the weighted sum
 of layer costs by their block lengths. -/
 theorem sum_slowUnitStepCalendar_at_start
@@ -7870,6 +7895,46 @@ theorem summable_finkRelativeBoundaryStepError_slowCalendar_of_boundedDilation
   have hslow := G.summable_finkCorrectedTargetStepError_slowCalendar
     W R z B (by simpa only [R] using hfast) hhold
   simpa only [R] using hslow.1
+
+/-- A directly checkable version of the slow-calendar rate bridge.  It is
+enough to control the next annealing cost against the current root scale;
+the recursive block lengths then satisfy bounded dilation automatically. -/
+theorem summable_finkRelativeBoundaryStepError_slowCalendar_of_adjacentGrowth
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (B : ℕ → ℝ) (β : ℕ → ℝ)
+    (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (W K : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (hfast : Summable (fun n => G.finkCorrectedTargetStepError W
+      (fun m => G.finkReferenceCorrection (β m / (1 - β m))
+        (G.finkRelativeBias (β m) W (z m)) K) z n))
+    (hnext : Summable (fun n =>
+      ‖G.finkContinuationResidualVector
+          (G.finkNextReferenceVector (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) W K) (z n)‖ +
+        G.finkPositiveContinuationGainSum
+          (G.finkNextReferenceVector (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) W K) (z n)))
+    (C : ℝ)
+    (hadjacent : ∀ n,
+      (((n + 1 : ℕ) : ℝ) * |B (n + 1)| + 2) *
+        ((1 - β n) / β n + ‖G.finkValue (z n) - W‖) ≤ C) :
+    Summable (fun t => G.finkCorrectedTargetStepError W
+      ((fun m => G.finkReferenceCorrection (β m / (1 - β m))
+        (G.finkRelativeBias (β m) W (z m)) K) ∘
+          slowUnitStepCalendar B)
+      (z ∘ slowUnitStepCalendar B) t) := by
+  apply G.summable_finkRelativeBoundaryStepError_slowCalendar_of_boundedDilation
+    B β hβpos hβ1 W K z hfast hnext C
+  intro n
+  have hscale0 : 0 ≤ (1 - β n) / β n +
+      ‖G.finkValue (z n) - W‖ :=
+    add_nonneg
+      (div_nonneg (sub_pos.mpr (hβ1 n)).le (hβpos n).le)
+      (norm_nonneg _)
+  exact (mul_le_mul_of_nonneg_right
+    (slowCalendarBlockLength_cast_le B n) hscale0).trans
+      (hadjacent n)
 
 /-- Sharp adjacent switching charge obtained by centering the scaled Fink
 bias at a target vector `W`.  The first term is the actual relative-bias
