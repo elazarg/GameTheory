@@ -1,0 +1,18 @@
+/.lake/
+/.cache/
+/.lsp-state.json
+/.mcp.json
+/.claude/
+/.codex/
+/.worktrees/
+
+# The pinned v1 tree is local evidence, not part of the new library.
+/reference/GameTheory-v1/
+
+*.log
+*.olean
+*.ilean
+*.c
+*.o
+*.obj
+*.pdf

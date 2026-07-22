@@ -1,0 +1,88 @@
+# CLAUDE.md
+
+Read `AGENTS.md` first; it is the canonical operational guidance. Then read the
+relevant decision and falsification test in `docs/GameTheory2Design.md` before
+changing an architectural surface.
+
+## Project state
+
+This is a fresh Lean 4/Mathlib project. Its Lake package, future public library,
+and Lean namespace are named `GameTheory`. There is deliberately no
+`GameTheory/` source tree or `GameTheory.lean` root yet.
+
+The old implementation is available only as an ignored evidence snapshot at
+`reference/GameTheory-v1/`, pinned to
+`a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`. Never import it, edit it, or treat
+its names as compatibility requirements. Use it to measure real costs and to
+recover theorem obligations that a greenfield prototype must represent.
+
+## Tempo: move fast, depth first
+
+Move fast in two deliberate stages:
+
+1. First validate the architecture depth first. Push one hostile vertical slice
+   through its downstream theorem, kill or repair weak abstractions immediately,
+   and do not spend time building breadth on an unsettled foundation.
+2. Once the relevant gate passes, steal aggressively from v1: recover theorem
+   statements, proof structure, helpers, and tests from the pinned snapshot and
+   adapt them to the accepted API instead of reproving them gratuitously.
+
+Parallelize independent theorem families after their shared definitions are
+stable. Use faster models for routine translation, import repair, short proofs,
+and repetitive ports; move semantic ambiguity, architecture decisions,
+counterexamples, persistent proof failures, and integration conflicts to
+stronger reasoning models. Check parallel work against the shared target often
+so speed does not create duplicate concepts or divergent APIs.
+
+Every architecture spike gets a short `EXP-NNN` entry in
+`docs/ExperimentLog.md`. Record the question before or when work starts, then
+add exact artifacts/commands, observations, outcome, and next action. Log
+positive, negative, narrowed, and inconclusive evidence. Decision records and
+RFC changes must cite the experiment ID; do not erase a failed hypothesis by
+quietly rewriting the design document.
+
+## How to work here
+
+- The working directory is already the project root; do not prepend `cd` to
+  commands.
+- Use `rg` and `rg --files` for repository search.
+- Begin with the smallest RFC spike capable of killing the proposed design.
+- Reserve its experiment-log ID before substantial implementation.
+- Compile one definition or theorem at a time once Lean code exists.
+- Inspect the actual goal before writing proof tactics; test small candidate
+  tactics before committing a proof.
+- Search Mathlib APIs before inspecting or recreating general-purpose proofs.
+- Address all diagnostics and linter warnings before calling a slice complete.
+- During design validation, do not broaden scope by porting adjacent v1
+  modules. During theorem harvesting, port only the assigned inventory against
+  the accepted shared API.
+
+## Environment commands
+
+```text
+lake update
+lake env lean --version
+lake exe cache get
+```
+
+There is no meaningful library build until the first source module is created.
+After that, use the narrowest target during iteration and reserve `lake build`
+for dependency or phase-gate validation.
+
+## Architectural reminders
+
+- `GameTheory` is the public namespace; `GameTheory2` is only the repository and
+  RFC generation label.
+- Static forms, execution protocols, and information models are distinct until
+  their experiments justify sharing more.
+- Equilibrium deviations are local and law-linear by construction; response
+  and dominance concepts keep their profile-quantified logical shape.
+- Finite-support probability is the v1 default, but its representation remains
+  experiment-gated. Infinite stochastic path laws wait for a measurable layer.
+- Executable finite algorithms and real-valued correctness proofs live in
+  separate dependency roots.
+- D0 is decided from the measured v1 hub, direct-bridge baselines, and a small
+  hybrid prototype—not by rebuilding the hardest theorem three times.
+
+When an RFC choice fails its kill condition, record the failure and narrow or
+replace the design. Do not patch around it to preserve sunk work.
