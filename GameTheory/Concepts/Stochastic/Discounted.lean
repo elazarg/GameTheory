@@ -506,6 +506,59 @@ theorem finitePayoff_telescope_of_averageReward_bellman_le
         Finset.sum_range_succ]
       linarith [hstep T]
 
+/-- Finite-average lower verification that retains the actual average of the
+state-dependent target.  This is the form needed when discounted values
+converge to a harmonic function rather than to one constant across states. -/
+theorem finiteAveragePayoff_ge_targetAverage_of_averageReward_bellman_le
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ) {T : ℕ}
+    {C0 CT : ℝ} (hv0 : ∀ s, |v 0 s| ≤ C0)
+    (hvT : ∀ s, |v T s| ≤ CT)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      z t h.2 + v t h.2 ≤ G.stageEUAt σ h who +
+        expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a) (v (t + 1))) + e t)
+    (hT : 0 < T) :
+    (T : ℝ)⁻¹ *
+          ∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t) -
+        (C0 + CT) / (T : ℝ) -
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t ≤
+      G.finiteAveragePayoff s₀ T σ who := by
+  have htel := G.finitePayoff_telescope_of_averageReward_bellman_le
+    σ s₀ who z v e hbellman T
+  have hV0 : -C0 ≤ G.expectedStateValue σ s₀ 0 (v 0) := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ 0) (fun h => v 0 h.2) fun h => hv0 h.2
+    exact neg_le_of_abs_le habs
+  have hVT : G.expectedStateValue σ s₀ T (v T) ≤ CT := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ T) (fun h => v T h.2) fun h => hvT h.2
+    exact le_of_abs_le habs
+  have hraw :
+      (∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t)) -
+          C0 - CT - ∑ t ∈ Finset.range T, e t ≤
+        ∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who := by
+    linarith
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  rw [G.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+  calc
+    (T : ℝ)⁻¹ *
+            ∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t) -
+          (C0 + CT) / (T : ℝ) -
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t =
+        ((∑ t ∈ Finset.range T,
+              G.expectedStateValue σ s₀ t (z t)) - C0 - CT -
+            ∑ t ∈ Finset.range T, e t) / (T : ℝ) := by
+      field_simp [ne_of_gt hTreal]
+      ring
+    _ ≤ (∑ t ∈ Finset.range T,
+          G.expectedStagePayoff σ s₀ t who) / (T : ℝ) :=
+      (div_le_div_iff_of_pos_right hTreal).2 hraw
+    _ = (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.expectedStagePayoff σ s₀ t who := by
+      rw [div_eq_inv_mul]
+
 /-- Finite-average lower verification with separate bounds on the initial
 and terminal time-varying biases.  Unlike the uniform-bias wrapper below,
 this form permits a bias schedule that grows with the horizon, provided its
@@ -670,6 +723,59 @@ theorem finitePayoff_telescope_of_averageReward_bellman_ge
       rw [Finset.sum_range_succ, Finset.sum_range_succ,
         Finset.sum_range_succ]
       linarith [hstep T]
+
+/-- Dual finite-average verification retaining the state-dependent target
+average. -/
+theorem finiteAveragePayoff_le_targetAverage_of_averageReward_bellman_ge
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ) {T : ℕ}
+    {C0 CT : ℝ} (hv0 : ∀ s, |v 0 s| ≤ C0)
+    (hvT : ∀ s, |v T s| ≤ CT)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      G.stageEUAt σ h who +
+          expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a) (v (t + 1))) ≤
+        z t h.2 + v t h.2 + e t)
+    (hT : 0 < T) :
+    G.finiteAveragePayoff s₀ T σ who ≤
+      (T : ℝ)⁻¹ *
+          ∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t) +
+        (C0 + CT) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t := by
+  have htel := G.finitePayoff_telescope_of_averageReward_bellman_ge
+    σ s₀ who z v e hbellman T
+  have hV0 : G.expectedStateValue σ s₀ 0 (v 0) ≤ C0 := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ 0) (fun h => v 0 h.2) fun h => hv0 h.2
+    exact le_of_abs_le habs
+  have hVT : -CT ≤ G.expectedStateValue σ s₀ T (v T) := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ T) (fun h => v T h.2) fun h => hvT h.2
+    exact neg_le_of_abs_le habs
+  have hraw :
+      (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who) ≤
+        (∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t)) +
+          C0 + CT + ∑ t ∈ Finset.range T, e t := by
+    linarith
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  rw [G.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+  calc
+    (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.expectedStagePayoff σ s₀ t who =
+        (∑ t ∈ Finset.range T,
+          G.expectedStagePayoff σ s₀ t who) / (T : ℝ) := by
+      rw [div_eq_inv_mul]
+    _ ≤ ((∑ t ∈ Finset.range T,
+            G.expectedStateValue σ s₀ t (z t)) + C0 + CT +
+          ∑ t ∈ Finset.range T, e t) / (T : ℝ) :=
+      (div_le_div_iff_of_pos_right hTreal).2 hraw
+    _ = (T : ℝ)⁻¹ *
+            ∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t) +
+          (C0 + CT) / (T : ℝ) +
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t := by
+      field_simp [ne_of_gt hTreal]
+      ring
 
 /-- Dual finite-average verification with separate initial and terminal bias
 bounds. -/

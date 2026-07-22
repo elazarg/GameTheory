@@ -137,6 +137,153 @@ theorem finkProfile_convergesPointwise
     (nhds (ENNReal.ofReal (zlim.1.1 (s, who) d)))
   simpa only [Function.comp_def] using hof
 
+/-- Against a fixed continuation function, the expected successor value of
+the decoded stationary profiles converges along the Fink-domain sequence. -/
+theorem tendsto_finkProfile_continuation
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → ℝ)
+    (s : G.State) :
+    Tendsto (fun n => expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+        expect (G.transition s a) W)) atTop
+      (nhds (expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) W))) := by
+  classical
+  have hsum : Tendsto (fun n => ∑ a : G.JointAct,
+      ((pmfPi (G.finkProfile (z n) s)) a).toReal *
+        expect (G.transition s a) W) atTop
+      (nhds (∑ a : G.JointAct,
+        ((pmfPi (G.finkProfile zlim s)) a).toReal *
+          expect (G.transition s a) W)) := by
+    apply tendsto_finsetSum Finset.univ
+    intro a ha
+    have hw := pmfPi_apply_toReal_tendsto
+      (σs := fun n => G.finkProfile (z n) s)
+      (σ := G.finkProfile zlim s) a
+      (fun i => G.finkProfile_convergesPointwise hz s i (a i))
+    exact hw.mul tendsto_const_nhds
+  simpa only [expect_eq_sum] using hsum
+
+/-- The same continuation expectation converges after fixing one player's
+action to a pure deviation. -/
+theorem tendsto_finkProfile_pureDeviationContinuation
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → ℝ)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Tendsto (fun n =>
+        expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a => expect (G.transition s a) W)) atTop
+      (nhds (expect (pmfPi (Function.update (G.finkProfile zlim s)
+        who (PMF.pure d))) (fun a => expect (G.transition s a) W))) := by
+  have hsum : Tendsto (fun n => ∑ a : G.JointAct,
+      ((pmfPi (Function.update (G.finkProfile (z n) s)
+        who (PMF.pure d))) a).toReal * expect (G.transition s a) W) atTop
+      (nhds (∑ a : G.JointAct,
+        ((pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) a).toReal * expect (G.transition s a) W)) := by
+    apply tendsto_finsetSum Finset.univ
+    intro a ha
+    have hmarg : ∀ i, Tendsto (fun n =>
+        (Function.update (G.finkProfile (z n) s) who (PMF.pure d)) i (a i))
+        atTop (nhds
+          ((Function.update (G.finkProfile zlim s) who (PMF.pure d)) i
+            (a i))) := by
+      intro i
+      by_cases hi : i = who
+      · subst i
+        simp
+      · simp only [Function.update_of_ne hi]
+        exact G.finkProfile_convergesPointwise hz s i (a i)
+    have hw := pmfPi_apply_toReal_tendsto
+      (σs := fun n => Function.update (G.finkProfile (z n) s)
+        who (PMF.pure d))
+      (σ := Function.update (G.finkProfile zlim s) who (PMF.pure d))
+      a hmarg
+    exact hw.mul tendsto_const_nhds
+  simpa only [expect_eq_sum] using hsum
+
+/-- A common upper bound for all pure unilateral continuation deviations is
+also an upper bound for every mixed unilateral deviation. -/
+theorem mixedDeviationContinuation_le_of_pure_bound
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (x : G.StationaryMixedProfile)
+    (W : G.State → Payoff ι) (s : G.State) (who : ι) (c : ℝ)
+    (hpure : ∀ d : G.Act who,
+      expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+          (fun a => expect (G.transition s a) (fun s' => W s' who)) ≤ c)
+    (dev : PMF (G.Act who)) :
+    expect (pmfPi (Function.update (x s) who dev))
+        (fun a => expect (G.transition s a) (fun s' => W s' who)) ≤ c := by
+  let f : G.JointAct → ℝ := fun a =>
+    expect (G.transition s a) (fun s' => W s' who)
+  calc
+    expect (pmfPi (Function.update (x s) who dev)) f =
+        expect dev (fun d =>
+          expect (pmfPi (Function.update (x s) who (PMF.pure d))) f) := by
+      rw [pmfPi_update_bind, expect_bind]
+    _ ≤ expect dev (fun _ => c) := expect_mono dev _ _ hpure
+    _ = c := expect_const dev c
+
+/-- Harmonicity and pure-action excessiveness of a limiting profile become
+uniform approximate drift bounds along every convergent finite-state/action
+Fink-domain sequence. -/
+theorem eventually_finkProfile_harmonic_excessive_close
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    {η : ℝ} (hη : 0 < η) :
+    ∀ᶠ n in atTop,
+      (∀ s who,
+        |expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+            expect (G.transition s a) (fun s' => W s' who)) - W s who| ≤ η) ∧
+      ∀ s who (dev : PMF (G.Act who)),
+        expect (pmfPi (Function.update (G.finkProfile (z n) s) who dev)) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) ≤ W s who + η := by
+  have hon : ∀ᶠ n in atTop, ∀ s who,
+      |expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) - W s who| ≤ η := by
+    rw [Filter.eventually_all]
+    intro s
+    rw [Filter.eventually_all]
+    intro who
+    have ht := G.tendsto_finkProfile_continuation hz
+      (fun s' => W s' who) s
+    rw [← hharmonic s who] at ht
+    obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht η hη
+    filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+    simpa only [Real.dist_eq] using (le_of_lt hn)
+  have hdev : ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who + η := by
+    rw [Filter.eventually_all]
+    intro s
+    rw [Filter.eventually_all]
+    intro who
+    rw [Filter.eventually_all]
+    intro d
+    have ht := G.tendsto_finkProfile_pureDeviationContinuation hz
+      (fun s' => W s' who) s who d
+    obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht η hη
+    filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+    rw [Real.dist_eq, abs_lt] at hn
+    linarith [hexcessive s who d]
+  filter_upwards [hon, hdev] with n hn hd
+  refine ⟨hn, fun s who dev => ?_⟩
+  exact G.mixedDeviationContinuation_le_of_pure_bound
+    (G.finkProfile (z n)) W s who (W s who + η) (hd s who) dev
+
 /-- Auxiliary pure payoffs are jointly continuous in the discount factor and
 the Fink-domain point. -/
 theorem continuous_finkDiscountedAuxPayoff_param
