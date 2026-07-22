@@ -7470,6 +7470,40 @@ theorem slowCalendarStart_add_blockLength (B : ℕ → ℝ) (n : ℕ) :
   exact Nat.add_sub_of_le
     (strictMono_slowCalendarStart B (Nat.lt_succ_self n)).le
 
+theorem ceil_slowCalendarThreshold_le_start (B : ℕ → ℝ) (n : ℕ) :
+    Nat.ceil (((n : ℕ) : ℝ) * |B n|) ≤ slowCalendarStart B n := by
+  exact Nat.ceil_le.mpr (slowCalendarStart_cost_le B n)
+
+/-- Sharp block estimate: because the current activation threshold has
+already been met, a layer is held only for one stage or for the positive
+increment of the integer activation thresholds. -/
+theorem slowCalendarBlockLength_le_max_ceil_sub (B : ℕ → ℝ) (n : ℕ) :
+    slowCalendarBlockLength B n ≤ max 1
+      (Nat.ceil ((((n + 1 : ℕ) : ℝ) * |B (n + 1)|)) -
+        Nat.ceil (((n : ℕ) : ℝ) * |B n|)) := by
+  have hthreshold := ceil_slowCalendarThreshold_le_start B n
+  rw [slowCalendarBlockLength, slowCalendarStart]
+  omega
+
+/-- Any nonnegative scale satisfying a bound against successive activation
+threshold increments satisfies the concrete calendar's bounded-dilation
+condition. -/
+theorem slowCalendarBlockLength_mul_le_of_thresholdIncrement
+    (B scale : ℕ → ℝ) (hscale : ∀ n, 0 ≤ scale n) (C : ℝ)
+    (hincrement : ∀ n,
+      ((max 1
+        (Nat.ceil ((((n + 1 : ℕ) : ℝ) * |B (n + 1)|)) -
+          Nat.ceil (((n : ℕ) : ℝ) * |B n|)) : ℕ) : ℝ) * scale n ≤ C) :
+    ∀ n, (slowCalendarBlockLength B n : ℝ) * scale n ≤ C := by
+  intro n
+  have hblock : (slowCalendarBlockLength B n : ℝ) ≤
+      ((max 1
+        (Nat.ceil ((((n + 1 : ℕ) : ℝ) * |B (n + 1)|)) -
+          Nat.ceil (((n : ℕ) : ℝ) * |B n|)) : ℕ) : ℝ) := by
+    exact_mod_cast slowCalendarBlockLength_le_max_ceil_sub B n
+  exact (mul_le_mul_of_nonneg_right hblock (hscale n)).trans
+    (hincrement n)
+
 /-- A block cannot be longer than one plus the next layer's raw activation
 threshold.  This removes the recursively defined activation time from rate
 estimates for the concrete slow calendar. -/
