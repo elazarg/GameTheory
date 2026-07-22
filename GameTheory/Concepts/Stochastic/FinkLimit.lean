@@ -6175,6 +6175,25 @@ theorem tendsto_finkPositiveContinuationGainSum_zero
   rw [Real.dist_eq, sub_zero, abs_of_nonneg hsum0]
   exact hsum.trans_lt hcardδ
 
+/-- Error paid on every calendar stage that holds one corrected Fink point
+fixed.  Unlike correction motion, this term is repeated during waits. -/
+noncomputable def finkCorrectedTargetHoldError
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (t : ℕ) : ℝ :=
+  ‖G.finkContinuationResidualVector (W + R t) (z t)‖ +
+    G.finkPositiveContinuationGainSum (W + R t) (z t)
+
+theorem finkCorrectedTargetHoldError_nonneg
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (t : ℕ) :
+    0 ≤ G.finkCorrectedTargetHoldError W R z t := by
+  unfold finkCorrectedTargetHoldError finkPositiveContinuationGainSum
+  positivity
+
 /-- One scalar charges all defects in an adjacent corrected-target step:
 same-index harmonic residual, positive pure-deviation gain, and correction
 motion. -/
@@ -6186,6 +6205,16 @@ noncomputable def finkCorrectedTargetStepError
   ‖G.finkContinuationResidualVector (W + R t) (z t)‖ +
     G.finkPositiveContinuationGainSum (W + R t) (z t) +
     ‖R (t + 1) - R t‖
+
+theorem finkCorrectedTargetStepError_eq_hold_add_motion
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (t : ℕ) :
+    G.finkCorrectedTargetStepError W R z t =
+      G.finkCorrectedTargetHoldError W R z t +
+        ‖R (t + 1) - R t‖ := by
+  rfl
 
 theorem finkCorrectedTargetStepError_nonneg
     (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
@@ -7259,6 +7288,91 @@ theorem sum_unitStepCalendar_eq (ν : ℕ → ℕ) (e : ℕ → ℝ)
       · rw [hadvance, Finset.sum_range_succ]
         simp
 
+/-- Exact drift accounting for a unit-step block calendar.  Hold errors are
+paid once per calendar stage, whereas correction motion is paid exactly once
+per crossed subsequence edge. -/
+theorem sum_finkCorrectedTargetStepError_unitStep
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U)
+    (ν : ℕ → ℕ) (hν0 : ν 0 = 0)
+    (hstep : ∀ t, ν (t + 1) = ν t ∨ ν (t + 1) = ν t + 1)
+    (T : ℕ) :
+    ∑ t ∈ Finset.range T,
+        G.finkCorrectedTargetStepError W (R ∘ ν) (z ∘ ν) t =
+      ∑ t ∈ Finset.range T,
+        G.finkCorrectedTargetHoldError W R z (ν t) +
+      ∑ n ∈ Finset.range (ν T), ‖R (n + 1) - R n‖ := by
+  have hmotion : ∀ t,
+      ‖R (ν (t + 1)) - R (ν t)‖ =
+        if ν (t + 1) = ν t then 0 else ‖R (ν t + 1) - R (ν t)‖ := by
+    intro t
+    rcases hstep t with hwait | hadvance
+    · simp [hwait]
+    · simp [hadvance]
+  calc
+    ∑ t ∈ Finset.range T,
+        G.finkCorrectedTargetStepError W (R ∘ ν) (z ∘ ν) t =
+        ∑ t ∈ Finset.range T,
+          (G.finkCorrectedTargetHoldError W R z (ν t) +
+            ‖R (ν (t + 1)) - R (ν t)‖) := by
+      apply Finset.sum_congr rfl
+      intro t ht
+      rw [G.finkCorrectedTargetStepError_eq_hold_add_motion]
+      rfl
+    _ = (∑ t ∈ Finset.range T,
+          G.finkCorrectedTargetHoldError W R z (ν t)) +
+        ∑ t ∈ Finset.range T,
+          ‖R (ν (t + 1)) - R (ν t)‖ := by
+      rw [Finset.sum_add_distrib]
+    _ = (∑ t ∈ Finset.range T,
+          G.finkCorrectedTargetHoldError W R z (ν t)) +
+        ∑ t ∈ Finset.range T,
+          (if ν (t + 1) = ν t then 0
+          else ‖R (ν t + 1) - R (ν t)‖) := by
+      congr 1
+      exact Finset.sum_congr rfl fun t _ => hmotion t
+    _ = (∑ t ∈ Finset.range T,
+          G.finkCorrectedTargetHoldError W R z (ν t)) +
+        ∑ n ∈ Finset.range (ν T), ‖R (n + 1) - R n‖ := by
+      rw [sum_unitStepCalendar_eq ν
+        (fun n => ‖R (n + 1) - R n‖) hν0 hstep T]
+
+/-- Once the fast subsequence has summable adjacent step error, slowing it
+adds only the repeated hold-error bill.  Correction motion itself never costs
+more than its original fast-subsequence total. -/
+theorem sum_finkCorrectedTargetStepError_unitStep_le_hold_add_tsum
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U)
+    (ν : ℕ → ℕ) (hν0 : ν 0 = 0)
+    (hstep : ∀ t, ν (t + 1) = ν t ∨ ν (t + 1) = ν t + 1)
+    (hsummable : Summable (fun n =>
+      G.finkCorrectedTargetStepError W R z n))
+    (T : ℕ) :
+    ∑ t ∈ Finset.range T,
+        G.finkCorrectedTargetStepError W (R ∘ ν) (z ∘ ν) t ≤
+      ∑ t ∈ Finset.range T,
+        G.finkCorrectedTargetHoldError W R z (ν t) +
+      ∑' n, G.finkCorrectedTargetStepError W R z n := by
+  rw [G.sum_finkCorrectedTargetStepError_unitStep
+    W R z ν hν0 hstep T]
+  apply add_le_add le_rfl
+  calc
+    ∑ n ∈ Finset.range (ν T), ‖R (n + 1) - R n‖ ≤
+        ∑ n ∈ Finset.range (ν T),
+          G.finkCorrectedTargetStepError W R z n := by
+      apply Finset.sum_le_sum
+      intro n hn
+      rw [G.finkCorrectedTargetStepError_eq_hold_add_motion]
+      exact le_add_of_nonneg_left
+        (G.finkCorrectedTargetHoldError_nonneg W R z n)
+    _ ≤ ∑' n, G.finkCorrectedTargetStepError W R z n := by
+      exact hsummable.sum_le_tsum (Finset.range (ν T))
+        (fun n _ => G.finkCorrectedTargetStepError_nonneg W R z n)
+
 /-- Sharp adjacent switching charge obtained by centering the scaled Fink
 bias at a target vector `W`.  The first term is the actual relative-bias
 change; the second is only the change of discount scale applied to `W`. -/
@@ -7612,6 +7726,135 @@ def IsIndexedFinkCorrectedCalendarSelectable (G : StochasticGame ι)
         (q (κ t) + ‖R (κ 0)‖ + ‖R (κ t)‖ +
           ∑ k ∈ Finset.range t,
             G.finkCorrectedTargetStepError W (R ∘ κ) (z ∘ κ) k) ≤ η
+
+/-- Summable-step sufficient criterion for corrected calendar selectability.
+It separates the final construction into the already-proved annealing limits,
+ordinary value/correction convergence, and an arbitrarily small total mass of
+the canonical corrected-target step error. -/
+theorem isIndexedFinkCorrectedCalendarSelectable_of_summableStepError
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (q : ℕ → ℝ)
+    (hcalendar : ∀ ε : ℝ, 0 < ε → ∃ κ : ℕ → ℕ,
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        finkScaledBiasBound β U (κ T)) atTop (nhds 0) ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W κ t)
+          atTop (nhds 0) ∧
+      Tendsto (q ∘ κ) atTop (nhds 0) ∧
+      Tendsto (fun t => ‖R (κ t)‖) atTop (nhds 0) ∧
+      ‖R (κ 0)‖ ≤ ε ∧
+      Summable (fun t => G.finkCorrectedTargetStepError W
+        (R ∘ κ) (z ∘ κ) t) ∧
+      ∑' t, G.finkCorrectedTargetStepError W
+        (R ∘ κ) (z ∘ κ) t ≤ ε) :
+    G.IsIndexedFinkCorrectedCalendarSelectable β U z W R q := by
+  intro η hη
+  have hquarter : 0 < η / 4 := by linarith
+  obtain ⟨κ, hterminal, hswitch, hq, hR, hRzero,
+      hrsum, hrTotal⟩ := hcalendar (η / 4) hquarter
+  let r : ℕ → ℝ := fun t => G.finkCorrectedTargetStepError W
+    (R ∘ κ) (z ∘ κ) t
+  have hr0 : ∀ t, 0 ≤ r t := fun t =>
+    G.finkCorrectedTargetStepError_nonneg W (R ∘ κ) (z ∘ κ) t
+  have hqavg : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, q (κ t)) atTop (nhds 0) := by
+    simpa only [Function.comp_apply] using hq.cesaro
+  have hRavg : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, ‖R (κ t)‖) atTop (nhds 0) := by
+    simpa only [Function.comp_apply] using hR.cesaro
+  have hinitial : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U (κ 0)) atTop (nhds 0) := by
+    have ht := tendsto_const_div_atTop_nhds_zero_nat
+      (finkScaledBiasBound β U (κ 0))
+    simpa only [div_eq_inv_mul] using ht
+  have hbias : Tendsto (fun T : ℕ =>
+      (finkScaledBiasBound β U (κ 0) +
+          finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t)
+      atTop (nhds 0) := by
+    have ht := (hinitial.add hterminal).add hswitch
+    convert ht using 1
+    · funext T
+      rw [div_eq_inv_mul]
+      ring
+    · simp
+  obtain ⟨Nb, hNb⟩ := Metric.tendsto_atTop.mp hbias η hη
+  obtain ⟨Nq, hNq⟩ := Metric.tendsto_atTop.mp hqavg
+    (η / 4) hquarter
+  obtain ⟨NR, hNR⟩ := Metric.tendsto_atTop.mp hRavg
+    (η / 4) hquarter
+  let T₀ := max 1 (max Nb (max Nq NR))
+  refine ⟨κ, T₀, fun T hT => ?_⟩
+  have hTone : 1 ≤ T := le_trans (le_max_left _ _) hT
+  have hTpos : 0 < T := Nat.zero_lt_of_lt hTone
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hTpos
+  have hNbT : Nb ≤ T :=
+    le_trans (le_max_left _ _)
+      (le_trans (le_max_right _ _) hT)
+  have hNqT : Nq ≤ T :=
+    le_trans (le_max_left _ _)
+      (le_trans (le_max_right _ _)
+        (le_trans (le_max_right _ _) hT))
+  have hNRT : NR ≤ T :=
+    le_trans (le_max_right _ _)
+      (le_trans (le_max_right _ _)
+        (le_trans (le_max_right _ _) hT))
+  have hbiasLe :
+      (finkScaledBiasBound β U (κ 0) +
+          finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t ≤ η := by
+    have hb := hNb T hNbT
+    rw [Real.dist_eq, sub_zero] at hb
+    exact (le_abs_self _).trans hb.le
+  have hqLe : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+      q (κ t) ≤ η / 4 := by
+    have ht := hNq T hNqT
+    rw [Real.dist_eq, sub_zero] at ht
+    exact (le_abs_self _).trans ht.le
+  have hRLe : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+      ‖R (κ t)‖ ≤ η / 4 := by
+    have ht := hNR T hNRT
+    rw [Real.dist_eq, sub_zero] at ht
+    exact (le_abs_self _).trans ht.le
+  have hprefix : ∀ t, ∑ k ∈ Finset.range t, r k ≤ ∑' k, r k := by
+    intro t
+    exact hrsum.sum_le_tsum (Finset.range t) (fun k _ => hr0 k)
+  have hsum : (∑ t ∈ Finset.range T,
+      (q (κ t) + ‖R (κ 0)‖ + ‖R (κ t)‖ +
+        ∑ k ∈ Finset.range t, r k)) ≤
+      ∑ t ∈ Finset.range T,
+        (q (κ t) + ‖R (κ 0)‖ + ‖R (κ t)‖ + ∑' k, r k) := by
+    exact Finset.sum_le_sum fun t _ =>
+      add_le_add le_rfl (hprefix t)
+  have hmul := mul_le_mul_of_nonneg_left hsum
+    (inv_nonneg.mpr hTreal.le)
+  have htarget : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+      (q (κ t) + ‖R (κ 0)‖ + ‖R (κ t)‖ +
+        ∑ k ∈ Finset.range t, r k) ≤ η := by
+    calc
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          (q (κ t) + ‖R (κ 0)‖ + ‖R (κ t)‖ +
+            ∑ k ∈ Finset.range t, r k) ≤
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+            (q (κ t) + ‖R (κ 0)‖ + ‖R (κ t)‖ + ∑' k, r k) := hmul
+      _ = (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, q (κ t) +
+          ‖R (κ 0)‖ +
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, ‖R (κ t)‖ +
+          ∑' k, r k := by
+        simp_rw [Finset.sum_add_distrib]
+        simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+        field_simp [ne_of_gt hTreal]
+      _ ≤ η / 4 + η / 4 + η / 4 + η / 4 := by
+        exact add_le_add (add_le_add (add_le_add hqLe hRzero) hRLe)
+          hrTotal
+      _ = η := by ring
+  exact ⟨hTpos, hbiasLe, htarget⟩
 
 /-- A useful sufficient form of calendar selectability.  It separates the
 remaining construction into vanishing terminal bias, vanishing average switch
