@@ -315,6 +315,59 @@ theorem nodeDistPrefix_eq_nodeDist {S : Struct Player n}
   rw [this, hproj, hobs_proj]
   rfl
 
+/-- A natural-order evaluation segment is deterministic along a target total
+assignment whenever every local kernel in the segment is the corresponding
+point mass.  This is the restartable, subgame-level form of
+`evalFoldPrefix_eq_pure_of_nodeDist`: the prefix before `k₀` is already fixed
+to the target assignment and only `[k₀, k₁)` is evaluated. -/
+theorem evalSegment_eq_pure_of_nodeDist {S : Struct Player n}
+    (sem : Sem S) (pol : Policy S) (hnat : S.NaturalOrder)
+    (k₀ k₁ : Nat) (hk₀ : k₀ ≤ k₁) (hk₁ : k₁ ≤ n)
+    (a : TAssign S)
+    (hnode : ∀ (nd : Fin n), k₀ ≤ nd.val → nd.val < k₁ →
+      nodeDist S sem pol nd a = PMF.pure (a nd)) :
+    evalSegment S sem pol hnat k₀ k₁ hk₀ hk₁
+        (PMF.pure (PrefixAssign.ofTAssign a k₀ (le_trans hk₀ hk₁))) =
+      PMF.pure (PrefixAssign.ofTAssign a k₁ hk₁) := by
+  induction hdist : k₁ - k₀ using Nat.strongRecOn generalizing k₀ with
+  | _ d ih =>
+      by_cases hlt : k₀ < k₁
+      · let hp : ∀ p ∈ S.parents ⟨k₀, Nat.lt_of_lt_of_le hlt hk₁⟩,
+            p.val < k₀ :=
+          fun p hp => hnat ⟨k₀, Nat.lt_of_lt_of_le hlt hk₁⟩ p hp
+        let ho : ∀ p ∈ S.obsParents ⟨k₀, Nat.lt_of_lt_of_le hlt hk₁⟩,
+            p.val < k₀ :=
+          fun p hp => hnat ⟨k₀, Nat.lt_of_lt_of_le hlt hk₁⟩ p
+            (S.obs_sub _ hp)
+        have hprefix :
+            nodeDistPrefix S sem pol ⟨k₀, Nat.lt_of_lt_of_le hlt hk₁⟩
+                (PrefixAssign.ofTAssign a k₀
+                  (le_of_lt (Nat.lt_of_lt_of_le hlt hk₁))) hp ho =
+              PMF.pure (a ⟨k₀, Nat.lt_of_lt_of_le hlt hk₁⟩) := by
+          rw [nodeDistPrefix_eq_nodeDist sem pol
+            ⟨k₀, Nat.lt_of_lt_of_le hlt hk₁⟩
+            (PrefixAssign.ofTAssign a k₀
+              (le_of_lt (Nat.lt_of_lt_of_le hlt hk₁))) a
+            (fun _ => rfl) hp ho]
+          exact hnode _ (le_refl k₀) hlt
+        have hstep :
+            evalStepPrefix S sem pol
+                (PMF.pure (PrefixAssign.ofTAssign a k₀
+                  (le_of_lt (Nat.lt_of_lt_of_le hlt hk₁)))) hp ho =
+              PMF.pure (PrefixAssign.ofTAssign a (k₀ + 1)
+                (Nat.lt_of_lt_of_le hlt hk₁)) := by
+          rw [evalStepPrefix, PMF.pure_bind, hprefix, PMF.pure_map]
+          exact congrArg PMF.pure (PrefixAssign.ofTAssign_snoc a)
+        conv_lhs => rw [evalSegment]
+        simp only [hlt, ↓reduceDIte]
+        rw [hstep]
+        exact ih (k₁ - (k₀ + 1)) (by omega) (k₀ + 1) (by omega)
+          (fun nd hlow hhigh => hnode nd (by omega) hhigh) rfl
+      · have hk₀₁ : k₀ = k₁ := by omega
+        subst k₀
+        rw [evalSegment]
+        simp only [lt_irrefl, ↓reduceDIte]
+
 /-- A natural-order MAID whose node kernels are point masses along a total
 assignment evaluates to the point mass at that assignment.  This packages the
 standard deterministic Bayesian-network induction independently of any
@@ -502,6 +555,42 @@ private theorem evalFoldPrefix_go_eq_evalSegment (S : Struct Player n) (sem : Se
       subst hmn
       conv_lhs => rw [evalFoldPrefix.go]; simp only [lt_irrefl, ↓reduceDIte]
       conv_rhs => rw [evalSegment]; simp only [lt_irrefl, ↓reduceDIte]
+
+/-- Evaluating a natural-order segment from `k` to the final node and then
+extending the resulting full prefix is the same as folding ordinary MAID
+steps over the suffix of `List.finRange n`.  This exposes the restart bridge
+used by subtree semantics. -/
+theorem evalSegment_toEnd_map_toTAssign (S : Struct Player n) (sem : Sem S)
+    (pol : Policy S) (hnat : S.NaturalOrder)
+    (k : Nat) (hk : k ≤ n) (acc : PMF (PrefixAssign S k hk)) :
+    (evalSegment S sem pol hnat k n hk (le_refl n) acc).map
+        PrefixAssign.toTAssign =
+      ((List.finRange n).drop k).foldl (evalStep S sem pol)
+        (acc.map PrefixAssign.extend) := by
+  rw [← evalFoldPrefix_go_eq_evalSegment S sem pol hnat k hk acc]
+  have hsim := evalFoldPrefix_go_map_extend S sem pol hnat k hk acc
+  rw [← hsim]
+  congr 1
+  funext a
+  exact a.toTAssign_eq_extend
+
+/-- A deterministic target assignment can be resumed at any natural-order
+prefix: fixing its first `k` coordinates and evaluating the remaining suffix
+produces the point mass at the whole target. -/
+theorem foldl_drop_finRange_eq_pure_of_nodeDist {S : Struct Player n}
+    (sem : Sem S) (pol : Policy S) (hnat : S.NaturalOrder)
+    (k : Nat) (hk : k ≤ n) (a : TAssign S)
+    (hnode : ∀ (nd : Fin n), k ≤ nd.val →
+      nodeDist S sem pol nd a = PMF.pure (a nd)) :
+    ((List.finRange n).drop k).foldl (evalStep S sem pol)
+        (PMF.pure (PrefixAssign.ofTAssign a k hk).extend) =
+      PMF.pure a := by
+  have hseg := evalSegment_eq_pure_of_nodeDist sem pol hnat
+    k n hk (le_refl n) a (fun nd hlow _ => hnode nd hlow)
+  have hmap := congrArg (PMF.map PrefixAssign.toTAssign) hseg
+  rw [evalSegment_toEnd_map_toTAssign S sem pol hnat k hk,
+    PMF.pure_map, PMF.pure_map, PrefixAssign.toTAssign_ofTAssign] at hmap
+  simpa using hmap
 
 /-- `evalFoldPrefix` equals `evalSegment` from `0` to `n`. -/
 private theorem evalFoldPrefix_eq_evalSegment_full (S : Struct Player n) (sem : Sem S)
