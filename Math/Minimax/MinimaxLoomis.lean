@@ -294,5 +294,59 @@ theorem wsum_extendDropRow [DecidableEq I] (i₀ : I)
       = ∑ i' : {i : I // i ≠ i₀}, x'.val i' * f i'.val :=
   wsum_extendDropColumn (J := I) i₀ x' f
 
+/-! ### Nonexpansiveness of the value in the matrix
+
+The maxmin value `lam0` is 1-Lipschitz in the payoff matrix under the
+entrywise sup metric.  This is the analytic property that makes the Shapley
+operator of a discounted stochastic game a contraction. -/
+
+omit [Nonempty I] in
+/-- One-sided perturbation bound for the row aggregate. -/
+theorem lam.aux_le_of_entrywise_le {A B : I → J → ℝ} {δ : ℝ}
+    (h : ∀ i j, A i j ≤ B i j + δ) (x : stdSimplex ℝ I) :
+    lam.aux A x ≤ lam.aux B x + δ := by
+  obtain ⟨j₀, -, hj₀⟩ := Finset.exists_mem_eq_inf' Finset.univ_nonempty
+    (fun j => wsum x (fun i => B i j))
+  have hcol : wsum x (fun i => A i j₀) ≤ wsum x (fun i => B i j₀) + δ := by
+    calc wsum x (fun i => A i j₀)
+        ≤ wsum x (fun i => B i j₀ + δ) := wsum_le_wsum x (fun i => h i j₀)
+      _ = wsum x ((fun i => B i j₀) + fun _ => δ) := rfl
+      _ = wsum x (fun i => B i j₀) + wsum x (fun _ => δ) := wsum_add x _ _
+      _ = wsum x (fun i => B i j₀) + δ := by rw [wsum_const]
+  calc lam.aux A x
+      ≤ wsum x (fun i => A i j₀) :=
+        Finset.inf'_le _ (Finset.mem_univ j₀)
+    _ ≤ wsum x (fun i => B i j₀) + δ := hcol
+    _ = lam.aux B x + δ := by rw [lam.aux, ← hj₀]
+
+/-- One-sided perturbation bound for the maxmin value. -/
+theorem lam0_le_of_entrywise_le {A B : I → J → ℝ} {δ : ℝ}
+    (h : ∀ i j, A i j ≤ B i j + δ) :
+    lam0 A ≤ lam0 B + δ := by
+  refine ciSup_le fun x => ?_
+  exact (lam.aux_le_of_entrywise_le h x).trans
+    (add_le_add (lam.aux.le_lam0 B x) le_rfl)
+
+/-- **The matrix-game value is nonexpansive in the payoff matrix**: an
+entrywise sup-norm bound on the perturbation bounds the change in the
+maxmin value. -/
+theorem abs_lam0_sub_le_of_entrywise_abs_le {A B : I → J → ℝ} {δ : ℝ}
+    (h : ∀ i j, |A i j - B i j| ≤ δ) :
+    |lam0 A - lam0 B| ≤ δ := by
+  rw [abs_sub_le_iff]
+  constructor
+  · have hAB : ∀ i j, A i j ≤ B i j + δ := by
+      intro i j
+      have := (abs_le.mp (h i j)).2
+      linarith
+    have := lam0_le_of_entrywise_le hAB
+    linarith
+  · have hBA : ∀ i j, B i j ≤ A i j + δ := by
+      intro i j
+      have := (abs_le.mp (h i j)).1
+      linarith
+    have := lam0_le_of_entrywise_le hBA
+    linarith
+
 end MinimaxLoomis
 

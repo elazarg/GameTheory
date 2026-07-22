@@ -105,6 +105,14 @@ import GameTheory.Concepts.Repeated.MonitoringPureDeviations
 import GameTheory.Concepts.Repeated.MonitoringIncentives
 import GameTheory.Concepts.Repeated.MonitoringHyperplanes
 
+-- Stochastic games (uniform equilibrium program)
+import GameTheory.Concepts.Stochastic.Basic
+import GameTheory.Concepts.Stochastic.Uniform
+import GameTheory.Concepts.Stochastic.StageGame
+import GameTheory.Concepts.Stochastic.Absorbing
+import GameTheory.Concepts.Stochastic.TransitionIndependent
+import GameTheory.Concepts.Stochastic.Discounted
+
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
 import GameTheory.Concepts.Correlation.Regret

@@ -669,6 +669,35 @@ theorem expect_congr_of_ne_zero
     Math.Probability.expect μ f = Math.Probability.expect μ g := by
   exact expect_congr_on_support μ f g (fun a ha => hfg a (by simpa [PMF.mem_support_iff] using ha))
 
+/-- Every probability mass function on a subsingleton type is the point mass
+at any of its elements. -/
+theorem eq_pure_of_subsingleton {α : Type*} [Subsingleton α]
+    (p : PMF α) (a : α) :
+    p = PMF.pure a := by
+  have hpa : p a = 1 := by
+    have htot := p.tsum_coe
+    rwa [tsum_eq_single a (fun b hb => (hb (Subsingleton.elim b a)).elim)]
+      at htot
+  ext b
+  rw [Subsingleton.elim b a, hpa, PMF.pure_apply_self]
+
+/-- An upper bound holding on the support bounds the expectation. -/
+theorem expect_le_of_le_on_support
+    {Ω : Type*} [Finite Ω] (μ : PMF Ω) (f : Ω → ℝ) {B : ℝ}
+    (hfB : ∀ a, a ∈ μ.support → f a ≤ B) :
+    Math.Probability.expect μ f ≤ B := by
+  classical
+  have hcongr : Math.Probability.expect μ f =
+      Math.Probability.expect μ (fun a => if a ∈ μ.support then f a else B) :=
+    expect_congr_on_support μ _ _ (fun a ha => by simp [ha])
+  rw [hcongr]
+  have hle : ∀ a, (if a ∈ μ.support then f a else B) ≤ B := by
+    intro a
+    by_cases ha : a ∈ μ.support
+    · simpa [ha] using hfB a ha
+    · simp [ha]
+  simpa using Math.Probability.expect_mono μ _ (fun _ => B) hle
+
 theorem expect_pushforward
     {Ω Ξ : Type*} [Finite Ξ]
     (μ : PMF Ω) (f : Ω → Ξ) (φ : Ξ → ℝ) :

@@ -21,6 +21,8 @@ import Math.BoundedLists
 import Math.DAG
 import Math.WeightedMedian
 import Math.WindowedContraction
+import Math.MeanErgodic
+import Math.ShapleyOperator
 import Math.SchauderFixedPoint
 import Math.SimplexApproximation
 import Math.Simplex
