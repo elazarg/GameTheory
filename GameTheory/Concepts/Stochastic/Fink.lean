@@ -513,6 +513,104 @@ theorem discountedAuxEU_eq (G : StochasticGame ι) [Fintype ι]
   unfold discountedAuxEU discountedAuxPayoff
   rw [expect_add, expect_const_mul, expect_const_mul]
 
+/-- The one-stage payoff gain from replacing one component of a decoded
+Fink profile by a pure action. -/
+def finkStageGain (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) : ℝ :=
+  G.mixedStageEU s
+      (Function.update (G.finkProfile z s) who (PMF.pure d)) who -
+    G.mixedStageEU s (G.finkProfile z s) who
+
+/-- The continuation-value gain from replacing one component of a decoded
+Fink profile by a pure action. -/
+def finkContinuationGain (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) : ℝ :=
+  expect (pmfPi (Function.update (G.finkProfile z s)
+      who (PMF.pure d))) (fun a =>
+    expect (G.transition s a) (fun s' => W s' who)) -
+  expect (pmfPi (G.finkProfile z s)) (fun a =>
+    expect (G.transition s a) (fun s' => W s' who))
+
+/-- A discounted auxiliary gain is exactly the weighted sum of its current
+stage gain and its continuation-value gain. -/
+theorem finkGain_eq_stage_add_continuation (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℝ) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkGain β z s who d =
+      (1 - β) * G.finkStageGain z s who d +
+        β * G.finkContinuationGain (G.finkValue z) z s who d := by
+  unfold finkGain
+  rw [G.finkDeviationAuxEU_eq_discountedAuxEU,
+    G.finkAuxEU_eq_discountedAuxEU,
+    G.discountedAuxEU_eq, G.discountedAuxEU_eq]
+  unfold finkStageGain finkContinuationGain mixedStageEU
+  ring
+
+/-- At discount zero, Fink's auxiliary gain is exactly the one-stage gain. -/
+@[simp] theorem finkGain_zero_eq_finkStageGain (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkGain 0 z s who d = G.finkStageGain z s who d := by
+  simpa using G.finkGain_eq_stage_add_continuation 0 z s who d
+
+/-- The relative bias of a discounted Fink value around an arbitrary target
+`W`, in the normalization relevant to average payoff. -/
+def finkRelativeBias (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (β : ℝ) (W : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.State → Payoff ι :=
+  fun s who => (β / (1 - β)) * (G.finkValue z s who - W s who)
+
+/-- Continuation gain is linear in the continuation vector, so relative bias
+records exactly the scaled difference between the discounted-value and target
+continuation gains. -/
+theorem finkContinuationGain_relativeBias (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℝ)
+    (W : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkContinuationGain (G.finkRelativeBias β W z) z s who d =
+      (β / (1 - β)) *
+        (G.finkContinuationGain (G.finkValue z) z s who d -
+          G.finkContinuationGain W z s who d) := by
+  let q := β / (1 - β)
+  have hinner (a : G.JointAct) :
+      expect (G.transition s a)
+          (fun s' => G.finkRelativeBias β W z s' who) =
+        q * (expect (G.transition s a) (fun s' => G.finkValue z s' who) -
+          expect (G.transition s a) (fun s' => W s' who)) := by
+    unfold finkRelativeBias
+    rw [expect_const_mul, expect_sub]
+  unfold finkContinuationGain
+  simp_rw [hinner, expect_const_mul, expect_sub]
+  dsimp [q]
+  ring
+
+/-- Centering at any target `W` separates normalized discounted gain into
+current stage gain, target continuation drift, and relative-bias drift.  This
+is the exact higher-order identity needed on the continuation-neutral face. -/
+theorem finkGain_div_one_sub_eq (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℝ} (hβ : β < 1)
+    (W : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkGain β z s who d / (1 - β) =
+      G.finkStageGain z s who d +
+        (β / (1 - β)) * G.finkContinuationGain W z s who d +
+          G.finkContinuationGain (G.finkRelativeBias β W z) z s who d := by
+  rw [G.finkGain_eq_stage_add_continuation,
+    G.finkContinuationGain_relativeBias]
+  have hden : 1 - β ≠ 0 := ne_of_gt (sub_pos.mpr hβ)
+  field_simp [hden]
+  ring
+
 /-- `x` is a statewise Nash selection for the auxiliary games determined by
 `V`.  This is the best-response component of Fink's correspondence. -/
 def IsDiscountedAuxNash (G : StochasticGame ι) [Fintype ι]
@@ -649,6 +747,92 @@ theorem finkDeviationAuxEU_le_finkAuxEU_of_finkMap_fixedPoint
   rw [← G.finkDeviationAuxEU_eq_discountedAuxEU,
     ← G.finkAuxEU_eq_discountedAuxEU] at hdev
   exact hdev
+
+/-- Every pure action used with positive probability at a Fink fixed point
+has exactly zero auxiliary gain, not merely nonpositive gain. -/
+theorem finkGain_eq_zero_of_finkMap_fixedPoint_of_ne_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β U : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1 hpay z = z)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hpos : G.finkProfile z s who d ≠ 0) :
+    G.finkGain β z s who d = 0 := by
+  haveI : Finite (G.discountedAuxGame β (G.finkValue z) s).Outcome :=
+    inferInstanceAs (Finite G.JointAct)
+  have hupper : ∀ d' : G.Act who, G.finkGain β z s who d' ≤ 0 := by
+    intro d'
+    exact sub_nonpos.mpr
+      (G.finkDeviationAuxEU_le_finkAuxEU_of_finkMap_fixedPoint
+        β U hβ0 hβ1 hpay z hfix s who d')
+  have hmean : expect (G.finkProfile z s who)
+      (fun d' => G.finkGain β z s who d') = 0 := by
+    have hwg := (G.discountedAuxGame β (G.finkValue z) s).weighted_gain_sum_zero
+      (G.finkProfile z s) who
+    calc
+      expect (G.finkProfile z s who) (fun d' => G.finkGain β z s who d') =
+          expect (G.finkProfile z s who) (fun d' =>
+            (G.discountedAuxGame β (G.finkValue z) s).mixedGain
+              (G.finkProfile z s) who d') := by
+        exact congrArg (expect (G.finkProfile z s who))
+          (funext fun d' => G.finkGain_eq_mixedGain β z s who d')
+      _ = 0 := hwg
+  apply le_antisymm (hupper d)
+  by_contra hnot
+  have hlt : G.finkGain β z s who d < 0 := lt_of_not_ge hnot
+  have hstrict := expect_lt_const_of_le_of_exists_lt
+    (G.finkProfile z s who) (fun d' => G.finkGain β z s who d')
+      hupper ⟨d, hpos, hlt⟩
+  rw [hmean] at hstrict
+  linarith
+
+/-- At a discounted Fink fixed point, the centered gain decomposition is
+nonpositive for every pure deviation.  Choosing a harmonic/excessive limit
+as `W` isolates the strict-drift actions from the continuation-neutral face. -/
+theorem finkCenteredGain_nonpos_of_finkMap_fixedPoint
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β U : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1.le hpay z = z)
+    (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkStageGain z s who d +
+        (β / (1 - β)) * G.finkContinuationGain W z s who d +
+          G.finkContinuationGain (G.finkRelativeBias β W z) z s who d ≤ 0 := by
+  have haux := G.finkDeviationAuxEU_le_finkAuxEU_of_finkMap_fixedPoint
+    β U hβ0 hβ1.le hpay z hfix s who d
+  have hgain : G.finkGain β z s who d ≤ 0 := sub_nonpos.mpr haux
+  have hdiv : G.finkGain β z s who d / (1 - β) ≤ 0 :=
+    div_nonpos_of_nonpos_of_nonneg hgain (sub_nonneg.mpr hβ1.le)
+  rw [G.finkGain_div_one_sub_eq hβ1 W] at hdiv
+  exact hdiv
+
+/-- On the support of a discounted Fink fixed point, the centered
+higher-order gain equation holds with equality. -/
+theorem finkCenteredGain_eq_zero_of_finkMap_fixedPoint_of_ne_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β U : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1.le hpay z = z)
+    (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hpos : G.finkProfile z s who d ≠ 0) :
+    G.finkStageGain z s who d +
+        (β / (1 - β)) * G.finkContinuationGain W z s who d +
+          G.finkContinuationGain (G.finkRelativeBias β W z) z s who d = 0 := by
+  rw [← G.finkGain_div_one_sub_eq hβ1 W]
+  rw [G.finkGain_eq_zero_of_finkMap_fixedPoint_of_ne_zero
+    β U hβ0 hβ1.le hpay z hfix s who d hpos]
+  simp
 
 /-- **Fink's theorem (finite discounted stochastic games).**  Every bounded
 finite stochastic game has a stationary mixed profile and continuation value

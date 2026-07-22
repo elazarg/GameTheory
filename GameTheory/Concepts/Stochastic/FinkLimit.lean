@@ -206,6 +206,34 @@ theorem tendsto_finkProfile_pureDeviationContinuation
     exact hw.mul tendsto_const_nhds
   simpa only [expect_eq_sum] using hsum
 
+/-- Continuation gains against a fixed target converge along a convergent
+Fink-domain sequence. -/
+theorem tendsto_finkContinuationGain
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Tendsto (fun n => G.finkContinuationGain W (z n) s who d) atTop
+      (nhds (G.finkContinuationGain W zlim s who d)) := by
+  have hdev := G.tendsto_finkProfile_pureDeviationContinuation hz
+    (fun s' => W s' who) s who d
+  have hbase := G.tendsto_finkProfile_continuation hz
+    (fun s' => W s' who) s
+  simpa only [finkContinuationGain] using hdev.sub hbase
+
+/-- One-stage gains converge along a convergent Fink-domain sequence. -/
+theorem tendsto_finkStageGain
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Tendsto (fun n => G.finkStageGain (z n) s who d) atTop
+      (nhds (G.finkStageGain zlim s who d)) := by
+  have ht := ((G.continuous_finkGain (U := U) 0 s who d).tendsto zlim).comp hz
+  simpa only [G.finkGain_zero_eq_finkStageGain, Function.comp_def] using ht
+
 /-- A unilateral mixed continuation value is the deviating player's
 expectation of the corresponding pure-action continuation values. -/
 theorem mixedDeviationContinuation_eq_expect_pure
@@ -235,8 +263,8 @@ theorem eq_of_expect_eq_of_forall_le_of_ne_zero
 /-- A common upper bound for all pure unilateral continuation deviations is
 also an upper bound for every mixed unilateral deviation. -/
 theorem mixedDeviationContinuation_le_of_pure_bound
-    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
-    [∀ i, Fintype (G.Act i)] (x : G.StationaryMixedProfile)
+    (G : StochasticGame ι) [Finite G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)] (x : G.StationaryMixedProfile)
     (W : G.State → Payoff ι) (s : G.State) (who : ι) (c : ℝ)
     (hpure : ∀ d : G.Act who,
       expect (pmfPi (Function.update (x s) who (PMF.pure d)))
@@ -308,6 +336,72 @@ theorem isContinuationNeutralOnSupport_of_harmonic_excessive
   intro s who d hpos
   exact G.finkLimit_support_continuation_eq z W s who d
     (hharmonic s who) (hexcessive s who) hpos
+
+/-- For a limiting supported action, the unscaled target-continuation gain
+along the discounted fixed-point sequence converges to zero.  The unresolved
+quantity is precisely this residual after multiplication by `β / (1 - β)`. -/
+theorem tendsto_finkContinuationGain_zero_of_limit_support
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (W : G.State → Payoff ι) (s : G.State) (who : ι)
+    (d : G.Act who)
+    (hharmonic : W s who =
+      expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ d' : G.Act who,
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d'))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hpos : G.finkProfile zlim s who d ≠ 0) :
+    Tendsto (fun n => G.finkContinuationGain W (z n) s who d)
+      atTop (nhds 0) := by
+  have hneutral := G.finkLimit_support_continuation_eq
+    zlim W s who d hharmonic hexcessive hpos
+  have hzero : G.finkContinuationGain W zlim s who d = 0 := by
+    unfold finkContinuationGain
+    rw [hneutral, ← hharmonic]
+    ring
+  have ht := G.tendsto_finkContinuationGain hz W s who d
+  simpa only [hzero] using ht
+
+/-- An action in the support of a limiting profile is eventually in the
+support of every convergent discounted fixed-point profile.  Consequently
+its centered higher-order gain equation holds exactly along the tail. -/
+theorem eventually_finkCenteredGain_eq_zero_of_limit_support
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W : G.State → Payoff ι) (s : G.State) (who : ι)
+    (d : G.Act who) (hpos : G.finkProfile zlim s who d ≠ 0) :
+    ∀ᶠ n in atTop,
+      G.finkStageGain (z n) s who d +
+          (β n / (1 - β n)) * G.finkContinuationGain W (z n) s who d +
+            G.finkContinuationGain
+              (G.finkRelativeBias (β n) W (z n)) (z n) s who d = 0 := by
+  have hlimitPos : 0 < zlim.1.1 (s, who) d := by
+    rw [← G.finkProfile_apply_toReal zlim s who d]
+    exact ENNReal.toReal_pos hpos (PMF.apply_ne_top _ _)
+  have ht := G.tendsto_finkStrategyWeight_apply hz s who d
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht
+    (zlim.1.1 (s, who) d) hlimitPos
+  filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+  have hnpos : G.finkProfile (z n) s who d ≠ 0 := by
+    intro hnzero
+    have hweightZero : z n |>.1.1 (s, who) d = 0 := by
+      rw [← G.finkProfile_apply_toReal (z n) s who d, hnzero]
+      simp
+    rw [Real.dist_eq, hweightZero, zero_sub, abs_neg,
+      abs_of_pos hlimitPos] at hn
+    exact (lt_irrefl _ hn)
+  exact G.finkCenteredGain_eq_zero_of_finkMap_fixedPoint_of_ne_zero
+    (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who d hnpos
 
 /-- A strictly value-decreasing pure action has zero probability in the
 limiting stationary profile. -/
