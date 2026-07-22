@@ -4,10 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import Mathlib.Analysis.Normed.Group.InfiniteSum
-import Mathlib.Analysis.SpecificLimits.Basic
-import Math.Probability
-import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Repeated.Discounted
 
 /-!
 # Infinite Repeated Games
@@ -16,10 +13,11 @@ An infinite repeated game plays the same stage game at every natural-numbered
 period.  Players observe the public history of past action profiles and choose
 the next stage-game action.
 
-This file is intentionally lightweight: it provides a public-action
-infinite-horizon repeated-game API.  Finite protocol syntax lives in
-`MultiRoundGame`, whose `rounds : List Round` is a separate compiled-language
-representation.
+This file is intentionally a compatibility facade over
+`GameTheory.Concepts.Repeated`: it turns the action/payoff presentation below
+into a stage `KernelGame`, then reuses its histories, repeated play, discounting,
+and equilibrium results. Finite protocol syntax lives in `MultiRoundGame`, whose
+`rounds : List Round` is a separate compiled-language representation.
 
 ## Main definitions
 
@@ -56,50 +54,52 @@ namespace RepeatedGame
 
 variable {ι : Type}
 
+/-- The one-shot stage game underlying the repeated-game facade. -/
+noncomputable abbrev stageKernelGame (R : RepeatedGame ι) : KernelGame ι :=
+  KernelGame.ofEU R.Act R.stageUtil
+
 /-- History before period `t`: the public sequence of past action profiles. -/
 abbrev History (R : RepeatedGame ι) (t : ℕ) : Type :=
-  Fin t → (∀ i, R.Act i)
+  R.stageKernelGame.ProfileHistory t
 
 /-- A strategy chooses an action after every finite public action history. -/
 abbrev Strategy (R : RepeatedGame ι) (i : ι) : Type :=
-  (t : ℕ) → R.History t → R.Act i
+  R.stageKernelGame.RepeatedStrategy i
 
 /-- A repeated-game strategy profile. -/
 abbrev RProfile (R : RepeatedGame ι) : Type :=
-  ∀ i, R.Strategy i
+  R.stageKernelGame.RepeatedProfile
 
 /-- Payoff of a single round given a joint action. -/
 def roundPayoff (R : RepeatedGame ι) (a : ∀ i, R.Act i) (who : ι) : ℝ :=
   R.stageUtil a who
 
-/-- Generate the action profile at period `t` by running strategies on the
-history built from earlier periods. -/
-def play (R : RepeatedGame ι) (σ : R.RProfile) : (t : ℕ) → (∀ i, R.Act i)
-  | t => fun i => σ i t (fun k => R.play σ k)
-termination_by t => t
-decreasing_by exact k.isLt
+/-- Generate the action profile stream using the generic repeated-play API. -/
+abbrev play (R : RepeatedGame ι) (σ : R.RProfile) :
+    (t : ℕ) → (∀ i, R.Act i) :=
+  R.stageKernelGame.repeatedPlay σ
 
 /-- Constant repeated play of a fixed stage action profile. -/
-def constStrategy (R : RepeatedGame ι) (a : ∀ i, R.Act i) : R.RProfile :=
-  fun i _ _ => a i
+abbrev constStrategy (R : RepeatedGame ι) (a : ∀ i, R.Act i) : R.RProfile :=
+  R.stageKernelGame.stationaryRepeatedProfile a
 
 /-- Normalized discounted payoff in the infinite repeated game.
 
 The definition is total for all real `δ`; the payoff interpretation and lemmas
 below use the explicit side conditions `0 ≤ δ` and `δ < 1`. -/
-def discountedPayoff (R : RepeatedGame ι) (δ : ℝ)
+abbrev discountedPayoff (R : RepeatedGame ι) (δ : ℝ)
     (σ : R.RProfile) (who : ι) : ℝ :=
-  (1 - δ) * ∑' t : ℕ, δ ^ t * R.stageUtil (R.play σ t) who
+  R.stageKernelGame.discountedAveragePayoff δ σ who
 
 /-- The strategic-form kernel game induced by a fixed discounted repeated game. -/
-def discountedKernelGame (R : RepeatedGame ι) (δ : ℝ) : KernelGame ι :=
-  KernelGame.ofEU R.Strategy (fun σ i => R.discountedPayoff δ σ i)
+noncomputable abbrev discountedKernelGame
+    (R : RepeatedGame ι) (δ : ℝ) : KernelGame ι :=
+  R.stageKernelGame.discountedRepeatedKernelGame δ
 
 @[simp] theorem play_constStrategy
     (R : RepeatedGame ι) (a : ∀ i, R.Act i) (t : ℕ) :
     R.play (R.constStrategy a) t = a := by
-  funext i
-  simp [play, constStrategy]
+  exact R.stageKernelGame.repeatedPlay_stationaryRepeatedProfile a t
 
 /-- If one player deviates from constant play, every realized period profile is
 the constant action profile with only that player's current action updated. -/
@@ -109,12 +109,7 @@ theorem play_update_constStrategy
     R.play (Function.update (R.constStrategy a) who dev) t =
       Function.update a who
         (dev t (fun k => R.play (Function.update (R.constStrategy a) who dev) k)) := by
-  funext i
-  by_cases hi : i = who
-  · subst hi
-    rw [play]
-    simp [Function.update]
-  · simp [play, constStrategy, Function.update, hi]
+  exact R.stageKernelGame.repeatedPlay_update_stationaryRepeatedProfile a who dev t
 
 /-- Discounted stage utilities are summable when stage utilities are uniformly
 bounded and `δ ∈ [0,1)`. -/
@@ -123,18 +118,13 @@ theorem summable_discounted_stageUtil_of_abs_bound
     {σ : R.RProfile} (who : ι)
     (hbd : ∀ a : ∀ i, R.Act i, |R.stageUtil a who| ≤ C) :
     Summable fun t : ℕ => δ ^ t * R.stageUtil (R.play σ t) who := by
-  have hgeom : Summable fun t : ℕ => C * δ ^ t :=
-    (summable_geometric_of_lt_one hδ0 hδ1).mul_left C
-  refine Summable.of_norm_bounded hgeom ?_
-  intro t
-  rw [Real.norm_eq_abs]
-  calc
-    |δ ^ t * R.stageUtil (R.play σ t) who| =
-        δ ^ t * |R.stageUtil (R.play σ t) who| := by
-          rw [abs_mul, abs_of_nonneg (pow_nonneg hδ0 t)]
-    _ ≤ δ ^ t * C :=
-        mul_le_mul_of_nonneg_left (hbd (R.play σ t)) (pow_nonneg hδ0 t)
-    _ = C * δ ^ t := by ring
+  have hbd' : ∀ ρ : R.stageKernelGame.Profile,
+      |R.stageKernelGame.eu ρ who| ≤ C := by
+    intro ρ
+    simpa only [KernelGame.eu_ofEU] using hbd ρ
+  simpa only [KernelGame.eu_ofEU] using
+    (R.stageKernelGame.summable_discounted_stageEU_of_abs_bound
+      hδ0 hδ1 who hbd' (σ := σ))
 
 /-- Pointwise dominance of all stage payoffs implies dominance of normalized
 discounted payoffs. -/
@@ -145,16 +135,17 @@ theorem discountedPayoff_le_of_forall_stageUtil_le
     (hle : ∀ t : ℕ,
       R.stageUtil (R.play σ t) who ≤ R.stageUtil (R.play τ t) who) :
     R.discountedPayoff δ σ who ≤ R.discountedPayoff δ τ who := by
-  have hsσ := R.summable_discounted_stageUtil_of_abs_bound
-    hδ0 hδ1 who hbd (σ := σ)
-  have hsτ := R.summable_discounted_stageUtil_of_abs_bound
-    hδ0 hδ1 who hbd (σ := τ)
-  have hsum :
-      (∑' t : ℕ, δ ^ t * R.stageUtil (R.play σ t) who) ≤
-        ∑' t : ℕ, δ ^ t * R.stageUtil (R.play τ t) who := by
-    exact hsσ.tsum_le_tsum
-      (fun t => mul_le_mul_of_nonneg_left (hle t) (pow_nonneg hδ0 t)) hsτ
-  exact mul_le_mul_of_nonneg_left hsum (sub_nonneg.mpr hδ1.le)
+  have hbd' : ∀ ρ : R.stageKernelGame.Profile,
+      |R.stageKernelGame.eu ρ who| ≤ C := by
+    intro ρ
+    simpa only [KernelGame.eu_ofEU] using hbd ρ
+  have hle' : ∀ t : ℕ,
+      R.stageKernelGame.eu (R.play σ t) who ≤
+        R.stageKernelGame.eu (R.play τ t) who := by
+    intro t
+    simpa only [KernelGame.eu_ofEU] using hle t
+  exact R.stageKernelGame.discountedAveragePayoff_le_of_forall_stageEU_le
+    hδ0 hδ1 who hbd' hle'
 
 /-- Normalized discounted payoff of constant repeated play is the stage payoff,
 for discount factors in `[0, 1)`. -/
@@ -162,8 +153,9 @@ theorem discountedPayoff_constStrategy
     (R : RepeatedGame ι) {δ : ℝ} (hδ0 : 0 ≤ δ) (hδ1 : δ < 1)
     (a : ∀ i, R.Act i) (who : ι) :
     R.discountedPayoff δ (R.constStrategy a) who = R.stageUtil a who := by
-  have hne : 1 - δ ≠ 0 := by linarith
-  simp [discountedPayoff, tsum_mul_right, tsum_geometric_of_lt_one hδ0 hδ1, hne]
+  simpa only [KernelGame.eu_ofEU] using
+    (R.stageKernelGame.discountedAveragePayoff_stationaryRepeatedProfile
+      hδ0 hδ1 a who)
 
 /-- If `a` is a stage-game Nash action profile, then constant repetition of `a`
 is Nash in the discounted repeated game induced by any `δ ∈ [0,1)`, assuming
@@ -179,7 +171,7 @@ theorem constStrategy_isDiscountedNash
     (R.discountedKernelGame δ).IsNash (R.constStrategy a) := by
   intro who dev
   obtain ⟨C, hC⟩ := hbd who
-  simp only [discountedKernelGame, KernelGame.eu_ofEU, KernelGame.ofEU_Strategy]
+  simp only [KernelGame.discountedRepeatedKernelGame_eu]
   rw [ge_iff_le]
   exact R.discountedPayoff_le_of_forall_stageUtil_le
     (σ := Function.update (R.constStrategy a) who dev)

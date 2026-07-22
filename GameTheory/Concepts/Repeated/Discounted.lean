@@ -37,6 +37,20 @@ def discountedAveragePayoff (G : KernelGame ι) (δ : ℝ)
     (σ : G.RepeatedProfile) (who : ι) : ℝ :=
   (1 - δ) * ∑' t : ℕ, δ ^ t * G.eu (G.repeatedPlay σ t) who
 
+/-- The strategic-form kernel game whose strategies are history-dependent
+repeated strategies and whose utility is normalized discounted average
+payoff. -/
+noncomputable def discountedRepeatedKernelGame
+    (G : KernelGame ι) (δ : ℝ) : KernelGame ι :=
+  KernelGame.ofEU G.RepeatedStrategy
+    (fun σ i => G.discountedAveragePayoff δ σ i)
+
+@[simp] theorem discountedRepeatedKernelGame_eu
+    (G : KernelGame ι) (δ : ℝ) (σ : G.RepeatedProfile) (who : ι) :
+    (G.discountedRepeatedKernelGame δ).eu σ who =
+      G.discountedAveragePayoff δ σ who := by
+  simp [discountedRepeatedKernelGame]
+
 /-- Normalized discounted continuation payoff of an explicit stage-profile
 stream, starting at period `start`.
 
@@ -237,6 +251,16 @@ def IsDiscountedRepeatedNash (G : KernelGame ι) [DecidableEq ι] (δ : ℝ)
   ∀ who (dev : G.RepeatedStrategy who),
     G.discountedAveragePayoff δ σ who ≥
       G.discountedAveragePayoff δ (Function.update σ who dev) who
+
+/-- Discounted repeated Nash is ordinary Nash in the packaged repeated
+strategic-form kernel game. -/
+theorem isDiscountedRepeatedNash_iff_discountedRepeatedKernelGame_isNash
+    (G : KernelGame ι) [DecidableEq ι] (δ : ℝ) (σ : G.RepeatedProfile) :
+    G.IsDiscountedRepeatedNash δ σ ↔
+      (G.discountedRepeatedKernelGame δ).IsNash σ := by
+  simp only [IsDiscountedRepeatedNash, KernelGame.IsNash,
+    discountedRepeatedKernelGame, KernelGame.eu_ofEU,
+    KernelGame.ofEU_Strategy]
 
 /-- Repeating a stage-game Nash profile stationarily is a Nash equilibrium of
 the discounted repeated game whenever stage expected payoffs are bounded. -/
