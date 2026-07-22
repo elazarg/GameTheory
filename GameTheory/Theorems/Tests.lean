@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Theorems.Minimax
 import GameTheory.Theorems.CorrelatedEqExistence
+import GameTheory.Theorems.Zermelo
 
 /-!
 # GameTheory.Theorems.Tests
@@ -61,6 +62,38 @@ example :
     ∃ μ : PMF (KernelGame.Profile trivialZeroSumGame),
       trivialZeroSumGame.IsCoarseCorrelatedEq μ :=
   KernelGame.coarseCorrelatedEq_exists trivialZeroSumGame
+
+/-! ## Zermelo worked example -/
+
+/-- Information structure for a one-player, one-move game. -/
+abbrev oneMoveInfo : EFG.InfoStructure where
+  n := 1
+  Infoset := fun _ => Unit
+  arity := fun _ _ => 2
+  arity_pos := fun _ _ => by omega
+
+/-- A concrete finite perfect-information game with one binary move. -/
+noncomputable abbrev oneMoveGame : EFG.EFGGame where
+  inf := oneMoveInfo
+  Outcome := Fin 2
+  tree := .decision (p := (0 : Fin 1)) () fun action => .terminal action
+  utility := fun outcome _ => outcome.val
+
+theorem oneMoveGame_isPerfectInfo : EFG.IsPerfectInfo oneMoveGame.tree := by
+  intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
+  rcases EFG.ReachBy_decision_inv hr₁ with hroot₁ | ⟨action₁, _rest₁, _hstep₁, htail₁⟩
+  · rcases hroot₁ with ⟨hh₁, _hp₁, _hI₁, hn₁⟩
+    rcases EFG.ReachBy_decision_inv hr₂ with hroot₂ |
+      ⟨action₂, _rest₂, _hstep₂, htail₂⟩
+    · rcases hroot₂ with ⟨hh₂, _hp₂, _hI₂, hn₂⟩
+      exact ⟨hh₁.trans hh₂.symm, hn₁.symm.trans hn₂⟩
+    · fin_cases action₂ <;> exact False.elim (EFG.ReachBy_terminal_absurd htail₂)
+  · fin_cases action₁ <;> exact False.elim (EFG.ReachBy_terminal_absurd htail₁)
+
+/-- `zermelo` supplies a pure SPE for the concrete one-move game. -/
+example : ∃ σ : EFG.PureProfile oneMoveGame.inf,
+    oneMoveGame.IsSubgamePerfectEq σ :=
+  EFG.zermelo oneMoveGame oneMoveGame_isPerfectInfo
 
 end
 
