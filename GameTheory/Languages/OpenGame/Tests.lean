@@ -55,6 +55,19 @@ example (X Y : Fin 3 → Type) :
     OpenGameIso (ShapeN X Y) (ShapeN.tensorDecisions X Y) :=
   ShapeN.finTensorIso X Y
 
+/-- The finite-horizon shape extends the existing two-stage presentation. -/
+example (A : Type) :
+    OpenGameIso (ShapeSeq 2 A) (ShapeS A A) :=
+  ShapeSeq.twoStageIso A
+
+/-- Arbitrary finite horizons compile to the existing kernel-game Nash
+semantics. -/
+example {n : Nat} {A : Type} (k : (Fin n → A) → Fin n → ℝ)
+    (σ : ShapeSeq.Strategy n A) :
+    (ShapeSeq n A).IsEquilibriumIn () k σ ↔
+      (ShapeSeq.compileAction n A k).IsNash σ :=
+  ShapeSeq.isEquilibriumIn_iff_isNash k σ
+
 noncomputable section
 
 open GameTheory
