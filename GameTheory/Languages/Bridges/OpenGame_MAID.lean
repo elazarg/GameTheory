@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Languages.OpenGame.Sequential
 import GameTheory.Languages.MAID.Prefix
 import GameTheory.Languages.Bridges.MAID_EFG
+import GameTheory.Concepts.Mixed.MixedExtension
 
 /-!
 # Finite Sequential Open Games as MAIDs
@@ -845,6 +846,37 @@ theorem eu_toPurePolicy (A : Fin n → Type)
   rw [evalAssignDist_toPurePolicy, Math.Probability.expect_pure,
     utilityOf_assignOfPath]
 
+/-- The same utility adequacy statement in the native pure-policy strategic
+form. -/
+theorem purePolicyKernelGame_eu_toPurePolicy (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (p : Fin n) :
+    (MAID.purePolicyKernelGame (sequentialStruct A) (sequentialSem A k)).eu
+        (toPurePolicy A σ) p = k (ShapeSeqDep.realize σ) p := by
+  change (MAID.toKernelGame (sequentialStruct A) (sequentialSem A k)).eu
+    (MAID.pureToPolicy (toPurePolicy A σ)) p = _
+  exact eu_toPurePolicy A k σ p
+
+/-- Utility adequacy is stable under replacement of one pure MAID policy. -/
+theorem purePolicyKernelGame_eu_update (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (p : Fin n)
+    (τ : MAID.PureStrategy (sequentialStruct A) p) :
+    (MAID.purePolicyKernelGame (sequentialStruct A) (sequentialSem A k)).eu
+        (Function.update (toPurePolicy A σ) p τ) p =
+      k (ShapeSeqDep.realize
+        (Function.update σ p (pureStageEquiv A p τ))) p := by
+  let G := MAID.purePolicyKernelGame (sequentialStruct A) (sequentialSem A k)
+  have hupd := toPurePolicy_update A σ p τ
+  calc
+    G.eu (Function.update (toPurePolicy A σ) p τ) p =
+        G.eu (toPurePolicy A
+          (Function.update σ p (pureStageEquiv A p τ))) p :=
+      congrArg (fun π : MAID.PurePolicy (sequentialStruct A) => G.eu π p) hupd
+    _ = _ := purePolicyKernelGame_eu_toPurePolicy A k _ p
+
 /-- Exact native pure-strategic correspondence.  The open-game equilibrium
 predicate permits replacement of one complete contingent stage plan; the
 canonical MAID's `IsPurePolicyNash` permits exactly the corresponding pure
@@ -858,12 +890,64 @@ theorem isEquilibriumIn_iff_isPurePolicyNash (A : Fin n → Type)
         (toPurePolicy A σ) := by
   constructor
   · intro hσ p τ
-    rw [eu_toPurePolicy, toPurePolicy_update, eu_toPurePolicy]
-    exact hσ p (pureStageEquiv A p τ)
+    calc
+      _ = k (ShapeSeqDep.realize σ) p :=
+        purePolicyKernelGame_eu_toPurePolicy A k σ p
+      _ ≥ k (ShapeSeqDep.realize
+          (Function.update σ p (pureStageEquiv A p τ))) p :=
+        hσ p (pureStageEquiv A p τ)
+      _ = _ := (purePolicyKernelGame_eu_update A k σ p τ).symm
   · intro hσ p deviation
     have hp := hσ p ((pureStageEquiv A p).symm deviation)
-    rw [eu_toPurePolicy, toPurePolicy_update, eu_toPurePolicy] at hp
-    simpa using hp
+    calc
+      k (ShapeSeqDep.realize (Function.update σ p deviation)) p =
+          (MAID.purePolicyKernelGame (sequentialStruct A)
+            (sequentialSem A k)).eu
+            (Function.update (toPurePolicy A σ) p
+              ((pureStageEquiv A p).symm deviation)) p := by
+        rw [purePolicyKernelGame_eu_update]
+        simp
+      _ ≤ (MAID.purePolicyKernelGame (sequentialStruct A)
+          (sequentialSem A k)).eu (toPurePolicy A σ) p := hp
+      _ = k (ShapeSeqDep.realize σ) p :=
+        purePolicyKernelGame_eu_toPurePolicy A k σ p
+
+/-- The explicit pure-policy predicate is the ordinary Nash predicate of the
+native pure-policy strategic kernel game. -/
+theorem isPurePolicyNash_iff_kernelGameIsNash (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (π : MAID.PurePolicy (sequentialStruct A)) :
+    MAID.IsPurePolicyNash (sequentialStruct A) (sequentialSem A k) π ↔
+      (MAID.purePolicyKernelGame (sequentialStruct A)
+        (sequentialSem A k)).IsNash π :=
+  Iff.rfl
+
+/-- Randomization over complete contingent MAID plans adds no profitable
+deviation at an embedded pure profile.  This is stronger than pure-policy
+Nash but deliberately distinct from arbitrary behavioral randomization at
+individual information sets. -/
+theorem isEquilibriumIn_iff_mixedPurePolicyNash (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    let G := MAID.purePolicyKernelGame (sequentialStruct A) (sequentialSem A k)
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      G.mixedExtension.IsNash (G.pureMixedProfile (toPurePolicy A σ)) := by
+  let G := MAID.purePolicyKernelGame (sequentialStruct A) (sequentialSem A k)
+  letI : Finite G.Outcome := by
+    change Finite (MAID.TAssign (sequentialStruct A))
+    infer_instance
+  change (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+    G.mixedExtension.IsNash (G.pureMixedProfile (toPurePolicy A σ))
+  calc
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+        MAID.IsPurePolicyNash (sequentialStruct A) (sequentialSem A k)
+          (toPurePolicy A σ) :=
+      isEquilibriumIn_iff_isPurePolicyNash A k σ
+    _ ↔ G.IsNash (toPurePolicy A σ) :=
+      isPurePolicyNash_iff_kernelGameIsNash A k _
+    _ ↔ _ := (G.pureMixedProfile_isNash_iff (toPurePolicy A σ)).symm
 
 /-- The canonical sequential MAID has perfect recall.  In agent form every
 player owns exactly one decision node, so both recall clauses are immediate. -/

@@ -148,6 +148,20 @@ example {n : Nat} (A : Fin n → Type)
         (ShapeSeqDep.MAIDBridge.toPurePolicy A σ) :=
   ShapeSeqDep.MAIDBridge.isEquilibriumIn_iff_isPurePolicyNash A k σ
 
+/-- The same equilibrium remains exact after allowing randomization over
+complete contingent MAID plans. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    let G := MAID.purePolicyKernelGame
+      (ShapeSeqDep.MAIDBridge.sequentialStruct A)
+      (ShapeSeqDep.MAIDBridge.sequentialSem A k)
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      G.mixedExtension.IsNash
+        (G.pureMixedProfile (ShapeSeqDep.MAIDBridge.toPurePolicy A σ)) :=
+  ShapeSeqDep.MAIDBridge.isEquilibriumIn_iff_mixedPurePolicyNash A k σ
+
 /-- The canonical agent-form sequential MAID has perfect recall. -/
 example {n : Nat} (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]

@@ -704,6 +704,15 @@ noncomputable def pureToPolicy {S : Struct Player n}
     (π : PurePolicy S) : Policy S :=
   fun p => pureToPlayerStrategy (π p)
 
+/-- The strategic-form kernel game whose actions are complete pure MAID
+policies for each player and whose outcome law is native MAID evaluation. -/
+noncomputable def purePolicyKernelGame (S : Struct Player n) (sem : Sem S) :
+    GameTheory.KernelGame Player where
+  Strategy := PureStrategy S
+  Outcome := TAssign S
+  utility := fun a => utilityOf S sem a
+  outcomeKernel := fun π => evalAssignDist S sem (pureToPolicy π)
+
 /-- Pure-policy Nash equilibrium for a MAID: no player gains by replacing its
 entire deterministic contingent policy.  This is the native pure strategic
 form; `toKernelGame.IsNash` instead permits arbitrary behavioral-policy
@@ -711,8 +720,7 @@ deviations. -/
 noncomputable def IsPurePolicyNash (S : Struct Player n) (sem : Sem S)
     (π : PurePolicy S) : Prop :=
   ∀ (p : Player) (τ : PureStrategy S p),
-    (toKernelGame S sem).eu (pureToPolicy π) p ≥
-      (toKernelGame S sem).eu
-        (pureToPolicy (Function.update π p τ)) p
+    (purePolicyKernelGame S sem).eu π p ≥
+      (purePolicyKernelGame S sem).eu (Function.update π p τ) p
 
 end MAID

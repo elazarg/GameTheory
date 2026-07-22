@@ -285,6 +285,21 @@ theorem IsNash.pureMixedProfile_isNash {σ : Profile G} (hN : G.IsNash σ) :
   have := hN who a
   linarith
 
+/-- Embedding a pure profile into the mixed extension neither creates nor
+destroys Nash equilibrium.  The reverse direction tests point-mass mixed
+deviations. -/
+theorem pureMixedProfile_isNash_iff (σ : Profile G) :
+    G.mixedExtension.IsNash (G.pureMixedProfile σ) ↔ G.IsNash σ := by
+  constructor
+  · intro hN who a
+    have h := hN who (PMF.pure a)
+    rw [← G.pureMixedProfile_update σ who a,
+      G.mixedExtension_eu_pureMixedProfile,
+      G.mixedExtension_eu_pureMixedProfile] at h
+    exact h
+  · intro hN
+    exact hN.pureMixedProfile_isNash (G := G)
+
 end NashGain
 
 -- ============================================================================
