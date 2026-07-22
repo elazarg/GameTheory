@@ -185,15 +185,9 @@ theorem isStableUnder_single_iff_isAgentEquilibrium
     (σ : Strategy A) :
     IsStableUnder (single (S := fun i => History A i → A i))
         realize (fun path i => u path (owner i)) σ ↔
-      IsAgentEquilibrium owner u σ := by
-  constructor
-  · intro h i deviation
-    exact h i (Function.update σ i deviation)
-      (single_update_mem σ i deviation)
-  · intro h i τ hτ
-    have hdev := h i (τ i)
-    rw [update_single_eq hτ] at hdev
-    exact hdev
+      IsAgentEquilibrium owner u σ :=
+  OwnedProfile.isStableUnder_single_iff_isAgentEquilibrium
+    owner realize u σ
 
 /-- Stability under owner-fibre deviation families is exactly player-form
 Nash for the ownership presentation. -/
@@ -201,27 +195,8 @@ theorem isStableUnder_fiber_iff_isPlayerNash
     (owner : Fin n → ι) (u : (∀ i, A i) → ι → ℝ)
     (σ : Strategy A) :
     IsStableUnder (fiber (S := fun i => History A i → A i) owner)
-        realize u σ ↔ IsPlayerNash owner u σ := by
-  constructor
-  · intro h p deviation
-    let τ := ungroup owner (Function.update (group owner σ) p deviation)
-    have hmem : τ ∈ fiber owner σ p := by
-      intro i hip
-      simp [τ, ungroup, group, Function.update, hip]
-    exact h p τ hmem
-  · intro h p τ hτ
-    have hdev := h p τ
-    have hprofile :
-        ungroup owner (Function.update (group owner σ) p τ) = τ := by
-      funext i history
-      by_cases hip : owner i = p
-      · simp [ungroup, Function.update, hip]
-      · simp [ungroup, group, Function.update, hip, hτ i hip]
-    change
-      u (realize (ungroup owner
-        (Function.update (group owner σ) p τ))) p ≤ u (realize σ) p at hdev
-    rw [hprofile] at hdev
-    exact hdev
+        realize u σ ↔ IsPlayerNash owner u σ :=
+  OwnedProfile.isStableUnder_fiber_iff_isPlayerNash owner realize u σ
 
 end ShapeSeqDep
 

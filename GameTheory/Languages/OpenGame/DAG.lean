@@ -440,7 +440,14 @@ theorem isEquilibriumIn_iff_isNash {n : Nat}
 
 /-- A counterfactual profile for node `i` may alter plans only at strict
 causal ancestors of `i`. Plans at `i`, its descendants, and unrelated nodes
-remain those of the reference profile. -/
+remain those of the reference profile.
+
+This is the conservative, observable-history reading of sparse conditioning:
+only decisions that can causally affect `i` generate histories tested at `i`.
+One could instead allow every non-descendant to vary. That agrees with this
+definition on complete DAGs but is generally stronger on sparse DAGs, because
+an unrelated decision can change realized play and utility without changing
+`i`'s observed parent history. -/
 def AgreesOutsideAncestors {n : Nat} {A : Fin n → Type}
     (D : DecisionDAG n) (σ τ : Strategy D A) (i : Fin n) : Prop :=
   ∀ j, ¬D.IsAncestor j i → τ j = σ j

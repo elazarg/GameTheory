@@ -7,22 +7,22 @@ Authors: GameTheory contributors
 import GameTheory.Languages.OpenGame.DAG
 
 /-!
-# Multi-Decision Ownership for Sequential Shapes
+# Multi-Decision Ownership for Open-Game Shapes
 
-An ownership map `owner : Fin n → ι` groups the stage-indexed contingent plans
-of `ShapeSeqDep` into one strategy per player. The induced NFG uses
-player-level deviations: one deviation replaces every contingent plan owned
-by that player.
+An ownership map groups node-indexed contingent plans into one strategy per
+player. The induced NFG uses player-level deviations: one deviation replaces
+every plan owned by that player.
 
 For a transport-free API, a player strategy supplies a total stage profile;
 realization reads only that player's owned coordinates. Off-owner coordinates
 are semantically irrelevant. This redundant presentation avoids quotienting
 proof-indexed products while preserving exactly the intended deviations.
 
-This is intentionally distinct from `ShapeSeqDep`'s open-game equilibrium,
-which tests one stage at a time.  The former is player-form Nash; the latter is
-agent-form Nash.  The definitions below make the boundary available without
-silently identifying the two notions.
+`OwnedProfile` is the representation-independent core. `ShapeSeqDep` and
+`ShapeDAG` expose thin specializations for sequential stages and sparse DAG
+nodes. Player-form Nash is intentionally distinct from the shapes' nodewise
+open-game equilibrium (agent-form Nash); the two coincide under injective
+ownership but diverge in general.
 -/
 
 namespace OpenGames
@@ -179,28 +179,31 @@ theorem isPlayerNash_iff_kernelNash (owner : Node → Player)
 
 end OwnedProfile
 
+/-! ## Sequential-shape specialization -/
+
 namespace ShapeSeqDep
 
 variable {n : Nat} {ι : Type} [DecidableEq ι]
 variable {A : Fin n → Type}
 
 /-- A player supplies a total plan profile; only owned coordinates are read. -/
-abbrev PlayerStrategy (_owner : Fin n → ι) (A : Fin n → Type) (_p : ι) :=
-  Strategy A
+abbrev PlayerStrategy (owner : Fin n → ι) (A : Fin n → Type) (p : ι) :=
+  OwnedProfile.PlayerStrategy owner (fun i => History A i → A i) p
 
 /-- Regroup stage-indexed plans into player-indexed strategies. -/
-def group (owner : Fin n → ι) (σ : Strategy A) :
+abbrev group (owner : Fin n → ι) (σ : Strategy A) :
     ∀ p, PlayerStrategy owner A p :=
-  fun _p => σ
+  OwnedProfile.group owner σ
 
 /-- Forget ownership grouping and recover the plan at each stage. -/
-def ungroup (owner : Fin n → ι)
+abbrev ungroup (owner : Fin n → ι)
     (σ : ∀ p, PlayerStrategy owner A p) : Strategy A :=
-  fun i => σ (owner i) i
+  OwnedProfile.ungroup owner σ
 
 omit [DecidableEq ι] in
 @[simp] theorem ungroup_group (owner : Fin n → ι) (σ : Strategy A) :
-    ungroup owner (group owner σ) = σ := rfl
+    ungroup owner (group owner σ) = σ :=
+  OwnedProfile.ungroup_group owner σ
 
 /-- Replacing the strategy of `owner i` by a regrouped single-stage update
 has exactly the intended stage-level effect. -/
@@ -209,14 +212,8 @@ theorem ungroup_update_group (owner : Fin n → ι) (σ : Strategy A)
     ungroup owner
         (Function.update (group owner σ) (owner i)
           (group owner (Function.update σ i deviation) (owner i))) =
-      Function.update σ i deviation := by
-  funext j h
-  by_cases howner : owner j = owner i
-  · simp [ungroup, group, Function.update, howner]
-  · have hji : j ≠ i := by
-      intro h
-      exact howner (congrArg owner h)
-    simp [ungroup, group, Function.update, howner, hji]
+      Function.update σ i deviation :=
+  OwnedProfile.ungroup_update_group owner σ i deviation
 
 /-- With at most one stage per owner, an owner-level deviation is exactly the
 corresponding single-stage update. -/
@@ -225,72 +222,39 @@ theorem ungroup_update_of_injective {owner : Fin n → ι}
     (deviation : Strategy A) :
     ungroup owner
         (Function.update (group owner σ) (owner i) deviation) =
-      Function.update σ i (deviation i) := by
-  funext j h
-  by_cases hji : j = i
-  · subst j
-    simp [ungroup, Function.update]
-  · have hne : owner j ≠ owner i := by
-      intro h
-      exact hji (howner h)
-    simp [ungroup, group, Function.update, hne, hji]
+      Function.update σ i (deviation i) :=
+  OwnedProfile.ungroup_update_of_injective howner σ i deviation
 
 /-- The strategic-form game whose deviations replace every plan owned by one
 player. -/
 def ownedNFG (owner : Fin n → ι) (A : Fin n → Type)
     (u : (∀ i, A i) → ι → ℝ) :
-    NFG.NFGGame ι (PlayerStrategy owner A) where
-  Outcome := ∀ i, A i
-  outcome σ := realize (ungroup owner σ)
-  utility := u
+    NFG.NFGGame ι (PlayerStrategy owner A) :=
+  OwnedProfile.ownedNFG owner realize u
 
 /-- Compile the player-form sequential game through the existing NFG bridge. -/
 noncomputable def compileOwned (owner : Fin n → ι) (A : Fin n → Type)
     (u : (∀ i, A i) → ι → ℝ) : GameTheory.KernelGame ι :=
-  (ownedNFG owner A u).toKernelGame
+  OwnedProfile.compileOwned owner realize u
 
 /-- Player-form Nash for a stage profile under an ownership map. -/
 def IsPlayerNash (owner : Fin n → ι) (u : (∀ i, A i) → ι → ℝ)
     (σ : Strategy A) : Prop :=
-  NFG.IsNashPure (ownedNFG owner A u) (group owner σ)
+  OwnedProfile.IsPlayerNash owner realize u σ
 
 /-- Agent-form equilibrium tests one owned decision at a time, using its
 owner's utility. -/
 def IsAgentEquilibrium (owner : Fin n → ι)
     (u : (∀ i, A i) → ι → ℝ) (σ : Strategy A) : Prop :=
-  (ShapeSeqDep A).IsEquilibriumIn ()
-    (fun path i => u path (owner i)) σ
-
-/-- The established sequential player-form predicate is the specialization of
-the representation-independent ownership core. -/
-theorem isPlayerNash_iff_ownedProfile (owner : Fin n → ι)
-    (u : (∀ i, A i) → ι → ℝ) (σ : Strategy A) :
-    IsPlayerNash owner u σ ↔
-      OwnedProfile.IsPlayerNash owner realize u σ :=
-  Iff.rfl
-
-omit [DecidableEq ι] in
-/-- Sequential agent form is likewise the generic one-node specialization. -/
-theorem isAgentEquilibrium_iff_ownedProfile (owner : Fin n → ι)
-    (u : (∀ i, A i) → ι → ℝ) (σ : Strategy A) :
-    IsAgentEquilibrium owner u σ ↔
-      OwnedProfile.IsAgentEquilibrium owner realize u σ :=
-  Iff.rfl
+  OwnedProfile.IsAgentEquilibrium owner realize u σ
 
 /-- Player-form Nash implies agent-form equilibrium: every single-stage
 deviation is a special case of replacing all plans owned by that player. -/
 theorem IsPlayerNash.isAgentEquilibrium {owner : Fin n → ι}
     {u : (∀ i, A i) → ι → ℝ} {σ : Strategy A}
     (hσ : IsPlayerNash owner u σ) :
-    IsAgentEquilibrium owner u σ := by
-  intro i deviation
-  have hdev := hσ (owner i)
-    (group owner (Function.update σ i deviation) (owner i))
-  change
-    u (realize (Function.update σ i deviation)) (owner i) ≤
-      u (realize σ) (owner i)
-  simpa [IsPlayerNash, ownedNFG, NFG.deviate,
-    ungroup_update_group] using hdev
+    IsAgentEquilibrium owner u σ :=
+  OwnedProfile.IsPlayerNash.isAgentEquilibrium hσ
 
 /-- If no player owns two stages, agent-form and player-form deviations
 coincide. Unowned players are harmless because their total plan coordinates
@@ -298,48 +262,21 @@ are never read. -/
 theorem isAgentEquilibrium_iff_isPlayerNash_of_injective
     {owner : Fin n → ι} (howner : Function.Injective owner)
     (u : (∀ i, A i) → ι → ℝ) (σ : Strategy A) :
-    IsAgentEquilibrium owner u σ ↔ IsPlayerNash owner u σ := by
-  constructor
-  · intro hσ p deviation
-    change
-      u (realize (ungroup owner
-          (Function.update (group owner σ) p deviation))) p ≤
-        u (realize σ) p
-    by_cases hp : ∃ i, owner i = p
-    · rcases hp with ⟨i, hi⟩
-      have hstage := hσ i (deviation i)
-      change
-        u (realize (Function.update σ i (deviation i))) (owner i) ≤
-          u (realize σ) (owner i) at hstage
-      have hprofile :
-          ungroup owner
-              (Function.update (group owner σ) p deviation) =
-            Function.update σ i (deviation i) := by
-        rw [← hi]
-        exact ungroup_update_of_injective howner σ i deviation
-      rw [hprofile, ← hi]
-      exact hstage
-    · have hprofile :
-          ungroup owner
-              (Function.update (group owner σ) p deviation) = σ := by
-        funext i history
-        have hip : owner i ≠ p := by
-          intro hi
-          exact hp ⟨i, hi⟩
-        simp [ungroup, group, Function.update, hip]
-      rw [hprofile]
-  · exact IsPlayerNash.isAgentEquilibrium
+    IsAgentEquilibrium owner u σ ↔ IsPlayerNash owner u σ :=
+  OwnedProfile.isAgentEquilibrium_iff_isPlayerNash_of_injective
+    howner realize u σ
 
 /-- Player-form Nash is exactly Nash in the compiled kernel game. -/
 theorem isPlayerNash_iff_kernelNash (owner : Fin n → ι)
     (u : (∀ i, A i) → ι → ℝ) (σ : Strategy A) :
     IsPlayerNash owner u σ ↔
-      (compileOwned owner A u).IsNash (group owner σ) := by
-  exact NFG.IsNashPure_iff_kernelGame (ownedNFG owner A u)
-    (group owner σ)
+      (compileOwned owner A u).IsNash (group owner σ) :=
+  OwnedProfile.isPlayerNash_iff_kernelNash owner realize u σ
 
 end ShapeSeqDep
 end OpenGames
+
+/-! ## Sparse-DAG specialization -/
 
 namespace OpenGames.ShapeDAG
 
@@ -412,6 +349,8 @@ theorem isPlayerNash_iff_kernelNash (D : DecisionDAG n)
 
 end OpenGames.ShapeDAG
 
+/-! ## Strict agent-form/player-form separation -/
+
 namespace OpenGames.ShapeSeqDep.OwnershipExample
 
 /-- Both stages are owned by the same player. -/
@@ -469,7 +408,7 @@ theorem allFalse_not_isPlayerNash :
       ungroup owner (Function.update (group owner allFalse) () allTrue) =
         allTrue := by
     funext i history
-    simp [ungroup, Function.update]
+    simp [ungroup, group, OwnedProfile.ungroup, owner]
   change
     utility (realize
       (ungroup owner

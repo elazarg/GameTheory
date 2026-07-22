@@ -7,10 +7,14 @@ Authors: GameTheory contributors
 import GameTheory.Languages.OpenGame
 
 /-!
-# Tests for Deterministic Open Games
+# Open-Game API Compilation Tests
 
-These compilation tests exercise the typed wiring diagram for a two-move game
-and check its equilibrium predicate by reduction.
+These examples compile every major public endpoint: deterministic wiring,
+finite sequential and sparse-DAG shapes, ownership and deviation families,
+EFG/MAID bridges, correlation, coend contexts, and probabilistic composition.
+Mathematical separation witnesses live with the implementation in
+`OpenGame.Examples`; this file checks that the intended umbrella API remains
+usable without internal imports.
 -/
 
 namespace OpenGames.Tests

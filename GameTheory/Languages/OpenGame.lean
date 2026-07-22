@@ -25,6 +25,14 @@ import GameTheory.Languages.OpenGame.Examples
 /-!
 # Open Games
 
-Public entrypoint for compositional deterministic open games and their
-context-indexed compilation to `KernelGame`.
+Public entrypoint for the Open Games research layer. It includes:
+
+* deterministic wiring, finite sequential and sparse-DAG shapes;
+* ownership, deviation-family, correlation, and evolutionary refinements;
+* finite probabilistic composition and Bayesian coend contexts; and
+* exact bridges to NFG, EFG, and MAID semantics where proved.
+
+Modules state known non-laws and incomplete bridges explicitly; importing this
+umbrella does not turn those scoped results into broader category or sparse-SPE
+claims.
 -/
