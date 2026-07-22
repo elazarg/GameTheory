@@ -327,6 +327,20 @@ theorem lam0_le_of_entrywise_le {A B : I → J → ℝ} {δ : ℝ}
   exact (lam.aux_le_of_entrywise_le h x).trans
     (add_le_add (lam.aux.le_lam0 B x) le_rfl)
 
+omit [Nonempty I] in
+/-- The row aggregate of the zero matrix vanishes. -/
+theorem lam.aux_zero (x : stdSimplex ℝ I) :
+    lam.aux (J := J) (fun _ _ => (0 : ℝ)) x = 0 := by
+  unfold lam.aux
+  simp
+
+/-- The maxmin value of the zero matrix vanishes. -/
+theorem lam0_zero : lam0 (I := I) (J := J) (fun _ _ => (0 : ℝ)) = 0 := by
+  unfold lam0
+  rw [show lam.aux (I := I) (J := J) (fun _ _ => (0 : ℝ)) =
+      fun _ : stdSimplex ℝ I => (0 : ℝ) from funext fun x => lam.aux_zero x,
+    ciSup_const]
+
 /-- **The matrix-game value is nonexpansive in the payoff matrix**: an
 entrywise sup-norm bound on the perturbation bounds the change in the
 maxmin value. -/
@@ -347,6 +361,13 @@ theorem abs_lam0_sub_le_of_entrywise_abs_le {A B : I → J → ℝ} {δ : ℝ}
       linarith
     have := lam0_le_of_entrywise_le hBA
     linarith
+
+/-- An entrywise bound on the matrix bounds its maxmin value. -/
+theorem abs_lam0_le {A : I → J → ℝ} {C : ℝ} (h : ∀ i j, |A i j| ≤ C) :
+    |lam0 A| ≤ C := by
+  have h0 := abs_lam0_sub_le_of_entrywise_abs_le
+    (A := A) (B := fun _ _ => 0) (by simpa using h)
+  rwa [lam0_zero, sub_zero] at h0
 
 end MinimaxLoomis
 
