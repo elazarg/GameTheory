@@ -586,6 +586,18 @@ theorem finkContinuationEU_smul (G : StochasticGame ι)
   unfold finkContinuationEU
   simp_rw [Pi.smul_apply, smul_eq_mul, expect_const_mul]
 
+/-- The on-profile continuation payoff respects addition of continuation
+vectors. -/
+theorem finkContinuationEU_add (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) :
+    G.finkContinuationEU (W + K) z s who =
+      G.finkContinuationEU W z s who +
+        G.finkContinuationEU K z s who := by
+  unfold finkContinuationEU
+  simp_rw [Pi.add_apply, expect_add]
+
 /-- The on-profile continuation payoff respects subtraction of continuation
 vectors. -/
 theorem finkContinuationEU_sub (G : StochasticGame ι)
@@ -608,6 +620,19 @@ theorem finkContinuationGain_smul (G : StochasticGame ι)
       c * G.finkContinuationGain W z s who d := by
   unfold finkContinuationGain
   simp_rw [Pi.smul_apply, smul_eq_mul, expect_const_mul]
+  ring
+
+/-- Continuation gain respects addition of continuation vectors. -/
+theorem finkContinuationGain_add (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W K : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) :
+    G.finkContinuationGain (W + K) z s who d =
+      G.finkContinuationGain W z s who d +
+        G.finkContinuationGain K z s who d := by
+  unfold finkContinuationGain
+  simp_rw [Pi.add_apply, expect_add]
   ring
 
 /-- Continuation gain respects subtraction of continuation vectors. -/

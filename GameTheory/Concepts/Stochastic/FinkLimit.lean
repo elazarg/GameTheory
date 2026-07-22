@@ -520,6 +520,78 @@ def finkNextDeviationGain (G : StochasticGame ι)
   (a / (1 + ‖J‖)) * D s who d +
     G.finkContinuationGain K z s who d
 
+/-- Reference potential represented after removing one projective bias
+direction.  Its continuation residual and pure-deviation gain are exactly
+the next Poisson and deviation forcings. -/
+def finkNextReferenceVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    (a : ℝ) (J R K : G.State → Payoff ι) : G.State → Payoff ι :=
+  (a / (1 + ‖J‖)) • R + K
+
+/-- The Poisson recursion preserves the representation of its forcing as a
+continuation residual. -/
+theorem finkNextPoissonRemainderVector_eq_continuationResidualVector
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (J R K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) :
+    G.finkNextPoissonRemainderVector a
+        (G.finkContinuationResidualVector R z) J K z =
+      G.finkContinuationResidualVector
+        (G.finkNextReferenceVector a J R K) z := by
+  ext s who
+  simp only [finkNextPoissonRemainderVector,
+    finkContinuationResidualVector, finkContinuationResidual,
+    finkContinuationVector, finkNextReferenceVector, Pi.smul_apply,
+    Pi.sub_apply, Pi.add_apply, smul_eq_mul]
+  rw [G.finkContinuationEU_add, G.finkContinuationEU_smul]
+  ring
+
+/-- The deviation recursion preserves the representation of its forcing as
+the pure-action continuation gain of the same updated reference potential. -/
+theorem finkNextDeviationGain_eq_continuationGain
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (J R K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkNextDeviationGain a
+        (fun s who d => G.finkContinuationGain R z s who d)
+        J K z s who d =
+      G.finkContinuationGain (G.finkNextReferenceVector a J R K)
+        z s who d := by
+  simp only [finkNextDeviationGain, finkNextReferenceVector]
+  rw [G.finkContinuationGain_add, G.finkContinuationGain_smul]
+
+/-- Bias correction only changes the decomposition of the total scheduled
+potential: corrected bias plus new scale times new reference is exactly the
+old bias plus old scale times old reference. -/
+theorem finkCorrectedBias_add_smul_nextReferenceVector
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (a : ℝ) (J R K : G.State → Payoff ι) :
+    G.finkCorrectedBias J K +
+        (1 + ‖J‖) • G.finkNextReferenceVector a J R K =
+      J + a • R := by
+  have hmag : 1 + ‖J‖ ≠ 0 := by positivity
+  ext s who
+  simp only [finkCorrectedBias, finkNextReferenceVector, Pi.add_apply,
+    Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
+  field_simp [hmag]
+  ring
+
+/-- Initially, relative bias plus the scaled target is exactly the absolute
+scheduled Fink bias. -/
+theorem finkRelativeBias_add_scale_smul_target
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (β : ℝ) (W : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) :
+    G.finkRelativeBias β W z + (β / (1 - β)) • W =
+      (β / (1 - β)) • G.finkValue z := by
+  ext s who
+  simp only [finkRelativeBias, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+  ring
+
 /-- A unilateral mixed continuation value is the deviating player's
 expectation of the corresponding pure-action continuation values. -/
 theorem mixedDeviationContinuation_eq_expect_pure
@@ -1761,6 +1833,452 @@ theorem exists_finkBiasResolution
     exact FinkBiasResolution.interior φ L hφ hlim
   · intro J K φ hφ hlim hKnorm tail
     exact FinkBiasResolution.boundary K φ hφ hlim hKnorm tail
+
+/-- Sum of a finite family of scalar bias layers at index `n`. -/
+def finkBiasLayerSum (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    (layers : List ((ℕ → ℝ) × (G.State → Payoff ι))) (n : ℕ) :
+    G.State → Payoff ι :=
+  (layers.map fun layer => layer.1 n • layer.2).sum
+
+/-- Sum of the scalar coefficients in a finite bias expansion. -/
+def finkBiasScaleSum (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    (layers : List ((ℕ → ℝ) × (G.State → Payoff ι))) (n : ℕ) : ℝ :=
+  (layers.map fun layer => layer.1 n).sum
+
+/-- If all unit-direction coefficients increase across one step, the norm
+of the corresponding layer change is bounded by the increase of their
+scalar sum. -/
+theorem norm_finkBiasLayerSum_sub_le_scaleSum_sub
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (layers : List ((ℕ → ℝ) × (G.State → Payoff ι))) (n : ℕ)
+    (hdir : ∀ layer ∈ layers, ‖layer.2‖ = 1)
+    (hmono : ∀ layer ∈ layers, layer.1 n ≤ layer.1 (n + 1)) :
+    ‖G.finkBiasLayerSum layers (n + 1) -
+        G.finkBiasLayerSum layers n‖ ≤
+      G.finkBiasScaleSum layers (n + 1) -
+        G.finkBiasScaleSum layers n := by
+  induction layers with
+  | nil => simp [finkBiasLayerSum, finkBiasScaleSum]
+  | cons layer layers ih =>
+      have hlayerDir : ‖layer.2‖ = 1 := hdir layer (by simp)
+      have hlayerMono : layer.1 n ≤ layer.1 (n + 1) :=
+        hmono layer (by simp)
+      have htailDir : ∀ item ∈ layers, ‖item.2‖ = 1 := by
+        intro item hitem
+        exact hdir item (by simp [hitem])
+      have htailMono : ∀ item ∈ layers,
+          item.1 n ≤ item.1 (n + 1) := by
+        intro item hitem
+        exact hmono item (by simp [hitem])
+      have htail := ih htailDir htailMono
+      change
+        ‖(layer.1 (n + 1) • layer.2 +
+              (layers.map fun item => item.1 (n + 1) • item.2).sum) -
+            (layer.1 n • layer.2 +
+              (layers.map fun item => item.1 n • item.2).sum)‖ ≤
+          (layer.1 (n + 1) +
+              (layers.map fun item => item.1 (n + 1)).sum) -
+            (layer.1 n + (layers.map fun item => item.1 n).sum)
+      have heq :
+          layer.1 (n + 1) • layer.2 +
+                (layers.map fun item => item.1 (n + 1) • item.2).sum -
+              (layer.1 n • layer.2 +
+                (layers.map fun item => item.1 n • item.2).sum) =
+            (layer.1 (n + 1) - layer.1 n) • layer.2 +
+              ((layers.map fun item => item.1 (n + 1) • item.2).sum -
+                (layers.map fun item => item.1 n • item.2).sum) := by
+        module
+      rw [heq]
+      calc
+        ‖(layer.1 (n + 1) - layer.1 n) • layer.2 +
+            ((layers.map fun item => item.1 (n + 1) • item.2).sum -
+              (layers.map fun item => item.1 n • item.2).sum)‖ ≤
+            ‖(layer.1 (n + 1) - layer.1 n) • layer.2‖ +
+              ‖(layers.map fun item => item.1 (n + 1) • item.2).sum -
+                (layers.map fun item => item.1 n • item.2).sum‖ :=
+          norm_add_le _ _
+        _ ≤ (layer.1 (n + 1) - layer.1 n) +
+              ((layers.map fun item => item.1 (n + 1)).sum -
+                (layers.map fun item => item.1 n).sum) := by
+          rw [norm_smul, Real.norm_eq_abs,
+            abs_of_nonneg (sub_nonneg.mpr hlayerMono), hlayerDir, mul_one]
+          exact add_le_add le_rfl htail
+        _ = layer.1 (n + 1) +
+              (layers.map fun item => item.1 (n + 1)).sum -
+            (layer.1 n + (layers.map fun item => item.1 n).sum) := by ring
+
+/-- Predicate asserting an explicit finite expansion extracted from a radial
+resolution.  Every unbounded layer has a fixed unit direction and a scalar
+coefficient tending to infinity; the final remainder converges ordinarily. -/
+def IsFinkBiasExpansion (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    (H : ℕ → G.State → Payoff ι) (φ : ℕ → ℕ)
+    (layers : List ((ℕ → ℝ) × (G.State → Payoff ι)))
+    (remainder : ℕ → G.State → Payoff ι)
+    (remainderLimit : G.State → Payoff ι) : Prop :=
+  StrictMono φ ∧
+    Tendsto remainder atTop (nhds remainderLimit) ∧
+    (∀ layer ∈ layers, ‖layer.2‖ = 1) ∧
+    (∀ layer ∈ layers, Tendsto layer.1 atTop atTop) ∧
+    ∀ n, H (φ n) = remainder n + G.finkBiasLayerSum layers n
+
+/-- A finite family of divergent real scales and one convergent remainder
+admit a common subsequence on which every scale is strictly increasing and
+the remainder approaches its limit at a geometric rate. -/
+theorem exists_finkBiasExpansion_regularizingSubsequence
+    {X : Type} [PseudoMetricSpace X]
+    (scales : List (ℕ → ℝ))
+    (hscale : ∀ u ∈ scales, Tendsto u atTop atTop)
+    {R : ℕ → X} {L : X} (hR : Tendsto R atTop (nhds L)) :
+    ∃ ψ : ℕ → ℕ, StrictMono ψ ∧
+      (∀ u ∈ scales, StrictMono (u ∘ ψ)) ∧
+      ∀ n, dist (R (ψ n)) L < ((2 : ℝ) ^ n)⁻¹ := by
+  have hscalesEventually : ∀ k : ℕ,
+      ∀ᶠ m in atTop, ∀ u ∈ scales, u k < u m := by
+    intro k
+    induction scales with
+    | nil => simp
+    | cons u scales ih =>
+        have hu := tendsto_atTop.1 (hscale u (by simp)) (u k + 1)
+        have htail : ∀ v ∈ scales, Tendsto v atTop atTop := by
+          intro v hv
+          exact hscale v (by simp [hv])
+        have hi := ih htail
+        filter_upwards [hu, hi] with m hum him
+        intro v hv
+        simp only [List.mem_cons] at hv
+        rcases hv with rfl | hv
+        · linarith
+        · exact him v hv
+  have hex : ∀ k n : ℕ, ∃ m : ℕ,
+      k < m ∧ (∀ u ∈ scales, u k < u m) ∧
+        dist (R m) L < ((2 : ℝ) ^ n)⁻¹ := by
+    intro k n
+    have hpositive : 0 < ((2 : ℝ) ^ n)⁻¹ := by positivity
+    have hclose := hR.eventually (Metric.ball_mem_nhds L hpositive)
+    have hindex : ∀ᶠ m in atTop, k < m := eventually_gt_atTop k
+    have hev : ∀ᶠ m in atTop,
+        k < m ∧ (∀ u ∈ scales, u k < u m) ∧
+          dist (R m) L < ((2 : ℝ) ^ n)⁻¹ := by
+      filter_upwards [hindex, hscalesEventually k, hclose] with m hkm hsm hrm
+      exact ⟨hkm, hsm, by simpa only [Metric.mem_ball] using hrm⟩
+    exact hev.exists
+  choose next hnext using hex
+  let ψ : ℕ → ℕ := fun n => Nat.rec (next 0 0)
+    (fun j previous => next previous (j + 1)) n
+  have hstep : ∀ n, ψ n < ψ (n + 1) := by
+    intro n
+    rw [show ψ (n + 1) = next (ψ n) (n + 1) by simp [ψ]]
+    exact (hnext (ψ n) (n + 1)).1
+  have hψ : StrictMono ψ := strictMono_nat_of_lt_succ hstep
+  refine ⟨ψ, hψ, ?_, ?_⟩
+  · intro u hu
+    apply strictMono_nat_of_lt_succ
+    intro n
+    change u (ψ n) < u (ψ (n + 1))
+    rw [show ψ (n + 1) = next (ψ n) (n + 1) by simp [ψ]]
+    exact (hnext (ψ n) (n + 1)).2.1 u hu
+  · intro n
+    cases n with
+    | zero =>
+        change dist (R (next 0 0)) L < ((2 : ℝ) ^ 0)⁻¹
+        exact (hnext 0 0).2.2
+    | succ n =>
+        rw [show ψ (n + 1) = next (ψ n) (n + 1) by simp [ψ]]
+        exact (hnext (ψ n) (n + 1)).2.2
+
+/-- Every explicit finite expansion can be regularized simultaneously at
+all of its scales. -/
+theorem IsFinkBiasExpansion.exists_regularizingSubsequence
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {φ : ℕ → ℕ}
+    {layers : List ((ℕ → ℝ) × (G.State → Payoff ι))}
+    {remainder : ℕ → G.State → Payoff ι}
+    {remainderLimit : G.State → Payoff ι}
+    (hexpansion : G.IsFinkBiasExpansion H φ layers
+      remainder remainderLimit) :
+    ∃ ψ : ℕ → ℕ, StrictMono ψ ∧
+      (∀ layer ∈ layers, StrictMono (layer.1 ∘ ψ)) ∧
+      ∀ n, dist (remainder (ψ n)) remainderLimit <
+        ((2 : ℝ) ^ n)⁻¹ := by
+  obtain ⟨ψ, hψ, hscales, hrem⟩ :=
+    exists_finkBiasExpansion_regularizingSubsequence
+      (layers.map Prod.fst)
+      (by
+        intro u hu
+        rw [List.mem_map] at hu
+        obtain ⟨layer, hlayer, rfl⟩ := hu
+        exact hexpansion.2.2.2.1 layer hlayer)
+      hexpansion.2.1
+  refine ⟨ψ, hψ, ?_, hrem⟩
+  intro layer hlayer
+  exact hscales layer.1 (List.mem_map.mpr ⟨layer, hlayer, rfl⟩)
+
+/-- One-step variation bound for a regularized finite bias expansion. -/
+theorem IsFinkBiasExpansion.norm_sub_le_remainder_add_scaleIncrement
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {φ : ℕ → ℕ}
+    {layers : List ((ℕ → ℝ) × (G.State → Payoff ι))}
+    {remainder : ℕ → G.State → Payoff ι}
+    {remainderLimit : G.State → Payoff ι}
+    (hexpansion : G.IsFinkBiasExpansion H φ layers
+      remainder remainderLimit)
+    (hmono : ∀ layer ∈ layers, StrictMono layer.1) (n : ℕ) :
+    ‖H (φ (n + 1)) - H (φ n)‖ ≤
+      ‖remainder (n + 1) - remainder n‖ +
+        (G.finkBiasScaleSum layers (n + 1) -
+          G.finkBiasScaleSum layers n) := by
+  rw [hexpansion.2.2.2.2 n, hexpansion.2.2.2.2 (n + 1)]
+  have hlayers := G.norm_finkBiasLayerSum_sub_le_scaleSum_sub
+    layers n hexpansion.2.2.1
+      (fun layer hlayer => (hmono layer hlayer).monotone (Nat.le_succ n))
+  have heq :
+      remainder (n + 1) + G.finkBiasLayerSum layers (n + 1) -
+          (remainder n + G.finkBiasLayerSum layers n) =
+        (remainder (n + 1) - remainder n) +
+          (G.finkBiasLayerSum layers (n + 1) -
+            G.finkBiasLayerSum layers n) := by
+    module
+  rw [heq]
+  exact (norm_add_le _ _).trans (add_le_add le_rfl hlayers)
+
+/-- Scalar increments telescope exactly across a finite range. -/
+theorem sum_range_succ_sub_eq (f : ℕ → ℝ) (N : ℕ) :
+    ∑ n ∈ Finset.range N, (f (n + 1) - f n) = f N - f 0 := by
+  induction N with
+  | zero => simp
+  | succ N ih =>
+      rw [Finset.sum_range_succ, ih]
+      ring
+
+/-- Cumulative adjacent variation of a regularized expansion is controlled
+by the terminal increase of its finite scalar layers plus the variation of
+the convergent remainder. -/
+theorem IsFinkBiasExpansion.sum_norm_sub_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {φ : ℕ → ℕ}
+    {layers : List ((ℕ → ℝ) × (G.State → Payoff ι))}
+    {remainder : ℕ → G.State → Payoff ι}
+    {remainderLimit : G.State → Payoff ι}
+    (hexpansion : G.IsFinkBiasExpansion H φ layers
+      remainder remainderLimit)
+    (hmono : ∀ layer ∈ layers, StrictMono layer.1) (N : ℕ) :
+    ∑ n ∈ Finset.range N,
+        ‖H (φ (n + 1)) - H (φ n)‖ ≤
+      (∑ n ∈ Finset.range N,
+        ‖remainder (n + 1) - remainder n‖) +
+      (G.finkBiasScaleSum layers N -
+        G.finkBiasScaleSum layers 0) := by
+  calc
+    ∑ n ∈ Finset.range N,
+        ‖H (φ (n + 1)) - H (φ n)‖ ≤
+        ∑ n ∈ Finset.range N,
+          (‖remainder (n + 1) - remainder n‖ +
+            (G.finkBiasScaleSum layers (n + 1) -
+              G.finkBiasScaleSum layers n)) := by
+      exact Finset.sum_le_sum fun n _ =>
+        IsFinkBiasExpansion.norm_sub_le_remainder_add_scaleIncrement
+          G hexpansion hmono n
+    _ = (∑ n ∈ Finset.range N,
+          ‖remainder (n + 1) - remainder n‖) +
+        ∑ n ∈ Finset.range N,
+          (G.finkBiasScaleSum layers (n + 1) -
+            G.finkBiasScaleSum layers n) := by
+      rw [Finset.sum_add_distrib]
+    _ = (∑ n ∈ Finset.range N,
+          ‖remainder (n + 1) - remainder n‖) +
+        (G.finkBiasScaleSum layers N -
+          G.finkBiasScaleSum layers 0) := by
+      rw [sum_range_succ_sub_eq]
+
+/-- Geometric convergence makes the total adjacent variation of the
+regularized remainder uniformly bounded. -/
+theorem sum_norm_sub_le_four_of_geometric_close
+    {X : Type} [NormedAddCommGroup X] (R : ℕ → X) (L : X)
+    (hclose : ∀ n, dist (R n) L < ((2 : ℝ) ^ n)⁻¹) (N : ℕ) :
+    ∑ n ∈ Finset.range N, ‖R (n + 1) - R n‖ ≤ 4 := by
+  have hstep : ∀ n, ‖R (n + 1) - R n‖ ≤
+      2 * ((2 : ℝ) ^ n)⁻¹ := by
+    intro n
+    have htriangle : ‖R (n + 1) - R n‖ ≤
+        dist (R (n + 1)) L + dist (R n) L := by
+      calc
+        ‖R (n + 1) - R n‖ = dist (R (n + 1)) (R n) := by
+          rw [dist_eq_norm]
+        _ ≤ dist (R (n + 1)) L + dist L (R n) :=
+          dist_triangle (R (n + 1)) L (R n)
+        _ = dist (R (n + 1)) L + dist (R n) L := by
+          rw [dist_comm L (R n)]
+    have hnext := hclose (n + 1)
+    have hcurrent := hclose n
+    have hpow : ((2 : ℝ) ^ (n + 1))⁻¹ ≤ ((2 : ℝ) ^ n)⁻¹ := by
+      exact inv_pow_le_inv_pow_of_le (by norm_num) (Nat.le_succ n)
+    linarith
+  have hsum := Finset.sum_le_sum fun n (_ : n ∈ Finset.range N) => hstep n
+  have hgeom : (∑ n ∈ Finset.range N, ((2 : ℝ) ^ n)⁻¹) ≤ 2 := by
+    simpa only [← inv_pow, one_div] using sum_geometric_two_le N
+  calc
+    ∑ n ∈ Finset.range N, ‖R (n + 1) - R n‖ ≤
+        ∑ n ∈ Finset.range N, 2 * ((2 : ℝ) ^ n)⁻¹ := hsum
+    _ = 2 * ∑ n ∈ Finset.range N, ((2 : ℝ) ^ n)⁻¹ := by
+      rw [Finset.mul_sum]
+    _ ≤ 2 * 2 := mul_le_mul_of_nonneg_left hgeom (by norm_num)
+    _ = 4 := by norm_num
+
+/-- Final variation estimate: after regularization, all nonconvergent motion
+is charged only once through the terminal increases of finitely many scalar
+layers. -/
+theorem IsFinkBiasExpansion.sum_norm_sub_le_four_add_scale
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {φ : ℕ → ℕ}
+    {layers : List ((ℕ → ℝ) × (G.State → Payoff ι))}
+    {remainder : ℕ → G.State → Payoff ι}
+    {remainderLimit : G.State → Payoff ι}
+    (hexpansion : G.IsFinkBiasExpansion H φ layers
+      remainder remainderLimit)
+    (hmono : ∀ layer ∈ layers, StrictMono layer.1)
+    (hclose : ∀ n, dist (remainder n) remainderLimit <
+      ((2 : ℝ) ^ n)⁻¹) (N : ℕ) :
+    ∑ n ∈ Finset.range N,
+        ‖H (φ (n + 1)) - H (φ n)‖ ≤
+      4 + (G.finkBiasScaleSum layers N -
+        G.finkBiasScaleSum layers 0) := by
+  exact (IsFinkBiasExpansion.sum_norm_sub_le G hexpansion hmono N).trans
+    (add_le_add
+      (sum_norm_sub_le_four_of_geometric_close remainder remainderLimit
+        hclose N)
+      le_rfl)
+
+/-- A finite radial resolution yields an explicit finite bias expansion. -/
+theorem FinkBiasResolution.exists_finkBiasExpansion
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι}
+    (hresolution : G.FinkBiasResolution H) :
+    ∃ (φ : ℕ → ℕ)
+      (layers : List ((ℕ → ℝ) × (G.State → Payoff ι)))
+      (remainder : ℕ → G.State → Payoff ι)
+      (remainderLimit : G.State → Payoff ι),
+      G.IsFinkBiasExpansion H φ layers remainder remainderLimit := by
+  induction hresolution with
+  | @interior H φ L hφ hlim =>
+      refine ⟨φ, [], H ∘ φ, L, hφ, hlim, ?_, ?_, ?_⟩
+      · simp
+      · simp
+      · intro n
+        simp [finkBiasLayerSum]
+  | @boundary H K φ hφ hcompact hKnorm tail ih =>
+      obtain ⟨ψ, layers, remainder, remainderLimit,
+        hψ, hrem, hdir, hscale, hdecomp⟩ := ih
+      let c : ℕ → ℝ := fun n => 1 + ‖H (φ (ψ n))‖
+      have hcompact' : Tendsto
+          (G.compactifyFinkBias ∘ fun n => H (φ n)) atTop (nhds K) := by
+        simpa only [Function.comp_def] using hcompact
+      have hnorm : Tendsto (fun n => ‖H (φ n)‖) atTop atTop :=
+        G.tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
+          hcompact' hKnorm
+      have hc : Tendsto c atTop atTop := by
+        have hnorm' := hnorm.comp hψ.tendsto_atTop
+        refine tendsto_atTop.2 fun b => ?_
+        filter_upwards [tendsto_atTop.1 hnorm' (b - 1)] with n hn
+        dsimp [c]
+        change b - 1 ≤ ‖H (φ (ψ n))‖ at hn
+        linarith
+      refine ⟨φ ∘ ψ, (c, K) :: layers, remainder, remainderLimit,
+        hφ.comp hψ, hrem, ?_, ?_, ?_⟩
+      · intro layer hlayer
+        simp only [List.mem_cons] at hlayer
+        rcases hlayer with rfl | hlayer
+        · exact hKnorm
+        · exact hdir layer hlayer
+      · intro layer hlayer
+        simp only [List.mem_cons] at hlayer
+        rcases hlayer with rfl | hlayer
+        · exact hc
+        · exact hscale layer hlayer
+      · intro n
+        have htail := hdecomp n
+        change G.finkCorrectedBias (H (φ (ψ n))) K =
+          remainder n + G.finkBiasLayerSum layers n at htail
+        rw [finkBiasLayerSum, List.map_cons, List.sum_cons]
+        dsimp only [c, Prod.fst, Prod.snd]
+        change H (φ (ψ n)) = remainder n +
+          ((1 + ‖H (φ (ψ n))‖) • K +
+            (layers.map fun layer => layer.1 n • layer.2).sum)
+        calc
+          H (φ (ψ n)) =
+              G.finkCorrectedBias (H (φ (ψ n))) K +
+                (1 + ‖H (φ (ψ n))‖) • K := by
+            ext s who
+            simp only [finkCorrectedBias, Pi.add_apply, Pi.sub_apply,
+              Pi.smul_apply, smul_eq_mul]
+            ring
+          _ = (remainder n + G.finkBiasLayerSum layers n) +
+                (1 + ‖H (φ (ψ n))‖) • K := by rw [htail]
+          _ = remainder n +
+                ((1 + ‖H (φ (ψ n))‖) • K +
+                  (layers.map fun layer => layer.1 n • layer.2).sum) := by
+            rw [finkBiasLayerSum]
+            abel
+
+/-- Every finite-dimensional bias family has a subsequence whose adjacent
+variation is controlled by terminal increases of finitely many monotone
+scalar layers, with only a universal constant left from the convergent
+remainder. -/
+theorem exists_regular_finkBiasExpansion
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : ℕ → G.State → Payoff ι) :
+    ∃ (θ : ℕ → ℕ)
+      (layers : List ((ℕ → ℝ) × (G.State → Payoff ι)))
+      (remainder : ℕ → G.State → Payoff ι)
+      (remainderLimit : G.State → Payoff ι),
+      G.IsFinkBiasExpansion H θ layers remainder remainderLimit ∧
+      (∀ layer ∈ layers, StrictMono layer.1) ∧
+      (∀ n, dist (remainder n) remainderLimit < ((2 : ℝ) ^ n)⁻¹) ∧
+      ∀ N, ∑ n ∈ Finset.range N,
+          ‖H (θ (n + 1)) - H (θ n)‖ ≤
+        4 + (G.finkBiasScaleSum layers N -
+          G.finkBiasScaleSum layers 0) := by
+  obtain ⟨φ, layers, remainder, remainderLimit, hexpansion⟩ :=
+    (G.exists_finkBiasResolution H).exists_finkBiasExpansion
+  obtain ⟨ψ, hψ, hmono, hclose⟩ :=
+    hexpansion.exists_regularizingSubsequence G
+  let layers' : List ((ℕ → ℝ) × (G.State → Payoff ι)) :=
+    layers.map fun layer => (layer.1 ∘ ψ, layer.2)
+  let remainder' : ℕ → G.State → Payoff ι := remainder ∘ ψ
+  have hexpansion' : G.IsFinkBiasExpansion H (φ ∘ ψ) layers'
+      remainder' remainderLimit := by
+    refine ⟨hexpansion.1.comp hψ,
+      hexpansion.2.1.comp hψ.tendsto_atTop, ?_, ?_, ?_⟩
+    · intro layer' hlayer'
+      simp only [layers', List.mem_map] at hlayer'
+      obtain ⟨layer, hlayer, rfl⟩ := hlayer'
+      exact hexpansion.2.2.1 layer hlayer
+    · intro layer' hlayer'
+      simp only [layers', List.mem_map] at hlayer'
+      obtain ⟨layer, hlayer, rfl⟩ := hlayer'
+      exact (hexpansion.2.2.2.1 layer hlayer).comp hψ.tendsto_atTop
+    · intro n
+      have hdecomp := hexpansion.2.2.2.2 (ψ n)
+      change H (φ (ψ n)) = remainder' n +
+        G.finkBiasLayerSum layers' n
+      rw [hdecomp]
+      simp only [remainder', layers', finkBiasLayerSum,
+        Function.comp_def, List.map_map]
+  have hmono' : ∀ layer ∈ layers', StrictMono layer.1 := by
+    intro layer' hlayer'
+    simp only [layers', List.mem_map] at hlayer'
+    obtain ⟨layer, hlayer, rfl⟩ := hlayer'
+    exact hmono layer hlayer
+  have hclose' : ∀ n, dist (remainder' n) remainderLimit <
+      ((2 : ℝ) ^ n)⁻¹ := by
+    intro n
+    exact hclose n
+  refine ⟨φ ∘ ψ, layers', remainder', remainderLimit,
+    hexpansion', hmono', hclose', ?_⟩
+  intro N
+  exact hexpansion'.sum_norm_sub_le_four_add_scale G hmono' hclose' N
 
 /-- A finite bias resolution together with the normalized Poisson
 cancellation forced by the Bellman equation at every boundary node. -/
