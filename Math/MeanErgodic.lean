@@ -186,6 +186,104 @@ theorem tendsto_cesaro_of_pow_norm_le [FiniteDimensional ℝ E]
   rw [add_zero] at hfinal
   exact hfinal.congr hsplit
 
+/-- A vector whose Cesàro orbit tends to zero is a one-step coboundary.
+Equivalently, the zero-limit condition kills the fixed-point component in
+the finite-dimensional decomposition
+`E = ker (P - 1) ⊕ range (P - 1)`. -/
+theorem mem_range_sub_id_of_tendsto_cesaro_zero [FiniteDimensional ℝ E]
+    (P : E →ₗ[ℝ] E) {C : ℝ}
+    (hC : ∀ (n : ℕ) (x : E), ‖(P ^ n) x‖ ≤ C * ‖x‖) (x : E)
+    (hzero : Tendsto
+      (fun T : ℕ => (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) x)
+        atTop (nhds 0)) :
+    x ∈ LinearMap.range (P - LinearMap.id) := by
+  have hdisj : Disjoint (LinearMap.ker (P - LinearMap.id))
+      (LinearMap.range (P - LinearMap.id)) := by
+    rw [Submodule.disjoint_def]
+    intro z hzk hzr
+    obtain ⟨y, hy⟩ := hzr
+    have hy' : P y - y = z := by simpa using hy
+    have hPz : P z = z := by
+      have h0 := LinearMap.mem_ker.mp hzk
+      have h1 : P z - z = 0 := by simpa using h0
+      exact sub_eq_zero.mp h1
+    have hzeq : ∀ᶠ T : ℕ in atTop,
+        z = (T : ℝ)⁻¹ • ((P ^ T) y - y) := by
+      filter_upwards [eventually_ge_atTop 1] with T hT
+      have hTne : (T : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+      have hsum : (T : ℕ) • z = (P ^ T) y - y := by
+        calc
+          (T : ℕ) • z = ∑ t ∈ Finset.range T, (P ^ t) z := by
+            rw [Finset.sum_congr rfl fun t _ =>
+              pow_apply_eq_of_fixed hPz t, Finset.sum_const,
+              Finset.card_range]
+          _ = ∑ t ∈ Finset.range T, (P ^ t) (P y - y) := by rw [hy']
+          _ = (P ^ T) y - y := sum_range_pow_apply_sub P y T
+      rw [← hsum, ← Nat.cast_smul_eq_nsmul ℝ, smul_smul,
+        inv_mul_cancel₀ hTne, one_smul]
+    have hz0 : Tendsto (fun _ : ℕ => z) atTop (nhds 0) :=
+      Tendsto.congr' (EventuallyEq.symm hzeq)
+        (tendsto_inv_smul_pow_sub_of_pow_norm_le P hC y)
+    exact tendsto_nhds_unique tendsto_const_nhds hz0
+  have hsup : LinearMap.ker (P - LinearMap.id) ⊔
+      LinearMap.range (P - LinearMap.id) = ⊤ := by
+    have h1 := LinearMap.finrank_range_add_finrank_ker (P - LinearMap.id)
+    have h2 := Submodule.finrank_sup_add_finrank_inf_eq
+      (LinearMap.ker (P - LinearMap.id))
+      (LinearMap.range (P - LinearMap.id))
+    rw [disjoint_iff.mp hdisj, finrank_bot, add_zero] at h2
+    exact Submodule.eq_top_of_finrank_eq (by omega)
+  have hx : x ∈ LinearMap.ker (P - LinearMap.id) ⊔
+      LinearMap.range (P - LinearMap.id) := by
+    rw [hsup]
+    exact Submodule.mem_top
+  obtain ⟨z, hzk, w, hwr, hzw⟩ := Submodule.mem_sup.mp hx
+  obtain ⟨y, hy⟩ := hwr
+  have hy' : P y - y = w := by simpa using hy
+  have hPz : P z = z := by
+    have h0 := LinearMap.mem_ker.mp hzk
+    have h1 : P z - z = 0 := by simpa using h0
+    exact sub_eq_zero.mp h1
+  have hzlim : Tendsto
+      (fun T : ℕ => (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) z)
+      atTop (nhds z) := by
+    have hzconst : ∀ᶠ T : ℕ in atTop,
+        (fun _ : ℕ => z) T =
+          (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) z := by
+      filter_upwards [eventually_ge_atTop 1] with T hT
+      have hTne : (T : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+      rw [Finset.sum_congr rfl fun t _ => pow_apply_eq_of_fixed hPz t,
+        Finset.sum_const, Finset.card_range, ← Nat.cast_smul_eq_nsmul ℝ,
+        smul_smul, inv_mul_cancel₀ hTne, one_smul]
+    exact Tendsto.congr' hzconst tendsto_const_nhds
+  have hwlim : Tendsto
+      (fun T : ℕ => (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) w)
+      atTop (nhds 0) := by
+    have hsum : ∀ T : ℕ,
+        (T : ℝ)⁻¹ • ((P ^ T) y - y) =
+          (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) w := by
+      intro T
+      rw [← hy', sum_range_pow_apply_sub]
+    exact (tendsto_inv_smul_pow_sub_of_pow_norm_le P hC y).congr hsum
+  have hsplit : ∀ T : ℕ,
+      ((T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) z) +
+          (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) w =
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) x := by
+    intro T
+    rw [← smul_add, ← Finset.sum_add_distrib]
+    congr 1
+    refine Finset.sum_congr rfl fun t _ => ?_
+    rw [← map_add, hzw]
+  have hxlim : Tendsto
+      (fun T : ℕ => (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) x)
+      atTop (nhds z) := by
+    have ht := hzlim.add hwlim
+    rw [add_zero] at ht
+    exact ht.congr hsplit
+  have hz0 : z = 0 := tendsto_nhds_unique hxlim hzero
+  rw [← hzw, hz0, zero_add]
+  exact ⟨y, hy⟩
+
 end Abstract
 
 -- ============================================================================
@@ -237,6 +335,24 @@ theorem norm_markovOperator_pow_apply_le (κ : S → PMF S) (t : ℕ)
   rw [markovOperator_pow_apply, Real.norm_eq_abs]
   refine abs_expect_le_of_abs_le _ _ fun s' => ?_
   simpa [Real.norm_eq_abs] using norm_le_pi_norm w s'
+
+/-- Finite-state Poisson solvability from the zero mean-ergodic component.
+If the Cesàro averages of an observable under a Markov operator converge to
+zero as a state vector, then that observable is a one-step coboundary. -/
+theorem exists_poisson_of_tendsto_cesaro_zero
+    (κ : S → PMF S) (f : S → ℝ)
+    (hzero : Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+        ((markovOperator κ) ^ t) f) atTop (nhds 0)) :
+    ∃ u : S → ℝ, ∀ s,
+      expect (κ s) u - u s = f s := by
+  have hrange := mem_range_sub_id_of_tendsto_cesaro_zero
+    (markovOperator κ)
+    (fun t w => norm_markovOperator_pow_apply_le κ t w) f hzero
+  obtain ⟨u, hu⟩ := hrange
+  refine ⟨u, fun s => ?_⟩
+  have hs := congrFun hu s
+  simpa [markovOperator_apply] using hs
 
 end Markov
 

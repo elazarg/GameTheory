@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.FinkSchedule
+import Math.MeanErgodic
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
 
 /-!
@@ -453,6 +454,51 @@ def finkContinuationResidualVector (G : StochasticGame ι)
     (z : G.finkDomain U) : G.State → Payoff ι :=
   fun s who => G.finkContinuationResidual W z s who
 
+/-- State transition kernel induced by one decoded stationary Fink profile. -/
+def finkStateKernel (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) : PMF G.State :=
+  (pmfPi (G.finkProfile z s)).bind (G.transition s)
+
+/-- Expectations under the induced state kernel are exactly the nested
+action/transition expectations used by `finkContinuationEU`. -/
+theorem expect_finkStateKernel_eq
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (w : G.State → ℝ) :
+    expect (G.finkStateKernel z s) w =
+      expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) w) := by
+  unfold finkStateKernel
+  rw [expect_bind]
+
+/-- Mean-ergodic criterion for representing an on-profile forcing by one
+finite state potential.  It is enough that every player's forcing have zero
+Cesàro component under the limiting stationary state kernel. -/
+theorem exists_finkContinuationResidualVector_eq_of_tendsto_cesaro_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (F : G.State → Payoff ι)
+    (hzero : ∀ who, Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+        ((Math.MeanErgodic.markovOperator (G.finkStateKernel z)) ^ t)
+          (fun s => F s who)) atTop (nhds 0)) :
+    ∃ K : G.State → Payoff ι,
+      G.finkContinuationResidualVector K z = F := by
+  have hplayer : ∀ who, ∃ k : G.State → ℝ, ∀ s,
+      expect (G.finkStateKernel z s) k - k s = F s who := by
+    intro who
+    exact Math.MeanErgodic.exists_poisson_of_tendsto_cesaro_zero
+      (G.finkStateKernel z) (fun s => F s who) (hzero who)
+  choose k hk using hplayer
+  let K : G.State → Payoff ι := fun s who => k who s
+  refine ⟨K, ?_⟩
+  ext s who
+  unfold finkContinuationResidualVector finkContinuationResidual
+    finkContinuationEU
+  rw [← G.expect_finkStateKernel_eq z s (k who)]
+  exact hk who s
+
 /-- Vector forcing represented by an on-profile average-reward Bellman
 equation with value `V` and bias `J`. -/
 def finkBellmanForcingVector (G : StochasticGame ι)
@@ -576,6 +622,33 @@ theorem finkContinuationResidualVector_smul
     Pi.smul_apply, smul_eq_mul]
   rw [G.finkContinuationEU_smul]
   ring
+
+/-- The on-profile Poisson equation required by the interior verification
+criterion is solvable whenever its forcing has zero Cesàro fixed component
+under the limiting stationary state kernel. -/
+theorem exists_finkPoissonCorrection_of_tendsto_cesaro_forcing_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (W H : G.State → Payoff ι)
+    (hzero : ∀ who, Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+        ((Math.MeanErgodic.markovOperator (G.finkStateKernel z)) ^ t)
+          (fun s => G.finkBellmanForcingVector W H z s who))
+        atTop (nhds 0)) :
+    ∃ K : G.State → Payoff ι,
+      G.finkBellmanForcingVector W H z =
+        -G.finkContinuationResidualVector K z := by
+  obtain ⟨L, hL⟩ :=
+    G.exists_finkContinuationResidualVector_eq_of_tendsto_cesaro_zero
+      z (G.finkBellmanForcingVector W H z) hzero
+  refine ⟨-L, ?_⟩
+  have hnegL : -L = (-1 : ℝ) • L := by
+    ext s who
+    simp
+  rw [hnegL]
+  rw [G.finkContinuationResidualVector_smul]
+  rw [hL]
+  simp
 
 /-- Adding the boundary correction to the current reference is the same as
 rescaling the updated reference potential. -/
