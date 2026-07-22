@@ -156,7 +156,12 @@ presentation, strengthens plain equilibrium in general, and collapses back to
 plain equilibrium on the edgeless graph. On the complete graph it is proved
 isomorphic to the existing `ShapeSeqDep.conditioned` semantics. No
 sparse-information SPE claim is made without the corresponding
-information-set hypotheses.
+information-set hypotheses. Finite local stochastic kernels on the same typed
+DAG are evaluated by the existing order-independent MAID/Bayesian-network
+factorization; deterministic plans embed as point kernels and are proved to
+recover exactly the original `ShapeDAG.realize` path. This supplies a chance
+and behavioral-kernel semantic foundation without misrepresenting stochastic
+play as an atom of the deterministic `OpenGame` record.
 Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and

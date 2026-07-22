@@ -129,6 +129,41 @@ example {n : Nat} {Player : Type} [DecidableEq Player]
       ShapeDAG.IsPlayerNash D owner u σ :=
   ShapeDAG.isStableUnder_fiber_iff_isPlayerNash D owner u σ
 
+/-- Sparse local stochastic kernels are evaluated by the existing
+order-independent MAID/Bayesian-network factorization. -/
+example {n : Nat} (D : DecisionDAG n) (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (κ : ShapeDAG.Causal.LocalKernel D A) :
+    (ShapeDAG.Causal.eval D A κ).toPMF =
+      MAID.evalAssignDist (ShapeDAG.Causal.maidStruct D A)
+        (ShapeDAG.Causal.sem D A κ)
+        (MAID.defaultPolicy (ShapeDAG.Causal.maidStruct D A)) :=
+  ShapeDAG.Causal.eval_toPMF D A κ
+
+/-- Pure contingent plans embed as point kernels and recover exactly the
+existing well-founded deterministic realization. -/
+example {n : Nat} (D : DecisionDAG n) (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeDAG.Strategy D A) :
+    ShapeDAG.Causal.eval D A (ShapeDAG.Causal.deterministic D σ) =
+      Math.FinPMF.pure (ShapeDAG.realize D σ) :=
+  ShapeDAG.Causal.eval_deterministic D A σ
+
+/-- Fixed chance nodes and player-owned behavioral kernels form an ordinary
+strategic game with exact kernel compilation. -/
+example {n : Nat} {Player : Type} [DecidableEq Player]
+    (D : DecisionDAG n) (owner : Fin n → Option Player)
+    (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (chance : ShapeDAG.Causal.LocalKernel D A)
+    (u : (∀ i, A i) → Player → ℝ)
+    (policy : ∀ player : Player,
+      ShapeDAG.Causal.PlayerPolicy (Player := Player) D A player) :
+    ShapeDAG.Causal.IsBehavioralNash D owner A chance u policy ↔
+      (ShapeDAG.Causal.compileBehavioral D owner A chance u).IsNash policy :=
+  ShapeDAG.Causal.isBehavioralNash_iff_kernelNash
+    D owner A chance u policy
+
 /-- Sparse graph conditioning has an exact one-action presentation without
 claiming an EFG subgame interpretation at imperfect information sets. -/
 example {n : Nat} (D : DecisionDAG n) {A : Fin n → Type}

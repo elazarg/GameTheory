@@ -17,6 +17,7 @@ import GameTheory.Languages.OpenGame.Mixed
 import GameTheory.Languages.OpenGame.CoendContext
 import GameTheory.Languages.OpenGame.Evolutionary
 import GameTheory.Languages.Bridges.OpenGame_EFG
+import GameTheory.Languages.Bridges.OpenGame_DAG_MAID
 import GameTheory.Languages.Bridges.OpenGame_MAID
 import GameTheory.Languages.Bridges.OpenGame_Mixed
 import GameTheory.Languages.OpenGame.Examples
