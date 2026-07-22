@@ -41,3 +41,14 @@ import Math.LinearAlgebra.WeightedIncidence
 import Math.LinearAlgebra.ZeroSum
 import Math.LinearProgramming
 import Math.Topology.WeakDominance
+
+/-!
+# Math
+
+Public umbrella for the repository's standalone mathematical library. Modules
+under `Math/` may support GameTheory developments, independent proof routes,
+or downstream users directly. Consequently, absence of an in-repository
+GameTheory caller is not by itself a deprecation signal; public results such as
+Scarf, Loomis minimax, Perron--Frobenius, and the specialized topology and
+optimization utilities are intentionally built by this target.
+-/
