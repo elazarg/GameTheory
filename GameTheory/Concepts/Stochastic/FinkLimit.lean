@@ -7888,6 +7888,63 @@ theorem summable_finkRelativeBoundaryWeightedHoldError_of_boundedDilation
         unfold finkPositiveContinuationGainSum
         exact Finset.sum_nonneg fun p hp => le_max_right _ _))
 
+/-- Quantitative form of the bounded-dilation hold estimate.  The whole
+repeated root bill is at most the dilation bound times the total next-layer
+hold defect. -/
+theorem tsum_finkRelativeBoundaryWeightedHoldError_le_of_boundedDilation
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (B : ℕ → ℝ) (β : ℕ → ℝ)
+    (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (W K : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (hnext : Summable (fun n =>
+      ‖G.finkContinuationResidualVector
+          (G.finkNextReferenceVector (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) W K) (z n)‖ +
+        G.finkPositiveContinuationGainSum
+          (G.finkNextReferenceVector (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) W K) (z n)))
+    (C : ℝ)
+    (hdilation : ∀ n,
+      (slowCalendarBlockLength B n : ℝ) *
+        ((1 - β n) / β n + ‖G.finkValue (z n) - W‖) ≤ C) :
+    ∑' n, (slowCalendarBlockLength B n : ℝ) *
+      (‖G.finkContinuationResidualVector
+          (W + G.finkReferenceCorrection (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) K) (z n)‖ +
+        G.finkPositiveContinuationGainSum
+          (W + G.finkReferenceCorrection (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) K) (z n)) ≤
+      C * ∑' n,
+        (‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector (β n / (1 - β n))
+              (G.finkRelativeBias (β n) W (z n)) W K) (z n)‖ +
+          G.finkPositiveContinuationGainSum
+            (G.finkNextReferenceVector (β n / (1 - β n))
+              (G.finkRelativeBias (β n) W (z n)) W K) (z n)) := by
+  have hweighted :=
+    G.summable_finkRelativeBoundaryWeightedHoldError_of_boundedDilation
+      B β hβpos hβ1 W K z hnext C hdilation
+  calc
+    _ ≤ ∑' n, C *
+        (‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector (β n / (1 - β n))
+              (G.finkRelativeBias (β n) W (z n)) W K) (z n)‖ +
+          G.finkPositiveContinuationGainSum
+            (G.finkNextReferenceVector (β n / (1 - β n))
+              (G.finkRelativeBias (β n) W (z n)) W K) (z n)) := by
+      apply hweighted.tsum_le_tsum
+      · intro n
+        rw [G.finkRelativeBoundaryHoldError_eq
+          (β n) (hβpos n) (hβ1 n) W K (z n)]
+        rw [← mul_assoc]
+        exact mul_le_mul_of_nonneg_right (hdilation n)
+          (add_nonneg (norm_nonneg _) (by
+            unfold finkPositiveContinuationGainSum
+            exact Finset.sum_nonneg fun p hp => le_max_right _ _))
+      · exact hnext.mul_left C
+    _ = _ := by rw [tsum_mul_left]
+
 /-- End-to-end slow-calendar form of the bounded-dilation criterion.  Fast
 adjacent corrected drift and summable next-layer defects remain summable
 after annealing whenever the calendar dilation is bounded in root-scale
@@ -7929,6 +7986,67 @@ theorem summable_finkRelativeBoundaryStepError_slowCalendar_of_boundedDilation
   have hslow := G.summable_finkCorrectedTargetStepError_slowCalendar
     W R z B (by simpa only [R] using hfast) hhold
   simpa only [R] using hslow.1
+
+/-- Quantitative end-to-end form: after slowing, total corrected drift is
+bounded by the fast adjacent bill plus `C` times the next-layer hold bill. -/
+theorem tsum_finkRelativeBoundaryStepError_slowCalendar_le_of_boundedDilation
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (B : ℕ → ℝ) (β : ℕ → ℝ)
+    (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (W K : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (hfast : Summable (fun n => G.finkCorrectedTargetStepError W
+      (fun m => G.finkReferenceCorrection (β m / (1 - β m))
+        (G.finkRelativeBias (β m) W (z m)) K) z n))
+    (hnext : Summable (fun n =>
+      ‖G.finkContinuationResidualVector
+          (G.finkNextReferenceVector (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) W K) (z n)‖ +
+        G.finkPositiveContinuationGainSum
+          (G.finkNextReferenceVector (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) W K) (z n)))
+    (C : ℝ)
+    (hdilation : ∀ n,
+      (slowCalendarBlockLength B n : ℝ) *
+        ((1 - β n) / β n + ‖G.finkValue (z n) - W‖) ≤ C) :
+    ∑' t, G.finkCorrectedTargetStepError W
+      ((fun m => G.finkReferenceCorrection (β m / (1 - β m))
+        (G.finkRelativeBias (β m) W (z m)) K) ∘
+          slowUnitStepCalendar B)
+      (z ∘ slowUnitStepCalendar B) t ≤
+      C * ∑' n,
+        (‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector (β n / (1 - β n))
+              (G.finkRelativeBias (β n) W (z n)) W K) (z n)‖ +
+          G.finkPositiveContinuationGainSum
+            (G.finkNextReferenceVector (β n / (1 - β n))
+              (G.finkRelativeBias (β n) W (z n)) W K) (z n)) +
+      ∑' n, G.finkCorrectedTargetStepError W
+        (fun m => G.finkReferenceCorrection (β m / (1 - β m))
+          (G.finkRelativeBias (β m) W (z m)) K) z n := by
+  let R : ℕ → G.State → Payoff ι := fun n =>
+    G.finkReferenceCorrection (β n / (1 - β n))
+      (G.finkRelativeBias (β n) W (z n)) K
+  have hhold : Summable (fun n => (slowCalendarBlockLength B n : ℝ) *
+      G.finkCorrectedTargetHoldError W R z n) := by
+    have h :=
+      G.summable_finkRelativeBoundaryWeightedHoldError_of_boundedDilation
+        B β hβpos hβ1 W K z hnext C hdilation
+    simpa only [finkCorrectedTargetHoldError, R] using h
+  have hslow := G.summable_finkCorrectedTargetStepError_slowCalendar
+    W R z B (by simpa only [R] using hfast) hhold
+  have hweighted :=
+    G.tsum_finkRelativeBoundaryWeightedHoldError_le_of_boundedDilation
+      B β hβpos hβ1 W K z hnext C hdilation
+  calc
+    _ ≤ (∑' n, (slowCalendarBlockLength B n : ℝ) *
+          G.finkCorrectedTargetHoldError W R z n) +
+        ∑' n, G.finkCorrectedTargetStepError W R z n := by
+      simpa only [R] using hslow.2
+    _ ≤ _ := by
+      exact add_le_add
+        (by simpa only [finkCorrectedTargetHoldError, R] using hweighted)
+        le_rfl
 
 /-- A directly checkable version of the slow-calendar rate bridge.  It is
 enough to control the next annealing cost against the current root scale;
