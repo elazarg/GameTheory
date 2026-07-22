@@ -624,16 +624,9 @@ private theorem nodeDist_decision (A : Fin n → Type)
     MAID.nodeDist (sequentialStruct A) (sequentialSem A k) pol
         (decisionNode i) a =
       pol i ⟨⟨decisionNode i, sequentialStruct_kind_decision A i⟩,
-        MAID.projCfg a ((sequentialStruct A).obsParents (decisionNode i))⟩ := by
-  unfold MAID.nodeDist
-  split
-  · next hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
-  · next p hk =>
-    have hp : p = i := by
-      injection hk.symm.trans (sequentialStruct_kind_decision A i)
-    subst p
-    rfl
-  · next p hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
+        MAID.projCfg a ((sequentialStruct A).obsParents (decisionNode i))⟩ :=
+  MAID.nodeDist_decision (sequentialSem A k) pol (decisionNode i) a i
+    (sequentialStruct_kind_decision A i)
 
 /-- Under an encoded pure policy, the native MAID decision kernel is the point
 mass at the open-game action prescribed by the assignment prefix. -/
@@ -718,16 +711,9 @@ private theorem nodeDist_utility (A : Fin n → Type)
     (pol : MAID.Policy (sequentialStruct A))
     (i : Fin n) (a : MAID.TAssign (sequentialStruct A)) :
     MAID.nodeDist (sequentialStruct A) (sequentialSem A k) pol
-        (utilityNode i) a = PMF.pure default := by
-  unfold MAID.nodeDist
-  split
-  · next hk => exact nomatch (sequentialStruct_kind_utility A i).symm.trans hk
-  · next p hk => exact nomatch (sequentialStruct_kind_utility A i).symm.trans hk
-  · next p hk =>
-    have hp : p = i := by
-      injection hk.symm.trans (sequentialStruct_kind_utility A i)
-    subst p
-    rfl
+        (utilityNode i) a = PMF.pure default :=
+  MAID.nodeDist_utility (sequentialSem A k) pol (utilityNode i) a i
+    (sequentialStruct_kind_utility A i)
 
 /-- Every local kernel of the canonical MAID agrees with the encoded realized
 assignment under an encoded pure policy. -/

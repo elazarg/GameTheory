@@ -221,45 +221,6 @@ noncomputable def pureStrategyEquivPlayer {S : MAID.Struct (Fin m) n}
 -- Evaluation equivalence
 -- ============================================================================
 
-/-- `nodeDist` at a chance node. -/
-private theorem nodeDist_chance {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S)
-    (pol : MAID.Policy S) (nd : Fin n) (assign : MAID.TAssign S)
-    (hk : S.kind nd = .chance) :
-    MAID.nodeDist S sem pol nd assign =
-    sem.chanceCPD ⟨nd, hk⟩ (MAID.projCfg assign (S.parents nd)) := by
-  unfold MAID.nodeDist
-  split
-  · rfl
-  · next p hk' => exact nomatch hk.symm.trans hk'
-  · next a hk' => exact nomatch hk.symm.trans hk'
-
-/-- `nodeDist` at a decision node. -/
-private theorem nodeDist_decision {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S)
-    (pol : MAID.Policy S) (nd : Fin n) (assign : MAID.TAssign S)
-    (p : Fin m) (hk : S.kind nd = .decision p) :
-    MAID.nodeDist S sem pol nd assign =
-    pol p ⟨⟨nd, hk⟩, MAID.projCfg assign (S.obsParents nd)⟩ := by
-  unfold MAID.nodeDist
-  split
-  · next hk' => exact nomatch hk.symm.trans hk'
-  · next p' hk' =>
-    have hp : p' = p := by injection hk'.symm.trans hk
-    subst hp; rfl
-  · next a hk' => exact nomatch hk.symm.trans hk'
-
-/-- `nodeDist` at a utility node is a point mass at `default`. -/
-private theorem nodeDist_utility {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S)
-    (pol : MAID.Policy S) (nd : Fin n) (assign : MAID.TAssign S)
-    (a : Fin m) (hk : S.kind nd = .utility a) :
-    MAID.nodeDist S sem pol nd assign = PMF.pure default := by
-  unfold MAID.nodeDist
-  split
-  · next hk' => exact nomatch hk.symm.trans hk'
-  · next p hk' => exact nomatch hk.symm.trans hk'
-  · next a' hk' =>
-    have ha : a' = a := by injection hk'.symm.trans hk
-    subst ha; rfl
-
 /-- `evalStep` on a `PMF.pure` reduces to `nodeDist.bind`. -/
 private theorem evalStep_pure {S : MAID.Struct (Fin m) n} (sem : MAID.Sem S)
     (pol : MAID.Policy S) (assign : MAID.TAssign S) (nd : Fin n) :

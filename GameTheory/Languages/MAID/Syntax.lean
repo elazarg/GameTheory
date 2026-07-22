@@ -256,6 +256,48 @@ noncomputable def nodeDist (S : Struct Player n) (sem : Sem S) (pol : Policy S)
   | .decision p => pol p ⟨⟨nd, hk⟩, projCfg a (S.obsParents nd)⟩
   | .utility _ => PMF.pure default
 
+/-- `nodeDist` at a chance node is its conditional probability distribution. -/
+theorem nodeDist_chance {S : Struct Player n} (sem : Sem S)
+    (pol : Policy S) (nd : Fin n) (assign : TAssign S)
+    (hk : S.kind nd = .chance) :
+    nodeDist S sem pol nd assign =
+      sem.chanceCPD ⟨nd, hk⟩ (projCfg assign (S.parents nd)) := by
+  unfold nodeDist
+  split
+  · rfl
+  · next p hk' => exact nomatch hk.symm.trans hk'
+  · next a hk' => exact nomatch hk.symm.trans hk'
+
+/-- `nodeDist` at a decision node is the acting player's policy at the
+corresponding information set. -/
+theorem nodeDist_decision {S : Struct Player n} (sem : Sem S)
+    (pol : Policy S) (nd : Fin n) (assign : TAssign S)
+    (p : Player) (hk : S.kind nd = .decision p) :
+    nodeDist S sem pol nd assign =
+      pol p ⟨⟨nd, hk⟩, projCfg assign (S.obsParents nd)⟩ := by
+  unfold nodeDist
+  split
+  · next hk' => exact nomatch hk.symm.trans hk'
+  · next p' hk' =>
+    have hp : p' = p := by injection hk'.symm.trans hk
+    subst hp
+    rfl
+  · next a hk' => exact nomatch hk.symm.trans hk'
+
+/-- `nodeDist` at a utility node is a point mass at its unique default value. -/
+theorem nodeDist_utility {S : Struct Player n} (sem : Sem S)
+    (pol : Policy S) (nd : Fin n) (assign : TAssign S)
+    (p : Player) (hk : S.kind nd = .utility p) :
+    nodeDist S sem pol nd assign = PMF.pure default := by
+  unfold nodeDist
+  split
+  · next hk' => exact nomatch hk.symm.trans hk'
+  · next p' hk' => exact nomatch hk.symm.trans hk'
+  · next p' hk' =>
+    have hp : p' = p := by injection hk'.symm.trans hk
+    subst hp
+    rfl
+
 /-- Update a total assignment at node `nd` with value `v`. -/
 def updateAssign {S : Struct Player n} (a : TAssign S) (nd : Fin n) (v : S.Val nd) :
     TAssign S :=
