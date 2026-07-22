@@ -537,6 +537,55 @@ def finkContinuationGain (G : StochasticGame ι)
   expect (pmfPi (G.finkProfile z s)) (fun a =>
     expect (G.transition s a) (fun s' => W s' who))
 
+/-- Continuation payoff of the current decoded Fink profile.  Naming this
+baseline keeps the semantic PMF expression available without repeatedly
+expanding its finite-coordinate presentation. -/
+def finkContinuationEU (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) : ℝ :=
+  expect (pmfPi (G.finkProfile z s)) (fun a =>
+    expect (G.transition s a) (fun s' => W s' who))
+
+/-- One-step harmonic residual of a target payoff under the current decoded
+Fink profile. -/
+def finkContinuationResidual (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) : ℝ :=
+  G.finkContinuationEU W z s who - W s who
+
+/-- Current one-stage payoff of the decoded Fink profile. -/
+def finkStageEU (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) : ℝ :=
+  expect (pmfPi (G.finkProfile z s)) (fun a => G.stagePayoff s a who)
+
+/-- The current one-stage payoff varies continuously with Fink's decoded
+mixed profile. -/
+theorem continuous_finkStageEU (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (s : G.State) (who : ι) :
+    Continuous (fun z : G.finkDomain U => G.finkStageEU z s who) := by
+  classical
+  have hc := G.continuous_finkAuxEU (U := U) 0 s who
+  convert hc using 1
+  funext z
+  rw [G.finkAuxEU_eq_discountedAuxEU, G.discountedAuxEU_eq]
+  simp [finkStageEU]
+
+/-- The on-profile continuation payoff is homogeneous in its continuation
+vector. -/
+theorem finkContinuationEU_smul (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (c : ℝ) (W : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) :
+    G.finkContinuationEU (c • W) z s who =
+      c * G.finkContinuationEU W z s who := by
+  unfold finkContinuationEU
+  simp_rw [Pi.smul_apply, smul_eq_mul, expect_const_mul]
+
 /-- Continuation gain is homogeneous in its continuation vector. -/
 theorem finkContinuationGain_smul (G : StochasticGame ι)
     [Fintype G.State] [Fintype ι] [DecidableEq ι]
@@ -585,10 +634,9 @@ theorem finkContinuationCoordEU_eq (G : StochasticGame ι)
     [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
     {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
     G.finkContinuationCoordEU W z s who =
-      expect (pmfPi (G.finkProfile z s)) (fun a =>
-        expect (G.transition s a) (fun s' => W s' who)) := by
+      G.finkContinuationEU W z s who := by
   classical
-  rw [finkContinuationCoordEU, expect_eq_sum]
+  rw [finkContinuationCoordEU, finkContinuationEU, expect_eq_sum]
   refine Finset.sum_congr rfl ?_
   intro a ha
   congr 1
@@ -628,6 +676,7 @@ theorem finkContinuationCoordGain_eq (G : StochasticGame ι)
   unfold finkContinuationCoordGain finkContinuationGain
   rw [G.finkDeviationContinuationCoordEU_eq,
     G.finkContinuationCoordEU_eq]
+  rfl
 
 /-- The coordinate presentation of continuation gain is a finite polynomial
 in the continuation vector and Fink-domain coordinates. -/
@@ -641,6 +690,32 @@ theorem continuous_finkContinuationCoordGain_param
     finkContinuationCoordEU
   simp_rw [expect_eq_sum]
   fun_prop
+
+/-- The coordinate presentation of the on-profile continuation expectation
+is jointly continuous in its continuation vector and Fink-domain coordinates. -/
+theorem continuous_finkContinuationCoordEU_param
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (s : G.State) (who : ι) :
+    Continuous (fun q : (G.State → Payoff ι) × G.finkDomain U =>
+      G.finkContinuationCoordEU q.1 q.2 s who) := by
+  classical
+  unfold finkContinuationCoordEU
+  simp_rw [expect_eq_sum]
+  fun_prop
+
+/-- The on-profile continuation expectation is jointly continuous in its
+continuation vector and Fink-domain coordinates. -/
+theorem continuous_finkContinuationEU_param
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (s : G.State) (who : ι) :
+    Continuous (fun q : (G.State → Payoff ι) × G.finkDomain U =>
+      G.finkContinuationEU q.1 q.2 s who) := by
+  classical
+  convert G.continuous_finkContinuationCoordEU_param (U := U) s who using 1
+  funext q
+  exact (G.finkContinuationCoordEU_eq q.1 q.2 s who).symm
 
 /-- Continuation gain is jointly continuous in the continuation vector and
 the finite-dimensional Fink coordinates. -/
@@ -687,6 +762,54 @@ def finkRelativeBias (G : StochasticGame ι)
     (β : ℝ) (W : G.State → Payoff ι) {U : ℝ}
     (z : G.finkDomain U) : G.State → Payoff ι :=
   fun s who => (β / (1 - β)) * (G.finkValue z s who - W s who)
+
+/-- The on-profile Bellman equation centered at an arbitrary target `W`.
+Besides the relative-bias drift, it exposes the scaled one-step harmonic
+residual of `W`. -/
+theorem finkValue_add_relativeBias_eq_stage_add
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β U : ℝ)
+    (hβ0 : 0 ≤ β) (hβ1 : β < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1.le hpay z = z)
+    (W : G.State → Payoff ι) (s : G.State) (who : ι) :
+    G.finkValue z s who + G.finkRelativeBias β W z s who =
+      expect (pmfPi (G.finkProfile z s))
+          (fun a => G.stagePayoff s a who) +
+        expect (pmfPi (G.finkProfile z s)) (fun a =>
+          expect (G.transition s a) (fun s' =>
+            G.finkRelativeBias β W z s' who)) +
+        (β / (1 - β)) *
+          (expect (pmfPi (G.finkProfile z s)) (fun a =>
+            expect (G.transition s a) (fun s' => W s' who)) - W s who) := by
+  have hvalue := G.finkAuxEU_eq_finkValue_of_finkMap_fixedPoint
+    β U hβ0 hβ1.le hpay z hfix s who
+  rw [G.finkAuxEU_eq_discountedAuxEU, G.discountedAuxEU_eq] at hvalue
+  unfold finkRelativeBias
+  simp_rw [expect_const_mul, expect_sub]
+  have hden : 1 - β ≠ 0 := ne_of_gt (sub_pos.mpr hβ1)
+  field_simp [hden]
+  nlinarith [hvalue]
+
+/-- Named-EU form of the centered on-profile Bellman equation. -/
+theorem finkValue_add_relativeBias_eq_finkEU_add
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β U : ℝ)
+    (hβ0 : 0 ≤ β) (hβ1 : β < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1.le hpay z = z)
+    (W : G.State → Payoff ι) (s : G.State) (who : ι) :
+    G.finkValue z s who + G.finkRelativeBias β W z s who =
+      G.finkStageEU z s who +
+        G.finkContinuationEU (G.finkRelativeBias β W z) z s who +
+        (β / (1 - β)) * G.finkContinuationResidual W z s who := by
+  simpa only [finkStageEU, finkContinuationEU, finkContinuationResidual]
+    using G.finkValue_add_relativeBias_eq_stage_add
+      β U hβ0 hβ1 hpay z hfix W s who
 
 /-- Continuation gain is linear in the continuation vector, so relative bias
 records exactly the scaled difference between the discounted-value and target
