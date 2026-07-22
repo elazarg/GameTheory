@@ -8,7 +8,7 @@ import GameTheory.Theorems.Kuhn
 import GameTheory.Theorems.Kuhn.BehavioralToMixed
 import GameTheory.Theorems.Kuhn.CorrelatedRealization
 import GameTheory.Theorems.Minimax
-import GameTheory.Theorems.OneShotDeviation
+import GameTheory.Languages.EFG.OneShotDeviation
 import GameTheory.Theorems.Zermelo
 import GameTheory.Theorems.CorrelatedEqExistence
 

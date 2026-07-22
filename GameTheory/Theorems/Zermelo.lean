@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Theorems.OneShotDeviation
+import GameTheory.Languages.EFG.OneShotDeviation
 import Math.Probability
 
 /-!

@@ -16,10 +16,8 @@ For finite perfect-information extensive-form games, a pure strategy profile
 is a subgame-perfect equilibrium if and only if no player has a profitable
 one-shot deviation at any decision node.
 
-This reusable EFG characterization lives in the language layer so bridge
-modules can depend on it without importing terminal `GameTheory.Theorems`
-modules. `GameTheory.Theorems.OneShotDeviation` remains a compatibility
-re-export.
+This reusable EFG characterization lives in the language layer so bridge and
+theorem modules can depend on it without importing a terminal theorem module.
 
 ## Main definitions
 
