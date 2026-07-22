@@ -16,6 +16,11 @@ essentially the *only* DSIC rules on unrestricted domains; this file proves the 
 direction (they are truthful), the canonical truthful class behind VCG. Serves
 Lavi/Monderer mechanism design.
 
+The separate `GameTheory.Auctions.VCG` API packages general Groves payments
+with an arbitrary report-independent `h` term and an informational-game view.
+The present module uses finite alternatives and the canonical Clarke pivot,
+but additionally covers positive affine weights and alternative biases.
+
 ## Main definitions
 
 * `affineObjective` / `affineChoice` — the weighted-welfare objective and its maximizer

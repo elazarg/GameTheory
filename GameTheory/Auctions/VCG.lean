@@ -17,6 +17,11 @@ their type, an efficient allocation is chosen, and payments are set so
 that each player's incentive aligns with social welfare maximization.
 The key result is that truthful reporting is a dominant strategy.
 
+For the finite-alternative Clarke-pivot specialization, and its extension to
+positive affine weights, see `GameTheory.Mechanism.Bayesian.AffineMaximizer`.
+This module instead permits an arbitrary report-independent Groves `h` term
+and supplies an informational-game view.
+
 ## Main definitions
 
 * `VCGSetup` — a VCG problem: types, outcomes, valuations, efficient allocation
