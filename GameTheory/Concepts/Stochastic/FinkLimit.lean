@@ -5781,6 +5781,248 @@ theorem expectedStateValue_deviation_le_initial_of_mixedContinuation_le
     z who dev s₀ hexcessive
   simpa using hanti (Nat.zero_le T)
 
+/-- A stationary average-reward Bellman certificate closes the verification
+problem without any annealing calendar.  Harmonicity/excessiveness transports
+the state-dependent target `W` through arbitrary horizons, while the bounded
+bias `H` contributes only an endpoint term. -/
+theorem isUniformEquilibriumPayoff_of_stationaryAverageRewardBias
+    (G : StochasticGame ι) [Finite G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)] (s₀ : G.State)
+    (x : G.StationaryMixedProfile) (W H : G.State → Payoff ι)
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (x s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (dev : PMF (G.Act who)),
+      expect (pmfPi (Function.update (x s) who dev)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (honProfile : ∀ s who,
+      W s who + H s who = G.mixedStageEU s (x s) who +
+        expect (pmfPi (x s)) (fun a =>
+          expect (G.transition s a) (fun s' => H s' who)))
+    (hdeviation : ∀ s who (dev : PMF (G.Act who)),
+      G.mixedStageEU s (Function.update (x s) who dev) who +
+          expect (pmfPi (Function.update (x s) who dev)) (fun a =>
+            expect (G.transition s a) (fun s' => H s' who)) ≤
+        W s who + H s who) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  letI : Fintype G.State := Fintype.ofFinite G.State
+  letI : ∀ i, Fintype (G.Act i) := fun i => Fintype.ofFinite (G.Act i)
+  apply G.isUniformEquilibriumPayoff_of_deviation_caps s₀ (W s₀)
+  intro δ hδ
+  let xConst : ℕ → G.StationaryMixedProfile := fun _ => x
+  let σ := G.scheduledMarkovBehaviorProfile xConst
+  let C : ℝ := ‖H‖
+  obtain ⟨N, hN⟩ := exists_nat_ge (2 * C / δ)
+  refine ⟨σ, N + 1, ?_⟩
+  intro T hT
+  have hTpos : 0 < T := lt_of_lt_of_le (Nat.zero_lt_succ N) hT
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hTpos
+  have hNT : (N : ℝ) ≤ T := by
+    exact_mod_cast (Nat.le_trans (Nat.le_succ N) hT)
+  have hratio : 2 * C / δ ≤ (T : ℝ) := hN.trans hNT
+  have hboundary : 2 * C / (T : ℝ) ≤ δ := by
+    rw [div_le_iff₀ hTreal]
+    have hδT : 2 * C ≤ δ * (T : ℝ) := by
+      simpa only [mul_comm] using (div_le_iff₀ hδ).mp hratio
+    nlinarith
+  have hHbound : ∀ t s who, |(fun _ : ℕ => H) t s who| ≤ C :=
+    fun _ s who => G.abs_finkBiasCoordinate_le_norm H s who
+  have htarget : ∀ who,
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.expectedStateValue σ s₀ t (fun s => W s who) =
+        W s₀ who := by
+    intro who
+    have hclose := G.scheduled_targetAverage_close_initial
+      xConst (fun _ => W) W (fun _ => 0) (fun _ => 0) who s₀
+      (fun _ _ => by simp)
+      (fun _ s => by rw [← hharmonic s]; simp) hTpos
+    have hzero : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        ((fun _ : ℕ => 0) t +
+          ∑ k ∈ Finset.range t, (fun _ : ℕ => 0) k) = 0 := by
+      simp
+    rw [hzero] at hclose
+    exact sub_eq_zero.mp (abs_eq_zero.mp (le_antisymm hclose (abs_nonneg _)))
+  constructor
+  · intro who
+    have hlo := G.finiteAveragePayoff_ge_targetAverage_of_averageReward_bellman_le
+      σ s₀ who (fun _ s => W s who) (fun _ s => H s who)
+        (fun _ => 0) (C0 := C) (CT := C)
+        (hHbound 0 · who) (hHbound T · who) (fun t h => by
+          change W h.2 who + H h.2 who ≤
+            G.mixedStageEU h.2 (x h.2) who +
+              expect (pmfPi (x h.2)) (fun a =>
+                expect (G.transition h.2 a) (fun s' => H s' who)) + 0
+          linarith [honProfile h.2 who]) hTpos
+    have hup := G.finiteAveragePayoff_le_targetAverage_of_averageReward_bellman_ge
+      σ s₀ who (fun _ s => W s who) (fun _ s => H s who)
+        (fun _ => 0) (C0 := C) (CT := C)
+        (hHbound 0 · who) (hHbound T · who) (fun t h => by
+          change G.mixedStageEU h.2 (x h.2) who +
+                expect (pmfPi (x h.2)) (fun a =>
+                  expect (G.transition h.2 a) (fun s' => H s' who)) ≤
+              W h.2 who + H h.2 who + 0
+          linarith [honProfile h.2 who]) hTpos
+    rw [htarget who] at hlo hup
+    simp only [add_zero, Finset.sum_const_zero, mul_zero] at hlo hup
+    have hboundary' : (C + C) / (T : ℝ) ≤ δ := by
+      simpa only [two_mul] using hboundary
+    rw [abs_le]
+    constructor <;> linarith
+  · intro who dev
+    have hexcessiveConst : ∀ t s (d : PMF (G.Act who)),
+        expect (pmfPi (Function.update (xConst t s) who d)) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) ≤
+            W s who + (fun _ : ℕ => 0) t := by
+      intro t s d
+      simpa only [xConst, add_zero] using hexcessive s who d
+    have htargetDev := G.scheduled_deviation_targetAverage_le_initial
+      xConst (fun _ => W) W (fun _ => 0) (fun _ => 0) who dev s₀
+      (fun _ _ => by simp)
+      hexcessiveConst hTpos
+    have hup := G.finiteAveragePayoff_le_targetAverage_of_averageReward_bellman_ge
+      (Function.update σ who dev) s₀ who
+        (fun _ s => W s who) (fun _ s => H s who) (fun _ => 0)
+        (C0 := C) (CT := C) (hHbound 0 · who) (hHbound T · who)
+        (fun t h => by
+          unfold stageEUAt
+          rw [G.stageActionDist_update_scheduledMarkovBehaviorProfile]
+          dsimp only [xConst]
+          change G.mixedStageEU h.2
+                (Function.update (x h.2) who (dev t h)) who +
+              expect (pmfPi (Function.update (x h.2) who (dev t h)))
+                (fun a => expect (G.transition h.2 a)
+                  (fun s' => H s' who)) ≤ W h.2 who + H h.2 who + 0
+          linarith [hdeviation h.2 who (dev t h)]) hTpos
+    simp only [Finset.sum_const_zero, add_zero, mul_zero] at htargetDev hup
+    have hboundary' : (C + C) / (T : ℝ) ≤ δ := by
+      simpa only [two_mul] using hboundary
+    linarith
+
+/-- A finite relative-bias branch closes to a stationary uniform equilibrium
+whenever its two singular target-continuation terms actually vanish.  The
+limit relative bias is then an average-reward Bellman bias, so the preceding
+stationary verification theorem applies and no slow calendar is needed. -/
+theorem isUniformEquilibriumPayoff_of_finkInteriorCertificate
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (s₀ : G.State)
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hscaledResidual : Tendsto (fun n =>
+      (β n / (1 - β n)) • G.finkContinuationResidualVector W (z n))
+        atTop (nhds 0))
+    (hscaledGain : ∀ s who (d : G.Act who),
+      Tendsto (fun n => (β n / (1 - β n)) *
+        G.finkContinuationGain W (z n) s who d) atTop (nhds 0)) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  let a : ℕ → ℝ := fun n => β n / (1 - β n)
+  let J : ℕ → G.State → Payoff ι := fun n =>
+    G.finkRelativeBias (β n) W (z n)
+  let E : ℕ → G.State → Payoff ι := fun n =>
+    G.finkContinuationResidualVector W (z n)
+  have hbellman : ∀ n s who,
+      G.finkValue (z n) s who + J n s who =
+        G.finkStageEU (z n) s who +
+          G.finkContinuationEU (J n) (z n) s who +
+            a n * E n s who := by
+    intro n s who
+    simpa only [J, E, a, finkContinuationResidualVector] using
+      G.finkValue_add_relativeBias_eq_finkEU_add
+        (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who
+  have hforcing := G.tendsto_smul_finkBellmanForcingVector hz hV
+    (by simpa only [J] using hH) a hbellman
+  have hforcingZero : G.finkBellmanForcingVector W H zlim = 0 := by
+    apply tendsto_nhds_unique hforcing
+    simpa only [a, E] using hscaledResidual
+  have honProfile : ∀ s who,
+      W s who + H s who =
+        G.mixedStageEU s (G.finkProfile zlim s) who +
+          expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+            expect (G.transition s a) (fun s' => H s' who)) := by
+    intro s who
+    have hcoord := congrFun (congrFun hforcingZero s) who
+    unfold finkBellmanForcingVector finkStageEU finkContinuationEU at hcoord
+    simp only [Pi.zero_apply] at hcoord
+    unfold mixedStageEU
+    linarith
+  have hpure : ∀ s who (d : G.Act who),
+      G.mixedStageEU s
+            (Function.update (G.finkProfile zlim s) who (PMF.pure d)) who +
+          expect (pmfPi (Function.update (G.finkProfile zlim s)
+            who (PMF.pure d))) (fun a =>
+              expect (G.transition s a) (fun s' => H s' who)) ≤
+        W s who + H s who := by
+    intro s who d
+    have hstage := G.tendsto_finkStageGain hz s who d
+    have htarget := hscaledGain s who d
+    have hbias := G.tendsto_finkContinuationGain_of_tendsto hH hz s who d
+    have hsum : Tendsto (fun n =>
+        G.finkStageGain (z n) s who d +
+          (β n / (1 - β n)) *
+            G.finkContinuationGain W (z n) s who d +
+          G.finkContinuationGain
+            (G.finkRelativeBias (β n) W (z n)) (z n) s who d)
+        atTop (nhds (G.finkStageGain zlim s who d +
+          G.finkContinuationGain H zlim s who d)) := by
+      simpa only [add_zero] using (hstage.add htarget).add hbias
+    have hnonpos : G.finkStageGain zlim s who d +
+        G.finkContinuationGain H zlim s who d ≤ 0 := by
+      apply le_of_tendsto_of_tendsto hsum
+        (tendsto_const_nhds : Tendsto (fun _ : ℕ => (0 : ℝ))
+          atTop (nhds 0))
+      exact Filter.Eventually.of_forall fun n =>
+        G.finkCenteredGain_nonpos_of_finkMap_fixedPoint
+          (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who d
+    unfold finkStageGain finkContinuationGain at hnonpos
+    have hon := honProfile s who
+    linarith
+  have hmixed : ∀ s who (dev : PMF (G.Act who)),
+      G.mixedStageEU s
+            (Function.update (G.finkProfile zlim s) who dev) who +
+          expect (pmfPi (Function.update (G.finkProfile zlim s) who dev))
+            (fun a => expect (G.transition s a) (fun s' => H s' who)) ≤
+        W s who + H s who := by
+    intro s who dev
+    calc
+      G.mixedStageEU s
+              (Function.update (G.finkProfile zlim s) who dev) who +
+            expect (pmfPi (Function.update (G.finkProfile zlim s) who dev))
+              (fun a => expect (G.transition s a) (fun s' => H s' who)) =
+          expect dev (fun d =>
+            G.mixedStageEU s
+                (Function.update (G.finkProfile zlim s) who (PMF.pure d)) who +
+              expect (pmfPi (Function.update (G.finkProfile zlim s)
+                who (PMF.pure d))) (fun a =>
+                  expect (G.transition s a) (fun s' => H s' who))) := by
+            unfold mixedStageEU
+            rw [pmfPi_update_bind]
+            rw [expect_bind, expect_bind, expect_add]
+      _ ≤ expect dev (fun _ => W s who + H s who) :=
+        expect_mono dev _ _ (hpure s who)
+      _ = W s who + H s who := expect_const dev _
+  apply G.isUniformEquilibriumPayoff_of_stationaryAverageRewardBias
+    s₀ (G.finkProfile zlim) W H hharmonic
+  · intro s who dev
+    exact G.mixedDeviationContinuation_le_of_pure_bound
+      (G.finkProfile zlim) W s who (W s who) (hexcessive s who) dev
+  · exact honProfile
+  · exact hmixed
+
 /-- Canonical vanishing-discount selection yields a stationary profile and
 bounded value function that are harmonic on path and excessive against every
 unilateral mixed action. -/
