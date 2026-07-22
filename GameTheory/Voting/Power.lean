@@ -82,7 +82,7 @@ induced by the fixed delegation profile. This value is not normalized across
 voters. -/
 noncomputable def delegationBanzhafPower (d : DelegationProfile ι β)
     (q : ℕ) (hq : 0 < q) (i : ι) : ℝ :=
-  (delegationPowerGame d q hq).banzhafIndex i
+  (delegationPowerGame d q hq).probabilisticBanzhafValue i
 
 /-- The Shapley--Shubik power of voter `i` in the simple delegation power game.
 The quota bound ensures that the grand coalition wins. -/

@@ -23,8 +23,8 @@ variable {ι : Type} [DecidableEq ι]
 An *additive* coalitional game has `v(S) = ∑_{i ∈ S} α i` for some
 per-player vector `α`. These are degenerate from a cooperative-game
 standpoint (no synergy from cooperation), but they form a natural class
-on which the Shapley value, Banzhaf index, and core all collapse to the
-identity allocation. -/
+on which the Shapley value, probabilistic Banzhaf value, and core all collapse
+to the identity allocation. -/
 
 /-- The additive game with weights `α`: `v(S) = ∑_{i ∈ S} α i`. -/
 def additiveGame (α : ι → ℝ) : CoalGame ι where
@@ -97,31 +97,31 @@ theorem additiveGame_eq_gameSum (α : ι → ℝ) :
     simp [Finset.singleton_subset_iff]
   rw [hfilter]
 
-/-- **Banzhaf index of an additive game**: each player receives exactly
-their own weight, like the Shapley value. Same decomposition trick:
-`additiveGame α = Σ_j (α j) · u_{j}`, and Banzhaf is linear with
-`banzhafIndex (unanimityGame {j}) i = 1[i = j]`. -/
-theorem additiveGame_banzhafIndex (α : ι → ℝ) (i : ι) :
-    (additiveGame α).banzhafIndex i = α i := by
+/-- **Probabilistic Banzhaf value of an additive game**: each player receives
+exactly their own weight, like the Shapley value. Same decomposition trick:
+`additiveGame α = Σ_j (α j) · u_{j}`, and the value is linear with
+`probabilisticBanzhafValue (unanimityGame {j}) i = 1[i = j]`. -/
+theorem additiveGame_probabilisticBanzhafValue (α : ι → ℝ) (i : ι) :
+    (additiveGame α).probabilisticBanzhafValue i = α i := by
   classical
   rw [additiveGame_eq_gameSum,
-    gameSum_allocation_eq banzhafIndex
-      (fun G₁ G₂ k => banzhafIndex_additive G₁ G₂ k)]
+    gameSum_allocation_eq probabilisticBanzhafValue
+      (fun G₁ G₂ k => probabilisticBanzhafValue_additive G₁ G₂ k)]
   -- shapleyValue (gameScalar (α j) (unanimityGame {j})) i = α j * (1[i = j])
   have hterm : ∀ j : ι,
-      banzhafIndex (gameScalar (α j)
+      probabilisticBanzhafValue (gameScalar (α j)
         (unanimityGame ({j} : Finset ι) (Finset.singleton_nonempty j))) i =
       if i = j then α j else 0 := by
     intro j
-    rw [banzhafIndex_scalar]
+    rw [probabilisticBanzhafValue_scalar]
     by_cases hij : i = j
     · subst hij
-      rw [unanimityGame_singleton_banzhafIndex, mul_one]
+      rw [unanimityGame_singleton_probabilisticBanzhafValue, mul_one]
       simp
     · have hnull : (unanimityGame ({j} : Finset ι) (Finset.singleton_nonempty j)).IsNull i := by
         apply unanimityGame_isNull_of_notMem
         simp [Finset.mem_singleton, hij]
-      rw [banzhafIndex_null _ hnull, mul_zero]
+      rw [probabilisticBanzhafValue_null _ hnull, mul_zero]
       simp [hij]
   rw [Finset.sum_congr rfl (fun j _ => hterm j)]
   simp [Finset.sum_ite_eq]
