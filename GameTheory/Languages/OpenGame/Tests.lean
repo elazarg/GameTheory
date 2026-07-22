@@ -183,6 +183,19 @@ example {X Y R : Type} (x : X) (k : Y → R) (y : Y) :
         Math.FinPMF.pure (k y) := by
   simp
 
+/-- The coend context exposes a quotient-invariant joint response whose first
+marginal is the visible history law. -/
+example {X Y R : Type} (c : CoendContext X Y R) (policy : X → Y) :
+    Math.FinPMF.map Prod.fst (CoendContext.jointResponse c policy) =
+      CoendContext.historyMarginal c :=
+  CoendContext.map_fst_jointResponse c policy
+
+/-- Deterministic contexts give the expected point-mass joint response. -/
+example {X Y R : Type} (x : X) (k : Y → R) (policy : X → Y) :
+    CoendContext.jointResponse (CoendContext.ofDeterministic x k) policy =
+      Math.FinPMF.pure (x, k (policy x)) := by
+  simp
+
 /-- The public coend API exposes its generating hidden-state
 reparameterization equation. -/
 example {X Y R Θ Ξ : Type} (f : Θ → Ξ)

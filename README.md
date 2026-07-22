@@ -143,8 +143,10 @@ randomization over Nash equilibria, with checked strict-separation examples.
 The Bayesian-context foundation implements the concrete hidden-state coend:
 joint finite laws on `Θ × X` and continuation kernels `Θ × Y → FinPMF R` are
 quotiented by reparameterization. Deterministic contexts embed canonically;
-visible-history and unconditional-response marginals descend to the quotient.
-Full Bayesian open-game composition is not yet claimed.
+visible-history, unconditional-response, and policy-indexed joint
+history/cooutcome laws descend to the quotient. The joint law retains hidden
+correlation and recovers the two existing marginals in the constant-policy
+cases. Full Bayesian open-game composition is not yet claimed.
 Evolutionary stability has an exact symmetric-shape bridge: its Nash clause is
 ordinary open-game equilibrium and its second clause is the additional
 invasion-stability condition. ESS is proved closed under independent additive

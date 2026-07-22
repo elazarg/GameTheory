@@ -88,6 +88,15 @@ def responseAt (c : CoendContextRep X Y R) (y : Y) : Math.FinPMF R :=
   Math.FinPMF.bind (Math.FinPMF.map Prod.fst c.prior)
     fun θ => c.continuation (θ, y)
 
+/-- Joint visible-history/cooutcome response under a deterministic policy.
+Unlike the two separate marginals, this observable retains correlation routed
+through the hidden state. -/
+def jointResponse (c : CoendContextRep X Y R) (policy : X → Y) :
+    Math.FinPMF (X × R) :=
+  Math.FinPMF.bind c.prior fun z =>
+    Math.FinPMF.map (fun r => (z.2, r))
+      (c.continuation (z.1, policy z.2))
+
 /-- The unconditional response law is invariant under hidden-state
 reparameterization. -/
 theorem responseAt_eq_of_reparam {c d : CoendContextRep X Y R}
@@ -99,6 +108,44 @@ theorem responseAt_eq_of_reparam {c d : CoendContextRep X Y R}
   | refl => rfl
   | symm _ _ _ ih => exact ih.symm
   | trans _ _ _ _ _ ih ih' => exact ih.trans ih'
+
+/-- The joint response is invariant under hidden-state
+reparameterization. -/
+theorem jointResponse_eq_of_reparam {c d : CoendContextRep X Y R}
+    (h : Reparam c d) (policy : X → Y) :
+    jointResponse c policy = jointResponse d policy := by
+  induction h with
+  | rel c d hstep =>
+      cases hstep
+      simp [jointResponse, Function.comp_def]
+  | refl => rfl
+  | symm _ _ _ ih => exact ih.symm
+  | trans _ _ _ _ _ ih ih' => exact ih.trans ih'
+
+/-- The first marginal of the joint response is the visible history law. -/
+@[simp] theorem map_fst_jointResponse (c : CoendContextRep X Y R)
+    (policy : X → Y) :
+    Math.FinPMF.map Prod.fst (jointResponse c policy) =
+      historyMarginal c := by
+  simp only [jointResponse, Math.FinPMF.map_bind, Math.FinPMF.map_comp,
+    Function.comp_def, Math.FinPMF.map_const, historyMarginal]
+  apply Math.FinPMF.ext
+  change c.prior.toPMF.bind (fun a => PMF.pure a.2) =
+    c.prior.toPMF.map Prod.snd
+  rw [← PMF.bind_pure_comp]
+  rfl
+
+/-- For a constant policy, the second joint-response marginal is the existing
+unconditional response at that output. -/
+@[simp] theorem map_snd_jointResponse_const (c : CoendContextRep X Y R)
+    (y : Y) :
+    Math.FinPMF.map Prod.snd (jointResponse c (fun _ => y)) =
+      responseAt c y := by
+  simp only [jointResponse, Math.FinPMF.map_bind, Math.FinPMF.map_comp,
+    Function.comp_def, responseAt, Math.FinPMF.bind_map]
+  congr 1
+  funext z
+  exact Math.FinPMF.map_id _
 
 end CoendContextRep
 
@@ -148,6 +195,13 @@ def responseAt (c : CoendContext X Y R) (y : Y) : Math.FinPMF R :=
   Quotient.lift (fun representative => representative.responseAt y)
     (fun _ _ h => CoendContextRep.responseAt_eq_of_reparam h y) c
 
+/-- The policy-indexed joint visible-history/cooutcome response is
+well-defined on coend classes. -/
+def jointResponse (c : CoendContext X Y R) (policy : X → Y) :
+    Math.FinPMF (X × R) :=
+  Quotient.lift (fun representative => representative.jointResponse policy)
+    (fun _ _ h => CoendContextRep.jointResponse_eq_of_reparam h policy) c
+
 @[simp] theorem historyMarginal_mk (c : CoendContextRep X Y R) :
     historyMarginal (mk c) = c.historyMarginal := rfl
 
@@ -159,6 +213,32 @@ def responseAt (c : CoendContext X Y R) (y : Y) : Math.FinPMF R :=
 @[simp] theorem responseAt_ofDeterministic (x : X) (k : Y → R) (y : Y) :
     responseAt (ofDeterministic x k) y = Math.FinPMF.pure (k y) := by
   simp [responseAt, ofDeterministic, mk, CoendContextRep.responseAt]
+
+@[simp] theorem jointResponse_mk (c : CoendContextRep X Y R)
+    (policy : X → Y) :
+    jointResponse (mk c) policy = c.jointResponse policy := rfl
+
+@[simp] theorem jointResponse_ofDeterministic (x : X) (k : Y → R)
+    (policy : X → Y) :
+    jointResponse (ofDeterministic x k) policy =
+      Math.FinPMF.pure (x, k (policy x)) := by
+  simp [jointResponse, ofDeterministic, mk, CoendContextRep.jointResponse]
+
+@[simp] theorem map_fst_jointResponse (c : CoendContext X Y R)
+    (policy : X → Y) :
+    Math.FinPMF.map Prod.fst (jointResponse c policy) =
+      historyMarginal c := by
+  refine Quotient.inductionOn c ?_
+  intro representative
+  exact CoendContextRep.map_fst_jointResponse representative policy
+
+@[simp] theorem map_snd_jointResponse_const (c : CoendContext X Y R)
+    (y : Y) :
+    Math.FinPMF.map Prod.snd (jointResponse c (fun _ => y)) =
+      responseAt c y := by
+  refine Quotient.inductionOn c ?_
+  intro representative
+  exact CoendContextRep.map_snd_jointResponse_const representative y
 
 end CoendContext
 
