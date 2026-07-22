@@ -299,6 +299,15 @@ def finkBiasCoordinate (G : StochasticGame ι)
     (H : G.State → Payoff ι) (p : G.FinkBiasIndex) : ℝ :=
   H p.1 p.2
 
+/-- Every state/player coordinate is bounded by the finite-product sup norm. -/
+theorem abs_finkBiasCoordinate_le_norm
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : G.State → Payoff ι) (s : G.State) (who : ι) :
+    |H s who| ≤ ‖H‖ := by
+  have hplayer : ‖H s who‖ ≤ ‖H s‖ := norm_le_pi_norm (H s) who
+  have hstate : ‖H s‖ ≤ ‖H‖ := norm_le_pi_norm H s
+  simpa only [Real.norm_eq_abs] using hplayer.trans hstate
+
 /-- Add one protected state/player coordinate without exposing a decidable
 equality assumption in theorem statements. -/
 noncomputable def extendFinkBiasMask (G : StochasticGame ι)
@@ -5988,6 +5997,293 @@ theorem exists_fast_approachOne_finkFixedPoint_family
 -- Time-dependent potential verification
 -- ============================================================================
 
+/-- Exact on-profile one-step decomposition for adjacent corrections.  The
+defect is the same-index continuation residual plus the continuation value of
+the correction increment. -/
+theorem fink_correctedTarget_onProfile_step_eq
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (W R₀ R₁ : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) :
+    expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who + R₁ s' who)) -
+      (W s who + R₀ s who) =
+    G.finkContinuationResidual (W + R₀) z s who +
+      G.finkContinuationEU (R₁ - R₀) z s who := by
+  change G.finkContinuationEU (W + R₁) z s who -
+      (W + R₀) s who = _
+  rw [show W + R₁ = (W + R₀) + (R₁ - R₀) by abel]
+  rw [G.finkContinuationEU_add]
+  simp only [finkContinuationResidual, Pi.add_apply]
+  ring
+
+/-- Exact pure-deviation analogue of
+`fink_correctedTarget_onProfile_step_eq`. -/
+theorem fink_correctedTarget_pureDeviation_step_eq
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W R₀ R₁ : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι)
+    (d : G.Act who) :
+    expect (pmfPi (Function.update (G.finkProfile z s)
+        who (PMF.pure d))) (fun a =>
+      expect (G.transition s a) (fun s' => W s' who + R₁ s' who)) -
+        (W s who + R₀ s who) =
+      G.finkContinuationResidual (W + R₀) z s who +
+        G.finkContinuationGain (W + R₀) z s who d +
+        expect (pmfPi (Function.update (G.finkProfile z s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => (R₁ - R₀) s' who)) := by
+  change (expect (pmfPi (Function.update (G.finkProfile z s)
+      who (PMF.pure d))) (fun a =>
+    expect (G.transition s a) (fun s' => (W + R₁) s' who))) -
+      (W + R₀) s who = _
+  rw [show W + R₁ = (W + R₀) + (R₁ - R₀) by abel]
+  unfold finkContinuationResidual finkContinuationGain finkContinuationEU
+  simp_rw [Pi.add_apply, expect_add]
+  ring
+
+/-- Same-index harmonic error and adjacent correction motion jointly bound
+the on-profile time-dependent potential step. -/
+theorem abs_fink_correctedTarget_onProfile_step_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (W R₀ R₁ : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) (r m : ℝ)
+    (hresidual : |G.finkContinuationResidual (W + R₀) z s who| ≤ r)
+    (hmove : ∀ s', |(R₁ - R₀) s' who| ≤ m) :
+    |expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who + R₁ s' who)) -
+      (W s who + R₀ s who)| ≤ r + m := by
+  rw [G.fink_correctedTarget_onProfile_step_eq W R₀ R₁ z s who]
+  have hcontinuation :
+      |G.finkContinuationEU (R₁ - R₀) z s who| ≤ m := by
+    unfold finkContinuationEU
+    exact abs_expect_le_of_abs_le _ _ fun a =>
+      abs_expect_le_of_abs_le _ _ hmove
+  exact (abs_add_le _ _).trans (add_le_add hresidual hcontinuation)
+
+/-- Pure gain bounds lift to arbitrary mixed deviations after adding the
+same-index residual and adjacent correction-motion charges. -/
+theorem fink_correctedTarget_mixedDeviation_step_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W R₀ R₁ : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι)
+    (r g m : ℝ)
+    (hresidual : G.finkContinuationResidual (W + R₀) z s who ≤ r)
+    (hgain : ∀ d : G.Act who,
+      G.finkContinuationGain (W + R₀) z s who d ≤ g)
+    (hmove : ∀ s', |(R₁ - R₀) s' who| ≤ m)
+    (dev : PMF (G.Act who)) :
+    expect (pmfPi (Function.update (G.finkProfile z s) who dev)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who + R₁ s' who)) ≤
+      W s who + R₀ s who + (r + g + m) := by
+  apply G.mixedDeviationContinuation_le_of_pure_bound
+    (G.finkProfile z) (W + R₁) s who
+      (W s who + R₀ s who + (r + g + m))
+  intro d
+  have hmovePure :
+      expect (pmfPi (Function.update (G.finkProfile z s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => (R₁ - R₀) s' who)) ≤ m := by
+    exact (le_abs_self _).trans (abs_expect_le_of_abs_le _ _ fun a =>
+      abs_expect_le_of_abs_le _ _ hmove)
+  have hdecomp :=
+    G.fink_correctedTarget_pureDeviation_step_eq W R₀ R₁ z s who d
+  simp only [Pi.add_apply] at ⊢
+  linarith [hgain d]
+
+/-- Finite sum of the positive pure-deviation continuation gains of a
+potential.  Using a sum rather than a maximum also covers degenerate empty
+coordinate types without extra inhabitedness assumptions. -/
+noncomputable def finkPositiveContinuationGainSum
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (C : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U) : ℝ :=
+  ∑ p : G.FinkPureActionIndex,
+    max (G.finkContinuationGain C z p.1 p.2.1 p.2.2) 0
+
+theorem finkContinuationGain_le_positiveSum
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (C : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkContinuationGain C z s who d ≤
+      G.finkPositiveContinuationGainSum C z := by
+  classical
+  let q : G.FinkPureActionIndex := ⟨s, ⟨who, d⟩⟩
+  calc
+    G.finkContinuationGain C z s who d ≤
+        max (G.finkContinuationGain C z s who d) 0 := le_max_left _ _
+    _ ≤ ∑ p : G.FinkPureActionIndex,
+        max (G.finkContinuationGain C z p.1 p.2.1 p.2.2) 0 := by
+      let f : G.FinkPureActionIndex → ℝ := fun p =>
+        max (G.finkContinuationGain C z p.1 p.2.1 p.2.2) 0
+      change f q ≤ ∑ p, f p
+      exact Finset.single_le_sum
+        (fun p _ => le_max_right
+          (G.finkContinuationGain C z p.1 p.2.1 p.2.2) 0)
+        (Finset.mem_univ q)
+    _ = G.finkPositiveContinuationGainSum C z := rfl
+
+/-- Uniform asymptotic nonpositivity of the finitely many pure gains is
+equivalent to vanishing of their summed positive parts in the direction used
+below. -/
+theorem tendsto_finkPositiveContinuationGainSum_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (C : ℕ → G.State → Payoff ι) {U : ℝ}
+    (z : ℕ → G.finkDomain U)
+    (hgain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain (C n) (z n) s who d ≤ ε) :
+    Tendsto (fun n => G.finkPositiveContinuationGainSum (C n) (z n))
+      atTop (nhds 0) := by
+  apply Metric.tendsto_atTop.2
+  intro ε hε
+  let card : ℝ := Fintype.card G.FinkPureActionIndex
+  let δ : ℝ := ε / (card + 1)
+  have hcard0 : 0 ≤ card := by
+    dsimp only [card]
+    positivity
+  have hδ : 0 < δ := div_pos hε (by linarith)
+  apply Filter.eventually_atTop.mp
+  filter_upwards [hgain δ hδ] with n hn
+  have hsum0 : 0 ≤ G.finkPositiveContinuationGainSum (C n) (z n) := by
+    unfold finkPositiveContinuationGainSum
+    exact Finset.sum_nonneg fun p _ => le_max_right _ _
+  have hsum : G.finkPositiveContinuationGainSum (C n) (z n) ≤
+      Fintype.card G.FinkPureActionIndex * δ := by
+    unfold finkPositiveContinuationGainSum
+    calc
+      ∑ p : G.FinkPureActionIndex,
+          max (G.finkContinuationGain (C n) (z n)
+            p.1 p.2.1 p.2.2) 0 ≤
+          ∑ _p : G.FinkPureActionIndex, δ := by
+        apply Finset.sum_le_sum
+        intro p hp
+        exact max_le (hn p.1 p.2.1 p.2.2) hδ.le
+      _ = Fintype.card G.FinkPureActionIndex * δ := by
+        simp
+  have hcardδ : Fintype.card G.FinkPureActionIndex * δ < ε := by
+    change card * (ε / (card + 1)) < ε
+    rw [show card * (ε / (card + 1)) =
+      (card * ε) / (card + 1) by ring]
+    rw [div_lt_iff₀ (by linarith : 0 < card + 1)]
+    nlinarith
+  rw [Real.dist_eq, sub_zero, abs_of_nonneg hsum0]
+  exact hsum.trans_lt hcardδ
+
+/-- One scalar charges all defects in an adjacent corrected-target step:
+same-index harmonic residual, positive pure-deviation gain, and correction
+motion. -/
+noncomputable def finkCorrectedTargetStepError
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (t : ℕ) : ℝ :=
+  ‖G.finkContinuationResidualVector (W + R t) (z t)‖ +
+    G.finkPositiveContinuationGainSum (W + R t) (z t) +
+    ‖R (t + 1) - R t‖
+
+theorem finkCorrectedTargetStepError_nonneg
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (t : ℕ) :
+    0 ≤ G.finkCorrectedTargetStepError W R z t := by
+  unfold finkCorrectedTargetStepError finkPositiveContinuationGainSum
+  positivity
+
+/-- If corrections, same-index residuals, and positive deviation gains all
+vanish, then the actual adjacent corrected-target step error vanishes.  This
+is the precise non-summable input delivered by the hierarchy. -/
+theorem tendsto_finkCorrectedTargetStepError_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U)
+    (hR : Tendsto R atTop (nhds 0))
+    (hresidual : Tendsto (fun n => G.finkContinuationResidualVector
+      (W + R n) (z n)) atTop (nhds 0))
+    (hgain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain (W + R n) (z n) s who d ≤ ε) :
+    Tendsto (fun n => G.finkCorrectedTargetStepError W R z n)
+      atTop (nhds 0) := by
+  have hresidualNorm : Tendsto (fun n =>
+      ‖G.finkContinuationResidualVector (W + R n) (z n)‖)
+      atTop (nhds 0) := by
+    simpa only [norm_zero] using hresidual.norm
+  have hgainSum := G.tendsto_finkPositiveContinuationGainSum_zero
+    (fun n => W + R n) z hgain
+  have hRsucc : Tendsto (fun n => R (n + 1)) atTop (nhds 0) :=
+    hR.comp (tendsto_add_atTop_nat 1)
+  have hmove : Tendsto (fun n => ‖R (n + 1) - R n‖)
+      atTop (nhds 0) := by
+    simpa using (hRsucc.sub hR).norm
+  simpa only [finkCorrectedTargetStepError, zero_add] using
+    (hresidualNorm.add hgainSum).add hmove
+
+/-- The canonical corrected-target error controls the on-profile step in the
+exact form consumed by the time-dependent potential telescope. -/
+theorem abs_fink_correctedTarget_onProfile_step_le_stepError
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (t : ℕ)
+    (s : G.State) (who : ι) :
+    |expect (pmfPi (G.finkProfile (z t) s)) (fun a =>
+        expect (G.transition s a)
+          (fun s' => W s' who + R (t + 1) s' who)) -
+      (W s who + R t s who)| ≤
+        G.finkCorrectedTargetStepError W R z t := by
+  have hresidual :
+      |G.finkContinuationResidual (W + R t) (z t) s who| ≤
+        ‖G.finkContinuationResidualVector (W + R t) (z t)‖ := by
+    exact G.abs_finkBiasCoordinate_le_norm
+      (G.finkContinuationResidualVector (W + R t) (z t)) s who
+  have hmove : ∀ s', |(R (t + 1) - R t) s' who| ≤
+      ‖R (t + 1) - R t‖ := fun s' =>
+    G.abs_finkBiasCoordinate_le_norm (R (t + 1) - R t) s' who
+  have hstep := G.abs_fink_correctedTarget_onProfile_step_le
+    W (R t) (R (t + 1)) (z t) s who
+      ‖G.finkContinuationResidualVector (W + R t) (z t)‖
+      ‖R (t + 1) - R t‖ hresidual hmove
+  have hgainNonneg : 0 ≤
+      G.finkPositiveContinuationGainSum (W + R t) (z t) := by
+    unfold finkPositiveContinuationGainSum
+    exact Finset.sum_nonneg fun p _ => le_max_right _ _
+  exact hstep.trans (by
+    unfold finkCorrectedTargetStepError
+    linarith)
+
+/-- The same canonical error controls every mixed unilateral deviation, and
+hence every history-dependent deviation after the telescope. -/
+theorem fink_correctedTarget_mixedDeviation_step_le_stepError
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (t : ℕ)
+    (s : G.State) (who : ι) (dev : PMF (G.Act who)) :
+    expect (pmfPi (Function.update (G.finkProfile (z t) s) who dev))
+        (fun a => expect (G.transition s a)
+          (fun s' => W s' who + R (t + 1) s' who)) ≤
+      W s who + R t s who + G.finkCorrectedTargetStepError W R z t := by
+  apply G.fink_correctedTarget_mixedDeviation_step_le
+    W (R t) (R (t + 1)) (z t) s who
+      ‖G.finkContinuationResidualVector (W + R t) (z t)‖
+      (G.finkPositiveContinuationGainSum (W + R t) (z t))
+      ‖R (t + 1) - R t‖
+  · exact (le_abs_self _).trans
+      (G.abs_finkBiasCoordinate_le_norm
+        (G.finkContinuationResidualVector (W + R t) (z t)) s who)
+  · intro d
+    exact G.finkContinuationGain_le_positiveSum (W + R t) (z t) s who d
+  · intro s'
+    exact G.abs_finkBiasCoordinate_le_norm (R (t + 1) - R t) s' who
+
 /-- A time-dependent state potential telescopes along a scheduled Markov
 profile.  Unlike a pointwise bound on the drift of one fixed target, this
 form retains cancellations supplied by Poisson corrections. -/
@@ -6607,6 +6903,50 @@ theorem FinkVerifiedReferenceResolution.relativeBias_rootCorrection_dichotomy
     β hβpos hβ1 hβlim z W hV
   simpa only [Function.comp_def] using
     hresolution.rootCorrection_dichotomy G ha hscale0 hscale
+
+/-- Scalar-error form of `relativeBias_rootCorrection_dichotomy`.  In the
+boundary branch the hierarchy produces exactly the time-dependent step error
+used by the corrected-target verifier, and that error tends to zero. -/
+theorem FinkVerifiedReferenceResolution.relativeBias_rootStepError_dichotomy
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1)) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hresolution : G.FinkVerifiedReferenceResolution z
+      (fun n => G.finkValue (z n))
+      (fun n => β n / (1 - β n))
+      (fun n => G.finkRelativeBias (β n) W (z n))
+      (fun _ => W)) :
+    (∃ (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι),
+      StrictMono φ ∧ Tendsto (fun n =>
+        G.finkRelativeBias (β (φ n)) W (z (φ n)))
+          atTop (nhds Jlim)) ∨
+    ∃ (K : G.State → Payoff ι) (φ : ℕ → ℕ),
+      StrictMono φ ∧ ‖K‖ = 1 ∧
+      let R : ℕ → G.State → Payoff ι := fun n =>
+        G.finkReferenceCorrection
+          (β (φ n) / (1 - β (φ n)))
+          (G.finkRelativeBias (β (φ n)) W (z (φ n))) K
+      Tendsto R atTop (nhds 0) ∧
+        Tendsto (fun n => G.finkCorrectedTargetStepError W R
+          (fun k => z (φ k)) n) atTop (nhds 0) := by
+  rcases hresolution.relativeBias_rootCorrection_dichotomy G
+      β hβpos hβ1 hβlim z W hV with hinterior | hboundary
+  · exact Or.inl hinterior
+  · right
+    obtain ⟨K, φ, hφ, hKnorm, hR, hresidual, hgain⟩ := hboundary
+    let R : ℕ → G.State → Payoff ι := fun n =>
+      G.finkReferenceCorrection
+        (β (φ n) / (1 - β (φ n)))
+        (G.finkRelativeBias (β (φ n)) W (z (φ n))) K
+    have hstep : Tendsto (fun n => G.finkCorrectedTargetStepError W R
+        (fun k => z (φ k)) n) atTop (nhds 0) := by
+      exact G.tendsto_finkCorrectedTargetStepError_zero W R
+        (fun k => z (φ k)) hR hresidual hgain
+    exact ⟨K, φ, hφ, hKnorm, hR, hstep⟩
 
 /-- Activation times for a slow calendar.  Layer `n` is not activated before
 calendar time `n * |B n|`, and consecutive activation times are distinct. -/
