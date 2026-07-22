@@ -292,6 +292,13 @@ def finkCorrectedBias (G : StochasticGame ι)
     (H K : G.State → Payoff ι) : G.State → Payoff ι :=
   H - (1 + ‖H‖) • K
 
+/-- First corrected relative bias of a discounted Fink point around `W`. -/
+def finkCorrectedRelativeBias (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (β : ℝ) (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.State → Payoff ι :=
+  G.finkCorrectedBias (G.finkRelativeBias β W z) K
+
 /-- Error left after the leading boundary direction cancels the magnified
 harmonic residual of `W`. -/
 def finkPoissonRemainder (G : StochasticGame ι)
@@ -301,6 +308,28 @@ def finkPoissonRemainder (G : StochasticGame ι)
   G.finkProjectiveBiasScale β W z *
       G.finkContinuationResidual W z s who -
     (K s who - G.finkContinuationEU K z s who)
+
+/-- All coordinates of the first Poisson remainder. -/
+def finkPoissonRemainderVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (β : ℝ) (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.State → Payoff ι :=
+  fun s who => G.finkPoissonRemainder β W K z s who
+
+/-- Successor-value vector under the current decoded Fink profile. -/
+def finkContinuationVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.State → Payoff ι :=
+  fun s who => G.finkContinuationEU K z s who
+
+/-- Remainder produced by removing direction `L` from a bias `J` whose
+Bellman forcing is `a • E`. -/
+def finkNextPoissonRemainderVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (E J L : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.State → Payoff ι :=
+  (a / (1 + ‖J‖)) • E - (L - G.finkContinuationVector L z)
 
 /-- Radial compactification of the relative bias is exactly the value error
 rescaled by `finkProjectiveBiasScale`. -/
@@ -314,6 +343,94 @@ theorem compactify_finkRelativeBias_eq
   simp only [compactifyFinkBias, finkProjectiveBiasScale,
     finkRelativeBias, Pi.smul_apply, Pi.sub_apply, smul_eq_mul]
   ring
+
+/-- Removing a radial direction is exactly the error of the compactified
+bias from that direction, rescaled back to the original magnitude. -/
+theorem inv_magnitude_smul_finkCorrectedBias
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H K : G.State → Payoff ι) :
+    (1 / (1 + ‖H‖)) • G.finkCorrectedBias H K =
+      G.compactifyFinkBias H - K := by
+  have hmag : 1 + ‖H‖ ≠ 0 := by positivity
+  ext s who
+  simp only [finkCorrectedBias, compactifyFinkBias, Pi.smul_apply,
+    Pi.sub_apply, smul_eq_mul]
+  field_simp [hmag]
+
+/-- Norm form of `inv_magnitude_smul_finkCorrectedBias`. -/
+theorem norm_finkCorrectedBias_div_magnitude
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H K : G.State → Payoff ι) :
+    ‖G.finkCorrectedBias H K‖ / (1 + ‖H‖) =
+      ‖G.compactifyFinkBias H - K‖ := by
+  have heq := congrArg norm (G.inv_magnitude_smul_finkCorrectedBias H K)
+  rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (by positivity :
+    0 ≤ (1 / (1 + ‖H‖) : ℝ))] at heq
+  rw [div_eq_mul_inv]
+  calc
+    ‖G.finkCorrectedBias H K‖ * (1 + ‖H‖)⁻¹ =
+        (1 + ‖H‖)⁻¹ * ‖G.finkCorrectedBias H K‖ := by ring
+    _ = ‖G.compactifyFinkBias H - K‖ := by
+      simpa only [one_mul, one_div] using heq
+
+/-- A corrected bias is genuinely lower order than the bias from which its
+leading compactified direction was removed. -/
+theorem tendsto_norm_finkCorrectedBias_div_magnitude_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {K : G.State → Payoff ι}
+    (hlim : Tendsto (G.compactifyFinkBias ∘ H) atTop (nhds K)) :
+    Tendsto (fun n => ‖G.finkCorrectedBias (H n) K‖ /
+      (1 + ‖H n‖)) atTop (nhds 0) := by
+  have hconstant : Tendsto (fun _ : ℕ => K) atTop (nhds K) :=
+    tendsto_const_nhds
+  have hdiff := (hlim.sub hconstant).norm
+  have hdiff' : Tendsto (fun n =>
+      ‖G.compactifyFinkBias (H n) - K‖) atTop (nhds 0) := by
+    simpa only [Function.comp_def, sub_self, norm_zero] using hdiff
+  apply hdiff'.congr'
+  exact Filter.Eventually.of_forall fun n => by
+    simpa only [Function.comp_def] using
+      (G.norm_finkCorrectedBias_div_magnitude (H n) K).symm
+
+/-- If the corrected bias is still unbounded, its magnitude defines a
+strictly lower asymptotic scale: the old magnitude divided by the corrected
+one tends to infinity. -/
+theorem tendsto_finkBias_magnitude_div_corrected_magnitude_atTop
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {K : G.State → Payoff ι}
+    (hlim : Tendsto (G.compactifyFinkBias ∘ H) atTop (nhds K))
+    (hcorrected : Tendsto (fun n => ‖G.finkCorrectedBias (H n) K‖)
+      atTop atTop) :
+    Tendsto (fun n => (1 + ‖H n‖) /
+      (1 + ‖G.finkCorrectedBias (H n) K‖)) atTop atTop := by
+  have hratio := G.tendsto_norm_finkCorrectedBias_div_magnitude_zero hlim
+  refine tendsto_atTop.2 fun b => ?_
+  let B : ℝ := max b 1
+  have hBpos : 0 < B := lt_of_lt_of_le zero_lt_one (le_max_right b 1)
+  let δ : ℝ := 1 / (2 * B)
+  have hδpos : 0 < δ := by
+    dsimp [δ]
+    positivity
+  filter_upwards
+    [hratio.eventually (eventually_lt_nhds hδpos),
+      tendsto_atTop.1 hcorrected 1] with n hn hlarge
+  have hHmag : 0 < 1 + ‖H n‖ := by positivity
+  have hJmag : 0 < 1 + ‖G.finkCorrectedBias (H n) K‖ := by positivity
+  have h2B : 0 < 2 * B := by positivity
+  have hcross : ‖G.finkCorrectedBias (H n) K‖ * (2 * B) <
+      1 + ‖H n‖ := by
+    have hfrac : ‖G.finkCorrectedBias (H n) K‖ / (1 + ‖H n‖) <
+        (1 : ℝ) / (2 * B) := by
+      simpa only [δ] using hn
+    simpa only [one_mul] using (div_lt_div_iff₀ hHmag h2B).mp hfrac
+  have hBstep : B * (1 + ‖G.finkCorrectedBias (H n) K‖) ≤
+      ‖G.finkCorrectedBias (H n) K‖ * (2 * B) := by
+    nlinarith
+  have hBout : B < (1 + ‖H n‖) /
+      (1 + ‖G.finkCorrectedBias (H n) K‖) := by
+    rw [lt_div_iff₀ hJmag]
+    exact lt_of_le_of_lt hBstep hcross
+  exact (le_max_left b 1).trans hBout.le
 
 theorem norm_compactify_finkRelativeBias_eq
     (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
@@ -394,6 +511,55 @@ theorem finkValue_add_correctedBias_eq_stage_add
   field_simp [hmag]
   linear_combination hcenter
 
+/-- Generic recursive correction step.  If `J` solves an on-profile Bellman
+equation with forcing `a • E`, subtracting its leading radial direction `L`
+produces the same equation with the next normalized Poisson remainder. -/
+theorem value_add_finkCorrectedBias_eq_stage_add
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (z : G.finkDomain U) (v a : ℝ)
+    (E J L : G.State → Payoff ι) (s : G.State) (who : ι)
+    (hbellman : v + J s who =
+      G.finkStageEU z s who + G.finkContinuationEU J z s who +
+        a * E s who) :
+    v + G.finkCorrectedBias J L s who =
+      G.finkStageEU z s who +
+        G.finkContinuationEU (G.finkCorrectedBias J L) z s who +
+        (1 + ‖J‖) *
+          G.finkNextPoissonRemainderVector a E J L z s who := by
+  have hmag : 1 + ‖J‖ ≠ 0 := by positivity
+  unfold finkCorrectedBias finkNextPoissonRemainderVector
+    finkContinuationVector
+  simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul,
+    G.finkContinuationEU_sub, G.finkContinuationEU_smul]
+  field_simp [hmag]
+  linear_combination hbellman
+
+/-- The normalized forcing at the next bias scale can be read directly from
+the Bellman equation.  This form is suited to taking a boundary limit. -/
+theorem finkNextPoissonRemainderVector_eq
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (z : G.finkDomain U) (v a : ℝ)
+    (E J L : G.State → Payoff ι) (s : G.State) (who : ι)
+    (hbellman : v + J s who =
+      G.finkStageEU z s who + G.finkContinuationEU J z s who +
+        a * E s who) :
+    G.finkNextPoissonRemainderVector a E J L z s who =
+      (1 / (1 + ‖J‖)) * v + G.compactifyFinkBias J s who -
+        (1 / (1 + ‖J‖)) * G.finkStageEU z s who -
+        G.finkContinuationEU (G.compactifyFinkBias J) z s who -
+        (L s who - G.finkContinuationEU L z s who) := by
+  have hmag : 1 + ‖J‖ ≠ 0 := by positivity
+  unfold finkNextPoissonRemainderVector finkContinuationVector
+    compactifyFinkBias
+  simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul,
+    G.finkContinuationEU_smul]
+  field_simp [hmag]
+  linarith [hbellman]
+
 theorem norm_compactifyFinkBias_eq
     (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
     (H : G.State → Payoff ι) :
@@ -459,6 +625,110 @@ theorem tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
   rw [div_lt_div_iff₀ hdenB hdenH] at hn
   have hBH : B < ‖H n‖ := by linarith
   exact (le_max_left b 0).trans hBH.le
+
+/-- A boundary direction of any Bellman bias cancels the forcing at the next
+normalized scale.  This is the recursive Poisson-limit step underlying the
+bias hierarchy. -/
+theorem tendsto_finkNextPoissonRemainderVector_apply_zero_of_boundary
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    {v a : ℕ → ℝ} {vlim : ℝ}
+    (hv : Tendsto v atTop (nhds vlim))
+    {E J : ℕ → G.State → Payoff ι} (L : G.State → Payoff ι)
+    (s : G.State) (who : ι)
+    (hbellman : ∀ n, v n + J n s who =
+      G.finkStageEU (z n) s who +
+        G.finkContinuationEU (J n) (z n) s who +
+        a n * E n s who)
+    (hJlim : Tendsto (G.compactifyFinkBias ∘ J) atTop (nhds L))
+    (hLnorm : ‖L‖ = 1) :
+    Tendsto (fun n => G.finkNextPoissonRemainderVector
+      (a n) (E n) (J n) L (z n) s who) atTop (nhds 0) := by
+  have hnorm : Tendsto (fun n => ‖J n‖) atTop atTop :=
+    G.tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
+      hJlim hLnorm
+  have hscale : Tendsto (fun n => 1 + ‖J n‖) atTop atTop := by
+    refine tendsto_atTop.2 fun b => ?_
+    filter_upwards [tendsto_atTop.1 hnorm (b - 1)] with n hn
+    linarith
+  have hinv : Tendsto (fun n => 1 / (1 + ‖J n‖)) atTop (nhds 0) := by
+    simpa only [Function.comp_def, one_div] using
+      tendsto_inv_atTop_zero.comp hscale
+  have hvScaled : Tendsto (fun n =>
+      (1 / (1 + ‖J n‖)) * v n) atTop (nhds 0) := by
+    simpa using hinv.mul hv
+  have hstage :=
+    ((G.continuous_finkStageEU (U := U) s who).tendsto zlim).comp hz
+  have hstageScaled : Tendsto (fun n =>
+      (1 / (1 + ‖J n‖)) * G.finkStageEU (z n) s who)
+      atTop (nhds 0) := by
+    simpa using hinv.mul hstage
+  have hcompact : Tendsto (fun n => G.compactifyFinkBias (J n))
+      atTop (nhds L) := by
+    simpa only [Function.comp_def] using hJlim
+  have hcompactCoord : Tendsto
+      (fun n => G.compactifyFinkBias (J n) s who) atTop
+      (nhds (L s who)) := by
+    have hc : Continuous (fun H : G.State → Payoff ι => H s who) := by
+      fun_prop
+    exact (hc.tendsto L).comp hcompact
+  have hpair : Tendsto
+      (fun n => (G.compactifyFinkBias (J n), z n)) atTop
+      (nhds (L, zlim)) := by
+    simpa only [nhds_prod_eq] using hcompact.prodMk hz
+  have hcompactEU :=
+    ((G.continuous_finkContinuationEU_param (U := U) s who).tendsto
+      (L, zlim)).comp hpair
+  have hLpair : Tendsto (fun n => (L, z n)) atTop
+      (nhds (L, zlim)) := by
+    simpa only [nhds_prod_eq] using (tendsto_const_nhds.prodMk hz)
+  have hLEU :=
+    ((G.continuous_finkContinuationEU_param (U := U) s who).tendsto
+      (L, zlim)).comp hLpair
+  have hLcoord : Tendsto (fun _ : ℕ => L s who) atTop
+      (nhds (L s who)) := tendsto_const_nhds
+  have hrhs := (((hvScaled.add hcompactCoord).sub hstageScaled).sub
+    hcompactEU).sub (hLcoord.sub hLEU)
+  have hrhs' : Tendsto (fun n =>
+      (1 / (1 + ‖J n‖)) * v n + G.compactifyFinkBias (J n) s who -
+        (1 / (1 + ‖J n‖)) * G.finkStageEU (z n) s who -
+        G.finkContinuationEU (G.compactifyFinkBias (J n)) (z n) s who -
+        (L s who - G.finkContinuationEU L (z n) s who))
+      atTop (nhds 0) := by
+    simpa only [Function.comp_def, zero_add, sub_zero, sub_self] using hrhs
+  apply hrhs'.congr'
+  exact Filter.Eventually.of_forall fun n =>
+    (G.finkNextPoissonRemainderVector_eq (z n) (v n) (a n)
+      (E n) (J n) L s who (hbellman n)).symm
+
+/-- Finite-dimensional form of the recursive Poisson cancellation. -/
+theorem tendsto_finkNextPoissonRemainderVector_zero_of_boundary
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    {v a : ℕ → ℝ} {vlim : ℝ}
+    (hv : Tendsto v atTop (nhds vlim))
+    {E J : ℕ → G.State → Payoff ι} (L : G.State → Payoff ι)
+    (hbellman : ∀ n s who, v n + J n s who =
+      G.finkStageEU (z n) s who +
+        G.finkContinuationEU (J n) (z n) s who +
+        a n * E n s who)
+    (hJlim : Tendsto (G.compactifyFinkBias ∘ J) atTop (nhds L))
+    (hLnorm : ‖L‖ = 1) :
+    Tendsto (fun n => G.finkNextPoissonRemainderVector
+      (a n) (E n) (J n) L (z n)) atTop (nhds 0) := by
+  apply tendsto_pi_nhds.2
+  intro s
+  apply tendsto_pi_nhds.2
+  intro who
+  simpa only [Pi.zero_apply] using
+    G.tendsto_finkNextPoissonRemainderVector_apply_zero_of_boundary
+      hz hv L s who (fun n => hbellman n s who) hJlim hLnorm
 
 /-- At a projective bias boundary, the magnified harmonic residual of the
 target payoff converges to the Poisson drift of the boundary direction. -/
@@ -566,6 +836,67 @@ theorem tendsto_finkPoissonRemainder_zero_of_boundary
   have hdrift := hconstant.sub hcontinuation'
   have ht := hscaled.sub hdrift
   simpa only [finkPoissonRemainder, sub_self] using ht
+
+/-- Finite-dimensional form of the first Poisson cancellation. -/
+theorem tendsto_finkPoissonRemainderVector_zero_of_boundary
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘ fun n =>
+      G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1) :
+    Tendsto (fun n => G.finkPoissonRemainderVector
+      (β n) W K (z n)) atTop (nhds 0) := by
+  apply tendsto_pi_nhds.2
+  intro s
+  apply tendsto_pi_nhds.2
+  intro who
+  simpa only [finkPoissonRemainderVector, Pi.zero_apply] using
+    G.tendsto_finkPoissonRemainder_zero_of_boundary
+      hβ0 hβ1 hpay hz hfix W K hKlim hKnorm s who
+
+/-- If the first corrected relative bias reaches another projective
+boundary, the exact corrected Bellman equation cancels its normalized
+forcing as well. -/
+theorem tendsto_finkNextPoissonRemainderVector_zero_of_corrected_boundary
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K L : G.State → Payoff ι)
+    (hLlim : Tendsto (G.compactifyFinkBias ∘ fun n =>
+      G.finkCorrectedRelativeBias (β n) W K (z n)) atTop (nhds L))
+    (hLnorm : ‖L‖ = 1) :
+    Tendsto (fun n => G.finkNextPoissonRemainderVector
+      (1 + ‖G.finkRelativeBias (β n) W (z n)‖)
+      (G.finkPoissonRemainderVector (β n) W K (z n))
+      (G.finkCorrectedRelativeBias (β n) W K (z n)) L (z n))
+      atTop (nhds 0) := by
+  apply tendsto_pi_nhds.2
+  intro s
+  apply tendsto_pi_nhds.2
+  intro who
+  have hv := G.tendsto_finkValue_apply hz s who
+  apply G.tendsto_finkNextPoissonRemainderVector_apply_zero_of_boundary
+    hz hv L s who
+  · intro n
+    simpa only [finkCorrectedRelativeBias, finkPoissonRemainderVector] using
+      G.finkValue_add_correctedBias_eq_stage_add
+        (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W K s who
+  · exact hLlim
+  · exact hLnorm
 
 /-- A projective boundary direction over a convergent Fink value family
 creates a genuinely faster scale: the multiplier which rescales
@@ -702,6 +1033,84 @@ theorem exists_finkBias_subsequence_interior_or_direction
     apply G.tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
       (H := H ∘ φ) (K := K) _ hKeq
     simpa only [Function.comp_def] using hlim
+
+/-- The first Poisson-corrected relative bias admits the same projective
+dichotomy.  The extraction preserves the Fink point, leading direction, and
+vanishing normalized Poisson remainder, so the boundary branch can be
+iterated without losing any certificate already obtained. -/
+theorem exists_finkCorrectedRelativeBias_subsequence_interior_or_direction
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘ fun n =>
+      G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1) :
+    ∃ (L : G.State → Payoff ι) (φ : ℕ → ℕ),
+      StrictMono φ ∧
+      Tendsto (z ∘ φ) atTop (nhds zlim) ∧
+      Tendsto ((G.compactifyFinkBias ∘ fun n =>
+        G.finkRelativeBias (β n) W (z n)) ∘ φ) atTop (nhds K) ∧
+      Tendsto ((fun n => G.finkPoissonRemainderVector
+        (β n) W K (z n)) ∘ φ) atTop (nhds 0) ∧
+      Tendsto (G.compactifyFinkBias ∘
+        (fun n => G.finkCorrectedRelativeBias (β n) W K (z n)) ∘ φ)
+          atTop (nhds L) ∧
+      ((‖L‖ < 1 ∧ Tendsto
+          ((fun n => G.finkCorrectedRelativeBias (β n) W K (z n)) ∘ φ)
+            atTop (nhds (G.decompactifyFinkBias L))) ∨
+        (‖L‖ = 1 ∧ Tendsto (fun n =>
+          ‖G.finkCorrectedRelativeBias (β (φ n)) W K (z (φ n))‖)
+            atTop atTop ∧ Tendsto (fun n =>
+          (1 + ‖G.finkRelativeBias (β (φ n)) W (z (φ n))‖) /
+            (1 + ‖G.finkCorrectedRelativeBias
+              (β (φ n)) W K (z (φ n))‖)) atTop atTop ∧
+          Tendsto (fun n => G.finkNextPoissonRemainderVector
+            (1 + ‖G.finkRelativeBias (β (φ n)) W (z (φ n))‖)
+            (G.finkPoissonRemainderVector
+              (β (φ n)) W K (z (φ n)))
+            (G.finkCorrectedRelativeBias
+              (β (φ n)) W K (z (φ n))) L (z (φ n)))
+            atTop (nhds 0))) := by
+  let J : ℕ → G.State → Payoff ι := fun n =>
+    G.finkCorrectedRelativeBias (β n) W K (z n)
+  obtain ⟨L, φ, hφ, hLlim, hLalternative⟩ :=
+    G.exists_finkBias_subsequence_interior_or_direction J
+  have hzφ : Tendsto (z ∘ φ) atTop (nhds zlim) :=
+    hz.comp hφ.tendsto_atTop
+  have hKφ := hKlim.comp hφ.tendsto_atTop
+  have hrem := G.tendsto_finkPoissonRemainderVector_zero_of_boundary
+    hβ0 hβ1 hpay hz hfix W K hKlim hKnorm
+  have hremφ := hrem.comp hφ.tendsto_atTop
+  refine ⟨L, φ, hφ, hzφ, hKφ, hremφ, ?_, ?_⟩
+  · simpa only [J, Function.comp_def] using hLlim
+  · rcases hLalternative with hLint | ⟨hLnorm, hJtop⟩
+    · left
+      simpa only [J, Function.comp_def] using hLint
+    · right
+      refine ⟨hLnorm, ?_, ?_, ?_⟩
+      · simpa only [J, Function.comp_def] using hJtop
+      · have hscale :=
+          G.tendsto_finkBias_magnitude_div_corrected_magnitude_atTop
+            (H := fun n => G.finkRelativeBias
+              (β (φ n)) W (z (φ n))) (K := K) ?_ ?_
+        · simpa only [finkCorrectedRelativeBias] using hscale
+        · simpa only [Function.comp_def] using hKφ
+        · simpa only [J, Function.comp_def, finkCorrectedRelativeBias] using hJtop
+      · have hnext :=
+          G.tendsto_finkNextPoissonRemainderVector_zero_of_corrected_boundary
+            (β := β ∘ φ) (z := z ∘ φ)
+            (fun n => hβ0 (φ n)) (fun n => hβ1 (φ n)) hpay hzφ
+            (fun n => by simpa only [Function.comp_def] using hfix (φ n))
+            W K L ?_ hLnorm
+        · simpa only [Function.comp_def] using hnext
+        · simpa only [J, Function.comp_def] using hLlim
 
 /-- Specialization of the projective compactness dichotomy to the relative
 biases of a discounted Fink family around a target `W`. -/
