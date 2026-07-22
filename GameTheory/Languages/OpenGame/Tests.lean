@@ -130,6 +130,24 @@ example {n : Nat} (A : Fin n → Type)
     (ShapeSeqDep.MAIDBridge.sequentialStruct A).PerfectRecall :=
   ShapeSeqDep.MAIDBridge.sequentialStruct_perfectRecall A
 
+/-- Reusing the repository's general MAID-to-EFG translation preserves the
+entire strategic kernel up to bisimulation. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) :
+    GameTheory.KernelGame.Bisimulation
+      (MAID.toKernelGame (ShapeSeqDep.MAIDBridge.sequentialStruct A)
+        (ShapeSeqDep.MAIDBridge.sequentialSem A k))
+      ((ShapeSeqDep.MAIDBridge.toEFG A k).toKernelGame) :=
+  ShapeSeqDep.MAIDBridge.toEFGBisimulation A k
+
+/-- Perfect recall transfers through the existing MAID-to-EFG bridge. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) :
+    EFG.PerfectRecall (ShapeSeqDep.MAIDBridge.toEFG A k).tree :=
+  ShapeSeqDep.MAIDBridge.toEFG_perfectRecall A k
+
 end
 
 /-- One-decision-per-player ownership makes agent and player deviations

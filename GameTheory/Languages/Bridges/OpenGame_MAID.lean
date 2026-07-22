@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.OpenGame.Sequential
 import GameTheory.Languages.MAID.Prefix
+import GameTheory.Languages.Bridges.MAID_EFG
 
 /-!
 # Finite Sequential Open Games as MAIDs
@@ -605,5 +606,35 @@ theorem sequentialStruct_perfectRecall (A : Fin n → Type)
     rw [h₁, h₂] at _hancestor
     exact absurd _hancestor
       ((sequentialStruct A).isAncestor_irrefl (decisionNode p))
+
+/-! ## Reuse of the existing MAID-to-EFG bridge -/
+
+/-- The EFG obtained by passing the canonical sequential MAID through the
+repository's general MAID-to-EFG translation.  The seed policy is semantically
+irrelevant to that translation; the existing bridge proves this internally. -/
+def toEFG (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) : EFG.EFGGame :=
+  MAID_EFG.maidToEFG (sequentialStruct A) (sequentialSem A k)
+    (MAID.defaultPolicy (sequentialStruct A))
+
+/-- The general MAID-to-EFG compiler supplies a game bisimulation for the
+canonical sequential presentation. -/
+def toEFGBisimulation (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) :
+    GameTheory.KernelGame.Bisimulation
+      (MAID.toKernelGame (sequentialStruct A) (sequentialSem A k))
+      ((toEFG A k).toKernelGame) :=
+  MAID_EFG.maidToEFG_bisimulation (sequentialSem A k)
+    (MAID.defaultPolicy (sequentialStruct A))
+
+/-- The induced extensive-form game has perfect recall. -/
+theorem toEFG_perfectRecall (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) :
+    EFG.PerfectRecall (toEFG A k).tree :=
+  MAID_EFG.maidToEFG_perfectRecall (sequentialStruct_perfectRecall A)
+    (sequentialSem A k) (MAID.defaultPolicy (sequentialStruct A))
 
 end OpenGames.ShapeSeqDep.MAIDBridge
