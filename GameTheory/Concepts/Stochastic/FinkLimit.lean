@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.FinkSchedule
 import Math.MeanErgodic
+import Mathlib.Analysis.PSeries
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
 
 /-!
@@ -30,6 +31,48 @@ open Math.Probability Math.PMFProduct
 open Math.ProbabilityMassFunction
 
 variable {ι : Type}
+
+/-- A nonnegative error cannot be summable if it remains at least a positive
+multiple of the reciprocal calendar time.  The formulation below derives
+that comparison from a positive product lower bound and a scale negligible
+relative to calendar time. -/
+theorem not_summable_of_eventually_pos_le_mul_of_inv_mul_tendsto_zero
+    (a e : ℕ → ℝ) (c : ℝ) (hc : 0 < c)
+    (he0 : ∀ n, 0 ≤ e n)
+    (hlower : ∀ᶠ n in atTop, c ≤ a n * e n)
+    (hscale : Tendsto (fun n : ℕ => (n : ℝ)⁻¹ * a n)
+      atTop (nhds 0)) :
+    ¬ Summable e := by
+  intro he
+  have hscaleOne : ∀ᶠ n : ℕ in atTop, (n : ℝ)⁻¹ * a n < 1 := by
+    have hclose := hscale.eventually (Metric.ball_mem_nhds (0 : ℝ) zero_lt_one)
+    filter_upwards [hclose] with n hn
+    rw [Real.dist_eq, sub_zero, abs_lt] at hn
+    exact hn.2
+  have hcompare : ∀ᶠ n : ℕ in atTop,
+      c * (n : ℝ)⁻¹ ≤ e n := by
+    filter_upwards [hlower, hscaleOne, eventually_gt_atTop 0] with n hn hsmall hnpos
+    have hnreal : (0 : ℝ) < n := by exact_mod_cast hnpos
+    have hane : a n ≤ n := by
+      have hlt : a n < (n : ℝ) := by
+        simpa only [mul_one] using (inv_mul_lt_iff₀ hnreal).mp hsmall
+      exact hlt.le
+    have hmul : a n * e n ≤ (n : ℝ) * e n :=
+      mul_le_mul_of_nonneg_right hane (he0 n)
+    have hdiv : c / (n : ℝ) ≤ e n :=
+      (div_le_iff₀ hnreal).2 (by
+        simpa only [mul_comm] using hn.trans hmul)
+    simpa only [div_eq_mul_inv] using hdiv
+  have hharmonic : Summable (fun n : ℕ => c * (n : ℝ)⁻¹) := by
+    apply Summable.of_norm_bounded_eventually_nat he
+    filter_upwards [hcompare] with n hn
+    rw [Real.norm_eq_abs, abs_of_nonneg
+      (mul_nonneg hc.le (inv_nonneg.mpr (Nat.cast_nonneg n)))]
+    exact hn
+  have honeDiv : Summable (fun n : ℕ => (n : ℝ)⁻¹) := by
+    have hscaled := hharmonic.mul_left c⁻¹
+    simpa only [← mul_assoc, inv_mul_cancel₀ hc.ne', one_mul] using hscaled
+  exact Real.not_summable_natCast_inv honeDiv
 
 /-- The canonical increasing sequence of discount factors approaching one. -/
 def approachOneDiscount (n : ℕ) : ℝ := (n : ℝ) / (n + 1)
@@ -7440,6 +7483,106 @@ theorem tendsto_zeroCorrectionStepError_of_harmonic_excessive_limit
     linarith
   exact G.tendsto_finkCorrectedTargetStepError_zero W
     (fun _ => 0) z hR hresidual hgain
+
+/-- A nonzero first-order continuation residual cannot be hidden by a
+zero-correction annealing calendar whose bias scale is negligible relative to
+calendar time.  The residual forces at least harmonic-series hold cost, so
+the summable-drift verification route is genuinely unavailable on this
+branch. -/
+theorem not_summable_zeroCorrectionStepError_of_scaledResidual_tendsto_ne_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (a : ℕ → ℝ) (ha0 : ∀ n, 0 ≤ a n)
+    (z : ℕ → G.finkDomain U) (W F : G.State → Payoff ι)
+    (hscaled : Tendsto (fun n =>
+      a n • G.finkContinuationResidualVector W (z n))
+        atTop (nhds F))
+    (hF : F ≠ 0) (κ : ℕ → ℕ) (hκ : Tendsto κ atTop atTop)
+    (hterminal : Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ * a (κ T)) atTop (nhds 0)) :
+    ¬ Summable (fun t => G.finkCorrectedTargetStepError W
+      ((fun _ => 0) ∘ κ) (z ∘ κ) t) := by
+  let e : ℕ → ℝ := fun t => G.finkCorrectedTargetStepError W
+    ((fun _ => 0) ∘ κ) (z ∘ κ) t
+  let c : ℝ := ‖F‖ / 2
+  have hc : 0 < c := by
+    dsimp only [c]
+    exact half_pos (norm_pos_iff.mpr hF)
+  have hnorm : Tendsto (fun t =>
+      ‖a (κ t) • G.finkContinuationResidualVector W (z (κ t))‖)
+      atTop (nhds ‖F‖) := by
+    simpa only [Function.comp_apply] using (hscaled.comp hκ).norm
+  have hlowerNorm : ∀ᶠ t : ℕ in atTop,
+      c ≤ ‖a (κ t) •
+        G.finkContinuationResidualVector W (z (κ t))‖ := by
+    obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp hnorm c hc
+    filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with t ht
+    rw [Real.dist_eq, abs_lt] at ht
+    dsimp only [c] at ht ⊢
+    linarith
+  have he0 : ∀ t, 0 ≤ e t := fun t =>
+    G.finkCorrectedTargetStepError_nonneg W
+      ((fun _ => 0) ∘ κ) (z ∘ κ) t
+  have hlower : ∀ᶠ t : ℕ in atTop, c ≤ a (κ t) * e t := by
+    filter_upwards [hlowerNorm] with t ht
+    have hstep : ‖G.finkContinuationResidualVector W (z (κ t))‖ ≤ e t := by
+      dsimp only [e]
+      unfold finkCorrectedTargetStepError
+      simp only [Function.comp_apply, add_zero, sub_self,
+        norm_zero, add_zero]
+      apply le_add_of_nonneg_right
+      unfold finkPositiveContinuationGainSum
+      exact Finset.sum_nonneg fun p hp => le_max_right _ _
+    rw [norm_smul, Real.norm_eq_abs, abs_of_nonneg (ha0 (κ t))] at ht
+    exact ht.trans (mul_le_mul_of_nonneg_left hstep (ha0 (κ t)))
+  exact not_summable_of_eventually_pos_le_mul_of_inv_mul_tendsto_zero
+    (a ∘ κ) e c hc he0 hlower (by
+      simpa only [Function.comp_apply] using hterminal)
+
+/-- Concrete finite-bias no-go theorem.  If the limiting Bellman forcing is
+nonzero, every zero-correction calendar that amortizes the scaled discounted
+bias necessarily has nonsummable corrected-target drift. -/
+theorem not_summable_zeroCorrectionStepError_of_finkBellmanForcing_ne_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℕ → ℝ) (U : ℝ)
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hforcing : G.finkBellmanForcingVector W H zlim ≠ 0)
+    (κ : ℕ → ℕ) (hκ : Tendsto κ atTop atTop)
+    (hterminal : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      (β (κ T) / (1 - β (κ T)))) atTop (nhds 0)) :
+    ¬ Summable (fun t => G.finkCorrectedTargetStepError W
+      ((fun _ => 0) ∘ κ) (z ∘ κ) t) := by
+  let a : ℕ → ℝ := fun n => β n / (1 - β n)
+  let J : ℕ → G.State → Payoff ι := fun n =>
+    G.finkRelativeBias (β n) W (z n)
+  let E : ℕ → G.State → Payoff ι := fun n =>
+    G.finkContinuationResidualVector W (z n)
+  have ha0 : ∀ n, 0 ≤ a n := fun n =>
+    div_nonneg (hβ0 n) (sub_nonneg.mpr (hβ1 n).le)
+  have hbellman : ∀ n s who,
+      G.finkValue (z n) s who + J n s who =
+        G.finkStageEU (z n) s who +
+          G.finkContinuationEU (J n) (z n) s who +
+            a n * E n s who := by
+    intro n s who
+    simpa only [J, E, a, finkContinuationResidualVector] using
+      G.finkValue_add_relativeBias_eq_finkEU_add
+        (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who
+  have hscaled := G.tendsto_smul_finkBellmanForcingVector hz hV
+    (by simpa only [J] using hH) a hbellman
+  apply G.not_summable_zeroCorrectionStepError_of_scaledResidual_tendsto_ne_zero
+    a ha0 z W (G.finkBellmanForcingVector W H zlim) hscaled hforcing
+      κ hκ
+  simpa only [a] using hterminal
 
 /-- The asymptotic reference certificates admit a fast subsequence on which
 the actual adjacent corrected-target errors are summable with arbitrarily
