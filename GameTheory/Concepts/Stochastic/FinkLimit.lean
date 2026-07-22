@@ -2229,6 +2229,134 @@ theorem exists_terminal_maskedFinkProjectiveLoss_subsequence
     simpa only [Function.comp_def] using ht
   · simpa only [L, Function.comp_def] using hlim
 
+/-- Terminal lexicographic gain certificate.  Outside a finite mask disjoint
+from the limiting support, every first-boundary projective gain converges to
+the negative of a finite nonnegative loss.  The terminal loss is zero on all
+limiting-support coordinates. -/
+theorem exists_terminal_finkProjectiveGain_subsequence
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1) :
+    ∃ (P : Finset G.FinkPureActionIndex) (φ : ℕ → ℕ)
+      (R : G.FinkPureActionVector),
+      Disjoint P (G.finkSupportIndices zlim) ∧ StrictMono φ ∧
+      Tendsto (z ∘ φ) atTop (nhds zlim) ∧
+      Tendsto ((G.compactifyFinkBias ∘
+        fun n => G.finkRelativeBias (β n) W (z n)) ∘ φ)
+          atTop (nhds K) ∧
+      (∀ s who (d : G.Act who), 0 ≤ R s who d) ∧
+      (∀ p ∈ G.finkSupportIndices zlim,
+        R p.1 p.2.1 p.2.2 = 0) ∧
+      ∀ p ∉ P, Tendsto (fun n =>
+        G.finkProjectiveGainVector (β (φ n)) W K (z (φ n))
+          p.1 p.2.1 p.2.2) atTop
+            (nhds (-R p.1 p.2.1 p.2.2)) := by
+  obtain ⟨P, φ, R, hPS, hφ, hzφ, hKφ, hloss⟩ :=
+    G.exists_terminal_maskedFinkProjectiveLoss_subsequence
+      hβ0 hβ1 hpay hz hfix W K hKlim hKnorm
+  have hlossCoord (p : G.FinkPureActionIndex) : Tendsto (fun n =>
+      G.maskFinkActionVector P
+        (G.finkProjectiveLossVector (β (φ n)) W K (z (φ n)))
+          p.1 p.2.1 p.2.2) atTop (nhds (R p.1 p.2.1 p.2.2)) := by
+    have hc : Continuous (fun Q : G.FinkPureActionVector =>
+        Q p.1 p.2.1 p.2.2) := by
+      fun_prop
+    have ht := (hc.tendsto R).comp hloss
+    simpa only [Function.comp_def] using ht
+  have hRnonneg : ∀ s who (d : G.Act who), 0 ≤ R s who d := by
+    intro s who d
+    let p : G.FinkPureActionIndex := ⟨s, ⟨who, d⟩⟩
+    apply ge_of_tendsto' (hlossCoord p)
+    intro n
+    apply G.maskFinkActionVector_nonneg
+    intro s' who' d'
+    exact G.finkProjectiveLossVector_nonneg
+      (β (φ n)) W K (z (φ n)) s' who' d'
+  have hRsupport : ∀ p ∈ G.finkSupportIndices zlim,
+      R p.1 p.2.1 p.2.2 = 0 := by
+    intro p hp
+    have hpP : p ∉ P := by
+      intro hp'
+      exact Finset.disjoint_left.mp hPS hp' hp
+    have horiginal :=
+      (G.tendsto_finkProjectiveLossVector_zero_of_limit_support
+        hβ0 hβ1 hpay hz hfix W K hKlim hKnorm
+          p.1 p.2.1 p.2.2
+          ((G.mem_finkSupportIndices zlim p).mp hp)).comp hφ.tendsto_atTop
+    have hmasked : Tendsto (fun n =>
+        G.maskFinkActionVector P
+          (G.finkProjectiveLossVector (β (φ n)) W K (z (φ n)))
+            p.1 p.2.1 p.2.2) atTop (nhds 0) := by
+      have heq : (fun n => G.maskFinkActionVector P
+          (G.finkProjectiveLossVector (β (φ n)) W K (z (φ n)))
+            p.1 p.2.1 p.2.2) =
+          (fun n => G.finkProjectiveLossVector
+            (β (φ n)) W K (z (φ n)) p.1 p.2.1 p.2.2) := by
+        funext n
+        exact G.maskFinkActionVector_apply_of_not_mem P _
+          p.1 p.2.1 p.2.2 hpP
+      rw [heq]
+      exact horiginal
+    exact tendsto_nhds_unique (hlossCoord p) hmasked
+  refine ⟨P, φ, R, hPS, hφ, hzφ, hKφ,
+    hRnonneg, hRsupport, ?_⟩
+  intro p hpP
+  have hlossOriginal : Tendsto (fun n =>
+      G.finkProjectiveLossVector (β (φ n)) W K (z (φ n))
+        p.1 p.2.1 p.2.2) atTop (nhds (R p.1 p.2.1 p.2.2)) := by
+    have heq : (fun n => G.maskFinkActionVector P
+        (G.finkProjectiveLossVector (β (φ n)) W K (z (φ n)))
+          p.1 p.2.1 p.2.2) =
+        (fun n => G.finkProjectiveLossVector
+          (β (φ n)) W K (z (φ n)) p.1 p.2.1 p.2.2) := by
+      funext n
+      exact G.maskFinkActionVector_apply_of_not_mem P _
+        p.1 p.2.1 p.2.2 hpP
+    rw [← heq]
+    exact hlossCoord p
+  have hpositivePart : Tendsto (fun n => max
+      (G.finkProjectiveGainVector (β (φ n)) W K (z (φ n))
+        p.1 p.2.1 p.2.2) 0) atTop (nhds 0) := by
+    apply Metric.tendsto_atTop.2
+    intro ε hε
+    have hhalf : 0 < ε / 2 := by linarith
+    have hupper := G.eventually_all_finkProjectiveGainVector_le_of_boundary
+      hβ0 hβ1 hpay hz hfix W K hKlim hKnorm hhalf
+    have hupperφ := hφ.tendsto_atTop.eventually hupper
+    apply Filter.eventually_atTop.mp
+    filter_upwards [hupperφ] with n hn
+    have hnonneg : 0 ≤ max
+        (G.finkProjectiveGainVector (β (φ n)) W K (z (φ n))
+          p.1 p.2.1 p.2.2) 0 := le_max_right _ _
+    have hle : max
+        (G.finkProjectiveGainVector (β (φ n)) W K (z (φ n))
+          p.1 p.2.1 p.2.2) 0 ≤ ε / 2 := by
+      exact max_le (hn p.1 p.2.1 p.2.2) hhalf.le
+    rw [Real.dist_eq, sub_zero, abs_of_nonneg hnonneg]
+    linarith
+  have hdiff := hpositivePart.sub hlossOriginal
+  have hdiff' : Tendsto (fun n => max
+      (G.finkProjectiveGainVector (β (φ n)) W K (z (φ n))
+        p.1 p.2.1 p.2.2) 0 -
+      G.finkProjectiveLossVector (β (φ n)) W K (z (φ n))
+        p.1 p.2.1 p.2.2) atTop
+      (nhds (-R p.1 p.2.1 p.2.2)) := by
+    simpa only [zero_sub] using hdiff
+  apply hdiff'.congr'
+  apply Filter.Eventually.of_forall
+  intro n
+  unfold finkProjectiveLossVector
+  exact max_zero_sub_max_neg_zero_eq_self _
+
 /-- The next finite action-face extraction.  Either all first-layer losses
 are bounded along a subsequence, or their projective boundary direction is a
 nonzero nonnegative vector which vanishes on the current limiting support.
