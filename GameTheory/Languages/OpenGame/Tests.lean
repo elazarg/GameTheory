@@ -98,6 +98,31 @@ example {n : Nat} (D : DecisionDAG n) (A : Fin n → Type)
       (ShapeDAG.compileAction D A k).IsNash σ :=
   ShapeDAG.isEquilibriumIn_iff_isNash D A k σ
 
+/-- Sparse graph conditioning has an exact one-action presentation without
+claiming an EFG subgame interpretation at imperfect information sets. -/
+example {n : Nat} (D : DecisionDAG n) {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : ShapeDAG.Strategy D A) :
+    ShapeDAG.IsConditionedEquilibrium D k σ ↔
+      ShapeDAG.IsOneShotConditionedEquilibrium D k σ :=
+  ShapeDAG.isConditionedEquilibrium_iff_isOneShot D k σ
+
+/-- With no causal ancestors, graph conditioning adds no tests beyond plain
+simultaneous equilibrium. -/
+example {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeDAG.Strategy (DecisionDAG.discrete n) A) :
+    (ShapeDAG.conditioned (DecisionDAG.discrete n) A).IsEquilibriumIn () k σ ↔
+      (OpenGames.ShapeDAG (DecisionDAG.discrete n) A).IsEquilibriumIn () k σ :=
+  ShapeDAG.conditioned_discrete_iff_plain k σ
+
+/-- Consequently the conditioned edgeless DAG is itself isomorphic to the
+closed simultaneous shape. -/
+example {n : Nat} (A : Fin n → Type) :
+    OpenGameIso
+      (ShapeDAG.conditioned (DecisionDAG.discrete n) A)
+      (ShapeN (fun _ : Fin n => Unit) A) :=
+  ShapeDAG.discreteConditionedIso A
+
 /-- The edgeless decision DAG coheres with the existing closed simultaneous
 shape, including the contractible boundary reindexing. -/
 example {n : Nat} (A : Fin n → Type) :
@@ -122,6 +147,14 @@ example {n : Nat} (A : Fin n → Type) :
       (OpenGames.ShapeDAG (DecisionDAG.complete n) A)
       (OpenGames.ShapeSeqDep A) :=
   ShapeDAG.completeIso A
+
+/-- The complete-DAG identification also transports the strengthened
+counterfactual equilibrium semantics exactly. -/
+example {n : Nat} (A : Fin n → Type) :
+    OpenGameIso
+      (ShapeDAG.conditioned (DecisionDAG.complete n) A)
+      (ShapeSeqDep.conditioned A) :=
+  ShapeDAG.completeConditionedIso A
 
 /-- The predecessor-profile presentation of conditioning covers every
 dependent prefix history. -/

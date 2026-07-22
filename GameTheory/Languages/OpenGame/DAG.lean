@@ -57,6 +57,25 @@ def discrete (n : Nat) : DecisionDAG n where
   parents _ := ∅
   parent_lt h := by simp at h
 
+/-- In the complete DAG, strict causal ancestry is exactly the natural
+topological order. -/
+theorem complete_isAncestor_iff {i j : Fin n} :
+    (complete n).IsAncestor i j ↔ i.val < j.val := by
+  constructor
+  · exact (complete n).ancestor_lt
+  · intro hij
+    apply Relation.TransGen.single
+    simp only [Edge, complete, Finset.mem_filter, Finset.mem_univ, true_and]
+    exact hij
+
+/-- The discrete DAG has no strict causal ancestors. -/
+theorem discrete_not_isAncestor (i j : Fin n) :
+    ¬(discrete n).IsAncestor i j := by
+  intro h
+  induction h with
+  | single hedge => simp [Edge, discrete] at hedge
+  | tail _ _ ih => exact ih
+
 end DecisionDAG
 
 namespace ShapeDAG
@@ -128,6 +147,53 @@ theorem realizeAt_update_of_not_ancestor (D : DecisionDAG n)
     hip hparent
 termination_by j.val
 decreasing_by exact D.parent_lt parent.property
+
+/-- Coordinatewise off-path irrelevance: two replacements at the same node
+produce the same realization when they choose the same action at the parent
+configuration reached by the original profile. -/
+theorem realizeAt_updates_eq_of_eq_at_reached_history (D : DecisionDAG n)
+    {A : Fin n → Type} (σ : Strategy D A) (i : Fin n)
+    (deviation deviation' : History D A i → A i)
+    (hdev : deviation (fun parent => realize D σ parent.val) =
+      deviation' (fun parent => realize D σ parent.val)) (j : Fin n) :
+    realizeAt D (Function.update σ i deviation) j =
+      realizeAt D (Function.update σ i deviation') j := by
+  rw [realizeAt, realizeAt]
+  by_cases hji : j = i
+  · subst j
+    simp only [Function.update_self]
+    have hparents : (fun parent : ↥(D.parents i) =>
+        realizeAt D (Function.update σ i deviation) parent.val) =
+        fun parent : ↥(D.parents i) => realize D σ parent.val := by
+      funext parent
+      exact realizeAt_update_of_lt D σ i deviation parent.val
+        (D.parent_lt parent.property)
+    have hparents' : (fun parent : ↥(D.parents i) =>
+        realizeAt D (Function.update σ i deviation') parent.val) =
+        fun parent : ↥(D.parents i) => realize D σ parent.val := by
+      funext parent
+      exact realizeAt_update_of_lt D σ i deviation' parent.val
+        (D.parent_lt parent.property)
+    rw [hparents, hparents', hdev]
+  · rw [Function.update_of_ne hji, Function.update_of_ne hji]
+    congr 1
+    funext parent
+    exact realizeAt_updates_eq_of_eq_at_reached_history D σ i deviation
+      deviation' hdev parent.val
+termination_by j.val
+decreasing_by exact D.parent_lt parent.property
+
+/-- Function-level off-path irrelevance for a sparse decision DAG. -/
+theorem realize_update_eq_of_eq_at_reached_history (D : DecisionDAG n)
+    {A : Fin n → Type} (σ : Strategy D A) (i : Fin n)
+    (deviation deviation' : History D A i → A i)
+    (hdev : deviation (fun parent => realize D σ parent.val) =
+      deviation' (fun parent => realize D σ parent.val)) :
+    realize D (Function.update σ i deviation) =
+      realize D (Function.update σ i deviation') := by
+  funext j
+  exact realizeAt_updates_eq_of_eq_at_reached_history D σ i deviation
+    deviation' hdev j
 
 /-! ## Discrete specialization -/
 
@@ -310,6 +376,20 @@ theorem realize_completeStrategyEquiv_symm (A : Fin n → Type)
   rw [(completeStrategyEquiv A).apply_symm_apply] at h
   exact h.symm
 
+/-- The complete-history strategy equivalence transports a one-node plan
+replacement to the corresponding dependent sequential replacement. -/
+theorem completeStrategyEquiv_update (A : Fin n → Type)
+    (σ : Strategy (DecisionDAG.complete n) A) (i : Fin n)
+    (deviation : History (DecisionDAG.complete n) A i → A i) :
+    completeStrategyEquiv A (Function.update σ i deviation) =
+      Function.update (completeStrategyEquiv A σ) i
+        (fun history => deviation ((completeHistoryEquiv A i).symm history)) := by
+  funext j history
+  by_cases hji : j = i
+  · subst j
+    simp [completeStrategyEquiv]
+  · simp [completeStrategyEquiv, Function.update_of_ne hji]
+
 /-- The action-level strategic game induced by a closing continuation. -/
 def actionNFG (D : DecisionDAG n) (A : Fin n → Type)
     (k : (∀ i, A i) → Fin n → ℝ) :
@@ -356,6 +436,200 @@ theorem isEquilibriumIn_iff_isNash {n : Nat}
   rw [isEquilibriumIn_iff_isNashPure]
   exact NFG.IsNashPure_iff_kernelGame (actionNFG D A k) σ
 
+/-! ## Conditioning along causal ancestry -/
+
+/-- A counterfactual profile for node `i` may alter plans only at strict
+causal ancestors of `i`. Plans at `i`, its descendants, and unrelated nodes
+remain those of the reference profile. -/
+def AgreesOutsideAncestors {n : Nat} {A : Fin n → Type}
+    (D : DecisionDAG n) (σ τ : Strategy D A) (i : Fin n) : Prop :=
+  ∀ j, ¬D.IsAncestor j i → τ j = σ j
+
+/-- Graph-conditioned equilibrium tests a node at every causally generated
+counterfactual predecessor profile while retaining all non-ancestor plans.
+
+This is deliberately not named subgame perfection: for sparse information
+graphs, MAID/EFG refinement requires additional information-set and belief
+hypotheses. -/
+def IsConditionedEquilibrium {n : Nat} {A : Fin n → Type}
+    (D : DecisionDAG n) (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : Strategy D A) : Prop :=
+  ∀ (i : Fin n) (τ : Strategy D A), AgreesOutsideAncestors D σ τ i →
+    ∀ deviation : History D A i → A i,
+      k (realize D (Function.update τ i deviation)) i ≤ k (realize D τ) i
+
+/-- One-shot form of graph-conditioned equilibrium: only the action selected
+at the reached parent configuration matters. -/
+def IsOneShotConditionedEquilibrium {n : Nat} {A : Fin n → Type}
+    (D : DecisionDAG n) (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : Strategy D A) : Prop :=
+  ∀ (i : Fin n) (τ : Strategy D A), AgreesOutsideAncestors D σ τ i →
+    ∀ action : A i,
+      k (realize D (Function.update τ i (fun _ => action))) i ≤
+        k (realize D τ) i
+
+/-- Arbitrary contingent plan replacements and literal one-action changes are
+equivalent at each graph-conditioned counterfactual. -/
+theorem isConditionedEquilibrium_iff_isOneShot {n : Nat}
+    {A : Fin n → Type} (D : DecisionDAG n)
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : Strategy D A) :
+    IsConditionedEquilibrium D k σ ↔
+      IsOneShotConditionedEquilibrium D k σ := by
+  constructor
+  · intro h i τ hagree action
+    exact h i τ hagree (fun _ => action)
+  · intro h i τ hagree deviation
+    let history : History D A i := fun parent => realize D τ parent.val
+    have hone := h i τ hagree (deviation history)
+    have hrealize : realize D (Function.update τ i deviation) =
+        realize D (Function.update τ i (fun _ => deviation history)) := by
+      apply realize_update_eq_of_eq_at_reached_history
+      rfl
+    rw [hrealize]
+    exact hone
+
+/-- The sparse-DAG shape conditioned along strict causal ancestry. It retains
+the same boundaries, strategies, and play as the plain DAG shape. -/
+def conditioned {n : Nat} (D : DecisionDAG n) (A : Fin n → Type) :
+    OpenGame Unit Unit (∀ i, A i) (Fin n → ℝ) where
+  Strategy := Strategy D A
+  play σ _ := realize D σ
+  coplay _ _ _ := ()
+  IsEquilibriumIn _ k σ := IsConditionedEquilibrium D k σ
+
+/-- Graph conditioning strengthens plain agent-form equilibrium. -/
+theorem conditioned_implies_plain {n : Nat} {A : Fin n → Type}
+    (D : DecisionDAG n) (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : Strategy D A)
+    (hσ : (conditioned D A).IsEquilibriumIn () k σ) :
+    (OpenGames.ShapeDAG D A).IsEquilibriumIn () k σ := by
+  intro i deviation
+  exact hσ i σ (fun _ _ => rfl) deviation
+
+/-- On an edgeless DAG there are no causal counterfactual predecessors, so
+graph conditioning is exactly ordinary simultaneous equilibrium. -/
+theorem conditioned_discrete_iff_plain {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : Strategy (DecisionDAG.discrete n) A) :
+    (conditioned (DecisionDAG.discrete n) A).IsEquilibriumIn () k σ ↔
+      (OpenGames.ShapeDAG (DecisionDAG.discrete n) A).IsEquilibriumIn () k σ := by
+  constructor
+  · exact conditioned_implies_plain (DecisionDAG.discrete n) k σ
+  · intro hplain i τ hagree deviation
+    have htau : τ = σ := by
+      funext j
+      exact hagree j (DecisionDAG.discrete_not_isAncestor j i)
+    subst τ
+    exact hplain i deviation
+
+/-- For the complete DAG, agreeing outside the ancestors of `i` is exactly
+agreeing from the natural-number cut `i` onward. -/
+theorem complete_agreesOutsideAncestors_iff {n : Nat} {A : Fin n → Type}
+    (σ τ : Strategy (DecisionDAG.complete n) A) (i : Fin n) :
+    AgreesOutsideAncestors (DecisionDAG.complete n) σ τ i ↔
+      ∀ j, i.val ≤ j.val → τ j = σ j := by
+  constructor
+  · intro hagree j hij
+    apply hagree j
+    intro hancestor
+    exact (Nat.not_lt_of_ge hij)
+      (DecisionDAG.complete_isAncestor_iff.mp hancestor)
+  · intro hagree j hnot
+    apply hagree j
+    apply Nat.le_of_not_gt
+    intro hji
+    exact hnot (DecisionDAG.complete_isAncestor_iff.mpr hji)
+
+/-- Causal conditioning on the complete DAG is exactly the established
+prefix-conditioned equilibrium of `ShapeSeqDep`. -/
+theorem conditioned_complete_iff_sequential {n : Nat} (A : Fin n → Type)
+    (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : Strategy (DecisionDAG.complete n) A) :
+    (conditioned (DecisionDAG.complete n) A).IsEquilibriumIn () k σ ↔
+      (ShapeSeqDep.conditioned A).IsEquilibriumIn () k
+        (completeStrategyEquiv A σ) := by
+  change IsConditionedEquilibrium (DecisionDAG.complete n) k σ ↔
+    ShapeSeqDep.IsConditionedEquilibrium k (completeStrategyEquiv A σ)
+  constructor
+  · intro hdag i τseq hagree deviation
+    let τdag := (completeStrategyEquiv A).symm τseq
+    have hτagree : AgreesOutsideAncestors (DecisionDAG.complete n) σ τdag i := by
+      rw [complete_agreesOutsideAncestors_iff]
+      intro j hij
+      funext history
+      change τseq j (completeHistoryEquiv A j history) = σ j history
+      rw [hagree j hij]
+      simp [completeStrategyEquiv]
+    let dagDeviation : History (DecisionDAG.complete n) A i → A i :=
+      fun history => deviation (completeHistoryEquiv A i history)
+    have hineq := hdag i τdag hτagree dagDeviation
+    have hbase : realize (DecisionDAG.complete n) τdag =
+        ShapeSeqDep.realize τseq := by
+      exact realize_completeStrategyEquiv_symm A τseq
+    have hupdate : completeStrategyEquiv A
+        (Function.update τdag i dagDeviation) =
+        Function.update τseq i deviation := by
+      funext j history
+      by_cases hji : j = i
+      · subst j
+        simp [completeStrategyEquiv, τdag, dagDeviation]
+      · simp [completeStrategyEquiv, τdag, dagDeviation,
+          Function.update_of_ne hji]
+    have hchanged : realize (DecisionDAG.complete n)
+        (Function.update τdag i dagDeviation) =
+        ShapeSeqDep.realize (Function.update τseq i deviation) :=
+      (realize_completeStrategyEquiv A
+        (Function.update τdag i dagDeviation)).symm.trans
+          (congrArg ShapeSeqDep.realize hupdate)
+    calc
+      k (ShapeSeqDep.realize (Function.update τseq i deviation)) i =
+          k (realize (DecisionDAG.complete n)
+            (Function.update τdag i dagDeviation)) i :=
+        congrArg (fun path => k path i) hchanged.symm
+      _ ≤ k (realize (DecisionDAG.complete n) τdag) i := hineq
+      _ = k (ShapeSeqDep.realize τseq) i :=
+        congrArg (fun path => k path i) hbase
+  · intro hseq i τdag hagree deviation
+    let τseq := completeStrategyEquiv A τdag
+    have hτagree : ∀ j, i.val ≤ j.val →
+        τseq j = completeStrategyEquiv A σ j := by
+      intro j hij
+      have houtside : ¬(DecisionDAG.complete n).IsAncestor j i := by
+        intro hancestor
+        exact (Nat.not_lt_of_ge hij)
+          (DecisionDAG.complete_isAncestor_iff.mp hancestor)
+      have hj := hagree j houtside
+      funext history
+      change τdag j ((completeHistoryEquiv A j).symm history) =
+        σ j ((completeHistoryEquiv A j).symm history)
+      rw [hj]
+    let seqDeviation : ShapeSeqDep.History A i → A i :=
+      fun history => deviation ((completeHistoryEquiv A i).symm history)
+    have hineq := hseq i τseq hτagree seqDeviation
+    have hbase : ShapeSeqDep.realize τseq =
+        realize (DecisionDAG.complete n) τdag :=
+      realize_completeStrategyEquiv A τdag
+    have hupdate : completeStrategyEquiv A
+        (Function.update τdag i deviation) =
+        Function.update τseq i seqDeviation := by
+      exact completeStrategyEquiv_update A τdag i deviation
+    have hchanged : ShapeSeqDep.realize
+        (Function.update τseq i seqDeviation) =
+        realize (DecisionDAG.complete n)
+          (Function.update τdag i deviation) :=
+      (congrArg ShapeSeqDep.realize hupdate.symm).trans
+        (realize_completeStrategyEquiv A
+          (Function.update τdag i deviation))
+    calc
+      k (realize (DecisionDAG.complete n)
+          (Function.update τdag i deviation)) i =
+          k (ShapeSeqDep.realize
+            (Function.update τseq i seqDeviation)) i :=
+        congrArg (fun path => k path i) hchanged.symm
+      _ ≤ k (ShapeSeqDep.realize τseq) i := hineq
+      _ = k (realize (DecisionDAG.complete n) τdag) i :=
+        congrArg (fun path => k path i) hbase
+
 /-- The edgeless decision DAG is the closed simultaneous shape, up to the
 contractible Π-shaped input and cooutcome boundaries. -/
 def discreteIso {n : Nat} (A : Fin n → Type) :
@@ -398,6 +672,30 @@ def discreteIso {n : Nat} (A : Fin n → Type) :
       have h := hdag i deviation
       rw [realize_update_discrete] at h
       exact h
+
+/-- Conditioning the discrete DAG still yields the closed simultaneous shape:
+there are no strict ancestors over which to range counterfactual profiles. -/
+def discreteConditionedIso {n : Nat} (A : Fin n → Type) :
+    OpenGameIso
+      (conditioned (DecisionDAG.discrete n) A)
+      (ShapeN (fun _ : Fin n => Unit) A) where
+  eX := unitPiEquiv (Fin n)
+  eS := unitPiEquiv (Fin n)
+  eY := Equiv.refl _
+  eR := Equiv.refl _
+  stratEquiv := discreteStrategyEquiv A
+  play_preserved := by
+    intro σ x
+    cases x
+    exact realize_discreteStrategyEquiv A σ
+  coplay_preserved := by
+    intro σ x r
+    cases x
+    rfl
+  equilibrium_preserved := by
+    intro x k σ
+    have hplain := (discreteIso A).equilibrium_preserved x k σ
+    exact hplain.trans (conditioned_discrete_iff_plain k σ).symm
 
 /-- The complete-parent decision DAG recovers `ShapeSeqDep` up to the explicit
 dependent-history strategy equivalence. -/
@@ -476,6 +774,30 @@ def completeIso {n : Nat} (A : Fin n → Type) :
         _ ≤ k (realize (DecisionDAG.complete n) σ) i := hineq
         _ = _ := congrArg (fun path => k path i)
           (realize_completeStrategyEquiv A σ).symm
+
+/-- The complete-parent specialization preserves the strengthened conditioned
+equilibrium semantics, not only plain play and Nash equilibrium. -/
+def completeConditionedIso {n : Nat} (A : Fin n → Type) :
+    OpenGameIso
+      (conditioned (DecisionDAG.complete n) A)
+      (ShapeSeqDep.conditioned A) where
+  eX := Equiv.refl _
+  eS := Equiv.refl _
+  eY := Equiv.refl _
+  eR := Equiv.refl _
+  stratEquiv := completeStrategyEquiv A
+  play_preserved := by
+    intro σ x
+    cases x
+    exact realize_completeStrategyEquiv A σ
+  coplay_preserved := by
+    intro σ x r
+    cases x
+    rfl
+  equilibrium_preserved := by
+    intro x k σ
+    cases x
+    exact (conditioned_complete_iff_sequential A k σ).symm
 
 end ShapeDAG
 

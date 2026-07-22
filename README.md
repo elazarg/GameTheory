@@ -148,7 +148,13 @@ causal descendant cones. The complete-parent DAG is proved isomorphic to
 `ShapeSeqDep`, including realization and equilibrium, so this is a strict API
 generalization rather than a parallel encoding. At the other extreme, the
 edgeless DAG is proved isomorphic to the closed `ShapeN` simultaneous shape;
-the sparse family therefore coheres with both endpoint APIs.
+the sparse family therefore coheres with both endpoint APIs. Graph-conditioned
+equilibrium varies only strict causal ancestors, has an exact one-action
+presentation, strengthens plain equilibrium in general, and collapses back to
+plain equilibrium on the edgeless graph. On the complete graph it is proved
+isomorphic to the existing `ShapeSeqDep.conditioned` semantics. No
+sparse-information SPE claim is made without the corresponding
+information-set hypotheses.
 Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and
