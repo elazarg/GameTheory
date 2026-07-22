@@ -319,6 +319,27 @@ theorem realize_update_eq_of_eq_at_reached_history {n : Nat}
   exact realizeAt_updates_eq_of_eq_at_reached_history σ i deviation
     deviation' hdev j
 
+/-- A finite sequential realization is determined by its realized prefix and
+the contingent plans from the cut onward.  The profiles themselves may differ
+arbitrarily before the cut; only the actions they actually realize there
+matter. -/
+theorem realize_eq_of_prefix_and_eq_from {n : Nat} {A : Fin n → Type}
+    (σ τ : Strategy A) (cut : Fin n)
+    (hprefix : ∀ j, j.val < cut.val → realize σ j = realize τ j)
+    (hfrom : ∀ j, cut.val ≤ j.val → σ j = τ j) :
+    realize σ = realize τ := by
+  funext j
+  induction hj : j.val using Nat.strongRecOn generalizing j with
+  | _ d ih =>
+      by_cases hjcut : j.val < cut.val
+      · exact hprefix j hjcut
+      · rw [realize_eq, realize_eq, hfrom j (Nat.le_of_not_gt hjcut)]
+        congr 1
+        funext q
+        exact ih (priorIndex j q).val (by
+            simpa [priorIndex, hj] using q.isLt)
+          (priorIndex j q) rfl
+
 end ShapeSeqDep
 
 /-- A finite-horizon sequential shape with stage-specific action types. -/

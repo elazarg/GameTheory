@@ -755,6 +755,63 @@ theorem nodeDist_realize_eq_pure (A : Fin n → Type)
     apply (Equiv.cast (nodeVal_natAdd A i)).injective
     exact Subsingleton.elim _ _
 
+/-- Deterministic continuation is suffix-local.  If two sequential profiles
+agree from stage `start` onward, then evaluating any canonical node at or
+after that index under the first profile is deterministic along the complete
+path realized by the second.  Earlier actions may therefore be fixed by a
+counterfactual history without changing continuation evaluation. -/
+theorem nodeDist_realize_eq_pure_of_eq_from (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ τ : ShapeSeqDep.Strategy A) (start : Nat)
+    (hagree : ∀ j, start ≤ j.val → σ j = τ j)
+    (nd : Fin (n + n)) (hnd : start ≤ nd.val) :
+    MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) nd
+        (assignOfPath A (ShapeSeqDep.realize τ)) =
+      PMF.pure ((assignOfPath A (ShapeSeqDep.realize τ)) nd) := by
+  refine Fin.addCases (motive := fun nd => start ≤ nd.val →
+      MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+          (MAID.pureToPolicy (toPurePolicy A σ)) nd
+          (assignOfPath A (ShapeSeqDep.realize τ)) =
+        PMF.pure ((assignOfPath A (ShapeSeqDep.realize τ)) nd)) ?_ ?_ nd hnd
+  · intro j hj
+    have hjagree : σ j = τ j := hagree j (by
+      simpa [decisionNode] using hj)
+    have ht := nodeDist_decision_realize_eq_pure A k τ j
+    change MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (decisionNode j)
+        (assignOfPath A (ShapeSeqDep.realize τ)) =
+      PMF.pure ((assignOfPath A (ShapeSeqDep.realize τ)) (decisionNode j))
+    let I : MAID.Infoset (sequentialStruct A) j :=
+      ⟨⟨decisionNode j, sequentialStruct_kind_decision A j⟩,
+        MAID.projCfg (assignOfPath A (ShapeSeqDep.realize τ))
+          ((sequentialStruct A).obsParents (decisionNode j))⟩
+    have hpol : MAID.pureToPolicy (toPurePolicy A σ) j I =
+        MAID.pureToPolicy (toPurePolicy A τ) j I := by
+      change PMF.pure (toPurePolicy A σ j I) =
+        PMF.pure (toPurePolicy A τ j I)
+      congr 1
+      rw [toPurePolicy_apply, toPurePolicy_apply, hjagree]
+    calc
+      _ = MAID.pureToPolicy (toPurePolicy A σ) j I :=
+        nodeDist_decision A k _ j _
+      _ = MAID.pureToPolicy (toPurePolicy A τ) j I := hpol
+      _ = _ := by
+        rw [← nodeDist_decision A k
+          (MAID.pureToPolicy (toPurePolicy A τ)) j
+          (assignOfPath A (ShapeSeqDep.realize τ))]
+        exact ht
+  · intro j _
+    change MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (utilityNode j)
+        (assignOfPath A (ShapeSeqDep.realize τ)) =
+      PMF.pure ((assignOfPath A (ShapeSeqDep.realize τ)) (utilityNode j))
+    rw [nodeDist_utility]
+    congr 2
+    apply (Equiv.cast (nodeVal_natAdd A j)).injective
+    exact Subsingleton.elim _ _
+
 theorem pathOfUtilityCfg_projCfg (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
     [∀ i, Inhabited (A i)] (p : Fin n)
@@ -1053,6 +1110,507 @@ theorem sequentialTopologicalOrder_pairwiseObservation (A : Fin n → Type)
   rw [decisionNode_mem_parents_decision]
   simpa [decisionNode] using hvals
 
+/-! ## Canonical decision subtrees -/
+
+/-- The suffix of the natural MAID order beginning at node index `start`. -/
+def nodesFrom (n start : Nat) : List (Fin (n + n)) :=
+  (List.finRange (n + n)).drop start
+
+/-- Before the utility-node suffix, the natural-order subtree at stage `i`
+starts with exactly the canonical decision node for `i`. -/
+theorem nodesFrom_stage (i : Fin n) :
+    nodesFrom n i.val = decisionNode i :: nodesFrom n (i.val + 1) := by
+  unfold nodesFrom
+  have hi : i.val < (List.finRange (n + n)).length := by
+    simp only [List.length_finRange]
+    omega
+  rw [← List.cons_getElem_drop_succ (h := hi)]
+  congr 1
+  apply Fin.ext
+  simp [List.getElem_finRange, decisionNode]
+
+/-- Replace the current stage by a constant action after forcing a requested
+counterfactual prefix; later contingent plans remain those of `σ`. -/
+def continuationProfile {A : Fin n → Type}
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) (action : A i) :
+    ShapeSeqDep.Strategy A :=
+  Function.update (ShapeSeqDep.profileForHistory σ i h) i
+    (fun _ => action)
+
+/-- A continuation profile agrees with the reference profile strictly after
+the currently forced stage. -/
+theorem continuationProfile_eq_of_lt {A : Fin n → Type}
+    (σ : ShapeSeqDep.Strategy A) (i j : Fin n)
+    (h : ShapeSeqDep.History A i) (action : A i) (hij : i.val < j.val) :
+    continuationProfile σ i h action j = σ j := by
+  unfold continuationProfile
+  rw [Function.update_of_ne (by intro heq; subst j; omega)]
+  exact ShapeSeqDep.profileForHistory_eq_of_le σ i h j (Nat.le_of_lt hij)
+
+/-- The forced counterfactual prefix is realized literally. -/
+@[simp] theorem continuationProfile_realize_prior {A : Fin n → Type}
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) (action : A i) (j : Fin i.val) :
+    ShapeSeqDep.realize (continuationProfile σ i h action)
+        (ShapeSeqDep.priorIndex i j) = h j := by
+  change ShapeSeqDep.realizeAt
+      (Function.update (ShapeSeqDep.profileForHistory σ i h) i
+        (fun _ => action)) (ShapeSeqDep.priorIndex i j) = h j
+  rw [ShapeSeqDep.realizeAt_update_of_lt _ i _ _ j.isLt]
+  exact ShapeSeqDep.realize_profileForHistory_prior σ i h j
+
+/-- The forced action is selected at the current stage. -/
+@[simp] theorem continuationProfile_realize_current {A : Fin n → Type}
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) (action : A i) :
+    ShapeSeqDep.realize (continuationProfile σ i h action) i = action := by
+  rw [ShapeSeqDep.realize_eq]
+  simp only [continuationProfile, Function.update_self]
+
+/-- Forcing the action already selected by `σ` leaves the continuation from
+the requested history unchanged. -/
+theorem realize_continuation_selected {A : Fin n → Type}
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) :
+    ShapeSeqDep.realize (continuationProfile σ i h (σ i h)) =
+      ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h) := by
+  let base := ShapeSeqDep.profileForHistory σ i h
+  have hhistory : (fun j => ShapeSeqDep.realize base
+      (ShapeSeqDep.priorIndex i j)) = h := by
+    funext j
+    exact ShapeSeqDep.realize_profileForHistory_prior σ i h j
+  have hbase : base i = σ i :=
+    ShapeSeqDep.profileForHistory_eq_of_le σ i h i (le_refl i.val)
+  have hchoice : (fun _ : ShapeSeqDep.History A i => σ i h)
+        (fun j => ShapeSeqDep.realize base (ShapeSeqDep.priorIndex i j)) =
+      base i (fun j => ShapeSeqDep.realize base
+        (ShapeSeqDep.priorIndex i j)) := by
+    rw [hbase, hhistory]
+  calc
+    ShapeSeqDep.realize (continuationProfile σ i h (σ i h)) =
+        ShapeSeqDep.realize (Function.update base i (fun _ => σ i h)) := rfl
+    _ = ShapeSeqDep.realize (Function.update base i (base i)) :=
+      ShapeSeqDep.realize_update_eq_of_eq_at_reached_history
+        base i (fun _ => σ i h) (base i) hchoice
+    _ = ShapeSeqDep.realize base := by
+      rw [Function.update_eq_self]
+
+/-- Total assignment present immediately before the EFG decision for a
+counterfactual history.  Coordinates before `i` encode that history and all
+unvisited coordinates retain their defaults. -/
+def assignmentBefore (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A)
+    (i : Fin n) (h : ShapeSeqDep.History A i) :
+    MAID.TAssign (sequentialStruct A) :=
+  (MAID.PrefixAssign.ofTAssign
+    (assignOfPath A
+      (ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h)))
+    i.val (by omega)).extend
+
+/-- Encode a native stage action as the finite action used by the induced EFG
+at the canonical decision node. -/
+def encodeAction (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (i : Fin n) (action : A i) :
+    Fin ((sequentialStruct A).domainSize (decisionNode i)) :=
+  (sequentialStruct A).valEquiv (decisionNode i)
+    ((Equiv.cast (nodeVal_castAdd A i)).symm action)
+
+/-- Decode a finite EFG action at the canonical decision node to its native
+stage action. -/
+def decodeAction (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (i : Fin n)
+    (action : Fin ((sequentialStruct A).domainSize (decisionNode i))) : A i :=
+  Equiv.cast (nodeVal_castAdd A i)
+    (((sequentialStruct A).valEquiv (decisionNode i)).symm action)
+
+@[simp] theorem decodeAction_encodeAction (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (i : Fin n) (action : A i) :
+    decodeAction A i (encodeAction A i action) = action := by
+  simp [decodeAction, encodeAction]
+
+@[simp] theorem encodeAction_decodeAction (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (i : Fin n)
+    (action : Fin ((sequentialStruct A).domainSize (decisionNode i))) :
+    encodeAction A i (decodeAction A i action) = action := by
+  unfold decodeAction encodeAction
+  rw [(Equiv.cast (nodeVal_castAdd A i)).symm_apply_apply]
+  exact ((sequentialStruct A).valEquiv (decisionNode i)).apply_symm_apply action
+
+@[simp] theorem valEquiv_symm_encodeAction (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (i : Fin n) (action : A i) :
+    ((sequentialStruct A).valEquiv (decisionNode i)).symm
+        (encodeAction A i action) =
+      (Equiv.cast (nodeVal_castAdd A i)).symm action := by
+  exact (sequentialStruct A).valEquiv (decisionNode i) |>.symm_apply_apply _
+
+/-- Updating the current decision in `assignmentBefore` produces precisely
+the default extension of the target continuation through that decision. -/
+theorem assignmentBefore_update (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A)
+    (i : Fin n) (h : ShapeSeqDep.History A i) (action : A i) :
+    MAID.updateAssign (assignmentBefore A σ i h) (decisionNode i)
+        ((sequentialStruct A).valEquiv (decisionNode i) |>.symm
+          (encodeAction A i action)) =
+      (MAID.PrefixAssign.ofTAssign
+        (assignOfPath A
+          (ShapeSeqDep.realize (continuationProfile σ i h action)))
+        (i.val + 1) (by omega)).extend := by
+  let base := assignOfPath A
+    (ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h))
+  let target := assignOfPath A
+    (ShapeSeqDep.realize (continuationProfile σ i h action))
+  have hprefix : MAID.PrefixAssign.ofTAssign target i.val (by omega) =
+      MAID.PrefixAssign.ofTAssign base i.val (by omega) := by
+    funext j
+    simp only [MAID.PrefixAssign.ofTAssign]
+    apply eq_of_heq
+    let q : Fin n := ⟨j.val, Nat.lt_trans j.isLt i.isLt⟩
+    have hnode : Fin.castLE (show i.val ≤ n + n by omega) j = decisionNode q := by
+      apply Fin.ext
+      rfl
+    have hsame : target (decisionNode q) = base (decisionNode q) := by
+      dsimp [target, base]
+      apply (Equiv.cast (nodeVal_castAdd A q)).injective
+      rw [show (Equiv.cast (nodeVal_castAdd A q))
+          (assignOfPath A
+            (ShapeSeqDep.realize (continuationProfile σ i h action))
+              (decisionNode q)) =
+          ShapeSeqDep.realize (continuationProfile σ i h action) q from
+        congrFun (pathOfAssign_assignOfPath A
+          (ShapeSeqDep.realize (continuationProfile σ i h action))) q]
+      rw [show (Equiv.cast (nodeVal_castAdd A q))
+          (assignOfPath A
+            (ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h))
+              (decisionNode q)) =
+          ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h) q from
+        congrFun (pathOfAssign_assignOfPath A
+          (ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h))) q]
+      exact ShapeSeqDep.realizeAt_update_of_lt
+        (ShapeSeqDep.profileForHistory σ i h) i (fun _ => action) q j.isLt
+    cases hnode
+    exact heq_of_eq hsame
+  rw [assignmentBefore]
+  change MAID.updateAssign
+      (MAID.PrefixAssign.ofTAssign base i.val (by omega)).extend
+      (decisionNode i) _ = _
+  rw [← hprefix]
+  have hindex : decisionNode i =
+      (⟨i.val, by omega⟩ : Fin (n + n)) := by
+    apply Fin.ext
+    rfl
+  have hvalue :
+      ((sequentialStruct A).valEquiv (decisionNode i)).symm
+          (encodeAction A i action) = target (decisionNode i) := by
+    rw [valEquiv_symm_encodeAction]
+    dsimp [target]
+    apply (Equiv.cast (nodeVal_castAdd A i)).injective
+    rw [(Equiv.cast (nodeVal_castAdd A i)).apply_symm_apply]
+    rw [show (Equiv.cast (nodeVal_castAdd A i))
+          (assignOfPath A
+            (ShapeSeqDep.realize (continuationProfile σ i h action))
+              (decisionNode i)) =
+          ShapeSeqDep.realize (continuationProfile σ i h action) i from
+        congrFun (pathOfAssign_assignOfPath A
+          (ShapeSeqDep.realize (continuationProfile σ i h action))) i]
+    exact (continuationProfile_realize_current σ i h action).symm
+  rw [hvalue]
+  let current : Fin (n + n) := ⟨i.val, by omega⟩
+  have hcurrent : current = decisionNode i := by
+    apply Fin.ext
+    rfl
+  calc
+    MAID.updateAssign
+        (MAID.PrefixAssign.ofTAssign target i.val (by omega)).extend
+        (decisionNode i) (target (decisionNode i)) =
+      MAID.updateAssign
+        (MAID.PrefixAssign.ofTAssign target i.val (by omega)).extend
+        current (target current) := by cases hcurrent; rfl
+    _ = ((MAID.PrefixAssign.ofTAssign target i.val (by omega)).snoc
+        (target current)).extend := by
+      exact (MAID.PrefixAssign.snoc_extend _ _).symm
+    _ = (MAID.PrefixAssign.ofTAssign target (i.val + 1) (by omega)).extend := by
+      exact congrArg MAID.PrefixAssign.extend
+        (MAID.PrefixAssign.ofTAssign_snoc target)
+    _ = _ := by rfl
+
+/-- The concrete MAID/EFG information set reached after the requested
+counterfactual prefix. -/
+def infosetAtHistory (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A)
+    (i : Fin n) (h : ShapeSeqDep.History A i) :
+    MAID.Infoset (sequentialStruct A) i :=
+  ⟨decisionNodeFor A i,
+    MAID.projCfg (assignmentBefore A σ i h)
+      ((sequentialStruct A).obsParents (decisionNode i))⟩
+
+/-- The concrete information set at a forced prefix decodes to that prefix,
+not merely to an equivalent reachable presentation. -/
+@[simp] theorem infosetHistoryEquiv_infosetAtHistory (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A)
+    (i : Fin n) (h : ShapeSeqDep.History A i) :
+    infosetHistoryEquiv A i (infosetAtHistory A σ i h) = h := by
+  unfold infosetAtHistory
+  rw [infosetHistoryEquiv_canonical]
+  change cfgHistoryEquiv A i
+      (MAID.projCfg (assignmentBefore A σ i h)
+        ((sequentialStruct A).parents (decisionNode i))) = h
+  rw [cfgHistoryEquiv_projCfg]
+  funext j
+  let q := ShapeSeqDep.priorIndex i j
+  let base := assignOfPath A
+    (ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h))
+  have hpath : pathOfAssign A (assignmentBefore A σ i h) q =
+      pathOfAssign A base q := by
+    unfold pathOfAssign assignmentBefore
+    rw [MAID.PrefixAssign.extend_get _ (decisionNode q) (by
+      change q.val < i.val
+      exact j.isLt)]
+    apply eq_of_heq
+    rfl
+  rw [hpath]
+  change pathOfAssign A base q = h j
+  rw [show pathOfAssign A base =
+      ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h) from
+    pathOfAssign_assignOfPath A _]
+  exact ShapeSeqDep.realize_profileForHistory_prior σ i h j
+
+/-- The generated tree at a requested history exposes the corresponding
+decision node followed by the natural-order suffix. -/
+theorem buildTree_assignmentBefore (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) :
+    MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+        (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n i.val)
+        (assignmentBefore A σ i h) =
+      .decision (infosetAtHistory A σ i h) fun action =>
+        MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+          (MAID.defaultPolicy (sequentialStruct A))
+          (nodesFrom n (i.val + 1))
+          (MAID.updateAssign (assignmentBefore A σ i h) (decisionNode i)
+            ((sequentialStruct A).valEquiv (decisionNode i) |>.symm action)) := by
+  rw [nodesFrom_stage]
+  conv_lhs => unfold MAID_EFG.buildTree
+  split
+  · next hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
+  · next p hk =>
+    have hp : p = i := by
+      injection hk.symm.trans (sequentialStruct_kind_decision A i)
+    subst p
+    rfl
+  · next p hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
+
+/-- Evaluating a branch below the decision at history `h` under the encoded
+reference profile yields exactly the pure continuation path obtained by
+forcing that action and then returning to `σ`. -/
+theorem decisionContinuation_evalDist (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) (action : A i) :
+    (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+        (MAID.defaultPolicy (sequentialStruct A))
+        (nodesFrom n (i.val + 1))
+        (MAID.updateAssign (assignmentBefore A σ i h) (decisionNode i)
+          ((sequentialStruct A).valEquiv (decisionNode i) |>.symm
+            (encodeAction A i action)))).evalDist
+      (EFG.pureToBehavioral
+        (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))) =
+      PMF.pure (assignOfPath A
+        (ShapeSeqDep.realize (continuationProfile σ i h action))) := by
+  rw [MAID_EFG.pureToBehavioral_toEFGPureProfile]
+  rw [MAID_EFG.buildTree_pol_irrel (sequentialSem A k)
+    (MAID.defaultPolicy (sequentialStruct A))
+    (MAID.pureToPolicy (toPurePolicy A σ))]
+  rw [MAID_EFG.buildTree_evalDist]
+  rw [assignmentBefore_update]
+  let τ := continuationProfile σ i h action
+  apply MAID.foldl_drop_finRange_eq_pure_of_nodeDist
+    (sequentialSem A k) (MAID.pureToPolicy (toPurePolicy A σ))
+    (sequentialStruct_naturalOrder A) (i.val + 1) (by omega)
+    (assignOfPath A (ShapeSeqDep.realize τ))
+  intro nd hnd
+  apply nodeDist_realize_eq_pure_of_eq_from A k σ τ (i.val + 1)
+  · intro j hj
+    exact (continuationProfile_eq_of_lt σ i j h action (by omega)).symm
+  · exact hnd
+
+/-- Every assignment of the first `stage` canonical decisions determines a
+reachable subtree of the MAID unrolling.  This is a syntactic reachability
+result: zero-probability issues do not arise because these nodes are all
+decisions and every finite action branch is present. -/
+theorem buildTree_reach_prefix (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (u : (∀ i, A i) → Fin n → ℝ)
+    (target : MAID.TAssign (sequentialStruct A))
+    (stage : Nat) (hstage : stage ≤ n) :
+    ∃ history : List (EFG.HistoryStep (MAID_EFG.maidInfoS (sequentialStruct A))),
+      EFG.ReachBy history
+        (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A u)
+          (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n 0)
+          (MAID.defaultAssign (sequentialStruct A)))
+        (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A u)
+          (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n stage)
+          (MAID.PrefixAssign.ofTAssign target stage (by omega)).extend) := by
+  induction stage with
+  | zero =>
+      refine ⟨[], ?_⟩
+      rw [MAID.PrefixAssign.ofTAssign_zero,
+        MAID.PrefixAssign.empty_extend]
+      exact EFG.ReachBy.here _
+  | succ stage ih =>
+      have hlt : stage < n := by omega
+      let i : Fin n := ⟨stage, hlt⟩
+      let prior := (MAID.PrefixAssign.ofTAssign target stage (by omega)).extend
+      let I : MAID.Infoset (sequentialStruct A) i :=
+        ⟨decisionNodeFor A i,
+          MAID.projCfg prior
+            ((sequentialStruct A).obsParents (decisionNode i))⟩
+      let action : (MAID_EFG.maidInfoS (sequentialStruct A)).Act I :=
+        (sequentialStruct A).valEquiv (decisionNode i) (target (decisionNode i))
+      obtain ⟨history, hreach⟩ := ih (Nat.le_of_lt hlt)
+      have hroot :
+          MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A u)
+              (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n stage) prior =
+            .decision I fun value =>
+              MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A u)
+                (MAID.defaultPolicy (sequentialStruct A))
+                (nodesFrom n (stage + 1))
+                (MAID.updateAssign prior (decisionNode i)
+                  ((sequentialStruct A).valEquiv (decisionNode i) |>.symm value)) := by
+        change MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A u)
+              (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n i.val) prior = _
+        rw [nodesFrom_stage]
+        conv_lhs => unfold MAID_EFG.buildTree
+        split
+        · next hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
+        · next p hk =>
+          have hp : p = i := by
+            injection hk.symm.trans (sequentialStruct_kind_decision A i)
+          subst p
+          rfl
+        · next p hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
+      have hupdate :
+          MAID.updateAssign prior (decisionNode i)
+              ((sequentialStruct A).valEquiv (decisionNode i) |>.symm action) =
+            (MAID.PrefixAssign.ofTAssign target (stage + 1) (by omega)).extend := by
+        let current : Fin (n + n) := ⟨stage, by omega⟩
+        have hcurrent : current = decisionNode i := by
+          apply Fin.ext
+          rfl
+        calc
+          MAID.updateAssign prior (decisionNode i)
+              ((sequentialStruct A).valEquiv (decisionNode i) |>.symm action) =
+            MAID.updateAssign
+              (MAID.PrefixAssign.ofTAssign target stage (by omega)).extend
+              current (target current) := by
+                simp only [prior, action, Equiv.symm_apply_apply]
+                exact (congrArg (fun nd => MAID.updateAssign
+                  (MAID.PrefixAssign.ofTAssign target stage (by omega)).extend
+                  nd (target nd)) hcurrent).symm
+          _ = ((MAID.PrefixAssign.ofTAssign target stage (by omega)).snoc
+              (target current)).extend := by
+                exact (MAID.PrefixAssign.snoc_extend _ _).symm
+          _ = (MAID.PrefixAssign.ofTAssign target (stage + 1) (by omega)).extend := by
+                exact congrArg MAID.PrefixAssign.extend
+                  (MAID.PrefixAssign.ofTAssign_snoc target)
+      have hstep : EFG.ReachBy
+          [EFG.HistoryStep.action i I action]
+          (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A u)
+            (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n stage) prior)
+          (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A u)
+            (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n (stage + 1))
+            (MAID.PrefixAssign.ofTAssign target (stage + 1) (by omega)).extend) := by
+        rw [hroot]
+        apply EFG.ReachBy.action action
+        rw [hupdate]
+        exact EFG.ReachBy.here _
+      refine ⟨history ++ [EFG.HistoryStep.action i I action], ?_⟩
+      exact EFG.ReachBy_append hreach hstep
+
+/-! ## History-indexed one-shot normal form -/
+
+/-- The literal history-indexed form of sequential one-shot optimality.  It
+compares the selected action with every alternative after each abstract
+dependent history, then follows the reference continuation plans. -/
+def IsHistoryOneShotEquilibrium {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : ShapeSeqDep.Strategy A) : Prop :=
+  ∀ (i : Fin n) (h : ShapeSeqDep.History A i) (action : A i),
+    k (ShapeSeqDep.realize (continuationProfile σ i h action)) i ≤
+      k (ShapeSeqDep.realize (continuationProfile σ i h (σ i h))) i
+
+/-- Predecessor-profile and literal history quantification give exactly the
+same one-shot condition. -/
+theorem isOneShotConditionedEquilibrium_iff_history {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : ShapeSeqDep.Strategy A) :
+    ShapeSeqDep.IsOneShotConditionedEquilibrium k σ ↔
+      IsHistoryOneShotEquilibrium k σ := by
+  constructor
+  · intro hone i h action
+    let base := ShapeSeqDep.profileForHistory σ i h
+    have hineq := hone i base
+      (ShapeSeqDep.profileForHistory_eq_of_le σ i h) action
+    change k (ShapeSeqDep.realize (continuationProfile σ i h action)) i ≤
+      k (ShapeSeqDep.realize base) i at hineq
+    rw [← realize_continuation_selected σ i h] at hineq
+    exact hineq
+  · intro hhistory i τ hagree action
+    let h : ShapeSeqDep.History A i :=
+      fun j => ShapeSeqDep.realize τ (ShapeSeqDep.priorIndex i j)
+    have hdeviation :
+        ShapeSeqDep.realize (Function.update τ i (fun _ => action)) =
+          ShapeSeqDep.realize (continuationProfile σ i h action) := by
+      apply ShapeSeqDep.realize_eq_of_prefix_and_eq_from _ _ i
+      · intro j hj
+        change ShapeSeqDep.realizeAt (Function.update τ i (fun _ => action)) j =
+          ShapeSeqDep.realizeAt (continuationProfile σ i h action) j
+        rw [ShapeSeqDep.realizeAt_update_of_lt τ i (fun _ => action) j hj]
+        let q : Fin i.val := ⟨j.val, hj⟩
+        have hq : ShapeSeqDep.priorIndex i q = j := by
+          apply Fin.ext
+          rfl
+        rw [← hq]
+        change ShapeSeqDep.realize τ (ShapeSeqDep.priorIndex i q) =
+          ShapeSeqDep.realize (continuationProfile σ i h action)
+            (ShapeSeqDep.priorIndex i q)
+        rw [continuationProfile_realize_prior]
+      · intro j hij
+        by_cases hji : j = i
+        · subst j
+          simp only [continuationProfile, Function.update_self]
+        · have hij' : i.val < j.val := by omega
+          rw [Function.update_of_ne hji,
+            continuationProfile_eq_of_lt σ i j h action hij',
+            hagree j hij]
+    have hbase : ShapeSeqDep.realize τ =
+        ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h) := by
+      apply ShapeSeqDep.realize_eq_of_prefix_and_eq_from _ _ i
+      · intro j hj
+        let q : Fin i.val := ⟨j.val, hj⟩
+        have hq : ShapeSeqDep.priorIndex i q = j := by
+          apply Fin.ext
+          rfl
+        rw [← hq, ShapeSeqDep.realize_profileForHistory_prior]
+      · intro j hij
+        rw [ShapeSeqDep.profileForHistory_eq_of_le σ i h j hij,
+          hagree j hij]
+    have hselected : ShapeSeqDep.realize τ =
+        ShapeSeqDep.realize (continuationProfile σ i h (σ i h)) :=
+      hbase.trans (realize_continuation_selected σ i h).symm
+    rw [hdeviation, hselected]
+    exact hhistory i h action
+
 /-- The EFG obtained by passing the canonical sequential MAID through the
 repository's general MAID-to-EFG translation at its explicit natural order.
 The seed policy is semantically irrelevant to that translation; the existing
@@ -1076,6 +1634,33 @@ theorem toEFG_isPerfectInfo (A : Fin n → Type)
     exact sequentialStruct_noChance A nd
   · exact sequentialTopologicalOrder_pairwiseObservation A
 
+/-- Every dependent action history labels a reachable decision node in the
+canonical EFG, with the generated continuation exposed definitionally. -/
+theorem toEFG_reach_history (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) :
+    ∃ history : List (EFG.HistoryStep
+        (MAID_EFG.maidInfoS (sequentialStruct A))),
+      EFG.ReachBy history
+        (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+          (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n 0)
+          (MAID.defaultAssign (sequentialStruct A)))
+        (.decision (infosetAtHistory A σ i h) fun action =>
+          MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+            (MAID.defaultPolicy (sequentialStruct A))
+            (nodesFrom n (i.val + 1))
+            (MAID.updateAssign (assignmentBefore A σ i h) (decisionNode i)
+              ((sequentialStruct A).valEquiv (decisionNode i) |>.symm action))) := by
+  let target := assignOfPath A
+    (ShapeSeqDep.realize (ShapeSeqDep.profileForHistory σ i h))
+  obtain ⟨history, hreach⟩ := buildTree_reach_prefix A k target i.val
+    (Nat.le_of_lt i.isLt)
+  refine ⟨history, ?_⟩
+  rw [← buildTree_assignmentBefore A k σ i h]
+  simpa [assignmentBefore, target] using hreach
+
 /-- Encode an open-game contingent profile as a pure contingent plan of the
 EFG induced by the canonical MAID. -/
 noncomputable def toEFGPureProfile (A : Fin n → Type)
@@ -1083,6 +1668,229 @@ noncomputable def toEFGPureProfile (A : Fin n → Type)
     [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
     (σ : ShapeSeqDep.Strategy A) : EFG.PureProfile (toEFG A k).inf :=
   MAID_EFG.toEFGPureProfile (toPurePolicy A σ)
+
+/-- At the EFG information set for `h`, the encoded pure profile chooses
+exactly the finite encoding of the native action `σ i h`. -/
+theorem toEFGPureProfile_infosetAtHistory (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) :
+    MAID_EFG.toEFGPureProfile (toPurePolicy A σ) i
+        (infosetAtHistory A σ i h) =
+      encodeAction A i (σ i h) := by
+  unfold MAID_EFG.toEFGPureProfile encodeAction
+  rw [toPurePolicy_apply, infosetHistoryEquiv_infosetAtHistory]
+  unfold infosetAtHistory decisionNodeFor
+  rfl
+
+/-- Equivalent inverse-coordinate form of the encoded action lemma, useful
+when an arbitrary EFG information set is first decoded to a history. -/
+theorem toEFGPureProfile_infosetHistory_symm (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) :
+    MAID_EFG.toEFGPureProfile (toPurePolicy A σ) i
+        ((infosetHistoryEquiv A i).symm h) =
+      encodeAction A i (σ i h) := by
+  unfold MAID_EFG.toEFGPureProfile encodeAction
+  rw [toPurePolicy_apply, (infosetHistoryEquiv A i).apply_symm_apply]
+  rfl
+
+/-- Expected utility in a canonical decision continuation is the original
+open-game continuation evaluated on the forced history and action. -/
+theorem decisionContinuation_expect (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n)
+    (h : ShapeSeqDep.History A i) (action : A i) :
+    Math.Probability.expect
+      ((MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+          (MAID.defaultPolicy (sequentialStruct A))
+          (nodesFrom n (i.val + 1))
+          (MAID.updateAssign (assignmentBefore A σ i h) (decisionNode i)
+            ((sequentialStruct A).valEquiv (decisionNode i) |>.symm
+              (encodeAction A i action)))).evalDist
+        (EFG.pureToBehavioral
+          (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+      (fun outcome =>
+        MAID.utilityOf (sequentialStruct A) (sequentialSem A k) outcome i) =
+      k (ShapeSeqDep.realize (continuationProfile σ i h action)) i := by
+  rw [decisionContinuation_evalDist, Math.Probability.expect_pure,
+    utilityOf_assignOfPath]
+
+/-- The EFG no-one-shot-deviation predicate is exactly the literal
+history-indexed one-shot condition of the sequential open game. -/
+theorem hasNoOneShotDeviation_iff_history (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    EFG.HasNoOneShotDeviation (toEFG A k) (toEFGPureProfile A k σ) ↔
+      IsHistoryOneShotEquilibrium k σ := by
+  constructor
+  · intro hno i h action
+    let I := infosetAtHistory A σ i h
+    let next : (MAID_EFG.maidInfoS (sequentialStruct A)).Act I →
+        EFG.GameTree (MAID_EFG.maidInfoS (sequentialStruct A))
+          (MAID.TAssign (sequentialStruct A)) := fun value =>
+      MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+        (MAID.defaultPolicy (sequentialStruct A))
+        (nodesFrom n (i.val + 1))
+        (MAID.updateAssign (assignmentBefore A σ i h) (decisionNode i)
+          ((sequentialStruct A).valEquiv (decisionNode i) |>.symm value))
+    obtain ⟨history, hreach⟩ := toEFG_reach_history A k σ i h
+    have hreach' : ∃ history : List (EFG.HistoryStep (toEFG A k).inf),
+        EFG.ReachBy history (toEFG A k).tree (.decision I next) := by
+      refine ⟨history, ?_⟩
+      simpa [toEFG, MAID_EFG.maidToEFGAt, sequentialTopologicalOrder,
+        MAID.Struct.NaturalOrder.toTopologicalOrder, nodesFrom, I, next] using hreach
+    have hineq := hno I next hreach' (encodeAction A i action)
+    change Math.Probability.expect
+        ((next ((MAID_EFG.toEFGPureProfile (toPurePolicy A σ)) i I)).evalDist
+          (EFG.pureToBehavioral
+            (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+          (fun outcome => MAID.utilityOf (sequentialStruct A)
+            (sequentialSem A k) outcome i) ≥
+      Math.Probability.expect
+        ((next (encodeAction A i action)).evalDist
+          (EFG.pureToBehavioral
+            (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+          (fun outcome => MAID.utilityOf (sequentialStruct A)
+            (sequentialSem A k) outcome i) at hineq
+    rw [toEFGPureProfile_infosetAtHistory A σ i h] at hineq
+    rw [show Math.Probability.expect
+          ((next (encodeAction A i (σ i h))).evalDist
+            (EFG.pureToBehavioral
+              (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+            (fun outcome => MAID.utilityOf (sequentialStruct A)
+              (sequentialSem A k) outcome i) =
+          k (ShapeSeqDep.realize
+            (continuationProfile σ i h (σ i h))) i from
+        decisionContinuation_expect A k σ i h (σ i h)] at hineq
+    rw [show Math.Probability.expect
+          ((next (encodeAction A i action)).evalDist
+            (EFG.pureToBehavioral
+              (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+            (fun outcome => MAID.utilityOf (sequentialStruct A)
+              (sequentialSem A k) outcome i) =
+          k (ShapeSeqDep.realize (continuationProfile σ i h action)) i from
+        decisionContinuation_expect A k σ i h action] at hineq
+    exact hineq
+  · intro hhistory p I next hreach action
+    let e := infosetHistoryEquiv A p
+    generalize hh : e I = h
+    have hI : I = e.symm h := by
+      rw [← hh]
+      exact (e.symm_apply_apply I).symm
+    subst I
+    have hcanonical : infosetAtHistory A σ p h = e.symm h := by
+      apply (infosetHistoryEquiv A p).injective
+      simp [e]
+    let canonicalNext :
+        (MAID_EFG.maidInfoS (sequentialStruct A)).Act
+            (e.symm h) →
+        EFG.GameTree (MAID_EFG.maidInfoS (sequentialStruct A))
+          (MAID.TAssign (sequentialStruct A)) := fun value =>
+      MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+        (MAID.defaultPolicy (sequentialStruct A))
+        (nodesFrom n (p.val + 1))
+        (MAID.updateAssign (assignmentBefore A σ p h) (decisionNode p)
+          ((sequentialStruct A).valEquiv (decisionNode p) |>.symm value))
+    obtain ⟨canonicalHistory, canonicalReach⟩ :=
+      toEFG_reach_history A k σ p h
+    have canonicalReach' : EFG.ReachBy canonicalHistory
+        (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+          (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n 0)
+          (MAID.defaultAssign (sequentialStruct A)))
+        (.decision (e.symm h) canonicalNext) := by
+      have htree :
+          (.decision (infosetAtHistory A σ p h) (fun value =>
+            MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+              (MAID.defaultPolicy (sequentialStruct A))
+              (nodesFrom n (p.val + 1))
+              (MAID.updateAssign (assignmentBefore A σ p h) (decisionNode p)
+                ((sequentialStruct A).valEquiv (decisionNode p) |>.symm value))) :
+            EFG.GameTree (MAID_EFG.maidInfoS (sequentialStruct A))
+              (MAID.TAssign (sequentialStruct A))) =
+            .decision (e.symm h) canonicalNext := by
+        let Branch := fun J : MAID.Infoset (sequentialStruct A) p =>
+          (MAID_EFG.maidInfoS (sequentialStruct A)).Act J →
+            EFG.GameTree (MAID_EFG.maidInfoS (sequentialStruct A))
+              (MAID.TAssign (sequentialStruct A))
+        have hpair :
+            (⟨infosetAtHistory A σ p h, fun value =>
+              MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+                (MAID.defaultPolicy (sequentialStruct A))
+                (nodesFrom n (p.val + 1))
+                (MAID.updateAssign (assignmentBefore A σ p h) (decisionNode p)
+                  ((sequentialStruct A).valEquiv (decisionNode p) |>.symm value))⟩ :
+              Sigma Branch) = ⟨e.symm h, canonicalNext⟩ := by
+          apply Sigma.ext hcanonical
+          rfl
+        exact congrArg (fun data : Sigma Branch =>
+          @EFG.GameTree.decision
+            (MAID_EFG.maidInfoS (sequentialStruct A))
+            (MAID.TAssign (sequentialStruct A)) p data.1 data.2) hpair
+      exact htree ▸ canonicalReach
+    rcases hreach with ⟨history, hreach⟩
+    have hreach' : EFG.ReachBy history
+        (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+          (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n 0)
+          (MAID.defaultAssign (sequentialStruct A)))
+        (.decision (e.symm h) next) := by
+      simpa [toEFG, MAID_EFG.maidToEFGAt, sequentialTopologicalOrder,
+        MAID.Struct.NaturalOrder.toTopologicalOrder, nodesFrom] using hreach
+    have hpi : EFG.IsPerfectInfo
+        (MAID_EFG.buildTree (sequentialStruct A) (sequentialSem A k)
+          (MAID.defaultPolicy (sequentialStruct A)) (nodesFrom n 0)
+          (MAID.defaultAssign (sequentialStruct A))) := by
+      simpa [toEFG, MAID_EFG.maidToEFGAt, sequentialTopologicalOrder,
+        MAID.Struct.NaturalOrder.toTopologicalOrder, nodesFrom] using
+          (toEFG_isPerfectInfo A k)
+    have hnextHeq := hpi history canonicalHistory p
+      (e.symm h) next canonicalNext hreach' canonicalReach'
+    have hnext : next = canonicalNext := eq_of_heq hnextHeq.2
+    rw [hnext]
+    have hnative := hhistory p h (decodeAction A p action)
+    have haction : action = encodeAction A p (decodeAction A p action) :=
+      (encodeAction_decodeAction A p action).symm
+    rw [haction]
+    change Math.Probability.expect
+        ((canonicalNext
+          ((MAID_EFG.toEFGPureProfile (toPurePolicy A σ)) p (e.symm h))).evalDist
+          (EFG.pureToBehavioral
+            (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+          (fun outcome => MAID.utilityOf (sequentialStruct A)
+            (sequentialSem A k) outcome p) ≥
+      Math.Probability.expect
+        ((canonicalNext (encodeAction A p (decodeAction A p action))).evalDist
+          (EFG.pureToBehavioral
+            (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+          (fun outcome => MAID.utilityOf (sequentialStruct A)
+            (sequentialSem A k) outcome p)
+    rw [show (MAID_EFG.toEFGPureProfile (toPurePolicy A σ)) p
+          (e.symm h) =
+        encodeAction A p (σ p h) by
+      exact toEFGPureProfile_infosetHistory_symm A σ p h]
+    rw [show Math.Probability.expect
+          ((canonicalNext (encodeAction A p (σ p h))).evalDist
+            (EFG.pureToBehavioral
+              (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+            (fun outcome => MAID.utilityOf (sequentialStruct A)
+              (sequentialSem A k) outcome p) =
+          k (ShapeSeqDep.realize
+            (continuationProfile σ p h (σ p h))) p from
+        decisionContinuation_expect A k σ p h (σ p h)]
+    rw [show Math.Probability.expect
+          ((canonicalNext
+            (encodeAction A p (decodeAction A p action))).evalDist
+            (EFG.pureToBehavioral
+              (MAID_EFG.toEFGPureProfile (toPurePolicy A σ))))
+            (fun outcome => MAID.utilityOf (sequentialStruct A)
+              (sequentialSem A k) outcome p) =
+          k (ShapeSeqDep.realize
+            (continuationProfile σ p h (decodeAction A p action))) p from
+        decisionContinuation_expect A k σ p h (decodeAction A p action)]
+    exact hnative
 
 /-- The existing finite perfect-information one-shot-deviation principle
 applies to every canonical finite-horizon EFG. -/
@@ -1098,6 +1906,44 @@ theorem efg_isSubgamePerfectEq_iff_hasNoOneShotDeviation
     infer_instance
   exact EFG.oneShotDeviation_iff_spe (toEFG A k) (toEFGPureProfile A k σ)
     (toEFG_isPerfectInfo A k)
+
+/-- The intrinsic one-shot condition of the finite sequential open game is
+exactly the EFG no-one-shot-deviation predicate under the canonical profile
+encoding. -/
+theorem isOneShotConditionedEquilibrium_iff_efgHasNoOneShotDeviation
+    (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    ShapeSeqDep.IsOneShotConditionedEquilibrium k σ ↔
+      EFG.HasNoOneShotDeviation (toEFG A k) (toEFGPureProfile A k σ) := by
+  calc
+    ShapeSeqDep.IsOneShotConditionedEquilibrium k σ ↔
+        IsHistoryOneShotEquilibrium k σ :=
+      isOneShotConditionedEquilibrium_iff_history k σ
+    _ ↔ EFG.HasNoOneShotDeviation (toEFG A k)
+        (toEFGPureProfile A k σ) :=
+      (hasNoOneShotDeviation_iff_history A k σ).symm
+
+/-- Full arbitrary finite-horizon refinement correspondence: intrinsic
+conditioning at every dependent history is equivalent to subgame-perfect
+equilibrium of the induced perfect-information EFG. -/
+theorem conditioned_isEquilibriumIn_iff_efgIsSubgamePerfect
+    (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep.conditioned A).IsEquilibriumIn () k σ ↔
+      (toEFG A k).IsSubgamePerfectEq (toEFGPureProfile A k σ) := by
+  calc
+    (ShapeSeqDep.conditioned A).IsEquilibriumIn () k σ ↔
+        ShapeSeqDep.IsOneShotConditionedEquilibrium k σ :=
+      ShapeSeqDep.conditioned_isEquilibriumIn_iff_oneShot k σ
+    _ ↔ EFG.HasNoOneShotDeviation (toEFG A k)
+        (toEFGPureProfile A k σ) :=
+      isOneShotConditionedEquilibrium_iff_efgHasNoOneShotDeviation A k σ
+    _ ↔ (toEFG A k).IsSubgamePerfectEq (toEFGPureProfile A k σ) :=
+      (efg_isSubgamePerfectEq_iff_hasNoOneShotDeviation A k σ).symm
 
 /-- The general MAID-to-EFG compiler supplies a game bisimulation for the
 canonical sequential presentation. -/

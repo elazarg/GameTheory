@@ -227,6 +227,18 @@ example {n : Nat} (A : Fin n → Type)
     ShapeSeqDep.MAIDBridge.efg_isSubgamePerfectEq_iff_hasNoOneShotDeviation
       A k σ⟩
 
+/-- At every finite heterogeneous horizon, intrinsic conditioning is exactly
+subgame-perfect equilibrium in the induced EFG. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep.conditioned A).IsEquilibriumIn () k σ ↔
+      (ShapeSeqDep.MAIDBridge.toEFG A k).IsSubgamePerfectEq
+        (ShapeSeqDep.MAIDBridge.toEFGPureProfile A k σ) :=
+  ShapeSeqDep.MAIDBridge.conditioned_isEquilibriumIn_iff_efgIsSubgamePerfect
+    A k σ
+
 /-- Perfect recall transfers through the existing MAID-to-EFG bridge. -/
 example {n : Nat} (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]

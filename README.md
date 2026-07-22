@@ -134,9 +134,12 @@ while deliberately leaving coalition objectives unspecified. The two-stage
 perfect-information
 bridge additionally reaches EFG subgame perfection and the one-shot-deviation
 principle. For arbitrary finite heterogeneous horizons, the conditioned
-predicate is now reduced exactly to one action change at each reached
-counterfactual history; the remaining EFG refinement obligation is to identify
-those history-indexed tests with the decision subtrees of the induced EFG.
+predicate reduces exactly to one action change at each reached counterfactual
+history. Every dependent history is proved reachable in the induced EFG, its
+continuation evaluates to the same pure action path, and perfect information
+identifies arbitrary reachable decision nodes with these canonical subtrees.
+Consequently conditioned open equilibrium is exactly EFG subgame-perfect
+equilibrium at every finite heterogeneous horizon.
 Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and
@@ -149,8 +152,7 @@ plain open equilibrium is exactly ordinary strategic-form Nash in the induced
 EFG. The canonical natural node order is now explicit, and a generic
 chance-free/full-observation criterion proves this induced tree has perfect
 information. Consequently its SPE and EFG one-shot-deviation predicates are
-equivalent; matching those subtree inequalities to the open conditioned
-predicate is the remaining refinement step.
+equivalent, and both coincide with the open conditioned predicate.
 Native pure-policy evaluation is also adequate: its projected assignment law
 is the point mass at the open-game realization, and pure contingent-plan
 equilibrium agrees exactly with native pure-policy Nash, including arbitrary
