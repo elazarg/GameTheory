@@ -49,6 +49,12 @@ example {X S Y R : Type*} (g : OpenGame X S Y R)
     g.IsEquilibriumAt c σ ↔ g.IsEquilibriumIn c.1 c.2 σ :=
   Iff.rfl
 
+/-- The public API exposes the ordered tensor representation for any finite
+heterogeneous simultaneous shape. -/
+example (X Y : Fin 3 → Type) :
+    OpenGameIso (ShapeN X Y) (ShapeN.tensorDecisions X Y) :=
+  ShapeN.finTensorIso X Y
+
 noncomputable section
 
 open GameTheory
