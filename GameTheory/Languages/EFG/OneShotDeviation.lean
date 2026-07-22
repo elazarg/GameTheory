@@ -1,0 +1,455 @@
+/-
+Copyright (c) 2025 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
+import Mathlib.Tactic.Linarith
+import Math.Probability
+import Math.ProbabilityMassFunction
+import GameTheory.Languages.EFG.Refinements
+
+/-!
+# EFG One-Shot Deviation Principle
+
+For finite perfect-information extensive-form games, a pure strategy profile
+is a subgame-perfect equilibrium if and only if no player has a profitable
+one-shot deviation at any decision node.
+
+This reusable EFG characterization lives in the language layer so bridge
+modules can depend on it without importing terminal `GameTheory.Theorems`
+modules. `GameTheory.Theorems.OneShotDeviation` remains a compatibility
+re-export.
+
+## Main definitions
+
+- `HasNoOneShotDeviation` — no player benefits from changing a single action
+
+## Main theorems
+
+- `spe_hasNoOneShotDeviation` — SPE implies no profitable one-shot deviation
+- `hasNoOneShotDeviation_spe` — converse (for perfect-info games)
+- `oneShotDeviation_iff_spe` — the equivalence (ODP)
+-/
+
+namespace EFG
+
+open GameTheory
+open Math.Probability
+
+-- ============================================================================
+-- No profitable one-shot deviation
+-- ============================================================================
+
+/-- A profile has no profitable one-shot deviation if at every reachable
+    decision node, the action chosen by `σ` gives at least as much EU
+    as any alternative action, with the rest of the profile unchanged. -/
+def HasNoOneShotDeviation (G : EFGGame) (σ : PureProfile G.inf) : Prop :=
+  ∀ {p : G.inf.Player} (I : G.inf.Infoset p)
+    (next : G.inf.Act I → GameTree G.inf G.Outcome),
+    (∃ h : List (HistoryStep G.inf), ReachBy h G.tree (.decision I next)) →
+    ∀ (a' : G.inf.Act I),
+      expect ((next (σ p I)).evalDist (pureToBehavioral σ))
+        (fun ω => G.utility ω p) ≥
+      expect ((next a').evalDist (pureToBehavioral σ))
+        (fun ω => G.utility ω p)
+
+/-- Structural presentation of one-shot optimality on a subtree.  At a
+decision node it records the local one-action inequalities and recurses down
+every action branch; chance nodes recurse down every branch as well.
+
+Unlike `HasNoOneShotDeviation`, this predicate does not carry explicit
+reachability witnesses.  Applying it to the root tree is equivalent because
+every syntactic subtree is reachable by its corresponding history. -/
+def IsOneShotOptimalAtEveryNode (G : EFGGame) (σ : PureProfile G.inf) :
+    GameTree G.inf G.Outcome → Prop
+  | .terminal _ => True
+  | .chance _ _ _ next =>
+      ∀ b, IsOneShotOptimalAtEveryNode G σ (next b)
+  | .decision (p := p) I next =>
+      (∀ a',
+        expect ((next (σ p I)).evalDist (pureToBehavioral σ))
+            (fun ω => G.utility ω p) ≥
+          expect ((next a').evalDist (pureToBehavioral σ))
+            (fun ω => G.utility ω p)) ∧
+      ∀ a, IsOneShotOptimalAtEveryNode G σ (next a)
+
+/-- Structural one-shot optimality is inherited by every reachable
+subtree. -/
+theorem IsOneShotOptimalAtEveryNode.of_reachBy (G : EFGGame)
+    (σ : PureProfile G.inf) {root target : GameTree G.inf G.Outcome}
+    {h : List (HistoryStep G.inf)}
+    (hroot : IsOneShotOptimalAtEveryNode G σ root)
+    (hreach : ReachBy h root target) :
+    IsOneShotOptimalAtEveryNode G σ target := by
+  induction hreach with
+  | nil => exact hroot
+  | @cons step rest root mid target hstep _ ih =>
+      cases step with
+      | chance k b =>
+          rcases hstep with ⟨μ, hk, next, hrootEq, hmidEq⟩
+          subst hrootEq
+          subst hmidEq
+          exact ih (hroot b)
+      | action p I a =>
+          rcases hstep with ⟨next, hrootEq, hmidEq⟩
+          subst hrootEq
+          subst hmidEq
+          exact ih (hroot.2 a)
+
+/-- The reachability-based and structural presentations of no profitable
+one-shot deviation coincide for every EFG. -/
+theorem hasNoOneShotDeviation_iff_everyNode (G : EFGGame)
+    (σ : PureProfile G.inf) :
+    HasNoOneShotDeviation G σ ↔
+      IsOneShotOptimalAtEveryNode G σ G.tree := by
+  constructor
+  · intro h
+    have go : ∀ (t : GameTree G.inf G.Outcome)
+        (history : List (HistoryStep G.inf)),
+        ReachBy history G.tree t →
+        IsOneShotOptimalAtEveryNode G σ t := by
+      intro t
+      induction t with
+      | terminal z =>
+          intro _ _
+          trivial
+      | chance k μ hk next ih =>
+          intro history hreach b
+          exact ih b (history ++ [HistoryStep.chance k b])
+            (ReachBy_append hreach (.chance b (.here _)))
+      | @decision p I next ih =>
+          intro history hreach
+          constructor
+          · exact h I next ⟨history, hreach⟩
+          · intro a
+            exact ih a (history ++ [HistoryStep.action p I a])
+              (ReachBy_append hreach (.action a (.here _)))
+    exact go G.tree [] (.here _)
+  · intro h p I next hreach a'
+    rcases hreach with ⟨history, hreach⟩
+    exact (h.of_reachBy G σ hreach).1 a'
+
+-- ============================================================================
+-- Easy direction: SPE → no profitable one-shot deviation
+-- ============================================================================
+
+open Classical in
+/-- SPE implies no profitable one-shot deviation (for perfect-info games). -/
+theorem spe_hasNoOneShotDeviation (G : EFGGame)
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
+    (hspe : G.IsSubgamePerfectEq σ) : HasNoOneShotDeviation G σ := by
+  intro p I next ⟨h, hreach⟩ a'
+  have hSub := perfectInfo_isSubgame_decision G.tree hpi I next hreach
+  -- Extract Nash inequality with our local Function.update instance
+  have hDecN : expect ((.decision I next : GameTree G.inf G.Outcome).evalDist
+      (pureToBehavioral σ)) (fun ω => G.utility ω p) ≥
+    expect ((.decision I next : GameTree G.inf G.Outcome).evalDist
+      (pureToBehavioral (Function.update σ p (Function.update (σ p) I a'))))
+      (fun ω => G.utility ω p) := by
+    have h' := ((G.withTree (.decision I next)).toStrategicKernelGame.toGameForm.isNashFor_iff
+      (KernelGame.euPref G.toStrategicKernelGame) σ).1 (hspe _ hSub)
+    have h := h' p (Function.update (σ p) I a')
+    exact h
+  -- Simplify both sides
+  have hEvalL : (.decision I next : GameTree G.inf G.Outcome).evalDist (pureToBehavioral σ) =
+      (next (σ p I)).evalDist (pureToBehavioral σ) := by
+    simp [evalDist_decision, pureToBehavioral]
+  have hEvalR : (.decision I next : GameTree G.inf G.Outcome).evalDist
+      (pureToBehavioral (Function.update σ p (Function.update (σ p) I a'))) =
+      (next a').evalDist
+        (pureToBehavioral (Function.update σ p (Function.update (σ p) I a'))) := by
+    simp [evalDist_decision, pureToBehavioral]
+  -- In subtree next a', the one-shot deviation agrees with σ
+  have hpi_dec : IsPerfectInfo (.decision I next) := IsPerfectInfo_subtree hpi hreach
+  have hAgree : (next a').evalDist
+      (pureToBehavioral (Function.update σ p (Function.update (σ p) I a'))) =
+      (next a').evalDist (pureToBehavioral σ) := by
+    apply evalDist_eq_of_agree
+    intro q J hIn
+    by_cases hq : q = p
+    · subst hq
+      have hJI : J ≠ I := fun hEq =>
+        perfectInfo_root_not_in_subtree (hpi := hpi_dec) (hEq ▸ hIn)
+      simp [Function.update, hJI]
+    · simp [Function.update, hq]
+  rw [hEvalL, hEvalR, hAgree] at hDecN
+  exact hDecN
+
+-- ============================================================================
+-- Hard direction: no profitable one-shot deviation → SPE
+-- ============================================================================
+
+open Classical in
+/-- Key inductive lemma: if σ has no profitable one-shot deviation (globally),
+    then σ is Nash at every reachable subtree of a perfect-info tree.
+    Proof by structural induction on the tree, under bounded utility. -/
+theorem nash_of_noOSD_of_bounded (G : EFGGame)
+    (σ : PureProfile G.inf)
+    {C : G.inf.Player → ℝ} (hbd : ∀ p ω, |G.utility ω p| ≤ C p)
+    (hnosd : HasNoOneShotDeviation G σ) :
+    ∀ (t : GameTree G.inf G.Outcome),
+      IsPerfectInfo t →
+      ∀ hroot, ReachBy hroot G.tree t →
+      ∀ {h u}, ReachBy h t u →
+        (G.withTree u).toStrategicKernelGame.IsNashFor
+          (KernelGame.euPref G.toStrategicKernelGame) σ := by
+  intro t hpi
+  induction t with
+  | terminal z =>
+    intro hroot hreach_root h u hr
+    cases hr with
+    | nil => exact terminal_isNashFor_euPref z σ
+    | @cons a _ _ _ _ hstep _ =>
+        cases a <;> simp [HistoryStepStep] at hstep
+  | chance k μ hk next ih =>
+    intro hroot hreach_root h u hr
+    have hpi_next : ∀ b : Fin k, IsPerfectInfo (next b) :=
+      fun b => IsPerfectInfo_subtree (root := .chance k μ hk next) hpi
+        (.chance b (.here _))
+    cases hr with
+    | nil =>
+      intro who s'
+      have hNnext : ∀ b : Fin k,
+          (G.withTree (next b)).toStrategicKernelGame.IsNashFor
+            (KernelGame.euPref G.toStrategicKernelGame) σ :=
+        fun b => ih b (hpi_next b) _ (ReachBy_append hreach_root (.chance b (.here _)))
+          (.here _)
+      have hpoint : ∀ b : Fin k,
+          expect ((next b).evalDist (pureToBehavioral σ)) (fun ω => G.utility ω who) ≥
+          expect ((next b).evalDist
+            (pureToBehavioral (Function.update σ who s')))
+            (fun ω => G.utility ω who) := by
+        intro b
+        have hNnext' := ((G.withTree (next b)).toStrategicKernelGame.toGameForm.isNashFor_iff
+          (KernelGame.euPref G.toStrategicKernelGame) σ).1 (hNnext b)
+        have hb := hNnext' who s'
+        exact hb
+      have hbind_base :
+          expect (μ.bind fun b => (next b).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω who) =
+            expect μ (fun b => expect ((next b).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω who)) :=
+        expect_bind_of_bounded μ (fun b => (next b).evalDist (pureToBehavioral σ))
+          (fun ω => G.utility ω who) (hbd who)
+      have hbind_dev :
+          expect (μ.bind fun b => (next b).evalDist
+              (pureToBehavioral (Function.update σ who s')))
+              (fun ω => G.utility ω who) =
+            expect μ (fun b => expect ((next b).evalDist
+              (pureToBehavioral (Function.update σ who s')))
+              (fun ω => G.utility ω who)) :=
+        expect_bind_of_bounded μ
+          (fun b => (next b).evalDist
+            (pureToBehavioral (Function.update σ who s')))
+          (fun ω => G.utility ω who) (hbd who)
+      have hmono :=
+        (Math.Probability.expect_mono μ
+          (fun b => expect ((next b).evalDist
+            (pureToBehavioral (Function.update σ who s')))
+            (fun ω => G.utility ω who))
+          (fun b => expect ((next b).evalDist (pureToBehavioral σ))
+            (fun ω => G.utility ω who))
+          (fun b => hpoint b))
+      have hroot :
+          expect (μ.bind fun b => (next b).evalDist
+              (pureToBehavioral (Function.update σ who s')))
+              (fun ω => G.utility ω who) ≤
+            expect (μ.bind fun b => (next b).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω who) := by
+        rw [hbind_dev, hbind_base]
+        exact hmono
+      convert hroot using 1
+      simp [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+        evalDist_chance, GameForm.correlatedOutcome_pure,
+        GameForm.constantDeviationProfileFamily_deviate,
+        KernelGame.toGameForm, ge_iff_le]
+      rfl
+    | @cons a _ _ _ _ hstep hr' =>
+      cases a with
+      | chance _k b =>
+          rcases hstep with ⟨_, _, _, hs, hu⟩
+          cases hs
+          subst hu
+          exact ih b (hpi_next b) _ (ReachBy_append hreach_root (.chance b (.here _))) hr'
+      | action p I a =>
+          simp [HistoryStepStep] at hstep
+  | @decision p I next ih =>
+    intro hroot hreach_root h u hr
+    have hpi_next : ∀ a : G.inf.Act I, IsPerfectInfo (next a) :=
+      fun a => IsPerfectInfo_subtree (root := .decision I next) hpi
+        (.action a (.here _))
+    cases hr with
+    | nil =>
+      intro who s'
+      by_cases hwho : who = p
+      · -- Deviator is the deciding player
+        let s'p : PureStrategy G.inf p := hwho ▸ s'
+        have hUpd : Function.update σ who s' = Function.update σ p s'p := by
+          cases hwho; rfl
+        let aDev : G.inf.Act I := s'p I
+        -- Step 1: OSD gives EU(σ, next(σ p I)) ≥ EU(σ, next(aDev))
+        have hOSD : expect ((next (σ p I)).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω p) ≥
+            expect ((next aDev).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω p) :=
+          hnosd I next ⟨hroot, hreach_root⟩ aDev
+        -- Step 2: IH gives Nash in subtree next aDev
+        have hNashSub :
+            (G.withTree (next aDev)).toStrategicKernelGame.IsNashFor
+              (KernelGame.euPref G.toStrategicKernelGame) σ :=
+          ih aDev (hpi_next aDev) _
+            (ReachBy_append hreach_root (.action aDev (.here _))) (.here _)
+        have hSubDev :
+            expect ((next aDev).evalDist (pureToBehavioral σ)) (fun ω => G.utility ω p) ≥
+            expect ((next aDev).evalDist
+              (pureToBehavioral (Function.update σ p s'p)))
+              (fun ω => G.utility ω p) := by
+          have hNashSub' := ((G.withTree (next aDev)).toStrategicKernelGame.toGameForm.isNashFor_iff
+            (KernelGame.euPref G.toStrategicKernelGame) σ).1 hNashSub
+          have hb := hNashSub' p s'p
+          exact hb
+        -- Step 3: Evaluation at root and with deviation
+        have hRootL :
+            expect ((GameTree.decision I next).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω p) =
+            expect ((next (σ p I)).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω p) := by
+          simp [evalDist_decision, pureToBehavioral]
+        have hRootR :
+            expect ((GameTree.decision I next).evalDist
+              (pureToBehavioral (Function.update σ p s'p)))
+              (fun ω => G.utility ω p) =
+            expect ((next aDev).evalDist
+              (pureToBehavioral (Function.update σ p s'p)))
+              (fun ω => G.utility ω p) := by
+          simp [aDev, evalDist_decision, pureToBehavioral, Function.update]
+        -- Chain the inequalities
+        have hMain :
+            expect ((GameTree.decision I next).evalDist (pureToBehavioral σ))
+              (fun ω => G.utility ω p) ≥
+            expect ((GameTree.decision I next).evalDist
+              (pureToBehavioral (Function.update σ p s'p)))
+              (fun ω => G.utility ω p) := by
+          rw [hRootL, hRootR]
+          exact le_trans hSubDev hOSD
+        -- Bridge DecidableEq and conclude
+        have hMain' :
+            expect ((pureToBehavioral (Function.update σ who s') p I).bind
+              (fun a => (next a).evalDist (pureToBehavioral (Function.update σ who s'))))
+              (fun ω => G.utility ω p) ≤
+            expect ((pureToBehavioral σ p I).bind
+              (fun a => (next a).evalDist (pureToBehavioral σ)))
+              (fun ω => G.utility ω p) := by
+          simpa [hUpd] using hMain
+        convert hMain' using 1
+        simp [KernelGame.euPref, EFGGame.toStrategicKernelGame, EFGGame.withTree,
+          hwho, GameForm.correlatedOutcome_pure,
+          GameForm.constantDeviationProfileFamily_deviate,
+          KernelGame.toGameForm, ge_iff_le]
+        rfl
+      · -- Deviator is NOT the deciding player
+        have hNashOpt :
+            (G.withTree (next (σ p I))).toStrategicKernelGame.IsNashFor
+              (KernelGame.euPref G.toStrategicKernelGame) σ :=
+          ih (σ p I) (hpi_next (σ p I)) _
+            (ReachBy_append hreach_root (.action (σ p I) (.here _))) (.here _)
+        have hNashOpt' :=
+          ((G.withTree (next (σ p I))).toStrategicKernelGame.toGameForm.isNashFor_iff
+            (KernelGame.euPref G.toStrategicKernelGame) σ).1 hNashOpt
+        have hOpt := hNashOpt' who s'
+        have hpw : p ≠ who := Ne.symm hwho
+        convert hOpt using 1
+        · simp [EFGGame.toStrategicKernelGame, EFGGame.withTree,
+            evalDist_decision, pureToBehavioral,
+            GameForm.correlatedOutcome_pure, KernelGame.toGameForm]
+        · simp [EFGGame.toStrategicKernelGame, EFGGame.withTree,
+            evalDist_decision, pureToBehavioral, Function.update, hpw,
+            GameForm.correlatedOutcome_pure, GameForm.constantDeviationProfileFamily_deviate,
+            KernelGame.toGameForm]
+          rfl
+    | @cons a _ _ _ _ hstep hr' =>
+      cases a with
+      | chance k b =>
+          simp [HistoryStepStep] at hstep
+      | action p' I' a =>
+          rcases hstep with ⟨next', hs, hu⟩
+          cases hs
+          subst hu
+          exact ih a (hpi_next a) _
+            (ReachBy_append hreach_root (.action a (.here _))) hr'
+
+open Classical in
+/-- Finite-outcome wrapper for `nash_of_noOSD_of_bounded`. -/
+theorem nash_of_noOSD (G : EFGGame) [Finite G.Outcome]
+    (σ : PureProfile G.inf)
+    (hnosd : HasNoOneShotDeviation G σ) :
+    ∀ (t : GameTree G.inf G.Outcome),
+      IsPerfectInfo t →
+      ∀ hroot, ReachBy hroot G.tree t →
+      ∀ {h u}, ReachBy h t u →
+        (G.withTree u).toStrategicKernelGame.IsNashFor
+          (KernelGame.euPref G.toStrategicKernelGame) σ := by
+  let C : G.inf.Player → ℝ := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose
+  have hbd : ∀ p ω, |G.utility ω p| ≤ C p := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose_spec
+  exact nash_of_noOSD_of_bounded G σ hbd hnosd
+
+open Classical in
+/-- No profitable one-shot deviation implies SPE (for perfect-info games),
+    under bounded utility. -/
+theorem hasNoOneShotDeviation_spe_of_bounded (G : EFGGame)
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
+    {C : G.inf.Player → ℝ} (hbd : ∀ p ω, |G.utility ω p| ≤ C p)
+    (hnosd : HasNoOneShotDeviation G σ) : G.IsSubgamePerfectEq σ := by
+  intro t hSub
+  rcases hSub.1 with ⟨hpath, hreach⟩
+  have hpi_t := IsPerfectInfo_subtree hpi hreach
+  exact nash_of_noOSD_of_bounded G σ hbd hnosd t hpi_t hpath hreach (.here _)
+
+open Classical in
+/-- Finite-outcome wrapper for `hasNoOneShotDeviation_spe_of_bounded`. -/
+theorem hasNoOneShotDeviation_spe (G : EFGGame) [Finite G.Outcome]
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
+    (hnosd : HasNoOneShotDeviation G σ) : G.IsSubgamePerfectEq σ := by
+  let C : G.inf.Player → ℝ := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose
+  have hbd : ∀ p ω, |G.utility ω p| ≤ C p := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose_spec
+  exact hasNoOneShotDeviation_spe_of_bounded G σ hpi hbd hnosd
+
+-- ============================================================================
+-- The equivalence
+-- ============================================================================
+
+open Classical in
+/-- **One-Shot Deviation Principle**: for finite perfect-information extensive-form
+    games, a pure strategy profile is a subgame-perfect equilibrium if and only if
+    no player has a profitable one-shot deviation at any decision node. -/
+theorem oneShotDeviation_iff_spe_of_bounded (G : EFGGame)
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree)
+    {C : G.inf.Player → ℝ} (hbd : ∀ p ω, |G.utility ω p| ≤ C p) :
+    G.IsSubgamePerfectEq σ ↔ HasNoOneShotDeviation G σ :=
+  ⟨spe_hasNoOneShotDeviation G σ hpi,
+    hasNoOneShotDeviation_spe_of_bounded G σ hpi hbd⟩
+
+open Classical in
+/-- **One-Shot Deviation Principle**: finite-outcome wrapper for the bounded
+    one-shot deviation theorem. -/
+theorem oneShotDeviation_iff_spe (G : EFGGame) [Finite G.Outcome]
+    (σ : PureProfile G.inf) (hpi : IsPerfectInfo G.tree) :
+    G.IsSubgamePerfectEq σ ↔ HasNoOneShotDeviation G σ := by
+  let C : G.inf.Player → ℝ := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose
+  have hbd : ∀ p ω, |G.utility ω p| ≤ C p := fun p =>
+    (Math.Probability.exists_abs_bound_of_finite
+      (fun ω => G.utility ω p)).choose_spec
+  exact oneShotDeviation_iff_spe_of_bounded G σ hpi hbd
+
+end EFG

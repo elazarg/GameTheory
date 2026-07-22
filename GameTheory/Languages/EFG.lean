@@ -14,6 +14,7 @@ import GameTheory.Languages.EFG.Kuhn
 import GameTheory.Languages.EFG.Theorems
 import GameTheory.Languages.EFG.Sequential
 import GameTheory.Languages.EFG.Refinements
+import GameTheory.Languages.EFG.OneShotDeviation
 
 /-!
 # GameTheory.Languages.EFG
@@ -25,6 +26,7 @@ This surface is intentionally textbook-facing:
 - `SOS` exposes the structural execution view
 - `Compile` maps the language into generic semantic targets
 - `Theorems` packages language-level reductions
+- `OneShotDeviation` gives the reusable ODP characterization of pure SPE
 
 Reader-facing examples live in the separate `GameTheoryExamples` target.
 -/

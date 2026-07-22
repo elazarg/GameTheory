@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.OpenGame.Theorems
 import GameTheory.Languages.EFG.Refinements
-import GameTheory.Theorems.OneShotDeviation
+import GameTheory.Languages.EFG.OneShotDeviation
 
 /-!
 # Two-Stage Open Games as Extensive-Form Games

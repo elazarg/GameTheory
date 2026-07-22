@@ -10,7 +10,7 @@ import GameTheory.Languages.MAID.Kuhn
 import GameTheory.Languages.Bridges.MAID_EFG
 import GameTheory.Concepts.Mixed.MixedExtension
 import GameTheory.Concepts.Foundations.GameMorphism
-import GameTheory.Theorems.OneShotDeviation
+import GameTheory.Languages.EFG.OneShotDeviation
 
 /-!
 # Finite Sequential Open Games as MAIDs
