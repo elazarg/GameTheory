@@ -5624,6 +5624,470 @@ theorem exists_fast_approachOne_finkFixedPoint_family
     hharmonic, hexcessive, hneutral, happroxFast, hneutralRate, hprune⟩
 
 -- ============================================================================
+-- Time-dependent potential verification
+-- ============================================================================
+
+/-- A time-dependent state potential telescopes along a scheduled Markov
+profile.  Unlike a pointwise bound on the drift of one fixed target, this
+form retains cancellations supplied by Poisson corrections. -/
+theorem scheduled_expectedTimeDependentStateValue_close_initial
+    (G : StochasticGame ι) [Fintype ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile)
+    (C : ℕ → G.State → Payoff ι) (r : ℕ → ℝ)
+    (who : ι) (s₀ : G.State)
+    (hstep : ∀ t s,
+      |expect (pmfPi (x t s)) (fun a =>
+          expect (G.transition s a) (fun s' => C (t + 1) s' who)) -
+        C t s who| ≤ r t)
+    (T : ℕ) :
+    |G.expectedStateValue (G.scheduledMarkovBehaviorProfile x) s₀ T
+        (fun s => C T s who) - C 0 s₀ who| ≤
+      ∑ t ∈ Finset.range T, r t := by
+  let σ := G.scheduledMarkovBehaviorProfile x
+  let A : ℕ → ℝ := fun t =>
+    G.expectedStateValue σ s₀ t (fun s => C t s who)
+  have hA : ∀ T, |A T - A 0| ≤ ∑ t ∈ Finset.range T, r t := by
+    intro N
+    induction N with
+    | zero => simp
+    | succ N ih =>
+        have hup : A (N + 1) ≤ A N + r N := by
+          rw [show A (N + 1) = G.expectedStateValue σ s₀ (N + 1)
+              (fun s => C (N + 1) s who) from rfl,
+            G.expectedStateValue_succ]
+          calc
+            expect (G.histDist σ s₀ N) (fun h =>
+                expect (G.stageActionDist σ h) (fun a =>
+                  expect (G.transition h.2 a)
+                    (fun s' => C (N + 1) s' who))) ≤
+              expect (G.histDist σ s₀ N)
+                (fun h => C N h.2 who + r N) := by
+              apply expect_mono
+              intro h
+              rw [show G.stageActionDist σ h = pmfPi (x N h.2) from rfl]
+              have hh := (abs_le.mp (hstep N h.2)).2
+              linarith
+            _ = A N + r N := by
+              rw [expect_add, expect_const]
+              rfl
+        have hlo : A N ≤ A (N + 1) + r N := by
+          calc
+            A N = expect (G.histDist σ s₀ N)
+                (fun h => C N h.2 who) := rfl
+            _ ≤ expect (G.histDist σ s₀ N) (fun h =>
+                expect (G.stageActionDist σ h) (fun a =>
+                  expect (G.transition h.2 a)
+                    (fun s' => C (N + 1) s' who)) + r N) := by
+              apply expect_mono
+              intro h
+              rw [show G.stageActionDist σ h = pmfPi (x N h.2) from rfl]
+              have hh := (abs_le.mp (hstep N h.2)).1
+              linarith
+            _ = A (N + 1) + r N := by
+              rw [expect_add, expect_const]
+              change _ = G.expectedStateValue σ s₀ (N + 1)
+                (fun s => C (N + 1) s who) + r N
+              rw [G.expectedStateValue_succ]
+        have hone : |A (N + 1) - A N| ≤ r N :=
+          abs_le.mpr ⟨by linarith, by linarith⟩
+        have htriangle : |A (N + 1) - A 0| ≤
+            |A (N + 1) - A N| + |A N - A 0| := by
+          calc
+            |A (N + 1) - A 0| =
+                |(A (N + 1) - A N) + (A N - A 0)| := by ring_nf
+            _ ≤ _ := abs_add_le _ _
+        rw [Finset.sum_range_succ]
+        linarith
+  simpa only [A, σ, G.expectedStateValue_zero] using hA T
+
+/-- Deviation-side time-dependent potential telescope.  A one-step
+superharmonic correction remains valid against an arbitrary history-dependent
+unilateral deviation. -/
+theorem scheduled_deviation_expectedTimeDependentStateValue_le_initial
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile)
+    (C : ℕ → G.State → Payoff ι) (r : ℕ → ℝ)
+    (who : ι) (dev : G.BehaviorStrategy who) (s₀ : G.State)
+    (hstep : ∀ t s (d : PMF (G.Act who)),
+      expect (pmfPi (Function.update (x t s) who d)) (fun a =>
+          expect (G.transition s a) (fun s' => C (t + 1) s' who)) ≤
+        C t s who + r t)
+    (T : ℕ) :
+    G.expectedStateValue
+        (Function.update (G.scheduledMarkovBehaviorProfile x) who dev)
+        s₀ T (fun s => C T s who) ≤
+      C 0 s₀ who + ∑ t ∈ Finset.range T, r t := by
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      let σ := Function.update (G.scheduledMarkovBehaviorProfile x) who dev
+      have hone : G.expectedStateValue σ s₀ (T + 1)
+          (fun s => C (T + 1) s who) ≤
+          G.expectedStateValue σ s₀ T (fun s => C T s who) + r T := by
+        rw [G.expectedStateValue_succ]
+        calc
+          expect (G.histDist σ s₀ T) (fun h =>
+              expect (G.stageActionDist σ h) (fun a =>
+                expect (G.transition h.2 a)
+                  (fun s' => C (T + 1) s' who))) ≤
+            expect (G.histDist σ s₀ T)
+              (fun h => C T h.2 who + r T) := by
+              apply expect_mono
+              intro h
+              rw [G.stageActionDist_update_scheduledMarkovBehaviorProfile]
+              exact hstep T h.2 (dev T h)
+          _ = G.expectedStateValue σ s₀ T
+              (fun s => C T s who) + r T := by
+            rw [expect_add, expect_const]
+            rfl
+      rw [Finset.sum_range_succ]
+      linarith
+
+/-- A bounded time-dependent correction converts the potential telescope
+into control of the original target.  The correction is paid only at the two
+endpoints, not once per calendar stage. -/
+theorem scheduled_expectedStateValue_close_initial_of_correction
+    (G : StochasticGame ι) [Fintype ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (c r : ℕ → ℝ)
+    (who : ι) (s₀ : G.State)
+    (hR : ∀ t s, |R t s who| ≤ c t)
+    (hstep : ∀ t s,
+      |expect (pmfPi (x t s)) (fun a =>
+          expect (G.transition s a)
+            (fun s' => W s' who + R (t + 1) s' who)) -
+        (W s who + R t s who)| ≤ r t)
+    (T : ℕ) :
+    |G.expectedStateValue (G.scheduledMarkovBehaviorProfile x) s₀ T
+        (fun s => W s who) - W s₀ who| ≤
+      c 0 + c T + ∑ t ∈ Finset.range T, r t := by
+  let σ := G.scheduledMarkovBehaviorProfile x
+  let C : ℕ → G.State → Payoff ι :=
+    fun t s i => W s i + R t s i
+  have hC := G.scheduled_expectedTimeDependentStateValue_close_initial
+    x C r who s₀ (by
+      intro t s
+      simpa only [C] using hstep t s) T
+  have hdecomp : G.expectedStateValue σ s₀ T
+      (fun s => C T s who) =
+      G.expectedStateValue σ s₀ T (fun s => W s who) +
+        G.expectedStateValue σ s₀ T (fun s => R T s who) := by
+    unfold expectedStateValue
+    rw [expect_add]
+  have hRT : |G.expectedStateValue σ s₀ T
+      (fun s => R T s who)| ≤ c T := by
+    unfold expectedStateValue
+    exact abs_expect_le_of_abs_le _ _ fun h => hR T h.2
+  have hR0 := hR 0 s₀
+  have htriangle :
+      |G.expectedStateValue σ s₀ T (fun s => W s who) - W s₀ who| ≤
+        |G.expectedStateValue σ s₀ T (fun s => C T s who) -
+          C 0 s₀ who| + |R 0 s₀ who| +
+            |G.expectedStateValue σ s₀ T (fun s => R T s who)| := by
+    rw [hdecomp]
+    dsimp only [C]
+    let a := (G.expectedStateValue σ s₀ T (fun s => W s who) +
+      G.expectedStateValue σ s₀ T (fun s => R T s who)) -
+        (W s₀ who + R 0 s₀ who)
+    let b := R 0 s₀ who
+    let d := G.expectedStateValue σ s₀ T (fun s => R T s who)
+    change |(G.expectedStateValue σ s₀ T (fun s => W s who) -
+      W s₀ who)| ≤ |a| + |b| + |d|
+    have heq : G.expectedStateValue σ s₀ T (fun s => W s who) -
+        W s₀ who = a + b - d := by
+      dsimp only [a, b, d]
+      ring
+    rw [heq]
+    calc
+      |a + b - d| = |(a + b) + (-d)| := by ring_nf
+      _ ≤ |a + b| + |-d| := abs_add_le _ _
+      _ ≤ (|a| + |b|) + |d| := by
+        rw [abs_neg]
+        exact add_le_add (abs_add_le _ _) le_rfl
+  exact htriangle.trans (by linarith)
+
+/-- Deviation-side corrected-potential estimate.  A bounded correction is
+again charged only at the endpoints. -/
+theorem scheduled_deviation_expectedStateValue_le_initial_of_correction
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (c r : ℕ → ℝ)
+    (who : ι) (dev : G.BehaviorStrategy who) (s₀ : G.State)
+    (hR : ∀ t s, |R t s who| ≤ c t)
+    (hstep : ∀ t s (d : PMF (G.Act who)),
+      expect (pmfPi (Function.update (x t s) who d)) (fun a =>
+          expect (G.transition s a)
+            (fun s' => W s' who + R (t + 1) s' who)) ≤
+        W s who + R t s who + r t)
+    (T : ℕ) :
+    G.expectedStateValue
+        (Function.update (G.scheduledMarkovBehaviorProfile x) who dev)
+        s₀ T (fun s => W s who) ≤
+      W s₀ who + c 0 + c T + ∑ t ∈ Finset.range T, r t := by
+  let σ := Function.update (G.scheduledMarkovBehaviorProfile x) who dev
+  let C : ℕ → G.State → Payoff ι :=
+    fun t s i => W s i + R t s i
+  have hC :=
+    G.scheduled_deviation_expectedTimeDependentStateValue_le_initial
+      x C r who dev s₀ (by
+        intro t s d
+        simpa only [C, add_assoc] using hstep t s d) T
+  have hdecomp : G.expectedStateValue σ s₀ T
+      (fun s => C T s who) =
+      G.expectedStateValue σ s₀ T (fun s => W s who) +
+        G.expectedStateValue σ s₀ T (fun s => R T s who) := by
+    unfold expectedStateValue
+    rw [expect_add]
+  have hRT : |G.expectedStateValue σ s₀ T
+      (fun s => R T s who)| ≤ c T := by
+    unfold expectedStateValue
+    exact abs_expect_le_of_abs_le _ _ fun h => hR T h.2
+  have hR0 := hR 0 s₀
+  rw [hdecomp] at hC
+  dsimp only [C] at hC
+  linarith [neg_abs_le (G.expectedStateValue σ s₀ T
+    (fun s => R T s who)), le_abs_self (R 0 s₀ who)]
+
+/-- Scheduled certificate values close to a target inherit the corrected
+potential estimate. -/
+theorem scheduled_expectedTarget_close_initial_of_correction
+    (G : StochasticGame ι) [Fintype ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile)
+    (V : ℕ → G.State → Payoff ι) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (q c r : ℕ → ℝ)
+    (who : ι) (s₀ : G.State)
+    (hclose : ∀ t s, |V t s who - W s who| ≤ q t)
+    (hR : ∀ t s, |R t s who| ≤ c t)
+    (hstep : ∀ t s,
+      |expect (pmfPi (x t s)) (fun a =>
+          expect (G.transition s a)
+            (fun s' => W s' who + R (t + 1) s' who)) -
+        (W s who + R t s who)| ≤ r t)
+    (T : ℕ) :
+    |G.expectedStateValue (G.scheduledMarkovBehaviorProfile x) s₀ T
+        (fun s => V T s who) - W s₀ who| ≤
+      q T + c 0 + c T + ∑ t ∈ Finset.range T, r t := by
+  let σ := G.scheduledMarkovBehaviorProfile x
+  have hVW :
+      |G.expectedStateValue σ s₀ T (fun s => V T s who) -
+        G.expectedStateValue σ s₀ T (fun s => W s who)| ≤ q T := by
+    unfold expectedStateValue
+    rw [← expect_sub]
+    exact abs_expect_le_of_abs_le _ _ fun h => hclose T h.2
+  have hW := G.scheduled_expectedStateValue_close_initial_of_correction
+    x W R c r who s₀ hR hstep T
+  have htriangle :
+      |G.expectedStateValue σ s₀ T (fun s => V T s who) - W s₀ who| ≤
+        |G.expectedStateValue σ s₀ T (fun s => V T s who) -
+          G.expectedStateValue σ s₀ T (fun s => W s who)| +
+        |G.expectedStateValue σ s₀ T (fun s => W s who) - W s₀ who| := by
+    calc
+      |_ - _| = |(_ - G.expectedStateValue σ s₀ T
+          (fun s => W s who)) +
+          (G.expectedStateValue σ s₀ T (fun s => W s who) -
+            W s₀ who)| := by ring_nf
+      _ ≤ _ := abs_add_le _ _
+  linarith
+
+/-- Deviation-side certificate estimate with a bounded Poisson correction. -/
+theorem scheduled_deviation_expectedTarget_le_initial_of_correction
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile)
+    (V : ℕ → G.State → Payoff ι) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (q c r : ℕ → ℝ)
+    (who : ι) (dev : G.BehaviorStrategy who) (s₀ : G.State)
+    (hclose : ∀ t s, |V t s who - W s who| ≤ q t)
+    (hR : ∀ t s, |R t s who| ≤ c t)
+    (hstep : ∀ t s (d : PMF (G.Act who)),
+      expect (pmfPi (Function.update (x t s) who d)) (fun a =>
+          expect (G.transition s a)
+            (fun s' => W s' who + R (t + 1) s' who)) ≤
+        W s who + R t s who + r t)
+    (T : ℕ) :
+    G.expectedStateValue
+        (Function.update (G.scheduledMarkovBehaviorProfile x) who dev)
+        s₀ T (fun s => V T s who) ≤
+      W s₀ who + q T + c 0 + c T +
+        ∑ t ∈ Finset.range T, r t := by
+  let σ := Function.update (G.scheduledMarkovBehaviorProfile x) who dev
+  have hVW : G.expectedStateValue σ s₀ T (fun s => V T s who) ≤
+      G.expectedStateValue σ s₀ T (fun s => W s who) + q T := by
+    calc
+      G.expectedStateValue σ s₀ T (fun s => V T s who) ≤
+          expect (G.histDist σ s₀ T) (fun h => W h.2 who + q T) := by
+        apply expect_mono
+        intro h
+        have hh := (abs_le.mp (hclose T h.2)).2
+        linarith
+      _ = G.expectedStateValue σ s₀ T (fun s => W s who) + q T := by
+        rw [expect_add, expect_const]
+        rfl
+  have hW :=
+    G.scheduled_deviation_expectedStateValue_le_initial_of_correction
+      x W R c r who dev s₀ hR hstep T
+  linarith
+
+/-- Average on-path target estimate retaining time-dependent Poisson
+corrections. -/
+theorem scheduled_targetAverage_close_initial_of_correction
+    (G : StochasticGame ι) [Fintype ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile)
+    (V : ℕ → G.State → Payoff ι) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (q c r : ℕ → ℝ)
+    (who : ι) (s₀ : G.State)
+    (hclose : ∀ t s, |V t s who - W s who| ≤ q t)
+    (hR : ∀ t s, |R t s who| ≤ c t)
+    (hstep : ∀ t s,
+      |expect (pmfPi (x t s)) (fun a =>
+          expect (G.transition s a)
+            (fun s' => W s' who + R (t + 1) s' who)) -
+        (W s who + R t s who)| ≤ r t)
+    {T : ℕ} (hT : 0 < T) :
+    |(T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.expectedStateValue (G.scheduledMarkovBehaviorProfile x) s₀ t
+            (fun s => V t s who) - W s₀ who| ≤
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        (q t + c 0 + c t + ∑ k ∈ Finset.range t, r k) := by
+  let A : ℕ → ℝ := fun t =>
+    G.expectedStateValue (G.scheduledMarkovBehaviorProfile x) s₀ t
+      (fun s => V t s who)
+  let E : ℕ → ℝ := fun t =>
+    q t + c 0 + c t + ∑ k ∈ Finset.range t, r k
+  have hpoint : ∀ t, |A t - W s₀ who| ≤ E t := fun t =>
+    G.scheduled_expectedTarget_close_initial_of_correction
+      x V W R q c r who s₀ hclose hR hstep t
+  have hsum : |∑ t ∈ Finset.range T, (A t - W s₀ who)| ≤
+      ∑ t ∈ Finset.range T, E t := by
+    calc
+      |∑ t ∈ Finset.range T, (A t - W s₀ who)| ≤
+          ∑ t ∈ Finset.range T, |A t - W s₀ who| :=
+        Finset.abs_sum_le_sum_abs _ _
+      _ ≤ ∑ t ∈ Finset.range T, E t :=
+        Finset.sum_le_sum fun t _ => hpoint t
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hinv : 0 ≤ (T : ℝ)⁻¹ := inv_nonneg.mpr hTreal.le
+  have hid : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, A t - W s₀ who =
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, (A t - W s₀ who) := by
+    rw [Finset.sum_sub_distrib]
+    simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    field_simp [ne_of_gt hTreal]
+  change |(T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, A t - W s₀ who| ≤
+    (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, E t
+  rw [hid, abs_mul, abs_of_nonneg hinv]
+  exact mul_le_mul_of_nonneg_left hsum hinv
+
+/-- Average deviation estimate retaining time-dependent Poisson
+corrections. -/
+theorem scheduled_deviation_targetAverage_le_initial_of_correction
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : ℕ → G.StationaryMixedProfile)
+    (V : ℕ → G.State → Payoff ι) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (q c r : ℕ → ℝ)
+    (who : ι) (dev : G.BehaviorStrategy who) (s₀ : G.State)
+    (hclose : ∀ t s, |V t s who - W s who| ≤ q t)
+    (hR : ∀ t s, |R t s who| ≤ c t)
+    (hstep : ∀ t s (d : PMF (G.Act who)),
+      expect (pmfPi (Function.update (x t s) who d)) (fun a =>
+          expect (G.transition s a)
+            (fun s' => W s' who + R (t + 1) s' who)) ≤
+        W s who + R t s who + r t)
+    {T : ℕ} (hT : 0 < T) :
+    (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        G.expectedStateValue
+          (Function.update (G.scheduledMarkovBehaviorProfile x) who dev)
+          s₀ t (fun s => V t s who) ≤
+      W s₀ who + (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        (q t + c 0 + c t + ∑ k ∈ Finset.range t, r k) := by
+  let A : ℕ → ℝ := fun t => G.expectedStateValue
+    (Function.update (G.scheduledMarkovBehaviorProfile x) who dev)
+    s₀ t (fun s => V t s who)
+  let E : ℕ → ℝ := fun t =>
+    q t + c 0 + c t + ∑ k ∈ Finset.range t, r k
+  have hpoint : ∀ t, A t ≤ W s₀ who + E t := by
+    intro t
+    dsimp only [A, E]
+    simpa only [add_assoc] using
+      G.scheduled_deviation_expectedTarget_le_initial_of_correction
+        x V W R q c r who dev s₀ hclose hR hstep t
+  have hsum : (∑ t ∈ Finset.range T, A t) ≤
+      ∑ t ∈ Finset.range T, (W s₀ who + E t) :=
+    Finset.sum_le_sum fun t _ => hpoint t
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hinv : 0 ≤ (T : ℝ)⁻¹ := inv_nonneg.mpr hTreal.le
+  have hmul := mul_le_mul_of_nonneg_left hsum hinv
+  change (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, A t ≤
+    W s₀ who + (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, E t
+  calc
+    (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, A t ≤
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, (W s₀ who + E t) := hmul
+    _ = W s₀ who + (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, E t := by
+      rw [Finset.sum_add_distrib]
+      simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+      field_simp [ne_of_gt hTreal]
+
+/-- Corrected-potential schedule criterion for a uniform equilibrium payoff.
+This is the cancellation-aware replacement for the scalar harmonic-drift
+criterion: Poisson corrections are paid through their endpoint bounds. -/
+theorem isUniformEquilibriumPayoff_of_scheduledFink_correctedTarget
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (s₀ : G.State) (W : G.State → Payoff ι)
+    (hcert : ∀ η : ℝ, 0 < η →
+      ∃ (β : ℕ → ℝ) (x : ℕ → G.StationaryMixedProfile)
+        (V R : ℕ → G.State → Payoff ι)
+        (e B q c r : ℕ → ℝ) (T₀ : ℕ),
+        G.IsDiscountedStationaryBellmanSchedule β x V ∧
+          (∀ t, β t < 1) ∧ G.IsScheduledFinkSwitchBound β V e ∧
+          (∀ t s who, |G.scheduledFinkBias β V t s who| ≤ B t) ∧
+          (∀ t s who, |V t s who - W s who| ≤ q t) ∧
+          (∀ t s who, |R t s who| ≤ c t) ∧
+          (∀ t s who,
+            |expect (pmfPi (x t s)) (fun a =>
+                expect (G.transition s a)
+                  (fun s' => W s' who + R (t + 1) s' who)) -
+              (W s who + R t s who)| ≤ r t) ∧
+          (∀ t s who (d : PMF (G.Act who)),
+            expect (pmfPi (Function.update (x t s) who d)) (fun a =>
+                expect (G.transition s a)
+                  (fun s' => W s' who + R (t + 1) s' who)) ≤
+              W s who + R t s who + r t) ∧
+          ∀ T, T₀ ≤ T → 0 < T ∧
+            ((B 0 + B T) / (T : ℝ) +
+              (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t ≤ η) ∧
+            (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+              (q t + c 0 + c t +
+                ∑ k ∈ Finset.range t, r k) ≤ η) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  apply G.isUniformEquilibriumPayoff_of_scheduledFink_targetAverages s₀ (W s₀)
+  intro η hη
+  obtain ⟨β, x, V, R, e, B, q, c, r, T₀,
+      hF, hβ1, hswitch, hbias, hclose, hR,
+      hharmonic, hexcessive, hasymp⟩ := hcert η hη
+  refine ⟨β, x, V, e, B, T₀, hF, hβ1, hswitch, hbias, ?_⟩
+  intro T hT
+  obtain ⟨hTpos, hboundary, htarget⟩ := hasymp T hT
+  refine ⟨hTpos, hboundary, ?_, ?_⟩
+  · intro who
+    exact (G.scheduled_targetAverage_close_initial_of_correction
+      x V W R q c r who s₀ (fun t s => hclose t s who)
+      (fun t s => hR t s who) (fun t s => hharmonic t s who) hTpos).trans
+        htarget
+  · intro who dev
+    have hdev := G.scheduled_deviation_targetAverage_le_initial_of_correction
+      x V W R q c r who dev s₀ (fun t s => hclose t s who)
+        (fun t s => hR t s who)
+        (fun t s d => hexcessive t s who d) hTpos
+    linarith
+
+-- ============================================================================
 -- Calendar schedules indexed by discounted Fink fixed points
 -- ============================================================================
 
