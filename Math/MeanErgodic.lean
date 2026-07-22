@@ -457,7 +457,76 @@ theorem exists_harmonic_add_poisson (κ : S → PMF S) (f : S → ℝ) :
     have hs := congrFun hdecomp s
     simpa [markovOperator_apply] using hs
 
+/-- A proposed harmonic-plus-Poisson decomposition identifies the Cesàro
+limit, independently of how it was obtained. -/
+theorem tendsto_cesaro_of_harmonic_add_poisson
+    (κ : S → PMF S) (f o u : S → ℝ)
+    (ho : ∀ s, expect (κ s) o = o s)
+    (hdecomp : ∀ s, f s = o s + (expect (κ s) u - u s)) :
+    Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+        ((markovOperator κ) ^ t) f) atTop (nhds o) := by
+  let P := markovOperator κ
+  let g : S → ℝ := fun s => expect (κ s) u - u s
+  have hg : g = P u - u := by
+    ext s
+    simp only [g, P, markovOperator_apply, Pi.sub_apply]
+  have hgzero : Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) g)
+      atTop (nhds 0) := by
+    apply tendsto_cesaro_zero_of_mem_range_sub_id P
+      (fun t w => norm_markovOperator_pow_apply_le κ t w) g
+    exact ⟨u, hg⟩
+  have hPo : P o = o := by
+    ext s
+    simpa only [P, markovOperator_apply] using ho s
+  have hpow : ∀ t : ℕ, (P ^ t) o = o := by
+    intro t
+    induction t with
+    | zero => simp
+    | succ t ih =>
+        rw [pow_succ, Module.End.mul_apply, hPo, ih]
+  have hf : f = o + g := by
+    ext s
+    simpa only [g, Pi.add_apply] using hdecomp s
+  have hlim : Tendsto (fun T : ℕ => o +
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) g)
+      atTop (nhds (o + 0)) := tendsto_const_nhds.add hgzero
+  rw [add_zero] at hlim
+  apply hlim.congr'
+  filter_upwards [eventually_ge_atTop (1 : ℕ)] with T hT
+  change o + (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) g =
+    (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) f
+  rw [hf]
+  simp_rw [map_add, hpow, Finset.sum_add_distrib]
+  have hTne : (T : ℝ) ≠ 0 := by
+    exact_mod_cast (Nat.ne_of_gt hT)
+  simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul,
+    smul_add, add_left_inj]
+  ext s
+  simp [Pi.smul_apply, hTne]
+
 end Markov
+
+section MarkovUnique
+
+variable {S : Type*} [Finite S]
+
+/-- The harmonic component in a finite-state Markov Poisson decomposition
+is unique. -/
+theorem harmonic_eq_of_add_poisson_eq
+    (κ : S → PMF S) (f o₁ u₁ o₂ u₂ : S → ℝ)
+    (ho₁ : ∀ s, expect (κ s) o₁ = o₁ s)
+    (hdecomp₁ : ∀ s, f s = o₁ s + (expect (κ s) u₁ - u₁ s))
+    (ho₂ : ∀ s, expect (κ s) o₂ = o₂ s)
+    (hdecomp₂ : ∀ s, f s = o₂ s + (expect (κ s) u₂ - u₂ s)) :
+    o₁ = o₂ := by
+  letI : Fintype S := Fintype.ofFinite S
+  exact tendsto_nhds_unique
+    (tendsto_cesaro_of_harmonic_add_poisson κ f o₁ u₁ ho₁ hdecomp₁)
+    (tendsto_cesaro_of_harmonic_add_poisson κ f o₂ u₂ ho₂ hdecomp₂)
+
+end MarkovUnique
 
 section MarkovFinite
 

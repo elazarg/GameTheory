@@ -569,6 +569,66 @@ theorem exists_finkHarmonicObstruction_add_continuationResidual
   · intro who
     simpa only [O] using hlim who
 
+/-- The harmonic obstruction in a Fink continuation-residual decomposition
+is unique.  In particular it cannot be changed by choosing a different
+Poisson potential. -/
+theorem finkHarmonicObstruction_unique
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (F O K O' K' : G.State → Payoff ι)
+    (hO : G.finkContinuationResidualVector O z = 0)
+    (hdecomp : F = O + G.finkContinuationResidualVector K z)
+    (hO' : G.finkContinuationResidualVector O' z = 0)
+    (hdecomp' : F = O' + G.finkContinuationResidualVector K' z) :
+    O = O' := by
+  ext s who
+  have ho : ∀ t, expect (G.finkStateKernel z t) (fun s' => O s' who) =
+      O t who := by
+    intro t
+    have hcoord := congrFun (congrFun hO t) who
+    unfold finkContinuationResidualVector finkContinuationResidual
+      finkContinuationEU at hcoord
+    rw [← G.expect_finkStateKernel_eq z t (fun s' => O s' who)] at hcoord
+    simp only [Pi.zero_apply] at hcoord
+    exact sub_eq_zero.mp hcoord
+  have hdecompCoord : ∀ t, F t who = O t who +
+      (expect (G.finkStateKernel z t) (fun s' => K s' who) - K t who) := by
+    intro t
+    have hcoord := congrFun (congrFun hdecomp t) who
+    unfold finkContinuationResidualVector finkContinuationResidual
+      finkContinuationEU at hcoord
+    change F t who = O t who +
+      ((expect (pmfPi (G.finkProfile z t)) fun a =>
+        expect (G.transition t a) (fun s' => K s' who)) - K t who) at hcoord
+    rw [← G.expect_finkStateKernel_eq z t (fun s' => K s' who)] at hcoord
+    exact hcoord
+  have ho' : ∀ t, expect (G.finkStateKernel z t) (fun s' => O' s' who) =
+      O' t who := by
+    intro t
+    have hcoord := congrFun (congrFun hO' t) who
+    unfold finkContinuationResidualVector finkContinuationResidual
+      finkContinuationEU at hcoord
+    rw [← G.expect_finkStateKernel_eq z t (fun s' => O' s' who)] at hcoord
+    simp only [Pi.zero_apply] at hcoord
+    exact sub_eq_zero.mp hcoord
+  have hdecompCoord' : ∀ t, F t who = O' t who +
+      (expect (G.finkStateKernel z t) (fun s' => K' s' who) - K' t who) := by
+    intro t
+    have hcoord := congrFun (congrFun hdecomp' t) who
+    unfold finkContinuationResidualVector finkContinuationResidual
+      finkContinuationEU at hcoord
+    change F t who = O' t who +
+      ((expect (pmfPi (G.finkProfile z t)) fun a =>
+        expect (G.transition t a) (fun s' => K' s' who)) - K' t who) at hcoord
+    rw [← G.expect_finkStateKernel_eq z t (fun s' => K' s' who)] at hcoord
+    exact hcoord
+  have hunique := Math.MeanErgodic.harmonic_eq_of_add_poisson_eq
+    (G.finkStateKernel z) (fun t => F t who)
+    (fun t => O t who) (fun t => K t who)
+    (fun t => O' t who) (fun t => K' t who)
+    ho hdecompCoord ho' hdecompCoord'
+  exact congrFun hunique s
+
 /-- Vector forcing represented by an on-profile average-reward Bellman
 equation with value `V` and bias `J`. -/
 def finkBellmanForcingVector (G : StochasticGame ι)
@@ -711,6 +771,16 @@ theorem finkContinuationResidualVector_smul
   rw [G.finkContinuationEU_smul]
   ring
 
+/-- The zero potential has zero continuation residual. -/
+theorem finkContinuationResidualVector_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) :
+    G.finkContinuationResidualVector 0 z = 0 := by
+  ext s who
+  simp [finkContinuationResidualVector, finkContinuationResidual,
+    finkContinuationEU]
+
 /-- Continuation residuals respect negation. -/
 theorem finkContinuationResidualVector_neg
     (G : StochasticGame ι)
@@ -723,6 +793,25 @@ theorem finkContinuationResidualVector_neg
     simp
   rw [hneg, G.finkContinuationResidualVector_smul]
   simp
+
+/-- A nonzero harmonic obstruction rules out every stationary Poisson
+representation of the forcing.  Changing the potential can alter only the
+coboundary component. -/
+theorem not_exists_finkContinuationResidualVector_eq_of_harmonicObstruction_ne
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (F O K : G.State → Payoff ι)
+    (hO : G.finkContinuationResidualVector O z = 0)
+    (hdecomp : F = O + G.finkContinuationResidualVector K z)
+    (hOne : O ≠ 0) :
+    ¬ ∃ L : G.State → Payoff ι,
+      G.finkContinuationResidualVector L z = F := by
+  rintro ⟨L, hL⟩
+  have hzeroDecomp : F = 0 + G.finkContinuationResidualVector L z := by
+    simpa only [zero_add] using hL.symm
+  have hOzero := G.finkHarmonicObstruction_unique z F O K 0 L
+    hO hdecomp (G.finkContinuationResidualVector_zero z) hzeroDecomp
+  exact hOne hOzero
 
 /-- The on-profile Poisson equation required by the interior verification
 criterion is solvable whenever its forcing has zero Cesàro fixed component
@@ -777,6 +866,27 @@ theorem exists_finkPoissonCorrection_iff_tendsto_cesaro_forcing_zero
       _ = G.finkBellmanForcingVector W H z := hK.symm
   · exact G.exists_finkPoissonCorrection_of_tendsto_cesaro_forcing_zero
       z W H
+
+/-- If the Bellman forcing has a nonzero harmonic component, no stationary
+Poisson correction can remove it. -/
+theorem not_exists_finkPoissonCorrection_of_harmonicObstruction_ne
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (W H O K : G.State → Payoff ι)
+    (hO : G.finkContinuationResidualVector O z = 0)
+    (hdecomp : G.finkBellmanForcingVector W H z =
+      O + G.finkContinuationResidualVector K z)
+    (hOne : O ≠ 0) :
+    ¬ ∃ L : G.State → Payoff ι,
+      G.finkBellmanForcingVector W H z =
+        -G.finkContinuationResidualVector L z := by
+  intro hcorrection
+  apply G.not_exists_finkContinuationResidualVector_eq_of_harmonicObstruction_ne
+    z (G.finkBellmanForcingVector W H z) O K hO hdecomp hOne
+  obtain ⟨L, hL⟩ := hcorrection
+  refine ⟨-L, ?_⟩
+  rw [G.finkContinuationResidualVector_neg]
+  exact hL.symm
 
 /-- Adding the boundary correction to the current reference is the same as
 rescaling the updated reference potential. -/
