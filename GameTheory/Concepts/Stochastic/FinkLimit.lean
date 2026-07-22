@@ -5898,10 +5898,137 @@ theorem isUniformEquilibriumPayoff_of_stationaryAverageRewardBias
       simpa only [two_mul] using hboundary
     linarith
 
+/-- It is enough to verify the average-reward bias inequality on pure actions
+that preserve the harmonic target `W`.  By finiteness, all remaining actions
+decrease `W` by one common positive gap.  Adding a sufficiently large multiple
+of `W` to the bias leaves the on-profile Bellman equation unchanged and makes
+the deviation inequality automatic on those strict-loss actions. -/
+theorem isUniformEquilibriumPayoff_of_stationaryAverageRewardBias_on_neutral
+    (G : StochasticGame ι) [Finite G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)] (s₀ : G.State)
+    (x : G.StationaryMixedProfile) (W H : G.State → Payoff ι)
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (x s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (honProfile : ∀ s who,
+      W s who + H s who = G.mixedStageEU s (x s) who +
+        expect (pmfPi (x s)) (fun a =>
+          expect (G.transition s a) (fun s' => H s' who)))
+    (hneutral : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) = W s who →
+        G.mixedStageEU s
+              (Function.update (x s) who (PMF.pure d)) who +
+            expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+              (fun a => expect (G.transition s a) (fun s' => H s' who)) ≤
+          W s who + H s who) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  let D := Σ p : G.State × ι, G.Act p.2
+  let base : D → ℝ := fun q =>
+    G.mixedStageEU q.1.1
+          (Function.update (x q.1.1) q.1.2 (PMF.pure q.2)) q.1.2 +
+      expect (pmfPi (Function.update (x q.1.1) q.1.2 (PMF.pure q.2)))
+        (fun a => expect (G.transition q.1.1 a) (fun s' => H s' q.1.2)) -
+      (W q.1.1 q.1.2 + H q.1.1 q.1.2)
+  obtain ⟨B, hB⟩ := Math.Probability.exists_abs_bound_of_finite base
+  obtain ⟨δ, hδ, hgap⟩ := G.exists_uniform_strictContinuationGap x W
+  let c : ℝ := (|B| + 1) / δ
+  let H' : G.State → Payoff ι := fun s who => H s who + c * W s who
+  have hc0 : 0 ≤ c := div_nonneg (by positivity) hδ.le
+  have hcδ : c * δ = |B| + 1 := by
+    dsimp only [c]
+    field_simp
+  have hcontAdd : ∀ s (mu : PMF G.JointAct) who,
+      expect mu (fun a => expect (G.transition s a) (fun s' => H' s' who)) =
+        expect mu (fun a => expect (G.transition s a) (fun s' => H s' who)) +
+          c * expect mu (fun a =>
+            expect (G.transition s a) (fun s' => W s' who)) := by
+    intro s mu who
+    dsimp only [H']
+    simp_rw [expect_add, expect_const_mul]
+  have hpure : ∀ s who (d : G.Act who),
+      G.mixedStageEU s
+            (Function.update (x s) who (PMF.pure d)) who +
+          expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+            (fun a => expect (G.transition s a) (fun s' => H' s' who)) ≤
+        W s who + H' s who := by
+    intro s who d
+    let contW := expect
+      (pmfPi (Function.update (x s) who (PMF.pure d)))
+      (fun a => expect (G.transition s a) (fun s' => W s' who))
+    rw [hcontAdd]
+    change G.mixedStageEU s
+          (Function.update (x s) who (PMF.pure d)) who +
+        (expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+            (fun a => expect (G.transition s a) (fun s' => H s' who)) +
+          c * contW) ≤ W s who + (H s who + c * W s who)
+    by_cases hstrict : contW < W s who
+    · have hgap' := hgap s who d hstrict
+      have hbaseUpper : base ⟨(s, who), d⟩ ≤ |B| :=
+        (le_abs_self _).trans ((hB ⟨(s, who), d⟩).trans (le_abs_self B))
+      have hcLoss : c * (contW - W s who) ≤ c * (-δ) := by
+        apply mul_le_mul_of_nonneg_left _ hc0
+        dsimp only [contW] at hgap' ⊢
+        linarith
+      dsimp only [base] at hbaseUpper
+      linarith
+    · have heq : contW = W s who := by
+        apply le_antisymm
+        · exact hexcessive s who d
+        · exact le_of_not_gt hstrict
+      have hn := hneutral s who d (by simpa only [contW] using heq)
+      rw [heq]
+      linarith
+  have hmixedExcessive : ∀ s who (dev : PMF (G.Act who)),
+      expect (pmfPi (Function.update (x s) who dev)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who := by
+    intro s who dev
+    exact G.mixedDeviationContinuation_le_of_pure_bound
+      x W s who (W s who) (hexcessive s who) dev
+  have honProfile' : ∀ s who,
+      W s who + H' s who = G.mixedStageEU s (x s) who +
+        expect (pmfPi (x s)) (fun a =>
+          expect (G.transition s a) (fun s' => H' s' who)) := by
+    intro s who
+    rw [hcontAdd]
+    rw [← hharmonic s who]
+    dsimp only [H']
+    linarith [honProfile s who]
+  have hmixed : ∀ s who (dev : PMF (G.Act who)),
+      G.mixedStageEU s (Function.update (x s) who dev) who +
+          expect (pmfPi (Function.update (x s) who dev)) (fun a =>
+            expect (G.transition s a) (fun s' => H' s' who)) ≤
+        W s who + H' s who := by
+    intro s who dev
+    calc
+      G.mixedStageEU s (Function.update (x s) who dev) who +
+            expect (pmfPi (Function.update (x s) who dev)) (fun a =>
+              expect (G.transition s a) (fun s' => H' s' who)) =
+          expect dev (fun d =>
+            G.mixedStageEU s
+                  (Function.update (x s) who (PMF.pure d)) who +
+              expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+                (fun a => expect (G.transition s a)
+                  (fun s' => H' s' who))) := by
+            unfold mixedStageEU
+            rw [pmfPi_update_bind]
+            rw [expect_bind, expect_bind, expect_add]
+      _ ≤ expect dev (fun _ => W s who + H' s who) :=
+        expect_mono dev _ _ (hpure s who)
+      _ = W s who + H' s who := expect_const dev _
+  exact G.isUniformEquilibriumPayoff_of_stationaryAverageRewardBias
+    s₀ x W H' hharmonic hmixedExcessive honProfile' hmixed
+
 /-- A finite relative-bias branch closes to a stationary uniform equilibrium
 when its singular target-continuation terms are controlled by one further
 potential `K`.  The on-profile forcing must converge to the residual of `K`,
-while pure deviations only need the corresponding asymptotic lower bound.
+while continuation-neutral pure deviations only need the corresponding
+asymptotic lower bound.  Strict continuation losses are handled by the finite
+gap argument in
+`isUniformEquilibriumPayoff_of_stationaryAverageRewardBias_on_neutral`.
 Subtracting `K` from the limiting relative bias then gives an average-reward
 verification certificate.  This is the finite-bias analogue of one Poisson
 correction, and needs no calendar. -/
@@ -5929,10 +6056,14 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
     (hscaledResidual : Tendsto (fun n =>
       (β n / (1 - β n)) • G.finkContinuationResidualVector W (z n))
         atTop (nhds (-G.finkContinuationResidualVector K zlim)))
-    (hscaledGainLower : ∀ s who (d : G.Act who) (ε : ℝ), 0 < ε →
-      ∀ᶠ n in atTop, -G.finkContinuationGain K zlim s who d - ε ≤
-        (β n / (1 - β n)) *
-          G.finkContinuationGain W (z n) s who d) :
+    (hscaledGainLower : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) = W s who →
+      ∀ ε : ℝ, 0 < ε →
+        ∀ᶠ n in atTop, -G.finkContinuationGain K zlim s who d - ε ≤
+          (β n / (1 - β n)) *
+            G.finkContinuationGain W (z n) s who d) :
     G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
   let a : ℕ → ℝ := fun n => β n / (1 - β n)
   let J : ℕ → G.State → Payoff ι := fun n =>
@@ -5973,13 +6104,16 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
     simp only [Pi.sub_apply] at hcoord ⊢
     linarith
   have hpure : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) = W s who →
       G.mixedStageEU s
             (Function.update (G.finkProfile zlim s) who (PMF.pure d)) who +
           expect (pmfPi (Function.update (G.finkProfile zlim s)
             who (PMF.pure d))) (fun a =>
               expect (G.transition s a) (fun s' => (H - K) s' who)) ≤
         W s who + (H - K) s who := by
-    intro s who d
+    intro s who d hneutral
     have hstage := G.tendsto_finkStageGain hz s who d
     have hbias := G.tendsto_finkContinuationGain_of_tendsto hH hz s who d
     have hbase : Tendsto (fun n =>
@@ -6014,7 +6148,7 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
                 G.finkContinuationGain H zlim s who d)| < ε := by
           filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
           simpa only [Real.dist_eq] using hn
-        have hlower := hscaledGainLower s who d ε hε
+        have hlower := hscaledGainLower s who d hneutral ε hε
         obtain ⟨n, hnclose, hnlower⟩ := (hbaseClose.and hlower).exists
         have hcenter :=
           G.finkCenteredGain_nonpos_of_finkMap_fixedPoint
@@ -6027,40 +6161,9 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
     unfold finkStageGain finkContinuationGain at hnonpos
     have hon := honProfile s who
     linarith
-  have hmixed : ∀ s who (dev : PMF (G.Act who)),
-      G.mixedStageEU s
-            (Function.update (G.finkProfile zlim s) who dev) who +
-          expect (pmfPi (Function.update (G.finkProfile zlim s) who dev))
-            (fun a => expect (G.transition s a)
-              (fun s' => (H - K) s' who)) ≤
-        W s who + (H - K) s who := by
-    intro s who dev
-    calc
-      G.mixedStageEU s
-              (Function.update (G.finkProfile zlim s) who dev) who +
-            expect (pmfPi (Function.update (G.finkProfile zlim s) who dev))
-              (fun a => expect (G.transition s a)
-                (fun s' => (H - K) s' who)) =
-          expect dev (fun d =>
-            G.mixedStageEU s
-                (Function.update (G.finkProfile zlim s) who (PMF.pure d)) who +
-              expect (pmfPi (Function.update (G.finkProfile zlim s)
-                who (PMF.pure d))) (fun a =>
-                  expect (G.transition s a)
-                    (fun s' => (H - K) s' who))) := by
-            unfold mixedStageEU
-            rw [pmfPi_update_bind]
-            rw [expect_bind, expect_bind, expect_add]
-      _ ≤ expect dev (fun _ => W s who + (H - K) s who) :=
-        expect_mono dev _ _ (hpure s who)
-      _ = W s who + (H - K) s who := expect_const dev _
-  apply G.isUniformEquilibriumPayoff_of_stationaryAverageRewardBias
-    s₀ (G.finkProfile zlim) W (H - K) hharmonic
-  · intro s who dev
-    exact G.mixedDeviationContinuation_le_of_pure_bound
-      (G.finkProfile zlim) W s who (W s who) (hexcessive s who) dev
-  · exact honProfile
-  · exact hmixed
+  exact G.isUniformEquilibriumPayoff_of_stationaryAverageRewardBias_on_neutral
+    s₀ (G.finkProfile zlim) W (H - K) hharmonic hexcessive
+      honProfile hpure
 
 /-- Two-sided convergence is a convenient sufficient condition for the
 one-sided pure-deviation control in
@@ -6097,7 +6200,7 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate
   apply G.isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
     s₀ β U hβ0 hβ1 hpay z zlim W H K hfix hz hV hH
       hharmonic hexcessive hscaledResidual
-  intro s who d ε hε
+  intro s who d _ ε hε
   obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp (hscaledGain s who d) ε hε
   filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
   rw [Real.dist_eq, abs_lt] at hn
@@ -6130,10 +6233,14 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonLowerCorrection
         expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
     (hPoisson : G.finkBellmanForcingVector W H zlim =
       -G.finkContinuationResidualVector K zlim)
-    (hscaledGainLower : ∀ s who (d : G.Act who) (ε : ℝ), 0 < ε →
-      ∀ᶠ n in atTop, -G.finkContinuationGain K zlim s who d - ε ≤
-        (β n / (1 - β n)) *
-          G.finkContinuationGain W (z n) s who d) :
+    (hscaledGainLower : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) = W s who →
+      ∀ ε : ℝ, 0 < ε →
+        ∀ᶠ n in atTop, -G.finkContinuationGain K zlim s who d - ε ≤
+          (β n / (1 - β n)) *
+            G.finkContinuationGain W (z n) s who d) :
     G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
   let a : ℕ → ℝ := fun n => β n / (1 - β n)
   let E : ℕ → G.State → Payoff ι := fun n =>
@@ -6190,7 +6297,7 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonCorrection
   apply G.isUniformEquilibriumPayoff_of_finkInteriorPoissonLowerCorrection
     s₀ β U hβ0 hβ1 hpay z zlim W H K hfix hz hV hH
       hharmonic hexcessive hPoisson
-  intro s who d ε hε
+  intro s who d _ ε hε
   obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp (hscaledGain s who d) ε hε
   filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
   rw [Real.dist_eq, abs_lt] at hn
