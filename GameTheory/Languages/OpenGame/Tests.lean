@@ -91,6 +91,22 @@ example {n : Nat} {A : Fin n → Type}
       ShapeSeqDep.IsOneShotConditionedEquilibrium k σ :=
   ShapeSeqDep.conditioned_isEquilibriumIn_iff_oneShot k σ
 
+/-- Sparse typed decision DAGs retain exact strategic-form compilation. -/
+example {n : Nat} (D : DecisionDAG n) (A : Fin n → Type)
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : ShapeDAG.Strategy D A) :
+    (OpenGames.ShapeDAG D A).IsEquilibriumIn () k σ ↔
+      (ShapeDAG.compileAction D A k).IsNash σ :=
+  ShapeDAG.isEquilibriumIn_iff_isNash D A k σ
+
+/-- A plan change cannot affect nodes outside its causal descendant cone. -/
+example {n : Nat} (D : DecisionDAG n) {A : Fin n → Type}
+    (σ : ShapeDAG.Strategy D A) (i j : Fin n)
+    (deviation : ShapeDAG.History D A i → A i)
+    (hne : j ≠ i) (hnot : ¬ D.IsAncestor i j) :
+    ShapeDAG.realizeAt D (Function.update σ i deviation) j =
+      ShapeDAG.realizeAt D σ j :=
+  ShapeDAG.realizeAt_update_of_not_ancestor D σ i deviation j hne hnot
+
 /-- The predecessor-profile presentation of conditioning covers every
 dependent prefix history. -/
 example {n : Nat} {A : Fin n → Type} (σ : ShapeSeqDep.Strategy A)

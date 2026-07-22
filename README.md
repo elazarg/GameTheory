@@ -140,6 +140,11 @@ continuation evaluates to the same pure action path, and perfect information
 identifies arbitrary reachable decision nodes with these canonical subtrees.
 Consequently conditioned open equilibrium is exactly EFG subgame-perfect
 equilibrium at every finite heterogeneous horizon.
+The sequential core also now has a sparse typed `DecisionDAG` generalization:
+each naturally topologically numbered decision observes an arbitrary finite
+parent set, realization is well founded, plain equilibrium still compiles
+exactly to kernel Nash, and plan changes are proved irrelevant outside their
+causal descendant cones.
 Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and
