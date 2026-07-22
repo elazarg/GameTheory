@@ -1223,6 +1223,554 @@ theorem eventually_all_abs_finkProjectiveGain_le_of_limit_support
     simpa only [Real.dist_eq, sub_zero] using hn.le
   · exact Filter.Eventually.of_forall fun _ h => (hpos h).elim
 
+/-- The finite vector space of pure-action coordinates, indexed by state,
+player, and that player's action. -/
+abbrev FinkPureActionVector (G : StochasticGame ι) :=
+  G.State → ∀ who : ι, G.Act who → ℝ
+
+/-- The first boundary-layer gain in every pure-action coordinate. -/
+def finkProjectiveGainVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℝ)
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.FinkPureActionVector :=
+  fun s who d =>
+    G.finkProjectiveBiasScale β W z *
+        G.finkContinuationGain W z s who d +
+      G.finkContinuationGain K z s who d
+
+/-- Nonnegative loss corresponding to a projective gain.  It agrees with
+the negative gain once boundary optimality has become exact, while remaining
+well behaved before that tail. -/
+def finkProjectiveLossVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℝ)
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.FinkPureActionVector :=
+  fun s who d => max (-(G.finkProjectiveGainVector
+    β W K z s who d)) 0
+
+theorem finkProjectiveLossVector_nonneg
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)] (β : ℝ)
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    0 ≤ G.finkProjectiveLossVector β W K z s who d := by
+  unfold finkProjectiveLossVector
+  exact le_max_right _ _
+
+/-- A player's own mixed action averages its pure continuation gains to
+zero. -/
+theorem expect_finkContinuationGain_eq_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
+    expect (G.finkProfile z s who) (fun d =>
+      G.finkContinuationGain W z s who d) = 0 := by
+  have hdecomp := G.mixedDeviationContinuation_eq_expect_pure
+    (G.finkProfile z) W s who (G.finkProfile z s who)
+  simp only [Function.update_eq_self] at hdecomp
+  unfold finkContinuationGain
+  rw [expect_sub, expect_const, ← hdecomp]
+  ring
+
+/-- Consequently the complete current-profile projective gain vector has
+zero own-action mean at every state and player. -/
+theorem expect_finkProjectiveGainVector_eq_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℝ)
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι) :
+    expect (G.finkProfile z s who) (fun d =>
+      G.finkProjectiveGainVector β W K z s who d) = 0 := by
+  unfold finkProjectiveGainVector
+  rw [expect_add, expect_const_mul,
+    G.expect_finkContinuationGain_eq_zero,
+    G.expect_finkContinuationGain_eq_zero]
+  ring
+
+/-- If every zero-mean gain coordinate is at most `ε`, the expected
+negative-part loss is at most `ε`. -/
+theorem expect_finkProjectiveLossVector_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℝ)
+    (W K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (s : G.State) (who : ι)
+    {ε : ℝ} (hε0 : 0 ≤ ε)
+    (hupper : ∀ d : G.Act who,
+      G.finkProjectiveGainVector β W K z s who d ≤ ε) :
+    expect (G.finkProfile z s who) (fun d =>
+      G.finkProjectiveLossVector β W K z s who d) ≤ ε := by
+  calc
+    expect (G.finkProfile z s who) (fun d =>
+        G.finkProjectiveLossVector β W K z s who d) ≤
+      expect (G.finkProfile z s who) (fun d =>
+        ε - G.finkProjectiveGainVector β W K z s who d) := by
+      apply expect_mono
+      intro d
+      unfold finkProjectiveLossVector
+      apply max_le
+      · linarith
+      · linarith [hupper d]
+    _ = ε := by
+      rw [expect_sub, expect_const,
+        G.expect_finkProjectiveGainVector_eq_zero]
+      ring
+
+/-- Uniform boundary optimality with the correction gain evaluated at the
+current profile.  This form has exact zero own-action mean. -/
+theorem eventually_all_finkProjectiveGainVector_le_of_boundary
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+      G.finkProjectiveGainVector (β n) W K (z n) s who d ≤ ε := by
+  have hhalf : 0 < ε / 2 := by linarith
+  have hlimitGain := G.eventually_all_finkProjectiveGain_le_of_boundary
+    hβ0 hβ1 hpay hz hfix W K hKlim hKnorm hhalf
+  have hKclose : ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+      |G.finkContinuationGain K (z n) s who d -
+        G.finkContinuationGain K zlim s who d| ≤ ε / 2 := by
+    rw [Filter.eventually_all]
+    intro s
+    rw [Filter.eventually_all]
+    intro who
+    rw [Filter.eventually_all]
+    intro d
+    have ht := G.tendsto_finkContinuationGain hz K s who d
+    obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht (ε / 2) hhalf
+    filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+    simpa only [Real.dist_eq] using hn.le
+  filter_upwards [hlimitGain, hKclose] with n hn hKn
+  intro s who d
+  have hmain := hn s who d
+  have hcorr := (abs_le.mp (hKn s who d)).2
+  unfold finkProjectiveGainVector
+  linarith
+
+/-- At a projective boundary, the expected current-profile loss vanishes for
+every state and player. -/
+theorem tendsto_expect_finkProjectiveLossVector_zero_of_boundary
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1) (s : G.State) (who : ι) :
+    Tendsto (fun n => expect (G.finkProfile (z n) s who) (fun d =>
+      G.finkProjectiveLossVector (β n) W K (z n) s who d))
+      atTop (nhds 0) := by
+  apply Metric.tendsto_atTop.2
+  intro ε hε
+  have hhalf : 0 < ε / 2 := by linarith
+  have hupper := G.eventually_all_finkProjectiveGainVector_le_of_boundary
+    hβ0 hβ1 hpay hz hfix W K hKlim hKnorm hhalf
+  apply Filter.eventually_atTop.mp
+  filter_upwards [hupper] with n hn
+  have hloss0 : 0 ≤ expect (G.finkProfile (z n) s who) (fun d =>
+      G.finkProjectiveLossVector (β n) W K (z n) s who d) := by
+    exact expect_nonneg _ _ fun d =>
+      G.finkProjectiveLossVector_nonneg
+        (β n) W K (z n) s who d
+  have hloss := G.expect_finkProjectiveLossVector_le
+    (β n) W K (z n) s who hhalf.le (hn s who)
+  rw [Real.dist_eq, sub_zero, abs_of_nonneg hloss0]
+  linarith
+
+/-- A nonnegative summand is bounded by its finite PMF expectation. -/
+theorem pmf_apply_toReal_mul_le_expect_of_nonneg
+    {α : Type} [Finite α] (p : PMF α) (f : α → ℝ)
+    (hf : ∀ a, 0 ≤ f a) (a : α) :
+    (p a).toReal * f a ≤ expect p f := by
+  letI := Fintype.ofFinite α
+  rw [expect_eq_sum]
+  exact Finset.single_le_sum
+    (fun b _ => mul_nonneg ENNReal.toReal_nonneg (hf b))
+    (Finset.mem_univ a)
+
+/-- Every individual probability-weighted boundary loss tends to zero.  Thus
+an action whose loss diverges must be played at a correspondingly faster
+vanishing rate. -/
+theorem tendsto_finkProfile_mul_projectiveLoss_zero_of_boundary
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Tendsto (fun n => ((G.finkProfile (z n) s who) d).toReal *
+      G.finkProjectiveLossVector (β n) W K (z n) s who d)
+      atTop (nhds 0) := by
+  apply squeeze_zero
+  · intro n
+    exact mul_nonneg ENNReal.toReal_nonneg
+      (G.finkProjectiveLossVector_nonneg
+        (β n) W K (z n) s who d)
+  · intro n
+    exact pmf_apply_toReal_mul_le_expect_of_nonneg
+      (G.finkProfile (z n) s who)
+      (fun d' => G.finkProjectiveLossVector
+        (β n) W K (z n) s who d')
+      (fun d' => G.finkProjectiveLossVector_nonneg
+        (β n) W K (z n) s who d') d
+  · exact G.tendsto_expect_finkProjectiveLossVector_zero_of_boundary
+      hβ0 hβ1 hpay hz hfix W K hKlim hKnorm s who
+
+/-- Radial compactification for the finite pure-action loss space. -/
+def compactifyFinkActionVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) : G.FinkPureActionVector :=
+  (1 / (1 + ‖L‖)) • L
+
+theorem norm_compactifyFinkActionVector_eq
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) :
+    ‖G.compactifyFinkActionVector L‖ = ‖L‖ / (1 + ‖L‖) := by
+  have hden : 0 < 1 + ‖L‖ := by positivity
+  simp [compactifyFinkActionVector, norm_smul, Real.norm_eq_abs,
+    abs_of_pos hden, div_eq_mul_inv]
+  ring
+
+theorem norm_compactifyFinkActionVector_lt_one
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) :
+    ‖G.compactifyFinkActionVector L‖ < 1 := by
+  rw [G.norm_compactifyFinkActionVector_eq L]
+  exact (div_lt_one (by positivity)).2 (by linarith [norm_nonneg L])
+
+theorem compactifyFinkActionVector_mem_closedBall
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) :
+    G.compactifyFinkActionVector L ∈
+      Metric.closedBall (0 : G.FinkPureActionVector) 1 := by
+  rw [Metric.mem_closedBall]
+  simpa only [dist_zero_right] using
+    (G.norm_compactifyFinkActionVector_lt_one L).le
+
+theorem compactifyFinkActionVector_apply_nonneg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector)
+    (hL : ∀ s who (d : G.Act who), 0 ≤ L s who d)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    0 ≤ G.compactifyFinkActionVector L s who d := by
+  simp only [compactifyFinkActionVector, Pi.smul_apply, smul_eq_mul]
+  exact mul_nonneg (by positivity) (hL s who d)
+
+/-- A nonnegative action coordinate tending to zero still tends to zero
+after radial compactification, regardless of the other coordinates' growth. -/
+theorem tendsto_compactifyFinkActionVector_apply_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {L : ℕ → G.FinkPureActionVector}
+    (hL : ∀ n s who (d : G.Act who), 0 ≤ L n s who d)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hzero : Tendsto (fun n => L n s who d) atTop (nhds 0)) :
+    Tendsto (fun n => G.compactifyFinkActionVector (L n) s who d)
+      atTop (nhds 0) := by
+  apply squeeze_zero
+  · exact fun n => G.compactifyFinkActionVector_apply_nonneg
+      (L n) (hL n) s who d
+  · intro n
+    simp only [compactifyFinkActionVector, Pi.smul_apply, smul_eq_mul]
+    have hfactor : 1 / (1 + ‖L n‖) ≤ 1 := by
+      exact (div_le_one (by positivity)).2 (by linarith [norm_nonneg (L n)])
+    exact mul_le_of_le_one_left (hL n s who d) hfactor
+  · exact hzero
+
+/-- If a probability-weighted coordinate tends to zero while its radial
+compactification tends to a positive number, then the probability vanishes
+faster than the reciprocal total-vector scale. -/
+theorem tendsto_mul_one_add_norm_finkActionVector_zero_of_compactify_apply_pos
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {L : ℕ → G.FinkPureActionVector} {p : ℕ → ℝ}
+    (s : G.State) (who : ι) (d : G.Act who) {c : ℝ} (hc : 0 < c)
+    (hcompact : Tendsto (fun n =>
+      G.compactifyFinkActionVector (L n) s who d) atTop (nhds c))
+    (hweighted : Tendsto (fun n => p n * L n s who d) atTop (nhds 0)) :
+    Tendsto (fun n => p n * (1 + ‖L n‖)) atTop (nhds 0) := by
+  have hinv := hcompact.inv₀ (ne_of_gt hc)
+  have hmul := hweighted.mul hinv
+  have hmul' : Tendsto (fun n =>
+      (p n * L n s who d) *
+        (G.compactifyFinkActionVector (L n) s who d)⁻¹)
+      atTop (nhds 0) := by
+    simpa using hmul
+  apply hmul'.congr'
+  filter_upwards [hcompact.eventually (eventually_ne_nhds (ne_of_gt hc))]
+    with n hn
+  have hden : 1 + ‖L n‖ ≠ 0 := ne_of_gt (by positivity)
+  have hloss : L n s who d ≠ 0 := by
+    intro hloss
+    apply hn
+    simp [compactifyFinkActionVector, hloss]
+  simp only [compactifyFinkActionVector, Pi.smul_apply, smul_eq_mul]
+  field_simp [hden, hloss]
+
+/-- Inverse radial chart on the open pure-action vector ball. -/
+def decompactifyFinkActionVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (K : G.FinkPureActionVector) : G.FinkPureActionVector :=
+  (1 / (1 - ‖K‖)) • K
+
+@[simp] theorem decompactify_compactifyFinkActionVector
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) :
+    G.decompactifyFinkActionVector (G.compactifyFinkActionVector L) = L := by
+  rw [decompactifyFinkActionVector,
+    G.norm_compactifyFinkActionVector_eq L,
+    compactifyFinkActionVector, smul_smul]
+  have hden : 1 + ‖L‖ ≠ 0 := ne_of_gt (by positivity)
+  convert one_smul ℝ L using 1
+  field_simp [hden]
+  ring_nf
+
+/-- An interior compactified action-vector limit gives an ordinary finite
+loss-vector limit. -/
+theorem tendsto_finkActionVector_of_compactify_tendsto_of_norm_lt_one
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {L : ℕ → G.FinkPureActionVector} {K : G.FinkPureActionVector}
+    (hlim : Tendsto (G.compactifyFinkActionVector ∘ L) atTop (nhds K))
+    (hK : ‖K‖ < 1) :
+    Tendsto L atTop (nhds (G.decompactifyFinkActionVector K)) := by
+  have hden : 1 - ‖K‖ ≠ 0 := by linarith
+  have hc : ContinuousAt (G.decompactifyFinkActionVector) K := by
+    unfold decompactifyFinkActionVector
+    fun_prop
+  have ht := hc.tendsto.comp hlim
+  simpa only [Function.comp_def,
+    G.decompactify_compactifyFinkActionVector] using ht
+
+/-- A unit compactified action-vector limit forces the original loss norms
+to diverge. -/
+theorem tendsto_norm_finkActionVector_atTop_of_compactify_tendsto_norm_eq_one
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {L : ℕ → G.FinkPureActionVector} {K : G.FinkPureActionVector}
+    (hlim : Tendsto (G.compactifyFinkActionVector ∘ L) atTop (nhds K))
+    (hK : ‖K‖ = 1) :
+    Tendsto (fun n => ‖L n‖) atTop atTop := by
+  have hnorm : Tendsto (fun n => ‖G.compactifyFinkActionVector (L n)‖)
+      atTop (nhds 1) := by
+    have ht := continuous_norm.tendsto K |>.comp hlim
+    simpa only [Function.comp_def, hK] using ht
+  refine tendsto_atTop.2 fun b => ?_
+  let B := max b 0
+  have hB0 : 0 ≤ B := le_max_right b 0
+  have hfrac : B / (1 + B) < 1 := by
+    exact (div_lt_one (by linarith)).2 (by linarith)
+  filter_upwards [hnorm.eventually (eventually_gt_nhds hfrac)] with n hn
+  rw [G.norm_compactifyFinkActionVector_eq] at hn
+  have hdenB : 0 < 1 + B := by linarith
+  have hdenL : 0 < 1 + ‖L n‖ := by positivity
+  rw [div_lt_div_iff₀ hdenB hdenL] at hn
+  have hBL : B < ‖L n‖ := by linarith
+  exact (le_max_left b 0).trans hBL.le
+
+/-- Every projective loss family has a convergent radial subsequence. -/
+theorem exists_convergent_compactifiedFinkActionVector_subsequence
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : ℕ → G.FinkPureActionVector) :
+    ∃ (Llim : G.FinkPureActionVector) (φ : ℕ → ℕ),
+      Llim ∈ Metric.closedBall (0 : G.FinkPureActionVector) 1 ∧
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkActionVector ∘ L ∘ φ)
+        atTop (nhds Llim) := by
+  let C := Metric.closedBall (0 : G.FinkPureActionVector) 1
+  let y : ℕ → C := fun n =>
+    ⟨G.compactifyFinkActionVector (L n),
+      G.compactifyFinkActionVector_mem_closedBall (L n)⟩
+  letI : CompactSpace C :=
+    isCompact_iff_compactSpace.mp (isCompact_closedBall 0 1)
+  obtain ⟨ylim, φ, hφ, hlim⟩ := CompactSpace.tendsto_subseq y
+  refine ⟨ylim.1, φ, ylim.2, hφ, ?_⟩
+  have ht := continuous_subtype_val.tendsto ylim |>.comp hlim
+  simpa only [y, Function.comp_def] using ht
+
+/-- Projective compactness dichotomy for finite pure-action loss vectors. -/
+theorem exists_finkActionVector_subsequence_interior_or_direction
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : ℕ → G.FinkPureActionVector) :
+    ∃ (K : G.FinkPureActionVector) (φ : ℕ → ℕ),
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkActionVector ∘ L ∘ φ)
+        atTop (nhds K) ∧
+      ((‖K‖ < 1 ∧ Tendsto (L ∘ φ) atTop
+          (nhds (G.decompactifyFinkActionVector K))) ∨
+        (‖K‖ = 1 ∧ Tendsto (fun n => ‖L (φ n)‖) atTop atTop)) := by
+  obtain ⟨K, φ, hKmem, hφ, hlim⟩ :=
+    G.exists_convergent_compactifiedFinkActionVector_subsequence L
+  have hKle : ‖K‖ ≤ 1 := by
+    rw [Metric.mem_closedBall] at hKmem
+    simpa only [dist_zero_right] using hKmem
+  refine ⟨K, φ, hφ, hlim, ?_⟩
+  by_cases hKlt : ‖K‖ < 1
+  · left
+    refine ⟨hKlt, ?_⟩
+    apply G.tendsto_finkActionVector_of_compactify_tendsto_of_norm_lt_one
+      (L := L ∘ φ) (K := K) _ hKlt
+    simpa only [Function.comp_def] using hlim
+  · right
+    have hKeq : ‖K‖ = 1 := le_antisymm hKle (le_of_not_gt hKlt)
+    refine ⟨hKeq, ?_⟩
+    apply G.tendsto_norm_finkActionVector_atTop_of_compactify_tendsto_norm_eq_one
+      (L := L ∘ φ) (K := K) _ hKeq
+    simpa only [Function.comp_def] using hlim
+
+/-- The next finite action-face extraction.  Either all first-layer losses
+are bounded along a subsequence, or their projective boundary direction is a
+nonzero nonnegative vector which vanishes on the current limiting support.
+Hence the boundary case identifies an action outside that support to prune
+at the next lexicographic layer. -/
+theorem exists_finkProjectiveLoss_subsequence_interior_or_pruningDirection
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1) :
+    ∃ (Llim : G.FinkPureActionVector) (φ : ℕ → ℕ),
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkActionVector ∘
+          (fun n => G.finkProjectiveLossVector
+            (β n) W K (z n)) ∘ φ)
+        atTop (nhds Llim) ∧
+      ((‖Llim‖ < 1 ∧
+          Tendsto ((fun n => G.finkProjectiveLossVector
+            (β n) W K (z n)) ∘ φ) atTop
+              (nhds (G.decompactifyFinkActionVector Llim))) ∨
+        (‖Llim‖ = 1 ∧
+          Tendsto (fun n =>
+            ‖G.finkProjectiveLossVector
+              (β (φ n)) W K (z (φ n))‖) atTop atTop ∧
+          (∀ s who (d : G.Act who), 0 ≤ Llim s who d) ∧
+          (∀ s who (d : G.Act who),
+            G.finkProfile zlim s who d ≠ 0 → Llim s who d = 0) ∧
+          (∃ (s : G.State) (who : ι) (d : G.Act who),
+            0 < Llim s who d ∧ G.finkProfile zlim s who d = 0 ∧
+            Tendsto (fun n =>
+              ((G.finkProfile (z (φ n)) s who) d).toReal *
+                (1 + ‖G.finkProjectiveLossVector
+                  (β (φ n)) W K (z (φ n))‖))
+              atTop (nhds 0)))) := by
+  let L : ℕ → G.FinkPureActionVector := fun n =>
+    G.finkProjectiveLossVector (β n) W K (z n)
+  obtain ⟨Llim, φ, hφ, hLlim, halternative⟩ :=
+    G.exists_finkActionVector_subsequence_interior_or_direction L
+  refine ⟨Llim, φ, hφ, ?_, ?_⟩
+  · simpa only [L, Function.comp_def] using hLlim
+  rcases halternative with hinterior | hboundary
+  · exact Or.inl (by simpa only [L, Function.comp_def] using hinterior)
+  · right
+    have hcoordTendsto (s : G.State) (who : ι) (d : G.Act who) :
+        Tendsto (fun n =>
+          G.compactifyFinkActionVector (L (φ n)) s who d)
+          atTop (nhds (Llim s who d)) := by
+      have hc : Continuous (fun Q : G.FinkPureActionVector => Q s who d) := by
+        fun_prop
+      have ht := (hc.tendsto Llim).comp hLlim
+      simpa only [Function.comp_def] using ht
+    have hnonneg : ∀ s who (d : G.Act who), 0 ≤ Llim s who d := by
+      intro s who d
+      apply ge_of_tendsto' (hcoordTendsto s who d)
+      intro n
+      apply G.compactifyFinkActionVector_apply_nonneg
+      intro s' who' d'
+      exact G.finkProjectiveLossVector_nonneg
+        (β (φ n)) W K (z (φ n)) s' who' d'
+    have hsupport : ∀ s who (d : G.Act who),
+        G.finkProfile zlim s who d ≠ 0 → Llim s who d = 0 := by
+      intro s who d hpos
+      have hmain :=
+        G.tendsto_finkProjectiveBiasScale_mul_continuationGain_of_limit_support
+          hβ0 hβ1 hpay hz hfix W K hKlim hKnorm s who d hpos
+      have hKcurrent := G.tendsto_finkContinuationGain hz K s who d
+      have hgain : Tendsto (fun n =>
+          G.finkProjectiveGainVector (β n) W K (z n) s who d)
+          atTop (nhds 0) := by
+        have ht := hmain.add hKcurrent
+        simpa only [finkProjectiveGainVector, neg_add_cancel] using ht
+      have hgainφ := hgain.comp hφ.tendsto_atTop
+      have hlossφ : Tendsto (fun n => L (φ n) s who d)
+          atTop (nhds 0) := by
+        have ht := hgainφ.neg.max
+          (tendsto_const_nhds : Tendsto (fun _ : ℕ => (0 : ℝ))
+            atTop (nhds 0))
+        simpa only [L, finkProjectiveLossVector, Function.comp_def,
+          neg_zero, max_self] using ht
+      have hcompactZero :=
+        G.tendsto_compactifyFinkActionVector_apply_zero
+          (L := L ∘ φ)
+          (fun n s' who' d' => G.finkProjectiveLossVector_nonneg
+            (β (φ n)) W K (z (φ n)) s' who' d')
+          s who d (by simpa only [Function.comp_def] using hlossφ)
+      exact tendsto_nhds_unique (hcoordTendsto s who d) hcompactZero
+    have hpositive : ∃ (s : G.State) (who : ι) (d : G.Act who),
+        0 < Llim s who d := by
+      by_contra hnot
+      have hnonpos : ∀ s who (d : G.Act who), Llim s who d ≤ 0 := by
+        intro s who d
+        exact le_of_not_gt fun h => hnot ⟨s, who, d, h⟩
+      have hzero : Llim = 0 := by
+        funext s who d
+        exact le_antisymm (hnonpos s who d) (hnonneg s who d)
+      rw [hzero] at hboundary
+      simp at hboundary
+    obtain ⟨s, who, d, hdpos⟩ := hpositive
+    have hweighted :=
+      (G.tendsto_finkProfile_mul_projectiveLoss_zero_of_boundary
+        hβ0 hβ1 hpay hz hfix W K hKlim hKnorm s who d).comp
+          hφ.tendsto_atTop
+    have hrate :=
+      G.tendsto_mul_one_add_norm_finkActionVector_zero_of_compactify_apply_pos
+        (L := L ∘ φ)
+        (p := fun n => ((G.finkProfile (z (φ n)) s who) d).toReal)
+        s who d hdpos (hcoordTendsto s who d)
+          (by simpa only [L, Function.comp_def] using hweighted)
+    refine ⟨hboundary.1, ?_, hnonneg, hsupport,
+      s, who, d, hdpos, ?_, ?_⟩
+    · simpa only [L, Function.comp_def] using hboundary.2
+    · by_contra hpos
+      exact (not_lt_of_ge (le_of_eq (hsupport s who d hpos)) hdpos)
+    · simpa only [L, Function.comp_def] using hrate
+
 /-- A strictly value-decreasing pure action has zero probability in the
 limiting stationary profile. -/
 theorem finkLimit_strictDeviation_probability_zero
