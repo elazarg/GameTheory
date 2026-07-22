@@ -6639,6 +6639,65 @@ theorem exists_strictMono_summable_finkCorrectedTargetStepError_and_aux_subseque
   exact ⟨ψ, strictMono_nat_of_lt_succ hψstep, hRzero,
     hfast, hfastTotal, hauxSum, hauxTotal⟩
 
+/-- A defect tending to zero can be thinned fast enough to absorb any
+prescribed nonnegative weight on the *new subsequence index*.  The weight may
+be unbounded; choosing the subsequence point at stage `n` after seeing `D n`
+makes the weighted series geometric. -/
+theorem exists_strictMono_summable_weighted_subsequence
+    (aux D : ℕ → ℝ) (haux0 : ∀ n, 0 ≤ aux n)
+    (haux : Tendsto aux atTop (nhds 0)) (hD0 : ∀ n, 0 ≤ D n) :
+    ∃ ψ : ℕ → ℕ, StrictMono ψ ∧
+      Summable (fun n => D n * aux (ψ n)) := by
+  let δ : ℕ → ℝ := fun n => (1 / (D n + 1)) / (2 : ℝ) ^ n
+  have hδpos : ∀ n, 0 < δ n := fun n => by
+    dsimp only [δ]
+    exact div_pos (div_pos zero_lt_one (by linarith [hD0 n]))
+      (pow_pos (by norm_num) n)
+  have hev : ∀ n, ∀ᶠ k in atTop, aux k ≤ δ n := by
+    intro n
+    exact (haux.eventually (Iio_mem_nhds (hδpos n))).mono
+      fun _ hk => hk.le
+  have hexN : ∀ n, ∃ N, ∀ k, N ≤ k → aux k ≤ δ n := fun n =>
+    Filter.eventually_atTop.mp (hev n)
+  choose N hN using hexN
+  let ψ : ℕ → ℕ := fun n => Nat.rec (N 0)
+    (fun k previous => max (N (k + 1)) (previous + 1)) n
+  have hNle : ∀ n, N n ≤ ψ n := by
+    intro n
+    induction n with
+    | zero => simp [ψ]
+    | succ n ih =>
+        rw [show ψ (n + 1) = max (N (n + 1)) (ψ n + 1) by simp [ψ]]
+        exact le_max_left _ _
+  have hψstep : ∀ n, ψ n < ψ (n + 1) := by
+    intro n
+    rw [show ψ (n + 1) = max (N (n + 1)) (ψ n + 1) by simp [ψ]]
+    exact lt_of_lt_of_le (Nat.lt_succ_self _) (le_max_right _ _)
+  have hauxBound : ∀ n, aux (ψ n) ≤ δ n := fun n =>
+    hN n (ψ n) (hNle n)
+  have hweighted : ∀ n, D n * aux (ψ n) ≤
+      (1 : ℝ) / (2 : ℝ) ^ n := by
+    intro n
+    calc
+      D n * aux (ψ n) ≤ D n * δ n :=
+        mul_le_mul_of_nonneg_left (hauxBound n) (hD0 n)
+      _ = (D n / (D n + 1)) / (2 : ℝ) ^ n := by
+        dsimp only [δ]
+        ring
+      _ ≤ (1 : ℝ) / (2 : ℝ) ^ n := by
+        apply div_le_div_of_nonneg_right _ (by positivity)
+        exact (div_le_one (by linarith [hD0 n])).2 (by linarith)
+  have hgeom : Summable (fun n : ℕ => (1 : ℝ) / (2 : ℝ) ^ n) := by
+    convert summable_geometric_two' (2 : ℝ) using 1
+    funext n
+    norm_num
+  have hsum : Summable (fun n => D n * aux (ψ n)) := by
+    apply Summable.of_nonneg_of_le
+    · exact fun n => mul_nonneg (hD0 n) (haux0 (ψ n))
+    · exact hweighted
+    · exact hgeom
+  exact ⟨ψ, strictMono_nat_of_lt_succ hψstep, hsum⟩
+
 /-- A long correction jump costs no more than the variation along all crossed
 adjacent edges. -/
 theorem norm_sub_le_sum_Ico_norm_sub
@@ -6754,6 +6813,32 @@ theorem summable_finkCorrectedTargetStepError_strictMono
   rw [hnewEq, hholdSub.tsum_add hjump, horiginalEq,
     hhold.tsum_add hmove]
   exact add_le_add hholdTotal hjumpTotal
+
+/-- After a corrected branch has been made summable, it may be thinned again
+to make any vanishing auxiliary defect summable against a prescribed
+nonnegative index weight.  Corrected drift remains summable and its total
+cannot increase. -/
+theorem exists_strictMono_preserving_finkCorrectedError_weightingAux
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U)
+    (hstep : Summable (fun n =>
+      G.finkCorrectedTargetStepError W R z n))
+    (aux D : ℕ → ℝ) (haux0 : ∀ n, 0 ≤ aux n)
+    (haux : Tendsto aux atTop (nhds 0)) (hD0 : ∀ n, 0 ≤ D n) :
+    ∃ ψ : ℕ → ℕ, StrictMono ψ ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        (R ∘ ψ) (z ∘ ψ) n) ∧
+      (∑' n, G.finkCorrectedTargetStepError W
+          (R ∘ ψ) (z ∘ ψ) n) ≤
+        ∑' n, G.finkCorrectedTargetStepError W R z n ∧
+      Summable (fun n => D n * aux (ψ n)) := by
+  obtain ⟨ψ, hψ, hweighted⟩ :=
+    exists_strictMono_summable_weighted_subsequence aux D haux0 haux hD0
+  have hpreserved :=
+    G.summable_finkCorrectedTargetStepError_strictMono W R z hstep ψ hψ
+  exact ⟨ψ, hψ, hpreserved.1, hpreserved.2, hweighted⟩
 
 /-- Information-preserving form of the root correction dichotomy.  In the
 boundary branch it retains the vanishing next-reference hold defect instead
@@ -7813,6 +7898,62 @@ theorem FinkVerifiedReferenceResolution.relativeBias_rootSummableStepAndNextHold
     · simpa only [R, θ, Function.comp_def] using hfastTotal
     · simpa only [aux, θ, Function.comp_def] using hauxSum
     · simpa only [aux, θ, Function.comp_apply] using hauxTotal
+
+/-- Weighted joint-series form of the root dichotomy.  For every prescribed
+nonnegative layer envelope `D`, the boundary branch can be chosen so that its
+next-reference defect is summable after multiplication by `D`, while the
+corrected adjacent drift remains summable on the same strict subsequence. -/
+theorem FinkVerifiedReferenceResolution.relativeBias_rootSummableStepAndWeightedNextHold_dichotomy
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1)) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hresolution : G.FinkVerifiedReferenceResolution z
+      (fun n => G.finkValue (z n))
+      (fun n => β n / (1 - β n))
+      (fun n => G.finkRelativeBias (β n) W (z n))
+      (fun _ => W))
+    (D : ℕ → ℝ) (hD0 : ∀ n, 0 ≤ D n) :
+    (∃ (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι),
+      StrictMono φ ∧ Tendsto (fun n =>
+        G.finkRelativeBias (β (φ n)) W (z (φ n)))
+          atTop (nhds Jlim)) ∨
+    ∃ (K : G.State → Payoff ι) (θ : ℕ → ℕ),
+      StrictMono θ ∧ ‖K‖ = 1 ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n) ∧
+      Summable (fun n => D n *
+        G.finkNextReferenceHoldError β W K z (θ n)) := by
+  rcases hresolution.relativeBias_rootSummableStepAndNextHold_dichotomy
+      G β hβpos hβ1 hβlim z W hV (1 : ℝ) (by norm_num) with
+    hinterior | hboundary
+  · exact Or.inl hinterior
+  · right
+    obtain ⟨K, θ, hθ, hKnorm, hRzero, hfast, hfastTotal,
+      hnext, hnextTotal⟩ := hboundary
+    let R : ℕ → G.State → Payoff ι :=
+      G.finkRootCorrection β W K z ∘ θ
+    let zθ : ℕ → G.finkDomain U := z ∘ θ
+    let aux : ℕ → ℝ := G.finkNextReferenceHoldError β W K z ∘ θ
+    have haux0 : ∀ n, 0 ≤ aux n := by
+      intro n
+      unfold aux finkNextReferenceHoldError finkPositiveContinuationGainSum
+      exact add_nonneg (norm_nonneg _)
+        (Finset.sum_nonneg fun p hp => le_max_right _ _)
+    have haux : Tendsto aux atTop (nhds 0) := by
+      exact hnext.tendsto_atTop_zero
+    obtain ⟨ψ, hψ, hfast', hfastTotal', hweighted⟩ :=
+      G.exists_strictMono_preserving_finkCorrectedError_weightingAux
+        W R zθ (by simpa only [R, zθ] using hfast)
+        aux D haux0 haux hD0
+    let Θ : ℕ → ℕ := θ ∘ ψ
+    have hΘ : StrictMono Θ := hθ.comp hψ
+    refine ⟨K, Θ, hΘ, hKnorm, ?_, ?_⟩
+    · simpa only [R, zθ, Θ, Function.comp_def] using hfast'
+    · simpa only [aux, Θ, Function.comp_def] using hweighted
 
 /-- Activation times for a slow calendar.  Layer `n` is not activated before
 calendar time `n * |B n|`, and consecutive activation times are distinct. -/
@@ -9097,6 +9238,117 @@ theorem exists_finkRelativeAnnealingCalendar_preservingErrors
   exact ⟨θ, B, hκlim, hterminalLim, hswitchLim,
     hfast', hfastTotal, haux', hauxTotal⟩
 
+/-- Weighted-error form of annealing preservation.  If `D n * aux n` is
+already summable, regularization transports the weight with the selected
+index, yielding the summable series `D (θ n) * aux (θ n)` on the returned
+annealing branch. -/
+theorem exists_finkRelativeAnnealingCalendar_preservingWeightedErrors
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (aux D : ℕ → ℝ)
+    (hU : 0 ≤ U) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1) (hβlim : Tendsto β atTop (nhds 1))
+    (hfast : Summable (fun n =>
+      G.finkCorrectedTargetStepError W R z n))
+    (haux0 : ∀ n, 0 ≤ aux n) (hD0 : ∀ n, 0 ≤ D n)
+    (hweighted : Summable (fun n => D n * aux n)) :
+    ∃ (θ : ℕ → ℕ) (B : ℕ → ℝ),
+      let κ := θ ∘ slowUnitStepCalendar B
+      Tendsto κ atTop atTop ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        finkScaledBiasBound β U (κ T)) atTop (nhds 0) ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t)
+          atTop (nhds 0) ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        (R ∘ θ) (z ∘ θ) n) ∧
+      Summable (fun n => D (θ n) * aux (θ n)) := by
+  let weightedAux : ℕ → ℝ := fun n => D n * aux n
+  have hweighted0 : ∀ n, 0 ≤ weightedAux n := fun n =>
+    mul_nonneg (hD0 n) (haux0 n)
+  obtain ⟨θ, B, hκ, hterminal, hswitch, hfast', hfastTotal,
+      hweighted', hweightedTotal⟩ :=
+    G.exists_finkRelativeAnnealingCalendar_preservingErrors
+      β U z W R weightedAux hU hβ0 hβ1 hβlim hfast
+        hweighted0 (by simpa only [weightedAux] using hweighted)
+  refine ⟨θ, B, hκ, hterminal, hswitch, hfast', ?_⟩
+  simpa only [weightedAux, Function.comp_def] using hweighted'
+
+/-- The verified hierarchy and annealing construction can be joined while
+retaining an arbitrary prescribed dilation envelope.  In the boundary branch
+everything needed for corrected selectability is produced except comparison
+of the concrete calendar block length with the transported weight
+`D (θ n)`. -/
+theorem FinkVerifiedReferenceResolution.relativeBias_weightedAnnealing_dichotomy
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1))
+    (M : ℝ) (hM : 0 ≤ M) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hresolution : G.FinkVerifiedReferenceResolution z
+      (fun n => G.finkValue (z n))
+      (fun n => β n / (1 - β n))
+      (fun n => G.finkRelativeBias (β n) W (z n))
+      (fun _ => W))
+    (D : ℕ → ℝ) (hD0 : ∀ n, 0 ≤ D n) :
+    (∃ (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι),
+      StrictMono φ ∧ Tendsto (fun n =>
+        G.finkRelativeBias (β (φ n)) W (z (φ n)))
+          atTop (nhds Jlim)) ∨
+    ∃ (K : G.State → Payoff ι) (φ θ : ℕ → ℕ) (B : ℕ → ℝ),
+      StrictMono φ ∧ ‖K‖ = 1 ∧
+      let Θ := φ ∘ θ
+      let κ := Θ ∘ slowUnitStepCalendar B
+      Tendsto κ atTop atTop ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        finkScaledBiasBound β M (κ T)) atTop (nhds 0) ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β M z W κ t)
+          atTop (nhds 0) ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        (G.finkRootCorrection β W K z ∘ Θ) (z ∘ Θ) n) ∧
+      Summable (fun n => D (θ n) *
+        G.finkNextReferenceHoldError β W K z (Θ n)) := by
+  rcases hresolution.relativeBias_rootSummableStepAndWeightedNextHold_dichotomy
+      G β hβpos hβ1 hβlim z W hV D hD0 with hinterior | hboundary
+  · exact Or.inl hinterior
+  · right
+    obtain ⟨K, φ, hφ, hKnorm, hfast, hweighted⟩ := hboundary
+    let βφ : ℕ → ℝ := β ∘ φ
+    let zφ : ℕ → G.finkDomain U := z ∘ φ
+    let Rφ : ℕ → G.State → Payoff ι :=
+      G.finkRootCorrection β W K z ∘ φ
+    let auxφ : ℕ → ℝ := G.finkNextReferenceHoldError β W K z ∘ φ
+    have haux0 : ∀ n, 0 ≤ auxφ n := by
+      intro n
+      unfold auxφ finkNextReferenceHoldError finkPositiveContinuationGainSum
+      exact add_nonneg (norm_nonneg _)
+        (Finset.sum_nonneg fun p hp => le_max_right _ _)
+    obtain ⟨θ, B, hκ, hterminal, hswitch, hfast', hweighted'⟩ :=
+      G.exists_finkRelativeAnnealingCalendar_preservingWeightedErrors
+        βφ M zφ W Rφ auxφ D hM
+        (fun n => (hβpos (φ n)).le) (fun n => hβ1 (φ n))
+        (by simpa only [βφ, Function.comp_def] using
+          hβlim.comp hφ.tendsto_atTop)
+        (by simpa only [Rφ, zφ, Function.comp_def] using hfast)
+        haux0 hD0 (by simpa only [auxφ, Function.comp_def] using hweighted)
+    let Θ : ℕ → ℕ := φ ∘ θ
+    have hΘcalendar : Tendsto (Θ ∘ slowUnitStepCalendar B) atTop atTop := by
+      simpa only [Θ, Function.comp_def] using hφ.tendsto_atTop.comp hκ
+    refine ⟨K, φ, θ, B, hφ, hKnorm, hΘcalendar, ?_, ?_, ?_, ?_⟩
+    · simpa only [βφ, Θ, finkScaledBiasBound, Function.comp_def] using hterminal
+    · simpa only [βφ, zφ, Θ, indexedFinkRelativeSwitchError,
+        Function.comp_def] using hswitch
+    · simpa only [Rφ, zφ, Θ, Function.comp_def] using hfast'
+    · simpa only [auxφ, Θ, Function.comp_def] using hweighted'
+
 /-- Full annealing package.  Any ordinary value-error convergence survives
 the slow calendar, while the exact boundary-plus-switch expression tends to
 zero.  Only accumulated transition drift is absent from this package. -/
@@ -9579,6 +9831,48 @@ theorem isIndexedFinkCorrectedCalendarSelectable_of_oneSummableRootBillBranch
   · exact hq.comp (by simpa only [κ, ν] using hκ)
   · exact hrootNorm.comp (by simpa only [κ, ν] using hκ)
   · exact hslow'
+
+/-- Variable-envelope form of the global branch criterion.  The concrete
+calendar dilation may grow without bound, as long as it is eventually below
+`D` and the next-reference defect has already been selected summably against
+that same envelope. -/
+theorem isIndexedFinkCorrectedCalendarSelectable_of_oneDilationMajorantBranch
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1))
+    (U : ℝ) {U₀ : ℝ} (z : ℕ → G.finkDomain U₀)
+    (W K : G.State → Payoff ι) (q : ℕ → ℝ)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hq : Tendsto q atTop (nhds 0))
+    (θ : ℕ → ℕ) (B D : ℕ → ℝ)
+    (hκ : Tendsto (θ ∘ slowUnitStepCalendar B) atTop atTop)
+    (hterminal : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U ((θ ∘ slowUnitStepCalendar B) T))
+        atTop (nhds 0))
+    (hswitch : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, G.indexedFinkRelativeSwitchError
+        β U z W (θ ∘ slowUnitStepCalendar B) t) atTop (nhds 0))
+    (hfast : Summable (fun n => G.finkCorrectedTargetStepError W
+      (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n))
+    (hweighted : Summable (fun n => D n *
+      G.finkNextReferenceHoldError β W K z (θ n)))
+    (hdilation : ∀ᶠ n in atTop, (slowCalendarBlockLength B n : ℝ) *
+      ((1 - β (θ n)) / β (θ n) +
+        ‖G.finkValue (z (θ n)) - W‖) ≤ D n) :
+    G.IsIndexedFinkCorrectedCalendarSelectable β U z W
+      (G.finkRootCorrection β W K z) q := by
+  have hweighted' : Summable (fun n => D n *
+      G.finkNextReferenceHoldError (β ∘ θ) W K (z ∘ θ) n) := by
+    simpa only [finkNextReferenceHoldError, Function.comp_def] using hweighted
+  have hbill :=
+    G.summable_finkRelativeBoundaryRootBill_of_dilationMajorant
+      B (β ∘ θ) (fun n => hβpos (θ n)) (fun n => hβ1 (θ n))
+      W K (z ∘ θ) D hweighted' hdilation
+  apply G.isIndexedFinkCorrectedCalendarSelectable_of_oneSummableRootBillBranch
+    β hβpos hβ1 hβlim U z W K q hV hq θ B hκ hterminal hswitch hfast
+  simpa only [finkNextReferenceHoldError, Function.comp_def] using hbill
 
 /-- Global bounded-dilation form of the root criterion.  Unlike the
 error-budgeted criterion below, this needs only one annealing branch: its
