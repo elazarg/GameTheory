@@ -108,6 +108,25 @@ theorem pmfPi_update_bind (σ : ∀ i, PMF (A i)) (j : ι) (d : PMF (A j)) :
   · simp
   · intro b hb; simp [Ne.symm hb]
 
+open Classical in
+/-- If every coordinate except `j` is deterministic, the independent product
+is exactly the mixture obtained by replacing coordinate `j` in the underlying
+pure profile. -/
+theorem pmfPi_update_pure_family (s : ∀ i, A i) (j : ι) (d : PMF (A j)) :
+    pmfPi (A := A) (Function.update (fun i => PMF.pure (s i)) j d) =
+      d.bind (fun a => PMF.pure (Function.update s j a)) := by
+  rw [pmfPi_update_bind]
+  congr 1
+  funext a
+  have hfamily : Function.update (fun i => PMF.pure (s i)) j (PMF.pure a) =
+      fun i => PMF.pure ((Function.update s j a) i) := by
+    funext i
+    by_cases h : i = j
+    · subst h
+      simp
+    · simp [Function.update, h]
+  rw [hfamily, pmfPi_pure]
+
 variable [∀ i, Fintype (A i)]
 
 omit [∀ i, Fintype (A i)] in

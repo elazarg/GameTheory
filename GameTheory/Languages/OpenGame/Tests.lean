@@ -162,6 +162,19 @@ example {n : Nat} (A : Fin n → Type)
         (G.pureMixedProfile (ShapeSeqDep.MAIDBridge.toPurePolicy A σ)) :=
   ShapeSeqDep.MAIDBridge.isEquilibriumIn_iff_mixedPurePolicyNash A k σ
 
+/-- Perfect recall upgrades the same result to arbitrary behavioral
+randomization at individual MAID information sets. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      (MAID.toKernelGame (ShapeSeqDep.MAIDBridge.sequentialStruct A)
+        (ShapeSeqDep.MAIDBridge.sequentialSem A k)).IsNash
+        (MAID.pureToPolicy
+          (ShapeSeqDep.MAIDBridge.toPurePolicy A σ)) :=
+  ShapeSeqDep.MAIDBridge.isEquilibriumIn_iff_behavioralNash A k σ
+
 /-- The canonical agent-form sequential MAID has perfect recall. -/
 example {n : Nat} (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]

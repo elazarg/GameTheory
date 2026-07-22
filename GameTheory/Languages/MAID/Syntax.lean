@@ -704,6 +704,17 @@ noncomputable def pureToPolicy {S : Struct Player n}
     (π : PurePolicy S) : Policy S :=
   fun p => pureToPlayerStrategy (π p)
 
+@[simp] theorem pureToPolicy_update
+    {S : Struct Player n} (π : PurePolicy S) (p : Player)
+    (τ : PureStrategy S p) :
+    pureToPolicy (Function.update π p τ) =
+      Function.update (pureToPolicy π) p (pureToPlayerStrategy τ) := by
+  funext q I
+  by_cases h : q = p
+  · subst h
+    simp [pureToPolicy, pureToPlayerStrategy]
+  · simp [pureToPolicy, pureToPlayerStrategy, Function.update, h]
+
 /-- The strategic-form kernel game whose actions are complete pure MAID
 policies for each player and whose outcome law is native MAID evaluation. -/
 noncomputable def purePolicyKernelGame (S : Struct Player n) (sem : Sem S) :

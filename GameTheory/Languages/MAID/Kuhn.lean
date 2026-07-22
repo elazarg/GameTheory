@@ -7,6 +7,8 @@ Authors: GameTheory contributors
 import Math.PMFProduct
 import GameTheory.Languages.Kuhn
 import GameTheory.Languages.MAID.CompileObsFacts
+import GameTheory.Languages.MAID.FrontierEval
+import GameTheory.Concepts.Equilibrium.SolutionConcepts
 
 /-!
 # GameTheory.Languages.MAID.Kuhn
@@ -32,34 +34,71 @@ variable (S : Struct Player n) (sem : Sem S)
 
 open Math.PMFProduct Math.ProbabilityMassFunction
 
-/-- **Kuhn B→M (fully native MAID)**: under perfect recall, every behavioral
-policy can be realized by a product mixed strategy with the same outcome
-distribution via `frontierEval`.
+/-- The canonical mixed strategy over complete pure plans induced by a native
+behavioral MAID policy.  It samples an action independently at every
+information set and then forgets the compiled model's trivial inactive state. -/
+noncomputable def behavioralPlanMix (pol : Policy S) :
+    ∀ p, PMF (PureStrategy S p) :=
+  fun p => ((compiledPRObs S sem).behavioralToMixed
+    (liftBehavioralProfile S sem pol) p).map (descendPureStrategy S sem)
 
-Both LHS and RHS use native MAID types — no compiled model types in the statement.
-The compiled model is used internally to construct the mixed strategy
-via the core B→M theorem. -/
-theorem kuhn_behavioral_to_mixed
+/-- A deterministic behavioral policy induces the point mass at its complete
+pure plan. -/
+theorem behavioralPlanMix_pureToPolicy (π : PurePolicy S) (p : Player) :
+    behavioralPlanMix S sem (pureToPolicy π) p = PMF.pure (π p) := by
+  have hc : (compiledPRObs S sem).behavioralToMixed
+      (liftBehavioralProfile S sem (pureToPolicy π)) p =
+      PMF.pure (liftPureStrategy S sem (π p)) := by
+    unfold ObsModelCore.behavioralToMixed
+    rw [← pmfPi_pure (liftPureStrategy S sem (π p))]
+    congr 1
+    funext v
+    cases v <;> rfl
+  rw [behavioralPlanMix, hc, PMF.pure_map, descend_lift_pureStrategy]
+
+/-- The mixed plan of one player depends only on that player's behavioral
+policy coordinate. -/
+theorem behavioralPlanMix_congr_coord (pol pol' : Policy S) (p : Player)
+    (h : pol p = pol' p) :
+    behavioralPlanMix S sem pol p = behavioralPlanMix S sem pol' p := by
+  unfold behavioralPlanMix ObsModelCore.behavioralToMixed
+  rw [show liftBehavioralProfile S sem pol p =
+      liftBehavioralProfile S sem pol' p by
+    funext v
+    cases v with
+    | none => rfl
+    | some I => exact congrFun h I]
+
+/-- Converting a unilateral behavioral deviation preserves every other
+player's deterministic complete plan exactly. -/
+theorem behavioralPlanMix_update_pure_ne (π : PurePolicy S) (p q : Player)
+    (τ : PlayerStrategy S p) (hne : q ≠ p) :
+    behavioralPlanMix S sem
+        (Function.update (pureToPolicy π) p τ) q = PMF.pure (π q) := by
+  rw [behavioralPlanMix_congr_coord S sem _ (pureToPolicy π) q (by
+    simp [Function.update, hne])]
+  exact behavioralPlanMix_pureToPolicy S sem π q
+
+/-- **Explicit Kuhn B→M (fully native MAID)**: under perfect recall, the
+canonical complete-plan mixture induced by a behavioral policy has exactly
+the same native outcome distribution. -/
+theorem frontierEval_behavioralPlanMix
     (hPR : S.PerfectRecall) (pol : Policy S) :
-    ∃ μ : ∀ p, PMF (PureStrategy S p),
-      frontierEval S sem pol =
-        (pmfPi μ).bind (fun π => frontierEval S sem (pureToPolicy π)) := by
+    frontierEval S sem pol =
+      (pmfPi (behavioralPlanMix S sem pol)).bind
+        (fun π => frontierEval S sem (pureToPolicy π)) := by
+  set μ := behavioralPlanMix S sem pol
   -- 1. Lift native policy to compiled behavioral profile
   set β := liftBehavioralProfile S sem pol
   -- 2. Apply compiled B→M (NNISIR holds unconditionally)
   have hNR := noNontrivialInfoStateRepeat_compiledPR S sem
   have hbm := ObsModelCore.kuhn_behavioral_to_mixed hNR β n
   -- hbm : runDist n β = (behavioralToMixedJoint β).bind (runDistPure n)
-  -- 3. Define native μ by descending the compiled mixed strategies
-  set μ : ∀ p, PMF (PureStrategy S p) :=
-    fun p => ((compiledPRObs S sem).behavioralToMixed β p).map
-      (descendPureStrategy S sem)
-  refine ⟨μ, ?_⟩
-  -- 4. LHS: frontierEval pol = (runDist n β).bind extractTAssign  (adequacy)
+  -- 3. LHS: frontierEval pol = (runDist n β).bind extractTAssign  (adequacy)
   rw [← compiledPR_runDist_eq_frontierEval S sem hPR pol]
-  -- 5. Apply hbm
+  -- 4. Apply hbm
   rw [hbm, PMF.bind_bind]
-  -- 6. RHS: (pmfPi μ).bind (frontierEval ∘ pureToPolicy) via pure adequacy
+  -- 5. RHS: (pmfPi μ).bind (frontierEval ∘ pureToPolicy) via pure adequacy
   -- Connect pmfPi μ with pmfPi (behavioralToMixed β) via push
   have hpush : pmfPi μ =
       pushforward (pmfPi ((compiledPRObs S sem).behavioralToMixed β))
@@ -92,6 +131,95 @@ theorem kuhn_behavioral_to_mixed
   · exact (PMF.bind_map (pmfPi (ObsModelCore.behavioralToMixed β))
       (descendPureProfile S sem)
       (fun π => frontierEval S sem (pureToPolicy π))).symm
+
+/-- **Kuhn B→M (fully native MAID)**: under perfect recall, every behavioral
+policy can be realized by a product mixed strategy with the same outcome
+distribution via `frontierEval`.
+
+Both LHS and RHS use native MAID types — no compiled model types in the statement.
+The compiled model is used internally to construct the mixed strategy
+via the core B→M theorem. -/
+theorem kuhn_behavioral_to_mixed
+    (hPR : S.PerfectRecall) (pol : Policy S) :
+    ∃ μ : ∀ p, PMF (PureStrategy S p),
+      frontierEval S sem pol =
+        (pmfPi μ).bind (fun π => frontierEval S sem (pureToPolicy π)) := by
+  exact ⟨behavioralPlanMix S sem pol,
+    frontierEval_behavioralPlanMix S sem hPR pol⟩
+
+/-- Under perfect recall, a pure MAID policy is Nash against pure complete-plan
+deviations exactly when its deterministic behavioral embedding is Nash against
+arbitrary behavioral-policy deviations.
+
+The nontrivial direction uses the explicit B→M witness above.  For a unilateral
+behavioral deviation all other players' mixed plans remain point masses, so
+pure-policy Nash bounds every plan in the deviator's resulting mixture. -/
+theorem isPurePolicyNash_iff_behavioralNash
+    (hPR : S.PerfectRecall) (π : PurePolicy S) :
+    IsPurePolicyNash S sem π ↔
+      (toKernelGame S sem).IsNash (pureToPolicy π) := by
+  let G := toKernelGame S sem
+  constructor
+  · intro h p τ
+    let pol' := Function.update (pureToPolicy π) p τ
+    let μ := behavioralPlanMix S sem pol'
+    have hμ : μ = Function.update (fun q => PMF.pure (π q)) p (μ p) := by
+      funext q
+      by_cases hqp : q = p
+      · subst q
+        simp
+      · have hoff : μ q = PMF.pure (π q) := by
+          exact behavioralPlanMix_update_pure_ne S sem π p q τ hqp
+        rw [hoff]
+        simp [Function.update, hqp]
+    have hfront : MAID.frontierEval S sem pol' =
+        (pmfPi μ).bind
+          (fun ρ => MAID.frontierEval S sem (pureToPolicy ρ)) :=
+      frontierEval_behavioralPlanMix S sem hPR pol'
+    have hout : MAID.evalAssignDist S sem pol' =
+        (μ p).bind (fun ρ =>
+          MAID.evalAssignDist S sem
+            (pureToPolicy (Function.update π p ρ))) := by
+      rw [← MAID.frontierEval_eq_evalAssignDist S sem pol', hfront, hμ]
+      simp only [Function.update_self]
+      rw [pmfPi_update_pure_family, PMF.bind_bind]
+      simp only [PMF.pure_bind, MAID.frontierEval_eq_evalAssignDist]
+    have hpure : ∀ ρ : PureStrategy S p,
+        G.eu (pureToPolicy (Function.update π p ρ)) p ≤
+          G.eu (pureToPolicy π) p := by
+      intro ρ
+      have hρ := h p ρ
+      change G.eu (pureToPolicy π) p ≥
+        G.eu (pureToPolicy (Function.update π p ρ)) p at hρ
+      exact hρ
+    change G.eu (pureToPolicy π) p ≥ G.eu pol' p
+    have heq : G.eu pol' p =
+        Math.Probability.expect (μ p)
+          (fun ρ => G.eu (pureToPolicy (Function.update π p ρ)) p) := by
+      unfold GameTheory.KernelGame.eu
+      change Math.Probability.expect (MAID.evalAssignDist S sem pol')
+          (fun a => MAID.utilityOf S sem a p) =
+        Math.Probability.expect (μ p) (fun ρ =>
+          Math.Probability.expect
+            (MAID.evalAssignDist S sem
+              (pureToPolicy (Function.update π p ρ)))
+            (fun a => MAID.utilityOf S sem a p))
+      rw [hout, Math.Probability.expect_bind]
+    rw [heq]
+    calc
+      Math.Probability.expect (μ p)
+          (fun ρ => G.eu (pureToPolicy (Function.update π p ρ)) p) ≤
+          Math.Probability.expect (μ p) (fun _ => G.eu (pureToPolicy π) p) :=
+        Math.Probability.expect_mono _ _ _ hpure
+      _ = G.eu (pureToPolicy π) p := Math.Probability.expect_const _ _
+  · intro h p τ
+    have hτ := h p (pureToPlayerStrategy τ)
+    change (purePolicyKernelGame S sem).eu π p ≥
+      (purePolicyKernelGame S sem).eu (Function.update π p τ) p
+    change (toKernelGame S sem).eu (pureToPolicy π) p ≥
+      (toKernelGame S sem).eu (pureToPolicy (Function.update π p τ)) p
+    rw [pureToPolicy_update]
+    exact hτ
 
 end NativeBToM
 -- ============================================================================

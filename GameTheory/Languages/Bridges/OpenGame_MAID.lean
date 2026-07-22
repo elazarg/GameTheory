@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.OpenGame.Sequential
 import GameTheory.Languages.MAID.Prefix
+import GameTheory.Languages.MAID.Kuhn
 import GameTheory.Languages.Bridges.MAID_EFG
 import GameTheory.Concepts.Mixed.MixedExtension
 
@@ -972,6 +973,27 @@ theorem sequentialStruct_perfectRecall (A : Fin n → Type)
     rw [h₁, h₂] at _hancestor
     exact absurd _hancestor
       ((sequentialStruct A).isAncestor_irrefl (decisionNode p))
+
+/-- Exact behavioral-policy correspondence for the canonical sequential MAID.
+The open-game stage deviation replaces a complete contingent plan.  Perfect
+recall and the native Kuhn theorem show that allowing arbitrary randomization
+separately at every information set adds no profitable deviation at the
+embedded pure profile. -/
+theorem isEquilibriumIn_iff_behavioralNash (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      (MAID.toKernelGame (sequentialStruct A) (sequentialSem A k)).IsNash
+        (MAID.pureToPolicy (toPurePolicy A σ)) := by
+  calc
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+        MAID.IsPurePolicyNash (sequentialStruct A) (sequentialSem A k)
+          (toPurePolicy A σ) :=
+      isEquilibriumIn_iff_isPurePolicyNash A k σ
+    _ ↔ _ := GameTheory.Languages.MAID.isPurePolicyNash_iff_behavioralNash
+      (sequentialStruct A) (sequentialSem A k)
+      (sequentialStruct_perfectRecall A) (toPurePolicy A σ)
 
 /-! ## Reuse of the existing MAID-to-EFG bridge -/
 

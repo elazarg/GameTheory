@@ -142,8 +142,11 @@ MAID-to-EFG bridge yields a kernel-game bisimulation and EFG perfect recall.
 Native pure-policy evaluation is also adequate: its projected assignment law
 is the point mass at the open-game realization, and pure contingent-plan
 equilibrium agrees exactly with native pure-policy Nash, including arbitrary
-mixed deviations over complete contingent plans. Strengthening this to
-behavioral randomization at individual information sets remains open. Backward
+mixed deviations over complete contingent plans. The native Kuhn bridge now
+strengthens this further to arbitrary behavioral randomization at individual
+information sets: a unilateral behavioral deviation preserves every other
+player's pure plan, and perfect recall converts the deviator's policy to a
+mixture over complete plans. Backward
 values are called *cooutcomes* (the
 open-games literature also says *coutilities*). Closed, deliberately
 non-compositional devices recover CE, CCE, and pure-profile public
