@@ -794,6 +794,40 @@ theorem finkContinuationResidualVector_neg
   rw [hneg, G.finkContinuationResidualVector_smul]
   simp
 
+/-- Continuation residuals respect subtraction. -/
+theorem finkContinuationResidualVector_sub
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (R K : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U) :
+    G.finkContinuationResidualVector (R - K) z =
+      G.finkContinuationResidualVector R z -
+        G.finkContinuationResidualVector K z := by
+  rw [sub_eq_add_neg, G.finkContinuationResidualVector_add,
+    G.finkContinuationResidualVector_neg, sub_eq_add_neg]
+
+/-- Once one stationary Poisson correction is known, every other correction
+is obtained from it by adding an on-profile harmonic potential. -/
+theorem finkPoissonCorrection_iff_sub_harmonic
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (F K K' : G.State → Payoff ι)
+    (hK : F = -G.finkContinuationResidualVector K z) :
+    F = -G.finkContinuationResidualVector K' z ↔
+      G.finkContinuationResidualVector (K' - K) z = 0 := by
+  constructor
+  · intro hK'
+    have hneg : -G.finkContinuationResidualVector K' z =
+        -G.finkContinuationResidualVector K z := hK'.symm.trans hK
+    have hresidual : G.finkContinuationResidualVector K' z =
+        G.finkContinuationResidualVector K z := neg_inj.mp hneg
+    rw [G.finkContinuationResidualVector_sub, hresidual, sub_self]
+  · intro hharmonic
+    rw [G.finkContinuationResidualVector_sub] at hharmonic
+    have hresidual : G.finkContinuationResidualVector K' z =
+        G.finkContinuationResidualVector K z := sub_eq_zero.mp hharmonic
+    rw [hresidual]
+    exact hK
+
 /-- A nonzero harmonic obstruction rules out every stationary Poisson
 representation of the forcing.  Changing the potential can alter only the
 coboundary component. -/
@@ -6573,6 +6607,54 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonLowerCorrection
     s₀ β U hβ0 hβ1 hpay z zlim W H K hfix hz hV hH
       hharmonic hexcessive
   · simpa only [a, E, hPoisson] using hscaledResidual
+  · exact hscaledGainLower
+
+/-- Harmonic-adjustment form of the interior criterion.  A Poisson solution
+may be shifted by any potential harmonic for the limiting on-profile kernel;
+the remaining task is precisely to choose that shift so the
+continuation-neutral deviation lower bounds hold. -/
+theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonHarmonicAdjustment
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (s₀ : G.State)
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H K A : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hPoisson : G.finkBellmanForcingVector W H zlim =
+      -G.finkContinuationResidualVector K zlim)
+    (hAharmonic : G.finkContinuationResidualVector A zlim = 0)
+    (hscaledGainLower : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) = W s who →
+      ∀ ε : ℝ, 0 < ε →
+        ∀ᶠ n in atTop,
+          -G.finkContinuationGain (K + A) zlim s who d - ε ≤
+            (β n / (1 - β n)) *
+              G.finkContinuationGain W (z n) s who d) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  have hresidual : G.finkContinuationResidualVector (K + A) zlim =
+      G.finkContinuationResidualVector K zlim := by
+    rw [G.finkContinuationResidualVector_add, hAharmonic, add_zero]
+  apply G.isUniformEquilibriumPayoff_of_finkInteriorPoissonLowerCorrection
+    s₀ β U hβ0 hβ1 hpay z zlim W H (K + A) hfix hz hV hH
+      hharmonic hexcessive
+  · rw [hresidual]
+    exact hPoisson
   · exact hscaledGainLower
 
 /-- Two-sided pure-deviation convergence specializes the one-sided algebraic
