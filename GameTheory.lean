@@ -112,6 +112,7 @@ import GameTheory.Concepts.Stochastic.StageGame
 import GameTheory.Concepts.Stochastic.Absorbing
 import GameTheory.Concepts.Stochastic.TransitionIndependent
 import GameTheory.Concepts.Stochastic.Discounted
+import GameTheory.Concepts.Stochastic.ZeroSum
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
