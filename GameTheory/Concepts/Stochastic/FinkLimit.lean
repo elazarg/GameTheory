@@ -260,6 +260,69 @@ theorem eq_of_expect_eq_of_forall_le_of_ne_zero
   have hstrict := expect_lt_const_of_le_of_exists_lt μ f hle ⟨a, ha, hlt⟩
   linarith
 
+/-- Quantitative support pruning for a finite distribution.  If one point is
+`δ` below a reference level, every point is at most `r` above it, and the
+mean is at most `r` below it, then that point's mass times `δ` is at most
+`2r`. -/
+theorem pmf_apply_toReal_mul_gap_le_two_error
+    {α : Type} [Finite α]
+    (μ : PMF α) (f : α → ℝ) (c δ r : ℝ) (hr : 0 ≤ r)
+    (hmean : c - r ≤ expect μ f)
+    (hupper : ∀ b, f b ≤ c + r) {a : α} (ha : f a ≤ c - δ) :
+    (μ a).toReal * δ ≤ 2 * r := by
+  classical
+  let g : α → ℝ := fun b =>
+    c + r - if b = a then δ + r else 0
+  have hfg : ∀ b, f b ≤ g b := by
+    intro b
+    by_cases hba : b = a
+    · subst b
+      dsimp [g]
+      simp only [if_true]
+      linarith
+    · dsimp [g]
+      simp only [if_false, hba, sub_zero]
+      exact hupper b
+  have hE : expect μ f ≤ expect μ g := expect_mono μ f g hfg
+  have hindicator :
+      expect μ (fun b => if b = a then δ + r else 0) =
+        (μ a).toReal * (δ + r) := by
+    letI : Fintype α := Fintype.ofFinite α
+    rw [expect_eq_sum]
+    simp
+  have hg : expect μ g = c + r - (μ a).toReal * (δ + r) := by
+    unfold g
+    rw [expect_sub, expect_const, hindicator]
+  rw [hg] at hE
+  have hp0 : 0 ≤ (μ a).toReal := ENNReal.toReal_nonneg
+  nlinarith [mul_nonneg hp0 hr, hmean.trans hE]
+
+/-- A positive real family indexed by a finite predicate has a uniform
+positive lower bound.  The predicate may be empty. -/
+theorem exists_pos_le_of_finite
+    {α : Type} [Finite α] (P : α → Prop) (f : α → ℝ)
+    (hpos : ∀ a, P a → 0 < f a) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ a, P a → δ ≤ f a := by
+  classical
+  letI : Fintype α := Fintype.ofFinite α
+  let S : Finset ℝ := (Finset.univ.filter P).image f
+  by_cases hS : S.Nonempty
+  · let δ := S.min' hS
+    have hδmem : δ ∈ S := Finset.min'_mem S hS
+    obtain ⟨a, ha, hfa⟩ := Finset.mem_image.mp hδmem
+    have haP : P a := (Finset.mem_filter.mp ha).2
+    refine ⟨δ, ?_, ?_⟩
+    · simpa [hfa] using hpos a haP
+    · intro b hb
+      exact Finset.min'_le S (f b)
+        (Finset.mem_image.mpr ⟨b, Finset.mem_filter.mpr ⟨Finset.mem_univ b, hb⟩, rfl⟩)
+  · refine ⟨1, by norm_num, ?_⟩
+    intro a ha
+    exfalso
+    exact hS ⟨f a,
+      Finset.mem_image.mpr
+        ⟨a, Finset.mem_filter.mpr ⟨Finset.mem_univ a, ha⟩, rfl⟩⟩
+
 /-- A common upper bound for all pure unilateral continuation deviations is
 also an upper bound for every mixed unilateral deviation. -/
 theorem mixedDeviationContinuation_le_of_pure_bound
@@ -279,6 +342,111 @@ theorem mixedDeviationContinuation_le_of_pure_bound
           (fun a => expect (G.transition s a) (fun s' => W s' who))) ≤
         expect dev (fun _ => c) := expect_mono dev _ _ hpure
     _ = c := expect_const dev c
+
+/-- A strictly continuation-losing action can receive substantial probability
+only when the profile's harmonic/excessive errors are substantial. -/
+theorem strictContinuation_probability_mul_gap_le
+    (G : StochasticGame ι) [Finite G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)]
+    (x : G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who) (δ r : ℝ) (hr : 0 ≤ r)
+    (hharmonic :
+      W s who - r ≤ expect (pmfPi (x s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ d' : G.Act who,
+      expect (pmfPi (Function.update (x s) who (PMF.pure d'))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who + r)
+    (hstrict :
+      expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who - δ) :
+    ((x s who) d).toReal * δ ≤ 2 * r := by
+  classical
+  let f : G.Act who → ℝ := fun d' =>
+    expect (pmfPi (Function.update (x s) who (PMF.pure d'))) (fun a =>
+      expect (G.transition s a) (fun s' => W s' who))
+  have hdecomp := G.mixedDeviationContinuation_eq_expect_pure
+    x W s who (x s who)
+  simp only [Function.update_eq_self] at hdecomp
+  apply pmf_apply_toReal_mul_gap_le_two_error
+    (x s who) f (W s who) δ r hr
+  · rw [← hdecomp]
+    exact hharmonic
+  · exact hexcessive
+  · exact hstrict
+
+/-- Finiteness upgrades all strict continuation losses of a stationary
+profile to one common positive gap, simultaneously over states, players, and
+actions. -/
+theorem exists_uniform_strictContinuationGap
+    (G : StochasticGame ι) [Finite G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)]
+    (x : G.StationaryMixedProfile) (W : G.State → Payoff ι) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) < W s who →
+        expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) ≤ W s who - δ := by
+  let D := Σ p : G.FinkAgent, G.FinkAction p
+  let P : D → Prop := fun q =>
+    expect (pmfPi (Function.update (x q.1.1) q.1.2 (PMF.pure q.2))) (fun a =>
+      expect (G.transition q.1.1 a) (fun s' => W s' q.1.2)) <
+        W q.1.1 q.1.2
+  let f : D → ℝ := fun q =>
+    W q.1.1 q.1.2 -
+      expect (pmfPi (Function.update (x q.1.1) q.1.2 (PMF.pure q.2))) (fun a =>
+        expect (G.transition q.1.1 a) (fun s' => W s' q.1.2))
+  have hpos : ∀ q, P q → 0 < f q := by
+    intro q hq
+    dsimp [P, f] at hq ⊢
+    linarith
+  obtain ⟨δ, hδ, hlower⟩ := exists_pos_le_of_finite P f hpos
+  refine ⟨δ, hδ, ?_⟩
+  intro s who d hstrict
+  have hgap := hlower ⟨(s, who), d⟩ hstrict
+  dsimp [f] at hgap
+  linarith
+
+/-- Pure actions that strictly lower a player's target continuation value
+against a reference stationary profile. -/
+def strictContinuationActions
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (xref : G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) : Finset (G.Act who) :=
+  Finset.univ.filter fun d =>
+    expect (pmfPi (Function.update (xref s) who (PMF.pure d))) (fun a =>
+      expect (G.transition s a) (fun s' => W s' who)) < W s who
+
+/-- Probability assigned by `x` to actions that are strict continuation
+losses relative to `xref` and `W`. -/
+def strictContinuationMass
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (xref x : G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) : ℝ :=
+  ∑ d ∈ G.strictContinuationActions xref W s who,
+    ((x s who) d).toReal
+
+/-- Coordinatewise pruning estimates sum to an estimate on the entire strict
+continuation-loss mass. -/
+theorem strictContinuationMass_mul_le
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (xref x : G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (δ r : ℝ)
+    (hpoint : ∀ d ∈ G.strictContinuationActions xref W s who,
+      ((x s who) d).toReal * δ ≤ 2 * r) :
+    G.strictContinuationMass xref x W s who * δ ≤
+      2 * (G.strictContinuationActions xref W s who).card * r := by
+  rw [strictContinuationMass, Finset.sum_mul]
+  calc
+    ∑ d ∈ G.strictContinuationActions xref W s who,
+        ((x s who) d).toReal * δ ≤
+        ∑ _d ∈ G.strictContinuationActions xref W s who, 2 * r :=
+      Finset.sum_le_sum fun d hd => hpoint d hd
+    _ = 2 * (G.strictContinuationActions xref W s who).card * r := by
+      simp
+      ring
 
 /-- Every action used with positive probability by a harmonic/excessive
 limit profile is continuation-neutral: it preserves the limiting value
@@ -478,6 +646,123 @@ theorem eventually_finkProfile_strictDeviation_margin
   dsimp [δ, L]
   dsimp [L, δ] at hn
   linarith
+
+/-- Quantitative tail pruning along a convergent Fink family.  Once a limiting
+action has a strict continuation loss, its current probability is bounded by
+the same harmonic/excessive error that controls the family. -/
+theorem eventually_finkProfile_strictDeviation_probability_mul_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hstrict : expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) < W s who)
+    (r : ℕ → ℝ) (hr : ∀ n, 0 ≤ r n)
+    (hharmonic : ∀ n,
+      W s who - r n ≤ expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ n (d' : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d'))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who + r n) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ᶠ n in atTop,
+      ((G.finkProfile (z n) s who) d).toReal * δ ≤ 2 * r n := by
+  obtain ⟨δ, hδ, hmargin⟩ :=
+    G.eventually_finkProfile_strictDeviation_margin hz W s who d hstrict
+  refine ⟨δ, hδ, ?_⟩
+  filter_upwards [hmargin] with n hn
+  exact G.strictContinuation_probability_mul_gap_le
+    (G.finkProfile (z n)) W s who d δ (r n) (hr n)
+      (hharmonic n) (hexcessive n) hn
+
+/-- Uniform finite-action pruning: one positive gap controls every strict
+limiting continuation deviation, simultaneously over all states and players. -/
+theorem eventually_all_strictDeviation_probability_mul_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (r : ℕ → ℝ) (hr : ∀ n, 0 ≤ r n)
+    (hharmonic : ∀ n s who,
+      W s who - r n ≤ expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ n s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who + r n) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) < W s who →
+      ((G.finkProfile (z n) s who) d).toReal * δ ≤ 2 * r n := by
+  obtain ⟨Δ, hΔ, hgap⟩ :=
+    G.exists_uniform_strictContinuationGap (G.finkProfile zlim) W
+  let δ := Δ / 2
+  have hδ : 0 < δ := by dsimp [δ]; linarith
+  have hmargin : ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) < W s who →
+      expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who - δ := by
+    rw [Filter.eventually_all]
+    intro s
+    rw [Filter.eventually_all]
+    intro who
+    rw [Filter.eventually_all]
+    intro d
+    by_cases hstrict : expect (pmfPi (Function.update (G.finkProfile zlim s)
+        who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) < W s who
+    · have ht := G.tendsto_finkProfile_pureDeviationContinuation hz
+        (fun s' => W s' who) s who d
+      obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht δ hδ
+      filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+      intro _
+      have hlimit := hgap s who d hstrict
+      rw [Real.dist_eq, abs_lt] at hn
+      dsimp [δ] at hn ⊢
+      linarith
+    · exact Filter.Eventually.of_forall fun _ h => (hstrict h).elim
+  refine ⟨δ, hδ, ?_⟩
+  filter_upwards [hmargin] with n hn
+  intro s who d hstrict
+  exact G.strictContinuation_probability_mul_gap_le
+    (G.finkProfile (z n)) W s who d δ (r n) (hr n)
+      (hharmonic n s who) (hexcessive n s who) (hn s who d hstrict)
+
+/-- Equivalent aggregate form: the total probability outside the limiting
+continuation-neutral face is `O(r n)`, uniformly over states and players. -/
+theorem eventually_strictContinuationMass_mul_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (r : ℕ → ℝ) (hr : ∀ n, 0 ≤ r n)
+    (hharmonic : ∀ n s who,
+      W s who - r n ≤ expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ n s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who + r n) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ᶠ n in atTop, ∀ s who,
+      G.strictContinuationMass (G.finkProfile zlim) (G.finkProfile (z n))
+          W s who * δ ≤
+        2 * (G.strictContinuationActions (G.finkProfile zlim) W s who).card *
+          r n := by
+  obtain ⟨δ, hδ, hpoint⟩ :=
+    G.eventually_all_strictDeviation_probability_mul_le
+      hz W r hr hharmonic hexcessive
+  refine ⟨δ, hδ, ?_⟩
+  filter_upwards [hpoint] with n hn
+  intro s who
+  apply G.strictContinuationMass_mul_le
+  intro d hd
+  exact hn s who d (Finset.mem_filter.mp hd).2
 
 /-- Harmonicity and pure-action excessiveness of a limiting profile become
 uniform approximate drift bounds along every convergent finite-state/action
@@ -1033,7 +1318,8 @@ theorem exists_fast_approachOne_finkFixedPoint_family
       (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1),
       (∀ n, G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n) ∧
       Tendsto β atTop (nhds 1) ∧
-      ∀ n,
+      Tendsto z atTop (nhds zlim) ∧
+      (∀ n,
         (∀ s who,
           |G.finkValue (z n) s who - G.finkValue zlim s who| ≤
             (((n + 1 : ℕ) : ℝ))⁻¹) ∧
@@ -1046,7 +1332,14 @@ theorem exists_fast_approachOne_finkFixedPoint_family
           expect (pmfPi (Function.update (G.finkProfile (z n) s) who dev))
               (fun a => expect (G.transition s a)
                 (fun s' => G.finkValue zlim s' who)) ≤
-            G.finkValue zlim s who + (((n + 1 : ℕ) : ℝ))⁻¹ := by
+            G.finkValue zlim s who + (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      ∃ δ : ℝ, 0 < δ ∧ ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+        expect (pmfPi (Function.update (G.finkProfile zlim s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a)
+            (fun s' => G.finkValue zlim s' who)) < G.finkValue zlim s who →
+        ((G.finkProfile (z n) s who) d).toReal * δ ≤
+          2 * (((n + 1 : ℕ) : ℝ))⁻¹ := by
   obtain ⟨z₀, zlim, φ, hfix, hφ, hzlim, hβlim⟩ :=
     G.exists_convergent_approachOne_finkFixedPoint_subsequence U hU hpay
   have hharmonic : ∀ s who,
@@ -1073,13 +1366,41 @@ theorem exists_fast_approachOne_finkFixedPoint_family
   let z : ℕ → G.finkDomain U := fun n => z₀ (φ (ψ n))
   have hβ0 : ∀ n, 0 ≤ β n := fun n => approachOneDiscount_nonneg _
   have hβ1 : ∀ n, β n < 1 := fun n => approachOneDiscount_lt_one _
-  refine ⟨β, z, zlim, hβ0, hβ1, ?_, ?_, ?_⟩
-  · intro n
+  have hfixFast : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n := by
+    intro n
     simpa [β, z] using hfix (φ (ψ n))
-  · have ht := hβlim.comp hψ.tendsto_atTop
+  have hβFast : Tendsto β atTop (nhds 1) := by
+    have ht := hβlim.comp hψ.tendsto_atTop
     simpa only [β, Function.comp_def] using ht
-  · intro n
+  have hzFast : Tendsto z atTop (nhds zlim) := by
+    have ht := hzlim.comp hψ.tendsto_atTop
+    simpa only [z, Function.comp_def] using ht
+  have happroxFast : ∀ n,
+      (∀ s who,
+        |G.finkValue (z n) s who - G.finkValue zlim s who| ≤
+          (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      (∀ s who,
+        |expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+            expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who)) -
+          G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      ∀ s who (dev : PMF (G.Act who)),
+        expect (pmfPi (Function.update (G.finkProfile (z n) s) who dev))
+            (fun a => expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who)) ≤
+          G.finkValue zlim s who + (((n + 1 : ℕ) : ℝ))⁻¹ := by
+    intro n
     simpa only [z, Function.comp_apply] using happrox n
+  have hprune := G.eventually_all_strictDeviation_probability_mul_le
+    hzFast (G.finkValue zlim) (fun n => (((n + 1 : ℕ) : ℝ))⁻¹)
+      (fun n => by positivity)
+      (fun n s who => by
+        have h := (abs_le.mp ((happroxFast n).2.1 s who)).1
+        linarith)
+      (fun n s who d => (happroxFast n).2.2 s who (PMF.pure d))
+  exact ⟨β, z, zlim, hβ0, hβ1, hfixFast, hβFast, hzFast,
+    happroxFast, hprune⟩
 
 -- ============================================================================
 -- Calendar schedules indexed by discounted Fink fixed points
