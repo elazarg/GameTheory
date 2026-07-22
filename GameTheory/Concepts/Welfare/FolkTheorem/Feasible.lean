@@ -164,6 +164,39 @@ def opponentMinmaxLevel (G : KernelGame ι) [DecidableEq ι] (who : ι) : ℝ :=
 def opponentMinmaxVector (G : KernelGame ι) [DecidableEq ι] : Payoff ι :=
   fun i => G.opponentMinmaxLevel i
 
+open Classical in
+/-- The maximin security level cannot exceed the opponent-enforced minmax
+level. This is the elementary `sup inf ≤ inf sup` inequality, stated for the
+library's profile-based security level and explicit opponent profiles. -/
+theorem securityLevelSup_le_opponentMinmaxLevel (G : KernelGame ι) (who : ι)
+    [Nonempty (G.Strategy who)] [Nonempty (G.OpponentProfile who)]
+    {C : ℝ} (hbd : ∀ σ : Profile G, |G.eu σ who| ≤ C) :
+    G.securityLevelSup who ≤ G.opponentMinmaxLevel who := by
+  apply ciSup_le
+  intro own
+  apply le_ciInf
+  intro opp
+  calc
+    G.worstCaseEUInf who own ≤
+        G.eu (Function.update (G.profileWithOpponent who own opp) who own) who :=
+      G.worstCaseEUInf_le who own (by
+        refine ⟨-C, ?_⟩
+        rintro _ ⟨σ, rfl⟩
+        exact (abs_le.mp (hbd (Function.update σ who own))).1)
+          (G.profileWithOpponent who own opp)
+    _ = G.eu (G.profileWithOpponent who own opp) who := by
+      apply congrArg (fun σ => G.eu σ who)
+      funext j
+      by_cases hj : j = who
+      · subst j
+        simp
+      · simp [hj]
+    _ ≤ G.bestResponseValueAgainstOpponents who opp :=
+      le_ciSup (by
+        refine ⟨C, ?_⟩
+        rintro _ ⟨s, rfl⟩
+        exact (abs_le.mp (hbd (G.profileWithOpponent who s opp))).2) own
+
 /-- The opponent-enforced minmax is approximated from above by some opponent
 profile. This is the order-theoretic selection step needed for approximate
 punishments. -/
@@ -235,6 +268,21 @@ theorem nonempty_mixedExtension_strategy (G : KernelGame ι) [Fintype ι]
     Nonempty (G.mixedExtension.Strategy i) := by
   classical
   exact ⟨PMF.pure (Classical.arbitrary (G.Strategy i))⟩
+
+open Classical in
+/-- The mixed maximin security vector is pointwise bounded by the
+mixed-extension opponent-minmax punishment vector. -/
+theorem mixedSecurityVector_le_opponentMinmaxVector (G : KernelGame ι)
+    [Fintype ι] [Finite G.Outcome] [∀ i, Nonempty (G.Strategy i)] :
+    G.mixedSecurityVector ≤ G.mixedExtension.opponentMinmaxVector := by
+  intro who
+  letI : Nonempty (G.mixedExtension.Strategy who) :=
+    G.nonempty_mixedExtension_strategy who
+  letI : Nonempty (G.mixedExtension.OpponentProfile who) :=
+    G.nonempty_mixedExtension_opponentProfile who
+  letI : Finite G.mixedExtension.Outcome := G.finite_mixedExtension_outcome
+  obtain ⟨C, hC⟩ := G.mixedExtension.exists_eu_abs_bound_of_finite_outcome who
+  exact G.mixedExtension.securityLevelSup_le_opponentMinmaxLevel who hC
 
 /-- Payoff vectors are preserved by embedding pure profiles into the mixed
 extension as Dirac mixed profiles. -/

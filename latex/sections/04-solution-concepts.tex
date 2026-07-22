@@ -745,9 +745,13 @@ constraint is formal scaffolding for the mechanism-design layer
 (\Cref{sec:mechanism-auctions}).  The repeated-game folk theorem uses
 the related opponent-enforced mixed minmax vector
 $m_i(\KG^{\mathrm{mix}})$, defined in \Cref{sec:theorems:folk}, as
-its strict individual-rationality threshold.
+its strict individual-rationality threshold.  The elementary minimax
+inequality is recorded as
+\TT{mixedSecurityVector\_le\_opponentMinmaxVector}: a player's mixed
+maximin guarantee cannot exceed that opponent-enforced threshold.
 
-\leancorr{\TT{Concepts/Welfare/IndividualRationality.lean}.}
+\leancorr{\TT{Concepts/Welfare/IndividualRationality.lean};
+\TT{Concepts/Welfare/FolkTheorem/Feasible.lean}.}
 
 \subsection{Babbling and cheap talk}
 \label{sec:solution-concepts:babbling}
