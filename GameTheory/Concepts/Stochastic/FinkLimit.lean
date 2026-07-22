@@ -6370,6 +6370,59 @@ theorem tendsto_finkCorrectedTargetStepError_zero
   simpa only [finkCorrectedTargetStepError, zero_add] using
     (hresidualNorm.add hgainSum).add hmove
 
+/-- A harmonic and pure-deviation excessive limiting profile has vanishing
+zero-correction step error along every convergent Fink-domain sequence.  This
+is the analytic input needed by the interior annealing branch. -/
+theorem tendsto_zeroCorrectionStepError_of_harmonic_excessive_limit
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who) :
+    Tendsto (fun n => G.finkCorrectedTargetStepError W
+      (fun _ => 0) z n) atTop (nhds 0) := by
+  have hR : Tendsto (fun _ : ℕ => (0 : G.State → Payoff ι))
+      atTop (nhds 0) := tendsto_const_nhds
+  have hresidual : Tendsto (fun n =>
+      G.finkContinuationResidualVector
+        (W + (fun _ => 0) n) (z n)) atTop (nhds 0) := by
+    apply tendsto_pi_nhds.2
+    intro s
+    apply tendsto_pi_nhds.2
+    intro who
+    have ht := G.tendsto_finkProfile_continuation hz
+      (fun s' => W s' who) s
+    rw [← hharmonic s who] at ht
+    have ht' := ht.sub
+      (tendsto_const_nhds : Tendsto (fun _ : ℕ => W s who)
+        atTop (nhds (W s who)))
+    simpa only [finkContinuationResidualVector, finkContinuationResidual,
+      finkContinuationEU, Pi.add_apply, Pi.zero_apply, add_zero, sub_self]
+      using ht'
+  have hgain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain (W + (fun _ => 0) n) (z n)
+          s who d ≤ ε := by
+    intro ε hε
+    have hclose := G.eventually_finkProfile_harmonic_excessive_close
+      hz W hharmonic hexcessive (show 0 < ε / 2 by linarith)
+    filter_upwards [hclose] with n hn
+    intro s who d
+    have hon := hn.1 s who
+    have hdev := hn.2 s who (PMF.pure d)
+    rw [abs_le] at hon
+    unfold finkContinuationGain
+    simp only [Pi.add_apply, Pi.zero_apply, add_zero]
+    linarith
+  exact G.tendsto_finkCorrectedTargetStepError_zero W
+    (fun _ => 0) z hR hresidual hgain
+
 /-- The asymptotic reference certificates admit a fast subsequence on which
 the actual adjacent corrected-target errors are summable with arbitrarily
 small total mass.  This proves the drift half of calendar selection without
@@ -6697,6 +6750,69 @@ theorem exists_strictMono_summable_weighted_subsequence
     · exact hweighted
     · exact hgeom
   exact ⟨ψ, strictMono_nat_of_lt_succ hψstep, hsum⟩
+
+/-- Zero-correction specialization for an interior hierarchy branch.  A
+vanishing root step error can be thinned so that both the ordinary step series
+and the series weighted by any prescribed nonnegative block envelope are
+summable on one strict subsequence. -/
+theorem exists_strictMono_summable_zeroCorrectionStepError_weighted
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (D : ℕ → ℝ) (hD0 : ∀ n, 0 ≤ D n)
+    (hstep0 : Tendsto (fun n => G.finkCorrectedTargetStepError W
+      (fun _ => 0) z n) atTop (nhds 0)) :
+    ∃ ψ : ℕ → ℕ, StrictMono ψ ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        ((fun _ => 0) ∘ ψ) (z ∘ ψ) n) ∧
+      Summable (fun n => D n * G.finkCorrectedTargetStepError W
+        ((fun _ => 0) ∘ ψ) (z ∘ ψ) n) := by
+  let e : ℕ → ℝ := fun n => G.finkCorrectedTargetStepError W
+    (fun _ => 0) z n
+  let E : ℕ → ℝ := fun n => D n + 1
+  have he0 : ∀ n, 0 ≤ e n := fun n =>
+    G.finkCorrectedTargetStepError_nonneg W (fun _ => 0) z n
+  have hE0 : ∀ n, 0 ≤ E n := fun n => by dsimp only [E]; linarith [hD0 n]
+  obtain ⟨ψ, hψ, hweighted⟩ :=
+    exists_strictMono_summable_weighted_subsequence e E he0
+      (by simpa only [e] using hstep0) hE0
+  have heLe : ∀ n, e (ψ n) ≤ E n * e (ψ n) := by
+    intro n
+    have := mul_le_mul_of_nonneg_right (show 1 ≤ E n by
+      dsimp only [E]; linarith [hD0 n]) (he0 (ψ n))
+    simpa only [one_mul] using this
+  have hDLe : ∀ n, D n * e (ψ n) ≤ E n * e (ψ n) := by
+    intro n
+    exact mul_le_mul_of_nonneg_right (by dsimp only [E]; linarith)
+      (he0 (ψ n))
+  have heSum : Summable (fun n => e (ψ n)) :=
+    Summable.of_nonneg_of_le (fun n => he0 (ψ n)) heLe hweighted
+  have hDSum : Summable (fun n => D n * e (ψ n)) :=
+    Summable.of_nonneg_of_le
+      (fun n => mul_nonneg (hD0 n) (he0 (ψ n))) hDLe hweighted
+  refine ⟨ψ, hψ, ?_, ?_⟩
+  · simpa only [e, finkCorrectedTargetStepError, Function.comp_def,
+      sub_self, norm_zero, add_zero] using heSum
+  · simpa only [e, finkCorrectedTargetStepError, Function.comp_def,
+      sub_self, norm_zero, add_zero] using hDSum
+
+/-- An eventual pointwise majorant is enough to transfer summability of a
+weighted nonnegative series.  Finitely many exceptional initial indices are
+absorbed by shifting the series. -/
+theorem summable_mul_of_eventually_le_weight
+    (f L D : ℕ → ℝ) (hf0 : ∀ n, 0 ≤ f n) (hL0 : ∀ n, 0 ≤ L n)
+    (hweighted : Summable (fun n => D n * f n))
+    (hle : ∀ᶠ n in atTop, L n ≤ D n) :
+    Summable (fun n => L n * f n) := by
+  obtain ⟨N, hN⟩ := eventually_atTop.1 hle
+  apply (summable_nat_add_iff N).mp
+  refine Summable.of_nonneg_of_le
+    (f := fun n => D (n + N) * f (n + N)) ?_ ?_ ?_
+  · exact fun n => mul_nonneg (hL0 (n + N)) (hf0 (n + N))
+  · intro n
+    exact mul_le_mul_of_nonneg_right
+      (hN (n + N) (Nat.le_add_left N n)) (hf0 (n + N))
+  · exact (summable_nat_add_iff N).mpr hweighted
 
 /-- A long correction jump costs no more than the variation along all crossed
 adjacent edges. -/
@@ -9277,6 +9393,77 @@ theorem exists_finkRelativeAnnealingCalendar_preservingWeightedErrors
   refine ⟨θ, B, hκ, hterminal, hswitch, hfast', ?_⟩
   simpa only [weightedAux, Function.comp_def] using hweighted'
 
+/-- Interior annealing package with an arbitrary block envelope.  Starting
+from a vanishing zero-correction step error, the first subsequence makes both
+its ordinary and `D`-weighted series summable; annealing regularization then
+preserves those series.  The only missing input for the corresponding
+selectability theorem is eventual domination of the returned block lengths
+by the transported envelope `D ∘ θ`. -/
+theorem exists_finkRelativeAnnealingCalendar_zeroCorrection_weighted
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (M : ℝ) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (hM : 0 ≤ M) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1) (hβlim : Tendsto β atTop (nhds 1))
+    (D : ℕ → ℝ) (hD0 : ∀ n, 0 ≤ D n)
+    (hstep0 : Tendsto (fun n => G.finkCorrectedTargetStepError W
+      (fun _ => 0) z n) atTop (nhds 0)) :
+    ∃ (ψ θ : ℕ → ℕ) (B : ℕ → ℝ),
+      StrictMono ψ ∧
+      let Θ := ψ ∘ θ
+      let κ := Θ ∘ slowUnitStepCalendar B
+      Tendsto κ atTop atTop ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        finkScaledBiasBound β M (κ T)) atTop (nhds 0) ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β M z W κ t)
+          atTop (nhds 0) ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        ((fun _ => 0) ∘ Θ) (z ∘ Θ) n) ∧
+      Summable (fun n => D (θ n) *
+        G.finkCorrectedTargetStepError W
+          ((fun _ => 0) ∘ Θ) (z ∘ Θ) n) := by
+  obtain ⟨ψ, hψ, hfast, hweighted⟩ :=
+    G.exists_strictMono_summable_zeroCorrectionStepError_weighted
+      W z D hD0 hstep0
+  let βψ : ℕ → ℝ := β ∘ ψ
+  let zψ : ℕ → G.finkDomain U := z ∘ ψ
+  let R₀ : ℕ → G.State → Payoff ι := fun _ => 0
+  let auxψ : ℕ → ℝ := fun n =>
+    G.finkCorrectedTargetStepError W R₀ zψ n
+  have hfastψ : Summable (fun n =>
+      G.finkCorrectedTargetStepError W R₀ zψ n) := by
+    simpa only [R₀, zψ, finkCorrectedTargetStepError,
+      Function.comp_def, sub_self, norm_zero, add_zero] using hfast
+  have haux0 : ∀ n, 0 ≤ auxψ n := fun n =>
+    G.finkCorrectedTargetStepError_nonneg W R₀ zψ n
+  have hweightedψ : Summable (fun n => D n * auxψ n) := by
+    simpa only [auxψ, R₀, zψ, finkCorrectedTargetStepError,
+      Function.comp_def, sub_self, norm_zero, add_zero] using hweighted
+  obtain ⟨θ, B, hκ, hterminal, hswitch, hfast', hweighted'⟩ :=
+    G.exists_finkRelativeAnnealingCalendar_preservingWeightedErrors
+      βψ M zψ W R₀ auxψ D hM
+      (fun n => hβ0 (ψ n)) (fun n => hβ1 (ψ n))
+      (by simpa only [βψ, Function.comp_def] using
+        hβlim.comp hψ.tendsto_atTop)
+      hfastψ haux0 hD0 hweightedψ
+  let Θ : ℕ → ℕ := ψ ∘ θ
+  have hΘcalendar : Tendsto (Θ ∘ slowUnitStepCalendar B)
+      atTop atTop := by
+    simpa only [Θ, Function.comp_def] using hψ.tendsto_atTop.comp hκ
+  refine ⟨ψ, θ, B, hψ, hΘcalendar, ?_, ?_, ?_, ?_⟩
+  · simpa only [βψ, Θ, finkScaledBiasBound, Function.comp_def]
+      using hterminal
+  · simpa only [βψ, zψ, Θ, indexedFinkRelativeSwitchError,
+      Function.comp_def] using hswitch
+  · simpa only [R₀, zψ, Θ, finkCorrectedTargetStepError,
+      Function.comp_def, sub_self, norm_zero, add_zero] using hfast'
+  · simpa only [auxψ, R₀, zψ, Θ,
+      finkCorrectedTargetStepError, Function.comp_def, sub_self, norm_zero,
+      add_zero] using hweighted'
+
 /-- The verified hierarchy and annealing construction can be joined while
 retaining an arbitrary prescribed dilation envelope.  In the boundary branch
 everything needed for corrected selectability is produced except comparison
@@ -9830,6 +10017,65 @@ theorem isIndexedFinkCorrectedCalendarSelectable_of_oneSummableRootBillBranch
   · simpa only [κ, ν] using hswitch
   · exact hq.comp (by simpa only [κ, ν] using hκ)
   · exact hrootNorm.comp (by simpa only [κ, ν] using hκ)
+  · exact hslow'
+
+/-- Interior-branch analogue of the root-bill criterion.  With zero
+correction, a step is just its same-point hold error.  If that error was
+selected summably against a block envelope `D`, eventual domination of the
+actual block lengths by `D` makes the slowed calendar summable. -/
+theorem isIndexedFinkCorrectedCalendarSelectable_of_oneWeightedZeroCorrectionBranch
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (q : ℕ → ℝ) (hq : Tendsto q atTop (nhds 0))
+    (θ : ℕ → ℕ) (B D : ℕ → ℝ)
+    (hκ : Tendsto (θ ∘ slowUnitStepCalendar B) atTop atTop)
+    (hterminal : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U ((θ ∘ slowUnitStepCalendar B) T))
+        atTop (nhds 0))
+    (hswitch : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, G.indexedFinkRelativeSwitchError
+        β U z W (θ ∘ slowUnitStepCalendar B) t) atTop (nhds 0))
+    (hfast : Summable (fun n => G.finkCorrectedTargetStepError W
+      ((fun _ => 0) ∘ θ) (z ∘ θ) n))
+    (hweighted : Summable (fun n => D n *
+      G.finkCorrectedTargetStepError W
+        ((fun _ => 0) ∘ θ) (z ∘ θ) n))
+    (hdilation : ∀ᶠ n in atTop, (slowCalendarBlockLength B n : ℝ) ≤ D n) :
+    G.IsIndexedFinkCorrectedCalendarSelectable β U z W (fun _ => 0) q := by
+  let zθ : ℕ → G.finkDomain U₀ := z ∘ θ
+  let R₀ : ℕ → G.State → Payoff ι := fun _ => 0
+  have hweightedHold : Summable (fun n => D n *
+      G.finkCorrectedTargetHoldError W R₀ zθ n) := by
+    simpa only [R₀, zθ, finkCorrectedTargetStepError,
+      finkCorrectedTargetHoldError, Function.comp_def, sub_self, norm_zero,
+      add_zero] using hweighted
+  have hhold : Summable (fun n => (slowCalendarBlockLength B n : ℝ) *
+      G.finkCorrectedTargetHoldError W R₀ zθ n) := by
+    apply summable_mul_of_eventually_le_weight
+      (fun n => G.finkCorrectedTargetHoldError W R₀ zθ n)
+      (fun n => (slowCalendarBlockLength B n : ℝ)) D
+    · exact fun n => G.finkCorrectedTargetHoldError_nonneg W R₀ zθ n
+    · exact fun n => Nat.cast_nonneg _
+    · exact hweightedHold
+    · exact hdilation
+  have hslow := G.summable_finkCorrectedTargetStepError_slowCalendar
+    W R₀ zθ B (by
+      simpa only [R₀, zθ, finkCorrectedTargetStepError,
+        Function.comp_def, sub_self, norm_zero, add_zero] using hfast) hhold
+  let κ := θ ∘ slowUnitStepCalendar B
+  have hslow' : Summable (fun t => G.finkCorrectedTargetStepError W
+      ((fun _ => 0) ∘ κ) (z ∘ κ) t) := by
+    simpa only [κ, R₀, zθ, Function.comp_def] using hslow.1
+  apply G.isIndexedFinkCorrectedCalendarSelectable_of_oneSummableCalendar
+    β U z W (fun _ => 0) q κ
+  · simpa only [κ] using hterminal
+  · simpa only [κ] using hswitch
+  · exact hq.comp (by simpa only [κ] using hκ)
+  · simpa only [norm_zero] using
+      (tendsto_const_nhds (x := (0 : ℝ)))
   · exact hslow'
 
 /-- Variable-envelope form of the global branch criterion.  The concrete
