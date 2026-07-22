@@ -40,9 +40,9 @@ kernel is exactly empty (boundary and triple-zero cases still unwritten).
 What is open: excluding aperiodic discrete absorption paths
 (Solan–Solan, *Absorption Paths and Equilibria in Quitting Games*,
 Theorem 4.13 reduces the ε-equilibrium question to such paths given the
-first-stage screen), and the translation of that framework's expected-
-terminal ε-equilibria into this repository's finite-horizon-average
-`IsUniformEquilibriumPayoff`.
+first-stage screen).  The translation from expected-terminal equilibria to
+this repository's finite-horizon-average `IsUniformEquilibriumPayoff` is
+formalized in `GameTheory.Concepts.Stochastic.QuittingAsymptotic`.
 
 ## Main definitions
 
