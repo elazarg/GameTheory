@@ -134,7 +134,11 @@ half/half solution. For arbitrary carried equilibrium predicates, the exact
 lifting convexifies the later game's selected set at a point input; the API
 records both the resulting left-identity condition and a checked obstruction
 showing that independent sequential and tensor composition do not preserve
-convex closure.
+convex closure. The implemented Lemma 16 repair compares games up to
+convex-closed equilibrium semantics and proves both sequential unit laws under
+that equivalence. Establishing composition congruence and porting the paper's
+associativity theorem remain prerequisites to forming the corresponding
+quotient category.
 
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition

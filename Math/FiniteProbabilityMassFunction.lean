@@ -169,6 +169,11 @@ theorem bind_congr_on_support (μ : FinPMF α)
   apply ext
   exact PMF.pure_map f a
 
+@[simp] theorem map_const (μ : FinPMF α) (b : β) :
+    map (fun _ => b) μ = pure b := by
+  apply ext
+  exact PMF.map_const μ.toPMF b
+
 @[simp] theorem map_bind (g : β → γ) (μ : FinPMF α)
     (f : α → FinPMF β) :
     map g (bind μ f) = bind μ fun a => map g (f a) := by
@@ -194,6 +199,63 @@ theorem bind_congr_on_support (μ : FinPMF α)
 @[simp] theorem product_pure (a : α) (b : β) :
     product (pure a) (pure b) = pure (a, b) := by
   simp [product]
+
+@[simp] theorem pure_product (a : α) (ν : FinPMF β) :
+    product (pure a) ν = map (fun b => (a, b)) ν := by
+  simp [product]
+
+@[simp] theorem product_pure_right (μ : FinPMF α) (b : β) :
+    product μ (pure b) = map (fun a => (a, b)) μ := by
+  apply ext
+  simp only [product, toPMF_bind, toPMF_map, toPMF_pure,
+    PMF.pure_map]
+  change μ.toPMF.bind (PMF.pure ∘ fun a => (a, b)) = _
+  exact PMF.bind_pure_comp _ _
+
+@[simp] theorem map_fst_map_mk_right (μ : FinPMF α) (b : β) :
+    map Prod.fst (map (fun a => (a, b)) μ) = μ := by
+  rw [← product_pure_right, map_fst_product]
+
+@[simp] theorem map_snd_map_mk_right (μ : FinPMF α) (b : β) :
+    map Prod.snd (map (fun a => (a, b)) μ) = pure b := by
+  rw [← product_pure_right, map_snd_product]
+
+@[simp] theorem map_fst_unit_product (μ : FinPMF (Unit × α)) :
+    map Prod.fst μ = pure () := by
+  apply ext_apply
+  intro u
+  cases u
+  simp
+
+@[simp] theorem map_snd_product_unit (μ : FinPMF (α × Unit)) :
+    map Prod.snd μ = pure () := by
+  apply ext_apply
+  intro u
+  cases u
+  simp
+
+/-- Every law on `Unit × α` is independent: its first marginal is forced. -/
+theorem product_pure_unit_map_snd (μ : FinPMF (Unit × α)) :
+    product (pure ()) (map Prod.snd μ) = μ := by
+  calc
+    product (pure ()) (map Prod.snd μ) =
+        map (fun a => ((), a)) (map Prod.snd μ) := pure_product _ _
+    _ = map ((fun a => ((), a)) ∘ Prod.snd) μ := map_comp _ _ _
+    _ = map id μ := by
+      congr 1
+    _ = μ := map_id μ
+
+/-- Every law on `α × Unit` is independent: its second marginal is forced. -/
+theorem product_map_fst_pure_unit (μ : FinPMF (α × Unit)) :
+    product (map Prod.fst μ) (pure ()) = μ := by
+  calc
+    product (map Prod.fst μ) (pure ()) =
+        map (fun a => (a, ())) (map Prod.fst μ) :=
+      product_pure_right _ _
+    _ = map ((fun a => (a, ())) ∘ Prod.fst) μ := map_comp _ _ _
+    _ = map id μ := by
+      congr 1
+    _ = μ := map_id μ
 
 /-- Independent product is commutative up to swapping coordinates. -/
 theorem map_swap_product (μ : FinPMF α) (ν : FinPMF β) :
@@ -407,6 +469,45 @@ theorem relKleisli_mono {R Q : α → Set (FinPMF β)}
     (h : RelKleisli R μ ν) : RelKleisli Q μ ν := by
   rcases h with ⟨choose, hsupp, hjoin⟩
   exact ⟨choose, fun a ha => (hsupp a ha).trans (hRQ a), hjoin⟩
+
+/-- Relational Kleisli lifting already performs pointwise convex saturation;
+closing every fiber beforehand does not change the lifted relation. -/
+theorem relKleisli_convexClosure_iff (R : α → Set (FinPMF β))
+    (μ : FinPMF α) (ν : FinPMF β) :
+    RelKleisli (fun a => convexClosure (R a)) μ ν ↔
+      RelKleisli R μ ν := by
+  classical
+  constructor
+  · rintro ⟨choose, hsupp, hjoin⟩
+    have hfiber (a : α) (ha : a ∈ μ.support) :
+        join (choose a) ∈ convexClosure (R a) := by
+      have hdouble : join (choose a) ∈
+          convexClosure (convexClosure (R a)) :=
+        ⟨choose a, hsupp a ha, rfl⟩
+      rwa [convexClosure_idempotent] at hdouble
+    let refined : α → FinPMF (FinPMF β) := fun a =>
+      if ha : a ∈ μ.support then Classical.choose (hfiber a ha)
+      else choose a
+    have refined_support (a : α) (ha : a ∈ μ.support) :
+        (refined a).support ⊆ R a := by
+      simpa only [refined, dif_pos ha] using
+        (Classical.choose_spec (hfiber a ha)).1
+    have refined_join (a : α) (ha : a ∈ μ.support) :
+        join (refined a) = join (choose a) := by
+      simpa only [refined, dif_pos ha] using
+        (Classical.choose_spec (hfiber a ha)).2
+    refine ⟨refined, refined_support, ?_⟩
+    calc
+      join (bind μ refined) = bind μ (fun a => join (refined a)) := by
+        simp only [join, bind_bind]
+      _ = bind μ (fun a => join (choose a)) :=
+        bind_congr_on_support μ _ _ refined_join
+      _ = join (bind μ choose) := by
+        simp only [join, bind_bind]
+      _ = ν := hjoin
+  · intro h
+    exact relKleisli_mono
+      (fun a => subset_convexClosure (R a)) h
 
 /-- A pointwise admissible distribution is admitted by the lifting at a point
 mass.  The converse is convex closure rather than literal membership; this is

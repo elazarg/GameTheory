@@ -110,6 +110,16 @@ example :
           Examples.freeStrategyWire Bool Unit ℝ) :=
   Examples.probabilistic_seq_does_not_preserve_convexEquilibria
 
+example {X S Y R : Type*} [Math.AvgAlgebra S]
+    (g : ProbOpenGame X S Y R) :
+    ProbOpenGame.ConvexIso (ProbOpenGame.idWire X S ;ₚ g) g :=
+  ProbOpenGame.convexSeqIdLeft g
+
+example {X S Y R : Type*} [Math.AvgAlgebra R]
+    (g : ProbOpenGame X S Y R) :
+    ProbOpenGame.ConvexIso (g ;ₚ ProbOpenGame.idWire Y R) g :=
+  ProbOpenGame.convexSeqIdRight g
+
 end
 
 end OpenGames.Tests

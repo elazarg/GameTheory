@@ -15,6 +15,15 @@ deterministic; only the equilibrium predicate ranges over finite mixed
 strategies.  Parallel and sequential composition admit independent joint
 strategies.  Sequential composition uses the relational Kleisli lifting
 `FinPMF.RelKleisli` at the random intermediate history.
+
+The lifting does not preserve the distribution monad's unit: composing an
+identity on the left convexifies the later equilibrium set.  Accordingly,
+the raw structure does not satisfy Lemma 16's left-unit claim.  This file
+implements repair (c): `ProbOpenGame.ConvexIso` compares equilibrium semantics
+after finite convex closure, and `convexSeqIdLeft`/`convexSeqIdRight` prove both
+unit laws in that semantics.  This is deliberately not yet advertised as a
+quotient category; compatibility with composition and the paper's raw
+associativity theorem remain separate obligations.
 -/
 
 noncomputable section
@@ -169,6 +178,84 @@ def HasConvexEquilibria (g : ProbOpenGame X S Y R) : Prop :=
     FinPMF.convexClosure {μ | g.IsEquilibriumIn x k μ} ⊆
       {μ | g.IsEquilibriumIn x k μ}
 
+/-- The equilibrium semantics observed only up to finite convex closure. -/
+def IsConvexEquilibriumIn (g : ProbOpenGame X S Y R)
+    (x : X) (k : Y → R) (μ : FinPMF g.Strategy) : Prop :=
+  μ ∈ FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ}
+
+/-- Strategy isomorphism preserving play, coplay, and equilibrium semantics
+after finite convex closure.  This is the equality notion used by the repaired
+probabilistic unit laws. -/
+structure ConvexIso
+    (g g' : ProbOpenGame X S Y R) where
+  stratEquiv : g.Strategy ≃ g'.Strategy
+  play_preserved : ∀ σ x,
+    g'.play (stratEquiv σ) x = g.play σ x
+  coplay_preserved : ∀ σ x r,
+    g'.coplay (stratEquiv σ) x r = g.coplay σ x r
+  equilibrium_preserved : ∀ x k φ,
+    g'.IsConvexEquilibriumIn x k (FinPMF.map stratEquiv φ) ↔
+      g.IsConvexEquilibriumIn x k φ
+
+namespace ConvexIso
+
+/-- Reflexivity of convex-semantic game isomorphism. -/
+def refl (g : ProbOpenGame X S Y R) : ConvexIso g g where
+  stratEquiv := Equiv.refl _
+  play_preserved := fun _ _ => rfl
+  coplay_preserved := fun _ _ _ => rfl
+  equilibrium_preserved := by
+    intro x k φ
+    change g.IsConvexEquilibriumIn x k (FinPMF.map id φ) ↔ _
+    rw [FinPMF.map_id]
+
+/-- Symmetry of convex-semantic game isomorphism. -/
+def symm {g g' : ProbOpenGame X S Y R}
+    (e : ConvexIso g g') : ConvexIso g' g where
+  stratEquiv := e.stratEquiv.symm
+  play_preserved := by
+    intro σ x
+    simpa using (e.play_preserved (e.stratEquiv.symm σ) x).symm
+  coplay_preserved := by
+    intro σ x r
+    simpa using (e.coplay_preserved (e.stratEquiv.symm σ) x r).symm
+  equilibrium_preserved := by
+    intro x k φ
+    have h := (e.equilibrium_preserved x k
+      (FinPMF.map e.stratEquiv.symm φ)).symm
+    rw [FinPMF.map_comp] at h
+    have hmap : FinPMF.map
+        (e.stratEquiv ∘ e.stratEquiv.symm) φ = φ := by
+      calc
+        FinPMF.map (e.stratEquiv ∘ e.stratEquiv.symm) φ =
+            FinPMF.map id φ := by
+          congr 1
+          funext σ
+          exact e.stratEquiv.apply_symm_apply σ
+        _ = φ := FinPMF.map_id φ
+    rw [hmap] at h
+    exact h
+
+/-- Transitivity of convex-semantic game isomorphism. -/
+def trans {g g' g'' : ProbOpenGame X S Y R}
+    (e : ConvexIso g g') (f : ConvexIso g' g'') : ConvexIso g g'' where
+  stratEquiv := e.stratEquiv.trans f.stratEquiv
+  play_preserved := by
+    intro σ x
+    exact (f.play_preserved (e.stratEquiv σ) x).trans
+      (e.play_preserved σ x)
+  coplay_preserved := by
+    intro σ x r
+    exact (f.coplay_preserved (e.stratEquiv σ) x r).trans
+      (e.coplay_preserved σ x r)
+  equilibrium_preserved := by
+    intro x k φ
+    simpa [FinPMF.map_comp, Function.comp_def] using
+      (f.equilibrium_preserved x k (FinPMF.map e.stratEquiv φ)).trans
+        (e.equilibrium_preserved x k φ)
+
+end ConvexIso
+
 /-- Saturate every equilibrium set under finite barycenters. -/
 def convexify (g : ProbOpenGame X S Y R) : ProbOpenGame X S Y R where
   Strategy := g.Strategy
@@ -192,8 +279,53 @@ theorem convexify_hasConvexEquilibria (g : ProbOpenGame X S Y R) :
       μ ∈ FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ} :=
   Iff.rfl
 
+@[simp] theorem convexify_isEquilibriumIn_iff_isConvexEquilibriumIn
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (μ : FinPMF g.Strategy) :
+    (convexify g).IsEquilibriumIn x k μ ↔
+      g.IsConvexEquilibriumIn x k μ :=
+  Iff.rfl
+
+/-- `D̄#` already convex-saturates every downstream equilibrium fiber, so
+convexifying the second component before composition changes nothing. -/
+theorem seq_convexify_right_isEquilibriumIn_iff [AvgAlgebra R]
+    (g : ProbOpenGame X S Y R) (h : ProbOpenGame Y R Z Q)
+    (x : X) (k : Z → Q) (φ : FinPMF (g.Strategy × h.Strategy)) :
+    (g ;ₚ convexify h).IsEquilibriumIn x k φ ↔
+      (g ;ₚ h).IsEquilibriumIn x k φ := by
+  simp only [seq, convexify]
+  apply and_congr_right
+  intro _
+  apply and_congr_right
+  intro _
+  exact FinPMF.relKleisli_convexClosure_iff
+    (fun y => {ψ | h.IsEquilibriumIn y k ψ})
+    (FinPMF.map (fun σg => g.play σg x) (FinPMF.map Prod.fst φ))
+    (FinPMF.map Prod.snd φ)
+
 /-- Composing an identity before a game convexifies the game's equilibrium
 set.  This is exact, not merely an inclusion. -/
+theorem idWire_seq_isEquilibriumIn_iff [AvgAlgebra S]
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF (Unit × g.Strategy)) :
+    (idWire X S ;ₚ g).IsEquilibriumIn x k φ ↔
+      FinPMF.map Prod.snd φ ∈
+        FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ} := by
+  change
+    (φ = FinPMF.product (FinPMF.map Prod.fst φ)
+          (FinPMF.map Prod.snd φ) ∧
+        True ∧
+        FinPMF.RelKleisli
+          (fun y => {ψ | g.IsEquilibriumIn y k ψ})
+          (FinPMF.map (fun _ : Unit => x) (FinPMF.map Prod.fst φ))
+          (FinPMF.map Prod.snd φ)) ↔ _
+  rw [FinPMF.map_fst_unit_product,
+    FinPMF.product_pure_unit_map_snd]
+  simp only [FinPMF.map_pure, true_and]
+  exact FinPMF.relKleisli_pure_iff
+    (fun y => {ψ | g.IsEquilibriumIn y k ψ}) x _
+
+/-- Product-form specialization of `idWire_seq_isEquilibriumIn_iff`. -/
 theorem idWire_seq_isEquilibriumIn_product_iff [AvgAlgebra S]
     (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
     (φ : FinPMF g.Strategy) :
@@ -204,6 +336,44 @@ theorem idWire_seq_isEquilibriumIn_product_iff [AvgAlgebra S]
   simp only [idWire, ofLens, true_and, FinPMF.map_pure]
   exact FinPMF.relKleisli_pure_iff
     (fun y => {ψ | g.IsEquilibriumIn y k ψ}) x φ
+
+/-- A left identity composite always has convex equilibrium sets, even when
+the original game's selected sets are not convex. -/
+theorem idWire_seq_hasConvexEquilibria [AvgAlgebra S]
+    (g : ProbOpenGame X S Y R) :
+    HasConvexEquilibria (idWire X S ;ₚ g) := by
+  intro x k φ hφ
+  change (idWire X S ;ₚ g).IsEquilibriumIn x k φ
+  rw [idWire_seq_isEquilibriumIn_iff]
+  rcases hφ with ⟨θ, hθ, hjoin⟩
+  have hdouble : FinPMF.map Prod.snd φ ∈ FinPMF.convexClosure
+      (FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ}) := by
+    refine ⟨FinPMF.map (FinPMF.map Prod.snd) θ, ?_, ?_⟩
+    · intro ψ hψ
+      rw [FinPMF.support_map] at hψ
+      rcases hψ with ⟨ρ, hρ, rfl⟩
+      exact (idWire_seq_isEquilibriumIn_iff g x k ρ).1 (hθ hρ)
+    · calc
+        FinPMF.join (FinPMF.map (FinPMF.map Prod.snd) θ) =
+            FinPMF.map Prod.snd (FinPMF.join θ) :=
+          FinPMF.join_map_map Prod.snd θ
+        _ = FinPMF.map Prod.snd φ := congrArg _ hjoin
+  rwa [FinPMF.convexClosure_idempotent] at hdouble
+
+/-- The left identity law is valid for every probabilistic open game when
+equilibrium predicates are observed up to convex closure. -/
+theorem idWire_seq_isConvexEquilibriumIn_iff [AvgAlgebra S]
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF (Unit × g.Strategy)) :
+    (idWire X S ;ₚ g).IsConvexEquilibriumIn x k φ ↔
+      g.IsConvexEquilibriumIn x k (FinPMF.map Prod.snd φ) := by
+  constructor
+  · intro hφ
+    exact (idWire_seq_isEquilibriumIn_iff g x k φ).1
+      (idWire_seq_hasConvexEquilibria g x k hφ)
+  · intro hφ
+    exact FinPMF.subset_convexClosure _
+      ((idWire_seq_isEquilibriumIn_iff g x k φ).2 hφ)
 
 /-- Thus the unrestricted left composite agrees exactly with the convexified
 game, identifying convex saturation as the minimal unit-law repair. -/
@@ -248,6 +418,129 @@ theorem seq_idWire_isEquilibriumIn_product_iff [AvgAlgebra R]
     · apply FinPMF.relKleisli_of_forall_mem
       intro y _hy
       exact Set.mem_univ _
+
+/-- General right-unit characterization; every law on `Strategy × Unit`
+already has product form. -/
+theorem seq_idWire_isEquilibriumIn_iff [AvgAlgebra R]
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF (g.Strategy × Unit)) :
+    (g ;ₚ idWire Y R).IsEquilibriumIn x k φ ↔
+      g.IsEquilibriumIn x k (FinPMF.map Prod.fst φ) := by
+  change
+    (φ = FinPMF.product (FinPMF.map Prod.fst φ)
+          (FinPMF.map Prod.snd φ) ∧
+        g.IsEquilibriumIn x
+          (fun y => AvgAlgebra.avg
+            (FinPMF.map (fun _ : Unit => k y)
+              (FinPMF.map Prod.snd φ)))
+          (FinPMF.map Prod.fst φ) ∧
+        FinPMF.RelKleisli (fun _ => Set.univ)
+          (FinPMF.map (fun σ => g.play σ x) (FinPMF.map Prod.fst φ))
+          (FinPMF.map Prod.snd φ)) ↔ _
+  rw [FinPMF.map_snd_product_unit,
+    FinPMF.product_map_fst_pure_unit]
+  simp only [FinPMF.map_pure, AvgAlgebra.avg_pure, true_and]
+  apply and_iff_left
+  apply FinPMF.relKleisli_of_forall_mem
+  intro _ _
+  exact Set.mem_univ _
+
+/-- The right identity law also holds up to convex closure. -/
+theorem seq_idWire_isConvexEquilibriumIn_iff [AvgAlgebra R]
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF (g.Strategy × Unit)) :
+    (g ;ₚ idWire Y R).IsConvexEquilibriumIn x k φ ↔
+      g.IsConvexEquilibriumIn x k (FinPMF.map Prod.fst φ) := by
+  constructor
+  · rintro ⟨θ, hθ, hjoin⟩
+    refine ⟨FinPMF.map (FinPMF.map Prod.fst) θ, ?_, ?_⟩
+    · intro ψ hψ
+      rw [FinPMF.support_map] at hψ
+      rcases hψ with ⟨ρ, hρ, rfl⟩
+      exact (seq_idWire_isEquilibriumIn_iff g x k ρ).1 (hθ hρ)
+    · calc
+        FinPMF.join (FinPMF.map (FinPMF.map Prod.fst) θ) =
+            FinPMF.map Prod.fst (FinPMF.join θ) :=
+          FinPMF.join_map_map Prod.fst θ
+        _ = FinPMF.map Prod.fst φ := congrArg _ hjoin
+  · rintro ⟨θ, hθ, hjoin⟩
+    let pairUnit : g.Strategy → g.Strategy × Unit := fun σ => (σ, ())
+    refine ⟨FinPMF.map (FinPMF.map pairUnit) θ, ?_, ?_⟩
+    · intro ρ hρ
+      rw [FinPMF.support_map] at hρ
+      rcases hρ with ⟨ψ, hψ, rfl⟩
+      simp only [seq, idWire, ofLens, pairUnit]
+      have hfst : FinPMF.map Prod.fst
+          (FinPMF.map (fun σ : g.Strategy => (σ, ())) ψ) = ψ :=
+        FinPMF.map_fst_map_mk_right ψ ()
+      have hsnd : FinPMF.map Prod.snd
+          (FinPMF.map (fun σ : g.Strategy => (σ, ())) ψ) =
+          FinPMF.pure () :=
+        FinPMF.map_snd_map_mk_right ψ ()
+      constructor
+      · rw [hfst, hsnd, FinPMF.product_pure_right]
+      · constructor
+        · simpa [hfst, hsnd] using hθ hψ
+        · apply FinPMF.relKleisli_of_forall_mem
+          intro _ _
+          exact Set.mem_univ _
+    · calc
+        FinPMF.join (FinPMF.map (FinPMF.map pairUnit) θ) =
+            FinPMF.map pairUnit (FinPMF.join θ) :=
+          FinPMF.join_map_map pairUnit θ
+        _ = FinPMF.map pairUnit (FinPMF.map Prod.fst φ) :=
+          congrArg _ hjoin
+        _ = FinPMF.product (FinPMF.map Prod.fst φ)
+            (FinPMF.pure ()) := by
+          rw [FinPMF.product_pure_right]
+        _ = φ := FinPMF.product_map_fst_pure_unit φ
+
+/-- Repair (c) for the left unit in Lemma 16: the usual strategy unitor is an
+isomorphism when equilibrium predicates are compared up to convex closure. -/
+def convexSeqIdLeft [AvgAlgebra S] (g : ProbOpenGame X S Y R) :
+    ConvexIso (idWire X S ;ₚ g) g where
+  stratEquiv := {
+    toFun := fun σ => σ.2
+    invFun := fun σ => ((), σ)
+    left_inv := by rintro ⟨u, σ⟩; cases u; rfl
+    right_inv := fun _ => rfl }
+  play_preserved := by
+    rintro ⟨u, σ⟩ x
+    cases u
+    rfl
+  coplay_preserved := by
+    rintro ⟨u, σ⟩ x r
+    cases u
+    rfl
+  equilibrium_preserved := by
+    intro x k φ
+    change FinPMF (Unit × g.Strategy) at φ
+    change g.IsConvexEquilibriumIn x k (FinPMF.map Prod.snd φ) ↔
+      (idWire X S ;ₚ g).IsConvexEquilibriumIn x k φ
+    exact (idWire_seq_isConvexEquilibriumIn_iff g x k φ).symm
+
+/-- Repair (c) for the right unit in Lemma 16. -/
+def convexSeqIdRight [AvgAlgebra R] (g : ProbOpenGame X S Y R) :
+    ConvexIso (g ;ₚ idWire Y R) g where
+  stratEquiv := {
+    toFun := fun σ => σ.1
+    invFun := fun σ => (σ, ())
+    left_inv := by rintro ⟨σ, u⟩; cases u; rfl
+    right_inv := fun _ => rfl }
+  play_preserved := by
+    rintro ⟨σ, u⟩ x
+    cases u
+    rfl
+  coplay_preserved := by
+    rintro ⟨σ, u⟩ x r
+    cases u
+    rfl
+  equilibrium_preserved := by
+    intro x k φ
+    change FinPMF (g.Strategy × Unit) at φ
+    change g.IsConvexEquilibriumIn x k (FinPMF.map Prod.fst φ) ↔
+      (g ;ₚ idWire Y R).IsConvexEquilibriumIn x k φ
+    exact (seq_idWire_isConvexEquilibriumIn_iff g x k φ).symm
 
 /-- A mixed decision after observing `X`.  A distribution over contingent
 pure plans is selected exactly when no alternative distribution has greater
