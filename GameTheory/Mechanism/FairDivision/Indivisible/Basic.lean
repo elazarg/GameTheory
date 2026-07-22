@@ -432,11 +432,15 @@ theorem exists_efx_two_agents (v : AdditiveValuation (Fin 2) G)
     · exact maximin_cut_partition_efx_for_zero_swapped hnonneg hmax'
         (le_of_lt (lt_of_not_ge hchoose))
 
+/-- Compatibility name for `exists_efx_two_agents`, following the
+property-first naming convention used by some callers. -/
 theorem efx_exists_two_agents (v : AdditiveValuation (Fin 2) G)
     (hnonneg : Nonnegative v) :
     ∃ A : Allocation (Fin 2) G, IsAllocation A ∧ IsEFX v A :=
   exists_efx_two_agents v hnonneg
 
+/-- Two agents and two goods admit an EFX allocation; this convenient textbook
+specialization of `exists_efx_two_agents` requires no separate argument. -/
 theorem efx_two_agents_two_goods (v : AdditiveValuation (Fin 2) (Fin 2))
     (hnonneg : Nonnegative v) :
     ∃ A : Allocation (Fin 2) (Fin 2), IsAllocation A ∧ IsEFX v A :=
