@@ -284,6 +284,96 @@ theorem eventually_finkProfile_harmonic_excessive_close
   exact G.mixedDeviationContinuation_le_of_pure_bound
     (G.finkProfile (z n)) W s who (W s who + η) (hd s who) dev
 
+/-- Coordinatewise convergence in the finite Fink value cube is eventually
+uniform over states and players. -/
+theorem eventually_finkValue_close
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) {η : ℝ} (hη : 0 < η) :
+    ∀ᶠ n in atTop, ∀ s who,
+      |G.finkValue (z n) s who - G.finkValue zlim s who| ≤ η := by
+  rw [Filter.eventually_all]
+  intro s
+  rw [Filter.eventually_all]
+  intro who
+  have ht := G.tendsto_finkValue_apply hz s who
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht η hη
+  filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+  simpa only [Real.dist_eq] using (le_of_lt hn)
+
+/-- A further subsequence can be chosen so value convergence and all
+harmonic/excessive transition residuals are bounded explicitly by
+`1 / (n + 1)`.  This leaves scaled-bias growth as the only uncontrolled rate. -/
+theorem exists_strictMono_finkApproximation_subsequence
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hharmonic : ∀ s who,
+      G.finkValue zlim s who =
+        expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+          expect (G.transition s a) (fun s' => G.finkValue zlim s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) ≤
+          G.finkValue zlim s who) :
+    ∃ ψ : ℕ → ℕ, StrictMono ψ ∧ ∀ n,
+      (∀ s who,
+        |G.finkValue (z (ψ n)) s who - G.finkValue zlim s who| ≤
+          (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      (∀ s who,
+        |expect (pmfPi (G.finkProfile (z (ψ n)) s)) (fun a =>
+            expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
+          G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      ∀ s who (dev : PMF (G.Act who)),
+        expect (pmfPi (Function.update (G.finkProfile (z (ψ n)) s) who dev))
+            (fun a => expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who)) ≤
+          G.finkValue zlim s who + (((n + 1 : ℕ) : ℝ))⁻¹ := by
+  let P : ℕ → ℕ → Prop := fun n k =>
+    (∀ s who,
+      |G.finkValue (z k) s who - G.finkValue zlim s who| ≤
+        (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+    (∀ s who,
+      |expect (pmfPi (G.finkProfile (z k) s)) (fun a =>
+          expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
+        G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+    ∀ s who (dev : PMF (G.Act who)),
+      expect (pmfPi (Function.update (G.finkProfile (z k) s) who dev))
+          (fun a => expect (G.transition s a)
+            (fun s' => G.finkValue zlim s' who)) ≤
+        G.finkValue zlim s who + (((n + 1 : ℕ) : ℝ))⁻¹
+  have hev : ∀ n, ∀ᶠ k in atTop, P n k := by
+    intro n
+    have hη : 0 < (((n + 1 : ℕ) : ℝ))⁻¹ := by positivity
+    have hv := G.eventually_finkValue_close hz hη
+    have hd := G.eventually_finkProfile_harmonic_excessive_close hz
+      (G.finkValue zlim) hharmonic hexcessive hη
+    filter_upwards [hv, hd] with k hk hdk
+    exact ⟨hk, hdk⟩
+  have hexN : ∀ n, ∃ N, ∀ k, N ≤ k → P n k := by
+    intro n
+    exact Filter.eventually_atTop.mp (hev n)
+  choose N hN using hexN
+  let ψ : ℕ → ℕ := fun n => Nat.rec (N 0)
+    (fun k previous => max (N (k + 1)) (previous + 1)) n
+  have hNle : ∀ n, N n ≤ ψ n := by
+    intro n
+    induction n with
+    | zero => simp [ψ]
+    | succ n ih =>
+        rw [show ψ (n + 1) = max (N (n + 1)) (ψ n + 1) by simp [ψ]]
+        exact le_max_left _ _
+  have hstep : ∀ n, ψ n < ψ (n + 1) := by
+    intro n
+    rw [show ψ (n + 1) = max (N (n + 1)) (ψ n + 1) by simp [ψ]]
+    exact lt_of_lt_of_le (Nat.lt_succ_self _) (le_max_right _ _)
+  refine ⟨ψ, strictMono_nat_of_lt_succ hstep, ?_⟩
+  intro n
+  exact hN n (ψ n) (hNle n)
+
 /-- Auxiliary pure payoffs are jointly continuous in the discount factor and
 the Fink-domain point. -/
 theorem continuous_finkDiscountedAuxPayoff_param
@@ -648,6 +738,228 @@ theorem exists_finkLimit_harmonic_excessive
     exact G.finkValue_excessive_pureDeviation_of_fixedPoint_tendsto
       approachOneDiscount U approachOneDiscount_nonneg
         approachOneDiscount_le_one hpay z zlim φ hfix hβlim hzlim s who d
+
+/-- Canonical Fink fixed points admit a further vanishing-discount family
+whose value and transition residuals have the explicit rate `1 / (n + 1)`.
+The theorem deliberately makes no claim about the growth of the corresponding
+scaled biases. -/
+theorem exists_fast_approachOne_finkFixedPoint_family
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)]
+    (U : ℝ) (hU : 0 ≤ U)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) :
+    ∃ (β : ℕ → ℝ) (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+      (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1),
+      (∀ n, G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n) ∧
+      Tendsto β atTop (nhds 1) ∧
+      ∀ n,
+        (∀ s who,
+          |G.finkValue (z n) s who - G.finkValue zlim s who| ≤
+            (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+        (∀ s who,
+          |expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+              expect (G.transition s a)
+                (fun s' => G.finkValue zlim s' who)) -
+            G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+        ∀ s who (dev : PMF (G.Act who)),
+          expect (pmfPi (Function.update (G.finkProfile (z n) s) who dev))
+              (fun a => expect (G.transition s a)
+                (fun s' => G.finkValue zlim s' who)) ≤
+            G.finkValue zlim s who + (((n + 1 : ℕ) : ℝ))⁻¹ := by
+  obtain ⟨z₀, zlim, φ, hfix, hφ, hzlim, hβlim⟩ :=
+    G.exists_convergent_approachOne_finkFixedPoint_subsequence U hU hpay
+  have hharmonic : ∀ s who,
+      G.finkValue zlim s who =
+        expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+          expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) := by
+    intro s who
+    exact G.finkValue_harmonic_of_fixedPoint_tendsto
+      approachOneDiscount U approachOneDiscount_nonneg
+        approachOneDiscount_le_one hpay z₀ zlim φ hfix hβlim hzlim s who
+  have hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) ≤
+          G.finkValue zlim s who := by
+    intro s who d
+    exact G.finkValue_excessive_pureDeviation_of_fixedPoint_tendsto
+      approachOneDiscount U approachOneDiscount_nonneg
+        approachOneDiscount_le_one hpay z₀ zlim φ hfix hβlim hzlim s who d
+  obtain ⟨ψ, hψ, happrox⟩ :=
+    G.exists_strictMono_finkApproximation_subsequence
+      (z := z₀ ∘ φ) hzlim hharmonic hexcessive
+  let β : ℕ → ℝ := fun n => approachOneDiscount (φ (ψ n))
+  let z : ℕ → G.finkDomain U := fun n => z₀ (φ (ψ n))
+  have hβ0 : ∀ n, 0 ≤ β n := fun n => approachOneDiscount_nonneg _
+  have hβ1 : ∀ n, β n < 1 := fun n => approachOneDiscount_lt_one _
+  refine ⟨β, z, zlim, hβ0, hβ1, ?_, ?_, ?_⟩
+  · intro n
+    simpa [β, z] using hfix (φ (ψ n))
+  · have ht := hβlim.comp hψ.tendsto_atTop
+    simpa only [β, Function.comp_def] using ht
+  · intro n
+    simpa only [z, Function.comp_apply] using happrox n
+
+-- ============================================================================
+-- Calendar schedules indexed by discounted Fink fixed points
+-- ============================================================================
+
+/-- Read a discounted fixed-point family according to the calendar index
+selector `κ`. -/
+def indexedFinkDiscount (β : ℕ → ℝ) (κ : ℕ → ℕ) (t : ℕ) : ℝ := β (κ t)
+
+/-- Stationary profile scheduled at time `t` by the index selector `κ`. -/
+def indexedFinkProfile (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : ℕ → G.finkDomain U) (κ : ℕ → ℕ) :
+    ℕ → G.StationaryMixedProfile :=
+  fun t => G.finkProfile (z (κ t))
+
+/-- Continuation values scheduled at time `t` by `κ`. -/
+def indexedFinkValue (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : ℕ → G.finkDomain U) (κ : ℕ → ℕ) :
+    ℕ → G.State → Payoff ι :=
+  fun t => G.finkValue (z (κ t))
+
+/-- Natural uniform bound on the scaled bias of discounted fixed point `n`. -/
+def finkScaledBiasBound (β : ℕ → ℝ) (U : ℝ) (n : ℕ) : ℝ :=
+  (β n / (1 - β n)) * U
+
+/-- Charge zero while an indexed schedule stays on one fixed point and the
+sum of the adjacent bias bounds when it switches. -/
+def indexedFinkSwitchError (β : ℕ → ℝ) (U : ℝ) (κ : ℕ → ℕ)
+    (t : ℕ) : ℝ :=
+  if κ (t + 1) = κ t then 0
+  else finkScaledBiasBound β U (κ (t + 1)) +
+    finkScaledBiasBound β U (κ t)
+
+/-- The exact quantitative calendar-selection property required to amortize
+scaled Fink biases while keeping accumulated harmonic/excessive drift
+negligible. -/
+def IsIndexedFinkCalendarSelectable (β : ℕ → ℝ) (U : ℝ)
+    (q r : ℕ → ℝ) : Prop :=
+  ∀ η : ℝ, 0 < η → ∃ (κ : ℕ → ℕ) (T₀ : ℕ),
+    ∀ T, T₀ ≤ T → 0 < T ∧
+      ((finkScaledBiasBound β U (κ 0) +
+            finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+            indexedFinkSwitchError β U κ t ≤ η) ∧
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        (q (κ t) + ∑ k ∈ Finset.range t, r (κ k)) ≤ η
+
+/-- Indexed Fink fixed points form a calendar-time Bellman schedule. -/
+theorem isDiscountedStationaryBellmanSchedule_indexedFink
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (κ : ℕ → ℕ) :
+    G.IsDiscountedStationaryBellmanSchedule
+      (indexedFinkDiscount β κ) (G.indexedFinkProfile z κ)
+        (G.indexedFinkValue z κ) := by
+  intro t
+  exact G.isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
+    (β (κ t)) U (hβ0 (κ t)) (hβ1 (κ t)).le hpay
+      (z (κ t)) (hfix (κ t))
+
+/-- The scheduled bias of an indexed fixed point obeys its natural scaled
+cube bound. -/
+theorem abs_scheduledFinkBias_indexed_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1) (z : ℕ → G.finkDomain U)
+    (κ : ℕ → ℕ) (t : ℕ) (s : G.State) (who : ι) :
+    |G.scheduledFinkBias (indexedFinkDiscount β κ)
+        (G.indexedFinkValue z κ) t s who| ≤
+      finkScaledBiasBound β U (κ t) := by
+  have hratio : 0 ≤ β (κ t) / (1 - β (κ t)) :=
+    div_nonneg (hβ0 (κ t)) (by linarith [hβ1 (κ t)])
+  rw [scheduledFinkBias]
+  change |(β (κ t) / (1 - β (κ t))) * G.finkValue (z (κ t)) s who| ≤ _
+  rw [abs_mul, abs_of_nonneg hratio]
+  exact mul_le_mul_of_nonneg_left (G.abs_finkValue_le (z (κ t)) s who) hratio
+
+/-- The adjacent-bias charge is a valid switching-error bound for every
+indexed Fink schedule. -/
+theorem isScheduledFinkSwitchBound_indexed
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1) (z : ℕ → G.finkDomain U)
+    (κ : ℕ → ℕ) :
+    G.IsScheduledFinkSwitchBound (indexedFinkDiscount β κ)
+      (G.indexedFinkValue z κ) (indexedFinkSwitchError β U κ) := by
+  intro t s who
+  by_cases hκ : κ (t + 1) = κ t
+  · simp [indexedFinkSwitchError, hκ, scheduledFinkBias,
+      indexedFinkDiscount, indexedFinkValue]
+  · have hnext := G.abs_scheduledFinkBias_indexed_le
+      β U hβ0 hβ1 z κ (t + 1) s who
+    have hcurrent := G.abs_scheduledFinkBias_indexed_le
+      β U hβ0 hβ1 z κ t s who
+    calc
+      |G.scheduledFinkBias (indexedFinkDiscount β κ)
+          (G.indexedFinkValue z κ) (t + 1) s who -
+        G.scheduledFinkBias (indexedFinkDiscount β κ)
+          (G.indexedFinkValue z κ) t s who| ≤
+          |G.scheduledFinkBias (indexedFinkDiscount β κ)
+            (G.indexedFinkValue z κ) (t + 1) s who| +
+          |G.scheduledFinkBias (indexedFinkDiscount β κ)
+            (G.indexedFinkValue z κ) t s who| := abs_sub _ _
+      _ ≤ finkScaledBiasBound β U (κ (t + 1)) +
+          finkScaledBiasBound β U (κ t) := add_le_add hnext hcurrent
+      _ = indexedFinkSwitchError β U κ t := by
+        simp [indexedFinkSwitchError, hκ]
+
+/-- Conditional indexed-family bridge to a uniform equilibrium payoff.  All
+game-theoretic verification is discharged here; the remaining hypothesis is
+the quantitative calendar selection condition balancing scaled biases against
+the accumulated harmonic/excessive residuals. -/
+theorem isUniformEquilibriumPayoff_of_indexedFinkFixedPoints
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (s₀ : G.State) (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (q r : ℕ → ℝ)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hclose : ∀ n s who, |G.finkValue (z n) s who - W s who| ≤ q n)
+    (hharmonic : ∀ n s who,
+      |expect (pmfPi (G.finkProfile (z n) s)) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) - W s who| ≤ r n)
+    (hexcessive : ∀ n s who (d : PMF (G.Act who)),
+      expect (pmfPi (Function.update (G.finkProfile (z n) s) who d))
+          (fun a => expect (G.transition s a) (fun s' => W s' who)) ≤
+        W s who + r n)
+    (hselect : IsIndexedFinkCalendarSelectable β U q r) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  apply G.isUniformEquilibriumPayoff_of_scheduledFink_harmonicTarget s₀ W
+  intro η hη
+  obtain ⟨κ, T₀, hκ⟩ := hselect η hη
+  refine ⟨indexedFinkDiscount β κ, G.indexedFinkProfile z κ,
+    G.indexedFinkValue z κ, indexedFinkSwitchError β U κ,
+    (fun t => finkScaledBiasBound β U (κ t)),
+    (fun t => q (κ t)), (fun t => r (κ t)), T₀, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact G.isDiscountedStationaryBellmanSchedule_indexedFink
+      β U hβ0 hβ1 hpay z hfix κ
+  · exact fun t => hβ1 (κ t)
+  · exact G.isScheduledFinkSwitchBound_indexed β U hβ0 hβ1 z κ
+  · exact G.abs_scheduledFinkBias_indexed_le β U hβ0 hβ1 z κ
+  · intro t s who
+    exact hclose (κ t) s who
+  · intro t s who
+    exact hharmonic (κ t) s who
+  · intro t s who d
+    exact hexcessive (κ t) s who d
+  · exact hκ
 
 end StochasticGame
 end GameTheory
