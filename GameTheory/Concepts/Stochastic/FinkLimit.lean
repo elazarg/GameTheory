@@ -7118,6 +7118,30 @@ theorem finkRelativeBoundaryHoldError_eq
     β hβpos hβ1 W z] at hfactor
   exact hfactor
 
+/-- Canonical root correction sequence attached to a discounted Fink family
+and a fixed unit boundary direction. -/
+noncomputable def finkRootCorrection
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (W K : G.State → Payoff ι) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (n : ℕ) : G.State → Payoff ι :=
+  G.finkReferenceCorrection (β n / (1 - β n))
+    (G.finkRelativeBias (β n) W (z n)) K
+
+/-- Hold defect of the next reference exposed by the root correction
+factorization. -/
+noncomputable def finkNextReferenceHoldError
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (W K : G.State → Payoff ι) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (n : ℕ) : ℝ :=
+  ‖G.finkContinuationResidualVector
+      (G.finkNextReferenceVector (β n / (1 - β n))
+        (G.finkRelativeBias (β n) W (z n)) W K) (z n)‖ +
+    G.finkPositiveContinuationGainSum
+      (G.finkNextReferenceVector (β n / (1 - β n))
+        (G.finkRelativeBias (β n) W (z n)) W K) (z n)
+
 /-- Along a verified root boundary, the corrected hold error is little-o of
 the inverse discount horizon plus the value error.  This is the asymptotic
 rate, rather than just pointwise convergence, exposed by the next hierarchy
@@ -8570,6 +8594,132 @@ theorem isIndexedFinkCorrectedCalendarSelectable_of_summableStepError
           hrTotal
       _ = η := by ring
   exact ⟨hTpos, hbiasLe, htarget⟩
+
+/-- Slow-calendar sufficient criterion for corrected selectability.  It joins
+a fast hierarchy subsequence to the concrete wait/advance calendar: the only
+drift budget required is the weighted repeated hold bill plus the fast edge
+bill. -/
+theorem isIndexedFinkCorrectedCalendarSelectable_of_slowCalendar
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (R : ℕ → G.State → Payoff ι) (q : ℕ → ℝ)
+    (hcalendar : ∀ ε : ℝ, 0 < ε →
+      ∃ (θ : ℕ → ℕ) (B : ℕ → ℝ),
+        let ν := slowUnitStepCalendar B
+        let κ := θ ∘ ν
+        Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+          finkScaledBiasBound β U (κ T)) atTop (nhds 0) ∧
+        Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t)
+            atTop (nhds 0) ∧
+        Tendsto (q ∘ κ) atTop (nhds 0) ∧
+        Tendsto (fun t => ‖R (κ t)‖) atTop (nhds 0) ∧
+        ‖R (θ 0)‖ ≤ ε ∧
+        Summable (fun n => G.finkCorrectedTargetStepError W
+          (R ∘ θ) (z ∘ θ) n) ∧
+        Summable (fun n => (slowCalendarBlockLength B n : ℝ) *
+          G.finkCorrectedTargetHoldError W (R ∘ θ) (z ∘ θ) n) ∧
+        (∑' n, (slowCalendarBlockLength B n : ℝ) *
+            G.finkCorrectedTargetHoldError W (R ∘ θ) (z ∘ θ) n) +
+          ∑' n, G.finkCorrectedTargetStepError W
+            (R ∘ θ) (z ∘ θ) n ≤ ε) :
+    G.IsIndexedFinkCorrectedCalendarSelectable β U z W R q := by
+  apply G.isIndexedFinkCorrectedCalendarSelectable_of_summableStepError
+  intro ε hε
+  obtain ⟨θ, B, hterminal, hswitch, hq, hR, hRzero,
+      hfast, hhold, htotal⟩ := hcalendar ε hε
+  let ν := slowUnitStepCalendar B
+  let κ := θ ∘ ν
+  have hslow := G.summable_finkCorrectedTargetStepError_slowCalendar
+    W (R ∘ θ) (z ∘ θ) B hfast hhold
+  refine ⟨κ, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · simpa only [κ, ν] using hterminal
+  · simpa only [κ, ν] using hswitch
+  · simpa only [κ, ν] using hq
+  · simpa only [κ, ν] using hR
+  · simpa only [κ, ν, slowUnitStepCalendar_zero,
+      Function.comp_apply] using hRzero
+  · simpa only [κ, ν, Function.comp_def] using hslow.1
+  · have hbound := hslow.2.trans htotal
+    simpa only [κ, ν, Function.comp_def] using hbound
+
+/-- Root-rate form of the slow-calendar criterion.  A rate-compatible root
+boundary branch is enough for corrected calendar selectability: its fast edge
+bill and `C` times its next-reference hold bill must fit in the requested
+error budget. -/
+theorem isIndexedFinkCorrectedCalendarSelectable_of_rootRateCompatibleSlowCalendar
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (U : ℝ) {U₀ : ℝ} (z : ℕ → G.finkDomain U₀)
+    (W K : G.State → Payoff ι) (q : ℕ → ℝ)
+    (hcalendar : ∀ ε : ℝ, 0 < ε →
+      ∃ (θ : ℕ → ℕ) (B : ℕ → ℝ) (C : ℝ),
+        let ν := slowUnitStepCalendar B
+        let κ := θ ∘ ν
+        Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+          finkScaledBiasBound β U (κ T)) atTop (nhds 0) ∧
+        Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t)
+            atTop (nhds 0) ∧
+        Tendsto (q ∘ κ) atTop (nhds 0) ∧
+        Tendsto (fun t => ‖G.finkRootCorrection β W K z (κ t)‖)
+          atTop (nhds 0) ∧
+        ‖G.finkRootCorrection β W K z (θ 0)‖ ≤ ε ∧
+        Summable (fun n => G.finkCorrectedTargetStepError W
+          (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n) ∧
+        Summable (G.finkNextReferenceHoldError β W K z ∘ θ) ∧
+        (∀ n, (slowCalendarBlockLength B n : ℝ) *
+          ((1 - β (θ n)) / β (θ n) +
+            ‖G.finkValue (z (θ n)) - W‖) ≤ C) ∧
+        C * ∑' n, G.finkNextReferenceHoldError β W K z (θ n) +
+          ∑' n, G.finkCorrectedTargetStepError W
+            (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n ≤ ε) :
+    G.IsIndexedFinkCorrectedCalendarSelectable β U z W
+      (G.finkRootCorrection β W K z) q := by
+  apply G.isIndexedFinkCorrectedCalendarSelectable_of_slowCalendar
+  intro ε hε
+  obtain ⟨θ, B, C, hterminal, hswitch, hq, hR, hRzero,
+      hfast, hnext, hdilation, hbudget⟩ := hcalendar ε hε
+  have hnext' : Summable (fun n =>
+      ‖G.finkContinuationResidualVector
+          (G.finkNextReferenceVector
+            ((β ∘ θ) n / (1 - (β ∘ θ) n))
+            (G.finkRelativeBias ((β ∘ θ) n) W ((z ∘ θ) n)) W K)
+          ((z ∘ θ) n)‖ +
+        G.finkPositiveContinuationGainSum
+          (G.finkNextReferenceVector
+            ((β ∘ θ) n / (1 - (β ∘ θ) n))
+            (G.finkRelativeBias ((β ∘ θ) n) W ((z ∘ θ) n)) W K)
+          ((z ∘ θ) n)) := by
+    simpa only [finkNextReferenceHoldError, Function.comp_def] using hnext
+  have hholdExplicit :=
+    G.summable_finkRelativeBoundaryWeightedHoldError_of_boundedDilation
+      B (β ∘ θ) (fun n => hβpos (θ n)) (fun n => hβ1 (θ n))
+      W K (z ∘ θ) hnext' C hdilation
+  have hhold : Summable (fun n => (slowCalendarBlockLength B n : ℝ) *
+      G.finkCorrectedTargetHoldError W
+        (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n) := by
+    simpa only [finkCorrectedTargetHoldError, finkRootCorrection,
+      Function.comp_apply] using hholdExplicit
+  have hweightedExplicit :=
+    G.tsum_finkRelativeBoundaryWeightedHoldError_le_of_boundedDilation
+      B (β ∘ θ) (fun n => hβpos (θ n)) (fun n => hβ1 (θ n))
+      W K (z ∘ θ) hnext' C hdilation
+  have hweighted :
+      ∑' n, (slowCalendarBlockLength B n : ℝ) *
+          G.finkCorrectedTargetHoldError W
+            (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n ≤
+        C * ∑' n, G.finkNextReferenceHoldError β W K z (θ n) := by
+    simpa only [finkCorrectedTargetHoldError, finkRootCorrection,
+      finkNextReferenceHoldError, Function.comp_apply] using hweightedExplicit
+  refine ⟨θ, B, hterminal, hswitch, hq, hR, hRzero,
+    hfast, hhold, ?_⟩
+  exact (add_le_add hweighted le_rfl).trans hbudget
 
 /-- A useful sufficient form of calendar selectability.  It separates the
 remaining construction into vanishing terminal bias, vanishing average switch
