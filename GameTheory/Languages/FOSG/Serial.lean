@@ -16,6 +16,10 @@ import Mathlib.Probability.ProbabilityMassFunction.Constructions
 
 Serialization of FOSGs into turn-based serial FOSGs.
 
+**Status:** experimental structural infrastructure. It remains in the public
+FOSG umbrella so clients can build on the serialized state/action invariants,
+but it is not yet a semantics-preserving game translation.
+
 This follows the paper's serial construction at the game-structure level. The
 serialized game inserts deterministic player-choice states and chance-resolution
 states. Deterministic inserted steps emit trivial observations, so serialized
