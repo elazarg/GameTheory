@@ -98,6 +98,37 @@ example {n : Nat} (D : DecisionDAG n) (A : Fin n → Type)
       (ShapeDAG.compileAction D A k).IsNash σ :=
   ShapeDAG.isEquilibriumIn_iff_isNash D A k σ
 
+/-- Node ownership on a sparse DAG compiles player-level joint plan
+deviations to the common kernel-game semantics. -/
+example {n : Nat} {Player : Type} [DecidableEq Player]
+    (D : DecisionDAG n) (owner : Fin n → Player) (A : Fin n → Type)
+    (u : (∀ i, A i) → Player → ℝ) (σ : ShapeDAG.Strategy D A) :
+    ShapeDAG.IsPlayerNash D owner u σ ↔
+      (ShapeDAG.compileOwned D owner A u).IsNash
+        (OwnedProfile.group owner σ) :=
+  ShapeDAG.isPlayerNash_iff_kernelNash D owner u σ
+
+/-- Player-level stability remains stronger than nodewise agent-form
+stability on an arbitrary sparse graph. -/
+example {n : Nat} {Player : Type} [DecidableEq Player]
+    {D : DecisionDAG n} {owner : Fin n → Player} {A : Fin n → Type}
+    {u : (∀ i, A i) → Player → ℝ} {σ : ShapeDAG.Strategy D A}
+    (hσ : ShapeDAG.IsPlayerNash D owner u σ) :
+    ShapeDAG.IsAgentEquilibrium D owner u σ :=
+  hσ.isAgentEquilibrium
+
+/-- The existing deviation-family calculus recovers DAG owner-fibre Nash
+exactly, with no graph-specific deviation-family definition. -/
+example {n : Nat} {Player : Type} [DecidableEq Player]
+    (D : DecisionDAG n) (owner : Fin n → Player) {A : Fin n → Type}
+    (u : (∀ i, A i) → Player → ℝ) (σ : ShapeDAG.Strategy D A) :
+    DeviationFamily.IsStableUnder
+        (DeviationFamily.fiber
+          (S := fun i => ShapeDAG.History D A i → A i) owner)
+        (ShapeDAG.realize D) u σ ↔
+      ShapeDAG.IsPlayerNash D owner u σ :=
+  ShapeDAG.isStableUnder_fiber_iff_isPlayerNash D owner u σ
+
 /-- Sparse graph conditioning has an exact one-action presentation without
 claiming an EFG subgame interpretation at imperfect information sets. -/
 example {n : Nat} (D : DecisionDAG n) {A : Fin n → Type}

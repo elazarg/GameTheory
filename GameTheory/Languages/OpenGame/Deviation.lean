@@ -113,6 +113,63 @@ theorem fiber_eq_singletonCoalition
 
 end DeviationFamily
 
+namespace OwnedProfile
+
+open DeviationFamily
+
+variable {Node Player Outcome : Type} [DecidableEq Node]
+variable {Plan : Node → Type}
+
+/-- Single-node deviation-family stability is exactly generic agent-form
+owned-profile equilibrium. -/
+theorem isStableUnder_single_iff_isAgentEquilibrium
+    (owner : Node → Player) (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) (σ : ∀ node, Plan node) :
+    IsStableUnder (single (S := Plan)) outcome
+        (fun result node => utility result (owner node)) σ ↔
+      IsAgentEquilibrium owner outcome utility σ := by
+  constructor
+  · intro h node deviation
+    exact h node (Function.update σ node deviation)
+      (single_update_mem σ node deviation)
+  · intro h node τ hτ
+    have hdev := h node (τ node)
+    rw [update_single_eq hτ] at hdev
+    exact hdev
+
+variable [DecidableEq Player]
+
+omit [DecidableEq Node] in
+/-- Owner-fibre deviation-family stability is exactly generic player-form
+Nash. -/
+theorem isStableUnder_fiber_iff_isPlayerNash
+    (owner : Node → Player) (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) (σ : ∀ node, Plan node) :
+    IsStableUnder (fiber (S := Plan) owner) outcome utility σ ↔
+      IsPlayerNash owner outcome utility σ := by
+  constructor
+  · intro h player deviation
+    let τ := ungroup owner (Function.update (group owner σ) player deviation)
+    have hmem : τ ∈ fiber owner σ player := by
+      intro node howner
+      simp [τ, ungroup, group, Function.update, howner]
+    exact h player τ hmem
+  · intro h player τ hτ
+    have hdev := h player τ
+    have hprofile : ungroup owner
+        (Function.update (group owner σ) player τ) = τ := by
+      funext node
+      by_cases howner : owner node = player
+      · simp [ungroup, Function.update, howner]
+      · simp [ungroup, group, Function.update, howner, hτ node howner]
+    change utility (outcome (ungroup owner
+      (Function.update (group owner σ) player τ))) player ≤
+        utility (outcome σ) player at hdev
+    rw [hprofile] at hdev
+    exact hdev
+
+end OwnedProfile
+
 namespace ShapeSeqDep
 
 open DeviationFamily
@@ -167,5 +224,38 @@ theorem isStableUnder_fiber_iff_isPlayerNash
     exact hdev
 
 end ShapeSeqDep
+
+namespace ShapeDAG
+
+open DeviationFamily
+
+variable {n : Nat} {Player : Type} [DecidableEq Player]
+variable {A : Fin n → Type}
+
+omit [DecidableEq Player] in
+/-- Single-node deviation-family stability recovers sparse-DAG agent-form
+equilibrium exactly. -/
+theorem isStableUnder_single_iff_isAgentEquilibrium
+    (D : DecisionDAG n) (owner : Fin n → Player)
+    (utility : (∀ i, A i) → Player → ℝ) (σ : Strategy D A) :
+    IsStableUnder
+        (single (S := fun i => History D A i → A i))
+        (realize D) (fun path i => utility path (owner i)) σ ↔
+      IsAgentEquilibrium D owner utility σ :=
+  OwnedProfile.isStableUnder_single_iff_isAgentEquilibrium
+    owner (realize D) utility σ
+
+/-- Owner-fibre deviation-family stability recovers sparse-DAG player-form
+Nash exactly. -/
+theorem isStableUnder_fiber_iff_isPlayerNash
+    (D : DecisionDAG n) (owner : Fin n → Player)
+    (utility : (∀ i, A i) → Player → ℝ) (σ : Strategy D A) :
+    IsStableUnder
+        (fiber (S := fun i => History D A i → A i) owner)
+        (realize D) utility σ ↔ IsPlayerNash D owner utility σ :=
+  OwnedProfile.isStableUnder_fiber_iff_isPlayerNash
+    owner (realize D) utility σ
+
+end ShapeDAG
 
 end OpenGames

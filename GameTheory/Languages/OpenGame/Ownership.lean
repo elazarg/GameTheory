@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Languages.OpenGame.Sequential
+import GameTheory.Languages.OpenGame.DAG
 
 /-!
 # Multi-Decision Ownership for Sequential Shapes
@@ -25,7 +25,161 @@ agent-form Nash.  The definitions below make the boundary available without
 silently identifying the two notions.
 -/
 
-namespace OpenGames.ShapeSeqDep
+namespace OpenGames
+
+/-! ## Representation-independent ownership -/
+
+/-! Generic ownership operations for any dependent family of node plans.
+
+The intentionally redundant player strategy gives each player a total node
+profile; realization reads only the coordinates owned by that player. This is
+the transport-free core shared by sequential and sparse-DAG presentations. -/
+namespace OwnedProfile
+
+variable {Node Player Outcome : Type} [DecidableEq Player]
+variable {Plan : Node → Type}
+
+/-- A player supplies a total plan profile; only owned coordinates are read. -/
+abbrev PlayerStrategy (_owner : Node → Player) (Plan : Node → Type)
+    (_player : Player) := ∀ node, Plan node
+
+/-- Regroup a node-indexed profile into redundant player-indexed profiles. -/
+def group (owner : Node → Player) (σ : ∀ node, Plan node) :
+    ∀ player, PlayerStrategy owner Plan player :=
+  fun _ => σ
+
+/-- Recover the plan at each node from the profile supplied by its owner. -/
+def ungroup (owner : Node → Player)
+    (σ : ∀ player, PlayerStrategy owner Plan player) : ∀ node, Plan node :=
+  fun node => σ (owner node) node
+
+omit [DecidableEq Player] in
+@[simp] theorem ungroup_group (owner : Node → Player)
+    (σ : ∀ node, Plan node) : ungroup owner (group owner σ) = σ := rfl
+
+/-- A single-node update is representable as a deviation by that node's
+owner, even when the owner controls other nodes. -/
+theorem ungroup_update_group [DecidableEq Node] (owner : Node → Player)
+    (σ : ∀ node, Plan node) (node : Node) (deviation : Plan node) :
+    ungroup owner
+        (Function.update (group owner σ) (owner node)
+          (group owner (Function.update σ node deviation) (owner node))) =
+      Function.update σ node deviation := by
+  funext other
+  by_cases howner : owner other = owner node
+  · simp [ungroup, group, Function.update, howner]
+  · have hne : other ≠ node := by
+      intro h
+      exact howner (congrArg owner h)
+    simp [ungroup, group, Function.update, howner, hne]
+
+/-- Under injective ownership, every owner deviation changes at most one
+node. -/
+theorem ungroup_update_of_injective [DecidableEq Node]
+    {owner : Node → Player} (howner : Function.Injective owner)
+    (σ : ∀ node, Plan node) (node : Node) (deviation : ∀ node, Plan node) :
+    ungroup owner (Function.update (group owner σ) (owner node) deviation) =
+      Function.update σ node (deviation node) := by
+  funext other
+  by_cases hne : other = node
+  · subst other
+    simp [ungroup, Function.update]
+  · have hownerNe : owner other ≠ owner node := by
+      intro h
+      exact hne (howner h)
+    simp [ungroup, group, Function.update, hownerNe, hne]
+
+/-- The NFG whose unilateral deviations replace all plans owned by one
+player. -/
+def ownedNFG (owner : Node → Player) (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) :
+    NFG.NFGGame Player (PlayerStrategy owner Plan) where
+  Outcome := Outcome
+  outcome σ := outcome (ungroup owner σ)
+  utility := utility
+
+/-- Compile a representation-independent owned profile game. -/
+noncomputable def compileOwned (owner : Node → Player)
+    (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) : GameTheory.KernelGame Player :=
+  (ownedNFG owner outcome utility).toKernelGame
+
+/-- Player-form Nash under an ownership map. -/
+def IsPlayerNash (owner : Node → Player)
+    (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) (σ : ∀ node, Plan node) : Prop :=
+  NFG.IsNashPure (ownedNFG owner outcome utility) (group owner σ)
+
+/-- Agent-form equilibrium tests one node at a time with its owner's
+utility. -/
+def IsAgentEquilibrium [DecidableEq Node] (owner : Node → Player)
+    (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) (σ : ∀ node, Plan node) : Prop :=
+  ∀ node (deviation : Plan node),
+    utility (outcome (Function.update σ node deviation)) (owner node) ≤
+      utility (outcome σ) (owner node)
+
+/-- Player-form Nash implies agent-form equilibrium for every owned profile
+representation. -/
+theorem IsPlayerNash.isAgentEquilibrium [DecidableEq Node]
+    {owner : Node → Player} {outcome : (∀ node, Plan node) → Outcome}
+    {utility : Outcome → Player → ℝ} {σ : ∀ node, Plan node}
+    (hσ : IsPlayerNash owner outcome utility σ) :
+    IsAgentEquilibrium owner outcome utility σ := by
+  intro node deviation
+  have hdev := hσ (owner node)
+    (group owner (Function.update σ node deviation) (owner node))
+  change
+    utility (outcome (Function.update σ node deviation)) (owner node) ≤
+      utility (outcome σ) (owner node)
+  simpa [IsPlayerNash, ownedNFG, NFG.deviate,
+    ungroup_update_group] using hdev
+
+/-- Injective ownership identifies player-form and agent-form deviations for
+an arbitrary dependent plan family. -/
+theorem isAgentEquilibrium_iff_isPlayerNash_of_injective [DecidableEq Node]
+    {owner : Node → Player} (howner : Function.Injective owner)
+    (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) (σ : ∀ node, Plan node) :
+    IsAgentEquilibrium owner outcome utility σ ↔
+      IsPlayerNash owner outcome utility σ := by
+  constructor
+  · intro hσ player deviation
+    change utility (outcome (ungroup owner
+        (Function.update (group owner σ) player deviation))) player ≤
+      utility (outcome σ) player
+    by_cases hp : ∃ node, owner node = player
+    · rcases hp with ⟨node, hnode⟩
+      have hlocal := hσ node (deviation node)
+      have hprofile : ungroup owner
+          (Function.update (group owner σ) player deviation) =
+          Function.update σ node (deviation node) := by
+        rw [← hnode]
+        exact ungroup_update_of_injective howner σ node deviation
+      rw [hprofile, ← hnode]
+      exact hlocal
+    · have hprofile : ungroup owner
+          (Function.update (group owner σ) player deviation) = σ := by
+        funext node
+        have hne : owner node ≠ player := by
+          intro h
+          exact hp ⟨node, h⟩
+        simp [ungroup, group, Function.update, hne]
+      rw [hprofile]
+  · exact IsPlayerNash.isAgentEquilibrium
+
+/-- Player-form Nash is exactly Nash of the generic compiled owned game. -/
+theorem isPlayerNash_iff_kernelNash (owner : Node → Player)
+    (outcome : (∀ node, Plan node) → Outcome)
+    (utility : Outcome → Player → ℝ) (σ : ∀ node, Plan node) :
+    IsPlayerNash owner outcome utility σ ↔
+      (compileOwned owner outcome utility).IsNash (group owner σ) := by
+  exact NFG.IsNashPure_iff_kernelGame (ownedNFG owner outcome utility)
+    (group owner σ)
+
+end OwnedProfile
+
+namespace ShapeSeqDep
 
 variable {n : Nat} {ι : Type} [DecidableEq ι]
 variable {A : Fin n → Type}
@@ -107,6 +261,22 @@ def IsAgentEquilibrium (owner : Fin n → ι)
   (ShapeSeqDep A).IsEquilibriumIn ()
     (fun path i => u path (owner i)) σ
 
+/-- The established sequential player-form predicate is the specialization of
+the representation-independent ownership core. -/
+theorem isPlayerNash_iff_ownedProfile (owner : Fin n → ι)
+    (u : (∀ i, A i) → ι → ℝ) (σ : Strategy A) :
+    IsPlayerNash owner u σ ↔
+      OwnedProfile.IsPlayerNash owner realize u σ :=
+  Iff.rfl
+
+omit [DecidableEq ι] in
+/-- Sequential agent form is likewise the generic one-node specialization. -/
+theorem isAgentEquilibrium_iff_ownedProfile (owner : Fin n → ι)
+    (u : (∀ i, A i) → ι → ℝ) (σ : Strategy A) :
+    IsAgentEquilibrium owner u σ ↔
+      OwnedProfile.IsAgentEquilibrium owner realize u σ :=
+  Iff.rfl
+
 /-- Player-form Nash implies agent-form equilibrium: every single-stage
 deviation is a special case of replacing all plans owned by that player. -/
 theorem IsPlayerNash.isAgentEquilibrium {owner : Fin n → ι}
@@ -168,7 +338,79 @@ theorem isPlayerNash_iff_kernelNash (owner : Fin n → ι)
   exact NFG.IsNashPure_iff_kernelGame (ownedNFG owner A u)
     (group owner σ)
 
-end OpenGames.ShapeSeqDep
+end ShapeSeqDep
+end OpenGames
+
+namespace OpenGames.ShapeDAG
+
+variable {n : Nat} {Player : Type} [DecidableEq Player]
+variable {A : Fin n → Type}
+
+/-- The player-form strategic game of a sparse decision DAG. A unilateral
+deviation replaces every node plan owned by that player. -/
+def ownedNFG (D : DecisionDAG n) (owner : Fin n → Player)
+    (A : Fin n → Type) (utility : (∀ i, A i) → Player → ℝ) :
+    NFG.NFGGame Player
+      (OwnedProfile.PlayerStrategy owner
+        (fun i => History D A i → A i)) :=
+  OwnedProfile.ownedNFG owner (realize D) utility
+
+/-- Compile sparse-DAG player-form deviations to the common kernel game. -/
+noncomputable def compileOwned (D : DecisionDAG n)
+    (owner : Fin n → Player) (A : Fin n → Type)
+    (utility : (∀ i, A i) → Player → ℝ) : GameTheory.KernelGame Player :=
+  OwnedProfile.compileOwned owner (realize D) utility
+
+/-- Player-form Nash for a sparse DAG under a node-ownership map. -/
+def IsPlayerNash (D : DecisionDAG n) (owner : Fin n → Player)
+    (utility : (∀ i, A i) → Player → ℝ) (σ : Strategy D A) : Prop :=
+  OwnedProfile.IsPlayerNash owner (realize D) utility σ
+
+/-- Agent-form equilibrium tests one DAG decision node at a time. -/
+def IsAgentEquilibrium (D : DecisionDAG n) (owner : Fin n → Player)
+    (utility : (∀ i, A i) → Player → ℝ) (σ : Strategy D A) : Prop :=
+  OwnedProfile.IsAgentEquilibrium owner (realize D) utility σ
+
+omit [DecidableEq Player] in
+/-- The generic agent-form ownership predicate is definitionally the plain
+sparse open-game equilibrium with each node evaluated by its owner's utility. -/
+theorem isAgentEquilibrium_iff_openGame (D : DecisionDAG n)
+    (owner : Fin n → Player) (utility : (∀ i, A i) → Player → ℝ)
+    (σ : Strategy D A) :
+    IsAgentEquilibrium D owner utility σ ↔
+      (OpenGames.ShapeDAG D A).IsEquilibriumIn ()
+        (fun path i => utility path (owner i)) σ :=
+  Iff.rfl
+
+/-- Player-form Nash implies the sparse open game's nodewise agent-form
+equilibrium. -/
+theorem IsPlayerNash.isAgentEquilibrium {D : DecisionDAG n}
+    {owner : Fin n → Player} {utility : (∀ i, A i) → Player → ℝ}
+    {σ : Strategy D A} (hσ : IsPlayerNash D owner utility σ) :
+    IsAgentEquilibrium D owner utility σ :=
+  OwnedProfile.IsPlayerNash.isAgentEquilibrium hσ
+
+/-- If no player owns two DAG nodes, player-form and agent-form deviations
+coincide. -/
+theorem isAgentEquilibrium_iff_isPlayerNash_of_injective
+    {D : DecisionDAG n} {owner : Fin n → Player}
+    (howner : Function.Injective owner)
+    (utility : (∀ i, A i) → Player → ℝ) (σ : Strategy D A) :
+    IsAgentEquilibrium D owner utility σ ↔
+      IsPlayerNash D owner utility σ :=
+  OwnedProfile.isAgentEquilibrium_iff_isPlayerNash_of_injective
+    howner (realize D) utility σ
+
+/-- Sparse-DAG player-form Nash is exactly Nash in its compiled kernel game. -/
+theorem isPlayerNash_iff_kernelNash (D : DecisionDAG n)
+    (owner : Fin n → Player) (utility : (∀ i, A i) → Player → ℝ)
+    (σ : Strategy D A) :
+    IsPlayerNash D owner utility σ ↔
+      (compileOwned D owner A utility).IsNash
+        (OwnedProfile.group owner σ) :=
+  OwnedProfile.isPlayerNash_iff_kernelNash owner (realize D) utility σ
+
+end OpenGames.ShapeDAG
 
 namespace OpenGames.ShapeSeqDep.OwnershipExample
 
