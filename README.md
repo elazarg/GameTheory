@@ -146,7 +146,11 @@ MAID-to-EFG bridge yields a behavioral kernel-game bisimulation and EFG
 perfect recall. The generic bridge now also exposes an exact equivalence of
 pure contingent plans and a bisimulation of the pure strategic forms; hence
 plain open equilibrium is exactly ordinary strategic-form Nash in the induced
-EFG (not yet subgame perfection).
+EFG. The canonical natural node order is now explicit, and a generic
+chance-free/full-observation criterion proves this induced tree has perfect
+information. Consequently its SPE and EFG one-shot-deviation predicates are
+equivalent; matching those subtree inequalities to the open conditioned
+predicate is the remaining refinement step.
 Native pure-policy evaluation is also adequate: its projected assignment law
 is the point mass at the open-game realization, and pure contingent-plan
 equilibrium agrees exactly with native pure-policy Nash, including arbitrary

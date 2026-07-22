@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.MAID.FoldEval
 import GameTheory.Languages.EFG.Syntax
+import GameTheory.Languages.EFG.Refinements
 import GameTheory.Languages.EFG.Kuhn
 import GameTheory.Core.GameSimulation
 import Mathlib.Logic.Relation
@@ -659,6 +660,117 @@ private theorem buildTree_decNode_mem
         obtain ⟨_, _, rfl, hr'⟩ := hex
         exact List.mem_cons.mpr (.inr (ih _ hr'))
     · exact List.mem_cons.mpr (.inr (ih _ hr))
+
+/-- Path uniqueness for MAID unrollings with no chance nodes and full
+observation of earlier decisions.  This is stronger than perfect recall: the
+complete histories to a repeated information-set label must coincide. -/
+private theorem buildTree_reach_decision_unique
+    {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (nodes : List (Fin n)) (hnodup : nodes.Nodup)
+    (hNoChance : ∀ nd ∈ nodes, S.kind nd ≠ .chance)
+    (hObserve : nodes.Pairwise fun earlier later =>
+      ∀ {p q : Fin m}, S.kind earlier = .decision p →
+        S.kind later = .decision q → earlier ∈ S.obsParents later)
+    (assign : MAID.TAssign S)
+    {h₁ h₂ : List (EFG.HistoryStep (maidInfoS S))}
+    {p : Fin m} {I : MAID.Infoset S p}
+    {next₁ next₂ : (maidInfoS S).Act I →
+      EFG.GameTree (maidInfoS S) (MAID.TAssign S)}
+    (hr₁ : EFG.ReachBy h₁ (buildTree S sem pol nodes assign)
+      (.decision I next₁))
+    (hr₂ : EFG.ReachBy h₂ (buildTree S sem pol nodes assign)
+      (.decision I next₂)) :
+    h₁ = h₂ ∧ HEq next₁ next₂ := by
+  induction nodes generalizing assign h₁ h₂ with
+  | nil =>
+      simp only [buildTree] at hr₁
+      exact False.elim (EFG.ReachBy_terminal_absurd hr₁)
+  | cons nd rest ih =>
+      have hnd_notin : nd ∉ rest := (List.nodup_cons.mp hnodup).1
+      have hrest_nodup : rest.Nodup := (List.nodup_cons.mp hnodup).2
+      have hNoChance_rest : ∀ nd' ∈ rest, S.kind nd' ≠ .chance :=
+        fun nd' hnd' => hNoChance nd' (List.mem_cons.mpr (.inr hnd'))
+      have hObserve_rest := (List.pairwise_cons.mp hObserve).2
+      unfold buildTree at hr₁
+      split at hr₁
+      · next hk => exact False.elim (hNoChance nd (by simp) hk)
+      · next q hk =>
+        unfold buildTree at hr₂
+        split at hr₂
+        · next hk' => exact nomatch hk.symm.trans hk'
+        · next q' hk' =>
+          have hqq : q = q' := by injection hk.symm.trans hk'
+          subst q'
+          cases EFG.ReachBy_decision_inv hr₁ with
+          | inl heq₁ =>
+            obtain ⟨rfl, hpq, hI₁, hnext₁⟩ := heq₁
+            subst hpq
+            have hIeq := eq_of_heq hI₁
+            subst hIeq
+            cases EFG.ReachBy_decision_inv hr₂ with
+            | inl heq₂ =>
+              obtain ⟨rfl, _, _, hnext₂⟩ := heq₂
+              exact ⟨rfl, hnext₁.symm.trans hnext₂⟩
+            | inr hex₂ =>
+              obtain ⟨_, _, rfl, hr₂'⟩ := hex₂
+              exfalso
+              exact hnd_notin (buildTree_decNode_mem sem pol rest _ hr₂')
+          | inr hex₁ =>
+            obtain ⟨a₁, _, rfl, hr₁'⟩ := hex₁
+            cases EFG.ReachBy_decision_inv hr₂ with
+            | inl heq₂ =>
+              obtain ⟨rfl, hpq, hI₂, _⟩ := heq₂
+              subst hpq
+              have hIeq := eq_of_heq hI₂
+              subst hIeq
+              exfalso
+              exact hnd_notin (buildTree_decNode_mem sem pol rest _ hr₁')
+            | inr hex₂ =>
+              obtain ⟨a₂, _, rfl, hr₂'⟩ := hex₂
+              have hI_mem : I.1.val ∈ rest :=
+                buildTree_decNode_mem sem pol rest _ hr₁'
+              have hnd_obs : nd ∈ S.obsParents I.1.val :=
+                (List.pairwise_cons.mp hObserve).1 I.1.val hI_mem hk I.1.2
+              have hs₁ := buildTree_obs_stable sem pol rest
+                (MAID.updateAssign assign nd ((S.valEquiv nd).symm a₁))
+                hr₁' hnd_obs hnd_notin
+              have hs₂ := buildTree_obs_stable sem pol rest
+                (MAID.updateAssign assign nd ((S.valEquiv nd).symm a₂))
+                hr₂' hnd_obs hnd_notin
+              rw [MAID.updateAssign_get_self] at hs₁ hs₂
+              have ha : a₁ = a₂ := (S.valEquiv nd).symm.injective
+                (hs₁.symm.trans hs₂)
+              subst a₂
+              obtain ⟨rfl, hnext⟩ := ih hrest_nodup hNoChance_rest
+                hObserve_rest _ hr₁' hr₂'
+              exact ⟨rfl, hnext⟩
+        · next a hk' => exact nomatch hk.symm.trans hk'
+      · next a hk =>
+        unfold buildTree at hr₂
+        split at hr₂
+        · next hk' => exact nomatch hk.symm.trans hk'
+        · next q hk' => exact nomatch hk.symm.trans hk'
+        · next a' hk' =>
+          have haa : a = a' := by injection hk.symm.trans hk'
+          subst a'
+          exact ih hrest_nodup hNoChance_rest hObserve_rest _ hr₁ hr₂
+
+/-- A chance-free MAID order in which every later decision observes every
+earlier decision unrolls to a perfect-information EFG tree. -/
+theorem buildTree_isPerfectInfo_of_pairwise_observation
+    {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol : MAID.Policy S)
+    (nodes : List (Fin n)) (hnodup : nodes.Nodup)
+    (hNoChance : ∀ nd ∈ nodes, S.kind nd ≠ .chance)
+    (hObserve : nodes.Pairwise fun earlier later =>
+      ∀ {p q : Fin m}, S.kind earlier = .decision p →
+        S.kind later = .decision q → earlier ∈ S.obsParents later)
+    (assign : MAID.TAssign S) :
+    EFG.IsPerfectInfo (buildTree S sem pol nodes assign) := by
+  intro h₁ h₂ p I next₁ next₂ hr₁ hr₂
+  exact buildTree_reach_decision_unique sem pol nodes hnodup hNoChance
+    hObserve assign hr₁ hr₂
 
 
 /-- The EFG tree built from a MAID with perfect recall has EFG perfect recall.

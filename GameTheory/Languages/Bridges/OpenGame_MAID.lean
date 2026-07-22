@@ -10,6 +10,7 @@ import GameTheory.Languages.MAID.Kuhn
 import GameTheory.Languages.Bridges.MAID_EFG
 import GameTheory.Concepts.Mixed.MixedExtension
 import GameTheory.Concepts.Foundations.GameMorphism
+import GameTheory.Theorems.OneShotDeviation
 
 /-!
 # Finite Sequential Open Games as MAIDs
@@ -998,14 +999,82 @@ theorem isEquilibriumIn_iff_behavioralNash (A : Fin n → Type)
 
 /-! ## Reuse of the existing MAID-to-EFG bridge -/
 
+/-- The explicit natural topological order of the canonical sequential MAID.
+Its node list is `[0, ..., 2n-1]`, so all stage decisions precede the utility
+nodes and appear in stage order. -/
+def sequentialTopologicalOrder (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] : MAID.TopologicalOrder (sequentialStruct A) :=
+  (sequentialStruct_naturalOrder A).toTopologicalOrder
+
+/-- The canonical sequential MAID has no chance nodes. -/
+theorem sequentialStruct_noChance (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (nd : Fin (n + n)) :
+    (sequentialStruct A).kind nd ≠ .chance := by
+  refine Fin.addCases (motive := fun nd =>
+    (sequentialStruct A).kind nd ≠ .chance) ?_ ?_ nd
+  · intro i
+    change nodeKind (Fin.castAdd n i) ≠ .chance
+    simp [nodeKind]
+  · intro i
+    change nodeKind (Fin.natAdd n i) ≠ .chance
+    unfold nodeKind
+    rw [Fin.addCases_right]
+    intro h
+    cases h
+
+/-- In natural node order, every later canonical decision observes every
+earlier canonical decision. -/
+theorem sequentialTopologicalOrder_pairwiseObservation (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] :
+    (sequentialTopologicalOrder A).order.Pairwise fun earlier later =>
+      ∀ {p q : Fin n},
+        (sequentialStruct A).kind earlier = .decision p →
+        (sequentialStruct A).kind later = .decision q →
+        earlier ∈ (sequentialStruct A).obsParents later := by
+  change (List.finRange (n + n)).Pairwise _
+  refine List.pairwise_iff_getElem.mpr ?_
+  intro i j hi hj hij p q hearlier hlater
+  let D₁ : MAID.DecisionNode (sequentialStruct A) p :=
+    ⟨(List.finRange (n + n))[i], hearlier⟩
+  let D₂ : MAID.DecisionNode (sequentialStruct A) q :=
+    ⟨(List.finRange (n + n))[j], hlater⟩
+  have h₁ := decisionNode_eq p D₁
+  have h₂ := decisionNode_eq q D₂
+  change (List.finRange (n + n))[i] = decisionNode p at h₁
+  change (List.finRange (n + n))[j] = decisionNode q at h₂
+  have hvals : ((List.finRange (n + n))[i]).val <
+      ((List.finRange (n + n))[j]).val := by
+    simpa [List.getElem_finRange] using hij
+  rw [h₁, h₂] at hvals ⊢
+  change decisionNode p ∈ (sequentialStruct A).parents (decisionNode q)
+  rw [decisionNode_mem_parents_decision]
+  simpa [decisionNode] using hvals
+
 /-- The EFG obtained by passing the canonical sequential MAID through the
-repository's general MAID-to-EFG translation.  The seed policy is semantically
-irrelevant to that translation; the existing bridge proves this internally. -/
+repository's general MAID-to-EFG translation at its explicit natural order.
+The seed policy is semantically irrelevant to that translation; the existing
+bridge proves this internally. -/
 def toEFG (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
     [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) : EFG.EFGGame :=
-  MAID_EFG.maidToEFG (sequentialStruct A) (sequentialSem A k)
-    (MAID.defaultPolicy (sequentialStruct A))
+  MAID_EFG.maidToEFGAt (sequentialStruct A) (sequentialSem A k)
+    (MAID.defaultPolicy (sequentialStruct A)) (sequentialTopologicalOrder A)
+
+/-- The EFG induced by the canonical sequential MAID has perfect information.
+Its natural order is chance-free and each later decision observes every
+earlier decision, so the generic MAID-unrolling criterion applies. -/
+theorem toEFG_isPerfectInfo (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) :
+    EFG.IsPerfectInfo (toEFG A k).tree := by
+  apply MAID_EFG.buildTree_isPerfectInfo_of_pairwise_observation
+  · exact (sequentialTopologicalOrder A).nodup
+  · intro nd _
+    exact sequentialStruct_noChance A nd
+  · exact sequentialTopologicalOrder_pairwiseObservation A
 
 /-- Encode an open-game contingent profile as a pure contingent plan of the
 EFG induced by the canonical MAID. -/
@@ -1015,6 +1084,21 @@ noncomputable def toEFGPureProfile (A : Fin n → Type)
     (σ : ShapeSeqDep.Strategy A) : EFG.PureProfile (toEFG A k).inf :=
   MAID_EFG.toEFGPureProfile (toPurePolicy A σ)
 
+/-- The existing finite perfect-information one-shot-deviation principle
+applies to every canonical finite-horizon EFG. -/
+theorem efg_isSubgamePerfectEq_iff_hasNoOneShotDeviation
+    (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (toEFG A k).IsSubgamePerfectEq (toEFGPureProfile A k σ) ↔
+      EFG.HasNoOneShotDeviation (toEFG A k) (toEFGPureProfile A k σ) := by
+  letI : Finite (toEFG A k).Outcome := by
+    change Finite (MAID.TAssign (sequentialStruct A))
+    infer_instance
+  exact EFG.oneShotDeviation_iff_spe (toEFG A k) (toEFGPureProfile A k σ)
+    (toEFG_isPerfectInfo A k)
+
 /-- The general MAID-to-EFG compiler supplies a game bisimulation for the
 canonical sequential presentation. -/
 def toEFGBisimulation (A : Fin n → Type)
@@ -1023,8 +1107,8 @@ def toEFGBisimulation (A : Fin n → Type)
     GameTheory.KernelGame.Bisimulation
       (MAID.toKernelGame (sequentialStruct A) (sequentialSem A k))
       ((toEFG A k).toKernelGame) :=
-  MAID_EFG.maidToEFG_bisimulation (sequentialSem A k)
-    (MAID.defaultPolicy (sequentialStruct A))
+  MAID_EFG.maidToEFGAt_bisimulation (sequentialSem A k)
+    (MAID.defaultPolicy (sequentialStruct A)) (sequentialTopologicalOrder A)
 
 /-- The complete-plan strategic kernel of the canonical MAID is bisimilar to
 the pure strategic kernel of its induced EFG. -/
@@ -1034,8 +1118,8 @@ noncomputable def toEFGPureBisimulation (A : Fin n → Type)
     GameTheory.KernelGame.Bisimulation
       (MAID.purePolicyKernelGame (sequentialStruct A) (sequentialSem A k))
       ((toEFG A k).toStrategicKernelGame) :=
-  MAID_EFG.maidToEFG_pure_bisimulation (sequentialSem A k)
-    (MAID.defaultPolicy (sequentialStruct A))
+  MAID_EFG.maidToEFGAt_pure_bisimulation (sequentialSem A k)
+    (MAID.defaultPolicy (sequentialStruct A)) (sequentialTopologicalOrder A)
 
 /-- Plain open-game equilibrium corresponds exactly to strategic-form Nash in
 the induced EFG.  This theorem deliberately says Nash, not subgame perfection;
@@ -1064,7 +1148,8 @@ theorem toEFG_perfectRecall (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
     [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) :
     EFG.PerfectRecall (toEFG A k).tree :=
-  MAID_EFG.maidToEFG_perfectRecall (sequentialStruct_perfectRecall A)
+  MAID_EFG.buildTree_perfectRecall (sequentialStruct_perfectRecall A)
     (sequentialSem A k) (MAID.defaultPolicy (sequentialStruct A))
+    (sequentialTopologicalOrder A)
 
 end OpenGames.ShapeSeqDep.MAIDBridge

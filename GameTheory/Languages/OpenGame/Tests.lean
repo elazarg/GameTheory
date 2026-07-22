@@ -212,6 +212,21 @@ example {n : Nat} (A : Fin n → Type)
         (ShapeSeqDep.MAIDBridge.toEFGPureProfile A k σ) :=
   ShapeSeqDep.MAIDBridge.isEquilibriumIn_iff_efgIsNash A k σ
 
+/-- The canonical finite-horizon EFG is perfect-information, so its SPE and
+one-shot-deviation predicates coincide. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    EFG.IsPerfectInfo (ShapeSeqDep.MAIDBridge.toEFG A k).tree ∧
+      ((ShapeSeqDep.MAIDBridge.toEFG A k).IsSubgamePerfectEq
+          (ShapeSeqDep.MAIDBridge.toEFGPureProfile A k σ) ↔
+        EFG.HasNoOneShotDeviation (ShapeSeqDep.MAIDBridge.toEFG A k)
+          (ShapeSeqDep.MAIDBridge.toEFGPureProfile A k σ)) :=
+  ⟨ShapeSeqDep.MAIDBridge.toEFG_isPerfectInfo A k,
+    ShapeSeqDep.MAIDBridge.efg_isSubgamePerfectEq_iff_hasNoOneShotDeviation
+      A k σ⟩
+
 /-- Perfect recall transfers through the existing MAID-to-EFG bridge. -/
 example {n : Nat} (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
