@@ -299,33 +299,29 @@ structure EUMorphism (G H : KernelGame ι) extends Morphism G H where
   eu_preserved : ∀ (σ : Profile G) (who : ι),
     H.eu (fun i => stratMap i (σ i)) who = G.eu σ who
 
-/-- Upgrade a finite-outcome utility-distribution morphism to the EU-specialized
-morphism expected by solution-concept transport theorems. -/
-def Morphism.toEUMorphismOfFintypeOutcome {G H : KernelGame ι}
-    [Finite G.Outcome] [Finite H.Outcome] (f : Morphism G H) :
-    EUMorphism G H where
-  toMorphism := f
-  eu_preserved := f.eu_preserved_of_fintype_outcome
-
-/-- Upgrade a bounded utility-distribution morphism to the EU-specialized
-morphism expected by solution-concept transport theorems. -/
-def Morphism.toEUMorphismOfBounded {G H : KernelGame ι}
-    (f : Morphism G H)
-    {C_G C_H : ι → ℝ}
-    (hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who)
-    (hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who) :
-    EUMorphism G H where
-  toMorphism := f
-  eu_preserved := f.eu_preserved_of_bounded hbdG hbdH
-
 /-- Upgrade any utility-distribution morphism to the EU-specialized morphism
-expected by solution-concept transport theorems, unconditionally. Special
-case of `toEUMorphismOfBounded`/`toEUMorphismOfFintypeOutcome` made possible
-by the unconditional `Morphism.eu_preserved`. -/
+expected by solution-concept transport theorems, unconditionally. -/
 def Morphism.toEUMorphism {G H : KernelGame ι} (f : Morphism G H) :
     EUMorphism G H where
   toMorphism := f
   eu_preserved := f.eu_preserved
+
+/-- Compatibility wrapper for `Morphism.toEUMorphism` under the historical
+finite-outcome hypotheses. Expected-utility preservation is unconditional. -/
+def Morphism.toEUMorphismOfFintypeOutcome {G H : KernelGame ι}
+    [Finite G.Outcome] [Finite H.Outcome] (f : Morphism G H) :
+    EUMorphism G H :=
+  f.toEUMorphism
+
+/-- Compatibility wrapper for `Morphism.toEUMorphism` under the historical
+bounded-utility hypotheses. Expected-utility preservation is unconditional. -/
+def Morphism.toEUMorphismOfBounded {G H : KernelGame ι}
+    (f : Morphism G H)
+    {C_G C_H : ι → ℝ}
+    (_hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who)
+    (_hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who) :
+    EUMorphism G H :=
+  f.toEUMorphism
 
 namespace EUMorphism
 

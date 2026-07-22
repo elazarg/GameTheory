@@ -47,8 +47,8 @@ noncomputable def Morphism.realizeLaw {G H : KernelGame ι} (f : Morphism G H)
 
 omit [DecidableEq ι] in
 /-- Correlated EU is preserved along a realized profile-law, under bounded
-utility. The semantic content is already `Morphism.eu_preserved_of_bounded`;
-boundedness only justifies reading correlated EU as an expectation of `eu`. -/
+utility. Pointwise EU preservation is unconditional; boundedness here only
+justifies reading correlated EU as an expectation of `eu`. -/
 theorem Morphism.correlatedEu_preserved_of_bounded {G H : KernelGame ι}
     (f : Morphism G H)
     {C_G C_H : ι → ℝ}
@@ -58,7 +58,7 @@ theorem Morphism.correlatedEu_preserved_of_bounded {G H : KernelGame ι}
     H.correlatedEu (f.realizeLaw μ) who = G.correlatedEu μ who := by
   rw [Morphism.realizeLaw, correlatedEu_eq_expect_eu_of_bounded _ who (hbdH who), expect_map,
     correlatedEu_eq_expect_eu_of_bounded μ who (hbdG who)]
-  exact congrArg (expect μ) (funext fun σ => f.eu_preserved_of_bounded hbdG hbdH σ who)
+  exact congrArg (expect μ) (funext fun σ => f.eu_preserved σ who)
 
 namespace EUGameIsomorphism
 
