@@ -14,6 +14,10 @@ import Math.Probability
 
 Welfare theorems relating social welfare to individual expected utilities.
 
+Despite the historical filename, this module is not a formalization of the
+first or second fundamental theorem of welfare economics. Its scope is the
+team-game and Pareto-efficiency results listed below.
+
 ## Main results
 
 - `IsTeamGame.socialWelfare_eq` — in a team game with `n` players,
