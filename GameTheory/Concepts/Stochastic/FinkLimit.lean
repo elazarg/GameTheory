@@ -7492,6 +7492,70 @@ theorem sum_finkCorrectedTargetStepError_slowCalendar_at_start_le
     (fun n => G.finkCorrectedTargetHoldError W R z n) N] at hbound
   exact hbound
 
+/-- Summability of the block-length-weighted hold errors is sufficient to
+transport the fast corrected subsequence through the concrete slow calendar.
+The resulting total error is bounded by the weighted hold total plus the fast
+adjacent-step total. -/
+theorem summable_finkCorrectedTargetStepError_slowCalendar
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (B : ℕ → ℝ)
+    (hfast : Summable (fun n =>
+      G.finkCorrectedTargetStepError W R z n))
+    (hhold : Summable (fun n => (slowCalendarBlockLength B n : ℝ) *
+      G.finkCorrectedTargetHoldError W R z n)) :
+    Summable (fun t => G.finkCorrectedTargetStepError W
+        (R ∘ slowUnitStepCalendar B)
+        (z ∘ slowUnitStepCalendar B) t) ∧
+      ∑' t, G.finkCorrectedTargetStepError W
+          (R ∘ slowUnitStepCalendar B)
+          (z ∘ slowUnitStepCalendar B) t ≤
+        (∑' n, (slowCalendarBlockLength B n : ℝ) *
+          G.finkCorrectedTargetHoldError W R z n) +
+        ∑' n, G.finkCorrectedTargetStepError W R z n := by
+  let ν := slowUnitStepCalendar B
+  let e : ℕ → ℝ := fun t =>
+    G.finkCorrectedTargetStepError W (R ∘ ν) (z ∘ ν) t
+  let w : ℕ → ℝ := fun n => (slowCalendarBlockLength B n : ℝ) *
+    G.finkCorrectedTargetHoldError W R z n
+  have he0 : ∀ t, 0 ≤ e t := fun t =>
+    G.finkCorrectedTargetStepError_nonneg W (R ∘ ν) (z ∘ ν) t
+  have hw0 : ∀ n, 0 ≤ w n := fun n => mul_nonneg
+    (Nat.cast_nonneg _) (G.finkCorrectedTargetHoldError_nonneg W R z n)
+  have hprefix : ∀ T, ∑ t ∈ Finset.range T, e t ≤
+      (∑' n, w n) + ∑' n,
+        G.finkCorrectedTargetStepError W R z n := by
+    intro T
+    let N := ν T + 1
+    have hTstart : T < slowCalendarStart B N := by
+      have hinterval := (slowUnitStepCalendar_eq_iff B T (ν T)).1 rfl
+      exact hinterval.2
+    have hmono : ∑ t ∈ Finset.range T, e t ≤
+        ∑ t ∈ Finset.range (slowCalendarStart B N), e t := by
+      exact Finset.sum_le_sum_of_subset_of_nonneg
+        (Finset.range_mono hTstart.le) (fun t ht hnot => he0 t)
+    have hactivation :=
+      G.sum_finkCorrectedTargetStepError_slowCalendar_at_start_le
+        W R z B hfast N
+    have hweighted : ∑ n ∈ Finset.range N, w n ≤ ∑' n, w n :=
+      hhold.sum_le_tsum (Finset.range N) (fun n _ => hw0 n)
+    calc
+      ∑ t ∈ Finset.range T, e t ≤
+          ∑ t ∈ Finset.range (slowCalendarStart B N), e t := hmono
+      _ ≤ ∑ n ∈ Finset.range N, w n +
+          ∑' n, G.finkCorrectedTargetStepError W R z n := by
+        simpa only [e, ν, w] using hactivation
+      _ ≤ (∑' n, w n) +
+          ∑' n, G.finkCorrectedTargetStepError W R z n :=
+        add_le_add hweighted le_rfl
+  have hesum : Summable e :=
+    summable_of_sum_range_le he0 hprefix
+  have hetotal : ∑' t, e t ≤ (∑' n, w n) +
+      ∑' n, G.finkCorrectedTargetStepError W R z n :=
+    Real.tsum_le_of_sum_range_le he0 hprefix
+  simpa only [e, ν, w] using And.intro hesum hetotal
+
 /-- Sharp adjacent switching charge obtained by centering the scaled Fink
 bias at a target vector `W`.  The first term is the actual relative-bias
 change; the second is only the change of discount scale applied to `W`. -/
