@@ -115,11 +115,6 @@ theorem unanimity_isIIA : IsIIA (unanimity : SWF ι A) := by
     determines the social ranking. -/
 def IsNonDictatorial (f : SWF ι A) : Prop := ¬f.IsDictatorial
 
-/-- Compatibility predicate for the structurally unrestricted domain of `SWF`.
-Every `SWF` accepts every profile `ι → PrefRel A`, so unrestrictedness is
-encoded by its type and this proposition is always true. -/
-abbrev HasUnrestrictedDomain (_f : SWF ι A) : Prop := True
-
 end SWF
 
 end GameTheory
