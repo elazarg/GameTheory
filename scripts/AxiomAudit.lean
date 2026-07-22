@@ -54,7 +54,7 @@ import Math.SchauderFixedPoint
 #print axioms GameTheory.MatchingMarket.OptionalOrder.lattice
 #print axioms GameTheory.CoalGame.IsCore.isBalanced
 #print axioms GameTheory.CoalGame.costOfStability_eq_zero_iff_core
-#print axioms GameTheory.CoalGame.banzhafIndex_additive
+#print axioms GameTheory.CoalGame.probabilisticBanzhafValue_additive
 #print axioms GameTheory.CoalGame.shapleyShubikIndex_sum_eq_one
 
 -- Indivisible fair division and correlation saturation.
