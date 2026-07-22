@@ -22,6 +22,12 @@ Provides:
 - `KernelGame.Guarantees.mono` — monotonicity of guarantees in the bound
 - `KernelGame.IsSaddlePoint` — saddle point for 2-player games
 - `KernelGame.isSaddlePoint_iff_isNash` — saddle point ↔ Nash equilibrium for 2-player games
+
+For an independent matrix-level induction route, see
+`Loomis.minmax_from_general` in `Math.Minimax.Loomis`. That theorem
+specializes the positive-`B` Loomis theorem, whereas
+`KernelGame.von_neumann_minimax` below uses mixed-Nash existence for arbitrary
+finite two-player zero-sum kernel games; neither development imports the other.
 -/
 
 namespace GameTheory
