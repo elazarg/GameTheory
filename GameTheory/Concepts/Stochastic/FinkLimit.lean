@@ -528,6 +528,60 @@ def finkNextReferenceVector (G : StochasticGame ι)
     (a : ℝ) (J R K : G.State → Payoff ι) : G.State → Payoff ι :=
   (a / (1 + ‖J‖)) • R + K
 
+/-- Scalar coefficient of the projective direction used to correct the
+current reference potential. -/
+def finkReferenceCorrectionScale (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] (a : ℝ)
+    (J : G.State → Payoff ι) : ℝ :=
+  (1 + ‖J‖) / a
+
+/-- Boundary correction applied to a reference potential. -/
+def finkReferenceCorrection (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    (a : ℝ) (J K : G.State → Payoff ι) : G.State → Payoff ι :=
+  G.finkReferenceCorrectionScale a J • K
+
+/-- Continuation residuals respect addition. -/
+theorem finkContinuationResidualVector_add
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (R K : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U) :
+    G.finkContinuationResidualVector (R + K) z =
+      G.finkContinuationResidualVector R z +
+        G.finkContinuationResidualVector K z := by
+  ext s who
+  simp only [finkContinuationResidualVector, finkContinuationResidual,
+    Pi.add_apply]
+  rw [G.finkContinuationEU_add]
+  ring
+
+/-- Continuation residuals respect scalar multiplication. -/
+theorem finkContinuationResidualVector_smul
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (c : ℝ) (R : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U) :
+    G.finkContinuationResidualVector (c • R) z =
+      c • G.finkContinuationResidualVector R z := by
+  ext s who
+  simp only [finkContinuationResidualVector, finkContinuationResidual,
+    Pi.smul_apply, smul_eq_mul]
+  rw [G.finkContinuationEU_smul]
+  ring
+
+/-- Adding the boundary correction to the current reference is the same as
+rescaling the updated reference potential. -/
+theorem add_finkReferenceCorrection_eq_smul_nextReferenceVector
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (a : ℝ) (J R K : G.State → Payoff ι) (ha : a ≠ 0) :
+    R + G.finkReferenceCorrection a J K =
+      G.finkReferenceCorrectionScale a J •
+        G.finkNextReferenceVector a J R K := by
+  have hmag : 1 + ‖J‖ ≠ 0 := by positivity
+  ext s who
+  simp only [finkReferenceCorrection, finkReferenceCorrectionScale,
+    finkNextReferenceVector, Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+  field_simp [ha, hmag]
+
 /-- The Poisson recursion preserves the representation of its forcing as a
 continuation residual. -/
 theorem finkNextPoissonRemainderVector_eq_continuationResidualVector
@@ -562,6 +616,109 @@ theorem finkNextDeviationGain_eq_continuationGain
         z s who d := by
   simp only [finkNextDeviationGain, finkNextReferenceVector]
   rw [G.finkContinuationGain_add, G.finkContinuationGain_smul]
+
+/-- The boundary-corrected reference residual is exactly the next Poisson
+forcing multiplied by the correction scale. -/
+theorem finkContinuationResidualVector_add_correction
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (J R K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (ha : a ≠ 0) :
+    G.finkContinuationResidualVector
+        (R + G.finkReferenceCorrection a J K) z =
+      G.finkReferenceCorrectionScale a J •
+        G.finkNextPoissonRemainderVector a
+          (G.finkContinuationResidualVector R z) J K z := by
+  rw [G.add_finkReferenceCorrection_eq_smul_nextReferenceVector
+    a J R K ha]
+  rw [G.finkContinuationResidualVector_smul]
+  rw [G.finkNextPoissonRemainderVector_eq_continuationResidualVector]
+
+/-- Every pure-deviation gain of the boundary-corrected reference is the
+same correction scale times the next deviation forcing. -/
+theorem finkContinuationGain_add_correction
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (J R K : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) (ha : a ≠ 0)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkContinuationGain
+        (R + G.finkReferenceCorrection a J K) z s who d =
+      G.finkReferenceCorrectionScale a J *
+        G.finkNextDeviationGain a
+          (fun s who d => G.finkContinuationGain R z s who d)
+          J K z s who d := by
+  rw [G.add_finkReferenceCorrection_eq_smul_nextReferenceVector
+    a J R K ha]
+  rw [G.finkContinuationGain_smul]
+  rw [G.finkNextDeviationGain_eq_continuationGain]
+
+/-- If the correction scale and next reference residual vanish, then the
+corrected current reference is asymptotically harmonic. -/
+theorem tendsto_finkContinuationResidualVector_add_correction_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (a : ℕ → ℝ) (J R : ℕ → G.State → Payoff ι)
+    (K : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (ha : ∀ n, a n ≠ 0)
+    (hscale : Tendsto (fun n => G.finkReferenceCorrectionScale
+      (a n) (J n)) atTop (nhds 0))
+    (hnext : Tendsto (fun n => G.finkContinuationResidualVector
+      (G.finkNextReferenceVector (a n) (J n) (R n) K) (z n))
+      atTop (nhds 0)) :
+    Tendsto (fun n => G.finkContinuationResidualVector
+      (R n + G.finkReferenceCorrection (a n) (J n) K) (z n))
+      atTop (nhds 0) := by
+  have hprod := hscale.smul hnext
+  have heq : (fun n => G.finkContinuationResidualVector
+      (R n + G.finkReferenceCorrection (a n) (J n) K) (z n)) =
+      fun n => G.finkReferenceCorrectionScale (a n) (J n) •
+        G.finkContinuationResidualVector
+          (G.finkNextReferenceVector (a n) (J n) (R n) K) (z n) := by
+    funext n
+    rw [G.finkContinuationResidualVector_add_correction
+      (a n) (J n) (R n) K (z n) (ha n)]
+    rw [G.finkNextPoissonRemainderVector_eq_continuationResidualVector]
+  rw [heq]
+  simpa only [zero_smul] using hprod
+
+/-- The same hypotheses turn asymptotically nonpositive next-reference gains
+into asymptotically nonpositive gains for the corrected current reference. -/
+theorem eventually_finkContinuationGain_add_correction_le
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (a : ℕ → ℝ) (J R : ℕ → G.State → Payoff ι)
+    (K : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (ha : ∀ n, a n ≠ 0)
+    (hscale0 : ∀ n, 0 ≤ G.finkReferenceCorrectionScale (a n) (J n))
+    (hscale : Tendsto (fun n => G.finkReferenceCorrectionScale
+      (a n) (J n)) atTop (nhds 0))
+    (hnext : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain
+          (G.finkNextReferenceVector (a n) (J n) (R n) K)
+            (z n) s who d ≤ ε) :
+    ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain
+          (R n + G.finkReferenceCorrection (a n) (J n) K)
+            (z n) s who d ≤ ε := by
+  intro ε hε
+  have hscaleOne : ∀ᶠ n in atTop,
+      G.finkReferenceCorrectionScale (a n) (J n) < 1 :=
+    hscale.eventually (Iio_mem_nhds (by norm_num : (0 : ℝ) < 1))
+  filter_upwards [hscaleOne, hnext ε hε] with n hnScale hn
+  intro s who d
+  have hgainEq := G.finkContinuationGain_add_correction
+    (a n) (J n) (R n) K (z n) (ha n) s who d
+  have hnextEq := G.finkNextDeviationGain_eq_continuationGain
+    (a n) (J n) (R n) K (z n) s who d
+  rw [hnextEq] at hgainEq
+  rw [hgainEq]
+  exact (mul_le_mul_of_nonneg_left (hn s who d) (hscale0 n)).trans
+    (by nlinarith)
 
 /-- Bias correction only changes the decomposition of the total scheduled
 potential: corrected bias plus new scale times new reference is exactly the
@@ -2546,6 +2703,185 @@ inductive FinkVerifiedResolution (G : StochasticGame ι)
           (a (φ n)) (D (φ n)) (J (φ n)) K (z (φ n)) s who d)) :
       G.FinkVerifiedResolution z V a E J D
 
+/-- Verified hierarchy with its underlying reference potential made explicit.
+At every boundary, the next Poisson forcing and deviation forcing are the
+continuation residual and continuation gain of the same updated potential. -/
+inductive FinkVerifiedReferenceResolution (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} :
+    (ℕ → G.finkDomain U) →
+    (ℕ → G.State → Payoff ι) →
+    (ℕ → ℝ) →
+    (ℕ → G.State → Payoff ι) →
+    (ℕ → G.State → Payoff ι) → Prop
+  | interior
+      {z : ℕ → G.finkDomain U} {V : ℕ → G.State → Payoff ι}
+      {a : ℕ → ℝ} {J R : ℕ → G.State → Payoff ι}
+      (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι)
+      (hφ : StrictMono φ)
+      (hJlim : Tendsto (J ∘ φ) atTop (nhds Jlim)) :
+      G.FinkVerifiedReferenceResolution z V a J R
+  | boundary
+      {z : ℕ → G.finkDomain U} {V : ℕ → G.State → Payoff ι}
+      {a : ℕ → ℝ} {J R : ℕ → G.State → Payoff ι}
+      (K : G.State → Payoff ι) (φ : ℕ → ℕ)
+      (hφ : StrictMono φ)
+      (hJlim : Tendsto (G.compactifyFinkBias ∘ J ∘ φ)
+        atTop (nhds K))
+      (hKnorm : ‖K‖ = 1)
+      (hnextResidual : Tendsto (fun n =>
+        G.finkContinuationResidualVector
+          (G.finkNextReferenceVector (a (φ n)) (J (φ n))
+            (R (φ n)) K) (z (φ n))) atTop (nhds 0))
+      (hnextGain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+        ∀ s who (d : G.Act who),
+          G.finkContinuationGain
+            (G.finkNextReferenceVector (a (φ n)) (J (φ n))
+              (R (φ n)) K) (z (φ n)) s who d ≤ ε)
+      (tail : G.FinkVerifiedReferenceResolution
+        (z ∘ φ) (V ∘ φ)
+        (fun n => 1 + ‖J (φ n)‖)
+        (fun n => G.finkCorrectedBias (J (φ n)) K)
+        (fun n => G.finkNextReferenceVector
+          (a (φ n)) (J (φ n)) (R (φ n)) K)) :
+      G.FinkVerifiedReferenceResolution z V a J R
+
+/-- A verified reference hierarchy already gives the correction needed at its
+root boundary.  Either the root bias is precompact along a subsequence, or a
+single projective correction tends to zero while making the root reference
+asymptotically harmonic and asymptotically excessive against every pure
+deviation. -/
+theorem FinkVerifiedReferenceResolution.rootCorrection_dichotomy
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {V J R : ℕ → G.State → Payoff ι}
+    {a : ℕ → ℝ}
+    (hresolution : G.FinkVerifiedReferenceResolution z V a J R)
+    (ha : ∀ n, a n ≠ 0)
+    (hscale0 : ∀ n, 0 ≤ G.finkReferenceCorrectionScale (a n) (J n))
+    (hscale : Tendsto (fun n => G.finkReferenceCorrectionScale
+      (a n) (J n)) atTop (nhds 0)) :
+    (∃ (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι),
+      StrictMono φ ∧ Tendsto (J ∘ φ) atTop (nhds Jlim)) ∨
+    ∃ (K : G.State → Payoff ι) (φ : ℕ → ℕ),
+      StrictMono φ ∧ ‖K‖ = 1 ∧
+      Tendsto (fun n => G.finkReferenceCorrection
+        (a (φ n)) (J (φ n)) K) atTop (nhds 0) ∧
+      Tendsto (fun n => G.finkContinuationResidualVector
+        (R (φ n) + G.finkReferenceCorrection
+          (a (φ n)) (J (φ n)) K) (z (φ n))) atTop (nhds 0) ∧
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+        ∀ s who (d : G.Act who),
+          G.finkContinuationGain
+            (R (φ n) + G.finkReferenceCorrection
+              (a (φ n)) (J (φ n)) K)
+            (z (φ n)) s who d ≤ ε := by
+  cases hresolution with
+  | interior φ Jlim hφ hJlim =>
+      exact Or.inl ⟨φ, Jlim, hφ, hJlim⟩
+  | boundary K φ hφ hJlim hKnorm hnextResidual hnextGain tail =>
+      right
+      have hscaleφ : Tendsto (fun n => G.finkReferenceCorrectionScale
+          (a (φ n)) (J (φ n))) atTop (nhds 0) := by
+        simpa only [Function.comp_def] using
+          hscale.comp hφ.tendsto_atTop
+      have hcorrection : Tendsto (fun n => G.finkReferenceCorrection
+          (a (φ n)) (J (φ n)) K) atTop (nhds 0) := by
+        simpa only [finkReferenceCorrection, zero_smul] using
+          hscaleφ.smul_const K
+      have hresidual :=
+        G.tendsto_finkContinuationResidualVector_add_correction_zero
+          (fun n => a (φ n)) (fun n => J (φ n))
+          (fun n => R (φ n)) K (fun n => z (φ n))
+          (fun n => ha (φ n)) hscaleφ hnextResidual
+      have hgain := G.eventually_finkContinuationGain_add_correction_le
+        (fun n => a (φ n)) (fun n => J (φ n))
+        (fun n => R (φ n)) K (fun n => z (φ n))
+        (fun n => ha (φ n)) (fun n => hscale0 (φ n))
+        hscaleφ hnextGain
+      exact ⟨K, φ, hφ, hKnorm, hcorrection, hresidual, hgain⟩
+
+/-- Upgrade a verified hierarchy to the reference-potential presentation
+whenever its two forcing families are represented by one potential. -/
+theorem FinkVerifiedResolution.toFinkVerifiedReferenceResolution
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {V : ℕ → G.State → Payoff ι}
+    {a : ℕ → ℝ} {E J : ℕ → G.State → Payoff ι}
+    {D : ℕ → G.State → ∀ who : ι, G.Act who → ℝ}
+    (hresolution : G.FinkVerifiedResolution z V a E J D)
+    (R : ℕ → G.State → Payoff ι)
+    (hE : ∀ n, E n = G.finkContinuationResidualVector (R n) (z n))
+    (hD : ∀ n s who (d : G.Act who),
+      D n s who d = G.finkContinuationGain (R n) (z n) s who d) :
+    G.FinkVerifiedReferenceResolution z V a J R := by
+  induction hresolution generalizing R with
+  | @interior z V a E J D φ Jlim hφ hJlim hmean =>
+      exact FinkVerifiedReferenceResolution.interior φ Jlim hφ hJlim
+  | @boundary z V a E J D K φ hφ hJlim hKnorm hmean
+      hnextPoisson hnextGain tail ih =>
+      let Rnext : ℕ → G.State → Payoff ι := fun n =>
+        G.finkNextReferenceVector
+          (a (φ n)) (J (φ n)) (R (φ n)) K
+      have hnextResidual' : Tendsto (fun n =>
+          G.finkContinuationResidualVector (Rnext n) (z (φ n)))
+          atTop (nhds 0) := by
+        apply hnextPoisson.congr'
+        exact Filter.Eventually.of_forall fun n => by
+          dsimp only [Rnext]
+          rw [hE (φ n)]
+          exact G.finkNextPoissonRemainderVector_eq_continuationResidualVector
+            (a (φ n)) (J (φ n)) (R (φ n)) K (z (φ n))
+      have hnextGain' : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+          ∀ s who (d : G.Act who),
+            G.finkContinuationGain (Rnext n) (z (φ n)) s who d ≤ ε := by
+        intro ε hε
+        filter_upwards [hnextGain ε hε] with n hn
+        intro s who d
+        calc
+          G.finkContinuationGain (Rnext n) (z (φ n)) s who d =
+              G.finkNextDeviationGain (a (φ n))
+                (fun s who d =>
+                  G.finkContinuationGain (R (φ n)) (z (φ n)) s who d)
+                (J (φ n)) K (z (φ n)) s who d :=
+            (G.finkNextDeviationGain_eq_continuationGain
+              (a (φ n)) (J (φ n)) (R (φ n)) K
+                (z (φ n)) s who d).symm
+          _ = G.finkNextDeviationGain (a (φ n)) (D (φ n))
+                (J (φ n)) K (z (φ n)) s who d := by
+            simp only [finkNextDeviationGain, hD]
+          _ ≤ ε := hn s who d
+      have hEtail : ∀ n,
+          G.finkNextPoissonRemainderVector
+              (a (φ n)) (E (φ n)) (J (φ n)) K (z (φ n)) =
+            G.finkContinuationResidualVector (Rnext n) (z (φ n)) := by
+        intro n
+        rw [hE (φ n)]
+        exact G.finkNextPoissonRemainderVector_eq_continuationResidualVector
+          (a (φ n)) (J (φ n)) (R (φ n)) K (z (φ n))
+      have hDtail : ∀ n s who (d : G.Act who),
+          G.finkNextDeviationGain (a (φ n)) (D (φ n))
+              (J (φ n)) K (z (φ n)) s who d =
+            G.finkContinuationGain (Rnext n) (z (φ n)) s who d := by
+        intro n s who d
+        calc
+          G.finkNextDeviationGain (a (φ n)) (D (φ n))
+              (J (φ n)) K (z (φ n)) s who d =
+              G.finkNextDeviationGain (a (φ n))
+                (fun s who d =>
+                  G.finkContinuationGain (R (φ n)) (z (φ n)) s who d)
+                (J (φ n)) K (z (φ n)) s who d := by
+            simp only [finkNextDeviationGain, hD]
+          _ = G.finkContinuationGain (Rnext n) (z (φ n)) s who d := by
+            exact G.finkNextDeviationGain_eq_continuationGain
+              (a (φ n)) (J (φ n)) (R (φ n)) K
+                (z (φ n)) s who d
+      have htail := ih Rnext hEtail hDtail
+      exact FinkVerifiedReferenceResolution.boundary K φ hφ hJlim hKnorm
+        hnextResidual' hnextGain' htail
+
 /-- A finite radial bias resolution upgrades to a finite verified resolution
 when supplied with its Bellman equations and centered pure-deviation
 inequalities. -/
@@ -2675,6 +3011,31 @@ theorem exists_finkRelativeBiasVerifiedResolution
   · intro n s who d
     exact G.finkCenteredGain_nonpos_of_finkMap_fixedPoint
       (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who d
+
+/-- Reference-potential form of the verified relative-bias hierarchy.  It
+starts from the target `W` itself and records the exact updated reference
+potential at every radial boundary. -/
+theorem exists_finkRelativeBiasVerifiedReferenceResolution
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W : G.State → Payoff ι) :
+    G.FinkVerifiedReferenceResolution z (fun n => G.finkValue (z n))
+      (fun n => β n / (1 - β n))
+      (fun n => G.finkRelativeBias (β n) W (z n))
+      (fun _ => W) := by
+  apply (G.exists_finkRelativeBiasVerifiedResolution
+    hβ0 hβ1 hpay hz hfix W).toFinkVerifiedReferenceResolution G
+  · intro n
+    rfl
+  · intro n s who d
+    rfl
 
 /-- The first Poisson-corrected relative bias admits the same projective
 dichotomy.  The extraction preserves the Fink point, leading direction, and
@@ -6136,6 +6497,116 @@ theorem tendsto_finkDiscountScale_atTop (β : ℕ → ℝ)
     ring
   rw [hid]
   linarith
+
+/-- For a relative Fink bias around its value limit, the coefficient of every
+unit boundary correction tends to zero.  Quantitatively it is exactly the
+reciprocal root discount scale plus the norm of the value error. -/
+theorem tendsto_finkReferenceCorrectionScale_relativeBias_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1)) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W)) :
+    Tendsto (fun n => G.finkReferenceCorrectionScale
+      (β n / (1 - β n)) (G.finkRelativeBias (β n) W (z n)))
+      atTop (nhds 0) := by
+  let a : ℕ → ℝ := fun n => β n / (1 - β n)
+  have haPos : ∀ n, 0 < a n := fun n =>
+    div_pos (hβpos n) (sub_pos.mpr (hβ1 n))
+  have haLim : Tendsto a atTop atTop := by
+    exact tendsto_finkDiscountScale_atTop β hβ1 hβlim
+  have haInv : Tendsto (fun n => (a n)⁻¹) atTop (nhds 0) :=
+    haLim.inv_tendsto_atTop
+  have hdiff : Tendsto
+      (fun n => ‖G.finkValue (z n) - W‖) atTop (nhds 0) := by
+    simpa using (hV.sub (tendsto_const_nhds (x := W))).norm
+  have heq : (fun n => G.finkReferenceCorrectionScale
+      (β n / (1 - β n)) (G.finkRelativeBias (β n) W (z n))) =
+      fun n => (a n)⁻¹ + ‖G.finkValue (z n) - W‖ := by
+    funext n
+    have hrelative : G.finkRelativeBias (β n) W (z n) =
+        a n • (G.finkValue (z n) - W) := by
+      ext s who
+      simp only [finkRelativeBias, a, Pi.smul_apply, Pi.sub_apply,
+        smul_eq_mul]
+    change (1 + ‖G.finkRelativeBias (β n) W (z n)‖) / a n =
+      (a n)⁻¹ + ‖G.finkValue (z n) - W‖
+    rw [hrelative, norm_smul,
+      Real.norm_eq_abs, abs_of_pos (haPos n)]
+    field_simp [ne_of_gt (haPos n)]
+  rw [heq]
+  simpa only [zero_add] using haInv.add hdiff
+
+/-- The boundary correction vector itself therefore vanishes for every fixed
+unit direction (indeed, for every fixed direction). -/
+theorem tendsto_finkReferenceCorrection_relativeBias_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1)) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W K : G.State → Payoff ι)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W)) :
+    Tendsto (fun n => G.finkReferenceCorrection
+      (β n / (1 - β n)) (G.finkRelativeBias (β n) W (z n)) K)
+      atTop (nhds 0) := by
+  have hs := G.tendsto_finkReferenceCorrectionScale_relativeBias_zero
+    β hβpos hβ1 hβlim z W hV
+  simpa only [finkReferenceCorrection, zero_smul] using hs.smul_const K
+
+/-- At the root of the relative-bias hierarchy, every boundary correction is
+automatically negligible as the discount tends to one.  Thus the verified
+hierarchy yields either a convergent relative-bias subsequence or corrected
+targets converging back to `W` whose continuation residuals vanish and whose
+pure-deviation continuation gains are asymptotically nonpositive. -/
+theorem FinkVerifiedReferenceResolution.relativeBias_rootCorrection_dichotomy
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1)) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hresolution : G.FinkVerifiedReferenceResolution z
+      (fun n => G.finkValue (z n))
+      (fun n => β n / (1 - β n))
+      (fun n => G.finkRelativeBias (β n) W (z n))
+      (fun _ => W)) :
+    (∃ (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι),
+      StrictMono φ ∧ Tendsto (fun n =>
+        G.finkRelativeBias (β (φ n)) W (z (φ n)))
+          atTop (nhds Jlim)) ∨
+    ∃ (K : G.State → Payoff ι) (φ : ℕ → ℕ),
+      StrictMono φ ∧ ‖K‖ = 1 ∧
+      Tendsto (fun n => G.finkReferenceCorrection
+        (β (φ n) / (1 - β (φ n)))
+        (G.finkRelativeBias (β (φ n)) W (z (φ n))) K)
+        atTop (nhds 0) ∧
+      Tendsto (fun n => G.finkContinuationResidualVector
+        (W + G.finkReferenceCorrection
+          (β (φ n) / (1 - β (φ n)))
+          (G.finkRelativeBias (β (φ n)) W (z (φ n))) K)
+        (z (φ n))) atTop (nhds 0) ∧
+      ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+        ∀ s who (d : G.Act who),
+          G.finkContinuationGain
+            (W + G.finkReferenceCorrection
+              (β (φ n) / (1 - β (φ n)))
+              (G.finkRelativeBias (β (φ n)) W (z (φ n))) K)
+            (z (φ n)) s who d ≤ ε := by
+  have ha : ∀ n, β n / (1 - β n) ≠ 0 := fun n =>
+    div_ne_zero (ne_of_gt (hβpos n)) (ne_of_gt (sub_pos.mpr (hβ1 n)))
+  have hscale0 : ∀ n, 0 ≤ G.finkReferenceCorrectionScale
+      (β n / (1 - β n))
+      (G.finkRelativeBias (β n) W (z n)) := by
+    intro n
+    unfold finkReferenceCorrectionScale
+    exact div_nonneg (by positivity)
+      (div_nonneg (hβpos n).le (sub_pos.mpr (hβ1 n)).le)
+  have hscale := G.tendsto_finkReferenceCorrectionScale_relativeBias_zero
+    β hβpos hβ1 hβlim z W hV
+  simpa only [Function.comp_def] using
+    hresolution.rootCorrection_dichotomy G ha hscale0 hscale
 
 /-- Activation times for a slow calendar.  Layer `n` is not activated before
 calendar time `n * |B n|`, and consecutive activation times are distinct. -/
