@@ -170,6 +170,18 @@ theorem efgTree_evalDist (σ : A × (A → B)) :
   rw [evalDist_pureToBehavioral_eq_pure _ _ (efgTree_isDeterministic A B)]
   rw [efgTree_evalPure]
 
+/-- The EFG strategic kernel and the direct `ShapeS` strategic compilation
+produce the same outcome law under their respective profile translations. -/
+theorem toEFG_outcomeKernel_eq_compileAction
+    (k : A × B → ℝ × ℝ) (σ : A × (A → B)) :
+    (toEFG A B k).toStrategicKernelGame.outcomeKernel
+        (toPureProfile A B σ) =
+      (compileAction A B k).outcomeKernel (toProfile σ) := by
+  change (efgTree A B).evalDist
+      (pureToBehavioral (toPureProfile A B σ)) =
+    PMF.pure (σ.1, σ.2 σ.1)
+  exact efgTree_evalDist A B σ
+
 /-- Distributional evaluation for an arbitrary EFG contingent plan. -/
 theorem efgTree_evalDist_profile (σ : PureProfile (efgInfo A B)) :
     (efgTree A B).evalDist (pureToBehavioral σ) =

@@ -119,6 +119,14 @@ The language layer treats concrete presentations as syntax plus semantics:
 | Intrinsic | Witsenhausen-style intrinsic information structures |
 | OpenGame | Compositional games with forward play and backward cooutcomes |
 
+The deterministic OpenGame layer provides sequential/tensor wiring, laws up
+to strategy and boundary equivalence, context-indexed Nash compilation, and a
+two-stage perfect-information bridge to EFG subgame perfection and the
+one-shot-deviation principle. Backward values are called *cooutcomes* (the
+open-games literature also says *coutilities*). Closed, deliberately
+non-compositional devices recover CE, CCE, and pure-profile public
+randomization over Nash equilibria, with checked strict-separation examples.
+
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition
 values, feasible payoff sets, and preference rankings rather than strategic

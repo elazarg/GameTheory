@@ -104,7 +104,8 @@ def closedStrategyEquiv (A : ι → Type) :
     rfl
   right_inv _ := rfl
 
-/-- A Bool-indexed dependent function is equivalently a binary product. -/
+/-- A Bool-indexed dependent function is equivalently a binary product.
+Mathlib's `boolArrowEquivProd` covers only the non-dependent special case. -/
 def boolPiEquiv (T : Bool → Type*) : (∀ i, T i) ≃ T false × T true where
   toFun f := (f false, f true)
   invFun p

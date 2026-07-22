@@ -195,26 +195,27 @@ namespace OpenGameIso
 variable {X S Y R Z Q W T : Type*}
 variable {g : OpenGame X S Y R} {g' : OpenGame X S Y R}
 
-/-- Concrete left-unit equivalence used by the coherence witnesses. -/
+/-- Concrete left-unit equivalence used by the coherence witnesses.  Mathlib's
+`Equiv.punitProd` is trans-composed; this local witness intentionally exposes
+the reducible projections needed by the coherence proofs. -/
 def unitProdEquiv (A : Type*) : Unit × A ≃ A where
   toFun x := x.2
   invFun a := ((), a)
   left_inv := by rintro ⟨u, a⟩; cases u; rfl
   right_inv _ := rfl
 
-/-- Concrete right-unit equivalence used by the coherence witnesses. -/
+/-- Concrete right-unit equivalence used by the coherence witnesses.  As with
+`unitProdEquiv`, the direct witness gives better definitional reduction than
+Mathlib's trans-composed `Equiv.prodPUnit`. -/
 def prodUnitEquiv (A : Type*) : A × Unit ≃ A where
   toFun x := x.1
   invFun a := (a, ())
   left_inv := by rintro ⟨a, u⟩; cases u; rfl
   right_inv _ := rfl
 
-/-- Concrete product reassociation used by the coherence witnesses. -/
-def prodAssocEquiv (A B C : Type*) : (A × B) × C ≃ A × (B × C) where
-  toFun x := (x.1.1, x.1.2, x.2)
-  invFun x := ((x.1, x.2.1), x.2.2)
-  left_inv _ := rfl
-  right_inv _ := rfl
+/-- Product reassociation, named locally alongside the unit witnesses. -/
+abbrev prodAssocEquiv (A B C : Type*) : (A × B) × C ≃ A × (B × C) :=
+  Equiv.prodAssoc A B C
 
 @[simp]
 theorem unitProdEquiv_apply (A : Type*) (x : Unit × A) :
