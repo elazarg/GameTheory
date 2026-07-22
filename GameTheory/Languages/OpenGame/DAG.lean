@@ -129,6 +129,91 @@ theorem realizeAt_update_of_not_ancestor (D : DecisionDAG n)
 termination_by j.val
 decreasing_by exact D.parent_lt parent.property
 
+/-! ## Discrete specialization -/
+
+/-- An edgeless decision node has exactly one parent configuration. -/
+def discreteHistoryEquiv (A : Fin n → Type) (i : Fin n) :
+    History (DecisionDAG.discrete n) A i ≃ Unit where
+  toFun _ := ()
+  invFun _ parent := by
+    have hp : parent.val ∈ (∅ : Finset (Fin n)) := by
+      rw [← show (DecisionDAG.discrete n).parents i = ∅ from rfl]
+      exact parent.property
+    exact (Finset.notMem_empty parent.val hp).elim
+  left_inv history := by
+    funext parent
+    have hp : parent.val ∈ (∅ : Finset (Fin n)) := by
+      rw [← show (DecisionDAG.discrete n).parents i = ∅ from rfl]
+      exact parent.property
+    exact (Finset.notMem_empty parent.val hp).elim
+  right_inv _ := rfl
+
+/-- A singleton boundary is equivalent to a Π-shaped boundary of singleton
+components. -/
+def unitPiEquiv (ι : Type) : Unit ≃ (ι → Unit) where
+  toFun _ _ := ()
+  invFun _ := ()
+  left_inv _ := rfl
+  right_inv f := by
+    funext i
+    exact Subsingleton.elim _ _
+
+/-- Strategies on an edgeless decision DAG are precisely closed simultaneous
+contingent strategies. -/
+def discreteStrategyEquiv (A : Fin n → Type) :
+    Strategy (DecisionDAG.discrete n) A ≃ (∀ i, Unit → A i) where
+  toFun σ i u := σ i ((discreteHistoryEquiv A i).symm u)
+  invFun τ i history := τ i (discreteHistoryEquiv A i history)
+  left_inv σ := by
+    funext i history
+    change σ i ((discreteHistoryEquiv A i).symm
+      (discreteHistoryEquiv A i history)) = σ i history
+    rw [(discreteHistoryEquiv A i).symm_apply_apply]
+  right_inv τ := by
+    funext i u
+    change τ i (discreteHistoryEquiv A i
+      ((discreteHistoryEquiv A i).symm u)) = τ i u
+    rw [(discreteHistoryEquiv A i).apply_symm_apply]
+
+/-- With no parent edges, realization at a node is evaluation at its unique
+empty history. -/
+theorem realize_discrete (A : Fin n → Type)
+    (σ : Strategy (DecisionDAG.discrete n) A) (i : Fin n) :
+    realize (DecisionDAG.discrete n) σ i =
+      (discreteStrategyEquiv A σ) i () := by
+  rw [realize_eq]
+  change σ i (fun parent =>
+      realize (DecisionDAG.discrete n) σ parent.val) =
+    σ i ((discreteHistoryEquiv A i).symm ())
+  congr 1
+  apply (discreteHistoryEquiv A i).injective
+  rfl
+
+/-- On a discrete DAG, changing one contingent plan changes exactly the
+corresponding realized action. -/
+theorem realize_update_discrete (A : Fin n → Type)
+    (σ : Strategy (DecisionDAG.discrete n) A) (i : Fin n)
+    (deviation : History (DecisionDAG.discrete n) A i → A i) :
+    realize (DecisionDAG.discrete n) (Function.update σ i deviation) =
+      Function.update (realize (DecisionDAG.discrete n) σ) i
+        (deviation ((discreteHistoryEquiv A i).symm ())) := by
+  funext j
+  by_cases hji : j = i
+  · subst j
+    rw [realize_discrete]
+    simp [discreteStrategyEquiv, Function.update_self]
+  · rw [realize_discrete, Function.update_of_ne hji, realize_discrete]
+    simp [discreteStrategyEquiv, Function.update_of_ne hji]
+
+/-- Encoding a discrete-DAG strategy as a closed simultaneous strategy
+preserves its realized action profile. -/
+theorem realize_discreteStrategyEquiv (A : Fin n → Type)
+    (σ : Strategy (DecisionDAG.discrete n) A) :
+    ShapeN.realize (fun _ => ()) (discreteStrategyEquiv A σ) =
+      realize (DecisionDAG.discrete n) σ := by
+  funext i
+  exact (realize_discrete A σ i).symm
+
 /-! ## Complete-history specialization -/
 
 /-- Parents of `DecisionDAG.complete` at stage `i` are exactly the indices in
@@ -270,6 +355,49 @@ theorem isEquilibriumIn_iff_isNash {n : Nat}
       (compileAction D A k).IsNash σ := by
   rw [isEquilibriumIn_iff_isNashPure]
   exact NFG.IsNashPure_iff_kernelGame (actionNFG D A k) σ
+
+/-- The edgeless decision DAG is the closed simultaneous shape, up to the
+contractible Π-shaped input and cooutcome boundaries. -/
+def discreteIso {n : Nat} (A : Fin n → Type) :
+    OpenGameIso (OpenGames.ShapeDAG (DecisionDAG.discrete n) A)
+      (ShapeN (fun _ : Fin n => Unit) A) where
+  eX := unitPiEquiv (Fin n)
+  eS := unitPiEquiv (Fin n)
+  eY := Equiv.refl _
+  eR := Equiv.refl _
+  stratEquiv := discreteStrategyEquiv A
+  play_preserved := by
+    intro σ x
+    cases x
+    exact realize_discreteStrategyEquiv A σ
+  coplay_preserved := by
+    intro σ x r
+    cases x
+    rfl
+  equilibrium_preserved := by
+    intro x k σ
+    cases x
+    change (∀ i (action : A i),
+        k (Function.update
+          (ShapeN.realize (fun _ : Fin n => ())
+            (discreteStrategyEquiv A σ)) i action) i ≤
+          k (ShapeN.realize (fun _ : Fin n => ())
+            (discreteStrategyEquiv A σ)) i) ↔
+      ∀ i (deviation : History (DecisionDAG.discrete n) A i → A i),
+        k (realize (DecisionDAG.discrete n)
+          (Function.update σ i deviation)) i ≤
+        k (realize (DecisionDAG.discrete n) σ) i
+    rw [realize_discreteStrategyEquiv A σ]
+    constructor
+    · intro hsim i deviation
+      rw [realize_update_discrete]
+      exact hsim i (deviation ((discreteHistoryEquiv A i).symm ()))
+    · intro hdag i action
+      let deviation : History (DecisionDAG.discrete n) A i → A i :=
+        fun _ => action
+      have h := hdag i deviation
+      rw [realize_update_discrete] at h
+      exact h
 
 /-- The complete-parent decision DAG recovers `ShapeSeqDep` up to the explicit
 dependent-history strategy equivalence. -/

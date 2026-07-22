@@ -98,6 +98,14 @@ example {n : Nat} (D : DecisionDAG n) (A : Fin n → Type)
       (ShapeDAG.compileAction D A k).IsNash σ :=
   ShapeDAG.isEquilibriumIn_iff_isNash D A k σ
 
+/-- The edgeless decision DAG coheres with the existing closed simultaneous
+shape, including the contractible boundary reindexing. -/
+example {n : Nat} (A : Fin n → Type) :
+    OpenGameIso
+      (OpenGames.ShapeDAG (DecisionDAG.discrete n) A)
+      (ShapeN (fun _ : Fin n => Unit) A) :=
+  ShapeDAG.discreteIso A
+
 /-- A plan change cannot affect nodes outside its causal descendant cone. -/
 example {n : Nat} (D : DecisionDAG n) {A : Fin n → Type}
     (σ : ShapeDAG.Strategy D A) (i j : Fin n)

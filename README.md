@@ -146,7 +146,9 @@ parent set, realization is well founded, plain equilibrium still compiles
 exactly to kernel Nash, and plan changes are proved irrelevant outside their
 causal descendant cones. The complete-parent DAG is proved isomorphic to
 `ShapeSeqDep`, including realization and equilibrium, so this is a strict API
-generalization rather than a parallel encoding.
+generalization rather than a parallel encoding. At the other extreme, the
+edgeless DAG is proved isomorphic to the closed `ShapeN` simultaneous shape;
+the sparse family therefore coheres with both endpoint APIs.
 Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and
