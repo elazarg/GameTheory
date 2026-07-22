@@ -533,35 +533,4 @@ theorem CommonKnowledgeAt.commonPBeliefAt [Fintype ι]
   rw [posterior_eq_one_of_cell_subset μ hμ (P i) hcellE]
   exact hp
 
-/-! ## Abstract coordination certificates -/
-
-/-- Compatibility name for `CommonPBeliefAt`, used when a concrete
-coordination-game survival argument is viewed as producing a certificate.
-
-Concrete coordination-game files should prove this predicate from their
-payoff and rationality assumptions. -/
-abbrev CommonPBeliefCertificate [Fintype ι]
-    (μ : Ω → ℝ) (P : ι → InfoPartition Ω)
-    (p : ℝ) (E : Finset Ω) (s : Ω) : Prop :=
-  CommonPBeliefAt μ P p E s
-
-/-- A game-specific common-`p`-belief certificate is exactly the witness needed
-for `CommonPBeliefAt`.  This is the reusable target for later payoff-level
-survival proofs; it is not itself a payoff theorem. -/
-theorem CommonPBeliefCertificate.commonPBeliefAt [Fintype ι]
-    {μ : Ω → ℝ} {P : ι → InfoPartition Ω}
-    {p : ℝ} {E : Finset Ω} {s : Ω}
-    (h : CommonPBeliefCertificate μ P p E s) :
-    CommonPBeliefAt μ P p E s := h
-
-/-- Abstract necessity wrapper: if a model-specific survival predicate implies
-the common-`p`-belief certificate, then survival implies common `p`-belief. -/
-theorem survives_only_if_commonPBelief_certificate [Fintype ι]
-    {μ : Ω → ℝ} {P : ι → InfoPartition Ω}
-    {p : ℝ} {E : Finset Ω} {Survives : Ω → Prop}
-    (hcert : ∀ s, Survives s → CommonPBeliefCertificate μ P p E s)
-    {s : Ω} (hs : Survives s) :
-    CommonPBeliefAt μ P p E s :=
-  (hcert s hs).commonPBeliefAt
-
 end GameTheory
