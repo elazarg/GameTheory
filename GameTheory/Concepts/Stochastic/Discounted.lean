@@ -33,6 +33,9 @@ vanishing-discount analysis behind uniform values
   series converges for `|β| < 1`
 * `StochasticGame.le_discountedPayoff_of_bellman_le` — an excessive-function
   inequality at every history guarantees the corresponding discounted value
+* `StochasticGame.finiteAveragePayoff_ge_of_averageReward_bellman_le` — a
+  time-varying average-reward Bellman certificate gives a quantitative
+  finite-horizon guarantee
 -/
 
 noncomputable section
@@ -363,6 +366,380 @@ theorem le_discountedPayoff_of_bellman_le
     htsumA, htsumB] at htsumD0
   have hV0 : V 0 = v s₀ := by simp [V]
   linarith
+
+-- ============================================================================
+-- Time-varying average-reward verification
+-- ============================================================================
+
+/-- Convert a normalized discounted Bellman lower inequality into an
+average-reward Bellman inequality.  The discounted continuation value `v`
+becomes the target reward, while `β / (1 - β) • v` is the bias.  An additive
+discounted residual `δ` is amplified to `δ / (1 - β)`.
+
+This algebraic conversion is the direct bridge from discounted Shapley/Fink
+certificates to finite-horizon uniform-payoff estimates. -/
+theorem averageReward_bellman_le_of_discounted_bellman_le
+    (G : StochasticGame ι) [Fintype ι] (σ : G.BehaviorProfile)
+    (who : ι) (v : G.State → ℝ) {β δ : ℝ} (hβ1 : β < 1)
+    (hdisc : ∀ (t : ℕ) (h : G.Hist t),
+      v h.2 ≤ (1 - β) * G.stageEUAt σ h who +
+        β * expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a) v) + δ) :
+    ∀ (t : ℕ) (h : G.Hist t),
+      v h.2 + (β / (1 - β)) * v h.2 ≤
+        G.stageEUAt σ h who +
+          expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a)
+              (fun s => (β / (1 - β)) * v s)) +
+            δ / (1 - β) := by
+  intro t h
+  have hden : 0 < 1 - β := by linarith
+  let E : ℝ := expect (G.stageActionDist σ h) (fun a =>
+    expect (G.transition h.2 a) v)
+  have hcont :
+      expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a)
+            (fun s => (β / (1 - β)) * v s)) =
+        (β / (1 - β)) * E := by
+    simp_rw [expect_const_mul]
+    rfl
+  rw [hcont]
+  have hd := hdisc t h
+  change v h.2 ≤ (1 - β) * G.stageEUAt σ h who + β * E + δ at hd
+  rw [show v h.2 + (β / (1 - β)) * v h.2 =
+      v h.2 / (1 - β) by
+    field_simp
+    ring]
+  rw [show G.stageEUAt σ h who + (β / (1 - β)) * E + δ / (1 - β) =
+      ((1 - β) * G.stageEUAt σ h who + β * E + δ) / (1 - β) by
+    field_simp]
+  exact (div_le_div_iff_of_pos_right hden).2 hd
+
+/-- Dual conversion of a discounted Bellman upper inequality into an
+average-reward upper certificate. -/
+theorem averageReward_bellman_ge_of_discounted_bellman_ge
+    (G : StochasticGame ι) [Fintype ι] (σ : G.BehaviorProfile)
+    (who : ι) (v : G.State → ℝ) {β δ : ℝ} (hβ1 : β < 1)
+    (hdisc : ∀ (t : ℕ) (h : G.Hist t),
+      (1 - β) * G.stageEUAt σ h who +
+          β * expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a) v) ≤ v h.2 + δ) :
+    ∀ (t : ℕ) (h : G.Hist t),
+      G.stageEUAt σ h who +
+          expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a)
+              (fun s => (β / (1 - β)) * v s)) ≤
+        v h.2 + (β / (1 - β)) * v h.2 + δ / (1 - β) := by
+  intro t h
+  have hden : 0 < 1 - β := by linarith
+  let E : ℝ := expect (G.stageActionDist σ h) (fun a =>
+    expect (G.transition h.2 a) v)
+  have hcont :
+      expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a)
+            (fun s => (β / (1 - β)) * v s)) =
+        (β / (1 - β)) * E := by
+    simp_rw [expect_const_mul]
+    rfl
+  rw [hcont]
+  have hd := hdisc t h
+  change (1 - β) * G.stageEUAt σ h who + β * E ≤ v h.2 + δ at hd
+  rw [show G.stageEUAt σ h who + (β / (1 - β)) * E =
+      ((1 - β) * G.stageEUAt σ h who + β * E) / (1 - β) by
+    field_simp]
+  rw [show v h.2 + (β / (1 - β)) * v h.2 + δ / (1 - β) =
+      (v h.2 + δ) / (1 - β) by
+    field_simp
+    ring]
+  exact (div_le_div_iff_of_pos_right hden).2 hd
+
+/-- **Finite-horizon Bellman telescoping.**  Let `z t s` be a target reward,
+`v t s` a time-varying bias (or continuation potential), and `e t` an
+additive error.  If after every history
+
+`zₜ(s) + vₜ(s) ≤ current payoff + 𝔼[vₜ₊₁(s')] + eₜ`,
+
+then the expected targets plus the initial bias are bounded by the expected
+stage payoffs plus the terminal bias and accumulated errors.  This is the
+quantitative verification form needed for adaptive, history-dependent
+continuation certificates in uniform-equilibrium arguments. -/
+theorem finitePayoff_telescope_of_averageReward_bellman_le
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      z t h.2 + v t h.2 ≤ G.stageEUAt σ h who +
+        expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a) (v (t + 1))) + e t)
+    (T : ℕ) :
+    (∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t)) +
+        G.expectedStateValue σ s₀ 0 (v 0) ≤
+      (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who) +
+        G.expectedStateValue σ s₀ T (v T) +
+          ∑ t ∈ Finset.range T, e t := by
+  let Z : ℕ → ℝ := fun t => G.expectedStateValue σ s₀ t (z t)
+  let V : ℕ → ℝ := fun t => G.expectedStateValue σ s₀ t (v t)
+  let r : ℕ → ℝ := fun t => G.expectedStagePayoff σ s₀ t who
+  have hstep : ∀ t, Z t + V t ≤ r t + V (t + 1) + e t := by
+    intro t
+    calc
+      Z t + V t = expect (G.histDist σ s₀ t) (fun h =>
+          z t h.2 + v t h.2) := by
+        rw [expect_add]
+        rfl
+      _ ≤ expect (G.histDist σ s₀ t) (fun h =>
+          G.stageEUAt σ h who +
+            expect (G.stageActionDist σ h) (fun a =>
+              expect (G.transition h.2 a) (v (t + 1))) + e t) :=
+        expect_mono _ _ _ (hbellman t)
+      _ = r t + V (t + 1) + e t := by
+        rw [expect_add, expect_add, expect_const,
+          ← G.expectedStateValue_succ]
+        rfl
+  change (∑ t ∈ Finset.range T, Z t) + V 0 ≤
+    (∑ t ∈ Finset.range T, r t) + V T +
+      ∑ t ∈ Finset.range T, e t
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      rw [Finset.sum_range_succ, Finset.sum_range_succ,
+        Finset.sum_range_succ]
+      linarith [hstep T]
+
+/-- A uniformly lower-bounded target and bounded time-varying bias turn the
+historywise average-reward Bellman inequality into a finite-horizon payoff
+guarantee.  The only losses are the two boundary biases (`2C / T`) and the
+average accumulated Bellman error. -/
+theorem finiteAveragePayoff_ge_of_averageReward_bellman_le
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ)
+    {c C : ℝ} (hz : ∀ t s, c ≤ z t s) (hv : ∀ t s, |v t s| ≤ C)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      z t h.2 + v t h.2 ≤ G.stageEUAt σ h who +
+        expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a) (v (t + 1))) + e t)
+    {T : ℕ} (hT : 0 < T) :
+    c - 2 * C / (T : ℝ) -
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t ≤
+      G.finiteAveragePayoff s₀ T σ who := by
+  have htel := G.finitePayoff_telescope_of_averageReward_bellman_le
+    σ s₀ who z v e hbellman T
+  have hZ : ∀ t, c ≤ G.expectedStateValue σ s₀ t (z t) := by
+    intro t
+    calc
+      c = expect (G.histDist σ s₀ t) (fun _ => c) :=
+        (expect_const _ _).symm
+      _ ≤ expect (G.histDist σ s₀ t) (fun h => z t h.2) :=
+        expect_mono _ _ _ fun h => hz t h.2
+  have hsumZ : (T : ℝ) * c ≤
+      ∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t) := by
+    calc
+      (T : ℝ) * c = ∑ _t ∈ Finset.range T, c := by simp
+      _ ≤ ∑ t ∈ Finset.range T,
+          G.expectedStateValue σ s₀ t (z t) :=
+        Finset.sum_le_sum fun t _ => hZ t
+  have hV0 : -C ≤ G.expectedStateValue σ s₀ 0 (v 0) := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ 0) (fun h => v 0 h.2) fun h => hv 0 h.2
+    exact neg_le_of_abs_le habs
+  have hVT : G.expectedStateValue σ s₀ T (v T) ≤ C := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ T) (fun h => v T h.2) fun h => hv T h.2
+    exact le_of_abs_le habs
+  have hraw : (T : ℝ) * c - 2 * C -
+      (∑ t ∈ Finset.range T, e t) ≤
+        ∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who := by
+    linarith
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hsumPayoff :
+      (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who) =
+        (T : ℝ) * G.finiteAveragePayoff s₀ T σ who := by
+    rw [G.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+    field_simp
+  rw [hsumPayoff] at hraw
+  rw [show c - 2 * C / (T : ℝ) -
+      (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, e t) =
+      ((T : ℝ) * c - 2 * C - (∑ t ∈ Finset.range T, e t)) /
+        (T : ℝ) by
+    field_simp]
+  exact (div_le_iff₀ hTreal).2 (by simpa [mul_comm] using hraw)
+
+/-- Dual finite-horizon telescoping for an upper average-reward Bellman
+certificate. -/
+theorem finitePayoff_telescope_of_averageReward_bellman_ge
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      G.stageEUAt σ h who +
+          expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a) (v (t + 1))) ≤
+        z t h.2 + v t h.2 + e t)
+    (T : ℕ) :
+    (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who) +
+        G.expectedStateValue σ s₀ T (v T) ≤
+      (∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t)) +
+        G.expectedStateValue σ s₀ 0 (v 0) +
+          ∑ t ∈ Finset.range T, e t := by
+  let Z : ℕ → ℝ := fun t => G.expectedStateValue σ s₀ t (z t)
+  let V : ℕ → ℝ := fun t => G.expectedStateValue σ s₀ t (v t)
+  let r : ℕ → ℝ := fun t => G.expectedStagePayoff σ s₀ t who
+  have hstep : ∀ t, r t + V (t + 1) ≤ Z t + V t + e t := by
+    intro t
+    calc
+      r t + V (t + 1) = expect (G.histDist σ s₀ t) (fun h =>
+          G.stageEUAt σ h who +
+            expect (G.stageActionDist σ h) (fun a =>
+              expect (G.transition h.2 a) (v (t + 1)))) := by
+        rw [expect_add, ← G.expectedStateValue_succ]
+        rfl
+      _ ≤ expect (G.histDist σ s₀ t) (fun h =>
+          z t h.2 + v t h.2 + e t) :=
+        expect_mono _ _ _ (hbellman t)
+      _ = Z t + V t + e t := by
+        rw [expect_add, expect_add, expect_const]
+        rfl
+  change (∑ t ∈ Finset.range T, r t) + V T ≤
+    (∑ t ∈ Finset.range T, Z t) + V 0 +
+      ∑ t ∈ Finset.range T, e t
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      rw [Finset.sum_range_succ, Finset.sum_range_succ,
+        Finset.sum_range_succ]
+      linarith [hstep T]
+
+/-- Quantitative upper payoff bound from a uniformly upper-bounded target and
+bounded time-varying bias. -/
+theorem finiteAveragePayoff_le_of_averageReward_bellman_ge
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ)
+    {c C : ℝ} (hz : ∀ t s, z t s ≤ c) (hv : ∀ t s, |v t s| ≤ C)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      G.stageEUAt σ h who +
+          expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a) (v (t + 1))) ≤
+        z t h.2 + v t h.2 + e t)
+    {T : ℕ} (hT : 0 < T) :
+    G.finiteAveragePayoff s₀ T σ who ≤
+      c + 2 * C / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t := by
+  have htel := G.finitePayoff_telescope_of_averageReward_bellman_ge
+    σ s₀ who z v e hbellman T
+  have hZ : ∀ t, G.expectedStateValue σ s₀ t (z t) ≤ c := by
+    intro t
+    calc
+      expect (G.histDist σ s₀ t) (fun h => z t h.2) ≤
+          expect (G.histDist σ s₀ t) (fun _ => c) :=
+        expect_mono _ _ _ fun h => hz t h.2
+      _ = c := expect_const _ _
+  have hsumZ : (∑ t ∈ Finset.range T,
+      G.expectedStateValue σ s₀ t (z t)) ≤ (T : ℝ) * c := by
+    calc
+      (∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t)) ≤
+          ∑ _t ∈ Finset.range T, c :=
+        Finset.sum_le_sum fun t _ => hZ t
+      _ = (T : ℝ) * c := by simp
+  have hV0 : G.expectedStateValue σ s₀ 0 (v 0) ≤ C := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ 0) (fun h => v 0 h.2) fun h => hv 0 h.2
+    exact le_of_abs_le habs
+  have hVT : -C ≤ G.expectedStateValue σ s₀ T (v T) := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ T) (fun h => v T h.2) fun h => hv T h.2
+    exact neg_le_of_abs_le habs
+  have hraw : (∑ t ∈ Finset.range T,
+      G.expectedStagePayoff σ s₀ t who) ≤
+        (T : ℝ) * c + 2 * C + ∑ t ∈ Finset.range T, e t := by
+    linarith
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hsumPayoff :
+      (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who) =
+        (T : ℝ) * G.finiteAveragePayoff s₀ T σ who := by
+    rw [G.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+    field_simp
+  rw [hsumPayoff] at hraw
+  rw [show c + 2 * C / (T : ℝ) +
+      (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, e t) =
+      ((T : ℝ) * c + 2 * C + (∑ t ∈ Finset.range T, e t)) /
+        (T : ℝ) by
+    field_simp]
+  exact (le_div_iff₀ hTreal).2 (by simpa [mul_comm] using hraw)
+
+/-- A discounted Bellman lower certificate yields an explicit finite-horizon
+average-payoff guarantee.  The boundary loss is controlled by the scaled bias
+`β/(1-β) · v`; a discounted residual `δ` costs `δ/(1-β)` per stage. -/
+theorem finiteAveragePayoff_ge_of_discounted_bellman_le
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (v : G.State → ℝ) {β δ c C : ℝ}
+    (hβ0 : 0 ≤ β) (hβ1 : β < 1) (hz : ∀ s, c ≤ v s)
+    (hv : ∀ s, |v s| ≤ C)
+    (hdisc : ∀ (t : ℕ) (h : G.Hist t),
+      v h.2 ≤ (1 - β) * G.stageEUAt σ h who +
+        β * expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a) v) + δ)
+    {T : ℕ} (hT : 0 < T) :
+    c - 2 * ((β / (1 - β)) * C) / (T : ℝ) - δ / (1 - β) ≤
+      G.finiteAveragePayoff s₀ T σ who := by
+  have hden : 0 < 1 - β := by linarith
+  have hq : 0 ≤ β / (1 - β) := div_nonneg hβ0 hden.le
+  have hbias : ∀ (t : ℕ) (s : G.State),
+      |(β / (1 - β)) * v s| ≤ (β / (1 - β)) * C := by
+    intro _ s
+    rw [abs_mul, abs_of_nonneg hq]
+    exact mul_le_mul_of_nonneg_left (hv s) hq
+  have havg := G.finiteAveragePayoff_ge_of_averageReward_bellman_le
+    σ s₀ who (fun _ => v)
+      (fun _ s => (β / (1 - β)) * v s)
+      (fun _ => δ / (1 - β))
+      (fun _ s => hz s) hbias
+      (G.averageReward_bellman_le_of_discounted_bellman_le
+        σ who v hβ1 hdisc) hT
+  have hTreal : (T : ℝ) ≠ 0 := by exact_mod_cast hT.ne'
+  have herr : (T : ℝ)⁻¹ *
+      (∑ t ∈ Finset.range T, δ / (1 - β)) = δ / (1 - β) := by
+    simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    field_simp
+  rwa [herr] at havg
+
+/-- Dual finite-horizon upper bound from a discounted Bellman upper
+certificate. -/
+theorem finiteAveragePayoff_le_of_discounted_bellman_ge
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (v : G.State → ℝ) {β δ c C : ℝ}
+    (hβ0 : 0 ≤ β) (hβ1 : β < 1) (hz : ∀ s, v s ≤ c)
+    (hv : ∀ s, |v s| ≤ C)
+    (hdisc : ∀ (t : ℕ) (h : G.Hist t),
+      (1 - β) * G.stageEUAt σ h who +
+          β * expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a) v) ≤ v h.2 + δ)
+    {T : ℕ} (hT : 0 < T) :
+    G.finiteAveragePayoff s₀ T σ who ≤
+      c + 2 * ((β / (1 - β)) * C) / (T : ℝ) + δ / (1 - β) := by
+  have hden : 0 < 1 - β := by linarith
+  have hq : 0 ≤ β / (1 - β) := div_nonneg hβ0 hden.le
+  have hbias : ∀ (t : ℕ) (s : G.State),
+      |(β / (1 - β)) * v s| ≤ (β / (1 - β)) * C := by
+    intro _ s
+    rw [abs_mul, abs_of_nonneg hq]
+    exact mul_le_mul_of_nonneg_left (hv s) hq
+  have havg := G.finiteAveragePayoff_le_of_averageReward_bellman_ge
+    σ s₀ who (fun _ => v)
+      (fun _ s => (β / (1 - β)) * v s)
+      (fun _ => δ / (1 - β))
+      (fun _ s => hz s) hbias
+      (G.averageReward_bellman_ge_of_discounted_bellman_ge
+        σ who v hβ1 hdisc) hT
+  have hTreal : (T : ℝ) ≠ 0 := by exact_mod_cast hT.ne'
+  have herr : (T : ℝ)⁻¹ *
+      (∑ t ∈ Finset.range T, δ / (1 - β)) = δ / (1 - β) := by
+    simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+    field_simp
+  rwa [herr] at havg
 
 /-- ε-Nash equilibrium of the `β`-discounted game from `s₀`: no unilateral
 replacement of a whole behavior strategy gains more than `ε` in discounted

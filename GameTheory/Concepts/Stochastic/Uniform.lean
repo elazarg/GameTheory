@@ -52,6 +52,9 @@ development so far live in `GameTheory.Concepts.Stochastic.Absorbing`.
   (stated with `sorry`)
 * `StochasticGame.exists_isUniformεEquilibrium` — for every `ε > 0` some
   profile is a uniform ε-equilibrium (derived from the conjecture)
+* `StochasticGame.isUniformEquilibriumPayoff_of_deviation_caps` — a direct
+  proof interface reducing the uniform-payoff goal to asymptotic on-path
+  payoff estimates and unilateral deviation caps
 -/
 
 noncomputable section
@@ -122,6 +125,37 @@ theorem isεHorizonNash_iff_horizonGame (G : StochasticGame ι) [Fintype ι]
     have h := hN who dev
     rw [eu_horizonGame, eu_horizonGame] at h
     exact h
+
+/-- A proof-facing certificate for uniform equilibrium payoffs.  It is enough
+to construct, for every positive `δ`, one profile whose long-horizon payoff is
+within `δ` of `v` and under which every unilateral deviation is capped by
+`v + δ`.  Applying the certificate with `δ = ε / 2` gives the required
+`ε`-Nash inequality and `ε` payoff approximation.
+
+This theorem isolates exactly the quantitative estimates that a direct proof
+of `exists_uniformEquilibriumPayoff` must supply. -/
+theorem isUniformEquilibriumPayoff_of_deviation_caps
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    (s₀ : G.State) (v : Payoff ι)
+    (hcert : ∀ δ : ℝ, 0 < δ →
+      ∃ (σ : G.BehaviorProfile) (T₀ : ℕ), ∀ T, T₀ ≤ T →
+        (∀ who, |G.finiteAveragePayoff s₀ T σ who - v who| ≤ δ) ∧
+        (∀ who (dev : G.BehaviorStrategy who),
+          G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
+            v who + δ)) :
+    G.IsUniformEquilibriumPayoff s₀ v := by
+  intro ε hε
+  have hδ : 0 < ε / 2 := by linarith
+  obtain ⟨σ, T₀, hσ⟩ := hcert (ε / 2) hδ
+  refine ⟨σ, T₀, fun T hT => ?_⟩
+  obtain ⟨hon, hdev⟩ := hσ T hT
+  constructor
+  · intro who dev
+    have hlower := (abs_le.mp (hon who)).1
+    have hupper := hdev who dev
+    linarith
+  · intro who
+    exact (hon who).trans (by linarith)
 
 /-- **The uniform equilibrium existence problem.**
 
