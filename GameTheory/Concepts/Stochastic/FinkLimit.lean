@@ -206,6 +206,32 @@ theorem tendsto_finkProfile_pureDeviationContinuation
     exact hw.mul tendsto_const_nhds
   simpa only [expect_eq_sum] using hsum
 
+/-- A unilateral mixed continuation value is the deviating player's
+expectation of the corresponding pure-action continuation values. -/
+theorem mixedDeviationContinuation_eq_expect_pure
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (dev : PMF (G.Act who)) :
+    expect (pmfPi (Function.update (x s) who dev))
+        (fun a => expect (G.transition s a) (fun s' => W s' who)) =
+      expect dev (fun d =>
+        expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+          (fun a => expect (G.transition s a) (fun s' => W s' who))) := by
+  rw [pmfPi_update_bind, expect_bind]
+
+/-- If a finite-distribution expectation reaches a common pointwise upper
+bound, every positive-probability point reaches that bound. -/
+theorem eq_of_expect_eq_of_forall_le_of_ne_zero
+    {α : Type} [Finite α] (μ : PMF α) (f : α → ℝ) (c : ℝ)
+    (hexpect : expect μ f = c) (hle : ∀ a, f a ≤ c)
+    {a : α} (ha : μ a ≠ 0) : f a = c := by
+  apply le_antisymm (hle a)
+  by_contra hnot
+  have hlt : f a < c := lt_of_not_ge hnot
+  have hstrict := expect_lt_const_of_le_of_exists_lt μ f hle ⟨a, ha, hlt⟩
+  linarith
+
 /-- A common upper bound for all pure unilateral continuation deviations is
 also an upper bound for every mixed unilateral deviation. -/
 theorem mixedDeviationContinuation_le_of_pure_bound
@@ -218,15 +244,146 @@ theorem mixedDeviationContinuation_le_of_pure_bound
     (dev : PMF (G.Act who)) :
     expect (pmfPi (Function.update (x s) who dev))
         (fun a => expect (G.transition s a) (fun s' => W s' who)) ≤ c := by
-  let f : G.JointAct → ℝ := fun a =>
-    expect (G.transition s a) (fun s' => W s' who)
+  rw [G.mixedDeviationContinuation_eq_expect_pure x W s who dev]
   calc
-    expect (pmfPi (Function.update (x s) who dev)) f =
-        expect dev (fun d =>
-          expect (pmfPi (Function.update (x s) who (PMF.pure d))) f) := by
-      rw [pmfPi_update_bind, expect_bind]
-    _ ≤ expect dev (fun _ => c) := expect_mono dev _ _ hpure
+    expect dev (fun d =>
+        expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+          (fun a => expect (G.transition s a) (fun s' => W s' who))) ≤
+        expect dev (fun _ => c) := expect_mono dev _ _ hpure
     _ = c := expect_const dev c
+
+/-- Every action used with positive probability by a harmonic/excessive
+limit profile is continuation-neutral: it preserves the limiting value
+against the other players' limiting mixed actions. -/
+theorem finkLimit_support_continuation_eq
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (W : G.State → Payoff ι) (s : G.State) (who : ι) (d : G.Act who)
+    (hharmonic : W s who =
+      expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ d' : G.Act who,
+      expect (pmfPi (Function.update (G.finkProfile z s)
+          who (PMF.pure d'))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hpos : G.finkProfile z s who d ≠ 0) :
+    expect (pmfPi (Function.update (G.finkProfile z s)
+        who (PMF.pure d))) (fun a =>
+      expect (G.transition s a) (fun s' => W s' who)) = W s who := by
+  have hdecomp := G.mixedDeviationContinuation_eq_expect_pure
+    (G.finkProfile z) W s who (G.finkProfile z s who)
+  simp only [Function.update_eq_self] at hdecomp
+  have hexpect : expect (G.finkProfile z s who) (fun d' =>
+      expect (pmfPi (Function.update (G.finkProfile z s)
+        who (PMF.pure d'))) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who))) = W s who :=
+    hdecomp.symm.trans hharmonic.symm
+  exact eq_of_expect_eq_of_forall_le_of_ne_zero
+    (G.finkProfile z s who) _ (W s who) hexpect hexcessive hpos
+
+/-- A stationary profile is continuation-neutral on its support for `W` if
+every positively played pure action preserves that player's expected next
+state value against the other players' mixed actions. -/
+def IsContinuationNeutralOnSupport (G : StochasticGame ι) [Fintype ι]
+    [DecidableEq ι]
+    (x : G.StationaryMixedProfile) (W : G.State → Payoff ι) : Prop :=
+  ∀ s who (d : G.Act who), x s who d ≠ 0 →
+    expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+      expect (G.transition s a) (fun s' => W s' who)) = W s who
+
+/-- Harmonicity on path and excessiveness against pure deviations imply
+continuation-neutrality on the profile's support. -/
+theorem isContinuationNeutralOnSupport_of_harmonic_excessive
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (W : G.State → Payoff ι)
+    (hharmonic : ∀ s who, W s who =
+      expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile z s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who) :
+    G.IsContinuationNeutralOnSupport (G.finkProfile z) W := by
+  intro s who d hpos
+  exact G.finkLimit_support_continuation_eq z W s who d
+    (hharmonic s who) (hexcessive s who) hpos
+
+/-- A strictly value-decreasing pure action has zero probability in the
+limiting stationary profile. -/
+theorem finkLimit_strictDeviation_probability_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (W : G.State → Payoff ι) (s : G.State) (who : ι) (d : G.Act who)
+    (hharmonic : W s who =
+      expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ d' : G.Act who,
+      expect (pmfPi (Function.update (G.finkProfile z s)
+          who (PMF.pure d'))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hstrict : expect (pmfPi (Function.update (G.finkProfile z s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) < W s who) :
+    G.finkProfile z s who d = 0 := by
+  by_contra hne
+  have heq := G.finkLimit_support_continuation_eq
+    z W s who d hharmonic hexcessive hne
+  linarith
+
+/-- Along a convergent Fink family, the probability of every strictly
+value-decreasing limiting action tends to zero. -/
+theorem tendsto_finkProfile_strictDeviation_probability_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hharmonic : W s who =
+      expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ d' : G.Act who,
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d'))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hstrict : expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) < W s who) :
+    Tendsto (fun n => G.finkProfile (z n) s who d) atTop (nhds 0) := by
+  have hzero := G.finkLimit_strictDeviation_probability_zero
+    zlim W s who d hharmonic hexcessive hstrict
+  have ht := G.finkProfile_convergesPointwise hz s who d
+  simpa only [hzero] using ht
+
+/-- A strict limiting continuation loss persists with a fixed positive
+margin along all sufficiently late discounted Fink profiles. -/
+theorem eventually_finkProfile_strictDeviation_margin
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hstrict : expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) < W s who) :
+    ∃ δ : ℝ, 0 < δ ∧ ∀ᶠ n in atTop,
+      expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who - δ := by
+  let L := expect (pmfPi (Function.update (G.finkProfile zlim s)
+      who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who))
+  let δ := (W s who - L) / 2
+  have hδ : 0 < δ := by dsimp [δ, L]; linarith
+  have ht := G.tendsto_finkProfile_pureDeviationContinuation hz
+    (fun s' => W s' who) s who d
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht δ hδ
+  refine ⟨δ, hδ, ?_⟩
+  filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+  rw [Real.dist_eq, abs_lt] at hn
+  dsimp [δ, L]
+  dsimp [L, δ] at hn
+  linarith
 
 /-- Harmonicity and pure-action excessiveness of a limiting profile become
 uniform approximate drift bounds along every convergent finite-state/action
@@ -739,6 +896,35 @@ theorem exists_finkLimit_harmonic_excessive
     exact G.finkValue_excessive_pureDeviation_of_fixedPoint_tendsto
       approachOneDiscount U approachOneDiscount_nonneg
         approachOneDiscount_le_one hpay z zlim φ hfix hβlim hzlim s who d
+
+/-- The canonical limit certificate additionally plays only continuation-
+neutral actions.  Strictly value-decreasing actions are absent from its
+support and therefore belong to lower-order transient behavior. -/
+theorem exists_finkLimit_harmonic_excessive_neutral
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)]
+    (U : ℝ) (hU : 0 ≤ U)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) :
+    ∃ zlim : G.finkDomain U,
+      (∀ s who,
+        G.finkValue zlim s who =
+          expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+            expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who))) ∧
+      (∀ s who (dev : PMF (G.Act who)),
+        expect (pmfPi (Function.update (G.finkProfile zlim s) who dev))
+            (fun a => expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who)) ≤
+          G.finkValue zlim s who) ∧
+      G.IsContinuationNeutralOnSupport (G.finkProfile zlim)
+        (G.finkValue zlim) := by
+  obtain ⟨zlim, hharmonic, hexcessive⟩ :=
+    G.exists_finkLimit_harmonic_excessive U hU hpay
+  refine ⟨zlim, hharmonic, hexcessive, ?_⟩
+  apply G.isContinuationNeutralOnSupport_of_harmonic_excessive zlim
+    (G.finkValue zlim) hharmonic
+  intro s who d
+  exact hexcessive s who (PMF.pure d)
 
 /-- Canonical Fink fixed points admit a further vanishing-discount family
 whose value and transition residuals have the explicit rate `1 / (n + 1)`.
