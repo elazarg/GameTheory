@@ -4,7 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Languages.OpenGame.Theorems
+import GameTheory.Languages.Bridges.OpenGame_EFG
+import GameTheory.Languages.NFG.Stackelberg
 
 /-!
 # Open-Game Examples
@@ -83,18 +84,18 @@ theorem deterrenceThreat_is_plainEquilibrium :
 
 /-- The same profile fails the conditioned predicate because fighting after
 entry is not optimal. -/
-theorem deterrenceThreat_not_subgamePerfect :
-    ¬ShapeS.IsSubgamePerfect entryDeterrencePayoff deterrenceThreat := by
-  simp [ShapeS.IsSubgamePerfect, entryDeterrencePayoff, deterrenceThreat]
+theorem deterrenceThreat_not_conditioned :
+    ¬ShapeS.IsConditionedEquilibrium entryDeterrencePayoff deterrenceThreat := by
+  simp [ShapeS.IsConditionedEquilibrium, entryDeterrencePayoff, deterrenceThreat]
 
 /-- Enter followed by accommodation is subgame perfect (the off-path Out
 subgame leaves the follower indifferent). -/
 def entryAccommodation : Bool × (Bool → Bool) :=
   (true, fun _entry => false)
 
-theorem entryAccommodation_is_subgamePerfect :
-    ShapeS.IsSubgamePerfect entryDeterrencePayoff entryAccommodation := by
-  simp [ShapeS.IsSubgamePerfect, entryDeterrencePayoff, entryAccommodation]
+theorem entryAccommodation_is_conditioned :
+    ShapeS.IsConditionedEquilibrium entryDeterrencePayoff entryAccommodation := by
+  simp [ShapeS.IsConditionedEquilibrium, entryDeterrencePayoff, entryAccommodation]
 
 /-- The non-credible threat is nevertheless Nash in the compiled sequential
 strategic form. -/
@@ -103,5 +104,46 @@ theorem deterrenceThreat_is_kernelNash :
       (ShapeS.toProfile deterrenceThreat) :=
   (ShapeS.isEquilibriumIn_iff_isNash entryDeterrencePayoff deterrenceThreat).mp
     deterrenceThreat_is_plainEquilibrium
+
+/-! ## Stackelberg compatibility -/
+
+/-- The conditioned two-stage predicate is exactly the existing Stackelberg
+equilibrium predicate when the continuation is built from leader/follower
+utilities. -/
+theorem conditioned_iff_isStackelbergEq (G : GameTheory.StackelbergGame)
+    (l : G.L) (br : G.L → G.F) :
+    (ShapeS.conditioned G.L G.F).IsEquilibriumIn ()
+        (fun x => (G.uL x.1 x.2, G.uF x.1 x.2)) (l, br) ↔
+      G.IsStackelbergEq l br := by
+  constructor
+  · intro h
+    exact ⟨fun l' f' => h.2 l' f', fun l' => h.1 l'⟩
+  · intro h
+    exact ⟨fun l' => h.2 l', fun l' f' => h.1 l' f'⟩
+
+/-- The repository's entry-deterrence Stackelberg solution is therefore a
+conditioned open-game equilibrium. -/
+theorem stackelberg_entry_is_conditioned :
+    (ShapeS.conditioned Bool Bool).IsEquilibriumIn ()
+        (fun x => (GameTheory.EntryDeterrence.uL x.1 x.2,
+          GameTheory.EntryDeterrence.uF x.1 x.2))
+        (GameTheory.EntryDeterrence.fight, GameTheory.EntryDeterrence.br) :=
+  (conditioned_iff_isStackelbergEq GameTheory.EntryDeterrence.game
+    GameTheory.EntryDeterrence.fight GameTheory.EntryDeterrence.br).2
+      GameTheory.EntryDeterrence.game_stackelberg_eq_fight
+
+/-- The same Stackelberg solution is subgame-perfect in the staged EFG
+encoding, by the genuine bridge correspondence. -/
+theorem stackelberg_entry_is_efgSubgamePerfect :
+    (ShapeS.toEFG Bool Bool fun x =>
+      (GameTheory.EntryDeterrence.uL x.1 x.2,
+        GameTheory.EntryDeterrence.uF x.1 x.2)).IsSubgamePerfectEq
+      (ShapeS.toPureProfile Bool Bool
+        (GameTheory.EntryDeterrence.fight, GameTheory.EntryDeterrence.br)) :=
+  (ShapeS.conditioned_isEquilibriumIn_iff_efg_isSubgamePerfectEq Bool Bool
+    (fun x => (GameTheory.EntryDeterrence.uL x.1 x.2,
+      GameTheory.EntryDeterrence.uF x.1 x.2))
+    (GameTheory.EntryDeterrence.fight, GameTheory.EntryDeterrence.br)).1
+      stackelberg_entry_is_conditioned
 
 end OpenGames.Examples

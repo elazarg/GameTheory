@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Languages.OpenGame.Correlation
+import GameTheory.Languages.OpenGame
 
 /-!
 # Tests for Deterministic Open Games
@@ -60,6 +60,12 @@ example (μ : PMF G.Profile) :
     (PrivateDevice.canonical G μ).IsExAnteEquilibrium ↔
       G.IsCoarseCorrelatedEq μ :=
   PrivateDevice.canonical_isExAnteEquilibrium_iff_isCoarseCorrelatedEq μ
+
+example (k : Bool × Bool → ℝ × ℝ) (σ : Bool × (Bool → Bool)) :
+    (ShapeS.conditioned Bool Bool).IsEquilibriumIn () k σ ↔
+      (ShapeS.toEFG Bool Bool k).IsSubgamePerfectEq
+        (ShapeS.toPureProfile Bool Bool σ) :=
+  ShapeS.conditioned_isEquilibriumIn_iff_efg_isSubgamePerfectEq Bool Bool k σ
 
 end
 

@@ -12,8 +12,8 @@ import GameTheory.Languages.OpenGame.Compile
 Plain sequential composition checks a later decision only at its realized
 history.  `ShapeS.conditioned` makes the stronger, subgame-conditioned
 predicate explicit: the follower must be optimal after every possible first
-move.  This file relates the two predicates and records a machine-checked
-non-credible-threat witness.
+move.  Its actual correspondence to EFG subgame perfection lives in
+`Languages/Bridges/OpenGame_EFG.lean`.
 -/
 
 namespace OpenGames.ShapeS
@@ -30,19 +30,21 @@ def conditioned (A B : Type) : OpenGame Unit Unit (A × B) (ℝ × ℝ) where
     (∀ a, (k (a, σ.2 a)).1 ≤ (k (σ.1, σ.2 σ.1)).1) ∧
     (∀ a b, (k (a, b)).2 ≤ (k (a, σ.2 a)).2)
 
-/-- Intrinsic subgame-perfect predicate for a two-stage perfect-information
-shape. -/
-def IsSubgamePerfect {A B : Type} (k : A × B → ℝ × ℝ)
+/-- The explicit pointwise inequalities carried by the conditioned shape.
+
+This is a shape-local characterization, not the EFG definition of subgame
+perfection.  See `conditioned_isEquilibriumIn_iff_efg_isSubgamePerfectEq` for
+the substantive bridge theorem. -/
+def IsConditionedEquilibrium {A B : Type} (k : A × B → ℝ × ℝ)
     (σ : A × (A → B)) : Prop :=
   (∀ a, (k (a, σ.2 a)).1 ≤ (k (σ.1, σ.2 σ.1)).1) ∧
   (∀ a b, (k (a, b)).2 ≤ (k (a, σ.2 a)).2)
 
-/-- The explicit conditioning operator carries exactly the intrinsic
-subgame-perfect predicate. -/
-theorem conditioned_isEquilibriumIn_iff_isSubgamePerfect {A B : Type}
+/-- Unfolding the conditioning operator gives its pointwise inequalities. -/
+theorem conditioned_isEquilibriumIn_iff_isConditionedEquilibrium {A B : Type}
     (k : A × B → ℝ × ℝ) (σ : A × (A → B)) :
     (conditioned A B).IsEquilibriumIn () k σ ↔
-      IsSubgamePerfect k σ :=
+      IsConditionedEquilibrium k σ :=
   Iff.rfl
 
 /-- Subgame-conditioned equilibrium implies equilibrium of plain sequential
