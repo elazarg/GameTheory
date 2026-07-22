@@ -499,6 +499,31 @@ theorem exists_finkContinuationResidualVector_eq_of_tendsto_cesaro_zero
   rw [← G.expect_finkStateKernel_eq z s (k who)]
   exact hk who s
 
+/-- Exact mean-ergodic characterization of the range of the Fink
+continuation-residual operator. -/
+theorem exists_finkContinuationResidualVector_eq_iff_tendsto_cesaro_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (F : G.State → Payoff ι) :
+    (∃ K : G.State → Payoff ι,
+        G.finkContinuationResidualVector K z = F) ↔
+      ∀ who, Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+          ((Math.MeanErgodic.markovOperator (G.finkStateKernel z)) ^ t)
+            (fun s => F s who)) atTop (nhds 0) := by
+  constructor
+  · rintro ⟨K, hK⟩ who
+    apply (Math.MeanErgodic.exists_poisson_iff_tendsto_cesaro_zero
+      (G.finkStateKernel z) (fun s => F s who)).mp
+    refine ⟨fun s => K s who, fun s => ?_⟩
+    have hcoord := congrFun (congrFun hK s) who
+    unfold finkContinuationResidualVector finkContinuationResidual
+      finkContinuationEU at hcoord
+    rw [G.expect_finkStateKernel_eq z s (fun s' => K s' who)]
+    exact hcoord
+  · exact G.exists_finkContinuationResidualVector_eq_of_tendsto_cesaro_zero
+      z F
+
 /-- Vector forcing represented by an on-profile average-reward Bellman
 equation with value `V` and bias `J`. -/
 def finkBellmanForcingVector (G : StochasticGame ι)

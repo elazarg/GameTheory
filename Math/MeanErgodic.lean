@@ -284,6 +284,34 @@ theorem mem_range_sub_id_of_tendsto_cesaro_zero [FiniteDimensional ℝ E]
   rw [← hzw, hz0, zero_add]
   exact ⟨y, hy⟩
 
+/-- Every one-step coboundary has vanishing Cesàro orbit under a
+power-bounded operator. -/
+theorem tendsto_cesaro_zero_of_mem_range_sub_id
+    (P : E →ₗ[ℝ] E) {C : ℝ}
+    (hC : ∀ (n : ℕ) (x : E), ‖(P ^ n) x‖ ≤ C * ‖x‖) (x : E)
+    (hx : x ∈ LinearMap.range (P - LinearMap.id)) :
+    Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) x)
+        atTop (nhds 0) := by
+  obtain ⟨y, hy⟩ := hx
+  have hy' : P y - y = x := by simpa using hy
+  apply (tendsto_inv_smul_pow_sub_of_pow_norm_le P hC y).congr'
+  exact Filter.Eventually.of_forall fun T => by
+    dsimp only
+    rw [← hy', sum_range_pow_apply_sub]
+
+/-- Mean-ergodic range characterization of one-step coboundaries. -/
+theorem tendsto_cesaro_zero_iff_mem_range_sub_id
+    [FiniteDimensional ℝ E] (P : E →ₗ[ℝ] E) {C : ℝ}
+    (hC : ∀ (n : ℕ) (x : E), ‖(P ^ n) x‖ ≤ C * ‖x‖) (x : E) :
+    Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) x)
+        atTop (nhds 0) ↔
+      x ∈ LinearMap.range (P - LinearMap.id) := by
+  constructor
+  · exact mem_range_sub_id_of_tendsto_cesaro_zero P hC x
+  · exact tendsto_cesaro_zero_of_mem_range_sub_id P hC x
+
 end Abstract
 
 -- ============================================================================
@@ -353,6 +381,24 @@ theorem exists_poisson_of_tendsto_cesaro_zero
   refine ⟨u, fun s => ?_⟩
   have hs := congrFun hu s
   simpa [markovOperator_apply] using hs
+
+/-- Exact finite-state Poisson criterion: an observable is a one-step Markov
+coboundary if and only if its mean-ergodic fixed component vanishes. -/
+theorem exists_poisson_iff_tendsto_cesaro_zero
+    (κ : S → PMF S) (f : S → ℝ) :
+    (∃ u : S → ℝ, ∀ s, expect (κ s) u - u s = f s) ↔
+      Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+          ((markovOperator κ) ^ t) f) atTop (nhds 0) := by
+  constructor
+  · rintro ⟨u, hu⟩
+    apply tendsto_cesaro_zero_of_mem_range_sub_id
+      (markovOperator κ)
+      (fun t w => norm_markovOperator_pow_apply_le κ t w) f
+    refine ⟨u, ?_⟩
+    ext s
+    simpa [markovOperator_apply] using hu s
+  · exact exists_poisson_of_tendsto_cesaro_zero κ f
 
 end Markov
 
