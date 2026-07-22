@@ -150,17 +150,6 @@ theorem gsStable_greatest
       obtain ⟨b, hda, hle⟩ := M.daMatching_man_optimal hAinj hBinj hAne μ.2 hμa
       simp [prefAOption, gsStable, hda, hle]
 
-/-- Compatibility/order-style name for `gsStable_greatest`: deferred acceptance
-is greatest among stable matchings under the generalized `α`-side order. This
-avoids installing a global `LE` instance, since the complete-market lattice
-uses a stronger specialized order. -/
-theorem le_gsStable
-    (hAinj : ∀ a, Function.Injective (M.prefA a))
-    (hBinj : ∀ b, Function.Injective (M.prefB b))
-    (hAne : ∀ a b, M.reserveA a ≠ M.prefA a b) (μ : M.StableMatching) :
-    menLe M μ (gsStable M hAinj hBinj) :=
-  gsStable_greatest M hAinj hBinj hAne μ
-
 end OptionalOrder
 
 end MatchingMarket
