@@ -506,6 +506,67 @@ theorem finitePayoff_telescope_of_averageReward_bellman_le
         Finset.sum_range_succ]
       linarith [hstep T]
 
+/-- Finite-average lower verification with separate bounds on the initial
+and terminal time-varying biases.  Unlike the uniform-bias wrapper below,
+this form permits a bias schedule that grows with the horizon, provided its
+terminal growth is sublinear. -/
+theorem finiteAveragePayoff_ge_of_averageReward_bellman_le_endpoints
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ) {T : ℕ}
+    {c C0 CT : ℝ} (hz : ∀ t s, c ≤ z t s)
+    (hv0 : ∀ s, |v 0 s| ≤ C0) (hvT : ∀ s, |v T s| ≤ CT)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      z t h.2 + v t h.2 ≤ G.stageEUAt σ h who +
+        expect (G.stageActionDist σ h) (fun a =>
+          expect (G.transition h.2 a) (v (t + 1))) + e t)
+    (hT : 0 < T) :
+    c - (C0 + CT) / (T : ℝ) -
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t ≤
+      G.finiteAveragePayoff s₀ T σ who := by
+  have htel := G.finitePayoff_telescope_of_averageReward_bellman_le
+    σ s₀ who z v e hbellman T
+  have hZ : ∀ t, c ≤ G.expectedStateValue σ s₀ t (z t) := by
+    intro t
+    calc
+      c = expect (G.histDist σ s₀ t) (fun _ => c) :=
+        (expect_const _ _).symm
+      _ ≤ expect (G.histDist σ s₀ t) (fun h => z t h.2) :=
+        expect_mono _ _ _ fun h => hz t h.2
+  have hsumZ : (T : ℝ) * c ≤
+      ∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t) := by
+    calc
+      (T : ℝ) * c = ∑ _t ∈ Finset.range T, c := by simp
+      _ ≤ ∑ t ∈ Finset.range T,
+          G.expectedStateValue σ s₀ t (z t) :=
+        Finset.sum_le_sum fun t _ => hZ t
+  have hV0 : -C0 ≤ G.expectedStateValue σ s₀ 0 (v 0) := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ 0) (fun h => v 0 h.2) fun h => hv0 h.2
+    exact neg_le_of_abs_le habs
+  have hVT : G.expectedStateValue σ s₀ T (v T) ≤ CT := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ T) (fun h => v T h.2) fun h => hvT h.2
+    exact le_of_abs_le habs
+  have hraw : (T : ℝ) * c - C0 - CT -
+      (∑ t ∈ Finset.range T, e t) ≤
+        ∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who := by
+    linarith
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hsumPayoff :
+      (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who) =
+        (T : ℝ) * G.finiteAveragePayoff s₀ T σ who := by
+    rw [G.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+    field_simp
+  rw [hsumPayoff] at hraw
+  rw [show c - (C0 + CT) / (T : ℝ) -
+      (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, e t) =
+      ((T : ℝ) * c - C0 - CT - (∑ t ∈ Finset.range T, e t)) /
+        (T : ℝ) by
+    field_simp
+    ring]
+  exact (div_le_iff₀ hTreal).2 (by simpa [mul_comm] using hraw)
+
 /-- A uniformly lower-bounded target and bounded time-varying bias turn the
 historywise average-reward Bellman inequality into a finite-horizon payoff
 guarantee.  The only losses are the two boundary biases (`2C / T`) and the
@@ -609,6 +670,66 @@ theorem finitePayoff_telescope_of_averageReward_bellman_ge
       rw [Finset.sum_range_succ, Finset.sum_range_succ,
         Finset.sum_range_succ]
       linarith [hstep T]
+
+/-- Dual finite-average verification with separate initial and terminal bias
+bounds. -/
+theorem finiteAveragePayoff_le_of_averageReward_bellman_ge_endpoints
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] (σ : G.BehaviorProfile) (s₀ : G.State)
+    (who : ι) (z v : ℕ → G.State → ℝ) (e : ℕ → ℝ) {T : ℕ}
+    {c C0 CT : ℝ} (hz : ∀ t s, z t s ≤ c)
+    (hv0 : ∀ s, |v 0 s| ≤ C0) (hvT : ∀ s, |v T s| ≤ CT)
+    (hbellman : ∀ (t : ℕ) (h : G.Hist t),
+      G.stageEUAt σ h who +
+          expect (G.stageActionDist σ h) (fun a =>
+            expect (G.transition h.2 a) (v (t + 1))) ≤
+        z t h.2 + v t h.2 + e t)
+    (hT : 0 < T) :
+    G.finiteAveragePayoff s₀ T σ who ≤
+      c + (C0 + CT) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t := by
+  have htel := G.finitePayoff_telescope_of_averageReward_bellman_ge
+    σ s₀ who z v e hbellman T
+  have hZ : ∀ t, G.expectedStateValue σ s₀ t (z t) ≤ c := by
+    intro t
+    calc
+      expect (G.histDist σ s₀ t) (fun h => z t h.2) ≤
+          expect (G.histDist σ s₀ t) (fun _ => c) :=
+        expect_mono _ _ _ fun h => hz t h.2
+      _ = c := expect_const _ _
+  have hsumZ : (∑ t ∈ Finset.range T,
+      G.expectedStateValue σ s₀ t (z t)) ≤ (T : ℝ) * c := by
+    calc
+      (∑ t ∈ Finset.range T, G.expectedStateValue σ s₀ t (z t)) ≤
+          ∑ _t ∈ Finset.range T, c :=
+        Finset.sum_le_sum fun t _ => hZ t
+      _ = (T : ℝ) * c := by simp
+  have hV0 : G.expectedStateValue σ s₀ 0 (v 0) ≤ C0 := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ 0) (fun h => v 0 h.2) fun h => hv0 h.2
+    exact le_of_abs_le habs
+  have hVT : -CT ≤ G.expectedStateValue σ s₀ T (v T) := by
+    have habs := abs_expect_le_of_abs_le
+      (G.histDist σ s₀ T) (fun h => v T h.2) fun h => hvT h.2
+    exact neg_le_of_abs_le habs
+  have hraw : (∑ t ∈ Finset.range T,
+      G.expectedStagePayoff σ s₀ t who) ≤
+        (T : ℝ) * c + C0 + CT + ∑ t ∈ Finset.range T, e t := by
+    linarith
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hsumPayoff :
+      (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t who) =
+        (T : ℝ) * G.finiteAveragePayoff s₀ T σ who := by
+    rw [G.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+    field_simp
+  rw [hsumPayoff] at hraw
+  rw [show c + (C0 + CT) / (T : ℝ) +
+      (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, e t) =
+      ((T : ℝ) * c + C0 + CT + (∑ t ∈ Finset.range T, e t)) /
+        (T : ℝ) by
+    field_simp
+    ring]
+  exact (le_div_iff₀ hTreal).2 (by simpa [mul_comm] using hraw)
 
 /-- Quantitative upper payoff bound from a uniformly upper-bounded target and
 bounded time-varying bias. -/

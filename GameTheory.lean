@@ -114,6 +114,7 @@ import GameTheory.Concepts.Stochastic.TransitionIndependent
 import GameTheory.Concepts.Stochastic.Discounted
 import GameTheory.Concepts.Stochastic.ZeroSum
 import GameTheory.Concepts.Stochastic.Fink
+import GameTheory.Concepts.Stochastic.FinkSchedule
 
 -- Correlated equilibrium
 import GameTheory.Concepts.Correlation.CorrelatedEqProperties
