@@ -1228,6 +1228,70 @@ player, and that player's action. -/
 abbrev FinkPureActionVector (G : StochasticGame ι) :=
   G.State → ∀ who : ι, G.Act who → ℝ
 
+/-- A single coordinate of the finite pure-action vector. -/
+abbrev FinkPureActionIndex (G : StochasticGame ι) :=
+  G.State × (Σ who : ι, G.Act who)
+
+/-- Coordinates selected strictly positively by an action-loss direction. -/
+def positiveFinkActionIndices (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) : Finset G.FinkPureActionIndex :=
+  Finset.univ.filter fun p => 0 < L p.1 p.2.1 p.2.2
+
+@[simp] theorem mem_positiveFinkActionIndices
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) (p : G.FinkPureActionIndex) :
+    p ∈ G.positiveFinkActionIndices L ↔ 0 < L p.1 p.2.1 p.2.2 := by
+  simp [positiveFinkActionIndices]
+
+/-- Pure-action coordinates in the support of a decoded Fink profile. -/
+def finkSupportIndices (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) : Finset G.FinkPureActionIndex :=
+  Finset.univ.filter fun p => G.finkProfile z p.1 p.2.1 p.2.2 ≠ 0
+
+@[simp] theorem mem_finkSupportIndices
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (p : G.FinkPureActionIndex) :
+    p ∈ G.finkSupportIndices z ↔
+      G.finkProfile z p.1 p.2.1 p.2.2 ≠ 0 := by
+  simp [finkSupportIndices]
+
+theorem positiveFinkActionIndices_nonempty_of_norm_eq_one_of_nonneg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) (hnorm : ‖L‖ = 1)
+    (hnonneg : ∀ s who (d : G.Act who), 0 ≤ L s who d) :
+    (G.positiveFinkActionIndices L).Nonempty := by
+  have hpositive : ∃ (s : G.State) (who : ι) (d : G.Act who),
+      0 < L s who d := by
+    by_contra hnot
+    have hnonpos : ∀ s who (d : G.Act who), L s who d ≤ 0 := by
+      intro s who d
+      exact le_of_not_gt fun h => hnot ⟨s, who, d, h⟩
+    have hzero : L = 0 := by
+      funext s who d
+      exact le_antisymm (hnonpos s who d) (hnonneg s who d)
+    rw [hzero] at hnorm
+    simp at hnorm
+  obtain ⟨s, who, d, hd⟩ := hpositive
+  exact ⟨⟨s, ⟨who, d⟩⟩, by simp [hd]⟩
+
+theorem positiveFinkActionIndices_disjoint_finkSupportIndices
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (L : G.FinkPureActionVector) {U : ℝ} (z : G.finkDomain U)
+    (hsupport : ∀ s who (d : G.Act who),
+      G.finkProfile z s who d ≠ 0 → L s who d = 0) :
+    Disjoint (G.positiveFinkActionIndices L) (G.finkSupportIndices z) := by
+  rw [Finset.disjoint_left]
+  intro p hp hsupportp
+  have hpos := (G.mem_positiveFinkActionIndices L p).mp hp
+  have hplayed := (G.mem_finkSupportIndices z p).mp hsupportp
+  exact (not_lt_of_ge (le_of_eq (hsupport p.1 p.2.1 p.2.2 hplayed))) hpos
+
 /-- The first boundary-layer gain in every pure-action coordinate. -/
 def finkProjectiveGainVector (G : StochasticGame ι)
     [Fintype G.State] [Fintype ι] [DecidableEq ι]
@@ -1683,13 +1747,15 @@ theorem exists_finkProjectiveLoss_subsequence_interior_or_pruningDirection
           (∀ s who (d : G.Act who), 0 ≤ Llim s who d) ∧
           (∀ s who (d : G.Act who),
             G.finkProfile zlim s who d ≠ 0 → Llim s who d = 0) ∧
-          (∃ (s : G.State) (who : ι) (d : G.Act who),
-            0 < Llim s who d ∧ G.finkProfile zlim s who d = 0 ∧
+          (∀ s who (d : G.Act who), 0 < Llim s who d →
+            G.finkProfile zlim s who d = 0 ∧
             Tendsto (fun n =>
               ((G.finkProfile (z (φ n)) s who) d).toReal *
                 (1 + ‖G.finkProjectiveLossVector
                   (β (φ n)) W K (z (φ n))‖))
-              atTop (nhds 0)))) := by
+              atTop (nhds 0)) ∧
+          (∃ (s : G.State) (who : ι) (d : G.Act who),
+            0 < Llim s who d))) := by
   let L : ℕ → G.FinkPureActionVector := fun n =>
     G.finkProjectiveLossVector (β n) W K (z n)
   obtain ⟨Llim, φ, hφ, hLlim, halternative⟩ :=
@@ -1753,23 +1819,31 @@ theorem exists_finkProjectiveLoss_subsequence_interior_or_pruningDirection
         exact le_antisymm (hnonpos s who d) (hnonneg s who d)
       rw [hzero] at hboundary
       simp at hboundary
-    obtain ⟨s, who, d, hdpos⟩ := hpositive
-    have hweighted :=
-      (G.tendsto_finkProfile_mul_projectiveLoss_zero_of_boundary
-        hβ0 hβ1 hpay hz hfix W K hKlim hKnorm s who d).comp
-          hφ.tendsto_atTop
-    have hrate :=
-      G.tendsto_mul_one_add_norm_finkActionVector_zero_of_compactify_apply_pos
-        (L := L ∘ φ)
-        (p := fun n => ((G.finkProfile (z (φ n)) s who) d).toReal)
-        s who d hdpos (hcoordTendsto s who d)
-          (by simpa only [L, Function.comp_def] using hweighted)
-    refine ⟨hboundary.1, ?_, hnonneg, hsupport,
-      s, who, d, hdpos, ?_, ?_⟩
-    · simpa only [L, Function.comp_def] using hboundary.2
-    · by_contra hpos
+    have hprune : ∀ s who (d : G.Act who), 0 < Llim s who d →
+        G.finkProfile zlim s who d = 0 ∧
+        Tendsto (fun n =>
+          ((G.finkProfile (z (φ n)) s who) d).toReal *
+            (1 + ‖G.finkProjectiveLossVector
+              (β (φ n)) W K (z (φ n))‖))
+          atTop (nhds 0) := by
+      intro s who d hdpos
+      have hweighted :=
+        (G.tendsto_finkProfile_mul_projectiveLoss_zero_of_boundary
+          hβ0 hβ1 hpay hz hfix W K hKlim hKnorm s who d).comp
+            hφ.tendsto_atTop
+      have hrate :=
+        G.tendsto_mul_one_add_norm_finkActionVector_zero_of_compactify_apply_pos
+          (L := L ∘ φ)
+          (p := fun n => ((G.finkProfile (z (φ n)) s who) d).toReal)
+          s who d hdpos (hcoordTendsto s who d)
+            (by simpa only [L, Function.comp_def] using hweighted)
+      refine ⟨?_, by simpa only [L, Function.comp_def] using hrate⟩
+      by_contra hpos
       exact (not_lt_of_ge (le_of_eq (hsupport s who d hpos)) hdpos)
-    · simpa only [L, Function.comp_def] using hrate
+    obtain ⟨s, who, d, hdpos⟩ := hpositive
+    refine ⟨hboundary.1, ?_, hnonneg, hsupport,
+      hprune, s, who, d, hdpos⟩
+    · simpa only [L, Function.comp_def] using hboundary.2
 
 /-- A strictly value-decreasing pure action has zero probability in the
 limiting stationary profile. -/
