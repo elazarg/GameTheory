@@ -312,6 +312,43 @@ theorem tendsto_cesaro_zero_iff_mem_range_sub_id
   · exact mem_range_sub_id_of_tendsto_cesaro_zero P hC x
   · exact tendsto_cesaro_zero_of_mem_range_sub_id P hC x
 
+/-- Every vector splits into its mean-ergodic fixed component and a one-step
+coboundary.  The displayed fixed component is the Cesàro limit. -/
+theorem exists_fixed_add_coboundary [FiniteDimensional ℝ E]
+    (P : E →ₗ[ℝ] E) {C : ℝ}
+    (hC : ∀ (n : ℕ) (x : E), ‖(P ^ n) x‖ ≤ C * ‖x‖) (x : E) :
+    ∃ z y : E, P z = z ∧ x = z + (P y - y) ∧
+      Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) x)
+          atTop (nhds z) := by
+  obtain ⟨z, hPz, hlim⟩ := tendsto_cesaro_of_pow_norm_le P hC x
+  have hsub : Tendsto (fun T : ℕ =>
+      (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T, (P ^ t) (x - z))
+        atTop (nhds 0) := by
+    have ht := hlim.sub (tendsto_const_nhds :
+      Tendsto (fun _ : ℕ => z) atTop (nhds z))
+    rw [sub_self] at ht
+    apply ht.congr'
+    filter_upwards [eventually_ge_atTop 1] with T hT
+    have hTne : (T : ℝ) ≠ 0 := Nat.cast_ne_zero.mpr (by omega)
+    have hsumSub :
+        ∑ t ∈ Finset.range T, (P ^ t) (x - z) =
+          (∑ t ∈ Finset.range T, (P ^ t) x) -
+            ∑ t ∈ Finset.range T, (P ^ t) z := by
+      rw [← Finset.sum_sub_distrib]
+      exact Finset.sum_congr rfl fun t _ => map_sub (P ^ t) x z
+    rw [hsumSub,
+      Finset.sum_congr rfl fun t _ => pow_apply_eq_of_fixed hPz t,
+      Finset.sum_const, Finset.card_range,
+      smul_sub, ← Nat.cast_smul_eq_nsmul ℝ, smul_smul,
+      inv_mul_cancel₀ hTne, one_smul]
+  have hrange := mem_range_sub_id_of_tendsto_cesaro_zero P hC (x - z) hsub
+  obtain ⟨y, hy⟩ := hrange
+  have hy' : P y - y = x - z := by simpa using hy
+  refine ⟨z, y, hPz, ?_, hlim⟩
+  rw [hy']
+  abel
+
 end Abstract
 
 -- ============================================================================
@@ -399,6 +436,26 @@ theorem exists_poisson_iff_tendsto_cesaro_zero
     ext s
     simpa [markovOperator_apply] using hu s
   · exact exists_poisson_of_tendsto_cesaro_zero κ f
+
+/-- Markov-chain form of the mean-ergodic decomposition: every observable is
+the sum of a harmonic recurrent component and a Poisson coboundary. -/
+theorem exists_harmonic_add_poisson (κ : S → PMF S) (f : S → ℝ) :
+    ∃ o u : S → ℝ,
+      (∀ s, expect (κ s) o = o s) ∧
+      (∀ s, f s = o s + (expect (κ s) u - u s)) ∧
+      Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+          ((markovOperator κ) ^ t) f) atTop (nhds o) := by
+  obtain ⟨o, u, ho, hdecomp, hlim⟩ := exists_fixed_add_coboundary
+    (markovOperator κ)
+    (fun t w => norm_markovOperator_pow_apply_le κ t w) f
+  refine ⟨o, u, ?_, ?_, hlim⟩
+  · intro s
+    have hs := congrFun ho s
+    simpa [markovOperator_apply] using hs
+  · intro s
+    have hs := congrFun hdecomp s
+    simpa [markovOperator_apply] using hs
 
 end Markov
 

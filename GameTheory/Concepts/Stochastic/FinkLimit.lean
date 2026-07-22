@@ -524,6 +524,51 @@ theorem exists_finkContinuationResidualVector_eq_iff_tendsto_cesaro_zero
   · exact G.exists_finkContinuationResidualVector_eq_of_tendsto_cesaro_zero
       z F
 
+/-- Every Fink forcing splits into a harmonic recurrent obstruction and a
+Poisson-solvable transient part.  The obstruction is exactly the vector of
+Cesàro limits under the induced stationary state kernel. -/
+theorem exists_finkHarmonicObstruction_add_continuationResidual
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (F : G.State → Payoff ι) :
+    ∃ O K : G.State → Payoff ι,
+      G.finkContinuationResidualVector O z = 0 ∧
+      F = O + G.finkContinuationResidualVector K z ∧
+      ∀ who, Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+          ((Math.MeanErgodic.markovOperator (G.finkStateKernel z)) ^ t)
+            (fun s => F s who)) atTop (nhds (fun s => O s who)) := by
+  have hplayer : ∀ who, ∃ o k : G.State → ℝ,
+      (∀ s, expect (G.finkStateKernel z s) o = o s) ∧
+      (∀ s, F s who = o s +
+        (expect (G.finkStateKernel z s) k - k s)) ∧
+      Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+          ((Math.MeanErgodic.markovOperator (G.finkStateKernel z)) ^ t)
+            (fun s => F s who)) atTop (nhds o) := by
+    intro who
+    exact Math.MeanErgodic.exists_harmonic_add_poisson
+      (G.finkStateKernel z) (fun s => F s who)
+  choose o k ho hdecomp hlim using hplayer
+  let O : G.State → Payoff ι := fun s who => o who s
+  let K : G.State → Payoff ι := fun s who => k who s
+  refine ⟨O, K, ?_, ?_, ?_⟩
+  · ext s who
+    unfold finkContinuationResidualVector finkContinuationResidual
+      finkContinuationEU
+    rw [← G.expect_finkStateKernel_eq z s (o who)]
+    exact sub_eq_zero.mpr (ho who s)
+  · ext s who
+    unfold finkContinuationResidualVector finkContinuationResidual
+      finkContinuationEU
+    change F s who = o who s +
+      ((expect (pmfPi (G.finkProfile z s)) fun a =>
+        expect (G.transition s a) (k who)) - k who s)
+    rw [← G.expect_finkStateKernel_eq z s (k who)]
+    exact hdecomp who s
+  · intro who
+    simpa only [O] using hlim who
+
 /-- Vector forcing represented by an on-profile average-reward Bellman
 equation with value `V` and bias `J`. -/
 def finkBellmanForcingVector (G : StochasticGame ι)
@@ -532,6 +577,24 @@ def finkBellmanForcingVector (G : StochasticGame ι)
     (z : G.finkDomain U) : G.State → Payoff ι :=
   fun s who => V s who + J s who - G.finkStageEU z s who -
     G.finkContinuationEU J z s who
+
+/-- The limiting Bellman forcing has a canonical mean-ergodic split into a
+harmonic obstruction and a Poisson-solvable continuation residual. -/
+theorem exists_finkBellmanForcing_harmonicObstruction_decomposition
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (W H : G.State → Payoff ι) :
+    ∃ O K : G.State → Payoff ι,
+      G.finkContinuationResidualVector O z = 0 ∧
+      G.finkBellmanForcingVector W H z =
+        O + G.finkContinuationResidualVector K z ∧
+      ∀ who, Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+          ((Math.MeanErgodic.markovOperator (G.finkStateKernel z)) ^ t)
+            (fun s => G.finkBellmanForcingVector W H z s who))
+          atTop (nhds (fun s => O s who)) :=
+  G.exists_finkHarmonicObstruction_add_continuationResidual z
+    (G.finkBellmanForcingVector W H z)
 
 /-- At an interior bias scale, the rescaled Bellman remainder has a finite
 limit determined by the limiting value, bias, and stationary profile. -/
@@ -648,6 +711,19 @@ theorem finkContinuationResidualVector_smul
   rw [G.finkContinuationEU_smul]
   ring
 
+/-- Continuation residuals respect negation. -/
+theorem finkContinuationResidualVector_neg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (R : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U) :
+    G.finkContinuationResidualVector (-R) z =
+      -G.finkContinuationResidualVector R z := by
+  have hneg : -R = (-1 : ℝ) • R := by
+    ext s who
+    simp
+  rw [hneg, G.finkContinuationResidualVector_smul]
+  simp
+
 /-- The on-profile Poisson equation required by the interior verification
 criterion is solvable whenever its forcing has zero Cesàro fixed component
 under the limiting stationary state kernel. -/
@@ -674,6 +750,33 @@ theorem exists_finkPoissonCorrection_of_tendsto_cesaro_forcing_zero
   rw [G.finkContinuationResidualVector_smul]
   rw [hL]
   simp
+
+/-- A stationary Poisson correction removes the limiting Bellman forcing
+exactly when that forcing has no harmonic mean-ergodic component. -/
+theorem exists_finkPoissonCorrection_iff_tendsto_cesaro_forcing_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (W H : G.State → Payoff ι) :
+    (∃ K : G.State → Payoff ι,
+      G.finkBellmanForcingVector W H z =
+        -G.finkContinuationResidualVector K z) ↔
+      ∀ who, Tendsto (fun T : ℕ =>
+        (T : ℝ)⁻¹ • ∑ t ∈ Finset.range T,
+          ((Math.MeanErgodic.markovOperator (G.finkStateKernel z)) ^ t)
+            (fun s => G.finkBellmanForcingVector W H z s who))
+          atTop (nhds 0) := by
+  constructor
+  · rintro ⟨K, hK⟩
+    apply (G.exists_finkContinuationResidualVector_eq_iff_tendsto_cesaro_zero
+      z (G.finkBellmanForcingVector W H z)).mp
+    refine ⟨-K, ?_⟩
+    calc
+      G.finkContinuationResidualVector (-K) z =
+          -G.finkContinuationResidualVector K z := by
+        exact G.finkContinuationResidualVector_neg K z
+      _ = G.finkBellmanForcingVector W H z := hK.symm
+  · exact G.exists_finkPoissonCorrection_of_tendsto_cesaro_forcing_zero
+      z W H
 
 /-- Adding the boundary correction to the current reference is the same as
 rescaling the updated reference potential. -/
