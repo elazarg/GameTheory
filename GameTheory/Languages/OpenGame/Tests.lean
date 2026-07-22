@@ -99,6 +99,30 @@ example :
         ShapeSeqDep.OwnershipExample.allFalse :=
   ShapeSeqDep.OwnershipExample.agentForm_not_playerForm
 
+/-- Deterministic contexts embed into the coend-context quotient with their
+visible history and continuation laws intact. -/
+example {X Y R : Type} (x : X) (k : Y → R) (y : Y) :
+    CoendContext.historyMarginal (CoendContext.ofDeterministic x k) =
+        Math.FinPMF.pure x ∧
+      CoendContext.responseAt (CoendContext.ofDeterministic x k) y =
+        Math.FinPMF.pure (k y) := by
+  simp
+
+/-- The public coend API exposes its generating hidden-state
+reparameterization equation. -/
+example {X Y R Θ Ξ : Type} (f : Θ → Ξ)
+    (prior : Math.FinPMF (Θ × X))
+    (k : Ξ × Y → Math.FinPMF R) :
+    CoendContext.mk
+        { Hidden := Ξ
+          prior := Math.FinPMF.map (fun z => (f z.1, z.2)) prior
+          continuation := k } =
+      CoendContext.mk
+        { Hidden := Θ
+          prior := prior
+          continuation := fun z => k (f z.1, z.2) } :=
+  CoendContext.reparam_eq f prior k
+
 noncomputable section
 
 open GameTheory

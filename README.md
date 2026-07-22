@@ -133,6 +133,11 @@ principle. Backward values are called *cooutcomes* (the
 open-games literature also says *coutilities*). Closed, deliberately
 non-compositional devices recover CE, CCE, and pure-profile public
 randomization over Nash equilibria, with checked strict-separation examples.
+The Bayesian-context foundation implements the concrete hidden-state coend:
+joint finite laws on `Θ × X` and continuation kernels `Θ × Y → FinPMF R` are
+quotiented by reparameterization. Deterministic contexts embed canonically;
+visible-history and unconditional-response marginals descend to the quotient.
+Full Bayesian open-game composition is not yet claimed.
 The probabilistic layer uses finite-support `FinPMF` distributions and
 expectation algebras for `GProb`-style sequential/tensor composition and its
 relational Kleisli lifting. Its two-player decision tensor is equivalent to
