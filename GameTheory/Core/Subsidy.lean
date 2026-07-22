@@ -10,8 +10,9 @@ import Math.Probability
 /-!
 # Profile-observed subsidies
 
-A subsidy scheme observes the realized pure strategy profile and adds a
-nonnegative transfer to each player's payoff. The transformed game records the
+A transfer scheme observes the realized pure strategy profile and adds a
+profile-dependent transfer to each player's payoff. Transfers may have either
+sign. The transformed game records the
 original outcome together with the profile whose transfers are being paid.
 -/
 

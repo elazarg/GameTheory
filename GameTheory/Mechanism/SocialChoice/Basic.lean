@@ -115,11 +115,10 @@ theorem unanimity_isIIA : IsIIA (unanimity : SWF ι A) := by
     determines the social ranking. -/
 def IsNonDictatorial (f : SWF ι A) : Prop := ¬f.IsDictatorial
 
-/-- A social welfare function has unrestricted domain if it's defined
-    for all logically possible preference profiles.
-    (This is always true in our formalization since the SWF takes
-    any function `ι → PrefRel A`.) -/
-def HasUnrestrictedDomain (_f : SWF ι A) : Prop := True
+/-- Compatibility predicate for the structurally unrestricted domain of `SWF`.
+Every `SWF` accepts every profile `ι → PrefRel A`, so unrestrictedness is
+encoded by its type and this proposition is always true. -/
+abbrev HasUnrestrictedDomain (_f : SWF ι A) : Prop := True
 
 end SWF
 

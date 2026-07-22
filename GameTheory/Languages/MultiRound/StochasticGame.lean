@@ -22,7 +22,11 @@ and probabilistic transitions between states depending on the joint action.
 
 ## Main results
 
-* `IsMarkovNash_iff_all_stage_nash` — Markov Nash ↔ stage-game Nash at every state
+* `isStagewiseNash_iff_all_stage_nash` — stagewise Nash ↔ stage-game Nash at every state
+
+The current equilibrium API is deliberately myopic: it does not yet aggregate
+discounted continuation payoffs. `transition` and `discount` are retained for
+that future dynamic development.
 -/
 
 namespace GameTheory
@@ -61,13 +65,18 @@ noncomputable def stageEU (G : StochasticGame ι) (σ : G.MarkovProfile)
   G.stagePayoff s (fun i => σ i s) who
 
 open Classical in
-/-- Markov Nash equilibrium: no player can improve by unilateral deviation
-    of their Markov strategy at any single state.
-    (This is a stage-game Nash condition, not the full discounted-payoff Nash.) -/
-def IsMarkovNash (G : StochasticGame ι) (σ : G.MarkovProfile) : Prop :=
+/-- Stagewise Nash condition: at every state, the selected action profile is a
+Nash equilibrium of that state's one-shot stage game. This is not a
+discounted-payoff Markov-perfect equilibrium. -/
+def IsStagewiseNash (G : StochasticGame ι) (σ : G.MarkovProfile) : Prop :=
   ∀ (s : G.State) (who : ι) (a' : G.Act who),
     G.stagePayoff s (fun i => σ i s) who ≥
     G.stagePayoff s (Function.update (fun i => σ i s) who a') who
+
+/-- Compatibility alias for the former name. Despite that historical name,
+this denotes only `IsStagewiseNash`, not Markov-perfect equilibrium. -/
+abbrev IsMarkovNash (G : StochasticGame ι) (σ : G.MarkovProfile) : Prop :=
+  G.IsStagewiseNash σ
 
 open Classical in
 /-- The stage game at state `s` as a `KernelGame`. -/
@@ -75,10 +84,11 @@ noncomputable def stageKernelGame (G : StochasticGame ι) (s : G.State) : Kernel
   KernelGame.ofEU G.Act (fun a i => G.stagePayoff s a i)
 
 open Classical in
-/-- Markov Nash ↔ the Markov profile induces a Nash equilibrium
-    at every state's stage game. -/
-theorem isMarkovNash_iff_all_stage_nash (G : StochasticGame ι) (σ : G.MarkovProfile) :
-    G.IsMarkovNash σ ↔ ∀ s : G.State,
+/-- Stagewise Nash is equivalent to inducing a Nash equilibrium in every
+state's stage game. -/
+theorem isStagewiseNash_iff_all_stage_nash
+    (G : StochasticGame ι) (σ : G.MarkovProfile) :
+    G.IsStagewiseNash σ ↔ ∀ s : G.State,
       (G.stageKernelGame s).IsNash (fun i => σ i s) := by
   constructor
   · intro hMN s who a'
@@ -88,6 +98,14 @@ theorem isMarkovNash_iff_all_stage_nash (G : StochasticGame ι) (σ : G.MarkovPr
     have h := hN s who a'
     simp only [stageKernelGame, KernelGame.eu_ofEU] at h
     exact h
+
+open Classical in
+/-- Compatibility theorem for `isStagewiseNash_iff_all_stage_nash`. -/
+theorem isMarkovNash_iff_all_stage_nash
+    (G : StochasticGame ι) (σ : G.MarkovProfile) :
+    G.IsMarkovNash σ ↔ ∀ s : G.State,
+      (G.stageKernelGame s).IsNash (fun i => σ i s) :=
+  G.isStagewiseNash_iff_all_stage_nash σ
 
 end StochasticGame
 

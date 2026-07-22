@@ -21,6 +21,7 @@ Three constructions converting an extensive-form game to its strategic form:
    Shares `Outcome` and `utility` with the EFG.
 
 ### Key theorems
+- `toNFGGame_eu` — the general EU-collapsing NFG preserves strategic-form EU
 - `toNFGGameDet_outcomeKernel` — deterministic NFG matches strategic kernel game
 -/
 
@@ -37,6 +38,16 @@ noncomputable def EFGGame.toNFGGame (G : EFGGame) :
   outcome := fun σ p =>
     Math.Probability.expect (G.tree.evalDist (pureToBehavioral σ)) (fun ω => G.utility ω p)
   utility := id
+
+/-- The general EU-collapsing strategic-form NFG preserves each player's
+expected utility at every pure contingent-plan profile. Its outcome is already
+the EFG expected-payoff vector, so the NFG kernel's point-mass expectation
+evaluates to the original strategic-form expectation. -/
+@[simp] theorem EFGGame.toNFGGame_eu (G : EFGGame)
+    (σ : PureProfile G.inf) (p : G.inf.Player) :
+    G.toNFGGame.toKernelGame.eu σ p = G.toStrategicKernelGame.eu σ p := by
+  simp [KernelGame.eu, EFGGame.toNFGGame, NFG.NFGGame.toKernelGame,
+    EFGGame.toStrategicKernelGame, Math.Probability.expect_pure]
 
 /-- Strategic form of a deterministic (chance-free) EFG as an `NFGGame`.
     Shares `Outcome` and `utility` with the EFG; the outcome function is

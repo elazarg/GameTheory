@@ -168,6 +168,7 @@ fork for Brouwer/Kakutani-style fixed-point support.
 git submodule update --init
 lake exe cache get
 lake build
+python scripts/test_check_lean_placeholders.py
 python scripts/check_lean_placeholders.py
 python scripts/audit_repository.py
 ```

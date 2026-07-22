@@ -151,7 +151,12 @@ theorem bestNashWelfare_le_optimalWelfare (hN : ∃ σ : Profile G, G.IsNash σ)
 open Classical in
 /-- **Price of Anarchy** (Koutsoupias–Papadimitriou): the ratio of optimal
 welfare to the *worst* Nash welfare. Measures the inefficiency loss from
-selfish play in the worst case. -/
+selfish play in the worst case when the welfare denominator is positive.
+
+The definition itself is the total real-valued quotient and therefore also
+exists for zero or negative welfare. Interpretations and bounds using the
+usual welfare ratio must assume positivity explicitly. Cost-minimization games
+should use the corresponding cost ratio rather than negating costs here. -/
 noncomputable def priceOfAnarchy (hN : ∃ σ : Profile G, G.IsNash σ) : ℝ :=
   G.optimalWelfare / G.worstNashWelfare hN
 

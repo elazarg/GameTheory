@@ -28,6 +28,8 @@ Public entrypoint for the Open Games research layer. It includes:
 
 Cross-language translations are exposed by `GameTheory.Languages.Bridges`.
 Reader-facing examples remain in the separate `GameTheoryExamples` target.
+This layer is a denotational open-game calculus, so it intentionally has no
+separate structural operational semantics (`SOS.lean`) module.
 Modules state known non-laws explicitly; importing this umbrella does not turn
 scoped results into broader category or sparse-SPE claims.
 -/

@@ -33,6 +33,7 @@ import GameTheory.Concepts.Transport.Corners
 import GameTheory.Concepts.Transport.OutcomeProperties
 import GameTheory.Concepts.Transport.Oblivious
 import GameTheory.Concepts.Transport.Separations
+import GameTheory.Concepts.Transport.SolutionConcepts
 import GameTheory.Concepts.Foundations.Deviation
 import GameTheory.Concepts.Foundations.BestResponse
 import GameTheory.Concepts.Foundations.PrefPreorderProperties

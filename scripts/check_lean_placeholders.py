@@ -12,6 +12,16 @@ import sys
 TOKEN_RE = re.compile(r"\b(sorry|admit)\b")
 
 
+def is_identifier_continuation(c: str) -> bool:
+    """Return whether `c` can keep a Lean identifier going for this lexer.
+
+    Lean identifiers commonly end in one or more primes.  The audit lexer does
+    not need to recognize every identifier token; it only needs to avoid
+    mistaking those primes for the start of character literals.
+    """
+    return bool(c) and (c.isalnum() or c == "_" or c == "'" or not c.isascii())
+
+
 def tracked_lean_files() -> list[pathlib.Path]:
     result = subprocess.run(
         ["git", "ls-files", "*.lean"],
@@ -93,7 +103,9 @@ def strip_comments_and_strings(text: str) -> str:
             in_string = True
             out.append(" ")
             i += 1
-        elif c == "'":
+        elif c == "'" and not (
+            i > 0 and is_identifier_continuation(text[i - 1])
+        ):
             in_char = True
             out.append(" ")
             i += 1

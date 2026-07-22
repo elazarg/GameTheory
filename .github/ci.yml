@@ -29,5 +29,8 @@ jobs:
       - name: Check for proof placeholders
         run: python3 scripts/check_lean_placeholders.py
 
+      - name: Test proof-placeholder lexer
+        run: python3 scripts/test_check_lean_placeholders.py
+
       - name: Audit repository and theorem axioms
         run: python3 scripts/audit_repository.py

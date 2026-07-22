@@ -535,17 +535,15 @@ theorem CommonKnowledgeAt.commonPBeliefAt [Fintype ι]
 
 /-! ## Abstract coordination certificates -/
 
-/-- A generic certificate produced by a concrete coordination-game survival
-argument: there is a `p`-evident support event containing `s`, and throughout
-that support the payoff-relevant event `E` is mutually `p`-believed.
+/-- Compatibility name for `CommonPBeliefAt`, used when a concrete
+coordination-game survival argument is viewed as producing a certificate.
 
 Concrete coordination-game files should prove this predicate from their
 payoff and rationality assumptions. -/
-def CommonPBeliefCertificate [Fintype ι]
+abbrev CommonPBeliefCertificate [Fintype ι]
     (μ : Ω → ℝ) (P : ι → InfoPartition Ω)
     (p : ℝ) (E : Finset Ω) (s : Ω) : Prop :=
-  ∃ F : Finset Ω,
-    s ∈ F ∧ IsPEvident μ P p F ∧ F ⊆ mutualPBelief μ P p E
+  CommonPBeliefAt μ P p E s
 
 /-- A game-specific common-`p`-belief certificate is exactly the witness needed
 for `CommonPBeliefAt`.  This is the reusable target for later payoff-level

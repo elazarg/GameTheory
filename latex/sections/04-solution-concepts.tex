@@ -157,11 +157,13 @@ Nash $\Rightarrow$ Nash $\land$ Pareto efficient.
 \subsection{Dominance}
 \label{sec:solution-concepts:dominance}
 
-Two notions of dominance are formalized.  \emph{Weak dominance}:
-$s$ weakly dominates $t$ for player $i$ when, for every opponent
-profile, $i$'s payoff under $s$ is $\Pref$-preferred to that under
-$t$.  \emph{Strict dominance} replaces $\Pref$ by a strict
-preference $\sPref$ (typically the strict EU comparison).
+Three notions of dominance are formalized.  The reflexive weak-dominance
+preorder says that $s$ weakly dominates $t$ for player $i$ when, for every
+opponent profile, $i$'s payoff under $s$ is $\Pref$-preferred to that under
+$t$; no strict witness is required.  The everywhere-weak, somewhere-strict
+variant commonly called ``weak dominance'' in textbooks is formalized
+separately.  \emph{Strict dominance} requires a strict preference at every
+opponent profile (typically the strict EU comparison).
 
 A strategy $s$ is \emph{(weakly) dominant} for $i$ when it weakly
 dominates every alternative; it is \emph{strictly dominant} when

@@ -91,12 +91,25 @@ theorem not_isNash_iff_exists_improvingStep {σ : Profile G} :
     exact ⟨who, s', h⟩
 
 open Classical in
-/-- A strict Nash equilibrium is absorbing: any single-player deviation
-    strictly decreases the deviator's EU. -/
-theorem strictNash_absorbing {σ : Profile G} (hstrict : G.IsStrictNash σ) :
+/-- At a strict Nash equilibrium, every genuine single-player deviation
+strictly decreases the deviator's expected utility. -/
+theorem strictNash_deviation_lt {σ : Profile G} (hstrict : G.IsStrictNash σ) :
     ∀ (who : ι) (s' : G.Strategy who), s' ≠ σ who →
       G.eu (Function.update σ who s') who < G.eu σ who :=
   hstrict
+
+open Classical in
+/-- A strict Nash equilibrium is absorbing for the `ImprovingStep` relation:
+no improving step leaves it. -/
+theorem strictNash_absorbing {σ : Profile G} (hstrict : G.IsStrictNash σ) :
+    ∀ τ, ¬ G.ImprovingStep σ τ := by
+  intro τ hstep
+  rcases hstep with ⟨who, s', rfl, himproves⟩
+  by_cases hs : s' = σ who
+  · subst s'
+    simp at himproves
+  · have hdecreases := G.strictNash_deviation_lt hstrict who s' hs
+    linarith
 
 open Classical in
 /-- In an ε-Nash equilibrium, any improving deviation must improve by at most ε. -/

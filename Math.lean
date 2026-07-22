@@ -2,6 +2,7 @@ import Math.Probability
 import Math.Fin
 import Math.Fintype
 import Math.Fintype.Transport
+import Math.List
 import Math.Reindex
 import Math.ProbabilityMassFunction
 import Math.FiniteProbabilityMassFunction

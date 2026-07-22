@@ -20,15 +20,18 @@ variable {ι : Type} [Fintype ι] [DecidableEq ι]
 
 /-! ### Banzhaf power index and simple games
 
-The *Banzhaf index* (Penrose 1946, Banzhaf 1965) is an alternative power
-index that weights every coalition equally instead of by Shapley's
+The probabilistic *Banzhaf value* (Penrose 1946, Banzhaf 1965), exposed under
+the historical API name `banzhafIndex`, weights every coalition equally instead of by Shapley's
 arrival-order weights. On *simple games* — coalitional games whose values
 lie in `{0, 1}`, modeling voting bodies — the Shapley value is known as
-the **Shapley–Shubik power index** (Shapley–Shubik 1954). -/
+the **Shapley–Shubik power index** (Shapley–Shubik 1954). This definition is
+not normalized by the sum of all players' Banzhaf values. -/
 
-/-- **Banzhaf power index**: an unweighted average of player `i`'s
+/-- **Probabilistic Banzhaf value** (historical name `banzhafIndex`): an
+unweighted average of player `i`'s
 marginal contributions to all coalitions not containing them.
-Equals `(1/2^{n-1}) · Σ_{S : i ∉ S} (v(S ∪ {i}) - v(S))`. -/
+Equals `(1/2^{n-1}) · Σ_{S : i ∉ S} (v(S ∪ {i}) - v(S))`. It is not the
+relative index obtained by normalizing across players. -/
 noncomputable def banzhafIndex (G : CoalGame ι) (i : ι) : ℝ :=
   (∑ S ∈ (Finset.univ : Finset (Finset ι)).filter (fun S => i ∉ S),
       G.marginalContribution i S) / (2 ^ (Fintype.card ι - 1) : ℝ)

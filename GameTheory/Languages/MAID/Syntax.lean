@@ -51,7 +51,13 @@ deriving DecidableEq, Repr
 
 The structure is defined by node kinds, parent relations, and domain sizes.
 Acyclicity is stated as irreflexivity of the transitive closure of the parent
-relation — the standard definition of "directed acyclic graph". -/
+relation — the standard definition of "directed acyclic graph".
+
+`parents nd` controls causal/topological precedence. `obsParents nd` controls
+what a decision policy observes and must be a subset of `parents nd`. Thus a
+decision node may have parents outside `obsParents`; such edges impose ordering
+but deliberately carry no information to the decision maker. For chance and
+utility nodes the two parent sets coincide. -/
 structure Struct (Player : Type) [DecidableEq Player] [Fintype Player]
     (n : Nat) where
   kind : Fin n → NodeKind Player
