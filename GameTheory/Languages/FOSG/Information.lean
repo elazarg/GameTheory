@@ -458,7 +458,9 @@ def ActionRecall (G : FOSG ι W Act PrivObs PubObs) : Prop :=
 
 /-- Perfect recall for a FOSG is the conjunction of observation recall and
 action recall. For native FOSGs this holds by construction, since information
-states are action-observation histories. -/
+states are action-observation histories. Thus this predicate is not an
+additional restriction on a native `FOSG`; it records a structural guarantee
+for use by generic recall-sensitive APIs. -/
 def PerfectRecall (G : FOSG ι W Act PrivObs PubObs) : Prop :=
   G.ObsRecall ∧ G.ActionRecall
 
