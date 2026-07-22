@@ -24,8 +24,10 @@ different history representation. The currently formalized notions are:
   infosets carry equal own-action histories. `EFG.AugmentedGame.PerfectRecall`
   is exactly this predicate on the augmented game's underlying tree.
 - `ObsModel.PerfectRecall`: observation recall plus action recall for the
-  snapshot-refined generic Kuhn model. No generic implication from this
-  predicate to the semantic M→B hypotheses is currently exported.
+  snapshot-refined generic Kuhn model. Its action-recall component formally
+  implies `TracePlayerStepRecall`; the M→B corollary
+  `kuhn_mixed_to_behavioral_perfectRecall_of_psar` states global PSAR
+  separately because perfect recall only constrains reachable traces.
 - `GameTheory.InfoModel.PerfectRecall`: observation plus action recall for the
   semantics-first relational information model. It is not an alias for the
   snapshot-refined `ObsModel` predicate.

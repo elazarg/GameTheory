@@ -405,13 +405,17 @@ Syntactic implication chain:
          ∀ i, ReachablePlayerStepRecall O i
                ↓ (strengthen hyp: obsEq → full trace eq)
          ∀ i, TracePlayerStepRecall O i
-               ↑ (PerfectRecall → Reachable → Trace)
+               ↑ (ActionRecall on reachable traces)
          PerfectRecall = ObsRecall ∧ ActionRecall
 ```
 
 Neither PSPR nor PerfectRecall implies the other:
 - PSPR constrains ALL transitions; PerfectRecall only reachable traces
 - PerfectRecall reconstructs full history; PSPR is one-step
+
+In particular, PerfectRecall supplies the per-player trace-locality side of
+M→B, but global `PerStepActionRecall` (PSAR) remains an independent hypothesis
+for action determinism and reach-mass factorization.
 
 ### Semantic conditions
 
@@ -429,7 +433,7 @@ Full syntactic → semantic implication graph:
   PlayerStepRecall O i → ReachablePlayerStepRecall O i
     → TracePlayerStepRecall O i → (+ PSAR) ObsLocalFeasibility D i
 
-  PerfectRecall → ReachablePlayerStepRecall O i (via ActionRecall)
+  PerfectRecall → TracePlayerStepRecall O i (via ActionRecall)
   PSAR → StepActionDeterminism D
 ```
 
@@ -507,6 +511,23 @@ theorem kuhn_mixed_to_behavioral_trace
       (fun i => obsLocalFeasibilityFull_of_tracePlayerStepRecall
         hPSAR i (hTPSR i)))
     μ k
+
+omit [∀ i, Fintype (O.InfoState i)] in
+/-- **Kuhn M→B under perfect recall and global action determinism**.
+
+`PerfectRecall` supplies the per-player trace-local action-recall condition.
+`PerStepActionRecall` is stated separately because perfect recall only
+constrains reachable traces, whereas PSAR also constrains unreachable
+transitions and provides the global reach-mass factorization used by the
+generic theorem. -/
+theorem kuhn_mixed_to_behavioral_perfectRecall_of_psar
+    [∀ i, Finite (O.InfoState i)] [∀ i o, Nonempty (Act i o)]
+    (hPSAR : PerStepActionRecall O) (hPR : O.PerfectRecall)
+    (μ : ∀ i, PMF (O.LocalStrategy i)) (k : Nat) :
+    ∃ β : BehavioralProfile O,
+      O.runDist k β = (pmfPi μ).bind (O.runDistPure k) :=
+  kuhn_mixed_to_behavioral_trace hPSAR
+    (fun i => hPR.toTracePlayerStepRecall i) μ k
 
 omit [∀ i, Fintype (O.InfoState i)] in
 /-- **Generalized Kuhn (M→B) under PSPR**: For any product distribution over

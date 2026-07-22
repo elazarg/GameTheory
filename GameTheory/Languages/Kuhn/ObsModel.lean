@@ -494,6 +494,38 @@ def ActionRecall (O : ObsModel ι σ Obs Act) : Prop :=
 def PerfectRecall (O : ObsModel ι σ Obs Act) : Prop :=
   O.ObsRecall ∧ O.ActionRecall
 
+open Classical in
+/-- Action recall implies the trace-local player step-recall condition used by
+the generic Kuhn M→B hierarchy. This implication only concerns reachable
+traces; it does not imply the global `PerStepActionRecall` condition on
+unreachable transitions. -/
+theorem ActionRecall.toTracePlayerStepRecall
+    {O : ObsModel ι σ Obs Act} (hAR : O.ActionRecall) (i : ι) :
+    O.TracePlayerStepRecall i := by
+  intro s s' t t' a a' ss ss' hreach hreach' hlast hlast' _hproj
+    hs hs' hobst hobs _hnontriv
+  let rat : O.ReachActionTrace ss := Classical.choice hreach
+  let rat' : O.ReachActionTrace ss' := Classical.choice hreach'
+  have hterminal :
+      O.obsEq i (O.lastState (ss ++ [t])) (O.lastState (ss' ++ [t'])) := by
+    simpa [ObsModel.obsEq, ObsModel.lastState, ObsModelCore.lastState] using hobst
+  have hactions := hAR i (ss ++ [t]) (ss' ++ [t'])
+    (.snoc a rat hlast hs) (.snoc a' rat' hlast' hs') hterminal
+  have hlastAction := congrArg List.getLast? hactions
+  simp only [projectActions, List.getLast?_append_cons, List.getLast?_singleton]
+    at hlastAction
+  have hsigma : (⟨O.observe i s, a i⟩ : Σ o, Act i o) =
+      ⟨O.observe i s', a' i⟩ := Option.some.inj hlastAction
+  have ha : HEq (a i) (a' i) := (Sigma.mk.inj_iff.mp hsigma).2
+  exact eq_of_heq ((rec_heq_of_heq hobs HEq.rfl).trans ha)
+
+/-- Perfect recall supplies trace-local player step recall through its action
+recall component. Global PSAR remains a separate requirement. -/
+theorem PerfectRecall.toTracePlayerStepRecall
+    {O : ObsModel ι σ Obs Act} (hPR : O.PerfectRecall) (i : ι) :
+    O.TracePlayerStepRecall i :=
+  hPR.2.toTracePlayerStepRecall i
+
 end NoFintype
 
 /-! ### Additional execution -/

@@ -25,7 +25,11 @@ The semantic core lives on `KuhnModel`/`ObsModelCore`:
 `ObsModel` is the stronger snapshot-refined compatibility layer. It is
 useful when a client naturally has faithful observation-history snapshots and
 wants syntactic recall corollaries such as
-`kuhn_mixed_to_behavioral_pspr` or automatic `HorizonSeparation`.
+`kuhn_mixed_to_behavioral_pspr`,
+`kuhn_mixed_to_behavioral_perfectRecall_of_psar`, or automatic
+`HorizonSeparation`. The perfect-recall corollary retains PSAR explicitly:
+perfect recall governs reachable histories, while PSAR supplies global action
+determinism for the generic factorization proof.
 
 This file re-exports the Kuhn model, the core theorems, the migration wrappers,
 and the generic outcome-equality schema types used by language-specific Kuhn
