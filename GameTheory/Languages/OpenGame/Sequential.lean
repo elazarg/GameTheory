@@ -259,6 +259,66 @@ theorem realize_eq {n : Nat} {A : Fin n → Type} (σ : Strategy A)
   change realizeAt σ i = σ i (fun j => realizeAt σ (priorIndex i j))
   rw [realizeAt]
 
+/-- Replacing a later-stage plan cannot change an earlier realized action. -/
+theorem realizeAt_update_of_lt {n : Nat} {A : Fin n → Type}
+    (σ : Strategy A) (i : Fin n) (deviation : History A i → A i)
+    (j : Fin n) (hji : j.val < i.val) :
+    realizeAt (Function.update σ i deviation) j = realizeAt σ j := by
+  rw [realizeAt, realizeAt]
+  have hne : j ≠ i := fun h => by subst h; omega
+  rw [Function.update_of_ne hne]
+  congr 1
+  funext q
+  exact realizeAt_update_of_lt σ i deviation (priorIndex j q)
+    (Nat.lt_trans q.isLt hji)
+termination_by j.val
+decreasing_by exact q.isLt
+
+/-- Coordinatewise form of `realize_update_eq_of_eq_at_reached_history`. -/
+theorem realizeAt_updates_eq_of_eq_at_reached_history {n : Nat}
+    {A : Fin n → Type} (σ : Strategy A) (i : Fin n)
+    (deviation deviation' : History A i → A i)
+    (hdev : deviation (fun j => realize σ (priorIndex i j)) =
+      deviation' (fun j => realize σ (priorIndex i j))) (j : Fin n) :
+    realizeAt (Function.update σ i deviation) j =
+      realizeAt (Function.update σ i deviation') j := by
+  rw [realizeAt, realizeAt]
+  by_cases hji : j = i
+  · subst j
+    simp only [Function.update_self]
+    have hprefix : (fun q =>
+        realizeAt (Function.update σ i deviation) (priorIndex i q)) =
+        fun q => realize σ (priorIndex i q) := by
+      funext q
+      exact realizeAt_update_of_lt σ i deviation (priorIndex i q) q.isLt
+    have hprefix' : (fun q =>
+        realizeAt (Function.update σ i deviation') (priorIndex i q)) =
+        fun q => realize σ (priorIndex i q) := by
+      funext q
+      exact realizeAt_update_of_lt σ i deviation' (priorIndex i q) q.isLt
+    rw [hprefix, hprefix', hdev]
+  · rw [Function.update_of_ne hji, Function.update_of_ne hji]
+    congr 1
+    funext q
+    exact realizeAt_updates_eq_of_eq_at_reached_history σ i deviation
+      deviation' hdev (priorIndex j q)
+termination_by j.val
+decreasing_by exact q.isLt
+
+/-- Two replacements of the same stage have the same complete realization
+when they choose the same action at the history reached before that stage.
+Off-path values of a contingent deviation are therefore irrelevant. -/
+theorem realize_update_eq_of_eq_at_reached_history {n : Nat}
+    {A : Fin n → Type} (σ : Strategy A) (i : Fin n)
+    (deviation deviation' : History A i → A i)
+    (hdev : deviation (fun j => realize σ (priorIndex i j)) =
+      deviation' (fun j => realize σ (priorIndex i j))) :
+    realize (Function.update σ i deviation) =
+      realize (Function.update σ i deviation') := by
+  funext j
+  exact realizeAt_updates_eq_of_eq_at_reached_history σ i deviation
+    deviation' hdev j
+
 end ShapeSeqDep
 
 /-- A finite-horizon sequential shape with stage-specific action types. -/
@@ -319,6 +379,36 @@ def IsConditionedEquilibrium {n : Nat} {A : Fin n → Type}
     ∀ deviation : History A i → A i,
       k (realize (Function.update τ i deviation)) i ≤ k (realize τ) i
 
+/-- One-shot presentation of finite-horizon conditioning: at every
+counterfactual predecessor profile, changing only the action selected at the
+reached information set is unprofitable. -/
+def IsOneShotConditionedEquilibrium {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : Strategy A) : Prop :=
+  ∀ (i : Fin n) (τ : Strategy A),
+    (∀ j, i.val ≤ j.val → τ j = σ j) →
+    ∀ action : A i,
+      k (realize (Function.update τ i (fun _ => action))) i ≤ k (realize τ) i
+
+/-- Arbitrary contingent replacements and one-shot action changes are exactly
+equivalent in the conditioned predicate: only the deviation's value at the
+reached history can affect play. -/
+theorem isConditionedEquilibrium_iff_isOneShot {n : Nat}
+    {A : Fin n → Type} (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : Strategy A) :
+    IsConditionedEquilibrium k σ ↔ IsOneShotConditionedEquilibrium k σ := by
+  constructor
+  · intro h i τ hagree action
+    exact h i τ hagree (fun _ => action)
+  · intro h i τ hagree deviation
+    let history : History A i := fun j => realize τ (priorIndex i j)
+    have hone := h i τ hagree (deviation history)
+    have hrealize : realize (Function.update τ i deviation) =
+        realize (Function.update τ i (fun _ => deviation history)) := by
+      apply realize_update_eq_of_eq_at_reached_history
+      rfl
+    rw [hrealize]
+    exact hone
+
 /-- The finite-horizon sequential shape conditioned at every counterfactual
 history.  It has the same strategies, play, and boundaries as `ShapeSeqDep`;
 only its equilibrium predicate is strengthened. -/
@@ -336,6 +426,15 @@ theorem conditioned_isEquilibriumIn_iff {n : Nat} {A : Fin n → Type}
     (conditioned A).IsEquilibriumIn () k σ ↔
       IsConditionedEquilibrium k σ :=
   Iff.rfl
+
+/-- The conditioned open game is equivalently characterized by one action
+change at every counterfactual reached information set. -/
+theorem conditioned_isEquilibriumIn_iff_oneShot {n : Nat}
+    {A : Fin n → Type} (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : Strategy A) :
+    (conditioned A).IsEquilibriumIn () k σ ↔
+      IsOneShotConditionedEquilibrium k σ :=
+  isConditionedEquilibrium_iff_isOneShot k σ
 
 /-- Conditioning strengthens the plain agent-form equilibrium predicate. -/
 theorem conditioned_implies_plain {n : Nat} {A : Fin n → Type}

@@ -133,7 +133,11 @@ predicate recovers the existing agent-form and player-form notions exactly,
 while deliberately leaving coalition objectives unspecified. The two-stage
 perfect-information
 bridge additionally reaches EFG subgame perfection and the one-shot-deviation
-principle. Finite heterogeneous sequential shapes also have a canonical
+principle. For arbitrary finite heterogeneous horizons, the conditioned
+predicate is now reduced exactly to one action change at each reached
+counterfactual history; the remaining EFG refinement obligation is to identify
+those history-indexed tests with the decision subtrees of the induced EFG.
+Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and
 action paths, utilities agree pointwise, the node order is topological, and

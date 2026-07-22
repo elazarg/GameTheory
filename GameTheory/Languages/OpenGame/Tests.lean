@@ -83,6 +83,14 @@ example {n : Nat} {A : Fin n → Type}
     (ShapeSeqDep A).IsEquilibriumIn () k σ :=
   ShapeSeqDep.conditioned_implies_plain k σ hσ
 
+/-- Arbitrary contingent deviations in the conditioned predicate reduce
+exactly to changing one action at the reached counterfactual history. -/
+example {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep.conditioned A).IsEquilibriumIn () k σ ↔
+      ShapeSeqDep.IsOneShotConditionedEquilibrium k σ :=
+  ShapeSeqDep.conditioned_isEquilibriumIn_iff_oneShot k σ
+
 /-- The predecessor-profile presentation of conditioning covers every
 dependent prefix history. -/
 example {n : Nat} {A : Fin n → Type} (σ : ShapeSeqDep.Strategy A)
