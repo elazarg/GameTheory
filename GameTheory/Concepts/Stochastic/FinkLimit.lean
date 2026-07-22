@@ -1847,6 +1847,24 @@ def finkBiasScaleSum (G : StochasticGame ι)
     (layers : List ((ℕ → ℝ) × (G.State → Payoff ι))) (n : ℕ) : ℝ :=
   (layers.map fun layer => layer.1 n).sum
 
+theorem monotone_finkBiasScaleSum
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (layers : List ((ℕ → ℝ) × (G.State → Payoff ι)))
+    (hmono : ∀ layer ∈ layers, Monotone layer.1) :
+    Monotone (G.finkBiasScaleSum layers) := by
+  intro m n hmn
+  induction layers with
+  | nil => simp [finkBiasScaleSum]
+  | cons layer layers ih =>
+      have hlayer : layer.1 m ≤ layer.1 n :=
+        hmono layer (by simp) hmn
+      have htail : ∀ item ∈ layers, Monotone item.1 := by
+        intro item hitem
+        exact hmono item (by simp [hitem])
+      change layer.1 m + (layers.map fun item => item.1 m).sum ≤
+        layer.1 n + (layers.map fun item => item.1 n).sum
+      exact add_le_add hlayer (ih htail)
+
 /-- If all unit-direction coefficients increase across one step, the norm
 of the corresponding layer change is bounded by the increase of their
 scalar sum. -/
@@ -2277,6 +2295,79 @@ theorem exists_regular_finkBiasExpansion
     exact hclose n
   refine ⟨φ ∘ ψ, layers', remainder', remainderLimit,
     hexpansion', hmono', hclose', ?_⟩
+  intro N
+  exact hexpansion'.sum_norm_sub_le_four_add_scale G hmono' hclose' N
+
+/-- A divergent external scale can be regularized together with every radial
+scale in a finite bias expansion.  This is the form needed when the bias is
+centered at a vanishing-discount limit: the external scale is
+`β / (1 - β)`. -/
+theorem exists_regular_finkBiasExpansion_with_scale
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : ℕ → G.State → Payoff ι) (a : ℕ → ℝ)
+    (ha : Tendsto a atTop atTop) :
+    ∃ (θ : ℕ → ℕ)
+      (layers : List ((ℕ → ℝ) × (G.State → Payoff ι)))
+      (remainder : ℕ → G.State → Payoff ι)
+      (remainderLimit : G.State → Payoff ι),
+      G.IsFinkBiasExpansion H θ layers remainder remainderLimit ∧
+      StrictMono (a ∘ θ) ∧
+      (∀ layer ∈ layers, StrictMono layer.1) ∧
+      (∀ n, dist (remainder n) remainderLimit < ((2 : ℝ) ^ n)⁻¹) ∧
+      ∀ N, ∑ n ∈ Finset.range N,
+          ‖H (θ (n + 1)) - H (θ n)‖ ≤
+        4 + (G.finkBiasScaleSum layers N -
+          G.finkBiasScaleSum layers 0) := by
+  obtain ⟨φ, layers, remainder, remainderLimit, hexpansion⟩ :=
+    (G.exists_finkBiasResolution H).exists_finkBiasExpansion
+  obtain ⟨ψ, hψ, hscales, hclose⟩ :=
+    exists_finkBiasExpansion_regularizingSubsequence
+      ((a ∘ φ) :: layers.map Prod.fst)
+      (by
+        intro u hu
+        simp only [List.mem_cons] at hu
+        rcases hu with rfl | hu
+        · exact ha.comp hexpansion.1.tendsto_atTop
+        · rw [List.mem_map] at hu
+          obtain ⟨layer, hlayer, rfl⟩ := hu
+          exact hexpansion.2.2.2.1 layer hlayer)
+      hexpansion.2.1
+  let layers' : List ((ℕ → ℝ) × (G.State → Payoff ι)) :=
+    layers.map fun layer => (layer.1 ∘ ψ, layer.2)
+  let remainder' : ℕ → G.State → Payoff ι := remainder ∘ ψ
+  have hexpansion' : G.IsFinkBiasExpansion H (φ ∘ ψ) layers'
+      remainder' remainderLimit := by
+    refine ⟨hexpansion.1.comp hψ,
+      hexpansion.2.1.comp hψ.tendsto_atTop, ?_, ?_, ?_⟩
+    · intro layer' hlayer'
+      simp only [layers', List.mem_map] at hlayer'
+      obtain ⟨layer, hlayer, rfl⟩ := hlayer'
+      exact hexpansion.2.2.1 layer hlayer
+    · intro layer' hlayer'
+      simp only [layers', List.mem_map] at hlayer'
+      obtain ⟨layer, hlayer, rfl⟩ := hlayer'
+      exact (hexpansion.2.2.2.1 layer hlayer).comp hψ.tendsto_atTop
+    · intro n
+      have hdecomp := hexpansion.2.2.2.2 (ψ n)
+      change H (φ (ψ n)) = remainder' n +
+        G.finkBiasLayerSum layers' n
+      rw [hdecomp]
+      simp only [remainder', layers', finkBiasLayerSum,
+        Function.comp_def, List.map_map]
+  have ha' : StrictMono (a ∘ (φ ∘ ψ)) := by
+    simpa only [Function.comp_assoc] using
+      hscales (a ∘ φ) (by simp)
+  have hmono' : ∀ layer ∈ layers', StrictMono layer.1 := by
+    intro layer' hlayer'
+    simp only [layers', List.mem_map] at hlayer'
+    obtain ⟨layer, hlayer, rfl⟩ := hlayer'
+    exact hscales layer.1 (by
+      simp only [List.mem_cons, List.mem_map]
+      exact Or.inr ⟨layer, hlayer, rfl⟩)
+  have hclose' : ∀ n, dist (remainder' n) remainderLimit <
+      ((2 : ℝ) ^ n)⁻¹ := hclose
+  refine ⟨φ ∘ ψ, layers', remainder', remainderLimit,
+    hexpansion', ha', hmono', hclose', ?_⟩
   intro N
   exact hexpansion'.sum_norm_sub_le_four_add_scale G hmono' hclose' N
 
@@ -5558,6 +5649,168 @@ def indexedFinkValue (G : StochasticGame ι)
 def finkScaledBiasBound (β : ℕ → ℝ) (U : ℝ) (n : ℕ) : ℝ :=
   (β n / (1 - β n)) * U
 
+/-- The unnormalized discount scale diverges when discounts approach one
+from below. -/
+theorem tendsto_finkDiscountScale_atTop (β : ℕ → ℝ)
+    (hβ1 : ∀ n, β n < 1) (hβlim : Tendsto β atTop (nhds 1)) :
+    Tendsto (fun n => β n / (1 - β n)) atTop atTop := by
+  have hden : Tendsto (fun n => (1 : ℝ) - β n) atTop (nhds 0) := by
+    simpa using (tendsto_const_nhds (x := (1 : ℝ))).sub hβlim
+  have hdenPos : ∀ᶠ n in atTop, 1 - β n ∈ Set.Ioi (0 : ℝ) := by
+    exact Filter.Eventually.of_forall fun n => by
+      simpa only [Set.mem_Ioi] using sub_pos.mpr (hβ1 n)
+  have hdenGT : Tendsto (fun n => (1 : ℝ) - β n) atTop
+      (nhdsWithin 0 (Set.Ioi 0)) :=
+    tendsto_nhdsWithin_of_tendsto_nhds_of_eventually_within _ hden hdenPos
+  have hinv : Tendsto (fun n => (1 - β n)⁻¹) atTop atTop :=
+    hdenGT.inv_tendsto_nhdsGT_zero
+  refine tendsto_atTop.2 fun b => ?_
+  filter_upwards [tendsto_atTop.1 hinv (b + 1)] with n hn
+  have hne : 1 - β n ≠ 0 := ne_of_gt (sub_pos.mpr (hβ1 n))
+  have hid : β n / (1 - β n) = (1 - β n)⁻¹ - 1 := by
+    field_simp [hne]
+    ring
+  rw [hid]
+  linarith
+
+/-- Activation times for a slow calendar.  Layer `n` is not activated before
+calendar time `n * |B n|`, and consecutive activation times are distinct. -/
+noncomputable def slowCalendarStart (B : ℕ → ℝ) : ℕ → ℕ
+  | 0 => 0
+  | n + 1 => max (slowCalendarStart B n + 1)
+      (Nat.ceil (((n + 1 : ℕ) : ℝ) * |B (n + 1)|))
+
+theorem strictMono_slowCalendarStart (B : ℕ → ℝ) :
+    StrictMono (slowCalendarStart B) := by
+  apply strictMono_nat_of_lt_succ
+  intro n
+  rw [slowCalendarStart]
+  exact (Nat.lt_succ_self _).trans_le (le_max_left _ _)
+
+theorem slowCalendarStart_cost_le (B : ℕ → ℝ) (n : ℕ) :
+    (n : ℝ) * |B n| ≤ (slowCalendarStart B n : ℝ) := by
+  cases n with
+  | zero => simp [slowCalendarStart]
+  | succ n =>
+      rw [slowCalendarStart]
+      exact (Nat.le_ceil _).trans (by
+        exact_mod_cast (le_max_right
+          (slowCalendarStart B n + 1)
+          (Nat.ceil ((((n + 1 : ℕ) : ℝ) * |B (n + 1)|)))))
+
+/-- The slow unit-step calendar is the greatest layer whose activation time
+has arrived. -/
+noncomputable def slowUnitStepCalendar (B : ℕ → ℝ) (t : ℕ) : ℕ :=
+  Nat.findGreatest (fun n => slowCalendarStart B n ≤ t) t
+
+@[simp] theorem slowUnitStepCalendar_zero (B : ℕ → ℝ) :
+    slowUnitStepCalendar B 0 = 0 := by
+  simp [slowUnitStepCalendar]
+
+theorem slowCalendarStart_slowUnitStepCalendar_le
+    (B : ℕ → ℝ) (t : ℕ) :
+    slowCalendarStart B (slowUnitStepCalendar B t) ≤ t := by
+  exact Nat.findGreatest_spec (P := fun n => slowCalendarStart B n ≤ t)
+    (Nat.zero_le t) (by simp [slowCalendarStart])
+
+theorem monotone_slowUnitStepCalendar (B : ℕ → ℝ) :
+    Monotone (slowUnitStepCalendar B) := by
+  intro s t hst
+  unfold slowUnitStepCalendar
+  exact Nat.findGreatest_mono (fun _ hn => hn.trans hst) hst
+
+theorem slowUnitStepCalendar_step (B : ℕ → ℝ) (t : ℕ) :
+    slowUnitStepCalendar B (t + 1) = slowUnitStepCalendar B t ∨
+      slowUnitStepCalendar B (t + 1) = slowUnitStepCalendar B t + 1 := by
+  let v := slowUnitStepCalendar B t
+  let w := slowUnitStepCalendar B (t + 1)
+  have hvw : v ≤ w := monotone_slowUnitStepCalendar B (Nat.le_succ t)
+  have hwle : w ≤ t + 1 := Nat.findGreatest_le _
+  have hwStart : slowCalendarStart B w ≤ t + 1 :=
+    slowCalendarStart_slowUnitStepCalendar_le B (t + 1)
+  have hwv : w ≤ v + 1 := by
+    by_contra hnot
+    have hv1w : v + 1 < w := by omega
+    have hv1t : v + 1 ≤ t := by omega
+    have hstartLt : slowCalendarStart B (v + 1) <
+        slowCalendarStart B w :=
+      strictMono_slowCalendarStart B hv1w
+    have hstartLe : slowCalendarStart B (v + 1) ≤ t := by omega
+    have hgreatest : v + 1 ≤ slowUnitStepCalendar B t :=
+      Nat.le_findGreatest hv1t hstartLe
+    change v + 1 ≤ v at hgreatest
+    omega
+  change w = v ∨ w = v + 1
+  omega
+
+theorem tendsto_slowUnitStepCalendar_atTop (B : ℕ → ℝ) :
+    Tendsto (slowUnitStepCalendar B) atTop atTop := by
+  refine tendsto_atTop.2 fun n => ?_
+  filter_upwards [eventually_ge_atTop (slowCalendarStart B n)] with t ht
+  have hnt : n ≤ t :=
+    (strictMono_slowCalendarStart B).id_le n |>.trans ht
+  exact Nat.le_findGreatest hnt ht
+
+/-- Every prescribed scalar endpoint cost is sublinear along its associated
+slow unit-step calendar. -/
+theorem tendsto_slowUnitStepCalendar_absCost_div_zero (B : ℕ → ℝ) :
+    Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * |B (slowUnitStepCalendar B T)|)
+      atTop (nhds 0) := by
+  have hν := tendsto_slowUnitStepCalendar_atTop B
+  have hinv : Tendsto
+      (fun T : ℕ => ((slowUnitStepCalendar B T : ℕ) : ℝ)⁻¹)
+      atTop (nhds 0) :=
+    tendsto_inv_atTop_zero.comp
+      (tendsto_natCast_atTop_atTop.comp hν)
+  apply squeeze_zero'
+  · exact Filter.Eventually.of_forall fun T =>
+      mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T)) (abs_nonneg _)
+  · have hνpos : ∀ᶠ T in atTop, 0 < slowUnitStepCalendar B T :=
+      (tendsto_atTop.1 hν 1).mono fun T hT => Nat.zero_lt_of_lt hT
+    have hTpos : ∀ᶠ T in atTop, 0 < T := eventually_gt_atTop 0
+    filter_upwards [hνpos, hTpos] with T hνT hT
+    let n := slowUnitStepCalendar B T
+    have hnreal : 0 < (n : ℝ) := by exact_mod_cast hνT
+    have hTreal : 0 < (T : ℝ) := by exact_mod_cast hT
+    have hcost := slowCalendarStart_cost_le B n
+    have hstart := slowCalendarStart_slowUnitStepCalendar_le B T
+    have hcostT : (n : ℝ) * |B n| ≤ (T : ℝ) :=
+      hcost.trans (by exact_mod_cast hstart)
+    change (T : ℝ)⁻¹ * |B n| ≤ (n : ℝ)⁻¹
+    rw [← div_eq_inv_mul, ← one_div]
+    apply (div_le_iff₀ hTreal).2
+    rw [one_div, inv_mul_eq_div]
+    exact (le_div_iff₀ hnreal).2 (by simpa [mul_comm] using hcostT)
+  · exact hinv
+
+theorem tendsto_slowUnitStepCalendar_cost_div_zero (B : ℕ → ℝ) :
+    Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * B (slowUnitStepCalendar B T))
+      atTop (nhds 0) := by
+  rw [tendsto_zero_iff_abs_tendsto_zero]
+  convert tendsto_slowUnitStepCalendar_absCost_div_zero B using 1
+  ext T
+  simp only [Function.comp_apply, abs_mul]
+  rw [abs_of_nonneg (show 0 ≤ ((T : ℝ)⁻¹) from
+    inv_nonneg.mpr (Nat.cast_nonneg T))]
+
+/-- A calendar that starts at zero and either waits or advances by one charges
+each crossed edge exactly once. -/
+theorem sum_unitStepCalendar_eq (ν : ℕ → ℕ) (e : ℕ → ℝ)
+    (hν0 : ν 0 = 0)
+    (hstep : ∀ t, ν (t + 1) = ν t ∨ ν (t + 1) = ν t + 1)
+    (T : ℕ) :
+    ∑ t ∈ Finset.range T,
+        (if ν (t + 1) = ν t then 0 else e (ν t)) =
+      ∑ n ∈ Finset.range (ν T), e n := by
+  induction T with
+  | zero => simp [hν0]
+  | succ T ih =>
+      rw [Finset.sum_range_succ, ih]
+      rcases hstep T with hwait | hadvance
+      · simp [hwait]
+      · rw [hadvance, Finset.sum_range_succ]
+        simp
+
 /-- Sharp adjacent switching charge obtained by centering the scaled Fink
 bias at a target vector `W`.  The first term is the actual relative-bias
 change; the second is only the change of discount scale applied to `W`. -/
@@ -5570,6 +5823,251 @@ def indexedFinkRelativeSwitchError (G : StochasticGame ι)
       G.finkRelativeBias (β (κ t)) W (z (κ t))‖ +
     |β (κ (t + 1)) / (1 - β (κ (t + 1))) -
       β (κ t) / (1 - β (κ t))| * U
+
+/-- Repeating the indices of a Fink subsequence according to a unit-step
+calendar preserves the exact edge-charge telescope. -/
+theorem sum_indexedFinkRelativeSwitchError_unitStep
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (θ ν : ℕ → ℕ) (hν0 : ν 0 = 0)
+    (hstep : ∀ t, ν (t + 1) = ν t ∨ ν (t + 1) = ν t + 1)
+    (T : ℕ) :
+    ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W (θ ∘ ν) t =
+      ∑ n ∈ Finset.range (ν T),
+        G.indexedFinkRelativeSwitchError β U z W θ n := by
+  have hpoint : ∀ t,
+      G.indexedFinkRelativeSwitchError β U z W (θ ∘ ν) t =
+        if ν (t + 1) = ν t then 0
+        else G.indexedFinkRelativeSwitchError β U z W θ (ν t) := by
+    intro t
+    by_cases hwait : ν (t + 1) = ν t
+    · simp [indexedFinkRelativeSwitchError, hwait, Function.comp_apply]
+    · have hadvance := (hstep t).resolve_left hwait
+      rw [if_neg hwait]
+      simp only [indexedFinkRelativeSwitchError, Function.comp_apply, hadvance]
+  calc
+    ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W (θ ∘ ν) t =
+        ∑ t ∈ Finset.range T,
+          (if ν (t + 1) = ν t then 0
+          else G.indexedFinkRelativeSwitchError β U z W θ (ν t)) := by
+      exact Finset.sum_congr rfl fun t _ => hpoint t
+    _ = ∑ n ∈ Finset.range (ν T),
+        G.indexedFinkRelativeSwitchError β U z W θ n :=
+      sum_unitStepCalendar_eq ν
+        (G.indexedFinkRelativeSwitchError β U z W θ) hν0 hstep T
+
+/-- Along one subsequence, both the centered Fink bias and the root discount
+scale have finite monotone-layer variation.  Consequently the entire sharp
+switch charge telescopes to endpoint increases of finitely many scalar
+scales, up to the universal variation constant of the convergent remainder. -/
+theorem exists_regular_indexedFinkRelativeSwitchBound
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (hβ1 : ∀ n, β n < 1) (hβlim : Tendsto β atTop (nhds 1)) :
+    ∃ (θ : ℕ → ℕ)
+      (layers : List ((ℕ → ℝ) × (G.State → Payoff ι)))
+      (remainder : ℕ → G.State → Payoff ι)
+      (remainderLimit : G.State → Payoff ι),
+      G.IsFinkBiasExpansion
+          (fun n => G.finkRelativeBias (β n) W (z n))
+          θ layers remainder remainderLimit ∧
+      StrictMono
+        ((fun n => β n / (1 - β n)) ∘ θ) ∧
+      (∀ layer ∈ layers, StrictMono layer.1) ∧
+      (∀ n, dist (remainder n) remainderLimit < ((2 : ℝ) ^ n)⁻¹) ∧
+      ∀ N, ∑ t ∈ Finset.range N,
+          G.indexedFinkRelativeSwitchError β U z W θ t ≤
+        4 + (G.finkBiasScaleSum layers N -
+          G.finkBiasScaleSum layers 0) +
+        (β (θ N) / (1 - β (θ N)) -
+          β (θ 0) / (1 - β (θ 0))) * U := by
+  let a : ℕ → ℝ := fun n => β n / (1 - β n)
+  let H : ℕ → G.State → Payoff ι :=
+    fun n => G.finkRelativeBias (β n) W (z n)
+  have ha : Tendsto a atTop atTop := by
+    simpa only [a] using tendsto_finkDiscountScale_atTop β hβ1 hβlim
+  obtain ⟨θ, layers, remainder, remainderLimit,
+      hexpansion, haMono, hmono, hclose, hvariation⟩ :=
+    G.exists_regular_finkBiasExpansion_with_scale H a ha
+  refine ⟨θ, layers, remainder, remainderLimit, hexpansion,
+    ?_, hmono, hclose, ?_⟩
+  · exact haMono
+  · intro N
+    have haStep : ∀ n, a (θ n) ≤ a (θ (n + 1)) := by
+      intro n
+      exact haMono.monotone (Nat.le_succ n)
+    have hscaleSum :
+        ∑ t ∈ Finset.range N,
+            |a (θ (t + 1)) - a (θ t)| * U =
+          (a (θ N) - a (θ 0)) * U := by
+      rw [← Finset.sum_mul]
+      congr 1
+      calc
+        ∑ t ∈ Finset.range N, |a (θ (t + 1)) - a (θ t)| =
+            ∑ t ∈ Finset.range N, (a (θ (t + 1)) - a (θ t)) := by
+          apply Finset.sum_congr rfl
+          intro t ht
+          exact abs_of_nonneg (sub_nonneg.mpr (haStep t))
+        _ = a (θ N) - a (θ 0) := by
+          simpa only [Function.comp_apply] using
+            sum_range_succ_sub_eq (a ∘ θ) N
+    change
+      ∑ t ∈ Finset.range N,
+          (‖H (θ (t + 1)) - H (θ t)‖ +
+            |a (θ (t + 1)) - a (θ t)| * U) ≤ _
+    rw [Finset.sum_add_distrib, hscaleSum]
+    simpa only [a, H] using
+      add_le_add (hvariation N) (le_refl ((a (θ N) - a (θ 0)) * U))
+
+/-- Block-calendar form of the regularized switch bound.  Waiting is free;
+after any number of calendar stages, the total charge depends only on the
+last radial layer reached. -/
+theorem exists_regular_indexedFinkRelativeSwitchBound_unitStep
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (hβ1 : ∀ n, β n < 1) (hβlim : Tendsto β atTop (nhds 1)) :
+    ∃ (θ : ℕ → ℕ)
+      (layers : List ((ℕ → ℝ) × (G.State → Payoff ι)))
+      (remainder : ℕ → G.State → Payoff ι)
+      (remainderLimit : G.State → Payoff ι),
+      G.IsFinkBiasExpansion
+          (fun n => G.finkRelativeBias (β n) W (z n))
+          θ layers remainder remainderLimit ∧
+      StrictMono
+        ((fun n => β n / (1 - β n)) ∘ θ) ∧
+      (∀ layer ∈ layers, StrictMono layer.1) ∧
+      (∀ n, dist (remainder n) remainderLimit < ((2 : ℝ) ^ n)⁻¹) ∧
+      ∀ (ν : ℕ → ℕ), ν 0 = 0 →
+        (∀ t, ν (t + 1) = ν t ∨ ν (t + 1) = ν t + 1) →
+        ∀ T, ∑ t ∈ Finset.range T,
+            G.indexedFinkRelativeSwitchError β U z W (θ ∘ ν) t ≤
+          4 + (G.finkBiasScaleSum layers (ν T) -
+            G.finkBiasScaleSum layers 0) +
+          (β (θ (ν T)) / (1 - β (θ (ν T))) -
+            β (θ 0) / (1 - β (θ 0))) * U := by
+  obtain ⟨θ, layers, remainder, remainderLimit,
+      hexpansion, haMono, hmono, hclose, hbound⟩ :=
+    G.exists_regular_indexedFinkRelativeSwitchBound
+      β U z W hβ1 hβlim
+  refine ⟨θ, layers, remainder, remainderLimit,
+    hexpansion, haMono, hmono, hclose, ?_⟩
+  intro ν hν0 hstep T
+  rw [G.sum_indexedFinkRelativeSwitchError_unitStep
+    β U z W θ ν hν0 hstep T]
+  exact hbound (ν T)
+
+/-- The sharp Fink switching cost and the terminal scaled bias always admit
+a common slow annealing calendar.  Thus the first, purely bias-theoretic half
+of relative calendar selectability is unconditional. -/
+theorem exists_finkRelativeAnnealingCalendar
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (hU : 0 ≤ U) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1) (hβlim : Tendsto β atTop (nhds 1)) :
+    ∃ κ : ℕ → ℕ,
+      Tendsto κ atTop atTop ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        finkScaledBiasBound β U (κ T)) atTop (nhds 0) ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+        ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t)
+        atTop (nhds 0) := by
+  obtain ⟨θ, layers, remainder, remainderLimit,
+      hexpansion, haMono, hmono, hclose, hbound⟩ :=
+    G.exists_regular_indexedFinkRelativeSwitchBound_unitStep
+      β U z W hβ1 hβlim
+  let a : ℕ → ℝ := fun n => β (θ n) / (1 - β (θ n))
+  let E : ℕ → ℝ := fun n =>
+    4 + (G.finkBiasScaleSum layers n -
+      G.finkBiasScaleSum layers 0) + (a n - a 0) * U
+  let B : ℕ → ℝ := fun n => finkScaledBiasBound β U (θ n) + E n
+  let ν : ℕ → ℕ := slowUnitStepCalendar B
+  let κ : ℕ → ℕ := θ ∘ ν
+  have hscaleMono : Monotone (G.finkBiasScaleSum layers) :=
+    G.monotone_finkBiasScaleSum layers fun layer hlayer =>
+      (hmono layer hlayer).monotone
+  have haMono' : Monotone a := by
+    simpa only [a, Function.comp_def] using haMono.monotone
+  have hterminalNonneg : ∀ n, 0 ≤ finkScaledBiasBound β U (θ n) := by
+    intro n
+    exact mul_nonneg
+      (div_nonneg (hβ0 (θ n)) (by linarith [hβ1 (θ n)])) hU
+  have hEnonneg : ∀ n, 0 ≤ E n := by
+    intro n
+    have hlayer : 0 ≤ G.finkBiasScaleSum layers n -
+        G.finkBiasScaleSum layers 0 :=
+      sub_nonneg.mpr (hscaleMono (Nat.zero_le n))
+    have hroot : 0 ≤ a n - a 0 :=
+      sub_nonneg.mpr (haMono' (Nat.zero_le n))
+    dsimp only [E]
+    positivity
+  have hterminalLeB : ∀ n,
+      finkScaledBiasBound β U (θ n) ≤ B n := by
+    intro n
+    exact le_add_of_nonneg_right (hEnonneg n)
+  have hELeB : ∀ n, E n ≤ B n := by
+    intro n
+    exact le_add_of_nonneg_left (hterminalNonneg n)
+  have hνlim : Tendsto ν atTop atTop := by
+    exact tendsto_slowUnitStepCalendar_atTop B
+  have hκlim : Tendsto κ atTop atTop := by
+    exact hexpansion.1.tendsto_atTop.comp hνlim
+  have hBlim : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * B (ν T))
+      atTop (nhds 0) := by
+    exact tendsto_slowUnitStepCalendar_cost_div_zero B
+  have hterminalLim : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U (κ T)) atTop (nhds 0) := by
+    apply squeeze_zero
+    · intro T
+      exact mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T))
+        (hterminalNonneg (ν T))
+    · intro T
+      exact mul_le_mul_of_nonneg_left (hterminalLeB (ν T))
+        (inv_nonneg.mpr (Nat.cast_nonneg T))
+    · simpa only [κ, Function.comp_apply] using hBlim
+  have hswitchNonneg : ∀ T, 0 ≤
+      ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W κ t := by
+    intro T
+    apply Finset.sum_nonneg
+    intro t ht
+    unfold indexedFinkRelativeSwitchError
+    exact add_nonneg (norm_nonneg _)
+      (mul_nonneg (abs_nonneg _) hU)
+  have hswitchLeB : ∀ T,
+      ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t ≤ B (ν T) := by
+    intro T
+    have hswitch := hbound ν (by simp [ν])
+      (fun t => by simpa only [ν] using slowUnitStepCalendar_step B t) T
+    have hswitchE :
+        ∑ t ∈ Finset.range T,
+            G.indexedFinkRelativeSwitchError β U z W κ t ≤ E (ν T) := by
+      simpa only [κ, E, a, Function.comp_apply] using hswitch
+    exact hswitchE.trans (hELeB (ν T))
+  have hswitchLim : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W κ t)
+      atTop (nhds 0) := by
+    apply squeeze_zero
+    · intro T
+      exact mul_nonneg (inv_nonneg.mpr (Nat.cast_nonneg T))
+        (hswitchNonneg T)
+    · intro T
+      exact mul_le_mul_of_nonneg_left (hswitchLeB T)
+        (inv_nonneg.mpr (Nat.cast_nonneg T))
+    · exact hBlim
+  exact ⟨κ, hκlim, hterminalLim, hswitchLim⟩
 
 /-- Charge zero while an indexed schedule stays on one fixed point and the
 sum of the adjacent bias bounds when it switches. -/
