@@ -110,6 +110,17 @@ theorem map_pure (f : α → β) (a : α) : map f (pure a) = pure (f a) := by
   simp [map, pure, Finsupp.mapDomain]
 
 @[simp]
+theorem map_id (μ : Law α) : map id μ = μ := by
+  apply ext
+  exact Finsupp.mapDomain_id
+
+@[simp]
+theorem map_comp (g : β → γ) (f : α → β) (μ : Law α) :
+    map g (map f μ) = map (g ∘ f) μ := by
+  apply ext
+  exact Finsupp.mapDomain_comp.symm
+
+@[simp]
 theorem product_pure (a : α) (b : β) : product (pure a) (pure b) = pure (a, b) := by
   simp [product]
 

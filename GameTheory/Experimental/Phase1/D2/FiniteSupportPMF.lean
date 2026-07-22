@@ -11,7 +11,7 @@ import Mathlib.Probability.ProbabilityMassFunction.Integrals
 
 noncomputable section
 
-open scoped BigOperators
+open scoped BigOperators NNReal
 
 namespace GameTheory.Experimental.Phase1.D2.FiniteSupportPMF
 
@@ -50,6 +50,25 @@ def bind (μ : Law α) (f : α → Law β) : Law β :=
 def product (μ : Law α) (ν : Law β) : Law (α × β) :=
   bind μ fun a => map (fun b => (a, b)) ν
 
+/-- Convexly mix two finite-support laws, with weight `t` on the first law. -/
+def mix (t : ℝ≥0) (ht : t ≤ 1) (μ ν : Law α) : Law α :=
+  ⟨⟨fun a => t * μ.toPMF a + (1 - t) * ν.toPMF a,
+      ENNReal.summable.hasSum_iff.2 (by
+        rw [ENNReal.tsum_add, ENNReal.tsum_mul_left, ENNReal.tsum_mul_left,
+          PMF.tsum_coe, PMF.tsum_coe]
+        rw [add_comm]
+        simpa using tsub_add_cancel_of_le (ENNReal.coe_le_coe.2 ht))⟩,
+    by
+      change Set.Finite {a | t * μ.toPMF a + (1 - t) * ν.toPMF a ≠ 0}
+      apply (μ.support_finite.union ν.support_finite).subset
+      intro a ha
+      simp only [Set.mem_union]
+      by_contra h
+      push Not at h
+      have hμ : μ.toPMF a = 0 := μ.toPMF.apply_eq_zero_iff a |>.2 h.1
+      have hν : ν.toPMF a = 0 := ν.toPMF.apply_eq_zero_iff a |>.2 h.2
+      exact ha (by simp [hμ, hν])⟩
+
 @[simp]
 theorem toPMF_pure (a : α) : (pure a).toPMF = PMF.pure a := rfl
 
@@ -59,6 +78,11 @@ theorem toPMF_map (f : α → β) (μ : Law α) : (map f μ).toPMF = μ.toPMF.ma
 @[simp]
 theorem toPMF_bind (μ : Law α) (f : α → Law β) :
     (bind μ f).toPMF = μ.toPMF.bind fun a => (f a).toPMF := rfl
+
+@[simp]
+theorem toPMF_mix_apply (t : ℝ≥0) (ht : t ≤ 1) (μ ν : Law α) (a : α) :
+    (mix t ht μ ν).toPMF a =
+      t * μ.toPMF a + (1 - t) * ν.toPMF a := rfl
 
 @[simp]
 theorem pure_bind (a : α) (f : α → Law β) : bind (pure a) f = f a := by
@@ -171,6 +195,38 @@ theorem expect_bind (μ : Law α) (f : α → Law β) (u : β → ℝ) :
   apply tsum_congr
   intro b
   simp [F, mul_assoc]
+
+/-- Expectation is affine in the law argument. -/
+theorem expect_mix (t : ℝ≥0) (ht : t ≤ 1) (μ ν : Law α) (u : α → ℝ) :
+    expect (mix t ht μ ν) u =
+      (t : ℝ) * expect μ u + (1 - (t : ℝ)) * expect ν u := by
+  have hμ : Summable (fun a => (μ.toPMF a).toReal * u a) := by
+    apply summable_of_hasFiniteSupport
+    apply μ.support_finite.subset
+    intro a ha
+    by_contra hnot
+    have hz : μ.toPMF a = 0 := μ.toPMF.apply_eq_zero_iff a |>.2 hnot
+    exact ha (by simp [hz])
+  have hν : Summable (fun a => (ν.toPMF a).toReal * u a) := by
+    apply summable_of_hasFiniteSupport
+    apply ν.support_finite.subset
+    intro a ha
+    by_contra hnot
+    have hz : ν.toPMF a = 0 := ν.toPMF.apply_eq_zero_iff a |>.2 hnot
+    exact ha (by simp [hz])
+  have hmixReal (a : α) :
+      (t * μ.toPMF a + (1 - t) * ν.toPMF a).toReal =
+        (t : ℝ) * (μ.toPMF a).toReal + (1 - (t : ℝ)) * (ν.toPMF a).toReal := by
+    rw [ENNReal.toReal_add
+      (ENNReal.mul_ne_top ENNReal.coe_ne_top (PMF.apply_ne_top _ _))
+      (ENNReal.mul_ne_top (ENNReal.sub_ne_top ENNReal.one_ne_top) (PMF.apply_ne_top _ _)),
+      ENNReal.toReal_mul, ENNReal.toReal_mul,
+      ENNReal.toReal_sub_of_le (by exact_mod_cast ht) (by simp)]
+    simp
+  unfold expect
+  simp_rw [toPMF_mix_apply, hmixReal]
+  simp_rw [add_mul, mul_assoc]
+  rw [Summable.tsum_add (hμ.mul_left _) (hν.mul_left _), tsum_mul_left, tsum_mul_left]
 
 theorem expect_eq_sum_support (μ : Law α) (u : α → ℝ) :
     expect μ u = ∑ a ∈ μ.support_finite.toFinset, (μ.toPMF a).toReal * u a := by
@@ -290,6 +346,10 @@ theorem pmfOfVector_toReal [Fintype α] (x : stdSimplex ℝ α) (a : α) :
 def toSimplex [Fintype α] (μ : Law α) : stdSimplex ℝ α :=
   ⟨pmfToVector μ.toPMF, pmfToVector_mem μ.toPMF⟩
 
+@[simp]
+theorem toSimplex_apply [Fintype α] (μ : Law α) (a : α) :
+    toSimplex μ a = (μ.toPMF a).toReal := rfl
+
 def ofSimplex [Fintype α] (x : stdSimplex ℝ α) : Law α :=
   ⟨pmfOfVector x, Set.toFinite _⟩
 
@@ -308,11 +368,36 @@ def simplexEquiv [Fintype α] : Law α ≃ stdSimplex ℝ α where
     funext a
     exact pmfOfVector_toReal x a
 
+@[simp]
+theorem simplexEquiv_pure [Fintype α] [DecidableEq α] (a : α) :
+    simplexEquiv (pure a) = stdSimplex.vertex (S := ℝ) a := by
+  apply stdSimplex.ext
+  funext b
+  by_cases hab : a = b
+  · subst b
+    simp [simplexEquiv, PMF.pure_apply]
+  · simp [simplexEquiv, PMF.pure_apply, hab, eq_comm]
+
 theorem simplexEquiv_expect [Fintype α] (μ : Law α) (u : α → ℝ) :
     expect μ u = ∑ a, simplexEquiv μ a * u a := by
   rw [expect, tsum_fintype]
   change (∑ a, (μ.toPMF a).toReal * u a) = ∑ a, (μ.toPMF a).toReal * u a
   rfl
+
+/-- The simplex bridge preserves convex combinations coordinatewise. -/
+theorem simplexEquiv_mix_apply [Fintype α] (t : ℝ≥0) (ht : t ≤ 1)
+    (μ ν : Law α) (a : α) :
+    simplexEquiv (mix t ht μ ν) a =
+      (t : ℝ) * simplexEquiv μ a + (1 - (t : ℝ)) * simplexEquiv ν a := by
+  change ((mix t ht μ ν).toPMF a).toReal =
+    (t : ℝ) * (μ.toPMF a).toReal + (1 - (t : ℝ)) * (ν.toPMF a).toReal
+  rw [toPMF_mix_apply,
+    ENNReal.toReal_add
+      (ENNReal.mul_ne_top ENNReal.coe_ne_top (PMF.apply_ne_top _ _))
+      (ENNReal.mul_ne_top (ENNReal.sub_ne_top ENNReal.one_ne_top) (PMF.apply_ne_top _ _)),
+    ENNReal.toReal_mul, ENNReal.toReal_mul,
+    ENNReal.toReal_sub_of_le (by exact_mod_cast ht) (by simp)]
+  simp
 
 end Law
 

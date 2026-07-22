@@ -8,10 +8,11 @@ namespace GameTheory.Experimental.Phase1.D1.Indexed
 
 open D2.FiniteSupportPMF
 
-set_option linter.checkUnivs false
-
 universe uι uκ us ut uo up
 
+set_option linter.checkUnivs false in
+/-- Strategy and outcome universes stay independent intentionally; the universe
+linter otherwise suggests collapsing them because both occur under one `max`. -/
 structure Signature (ι : Type uι) where
   Strategy : ι → Type us
   Outcome : Type uo

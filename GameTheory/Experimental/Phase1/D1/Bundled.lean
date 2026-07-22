@@ -8,10 +8,11 @@ namespace GameTheory.Experimental.Phase1.D1.Bundled
 
 open D2.FiniteSupportPMF
 
-set_option linter.checkUnivs false
-
 universe uι uκ us uo up
 
+set_option linter.checkUnivs false in
+/-- Strategy and outcome universes stay independent intentionally; the universe
+linter otherwise suggests collapsing them because both occur under one `max`. -/
 structure Signature (ι : Type uι) where
   Strategy : ι → Type us
   Outcome : Type uo
@@ -37,7 +38,11 @@ theorem update_of_ne {ι : Type uι} {sig : Signature ι} [DecidableEq ι]
 
 end Profile
 
-/-- Candidate B stores the signature as a form field. -/
+set_option linter.checkUnivs false in
+/-- Candidate B stores the signature as a form field. Its `us` and `uo`
+universes are not inferable from `Form ι` and occur only through the stored
+signature, so this declaration intentionally pays one universe level over the
+indexed form; EXP-002 records that cost. -/
 structure Form (ι : Type uι) where
   sig : Signature.{uι, us, uo} ι
   play : Profile sig → Law sig.Outcome

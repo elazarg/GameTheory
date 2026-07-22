@@ -14,7 +14,7 @@ universe u
 namespace A
 abbrev Law (α : Type u) := FiniteSupportPMF.Law α
 export FiniteSupportPMF.Law (toPMF support support_finite pure map product product_apply
-  pi expect simplexEquiv)
+  pi mix expect expect_mix simplexEquiv)
 end A
 
 namespace B
@@ -74,19 +74,35 @@ def bPi {ι : Type*} [Fintype ι] {S : ι → Type*} (μ : ∀ i, B.Law (S i)) :
     B.Law (∀ i, S i) :=
   aToB (A.pi fun i => bToA (μ i))
 
-/-- A finite-support strategy on the infinite carrier `Nat`. -/
-def infiniteCarrierA : A.Law ℕ := A.pure 7
+/-- A genuinely nontrivial finite-support law on the infinite carrier `Nat`. -/
+def infiniteCarrierA : A.Law ℕ :=
+  A.mix (1 / 2) (by norm_num) (A.pure 7) (A.pure 11)
 
-/-- The same hostile carrier is accepted by candidate B. -/
-def infiniteCarrierB : B.Law ℕ := B.pure 7
+/-- Candidate B's native `Finsupp` also carries two points on `Nat`. -/
+def infiniteCarrierB : B.Law ℕ where
+  weight := Finsupp.single 7 (1 / 2) + Finsupp.single 11 (1 / 2)
+  mass_one := by
+    classical
+    rw [Finsupp.sum_add_index]
+    · norm_num
+    · simp
+    · intros
+      rfl
 
 @[simp]
-theorem inspect_infiniteCarrierA : A.expect infiniteCarrierA (fun n => (n : ℝ)) = 7 := by
-  exact FiniteSupportPMF.Law.expect_pure 7 _
+theorem inspect_infiniteCarrierA : A.expect infiniteCarrierA (fun n => (n : ℝ)) = 9 := by
+  rw [infiniteCarrierA, A.expect_mix]
+  norm_num
 
 @[simp]
-theorem inspect_infiniteCarrierB : B.expect infiniteCarrierB (fun n => (n : ℝ)) = 7 := by
-  exact NormalizedFinsupp.Law.expect_pure 7 _
+theorem inspect_infiniteCarrierB : B.expect infiniteCarrierB (fun n => (n : ℝ)) = 9 := by
+  classical
+  simp only [infiniteCarrierB, NormalizedFinsupp.Law.expect]
+  rw [Finsupp.sum_add_index]
+  · norm_num
+  · simp
+  · intros
+    simp [add_mul]
 
 theorem a_simplex_product [Fintype α] [Fintype β]
     (μ : A.Law α) (ν : A.Law β) (a : α) (b : β) :
