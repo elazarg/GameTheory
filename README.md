@@ -136,9 +136,16 @@ records both the resulting left-identity condition and a checked obstruction
 showing that independent sequential and tensor composition do not preserve
 convex closure. The implemented Lemma 16 repair compares games up to
 convex-closed equilibrium semantics and proves both sequential unit laws under
-that equivalence. Establishing composition congruence and porting the paper's
-associativity theorem remain prerequisites to forming the corresponding
-quotient category.
+that equivalence. A checked history-dependent counterexample shows this
+equivalence is not a left congruence for raw composition, so it repairs the
+unit equations but cannot by itself form a quotient category. Repair candidate
+(a) is implemented as `ProbOpenGame.Saturated`: morphisms bundle
+convex-closed equilibrium predicates and composition convex-closes afterward.
+Closure and both unitors are proved. Checked Boolean history/echo witnesses
+show, however, that both raw sequential composition (the paper's Theorem 15)
+and this post-closed composition fail canonical associativity. Thus neither
+convex closure repair produces the category claimed by Lemma 16; the remaining
+problem requires changing the lifting or the treatment of joint strategy laws.
 
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition

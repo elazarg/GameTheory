@@ -120,6 +120,31 @@ example {X S Y R : Type*} [Math.AvgAlgebra R]
     ProbOpenGame.ConvexIso (g ;ₚ ProbOpenGame.idWire Y R) g :=
   ProbOpenGame.convexSeqIdRight g
 
+example :
+    Nonempty (ProbOpenGame.ConvexIso Examples.binaryHistorySource
+      (ProbOpenGame.convexify Examples.binaryHistorySource)) ∧
+    (ProbOpenGame.convexify Examples.binaryHistorySource ;ₚ
+      Examples.echoHistory).IsEquilibriumIn () (fun _ => 0)
+        (Math.FinPMF.product Examples.fairBoolFin Examples.fairBoolFin) ∧
+    ¬(Examples.binaryHistorySource ;ₚ
+      Examples.echoHistory).IsConvexEquilibriumIn () (fun _ => 0)
+        (Math.FinPMF.product Examples.fairBoolFin Examples.fairBoolFin) :=
+  Examples.convexIso_not_left_seq_congruence
+
+example {X S Y R : Type*} [Math.AvgAlgebra S]
+    (g : ProbOpenGame.Saturated X S Y R) :
+    ProbOpenGame.ConvexIso
+      (ProbOpenGame.Saturated.seq (ProbOpenGame.Saturated.id X S) g).1
+      g.1 :=
+  ProbOpenGame.Saturated.seqIdLeft g
+
+example {X S Y R : Type*} [Math.AvgAlgebra R]
+    (g : ProbOpenGame.Saturated X S Y R) :
+    ProbOpenGame.ConvexIso
+      (ProbOpenGame.Saturated.seq g
+        (ProbOpenGame.Saturated.id Y R)).1 g.1 :=
+  ProbOpenGame.Saturated.seqIdRight g
+
 end
 
 end OpenGames.Tests

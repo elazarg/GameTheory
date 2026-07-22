@@ -21,9 +21,17 @@ identity on the left convexifies the later equilibrium set.  Accordingly,
 the raw structure does not satisfy Lemma 16's left-unit claim.  This file
 implements repair (c): `ProbOpenGame.ConvexIso` compares equilibrium semantics
 after finite convex closure, and `convexSeqIdLeft`/`convexSeqIdRight` prove both
-unit laws in that semantics.  This is deliberately not yet advertised as a
-quotient category; compatibility with composition and the paper's raw
-associativity theorem remain separate obligations.
+unit laws in that semantics.  It is not a quotient-category repair:
+`Examples.convexIso_not_left_seq_congruence` proves that this equivalence is
+not a left congruence for raw composition.  A categorical repair must therefore
+also change composition or restrict its morphisms.  `ProbOpenGame.Saturated`
+implements that next repair: morphisms carry convex-closed equilibrium sets and
+composition closes after each step; closure and both unitors are proved.
+However, `Examples.probabilistic_seq_not_associative` refutes the paper's raw
+Theorem 15, and `Examples.saturated_seq_not_associative` shows that post-closing
+does not repair associativity.  Thus neither repair (a) nor repair (c) yields
+the claimed category without a deeper change to the lifting or strategy-law
+semantics.
 -/
 
 noncomputable section
@@ -286,6 +294,24 @@ theorem convexify_hasConvexEquilibria (g : ProbOpenGame X S Y R) :
       g.IsConvexEquilibriumIn x k μ :=
   Iff.rfl
 
+/-- Every game is convex-semantically isomorphic to its saturation. -/
+def convexifyConvexIso (g : ProbOpenGame X S Y R) :
+    ConvexIso g (convexify g) where
+  stratEquiv := Equiv.refl _
+  play_preserved := fun _ _ => rfl
+  coplay_preserved := fun _ _ _ => rfl
+  equilibrium_preserved := by
+    intro x k φ
+    change FinPMF g.Strategy at φ
+    unfold IsConvexEquilibriumIn
+    change FinPMF.map (Equiv.refl g.Strategy) φ ∈ FinPMF.convexClosure
+      (FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ}) ↔
+        φ ∈ FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ}
+    have hmap : FinPMF.map (Equiv.refl g.Strategy) φ = φ := by
+      change FinPMF.map id φ = φ
+      exact FinPMF.map_id φ
+    rw [hmap, FinPMF.convexClosure_idempotent]
+
 /-- `D̄#` already convex-saturates every downstream equilibrium fiber, so
 convexifying the second component before composition changes nothing. -/
 theorem seq_convexify_right_isEquilibriumIn_iff [AvgAlgebra R]
@@ -541,6 +567,60 @@ def convexSeqIdRight [AvgAlgebra R] (g : ProbOpenGame X S Y R) :
     change g.IsConvexEquilibriumIn x k (FinPMF.map Prod.fst φ) ↔
       (g ;ₚ idWire Y R).IsConvexEquilibriumIn x k φ
     exact (seq_idWire_isConvexEquilibriumIn_iff g x k φ).symm
+
+/-! ## Post-closed composition -/
+
+/-- A probabilistic open game whose equilibrium sets are convex-closed.  This
+is the morphism carrier for repair (a): composition is saturated after every
+step, so the carrier is closed by construction. -/
+def Saturated (X S Y R : Type*) :=
+  {g : ProbOpenGame X S Y R // HasConvexEquilibria g}
+
+namespace Saturated
+
+/-- Identity is already convex-closed. -/
+def id (X S : Type*) : Saturated X S X S :=
+  ⟨idWire X S, by
+    intro _ _ _ _
+    trivial⟩
+
+/-- Repair (a): sequentially compose, then close the resulting equilibrium
+sets under finite barycenters. -/
+def seq [AvgAlgebra R]
+    (g : Saturated X S Y R) (h : Saturated Y R Z Q) :
+    Saturated X S Z Q :=
+  ⟨convexify (g.1 ;ₚ h.1), convexify_hasConvexEquilibria _⟩
+
+/-- On a saturated game, convex equilibrium semantics and the carried raw
+predicate coincide. -/
+theorem isConvexEquilibriumIn_iff
+    (g : Saturated X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF g.1.Strategy) :
+    g.1.IsConvexEquilibriumIn x k φ ↔
+      g.1.IsEquilibriumIn x k φ := by
+  constructor
+  · intro hφ
+    exact g.2 x k hφ
+  · intro hφ
+    exact FinPMF.subset_convexClosure _ hφ
+
+/-- The post-closed composition has a left unit up to strategy isomorphism and
+convex semantics.  Since both bundled games are saturated, this also compares
+their raw equilibrium predicates. -/
+def seqIdLeft [AvgAlgebra S] (g : Saturated X S Y R) :
+    ConvexIso (seq (id X S) g).1 g.1 :=
+  ConvexIso.trans
+    (ConvexIso.symm (convexifyConvexIso (idWire X S ;ₚ g.1)))
+    (convexSeqIdLeft g.1)
+
+/-- Right unit for post-closed composition. -/
+def seqIdRight [AvgAlgebra R] (g : Saturated X S Y R) :
+    ConvexIso (seq g (id Y R)).1 g.1 :=
+  ConvexIso.trans
+    (ConvexIso.symm (convexifyConvexIso (g.1 ;ₚ idWire Y R)))
+    (convexSeqIdRight g.1)
+
+end Saturated
 
 /-- A mixed decision after observing `X`.  A distribution over contingent
 pure plans is selected exactly when no alternative distribution has greater

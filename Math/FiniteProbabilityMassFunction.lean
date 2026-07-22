@@ -270,6 +270,15 @@ theorem map_swap_product (μ : FinPMF α) (ν : FinPMF β) :
   simpa [Function.comp_def] using
     (PMF.bind_comm μ.toPMF ν.toPMF fun a b => PMF.pure (b, a))
 
+/-- Independent products reassociate under the canonical product map. -/
+theorem map_assoc_product (μ : FinPMF α) (ν : FinPMF β)
+    (ξ : FinPMF γ) :
+    map (fun p => (p.1.1, (p.1.2, p.2)))
+        (product (product μ ν) ξ) =
+      product μ (product ν ξ) := by
+  apply ext
+  simp [product, Function.comp_def]
+
 /-- Flatten a finite distribution of finite distributions. -/
 def join (μ : FinPMF (FinPMF α)) : FinPMF α :=
   bind μ id
@@ -418,6 +427,21 @@ theorem subset_convexClosure (S : Set (FinPMF α)) :
   intro ν hν
   exact ⟨pure ν, by simpa using hν, by simp⟩
 
+@[simp] theorem convexClosure_singleton (ν : FinPMF α) :
+    convexClosure {ν} = {ν} := by
+  apply Set.Subset.antisymm
+  · rintro μ ⟨θ, hθ, hjoin⟩
+    have hjoin' : join θ = ν := by
+      calc
+        join θ = bind θ id := rfl
+        _ = bind θ (fun _ => ν) :=
+          bind_congr_on_support θ _ _ fun ψ hψ => by
+            simpa using hθ hψ
+        _ = ν := bind_const θ ν
+    have hμ : μ = ν := hjoin.symm.trans hjoin'
+    simpa using hμ
+  · exact subset_convexClosure {ν}
+
 theorem convexClosure_mono {S T : Set (FinPMF α)} (hST : S ⊆ T) :
     convexClosure S ⊆ convexClosure T := by
   rintro ν ⟨θ, hθ, hjoin⟩
@@ -508,6 +532,26 @@ theorem relKleisli_convexClosure_iff (R : α → Set (FinPMF β))
   · intro h
     exact relKleisli_mono
       (fun a => subset_convexClosure (R a)) h
+
+/-- Any support invariant shared by all admissible output laws is preserved by
+the relational Kleisli lifting. -/
+theorem relKleisli_support {R : α → Set (FinPMF β)}
+    {μ : FinPMF α} {ν : FinPMF β} (h : RelKleisli R μ ν)
+    (P : β → Prop)
+    (hP : ∀ a, a ∈ μ.support → ∀ ψ, ψ ∈ R a →
+      ∀ b, b ∈ ψ.support → P b) :
+    ∀ b, b ∈ ν.support → P b := by
+  rintro b hb
+  rcases h with ⟨choose, hsupp, hjoin⟩
+  rw [← hjoin] at hb
+  change b ∈ (bind (bind μ choose) id).support at hb
+  rw [support_bind] at hb
+  simp only [Set.mem_iUnion] at hb
+  rcases hb with ⟨ψ, hψ, hb⟩
+  rw [support_bind] at hψ
+  simp only [Set.mem_iUnion] at hψ
+  rcases hψ with ⟨a, ha, hψ⟩
+  exact hP a ha ψ (hsupp a ha hψ) b hb
 
 /-- A pointwise admissible distribution is admitted by the lifting at a point
 mass.  The converse is convex closure rather than literal membership; this is
