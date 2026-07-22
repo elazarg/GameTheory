@@ -12,8 +12,9 @@ import Mathlib.Data.Rat.Lemmas
 # Undominated strategies
 
 Undominated-strategy rationality for the weak-with-strict-witness dominance
-relation `KernelGame.WeaklyStrictlyDominates`. This is not the same as
-`KernelGame.WeaklyDominates`, which is the reflexive `≥`-everywhere preorder.
+relation `KernelGame.WeaklyDominatesWithStrictWitness` (also exposed under the
+compatibility name `WeaklyStrictlyDominates`). This is not the same as
+`KernelGame.WeaklyDominatesReflexive`, the reflexive `≥`-everywhere preorder.
 
 This file provides undominated strategies/profiles for that relation, and the
 finite ascent lemma used to move from an arbitrary dominated strategy to an

@@ -211,14 +211,18 @@ theorem IsStrictDominant_iff_IsStrictDominantFor_eu (G : KernelGame ι)
 -- ============================================================================
 
 open Classical in
-/-- `s` weakly dominates `t` for player `who` in the reflexive preorder sense:
-its expected utility is at least that of `t` against every profile. No strict
-witness is required; see `WeaklyStrictlyDominates` for the everywhere-weak,
-somewhere-strict textbook variant. -/
-def WeaklyDominates (G : KernelGame ι) (who : ι)
+/-- `s` weakly dominates `t` for player `who` in the reflexive-preorder sense:
+its expected utility is at least that of `t` against every profile. -/
+def WeaklyDominatesReflexive (G : KernelGame ι) (who : ι)
     (s t : G.Strategy who) : Prop :=
   ∀ (σ : Profile G),
     G.eu (Function.update σ who s) who ≥ G.eu (Function.update σ who t) who
+
+/-- Compatibility name for `WeaklyDominatesReflexive`. For the everywhere-weak,
+somewhere-strict textbook relation, use `WeaklyDominatesWithStrictWitness`. -/
+abbrev WeaklyDominates (G : KernelGame ι) (who : ι)
+    (s t : G.Strategy who) : Prop :=
+  G.WeaklyDominatesReflexive who s t
 
 open Classical in
 /-- `s` strictly dominates `t` for player `who`. -/

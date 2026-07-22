@@ -165,6 +165,12 @@ variant commonly called ``weak dominance'' in textbooks is formalized
 separately.  \emph{Strict dominance} requires a strict preference at every
 opponent profile (typically the strict EU comparison).
 
+In the Lean API these are named
+\texttt{WeaklyDominatesReflexive},
+\texttt{WeaklyDominatesWithStrictWitness}, and
+\texttt{StrictlyDominates}, respectively.  The shorter historical names are
+retained as compatibility aliases.
+
 A strategy $s$ is \emph{(weakly) dominant} for $i$ when it weakly
 dominates every alternative; it is \emph{strictly dominant} when
 the analogous statement holds for $\sPref$.  The library exposes

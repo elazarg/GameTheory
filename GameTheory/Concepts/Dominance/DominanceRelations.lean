@@ -14,10 +14,12 @@ import Math.Probability
 Structural properties of dominance relations on `KernelGame`.
 
 Provides:
-- `WeaklyDominates.refl` -- weak dominance is reflexive
-- `WeaklyDominates.trans` -- weak dominance is transitive
-- `WeaklyDominates.instIsPreorder` -- weak dominance is a preorder
-- `WeaklyStrictlyDominates` -- weak dominance with a strict witness
+- `WeaklyDominatesReflexive` -- the weak-dominance preorder (≥ everywhere)
+- `WeaklyDominates.refl` -- reflexivity (under the compatibility namespace)
+- `WeaklyDominates.trans` -- transitivity (under the compatibility namespace)
+- `WeaklyDominates.instIsPreorder` -- preorder instance
+- `WeaklyDominatesWithStrictWitness` -- ≥ everywhere and > somewhere
+- `WeaklyStrictlyDominates` -- compatibility name for that relation
 - `WeaklyStrictlyDominates.instIsStrictOrder` -- weak dominance with a strict
   witness is a strict order
 - `StrictlyDominates.toWeaklyDominates` -- strict dominance implies weak dominance
@@ -59,15 +61,20 @@ instance WeaklyDominates.instIsPreorder (who : ι) :
 
 /-- Weak dominance with at least one strict witness. This is the textbook
 "weak dominance" relation used by Monderer--Tennenholtz for undominated-strategy
-rationality. It is distinct from `WeaklyDominates`, which is the reflexive
+rationality. It is distinct from `WeaklyDominatesReflexive`, which is the reflexive
 `≥`-everywhere preorder, and from `StrictlyDominates`, which is strict against
 every opponent profile. -/
-def WeaklyStrictlyDominates (G : KernelGame ι) (who : ι)
+def WeaklyDominatesWithStrictWitness (G : KernelGame ι) (who : ι)
     (s t : G.Strategy who) : Prop :=
-  G.WeaklyDominates who s t ∧
+  G.WeaklyDominatesReflexive who s t ∧
     ∃ σ : Profile G,
       G.eu (Function.update σ who s) who >
         G.eu (Function.update σ who t) who
+
+/-- Compatibility name for `WeaklyDominatesWithStrictWitness`. -/
+abbrev WeaklyStrictlyDominates (G : KernelGame ι) (who : ι)
+    (s t : G.Strategy who) : Prop :=
+  G.WeaklyDominatesWithStrictWitness who s t
 
 theorem WeaklyStrictlyDominates.toWeaklyDominates {who : ι} {s t : G.Strategy who}
     (h : G.WeaklyStrictlyDominates who s t) : G.WeaklyDominates who s t :=

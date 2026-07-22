@@ -172,14 +172,19 @@ def IsBestResponseFor (F : GameForm ι)
 
 open Classical in
 /-- `s` weakly dominates `t` for player `who` with respect to `pref` at every
-profile. This is the reflexive preorder notion when `pref` is reflexive; no
-separate strict witness is required. -/
-def WeaklyDominatesFor (F : GameForm ι)
+profile. This is the reflexive-preorder notion when `pref` is reflexive. -/
+def WeaklyDominatesReflexiveFor (F : GameForm ι)
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     (who : ι) (s t : F.Strategy who) : Prop :=
   ∀ (σ : F.Profile),
     pref who (F.outcomeKernel (Function.update σ who s))
              (F.outcomeKernel (Function.update σ who t))
+
+/-- Compatibility name for `WeaklyDominatesReflexiveFor`. -/
+abbrev WeaklyDominatesFor (F : GameForm ι)
+    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
+    (who : ι) (s t : F.Strategy who) : Prop :=
+  F.WeaklyDominatesReflexiveFor pref who s t
 
 open Classical in
 /-- `s` strictly dominates `t` for player `who` w.r.t. strict preference `spref`. -/
