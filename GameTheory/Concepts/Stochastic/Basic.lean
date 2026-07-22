@@ -252,6 +252,94 @@ theorem abs_finiteAveragePayoff_le (G : StochasticGame ι) [Fintype ι]
           field_simp
 
 -- ============================================================================
+-- Shifting play past a completed first stage
+-- ============================================================================
+
+/-- Prefix a completed first stage onto a history. -/
+def consHist (G : StochasticGame ι) (e : G.State × G.JointAct) {t : ℕ}
+    (h : G.Hist t) : G.Hist (t + 1) :=
+  (Fin.cons e h.1, h.2)
+
+@[simp] theorem consHist_snd (G : StochasticGame ι)
+    (e : G.State × G.JointAct) {t : ℕ} (h : G.Hist t) :
+    (G.consHist e h).2 = h.2 :=
+  rfl
+
+/-- The continuation of a behavior profile after a completed first stage:
+respond to every history as the original profile responds to that history
+prefixed by the first stage. -/
+def shiftProfile (G : StochasticGame ι) (σ : G.BehaviorProfile)
+    (e : G.State × G.JointAct) : G.BehaviorProfile :=
+  fun i t h => σ i (t + 1) (G.consHist e h)
+
+@[simp] theorem stageActionDist_shiftProfile (G : StochasticGame ι)
+    [Fintype ι] (σ : G.BehaviorProfile) (e : G.State × G.JointAct)
+    {t : ℕ} (h : G.Hist t) :
+    G.stageActionDist (G.shiftProfile σ e) h =
+      G.stageActionDist σ (G.consHist e h) :=
+  rfl
+
+/-- Prefixing commutes with appending a stage. -/
+theorem consHist_snoc (G : StochasticGame ι) (e : G.State × G.JointAct)
+    {t : ℕ} (h : G.Hist t) (a : G.JointAct) (s' : G.State) :
+    G.consHist e ((Fin.snoc h.1 (h.2, a), s') : G.Hist (t + 1)) =
+      (Fin.snoc (G.consHist e h).1 ((G.consHist e h).2, a), s') := by
+  unfold consHist
+  exact Prod.ext (Fin.cons_snoc_eq_snoc_cons e h.1 (h.2, a)) rfl
+
+/-- **First-stage disintegration of the history distribution** (the Markov
+property of play): the distribution over `t + 1`-stage histories is
+obtained by drawing the first joint action and the successor state, then
+running the shifted profile from the successor and prefixing the completed
+first stage. -/
+theorem histDist_succ_shift (G : StochasticGame ι) [Fintype ι]
+    (σ : G.BehaviorProfile) (s₀ : G.State) :
+    ∀ t : ℕ, G.histDist σ s₀ (t + 1) =
+      (G.stageActionDist σ (G.emptyHist s₀)).bind fun a =>
+        (G.transition s₀ a).bind fun s₁ =>
+          (G.histDist (G.shiftProfile σ (s₀, a)) s₁ t).map
+            (G.consHist (s₀, a)) := by
+  intro t
+  induction t with
+  | zero =>
+    rw [histDist_succ, histDist_zero, PMF.pure_bind]
+    congr 1
+    funext a
+    congr 1
+    funext s₁
+    rw [histDist_zero, PMF.pure_map]
+    congr 1
+    unfold consHist emptyHist
+    refine Prod.ext ?_ rfl
+    funext k
+    have hk : k = Fin.last 0 := Fin.ext (by omega)
+    rw [hk]
+    dsimp only
+    rw [Fin.snoc_last]
+    rfl
+  | succ t ih =>
+    rw [histDist_succ, ih, PMF.bind_bind]
+    congr 1
+    funext a
+    rw [PMF.bind_bind]
+    congr 1
+    funext s₁
+    rw [PMF.bind_map, histDist_succ, PMF.map_bind]
+    congr 1
+    funext h
+    simp only [Function.comp_apply, stageActionDist_shiftProfile]
+    rw [PMF.map_bind]
+    congr 1
+    funext b
+    rw [PMF.map_bind]
+    have h2 : (G.consHist (s₀, a) h).2 = h.2 := rfl
+    rw [h2]
+    congr 1
+    funext s'
+    rw [PMF.pure_map, G.consHist_snoc]
+    rfl
+
+-- ============================================================================
 -- The horizon game: each finite truncation as a KernelGame
 -- ============================================================================
 
