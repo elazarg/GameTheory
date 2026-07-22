@@ -90,6 +90,16 @@ example :
           Examples.matchingPenniesFairFin) :=
   Examples.matchingPennies_fair_probabilistic_equilibrium
 
+/-- The public probabilistic API records that convex equilibrium predicates
+are not closed under the independent tensor. -/
+example :
+    ProbOpenGame.HasConvexEquilibria
+        (ProbOpenGame.actionDecision Bool) ∧
+      ¬ProbOpenGame.HasConvexEquilibria
+        (ProbOpenGame.actionDecision Bool ⊗ₚ
+          ProbOpenGame.actionDecision Bool) :=
+  Examples.probabilistic_tensor_does_not_preserve_convexEquilibria
+
 end
 
 end OpenGames.Tests

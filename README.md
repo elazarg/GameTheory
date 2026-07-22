@@ -130,7 +130,10 @@ The probabilistic layer uses finite-support `FinPMF` distributions and
 expectation algebras for `GProb`-style sequential/tensor composition and its
 relational Kleisli lifting. Its two-player decision tensor is equivalent to
 the existing mixed-Nash semantics; Matching Pennies has the expected unique
-half/half solution.
+half/half solution. For arbitrary carried equilibrium predicates, the exact
+lifting convexifies the later game's selected set at a point input; the API
+records both the resulting left-identity condition and a checked obstruction
+showing that independent tensor does not preserve convex closure.
 
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition

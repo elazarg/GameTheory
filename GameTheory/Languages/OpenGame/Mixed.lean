@@ -170,6 +170,93 @@ def ofLens (view : X → Y) (update : X → R → S) :
 def idWire (X S : Type*) : ProbOpenGame X S X S :=
   ofLens id fun _ s => s
 
+/-- Every equilibrium set of `g` is closed under finite barycenters.  Exact
+`D̄#` composition needs this semantic property for the left identity law. -/
+def HasConvexEquilibria (g : ProbOpenGame X S Y R) : Prop :=
+  ∀ (x : X) (k : Y → R),
+    FinPMF.convexClosure {μ | g.IsEquilibriumIn x k μ} ⊆
+      {μ | g.IsEquilibriumIn x k μ}
+
+/-- Saturate every equilibrium set under finite barycenters. -/
+def convexify (g : ProbOpenGame X S Y R) : ProbOpenGame X S Y R where
+  Strategy := g.Strategy
+  play := g.play
+  coplay := g.coplay
+  IsEquilibriumIn x k μ :=
+    μ ∈ FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ}
+
+theorem convexify_hasConvexEquilibria (g : ProbOpenGame X S Y R) :
+    HasConvexEquilibria (convexify g) := by
+  intro x k μ hμ
+  change μ ∈ FinPMF.convexClosure
+    (FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ}) at hμ
+  change μ ∈ FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ}
+  rwa [FinPMF.convexClosure_idempotent] at hμ
+
+@[simp] theorem convexify_isEquilibriumIn_iff
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (μ : FinPMF g.Strategy) :
+    (convexify g).IsEquilibriumIn x k μ ↔
+      μ ∈ FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ} :=
+  Iff.rfl
+
+/-- Composing an identity before a game convexifies the game's equilibrium
+set.  This is exact, not merely an inclusion. -/
+theorem idWire_seq_isEquilibriumIn_product_iff [AvgAlgebra S]
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF g.Strategy) :
+    (idWire X S ;ₚ g).IsEquilibriumIn x k
+        (FinPMF.product (FinPMF.pure ()) φ) ↔
+      φ ∈ FinPMF.convexClosure {ψ | g.IsEquilibriumIn x k ψ} := by
+  rw [seq_isEquilibriumIn_product_iff]
+  simp only [idWire, ofLens, true_and, FinPMF.map_pure]
+  exact FinPMF.relKleisli_pure_iff
+    (fun y => {ψ | g.IsEquilibriumIn y k ψ}) x φ
+
+/-- Thus the unrestricted left composite agrees exactly with the convexified
+game, identifying convex saturation as the minimal unit-law repair. -/
+theorem idWire_seq_isEquilibriumIn_product_iff_convexify [AvgAlgebra S]
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF g.Strategy) :
+    (idWire X S ;ₚ g).IsEquilibriumIn x k
+        (FinPMF.product (FinPMF.pure ()) φ) ↔
+      (convexify g).IsEquilibriumIn x k φ :=
+  idWire_seq_isEquilibriumIn_product_iff g x k φ
+
+/-- The left identity law holds on games whose equilibrium sets are already
+closed under the convexification performed by `D̄#`. -/
+theorem idWire_seq_isEquilibriumIn_product_iff_of_convex [AvgAlgebra S]
+    (g : ProbOpenGame X S Y R) (hg : HasConvexEquilibria g)
+    (x : X) (k : Y → R) (φ : FinPMF g.Strategy) :
+    (idWire X S ;ₚ g).IsEquilibriumIn x k
+        (FinPMF.product (FinPMF.pure ()) φ) ↔
+      g.IsEquilibriumIn x k φ := by
+  rw [idWire_seq_isEquilibriumIn_product_iff]
+  constructor
+  · intro hφ
+    exact hg x k hφ
+  · intro hφ
+    exact FinPMF.subset_convexClosure _ hφ
+
+/-- Composing a game with an identity on the right preserves equilibrium
+without an additional closure hypothesis. -/
+theorem seq_idWire_isEquilibriumIn_product_iff [AvgAlgebra R]
+    (g : ProbOpenGame X S Y R) (x : X) (k : Y → R)
+    (φ : FinPMF g.Strategy) :
+    (g ;ₚ idWire Y R).IsEquilibriumIn x k
+        (FinPMF.product φ (FinPMF.pure ())) ↔
+      g.IsEquilibriumIn x k φ := by
+  rw [seq_isEquilibriumIn_product_iff]
+  constructor
+  · rintro ⟨hg, _hid⟩
+    simpa [idWire, ofLens] using hg
+  · intro hg
+    constructor
+    · simpa [idWire, ofLens] using hg
+    · apply FinPMF.relKleisli_of_forall_mem
+      intro y _hy
+      exact Set.mem_univ _
+
 /-- A mixed decision after observing `X`.  A distribution over contingent
 pure plans is selected exactly when no alternative distribution has greater
 expected payoff at the realized history. -/
@@ -193,6 +280,25 @@ theorem decision_isEquilibriumIn_iff (X Y : Type*) (x : X) (k : Y → ℝ)
     exact FinPMF.expect_le_const ν (fun σ => k (σ x))
       (expect μ fun σ => k (σ x)) fun σ => h (σ x)
 
+theorem decision_hasConvexEquilibria (X Y : Type*) :
+    HasConvexEquilibria (decision X Y) := by
+  intro x k μ hμ
+  rcases hμ with ⟨θ, hθ, rfl⟩
+  intro ν
+  calc
+    expect ν (fun σ => k (σ x)) =
+        Math.Probability.expect θ.toPMF
+          (fun _ => expect ν (fun σ => k (σ x))) := by
+      symm
+      exact Math.Probability.expect_const _ _
+    _ ≤ Math.Probability.expect θ.toPMF
+          (fun ψ => expect ψ (fun σ => k (σ x))) := by
+      apply FinPMF.expect_mono_on_support
+      intro ψ hψ
+      exact hθ hψ ν
+    _ = expect (FinPMF.join θ) (fun σ => k (σ x)) := by
+      exact (FinPMF.expect_bind θ id (fun σ => k (σ x))).symm
+
 /-- State-free decisions use actions themselves as pure strategies, avoiding
 an inessential `Unit → Y` wrapper in normal-form bridges. -/
 def actionDecision (Y : Type*) : ProbOpenGame Unit Unit Y ℝ where
@@ -211,6 +317,22 @@ theorem actionDecision_isEquilibriumIn_iff (Y : Type*) (k : Y → ℝ)
     simpa using h (FinPMF.pure y)
   · intro h ν
     exact FinPMF.expect_le_const ν k (expect μ k) h
+
+theorem actionDecision_hasConvexEquilibria (Y : Type*) :
+    HasConvexEquilibria (actionDecision Y) := by
+  intro _x k μ hμ
+  rcases hμ with ⟨θ, hθ, rfl⟩
+  intro ν
+  calc
+    expect ν k = Math.Probability.expect θ.toPMF (fun _ => expect ν k) := by
+      symm
+      exact Math.Probability.expect_const _ _
+    _ ≤ Math.Probability.expect θ.toPMF (fun ψ => expect ψ k) := by
+      apply FinPMF.expect_mono_on_support
+      intro ψ hψ
+      exact hθ hψ ν
+    _ = expect (FinPMF.join θ) k := by
+      exact (FinPMF.expect_bind θ id k).symm
 
 /-! ## Two-player normal-form recovery -/
 

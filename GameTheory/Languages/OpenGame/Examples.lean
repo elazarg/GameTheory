@@ -196,6 +196,154 @@ theorem matchingPennies_private_not_broadcast :
 
 /-! ## Probabilistic open games -/
 
+/-- A deliberately non-convex probabilistic game used to expose the exact
+left-unit behavior of relational Kleisli composition. -/
+def nonconvexSelection : ProbOpenGame Unit ℝ Unit ℝ where
+  Strategy := Bool
+  play _ _ := ()
+  coplay _ _ r := r
+  IsEquilibriumIn _ _ μ :=
+    μ = Math.FinPMF.pure false ∨ μ = Math.FinPMF.pure true
+
+/-- Fair randomization on `Bool`, with finite support carried in the type. -/
+def fairBoolFin : Math.FinPMF Bool :=
+  Math.FinPMF.ofPMF (PMF.uniformOfFintype Bool)
+
+private theorem fairBoolFin_mem_nonconvexClosure :
+    fairBoolFin ∈ Math.FinPMF.convexClosure
+      {ψ | nonconvexSelection.IsEquilibriumIn () (fun _ => 0) ψ} := by
+  refine ⟨Math.FinPMF.map Math.FinPMF.pure fairBoolFin, ?_, by simp⟩
+  intro ψ hψ
+  rw [Math.FinPMF.support_map] at hψ
+  rcases hψ with ⟨b, _hb, rfl⟩
+  cases b
+  · exact Or.inl rfl
+  · exact Or.inr rfl
+
+private theorem fairBoolFin_not_nonconvexEquilibrium :
+    ¬nonconvexSelection.IsEquilibriumIn () (fun _ => 0) fairBoolFin := by
+  intro h
+  rcases h with h | h
+  · have hmass := congrArg
+      (fun μ : Math.FinPMF Bool => (μ.toPMF false).toReal) h
+    norm_num [fairBoolFin, PMF.uniformOfFintype_apply] at hmass
+  · have hmass := congrArg
+      (fun μ : Math.FinPMF Bool => (μ.toPMF true).toReal) h
+    norm_num [fairBoolFin, PMF.uniformOfFintype_apply] at hmass
+
+/-- Without convex-closed equilibrium sets, the paper-style left identity
+law fails: `D̄#` admits the fair barycenter although the original game admits
+only the two point masses. -/
+theorem probabilistic_leftIdentity_requires_convexity :
+    (ProbOpenGame.idWire Unit ℝ ;ₚ nonconvexSelection).IsEquilibriumIn ()
+        (fun _ => 0)
+        (Math.FinPMF.product (Math.FinPMF.pure ()) fairBoolFin) ∧
+      ¬nonconvexSelection.IsEquilibriumIn () (fun _ => 0) fairBoolFin := by
+  constructor
+  · exact (ProbOpenGame.idWire_seq_isEquilibriumIn_product_iff
+      nonconvexSelection () (fun _ => 0) fairBoolFin).2
+        fairBoolFin_mem_nonconvexClosure
+  · exact fairBoolFin_not_nonconvexEquilibrium
+
+/-- Perfectly correlated fair bits. -/
+def diagonalBoolFin : Math.FinPMF (Bool × Bool) :=
+  Math.FinPMF.map (fun b => (b, b)) fairBoolFin
+
+private theorem fairBoolFin_fullSupport (b : Bool) :
+    b ∈ fairBoolFin.support := by
+  change PMF.uniformOfFintype Bool b ≠ 0
+  rw [PMF.uniformOfFintype_apply]
+  norm_num
+
+private theorem diagonalBoolFin_mem_tensorClosure :
+    diagonalBoolFin ∈ Math.FinPMF.convexClosure
+      {φ | (ProbOpenGame.actionDecision Bool ⊗ₚ
+        ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
+          (fun _ => (0, 0)) φ} := by
+  let vertices : Math.FinPMF (Math.FinPMF (Bool × Bool)) :=
+    Math.FinPMF.map
+      (fun b => Math.FinPMF.product (Math.FinPMF.pure b)
+        (Math.FinPMF.pure b)) fairBoolFin
+  refine ⟨vertices, ?_, ?_⟩
+  · change ∀ ψ : Math.FinPMF (Bool × Bool), ψ ∈ vertices.support →
+      (ProbOpenGame.actionDecision Bool ⊗ₚ
+        ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
+          (fun _ => (0, 0)) ψ
+    intro ψ hψ
+    rw [show vertices.support =
+      (fun b => Math.FinPMF.product (Math.FinPMF.pure b)
+        (Math.FinPMF.pure b)) '' fairBoolFin.support by
+          exact Math.FinPMF.support_map _ _] at hψ
+    rcases hψ with ⟨b, _hb, rfl⟩
+    simp [ProbOpenGame.tensor, ProbOpenGame.actionDecision,
+      ProbOpenGame.expect]
+  · have hvertices : vertices =
+        Math.FinPMF.map Math.FinPMF.pure diagonalBoolFin := by
+      simp only [vertices, diagonalBoolFin, Math.FinPMF.product_pure,
+        Math.FinPMF.map_comp]
+      congr 1
+    change Math.FinPMF.join vertices = diagonalBoolFin
+    rw [hvertices, Math.FinPMF.join_map_pure]
+
+private theorem diagonalBoolFin_not_tensorEquilibrium :
+    ¬(ProbOpenGame.actionDecision Bool ⊗ₚ
+      ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
+        (fun _ => (0, 0)) diagonalBoolFin := by
+  intro h
+  have hfactor : diagonalBoolFin =
+      Math.FinPMF.product (Math.FinPMF.map Prod.fst diagonalBoolFin)
+        (Math.FinPMF.map Prod.snd diagonalBoolFin) := h.1
+  have hfst : Math.FinPMF.map Prod.fst diagonalBoolFin = fairBoolFin := by
+    rw [diagonalBoolFin, Math.FinPMF.map_comp]
+    change Math.FinPMF.map id fairBoolFin = fairBoolFin
+    exact Math.FinPMF.map_id fairBoolFin
+  have hsnd : Math.FinPMF.map Prod.snd diagonalBoolFin = fairBoolFin := by
+    rw [diagonalBoolFin, Math.FinPMF.map_comp]
+    change Math.FinPMF.map id fairBoolFin = fairBoolFin
+    exact Math.FinPMF.map_id fairBoolFin
+  have hoffProduct : (false, true) ∈
+      (Math.FinPMF.product fairBoolFin fairBoolFin).support :=
+    (Math.FinPMF.mem_support_product_iff _ _ _ _).2
+      ⟨fairBoolFin_fullSupport false, fairBoolFin_fullSupport true⟩
+  have hoffDiagonal : (false, true) ∉ diagonalBoolFin.support := by
+    rw [diagonalBoolFin, Math.FinPMF.support_map]
+    rintro ⟨b, _hb, hpair⟩
+    cases b <;> simp at hpair
+  apply hoffDiagonal
+  rw [hfactor, hfst, hsnd]
+  exact hoffProduct
+
+/-- Convex closure is not preserved by parallel composition: each pure
+diagonal profile is an equilibrium of the zero-payoff decision tensor, but
+their correlated fair mixture violates the required independence factor. -/
+theorem probabilistic_tensor_equilibria_need_not_be_convex :
+    diagonalBoolFin ∈ Math.FinPMF.convexClosure
+      {φ | (ProbOpenGame.actionDecision Bool ⊗ₚ
+        ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
+          (fun _ => (0, 0)) φ} ∧
+      ¬(ProbOpenGame.actionDecision Bool ⊗ₚ
+        ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
+          (fun _ => (0, 0)) diagonalBoolFin :=
+  ⟨diagonalBoolFin_mem_tensorClosure,
+    diagonalBoolFin_not_tensorEquilibrium⟩
+
+/-- Although individual mixed decisions have convex equilibrium sets,
+parallel composition need not preserve that property: the tensor requires an
+independent joint law, while a convex mixture of independent laws may be
+correlated. -/
+theorem probabilistic_tensor_does_not_preserve_convexEquilibria :
+    ProbOpenGame.HasConvexEquilibria
+        (ProbOpenGame.actionDecision Bool) ∧
+      ¬ProbOpenGame.HasConvexEquilibria
+        (ProbOpenGame.actionDecision Bool ⊗ₚ
+          ProbOpenGame.actionDecision Bool) := by
+  constructor
+  · exact ProbOpenGame.actionDecision_hasConvexEquilibria Bool
+  · intro hconvex
+    exact diagonalBoolFin_not_tensorEquilibrium
+      (hconvex ((), ()) (fun _ => (0, 0))
+        diagonalBoolFin_mem_tensorClosure)
+
 private instance matchingPenniesOutcomeFinite :
     Finite NFG.matchingPennies.Outcome := by
   change Finite (∀ _ : Bool, NFG.MPAction)

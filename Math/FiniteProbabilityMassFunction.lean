@@ -140,6 +140,15 @@ theorem mem_support_product_iff (μ : FinPMF α) (ν : FinPMF β)
   apply ext
   exact PMF.bind_const μ.toPMF ν.toPMF
 
+theorem bind_congr_on_support (μ : FinPMF α)
+    (f g : α → FinPMF β)
+    (hfg : ∀ a, a ∈ μ.support → f a = g a) :
+    bind μ f = bind μ g := by
+  apply ext
+  exact ProbabilityMassFunction.bind_congr_on_support μ.toPMF
+    (fun a => (f a).toPMF) (fun a => (g a).toPMF)
+    (fun a ha => congrArg toPMF (hfg a ha))
+
 @[simp] theorem bind_bind (μ : FinPMF α) (f : α → FinPMF β)
     (g : β → FinPMF γ) :
     bind (bind μ f) g = bind μ fun a => bind (f a) g := by
@@ -291,6 +300,14 @@ theorem expect_mono (μ : FinPMF α) {u v : α → ℝ}
   exact Finset.sum_le_sum fun a _ =>
     mul_le_mul_of_nonneg_left (huv a) ENNReal.toReal_nonneg
 
+theorem expect_mono_on_support (μ : FinPMF α) {u v : α → ℝ}
+    (huv : ∀ a, a ∈ μ.support → u a ≤ v a) :
+    Probability.expect μ.toPMF u ≤ Probability.expect μ.toPMF v := by
+  rw [expect_eq_sum_support, expect_eq_sum_support]
+  exact Finset.sum_le_sum fun a ha =>
+    mul_le_mul_of_nonneg_left
+      (huv a (Set.Finite.mem_toFinset _ |>.1 ha)) ENNReal.toReal_nonneg
+
 theorem expect_le_const (μ : FinPMF α) (u : α → ℝ) (c : ℝ)
     (h : ∀ a, u a ≤ c) :
     Probability.expect μ.toPMF u ≤ c := by
@@ -327,6 +344,47 @@ distributions. -/
 def convexClosure (S : Set (FinPMF α)) : Set (FinPMF α) :=
   {ν | ∃ θ : FinPMF (FinPMF α), θ.support ⊆ S ∧ join θ = ν}
 
+theorem subset_convexClosure (S : Set (FinPMF α)) :
+    S ⊆ convexClosure S := by
+  intro ν hν
+  exact ⟨pure ν, by simpa using hν, by simp⟩
+
+theorem convexClosure_mono {S T : Set (FinPMF α)} (hST : S ⊆ T) :
+    convexClosure S ⊆ convexClosure T := by
+  rintro ν ⟨θ, hθ, hjoin⟩
+  exact ⟨θ, hθ.trans hST, hjoin⟩
+
+/-- Finite convex closure is idempotent. -/
+theorem convexClosure_idempotent (S : Set (FinPMF α)) :
+    convexClosure (convexClosure S) = convexClosure S := by
+  classical
+  apply Set.Subset.antisymm
+  · rintro ν ⟨θ, hθ, hjoinθ⟩
+    let choose : FinPMF α → FinPMF (FinPMF α) := fun ψ =>
+      if hψ : ψ ∈ θ.support then Classical.choose (hθ hψ) else pure ψ
+    have choose_support (ψ : FinPMF α) (hψ : ψ ∈ θ.support) :
+        (choose ψ).support ⊆ S := by
+      simpa only [choose, dif_pos hψ] using
+        (Classical.choose_spec (hθ hψ)).1
+    have choose_join (ψ : FinPMF α) (hψ : ψ ∈ θ.support) :
+        join (choose ψ) = ψ := by
+      simpa only [choose, dif_pos hψ] using
+        (Classical.choose_spec (hθ hψ)).2
+    refine ⟨bind θ choose, ?_, ?_⟩
+    · intro φ hφ
+      rw [support_bind] at hφ
+      simp only [Set.mem_iUnion] at hφ
+      rcases hφ with ⟨ψ, hψ, hφ⟩
+      exact choose_support ψ hψ hφ
+    · calc
+        join (bind θ choose) = bind θ (fun ψ => join (choose ψ)) := by
+          simp only [join, bind_bind]
+        _ = bind θ id := bind_congr_on_support θ _ _ fun ψ hψ => by
+          simpa using choose_join ψ hψ
+        _ = join θ := rfl
+        _ = ν := hjoinθ
+  · exact subset_convexClosure (convexClosure S)
+
 /-- The concrete relational Kleisli lifting `D̄#` from Definition 11 of
 Ghani--Kupke--Lambert--Nordvall Forsberg.  At each supported input it may
 randomize among admissible output distributions, then takes their total
@@ -354,6 +412,34 @@ theorem relKleisli_pure_of_mem (R : α → Set (FinPMF β))
     have hxa : x = a := by simpa using hx
     subst x
     simpa using hν
+  · simp [join]
+
+/-- At a point input, the lifting is exactly convex closure of the
+pointwise admissible set. -/
+theorem relKleisli_pure_iff (R : α → Set (FinPMF β))
+    (a : α) (ν : FinPMF β) :
+    RelKleisli R (pure a) ν ↔ ν ∈ convexClosure (R a) := by
+  constructor
+  · rintro ⟨choose, hsupp, hjoin⟩
+    refine ⟨choose a, ?_, ?_⟩
+    · exact hsupp a (by simp)
+    · simpa using hjoin
+  · rintro ⟨θ, hθ, hjoin⟩
+    refine ⟨fun _ => θ, ?_, ?_⟩
+    · intro x hx
+      have hxa : x = a := by simpa using hx
+      simpa [hxa] using hθ
+    · simpa using hjoin
+
+/-- A single output distribution that is admissible at every supported input
+is admitted by the relational lifting. -/
+theorem relKleisli_of_forall_mem (R : α → Set (FinPMF β))
+    (μ : FinPMF α) (ν : FinPMF β)
+    (hν : ∀ a, a ∈ μ.support → ν ∈ R a) :
+    RelKleisli R μ ν := by
+  refine ⟨fun _ => pure ν, ?_, ?_⟩
+  · intro a ha
+    simpa using hν a ha
   · simp [join]
 
 /-- On a constant predicate, the relational lifting is exactly finite convex
