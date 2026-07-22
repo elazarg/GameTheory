@@ -119,108 +119,25 @@ The language layer treats concrete presentations as syntax plus semantics:
 | Intrinsic | Witsenhausen-style intrinsic information structures |
 | OpenGame | Compositional games with forward play and backward cooutcomes |
 
-The deterministic OpenGame layer provides sequential/tensor wiring, laws up
-to strategy and boundary equivalence, context-indexed Nash compilation, and
-finite-horizon sequential shapes with one decision owner per stage, including
-dependent prefix histories and stage-specific action types. The homogeneous
-horizon recovers the existing two-stage shape up to its canonical
-function/product equivalence. A separate ownership layer groups multiple
-decisions per player, compiles player-form deviations, proves equivalence with
-agent form for injective ownership, and gives a strict two-stage separation
-witness when one player owns both decisions. Its representation-independent
-core now applies the same compilation and implications to sparse DAG nodes. A
-generic deviation-family layer then treats node, owner-fibre, and coalition
-scopes uniformly; its stability predicate recovers the sequential and DAG
-agent/player-form notions exactly, while deliberately leaving coalition
-objectives unspecified. The two-stage
-perfect-information
-bridge additionally reaches EFG subgame perfection and the one-shot-deviation
-principle. For arbitrary finite heterogeneous horizons, the conditioned
-predicate reduces exactly to one action change at each reached counterfactual
-history. Every dependent history is proved reachable in the induced EFG, its
-continuation evaluates to the same pure action path, and perfect information
-identifies arbitrary reachable decision nodes with these canonical subtrees.
-Consequently conditioned open equilibrium is exactly EFG subgame-perfect
-equilibrium at every finite heterogeneous horizon.
-The sequential core also now has a sparse typed `DecisionDAG` generalization:
-each naturally topologically numbered decision observes an arbitrary finite
-parent set, realization is well founded, plain equilibrium still compiles
-exactly to kernel Nash, and plan changes are proved irrelevant outside their
-causal descendant cones. The complete-parent DAG is proved isomorphic to
-`ShapeSeqDep`, including realization and equilibrium, so this is a strict API
-generalization rather than a parallel encoding. At the other extreme, the
-edgeless DAG is proved isomorphic to the closed `ShapeN` simultaneous shape;
-the sparse family therefore coheres with both endpoint APIs. Graph-conditioned
-equilibrium varies only strict causal ancestors, has an exact one-action
-presentation, strengthens plain equilibrium in general, and collapses back to
-plain equilibrium on the edgeless graph. On the complete graph it is proved
-isomorphic to the existing `ShapeSeqDep.conditioned` semantics. No
-sparse-information SPE claim is made without the corresponding
-information-set hypotheses. Finite local stochastic kernels on the same typed
-DAG are evaluated by the existing order-independent MAID/Bayesian-network
-factorization; deterministic plans embed as point kernels and are proved to
-recover exactly the original `ShapeDAG.realize` path. This supplies a chance
-and behavioral-kernel semantic foundation without misrepresenting stochastic
-play as an atom of the deterministic `OpenGame` record.
-Finite heterogeneous sequential shapes also have a canonical
-agent-form MAID bridge: dependent histories are exactly MAID information sets,
-pure policies and total assignments are equivalent to contingent profiles and
-action paths, utilities agree pointwise, the node order is topological, and
-perfect recall holds. Passing this presentation through the existing
-MAID-to-EFG bridge yields a behavioral kernel-game bisimulation and EFG
-perfect recall. The generic bridge now also exposes an exact equivalence of
-pure contingent plans and a bisimulation of the pure strategic forms; hence
-plain open equilibrium is exactly ordinary strategic-form Nash in the induced
-EFG. The canonical natural node order is now explicit, and a generic
-chance-free/full-observation criterion proves this induced tree has perfect
-information. Consequently its SPE and EFG one-shot-deviation predicates are
-equivalent, and both coincide with the open conditioned predicate.
-Native pure-policy evaluation is also adequate: its projected assignment law
-is the point mass at the open-game realization, and pure contingent-plan
-equilibrium agrees exactly with native pure-policy Nash, including arbitrary
-mixed deviations over complete contingent plans. The native Kuhn bridge now
-strengthens this further to arbitrary behavioral randomization at individual
-information sets: a unilateral behavioral deviation preserves every other
-player's pure plan, and perfect recall converts the deviator's policy to a
-mixture over complete plans. Backward
-values are called *cooutcomes* (the
-open-games literature also says *coutilities*). Closed, deliberately
-non-compositional devices recover CE, CCE, and pure-profile public
-randomization over Nash equilibria, with checked strict-separation examples.
-The Bayesian-context foundation implements the concrete hidden-state coend:
-joint finite laws on `Θ × X` and continuation kernels `Θ × Y → FinPMF R` are
-quotiented by reparameterization. Deterministic contexts embed canonically;
-visible-history, unconditional-response, and policy-indexed joint
-history/cooutcome laws descend to the quotient. The joint law retains hidden
-correlation and recovers the two existing marginals in the constant-policy
-cases. Full Bayesian open-game composition is not yet claimed.
-Evolutionary stability has an exact symmetric-shape bridge: its Nash clause is
-ordinary open-game equilibrium and its second clause is the additional
-invasion-stability condition. ESS is proved closed under independent additive
-products, which also yields equilibrium of the product-strategy symmetric
-shape; no arbitrary sequential/tensor ESS closure is claimed.
-The probabilistic layer uses finite-support `FinPMF` distributions and
-expectation algebras for `GProb`-style sequential/tensor composition and its
-relational Kleisli lifting. Its two-player decision tensor is equivalent to
-the existing mixed-Nash semantics; Matching Pennies has the expected unique
-half/half solution. For arbitrary carried equilibrium predicates, the exact
-lifting convexifies the later game's selected set at a point input; the API
-records both the resulting left-identity condition and a checked obstruction
-showing that independent sequential and tensor composition do not preserve
-convex closure. The implemented Lemma 16 repair compares games up to
-convex-closed equilibrium semantics and proves both sequential unit laws under
-that equivalence. A checked history-dependent counterexample shows this
-equivalence is not a left congruence for raw composition, so it repairs the
-unit equations but cannot by itself form a quotient category. Repair candidate
-(a) is implemented as `ProbOpenGame.Saturated`: morphisms bundle
-convex-closed equilibrium predicates and composition convex-closes afterward.
-Closure and both unitors are proved. Checked Boolean history/echo witnesses
-show, however, that both raw sequential composition (the paper's Theorem 15)
-and this post-closed composition fail canonical associativity. The raw
-bracketings are in fact incomparable after reassociation, ruling out
-equilibrium-inclusion lax associators in either direction. Thus neither convex
-closure repair produces the category claimed by Lemma 16; the remaining problem
-requires changing the lifting or the treatment of joint strategy laws.
+The OpenGame layer combines deterministic wiring with finite simultaneous,
+sequential, and sparse-DAG shapes. Shared ownership and deviation-family cores
+avoid representation-specific solution concepts, while exact NFG, EFG, and
+MAID bridges reuse the library's existing semantics. In particular,
+conditioned finite sequential equilibrium coincides with induced-EFG SPE under
+the stated perfect-information hypotheses. Backward values are called
+*cooutcomes* (also *coutilities* in the literature).
+
+Finite extensions cover correlation devices, evolutionary stability,
+hidden-state coend contexts, and `FinPMF`-based probabilistic composition. DAG
+evaluation delegates to the MAID/Bayesian-network factorization rather than
+introducing a second stochastic evaluator.
+
+The probabilistic development also records scoped falsifications: checked
+finite witnesses show that the tested independent-law relational lifting does
+not satisfy the claimed category laws, and that convex closing does not repair
+associativity. This concerns that particular equilibrium lifting—not
+probabilistic open games generally—and motivates retaining causal or coupling
+witnesses through composition.
 
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition
