@@ -7190,6 +7190,98 @@ theorem slowCalendarStart_slowUnitStepCalendar_le
   exact Nat.findGreatest_spec (P := fun n => slowCalendarStart B n ≤ t)
     (Nat.zero_le t) (by simp [slowCalendarStart])
 
+theorem slowUnitStepCalendar_slowCalendarStart
+    (B : ℕ → ℝ) (n : ℕ) :
+    slowUnitStepCalendar B (slowCalendarStart B n) = n := by
+  apply le_antisymm
+  · let k := slowUnitStepCalendar B (slowCalendarStart B n)
+    have hkStart : slowCalendarStart B k ≤ slowCalendarStart B n :=
+      slowCalendarStart_slowUnitStepCalendar_le B (slowCalendarStart B n)
+    by_contra hnot
+    have hnk : n < k := Nat.lt_of_not_ge hnot
+    have hlt := strictMono_slowCalendarStart B hnk
+    omega
+  · have hnStart : n ≤ slowCalendarStart B n :=
+      (strictMono_slowCalendarStart B).id_le n
+    exact Nat.le_findGreatest hnStart le_rfl
+
+/-- Calendar layer `n` occupies exactly the half-open activation interval
+from its own start time to the next layer's start time. -/
+theorem slowUnitStepCalendar_eq_iff
+    (B : ℕ → ℝ) (t n : ℕ) :
+    slowUnitStepCalendar B t = n ↔
+      slowCalendarStart B n ≤ t ∧ t < slowCalendarStart B (n + 1) := by
+  constructor
+  · intro hν
+    constructor
+    · simpa only [hν] using slowCalendarStart_slowUnitStepCalendar_le B t
+    · by_contra hnot
+      have hnext : slowCalendarStart B (n + 1) ≤ t :=
+        Nat.le_of_not_gt hnot
+      have hnextT : n + 1 ≤ t :=
+        (strictMono_slowCalendarStart B).id_le (n + 1) |>.trans hnext
+      have hle : n + 1 ≤ slowUnitStepCalendar B t :=
+        Nat.le_findGreatest hnextT hnext
+      rw [hν] at hle
+      omega
+  · rintro ⟨hstart, hnext⟩
+    have hnt : n ≤ t :=
+      (strictMono_slowCalendarStart B).id_le n |>.trans hstart
+    have hnle : n ≤ slowUnitStepCalendar B t :=
+      Nat.le_findGreatest hnt hstart
+    apply le_antisymm
+    · by_contra hnot
+      have hnextle : n + 1 ≤ slowUnitStepCalendar B t := by omega
+      have hmono := (strictMono_slowCalendarStart B).monotone hnextle
+      have hgreatest := slowCalendarStart_slowUnitStepCalendar_le B t
+      omega
+    · exact hnle
+
+/-- Number of calendar stages for which one slow-calendar layer is held. -/
+noncomputable def slowCalendarBlockLength (B : ℕ → ℝ) (n : ℕ) : ℕ :=
+  slowCalendarStart B (n + 1) - slowCalendarStart B n
+
+theorem slowCalendarStart_add_blockLength (B : ℕ → ℝ) (n : ℕ) :
+    slowCalendarStart B n + slowCalendarBlockLength B n =
+      slowCalendarStart B (n + 1) := by
+  unfold slowCalendarBlockLength
+  exact Nat.add_sub_of_le
+    (strictMono_slowCalendarStart B (Nat.lt_succ_self n)).le
+
+/-- At activation times, the total repeated cost is exactly the weighted sum
+of layer costs by their block lengths. -/
+theorem sum_slowUnitStepCalendar_at_start
+    (B h : ℕ → ℝ) (N : ℕ) :
+    ∑ t ∈ Finset.range (slowCalendarStart B N),
+        h (slowUnitStepCalendar B t) =
+      ∑ n ∈ Finset.range N, (slowCalendarBlockLength B n : ℝ) * h n := by
+  induction N with
+  | zero => simp [slowCalendarStart]
+  | succ N ih =>
+      let L := slowCalendarBlockLength B N
+      have hstart : slowCalendarStart B N + L =
+          slowCalendarStart B (N + 1) :=
+        slowCalendarStart_add_blockLength B N
+      have hblock : ∑ t ∈ Finset.range L,
+          h (slowUnitStepCalendar B (slowCalendarStart B N + t)) =
+          (L : ℝ) * h N := by
+        calc
+          ∑ t ∈ Finset.range L,
+              h (slowUnitStepCalendar B (slowCalendarStart B N + t)) =
+              ∑ _t ∈ Finset.range L, h N := by
+            apply Finset.sum_congr rfl
+            intro t ht
+            congr 1
+            apply (slowUnitStepCalendar_eq_iff B
+              (slowCalendarStart B N + t) N).2
+            constructor
+            · omega
+            · have htL : t < L := Finset.mem_range.mp ht
+              omega
+          _ = (L : ℝ) * h N := by simp
+      rw [← hstart, Finset.sum_range_add, ih, hblock,
+        Finset.sum_range_succ]
+
 theorem monotone_slowUnitStepCalendar (B : ℕ → ℝ) :
     Monotone (slowUnitStepCalendar B) := by
   intro s t hst
@@ -7372,6 +7464,33 @@ theorem sum_finkCorrectedTargetStepError_unitStep_le_hold_add_tsum
     _ ≤ ∑' n, G.finkCorrectedTargetStepError W R z n := by
       exact hsummable.sum_le_tsum (Finset.range (ν T))
         (fun n _ => G.finkCorrectedTargetStepError_nonneg W R z n)
+
+/-- For the concrete slow calendar, the unresolved repeated-drift bill is
+exactly the block-length-weighted hold error.  The fast adjacent correction
+bill remains bounded by its original `tsum`. -/
+theorem sum_finkCorrectedTargetStepError_slowCalendar_at_start_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U) (B : ℕ → ℝ)
+    (hsummable : Summable (fun n =>
+      G.finkCorrectedTargetStepError W R z n))
+    (N : ℕ) :
+    ∑ t ∈ Finset.range (slowCalendarStart B N),
+        G.finkCorrectedTargetStepError W
+          (R ∘ slowUnitStepCalendar B)
+          (z ∘ slowUnitStepCalendar B) t ≤
+      ∑ n ∈ Finset.range N, (slowCalendarBlockLength B n : ℝ) *
+        G.finkCorrectedTargetHoldError W R z n +
+      ∑' n, G.finkCorrectedTargetStepError W R z n := by
+  have hbound :=
+    G.sum_finkCorrectedTargetStepError_unitStep_le_hold_add_tsum
+      W R z (slowUnitStepCalendar B)
+      (slowUnitStepCalendar_zero B)
+      (slowUnitStepCalendar_step B) hsummable (slowCalendarStart B N)
+  rw [sum_slowUnitStepCalendar_at_start B
+    (fun n => G.finkCorrectedTargetHoldError W R z n) N] at hbound
+  exact hbound
 
 /-- Sharp adjacent switching charge obtained by centering the scaled Fink
 bias at a target vector `W`.  The first term is the actual relative-bias
