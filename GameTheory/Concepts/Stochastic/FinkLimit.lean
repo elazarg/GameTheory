@@ -427,6 +427,33 @@ def strictContinuationMass
   ∑ d ∈ G.strictContinuationActions xref W s who,
     ((x s who) d).toReal
 
+/-- Outside the strict-loss set, excessiveness makes a reference action
+exactly continuation-neutral.  Therefore coordinatewise approximation of its
+continuation value is approximation to the target itself. -/
+theorem abs_pureDeviationContinuation_sub_target_le_of_not_mem_strict
+    (G : StochasticGame ι) [Finite G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (xref x : G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who) (r : ℝ)
+    (hexcessive :
+      expect (pmfPi (Function.update (xref s) who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hclose :
+      |expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who)) -
+        expect (pmfPi (Function.update (xref s) who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => W s' who))| ≤ r)
+    (hneutral : d ∉ G.strictContinuationActions xref W s who) :
+    |expect (pmfPi (Function.update (x s) who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) - W s who| ≤ r := by
+  have hnlt : ¬ expect (pmfPi (Function.update (xref s) who (PMF.pure d)))
+      (fun a => expect (G.transition s a) (fun s' => W s' who)) < W s who := by
+    simpa [strictContinuationActions] using hneutral
+  have heq : expect (pmfPi (Function.update (xref s) who (PMF.pure d)))
+      (fun a => expect (G.transition s a) (fun s' => W s' who)) = W s who :=
+    le_antisymm hexcessive (le_of_not_gt hnlt)
+  simpa only [heq] using hclose
+
 /-- Coordinatewise pruning estimates sum to an estimate on the entire strict
 continuation-loss mass. -/
 theorem strictContinuationMass_mul_le
@@ -839,6 +866,33 @@ theorem eventually_finkValue_close
   filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
   simpa only [Real.dist_eq] using (le_of_lt hn)
 
+/-- Pure-deviation continuation values converge uniformly over the finite
+state-player-action coordinates. -/
+theorem eventually_finkPureDeviationContinuation_close
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim)) (W : G.State → Payoff ι)
+    {η : ℝ} (hη : 0 < η) :
+    ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+      |expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) -
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who))| ≤ η := by
+  rw [Filter.eventually_all]
+  intro s
+  rw [Filter.eventually_all]
+  intro who
+  rw [Filter.eventually_all]
+  intro d
+  have ht := G.tendsto_finkProfile_pureDeviationContinuation hz
+    (fun s' => W s' who) s who d
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp ht η hη
+  filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+  simpa only [Real.dist_eq] using (le_of_lt hn)
+
 /-- A further subsequence can be chosen so value convergence and all
 harmonic/excessive transition residuals are bounded explicitly by
 `1 / (n + 1)`.  This leaves scaled-bias growth as the only uncontrolled rate. -/
@@ -864,6 +918,14 @@ theorem exists_strictMono_finkApproximation_subsequence
         |expect (pmfPi (G.finkProfile (z (ψ n)) s)) (fun a =>
             expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
           G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      (∀ s who (d : G.Act who),
+        |expect (pmfPi (Function.update (G.finkProfile (z (ψ n)) s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
+        expect (pmfPi (Function.update (G.finkProfile zlim s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => G.finkValue zlim s' who))| ≤
+            (((n + 1 : ℕ) : ℝ))⁻¹) ∧
       ∀ s who (dev : PMF (G.Act who)),
         expect (pmfPi (Function.update (G.finkProfile (z (ψ n)) s) who dev))
             (fun a => expect (G.transition s a)
@@ -877,6 +939,14 @@ theorem exists_strictMono_finkApproximation_subsequence
       |expect (pmfPi (G.finkProfile (z k) s)) (fun a =>
           expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
         G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+    (∀ s who (d : G.Act who),
+      |expect (pmfPi (Function.update (G.finkProfile (z k) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => G.finkValue zlim s' who))| ≤
+          (((n + 1 : ℕ) : ℝ))⁻¹) ∧
     ∀ s who (dev : PMF (G.Act who)),
       expect (pmfPi (Function.update (G.finkProfile (z k) s) who dev))
           (fun a => expect (G.transition s a)
@@ -888,8 +958,10 @@ theorem exists_strictMono_finkApproximation_subsequence
     have hv := G.eventually_finkValue_close hz hη
     have hd := G.eventually_finkProfile_harmonic_excessive_close hz
       (G.finkValue zlim) hharmonic hexcessive hη
-    filter_upwards [hv, hd] with k hk hdk
-    exact ⟨hk, hdk⟩
+    have hpure := G.eventually_finkPureDeviationContinuation_close hz
+      (G.finkValue zlim) hη
+    filter_upwards [hv, hd, hpure] with k hk hdk hpk
+    exact ⟨hk, hdk.1, hpk, hdk.2⟩
   have hexN : ∀ n, ∃ N, ∀ k, N ≤ k → P n k := by
     intro n
     exact Filter.eventually_atTop.mp (hev n)
@@ -1319,6 +1391,18 @@ theorem exists_fast_approachOne_finkFixedPoint_family
       (∀ n, G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n) ∧
       Tendsto β atTop (nhds 1) ∧
       Tendsto z atTop (nhds zlim) ∧
+      (∀ s who,
+        G.finkValue zlim s who =
+          expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+            expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who))) ∧
+      (∀ s who (d : G.Act who),
+        expect (pmfPi (Function.update (G.finkProfile zlim s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a)
+            (fun s' => G.finkValue zlim s' who)) ≤ G.finkValue zlim s who) ∧
+      G.IsContinuationNeutralOnSupport (G.finkProfile zlim)
+        (G.finkValue zlim) ∧
       (∀ n,
         (∀ s who,
           |G.finkValue (z n) s who - G.finkValue zlim s who| ≤
@@ -1328,11 +1412,27 @@ theorem exists_fast_approachOne_finkFixedPoint_family
               expect (G.transition s a)
                 (fun s' => G.finkValue zlim s' who)) -
             G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+        (∀ s who (d : G.Act who),
+          |expect (pmfPi (Function.update (G.finkProfile (z n) s)
+              who (PMF.pure d))) (fun a =>
+            expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
+          expect (pmfPi (Function.update (G.finkProfile zlim s)
+              who (PMF.pure d))) (fun a =>
+            expect (G.transition s a) (fun s' => G.finkValue zlim s' who))| ≤
+              (((n + 1 : ℕ) : ℝ))⁻¹) ∧
         ∀ s who (dev : PMF (G.Act who)),
           expect (pmfPi (Function.update (G.finkProfile (z n) s) who dev))
               (fun a => expect (G.transition s a)
                 (fun s' => G.finkValue zlim s' who)) ≤
             G.finkValue zlim s who + (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      (∀ n s who (d : G.Act who),
+        d ∉ G.strictContinuationActions (G.finkProfile zlim)
+            (G.finkValue zlim) s who →
+        |expect (pmfPi (Function.update (G.finkProfile (z n) s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a)
+            (fun s' => G.finkValue zlim s' who)) - G.finkValue zlim s who| ≤
+              (((n + 1 : ℕ) : ℝ))⁻¹) ∧
       ∃ δ : ℝ, 0 < δ ∧ ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
         expect (pmfPi (Function.update (G.finkProfile zlim s)
             who (PMF.pure d))) (fun a =>
@@ -1376,6 +1476,10 @@ theorem exists_fast_approachOne_finkFixedPoint_family
   have hzFast : Tendsto z atTop (nhds zlim) := by
     have ht := hzlim.comp hψ.tendsto_atTop
     simpa only [z, Function.comp_def] using ht
+  have hneutral : G.IsContinuationNeutralOnSupport (G.finkProfile zlim)
+      (G.finkValue zlim) := by
+    exact G.isContinuationNeutralOnSupport_of_harmonic_excessive
+      zlim (G.finkValue zlim) hharmonic hexcessive
   have happroxFast : ∀ n,
       (∀ s who,
         |G.finkValue (z n) s who - G.finkValue zlim s who| ≤
@@ -1385,6 +1489,14 @@ theorem exists_fast_approachOne_finkFixedPoint_family
             expect (G.transition s a)
               (fun s' => G.finkValue zlim s' who)) -
           G.finkValue zlim s who| ≤ (((n + 1 : ℕ) : ℝ))⁻¹) ∧
+      (∀ s who (d : G.Act who),
+        |expect (pmfPi (Function.update (G.finkProfile (z n) s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => G.finkValue zlim s' who)) -
+        expect (pmfPi (Function.update (G.finkProfile zlim s)
+            who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) (fun s' => G.finkValue zlim s' who))| ≤
+            (((n + 1 : ℕ) : ℝ))⁻¹) ∧
       ∀ s who (dev : PMF (G.Act who)),
         expect (pmfPi (Function.update (G.finkProfile (z n) s) who dev))
             (fun a => expect (G.transition s a)
@@ -1398,9 +1510,22 @@ theorem exists_fast_approachOne_finkFixedPoint_family
       (fun n s who => by
         have h := (abs_le.mp ((happroxFast n).2.1 s who)).1
         linarith)
-      (fun n s who d => (happroxFast n).2.2 s who (PMF.pure d))
+      (fun n s who d => (happroxFast n).2.2.2 s who (PMF.pure d))
+  have hneutralRate : ∀ n s who (d : G.Act who),
+      d ∉ G.strictContinuationActions (G.finkProfile zlim)
+          (G.finkValue zlim) s who →
+      |expect (pmfPi (Function.update (G.finkProfile (z n) s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a)
+          (fun s' => G.finkValue zlim s' who)) - G.finkValue zlim s who| ≤
+            (((n + 1 : ℕ) : ℝ))⁻¹ := by
+    intro n s who d hd
+    exact G.abs_pureDeviationContinuation_sub_target_le_of_not_mem_strict
+      (G.finkProfile zlim) (G.finkProfile (z n)) (G.finkValue zlim)
+        s who d (((n + 1 : ℕ) : ℝ))⁻¹ (hexcessive s who d)
+          ((happroxFast n).2.2.1 s who d) hd
   exact ⟨β, z, zlim, hβ0, hβ1, hfixFast, hβFast, hzFast,
-    happroxFast, hprune⟩
+    hharmonic, hexcessive, hneutral, happroxFast, hneutralRate, hprune⟩
 
 -- ============================================================================
 -- Calendar schedules indexed by discounted Fink fixed points
