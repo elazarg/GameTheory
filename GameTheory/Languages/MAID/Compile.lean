@@ -6,7 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.MAID.Syntax
 import GameTheory.Languages.MAID.SOS
-import GameTheory.Languages.InfoModel.InfoGame
+import GameTheory.Languages.InfoModel.SemanticForm
 import GameTheory.Languages.InfoModel.Simulation
 
 /-!

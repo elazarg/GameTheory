@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Core.KernelGame
 import GameTheory.Core.GameMorphism
 import Math.PMFIter
-import GameTheory.Languages.InfoModel.InfoGame
+import GameTheory.Languages.InfoModel.SemanticForm
 import GameTheory.Languages.InfoModel.Simulation
 import GameTheory.Languages.MultiRound.SOS
 import Math.PMFProduct

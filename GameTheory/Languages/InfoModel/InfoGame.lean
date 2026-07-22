@@ -13,7 +13,10 @@ Common-knowledge game layer over InfoModel.
 
 `InfoModel` carries latent state and visibility.
 `ControlModel` carries common-knowledge controller specifications.
-`InfoGame` packages both as a game-level target for language compilation.
+`InfoGame` packages both as a retained public extension point for clients that
+want a common-knowledge controller layer. Current in-tree language compilers
+target `InfoModel` plus simulation/bisimulation witnesses directly; they do not
+construct `InfoGame` values.
 -/
 
 namespace GameTheory

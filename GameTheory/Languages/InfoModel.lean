@@ -13,4 +13,8 @@ import GameTheory.Languages.InfoModel.Simulation
 
 Information-model game language: multi-agent state machines with public and
 private observation layers, execution dynamics, and the InfoModel lemma library.
+
+`InfoGame` is re-exported as an optional public extension point for packaging a
+common-knowledge control specification with an `InfoModel`. The current EFG,
+MAID, and MultiRound compilers target `InfoModel` directly.
 -/
