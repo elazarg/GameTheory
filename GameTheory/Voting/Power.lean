@@ -18,6 +18,9 @@ delegation concentrates influence in the casters.
 ## Main definitions
 
 * `Voting.delegationPowerGame` — the weighted majority game of guru weights
+* `Voting.delegationBanzhafPower` — probabilistic Banzhaf power in that game
+* `Voting.delegationShapleyShubikPower` — Shapley--Shubik power for an
+  achievable quota
 
 ## Main results
 
@@ -25,6 +28,8 @@ delegation concentrates influence in the casters.
   whose delegation chains end inside it meet the quota
 * `delegationPowerGame_isSimpleGame` — achievable quotas (at most the number
   of participants) yield simple games, so power indices apply
+* `sum_delegationShapleyShubikPower` — Shapley--Shubik delegation power sums
+  to one
 -/
 
 namespace GameTheory.Voting
@@ -71,5 +76,27 @@ theorem delegationPowerGame_isSimpleGame (d : DelegationProfile ι β) {q : ℕ}
     (hq : 0 < q) (hle : q ≤ d.participants.card) :
     (delegationPowerGame d q hq).IsSimpleGame :=
   CoalGame.weightedMajority_isSimpleGame hq (by rw [sum_weight_univ]; exact hle)
+
+/-- The probabilistic Banzhaf power of voter `i` in the weighted-majority game
+induced by the fixed delegation profile. This value is not normalized across
+voters. -/
+noncomputable def delegationBanzhafPower (d : DelegationProfile ι β)
+    (q : ℕ) (hq : 0 < q) (i : ι) : ℝ :=
+  (delegationPowerGame d q hq).banzhafIndex i
+
+/-- The Shapley--Shubik power of voter `i` in the simple delegation power game.
+The quota bound ensures that the grand coalition wins. -/
+noncomputable def delegationShapleyShubikPower (d : DelegationProfile ι β)
+    (q : ℕ) (hq : 0 < q) (hle : q ≤ d.participants.card) (i : ι) : ℝ :=
+  (delegationPowerGame d q hq).shapleyShubikIndex
+    (delegationPowerGame_isSimpleGame d hq hle) i
+
+/-- Shapley--Shubik power in an achievable-quota delegation game is normalized:
+the voters' powers sum to one. -/
+theorem sum_delegationShapleyShubikPower (d : DelegationProfile ι β)
+    (q : ℕ) (hq : 0 < q) (hle : q ≤ d.participants.card) :
+    ∑ i, delegationShapleyShubikPower d q hq hle i = 1 := by
+  exact CoalGame.shapleyShubikIndex_sum_eq_one
+    (delegationPowerGame d q hq) (delegationPowerGame_isSimpleGame d hq hle)
 
 end GameTheory.Voting
