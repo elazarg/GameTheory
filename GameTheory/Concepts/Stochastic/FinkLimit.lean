@@ -6069,6 +6069,42 @@ theorem exists_finkRelativeAnnealingCalendar
     · exact hBlim
   exact ⟨κ, hκlim, hterminalLim, hswitchLim⟩
 
+/-- Full annealing package.  Any ordinary value-error convergence survives
+the slow calendar, while the exact boundary-plus-switch expression tends to
+zero.  Only accumulated transition drift is absent from this package. -/
+theorem exists_finkRelativeAnnealingCalendar_with_valueError
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (q : ℕ → ℝ) (hq : Tendsto q atTop (nhds 0))
+    (hU : 0 ≤ U) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1) (hβlim : Tendsto β atTop (nhds 1)) :
+    ∃ κ : ℕ → ℕ,
+      Tendsto κ atTop atTop ∧
+      Tendsto (fun T : ℕ =>
+        (finkScaledBiasBound β U (κ 0) +
+            finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+            G.indexedFinkRelativeSwitchError β U z W κ t)
+        atTop (nhds 0) ∧
+      Tendsto (q ∘ κ) atTop (nhds 0) := by
+  obtain ⟨κ, hκ, hterminal, hswitch⟩ :=
+    G.exists_finkRelativeAnnealingCalendar
+      β U z W hU hβ0 hβ1 hβlim
+  have hinitial : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U (κ 0)) atTop (nhds 0) := by
+    have ht := tendsto_const_div_atTop_nhds_zero_nat
+      (finkScaledBiasBound β U (κ 0))
+    simpa only [div_eq_inv_mul] using ht
+  have hbias := (hinitial.add hterminal).add hswitch
+  refine ⟨κ, hκ, ?_, hq.comp hκ⟩
+  convert hbias using 1
+  · funext T
+    rw [div_eq_inv_mul]
+    ring
+  · simp
+
 /-- Charge zero while an indexed schedule stays on one fixed point and the
 sum of the adjacent bias bounds when it switches. -/
 def indexedFinkSwitchError (β : ℕ → ℝ) (U : ℝ) (κ : ℕ → ℕ)
@@ -6178,6 +6214,100 @@ theorem isIndexedFinkCalendarSelectable_of_summableDrift
         ∑ t ∈ Finset.range T, (q (κ t) + ∑' k, r (κ k)) :=
       Finset.sum_le_sum fun t _ => add_le_add le_rfl (hprefix t)
     have hmul := mul_le_mul_of_nonneg_left hsum (inv_nonneg.mpr hTreal.le)
+    calc
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          (q (κ t) + ∑ k ∈ Finset.range t, r (κ k)) ≤
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+            (q (κ t) + ∑' k, r (κ k)) := hmul
+      _ = (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, q (κ t) +
+          ∑' k, r (κ k) := by
+        rw [Finset.sum_add_distrib]
+        simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+        field_simp [ne_of_gt hTreal]
+      _ ≤ η / 2 + η / 2 := add_le_add hqLe hrTotal
+      _ = η := by ring
+  exact ⟨hTpos, hbiasLe, htarget⟩
+
+/-- Relative-bias version of the summable-drift criterion.  Together with
+`exists_finkRelativeAnnealingCalendar_with_valueError`, this isolates the
+remaining selection problem to finding calendars with arbitrarily small
+summable transition drift. -/
+theorem isIndexedFinkRelativeCalendarSelectable_of_summableDrift
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) {U₀ : ℝ}
+    (z : ℕ → G.finkDomain U₀) (W : G.State → Payoff ι)
+    (q r : ℕ → ℝ)
+    (hcalendar : ∀ ε : ℝ, 0 < ε → ∃ κ : ℕ → ℕ,
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * finkScaledBiasBound β U (κ T))
+        atTop (nhds 0) ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        G.indexedFinkRelativeSwitchError β U z W κ t)
+          atTop (nhds 0) ∧
+      Tendsto (q ∘ κ) atTop (nhds 0) ∧
+      (∀ t, 0 ≤ r (κ t)) ∧ Summable (r ∘ κ) ∧
+      ∑' t, r (κ t) ≤ ε) :
+    G.IsIndexedFinkRelativeCalendarSelectable β U z W q r := by
+  intro η hη
+  have hhalf : 0 < η / 2 := by linarith
+  obtain ⟨κ, hterminal, hswitch, hq, hr0, hrsum, hrTotal⟩ :=
+    hcalendar (η / 2) hhalf
+  have hqavg : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, q (κ t)) atTop (nhds 0) := by
+    simpa only [Function.comp_apply] using hq.cesaro
+  have hinitial : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U (κ 0)) atTop (nhds 0) := by
+    have ht := tendsto_const_div_atTop_nhds_zero_nat
+      (finkScaledBiasBound β U (κ 0))
+    simpa only [div_eq_inv_mul] using ht
+  have hbias : Tendsto (fun T : ℕ =>
+      (finkScaledBiasBound β U (κ 0) +
+          finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t)
+      atTop (nhds 0) := by
+    have ht := (hinitial.add hterminal).add hswitch
+    convert ht using 1
+    · funext T
+      rw [div_eq_inv_mul]
+      ring
+    · simp
+  obtain ⟨Nb, hNb⟩ := Metric.tendsto_atTop.mp hbias η hη
+  obtain ⟨Nq, hNq⟩ := Metric.tendsto_atTop.mp hqavg (η / 2) hhalf
+  let T₀ := max 1 (max Nb Nq)
+  refine ⟨κ, T₀, fun T hT => ?_⟩
+  have hTone : 1 ≤ T := le_trans (le_max_left _ _) hT
+  have hTpos : 0 < T := Nat.zero_lt_of_lt hTone
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hTpos
+  have hNbT : Nb ≤ T :=
+    le_trans (le_max_left _ _) (le_trans (le_max_right _ _) hT)
+  have hNqT : Nq ≤ T :=
+    le_trans (le_max_right _ _) (le_trans (le_max_right _ _) hT)
+  have hbiasLe :
+      (finkScaledBiasBound β U (κ 0) +
+          finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          G.indexedFinkRelativeSwitchError β U z W κ t ≤ η := by
+    have hb := hNb T hNbT
+    rw [Real.dist_eq, sub_zero] at hb
+    exact (le_abs_self _).trans hb.le
+  have hqLe : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+      q (κ t) ≤ η / 2 := by
+    have hqT := hNq T hNqT
+    rw [Real.dist_eq, sub_zero] at hqT
+    exact (le_abs_self _).trans hqT.le
+  have hprefix : ∀ t, (∑ k ∈ Finset.range t, r (κ k)) ≤
+      ∑' k, r (κ k) := by
+    intro t
+    exact hrsum.sum_le_tsum (Finset.range t) (fun k _ => hr0 k)
+  have htarget : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+      (q (κ t) + ∑ k ∈ Finset.range t, r (κ k)) ≤ η := by
+    have hsum : (∑ t ∈ Finset.range T,
+        (q (κ t) + ∑ k ∈ Finset.range t, r (κ k))) ≤
+        ∑ t ∈ Finset.range T, (q (κ t) + ∑' k, r (κ k)) :=
+      Finset.sum_le_sum fun t _ => add_le_add le_rfl (hprefix t)
+    have hmul := mul_le_mul_of_nonneg_left hsum
+      (inv_nonneg.mpr hTreal.le)
     calc
       (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
           (q (κ t) + ∑ k ∈ Finset.range t, r (κ k)) ≤
