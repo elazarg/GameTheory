@@ -9,6 +9,7 @@ import GameTheory.Languages.MAID.Prefix
 import GameTheory.Languages.MAID.Kuhn
 import GameTheory.Languages.Bridges.MAID_EFG
 import GameTheory.Concepts.Mixed.MixedExtension
+import GameTheory.Concepts.Foundations.GameMorphism
 
 /-!
 # Finite Sequential Open Games as MAIDs
@@ -1006,6 +1007,14 @@ def toEFG (A : Fin n → Type)
   MAID_EFG.maidToEFG (sequentialStruct A) (sequentialSem A k)
     (MAID.defaultPolicy (sequentialStruct A))
 
+/-- Encode an open-game contingent profile as a pure contingent plan of the
+EFG induced by the canonical MAID. -/
+noncomputable def toEFGPureProfile (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) : EFG.PureProfile (toEFG A k).inf :=
+  MAID_EFG.toEFGPureProfile (toPurePolicy A σ)
+
 /-- The general MAID-to-EFG compiler supplies a game bisimulation for the
 canonical sequential presentation. -/
 def toEFGBisimulation (A : Fin n → Type)
@@ -1016,6 +1025,39 @@ def toEFGBisimulation (A : Fin n → Type)
       ((toEFG A k).toKernelGame) :=
   MAID_EFG.maidToEFG_bisimulation (sequentialSem A k)
     (MAID.defaultPolicy (sequentialStruct A))
+
+/-- The complete-plan strategic kernel of the canonical MAID is bisimilar to
+the pure strategic kernel of its induced EFG. -/
+noncomputable def toEFGPureBisimulation (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ) :
+    GameTheory.KernelGame.Bisimulation
+      (MAID.purePolicyKernelGame (sequentialStruct A) (sequentialSem A k))
+      ((toEFG A k).toStrategicKernelGame) :=
+  MAID_EFG.maidToEFG_pure_bisimulation (sequentialSem A k)
+    (MAID.defaultPolicy (sequentialStruct A))
+
+/-- Plain open-game equilibrium corresponds exactly to strategic-form Nash in
+the induced EFG.  This theorem deliberately says Nash, not subgame perfection;
+the latter requires the stronger conditioned predicate. -/
+theorem isEquilibriumIn_iff_efgIsNash (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      ((toEFG A k).toStrategicKernelGame).IsNash
+        (toEFGPureProfile A k σ) := by
+  let e := (toEFGPureBisimulation A k).toEUGameIsomorphism
+  calc
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+        (MAID.purePolicyKernelGame (sequentialStruct A)
+          (sequentialSem A k)).IsNash (toPurePolicy A σ) := by
+      rw [← isPurePolicyNash_iff_kernelGameIsNash]
+      exact isEquilibriumIn_iff_isPurePolicyNash A k σ
+    _ ↔ ((toEFG A k).toStrategicKernelGame).IsNash
+        (e.profileEquiv (toPurePolicy A σ)) :=
+      e.nash_iff (toPurePolicy A σ)
+    _ ↔ _ := by rfl
 
 /-- The induced extensive-form game has perfect recall. -/
 theorem toEFG_perfectRecall (A : Fin n → Type)

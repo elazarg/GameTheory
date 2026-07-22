@@ -168,6 +168,54 @@ noncomputable def policyBehavioralEquiv {S : MAID.Struct (Fin m) n} :
   left_inv := fromTo
   right_inv := toFrom
 
+/-- Convert a complete pure MAID policy to the corresponding EFG contingent
+plan, using the node-value/action equivalence at each information set. -/
+noncomputable def toEFGPureProfile {S : MAID.Struct (Fin m) n}
+    (π : MAID.PurePolicy S) : EFG.PureProfile (maidInfoS S) :=
+  fun p I => S.valEquiv I.1.val (π p I)
+
+/-- Convert an EFG contingent plan back to a complete pure MAID policy. -/
+noncomputable def fromEFGPureProfile {S : MAID.Struct (Fin m) n}
+    (σ : EFG.PureProfile (maidInfoS S)) : MAID.PurePolicy S :=
+  fun p I => (S.valEquiv I.1.val).symm (σ p I)
+
+@[simp] theorem fromToPure {S : MAID.Struct (Fin m) n}
+    (π : MAID.PurePolicy S) :
+    fromEFGPureProfile (toEFGPureProfile π) = π := by
+  funext p I
+  exact (S.valEquiv I.1.val).symm_apply_apply (π p I)
+
+@[simp] theorem toFromPure {S : MAID.Struct (Fin m) n}
+    (σ : EFG.PureProfile (maidInfoS S)) :
+    toEFGPureProfile (fromEFGPureProfile σ) = σ := by
+  funext p I
+  exact (S.valEquiv I.1.val).apply_symm_apply (σ p I)
+
+/-- Pure policy spaces are equivalent under the MAID→EFG action encoding. -/
+noncomputable def purePolicyEquiv {S : MAID.Struct (Fin m) n} :
+    MAID.PurePolicy S ≃ EFG.PureProfile (maidInfoS S) where
+  toFun := toEFGPureProfile
+  invFun := fromEFGPureProfile
+  left_inv := fromToPure
+  right_inv := toFromPure
+
+/-- Encoding a pure policy and then embedding it behaviorally agrees with
+embedding it behaviorally in the MAID and then using the behavioral bridge. -/
+theorem pureToBehavioral_toEFGPureProfile {S : MAID.Struct (Fin m) n}
+    (π : MAID.PurePolicy S) :
+    EFG.pureToBehavioral (toEFGPureProfile π) =
+      toEFGProfile (MAID.pureToPolicy π) := by
+  funext p I
+  change PMF.pure (S.valEquiv I.1.val (π p I)) =
+    PMF.map (S.valEquiv I.1.val) (PMF.pure (π p I))
+  rw [PMF.pure_map]
+
+/-- Per-player restriction of `purePolicyEquiv`. -/
+noncomputable def pureStrategyEquivPlayer {S : MAID.Struct (Fin m) n}
+    (p : Fin m) :
+    MAID.PureStrategy S p ≃ EFG.PureStrategy (maidInfoS S) p :=
+  Equiv.piCongrRight fun I => S.valEquiv I.1.val
+
 -- ============================================================================
 -- Evaluation equivalence
 -- ============================================================================
@@ -416,6 +464,46 @@ theorem maidToEFGAt_outcomeKernel {S : MAID.Struct (Fin m) n}
     (MAID.toKernelGame S sem).outcomeKernel pol := by
   simp only [EFG.EFGGame.toKernelGame, MAID.toKernelGame]
   exact maid_efg_evalDist_at sem pol σ
+
+/-- The pure strategic forms have the same outcome kernel under the explicit
+complete-plan correspondence. -/
+theorem maidToEFGAt_pure_outcomeKernel {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) (σ : MAID.TopologicalOrder S)
+    (π : MAID.PurePolicy S) :
+    ((maidToEFGAt S sem pol₀ σ).toStrategicKernelGame).outcomeKernel
+        (toEFGPureProfile π) =
+      (MAID.purePolicyKernelGame S sem).outcomeKernel π := by
+  change (maidToEFGAt S sem pol₀ σ).tree.evalDist
+      (EFG.pureToBehavioral (toEFGPureProfile π)) =
+    MAID.evalAssignDist S sem (MAID.pureToPolicy π)
+  rw [pureToBehavioral_toEFGPureProfile]
+  change (buildTree S sem pol₀ σ.order (MAID.defaultAssign S)).evalDist
+      (toEFGProfile (MAID.pureToPolicy π)) = _
+  rw [buildTree_pol_irrel sem pol₀ (MAID.pureToPolicy π) σ.order
+    (MAID.defaultAssign S)]
+  exact maid_efg_evalDist_at sem (MAID.pureToPolicy π) σ
+
+/-- The native pure-policy strategic form of a MAID is bisimilar to the pure
+strategic form of its induced EFG. -/
+noncomputable def maidToEFGAt_pure_bisimulation
+    {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) (σ : MAID.TopologicalOrder S) :
+    GameTheory.KernelGame.Bisimulation (MAID.purePolicyKernelGame S sem)
+      ((maidToEFGAt S sem pol₀ σ).toStrategicKernelGame) where
+  stratEquiv := pureStrategyEquivPlayer
+  udist_preserved := by
+    intro π
+    change ((maidToEFGAt S sem pol₀ σ).tree.evalDist
+        (EFG.pureToBehavioral (toEFGPureProfile π))).bind
+          (fun a => PMF.pure (MAID.utilityOf S sem a)) =
+      (MAID.evalAssignDist S sem (MAID.pureToPolicy π)).bind
+        (fun a => PMF.pure (MAID.utilityOf S sem a))
+    have hout : (maidToEFGAt S sem pol₀ σ).tree.evalDist
+        (EFG.pureToBehavioral (toEFGPureProfile π)) =
+        MAID.evalAssignDist S sem (MAID.pureToPolicy π) :=
+      maidToEFGAt_pure_outcomeKernel sem pol₀ σ π
+    rw [hout]
+    rfl
 
 /-- The MAID and EFG KernelGames have the same joint utility distribution. -/
 theorem maidToEFGAt_udist {S : MAID.Struct (Fin m) n}
@@ -848,6 +936,13 @@ noncomputable def maidToEFG_bisimulation {S : MAID.Struct (Fin m) n}
     GameTheory.KernelGame.Bisimulation (MAID.toKernelGame S sem)
       ((maidToEFG S sem pol₀).toKernelGame) :=
   maidToEFGAt_bisimulation sem pol₀ _
+
+/-- Order-free pure-strategic counterpart of `maidToEFG_bisimulation`. -/
+noncomputable def maidToEFG_pure_bisimulation {S : MAID.Struct (Fin m) n}
+    (sem : MAID.Sem S) (pol₀ : MAID.Policy S) :
+    GameTheory.KernelGame.Bisimulation (MAID.purePolicyKernelGame S sem)
+      ((maidToEFG S sem pol₀).toStrategicKernelGame) :=
+  maidToEFGAt_pure_bisimulation sem pol₀ _
 
 /-- The MAID and order-free EFG KernelGames have the same joint utility distribution. -/
 theorem maidToEFG_udist {S : MAID.Struct (Fin m) n}

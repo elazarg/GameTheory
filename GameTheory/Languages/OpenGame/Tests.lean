@@ -193,6 +193,17 @@ example {n : Nat} (A : Fin n → Type)
       ((ShapeSeqDep.MAIDBridge.toEFG A k).toKernelGame) :=
   ShapeSeqDep.MAIDBridge.toEFGBisimulation A k
 
+/-- The pure strategic form is preserved separately from the behavioral
+kernel, and plain open equilibrium becomes ordinary EFG Nash. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      ((ShapeSeqDep.MAIDBridge.toEFG A k).toStrategicKernelGame).IsNash
+        (ShapeSeqDep.MAIDBridge.toEFGPureProfile A k σ) :=
+  ShapeSeqDep.MAIDBridge.isEquilibriumIn_iff_efgIsNash A k σ
+
 /-- Perfect recall transfers through the existing MAID-to-EFG bridge. -/
 example {n : Nat} (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
