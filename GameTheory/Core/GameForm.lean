@@ -109,14 +109,6 @@ noncomputable def deviateDistribution (F : GameForm ι)
   μ.bind (fun σ => F.outcomeKernel (F.deviateProfile σ who s'))
 
 open Classical in
-/-- Compatibility name for `deviateOutcome` at a single profile. For a
-distribution of source profiles, use `deviateDistribution`; for correlated
-profile-dependent deviations, use `constDeviateDistributionFn`. -/
-noncomputable abbrev constDeviateDistribution (F : GameForm ι)
-    (σ : F.Profile) (who : ι) (s' : F.Strategy who) : PMF F.Outcome :=
-  F.deviateOutcome σ who s'
-
-open Classical in
 @[simp] theorem deviateProfile_same (F : GameForm ι) (σ : F.Profile)
     (who : ι) : F.deviateProfile σ who (σ who) = σ := by
   simp [deviateProfile]
