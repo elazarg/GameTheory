@@ -49,6 +49,82 @@ def HasNoOneShotDeviation (G : EFGGame) (σ : PureProfile G.inf) : Prop :=
       expect ((next a').evalDist (pureToBehavioral σ))
         (fun ω => G.utility ω p)
 
+/-- Structural presentation of one-shot optimality on a subtree.  At a
+decision node it records the local one-action inequalities and recurses down
+every action branch; chance nodes recurse down every branch as well.
+
+Unlike `HasNoOneShotDeviation`, this predicate does not carry explicit
+reachability witnesses.  Applying it to the root tree is equivalent because
+every syntactic subtree is reachable by its corresponding history. -/
+def IsOneShotOptimalAtEveryNode (G : EFGGame) (σ : PureProfile G.inf) :
+    GameTree G.inf G.Outcome → Prop
+  | .terminal _ => True
+  | .chance _ _ _ next =>
+      ∀ b, IsOneShotOptimalAtEveryNode G σ (next b)
+  | .decision (p := p) I next =>
+      (∀ a',
+        expect ((next (σ p I)).evalDist (pureToBehavioral σ))
+            (fun ω => G.utility ω p) ≥
+          expect ((next a').evalDist (pureToBehavioral σ))
+            (fun ω => G.utility ω p)) ∧
+      ∀ a, IsOneShotOptimalAtEveryNode G σ (next a)
+
+/-- Structural one-shot optimality is inherited by every reachable
+subtree. -/
+theorem IsOneShotOptimalAtEveryNode.of_reachBy (G : EFGGame)
+    (σ : PureProfile G.inf) {root target : GameTree G.inf G.Outcome}
+    {h : List (HistoryStep G.inf)}
+    (hroot : IsOneShotOptimalAtEveryNode G σ root)
+    (hreach : ReachBy h root target) :
+    IsOneShotOptimalAtEveryNode G σ target := by
+  induction hreach with
+  | nil => exact hroot
+  | @cons step rest root mid target hstep _ ih =>
+      cases step with
+      | chance k b =>
+          rcases hstep with ⟨μ, hk, next, hrootEq, hmidEq⟩
+          subst hrootEq
+          subst hmidEq
+          exact ih (hroot b)
+      | action p I a =>
+          rcases hstep with ⟨next, hrootEq, hmidEq⟩
+          subst hrootEq
+          subst hmidEq
+          exact ih (hroot.2 a)
+
+/-- The reachability-based and structural presentations of no profitable
+one-shot deviation coincide for every EFG. -/
+theorem hasNoOneShotDeviation_iff_everyNode (G : EFGGame)
+    (σ : PureProfile G.inf) :
+    HasNoOneShotDeviation G σ ↔
+      IsOneShotOptimalAtEveryNode G σ G.tree := by
+  constructor
+  · intro h
+    have go : ∀ (t : GameTree G.inf G.Outcome)
+        (history : List (HistoryStep G.inf)),
+        ReachBy history G.tree t →
+        IsOneShotOptimalAtEveryNode G σ t := by
+      intro t
+      induction t with
+      | terminal z =>
+          intro _ _
+          trivial
+      | chance k μ hk next ih =>
+          intro history hreach b
+          exact ih b (history ++ [HistoryStep.chance k b])
+            (ReachBy_append hreach (.chance b (.here _)))
+      | @decision p I next ih =>
+          intro history hreach
+          constructor
+          · exact h I next ⟨history, hreach⟩
+          · intro a
+            exact ih a (history ++ [HistoryStep.action p I a])
+              (ReachBy_append hreach (.action a (.here _)))
+    exact go G.tree [] (.here _)
+  · intro h p I next hreach a'
+    rcases hreach with ⟨history, hreach⟩
+    exact (h.of_reachBy G σ hreach).1 a'
+
 -- ============================================================================
 -- Easy direction: SPE → no profitable one-shot deviation
 -- ============================================================================
