@@ -138,9 +138,10 @@ agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and
 action paths, utilities agree pointwise, the node order is topological, and
 perfect recall holds. Passing this presentation through the existing
-MAID-to-EFG bridge yields a kernel-game bisimulation and EFG perfect recall. A
-native OpenGame-to-MAID outcome/equilibrium correspondence remains to be
-proved. Backward values are called *cooutcomes* (the
+MAID-to-EFG bridge yields a kernel-game bisimulation and EFG perfect recall.
+Native pure-policy evaluation is also adequate: its projected assignment law
+is the point mass at the open-game realization. The corresponding equilibrium
+theorem remains to be proved. Backward values are called *cooutcomes* (the
 open-games literature also says *coutilities*). Closed, deliberately
 non-compositional devices recover CE, CCE, and pure-profile public
 randomization over Nash equilibria, with checked strict-separation examples.

@@ -250,6 +250,16 @@ theorem parentValueType_eq (A : Fin n → Type)
   rw [hq]
   exact nodeVal_castAdd A _
 
+def parentValueEquiv (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (i : Fin n)
+    (q : ↥((sequentialStruct A).parents (decisionNode i))) :
+    (sequentialStruct A).Val q.val ≃
+      A (ShapeSeqDep.priorIndex i ((parentIndexEquiv A i) q)) := by
+  change (sequentialStruct A).Val q.val ≃
+    A (ShapeSeqDep.priorIndex i (parentStage A i q))
+  exact Equiv.cast (parentValueType_eq A i q)
+
 /-- A sequential history is exactly the information observed at its canonical
 MAID decision node. -/
 def cfgHistoryEquiv (A : Fin n → Type)
@@ -258,8 +268,7 @@ def cfgHistoryEquiv (A : Fin n → Type)
     MAID.Cfg (sequentialStruct A)
         ((sequentialStruct A).parents (decisionNode i)) ≃
       ShapeSeqDep.History A i :=
-  Equiv.piCongr (parentIndexEquiv A i) fun q =>
-    Equiv.cast (parentValueType_eq A i q)
+  Equiv.piCongr (parentIndexEquiv A i) (parentValueEquiv A i)
 
 /-- Forget the unique decision-node witness in an agent-form information set. -/
 def infosetCfgEquiv (A : Fin n → Type)
@@ -292,6 +301,15 @@ def infosetHistoryEquiv (A : Fin n → Type)
     [∀ i, Inhabited (A i)] (p : Fin n) :
     MAID.Infoset (sequentialStruct A) p ≃ ShapeSeqDep.History A p :=
   (infosetCfgEquiv A p).trans (cfgHistoryEquiv A p)
+
+@[simp] theorem infosetHistoryEquiv_canonical (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (p : Fin n)
+    (cfg : MAID.Cfg (sequentialStruct A)
+      ((sequentialStruct A).parents (decisionNode p))) :
+    infosetHistoryEquiv A p ⟨decisionNodeFor A p, cfg⟩ =
+      cfgHistoryEquiv A p cfg := by
+  rfl
 
 /-- The value chosen at any information set of stage-agent `p` has action
 type `A p`. -/
@@ -348,6 +366,19 @@ def ofPurePolicy (A : Fin n → Type)
     toPurePolicy A (ofPurePolicy A π) = π :=
   (purePolicyEquiv A).symm_apply_apply π
 
+theorem toPurePolicy_apply (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A)
+    (p : Fin n) (I : MAID.Infoset (sequentialStruct A) p) :
+    toPurePolicy A σ p I =
+      (Equiv.cast (infosetValueType_eq A p I)).symm
+        (σ p (infosetHistoryEquiv A p I)) := by
+  change ((Equiv.piCongrRight fun p => pureStageEquiv A p).symm σ p) I = _
+  rw [Equiv.piCongrRight_symm_apply]
+  exact congrFun
+    (Equiv.piCongr_symm_apply (infosetHistoryEquiv A p)
+      (fun I => Equiv.cast (infosetValueType_eq A p I)) (σ p)) I
+
 /-! ## Assignments and utility semantics -/
 
 /-- Read the decision path from a total MAID assignment. -/
@@ -358,6 +389,26 @@ def pathOfAssign (A : Fin n → Type)
   fun i => by
     have v := a (decisionNode i)
     simpa [sequentialStruct, decisionNode] using v
+
+/-- Projecting an assignment to a decision's observed parents and decoding it
+recovers exactly the corresponding prefix of the assignment path. -/
+theorem cfgHistoryEquiv_projCfg (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (i : Fin n)
+    (a : MAID.TAssign (sequentialStruct A)) :
+    cfgHistoryEquiv A i
+        (MAID.projCfg a ((sequentialStruct A).parents (decisionNode i))) =
+      fun j => pathOfAssign A a (ShapeSeqDep.priorIndex i j) := by
+  funext j
+  have hpi := Equiv.piCongr_apply_apply
+    (W := fun q : ↥((sequentialStruct A).parents (decisionNode i)) =>
+      (sequentialStruct A).Val q.val)
+    (Z := fun j : Fin i.val => A (ShapeSeqDep.priorIndex i j))
+    (parentIndexEquiv A i) (parentValueEquiv A i)
+    (MAID.projCfg a ((sequentialStruct A).parents (decisionNode i)))
+    (priorParent A i j)
+  apply eq_of_heq
+  exact (heq_of_eq hpi).trans (by rfl)
 
 /-- Extend a dependent decision path by the unique values at utility nodes. -/
 def assignOfPath (A : Fin n → Type)
@@ -534,6 +585,145 @@ def sequentialSem (A : Fin n → Type)
     subst u
     exact k (pathOfUtilityCfg A p cfg) p
 
+private theorem nodeDist_decision (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (pol : MAID.Policy (sequentialStruct A))
+    (i : Fin n) (a : MAID.TAssign (sequentialStruct A)) :
+    MAID.nodeDist (sequentialStruct A) (sequentialSem A k) pol
+        (decisionNode i) a =
+      pol i ⟨⟨decisionNode i, sequentialStruct_kind_decision A i⟩,
+        MAID.projCfg a ((sequentialStruct A).obsParents (decisionNode i))⟩ := by
+  unfold MAID.nodeDist
+  split
+  · next hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
+  · next p hk =>
+    have hp : p = i := by
+      injection hk.symm.trans (sequentialStruct_kind_decision A i)
+    subst p
+    rfl
+  · next p hk => exact nomatch (sequentialStruct_kind_decision A i).symm.trans hk
+
+/-- Under an encoded pure policy, the native MAID decision kernel is the point
+mass at the open-game action prescribed by the assignment prefix. -/
+theorem map_nodeDist_decision_eq_pure (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (a : MAID.TAssign (sequentialStruct A))
+    (i : Fin n) :
+    PMF.map (Equiv.cast (nodeVal_castAdd A i))
+        (MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (decisionNode i) a) =
+      PMF.pure
+        (σ i (fun j => pathOfAssign A a (ShapeSeqDep.priorIndex i j))) := by
+  rw [nodeDist_decision]
+  change PMF.map (Equiv.cast (nodeVal_castAdd A i))
+      (PMF.pure (toPurePolicy A σ i
+        ⟨⟨decisionNode i, sequentialStruct_kind_decision A i⟩,
+          MAID.projCfg a ((sequentialStruct A).obsParents (decisionNode i))⟩)) = _
+  rw [PMF.pure_map]
+  rw [toPurePolicy_apply]
+  congr 2
+  · exact (Equiv.cast (infosetValueType_eq A i _)).apply_symm_apply _
+
+/-- Along the realized open-game path, each decision node is locally
+deterministic at the corresponding coordinate of the encoded assignment. -/
+theorem nodeDist_decision_realize_eq_pure (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (i : Fin n) :
+    MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (decisionNode i)
+        (assignOfPath A (ShapeSeqDep.realize σ)) =
+      PMF.pure ((assignOfPath A (ShapeSeqDep.realize σ)) (decisionNode i)) := by
+  let e : (sequentialStruct A).Val (decisionNode i) ≃ A i := by
+    change nodeVal A (Fin.castAdd n i) ≃ A i
+    exact Equiv.cast (nodeVal_castAdd A i)
+  have hmap := map_nodeDist_decision_eq_pure A k σ
+    (assignOfPath A (ShapeSeqDep.realize σ)) i
+  change PMF.map e
+      (MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (decisionNode i)
+        (assignOfPath A (ShapeSeqDep.realize σ))) = _ at hmap
+  rw [pathOfAssign_assignOfPath] at hmap
+  have hchoice :
+      σ i (fun j => ShapeSeqDep.realize σ (ShapeSeqDep.priorIndex i j)) =
+        ShapeSeqDep.realize σ i :=
+    (ShapeSeqDep.realize_eq σ i).symm
+  have hmap' := hmap.trans (congrArg PMF.pure hchoice)
+  have hleft : PMF.map e.symm
+      (PMF.map e (MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (decisionNode i)
+        (assignOfPath A (ShapeSeqDep.realize σ)))) =
+      MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (decisionNode i)
+        (assignOfPath A (ShapeSeqDep.realize σ)) := by
+    rw [PMF.map_comp]
+    have hfun : e.symm ∘ e = id := by
+      funext x
+      exact e.symm_apply_apply x
+    rw [hfun, PMF.map_id]
+  calc
+    _ = PMF.map e.symm (PMF.map e
+          (MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+            (MAID.pureToPolicy (toPurePolicy A σ)) (decisionNode i)
+            (assignOfPath A (ShapeSeqDep.realize σ)))) := hleft.symm
+    _ = PMF.map e.symm (PMF.pure (ShapeSeqDep.realize σ i)) :=
+      congrArg (PMF.map e.symm) hmap'
+    _ = PMF.pure (e.symm (ShapeSeqDep.realize σ i)) := PMF.pure_map _ _
+    _ = _ := by
+      congr 2
+      apply e.injective
+      rw [e.apply_symm_apply]
+      have hp := congrFun
+        (pathOfAssign_assignOfPath A (ShapeSeqDep.realize σ)) i
+      change e ((assignOfPath A (ShapeSeqDep.realize σ)) (decisionNode i)) =
+        ShapeSeqDep.realize σ i at hp
+      exact hp.symm
+
+private theorem nodeDist_utility (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (pol : MAID.Policy (sequentialStruct A))
+    (i : Fin n) (a : MAID.TAssign (sequentialStruct A)) :
+    MAID.nodeDist (sequentialStruct A) (sequentialSem A k) pol
+        (utilityNode i) a = PMF.pure default := by
+  unfold MAID.nodeDist
+  split
+  · next hk => exact nomatch (sequentialStruct_kind_utility A i).symm.trans hk
+  · next p hk => exact nomatch (sequentialStruct_kind_utility A i).symm.trans hk
+  · next p hk =>
+    have hp : p = i := by
+      injection hk.symm.trans (sequentialStruct_kind_utility A i)
+    subst p
+    rfl
+
+/-- Every local kernel of the canonical MAID agrees with the encoded realized
+assignment under an encoded pure policy. -/
+theorem nodeDist_realize_eq_pure (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (nd : Fin (n + n)) :
+    MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) nd
+        (assignOfPath A (ShapeSeqDep.realize σ)) =
+      PMF.pure ((assignOfPath A (ShapeSeqDep.realize σ)) nd) := by
+  refine Fin.addCases (motive := fun nd =>
+      MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+          (MAID.pureToPolicy (toPurePolicy A σ)) nd
+          (assignOfPath A (ShapeSeqDep.realize σ)) =
+        PMF.pure ((assignOfPath A (ShapeSeqDep.realize σ)) nd)) ?_ ?_ nd
+  · exact nodeDist_decision_realize_eq_pure A k σ
+  · intro i
+    change MAID.nodeDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) (utilityNode i)
+        (assignOfPath A (ShapeSeqDep.realize σ)) =
+      PMF.pure ((assignOfPath A (ShapeSeqDep.realize σ)) (utilityNode i))
+    rw [nodeDist_utility]
+    congr 2
+    apply (Equiv.cast (nodeVal_natAdd A i)).injective
+    exact Subsingleton.elim _ _
+
 theorem pathOfUtilityCfg_projCfg (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
     [∀ i, Inhabited (A i)] (p : Fin n)
@@ -582,6 +772,34 @@ theorem sequentialStruct_naturalOrder (A : Fin n → Type)
     (sequentialStruct A).NaturalOrder := by
   intro nd p hp
   exact parentNodes_lt hp
+
+/-- Native pure-policy outcome adequacy: evaluating the canonical MAID at an
+encoded open-game profile produces exactly the encoded realized path. -/
+theorem evalAssignDist_toPurePolicy (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    MAID.evalAssignDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)) =
+      PMF.pure (assignOfPath A (ShapeSeqDep.realize σ)) := by
+  exact MAID.evalAssignDist_eq_pure_of_nodeDist
+    (sequentialSem A k) (MAID.pureToPolicy (toPurePolicy A σ))
+    (sequentialStruct_naturalOrder A)
+    (assignOfPath A (ShapeSeqDep.realize σ))
+    (nodeDist_realize_eq_pure A k σ)
+
+/-- Projected to decision coordinates, native MAID evaluation is the point
+mass at the open-game realization. -/
+theorem map_evalAssignDist_toPurePolicy (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    PMF.map (pathOfAssign A)
+        (MAID.evalAssignDist (sequentialStruct A) (sequentialSem A k)
+          (MAID.pureToPolicy (toPurePolicy A σ))) =
+      PMF.pure (ShapeSeqDep.realize σ) := by
+  rw [evalAssignDist_toPurePolicy, PMF.pure_map,
+    pathOfAssign_assignOfPath]
 
 /-- The canonical sequential MAID has perfect recall.  In agent form every
 player owns exactly one decision node, so both recall clauses are immediate. -/

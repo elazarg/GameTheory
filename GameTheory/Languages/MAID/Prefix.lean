@@ -73,6 +73,17 @@ instance (S : Struct Player n) (k : Nat) (hk : k ≤ n) :
 def PrefixAssign.empty (S : Struct Player n) : PrefixAssign S 0 (Nat.zero_le n) :=
   fun i => i.elim0
 
+/-- Restrict a total assignment to its first `k` nodes. -/
+def PrefixAssign.ofTAssign {S : Struct Player n} (a : TAssign S)
+    (k : Nat) (hk : k ≤ n) : PrefixAssign S k hk :=
+  fun i => a (Fin.castLE hk i)
+
+@[simp] theorem PrefixAssign.ofTAssign_zero {S : Struct Player n}
+    (a : TAssign S) :
+    PrefixAssign.ofTAssign a 0 (Nat.zero_le n) = PrefixAssign.empty S := by
+  funext i
+  exact i.elim0
+
 /-- Read a value from a prefix assignment at a node known to be in the prefix. -/
 def PrefixAssign.get {S : Struct Player n} {k : Nat} {hk : k ≤ n}
     (a : PrefixAssign S k hk) (nd : Fin n) (h : nd.val < k) : S.Val nd :=
@@ -91,12 +102,34 @@ def PrefixAssign.snoc {S : Struct Player n} {k : Nat} {hk : k < n}
       have : Fin.castLE hk i = ⟨k, hk⟩ := Fin.ext (show i.val = k by omega)
       this ▸ v
 
+@[simp] theorem PrefixAssign.ofTAssign_snoc {S : Struct Player n}
+    (a : TAssign S) {k : Nat} {hk : k < n} :
+    (PrefixAssign.ofTAssign a k (le_of_lt hk)).snoc (a ⟨k, hk⟩) =
+      PrefixAssign.ofTAssign a (k + 1) hk := by
+  funext ⟨iv, hiv⟩
+  by_cases h : iv < k
+  · simp only [ofTAssign, snoc, h, ↓reduceDIte]
+    apply eq_of_heq
+    rfl
+  · have hivk : iv = k := by omega
+    subst iv
+    simp only [ofTAssign, snoc, h, ↓reduceDIte]
+    apply eq_of_heq
+    rfl
+
 /-- Convert a full prefix assignment to a total assignment. -/
 def PrefixAssign.toTAssign {S : Struct Player n}
     (a : PrefixAssign S n (le_refl n)) : TAssign S :=
   fun nd =>
     have : Fin.castLE (le_refl n) ⟨nd.val, nd.isLt⟩ = nd := Fin.ext rfl
     this ▸ a ⟨nd.val, nd.isLt⟩
+
+@[simp] theorem PrefixAssign.toTAssign_ofTAssign {S : Struct Player n}
+    (a : TAssign S) :
+    (PrefixAssign.ofTAssign a n (le_refl n)).toTAssign = a := by
+  funext nd
+  apply eq_of_heq
+  rfl
 
 /-- Extend a prefix to a total assignment, filling unassigned nodes with
 default values (0). -/
@@ -282,6 +315,54 @@ theorem nodeDistPrefix_eq_nodeDist {S : Struct Player n}
   rw [this, hproj, hobs_proj]
   rfl
 
+/-- A natural-order MAID whose node kernels are point masses along a total
+assignment evaluates to the point mass at that assignment.  This packages the
+standard deterministic Bayesian-network induction independently of any
+particular policy representation. -/
+theorem evalFoldPrefix_eq_pure_of_nodeDist {S : Struct Player n}
+    (sem : Sem S) (pol : Policy S) (hnat : S.NaturalOrder)
+    (a : TAssign S)
+    (hnode : ∀ nd, nodeDist S sem pol nd a = PMF.pure (a nd)) :
+    evalFoldPrefix S sem pol hnat =
+      PMF.pure (PrefixAssign.ofTAssign a n (le_refl n)) := by
+  simp only [evalFoldPrefix]
+  have hgo : ∀ (k : Nat) (hk : k ≤ n),
+      evalFoldPrefix.go S sem pol hnat k hk
+          (PMF.pure (PrefixAssign.ofTAssign a k hk)) =
+        PMF.pure (PrefixAssign.ofTAssign a n (le_refl n)) := by
+    intro k hk
+    induction h : n - k using Nat.strongRecOn generalizing k with
+    | _ d ih =>
+      by_cases hlt : k < n
+      · let hp : ∀ p ∈ S.parents ⟨k, hlt⟩, p.val < k :=
+          fun p hp => hnat ⟨k, hlt⟩ p hp
+        let ho : ∀ p ∈ S.obsParents ⟨k, hlt⟩, p.val < k :=
+          fun p hp => hnat ⟨k, hlt⟩ p (S.obs_sub _ hp)
+        have hprefix :
+            nodeDistPrefix S sem pol ⟨k, hlt⟩
+                (PrefixAssign.ofTAssign a k (le_of_lt hlt)) hp ho =
+              PMF.pure (a ⟨k, hlt⟩) := by
+          rw [nodeDistPrefix_eq_nodeDist sem pol ⟨k, hlt⟩
+            (PrefixAssign.ofTAssign a k (le_of_lt hlt)) a
+            (fun _ => rfl) hp ho]
+          exact hnode ⟨k, hlt⟩
+        have hstep :
+            evalStepPrefix S sem pol
+                (PMF.pure (PrefixAssign.ofTAssign a k (le_of_lt hlt))) hp ho =
+              PMF.pure (PrefixAssign.ofTAssign a (k + 1) hlt) := by
+          rw [evalStepPrefix, PMF.pure_bind, hprefix, PMF.pure_map]
+          exact congrArg PMF.pure (PrefixAssign.ofTAssign_snoc a)
+        conv_lhs => rw [evalFoldPrefix.go]
+        simp only [hlt, ↓reduceDIte]
+        rw [hstep]
+        exact ih (n - (k + 1)) (by omega) (k + 1) hlt rfl
+      · have hkn : k = n := by omega
+        subst k
+        conv_lhs => rw [evalFoldPrefix.go]
+        simp only [lt_irrefl, ↓reduceDIte]
+  rw [← PrefixAssign.ofTAssign_zero a]
+  exact hgo 0 (Nat.zero_le n)
+
 /-- Natural order yields a topological order: `[0, 1, ..., n-1]`. -/
 def Struct.NaturalOrder.toTopologicalOrder {S : Struct Player n} (hnat : S.NaturalOrder) :
     TopologicalOrder S where
@@ -393,6 +474,17 @@ theorem evalFoldPrefix_eq_evalAssignDist (S : Struct Player n) (sem : Sem S) (po
   -- Step 4: This is evalFold with the natural topological order
   rw [evalAssignDist_eq_evalFold S sem pol hnat.toTopologicalOrder]
   rfl
+
+/-- Deterministic local kernels on a natural-order MAID induce the expected
+point-mass joint law. -/
+theorem evalAssignDist_eq_pure_of_nodeDist {S : Struct Player n}
+    (sem : Sem S) (pol : Policy S) (hnat : S.NaturalOrder)
+    (a : TAssign S)
+    (hnode : ∀ nd, nodeDist S sem pol nd a = PMF.pure (a nd)) :
+    evalAssignDist S sem pol = PMF.pure a := by
+  rw [← evalFoldPrefix_eq_evalAssignDist S sem pol hnat,
+    evalFoldPrefix_eq_pure_of_nodeDist sem pol hnat a hnode,
+    PMF.pure_map, PrefixAssign.toTAssign_ofTAssign]
 
 /-- `evalFoldPrefix.go` from `m` equals `evalSegment` from `m` to `n`. -/
 private theorem evalFoldPrefix_go_eq_evalSegment (S : Struct Player n) (sem : Sem S)

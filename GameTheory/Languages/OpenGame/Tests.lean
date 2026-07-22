@@ -123,6 +123,19 @@ example {n : Nat} (A : Fin n → Type)
       k (ShapeSeqDep.MAIDBridge.pathOfAssign A a) p :=
   ShapeSeqDep.MAIDBridge.utilityOf_eq A k a p
 
+/-- Native pure-policy MAID evaluation produces exactly the open-game
+realization on decision coordinates. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    PMF.map (ShapeSeqDep.MAIDBridge.pathOfAssign A)
+        (MAID.evalAssignDist (ShapeSeqDep.MAIDBridge.sequentialStruct A)
+          (ShapeSeqDep.MAIDBridge.sequentialSem A k)
+          (MAID.pureToPolicy (ShapeSeqDep.MAIDBridge.toPurePolicy A σ))) =
+      PMF.pure (ShapeSeqDep.realize σ) :=
+  ShapeSeqDep.MAIDBridge.map_evalAssignDist_toPurePolicy A k σ
+
 /-- The canonical agent-form sequential MAID has perfect recall. -/
 example {n : Nat} (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]

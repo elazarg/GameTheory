@@ -251,6 +251,14 @@ decreasing_by exact j.isLt
 def realize {n : Nat} {A : Fin n → Type} (σ : Strategy A) : ∀ i, A i :=
   fun i => realizeAt σ i
 
+/-- The realized action at a stage is the contingent action selected from the
+realized strict prefix. -/
+theorem realize_eq {n : Nat} {A : Fin n → Type} (σ : Strategy A)
+    (i : Fin n) :
+    realize σ i = σ i (fun j => realize σ (priorIndex i j)) := by
+  change realizeAt σ i = σ i (fun j => realizeAt σ (priorIndex i j))
+  rw [realizeAt]
+
 end ShapeSeqDep
 
 /-- A finite-horizon sequential shape with stage-specific action types. -/
