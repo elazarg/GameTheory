@@ -444,6 +444,63 @@ def finkContinuationResidualVector (G : StochasticGame ι)
     (z : G.finkDomain U) : G.State → Payoff ι :=
   fun s who => G.finkContinuationResidual W z s who
 
+/-- Vector forcing represented by an on-profile average-reward Bellman
+equation with value `V` and bias `J`. -/
+def finkBellmanForcingVector (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (V J : G.State → Payoff ι) {U : ℝ}
+    (z : G.finkDomain U) : G.State → Payoff ι :=
+  fun s who => V s who + J s who - G.finkStageEU z s who -
+    G.finkContinuationEU J z s who
+
+/-- At an interior bias scale, the rescaled Bellman remainder has a finite
+limit determined by the limiting value, bias, and stationary profile. -/
+theorem tendsto_smul_finkBellmanForcingVector
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    {V J E : ℕ → G.State → Payoff ι}
+    {Vlim Jlim : G.State → Payoff ι}
+    (hV : Tendsto V atTop (nhds Vlim))
+    (hJ : Tendsto J atTop (nhds Jlim)) (a : ℕ → ℝ)
+    (hbellman : ∀ n s who, V n s who + J n s who =
+      G.finkStageEU (z n) s who +
+        G.finkContinuationEU (J n) (z n) s who +
+        a n * E n s who) :
+    Tendsto (fun n => a n • E n) atTop
+      (nhds (G.finkBellmanForcingVector Vlim Jlim zlim)) := by
+  apply tendsto_pi_nhds.2
+  intro s
+  apply tendsto_pi_nhds.2
+  intro who
+  have hVcoord : Tendsto (fun n => V n s who) atTop
+      (nhds (Vlim s who)) := by
+    have hc : Continuous (fun H : G.State → Payoff ι => H s who) := by
+      fun_prop
+    exact (hc.tendsto Vlim).comp hV
+  have hJcoord : Tendsto (fun n => J n s who) atTop
+      (nhds (Jlim s who)) := by
+    have hc : Continuous (fun H : G.State → Payoff ι => H s who) := by
+      fun_prop
+    exact (hc.tendsto Jlim).comp hJ
+  have hstage :=
+    ((G.continuous_finkStageEU (U := U) s who).tendsto zlim).comp hz
+  have hpair : Tendsto (fun n => (J n, z n)) atTop
+      (nhds (Jlim, zlim)) := by
+    simpa only [nhds_prod_eq] using hJ.prodMk hz
+  have hcontinuation :=
+    ((G.continuous_finkContinuationEU_param (U := U) s who).tendsto
+      (Jlim, zlim)).comp hpair
+  have hforcing := ((hVcoord.add hJcoord).sub hstage).sub hcontinuation
+  have hforcing' : Tendsto (fun n => a n * E n s who) atTop
+      (nhds (G.finkBellmanForcingVector Vlim Jlim zlim s who)) := by
+    apply hforcing.congr'
+    exact Filter.Eventually.of_forall fun n => by
+      simp only [Function.comp_apply]
+      linarith [hbellman n s who]
+  simpa only [Pi.smul_apply, smul_eq_mul] using hforcing'
+
 /-- Remainder produced by removing direction `L` from a bias `J` whose
 Bellman forcing is `a • E`. -/
 def finkNextPoissonRemainderVector (G : StochasticGame ι)
@@ -451,6 +508,62 @@ def finkNextPoissonRemainderVector (G : StochasticGame ι)
     (a : ℝ) (E J L : G.State → Payoff ι) {U : ℝ}
     (z : G.finkDomain U) : G.State → Payoff ι :=
   (a / (1 + ‖J‖)) • E - (L - G.finkContinuationVector L z)
+
+/-- Deviation-side forcing after removing one bias direction.  It is the
+exact analogue of `finkNextPoissonRemainderVector` for pure-action gains. -/
+def finkNextDeviationGain (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (D : G.State → ∀ who : ι, G.Act who → ℝ)
+    (J K : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+  (s : G.State) (who : ι) (d : G.Act who) : ℝ :=
+  (a / (1 + ‖J‖)) * D s who d +
+    G.finkContinuationGain K z s who d
+
+/-- A unilateral mixed continuation value is the deviating player's
+expectation of the corresponding pure-action continuation values. -/
+theorem mixedDeviationContinuation_eq_expect_pure
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : G.StationaryMixedProfile) (W : G.State → Payoff ι)
+    (s : G.State) (who : ι) (dev : PMF (G.Act who)) :
+    expect (pmfPi (Function.update (x s) who dev))
+        (fun a => expect (G.transition s a) (fun s' => W s' who)) =
+      expect dev (fun d =>
+        expect (pmfPi (Function.update (x s) who (PMF.pure d)))
+          (fun a => expect (G.transition s a) (fun s' => W s' who))) := by
+  rw [pmfPi_update_bind, expect_bind]
+
+/-- A player's own mixed action averages its pure continuation gains to
+zero. -/
+theorem expect_finkContinuationGain_eq_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
+    expect (G.finkProfile z s who) (fun d =>
+      G.finkContinuationGain W z s who d) = 0 := by
+  have hdecomp := G.mixedDeviationContinuation_eq_expect_pure
+    (G.finkProfile z) W s who (G.finkProfile z s who)
+  simp only [Function.update_eq_self] at hdecomp
+  unfold finkContinuationGain
+  rw [expect_sub, expect_const, ← hdecomp]
+  ring
+
+/-- The recursive deviation forcing preserves zero own-action mean. -/
+theorem expect_finkNextDeviationGain_eq_zero
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (D : G.State → ∀ who : ι, G.Act who → ℝ)
+    (J K : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι)
+    (hmean : expect (G.finkProfile z s who) (D s who) = 0) :
+    expect (G.finkProfile z s who) (fun d =>
+      G.finkNextDeviationGain a D J K z s who d) = 0 := by
+  unfold finkNextDeviationGain
+  rw [expect_add, expect_const_mul, hmean,
+    G.expect_finkContinuationGain_eq_zero]
+  ring
 
 /-- Radial compactification of the relative bias is exactly the value error
 rescaled by `finkProjectiveBiasScale`. -/
@@ -656,6 +769,40 @@ theorem value_add_finkCorrectedBias_eq_stage_add
     G.finkContinuationEU_sub, G.finkContinuationEU_smul]
   field_simp [hmag]
   linear_combination hbellman
+
+/-- Continuation gain of a corrected bias is the old gain minus the radial
+direction at the old magnitude. -/
+theorem finkContinuationGain_finkCorrectedBias
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (J K : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkContinuationGain (G.finkCorrectedBias J K) z s who d =
+      G.finkContinuationGain J z s who d -
+        (1 + ‖J‖) * G.finkContinuationGain K z s who d := by
+  unfold finkCorrectedBias
+  rw [G.finkContinuationGain_sub, G.finkContinuationGain_smul]
+
+/-- Exact deviation-side recursion.  Replacing `J` by its corrected bias
+turns the old forcing `a • D` into the next normalized deviation gain. -/
+theorem stage_add_correctedGain_add_next_eq
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (a : ℝ) (D : G.State → ∀ who : ι, G.Act who → ℝ)
+    (J K : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkStageGain z s who d +
+        G.finkContinuationGain (G.finkCorrectedBias J K) z s who d +
+        (1 + ‖J‖) * G.finkNextDeviationGain a D J K z s who d =
+      G.finkStageGain z s who d + a * D s who d +
+        G.finkContinuationGain J z s who d := by
+  rw [G.finkContinuationGain_finkCorrectedBias]
+  unfold finkNextDeviationGain
+  have hmag : 1 + ‖J‖ ≠ 0 := by positivity
+  field_simp [hmag]
+  ring
 
 /-- The normalized forcing at the next bias scale can be read directly from
 the Bellman equation.  This form is suited to taking a boundary limit. -/
@@ -1072,6 +1219,142 @@ theorem tendsto_finkNextPoissonRemainderVector_zero_of_boundary_valueVector
   simpa only [Pi.zero_apply] using
     G.tendsto_finkNextPoissonRemainderVector_apply_zero_of_boundary
       hz hVcoord L s who (fun n => hbellman n s who) hJlim hLnorm
+
+/-- Generic deviation-side boundary optimality.  If `J` is the current
+Bellman bias and all pure deviations satisfy the centered gain inequality,
+then after removing a projective boundary direction the next normalized
+deviation gain has asymptotically nonpositive limsup. -/
+theorem eventually_finkNextDeviationGain_le_of_boundary
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    {J : ℕ → G.State → Payoff ι} (K : G.State → Payoff ι)
+    (hJlim : Tendsto (G.compactifyFinkBias ∘ J) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1)
+    (a : ℕ → ℝ)
+    (D : ℕ → G.State → ∀ who : ι, G.Act who → ℝ)
+    (hgain : ∀ n s who (d : G.Act who),
+      G.finkStageGain (z n) s who d + a n * D n s who d +
+        G.finkContinuationGain (J n) (z n) s who d ≤ 0)
+    (s : G.State) (who : ι) (d : G.Act who) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ n in atTop,
+      G.finkNextDeviationGain (a n) (D n) (J n) K (z n) s who d ≤ ε := by
+  have hnorm : Tendsto (fun n => ‖J n‖) atTop atTop :=
+    G.tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
+      hJlim hKnorm
+  have hscale : Tendsto (fun n => 1 + ‖J n‖) atTop atTop := by
+    refine tendsto_atTop.2 fun b => ?_
+    filter_upwards [tendsto_atTop.1 hnorm (b - 1)] with n hn
+    linarith
+  have hinv : Tendsto (fun n => 1 / (1 + ‖J n‖)) atTop (nhds 0) := by
+    simpa only [Function.comp_def, one_div] using
+      tendsto_inv_atTop_zero.comp hscale
+  have hstage := G.tendsto_finkStageGain hz s who d
+  have hstageScaled : Tendsto (fun n =>
+      (1 / (1 + ‖J n‖)) * G.finkStageGain (z n) s who d)
+      atTop (nhds 0) := by
+    simpa using hinv.mul hstage
+  have hconstant : Tendsto (fun _ : ℕ => K) atTop (nhds K) :=
+    tendsto_const_nhds
+  have hdiff := hJlim.sub hconstant
+  have hcorrectedVector : Tendsto (fun n =>
+      (1 / (1 + ‖J n‖)) • G.finkCorrectedBias (J n) K)
+      atTop (nhds 0) := by
+    have hdiff' : Tendsto (fun n => G.compactifyFinkBias (J n) - K)
+        atTop (nhds 0) := by
+      simpa only [Function.comp_def, sub_self] using hdiff
+    apply hdiff'.congr'
+    exact Filter.Eventually.of_forall fun n =>
+      (G.inv_magnitude_smul_finkCorrectedBias (J n) K).symm
+  have hcorrectedGainRaw := G.tendsto_finkContinuationGain_of_tendsto
+    hcorrectedVector hz s who d
+  have hcorrectedGain : Tendsto (fun n =>
+      (1 / (1 + ‖J n‖)) *
+        G.finkContinuationGain (G.finkCorrectedBias (J n) K)
+          (z n) s who d) atTop (nhds 0) := by
+    have heq : (fun n =>
+        (1 / (1 + ‖J n‖)) *
+          G.finkContinuationGain (G.finkCorrectedBias (J n) K)
+            (z n) s who d) =
+        (fun n => G.finkContinuationGain
+          ((1 / (1 + ‖J n‖)) • G.finkCorrectedBias (J n) K)
+            (z n) s who d) := by
+      funext n
+      exact (G.finkContinuationGain_smul
+        (1 / (1 + ‖J n‖)) (G.finkCorrectedBias (J n) K)
+          (z n) s who d).symm
+    rw [heq]
+    simpa [finkContinuationGain] using hcorrectedGainRaw
+  have herror : Tendsto (fun n =>
+      (1 / (1 + ‖J n‖)) *
+        (G.finkStageGain (z n) s who d +
+          G.finkContinuationGain (G.finkCorrectedBias (J n) K)
+            (z n) s who d)) atTop (nhds 0) := by
+    have ht := hstageScaled.add hcorrectedGain
+    have ht' : Tendsto (fun n =>
+        (1 / (1 + ‖J n‖)) * G.finkStageGain (z n) s who d +
+          (1 / (1 + ‖J n‖)) *
+            G.finkContinuationGain (G.finkCorrectedBias (J n) K)
+              (z n) s who d) atTop (nhds 0) := by
+      simpa only [zero_add] using ht
+    convert ht' using 1
+    funext n
+    ring
+  filter_upwards [herror.eventually (Metric.ball_mem_nhds 0 hε)] with n hn
+  rw [Real.dist_eq, sub_zero] at hn
+  have hmag : 0 < 1 + ‖J n‖ := by positivity
+  have hold := hgain n s who d
+  have heq := G.stage_add_correctedGain_add_next_eq
+    (a n) (D n) (J n) K (z n) s who d
+  have hnormalized :
+      (1 / (1 + ‖J n‖)) *
+          (G.finkStageGain (z n) s who d +
+            G.finkContinuationGain (G.finkCorrectedBias (J n) K)
+              (z n) s who d) +
+        G.finkNextDeviationGain (a n) (D n) (J n) K
+          (z n) s who d =
+      (1 / (1 + ‖J n‖)) *
+        (G.finkStageGain (z n) s who d + a n * D n s who d +
+          G.finkContinuationGain (J n) (z n) s who d) := by
+    rw [← heq]
+    field_simp [ne_of_gt hmag]
+  have hrhs : (1 / (1 + ‖J n‖)) *
+      (G.finkStageGain (z n) s who d + a n * D n s who d +
+        G.finkContinuationGain (J n) (z n) s who d) ≤ 0 :=
+    mul_nonpos_of_nonneg_of_nonpos (by positivity) hold
+  have hsum := hnormalized.trans_le hrhs
+  have hlower := (neg_lt_of_abs_lt hn)
+  linarith
+
+/-- Finite-coordinate uniform form of recursive deviation-side boundary
+optimality. -/
+theorem eventually_all_finkNextDeviationGain_le_of_boundary
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    {J : ℕ → G.State → Payoff ι} (K : G.State → Payoff ι)
+    (hJlim : Tendsto (G.compactifyFinkBias ∘ J) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1)
+    (a : ℕ → ℝ)
+    (D : ℕ → G.State → ∀ who : ι, G.Act who → ℝ)
+    (hgain : ∀ n s who (d : G.Act who),
+      G.finkStageGain (z n) s who d + a n * D n s who d +
+        G.finkContinuationGain (J n) (z n) s who d ≤ 0)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ n in atTop, ∀ s who (d : G.Act who),
+      G.finkNextDeviationGain (a n) (D n) (J n) K (z n) s who d ≤ ε := by
+  rw [Filter.eventually_all]
+  intro s
+  rw [Filter.eventually_all]
+  intro who
+  rw [Filter.eventually_all]
+  intro d
+  exact G.eventually_finkNextDeviationGain_le_of_boundary
+    hz K hJlim hKnorm a D hgain s who d hε
 
 /-- At a projective bias boundary, the magnified harmonic residual of the
 target payoff converges to the Poisson drift of the boundary direction. -/
@@ -1604,6 +1887,186 @@ theorem exists_finkRelativeBiasPoissonResolution
     G.finkValue_add_relativeBias_eq_finkEU_add
       (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who
 
+/-- A finite resolution carrying both sides of verification: the on-profile
+Poisson remainder vanishes at every boundary scale, and every pure-deviation
+forcing is asymptotically nonpositive there. -/
+inductive FinkVerifiedResolution (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} :
+    (ℕ → G.finkDomain U) →
+    (ℕ → G.State → Payoff ι) →
+    (ℕ → ℝ) →
+    (ℕ → G.State → Payoff ι) →
+    (ℕ → G.State → Payoff ι) →
+    (ℕ → G.State → ∀ who : ι, G.Act who → ℝ) → Prop
+  | interior
+      {z : ℕ → G.finkDomain U} {V : ℕ → G.State → Payoff ι}
+      {a : ℕ → ℝ} {E J : ℕ → G.State → Payoff ι}
+      {D : ℕ → G.State → ∀ who : ι, G.Act who → ℝ}
+      (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι)
+      (hφ : StrictMono φ)
+      (hJlim : Tendsto (J ∘ φ) atTop (nhds Jlim))
+      (hmean : ∀ n s who,
+        expect (G.finkProfile (z n) s who) (D n s who) = 0) :
+      G.FinkVerifiedResolution z V a E J D
+  | boundary
+      {z : ℕ → G.finkDomain U} {V : ℕ → G.State → Payoff ι}
+      {a : ℕ → ℝ} {E J : ℕ → G.State → Payoff ι}
+      {D : ℕ → G.State → ∀ who : ι, G.Act who → ℝ}
+      (K : G.State → Payoff ι) (φ : ℕ → ℕ)
+      (hφ : StrictMono φ)
+      (hJlim : Tendsto (G.compactifyFinkBias ∘ J ∘ φ)
+        atTop (nhds K))
+      (hKnorm : ‖K‖ = 1)
+      (hmean : ∀ n s who,
+        expect (G.finkProfile (z n) s who) (D n s who) = 0)
+      (hnextPoisson : Tendsto (fun n => G.finkNextPoissonRemainderVector
+        (a (φ n)) (E (φ n)) (J (φ n)) K (z (φ n)))
+        atTop (nhds 0))
+      (hnextGain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+        ∀ s who (d : G.Act who),
+          G.finkNextDeviationGain (a (φ n)) (D (φ n))
+            (J (φ n)) K (z (φ n)) s who d ≤ ε)
+      (tail : G.FinkVerifiedResolution
+        (z ∘ φ) (V ∘ φ)
+        (fun n => 1 + ‖J (φ n)‖)
+        (fun n => G.finkNextPoissonRemainderVector
+          (a (φ n)) (E (φ n)) (J (φ n)) K (z (φ n)))
+        (fun n => G.finkCorrectedBias (J (φ n)) K)
+        (fun n s who d => G.finkNextDeviationGain
+          (a (φ n)) (D (φ n)) (J (φ n)) K (z (φ n)) s who d)) :
+      G.FinkVerifiedResolution z V a E J D
+
+/-- A finite radial bias resolution upgrades to a finite verified resolution
+when supplied with its Bellman equations and centered pure-deviation
+inequalities. -/
+theorem FinkBiasResolution.toFinkVerifiedResolution
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {J : ℕ → G.State → Payoff ι}
+    (hresolution : G.FinkBiasResolution J)
+    {U : ℝ} {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    {V : ℕ → G.State → Payoff ι} {Vlim : G.State → Payoff ι}
+    (hV : Tendsto V atTop (nhds Vlim))
+    {a : ℕ → ℝ} {E : ℕ → G.State → Payoff ι}
+    {D : ℕ → G.State → ∀ who : ι, G.Act who → ℝ}
+    (hmean : ∀ n s who,
+      expect (G.finkProfile (z n) s who) (D n s who) = 0)
+    (hbellman : ∀ n s who, V n s who + J n s who =
+      G.finkStageEU (z n) s who +
+        G.finkContinuationEU (J n) (z n) s who +
+        a n * E n s who)
+    (hgain : ∀ n s who (d : G.Act who),
+      G.finkStageGain (z n) s who d + a n * D n s who d +
+        G.finkContinuationGain (J n) (z n) s who d ≤ 0) :
+    G.FinkVerifiedResolution z V a E J D := by
+  induction hresolution generalizing U z zlim V Vlim a E D with
+  | @interior J φ Jlim hφ hJlim =>
+      exact FinkVerifiedResolution.interior φ Jlim hφ hJlim hmean
+  | @boundary J K φ hφ hJlim hKnorm tail ih =>
+      have hzφ : Tendsto (z ∘ φ) atTop (nhds zlim) :=
+        hz.comp hφ.tendsto_atTop
+      have hVφ : Tendsto (V ∘ φ) atTop (nhds Vlim) :=
+        hV.comp hφ.tendsto_atTop
+      have hJlim' : Tendsto (G.compactifyFinkBias ∘ fun n => J (φ n))
+          atTop (nhds K) := by
+        simpa only [Function.comp_def] using hJlim
+      have hnextPoisson :=
+        G.tendsto_finkNextPoissonRemainderVector_zero_of_boundary_valueVector
+          hzφ hVφ K (fun n s who => hbellman (φ n) s who)
+            hJlim' hKnorm
+      have hnextGain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+          ∀ s who (d : G.Act who),
+            G.finkNextDeviationGain (a (φ n)) (D (φ n))
+              (J (φ n)) K (z (φ n)) s who d ≤ ε := by
+        intro ε hε
+        exact G.eventually_all_finkNextDeviationGain_le_of_boundary
+          hzφ K hJlim' hKnorm (a ∘ φ) (D ∘ φ)
+            (fun n s who d => hgain (φ n) s who d) hε
+      have hmeanNext : ∀ n s who,
+          expect (G.finkProfile (z (φ n)) s who) (fun d =>
+            G.finkNextDeviationGain (a (φ n)) (D (φ n))
+              (J (φ n)) K (z (φ n)) s who d) = 0 := by
+        intro n s who
+        exact G.expect_finkNextDeviationGain_eq_zero
+          (a (φ n)) (D (φ n)) (J (φ n)) K (z (φ n)) s who
+            (hmean (φ n) s who)
+      have hbellmanNext : ∀ n s who,
+          V (φ n) s who + G.finkCorrectedBias (J (φ n)) K s who =
+            G.finkStageEU (z (φ n)) s who +
+              G.finkContinuationEU
+                (G.finkCorrectedBias (J (φ n)) K) (z (φ n)) s who +
+              (1 + ‖J (φ n)‖) *
+                G.finkNextPoissonRemainderVector
+                  (a (φ n)) (E (φ n)) (J (φ n)) K (z (φ n)) s who := by
+        intro n s who
+        exact G.value_add_finkCorrectedBias_eq_stage_add
+          (z (φ n)) (V (φ n) s who) (a (φ n))
+            (E (φ n)) (J (φ n)) K s who (hbellman (φ n) s who)
+      have hgainNext : ∀ n s who (d : G.Act who),
+          G.finkStageGain (z (φ n)) s who d +
+              (1 + ‖J (φ n)‖) *
+                G.finkNextDeviationGain (a (φ n)) (D (φ n))
+                  (J (φ n)) K (z (φ n)) s who d +
+              G.finkContinuationGain (G.finkCorrectedBias (J (φ n)) K)
+                (z (φ n)) s who d ≤ 0 := by
+        intro n s who d
+        have heq := G.stage_add_correctedGain_add_next_eq
+          (a (φ n)) (D (φ n)) (J (φ n)) K (z (φ n)) s who d
+        calc
+          G.finkStageGain (z (φ n)) s who d +
+                (1 + ‖J (φ n)‖) *
+                  G.finkNextDeviationGain (a (φ n)) (D (φ n))
+                    (J (φ n)) K (z (φ n)) s who d +
+                G.finkContinuationGain (G.finkCorrectedBias (J (φ n)) K)
+                  (z (φ n)) s who d =
+              G.finkStageGain (z (φ n)) s who d +
+                G.finkContinuationGain (G.finkCorrectedBias (J (φ n)) K)
+                  (z (φ n)) s who d +
+                (1 + ‖J (φ n)‖) *
+                  G.finkNextDeviationGain (a (φ n)) (D (φ n))
+                    (J (φ n)) K (z (φ n)) s who d := by ring
+          _ = G.finkStageGain (z (φ n)) s who d +
+                a (φ n) * D (φ n) s who d +
+                G.finkContinuationGain (J (φ n)) (z (φ n)) s who d := heq
+          _ ≤ 0 := hgain (φ n) s who d
+      have htail := ih hzφ hVφ hmeanNext hbellmanNext hgainNext
+      exact FinkVerifiedResolution.boundary K φ hφ hJlim hKnorm
+        hmean hnextPoisson hnextGain htail
+
+/-- The relative biases of discounted Fink fixed points admit a finite
+verified hierarchy around any target vector `W`. -/
+theorem exists_finkRelativeBiasVerifiedResolution
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W : G.State → Payoff ι) :
+    G.FinkVerifiedResolution z (fun n => G.finkValue (z n))
+      (fun n => β n / (1 - β n))
+      (fun n => G.finkContinuationResidualVector W (z n))
+      (fun n => G.finkRelativeBias (β n) W (z n))
+      (fun n s who d => G.finkContinuationGain W (z n) s who d) := by
+  apply FinkBiasResolution.toFinkVerifiedResolution
+    (G := G) (hresolution := G.exists_finkBiasResolution
+      (fun n => G.finkRelativeBias (β n) W (z n)))
+    hz (G.tendsto_finkValue hz)
+  · intro n s who
+    exact G.expect_finkContinuationGain_eq_zero W (z n) s who
+  · intro n s who
+    simpa only [finkContinuationResidualVector] using
+      G.finkValue_add_relativeBias_eq_finkEU_add
+        (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who
+  · intro n s who d
+    exact G.finkCenteredGain_nonpos_of_finkMap_fixedPoint
+      (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who d
+
 /-- The first Poisson-corrected relative bias admits the same projective
 dichotomy.  The extraction preserves the Fink point, leading direction, and
 vanishing normalized Poisson remainder, so the boundary branch can be
@@ -1745,20 +2208,6 @@ theorem exists_finkValueBias_subsequence_interior_or_boundaryScale
         (fun n => hβ0 (φ n)) (fun n => hβ1 (φ n)) hzφ
         (K := K) _ hboundary.1
       simpa only [Function.comp_def] using hKlim⟩
-
-/-- A unilateral mixed continuation value is the deviating player's
-expectation of the corresponding pure-action continuation values. -/
-theorem mixedDeviationContinuation_eq_expect_pure
-    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
-    [Finite G.State] [∀ i, Finite (G.Act i)]
-    (x : G.StationaryMixedProfile) (W : G.State → Payoff ι)
-    (s : G.State) (who : ι) (dev : PMF (G.Act who)) :
-    expect (pmfPi (Function.update (x s) who dev))
-        (fun a => expect (G.transition s a) (fun s' => W s' who)) =
-      expect dev (fun d =>
-        expect (pmfPi (Function.update (x s) who (PMF.pure d)))
-          (fun a => expect (G.transition s a) (fun s' => W s' who))) := by
-  rw [pmfPi_update_bind, expect_bind]
 
 /-- If a finite-distribution expectation reaches a common pointwise upper
 bound, every positive-probability point reaches that bound. -/
@@ -2574,21 +3023,6 @@ theorem finkProjectiveLossVector_nonneg
     0 ≤ G.finkProjectiveLossVector β W K z s who d := by
   unfold finkProjectiveLossVector
   exact le_max_right _ _
-
-/-- A player's own mixed action averages its pure continuation gains to
-zero. -/
-theorem expect_finkContinuationGain_eq_zero
-    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
-    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
-    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
-    expect (G.finkProfile z s who) (fun d =>
-      G.finkContinuationGain W z s who d) = 0 := by
-  have hdecomp := G.mixedDeviationContinuation_eq_expect_pure
-    (G.finkProfile z) W s who (G.finkProfile z s who)
-  simp only [Function.update_eq_self] at hdecomp
-  unfold finkContinuationGain
-  rw [expect_sub, expect_const, ← hdecomp]
-  ring
 
 /-- Consequently the complete current-profile projective gain vector has
 zero own-action mean at every state and player. -/
