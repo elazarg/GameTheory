@@ -306,23 +306,6 @@ def Morphism.toEUMorphism {G H : KernelGame ι} (f : Morphism G H) :
   toMorphism := f
   eu_preserved := f.eu_preserved
 
-/-- Compatibility wrapper for `Morphism.toEUMorphism` under the historical
-finite-outcome hypotheses. Expected-utility preservation is unconditional. -/
-def Morphism.toEUMorphismOfFintypeOutcome {G H : KernelGame ι}
-    [Finite G.Outcome] [Finite H.Outcome] (f : Morphism G H) :
-    EUMorphism G H :=
-  f.toEUMorphism
-
-/-- Compatibility wrapper for `Morphism.toEUMorphism` under the historical
-bounded-utility hypotheses. Expected-utility preservation is unconditional. -/
-def Morphism.toEUMorphismOfBounded {G H : KernelGame ι}
-    (f : Morphism G H)
-    {C_G C_H : ι → ℝ}
-    (_hbdG : ∀ who ω, |G.utility ω who| ≤ C_G who)
-    (_hbdH : ∀ who ω, |H.utility ω who| ≤ C_H who) :
-    EUMorphism G H :=
-  f.toEUMorphism
-
 namespace EUMorphism
 
 /-- Identity EU morphism. -/
