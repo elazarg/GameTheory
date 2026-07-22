@@ -5899,11 +5899,13 @@ theorem isUniformEquilibriumPayoff_of_stationaryAverageRewardBias
     linarith
 
 /-- A finite relative-bias branch closes to a stationary uniform equilibrium
-when its two singular target-continuation limits are represented by one
-further potential `K`.  Subtracting `K` from the limiting relative bias
-absorbs both the on-profile forcing and every pure-deviation forcing.  This is
-the finite-bias analogue of one Poisson correction, and needs no calendar. -/
-theorem isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate
+when its singular target-continuation terms are controlled by one further
+potential `K`.  The on-profile forcing must converge to the residual of `K`,
+while pure deviations only need the corresponding asymptotic lower bound.
+Subtracting `K` from the limiting relative bias then gives an average-reward
+verification certificate.  This is the finite-bias analogue of one Poisson
+correction, and needs no calendar. -/
+theorem isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
     (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
     [∀ i, Fintype (G.Act i)] (s₀ : G.State)
     (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
@@ -5927,10 +5929,10 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate
     (hscaledResidual : Tendsto (fun n =>
       (β n / (1 - β n)) • G.finkContinuationResidualVector W (z n))
         atTop (nhds (-G.finkContinuationResidualVector K zlim)))
-    (hscaledGain : ∀ s who (d : G.Act who),
-      Tendsto (fun n => (β n / (1 - β n)) *
-        G.finkContinuationGain W (z n) s who d) atTop
-          (nhds (-G.finkContinuationGain K zlim s who d))) :
+    (hscaledGainLower : ∀ s who (d : G.Act who) (ε : ℝ), 0 < ε →
+      ∀ᶠ n in atTop, -G.finkContinuationGain K zlim s who d - ε ≤
+        (β n / (1 - β n)) *
+          G.finkContinuationGain W (z n) s who d) :
     G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
   let a : ℕ → ℝ := fun n => β n / (1 - β n)
   let J : ℕ → G.State → Payoff ι := fun n =>
@@ -5979,29 +5981,47 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate
         W s who + (H - K) s who := by
     intro s who d
     have hstage := G.tendsto_finkStageGain hz s who d
-    have htarget := hscaledGain s who d
     have hbias := G.tendsto_finkContinuationGain_of_tendsto hH hz s who d
-    have hsum : Tendsto (fun n =>
+    have hbase : Tendsto (fun n =>
         G.finkStageGain (z n) s who d +
-          (β n / (1 - β n)) *
-            G.finkContinuationGain W (z n) s who d +
           G.finkContinuationGain
             (G.finkRelativeBias (β n) W (z n)) (z n) s who d)
         atTop (nhds (G.finkStageGain zlim s who d +
-          (-G.finkContinuationGain K zlim s who d) +
           G.finkContinuationGain H zlim s who d)) := by
-      exact (hstage.add htarget).add hbias
+      exact hstage.add hbias
     have hnonpos : G.finkStageGain zlim s who d +
         G.finkContinuationGain (H - K) zlim s who d ≤ 0 := by
       have hlimit : G.finkStageGain zlim s who d +
           (-G.finkContinuationGain K zlim s who d) +
             G.finkContinuationGain H zlim s who d ≤ 0 := by
-        apply le_of_tendsto_of_tendsto hsum
-          (tendsto_const_nhds : Tendsto (fun _ : ℕ => (0 : ℝ))
-            atTop (nhds 0))
-        exact Filter.Eventually.of_forall fun n =>
+        by_contra hnot
+        have hpos : 0 < G.finkStageGain zlim s who d +
+            (-G.finkContinuationGain K zlim s who d) +
+              G.finkContinuationGain H zlim s who d :=
+          lt_of_not_ge hnot
+        let ε := (G.finkStageGain zlim s who d +
+          (-G.finkContinuationGain K zlim s who d) +
+            G.finkContinuationGain H zlim s who d) / 4
+        have hε : 0 < ε := by
+          dsimp only [ε]
+          linarith
+        obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp hbase ε hε
+        have hbaseClose : ∀ᶠ n in atTop,
+            |(G.finkStageGain (z n) s who d +
+                G.finkContinuationGain
+                  (G.finkRelativeBias (β n) W (z n)) (z n) s who d) -
+              (G.finkStageGain zlim s who d +
+                G.finkContinuationGain H zlim s who d)| < ε := by
+          filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+          simpa only [Real.dist_eq] using hn
+        have hlower := hscaledGainLower s who d ε hε
+        obtain ⟨n, hnclose, hnlower⟩ := (hbaseClose.and hlower).exists
+        have hcenter :=
           G.finkCenteredGain_nonpos_of_finkMap_fixedPoint
             (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who d
+        rw [abs_lt] at hnclose
+        dsimp only [ε] at hnclose hnlower
+        linarith
       rw [G.finkContinuationGain_sub]
       linarith
     unfold finkStageGain finkContinuationGain at hnonpos
@@ -6042,10 +6062,103 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate
   · exact honProfile
   · exact hmixed
 
-/-- Algebraic Poisson form of the interior correction criterion.  The
-on-profile scaled residual convergence is automatic from the centered Fink
-Bellman equation; it is enough to identify its forced limit as the negative
-continuation residual of `K`. -/
+/-- Two-sided convergence is a convenient sufficient condition for the
+one-sided pure-deviation control in
+`isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate`. -/
+theorem isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (s₀ : G.State)
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H K : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hscaledResidual : Tendsto (fun n =>
+      (β n / (1 - β n)) • G.finkContinuationResidualVector W (z n))
+        atTop (nhds (-G.finkContinuationResidualVector K zlim)))
+    (hscaledGain : ∀ s who (d : G.Act who),
+      Tendsto (fun n => (β n / (1 - β n)) *
+        G.finkContinuationGain W (z n) s who d) atTop
+          (nhds (-G.finkContinuationGain K zlim s who d))) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  apply G.isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
+    s₀ β U hβ0 hβ1 hpay z zlim W H K hfix hz hV hH
+      hharmonic hexcessive hscaledResidual
+  intro s who d ε hε
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp (hscaledGain s who d) ε hε
+  filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+  rw [Real.dist_eq, abs_lt] at hn
+  linarith
+
+/-- Algebraic Poisson form of the one-sided interior correction criterion.
+The on-profile scaled residual convergence is automatic from the centered
+Fink Bellman equation; it is enough to identify its forced limit as the
+negative continuation residual of `K`. -/
+theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonLowerCorrection
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (s₀ : G.State)
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H K : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hPoisson : G.finkBellmanForcingVector W H zlim =
+      -G.finkContinuationResidualVector K zlim)
+    (hscaledGainLower : ∀ s who (d : G.Act who) (ε : ℝ), 0 < ε →
+      ∀ᶠ n in atTop, -G.finkContinuationGain K zlim s who d - ε ≤
+        (β n / (1 - β n)) *
+          G.finkContinuationGain W (z n) s who d) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  let a : ℕ → ℝ := fun n => β n / (1 - β n)
+  let E : ℕ → G.State → Payoff ι := fun n =>
+    G.finkContinuationResidualVector W (z n)
+  let J : ℕ → G.State → Payoff ι := fun n =>
+    G.finkRelativeBias (β n) W (z n)
+  have hbellman : ∀ n s who,
+      G.finkValue (z n) s who + J n s who =
+        G.finkStageEU (z n) s who +
+          G.finkContinuationEU (J n) (z n) s who +
+            a n * E n s who := by
+    intro n s who
+    simpa only [J, E, a, finkContinuationResidualVector] using
+      G.finkValue_add_relativeBias_eq_finkEU_add
+        (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who
+  have hscaledResidual := G.tendsto_smul_finkBellmanForcingVector hz hV
+    (by simpa only [J] using hH) a hbellman
+  apply G.isUniformEquilibriumPayoff_of_finkInteriorLowerCorrectionCertificate
+    s₀ β U hβ0 hβ1 hpay z zlim W H K hfix hz hV hH
+      hharmonic hexcessive
+  · simpa only [a, E, hPoisson] using hscaledResidual
+  · exact hscaledGainLower
+
+/-- Two-sided pure-deviation convergence specializes the one-sided algebraic
+Poisson correction criterion. -/
 theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonCorrection
     (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
     [∀ i, Fintype (G.Act i)] (s₀ : G.State)
@@ -6074,27 +6187,14 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonCorrection
         G.finkContinuationGain W (z n) s who d) atTop
           (nhds (-G.finkContinuationGain K zlim s who d))) :
     G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
-  let a : ℕ → ℝ := fun n => β n / (1 - β n)
-  let E : ℕ → G.State → Payoff ι := fun n =>
-    G.finkContinuationResidualVector W (z n)
-  let J : ℕ → G.State → Payoff ι := fun n =>
-    G.finkRelativeBias (β n) W (z n)
-  have hbellman : ∀ n s who,
-      G.finkValue (z n) s who + J n s who =
-        G.finkStageEU (z n) s who +
-          G.finkContinuationEU (J n) (z n) s who +
-            a n * E n s who := by
-    intro n s who
-    simpa only [J, E, a, finkContinuationResidualVector] using
-      G.finkValue_add_relativeBias_eq_finkEU_add
-        (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who
-  have hscaledResidual := G.tendsto_smul_finkBellmanForcingVector hz hV
-    (by simpa only [J] using hH) a hbellman
-  apply G.isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate
+  apply G.isUniformEquilibriumPayoff_of_finkInteriorPoissonLowerCorrection
     s₀ β U hβ0 hβ1 hpay z zlim W H K hfix hz hV hH
-      hharmonic hexcessive
-  · simpa only [a, E, hPoisson] using hscaledResidual
-  · exact hscaledGain
+      hharmonic hexcessive hPoisson
+  intro s who d ε hε
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp (hscaledGain s who d) ε hε
+  filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+  rw [Real.dist_eq, abs_lt] at hn
+  linarith
 
 /-- Zero-correction specialization of
 `isUniformEquilibriumPayoff_of_finkInteriorCorrectionCertificate`. -/
