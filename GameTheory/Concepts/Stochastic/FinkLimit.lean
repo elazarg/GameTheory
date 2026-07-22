@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.FinkSchedule
+import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
 
 /-!
 # Vanishing-Discount Compactness for Fink Fixed Points
@@ -847,6 +848,90 @@ def IsIndexedFinkCalendarSelectable (β : ℕ → ℝ) (U : ℝ)
             indexedFinkSwitchError β U κ t ≤ η) ∧
       (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
         (q (κ t) + ∑ k ∈ Finset.range t, r (κ k)) ≤ η
+
+/-- A useful sufficient form of calendar selectability.  It separates the
+remaining construction into vanishing terminal bias, vanishing average switch
+cost, ordinary convergence of value errors, and a summable total transition
+drift. -/
+theorem isIndexedFinkCalendarSelectable_of_summableDrift
+    (β : ℕ → ℝ) (U : ℝ) (q r : ℕ → ℝ)
+    (hcalendar : ∀ ε : ℝ, 0 < ε → ∃ κ : ℕ → ℕ,
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * finkScaledBiasBound β U (κ T))
+        atTop (nhds 0) ∧
+      Tendsto (fun T : ℕ => (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        indexedFinkSwitchError β U κ t) atTop (nhds 0) ∧
+      Tendsto (q ∘ κ) atTop (nhds 0) ∧
+      (∀ t, 0 ≤ r (κ t)) ∧ Summable (r ∘ κ) ∧
+      ∑' t, r (κ t) ≤ ε) :
+    IsIndexedFinkCalendarSelectable β U q r := by
+  intro η hη
+  have hhalf : 0 < η / 2 := by linarith
+  obtain ⟨κ, hterminal, hswitch, hq, hr0, hrsum, hrTotal⟩ :=
+    hcalendar (η / 2) hhalf
+  have hqavg : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      ∑ t ∈ Finset.range T, q (κ t)) atTop (nhds 0) := by
+    simpa only [Function.comp_apply] using hq.cesaro
+  have hinitial : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      finkScaledBiasBound β U (κ 0)) atTop (nhds 0) := by
+    have ht := tendsto_const_div_atTop_nhds_zero_nat
+      (finkScaledBiasBound β U (κ 0))
+    simpa only [div_eq_inv_mul] using ht
+  have hbias : Tendsto (fun T : ℕ =>
+      (finkScaledBiasBound β U (κ 0) +
+          finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          indexedFinkSwitchError β U κ t) atTop (nhds 0) := by
+    have ht := (hinitial.add hterminal).add hswitch
+    convert ht using 1
+    · funext T
+      rw [div_eq_inv_mul]
+      ring
+    · simp
+  obtain ⟨Nb, hNb⟩ := Metric.tendsto_atTop.mp hbias η hη
+  obtain ⟨Nq, hNq⟩ := Metric.tendsto_atTop.mp hqavg (η / 2) hhalf
+  let T₀ := max 1 (max Nb Nq)
+  refine ⟨κ, T₀, fun T hT => ?_⟩
+  have hTone : 1 ≤ T := le_trans (le_max_left _ _) hT
+  have hTpos : 0 < T := Nat.zero_lt_of_lt hTone
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hTpos
+  have hNbT : Nb ≤ T := le_trans (le_max_left _ _) (le_trans (le_max_right _ _) hT)
+  have hNqT : Nq ≤ T := le_trans (le_max_right _ _) (le_trans (le_max_right _ _) hT)
+  have hbiasLe :
+      (finkScaledBiasBound β U (κ 0) +
+          finkScaledBiasBound β U (κ T)) / (T : ℝ) +
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          indexedFinkSwitchError β U κ t ≤ η := by
+    have hb := hNb T hNbT
+    rw [Real.dist_eq, sub_zero] at hb
+    exact (le_abs_self _).trans hb.le
+  have hqLe : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, q (κ t) ≤ η / 2 := by
+    have hqT := hNq T hNqT
+    rw [Real.dist_eq, sub_zero] at hqT
+    exact (le_abs_self _).trans hqT.le
+  have hprefix : ∀ t, (∑ k ∈ Finset.range t, r (κ k)) ≤
+      ∑' k, r (κ k) := by
+    intro t
+    exact hrsum.sum_le_tsum (Finset.range t) (fun k _ => hr0 k)
+  have htarget : (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+      (q (κ t) + ∑ k ∈ Finset.range t, r (κ k)) ≤ η := by
+    have hsum : (∑ t ∈ Finset.range T,
+        (q (κ t) + ∑ k ∈ Finset.range t, r (κ k))) ≤
+        ∑ t ∈ Finset.range T, (q (κ t) + ∑' k, r (κ k)) :=
+      Finset.sum_le_sum fun t _ => add_le_add le_rfl (hprefix t)
+    have hmul := mul_le_mul_of_nonneg_left hsum (inv_nonneg.mpr hTreal.le)
+    calc
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+          (q (κ t) + ∑ k ∈ Finset.range t, r (κ k)) ≤
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+            (q (κ t) + ∑' k, r (κ k)) := hmul
+      _ = (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, q (κ t) +
+          ∑' k, r (κ k) := by
+        rw [Finset.sum_add_distrib]
+        simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
+        field_simp [ne_of_gt hTreal]
+      _ ≤ η / 2 + η / 2 := add_le_add hqLe hrTotal
+      _ = η := by ring
+  exact ⟨hTpos, hbiasLe, htarget⟩
 
 /-- Indexed Fink fixed points form a calendar-time Bellman schedule. -/
 theorem isDiscountedStationaryBellmanSchedule_indexedFink
