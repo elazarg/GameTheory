@@ -164,6 +164,23 @@ theorem continuous_finkAuxEU_param
     fun_prop
   exact hw.mul (G.continuous_finkDiscountedAuxPayoff_param s a who)
 
+/-- Pure-deviation auxiliary expected payoff is jointly continuous in the
+discount factor and Fink coordinates. -/
+theorem continuous_finkDeviationAuxEU_param
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Continuous (fun q : ℝ × G.finkDomain U =>
+      G.finkDeviationAuxEU q.1 q.2 s who d) := by
+  unfold finkDeviationAuxEU
+  refine continuous_finsetSum (s := (Finset.univ : Finset G.JointAct)) ?_
+  intro a ha
+  have hw : Continuous (fun q : ℝ × G.finkDomain U =>
+      (((PMF.pure d) (a who)).toReal) *
+        (∏ i ∈ (Finset.univ.erase who), q.2.1.1 (s, i) (a i))) := by
+    fun_prop
+  exact hw.mul (G.continuous_finkDiscountedAuxPayoff_param s a who)
+
 /-- The auxiliary expected payoff tends to its value at every parameter
 point.  This pointwise form keeps later filter compositions lightweight. -/
 theorem tendsto_finkAuxEU_param
@@ -174,6 +191,17 @@ theorem tendsto_finkAuxEU_param
       G.finkAuxEU p.1 p.2 s who) (nhds q)
       (nhds (G.finkAuxEU q.1 q.2 s who)) :=
   (G.continuous_finkAuxEU_param (U := U) s who).tendsto q
+
+/-- The pure-deviation auxiliary payoff tends to its value at every
+parameter point. -/
+theorem tendsto_finkDeviationAuxEU_param
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (q : ℝ × G.finkDomain U) (s : G.State) (who : ι) (d : G.Act who) :
+    Tendsto (fun p : ℝ × G.finkDomain U =>
+      G.finkDeviationAuxEU p.1 p.2 s who d) (nhds q)
+      (nhds (G.finkDeviationAuxEU q.1 q.2 s who d)) :=
+  (G.continuous_finkDeviationAuxEU_param (U := U) s who d).tendsto q
 
 /-- Joint convergence of the discount and domain point transports through
 the auxiliary expected payoff. -/
@@ -192,6 +220,24 @@ theorem tendsto_finkAuxEU_of_tendsto
       (nhds (1, zlim)) := by
     simpa only [Function.comp_def, nhds_prod_eq] using hβlim.prodMk hzlim
   exact (G.tendsto_finkAuxEU_param (1, zlim) s who).comp hpair
+
+/-- Joint convergence of the discount and domain point transports through a
+pure-deviation auxiliary payoff. -/
+theorem tendsto_finkDeviationAuxEU_of_tendsto
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {β : ℕ → ℝ} {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    {φ : ℕ → ℕ} (s : G.State) (who : ι) (d : G.Act who)
+    (hβlim : Tendsto (β ∘ φ) atTop (nhds 1))
+    (hzlim : Tendsto (z ∘ φ) atTop (nhds zlim)) :
+    Tendsto ((fun p : ℝ × G.finkDomain U =>
+      G.finkDeviationAuxEU p.1 p.2 s who d) ∘
+        fun k => (β (φ k), z (φ k))) atTop
+      (nhds (G.finkDeviationAuxEU 1 zlim s who d)) := by
+  have hpair : Tendsto (fun k => (β (φ k), z (φ k))) atTop
+      (nhds (1, zlim)) := by
+    simpa only [Function.comp_def, nhds_prod_eq] using hβlim.prodMk hzlim
+  exact (G.tendsto_finkDeviationAuxEU_param (1, zlim) s who d).comp hpair
 
 /-- Convergence of Fink-domain points gives coordinatewise convergence of
 their decoded value functions, also after passing to a subsequence. -/
@@ -240,6 +286,27 @@ theorem finkAuxEU_one_eq_finkValue_of_tendsto
   exact tendsto_eq_of_forall_eq haux hval fun k => by
     simpa only [Function.comp_apply] using hvalue (φ k)
 
+/-- Pure-deviation optimality is closed under a convergent vanishing-discount
+subsequence. -/
+theorem finkDeviationAuxEU_one_le_finkAuxEU_of_tendsto
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U) (φ : ℕ → ℕ)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hdev : ∀ n,
+      G.finkDeviationAuxEU (β n) (z n) s who d ≤
+        G.finkAuxEU (β n) (z n) s who)
+    (hβlim : Tendsto (β ∘ φ) atTop (nhds 1))
+    (hzlim : Tendsto (z ∘ φ) atTop (nhds zlim)) :
+    G.finkDeviationAuxEU 1 zlim s who d ≤ G.finkAuxEU 1 zlim s who := by
+  have hleft := G.tendsto_finkDeviationAuxEU_of_tendsto
+    s who d hβlim hzlim
+  have hright := G.tendsto_finkAuxEU_of_tendsto s who hβlim hzlim
+  apply le_of_tendsto_of_tendsto hleft hright
+  exact Filter.Eventually.of_forall fun k => by
+    simpa only [Function.comp_apply] using hdev (φ k)
+
 /-- At discount one, the Fink value equation says precisely that the value is
 harmonic for the transition kernel induced by the stationary profile. -/
 theorem finkValue_harmonic_of_finkAuxEU_one_eq
@@ -252,6 +319,51 @@ theorem finkValue_harmonic_of_finkAuxEU_one_eq
         expect (G.transition s a) (fun s' => G.finkValue z s' who)) := by
   rw [G.finkAuxEU_eq_discountedAuxEU, G.discountedAuxEU_eq] at hlimit
   simpa using hlimit.symm
+
+/-- At discount one, a Fink pure-deviation inequality compares only expected
+successor values: the current-stage payoff has vanished. -/
+theorem pureDeviationContinuation_le_onProfile_of_finkAuxEU_one_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hdev : G.finkDeviationAuxEU 1 z s who d ≤ G.finkAuxEU 1 z s who) :
+    expect (pmfPi (Function.update (G.finkProfile z s) who (PMF.pure d)))
+        (fun a => expect (G.transition s a)
+          (fun s' => G.finkValue z s' who)) ≤
+      expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => G.finkValue z s' who)) := by
+  rw [G.finkDeviationAuxEU_eq_discountedAuxEU,
+    G.finkAuxEU_eq_discountedAuxEU,
+    G.discountedAuxEU_eq, G.discountedAuxEU_eq] at hdev
+  simpa using hdev
+
+/-- Excessiveness against every pure action extends by linearity to every
+mixed action of the deviating player. -/
+theorem mixedDeviationContinuation_le_of_pure
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι)
+    (hpure : ∀ d : G.Act who,
+      expect (pmfPi (Function.update (G.finkProfile z s) who (PMF.pure d)))
+          (fun a => expect (G.transition s a)
+            (fun s' => G.finkValue z s' who)) ≤
+        G.finkValue z s who)
+    (dev : PMF (G.Act who)) :
+    expect (pmfPi (Function.update (G.finkProfile z s) who dev))
+        (fun a => expect (G.transition s a)
+          (fun s' => G.finkValue z s' who)) ≤
+      G.finkValue z s who := by
+  let f : G.JointAct → ℝ := fun a =>
+    expect (G.transition s a) (fun s' => G.finkValue z s' who)
+  calc
+    expect (pmfPi (Function.update (G.finkProfile z s) who dev)) f =
+        expect dev (fun d =>
+          expect (pmfPi (Function.update (G.finkProfile z s) who (PMF.pure d)))
+            f) := by
+          rw [pmfPi_update_bind, expect_bind]
+    _ ≤ expect dev (fun _ => G.finkValue z s who) := by
+      exact expect_mono dev _ _ hpure
+    _ = G.finkValue z s who := expect_const dev _
 
 /-- A convergent family of Fink fixed points with discounts tending to one
 has a harmonic limiting continuation value under its limiting stationary
@@ -280,6 +392,72 @@ theorem finkValue_harmonic_of_fixedPoint_tendsto
   have hlimit := G.finkAuxEU_one_eq_finkValue_of_tendsto
     β U z zlim φ s who hvalue hβlim hzlim
   exact G.finkValue_harmonic_of_finkAuxEU_one_eq zlim s who hlimit
+
+/-- The limiting Fink value is excessive against every unilateral pure
+action, while it is harmonic on the limiting stationary profile. -/
+theorem finkValue_excessive_pureDeviation_of_fixedPoint_tendsto
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U) (φ : ℕ → ℕ)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n) hpay (z n) = z n)
+    (hβlim : Tendsto (β ∘ φ) atTop (nhds 1))
+    (hzlim : Tendsto (z ∘ φ) atTop (nhds zlim))
+    (s : G.State) (who : ι) (d : G.Act who) :
+    expect (pmfPi (Function.update (G.finkProfile zlim s) who (PMF.pure d)))
+        (fun a => expect (G.transition s a)
+          (fun s' => G.finkValue zlim s' who)) ≤
+      G.finkValue zlim s who := by
+  have hdev : ∀ n,
+      G.finkDeviationAuxEU (β n) (z n) s who d ≤
+        G.finkAuxEU (β n) (z n) s who := by
+    intro n
+    exact G.finkDeviationAuxEU_le_finkAuxEU_of_finkMap_fixedPoint
+      (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) s who d
+  have hdevLimit := G.finkDeviationAuxEU_one_le_finkAuxEU_of_tendsto
+    β U z zlim φ s who d hdev hβlim hzlim
+  have hcont :=
+    G.pureDeviationContinuation_le_onProfile_of_finkAuxEU_one_le
+      zlim s who d hdevLimit
+  exact hcont.trans_eq
+    (G.finkValue_harmonic_of_fixedPoint_tendsto β U hβ0 hβ1 hpay
+      z zlim φ hfix hβlim hzlim s who).symm
+
+/-- Canonical vanishing-discount selection yields a stationary profile and
+bounded value function that are harmonic on path and excessive against every
+unilateral mixed action. -/
+theorem exists_finkLimit_harmonic_excessive
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)]
+    (U : ℝ) (hU : 0 ≤ U)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) :
+    ∃ zlim : G.finkDomain U,
+      (∀ s who,
+        G.finkValue zlim s who =
+          expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+            expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who))) ∧
+      ∀ s who (dev : PMF (G.Act who)),
+        expect (pmfPi (Function.update (G.finkProfile zlim s) who dev))
+            (fun a => expect (G.transition s a)
+              (fun s' => G.finkValue zlim s' who)) ≤
+          G.finkValue zlim s who := by
+  obtain ⟨z, zlim, φ, hfix, hφ, hzlim, hβlim⟩ :=
+    G.exists_convergent_approachOne_finkFixedPoint_subsequence U hU hpay
+  refine ⟨zlim, ?_, ?_⟩
+  · intro s who
+    exact G.finkValue_harmonic_of_fixedPoint_tendsto
+      approachOneDiscount U approachOneDiscount_nonneg
+        approachOneDiscount_le_one hpay z zlim φ hfix hβlim hzlim s who
+  · intro s who dev
+    apply G.mixedDeviationContinuation_le_of_pure zlim s who
+    intro d
+    exact G.finkValue_excessive_pureDeviation_of_fixedPoint_tendsto
+      approachOneDiscount U approachOneDiscount_nonneg
+        approachOneDiscount_le_one hpay z zlim φ hfix hβlim hzlim s who d
 
 end StochasticGame
 end GameTheory

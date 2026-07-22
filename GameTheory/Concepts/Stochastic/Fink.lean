@@ -559,22 +559,19 @@ def IsDiscountedStationaryBellmanEq (G : StochasticGame ι) [Fintype ι]
   G.IsDiscountedAuxNash β V x ∧
     ∀ (s : G.State) (who : ι), G.discountedAuxEU β V s (x s) who = V s who
 
-/-- **Fink's theorem (finite discounted stochastic games).**  Every bounded
-finite stochastic game has a stationary mixed profile and continuation value
-satisfying the discounted Bellman equations and all statewise best-response
-inequalities. -/
-theorem exists_isDiscountedStationaryBellmanEq_bounded (G : StochasticGame ι)
-    [Finite G.State] [Fintype ι] [DecidableEq ι]
-    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]
-    (β U : ℝ) (hU : 0 ≤ U) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
-    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) :
-    ∃ (x : G.StationaryMixedProfile) (V : G.State → Payoff ι),
-      G.IsDiscountedStationaryBellmanEq β x V ∧
-        ∀ s who, |V s who| ≤ U := by
-  letI : Fintype G.State := Fintype.ofFinite G.State
-  letI : ∀ i, Fintype (G.Act i) := fun i => Fintype.ofFinite (G.Act i)
-  obtain ⟨z, hz⟩ := G.exists_finkMap_fixedPoint β U hU hβ0 hβ1 hpay
-  refine ⟨G.finkProfile z, G.finkValue z, ⟨?_, ?_⟩, ?_⟩
+/-- A fixed point of Fink's map decodes to the corresponding discounted
+stationary Bellman equilibrium. -/
+theorem isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β U : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1 hpay z = z) :
+    G.IsDiscountedStationaryBellmanEq β (G.finkProfile z)
+      (G.finkValue z) := by
+  constructor
   · intro s who dev
     let actFintype : ∀ i, Fintype (G.Act i) := inferInstance
     haveI : ∀ i,
@@ -594,7 +591,7 @@ theorem exists_isDiscountedStationaryBellmanEq_bounded (G : StochasticGame ι)
                 (G.finkProfile z s) i d) := by
       intro i d
       have hcoord := congrArg
-        (fun q : G.finkDomain U => q.1.1 (s, i) d) hz
+        (fun q : G.finkDomain U => q.1.1 (s, i) d) hfix
       have hden : 1 + G.finkGainSum β z s i ≠ 0 := by
         linarith [G.finkGainSum_nonneg β z s i]
       have hsum :
@@ -630,12 +627,48 @@ theorem exists_isDiscountedStationaryBellmanEq_bounded (G : StochasticGame ι)
       G.mixedExtension_eu_discountedAuxGame] at hdev
     exact hdev
   · intro s who
-    have hcoord := congrArg (fun q : G.finkDomain U => q.1.2 s who) hz
-    have hval : G.finkAuxEU β z s who = G.finkValue z s who := by
-      simpa [finkMap, finkAmbientUpdate, finkValueUpdate, finkValue] using hcoord
-    rw [G.finkAuxEU_eq_discountedAuxEU] at hval
-    exact hval
-  · exact fun s who => G.abs_finkValue_le z s who
+    rw [← G.finkAuxEU_eq_discountedAuxEU]
+    exact G.finkAuxEU_eq_finkValue_of_finkMap_fixedPoint
+      β U hβ0 hβ1 hpay z hfix s who
+
+/-- In particular, every pure deviation has no positive auxiliary gain at a
+fixed point of Fink's map. -/
+theorem finkDeviationAuxEU_le_finkAuxEU_of_finkMap_fixedPoint
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β U : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hfix : G.finkMap β U hβ0 hβ1 hpay z = z)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkDeviationAuxEU β z s who d ≤ G.finkAuxEU β z s who := by
+  have hF := G.isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
+    β U hβ0 hβ1 hpay z hfix
+  have hdev := hF.1 s who (PMF.pure d)
+  rw [← G.finkDeviationAuxEU_eq_discountedAuxEU,
+    ← G.finkAuxEU_eq_discountedAuxEU] at hdev
+  exact hdev
+
+/-- **Fink's theorem (finite discounted stochastic games).**  Every bounded
+finite stochastic game has a stationary mixed profile and continuation value
+satisfying the discounted Bellman equations and all statewise best-response
+inequalities. -/
+theorem exists_isDiscountedStationaryBellmanEq_bounded (G : StochasticGame ι)
+    [Finite G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]
+    (β U : ℝ) (hU : 0 ≤ U) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U) :
+    ∃ (x : G.StationaryMixedProfile) (V : G.State → Payoff ι),
+      G.IsDiscountedStationaryBellmanEq β x V ∧
+        ∀ s who, |V s who| ≤ U := by
+  letI : Fintype G.State := Fintype.ofFinite G.State
+  letI : ∀ i, Fintype (G.Act i) := fun i => Fintype.ofFinite (G.Act i)
+  obtain ⟨z, hz⟩ := G.exists_finkMap_fixedPoint β U hU hβ0 hβ1 hpay
+  exact ⟨G.finkProfile z, G.finkValue z,
+    G.isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
+      β U hβ0 hβ1 hpay z hz,
+    fun s who => G.abs_finkValue_le z s who⟩
 
 /-- Certificate-only form of Fink's theorem. -/
 theorem exists_isDiscountedStationaryBellmanEq (G : StochasticGame ι)
