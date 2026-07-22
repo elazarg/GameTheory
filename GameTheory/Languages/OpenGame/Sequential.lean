@@ -21,9 +21,10 @@ later plans reacting to the changed history.  It is deliberately the plain
 sequential/agent-form notion, not subgame-perfect equilibrium; a future
 extension can impose optimality at every counterfactual history.
 
-The homogeneous action type keeps this first n-stage API small while already
-covering arbitrary finite horizons.  Heterogeneous actions require dependent
-prefix histories and are left as a separate generalization.
+`ShapeSeq` is the convenient homogeneous-action front end. `ShapeSeqDep`
+supplies stage-specific action types: its dependent history at `i` contains
+exactly the actions at indices strictly before `i`, and its realization uses
+well-founded recursion on the stage index.
 -/
 
 namespace OpenGames
@@ -222,5 +223,77 @@ def twoStageIso (A : Type) :
           hn 1 deviation
 
 end ShapeSeq
+
+/-! ## Heterogeneous finite horizons -/
+
+namespace ShapeSeqDep
+
+/-- Embed a coordinate of the prefix before `i` into the full horizon. -/
+def priorIndex {n : Nat} (i : Fin n) (j : Fin i.val) : Fin n :=
+  ⟨j.val, Nat.lt_trans j.isLt i.isLt⟩
+
+/-- A dependent prefix containing precisely the actions before stage `i`. -/
+abbrev History {n : Nat} (A : Fin n → Type) (i : Fin n) :=
+  ∀ j : Fin i.val, A (priorIndex i j)
+
+/-- One contingent plan for each stage-specific action type. -/
+abbrev Strategy {n : Nat} (A : Fin n → Type) :=
+  ∀ i, History A i → A i
+
+/-- Realize stage `i`; recursive calls are confined to its strict prefix. -/
+def realizeAt {n : Nat} {A : Fin n → Type} (σ : Strategy A)
+    (i : Fin n) : A i :=
+  σ i fun j => realizeAt σ (priorIndex i j)
+termination_by i.val
+decreasing_by exact j.isLt
+
+/-- Realize the complete dependent action path. -/
+def realize {n : Nat} {A : Fin n → Type} (σ : Strategy A) : ∀ i, A i :=
+  fun i => realizeAt σ i
+
+end ShapeSeqDep
+
+/-- A finite-horizon sequential shape with stage-specific action types. -/
+def ShapeSeqDep {n : Nat} (A : Fin n → Type) :
+    OpenGame Unit Unit (∀ i, A i) (Fin n → ℝ) where
+  Strategy := ShapeSeqDep.Strategy A
+  play := fun σ _ => ShapeSeqDep.realize σ
+  coplay := fun _ _ _ => ()
+  IsEquilibriumIn := fun _ k σ =>
+    ∀ i (deviation : ShapeSeqDep.History A i → A i),
+      k (ShapeSeqDep.realize (Function.update σ i deviation)) i ≤
+        k (ShapeSeqDep.realize σ) i
+
+namespace ShapeSeqDep
+
+/-- The strategic form induced by a heterogeneous sequential shape. -/
+def actionNFG {n : Nat} (A : Fin n → Type)
+    (k : (∀ i, A i) → Fin n → ℝ) : NFG.NFGGame (Fin n) (fun i =>
+      History A i → A i) where
+  Outcome := ∀ i, A i
+  outcome := realize
+  utility := k
+
+/-- Compile the heterogeneous horizon through the NFG bridge. -/
+noncomputable def compileAction {n : Nat} (A : Fin n → Type)
+    (k : (∀ i, A i) → Fin n → ℝ) : GameTheory.KernelGame (Fin n) :=
+  (actionNFG A k).toKernelGame
+
+/-- Open-game equilibrium is definitionally strategic-form Nash. -/
+theorem isEquilibriumIn_iff_isNashPure {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      NFG.IsNashPure (actionNFG A k) σ := by
+  rfl
+
+/-- Kernel-level correctness for heterogeneous finite horizons. -/
+theorem isEquilibriumIn_iff_isNash {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      (compileAction A k).IsNash σ := by
+  rw [isEquilibriumIn_iff_isNashPure]
+  exact NFG.IsNashPure_iff_kernelGame (actionNFG A k) σ
+
+end ShapeSeqDep
 
 end OpenGames

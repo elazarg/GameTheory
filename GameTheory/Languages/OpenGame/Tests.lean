@@ -68,6 +68,13 @@ example {n : Nat} {A : Type} (k : (Fin n → A) → Fin n → ℝ)
       (ShapeSeq.compileAction n A k).IsNash σ :=
   ShapeSeq.isEquilibriumIn_iff_isNash k σ
 
+/-- Stage-specific action types retain the same exact compilation theorem. -/
+example {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      (ShapeSeqDep.compileAction A k).IsNash σ :=
+  ShapeSeqDep.isEquilibriumIn_iff_isNash k σ
+
 noncomputable section
 
 open GameTheory

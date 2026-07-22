@@ -121,9 +121,10 @@ The language layer treats concrete presentations as syntax plus semantics:
 
 The deterministic OpenGame layer provides sequential/tensor wiring, laws up
 to strategy and boundary equivalence, context-indexed Nash compilation, and
-finite-horizon sequential shapes with one decision owner per stage. The
-generic horizon recovers the existing homogeneous two-stage shape up to its
-canonical function/product equivalence; the two-stage perfect-information
+finite-horizon sequential shapes with one decision owner per stage, including
+dependent prefix histories and stage-specific action types. The homogeneous
+horizon recovers the existing two-stage shape up to its canonical
+function/product equivalence; the two-stage perfect-information
 bridge additionally reaches EFG subgame perfection and the one-shot-deviation
 principle. Backward values are called *cooutcomes* (the
 open-games literature also says *coutilities*). Closed, deliberately
