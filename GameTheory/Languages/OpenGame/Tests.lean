@@ -92,6 +92,46 @@ example {n : Nat} {A : Fin n → Type} (σ : ShapeSeqDep.Strategy A)
       ∀ j, ShapeSeqDep.realize τ (ShapeSeqDep.priorIndex i j) = h j :=
   ShapeSeqDep.exists_profile_realizing_history σ i h
 
+noncomputable section
+
+/-- Finite sequential open-game profiles are exactly pure policies of the
+canonical agent-form MAID. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] :
+    MAID.PurePolicy (ShapeSeqDep.MAIDBridge.sequentialStruct A) ≃
+      ShapeSeqDep.Strategy A :=
+  ShapeSeqDep.MAIDBridge.purePolicyEquiv A
+
+/-- The MAID bridge preserves the dependent action path exactly. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] :
+    MAID.TAssign (ShapeSeqDep.MAIDBridge.sequentialStruct A) ≃
+      (∀ i, A i) :=
+  ShapeSeqDep.MAIDBridge.assignPathEquiv A
+
+/-- Canonical MAID utility agrees with the open-game continuation on every
+assignment, not merely on realized paths. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (a : MAID.TAssign (ShapeSeqDep.MAIDBridge.sequentialStruct A))
+    (p : Fin n) :
+    MAID.utilityOf (ShapeSeqDep.MAIDBridge.sequentialStruct A)
+        (ShapeSeqDep.MAIDBridge.sequentialSem A k) a p =
+      k (ShapeSeqDep.MAIDBridge.pathOfAssign A a) p :=
+  ShapeSeqDep.MAIDBridge.utilityOf_eq A k a p
+
+/-- The canonical agent-form sequential MAID has perfect recall. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] :
+    (ShapeSeqDep.MAIDBridge.sequentialStruct A).PerfectRecall :=
+  ShapeSeqDep.MAIDBridge.sequentialStruct_perfectRecall A
+
+end
+
 /-- One-decision-per-player ownership makes agent and player deviations
 coincide. -/
 example {n : Nat} {ι : Type} [DecidableEq ι]

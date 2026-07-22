@@ -129,7 +129,12 @@ decisions per player, compiles player-form deviations, proves equivalence with
 agent form for injective ownership, and gives a strict two-stage separation
 witness when one player owns both decisions. The two-stage perfect-information
 bridge additionally reaches EFG subgame perfection and the one-shot-deviation
-principle. Backward values are called *cooutcomes* (the
+principle. Finite heterogeneous sequential shapes also have a canonical
+agent-form MAID bridge: dependent histories are exactly MAID information sets,
+pure policies and total assignments are equivalent to contingent profiles and
+action paths, utilities agree pointwise, the node order is topological, and
+perfect recall holds. A native MAID outcome/equilibrium correspondence remains
+to be proved. Backward values are called *cooutcomes* (the
 open-games literature also says *coutilities*). Closed, deliberately
 non-compositional devices recover CE, CCE, and pure-profile public
 randomization over Nash equilibria, with checked strict-separation examples.
