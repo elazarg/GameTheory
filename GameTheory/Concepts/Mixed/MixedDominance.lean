@@ -62,7 +62,7 @@ theorem WeaklyStrictlyDominates.pure_to_mixedExtension
     (h : G.WeaklyStrictlyDominates who s t) :
     G.mixedExtension.WeaklyStrictlyDominates who (PMF.pure s) (PMF.pure t) := by
   classical
-  refine ⟨h.1.pure_to_mixedExtension (G := G), ?_⟩
+  refine ⟨WeaklyDominates.pure_to_mixedExtension (G := G) h.1, ?_⟩
   obtain ⟨σ, hstrict⟩ := h.2
   refine ⟨G.pureMixedProfile σ, ?_⟩
   rw [← G.pureMixedProfile_update σ who s]
@@ -120,7 +120,8 @@ theorem IsDominant.pure_to_mixedExtension
       G.mixedExtension.eu (Function.update σm who (PMF.pure a)) who ≤
         G.mixedExtension.eu (Function.update σ who ps) who := by
     intro a
-    exact (h.weaklyDominates a).pure_to_mixedExtension (G := G) σ
+    exact WeaklyDominates.pure_to_mixedExtension (G := G)
+      (h.weaklyDominates a) σ
   have hle := expect_mono τ
     (fun a : G.Strategy who =>
       G.mixedExtension.eu (Function.update σm who (PMF.pure a)) who)
@@ -155,7 +156,8 @@ theorem forall_weaklyStrictlyDominates_pure_to_mixedExtension
       by_cases hbs : b = s
       · subst b
         exact le_rfl
-      · exact (h b hbs).toWeaklyDominates.pure_to_mixedExtension (G := G) σ
+      · exact WeaklyDominates.pure_to_mixedExtension (G := G)
+          (WeaklyStrictlyDominates.toWeaklyDominates (h b hbs)) σ
     have hle := expect_mono τ
       (fun b : G.Strategy who =>
         G.mixedExtension.eu (Function.update σm who (PMF.pure b)) who)
@@ -166,8 +168,9 @@ theorem forall_weaklyStrictlyDominates_pure_to_mixedExtension
     exact hle
   · have hpure_a :
         G.mixedExtension.WeaklyStrictlyDominates who (PMF.pure s) (PMF.pure a) :=
-      (h a has).pure_to_mixedExtension (G := G)
-    obtain ⟨σ, hstrict_a⟩ := hpure_a.strict_witness
+      WeaklyStrictlyDominates.pure_to_mixedExtension (G := G) (h a has)
+    obtain ⟨σ, hstrict_a⟩ :=
+      WeaklyStrictlyDominates.strict_witness hpure_a
     refine ⟨σ, ?_⟩
     let σm : ∀ i, PMF (G.Strategy i) := σ
     let ps : G.mixedExtension.Strategy who := PMF.pure s
@@ -181,7 +184,8 @@ theorem forall_weaklyStrictlyDominates_pure_to_mixedExtension
       by_cases hbs : b = s
       · subst b
         exact le_rfl
-      · exact (h b hbs).toWeaklyDominates.pure_to_mixedExtension (G := G) σ
+      · exact WeaklyDominates.pure_to_mixedExtension (G := G)
+          (WeaklyStrictlyDominates.toWeaklyDominates (h b hbs)) σ
     exact expect_lt_const_of_le_of_exists_lt τ
       (fun b : G.Strategy who =>
         G.mixedExtension.eu (Function.update σm who (PMF.pure b)) who)
