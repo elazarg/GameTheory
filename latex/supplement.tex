@@ -1021,8 +1021,11 @@ The bunched siblings of \TT{IsNash} are:
 \item \TT{IsDominant(For)} / \TT{IsStrictDominant(For)} — the
   coordinate is best-response against \emph{every} opponent
   profile.
-\item \TT{WeaklyDominates(For)} / \TT{StrictlyDominates(For)} —
-  pairwise dominance as a binary predicate on strategies.
+\item \TT{WeaklyDominatesReflexive(For)} /
+  \TT{WeaklyDominatesWithStrictWitness} / \TT{StrictlyDominates(For)} —
+  pairwise dominance as binary predicates on strategies, respectively meaning
+  weak everywhere, weak everywhere with a strict witness, and strict
+  everywhere.
 \end{itemize}
 Each is the obvious quantifier rearrangement of \eqref{eq:supp:isNash}
 and unfolds analogously.  The dominance$\Rightarrow$Nash chain

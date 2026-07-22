@@ -20,7 +20,8 @@ Provides:
   mixed-dominated strategy is never a best response
 - `StrictlyDominates.toStrictlyDominatedByMixed` — pure dominance is the
   point-mass case of mixed dominance
-- `WeaklyDominates.best_response_of_best_response` — weak dominance preserves best-response status
+- `WeaklyDominatesReflexive.best_response_of_best_response` — reflexive weak
+  dominance preserves best-response status
 - `nash_never_strictly_dominated` — Nash equilibrium strategies are never strictly dominated
 - `IsDominant.isBestResponse` — a dominant strategy is a best response against every profile
 -/
@@ -85,8 +86,10 @@ theorem StrictlyDominates.toStrictlyDominatedByMixed {G : KernelGame ι} {who : 
 
 /-- If `s` weakly dominates `t` and `t` is a best response against `σ`,
     then `s` is also a best response against `σ`. -/
-theorem WeaklyDominates.best_response_of_best_response {G : KernelGame ι} {who : ι}
-    {s t : G.Strategy who} (hwd : G.WeaklyDominates who s t) (σ : Profile G)
+theorem WeaklyDominatesReflexive.best_response_of_best_response
+    {G : KernelGame ι} {who : ι}
+    {s t : G.Strategy who} (hwd : G.WeaklyDominatesReflexive who s t)
+    (σ : Profile G)
     (hbr : G.IsBestResponse who σ t) : G.IsBestResponse who σ s := by
   intro s'
   have h1 := hbr s'

@@ -12,8 +12,7 @@ import Mathlib.Data.Rat.Lemmas
 # Undominated strategies
 
 Undominated-strategy rationality for the weak-with-strict-witness dominance
-relation `KernelGame.WeaklyDominatesWithStrictWitness` (also exposed under the
-compatibility name `WeaklyStrictlyDominates`). This is not the same as
+relation `KernelGame.WeaklyDominatesWithStrictWitness`. This is not the same as
 `KernelGame.WeaklyDominatesReflexive`, the reflexive `≥`-everywhere preorder.
 
 This file provides undominated strategies/profiles for that relation, and the
@@ -31,7 +30,7 @@ variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
 /-- A strategy is undominated when no other strategy dominates it. -/
 def IsUndominated (G : KernelGame ι) (who : ι) (s : G.Strategy who) : Prop :=
-  ∀ t : G.Strategy who, ¬ G.WeaklyStrictlyDominates who t s
+  ∀ t : G.Strategy who, ¬ G.WeaklyDominatesWithStrictWitness who t s
 
 /-- Profiles whose every coordinate is undominated. -/
 def undominatedProfiles (G : KernelGame ι) : Set (Profile G) :=
@@ -64,11 +63,11 @@ theorem UtilityEquivalent.trans {who : ι} {s t u : G.Strategy who}
 
 /-- Replacing the dominated strategy by a utility-equivalent one preserves
 weak dominance with a strict witness. -/
-theorem WeaklyStrictlyDominates.congr_dominated_utilityEquivalent
+theorem WeaklyDominatesWithStrictWitness.congr_dominated_utilityEquivalent
     {who : ι} {u s t : G.Strategy who}
     (hst : G.UtilityEquivalent who s t) :
-    G.WeaklyStrictlyDominates who u s ↔
-      G.WeaklyStrictlyDominates who u t := by
+    G.WeaklyDominatesWithStrictWitness who u s ↔
+      G.WeaklyDominatesWithStrictWitness who u t := by
   constructor
   · intro h
     refine ⟨?_, ?_⟩
@@ -96,14 +95,15 @@ theorem UtilityEquivalent.isUndominated_iff
     G.IsUndominated who s ↔ G.IsUndominated who t := by
   constructor
   · intro hs u hut
-    exact hs u ((WeaklyStrictlyDominates.congr_dominated_utilityEquivalent
+    exact hs u ((WeaklyDominatesWithStrictWitness.congr_dominated_utilityEquivalent
       (G := G) (who := who) (u := u) hst).mpr hut)
   · intro ht u hus
-    exact ht u ((WeaklyStrictlyDominates.congr_dominated_utilityEquivalent
+    exact ht u ((WeaklyDominatesWithStrictWitness.congr_dominated_utilityEquivalent
       (G := G) (who := who) (u := u) hst).mp hus)
 
 theorem IsUndominated.not_dominated {who : ι} {s t : G.Strategy who}
-    (h : G.IsUndominated who s) : ¬ G.WeaklyStrictlyDominates who t s :=
+    (h : G.IsUndominated who s) :
+    ¬ G.WeaklyDominatesWithStrictWitness who t s :=
   h t
 
 /-- A weakly dominant strategy is undominated under weak dominance with a
@@ -117,9 +117,9 @@ theorem IsDominant.isUndominated {who : ι} {s : G.Strategy who}
 
 /-- If `b` weakly dominates every strategy of player `who`, then the
 undominated strategies are exactly those utility-equivalent to `b`. -/
-theorem isUndominated_iff_utilityEquivalent_of_forall_weaklyDominates
+theorem isUndominated_iff_utilityEquivalent_of_forall_weaklyDominatesReflexive
     {who : ι} {b s : G.Strategy who}
-    (hdom : ∀ t : G.Strategy who, G.WeaklyDominates who b t) :
+    (hdom : ∀ t : G.Strategy who, G.WeaklyDominatesReflexive who b t) :
     G.IsUndominated who s ↔ G.UtilityEquivalent who s b := by
   classical
   constructor
@@ -142,33 +142,34 @@ theorem isUndominated_iff_utilityEquivalent_of_forall_weaklyDominates
     have hsb := heq σ
     linarith
 
-/-- Set form of `isUndominated_iff_utilityEquivalent_of_forall_weaklyDominates`. -/
-theorem undominated_set_eq_utilityEquivalent_of_forall_weaklyDominates
+/-- Set form of
+`isUndominated_iff_utilityEquivalent_of_forall_weaklyDominatesReflexive`. -/
+theorem undominated_set_eq_utilityEquivalent_of_forall_weaklyDominatesReflexive
     {who : ι} {b : G.Strategy who}
-    (hdom : ∀ t : G.Strategy who, G.WeaklyDominates who b t) :
+    (hdom : ∀ t : G.Strategy who, G.WeaklyDominatesReflexive who b t) :
     {s : G.Strategy who | G.IsUndominated who s} =
       {s : G.Strategy who | G.UtilityEquivalent who s b} := by
   ext s
-  exact isUndominated_iff_utilityEquivalent_of_forall_weaklyDominates
+  exact isUndominated_iff_utilityEquivalent_of_forall_weaklyDominatesReflexive
     (G := G) (who := who) (b := b) (s := s) hdom
 
 /-- Product-profile form: if each coordinate of `b` weakly dominates every
 strategy of that player, then the undominated profiles are exactly the product
 of the utility-equivalence classes of the coordinates of `b`. -/
-theorem undominatedProfiles_eq_utilityEquivalentClass_of_forall_weaklyDominates
+theorem undominatedProfiles_eq_utilityEquivalentClass_of_forall_weaklyDominatesReflexive
     {b : Profile G}
-    (hdom : ∀ i (t : G.Strategy i), G.WeaklyDominates i (b i) t) :
+    (hdom : ∀ i (t : G.Strategy i), G.WeaklyDominatesReflexive i (b i) t) :
     G.undominatedProfiles =
       {σ : Profile G | ∀ i, G.UtilityEquivalent i (σ i) (b i)} := by
   ext σ
   constructor
   · intro hσ i
     exact
-      (isUndominated_iff_utilityEquivalent_of_forall_weaklyDominates
+      (isUndominated_iff_utilityEquivalent_of_forall_weaklyDominatesReflexive
         (G := G) (who := i) (b := b i) (s := σ i) (hdom i)).mp (hσ i)
   · intro hσ i
     exact
-      (isUndominated_iff_utilityEquivalent_of_forall_weaklyDominates
+      (isUndominated_iff_utilityEquivalent_of_forall_weaklyDominatesReflexive
         (G := G) (who := i) (b := b i) (s := σ i) (hdom i)).mpr (hσ i)
 
 /-- Under weak dominance of every coordinate of `b`, the undominated profile
@@ -176,7 +177,7 @@ set is the singleton `{b}` exactly when each coordinate's utility-equivalence
 class is trivial. -/
 theorem undominatedProfiles_eq_singleton_iff_utilityEquivalent_eq
     {b : Profile G}
-    (hdom : ∀ i (t : G.Strategy i), G.WeaklyDominates i (b i) t) :
+    (hdom : ∀ i (t : G.Strategy i), G.WeaklyDominatesReflexive i (b i) t) :
     G.undominatedProfiles = ({b} : Set (Profile G)) ↔
       ∀ i (s : G.Strategy i), G.UtilityEquivalent i s (b i) → s = b i := by
   classical
@@ -184,7 +185,7 @@ theorem undominatedProfiles_eq_singleton_iff_utilityEquivalent_eq
   · intro hsingle i s hs
     have hmem :
         Function.update b i s ∈ G.undominatedProfiles := by
-      rw [undominatedProfiles_eq_utilityEquivalentClass_of_forall_weaklyDominates
+      rw [undominatedProfiles_eq_utilityEquivalentClass_of_forall_weaklyDominatesReflexive
         (G := G) (b := b) hdom]
       intro j
       by_cases hji : j = i
@@ -196,7 +197,7 @@ theorem undominatedProfiles_eq_singleton_iff_utilityEquivalent_eq
       simpa [hsingle] using hmem)
     simpa using congrFun heq i
   · intro htriv
-    rw [undominatedProfiles_eq_utilityEquivalentClass_of_forall_weaklyDominates
+    rw [undominatedProfiles_eq_utilityEquivalentClass_of_forall_weaklyDominatesReflexive
       (G := G) (b := b) hdom]
     ext σ
     constructor
@@ -231,12 +232,13 @@ dominated by an undominated strategy. -/
 theorem exists_undominated_or_dominator {who : ι} [Finite (G.Strategy who)]
     (s : G.Strategy who) :
     ∃ t : G.Strategy who,
-      G.IsUndominated who t ∧ (t = s ∨ G.WeaklyStrictlyDominates who t s) := by
+      G.IsUndominated who t ∧
+        (t = s ∨ G.WeaklyDominatesWithStrictWitness who t s) := by
   obtain ⟨t, htmax, htcand⟩ :=
     Math.exists_maximal_or_rel_of_finite_trans_irrefl
-      (G.WeaklyStrictlyDominates who)
-      (fun a b c hab hbc => WeaklyStrictlyDominates.trans hab hbc)
-      (fun a => WeaklyStrictlyDominates.irrefl (G := G) (who := who) a)
+      (G.WeaklyDominatesWithStrictWitness who)
+      (fun a b c hab hbc => WeaklyDominatesWithStrictWitness.trans hab hbc)
+      (fun a => WeaklyDominatesWithStrictWitness.irrefl (G := G) (who := who) a)
       s
   exact ⟨t, htmax, htcand⟩
 
@@ -244,14 +246,15 @@ theorem exists_undominated_or_dominator {who : ι} [Finite (G.Strategy who)]
 undominated strategy. -/
 theorem exists_undominated_dominator {who : ι} [Finite (G.Strategy who)]
     {s : G.Strategy who}
-    (hdominated : ∃ t : G.Strategy who, G.WeaklyStrictlyDominates who t s) :
+    (hdominated :
+      ∃ t : G.Strategy who, G.WeaklyDominatesWithStrictWitness who t s) :
     ∃ t : G.Strategy who,
-      G.IsUndominated who t ∧ G.WeaklyStrictlyDominates who t s := by
+      G.IsUndominated who t ∧ G.WeaklyDominatesWithStrictWitness who t s := by
   obtain ⟨t, htmax, hts⟩ :=
     Math.exists_maximal_rel_of_finite_trans_irrefl
-      (G.WeaklyStrictlyDominates who)
-      (fun a b c hab hbc => WeaklyStrictlyDominates.trans hab hbc)
-      (fun a => WeaklyStrictlyDominates.irrefl (G := G) (who := who) a)
+      (G.WeaklyDominatesWithStrictWitness who)
+      (fun a b c hab hbc => WeaklyDominatesWithStrictWitness.trans hab hbc)
+      (fun a => WeaklyDominatesWithStrictWitness.irrefl (G := G) (who := who) a)
       hdominated
   exact ⟨t, htmax, hts⟩
 
@@ -432,8 +435,9 @@ theorem lt_midpointToOne (q : OpenUnitRat) :
 
 /-- In the paper's game, every rational point in `(0,1)` is dominated by any
 strictly larger rational point in `(0,1)`. -/
-theorem some_weaklyStrictlyDominates_of_lt {q r : OpenUnitRat} (hqr : q.1 < r.1) :
-    game.WeaklyStrictlyDominates 0 (some r) (some q) := by
+theorem some_weaklyDominatesWithStrictWitness_of_lt
+    {q r : OpenUnitRat} (hqr : q.1 < r.1) :
+    game.WeaklyDominatesWithStrictWitness 0 (some r) (some q) := by
   have hqr_real : ((q.1 : ℚ) : ℝ) < (r.1 : ℝ) := by
     exact_mod_cast hqr
   refine ⟨?_, ?_⟩
@@ -443,9 +447,10 @@ theorem some_weaklyStrictlyDominates_of_lt {q r : OpenUnitRat} (hqr : q.1 < r.1)
       simpa [game, payoff, profile, z1, z2] using hqr_real⟩
 
 theorem some_is_dominated (q : OpenUnitRat) :
-    ∃ t : game.Strategy 0, game.WeaklyStrictlyDominates 0 t (some q) :=
+    ∃ t : game.Strategy 0,
+      game.WeaklyDominatesWithStrictWitness 0 t (some q) :=
   ⟨some (midpointToOne q),
-    some_weaklyStrictlyDominates_of_lt (lt_midpointToOne q)⟩
+    some_weaklyDominatesWithStrictWitness_of_lt (lt_midpointToOne q)⟩
 
 /-- The paper's `z1` is not dominated. -/
 theorem target_isUndominated :
@@ -453,7 +458,8 @@ theorem target_isUndominated :
   intro t ht
   cases t with
   | none =>
-      exact KernelGame.WeaklyStrictlyDominates.irrefl (G := game) (who := 0) z1 ht
+      exact KernelGame.WeaklyDominatesWithStrictWitness.irrefl
+        (G := game) (who := 0) z1 ht
   | some q =>
       have hweak := ht.1 (profile z1 x2)
       have hq_ge_ten : (10 : ℝ) ≤ (q.1 : ℝ) := by
@@ -493,13 +499,14 @@ def sevenEighths : OpenUnitRat :=
 
 theorem threeFour_dominated :
     ∃ t : game.Strategy 0,
-      game.WeaklyStrictlyDominates 0 t (some threeFour) :=
+      game.WeaklyDominatesWithStrictWitness 0 t (some threeFour) :=
   ⟨some sevenEighths,
-    some_weaklyStrictlyDominates_of_lt (by norm_num [threeFour, sevenEighths])⟩
+    some_weaklyDominatesWithStrictWitness_of_lt
+      (by norm_num [threeFour, sevenEighths])⟩
 
 /-- The paper's `z1` does not dominate `3/4 > 0.5`. -/
-theorem target_not_weaklyDominates_threeFour :
-    ¬ game.WeaklyDominates 0 z1 (some threeFour) := by
+theorem target_not_weaklyDominatesReflexive_threeFour :
+    ¬ game.WeaklyDominatesReflexive 0 z1 (some threeFour) := by
   intro h
   have hbad : (1 / 2 : ℝ) ≥ (3 / 4 : ℝ) := by
     simpa [game, payoff, profile, z1, z2, threeFour] using h (profile z1 z2)
@@ -508,7 +515,7 @@ theorem target_not_weaklyDominates_threeFour :
 theorem target_not_dominant :
     ¬ game.IsDominant 0 z1 := by
   intro hdom
-  exact target_not_weaklyDominates_threeFour
+  exact target_not_weaklyDominatesReflexive_threeFour
     (fun σ => hdom σ (some threeFour))
 
 /-- The dominated-to-undominated-dominator conclusion fails in the paper's
@@ -517,20 +524,20 @@ it. -/
 theorem threeFour_no_undominated_dominator :
     ¬ ∃ t : game.Strategy 0,
       game.IsUndominated 0 t ∧
-        game.WeaklyStrictlyDominates 0 t (some threeFour) := by
+        game.WeaklyDominatesWithStrictWitness 0 t (some threeFour) := by
   rintro ⟨t, htundom, htdom⟩
   have ht : t = z1 := (isUndominated_iff_eq_target t).mp htundom
   subst t
-  exact target_not_weaklyDominates_threeFour htdom.1
+  exact target_not_weaklyDominatesReflexive_threeFour htdom.1
 
 /-- The paper's Section 3.2 game witnesses that the finite-ascent lemma used in
 the singleton proof cannot be generalized to arbitrary infinite games. -/
 theorem finite_ascent_conclusion_fails :
     (∃ t : game.Strategy 0,
-      game.WeaklyStrictlyDominates 0 t (some threeFour)) ∧
+      game.WeaklyDominatesWithStrictWitness 0 t (some threeFour)) ∧
       ¬ ∃ t : game.Strategy 0,
         game.IsUndominated 0 t ∧
-          game.WeaklyStrictlyDominates 0 t (some threeFour) :=
+          game.WeaklyDominatesWithStrictWitness 0 t (some threeFour) :=
   ⟨threeFour_dominated, threeFour_no_undominated_dominator⟩
 
 end InfiniteAscentPaperGame

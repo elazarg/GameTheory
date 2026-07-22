@@ -15,18 +15,19 @@ Structural properties of dominance relations on `KernelGame`.
 
 Provides:
 - `WeaklyDominatesReflexive` -- the weak-dominance preorder (≥ everywhere)
-- `WeaklyDominates.refl` -- reflexivity (under the compatibility namespace)
-- `WeaklyDominates.trans` -- transitivity (under the compatibility namespace)
-- `WeaklyDominates.instIsPreorder` -- preorder instance
+- `WeaklyDominatesReflexive.refl` -- reflexivity
+- `WeaklyDominatesReflexive.trans` -- transitivity
+- `WeaklyDominatesReflexive.instIsPreorder` -- preorder instance
 - `WeaklyDominatesWithStrictWitness` -- ≥ everywhere and > somewhere
-- `WeaklyStrictlyDominates` -- compatibility name for that relation
-- `WeaklyStrictlyDominates.instIsStrictOrder` -- weak dominance with a strict
+- `WeaklyDominatesWithStrictWitness.instIsStrictOrder` -- weak dominance with a strict
   witness is a strict order
-- `StrictlyDominates.toWeaklyDominates` -- strict dominance implies weak dominance
+- `StrictlyDominates.toWeaklyDominatesReflexive` -- strict dominance implies
+  reflexive weak dominance
 - `StrictlyDominates.trans` -- strict dominance is transitive
 - `StrictlyDominates.instIsStrictOrder` -- strong strict dominance is a strict
   order when profiles exist
-- `IsDominant.weaklyDominates` -- a dominant strategy weakly dominates every alternative
+- `IsDominant.weaklyDominatesReflexive` -- a dominant strategy reflexively
+  weakly dominates every alternative
 -/
 
 namespace GameTheory
@@ -37,27 +38,28 @@ namespace KernelGame
 variable {ι : Type} [DecidableEq ι] {G : KernelGame ι}
 
 /-- Weak dominance is reflexive: every strategy weakly dominates itself.
-    Derives from `GameForm.WeaklyDominatesFor.refl` via the EU bridge. -/
-theorem WeaklyDominates.refl (who : ι) (s : G.Strategy who) :
-    G.WeaklyDominates who s s := by
+    Derives from `GameForm.WeaklyDominatesReflexiveFor.refl` via the EU bridge. -/
+theorem WeaklyDominatesReflexive.refl (who : ι) (s : G.Strategy who) :
+    G.WeaklyDominatesReflexive who s s := by
   intro σ
   exact le_refl _
 
 /-- Weak dominance is transitive.
-    Derives from `GameForm.WeaklyDominatesFor.trans` via the EU bridge. -/
-theorem WeaklyDominates.trans {who : ι} {s t u : G.Strategy who}
-    (h1 : G.WeaklyDominates who s t) (h2 : G.WeaklyDominates who t u) :
-    G.WeaklyDominates who s u := by
+    Derives from `GameForm.WeaklyDominatesReflexiveFor.trans` via the EU bridge. -/
+theorem WeaklyDominatesReflexive.trans {who : ι} {s t u : G.Strategy who}
+    (h1 : G.WeaklyDominatesReflexive who s t)
+    (h2 : G.WeaklyDominatesReflexive who t u) :
+    G.WeaklyDominatesReflexive who s u := by
   intro σ
   exact ge_trans (h1 σ) (h2 σ)
 
 /-- Weak dominance is a preorder on a player's strategies. Antisymmetry is not
 available in general: payoff-equivalent strategies can weakly dominate each
 other. -/
-instance WeaklyDominates.instIsPreorder (who : ι) :
-    IsPreorder (G.Strategy who) (G.WeaklyDominates who) where
-  refl := WeaklyDominates.refl who
-  trans := fun _ _ _ => WeaklyDominates.trans
+instance WeaklyDominatesReflexive.instIsPreorder (who : ι) :
+    IsPreorder (G.Strategy who) (G.WeaklyDominatesReflexive who) where
+  refl := WeaklyDominatesReflexive.refl who
+  trans := fun _ _ _ => WeaklyDominatesReflexive.trans
 
 /-- Weak dominance with at least one strict witness. This is the textbook
 "weak dominance" relation used by Monderer--Tennenholtz for undominated-strategy
@@ -71,59 +73,64 @@ def WeaklyDominatesWithStrictWitness (G : KernelGame ι) (who : ι)
       G.eu (Function.update σ who s) who >
         G.eu (Function.update σ who t) who
 
-/-- Compatibility name for `WeaklyDominatesWithStrictWitness`. -/
-abbrev WeaklyStrictlyDominates (G : KernelGame ι) (who : ι)
-    (s t : G.Strategy who) : Prop :=
-  G.WeaklyDominatesWithStrictWitness who s t
-
-theorem WeaklyStrictlyDominates.toWeaklyDominates {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyStrictlyDominates who s t) : G.WeaklyDominates who s t :=
+theorem WeaklyDominatesWithStrictWitness.toWeaklyDominatesReflexive
+    {who : ι} {s t : G.Strategy who}
+    (h : G.WeaklyDominatesWithStrictWitness who s t) :
+    G.WeaklyDominatesReflexive who s t :=
   h.1
 
-theorem WeaklyStrictlyDominates.strict_witness {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyStrictlyDominates who s t) :
+theorem WeaklyDominatesWithStrictWitness.strict_witness
+    {who : ι} {s t : G.Strategy who}
+    (h : G.WeaklyDominatesWithStrictWitness who s t) :
     ∃ σ : Profile G,
       G.eu (Function.update σ who s) who >
         G.eu (Function.update σ who t) who :=
   h.2
 
-theorem WeaklyStrictlyDominates.irrefl {who : ι} (s : G.Strategy who) :
-    ¬ G.WeaklyStrictlyDominates who s s := by
+theorem WeaklyDominatesWithStrictWitness.irrefl
+    {who : ι} (s : G.Strategy who) :
+    ¬ G.WeaklyDominatesWithStrictWitness who s s := by
   rintro ⟨_, σ, hσ⟩
   exact lt_irrefl _ hσ
 
-theorem WeaklyStrictlyDominates.ne {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyStrictlyDominates who s t) : s ≠ t := by
+theorem WeaklyDominatesWithStrictWitness.ne {who : ι} {s t : G.Strategy who}
+    (h : G.WeaklyDominatesWithStrictWitness who s t) : s ≠ t := by
   intro hst
   subst hst
-  exact WeaklyStrictlyDominates.irrefl s h
+  exact WeaklyDominatesWithStrictWitness.irrefl s h
 
-theorem WeaklyStrictlyDominates.trans {who : ι} {s t u : G.Strategy who}
-    (hst : G.WeaklyStrictlyDominates who s t)
-    (htu : G.WeaklyStrictlyDominates who t u) :
-    G.WeaklyStrictlyDominates who s u := by
-  refine ⟨WeaklyDominates.trans hst.1 htu.1, ?_⟩
+theorem WeaklyDominatesWithStrictWitness.trans
+    {who : ι} {s t u : G.Strategy who}
+    (hst : G.WeaklyDominatesWithStrictWitness who s t)
+    (htu : G.WeaklyDominatesWithStrictWitness who t u) :
+    G.WeaklyDominatesWithStrictWitness who s u := by
+  refine ⟨WeaklyDominatesReflexive.trans hst.1 htu.1, ?_⟩
   obtain ⟨σ, hσ⟩ := hst.2
   refine ⟨σ, ?_⟩
   have htuσ := htu.1 σ
   linarith
 
-theorem WeaklyStrictlyDominates.asymm {who : ι} {s t : G.Strategy who}
-    (hst : G.WeaklyStrictlyDominates who s t) :
-    ¬ G.WeaklyStrictlyDominates who t s := by
+theorem WeaklyDominatesWithStrictWitness.asymm
+    {who : ι} {s t : G.Strategy who}
+    (hst : G.WeaklyDominatesWithStrictWitness who s t) :
+    ¬ G.WeaklyDominatesWithStrictWitness who t s := by
   intro hts
-  exact WeaklyStrictlyDominates.irrefl s (WeaklyStrictlyDominates.trans hst hts)
+  exact WeaklyDominatesWithStrictWitness.irrefl s
+    (WeaklyDominatesWithStrictWitness.trans hst hts)
 
 /-- Weak dominance with a strict witness is a strict order. -/
-instance WeaklyStrictlyDominates.instIsStrictOrder (who : ι) :
-    IsStrictOrder (G.Strategy who) (G.WeaklyStrictlyDominates who) where
-  irrefl := WeaklyStrictlyDominates.irrefl
-  trans := fun _ _ _ => WeaklyStrictlyDominates.trans
+instance WeaklyDominatesWithStrictWitness.instIsStrictOrder (who : ι) :
+    IsStrictOrder (G.Strategy who) (G.WeaklyDominatesWithStrictWitness who) where
+  irrefl := WeaklyDominatesWithStrictWitness.irrefl
+  trans := fun _ _ _ => WeaklyDominatesWithStrictWitness.trans
 
-/-- Strict dominance implies weak dominance.
-    Derives from `GameForm.StrictlyDominatesFor.toWeaklyDominatesFor` via the EU bridge. -/
-theorem StrictlyDominates.toWeaklyDominates {who : ι} {s t : G.Strategy who}
-    (h : G.StrictlyDominates who s t) : G.WeaklyDominates who s t := by
+/-- Strict dominance implies reflexive weak dominance.
+    Derives from
+    `GameForm.StrictlyDominatesFor.toWeaklyDominatesReflexiveFor` via the EU bridge. -/
+theorem StrictlyDominates.toWeaklyDominatesReflexive
+    {who : ι} {s t : G.Strategy who}
+    (h : G.StrictlyDominates who s t) :
+    G.WeaklyDominatesReflexive who s t := by
   intro σ
   exact le_of_lt (h σ)
 
@@ -155,11 +162,11 @@ theorem StrictlyDominates.asymm_of_nonempty (hprof : Nonempty (Profile G))
 
 /-- Strong strict dominance implies weak dominance with a strict witness when
 there is at least one profile to witness strictness. -/
-theorem StrictlyDominates.toWeaklyStrictlyDominates
+theorem StrictlyDominates.toWeaklyDominatesWithStrictWitness
     (hprof : Nonempty (Profile G)) {who : ι} {s t : G.Strategy who}
     (h : G.StrictlyDominates who s t) :
-    G.WeaklyStrictlyDominates who s t := by
-  refine ⟨h.toWeaklyDominates, ?_⟩
+    G.WeaklyDominatesWithStrictWitness who s t := by
+  refine ⟨h.toWeaklyDominatesReflexive, ?_⟩
   obtain ⟨σ⟩ := hprof
   exact ⟨σ, h σ⟩
 
@@ -170,9 +177,9 @@ instance StrictlyDominates.instIsStrictOrder (who : ι) [hprof : Nonempty (Profi
   trans := fun _ _ _ => StrictlyDominates.trans
 
 /-- A dominant strategy weakly dominates every alternative. -/
-theorem IsDominant.weaklyDominates {who : ι} {s : G.Strategy who}
+theorem IsDominant.weaklyDominatesReflexive {who : ι} {s : G.Strategy who}
     (hdom : G.IsDominant who s) (t : G.Strategy who) :
-    G.WeaklyDominates who s t := by
+    G.WeaklyDominatesReflexive who s t := by
   intro σ
   exact hdom σ t
 

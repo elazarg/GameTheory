@@ -16,7 +16,7 @@ Nash, dominance, best-response, and (weak/strict) dominates transport
 theorems, which depend on solution concepts.
 
 Every `EUGameIsomorphism` corollary here (`nash_iff`, `dominant_iff`,
-`isBestResponse_iff`, `weaklyDominates_iff`, `strictlyDominates_iff`,
+`isBestResponse_iff`, `weaklyDominatesReflexive_iff`, `strictlyDominates_iff`,
 `isStrictNash_iff`, `isStrictDominant_iff`) reduces to a single fact,
 `eu_update_preserved` (updating one player's strategy commutes with the
 isomorphism), composed with generic quantifier reindexing along the
@@ -285,18 +285,20 @@ theorem dominant_iff [DecidableEq ι] (e : EUGameIsomorphism G H)
 `IsDominant`, the alternative strategy `t` is fixed rather than universally
 quantified, so only the ambient profile needs reindexing, along
 `e.profileEquiv`. -/
-theorem weaklyDominates_iff [DecidableEq ι] (e : EUGameIsomorphism G H)
+theorem weaklyDominatesReflexive_iff [DecidableEq ι]
+    (e : EUGameIsomorphism G H)
     (who : ι) (s t : G.Strategy who) :
-    G.WeaklyDominates who s t ↔
-      H.WeaklyDominates who (e.stratEquiv who s) (e.stratEquiv who t) := by
-  unfold KernelGame.WeaklyDominates
+    G.WeaklyDominatesReflexive who s t ↔
+      H.WeaklyDominatesReflexive who (e.stratEquiv who s)
+        (e.stratEquiv who t) := by
+  unfold KernelGame.WeaklyDominatesReflexive
   refine e.profileEquiv.forall_congr' (fun τ => ?_)
   rw [← e.eu_update_preserved (e.profileEquiv.symm τ) who s,
     ← e.eu_update_preserved (e.profileEquiv.symm τ) who t]
   simp
 
 /-- EU corollary: strict dominance is preserved in both directions, the
-strict analogue of `weaklyDominates_iff`. -/
+strict analogue of `weaklyDominatesReflexive_iff`. -/
 theorem strictlyDominates_iff [DecidableEq ι] (e : EUGameIsomorphism G H)
     (who : ι) (s t : G.Strategy who) :
     G.StrictlyDominates who s t ↔

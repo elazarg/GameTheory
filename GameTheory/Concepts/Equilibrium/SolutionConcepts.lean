@@ -218,12 +218,6 @@ def WeaklyDominatesReflexive (G : KernelGame ι) (who : ι)
   ∀ (σ : Profile G),
     G.eu (Function.update σ who s) who ≥ G.eu (Function.update σ who t) who
 
-/-- Compatibility name for `WeaklyDominatesReflexive`. For the everywhere-weak,
-somewhere-strict textbook relation, use `WeaklyDominatesWithStrictWitness`. -/
-abbrev WeaklyDominates (G : KernelGame ι) (who : ι)
-    (s t : G.Strategy who) : Prop :=
-  G.WeaklyDominatesReflexive who s t
-
 open Classical in
 /-- `s` strictly dominates `t` for player `who`. -/
 def StrictlyDominates (G : KernelGame ι) (who : ι)
@@ -231,11 +225,12 @@ def StrictlyDominates (G : KernelGame ι) (who : ι)
   ∀ (σ : Profile G),
     G.eu (Function.update σ who s) who > G.eu (Function.update σ who t) who
 
-/-- `KernelGame.WeaklyDominatesFor` delegates to `GameForm.WeaklyDominatesFor`. -/
-def WeaklyDominatesFor (G : KernelGame ι)
+/-- `KernelGame.WeaklyDominatesReflexiveFor` delegates to
+`GameForm.WeaklyDominatesReflexiveFor`. -/
+def WeaklyDominatesReflexiveFor (G : KernelGame ι)
     (pref : ι → PMF G.Outcome → PMF G.Outcome → Prop)
     (who : ι) (s t : G.Strategy who) : Prop :=
-  G.toGameForm.WeaklyDominatesFor pref who s t
+  G.toGameForm.WeaklyDominatesReflexiveFor pref who s t
 
 /-- `KernelGame.StrictlyDominatesFor` delegates to `GameForm.StrictlyDominatesFor`. -/
 def StrictlyDominatesFor (G : KernelGame ι)
@@ -243,10 +238,13 @@ def StrictlyDominatesFor (G : KernelGame ι)
     (who : ι) (s t : G.Strategy who) : Prop :=
   G.toGameForm.StrictlyDominatesFor spref who s t
 
-/-- `WeaklyDominates` is exactly `WeaklyDominatesFor` with EU preference. -/
-theorem WeaklyDominates_iff_WeaklyDominatesFor_eu (G : KernelGame ι)
+/-- `WeaklyDominatesReflexive` is exactly `WeaklyDominatesReflexiveFor` with
+EU preference. -/
+theorem WeaklyDominatesReflexive_iff_WeaklyDominatesReflexiveFor_eu
+    (G : KernelGame ι)
     (who : ι) (s t : G.Strategy who) :
-    G.WeaklyDominates who s t ↔ G.WeaklyDominatesFor G.euPref who s t :=
+    G.WeaklyDominatesReflexive who s t ↔
+      G.WeaklyDominatesReflexiveFor G.euPref who s t :=
   ⟨fun h σ => h σ, fun h σ => h σ⟩
 
 /-- `StrictlyDominates` is exactly `StrictlyDominatesFor` with EU strict preference. -/

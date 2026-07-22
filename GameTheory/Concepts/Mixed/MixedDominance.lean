@@ -29,11 +29,12 @@ variable {G : KernelGame ι}
 
 /-- Weak dominance between pure strategies persists in the mixed extension after
 embedding both strategies as point masses. -/
-theorem WeaklyDominates.pure_to_mixedExtension
+theorem WeaklyDominatesReflexive.pure_to_mixedExtension
     [Finite (Profile G)] [Finite G.Outcome] [∀ i, Finite (G.Strategy i)]
     {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyDominates who s t) :
-    G.mixedExtension.WeaklyDominates who (PMF.pure s) (PMF.pure t) := by
+    (h : G.WeaklyDominatesReflexive who s t) :
+    G.mixedExtension.WeaklyDominatesReflexive who (PMF.pure s)
+      (PMF.pure t) := by
   classical
   intro σ
   let σm : ∀ i, PMF (G.Strategy i) := σ
@@ -56,13 +57,14 @@ theorem WeaklyDominates.pure_to_mixedExtension
 
 /-- Weak dominance with a strict pure-profile witness persists in the mixed
 extension after embedding both strategies as point masses. -/
-theorem WeaklyStrictlyDominates.pure_to_mixedExtension
+theorem WeaklyDominatesWithStrictWitness.pure_to_mixedExtension
     [Finite (Profile G)] [Finite G.Outcome] [∀ i, Finite (G.Strategy i)]
     {who : ι} {s t : G.Strategy who}
-    (h : G.WeaklyStrictlyDominates who s t) :
-    G.mixedExtension.WeaklyStrictlyDominates who (PMF.pure s) (PMF.pure t) := by
+    (h : G.WeaklyDominatesWithStrictWitness who s t) :
+    G.mixedExtension.WeaklyDominatesWithStrictWitness who (PMF.pure s)
+      (PMF.pure t) := by
   classical
-  refine ⟨WeaklyDominates.pure_to_mixedExtension (G := G) h.1, ?_⟩
+  refine ⟨WeaklyDominatesReflexive.pure_to_mixedExtension (G := G) h.1, ?_⟩
   obtain ⟨σ, hstrict⟩ := h.2
   refine ⟨G.pureMixedProfile σ, ?_⟩
   rw [← G.pureMixedProfile_update σ who s]
@@ -120,8 +122,8 @@ theorem IsDominant.pure_to_mixedExtension
       G.mixedExtension.eu (Function.update σm who (PMF.pure a)) who ≤
         G.mixedExtension.eu (Function.update σ who ps) who := by
     intro a
-    exact WeaklyDominates.pure_to_mixedExtension (G := G)
-      (h.weaklyDominates a) σ
+    exact WeaklyDominatesReflexive.pure_to_mixedExtension (G := G)
+      (h.weaklyDominatesReflexive a) σ
   have hle := expect_mono τ
     (fun a : G.Strategy who =>
       G.mixedExtension.eu (Function.update σm who (PMF.pure a)) who)
@@ -134,12 +136,13 @@ theorem IsDominant.pure_to_mixedExtension
 /-- If a pure strategy weakly-strictly dominates every distinct pure strategy,
 then its point mass weakly-strictly dominates every distinct mixed strategy in
 the mixed extension. -/
-theorem forall_weaklyStrictlyDominates_pure_to_mixedExtension
+theorem forall_weaklyDominatesWithStrictWitness_pure_to_mixedExtension
     [Finite (Profile G)] [Finite G.Outcome] [∀ i, Finite (G.Strategy i)]
     {who : ι} {s : G.Strategy who}
-    (h : ∀ t : G.Strategy who, t ≠ s → G.WeaklyStrictlyDominates who s t)
+    (h : ∀ t : G.Strategy who, t ≠ s →
+      G.WeaklyDominatesWithStrictWitness who s t)
     {τ : PMF (G.Strategy who)} (hτ : τ ≠ PMF.pure s) :
-    G.mixedExtension.WeaklyStrictlyDominates who (PMF.pure s) τ := by
+    G.mixedExtension.WeaklyDominatesWithStrictWitness who (PMF.pure s) τ := by
   classical
   obtain ⟨a, has, hτa⟩ := exists_ne_of_ne_pure τ hτ
   refine ⟨?_, ?_⟩
@@ -156,8 +159,9 @@ theorem forall_weaklyStrictlyDominates_pure_to_mixedExtension
       by_cases hbs : b = s
       · subst b
         exact le_rfl
-      · exact WeaklyDominates.pure_to_mixedExtension (G := G)
-          (WeaklyStrictlyDominates.toWeaklyDominates (h b hbs)) σ
+      · exact WeaklyDominatesReflexive.pure_to_mixedExtension (G := G)
+          (WeaklyDominatesWithStrictWitness.toWeaklyDominatesReflexive
+            (h b hbs)) σ
     have hle := expect_mono τ
       (fun b : G.Strategy who =>
         G.mixedExtension.eu (Function.update σm who (PMF.pure b)) who)
@@ -167,10 +171,11 @@ theorem forall_weaklyStrictlyDominates_pure_to_mixedExtension
     rw [expect_const] at hle
     exact hle
   · have hpure_a :
-        G.mixedExtension.WeaklyStrictlyDominates who (PMF.pure s) (PMF.pure a) :=
-      WeaklyStrictlyDominates.pure_to_mixedExtension (G := G) (h a has)
+        G.mixedExtension.WeaklyDominatesWithStrictWitness who (PMF.pure s)
+          (PMF.pure a) :=
+      WeaklyDominatesWithStrictWitness.pure_to_mixedExtension (G := G) (h a has)
     obtain ⟨σ, hstrict_a⟩ :=
-      WeaklyStrictlyDominates.strict_witness hpure_a
+      WeaklyDominatesWithStrictWitness.strict_witness hpure_a
     refine ⟨σ, ?_⟩
     let σm : ∀ i, PMF (G.Strategy i) := σ
     let ps : G.mixedExtension.Strategy who := PMF.pure s
@@ -184,8 +189,9 @@ theorem forall_weaklyStrictlyDominates_pure_to_mixedExtension
       by_cases hbs : b = s
       · subst b
         exact le_rfl
-      · exact WeaklyDominates.pure_to_mixedExtension (G := G)
-          (WeaklyStrictlyDominates.toWeaklyDominates (h b hbs)) σ
+      · exact WeaklyDominatesReflexive.pure_to_mixedExtension (G := G)
+          (WeaklyDominatesWithStrictWitness.toWeaklyDominatesReflexive
+            (h b hbs)) σ
     exact expect_lt_const_of_le_of_exists_lt τ
       (fun b : G.Strategy who =>
         G.mixedExtension.eu (Function.update σm who (PMF.pure b)) who)

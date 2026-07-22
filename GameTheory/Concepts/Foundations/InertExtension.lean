@@ -318,11 +318,12 @@ theorem dominantFor_of_projected_dominantFor
   exact h
 
 /-- Preference-parameterized weak dominance pulls back along inert extensions. -/
-theorem weaklyDominatesFor_of_projected_weaklyDominatesFor
+theorem weaklyDominatesReflexiveFor_of_projected_weaklyDominatesReflexiveFor
     (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
     {who : ι} {s t : E.form.Strategy who}
-    (hdom : F.WeaklyDominatesFor pref who (E.proj who s) (E.proj who t)) :
-    E.form.WeaklyDominatesFor pref who s t := by
+    (hdom : F.WeaklyDominatesReflexiveFor pref who (E.proj who s)
+      (E.proj who t)) :
+    E.form.WeaklyDominatesReflexiveFor pref who s t := by
   intro σ'
   have h := hdom (E.projectProfile σ')
   change pref who (E.outcomeKernel' (Function.update σ' who s))

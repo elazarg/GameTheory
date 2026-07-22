@@ -180,12 +180,6 @@ def WeaklyDominatesReflexiveFor (F : GameForm ι)
     pref who (F.outcomeKernel (Function.update σ who s))
              (F.outcomeKernel (Function.update σ who t))
 
-/-- Compatibility name for `WeaklyDominatesReflexiveFor`. -/
-abbrev WeaklyDominatesFor (F : GameForm ι)
-    (pref : ι → PMF F.Outcome → PMF F.Outcome → Prop)
-    (who : ι) (s t : F.Strategy who) : Prop :=
-  F.WeaklyDominatesReflexiveFor pref who s t
-
 open Classical in
 /-- `s` strictly dominates `t` for player `who` w.r.t. strict preference `spref`. -/
 def StrictlyDominatesFor (F : GameForm ι)
@@ -323,39 +317,39 @@ theorem IsDominantFor.mono {F : GameForm ι}
   exact h who _ _ (hdom σ s')
 
 /-- Weak dominance is reflexive (given `PrefPreorder`). -/
-theorem WeaklyDominatesFor.refl {F : GameForm ι}
+theorem WeaklyDominatesReflexiveFor.refl {F : GameForm ι}
     {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop} [PrefPreorder pref]
     (who : ι) (s : F.Strategy who) :
-    F.WeaklyDominatesFor pref who s s := by
+    F.WeaklyDominatesReflexiveFor pref who s s := by
   intro σ
   exact PrefPreorder.refl who _
 
 /-- Weak dominance is transitive (given `PrefPreorder`). -/
-theorem WeaklyDominatesFor.trans {F : GameForm ι}
+theorem WeaklyDominatesReflexiveFor.trans {F : GameForm ι}
     {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop} [PrefPreorder pref]
     {who : ι} {s t u : F.Strategy who}
-    (h1 : F.WeaklyDominatesFor pref who s t)
-    (h2 : F.WeaklyDominatesFor pref who t u) :
-    F.WeaklyDominatesFor pref who s u := by
+    (h1 : F.WeaklyDominatesReflexiveFor pref who s t)
+    (h2 : F.WeaklyDominatesReflexiveFor pref who t u) :
+    F.WeaklyDominatesReflexiveFor pref who s u := by
   intro σ
   exact PrefPreorder.trans who _ _ _ (h1 σ) (h2 σ)
 
 /-- Strict dominance implies weak dominance (given `spref → pref`). -/
-theorem StrictlyDominatesFor.toWeaklyDominatesFor {F : GameForm ι}
+theorem StrictlyDominatesFor.toWeaklyDominatesReflexiveFor {F : GameForm ι}
     {pref spref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
     (himpl : ∀ i d₁ d₂, spref i d₁ d₂ → pref i d₁ d₂)
     {who : ι} {s t : F.Strategy who}
     (h : F.StrictlyDominatesFor spref who s t) :
-    F.WeaklyDominatesFor pref who s t := by
+    F.WeaklyDominatesReflexiveFor pref who s t := by
   intro σ
   exact himpl who _ _ (h σ)
 
 /-- A dominant strategy weakly dominates every alternative. -/
-theorem IsDominantFor.weaklyDominatesFor {F : GameForm ι}
+theorem IsDominantFor.weaklyDominatesReflexiveFor {F : GameForm ι}
     {pref : ι → PMF F.Outcome → PMF F.Outcome → Prop}
     {who : ι} {s : F.Strategy who}
     (hdom : F.IsDominantFor pref who s) (t : F.Strategy who) :
-    F.WeaklyDominatesFor pref who s t := by
+    F.WeaklyDominatesReflexiveFor pref who s t := by
   intro σ
   exact hdom σ t
 

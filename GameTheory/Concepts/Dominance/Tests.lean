@@ -19,11 +19,13 @@ noncomputable section
 def oneGame : KernelGame Bool :=
   KernelGame.ofPureEU (fun _ : Bool => PUnit) (fun _ _ => 0)
 
-example (who : Bool) : oneGame.WeaklyDominates who PUnit.unit PUnit.unit :=
-  KernelGame.WeaklyDominates.refl who PUnit.unit
+example (who : Bool) :
+    oneGame.WeaklyDominatesReflexive who PUnit.unit PUnit.unit :=
+  KernelGame.WeaklyDominatesReflexive.refl who PUnit.unit
 
 example (who : Bool) :
-    IsPreorder (oneGame.Strategy who) (oneGame.WeaklyDominates who) :=
+    IsPreorder (oneGame.Strategy who)
+      (oneGame.WeaklyDominatesReflexive who) :=
   inferInstance
 
 end
