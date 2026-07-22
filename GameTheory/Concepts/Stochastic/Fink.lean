@@ -120,6 +120,35 @@ def finkValue (G : StochasticGame ι)
     {U : ℝ} (z : G.finkDomain U) : G.State → Payoff ι :=
   z.1.2
 
+/-- Encode an arbitrary stationary mixed profile and bounded value vector as
+a point of Fink's compact domain. -/
+noncomputable def finkPointOfProfileValue (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (x : G.StationaryMixedProfile) (V : G.State → Payoff ι) {U : ℝ}
+    (hV : ∀ s who, |V s who| ≤ U) : G.finkDomain U := by
+  refine ⟨(fun p => (stdSimplexEquiv (x p.1 p.2)).1, V), ?_, ?_⟩
+  · intro p _
+    exact (stdSimplexEquiv (x p.1 p.2)).2
+  · constructor <;> intro s who
+    · exact (abs_le.mp (hV s who)).1
+    · exact (abs_le.mp (hV s who)).2
+
+@[simp] theorem finkValue_finkPointOfProfileValue
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (x : G.StationaryMixedProfile) (V : G.State → Payoff ι) {U : ℝ}
+    (hV : ∀ s who, |V s who| ≤ U) :
+    G.finkValue (G.finkPointOfProfileValue x V hV) = V := rfl
+
+@[simp] theorem finkProfile_finkPointOfProfileValue
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (x : G.StationaryMixedProfile) (V : G.State → Payoff ι) {U : ℝ}
+    (hV : ∀ s who, |V s who| ≤ U) :
+    G.finkProfile (G.finkPointOfProfileValue x V hV) = x := by
+  funext s who
+  exact (stdSimplexEquiv (α := G.Act who)).symm_apply_apply (x s who)
+
 theorem abs_finkValue_le (G : StochasticGame ι)
     [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
     {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
@@ -433,6 +462,37 @@ theorem finkAuxEU_eq_finkValue_of_finkMap_fixedPoint
     G.finkAuxEU β z s who = G.finkValue z s who := by
   have hcoord := congrArg (fun q : G.finkDomain U => q.1.2 s who) hfix
   simpa [finkMap, finkAmbientUpdate, finkValueUpdate, finkValue] using hcoord
+
+/-- Converse fixed-point certificate for Fink's map.  If the encoded value
+is consistent with the current auxiliary payoff and every pure auxiliary
+gain is nonpositive, Nash's gain adjustment leaves every strategy weight
+unchanged and the whole domain point is a fixed point. -/
+theorem finkMap_fixedPoint_of_gain_nonpos_of_value_eq
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β U : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : G.finkDomain U)
+    (hgain : ∀ s who (d : G.Act who), G.finkGain β z s who d ≤ 0)
+    (hvalue : ∀ s who, G.finkAuxEU β z s who = G.finkValue z s who) :
+    G.finkMap β U hβ0 hβ1 hpay z = z := by
+  apply Subtype.ext
+  apply Prod.ext
+  · funext p d
+    have hpart : ∀ e : G.Act p.2,
+        KernelGame.pospart (G.finkGain β z p.1 p.2 e) = 0 := by
+      intro e
+      exact (KernelGame.pospart_eq_zero_iff _).2 (hgain p.1 p.2 e)
+    have hsum : G.finkGainSum β z p.1 p.2 = 0 := by
+      unfold finkGainSum
+      simp only [hpart, Finset.sum_const_zero]
+    change G.finkStrategyWeightUpdate β z p.1 p.2 d = z.1.1 p d
+    rw [finkStrategyWeightUpdate, hpart d, hsum]
+    ring
+  · funext s who
+    change G.finkValueUpdate β z s who = z.1.2 s who
+    simpa only [finkValueUpdate, finkValue] using hvalue s who
 
 /-- The discounted auxiliary normal-form game at state `s`. -/
 def discountedAuxGame (G : StochasticGame ι) (β : ℝ)
@@ -949,6 +1009,33 @@ def IsDiscountedStationaryBellmanEq (G : StochasticGame ι) [Fintype ι]
     (V : G.State → Payoff ι) : Prop :=
   G.IsDiscountedAuxNash β V x ∧
     ∀ (s : G.State) (who : ι), G.discountedAuxEU β V s (x s) who = V s who
+
+/-- Every bounded semantic discounted stationary Bellman equilibrium has a
+canonical encoding which is literally a fixed point of Fink's map. -/
+theorem finkMap_finkPointOfProfileValue_eq_self
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β U : ℝ) (hβ0 : 0 ≤ β) (hβ1 : β ≤ 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (x : G.StationaryMixedProfile) (V : G.State → Payoff ι)
+    (hV : ∀ s who, |V s who| ≤ U)
+    (hEq : G.IsDiscountedStationaryBellmanEq β x V) :
+    G.finkMap β U hβ0 hβ1 hpay
+        (G.finkPointOfProfileValue x V hV) =
+      G.finkPointOfProfileValue x V hV := by
+  apply G.finkMap_fixedPoint_of_gain_nonpos_of_value_eq
+  · intro s who d
+    unfold finkGain
+    rw [G.finkDeviationAuxEU_eq_discountedAuxEU,
+      G.finkAuxEU_eq_discountedAuxEU]
+    simp only [G.finkValue_finkPointOfProfileValue,
+      G.finkProfile_finkPointOfProfileValue]
+    exact sub_nonpos.mpr (hEq.1 s who (PMF.pure d))
+  · intro s who
+    rw [G.finkAuxEU_eq_discountedAuxEU]
+    simpa only [G.finkValue_finkPointOfProfileValue,
+      G.finkProfile_finkPointOfProfileValue] using hEq.2 s who
 
 /-- A fixed point of Fink's map decodes to the corresponding discounted
 stationary Bellman equilibrium. -/
