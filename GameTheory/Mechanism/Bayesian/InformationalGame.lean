@@ -101,16 +101,16 @@ def IsSignalBlindExPostDominantKImplementation (G : InformationalGame ι)
 /-- Signal-blind weak dominance between signal-contingent strategies after
 transfers. The comparison is pointwise in the full signal profile and every
 opponent action profile. -/
-def WeaklyDominatesWithTransfer (G : InformationalGame ι)
+def WeaklyDominatesReflexiveWithTransfer (G : InformationalGame ι)
     (V : G.ActionTransfer) (i : ι) (b c : G.Strategy i) : Prop :=
   ∀ (θ : G.SignalProfile) (a : G.ActionProfile),
     G.subsidizedUtility V θ (Function.update a i (b (θ i))) i ≥
       G.subsidizedUtility V θ (Function.update a i (c (θ i))) i
 
 /-- Signal-blind weak dominance with an existential strict pointwise witness. -/
-def WeaklyStrictlyDominatesWithTransfer (G : InformationalGame ι)
+def WeaklyDominatesWithStrictWitnessAndTransfer (G : InformationalGame ι)
     (V : G.ActionTransfer) (i : ι) (b c : G.Strategy i) : Prop :=
-  G.WeaklyDominatesWithTransfer V i b c ∧
+  G.WeaklyDominatesReflexiveWithTransfer V i b c ∧
     ∃ (θ : G.SignalProfile) (a : G.ActionProfile),
       G.subsidizedUtility V θ (Function.update a i (b (θ i))) i >
         G.subsidizedUtility V θ (Function.update a i (c (θ i))) i
@@ -128,7 +128,8 @@ def StrategyEquivalentWithTransfer (G : InformationalGame ι)
 with a strict witness. -/
 def IsUndominatedWithTransfer (G : InformationalGame ι)
     (V : G.ActionTransfer) (i : ι) (b : G.Strategy i) : Prop :=
-  ∀ c : G.Strategy i, ¬ G.WeaklyStrictlyDominatesWithTransfer V i c b
+  ∀ c : G.Strategy i,
+    ¬ G.WeaklyDominatesWithStrictWitnessAndTransfer V i c b
 
 /-- Strategy profiles whose every signal-contingent component is undominated. -/
 def undominatedStrategyProfilesWithTransfer (G : InformationalGame ι)
@@ -212,28 +213,28 @@ theorem StrategyEquivalentWithTransfer.trans
   intro θ a
   exact (hbc θ a).trans (hcd θ a)
 
-theorem IsExPostDominantStrategyWithTransfer.weaklyDominatesWithTransfer
+theorem IsExPostDominantStrategyWithTransfer.weaklyDominatesReflexiveWithTransfer
     {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
     {b : G.Strategy i}
     (h : G.IsExPostDominantStrategyWithTransfer V i b)
     (c : G.Strategy i) :
-    G.WeaklyDominatesWithTransfer V i b c := by
+    G.WeaklyDominatesReflexiveWithTransfer V i b c := by
   intro θ a
   exact h θ a (c (θ i))
 
-theorem WeaklyStrictlyDominatesWithTransfer.irrefl
+theorem WeaklyDominatesWithStrictWitnessAndTransfer.irrefl
     {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
     (b : G.Strategy i) :
-    ¬ G.WeaklyStrictlyDominatesWithTransfer V i b b := by
+    ¬ G.WeaklyDominatesWithStrictWitnessAndTransfer V i b b := by
   rintro ⟨_, θ, a, hstrict⟩
   exact lt_irrefl _ hstrict
 
-theorem WeaklyStrictlyDominatesWithTransfer.trans
+theorem WeaklyDominatesWithStrictWitnessAndTransfer.trans
     {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
     {a b c : G.Strategy i}
-    (hab : G.WeaklyStrictlyDominatesWithTransfer V i a b)
-    (hbc : G.WeaklyStrictlyDominatesWithTransfer V i b c) :
-    G.WeaklyStrictlyDominatesWithTransfer V i a c := by
+    (hab : G.WeaklyDominatesWithStrictWitnessAndTransfer V i a b)
+    (hbc : G.WeaklyDominatesWithStrictWitnessAndTransfer V i b c) :
+    G.WeaklyDominatesWithStrictWitnessAndTransfer V i a c := by
   refine ⟨?_, ?_⟩
   · intro θ σ
     exact le_trans (hbc.1 θ σ) (hab.1 θ σ)
@@ -244,12 +245,12 @@ theorem WeaklyStrictlyDominatesWithTransfer.trans
 
 /-- Replacing the dominated strategy by a transfer-equivalent one preserves
 weak dominance with a strict witness. -/
-theorem WeaklyStrictlyDominatesWithTransfer.congr_dominated_strategyEquivalent
+theorem WeaklyDominatesWithStrictWitnessAndTransfer.congr_dominated_strategyEquivalent
     {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
     {a b c : G.Strategy i}
     (hbc : G.StrategyEquivalentWithTransfer V i b c) :
-    G.WeaklyStrictlyDominatesWithTransfer V i a b ↔
-      G.WeaklyStrictlyDominatesWithTransfer V i a c := by
+    G.WeaklyDominatesWithStrictWitnessAndTransfer V i a b ↔
+      G.WeaklyDominatesWithStrictWitnessAndTransfer V i a c := by
   constructor
   · intro h
     refine ⟨?_, ?_⟩
@@ -279,10 +280,10 @@ theorem StrategyEquivalentWithTransfer.isUndominated_iff
       G.IsUndominatedWithTransfer V i c := by
   constructor
   · intro hb a hac
-    exact hb a ((WeaklyStrictlyDominatesWithTransfer.congr_dominated_strategyEquivalent
+    exact hb a ((WeaklyDominatesWithStrictWitnessAndTransfer.congr_dominated_strategyEquivalent
       (G := G) (V := V) (i := i) (a := a) hbc).mpr hac)
   · intro hc a hab
-    exact hc a ((WeaklyStrictlyDominatesWithTransfer.congr_dominated_strategyEquivalent
+    exact hc a ((WeaklyDominatesWithStrictWitnessAndTransfer.congr_dominated_strategyEquivalent
       (G := G) (V := V) (i := i) (a := a) hbc).mp hab)
 
 /-- On a finite signal-contingent strategy set, every strategy is either
@@ -292,12 +293,12 @@ theorem exists_undominated_or_dominator_withTransfer
     [Finite (G.Strategy i)] (b : G.Strategy i) :
     ∃ t : G.Strategy i,
       G.IsUndominatedWithTransfer V i t ∧
-        (t = b ∨ G.WeaklyStrictlyDominatesWithTransfer V i t b) := by
+        (t = b ∨ G.WeaklyDominatesWithStrictWitnessAndTransfer V i t b) := by
   exact Math.exists_maximal_or_rel_of_finite_trans_irrefl
-    (G.WeaklyStrictlyDominatesWithTransfer V i)
+    (G.WeaklyDominatesWithStrictWitnessAndTransfer V i)
     (fun a b c hab hbc =>
-      WeaklyStrictlyDominatesWithTransfer.trans hab hbc)
-    (fun a => WeaklyStrictlyDominatesWithTransfer.irrefl a)
+      WeaklyDominatesWithStrictWitnessAndTransfer.trans hab hbc)
+    (fun a => WeaklyDominatesWithStrictWitnessAndTransfer.irrefl a)
     b
 
 /-- On a finite signal-contingent strategy set, every dominated strategy is
@@ -306,24 +307,26 @@ theorem exists_undominated_dominator_withTransfer
     {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
     [Finite (G.Strategy i)] {b : G.Strategy i}
     (hdominated :
-      ∃ t : G.Strategy i, G.WeaklyStrictlyDominatesWithTransfer V i t b) :
+      ∃ t : G.Strategy i,
+        G.WeaklyDominatesWithStrictWitnessAndTransfer V i t b) :
     ∃ t : G.Strategy i,
       G.IsUndominatedWithTransfer V i t ∧
-        G.WeaklyStrictlyDominatesWithTransfer V i t b := by
+        G.WeaklyDominatesWithStrictWitnessAndTransfer V i t b := by
   exact Math.exists_maximal_rel_of_finite_trans_irrefl
-    (G.WeaklyStrictlyDominatesWithTransfer V i)
+    (G.WeaklyDominatesWithStrictWitnessAndTransfer V i)
     (fun a b c hab hbc =>
-      WeaklyStrictlyDominatesWithTransfer.trans hab hbc)
-    (fun a => WeaklyStrictlyDominatesWithTransfer.irrefl a)
+      WeaklyDominatesWithStrictWitnessAndTransfer.trans hab hbc)
+    (fun a => WeaklyDominatesWithStrictWitnessAndTransfer.irrefl a)
     hdominated
 
 /-- If `b` weakly dominates every signal-contingent strategy of player `i`,
 then the undominated strategies are exactly those equivalent to `b` after the
 transfer. -/
-theorem isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominates
+theorem isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominatesReflexive
     {G : InformationalGame ι} {V : G.ActionTransfer} {i : ι}
     {b c : G.Strategy i}
-    (hdom : ∀ d : G.Strategy i, G.WeaklyDominatesWithTransfer V i b d) :
+    (hdom : ∀ d : G.Strategy i,
+      G.WeaklyDominatesReflexiveWithTransfer V i b d) :
     G.IsUndominatedWithTransfer V i c ↔
       G.StrategyEquivalentWithTransfer V i c b := by
   classical
@@ -351,7 +354,8 @@ theorem isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominat
 theorem undominatedStrategyProfilesWithTransfer_eq_strategyEquivalentClass
     {G : InformationalGame ι} {V : G.ActionTransfer} {σ : G.StrategyProfile}
     (hdom :
-      ∀ i (c : G.Strategy i), G.WeaklyDominatesWithTransfer V i (σ i) c) :
+      ∀ i (c : G.Strategy i),
+        G.WeaklyDominatesReflexiveWithTransfer V i (σ i) c) :
     G.undominatedStrategyProfilesWithTransfer V =
       {τ : G.StrategyProfile |
         ∀ i, G.StrategyEquivalentWithTransfer V i (τ i) (σ i)} := by
@@ -359,11 +363,11 @@ theorem undominatedStrategyProfilesWithTransfer_eq_strategyEquivalentClass
   constructor
   · intro hτ i
     exact
-      (isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominates
+      (isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominatesReflexive
         (G := G) (V := V) (i := i) (b := σ i) (c := τ i) (hdom i)).mp (hτ i)
   · intro hτ i
     exact
-      (isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominates
+      (isUndominatedWithTransfer_iff_strategyEquivalent_of_forall_weaklyDominatesReflexive
         (G := G) (V := V) (i := i) (b := σ i) (c := τ i) (hdom i)).mpr (hτ i)
 
 /-- Ex-post dominance gives the equivalence-class form of the undominated
@@ -376,12 +380,13 @@ theorem IsExPostDominantProfileWithTransfer.undominatedStrategyProfiles_eq
         ∀ i, G.StrategyEquivalentWithTransfer V i (τ i) (σ i)} := by
   exact undominatedStrategyProfilesWithTransfer_eq_strategyEquivalentClass
     (G := G) (V := V) (σ := σ)
-    (fun i c => (h i).weaklyDominatesWithTransfer c)
+    (fun i c => (h i).weaklyDominatesReflexiveWithTransfer c)
 
 theorem undominatedStrategyProfilesWithTransfer_eq_singleton_iff_strategyEquivalent_eq
     {G : InformationalGame ι} {V : G.ActionTransfer} {σ : G.StrategyProfile}
     (hdom :
-      ∀ i (c : G.Strategy i), G.WeaklyDominatesWithTransfer V i (σ i) c) :
+      ∀ i (c : G.Strategy i),
+        G.WeaklyDominatesReflexiveWithTransfer V i (σ i) c) :
     G.undominatedStrategyProfilesWithTransfer V =
         ({σ} : Set G.StrategyProfile) ↔
       ∀ i (c : G.Strategy i),
@@ -428,7 +433,7 @@ theorem IsExPostDominantProfileWithTransfer.undominatedStrategyProfiles_eq_singl
         G.StrategyEquivalentWithTransfer V i c (σ i) → c = σ i :=
   undominatedStrategyProfilesWithTransfer_eq_singleton_iff_strategyEquivalent_eq
     (G := G) (V := V) (σ := σ)
-    (fun i c => (h i).weaklyDominatesWithTransfer c)
+    (fun i c => (h i).weaklyDominatesReflexiveWithTransfer c)
 
 theorem IsSignalBlindExPostDominantKImplementation.undominatedStrategyProfiles_eq
     {G : InformationalGame ι} [Fintype ι] {V : G.ActionTransfer}
@@ -620,7 +625,8 @@ theorem singleton_signalBlindImplementation_isExPostDominant
       simpa using congrFun heq i
     exact hc_ne hc_eq
   have hc_dominated :
-      ∃ t : G.Strategy i, G.WeaklyStrictlyDominatesWithTransfer V i t c := by
+      ∃ t : G.Strategy i,
+        G.WeaklyDominatesWithStrictWitnessAndTransfer V i t c := by
     by_contra hnone
     exact hc_not_undom (by
       intro t ht
@@ -638,7 +644,8 @@ theorem singleton_signalBlindImplementation_isExPostDominant
   have hteq : Function.update σ i t = σ := Set.mem_singleton_iff.mp htmem
   have ht_eq : t = σ i := by
     simpa using congrFun hteq i
-  have hσc : G.WeaklyStrictlyDominatesWithTransfer V i (σ i) c := by
+  have hσc :
+      G.WeaklyDominatesWithStrictWitnessAndTransfer V i (σ i) c := by
     simpa [ht_eq] using htc
   have hweak := hσc.1 θ a
   simpa [c, subsidizedUtility] using hweak
