@@ -16,11 +16,6 @@ import GameTheory.Languages.OpenGame.Correlation
 import GameTheory.Languages.OpenGame.Mixed
 import GameTheory.Languages.OpenGame.CoendContext
 import GameTheory.Languages.OpenGame.Evolutionary
-import GameTheory.Languages.Bridges.OpenGame_EFG
-import GameTheory.Languages.Bridges.OpenGame_DAG_MAID
-import GameTheory.Languages.Bridges.OpenGame_MAID
-import GameTheory.Languages.Bridges.OpenGame_Mixed
-import GameTheory.Languages.OpenGame.Examples
 
 /-!
 # Open Games
@@ -29,10 +24,10 @@ Public entrypoint for the Open Games research layer. It includes:
 
 * deterministic wiring, finite sequential and sparse-DAG shapes;
 * ownership, deviation-family, correlation, and evolutionary refinements;
-* finite probabilistic composition and Bayesian coend contexts; and
-* exact bridges to NFG, EFG, and MAID semantics where proved.
+* finite probabilistic composition and Bayesian coend contexts.
 
-Modules state known non-laws and incomplete bridges explicitly; importing this
-umbrella does not turn those scoped results into broader category or sparse-SPE
-claims.
+Cross-language translations are exposed by `GameTheory.Languages.Bridges`.
+Reader-facing examples remain in the separate `GameTheoryExamples` target.
+Modules state known non-laws explicitly; importing this umbrella does not turn
+scoped results into broader category or sparse-SPE claims.
 -/

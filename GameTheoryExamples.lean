@@ -9,6 +9,7 @@ import GameTheory.Languages.Bridges.FOSG.Examples
 import GameTheory.Languages.MAID.Examples
 import GameTheory.Languages.MultiRound.Examples
 import GameTheory.Languages.Intrinsic.Examples
+import GameTheory.Languages.OpenGame.Examples
 
 /-!
 # GameTheoryExamples

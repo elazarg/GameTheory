@@ -5,6 +5,8 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.OpenGame
+import GameTheory.Languages.Bridges
+import GameTheory.Languages.OpenGame.Examples
 
 /-!
 # Open-Game API Compilation Tests
@@ -13,8 +15,8 @@ These examples compile every major public endpoint: deterministic wiring,
 finite sequential and sparse-DAG shapes, ownership and deviation families,
 EFG/MAID bridges, correlation, coend contexts, and probabilistic composition.
 Mathematical separation witnesses live with the implementation in
-`OpenGame.Examples`; this file checks that the intended umbrella API remains
-usable without internal imports.
+`OpenGame.Examples`; this file checks that the intended language and bridge
+entrypoints remain usable without internal imports.
 -/
 
 namespace OpenGames.Tests
