@@ -138,6 +138,11 @@ joint finite laws on `Θ × X` and continuation kernels `Θ × Y → FinPMF R` a
 quotiented by reparameterization. Deterministic contexts embed canonically;
 visible-history and unconditional-response marginals descend to the quotient.
 Full Bayesian open-game composition is not yet claimed.
+Evolutionary stability has an exact symmetric-shape bridge: its Nash clause is
+ordinary open-game equilibrium and its second clause is the additional
+invasion-stability condition. ESS is proved closed under independent additive
+products, which also yields equilibrium of the product-strategy symmetric
+shape; no arbitrary sequential/tensor ESS closure is claimed.
 The probabilistic layer uses finite-support `FinPMF` distributions and
 expectation algebras for `GProb`-style sequential/tensor composition and its
 relational Kleisli lifting. Its two-player decision tensor is equivalent to

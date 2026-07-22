@@ -123,6 +123,20 @@ example {X Y R Θ Ξ : Type} (f : Θ → Ξ)
           continuation := fun z => k (f z.1, z.2) } :=
   CoendContext.reparam_eq f prior k
 
+/-- ESS refines equilibrium of the corresponding symmetric open shape. -/
+example {S : Type} {u : S → S → ℝ} {s : S}
+    (h : GameTheory.IsESS u s) :
+    (Evolutionary.SymmetricShape S).IsEquilibriumIn (fun _ => ())
+      (Evolutionary.symmetricContinuation u) (Evolutionary.resident s) :=
+  Evolutionary.isEquilibriumIn_of_isESS h
+
+/-- Independent additive products preserve evolutionary stability. -/
+example {S T : Type} {u : S → S → ℝ} {v : T → T → ℝ}
+    {s : S} {t : T} (hs : GameTheory.IsESS u s)
+    (ht : GameTheory.IsESS v t) :
+    GameTheory.IsESS (Evolutionary.productPayoff u v) (s, t) :=
+  Evolutionary.isESS_product hs ht
+
 noncomputable section
 
 open GameTheory

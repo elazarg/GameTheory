@@ -13,6 +13,7 @@ import GameTheory.Languages.OpenGame.Theorems
 import GameTheory.Languages.OpenGame.Correlation
 import GameTheory.Languages.OpenGame.Mixed
 import GameTheory.Languages.OpenGame.CoendContext
+import GameTheory.Languages.OpenGame.Evolutionary
 import GameTheory.Languages.Bridges.OpenGame_EFG
 import GameTheory.Languages.Bridges.OpenGame_Mixed
 import GameTheory.Languages.OpenGame.Examples
