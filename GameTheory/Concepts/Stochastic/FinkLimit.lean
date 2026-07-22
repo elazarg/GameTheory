@@ -426,6 +426,49 @@ theorem finkValue_excessive_pureDeviation_of_fixedPoint_tendsto
     (G.finkValue_harmonic_of_fixedPoint_tendsto β U hβ0 hβ1 hpay
       z zlim φ hfix hβlim hzlim s who).symm
 
+/-- A statewise excessive continuation value becomes a supermartingale in
+expectation against every history-dependent unilateral deviation. -/
+theorem expectedStateValue_antitone_of_mixedDeviationContinuation_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (who : ι) (dev : G.BehaviorStrategy who) (s₀ : G.State)
+    (hexcessive : ∀ s (d : PMF (G.Act who)),
+      expect (pmfPi (Function.update (G.finkProfile z s) who d))
+          (fun a => expect (G.transition s a)
+            (fun s' => G.finkValue z s' who)) ≤
+        G.finkValue z s who) :
+    Antitone (fun t => G.expectedStateValue
+      (Function.update (G.markovBehaviorProfile (G.finkProfile z)) who dev)
+      s₀ t (fun s => G.finkValue z s who)) := by
+  apply antitone_nat_of_succ_le
+  intro t
+  rw [G.expectedStateValue_succ]
+  apply expect_mono
+  intro h
+  rw [G.stageActionDist_update_markovBehaviorProfile]
+  exact hexcessive h.2 (dev t h)
+
+/-- Consequently, the expected limiting Fink value at every future horizon
+is capped by its initial-state value under any unilateral behavioral
+deviation. -/
+theorem expectedStateValue_deviation_le_initial_of_mixedContinuation_le
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (who : ι) (dev : G.BehaviorStrategy who) (s₀ : G.State)
+    (hexcessive : ∀ s (d : PMF (G.Act who)),
+      expect (pmfPi (Function.update (G.finkProfile z s) who d))
+          (fun a => expect (G.transition s a)
+            (fun s' => G.finkValue z s' who)) ≤
+        G.finkValue z s who)
+    (T : ℕ) :
+    G.expectedStateValue
+        (Function.update (G.markovBehaviorProfile (G.finkProfile z)) who dev)
+        s₀ T (fun s => G.finkValue z s who) ≤
+      G.finkValue z s₀ who := by
+  have hanti := G.expectedStateValue_antitone_of_mixedDeviationContinuation_le
+    z who dev s₀ hexcessive
+  simpa using hanti (Nat.zero_le T)
+
 /-- Canonical vanishing-discount selection yields a stationary profile and
 bounded value function that are harmonic on path and excessive against every
 unilateral mixed action. -/
