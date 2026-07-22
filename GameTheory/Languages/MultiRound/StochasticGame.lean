@@ -73,11 +73,6 @@ def IsStagewiseNash (G : StochasticGame ι) (σ : G.MarkovProfile) : Prop :=
     G.stagePayoff s (fun i => σ i s) who ≥
     G.stagePayoff s (Function.update (fun i => σ i s) who a') who
 
-/-- Compatibility alias for the former name. Despite that historical name,
-this denotes only `IsStagewiseNash`, not Markov-perfect equilibrium. -/
-abbrev IsMarkovNash (G : StochasticGame ι) (σ : G.MarkovProfile) : Prop :=
-  G.IsStagewiseNash σ
-
 open Classical in
 /-- The stage game at state `s` as a `KernelGame`. -/
 noncomputable def stageKernelGame (G : StochasticGame ι) (s : G.State) : KernelGame ι :=
@@ -98,14 +93,6 @@ theorem isStagewiseNash_iff_all_stage_nash
     have h := hN s who a'
     simp only [stageKernelGame, KernelGame.eu_ofEU] at h
     exact h
-
-open Classical in
-/-- Compatibility theorem for `isStagewiseNash_iff_all_stage_nash`. -/
-theorem isMarkovNash_iff_all_stage_nash
-    (G : StochasticGame ι) (σ : G.MarkovProfile) :
-    G.IsMarkovNash σ ↔ ∀ s : G.State,
-      (G.stageKernelGame s).IsNash (fun i => σ i s) :=
-  G.isStagewiseNash_iff_all_stage_nash σ
 
 end StochasticGame
 
