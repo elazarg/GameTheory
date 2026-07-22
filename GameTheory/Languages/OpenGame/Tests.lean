@@ -107,6 +107,14 @@ example {n : Nat} (D : DecisionDAG n) {A : Fin n → Type}
       ShapeDAG.realizeAt D σ j :=
   ShapeDAG.realizeAt_update_of_not_ancestor D σ i deviation j hne hnot
 
+/-- Observing every earlier node recovers the existing dependent sequential
+shape, including its equilibrium predicate. -/
+example {n : Nat} (A : Fin n → Type) :
+    OpenGameIso
+      (OpenGames.ShapeDAG (DecisionDAG.complete n) A)
+      (OpenGames.ShapeSeqDep A) :=
+  ShapeDAG.completeIso A
+
 /-- The predecessor-profile presentation of conditioning covers every
 dependent prefix history. -/
 example {n : Nat} {A : Fin n → Type} (σ : ShapeSeqDep.Strategy A)

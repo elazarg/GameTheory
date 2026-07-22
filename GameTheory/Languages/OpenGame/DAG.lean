@@ -129,6 +129,102 @@ theorem realizeAt_update_of_not_ancestor (D : DecisionDAG n)
 termination_by j.val
 decreasing_by exact D.parent_lt parent.property
 
+/-! ## Complete-history specialization -/
+
+/-- Parents of `DecisionDAG.complete` at stage `i` are exactly the indices in
+the strict prefix `Fin i.val`. -/
+def completeParentEquiv (i : Fin n) :
+    ↥((DecisionDAG.complete n).parents i) ≃ Fin i.val where
+  toFun parent := ⟨parent.val.val, by
+    have hp := parent.property
+    simpa only [DecisionDAG.complete, Finset.mem_filter,
+      Finset.mem_univ, true_and] using hp⟩
+  invFun j := ⟨ShapeSeqDep.priorIndex i j, by
+    simp only [DecisionDAG.complete, Finset.mem_filter,
+      Finset.mem_univ, true_and]
+    exact j.isLt⟩
+  left_inv parent := by
+    apply Subtype.ext
+    apply Fin.ext
+    rfl
+  right_inv j := by
+    apply Fin.ext
+    rfl
+
+/-- The action type at a complete-DAG parent is the corresponding dependent
+prefix action type. -/
+def completeParentValueEquiv (A : Fin n → Type) (i : Fin n)
+    (parent : ↥((DecisionDAG.complete n).parents i)) :
+    A parent.val ≃
+      A (ShapeSeqDep.priorIndex i (completeParentEquiv i parent)) := by
+  apply Equiv.cast
+  congr 1
+
+/-- Complete-DAG parent configurations are exactly the dependent histories
+of `ShapeSeqDep`. -/
+def completeHistoryEquiv (A : Fin n → Type) (i : Fin n) :
+    History (DecisionDAG.complete n) A i ≃ ShapeSeqDep.History A i :=
+  Equiv.piCongr (completeParentEquiv i) (completeParentValueEquiv A i)
+
+/-- A complete-DAG contingent profile is exactly a `ShapeSeqDep` contingent
+profile. -/
+def completeStrategyEquiv (A : Fin n → Type) :
+    Strategy (DecisionDAG.complete n) A ≃ ShapeSeqDep.Strategy A where
+  toFun σ i h := σ i ((completeHistoryEquiv A i).symm h)
+  invFun τ i h := τ i (completeHistoryEquiv A i h)
+  left_inv σ := by
+    funext i h
+    change σ i ((completeHistoryEquiv A i).symm
+      (completeHistoryEquiv A i h)) = σ i h
+    rw [(completeHistoryEquiv A i).symm_apply_apply]
+  right_inv τ := by
+    funext i h
+    change τ i (completeHistoryEquiv A i
+      ((completeHistoryEquiv A i).symm h)) = τ i h
+    rw [(completeHistoryEquiv A i).apply_symm_apply]
+
+/-- Encoding a complete-DAG strategy as a sequential dependent strategy
+preserves its realized typed action path. -/
+theorem realize_completeStrategyEquiv (A : Fin n → Type)
+    (σ : Strategy (DecisionDAG.complete n) A) :
+    ShapeSeqDep.realize (completeStrategyEquiv A σ) =
+      realize (DecisionDAG.complete n) σ := by
+  funext i
+  induction hi : i.val using Nat.strongRecOn generalizing i with
+  | _ d ih =>
+      rw [ShapeSeqDep.realize_eq, realize_eq]
+      change σ i ((completeHistoryEquiv A i).symm
+          (fun j => ShapeSeqDep.realize (completeStrategyEquiv A σ)
+            (ShapeSeqDep.priorIndex i j))) =
+        σ i (fun parent => realize (DecisionDAG.complete n) σ parent.val)
+      congr 1
+      apply (completeHistoryEquiv A i).injective
+      rw [(completeHistoryEquiv A i).apply_symm_apply]
+      funext j
+      let parent := (completeParentEquiv i).symm j
+      have hpi := Equiv.piCongr_apply_apply
+        (W := fun parent : ↥((DecisionDAG.complete n).parents i) => A parent.val)
+        (Z := fun q : Fin i.val => A (ShapeSeqDep.priorIndex i q))
+        (completeParentEquiv i) (completeParentValueEquiv A i)
+        (fun parent => realize (DecisionDAG.complete n) σ parent.val) parent
+      have hj := (completeParentEquiv i).apply_symm_apply j
+      change completeParentEquiv i parent = j at hj
+      cases hj
+      apply eq_of_heq
+      exact ((heq_of_eq hpi).trans (heq_of_eq (ih parent.val.val (by
+        have hp := (DecisionDAG.complete n).parent_lt parent.property
+        simpa [hi] using hp) parent.val rfl).symm)).symm
+
+/-- Decoding a dependent sequential profile into the complete DAG also
+preserves realization. -/
+theorem realize_completeStrategyEquiv_symm (A : Fin n → Type)
+    (σ : ShapeSeqDep.Strategy A) :
+    realize (DecisionDAG.complete n) ((completeStrategyEquiv A).symm σ) =
+      ShapeSeqDep.realize σ := by
+  have h := realize_completeStrategyEquiv A ((completeStrategyEquiv A).symm σ)
+  rw [(completeStrategyEquiv A).apply_symm_apply] at h
+  exact h.symm
+
 /-- The action-level strategic game induced by a closing continuation. -/
 def actionNFG (D : DecisionDAG n) (A : Fin n → Type)
     (k : (∀ i, A i) → Fin n → ℝ) :
@@ -174,6 +270,84 @@ theorem isEquilibriumIn_iff_isNash {n : Nat}
       (compileAction D A k).IsNash σ := by
   rw [isEquilibriumIn_iff_isNashPure]
   exact NFG.IsNashPure_iff_kernelGame (actionNFG D A k) σ
+
+/-- The complete-parent decision DAG recovers `ShapeSeqDep` up to the explicit
+dependent-history strategy equivalence. -/
+def completeIso {n : Nat} (A : Fin n → Type) :
+    OpenGameIso (OpenGames.ShapeDAG (DecisionDAG.complete n) A)
+      (OpenGames.ShapeSeqDep A) where
+  eX := Equiv.refl _
+  eS := Equiv.refl _
+  eY := Equiv.refl _
+  eR := Equiv.refl _
+  stratEquiv := completeStrategyEquiv A
+  play_preserved := by
+    intro σ x
+    cases x
+    exact realize_completeStrategyEquiv A σ
+  coplay_preserved := by
+    intro σ x r
+    cases x
+    rfl
+  equilibrium_preserved := by
+    intro x k σ
+    cases x
+    constructor
+    · intro hseq i deviation
+      let seqDeviation : ShapeSeqDep.History A i → A i :=
+        fun history => deviation ((completeHistoryEquiv A i).symm history)
+      have hineq := hseq i seqDeviation
+      have hupdate : Function.update (completeStrategyEquiv A σ) i seqDeviation =
+          completeStrategyEquiv A (Function.update σ i deviation) := by
+        funext j history
+        by_cases hji : j = i
+        · subst j
+          simp [completeStrategyEquiv, seqDeviation]
+        · simp [completeStrategyEquiv, Function.update_of_ne hji]
+      have hpath : ShapeSeqDep.realize
+          (Function.update (completeStrategyEquiv A σ) i seqDeviation) =
+          realize (DecisionDAG.complete n) (Function.update σ i deviation) :=
+        (congrArg ShapeSeqDep.realize hupdate).trans
+          (realize_completeStrategyEquiv A (Function.update σ i deviation))
+      change k (realize (DecisionDAG.complete n)
+        (Function.update σ i deviation)) i ≤
+          k (realize (DecisionDAG.complete n) σ) i
+      calc
+        _ = k (ShapeSeqDep.realize
+            (Function.update (completeStrategyEquiv A σ) i seqDeviation)) i :=
+          congrArg (fun path => k path i) hpath.symm
+        _ ≤ k (ShapeSeqDep.realize (completeStrategyEquiv A σ)) i := hineq
+        _ = _ := congrArg (fun path => k path i)
+          (realize_completeStrategyEquiv A σ)
+    · intro hdag i deviation
+      let dagDeviation : History (DecisionDAG.complete n) A i → A i :=
+        fun history => deviation (completeHistoryEquiv A i history)
+      have hineq := hdag i dagDeviation
+      have hupdate : completeStrategyEquiv A
+          (Function.update σ i dagDeviation) =
+          Function.update (completeStrategyEquiv A σ) i deviation := by
+        funext j history
+        by_cases hji : j = i
+        · subst j
+          simp [completeStrategyEquiv, dagDeviation]
+        · simp [completeStrategyEquiv, Function.update_of_ne hji]
+      have hpath : realize (DecisionDAG.complete n)
+          (Function.update σ i dagDeviation) =
+          ShapeSeqDep.realize
+            (Function.update (completeStrategyEquiv A σ) i deviation) :=
+        (realize_completeStrategyEquiv A
+          (Function.update σ i dagDeviation)).symm.trans
+            (congrArg ShapeSeqDep.realize hupdate)
+      change k (ShapeSeqDep.realize
+          (Function.update (completeStrategyEquiv A σ) i deviation)) i ≤
+        k (ShapeSeqDep.realize (completeStrategyEquiv A σ)) i
+      calc
+        _ = k (realize (DecisionDAG.complete n)
+            (Function.update σ i dagDeviation)) i :=
+          congrArg (fun path => k path i) hpath.symm
+        _ ≤ k (realize (DecisionDAG.complete n) σ) i := hineq
+        _ = _ := congrArg (fun path => k path i)
+          (realize_completeStrategyEquiv A σ).symm
 
 end ShapeDAG
 

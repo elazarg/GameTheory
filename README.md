@@ -144,7 +144,9 @@ The sequential core also now has a sparse typed `DecisionDAG` generalization:
 each naturally topologically numbered decision observes an arbitrary finite
 parent set, realization is well founded, plain equilibrium still compiles
 exactly to kernel Nash, and plan changes are proved irrelevant outside their
-causal descendant cones.
+causal descendant cones. The complete-parent DAG is proved isomorphic to
+`ShapeSeqDep`, including realization and equilibrium, so this is a strict API
+generalization rather than a parallel encoding.
 Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
 pure policies and total assignments are equivalent to contingent profiles and
