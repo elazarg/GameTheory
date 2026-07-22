@@ -6240,6 +6240,56 @@ theorem tendsto_finkPositiveContinuationGainSum_zero
   rw [Real.dist_eq, sub_zero, abs_of_nonneg hsum0]
   exact hsum.trans_lt hcardδ
 
+/-- Along a boundary family, corrected hold error is little-o of its
+correction scale: after division by that scale it is exactly the next-layer
+hold error, which vanishes by the verified hierarchy certificates. -/
+theorem tendsto_finkCorrectedReferenceHoldError_div_scale_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (a : ℕ → ℝ) (J R : ℕ → G.State → Payoff ι)
+    (K : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (ha : ∀ n, a n ≠ 0)
+    (hscalePos : ∀ n, 0 < G.finkReferenceCorrectionScale (a n) (J n))
+    (hnextResidual : Tendsto (fun n =>
+      G.finkContinuationResidualVector
+        (G.finkNextReferenceVector (a n) (J n) (R n) K) (z n))
+      atTop (nhds 0))
+    (hnextGain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain
+          (G.finkNextReferenceVector (a n) (J n) (R n) K)
+          (z n) s who d ≤ ε) :
+    Tendsto (fun n =>
+      (‖G.finkContinuationResidualVector
+          (R n + G.finkReferenceCorrection (a n) (J n) K) (z n)‖ +
+        G.finkPositiveContinuationGainSum
+          (R n + G.finkReferenceCorrection (a n) (J n) K) (z n)) /
+      G.finkReferenceCorrectionScale (a n) (J n))
+      atTop (nhds 0) := by
+  have hresidualNorm : Tendsto (fun n =>
+      ‖G.finkContinuationResidualVector
+        (G.finkNextReferenceVector (a n) (J n) (R n) K) (z n)‖)
+      atTop (nhds 0) := by
+    simpa only [norm_zero] using hnextResidual.norm
+  have hgainSum := G.tendsto_finkPositiveContinuationGainSum_zero
+    (fun n => G.finkNextReferenceVector (a n) (J n) (R n) K)
+    z hnextGain
+  have hnextHold := hresidualNorm.add hgainSum
+  have hnextHoldZero : Tendsto (fun n =>
+      ‖G.finkContinuationResidualVector
+        (G.finkNextReferenceVector (a n) (J n) (R n) K) (z n)‖ +
+      G.finkPositiveContinuationGainSum
+        (G.finkNextReferenceVector (a n) (J n) (R n) K) (z n))
+      atTop (nhds 0) := by
+    simpa using hnextHold
+  apply hnextHoldZero.congr'
+  exact Filter.Eventually.of_forall fun n => by
+    have hfactor := G.finkCorrectedReferenceHoldError_eq_scale_mul
+      (a n) (J n) (R n) K (z n) (ha n) (hscalePos n).le
+    simp only
+    rw [hfactor]
+    field_simp [ne_of_gt (hscalePos n)]
+
 /-- Error paid on every calendar stage that holds one corrected Fink point
 fixed.  Unlike correction motion, this term is repeated during waits. -/
 noncomputable def finkCorrectedTargetHoldError
@@ -7067,6 +7117,55 @@ theorem finkRelativeBoundaryHoldError_eq
   rw [G.finkReferenceCorrectionScale_relativeBias_eq
     β hβpos hβ1 W z] at hfactor
   exact hfactor
+
+/-- Along a verified root boundary, the corrected hold error is little-o of
+the inverse discount horizon plus the value error.  This is the asymptotic
+rate, rather than just pointwise convergence, exposed by the next hierarchy
+layer. -/
+theorem tendsto_finkRelativeBoundaryHoldError_div_rootScale_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (W K : G.State → Payoff ι) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (hnextResidual : Tendsto (fun n =>
+      G.finkContinuationResidualVector
+        (G.finkNextReferenceVector (β n / (1 - β n))
+          (G.finkRelativeBias (β n) W (z n)) W K) (z n))
+      atTop (nhds 0))
+    (hnextGain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain
+          (G.finkNextReferenceVector (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) W K)
+          (z n) s who d ≤ ε) :
+    Tendsto (fun n =>
+      (‖G.finkContinuationResidualVector
+          (W + G.finkReferenceCorrection (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) K) (z n)‖ +
+        G.finkPositiveContinuationGainSum
+          (W + G.finkReferenceCorrection (β n / (1 - β n))
+            (G.finkRelativeBias (β n) W (z n)) K) (z n)) /
+      ((1 - β n) / β n + ‖G.finkValue (z n) - W‖))
+      atTop (nhds 0) := by
+  have ha : ∀ n, β n / (1 - β n) ≠ 0 := fun n =>
+    div_ne_zero (ne_of_gt (hβpos n)) (ne_of_gt (sub_pos.mpr (hβ1 n)))
+  have hscalePos : ∀ n, 0 < G.finkReferenceCorrectionScale
+      (β n / (1 - β n))
+      (G.finkRelativeBias (β n) W (z n)) := by
+    intro n
+    rw [G.finkReferenceCorrectionScale_relativeBias_eq
+      (β n) (hβpos n) (hβ1 n) W (z n)]
+    exact add_pos_of_pos_of_nonneg
+      (div_pos (sub_pos.mpr (hβ1 n)) (hβpos n)) (norm_nonneg _)
+  have h := G.tendsto_finkCorrectedReferenceHoldError_div_scale_zero
+    (fun n => β n / (1 - β n))
+    (fun n => G.finkRelativeBias (β n) W (z n))
+    (fun _ => W) K z ha hscalePos hnextResidual hnextGain
+  apply h.congr'
+  exact Filter.Eventually.of_forall fun n => by
+    simp only
+    rw [G.finkReferenceCorrectionScale_relativeBias_eq
+      (β n) (hβpos n) (hβ1 n) W (z n)]
 
 /-- For a relative Fink bias around its value limit, the coefficient of every
 unit boundary correction tends to zero.  Quantitatively it is exactly the
