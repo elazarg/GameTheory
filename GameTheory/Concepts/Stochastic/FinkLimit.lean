@@ -7,6 +7,7 @@ import GameTheory.Concepts.Stochastic.FinkSchedule
 import Math.MeanErgodic
 import Mathlib.Analysis.PSeries
 import Mathlib.Analysis.Asymptotics.SpecificAsymptotics
+import Mathlib.LinearAlgebra.Dual.Lemmas
 
 /-!
 # Vanishing-Discount Compactness for Fink Fixed Points
@@ -558,6 +559,54 @@ def finkContinuationResidualVector (G : StochasticGame ι)
     (W : G.State → Payoff ι) {U : ℝ}
     (z : G.finkDomain U) : G.State → Payoff ι :=
   fun s who => G.finkContinuationResidual W z s who
+
+/-- A state-constant payoff vector has exactly its current coordinate as
+continuation value under every decoded Fink profile. -/
+theorem finkContinuationEU_eq_of_stateConstant
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι)
+    (hconstant : ∀ who s t, W s who = W t who)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
+    G.finkContinuationEU W z s who = W s who := by
+  have hfun : (fun t => W t who) = fun _ => W s who := by
+    funext t
+    exact (hconstant who s t).symm
+  unfold finkContinuationEU
+  rw [hfun]
+  simp
+
+/-- State-constant payoff vectors have zero on-profile continuation
+residual, uniformly over the Fink domain. -/
+theorem finkContinuationResidualVector_eq_zero_of_stateConstant
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι)
+    (hconstant : ∀ who s t, W s who = W t who)
+    {U : ℝ} (z : G.finkDomain U) :
+    G.finkContinuationResidualVector W z = 0 := by
+  ext s who
+  unfold finkContinuationResidualVector finkContinuationResidual
+  rw [G.finkContinuationEU_eq_of_stateConstant W hconstant]
+  simp
+
+/-- State-constant payoff vectors also have zero continuation gain for every
+pure deviation, uniformly over the Fink domain. -/
+theorem finkContinuationGain_eq_zero_of_stateConstant
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι)
+    (hconstant : ∀ who s t, W s who = W t who)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι)
+    (d : G.Act who) :
+    G.finkContinuationGain W z s who d = 0 := by
+  have hfun : (fun t => W t who) = fun _ => W s who := by
+    funext t
+    exact (hconstant who s t).symm
+  unfold finkContinuationGain
+  rw [hfun]
+  simp
 
 /-- State transition kernel induced by one decoded stationary Fink profile. -/
 def finkStateKernel (G : StochasticGame ι)
@@ -1236,6 +1285,46 @@ theorem expect_finkContinuationGain_eq_zero
   unfold finkContinuationGain
   rw [expect_sub, expect_const, ← hdecomp]
   ring
+
+/-- A player's own mixed action also averages its pure one-stage gains to
+zero.  Together with `expect_finkContinuationGain_eq_zero`, this is the
+zero-mean identity behind the finite tangent equations on limiting support. -/
+theorem mixedDeviationStage_eq_expect_pure
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (x : G.StationaryMixedProfile) (s : G.State)
+    (who : ι) (dev : PMF (G.Act who)) :
+    G.mixedStageEU s (Function.update (x s) who dev) who =
+      expect dev (fun d =>
+        G.mixedStageEU s
+          (Function.update (x s) who (PMF.pure d)) who) := by
+  unfold mixedStageEU
+  rw [pmfPi_update_bind, expect_bind]
+
+theorem expect_finkStageGain_eq_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) :
+    expect (G.finkProfile z s who) (fun d =>
+      G.finkStageGain z s who d) = 0 := by
+  have hdecomp := G.mixedDeviationStage_eq_expect_pure
+    (G.finkProfile z) s who (G.finkProfile z s who)
+  simp only [Function.update_eq_self] at hdecomp
+  unfold finkStageGain
+  rw [expect_sub, expect_const, ← hdecomp]
+  ring
+
+/-- Every stationary potential has zero own-action mean after adding its
+one-stage and continuation gains. -/
+theorem expect_finkStageGain_add_continuationGain_eq_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (B : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
+    expect (G.finkProfile z s who) (fun d =>
+      G.finkStageGain z s who d +
+        G.finkContinuationGain B z s who d) = 0 := by
+  rw [expect_add, G.expect_finkStageGain_eq_zero,
+    G.expect_finkContinuationGain_eq_zero, add_zero]
 
 /-- The recursive deviation forcing preserves zero own-action mean. -/
 theorem expect_finkNextDeviationGain_eq_zero
@@ -3650,6 +3739,107 @@ theorem eq_of_expect_eq_of_forall_le_of_ne_zero
   have hstrict := expect_lt_const_of_le_of_exists_lt μ f hle ⟨a, ha, hlt⟩
   linarith
 
+/-- Finite maximum principle for a strictly positive induced Fink state
+kernel: every harmonic payoff coordinate is constant across states.  This is
+the one-step-positive (hence irreducible) structural closure of the
+state-constant interior branch. -/
+theorem stateConstant_of_finkStateKernel_positive_of_harmonic
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (W : G.State → Payoff ι)
+    (hpositive : ∀ s t, G.finkStateKernel z s t ≠ 0)
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who))) :
+    ∀ who s t, W s who = W t who := by
+  intro who s t
+  obtain ⟨m, _, hm⟩ := Finset.exists_max_image Finset.univ
+    (fun r => W r who) ⟨s, Finset.mem_univ s⟩
+  have hmean : expect (G.finkStateKernel z m) (fun r => W r who) =
+      W m who := by
+    rw [G.expect_finkStateKernel_eq]
+    exact (hharmonic m who).symm
+  have hall (r : G.State) : W r who = W m who :=
+    eq_of_expect_eq_of_forall_le_of_ne_zero
+      (G.finkStateKernel z m) (fun q => W q who) (W m who)
+        hmean (fun q => hm q (Finset.mem_univ q)) (hpositive m r)
+  exact (hall s).trans (hall t).symm
+
+/-- Because every one-stage-plus-continuation gain has zero own-action mean,
+nonpositivity on the support is equivalent to equality on the support.  Thus
+the supported part of the interior tangent problem is a finite linear
+equation, not a genuine inequality system. -/
+theorem finkSupportAverageRewardGain_nonpos_iff_eq_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (B : G.State → Payoff ι) (s : G.State) (who : ι) :
+    (∀ d : G.Act who, G.finkProfile z s who d ≠ 0 →
+      G.finkStageGain z s who d +
+        G.finkContinuationGain B z s who d ≤ 0) ↔
+    (∀ d : G.Act who, G.finkProfile z s who d ≠ 0 →
+      G.finkStageGain z s who d +
+        G.finkContinuationGain B z s who d = 0) := by
+  constructor
+  · intro hnonpos d hd
+    let f : G.Act who → ℝ := fun e =>
+      if G.finkProfile z s who e = 0 then 0 else
+        G.finkStageGain z s who e +
+          G.finkContinuationGain B z s who e
+    have hmean : expect (G.finkProfile z s who) f = 0 := by
+      rw [Math.ProbabilityMassFunction.expect_congr_of_ne_zero
+        (G.finkProfile z s who) f (fun e =>
+          G.finkStageGain z s who e +
+            G.finkContinuationGain B z s who e)]
+      · exact G.expect_finkStageGain_add_continuationGain_eq_zero
+          B z s who
+      · intro e he
+        simp only [f, if_neg he]
+    have hle : ∀ e, f e ≤ 0 := by
+      intro e
+      by_cases he : G.finkProfile z s who e = 0
+      · simp [f, he]
+      · simpa only [f, if_neg he] using hnonpos e he
+    have heq := eq_of_expect_eq_of_forall_le_of_ne_zero
+      (G.finkProfile z s who) f 0 hmean hle hd
+    simpa only [f, if_neg hd] using heq
+  · intro hzero d hd
+    exact (hzero d hd).le
+
+/-- Exact tangent-equation form of the supported harmonic-adjustment
+condition.  The correction must reproduce, on every supported pure action,
+the average-reward gain of the unadjusted Poisson bias. -/
+theorem finkSupportHarmonicAdjustment_iff_tangentEquation
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K A : G.State → Payoff ι) :
+    (∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+      G.finkStageGain z s who d +
+        G.finkContinuationGain (H - (K + A)) z s who d ≤ 0) ↔
+    (∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+      G.finkContinuationGain A z s who d =
+        G.finkStageGain z s who d +
+          G.finkContinuationGain (H - K) z s who d) := by
+  constructor
+  · intro hnonpos s who d hd
+    have hzero :=
+      (G.finkSupportAverageRewardGain_nonpos_iff_eq_zero z
+        (H - (K + A)) s who).mp (hnonpos s who) d hd
+    have hsplit : G.finkContinuationGain (H - (K + A)) z s who d =
+        G.finkContinuationGain (H - K) z s who d -
+          G.finkContinuationGain A z s who d := by
+      rw [show H - (K + A) = (H - K) - A by abel,
+        G.finkContinuationGain_sub]
+    rw [hsplit] at hzero
+    linarith
+  · intro htangent s who d hd
+    have hsplit : G.finkContinuationGain (H - (K + A)) z s who d =
+        G.finkContinuationGain (H - K) z s who d -
+          G.finkContinuationGain A z s who d := by
+      rw [show H - (K + A) = (H - K) - A by abel,
+        G.finkContinuationGain_sub]
+    rw [hsplit, htangent s who d hd]
+    linarith
+
 /-- Quantitative support pruning for a finite distribution.  If one point is
 `δ` below a reference level, every point is at most `r` above it, and the
 mean is at most `r` below it, then that point's mass times `δ` is at most
@@ -4270,6 +4460,185 @@ abbrev FinkPureActionVector (G : StochasticGame ι) :=
 /-- A single coordinate of the finite pure-action vector. -/
 abbrev FinkPureActionIndex (G : StochasticGame ι) :=
   G.State × (Σ who : ι, G.Act who)
+
+/-- Codomain of the finite supported tangent system: its first component is
+the on-profile harmonicity equation and its second component records the
+supported pure-action continuation equations. -/
+abbrev FinkSupportTangentEquationVector (G : StochasticGame ι) :=
+  (G.State → Payoff ι) × G.FinkPureActionVector
+
+/-- Linear operator of the finite supported tangent system.  Off-support
+action coordinates are masked to zero; the first component forces the
+adjustment to be harmonic for the limiting on-profile state kernel. -/
+noncomputable def finkSupportTangentOperator
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U) :
+    (G.State → Payoff ι) →ₗ[ℝ] G.FinkSupportTangentEquationVector :=
+  { toFun := fun A =>
+      (G.finkContinuationResidualVector A z, fun s who d =>
+        if G.finkProfile z s who d ≠ 0 then
+          G.finkContinuationGain A z s who d else 0)
+    map_add' := by
+      intro A B
+      apply Prod.ext
+      · exact G.finkContinuationResidualVector_add A B z
+      · funext s who d
+        change (if G.finkProfile z s who d ≠ 0 then
+            G.finkContinuationGain (A + B) z s who d else 0) =
+          (if G.finkProfile z s who d ≠ 0 then
+            G.finkContinuationGain A z s who d else 0) +
+          (if G.finkProfile z s who d ≠ 0 then
+            G.finkContinuationGain B z s who d else 0)
+        by_cases hd : G.finkProfile z s who d ≠ 0
+        · rw [if_pos hd, if_pos hd, if_pos hd]
+          exact G.finkContinuationGain_add A B z s who d
+        · rw [if_neg hd, if_neg hd, if_neg hd, add_zero]
+    map_smul' := by
+      intro c A
+      apply Prod.ext
+      · exact G.finkContinuationResidualVector_smul c A z
+      · funext s who d
+        change (if G.finkProfile z s who d ≠ 0 then
+            G.finkContinuationGain (c • A) z s who d else 0) =
+          c * (if G.finkProfile z s who d ≠ 0 then
+            G.finkContinuationGain A z s who d else 0)
+        by_cases hd : G.finkProfile z s who d ≠ 0
+        · rw [if_pos hd, if_pos hd]
+          exact G.finkContinuationGain_smul c A z s who d
+        · rw [if_neg hd, if_neg hd, mul_zero] }
+
+/-- Right-hand side of the finite supported tangent system. -/
+noncomputable def finkSupportTangentTarget
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι) :
+    G.FinkSupportTangentEquationVector :=
+  (0, fun s who d =>
+    if G.finkProfile z s who d ≠ 0 then
+      G.finkStageGain z s who d +
+        G.finkContinuationGain (H - K) z s who d else 0)
+
+/-- Solving the operator equation is exactly choosing a harmonic adjustment
+that matches every supported tangent gain. -/
+theorem finkSupportTangentOperator_eq_target_iff
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K A : G.State → Payoff ι) :
+    G.finkSupportTangentOperator z A =
+        G.finkSupportTangentTarget z H K ↔
+      G.finkContinuationResidualVector A z = 0 ∧
+        ∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+          G.finkContinuationGain A z s who d =
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d := by
+  constructor
+  · intro heq
+    have hfirst := congrArg Prod.fst heq
+    change G.finkContinuationResidualVector A z = 0 at hfirst
+    refine ⟨hfirst, ?_⟩
+    intro s who d hd
+    have hcoord := congrFun (congrFun (congrFun
+      (congrArg Prod.snd heq) s) who) d
+    change (if G.finkProfile z s who d ≠ 0 then
+          G.finkContinuationGain A z s who d else 0) =
+        (if G.finkProfile z s who d ≠ 0 then
+          G.finkStageGain z s who d +
+            G.finkContinuationGain (H - K) z s who d else 0) at hcoord
+    rwa [if_pos hd, if_pos hd] at hcoord
+  · rintro ⟨hharmonic, htangent⟩
+    apply Prod.ext
+    · change G.finkContinuationResidualVector A z = 0
+      exact hharmonic
+    · funext s who d
+      by_cases hd : G.finkProfile z s who d ≠ 0
+      · change (if G.finkProfile z s who d ≠ 0 then
+              G.finkContinuationGain A z s who d else 0) =
+            (if G.finkProfile z s who d ≠ 0 then
+              G.finkStageGain z s who d +
+                G.finkContinuationGain (H - K) z s who d else 0)
+        rw [if_pos hd, if_pos hd]
+        exact htangent s who d hd
+      · change (if G.finkProfile z s who d ≠ 0 then
+            G.finkContinuationGain A z s who d else 0) =
+          (if G.finkProfile z s who d ≠ 0 then
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d else 0)
+        rw [if_neg hd, if_neg hd]
+
+/-- Fredholm/Farkas form of supported tangent feasibility.  A harmonic
+adjustment exists exactly when every linear functional annihilating the
+tangent operator's range also annihilates the required supported target. -/
+theorem exists_finkSupportHarmonicAdjustment_iff_forall_dual
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι) :
+    (∃ A : G.State → Payoff ι,
+      G.finkContinuationResidualVector A z = 0 ∧
+        ∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+          G.finkContinuationGain A z s who d =
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d) ↔
+    ∀ ℓ : Module.Dual ℝ G.FinkSupportTangentEquationVector,
+      (∀ A : G.State → Payoff ι,
+        ℓ (G.finkSupportTangentOperator z A) = 0) →
+      ℓ (G.finkSupportTangentTarget z H K) = 0 := by
+  constructor
+  · rintro ⟨A, hA⟩ ℓ hℓ
+    rw [← (G.finkSupportTangentOperator_eq_target_iff z H K A).2 hA]
+    exact hℓ A
+  · intro hdual
+    have hmem : G.finkSupportTangentTarget z H K ∈
+        LinearMap.range (G.finkSupportTangentOperator z) := by
+      apply (Subspace.forall_mem_dualAnnihilator_apply_eq_zero_iff
+        (LinearMap.range (G.finkSupportTangentOperator z))
+          (G.finkSupportTangentTarget z H K)).mp
+      intro ℓ hℓ
+      apply hdual ℓ
+      intro A
+      exact (Submodule.mem_dualAnnihilator ℓ).mp hℓ
+        (G.finkSupportTangentOperator z A) ⟨A, rfl⟩
+    obtain ⟨A, hA⟩ := hmem
+    exact ⟨A, (G.finkSupportTangentOperator_eq_target_iff z H K A).1 hA⟩
+
+/-- Explicit finite alternative: either a supported harmonic adjustment
+exists, or a dual functional certifies that none can exist. -/
+theorem exists_finkSupportHarmonicAdjustment_or_dualObstruction
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι) :
+    (∃ A : G.State → Payoff ι,
+      G.finkContinuationResidualVector A z = 0 ∧
+        ∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+          G.finkContinuationGain A z s who d =
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d) ∨
+    ∃ ℓ : Module.Dual ℝ G.FinkSupportTangentEquationVector,
+      (∀ A : G.State → Payoff ι,
+        ℓ (G.finkSupportTangentOperator z A) = 0) ∧
+      ℓ (G.finkSupportTangentTarget z H K) ≠ 0 := by
+  classical
+  by_cases hfeasible : ∃ A : G.State → Payoff ι,
+      G.finkContinuationResidualVector A z = 0 ∧
+        ∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+          G.finkContinuationGain A z s who d =
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d
+  · exact Or.inl hfeasible
+  · right
+    have hnotDual : ¬ ∀ ℓ : Module.Dual ℝ G.FinkSupportTangentEquationVector,
+        (∀ A : G.State → Payoff ι,
+          ℓ (G.finkSupportTangentOperator z A) = 0) →
+        ℓ (G.finkSupportTangentTarget z H K) = 0 := by
+      intro hdual
+      exact hfeasible ((G.exists_finkSupportHarmonicAdjustment_iff_forall_dual
+        z H K).2 hdual)
+    push Not at hnotDual
+    exact hnotDual
 
 /-- Coordinates selected strictly positively by an action-loss direction. -/
 def positiveFinkActionIndices (G : StochasticGame ι)
@@ -6903,6 +7272,74 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorCertificate
   · intro s who d
     simpa only [finkContinuationGain, Pi.zero_apply, expect_const,
       sub_self, neg_zero] using hscaledGain s who d
+
+/-- The finite-relative-bias branch closes outright when the limiting value
+is state-constant for each player.  In that case every singular target
+residual and every pure target-continuation gain is identically zero, so no
+Poisson or tangent correction is needed. -/
+theorem isUniformEquilibriumPayoff_of_finkInterior_stateConstantValue
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (s₀ : G.State)
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hconstant : ∀ who s t, W s who = W t who) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  apply G.isUniformEquilibriumPayoff_of_finkInteriorCertificate
+    s₀ β U hβ0 hβ1 hpay z zlim W H hfix hz hV hH
+  · intro s who
+    change W s who = G.finkContinuationEU W zlim s who
+    exact (G.finkContinuationEU_eq_of_stateConstant
+      W hconstant zlim s who).symm
+  · intro s who d
+    have hfun : (fun t => W t who) = fun _ => W s who := by
+      funext t
+      exact (hconstant who s t).symm
+    rw [hfun]
+    simp
+  · simpa only [G.finkContinuationResidualVector_eq_zero_of_stateConstant
+      W hconstant, smul_zero] using
+      (tendsto_const_nhds : Tendsto
+        (fun _ : ℕ => (0 : G.State → Payoff ι)) atTop (nhds 0))
+  · intro s who d
+    simpa only [G.finkContinuationGain_eq_zero_of_stateConstant
+      W hconstant, mul_zero] using
+      (tendsto_const_nhds : Tendsto (fun _ : ℕ => (0 : ℝ)) atTop (nhds 0))
+
+/-- A strictly positive limiting induced state kernel closes the finite-bias
+interior branch.  The finite maximum principle first makes the harmonic value
+state-constant, after which the zero-correction theorem applies. -/
+theorem isUniformEquilibriumPayoff_of_finkInterior_positiveStateKernel
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (s₀ : G.State)
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hpositive : ∀ s t, G.finkStateKernel zlim s t ≠ 0) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  apply G.isUniformEquilibriumPayoff_of_finkInterior_stateConstantValue
+    s₀ β U hβ0 hβ1 hpay z zlim W H hfix hz hV hH
+  exact G.stateConstant_of_finkStateKernel_positive_of_harmonic
+    zlim W hpositive hharmonic
 
 /-- Canonical vanishing-discount selection yields a stationary profile and
 bounded value function that are harmonic on path and excessive against every
