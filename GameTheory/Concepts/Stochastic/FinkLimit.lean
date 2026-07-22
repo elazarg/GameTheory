@@ -6657,6 +6657,65 @@ theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonHarmonicAdjustment
     exact hPoisson
   · exact hscaledGainLower
 
+/-- Support/off-support form of the harmonic-adjustment criterion.  On an
+action retained by the limiting profile, the centered Fink equality gives a
+finite singular-gain limit, so a static average-reward inequality suffices.
+Only continuation-neutral actions that vanish from the limiting support need
+an asymptotic lower bound. -/
+theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonHarmonicAdjustment_onSupport
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (s₀ : G.State)
+    (β : ℕ → ℝ) (U : ℝ) (hβ0 : ∀ n, 0 ≤ β n)
+    (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H K A : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hharmonic : ∀ s who,
+      W s who = expect (pmfPi (G.finkProfile zlim s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)))
+    (hexcessive : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) ≤ W s who)
+    (hPoisson : G.finkBellmanForcingVector W H zlim =
+      -G.finkContinuationResidualVector K zlim)
+    (hAharmonic : G.finkContinuationResidualVector A zlim = 0)
+    (hsupport : ∀ s who (d : G.Act who),
+      G.finkProfile zlim s who d ≠ 0 →
+      G.finkStageGain zlim s who d +
+        G.finkContinuationGain (H - (K + A)) zlim s who d ≤ 0)
+    (hoffSupport : ∀ s who (d : G.Act who),
+      expect (pmfPi (Function.update (G.finkProfile zlim s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) = W s who →
+      G.finkProfile zlim s who d = 0 →
+      ∀ ε : ℝ, 0 < ε →
+        ∀ᶠ n in atTop,
+          -G.finkContinuationGain (K + A) zlim s who d - ε ≤
+            (β n / (1 - β n)) *
+              G.finkContinuationGain W (z n) s who d) :
+    G.IsUniformEquilibriumPayoff s₀ (W s₀) := by
+  apply G.isUniformEquilibriumPayoff_of_finkInteriorPoissonHarmonicAdjustment
+    s₀ β U hβ0 hβ1 hpay z zlim W H K A hfix hz hV hH
+      hharmonic hexcessive hPoisson hAharmonic
+  intro s who d hneutral ε hε
+  by_cases hzero : G.finkProfile zlim s who d = 0
+  · exact hoffSupport s who d hneutral hzero ε hε
+  · have hlimit := G.tendsto_scaled_finkContinuationGain_of_limit_support
+      hβ0 hβ1 hpay hz hfix W H hH s who d hzero
+    obtain ⟨N, hN⟩ := Metric.tendsto_atTop.mp hlimit ε hε
+    filter_upwards [Filter.eventually_atTop.2 ⟨N, hN⟩] with n hn
+    rw [Real.dist_eq, abs_lt] at hn
+    have hstatic := hsupport s who d hzero
+    rw [G.finkContinuationGain_sub] at hstatic
+    linarith
+
 /-- Two-sided pure-deviation convergence specializes the one-sided algebraic
 Poisson correction criterion. -/
 theorem isUniformEquilibriumPayoff_of_finkInteriorPoissonCorrection
