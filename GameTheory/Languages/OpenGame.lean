@@ -9,7 +9,9 @@ import GameTheory.Languages.OpenGame.Compile
 import GameTheory.Languages.OpenGame.FinTensor
 import GameTheory.Languages.OpenGame.Theorems
 import GameTheory.Languages.OpenGame.Correlation
+import GameTheory.Languages.OpenGame.Mixed
 import GameTheory.Languages.Bridges.OpenGame_EFG
+import GameTheory.Languages.Bridges.OpenGame_Mixed
 import GameTheory.Languages.OpenGame.Examples
 
 /-!

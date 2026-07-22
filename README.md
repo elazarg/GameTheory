@@ -126,6 +126,11 @@ one-shot-deviation principle. Backward values are called *cooutcomes* (the
 open-games literature also says *coutilities*). Closed, deliberately
 non-compositional devices recover CE, CCE, and pure-profile public
 randomization over Nash equilibria, with checked strict-separation examples.
+The probabilistic layer uses finite-support `FinPMF` distributions and
+expectation algebras for `GProb`-style sequential/tensor composition and its
+relational Kleisli lifting. Its two-player decision tensor is equivalent to
+the existing mixed-Nash semantics; Matching Pennies has the expected unique
+half/half solution.
 
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition

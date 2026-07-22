@@ -10,6 +10,7 @@ import GameTheory.Languages.Bridges.NFG_FOSG
 import GameTheory.Languages.Bridges.MAID_EFG
 import GameTheory.Languages.Bridges.FOSG
 import GameTheory.Languages.Bridges.OpenGame_EFG
+import GameTheory.Languages.Bridges.OpenGame_Mixed
 
 /-!
 # GameTheory.Languages.Bridges

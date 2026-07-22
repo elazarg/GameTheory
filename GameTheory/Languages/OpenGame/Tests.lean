@@ -82,6 +82,14 @@ example (μ : PMF G.Profile) :
       ∀ σ, μ σ ≠ 0 → G.IsNash σ :=
   BroadcastDevice.canonical_isEquilibrium_iff_nashSupport μ
 
+example :
+    (ProbOpenGame.actionDecision NFG.MPAction ⊗ₚ
+      ProbOpenGame.actionDecision NFG.MPAction).IsEquilibriumIn ((), ())
+        (ProbOpenGame.boolPayoffPair NFG.matchingPennies)
+        (Math.FinPMF.product Examples.matchingPenniesFairFin
+          Examples.matchingPenniesFairFin) :=
+  Examples.matchingPennies_fair_probabilistic_equilibrium
+
 end
 
 end OpenGames.Tests

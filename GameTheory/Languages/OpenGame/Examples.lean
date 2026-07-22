@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.Bridges.OpenGame_EFG
+import GameTheory.Languages.Bridges.OpenGame_Mixed
 import GameTheory.Languages.OpenGame.Correlation
 import GameTheory.Languages.NFG.Stackelberg
 import GameTheory.Languages.NFG.MatchingPenniesMixed
@@ -192,6 +193,48 @@ theorem matchingPennies_private_not_broadcast :
     have hn := h profile hpos
     have hnNFG := (NFG.IsNashPure_iff_kernelGame NFG.matchingPennies profile).2 hn
     exact NFG.matchingPennies_no_pure_nash profile hnNFG
+
+/-! ## Probabilistic open games -/
+
+private instance matchingPenniesOutcomeFinite :
+    Finite NFG.matchingPennies.Outcome := by
+  change Finite (∀ _ : Bool, NFG.MPAction)
+  infer_instance
+
+/-- The fair action marginal, now carrying finite support in its type. -/
+def matchingPenniesFairFin : Math.FinPMF NFG.MPAction :=
+  Math.FinPMF.ofPMF (PMF.uniformOfFintype NFG.MPAction)
+
+/-- The `GProb` decision tensor solves Matching Pennies at the fair product
+strategy, through the generic bridge to the existing mixed-Nash theorem. -/
+theorem matchingPennies_fair_probabilistic_equilibrium :
+    (ProbOpenGame.actionDecision NFG.MPAction ⊗ₚ
+      ProbOpenGame.actionDecision NFG.MPAction).IsEquilibriumIn ((), ())
+        (ProbOpenGame.boolPayoffPair NFG.matchingPennies)
+        (Math.FinPMF.product matchingPenniesFairFin
+          matchingPenniesFairFin) := by
+  rw [ProbOpenGame.actionDecision_tensor_isEquilibriumIn_iff_isNashMixed]
+  have heq :
+      ProbOpenGame.boolMixedProfile matchingPenniesFairFin
+          matchingPenniesFairFin = NFG.matchingPenniesFairMixed := by
+    funext i
+    cases i <;> rfl
+  rw [heq]
+  exact NFG.matchingPennies_fair_mixed_nash
+
+/-- Complete solution of the probabilistic open-game presentation of
+Matching Pennies: both marginals put probability one half on heads. -/
+theorem matchingPennies_probabilistic_equilibrium_iff_half
+    (μfalse μtrue : Math.FinPMF NFG.MPAction) :
+    (ProbOpenGame.actionDecision NFG.MPAction ⊗ₚ
+      ProbOpenGame.actionDecision NFG.MPAction).IsEquilibriumIn ((), ())
+        (ProbOpenGame.boolPayoffPair NFG.matchingPennies)
+        (Math.FinPMF.product μfalse μtrue) ↔
+      (μtrue.toPMF NFG.MPAction.heads).toReal = (1 / 2 : ℝ) ∧
+        (μfalse.toPMF NFG.MPAction.heads).toReal = (1 / 2 : ℝ) := by
+  rw [ProbOpenGame.actionDecision_tensor_isEquilibriumIn_iff_isNashMixed]
+  exact NFG.matchingPennies_mixed_nash_iff_half
+    (ProbOpenGame.boolMixedProfile μfalse μtrue)
 
 end
 
