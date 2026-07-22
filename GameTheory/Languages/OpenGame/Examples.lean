@@ -255,28 +255,23 @@ private theorem fairBoolFin_fullSupport (b : Bool) :
   rw [PMF.uniformOfFintype_apply]
   norm_num
 
-private theorem diagonalBoolFin_mem_tensorClosure :
-    diagonalBoolFin ∈ Math.FinPMF.convexClosure
-      {φ | (ProbOpenGame.actionDecision Bool ⊗ₚ
-        ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
-          (fun _ => (0, 0)) φ} := by
+private theorem diagonalBoolFin_mem_convexClosure_of_pureProducts
+    (S : Set (Math.FinPMF (Bool × Bool)))
+    (hpure : ∀ b, Math.FinPMF.product (Math.FinPMF.pure b)
+      (Math.FinPMF.pure b) ∈ S) :
+    diagonalBoolFin ∈ Math.FinPMF.convexClosure S := by
   let vertices : Math.FinPMF (Math.FinPMF (Bool × Bool)) :=
     Math.FinPMF.map
       (fun b => Math.FinPMF.product (Math.FinPMF.pure b)
         (Math.FinPMF.pure b)) fairBoolFin
   refine ⟨vertices, ?_, ?_⟩
-  · change ∀ ψ : Math.FinPMF (Bool × Bool), ψ ∈ vertices.support →
-      (ProbOpenGame.actionDecision Bool ⊗ₚ
-        ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
-          (fun _ => (0, 0)) ψ
-    intro ψ hψ
+  · intro ψ hψ
     rw [show vertices.support =
       (fun b => Math.FinPMF.product (Math.FinPMF.pure b)
         (Math.FinPMF.pure b)) '' fairBoolFin.support by
           exact Math.FinPMF.support_map _ _] at hψ
     rcases hψ with ⟨b, _hb, rfl⟩
-    simp [ProbOpenGame.tensor, ProbOpenGame.actionDecision,
-      ProbOpenGame.expect]
+    exact hpure b
   · have hvertices : vertices =
         Math.FinPMF.map Math.FinPMF.pure diagonalBoolFin := by
       simp only [vertices, diagonalBoolFin, Math.FinPMF.product_pure,
@@ -285,14 +280,11 @@ private theorem diagonalBoolFin_mem_tensorClosure :
     change Math.FinPMF.join vertices = diagonalBoolFin
     rw [hvertices, Math.FinPMF.join_map_pure]
 
-private theorem diagonalBoolFin_not_tensorEquilibrium :
-    ¬(ProbOpenGame.actionDecision Bool ⊗ₚ
-      ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
-        (fun _ => (0, 0)) diagonalBoolFin := by
-  intro h
-  have hfactor : diagonalBoolFin =
+private theorem diagonalBoolFin_not_productOfMarginals :
+    diagonalBoolFin ≠
       Math.FinPMF.product (Math.FinPMF.map Prod.fst diagonalBoolFin)
-        (Math.FinPMF.map Prod.snd diagonalBoolFin) := h.1
+        (Math.FinPMF.map Prod.snd diagonalBoolFin) := by
+  intro hfactor
   have hfst : Math.FinPMF.map Prod.fst diagonalBoolFin = fairBoolFin := by
     rw [diagonalBoolFin, Math.FinPMF.map_comp]
     change Math.FinPMF.map id fairBoolFin = fairBoolFin
@@ -312,6 +304,23 @@ private theorem diagonalBoolFin_not_tensorEquilibrium :
   apply hoffDiagonal
   rw [hfactor, hfst, hsnd]
   exact hoffProduct
+
+private theorem diagonalBoolFin_mem_tensorClosure :
+    diagonalBoolFin ∈ Math.FinPMF.convexClosure
+      {φ | (ProbOpenGame.actionDecision Bool ⊗ₚ
+        ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
+          (fun _ => (0, 0)) φ} := by
+  apply diagonalBoolFin_mem_convexClosure_of_pureProducts
+  intro b
+  simp [ProbOpenGame.tensor, ProbOpenGame.actionDecision,
+    Math.FinPMF.expect]
+
+private theorem diagonalBoolFin_not_tensorEquilibrium :
+    ¬(ProbOpenGame.actionDecision Bool ⊗ₚ
+      ProbOpenGame.actionDecision Bool).IsEquilibriumIn ((), ())
+        (fun _ => (0, 0)) diagonalBoolFin := by
+  intro h
+  exact diagonalBoolFin_not_productOfMarginals h.1
 
 /-- Convex closure is not preserved by parallel composition: each pure
 diagonal profile is an equilibrium of the zero-payoff decision tensor, but
@@ -343,6 +352,61 @@ theorem probabilistic_tensor_does_not_preserve_convexEquilibria :
     exact diagonalBoolFin_not_tensorEquilibrium
       (hconvex ((), ()) (fun _ => (0, 0))
         diagonalBoolFin_mem_tensorClosure)
+
+/-- A strategically free wire.  It is useful for isolating structural
+properties of probabilistic composition from payoff optimality. -/
+def freeStrategyWire (StrategyType X S : Type*) : ProbOpenGame X S X S where
+  Strategy := StrategyType
+  play _ x := x
+  coplay _ _ s := s
+  IsEquilibriumIn _ _ _ := True
+
+theorem freeStrategyWire_hasConvexEquilibria (StrategyType X S : Type*) :
+    ProbOpenGame.HasConvexEquilibria
+      (freeStrategyWire StrategyType X S) := by
+  intro _ _ _ _
+  trivial
+
+private theorem diagonalBoolFin_mem_freeSeqClosure :
+    diagonalBoolFin ∈ Math.FinPMF.convexClosure
+      {φ | (freeStrategyWire Bool Unit ℝ ;ₚ
+        freeStrategyWire Bool Unit ℝ).IsEquilibriumIn ()
+          (fun _ => 0) φ} := by
+  apply diagonalBoolFin_mem_convexClosure_of_pureProducts
+  intro b
+  change (freeStrategyWire Bool Unit ℝ ;ₚ
+    freeStrategyWire Bool Unit ℝ).IsEquilibriumIn () (fun _ => 0)
+      (Math.FinPMF.product (Math.FinPMF.pure b)
+        (Math.FinPMF.pure b))
+  unfold ProbOpenGame.seq
+  simp only [Math.FinPMF.map_fst_product,
+    Math.FinPMF.map_snd_product, freeStrategyWire, true_and,
+    Math.FinPMF.map_pure]
+  apply Math.FinPMF.relKleisli_pure_of_mem
+  trivial
+
+private theorem diagonalBoolFin_not_freeSeqEquilibrium :
+    ¬(freeStrategyWire Bool Unit ℝ ;ₚ
+      freeStrategyWire Bool Unit ℝ).IsEquilibriumIn ()
+        (fun _ => 0) diagonalBoolFin := by
+  intro h
+  exact diagonalBoolFin_not_productOfMarginals h.1
+
+/-- Convex equilibrium sets are not closed under the current sequential
+composition either.  Both factors select every mixed strategy, but the
+composite additionally requires the joint strategy law to be independent;
+the convex mixture of two diagonal point masses is correlated. -/
+theorem probabilistic_seq_does_not_preserve_convexEquilibria :
+    ProbOpenGame.HasConvexEquilibria
+        (freeStrategyWire Bool Unit ℝ) ∧
+      ¬ProbOpenGame.HasConvexEquilibria
+        (freeStrategyWire Bool Unit ℝ ;ₚ
+          freeStrategyWire Bool Unit ℝ) := by
+  constructor
+  · exact freeStrategyWire_hasConvexEquilibria Bool Unit ℝ
+  · intro hconvex
+    exact diagonalBoolFin_not_freeSeqEquilibrium
+      (hconvex () (fun _ => 0) diagonalBoolFin_mem_freeSeqClosure)
 
 private instance matchingPenniesOutcomeFinite :
     Finite NFG.matchingPennies.Outcome := by

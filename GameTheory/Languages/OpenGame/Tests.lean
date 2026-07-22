@@ -100,6 +100,16 @@ example :
           ProbOpenGame.actionDecision Bool) :=
   Examples.probabilistic_tensor_does_not_preserve_convexEquilibria
 
+/-- Convex equilibrium predicates are likewise not closed under sequential
+composition when composite laws must factor independently. -/
+example :
+    ProbOpenGame.HasConvexEquilibria
+        (Examples.freeStrategyWire Bool Unit ℝ) ∧
+      ¬ProbOpenGame.HasConvexEquilibria
+        (Examples.freeStrategyWire Bool Unit ℝ ;ₚ
+          Examples.freeStrategyWire Bool Unit ℝ) :=
+  Examples.probabilistic_seq_does_not_preserve_convexEquilibria
+
 end
 
 end OpenGames.Tests

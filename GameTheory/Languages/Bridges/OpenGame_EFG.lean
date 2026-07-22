@@ -28,6 +28,9 @@ namespace OpenGames.ShapeS
 open GameTheory
 open EFG
 
+/- The `Fintype` constraints below are inherited from `InfoStructure.arity`:
+EFG actions are encoded by finite arities, rather than by arbitrary action
+carriers. -/
 variable (A B : Type) [Fintype A] [DecidableEq A] [Nonempty A]
   [Fintype B] [DecidableEq B] [Nonempty B]
 

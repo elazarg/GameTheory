@@ -80,11 +80,11 @@ private theorem mixed_eu_false_eq_pair_expect
     (μfalse μtrue : FinPMF A) :
     G.toKernelGame.mixedExtension.eu
         (boolMixedProfile μfalse μtrue) false =
-      expect (FinPMF.product μfalse μtrue)
+      FinPMF.expect (FinPMF.product μfalse μtrue)
         (fun p => (boolPayoffPair G p).1) := by
   letI : Finite G.toKernelGame.Outcome := ‹Finite G.Outcome›
   rw [G.toKernelGame.mixedExtension_eu]
-  unfold expect
+  unfold FinPMF.expect
   rw [← map_pmfPi_bool_eq_product μfalse μtrue,
     Math.Probability.expect_map]
   simp only [GameTheory.KernelGame.eu, NFG.NFGGame.toKernelGame,
@@ -100,11 +100,11 @@ private theorem mixed_eu_true_eq_pair_expect
     (μfalse μtrue : FinPMF A) :
     G.toKernelGame.mixedExtension.eu
         (boolMixedProfile μfalse μtrue) true =
-      expect (FinPMF.product μfalse μtrue)
+      FinPMF.expect (FinPMF.product μfalse μtrue)
         (fun p => (boolPayoffPair G p).2) := by
   letI : Finite G.toKernelGame.Outcome := ‹Finite G.Outcome›
   rw [G.toKernelGame.mixedExtension_eu]
-  unfold expect
+  unfold FinPMF.expect
   rw [← map_pmfPi_bool_eq_product μfalse μtrue,
     Math.Probability.expect_map]
   simp only [GameTheory.KernelGame.eu, NFG.NFGGame.toKernelGame,
@@ -133,10 +133,10 @@ theorem isMixedNash2_iff_isNashMixed
       calc
         G.toKernelGame.mixedExtension.eu
             (boolMixedProfile μfalse μtrue) false =
-            expect (FinPMF.product μfalse μtrue)
+            FinPMF.expect (FinPMF.product μfalse μtrue)
               (fun p => (boolPayoffPair G p).1) :=
           mixed_eu_false_eq_pair_expect G μfalse μtrue
-        _ ≥ expect (FinPMF.product (FinPMF.ofPMF τ) μtrue)
+        _ ≥ FinPMF.expect (FinPMF.product (FinPMF.ofPMF τ) μtrue)
               (fun p => (boolPayoffPair G p).1) := hfalse (FinPMF.ofPMF τ)
         _ = G.toKernelGame.mixedExtension.eu
               (boolMixedProfile (FinPMF.ofPMF τ) μtrue) false :=
@@ -151,10 +151,10 @@ theorem isMixedNash2_iff_isNashMixed
       calc
         G.toKernelGame.mixedExtension.eu
             (boolMixedProfile μfalse μtrue) true =
-            expect (FinPMF.product μfalse μtrue)
+            FinPMF.expect (FinPMF.product μfalse μtrue)
               (fun p => (boolPayoffPair G p).2) :=
           mixed_eu_true_eq_pair_expect G μfalse μtrue
-        _ ≥ expect (FinPMF.product μfalse (FinPMF.ofPMF τ))
+        _ ≥ FinPMF.expect (FinPMF.product μfalse (FinPMF.ofPMF τ))
               (fun p => (boolPayoffPair G p).2) := htrue (FinPMF.ofPMF τ)
         _ = G.toKernelGame.mixedExtension.eu
               (boolMixedProfile μfalse (FinPMF.ofPMF τ)) true :=
@@ -171,7 +171,7 @@ theorem isMixedNash2_iff_isNashMixed
     constructor
     · intro μ'
       calc
-        expect (FinPMF.product μ' μtrue)
+        FinPMF.expect (FinPMF.product μ' μtrue)
             (fun p => (boolPayoffPair G p).1) =
             G.toKernelGame.mixedExtension.eu
               (boolMixedProfile μ' μtrue) false :=
@@ -184,12 +184,12 @@ theorem isMixedNash2_iff_isNashMixed
             (boolMixedProfile_update_false μfalse μtrue μ'.toPMF).symm
         _ ≤ G.toKernelGame.mixedExtension.eu
               (boolMixedProfile μfalse μtrue) false := h false μ'.toPMF
-        _ = expect (FinPMF.product μfalse μtrue)
+        _ = FinPMF.expect (FinPMF.product μfalse μtrue)
               (fun p => (boolPayoffPair G p).1) :=
           mixed_eu_false_eq_pair_expect G μfalse μtrue
     · intro ν'
       calc
-        expect (FinPMF.product μfalse ν')
+        FinPMF.expect (FinPMF.product μfalse ν')
             (fun p => (boolPayoffPair G p).2) =
             G.toKernelGame.mixedExtension.eu
               (boolMixedProfile μfalse ν') true :=
@@ -202,7 +202,7 @@ theorem isMixedNash2_iff_isNashMixed
             (boolMixedProfile_update_true μfalse μtrue ν'.toPMF).symm
         _ ≤ G.toKernelGame.mixedExtension.eu
               (boolMixedProfile μfalse μtrue) true := h true ν'.toPMF
-        _ = expect (FinPMF.product μfalse μtrue)
+        _ = FinPMF.expect (FinPMF.product μfalse μtrue)
               (fun p => (boolPayoffPair G p).2) :=
           mixed_eu_true_eq_pair_expect G μfalse μtrue
 
