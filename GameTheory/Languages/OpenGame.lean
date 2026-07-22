@@ -8,6 +8,7 @@ import GameTheory.Languages.OpenGame.Syntax
 import GameTheory.Languages.OpenGame.Compile
 import GameTheory.Languages.OpenGame.Sequential
 import GameTheory.Languages.OpenGame.Ownership
+import GameTheory.Languages.OpenGame.Deviation
 import GameTheory.Languages.OpenGame.FinTensor
 import GameTheory.Languages.OpenGame.Theorems
 import GameTheory.Languages.OpenGame.Correlation

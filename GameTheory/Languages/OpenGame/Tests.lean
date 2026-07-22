@@ -161,6 +161,28 @@ example {n : Nat} {ι : Type} [DecidableEq ι]
   ShapeSeqDep.isAgentEquilibrium_iff_isPlayerNash_of_injective
     howner u σ
 
+/-- The generic single-stage deviation family recovers agent form exactly. -/
+example {n : Nat} {ι : Type} [DecidableEq ι]
+    {A : Fin n → Type} (owner : Fin n → ι)
+    (u : (∀ i, A i) → ι → ℝ) (σ : ShapeSeqDep.Strategy A) :
+    DeviationFamily.IsStableUnder
+        (DeviationFamily.single
+          (S := fun i => ShapeSeqDep.History A i → A i))
+        ShapeSeqDep.realize (fun path i => u path (owner i)) σ ↔
+      ShapeSeqDep.IsAgentEquilibrium owner u σ :=
+  ShapeSeqDep.isStableUnder_single_iff_isAgentEquilibrium owner u σ
+
+/-- Owner-fibre deviation families recover player-form Nash exactly. -/
+example {n : Nat} {ι : Type} [DecidableEq ι]
+    {A : Fin n → Type} (owner : Fin n → ι)
+    (u : (∀ i, A i) → ι → ℝ) (σ : ShapeSeqDep.Strategy A) :
+    DeviationFamily.IsStableUnder
+        (DeviationFamily.fiber
+          (S := fun i => ShapeSeqDep.History A i → A i) owner)
+        ShapeSeqDep.realize u σ ↔
+      ShapeSeqDep.IsPlayerNash owner u σ :=
+  ShapeSeqDep.isStableUnder_fiber_iff_isPlayerNash owner u σ
+
 /-- Two stages owned by one player strictly separate agent-form equilibrium
 from player-form Nash. -/
 example :

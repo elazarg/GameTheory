@@ -127,7 +127,11 @@ horizon recovers the existing two-stage shape up to its canonical
 function/product equivalence. A separate ownership layer groups multiple
 decisions per player, compiles player-form deviations, proves equivalence with
 agent form for injective ownership, and gives a strict two-stage separation
-witness when one player owns both decisions. The two-stage perfect-information
+witness when one player owns both decisions. A generic deviation-family layer
+then treats stage, owner-fibre, and coalition scopes uniformly; its stability
+predicate recovers the existing agent-form and player-form notions exactly,
+while deliberately leaving coalition objectives unspecified. The two-stage
+perfect-information
 bridge additionally reaches EFG subgame perfection and the one-shot-deviation
 principle. Finite heterogeneous sequential shapes also have a canonical
 agent-form MAID bridge: dependent histories are exactly MAID information sets,
