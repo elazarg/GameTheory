@@ -108,6 +108,7 @@ import GameTheory.Concepts.Repeated.MonitoringHyperplanes
 -- Stochastic games (uniform equilibrium program)
 import GameTheory.Concepts.Stochastic.Basic
 import GameTheory.Concepts.Stochastic.Uniform
+import GameTheory.Concepts.Stochastic.Asymptotic
 import GameTheory.Concepts.Stochastic.StageGame
 import GameTheory.Concepts.Stochastic.Absorbing
 import GameTheory.Concepts.Stochastic.TransitionIndependent
