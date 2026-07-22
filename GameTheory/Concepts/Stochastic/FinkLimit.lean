@@ -6492,6 +6492,233 @@ theorem exists_strictMono_summable_finkCorrectedTargetStepError_subsequence
   exact ⟨ψ, strictMono_nat_of_lt_succ hψstep, hRzero,
     hsummable, htotal⟩
 
+/-- The fast extraction can simultaneously make any additional nonnegative
+defect tending to zero summable.  Applied to the next-reference hold error,
+this supplies both small series required by the root rate-compatible calendar
+criterion on one common subsequence. -/
+theorem exists_strictMono_summable_finkCorrectedTargetStepError_and_aux_subsequence
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [DecidableEq ι] [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) (R : ℕ → G.State → Payoff ι)
+    {U : ℝ} (z : ℕ → G.finkDomain U)
+    (hR : Tendsto R atTop (nhds 0))
+    (hresidual : Tendsto (fun n => G.finkContinuationResidualVector
+      (W + R n) (z n)) atTop (nhds 0))
+    (hgain : ∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+      ∀ s who (d : G.Act who),
+        G.finkContinuationGain (W + R n) (z n) s who d ≤ ε)
+    (aux : ℕ → ℝ) (haux0 : ∀ n, 0 ≤ aux n)
+    (haux : Tendsto aux atTop (nhds 0))
+    (ε : ℝ) (hε : 0 < ε) :
+    ∃ ψ : ℕ → ℕ, StrictMono ψ ∧ ‖R (ψ 0)‖ ≤ ε ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        (R ∘ ψ) (z ∘ ψ) n) ∧
+      ∑' n, G.finkCorrectedTargetStepError W
+        (R ∘ ψ) (z ∘ ψ) n ≤ ε ∧
+      Summable (aux ∘ ψ) ∧ ∑' n, aux (ψ n) ≤ ε := by
+  let δ : ℕ → ℝ := fun n => ε / 8 / 2 ^ n
+  have hδpos : ∀ n, 0 < δ n := fun n => by
+    dsimp only [δ]
+    positivity
+  have hRnorm : Tendsto (fun n => ‖R n‖) atTop (nhds 0) := by
+    simpa only [norm_zero] using hR.norm
+  have hresidualNorm : Tendsto (fun n =>
+      ‖G.finkContinuationResidualVector (W + R n) (z n)‖)
+      atTop (nhds 0) := by
+    simpa only [norm_zero] using hresidual.norm
+  have hgainSum := G.tendsto_finkPositiveContinuationGainSum_zero
+    (fun n => W + R n) z hgain
+  let P : ℕ → ℕ → Prop := fun n k =>
+    ‖R k‖ ≤ δ n ∧
+      ‖G.finkContinuationResidualVector (W + R k) (z k)‖ ≤ δ n ∧
+      G.finkPositiveContinuationGainSum (W + R k) (z k) ≤ δ n ∧
+      aux k ≤ δ n
+  have hev : ∀ n, ∀ᶠ k in atTop, P n k := by
+    intro n
+    have hRsmall : ∀ᶠ k in atTop, ‖R k‖ ≤ δ n :=
+      (hRnorm.eventually (Iio_mem_nhds (hδpos n))).mono
+        fun _ hk => hk.le
+    have hressmall : ∀ᶠ k in atTop,
+        ‖G.finkContinuationResidualVector (W + R k) (z k)‖ ≤ δ n :=
+      (hresidualNorm.eventually (Iio_mem_nhds (hδpos n))).mono
+        fun _ hk => hk.le
+    have hgainsmall : ∀ᶠ k in atTop,
+        G.finkPositiveContinuationGainSum (W + R k) (z k) ≤ δ n :=
+      (hgainSum.eventually (Iio_mem_nhds (hδpos n))).mono
+        fun _ hk => hk.le
+    have hauxsmall : ∀ᶠ k in atTop, aux k ≤ δ n :=
+      (haux.eventually (Iio_mem_nhds (hδpos n))).mono
+        fun _ hk => hk.le
+    filter_upwards [hRsmall, hressmall, hgainsmall, hauxsmall]
+      with k hkR hkres hkgain hkaux
+    exact ⟨hkR, hkres, hkgain, hkaux⟩
+  have hexN : ∀ n, ∃ N, ∀ k, N ≤ k → P n k := fun n =>
+    Filter.eventually_atTop.mp (hev n)
+  choose N hN using hexN
+  let ψ : ℕ → ℕ := fun n => Nat.rec (N 0)
+    (fun k previous => max (N (k + 1)) (previous + 1)) n
+  have hNle : ∀ n, N n ≤ ψ n := by
+    intro n
+    induction n with
+    | zero => simp [ψ]
+    | succ n ih =>
+        rw [show ψ (n + 1) = max (N (n + 1)) (ψ n + 1) by simp [ψ]]
+        exact le_max_left _ _
+  have hψstep : ∀ n, ψ n < ψ (n + 1) := by
+    intro n
+    rw [show ψ (n + 1) = max (N (n + 1)) (ψ n + 1) by simp [ψ]]
+    exact lt_of_lt_of_le (Nat.lt_succ_self _) (le_max_right _ _)
+  have hP : ∀ n, P n (ψ n) := fun n => hN n (ψ n) (hNle n)
+  have hδmono : ∀ n, δ (n + 1) ≤ δ n := by
+    intro n
+    dsimp only [δ]
+    apply (div_le_div_iff₀ (by positivity : (0 : ℝ) < 2 ^ (n + 1))
+      (by positivity : (0 : ℝ) < 2 ^ n)).2
+    rw [pow_succ]
+    nlinarith [hε, pow_pos (by norm_num : (0 : ℝ) < 2) n]
+  have herror : ∀ n, G.finkCorrectedTargetStepError W
+      (R ∘ ψ) (z ∘ ψ) n ≤ ε / 2 / 2 ^ n := by
+    intro n
+    have hmove : ‖R (ψ (n + 1)) - R (ψ n)‖ ≤
+        δ (n + 1) + δ n := by
+      exact (norm_sub_le _ _).trans
+        (add_le_add (hP (n + 1)).1 (hP n).1)
+    calc
+      G.finkCorrectedTargetStepError W (R ∘ ψ) (z ∘ ψ) n =
+          ‖G.finkContinuationResidualVector
+            (W + R (ψ n)) (z (ψ n))‖ +
+          G.finkPositiveContinuationGainSum
+            (W + R (ψ n)) (z (ψ n)) +
+          ‖R (ψ (n + 1)) - R (ψ n)‖ := by
+        rfl
+      _ ≤ δ n + δ n + (δ (n + 1) + δ n) := by
+        exact add_le_add
+          (add_le_add (hP n).2.1 (hP n).2.2.1) hmove
+      _ ≤ 4 * δ n := by linarith [hδmono n]
+      _ = ε / 2 / 2 ^ n := by
+        dsimp only [δ]
+        ring
+  have hfast : Summable (fun n => G.finkCorrectedTargetStepError W
+      (R ∘ ψ) (z ∘ ψ) n) := by
+    apply Summable.of_nonneg_of_le
+    · exact fun n => G.finkCorrectedTargetStepError_nonneg
+        W (R ∘ ψ) (z ∘ ψ) n
+    · exact herror
+    · exact summable_geometric_two' ε
+  have hfastTotal : ∑' n, G.finkCorrectedTargetStepError W
+      (R ∘ ψ) (z ∘ ψ) n ≤ ε := by
+    calc
+      _ ≤ ∑' n : ℕ, ε / 2 / 2 ^ n :=
+        hfast.tsum_le_tsum herror (summable_geometric_two' ε)
+      _ = ε := tsum_geometric_two' ε
+  have hauxBound : ∀ n, aux (ψ n) ≤ ε / 2 / 2 ^ n := by
+    intro n
+    calc
+      aux (ψ n) ≤ δ n := (hP n).2.2.2
+      _ ≤ ε / 2 / 2 ^ n := by
+        dsimp only [δ]
+        have hpow : 0 < (2 : ℝ) ^ n := pow_pos (by norm_num) n
+        exact div_le_div_of_nonneg_right (by linarith) hpow.le
+  have hauxSum : Summable (aux ∘ ψ) := by
+    apply Summable.of_nonneg_of_le
+    · exact fun n => haux0 (ψ n)
+    · simpa only [Function.comp_apply] using hauxBound
+    · exact summable_geometric_two' ε
+  have hauxTotal : ∑' n, aux (ψ n) ≤ ε := by
+    calc
+      _ ≤ ∑' n : ℕ, ε / 2 / 2 ^ n :=
+        hauxSum.tsum_le_tsum hauxBound (summable_geometric_two' ε)
+      _ = ε := tsum_geometric_two' ε
+  have hRzero : ‖R (ψ 0)‖ ≤ ε := by
+    calc
+      ‖R (ψ 0)‖ ≤ δ 0 := (hP 0).1
+      _ ≤ ε := by
+        dsimp only [δ]
+        norm_num
+        linarith
+  exact ⟨ψ, strictMono_nat_of_lt_succ hψstep, hRzero,
+    hfast, hfastTotal, hauxSum, hauxTotal⟩
+
+/-- Information-preserving form of the root correction dichotomy.  In the
+boundary branch it retains the vanishing next-reference hold defect instead
+of projecting it away after deriving the corrected root certificates. -/
+theorem FinkVerifiedReferenceResolution.rootCorrection_and_nextHold_dichotomy
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {z : ℕ → G.finkDomain U} {V J R : ℕ → G.State → Payoff ι}
+    {a : ℕ → ℝ}
+    (hresolution : G.FinkVerifiedReferenceResolution z V a J R)
+    (ha : ∀ n, a n ≠ 0)
+    (hscale0 : ∀ n, 0 ≤ G.finkReferenceCorrectionScale (a n) (J n))
+    (hscale : Tendsto (fun n => G.finkReferenceCorrectionScale
+      (a n) (J n)) atTop (nhds 0)) :
+    (∃ (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι),
+      StrictMono φ ∧ Tendsto (J ∘ φ) atTop (nhds Jlim)) ∨
+    ∃ (K : G.State → Payoff ι) (φ : ℕ → ℕ),
+      StrictMono φ ∧ ‖K‖ = 1 ∧
+      Tendsto (fun n => G.finkReferenceCorrection
+        (a (φ n)) (J (φ n)) K) atTop (nhds 0) ∧
+      Tendsto (fun n => G.finkContinuationResidualVector
+        (R (φ n) + G.finkReferenceCorrection
+          (a (φ n)) (J (φ n)) K) (z (φ n))) atTop (nhds 0) ∧
+      (∀ ε : ℝ, 0 < ε → ∀ᶠ n in atTop,
+        ∀ s who (d : G.Act who),
+          G.finkContinuationGain
+            (R (φ n) + G.finkReferenceCorrection
+              (a (φ n)) (J (φ n)) K)
+            (z (φ n)) s who d ≤ ε) ∧
+      Tendsto (fun n =>
+        ‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector (a (φ n)) (J (φ n))
+              (R (φ n)) K) (z (φ n))‖ +
+          G.finkPositiveContinuationGainSum
+            (G.finkNextReferenceVector (a (φ n)) (J (φ n))
+              (R (φ n)) K) (z (φ n))) atTop (nhds 0) := by
+  cases hresolution with
+  | interior φ Jlim hφ hJlim =>
+      exact Or.inl ⟨φ, Jlim, hφ, hJlim⟩
+  | boundary K φ hφ hJlim hKnorm hnextResidual hnextGain tail =>
+      right
+      have hscaleφ : Tendsto (fun n => G.finkReferenceCorrectionScale
+          (a (φ n)) (J (φ n))) atTop (nhds 0) := by
+        simpa only [Function.comp_def] using
+          hscale.comp hφ.tendsto_atTop
+      have hcorrection : Tendsto (fun n => G.finkReferenceCorrection
+          (a (φ n)) (J (φ n)) K) atTop (nhds 0) := by
+        simpa only [finkReferenceCorrection, zero_smul] using
+          hscaleφ.smul_const K
+      have hresidual :=
+        G.tendsto_finkContinuationResidualVector_add_correction_zero
+          (fun n => a (φ n)) (fun n => J (φ n))
+          (fun n => R (φ n)) K (fun n => z (φ n))
+          (fun n => ha (φ n)) hscaleφ hnextResidual
+      have hgain := G.eventually_finkContinuationGain_add_correction_le
+        (fun n => a (φ n)) (fun n => J (φ n))
+        (fun n => R (φ n)) K (fun n => z (φ n))
+        (fun n => ha (φ n)) (fun n => hscale0 (φ n))
+        hscaleφ hnextGain
+      have hnextResidualNorm : Tendsto (fun n =>
+          ‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector (a (φ n)) (J (φ n))
+              (R (φ n)) K) (z (φ n))‖) atTop (nhds 0) := by
+        simpa only [norm_zero] using hnextResidual.norm
+      have hnextGainSum := G.tendsto_finkPositiveContinuationGainSum_zero
+        (fun n => G.finkNextReferenceVector
+          (a (φ n)) (J (φ n)) (R (φ n)) K)
+        (z ∘ φ) hnextGain
+      have hnextHold : Tendsto (fun n =>
+          ‖G.finkContinuationResidualVector
+            (G.finkNextReferenceVector (a (φ n)) (J (φ n))
+              (R (φ n)) K) (z (φ n))‖ +
+          G.finkPositiveContinuationGainSum
+            (G.finkNextReferenceVector (a (φ n)) (J (φ n))
+              (R (φ n)) K) (z (φ n))) atTop (nhds 0) := by
+        simpa only [Function.comp_apply, zero_add] using
+          hnextResidualNorm.add hnextGainSum
+      exact ⟨K, φ, hφ, hKnorm, hcorrection, hresidual,
+        hgain, hnextHold⟩
+
 /-- The canonical corrected-target error controls the on-profile step in the
 exact form consumed by the time-dependent potential telescope. -/
 theorem abs_fink_correctedTarget_onProfile_step_le_stepError
@@ -7395,6 +7622,81 @@ theorem FinkVerifiedReferenceResolution.relativeBias_rootSummableStep_dichotomy
     · simpa only [R, θ, Function.comp_apply] using hRzero
     · simpa only [R, θ, Function.comp_apply, Function.comp_def] using hsummable
     · simpa only [R, θ, Function.comp_apply, Function.comp_def] using htotal
+
+/-- Joint fast-series form of the root dichotomy.  The boundary branch has a
+single strict subsequence on which both corrected adjacent drift and the
+next-reference hold defect are summable with arbitrarily small totals.  Only
+compatibility of this subsequence with the annealing threshold increments
+remains. -/
+theorem FinkVerifiedReferenceResolution.relativeBias_rootSummableStepAndNextHold_dichotomy
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) (hβpos : ∀ n, 0 < β n) (hβ1 : ∀ n, β n < 1)
+    (hβlim : Tendsto β atTop (nhds 1)) {U : ℝ}
+    (z : ℕ → G.finkDomain U) (W : G.State → Payoff ι)
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hresolution : G.FinkVerifiedReferenceResolution z
+      (fun n => G.finkValue (z n))
+      (fun n => β n / (1 - β n))
+      (fun n => G.finkRelativeBias (β n) W (z n))
+      (fun _ => W))
+    (ε : ℝ) (hε : 0 < ε) :
+    (∃ (φ : ℕ → ℕ) (Jlim : G.State → Payoff ι),
+      StrictMono φ ∧ Tendsto (fun n =>
+        G.finkRelativeBias (β (φ n)) W (z (φ n)))
+          atTop (nhds Jlim)) ∨
+    ∃ (K : G.State → Payoff ι) (θ : ℕ → ℕ),
+      StrictMono θ ∧ ‖K‖ = 1 ∧
+      ‖G.finkRootCorrection β W K z (θ 0)‖ ≤ ε ∧
+      Summable (fun n => G.finkCorrectedTargetStepError W
+        (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n) ∧
+      ∑' n, G.finkCorrectedTargetStepError W
+        (G.finkRootCorrection β W K z ∘ θ) (z ∘ θ) n ≤ ε ∧
+      Summable (G.finkNextReferenceHoldError β W K z ∘ θ) ∧
+      ∑' n, G.finkNextReferenceHoldError β W K z (θ n) ≤ ε := by
+  have ha : ∀ n, β n / (1 - β n) ≠ 0 := fun n =>
+    div_ne_zero (ne_of_gt (hβpos n)) (ne_of_gt (sub_pos.mpr (hβ1 n)))
+  have hscale0 : ∀ n, 0 ≤ G.finkReferenceCorrectionScale
+      (β n / (1 - β n))
+      (G.finkRelativeBias (β n) W (z n)) := by
+    intro n
+    unfold finkReferenceCorrectionScale
+    exact div_nonneg (by positivity)
+      (div_nonneg (hβpos n).le (sub_pos.mpr (hβ1 n)).le)
+  have hscale := G.tendsto_finkReferenceCorrectionScale_relativeBias_zero
+    β hβpos hβ1 hβlim z W hV
+  rcases hresolution.rootCorrection_and_nextHold_dichotomy
+      G ha hscale0 hscale with hinterior | hboundary
+  · left
+    simpa only [Function.comp_def] using hinterior
+  · right
+    obtain ⟨K, φ, hφ, hKnorm, hR, hresidual, hgain,
+      hnextHoldRaw⟩ := hboundary
+    let R : ℕ → G.State → Payoff ι := fun n =>
+      G.finkRootCorrection β W K z (φ n)
+    let aux : ℕ → ℝ := fun n =>
+      G.finkNextReferenceHoldError β W K z (φ n)
+    have hnextHold : Tendsto aux atTop (nhds 0) := by
+      simpa only [aux, finkNextReferenceHoldError] using hnextHoldRaw
+    have haux0 : ∀ n, 0 ≤ aux n := by
+      intro n
+      dsimp only [aux, finkNextReferenceHoldError]
+      exact add_nonneg (norm_nonneg _) (by
+        unfold finkPositiveContinuationGainSum
+        exact Finset.sum_nonneg fun p hp => le_max_right _ _)
+    obtain ⟨ψ, hψ, hRzero, hfast, hfastTotal,
+        hauxSum, hauxTotal⟩ :=
+      G.exists_strictMono_summable_finkCorrectedTargetStepError_and_aux_subsequence
+        W R (z ∘ φ) hR hresidual hgain aux haux0 hnextHold ε hε
+    let θ : ℕ → ℕ := φ ∘ ψ
+    have hθ : StrictMono θ := hφ.comp hψ
+    refine ⟨K, θ, hθ, hKnorm, ?_, ?_, ?_, ?_, ?_⟩
+    · simpa only [R, θ, finkRootCorrection, Function.comp_apply] using hRzero
+    · simpa only [R, θ, Function.comp_def] using hfast
+    · simpa only [R, θ, Function.comp_def] using hfastTotal
+    · simpa only [aux, θ, Function.comp_def] using hauxSum
+    · simpa only [aux, θ, Function.comp_apply] using hauxTotal
 
 /-- Activation times for a slow calendar.  Layer `n` is not activated before
 calendar time `n * |B n|`, and consecutive activation times are distinct. -/
