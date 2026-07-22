@@ -13,10 +13,10 @@ An infinite repeated game plays the same stage game at every natural-numbered
 period.  Players observe the public history of past action profiles and choose
 the next stage-game action.
 
-This file is intentionally a compatibility facade over
-`GameTheory.Concepts.Repeated`: it turns the action/payoff presentation below
-into a stage `KernelGame`, then reuses its histories, repeated play, discounting,
-and equilibrium results. Finite protocol syntax lives in `MultiRoundGame`, whose
+This file is an action/payoff presentation adapter over
+`GameTheory.Concepts.Repeated`: it turns the presentation below into a stage
+`KernelGame`, then reuses its histories, repeated play, discounting, and
+equilibrium results. Finite protocol syntax lives in `MultiRoundGame`, whose
 `rounds : List Round` is a separate compiled-language representation.
 
 ## Main definitions
@@ -54,7 +54,7 @@ namespace RepeatedGame
 
 variable {ι : Type}
 
-/-- The one-shot stage game underlying the repeated-game facade. -/
+/-- The one-shot stage game underlying the repeated-game presentation. -/
 noncomputable abbrev stageKernelGame (R : RepeatedGame ι) : KernelGame ι :=
   KernelGame.ofEU R.Act R.stageUtil
 
