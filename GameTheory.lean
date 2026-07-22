@@ -113,13 +113,17 @@ import GameTheory.Concepts.Stochastic.StageGame
 import GameTheory.Concepts.Stochastic.Absorbing
 import GameTheory.Concepts.Stochastic.TransitionIndependent
 import GameTheory.Concepts.Stochastic.Discounted
+import GameTheory.Concepts.Stochastic.Adaptive
 import GameTheory.Concepts.Stochastic.ZeroSum
 import GameTheory.Concepts.Stochastic.Fink
 import GameTheory.Concepts.Stochastic.FinkSchedule
 import GameTheory.Concepts.Stochastic.FinkLimit
+import GameTheory.Concepts.Stochastic.FinkEndpoint
 import GameTheory.Concepts.Stochastic.FinkDual
 import GameTheory.Concepts.Stochastic.FinkTangentRate
+import GameTheory.Concepts.Stochastic.FinkTangentBridge
 import GameTheory.Concepts.Stochastic.FinkTangentCounterexample
+import GameTheory.Concepts.Stochastic.FinkSelectionCounterexample
 import GameTheory.Concepts.Stochastic.FinkHarmonic
 import GameTheory.Concepts.Stochastic.FinkBoundaryCalendar
 import GameTheory.Concepts.Stochastic.QuittingGame
