@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Languages.OpenGame.Compile
 import GameTheory.Concepts.Equilibrium.SolutionConcepts
+import GameTheory.Concepts.Correlation.CorrelationRegimes
 
 /-!
 # Closed Correlation Devices for Open Games
@@ -19,6 +20,11 @@ player `i`, and applies an obedience map.  Signal-dependent deviations recover
 correlated equilibrium.  Restricting deviations to constant overrides recovers
 coarse correlated equilibrium.  The revelation-direction theorems hold for
 arbitrary signal spaces; canonical action recommendations give iff theorems.
+
+A broadcast device publicly reveals one signal to every player.  Its
+equilibrium condition is pointwise on the signal's support: every selected
+pure profile must be Nash.  Thus it implements the pure-profile sunspot
+regime and embeds into the library's more general `PublicSignalNash` regime.
 -/
 
 noncomputable section
@@ -194,5 +200,83 @@ theorem canonical_isExAnteEquilibrium_iff_isCoarseCorrelatedEq
     exact h who action
 
 end PrivateDevice
+
+/-! ## Public broadcast / pure-profile sunspot devices -/
+
+/-- A public signal selecting a pure action profile.  All players observe the
+same signal before acting. -/
+structure BroadcastDevice {ι : Type} (G : KernelGame ι) (Signal : Type) where
+  /-- Law of the common signal. -/
+  law : PMF Signal
+  /-- Pure profile announced by each signal. -/
+  play : Signal → G.Profile
+
+namespace BroadcastDevice
+
+variable {ι Signal : Type} [DecidableEq ι]
+variable {G : KernelGame ι}
+
+/-- Broadcast equilibrium: every on-support public announcement selects a
+pure Nash profile.  Off-support announcements impose no condition. -/
+def IsEquilibrium (d : BroadcastDevice G Signal) : Prop :=
+  ∀ z, d.law z ≠ 0 → G.IsNash (d.play z)
+
+/-- Pure-profile law induced by the broadcast device. -/
+def inducedLaw (d : BroadcastDevice G Signal) : PMF G.Profile :=
+  d.law.map d.play
+
+/-- Canonical fully revealing broadcast of an action profile. -/
+def canonical (G : KernelGame ι) (μ : PMF G.Profile) :
+    BroadcastDevice G G.Profile where
+  law := μ
+  play := id
+
+omit [DecidableEq ι] in
+@[simp] theorem canonical_inducedLaw (μ : PMF G.Profile) :
+    (canonical G μ).inducedLaw = μ := by
+  exact PMF.map_id μ
+
+/-- Canonical broadcast equilibrium is exactly Nash support. -/
+theorem canonical_isEquilibrium_iff_nashSupport (μ : PMF G.Profile) :
+    (canonical G μ).IsEquilibrium ↔
+      ∀ σ, μ σ ≠ 0 → G.IsNash σ :=
+  Iff.rfl
+
+/-- A broadcast of pure profiles is the existing public-signal Nash regime
+after embedding each pure profile as a point-mass mixed profile. -/
+theorem isEquilibrium_iff_publicSignalNash [Fintype ι] [Finite G.Outcome]
+    (d : BroadcastDevice G Signal) :
+    d.IsEquilibrium ↔
+      G.PublicSignalNash d.law (fun z => G.pureMixedProfile (d.play z)) := by
+  constructor
+  · intro h z hz
+    exact (h z hz).pureMixedProfile_isNash
+  · intro h z hz who action
+    have hdev := h z hz who (PMF.pure action)
+    rw [← G.pureMixedProfile_update (d.play z) who action,
+      G.mixedExtension_eu_pureMixedProfile,
+      G.mixedExtension_eu_pureMixedProfile] at hdev
+    exact hdev
+
+omit [DecidableEq ι] in
+/-- The action law of a pure broadcast agrees with the general public-signal
+construction. -/
+theorem inducedLaw_eq_publicCorrelatedLaw [Fintype ι]
+    (d : BroadcastDevice G Signal) :
+    d.inducedLaw = G.publicCorrelatedLaw d.law
+      (fun z => G.pureMixedProfile (d.play z)) := by
+  unfold inducedLaw KernelGame.publicCorrelatedLaw
+  simp_rw [Math.PMFProduct.pmfPi_pure]
+  exact PMF.bind_pure_comp d.play d.law |>.symm
+
+/-- Every equilibrium pure broadcast induces a correlated equilibrium. -/
+theorem IsEquilibrium.inducedLaw_isCorrelatedEq [Finite ι] [Finite G.Outcome]
+    {d : BroadcastDevice G Signal} (h : d.IsEquilibrium) :
+    G.IsCorrelatedEq d.inducedLaw := by
+  letI : Fintype ι := Fintype.ofFinite ι
+  rw [d.inducedLaw_eq_publicCorrelatedLaw]
+  exact ((d.isEquilibrium_iff_publicSignalNash).mp h).isCorrelatedEq
+
+end BroadcastDevice
 
 end OpenGames

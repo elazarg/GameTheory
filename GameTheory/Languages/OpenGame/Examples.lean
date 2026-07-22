@@ -5,7 +5,10 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Languages.Bridges.OpenGame_EFG
+import GameTheory.Languages.OpenGame.Correlation
 import GameTheory.Languages.NFG.Stackelberg
+import GameTheory.Languages.NFG.MatchingPenniesMixed
+import GameTheory.Concepts.Correlation.SignalTiming
 
 /-!
 # Open-Game Examples
@@ -145,5 +148,51 @@ theorem stackelberg_entry_is_efgSubgamePerfect :
       GameTheory.EntryDeterrence.uF x.1 x.2))
     (GameTheory.EntryDeterrence.fight, GameTheory.EntryDeterrence.br)).1
       stackelberg_entry_is_conditioned
+
+/-! ## Strict separation of correlation regimes -/
+
+noncomputable section
+
+/-- The verified signal-timing CCE is an ex-ante device equilibrium but not a
+private recommendation equilibrium.  This witnesses the strict CCE/CE gap at
+the device level. -/
+theorem signalTiming_exAnte_not_private :
+    (PrivateDevice.canonical GameTheory.SignalTiming.earlySignalGame
+      GameTheory.SignalTiming.earlyCCEWitness).IsExAnteEquilibrium ∧
+    ¬(PrivateDevice.canonical GameTheory.SignalTiming.earlySignalGame
+      GameTheory.SignalTiming.earlyCCEWitness).IsEquilibrium := by
+  constructor
+  · exact (PrivateDevice.canonical_isExAnteEquilibrium_iff_isCoarseCorrelatedEq
+      GameTheory.SignalTiming.earlyCCEWitness).2
+        GameTheory.SignalTiming.earlyCCEWitness_isCCE
+  · rw [PrivateDevice.canonical_isEquilibrium_iff_isCorrelatedEq]
+    intro hCE
+    have hmem : (fun i => GameTheory.SignalTiming.earlySignalGame.correlatedEu
+        GameTheory.SignalTiming.earlyCCEWitness i) ∈
+        GameTheory.SignalTiming.earlySignalGame.correlatedPayoffSet :=
+      ⟨GameTheory.SignalTiming.earlyCCEWitness, hCE, rfl⟩
+    have hcap := GameTheory.SignalTiming.early_correlated_p1_cap _ hmem
+    exact (not_le_of_gt GameTheory.SignalTiming.earlyCCE_p1_value_gt_cap) hcap
+
+/-- The fair matching-pennies law is correlated equilibrium but cannot be a
+fully revealing broadcast equilibrium, since matching pennies has no pure
+Nash profile in its support (or anywhere else). -/
+theorem matchingPennies_private_not_broadcast :
+    (PrivateDevice.canonical NFG.matchingPennies.toKernelGame
+      (Math.PMFProduct.pmfPi NFG.matchingPenniesFairMixed)).IsEquilibrium ∧
+    ¬(BroadcastDevice.canonical NFG.matchingPennies.toKernelGame
+      (Math.PMFProduct.pmfPi NFG.matchingPenniesFairMixed)).IsEquilibrium := by
+  constructor
+  · exact (PrivateDevice.canonical_isEquilibrium_iff_isCorrelatedEq _).2
+      NFG.matchingPennies_fair_correlated_eq
+  · rw [BroadcastDevice.canonical_isEquilibrium_iff_nashSupport]
+    intro h
+    obtain ⟨profile, hpos⟩ :=
+      (Math.PMFProduct.pmfPi NFG.matchingPenniesFairMixed).support_nonempty
+    have hn := h profile hpos
+    have hnNFG := (NFG.IsNashPure_iff_kernelGame NFG.matchingPennies profile).2 hn
+    exact NFG.matchingPennies_no_pure_nash profile hnNFG
+
+end
 
 end OpenGames.Examples
