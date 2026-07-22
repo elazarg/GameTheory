@@ -32,6 +32,7 @@ noncomputable section
 namespace GameTheory
 namespace StochasticGame
 
+open Filter
 open Math.Probability Math.PMFProduct
 open Math.ProbabilityMassFunction
 
@@ -535,6 +536,125 @@ def finkContinuationGain (G : StochasticGame ι)
     expect (G.transition s a) (fun s' => W s' who)) -
   expect (pmfPi (G.finkProfile z s)) (fun a =>
     expect (G.transition s a) (fun s' => W s' who))
+
+/-- Continuation gain is homogeneous in its continuation vector. -/
+theorem finkContinuationGain_smul (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (c : ℝ) (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) :
+    G.finkContinuationGain (c • W) z s who d =
+      c * G.finkContinuationGain W z s who d := by
+  unfold finkContinuationGain
+  simp_rw [Pi.smul_apply, smul_eq_mul, expect_const_mul]
+  ring
+
+/-- Baseline continuation expectation in the real coordinates of Fink's
+domain.  This polynomial presentation is used for joint continuity in the
+continuation vector and profile. -/
+def finkContinuationCoordEU (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) : ℝ :=
+  ∑ a : G.JointAct, (∏ i, z.1.1 (s, i) (a i)) *
+    expect (G.transition s a) (fun s' => W s' who)
+
+/-- Pure-deviation continuation expectation in Fink's real coordinates. -/
+def finkDeviationContinuationCoordEU (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) : ℝ :=
+  ∑ a : G.JointAct,
+    ((((PMF.pure d) (a who)).toReal) *
+      (∏ i ∈ (Finset.univ.erase who), z.1.1 (s, i) (a i))) *
+        expect (G.transition s a) (fun s' => W s' who)
+
+/-- Continuation gain written entirely in the real coordinates of Fink's
+finite-dimensional domain. -/
+def finkContinuationCoordGain (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) : ℝ :=
+  G.finkDeviationContinuationCoordEU W z s who d -
+    G.finkContinuationCoordEU W z s who
+
+theorem finkContinuationCoordEU_eq (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State) (who : ι) :
+    G.finkContinuationCoordEU W z s who =
+      expect (pmfPi (G.finkProfile z s)) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) := by
+  classical
+  rw [finkContinuationCoordEU, expect_eq_sum]
+  refine Finset.sum_congr rfl ?_
+  intro a ha
+  congr 1
+  simp [pmfPi_apply, finkProfile, finkSimplex,
+    stdSimplexEquiv_symm_apply]
+  rfl
+
+theorem finkDeviationContinuationCoordEU_eq (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) :
+    G.finkDeviationContinuationCoordEU W z s who d =
+      expect (pmfPi (Function.update (G.finkProfile z s)
+          who (PMF.pure d))) (fun a =>
+        expect (G.transition s a) (fun s' => W s' who)) := by
+  classical
+  rw [finkDeviationContinuationCoordEU, expect_eq_sum]
+  refine Finset.sum_congr rfl ?_
+  intro a ha
+  congr 1
+  rw [pmfPi_apply_update_family]
+  by_cases hsa : a who = d
+  · subst hsa
+    simp [PMF.pure_apply, finkProfile, finkSimplex,
+      stdSimplexEquiv_symm_apply]
+    rfl
+  · simp [PMF.pure_apply, hsa]
+
+theorem finkContinuationCoordGain_eq (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (W : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) :
+    G.finkContinuationCoordGain W z s who d =
+      G.finkContinuationGain W z s who d := by
+  unfold finkContinuationCoordGain finkContinuationGain
+  rw [G.finkDeviationContinuationCoordEU_eq,
+    G.finkContinuationCoordEU_eq]
+
+/-- The coordinate presentation of continuation gain is a finite polynomial
+in the continuation vector and Fink-domain coordinates. -/
+theorem continuous_finkContinuationCoordGain_param
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Continuous (fun q : (G.State → Payoff ι) × G.finkDomain U =>
+      G.finkContinuationCoordGain q.1 q.2 s who d) := by
+  unfold finkContinuationCoordGain finkDeviationContinuationCoordEU
+    finkContinuationCoordEU
+  simp_rw [expect_eq_sum]
+  fun_prop
+
+/-- Continuation gain is jointly continuous in the continuation vector and
+the finite-dimensional Fink coordinates. -/
+theorem continuous_finkContinuationGain_param
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Continuous (fun q : (G.State → Payoff ι) × G.finkDomain U =>
+      G.finkContinuationGain q.1 q.2 s who d) := by
+  have hc := G.continuous_finkContinuationCoordGain_param
+    (U := U) s who d
+  convert hc using 1
+  funext q
+  exact (G.finkContinuationCoordGain_eq q.1 q.2 s who d).symm
 
 /-- A discounted auxiliary gain is exactly the weighted sum of its current
 stage gain and its continuation-value gain. -/

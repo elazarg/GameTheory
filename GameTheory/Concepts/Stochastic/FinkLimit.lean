@@ -222,6 +222,25 @@ theorem tendsto_finkContinuationGain
     (fun s' => W s' who) s
   simpa only [finkContinuationGain] using hdev.sub hbase
 
+/-- Jointly convergent continuation vectors and Fink-domain points have
+convergent continuation gains.  The proof runs through the finite polynomial
+coordinate presentation, avoiding any topological claims about `ENNReal`. -/
+theorem tendsto_finkContinuationGain_of_tendsto
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ}
+    {H : ℕ → G.State → Payoff ι} {Hlim : G.State → Payoff ι}
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hH : Tendsto H atTop (nhds Hlim)) (hz : Tendsto z atTop (nhds zlim))
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Tendsto (fun n => G.finkContinuationGain (H n) (z n) s who d) atTop
+      (nhds (G.finkContinuationGain Hlim zlim s who d)) := by
+  have hpair : Tendsto (fun n => (H n, z n)) atTop (nhds (Hlim, zlim)) := by
+    simpa only [nhds_prod_eq] using hH.prodMk hz
+  have ht :=
+    ((G.continuous_finkContinuationCoordGain_param (U := U) s who d).tendsto
+      (Hlim, zlim)).comp hpair
+  simpa only [Function.comp_def, G.finkContinuationCoordGain_eq] using ht
+
 /-- One-stage gains converge along a convergent Fink-domain sequence. -/
 theorem tendsto_finkStageGain
     (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
@@ -233,6 +252,177 @@ theorem tendsto_finkStageGain
       (nhds (G.finkStageGain zlim s who d)) := by
   have ht := ((G.continuous_finkGain (U := U) 0 s who d).tendsto zlim).comp hz
   simpa only [G.finkGain_zero_eq_finkStageGain, Function.comp_def] using ht
+
+/-- Radial compactification of a finite-dimensional bias vector.  Bounded
+biases remain in the open unit ball, while an unbounded sequence can converge
+to a direction on its boundary. -/
+def compactifyFinkBias (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    (H : G.State → Payoff ι) : G.State → Payoff ι :=
+  (1 / (1 + ‖H‖)) • H
+
+theorem finkContinuationGain_compactifyFinkBias
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (H : G.State → Payoff ι)
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) :
+    G.finkContinuationGain (G.compactifyFinkBias H) z s who d =
+      (1 / (1 + ‖H‖)) * G.finkContinuationGain H z s who d := by
+  unfold compactifyFinkBias
+  exact G.finkContinuationGain_smul (1 / (1 + ‖H‖)) H z s who d
+
+theorem norm_compactifyFinkBias_eq
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : G.State → Payoff ι) :
+    ‖G.compactifyFinkBias H‖ = ‖H‖ / (1 + ‖H‖) := by
+  have hden : 0 < 1 + ‖H‖ := by positivity
+  simp [compactifyFinkBias, norm_smul, Real.norm_eq_abs,
+    abs_of_pos hden, div_eq_mul_inv]
+  ring
+
+theorem norm_compactifyFinkBias_lt_one
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : G.State → Payoff ι) :
+    ‖G.compactifyFinkBias H‖ < 1 := by
+  rw [G.norm_compactifyFinkBias_eq H]
+  exact (div_lt_one (by positivity)).2 (by linarith [norm_nonneg H])
+
+/-- Inverse radial chart on the open unit bias ball. -/
+def decompactifyFinkBias (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    (K : G.State → Payoff ι) : G.State → Payoff ι :=
+  (1 / (1 - ‖K‖)) • K
+
+@[simp] theorem decompactify_compactifyFinkBias
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : G.State → Payoff ι) :
+    G.decompactifyFinkBias (G.compactifyFinkBias H) = H := by
+  rw [decompactifyFinkBias, G.norm_compactifyFinkBias_eq H,
+    compactifyFinkBias, smul_smul]
+  have hden : 1 + ‖H‖ ≠ 0 := ne_of_gt (by positivity)
+  convert one_smul ℝ H using 1
+  field_simp [hden]
+  ring_nf
+
+theorem compactifyFinkBias_mem_closedBall
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : G.State → Payoff ι) :
+    G.compactifyFinkBias H ∈
+      Metric.closedBall (0 : G.State → Payoff ι) 1 := by
+  rw [Metric.mem_closedBall]
+  simpa only [dist_zero_right] using (G.norm_compactifyFinkBias_lt_one H).le
+
+/-- Reaching the boundary of the radial compactification is exactly the
+unbounded-bias regime: the norms of the original biases tend to infinity. -/
+theorem tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {K : G.State → Payoff ι}
+    (hlim : Tendsto (G.compactifyFinkBias ∘ H) atTop (nhds K))
+    (hK : ‖K‖ = 1) :
+    Tendsto (fun n => ‖H n‖) atTop atTop := by
+  have hnorm : Tendsto (fun n => ‖G.compactifyFinkBias (H n)‖)
+      atTop (nhds 1) := by
+    have ht := continuous_norm.tendsto K |>.comp hlim
+    simpa only [Function.comp_def, hK] using ht
+  refine tendsto_atTop.2 fun b => ?_
+  let B := max b 0
+  have hB0 : 0 ≤ B := le_max_right b 0
+  have hfrac : B / (1 + B) < 1 := by
+    exact (div_lt_one (by linarith)).2 (by linarith)
+  filter_upwards [hnorm.eventually (eventually_gt_nhds hfrac)] with n hn
+  rw [G.norm_compactifyFinkBias_eq] at hn
+  have hdenB : 0 < 1 + B := by linarith
+  have hdenH : 0 < 1 + ‖H n‖ := by positivity
+  rw [div_lt_div_iff₀ hdenB hdenH] at hn
+  have hBH : B < ‖H n‖ := by linarith
+  exact (le_max_left b 0).trans hBH.le
+
+/-- Every relative-bias family has a projectively convergent subsequence in
+the compactified finite-dimensional bias ball. -/
+theorem exists_convergent_compactifiedFinkBias_subsequence
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : ℕ → G.State → Payoff ι) :
+    ∃ (Hlim : G.State → Payoff ι) (φ : ℕ → ℕ),
+      Hlim ∈ Metric.closedBall (0 : G.State → Payoff ι) 1 ∧
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkBias ∘ H ∘ φ) atTop (nhds Hlim) := by
+  let K := Metric.closedBall (0 : G.State → Payoff ι) 1
+  let y : ℕ → K := fun n =>
+    ⟨G.compactifyFinkBias (H n), G.compactifyFinkBias_mem_closedBall (H n)⟩
+  letI : CompactSpace K :=
+    isCompact_iff_compactSpace.mp (isCompact_closedBall 0 1)
+  obtain ⟨ylim, φ, hφ, hlim⟩ := CompactSpace.tendsto_subseq y
+  refine ⟨ylim.1, φ, ylim.2, hφ, ?_⟩
+  have ht := continuous_subtype_val.tendsto ylim |>.comp hlim
+  simpa only [y, Function.comp_def] using ht
+
+/-- An interior compactified limit is equivalent to an ordinary finite bias
+limit. -/
+theorem tendsto_finkBias_of_compactify_tendsto_of_norm_lt_one
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    {H : ℕ → G.State → Payoff ι} {K : G.State → Payoff ι}
+    (hlim : Tendsto (G.compactifyFinkBias ∘ H) atTop (nhds K))
+    (hK : ‖K‖ < 1) :
+    Tendsto H atTop (nhds (G.decompactifyFinkBias K)) := by
+  have hden : 1 - ‖K‖ ≠ 0 := by linarith
+  have hc : ContinuousAt (G.decompactifyFinkBias) K := by
+    unfold decompactifyFinkBias
+    fun_prop
+  have ht := hc.tendsto.comp hlim
+  simpa only [Function.comp_def, G.decompactify_compactifyFinkBias] using ht
+
+/-- Projective compactness dichotomy for finite-dimensional bias families.
+After passing to a subsequence, either the compactified limit is interior and
+the original biases converge, or the limit lies on the unit boundary and
+records a higher-order bias direction. -/
+theorem exists_finkBias_subsequence_interior_or_direction
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    (H : ℕ → G.State → Payoff ι) :
+    ∃ (K : G.State → Payoff ι) (φ : ℕ → ℕ),
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkBias ∘ H ∘ φ) atTop (nhds K) ∧
+      ((‖K‖ < 1 ∧
+          Tendsto (H ∘ φ) atTop (nhds (G.decompactifyFinkBias K))) ∨
+        (‖K‖ = 1 ∧ Tendsto (fun n => ‖H (φ n)‖) atTop atTop)) := by
+  obtain ⟨K, φ, hKmem, hφ, hlim⟩ :=
+    G.exists_convergent_compactifiedFinkBias_subsequence H
+  have hKle : ‖K‖ ≤ 1 := by
+    rw [Metric.mem_closedBall] at hKmem
+    simpa only [dist_zero_right] using hKmem
+  refine ⟨K, φ, hφ, hlim, ?_⟩
+  by_cases hKlt : ‖K‖ < 1
+  · left
+    refine ⟨hKlt, ?_⟩
+    exact G.tendsto_finkBias_of_compactify_tendsto_of_norm_lt_one
+      (H := H ∘ φ) (K := K) (by simpa only [Function.comp_def] using hlim) hKlt
+  · right
+    have hKeq : ‖K‖ = 1 := le_antisymm hKle (le_of_not_gt hKlt)
+    refine ⟨hKeq, ?_⟩
+    apply G.tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
+      (H := H ∘ φ) (K := K) _ hKeq
+    simpa only [Function.comp_def] using hlim
+
+/-- Specialization of the projective compactness dichotomy to the relative
+biases of a discounted Fink family around a target `W`. -/
+theorem exists_finkRelativeBias_subsequence_interior_or_direction
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    (β : ℕ → ℝ) {U : ℝ} (z : ℕ → G.finkDomain U)
+    (W : G.State → Payoff ι) :
+    ∃ (K : G.State → Payoff ι) (φ : ℕ → ℕ),
+      StrictMono φ ∧
+      Tendsto (G.compactifyFinkBias ∘
+          (fun n => G.finkRelativeBias (β n) W (z n)) ∘ φ)
+        atTop (nhds K) ∧
+      ((‖K‖ < 1 ∧
+          Tendsto ((fun n => G.finkRelativeBias (β n) W (z n)) ∘ φ)
+            atTop (nhds (G.decompactifyFinkBias K))) ∨
+        (‖K‖ = 1 ∧
+          Tendsto (fun n =>
+            ‖G.finkRelativeBias (β (φ n)) W (z (φ n))‖)
+            atTop atTop)) := by
+  exact G.exists_finkBias_subsequence_interior_or_direction
+    (fun n => G.finkRelativeBias (β n) W (z n))
 
 /-- A unilateral mixed continuation value is the deviating player's
 expectation of the corresponding pure-action continuation values. -/
@@ -597,6 +787,102 @@ theorem eventually_finkCenteredGain_eq_zero_of_limit_support
     exact (lt_irrefl _ hn)
   exact G.finkCenteredGain_eq_zero_of_finkMap_fixedPoint_of_ne_zero
     (β n) U (hβ0 n) (hβ1 n) hpay (z n) (hfix n) W s who d hnpos
+
+/-- In the finite relative-bias branch, the apparently singular target
+continuation residual has a finite limit on every limiting supported action.
+Its limit is forced by the next-order centered gain equation. -/
+theorem tendsto_scaled_finkContinuationGain_of_limit_support
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W H : G.State → Payoff ι)
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hpos : G.finkProfile zlim s who d ≠ 0) :
+    Tendsto (fun n => (β n / (1 - β n)) *
+        G.finkContinuationGain W (z n) s who d) atTop
+      (nhds (-(G.finkStageGain zlim s who d +
+        G.finkContinuationGain H zlim s who d))) := by
+  have hstage := G.tendsto_finkStageGain hz s who d
+  have hbias := G.tendsto_finkContinuationGain_of_tendsto hH hz s who d
+  have hneg := (hstage.add hbias).neg
+  apply hneg.congr'
+  filter_upwards [G.eventually_finkCenteredGain_eq_zero_of_limit_support
+    hβ0 hβ1 hpay hz hfix W s who d hpos] with n hn
+  linarith
+
+/-- In the projective boundary branch, dividing the centered gain equation
+by the diverging bias scale removes the stage term.  The remaining normalized
+target residual converges to the negative continuation gain of the boundary
+direction. -/
+theorem tendsto_normalized_scaled_finkContinuationGain_of_limit_support
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {β : ℕ → ℝ} {U : ℝ}
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    {z : ℕ → G.finkDomain U} {zlim : G.finkDomain U}
+    (hz : Tendsto z atTop (nhds zlim))
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (W K : G.State → Payoff ι)
+    (hKlim : Tendsto (G.compactifyFinkBias ∘
+      fun n => G.finkRelativeBias (β n) W (z n)) atTop (nhds K))
+    (hKnorm : ‖K‖ = 1)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hpos : G.finkProfile zlim s who d ≠ 0) :
+    Tendsto (fun n =>
+        (1 / (1 + ‖G.finkRelativeBias (β n) W (z n)‖)) *
+          ((β n / (1 - β n)) *
+            G.finkContinuationGain W (z n) s who d)) atTop
+      (nhds (-G.finkContinuationGain K zlim s who d)) := by
+  let H : ℕ → G.State → Payoff ι :=
+    fun n => G.finkRelativeBias (β n) W (z n)
+  have hnorm : Tendsto (fun n => ‖H n‖) atTop atTop :=
+    G.tendsto_norm_finkBias_atTop_of_compactify_tendsto_norm_eq_one
+      (H := H) (K := K) (by simpa only [H] using hKlim) hKnorm
+  have hscale : Tendsto (fun n => 1 + ‖H n‖) atTop atTop := by
+    refine tendsto_atTop.2 fun b => ?_
+    filter_upwards [tendsto_atTop.1 hnorm (b - 1)] with n hn
+    linarith
+  have hinv : Tendsto (fun n => 1 / (1 + ‖H n‖)) atTop (nhds 0) := by
+    simpa only [Function.comp_def, one_div] using
+      tendsto_inv_atTop_zero.comp hscale
+  have hstage := G.tendsto_finkStageGain hz s who d
+  have hstageScaled : Tendsto
+      (fun n => (1 / (1 + ‖H n‖)) * G.finkStageGain (z n) s who d)
+      atTop (nhds 0) := by
+    simpa using hinv.mul hstage
+  have hcompact : Tendsto (fun n => G.compactifyFinkBias (H n))
+      atTop (nhds K) := by
+    simpa only [H, Function.comp_def] using hKlim
+  have hcompactGain :=
+    G.tendsto_finkContinuationGain_of_tendsto hcompact hz s who d
+  have hrhs := (hstageScaled.add hcompactGain).neg
+  have hrhs' : Tendsto (fun n =>
+      -(1 / (1 + ‖H n‖) * G.finkStageGain (z n) s who d +
+        G.finkContinuationGain (G.compactifyFinkBias (H n))
+          (z n) s who d)) atTop
+      (nhds (-G.finkContinuationGain K zlim s who d)) := by
+    simpa only [zero_add] using hrhs
+  apply hrhs'.congr'
+  filter_upwards [G.eventually_finkCenteredGain_eq_zero_of_limit_support
+    hβ0 hβ1 hpay hz hfix W s who d hpos] with n hn
+  rw [G.finkContinuationGain_compactifyFinkBias]
+  dsimp only [H]
+  have htarget :
+      (β n / (1 - β n)) * G.finkContinuationGain W (z n) s who d =
+        -(G.finkStageGain (z n) s who d +
+          G.finkContinuationGain
+            (G.finkRelativeBias (β n) W (z n)) (z n) s who d) := by
+    linarith
+  rw [htarget]
+  ring
 
 /-- A strictly value-decreasing pure action has zero probability in the
 limiting stationary profile. -/
