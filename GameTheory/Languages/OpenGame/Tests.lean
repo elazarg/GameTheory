@@ -75,6 +75,23 @@ example {n : Nat} {A : Fin n → Type}
       (ShapeSeqDep.compileAction A k).IsNash σ :=
   ShapeSeqDep.isEquilibriumIn_iff_isNash k σ
 
+/-- Finite-horizon conditioning tests every counterfactual predecessor
+profile and therefore strengthens the plain sequential predicate. -/
+example {n : Nat} {A : Fin n → Type}
+    (k : (∀ i, A i) → Fin n → ℝ) (σ : ShapeSeqDep.Strategy A)
+    (hσ : (ShapeSeqDep.conditioned A).IsEquilibriumIn () k σ) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ :=
+  ShapeSeqDep.conditioned_implies_plain k σ hσ
+
+/-- The predecessor-profile presentation of conditioning covers every
+dependent prefix history. -/
+example {n : Nat} {A : Fin n → Type} (σ : ShapeSeqDep.Strategy A)
+    (i : Fin n) (h : ShapeSeqDep.History A i) :
+    ∃ τ : ShapeSeqDep.Strategy A,
+      (∀ j, i.val ≤ j.val → τ j = σ j) ∧
+      ∀ j, ShapeSeqDep.realize τ (ShapeSeqDep.priorIndex i j) = h j :=
+  ShapeSeqDep.exists_profile_realizing_history σ i h
+
 /-- One-decision-per-player ownership makes agent and player deviations
 coincide. -/
 example {n : Nat} {ι : Type} [DecidableEq ι]
