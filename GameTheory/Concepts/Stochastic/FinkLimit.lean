@@ -74,6 +74,68 @@ theorem not_summable_of_eventually_pos_le_mul_of_inv_mul_tendsto_zero
     simpa only [← mul_assoc, inv_mul_cancel₀ hc.ne', one_mul] using hscaled
   exact Real.not_summable_natCast_inv honeDiv
 
+/-- For nonnegative errors, a bounded normalized sum of cumulative prefix
+errors already forces summability of the original errors.  Thus the nested
+drift bill used by calendar verification is not weaker than summable drift. -/
+theorem summable_of_eventually_normalized_cumulative_sum_le
+    (e : ℕ → ℝ) (he0 : ∀ n, 0 ≤ e n) (C : ℝ)
+    (hbound : ∀ᶠ T : ℕ in atTop,
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        ∑ k ∈ Finset.range t, e k ≤ C) :
+    Summable e := by
+  obtain ⟨T₀, hT₀⟩ := Filter.eventually_atTop.1 hbound
+  apply summable_of_sum_range_le (c := 2 * C) he0
+  intro N
+  let T := max T₀ (2 * N + 2)
+  have hT₀T : T₀ ≤ T := le_max_left _ _
+  have htwo : 2 * N + 2 ≤ T := le_max_right _ _
+  have hNT : N ≤ T := by omega
+  have hTpos : 0 < T := by omega
+  let P : ℝ := ∑ k ∈ Finset.range N, e k
+  have hP0 : 0 ≤ P := Finset.sum_nonneg fun k hk => he0 k
+  have hinner : ∀ t ∈ Finset.Ico N T, P ≤
+      ∑ k ∈ Finset.range t, e k := by
+    intro t ht
+    apply Finset.sum_le_sum_of_subset_of_nonneg
+      (Finset.range_mono (Finset.mem_Ico.mp ht).1)
+    intro k hk hnot
+    exact he0 k
+  have hIcoSubset : Finset.Ico N T ⊆ Finset.range T := by
+    intro t ht
+    exact Finset.mem_range.mpr (Finset.mem_Ico.mp ht).2
+  have houter : ((T - N : ℕ) : ℝ) * P ≤
+      ∑ t ∈ Finset.range T, ∑ k ∈ Finset.range t, e k := by
+    calc
+      ((T - N : ℕ) : ℝ) * P = ∑ _t ∈ Finset.Ico N T, P := by
+        simp [Nat.card_Ico, hNT]
+      _ ≤ ∑ t ∈ Finset.Ico N T, ∑ k ∈ Finset.range t, e k :=
+        Finset.sum_le_sum hinner
+      _ ≤ ∑ t ∈ Finset.range T, ∑ k ∈ Finset.range t, e k := by
+        apply Finset.sum_le_sum_of_subset_of_nonneg hIcoSubset
+        intro t ht hnot
+        exact Finset.sum_nonneg fun k hk => he0 k
+  have hbill := hT₀ T hT₀T
+  have hweighted : (T : ℝ)⁻¹ * (((T - N : ℕ) : ℝ) * P) ≤ C :=
+    (mul_le_mul_of_nonneg_left houter
+      (inv_nonneg.mpr (Nat.cast_nonneg T))).trans hbill
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hTpos
+  have hratio : (1 / 2 : ℝ) ≤ ((T - N : ℕ) : ℝ) / T := by
+    apply (le_div_iff₀ hTreal).2
+    rw [Nat.cast_sub hNT]
+    have hcast : (2 : ℝ) * N ≤ T := by exact_mod_cast (by omega : 2 * N ≤ T)
+    linarith
+  have hhalf : (1 / 2 : ℝ) * P ≤ C := by
+    calc
+      (1 / 2 : ℝ) * P ≤
+          (((T - N : ℕ) : ℝ) / T) * P :=
+        mul_le_mul_of_nonneg_right hratio hP0
+      _ = (T : ℝ)⁻¹ * (((T - N : ℕ) : ℝ) * P) := by
+        rw [div_eq_mul_inv]
+        ring
+      _ ≤ C := hweighted
+  dsimp only [P] at hhalf ⊢
+  linarith
+
 /-- The canonical increasing sequence of discount factors approaching one. -/
 def approachOneDiscount (n : ℕ) : ℝ := (n : ℝ) / (n + 1)
 
@@ -7583,6 +7645,47 @@ theorem not_summable_zeroCorrectionStepError_of_finkBellmanForcing_ne_zero
     a ha0 z W (G.finkBellmanForcingVector W H zlim) hscaled hforcing
       κ hκ
   simpa only [a] using hterminal
+
+/-- Strong zero-correction calendar no-go theorem.  Under nonzero limiting
+Bellman forcing, the exact normalized cumulative-drift bill appearing in
+`IsIndexedFinkCorrectedCalendarSelectable` is unbounded along every
+cofinal bias-amortizing calendar. -/
+theorem not_eventually_bounded_zeroCorrectionCumulativeDrift_of_finkBellmanForcing_ne_zero
+    (G : StochasticGame ι) [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] (β : ℕ → ℝ) (U : ℝ)
+    (hβ0 : ∀ n, 0 ≤ β n) (hβ1 : ∀ n, β n < 1)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (z : ℕ → G.finkDomain U) (zlim : G.finkDomain U)
+    (W H : G.State → Payoff ι)
+    (hfix : ∀ n,
+      G.finkMap (β n) U (hβ0 n) (hβ1 n).le hpay (z n) = z n)
+    (hz : Tendsto z atTop (nhds zlim))
+    (hV : Tendsto (fun n => G.finkValue (z n)) atTop (nhds W))
+    (hH : Tendsto (fun n => G.finkRelativeBias (β n) W (z n))
+      atTop (nhds H))
+    (hforcing : G.finkBellmanForcingVector W H zlim ≠ 0)
+    (κ : ℕ → ℕ) (hκ : Tendsto κ atTop atTop)
+    (hterminal : Tendsto (fun T : ℕ => (T : ℝ)⁻¹ *
+      (β (κ T) / (1 - β (κ T)))) atTop (nhds 0)) :
+    ¬ ∃ C : ℝ, ∀ᶠ T : ℕ in atTop,
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T,
+        ∑ k ∈ Finset.range t,
+          G.finkCorrectedTargetStepError W
+            ((fun _ => 0) ∘ κ) (z ∘ κ) k ≤ C := by
+  rintro ⟨C, hC⟩
+  let e : ℕ → ℝ := fun t => G.finkCorrectedTargetStepError W
+    ((fun _ => 0) ∘ κ) (z ∘ κ) t
+  have he0 : ∀ t, 0 ≤ e t := fun t =>
+    G.finkCorrectedTargetStepError_nonneg W
+      ((fun _ => 0) ∘ κ) (z ∘ κ) t
+  have heSummable : Summable e :=
+    summable_of_eventually_normalized_cumulative_sum_le e he0 C
+      (by simpa only [e] using hC)
+  have heNotSummable :=
+    G.not_summable_zeroCorrectionStepError_of_finkBellmanForcing_ne_zero
+      β U hβ0 hβ1 hpay z zlim W H hfix hz hV hH hforcing
+        κ hκ hterminal
+  exact heNotSummable (by simpa only [e] using heSummable)
 
 /-- The asymptotic reference certificates admit a fast subsequence on which
 the actual adjacent corrected-target errors are summable with arbitrarily
