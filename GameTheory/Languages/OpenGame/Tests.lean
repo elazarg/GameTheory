@@ -136,6 +136,18 @@ example {n : Nat} (A : Fin n → Type)
       PMF.pure (ShapeSeqDep.realize σ) :=
   ShapeSeqDep.MAIDBridge.map_evalAssignDist_toPurePolicy A k σ
 
+/-- Pure contingent-plan equilibrium agrees exactly with native pure-policy
+Nash equilibrium in the canonical MAID. -/
+example {n : Nat} (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      MAID.IsPurePolicyNash (ShapeSeqDep.MAIDBridge.sequentialStruct A)
+        (ShapeSeqDep.MAIDBridge.sequentialSem A k)
+        (ShapeSeqDep.MAIDBridge.toPurePolicy A σ) :=
+  ShapeSeqDep.MAIDBridge.isEquilibriumIn_iff_isPurePolicyNash A k σ
+
 /-- The canonical agent-form sequential MAID has perfect recall. -/
 example {n : Nat} (A : Fin n → Type)
     [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]

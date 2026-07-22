@@ -379,6 +379,33 @@ theorem toPurePolicy_apply (A : Fin n → Type)
     (Equiv.piCongr_symm_apply (infosetHistoryEquiv A p)
       (fun I => Equiv.cast (infosetValueType_eq A p I)) (σ p)) I
 
+/-- Encoding commutes with replacement of one stage's complete contingent
+plan. -/
+theorem toPurePolicy_update (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (σ : ShapeSeqDep.Strategy A)
+    (p : Fin n) (τ : MAID.PureStrategy (sequentialStruct A) p) :
+    Function.update (toPurePolicy A σ) p τ =
+      toPurePolicy A
+        (Function.update σ p (pureStageEquiv A p τ)) := by
+  change Function.update ((purePolicyEquiv A).symm σ) p τ =
+    (purePolicyEquiv A).symm
+      (Function.update σ p (pureStageEquiv A p τ))
+  apply (purePolicyEquiv A).injective
+  rw [(purePolicyEquiv A).apply_symm_apply]
+  change (Equiv.piCongrRight fun q => pureStageEquiv A q)
+      (Function.update
+        ((Equiv.piCongrRight fun q => pureStageEquiv A q).symm σ) p τ) =
+    Function.update σ p (pureStageEquiv A p τ)
+  funext q
+  by_cases hqp : q = p
+  · subst q
+    rw [Equiv.piCongrRight_apply]
+    simp only [Pi.map, Function.update_self]
+  · rw [Equiv.piCongrRight_apply]
+    simp only [Pi.map, Function.update_of_ne hqp]
+    exact congrFun ((purePolicyEquiv A).apply_symm_apply σ) q
+
 /-! ## Assignments and utility semantics -/
 
 /-- Read the decision path from a total MAID assignment. -/
@@ -800,6 +827,43 @@ theorem map_evalAssignDist_toPurePolicy (A : Fin n → Type)
       PMF.pure (ShapeSeqDep.realize σ) := by
   rw [evalAssignDist_toPurePolicy, PMF.pure_map,
     pathOfAssign_assignOfPath]
+
+/-- Expected utility under an encoded pure policy is exactly the open-game
+continuation evaluated at the realized path. -/
+theorem eu_toPurePolicy (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) (p : Fin n) :
+    (MAID.toKernelGame (sequentialStruct A) (sequentialSem A k)).eu
+        (MAID.pureToPolicy (toPurePolicy A σ)) p =
+      k (ShapeSeqDep.realize σ) p := by
+  rw [GameTheory.KernelGame.eu]
+  change Math.Probability.expect
+      (MAID.evalAssignDist (sequentialStruct A) (sequentialSem A k)
+        (MAID.pureToPolicy (toPurePolicy A σ)))
+      (fun a => MAID.utilityOf (sequentialStruct A) (sequentialSem A k) a p) = _
+  rw [evalAssignDist_toPurePolicy, Math.Probability.expect_pure,
+    utilityOf_assignOfPath]
+
+/-- Exact native pure-strategic correspondence.  The open-game equilibrium
+predicate permits replacement of one complete contingent stage plan; the
+canonical MAID's `IsPurePolicyNash` permits exactly the corresponding pure
+policy replacement. -/
+theorem isEquilibriumIn_iff_isPurePolicyNash (A : Fin n → Type)
+    [∀ i, Fintype (A i)] [∀ i, DecidableEq (A i)]
+    [∀ i, Inhabited (A i)] (k : (∀ i, A i) → Fin n → ℝ)
+    (σ : ShapeSeqDep.Strategy A) :
+    (ShapeSeqDep A).IsEquilibriumIn () k σ ↔
+      MAID.IsPurePolicyNash (sequentialStruct A) (sequentialSem A k)
+        (toPurePolicy A σ) := by
+  constructor
+  · intro hσ p τ
+    rw [eu_toPurePolicy, toPurePolicy_update, eu_toPurePolicy]
+    exact hσ p (pureStageEquiv A p τ)
+  · intro hσ p deviation
+    have hp := hσ p ((pureStageEquiv A p).symm deviation)
+    rw [eu_toPurePolicy, toPurePolicy_update, eu_toPurePolicy] at hp
+    simpa using hp
 
 /-- The canonical sequential MAID has perfect recall.  In agent form every
 player owns exactly one decision node, so both recall clauses are immediate. -/
