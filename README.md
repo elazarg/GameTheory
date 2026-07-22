@@ -174,9 +174,11 @@ unit equations but cannot by itself form a quotient category. Repair candidate
 convex-closed equilibrium predicates and composition convex-closes afterward.
 Closure and both unitors are proved. Checked Boolean history/echo witnesses
 show, however, that both raw sequential composition (the paper's Theorem 15)
-and this post-closed composition fail canonical associativity. Thus neither
-convex closure repair produces the category claimed by Lemma 16; the remaining
-problem requires changing the lifting or the treatment of joint strategy laws.
+and this post-closed composition fail canonical associativity. The raw
+bracketings are in fact incomparable after reassociation, ruling out
+equilibrium-inclusion lax associators in either direction. Thus neither convex
+closure repair produces the category claimed by Lemma 16; the remaining problem
+requires changing the lifting or the treatment of joint strategy laws.
 
 The cooperative branch is intentionally separate. Coalitional games, bargaining,
 and matching do not compile to `KernelGame`; their primitives are coalition

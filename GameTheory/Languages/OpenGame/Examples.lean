@@ -255,6 +255,17 @@ private theorem fairBoolFin_fullSupport (b : Bool) :
   rw [PMF.uniformOfFintype_apply]
   norm_num
 
+private theorem diagonalBoolFin_mem_support (b : Bool) :
+    (b, b) ∈ diagonalBoolFin.support := by
+  rw [diagonalBoolFin, Math.FinPMF.support_map]
+  exact ⟨b, fairBoolFin_fullSupport b, rfl⟩
+
+private theorem diagonalBoolFin_support_eq (p : Bool × Bool)
+    (hp : p ∈ diagonalBoolFin.support) : p.1 = p.2 := by
+  rw [diagonalBoolFin, Math.FinPMF.support_map] at hp
+  rcases hp with ⟨b, _hb, rfl⟩
+  rfl
+
 private theorem diagonalBoolFin_mem_convexClosure_of_pureProducts
     (S : Set (Math.FinPMF (Bool × Bool)))
     (hpure : ∀ b, Math.FinPMF.product (Math.FinPMF.pure b)
@@ -656,6 +667,64 @@ def fairTripleRight : Math.FinPMF (Bool × (Bool × Bool)) :=
   Math.FinPMF.product fairBoolFin
     (Math.FinPMF.product fairBoolFin fairBoolFin)
 
+/-- A fair upstream strategy independent of two perfectly correlated echo
+strategies, in right-associated coordinates. -/
+def echoCorrelatedTripleRight : Math.FinPMF (Bool × (Bool × Bool)) :=
+  Math.FinPMF.product fairBoolFin diagonalBoolFin
+
+/-- The same law transported to left-associated coordinates. -/
+def echoCorrelatedTripleLeft : Math.FinPMF ((Bool × Bool) × Bool) :=
+  Math.FinPMF.map (fun p => ((p.1, p.2.1), p.2.2))
+    echoCorrelatedTripleRight
+
+private theorem map_assoc_echoCorrelatedTriple :
+    Math.FinPMF.map (fun p => (p.1.1, (p.1.2, p.2)))
+        echoCorrelatedTripleLeft = echoCorrelatedTripleRight := by
+  rw [echoCorrelatedTripleLeft, Math.FinPMF.map_comp]
+  change Math.FinPMF.map id echoCorrelatedTripleRight = _
+  exact Math.FinPMF.map_id echoCorrelatedTripleRight
+
+private theorem echoForward_seq_pure_equilibrium (b : Bool) :
+    (echoForward ;ₚ echoForward).IsEquilibriumIn b (fun _ => 0)
+      (Math.FinPMF.pure (b, b)) := by
+  unfold ProbOpenGame.seq
+  simp only [Math.FinPMF.map_pure, Math.FinPMF.product_pure,
+    echoForward, true_and]
+  apply Math.FinPMF.relKleisli_pure_of_mem
+  rfl
+
+private theorem rawRightAssociated_admits_echoCorrelatedTriple :
+    (ProbOpenGame.convexify binaryHistorySource ;ₚ
+      (echoForward ;ₚ echoForward)).IsEquilibriumIn ()
+        (fun _ => 0) echoCorrelatedTripleRight := by
+  change (ProbOpenGame.convexify binaryHistorySource ;ₚ
+    (echoForward ;ₚ echoForward)).IsEquilibriumIn () (fun _ => 0)
+      (Math.FinPMF.product fairBoolFin diagonalBoolFin)
+  unfold ProbOpenGame.seq
+  simp only [Math.FinPMF.map_fst_product,
+    Math.FinPMF.map_snd_product, true_and]
+  constructor
+  · exact fairBoolFin_mem_binaryHistorySourceClosure
+  · change Math.FinPMF.RelKleisli
+      (fun b : Bool => {ψ | (echoForward ;ₚ echoForward).IsEquilibriumIn b
+        (fun _ => 0) ψ})
+      (Math.FinPMF.map (fun b => b) fairBoolFin) diagonalBoolFin
+    have hmap : Math.FinPMF.map (fun b => b) fairBoolFin = fairBoolFin := by
+      change Math.FinPMF.map id fairBoolFin = fairBoolFin
+      exact Math.FinPMF.map_id fairBoolFin
+    rw [hmap]
+    refine ⟨fun b => Math.FinPMF.pure (Math.FinPMF.pure (b, b)), ?_, ?_⟩
+    · intro b _hb ψ hψ
+      rw [Math.FinPMF.support_pure] at hψ
+      subst ψ
+      exact echoForward_seq_pure_equilibrium b
+    · simp only [Math.FinPMF.join]
+      simp only [Math.FinPMF.bind_bind, Math.FinPMF.pure_bind, id_eq]
+      apply Math.FinPMF.ext
+      change fairBoolFin.toPMF.bind (PMF.pure ∘ fun a => (a, a)) =
+        PMF.map (fun a => (a, a)) fairBoolFin.toPMF
+      exact PMF.bind_pure_comp _ _
+
 private theorem convexifiedSource_seq_echo_admits_fairProduct :
     (ProbOpenGame.convexify binaryHistorySource ;ₚ
       echoForward).IsEquilibriumIn () (fun _ => 0)
@@ -709,6 +778,55 @@ private theorem rawRightAssociated_rejects_fairTriple :
       (Math.FinPMF.mem_support_product_iff _ _ _ _).2
         ⟨fairBoolFin_fullSupport false, fairBoolFin_fullSupport true⟩⟩
 
+private theorem echoCorrelatedTripleLeft_no_mismatchedEcho :
+    ((false, false), true) ∉ echoCorrelatedTripleLeft.support := by
+  rw [echoCorrelatedTripleLeft, Math.FinPMF.support_map]
+  rintro ⟨p, hp, hout⟩
+  have hpdiag : p.2 ∈ diagonalBoolFin.support :=
+    ((Math.FinPMF.mem_support_product_iff _ _ _ _).1 hp).2
+  have heq := diagonalBoolFin_support_eq p.2 hpdiag
+  have hleft : p.2.1 = false := congrArg (fun q => q.1.2) hout
+  have hright : p.2.2 = true := congrArg Prod.snd hout
+  simp [hleft, hright] at heq
+
+private theorem echoCorrelatedTripleLeft_firstMarginal_support :
+    (false, false) ∈
+      (Math.FinPMF.map Prod.fst echoCorrelatedTripleLeft).support := by
+  rw [Math.FinPMF.support_map]
+  refine ⟨((false, false), false), ?_, rfl⟩
+  rw [echoCorrelatedTripleLeft, Math.FinPMF.support_map]
+  refine ⟨(false, (false, false)), ?_, rfl⟩
+  exact (Math.FinPMF.mem_support_product_iff _ _ _ _).2
+    ⟨fairBoolFin_fullSupport false, diagonalBoolFin_mem_support false⟩
+
+private theorem echoCorrelatedTripleLeft_secondMarginal_support :
+    true ∈ (Math.FinPMF.map Prod.snd echoCorrelatedTripleLeft).support := by
+  rw [Math.FinPMF.support_map]
+  refine ⟨((false, true), true), ?_, rfl⟩
+  rw [echoCorrelatedTripleLeft, Math.FinPMF.support_map]
+  refine ⟨(false, (true, true)), ?_, rfl⟩
+  exact (Math.FinPMF.mem_support_product_iff _ _ _ _).2
+    ⟨fairBoolFin_fullSupport false, diagonalBoolFin_mem_support true⟩
+
+private theorem echoCorrelatedTripleLeft_not_productOfMarginals :
+    echoCorrelatedTripleLeft ≠
+      Math.FinPMF.product
+        (Math.FinPMF.map Prod.fst echoCorrelatedTripleLeft)
+        (Math.FinPMF.map Prod.snd echoCorrelatedTripleLeft) := by
+  intro hfactor
+  apply echoCorrelatedTripleLeft_no_mismatchedEcho
+  rw [hfactor]
+  exact (Math.FinPMF.mem_support_product_iff _ _ _ _).2
+    ⟨echoCorrelatedTripleLeft_firstMarginal_support,
+      echoCorrelatedTripleLeft_secondMarginal_support⟩
+
+private theorem rawLeftAssociated_rejects_echoCorrelatedTriple :
+    ¬((ProbOpenGame.convexify binaryHistorySource ;ₚ echoForward) ;ₚ
+      echoForward).IsEquilibriumIn () (fun _ => 0)
+        echoCorrelatedTripleLeft := by
+  intro h
+  exact echoCorrelatedTripleLeft_not_productOfMarginals h.1
+
 /-- The paper-style raw sequential composition fails the claimed canonical
 associativity law (Theorem 15): reassociation transports the fully independent
 fair law, but the right grouping forces its two downstream coordinates to be
@@ -725,6 +843,32 @@ theorem probabilistic_seq_not_associative :
   · exact Math.FinPMF.map_assoc_product fairBoolFin fairBoolFin fairBoolFin
   · exact ⟨rawLeftAssociated_admits_fairTriple,
       rawRightAssociated_rejects_fairTriple⟩
+
+/-- The two raw bracketings are incomparable after canonical reassociation.
+The independent fair law is admitted only on the left; a law with an
+independent source and perfectly correlated echo strategies is admitted only
+on the right.  Thus equilibrium inclusion cannot supply a lax associator in
+either direction. -/
+theorem probabilistic_seq_bracketings_incomparable :
+    (Math.FinPMF.map (fun p => (p.1.1, (p.1.2, p.2))) fairTripleLeft =
+        fairTripleRight ∧
+      ((ProbOpenGame.convexify binaryHistorySource ;ₚ echoForward) ;ₚ
+        echoForward).IsEquilibriumIn () (fun _ => 0) fairTripleLeft ∧
+      ¬(ProbOpenGame.convexify binaryHistorySource ;ₚ
+        (echoForward ;ₚ echoForward)).IsEquilibriumIn ()
+          (fun _ => 0) fairTripleRight) ∧
+    (Math.FinPMF.map (fun p => (p.1.1, (p.1.2, p.2)))
+        echoCorrelatedTripleLeft = echoCorrelatedTripleRight ∧
+      ¬((ProbOpenGame.convexify binaryHistorySource ;ₚ echoForward) ;ₚ
+        echoForward).IsEquilibriumIn () (fun _ => 0)
+          echoCorrelatedTripleLeft ∧
+      (ProbOpenGame.convexify binaryHistorySource ;ₚ
+        (echoForward ;ₚ echoForward)).IsEquilibriumIn ()
+          (fun _ => 0) echoCorrelatedTripleRight) := by
+  exact ⟨probabilistic_seq_not_associative,
+    map_assoc_echoCorrelatedTriple,
+    rawLeftAssociated_rejects_echoCorrelatedTriple,
+    rawRightAssociated_admits_echoCorrelatedTriple⟩
 
 private theorem leftPostRaw_admits_fairTriple :
     (ProbOpenGame.convexify
