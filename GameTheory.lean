@@ -124,6 +124,7 @@ import GameTheory.Concepts.Stochastic.FinkTangentRate
 import GameTheory.Concepts.Stochastic.FinkTangentBridge
 import GameTheory.Concepts.Stochastic.FinkTangentCounterexample
 import GameTheory.Concepts.Stochastic.FinkSelectionCounterexample
+import GameTheory.Concepts.Stochastic.AlteredSingletonContinuous
 import GameTheory.Concepts.Stochastic.FinkHarmonic
 import GameTheory.Concepts.Stochastic.FinkBoundaryCalendar
 import GameTheory.Concepts.Stochastic.QuittingGame

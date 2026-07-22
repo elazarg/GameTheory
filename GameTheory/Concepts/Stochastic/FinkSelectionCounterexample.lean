@@ -374,3 +374,285 @@ end Base
 end FinkSelectionCounterexample
 end StochasticGame
 end GameTheory
+
+namespace GameTheory
+namespace StochasticGame
+namespace FinkSelectionCounterexample
+namespace Base
+
+open Math.Probability Math.PMFProduct
+open Math.ProbabilityMassFunction
+
+/-! ## Semantic uniqueness of the live Bellman equilibrium -/
+
+lemma pmfBool_false_toReal (μ : PMF Bool) :
+    (μ false).toReal = 1 - (μ true).toReal := by
+  have h := expect_const μ (1 : ℝ)
+  rw [expect_eq_sum, Fintype.sum_bool] at h
+  norm_num at h ⊢
+  linarith
+
+lemma pmfBool_toReal_nonneg (μ : PMF Bool) (d : Bool) :
+    0 ≤ (μ d).toReal := ENNReal.toReal_nonneg
+
+lemma pmfBool_toReal_le_one (μ : PMF Bool) (d : Bool) :
+    (μ d).toReal ≤ 1 := by
+  simpa using ENNReal.toReal_mono ENNReal.one_ne_top (μ.coe_le_one d)
+
+/-- Bellman consistency fixes all continuation values at the two absorbing
+states, independently of the stationary profile. -/
+lemma absorbing_values_of_bellman
+    {β : ℝ} {x : game.StationaryMixedProfile}
+    {V : game.State → Payoff Player} (hβ : β < 1)
+    (hF : game.IsDiscountedStationaryBellmanEq β x V) :
+    V .high false = 1 ∧ V .low false = -1 ∧
+      V .high true = 0 ∧ V .low true = 0 := by
+  have hHighOne := hF.2 .high false
+  have hLowOne := hF.2 .low false
+  have hHighTwo := hF.2 .high true
+  have hLowTwo := hF.2 .low true
+  unfold StochasticGame.discountedAuxEU at hHighOne hLowOne hHighTwo hLowTwo
+  simp [discountedAuxPayoff, payoff,
+    FinkTangentCounterexample.payoff,
+    FinkTangentCounterexample.expect_transition,
+    FinkTangentCounterexample.nextState,
+    expect_const] at hHighOne hLowOne hHighTwo hLowTwo
+  constructor
+  · nlinarith [sub_pos.mpr hβ]
+  constructor
+  · nlinarith [sub_pos.mpr hβ]
+  constructor <;> nlinarith [sub_pos.mpr hβ]
+
+/-- A Boolean player's on-profile auxiliary payoff is the probability-weighted
+average of its two pure auxiliary payoffs. -/
+lemma discountedAuxEU_eq_bool_mix
+    (β : ℝ) (x : game.StationaryMixedProfile)
+    (V : game.State → Payoff Player) (s : game.State) (who : Player) :
+    game.discountedAuxEU β V s (x s) who =
+      (1 - ((x s who) true).toReal) *
+          game.discountedAuxEU β V s
+            (Function.update (x s) who (PMF.pure false)) who +
+        ((x s who) true).toReal *
+          game.discountedAuxEU β V s
+            (Function.update (x s) who (PMF.pure true)) who := by
+  calc
+    game.discountedAuxEU β V s (x s) who =
+        game.discountedAuxEU β V s
+          (Function.update (x s) who (x s who)) who := by
+            rw [Function.update_eq_self]
+    _ = _ := by
+      unfold StochasticGame.discountedAuxEU
+      rw [pmfPi_update_bind, expect_bind, expect_eq_sum, Fintype.sum_bool]
+      rw [pmfBool_false_toReal]
+      exact add_comm _ _
+
+/-- Player 1's two live pure auxiliary payoffs in semantic coordinates. -/
+lemma playerOne_live_pure_values
+    {β : ℝ} {x : game.StationaryMixedProfile}
+    {V : game.State → Payoff Player}
+    (hHigh : V .high false = 1) (hLow : V .low false = -1) :
+    let q := ((x .live true) true).toReal
+    let v := V .live false
+    game.discountedAuxEU β V .live
+        (Function.update (x .live) false (PMF.pure false)) false =
+          (1 - β) * (-1) + β * ((1 - q) * v + q * 1) ∧
+      game.discountedAuxEU β V .live
+        (Function.update (x .live) false (PMF.pure true)) false =
+          (1 - β) * 1 + β * ((1 - q) * v + q * (-1)) := by
+  dsimp only
+  unfold StochasticGame.discountedAuxEU
+  rw [FinkTangentCounterexample.expect_pmfPi_bool,
+    FinkTangentCounterexample.expect_pmfPi_bool]
+  simp [discountedAuxPayoff, payoff,
+    FinkTangentCounterexample.payoff,
+    FinkTangentCounterexample.expect_transition,
+    FinkTangentCounterexample.nextState]
+  rw [expect_eq_sum, expect_eq_sum, Fintype.sum_bool, Fintype.sum_bool]
+  simp [hHigh, hLow]
+  simp_rw [pmfBool_false_toReal]
+  constructor <;> ring
+
+lemma playerTwo_live_pure_values
+    {β : ℝ} {x : game.StationaryMixedProfile}
+    {V : game.State → Payoff Player}
+    (hHigh : V .high true = 0) (hLow : V .low true = 0) :
+    let r := ((x .live false) true).toReal
+    let v := V .live true
+    game.discountedAuxEU β V .live
+        (Function.update (x .live) true (PMF.pure false)) true =
+          (1 - β) * (1 - 2 * r) + β * v ∧
+      game.discountedAuxEU β V .live
+        (Function.update (x .live) true (PMF.pure true)) true =
+          (1 - β) * (2 * r - 1) := by
+  dsimp only
+  unfold StochasticGame.discountedAuxEU
+  rw [FinkTangentCounterexample.expect_pmfPi_bool,
+    FinkTangentCounterexample.expect_pmfPi_bool]
+  simp [discountedAuxPayoff, payoff,
+    FinkTangentCounterexample.expect_transition,
+    FinkTangentCounterexample.nextState]
+  rw [expect_eq_sum, expect_eq_sum, Fintype.sum_bool, Fintype.sum_bool]
+  simp [hHigh, hLow]
+  simp_rw [pmfBool_false_toReal]
+  constructor <;> ring
+
+/-- Every discounted stationary Bellman equilibrium on the selection-resistant
+game has the same live-state coordinates once `1 / 2 < β < 1`.  In
+particular, the rare action cannot be removed or made smaller by choosing a
+different semantic equilibrium. -/
+theorem unique_live_coordinates_of_isDiscountedStationaryBellmanEq
+    {β : ℝ} {x : game.StationaryMixedProfile}
+    {V : game.State → Payoff Player}
+    (hβlow : 1 / 2 < β) (hβhigh : β < 1)
+    (hF : game.IsDiscountedStationaryBellmanEq β x V) :
+    ((x .live true) true).toReal = (1 - β) / β ∧
+      ((x .live false) true).toReal = 1 / 2 ∧
+        V .live true = 0 := by
+  let q : ℝ := ((x .live true) true).toReal
+  let r : ℝ := ((x .live false) true).toReal
+  let vOne : ℝ := V .live false
+  let vTwo : ℝ := V .live true
+  let uA : ℝ := game.discountedAuxEU β V .live
+    (Function.update (x .live) false (PMF.pure false)) false
+  let uB : ℝ := game.discountedAuxEU β V .live
+    (Function.update (x .live) false (PMF.pure true)) false
+  let uC : ℝ := game.discountedAuxEU β V .live
+    (Function.update (x .live) true (PMF.pure false)) true
+  let uQ : ℝ := game.discountedAuxEU β V .live
+    (Function.update (x .live) true (PMF.pure true)) true
+  obtain ⟨hHighOne, hLowOne, hHighTwo, hLowTwo⟩ :=
+    absorbing_values_of_bellman hβhigh hF
+  have hOne :
+      uA = (1 - β) * (-1) + β * ((1 - q) * vOne + q * 1) ∧
+      uB = (1 - β) * 1 + β * ((1 - q) * vOne + q * (-1)) := by
+    simpa only [uA, uB, q, vOne] using
+      playerOne_live_pure_values (β := β) (x := x) (V := V)
+        hHighOne hLowOne
+  have hTwo :
+      uC = (1 - β) * (1 - 2 * r) + β * vTwo ∧
+      uQ = (1 - β) * (2 * r - 1) := by
+    simpa only [uC, uQ, r, vTwo] using
+      playerTwo_live_pure_values (β := β) (x := x) (V := V)
+        hHighTwo hLowTwo
+  have hBellOne : vOne = (1 - r) * uA + r * uB := by
+    have hm := discountedAuxEU_eq_bool_mix β x V .live false
+    have hb := hF.2 .live false
+    dsimp only [vOne, r, uA, uB]
+    exact hb.symm.trans hm
+  have hBellTwo : vTwo = (1 - q) * uC + q * uQ := by
+    have hm := discountedAuxEU_eq_bool_mix β x V .live true
+    have hb := hF.2 .live true
+    dsimp only [vTwo, q, uC, uQ]
+    exact hb.symm.trans hm
+  have hAdev : uA ≤ vOne := by
+    have h := hF.1 .live false (PMF.pure false)
+    rw [hF.2 .live false] at h
+    exact h
+  have hBdev : uB ≤ vOne := by
+    have h := hF.1 .live false (PMF.pure true)
+    rw [hF.2 .live false] at h
+    exact h
+  have hCdev : uC ≤ vTwo := by
+    have h := hF.1 .live true (PMF.pure false)
+    rw [hF.2 .live true] at h
+    exact h
+  have hQdev : uQ ≤ vTwo := by
+    have h := hF.1 .live true (PMF.pure true)
+    rw [hF.2 .live true] at h
+    exact h
+  have hOneDiff : uA - uB = 2 * (β * q - (1 - β)) := by
+    rw [hOne.1, hOne.2]
+    exact playerOne_live_pureDifference β q vOne
+  have hA : r < 1 → 0 ≤ β * q - (1 - β) := by
+    intro hr
+    have hfactor : vOne - uB = (1 - r) * (uA - uB) := by
+      rw [hBellOne]
+      ring
+    have hmul : 0 ≤ (1 - r) * (uA - uB) := by
+      rw [← hfactor]
+      exact sub_nonneg.mpr hBdev
+    have hdiff : 0 ≤ uA - uB :=
+      nonneg_of_mul_nonneg_right hmul (sub_pos.mpr hr)
+    rw [hOneDiff] at hdiff
+    linarith
+  have hB : 0 < r → β * q - (1 - β) ≤ 0 := by
+    intro hr
+    have hfactor : vOne - uA = r * (uB - uA) := by
+      rw [hBellOne]
+      ring
+    have hmul : 0 ≤ r * (uB - uA) := by
+      rw [← hfactor]
+      exact sub_nonneg.mpr hAdev
+    have hdiff : 0 ≤ uB - uA :=
+      nonneg_of_mul_nonneg_right hmul hr
+    linarith [hOneDiff]
+  have hC : q < 1 → uQ ≤ uC := by
+    intro hq
+    have hfactor : vTwo - uQ = (1 - q) * (uC - uQ) := by
+      rw [hBellTwo]
+      ring
+    have hmul : 0 ≤ (1 - q) * (uC - uQ) := by
+      rw [← hfactor]
+      exact sub_nonneg.mpr hQdev
+    exact sub_nonneg.mp
+      (nonneg_of_mul_nonneg_right hmul (sub_pos.mpr hq))
+  have hQ : 0 < q → uC ≤ uQ := by
+    intro hq
+    have hfactor : vTwo - uC = q * (uQ - uC) := by
+      rw [hBellTwo]
+      ring
+    have hmul : 0 ≤ q * (uQ - uC) := by
+      rw [← hfactor]
+      exact sub_nonneg.mpr hCdev
+    exact sub_nonneg.mp (nonneg_of_mul_nonneg_right hmul hq)
+  have hq0 : 0 ≤ q := pmfBool_toReal_nonneg _ _
+  have hq1 : q ≤ 1 := pmfBool_toReal_le_one _ _
+  have hr0 : 0 ≤ r := pmfBool_toReal_nonneg _ _
+  have hr1 : r ≤ 1 := pmfBool_toReal_le_one _ _
+  have hresult := unique_live_mix_of_bellman_bestResponses
+    hβlow hβhigh hq0 hq1 hr0 hr1 hA hB
+    (fun hq => by rw [← hTwo.1, ← hTwo.2]; exact hC hq)
+    (fun hq => by rw [← hTwo.1, ← hTwo.2]; exact hQ hq)
+    (by simpa only [hTwo.1, hTwo.2] using hBellTwo)
+  simpa only [q, r, vTwo] using hresult
+
+/-- Fixed-point form of semantic live-state uniqueness.  Any Fink fixed point
+for this game in the discount range `1 / 2 < β < 1` decodes to the forced
+rare-action probability, the forced half mixture of player 1, and zero live
+value for player 2. -/
+theorem unique_live_coordinates_of_finkMap_fixedPoint
+    {β U : ℝ} (hβlow : 1 / 2 < β) (hβhigh : β < 1)
+    (hpay : ∀ s a who, |game.stagePayoff s a who| ≤ U)
+    (z : game.finkDomain U)
+    (hfix : game.finkMap β U (le_trans (by norm_num) hβlow.le)
+        hβhigh.le hpay z = z) :
+    ((game.finkProfile z .live true) true).toReal = (1 - β) / β ∧
+      ((game.finkProfile z .live false) true).toReal = 1 / 2 ∧
+        game.finkValue z .live true = 0 := by
+  have hF := game.isDiscountedStationaryBellmanEq_of_finkMap_fixedPoint
+    β U (le_trans (by norm_num) hβlow.le) hβhigh.le hpay z hfix
+  exact unique_live_coordinates_of_isDiscountedStationaryBellmanEq
+    hβlow hβhigh hF
+
+/-- The forced rare action survives exactly at reciprocal-bias scale.  Thus
+no selection of Fink fixed points can make this scaled live coordinate tend
+to zero. -/
+theorem scaled_live_playerTwo_Q_of_finkMap_fixedPoint
+    {β U : ℝ} (hβlow : 1 / 2 < β) (hβhigh : β < 1)
+    (hpay : ∀ s a who, |game.stagePayoff s a who| ≤ U)
+    (z : game.finkDomain U)
+    (hfix : game.finkMap β U (le_trans (by norm_num) hβlow.le)
+        hβhigh.le hpay z = z) :
+    (β / (1 - β)) *
+        ((game.finkProfile z .live true) true).toReal = 1 := by
+  have hq := (unique_live_coordinates_of_finkMap_fixedPoint
+    hβlow hβhigh hpay z hfix).1
+  rw [hq]
+  have hβ : β ≠ 0 := ne_of_gt (lt_trans (by norm_num) hβlow)
+  have hOne : 1 - β ≠ 0 := ne_of_gt (sub_pos.mpr hβhigh)
+  field_simp [hβ, hOne]
+
+end Base
+end FinkSelectionCounterexample
+end StochasticGame
+end GameTheory
