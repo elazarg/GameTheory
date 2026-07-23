@@ -42,24 +42,6 @@ def finkFrozenSupportContinuationVector
     if G.finkProfile zref s who d ≠ 0 then
       G.finkContinuationGain W z s who d else 0)
 
-/-- Scalar norm form of frozen-support operator-drift convergence.  This is
-often the convenient rate obligation produced by a quantitative estimate on
-the moving Fink profiles. -/
-theorem tendsto_smul_finkFrozenSupportContinuationVector_zero_iff
-    (G : StochasticGame ι)
-    [Fintype G.State] [Fintype ι] [DecidableEq ι]
-    [∀ i, Fintype (G.Act i)] {U : ℝ}
-    (a : ℕ → ℝ) (zref : G.finkDomain U) (z : ℕ → G.finkDomain U)
-    (W : G.State → Payoff ι) :
-    Tendsto (fun n => a n •
-      G.finkFrozenSupportContinuationVector zref (z n) W)
-        atTop (nhds 0) ↔
-      Tendsto (fun n => |a n| *
-        ‖G.finkFrozenSupportContinuationVector zref (z n) W‖)
-          atTop (nhds 0) := by
-  rw [tendsto_zero_iff_norm_tendsto_zero]
-  simp only [norm_smul, Real.norm_eq_abs]
-
 /-- Zero scaled drift of the continuation operator, with support frozen at
 the limiting profile, closes the supported tangent problem explicitly.
 

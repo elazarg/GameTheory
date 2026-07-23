@@ -131,7 +131,6 @@ import GameTheory.Concepts.Stochastic.BigMatchNoMarkov
 import GameTheory.Concepts.Stochastic.BigMatchFink
 import GameTheory.Concepts.Stochastic.BigMatchFinkEndpoint
 import GameTheory.Concepts.Stochastic.AlteredSingletonContinuous
-import GameTheory.Concepts.Stochastic.FinkHarmonic
 import GameTheory.Concepts.Stochastic.FinkBoundaryCalendar
 import GameTheory.Concepts.Stochastic.QuittingGame
 import GameTheory.Concepts.Stochastic.QuittingAsymptotic

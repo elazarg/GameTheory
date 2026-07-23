@@ -83,13 +83,6 @@ def IsScheduledFinkSwitchBound (G : StochasticGame ι)
     |G.scheduledFinkBias β V (t + 1) s who -
       G.scheduledFinkBias β V t s who| ≤ e t
 
-theorem IsScheduledFinkSwitchBound.nonneg
-    {G : StochasticGame ι} {β : ℕ → ℝ}
-    {V : ℕ → G.State → Payoff ι} {e : ℕ → ℝ}
-    (hswitch : G.IsScheduledFinkSwitchBound β V e)
-    (t : ℕ) (s : G.State) (who : ι) : 0 ≤ e t :=
-  le_trans (abs_nonneg _) (hswitch t s who)
-
 /-- Replacing the current bias by the next scheduled bias in a one-step
 continuation expectation costs at most `e t`. -/
 theorem IsScheduledFinkSwitchBound.expect_current_le_succ_add
@@ -622,94 +615,6 @@ theorem scheduled_deviation_targetAverage_le_initial
       simp only [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
       field_simp [ne_of_gt hTreal]
 
-/-- Quantitative lower finite-horizon payoff bound for a scheduled family of
-Fink certificates.  Only the initial bias, terminal bias, and accumulated
-switching errors survive telescoping. -/
-theorem IsDiscountedStationaryBellmanSchedule.finiteAveragePayoff_ge
-    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
-    [Finite G.State] [∀ i, Finite (G.Act i)]
-    {β : ℕ → ℝ} {x : ℕ → G.StationaryMixedProfile}
-    {V : ℕ → G.State → Payoff ι} {e B : ℕ → ℝ}
-    (hF : G.IsDiscountedStationaryBellmanSchedule β x V)
-    (hβ1 : ∀ t, β t < 1) (hswitch : G.IsScheduledFinkSwitchBound β V e)
-    (who : ι) (s₀ : G.State) (v : ℝ) {η : ℝ}
-    (hclose : ∀ t s, |V t s who - v| ≤ η)
-    (hbias : ∀ t s, |G.scheduledFinkBias β V t s who| ≤ B t)
-    {T : ℕ} (hT : 0 < T) :
-    v - η - (B 0 + B T) / (T : ℝ) -
-        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t ≤
-      G.finiteAveragePayoff s₀ T (G.scheduledMarkovBehaviorProfile x) who := by
-  apply G.finiteAveragePayoff_ge_of_averageReward_bellman_le_endpoints
-    (G.scheduledMarkovBehaviorProfile x) s₀ who
-    (fun t s => V t s who)
-    (fun t s => G.scheduledFinkBias β V t s who) e
-    (c := v - η) (C0 := B 0) (CT := B T)
-  · intro t s
-    have hs := (abs_le.mp (hclose t s)).1
-    linarith
-  · exact hbias 0
-  · exact hbias T
-  · exact hF.onProfile_averageReward_bellman_le hβ1 hswitch who
-  · exact hT
-
-/-- Matching upper finite-horizon payoff bound on the scheduled profile. -/
-theorem IsDiscountedStationaryBellmanSchedule.finiteAveragePayoff_le
-    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
-    [Finite G.State] [∀ i, Finite (G.Act i)]
-    {β : ℕ → ℝ} {x : ℕ → G.StationaryMixedProfile}
-    {V : ℕ → G.State → Payoff ι} {e B : ℕ → ℝ}
-    (hF : G.IsDiscountedStationaryBellmanSchedule β x V)
-    (hβ1 : ∀ t, β t < 1) (hswitch : G.IsScheduledFinkSwitchBound β V e)
-    (who : ι) (s₀ : G.State) (v : ℝ) {η : ℝ}
-    (hclose : ∀ t s, |V t s who - v| ≤ η)
-    (hbias : ∀ t s, |G.scheduledFinkBias β V t s who| ≤ B t)
-    {T : ℕ} (hT : 0 < T) :
-    G.finiteAveragePayoff s₀ T (G.scheduledMarkovBehaviorProfile x) who ≤
-      v + η + (B 0 + B T) / (T : ℝ) +
-        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t := by
-  apply G.finiteAveragePayoff_le_of_averageReward_bellman_ge_endpoints
-    (G.scheduledMarkovBehaviorProfile x) s₀ who
-    (fun t s => V t s who)
-    (fun t s => G.scheduledFinkBias β V t s who) e
-    (c := v + η) (C0 := B 0) (CT := B T)
-  · intro t s
-    have hs := (abs_le.mp (hclose t s)).2
-    linarith
-  · exact hbias 0
-  · exact hbias T
-  · exact hF.onProfile_averageReward_bellman_ge hβ1 hswitch who
-  · exact hT
-
-/-- Every history-dependent unilateral deviation obeys the same scheduled
-upper bound. -/
-theorem IsDiscountedStationaryBellmanSchedule.deviation_finiteAveragePayoff_le
-    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
-    [Finite G.State] [∀ i, Finite (G.Act i)]
-    {β : ℕ → ℝ} {x : ℕ → G.StationaryMixedProfile}
-    {V : ℕ → G.State → Payoff ι} {e B : ℕ → ℝ}
-    (hF : G.IsDiscountedStationaryBellmanSchedule β x V)
-    (hβ1 : ∀ t, β t < 1) (hswitch : G.IsScheduledFinkSwitchBound β V e)
-    (who : ι) (dev : G.BehaviorStrategy who) (s₀ : G.State) (v : ℝ)
-    {η : ℝ} (hclose : ∀ t s, |V t s who - v| ≤ η)
-    (hbias : ∀ t s, |G.scheduledFinkBias β V t s who| ≤ B t)
-    {T : ℕ} (hT : 0 < T) :
-    G.finiteAveragePayoff s₀ T
-        (Function.update (G.scheduledMarkovBehaviorProfile x) who dev) who ≤
-      v + η + (B 0 + B T) / (T : ℝ) +
-        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t := by
-  apply G.finiteAveragePayoff_le_of_averageReward_bellman_ge_endpoints
-    (Function.update (G.scheduledMarkovBehaviorProfile x) who dev)
-    s₀ who (fun t s => V t s who)
-    (fun t s => G.scheduledFinkBias β V t s who) e
-    (c := v + η) (C0 := B 0) (CT := B T)
-  · intro t s
-    have hs := (abs_le.mp (hclose t s)).2
-    linarith
-  · exact hbias 0
-  · exact hbias T
-  · exact hF.deviation_averageReward_bellman_ge hβ1 hswitch who dev
-  · exact hT
-
 /-- A state-target schedule-to-uniform-payoff criterion.  Unlike the
 pointwise-constant criterion below, this form permits discounted values to
 approach a harmonic state-dependent function.  What matters is that its
@@ -808,46 +713,6 @@ theorem isUniformEquilibriumPayoff_of_scheduledFink_harmonicTarget
     have hdev := G.scheduled_deviation_targetAverage_le_initial
       x V W q r who dev s₀ (fun t s => hclose t s who)
         (fun t s d => hexcessive t s who d) hTpos
-    linarith
-
-/-- A direct schedule-to-uniform-payoff criterion.  It reduces the unresolved
-existence theorem to constructing, at every precision, one infinite schedule
-of Fink certificates whose values stay close to `v` and whose terminal bias
-plus cumulative switching loss is sublinear. -/
-theorem isUniformEquilibriumPayoff_of_scheduledFink_certificates
-    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
-    [Finite G.State] [∀ i, Finite (G.Act i)]
-    (s₀ : G.State) (v : Payoff ι)
-    (hcert : ∀ η : ℝ, 0 < η →
-      ∃ (β : ℕ → ℝ) (x : ℕ → G.StationaryMixedProfile)
-        (V : ℕ → G.State → Payoff ι) (e B : ℕ → ℝ) (T₀ : ℕ),
-        G.IsDiscountedStationaryBellmanSchedule β x V ∧
-          (∀ t, β t < 1) ∧ G.IsScheduledFinkSwitchBound β V e ∧
-          (∀ t s who, |V t s who - v who| ≤ η) ∧
-          (∀ t s who, |G.scheduledFinkBias β V t s who| ≤ B t) ∧
-          ∀ T, T₀ ≤ T → 0 < T ∧
-            (B 0 + B T) / (T : ℝ) +
-              (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, e t ≤ η) :
-    G.IsUniformEquilibriumPayoff s₀ v := by
-  apply G.isUniformEquilibriumPayoff_of_deviation_caps s₀ v
-  intro δ hδ
-  have hη : 0 < δ / 2 := by linarith
-  obtain ⟨β, x, V, e, B, T₀, hF, hβ1, hswitch,
-      hclose, hbias, hasymp⟩ := hcert (δ / 2) hη
-  refine ⟨G.scheduledMarkovBehaviorProfile x, T₀, fun T hT => ?_⟩
-  obtain ⟨hTpos, herr⟩ := hasymp T hT
-  constructor
-  · intro who
-    have hlo := hF.finiteAveragePayoff_ge hβ1 hswitch who s₀ (v who)
-      (fun t s => hclose t s who) (fun t s => hbias t s who) hTpos
-    have hup := hF.finiteAveragePayoff_le hβ1 hswitch who s₀ (v who)
-      (fun t s => hclose t s who) (fun t s => hbias t s who) hTpos
-    rw [abs_le]
-    constructor <;> linarith
-  · intro who dev
-    have hup := hF.deviation_finiteAveragePayoff_le hβ1 hswitch
-      who dev s₀ (v who) (fun t s => hclose t s who)
-      (fun t s => hbias t s who) hTpos
     linarith
 
 end StochasticGame
