@@ -33,6 +33,7 @@ import Math.FixedPoint.KKM
 import Math.FixedPoint.Scarf
 import Math.Minimax.MinimaxLoomis
 import Math.Minimax.Loomis
+import Math.Minimax.ShapleySnow
 import Math.LinearAlgebra.FourierMotzkin
 import Math.LinearAlgebra.Farkas
 import Math.LinearAlgebra.PerronFrobenius
@@ -40,4 +41,6 @@ import Math.LinearAlgebra.Pi
 import Math.LinearAlgebra.WeightedIncidence
 import Math.LinearAlgebra.ZeroSum
 import Math.LinearProgramming
+import Math.AlgebraicSelection
+import Math.InfinitesimalRatFunc
 import Math.Topology.WeakDominance
