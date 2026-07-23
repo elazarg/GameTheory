@@ -29,6 +29,42 @@ hypothesis rather than merely to state it, this file promotes the residual
 to an explicit, precisely named hypothesis instead of `sorry`ing it — see
 the module docstring notes on `IsRowIndexTrackingCert` below.
 
+## Three-layer structure
+
+The Stage B/C material is organized into three layers, deliberately kept
+separate so that the *assembly* layer never has to know how its inputs were
+built:
+
+1. **The tracking certificate (the contract).**
+   `StochasticGame.IsRowTrackingCertificate` (row side) and
+   `StochasticGame.SecuresCol` (column side) name the bare finite-horizon
+   securing guarantee each player's strategy must meet — nothing about
+   discount families, tail variation, or adaptive indices appears in either
+   definition.
+2. **Constructors (mechanism-specific).** Two ways to build a row tracking
+   certificate are proved here, both genuinely using variation:
+   * `trackingCertificate_of_discountBiasControl` ("mechanism 2") — from
+     `IsTailVariationBounded` plus the promoted `IsRowIndexTrackingCert`
+     hypothesis, along the canonical calendar schedule.
+   * `trackingCertificate_of_runningDeficit` ("mechanism 3") — from the
+     sharpened, concrete `IsRowDeficitIndexSecuring` residual (the
+     Mertens–Neyman realized-running-deficit λ-update), by unwrapping its
+     already-fixed witness strategy.
+   The `StageBSchedule` section's no-go remark (`tendsto_atTop_calSched_ratio`)
+   is exactly why a *third*, more naive constructor — deriving mechanism 2's
+   `IsRowIndexTrackingCert` hypothesis directly from `IsShapleyFamily` and
+   the plain, *unscaled* `IsTailVariationBounded` — does not exist: the
+   scaled bias jump `(1 - lam) / lam · V` that a correct average-reward
+   Bellman conversion needs diverges as `lam → 0⁺`, so unscaled tail
+   variation alone does not imply the discount-bias control mechanism 2's
+   constructor assumes as a hypothesis instead of deriving.
+3. **Assembly (mechanism-neutral).**
+   `uniformValue_of_rowColumnTrackingCertificates` takes exactly the two
+   certificates from layer 1 and concludes `IsUniformEquilibriumPayoff` — its
+   signature mentions neither `IsTailVariationBounded` nor any other
+   construction mechanism, so it applies verbatim to certificates built by
+   mechanism 2, mechanism 3, or any future mechanism.
+
 ## Stage A: the discounted-value family and its contract
 
 * `StochasticGame.IsTailVariationBounded` — the tail-variation modulus, in
@@ -62,12 +98,14 @@ the module docstring notes on `IsRowIndexTrackingCert` below.
   a hypothesis here rather than derived from `IsShapleyFamily` and
   `IsTailVariationBounded` directly (see the docstring on the definition for
   the exact missing step).
-* `StochasticGame.secures_vanishingDiscountLimit_row` — **the core
-  reduction**: bounded payoffs, `IsTailVariationBounded`, and
-  `IsRowIndexTrackingCert` (supplied along the canonical vanishing calendar
-  schedule) together give the maximizer-role finite-horizon guarantee.
+* `StochasticGame.trackingCertificate_of_discountBiasControl` — **the core
+  reduction, mechanism 2's constructor**: bounded payoffs,
+  `IsTailVariationBounded`, and `IsRowIndexTrackingCert` (supplied along the
+  canonical vanishing calendar schedule) together give the maximizer-role
+  finite-horizon guarantee, packaged as an `IsRowTrackingCertificate`.
   `IsTailVariationBounded` is used directly inside the proof to bound the
-  cumulative tracking error by `ε`, uniformly in the horizon.
+  cumulative tracking error by `ε`, uniformly in the horizon. (The
+  deprecated alias `secures_vanishingDiscountLimit_row` still resolves.)
 
 ### The zero-sum row/column protection bridge (`StageAB`) and its limits (`StageBSchedule`)
 
@@ -137,17 +175,30 @@ goes without `sorry`:
   pushed against its floor by a sustained shortfall, weighted by
   `IsTailVariationBounded`'s modulus at each level visited — that a proof
   would need.
+* `StochasticGame.trackingCertificate_of_runningDeficit` — **mechanism 3's
+  constructor**: repackages `IsRowDeficitIndexSecuring`'s already-fixed
+  witness strategy as an `IsRowTrackingCertificate`. Pure existential
+  introduction, not a discharge of the residual above — it only fixes the
+  *shape* a future proof of `IsRowDeficitIndexSecuring` would deliver.
 
 ## Stage C: assembly to a uniform equilibrium payoff
 
-* `StochasticGame.isUniformEquilibriumPayoff_of_secures_row_col` — combining
-  a row-side and a column-side instance of Stage B's guarantee through
-  `isUniformEquilibriumPayoff_of_deviation_caps` gives the two-player
-  zero-sum uniform equilibrium payoff `(w, -w)`. The column-side guarantee is
-  the mirror image of Stage B (row and column swapped, sign of the target
-  flipped) and is taken here as a hypothesis of the same shape that Stage B
-  proves for the row side; it is not re-derived to keep this file's scope
-  bounded — the construction is identical with `0` and `1` exchanged.
+* `StochasticGame.IsRowTrackingCertificate` / `StochasticGame.SecuresCol` —
+  the row- and column-side tracking certificates, layer 1 of the three-layer
+  structure above: bare finite-horizon securing guarantees, with no
+  reference to discount families or variation.
+* `StochasticGame.uniformValue_of_rowColumnTrackingCertificates` — **the
+  mechanism-neutral assembly theorem**: combining a row and a column
+  tracking certificate through `isUniformEquilibriumPayoff_of_deviation_caps`
+  gives the two-player zero-sum uniform equilibrium payoff `(w, -w)`. Its
+  signature carries no variation hypothesis whatsoever — `IsTailVariationBounded`
+  is absent, by design; only the two certificates from layer 1 are consumed.
+  The column-side guarantee is the mirror image of the row side (row and
+  column swapped, sign of the target flipped) and is taken here as a
+  hypothesis of that shape rather than re-derived, to keep this file's scope
+  bounded — the construction is identical with `0` and `1` exchanged. (The
+  deprecated alias `isUniformEquilibriumPayoff_of_secures_row_col` still
+  resolves.)
 -/
 
 noncomputable section
@@ -597,24 +648,39 @@ theorem sum_calTrackError_le {v : ℝ → G.State → Payoff (Fin 2)} {δ ε' : 
   have hfinal := hsum.trans hvar
   exact (ENNReal.ofReal_le_ofReal_iff hε').mp hfinal
 
-/-- **Stage B: the maximizer-role guarantee — the core reduction.** Bounded
-payoffs, the tail-variation modulus, and the promoted one-step tracking
-estimate (along the canonical calendar schedule) together secure the
-vanishing-discount limit value up to `ε`, against *every* opposing column
-strategy, uniformly over every sufficiently long horizon.
-`IsTailVariationBounded` is used directly here (via `sum_calTrackError_le`)
-to bound the cumulative tracking error by `ε ⁄ 2` uniformly in the horizon
-`T`; the boundary loss from the telescope (`2 C ⁄ T`) is what then forces
-the horizon threshold `T₀`. -/
-theorem secures_vanishingDiscountLimit_row
+/-- **Row tracking certificate.** The mechanism-neutral "row securing
+guarantee": player `0` has a strategy securing `w - ε`, against *every*
+history-dependent column deviation, over every sufficiently long horizon.
+This is exactly the shape Stage C's assembly theorem
+(`uniformValue_of_rowColumnTrackingCertificates`) consumes as a black box —
+deliberately with **no reference to `IsTailVariationBounded` or to any other
+construction mechanism**: how the certificate was produced (mechanism 2's
+`trackingCertificate_of_discountBiasControl`, mechanism 3's
+`trackingCertificate_of_runningDeficit`, or any future construction) is
+irrelevant to Stage C, which only ever consumes this Prop. -/
+def IsRowTrackingCertificate (w : ℝ) (s₀ : G.State) : Prop :=
+  ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 0) (T₀ : ℕ),
+    ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
+      w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0
+
+/-- **Mechanism-2 constructor: the discount-bias-control tracking
+certificate.** Bounded payoffs, the tail-variation modulus, and the promoted
+one-step tracking estimate (along the canonical calendar schedule) together
+secure the vanishing-discount limit value up to `ε`, against *every*
+opposing column strategy, uniformly over every sufficiently long horizon —
+i.e. they construct an `IsRowTrackingCertificate`. `IsTailVariationBounded`
+is used directly here (via `sum_calTrackError_le`) to bound the cumulative
+tracking error by `ε ⁄ 2` uniformly in the horizon `T`; the boundary loss
+from the telescope (`2 C ⁄ T`) is what then forces the horizon threshold
+`T₀`. Variation lives here, in the constructor — *not* in the neutral
+assembly theorem that consumes the resulting certificate. -/
+theorem trackingCertificate_of_discountBiasControl
     (v : ℝ → G.State → Payoff (Fin 2)) (x : ℝ → G.StationaryMixedProfile)
     {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) 1, ∀ s who, |v lam s who| ≤ C)
     (hvar : G.IsTailVariationBounded v) (w : ℝ) (s₀ : G.State)
     (htrack : ∀ δ : ℝ, 0 < δ →
       G.IsRowIndexTrackingCert v x (G.calScheduleHist δ) w (G.calTrackError v δ)) :
-    ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 0) (T₀ : ℕ),
-      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
-        w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0 := by
+    G.IsRowTrackingCertificate w s₀ := by
   intro ε hε
   obtain ⟨δ0, hδ0, hvarδ0⟩ := hvar (ε / 2) (half_pos hε)
   set δ := min δ0 1 with hδdef
@@ -662,6 +728,20 @@ theorem secures_vanishingDiscountLimit_row
   have h5 : 2 * C / (T : ℝ) + (T : ℝ)⁻¹ * (ε / 2) ≤ ε := heq5 ▸ h4
   have hCT2 : (C + C) / (T : ℝ) = 2 * C / T := by ring
   linarith [hguar, h1, h5, hCT2]
+
+/-- Deprecated alias for `trackingCertificate_of_discountBiasControl`,
+kept so external call sites (if any) still resolve. -/
+@[deprecated trackingCertificate_of_discountBiasControl (since := "2026-07-23")]
+theorem secures_vanishingDiscountLimit_row
+    (v : ℝ → G.State → Payoff (Fin 2)) (x : ℝ → G.StationaryMixedProfile)
+    {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) 1, ∀ s who, |v lam s who| ≤ C)
+    (hvar : G.IsTailVariationBounded v) (w : ℝ) (s₀ : G.State)
+    (htrack : ∀ δ : ℝ, 0 < δ →
+      G.IsRowIndexTrackingCert v x (G.calScheduleHist δ) w (G.calTrackError v δ)) :
+    ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 0) (T₀ : ℕ),
+      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
+        w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0 :=
+  G.trackingCertificate_of_discountBiasControl v x hC0 hC hvar w s₀ htrack
 
 end StageB
 
@@ -1120,6 +1200,22 @@ def IsRowDeficitIndexSecuring
     w - ε ≤ G.finiteAveragePayoff s₀ T
       (G.pairBehaviorProfile (G.rowIndexStrategy x (G.rowDeficitIndex δ N w)) dev) 0
 
+/-- **Mechanism-3 constructor: the running-deficit tracking certificate.**
+`IsRowDeficitIndexSecuring` already names its witness strategy —
+`rowIndexStrategy x (rowDeficitIndex δ N w)` — once and for all, for every
+`ε`; repackaging that as the `∃ σ` shape of `IsRowTrackingCertificate` is
+pure existential introduction, with no change to the underlying quantitative
+content (`IsRowDeficitIndexSecuring` remains unproved — the "sharpened
+residual" described above — so this constructor is only as good as a future
+proof of its hypothesis; it fixes the *shape* mechanism 3 will produce). -/
+theorem trackingCertificate_of_runningDeficit
+    {x : ℝ → G.StationaryMixedProfile} {δ : ℝ} {N : ℕ} {w : ℝ} {s₀ : G.State}
+    (hsec : G.IsRowDeficitIndexSecuring x δ N w s₀) :
+    G.IsRowTrackingCertificate w s₀ := by
+  intro ε hε
+  obtain ⟨T₀, hT₀⟩ := hsec ε hε
+  exact ⟨G.rowIndexStrategy x (G.rowDeficitIndex δ N w), T₀, hT₀⟩
+
 end AdaptiveIndex
 
 -- ============================================================================
@@ -1146,26 +1242,33 @@ theorem finiteAveragePayoff_one_eq_neg_zero (hzs : G.IsZeroSum) (σ : G.Behavior
     rw [Finset.sum_neg_distrib]
     ring
 
-/-- **The column-side mirror of Stage B's row guarantee**: securing `-w - ε`
-for player `1` against every row deviation. This has exactly the shape
-`secures_vanishingDiscountLimit_row` proves for the row player with `0` and
-`1` exchanged; it is taken here as a hypothesis of that same shape rather
-than re-derived, to keep this file's scope bounded (see the module
+/-- **The column-side tracking certificate** — the column-side mirror of
+`IsRowTrackingCertificate`: player `1` secures `-w - ε` against every row
+deviation. This has exactly the shape mechanism 2's
+`trackingCertificate_of_discountBiasControl` proves for the row player, with
+`0` and `1` exchanged; it is taken here as a hypothesis of that same shape
+rather than re-derived, to keep this file's scope bounded (see the module
 docstring). -/
 def SecuresCol (w : ℝ) (s₀ : G.State) : Prop :=
   ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 1) (T₀ : ℕ),
     ∀ (dev : G.BehaviorStrategy 0) (T : ℕ), T₀ ≤ T →
       -w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile dev σ) 1
 
-/-- **Stage C: assembly to a uniform equilibrium payoff.** Combining Stage
-B's row guarantee with its column-side mirror (`SecuresCol`) through
-`isUniformEquilibriumPayoff_of_deviation_caps` gives the two-player
-zero-sum uniform equilibrium payoff `(w, -w)`. -/
-theorem isUniformEquilibriumPayoff_of_secures_row_col
+/-- **Stage C: the mechanism-neutral assembly theorem.** Combining a row
+tracking certificate (`IsRowTrackingCertificate`) with its column-side
+mirror (`SecuresCol`) through `isUniformEquilibriumPayoff_of_deviation_caps`
+gives the two-player zero-sum uniform equilibrium payoff `(w, -w)`.
+
+This theorem is deliberately **mechanism-neutral**: its signature carries no
+variation hypothesis (`IsTailVariationBounded` does not appear here) and no
+reference to `IsRowIndexTrackingCert`, `IsRowDeficitIndexSecuring`, or any
+other construction machinery — it consumes exactly two already-built
+tracking certificates, however they were produced (mechanism 2's
+`trackingCertificate_of_discountBiasControl`, mechanism 3's
+`trackingCertificate_of_runningDeficit`, or a future third mechanism). -/
+theorem uniformValue_of_rowColumnTrackingCertificates
     (hzs : G.IsZeroSum) (w : ℝ) (s₀ : G.State)
-    (hrow : ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 0) (T₀ : ℕ),
-      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
-        w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0)
+    (hrow : G.IsRowTrackingCertificate w s₀)
     (hcol : G.SecuresCol w s₀) :
     G.IsUniformEquilibriumPayoff s₀ (fun who => if who = 0 then w else -w) := by
   apply G.isUniformEquilibriumPayoff_of_deviation_caps
@@ -1203,6 +1306,18 @@ theorem isUniformEquilibriumPayoff_of_secures_row_col
       have hzs' := G.finiteAveragePayoff_one_eq_neg_zero hzs
         (G.pairBehaviorProfile σrow dev) s₀ T
       linarith
+
+/-- Deprecated alias for `uniformValue_of_rowColumnTrackingCertificates`,
+kept so external call sites (if any) still resolve. -/
+@[deprecated uniformValue_of_rowColumnTrackingCertificates (since := "2026-07-23")]
+theorem isUniformEquilibriumPayoff_of_secures_row_col
+    (hzs : G.IsZeroSum) (w : ℝ) (s₀ : G.State)
+    (hrow : ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 0) (T₀ : ℕ),
+      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
+        w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0)
+    (hcol : G.SecuresCol w s₀) :
+    G.IsUniformEquilibriumPayoff s₀ (fun who => if who = 0 then w else -w) :=
+  G.uniformValue_of_rowColumnTrackingCertificates hzs w s₀ hrow hcol
 
 end StageC
 
