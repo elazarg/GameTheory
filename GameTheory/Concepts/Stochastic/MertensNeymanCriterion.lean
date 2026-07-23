@@ -383,7 +383,7 @@ zero-sum and the continuation value `V` is itself zero-sum, the auxiliary
 payoff is zero-sum at *every* joint mixed action, not just at an equilibrium
 profile. Pure algebra, no Nash property used. -/
 theorem discountedAuxEU_one_eq_neg_zero_of_zeroSum
-    {G : StochasticGame (Fin 2)}
+    {G : StochasticGame (Fin 2)} [Finite G.State] [∀ i, Finite (G.Act i)]
     (hzs : G.IsZeroSum) (β : ℝ) (V : G.State → Payoff (Fin 2))
     (hVzs : ∀ s, V s 1 = -V s 0) (s : G.State) (m : ∀ i, PMF (G.Act i)) :
     G.discountedAuxEU β V s m 1 = -G.discountedAuxEU β V s m 0 := by
@@ -411,7 +411,7 @@ zero-sum linearity, bounds row's payoff *below* by `V s 0` against every
 column mixed deviation `d` — even though `d` need not be column's equilibrium
 action. -/
 theorem IsDiscountedStationaryBellmanEq.row_discountedAuxEU_ge
-    {G : StochasticGame (Fin 2)}
+    {G : StochasticGame (Fin 2)} [Finite G.State] [∀ i, Finite (G.Act i)]
     {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
     (hF : G.IsDiscountedStationaryBellmanEq β x V)
     (hzs : G.IsZeroSum) (hVzs : ∀ s, V s 1 = -V s 0)
@@ -429,7 +429,7 @@ theorem IsDiscountedStationaryBellmanEq.row_discountedAuxEU_ge
 zero-sum linearity, bounds column's payoff below by `V s 1` against every row
 mixed deviation. -/
 theorem IsDiscountedStationaryBellmanEq.col_discountedAuxEU_ge
-    {G : StochasticGame (Fin 2)}
+    {G : StochasticGame (Fin 2)} [Finite G.State] [∀ i, Finite (G.Act i)]
     {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
     (hF : G.IsDiscountedStationaryBellmanEq β x V)
     (hzs : G.IsZeroSum) (hVzs : ∀ s, V s 1 = -V s 0)
@@ -455,6 +455,7 @@ level (see the remark after `secures_vanishingDiscountLimit_row` for why a
 *single fixed* level does not yet assemble into that certificate's genuinely
 history-adaptive, index-tracking form). -/
 theorem IsDiscountedStationaryBellmanEq.row_bellman_ge
+    [Finite G.State] [∀ i, Finite (G.Act i)]
     {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
     (hF : G.IsDiscountedStationaryBellmanEq β x V)
     (hzs : G.IsZeroSum) (hVzs : ∀ s, V s 1 = -V s 0)
@@ -472,6 +473,7 @@ theorem IsDiscountedStationaryBellmanEq.row_bellman_ge
 omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- **Column protection, history level**, the mirror of `row_bellman_ge`. -/
 theorem IsDiscountedStationaryBellmanEq.col_bellman_ge
+    [Finite G.State] [∀ i, Finite (G.Act i)]
     {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
     (hF : G.IsDiscountedStationaryBellmanEq β x V)
     (hzs : G.IsZeroSum) (hVzs : ∀ s, V s 1 = -V s 0)
@@ -494,6 +496,7 @@ history-dependent column deviation — the Fink/Nash-style analogue of
 `ZeroSum.lean`'s `discountedShapleyValue_le_row_discountedPayoff` (which uses
 the separate Shapley-operator/minimax formalization instead). -/
 theorem IsShapleyFamily.le_row_discountedPayoff
+    [Finite G.State] [∀ i, Finite (G.Act i)]
     {v : ℝ → G.State → Payoff (Fin 2)} {x : ℝ → G.StationaryMixedProfile}
     (hSF : G.IsShapleyFamily v x) (hzs : G.IsZeroSum)
     {lam : ℝ} (hlam : lam ∈ Set.Ioo (0 : ℝ) 1) (hVzs : ∀ s, v lam s 1 = -v lam s 0)
@@ -512,6 +515,7 @@ omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- **Column protection, discounted-payoff level**, the mirror of
 `IsShapleyFamily.le_row_discountedPayoff`. -/
 theorem IsShapleyFamily.le_col_discountedPayoff
+    [Finite G.State] [∀ i, Finite (G.Act i)]
     {v : ℝ → G.State → Payoff (Fin 2)} {x : ℝ → G.StationaryMixedProfile}
     (hSF : G.IsShapleyFamily v x) (hzs : G.IsZeroSum)
     {lam : ℝ} (hlam : lam ∈ Set.Ioo (0 : ℝ) 1) (hVzs : ∀ s, v lam s 1 = -v lam s 0)
@@ -680,6 +684,7 @@ from the telescope (`2 C ⁄ T`) is what then forces the horizon threshold
 `T₀`. Variation lives here, in the constructor — *not* in the neutral
 assembly theorem that consumes the resulting certificate. -/
 theorem trackingCertificate_of_discountBiasControl
+    [∀ i, Finite (G.Act i)]
     (v : ℝ → G.State → Payoff (Fin 2)) (x : ℝ → G.StationaryMixedProfile)
     {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) 1, ∀ s who, |v lam s who| ≤ C)
     (hvar : G.IsTailVariationBounded v) (w : ℝ) (s₀ : G.State)
@@ -997,7 +1002,7 @@ theorem rowDeficitIndex_two_eq_calSched_of_surplus_zero {δ : ℝ} (w : ℝ)
 
 /-! #### Step 3: the one-step tracking attempt -/
 
-omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
+omit [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- General pointwise bound extracted from the sup-norm difference bound
 `IsTailVariationBounded` (via `IsTailVariationBounded.pairwise_le`) supplies:
 the value difference at any single state/player is bounded by the sup-norm
@@ -1029,7 +1034,7 @@ theorem stageActionDist_pairBehaviorProfile_rowIndexStrategy
   · rfl
   · simp [Function.update]
 
-omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
+omit [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **The one-step adaptive-index tracking attempt** — generalizing
 `BigMatchUniform.lean`'s `bfX_le_expect_step` from the Big Match's concrete
 `bfX` potential to the abstract discounted-value family `v`, along the
@@ -1055,6 +1060,7 @@ opposing deviation. `IsRowDeficitIndexCrossingBound` below states precisely
 why that further step is exactly where the `β / (1 - β)` divergence bites
 even at this fully explicit, concrete index. -/
 theorem IsShapleyFamily.rowDeficitIndex_bellman_le
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]
     {v : ℝ → G.State → Payoff (Fin 2)} {x : ℝ → G.StationaryMixedProfile}
     (hSF : G.IsShapleyFamily v x) (hzs : G.IsZeroSum)
     (hVzs : ∀ lam ∈ Set.Ioo (0 : ℝ) 1, ∀ s, v lam s 1 = -v lam s 0)
@@ -1238,7 +1244,9 @@ omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- Zero-sum stage payoffs make finite-horizon average payoffs zero-sum too,
 mirroring `ZeroSum.lean`'s `IsZeroSum.discountedPayoff_one_eq_neg_zero` at
 the finite-horizon average payoff. -/
-theorem finiteAveragePayoff_one_eq_neg_zero (hzs : G.IsZeroSum) (σ : G.BehaviorProfile)
+theorem finiteAveragePayoff_one_eq_neg_zero
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (hzs : G.IsZeroSum) (σ : G.BehaviorProfile)
     (s₀ : G.State) (T : ℕ) :
     G.finiteAveragePayoff s₀ T σ 1 = -G.finiteAveragePayoff s₀ T σ 0 := by
   rcases Nat.eq_zero_or_pos T with hT | hT
@@ -1277,6 +1285,7 @@ tracking certificates, however they were produced (mechanism 2's
 `trackingCertificate_of_discountBiasControl`, mechanism 3's
 `trackingCertificate_of_runningDeficit`, or a future third mechanism). -/
 theorem uniformValue_of_rowColumnTrackingCertificates
+    [Finite G.State] [∀ i, Finite (G.Act i)]
     (hzs : G.IsZeroSum) (w : ℝ) (s₀ : G.State)
     (hrow : G.IsRowTrackingCertificate w s₀)
     (hcol : G.SecuresCol w s₀) :

@@ -490,6 +490,7 @@ theorem tight_of_optimal_row_support {A : I → J → ℝ} {V : ℝ}
   · exact absurd h hi
   · linarith
 
+omit [Fintype J] in
 /-- **Extremality forces the tight-constraint system to have trivial kernel (row side).**
 This is the precise "if the tight constraints had a nontrivial kernel direction `d`, then
 `x ± εd` would both be optimal, contradicting extremality" step of the Shapley–Snow
@@ -501,11 +502,12 @@ exactly `V`), then `d = 0`. Proof: for small `ε > 0`, both `x + εd` and `x - �
 preserved by (iii), strict columns stay `≥ V` by taking `ε` small relative to their
 slack), and `x` is their midpoint; extremality then forces `x + εd = x`, i.e. `εd = 0`,
 i.e. `d = 0` since `ε ≠ 0`. -/
-theorem eq_zero_of_extreme_optimalRow {A : I → J → ℝ} {V : ℝ}
+theorem eq_zero_of_extreme_optimalRow [Finite J] {A : I → J → ℝ} {V : ℝ}
     {x : I → ℝ} (hx : x ∈ Set.extremePoints ℝ (optimalRowStrategies A V))
     {d : I → ℝ} (hd_supp : ∀ i, x i = 0 → d i = 0) (hd_sum : ∑ i, d i = 0)
     (hd_tight : ∀ j, ∑ i, x i * A i j = V → ∑ i, d i * A i j = 0) : d = 0 := by
   classical
+  haveI : Fintype J := Fintype.ofFinite J
   by_contra hd0
   obtain ⟨hxs, hxge⟩ := extremePoints_subset hx
   rw [Set.mem_iInter] at hxge
@@ -609,15 +611,17 @@ theorem eq_zero_of_extreme_optimalRow {A : I → J → ℝ} {V : ℝ}
     · exact h
   exact hd0 hεd0
 
+omit [Fintype I] in
 /-- **Extremality forces the tight-constraint system to have trivial kernel (column
 side).** The column-player mirror of `eq_zero_of_extreme_optimalRow`: if `y` is an
 extreme point of `optimalColStrategies A V`, and `e` (i) is supported on `y`'s support,
 (ii) sums to `0`, and (iii) is annihilated by every row tight at `y`, then `e = 0`. -/
-theorem eq_zero_of_extreme_optimalCol {A : I → J → ℝ} {V : ℝ}
+theorem eq_zero_of_extreme_optimalCol [Finite I] {A : I → J → ℝ} {V : ℝ}
     {y : J → ℝ} (hy : y ∈ Set.extremePoints ℝ (optimalColStrategies A V))
     {e : J → ℝ} (he_supp : ∀ j, y j = 0 → e j = 0) (he_sum : ∑ j, e j = 0)
     (he_tight : ∀ i, ∑ j, y j * A i j = V → ∑ j, e j * A i j = 0) : e = 0 := by
   classical
+  haveI : Fintype I := Fintype.ofFinite I
   by_contra he0
   obtain ⟨hys, hyle⟩ := extremePoints_subset hy
   rw [Set.mem_iInter] at hyle

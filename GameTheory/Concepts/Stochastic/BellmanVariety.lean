@@ -406,7 +406,8 @@ omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)]
 expectation, under `d`, of the pure-deviation gains — the affine-in-own-
 strategy fact that reduces the mixed best-response condition to its pure
 instances. -/
-theorem discountedAuxEU_update_eq_expect_pure (β : ℝ) (V : G.State → Payoff ι)
+theorem discountedAuxEU_update_eq_expect_pure [Finite G.State] [∀ i, Finite (G.Act i)]
+    (β : ℝ) (V : G.State → Payoff ι)
     (x : G.StationaryMixedProfile) (s : G.State) (who : ι) (d : PMF (G.Act who)) :
     G.discountedAuxEU β V s (Function.update (x s) who d) who =
       expect d (fun b => G.discountedAuxEU β V s (Function.update (x s) who (PMF.pure b)) who) := by
@@ -420,7 +421,8 @@ omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)]
 current auxiliary payoff, neither does any mixed deviation: mixed best
 response follows from the finite family of pure best-response
 inequalities. -/
-theorem discountedAuxEU_update_le_of_forall_pure {β : ℝ} {V : G.State → Payoff ι}
+theorem discountedAuxEU_update_le_of_forall_pure [Finite G.State] [∀ i, Finite (G.Act i)]
+    {β : ℝ} {V : G.State → Payoff ι}
     {x : G.StationaryMixedProfile} {s : G.State} {who : ι}
     (hpure : ∀ b : G.Act who,
       G.discountedAuxEU β V s (Function.update (x s) who (PMF.pure b)) who ≤

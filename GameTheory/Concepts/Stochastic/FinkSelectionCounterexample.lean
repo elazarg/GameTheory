@@ -463,15 +463,16 @@ lemma playerOne_live_pure_values
   unfold StochasticGame.discountedAuxEU
   rw [FinkTangentCounterexample.expect_pmfPi_bool,
     FinkTangentCounterexample.expect_pmfPi_bool]
-  simp only [Function.update_self, ne_eq, Bool.true_eq_false,
-    not_false_eq_true, Function.update_of_ne, expect_pure,
-    Bool.if_false_right, Bool.decide_eq_true, mul_neg, mul_one,
-    neg_sub, Bool.if_true_right, discountedAuxPayoff, payoff,
+  simp only [Function.update_self, ne_eq, Bool.true_eq_false, not_false_eq_true,
+    Function.update_of_ne, expect_pure, Bool.if_false_right, Bool.decide_eq_true, mul_neg,
+    mul_one, neg_sub, Bool.if_true_right, discountedAuxPayoff, payoff,
     FinkTangentCounterexample.payoff,
     FinkTangentCounterexample.expect_transition,
     FinkTangentCounterexample.nextState]
   rw [expect_eq_sum, expect_eq_sum, Fintype.sum_bool, Fintype.sum_bool]
-  simp only [hHigh, hLow]
+  simp only [hHigh, hLow, Bool.false_eq_true, ↓reduceIte, Bool.and_true, mul_neg, mul_one,
+    neg_sub, decide_true, Bool.and_self, Bool.and_false, Bool.not_false, Bool.or_self,
+    Bool.not_true, Bool.or_true, Bool.or_false]
   simp_rw [pmfBool_false_toReal]
   constructor <;> ring
 
@@ -491,14 +492,15 @@ lemma playerTwo_live_pure_values
   unfold StochasticGame.discountedAuxEU
   rw [FinkTangentCounterexample.expect_pmfPi_bool,
     FinkTangentCounterexample.expect_pmfPi_bool]
-  simp only [ne_eq, Bool.false_eq_true, not_false_eq_true,
-    Function.update_of_ne, Function.update_self, expect_pure,
-    Bool.if_false_left, Bool.decide_eq_true, Bool.if_true_left,
-    discountedAuxPayoff, payoff,
+  simp only [ne_eq, Bool.false_eq_true, not_false_eq_true, Function.update_of_ne,
+    Function.update_self, expect_pure, Bool.if_false_left, Bool.decide_eq_true,
+    Bool.if_true_left, discountedAuxPayoff, payoff,
     FinkTangentCounterexample.expect_transition,
     FinkTangentCounterexample.nextState]
   rw [expect_eq_sum, expect_eq_sum, Fintype.sum_bool, Fintype.sum_bool]
-  simp only [hHigh, hLow]
+  simp only [hHigh, hLow, ↓reduceIte, decide_false, Bool.not_false, Bool.and_self, decide_true,
+    Bool.not_true, Bool.and_true, Bool.true_eq_false, mul_neg, mul_one, neg_sub,
+    Bool.false_eq_true, Bool.and_false, Bool.or_true, Bool.or_self, Bool.or_false]
   simp_rw [pmfBool_false_toReal]
   constructor <;> ring
 

@@ -955,6 +955,7 @@ private theorem sum_coeff_mul_max_sub {ι : Type*} [Fintype ι] (A f : ι → �
   rw [← Finset.sum_sub_distrib]
   exact Finset.sum_congr rfl fun t _ => by rw [← mul_sub, max_sub_max_neg]
 
+open Classical in
 theorem rowEval_vriezeA_vriezeEncode_gain (G : StochasticGame Bool) [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
     (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ) (s : G.State)
@@ -976,6 +977,7 @@ theorem rowEval_vriezeA_vriezeEncode_gain (G : StochasticGame Bool) [Finite G.St
   have hite : (∑ x : G.State, (if x = s then (1:ℝ) else 0) * g x) = g s := by simp
   rw [hite]
 
+open Classical in
 private theorem sum_prod_ite_eq (G : StochasticGame Bool) [Finite G.State]
     {β : Type*} [Fintype β] (s : G.State) (f : G.State → β → ℝ) :
     (∑ p : G.State × β, (if p.1 = s then f p.1 p.2 else 0)) = ∑ i : β, f s i := by
@@ -983,9 +985,10 @@ private theorem sum_prod_ite_eq (G : StochasticGame Bool) [Finite G.State]
   rw [Finset.sum_eq_single s]
   · simp
   · intro s' _ hne
-    simp
+    simp [hne]
   · simp
 
+open Classical in
 theorem rowEval_vriezeA_vriezeEncode_bias (G : StochasticGame Bool) [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
     (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ) (s : G.State)
@@ -1008,7 +1011,7 @@ theorem rowEval_vriezeA_vriezeEncode_bias (G : StochasticGame Bool) [Finite G.St
       refine Finset.sum_congr rfl ?_
       rintro ⟨s', i⟩ _
       by_cases h : s' = s <;> simp [h]
-    rw [step, sum_prod_ite_eq G s (fun s' i => G.rewardVal controller s' i j * ((x s') i).toReal)]
+    rw [step, sum_prod_ite_eq G s (fun p i => G.rewardVal controller s i j * ((x p) i).toReal)]
     exact Finset.sum_congr rfl fun i _ => by ring
   have e23 : (∑ x, (-(if x = s then (1:ℝ) else 0)) * max (g x) 0) +
       (∑ x, (if x = s then (1:ℝ) else 0) * max (-(g x)) 0) = -g s := by
