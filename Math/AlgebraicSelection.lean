@@ -92,9 +92,13 @@ polynomial's root set.
   `eventually_sign_constant_of_polynomial`. (`IsPreconnected.constant` /
   `Mathlib/Topology/Instances/Sign.lean`'s `SignType.sign` machinery was investigated as an
   alternative route but the direct IVT argument was more economical here.)
-* No ready-made "bounded monotone function has vanishing oscillation near an excluded endpoint"
-  lemma was found (`MonotoneOn.tendsto_nhdsWithin_Ioo_left` is stated for the *right* endpoint of
-  an `Ioo`, not the left); see the `TODO` on `dist_le_eVariationOn_uIcc_of_polynomial_root` below.
+* The "vanishing oscillation near an excluded endpoint" fact ultimately did not need
+  `MonotoneOn.tendsto_nhdsWithin_Ioo_left` (stated for the *right* endpoint of an `Ioo`) or any
+  endpoint reflection at all: `BoundedVariationOn.tendsto_eVariationOn_Ioc_zero` (`Mathlib/Topology/
+  EMetricSpace/BoundedVariation.lean`) directly gives "variation on small open-closed intervals to
+  the right of a point → 0" for *any* bounded-variation function (monotone is a special case, via
+  `MonotoneOn.boundedVariationOn`), which is exactly the shape needed at the left endpoint `0` of
+  `Set.Ioo 0 ρ'` — see `eventually_tendsto_eVariationOn_nhds_zero_of_polynomial_root`.
 
 ## Main declarations
 
@@ -117,19 +121,17 @@ polynomial's root set.
   `BoundedVariationOn`.
 * `dist_le_eVariationOn_uIcc_of_polynomial_root`: the interval-control export — `|w a - w b|` is
   bounded by the total variation on `Set.uIcc a b`, for `a, b` in either order.
+* `eventually_tendsto_eVariationOn_nhds_zero_of_polynomial_root`: the previously-open gap, now
+  closed — `eVariationOn w (Set.Ioo 0 δ) → 0` as `δ → 0⁺`. Proved via `BoundedVariationOn.
+  tendsto_eVariationOn_Ioc_zero` at `0` (variation on small open-closed intervals to the right of a
+  point vanishes for a bounded-variation function), transported from `nhdsWithin 0 (Set.Ioo 0 ρ')`
+  to `nhdsWithin 0 (Set.Ioi 0)` via `nhdsWithin_inter_of_mem'`, then squeezed against
+  `eVariationOn.mono`.
+* `tailEVariation_vanishes_of_polynomial_root`: the Mertens–Neyman-facing scalar packaging of the
+  above in explicit `ε`–`δ` form — the per-coordinate feeder for `MertensNeymanCriterion.
+  StochasticGame.IsTailVariationBounded`.
 
-## TODO (not landed in this file)
-
-* `dist_le_eVariationOn_uIcc_of_polynomial_root` additionally claims (and does *not* prove) that
-  `eVariationOn w (Set.Ioo 0 ρ') → 0` as `ρ' → 0⁺`. The missing statement is: for `w` eventually
-  monotone (or antitone) and bounded on `Set.Ioo 0 ρ` (as furnished by
-  `eventually_monotone_of_polynomial_root`), `Filter.Tendsto (fun ρ' => eVariationOn w (Set.Ioo 0
-  ρ')) (nhdsWithin 0 (Set.Ioi 0)) (nhds 0)`. The expected route: a bounded `MonotoneOn` function on
-  `Set.Ioo 0 ρ` has a limit `L` along `nhdsWithin 0 (Set.Ioi 0)` (reflect/adapt
-  `MonotoneOn.tendsto_nhdsWithin_Ioo_left`, which is stated for the right endpoint), after which
-  `eVariationOn w (Set.Ioo 0 ρ') = ENNReal.ofReal (sSup (w '' Set.Ioo 0 ρ') - L)` (for monotone `w`;
-  `MonotoneOn.eVariationOn_le` gives one inequality) and the right-hand side `→ 0` as `ρ' → 0⁺` by
-  continuity of `sSup (w '' Set.Ioo 0 ·)` at `0`, itself following from the limit `L`.
+No `TODO`s remain in this file.
 -/
 
 open Polynomial Set
@@ -582,5 +584,66 @@ theorem dist_le_eVariationOn_uIcc_of_polynomial_root
   have huIcc : Set.uIcc a b ⊆ Set.Ioo (0 : ℝ) ρ' :=
     Set.ordConnected_Ioo.uIcc_subset ha hb
   exact (hbv.mono huIcc).dist_le Set.left_mem_uIcc Set.right_mem_uIcc
+
+/-- **Target 1, closing the file's `TODO`.** Once `w` is eventually monotone or antitone
+(`eventually_monotone_of_polynomial_root`) and bounded, the tail variation
+`eVariationOn w (Set.Ioo 0 δ)` tends to `0` as `δ → 0⁺`. Route: `BoundedVariationOn.
+tendsto_eVariationOn_Ioc_zero` (a bounded-variation function's variation on small open-closed
+intervals to the right of a point tends to `0`) applied at `0` to `w` on `Set.Ioo 0 ρ'`, after
+identifying `nhdsWithin 0 (Set.Ioo 0 ρ')` with `nhdsWithin 0 (Set.Ioi 0)` (since `Set.Ioo 0 ρ'` is
+a punctured neighbourhood of `0` within `Set.Ioi 0`), then squeezing `eVariationOn w (Set.Ioo 0 δ)`
+between `0` and `eVariationOn w (Set.Ioo 0 ρ' ∩ Set.Ioc 0 δ)` for `δ` near `0`. -/
+theorem eventually_tendsto_eVariationOn_nhds_zero_of_polynomial_root
+    {ρ : ℝ} (hρ : 0 < ρ) {w : ℝ → ℝ} (hw : ContinuousOn w (Set.Ioo 0 ρ))
+    {P : Polynomial (Polynomial ℝ)} (hP : P ≠ 0)
+    (hroot : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ, bivEval P lam (w lam) = 0)
+    (hRv : Polynomial.resultant P (Polynomial.derivative P) ≠ 0)
+    (hRlam : Polynomial.resultant P (bivDerivLam P) ≠ 0)
+    {C : ℝ} (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ, |w lam| ≤ C) :
+    ∃ ρ' ∈ Set.Ioc (0 : ℝ) ρ, Filter.Tendsto (fun δ => eVariationOn w (Set.Ioo 0 δ))
+      (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (nhds 0) := by
+  obtain ⟨ρ', hρ'mem, hbv⟩ := boundedVariationOn_of_polynomial_root hρ hw hP hroot hRv hRlam hC
+  refine ⟨ρ', hρ'mem, ?_⟩
+  have hρ'pos : 0 < ρ' := hρ'mem.1
+  have htendsto := hbv.tendsto_eVariationOn_Ioc_zero (0 : ℝ)
+  have hIioMem : Set.Iio ρ' ∈ nhdsWithin (0 : ℝ) (Set.Ioi 0) :=
+    mem_nhdsWithin_of_mem_nhds (Iio_mem_nhds hρ'pos)
+  have hfeq : nhdsWithin (0 : ℝ) (Set.Ioo 0 ρ') = nhdsWithin (0 : ℝ) (Set.Ioi 0) := by
+    have hIoo : Set.Ioi (0 : ℝ) ∩ Set.Iio ρ' = Set.Ioo 0 ρ' := rfl
+    rw [← hIoo]
+    exact nhdsWithin_inter_of_mem' hIioMem
+  rw [hfeq] at htendsto
+  have hbound : ∀ᶠ y in nhdsWithin (0 : ℝ) (Set.Ioi 0),
+      eVariationOn w (Set.Ioo 0 y) ≤ eVariationOn w (Set.Ioo 0 ρ' ∩ Set.Ioc 0 y) :=
+    Filter.eventually_of_mem hIioMem fun y hy =>
+      eVariationOn.mono w fun x hx => ⟨⟨hx.1, hx.2.trans hy⟩, hx.1, hx.2.le⟩
+  refine ENNReal.tendsto_nhds_zero.mpr fun ε hε => ?_
+  have hle := ENNReal.tendsto_nhds_zero.mp htendsto ε hε
+  filter_upwards [hbound, hle] with y hy1 hy2 using hy1.trans hy2
+
+/-- **Target 2, the Mertens–Neyman-facing scalar bridge lemma.** For `w` continuously selected
+by the nonzero bivariate polynomial `P` on `Set.Ioo 0 ρ`, eventually squarefree-in-`v` and
+non-degenerate-in-`λ` (`hRv`, `hRlam`), and bounded, the tail variation modulus vanishes: for
+every `ε > 0` there is `δ > 0` with `eVariationOn w (Set.Ioo 0 δ) ≤ ENNReal.ofReal ε`. This is
+exactly the per-coordinate content of `MertensNeymanCriterion.StochasticGame.
+IsTailVariationBounded` (`GameTheory/Concepts/Stochastic/MertensNeymanCriterion.lean`), which
+demands this ε–δ bound for a `ℝ → G.State → Payoff ι`-valued family `v`; the game-level assembly
+(finitely many `(state, player)` coordinates, each of the form `fun lam => v lam s who`, feeding
+this lemma and reassembled via `Pi`/`sup`-norm control) is left to the Stochastic layer. -/
+theorem tailEVariation_vanishes_of_polynomial_root
+    {ρ : ℝ} (hρ : 0 < ρ) {w : ℝ → ℝ} (hw : ContinuousOn w (Set.Ioo 0 ρ))
+    {P : Polynomial (Polynomial ℝ)} (hP : P ≠ 0)
+    (hroot : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ, bivEval P lam (w lam) = 0)
+    (hRv : Polynomial.resultant P (Polynomial.derivative P) ≠ 0)
+    (hRlam : Polynomial.resultant P (bivDerivLam P) ≠ 0)
+    {C : ℝ} (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ, |w lam| ≤ C) :
+    ∀ ε : ℝ, 0 < ε → ∃ δ : ℝ, 0 < δ ∧ eVariationOn w (Set.Ioo 0 δ) ≤ ENNReal.ofReal ε := by
+  obtain ⟨ρ', hρ'mem, htendsto⟩ :=
+    eventually_tendsto_eVariationOn_nhds_zero_of_polynomial_root hρ hw hP hroot hRv hRlam hC
+  intro ε hε
+  have hev := ENNReal.tendsto_nhds_zero.mp htendsto (ENNReal.ofReal ε) (by positivity)
+  obtain ⟨u, hu_pos, hu_sub⟩ := mem_nhdsGT_iff_exists_Ioo_subset.mp hev
+  have hu_pos' : 0 < u := hu_pos
+  exact ⟨u / 2, by linarith, hu_sub ⟨by linarith, by linarith⟩⟩
 
 end Math
