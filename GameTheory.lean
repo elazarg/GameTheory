@@ -115,9 +115,11 @@ import GameTheory.Concepts.Stochastic.TransitionIndependent
 import GameTheory.Concepts.Stochastic.Discounted
 import GameTheory.Concepts.Stochastic.Adaptive
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
+import GameTheory.Concepts.Stochastic.TransitionIndependentCertificate
 import GameTheory.Concepts.Stochastic.BellmanVariety
 import GameTheory.Concepts.Stochastic.ZeroSum
 import GameTheory.Concepts.Stochastic.Fink
+import GameTheory.Concepts.Stochastic.MertensNeymanCriterion
 import GameTheory.Concepts.Stochastic.FinkSchedule
 import GameTheory.Concepts.Stochastic.FinkLimit
 import GameTheory.Concepts.Stochastic.FinkEndpoint
