@@ -383,7 +383,7 @@ zero-sum and the continuation value `V` is itself zero-sum, the auxiliary
 payoff is zero-sum at *every* joint mixed action, not just at an equilibrium
 profile. Pure algebra, no Nash property used. -/
 theorem discountedAuxEU_one_eq_neg_zero_of_zeroSum
-    {G : StochasticGame (Fin 2)} [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    {G : StochasticGame (Fin 2)}
     (hzs : G.IsZeroSum) (β : ℝ) (V : G.State → Payoff (Fin 2))
     (hVzs : ∀ s, V s 1 = -V s 0) (s : G.State) (m : ∀ i, PMF (G.Act i)) :
     G.discountedAuxEU β V s m 1 = -G.discountedAuxEU β V s m 0 := by
@@ -411,7 +411,7 @@ zero-sum linearity, bounds row's payoff *below* by `V s 0` against every
 column mixed deviation `d` — even though `d` need not be column's equilibrium
 action. -/
 theorem IsDiscountedStationaryBellmanEq.row_discountedAuxEU_ge
-    {G : StochasticGame (Fin 2)} [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    {G : StochasticGame (Fin 2)}
     {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
     (hF : G.IsDiscountedStationaryBellmanEq β x V)
     (hzs : G.IsZeroSum) (hVzs : ∀ s, V s 1 = -V s 0)
@@ -429,7 +429,7 @@ theorem IsDiscountedStationaryBellmanEq.row_discountedAuxEU_ge
 zero-sum linearity, bounds column's payoff below by `V s 1` against every row
 mixed deviation. -/
 theorem IsDiscountedStationaryBellmanEq.col_discountedAuxEU_ge
-    {G : StochasticGame (Fin 2)} [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    {G : StochasticGame (Fin 2)}
     {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
     (hF : G.IsDiscountedStationaryBellmanEq β x V)
     (hzs : G.IsZeroSum) (hVzs : ∀ s, V s 1 = -V s 0)
@@ -444,6 +444,7 @@ theorem IsDiscountedStationaryBellmanEq.col_discountedAuxEU_ge
 
 variable {G : StochasticGame (Fin 2)} [Fintype G.State] [∀ i, Fintype (G.Act i)]
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- **Row protection, history level.** The zero-sum companion to
 `IsDiscountedStationaryBellmanEq.deviation_bellman_ge`: with row fixed at its
 `lam`-optimal stationary action and column playing an *arbitrary*
@@ -468,6 +469,7 @@ theorem IsDiscountedStationaryBellmanEq.row_bellman_ge
   rw [G.stageActionDist_update_markovBehaviorProfile, ← G.discountedAuxEU_eq]
   exact hrow
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- **Column protection, history level**, the mirror of `row_bellman_ge`. -/
 theorem IsDiscountedStationaryBellmanEq.col_bellman_ge
     {β : ℝ} {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
@@ -484,6 +486,7 @@ theorem IsDiscountedStationaryBellmanEq.col_bellman_ge
   rw [G.stageActionDist_update_markovBehaviorProfile, ← G.discountedAuxEU_eq]
   exact hcol
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- **Row protection, discounted-payoff level.** `IsShapleyFamily` at a
 genuine discount complement `lam`, plus zero-sum (game and value), gives row's
 `lam`-discounted Shapley-style security guarantee against every
@@ -505,6 +508,7 @@ theorem IsShapleyFamily.le_row_discountedPayoff
     (by linarith [hlam.2]) (by linarith [hlam.1])
     (fun t h => hF.row_bellman_ge hzs hVzs dev t h)
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- **Column protection, discounted-payoff level**, the mirror of
 `IsShapleyFamily.le_row_discountedPayoff`. -/
 theorem IsShapleyFamily.le_col_discountedPayoff
@@ -663,6 +667,7 @@ def IsRowTrackingCertificate (w : ℝ) (s₀ : G.State) : Prop :=
     ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
       w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0
 
+omit [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **Mechanism-2 constructor: the discount-bias-control tracking
 certificate.** Bounded payoffs, the tail-variation modulus, and the promoted
 one-step tracking estimate (along the canonical calendar schedule) together
@@ -729,20 +734,6 @@ theorem trackingCertificate_of_discountBiasControl
   have hCT2 : (C + C) / (T : ℝ) = 2 * C / T := by ring
   linarith [hguar, h1, h5, hCT2]
 
-/-- Deprecated alias for `trackingCertificate_of_discountBiasControl`,
-kept so external call sites (if any) still resolve. -/
-@[deprecated trackingCertificate_of_discountBiasControl (since := "2026-07-23")]
-theorem secures_vanishingDiscountLimit_row
-    (v : ℝ → G.State → Payoff (Fin 2)) (x : ℝ → G.StationaryMixedProfile)
-    {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) 1, ∀ s who, |v lam s who| ≤ C)
-    (hvar : G.IsTailVariationBounded v) (w : ℝ) (s₀ : G.State)
-    (htrack : ∀ δ : ℝ, 0 < δ →
-      G.IsRowIndexTrackingCert v x (G.calScheduleHist δ) w (G.calTrackError v δ)) :
-    ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 0) (T₀ : ℕ),
-      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
-        w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0 :=
-  G.trackingCertificate_of_discountBiasControl v x hC0 hC hvar w s₀ htrack
-
 end StageB
 
 -- ============================================================================
@@ -753,6 +744,7 @@ section StageBSchedule
 
 variable (G : StochasticGame (Fin 2)) [Fintype G.State] [∀ i, Fintype (G.Act i)]
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- Along the canonical calendar schedule, `IsShapleyFamily` gives a genuine
 `FinkSchedule.lean`-style `IsDiscountedStationaryBellmanSchedule`: statewise
 Nash consistency at every calendar stage `t`, with discount complement
@@ -867,10 +859,12 @@ realized stage payoff against an arbitrary target `w`). -/
 def rowRunningSurplus (w : ℝ) {t : ℕ} (h : G.Hist t) : ℝ :=
   G.totalPayoff 0 h - t * w
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 @[simp] theorem rowRunningSurplus_zero (w : ℝ) (h : G.Hist 0) :
     G.rowRunningSurplus w h = 0 := by
   simp [rowRunningSurplus]
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **One-step update of the running surplus** — the realized-stage analogue
 of `BigMatchUniform.lean`'s `netRightExcess_snoc`: extending the history by
 one realized stage adds that stage's realized payoff deficit `stagePayoff
@@ -896,14 +890,17 @@ the task calls for. -/
 def rowIndexDenom (N : ℕ) (w : ℝ) {t : ℕ} (h : G.Hist t) : ℝ :=
   max (N : ℝ) ((t : ℝ) + N + G.rowRunningSurplus w h)
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 theorem le_rowIndexDenom (N : ℕ) (w : ℝ) {t : ℕ} (h : G.Hist t) :
     (N : ℝ) ≤ G.rowIndexDenom N w h :=
   le_max_left _ _
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 theorem rowIndexDenom_pos {N : ℕ} (hN : 1 ≤ N) (w : ℝ) {t : ℕ} (h : G.Hist t) :
     0 < G.rowIndexDenom N w h :=
   lt_of_lt_of_le (by exact_mod_cast hN) (G.le_rowIndexDenom N w h)
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **The one-step update relation, off the clamp boundary.** Whenever both
 the stage-`t` *and* the successor stage-`(t+1)` unclamped calendar-plus-
 surplus values dominate the floor `N` (the real-valued step `stagePayoff h.2
@@ -940,22 +937,26 @@ needed in this finite discrete setting — ready to be plugged into
 def rowDeficitIndex (δ : ℝ) (N : ℕ) (w : ℝ) : G.HistoryPotential :=
   fun _ h => δ / G.rowIndexDenom N w h
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 theorem rowDeficitIndex_pos {δ : ℝ} (hδ : 0 < δ) {N : ℕ} (hN : 1 ≤ N) (w : ℝ)
     (t : ℕ) (h : G.Hist t) :
     0 < G.rowDeficitIndex δ N w t h :=
   div_pos hδ (G.rowIndexDenom_pos hN w h)
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 theorem rowDeficitIndex_le {δ : ℝ} (hδ : 0 ≤ δ) {N : ℕ} (hN : 1 ≤ N) (w : ℝ)
     (t : ℕ) (h : G.Hist t) :
     G.rowDeficitIndex δ N w t h ≤ δ / N :=
   div_le_div_of_nonneg_left hδ (by exact_mod_cast hN) (G.le_rowIndexDenom N w h)
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **Range fact.** `rowDeficitIndex` always lands in `(0, δ / N]`. -/
 theorem rowDeficitIndex_mem_Ioc {δ : ℝ} (hδ : 0 < δ) {N : ℕ} (hN : 1 ≤ N) (w : ℝ)
     (t : ℕ) (h : G.Hist t) :
     G.rowDeficitIndex δ N w t h ∈ Set.Ioc (0 : ℝ) (δ / N) :=
   ⟨G.rowDeficitIndex_pos hδ hN w t h, G.rowDeficitIndex_le hδ.le hN w t h⟩
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **Range fact.** With `δ < N`, `rowDeficitIndex` lands strictly inside
 `Ioo 0 1`, the domain `IsShapleyFamily` requires. -/
 theorem rowDeficitIndex_lt_one {δ : ℝ} (hδ : 0 < δ) {N : ℕ} (hN : 1 ≤ N)
@@ -965,12 +966,14 @@ theorem rowDeficitIndex_lt_one {δ : ℝ} (hδ : 0 < δ) {N : ℕ} (hN : 1 ≤ N
   calc G.rowDeficitIndex δ N w t h ≤ δ / N := G.rowDeficitIndex_le hδ.le hN w t h
     _ < 1 := (div_lt_one hNpos).mpr hδN
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 theorem rowDeficitIndex_zero {δ : ℝ} (N : ℕ) (w : ℝ) (h : G.Hist 0) :
     G.rowDeficitIndex δ N w 0 h = δ / N := by
   unfold rowDeficitIndex rowIndexDenom
   rw [rowRunningSurplus_zero]
   norm_num
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **Recovery of the calendar schedule.** When the realized running surplus
 is exactly `0` — in particular whenever row's realized stage payoff has
 equalled the target `w` at every past stage — `rowDeficitIndex` collapses
@@ -983,6 +986,7 @@ theorem rowDeficitIndex_eq_of_surplus_zero {δ : ℝ} (N : ℕ) (w : ℝ)
   unfold rowDeficitIndex rowIndexDenom
   rw [hsurplus, add_zero, max_eq_right (by linarith [Nat.cast_nonneg (α := ℝ) t])]
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- At base level `N = 2`, the zero-surplus collapse recovers `calSched`
 *verbatim*. -/
 theorem rowDeficitIndex_two_eq_calSched_of_surplus_zero {δ : ℝ} (w : ℝ)
@@ -993,6 +997,7 @@ theorem rowDeficitIndex_two_eq_calSched_of_surplus_zero {δ : ℝ} (w : ℝ)
 
 /-! #### Step 3: the one-step tracking attempt -/
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- General pointwise bound extracted from the sup-norm difference bound
 `IsTailVariationBounded` (via `IsTailVariationBounded.pairwise_le`) supplies:
 the value difference at any single state/player is bounded by the sup-norm
@@ -1004,6 +1009,7 @@ theorem abs_sub_apply_le_norm (V W : G.State → Payoff (Fin 2)) (s : G.State)
   rw [Pi.sub_apply, Pi.sub_apply, Real.norm_eq_abs] at h1
   exact h1.trans h2
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- At a single fixed history, the row-index strategy paired with an
 arbitrary column deviation induces exactly the same stage mixed action as
 row's stationary Markov play at the index's *current* value there, paired
@@ -1023,6 +1029,7 @@ theorem stageActionDist_pairBehaviorProfile_rowIndexStrategy
   · rfl
   · simp [Function.update]
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **The one-step adaptive-index tracking attempt** — generalizing
 `BigMatchUniform.lean`'s `bfX_le_expect_step` from the Big Match's concrete
 `bfX` potential to the abstract discounted-value family `v`, along the
@@ -1200,6 +1207,7 @@ def IsRowDeficitIndexSecuring
     w - ε ≤ G.finiteAveragePayoff s₀ T
       (G.pairBehaviorProfile (G.rowIndexStrategy x (G.rowDeficitIndex δ N w)) dev) 0
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **Mechanism-3 constructor: the running-deficit tracking certificate.**
 `IsRowDeficitIndexSecuring` already names its witness strategy —
 `rowIndexStrategy x (rowDeficitIndex δ N w)` — once and for all, for every
@@ -1226,6 +1234,7 @@ section StageC
 
 variable (G : StochasticGame (Fin 2)) [Fintype G.State] [∀ i, Fintype (G.Act i)]
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- Zero-sum stage payoffs make finite-horizon average payoffs zero-sum too,
 mirroring `ZeroSum.lean`'s `IsZeroSum.discountedPayoff_one_eq_neg_zero` at
 the finite-horizon average payoff. -/
@@ -1254,6 +1263,7 @@ def SecuresCol (w : ℝ) (s₀ : G.State) : Prop :=
     ∀ (dev : G.BehaviorStrategy 0) (T : ℕ), T₀ ≤ T →
       -w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile dev σ) 1
 
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- **Stage C: the mechanism-neutral assembly theorem.** Combining a row
 tracking certificate (`IsRowTrackingCertificate`) with its column-side
 mirror (`SecuresCol`) through `isUniformEquilibriumPayoff_of_deviation_caps`
@@ -1306,18 +1316,6 @@ theorem uniformValue_of_rowColumnTrackingCertificates
       have hzs' := G.finiteAveragePayoff_one_eq_neg_zero hzs
         (G.pairBehaviorProfile σrow dev) s₀ T
       linarith
-
-/-- Deprecated alias for `uniformValue_of_rowColumnTrackingCertificates`,
-kept so external call sites (if any) still resolve. -/
-@[deprecated uniformValue_of_rowColumnTrackingCertificates (since := "2026-07-23")]
-theorem isUniformEquilibriumPayoff_of_secures_row_col
-    (hzs : G.IsZeroSum) (w : ℝ) (s₀ : G.State)
-    (hrow : ∀ ε : ℝ, 0 < ε → ∃ (σ : G.BehaviorStrategy 0) (T₀ : ℕ),
-      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
-        w - ε ≤ G.finiteAveragePayoff s₀ T (G.pairBehaviorProfile σ dev) 0)
-    (hcol : G.SecuresCol w s₀) :
-    G.IsUniformEquilibriumPayoff s₀ (fun who => if who = 0 then w else -w) :=
-  G.uniformValue_of_rowColumnTrackingCertificates hzs w s₀ hrow hcol
 
 end StageC
 

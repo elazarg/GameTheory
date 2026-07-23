@@ -463,12 +463,15 @@ lemma playerOne_live_pure_values
   unfold StochasticGame.discountedAuxEU
   rw [FinkTangentCounterexample.expect_pmfPi_bool,
     FinkTangentCounterexample.expect_pmfPi_bool]
-  simp [discountedAuxPayoff, payoff,
+  simp only [Function.update_self, ne_eq, Bool.true_eq_false,
+    not_false_eq_true, Function.update_of_ne, expect_pure,
+    Bool.if_false_right, Bool.decide_eq_true, mul_neg, mul_one,
+    neg_sub, Bool.if_true_right, discountedAuxPayoff, payoff,
     FinkTangentCounterexample.payoff,
     FinkTangentCounterexample.expect_transition,
     FinkTangentCounterexample.nextState]
   rw [expect_eq_sum, expect_eq_sum, Fintype.sum_bool, Fintype.sum_bool]
-  simp [hHigh, hLow]
+  simp only [hHigh, hLow]
   simp_rw [pmfBool_false_toReal]
   constructor <;> ring
 
@@ -488,11 +491,14 @@ lemma playerTwo_live_pure_values
   unfold StochasticGame.discountedAuxEU
   rw [FinkTangentCounterexample.expect_pmfPi_bool,
     FinkTangentCounterexample.expect_pmfPi_bool]
-  simp [discountedAuxPayoff, payoff,
+  simp only [ne_eq, Bool.false_eq_true, not_false_eq_true,
+    Function.update_of_ne, Function.update_self, expect_pure,
+    Bool.if_false_left, Bool.decide_eq_true, Bool.if_true_left,
+    discountedAuxPayoff, payoff,
     FinkTangentCounterexample.expect_transition,
     FinkTangentCounterexample.nextState]
   rw [expect_eq_sum, expect_eq_sum, Fintype.sum_bool, Fintype.sum_bool]
-  simp [hHigh, hLow]
+  simp only [hHigh, hLow]
   simp_rw [pmfBool_false_toReal]
   constructor <;> ring
 

@@ -401,7 +401,7 @@ solution: `β = 1 - λ`, where `λ` is the `disc` coordinate. -/
 def bellmanDecodeDiscount (assign : BellmanVar G → ℝ) : ℝ :=
   1 - assign BellmanVar.disc
 
-omit [∀ i, DecidableEq (G.Act i)] in
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)] in
 /-- Best-response gain against an arbitrary mixed deviation `d` is the
 expectation, under `d`, of the pure-deviation gains — the affine-in-own-
 strategy fact that reduces the mixed best-response condition to its pure
@@ -415,7 +415,7 @@ theorem discountedAuxEU_update_eq_expect_pure (β : ℝ) (V : G.State → Payoff
   simp only [G.mixedExtension_eu_discountedAuxGame] at hstep
   exact hstep
 
-omit [∀ i, DecidableEq (G.Act i)] in
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)] in
 /-- If no pure deviation of player `who` at state `s` improves on the
 current auxiliary payoff, neither does any mixed deviation: mixed best
 response follows from the finite family of pure best-response

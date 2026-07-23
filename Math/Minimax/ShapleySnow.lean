@@ -891,7 +891,7 @@ theorem exists_kernel_of_extreme_matching_support {A : I → J → ℝ}
   have hys := hymem.1
   have hxne : ∃ i, x i ≠ 0 := by
     by_contra hcon
-    push_neg at hcon
+    push Not at hcon
     have hz : (∑ i, x i) = 0 := Finset.sum_eq_zero fun i _ => hcon i
     rw [hxs.2] at hz
     norm_num at hz

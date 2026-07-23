@@ -56,12 +56,13 @@ def quittingAbsorbedMass
   (quittingGame r).expectedStateValue σ none t
     (quittingAbsorbedIndicator r S)
 
+omit [DecidableEq ι] in
 theorem quittingAbsorbedMass_succ_ge
     (r : {S : Finset ι // S.Nonempty} → Payoff ι)
     (σ : (quittingGame r).BehaviorProfile) (t : ℕ)
     (S : {S : Finset ι // S.Nonempty}) :
     quittingAbsorbedMass r σ t S ≤ quittingAbsorbedMass r σ (t + 1) S := by
-  classical
+  open Classical in
   letI : Finite (quittingGame r).State :=
     inferInstanceAs (Finite (Option {S : Finset ι // S.Nonempty}))
   letI : ∀ i : ι, Finite ((quittingGame r).Act i) :=
@@ -82,6 +83,7 @@ theorem quittingAbsorbedMass_succ_ge
   | some T =>
       simp [quittingGame, quittingAbsorbedIndicator]
 
+omit [DecidableEq ι] in
 theorem quittingAbsorbedMass_monotone
     (r : {S : Finset ι // S.Nonempty} → Payoff ι)
     (σ : (quittingGame r).BehaviorProfile)
@@ -118,6 +120,7 @@ def quittingAbsorbedMassLimit
     (S : {S : Finset ι // S.Nonempty}) : ℝ :=
   ⨆ t, quittingAbsorbedMass r σ t S
 
+omit [DecidableEq ι] in
 theorem tendsto_quittingAbsorbedMass
     (r : {S : Finset ι // S.Nonempty} → Payoff ι)
     (σ : (quittingGame r).BehaviorProfile)
@@ -150,6 +153,7 @@ theorem stageEUAt_quittingGame_eq_stateReward
       simp [StochasticGame.stageEUAt, quittingGame, quittingStateReward,
         expect_const, hs]
 
+omit [DecidableEq ι] in
 theorem quittingStateReward_eq_sum_indicator
     (r : {S : Finset ι // S.Nonempty} → Payoff ι) (who : ι)
     (s : (quittingGame r).State) :
@@ -162,6 +166,7 @@ theorem quittingStateReward_eq_sum_indicator
   | some T =>
       simp [quittingStateReward, quittingAbsorbedIndicator, quittingGame]
 
+omit [DecidableEq ι] in
 theorem expectedStagePayoff_quittingGame_eq_sum_mass
     (r : {S : Finset ι // S.Nonempty} → Payoff ι)
     (σ : (quittingGame r).BehaviorProfile) (t : ℕ) (who : ι) :
@@ -199,6 +204,7 @@ def quittingTerminalPayoff
   ∑ S : {S : Finset ι // S.Nonempty},
     quittingAbsorbedMassLimit r σ S * r S who
 
+omit [DecidableEq ι] in
 theorem tendsto_expectedStagePayoff_quittingGame
     (r : {S : Finset ι // S.Nonempty} → Payoff ι)
     (σ : (quittingGame r).BehaviorProfile) (who : ι) :
@@ -211,6 +217,7 @@ theorem tendsto_expectedStagePayoff_quittingGame
   intro S _
   exact (tendsto_quittingAbsorbedMass r σ S).mul_const (r S who)
 
+omit [DecidableEq ι] in
 theorem tendsto_finiteAveragePayoff_quittingGame
     (r : {S : Finset ι // S.Nonempty} → Payoff ι)
     (σ : (quittingGame r).BehaviorProfile) (who : ι) :

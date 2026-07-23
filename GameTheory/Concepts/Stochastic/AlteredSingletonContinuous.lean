@@ -170,7 +170,8 @@ theorem alteredSingleton_zeroMask_classification
     by_cases h1 : alteredSingletonResidual m 1 = 0 <;>
     by_cases h2 : alteredSingletonResidual m 2 = 0 <;>
     by_cases h3 : alteredSingletonResidual m 3 = 0
-  all_goals simp_all
+  all_goals simp_all only [Fin.isValue, alteredSingletonResidual_zero, alteredSingletonResidual_one,
+    alteredSingletonResidual_two, alteredSingletonResidual_three]
   all_goals
     exfalso
     apply hne

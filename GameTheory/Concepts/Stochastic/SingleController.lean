@@ -237,6 +237,14 @@ instance instFintypeJointAct {G : StochasticGame Bool} [∀ i, Finite (G.Act i)]
     Fintype G.JointAct :=
   Fintype.ofFinite G.JointAct
 
+/-- A (noncanonical) `Fintype` instance on each `G.Act i` from the ambient
+`Finite` hypothesis, registered globally so the LP-embedding column/row types
+below (products and sums built from `G.Act controller`/`G.Act (!controller)`)
+find a consistent `Fintype` instance by typeclass search. -/
+instance instFintypeAct {G : StochasticGame Bool} [∀ i, Finite (G.Act i)] (i : Bool) :
+    Fintype (G.Act i) :=
+  Fintype.ofFinite (G.Act i)
+
 /-- **Worst-case controller reward.** The per-state expected stage payoff to
 `controller` under the stationary strategy `τ`, minimized over every possible
 opponent joint action (mixed opponent play only lowers this further by
@@ -652,6 +660,382 @@ theorem exists_uniformEquilibriumPayoff_of_singleController_of_vriezePrimalOptim
   refine G.exists_uniformEquilibriumPayoff_of_singleController hzs hSC s₀ (g s₀) x g v
     hopt.feasible rfl τ ρ hw ?_
   rw [hρeq]
+
+-- ============================================================================
+-- The LP embedding: Vrieze's primal in `Math.LinearProgramming.Standard` form
+-- ============================================================================
+
+/-!
+### The LP embedding
+
+This section carries out the "LP embedding" half of the residual above: it
+embeds `IsVriezePrimalOptimal` into `Math.LinearProgramming.Standard`'s
+min-primal/max-dual pair (`MinPrimalFeasible`/`MaxDualFeasible`), invokes
+`Math.LinearProgramming.StrongDuality.lp_strong_duality`, and decodes the
+resulting dual-optimal point into `IsVriezeDualOptimal`: the occupation
+measure `z` (dual to the bias rows), the auxiliary `yGain` (dual to the gain
+rows), and the per-state multiplier `lam` (dual to the noncontroller's
+simplex row), together with the flow/stationarity equation, the gain-dual
+identity, the reward-domination inequality, and the equal-objective fact.
+
+The embedding needs `IsSingleController controller`: without it,
+`IsVriezePrimalFeasible`'s two families of inequalities are **bilinear** in
+`(x, g, v)` (the transition kernel genuinely depends on the noncontroller's
+action `i`, which is averaged against by the very `x` being solved for), not
+linear, so there is no linear program to embed. Under `IsSingleController`,
+the transition/probability terms collapse to depend only on the
+*controller's* action `j`, and the system becomes linear: this is exactly
+what makes it *Vrieze's* LP (a single-controller construction) rather than a
+general two-player stochastic-game LP.
+-/
+
+-- Classical decidability is opened locally (see `open Classical in` below) for
+-- specific definitions where needed, to ensure consistent `Classical.propDecidable`
+-- instances. Mixing instances would make `rw`/`simp` fail to match syntactically
+-- identical propositions.
+
+/-- A joint action with the `controller` coordinate fixed to `j` and the
+`!controller` coordinate filled by `anyJointAct` (immaterial, since only the
+`controller` coordinate is ever read through `IsSingleController`). -/
+def jointOfControllerAct (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (j : G.Act controller) : G.JointAct :=
+  Function.update (anyJointAct G) controller j
+
+/-- A joint action with `controller`-coordinate `j` and `!controller`-coordinate
+`i`. Matches `Function.update b (!controller) i` for `b := jointOfControllerAct
+G controller j` **definitionally**, and (given `IsSingleController controller`)
+for *every* `b` with `b controller = j`, up to the transition/payoff it feeds —
+see `transition_jointOf_eq_of_single_controller`. -/
+def jointOf (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (j : G.Act controller) (i : G.Act (!controller)) : G.JointAct :=
+  Function.update (G.jointOfControllerAct controller j) (!controller) i
+
+@[simp] theorem jointOfControllerAct_apply_self (G : StochasticGame Bool)
+    [∀ i, Nonempty (G.Act i)] (controller : Bool) (j : G.Act controller) :
+    (G.jointOfControllerAct controller j) controller = j :=
+  Function.update_self ..
+
+theorem controller_ne_not (controller : Bool) : controller ≠ !controller := by
+  cases controller <;> decide
+
+@[simp] theorem jointOf_apply_controller (G : StochasticGame Bool)
+    [∀ i, Nonempty (G.Act i)] (controller : Bool) (j : G.Act controller)
+    (i : G.Act (!controller)) :
+    (G.jointOf controller j i) controller = j := by
+  unfold jointOf
+  rw [Function.update_of_ne (controller_ne_not controller)]
+  exact jointOfControllerAct_apply_self G controller j
+
+@[simp] theorem jointOf_apply_not (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (j : G.Act controller) (i : G.Act (!controller)) :
+    (G.jointOf controller j i) (!controller) = i :=
+  Function.update_self ..
+
+/-- Any two joint actions agreeing at both `controller` and `!controller` (i.e.
+everywhere, since `Bool` has exactly these two players) are equal. -/
+theorem jointAct_ext_of_agree_controller_not (G : StochasticGame Bool) (controller : Bool)
+    {b b' : G.JointAct} (hc : b controller = b' controller)
+    (hn : b (!controller) = b' (!controller)) : b = b' := by
+  funext p
+  cases controller <;> cases p <;> first | exact hc | exact hn
+
+/-- Under `IsSingleController controller`, the transition from `jointOf` does
+not depend on the noncontroller's action `i` — the algebraic core that
+collapses `IsVriezePrimalFeasible`'s bilinear inequalities to linear ones. -/
+theorem transition_jointOf_eq_of_single_controller {G : StochasticGame Bool}
+    [∀ i, Nonempty (G.Act i)] {controller : Bool} (hSC : G.IsSingleController controller)
+    (s : G.State) (j : G.Act controller) (i : G.Act (!controller)) :
+    G.transition s (G.jointOf controller j i) =
+      G.transition s (G.jointOfControllerAct controller j) := by
+  have h := hSC s j (G.jointOf controller j i) (G.jointOfControllerAct controller j)
+  have e1 : Function.update (G.jointOf controller j i) controller j
+      = G.jointOf controller j i := by
+    have := Function.update_eq_self controller (G.jointOf controller j i)
+    rwa [jointOf_apply_controller G controller j i] at this
+  have e2 : Function.update (G.jointOfControllerAct controller j) controller j
+      = G.jointOfControllerAct controller j := by
+    have := Function.update_eq_self controller (G.jointOfControllerAct controller j)
+    rwa [jointOfControllerAct_apply_self G controller j] at this
+  rwa [e1, e2] at h
+
+/-- Every joint action `b`, once its `!controller` coordinate is overridden to
+`i`, agrees with `jointOf controller (b controller) i` — the general (not just
+canonical-`b`) form needed to decode an arbitrary Standard-form feasible point
+back into an `IsVriezePrimalFeasible` witness (which quantifies over *every*
+`b`, not just `jointOfControllerAct`-shaped ones). -/
+theorem update_not_eq_jointOf (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (b : G.JointAct) (i : G.Act (!controller)) :
+    Function.update b (!controller) i = G.jointOf controller (b controller) i := by
+  apply jointAct_ext_of_agree_controller_not G controller
+  · rw [Function.update_of_ne (controller_ne_not controller), jointOf_apply_controller]
+  · rw [Function.update_self, jointOf_apply_not]
+
+/-- The controller-induced transition probability `P(t | s, j)`, as a real
+number: the `IsSingleController`-collapsed transition kernel used throughout
+the LP embedding. -/
+noncomputable def transProb (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (s : G.State) (j : G.Act controller) (t : G.State) : ℝ :=
+  (G.transition s (G.jointOfControllerAct controller j) t).toReal
+
+/-- The noncontroller's stage reward `r(s, i, j)` at controller action `j`. -/
+def rewardVal (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (s : G.State) (i : G.Act (!controller)) (j : G.Act controller) : ℝ :=
+  G.stagePayoff s (G.jointOf controller j i) (!controller)
+
+/-- **LP columns** for Vrieze's primal: the noncontroller's mixed-action
+weights `x_s(i)`, and the sign-split free variables `g⁺_s, g⁻_s, v⁺_s, v⁻_s`
+(with `g_s = g⁺_s - g⁻_s`, `v_s = v⁺_s - v⁻_s`), as required by
+`Math.LinearProgramming.Standard`'s `x ≥ 0` convention. -/
+abbrev VriezeCol (G : StochasticGame Bool) (controller : Bool) : Type :=
+  (G.State × G.Act (!controller)) ⊕ G.State ⊕ G.State ⊕ G.State ⊕ G.State
+
+/-- **LP rows** for Vrieze's primal: the gain inequality and the bias
+inequality at each `(state, controller-action)` pair, and the noncontroller's
+per-state simplex equality `Σ_i x_s(i) = 1`, split into its two inequality
+directions. -/
+abbrev VriezeRow (G : StochasticGame Bool) (controller : Bool) : Type :=
+  (G.State × G.Act controller) ⊕ (G.State × G.Act controller) ⊕ G.State ⊕ G.State
+
+open Classical in
+/-- The standard-form constraint matrix for Vrieze's primal. Row
+`inl (s, j)` is the gain row at `(s, j)`; row `inr (inl (s, j))` is the bias
+row; rows `inr (inr (inl s))`/`inr (inr (inr s))` are the two directions of
+the noncontroller's simplex equality at `s`. -/
+noncomputable def vriezeA (G : StochasticGame Bool) [Finite G.State] [∀ i, Finite (G.Act i)]
+    [∀ i, Nonempty (G.Act i)] (controller : Bool) :
+    VriezeRow G controller → VriezeCol G controller → ℝ
+  | Sum.inl (_, _), Sum.inl _ => 0
+  | Sum.inl (s, j), Sum.inr (Sum.inl t) => G.transProb controller s j t - (if t = s then 1 else 0)
+  | Sum.inl (s, j), Sum.inr (Sum.inr (Sum.inl t)) =>
+      (if t = s then 1 else 0) - G.transProb controller s j t
+  | Sum.inl _, Sum.inr (Sum.inr (Sum.inr (Sum.inl _))) => 0
+  | Sum.inl _, Sum.inr (Sum.inr (Sum.inr (Sum.inr _))) => 0
+  | Sum.inr (Sum.inl (s, j)), Sum.inl (s', i) => if s' = s then G.rewardVal controller s i j else 0
+  | Sum.inr (Sum.inl (s, _)), Sum.inr (Sum.inl t) => -(if t = s then 1 else 0)
+  | Sum.inr (Sum.inl (s, _)), Sum.inr (Sum.inr (Sum.inl t)) => if t = s then 1 else 0
+  | Sum.inr (Sum.inl (s, j)), Sum.inr (Sum.inr (Sum.inr (Sum.inl t))) =>
+      G.transProb controller s j t - (if t = s then 1 else 0)
+  | Sum.inr (Sum.inl (s, j)), Sum.inr (Sum.inr (Sum.inr (Sum.inr t))) =>
+      (if t = s then 1 else 0) - G.transProb controller s j t
+  | Sum.inr (Sum.inr (Sum.inl s)), Sum.inl (s', _) => if s' = s then 1 else 0
+  | Sum.inr (Sum.inr (Sum.inl _)), Sum.inr _ => 0
+  | Sum.inr (Sum.inr (Sum.inr s)), Sum.inl (s', _) => if s' = s then -1 else 0
+  | Sum.inr (Sum.inr (Sum.inr _)), Sum.inr _ => 0
+
+/-- The standard-form RHS: `0` on the gain/bias rows, `±1` on the two
+simplex-row directions (encoding `Σ_i x_s(i) = 1`). -/
+def vriezeB (G : StochasticGame Bool) (controller : Bool) : VriezeRow G controller → ℝ
+  | Sum.inl _ => 0
+  | Sum.inr (Sum.inl _) => 0
+  | Sum.inr (Sum.inr (Sum.inl _)) => 1
+  | Sum.inr (Sum.inr (Sum.inr _)) => -1
+
+/-- The standard-form objective: minimize `-Σ_s g_s = -Σ_s (g⁺_s - g⁻_s)`,
+i.e. maximize `Σ_s g_s`. -/
+def vriezeC (G : StochasticGame Bool) (controller : Bool) : VriezeCol G controller → ℝ
+  | Sum.inl _ => 0
+  | Sum.inr (Sum.inl _) => -1
+  | Sum.inr (Sum.inr (Sum.inl _)) => 1
+  | Sum.inr (Sum.inr (Sum.inr (Sum.inl _))) => 0
+  | Sum.inr (Sum.inr (Sum.inr (Sum.inr _))) => 0
+
+/-- Convert a nonnegative weight vector summing to `1` into a `PMF`. -/
+private noncomputable def weightsToPMF {α : Type*} [Fintype α] (w : α → ℝ)
+    (hnn : ∀ a, 0 ≤ w a) (hsum : ∑ a, w a = 1) : PMF α :=
+  PMF.ofFintype (fun a => ENNReal.ofReal (w a)) (by
+    rw [← ENNReal.ofReal_one, ← hsum]
+    exact (ENNReal.ofReal_sum_of_nonneg (fun i _ => hnn i)).symm)
+
+private theorem weightsToPMF_apply_toReal {α : Type*} [Fintype α] (w : α → ℝ)
+    (hnn : ∀ a, 0 ≤ w a) (hsum : ∑ a, w a = 1) (a : α) :
+    ((weightsToPMF w hnn hsum) a).toReal = w a := by
+  unfold weightsToPMF
+  rw [PMF.ofFintype_apply]
+  exact ENNReal.toReal_ofReal (hnn a)
+
+/-- Encode a Vrieze-primal point `(x, g, v)` as a standard-form column vector:
+`x_s(i)` directly, and `g, v` sign-split via `max (·) 0`/`max (-·) 0`. -/
+noncomputable def vriezeEncode (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ) :
+    VriezeCol G controller → ℝ
+  | Sum.inl (s, i) => ((x s) i).toReal
+  | Sum.inr (Sum.inl s) => max (g s) 0
+  | Sum.inr (Sum.inr (Sum.inl s)) => max (-(g s)) 0
+  | Sum.inr (Sum.inr (Sum.inr (Sum.inl s))) => max (v s) 0
+  | Sum.inr (Sum.inr (Sum.inr (Sum.inr s))) => max (-(v s)) 0
+
+/-- Recover `g` from a standard-form column vector's `g⁺, g⁻` block. -/
+def vriezeDecodeG (G : StochasticGame Bool) (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State) : ℝ :=
+  z (Sum.inr (Sum.inl s)) - z (Sum.inr (Sum.inr (Sum.inl s)))
+
+/-- Recover `v` from a standard-form column vector's `v⁺, v⁻` block. -/
+def vriezeDecodeV (G : StochasticGame Bool) (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State) : ℝ :=
+  z (Sum.inr (Sum.inr (Sum.inr (Sum.inl s)))) - z (Sum.inr (Sum.inr (Sum.inr (Sum.inr s))))
+
+/-- The raw `x`-block weight of a standard-form column vector, before it is
+known to define a genuine `PMF` (nonnegative, summing to `1`). -/
+def vriezeDecodeXVal (G : StochasticGame Bool) (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State) (i : G.Act (!controller)) : ℝ :=
+  z (Sum.inl (s, i))
+
+open Classical in
+/-- Recover the noncontroller's mixed action `x_s` from a standard-form column
+vector's `x`-block, when it is a genuine probability weighting (the case
+`MinPrimalFeasible` together with the simplex rows guarantees); an arbitrary
+fallback `PMF` otherwise, so the function is total. -/
+noncomputable def vriezeDecodeX (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State) : PMF (G.Act (!controller)) :=
+  if h : (∀ i, 0 ≤ G.vriezeDecodeXVal controller z s i) ∧
+      (∑ i, G.vriezeDecodeXVal controller z s i = 1) then
+    weightsToPMF (G.vriezeDecodeXVal controller z s) h.1 h.2
+  else
+    PMF.pure (Classical.arbitrary _)
+
+theorem vriezeDecodeX_apply_toReal (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State)
+    (hnn : ∀ i, 0 ≤ G.vriezeDecodeXVal controller z s i)
+    (hsum : ∑ i, G.vriezeDecodeXVal controller z s i = 1) (i : G.Act (!controller)) :
+    ((G.vriezeDecodeX controller z s) i).toReal = G.vriezeDecodeXVal controller z s i := by
+  unfold vriezeDecodeX
+  rw [dif_pos ⟨hnn, hsum⟩]
+  exact weightsToPMF_apply_toReal _ hnn hsum i
+
+private theorem max_sub_max_neg (a : ℝ) : max a 0 - max (-a) 0 = a := by
+  rcases le_total a 0 with h | h
+  · rw [max_eq_right h, max_eq_left (by linarith)]; ring
+  · rw [max_eq_left h, max_eq_right (by linarith)]; ring
+
+theorem vriezeDecodeG_vriezeEncode (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ) :
+    G.vriezeDecodeG controller (G.vriezeEncode controller x g v) = g := by
+  funext s
+  simp only [vriezeDecodeG, vriezeEncode]
+  exact max_sub_max_neg (g s)
+
+theorem vriezeDecodeV_vriezeEncode (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ) :
+    G.vriezeDecodeV controller (G.vriezeEncode controller x g v) = v := by
+  funext s
+  simp only [vriezeDecodeV, vriezeEncode]
+  exact max_sub_max_neg (v s)
+
+theorem vriezeDecodeXVal_vriezeEncode (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
+    (controller : Bool) (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ)
+    (s : G.State) (i : G.Act (!controller)) :
+    G.vriezeDecodeXVal controller (G.vriezeEncode controller x g v) s i = ((x s) i).toReal :=
+  rfl
+
+private theorem sum_vriezeCol (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] (controller : Bool) (f : VriezeCol G controller → ℝ) :
+    (∑ c, f c) =
+      (∑ p : G.State × G.Act (!controller), f (Sum.inl p)) +
+      (∑ s, f (Sum.inr (Sum.inl s))) +
+      (∑ s, f (Sum.inr (Sum.inr (Sum.inl s)))) +
+      (∑ s, f (Sum.inr (Sum.inr (Sum.inr (Sum.inl s))))) +
+      (∑ s, f (Sum.inr (Sum.inr (Sum.inr (Sum.inr s))))) := by
+  rw [Fintype.sum_sum_type, Fintype.sum_sum_type, Fintype.sum_sum_type, Fintype.sum_sum_type]
+  ring
+
+private theorem sum_vriezeRow (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] (controller : Bool) (f : VriezeRow G controller → ℝ) :
+    (∑ r, f r) =
+      (∑ p : G.State × G.Act controller, f (Sum.inl p)) +
+      (∑ p : G.State × G.Act controller, f (Sum.inr (Sum.inl p))) +
+      (∑ s, f (Sum.inr (Sum.inr (Sum.inl s)))) +
+      (∑ s, f (Sum.inr (Sum.inr (Sum.inr s)))) := by
+  rw [Fintype.sum_sum_type, Fintype.sum_sum_type, Fintype.sum_sum_type]
+  ring
+
+private theorem sum_coeff_mul_max_sub {ι : Type*} [Fintype ι] (A f : ι → ℝ) :
+    (∑ t, A t * max (f t) 0) - (∑ t, A t * max (-(f t)) 0) = ∑ t, A t * f t := by
+  rw [← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun t _ => by rw [← mul_sub, max_sub_max_neg]
+
+theorem rowEval_vriezeA_vriezeEncode_gain (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ) (s : G.State)
+    (j : G.Act controller) :
+    Math.LinearProgramming.rowEval (G.vriezeA controller) (G.vriezeEncode controller x g v)
+        (Sum.inl (s, j)) =
+      (∑ t, G.transProb controller s j t * g t) - g s := by
+  change (∑ c, G.vriezeA controller (Sum.inl (s, j)) c * G.vriezeEncode controller x g v c) = _
+  rw [sum_vriezeCol]
+  simp only [vriezeA, vriezeEncode, zero_mul, Finset.sum_const_zero]
+  simp only [zero_add, add_zero]
+  have hneg : (∑ x, ((if x = s then (1:ℝ) else 0) - G.transProb controller s j x) * max (-(g x)) 0)
+      = -(∑ x, (G.transProb controller s j x - (if x = s then (1:ℝ) else 0)) * max (-(g x)) 0) := by
+    rw [← Finset.sum_neg_distrib]
+    exact Finset.sum_congr rfl fun t _ => by ring
+  rw [hneg, ← sub_eq_add_neg, sum_coeff_mul_max_sub]
+  simp only [sub_mul]
+  rw [Finset.sum_sub_distrib]
+  have hite : (∑ x : G.State, (if x = s then (1:ℝ) else 0) * g x) = g s := by simp
+  rw [hite]
+
+private theorem sum_prod_ite_eq (G : StochasticGame Bool) [Finite G.State]
+    {β : Type*} [Fintype β] (s : G.State) (f : G.State → β → ℝ) :
+    (∑ p : G.State × β, (if p.1 = s then f p.1 p.2 else 0)) = ∑ i : β, f s i := by
+  rw [Fintype.sum_prod_type]
+  rw [Finset.sum_eq_single s]
+  · simp
+  · intro s' _ hne
+    simp
+  · simp
+
+theorem rowEval_vriezeA_vriezeEncode_bias (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (x : G.State → PMF (G.Act (!controller))) (g v : G.State → ℝ) (s : G.State)
+    (j : G.Act controller) :
+    Math.LinearProgramming.rowEval (G.vriezeA controller) (G.vriezeEncode controller x g v)
+        (Sum.inr (Sum.inl (s, j))) =
+      (∑ i, ((x s) i).toReal * G.rewardVal controller s i j) +
+        (∑ t, G.transProb controller s j t * v t) - g s - v s := by
+  change (∑ c, G.vriezeA controller (Sum.inr (Sum.inl (s, j))) c *
+      G.vriezeEncode controller x g v c) = _
+  rw [sum_vriezeCol]
+  simp only [vriezeA, vriezeEncode]
+  have e1 : (∑ p : G.State × G.Act (!controller),
+      (if p.1 = s then G.rewardVal controller s p.2 j else 0) * ((x p.1) p.2).toReal) =
+      ∑ i, ((x s) i).toReal * G.rewardVal controller s i j := by
+    have step : (∑ p : G.State × G.Act (!controller),
+        (if p.1 = s then G.rewardVal controller s p.2 j else 0) * ((x p.1) p.2).toReal) =
+        ∑ p : G.State × G.Act (!controller),
+          (if p.1 = s then G.rewardVal controller s p.2 j * ((x p.1) p.2).toReal else 0) := by
+      refine Finset.sum_congr rfl ?_
+      rintro ⟨s', i⟩ _
+      by_cases h : s' = s <;> simp [h]
+    rw [step, sum_prod_ite_eq G s (fun s' i => G.rewardVal controller s' i j * ((x s') i).toReal)]
+    exact Finset.sum_congr rfl fun i _ => by ring
+  have e23 : (∑ x, (-(if x = s then (1:ℝ) else 0)) * max (g x) 0) +
+      (∑ x, (if x = s then (1:ℝ) else 0) * max (-(g x)) 0) = -g s := by
+    have hneg : (∑ x, (if x = s then (1:ℝ) else 0) * max (-(g x)) 0)
+        = -(∑ x, (-(if x = s then (1:ℝ) else 0)) * max (-(g x)) 0) := by
+      rw [← Finset.sum_neg_distrib]
+      exact Finset.sum_congr rfl fun t _ => by ring
+    rw [hneg, ← sub_eq_add_neg, sum_coeff_mul_max_sub]
+    have hcollapse : (∑ x : G.State, (-(if x = s then (1:ℝ) else 0)) * g x) = -(g s) := by
+      simp [neg_mul, Finset.sum_neg_distrib]
+    exact hcollapse
+  have e45 : (∑ x, (G.transProb controller s j x - (if x = s then (1:ℝ) else 0)) * max (v x) 0) +
+      (∑ x, ((if x = s then (1:ℝ) else 0) - G.transProb controller s j x) * max (-(v x)) 0) =
+      (∑ t, G.transProb controller s j t * v t) - v s := by
+    have hneg : (∑ x, ((if x = s then (1:ℝ) else 0) - G.transProb controller s j x) *
+        max (-(v x)) 0) =
+        -(∑ x, (G.transProb controller s j x - (if x = s then (1:ℝ) else 0)) * max (-(v x)) 0) := by
+      rw [← Finset.sum_neg_distrib]
+      exact Finset.sum_congr rfl fun t _ => by ring
+    rw [hneg, ← sub_eq_add_neg, sum_coeff_mul_max_sub]
+    rw [show (∑ x, (G.transProb controller s j x - (if x = s then (1:ℝ) else 0)) * v x)
+        = (∑ x, G.transProb controller s j x * v x) - (∑ x, (if x = s then (1:ℝ) else 0) * v x)
+        from by rw [← Finset.sum_sub_distrib]; exact Finset.sum_congr rfl fun t _ => by ring]
+    have hv : (∑ x : G.State, (if x = s then (1:ℝ) else 0) * v x) = v s := by simp
+    rw [hv]
+  rw [e1]
+  linarith [e23, e45]
 
 end StochasticGame
 end GameTheory
