@@ -102,18 +102,25 @@ nonsingular. Cramer's rule on that bordered system, or the determinant identity
 covers pure kernels (`B.adjugate = 1` by `Matrix.adjugate_subsingleton`, so
 `∑ i j, B.adjugate i j = 1` and `V = B.det`, i.e. a pure saddle point).
 
-### Two named partial cases
+### Two named partial cases, and the extremality step
 
-The two cases of the induction sketch above are landed below as standalone, sorry-free
-lemmas: `exists_kernel_of_saddlePoint` (the base case: a pure saddle point gives a
-`1 × 1` kernel) and `exists_kernel_of_completelyMixed` (the classical Kaplansky
-determinant formula for a completely-mixed square game: an *equalizing* pair of mixed
-strategies for a nonsingular matrix gives the whole matrix as its own kernel). What
-remains, and is NOT formalised here, is the reduction step: showing that every finite
-matrix game falls into one of these two cases *after restricting to some square
-submatrix* (i.e. producing the submatrix, and the nonsingularity / equalizing data, from
-`lam0`/`mu0` alone via extreme-point or induction-on-size arguments). That reduction is
-the genuinely hard core of Shapley–Snow 1950 and is left as the `TODO` above.
+The two base cases of the induction sketch above are landed below as standalone,
+sorry-free lemmas: `exists_kernel_of_saddlePoint` (a pure saddle point gives a `1 × 1`
+kernel) and `exists_kernel_of_completelyMixed` (the classical Kaplansky determinant
+formula for a completely-mixed square game: an *equalizing* pair of mixed strategies for
+a nonsingular matrix gives the whole matrix as its own kernel). The "extremality forces
+`|R| = |C|`" step of the reduction is *partially* landed: `eq_zero_of_extreme_optimalRow`
+/ `eq_zero_of_extreme_optimalCol` (in the `OptimalStrategies` section below) prove,
+sorry-free, that the tight-constraint linear system at an extreme optimal strategy has
+trivial kernel on its support — the precise `openSegment`-based `x ± εd` perturbation
+argument the reduction needs, reproved from scratch since Mathlib's `Set.extremePoints`
+carries no vertex/basic-feasible-solution theory. What remains, and is NOT formalised
+here — see the "What remains" note after the `OptimalStrategies` section for the precise
+three-part gap — is turning that trivial-kernel fact into the actual cardinality bound
+`|R| = |C|`, selecting the resulting nonsingular submatrix, and reassembling everything
+into `exists_kernel`/`shapley_snow_kernel`; `hkernel` is accordingly still an explicit,
+undischarged hypothesis of `exists_nonzero_poly_of_kernel` /
+`exists_nonzero_poly_of_discounted` below.
 -/
 
 /-- **Saddle-point base case.** If `(i₀, j₀)` is a saddle point of `A` — row `i₀`
@@ -478,12 +485,239 @@ theorem tight_of_optimal_row_support {A : I → J → ℝ} {V : ℝ}
   · exact absurd h hi
   · linarith
 
+/-- **Extremality forces the tight-constraint system to have trivial kernel (row side).**
+This is the precise "if the tight constraints had a nontrivial kernel direction `d`, then
+`x ± εd` would both be optimal, contradicting extremality" step of the Shapley–Snow
+reduction sketch. If `x` is an extreme point of `optimalRowStrategies A V`, and `d`
+(i) is supported on `x`'s support, (ii) sums to `0` (so `x ± εd` stays in the simplex),
+and (iii) is annihilated by every column tight at `x` (so `x ± εd` keeps those columns at
+exactly `V`), then `d = 0`. Proof: for small `ε > 0`, both `x + εd` and `x - εd` lie in
+`optimalRowStrategies A V` (nonnegativity from (i)+(ii) via a finite-min `ε`, tightness
+preserved by (iii), strict columns stay `≥ V` by taking `ε` small relative to their
+slack), and `x` is their midpoint; extremality then forces `x + εd = x`, i.e. `εd = 0`,
+i.e. `d = 0` since `ε ≠ 0`. -/
+theorem eq_zero_of_extreme_optimalRow {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ} (hx : x ∈ Set.extremePoints ℝ (optimalRowStrategies A V))
+    {d : I → ℝ} (hd_supp : ∀ i, x i = 0 → d i = 0) (hd_sum : ∑ i, d i = 0)
+    (hd_tight : ∀ j, ∑ i, x i * A i j = V → ∑ i, d i * A i j = 0) : d = 0 := by
+  classical
+  by_contra hd0
+  obtain ⟨hxs, hxge⟩ := extremePoints_subset hx
+  rw [Set.mem_iInter] at hxge
+  simp only [Set.mem_setOf_eq] at hxge
+  have hboundI_pos : ∀ i : I, (0:ℝ) < if x i = 0 then 1 else x i / (|d i| + 1) := by
+    intro i; split_ifs with h
+    · norm_num
+    · have hxi_pos : 0 < x i := lt_of_le_of_ne (hxs.1 i) (Ne.symm h)
+      positivity
+  have hboundJ_pos : ∀ j : J,
+      (0:ℝ) < if ∑ i, x i * A i j = V then 1
+        else (∑ i, x i * A i j - V) / (|∑ i, d i * A i j| + 1) := by
+    intro j; split_ifs with h
+    · norm_num
+    · have hslack : 0 < ∑ i, x i * A i j - V := by
+        rcases lt_or_eq_of_le (hxge j) with h' | h'
+        · linarith
+        · exact absurd h'.symm h
+      positivity
+  set ε : ℝ := min
+      (Finset.univ.inf' Finset.univ_nonempty
+        (fun i : I => if x i = 0 then (1:ℝ) else x i / (|d i| + 1)))
+      (Finset.univ.inf' Finset.univ_nonempty
+        (fun j : J => if ∑ i, x i * A i j = V then (1:ℝ)
+          else (∑ i, x i * A i j - V) / (|∑ i, d i * A i j| + 1)))
+    with hεdef
+  have hεpos : 0 < ε := by
+    rw [hεdef]
+    exact lt_min ((Finset.lt_inf'_iff Finset.univ_nonempty).mpr fun i _ => hboundI_pos i)
+      ((Finset.lt_inf'_iff Finset.univ_nonempty).mpr fun j _ => hboundJ_pos j)
+  have hεI' : ∀ i : I, ε ≤ if x i = 0 then (1:ℝ) else x i / (|d i| + 1) := fun i =>
+    (min_le_left _ _).trans
+      (Finset.inf'_le (fun i : I => if x i = 0 then (1:ℝ) else x i / (|d i| + 1))
+        (Finset.mem_univ i))
+  have hεJ' : ∀ j : J, ε ≤ if ∑ i, x i * A i j = V then (1:ℝ)
+      else (∑ i, x i * A i j - V) / (|∑ i, d i * A i j| + 1) := fun j =>
+    (min_le_right _ _).trans
+      (Finset.inf'_le
+        (fun j : J => if ∑ i, x i * A i j = V then (1:ℝ)
+          else (∑ i, x i * A i j - V) / (|∑ i, d i * A i j| + 1)) (Finset.mem_univ j))
+  have hbdI : ∀ i, ε * |d i| ≤ x i := by
+    intro i
+    by_cases hxi : x i = 0
+    · rw [hxi, hd_supp i hxi]; simp
+    · have hb := hεI' i
+      simp only [hxi, if_false] at hb
+      have hpos : (0:ℝ) < |d i| + 1 := by positivity
+      have h1 : ε * (|d i| + 1) ≤ x i := (le_div_iff₀ hpos).mp hb
+      nlinarith
+  have hbdJ : ∀ j, ∑ i, x i * A i j ≠ V →
+      ε * |∑ i, d i * A i j| ≤ ∑ i, x i * A i j - V := by
+    intro j hj
+    have hb := hεJ' j
+    simp only [hj, if_false] at hb
+    have hpos : (0:ℝ) < |∑ i, d i * A i j| + 1 := by positivity
+    have h1 : ε * (|∑ i, d i * A i j| + 1) ≤ ∑ i, x i * A i j - V := (le_div_iff₀ hpos).mp hb
+    nlinarith
+  -- `habs t bnd hbnd σ hσ` turns an absolute-value bound `ε * |t| ≤ bnd` into a two-sided
+  -- bound on `σ * (ε * t)`, usable for whichever sign `σ = ±1` is in play.
+  have habs : ∀ t bnd : ℝ, ε * |t| ≤ bnd → ∀ σ : ℝ, σ = 1 ∨ σ = -1 → |σ * (ε * t)| ≤ bnd := by
+    intro t bnd hbnd σ hσ
+    have hσ1 : |σ| = 1 := by rcases hσ with hσ | hσ <;> subst hσ <;> norm_num
+    have heq : |σ * (ε * t)| = ε * |t| := by
+      rw [abs_mul, abs_mul, hσ1, one_mul, abs_of_pos hεpos]
+    rw [heq]; exact hbnd
+  have hmem : ∀ σ : ℝ, σ = 1 ∨ σ = -1 →
+      (fun i => x i + σ * (ε * d i)) ∈ optimalRowStrategies A V := by
+    intro σ hσ
+    refine ⟨⟨fun i => ?_, ?_⟩, ?_⟩
+    · linarith [(abs_le.mp (habs (d i) (x i) (hbdI i) σ hσ)).1]
+    · have hpt : ∀ i, x i + σ * (ε * d i) = x i + (σ * ε) * d i := fun i => by ring
+      simp_rw [hpt, Finset.sum_add_distrib, ← Finset.mul_sum]
+      rw [hxs.2, hd_sum]; ring
+    · rw [Set.mem_iInter]
+      intro j
+      simp only [Set.mem_setOf_eq]
+      have hswap : ∑ i, (x i + σ * (ε * d i)) * A i j
+          = ∑ i, x i * A i j + σ * (ε * ∑ i, d i * A i j) := by
+        have hpt : ∀ i, (x i + σ * (ε * d i)) * A i j
+            = x i * A i j + (σ * ε) * (d i * A i j) := fun i => by ring
+        simp_rw [hpt, Finset.sum_add_distrib, ← Finset.mul_sum, mul_assoc]
+      rw [hswap]
+      by_cases htight : ∑ i, x i * A i j = V
+      · rw [hd_tight j htight]; simp only [mul_zero, add_zero]; linarith
+      · linarith [(abs_le.mp
+          (habs (∑ i, d i * A i j) (∑ i, x i * A i j - V) (hbdJ j htight) σ hσ)).1]
+  have hx1mem := hmem 1 (Or.inl rfl)
+  have hx2mem := hmem (-1) (Or.inr rfl)
+  simp only [one_mul] at hx1mem
+  have hxseg : x ∈ openSegment ℝ (fun i => x i + ε * d i) (fun i => x i + (-1) * (ε * d i)) := by
+    refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+    funext i
+    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+    ring
+  have heq := hx.2 hx1mem hx2mem hxseg
+  have hεd0 : d = 0 := by
+    funext i
+    have hi : x i + ε * d i = x i := congrFun heq i
+    rcases mul_eq_zero.1 (show ε * d i = 0 by linarith) with h | h
+    · exact absurd h hεpos.ne'
+    · exact h
+  exact hd0 hεd0
+
+/-- **Extremality forces the tight-constraint system to have trivial kernel (column
+side).** The column-player mirror of `eq_zero_of_extreme_optimalRow`: if `y` is an
+extreme point of `optimalColStrategies A V`, and `e` (i) is supported on `y`'s support,
+(ii) sums to `0`, and (iii) is annihilated by every row tight at `y`, then `e = 0`. -/
+theorem eq_zero_of_extreme_optimalCol {A : I → J → ℝ} {V : ℝ}
+    {y : J → ℝ} (hy : y ∈ Set.extremePoints ℝ (optimalColStrategies A V))
+    {e : J → ℝ} (he_supp : ∀ j, y j = 0 → e j = 0) (he_sum : ∑ j, e j = 0)
+    (he_tight : ∀ i, ∑ j, y j * A i j = V → ∑ j, e j * A i j = 0) : e = 0 := by
+  classical
+  by_contra he0
+  obtain ⟨hys, hyle⟩ := extremePoints_subset hy
+  rw [Set.mem_iInter] at hyle
+  simp only [Set.mem_setOf_eq] at hyle
+  have hboundJ_pos : ∀ j : J, (0:ℝ) < if y j = 0 then 1 else y j / (|e j| + 1) := by
+    intro j; split_ifs with h
+    · norm_num
+    · have hyj_pos : 0 < y j := lt_of_le_of_ne (hys.1 j) (Ne.symm h)
+      positivity
+  have hboundI_pos : ∀ i : I, (0:ℝ) < if ∑ j, y j * A i j = V then 1
+      else (V - ∑ j, y j * A i j) / (|∑ j, e j * A i j| + 1) := by
+    intro i; split_ifs with h
+    · norm_num
+    · have hslack : 0 < V - ∑ j, y j * A i j := by
+        rcases lt_or_eq_of_le (hyle i) with h' | h'
+        · linarith
+        · exact absurd h' h
+      positivity
+  set ε : ℝ := min
+      (Finset.univ.inf' Finset.univ_nonempty
+        (fun j : J => if y j = 0 then (1:ℝ) else y j / (|e j| + 1)))
+      (Finset.univ.inf' Finset.univ_nonempty
+        (fun i : I => if ∑ j, y j * A i j = V then (1:ℝ)
+          else (V - ∑ j, y j * A i j) / (|∑ j, e j * A i j| + 1)))
+    with hεdef
+  have hεpos : 0 < ε := by
+    rw [hεdef]
+    exact lt_min ((Finset.lt_inf'_iff Finset.univ_nonempty).mpr fun j _ => hboundJ_pos j)
+      ((Finset.lt_inf'_iff Finset.univ_nonempty).mpr fun i _ => hboundI_pos i)
+  have hεJ' : ∀ j : J, ε ≤ if y j = 0 then (1:ℝ) else y j / (|e j| + 1) := fun j =>
+    (min_le_left _ _).trans
+      (Finset.inf'_le (fun j : J => if y j = 0 then (1:ℝ) else y j / (|e j| + 1))
+        (Finset.mem_univ j))
+  have hεI' : ∀ i : I, ε ≤ if ∑ j, y j * A i j = V then (1:ℝ)
+      else (V - ∑ j, y j * A i j) / (|∑ j, e j * A i j| + 1) := fun i =>
+    (min_le_right _ _).trans
+      (Finset.inf'_le
+        (fun i : I => if ∑ j, y j * A i j = V then (1:ℝ)
+          else (V - ∑ j, y j * A i j) / (|∑ j, e j * A i j| + 1)) (Finset.mem_univ i))
+  have hbdJ : ∀ j, ε * |e j| ≤ y j := by
+    intro j
+    by_cases hyj : y j = 0
+    · rw [hyj, he_supp j hyj]; simp
+    · have hb := hεJ' j
+      simp only [hyj, if_false] at hb
+      have hpos : (0:ℝ) < |e j| + 1 := by positivity
+      have h1 : ε * (|e j| + 1) ≤ y j := (le_div_iff₀ hpos).mp hb
+      nlinarith
+  have hbdI : ∀ i, ∑ j, y j * A i j ≠ V → ε * |∑ j, e j * A i j| ≤ V - ∑ j, y j * A i j := by
+    intro i hi
+    have hb := hεI' i
+    simp only [hi, if_false] at hb
+    have hpos : (0:ℝ) < |∑ j, e j * A i j| + 1 := by positivity
+    have h1 : ε * (|∑ j, e j * A i j| + 1) ≤ V - ∑ j, y j * A i j := (le_div_iff₀ hpos).mp hb
+    nlinarith
+  have habs : ∀ t bnd : ℝ, ε * |t| ≤ bnd → ∀ σ : ℝ, σ = 1 ∨ σ = -1 → |σ * (ε * t)| ≤ bnd := by
+    intro t bnd hbnd σ hσ
+    have hσ1 : |σ| = 1 := by rcases hσ with hσ | hσ <;> subst hσ <;> norm_num
+    have heq : |σ * (ε * t)| = ε * |t| := by
+      rw [abs_mul, abs_mul, hσ1, one_mul, abs_of_pos hεpos]
+    rw [heq]; exact hbnd
+  have hmem : ∀ σ : ℝ, σ = 1 ∨ σ = -1 →
+      (fun j => y j + σ * (ε * e j)) ∈ optimalColStrategies A V := by
+    intro σ hσ
+    refine ⟨⟨fun j => ?_, ?_⟩, ?_⟩
+    · linarith [(abs_le.mp (habs (e j) (y j) (hbdJ j) σ hσ)).1]
+    · have hpt : ∀ j, y j + σ * (ε * e j) = y j + (σ * ε) * e j := fun j => by ring
+      simp_rw [hpt, Finset.sum_add_distrib, ← Finset.mul_sum]
+      rw [hys.2, he_sum]; ring
+    · rw [Set.mem_iInter]
+      intro i
+      simp only [Set.mem_setOf_eq]
+      have hswap : ∑ j, (y j + σ * (ε * e j)) * A i j
+          = ∑ j, y j * A i j + σ * (ε * ∑ j, e j * A i j) := by
+        have hpt : ∀ j, (y j + σ * (ε * e j)) * A i j
+            = y j * A i j + (σ * ε) * (e j * A i j) := fun j => by ring
+        simp_rw [hpt, Finset.sum_add_distrib, ← Finset.mul_sum, mul_assoc]
+      rw [hswap]
+      by_cases htight : ∑ j, y j * A i j = V
+      · rw [he_tight i htight]; simp only [mul_zero, add_zero]; linarith
+      · linarith [(abs_le.mp
+          (habs (∑ j, e j * A i j) (V - ∑ j, y j * A i j) (hbdI i htight) σ hσ)).2]
+  have hy1mem := hmem 1 (Or.inl rfl)
+  have hy2mem := hmem (-1) (Or.inr rfl)
+  simp only [one_mul] at hy1mem
+  have hyseg : y ∈ openSegment ℝ (fun j => y j + ε * e j) (fun j => y j + (-1) * (ε * e j)) := by
+    refine ⟨1 / 2, 1 / 2, by norm_num, by norm_num, by norm_num, ?_⟩
+    funext j
+    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+    ring
+  have heq := hy.2 hy1mem hy2mem hyseg
+  have he0' : e = 0 := by
+    funext j
+    have hj : y j + ε * e j = y j := congrFun heq j
+    rcases mul_eq_zero.1 (show ε * e j = 0 by linarith) with h | h
+    · exact absurd h hεpos.ne'
+    · exact h
+  exact he0 he0'
+
 end OptimalStrategies
 
-/-! ### What remains: the support-squareness / nonsingularity gap
+/-! ### What remains: from "trivial kernel direction" to a square nonsingular submatrix
 
-The building blocks above land exactly the convexity/compactness/Krein–Milman half of
-the reduction sketch: extreme optimal mixed strategies `x ∈ extremePoints ℝ
+The building blocks above land the convexity/compactness/Krein–Milman half of the
+reduction sketch: extreme optimal mixed strategies `x ∈ extremePoints ℝ
 (optimalRowStrategies A (lam0 A))`, `y ∈ extremePoints ℝ (optimalColStrategies A (lam0
 A))` exist (`extremePoints_optimalRowStrategies_nonempty`,
 `extremePoints_optimalColStrategies_nonempty`), and on their supports the payoff
@@ -491,27 +725,48 @@ equations are tight (`tight_of_optimal_row_support`, `tight_of_optimal_col_suppo
 this holds for *any* optimal pair, not just extreme ones, since complementary slackness
 only used the defining inequalities, not extremality.
 
-What is genuinely missing, and NOT proved here, is the step that uses *extremality* (as
-opposed to mere optimality) to force the support submatrix to be square and nonsingular:
-given `R := {i | x i ≠ 0}` and `C := {j | y j ≠ 0}`, tightness gives an equalizing pair
-for the (generally non-square, generally singular) submatrix `A.submatrix R C`; extreme
-points of `optimalRowStrategies`/`optimalColStrategies` are exactly the ones *not*
-expressible as a nontrivial average of two other optimal strategies with the same
-support-defining tight set, which — via a linear-independence / rank argument on the
-tight system `{∑ᵢ∈R xᵢ Aᵢⱼ = V : j ∈ C} ∪ {∑ᵢ∈R xᵢ = 1}` — forces `|R| = |C|` and the
-submatrix nonsingular (Shapley–Snow 1950's actual "basic feasible solution" argument).
-Mathlib's `IsExtreme`/`Set.extremePoints` API (`Mathlib.Analysis.Convex.Extreme`) is
-purely the `openSegment`-based definition and its immediate closure properties
-(`IsExtreme.inter`, `IsExtreme.extremePoints_eq`, ...); it carries no theory connecting
-extreme points of a polyhedron to the rank of its active/tight linear constraints: there
-is no `Polytope`/basic-feasible-solution/vertex type in Mathlib, and no LP duality theory
-beyond `Set.extremePoints`/`IsExtreme` themselves (checked via `leansearch`/`loogle`
-against `Mathlib.Analysis.Convex.*` and `Mathlib.Analysis.Convex.Extreme`/`KreinMilman` in
-particular). Deriving that connection from Mathlib's bare `openSegment` characterization
-(`mem_extremePoints_iff_left`) — i.e. reproving the relevant slice of LP vertex theory
-from scratch — is the remaining, substantial work; it is left as the precise `TODO`
-above (the `shapley_snow_kernel` proof sketch) together with this note pinpointing
-exactly which step it is. -/
+`eq_zero_of_extreme_optimalRow` / `eq_zero_of_extreme_optimalCol` (above) land the
+*extremality* step proper — precisely the "if the tight constraints had a nontrivial
+kernel direction `d`, then `x ± εd` would both be optimal, contradicting extremality"
+argument anticipated in the reduction sketch, reproved from Mathlib's bare
+`openSegment`/`Set.extremePoints` definition (`Mathlib.Analysis.Convex.Extreme` carries no
+higher-level vertex/basic-feasible-solution theory, so this had to be built directly: for
+`x` extreme in `optimalRowStrategies A V`, any direction `d` that (i) is supported on
+`x`'s support, (ii) sums to `0`, and (iii) is annihilated by every column tight at `x`,
+must be `0` — i.e. the tight-constraint linear system has trivial kernel on the support).
+This is the injectivity half of the classical "extreme point = basic feasible solution"
+equivalence, made precise and PROVED (sorry-free) for this specific polytope.
+
+What is NOT proved here, and is needed to finish `exists_kernel`/`shapley_snow_kernel`, is
+turning that injectivity fact into the concrete combinatorial/linear-algebraic data the
+theorem statement demands:
+
+1. **Cardinality bound.** Injectivity of `d ↦ (∑ᵢ dᵢ, (∑ᵢ dᵢAᵢⱼ)_{j ∈ C(x)})` on the
+   `|R|`-dimensional subspace of directions supported on `R := {i | x i ≠ 0}` is a
+   statement about an injective *linear map* between finite-dimensional spaces; turning it
+   into the cardinality bound `|R| ≤ |C(x)| + 1` (`C(x)` the columns tight at `x`) needs
+   Mathlib's rank-nullity / `LinearMap` finrank comparison machinery (e.g.
+   `LinearMap.finrank_le_finrank_of_injective` or equivalent), applied to an explicit
+   `LinearMap` packaging of `eq_zero_of_extreme_optimalRow`'s hypotheses — not yet built.
+2. **Basis selection.** Given the (not-yet-derived) cardinality bounds on both sides
+   (`|R| ≤ |C(x)| + 1` from `x`'s extremality, `|C| ≤ |R(y)| + 1` from `y`'s, where
+   `C := {j | y j ≠ 0}`, `R(y) := {i | ∑ⱼ yⱼAᵢⱼ = V}`), together with the complementary
+   -slackness inclusions `C ⊆ C(x)` and `R ⊆ R(y)` (from `tight_of_optimal_row_support` /
+   `tight_of_optimal_col_support`), matching row/column set sizes and selecting `|R|`
+   columns from `C(x)` (equivalently `|C|` rows from `R(y)`) so that the resulting `R ×
+   C'` submatrix of `A` is square and nonsingular is genuine linear algebra (full column
+   rank ⟹ some square submatrix is nonsingular) that is not yet formalised here either.
+3. **Reassembly.** Even granted 1–2, connecting the resulting nonsingular submatrix `B`
+   back to `lam0 A` (as opposed to `lam0 B`, which need not equal `lam0 A` without the
+   argument that `x|_R`, `y|_{C'}` restrict to an equalizing pair *for `B` itself*) to feed
+   `exists_kernel_of_completelyMixed` is a further step not attempted here.
+
+This is a strictly sharper residual than the previous blanket "extremality ⇒ squareness"
+gap: the genuinely novel *extreme-point* content (the `±εd` perturbation argument) is now
+proved; what remains is finite-dimensional linear algebra (rank-nullity, basis extraction
+from a full-rank rectangular system) rather than any further use of `Set.extremePoints`
+itself. `hkernel` is consequently NOT discharged in this file: `exists_nonzero_poly_of_kernel`
+and `exists_nonzero_poly_of_discounted` below still take it as an explicit hypothesis. -/
 
 /-! ### Bivariate evaluation
 
