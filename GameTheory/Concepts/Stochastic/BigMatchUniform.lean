@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.BigMatchMarkov
+import GameTheory.Concepts.Stochastic.AdaptiveCertificate
 
 /-!
 # The Big Match: the positive (Blackwell–Ferguson) side of the uniform value
@@ -1430,12 +1431,18 @@ theorem bfLiveDeltaExpect_eq (N : ℕ) (dev : game.BehaviorStrategy true) (t : �
     · simp [liveIndicator]
   simp_rw [hstep]
 
-/-- **Piece 3, the per-stage payoff bound.**  Combining
-`stageEUAt_bfDevProfile_ge` pointwise (`expect_mono`), the linearity of
-`expect`, `bfLiveDeltaExpect_eq`, and Piece 2's floor
-`bfXExpect_ge_bfPotential`. -/
-theorem expectedStagePayoff_bfDevProfile_ge (N : ℕ) (dev : game.BehaviorStrategy true) (t : ℕ) :
-    bfPotential (N + 1) + (1 / 2) * bfLiveDeltaExpect N dev t - bfLivePExpect N dev t ≤
+/-- **Piece 3, the per-stage payoff bound, un-substituted.**  The direct,
+pre-floor-substitution form: bounds the stage payoff below by *that same
+epoch's* `bfXExpect`, not yet replaced by the constant floor
+`bfPotential (N + 1)`.  This is exactly the per-stage hypothesis consumed by
+`AdaptiveCertificate.lean`'s "submartingale floor" mechanism
+(`finiteAveragePayoff_ge_of_expectedHistoryValue_submartingale_le`); see
+`finiteAveragePayoff_bfDevProfile_ge_via_certificate` below.  Substituting
+Piece 2's floor `bfXExpect_ge_bfPotential` recovers
+`expectedStagePayoff_bfDevProfile_ge`. -/
+theorem expectedStagePayoff_bfDevProfile_ge_of_bfXExpect (N : ℕ)
+    (dev : game.BehaviorStrategy true) (t : ℕ) :
+    bfXExpect N dev t + (1 / 2) * bfLiveDeltaExpect N dev t - bfLivePExpect N dev t ≤
       game.expectedStagePayoff (bfDevProfile N dev) .live t false := by
   have hpt : expect (game.histDist (bfDevProfile N dev) .live t)
       (fun h => bfX N h + (1 / 2) * (liveIndicator h.2 * (2 * (dev t h true).toReal - 1)) -
@@ -1451,8 +1458,15 @@ theorem expectedStagePayoff_bfDevProfile_ge (N : ℕ) (dev : game.BehaviorStrate
     unfold bfXExpect bfLivePExpect
     rw [expect_sub, expect_add, expect_const_mul]
   rw [hsplit] at hpt
+  exact hpt
+
+/-- **Piece 3, the per-stage payoff bound.**  Substitutes Piece 2's floor
+`bfXExpect_ge_bfPotential` into `expectedStagePayoff_bfDevProfile_ge_of_bfXExpect`. -/
+theorem expectedStagePayoff_bfDevProfile_ge (N : ℕ) (dev : game.BehaviorStrategy true) (t : ℕ) :
+    bfPotential (N + 1) + (1 / 2) * bfLiveDeltaExpect N dev t - bfLivePExpect N dev t ≤
+      game.expectedStagePayoff (bfDevProfile N dev) .live t false := by
   have hfloor := bfXExpect_ge_bfPotential N dev t
-  linarith [hpt, hfloor]
+  linarith [expectedStagePayoff_bfDevProfile_ge_of_bfXExpect N dev t, hfloor]
 
 /-! ## Piece 4 (Stage 3c): the two summation bounds
 
@@ -1762,6 +1776,115 @@ theorem bf_dev_eventually_ge_half (ε : ℝ) (hε : 0 < ε) :
     nlinarith [hstep1, hstep2]
   linarith [h1, h2, hNε, htail]
 
+/-! ## Stage 3c, re-derived via the "V2" adaptive potential certificate
+
+`bfXExpect N dev` (as `bfXPotential N`, a `HistoryPotential` constant in
+`t`) and its already-proved facts —
+`bfXExpect_le_succ` (the submartingale step) and
+`expectedStagePayoff_bfDevProfile_ge_of_bfXExpect` (the per-stage bound) —
+are *exactly* the data
+`AdaptiveCertificate.lean`'s `finiteAveragePayoff_ge_of_expectedHistoryValue_submartingale_le`
+("V2") consumes: no bound on `bfX` at any history but the initial one is
+used anywhere below, matching the module docstring's obstruction that no
+*bounded, history-independent* (V1-style) potential can witness this bound.
+This reproves `finiteAveragePayoff_bfDevProfile_ge` /
+`bf_dev_eventually_ge_half` through the general verification machinery
+instead of by hand-telescoping Piece 2 and Piece 3 together, demonstrating
+that the "V2" interface captures the proof that actually works here. -/
+
+/-- `bfX N`, read as a `HistoryPotential` (constant in the calendar-time
+argument, as `bfX` itself already is independent of it). -/
+def bfXPotential (N : ℕ) : game.HistoryPotential := fun _ h => bfX N h
+
+/-- `expectedHistoryValue` against `bfXPotential` is exactly `bfXExpect`. -/
+theorem expectedHistoryValue_bfXPotential (N : ℕ) (dev : game.BehaviorStrategy true) (t : ℕ) :
+    game.expectedHistoryValue (bfDevProfile N dev) .live (bfXPotential N) t =
+      bfXExpect N dev t := rfl
+
+/-- **Stage 3c's bound, re-derived via the V2 certificate's core lemma.**
+Instantiates `finiteAveragePayoff_ge_of_expectedHistoryValue_submartingale_le`
+with `φ := bfXPotential N`, submartingale step `bfXExpect_le_succ`, per-stage
+bound `expectedStagePayoff_bfDevProfile_ge_of_bfXExpect`, and budget
+`e t := bfLivePExpect N dev t - (1 / 2) * bfLiveDeltaExpect N dev t`, then
+bounds the accumulated budget by Piece 4's two summation bounds
+(`sum_bfLiveDeltaExpect_ge`, `sum_bfLivePExpect_le_one`) exactly as
+`finiteAveragePayoff_bfDevProfile_ge` does. Same statement as
+`finiteAveragePayoff_bfDevProfile_ge`, proved by a genuinely different
+route. -/
+theorem finiteAveragePayoff_bfDevProfile_ge_via_certificate (N : ℕ)
+    (dev : game.BehaviorStrategy true) (T : ℕ) (hT : 0 < T) :
+    bfPotential (N + 1) - (((N : ℝ) + 1) / 2 + 1) / T ≤
+      game.finiteAveragePayoff .live T (bfDevProfile N dev) false := by
+  have hmono : ∀ t, game.expectedHistoryValue (bfDevProfile N dev) .live (bfXPotential N) t ≤
+      game.expectedHistoryValue (bfDevProfile N dev) .live (bfXPotential N) (t + 1) := by
+    intro t
+    rw [expectedHistoryValue_bfXPotential, expectedHistoryValue_bfXPotential]
+    exact bfXExpect_le_succ N dev t
+  have hbellman : ∀ t, game.expectedHistoryValue (bfDevProfile N dev) .live (bfXPotential N) t ≤
+      game.expectedStagePayoff (bfDevProfile N dev) .live t false +
+        (bfLivePExpect N dev t - (1 / 2) * bfLiveDeltaExpect N dev t) := by
+    intro t
+    rw [expectedHistoryValue_bfXPotential]
+    have := expectedStagePayoff_bfDevProfile_ge_of_bfXExpect N dev t
+    linarith
+  have hkey := game.finiteAveragePayoff_ge_of_expectedHistoryValue_submartingale_le
+    (bfDevProfile N dev) .live false (bfXPotential N)
+    (fun t => bfLivePExpect N dev t - (1 / 2) * bfLiveDeltaExpect N dev t) hmono hbellman hT
+  rw [expectedHistoryValue_bfXPotential, bfXExpect_zero] at hkey
+  have h4i := sum_bfLiveDeltaExpect_ge N dev T
+  have h4ii := sum_bfLivePExpect_le_one N dev T
+  have hsum_le : (∑ t ∈ Finset.range T,
+      (bfLivePExpect N dev t - (1 / 2) * bfLiveDeltaExpect N dev t)) ≤ 1 + ((N : ℝ) + 1) / 2 := by
+    rw [Finset.sum_sub_distrib]
+    have hmul : ∑ t ∈ Finset.range T, (1 / 2 : ℝ) * bfLiveDeltaExpect N dev t =
+        (1 / 2) * ∑ t ∈ Finset.range T, bfLiveDeltaExpect N dev t := by
+      rw [Finset.mul_sum]
+    rw [hmul]
+    linarith [h4i, h4ii]
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hTinv : (0 : ℝ) ≤ (T : ℝ)⁻¹ := by positivity
+  have hmul2 := mul_le_mul_of_nonneg_left hsum_le hTinv
+  have hrw : (T : ℝ)⁻¹ * (1 + ((N : ℝ) + 1) / 2) = (((N : ℝ) + 1) / 2 + 1) / T := by
+    field_simp; ring
+  rw [hrw] at hmul2
+  linarith [hkey, hmul2]
+
+/-- **Stage 3c, the target of this stage, re-derived via the V2 certificate.**
+Same statement as `bf_dev_eventually_ge_half`, via
+`finiteAveragePayoff_bfDevProfile_ge_via_certificate` in place of
+`finiteAveragePayoff_bfDevProfile_ge`; the surrounding `ε`-bookkeeping is
+identical. -/
+theorem bf_dev_eventually_ge_half_via_certificate (ε : ℝ) (hε : 0 < ε) :
+    ∃ N : ℕ, ∃ T₀ : ℕ, ∀ (dev : game.BehaviorStrategy true) (T : ℕ), T₀ ≤ T →
+      1 / 2 - ε ≤ game.finiteAveragePayoff .live T (bfDevProfile N dev) false := by
+  obtain ⟨N, hN⟩ := exists_nat_gt (1 / ε)
+  have hN' : (1 : ℝ) < (N : ℝ) * ε := by
+    rw [div_lt_iff₀ hε] at hN; exact hN
+  have hNε : 1 / (2 * ((N : ℝ) + 1)) ≤ ε / 2 := by
+    rw [div_le_div_iff₀ (by positivity) (by norm_num)]
+    nlinarith [hN', hε]
+  obtain ⟨T₀, hT₀⟩ := exists_nat_gt (2 * ((((N : ℝ) + 1) / 2 + 1)) / ε)
+  refine ⟨N, max T₀ 1, fun dev T hT => ?_⟩
+  have hT0 : 0 < T := lt_of_lt_of_le (by norm_num) (le_trans (le_max_right T₀ 1) hT)
+  have hTge : (T₀ : ℝ) ≤ T := by
+    have : T₀ ≤ T := le_trans (le_max_left T₀ 1) hT
+    exact_mod_cast this
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT0
+  have h1 := finiteAveragePayoff_bfDevProfile_ge_via_certificate N dev T hT0
+  have h2 : bfPotential (N + 1) = 1 / 2 - 1 / (2 * ((N : ℝ) + 1)) := by
+    unfold bfPotential
+    push_cast
+    have hN0 : (N : ℝ) + 1 ≠ 0 := by positivity
+    field_simp
+  have hT₀' : 2 * ((((N : ℝ) + 1) / 2 + 1)) < (T₀ : ℝ) * ε := by
+    rw [div_lt_iff₀ hε] at hT₀; exact hT₀
+  have htail : ((((N : ℝ) + 1) / 2 + 1)) / T ≤ ε / 2 := by
+    rw [div_le_iff₀ hTreal]
+    have hstep1 : ((((N : ℝ) + 1) / 2 + 1)) * 2 < (T₀ : ℝ) * ε := by linarith [hT₀']
+    have hstep2 : (T₀ : ℝ) * ε ≤ (T : ℝ) * ε := mul_le_mul_of_nonneg_right hTge hε.le
+    nlinarith [hstep1, hstep2]
+  linarith [h1, h2, hNε, htail]
+
 /-! ## Stage 4: the equilibrium payoff assembly
 
 The final assembly, via `isUniformEquilibriumPayoff_of_deviation_caps`. On
@@ -1819,6 +1942,90 @@ theorem exists_uniformEquilibriumPayoff_live :
       have := hT₀ dev T hTT₀
       norm_num
       linarith
+
+/-! ## Stage 5: the capstone, re-derived through the zero-sum wrapper
+
+The Big Match is `IsZeroSumBoolGame` at every state and joint action
+(`payoff_minimizer`); the maximizer's Blackwell–Ferguson strategy is a
+one-sided guarantee securing `1/2` (Stage 3c,
+`bf_dev_eventually_ge_half_via_certificate`, exactly); the minimizer's
+uniform stationary strategy is a one-sided guarantee securing `-1/2`
+(Stage 2, `finiteAveragePayoff_eq_half_of_uniformMinimizer`, an *exact*
+equality against every maximizer completion — no submartingale needed).
+Feeding both into
+`AdaptiveCertificate.lean`'s `isUniformEquilibriumPayoff_of_isZeroSumBoolGame_of_oneSidedGuarantees`
+reproves the capstone, factoring it as "construct two one-sided
+certificates + invoke the generic wrapper". -/
+
+/-- The Big Match is zero-sum in `AdaptiveCertificate.lean`'s `Bool`-indexed
+sense, at every state and joint action: `payoff_minimizer`, repackaged. -/
+theorem game_isZeroSumBoolGame : game.IsZeroSumBoolGame := fun s a => payoff_minimizer s a
+
+/-- Overriding the minimizer's component of *any* profile by
+`blackwellFergusonStrategy N` recovers `bfDevProfile N` applied to that
+profile's own minimizer component: the shape needed to read Stage 3c as a
+one-sided guarantee (`IsOneSidedGuaranteeCertificateAt`'s `opp`-quantified
+form) rather than just a deviation cap from one fixed base profile. -/
+theorem update_false_blackwellFergusonStrategy (N : ℕ) (opp : game.BehaviorProfile) :
+    Function.update opp false (blackwellFergusonStrategy N) = bfDevProfile N (opp true) := by
+  funext who t h
+  cases who
+  · simp [bfDevProfile]
+  · simp [bfDevProfile]
+
+/-- **The maximizer's one-sided guarantee**: `blackwellFergusonStrategy N`
+(for a suitable `N`, depending on the error level, exactly as in Stage 3c)
+secures `1/2` against *every* completion of the minimizer's play — the
+`IsOneSidedGuaranteeCertificate` repackaging of
+`bf_dev_eventually_ge_half_via_certificate`. -/
+theorem isOneSidedGuaranteeCertificate_blackwellFerguson :
+    game.IsOneSidedGuaranteeCertificate .live false (1 / 2) := by
+  intro ε hε
+  obtain ⟨N, T₀, hT₀⟩ := bf_dev_eventually_ge_half_via_certificate ε hε
+  refine ⟨blackwellFergusonStrategy N, max T₀ 2, le_max_right _ _, fun opp T hT => ?_⟩
+  have hT0 : T₀ ≤ T := le_trans (le_max_left _ _) hT
+  rw [update_false_blackwellFergusonStrategy]
+  exact hT₀ (opp true) T hT0
+
+/-- Overriding the maximizer's component of *any* profile by
+`uniformMinimizerStrategy` recovers `profileUniformMinimizer` applied to
+that profile's own maximizer component: the `opp`-quantified analogue of
+`update_profileUniformMinimizer_false`/`update_profileUniformMinimizer_true`. -/
+theorem update_true_uniformMinimizerStrategy (opp : game.BehaviorProfile) :
+    Function.update opp true uniformMinimizerStrategy = profileUniformMinimizer (opp false) := by
+  funext who t h
+  cases who
+  · simp [profileUniformMinimizer]
+  · simp [profileUniformMinimizer]
+
+/-- **The minimizer's one-sided guarantee**: `uniformMinimizerStrategy`
+secures `-1/2` *exactly* against every completion of the maximizer's play —
+an `IsOneSidedGuaranteeCertificate` needing no error at all, since Stage 2's
+`finiteAveragePayoff_eq_half_of_uniformMinimizer` is an equality. -/
+theorem isOneSidedGuaranteeCertificate_uniformMinimizer :
+    game.IsOneSidedGuaranteeCertificate .live true (-(1 / 2)) := by
+  intro δ hδ
+  refine ⟨uniformMinimizerStrategy, 2, le_refl 2, fun opp T hT => ?_⟩
+  have hT0 : 0 < T := by omega
+  rw [update_true_uniformMinimizerStrategy]
+  rw [finiteAveragePayoff_minimizer .live T (profileUniformMinimizer (opp false)),
+    finiteAveragePayoff_eq_half_of_uniformMinimizer (opp false) hT0]
+  linarith
+
+/-- **Capstone, re-derived through the zero-sum wrapper.** Same conclusion
+as `exists_uniformEquilibriumPayoff_live` (up to the cosmetic difference
+between `fun who => if who then -(1/2) else 1/2` and the wrapper's
+`fun who => match who with | false => 1/2 | true => -(1/2)`, equal payoff
+vectors), obtained by constructing the two one-sided guarantees above and
+invoking `isUniformEquilibriumPayoff_of_isZeroSumBoolGame_of_oneSidedGuarantees`
+— the capstone factors as "construct two one-sided certificates + invoke
+the generic wrapper". -/
+theorem exists_uniformEquilibriumPayoff_live_via_wrapper :
+    ∃ v : Payoff Player, game.IsUniformEquilibriumPayoff .live v :=
+  ⟨_, isUniformEquilibriumPayoff_of_isZeroSumBoolGame_of_oneSidedGuarantees game
+    game_isZeroSumBoolGame .live (1 / 2)
+    isOneSidedGuaranteeCertificate_blackwellFerguson
+    isOneSidedGuaranteeCertificate_uniformMinimizer⟩
 
 /-! ## Superseded route-analysis notes (kept out of the module docstring)
 
