@@ -130,6 +130,7 @@ import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
 import GameTheory.Concepts.Stochastic.BigMatch
 import GameTheory.Concepts.Stochastic.BigMatchMarkov
 import GameTheory.Concepts.Stochastic.BigMatchNoMarkov
+import GameTheory.Concepts.Stochastic.BigMatchUniform
 import GameTheory.Concepts.Stochastic.BigMatchFink
 import GameTheory.Concepts.Stochastic.BigMatchFinkEndpoint
 import GameTheory.Concepts.Stochastic.AlteredSingletonContinuous
