@@ -57,8 +57,17 @@ the chain induced by the extracted policy, an optimal dual point can have
 `Σ_j z_s(j) = 0`. Vrieze's fix uses the *second* dual variable `y_s(·)` to
 normalize at those states instead, and separately proves that the zero-`z`
 states are *exactly* the transient states of the resulting chain. That
-transient/recurrent support analysis is genuinely the hard step of the
-undiscounted theory and is **not attempted here**; see the TODO on
+transient/recurrent support analysis splits into a purely **combinatorial**
+part — no choice of controller action anywhere can build a "trap" region
+disjoint from `R := {s | 0 < Σ_j z_s(j)}` (a bottom strongly-connected
+component of the induced chain missing `R` entirely) — and a genuinely
+**game-specific** part, that `R` in fact has this property because it is
+the *optimal* LP occupation support (a policy-improvement argument). The
+`FiniteReachability` namespace below proves the combinatorial part in full
+generality (for an arbitrary successor relation, independent of the game
+and LP data); the game-specific part, and the probabilistic translation of
+graph-reachability into the mean-ergodic statement `IsControllerProjectionWitness`
+actually needs, are **not attempted here**; see the TODO on
 `exists_controllerProjectionWitness_of_vriezePrimalDualOptimal` for exactly
 what is missing and which pieces of the repository's LP-duality inventory
 (below) it would draw on.
@@ -120,6 +129,11 @@ residual (Steps 2–3) is exactly the place a full solution would need them.
   and dominated by that kernel's ergodic projection of `worstReward`
 * `StochasticGame.IsVriezePrimalOptimal` — primal feasibility *plus*
   optimality of `Σ g_s`, the natural hypothesis the residual is stated under
+* `StochasticGame.FiniteReachability.CanReachSet` — reachability of a target
+  set along an arbitrary successor relation (generic finite-graph theory,
+  independent of the game/LP data)
+* `StochasticGame.controllerSucc` — the game's controller-action successor
+  relation `FiniteReachability` is meant to be instantiated against
 
 ## Main results
 
@@ -128,8 +142,19 @@ residual (Steps 2–3) is exactly the place a full solution would need them.
   (Step 4)
 * `StochasticGame.exists_uniformEquilibriumPayoff_of_singleController`
   (Step 5, conditional on a supplied `IsControllerProjectionWitness`)
+* `StochasticGame.FiniteReachability.trap_closed_of_not_canReachSet` — the
+  states that cannot reach a target set `R` are themselves closed under
+  every successor: the precise combinatorial form of "a trap disjoint from
+  `R` is unavoidable unless every non-`R` state can reach `R`", i.e. Vrieze's
+  bottom-strongly-connected-component obstruction, proved for an arbitrary
+  successor relation
+* `StochasticGame.FiniteReachability.exists_succ_canReachSet_of_canReachSet`
+  — the "make one step of progress toward `R`" building block a total
+  completion policy on the non-recurrent states would iterate
 * `StochasticGame.exists_controllerProjectionWitness_of_vriezePrimalDualOptimal`
-  — **the isolated residual**, Steps 2–3, stated but not proved
+  — **the isolated residual**, Steps 2–3, stated but not proved; see its
+  docstring for the six obligations the graph reformulation above splits it
+  into, and which of them remain open
 * `SingleControllerExample.transientProjectionWitness` — a minimal concrete
   instance: a two-state single-controller game (one transient, one absorbing
   state under the extracted policy) with an explicit
@@ -439,6 +464,87 @@ theorem exists_uniformEquilibriumPayoff_of_singleController
       hzs s₀ V hnc hc⟩
 
 -- ============================================================================
+-- Finite successor-graph reachability (pure graph theory, generic)
+-- ============================================================================
+
+/-!
+### The trap/reachability structure behind the transient completion
+
+Vrieze's "zero occupation ⟺ transient" step (the module docstring's "trap")
+is a genuine two-part claim: (a) a purely **combinatorial** fact about which
+states can be routed, by *some* choice of controller action at every state,
+into the recurrent support `R` of the extracted policy; and (b) the
+genuinely game-specific fact that `R` (the set of states with positive LP
+occupation mass) always has this routing property — i.e. that no *trap*
+region disjoint from `R` can be LP-optimal, which needs the LP's
+*optimality* (not just feasibility) via a policy-improvement argument.
+
+This section proves (a) in full generality, as a statement about an
+arbitrary successor relation on an arbitrary type — deliberately **not**
+about `StochasticGame`, `PMF`, or the LP data at all, so it is reusable
+regardless of how the connection to (b) is eventually made.
+`trap_closed_of_not_canReachSet` shows that if (b) *fails* at some
+particular `R`, the failure set is itself closed under every available
+successor (an unavoidable trap, exactly Vrieze's obstruction: a "bottom
+strongly-connected component" disjoint from `R`); and
+`exists_succ_canReachSet_of_canReachSet` is the "make one step of progress
+toward `R`" building block a total completion policy would be assembled
+from, at every state from which `R` remains reachable at all. -/
+
+namespace FiniteReachability
+
+variable {S : Type*} (Succ : S → S → Prop) (R : S → Prop)
+
+/-- Reachability along a successor relation `Succ`: the reflexive–transitive
+closure, i.e. "there is a (possibly empty) chain of `Succ`-steps". -/
+abbrev CanReachVia (s t : S) : Prop := Relation.ReflTransGen Succ s t
+
+/-- `s` can reach the target set `R` along `Succ`. -/
+def CanReachSet (s : S) : Prop := ∃ r, R r ∧ CanReachVia Succ s r
+
+/-- **Trap closure** (Vrieze's obstruction, made precise). The states that
+neither lie in `R` nor can reach `R` are closed under every available
+`Succ`-step: if such a state exists, it (together with everything reachable
+from it) forms an unavoidable region entirely disjoint from `R`, no matter
+which successor is chosen at each step — exactly the "trap" the module
+docstring's transient/recurrent analysis must rule out for `R := {s | 0 <
+Σ_j z_s(j)}` (the LP-optimal occupation support). -/
+theorem trap_closed_of_not_canReachSet {s t : S}
+    (_hsR : ¬ R s) (hs : ¬ CanReachSet Succ R s) (hst : Succ s t) :
+    ¬ R t ∧ ¬ CanReachSet Succ R t := by
+  refine ⟨fun htR => hs ⟨t, htR, Relation.ReflTransGen.single hst⟩, ?_⟩
+  rintro ⟨r, hr, hpath⟩
+  exact hs ⟨r, hr, Relation.ReflTransGen.head hst hpath⟩
+
+/-- **Greedy one-step progress.** If a non-`R` state can reach `R` at all,
+some single available successor can *also* reach `R`. Iterating this choice
+is exactly how a total completion policy would be assembled on the
+non-recurrent states, and (by `trap_closed_of_not_canReachSet`'s
+contrapositive) is the only way to avoid building a trap. -/
+theorem exists_succ_canReachSet_of_canReachSet {s : S}
+    (hsR : ¬ R s) (h : CanReachSet Succ R s) :
+    ∃ t, Succ s t ∧ CanReachSet Succ R t := by
+  obtain ⟨r, hr, hpath⟩ := h
+  rcases hpath.cases_head with heq | ⟨t, hst, htr⟩
+  · exact absurd (heq ▸ hr) hsR
+  · exact ⟨t, hst, r, hr, htr⟩
+
+end FiniteReachability
+
+/-- **The game's controller-action successor relation.** `t` is reachable
+from `s` in one step under *some* pure controller action `j` — the
+nondeterministic "support graph" that `FiniteReachability`'s lemmas above
+are meant to be instantiated against, with the target set
+`R := {s | 0 < Σ_j z_s(j)}` the LP-optimal occupation support. Connecting
+the two — proving `R` has no trap, which needs the LP's *optimality*, not
+just feasibility — is exactly the part of the residual this file does not
+close; see the TODO below. -/
+def controllerSucc (G : StochasticGame Bool) [∀ i, Finite (G.Act i)]
+    [∀ i, Nonempty (G.Act i)] (controller : Bool) (s t : G.State) : Prop :=
+  ∃ j : G.Act controller,
+    t ∈ (G.controllerKernel controller (fun _ => PMF.pure j) s).support
+
+-- ============================================================================
 -- The isolated residual: Steps 2–3
 -- ============================================================================
 
@@ -472,25 +578,52 @@ controller stationary strategy `τ` and a gain `ρ = -g` satisfying
    `Math.LinearProgramming.StrongComplementarity.exists_strong_complementary_pair`
    (Goldman–Tucker), so that a state's total dual mass
    `Σ_j z_s(j)` is positive *iff* its primal bias row is not strictly slack.
-3. **The trap.** Proving that the states with `Σ_j z_s(j) = 0` are *exactly*
-   the states that are transient under the kernel induced by the extracted
-   policy — this needs a formal notion of transience/recurrence for
-   `controllerKernel`'s induced chain (not yet formalized anywhere in this
-   repository) and Vrieze's specific argument connecting it to strict
-   primal/dual complementarity.
+3. **The trap**, now split into the six obligations the graph
+   reformulation below isolates. Let `R := {s | 0 < Σ_j z_s(j)}` (the
+   LP-optimal occupation support) and `τR` the `z`-normalized policy on `R`
+   (`τR s := z_s(·) / Σ_j z_s(j)`, well defined exactly on `R`):
+   (i) *totality* — extending `τR` to a total `τ : G.State → PMF (G.Act
+   controller)`; (ii) *no trap* — every recurrent class of the completed
+   `controllerKernel controller τ` meets `R` (equivalently, by
+   `FiniteReachability.trap_closed_of_not_canReachSet`'s contrapositive
+   applied to `Succ := controllerSucc G controller`: every state outside
+   `R` can reach `R`, so the "0-occupation states are exactly the transient
+   states" identity is the *consequence*, not the definition, of this
+   step — this is the part needing the LP's *optimality*, via a
+   policy-improvement argument ruling out an LP-beating trap, not proved
+   here); (iii) states outside that support are transient (or zero-mass
+   under the mean-ergodic projection) — given (ii),
+   `FiniteReachability.exists_succ_canReachSet_of_canReachSet` supplies the
+   one-step "make progress toward `R`" building block totality's completion
+   at each non-`R` state would use, but the *probabilistic* consequence
+   (transience in the Cesàro/ergodic sense the projection needs, as opposed
+   to mere graph-reachability) is not derived from it here; (iv) the reward
+   inequality on recurrent classes, from complementary slackness against
+   `z` where the invariant mass lives; (v) the projection extension
+   `ergodicProjection κ (worstReward controller τ) ≥ ρ` globally, because
+   the non-`R` states are transient (needs (iii)); (vi) harmonicity
+   `expect κ ρ = ρ` over the full state space, using the *dual gain-row*
+   feasibility of `y` on `R` and, on the non-`R` states, the specific
+   choice from (i)/(ii) making `ρ` locally constant along the completion.
 4. At the zero-`z` (transient) states, normalizing `τ_s` from `y_s(·)`
-   instead of `z_s(·)`, and checking the resulting `τ` and `ρ := -g` satisfy
-   both fields of `IsControllerProjectionWitness` — `harmonic` needs the
-   *dual gain-row feasibility* of `y` to force `ρ`'s exact harmonicity under
-   `controllerKernel controller τ`; `le_ergodicProjectionWorstReward` needs
-   the *dual bias-row feasibility* of `z` together with complementary
-   slackness against the primal bias rows.
+   instead of `z_s(·)` where obligation (ii) leaves genuine freedom, and
+   checking the resulting `τ` and `ρ := -g` satisfy both fields of
+   `IsControllerProjectionWitness` per (iv)–(vi) above.
 
-None of this is attempted: the theorem below takes the entire conclusion as
-an explicit hypothesis `hextract` (the honest name for "Steps 2–3, assumed")
-and returns it unchanged. Discharging `hextract` — replacing it with an
-actual construction of `(τ, ρ)` from `hopt`, following the four points above
-— is the required continuation of this file. -/
+**What is landed vs. open.** The `FiniteReachability` namespace and
+`controllerSucc` above discharge the *pure combinatorics* of obligation
+(ii)'s statement (a bottom-strongly-connected-component-meets-`R` fact,
+proved for an arbitrary successor relation, independent of the game and LP
+data) and give the one-step tool obligation (i)'s completion would iterate.
+They do **not** discharge (ii) itself (that `R` has no trap — the
+LP-optimality/policy-improvement argument), nor the probabilistic content of
+(iii)/(v)/(vi) (turning graph-reachability into an actual Cesàro/mean-ergodic
+statement about `ergodicProjection`), nor points 1–2 and 4 (the LP embedding
+itself). The theorem below still takes the entire conclusion as an explicit
+hypothesis `hextract` (the honest name for "Steps 2–3, assumed") and returns
+it unchanged — replacing it with an actual construction of `(τ, ρ)` from
+`hopt`, discharging the open obligations above, is the required continuation
+of this file. -/
 theorem exists_controllerProjectionWitness_of_vriezePrimalDualOptimal
     {controller : Bool} {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
     (_hopt : G.IsVriezePrimalOptimal controller x g v)
