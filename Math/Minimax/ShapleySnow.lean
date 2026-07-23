@@ -30,9 +30,13 @@ base cases of the proof sketch (`exists_kernel_of_saddlePoint`,
 Krein–Milman existence of *extreme* optimal strategies together with the
 complementary-slackness tightness step (`optimalRowStrategies`, `optimalColStrategies`,
 `expectedPayoff_eq_of_optimal`, `tight_of_optimal_row_support`,
-`tight_of_optimal_col_support`) ARE landed below, sorry-free; what remains is the
-extremality-forces-square-nonsingular-support step, documented precisely at the end of
-that section.
+`tight_of_optimal_col_support`) ARE landed below, sorry-free. Of the three remaining
+sub-steps (cardinality bound, square/basis selection, reassembly), the cardinality bound
+(`card_support_le_card_tightCol_of_extreme`, `card_support_le_card_tightRow_of_extreme`)
+and the reassembly (`exists_kernel_of_extreme_matching_support`) are ALSO now landed,
+sorry-free; only the square/basis-selection step (matching support sizes and producing a
+nonsingular submatrix on them) remains open, documented precisely at the end of that
+section.
 
 ## Stage 2 — the parametric product corollary
 
@@ -114,13 +118,14 @@ a nonsingular matrix gives the whole matrix as its own kernel). The "extremality
 sorry-free, that the tight-constraint linear system at an extreme optimal strategy has
 trivial kernel on its support — the precise `openSegment`-based `x ± εd` perturbation
 argument the reduction needs, reproved from scratch since Mathlib's `Set.extremePoints`
-carries no vertex/basic-feasible-solution theory. What remains, and is NOT formalised
-here — see the "What remains" note after the `OptimalStrategies` section for the precise
-three-part gap — is turning that trivial-kernel fact into the actual cardinality bound
-`|R| = |C|`, selecting the resulting nonsingular submatrix, and reassembling everything
-into `exists_kernel`/`shapley_snow_kernel`; `hkernel` is accordingly still an explicit,
-undischarged hypothesis of `exists_nonzero_poly_of_kernel` /
-`exists_nonzero_poly_of_discounted` below.
+carries no vertex/basic-feasible-solution theory. Turning that trivial-kernel fact into
+the cardinality bounds `|R| ≤ |C(x)| + 1`, `|C| ≤ |R(y)| + 1` (rank-nullity) and
+reassembling a matching-support nonsingular submatrix back into the Shapley–Snow identity
+for `A` itself ARE now also landed, sorry-free — see the "What remains" note after the
+`OptimalStrategies` section for exactly what is landed and what precise gap (matching
+`|R| = |C|` and selecting a nonsingular submatrix on the matching supports) remains;
+`hkernel` is accordingly still an explicit, undischarged hypothesis of
+`exists_nonzero_poly_of_kernel` / `exists_nonzero_poly_of_discounted` below.
 -/
 
 /-- **Saddle-point base case.** If `(i₀, j₀)` is a saddle point of `A` — row `i₀`
@@ -712,7 +717,230 @@ theorem eq_zero_of_extreme_optimalCol {A : I → J → ℝ} {V : ℝ}
     · exact h
   exact he0 he0'
 
+/-- **Reindexing a sum over a support.** If `f` vanishes off `x`'s support, its sum over
+the whole (ambient, `Fintype`) index type equals its sum over the support subtype. Used
+below to translate the `hd_sum`/`hd_tight`-shaped hypotheses of `eq_zero_of_extreme_*`
+(indexed over the full type) into sums over a strict subtype (the support), which is what
+carries a usable `Module.finrank`. -/
+theorem sum_eq_sum_support {ι : Type*} [Fintype ι] {x : ι → ℝ} (f : ι → ℝ)
+    (hf : ∀ i, x i = 0 → f i = 0) : ∑ i, f i = ∑ i : {i : ι // x i ≠ 0}, f i.val := by
+  classical
+  refine Finset.sum_congr_set {i : ι | x i ≠ 0} f (fun i => f i.val) (fun _ _ => rfl) ?_
+  intro i hi
+  simp only [Set.mem_setOf_eq, not_not] at hi
+  exact hf i hi
+
+/-- **Cardinality bound (row side): step 1 of "What remains" below.** If `x` is an extreme
+optimal row strategy at value `V`, the number of rows in its support is at most one more
+than the number of columns tight at `x`. Proof: package
+`eq_zero_of_extreme_optimalRow`'s hypotheses as an explicit `LinearMap` `g` from
+`x`'s-support-indexed directions `d` to `(∑ d, tight-column payoffs of d)`; its
+injectivity (that lemma) forces, via rank-nullity (`LinearMap.finrank_le_finrank_of_injective`),
+the domain dimension `|support x|` to be at most the codomain dimension
+`1 + |tight columns|`. -/
+theorem card_support_le_card_tightCol_of_extreme {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ} (hx : x ∈ Set.extremePoints ℝ (optimalRowStrategies A V)) :
+    Fintype.card {i : I // x i ≠ 0} ≤ Fintype.card {j : J // ∑ i, x i * A i j = V} + 1 := by
+  classical
+  let g : ({i : I // x i ≠ 0} → ℝ) →ₗ[ℝ]
+      ℝ × ({j : J // ∑ i, x i * A i j = V} → ℝ) :=
+    { toFun := fun d => (∑ i, d i, fun j => ∑ i, d i * A i j.val)
+      map_add' := by
+        intro d d'
+        refine Prod.ext ?_ (funext fun j => ?_)
+        · simp [Finset.sum_add_distrib]
+        · simp [Finset.sum_add_distrib, add_mul]
+      map_smul' := by
+        intro c d
+        refine Prod.ext ?_ (funext fun j => ?_)
+        · simp [Finset.mul_sum]
+        · simp [Finset.mul_sum, mul_assoc] }
+  have hginj : Function.Injective g := by
+    intro d d' hdd'
+    have hz : g (d - d') = 0 := by rw [map_sub, hdd', sub_self]
+    set e : {i : I // x i ≠ 0} → ℝ := d - d' with hedef
+    have hz1 : ∑ i, e i = 0 := congrArg Prod.fst hz
+    have hz2 : ∀ j : {j : J // ∑ i, x i * A i j = V}, ∑ i, e i * A i j.val = 0 := fun j =>
+      congrFun (congrArg Prod.snd hz) j
+    set extendR : I → ℝ := fun i => if h : x i ≠ 0 then e ⟨i, h⟩ else 0 with hextendRdef
+    have hval : ∀ i : {i : I // x i ≠ 0}, extendR i.val = e i := fun i => by
+      simp only [hextendRdef]; rw [dif_pos i.property]
+    have hd_supp : ∀ i, x i = 0 → extendR i = 0 := by
+      intro i hi; simp only [hextendRdef]; rw [dif_neg (by rw [hi]; simp)]
+    have hd_sum : ∑ i, extendR i = 0 := by
+      rw [sum_eq_sum_support extendR hd_supp]
+      exact (Finset.sum_congr rfl fun i _ => hval i).trans hz1
+    have hd_tight : ∀ j, ∑ i, x i * A i j = V → ∑ i, extendR i * A i j = 0 := by
+      intro j htight
+      have hf0 : ∀ i, x i = 0 → extendR i * A i j = 0 := fun i hi => by rw [hd_supp i hi, zero_mul]
+      rw [sum_eq_sum_support (fun i => extendR i * A i j) hf0]
+      have := hz2 ⟨j, htight⟩
+      exact (Finset.sum_congr rfl fun i _ => by rw [hval i]).trans this
+    have hextendR0 : extendR = 0 := eq_zero_of_extreme_optimalRow hx hd_supp hd_sum hd_tight
+    have he0 : e = 0 := funext fun i => (hval i).symm.trans (congrFun hextendR0 i.val)
+    exact sub_eq_zero.mp he0
+  have hle := LinearMap.finrank_le_finrank_of_injective hginj
+  rw [Module.finrank_fintype_fun_eq_card, Module.finrank_prod, Module.finrank_self,
+    Module.finrank_fintype_fun_eq_card] at hle
+  omega
+
+/-- **Cardinality bound (column side): step 1 of "What remains" below, mirror.** If `y`
+is an extreme optimal column strategy at value `V`, the number of columns in its support
+is at most one more than the number of rows tight at `y`. -/
+theorem card_support_le_card_tightRow_of_extreme {A : I → J → ℝ} {V : ℝ}
+    {y : J → ℝ} (hy : y ∈ Set.extremePoints ℝ (optimalColStrategies A V)) :
+    Fintype.card {j : J // y j ≠ 0} ≤ Fintype.card {i : I // ∑ j, y j * A i j = V} + 1 := by
+  classical
+  let g : ({j : J // y j ≠ 0} → ℝ) →ₗ[ℝ]
+      ℝ × ({i : I // ∑ j, y j * A i j = V} → ℝ) :=
+    { toFun := fun e => (∑ j, e j, fun i => ∑ j, e j * A i.val j)
+      map_add' := by
+        intro e e'
+        refine Prod.ext ?_ (funext fun i => ?_)
+        · simp [Finset.sum_add_distrib]
+        · simp [Finset.sum_add_distrib, add_mul]
+      map_smul' := by
+        intro c e
+        refine Prod.ext ?_ (funext fun i => ?_)
+        · simp [Finset.mul_sum]
+        · simp [Finset.mul_sum, mul_assoc] }
+  have hginj : Function.Injective g := by
+    intro e e' hee'
+    have hz : g (e - e') = 0 := by rw [map_sub, hee', sub_self]
+    set d : {j : J // y j ≠ 0} → ℝ := e - e' with hddef
+    have hz1 : ∑ j, d j = 0 := congrArg Prod.fst hz
+    have hz2 : ∀ i : {i : I // ∑ j, y j * A i j = V}, ∑ j, d j * A i.val j.val = 0 := fun i =>
+      congrFun (congrArg Prod.snd hz) i
+    set extendC : J → ℝ := fun j => if h : y j ≠ 0 then d ⟨j, h⟩ else 0 with hextendCdef
+    have hval : ∀ j : {j : J // y j ≠ 0}, extendC j.val = d j := fun j => by
+      simp only [hextendCdef]; rw [dif_pos j.property]
+    have hd_supp : ∀ j, y j = 0 → extendC j = 0 := by
+      intro j hj; simp only [hextendCdef]; rw [dif_neg (by rw [hj]; simp)]
+    have hd_sum : ∑ j, extendC j = 0 := by
+      rw [sum_eq_sum_support extendC hd_supp]
+      exact (Finset.sum_congr rfl fun j _ => hval j).trans hz1
+    have hd_tight : ∀ i, ∑ j, y j * A i j = V → ∑ j, extendC j * A i j = 0 := by
+      intro i htight
+      have hf0 : ∀ j, y j = 0 → extendC j * A i j = 0 := fun j hj => by rw [hd_supp j hj, zero_mul]
+      rw [sum_eq_sum_support (fun j => extendC j * A i j) hf0]
+      have := hz2 ⟨i, htight⟩
+      exact (Finset.sum_congr rfl fun j _ => by rw [hval j]).trans this
+    have hextendC0 : extendC = 0 := eq_zero_of_extreme_optimalCol hy hd_supp hd_sum hd_tight
+    have he0 : d = 0 := funext fun j => (hval j).symm.trans (congrFun hextendC0 j.val)
+    exact sub_eq_zero.mp he0
+  have hle := LinearMap.finrank_le_finrank_of_injective hginj
+  rw [Module.finrank_fintype_fun_eq_card, Module.finrank_prod, Module.finrank_self,
+    Module.finrank_fintype_fun_eq_card] at hle
+  omega
+
 end OptimalStrategies
+
+/-- **Reindexing a sum along an embedding whose range is exactly a support.** If
+`e : Fin r ↪ κ` enumerates `z`'s support exactly (`z k ≠ 0 ↔ k ∈ Set.range e`) and `f`
+vanishes off `z`'s support, then summing `f ∘ e` over `Fin r` recovers the sum of `f` over
+all of `κ`. Used below (step 3 of "What remains") to transport tightness/normalisation
+facts about a strategy `z`, stated as sums over the ambient type `κ`, onto a
+`Fin r`-indexed enumeration of `z`'s support. -/
+theorem sum_embedding_eq_sum_of_range_eq_support {κ : Type*} [Fintype κ] {z : κ → ℝ}
+    {r : ℕ} (e : Fin r ↪ κ) (he : ∀ k, z k ≠ 0 → k ∈ Set.range e)
+    (f : κ → ℝ) (hf : ∀ k, z k = 0 → f k = 0) :
+    ∑ i, f (e i) = ∑ k, f k := by
+  have h1 : ∑ k ∈ Finset.univ.map e, f k = ∑ i, f (e i) := Finset.sum_map _ _ _
+  have h2 : ∑ k ∈ Finset.univ.map e, f k = ∑ k, f k := by
+    apply Fintype.sum_subset
+    intro k hk
+    rw [Finset.mem_map]
+    obtain ⟨i, hi⟩ := he k (fun hz => hk (hf k hz))
+    exact ⟨i, Finset.mem_univ i, hi⟩
+  rw [← h1, h2]
+
+section SquareKernelReassembly
+
+variable {I J : Type*} [Fintype I] [Fintype J] [Nonempty I] [Nonempty J]
+
+omit [Nonempty I] in
+/-- **Reassembly (step 3 of "What remains" below).** If `x`, `y` are extreme optimal
+strategies at `V := lam0 A` whose supports are *exactly* enumerated by embeddings `rows`,
+`cols` of a common size `r` (`hrows`, `hcols`), and the resulting square submatrix
+`A.submatrix rows cols` is nonsingular (`hB`), then that submatrix IS a Shapley–Snow
+kernel for `A`: the restrictions `x ∘ rows`, `y ∘ cols` are themselves mixed strategies
+(they inherit non-negativity from `x`, `y`, and sum to `1` since `rows`/`cols` exactly
+enumerate the support, so no mass is lost), and they form an *equalizing pair* for the
+submatrix at value `V` (complementary slackness, `tight_of_optimal_row_support` /
+`tight_of_optimal_col_support`, applied since every row of `rows`/column of `cols` lies in
+the support of `x`/`y`, hence in the region where the corresponding player's tightness is
+known). `exists_kernel_of_completelyMixed` then gives `lam0 (submatrix) = V`, and
+`V = lam0 A` by construction, yielding exactly the Shapley–Snow determinant identity for
+`A` itself (not just for the submatrix in isolation) — the "reassembly" step. -/
+theorem exists_kernel_of_extreme_matching_support {A : I → J → ℝ}
+    {x : I → ℝ} (hx : x ∈ Set.extremePoints ℝ (optimalRowStrategies A (MinimaxLoomis.lam0 A)))
+    {y : J → ℝ} (hy : y ∈ Set.extremePoints ℝ (optimalColStrategies A (MinimaxLoomis.lam0 A)))
+    {r : ℕ} (rows : Fin r ↪ I) (cols : Fin r ↪ J)
+    (hrows : ∀ i, x i ≠ 0 ↔ i ∈ Set.range rows) (hcols : ∀ j, y j ≠ 0 ↔ j ∈ Set.range cols)
+    (hB : IsUnit ((Matrix.of A).submatrix rows cols).det) :
+    ∃ (r' : ℕ) (_ : 0 < r') (rows' : Fin r' ↪ I) (cols' : Fin r' ↪ J),
+      (∑ i, ∑ j, ((Matrix.of A).submatrix rows' cols').adjugate i j) ≠ 0 ∧
+        MinimaxLoomis.lam0 A * (∑ i, ∑ j, ((Matrix.of A).submatrix rows' cols').adjugate i j)
+          = ((Matrix.of A).submatrix rows' cols').det := by
+  classical
+  set V := MinimaxLoomis.lam0 A with hV
+  set B := (Matrix.of A).submatrix rows cols with hBdef
+  have hxmem : x ∈ optimalRowStrategies A V := extremePoints_subset hx
+  have hymem : y ∈ optimalColStrategies A V := extremePoints_subset hy
+  have hxs := hxmem.1
+  have hys := hymem.1
+  have hxne : ∃ i, x i ≠ 0 := by
+    by_contra hcon
+    push_neg at hcon
+    have hz : (∑ i, x i) = 0 := Finset.sum_eq_zero fun i _ => hcon i
+    rw [hxs.2] at hz
+    norm_num at hz
+  have hr : 0 < r := by
+    rcases Nat.eq_zero_or_pos r with hr0 | hr0
+    · exfalso
+      subst hr0
+      obtain ⟨i0, hi0⟩ := hxne
+      obtain ⟨i', -⟩ := (hrows i0).mp hi0
+      exact i'.elim0
+    · exact hr0
+  haveI : Nonempty (Fin r) := ⟨⟨0, hr⟩⟩
+  have hx'nonneg : ∀ i' : Fin r, 0 ≤ x (rows i') := fun i' => hxs.1 (rows i')
+  have hy'nonneg : ∀ j' : Fin r, 0 ≤ y (cols j') := fun j' => hys.1 (cols j')
+  have hx'sum : ∑ i' : Fin r, x (rows i') = 1 := by
+    rw [sum_embedding_eq_sum_of_range_eq_support rows (fun i hi => (hrows i).mp hi) x
+      (fun k hk => hk)]
+    exact hxs.2
+  have hy'sum : ∑ j' : Fin r, y (cols j') = 1 := by
+    rw [sum_embedding_eq_sum_of_range_eq_support cols (fun j hj => (hcols j).mp hj) y
+      (fun k hk => hk)]
+    exact hys.2
+  let xr : stdSimplex ℝ (Fin r) := ⟨fun i' => x (rows i'), hx'nonneg, hx'sum⟩
+  let yr : stdSimplex ℝ (Fin r) := ⟨fun j' => y (cols j'), hy'nonneg, hy'sum⟩
+  have hxr_tight : ∀ j' : Fin r, wsum xr (fun i' => B i' j') = V := by
+    intro j'
+    have hyj' : y (cols j') ≠ 0 := (hcols (cols j')).mpr ⟨j', rfl⟩
+    have htight := tight_of_optimal_col_support hxmem hymem hyj'
+    change (∑ i' : Fin r, x (rows i') * B i' j') = V
+    simp only [hBdef, Matrix.submatrix_apply, Matrix.of_apply]
+    rw [sum_embedding_eq_sum_of_range_eq_support rows (fun i hi => (hrows i).mp hi)
+      (fun i => x i * A i (cols j')) (fun k hk => by rw [hk, zero_mul])]
+    exact htight
+  have hyr_tight : ∀ i' : Fin r, wsum yr (fun j' => B i' j') = V := by
+    intro i'
+    have hxi' : x (rows i') ≠ 0 := (hrows (rows i')).mpr ⟨i', rfl⟩
+    have htight := tight_of_optimal_row_support hxmem hymem hxi'
+    change (∑ j' : Fin r, y (cols j') * B i' j') = V
+    simp only [hBdef, Matrix.submatrix_apply, Matrix.of_apply]
+    rw [sum_embedding_eq_sum_of_range_eq_support cols (fun j hj => (hcols j).mp hj)
+      (fun j => y j * A (rows i') j) (fun k hk => by rw [hk, zero_mul])]
+    exact htight
+  obtain ⟨hlamB, hadjne, heq⟩ := exists_kernel_of_completelyMixed B hB xr yr V hxr_tight hyr_tight
+  refine ⟨r, hr, rows, cols, hadjne, ?_⟩
+  change MinimaxLoomis.lam0 A * (∑ i, ∑ j, B.adjugate i j) = B.det
+  rw [← hV, ← hlamB]
+  exact heq
+
+end SquareKernelReassembly
 
 /-! ### What remains: from "trivial kernel direction" to a square nonsingular submatrix
 
@@ -739,34 +967,56 @@ equivalence, made precise and PROVED (sorry-free) for this specific polytope.
 
 What is NOT proved here, and is needed to finish `exists_kernel`/`shapley_snow_kernel`, is
 turning that injectivity fact into the concrete combinatorial/linear-algebraic data the
-theorem statement demands:
+theorem statement demands. Of the three sub-steps originally identified, **two are now
+landed** (sorry-free) and one remains, sharpened to a precise standalone statement:
 
-1. **Cardinality bound.** Injectivity of `d ↦ (∑ᵢ dᵢ, (∑ᵢ dᵢAᵢⱼ)_{j ∈ C(x)})` on the
-   `|R|`-dimensional subspace of directions supported on `R := {i | x i ≠ 0}` is a
-   statement about an injective *linear map* between finite-dimensional spaces; turning it
-   into the cardinality bound `|R| ≤ |C(x)| + 1` (`C(x)` the columns tight at `x`) needs
-   Mathlib's rank-nullity / `LinearMap` finrank comparison machinery (e.g.
-   `LinearMap.finrank_le_finrank_of_injective` or equivalent), applied to an explicit
-   `LinearMap` packaging of `eq_zero_of_extreme_optimalRow`'s hypotheses — not yet built.
-2. **Basis selection.** Given the (not-yet-derived) cardinality bounds on both sides
-   (`|R| ≤ |C(x)| + 1` from `x`'s extremality, `|C| ≤ |R(y)| + 1` from `y`'s, where
-   `C := {j | y j ≠ 0}`, `R(y) := {i | ∑ⱼ yⱼAᵢⱼ = V}`), together with the complementary
-   -slackness inclusions `C ⊆ C(x)` and `R ⊆ R(y)` (from `tight_of_optimal_row_support` /
-   `tight_of_optimal_col_support`), matching row/column set sizes and selecting `|R|`
-   columns from `C(x)` (equivalently `|C|` rows from `R(y)`) so that the resulting `R ×
-   C'` submatrix of `A` is square and nonsingular is genuine linear algebra (full column
-   rank ⟹ some square submatrix is nonsingular) that is not yet formalised here either.
-3. **Reassembly.** Even granted 1–2, connecting the resulting nonsingular submatrix `B`
-   back to `lam0 A` (as opposed to `lam0 B`, which need not equal `lam0 A` without the
-   argument that `x|_R`, `y|_{C'}` restrict to an equalizing pair *for `B` itself*) to feed
-   `exists_kernel_of_completelyMixed` is a further step not attempted here.
+1. **Cardinality bound — LANDED** (`card_support_le_card_tightCol_of_extreme`,
+   `card_support_le_card_tightRow_of_extreme`, just above). Injectivity of
+   `d ↦ (∑ᵢ dᵢ, (∑ᵢ dᵢAᵢⱼ)_{j ∈ C(x)})` on the directions supported on `R := {i | x i ≠
+   0}` is packaged as an explicit `LinearMap` on `(R → ℝ)`; rank-nullity
+   (`LinearMap.finrank_le_finrank_of_injective`) then gives exactly `|R| ≤ |C(x)| + 1`
+   (`C(x)` the columns tight at `x`), and symmetrically `|C| ≤ |R(y)| + 1` for the column
+   side. (`sum_eq_sum_support`, right above the row/column lemmas, is the reindexing
+   glue: a sum over the ambient type of a function vanishing off `x`'s support equals the
+   sum over the support subtype, needed to translate `eq_zero_of_extreme_*`'s
+   whole-type-indexed hypotheses onto that subtype.)
+2. **Basis/square selection — the ONE REMAINING GAP**, isolated as precisely as possible.
+   The cardinality bounds from step 1, together with the complementary-slackness
+   inclusions `C ⊆ C(x)` and `R ⊆ R(y)` (`tight_of_optimal_col_support` /
+   `tight_of_optimal_row_support`), give *rectangular* full-(row/column)-rank systems on
+   each side, but do NOT by themselves give `|R| = |C|`: that equality is a genuine fact
+   about *matching* linear-programming bases (`x`, `y` are extreme points of two *dual*
+   polytopes, and their supports correspond to bases of the *same* LP tableau), not a
+   generic rank-nullity consequence of the two one-sided bounds in isolation. Classically
+   this is established by an induction on `m + n` (a pivoting/degenerate-case argument),
+   which is a substantially larger undertaking than steps 1 and 3 and is NOT attempted
+   here. The exact remaining obligation, sharpened to a single precise statement,
+   is now exactly the hypothesis bundle of `exists_kernel_of_extreme_matching_support`
+   below: given extreme optimal `x`, `y` at `V := lam0 A`, produce `r`, embeddings
+   `rows : Fin r ↪ I`, `cols : Fin r ↪ J` whose ranges are EXACTLY `x`'s and `y`'s
+   supports (`hrows`, `hcols`), such that `(A.submatrix rows cols)` is nonsingular
+   (`hB`). No other input is missing: feeding any such `r`, `rows`, `cols`, `hB` (for
+   *some* choice of extreme `x`, `y` — not necessarily the same ones on repeated
+   invocations, since `exists_kernel` only needs existence) into that lemma finishes
+   `exists_kernel` outright.
+3. **Reassembly — LANDED** (`exists_kernel_of_extreme_matching_support`, just above,
+   in the `SquareKernelReassembly` section). Granted the step-2 data, `x ∘ rows` and
+   `y ∘ cols` are themselves valid mixed strategies (non-negativity inherited from `x`,
+   `y`; they sum to `1` because `rows`/`cols` enumerate the support *exactly*, so no
+   probability mass is dropped), and complementary slackness
+   (`tight_of_optimal_row_support` / `tight_of_optimal_col_support`) makes them an
+   *equalizing pair* for the submatrix `B` at value `V`, since every row of `rows`/column
+   of `cols` lies in `x`'s/`y`'s own support. `exists_kernel_of_completelyMixed` then
+   gives `lam0 B = V`, and since `V = lam0 A` by construction (not `lam0 B` a priori —
+   this is precisely the "reassembly" content), substituting recovers the Shapley–Snow
+   identity for `A` itself.
 
-This is a strictly sharper residual than the previous blanket "extremality ⇒ squareness"
-gap: the genuinely novel *extreme-point* content (the `±εd` perturbation argument) is now
-proved; what remains is finite-dimensional linear algebra (rank-nullity, basis extraction
-from a full-rank rectangular system) rather than any further use of `Set.extremePoints`
-itself. `hkernel` is consequently NOT discharged in this file: `exists_nonzero_poly_of_kernel`
-and `exists_nonzero_poly_of_discounted` below still take it as an explicit hypothesis. -/
+`hkernel` is consequently NOT discharged in this file: `exists_nonzero_poly_of_kernel`
+and `exists_nonzero_poly_of_discounted` below still take it as an explicit hypothesis.
+But the gap is now exactly step 2 above — a single precise square/nonsingular-selection
+fact — rather than the three-part gap (rank-nullity + selection + reassembly) that stood
+before this section; steps 1 and 3, the finite-dimensional linear algebra either side of
+it, are fully formalised and sorry-free. -/
 
 /-! ### Bivariate evaluation
 
