@@ -4,9 +4,12 @@ Released under the MIT license as described in the file LICENSE.
 -/
 
 import Math.Minimax.MinimaxLoomis
+import Math.Minimax.Loomis
 import Mathlib.LinearAlgebra.Matrix.Adjugate
 import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Div
+import Mathlib.Analysis.Convex.Extreme
+import Mathlib.Analysis.Convex.KreinMilman
 
 /-!
 # Math.Minimax.ShapleySnow
@@ -21,7 +24,15 @@ satisfies a determinant identity over some square submatrix ("kernel") `B`:
 1950 Shapley–Snow theorem. Its classical proof (extreme optimal strategies, tight payoff
 equations on the support, nonsingularity of the bordered kernel system) is genuinely
 substantial to formalise; it is recorded here as a precise `TODO` statement rather than
-an unproved (`sorry`-laden) declaration, per this repository's "no `sorry`" rule.
+an unproved (`sorry`-laden) declaration, per this repository's "no `sorry`" rule. The two
+base cases of the proof sketch (`exists_kernel_of_saddlePoint`,
+`exists_kernel_of_completelyMixed`) and, further down, convexity / compactness /
+Krein–Milman existence of *extreme* optimal strategies together with the
+complementary-slackness tightness step (`optimalRowStrategies`, `optimalColStrategies`,
+`expectedPayoff_eq_of_optimal`, `tight_of_optimal_row_support`,
+`tight_of_optimal_col_support`) ARE landed below, sorry-free; what remains is the
+extremality-forces-square-nonsingular-support step, documented precisely at the end of
+that section.
 
 ## Stage 2 — the parametric product corollary
 
@@ -204,6 +215,303 @@ theorem exists_kernel_of_completelyMixed {n : ℕ} [Nonempty (Fin n)]
     rw [hz, mul_zero] at hsum
     exact hA.ne_zero hsum
   exact ⟨hVeq, hSne, hVeq ▸ hsum.symm⟩
+
+/-! ### Optimal strategy sets: convexity, compactness, extreme optimizers
+
+Building blocks for the classical Shapley–Snow reduction sketch (`x`, `y` "extreme
+optimal mixed strategies" in the `TODO` proof sketch above). `optimalRowStrategies A V`
+and `optimalColStrategies A V` are the sets of row- / column-player mixed strategies
+that are optimal *at value `V`* — phrased as subsets of the ambient vector space
+`I → ℝ` / `J → ℝ` (rather than the `stdSimplex ℝ I` subtype used elsewhere) so
+that Mathlib's `Set.extremePoints` / Krein–Milman API, which is stated for subsets of a
+topological vector space, applies to them directly.
+
+At `V := MinimaxLoomis.lam0 A` these sets are shown convex, compact, and (via
+`exists_xx_lam0` / `exists_yy_mu0` together with `Loomis.minmax_from_general`, the
+already-proved von Neumann minimax `lam0 = mu0`) nonempty, so Krein–Milman
+(`IsCompact.extremePoints_nonempty`) produces an *extreme* optimal strategy for each
+player. `expectedPayoff_eq_of_optimal` and its corollaries `tight_of_optimal_col_support`
+/ `tight_of_optimal_row_support` are the complementary-slackness step of the sketch: on
+the support of an optimal pair, the payoff equations are tight. This is real progress
+towards the sketch, but NOT the reduction itself — see the TODO note at the end of this
+section for exactly what remains. -/
+
+section OptimalStrategies
+
+variable {I J : Type*} [Fintype I] [Fintype J] [Nonempty I] [Nonempty J]
+
+/-- The row player's mixed strategies that are optimal *at value `V`*: simplex points
+whose expected payoff against every pure column is at least `V`. -/
+def optimalRowStrategies (A : I → J → ℝ) (V : ℝ) : Set (I → ℝ) :=
+  stdSimplex ℝ I ∩ ⋂ j, {x : I → ℝ | V ≤ ∑ i, x i * A i j}
+
+/-- The column player's mixed strategies that are optimal *at value `V`*: simplex points
+whose expected payoff against every pure row is at most `V`. The sum order `y j * A i j`
+matches `MinimaxLoomis.mu.aux`'s `wsum y (fun j => A i j)`. -/
+def optimalColStrategies (A : I → J → ℝ) (V : ℝ) : Set (J → ℝ) :=
+  stdSimplex ℝ J ∩ ⋂ i, {y : J → ℝ | ∑ j, y j * A i j ≤ V}
+
+omit [Fintype J] [Nonempty I] [Nonempty J] in
+/-- Each "beats `V` against pure column `j`" cut is a closed halfspace, hence convex. -/
+theorem convex_rowHalfspace (A : I → J → ℝ) (V : ℝ) (j : J) :
+    Convex ℝ {x : I → ℝ | V ≤ ∑ i, x i * A i j} := by
+  intro x hx y hy a b ha hb _hab
+  simp only [Set.mem_setOf_eq] at hx hy ⊢
+  have hcomb : ∑ i, (a • x + b • y) i * A i j
+      = a * (∑ i, x i * A i j) + b * (∑ i, y i * A i j) := by
+    rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun i _ => ?_
+    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+    ring
+  rw [hcomb]
+  have h1 : a * V ≤ a * (∑ i, x i * A i j) := mul_le_mul_of_nonneg_left hx ha
+  have h2 : b * V ≤ b * (∑ i, y i * A i j) := mul_le_mul_of_nonneg_left hy hb
+  have h3 : a * V + b * V = V := by rw [← add_mul, _hab, one_mul]
+  linarith
+
+omit [Fintype I] [Nonempty I] [Nonempty J] in
+/-- Each "beaten by `V` against pure row `i`" cut is a closed halfspace, hence convex. -/
+theorem convex_colHalfspace (A : I → J → ℝ) (V : ℝ) (i : I) :
+    Convex ℝ {y : J → ℝ | ∑ j, y j * A i j ≤ V} := by
+  intro x hx y hy a b ha hb _hab
+  simp only [Set.mem_setOf_eq] at hx hy ⊢
+  have hcomb : ∑ j, (a • x + b • y) j * A i j
+      = a * (∑ j, x j * A i j) + b * (∑ j, y j * A i j) := by
+    rw [Finset.mul_sum, Finset.mul_sum, ← Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
+    ring
+  rw [hcomb]
+  have h1 : a * (∑ j, x j * A i j) ≤ a * V := mul_le_mul_of_nonneg_left hx ha
+  have h2 : b * (∑ j, y j * A i j) ≤ b * V := mul_le_mul_of_nonneg_left hy hb
+  have h3 : a * V + b * V = V := by rw [← add_mul, _hab, one_mul]
+  linarith
+
+omit [Fintype J] [Nonempty I] [Nonempty J] in
+/-- `optimalRowStrategies A V` is convex: the intersection of the (convex) simplex with
+countably many convex halfspace cuts. -/
+theorem convex_optimalRowStrategies (A : I → J → ℝ) (V : ℝ) :
+    Convex ℝ (optimalRowStrategies A V) :=
+  (convex_stdSimplex ℝ I).inter (convex_iInter fun j => convex_rowHalfspace A V j)
+
+omit [Fintype I] [Nonempty I] [Nonempty J] in
+/-- `optimalColStrategies A V` is convex. -/
+theorem convex_optimalColStrategies (A : I → J → ℝ) (V : ℝ) :
+    Convex ℝ (optimalColStrategies A V) :=
+  (convex_stdSimplex ℝ J).inter (convex_iInter fun i => convex_colHalfspace A V i)
+
+omit [Fintype J] [Nonempty I] [Nonempty J] in
+theorem isClosed_rowHalfspace (A : I → J → ℝ) (V : ℝ) (j : J) :
+    IsClosed {x : I → ℝ | V ≤ ∑ i, x i * A i j} := by
+  have heq : {x : I → ℝ | V ≤ ∑ i, x i * A i j}
+      = (fun x : I → ℝ => ∑ i, x i * A i j) ⁻¹' Set.Ici V := rfl
+  rw [heq]
+  exact isClosed_Ici.preimage
+    (continuous_finsetSum Finset.univ fun i _ => (continuous_apply i).mul continuous_const)
+
+omit [Fintype I] [Nonempty I] [Nonempty J] in
+theorem isClosed_colHalfspace (A : I → J → ℝ) (V : ℝ) (i : I) :
+    IsClosed {y : J → ℝ | ∑ j, y j * A i j ≤ V} := by
+  have heq : {y : J → ℝ | ∑ j, y j * A i j ≤ V}
+      = (fun y : J → ℝ => ∑ j, y j * A i j) ⁻¹' Set.Iic V := rfl
+  rw [heq]
+  exact isClosed_Iic.preimage
+    (continuous_finsetSum Finset.univ fun j _ => (continuous_apply j).mul continuous_const)
+
+omit [Fintype J] [Nonempty I] [Nonempty J] in
+/-- `optimalRowStrategies A V` is closed (in the ambient space `I → ℝ`): the simplex is
+compact-hence-closed in a `T2Space`, and each halfspace cut is closed. -/
+theorem isClosed_optimalRowStrategies (A : I → J → ℝ) (V : ℝ) :
+    IsClosed (optimalRowStrategies A V) :=
+  (isCompact_stdSimplex ℝ I).isClosed.inter
+    (isClosed_iInter fun j => isClosed_rowHalfspace A V j)
+
+omit [Fintype I] [Nonempty I] [Nonempty J] in
+/-- `optimalColStrategies A V` is closed. -/
+theorem isClosed_optimalColStrategies (A : I → J → ℝ) (V : ℝ) :
+    IsClosed (optimalColStrategies A V) :=
+  (isCompact_stdSimplex ℝ J).isClosed.inter
+    (isClosed_iInter fun i => isClosed_colHalfspace A V i)
+
+omit [Fintype J] [Nonempty I] [Nonempty J] in
+/-- `optimalRowStrategies A V` is compact: a closed subset of the compact simplex. -/
+theorem isCompact_optimalRowStrategies (A : I → J → ℝ) (V : ℝ) :
+    IsCompact (optimalRowStrategies A V) :=
+  IsCompact.of_isClosed_subset (isCompact_stdSimplex ℝ I) (isClosed_optimalRowStrategies A V)
+    Set.inter_subset_left
+
+omit [Fintype I] [Nonempty I] [Nonempty J] in
+/-- `optimalColStrategies A V` is compact. -/
+theorem isCompact_optimalColStrategies (A : I → J → ℝ) (V : ℝ) :
+    IsCompact (optimalColStrategies A V) :=
+  IsCompact.of_isClosed_subset (isCompact_stdSimplex ℝ J) (isClosed_optimalColStrategies A V)
+    Set.inter_subset_left
+
+/-- At `V := lam0 A`, `optimalRowStrategies` is nonempty: `exists_xx_lam0` supplies a
+mixed strategy whose column-payoffs all dominate `lam0 A`. -/
+theorem optimalRowStrategies_lam0_nonempty (A : I → J → ℝ) :
+    (optimalRowStrategies A (MinimaxLoomis.lam0 A)).Nonempty := by
+  obtain ⟨xx, hxx⟩ := MinimaxLoomis.exists_xx_lam0 A
+  exact ⟨xx.val, xx.property, Set.mem_iInter.2 fun j => hxx j⟩
+
+/-- At `V := lam0 A`, `optimalColStrategies` is nonempty: `exists_yy_mu0` supplies a
+mixed strategy whose row-payoffs are all dominated by `mu0 A`, and `mu0 A = lam0 A` by
+the (already-proved) von Neumann minimax theorem `Loomis.minmax_from_general`. -/
+theorem optimalColStrategies_lam0_nonempty (A : I → J → ℝ) :
+    (optimalColStrategies A (MinimaxLoomis.lam0 A)).Nonempty := by
+  rw [Loomis.minmax_from_general A]
+  obtain ⟨yy, hyy⟩ := MinimaxLoomis.exists_yy_mu0 A
+  exact ⟨yy.val, yy.property, Set.mem_iInter.2 fun i => hyy i⟩
+
+/-- **Krein–Milman for the row player's optimal strategies.** A nonempty compact convex
+set in a locally convex space has an extreme point (`IsCompact.extremePoints_nonempty`);
+`optimalRowStrategies A (lam0 A)` is exactly such a set. This produces an *extreme*
+optimal mixed strategy for the row player — the `x` of the reduction sketch above. -/
+theorem extremePoints_optimalRowStrategies_nonempty (A : I → J → ℝ) :
+    (Set.extremePoints ℝ (optimalRowStrategies A (MinimaxLoomis.lam0 A))).Nonempty :=
+  IsCompact.extremePoints_nonempty (isCompact_optimalRowStrategies A (MinimaxLoomis.lam0 A))
+    (optimalRowStrategies_lam0_nonempty A)
+
+/-- **Krein–Milman for the column player's optimal strategies.** The `y` of the
+reduction sketch above. -/
+theorem extremePoints_optimalColStrategies_nonempty (A : I → J → ℝ) :
+    (Set.extremePoints ℝ (optimalColStrategies A (MinimaxLoomis.lam0 A))).Nonempty :=
+  IsCompact.extremePoints_nonempty (isCompact_optimalColStrategies A (MinimaxLoomis.lam0 A))
+    (optimalColStrategies_lam0_nonempty A)
+
+omit [Nonempty I] [Nonempty J] in
+/-- **The expected payoff of any optimal pair equals the value.** If `x` is optimal for
+the row player and `y` is optimal for the column player at the same value `V`, then
+`E(x,y) = V`: `x`'s guarantee bounds `E(x,y)` below by `V` (averaging `x`'s per-column
+guarantee `≥ V` against `y`), and `y`'s guarantee bounds `E(x,y)` above by `V`
+(averaging `y`'s per-row guarantee `≤ V` against `x`); the two bounds coincide. -/
+theorem expectedPayoff_eq_of_optimal {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ} (hx : x ∈ optimalRowStrategies A V)
+    {y : J → ℝ} (hy : y ∈ optimalColStrategies A V) :
+    ∑ i, ∑ j, x i * A i j * y j = V := by
+  obtain ⟨hxs, hxge⟩ := hx
+  obtain ⟨hys, hyle⟩ := hy
+  rw [Set.mem_iInter] at hxge hyle
+  simp only [Set.mem_setOf_eq] at hxge hyle
+  have hswapR : ∑ i, ∑ j, x i * A i j * y j = ∑ j, y j * (∑ i, x i * A i j) := by
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => by ring
+  have hswapC : ∑ i, ∑ j, x i * A i j * y j = ∑ i, x i * (∑ j, y j * A i j) := by
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun j _ => by ring
+  have hge : V ≤ ∑ j, y j * (∑ i, x i * A i j) := by
+    calc V = ∑ j, y j * V := by rw [← Finset.sum_mul, hys.2, one_mul]
+      _ ≤ ∑ j, y j * (∑ i, x i * A i j) :=
+          Finset.sum_le_sum fun j _ => mul_le_mul_of_nonneg_left (hxge j) (hys.1 j)
+  have hle : ∑ i, x i * (∑ j, y j * A i j) ≤ V := by
+    calc ∑ i, x i * (∑ j, y j * A i j)
+        ≤ ∑ i, x i * V :=
+          Finset.sum_le_sum fun i _ => mul_le_mul_of_nonneg_left (hyle i) (hxs.1 i)
+      _ = V := by rw [← Finset.sum_mul, hxs.2, one_mul]
+  have hSge : V ≤ ∑ i, ∑ j, x i * A i j * y j := hswapR ▸ hge
+  have hSle : (∑ i, ∑ j, x i * A i j * y j) ≤ V := hswapC ▸ hle
+  exact le_antisymm hSle hSge
+
+omit [Nonempty I] [Nonempty J] in
+/-- **Complementary slackness, column side.** If `y j ≠ 0` for an optimal column
+strategy `y`, then column `j`'s payoff against `x` is exactly the value `V` (not just
+`≥ V`). -/
+theorem tight_of_optimal_col_support {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ} (hx : x ∈ optimalRowStrategies A V)
+    {y : J → ℝ} (hy : y ∈ optimalColStrategies A V) {j : J} (hj : y j ≠ 0) :
+    ∑ i, x i * A i j = V := by
+  have hEV := expectedPayoff_eq_of_optimal hx hy
+  obtain ⟨-, hxge⟩ := hx
+  rw [Set.mem_iInter] at hxge
+  simp only [Set.mem_setOf_eq] at hxge
+  obtain ⟨hys, -⟩ := hy
+  have hswap : ∑ i, ∑ j, x i * A i j * y j = ∑ j, y j * (∑ i, x i * A i j) := by
+    rw [Finset.sum_comm]
+    refine Finset.sum_congr rfl fun j _ => ?_
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => by ring
+  rw [hswap] at hEV
+  have hzero : ∑ j, y j * (∑ i, x i * A i j - V) = 0 := by
+    have heq : ∑ j, y j * (∑ i, x i * A i j - V)
+        = (∑ j, y j * (∑ i, x i * A i j)) - V * ∑ j, y j := by
+      rw [Finset.mul_sum, ← Finset.sum_sub_distrib]
+      exact Finset.sum_congr rfl fun j _ => by ring
+    rw [heq, hEV, hys.2, mul_one, sub_self]
+  have hnonneg : ∀ j ∈ (Finset.univ : Finset J), 0 ≤ y j * (∑ i, x i * A i j - V) :=
+    fun j _ => mul_nonneg (hys.1 j) (by linarith [hxge j])
+  have hall := (Finset.sum_eq_zero_iff_of_nonneg hnonneg).1 hzero j (Finset.mem_univ j)
+  rcases mul_eq_zero.1 hall with h | h
+  · exact absurd h hj
+  · linarith
+
+omit [Nonempty I] [Nonempty J] in
+/-- **Complementary slackness, row side.** If `x i ≠ 0` for an optimal row strategy `x`,
+then row `i`'s payoff against `y` is exactly the value `V`. -/
+theorem tight_of_optimal_row_support {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ} (hx : x ∈ optimalRowStrategies A V)
+    {y : J → ℝ} (hy : y ∈ optimalColStrategies A V) {i : I} (hi : x i ≠ 0) :
+    ∑ j, y j * A i j = V := by
+  have hEV := expectedPayoff_eq_of_optimal hx hy
+  obtain ⟨-, hyle⟩ := hy
+  rw [Set.mem_iInter] at hyle
+  simp only [Set.mem_setOf_eq] at hyle
+  obtain ⟨hxs, -⟩ := hx
+  have hswap : ∑ i, ∑ j, x i * A i j * y j = ∑ i, x i * (∑ j, y j * A i j) := by
+    refine Finset.sum_congr rfl fun i _ => ?_
+    rw [Finset.mul_sum]
+    exact Finset.sum_congr rfl fun j _ => by ring
+  rw [hswap] at hEV
+  -- Note the sign: `y`'s guarantee is `≤ V`, so the nonnegative slack is `V - (Ay)_i`.
+  have hzero : ∑ i, x i * (V - ∑ j, y j * A i j) = 0 := by
+    have heq : ∑ i, x i * (V - ∑ j, y j * A i j)
+        = (∑ i, x i) * V - ∑ i, x i * (∑ j, y j * A i j) := by
+      rw [Finset.sum_mul, ← Finset.sum_sub_distrib]
+      exact Finset.sum_congr rfl fun i _ => by ring
+    rw [heq, hxs.2, one_mul, hEV, sub_self]
+  have hnonneg : ∀ i ∈ (Finset.univ : Finset I), 0 ≤ x i * (V - ∑ j, y j * A i j) :=
+    fun i _ => mul_nonneg (hxs.1 i) (by linarith [hyle i])
+  have hall := (Finset.sum_eq_zero_iff_of_nonneg hnonneg).1 hzero i (Finset.mem_univ i)
+  rcases mul_eq_zero.1 hall with h | h
+  · exact absurd h hi
+  · linarith
+
+end OptimalStrategies
+
+/-! ### What remains: the support-squareness / nonsingularity gap
+
+The building blocks above land exactly the convexity/compactness/Krein–Milman half of
+the reduction sketch: extreme optimal mixed strategies `x ∈ extremePoints ℝ
+(optimalRowStrategies A (lam0 A))`, `y ∈ extremePoints ℝ (optimalColStrategies A (lam0
+A))` exist (`extremePoints_optimalRowStrategies_nonempty`,
+`extremePoints_optimalColStrategies_nonempty`), and on their supports the payoff
+equations are tight (`tight_of_optimal_row_support`, `tight_of_optimal_col_support`) —
+this holds for *any* optimal pair, not just extreme ones, since complementary slackness
+only used the defining inequalities, not extremality.
+
+What is genuinely missing, and NOT proved here, is the step that uses *extremality* (as
+opposed to mere optimality) to force the support submatrix to be square and nonsingular:
+given `R := {i | x i ≠ 0}` and `C := {j | y j ≠ 0}`, tightness gives an equalizing pair
+for the (generally non-square, generally singular) submatrix `A.submatrix R C`; extreme
+points of `optimalRowStrategies`/`optimalColStrategies` are exactly the ones *not*
+expressible as a nontrivial average of two other optimal strategies with the same
+support-defining tight set, which — via a linear-independence / rank argument on the
+tight system `{∑ᵢ∈R xᵢ Aᵢⱼ = V : j ∈ C} ∪ {∑ᵢ∈R xᵢ = 1}` — forces `|R| = |C|` and the
+submatrix nonsingular (Shapley–Snow 1950's actual "basic feasible solution" argument).
+Mathlib's `IsExtreme`/`Set.extremePoints` API (`Mathlib.Analysis.Convex.Extreme`) is
+purely the `openSegment`-based definition and its immediate closure properties
+(`IsExtreme.inter`, `IsExtreme.extremePoints_eq`, ...); it carries no theory connecting
+extreme points of a polyhedron to the rank of its active/tight linear constraints: there
+is no `Polytope`/basic-feasible-solution/vertex type in Mathlib, and no LP duality theory
+beyond `Set.extremePoints`/`IsExtreme` themselves (checked via `leansearch`/`loogle`
+against `Mathlib.Analysis.Convex.*` and `Mathlib.Analysis.Convex.Extreme`/`KreinMilman` in
+particular). Deriving that connection from Mathlib's bare `openSegment` characterization
+(`mem_extremePoints_iff_left`) — i.e. reproving the relevant slice of LP vertex theory
+from scratch — is the remaining, substantial work; it is left as the precise `TODO`
+above (the `shapley_snow_kernel` proof sketch) together with this note pinpointing
+exactly which step it is. -/
 
 /-! ### Bivariate evaluation
 
