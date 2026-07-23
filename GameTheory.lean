@@ -117,6 +117,8 @@ import GameTheory.Concepts.Stochastic.Adaptive
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
 import GameTheory.Concepts.Stochastic.TransitionIndependentCertificate
 import GameTheory.Concepts.Stochastic.AverageOptimalityCertificate
+import GameTheory.Concepts.Stochastic.SingleController
+import GameTheory.Concepts.Stochastic.DiscountBiasNoGo
 import GameTheory.Concepts.Stochastic.BellmanVariety
 import GameTheory.Concepts.Stochastic.ZeroSum
 import GameTheory.Concepts.Stochastic.Fink
