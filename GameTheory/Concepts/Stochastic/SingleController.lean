@@ -1040,6 +1040,534 @@ theorem rowEval_vriezeA_vriezeEncode_bias (G : StochasticGame Bool) [Finite G.St
   rw [e1]
   linarith [e23, e45]
 
+-- ============================================================================
+-- Duality extraction: strong duality applied to the Vrieze embedding
+-- ============================================================================
+
+/-!
+### From primal optimality to a dual-feasible point
+
+This section closes obligation 1 of the module docstring's residual: it
+embeds `IsVriezePrimalOptimal` into `Math.LinearProgramming.Standard`'s
+`MinPrimalFeasible`, invokes `Math.LinearProgramming.StrongDuality.
+lp_strong_duality`, and decodes the resulting dual-feasible point into the
+two named dual flows `IsVriezeDualFeasible` exports: `z` (dual to the bias
+rows — Vrieze's occupation measure) and `yGain` (dual to the gain rows).
+There is no third dual object: the abstract row-indexed vector
+`Math.LinearProgramming.MaxDualFeasible` produces is a technical artifact of
+the `VriezeRow` embedding (it also carries the two split directions of the
+noncontroller's simplex-equality dual, which is a genuine third *quantity*
+— the per-state Lagrange multiplier for `Σ_i x_s(i) = 1` — but not a fourth
+row/column family, and not consumed by anything below), decoded here into
+exactly the two named flows the module docstring's "LP-duality inventory"
+promises. -/
+
+private theorem sum_coeff_mul_sub {ι : Type*} [Fintype ι] (A f h : ι → ℝ) :
+    (∑ t, A t * f t) - (∑ t, A t * h t) = ∑ t, A t * (f t - h t) := by
+  rw [← Finset.sum_sub_distrib]
+  exact Finset.sum_congr rfl fun t _ => (mul_sub _ _ _).symm
+
+open Classical in
+/-- **General gain-row evaluation**, for an *arbitrary* standard-form column
+vector `z` (not necessarily of `vriezeEncode` shape), expressed via the
+decoded gain `vriezeDecodeG`. The algebra is simpler than
+`rowEval_vriezeA_vriezeEncode_gain`'s encode-specific version: no
+`max(·,0)`-splitting is needed, since `vriezeDecodeG` reads the `g⁺`/`g⁻`
+difference directly off `z`. -/
+theorem rowEval_vriezeA_gain (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State) (j : G.Act controller) :
+    Math.LinearProgramming.rowEval (G.vriezeA controller) z (Sum.inl (s, j)) =
+      (∑ t, G.transProb controller s j t * G.vriezeDecodeG controller z t) -
+        G.vriezeDecodeG controller z s := by
+  change (∑ c, G.vriezeA controller (Sum.inl (s, j)) c * z c) = _
+  rw [sum_vriezeCol]
+  simp only [vriezeA, zero_mul, Finset.sum_const_zero, zero_add, add_zero]
+  have hneg : (∑ x, ((if x = s then (1:ℝ) else 0) - G.transProb controller s j x) *
+      z (Sum.inr (Sum.inr (Sum.inl x))))
+      = -(∑ x, (G.transProb controller s j x - (if x = s then (1:ℝ) else 0)) *
+        z (Sum.inr (Sum.inr (Sum.inl x)))) := by
+    rw [← Finset.sum_neg_distrib]
+    exact Finset.sum_congr rfl fun t _ => by ring
+  rw [hneg, ← sub_eq_add_neg,
+    sum_coeff_mul_sub (fun x => G.transProb controller s j x - (if x = s then (1:ℝ) else 0))
+      (fun x => z (Sum.inr (Sum.inl x))) (fun x => z (Sum.inr (Sum.inr (Sum.inl x))))]
+  simp only [sub_mul]
+  rw [Finset.sum_sub_distrib]
+  have hite : (∑ x : G.State, (if x = s then (1:ℝ) else 0) *
+      (z (Sum.inr (Sum.inl x)) - z (Sum.inr (Sum.inr (Sum.inl x))))) =
+      z (Sum.inr (Sum.inl s)) - z (Sum.inr (Sum.inr (Sum.inl s))) := by simp
+  simp only [vriezeDecodeG]
+  rw [show (∑ x : G.State, G.transProb controller s j x *
+      (z (Sum.inr (Sum.inl x)) - z (Sum.inr (Sum.inr (Sum.inl x)))))
+      = ∑ x : G.State, G.transProb controller s j x *
+        (z (Sum.inr (Sum.inl x)) - z (Sum.inr (Sum.inr (Sum.inl x)))) from rfl,
+    hite]
+
+open Classical in
+/-- **General bias-row evaluation**, the arbitrary-`z` analogue of
+`rowEval_vriezeA_vriezeEncode_bias`. -/
+theorem rowEval_vriezeA_bias (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State) (j : G.Act controller) :
+    Math.LinearProgramming.rowEval (G.vriezeA controller) z (Sum.inr (Sum.inl (s, j))) =
+      (∑ i, G.vriezeDecodeXVal controller z s i * G.rewardVal controller s i j) +
+        (∑ t, G.transProb controller s j t * G.vriezeDecodeV controller z t) -
+        G.vriezeDecodeG controller z s - G.vriezeDecodeV controller z s := by
+  change (∑ c, G.vriezeA controller (Sum.inr (Sum.inl (s, j))) c * z c) = _
+  rw [sum_vriezeCol]
+  simp only [vriezeA]
+  have e1 : (∑ p : G.State × G.Act (!controller),
+      (if p.1 = s then G.rewardVal controller s p.2 j else 0) * z (Sum.inl p)) =
+      ∑ i, G.vriezeDecodeXVal controller z s i * G.rewardVal controller s i j := by
+    have step : (∑ p : G.State × G.Act (!controller),
+        (if p.1 = s then G.rewardVal controller s p.2 j else 0) * z (Sum.inl p)) =
+        ∑ p : G.State × G.Act (!controller),
+          (if p.1 = s then G.rewardVal controller s p.2 j * z (Sum.inl p) else 0) := by
+      refine Finset.sum_congr rfl ?_
+      rintro ⟨s', i⟩ _
+      by_cases h : s' = s <;> simp [h]
+    rw [step, sum_prod_ite_eq G s
+      (fun p i => G.rewardVal controller s i j * z (Sum.inl (p, i)))]
+    exact Finset.sum_congr rfl fun i _ => by
+      rw [vriezeDecodeXVal]; ring
+  have e23 : (∑ x, (-(if x = s then (1:ℝ) else 0)) * z (Sum.inr (Sum.inl x))) +
+      (∑ x, (if x = s then (1:ℝ) else 0) * z (Sum.inr (Sum.inr (Sum.inl x)))) =
+      -(G.vriezeDecodeG controller z s) := by
+    have hcollapse1 : (∑ x : G.State, (-(if x = s then (1:ℝ) else 0)) *
+        z (Sum.inr (Sum.inl x))) = -(z (Sum.inr (Sum.inl s))) := by
+      simp [neg_mul, Finset.sum_neg_distrib]
+    have hcollapse2 : (∑ x : G.State, (if x = s then (1:ℝ) else 0) *
+        z (Sum.inr (Sum.inr (Sum.inl x)))) = z (Sum.inr (Sum.inr (Sum.inl s))) := by simp
+    rw [hcollapse1, hcollapse2, vriezeDecodeG]; ring
+  have e45 : (∑ x, (G.transProb controller s j x - (if x = s then (1:ℝ) else 0)) *
+      z (Sum.inr (Sum.inr (Sum.inr (Sum.inl x))))) +
+      (∑ x, ((if x = s then (1:ℝ) else 0) - G.transProb controller s j x) *
+        z (Sum.inr (Sum.inr (Sum.inr (Sum.inr x))))) =
+      (∑ t, G.transProb controller s j t * G.vriezeDecodeV controller z t) -
+        G.vriezeDecodeV controller z s := by
+    have hneg : (∑ x, ((if x = s then (1:ℝ) else 0) - G.transProb controller s j x) *
+        z (Sum.inr (Sum.inr (Sum.inr (Sum.inr x))))) =
+        -(∑ x, (G.transProb controller s j x - (if x = s then (1:ℝ) else 0)) *
+          z (Sum.inr (Sum.inr (Sum.inr (Sum.inr x))))) := by
+      rw [← Finset.sum_neg_distrib]
+      exact Finset.sum_congr rfl fun t _ => by ring
+    rw [hneg, ← sub_eq_add_neg,
+      sum_coeff_mul_sub (fun x => G.transProb controller s j x - (if x = s then (1:ℝ) else 0))
+        (fun x => z (Sum.inr (Sum.inr (Sum.inr (Sum.inl x)))))
+        (fun x => z (Sum.inr (Sum.inr (Sum.inr (Sum.inr x)))))]
+    simp only [sub_mul]
+    rw [Finset.sum_sub_distrib]
+    have hite : (∑ x : G.State, (if x = s then (1:ℝ) else 0) *
+        (z (Sum.inr (Sum.inr (Sum.inr (Sum.inl x)))) -
+          z (Sum.inr (Sum.inr (Sum.inr (Sum.inr x)))))) =
+        z (Sum.inr (Sum.inr (Sum.inr (Sum.inl s)))) -
+          z (Sum.inr (Sum.inr (Sum.inr (Sum.inr s)))) := by simp
+    rw [hite]
+    simp only [vriezeDecodeV]
+  rw [e1]
+  linarith [e23, e45]
+
+open Classical in
+/-- **General simplex-row evaluations**, both directions: the noncontroller's
+raw column weight at `s` summed over its own actions, and its negation. -/
+theorem rowEval_vriezeA_simplex (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z : VriezeCol G controller → ℝ) (s : G.State) :
+    Math.LinearProgramming.rowEval (G.vriezeA controller) z
+        (Sum.inr (Sum.inr (Sum.inl s))) = ∑ i, G.vriezeDecodeXVal controller z s i ∧
+    Math.LinearProgramming.rowEval (G.vriezeA controller) z
+        (Sum.inr (Sum.inr (Sum.inr s))) = -(∑ i, G.vriezeDecodeXVal controller z s i) := by
+  constructor
+  · change (∑ c, G.vriezeA controller (Sum.inr (Sum.inr (Sum.inl s))) c * z c) = _
+    rw [sum_vriezeCol]
+    simp only [vriezeA, zero_mul, Finset.sum_const_zero, add_zero]
+    rw [show (∑ p : G.State × G.Act (!controller),
+        (if p.1 = s then (1:ℝ) else 0) * z (Sum.inl p)) =
+        ∑ p : G.State × G.Act (!controller), (if p.1 = s then z (Sum.inl p) else 0) from
+      Finset.sum_congr rfl fun p _ => by by_cases h : p.1 = s <;> simp [h]]
+    rw [sum_prod_ite_eq G s (fun p i => z (Sum.inl (p, i)))]
+    rfl
+  · change (∑ c, G.vriezeA controller (Sum.inr (Sum.inr (Sum.inr s))) c * z c) = _
+    rw [sum_vriezeCol]
+    simp only [vriezeA, zero_mul, Finset.sum_const_zero, add_zero]
+    rw [show (∑ p : G.State × G.Act (!controller),
+        (if p.1 = s then (-1:ℝ) else 0) * z (Sum.inl p)) =
+        -(∑ p : G.State × G.Act (!controller), (if p.1 = s then z (Sum.inl p) else 0)) from by
+      rw [← Finset.sum_neg_distrib]
+      exact Finset.sum_congr rfl fun p _ => by by_cases h : p.1 = s <;> simp [h]]
+    rw [sum_prod_ite_eq G s (fun p i => z (Sum.inl (p, i)))]
+    rfl
+
+/-!
+### The primal embedding, both directions
+
+`vriezeGainRow_of_isVriezePrimalFeasible`/`vriezeBiasRow_of_isVriezePrimalFeasible`
+collapse `IsVriezePrimalFeasible`'s two `∀ b : G.JointAct`-quantified clauses
+down to the single-`j` form the embedded LP's rows are indexed by, using
+`IsSingleController` to discharge the collapse
+`transition_jointOf_eq_of_single_controller` needs. Combined with the
+already-proved `rowEval_vriezeA_vriezeEncode_gain`/`_bias` and the PMF-sums-
+to-one fact, they give `minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible`
+— the encode direction. The reverse, `isVriezePrimalFeasible_of_minPrimalFeasible`,
+runs the same collapse outward from the *general* `rowEval_vriezeA_gain`/`_bias`/
+`_simplex` computed above, decoding an arbitrary standard-form feasible point
+back into a genuine `IsVriezePrimalFeasible` witness. -/
+
+private theorem vriezeGainRow_of_isVriezePrimalFeasible
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
+    (hfeas : G.IsVriezePrimalFeasible controller x g v) (s : G.State) (j : G.Act controller) :
+    g s ≤ ∑ t, G.transProb controller s j t * g t := by
+  have h := hfeas.1 s (G.jointOfControllerAct controller j)
+  have hconst : (fun i : G.Act (!controller) =>
+      expect (G.transition s (Function.update (G.jointOfControllerAct controller j)
+        (!controller) i)) g)
+      = fun _ : G.Act (!controller) =>
+        expect (G.transition s (G.jointOfControllerAct controller j)) g := by
+    funext i
+    exact congrArg (expect · g) (G.transition_jointOf_eq_of_single_controller hSC s j i)
+  rw [hconst, expect_const, expect_eq_sum] at h
+  simpa [transProb] using h
+
+private theorem vriezeBiasRow_of_isVriezePrimalFeasible
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
+    (hfeas : G.IsVriezePrimalFeasible controller x g v) (s : G.State) (j : G.Act controller) :
+    g s + v s ≤ (∑ i, ((x s) i).toReal * G.rewardVal controller s i j) +
+      ∑ t, G.transProb controller s j t * v t := by
+  have h := hfeas.2 s (G.jointOfControllerAct controller j)
+  have hconst : (fun i : G.Act (!controller) =>
+      G.stagePayoff s (Function.update (G.jointOfControllerAct controller j) (!controller) i)
+          (!controller) +
+        expect (G.transition s (Function.update (G.jointOfControllerAct controller j)
+          (!controller) i)) v)
+      = fun i : G.Act (!controller) =>
+        G.rewardVal controller s i j +
+          expect (G.transition s (G.jointOfControllerAct controller j)) v := by
+    funext i
+    change G.stagePayoff s (G.jointOf controller j i) (!controller) +
+        expect (G.transition s (G.jointOf controller j i)) v
+      = G.rewardVal controller s i j +
+        expect (G.transition s (G.jointOfControllerAct controller j)) v
+    rw [G.transition_jointOf_eq_of_single_controller hSC s j i]
+    rfl
+  rw [hconst, expect_add, expect_const] at h
+  simp only [expect_eq_sum] at h
+  simpa [transProb] using h
+
+private theorem sum_pmf_toReal_eq_one {α : Type*} [Fintype α] (p : PMF α) :
+    (∑ a, (p a).toReal) = 1 := by
+  have h : expect p (fun _ => (1:ℝ)) = ∑ a, (p a).toReal * 1 := expect_eq_sum p (fun _ => 1)
+  rw [expect_const] at h
+  simpa using h.symm
+
+theorem minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
+    (hfeas : G.IsVriezePrimalFeasible controller x g v) :
+    Math.LinearProgramming.MinPrimalFeasible (G.vriezeA controller) (G.vriezeB controller)
+      (G.vriezeEncode controller x g v) := by
+  refine ⟨?_, ?_⟩
+  · rintro (⟨s, i⟩ | s | s | s | s) <;> simp [vriezeEncode, ENNReal.toReal_nonneg]
+  · rintro (⟨s, j⟩ | ⟨s, j⟩ | s | s)
+    · rw [rowEval_vriezeA_vriezeEncode_gain]
+      have := G.vriezeGainRow_of_isVriezePrimalFeasible hSC hfeas s j
+      change (0:ℝ) ≤ _
+      linarith
+    · rw [rowEval_vriezeA_vriezeEncode_bias]
+      have := G.vriezeBiasRow_of_isVriezePrimalFeasible hSC hfeas s j
+      change (0:ℝ) ≤ _
+      linarith
+    · change (1:ℝ) ≤ Math.LinearProgramming.rowEval (G.vriezeA controller)
+        (G.vriezeEncode controller x g v) (Sum.inr (Sum.inr (Sum.inl s)))
+      rw [(G.rowEval_vriezeA_simplex controller (G.vriezeEncode controller x g v) s).1]
+      simp only [vriezeDecodeXVal, vriezeEncode]
+      exact le_of_eq (sum_pmf_toReal_eq_one (x s)).symm
+    · change (-1:ℝ) ≤ Math.LinearProgramming.rowEval (G.vriezeA controller)
+        (G.vriezeEncode controller x g v) (Sum.inr (Sum.inr (Sum.inr s)))
+      rw [(G.rowEval_vriezeA_simplex controller (G.vriezeEncode controller x g v) s).2]
+      simp only [vriezeDecodeXVal, vriezeEncode]
+      rw [sum_pmf_toReal_eq_one (x s)]
+
+/-- The two simplex-row directions sandwich `vriezeDecodeXVal` into a genuine
+probability weighting: nonnegative (from `Nonnegative z`) and summing to `1`
+(from the two opposite-signed `≥` bounds forcing equality). -/
+private theorem vriezeDecodeXVal_isProb_of_minPrimalFeasible
+    {controller : Bool} {z : VriezeCol G controller → ℝ}
+    (hmin : Math.LinearProgramming.MinPrimalFeasible (G.vriezeA controller)
+      (G.vriezeB controller) z) (s : G.State) :
+    (∀ i, 0 ≤ G.vriezeDecodeXVal controller z s i) ∧
+      (∑ i, G.vriezeDecodeXVal controller z s i) = 1 := by
+  refine ⟨fun i => hmin.1 (Sum.inl (s, i)), ?_⟩
+  have hpos := hmin.2 (Sum.inr (Sum.inr (Sum.inl s)))
+  have hneg := hmin.2 (Sum.inr (Sum.inr (Sum.inr s)))
+  rw [(G.rowEval_vriezeA_simplex controller z s).1] at hpos
+  rw [(G.rowEval_vriezeA_simplex controller z s).2] at hneg
+  simp only [vriezeB] at hpos hneg
+  linarith
+
+open Classical in
+/-- **The decode direction.** An arbitrary standard-form feasible point of the
+Vrieze embedding decodes to a genuine `IsVriezePrimalFeasible` witness — the
+converse of `minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible`, and
+the half of the equivalence `exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal`
+below needs to turn `IsVriezePrimalOptimal`'s domination over
+`IsVriezePrimalFeasible` points into domination over *every* standard-form
+feasible column vector, as `lp_strong_duality`'s `hopt` hypothesis requires. -/
+theorem isVriezePrimalFeasible_of_minPrimalFeasible
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    {z : VriezeCol G controller → ℝ}
+    (hmin : Math.LinearProgramming.MinPrimalFeasible (G.vriezeA controller)
+      (G.vriezeB controller) z) :
+    G.IsVriezePrimalFeasible controller (G.vriezeDecodeX controller z)
+      (G.vriezeDecodeG controller z) (G.vriezeDecodeV controller z) := by
+  have hnn : ∀ s, ∀ i, 0 ≤ G.vriezeDecodeXVal controller z s i :=
+    fun s => (G.vriezeDecodeXVal_isProb_of_minPrimalFeasible hmin s).1
+  have hsum : ∀ s, (∑ i, G.vriezeDecodeXVal controller z s i) = 1 :=
+    fun s => (G.vriezeDecodeXVal_isProb_of_minPrimalFeasible hmin s).2
+  have hxeq : ∀ s i, ((G.vriezeDecodeX controller z s) i).toReal =
+      G.vriezeDecodeXVal controller z s i := fun s =>
+    G.vriezeDecodeX_apply_toReal controller z s (hnn s) (hsum s)
+  constructor
+  · intro s b
+    have hrow := hmin.2 (Sum.inl (s, b controller))
+    rw [G.rowEval_vriezeA_gain] at hrow
+    simp only [vriezeB] at hrow
+    have hgain : G.vriezeDecodeG controller z s ≤
+        ∑ t, G.transProb controller s (b controller) t * G.vriezeDecodeG controller z t := by
+      linarith
+    have hcollapse : ∀ i, G.transition s (Function.update b (!controller) i) =
+        G.transition s (G.jointOfControllerAct controller (b controller)) := by
+      intro i
+      rw [G.update_not_eq_jointOf controller b i,
+        G.transition_jointOf_eq_of_single_controller hSC s (b controller) i]
+    have hexpect : (expect (G.vriezeDecodeX controller z s) fun i =>
+        expect (G.transition s (Function.update b (!controller) i))
+          (G.vriezeDecodeG controller z)) =
+        ∑ t, G.transProb controller s (b controller) t * G.vriezeDecodeG controller z t := by
+      rw [show (fun i => expect (G.transition s (Function.update b (!controller) i))
+            (G.vriezeDecodeG controller z))
+          = fun _ : G.Act (!controller) => expect
+            (G.transition s (G.jointOfControllerAct controller (b controller)))
+            (G.vriezeDecodeG controller z) from funext fun i => congrArg
+            (expect · (G.vriezeDecodeG controller z)) (hcollapse i),
+        expect_const, expect_eq_sum]
+      rfl
+    rw [hexpect]
+    exact hgain
+  · intro s b
+    have hrow := hmin.2 (Sum.inr (Sum.inl (s, b controller)))
+    rw [G.rowEval_vriezeA_bias] at hrow
+    simp only [vriezeB] at hrow
+    have hbias : G.vriezeDecodeG controller z s + G.vriezeDecodeV controller z s ≤
+        (∑ i, G.vriezeDecodeXVal controller z s i *
+          G.rewardVal controller s i (b controller)) +
+        ∑ t, G.transProb controller s (b controller) t * G.vriezeDecodeV controller z t := by
+      linarith
+    have hcollapse : ∀ i : G.Act (!controller),
+        G.stagePayoff s (Function.update b (!controller) i) (!controller) +
+          expect (G.transition s (Function.update b (!controller) i))
+            (G.vriezeDecodeV controller z) =
+        G.rewardVal controller s i (b controller) +
+          expect (G.transition s (G.jointOfControllerAct controller (b controller)))
+            (G.vriezeDecodeV controller z) := by
+      intro i
+      rw [G.update_not_eq_jointOf controller b i]
+      rw [G.transition_jointOf_eq_of_single_controller hSC s (b controller) i]
+      rfl
+    have hexpect : (expect (G.vriezeDecodeX controller z s) fun i =>
+        G.stagePayoff s (Function.update b (!controller) i) (!controller) +
+          expect (G.transition s (Function.update b (!controller) i))
+            (G.vriezeDecodeV controller z)) =
+        (∑ i, G.vriezeDecodeXVal controller z s i *
+          G.rewardVal controller s i (b controller)) +
+        ∑ t, G.transProb controller s (b controller) t * G.vriezeDecodeV controller z t := by
+      rw [show (fun i => G.stagePayoff s (Function.update b (!controller) i) (!controller) +
+              expect (G.transition s (Function.update b (!controller) i))
+                (G.vriezeDecodeV controller z))
+          = fun i => G.rewardVal controller s i (b controller) +
+              expect (G.transition s (G.jointOfControllerAct controller (b controller)))
+                (G.vriezeDecodeV controller z) from funext hcollapse,
+        expect_add, expect_const]
+      simp only [expect_eq_sum, hxeq, transProb]
+    rw [hexpect]
+    exact hbias
+
+/-- **The objective identity.** `minPrimalValue (vriezeC controller)` reads
+off `-Σ_s g_s` from *any* standard-form column vector, encoded or not — a
+pure algebraic consequence of `vriezeC`'s definition, with no feasibility
+hypothesis needed. -/
+theorem minPrimalValue_vriezeC_eq (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z : VriezeCol G controller → ℝ) :
+    Math.LinearProgramming.minPrimalValue (G.vriezeC controller) z =
+      -(∑ s, G.vriezeDecodeG controller z s) := by
+  change Math.LinearProgramming.dot (G.vriezeC controller) z = _
+  unfold Math.LinearProgramming.dot
+  rw [sum_vriezeCol]
+  simp only [vriezeC, zero_mul, Finset.sum_const_zero, zero_add, add_zero, neg_one_mul, one_mul]
+  rw [← Finset.sum_add_distrib, ← Finset.sum_neg_distrib]
+  exact Finset.sum_congr rfl fun t _ => by rw [vriezeDecodeG]; ring
+
+/-!
+### Strong duality: the dual-feasible point, and its two named flows
+
+`exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal` is the payoff of the
+embedding above: from `IsVriezePrimalOptimal` (primal feasibility *plus*
+`Σ g_s`-optimality) and `IsSingleController`, it produces a dual-feasible
+point of the embedded LP with the same objective value, via
+`Math.LinearProgramming.lp_strong_duality`. `vriezeDualZ`/`vriezeDualYGain`
+read off the two dual flows the module docstring names — `z` (dual to the
+bias rows, Vrieze's occupation measure) and `yGain` (dual to the gain rows)
+— from that single row-indexed witness; there is no third dual flow, only
+the two remaining `VriezeRow` summands (the noncontroller's split simplex-
+equality dual), which are not given names here because
+`exists_completedPolicy_of_vriezeDualFeasible` below never needs them. -/
+
+theorem exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
+    (hopt : G.IsVriezePrimalOptimal controller x g v) :
+    ∃ w : VriezeRow G controller → ℝ,
+      Math.LinearProgramming.MaxDualFeasible (G.vriezeA controller) (G.vriezeC controller) w ∧
+      Math.LinearProgramming.maxDualValue (G.vriezeB controller) w = -(∑ s, g s) := by
+  have hx := G.minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible hSC hopt.feasible
+  have hoptLP : ∀ z, Math.LinearProgramming.MinPrimalFeasible (G.vriezeA controller)
+      (G.vriezeB controller) z →
+      Math.LinearProgramming.minPrimalValue (G.vriezeC controller)
+        (G.vriezeEncode controller x g v) ≤
+        Math.LinearProgramming.minPrimalValue (G.vriezeC controller) z := by
+    intro z hz
+    rw [G.minPrimalValue_vriezeC_eq, G.minPrimalValue_vriezeC_eq, G.vriezeDecodeG_vriezeEncode]
+    have hdec := G.isVriezePrimalFeasible_of_minPrimalFeasible hSC hz
+    have hle := hopt.optimal (G.vriezeDecodeX controller z) (G.vriezeDecodeG controller z)
+      (G.vriezeDecodeV controller z) hdec
+    linarith
+  obtain ⟨w, hw, heq⟩ :=
+    Math.LinearProgramming.lp_strong_duality (A := G.vriezeA controller)
+      (b := G.vriezeB controller) (c := G.vriezeC controller) hx hoptLP
+  refine ⟨w, hw, ?_⟩
+  rw [heq, G.minPrimalValue_vriezeC_eq, G.vriezeDecodeG_vriezeEncode]
+
+/-- **Vrieze's occupation measure** — the dual flow `z` (dual to the bias
+rows), read off the abstract dual witness `w`. -/
+def vriezeDualZ (G : StochasticGame Bool) (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (s : G.State) (j : G.Act controller) : ℝ :=
+  w (Sum.inr (Sum.inl (s, j)))
+
+/-- **Vrieze's gain-row dual flow** `yGain` (dual to the gain rows), read off
+the abstract dual witness `w`. -/
+def vriezeDualYGain (G : StochasticGame Bool) (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (s : G.State) (j : G.Act controller) : ℝ :=
+  w (Sum.inl (s, j))
+
+/-- **Vrieze dual feasibility.** The nonnegativity of the two named dual
+flows `z`/`yGain`, exported from `MaxDualFeasible (vriezeA controller)
+(vriezeC controller) w` for the abstract row-indexed witness `w` strong
+duality produces. This is deliberately a *fragment* of full dual
+feasibility: `exists_completedPolicy_of_vriezeDualFeasible` below only ever
+needs `z`'s sign, not the per-column dual inequalities `MaxDualFeasible.2`
+also carries (decoding those into named closed forms, mirroring
+`rowEval_vriezeA_gain`/`_bias`/`_simplex` for `colEval`, is the natural next
+increment but is not needed downstream of this file yet). -/
+structure IsVriezeDualFeasible (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z yGain : G.State → G.Act controller → ℝ) : Prop where
+  z_nonneg : ∀ s j, 0 ≤ z s j
+  yGain_nonneg : ∀ s j, 0 ≤ yGain s j
+
+theorem isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain
+    {controller : Bool} {w : VriezeRow G controller → ℝ}
+    (hw : Math.LinearProgramming.MaxDualFeasible (G.vriezeA controller)
+      (G.vriezeC controller) w) :
+    G.IsVriezeDualFeasible controller (G.vriezeDualZ controller w)
+      (G.vriezeDualYGain controller w) :=
+  ⟨fun _ _ => hw.1 _, fun _ _ => hw.1 _⟩
+
+/-- Assembling `exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal` and
+`isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain`: from an
+`IsVriezePrimalOptimal` point, the two named dual flows `z`/`yGain` exist
+and are dual-feasible. -/
+theorem exists_vriezeDualFeasible_of_vriezePrimalOptimal
+    {controller : Bool} (hSC : G.IsSingleController controller)
+    {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
+    (hopt : G.IsVriezePrimalOptimal controller x g v) :
+    ∃ z yGain : G.State → G.Act controller → ℝ, G.IsVriezeDualFeasible controller z yGain := by
+  obtain ⟨w, hw, -⟩ := G.exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal hSC hopt
+  exact ⟨_, _, G.isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain hw⟩
+
+/-- **The LP-optimal occupation support**, `R := {s | 0 < Σ_j z_s(j)}`, for a
+dual flow `z` — the target set the module docstring's `FiniteReachability`
+obstruction is instantiated against. -/
+def vriezeOccupationSupport (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (z : G.State → G.Act controller → ℝ) (s : G.State) : Prop :=
+  0 < ∑ j, z s j
+
+/-- **Obligations (i)+(iii) of the residual, made concrete.** Given
+`IsVriezeDualFeasible`'s occupation measure `z` and the hypothesis that
+every state outside its support `R` can reach `R` along `controllerSucc`
+(obligation (ii) — genuinely open, needing the LP's *optimality* via a
+policy-improvement argument ruling out an LP-beating trap; taken here as an
+explicit hypothesis, exactly the honest name for what is *not* proved),
+a *total* controller policy `τ` exists that: agrees with the `z`-normalized
+mixture on `R`, and off `R` plays a pure action making one step of
+`FiniteReachability` progress toward `R`. This discharges totality
+(obligation (i)) completely and supplies the one-step "make progress toward
+`R`" fact obligation (iii) needs to iterate into an actual transience
+statement (not attempted here — see the module docstring). -/
+theorem exists_completedPolicy_of_vriezeDualFeasible
+    {controller : Bool} {z yGain : G.State → G.Act controller → ℝ}
+    (hdual : G.IsVriezeDualFeasible controller z yGain)
+    (hnotrap : ∀ s, ¬ G.vriezeOccupationSupport controller z s →
+      FiniteReachability.CanReachSet (G.controllerSucc controller)
+        (G.vriezeOccupationSupport controller z) s) :
+    ∃ τ : G.State → PMF (G.Act controller),
+      (∀ s (_ : G.vriezeOccupationSupport controller z s) (j : G.Act controller),
+        ((τ s) j).toReal = z s j / (∑ j', z s j')) ∧
+      (∀ s (_ : ¬ G.vriezeOccupationSupport controller z s),
+        ∃ t, t ∈ (G.controllerKernel controller τ s).support ∧
+          (G.vriezeOccupationSupport controller z t ∨
+            FiniteReachability.CanReachSet (G.controllerSucc controller)
+              (G.vriezeOccupationSupport controller z) t)) := by
+  classical
+  have hprogress : ∀ s, ¬ G.vriezeOccupationSupport controller z s → ∃ j : G.Act controller,
+      ∃ t, t ∈ (G.controllerKernel controller (fun _ => PMF.pure j) s).support ∧
+        (G.vriezeOccupationSupport controller z t ∨
+          FiniteReachability.CanReachSet (G.controllerSucc controller)
+            (G.vriezeOccupationSupport controller z) t) := by
+    intro s hs
+    obtain ⟨t, hst, htR⟩ := FiniteReachability.exists_succ_canReachSet_of_canReachSet
+      (G.controllerSucc controller) (G.vriezeOccupationSupport controller z) hs (hnotrap s hs)
+    obtain ⟨j, hjt⟩ := hst
+    exact ⟨j, t, hjt, Or.inr htR⟩
+  choose jOf hjOf using hprogress
+  set τ : G.State → PMF (G.Act controller) := fun s =>
+    if h : G.vriezeOccupationSupport controller z s then
+      weightsToPMF (fun j => z s j / (∑ j', z s j'))
+        (fun j => div_nonneg (hdual.z_nonneg s j) h.le)
+        (by rw [← Finset.sum_div]; exact div_self h.ne')
+    else PMF.pure (jOf s h) with hτdef
+  refine ⟨τ, ?_, ?_⟩
+  · intro s hs j
+    have : τ s = weightsToPMF (fun j => z s j / (∑ j', z s j'))
+        (fun j => div_nonneg (hdual.z_nonneg s j) hs.le)
+        (by rw [← Finset.sum_div]; exact div_self hs.ne') := by
+      rw [hτdef]; exact dif_pos hs
+    rw [this]
+    exact weightsToPMF_apply_toReal _ _ _ j
+  · intro s hs
+    have hτs : τ s = PMF.pure (jOf s hs) := by rw [hτdef]; exact dif_neg hs
+    obtain ⟨t, ht, hor⟩ := hjOf s hs
+    refine ⟨t, ?_, hor⟩
+    have hker : G.controllerKernel controller τ s =
+        G.controllerKernel controller (fun _ => PMF.pure (jOf s hs)) s := by
+      unfold controllerKernel
+      rw [hτs]
+    rw [hker]
+    exact ht
+
 end StochasticGame
 end GameTheory
 
