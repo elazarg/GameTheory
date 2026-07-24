@@ -1462,28 +1462,248 @@ def vriezeDualYGain (G : StochasticGame Bool) (controller : Bool)
     (w : VriezeRow G controller → ℝ) (s : G.State) (j : G.Act controller) : ℝ :=
   w (Sum.inl (s, j))
 
-/-- **Vrieze dual feasibility.** The nonnegativity of the two named dual
-flows `z`/`yGain`, exported from `MaxDualFeasible (vriezeA controller)
-(vriezeC controller) w` for the abstract row-indexed witness `w` strong
-duality produces. This is deliberately a *fragment* of full dual
-feasibility: `exists_completedPolicy_of_vriezeDualFeasible` below only ever
-needs `z`'s sign, not the per-column dual inequalities `MaxDualFeasible.2`
-also carries (decoding those into named closed forms, mirroring
-`rowEval_vriezeA_gain`/`_bias`/`_simplex` for `colEval`, is the natural next
-increment but is not needed downstream of this file yet). -/
+/-!
+### Decoding the dual *column* constraints
+
+`MaxDualFeasible.2` is a per-column inequality (`colEval A y j ≤ c j`); this
+section decodes it at each of `VriezeCol`'s five column families, mirroring
+`rowEval_vriezeA_gain`/`_bias`/`_simplex` for the row side. The `g⁺`/`g⁻`
+columns (a free primal variable's sign-split) and the `v⁺`/`v⁻` columns give
+a matching *pair* of opposite inequalities that combine into an *equality*
+— exactly the standard LP fact that a free variable's dual constraint is
+stationarity, not mere domination. Those two equalities are what
+`IsVriezeDualFeasible` below actually needs: the `v±` pair is `z`'s flow-
+conservation identity (`z` is a genuine stationary flow, not an arbitrary
+nonnegative array), and the `g±` pair is the coupling identity between `z`
+and `yGain` that makes the pair `(z, yGain) = (0, 0)` *infeasible* whenever
+`G.State` is nonempty (summing the coupling identity over every state
+collapses its transition-probability term to zero by
+`transProb`-normalization, forcing the right side to equal `-|G.State|`,
+which `(0,0)` cannot produce unless `G.State` is empty). -/
+
+open Classical in
+private theorem sum_prod_ite_eq_left (G : StochasticGame Bool) [Finite G.State]
+    {β : Type*} [Fintype β] (t : G.State) (f : G.State → β → ℝ) :
+    (∑ p : G.State × β, (if t = p.1 then f p.1 p.2 else 0)) = ∑ j : β, f t j := by
+  classical
+  rw [show (∑ p : G.State × β, (if t = p.1 then f p.1 p.2 else 0)) =
+      ∑ p : G.State × β, (if p.1 = t then f p.1 p.2 else 0) from
+    Finset.sum_congr rfl fun p _ => by
+      by_cases h : p.1 = t
+      · rw [if_pos h.symm, if_pos h]
+      · rw [if_neg (fun heq => h heq.symm), if_neg h]]
+  exact sum_prod_ite_eq G t f
+
+open Classical in
+/-- The multiplier-outside-the-`if` shape `colEval_vriezeA_gPlus`/`_gMinus`/
+`_vPlus`/`_vMinus` all reduce to, pushed inside and collapsed via
+`sum_prod_ite_eq_left`. -/
+private theorem sum_prod_mul_ite_left_one (G : StochasticGame Bool) [Finite G.State]
+    {β : Type*} [Fintype β] (t : G.State) (h : G.State → β → ℝ) :
+    (∑ p : G.State × β, h p.1 p.2 * (if t = p.1 then (1:ℝ) else 0)) = ∑ j : β, h t j := by
+  rw [show (∑ p : G.State × β, h p.1 p.2 * (if t = p.1 then (1:ℝ) else 0)) =
+      ∑ p : G.State × β, (if t = p.1 then h p.1 p.2 else 0) from
+    Finset.sum_congr rfl fun p _ => by
+      by_cases hh : t = p.1
+      · rw [if_pos hh, if_pos hh, mul_one]
+      · rw [if_neg hh, if_neg hh, mul_zero]]
+  exact sum_prod_ite_eq_left G t h
+
+open Classical in
+/-- **The x-column dual constraint.** `colEval (vriezeA controller) w` at the
+noncontroller's mixed-action column `(s, i)`. -/
+theorem colEval_vriezeA_x (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (s : G.State) (i : G.Act (!controller)) :
+    Math.LinearProgramming.colEval (G.vriezeA controller) w (Sum.inl (s, i)) =
+      (∑ j, G.vriezeDualZ controller w s j * G.rewardVal controller s i j) +
+        w (Sum.inr (Sum.inr (Sum.inl s))) - w (Sum.inr (Sum.inr (Sum.inr s))) := by
+  change (∑ r, w r * G.vriezeA controller r (Sum.inl (s, i))) = _
+  simp only [vriezeDualZ]
+  rw [sum_vriezeRow]
+  simp only [vriezeA, mul_zero, Finset.sum_const_zero, zero_add]
+  have e1 : (∑ p : G.State × G.Act controller,
+      w (Sum.inr (Sum.inl p)) * (if s = p.1 then G.rewardVal controller p.1 i p.2 else 0)) =
+      ∑ j, w (Sum.inr (Sum.inl (s, j))) * G.rewardVal controller s i j := by
+    rw [show (∑ p : G.State × G.Act controller,
+        w (Sum.inr (Sum.inl p)) * (if s = p.1 then G.rewardVal controller p.1 i p.2 else 0)) =
+        ∑ p : G.State × G.Act controller,
+          (if s = p.1 then w (Sum.inr (Sum.inl p)) * G.rewardVal controller p.1 i p.2 else 0) from
+      Finset.sum_congr rfl fun p _ => by by_cases h : s = p.1 <;> simp [h]]
+    rw [sum_prod_ite_eq_left G s (fun p j => w (Sum.inr (Sum.inl (p, j))) *
+      G.rewardVal controller p i j)]
+  have e2 : (∑ s' : G.State, w (Sum.inr (Sum.inr (Sum.inl s'))) *
+      (if s = s' then (1:ℝ) else 0)) = w (Sum.inr (Sum.inr (Sum.inl s))) := by simp
+  have e3 : (∑ s' : G.State, w (Sum.inr (Sum.inr (Sum.inr s'))) *
+      (if s = s' then (-1:ℝ) else 0)) = -(w (Sum.inr (Sum.inr (Sum.inr s)))) := by
+    simp [mul_neg]
+  rw [e1, e2, e3]
+  ring
+
+open Classical in
+/-- **The `g⁺`-column dual constraint.** -/
+theorem colEval_vriezeA_gPlus (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (t : G.State) :
+    Math.LinearProgramming.colEval (G.vriezeA controller) w (Sum.inr (Sum.inl t)) =
+      (∑ p : G.State × G.Act controller, G.vriezeDualYGain controller w p.1 p.2 *
+          G.transProb controller p.1 p.2 t) -
+        (∑ j, G.vriezeDualYGain controller w t j) - (∑ j, G.vriezeDualZ controller w t j) := by
+  change (∑ r, w r * G.vriezeA controller r (Sum.inr (Sum.inl t))) = _
+  simp only [vriezeDualZ, vriezeDualYGain]
+  rw [sum_vriezeRow]
+  simp only [vriezeA, mul_zero, Finset.sum_const_zero, add_zero]
+  have e1 : (∑ p : G.State × G.Act controller,
+      w (Sum.inl p) * (G.transProb controller p.1 p.2 t - (if t = p.1 then (1:ℝ) else 0))) =
+      (∑ p : G.State × G.Act controller, w (Sum.inl p) *
+          G.transProb controller p.1 p.2 t) - (∑ j, w (Sum.inl (t, j))) := by
+    rw [show (∑ p : G.State × G.Act controller,
+        w (Sum.inl p) * (G.transProb controller p.1 p.2 t - (if t = p.1 then (1:ℝ) else 0))) =
+        (∑ p : G.State × G.Act controller, w (Sum.inl p) * G.transProb controller p.1 p.2 t) -
+          (∑ p : G.State × G.Act controller, w (Sum.inl p) * (if t = p.1 then (1:ℝ) else 0)) from
+      by rw [← Finset.sum_sub_distrib]; exact Finset.sum_congr rfl fun p _ => by ring]
+    rw [sum_prod_mul_ite_left_one G t (fun p j => w (Sum.inl (p, j)))]
+  have e2 : (∑ p : G.State × G.Act controller,
+      w (Sum.inr (Sum.inl p)) * (-(if t = p.1 then (1:ℝ) else 0))) =
+      -(∑ j, w (Sum.inr (Sum.inl (t, j)))) := by
+    rw [show (∑ p : G.State × G.Act controller,
+        w (Sum.inr (Sum.inl p)) * (-(if t = p.1 then (1:ℝ) else 0))) =
+        -(∑ p : G.State × G.Act controller, w (Sum.inr (Sum.inl p)) *
+          (if t = p.1 then (1:ℝ) else 0)) from by
+      rw [← Finset.sum_neg_distrib]; exact Finset.sum_congr rfl fun p _ => by ring]
+    rw [sum_prod_mul_ite_left_one G t (fun p j => w (Sum.inr (Sum.inl (p, j))))]
+  rw [e1, e2]
+  ring
+
+open Classical in
+/-- **The `g⁻`-column dual constraint.** -/
+theorem colEval_vriezeA_gMinus (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (t : G.State) :
+    Math.LinearProgramming.colEval (G.vriezeA controller) w
+        (Sum.inr (Sum.inr (Sum.inl t))) =
+      -((∑ p : G.State × G.Act controller, G.vriezeDualYGain controller w p.1 p.2 *
+          G.transProb controller p.1 p.2 t) -
+        (∑ j, G.vriezeDualYGain controller w t j) - (∑ j, G.vriezeDualZ controller w t j)) := by
+  change (∑ r, w r * G.vriezeA controller r (Sum.inr (Sum.inr (Sum.inl t)))) = _
+  simp only [vriezeDualZ, vriezeDualYGain]
+  rw [sum_vriezeRow]
+  simp only [vriezeA, mul_zero, Finset.sum_const_zero, add_zero]
+  have e1 : (∑ p : G.State × G.Act controller,
+      w (Sum.inl p) * ((if t = p.1 then (1:ℝ) else 0) - G.transProb controller p.1 p.2 t)) =
+      (∑ j, w (Sum.inl (t, j))) -
+        (∑ p : G.State × G.Act controller, w (Sum.inl p) *
+          G.transProb controller p.1 p.2 t) := by
+    rw [show (∑ p : G.State × G.Act controller,
+        w (Sum.inl p) * ((if t = p.1 then (1:ℝ) else 0) - G.transProb controller p.1 p.2 t)) =
+        (∑ p : G.State × G.Act controller, w (Sum.inl p) * (if t = p.1 then (1:ℝ) else 0)) -
+          (∑ p : G.State × G.Act controller, w (Sum.inl p) * G.transProb controller p.1 p.2 t) from
+      by rw [← Finset.sum_sub_distrib]; exact Finset.sum_congr rfl fun p _ => by ring]
+    rw [sum_prod_mul_ite_left_one G t (fun p j => w (Sum.inl (p, j)))]
+  have e2 : (∑ p : G.State × G.Act controller,
+      w (Sum.inr (Sum.inl p)) * (if t = p.1 then (1:ℝ) else 0)) =
+      ∑ j, w (Sum.inr (Sum.inl (t, j))) :=
+    sum_prod_mul_ite_left_one G t (fun p j => w (Sum.inr (Sum.inl (p, j))))
+  rw [e1, e2]
+  ring
+
+open Classical in
+/-- **The `v⁺`-column dual constraint.** -/
+theorem colEval_vriezeA_vPlus (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (t : G.State) :
+    Math.LinearProgramming.colEval (G.vriezeA controller) w
+        (Sum.inr (Sum.inr (Sum.inr (Sum.inl t)))) =
+      (∑ p : G.State × G.Act controller, G.vriezeDualZ controller w p.1 p.2 *
+          G.transProb controller p.1 p.2 t) - ∑ j, G.vriezeDualZ controller w t j := by
+  change (∑ r, w r * G.vriezeA controller r (Sum.inr (Sum.inr (Sum.inr (Sum.inl t))))) = _
+  simp only [vriezeDualZ]
+  rw [sum_vriezeRow]
+  simp only [vriezeA, mul_zero, Finset.sum_const_zero, zero_add, add_zero]
+  rw [show (∑ p : G.State × G.Act controller,
+      w (Sum.inr (Sum.inl p)) *
+        (G.transProb controller p.1 p.2 t - (if t = p.1 then (1:ℝ) else 0))) =
+      (∑ p : G.State × G.Act controller, w (Sum.inr (Sum.inl p)) *
+        G.transProb controller p.1 p.2 t) -
+        (∑ p : G.State × G.Act controller, w (Sum.inr (Sum.inl p)) *
+          (if t = p.1 then (1:ℝ) else 0)) from
+    by rw [← Finset.sum_sub_distrib]; exact Finset.sum_congr rfl fun p _ => by ring]
+  rw [sum_prod_mul_ite_left_one G t (fun p j => w (Sum.inr (Sum.inl (p, j))))]
+
+open Classical in
+/-- **The `v⁻`-column dual constraint.** -/
+theorem colEval_vriezeA_vMinus (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (t : G.State) :
+    Math.LinearProgramming.colEval (G.vriezeA controller) w
+        (Sum.inr (Sum.inr (Sum.inr (Sum.inr t)))) =
+      (∑ j, G.vriezeDualZ controller w t j) -
+        ∑ p : G.State × G.Act controller, G.vriezeDualZ controller w p.1 p.2 *
+          G.transProb controller p.1 p.2 t := by
+  change (∑ r, w r * G.vriezeA controller r (Sum.inr (Sum.inr (Sum.inr (Sum.inr t))))) = _
+  simp only [vriezeDualZ]
+  rw [sum_vriezeRow]
+  simp only [vriezeA, mul_zero, Finset.sum_const_zero, zero_add, add_zero]
+  rw [show (∑ p : G.State × G.Act controller,
+      w (Sum.inr (Sum.inl p)) *
+        ((if t = p.1 then (1:ℝ) else 0) - G.transProb controller p.1 p.2 t)) =
+      (∑ p : G.State × G.Act controller, w (Sum.inr (Sum.inl p)) *
+        (if t = p.1 then (1:ℝ) else 0)) -
+        (∑ p : G.State × G.Act controller, w (Sum.inr (Sum.inl p)) *
+          G.transProb controller p.1 p.2 t) from
+    by rw [← Finset.sum_sub_distrib]; exact Finset.sum_congr rfl fun p _ => by ring]
+  rw [sum_prod_mul_ite_left_one G t (fun p j => w (Sum.inr (Sum.inl (p, j))))]
+
+/-- **Vrieze dual feasibility.** The two named dual flows `z`/`yGain`,
+nonnegative, and satisfying the two equalities `MaxDualFeasible.2` forces at
+the `g±`/`v±` column pairs:
+
+* `z_flow_balance` — `z`'s inflow (from `v±`) equals its own mass at every
+  state: `z` is a genuine stationary flow, not an arbitrary nonnegative
+  array.
+* `gain_coupling` — the `g±` stationarity identity coupling `z` and
+  `yGain`. This is what rules out the vacuous `z = yGain = 0`: summing it
+  over every state collapses the transition-probability term to zero
+  (`transProb controller s j` sums to `1` over its target), forcing
+  `Σ_t (Σ_j yGain t j + Σ_j z t j) = |G.State|`, which `(0, 0)` cannot
+  produce when `G.State` is nonempty.
+
+This still omits the `x`-column value-bound inequality
+(`colEval_vriezeA_x`, the per-state multiplier's complementary-slackness
+domination) — a genuinely further increment, not needed by
+`exists_completedPolicy_of_vriezeDualFeasible` below, so not carried as a
+field here. -/
 structure IsVriezeDualFeasible (G : StochasticGame Bool) [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
     (z yGain : G.State → G.Act controller → ℝ) : Prop where
   z_nonneg : ∀ s j, 0 ≤ z s j
   yGain_nonneg : ∀ s j, 0 ≤ yGain s j
+  z_flow_balance : ∀ t, (∑ p : G.State × G.Act controller, z p.1 p.2 *
+      G.transProb controller p.1 p.2 t) = ∑ j, z t j
+  gain_coupling : ∀ t, (∑ p : G.State × G.Act controller, yGain p.1 p.2 *
+      G.transProb controller p.1 p.2 t) - (∑ j, yGain t j) - (∑ j, z t j) = -1
 
 theorem isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain
     {controller : Bool} {w : VriezeRow G controller → ℝ}
     (hw : Math.LinearProgramming.MaxDualFeasible (G.vriezeA controller)
       (G.vriezeC controller) w) :
     G.IsVriezeDualFeasible controller (G.vriezeDualZ controller w)
-      (G.vriezeDualYGain controller w) :=
-  ⟨fun _ _ => hw.1 _, fun _ _ => hw.1 _⟩
+      (G.vriezeDualYGain controller w) := by
+  refine ⟨fun _ _ => hw.1 _, fun _ _ => hw.1 _, ?_, ?_⟩
+  · intro t
+    have hvPlus := hw.2 (Sum.inr (Sum.inr (Sum.inr (Sum.inl t))))
+    have hvMinus := hw.2 (Sum.inr (Sum.inr (Sum.inr (Sum.inr t))))
+    rw [G.colEval_vriezeA_vPlus] at hvPlus
+    rw [G.colEval_vriezeA_vMinus] at hvMinus
+    simp only [vriezeC] at hvPlus hvMinus
+    linarith
+  · intro t
+    have hgPlus := hw.2 (Sum.inr (Sum.inl t))
+    have hgMinus := hw.2 (Sum.inr (Sum.inr (Sum.inl t)))
+    rw [G.colEval_vriezeA_gPlus] at hgPlus
+    rw [G.colEval_vriezeA_gMinus] at hgMinus
+    simp only [vriezeC] at hgPlus hgMinus
+    linarith
 
 /-- Assembling `exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal` and
 `isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain`: from an
@@ -1516,7 +1736,23 @@ mixture on `R`, and off `R` plays a pure action making one step of
 `FiniteReachability` progress toward `R`. This discharges totality
 (obligation (i)) completely and supplies the one-step "make progress toward
 `R`" fact obligation (iii) needs to iterate into an actual transience
-statement (not attempted here — see the module docstring). -/
+statement (not attempted here — see the module docstring).
+
+**`hnotrap` is not derivable from `IsVriezeDualFeasible` alone, even after
+strengthening it with `z_flow_balance`/`gain_coupling`, and this was checked
+rather than assumed.** `z_flow_balance` (`Σ_{s,j} z(s,j)·P(t|s,j) = Σ_j z(t,j)`)
+only constrains `R`'s *internal* structure: if `t ∈ R` then the identity
+forces some `R`-state to transition into `t` (so `R` is closed under
+predecessors, from *within* `R`), which is the reverse direction of
+obligation (ii) and gives nothing about whether a state *outside* `R` can
+reach it. `gain_coupling` holds at every state, including transient ones
+where `z(t,·) = 0`, but only pins down `yGain`'s own net-outflow there
+(`Σ_j yGain(t,j) - Σ_{s,j} yGain(s,j)·P(t|s,j) = 1`) — a fact about the
+*gain* dual flow, not about which actions `controllerSucc` makes available
+at `t`, so it does not certify reachability either. Closing this gap needs
+the genuinely combinatorial policy-improvement argument the module
+docstring describes (obligation (ii) itself), not more dual-feasibility
+algebra. -/
 theorem exists_completedPolicy_of_vriezeDualFeasible
     {controller : Bool} {z yGain : G.State → G.Act controller → ℝ}
     (hdual : G.IsVriezeDualFeasible controller z yGain)
