@@ -20,6 +20,9 @@ becomes difficult to scan.
 | EXP-007 | 2026-07-26 | D10 / Phase 2 | Can the rational finite-table frontend prove its enumeration correct against the semantic Nash predicate under a clean dependency budget? | Supports | [`decisions/D10-executable-frontend.md`](decisions/D10-executable-frontend.md); `GameTheory/Finite/`; `GameTheory/Examples/Classic.lean` |
 | EXP-008 | 2026-07-26 | D5 / Phase 0 F5 | Does an interim, type-dependent Bayesian deviation fit the shared local-deviation interface? | Supports | `GameTheory/Experimental/Phase2/BayesianProbe.lean` |
 | EXP-009 | 2026-07-26 | D6/D7 / Phase 3 input | Does the open-game context hint at a better sequential interface, and is its carried equilibrium derivable? | Narrows | read-only audit of the pinned `Languages/OpenGame/` and `Bridges/OpenGame_EFG.lean` |
+| EXP-010 | 2026-07-27 | D6 / Phase 3 | Can a general-state execution protocol express terminal play and chance without an impossible total chooser or dummy probability data? | Supports | `GameTheory/Protocol/Execution.lean`; `GameTheory/Tests/Execution.lean` |
+| EXP-011 | 2026-07-26 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | *reserved* | `GameTheory/Protocol/` |
+| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | *reserved* | `GameTheory/Protocol/` |
 
 ## Entry template
 
@@ -286,3 +289,63 @@ but should not erase their evidence.
   from D5's deviation machinery and no co-outcome channel. Open games stay a
   Frontier branch under D12; this audit removes the temptation to promote them
   and replaces it with the one idea that measured well.
+
+### EXP-010: General-state execution, terminal play, and chance
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree based on the Phase 2 gate
+- **Decision / question:** D6; whether a general-state `ExecutionProtocol` can
+  give usable terminal, chance, and run semantics. RFC 9.1.6 makes it a
+  core-invalidating failure if the selected execution semantics needs an
+  impossible total legal-action chooser at terminal states, dummy probability
+  data at chance nodes, or evaluation that silently stops at a chance node.
+- **Representative slice:** `coinThenMove` in `GameTheory/Tests/Execution.lean` -
+  a fair chance node with no mover, followed by a one-player decision, followed
+  by a terminal state, so all three failure modes are reachable in one protocol
+- **Evidence:** `GameTheory/Protocol/Execution.lean` and
+  `GameTheory/Tests/Execution.lean`; `lake build`
+- **Observation:** none of the three failure modes occurred.
+  1. *No total chooser.* `Chooser` takes a non-terminality proof, so terminal
+     states are never queried. Stronger, `terminal_no_legal` is a *theorem*
+     rather than the assumed field of the RFC sketch: legality was defined as
+     "not terminal, and every active player supplies an available action", so a
+     total chooser could not be written even if a runner asked for one.
+  2. *Chance is carried by the transition law.* `chanceLaw` is `step` applied to
+     the no-op joint action at a state where nobody is active;
+     `coinThenMove_chanceLaw_heads`, `..._tails`, and `..._normalized` show the
+     law is a genuine fair coin, not dummy data hung on a `none` mover.
+  3. *Evaluation does not stop at chance.* `runFor_succ_of_chance` proves the
+     runner steps through a chance state, and `runFor_of_terminal` proves
+     terminal states absorb. `runFor_one_from_chance` instantiates both.
+  Two simplifications relative to the RFC sketch: legality became a definition
+  rather than a stored field plus `legal_iff_active_available`, removing one
+  field and one law; and `active` is proposition-valued rather than a `Finset`,
+  keeping enumeration out of proof semantics (D9). `Trace` is `Type`-valued, so
+  `IsTreeShaped := ∀ state, Subsingleton (Trace E state)` is a genuine
+  uniqueness statement - the repair for v1's `Subsingleton (Reachable s t)`,
+  which was vacuous under proof irrelevance.
+  One negative datapoint, and it is not about D6: the concrete protocol needed
+  `@[reducible]`, because `coinThenMove.State` does not reduce to its carrier at
+  `instances` transparency. This is the *third* module to need that annotation
+  after `GameForm` and `TableGame`/`BayesianGame`. RFC 9.3 says an exception
+  recurring across two or more modules is promoted to its design decision, so
+  this is now formal evidence against D1's bundled-signature form rather than an
+  isolated waiver.
+- **Outcome:** supports - the general-state candidate survives RFC 9.1.6; the
+  question of whether it *beats* finite-first is separate and is reserved as
+  EXP-012
+- **Next action:** build the finite-first candidate, encode the same
+  perfect-information EFG with chance in both, and decide D6 on the measurement
+### EXP-011: Information locality by construction
+
+- **Date / revision:** 2026-07-26, Phase 3 working tree based on the Phase 2 gate
+- **Decision / question:** D6; whether an information model layered over an
+  execution protocol keeps strategies information-local *by typing* rather than
+  by a later proposition. RFC 9.1.7 makes it a core-invalidating failure if the
+  strategy type exposes hidden execution state, relies only on a subsequent
+  locality proposition, or cannot support conditional beliefs and sequential
+  rationality without reopening native information equivalence.
+- **Representative slice:** *(reserved - completed at gate)*
+- **Evidence:** *(reserved)*
+- **Observation:** *(reserved)*
+- **Outcome:** *(reserved)*
+- **Next action:** *(reserved)*
