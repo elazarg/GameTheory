@@ -1,8 +1,8 @@
 # D1: signature ownership
 
-- **Status:** provisional
-- **Date:** 2026-07-22
-- **Evidence:** EXP-002, EXP-004
+- **Status:** provisional; new negative evidence from Phase 2
+- **Date:** 2026-07-22, amended 2026-07-26
+- **Evidence:** EXP-002, EXP-004, EXP-006
 - **Decision:** A form provisionally stores a `sig` field. Strategy and outcome
   carriers remain fields of that signature; they are not duplicated on the form.
 
@@ -76,3 +76,35 @@ lifted through mixed extension. Phase 2/4 must overturn the decision if those
 tests, or generic preference, utility, and deviation theorems, repeatedly
 require signature equalities or user-visible transports. Games remain ordinary
 values, never typeclass instances.
+
+## Phase 2 amendment (EXP-006)
+
+The generic preference, utility, and deviation theorems did **not** require
+signature equalities or user-visible transports: Phase 2 source contains one
+transport token in total, inside the representation module, and the profile
+module contains one, inside `Subprofile.single`. That part of the recheck
+passes.
+
+A different cost appeared instead. Storing the signature makes projections out
+of a derived form opaque: `F.mixed.sig` does not reduce to `F.sig.mixed`, and
+`(F.mapOutcome f).sig.Outcome` does not reduce to the target outcome type, at
+`instances` transparency. `rw` and `simp` then build targets that are only
+type-correct at default transparency and fail with an application type
+mismatch. The repair was to make every signature and form transformer
+`@[reducible]`:
+
+```text
+GameSignature.mapOutcome   GameSignature.mixed
+GameForm.mapOutcome        GameForm.mixed
+TableGame.toForm           BayesianGame.toForm
+```
+
+Even then, `isNash_mapOutcome` needs one `show` to restate its goal at the
+transparent type. Six reducibility annotations plus one `show` is a small but
+real tax that the indexed candidate would not pay, because there the carrier
+appears in the type of the form rather than behind a projection.
+
+This is recorded as additional negative evidence for bundling. It is not enough
+to flip the decision on its own — the Phase 1 downstream-signature advantage
+still stands — but D1 stays provisional and the Phase 4 transformation trial
+should weigh it explicitly.

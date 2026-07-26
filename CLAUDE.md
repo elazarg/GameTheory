@@ -6,9 +6,15 @@ changing an architectural surface.
 
 ## Project state
 
-This is a fresh Lean 4/Mathlib project. Its Lake package, future public library,
-and Lean namespace are named `GameTheory`. There is deliberately no
-`GameTheory/` source tree or `GameTheory.lean` root yet.
+This is a fresh Lean 4/Mathlib project. Its Lake package, public library, and
+Lean namespace are named `GameTheory`.
+
+Phases 0, 1, and 2 of the RFC spike have passed; Phase 3 (the sequential slice)
+has not started. The static semantic core lives under `GameTheory/Core`, the
+finite-support law type under `GameTheory/Probability`, the executable rational
+frontend under `GameTheory/Finite`, and architecture spikes under
+`GameTheory/Experimental` (never re-exported). See
+`docs/Phase2IncentiveSlice.md` for what the current gate guarantees.
 
 The old implementation is available only as an ignored evidence snapshot at
 `reference/GameTheory-v1/`, pinned to

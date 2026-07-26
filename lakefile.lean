@@ -15,7 +15,9 @@ package GameTheory where
 
 require "leanprover-community" / "mathlib" @ git "v4.32.0"
 
-/-- The public library target is declared before its source tree is created. -/
+/-- The public library target. `andSubmodules` makes `lake build` a real phase
+gate: examples, architecture tests, and experiments must compile too. -/
 @[default_target]
 lean_lib GameTheory where
+  globs := #[.andSubmodules `GameTheory]
   leanOptions := gameTheoryLeanOptions
