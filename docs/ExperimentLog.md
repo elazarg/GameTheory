@@ -22,7 +22,7 @@ becomes difficult to scan.
 | EXP-009 | 2026-07-26 | D6/D7 / Phase 3 input | Does the open-game context hint at a better sequential interface, and is its carried equilibrium derivable? | Narrows | read-only audit of the pinned `Languages/OpenGame/` and `Bridges/OpenGame_EFG.lean` |
 | EXP-010 | 2026-07-27 | D6 / Phase 3 | Can a general-state execution protocol express terminal play and chance without an impossible total chooser or dummy probability data? | Supports | `GameTheory/Protocol/Execution.lean`; `GameTheory/Tests/Execution.lean` |
 | EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
-| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Narrows (partial) | `GameTheory/Protocol/Tree.lean`; `GameTheory/Tests/Candidates.lean` |
+| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
 
 ## Entry template
 
@@ -482,6 +482,27 @@ but should not erase their evidence.
   chooser-indexed and fuel-shaped, `WellFoundedPlay` is chooser-independent and
   order-shaped) plus an extraction construction, but handles simultaneity
   natively and its certificates are provably not a parallel semantics.
-- **Next action:** encode a simultaneous-action slice in both candidates. That
-  measurement decides D6, and RFC D6 permits the answer to be more than one
-  execution interface - a universal record is not a success criterion.
+- **Simultaneity measurement (2026-07-27):** `GameTheory/Tests/Simultaneous.lean`.
+  The general-state protocol takes it natively: `matching_both_active` puts two
+  players on move at one state, `matching_legal_forces_both` shows a legal joint
+  action must supply a move for each, and `matching_outcome_depends_on_both`
+  proves the transition reads both calls. The finite-first tree cannot express
+  it at all - `Tree.node` carries one `mover` - so the same game must be
+  sequentialized, and `sequentialization_enlarges_strategy_space` proves that is
+  not faithful: eight contingent plans against four simultaneous profiles.
+  `respondingPlan` exhibits one of the extra plans, conditioning on the
+  opponent's call. Making the tree faithful needs an information layer to
+  quotient those plans - exactly the machinery whose absence made it cheaper on
+  the certificate axis.
+- **Outcome (final):** decides D6. RFC D6's disproof conditions apply
+  asymmetrically: general-state-first is rejected only on a failed terminal,
+  chance, locality, or finite-extraction test, and it failed none; finite-first
+  is rejected if the simultaneous-action slice needs a duplicate execution or
+  evaluation theory, and it needs an information layer. General-state is the
+  primary interface; the tree is retained as a derived presentation for
+  single-mover games, where it costs no certificate and evaluates structurally.
+  The two provably agree where both apply.
+- **Next action:** recorded in
+  [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md).
+  D7 remains open, as do the assessment and one-shot-deviation slice and the
+  MAID/FOSG encodings; D0 is not final until those are measured.

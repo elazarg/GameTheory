@@ -1,0 +1,116 @@
+# D6: execution protocols and information models
+
+- **Status:** decided for v1 — general-state execution as the primary
+  interface, finite-first trees retained as a derived presentation
+- **Date:** 2026-07-27
+- **Experiment IDs:** EXP-010, EXP-011, EXP-012
+
+**Decision:** Execution and information are separate interfaces. The primary
+execution interface is the general-state `ExecutionProtocol`. The finite-first
+`Tree` is retained as a derived presentation for single-mover games, where it is
+measurably cheaper, with its faithfulness limit recorded rather than papered
+over.
+
+## What was competed
+
+Two execution candidates, each encoding the same games:
+
+1. `GameTheory/Protocol/Execution.lean` — a state space with a
+   proposition-valued `active`, availability, terminality, and a `step` that
+   consumes a legal joint action.
+2. `GameTheory/Protocol/Tree.lean` — an inductive tree with a binary chance node
+   and single-mover decision nodes.
+
+The information model (`GameTheory/Protocol/Information.lean`) layers over the
+execution protocol and was tested separately.
+
+## Hostile tests
+
+| RFC D6 test | Result | Where |
+|---|---|---|
+| terminal play without a total chooser | passed | EXP-010 |
+| chance with a normalized law, no dummy data | passed | EXP-010 |
+| information locality by typing | passed | EXP-011 |
+| cyclic/merging arenas refute tree extraction | passed | `Tests/Arena.lean` |
+| finite strategy extraction over own decision sites | passed by both | `Tree.lean`, `Extraction.lean` |
+| simultaneous actions | **general-state only** | `Tests/Simultaneous.lean` |
+
+Neither core-invalidating failure fired. RFC 9.1.6 is not triggered:
+`terminal_no_legal` is a *theorem*, because legality was defined to include
+non-terminality, so a total chooser cannot be written at all. RFC 9.1.7 is not
+triggered: `Policy` takes an `InfoState` and no execution state, and two states
+in one information set give equal information states, so every local policy
+agrees there by `congrArg` with no locality hypothesis.
+
+## The measurement
+
+| Axis | finite-first | general-state |
+|---|---|---|
+| certificates required | none | `StopsWithin` and `WellFoundedPlay`, which do not derive from each other |
+| certificate size | — | 26 lines for recursor plus certificate, 22 for a concrete instance |
+| evaluator | structural, total | fuelled, total given `StopsWithin` |
+| decision sites | intrinsic to the tree | carved out by `Reachable`, faithfulness proved |
+| simultaneous actions | **cannot express** | native |
+
+Two results decided it.
+
+*The certificates are not a second semantics.*
+`backwardValue_eq_expect_runFor` proves that wherever `StopsWithin` holds, the
+backward-induction value equals the expected payoff of the fuelled run law.
+Neither side is defined from the other — one recurses on `Successor`, the other
+on fuel — so the general candidate meets the RFC's "small certificate rather
+than a second parallel semantics" criterion.
+
+*Sequentializing a simultaneous move is not faithful.*
+`Tree.node` carries one `mover`. Encoding a two-player simultaneous match as a
+tree requires ordering the moves, and
+`sequentialization_enlarges_strategy_space` proves the strategy space grows
+strictly: eight contingent plans against four simultaneous profiles.
+`respondingPlan` exhibits a plan that conditions on the opponent's call, which
+no simultaneous strategy can do. Making the tree faithful therefore requires an
+information layer to quotient those plans — precisely the machinery whose
+absence made it cheaper on the certificate axis.
+
+## Result
+
+RFC D6's disproof conditions apply asymmetrically. General-state-first is
+rejected only if it fails a terminal, chance, locality, or finite-extraction
+hostile test; it failed none. Finite-first is rejected if the simultaneous-action
+slice needs a duplicate execution or evaluation theory rather than a small
+extension; it needs an information layer, which is not small.
+
+So the general-state protocol is the primary interface. The RFC explicitly
+permits more than one execution interface — "a universal record is not a success
+criterion" — and the tree is genuinely better where it applies, so it is
+retained rather than deleted:
+
+- use `Tree` for single-mover games, where it costs no certificate, evaluates
+  structurally, and has an intrinsically finite plan type;
+- use `ExecutionProtocol` everywhere else, and for anything simultaneous.
+
+The two agree where both apply: `candidates_agree_take` and
+`candidates_agree_leave` prove they induce the same outcome law on the shared
+example.
+
+## Consequences for public API
+
+Execution and information stay separate structures; the information model
+consumes `StepEvent` and never redefines a transition. Histories are
+`Type`-valued, so `IsTreeShaped` is a real statement and a merging arena
+refutes it. `BoundedHorizon` is a predicate over reachable traces, never a
+stored field. Strategies over a protocol are `SiteStrategy`, indexed by
+reachable decision sites; `Chooser` remains the runner's input, and
+`runFor_congr_of_restrict_eq` connects them.
+
+Two costs are recorded rather than hidden. The information model's `menu`
+ranges over `Option (Action i)`, committing the design to "the information state
+determines whether the player moves". And `IsLegalJoint` is written as an
+inlined `∀ i, match …`, so its pointwise form is not definitionally equal and
+needed a one-off case split; a later refactor to `∀ i, LegalOption …` would
+remove that friction.
+
+## Still open
+
+D6 is decided; D7 is not. The certificate/bridge measurement for
+cross-language transfers, the assessment and one-shot-deviation slice, and the
+MAID/FOSG encodings remain, and D0 is not final until they are recorded.
