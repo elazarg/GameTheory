@@ -103,7 +103,8 @@ def fairCoin : FinDist Bool :=
 
 /-- Both sides of the coin are realized, so both deals are histories. -/
 theorem mem_support_fairCoin (side : Bool) : side ∈ fairCoin.support :=
-  FinDist.prob_pos_iff.mp (by cases side <;> norm_num [fairCoin, FinDist.prob_pure_eq_ite])
+  FinDist.prob_pos_iff.mp
+    (by cases side <;> norm_num [fairCoin, FinDist.prob_pure_eq_ite])
 
 /-- Which state each side of the coin deals. -/
 def dealOf : Bool → Table
@@ -139,7 +140,8 @@ def hiddenCard : ExecutionProtocol Seat where
     match state with
     | .shuffle => FinDist.map dealOf fairCoin
     | .dealt card =>
-        FinDist.pure (.settled card (callOf (joint.1 .blind)) (callOf (joint.1 .informed)))
+        FinDist.pure
+          (.settled card (callOf (joint.1 .blind)) (callOf (joint.1 .informed)))
     | .settled card blindCall informedCall =>
         FinDist.pure (.settled card blindCall informedCall)
   progress := by
@@ -396,7 +398,8 @@ def blindCallOf : Phase → Option Card
   | .calling => some .high
   | _ => none
 
-theorem blindCallOf_mem_phaseMenu (phase : Phase) : blindCallOf phase ∈ phaseMenu phase := by
+theorem blindCallOf_mem_phaseMenu (phase : Phase) :
+    blindCallOf phase ∈ phaseMenu phase := by
   cases phase
   · simp [blindCallOf, phaseMenu]
   · exact ⟨Card.high, rfl⟩
@@ -479,7 +482,8 @@ theorem blind_sees_the_deal (card : Card) :
 must name a card and may not pass. So a policy is genuinely constrained by its
 information state, and `blind_policy_type` is not a vacuous type. -/
 theorem blind_menu_excludes_passing (card : Card) :
-    (none : Option Card) ∉ dealMenu .blind (dealSignals.infoOf .blind (dealHistory card)) := by
+    (none : Option Card) ∉
+      dealMenu .blind (dealSignals.infoOf .blind (dealHistory card)) := by
   rw [infoOf_dealHistory_blind]
   simp [dealMenu, phaseMenu]
 
@@ -519,7 +523,8 @@ here is the chance law itself. -/
 def blindBelief : FinDist Table := FinDist.map dealOf fairCoin
 
 theorem blindBelief_onInfoSet :
-    dealModel.BeliefOn .blind (dealSignals.infoOf .blind (dealHistory .high)) blindBelief := by
+    dealModel.BeliefOn .blind
+      (dealSignals.infoOf .blind (dealHistory .high)) blindBelief := by
   intro state hstate
   rw [blindBelief, FinDist.support_map] at hstate
   obtain ⟨side, _, rfl⟩ := hstate

@@ -21,7 +21,7 @@ becomes difficult to scan.
 | EXP-008 | 2026-07-26 | D5 / Phase 0 F5 | Does an interim, type-dependent Bayesian deviation fit the shared local-deviation interface? | Supports | `GameTheory/Experimental/Phase2/BayesianProbe.lean` |
 | EXP-009 | 2026-07-26 | D6/D7 / Phase 3 input | Does the open-game context hint at a better sequential interface, and is its carried equilibrium derivable? | Narrows | read-only audit of the pinned `Languages/OpenGame/` and `Bridges/OpenGame_EFG.lean` |
 | EXP-010 | 2026-07-27 | D6 / Phase 3 | Can a general-state execution protocol express terminal play and chance without an impossible total chooser or dummy probability data? | Supports | `GameTheory/Protocol/Execution.lean`; `GameTheory/Tests/Execution.lean` |
-| EXP-011 | 2026-07-26 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | *reserved* | `GameTheory/Protocol/` |
+| EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
 | EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Narrows (partial) | `GameTheory/Protocol/Tree.lean`; `GameTheory/Tests/Candidates.lean` |
 
 ## Entry template
@@ -347,19 +347,63 @@ but should not erase their evidence.
   perfect-information EFG with chance in both, and decide D6 on the measurement
 ### EXP-011: Information locality by construction
 
-- **Date / revision:** 2026-07-26, Phase 3 working tree based on the Phase 2 gate
+- **Date / revision:** 2026-07-27, Phase 3 working tree
 - **Decision / question:** D6; whether an information model layered over an
   execution protocol keeps strategies information-local *by typing* rather than
   by a later proposition. RFC 9.1.7 makes it a core-invalidating failure if the
   strategy type exposes hidden execution state, relies only on a subsequent
   locality proposition, or cannot support conditional beliefs and sequential
   rationality without reopening native information equivalence.
-- **Representative slice:** *(reserved - completed at gate)*
-- **Evidence:** *(reserved)*
-- **Observation:** *(reserved)*
-- **Outcome:** *(reserved)*
-- **Next action:** *(reserved)*
-
+- **Representative slice:** `hiddenCard`, a two-seat imperfect-information
+  protocol - nature deals `high`/`low`, the `informed` seat is told privately,
+  the `blind` seat is not, both then call simultaneously
+- **Evidence:** `GameTheory/Protocol/Information.lean`,
+  `GameTheory/Tests/Information.lean`; `lake build`
+- **Observation:** RFC 9.1.7 is **not** triggered.
+  *Locality is typing, not a hypothesis.* `Policy i` is
+  `(info : InfoState i) → { choice // choice ∈ menu i info }`. It has no
+  `E.State` argument, which `blind_policy_type` records as an `rfl`-checked type
+  equation. `blind_cannot_tell` proves the two dealt states give the blind seat
+  equal `InfoState`, and `every_blind_policy_agrees` follows by `congrArg` -
+  there is no locality hypothesis and no "assume the policy is constant on the
+  information set" lemma anywhere.
+  *The information state is history-indexed.* `infoOf` recurses over `Trace`
+  rather than mapping states, so information accumulates along a run instead of
+  being read off a state.
+  *Menu adequacy did not need hidden state.* `menu : (i) → InfoState i → Set …`
+  never receives a state; the adequacy *law* quantifies over states and traces,
+  which is what a law is for. The payoff is `legalOption_of_mem_menu`: one
+  information-local menu is the legal option set at every state in the
+  information set, so `jointAt_legal` builds a legal joint action from a profile
+  of information-local policies with no state-indexed menu and no native
+  equivalence relation on states.
+  *The probes have teeth.* `informed_can_tell` proves the *informed* seat's
+  `InfoState` values at the same two states differ, which kills
+  `InfoState := Unit` and every degenerate information state that would make the
+  equalities above vacuous. `blindPolicy` inhabits the policy type, so the
+  universally quantified statements are not over an empty type;
+  `blind_menu_excludes_passing` shows the menu is not `Set.univ`;
+  `hidden_card_matters` shows the two merged states genuinely have different
+  futures.
+  Two honest costs. First, `menu` ranges over `Option (E.Action i)` rather than
+  `E.Action i`, which commits the design to "the information state determines
+  whether the player moves, not only what they may play". That is the standard
+  assumption and makes `menu` exactly the per-player conjunct of legality, but
+  without it a policy would need the hidden state to know whether to return
+  `none`. Second, `IsLegalJoint` is written in `Execution.lean` as an inlined
+  `∀ i, match …`, and two distinct stuck matchers are not definitionally equal,
+  so the pointwise form needed a one-off case split
+  (`isLegalJoint_iff_legalOption`) rather than `Iff.rfl`. A future refactor to
+  `IsLegalJoint := ∀ i, LegalOption …` would remove that friction.
+  A third instance of a now-familiar tactic hazard: `cases` on `Trace` fails
+  with an internal motive error unless the index is typed at the protocol's
+  `State` projection rather than the reduced carrier.
+- **Outcome:** supports - the separated information layer survives RFC 9.1.7 for
+  feasibility. A full sequential-rationality and consistency definition was
+  deliberately out of scope and was not faked.
+- **Next action:** build the assessment and one-shot-deviation slice on this
+  interface, shaped as profile-plus-continuation per EXP-009, which is what
+  closes 9.1.7's third clause.
 ### EXP-012: The two execution candidates on one game
 
 - **Date / revision:** 2026-07-27, Phase 3 working tree
