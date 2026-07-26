@@ -3,17 +3,17 @@
 
 A `GameSignature` owns the strategy and outcome carriers. Profiles are bound to
 the signature, never to a play law or a payoff package, so one profile theorem
-serves every game built over the same signature (D1).
+serves every game built over the same signature.
 
 `Profile.update`, `Profile.override`, and `Profile.restrict` are the *only*
 public profile operations. `Function.update` is used here, in the profile
-implementation, and nowhere else in the library (RFC 7.1). `Subprofile` and
+implementation, and nowhere else in the library. `Subprofile` and
 `Profile.restrict` deliberately carry no `DecidableEq` instance: only the
-operations that branch on membership need one (RFC 6).
+operations that branch on membership need one.
 
 This module deliberately imports no probability: signatures and profiles are
 the lowest sufficient semantic layer, so the executable rational frontend can
-share these operations without pulling real-valued semantics in (D10, D12).
+share these operations without pulling real-valued semantics in.
 -/
 
 import Mathlib.Data.Finset.Basic
@@ -46,7 +46,7 @@ abbrev Subprofile (sig : GameSignature ι) (members : Finset ι) :=
 /-- The one-player subprofile playing `s`. This is the only declaration in the
 library that transports a strategy along a coordinate equality; the equality is
 `j = i` for a member `j` of `{i}`, and the profile module is the designated
-transport site (RFC 7.1). -/
+transport site. -/
 def Subprofile.single (i : ι) (s : sig.Strategy i) : Subprofile sig {i} :=
   fun j => (Finset.mem_singleton.mp j.2).symm ▸ s
 

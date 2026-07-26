@@ -1,7 +1,7 @@
 /-
 # Local, law-linear deviations and the single equilibrium predicate
 
-`DeviationScheme` enforces the two invariants of D5 in its type, not in prose:
+`DeviationScheme` enforces two invariants in its type, not in prose:
 
 * **law-linearity** — a deviation acts on one profile at a time and is lifted to
   profile laws by `bind` in `DeviationScheme.apply`; no field of the scheme sees

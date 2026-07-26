@@ -1,17 +1,16 @@
 /-
 # Assessments, contexts, and one-shot deviations
 
-This acts on EXP-009's directive. Auditing the pinned v1 open-game corpus found
-three separable parts, with three different verdicts:
+An open game bundles three separable things, which are worth different amounts:
 
 * the *context* — a component together with a continuation — is the idea worth
   taking, because quantifying over the continuation is exactly what upgrades a
   static equilibrium to a sequential one;
-* the *carried equilibrium field* is rejected: v1 stores `IsEquilibriumIn` as
-  data, and each constructor hand-writes its own Nash condition, which is a
+* an equilibrium predicate carried as *data* is rejected: storing it forces
+  each constructor to hand-write its own optimality condition, which is a
   duplicate solution concept per constructor;
-* the *co-outcome channel* is rejected: every concrete v1 construction sets
-  `coplay _ _ _ := ()`, so nothing consumes it.
+* the contravariant co-outcome channel is rejected: no concrete construction
+  or theorem here consumes it.
 
 So `Context` below is the open-game context with the co-outcome channel dropped
 and the equilibrium *derived* rather than stored. It has exactly two fields: what
@@ -43,7 +42,7 @@ variable (E) in
 leads, and what the rest of the game is worth from there.
 
 This is the open-game context `X × (Y → R)` with the co-outcome channel `S`
-removed, because EXP-009 measured that channel as having no consumer. The
+removed, because nothing consumes that channel. The
 belief over hidden states and the other players' behaviour are folded into
 `outcome`; `Context.ofBelief` builds one that way. -/
 structure Context (i : ι) where

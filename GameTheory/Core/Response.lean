@@ -5,7 +5,7 @@ Equilibrium of a law is one logical shape; these are another. Best response
 fixes an opponents' profile, dominance quantifies over *all* profiles, and
 rationalizability iterates dominance over shrinking strategy sets. None of them
 is an instance of `IsEquilibrium`, and forcing them through it would hide the
-quantifier that distinguishes them (D5).
+quantifier that distinguishes them.
 
 They share `GameForm.play`, the preference, and `Profile.update` with the
 equilibrium family, which is what makes the cross-family theorems below short.

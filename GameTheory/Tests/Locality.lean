@@ -1,7 +1,7 @@
 /-
 # Hostile locality and law-linearity tests
 
-RFC 9.1.2 makes it a core-invalidating failure if the equilibrium API cannot
+The design constraint under test is that the equilibrium API must
 enforce both law-linearity and recommendation locality. These are the tests that
 would detect it.
 

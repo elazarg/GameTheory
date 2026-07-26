@@ -3,7 +3,7 @@
 
 This module contains data, enumeration, and boolean procedures only. It imports
 `GameTheory.Core.Signature` for the shared profile operations and nothing
-real-valued, topological, or noncomputable (D10, D12). There is no
+real-valued, topological, or noncomputable. There is no
 `open Classical` and no `Fintype.ofFinite`: the game's own enumeration and
 decidable equality are authoritative everywhere below.
 

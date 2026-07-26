@@ -1,10 +1,9 @@
 /-
 # The simultaneous-action slice
 
-RFC D6's fifth encoding target, and the measurement that runs *against* the
-finite-first candidate. EXP-012 found the general-state candidate needs two
-certificates and an extraction construction where the tree needs none. This is
-the axis where the comparison reverses.
+The measurement that runs *against* the finite-first presentation. It needs no
+certificates where the general-state protocol needs two plus an extraction
+construction, so this is the axis where the comparison reverses.
 
 The general-state protocol has several players active at one state and a `step`
 that consumes a joint action, so simultaneity is native. The finite-first

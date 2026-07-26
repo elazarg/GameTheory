@@ -73,8 +73,7 @@ theorem ghostArena_step_target (source : GhostSpot) (joint : ∀ _ : Unit, Optio
 
 The index must be typed `ghostArena.State` rather than `GhostSpot`: `cases` on
 an indexed inductive fails to build its motive when the index is stated at the
-reduced carrier. This is a fourth instance of D1's bundled-structure
-transparency tax, after `GameForm`, `TableGame`, and `ExecutionProtocol`. -/
+reduced carrier, because carriers are stored as structure fields. -/
 theorem ghostArena_trace_state {state : ghostArena.State} (trace : Trace ghostArena state) :
     state = .begin ∨ state = .leftStop ∨ state = .rightStop := by
   cases trace with

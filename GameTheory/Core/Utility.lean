@@ -1,7 +1,7 @@
 /-
 # Utility evaluation and expected-utility preference
 
-Utility is separate data from the game form (D4). `euPreference` is a *derived*
+Utility is separate data from the game form. `euPreference` is a *derived*
 weak preference, so every equilibrium concept keeps exactly one logical
 definition: `IsNash F (euPreference u) σ` is expected-utility Nash, and there is
 no second predicate to rewrite between.

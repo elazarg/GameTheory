@@ -1,9 +1,9 @@
 /-
 # The finite-first execution candidate
 
-D6's second candidate: inductive finite trees are primary, and evaluation is
-structural rather than fuelled. This is the comparison baseline for
-`GameTheory.Protocol.Execution`.
+A finite-first presentation: inductive trees are primary and evaluation is
+structural rather than fuelled. It is faithful only for single-mover games; see
+`GameTheory.Protocol.Execution` for the general interface.
 
 Two properties are what the competition is about.
 
@@ -11,7 +11,7 @@ Two properties are what the competition is about.
   recursion, total by construction.
 * The extracted strategy type is indexed by the tree's *own* decision sites,
   because `PureStrategy` is defined by recursion on the tree. It is finite as
-  soon as the local action carriers are, which is RFC D6's fifth hostile test.
+  soon as the local action carriers are.
 
 Chance is a binary node carrying a `FinDist Bool`, so a chance law is
 normalized by construction and no proof obligation is stored in the

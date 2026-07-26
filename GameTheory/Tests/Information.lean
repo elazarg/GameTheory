@@ -1,11 +1,11 @@
 /-
 # Hostile information tests
 
-RFC 9.1.7 makes it a core-invalidating failure if the information strategy type
+The design constraint under test is that the information strategy type must not
 exposes hidden execution state at an information set, or if locality holds only
 as a later proposition. These are the tests that would detect it.
 
-The protocol below is the RFC's second validation case: an imperfect-information
+The protocol below is the standard validation case: an imperfect-information
 game with two execution states in one information set. Nature deals a card; the
 `informed` seat is privately told which card it is, the `blind` seat is not; both
 then call a card simultaneously, and the terminal state records the truth and

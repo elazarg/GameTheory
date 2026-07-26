@@ -1,14 +1,14 @@
 /-
 # Hostile arena tests
 
-RFC D6's fourth hostile test: cyclic and merging arenas must fail the premises
-of tree extraction *for the intended reason*.
+Cyclic and merging arenas must fail the premises of tree extraction *for the
+intended reason*.
 
 This is the test that `Trace` being `Type`-valued exists to make possible. The
-v1 snapshot stated history uniqueness as `Subsingleton (Reachable s t)` with
-`Reachable` a `Prop`, which proof irrelevance makes vacuously true — so it could
-not distinguish a tree from a merging arena at all. Here `Trace` is data, so
-`IsTreeShaped` is refutable, and this file refutes it.
+obvious alternative — stating history uniqueness as `Subsingleton` of a
+`Prop`-valued reachability relation — is vacuously true by proof irrelevance, so
+it cannot distinguish a tree from a merging arena at all. Here `Trace` is data,
+so `IsTreeShaped` is refutable, and this file refutes it.
 -/
 
 import GameTheory.Protocol.Execution
@@ -116,7 +116,7 @@ theorem mergingArena_not_treeShaped : ¬ mergingArena.IsTreeShaped := by
 /-- The contrast that motivates making histories data. Had reachability been
 stated as a `Prop`, uniqueness would be vacuous by proof irrelevance and the
 merging arena above would have *passed* the tree-extraction premise. This is
-the v1 defect, reproduced here so the repair is visible. -/
+reproduced here so the contrast is visible. -/
 def ReachableProp {ι : Type} (E : ExecutionProtocol ι) (state : E.State) : Prop :=
   Nonempty (Trace E state)
 

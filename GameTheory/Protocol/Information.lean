@@ -1,12 +1,12 @@
 /-
 # Information models
 
-The information half of D6. `GameTheory.Protocol.Execution` owns transitions;
+The information layer. `GameTheory.Protocol.Execution` owns transitions;
 this module owns *who sees what*. It never redefines a transition: every
 observation is emitted by a `StepEvent`, which is exactly the data of one
 realized legal step, and the initial views are the only other source.
 
-RFC 9.1.7 makes it a core-invalidating failure if the information strategy type
+The design constraint is that the information strategy type must not
 exposes hidden execution state at an information set or relies only on a later
 locality proposition. Three design choices answer that.
 

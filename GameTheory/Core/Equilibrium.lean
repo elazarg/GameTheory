@@ -4,7 +4,7 @@
 Every concept in this file is a choice of status quo and deviation scheme for
 the single predicate `IsEquilibrium`. None of them is a new logical definition,
 and none of them mentions expected utility: the preference stays an explicit
-argument (D4, D5).
+argument.
 
 | Concept | Status quo | Units | Deviations |
 |---|---|---|---|

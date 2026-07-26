@@ -1,11 +1,10 @@
 /-
 # Reachable decision sites and strategy extraction
 
-EXP-012 found an asymmetry between the two D6 candidates. `Tree.PureStrategy`
-is defined by recursion on the tree, so a finite-first plan is indexed by the
-tree's *own* decision sites. The general-state `Chooser`, by contrast, is a
-function on *every* non-terminal state — all syntactically possible states,
-including ones no play ever reaches. RFC D6's hostile test asks for the former.
+`Tree.PureStrategy` is defined by recursion on the tree, so a finite-first plan
+is indexed by the tree's *own* decision sites. The general-state `Chooser`, by
+contrast, is a function on *every* non-terminal state — all syntactically
+possible states, including ones no play ever reaches.
 
 This module closes that gap for the general candidate. It carves out the
 reachable decision sites and proves the extraction is faithful: two choosers

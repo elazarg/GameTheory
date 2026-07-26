@@ -1,10 +1,10 @@
 /-
 # Backward induction over a general-state protocol
 
-This is the backward-induction half of EXP-012. `GameTheory.Protocol.Execution`
-already measured the *evaluator* half of D6's general-state candidate:
+Backward induction over an execution protocol. `GameTheory.Protocol.Execution`
+already provides the *evaluator*:
 `StopsWithin` plus two stabilization theorems turn the fuelled `runFor` into a
-total evaluator. D6's criterion covers both halves — the general candidate wins
+total evaluator. Backward induction is the other half — a general state space earns its keep
 only if the finite evaluator **and** the backward-induction API arise through a
 small well-founded/bounded certificate rather than a second parallel semantics.
 So the question asked here is: how much machinery must a protocol carry before
@@ -26,7 +26,7 @@ The module is organised so that the answer is readable off its structure.
   followed. It is deliberately *not* a max-over-actions optimum. Optimizing
   would need a supremum over the legal-action set together with a boundedness
   hypothesis — a preference and order question rather than an execution
-  question, and D6 is about execution. The honest scope of this file is
+  question, and this module is about execution. The honest scope of this file is
   therefore "backward induction exists and computes", not "backward induction
   optimizes".
 * `backwardValue_eq_expect_runFor` joins the two halves: wherever the fuelled
@@ -35,7 +35,7 @@ The module is organised so that the answer is readable off its structure.
   induction is not a second semantics for the same protocol but a second view of
   the same one.
 
-The final section is a discriminating probe, not a smoke test. EXP-010's review
+The final section is a discriminating probe, not a smoke test. Earlier review
 lesson was that a slice can pass every test while being insensitive to the thing
 it claims to test, so the probe is built to *fail* for named wrong
 implementations; `BackwardProbe` records which ones.
@@ -159,7 +159,7 @@ open Classical in
 /-- The backward-induction rule for a terminal payoff: collect at a terminal
 state, and otherwise average the successor values under the law the chooser
 induces. Terminality is inspected before the chooser is consulted, exactly as in
-`runFor`, so no total legal-action chooser is required (RFC 9.1.6). -/
+`runFor`, so no total legal-action chooser is required. -/
 def backwardStep (chooser : E.Chooser) (payoff : E.State → ℝ) (source : E.State)
     (successorValue : (reached : E.State) → E.Successor reached source → ℝ) : ℝ :=
   if hterm : E.terminal source then payoff source
@@ -209,7 +209,7 @@ theorem backwardValue_of_not_terminal {source : E.State} (hterm : ¬ E.terminal 
 
 /-! ## Backward induction computes the forward semantics
 
-The evaluator half of EXP-012 and this half describe the same number. That is
+The fuelled evaluator and this recursion describe the same number. That is
 what distinguishes "a small certificate over one semantics" from "a second
 parallel semantics". -/
 
@@ -523,7 +523,7 @@ theorem backwardValue_flip_ne_terminal_payoffs :
   rw [backwardValue_grab_base]
   constructor <;> norm_num [basePayoff]
 
-/-! ### Probe 5: the two halves of EXP-012 agree
+/-! ### Probe 5: the two evaluators agree
 
 `StopsWithin` is the evaluator half's certificate and `WellFoundedPlay` is this
 half's. Discharging both on one game shows they describe one semantics. -/

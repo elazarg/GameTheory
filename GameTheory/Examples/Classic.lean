@@ -1,7 +1,7 @@
 /-
 # Classic examples
 
-Four executable games plus the RFC's downstream usability tests. Nothing here
+Four executable games plus the downstream usability tests. Nothing here
 opens an implementation namespace or mentions a transport, certificate, or
 representation: the public `TableGame`, `Profile`, and solution-concept API is
 all a reader needs.
@@ -203,7 +203,7 @@ theorem unanimity_allTrue_isNash :
 
 /-! ## Usability tests
 
-These correspond to RFC 7.3. Each is written against the public API only. -/
+Each is written against the public API only. -/
 
 /-- A purely ordinal preference: judge a law by the best outcome it can
 produce, with no expected utility anywhere. -/

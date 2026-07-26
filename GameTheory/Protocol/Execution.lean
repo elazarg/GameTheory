@@ -1,24 +1,23 @@
 /-
 # Execution protocols
 
-The execution half of D6: legal actions, stochastic transitions, terminality,
-and traces. It knows nothing about who observes what; the information layer is
+Legal actions, stochastic transitions, terminality, and traces. It knows nothing about who observes what; the information layer is
 separate and is layered on top.
 
-Three RFC requirements shape the interface.
+Three requirements shape the interface.
 
 * **No impossible total chooser.** `Chooser` is asked for a joint action only at
   a *non-terminal* state, so run semantics inspects terminality before
-  requesting an action (RFC 9.1.6).
+  requesting an action.
 * **Chance is carried by the transition law.** A state where nobody is active is
   legal for the no-op joint action, and `step` may still return a nondegenerate
   law. A `none` mover with no probability law is not chance semantics.
 * **Histories are data.** `Trace` is `Type`-valued, so `Subsingleton (Trace E s)`
-  is a real uniqueness statement. The v1 snapshot's `Subsingleton (Reachable s t)`
-  was vacuous under proof irrelevance; this is the repair.
+  is a real uniqueness statement. A `Prop`-valued reachability relation would
+  make that vacuous under proof irrelevance.
 
 Legality is a *definition* here rather than a stored field plus a consistency
-law, which removes one field and one law from the RFC's sketch.
+law, which removes a field and an obligation.
 -/
 
 import GameTheory.Probability.FinDist
@@ -34,8 +33,7 @@ universe uι us ua
 variable {ι : Type uι}
 
 /-- A joint action is legal when every active player supplies an available
-action and every inactive player supplies none. This is the RFC's
-`legal_iff_active_available`, stated as a definition. -/
+action and every inactive player supplies none. -/
 def IsLegalJoint {Action : ι → Type ua} (active : ι → Prop)
     (available : (i : ι) → Set (Action i)) (joint : ∀ i, Option (Action i)) : Prop :=
   ∀ i, match joint i with
@@ -53,7 +51,7 @@ structure ExecutionProtocol (ι : Type uι) where
   /-- The initial state. -/
   init : State
   /-- Who must move. Proposition-valued: enumerating movers is not part of proof
-  semantics (D9). -/
+  semantics. -/
   active : State → ι → Prop
   /-- What an active player may choose. -/
   available : (state : State) → (i : ι) → Set (Action i)
@@ -81,8 +79,8 @@ every active player supplies an available action. -/
 def Legal (state : E.State) (joint : ∀ i, Option (E.Action i)) : Prop :=
   ¬ E.terminal state ∧ IsLegalJoint (E.active state) (E.available state) joint
 
-/-- Terminal states have no legal joint action. In the RFC's sketch this was an
-assumed field; here it is a theorem. -/
+/-- Terminal states have no legal joint action. Because legality includes
+non-terminality, this is a theorem rather than an assumption. -/
 theorem terminal_no_legal {state : E.State} (hterm : E.terminal state)
     (joint : ∀ i, Option (E.Action i)) : ¬ E.Legal state joint :=
   fun hlegal => hlegal.1 hterm
@@ -117,7 +115,7 @@ The chooser is a *partial* object by construction: it is applied only where a
 legal joint action is known to exist. -/
 
 /-- A policy for the whole protocol. Terminal states are never queried, so no
-total legal-joint chooser is required anywhere (RFC 9.1.6). -/
+total legal-joint chooser is required anywhere. -/
 def Chooser : Type _ :=
   (state : E.State) → ¬ E.terminal state →
     { joint : ∀ i, Option (E.Action i) // E.Legal state joint }

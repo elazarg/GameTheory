@@ -47,6 +47,21 @@ positive, negative, narrowed, and inconclusive evidence. Decision records and
 RFC changes must cite the experiment ID; do not erase a failed hypothesis by
 quietly rewriting the design document.
 
+## Documentation boundary
+
+Phases, experiment IDs (`EXP-NNN`), decision IDs (`D0`–`D12`), and RFC section
+or kill-criterion citations are **plan and history**. They belong in
+`docs/ExperimentLog.md`, `docs/decisions/`, and the phase gate documents.
+
+Do not put them in Lean docstrings. Code outlives the plan: a reader a year from
+now should learn from a module docstring *what the design is and why*, stated in
+timeless terms, without needing the planning documents to decode it. Write "a
+`Prop`-valued reachability relation would make this vacuous" rather than "RFC
+9.1.7 makes this a core-invalidating failure".
+
+The `GameTheory/Experimental/` tree is the exception: those files exist only as
+recorded evidence for a named experiment, and their directory names say so.
+
 ## How to work here
 
 - The working directory is already the project root; do not prepend `cd` to

@@ -1,10 +1,10 @@
 /-
 # Hostile execution tests
 
-RFC 9.1.6 makes it a core-invalidating failure if the selected execution
-semantics needs an impossible total legal-action chooser at terminal states,
-dummy probability data at chance nodes, or evaluation that silently stops at a
-chance node. These are the tests that would detect it.
+Execution semantics must not need an impossible total legal-action chooser at
+terminal states, dummy probability data at chance nodes, or evaluation that
+silently stops at a chance node. These are the tests that would detect any of
+those.
 
 The protocol below is deliberately minimal and deliberately awkward: it has a
 genuine chance node with no mover, a player move whose *choice changes the
@@ -70,8 +70,8 @@ def Move.resolve : Move → Spot
 Marked `@[reducible]` for the same reason `GameForm.mixed` and
 `TableGame.toForm` are: without it `coinThenMove.State` does not reduce to
 `Spot` at `instances` transparency, so instance search and `simp` fail on the
-concrete protocol. This is the third module in which D1's bundled-structure
-design has required the annotation. -/
+concrete protocol. Storing carriers as structure fields requires this wherever a
+concrete protocol is defined. -/
 @[reducible]
 def coinThenMove : ExecutionProtocol Unit where
   State := Spot

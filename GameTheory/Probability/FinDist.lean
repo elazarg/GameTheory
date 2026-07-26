@@ -1,22 +1,18 @@
 /-
 # Finite-support probability laws
 
-`FinDist α` is the v1 finite-support law type. D2 (EXP-003, EXP-004) selected a
-Mathlib `PMF` paired with a proof that its support is finite; that
-representation is deliberately *not* part of the public contract. Downstream
+`FinDist α` is a Mathlib `PMF` paired with a proof that its support is finite.
+That representation is deliberately *not* part of the public contract. Downstream
 modules use `pure`, `map`, `bind`, `pi`, `prob`, and `expect` together with the
 lemmas below, never `toPMF`.
 
 Finite support is a capability of a particular law, not a `Fintype` assumption
-on its carrier (D2, D9): `expect` is an unconditional real number for an
+on its carrier: `expect` is an unconditional real number for an
 arbitrary observable, and `FinDist Nat` is inhabited by genuinely two-point
 laws.
 
-The `Analysis`-facing `stdSimplex` bridge lives in `GameTheory.Analysis`, so
-this module stays free of convexity and topology imports. Operation and
-expectation proof ideas are adapted from the pinned v1 files
-`Math/FiniteProbabilityMassFunction.lean` and `Math/PMFProduct/Basic.lean` at
-commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the snapshot is not imported.
+The convexity-facing `stdSimplex` bridge lives outside this module, which stays
+free of convexity and topology imports.
 -/
 
 import Mathlib.Algebra.BigOperators.Fin
@@ -417,7 +413,7 @@ theorem expect_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) 
 
 /-! ## Dependent finite products
 
-Independent products need finitely many players and nothing else (D9). -/
+Independent products need finitely many players and nothing else. -/
 
 theorem ennreal_tsum_pi_fin {n : ℕ} {A : Fin n → Type*}
     (g : (i : Fin n) → A i → ENNReal) :

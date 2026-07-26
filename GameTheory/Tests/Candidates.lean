@@ -1,5 +1,5 @@
 /-
-# EXP-012: the two D6 execution candidates on one game
+# The two execution presentations on one game
 
 The same game — a fair coin, then one consequential decision — encoded twice:
 once as a general-state `ExecutionProtocol` (in `GameTheory.Tests.Execution`)
