@@ -316,6 +316,16 @@ but should not erase their evidence.
   3. *Evaluation does not stop at chance.* `runFor_succ_of_chance` proves the
      runner steps through a chance state, and `runFor_of_terminal` proves
      terminal states absorb. `runFor_one_from_chance` instantiates both.
+  4. *The chosen action drives the run.* Review caught that the first version of
+     the slice could not detect a runner that consulted the chooser and then
+     discarded its answer - for instance one picking a legal action itself via
+     `Classical.choice` on `exists_legal` - because `step` ignored the joint
+     action outside the chance node. The protocol now splits its terminal state
+     into `tookIt`/`leftIt` and lets `step` branch on the move, and
+     `takePolicy_ne_leavePolicy` proves the two policies induce *different*
+     two-step laws from the chance node (`prob_tookIt_take = 1` against
+     `prob_tookIt_leave = 0`). Without that probe the other three tests were
+     satisfiable by a runner that never used the chooser's choice.
   Two simplifications relative to the RFC sketch: legality became a definition
   rather than a stored field plus `legal_iff_active_available`, removing one
   field and one law; and `active` is proposition-valued rather than a `Finset`,
