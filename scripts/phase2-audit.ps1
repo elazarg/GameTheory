@@ -85,13 +85,21 @@ Report 'FUNCTION_UPDATE_OUTSIDE_PROFILE' `
   (Count-Pattern $OutsideProfile '(?<![A-Za-z0-9_.])Function\.update(?![A-Za-z0-9_])')
 Report 'TRANSPORT_IN_PROFILE_MODULE' (Count-Pattern @($ProfileModule) $TransportPattern)
 
-# Phase 1's experimental candidates are frozen evidence; they are reported
-# separately so that the Phase 2 source budget is a like-for-like number.
+# Each phase gets its own transport budget. Without this split a later phase's
+# files are silently charged to an earlier phase's gate number, which would make
+# the earlier measurement drift as the repository grows.
 $Phase1Files = @(Select-Files 'GameTheory/Experimental/Phase1')
 $Phase2ProbeFiles = @(Select-Files 'GameTheory/Experimental/Phase2')
+$Phase2Owned = @('GameTheory/Probability', 'GameTheory/Core', 'GameTheory/Finite',
+  'GameTheory/Examples', 'GameTheory/Tests/Locality.lean', 'GameTheory.lean')
 $Phase2Files = @($OutsideProfile | Where-Object {
-  ($Phase1Files -notcontains $_) -and ($Phase2ProbeFiles -notcontains $_) })
+  $candidate = $_
+  ($Phase2Owned | Where-Object { $candidate.StartsWith($_) }).Count -gt 0 })
+$Phase3Files = @($OutsideProfile | Where-Object {
+  $_.StartsWith('GameTheory/Protocol') -or
+    ($_.StartsWith('GameTheory/Tests') -and $_ -ne 'GameTheory/Tests/Locality.lean') })
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
+Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
 Report 'TRANSPORT_PHASE1_EVIDENCE' (Count-Pattern $Phase1Files $TransportPattern)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
@@ -241,6 +249,7 @@ if ($VerifyExpected) {
     FUNCTION_UPDATE_OUTSIDE_PROFILE = 0
     TRANSPORT_IN_PROFILE_MODULE = 1
     TRANSPORT_PHASE2_SOURCE = 1
+    TRANSPORT_PHASE3_SOURCE = 0
     TRANSPORT_PHASE2_PROBE = 0
     FINTYPE_OF_FINITE = 0
     ALGORITHM_OPEN_CLASSICAL = 0

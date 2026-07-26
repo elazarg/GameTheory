@@ -55,12 +55,14 @@ theorem reachable_of_mem_runFor (chooser : E.Chooser) :
   | zero =>
     intro source reached hsource hreached
     rw [runFor_zero, FinDist.mem_support_pure] at hreached
-    exact hreached ▸ hsource
+    subst hreached
+    exact hsource
   | succ fuel ih =>
     intro source reached hsource hreached
     by_cases hterm : E.terminal source
     · rw [runFor_of_terminal chooser _ hterm, FinDist.mem_support_pure] at hreached
-      exact hreached ▸ hsource
+      subst hreached
+      exact hsource
     · rw [runFor_succ_of_not_terminal chooser fuel hterm, FinDist.support_bind] at hreached
       simp only [Set.mem_iUnion] at hreached
       obtain ⟨mid, hmid, hrest⟩ := hreached
