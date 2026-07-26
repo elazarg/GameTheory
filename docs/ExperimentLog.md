@@ -403,8 +403,41 @@ but should not erase their evidence.
   finite-first passes hostile test 5 outright; general-state passes the
   small-certificate criterion for the evaluator but not yet for strategy
   extraction
-- **Next action:** D6 is *not* decided. Two measurements remain: a
-  backward-induction API for the general candidate, which needs more than
-  `StopsWithin` because it needs well-foundedness rather than a step bound; and
-  finite strategy extraction over reachable decision sites. Both are required
-  before the RFC's criterion can be applied in full.
+- **Follow-up (2026-07-27):** both open measurements were made, and a third gap
+  appeared.
+  *Backward induction.* `GameTheory/Protocol/Backward.lean`. `Successor` is
+  `StepEvent` with its data forgotten; `WellFoundedPlay` is one line;
+  `backwardRec` is `WellFounded.fix` along it. Terminal states are the
+  relation's minimal elements automatically, because `Legal` already contains
+  non-terminality, so no separate base-case predicate is needed. Certificate
+  plus recursor is 26 nonblank lines; the concrete instance for the probe
+  protocol is 22. Decisively, `backwardValue_eq_expect_runFor` proves that
+  wherever `StopsWithin` holds the backward-induction value *equals* the
+  expected payoff of the fuelled run law - neither is defined from the other,
+  so this is not a second parallel semantics. Five probes each pair with an
+  explicitly refuted mutant (`oneStepValue`, `sourceOnlyValue`,
+  `chooserBlindValue`), making discrimination a theorem.
+  *Strategy extraction.* `GameTheory/Protocol/Extraction.lean`. `Reachable`,
+  `DecisionSite`, `SiteStrategy`, `Chooser.restrict`, and
+  `runFor_congr_of_restrict_eq`: choosers agreeing on the reachable decision
+  sites induce the same run law. The `ghostArena` probe exhibits an active,
+  non-terminal, *unreachable* state, proves it unreachable, proves the two
+  choosers genuinely differ there, and proves the runs agree anyway - so the
+  faithfulness theorem is not vacuous.
+  *The new gap.* Reviewing the tree candidate against the rest of D6's slice
+  list shows `Tree.node` carries a single `mover`, so the finite-first candidate
+  as built **cannot express simultaneous actions at all**. The general-state
+  candidate handles them natively: `active` is a predicate over players and
+  `step` consumes a joint action. RFC D6 explicitly says to reject finite-first
+  if the simultaneous-action and MAID/FOSG slices need duplicate execution
+  theories rather than a small extension, so this is the decisive remaining
+  measurement and it runs the *opposite* way from the certificate count.
+- **Running tally:** finite-first needs zero certificates, has intrinsic
+  decision sites, and evaluates structurally, but is single-mover. General-state
+  needs two certificates that do not derive from each other (`StopsWithin` is
+  chooser-indexed and fuel-shaped, `WellFoundedPlay` is chooser-independent and
+  order-shaped) plus an extraction construction, but handles simultaneity
+  natively and its certificates are provably not a parallel semantics.
+- **Next action:** encode a simultaneous-action slice in both candidates. That
+  measurement decides D6, and RFC D6 permits the answer to be more than one
+  execution interface - a universal record is not a success criterion.
