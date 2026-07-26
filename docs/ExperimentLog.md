@@ -23,6 +23,9 @@ becomes difficult to scan.
 | EXP-010 | 2026-07-27 | D6 / Phase 3 | Can a general-state execution protocol express terminal play and chance without an impossible total chooser or dummy probability data? | Supports | `GameTheory/Protocol/Execution.lean`; `GameTheory/Tests/Execution.lean` |
 | EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
 | EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
+| EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
+| EXP-014 | 2026-07-27 | D6 / Phase 3 | Can EFG, MAID, and FOSG share one execution base without dummy data or escape fields? | *reserved* | `GameTheory/Languages/` |
+| EXP-015 | 2026-07-27 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | *reserved* | `GameTheory/Languages/` |
 
 ## Entry template
 
@@ -506,3 +509,80 @@ but should not erase their evidence.
   [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md).
   D7 remains open, as do the assessment and one-shot-deviation slice and the
   MAID/FOSG encodings; D0 is not final until those are measured.
+
+### EXP-013: Assessment, sequential rationality, and one-shot deviations
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Decision / question:** D6 and D7, and the third clause of RFC 9.1.7.
+  EXP-009 concluded that the open-game *context* is the idea worth taking while
+  its carried equilibrium field and co-outcome channel are not. This tests that
+  directive.
+- **Representative slice:** `Context`, `value`, `IsLocallyOptimal`,
+  `IsProfitableDeviation`, `IsSequentiallyRationalAt`, and four probes over a
+  two-room protocol
+- **Evidence:** `GameTheory/Protocol/Assessment.lean`,
+  `GameTheory/Tests/Assessment.lean`
+- **Observation:** the directive holds. `Context` has exactly two fields -
+  `outcome : Option (Action i) → FinDist State` and
+  `continuation : State → ℝ` - which is the open-game context with the
+  co-outcome channel dropped, as EXP-009 measured that channel to have no
+  consumer. Local optimality is a *definition* over those fields, in deliberate
+  contrast to v1, where every open-game constructor stored its own
+  `IsEquilibriumIn` and hand-wrote a Nash condition.
+  `isLocallyOptimal_iff_no_profitable_deviation` is the one-shot-deviation
+  interface, with both sides derived from `value`.
+  `IsSequentiallyRationalAt` composes it with the information layer: the policy
+  supplies the call, `menu` supplies the allowed set, and the context supplies
+  the value. `deviation_legalOption` shows every alternative the deviator may
+  consider is legal at every state its belief considers possible - feasibility
+  without ever handing a policy a state, which is the remaining clause of
+  9.1.7.
+  The probes matter here more than usual, because
+  `isLocallyOptimal_iff_no_profitable_deviation` is a tautology about `value`
+  and would hold just as well if `value` were constant. Each probe therefore
+  fixes one field and varies the other: `up_optimal_under_prefersLeft` against
+  `up_not_optimal_under_prefersRight` varies only the continuation and flips the
+  verdict; `outcome_map_matters` holds the continuation fixed and flips it back
+  by changing only where the calls lead; `down_is_profitable_under_prefersRight`
+  exhibits an actual profitable deviation rather than only denying one; and
+  `belief_matters` shows the belief-built context depends on the belief.
+  One honest limitation. A profile of information-local policies is
+  *history*-indexed, because `infoOf` recurses over `Trace`, while `runFor`
+  consumes a *state*-indexed `Chooser`. Folding a full profile into a context
+  therefore needs either a history-indexed runner or a bind that is dependent on
+  a law's support, and `FinDist` has neither. `Context.ofBelief` sidesteps this
+  by taking a total branch and proving, via `ofBelief_congr`, that only its
+  behaviour on the belief's support matters. That is enough for the one-shot
+  interface, which is what the RFC asked for, but a full sequential-equilibrium
+  development would need the missing piece.
+- **Outcome:** supports - the context idea survives, the carried equilibrium and
+  the co-outcome channel stay rejected, and 9.1.7's third clause is met for
+  feasibility and one-shot deviations
+- **Next action:** the history-indexed runner, or a support-dependent bind on
+  `FinDist`, is the prerequisite for full sequential equilibrium; record it as a
+  known gap rather than a blocker for Phase 3
+### EXP-014: One execution base for three languages
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Decision / question:** D6's disproof condition - reduce the interfaces to a
+  smaller shared base if EFG and MAID cannot share `ExecutionProtocol` without
+  fake players, fake actions beyond the canonical no-op, or language-specific
+  escape fields. Deliverable is the written list of every language-specific
+  workaround.
+- **Representative slice:** *(reserved - completed at gate)*
+- **Evidence:** *(reserved)*
+- **Observation:** *(reserved)*
+- **Outcome:** *(reserved)*
+- **Next action:** *(reserved)*
+
+### EXP-015: Certificates against their direct bridges
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Decision / question:** D7 and the finalization of D0. Phase 0 fixed an
+  eight-point bridge and certificate complexity budget; a certificate level
+  earns its place only against the bespoke direct bridge it replaces.
+- **Representative slice:** *(reserved - completed at gate)*
+- **Evidence:** *(reserved)*
+- **Observation:** *(reserved)*
+- **Outcome:** *(reserved)*
+- **Next action:** *(reserved)*
