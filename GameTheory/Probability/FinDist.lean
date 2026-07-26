@@ -351,6 +351,19 @@ theorem ext_of_prob {μ ν : FinDist α} (h : ∀ a, μ.prob a = ν.prob a) : μ
   refine ext (PMF.ext fun a => ?_)
   exact (ENNReal.toReal_eq_toReal_iff' (PMF.apply_ne_top _ _) (PMF.apply_ne_top _ _)).1 (h a)
 
+/-- Branches agreeing on the support give the same `bind`. -/
+theorem bind_congr {μ : FinDist α} {f g : α → FinDist β}
+    (h : ∀ a ∈ μ.support, f a = g a) : μ.bind f = μ.bind g := by
+  refine ext_of_prob fun b => ?_
+  rw [prob_bind, prob_bind]
+  exact expect_congr fun a ha => by rw [h a ha]
+
+/-- Binding a constant branch discards the first law. -/
+@[simp]
+theorem bind_const (μ : FinDist α) (ν : FinDist β) : (μ.bind fun _ => ν) = ν := by
+  refine ext_of_prob fun b => ?_
+  rw [prob_bind, expect_const]
+
 /-- Finite-support Fubini: independent expectations commute. -/
 theorem expect_comm (μ : FinDist α) (ν : FinDist β) (g : α → β → ℝ) :
     expect μ (fun a => expect ν (fun b => g a b)) =

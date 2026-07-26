@@ -22,7 +22,7 @@ becomes difficult to scan.
 | EXP-009 | 2026-07-26 | D6/D7 / Phase 3 input | Does the open-game context hint at a better sequential interface, and is its carried equilibrium derivable? | Narrows | read-only audit of the pinned `Languages/OpenGame/` and `Bridges/OpenGame_EFG.lean` |
 | EXP-010 | 2026-07-27 | D6 / Phase 3 | Can a general-state execution protocol express terminal play and chance without an impossible total chooser or dummy probability data? | Supports | `GameTheory/Protocol/Execution.lean`; `GameTheory/Tests/Execution.lean` |
 | EXP-011 | 2026-07-26 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | *reserved* | `GameTheory/Protocol/` |
-| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | *reserved* | `GameTheory/Protocol/` |
+| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Narrows (partial) | `GameTheory/Protocol/Tree.lean`; `GameTheory/Tests/Candidates.lean` |
 
 ## Entry template
 
@@ -359,3 +359,52 @@ but should not erase their evidence.
 - **Observation:** *(reserved)*
 - **Outcome:** *(reserved)*
 - **Next action:** *(reserved)*
+
+### EXP-012: The two execution candidates on one game
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Decision / question:** D6; finite-first inductive trees or general-state
+  transition systems for v1. The RFC's criterion is that the general candidate
+  wins only if the finite evaluator and the backward-induction API arise from a
+  small well-founded or bounded certificate rather than from a second parallel
+  semantics.
+- **Representative slice:** one fair coin followed by one consequential
+  decision, encoded twice - as `coinThenMove : ExecutionProtocol Unit` and as
+  `coinTree : Tree Unit (fun _ => Move) Spot`
+- **Evidence:** `GameTheory/Protocol/Tree.lean`,
+  `GameTheory/Protocol/Execution.lean`, `GameTheory/Tests/Candidates.lean`
+- **Observation:** three probes were built in before measuring, following the
+  review lesson from EXP-010.
+  1. *Agreement.* `candidates_agree_take` and `candidates_agree_leave` prove the
+     two candidates induce the same outcome law, so neither is quietly modelling
+     a different game.
+  2. *Discrimination.* `takePolicy_ne_leavePolicy` and `takePlan_ne_leavePlan`
+     prove each candidate's law depends on the chosen action, so neither set of
+     tests would pass an evaluator that discarded the strategy.
+  3. *Cost.* Finite-first: `Tree.eval` is structural recursion - total, no fuel,
+     no certificate. `Tree.PureStrategy` is defined by recursion on the tree, so
+     the plan type is indexed by the tree's *own* decision sites by
+     construction; `Fintype` follows from finiteness of the local action
+     carriers alone, and `card_pureStrategy_coinTree` computes by `rfl`. That is
+     RFC D6's fifth hostile test, passed outright.
+     General-state: `runFor` is fuelled and is therefore not yet an evaluator.
+     Making it one took `runFor_add` (which needed the new
+     `FinDist.bind_congr`), `StopsWithin`, and two stabilization theorems -
+     about 25 nonblank lines, and `takePolicy_stopsWithin` discharges the
+     certificate for the example in four. On the *evaluator* axis this is a
+     small bounded certificate, not a second parallel semantics, so the general
+     candidate meets the RFC's criterion there.
+  One asymmetry is already visible and counts against general-state. The tree's
+  strategy type is over the tree's own decision sites; the protocol's `Chooser`
+  is a function over *every* non-terminal state, which is "all syntactically
+  possible states" rather than the game's reachable decision sites. Recovering
+  the latter needs an extraction step the general candidate does not yet have.
+- **Outcome:** narrows, partial - both candidates encode the slice and agree;
+  finite-first passes hostile test 5 outright; general-state passes the
+  small-certificate criterion for the evaluator but not yet for strategy
+  extraction
+- **Next action:** D6 is *not* decided. Two measurements remain: a
+  backward-induction API for the general candidate, which needs more than
+  `StopsWithin` because it needs well-foundedness rather than a step bound; and
+  finite strategy extraction over reachable decision sites. Both are required
+  before the RFC's criterion can be applied in full.

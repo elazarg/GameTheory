@@ -167,6 +167,45 @@ theorem runFor_succ_of_chance (chooser : E.Chooser) (fuel : ℕ) {state : E.Stat
   rw [runFor_succ_of_not_terminal chooser fuel hchance.1, chanceLaw]
   exact congrArg (fun d => (E.step state d).bind (E.runFor chooser fuel)) hidle
 
+/-- Running `m + n` steps is running `m` and then `n`. -/
+theorem runFor_add (chooser : E.Chooser) (first second : ℕ) (state : E.State) :
+    E.runFor chooser (first + second) state =
+      (E.runFor chooser first state).bind (E.runFor chooser second) := by
+  induction first generalizing state with
+  | zero => simp [FinDist.pure_bind]
+  | succ first ih =>
+    by_cases hterm : E.terminal state
+    · rw [runFor_of_terminal chooser _ hterm, runFor_of_terminal chooser _ hterm,
+        FinDist.pure_bind, runFor_of_terminal chooser second hterm]
+    · rw [show first + 1 + second = (first + second) + 1 by omega,
+        runFor_succ_of_not_terminal chooser _ hterm,
+        runFor_succ_of_not_terminal chooser _ hterm, FinDist.bind_bind]
+      exact FinDist.bind_congr fun s _ => ih s
+
+variable (E) in
+/-- Under `chooser`, everything reachable from `state` in `horizon` steps has
+already stopped. This is the certificate a general-state protocol supplies in
+place of an inductive finite semantics. -/
+def StopsWithin (chooser : E.Chooser) (horizon : ℕ) (state : E.State) : Prop :=
+  ∀ reached ∈ (E.runFor chooser horizon state).support, E.terminal reached
+
+/-- Once the run has stopped, extra fuel changes nothing: a bounded-horizon
+certificate turns the fuelled runner into a total evaluator. -/
+theorem runFor_eq_of_stopsWithin {chooser : E.Chooser} {horizon : ℕ} {state : E.State}
+    (hstop : E.StopsWithin chooser horizon state) (extra : ℕ) :
+    E.runFor chooser (horizon + extra) state = E.runFor chooser horizon state := by
+  rw [runFor_add]
+  refine Eq.trans (FinDist.bind_congr fun reached hreached => ?_) (FinDist.bind_pure _)
+  exact runFor_of_terminal chooser extra (hstop reached hreached)
+
+/-- Hence the run law is the same for every fuel past the horizon. -/
+theorem runFor_eq_of_stopsWithin_le {chooser : E.Chooser} {horizon fuel : ℕ}
+    {state : E.State} (hstop : E.StopsWithin chooser horizon state)
+    (hle : horizon ≤ fuel) :
+    E.runFor chooser fuel state = E.runFor chooser horizon state := by
+  obtain ⟨extra, rfl⟩ := Nat.exists_eq_add_of_le hle
+  exact runFor_eq_of_stopsWithin hstop extra
+
 /-! ## Realized transitions and histories -/
 
 variable (E) in
