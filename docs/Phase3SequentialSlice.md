@@ -68,9 +68,9 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 
 | Measure | Value |
 |---|---:|
-| `GameTheory/Protocol` nonblank lines | 1391 |
+| `GameTheory/Protocol` nonblank lines | 1393 |
 | `GameTheory/Protocol` modules | 7 |
-| `GameTheory/Languages` nonblank lines | 820 |
+| `GameTheory/Languages` nonblank lines | 972 |
 | Source-level transport tokens in the sequential layer | 0 |
 | `Function.update` in the sequential layer | 0 |
 | `sorry`, `admit`, `native_decide`, custom axioms | 0 |
@@ -139,3 +139,23 @@ would need a wider state.
   consumers or one checked composition, so building one now would be exactly
   the speculative abstraction that budget exists to prevent.
 - Finalization of D0, which depends on that measurement.
+- A native extensive-form encoding with its own workaround list. The
+  imperfect-information and chance protocols under `GameTheory/Tests/` exercise
+  the interface but are not a language module and produce no such list.
+
+## Close-out list
+
+Deferred deliberately until the phase gate, not forgotten:
+
+- `GameTheory.lean` neither imports nor re-exports `GameTheory.Protocol`. The
+  sequential interface should not join the public umbrella until D7 settles,
+  since its shape is what D7 measures.
+- A trace-indexed runner is the single change that would remove the largest
+  remaining limitation. Finding 4 blocks two things at once: the strategic
+  compilation is restricted to state-indexed policies, and the one-shot
+  deviation *theorem* — local optimality at every information state implying
+  global optimality under `WellFoundedPlay` — cannot be stated, because it needs
+  a run law fed by history-indexed policies. A law over `Trace` with the state
+  law as its pushforward would lift both, and `infoOf` already recurses over
+  traces. Worth evaluating in the same pass that revisits signature ownership,
+  since both rest on how carriers are indexed.

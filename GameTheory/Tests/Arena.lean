@@ -49,7 +49,6 @@ def mergingArena : ExecutionProtocol Unit where
   active state _ := state = .start
   available _ _ := Set.univ
   terminal state := state = .merged
-  terminal_inactive := by rintro state rfl i h; simp at h
   step state joint :=
     match state with
     | .start =>
@@ -140,7 +139,6 @@ def cyclicArena : ExecutionProtocol Unit where
   active _ _ := False
   available _ _ := Set.univ
   terminal _ := False
-  terminal_inactive := by rintro state ⟨⟩
   step _ _ := FinDist.pure .loop
   progress := fun _ _ => ⟨fun _ => none, fun _ h => h⟩
 

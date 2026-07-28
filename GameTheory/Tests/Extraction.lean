@@ -37,7 +37,6 @@ def ghostArena : ExecutionProtocol Unit where
   active state _ := state = .begin ∨ state = .ghost
   available _ _ := Set.univ
   terminal state := state = .leftStop ∨ state = .rightStop
-  terminal_inactive := by rintro state (rfl | rfl) i (h | h) <;> simp at h
   step state joint :=
     match state with
     | .begin =>

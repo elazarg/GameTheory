@@ -275,12 +275,6 @@ def protocol (D : Diagram) : ExecutionProtocol Agent where
   active := isActive D
   available := availableAt D
   terminal := isTerminal D
-  terminal_inactive := by
-    intro state hstop agent hactive
-    have hpending : state.pending = some Node.plan :=
-      ((isActive_iff D state agent).mp hactive).1
-    have hstopped : state.pending = none := hstop
-    simp [hpending] at hstopped
   step := transition D
   progress := by
     intro state
@@ -861,8 +855,9 @@ only legal joint action is `E.noop` (`legal_eq_noop_of_pending_ne_plan`), and
 the decision branch reads the planner's action out of the legality certificate
 via `decisionValue`, and the exhausted-diagram branch is discharged by the
 certificate's non-terminality conjunct. This cost a dependent match on the
-certificate; the naive encoding, which writes a `none` branch at the decision
-node and a self-loop at the terminal state, would have been shorter.
+certificate. Writing a `none` branch at the decision node and a self-loop at the
+terminal state would be shorter, but both would invent an outcome for a joint
+action that legality already excludes.
 
 **3. Language-specific escape fields: none.** `ExecutionProtocol`,
 `InfoSignals`, and `InformationModel` were used as declared. No field of

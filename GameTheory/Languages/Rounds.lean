@@ -43,7 +43,6 @@ def rounds : ExecutionProtocol (Fin 2) where
   active state _ := match state with | .finished _ _ => False | _ => True
   available _ _ := Set.univ
   terminal state := match state with | .finished _ _ => True | _ => False
-  terminal_inactive := by rintro state hterm i hactive; cases state <;> simp_all
   step state joint :=
     match state with
     | .opening =>

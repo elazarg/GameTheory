@@ -38,7 +38,6 @@ def rooms : ExecutionProtocol Unit where
   active state _ := state ≠ .done
   available _ _ := Set.univ
   terminal state := state = .done
-  terminal_inactive := by rintro state rfl i h; exact h rfl
   step _ _ := FinDist.pure .done
   progress := by
     rintro state hterm

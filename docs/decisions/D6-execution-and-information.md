@@ -111,6 +111,6 @@ remove that friction.
 
 ## Still open
 
-D6 is decided; D7 is not. The certificate/bridge measurement for
-cross-language transfers, the assessment and one-shot-deviation slice, and the
-MAID/FOSG encodings remain, and D0 is not final until they are recorded.
+D6 is decided; D7 is not. The assessment and one-shot-deviation slice and both
+language encodings have since been recorded, so what remains is the
+certificate-versus-direct-bridge measurement. D0 is not final until that exists.

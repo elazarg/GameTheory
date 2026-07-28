@@ -6,11 +6,10 @@ An open game bundles three separable things, which are worth different amounts:
 * the *context* — a component together with a continuation — is the idea worth
   taking, because quantifying over the continuation is exactly what upgrades a
   static equilibrium to a sequential one;
-* an equilibrium predicate carried as *data* is rejected: storing it forces
-  each constructor to hand-write its own optimality condition, which is a
-  duplicate solution concept per constructor;
-* the contravariant co-outcome channel is rejected: no concrete construction
-  or theorem here consumes it.
+* an equilibrium predicate carried as *data* would force each constructor to
+  hand-write its own optimality condition, giving one duplicate solution concept
+  per constructor, so optimality is derived here instead;
+* a contravariant co-outcome channel has no consumer here, so there is none.
 
 So `Context` below is the open-game context with the co-outcome channel dropped
 and the equilibrium *derived* rather than stored. It has exactly two fields: what

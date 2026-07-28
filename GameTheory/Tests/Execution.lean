@@ -80,7 +80,6 @@ def coinThenMove : ExecutionProtocol Unit where
   active state _ := state = .heads ∨ state = .tails
   available _ _ := Set.univ
   terminal state := state = .tookIt ∨ state = .leftIt
-  terminal_inactive := by rintro state (rfl | rfl) i (h | h) <;> simp at h
   step state joint :=
     match state with
     | .chance =>

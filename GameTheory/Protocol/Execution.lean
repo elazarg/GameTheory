@@ -1,8 +1,8 @@
 /-
 # Execution protocols
 
-Legal actions, stochastic transitions, terminality, and traces. It knows nothing about who observes what; the information layer is
-separate and is layered on top.
+Legal actions, stochastic transitions, terminality, and traces. This layer knows
+nothing about who observes what; the information layer sits on top of it.
 
 Three requirements shape the interface.
 
@@ -16,8 +16,10 @@ Three requirements shape the interface.
   is a real uniqueness statement. A `Prop`-valued reachability relation would
   make that vacuous under proof irrelevance.
 
-Legality is a *definition* here rather than a stored field plus a consistency
-law, which removes a field and an obligation.
+Legality is a definition, not a field: a joint action is legal at a state when
+play has not stopped there and every active player supplies an available action.
+A protocol therefore cannot declare a legality relation inconsistent with its own
+`active` and `available`.
 -/
 
 import GameTheory.Probability.FinDist
@@ -57,8 +59,6 @@ structure ExecutionProtocol (ι : Type uι) where
   available : (state : State) → (i : ι) → Set (Action i)
   /-- Where execution stops. A `Prop`, never a stored horizon. -/
   terminal : State → Prop
-  /-- Nobody chooses at a terminal state. -/
-  terminal_inactive : ∀ state, terminal state → ∀ i, ¬ active state i
   /-- The stochastic transition law. It accepts only legal joint actions, and
   legality includes non-terminality, so `step` cannot be applied at a terminal
   state at all. -/
@@ -79,8 +79,11 @@ every active player supplies an available action. -/
 def Legal (state : E.State) (joint : ∀ i, Option (E.Action i)) : Prop :=
   ¬ E.terminal state ∧ IsLegalJoint (E.active state) (E.available state) joint
 
-/-- Terminal states have no legal joint action. Because legality includes
-non-terminality, this is a theorem rather than an assumption. -/
+/-- Terminal states have no legal joint action.
+
+`active` is therefore unconstrained at terminal states: a protocol may declare
+somebody active where play has stopped, and nothing depends on whether it does,
+because no legal action exists there either way. -/
 theorem terminal_no_legal {state : E.State} (hterm : E.terminal state)
     (joint : ∀ i, Option (E.Action i)) : ¬ E.Legal state joint :=
   fun hlegal => hlegal.1 hterm

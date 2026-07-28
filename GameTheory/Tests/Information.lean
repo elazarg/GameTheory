@@ -132,10 +132,6 @@ def hiddenCard : ExecutionProtocol Seat where
   active state _ := state.phase = .calling
   available _ _ := Set.univ
   terminal state := state.phase = .over
-  terminal_inactive := by
-    intro state hover _ hcalling
-    rw [hover] at hcalling
-    simp at hcalling
   step state joint :=
     match state with
     | .shuffle => FinDist.map dealOf fairCoin

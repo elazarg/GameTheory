@@ -341,7 +341,6 @@ def probe : ExecutionProtocol Unit where
   active state _ := state = .pick
   available _ _ := Set.univ
   terminal state := state = .grabbed ∨ state = .passed
-  terminal_inactive := by rintro state (rfl | rfl) i h <;> simp at h
   step state joint :=
     match state with
     | .flip => coin

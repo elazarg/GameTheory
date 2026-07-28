@@ -24,7 +24,7 @@ becomes difficult to scan.
 | EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
 | EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
 | EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
-| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can EFG, MAID, and FOSG share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
+| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
 | EXP-015 | 2026-07-27 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | *reserved* | `GameTheory/Languages/` |
 
 ## Entry template
@@ -561,14 +561,18 @@ but should not erase their evidence.
 - **Next action:** the history-indexed runner, or a support-dependent bind on
   `FinDist`, is the prerequisite for full sequential equilibrium; record it as a
   known gap rather than a blocker for Phase 3
-### EXP-014: One execution base for three languages
+### EXP-014: One execution base for two native shapes
 
 - **Date / revision:** 2026-07-28, Phase 3 working tree
 - **Decision / question:** D6's disproof condition - reduce the interfaces to a
   smaller shared base if the languages cannot share `ExecutionProtocol` without
   fake players, fake actions beyond the canonical no-op, or language-specific
   escape fields. Deliverable is the written list of every language-specific
-  workaround.
+  workaround. Two native shapes were encoded, not three: an influence diagram
+  and a multi-round simultaneous game. The extensive-form leg is covered only
+  informally, by the imperfect-information and chance protocols in
+  `GameTheory/Tests/Information.lean` and `GameTheory/Tests/Execution.lean`,
+  which carry no workaround list of their own.
 - **Representative slice:** a three-node MAID - one chance node, one decision
   node observing it, one utility node - compiled into `ExecutionProtocol` and
   `InformationModel`. MAID is the hardest of the three because its native shape
