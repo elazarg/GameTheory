@@ -1,8 +1,7 @@
 # Phase 3 sequential vertical slice
 
-Status: in progress. D6 is decided and one language encoding is done; the
-simultaneous-language encoding, D7, and the finalization of D0 are
-outstanding.
+Status: in progress. D6 is decided and both language encodings are done; D7 and
+the finalization of D0 are outstanding.
 
 ## What was built
 
@@ -16,6 +15,7 @@ outstanding.
 | `GameTheory/Protocol/Assessment.lean` | contexts, local optimality, the one-shot-deviation interface, sequential rationality |
 | `GameTheory/Protocol/Strategic.lean` | compilation of a protocol into a static `GameForm` |
 | `GameTheory/Languages/MAID.lean` | a three-node influence diagram compiled into the execution and information layers, with its workaround list |
+| `GameTheory/Languages/Rounds.lean` | a two-round simultaneous game, checking that simultaneity composes across rounds |
 
 ## Kill criteria
 
@@ -44,6 +44,7 @@ law over traces; the `menu` field never receives a state.
 | cyclic arena refutes every bounded horizon | passed | `Tests/Arena.lean` |
 | finite strategy extraction over own decision sites | passed by both presentations | `Tree.lean`, `Tests/Extraction.lean` |
 | simultaneous actions | general-state only | `Tests/Simultaneous.lean` |
+| simultaneity composes across rounds | passed | `Languages/Rounds.lean` |
 
 ## Decisions
 
@@ -125,12 +126,16 @@ diagram does not have. That case is untested.
 That encoding also rediscovered finding 4 above independently, from a different
 direction.
 
+A two-round simultaneous game compiles with no workaround at all: no fake
+players, no fake actions, and the no-op never appears, because no state has an
+idle player. Its recorded limit is that the middle state carries the round's
+*outcome* rather than its actions, so a game needing the exact previous profile
+would need a wider state.
+
 ## Outstanding
 
-- The two-round simultaneous encoding. One-round simultaneity is covered by
-  `Tests/Simultaneous.lean`, which is what decided the execution comparison, but
-  multi-round simultaneity with observation between rounds is untested.
-- The certificate-versus-direct-bridge measurement, and hence D7. This needs a
-  second language: with one transfer, the recorded budget awards a certificate
-  no credit and prescribes a direct named theorem instead.
-- Finalization of D0, which depends on the above.
+- The certificate-versus-direct-bridge measurement, and hence D7. The recorded
+  budget awards a certificate level no credit until it has two downstream
+  consumers or one checked composition, so building one now would be exactly
+  the speculative abstraction that budget exists to prevent.
+- Finalization of D0, which depends on that measurement.

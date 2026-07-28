@@ -24,7 +24,7 @@ becomes difficult to scan.
 | EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
 | EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
 | EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
-| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can EFG, MAID, and FOSG share one execution base without dummy data or escape fields? | Supports (partial) | `GameTheory/Languages/MAID.lean` |
+| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can EFG, MAID, and FOSG share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
 | EXP-015 | 2026-07-27 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | *reserved* | `GameTheory/Languages/` |
 
 ## Entry template
@@ -596,14 +596,27 @@ but should not erase their evidence.
   A discriminating probe (`outcome_law_depends_on_decision`) proves the compiled
   run law depends on the decision node's value, so the encoding does not
   collapse the decision away.
-- **Outcome:** supports, partial - MAID shares the execution base honestly, with
-  one clearly bounded scope limitation. The FOSG multi-round simultaneous
-  encoding was not written: the agent building it was cut off by a session
-  limit before it produced a file.
-- **Next action:** encode the two-round simultaneous FOSG slice. Until then D6's
-  disproof condition has been tested against MAID only, and the one-round
-  simultaneous case in `GameTheory/Tests/Simultaneous.lean` is the only
-  simultaneity evidence.
+- **Multi-round simultaneity (2026-07-28):** `GameTheory/Languages/Rounds.lean`.
+  Simultaneity composes across rounds with no encoding trick: `active` is a
+  predicate over players so a whole round is one state, `step` consumes a joint
+  action so a round resolves in one transition, and the reached state carries
+  the round's outcome so round two can depend on round one. The no-op never
+  appears, because `all_active_of_not_terminal` shows no state has an idle
+  player. Three probes make the claim non-vacuous - both players' first-round
+  calls matter, the second round is not vestigial, and the state reached after
+  round one genuinely records which outcome occurred - and `stopsWithin_two`
+  supplies the horizon certificate. The recorded remainder is that the middle
+  state carries the first round's *outcome* rather than its actions, so a game
+  whose second round depends on the exact first-round profile would need a wider
+  state; nothing in the interface prevents that, but this file does not test it.
+- **Outcome:** supports - both encodings share the execution base with no fake
+  players, no fake actions beyond the canonical no-op, and no escape fields, each
+  recorded with a theorem. Two scope limits are stated plainly rather than
+  hidden: an influence diagram with two incomparable decision nodes, and a
+  round-based game needing the exact previous profile.
+- **Next action:** neither encoding needed an escape hatch, so the shared
+  execution base stands. The certificate-versus-direct-bridge measurement is
+  the remaining input to D7.
 ### EXP-015: Certificates against their direct bridges
 
 - **Date / revision:** 2026-07-27, Phase 3 working tree
