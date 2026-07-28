@@ -24,7 +24,7 @@ becomes difficult to scan.
 | EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
 | EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
 | EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
-| EXP-014 | 2026-07-27 | D6 / Phase 3 | Can EFG, MAID, and FOSG share one execution base without dummy data or escape fields? | *reserved* | `GameTheory/Languages/` |
+| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can EFG, MAID, and FOSG share one execution base without dummy data or escape fields? | Supports (partial) | `GameTheory/Languages/MAID.lean` |
 | EXP-015 | 2026-07-27 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | *reserved* | `GameTheory/Languages/` |
 
 ## Entry template
@@ -563,18 +563,47 @@ but should not erase their evidence.
   known gap rather than a blocker for Phase 3
 ### EXP-014: One execution base for three languages
 
-- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Date / revision:** 2026-07-28, Phase 3 working tree
 - **Decision / question:** D6's disproof condition - reduce the interfaces to a
-  smaller shared base if EFG and MAID cannot share `ExecutionProtocol` without
+  smaller shared base if the languages cannot share `ExecutionProtocol` without
   fake players, fake actions beyond the canonical no-op, or language-specific
   escape fields. Deliverable is the written list of every language-specific
   workaround.
-- **Representative slice:** *(reserved - completed at gate)*
-- **Evidence:** *(reserved)*
-- **Observation:** *(reserved)*
-- **Outcome:** *(reserved)*
-- **Next action:** *(reserved)*
-
+- **Representative slice:** a three-node MAID - one chance node, one decision
+  node observing it, one utility node - compiled into `ExecutionProtocol` and
+  `InformationModel`. MAID is the hardest of the three because its native shape
+  is a DAG of typed nodes rather than a state machine.
+- **Evidence:** `GameTheory/Languages/MAID.lean` (820 nonblank lines), whose
+  `## Workarounds` section is the deliverable
+- **Observation:** all three named failures are absent, each with a theorem.
+  *No fake players*: the protocol's index is the diagram's own agent set, chance
+  is carried by the transition law at an ownerless node, and `no_extra_agent`
+  records there is no `nature` index. *No fake actions*: an agent with no
+  decision node gets `Empty` rather than a padding action, and at every
+  non-decision node the only legal joint action is the canonical no-op. *No
+  escape fields*: the three structures were used as declared.
+  The honest remainder is more interesting than the clean part. The DAG must be
+  linearized, so the state space is its prefixes; for this diagram the
+  topological order is unique, but the file states plainly that **a MAID with
+  two incomparable decision nodes would make the compiled protocol assert an
+  order the diagram does not have, and that case is untested**. The utility node
+  costs an execution step whose law is a point mass, so `IsChance` cannot
+  distinguish a chance node from a deterministic administrative step - node
+  kinds are not recoverable from the protocol. And the encoding independently
+  rediscovered the mismatch recorded in EXP-013: `runFor` is state-indexed while
+  policies are history-indexed, and the bridge is sound here only because the
+  stage records every resolved node's value.
+  A discriminating probe (`outcome_law_depends_on_decision`) proves the compiled
+  run law depends on the decision node's value, so the encoding does not
+  collapse the decision away.
+- **Outcome:** supports, partial - MAID shares the execution base honestly, with
+  one clearly bounded scope limitation. The FOSG multi-round simultaneous
+  encoding was not written: the agent building it was cut off by a session
+  limit before it produced a file.
+- **Next action:** encode the two-round simultaneous FOSG slice. Until then D6's
+  disproof condition has been tested against MAID only, and the one-round
+  simultaneous case in `GameTheory/Tests/Simultaneous.lean` is the only
+  simultaneity evidence.
 ### EXP-015: Certificates against their direct bridges
 
 - **Date / revision:** 2026-07-27, Phase 3 working tree
