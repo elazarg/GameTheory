@@ -25,7 +25,7 @@ becomes difficult to scan.
 | EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
 | EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
 | EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
-| EXP-015 | 2026-07-27 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | *reserved* | `GameTheory/Languages/` |
+| EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 
 ## Entry template
 
@@ -623,12 +623,38 @@ but should not erase their evidence.
   the remaining input to D7.
 ### EXP-015: Certificates against their direct bridges
 
-- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Date / revision:** 2026-07-28, Phase 3 working tree
 - **Decision / question:** D7 and the finalization of D0. Phase 0 fixed an
   eight-point bridge and certificate complexity budget; a certificate level
   earns its place only against the bespoke direct bridge it replaces.
-- **Representative slice:** *(reserved - completed at gate)*
-- **Evidence:** *(reserved)*
-- **Observation:** *(reserved)*
-- **Outcome:** *(reserved)*
-- **Next action:** *(reserved)*
+- **Representative slice:** the two encoded native shapes - an influence diagram
+  and a two-round simultaneous game - each taken to a `GameForm`, with the
+  static solution concepts applied to both
+- **Evidence:** `GameTheory/Tests/Transfer.lean`
+- **Observation:** the direct baseline is *zero*, which no certificate level can
+  beat. Each language reached the static core by applying one existing generic
+  function; it added no structure, no construction discharging certificate
+  fields, and no evaluation theorem of its own. Both obtain their outcome law
+  from the same theorem, `ExecutionProtocol.toGameForm_play`, instantiated
+  twice, and `IsNash` and `WeaklyDominates` apply to both without either
+  language contributing a definition or a lemma. A named adequacy record would
+  add a structure, composition laws, and a per-language construction, and would
+  enable nothing further: the transfer is function composition, and composing
+  functions needs no witness.
+  This corroborates EXP-009 from the opposite direction. That audit found a
+  compositional presentation whose carried equilibrium field was *derivable*
+  from native semantics, whose constructors each hand-wrote their own optimality
+  condition, and whose contravariant channel had no consumer. Storing a witness
+  for something already derivable is the mechanism by which a certificate
+  hierarchy decays into duplicated concepts.
+  The rejection is scoped, not universal: it holds for languages that compile
+  *into* a shared target, and says nothing about a transfer that must preserve
+  something the target forgets, such as recall or the identity of a decision
+  site. No such transfer exists here yet, which is itself the reason the
+  hierarchy is unamortized.
+- **Outcome:** rejects D7 for v1 - keep compilation as functions and named
+  evaluation theorems; reopen only on a concrete transfer the shared static form
+  provably cannot carry
+- **Next action:** record
+  [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md);
+  D0 can now be finalized at every semantic level.
