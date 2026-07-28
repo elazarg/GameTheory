@@ -629,6 +629,152 @@ theorem Policy.toBehavioral_toMixed {i : ι} [Fintype (M.InfoState i)]
     policy.toBehavioral.toMixed = FinDist.pure policy :=
   FinDist.pi_pure policy
 
+/-! ## When the two randomizations agree
+
+Drawing at each information state and drawing once over policies give the same
+law exactly when the single draw is never asked to answer twice. The proof
+follows play: at each step the drawn policy is factored at the information
+states about to be consulted, its first factor is matched against the local
+draw, and the rest is re-read as a mixed profile that has committed there. The
+commitment is then invisible, because the coordinate is never consulted again —
+or, where the player does not move, because there was nothing to choose. -/
+
+/-- Reassembling a policy from its value at one information state and its values
+elsewhere returns that value there. -/
+theorem piSplitAt_symm_self {i : ι} [DecidableEq (M.InfoState i)] (info : M.InfoState i)
+    (q : M.Choice i info × ∀ w : {w // w ≠ info}, M.Choice i w.1) :
+    (Equiv.piSplitAt info fun w => M.Choice i w).symm q info = q.1 := by
+  simp
+
+/-- Unfolding one step of deterministic play against a chooser value already
+known. Naming the value keeps the rewrite out of the dependent position it would
+otherwise land in. -/
+theorem runFrom_succ_of_chooser_eq (policies : (i : ι) → M.Policy i) {h : E.History}
+    (hterm : ¬ E.terminal h.state)
+    (chosen : { joint : ∀ i, Option (E.Action i) // E.Legal h.state joint })
+    (hchosen : M.historyChooser policies h hterm = chosen) (fuel : ℕ) :
+    M.runFrom policies (fuel + 1) h =
+      (E.step h.state chosen).bindOnSupport fun _ realized =>
+        M.runFrom policies fuel (h.extend chosen.2 realized) := by
+  subst hchosen
+  rw [runFrom, ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm]
+  rfl
+
+/-- A commitment made at one step is invisible from the next one on: either the
+player never meets that information state again while moving, or it does not
+move there and had nothing to choose. -/
+theorem commit_agree_of_actsOnce [∀ i, DecidableEq (M.InfoState i)]
+    (hactsOnce : M.ActsOnceAtEachInfoState)
+    (β : (i : ι) → M.BehavioralPolicy i) {h : E.History}
+    (draw : (i : ι) → M.Choice i (M.infoOf i h.trace))
+    {joint : ∀ i, Option (E.Action i)} (isLegal : E.Legal h.state joint)
+    {target : E.State} (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support)
+    {fuel : ℕ} (later : E.History)
+    (hreach : ExecutionProtocol.ReachesWithin E fuel (h.extend isLegal realized) later)
+    (hlater : ¬ E.terminal later.state) (i : ι) :
+    (β i).commit (M.infoOf i h.trace) (draw i) (M.infoOf i later.trace) =
+      β i (M.infoOf i later.trace) := by
+  by_cases hne : M.infoOf i later.trace ≠ M.infoOf i h.trace
+  · exact BehavioralPolicy.commit_of_ne _ _ _ hne
+  push Not at hne
+  by_cases hactiveLater : E.active later.state i
+  · by_cases hactiveHere : E.active h.state i
+    · refine absurd hne ?_
+      obtain ⟨laterJoint, hlaterJoint⟩ := E.progress later.state hlater
+      have hlaterLegal : E.Legal later.state laterJoint := ⟨hlater, hlaterJoint⟩
+      obtain ⟨laterTarget, hlaterRealized⟩ :=
+        (E.step later.state ⟨laterJoint, hlaterLegal⟩).support_nonempty
+      obtain ⟨_, hsome⟩ := LegalOption.exists_eq_some_of_active (joint i)
+        (ExecutionProtocol.legalOption_of_legal isLegal i) hactiveHere
+      obtain ⟨_, hlaterSome⟩ := LegalOption.exists_eq_some_of_active (laterJoint i)
+        (ExecutionProtocol.legalOption_of_legal hlaterLegal i) hactiveLater
+      exact M.infoOf_ne_of_actsOnce hactsOnce i isLegal realized (by rw [hsome]; rfl) hreach
+        hlaterLegal hlaterRealized (by rw [hlaterSome]; rfl)
+    · have : Subsingleton (M.Choice i (M.infoOf i h.trace)) :=
+        M.subsingleton_choice_of_not_active h.trace hactiveHere
+      rw [hne, BehavioralPolicy.commit_self]
+      exact (FinDist.eq_pure_of_subsingleton _ (draw i)).symm
+  · exact M.behavioral_eq_of_not_active _ _ later.trace hactiveLater
+
+section Equivalence
+
+variable [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+
+/-- **The equivalence.** With no player ever asked to act twice at one
+information state, randomizing locally and randomizing once over policies induce
+the same law over histories. -/
+theorem runMixedFrom_toMixed (hactsOnce : M.ActsOnceAtEachInfoState) :
+    ∀ (fuel : ℕ) (β : (i : ι) → M.BehavioralPolicy i) (h : E.History),
+      M.runMixedFrom (fun i => (β i).toMixed) fuel h = M.runBehavioralFrom β fuel h := by
+  intro fuel
+  induction fuel with
+  | zero => intro β h; exact FinDist.bind_const _ _
+  | succ fuel ih =>
+    intro β h
+    by_cases hterm : E.terminal h.state
+    · rw [runMixedFrom, runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
+      refine Eq.trans (FinDist.bind_congr fun policies _ => ?_) (FinDist.bind_const _ _)
+      rw [runFrom, ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
+    · -- The information states about to be consulted, and the two halves of a
+      -- drawn policy: its value there, and its values everywhere else.
+      set info : (i : ι) → M.InfoState i := fun i => M.infoOf i h.trace with hinfo
+      set assemble : (i : ι) →
+          M.Choice i (info i) × (∀ w : {w // w ≠ info i}, M.Choice i w.1) → M.Policy i :=
+        fun i q => (Equiv.piSplitAt (info i) fun w => M.Choice i w).symm q with hassemble
+      set elsewhere : (i : ι) → FinDist (∀ w : {w // w ≠ info i}, M.Choice i w.1) :=
+        fun i => FinDist.pi fun w => β i w.1 with helsewhere
+      have hfactor : (FinDist.pi fun i => (β i).toMixed) =
+          FinDist.map (fun q i => assemble i (q.1 i, q.2 i))
+            (FinDist.product (FinDist.pi fun i => β i (info i)) (FinDist.pi elsewhere)) := by
+        rw [show (fun i => (β i).toMixed) =
+            (fun i => FinDist.map (assemble i)
+              (FinDist.product (β i (info i)) (elsewhere i))) from
+          funext fun i => FinDist.pi_eq_map_product (info i) (β i),
+          FinDist.pi_map, FinDist.pi_product, FinDist.map_comp]
+        rfl
+      rw [runMixedFrom, hfactor, FinDist.bind_map, FinDist.product, FinDist.bind_bind,
+        runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm,
+        randomizedChooser, behavioralJoint, FinDist.bind_map]
+      refine FinDist.bind_congr fun draw _ => ?_
+      rw [FinDist.bind_map]
+      -- Both sides now take the same joint action.
+      have hchosen : ∀ rest : ∀ i, ∀ w : {w // w ≠ info i}, M.Choice i w.1,
+          M.historyChooser (fun i => assemble i (draw i, rest i)) h hterm =
+            ⟨fun i => (draw i).1,
+              ExecutionProtocol.legal_of_legalOption hterm fun i =>
+                (M.menu_adequate i h.trace (draw i).1).mp (draw i).2⟩ := by
+        intro rest
+        refine Subtype.ext (funext fun i => ?_)
+        show ((Equiv.piSplitAt (info i) fun w => M.Choice i w).symm (draw i, rest i)
+            (info i)).1 = (draw i).1
+        rw [piSplitAt_symm_self]
+      rw [show (fun rest => M.runFrom (fun i => assemble i (draw i, rest i)) (fuel + 1) h) =
+          (fun rest =>
+            (E.step h.state ⟨fun i => (draw i).1, _⟩).bindOnSupport fun _ realized =>
+              M.runFrom (fun i => assemble i (draw i, rest i)) fuel
+                (h.extend (ExecutionProtocol.legal_of_legalOption hterm fun i =>
+                  (M.menu_adequate i h.trace (draw i).1).mp (draw i).2) realized)) from
+        funext fun rest =>
+          M.runFrom_succ_of_chooser_eq _ hterm _ (hchosen rest) fuel,
+        FinDist.bind_bindOnSupport_comm]
+      refine FinDist.bindOnSupport_congr fun target realized => ?_
+      -- The rest of the drawn policy is again a mixed profile: the committed one.
+      rw [show (FinDist.pi elsewhere).bind (fun rest =>
+            M.runFrom (fun i => assemble i (draw i, rest i)) fuel _) =
+          M.runMixedFrom (fun i => ((β i).commit (info i) (draw i)).toMixed) fuel _ from by
+        rw [runMixedFrom,
+          show (fun i => ((β i).commit (info i) (draw i)).toMixed) =
+              (fun i => FinDist.map (fun rr => assemble i (draw i, rr)) (elsewhere i)) from
+            funext fun i => BehavioralPolicy.toMixed_commit (β i) (info i) (draw i),
+          FinDist.pi_map, FinDist.bind_map],
+        ih (fun i => (β i).commit (info i) (draw i)) _]
+      refine M.runBehavioralFrom_congr fuel _ fun later hreach hlater i => ?_
+      exact M.commit_agree_of_actsOnce hactsOnce β draw _ realized later hreach hlater i
+
+end Equivalence
+
 /-! ## Information sets and beliefs
 
 Beliefs are analyst-level objects: unlike policies they may name execution

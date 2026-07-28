@@ -30,7 +30,7 @@ open GameTheory.Protocol.ExecutionProtocol (Trace History)
 inductive Vote | up | down
   deriving DecidableEq, Repr
 
-/-- Play records the votes cast so far. -/
+/-- Play records the votes made so far. -/
 inductive Round | start | after (first : Vote) | done (first second : Vote)
   deriving DecidableEq, Repr
 
@@ -346,5 +346,122 @@ theorem not_actsOnceAtEachInfoState : ¬ signals.ActsOnceAtEachInfoState := by
   have hnodup := hactsOnce () votedTwice
   rw [actedAt_votedTwice] at hnodup
   simp at hnodup
+
+/-! ## The condition is satisfiable, and then the two agree
+
+A theorem whose hypothesis nothing satisfies proves nothing. Voting once
+satisfies it, so the equivalence applies to a real protocol — and the two
+protocols here differ in exactly the feature the hypothesis is about. -/
+
+/-- Play with a single vote. -/
+inductive Single | start | voted (vote : Vote)
+  deriving DecidableEq, Repr
+
+/-- Whether play has stopped. -/
+def Single.stopped : Single → Bool
+  | .voted _ => true
+  | .start => false
+
+/-- Vote once. -/
+@[reducible]
+def once : ExecutionProtocol Unit where
+  State := Single
+  Action _ := Vote
+  init := .start
+  active state _ := state.stopped = false
+  available _ _ := Set.univ
+  terminal state := state.stopped = true
+  step state joint :=
+    match state with
+    | .start =>
+        match joint.1 () with
+        | some vote => FinDist.pure (.voted vote)
+        | none => FinDist.pure (.voted .up)
+    | .voted vote => FinDist.pure (.voted vote)
+  progress := by
+    rintro state hterm
+    refine ⟨fun _ => some .up, fun _ => ⟨?_, Set.mem_univ _⟩⟩
+    cases hstopped : state.stopped
+    · rfl
+    · exact absurd hstopped hterm
+
+/-- The same observation as before: only whether play has stopped. -/
+@[reducible]
+def singleSignals : InfoSignals once where
+  PublicSignal := Bool
+  PrivateSignal _ := Unit
+  initialPublic := false
+  initialPrivate _ := ()
+  publicSignal event := event.target.stopped
+  privateSignal _ _ := ()
+  InfoState _ := Bool
+  initInfo _ _ announced := announced
+  pushInfo _ _ _ _ announced := announced
+
+theorem singleInfoOf_eq_stopped :
+    ∀ {state : once.State} (trace : Trace once state),
+      singleSignals.infoOf () trace = state.stopped
+  | _, .start => rfl
+  | _, .extend _ _ _ _ => rfl
+
+/-- Where play has not stopped, it has not started. -/
+theorem eq_start_of_not_stopped {state : Single} (hstopped : ¬ state.stopped = true) :
+    state = Single.start := by
+  cases state with
+  | start => rfl
+  | voted vote => exact absurd rfl hstopped
+
+/-- **A vote is made at most once.** Every history records at most one decision,
+so no information state can carry two. -/
+theorem actedAt_single {state : once.State} (trace : Trace once state) :
+    singleSignals.actedAt () trace = List.replicate (if state.stopped then 1 else 0) false := by
+  induction trace with
+  | start => rfl
+  | extend prior joint isLegal realized ih =>
+    have hsource := eq_start_of_not_stopped isLegal.1
+    subst hsource
+    obtain ⟨vote, hvote⟩ := LegalOption.exists_eq_some_of_active (joint ())
+      (ExecutionProtocol.legalOption_of_legal isLegal ()) rfl
+    have hstep : once.step Single.start ⟨joint, isLegal⟩ = FinDist.pure (Single.voted vote) := by
+      show (match joint () with
+        | some v => FinDist.pure (Single.voted v)
+        | none => FinDist.pure (Single.voted Vote.up)) = _
+      rw [hvote]
+    rw [hstep, FinDist.mem_support_pure] at realized
+    subst realized
+    rw [InfoSignals.actedAt, hvote, ih, singleInfoOf_eq_stopped]
+    rfl
+
+theorem single_actsOnceAtEachInfoState : singleSignals.ActsOnceAtEachInfoState := by
+  rintro ⟨⟩ state trace
+  rw [actedAt_single trace]
+  cases state.stopped <;> simp
+
+/-- The information model for a single vote; the menu is read off exactly as
+before. -/
+@[reducible]
+def singleModel : InformationModel once where
+  toInfoSignals := singleSignals
+  menu _ info := menuAt info
+  menu_adequate := by
+    rintro ⟨⟩ state trace choice
+    rw [singleInfoOf_eq_stopped trace]
+    cases hstopped : state.stopped
+    · cases choice with
+      | none => simp [menuAt, LegalOption, hstopped]
+      | some vote => cases vote <;> simp [menuAt, LegalOption, hstopped]
+    · cases choice with
+      | none => simp [menuAt, LegalOption, hstopped]
+      | some vote => simp [menuAt, LegalOption, hstopped]
+
+/-- **The equivalence, instantiated.** On a protocol where the condition holds,
+the two randomizations really do induce the same law — so the theorem is not
+vacuous, and the two protocols in this file differ in exactly the feature its
+hypothesis names. -/
+theorem runMixed_eq_runBehavioral_once (β : (i : Unit) → singleModel.BehavioralPolicy i)
+    (fuel : ℕ) (h : History once) :
+    singleModel.runMixedFrom (fun i => (β i).toMixed) fuel h =
+      singleModel.runBehavioralFrom β fuel h :=
+  singleModel.runMixedFrom_toMixed single_actsOnceAtEachInfoState fuel β h
 
 end GameTheory.Tests.Repeat

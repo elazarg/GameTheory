@@ -27,7 +27,7 @@ becomes difficult to scan.
 | EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
-| EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Narrows | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Tests/Randomized.lean` |
+| EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
 
 ## Entry template
 
@@ -847,3 +847,29 @@ quantify over reachable *non-terminal* histories. Otherwise a protocol calling a
 player active at a state it has already stopped at would demand agreement the
 runner never consults — a hypothesis stronger than the theorem needs, and one
 with no fact available to discharge it.
+
+#### Result: the equivalence
+
+`runMixedFrom_toMixed` is proved. Under `ActsOnceAtEachInfoState`, randomizing
+at each information state and randomizing once over whole policies induce the
+same law over histories, at every fuel and from every history.
+
+The induction follows play and never leaves full profiles. At each step the
+drawn policy is factored at the information states about to be consulted, its
+first factor is matched against the local draw — the two sides then take
+*literally* the same joint action — and the rest is re-read as the mixed profile
+that has committed there. The commitment is invisible afterwards for one of two
+reasons, and both are needed: the coordinate is never consulted again while the
+player moves, or the player does not move there and its menu was a single option
+all along.
+
+The theorem is not vacuous and the condition is not idle. Both are checked on
+the two protocols in the test file, which differ in exactly the feature the
+hypothesis names: voting twice at one information state separates the two
+randomizations, voting once satisfies the condition, and the equivalence is
+instantiated there.
+
+What this settles about the direction that needs recall: nothing. This is the
+direction that needs none, exactly as the pinned snapshot's structure predicted,
+and the condition it does need is about being asked twice rather than about
+memory.

@@ -43,6 +43,10 @@ def support (μ : FinDist α) : Set α := μ.toPMF.support
 
 theorem support_finite (μ : FinDist α) : μ.support.Finite := μ.2
 
+/-- Every law puts mass somewhere. -/
+theorem support_nonempty (μ : FinDist α) : μ.support.Nonempty := PMF.support_nonempty _
+
+
 /-- The finite support as a `Finset`. -/
 def supportFinset (μ : FinDist α) : Finset α := μ.support_finite.toFinset
 
@@ -193,6 +197,23 @@ theorem bindOnSupport_eq_bind_of_eq_on_support {μ : FinDist α}
     (h : ∀ a (ha : a ∈ μ.support), f a ha = g a) : μ.bindOnSupport f = μ.bind g := by
   rw [← bindOnSupport_eq_bind μ g]
   exact bindOnSupport_congr h
+
+/-- Two support-dependent compositions in either order. -/
+theorem bindOnSupport_comm (μ : FinDist α) (ν : FinDist β)
+    (f : ∀ a ∈ μ.support, ∀ b ∈ ν.support, FinDist γ) :
+    (μ.bindOnSupport fun a ha => ν.bindOnSupport (f a ha)) =
+      ν.bindOnSupport fun b hb => μ.bindOnSupport fun a ha => f a ha b hb := by
+  apply ext
+  simp only [toPMF_bindOnSupport]
+  exact PMF.bindOnSupport_comm _ _ _
+
+/-- A plain composition passes through a support-dependent one. -/
+theorem bind_bindOnSupport_comm (μ : FinDist α) (ν : FinDist β)
+    (f : α → ∀ b ∈ ν.support, FinDist γ) :
+    (μ.bind fun a => ν.bindOnSupport (f a)) =
+      ν.bindOnSupport fun b hb => μ.bind fun a => f a b hb := by
+  rw [← bindOnSupport_eq_bind μ fun a => ν.bindOnSupport (f a), bindOnSupport_comm]
+  exact bindOnSupport_congr fun b hb => bindOnSupport_eq_bind μ fun a => f a b hb
 
 @[simp]
 theorem pure_bindOnSupport (a : α) (f : ∀ b ∈ (pure a).support, FinDist β) :
@@ -706,6 +727,14 @@ theorem map_pi_product {B : ι → Type*} (μ : ∀ i, FinDist (A i)) (ν : ∀ 
       Prod.ext (congrFun (congrArg Prod.fst hxy) i) (congrFun (congrArg Prod.snd hxy) i)),
     prob_pi, prob_product, prob_pi, prob_pi, ← Finset.prod_mul_distrib]
   exact Finset.prod_congr rfl fun i _ => prob_product (μ i) (ν i) (q.1 i, q.2 i)
+
+/-- The same interchange read the other way: a product of pairs is drawn by
+drawing each family independently and pairing coordinatewise. -/
+theorem pi_product {B : ι → Type*} (μ : ∀ i, FinDist (A i)) (ν : ∀ i, FinDist (B i)) :
+    (pi fun i => product (μ i) (ν i)) =
+      map (fun q i => ((q.1 i, q.2 i) : A i × B i)) (product (pi μ) (pi ν)) := by
+  rw [← map_pi_product μ ν, map_comp]
+  exact (map_id _).symm
 
 /-- **A finite product factors at any one coordinate**: the law of a whole tuple
 is the law of that coordinate together with an independent law of the rest. This
