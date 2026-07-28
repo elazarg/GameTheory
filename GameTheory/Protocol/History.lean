@@ -125,6 +125,28 @@ theorem map_state_runHistoryFor (chooser : E.Chooser) :
         runFor_succ_of_not_terminal chooser fuel hterm, FinDist.map_bindOnSupport]
       exact FinDist.bindOnSupport_eq_bind_of_eq_on_support fun _ _ => ih _
 
+variable (E) in
+/-- The histories a run of at most `fuel` steps can pass through, starting from
+`h`. This over-approximates what any particular chooser reaches, which is what
+makes it usable as a hypothesis: it does not depend on the chooser. -/
+inductive ReachesWithin : ℕ → E.History → E.History → Prop
+  | /-- Nowhere to go is somewhere reachable. -/
+    refl (fuel : ℕ) (h : E.History) : ReachesWithin fuel h h
+  | /-- One realized legal step, then the rest. -/
+    step {fuel : ℕ} {h target : E.History} (joint : ∀ i, Option (E.Action i))
+      (isLegal : E.Legal h.state joint) {reached : E.State}
+      (realized : reached ∈ (E.step h.state ⟨joint, isLegal⟩).support)
+      (rest : ReachesWithin fuel (h.extend isLegal realized) target) :
+      ReachesWithin (fuel + 1) h target
+
+/-- With no fuel there is nowhere to go, so this really does bound how far play
+can get rather than relating everything to everything. -/
+theorem reachesWithin_zero_iff {h target : E.History} :
+    E.ReachesWithin 0 h target ↔ target = h := by
+  refine ⟨fun hreach => ?_, fun hequal => by subst hequal; exact .refl 0 target⟩
+  cases hreach
+  rfl
+
 /-- Choosers agreeing on every history induce the same history law. -/
 theorem runHistoryFor_congr {first second : E.HistoryChooser}
     (hagree : ∀ (h : E.History) (hterm : ¬ E.terminal h.state), first h hterm = second h hterm) :

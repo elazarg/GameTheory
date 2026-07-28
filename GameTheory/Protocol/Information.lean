@@ -332,6 +332,94 @@ theorem runFrom_congr {first second : (i : ι) → M.Policy i}
   ExecutionProtocol.runHistoryFor_congr
     (fun _ _ => Subtype.ext (funext fun i => hagree i _)) fuel h
 
+/-! ### What a run can consult
+
+A profile is consulted at every player and every history the run passes
+through, but where a player is inactive its menu is the single option `none`, so
+only the information states at which it *acts* can affect anything. The theorem
+below is the corresponding congruence: agreeing where the run can reach is
+enough, and behaviour elsewhere is unobservable rather than merely unused. -/
+
+/-- Profiles that answer alike at every history a run of this length can pass
+through induce the same law. -/
+theorem runFrom_congr_of_act_eq {first second : (i : ι) → M.Policy i} :
+    ∀ (fuel : ℕ) (h : E.History),
+      (∀ (h' : E.History), ExecutionProtocol.ReachesWithin E fuel h h' →
+        ∀ i, (first i).act (M.infoOf i h'.trace) = (second i).act (M.infoOf i h'.trace)) →
+      M.runFrom first fuel h = M.runFrom second fuel h := by
+  intro fuel
+  induction fuel with
+  | zero => intro h _; rfl
+  | succ fuel ih =>
+    intro h hagree
+    by_cases hterm : E.terminal h.state
+    · rw [runFrom, runFrom, ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm,
+        ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
+    · have hhere : M.historyChooser first h hterm = M.historyChooser second h hterm :=
+        Subtype.ext (funext fun i => hagree h (.refl _ _) i)
+      rw [runFrom, runFrom,
+        ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm,
+        ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm, hhere]
+      refine FinDist.bindOnSupport_congr fun target realized => ?_
+      exact ih _ fun h' hreach i => hagree h' (.step _ _ realized hreach) i
+
+/-! ### Acting twice, and what forbids it
+
+`ActsOnceAtEachInfoState` is stated as a list being duplicate-free. The two
+facts below turn that into the form an argument uses: a player's record of where
+it has acted only grows along play, and so an information state it has already
+acted at never comes back. -/
+
+/-- A player's record of where it has acted only grows as play continues. -/
+theorem actedAt_isSuffix_of_reachesWithin (i : ι) :
+    ∀ {fuel : ℕ} {h target : E.History}, ExecutionProtocol.ReachesWithin E fuel h target →
+      (M.actedAt i h.trace) <:+ (M.actedAt i target.trace) := by
+  intro fuel h target hreach
+  induction hreach with
+  | refl => exact List.suffix_refl _
+  | step joint isLegal realized rest ih =>
+    refine List.IsSuffix.trans ?_ ih
+    show (M.actedAt i _) <:+ M.actedAt i (Trace.extend _ joint isLegal realized)
+    rw [InfoSignals.actedAt]
+    cases joint i with
+    | none => exact List.suffix_refl _
+    | some action => exact List.suffix_cons _ _
+
+/-- **An information state a player has acted at never returns.** This is the
+form the no-revisit condition is used in: having moved at `h`, the player meets
+that information state at no later history at which it moves again. -/
+theorem infoOf_ne_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) (i : ι)
+    {h later : E.History} {fuel : ℕ}
+    {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
+    {reached : E.State} (realized : reached ∈ (E.step h.state ⟨joint, isLegal⟩).support)
+    (hacts : (joint i).isSome)
+    (hreach : ExecutionProtocol.ReachesWithin E fuel (h.extend isLegal realized) later)
+    {laterJoint : ∀ j, Option (E.Action j)} (laterLegal : E.Legal later.state laterJoint)
+    {laterReached : E.State}
+    (laterRealized : laterReached ∈ (E.step later.state ⟨laterJoint, laterLegal⟩).support)
+    (hactsLater : (laterJoint i).isSome) :
+    M.infoOf i later.trace ≠ M.infoOf i h.trace := by
+  intro hsame
+  have hnodup := hactsOnce i (later.extend laterLegal laterRealized).trace
+  have hstep : M.actedAt i (later.extend laterLegal laterRealized).trace =
+      M.infoOf i later.trace :: M.actedAt i later.trace := by
+    show M.actedAt i (Trace.extend _ laterJoint laterLegal laterRealized) = _
+    rw [InfoSignals.actedAt]
+    cases hcase : laterJoint i with
+    | none => rw [hcase] at hactsLater; exact absurd hactsLater (by simp)
+    | some action => rfl
+  rw [hstep] at hnodup
+  refine (List.nodup_cons.mp hnodup).1 ?_
+  have hsuffix := M.actedAt_isSuffix_of_reachesWithin i hreach
+  have hhead : M.infoOf i h.trace ∈ M.actedAt i (h.extend isLegal realized).trace := by
+    show M.infoOf i h.trace ∈ M.actedAt i (Trace.extend _ joint isLegal realized)
+    rw [InfoSignals.actedAt]
+    cases hcase : joint i with
+    | none => rw [hcase] at hacts; exact absurd hacts (by simp)
+    | some action => exact List.mem_cons_self
+  rw [hsame]
+  exact hsuffix.subset hhead
+
 /-! ## Randomizing
 
 There are two places a player can put its randomness: at each information state

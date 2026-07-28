@@ -760,3 +760,29 @@ does; or fix a family of *distinct* coordinates and factor them all at once,
 which states the independence the no-revisit condition supplies but needs a
 finite-product Fubini for `expect` that this module does not have. Only the
 first was built, because only the first has a consumer today.
+
+#### Addendum: the structural half of the equivalence
+
+Two facts that the equivalence needs and that do not touch the probabilistic
+gap are now proved, so what remains of the theorem is exactly that gap.
+
+`runFrom_congr_of_act_eq` says a profile is observable only through the
+histories a run of that length can pass through — the policy analogue of the
+chooser congruence over reachable decision sites. Its hypothesis is stated over
+`ReachesWithin`, an over-approximation of what any particular chooser reaches,
+so the condition does not mention the profile being varied. The bound is real
+rather than vacuous: with no fuel, `ReachesWithin` relates a history only to
+itself.
+
+`infoOf_ne_of_actsOnce` converts the no-revisit condition into the form the
+peel step consumes: having moved at one history, a player meets that information
+state at no later history where it moves again. It rests on the record of where
+a player has acted growing along play, which is a suffix relation over
+`ReachesWithin`. Before this, the condition had only a refutation as a consumer;
+it now has a positive one.
+
+What is left is to combine the peel with these: at each step, factor the drawn
+policy at the coordinate about to be consulted, match the first factor against
+the behavioral draw, and use the two facts above to show the residual can be
+extended arbitrarily at that coordinate. The obstruction is that the index type
+shrinks while the induction hypothesis quantifies over full profiles.
