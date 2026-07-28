@@ -309,6 +309,17 @@ theorem expect_eq_sum [Fintype α] (μ : FinDist α) (u : α → ℝ) :
     expect μ u = ∑ a, μ.prob a * u a := by
   simp [expect, tsum_fintype]
 
+/-- A sum over any finite superset of the support computes an expectation. This
+is what lets two laws built from the same family be compared term by term over
+one shared index set. -/
+theorem expect_eq_sum_of_subset (μ : FinDist α) (u : α → ℝ) (s : Finset α)
+    (hsub : μ.support ⊆ ↑s) : μ.expect u = ∑ a ∈ s, μ.prob a * u a := by
+  classical
+  rw [expect_eq_sum_support]
+  refine Finset.sum_subset (fun a ha => ?_) (fun a _ hnot => ?_)
+  · exact hsub (mem_supportFinset.mp ha)
+  · rw [prob_eq_zero_iff.mpr fun hmem => hnot (mem_supportFinset.mpr hmem), zero_mul]
+
 @[simp]
 theorem expect_pure (a : α) (u : α → ℝ) : expect (pure a) u = u a := by
   classical
@@ -419,6 +430,14 @@ extensionality principle; it mentions no representation. -/
 theorem ext_of_prob {μ ν : FinDist α} (h : ∀ a, μ.prob a = ν.prob a) : μ = ν := by
   refine ext (PMF.ext fun a => ?_)
   exact (ENNReal.toReal_eq_toReal_iff' (PMF.apply_ne_top _ _) (PMF.apply_ne_top _ _)).1 (h a)
+
+/-- A law on a type with only one element is the point mass there. -/
+theorem eq_pure_of_subsingleton [Subsingleton α] (μ : FinDist α) (a : α) : μ = pure a := by
+  classical
+  refine ext_of_prob fun b => ?_
+  rw [Subsingleton.elim b a, prob_pure_self]
+  have htotal := tsum_prob μ
+  rwa [tsum_eq_single a fun c hc => absurd (Subsingleton.elim c a) hc] at htotal
 
 /-- Branches agreeing on the support give the same `bind`. -/
 theorem bind_congr {μ : FinDist α} {f g : α → FinDist β}
@@ -626,6 +645,68 @@ theorem prob_pi (μ : ∀ i, FinDist (A i)) (s : ∀ i, A i) :
   rw [ENNReal.toReal_prod]
   rfl
 
+/-- An independent draw lands on a tuple exactly when every coordinate is
+possible for its own factor. -/
+theorem mem_support_pi {μ : ∀ i, FinDist (A i)} {s : ∀ i, A i} :
+    s ∈ (pi μ).support ↔ ∀ i, s i ∈ (μ i).support := by
+  rw [← prob_pos_iff, prob_pi]
+  constructor
+  · intro hpos i
+    rw [← prob_pos_iff]
+    rcases (prob_nonneg (μ i) (s i)).lt_or_eq with hlt | hzero
+    · exact hlt
+    · exact absurd (Finset.prod_eq_zero (Finset.mem_univ i) hzero.symm) hpos.ne'
+  · exact fun hall =>
+      Finset.prod_pos fun i _ => prob_pos_iff.mpr (hall i)
+
+theorem support_pi_subset [DecidableEq ι] (μ : ∀ i, FinDist (A i)) :
+    (pi μ).support ⊆ ↑(Fintype.piFinset fun i => (μ i).supportFinset) := by
+  classical
+  intro s hs
+  simp only [Finset.mem_coe, Fintype.mem_piFinset, mem_supportFinset]
+  exact mem_support_pi.mp hs
+
+/-- **Independent draws commute with coordinatewise pushforward.** Drawing a
+tuple and then relabelling each coordinate is drawing from the relabelled
+factors. -/
+theorem pi_map {B : ι → Type*} (f : ∀ i, A i → B i) (μ : ∀ i, FinDist (A i)) :
+    pi (fun i => map (f i) (μ i)) = map (fun s i => f i (s i)) (pi μ) := by
+  classical
+  refine ext_of_prob fun t => ?_
+  rw [prob_pi, prob_map,
+    expect_eq_sum_of_subset _ _ (Fintype.piFinset fun i => (μ i).supportFinset)
+      (support_pi_subset μ),
+    show (fun i => (map (f i) (μ i)).prob (t i)) =
+        fun i => ∑ a ∈ (μ i).supportFinset, (μ i).prob a * (if t i = f i a then 1 else 0) from
+      funext fun i => by
+        rw [prob_map,
+          expect_eq_sum_of_subset _ _ (μ i).supportFinset fun a ha => by simpa using ha],
+    Finset.prod_univ_sum]
+  refine Finset.sum_congr rfl fun s _ => ?_
+  rw [prob_pi, Finset.prod_mul_distrib]
+  refine congrArg _ ?_
+  by_cases hall : ∀ i, t i = f i (s i)
+  · rw [if_pos (funext hall)]
+    exact Finset.prod_eq_one fun i _ => if_pos (hall i)
+  · obtain ⟨i, hi⟩ := not_forall.mp hall
+    rw [if_neg fun hcontra => hi (congrFun hcontra i)]
+    exact Finset.prod_eq_zero (Finset.mem_univ i) (if_neg hi)
+
+/-- **Independent draws of pairs are a pair of independent draws.** The two
+families are drawn independently of each other as well as across coordinates,
+which is what lets a per-coordinate factorization be reassembled. -/
+theorem map_pi_product {B : ι → Type*} (μ : ∀ i, FinDist (A i)) (ν : ∀ i, FinDist (B i)) :
+    map (fun p => (fun i => (p i).1, fun i => (p i).2)) (pi fun i => product (μ i) (ν i)) =
+      product (pi μ) (pi ν) := by
+  classical
+  refine ext_of_prob fun q => ?_
+  rw [show q = ((fun p : ∀ i, A i × B i => (fun i => (p i).1, fun i => (p i).2))
+      fun i => (q.1 i, q.2 i)) from rfl,
+    prob_map_of_injective _ (fun x y hxy => funext fun i =>
+      Prod.ext (congrFun (congrArg Prod.fst hxy) i) (congrFun (congrArg Prod.snd hxy) i)),
+    prob_pi, prob_product, prob_pi, prob_pi, ← Finset.prod_mul_distrib]
+  exact Finset.prod_congr rfl fun i _ => prob_product (μ i) (ν i) (q.1 i, q.2 i)
+
 /-- **A finite product factors at any one coordinate**: the law of a whole tuple
 is the law of that coordinate together with an independent law of the rest. This
 is the decomposition an argument uses when it has to single out the coordinate
@@ -650,20 +731,6 @@ theorem map_apply_pi [DecidableEq ι] (i : ι) (μ : ∀ j, FinDist (A j)) :
   rw [pi_eq_map_product i μ, map_comp,
     show (fun s => s i) ∘ (Equiv.piSplitAt i A).symm = Prod.fst from funext fun p => by simp]
   exact map_fst_product _ _
-
-/-- An independent draw lands on a tuple exactly when every coordinate is
-possible for its own factor. -/
-theorem mem_support_pi {μ : ∀ i, FinDist (A i)} {s : ∀ i, A i} :
-    s ∈ (pi μ).support ↔ ∀ i, s i ∈ (μ i).support := by
-  rw [← prob_pos_iff, prob_pi]
-  constructor
-  · intro hpos i
-    rw [← prob_pos_iff]
-    rcases (prob_nonneg (μ i) (s i)).lt_or_eq with hlt | hzero
-    · exact hlt
-    · exact absurd (Finset.prod_eq_zero (Finset.mem_univ i) hzero.symm) hpos.ne'
-  · exact fun hall =>
-      Finset.prod_pos fun i _ => prob_pos_iff.mpr (hall i)
 
 @[simp]
 theorem pi_pure [DecidableEq ι] (s : ∀ i, A i) :

@@ -344,7 +344,7 @@ enough, and behaviour elsewhere is unobservable rather than merely unused. -/
 through induce the same law. -/
 theorem runFrom_congr_of_act_eq {first second : (i : ι) → M.Policy i} :
     ∀ (fuel : ℕ) (h : E.History),
-      (∀ (h' : E.History), ExecutionProtocol.ReachesWithin E fuel h h' →
+      (∀ (h' : E.History), ExecutionProtocol.ReachesWithin E fuel h h' → ¬ E.terminal h'.state →
         ∀ i, (first i).act (M.infoOf i h'.trace) = (second i).act (M.infoOf i h'.trace)) →
       M.runFrom first fuel h = M.runFrom second fuel h := by
   intro fuel
@@ -356,12 +356,12 @@ theorem runFrom_congr_of_act_eq {first second : (i : ι) → M.Policy i} :
     · rw [runFrom, runFrom, ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm,
         ExecutionProtocol.runHistoryFor_of_terminal _ _ hterm]
     · have hhere : M.historyChooser first h hterm = M.historyChooser second h hterm :=
-        Subtype.ext (funext fun i => hagree h (.refl _ _) i)
+        Subtype.ext (funext fun i => hagree h (.refl _ _) hterm i)
       rw [runFrom, runFrom,
         ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm,
         ExecutionProtocol.runHistoryFor_succ_of_not_terminal _ fuel hterm, hhere]
       refine FinDist.bindOnSupport_congr fun target realized => ?_
-      exact ih _ fun h' hreach i => hagree h' (.step _ _ realized hreach) i
+      exact ih _ fun h' hreach hterm' i => hagree h' (.step _ _ realized hreach) hterm' i
 
 /-! ### Acting twice, and what forbids it
 
@@ -420,6 +420,18 @@ theorem infoOf_ne_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) (i : ι)
   rw [hsame]
   exact hsuffix.subset hhead
 
+/-- **An inactive player has nothing to choose.** Its menu is the single option
+`none`, so every law over its choices at that information state is the same law.
+A commitment made there is therefore invisible without any argument about what
+play does next — which is what covers the players a step did not ask to move. -/
+theorem subsingleton_choice_of_not_active {i : ι} {state : E.State} (trace : Trace E state)
+    (hinactive : ¬ E.active state i) : Subsingleton (M.Choice i (M.infoOf i trace)) :=
+  ⟨fun first second => Subtype.ext <| by
+    rw [LegalOption.eq_none_of_inactive first.1
+        ((M.menu_adequate i trace first.1).mp first.2) hinactive,
+      LegalOption.eq_none_of_inactive second.1
+        ((M.menu_adequate i trace second.1).mp second.2) hinactive]⟩
+
 /-! ## Randomizing
 
 There are two places a player can put its randomness: at each information state
@@ -444,6 +456,16 @@ variable {M} in
 randomizes. -/
 def Policy.toBehavioral {i : ι} (policy : M.Policy i) : M.BehavioralPolicy i :=
   fun info => FinDist.pure (policy info)
+
+/-- Hence any two behavioral policies agree there. -/
+theorem behavioral_eq_of_not_active {i : ι} (first second : M.BehavioralPolicy i)
+    {state : E.State} (trace : Trace E state) (hinactive : ¬ E.active state i) :
+    first (M.infoOf i trace) = second (M.infoOf i trace) := by
+  have := M.subsingleton_choice_of_not_active trace hinactive
+  obtain ⟨choice⟩ : Nonempty (M.Choice i (M.infoOf i trace)) :=
+    ⟨⟨none, (M.menu_adequate i trace none).mpr hinactive⟩⟩
+  rw [FinDist.eq_pure_of_subsingleton (first (M.infoOf i trace)) choice,
+    FinDist.eq_pure_of_subsingleton (second (M.infoOf i trace)) choice]
 
 section Profiles
 
@@ -481,7 +503,7 @@ can pass through induce the same law. This is what makes a change to a
 coordinate the continuation never consults invisible. -/
 theorem runBehavioralFrom_congr {first second : (i : ι) → M.BehavioralPolicy i} :
     ∀ (fuel : ℕ) (h : E.History),
-      (∀ (h' : E.History), ExecutionProtocol.ReachesWithin E fuel h h' →
+      (∀ (h' : E.History), ExecutionProtocol.ReachesWithin E fuel h h' → ¬ E.terminal h'.state →
         ∀ i, first i (M.infoOf i h'.trace) = second i (M.infoOf i h'.trace)) →
       M.runBehavioralFrom first fuel h = M.runBehavioralFrom second fuel h := by
   intro fuel
@@ -495,12 +517,12 @@ theorem runBehavioralFrom_congr {first second : (i : ι) → M.BehavioralPolicy 
         ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
     · have hhere : M.randomizedChooser first h hterm = M.randomizedChooser second h hterm := by
         rw [randomizedChooser, randomizedChooser, behavioralJoint, behavioralJoint]
-        exact congrArg _ (congrArg FinDist.pi (funext fun i => hagree h (.refl _ _) i))
+        exact congrArg _ (congrArg FinDist.pi (funext fun i => hagree h (.refl _ _) hterm i))
       rw [runBehavioralFrom, runBehavioralFrom,
         ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm,
         ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm, hhere]
       refine FinDist.bind_congr fun draw _ => FinDist.bindOnSupport_congr fun target realized => ?_
-      exact ih _ fun h' hreach i => hagree h' (.step _ _ realized hreach) i
+      exact ih _ fun h' hreach hterm' i => hagree h' (.step _ _ realized hreach) hterm' i
 
 /-- The law a mixed profile induces: draw a deterministic profile once, then
 play it. The single draw is the whole difference from the behavioral case. -/

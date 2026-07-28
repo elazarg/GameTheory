@@ -820,3 +820,30 @@ value along an equality of information states, and both spellings of that —
 `Function.update` and `▸` — are already forbidden in this layer. Building it
 from `Equiv.piSplitAt`, the same decomposition the factorization uses, needs
 neither, and the audits confirm the layer's counts are unchanged.
+
+#### Addendum: two refinements found by attempting the step
+
+The interchange lemmas the step case needs are proved: `pi_map`, that
+independent draws commute with coordinatewise pushforward, and `map_pi_product`,
+that independent draws of pairs are a pair of independent draws. Neither needed
+a Fubini for expectations. `pi_map` does not follow from the injective
+pushforward rule, since relabelling coordinatewise is not injective; it goes
+through a finite superset of the support and the distributivity of a product of
+sums over a product index, which Mathlib already has.
+
+Attempting the step turned up two things the plan as designed does not cover.
+
+*A commitment must also be invisible where the player does not move.* The
+no-revisit condition speaks only about information states a player has *acted*
+at, but a profile is consulted at every player at every history, so a
+commitment could survive to a later visit at which the player is idle. It cannot
+matter, and for a reason already in the design: an inactive player's menu is the
+single option `none`, so its choices at that information state form a
+subsingleton and every law over them is the same law. Locality by typing settles
+it with no argument about what play does next.
+
+*Agreement is only needed where play has not stopped.* Both congruences now
+quantify over reachable *non-terminal* histories. Otherwise a protocol calling a
+player active at a state it has already stopped at would demand agreement the
+runner never consults — a hypothesis stronger than the theorem needs, and one
+with no fact available to discharge it.
