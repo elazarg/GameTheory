@@ -1,7 +1,7 @@
 # Phase 3 sequential vertical slice
 
-Status: in progress. D6 is decided and both language encodings are done; D7 and
-the finalization of D0 are outstanding.
+Status: gate passed. Neither sequential kill criterion fired, D6 and D7 are
+decided, and D0 is final at every semantic level.
 
 ## What was built
 
@@ -45,6 +45,7 @@ law over traces; the `menu` field never receives a state.
 | finite strategy extraction over own decision sites | passed by both presentations | `Tree.lean`, `Tests/Extraction.lean` |
 | simultaneous actions | general-state only | `Tests/Simultaneous.lean` |
 | simultaneity composes across rounds | passed | `Languages/Rounds.lean` |
+| two languages reach the static core with no language-specific machinery | passed | `Tests/Transfer.lean` |
 
 ## Decisions
 
@@ -55,6 +56,24 @@ retained as a derived presentation for single-mover games. The deciding
 measurement was that sequentializing a simultaneous move strictly enlarges the
 strategy space, so the tree needs an information layer to be faithful — the
 machinery whose absence made it cheaper elsewhere.
+
+D7 is recorded in
+[`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md):
+no named adequacy certificates. The budget said a certificate level must beat
+the bespoke bridge it replaces, and the bridge turned out to cost nothing —
+each language reached the static core by applying one existing generic function,
+and both take their outcome law from one theorem instantiated twice. Nothing
+beats zero. The rejection is scoped to languages compiling *into* a shared
+target; a transfer that must preserve what the target forgets, such as recall,
+would reopen it, and none exists here yet.
+
+D0 is finalized in
+[`decisions/D0-semantic-architecture.md`](decisions/D0-semantic-architecture.md).
+Its one substantive change is at the protocol level: Phase 0 predicted
+coordinated native branches, and the measurement is stronger than that, because
+both native shapes fit a single execution base. The finalization also records
+what it does not rest on — two of the four frozen transfers were never built,
+and one of them is precisely the experiment that could reopen D7.
 
 ## Measurements
 
@@ -68,14 +87,21 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 
 | Measure | Value |
 |---|---:|
-| `GameTheory/Protocol` nonblank lines | 1393 |
-| `GameTheory/Protocol` modules | 7 |
-| `GameTheory/Languages` nonblank lines | 972 |
+| `GameTheory/Protocol` nonblank lines | 1418 |
+| `GameTheory/Protocol` modules | 8 |
+| `GameTheory/Languages` nonblank lines | 973 |
+| second language front-end, nonblank lines | 158 |
 | Source-level transport tokens in the sequential layer | 0 |
 | `Function.update` in the sequential layer | 0 |
 | `sorry`, `admit`, `native_decide`, custom axioms | 0 |
 | Layering violations | 0 |
 | Reachability probes passed | 3 / 3 |
+
+The second front-end is the one that measures amortization. The shared layer is
+larger than the two front-ends put together, so the total is not the argument;
+the marginal cost is. `Rounds.lean` is 158 lines and receives the run law,
+histories, reachability, backward induction, information locality, assessment,
+and compilation into the static core, contributing none of them.
 
 ## Findings
 
@@ -134,22 +160,26 @@ would need a wider state.
 
 ## Outstanding
 
-- The certificate-versus-direct-bridge measurement, and hence D7. The recorded
-  budget awards a certificate level no credit until it has two downstream
-  consumers or one checked composition, so building one now would be exactly
-  the speculative abstraction that budget exists to prevent.
-- Finalization of D0, which depends on that measurement.
+Nothing blocks the gate. What follows is carried forward:
+
 - A native extensive-form encoding with its own workaround list. The
   imperfect-information and chance protocols under `GameTheory/Tests/` exercise
   the interface but are not a language module and produce no such list.
+- The Kuhn-style transfer, in both directions. It is the only experiment in
+  view that could reopen D7, because it must preserve recall, which the shared
+  static target forgets. It also remains the frozen transfer with the largest
+  gap between its name and its real obligations: reach mass, support
+  factorization, and player-local action posteriors.
+- The one-shot embedding commuting with compilation, the other frozen transfer
+  that was not built.
 
 ## Close-out list
 
-Deferred deliberately until the phase gate, not forgotten:
-
-- `GameTheory.lean` neither imports nor re-exports `GameTheory.Protocol`. The
-  sequential interface should not join the public umbrella until D7 settles,
-  since its shape is what D7 measures.
+- `GameTheory.lean` now re-exports `GameTheory.Protocol`, which was held back
+  until D7 settled because the sequential interface's shape was what D7
+  measured. `GameTheory.Languages` stays outside the umbrella: those encodings
+  are demonstrations with recorded scope limits, not coverage of their source
+  formalisms.
 - A trace-indexed runner is the single change that would remove the largest
   remaining limitation. Finding 4 blocks two things at once: the strategic
   compilation is restricted to state-indexed policies, and the one-shot

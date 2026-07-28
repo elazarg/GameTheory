@@ -80,8 +80,8 @@ function Report([string] $Key, $Value) {
   Write-Output "$Key=$Value"
 }
 
-$ProtocolFiles = Select-Files 'GameTheory/Protocol'
-$LanguageFiles = Select-Files 'GameTheory/Languages'
+$ProtocolFiles = @(Select-Files 'GameTheory/Protocol') + @('GameTheory/Protocol.lean')
+$LanguageFiles = @(Select-Files 'GameTheory/Languages')
 
 # --------------------------------------------------------------------------
 # 1. Layering. Protocol sits above Core and below the languages; nothing in
@@ -102,6 +102,15 @@ foreach ($f in $LanguageFiles) {
   foreach ($imp in Get-Imports $f) { if ($imp -match $LanguageForbidden) { $languageBad++ } }
 }
 Report 'LANGUAGE_FORBIDDEN_IMPORTS' $languageBad
+
+# The public root carries the sequential layer and nothing that is evidence
+# rather than library: encodings with recorded scope limits, and spikes.
+$rootImports = Get-Imports 'GameTheory.lean'
+Report 'ROOT_REEXPORTS_PROTOCOL' `
+  (@($rootImports | Where-Object { $_ -eq 'GameTheory.Protocol' }).Count)
+Report 'ROOT_FORBIDDEN_IMPORTS' `
+  (@($rootImports | Where-Object {
+    $_ -match 'GameTheory\.Languages|GameTheory\.Tests|GameTheory\.Experimental' }).Count)
 
 # --------------------------------------------------------------------------
 # 2. Forbidden patterns
@@ -187,14 +196,17 @@ if ($VerifyExpected) {
   $Expected = [ordered]@{
     PROTOCOL_FORBIDDEN_IMPORTS = 0
     LANGUAGE_FORBIDDEN_IMPORTS = 0
+    ROOT_REEXPORTS_PROTOCOL = 1
+    ROOT_FORBIDDEN_IMPORTS = 0
     TRANSPORT_PROTOCOL = 0
     TRANSPORT_LANGUAGES = 0
     FUNCTION_UPDATE_SEQUENTIAL = 0
     SORRY_OR_ADMIT_SEQUENTIAL = 0
     CUSTOM_AXIOM_SEQUENTIAL = 0
     EXECUTION_IMPORTS_INFORMATION = 0
-    # The 90-column guide is soft and 52 lines exceed it, but nothing in the
-    # library exceeds 100. That ceiling holds today, so it is locked here to
+    # The 90-column guide is soft and some lines exceed it; the count is
+    # reported above rather than pinned here, because it moves with ordinary
+    # edits. Nothing in the library exceeds 100, and that ceiling is locked to
     # stop it drifting.
     LIBRARY_LINES_OVER_100 = 0
   }

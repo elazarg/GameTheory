@@ -9,12 +9,19 @@ changing an architectural surface.
 This is a fresh Lean 4/Mathlib project. Its Lake package, public library, and
 Lean namespace are named `GameTheory`.
 
-Phases 0, 1, and 2 of the RFC spike have passed; Phase 3 (the sequential slice)
-has not started. The static semantic core lives under `GameTheory/Core`, the
-finite-support law type under `GameTheory/Probability`, the executable rational
-frontend under `GameTheory/Finite`, and architecture spikes under
-`GameTheory/Experimental` (never re-exported). See
-`docs/Phase2IncentiveSlice.md` for what the current gate guarantees.
+Phases 0 through 3 of the RFC spike have passed, so every architecture decision
+D0–D10 is now recorded rather than open. The static semantic core lives under
+`GameTheory/Core`, the finite-support law type under `GameTheory/Probability`,
+the sequential layer under `GameTheory/Protocol`, native encodings under
+`GameTheory/Languages`, the executable rational frontend under
+`GameTheory/Finite`, and architecture spikes under `GameTheory/Experimental`
+(never re-exported). See `docs/Phase2IncentiveSlice.md` and
+`docs/Phase3SequentialSlice.md` for what the gates guarantee and, more usefully,
+for the recorded limits they do not.
+
+With the architecture settled, the mode shifts from validation to harvesting:
+recover theorem statements, proof structure, and tests from the pinned snapshot
+and adapt them to the accepted API.
 
 The old implementation is available only as an ignored evidence snapshot at
 `reference/GameTheory-v1/`, pinned to
