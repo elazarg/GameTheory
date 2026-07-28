@@ -6,9 +6,9 @@ this module owns *who sees what*. It never redefines a transition: every
 observation is emitted by a `StepEvent`, which is exactly the data of one
 realized legal step, and the initial views are the only other source.
 
-The design constraint is that the information strategy type must not
-exposes hidden execution state at an information set or relies only on a later
-locality proposition. Three design choices answer that.
+A strategy must not be able to see hidden execution state at an information
+set, and locality must not rest on a proposition proved after the fact. Three
+design choices secure that.
 
 * **Locality is typing, not a law.** `Policy` is a function of `InfoState`
   alone. Two histories carrying the same information state therefore receive the

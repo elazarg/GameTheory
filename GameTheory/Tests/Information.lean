@@ -1,9 +1,9 @@
 /-
 # Hostile information tests
 
-The design constraint under test is that the information strategy type must not
-exposes hidden execution state at an information set, or if locality holds only
-as a later proposition. These are the tests that would detect it.
+A strategy that could see hidden execution state at an information set, or a
+locality claim resting on a proposition proved after the fact, would defeat the
+purpose of the information layer. These are the tests that would catch either.
 
 The protocol below is the standard validation case: an imperfect-information
 game with two execution states in one information set. Nature deals a card; the

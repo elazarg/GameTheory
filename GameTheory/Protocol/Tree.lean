@@ -1,11 +1,11 @@
 /-
-# The finite-first execution candidate
+# Finite game trees
 
-A finite-first presentation: inductive trees are primary and evaluation is
-structural rather than fuelled. It is faithful only for single-mover games; see
+A presentation in which inductive trees are primary and evaluation is structural
+rather than fuelled. It is faithful only for single-mover games; see
 `GameTheory.Protocol.Execution` for the general interface.
 
-Two properties are what the competition is about.
+Two properties are what it buys.
 
 * Evaluation needs no fuel and no horizon certificate — `eval` is structural
   recursion, total by construction.
@@ -63,7 +63,8 @@ def eval : (tree : Tree ι Action Outcome) → PureStrategy tree → FinDist Out
   | .node _ child, plan => eval (child plan.1) (plan.2 plan.1)
 
 @[simp]
-theorem eval_leaf (outcome : Outcome) (plan : PureStrategy (Tree.leaf (ι := ι) (Action := Action) outcome)) :
+theorem eval_leaf (outcome : Outcome)
+    (plan : PureStrategy (Tree.leaf (ι := ι) (Action := Action) outcome)) :
     eval (.leaf outcome) plan = FinDist.pure outcome := rfl
 
 @[simp]

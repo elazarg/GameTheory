@@ -3,14 +3,14 @@
 
 The same game — a fair coin, then one consequential decision — encoded twice:
 once as a general-state `ExecutionProtocol` (in `GameTheory.Tests.Execution`)
-and once as a finite-first `Tree`. The competition is decided on what each
-candidate needs in order to produce an outcome law and a strategy type.
+and once as a finite-first `Tree`. What separates them is what each needs in
+order to produce an outcome law and a strategy type.
 
 Three probes, all built in up front:
 
-* **agreement** — the two candidates induce the *same* outcome law, so neither
+* **agreement** — the two induce the *same* outcome law, so neither
   is quietly modelling a different game;
-* **discrimination** — in both candidates the law depends on the chosen action,
+* **discrimination** — in both, the law depends on the chosen action,
   so neither test would pass an evaluator that discarded the strategy;
 * **cost** — the finite-first evaluator is structural, while the general-state
   runner needs a fuel argument plus a `StopsWithin` certificate to become a
@@ -26,10 +26,10 @@ namespace GameTheory.Tests
 
 open GameTheory GameTheory.Protocol GameTheory.Probability
 
-/-! ## The general-state candidate: full outcome laws
+/-! ## The general-state presentation: full outcome laws
 
 `GameTheory.Tests.Execution` proved the two policies differ. Here are the laws
-themselves, which is what the tree candidate must reproduce. -/
+themselves, which is what the tree must reproduce. -/
 
 theorem runFor_two_take :
     coinThenMove.runFor takePolicy 2 .chance = FinDist.pure .tookIt := by
@@ -55,7 +55,7 @@ theorem runFor_two_leave :
     runFor_one_heads_leave, runFor_one_tails_leave]
   ring
 
-/-! ## Cost of the general-state candidate: a bounded-horizon certificate
+/-! ## Cost of the general-state presentation: a bounded-horizon certificate
 
 `runFor` is fuelled, so it is not yet an evaluator. `StopsWithin` is the
 certificate that makes it one, and it is small: one support computation. -/
@@ -73,7 +73,7 @@ theorem runFor_take_stable {fuel : ℕ} (hfuel : 2 ≤ fuel) :
   rw [ExecutionProtocol.runFor_eq_of_stopsWithin_le takePolicy_stopsWithin hfuel,
     runFor_two_take]
 
-/-! ## The finite-first candidate: the same game as a tree -/
+/-! ## The finite-first presentation: the same game as a tree -/
 
 /-- The fair coin as a law over branches. -/
 def fairCoin : FinDist Bool :=
@@ -118,9 +118,9 @@ theorem eval_coinTree_leave : Tree.eval coinTree leavePlan = FinDist.pure .leftI
   rw [eval_coinBranch_leave]
   simp
 
-/-! ## Probe 1: the candidates agree
+/-! ## Probe 1: the two agree
 
-Neither candidate is quietly modelling a different game. -/
+Neither presentation is quietly modelling a different game. -/
 
 theorem candidates_agree_take :
     Tree.eval coinTree takePlan = coinThenMove.runFor takePolicy 2 .chance := by

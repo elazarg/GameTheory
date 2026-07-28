@@ -1,14 +1,16 @@
 /-
 # Backward induction over a general-state protocol
 
-Backward induction over an execution protocol. `GameTheory.Protocol.Execution`
-already provides the *evaluator*:
-`StopsWithin` plus two stabilization theorems turn the fuelled `runFor` into a
-total evaluator. Backward induction is the other half — a general state space earns its keep
-only if the finite evaluator **and** the backward-induction API arise through a
-small well-founded/bounded certificate rather than a second parallel semantics.
-So the question asked here is: how much machinery must a protocol carry before
-backward induction is available on it?
+`GameTheory.Protocol.Execution` evaluates a protocol forwards: `StopsWithin`
+plus two stabilization theorems turn the fuelled `runFor` into a total
+evaluator. This module goes the other way, recursing from terminal states
+backwards.
+
+A general state space has no inductive structure to recurse on, so the recursion
+needs a certificate. The one it needs is small: `WellFoundedPlay`, that no play
+continues forever. Terminal states are its minimal elements automatically,
+because legality already contains non-terminality, so there is no separate base
+case to state.
 
 The module is organised so that the answer is readable off its structure.
 
@@ -459,12 +461,14 @@ def loudInteriorPayoff : Spot → ℝ
   | .passed => 0
 
 theorem backwardValue_grab_base :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip = 1 / 2 := by
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff Spot.flip =
+      1 / 2 := by
   rw [backwardValue_flip]
   norm_num [basePayoff, Move.outcome]
 
 theorem backwardValue_grab_raised :
-    probe.backwardValue probe_wellFoundedPlay (policy .grab) raisedPayoff Spot.flip = 1 := by
+    probe.backwardValue probe_wellFoundedPlay (policy .grab) raisedPayoff Spot.flip =
+      1 := by
   rw [backwardValue_flip]
   norm_num [raisedPayoff, Move.outcome]
 

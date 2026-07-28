@@ -1,9 +1,8 @@
 /-
 # Hostile locality and law-linearity tests
 
-The design constraint under test is that the equilibrium API must
-enforce both law-linearity and recommendation locality. These are the tests that
-would detect it.
+The equilibrium API is supposed to enforce law-linearity and recommendation
+locality by construction. These are the tests that would catch it failing to.
 
 Nothing here is a new definition; every statement exercises the public Core API.
 -/

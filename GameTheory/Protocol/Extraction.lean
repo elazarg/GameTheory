@@ -6,7 +6,7 @@ is indexed by the tree's *own* decision sites. The general-state `Chooser`, by
 contrast, is a function on *every* non-terminal state — all syntactically
 possible states, including ones no play ever reaches.
 
-This module closes that gap for the general candidate. It carves out the
+This module closes that gap for the general-state presentation. It carves out the
 reachable decision sites and proves the extraction is faithful: two choosers
 that agree on reachable sites induce the same run law, so behaviour off the
 reachable set is genuinely irrelevant rather than merely ignored by convention.

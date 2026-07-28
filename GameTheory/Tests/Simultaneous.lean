@@ -72,7 +72,8 @@ theorem matching_legal_forces_both {joint : ∀ _ : Fin 2, Option Bool}
 def bothTrue : ∀ _ : Fin 2, Option Bool := fun _ => some true
 
 /-- The first player deviates to `false`. -/
-def firstFalse : ∀ _ : Fin 2, Option Bool := fun i => if i = 0 then some false else some true
+def firstFalse : ∀ _ : Fin 2, Option Bool :=
+  fun i => if i = 0 then some false else some true
 
 theorem legal_bothTrue : matching.Legal .opening bothTrue :=
   ⟨by simp, fun _ => ⟨rfl, Set.mem_univ _⟩⟩
@@ -87,7 +88,8 @@ action and ignored the other would fail this. -/
 theorem matching_outcome_depends_on_both :
     matching.step .opening ⟨bothTrue, legal_bothTrue⟩ ≠
       matching.step .opening ⟨firstFalse, legal_firstFalse⟩ := by
-  have hboth : matching.step .opening ⟨bothTrue, legal_bothTrue⟩ = FinDist.pure .agreed := rfl
+  have hboth : matching.step .opening ⟨bothTrue, legal_bothTrue⟩ =
+      FinDist.pure .agreed := rfl
   have hfirst : matching.step .opening ⟨firstFalse, legal_firstFalse⟩ =
       FinDist.pure .split := rfl
   rw [hboth, hfirst]
@@ -116,7 +118,7 @@ theorem card_sequentialPlans : Fintype.card (Tree.PureStrategy sequentialTree) =
   rfl
 
 /-- **The measurement.** Sequentializing a simultaneous move is not faithful: it
-strictly enlarges the strategy space. The finite-first candidate therefore
+strictly enlarges the strategy space. The finite-first presentation therefore
 cannot encode this slice without gaining an information layer — the very
 machinery whose absence made it cheaper on the certificate axis. -/
 theorem sequentialization_enlarges_strategy_space :
