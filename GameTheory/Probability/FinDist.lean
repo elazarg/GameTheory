@@ -140,6 +140,79 @@ theorem support_map (f : α → β) (μ : FinDist α) :
   ext b
   simp [eq_comm]
 
+/-! ## Support-dependent composition
+
+`bind` hands its continuation an outcome. Some continuations need more than
+that: they need evidence that the outcome actually occurs. A law over histories
+is the motivating case, since extending a history by one transition is only
+meaningful for a transition that was realized.
+
+Finite support survives, because the result is a union of finitely many finite
+supports indexed by a finite support. -/
+
+/-- Sequential composition whose continuation may read a proof that its input
+lies in the support. -/
+def bindOnSupport (μ : FinDist α) (f : ∀ a ∈ μ.support, FinDist β) : FinDist β :=
+  ⟨μ.toPMF.bindOnSupport fun a ha => (f a ha).toPMF, by
+    rw [PMF.support_bindOnSupport]
+    have hrewrite :
+        (⋃ (a : α) (ha : a ∈ μ.toPMF.support), ((f a ha).toPMF).support) =
+          ⋃ a : μ.supportFinset, ((f a.1 (mem_supportFinset.mp a.2)).toPMF).support := by
+      ext b
+      simp only [Set.mem_iUnion]
+      exact ⟨fun ⟨a, ha, hb⟩ => ⟨⟨a, mem_supportFinset.mpr ha⟩, hb⟩,
+        fun ⟨a, hb⟩ => ⟨a.1, mem_supportFinset.mp a.2, hb⟩⟩
+    rw [hrewrite]
+    exact Set.finite_iUnion fun a => (f a.1 (mem_supportFinset.mp a.2)).support_finite⟩
+
+@[simp]
+theorem toPMF_bindOnSupport (μ : FinDist α) (f : ∀ a ∈ μ.support, FinDist β) :
+    (μ.bindOnSupport f).toPMF = μ.toPMF.bindOnSupport fun a ha => (f a ha).toPMF := rfl
+
+@[simp]
+theorem support_bindOnSupport (μ : FinDist α) (f : ∀ a ∈ μ.support, FinDist β) :
+    (μ.bindOnSupport f).support = ⋃ (a : α) (ha : a ∈ μ.support), (f a ha).support :=
+  PMF.support_bindOnSupport ..
+
+theorem bindOnSupport_congr {μ : FinDist α} {f g : ∀ a ∈ μ.support, FinDist β}
+    (h : ∀ a (ha : a ∈ μ.support), f a ha = g a ha) : μ.bindOnSupport f = μ.bindOnSupport g := by
+  simp only [funext fun a => funext fun ha => h a ha]
+
+/-- A continuation that ignores its evidence is an ordinary `bind`. -/
+@[simp]
+theorem bindOnSupport_eq_bind (μ : FinDist α) (f : α → FinDist β) :
+    (μ.bindOnSupport fun a _ => f a) = μ.bind f := by
+  apply ext; simp
+
+/-- **The composition collapses when the evidence is not used.** A continuation
+that happens to agree with a total one on the support is that total one, which
+is how a law defined by support-dependent recursion is compared with a law that
+never needed the evidence. -/
+theorem bindOnSupport_eq_bind_of_eq_on_support {μ : FinDist α}
+    {f : ∀ a ∈ μ.support, FinDist β} {g : α → FinDist β}
+    (h : ∀ a (ha : a ∈ μ.support), f a ha = g a) : μ.bindOnSupport f = μ.bind g := by
+  rw [← bindOnSupport_eq_bind μ g]
+  exact bindOnSupport_congr h
+
+@[simp]
+theorem pure_bindOnSupport (a : α) (f : ∀ b ∈ (pure a).support, FinDist β) :
+    (pure a).bindOnSupport f = f a (mem_support_pure.mpr rfl) := by
+  apply ext; simp
+
+@[simp]
+theorem bind_bindOnSupport (μ : FinDist α) (f : ∀ a ∈ μ.support, FinDist β) (g : β → FinDist γ) :
+    (μ.bindOnSupport f).bind g = μ.bindOnSupport fun a ha => (f a ha).bind g := by
+  apply ext
+  rw [toPMF_bind, toPMF_bindOnSupport, ← PMF.bindOnSupport_eq_bind _ fun b => (g b).toPMF,
+    PMF.bindOnSupport_bindOnSupport]
+  simp
+
+@[simp]
+theorem map_bindOnSupport (g : β → γ) (μ : FinDist α) (f : ∀ a ∈ μ.support, FinDist β) :
+    map g (μ.bindOnSupport f) = μ.bindOnSupport fun a ha => map g (f a ha) := by
+  simp only [map_eq_bind, bind_bindOnSupport]
+
+
 /-! ## Real masses -/
 
 /-- The real probability of a single outcome. Finite support keeps this an
@@ -359,6 +432,16 @@ theorem bind_congr {μ : FinDist α} {f g : α → FinDist β}
 theorem bind_const (μ : FinDist α) (ν : FinDist β) : (μ.bind fun _ => ν) = ν := by
   refine ext_of_prob fun b => ?_
   rw [prob_bind, expect_const]
+
+/-- When every branch pushes forward to the same law, so does the composition —
+so an observable that cannot tell the branches apart sees no composition at
+all. -/
+theorem map_bindOnSupport_const {μ : FinDist α} {f : ∀ a ∈ μ.support, FinDist β}
+    {ν : FinDist γ} (g : β → γ) (h : ∀ a (ha : a ∈ μ.support), map g (f a ha) = ν) :
+    map g (μ.bindOnSupport f) = ν := by
+  rw [map_bindOnSupport, bindOnSupport_eq_bind_of_eq_on_support h]
+  exact bind_const μ ν
+
 
 /-- Finite-support Fubini: independent expectations commute. -/
 theorem expect_comm (μ : FinDist α) (ν : FinDist β) (g : α → β → ℝ) :

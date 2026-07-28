@@ -180,6 +180,15 @@ Nothing blocks the gate. What follows is carried forward:
   measured. `GameTheory.Languages` stays outside the umbrella: those encodings
   are demonstrations with recorded scope limits, not coverage of their source
   formalisms.
+- **Done since the gate.** A history-indexed runner now exists in
+  `GameTheory/Protocol/History.lean`, and finding 4's first half is resolved: a
+  profile of information-local policies can be run. The state law is that law's
+  pushforward, so it is not a second semantics, and the gap it closes is
+  measured — the merging protocol in `Tests/History.lean` exhibits a profile
+  whose law no state-indexed chooser produces, together with a control profile
+  whose law one does. What remains of finding 4 is the one-shot-deviation
+  theorem, which now has the runner it was missing. The paragraph below is the
+  close-out item as it stood at the gate.
 - A trace-indexed runner is the single change that would remove the largest
   remaining limitation. Finding 4 blocks two things at once: the strategic
   compilation is restricted to state-indexed policies, and the one-shot

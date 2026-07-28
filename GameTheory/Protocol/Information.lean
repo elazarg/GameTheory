@@ -51,7 +51,7 @@ fields. `InformationModel extends InfoSignals` keeps that a private detail:
 `M.InfoState`, `M.pushInfo`, and `M.infoOf` all resolve through the parent.
 -/
 
-import GameTheory.Protocol.Execution
+import GameTheory.Protocol.History
 
 noncomputable section
 
@@ -265,6 +265,34 @@ theorem jointAt_legal (policies : (i : ι) → M.Policy i) {state : E.State}
   ExecutionProtocol.legal_of_legalOption hterm fun i =>
     (M.menu_adequate i trace ((policies i).act (M.infoOf i trace))).mp
       ((policies i).act_mem_menu (M.infoOf i trace))
+
+/-! ## Playing a profile
+
+A profile of information-local policies can be *run*, because the runner it
+drives is indexed by history — the same thing the policies read. A state-indexed
+runner could not take one, since two histories reaching one state may leave the
+players knowing different things and so calling for different actions. -/
+
+/-- A profile of information-local policies, as a chooser. The state a history
+reached is available here and is deliberately not passed on. -/
+def historyChooser (policies : (i : ι) → M.Policy i) : E.HistoryChooser :=
+  fun h hterm => ⟨M.jointAt policies h.trace, M.jointAt_legal policies h.trace hterm⟩
+
+/-- The law over histories a profile induces from a given history. -/
+def runFrom (policies : (i : ι) → M.Policy i) (fuel : ℕ) (h : E.History) : FinDist E.History :=
+  E.runHistoryFor (M.historyChooser policies) fuel h
+
+/-- The law over histories a profile induces from the start of play. -/
+def run (policies : (i : ι) → M.Policy i) (fuel : ℕ) : FinDist E.History :=
+  M.runFrom policies fuel E.initHistory
+
+/-- Only the actions a profile takes matter, not the certificates witnessing
+that they were on the menu. -/
+theorem runFrom_congr {first second : (i : ι) → M.Policy i}
+    (hagree : ∀ (i : ι) (info : M.InfoState i), (first i).act info = (second i).act info)
+    (fuel : ℕ) (h : E.History) : M.runFrom first fuel h = M.runFrom second fuel h :=
+  ExecutionProtocol.runHistoryFor_congr
+    (fun _ _ => Subtype.ext (funext fun i => hagree i _)) fuel h
 
 /-! ## Information sets and beliefs
 

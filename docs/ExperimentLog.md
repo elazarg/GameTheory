@@ -26,6 +26,7 @@ becomes difficult to scan.
 | EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
 | EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
+| EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 
 ## Entry template
 
@@ -658,3 +659,44 @@ but should not erase their evidence.
 - **Next action:** record
   [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md);
   D0 can now be finalized at every semantic level.
+
+### EXP-016: A run law indexed by history
+
+- **Date / revision:** 2026-07-28, working tree after the Phase 3 merge
+- **Decision / question:** whether the run law can be indexed by history rather
+  than state, so that a profile of information-local policies can actually be
+  run. The recorded limitation is that `infoOf` recurses over histories while the
+  runner consumes a state-indexed chooser, which blocks both the general
+  strategic compilation and the one-shot-deviation theorem. The risk to test is
+  that a history-indexed runner is a *second semantics*: if the state law is not
+  recoverable from it, the sequential layer has two disagreeing notions of play.
+- **Representative slice:** a protocol in which chance splits into two branches
+  that the player observes and that then merge back into one state, so two
+  histories reach the same state carrying different information
+- **Evidence:** `GameTheory/Protocol/History.lean`;
+  `GameTheory/Tests/History.lean`; `FinDist.bindOnSupport` and its laws
+- **Observation:** the missing primitive was a support-dependent composition,
+  because extending a history requires evidence that the transition was
+  realized. Mathlib's `PMF.bindOnSupport` supplies it from the *same* module the
+  finite-support type already imports, so the dependency budget is untouched.
+  Not a second semantics: `map_state_runHistoryFor` says the state law is the
+  history law's pushforward along the state each history reached, for any
+  chooser that ignores the history. Everything proved about the state law
+  therefore still holds.
+  Strictly more expressive, and measured as such rather than asserted. In the
+  merging protocol the profile that reads its branch induces a law with mass one
+  half on each ending, while every state-indexed chooser induces a point mass,
+  because at the merged state such a chooser has nothing left to condition on.
+  The probe is checked against its own control: the profile that ignores the
+  branch induces *exactly* a state chooser's law. So what the test detects is the
+  use of history, not the fact of running along one — the discrimination is
+  itself a theorem rather than a claim about the test.
+  One simplification fell out. The state runner needed an induction to show
+  everything it reaches is reachable; the history runner needs none, because a
+  history is that evidence.
+- **Outcome:** supports — adopt the history-indexed runner alongside the state
+  one, with the pushforward theorem as the compatibility guarantee
+- **Next action:** behavioral and mixed policies over the same `Policy` type,
+  then the one-shot-deviation theorem. Both are prerequisites for the
+  behavioral/mixed equivalence transfer, which is the experiment that could
+  reopen D7.
