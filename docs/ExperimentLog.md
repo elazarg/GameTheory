@@ -20,6 +20,12 @@ becomes difficult to scan.
 | EXP-007 | 2026-07-26 | D10 / Phase 2 | Can the rational finite-table frontend prove its enumeration correct against the semantic Nash predicate under a clean dependency budget? | Supports | [`decisions/D10-executable-frontend.md`](decisions/D10-executable-frontend.md); `GameTheory/Finite/`; `GameTheory/Examples/Classic.lean` |
 | EXP-008 | 2026-07-26 | D5 / Phase 0 F5 | Does an interim, type-dependent Bayesian deviation fit the shared local-deviation interface? | Supports | `GameTheory/Experimental/Phase2/BayesianProbe.lean` |
 | EXP-009 | 2026-07-26 | D6/D7 / Phase 3 input | Does the open-game context hint at a better sequential interface, and is its carried equilibrium derivable? | Narrows | read-only audit of the pinned `Languages/OpenGame/` and `Bridges/OpenGame_EFG.lean` |
+| EXP-010 | 2026-07-27 | D6 / Phase 3 | Can a general-state execution protocol express terminal play and chance without an impossible total chooser or dummy probability data? | Supports | `GameTheory/Protocol/Execution.lean`; `GameTheory/Tests/Execution.lean` |
+| EXP-011 | 2026-07-27 | D6 / Phase 3 | Does a separate information layer keep strategies information-local by construction? | Supports | `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Information.lean` |
+| EXP-012 | 2026-07-27 | D6 / Phase 3 | Finite-first or general-state-first execution for v1? | Decides D6 | [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md); `GameTheory/Tests/Candidates.lean`; `GameTheory/Tests/Simultaneous.lean` |
+| EXP-013 | 2026-07-27 | D6/D7 / Phase 3 | Does an assessment plus continuation express sequential rationality and one-shot deviations without a carried equilibrium? | Supports | `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Assessment.lean` |
+| EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
+| EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 
 ## Entry template
 
@@ -286,3 +292,369 @@ but should not erase their evidence.
   from D5's deviation machinery and no co-outcome channel. Open games stay a
   Frontier branch under D12; this audit removes the temptation to promote them
   and replaces it with the one idea that measured well.
+
+### EXP-010: General-state execution, terminal play, and chance
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree based on the Phase 2 gate
+- **Decision / question:** D6; whether a general-state `ExecutionProtocol` can
+  give usable terminal, chance, and run semantics. RFC 9.1.6 makes it a
+  core-invalidating failure if the selected execution semantics needs an
+  impossible total legal-action chooser at terminal states, dummy probability
+  data at chance nodes, or evaluation that silently stops at a chance node.
+- **Representative slice:** `coinThenMove` in `GameTheory/Tests/Execution.lean` -
+  a fair chance node with no mover, followed by a one-player decision, followed
+  by a terminal state, so all three failure modes are reachable in one protocol
+- **Evidence:** `GameTheory/Protocol/Execution.lean` and
+  `GameTheory/Tests/Execution.lean`; `lake build`
+- **Observation:** none of the three failure modes occurred.
+  1. *No total chooser.* `Chooser` takes a non-terminality proof, so terminal
+     states are never queried. Stronger, `terminal_no_legal` is a *theorem*
+     rather than the assumed field of the RFC sketch: legality was defined as
+     "not terminal, and every active player supplies an available action", so a
+     total chooser could not be written even if a runner asked for one.
+  2. *Chance is carried by the transition law.* `chanceLaw` is `step` applied to
+     the no-op joint action at a state where nobody is active;
+     `coinThenMove_chanceLaw_heads`, `..._tails`, and `..._normalized` show the
+     law is a genuine fair coin, not dummy data hung on a `none` mover.
+  3. *Evaluation does not stop at chance.* `runFor_succ_of_chance` proves the
+     runner steps through a chance state, and `runFor_of_terminal` proves
+     terminal states absorb. `runFor_one_from_chance` instantiates both.
+  4. *The chosen action drives the run.* Review caught that the first version of
+     the slice could not detect a runner that consulted the chooser and then
+     discarded its answer - for instance one picking a legal action itself via
+     `Classical.choice` on `exists_legal` - because `step` ignored the joint
+     action outside the chance node. The protocol now splits its terminal state
+     into `tookIt`/`leftIt` and lets `step` branch on the move, and
+     `takePolicy_ne_leavePolicy` proves the two policies induce *different*
+     two-step laws from the chance node (`prob_tookIt_take = 1` against
+     `prob_tookIt_leave = 0`). Without that probe the other three tests were
+     satisfiable by a runner that never used the chooser's choice.
+  Two simplifications relative to the RFC sketch: legality became a definition
+  rather than a stored field plus `legal_iff_active_available`, removing one
+  field and one law; and `active` is proposition-valued rather than a `Finset`,
+  keeping enumeration out of proof semantics (D9). `Trace` is `Type`-valued, so
+  `IsTreeShaped := ∀ state, Subsingleton (Trace E state)` is a genuine
+  uniqueness statement - the repair for v1's `Subsingleton (Reachable s t)`,
+  which was vacuous under proof irrelevance.
+  One negative datapoint, and it is not about D6: the concrete protocol needed
+  `@[reducible]`, because `coinThenMove.State` does not reduce to its carrier at
+  `instances` transparency. This is the *third* module to need that annotation
+  after `GameForm` and `TableGame`/`BayesianGame`. RFC 9.3 says an exception
+  recurring across two or more modules is promoted to its design decision, so
+  this is now formal evidence against D1's bundled-signature form rather than an
+  isolated waiver.
+- **Outcome:** supports - the general-state candidate survives RFC 9.1.6; the
+  question of whether it *beats* finite-first is separate and is reserved as
+  EXP-012
+- **Next action:** build the finite-first candidate, encode the same
+  perfect-information EFG with chance in both, and decide D6 on the measurement
+### EXP-011: Information locality by construction
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Decision / question:** D6; whether an information model layered over an
+  execution protocol keeps strategies information-local *by typing* rather than
+  by a later proposition. RFC 9.1.7 makes it a core-invalidating failure if the
+  strategy type exposes hidden execution state, relies only on a subsequent
+  locality proposition, or cannot support conditional beliefs and sequential
+  rationality without reopening native information equivalence.
+- **Representative slice:** `hiddenCard`, a two-seat imperfect-information
+  protocol - nature deals `high`/`low`, the `informed` seat is told privately,
+  the `blind` seat is not, both then call simultaneously
+- **Evidence:** `GameTheory/Protocol/Information.lean`,
+  `GameTheory/Tests/Information.lean`; `lake build`
+- **Observation:** RFC 9.1.7 is **not** triggered.
+  *Locality is typing, not a hypothesis.* `Policy i` is
+  `(info : InfoState i) → { choice // choice ∈ menu i info }`. It has no
+  `E.State` argument, which `blind_policy_type` records as an `rfl`-checked type
+  equation. `blind_cannot_tell` proves the two dealt states give the blind seat
+  equal `InfoState`, and `every_blind_policy_agrees` follows by `congrArg` -
+  there is no locality hypothesis and no "assume the policy is constant on the
+  information set" lemma anywhere.
+  *The information state is history-indexed.* `infoOf` recurses over `Trace`
+  rather than mapping states, so information accumulates along a run instead of
+  being read off a state.
+  *Menu adequacy did not need hidden state.* `menu : (i) → InfoState i → Set …`
+  never receives a state; the adequacy *law* quantifies over states and traces,
+  which is what a law is for. The payoff is `legalOption_of_mem_menu`: one
+  information-local menu is the legal option set at every state in the
+  information set, so `jointAt_legal` builds a legal joint action from a profile
+  of information-local policies with no state-indexed menu and no native
+  equivalence relation on states.
+  *The probes have teeth.* `informed_can_tell` proves the *informed* seat's
+  `InfoState` values at the same two states differ, which kills
+  `InfoState := Unit` and every degenerate information state that would make the
+  equalities above vacuous. `blindPolicy` inhabits the policy type, so the
+  universally quantified statements are not over an empty type;
+  `blind_menu_excludes_passing` shows the menu is not `Set.univ`;
+  `hidden_card_matters` shows the two merged states genuinely have different
+  futures.
+  Two honest costs. First, `menu` ranges over `Option (E.Action i)` rather than
+  `E.Action i`, which commits the design to "the information state determines
+  whether the player moves, not only what they may play". That is the standard
+  assumption and makes `menu` exactly the per-player conjunct of legality, but
+  without it a policy would need the hidden state to know whether to return
+  `none`. Second, `IsLegalJoint` is written in `Execution.lean` as an inlined
+  `∀ i, match …`, and two distinct stuck matchers are not definitionally equal,
+  so the pointwise form needed a one-off case split
+  (`isLegalJoint_iff_legalOption`) rather than `Iff.rfl`. A future refactor to
+  `IsLegalJoint := ∀ i, LegalOption …` would remove that friction.
+  A third instance of a now-familiar tactic hazard: `cases` on `Trace` fails
+  with an internal motive error unless the index is typed at the protocol's
+  `State` projection rather than the reduced carrier.
+- **Outcome:** supports - the separated information layer survives RFC 9.1.7 for
+  feasibility. A full sequential-rationality and consistency definition was
+  deliberately out of scope and was not faked.
+- **Next action:** build the assessment and one-shot-deviation slice on this
+  interface, shaped as profile-plus-continuation per EXP-009, which is what
+  closes 9.1.7's third clause.
+### EXP-012: The two execution candidates on one game
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Decision / question:** D6; finite-first inductive trees or general-state
+  transition systems for v1. The RFC's criterion is that the general candidate
+  wins only if the finite evaluator and the backward-induction API arise from a
+  small well-founded or bounded certificate rather than from a second parallel
+  semantics.
+- **Representative slice:** one fair coin followed by one consequential
+  decision, encoded twice - as `coinThenMove : ExecutionProtocol Unit` and as
+  `coinTree : Tree Unit (fun _ => Move) Spot`
+- **Evidence:** `GameTheory/Protocol/Tree.lean`,
+  `GameTheory/Protocol/Execution.lean`, `GameTheory/Tests/Candidates.lean`
+- **Observation:** three probes were built in before measuring, following the
+  review lesson from EXP-010.
+  1. *Agreement.* `candidates_agree_take` and `candidates_agree_leave` prove the
+     two candidates induce the same outcome law, so neither is quietly modelling
+     a different game.
+  2. *Discrimination.* `takePolicy_ne_leavePolicy` and `takePlan_ne_leavePlan`
+     prove each candidate's law depends on the chosen action, so neither set of
+     tests would pass an evaluator that discarded the strategy.
+  3. *Cost.* Finite-first: `Tree.eval` is structural recursion - total, no fuel,
+     no certificate. `Tree.PureStrategy` is defined by recursion on the tree, so
+     the plan type is indexed by the tree's *own* decision sites by
+     construction; `Fintype` follows from finiteness of the local action
+     carriers alone, and `card_pureStrategy_coinTree` computes by `rfl`. That is
+     RFC D6's fifth hostile test, passed outright.
+     General-state: `runFor` is fuelled and is therefore not yet an evaluator.
+     Making it one took `runFor_add` (which needed the new
+     `FinDist.bind_congr`), `StopsWithin`, and two stabilization theorems -
+     about 25 nonblank lines, and `takePolicy_stopsWithin` discharges the
+     certificate for the example in four. On the *evaluator* axis this is a
+     small bounded certificate, not a second parallel semantics, so the general
+     candidate meets the RFC's criterion there.
+  One asymmetry is already visible and counts against general-state. The tree's
+  strategy type is over the tree's own decision sites; the protocol's `Chooser`
+  is a function over *every* non-terminal state, which is "all syntactically
+  possible states" rather than the game's reachable decision sites. Recovering
+  the latter needs an extraction step the general candidate does not yet have.
+- **Outcome:** narrows, partial - both candidates encode the slice and agree;
+  finite-first passes hostile test 5 outright; general-state passes the
+  small-certificate criterion for the evaluator but not yet for strategy
+  extraction
+- **Follow-up (2026-07-27):** both open measurements were made, and a third gap
+  appeared.
+  *Backward induction.* `GameTheory/Protocol/Backward.lean`. `Successor` is
+  `StepEvent` with its data forgotten; `WellFoundedPlay` is one line;
+  `backwardRec` is `WellFounded.fix` along it. Terminal states are the
+  relation's minimal elements automatically, because `Legal` already contains
+  non-terminality, so no separate base-case predicate is needed. Certificate
+  plus recursor is 26 nonblank lines; the concrete instance for the probe
+  protocol is 22. Decisively, `backwardValue_eq_expect_runFor` proves that
+  wherever `StopsWithin` holds the backward-induction value *equals* the
+  expected payoff of the fuelled run law - neither is defined from the other,
+  so this is not a second parallel semantics. Five probes each pair with an
+  explicitly refuted mutant (`oneStepValue`, `sourceOnlyValue`,
+  `chooserBlindValue`), making discrimination a theorem.
+  *Strategy extraction.* `GameTheory/Protocol/Extraction.lean`. `Reachable`,
+  `DecisionSite`, `SiteStrategy`, `Chooser.restrict`, and
+  `runFor_congr_of_restrict_eq`: choosers agreeing on the reachable decision
+  sites induce the same run law. The `ghostArena` probe exhibits an active,
+  non-terminal, *unreachable* state, proves it unreachable, proves the two
+  choosers genuinely differ there, and proves the runs agree anyway - so the
+  faithfulness theorem is not vacuous.
+  *The new gap.* Reviewing the tree candidate against the rest of D6's slice
+  list shows `Tree.node` carries a single `mover`, so the finite-first candidate
+  as built **cannot express simultaneous actions at all**. The general-state
+  candidate handles them natively: `active` is a predicate over players and
+  `step` consumes a joint action. RFC D6 explicitly says to reject finite-first
+  if the simultaneous-action and MAID/FOSG slices need duplicate execution
+  theories rather than a small extension, so this is the decisive remaining
+  measurement and it runs the *opposite* way from the certificate count.
+- **Running tally:** finite-first needs zero certificates, has intrinsic
+  decision sites, and evaluates structurally, but is single-mover. General-state
+  needs two certificates that do not derive from each other (`StopsWithin` is
+  chooser-indexed and fuel-shaped, `WellFoundedPlay` is chooser-independent and
+  order-shaped) plus an extraction construction, but handles simultaneity
+  natively and its certificates are provably not a parallel semantics.
+- **Simultaneity measurement (2026-07-27):** `GameTheory/Tests/Simultaneous.lean`.
+  The general-state protocol takes it natively: `matching_both_active` puts two
+  players on move at one state, `matching_legal_forces_both` shows a legal joint
+  action must supply a move for each, and `matching_outcome_depends_on_both`
+  proves the transition reads both calls. The finite-first tree cannot express
+  it at all - `Tree.node` carries one `mover` - so the same game must be
+  sequentialized, and `sequentialization_enlarges_strategy_space` proves that is
+  not faithful: eight contingent plans against four simultaneous profiles.
+  `respondingPlan` exhibits one of the extra plans, conditioning on the
+  opponent's call. Making the tree faithful needs an information layer to
+  quotient those plans - exactly the machinery whose absence made it cheaper on
+  the certificate axis.
+- **Outcome (final):** decides D6. RFC D6's disproof conditions apply
+  asymmetrically: general-state-first is rejected only on a failed terminal,
+  chance, locality, or finite-extraction test, and it failed none; finite-first
+  is rejected if the simultaneous-action slice needs a duplicate execution or
+  evaluation theory, and it needs an information layer. General-state is the
+  primary interface; the tree is retained as a derived presentation for
+  single-mover games, where it costs no certificate and evaluates structurally.
+  The two provably agree where both apply.
+- **Next action:** recorded in
+  [`decisions/D6-execution-and-information.md`](decisions/D6-execution-and-information.md).
+  D7 remains open, as do the assessment and one-shot-deviation slice and the
+  MAID/FOSG encodings; D0 is not final until those are measured.
+
+### EXP-013: Assessment, sequential rationality, and one-shot deviations
+
+- **Date / revision:** 2026-07-27, Phase 3 working tree
+- **Decision / question:** D6 and D7, and the third clause of RFC 9.1.7.
+  EXP-009 concluded that the open-game *context* is the idea worth taking while
+  its carried equilibrium field and co-outcome channel are not. This tests that
+  directive.
+- **Representative slice:** `Context`, `value`, `IsLocallyOptimal`,
+  `IsProfitableDeviation`, `IsSequentiallyRationalAt`, and four probes over a
+  two-room protocol
+- **Evidence:** `GameTheory/Protocol/Assessment.lean`,
+  `GameTheory/Tests/Assessment.lean`
+- **Observation:** the directive holds. `Context` has exactly two fields -
+  `outcome : Option (Action i) → FinDist State` and
+  `continuation : State → ℝ` - which is the open-game context with the
+  co-outcome channel dropped, as EXP-009 measured that channel to have no
+  consumer. Local optimality is a *definition* over those fields, in deliberate
+  contrast to v1, where every open-game constructor stored its own
+  `IsEquilibriumIn` and hand-wrote a Nash condition.
+  `isLocallyOptimal_iff_no_profitable_deviation` is the one-shot-deviation
+  interface, with both sides derived from `value`.
+  `IsSequentiallyRationalAt` composes it with the information layer: the policy
+  supplies the call, `menu` supplies the allowed set, and the context supplies
+  the value. `deviation_legalOption` shows every alternative the deviator may
+  consider is legal at every state its belief considers possible - feasibility
+  without ever handing a policy a state, which is the remaining clause of
+  9.1.7.
+  The probes matter here more than usual, because
+  `isLocallyOptimal_iff_no_profitable_deviation` is a tautology about `value`
+  and would hold just as well if `value` were constant. Each probe therefore
+  fixes one field and varies the other: `up_optimal_under_prefersLeft` against
+  `up_not_optimal_under_prefersRight` varies only the continuation and flips the
+  verdict; `outcome_map_matters` holds the continuation fixed and flips it back
+  by changing only where the calls lead; `down_is_profitable_under_prefersRight`
+  exhibits an actual profitable deviation rather than only denying one; and
+  `belief_matters` shows the belief-built context depends on the belief.
+  One honest limitation. A profile of information-local policies is
+  *history*-indexed, because `infoOf` recurses over `Trace`, while `runFor`
+  consumes a *state*-indexed `Chooser`. Folding a full profile into a context
+  therefore needs either a history-indexed runner or a bind that is dependent on
+  a law's support, and `FinDist` has neither. `Context.ofBelief` sidesteps this
+  by taking a total branch and proving, via `ofBelief_congr`, that only its
+  behaviour on the belief's support matters. That is enough for the one-shot
+  interface, which is what the RFC asked for, but a full sequential-equilibrium
+  development would need the missing piece.
+- **Outcome:** supports - the context idea survives, the carried equilibrium and
+  the co-outcome channel stay rejected, and 9.1.7's third clause is met for
+  feasibility and one-shot deviations
+- **Next action:** the history-indexed runner, or a support-dependent bind on
+  `FinDist`, is the prerequisite for full sequential equilibrium; record it as a
+  known gap rather than a blocker for Phase 3
+### EXP-014: One execution base for two native shapes
+
+- **Date / revision:** 2026-07-28, Phase 3 working tree
+- **Decision / question:** D6's disproof condition - reduce the interfaces to a
+  smaller shared base if the languages cannot share `ExecutionProtocol` without
+  fake players, fake actions beyond the canonical no-op, or language-specific
+  escape fields. Deliverable is the written list of every language-specific
+  workaround. Two native shapes were encoded, not three: an influence diagram
+  and a multi-round simultaneous game. The extensive-form leg is covered only
+  informally, by the imperfect-information and chance protocols in
+  `GameTheory/Tests/Information.lean` and `GameTheory/Tests/Execution.lean`,
+  which carry no workaround list of their own.
+- **Representative slice:** a three-node MAID - one chance node, one decision
+  node observing it, one utility node - compiled into `ExecutionProtocol` and
+  `InformationModel`. MAID is the hardest of the three because its native shape
+  is a DAG of typed nodes rather than a state machine.
+- **Evidence:** `GameTheory/Languages/MAID.lean` (820 nonblank lines), whose
+  `## Workarounds` section is the deliverable
+- **Observation:** all three named failures are absent, each with a theorem.
+  *No fake players*: the protocol's index is the diagram's own agent set, chance
+  is carried by the transition law at an ownerless node, and `no_extra_agent`
+  records there is no `nature` index. *No fake actions*: an agent with no
+  decision node gets `Empty` rather than a padding action, and at every
+  non-decision node the only legal joint action is the canonical no-op. *No
+  escape fields*: the three structures were used as declared.
+  The honest remainder is more interesting than the clean part. The DAG must be
+  linearized, so the state space is its prefixes; for this diagram the
+  topological order is unique, but the file states plainly that **a MAID with
+  two incomparable decision nodes would make the compiled protocol assert an
+  order the diagram does not have, and that case is untested**. The utility node
+  costs an execution step whose law is a point mass, so `IsChance` cannot
+  distinguish a chance node from a deterministic administrative step - node
+  kinds are not recoverable from the protocol. And the encoding independently
+  rediscovered the mismatch recorded in EXP-013: `runFor` is state-indexed while
+  policies are history-indexed, and the bridge is sound here only because the
+  stage records every resolved node's value.
+  A discriminating probe (`outcome_law_depends_on_decision`) proves the compiled
+  run law depends on the decision node's value, so the encoding does not
+  collapse the decision away.
+- **Multi-round simultaneity (2026-07-28):** `GameTheory/Languages/Rounds.lean`.
+  Simultaneity composes across rounds with no encoding trick: `active` is a
+  predicate over players so a whole round is one state, `step` consumes a joint
+  action so a round resolves in one transition, and the reached state carries
+  the round's outcome so round two can depend on round one. The no-op never
+  appears, because `all_active_of_not_terminal` shows no state has an idle
+  player. Three probes make the claim non-vacuous - both players' first-round
+  calls matter, the second round is not vestigial, and the state reached after
+  round one genuinely records which outcome occurred - and `stopsWithin_two`
+  supplies the horizon certificate. The recorded remainder is that the middle
+  state carries the first round's *outcome* rather than its actions, so a game
+  whose second round depends on the exact first-round profile would need a wider
+  state; nothing in the interface prevents that, but this file does not test it.
+- **Outcome:** supports - both encodings share the execution base with no fake
+  players, no fake actions beyond the canonical no-op, and no escape fields, each
+  recorded with a theorem. Two scope limits are stated plainly rather than
+  hidden: an influence diagram with two incomparable decision nodes, and a
+  round-based game needing the exact previous profile.
+- **Next action:** neither encoding needed an escape hatch, so the shared
+  execution base stands. The certificate-versus-direct-bridge measurement is
+  the remaining input to D7.
+### EXP-015: Certificates against their direct bridges
+
+- **Date / revision:** 2026-07-28, Phase 3 working tree
+- **Decision / question:** D7 and the finalization of D0. Phase 0 fixed an
+  eight-point bridge and certificate complexity budget; a certificate level
+  earns its place only against the bespoke direct bridge it replaces.
+- **Representative slice:** the two encoded native shapes - an influence diagram
+  and a two-round simultaneous game - each taken to a `GameForm`, with the
+  static solution concepts applied to both
+- **Evidence:** `GameTheory/Tests/Transfer.lean`
+- **Observation:** the direct baseline is *zero*, which no certificate level can
+  beat. Each language reached the static core by applying one existing generic
+  function; it added no structure, no construction discharging certificate
+  fields, and no evaluation theorem of its own. Both obtain their outcome law
+  from the same theorem, `ExecutionProtocol.toGameForm_play`, instantiated
+  twice, and `IsNash` and `WeaklyDominates` apply to both without either
+  language contributing a definition or a lemma. A named adequacy record would
+  add a structure, composition laws, and a per-language construction, and would
+  enable nothing further: the transfer is function composition, and composing
+  functions needs no witness.
+  This corroborates EXP-009 from the opposite direction. That audit found a
+  compositional presentation whose carried equilibrium field was *derivable*
+  from native semantics, whose constructors each hand-wrote their own optimality
+  condition, and whose contravariant channel had no consumer. Storing a witness
+  for something already derivable is the mechanism by which a certificate
+  hierarchy decays into duplicated concepts.
+  The rejection is scoped, not universal: it holds for languages that compile
+  *into* a shared target, and says nothing about a transfer that must preserve
+  something the target forgets, such as recall or the identity of a decision
+  site. No such transfer exists here yet, which is itself the reason the
+  hierarchy is unamortized.
+- **Outcome:** rejects D7 for v1 - keep compilation as functions and named
+  evaluation theorems; reopen only on a concrete transfer the shared static form
+  provably cannot carry
+- **Next action:** record
+  [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md);
+  D0 can now be finalized at every semantic level.

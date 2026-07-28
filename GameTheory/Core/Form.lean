@@ -1,10 +1,9 @@
 /-
 # Game forms
 
-A `GameForm` is the utility-free static semantics selected by D0: a signature
-plus a play law sending profiles to outcome laws. It stores its signature
-(D1, provisional); strategies and outcomes stay owned by that signature and are
-never duplicated as form fields.
+A `GameForm` is utility-free static semantics: a signature plus a play law
+sending profiles to outcome laws. It stores its signature; strategies and
+outcomes stay owned by that signature and are never duplicated as form fields.
 
 Preferences, utilities, deviations, and every solution concept are defined
 elsewhere against this one object.
@@ -25,8 +24,8 @@ variable {ι : Type uι}
 
 set_option linter.checkUnivs false in
 /-- The utility-free semantics of a game. Storing the signature makes `us` and
-`uo` non-inferable from `GameForm ι`; EXP-002 records that as the measured cost
-of the provisional bundled design. -/
+`uo` non-inferable from `GameForm ι`, which is the measured cost of storing the
+signature rather than indexing by it. -/
 structure GameForm (ι : Type uι) where
   /-- The strategy and outcome carriers. -/
   sig : GameSignature.{uι, us, uo} ι
@@ -87,7 +86,7 @@ theorem outcomeLaw_mapOutcome (F : GameForm ι) {O : Type uo'} (f : F.sig.Outcom
 
 /-! ## Mixed extension
 
-Independent randomization needs finitely many players and nothing else (D9). -/
+Independent randomization needs finitely many players and nothing else. -/
 
 /-- Replace each strategy carrier by its finite-support laws. -/
 abbrev _root_.GameTheory.GameSignature.mixed (sig : GameSignature ι) : GameSignature ι where

@@ -9,12 +9,19 @@ changing an architectural surface.
 This is a fresh Lean 4/Mathlib project. Its Lake package, public library, and
 Lean namespace are named `GameTheory`.
 
-Phases 0, 1, and 2 of the RFC spike have passed; Phase 3 (the sequential slice)
-has not started. The static semantic core lives under `GameTheory/Core`, the
-finite-support law type under `GameTheory/Probability`, the executable rational
-frontend under `GameTheory/Finite`, and architecture spikes under
-`GameTheory/Experimental` (never re-exported). See
-`docs/Phase2IncentiveSlice.md` for what the current gate guarantees.
+Phases 0 through 3 of the RFC spike have passed, so every architecture decision
+D0–D10 is now recorded rather than open. The static semantic core lives under
+`GameTheory/Core`, the finite-support law type under `GameTheory/Probability`,
+the sequential layer under `GameTheory/Protocol`, native encodings under
+`GameTheory/Languages`, the executable rational frontend under
+`GameTheory/Finite`, and architecture spikes under `GameTheory/Experimental`
+(never re-exported). See `docs/Phase2IncentiveSlice.md` and
+`docs/Phase3SequentialSlice.md` for what the gates guarantee and, more usefully,
+for the recorded limits they do not.
+
+With the architecture settled, the mode shifts from validation to harvesting:
+recover theorem statements, proof structure, and tests from the pinned snapshot
+and adapt them to the accepted API.
 
 The old implementation is available only as an ignored evidence snapshot at
 `reference/GameTheory-v1/`, pinned to
@@ -46,6 +53,21 @@ add exact artifacts/commands, observations, outcome, and next action. Log
 positive, negative, narrowed, and inconclusive evidence. Decision records and
 RFC changes must cite the experiment ID; do not erase a failed hypothesis by
 quietly rewriting the design document.
+
+## Documentation boundary
+
+Phases, experiment IDs (`EXP-NNN`), decision IDs (`D0`–`D12`), and RFC section
+or kill-criterion citations are **plan and history**. They belong in
+`docs/ExperimentLog.md`, `docs/decisions/`, and the phase gate documents.
+
+Do not put them in Lean docstrings. Code outlives the plan: a reader a year from
+now should learn from a module docstring *what the design is and why*, stated in
+timeless terms, without needing the planning documents to decode it. Write "a
+`Prop`-valued reachability relation would make this vacuous" rather than "RFC
+9.1.7 makes this a core-invalidating failure".
+
+The `GameTheory/Experimental/` tree is the exception: those files exist only as
+recorded evidence for a named experiment, and their directory names say so.
 
 ## How to work here
 

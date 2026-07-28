@@ -4,7 +4,7 @@
 Every algorithm of `GameTheory.Finite.Algorithm` is proved equal to a *semantic*
 predicate of `GameTheory.Core`. No solution concept is redefined here: the
 executable layer has boolean procedures, and the meaning of "Nash", "dominates",
-"Pareto efficient" stays in Core (D10, kill criterion 9.1.4).
+"Pareto efficient" stays in Core.
 
 This module may import Core and real-valued semantics; the algorithm module may
 not.

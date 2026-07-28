@@ -2,7 +2,7 @@
 # Weak preferences over outcome laws
 
 Preferences are explicit arguments, never typeclass instances: one form is
-routinely studied under several preferences (D4). Preference laws such as
+routinely studied under several preferences. Preference laws such as
 reflexivity are named properties of a particular relation, not fields of the
 relation's type.
 
@@ -11,7 +11,7 @@ relation's type.
 `weaklyPrefers agent preferred alternative` means `agent` weakly prefers
 `preferred` to `alternative`. Every public definition below names its two law
 arguments, so reversing them is a visible error rather than a silent change of
-concept (RFC 6).
+concept.
 -/
 
 import GameTheory.Probability.FinDist
@@ -83,7 +83,7 @@ strictly gain"; see `coalition_iff_not_forall_strict`. The two readings come
 apart for a partial preference: a deviation leaving every member *incomparable*
 to the status quo is refused by this definition even though nobody strictly
 gains. That is the deliberate choice, because `WeakPreference` is allowed to be
-partial (D4) and the safe reading of a coalitional objection is "somebody is not
+partial and the safe reading of a coalitional objection is "somebody is not
 made worse off". Only the forward implication
 (`not_forall_strict_of_coalition`) is unconditional. -/
 def coalition (weaklyPrefers : WeakPreference Agent Outcome) :
