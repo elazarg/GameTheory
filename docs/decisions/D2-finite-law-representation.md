@@ -1,8 +1,8 @@
 # D2: finite-law representation
 
-- **Status:** adopted for the v1 finite core
-- **Date:** 2026-07-22
-- **Evidence:** EXP-003, EXP-004
+- **Status:** adopted for the v1 finite core; Phase 2 kill tests passed
+- **Date:** 2026-07-22, amended 2026-07-26
+- **Evidence:** EXP-003, EXP-004, EXP-006, EXP-007
 - **Decision:** Represent the future `FinDist α` by a `PMF α` paired with a
   proof that its support is finite. Hide that representation behind the public
   API; do not expose the experimental candidate name.
@@ -79,3 +79,39 @@ behavioral products; CE/CCE joint-law constraints; the Phase 4 Nash-existence
 route through compact convex simplices; and fuller same-signature reuse across
 those modules. Affine simplex preservation, previously missing, is now covered
 by `Law.mix`, `expect_mix`, and `simplexEquiv_mix_apply`.
+
+## Phase 2 amendment (EXP-006, EXP-007)
+
+Two of the named kill tests ran and passed.
+
+*NFG mixed extension through the final signature API.* `GameForm.mixed`,
+`pi_update_mixed`, `mixed_play_update`, `isNash_mixed_iff` and the executable
+`verifyMixedNash_eq_true_iff` are all stated and proved without a second
+mixed-game API and without exposing the representation. Mixed Nash is
+`IsNash F.mixed`, not a predicate of its own.
+
+*CE/CCE joint-law constraints.* Both are `IsEquilibrium` at an arbitrary
+`FinDist (Profile sig)` with different schemes; `IsCorrelatedEq.isCoarseCorrelatedEq`
+is one application of a scheme morphism.
+
+Representation leakage was measured at the public surface. `FinDist` exposes
+`prob : FinDist α → α → ℝ` and `expect`, and no Core, Finite, Examples, or Tests
+module mentions `ENNReal` or `toReal`; those tokens occur only inside
+`GameTheory/Probability/FinDist.lean`. The single source-level transport token
+in Phase 2 source is one `change` in `FinDist.mix`.
+
+The measured cost is a *dependency* one, not an API one. Mathlib's
+`ProbabilityMassFunction.Basic` imports `MeasureTheory.Measure.Dirac` and
+`Topology.Instances.ENNReal.Lemmas`, so `MeasureTheory.Measure` and
+`ContinuousMap` are reachable from `GameTheory.Core` even though Core's authored
+imports name neither. Narrowing `FinDist`'s import from
+`ProbabilityMassFunction.Constructions` to `.Monad` — which required defining
+`FinDist.map` from `bind` and `pure` rather than reusing `PMF.map` — removed
+`stdSimplex` and `Polynomial` from that closure and is checked by the Phase 2
+audit. The remaining measure-theoretic closure is inherent to Mathlib's `PMF`
+and cannot be removed while D2 stands.
+
+RFC 9.1.5 ("importing Core pulls topology") cannot be read as a statement about
+Mathlib's transitive closure, since any `ℝ`-valued expectation reaches
+topological instances. It is enforced here as an authored-import rule plus the
+reachability probes above, and this reading is recorded rather than assumed.
