@@ -784,5 +784,39 @@ it now has a positive one.
 What is left is to combine the peel with these: at each step, factor the drawn
 policy at the coordinate about to be consulted, match the first factor against
 the behavioral draw, and use the two facts above to show the residual can be
-extended arbitrarily at that coordinate. The obstruction is that the index type
-shrinks while the induction hypothesis quantifies over full profiles.
+extended arbitrarily at that coordinate.
+
+#### Addendum: how the shrinking index is avoided
+
+The obstruction recorded above — that the index type shrinks while the induction
+hypothesis quantifies over full profiles — is avoidable, and both remedies first
+recorded here were worse than the one now adopted. **Commit the consumed
+coordinate instead of deleting it.**
+
+`BehavioralPolicy.commit` fixes one information state to a point mass and leaves
+the rest alone, and `toMixed_commit` is the identity that makes it work:
+re-extending the residual of a factored draw with a fixed choice is again the
+mixed reading of a behavioral profile — the committed one. It is
+`pi_eq_map_product` read for the committed family. So the induction hypothesis
+never leaves full profiles; the set of already-consumed information states is
+encoded as the coordinates that have become point masses, and point masses need
+no bookkeeping.
+
+`runBehavioralFrom_congr` is what then makes the commitment invisible on the
+continuation, since `infoOf_ne_of_actsOnce` says the consumed coordinate is
+never consulted again.
+
+Why the two alternatives were worse. Generalizing over a consumed set would put
+the statement on types that change at every step, and moving between them is
+`Equiv` juggling — precisely what produces the source-level transport tokens
+this layer budgets at zero. Proving the distinct-family factorization outright
+would need a finite-product Fubini for expectations, and the step case does not
+need one: mass-level factorization is `prod` algebra over the existing lemmas,
+and the sequencing unfolds from `product`'s own definition.
+
+One point worth recording because it nearly went the other way: committing a
+coordinate is a pointwise update of a dependent function, which transports a
+value along an equality of information states, and both spellings of that —
+`Function.update` and `▸` — are already forbidden in this layer. Building it
+from `Equiv.piSplitAt`, the same decomposition the factorization uses, needs
+neither, and the audits confirm the layer's counts are unchanged.

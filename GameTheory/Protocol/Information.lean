@@ -476,6 +476,32 @@ def runBehavioralFrom (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ
 def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : FinDist E.History :=
   M.runBehavioralFrom policies fuel E.initHistory
 
+/-- Behavioral profiles that answer alike at every history a run of this length
+can pass through induce the same law. This is what makes a change to a
+coordinate the continuation never consults invisible. -/
+theorem runBehavioralFrom_congr {first second : (i : ι) → M.BehavioralPolicy i} :
+    ∀ (fuel : ℕ) (h : E.History),
+      (∀ (h' : E.History), ExecutionProtocol.ReachesWithin E fuel h h' →
+        ∀ i, first i (M.infoOf i h'.trace) = second i (M.infoOf i h'.trace)) →
+      M.runBehavioralFrom first fuel h = M.runBehavioralFrom second fuel h := by
+  intro fuel
+  induction fuel with
+  | zero => intro h _; rfl
+  | succ fuel ih =>
+    intro h hagree
+    by_cases hterm : E.terminal h.state
+    · rw [runBehavioralFrom, runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm,
+        ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterm]
+    · have hhere : M.randomizedChooser first h hterm = M.randomizedChooser second h hterm := by
+        rw [randomizedChooser, randomizedChooser, behavioralJoint, behavioralJoint]
+        exact congrArg _ (congrArg FinDist.pi (funext fun i => hagree h (.refl _ _) i))
+      rw [runBehavioralFrom, runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm,
+        ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ fuel hterm, hhere]
+      refine FinDist.bind_congr fun draw _ => FinDist.bindOnSupport_congr fun target realized => ?_
+      exact ih _ fun h' hreach i => hagree h' (.step _ _ realized hreach) i
+
 /-- The law a mixed profile induces: draw a deterministic profile once, then
 play it. The single draw is the whole difference from the behavioral case. -/
 def runMixedFrom (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) (h : E.History) :
@@ -518,15 +544,66 @@ Scope: this draws for *every* information state, so it asks the player's
 information states to be finite in number. Play with a bounded horizon visits
 only finitely many of them whether or not the rest are finite, so the weaker
 hypothesis would suffice; it is not taken here, because nothing yet needs it. -/
-def BehavioralPolicy.toMixed [∀ i, Fintype (M.InfoState i)] {i : ι}
+def BehavioralPolicy.toMixed {i : ι} [Fintype (M.InfoState i)]
     (policy : M.BehavioralPolicy i) : M.MixedPolicy i :=
   FinDist.pi policy
 
 variable {M} in
+/-- The behavioral profile that has committed to one choice at one information
+state and is unchanged elsewhere.
+
+It is built from the same coordinate decomposition the product factorization
+uses, rather than by updating a dependent function pointwise. That is not only
+tidier: updating pointwise would transport a value along an equality of
+information states, and this layer keeps such transports out. -/
+def BehavioralPolicy.commit {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i) (choice : M.Choice i info) :
+    M.BehavioralPolicy i :=
+  (Equiv.piSplitAt info fun w => FinDist (M.Choice i w)).symm
+    (FinDist.pure choice, fun w => policy w.1)
+
+variable {M} in
+@[simp]
+theorem BehavioralPolicy.commit_self {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i) (choice : M.Choice i info) :
+    policy.commit info choice info = FinDist.pure choice := by
+  simp [commit]
+
+variable {M} in
+@[simp]
+theorem BehavioralPolicy.commit_of_ne {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.BehavioralPolicy i) (info : M.InfoState i) (choice : M.Choice i info)
+    {other : M.InfoState i} (hne : other ≠ info) :
+    policy.commit info choice other = policy other := by
+  simp [commit, hne]
+
+variable {M} in
+/-- **Committing keeps the profile mixed.** Re-extending the rest of a drawn
+policy with a fixed choice at one information state is again the mixed reading
+of a behavioral profile — the one that has committed there.
+
+This is what lets an induction over play stay on full profiles: a coordinate
+already consulted becomes a point mass rather than disappearing from the index,
+and point masses need no bookkeeping. -/
+theorem BehavioralPolicy.toMixed_commit {i : ι} [Fintype (M.InfoState i)]
+    [DecidableEq (M.InfoState i)] (policy : M.BehavioralPolicy i) (info : M.InfoState i)
+    (choice : M.Choice i info) :
+    (policy.commit info choice).toMixed =
+      FinDist.map
+        (fun rest => (Equiv.piSplitAt info fun w => M.Choice i w).symm (choice, rest))
+        (FinDist.pi fun w : {w // w ≠ info} => policy w.1) := by
+  rw [toMixed, FinDist.pi_eq_map_product info,
+    show (fun w : {w // w ≠ info} => policy.commit info choice w.1) =
+      (fun w : {w // w ≠ info} => policy w.1) from
+        funext fun w => policy.commit_of_ne info choice w.2,
+    commit_self, FinDist.product, FinDist.pure_bind, FinDist.map_comp]
+  rfl
+
+variable {M} in
 /-- The construction is the right one in the degenerate case: a deterministic
 policy, randomized nowhere, comes back as the point mass at itself. -/
-theorem Policy.toBehavioral_toMixed [∀ i, Fintype (M.InfoState i)]
-    [∀ i, DecidableEq (M.InfoState i)] {i : ι} (policy : M.Policy i) :
+theorem Policy.toBehavioral_toMixed {i : ι} [Fintype (M.InfoState i)]
+    [DecidableEq (M.InfoState i)] (policy : M.Policy i) :
     policy.toBehavioral.toMixed = FinDist.pure policy :=
   FinDist.pi_pure policy
 

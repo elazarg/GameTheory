@@ -24,7 +24,7 @@ open scoped BigOperators NNReal
 
 namespace GameTheory.Probability
 
-universe u v w
+universe u v w z
 
 /-- A probability law whose support is finite. The representation is private to
 this module's API surface. -/
@@ -32,7 +32,7 @@ def FinDist (α : Type u) := { μ : PMF α // μ.support.Finite }
 
 namespace FinDist
 
-variable {α : Type u} {β : Type v} {γ : Type w}
+variable {α : Type u} {β : Type v} {γ : Type w} {δ : Type z}
 
 /-- Representation escape hatch. Public modules must not use this; it exists so
 that this module and the designated `Analysis` bridge can state their proofs. -/
@@ -499,6 +499,13 @@ theorem prob_product [DecidableEq α] [DecidableEq β] (μ : FinDist α) (ν : F
         show (fun b => if p = (a, b) then (1:ℝ) else 0) = fun _ => (0:ℝ) from
           funext fun b => if_neg fun hcontra => h (congrArg Prod.fst hcontra),
         expect_const]
+
+/-- Pushing a product forward coordinatewise is the product of the
+pushforwards. -/
+theorem map_product (f : α → γ) (g : β → δ) (μ : FinDist α) (ν : FinDist β) :
+    map (Prod.map f g) (product μ ν) = product (map f μ) (map g ν) := by
+  rw [product, product, map_bind, bind_map]
+  exact bind_congr fun a _ => by rw [map_comp, map_comp]; rfl
 
 /-- Forgetting the second coordinate of a product returns the first factor. -/
 theorem map_fst_product (μ : FinDist α) (ν : FinDist β) : map Prod.fst (product μ ν) = μ := by
