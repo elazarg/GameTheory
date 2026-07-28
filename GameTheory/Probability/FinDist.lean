@@ -451,6 +451,62 @@ theorem expect_comm (μ : FinDist α) (ν : FinDist β) (g : α → β → ℝ) 
   rw [Finset.sum_comm]
   exact Finset.sum_congr rfl fun b _ => Finset.sum_congr rfl fun a _ => by ring
 
+/-! ## Reading a mass off a pushforward
+
+`prob` after `map` is a sum over a fibre in general. The two cases below are the
+ones that arise: an injective pushforward moves masses without merging them, and
+a product's masses factor. -/
+
+theorem expect_ite_eq [DecidableEq α] (μ : FinDist α) (a : α) (c : ℝ) :
+    (μ.expect fun x => if a = x then c else 0) = μ.prob a * c := by
+  rw [expect_eq_sum_support]
+  by_cases hmem : a ∈ μ.support
+  · rw [Finset.sum_eq_single a (fun b _ hne => by simp [Ne.symm hne])
+      (fun hnot => absurd (mem_supportFinset.mpr hmem) hnot)]
+    simp
+  · rw [prob_eq_zero_iff.mpr hmem, zero_mul]
+    refine Finset.sum_eq_zero fun b hb => ?_
+    by_cases h : a = b
+    · subst h
+      exact absurd (mem_supportFinset.mp hb) hmem
+    · simp [h]
+
+theorem prob_map [DecidableEq β] (f : α → β) (μ : FinDist α) (b : β) :
+    (map f μ).prob b = μ.expect fun a => if b = f a then 1 else 0 := by
+  rw [map_eq_bind, prob_bind]
+  exact expect_congr fun a _ => by rw [prob_pure_eq_ite]
+
+/-- An injective pushforward carries each mass to its image untouched. -/
+theorem prob_map_of_injective [DecidableEq α] [DecidableEq β] (f : α → β)
+    (hf : Function.Injective f) (μ : FinDist α) (a : α) :
+    (map f μ).prob (f a) = μ.prob a := by
+  rw [prob_map, show (fun x => if f a = f x then (1:ℝ) else 0) =
+    fun x => if a = x then (1:ℝ) else 0 from funext fun x => by simp [hf.eq_iff],
+    expect_ite_eq, mul_one]
+
+/-- Independence, as masses: a product law factors at every point. -/
+theorem prob_product [DecidableEq α] [DecidableEq β] (μ : FinDist α) (ν : FinDist β)
+    (p : α × β) : (product μ ν).prob p = μ.prob p.1 * ν.prob p.2 := by
+  rw [product, prob_bind]
+  rw [show (fun a => (map (fun b => (a, b)) ν).prob p) =
+      fun a => if p.1 = a then ν.prob p.2 else 0 from funext fun a => ?_]
+  · exact expect_ite_eq μ p.1 (ν.prob p.2)
+  · by_cases h : p.1 = a
+    · subst h
+      rw [if_pos rfl, show p = ((fun b => (p.1, b)) p.2) from rfl,
+        prob_map_of_injective _ (fun x y hxy => (Prod.mk.inj hxy).2) ν p.2]
+    · rw [if_neg h, prob_map,
+        show (fun b => if p = (a, b) then (1:ℝ) else 0) = fun _ => (0:ℝ) from
+          funext fun b => if_neg fun hcontra => h (congrArg Prod.fst hcontra),
+        expect_const]
+
+/-- Forgetting the second coordinate of a product returns the first factor. -/
+theorem map_fst_product (μ : FinDist α) (ν : FinDist β) : map Prod.fst (product μ ν) = μ := by
+  rw [product, map_bind]
+  refine Eq.trans (bind_congr fun a _ => ?_) (bind_pure μ)
+  rw [map_comp]
+  exact bind_const ν (pure a)
+
 /-! ## Convex mixing -/
 
 /-- Mix two laws, with weight `t` on the first. The interface is real-valued;
@@ -562,6 +618,31 @@ theorem prob_pi (μ : ∀ i, FinDist (A i)) (s : ∀ i, A i) :
   show (∏ i, (μ i).toPMF (s i)).toReal = _
   rw [ENNReal.toReal_prod]
   rfl
+
+/-- **A finite product factors at any one coordinate**: the law of a whole tuple
+is the law of that coordinate together with an independent law of the rest. This
+is the decomposition an argument uses when it has to single out the coordinate
+play is about to consult and integrate over the others. -/
+theorem pi_eq_map_product [DecidableEq ι] (i : ι) (μ : ∀ j, FinDist (A j)) :
+    pi μ = map (Equiv.piSplitAt i A).symm
+      (product (μ i) (pi fun j : {j // j ≠ i} => μ j.1)) := by
+  classical
+  refine ext_of_prob fun s => ?_
+  conv_rhs => rw [show s = (Equiv.piSplitAt i A).symm ((Equiv.piSplitAt i A) s) from
+    ((Equiv.piSplitAt i A).symm_apply_apply s).symm]
+  rw [prob_map_of_injective _ (Equiv.injective _), prob_product, prob_pi, prob_pi,
+    Equiv.piSplitAt_apply]
+  rw [← Finset.mul_prod_erase Finset.univ (fun j => (μ j).prob (s j)) (Finset.mem_univ i)]
+  exact congrArg _ (Finset.prod_subtype (p := fun x => x ≠ i) (Finset.univ.erase i)
+    (fun x => by simp) (fun j => (μ j).prob (s j)))
+
+/-- The marginal of an independent product at one coordinate is that
+coordinate's own law. -/
+theorem map_apply_pi [DecidableEq ι] (i : ι) (μ : ∀ j, FinDist (A j)) :
+    map (fun s => s i) (pi μ) = μ i := by
+  rw [pi_eq_map_product i μ, map_comp,
+    show (fun s => s i) ∘ (Equiv.piSplitAt i A).symm = Prod.fst from funext fun p => by simp]
+  exact map_fst_product _ _
 
 /-- An independent draw lands on a tuple exactly when every coordinate is
 possible for its own factor. -/

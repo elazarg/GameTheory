@@ -310,4 +310,41 @@ theorem runBehavioral_ne_runMixed :
   rw [← hequal]
   exact mem_support_runBehavioral
 
+/-! ## The condition the counterexample violates
+
+The separation above is not an accident of this protocol's shape: it is exactly
+a player being asked to act twice at one information state. Naming that
+condition and refuting it here keeps the two facts attached to each other. -/
+
+theorem legalUpStart : twice.Legal Round.start (fun _ => some Vote.up) :=
+  legal_of_not_stopped rfl .up
+
+theorem realized_afterUp :
+    Round.after Vote.up ∈ (twice.step Round.start ⟨_, legalUpStart⟩).support :=
+  FinDist.mem_support_pure.2 rfl
+
+theorem legalDownAfter : twice.Legal (Round.after Vote.up) (fun _ => some Vote.down) :=
+  legal_of_not_stopped rfl .down
+
+theorem realized_done :
+    Round.done Vote.up Vote.down ∈
+      (twice.step (Round.after Vote.up) ⟨_, legalDownAfter⟩).support :=
+  FinDist.mem_support_pure.2 rfl
+
+/-- The play that votes `up` and then `down`. -/
+def votedTwice : Trace twice (Round.done Vote.up Vote.down) :=
+  .extend (.extend .start _ legalUpStart realized_afterUp) _ legalDownAfter realized_done
+
+/-- Along it, the player acted twice — and both times at the same information
+state, because all it ever saw was that play had not stopped. -/
+theorem actedAt_votedTwice : signals.actedAt () votedTwice = [false, false] := rfl
+
+/-- **So this protocol fails the condition**, which is why the two
+randomizations could come apart on it. -/
+theorem not_actsOnceAtEachInfoState : ¬ signals.ActsOnceAtEachInfoState := by
+  intro hactsOnce
+  have hnodup := hactsOnce () votedTwice
+  rw [actedAt_votedTwice] at hnodup
+  simp at hnodup
+
 end GameTheory.Tests.Repeat

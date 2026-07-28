@@ -182,6 +182,39 @@ theorem infoOf_extend (i : ι) {source target : E.State} (prior : Trace E source
         (S.publicSignal ⟨source, joint, isLegal, target, realized⟩) := by
   rw [infoOf]
 
+/-! ### Being asked twice at one information state
+
+A player asked to act twice at one information state cannot be committed by a
+single draw made in advance: a policy answers that information state once and
+for all, while a player randomizing locally draws again. The predicate below
+names the condition that rules this out.
+
+It is not recall. Recall is about what a player *remembers*; this is about
+whether it is *asked twice*, and a game can fail it while every player
+remembers everything. -/
+
+/-- The information states at which a player has acted along a history, most
+recent first. Passing through an information state without moving does not
+count: only a contribution of `some` action is a decision. -/
+def actedAt (S : InfoSignals E) (i : ι) :
+    {state : E.State} → Trace E state → List (S.InfoState i)
+  | _, .start => []
+  | _, .extend prior joint _ _ =>
+      match joint i with
+      | some _ => S.infoOf i prior :: S.actedAt i prior
+      | none => S.actedAt i prior
+
+@[simp]
+theorem actedAt_start (S : InfoSignals E) (i : ι) :
+    S.actedAt i (Trace.start : Trace E E.init) = [] := rfl
+
+/-- **No player is ever asked to act twice at one information state.** Stated
+over histories, so it constrains realized play rather than the syntax of the
+protocol: a state may recur freely as long as the player's information about it
+does not. -/
+def ActsOnceAtEachInfoState : Prop :=
+  ∀ (i : ι) {state : E.State} (trace : Trace E state), (S.actedAt i trace).Nodup
+
 end InfoSignals
 
 set_option linter.checkUnivs false in
@@ -391,7 +424,12 @@ end Profiles
 variable {M} in
 /-- A behavioral policy as a mixed one: draw the action for every information
 state in advance, independently. Whether the two laws agree is exactly the
-question above, and this construction is where it is asked. -/
+question above, and this construction is where it is asked.
+
+Scope: this draws for *every* information state, so it asks the player's
+information states to be finite in number. Play with a bounded horizon visits
+only finitely many of them whether or not the rest are finite, so the weaker
+hypothesis would suffice; it is not taken here, because nothing yet needs it. -/
 def BehavioralPolicy.toMixed [∀ i, Fintype (M.InfoState i)] {i : ι}
     (policy : M.BehavioralPolicy i) : M.MixedPolicy i :=
   FinDist.pi policy

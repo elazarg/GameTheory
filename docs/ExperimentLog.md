@@ -735,5 +735,28 @@ but should not erase their evidence.
 - **Outcome:** narrows — keep both randomizations over the shared `Choice`; the
   equivalence needs a no-revisit hypothesis, whose necessity is now recorded as a
   theorem instead of assumed
-- **Next action:** state and prove the equivalence under that hypothesis, then
-  the direction that needs recall.
+- **Next action:** state and prove the equivalence under
+  `ActsOnceAtEachInfoState`, then the direction that needs recall. The
+  factorization primitive is now in place; what is not yet settled is how the
+  induction carries the set of already-consulted information states, since the
+  coordinates a play consults are themselves random. See the addendum below.
+
+#### Addendum: the primitive the equivalence needs
+
+Predicted before the equivalence was attempted, and then narrowed by building
+it. The prediction was a peel law for the finite product, and that is now
+`FinDist.pi_eq_map_product`: a finite product factors at any one coordinate into
+that coordinate's law and an independent law of the rest. `map_apply_pi`, the
+marginal, falls out of it, and the basic mass API it rests on —
+`prob_map_of_injective`, `prob_product`, `map_fst_product` — was missing for
+operations the module already exported.
+
+What building it clarified is that the peel is not by itself the whole story.
+The coordinates a play consults are chosen by the play, so they are random, and
+an induction over fuel meets a *growing set of already-consulted information
+states* rather than one fixed coordinate. Two shapes are therefore in view: peel
+one coordinate and shrink the index type, which is what `pi_eq_map_product`
+does; or fix a family of *distinct* coordinates and factor them all at once,
+which states the independence the no-revisit condition supplies but needs a
+finite-product Fubini for `expect` that this module does not have. Only the
+first was built, because only the first has a consumer today.
