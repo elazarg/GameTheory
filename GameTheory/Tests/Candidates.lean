@@ -130,11 +130,11 @@ theorem candidates_agree_leave :
     Tree.eval coinTree leavePlan = coinThenMove.runFor leavePolicy 2 .chance := by
   rw [eval_coinTree_leave, runFor_two_leave]
 
-/-! ## Probe 2: the tree candidate is also sensitive to the plan
+/-! ## Probe 2: the tree is also sensitive to the plan
 
-The same hole that review found in the protocol slice would be invisible here
-without this. An evaluator that ignored the contingent plan would make the two
-plans agree. -/
+An evaluator that consulted the contingent plan and then ignored it would make
+the two plans agree, and every other test here would still pass. This is what
+rules that out. -/
 
 theorem takePlan_ne_leavePlan :
     Tree.eval coinTree takePlan ≠ Tree.eval coinTree leavePlan := by

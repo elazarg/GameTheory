@@ -12,7 +12,7 @@ continues forever. Terminal states are its minimal elements automatically,
 because legality already contains non-terminality, so there is no separate base
 case to state.
 
-The module is organised so that the answer is readable off its structure.
+The module is organised so that the cost is readable off its structure.
 
 * `Successor` is the one-step realized-transition relation, oriented the way
   `WellFounded` consumes a relation. It is `StepEvent` with the data forgotten,
@@ -37,10 +37,10 @@ The module is organised so that the answer is readable off its structure.
   induction is not a second semantics for the same protocol but a second view of
   the same one.
 
-The final section is a discriminating probe, not a smoke test. Earlier review
-lesson was that a slice can pass every test while being insensitive to the thing
-it claims to test, so the probe is built to *fail* for named wrong
-implementations; `BackwardProbe` records which ones.
+The final section is a discriminating probe, not a smoke test. A value function
+can satisfy every equation stated about it while being insensitive to the thing
+it claims to compute, so the probe is built to *fail* for named wrong
+implementations; `BackwardProbe` writes those down and refutes each.
 -/
 
 import GameTheory.Protocol.Execution

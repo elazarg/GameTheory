@@ -128,6 +128,26 @@ Report 'EXECUTION_IMPORTS_INFORMATION' $executionBad
 # 3. Sizes
 # --------------------------------------------------------------------------
 
+# Line width is a style guide, not a gate, so these are reported rather than
+# verified. They carry their threshold in the name: an unqualified "long lines"
+# count is ambiguous, because the answer moves with where the limit is drawn.
+$LibraryFiles = @(Get-ChildItem -Path (Join-Path $RepoRoot 'GameTheory') -Filter '*.lean' -Recurse |
+  ForEach-Object { $_.FullName.Substring($RepoRoot.Length + 1).Replace('\', '/') } |
+  Where-Object { -not $_.StartsWith('GameTheory/Experimental') })
+$widest = 0
+$over90 = 0
+$over100 = 0
+foreach ($f in $LibraryFiles) {
+  foreach ($line in [IO.File]::ReadAllLines((Join-Path $RepoRoot $f))) {
+    if ($line.Length -gt $widest) { $widest = $line.Length }
+    if ($line.Length -gt 90) { $over90++ }
+    if ($line.Length -gt 100) { $over100++ }
+  }
+}
+Report 'LIBRARY_MAX_LINE_LENGTH' $widest
+Report 'LIBRARY_LINES_OVER_90' $over90
+Report 'LIBRARY_LINES_OVER_100' $over100
+
 Report 'NONBLANK_PROTOCOL' (Measure-Nonblank $ProtocolFiles)
 Report 'NONBLANK_LANGUAGES' (Measure-Nonblank $LanguageFiles)
 Report 'PROTOCOL_MODULES' $ProtocolFiles.Count
@@ -173,6 +193,10 @@ if ($VerifyExpected) {
     SORRY_OR_ADMIT_SEQUENTIAL = 0
     CUSTOM_AXIOM_SEQUENTIAL = 0
     EXECUTION_IMPORTS_INFORMATION = 0
+    # The 90-column guide is soft and 52 lines exceed it, but nothing in the
+    # library exceeds 100. That ceiling holds today, so it is locked here to
+    # stop it drifting.
+    LIBRARY_LINES_OVER_100 = 0
   }
   if (-not $SkipReachability) { $Expected['UNREACHABLE_PROBES_PASSED'] = 3 }
   foreach ($entry in $Expected.GetEnumerator()) {
