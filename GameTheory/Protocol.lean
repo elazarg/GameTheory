@@ -9,9 +9,13 @@ finite-support distributions; `Trace` records histories as data, which is what
 makes uniqueness of history a real property rather than a vacuous one.
 `History` runs the protocol along those histories, which is what a player
 choosing from what it has seen requires, and proves the state law is that law's
-pushforward. `Information` keeps a policy's domain to what its owner can see, by
-typing rather than by a side condition. `Backward` supplies the well-founded
-recursion and proves it computes the same value as the fuelled runner.
+pushforward. `Randomized` lets the answer at a history be a law rather than a
+single action, with deterministic play as the point-mass case. `Information`
+keeps a policy's domain to what its owner can see, by typing rather than by a
+side condition, and is where a player's randomness is placed either at each
+information state or once over whole policies. `Backward` supplies the
+well-founded recursion and proves it computes the same value as the fuelled
+runner.
 `Strategic` compiles a protocol into a static `GameForm`, which is where this
 layer meets `GameTheory.Core`.
 
@@ -24,6 +28,7 @@ import GameTheory.Protocol.Execution
 import GameTheory.Protocol.Tree
 import GameTheory.Protocol.Extraction
 import GameTheory.Protocol.History
+import GameTheory.Protocol.Randomized
 import GameTheory.Protocol.Backward
 import GameTheory.Protocol.Information
 import GameTheory.Protocol.Assessment

@@ -27,6 +27,7 @@ becomes difficult to scan.
 | EXP-014 | 2026-07-28 | D6 / Phase 3 | Can an influence diagram and a multi-round simultaneous game share one execution base without dummy data or escape fields? | Supports | `GameTheory/Languages/MAID.lean`; `GameTheory/Languages/Rounds.lean` |
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
+| EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Narrows | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Tests/Randomized.lean` |
 
 ## Entry template
 
@@ -700,3 +701,39 @@ but should not erase their evidence.
   then the one-shot-deviation theorem. Both are prerequisites for the
   behavioral/mixed equivalence transfer, which is the experiment that could
   reopen D7.
+
+### EXP-017: Two places to put randomness
+
+- **Date / revision:** 2026-07-29, working tree after the history-indexed runner
+- **Decision / question:** whether the sequential layer can carry both local and
+  global randomization over one `Choice` type, and what an equivalence between
+  them would have to assume. The risk is a third notion of play: if randomized
+  running does not reduce to deterministic running, the layer accumulates
+  competing semantics instead of one with special cases.
+- **Representative slice:** a protocol in which one player moves twice and
+  observes only whether play has stopped, so both decision points carry the same
+  information state
+- **Evidence:** `GameTheory/Protocol/Randomized.lean`;
+  `GameTheory/Tests/Randomized.lean`; `FinDist.mem_support_pi`
+- **Observation:** no third semantics. A chooser answering with point masses
+  induces exactly the deterministic law, and reading a deterministic profile as
+  behavioral, or as a mixed profile concentrated on it, likewise changes
+  nothing — three conservativity theorems rather than three conventions. The
+  independence of players' draws comes from the existing finite product of laws,
+  so nothing new was needed to combine them, and menu adequacy makes every drawn
+  joint action legal without a second argument.
+  The two placements do *not* agree in general, and the counterexample is now
+  machine-checked rather than inherited. Where one player meets one information
+  state twice, a behavioral policy draws afresh and can play both actions, while
+  a mixed policy is committed by its single draw and must repeat itself. The
+  separating event is exactly a pair of unequal actions at a repeated
+  information state.
+  That fixes the shape of the eventual equivalence. It cannot be proved without
+  forbidding a player to return to an information state it has already acted at,
+  which is the condition the pinned snapshot carries under a different name —
+  and which is *not* recall. Recall governs the other direction.
+- **Outcome:** narrows — keep both randomizations over the shared `Choice`; the
+  equivalence needs a no-revisit hypothesis, whose necessity is now recorded as a
+  theorem instead of assumed
+- **Next action:** state and prove the equivalence under that hypothesis, then
+  the direction that needs recall.

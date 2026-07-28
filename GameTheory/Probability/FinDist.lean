@@ -563,6 +563,20 @@ theorem prob_pi (μ : ∀ i, FinDist (A i)) (s : ∀ i, A i) :
   rw [ENNReal.toReal_prod]
   rfl
 
+/-- An independent draw lands on a tuple exactly when every coordinate is
+possible for its own factor. -/
+theorem mem_support_pi {μ : ∀ i, FinDist (A i)} {s : ∀ i, A i} :
+    s ∈ (pi μ).support ↔ ∀ i, s i ∈ (μ i).support := by
+  rw [← prob_pos_iff, prob_pi]
+  constructor
+  · intro hpos i
+    rw [← prob_pos_iff]
+    rcases (prob_nonneg (μ i) (s i)).lt_or_eq with hlt | hzero
+    · exact hlt
+    · exact absurd (Finset.prod_eq_zero (Finset.mem_univ i) hzero.symm) hpos.ne'
+  · exact fun hall =>
+      Finset.prod_pos fun i _ => prob_pos_iff.mpr (hall i)
+
 @[simp]
 theorem pi_pure [DecidableEq ι] (s : ∀ i, A i) :
     pi (fun i => pure (s i)) = pure s := by

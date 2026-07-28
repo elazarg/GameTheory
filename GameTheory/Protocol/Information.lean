@@ -51,7 +51,7 @@ fields. `InformationModel extends InfoSignals` keeps that a private detail:
 `M.InfoState`, `M.pushInfo`, and `M.infoOf` all resolve through the parent.
 -/
 
-import GameTheory.Protocol.History
+import GameTheory.Protocol.Randomized
 
 noncomputable section
 
@@ -214,10 +214,15 @@ The whole point of the module is the type below: it has no `E.State` argument,
 so information locality is not a theorem about policies — it is the reason a
 non-local policy cannot be written. -/
 
+/-- What a player may do at an information state. Legality rides on the type, so
+nothing built from `Choice` — deterministic, randomizing, or correlated — can
+name an action outside the menu. -/
+abbrev Choice (i : ι) (info : M.InfoState i) : Type _ :=
+  { choice : Option (E.Action i) // choice ∈ M.menu i info }
+
 /-- A player's policy: a choice from its own menu, given only its own
 information state. -/
-def Policy (i : ι) : Type _ :=
-  (info : M.InfoState i) → { choice : Option (E.Action i) // choice ∈ M.menu i info }
+def Policy (i : ι) : Type _ := (info : M.InfoState i) → M.Choice i info
 
 /-- A policy that also reads a correlated device's recommendation. The
 recommendation is one more information-local input; it is still not the
@@ -293,6 +298,111 @@ theorem runFrom_congr {first second : (i : ι) → M.Policy i}
     (fuel : ℕ) (h : E.History) : M.runFrom first fuel h = M.runFrom second fuel h :=
   ExecutionProtocol.runHistoryFor_congr
     (fun _ _ => Subtype.ext (funext fun i => hagree i _)) fuel h
+
+/-! ## Randomizing
+
+There are two places a player can put its randomness: at each information state
+separately, or once over whole policies. Both are built from the same `Choice`,
+so neither can name an illegal action, and both agree with a deterministic
+policy when every law is a point mass.
+
+Whether the two agree with *each other* is a different question, and it turns on
+whether play can return a player to an information state it has already acted
+at. A behavioral policy draws afresh on the second visit; a mixed policy is
+committed by its single draw. -/
+
+/-- Local randomization: one law over its own menu at each information state. -/
+def BehavioralPolicy (i : ι) : Type _ :=
+  (info : M.InfoState i) → FinDist (M.Choice i info)
+
+/-- Global randomization: one law over deterministic policies. -/
+def MixedPolicy (i : ι) : Type _ := FinDist (M.Policy i)
+
+variable {M} in
+/-- A deterministic policy read as a behavioral one that never really
+randomizes. -/
+def Policy.toBehavioral {i : ι} (policy : M.Policy i) : M.BehavioralPolicy i :=
+  fun info => FinDist.pure (policy info)
+
+section Profiles
+
+variable [Fintype ι]
+
+/-- The law over legal joint actions a behavioral profile induces after a
+history: every player draws from its own menu, and the draws are independent
+because nothing couples them. Menu adequacy is what makes each drawn joint
+action legal, so randomizing needs no legality argument the deterministic case
+did not already have. -/
+def behavioralJoint (policies : (i : ι) → M.BehavioralPolicy i) {state : E.State}
+    (trace : Trace E state) (hterm : ¬ E.terminal state) :
+    FinDist { joint : ∀ i, Option (E.Action i) // E.Legal state joint } :=
+  FinDist.map
+    (fun draws => ⟨fun i => (draws i).1,
+      ExecutionProtocol.legal_of_legalOption hterm fun i =>
+        (M.menu_adequate i trace (draws i).1).mp (draws i).2⟩)
+    (FinDist.pi fun i => policies i (M.infoOf i trace))
+
+/-- A behavioral profile, as a chooser. -/
+def randomizedChooser (policies : (i : ι) → M.BehavioralPolicy i) : E.RandomizedChooser :=
+  fun h hterm => M.behavioralJoint policies h.trace hterm
+
+/-- The law over histories a behavioral profile induces from a given history. -/
+def runBehavioralFrom (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) (h : E.History) :
+    FinDist E.History :=
+  E.runRandomizedFor (M.randomizedChooser policies) fuel h
+
+/-- The law over histories a behavioral profile induces from the start. -/
+def runBehavioral (policies : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) : FinDist E.History :=
+  M.runBehavioralFrom policies fuel E.initHistory
+
+/-- The law a mixed profile induces: draw a deterministic profile once, then
+play it. The single draw is the whole difference from the behavioral case. -/
+def runMixedFrom (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) (h : E.History) :
+    FinDist E.History :=
+  (FinDist.pi mixed).bind fun policies => M.runFrom policies fuel h
+
+/-- The law a mixed profile induces from the start. -/
+def runMixed (mixed : (i : ι) → M.MixedPolicy i) (fuel : ℕ) : FinDist E.History :=
+  M.runMixedFrom mixed fuel E.initHistory
+
+/-- **Behavioral play extends deterministic play.** Reading a deterministic
+profile as behavioral changes nothing about the law it induces. -/
+theorem runBehavioralFrom_toBehavioral [DecidableEq ι] (policies : (i : ι) → M.Policy i)
+    (fuel : ℕ) (h : E.History) :
+    M.runBehavioralFrom (fun i => (policies i).toBehavioral) fuel h =
+      M.runFrom policies fuel h := by
+  have hchooser : M.randomizedChooser (fun i => (policies i).toBehavioral) =
+      (M.historyChooser policies).toRandomized := by
+    funext h' hterm
+    rw [randomizedChooser, behavioralJoint, ExecutionProtocol.HistoryChooser.toRandomized]
+    simp only [Policy.toBehavioral, FinDist.pi_pure, FinDist.map_pure]
+    rfl
+  rw [runBehavioralFrom, hchooser, runFrom, ExecutionProtocol.runRandomizedFor_toRandomized]
+
+/-- **Mixed play extends deterministic play**, for the same reason and by the
+other route. -/
+theorem runMixedFrom_pure [DecidableEq ι] (policies : (i : ι) → M.Policy i)
+    (fuel : ℕ) (h : E.History) :
+    M.runMixedFrom (fun i => FinDist.pure (policies i)) fuel h = M.runFrom policies fuel h := by
+  rw [runMixedFrom, FinDist.pi_pure, FinDist.pure_bind]
+
+end Profiles
+
+variable {M} in
+/-- A behavioral policy as a mixed one: draw the action for every information
+state in advance, independently. Whether the two laws agree is exactly the
+question above, and this construction is where it is asked. -/
+def BehavioralPolicy.toMixed [∀ i, Fintype (M.InfoState i)] {i : ι}
+    (policy : M.BehavioralPolicy i) : M.MixedPolicy i :=
+  FinDist.pi policy
+
+variable {M} in
+/-- The construction is the right one in the degenerate case: a deterministic
+policy, randomized nowhere, comes back as the point mass at itself. -/
+theorem Policy.toBehavioral_toMixed [∀ i, Fintype (M.InfoState i)]
+    [∀ i, DecidableEq (M.InfoState i)] {i : ι} (policy : M.Policy i) :
+    policy.toBehavioral.toMixed = FinDist.pure policy :=
+  FinDist.pi_pure policy
 
 /-! ## Information sets and beliefs
 
