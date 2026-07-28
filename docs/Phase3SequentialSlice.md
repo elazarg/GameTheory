@@ -1,7 +1,8 @@
 # Phase 3 sequential vertical slice
 
-Status: in progress. D6 is decided; the language encodings, D7, and the
-finalization of D0 are outstanding.
+Status: in progress. D6 is decided and one language encoding is done; the
+simultaneous-language encoding, D7, and the finalization of D0 are
+outstanding.
 
 ## What was built
 
@@ -14,6 +15,7 @@ finalization of D0 are outstanding.
 | `GameTheory/Protocol/Information.lean` | signals, information states, information-local policies, menus and their adequacy law, beliefs |
 | `GameTheory/Protocol/Assessment.lean` | contexts, local optimality, the one-shot-deviation interface, sequential rationality |
 | `GameTheory/Protocol/Strategic.lean` | compilation of a protocol into a static `GameForm` |
+| `GameTheory/Languages/MAID.lean` | a three-node influence diagram compiled into the execution and information layers, with its workaround list |
 
 ## Kill criteria
 
@@ -67,6 +69,7 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 |---|---:|
 | `GameTheory/Protocol` nonblank lines | 1391 |
 | `GameTheory/Protocol` modules | 7 |
+| `GameTheory/Languages` nonblank lines | 820 |
 | Source-level transport tokens in the sequential layer | 0 |
 | `Function.update` in the sequential layer | 0 |
 | `sorry`, `admit`, `native_decide`, custom axioms | 0 |
@@ -109,8 +112,25 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
    with an internal motive error. This has now recurred in five modules and is
    evidence about the signature-ownership decision, not an isolated waiver.
 
+## Language encodings
+
+A three-node influence diagram compiles into the execution and information
+layers with no fake players, no fake actions beyond the canonical no-op, and no
+escape fields — each recorded with a theorem in that module's `## Workarounds`
+section. The honest remainder is recorded there too, including one bounded
+limit: the diagram's DAG must be linearized, and a diagram with two
+incomparable decision nodes would make the compiled protocol assert an order the
+diagram does not have. That case is untested.
+
+That encoding also rediscovered finding 4 above independently, from a different
+direction.
+
 ## Outstanding
 
-- Language encodings and the written list of language-specific workarounds.
-- The certificate-versus-direct-bridge measurement, and hence D7.
-- Finalization of D0.
+- The two-round simultaneous encoding. One-round simultaneity is covered by
+  `Tests/Simultaneous.lean`, which is what decided the execution comparison, but
+  multi-round simultaneity with observation between rounds is untested.
+- The certificate-versus-direct-bridge measurement, and hence D7. This needs a
+  second language: with one transfer, the recorded budget awards a certificate
+  no credit and prescribes a direct named theorem instead.
+- Finalization of D0, which depends on the above.
