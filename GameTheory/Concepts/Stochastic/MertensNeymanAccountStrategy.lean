@@ -3512,6 +3512,85 @@ theorem isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
     hpayLower hpayUpper hvalueLower hvalueUpper
     hF hzs hVzs hq hlam0 hderiv hbound hlimit
 
+/-- A coordinatewise algebraic branch that becomes regular after a positive
+power reparameterization yields the zero-sum uniform payoff.
+
+Unlike `isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue`, this
+theorem does not ask for a derivative function or a derivative bound for the
+regular factors. A polynomial relation with a simple limiting root supplies
+that calculus data through
+`Math.puiseuxDerivativeEnvelope_of_regular_reparam_polynomial_root`. -/
+theorem isUniformEquilibriumPayoff_of_regular_reparam_algebraic_discountedValue
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (P : G.State → Polynomial (Polynomial ℝ))
+    (q ρw ρg : G.State → ℝ)
+    (g : G.State → ℝ → ℝ)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
+    (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (v lam))
+    (hzs : G.IsZeroSum)
+    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0)
+    (hq : ∀ z, 0 < q z)
+    (hρw : ∀ z, 0 < ρw z)
+    (hρg : ∀ z, 0 < ρg z)
+    (hreparam : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρw z) →
+      v lam z 0 = g z (lam ^ q z))
+    (hgcontinuousAt : ∀ z, ContinuousAt (g z) 0)
+    (hgcontinuousOn : ∀ z,
+      ContinuousOn (g z) (Set.Ioo 0 (ρg z)))
+    (hgroot : ∀ z t, t ∈ Set.Ioo (0 : ℝ) (ρg z) →
+      Math.bivEval (P z) t (g z t) = 0)
+    (hgregular : ∀ z,
+      Math.bivEval (Polynomial.derivative (P z)) 0 (g z 0) ≠ 0) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who => if who = 0 then g s₀ 0 else -g s₀ 0) := by
+  let g' : G.State → ℝ → ℝ := fun z t =>
+    -(Math.bivEval (Math.bivDerivLam (P z)) t (g z t)) /
+      Math.bivEval (Polynomial.derivative (P z)) t (g z t)
+  have hEnvelope : ∀ z, ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ lam, 0 < lam → lam < lam0 →
+        HasDerivAt (fun u => v u z 0)
+            (g' z (lam ^ q z) *
+              (q z * lam ^ (q z - 1))) lam ∧
+          |g' z (lam ^ q z) *
+              (q z * lam ^ (q z - 1))| ≤
+            lam ^ (q z - 1) / lam0 := by
+    intro z
+    exact Math.puiseuxDerivativeEnvelope_of_regular_reparam_polynomial_root
+      (P := P z) (w := fun lam => v lam z 0) (g := g z)
+      (hq z) (hρw z) (hρg z)
+      (hreparam z) (hgcontinuousAt z) (hgcontinuousOn z)
+      (hgroot z) (hgregular z)
+  choose lam0 hlam0 hEnvelope using hEnvelope
+  let v' : G.State → ℝ → ℝ := fun z lam =>
+    g' z (lam ^ q z) * (q z * lam ^ (q z - 1))
+  have hderiv : ∀ z lam, 0 < lam → lam < lam0 z →
+      HasDerivAt (fun u => v u z 0) (v' z lam) lam := by
+    intro z lam hlam hlam0'
+    exact (hEnvelope z lam hlam hlam0').1
+  have hbound : ∀ z lam, 0 < lam → lam < lam0 z →
+      |v' z lam| ≤ lam ^ (q z - 1) / lam0 z := by
+    intro z lam hlam hlam0'
+    exact (hEnvelope z lam hlam hlam0').2
+  have hlimit : ∀ z,
+      Tendsto (fun lam => v lam z 0)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (g z 0)) := by
+    intro z
+    exact Math.tendsto_zero_of_rpow_reparam
+      (hq z) (hρw z) (hreparam z) (hgcontinuousAt z)
+  exact isUniformEquilibriumPayoff_of_puiseux_discountedValue
+    (fun z => g z 0) s₀
+    hpayLower hpayUpper hvalueLower hvalueUpper
+    hF hzs hVzs hq hlam0 hderiv hbound hlimit
+
 /-- Regular algebraic discounted-value branches yield the zero-sum
 uniform payoff without a Newton--Puiseux construction.
 

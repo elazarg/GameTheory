@@ -134,6 +134,9 @@ polynomial's root set.
 * `puiseuxDerivativeEnvelope_of_rpow_reparam`: a local representation
   `w(λ) = g(λ^q)` with `q > 0` and bounded `g'` gives the exact normalized
   derivative envelope consumed by the account construction.
+* `puiseuxDerivativeEnvelope_of_regular_reparam_polynomial_root`: if the
+  ramified factor `g` is a simple polynomial root at zero, its derivative
+  and bound are derived automatically.
 * `tendsto_zero_of_rpow_reparam`: if the same regular factor `g` is continuous
   at zero, the selected branch tends to `g(0)` from positive rates.
 * `puiseuxDerivativeEnvelope_of_regular_polynomial_root`: a polynomial branch
@@ -888,6 +891,68 @@ theorem puiseuxDerivativeEnvelope_of_rpow_reparam
     _ = lam ^ (q - 1) / lam0 := by
       rw [div_eq_mul_inv]
       ring
+
+/-- A ramified algebraic branch whose regular factor is a simple polynomial
+root supplies the normalized Puiseux derivative envelope.
+
+The factor derivative and its bound are not hypotheses: the implicit function
+theorem derives both from the polynomial relation after ramification. The two
+radii distinguish the original representation interval for
+`w(λ) = g(λ^q)` from the interval on which `g` is a regular polynomial root. -/
+theorem puiseuxDerivativeEnvelope_of_regular_reparam_polynomial_root
+    {P : Polynomial (Polynomial ℝ)}
+    {w g : ℝ → ℝ} {q ρw ρg : ℝ}
+    (hq : 0 < q) (hρw : 0 < ρw) (hρg : 0 < ρg)
+    (hreparam : ∀ lam ∈ Set.Ioo (0 : ℝ) ρw,
+      w lam = g (lam ^ q))
+    (hg0 : ContinuousAt g 0)
+    (hg : ContinuousOn g (Set.Ioo 0 ρg))
+    (hroot : ∀ t ∈ Set.Ioo (0 : ℝ) ρg,
+      bivEval P t (g t) = 0)
+    (hD0 : bivEval (Polynomial.derivative P) 0 (g 0) ≠ 0) :
+    let g' := fun t =>
+      -(bivEval (bivDerivLam P) t (g t)) /
+        bivEval (Polynomial.derivative P) t (g t)
+    ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ lam, 0 < lam → lam < lam0 →
+        HasDerivAt w
+            (g' (lam ^ q) * (q * lam ^ (q - 1))) lam ∧
+          |g' (lam ^ q) * (q * lam ^ (q - 1))| ≤
+            lam ^ (q - 1) / lam0 := by
+  dsimp only
+  obtain ⟨ρ', K, hρ', hρ'ρg, hK, hregular⟩ :=
+    exists_regularPolynomialDerivativeBound
+      hρg hg0 hg hroot hD0
+  let a := min ρ' 1
+  let δ := a ^ q⁻¹
+  let ρ := min ρw δ
+  have ha : 0 < a := lt_min hρ' zero_lt_one
+  have hδ : 0 < δ := Real.rpow_pos_of_pos ha _
+  have hρ : 0 < ρ := lt_min hρw hδ
+  have hpowδ : δ ^ q = a := by
+    dsimp [δ]
+    exact Real.rpow_inv_rpow ha.le hq.ne'
+  have ht (lam : ℝ) (hlam : lam ∈ Set.Ioo (0 : ℝ) ρ) :
+      lam ^ q ∈ Set.Ioo (0 : ℝ) ρ' := by
+    have hlamδ : lam < δ :=
+      hlam.2.trans_le (min_le_right ρw δ)
+    have hlt :
+        lam ^ q < δ ^ q :=
+      Real.rpow_lt_rpow hlam.1.le hlamδ hq
+    rw [hpowδ] at hlt
+    exact ⟨Real.rpow_pos_of_pos hlam.1 q,
+      hlt.trans_le (min_le_left ρ' 1)⟩
+  exact puiseuxDerivativeEnvelope_of_rpow_reparam
+    (w := w) (g := g)
+    (g' := fun t =>
+      -(bivEval (bivDerivLam P) t (g t)) /
+        bivEval (Polynomial.derivative P) t (g t))
+    hq hρ hK
+    (fun lam hlam =>
+      hreparam lam ⟨hlam.1,
+        hlam.2.trans_le (min_le_left ρw δ)⟩)
+    (fun lam hlam => (hregular (lam ^ q) (ht lam hlam)).1)
+    (fun lam hlam => (hregular (lam ^ q) (ht lam hlam)).2)
 
 /-- A regular polynomial branch satisfies the normalized account
 envelope with Puiseux exponent `q = 1`.
