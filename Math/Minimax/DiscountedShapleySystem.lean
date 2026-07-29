@@ -42,10 +42,10 @@ open scoped BigOperators
 namespace ShapleySnow
 
 noncomputable def discountedStochasticEntry
-    {κ : Type*} [Fintype κ] {m n : ℕ}
-    (r : Fin m → Fin n → ℝ)
-    (T : Fin m → Fin n → κ → ℝ)
-    (i : Fin m) (j : Fin n) :
+    {κ I J : Type*} [Fintype κ]
+    (r : I → J → ℝ)
+    (T : I → J → κ → ℝ)
+    (i : I) (j : J) :
     MvPolynomial (Option κ) ℝ :=
   MvPolynomial.X none * MvPolynomial.C (r i j) +
     (1 - MvPolynomial.X none) *
@@ -54,10 +54,10 @@ noncomputable def discountedStochasticEntry
 
 @[simp]
 theorem eval_discountedStochasticEntry
-    {κ : Type*} [Fintype κ] {m n : ℕ}
-    (r : Fin m → Fin n → ℝ)
-    (T : Fin m → Fin n → κ → ℝ)
-    (i : Fin m) (j : Fin n)
+    {κ I J : Type*} [Fintype κ]
+    (r : I → J → ℝ)
+    (T : I → J → κ → ℝ)
+    (i : I) (j : J)
     (a : Option κ → ℝ) :
     MvPolynomial.eval a
         (discountedStochasticEntry r T i j) =
@@ -66,13 +66,12 @@ theorem eval_discountedStochasticEntry
   simp [discountedStochasticEntry]
 
 theorem discountedStochastic_borderedKernelPoly_ne_zero
-    {κ : Type*} [Fintype κ]
-    {m n : ℕ}
-    (r : Fin m → Fin n → ℝ)
-    (T : Fin m → Fin n → κ → ℝ)
+    {κ I J : Type*} [Fintype κ]
+    (r : I → J → ℝ)
+    (T : I → J → κ → ℝ)
     (target : κ)
     {sz : ℕ} (hr : 0 < sz)
-    (rows : Fin sz ↪ Fin m) (cols : Fin sz ↪ Fin n)
+    (rows : Fin sz ↪ I) (cols : Fin sz ↪ J)
     (hborder :
       (borderedMatrix
         ((Matrix.of
@@ -277,20 +276,35 @@ theorem exists_nonzero_mvPolynomial_of_forall_mem_exists
     rw [if_pos hk0]
     exact hkeval
 
+/-- A square kernel size, bounded by the row cardinality, together with its
+row and column embeddings into arbitrary finite action types. -/
+def ActionKernelShape (I J : Type*) [Fintype I] : Type _ :=
+  Σ sz : Fin (Fintype.card I + 1),
+    (Fin sz.val ↪ I) × (Fin sz.val ↪ J)
+
+noncomputable instance instFiniteActionKernelShape
+    (I J : Type*) [Fintype I] [Finite J] :
+    Finite (ActionKernelShape I J) := by
+  letI : Fintype J := Fintype.ofFinite J
+  unfold ActionKernelShape
+  infer_instance
+
+/-- The bordered-kernel candidate associated to a kernel shape in an
+arbitrary finite action matrix. -/
 noncomputable def mvBorderedKernelPoly
-    {σ : Type*} {m n : ℕ}
-    (E : Fin m → Fin n → MvPolynomial σ ℝ)
+    {σ I J : Type*} [Fintype I]
+    (E : I → J → MvPolynomial σ ℝ)
     (target : σ) :
-    KernelShape m n → MvPolynomial σ ℝ :=
-  fun ⟨_r, rows, cols⟩ =>
+    ActionKernelShape I J → MvPolynomial σ ℝ :=
+  fun ⟨_sz, rows, cols⟩ =>
     let B := (Matrix.of E).submatrix rows cols
     B.det - MvPolynomial.X target * (borderedMatrix B).det
 
 theorem exists_nonzero_mvPolynomial_of_discountedShapleySystem
-    {κ : Type*} [Fintype κ]
-    {m n : ℕ} [Nonempty (Fin m)] [Nonempty (Fin n)]
-    (r : κ → Fin m → Fin n → ℝ)
-    (T : κ → Fin m → Fin n → κ → ℝ)
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
     (w : ℝ → κ → ℝ)
     (S : Set ℝ)
     (hw : ∀ l ∈ S, ∀ s,
@@ -310,13 +324,13 @@ theorem exists_nonzero_mvPolynomial_of_discountedShapleySystem
       (some target))
     S (fun l x => Option.casesOn x l (w l))
   intro l hl
-  let A : Matrix (Fin m) (Fin n) ℝ :=
+  let A : Matrix I J ℝ :=
     fun i j =>
       l * r target i j +
         (1 - l) * ∑ z, T target i j z * w l z
   obtain ⟨sz, hsz, rows, cols, hborder, hvalue⟩ :=
     exists_bordered_kernel A
-  have hszm : sz ≤ m := by
+  have hszm : sz ≤ Fintype.card I := by
     have := Fintype.card_le_of_embedding rows
     simpa using this
   let a : Option κ → ℝ :=
