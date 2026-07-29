@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Real.Basic
+import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-!
@@ -31,6 +32,9 @@ the exact algebraic condition that the formal resultant is nonzero.
   eliminant carries information.
 * `bivariateOfEquiv`: encode a polynomial whose variable type has two elements
   as a nested bivariate polynomial.
+* `exists_nonunit_commonFactor_map_fractionRing_of_resultant_eq_zero`: interpret
+  a zero resultant as a genuine common factor over the coefficient fraction
+  field.
 -/
 
 noncomputable section
@@ -248,6 +252,78 @@ theorem eval_bivariateOfEquiv
       congr
       funext x
       simp [b]
+
+/-- A zero formal resultant becomes non-coprimality after mapping the
+coefficient ring to its fraction field. -/
+theorem not_isCoprime_map_fractionRing_of_resultant_eq_zero
+    {σ : Type*} (i : σ)
+    {P Q : MvPolynomial σ ℝ} (hP : P ≠ 0)
+    (hres :
+      Polynomial.resultant
+        (isolateVariable i P) (isolateVariable i Q) = 0) :
+    let A := MvPolynomial {j : σ // j ≠ i} ℝ
+    let K := FractionRing A
+    ¬ IsCoprime
+      ((isolateVariable i P).map (algebraMap A K))
+      ((isolateVariable i Q).map (algebraMap A K)) := by
+  classical
+  dsimp only
+  let A := MvPolynomial {j : σ // j ≠ i} ℝ
+  let K := FractionRing A
+  let φ : A →+* K := algebraMap A K
+  have hφ : Function.Injective φ :=
+    IsFractionRing.injective A K
+  have hPi : isolateVariable i P ≠ 0 :=
+    (isolateVariable i).injective.ne hP
+  have hfne : (isolateVariable i P).map φ ≠ 0 :=
+    (Polynomial.map_ne_zero_iff hφ).mpr hPi
+  have hmap := congrArg φ hres
+  have hresK :
+      Polynomial.resultant
+        ((isolateVariable i P).map φ)
+        ((isolateVariable i Q).map φ) = 0 := by
+    simpa only [map_zero, Polynomial.resultant_map_map,
+      Polynomial.natDegree_map_eq_of_injective hφ] using hmap
+  exact (Polynomial.resultant_eq_zero_iff.mp hresK).2
+
+/-- A zero formal resultant supplies a nonzero, nonunit common polynomial
+factor after adjoining fractions of the remaining-variable coefficient ring. -/
+theorem exists_nonunit_commonFactor_map_fractionRing_of_resultant_eq_zero
+    {σ : Type*} (i : σ)
+    {P Q : MvPolynomial σ ℝ} (hP : P ≠ 0)
+    (hres :
+      Polynomial.resultant
+        (isolateVariable i P) (isolateVariable i Q) = 0) :
+    let A := MvPolynomial {j : σ // j ≠ i} ℝ
+    let K := FractionRing A
+    ∃ H : Polynomial K,
+      H ≠ 0 ∧ ¬ IsUnit H ∧
+        H ∣ (isolateVariable i P).map (algebraMap A K) ∧
+        H ∣ (isolateVariable i Q).map (algebraMap A K) := by
+  classical
+  dsimp only
+  let A := MvPolynomial {j : σ // j ≠ i} ℝ
+  let K := FractionRing A
+  let f := (isolateVariable i P).map (algebraMap A K)
+  let g := (isolateVariable i Q).map (algebraMap A K)
+  have hf : f ≠ 0 := by
+    apply (Polynomial.map_ne_zero_iff
+      (IsFractionRing.injective A K)).mpr
+    exact (isolateVariable i).injective.ne hP
+  have hcop : ¬ IsCoprime f g := by
+    exact
+      not_isCoprime_map_fractionRing_of_resultant_eq_zero
+        i hP hres
+  let H := gcd f g
+  refine ⟨H, ?_, ?_, gcd_dvd_left f g, gcd_dvd_right f g⟩
+  · intro hH
+    have hz : (0 : Polynomial K) ∣ f := by
+      simpa [H, hH] using gcd_dvd_left f g
+    exact hf (zero_dvd_iff.mp hz)
+  · change ¬ IsUnit (gcd f g)
+    rw [gcd_isUnit_iff_isRelPrime,
+      isRelPrime_iff_isCoprime]
+    exact hcop
 
 end MultivariateElimination
 end Math
