@@ -334,6 +334,47 @@ theorem
     norm_num
   exact (not_lt_of_ge hnonpos) hpos
 
+namespace NormalizedFinkSupportTangentObstructionFlow
+
+/-- Every normalized obstruction exposes one of two semantically distinct
+response coordinates.  A transition-visible coordinate changes the
+next-state kernel.  At a transition-invisible coordinate all continuation
+gains vanish, so positive alignment is carried entirely by the stage gain and
+must be handled by a payoff charge or punishment response. -/
+theorem exists_positive_transition_coordinate_or_positive_stage_coordinate
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K) :
+    (∃ s, ∃ who, ∃ d : G.Act who,
+      G.finkProfile z s who d ≠ 0 ∧
+        G.finkPureDeviationStateKernel z s who d ≠
+          G.finkStateKernel z s ∧
+        0 < F.actionWeight s who d *
+          (G.finkStageGain z s who d +
+            G.finkContinuationGain (H - K) z s who d)) ∨
+      ∃ s, ∃ who, ∃ d : G.Act who,
+        G.finkProfile z s who d ≠ 0 ∧
+          G.finkPureDeviationStateKernel z s who d =
+            G.finkStateKernel z s ∧
+          0 < F.actionWeight s who d * G.finkStageGain z s who d := by
+  obtain ⟨s, who, d, hsupp, hpositive⟩ :=
+    F.exists_positive_target_coordinate
+  by_cases hkernel :
+      G.finkPureDeviationStateKernel z s who d = G.finkStateKernel z s
+  · right
+    refine ⟨s, who, d, hsupp, hkernel, ?_⟩
+    have hzero :=
+      G.finkContinuationGain_eq_zero_of_pureDeviationStateKernel_eq
+        (H - K) z s who d hkernel
+    rw [hzero, add_zero] at hpositive
+    exact hpositive
+  · left
+    exact ⟨s, who, d, hsupp, hkernel, hpositive⟩
+
+end NormalizedFinkSupportTangentObstructionFlow
+
 /-- A normalized obstruction flow must charge at least one supported action
 whose tangent target is nonzero.  Thus the coordinate certificate contains a
 concrete location at which any obstruction response has to act. -/
@@ -678,6 +719,24 @@ theorem selection_normalizedObstructionFlow_positive_live_playerOne_actionA :
       selection_normalizedObstructionFlow_actionWeight_live_playerOne_actionA,
       selection_tangentTarget_live_playerOne_actionA]
     norm_num
+
+/-- The selection-resistant acceptance example realizes the
+transition-invisible stage-payoff branch of the generic response dichotomy. -/
+theorem selection_normalizedObstructionFlow_positive_stage_coordinate :
+    game.finkProfile selectionLimitPoint .live false false ≠ 0 ∧
+      game.finkPureDeviationStateKernel
+          selectionLimitPoint .live false false =
+        game.finkStateKernel selectionLimitPoint .live ∧
+      0 <
+        selectionTangentDualObstruction.normalize.toObstructionFlow.actionWeight
+          .live false false *
+          game.finkStageGain selectionLimitPoint .live false false := by
+  refine ⟨selection_limit_live_playerOne_actionA_support,
+    selection_pureDeviationStateKernel_live_playerOne_actionA_eq, ?_⟩
+  rw [
+    selection_normalizedObstructionFlow_actionWeight_live_playerOne_actionA,
+    selection_finkStageGain_limit_live_playerOne_actionA]
+  norm_num
 
 /-- The selection-resistant flow necessarily identifies a supported action
 with nonzero tangent target and nonzero obstruction weight. -/

@@ -481,6 +481,20 @@ theorem finkContinuationGain_eq_expect_stateKernels
     G.expect_finkStateKernel_eq]
   rfl
 
+/-- If a pure unilateral deviation leaves the state kernel unchanged, then it
+has zero continuation gain against every state-payoff vector. -/
+theorem finkContinuationGain_eq_zero_of_pureDeviationStateKernel_eq
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hkernel :
+      G.finkPureDeviationStateKernel z s who d =
+        G.finkStateKernel z s) :
+    G.finkContinuationGain W z s who d = 0 := by
+  rw [G.finkContinuationGain_eq_expect_stateKernels, hkernel, sub_self]
+
 /-- Every Fink forcing splits into a harmonic recurrent obstruction and a
 Poisson-solvable transient part.  The obstruction is exactly the vector of
 Cesàro limits under the induced stationary state kernel. -/
