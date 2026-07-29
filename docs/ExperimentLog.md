@@ -1231,6 +1231,25 @@ memory.
   place, which was the original competition's subject and is not re-run here; and
   whether anything in the library needs a collection of protocols with differing
   carriers, which only the bundled form admits.
-- **Next action:** measure the flip on one real module rather than a toy — the
-  honest cost is what it takes to move `Execution.lean` and its dependents, not
-  what a fresh file looks like.
+- **Second observation: nothing requires bundling, and the static layer halves
+  rather than clears.**
+  Nothing in the library needs the carriers stored. No structure holds a protocol
+  as a field, nothing quantifies over protocols whose carriers must vary, and no
+  signature mentions two of them. The one argument that would have settled the
+  question in bundling's favour — that some use needs a collection of protocols
+  with differing carriers — has no instance here.
+  At the static layer, where the decision was actually taken, the cost is
+  smaller than the sequential one and the spike says so rather than overstating
+  it. Indexing removes the two facts the accepted design must state,
+  `mapOutcome_sig` and `mixed_sig`, along with the two annotations that make them
+  hold: with no projection there is nothing to state and the form transformers
+  can be plain definitions. It does **not** remove the need for the two
+  `GameSignature` transformers to be reducible — the indexed form's field types
+  still reduce through them. Four annotations against two: a halving, not an
+  elimination.
+  The cascade is shallow. Exactly two structures store one of these: a form
+  stores a signature, and a utility game stores a form.
+- **Next action:** the flip cost on real code. Both spikes are greenfield, and
+  what a fresh file looks like is not what moving `Execution.lean` and its ten
+  dependents costs. That measurement is the one thing still missing, and it is
+  the one that decides.
