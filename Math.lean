@@ -39,6 +39,8 @@ import Math.Minimax.Loomis
 import Math.Minimax.ShapleySnow
 import Math.LinearAlgebra.FourierMotzkin
 import Math.LinearAlgebra.Farkas
+import Math.LinearAlgebra.ConeSeparation
+import Math.LinearAlgebra.ApproximateCompatibility
 import Math.LinearAlgebra.PerronFrobenius
 import Math.LinearAlgebra.Pi
 import Math.LinearAlgebra.WeightedIncidence
