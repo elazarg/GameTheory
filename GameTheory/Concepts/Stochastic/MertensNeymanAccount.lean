@@ -216,6 +216,79 @@ theorem expect_nextAccount_sub
       {.up, .stay, .down} by decide]
   simp [moveProbability, nextAccount, expectedChange]
 
+/-- Closed form for the expected value of a scalar account potential after
+one stochastic account update. -/
+theorem expect_nextAccount_value
+    {γ M s y : ℝ} (h : IsValidScale γ s) (hyLower : -1 ≤ y)
+    (hyUpper : y ≤ 2) (V : ℝ → ℝ) :
+    expect (updatePMF γ M s y h hyLower hyUpper)
+        (fun move => V (nextAccount γ s move)) =
+      upProbability γ s y * V (γ * s) +
+        stayProbability γ M s y * V s +
+        downProbability γ M s y * V (γ⁻¹ * s) := by
+  classical
+  rw [expect_eq_sum]
+  rw [show (Finset.univ : Finset AccountMove) =
+      {.up, .stay, .down} by decide]
+  simp [moveProbability, nextAccount, add_assoc]
+
+/-- The probability-weighted variation bill for changing the account
+potential by one multiplicative step. -/
+def switchBudget (γ M s y : ℝ) (V : ℝ → ℝ) : ℝ :=
+  upProbability γ s y * |V (γ * s) - V s| +
+    downProbability γ M s y * |V (γ⁻¹ * s) - V s|
+
+/-- Expected switching, rather than pointwise switching, is controlled by
+the probability-weighted adjacent variation. This is the cancellation that
+allows rare account moves to avoid a pointwise relative-rate requirement.
+-/
+theorem value_sub_expect_nextAccount_value_ge_neg_switchBudget
+    {γ M s y : ℝ} (h : IsValidScale γ s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2) (V : ℝ → ℝ) :
+    -switchBudget γ M s y V ≤
+      V s -
+        expect (updatePMF γ M s y h hyLower hyUpper)
+          (fun move => V (nextAccount γ s move)) := by
+  have hup0 : 0 ≤ upProbability γ s y := upProbability_nonneg h
+  have hdown0 : 0 ≤ downProbability γ M s y :=
+    downProbability_nonneg h
+  have hupDiff :
+      -upProbability γ s y * |V (γ * s) - V s| ≤
+        upProbability γ s y * (V s - V (γ * s)) := by
+    have hdiff : -|V (γ * s) - V s| ≤ V s - V (γ * s) := by
+      rw [abs_sub_comm]
+      exact neg_abs_le _
+    nlinarith [mul_le_mul_of_nonneg_left hdiff hup0]
+  have hdownDiff :
+      -downProbability γ M s y * |V (γ⁻¹ * s) - V s| ≤
+        downProbability γ M s y * (V s - V (γ⁻¹ * s)) := by
+    have hdiff : -|V (γ⁻¹ * s) - V s| ≤
+        V s - V (γ⁻¹ * s) := by
+      rw [abs_sub_comm]
+      exact neg_abs_le _
+    nlinarith [mul_le_mul_of_nonneg_left hdiff hdown0]
+  rw [expect_nextAccount_value h hyLower hyUpper]
+  have hsum := probabilities_sum γ M s y
+  have hidentity :
+      V s -
+          (upProbability γ s y * V (γ * s) +
+            stayProbability γ M s y * V s +
+            downProbability γ M s y * V (γ⁻¹ * s)) =
+        upProbability γ s y * (V s - V (γ * s)) +
+          downProbability γ M s y * (V s - V (γ⁻¹ * s)) := by
+    calc
+      _ = (upProbability γ s y + stayProbability γ M s y +
+            downProbability γ M s y) * V s -
+          (upProbability γ s y * V (γ * s) +
+            stayProbability γ M s y * V s +
+            downProbability γ M s y * V (γ⁻¹ * s)) := by
+              rw [hsum]
+              ring
+      _ = _ := by ring
+  rw [hidentity]
+  unfold switchBudget
+  linarith
+
 /-- Away from the floor, the expected account increment equals the
 payoff/value gap exactly. -/
 theorem expectedChange_eq_of_floor_lt
@@ -294,6 +367,44 @@ theorem payoff_sub_switchedValue_ge
   have h_eps_lam : ε * lam ≤ ε := by
     exact mul_le_of_le_one_right hε hlam1
   nlinarith
+
+/-- Account-step payoff estimate with the switched value expressed as an
+actual expectation over the same account-update PMF. The analytic obligation
+is exactly the weighted `switchBudget ≤ ε * lam / 16`; no pointwise
+`O(lam)` bound on adjacent values is assumed. -/
+theorem payoff_sub_expectedNextValue_ge
+    {γ M s ε lam payoff : ℝ} {V : ℝ → ℝ}
+    (h : IsValidScale γ s) (hMs : M ≤ s)
+    (hε : 0 ≤ ε) (hlam1 : lam ≤ 1)
+    (hyLower : -1 ≤ payoff - V s + ε / 2)
+    (hyUpper : payoff - V s + ε / 2 ≤ 2)
+    (hbudget :
+      switchBudget γ M s (payoff - V s + ε / 2) V ≤ ε * lam / 16) :
+    -9 * ε / 16 +
+          expect
+            (updatePMF γ M s (payoff - V s + ε / 2) h
+              hyLower hyUpper)
+            (fun move => nextAccount γ s move - s) -
+          (if s = M then 1 else 0) ≤
+        payoff -
+          expect
+            (updatePMF γ M s (payoff - V s + ε / 2) h
+              hyLower hyUpper)
+            (fun move => V (nextAccount γ s move)) := by
+  have hswitchBase :=
+    value_sub_expect_nextAccount_value_ge_neg_switchBudget
+      (M := M) h hyLower hyUpper V
+  have hswitch :
+      -ε * lam / 16 ≤
+        V s -
+          expect
+            (updatePMF γ M s (payoff - V s + ε / 2) h
+              hyLower hyUpper)
+            (fun move => V (nextAccount γ s move)) := by
+    have := (neg_le_neg hbudget).trans hswitchBase
+    nlinarith
+  exact payoff_sub_switchedValue_ge h hMs hε hlam1
+    hyLower hyUpper hswitch
 
 /-- Finite-horizon telescope for the account-process payoff inequality.
 This is the deterministic expectation-level form of the summation step: a
