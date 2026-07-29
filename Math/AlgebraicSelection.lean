@@ -557,6 +557,43 @@ theorem boundedVariationOn_of_polynomial_root
   · exact ⟨ρ', hρ'mem,
       hanti.boundedVariationOn fun x hx => hC x (Set.Ioo_subset_Ioo_right hρ'mem.2 hx)⟩
 
+/-- A bounded continuous algebraic selection has a finite right-limit at
+zero. The resultant hypotheses make the selection eventually monotone or
+antitone; boundedness then gives the corresponding endpoint limit. -/
+theorem exists_tendsto_nhdsWithin_zero_of_polynomial_root
+    {ρ : ℝ} (hρ : 0 < ρ) {w : ℝ → ℝ}
+    (hw : ContinuousOn w (Set.Ioo 0 ρ))
+    {P : Polynomial (Polynomial ℝ)} (hP : P ≠ 0)
+    (hroot : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      bivEval P lam (w lam) = 0)
+    (hRv : Polynomial.resultant P (Polynomial.derivative P) ≠ 0)
+    (hRlam : Polynomial.resultant P (bivDerivLam P) ≠ 0)
+    {C : ℝ} (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      |w lam| ≤ C) :
+    ∃ L : ℝ, Filter.Tendsto w
+      (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (nhds L) := by
+  obtain ⟨ρ', hρ'mem, hmono | hanti⟩ :=
+    eventually_monotone_of_polynomial_root
+      hρ hw hP hroot hRv hRlam
+  · have hnonempty : (Set.Ioo (0 : ℝ) ρ').Nonempty := by
+      exact ⟨ρ' / 2, by constructor <;> linarith [hρ'mem.1]⟩
+    have hbdd : BddBelow (w '' Set.Ioo (0 : ℝ) ρ') := by
+      refine ⟨-C, ?_⟩
+      rintro y ⟨lam, hlam, rfl⟩
+      exact neg_le_of_abs_le
+        (hC lam (Set.Ioo_subset_Ioo_right hρ'mem.2 hlam))
+    exact ⟨sInf (w '' Set.Ioo (0 : ℝ) ρ'),
+      hmono.tendsto_nhdsWithin_Ioo_right hnonempty hbdd⟩
+  · have hnonempty : (Set.Ioo (0 : ℝ) ρ').Nonempty := by
+      exact ⟨ρ' / 2, by constructor <;> linarith [hρ'mem.1]⟩
+    have hbdd : BddAbove (w '' Set.Ioo (0 : ℝ) ρ') := by
+      refine ⟨C, ?_⟩
+      rintro y ⟨lam, hlam, rfl⟩
+      exact le_of_abs_le
+        (hC lam (Set.Ioo_subset_Ioo_right hρ'mem.2 hlam))
+    exact ⟨sSup (w '' Set.Ioo (0 : ℝ) ρ'),
+      hanti.tendsto_nhdsWithin_Ioo_right hnonempty hbdd⟩
+
 /-- **Target 2(b), interval control.** The value difference `w a - w b` is controlled by the
 total variation on the (order-independent) interval spanned by `a` and `b` — not by a
 decreasing-chain sum — which is what a criterion whose index moves in both directions needs:
