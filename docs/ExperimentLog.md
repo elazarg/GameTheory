@@ -1145,5 +1145,21 @@ memory.
   second and better reason. The level rejected earlier had no consumer; this one
   has no *content* — its conditions are either unnecessary or theorems of the
   layer that would have hosted them.
-- **Next action:** the guarded sharpening above, if the exact reduction is wanted.
-  Nothing else here is open.
+- **Fourth observation: the guarded sharpening is a level without a consumer,
+  and the same budget that rejected the certificate rejects it.** Its
+  prerequisite is done and was worth doing on its own: nested conditioning now
+  asks the smaller event to be smaller only *where the law lives*, which is the
+  true statement — what a law does outside its support is not something
+  conditioning can see. The earlier form was an artefact of the first proof.
+  Threading that through would replace the theorem's hypothesis by one relative
+  to the profile being run: the constraint sets need agree only on that
+  profile's support. That is genuinely weaker. But it is weaker in a direction
+  nothing yet asks for — a model failing the profile-independent condition while
+  satisfying the relative one for the profile at hand — and the quotable
+  statement would stay the profile-independent one regardless. By the rule this
+  project applies to everything else, that is a level to build when something
+  needs it and not before.
+  Recorded rather than built, and with the extra generality of the underlying
+  lemma honestly unexercised at present: its one caller discards it.
+- **Next action:** none open. Reopen if a model appears that needs the relative
+  condition.

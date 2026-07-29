@@ -683,7 +683,7 @@ theorem condOn_of_support_subset (μ : FinDist α) (S : Set α) (hmeet : ∃ a �
     exact ((PMF.apply_eq_zero_iff _ _).mpr fun hmem => haS (hsub hmem)).symm
 
 private theorem massOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C, a ∈ μ.support)
-    (hDC : D ⊆ C) : massOf (μ.condOn C hC) D = massOf μ D / massOf μ C := by
+    (hDC : D ∩ μ.support ⊆ C) : massOf (μ.condOn C hC) D = massOf μ D / massOf μ C := by
   rw [massOf, massOf]
   simp_rw [div_eq_mul_inv]
   rw [← ENNReal.tsum_mul_right]
@@ -691,7 +691,10 @@ private theorem massOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C
   by_cases haD : a ∈ D
   · rw [Set.indicator_of_mem haD, Set.indicator_of_mem haD]
     show C.indicator μ.toPMF a * (massOf μ C)⁻¹ = _
-    rw [Set.indicator_of_mem (hDC haD)]
+    by_cases hasupp : a ∈ μ.support
+    · rw [Set.indicator_of_mem (hDC ⟨haD, hasupp⟩)]
+    · rw [(PMF.apply_eq_zero_iff _ _).mpr hasupp, Set.indicator_apply_eq_zero.mpr
+        fun _ => (PMF.apply_eq_zero_iff _ _).mpr hasupp, zero_mul]
   · rw [Set.indicator_of_notMem haD, Set.indicator_of_notMem haD, zero_mul]
 
 /-- Conditioning keeps everything the event allows. -/
@@ -710,26 +713,32 @@ theorem condOn_congr (μ : FinDist α) {S T : Set α} (hST : S = T)
 
 /-- The mass a smaller event keeps after conditioning on a larger one. -/
 theorem probOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C, a ∈ μ.support)
-    (hDC : D ⊆ C) : (μ.condOn C hC).probOf D = μ.probOf D / μ.probOf C := by
+    (hDC : D ∩ μ.support ⊆ C) : (μ.condOn C hC).probOf D = μ.probOf D / μ.probOf C := by
   show (massOf (μ.condOn C hC) D).toReal = _
   rw [massOf_condOn hC hDC, ENNReal.toReal_div]
   rfl
 
 /-- **Conditioning again on a smaller event forgets the first one.** This is what
 lets an argument that keeps conditioning as play advances go on referring to the
-law it started from. -/
+law it started from.
+
+The smaller event need only be smaller *where the law lives*: what a law does
+outside its own support is not something conditioning can see. -/
 theorem condOn_condOn (μ : FinDist α) {C D : Set α} (hC : ∃ a ∈ C, a ∈ μ.support)
-    (hD : ∃ a ∈ D, a ∈ μ.support) (hDC : D ⊆ C)
+    (hD : ∃ a ∈ D, a ∈ μ.support) (hDC : D ∩ μ.support ⊆ C)
     (hDcond : ∃ a ∈ D, a ∈ (μ.condOn C hC).support) :
     (μ.condOn C hC).condOn D hDcond = μ.condOn D hD := by
   classical
   refine ext_of_prob fun a => ?_
   rw [prob_condOn, prob_condOn, prob_condOn, probOf_condOn hC hDC]
   by_cases haD : a ∈ D
-  · rw [if_pos haD, if_pos haD, if_pos (hDC haD)]
-    have hc := (probOf_pos hC).ne'
-    have hd := (probOf_pos hD).ne'
-    field_simp
+  · rw [if_pos haD, if_pos haD]
+    by_cases hasupp : a ∈ μ.support
+    · rw [if_pos (hDC ⟨haD, hasupp⟩)]
+      have hc := (probOf_pos hC).ne'
+      have hd := (probOf_pos hD).ne'
+      field_simp
+    · simp [prob_eq_zero_iff.mpr hasupp]
   · rw [if_neg haD, if_neg haD]
 
 /-- An event's mass is the expectation of its indicator, which is how a

@@ -1127,7 +1127,8 @@ theorem toBehavioralWith_condOn_answered (hconstrain : M.ConstrainsAlike) (i : �
         p ∈ (mixed.condOn (M.AnsweredBy h answer i) hmass).support :=
       ⟨policy, hpolicy, FinDist.mem_support_condOn _ _ _ (hnarrow hpolicy) hmem⟩
     rw [dif_pos hcond, dif_pos ⟨policy, hpolicy, hmem⟩,
-      FinDist.condOn_condOn mixed hmass ⟨policy, hpolicy, hmem⟩ hnarrow hcond]
+      FinDist.condOn_condOn mixed hmass ⟨policy, hpolicy, hmem⟩
+        (Set.inter_subset_left.trans hnarrow) hcond]
   · have hcond : ¬ ∃ p ∈ M.ConsistentAt i (M.infoOf i later.trace),
         p ∈ (mixed.condOn (M.AnsweredBy h answer i) hmass).support := by
       rintro ⟨p, hp, hmem⟩
