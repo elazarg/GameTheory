@@ -286,6 +286,94 @@ theorem expect_markovHistoryStateChargeSum_le
       exact expect_predictableScoreSum_eq_expect_conditionalMeanSum
         step score (T + 1)
 
+/-- Numeric assembly for extending an incentive bound from a recurrent core
+through a transient interface. The two occupation losses correspond to the
+deviating and prescribed laws. This theorem deliberately takes the shadow-play
+comparison inequalities as hypotheses: an occupation telescope alone does
+not construct the required core interface. -/
+theorem fullGameIncentiveGap_le_of_coreInterface
+    {fullDeviation fullPrescribed coreDeviation corePrescribed : ℝ}
+    {coreError payoffOscillation transientPotential discrepancyBudget : ℝ}
+    {deviationOccupation prescribedOccupation horizon : ℝ}
+    {deviationCost prescribedCost : ℝ}
+    (horizon_pos : 0 < horizon)
+    (payoffOscillation_nonneg : 0 ≤ payoffOscillation)
+    (hfullDeviation :
+      fullDeviation ≤
+        coreDeviation +
+          payoffOscillation * deviationOccupation / horizon +
+          deviationCost)
+    (hfullPrescribed :
+      corePrescribed -
+          payoffOscillation * prescribedOccupation / horizon -
+          prescribedCost ≤
+        fullPrescribed)
+    (hcore : coreDeviation - corePrescribed ≤ coreError)
+    (hdeviationOccupation :
+      deviationOccupation ≤ transientPotential + discrepancyBudget)
+    (hprescribedOccupation :
+      prescribedOccupation ≤ transientPotential) :
+    fullDeviation - fullPrescribed ≤
+      coreError +
+        payoffOscillation *
+          (2 * transientPotential + discrepancyBudget) / horizon +
+        deviationCost + prescribedCost := by
+  have hdevScaled :
+      payoffOscillation * deviationOccupation / horizon ≤
+        payoffOscillation *
+          (transientPotential + discrepancyBudget) / horizon := by
+    apply div_le_div_of_nonneg_right _ horizon_pos.le
+    exact mul_le_mul_of_nonneg_left
+      hdeviationOccupation payoffOscillation_nonneg
+  have hprescribedScaled :
+      payoffOscillation * prescribedOccupation / horizon ≤
+        payoffOscillation * transientPotential / horizon := by
+    apply div_le_div_of_nonneg_right _ horizon_pos.le
+    exact mul_le_mul_of_nonneg_left
+      hprescribedOccupation payoffOscillation_nonneg
+  calc
+    fullDeviation - fullPrescribed ≤
+        coreError +
+          payoffOscillation *
+            (transientPotential + discrepancyBudget) / horizon +
+          payoffOscillation * transientPotential / horizon +
+          deviationCost + prescribedCost := by
+      linarith
+    _ = coreError +
+          payoffOscillation *
+            (2 * transientPotential + discrepancyBudget) / horizon +
+          deviationCost + prescribedCost := by
+      ring
+
+/-- Specialization of the core-interface bound to payoffs with oscillation at
+most two, as under the normalization `|u| ≤ 1`. -/
+theorem fullGameIncentiveGap_le_of_coreInterface_two
+    {fullDeviation fullPrescribed coreDeviation corePrescribed : ℝ}
+    {coreError transientPotential discrepancyBudget : ℝ}
+    {deviationOccupation prescribedOccupation horizon : ℝ}
+    {deviationCost prescribedCost : ℝ}
+    (horizon_pos : 0 < horizon)
+    (hfullDeviation :
+      fullDeviation ≤
+        coreDeviation + 2 * deviationOccupation / horizon + deviationCost)
+    (hfullPrescribed :
+      corePrescribed - 2 * prescribedOccupation / horizon - prescribedCost ≤
+        fullPrescribed)
+    (hcore : coreDeviation - corePrescribed ≤ coreError)
+    (hdeviationOccupation :
+      deviationOccupation ≤ transientPotential + discrepancyBudget)
+    (hprescribedOccupation :
+      prescribedOccupation ≤ transientPotential) :
+    fullDeviation - fullPrescribed ≤
+      coreError + (4 * transientPotential + 2 * discrepancyBudget) / horizon +
+        deviationCost + prescribedCost := by
+  have h := fullGameIncentiveGap_le_of_coreInterface
+    horizon_pos (show (0 : ℝ) ≤ 2 by norm_num)
+    hfullDeviation hfullPrescribed hcore
+    hdeviationOccupation hprescribedOccupation
+  convert h using 1
+  all_goals ring
+
 end
 
 end Math.Probability

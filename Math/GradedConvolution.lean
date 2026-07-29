@@ -5,7 +5,9 @@ Authors: GameTheory contributors
 -/
 
 import Mathlib.Algebra.BigOperators.Field
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Real.Basic
+import Mathlib.Tactic
 
 /-!
 # Finite graded convolution certificates
@@ -108,6 +110,66 @@ theorem exists_transition_visible_pair_degrees
   have hle : i ≤ certificate.terminalDegree := Nat.lt_succ_iff.mp hi
   exact ⟨i, certificate.terminalDegree - i,
     Nat.add_sub_of_le hle, hvisible⟩
+
+/-- Under coefficientwise nonnegative primal-dual pairings, every pairing
+whose total degree lies below the terminal degree vanishes individually. -/
+theorem pairing_eq_zero_of_add_lt
+    (certificate : GradedCancellationCertificate ι)
+    (hpairing : ∀ i j,
+      0 ≤ ∑ s, certificate.transition i s * certificate.value j s)
+    {i j : ℕ} (hdegree : i + j < certificate.terminalDegree) :
+    (∑ s, certificate.transition i s * certificate.value j s) = 0 := by
+  have hcancel := certificate.lower_cancel (i + j) hdegree
+  unfold gradedPairingCoefficient at hcancel
+  have hall := (Finset.sum_eq_zero_iff_of_nonneg
+    (fun a _ => hpairing a (i + j - a))).mp hcancel
+  have hi : i ∈ Finset.range (i + j + 1) := by
+    simp
+  simpa using hall i hi
+
+/-- Coefficientwise cone compatibility turns terminal visibility into a
+strict step in the complementarity filtration: one terminal value
+coefficient is annihilated by every earlier transition coefficient but not by
+the terminally paired one. This is a jet-level statement, not a claim that
+the positive-parameter curve lies in a proper face. -/
+theorem exists_strict_complementarity_filtration_step
+    (certificate : GradedCancellationCertificate ι)
+    (hpairing : ∀ i j,
+      0 ≤ ∑ s, certificate.transition i s * certificate.value j s) :
+    ∃ i j, i + j = certificate.terminalDegree ∧
+      0 < ∑ s, certificate.transition i s * certificate.value j s ∧
+      ∀ h < i,
+        (∑ s, certificate.transition h s * certificate.value j s) = 0 := by
+  obtain ⟨i, j, hij, hne⟩ :=
+    certificate.exists_transition_visible_pair_degrees
+  have hpos :
+      0 < ∑ s, certificate.transition i s * certificate.value j s :=
+    lt_of_le_of_ne (hpairing i j) (Ne.symm hne)
+  refine ⟨i, j, hij, hpos, ?_⟩
+  intro h hh
+  apply certificate.pairing_eq_zero_of_add_lt hpairing
+  omega
+
+/-- With coefficientwise nonnegative pairings, the stage coefficient at the
+first nonzero terminal level is negative. -/
+theorem stageCoefficient_neg_of_pairing_nonneg
+    (certificate : GradedCancellationCertificate ι)
+    (hpairing : ∀ i j,
+      0 ≤ ∑ s, certificate.transition i s * certificate.value j s) :
+    certificate.stageCoefficient < 0 := by
+  have hterminal_nonneg :
+      0 ≤ gradedPairingCoefficient certificate.transition certificate.value
+        certificate.terminalDegree := by
+    unfold gradedPairingCoefficient
+    exact Finset.sum_nonneg fun a _ =>
+      hpairing a (certificate.terminalDegree - a)
+  have hterminal_ne :=
+    certificate.terminal_pairing_ne_zero
+  have hterminal_pos :
+      0 < gradedPairingCoefficient certificate.transition certificate.value
+        certificate.terminalDegree :=
+    lt_of_le_of_ne hterminal_nonneg (Ne.symm hterminal_ne)
+  linarith [certificate.terminal_balance]
 
 /-- Centering the value coefficients produces another certificate with
 identical stage data and transition coefficients. -/
