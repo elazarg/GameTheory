@@ -32,6 +32,7 @@ becomes difficult to scan.
 | EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | Narrows; closes D7 again | `GameTheory/Experimental/Phase4/ReachMassStatements.lean`; [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md) |
 | EXP-020 | 2026-07-29 | D1 / Phase 4 | Should carrier-bearing structures keep storing their carriers, now that the reducibility cost has been paid across a whole layer? | Decides D1 | [`decisions/D1-signature-ownership.md`](decisions/D1-signature-ownership.md); `GameTheory/Experimental/Phase4/D1/` |
 | EXP-021 | 2026-07-29 | D6 / Phase 3 close-out | Does the one-shot deviation principle hold on the accepted sequential interface, and does the certificate already in hand carry it? | Supports | `GameTheory/Protocol/Backward.lean`; `GameTheory/Tests/OneShot.lean` |
+| EXP-022 | 2026-07-29 | D12 / Phase 4 | What does an existence theorem at the static layer cost in dependencies, and where should the boundary be drawn? | Refutes the planned route; redirects | measurement only; no code |
 
 ## Entry template
 
@@ -1308,3 +1309,40 @@ memory.
   strictly dominated strategies — is done and is recorded with the code rather
   than here, since it is ordinary mathematics against a settled API rather than
   an architecture experiment.
+
+### EXP-022: what existence costs, measured before it is bought
+
+- **Date / revision:** 2026-07-29
+- **Decision / question:** the harvest's remaining flagship at the static layer
+  is an existence theorem that does not assume a potential. The layering was
+  built so that convexity and topology stay out of the core until something
+  needs them, and the discipline is to measure the import before taking it
+  rather than to discover the cost afterwards.
+- **Evidence:** probes against the pinned Mathlib, run before writing any proof.
+- **Observation, and it refutes the planned route.** **Mathlib has no Brouwer
+  fixed-point theorem and no Kakutani fixed-point theorem.** Every occurrence of
+  the second name is the Riesz–Markov–Kakutani *representation* theorem, which is
+  unrelated; the only fixed-point theorems available are Banach's for contracting
+  maps and the order-theoretic ones. Sperner's name is present but attached to
+  the antichain theorem, not the lemma about simplex colourings. So the standard
+  route to equilibrium existence for finite games is not merely expensive here —
+  it is absent, and supplying it would be a topology project of its own, far
+  outside this library.
+  The redirect is real and was found by the same search. Mathlib *does* have
+  **Sion's version of the von Neumann minimax theorem**, in saddle-point form.
+  That reaches the two-player zero-sum flagship, which is the existence result
+  this layer can actually have.
+  On the dependency question the measurement is more precise than expected.
+  Importing Sion's theorem makes **neither `stdSimplex` nor `Polynomial`
+  reachable** — the existing probes would not fire on it at all. The budget is
+  not spent by the theorem; it is spent by the *bridge*, which has to present a
+  finite-support law as a compact convex subset of a topological vector space,
+  and that is what pulls convexity in.
+- **Outcome:** refutes the planned route and redirects it. General equilibrium
+  existence is out of reach at the Mathlib level; zero-sum minimax is in reach,
+  and the dependency boundary sits at the law-to-simplex bridge rather than at
+  the theorem.
+- **Next action:** design that boundary before building on it — a root that Core
+  and Protocol do not import, with its own probe expectations recorded rather
+  than an exception patched into the existing ones. Nothing needs it until the
+  bridge is attempted, so it is queued rather than urgent.

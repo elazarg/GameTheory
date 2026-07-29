@@ -91,6 +91,13 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 - A mechanism-design encoding, with truthful reporting as a dominance statement.
   That is a language module rather than a theorem family, so it belongs with the
   other encodings and carries the same obligation: a workaround list.
-- The remaining flagship at this layer is existence without a potential, which
-  needs the convexity bridge held back since the first phase and is the one
-  piece here that will touch the dependency budget.
+- The remaining flagship at this layer is *not* general equilibrium existence.
+  That route is closed: the pinned Mathlib has neither Brouwer nor Kakutani, and
+  supplying either would be a topology project of its own. What is in reach is
+  the two-player zero-sum minimax theorem, since Mathlib does carry Sion's
+  version of it.
+- The dependency boundary for that work sits at the bridge presenting a
+  finite-support law as a compact convex set, not at the theorem: importing
+  Sion's theorem makes neither of the probed constants reachable. The boundary
+  should be a root that Core and Protocol do not import, with its own probe
+  expectations recorded rather than an exception patched into the existing ones.
