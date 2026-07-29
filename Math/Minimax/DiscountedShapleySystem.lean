@@ -703,6 +703,60 @@ noncomputable def discountedShapleyNonvanishingBranchIdeal
         MvPolynomial.rename some
           (discountedShapleyBranchDenominator r T branch) - 1}
 
+/-- Extending a nonvanishing branch to `ℝ(λ)` is the Rabinowitsch extension
+of its localized active branch ideal. -/
+theorem map_discountedShapleyNonvanishingBranchIdeal_eq_rabinowitschIdeal
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J) :
+    (discountedShapleyNonvanishingBranchIdeal r T branch).map
+        (MvPolynomial.map
+          (algebraMap (Polynomial ℝ)
+            (FractionRing (Polynomial ℝ)))) =
+      Math.MultivariateElimination.rabinowitschIdeal
+        (discountedShapleyActiveBranchIdeal r T branch)
+        (MvPolynomial.map
+          (algebraMap (Polynomial ℝ)
+            (FractionRing (Polynomial ℝ)))
+          (discountedShapleyBranchDenominator r T branch)) := by
+  rw [discountedShapleyNonvanishingBranchIdeal,
+    discountedShapleyActiveBranchIdeal,
+    Math.MultivariateElimination.rabinowitschIdeal]
+  simp only [Ideal.map_sup, Ideal.map_span, Set.image_singleton,
+    map_sub, map_mul, MvPolynomial.map_X, MvPolynomial.map_rename,
+    map_one, localizedDiscountedShapleyActiveKernelPoly]
+  congr 1
+  apply congrArg Ideal.span
+  rw [← Set.range_comp, ← Set.range_comp]
+  congr 1
+  funext s
+  exact MvPolynomial.map_rename _ _ _
+
+/-- Finite-dimensionality of a localized fixed active branch is preserved
+when its selected denominator product is made invertible. -/
+theorem moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_activeBranch
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    [Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+        discountedShapleyActiveBranchIdeal r T branch)] :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyNonvanishingBranchIdeal r T branch).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ))))) := by
+  rw [map_discountedShapleyNonvanishingBranchIdeal_eq_rabinowitschIdeal]
+  exact Math.MultivariateElimination.moduleFinite_rabinowitschIdeal
+    (discountedShapleyActiveBranchIdeal r T branch)
+    (MvPolynomial.map
+      (algebraMap (Polynomial ℝ)
+        (FractionRing (Polynomial ℝ)))
+      (discountedShapleyBranchDenominator r T branch))
+
 /-- With a unique state, a nonvanishing Shapley branch is exactly a
 one-variable Rabinowitsch ideal. -/
 theorem discountedShapleyNonvanishingBranchIdeal_eq_uniqueRabinowitschIdeal
