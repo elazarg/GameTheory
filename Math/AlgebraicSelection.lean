@@ -134,6 +134,8 @@ polynomial's root set.
 * `puiseuxDerivativeEnvelope_of_rpow_reparam`: a local representation
   `w(λ) = g(λ^q)` with `q > 0` and bounded `g'` gives the exact normalized
   derivative envelope consumed by the account construction.
+* `tendsto_zero_of_rpow_reparam`: if the same regular factor `g` is continuous
+  at zero, the selected branch tends to `g(0)` from positive rates.
 
 No `TODO`s remain in this file.
 -/
@@ -772,5 +774,38 @@ theorem puiseuxDerivativeEnvelope_of_rpow_reparam
     _ = lam ^ (q - 1) / lam0 := by
       rw [div_eq_mul_inv]
       ring
+
+/-- A local Puiseux reparameterization has the expected right limit.
+
+The positive exponent sends `λ` to `λ^q → 0` as `λ → 0⁺`; continuity of the
+regular factor `g` then gives `w(λ) → g(0)`. Together with
+`puiseuxDerivativeEnvelope_of_rpow_reparam`, this discharges both analytic
+inputs of the account theorem once a Newton--Puiseux reparameterization has
+been constructed. -/
+theorem tendsto_zero_of_rpow_reparam
+    {w g : ℝ → ℝ} {q ρ : ℝ}
+    (hq : 0 < q) (hρ : 0 < ρ)
+    (hreparam : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      w lam = g (lam ^ q))
+    (hg : ContinuousAt g 0) :
+    Filter.Tendsto w
+      (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (g 0)) := by
+  have hpowFull :
+      Filter.Tendsto (fun lam : ℝ => lam ^ q) (𝓝 0) (𝓝 0) := by
+    simpa [Real.zero_rpow hq.ne'] using
+      (Real.continuousAt_rpow_const 0 q (Or.inr hq.le)).tendsto
+  have hpow :
+      Filter.Tendsto (fun lam : ℝ => lam ^ q)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 0) :=
+    hpowFull.mono_left inf_le_left
+  have hcomp :
+      Filter.Tendsto (fun lam : ℝ => g (lam ^ q))
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (g 0)) :=
+    hg.tendsto.comp hpow
+  apply hcomp.congr'
+  have hIio : Set.Iio ρ ∈ nhdsWithin (0 : ℝ) (Set.Ioi 0) :=
+    mem_nhdsWithin_of_mem_nhds (Iio_mem_nhds hρ)
+  filter_upwards [hIio, self_mem_nhdsWithin] with lam hlamρ hlam
+  exact (hreparam lam ⟨hlam, hlamρ⟩).symm
 
 end Math

@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.MertensNeymanAccount
 import GameTheory.Concepts.Stochastic.MertensNeymanCriterion
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
+import Math.AlgebraicSelection
 
 /-!
 # Game-facing integration of the Mertens--Neyman account controller
@@ -3434,6 +3435,82 @@ theorem isUniformEquilibriumPayoff_of_puiseux_discountedValue
         hF hzs hVzs hβ hlam0 hderivOne hboundOne hlimitOne
   exact isUniformEquilibriumPayoff_of_oneSidedGuarantees
     hzs s₀ (target s₀) hrow hcol
+
+/-- A genuine coordinatewise Puiseux reparameterization discharges both
+analytic hypotheses of the zero-sum account theorem.
+
+For every state coordinate, `v(λ) = g(λ^q)` with `q > 0`, a regular factor
+continuous at zero, and a bounded derivative of that factor supplies:
+
+* the account derivative envelope, by
+  `Math.puiseuxDerivativeEnvelope_of_rpow_reparam`;
+* the right limit `g(0)`, by `Math.tendsto_zero_of_rpow_reparam`.
+
+Thus the remaining zero-sum selection obligation is the construction of this
+Puiseux data together with the discounted Bellman family, rather than a
+separate game-facing convergence or derivative estimate. -/
+theorem isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (q ρ K : G.State → ℝ)
+    (g g' : G.State → ℝ → ℝ)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
+    (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (v lam))
+    (hzs : G.IsZeroSum)
+    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0)
+    (hq : ∀ z, 0 < q z)
+    (hρ : ∀ z, 0 < ρ z)
+    (hK : ∀ z, 0 ≤ K z)
+    (hreparam : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      v lam z 0 = g z (lam ^ q z))
+    (hgcontinuous : ∀ z, ContinuousAt (g z) 0)
+    (hgderiv : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      HasDerivAt (g z) (g' z (lam ^ q z)) (lam ^ q z))
+    (hgbound : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      |g' z (lam ^ q z)| ≤ K z) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who => if who = 0 then g s₀ 0 else -g s₀ 0) := by
+  have hEnvelope : ∀ z, ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ lam, 0 < lam → lam < lam0 →
+        HasDerivAt (fun u => v u z 0)
+            (g' z (lam ^ q z) *
+              (q z * lam ^ (q z - 1))) lam ∧
+          |g' z (lam ^ q z) *
+              (q z * lam ^ (q z - 1))| ≤
+            lam ^ (q z - 1) / lam0 := by
+    intro z
+    exact Math.puiseuxDerivativeEnvelope_of_rpow_reparam
+      (hq z) (hρ z) (hK z)
+      (hreparam z) (hgderiv z) (hgbound z)
+  choose lam0 hlam0 hEnvelope using hEnvelope
+  let v' : G.State → ℝ → ℝ := fun z lam =>
+    g' z (lam ^ q z) * (q z * lam ^ (q z - 1))
+  have hderiv : ∀ z lam, 0 < lam → lam < lam0 z →
+      HasDerivAt (fun u => v u z 0) (v' z lam) lam := by
+    intro z lam hlam hlam0'
+    exact (hEnvelope z lam hlam hlam0').1
+  have hbound : ∀ z lam, 0 < lam → lam < lam0 z →
+      |v' z lam| ≤ lam ^ (q z - 1) / lam0 z := by
+    intro z lam hlam hlam0'
+    exact (hEnvelope z lam hlam hlam0').2
+  have hlimit : ∀ z,
+      Tendsto (fun lam => v lam z 0)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (g z 0)) := by
+    intro z
+    exact Math.tendsto_zero_of_rpow_reparam
+      (hq z) (hρ z) (hreparam z) (hgcontinuous z)
+  exact isUniformEquilibriumPayoff_of_puiseux_discountedValue
+    (fun z => g z 0) s₀
+    hpayLower hpayUpper hvalueLower hvalueUpper
+    hF hzs hVzs hq hlam0 hderiv hbound hlimit
 
 end MertensNeymanAccount
 end StochasticGame
