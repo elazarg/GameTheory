@@ -28,7 +28,7 @@ becomes difficult to scan.
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
-| EXP-018 | 2026-07-29 | D6/D7 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | *in progress* | `GameTheory/Probability/FinDist.lean` |
+| EXP-018 | 2026-07-29 | D6 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | Supports | `GameTheory/Probability/FinDist.lean`; `GameTheory/Protocol/Information.lean` |
 
 ## Entry template
 
@@ -1003,5 +1003,21 @@ memory.
   never goes — a scope statement worth making explicit rather than a defect.
   Recorded rather than applied, because it changes a public definition.
 
-- **Next action:** parameterize the fallback, then the induction, which needs no
-  further primitives.
+- **Outcome: supports.** `runMixedFrom_toBehavioralWith` is proved. Where every
+  player recalls its own play, drawing a whole policy once induces the same law
+  as randomizing afresh at each information state — at every fuel and from every
+  history the draw could already have reached, which at the start of play is no
+  hypothesis at all.
+  Parameterizing the fallback closed the gap exactly as diagnosed, and the reason
+  is worth keeping: it is the complement of the commitment lemma rather than a
+  workaround. Between the original law and the conditioned one the dichotomy in
+  the reading is stable — consistent mass survives the conditioning, so the
+  marginal branch of one reading is the marginal branch of the other and the
+  double conditioning collapses — and the only case the commitment lemma cannot
+  reach is fallback against fallback, which a shared fixed parameter makes an
+  equality by construction. Together the two cover both branches.
+  The statement that results is the honest one: the behavioral reading of a
+  single draw is determined up to its behaviour where play never goes.
+
+- **Next action:** the two directions now meet. Worth stating the combined
+  equivalence, and putting the recall-capable slice under both.

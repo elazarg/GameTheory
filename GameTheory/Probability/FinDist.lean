@@ -694,6 +694,14 @@ private theorem massOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C
     rw [Set.indicator_of_mem (hDC haD)]
   · rw [Set.indicator_of_notMem haD, Set.indicator_of_notMem haD, zero_mul]
 
+/-- Conditioning keeps everything the event allows. -/
+theorem mem_support_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ μ.support)
+    {a : α} (haS : a ∈ S) (ha : a ∈ μ.support) : a ∈ (μ.condOn S hmeet).support := by
+  classical
+  refine prob_pos_iff.mp ?_
+  rw [prob_condOn, if_pos haS]
+  exact div_pos (prob_pos_iff.mpr ha) (probOf_pos hmeet)
+
 /-- Conditioning depends on the event, not on the proof that it has mass. -/
 theorem condOn_congr (μ : FinDist α) {S T : Set α} (hST : S = T)
     (hS : ∃ a ∈ S, a ∈ μ.support) (hT : ∃ a ∈ T, a ∈ μ.support) :
