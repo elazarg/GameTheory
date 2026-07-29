@@ -29,7 +29,8 @@ becomes difficult to scan.
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
 | EXP-018 | 2026-07-29 | D6 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | Supports | `GameTheory/Probability/FinDist.lean`; `GameTheory/Protocol/Information.lean` |
-| EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | *in progress* | `GameTheory/Experimental/Phase4/ReachMassStatements.lean` |
+| EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | Narrows; closes D7 again | `GameTheory/Experimental/Phase4/ReachMassStatements.lean`; [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md) |
+| EXP-020 | 2026-07-29 | D1 / Phase 4 | Should carrier-bearing structures keep storing their carriers, now that the reducibility cost has been paid across a whole layer? | *reserved* | `GameTheory/Core/Form.lean`; `GameTheory/Protocol/Execution.lean` |
 
 ## Entry template
 
@@ -1163,3 +1164,44 @@ memory.
   lemma honestly unexercised at present: its one caller discards it.
 - **Next action:** none open. Reopen if a model appears that needs the relative
   condition.
+
+### EXP-020: the reducibility bill for bundled carriers
+
+- **Date / revision:** reserved 2026-07-29, before any change
+- **Decision / question:** D1, revisited at its recorded checkpoint. The
+  signature-ownership choice — a form *stores* its signature rather than being
+  indexed by it — was accepted provisionally, with the cost to be re-measured
+  once a second layer had been built on it. That layer exists, and the same
+  choice was repeated in it: an execution protocol stores its state and action
+  carriers, and an information model stores its signal and information carriers.
+  The question is whether the accumulated bill justifies a flip, and it has to be
+  asked now because every module added makes a flip more expensive.
+- **Measurement, current tree.** Thirty-two `@[reducible]` annotations exist in
+  the library and every one of them is forced by a stored carrier. By the
+  structure whose instance carries them: execution protocols 12, information
+  signals 5, information models 5, the influence diagram's own record 4, and one
+  each for a game form, a rational table, a tree strategy type, a Bayesian game,
+  and a carrier alias. Not one is there for a reason of its own.
+  The unit of cost is therefore *per instance, per structure*: a concrete
+  protocol with its signals and its model costs three annotations before it
+  proves anything, and forgetting one is not a warning but an elaboration
+  failure at some distant use site.
+  There is a second cost the count does not show. An induction over the
+  history type additionally needs its index written at the structure's
+  projection rather than at the carrier the projection reduces to; written the
+  other way it fails inside the equation compiler rather than at the statement.
+- **Prediction, written before attempting.** A flip removes the annotations and
+  replaces them with an index on every mention of the structure, so the question
+  is not whether the bill exists but which bill is smaller and which failure mode
+  is kinder. Predicted: the indexed form is *not* obviously better, because the
+  measured cost is one annotation per instance while the indexed cost is one
+  extra argument per *mention*, and mentions outnumber instances by a large
+  factor in the proved material. Predicted also that the deciding evidence is
+  not the count but the failure mode — an omitted `@[reducible]` fails late and
+  confusingly, whereas a missing index fails immediately at the signature.
+  If that prediction survives, the outcome is to keep the bundled form and record
+  the annotation as a known, bounded tax with a lint rather than a redesign.
+- **Evidence:** *pending*
+- **Observation:** *pending*
+- **Outcome:** *pending*
+- **Next action:** *pending*
