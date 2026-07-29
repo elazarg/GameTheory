@@ -13,6 +13,7 @@ import Mathlib.Analysis.Calculus.Deriv.Inverse
 import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.Calculus.ImplicitFunction.Bivariate
 import Mathlib.Analysis.Calculus.FDeriv.Analytic
+import Mathlib.Analysis.Analytic.IsolatedZeros
 import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
 import Mathlib.Topology.EMetricSpace.BoundedVariation
 import Mathlib.Analysis.Normed.Group.Uniform
@@ -153,6 +154,84 @@ No `TODO`s remain in this file.
 open Polynomial Set Topology
 
 namespace Math
+
+/-- Two real-analytic germs have an eventually fixed comparison on the right: they either agree,
+or one is strictly below the other. This is the analytic core of finite Puiseux-hierarchy
+stabilization after a common ramification has turned all branches into ordinary analytic
+functions. -/
+theorem analyticAt_eventually_eq_or_lt_or_gt
+    {f g : ℝ → ℝ} {x₀ : ℝ}
+    (hf : AnalyticAt ℝ f x₀) (hg : AnalyticAt ℝ g x₀) :
+    (∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), f x = g x) ∨
+      (∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), f x < g x) ∨
+      (∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), g x < f x) := by
+  let d : ℝ → ℝ := f - g
+  have hd : AnalyticAt ℝ d x₀ := hf.sub hg
+  rcases hd.eventually_eq_zero_or_eventually_ne_zero with hzero | hnonzero
+  · left
+    filter_upwards [hzero.filter_mono nhdsWithin_le_nhds] with x hx
+    simpa [d, sub_eq_zero] using hx
+  · have hnotzero : ¬∀ᶠ x in 𝓝 x₀, d x = 0 := by
+      intro h
+      have hz : ∀ᶠ x in 𝓝[≠] x₀, d x = 0 :=
+        h.filter_mono nhdsWithin_le_nhds
+      obtain ⟨x, hne, heq⟩ := (hnonzero.and hz).exists
+      exact hne heq
+    obtain ⟨n, u, hu, hu0, hfactor⟩ :=
+      hd.exists_eventuallyEq_pow_smul_nonzero_iff.mpr hnotzero
+    rcases lt_or_gt_of_ne hu0.symm with hu0pos | hu0neg
+    · right
+      right
+      have hupos : ∀ᶠ x in 𝓝 x₀, 0 < u x :=
+        hu.continuousAt.tendsto.eventually_const_lt hu0pos
+      filter_upwards [hfactor.filter_mono nhdsWithin_le_nhds,
+        hupos.filter_mono nhdsWithin_le_nhds,
+        self_mem_nhdsWithin] with x hfac hux hx
+      have hxpos : 0 < x - x₀ := sub_pos.mpr hx
+      have hpow : 0 < (x - x₀) ^ n := pow_pos hxpos n
+      change f x - g x = (x - x₀) ^ n * u x at hfac
+      change g x < f x
+      nlinarith
+    · right
+      left
+      have huneg : ∀ᶠ x in 𝓝 x₀, u x < 0 :=
+        hu.continuousAt.tendsto.eventually_lt_const hu0neg
+      filter_upwards [hfactor.filter_mono nhdsWithin_le_nhds,
+        huneg.filter_mono nhdsWithin_le_nhds,
+        self_mem_nhdsWithin] with x hfac hux hx
+      have hxpos : 0 < x - x₀ := sub_pos.mpr hx
+      have hpow : 0 < (x - x₀) ^ n := pow_pos hxpos n
+      change f x - g x = (x - x₀) ^ n * u x at hfac
+      change f x < g x
+      nlinarith
+
+/-- A finite family of real-analytic germs has one common right neighborhood on which every
+    pairwise weak comparison has a fixed truth value. The resulting relation records the stable
+    total preorder of the family. -/
+theorem finite_analytic_family_eventually_stable
+    {I : Type*} [Finite I] (f : I → ℝ → ℝ) {x₀ : ℝ}
+    (hf : ∀ i, AnalyticAt ℝ (f i) x₀) :
+    ∃ R : I → I → Prop,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), ∀ i j,
+        (f i x ≤ f j x ↔ R i j) := by
+  let L := nhdsWithin x₀ (Set.Ioi x₀)
+  let R : I → I → Prop := fun i j => ∀ᶠ x in L, f i x ≤ f j x
+  refine ⟨R, Filter.eventually_all.mpr fun i =>
+    Filter.eventually_all.mpr fun j => ?_⟩
+  rcases analyticAt_eventually_eq_or_lt_or_gt (hf i) (hf j) with
+    heq | hlt | hgt
+  · have hR : R i j := heq.mono fun x hx => hx.le
+    filter_upwards [heq] with x hx
+    simp [R, hR, hx]
+  · have hR : R i j := hlt.mono fun x hx => hx.le
+    filter_upwards [hlt] with x hx
+    simp [R, hR, hx.le]
+  · have hR : ¬R i j := by
+      intro hle
+      obtain ⟨x, hgtx, hlex⟩ := (hgt.and hle).exists
+      exact (not_lt_of_ge hlex) hgtx
+    filter_upwards [hgt] with x hx
+    simp [R, hR, not_le.mpr hx]
 
 /-- Evaluate a bivariate polynomial `P : Polynomial (Polynomial ℝ)` — outer variable `v`,
 coefficients in `ℝ[λ]` — at the point `(λ, v) = (lam, y)`: specialise every coefficient at `λ =
