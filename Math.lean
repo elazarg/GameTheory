@@ -53,6 +53,7 @@ import Math.AlgebraicSelection
 import Math.AnalyticConeDichotomy
 import Math.AnalyticMixedObstruction
 import Math.AnalyticPowerNormalization
+import Math.PolynomialSignCell
 import Math.WeierstrassCurve
 import Math.RamifiedWeierstrass
 import Math.InfinitesimalRatFunc
