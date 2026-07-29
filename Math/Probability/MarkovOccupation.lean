@@ -32,6 +32,12 @@ def markovStateChargeSum
     (charge : Ω → ℝ) (path : ℕ → Ω) (T : ℕ) : ℝ :=
   ∑ t ∈ Finset.range T, charge (path t)
 
+@[simp] theorem markovStateChargeSum_succ
+    (charge : Ω → ℝ) (path : ℕ → Ω) (T : ℕ) :
+    markovStateChargeSum charge path (T + 1) =
+      markovStateChargeSum charge path T + charge (path T) := by
+  simp [markovStateChargeSum, Finset.sum_range_succ]
+
 /-- Cumulative observed-versus-baseline potential discrepancy over the first
 `T` transitions of a state sequence. -/
 def markovPotentialDiscrepancySum
@@ -373,6 +379,103 @@ theorem fullGameIncentiveGap_le_of_coreInterface_two
     hdeviationOccupation hprescribedOccupation
   convert h using 1
   all_goals ring
+
+namespace CoreEntryCounterexample
+
+/-- A transient state `none` and two absorbing recurrent states. -/
+abbrev State := Option Bool
+
+/-- The baseline enters the zero-payoff recurrent state. -/
+def baseline : State → PMF State
+  | none => PMF.pure (some false)
+  | some recurrent => PMF.pure (some recurrent)
+
+/-- The comparison differs only by entering the other recurrent state. -/
+def comparison : State → PMF State
+  | none => PMF.pure (some true)
+  | some recurrent => PMF.pure (some recurrent)
+
+/-- Hitting-time potential of the recurrent set. -/
+def potential : State → ℝ
+  | none => 1
+  | some _ => 0
+
+/-- Indicator charge of the transient state. -/
+def transientCharge : State → ℝ
+  | none => 1
+  | some _ => 0
+
+/-- Payoff is one only in the comparison-selected recurrent state. -/
+def payoff : State → ℝ
+  | some true => 1
+  | _ => 0
+
+/-- Prescribed state path under the baseline transition. -/
+def prescribedPath : ℕ → State
+  | 0 => none
+  | _ + 1 => some false
+
+/-- Deviating state path under the comparison transition. -/
+def deviationPath : ℕ → State
+  | 0 => none
+  | _ + 1 => some true
+
+/-- The hitting-time potential solves the transient Poisson equation. -/
+theorem transientCharge_eq_potential_sub_expect_baseline (s : State) :
+    transientCharge s =
+      potential s - expect (baseline s) potential := by
+  cases s <;> simp [transientCharge, potential, baseline]
+
+/-- Changing the recurrent entry state has zero hitting-potential
+discrepancy. -/
+theorem comparison_potentialDiscrepancy_none_eq_zero :
+    expect (comparison none) potential -
+      expect (baseline none) potential = 0 := by
+  simp [comparison, baseline, potential]
+
+/-- The whole deviating path has zero observed hitting-potential discrepancy
+against the baseline kernel. -/
+theorem deviationPath_potentialDiscrepancySum_eq_zero (T : ℕ) :
+    markovPotentialDiscrepancySum baseline potential deviationPath T = 0 := by
+  induction T with
+  | zero =>
+      simp [markovPotentialDiscrepancySum]
+  | succ T ih =>
+      rw [markovPotentialDiscrepancySum,
+        Finset.sum_range_succ, ← markovPotentialDiscrepancySum, ih, zero_add]
+      cases T <;>
+        simp [markovPotentialDiscrepancy, baseline, potential, deviationPath]
+
+/-- The comparison-selected recurrent state pays one at every post-entry
+stage. -/
+theorem deviationPath_payoffSum_eq (T : ℕ) :
+    markovStateChargeSum payoff deviationPath (T + 1) = T := by
+  induction T with
+  | zero =>
+      simp [markovStateChargeSum, payoff, deviationPath]
+  | succ T ih =>
+      rw [markovStateChargeSum_succ, ih]
+      simp only [deviationPath, payoff]
+      push_cast
+      ring
+
+/-- The prescribed recurrent state has zero payoff at every stage. -/
+theorem prescribedPath_payoffSum_eq_zero (T : ℕ) :
+    markovStateChargeSum payoff prescribedPath T = 0 := by
+  unfold markovStateChargeSum
+  apply Finset.sum_eq_zero
+  intro t _
+  cases t <;> simp [payoff, prescribedPath]
+
+/-- Nevertheless, over horizon `T+1` the comparison-selected recurrent state
+creates payoff gap exactly `T`. -/
+theorem payoffGap_eq (T : ℕ) :
+    markovStateChargeSum payoff deviationPath (T + 1) -
+        markovStateChargeSum payoff prescribedPath (T + 1) =
+      T := by
+  rw [deviationPath_payoffSum_eq, prescribedPath_payoffSum_eq_zero, sub_zero]
+
+end CoreEntryCounterexample
 
 end
 
