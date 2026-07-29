@@ -30,6 +30,11 @@ discounted-value coordinate per state.
   function of the current-stage rate.
 * `exists_nonzero_mvPolynomial_discountedShapleyRateValue`: the polynomial
   relation along the coupled discounted-value vector.
+* `discountedShapleyKernelIdeal`: the canonical coupled kernel ideal over
+  `ℝ[λ]`.
+* `exists_nonzero_bivariate_discountedShapleyRateValue_of_kernelIdeal_moduleFinite`:
+  zero-dimensionality of that ideal over `ℝ(λ)` gives a fixed bivariate
+  relation for every value coordinate.
 * `discountedShapleyRateValue_twoState_elimination_dichotomy`: the bivariate
   relation/resultant-degeneracy dichotomy for a two-state game.
 -/
@@ -143,6 +148,48 @@ theorem exists_nonzero_mvPolynomial_discountedShapleyRateValue
     _ target
   exact fun l hl s =>
     G.discountedShapleyRateValue_eq_lam0 hl s
+
+/-- The canonical coupled bordered-kernel ideal for a finite zero-sum
+stochastic game, with the discount rate in the coefficient ring `ℝ[λ]`. -/
+noncomputable def discountedShapleyKernelIdeal
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)] :
+    Ideal (MvPolynomial G.State (Polynomial ℝ)) :=
+  ShapleySnow.discountedShapleySystemIdeal
+    G.rowStagePayoff
+    (fun s i j z => (G.pairTransition s i j z).toReal)
+
+/-- If the canonical coupled kernel ideal is zero-dimensional over `ℝ(λ)`,
+the canonical discounted Shapley value has a fixed nonzero bivariate relation
+in the rate and each chosen state value. -/
+theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_kernelIdeal_moduleFinite
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    [Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial G.State (FractionRing (Polynomial ℝ)) ⧸
+        (ShapleySnow.discountedShapleySystemIdeal
+          G.rowStagePayoff
+          (fun s i j z =>
+            (G.pairTransition s i j z).toReal)).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ)))))]
+    (target : G.State) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        Polynomial.eval
+          (G.discountedShapleyRateValue l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  exact
+    ShapleySnow.exists_nonzero_bivariateRelation_of_discountedShapleySystemIdeal_moduleFinite
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1)
+      (fun l hl s =>
+        G.discountedShapleyRateValue_eq_lam0 hl s)
+      target
 
 /-- For a two-state game, pairwise elimination of local kernel candidates
 either produces a nonzero bivariate relation for the target discounted value

@@ -36,6 +36,11 @@ determinants scale in adjacent degrees.
   nondegeneracy for positive-size bordered kernels.
 * `exists_nonzero_mvPolynomial_of_discountedShapleySystem`: a fixed nonzero
   relation for any chosen state coordinate of a finite coupled system.
+* `discountedShapleySystemIdeal`: the coupled kernel equations with the rate
+  moved into the coefficient ring.
+* `exists_nonzero_bivariateRelation_of_discountedShapleySystemIdeal_moduleFinite`:
+  zero-dimensionality of the coupled kernel ideal gives a fixed bivariate
+  coordinate relation.
 * `discountedShapleySystem_twoState_kernelPair_elimination_dichotomy`:
   pairwise resultant elimination for a two-state coupled system, with a
   specific local-kernel degeneracy certificate.
@@ -402,6 +407,210 @@ theorem exists_nonzero_mvPolynomial_of_discountedShapleySystem
   exact
     exists_nonzero_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
       r T w S hw target hl
+
+/-- Evaluation commutes with moving the `none` variable into the univariate
+coefficient ring. -/
+theorem eval₂_optionEquivRight
+    {κ R S : Type*} [CommSemiring R] [CommSemiring S]
+    (φ : R →+* S) (v : κ → S)
+    (l : S) (P : MvPolynomial (Option κ) R) :
+    MvPolynomial.eval₂ (Polynomial.eval₂RingHom φ l) v
+        (MvPolynomial.optionEquivRight R κ P) =
+      MvPolynomial.eval₂ φ
+        (fun x => Option.casesOn x l v) P := by
+  let f : MvPolynomial (Option κ) R →+* S :=
+    (MvPolynomial.eval₂Hom
+      (Polynomial.eval₂RingHom φ l) v).comp
+        (MvPolynomial.optionEquivRight R κ).toRingHom
+  let g : MvPolynomial (Option κ) R →+* S :=
+    MvPolynomial.eval₂Hom φ
+      (fun x => Option.casesOn x l v)
+  have hfg : f = g := by
+    apply MvPolynomial.ringHom_ext
+    · intro r
+      simp [f, g]
+    · intro x
+      cases x with
+      | none =>
+          simp [f, g]
+      | some s =>
+          simp [f, g]
+  exact RingHom.congr_fun hfg P
+
+/-- Evaluating a univariate polynomial at one multivariate coordinate and then
+evaluating all coordinates is the corresponding ordinary univariate
+evaluation. -/
+theorem eval₂_polynomial_aeval_X
+    {κ R S : Type*} [CommSemiring R] [CommSemiring S]
+    (φ : R →+* S) (v : κ → S)
+    (target : κ) (q : Polynomial R) :
+    MvPolynomial.eval₂ φ v
+        (Polynomial.aeval (MvPolynomial.X target) q) =
+      Polynomial.eval₂ φ (v target) q := by
+  have hcomp :
+      (MvPolynomial.eval₂Hom φ v).comp
+          (algebraMap R (MvPolynomial κ R)) = φ := by
+    ext r
+    simp
+  have h :=
+    Polynomial.hom_eval₂
+      q (algebraMap R (MvPolynomial κ R))
+      (MvPolynomial.eval₂Hom φ v)
+      (MvPolynomial.X target)
+  rw [hcomp] at h
+  simpa [Polynomial.aeval_def] using h
+
+/-- The product of all nonzero local bordered-kernel candidates for one
+state. -/
+noncomputable def discountedShapleyCoordinatePoly
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) :
+    MvPolynomial (Option κ) ℝ := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  exact
+    ∏ k,
+      if mvBorderedKernelPoly
+          (discountedStochasticEntry (r target) (T target))
+          (some target) k ≠ 0 then
+        mvBorderedKernelPoly
+          (discountedStochasticEntry (r target) (T target))
+          (some target) k
+      else 1
+
+theorem discountedShapleyCoordinatePoly_ne_zero
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) :
+    discountedShapleyCoordinatePoly r T target ≠ 0 := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  rw [discountedShapleyCoordinatePoly, Finset.prod_ne_zero_iff]
+  intro k _
+  split_ifs with hk
+  · exact hk
+  · exact one_ne_zero
+
+theorem eval_discountedShapleyCoordinatePoly_eq_zero
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (target : κ) {l : ℝ} (hl : l ∈ S) :
+    MvPolynomial.eval
+        (fun x => Option.casesOn x l (w l))
+        (discountedShapleyCoordinatePoly r T target) = 0 := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  obtain ⟨k, hk, hkeval⟩ :=
+    exists_nonzero_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
+      r T w S hw target hl
+  rw [discountedShapleyCoordinatePoly, map_prod]
+  apply Finset.prod_eq_zero (Finset.mem_univ k)
+  rw [if_pos hk]
+  exact hkeval
+
+/-- The coupled bordered-kernel ideal with the rate moved into the coefficient
+ring `ℝ[λ]` and only value coordinates retained as variables. -/
+noncomputable def discountedShapleySystemIdeal
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ) :
+    Ideal (MvPolynomial κ (Polynomial ℝ)) :=
+  Ideal.span
+    (Set.range fun s =>
+      MvPolynomial.optionEquivRight ℝ κ
+        (discountedShapleyCoordinatePoly r T s))
+
+/-- Every coupled Shapley value assignment annihilates the coupled
+bordered-kernel ideal after specializing the rate coefficient. -/
+theorem eval₂_mem_discountedShapleySystemIdeal_eq_zero
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    {P : MvPolynomial κ (Polynomial ℝ)}
+    (hP : P ∈ discountedShapleySystemIdeal r T)
+    {l : ℝ} (hl : l ∈ S) :
+    MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l) P = 0 := by
+  have hle : discountedShapleySystemIdeal r T ≤
+      RingHom.ker (MvPolynomial.eval₂Hom
+        (Polynomial.evalRingHom l) (w l)) := by
+    rw [discountedShapleySystemIdeal, Ideal.span_le]
+    rintro P ⟨s, rfl⟩
+    change MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l)
+      (MvPolynomial.optionEquivRight ℝ κ
+        (discountedShapleyCoordinatePoly r T s)) = 0
+    calc
+      _ = MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (discountedShapleyCoordinatePoly r T s) := by
+        simpa [Polynomial.evalRingHom] using
+          (eval₂_optionEquivRight (RingHom.id ℝ) (w l) l
+            (discountedShapleyCoordinatePoly r T s))
+      _ = 0 :=
+        eval_discountedShapleyCoordinatePoly_eq_zero
+          r T w S hw s hl
+  exact hle hP
+
+/-- If the coupled bordered-kernel ideal becomes zero-dimensional over
+`ℝ(λ)`, every chosen value coordinate satisfies a fixed nonzero bivariate
+relation in the rate and that coordinate. -/
+theorem exists_nonzero_bivariateRelation_of_discountedShapleySystemIdeal_moduleFinite
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    [Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleySystemIdeal r T).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ)))))]
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ S,
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  obtain ⟨R, hR, hRmem⟩ :=
+    Math.MultivariateElimination.exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing
+      (discountedShapleySystemIdeal r T) target
+  refine ⟨R, hR, fun l hl => ?_⟩
+  have hz :=
+    eval₂_mem_discountedShapleySystemIdeal_eq_zero
+      r T w S hw hRmem hl
+  rw [eval₂_polynomial_aeval_X] at hz
+  simpa [Polynomial.eval₂_eq_eval_map] using hz
 
 /-- After eliminating one state coordinate from a two-state system, the
 remaining variables are canonically the rate and the target value. -/
