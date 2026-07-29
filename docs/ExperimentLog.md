@@ -33,6 +33,7 @@ becomes difficult to scan.
 | EXP-020 | 2026-07-29 | D1 / Phase 4 | Should carrier-bearing structures keep storing their carriers, now that the reducibility cost has been paid across a whole layer? | Decides D1 | [`decisions/D1-signature-ownership.md`](decisions/D1-signature-ownership.md); `GameTheory/Experimental/Phase4/D1/` |
 | EXP-021 | 2026-07-29 | D6 / Phase 3 close-out | Does the one-shot deviation principle hold on the accepted sequential interface, and does the certificate already in hand carry it? | Supports | `GameTheory/Protocol/Backward.lean`; `GameTheory/Tests/OneShot.lean` |
 | EXP-022 | 2026-07-29 | D12 / Phase 4 | What does an existence theorem at the static layer cost in dependencies, and where should the boundary be drawn? | Refutes the planned route; redirects | measurement only; no code |
+| EXP-023 | 2026-07-29 | D12 / Phase 4 | What does taking the fixed-point primitive from outside Mathlib cost, and does the boundary hold once it is taken? | Supports; reopens general existence | `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 
 ## Entry template
 
@@ -1326,8 +1327,12 @@ memory.
   maps and the order-theoretic ones. Sperner's name is present but attached to
   the antichain theorem, not the lemma about simplex colourings. So the standard
   route to equilibrium existence for finite games is not merely expensive here —
-  it is absent, and supplying it would be a topology project of its own, far
-  outside this library.
+  it is absent *from Mathlib*, and supplying it from scratch would be a topology
+  project of its own, far outside this library. **This observation stands; the
+  conclusion originally drawn from it did not, and EXP-023 records the
+  correction.** Mathlib was treated as the only source of a primitive, which is
+  a question about the ecosystem rather than about Mathlib, and the probe run
+  here could not answer it.
   The redirect is real and was found by the same search. Mathlib *does* have
   **Sion's version of the von Neumann minimax theorem**, in saddle-point form.
   That reaches the two-player zero-sum flagship, which is the existence result
@@ -1346,3 +1351,80 @@ memory.
   and Protocol do not import, with its own probe expectations recorded rather
   than an exception patched into the existing ones. Nothing needs it until the
   bridge is attempted, so it is queued rather than urgent.
+- **Superseded in part by EXP-023.** The redirect to minimax remains available
+  and the bridge remains the place the budget is spent. The claim that general
+  existence is out of reach does not survive: the primitive exists outside
+  Mathlib.
+
+### EXP-023: buying the fixed-point primitive, measured before it is imported
+
+- **Date / revision:** 2026-07-29
+- **Decision / question:** EXP-022 concluded that general equilibrium existence
+  was out of reach because the pinned Mathlib carries no Brouwer or Kakutani
+  theorem. That conclusion silently assumed Mathlib is the only place a
+  primitive can come from. It is not: a standalone Lean 4 package proves both.
+  The question is therefore not whether the theorem exists but what taking it
+  costs, and whether the layering survives the taking.
+- **Evidence:** `harfe/fixed-point-theorems-lean4`, pinned in `lakefile.lean` at
+  `770940ddf9878cf61952ed53d910b92bca841838`; `lake update`; `lake build
+  FixedPointTheorems.kakutani FixedPointTheorems.brouwer`; axiom and
+  reachability probes run against the built package.
+- **Observation.** Six measurements, all taken before any of our own code
+  imported it.
+
+  *Version skew: none.* The package pins `leanprover/lean4:v4.32.0` and
+  `mathlib @ v4.32.0`, which are exactly this project's pins. Its README still
+  advertises v4.30.0; the repository does not, and the repository is what
+  resolves. Predicted skew was two toolchain minors, and the prediction was
+  wrong in the favourable direction.
+
+  *Disturbance to the existing dependency graph: none.* After `lake update` the
+  manifest gained exactly one entry and every pre-existing revision is
+  byte-identical. Mathlib's post-update hook downloaded nothing, which is the
+  same fact from the other side.
+
+  *Build cost: six modules, about a minute, and 484 additional Mathlib modules.*
+  The full build went from 2558 jobs to 3048. The package's own six are the
+  visible cost; the 484 are the real one, and they are convexity, topology, and
+  finite-dimensional normed spaces.
+
+  *Trust: clean.* `brouwer_fixed_point` and `kakutani_fixed_point` each depend
+  on `propext`, `Classical.choice`, `Quot.sound` and nothing else. No `sorryAx`,
+  no custom axiom. This is the measurement that decides admissibility, since a
+  dependency carrying a hole would make every theorem above it untrusted.
+
+  *Shape: usable as-is.* Kakutani is stated for a convex compact nonempty
+  `s : Set V` in a finite-dimensional real normed space, with `f : s -> Set V`
+  having a closed graph and convex nonempty values inside `s`, concluding
+  `exists x : s, x.1 in f x`. `closedGraph f` unfolds to
+  `IsClosed {z | z.2 in f z.1}`, a plain definition rather than a class. That is
+  the best-response correspondence's exact shape, so no restatement layer is
+  needed between the package and the equilibrium argument.
+
+  *Containment: the probes fire, and that is the point.* A file importing
+  `FixedPointTheorems.kakutani` reaches **both** `stdSimplex` and `Polynomial` —
+  the two constants the existing audit requires Core and the executable frontend
+  never to see. Where Sion's theorem cost nothing against those probes, this
+  package spends the whole convexity budget. So the dependency is admissible
+  only behind a root the audited layers do not import, and the audit has to say
+  so rather than leave it to discipline.
+- **Outcome:** supports, and reopens what EXP-022 closed. The primitive is
+  available, trustworthy, and free of version friction; the general existence
+  route is a bridge-building problem rather than a topology project. The cost is
+  a second external dependency and a genuinely leaky import surface, which the
+  boundary exists to contain.
+- **Next action:** instantiate `GameTheory.Analysis` as that boundary, with the
+  existing six probes required to keep passing and the new root's reachability
+  recorded as expected rather than exempted. The v1 snapshot took the same
+  dependency and built roughly four and a half thousand lines on it (Schauder,
+  KKM, Scarf, the simplex approximation layer, Loomis); the harvest should
+  measure how much of that a finite-game existence theorem actually needs before
+  porting any of it.
+- **Follow-through, same day.** The boundary was instantiated and the theorem it
+  was taken for is proved: `GameTheory/Analysis` holds the law-to-simplex
+  bridge, the payoff polynomial, and Kakutani applied to the best-reply
+  correspondence, and `exists_isNash_mixed` depends on the three standard axioms
+  only. Three hundred and fifty-one lines above the dependency, and none of
+  v1's four and a half thousand were needed. The containment checks are in
+  `scripts/phase2-audit.ps1`; the direction of the new probe is the part worth
+  remembering, since it asserts reachability rather than absence.

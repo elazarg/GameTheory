@@ -99,6 +99,8 @@ $Phase2Files = @($OutsideProfile | Where-Object {
 $Phase3Files = @($OutsideProfile | Where-Object {
   $_.StartsWith('GameTheory/Protocol') -or
     ($_.StartsWith('GameTheory/Tests') -and $_ -ne 'GameTheory/Tests/Locality.lean') })
+$AnalysisFiles = @(Select-Files 'GameTheory/Analysis')
+Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
@@ -130,7 +132,7 @@ Report 'TRANSPORT_PHASE4_EVIDENCE' (Count-Pattern $Phase4Files $TransportPattern
 # Every library file belongs to exactly one transport budget. An unbucketed file
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $Phase2Files + $Phase3Files +
-  @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
+  $AnalysisFiles + @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
 # `PMF`, and `toPMF` must not appear outside the representation module; the
@@ -180,6 +182,23 @@ foreach ($imp in Get-Imports 'GameTheory/Core/Signature.lean') {
 }
 Report 'SIGNATURE_PROBABILITY_IMPORTS' $sigBad
 
+# The fixed-point dependency is not part of Mathlib and reaches the whole of
+# convexity and topology when imported. Both facts are tolerable only while it
+# stays behind one root, so the containment is measured rather than intended.
+$analysisLeak = 0
+foreach ($f in @($AllFiles | Where-Object { -not $_.StartsWith('GameTheory/Analysis') })) {
+  foreach ($imp in Get-Imports $f) {
+    if ($imp -match '^(GameTheory\.Analysis|FixedPointTheorems)') { $analysisLeak++ }
+  }
+}
+Report 'ANALYSIS_IMPORTED_OUTSIDE_ROOT' $analysisLeak
+# Inside the root only the module that applies the theorem may name the package.
+$fixedPointNamers = 0
+foreach ($f in $AnalysisFiles) {
+  foreach ($imp in Get-Imports $f) { if ($imp -match '^FixedPointTheorems') { $fixedPointNamers++ } }
+}
+Report 'FIXED_POINT_IMPORTERS' $fixedPointNamers
+
 # --------------------------------------------------------------------------
 # 3. One public definition per concept (RFC 7.1, 9.1.1)
 # --------------------------------------------------------------------------
@@ -216,6 +235,7 @@ Report 'NONBLANK_CORE' `
 Report 'NONBLANK_FINITE' (Measure-Nonblank (Select-Files 'GameTheory/Finite'))
 Report 'NONBLANK_EXAMPLES' (Measure-Nonblank (Select-Files 'GameTheory/Examples'))
 Report 'NONBLANK_TESTS' (Measure-Nonblank (Select-Files 'GameTheory/Tests'))
+Report 'NONBLANK_ANALYSIS' (Measure-Nonblank $AnalysisFiles)
 Report 'NONBLANK_PHASE2_PROBE' `
   (Measure-Nonblank (Select-Files 'GameTheory/Experimental/Phase2'))
 
@@ -265,9 +285,16 @@ if (-not $SkipReachability) {
     if (Test-Unreachable $probe[0] $probe[1]) { $unreachable++ }
     else { $reachable += "$($probe[0]) reaches $($probe[1])" }
   }
-  Remove-Item $probeFile -ErrorAction SilentlyContinue
   Report 'UNREACHABLE_PROBES_PASSED' $unreachable
   foreach ($r in $reachable) { Write-Output "REACHABLE_UNEXPECTED=$r" }
+  # The analytic root is the one place the budget is spent, and a probe that
+  # only ever asserts absence would not notice if it stopped being spent there.
+  $reached = 0
+  foreach ($constant in @('stdSimplex', 'Polynomial')) {
+    if (-not (Test-Unreachable 'GameTheory.Analysis.Nash' $constant)) { $reached++ }
+  }
+  Report 'ANALYSIS_PROBES_REACHED' $reached
+  Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
 # --------------------------------------------------------------------------
@@ -285,6 +312,10 @@ if ($VerifyExpected) {
     # round-trip statement cannot be written without a signature equality to
     # transport along, which is the evidence the recheck exists to produce.
     TRANSPORT_PHASE4_EVIDENCE = 1
+    TRANSPORT_ANALYSIS_SOURCE = 0
+    ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
+    # One: the module that applies the fixed-point theorem, and nothing else.
+    FIXED_POINT_IMPORTERS = 1
     UNBUCKETED_FILES = 0
     CARRIER_INSTANCES_NOT_REDUCIBLE = 0
     FINTYPE_OF_FINITE = 0
@@ -302,7 +333,10 @@ if ($VerifyExpected) {
     throw ("PRISONERS_DILEMMA_DEF_LINES: RFC 7.3 budgets under 25, got " +
       $Results['PRISONERS_DILEMMA_DEF_LINES'])
   }
-  if (-not $SkipReachability) { $Expected['UNREACHABLE_PROBES_PASSED'] = 6 }
+  if (-not $SkipReachability) {
+    $Expected['UNREACHABLE_PROBES_PASSED'] = 6
+    $Expected['ANALYSIS_PROBES_REACHED'] = 2
+  }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {
       throw "$($entry.Key): expected $($entry.Value), got $($Results[$entry.Key])"

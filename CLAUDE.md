@@ -14,8 +14,16 @@ D0–D10 is now recorded rather than open. The static semantic core lives under
 `GameTheory/Core`, the finite-support law type under `GameTheory/Probability`,
 the sequential layer under `GameTheory/Protocol`, native encodings under
 `GameTheory/Languages`, the executable rational frontend under
-`GameTheory/Finite`, and architecture spikes under `GameTheory/Experimental`
-(never re-exported). See `docs/Phase2IncentiveSlice.md` and
+`GameTheory/Finite`, everything needing convexity or topology under
+`GameTheory/Analysis`, and architecture spikes under `GameTheory/Experimental`
+(never re-exported).
+
+`GameTheory/Analysis` is a one-way boundary. It is the only root allowed to
+import the external fixed-point package, and no module outside it may import it
+back; a file that does can reach all of `stdSimplex` and `Polynomial`, which the
+core and the executable frontend must never see. Both directions are checked by
+`scripts/phase2-audit.ps1`, including a probe that asserts the analytic root
+*does* reach them. See `docs/Phase2IncentiveSlice.md` and
 `docs/Phase3SequentialSlice.md` for what the gates guarantee and, more usefully,
 for the recorded limits they do not, and `docs/Phase4StaticHarvest.md` for the
 theorem families recovered on the settled API.

@@ -19,6 +19,7 @@ the same commit.
 | the correlated hierarchy | `Core/Equilibrium.lean` | both correlated concepts are closed under mixing; Nash sits inside them |
 | potential games | `Core/Potential.lean` | a finite potential game has a pure equilibrium |
 | the mixed extension | `Core/Mixed.lean` | pure equilibria survive it, and a mixed equilibrium is indifferent across its own support |
+| existence | `Analysis/Nash.lean` | every finite game has an equilibrium in mixed strategies |
 
 Each is instantiated in `Examples/Classic.lean` on the Prisoner's Dilemma, in
 the style the file already used: the finite frontend supplies one computed fact
@@ -46,6 +47,11 @@ them, and what closes the gap is that the deviator's utility is the *average* of
 the pure ones. A preference that does not respect averaging has no reason to
 survive the embedding.
 
+*A nonempty finite strategy set per player*, for existence. Finiteness is what
+makes the polytope compact and the payoff polynomial; nonemptiness is what makes
+it a polytope at all. A player with nothing to play has an empty simplex, and
+the fixed-point theorem has nothing to say about an empty set.
+
 ## Where the theorems stop, stated rather than skirted
 
 *Strong equilibrium gives only weak Pareto efficiency.* An equilibrium against
@@ -62,6 +68,31 @@ composes with.
 
 *A potential buys existence and nothing else.* It constrains unilateral changes
 only, so it says nothing about coalitions and nothing about efficiency.
+
+*The fixed-point theorem exhibits nothing.* It produces an equilibrium and no
+description of one — not which, not how many, not how to find it. Matching
+pennies makes the division of labour visible: the frontend decides by
+enumeration that it has no pure equilibrium, and the fixed-point argument
+asserts without exhibiting that it has a mixed one. The executable frontend is
+still the only thing here that computes an equilibrium.
+
+## The analytic root
+
+Everything that needs convexity or topology lives under `GameTheory/Analysis`,
+which no other module imports. That is a boundary rather than a directory: a
+file importing the fixed-point theorem can see all of `stdSimplex` and
+`Polynomial`, the two constants the audit requires the core and the executable
+frontend never to reach. Both the containment and the leak are measured — the
+existing six absence probes still pass, and a seventh and eighth probe assert
+that the analytic root does reach both, so the budget cannot quietly stop being
+spent where it was allowed.
+
+The root has three modules and one obligation each. `Simplex.lean` presents a
+law on a finite carrier as a point of the standard simplex and recovers it,
+which is where the dependency actually enters. `Payoff.lean` rewrites expected
+utility as a polynomial in the weights, which is what makes it continuous and,
+more importantly, affine in one player's own coordinates. `Nash.lean` applies
+Kakutani's theorem to the best-reply correspondence.
 
 ## Additions to the law type
 
@@ -85,19 +116,21 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 | interface changes required by the harvest | 0 |
 | `sorry`, `admit`, `native_decide`, custom axioms | 0 |
 | transport tokens added to the static layer | 0 |
+| `GameTheory/Analysis` nonblank lines | 351 |
+| transport tokens in the analytic root | 0 |
+| modules outside the root importing it | 0 |
+| absence probes still passing | 6 |
+| reachability probes firing inside the root | 2 |
 
 ## Outstanding
 
 - A mechanism-design encoding, with truthful reporting as a dominance statement.
   That is a language module rather than a theorem family, so it belongs with the
   other encodings and carries the same obligation: a workaround list.
-- The remaining flagship at this layer is *not* general equilibrium existence.
-  That route is closed: the pinned Mathlib has neither Brouwer nor Kakutani, and
-  supplying either would be a topology project of its own. What is in reach is
-  the two-player zero-sum minimax theorem, since Mathlib does carry Sion's
-  version of it.
-- The dependency boundary for that work sits at the bridge presenting a
-  finite-support law as a compact convex set, not at the theorem: importing
-  Sion's theorem makes neither of the probed constants reachable. The boundary
-  should be a root that Core and Protocol do not import, with its own probe
-  expectations recorded rather than an exception patched into the existing ones.
+- The two-player zero-sum minimax theorem, which Mathlib supplies directly in
+  Sion's form. It is now the cheaper of the two analytic results rather than the
+  only reachable one, and it needs no fixed point.
+- Whether any of v1's four and a half thousand lines above the same dependency
+  (Schauder, KKM, Scarf, the simplex approximation layer) is worth porting. The
+  existence theorem here needed none of it, so the question is what *else* would
+  need it, and nothing yet does.
