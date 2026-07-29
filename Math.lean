@@ -1,5 +1,6 @@
 import Math.Probability
 import Math.Probability.Adaptive
+import Math.Probability.MarkovOccupation
 import Math.Fin
 import Math.Fintype
 import Math.Fintype.Transport
