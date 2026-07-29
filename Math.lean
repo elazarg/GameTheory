@@ -1,5 +1,6 @@
 import Math.Probability
 import Math.Probability.Adaptive
+import Math.Probability.CoreShadow
 import Math.Probability.MarkovOccupation
 import Math.Probability.HittingTimePotential
 import Math.Fin
