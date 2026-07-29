@@ -71,16 +71,37 @@ Delegating to Mathlib was measured and rejected. Its bare-relation `Transitive`,
 preference here must stay an argument — one carrier is routinely studied under
 several preferences at once.
 
+### A coalitional game is not a game form, and that is the right answer
+
+`Core/Coalitional.lean` states what each coalition can guarantee itself, the
+core, and two theorems: a core allocation is individually rational, and the
+three-player majority game has no core allocation at all.
+
+The finding is the *absence* of reuse, and it is deliberate rather than a
+failure. A coalitional game has no strategies, no play, and no outcome carrier,
+so it is not a `GameForm` and forcing it into one would mean inventing a strategy
+space nobody uses and an outcome nobody observes. The module says so where a
+reader will meet it.
+
+What is shared is the vocabulary of groups: a coalition is a `Finset Agent` for
+the same reason it is one in a strong equilibrium's deviation, and the core's
+condition has that deviation's shape — a group objects when it can do better by
+itself. That is the correct amount of sharing, and it means `GameForm` is the
+centre of the *non-cooperative* theory rather than of the subject.
+
+The impossibility is the load-bearing half. Without it the core would look like
+a solution concept rather than one that routinely fails to exist, which is the
+fact every other cooperative concept is a response to.
+
 ## Axes not yet stressed
 
 Each of these is a part of the subject the design has never been asked about,
 listed with the choice it would put pressure on.
 
-*Cooperative games.* A coalitional game is a value on coalitions, not a form
-with strategies. Either it reuses the coalition machinery the core already has —
-`Subprofile`, `Profile.restrict`, `Preference.coalition`, the strong-equilibrium
-deviation shape — or `GameForm` is not the centre it claims to be. The core and
-the Shapley value are the theorems to push at it.
+*The Shapley value.* The coalitional primitive is in place and the core is
+proved to fail; the Shapley value is the concept that never fails, and its
+characterization by symmetry, efficiency, and additivity is the theorem that
+would stress whether that primitive is rich enough.
 
 *Arrow's theorem.* The vocabulary now states it. Proving it is the honest test
 of whether the split above was deep enough, since the pivotal-voter argument
