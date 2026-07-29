@@ -663,6 +663,118 @@ theorem condOn_pure (a : α) (S : Set α) (hmeet : ∃ b ∈ S, b ∈ (pure a).s
   · rw [if_neg hxS, prob_pure_eq_ite, if_neg]
     exact fun hxb => hxS (by rw [hxb]; exact hbS)
 
+private theorem massOf_eq_one_of_support_subset {μ : FinDist α} {S : Set α}
+    (hsub : μ.support ⊆ S) : massOf μ S = 1 := by
+  rw [massOf, tsum_congr fun a => ?_, μ.toPMF.tsum_coe]
+  by_cases haS : a ∈ S
+  · rw [Set.indicator_of_mem haS]
+  · rw [Set.indicator_of_notMem haS]
+    exact ((PMF.apply_eq_zero_iff _ _).mpr fun hmem => haS (hsub hmem)).symm
+
+/-- A law already carried by an event is unchanged by conditioning on it. -/
+theorem condOn_of_support_subset (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ μ.support)
+    (hsub : μ.support ⊆ S) : μ.condOn S hmeet = μ := by
+  refine ext (PMF.ext fun a => ?_)
+  show S.indicator μ.toPMF a / massOf μ S = μ.toPMF a
+  rw [massOf_eq_one_of_support_subset hsub, div_one]
+  by_cases haS : a ∈ S
+  · rw [Set.indicator_of_mem haS]
+  · rw [Set.indicator_of_notMem haS]
+    exact ((PMF.apply_eq_zero_iff _ _).mpr fun hmem => haS (hsub hmem)).symm
+
+private theorem massOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C, a ∈ μ.support)
+    (hDC : D ⊆ C) : massOf (μ.condOn C hC) D = massOf μ D / massOf μ C := by
+  rw [massOf, massOf]
+  simp_rw [div_eq_mul_inv]
+  rw [← ENNReal.tsum_mul_right]
+  refine tsum_congr fun a => ?_
+  by_cases haD : a ∈ D
+  · rw [Set.indicator_of_mem haD, Set.indicator_of_mem haD]
+    show C.indicator μ.toPMF a * (massOf μ C)⁻¹ = _
+    rw [Set.indicator_of_mem (hDC haD)]
+  · rw [Set.indicator_of_notMem haD, Set.indicator_of_notMem haD, zero_mul]
+
+/-- The mass a smaller event keeps after conditioning on a larger one. -/
+theorem probOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C, a ∈ μ.support)
+    (hDC : D ⊆ C) : (μ.condOn C hC).probOf D = μ.probOf D / μ.probOf C := by
+  show (massOf (μ.condOn C hC) D).toReal = _
+  rw [massOf_condOn hC hDC, ENNReal.toReal_div]
+  rfl
+
+/-- **Conditioning again on a smaller event forgets the first one.** This is what
+lets an argument that keeps conditioning as play advances go on referring to the
+law it started from. -/
+theorem condOn_condOn (μ : FinDist α) {C D : Set α} (hC : ∃ a ∈ C, a ∈ μ.support)
+    (hD : ∃ a ∈ D, a ∈ μ.support) (hDC : D ⊆ C)
+    (hDcond : ∃ a ∈ D, a ∈ (μ.condOn C hC).support) :
+    (μ.condOn C hC).condOn D hDcond = μ.condOn D hD := by
+  classical
+  refine ext_of_prob fun a => ?_
+  rw [prob_condOn, prob_condOn, prob_condOn, probOf_condOn hC hDC]
+  by_cases haD : a ∈ D
+  · rw [if_pos haD, if_pos haD, if_pos (hDC haD)]
+    have hc := (probOf_pos hC).ne'
+    have hd := (probOf_pos hD).ne'
+    field_simp
+  · rw [if_neg haD, if_neg haD]
+
+/-- An event's mass is the expectation of its indicator, which is how a
+conditioning meets the real-valued interface. -/
+theorem expect_indicator_eq_probOf (μ : FinDist α) (S : Set α) [DecidablePred (· ∈ S)] :
+    (μ.expect fun a => if a ∈ S then 1 else 0) = μ.probOf S := by
+  show ∑' a, μ.prob a * (if a ∈ S then 1 else 0) = (massOf μ S).toReal
+  rw [massOf, ENNReal.tsum_toReal_eq fun a => ?_]
+  · refine tsum_congr fun a => ?_
+    by_cases haS : a ∈ S
+    · rw [if_pos haS, mul_one, Set.indicator_of_mem haS, prob_def]
+    · rw [if_neg haS, mul_zero, Set.indicator_of_notMem haS, ENNReal.toReal_zero]
+  · by_cases haS : a ∈ S
+    · rw [Set.indicator_of_mem haS]
+      exact PMF.apply_ne_top _ _
+    · rw [Set.indicator_of_notMem haS]
+      exact ENNReal.zero_ne_top
+
+open Classical in
+/-- The law restricted to the fibre of `f` over `b`, or the law itself where
+that fibre carries no mass. The fallback is never reached along a draw, and
+naming it here keeps the disintegration below a total `bind`. -/
+noncomputable def condOnFibre (μ : FinDist α) (f : α → β) (b : β) : FinDist α :=
+  if hfibre : ∃ a ∈ f ⁻¹' {b}, a ∈ μ.support then μ.condOn (f ⁻¹' {b}) hfibre else μ
+
+/-- **Disintegration.** Drawing from a law is drawing its image and then drawing
+from what remains. This is how a conditioning is introduced with nothing
+assumed: one draw becomes an observed part and a conditioned remainder. -/
+theorem eq_bind_condOnFibre (μ : FinDist α) (f : α → β) :
+    μ = (map f μ).bind (μ.condOnFibre f) := by
+  classical
+  refine ext_of_prob fun x => ?_
+  rw [prob_bind, expect_map]
+  symm
+  by_cases hx : x ∈ μ.support
+  · have hfibre : ∃ a ∈ f ⁻¹' {f x}, a ∈ μ.support := ⟨x, rfl, hx⟩
+    refine Eq.trans (expect_congr (v := fun a =>
+      μ.prob x / μ.probOf (f ⁻¹' {f x}) * (if a ∈ f ⁻¹' {f x} then 1 else 0)) ?_) ?_
+    · intro a ha
+      by_cases hfa : a ∈ f ⁻¹' {f x}
+      · have hfa' : f a = f x := hfa
+        rw [if_pos hfa, mul_one, condOnFibre, hfa', dif_pos hfibre, prob_condOn]
+        exact if_pos (Set.mem_preimage.mpr rfl)
+      · rw [if_neg hfa, mul_zero, condOnFibre, dif_pos ⟨a, Set.mem_preimage.mpr rfl, ha⟩,
+          prob_condOn, if_neg]
+        exact fun hmem => hfa (Set.mem_preimage.mpr (Set.mem_preimage.mp hmem).symm)
+    · rw [expect_smul, expect_indicator_eq_probOf, div_mul_cancel₀ _ (probOf_pos hfibre).ne']
+  · have hzero : μ.prob x = 0 := prob_eq_zero_iff.mpr hx
+    rw [hzero]
+    refine Eq.trans (expect_congr (v := fun _ => (0 : ℝ)) ?_) (expect_const μ 0)
+    intro a _
+    rw [condOnFibre]
+    split
+    · rw [prob_condOn]
+      split
+      · rw [hzero, zero_div]
+      · rfl
+    · exact hzero
+
 /-! ## Convex mixing -/
 
 /-- Mix two laws, with weight `t` on the first. The interface is real-valued;
@@ -788,6 +900,43 @@ theorem mem_support_pi {μ : ∀ i, FinDist (A i)} {s : ∀ i, A i} :
     · exact absurd (Finset.prod_eq_zero (Finset.mem_univ i) hzero.symm) hpos.ne'
   · exact fun hall =>
       Finset.prod_pos fun i _ => prob_pos_iff.mpr (hall i)
+
+/-- The mass of a product event under independent draws is the product of the
+masses — the statement that conditioning on each coordinate separately is
+conditioning on all of them together. -/
+theorem probOf_pi (μ : ∀ i, FinDist (A i)) (C : ∀ i, Set (A i)) :
+    (pi μ).probOf { s | ∀ i, s i ∈ C i } = ∏ i, (μ i).probOf (C i) := by
+  classical
+  have hmass : massOf (pi μ) { s | ∀ i, s i ∈ C i } = ∏ i, massOf (μ i) (C i) := by
+    simp only [massOf]
+    rw [← ennreal_tsum_pi fun i a => (C i).indicator (μ i).toPMF a]
+    refine tsum_congr fun s => ?_
+    by_cases hevery : ∀ i, s i ∈ C i
+    · rw [Set.indicator_of_mem (show s ∈ { s | ∀ i, s i ∈ C i } from hevery)]
+      exact Finset.prod_congr rfl fun i _ => (Set.indicator_of_mem (hevery i) _).symm
+    · obtain ⟨i, hi⟩ := not_forall.mp hevery
+      rw [Set.indicator_of_notMem (show ¬ s ∈ { s | ∀ i, s i ∈ C i } from hevery),
+        Finset.prod_eq_zero (Finset.mem_univ i) (Set.indicator_of_notMem hi _)]
+  show (massOf (pi μ) _).toReal = _
+  rw [hmass, ENNReal.toReal_prod]
+  rfl
+
+/-- **Independent draws stay independent under conditioning on a product
+event.** Each coordinate is conditioned on its own event and nothing couples
+them, which is what lets a per-player conditioning be assembled into one. -/
+theorem condOn_pi (μ : ∀ i, FinDist (A i)) (C : ∀ i, Set (A i))
+    (hcoord : ∀ i, ∃ a ∈ C i, a ∈ (μ i).support)
+    (hall : ∃ s ∈ { s | ∀ i, s i ∈ C i }, s ∈ (pi μ).support) :
+    (pi μ).condOn { s | ∀ i, s i ∈ C i } hall = pi fun i => (μ i).condOn (C i) (hcoord i) := by
+  classical
+  refine ext_of_prob fun s => ?_
+  rw [prob_condOn, prob_pi, probOf_pi]
+  by_cases hmem : ∀ i, s i ∈ C i
+  · rw [if_pos (show s ∈ { s | ∀ i, s i ∈ C i } from hmem), prob_pi, ← Finset.prod_div_distrib]
+    exact Finset.prod_congr rfl fun i _ => by rw [prob_condOn, if_pos (hmem i)]
+  · obtain ⟨i, hi⟩ := not_forall.mp hmem
+    rw [if_neg (show ¬ s ∈ { s | ∀ i, s i ∈ C i } from hmem), prob_pi,
+      Finset.prod_eq_zero (Finset.mem_univ i) (by rw [prob_condOn, if_neg hi])]
 
 theorem support_pi_subset [DecidableEq ι] (μ : ∀ i, FinDist (A i)) :
     (pi μ).support ⊆ ↑(Fintype.piFinset fun i => (μ i).supportFinset) := by
