@@ -233,6 +233,73 @@ theorem finite_analytic_family_eventually_stable
     filter_upwards [hgt] with x hx
     simp [R, hR, not_le.mpr hx]
 
+/-- A finite family of real-analytic germs has one fixed index whose absolute
+value eventually dominates every member of the family. -/
+theorem finite_analytic_family_eventually_fixed_abs_maximizer
+    {I : Type*} [Finite I] [Nonempty I]
+    (f : I → ℝ → ℝ) {x₀ : ℝ}
+    (hf : ∀ i, AnalyticAt ℝ (f i) x₀) :
+    ∃ i, ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), ∀ j,
+      |f j x| ≤ |f i x| := by
+  letI := Fintype.ofFinite I
+  let square : I → ℝ → ℝ := fun i x => (f i x) ^ 2
+  have hsquare : ∀ i, AnalyticAt ℝ (square i) x₀ := by
+    intro i
+    exact (hf i).pow 2
+  obtain ⟨R, hstable⟩ :=
+    finite_analytic_family_eventually_stable square hsquare
+  obtain ⟨x, hxstable⟩ := hstable.exists
+  obtain ⟨i, -, hi⟩ :=
+    Finset.exists_mem_eq_sup' Finset.univ_nonempty (fun j => square j x)
+  refine ⟨i, ?_⟩
+  filter_upwards [hstable] with y hystable
+  intro j
+  have hxle : square j x ≤ square i x := by
+    have hsup :=
+      Finset.le_sup' (fun k => square k x) (Finset.mem_univ j)
+    rwa [hi] at hsup
+  have hR : R j i := (hxstable j i).mp hxle
+  have hyle : square j y ≤ square i y := (hystable j i).mpr hR
+  exact sq_le_sq.mp hyle
+
+/-- If some member of a finite analytic family is a nonzero right germ, one
+fixed member and one fixed sign eventually attain the absolute envelope
+exactly. The orientation is represented by the real scalar `-1` or `1`. -/
+theorem finite_analytic_family_eventually_fixed_oriented_abs_maximizer
+    {I : Type*} [Finite I] [Nonempty I]
+    (f : I → ℝ → ℝ) {x₀ : ℝ}
+    (hf : ∀ i, AnalyticAt ℝ (f i) x₀)
+    (hnonzero : ∃ j,
+      ¬∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), f j x = 0) :
+    ∃ i, ∃ σ : ℝ, (σ = -1 ∨ σ = 1) ∧
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        0 < σ * f i x ∧ ∀ j, |f j x| ≤ σ * f i x := by
+  obtain ⟨i, himax⟩ :=
+    finite_analytic_family_eventually_fixed_abs_maximizer f hf
+  have hine : ¬∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), f i x = 0 := by
+    rintro hizero
+    obtain ⟨j, hj⟩ := hnonzero
+    apply hj
+    filter_upwards [himax, hizero] with x hxmax hxzero
+    have hle := hxmax j
+    rw [hxzero, abs_zero] at hle
+    exact abs_eq_zero.mp (le_antisymm hle (abs_nonneg _))
+  rcases analyticAt_eventually_eq_or_lt_or_gt
+      (hf i) analyticAt_const with heq | hneg | hpos
+  · exact False.elim (hine heq)
+  · refine ⟨i, -1, Or.inl rfl, ?_⟩
+    filter_upwards [himax, hneg] with x hxmax hxneg
+    have hsign : (-1 : ℝ) * f i x = |f i x| := by
+      rw [neg_one_mul, abs_of_neg hxneg]
+    rw [hsign]
+    exact ⟨abs_pos.mpr (ne_of_lt hxneg), hxmax⟩
+  · refine ⟨i, 1, Or.inr rfl, ?_⟩
+    filter_upwards [himax, hpos] with x hxmax hxpos
+    have hsign : (1 : ℝ) * f i x = |f i x| := by
+      rw [one_mul, abs_of_pos hxpos]
+    rw [hsign]
+    exact ⟨abs_pos.mpr (ne_of_gt hxpos), hxmax⟩
+
 /-- Evaluate a bivariate polynomial `P : Polynomial (Polynomial ℝ)` — outer variable `v`,
 coefficients in `ℝ[λ]` — at the point `(λ, v) = (lam, y)`: specialise every coefficient at `λ =
 lam`, then evaluate the resulting real polynomial in `v` at `y`. -/
