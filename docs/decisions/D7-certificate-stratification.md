@@ -70,3 +70,42 @@ level.
 No `Adequacy` record, at any level. A language exposes its protocol and whatever
 named laws its own semantics justify. Downstream transfer is composition, and
 the compiled `GameForm` is the meeting point.
+
+---
+
+## Second measurement (2026-07-29)
+
+The first rejection was for want of a consumer. A candidate consumer has since
+appeared and been examined, and the rejection stands for a stronger reason.
+
+**Experiment ID:** EXP-019.
+
+The pinned snapshot proves the behavioral-from-mixed direction of the
+strategy-representation equivalence not from recall but from three conditions
+about reach mass, with recall demoted to sufficient. Structurally those are named
+adequacy certificates, and restating the theorem over them would have been the
+first real consumer of a certificate level. Two things came out of trying.
+
+*The generality is real but is not where the snapshot puts it.* Nothing in the
+proof reads a player's record except through the set of policies it rules out,
+so the hypothesis the theorem needs is that two histories a player cannot tell
+apart constrain its policy the same way. That is strictly weaker than recall —
+a player forgetting the order of its own moves satisfies it and fails recall —
+and the whole direction now runs on it. One condition, not three.
+
+*Two of the three conditions have no content in this layer, and one of those
+findings is a theorem rather than an argument.* The snapshot must assume that
+reaching a state factors player by player, because it conditions on reach
+probability and reach is not a product event. Here the conditioning event is a
+product event by construction, so the corresponding split is proved
+unconditionally about the law type. The mass condition has no counterpart at
+all: no reach mass is ever formed.
+
+So the level's content does not survive the move into this architecture. It is
+not that nothing consumes it; it is that after the layer's own construction is
+taken into account, there is nothing left for it to say. That is a stronger
+result than the first measurement and it points the same way.
+
+**Unchanged:** the rejection remains scoped to what has been examined. A
+transport between two languages preserving something the shared target forgets
+would still be a different question, and no such transport exists here.
