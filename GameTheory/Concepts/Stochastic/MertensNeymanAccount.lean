@@ -51,6 +51,42 @@ the negative discount rate. -/
 def logCorrector (s : ℝ) : ℝ :=
   (Real.log s)⁻¹
 
+/-- The logarithmic corrector is positive on the account domain. -/
+theorem logCorrector_pos {s : ℝ} (hs : 1 < s) :
+    0 < logCorrector s := by
+  unfold logCorrector
+  exact inv_pos.mpr (Real.log_pos hs)
+
+/-- The logarithmic corrector decreases as the account grows above one. -/
+theorem logCorrector_le_of_le
+    {a b : ℝ} (ha : 1 < a) (hab : a ≤ b) :
+    logCorrector b ≤ logCorrector a := by
+  have ha0 : 0 < a := lt_trans zero_lt_one ha
+  have hlog :
+      Real.log a ≤ Real.log b :=
+    Real.strictMonoOn_log.monotoneOn
+      (by simpa using ha0) (by exact ha0.trans_le hab) hab
+  unfold logCorrector
+  simpa [one_div] using
+    one_div_le_one_div_of_le (Real.log_pos ha) hlog
+
+/-- The logarithmic corrector vanishes along large accounts. -/
+theorem tendsto_logCorrector_atTop :
+    Tendsto logCorrector atTop (𝓝 0) := by
+  unfold logCorrector
+  exact tendsto_inv_atTop_zero.comp Real.tendsto_log_atTop
+
+/-- Threshold form of the vanishing logarithmic corrector. -/
+theorem exists_floor_logCorrector_le
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ S : ℝ, ∀ s : ℝ, S ≤ s → logCorrector s ≤ ε / 8 := by
+  have hevent :
+      ∀ᶠ s : ℝ in atTop, logCorrector s < ε / 8 :=
+    (tendsto_order.1 tendsto_logCorrector_atTop).2
+      (ε / 8) (by linarith)
+  rcases eventually_atTop.1 hevent with ⟨S, hS⟩
+  exact ⟨S, fun s hs => (hS s hs).le⟩
+
 theorem discountRate_pos {s : ℝ} (hs : 1 < s) :
     0 < discountRate s := by
   unfold discountRate
@@ -985,6 +1021,14 @@ def accountAtLevel (γ M : ℝ) (k : ℕ) : ℝ :=
     accountAtLevel γ M 0 = M := by
   simp [accountAtLevel]
 
+/-- Every reachable multiplicative account remains above its floor. -/
+theorem floor_le_accountAtLevel
+    {γ M : ℝ} (hfloor : IsValidScale γ M) (k : ℕ) :
+    M ≤ accountAtLevel γ M k := by
+  have hpow : 1 ≤ γ ^ k := one_le_pow₀ hfloor.1.le
+  unfold accountAtLevel
+  nlinarith [mul_nonneg (sub_nonneg.mpr hpow) hfloor.2.1.le]
+
 /-- A valid floor scale remains valid at every higher multiplicative account
 level. -/
 theorem isValidScale_accountAtLevel
@@ -992,13 +1036,11 @@ theorem isValidScale_accountAtLevel
     IsValidScale γ (accountAtLevel γ M k) := by
   have hγ := hfloor.1
   have hM := hfloor.2.1
-  have hpow : 1 ≤ γ ^ k := one_le_pow₀ hγ.le
   have haccountPos : 0 < accountAtLevel γ M k := by
     unfold accountAtLevel
     positivity
-  have hMle : M ≤ accountAtLevel γ M k := by
-    unfold accountAtLevel
-    nlinarith [mul_nonneg (sub_nonneg.mpr hpow) hM.le]
+  have hMle : M ≤ accountAtLevel γ M k :=
+    floor_le_accountAtLevel hfloor k
   have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
   have hdownFactor : 0 ≤ 1 - γ⁻¹ := by
     exact sub_nonneg.mpr ((inv_le_one₀ hγ0).2 hγ.le)
@@ -1634,6 +1676,75 @@ theorem exists_floor_forall_switchBudget_le_of_puiseux_deriv_bound
       exact Finset.single_le_sum
         (fun j _ => le_max_right (S j) 0) (Finset.mem_univ k)
     _ ≤ s := hs
+
+/-- One common account floor simultaneously supplies probability
+normalization, the small bounded-potential corrector, the logarithmic secant
+estimate, and every coordinate's Puiseux switch budget. -/
+theorem exists_commonAccountFloor_of_puiseux_deriv_bound
+    {κ : Type*} [Finite κ]
+    {ε : ℝ} {β lam0 : κ → ℝ} {W W' : κ → ℝ → ℝ}
+    (hε : 0 < ε) (hε1 : ε ≤ 1) (hεquarter : ε < 1 / 4)
+    (hβ : ∀ k, 0 < β k) (hlam0 : ∀ k, 0 < lam0 k)
+    (hWderiv : ∀ k lam, 0 < lam → lam < lam0 k →
+      HasDerivAt (W k) (W' k lam) lam)
+    (hWbound : ∀ k lam, 0 < lam → lam < lam0 k →
+      |W' k lam| ≤ lam ^ (β k - 1) / lam0 k) :
+    ∃ M : ℝ,
+      IsValidScale (1 + ε / 9) M ∧
+      1 < M ∧
+      logCorrector M ≤ ε / 8 ∧
+      (∀ s : ℝ, M ≤ s → ∀ s' : ℝ,
+        (1 + ε / 9)⁻¹ * s ≤ s' →
+        s' ≤ (1 + ε / 9) * s →
+        discountRate s *
+            (s' - s - ε * |s' - s| / 8) ≤
+          logCorrector s - logCorrector s') ∧
+      (∀ k : κ, ∀ s : ℝ, M ≤ s → ∀ M' y : ℝ,
+        IsValidScale (1 + ε / 9) s →
+        -1 ≤ y → y ≤ 2 →
+        switchBudget (1 + ε / 9) M' s y
+            (fun u => W k (discountRate u)) ≤
+          ε * discountRate s / 16) := by
+  obtain ⟨Sswitch, hswitch⟩ :=
+    exists_floor_forall_switchBudget_le_of_puiseux_deriv_bound
+      hε hεquarter hβ hlam0 hWderiv hWbound
+  obtain ⟨Ssecant, hsecant⟩ :=
+    exists_floor_discountRate_secant_le_logCorrector_sub hε
+  obtain ⟨Scorrector, hcorrector⟩ :=
+    exists_floor_logCorrector_le hε
+  let M :=
+    max (max Sswitch Ssecant)
+      (max Scorrector (max (18 / ε) 2))
+  have hswitchM : Sswitch ≤ M :=
+    (le_max_left Sswitch Ssecant).trans
+      (le_max_left (max Sswitch Ssecant)
+        (max Scorrector (max (18 / ε) 2)))
+  have hsecantM : Ssecant ≤ M :=
+    (le_max_right Sswitch Ssecant).trans
+      (le_max_left (max Sswitch Ssecant)
+        (max Scorrector (max (18 / ε) 2)))
+  have hcorrectorM : Scorrector ≤ M :=
+    (le_max_left Scorrector (max (18 / ε) 2)).trans
+      (le_max_right (max Sswitch Ssecant)
+        (max Scorrector (max (18 / ε) 2)))
+  have hscaleM : 18 / ε ≤ M :=
+    ((le_max_left (18 / ε) 2).trans
+      (le_max_right Scorrector (max (18 / ε) 2))).trans
+        (le_max_right (max Sswitch Ssecant)
+          (max Scorrector (max (18 / ε) 2)))
+  have htwoM : 2 ≤ M :=
+    ((le_max_right (18 / ε) 2).trans
+      (le_max_right Scorrector (max (18 / ε) 2))).trans
+        (le_max_right (max Sswitch Ssecant)
+          (max Scorrector (max (18 / ε) 2)))
+  refine ⟨M, isValidScale_one_add_epsilon_div_nine
+    hε hε1 hscaleM, by linarith, hcorrector M hcorrectorM,
+    ?_, ?_⟩
+  · intro s hs s' hs'Lower hs'Upper
+    exact hsecant s (hsecantM.trans hs) s' hs'Lower hs'Upper
+  · intro k s hs M' y hscale hyLower hyUpper
+    exact hswitch k s (hswitchM.trans hs) M' y
+      hscale hyLower hyUpper
 
 /-- A sufficient adjacent-variation criterion for the weighted switch
 budget. The permitted pointwise changes are proportional to the sizes of
