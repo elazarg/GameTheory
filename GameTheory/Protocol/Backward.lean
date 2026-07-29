@@ -209,6 +209,56 @@ theorem backwardValue_of_not_terminal {source : E.State} (hterm : ¬ E.terminal 
   exact padSuccessorValues_of_successor
     ⟨(chooser source hterm).1, (chooser source hterm).2, hreached⟩
 
+/-! ## The one-shot deviation principle
+
+Checking a strategy against every alternative strategy is checking infinitely
+many things; checking it against every alternative *action*, one step at a time,
+is checking finitely many. The principle below says the second suffices, and the
+certificate that makes it true is the same well-foundedness the backward
+recursion already needs — nothing further is assumed.
+
+What makes it non-circular is that the one-step comparison is made against the
+chooser's *own* continuation value. A chooser that cannot improve on itself by
+changing one action, given that it will go on playing as it does, cannot be
+improved on by any other chooser at all.
+
+Only the sufficient direction is proved. The converse would need, for one state
+and one alternative action, a chooser that takes that action there and plays as
+the original does everywhere else — a pointwise update of a dependent function,
+which transports along an equality of states and is not available in this
+layer. -/
+
+variable (E) in
+/-- No single legal action, substituted at one state and followed by the
+chooser's own continued play, does better than the action the chooser takes. -/
+def IsOneShotOptimal (certificate : E.WellFoundedPlay) (chooser : E.Chooser)
+    (payoff : E.State → ℝ) : Prop :=
+  ∀ (state : E.State) (hterm : ¬ E.terminal state)
+    (alternative : { joint : ∀ i, Option (E.Action i) // E.Legal state joint }),
+    (E.step state alternative).expect (E.backwardValue certificate chooser payoff) ≤
+      (E.step state (chooser state hterm)).expect
+        (E.backwardValue certificate chooser payoff)
+
+/-- **The one-shot deviation principle.** A chooser that no single-action change
+improves is better than every other chooser, everywhere.
+
+The induction is along the same `Successor` relation the value recursion uses,
+so the certificate carries both and no second hypothesis appears. -/
+theorem backwardValue_le_of_isOneShotOptimal {certificate : E.WellFoundedPlay}
+    {optimal : E.Chooser} {payoff : E.State → ℝ}
+    (hopt : E.IsOneShotOptimal certificate optimal payoff) (other : E.Chooser)
+    (state : E.State) :
+    E.backwardValue certificate other payoff state ≤
+      E.backwardValue certificate optimal payoff state := by
+  induction state using certificate.induction with
+  | _ source ih =>
+    by_cases hterm : E.terminal source
+    · rw [backwardValue_of_terminal hterm, backwardValue_of_terminal hterm]
+    · rw [backwardValue_of_not_terminal hterm, backwardValue_of_not_terminal hterm]
+      refine le_trans (FinDist.expect_mono fun reached hreached => ?_)
+        (hopt source hterm (other source hterm))
+      exact ih reached ⟨(other source hterm).1, (other source hterm).2, hreached⟩
+
 /-! ## Backward induction computes the forward semantics
 
 The fuelled evaluator and this recursion describe the same number. That is
@@ -238,6 +288,21 @@ theorem backwardValue_eq_expect_runFor {horizon : ℕ} {state : E.State}
       refine hstop final ?_
       rw [runFor_succ_of_not_terminal chooser horizon hterm, FinDist.support_bind]
       exact Set.mem_biUnion hreached hfinal
+
+/-- **The forward reading.** Where both choosers have stopped, the principle is a
+statement about run laws: the locally unimprovable chooser's expected payoff is
+at least any other's. Nothing new is proved here — the two semantics were already
+known to agree — but this is the form a caller quotes. -/
+theorem expect_runFor_le_of_isOneShotOptimal {certificate : E.WellFoundedPlay}
+    {optimal : E.Chooser} {payoff : E.State → ℝ}
+    (hopt : E.IsOneShotOptimal certificate optimal payoff) (other : E.Chooser)
+    {horizon : ℕ} {state : E.State}
+    (hother : E.StopsWithin other horizon state) (hoptimal : E.StopsWithin optimal horizon state) :
+    (E.runFor other horizon state).expect payoff ≤
+      (E.runFor optimal horizon state).expect payoff := by
+  rw [← backwardValue_eq_expect_runFor (certificate := certificate) hother,
+    ← backwardValue_eq_expect_runFor (certificate := certificate) hoptimal]
+  exact backwardValue_le_of_isOneShotOptimal hopt other state
 
 end ExecutionProtocol
 

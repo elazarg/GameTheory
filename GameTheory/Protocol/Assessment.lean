@@ -22,6 +22,7 @@ one information state and leaves everything else alone; `Context` is precisely
 the data that change is evaluated against.
 -/
 
+import GameTheory.Protocol.Backward
 import GameTheory.Protocol.Information
 
 noncomputable section
@@ -95,6 +96,45 @@ theorem isLocallyOptimal_congr {first second : E.Context i}
   constructor <;> intro hopt alternative hmem
   · rw [← hvalue, ← hvalue]; exact hopt alternative hmem
   · rw [hvalue, hvalue]; exact hopt alternative hmem
+
+/-! ## The context a one-shot deviation is evaluated in
+
+The principle proved for choosers compares whole joint actions. A deviator
+compares its own choices, and the two meet once the caller says how a choice
+becomes a joint action — which a concrete game supplies anyway, and which cannot
+be built generically here, since substituting one player's contribution is a
+pointwise update of a dependent function. -/
+
+/-- The context at one state: each of the deviator's choices is turned into a
+joint action, and continued play is worth `continuation`. -/
+def ofDeviation {state : E.State}
+    (deviate : Option (E.Action i) → { joint : ∀ j, Option (E.Action j) // E.Legal state joint })
+    (continuation : E.State → ℝ) : E.Context i where
+  outcome choice := E.step state (deviate choice)
+  continuation := continuation
+
+@[simp]
+theorem ofDeviation_value {state : E.State}
+    (deviate : Option (E.Action i) → { joint : ∀ j, Option (E.Action j) // E.Legal state joint })
+    (continuation : E.State → ℝ) (choice : Option (E.Action i)) :
+    (ofDeviation deviate continuation).value choice =
+      (E.step state (deviate choice)).expect continuation := rfl
+
+/-- **The one-shot deviation principle, read as local optimality.** A chooser no
+single action improves is locally optimal in the context its own continued play
+induces — whatever set of choices the deviator is allowed, and however its
+choices are turned into joint actions. -/
+theorem isLocallyOptimal_ofDeviation {certificate : E.WellFoundedPlay} {chooser : E.Chooser}
+    {payoff : E.State → ℝ} (hopt : E.IsOneShotOptimal certificate chooser payoff)
+    {state : E.State} (hterm : ¬ E.terminal state)
+    (deviate : Option (E.Action i) → { joint : ∀ j, Option (E.Action j) // E.Legal state joint })
+    (allowed : Set (Option (E.Action i))) (own : Option (E.Action i))
+    (hown : deviate own = chooser state hterm) :
+    (ofDeviation deviate (E.backwardValue certificate chooser payoff)).IsLocallyOptimal
+      allowed own := by
+  intro alternative _
+  rw [ofDeviation_value, ofDeviation_value, hown]
+  exact hopt state hterm (deviate alternative)
 
 /-- Build a context from an assessment: a belief over hidden states, and a
 branch giving the law that follows each choice at each state. The branch is

@@ -30,7 +30,8 @@ becomes difficult to scan.
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
 | EXP-018 | 2026-07-29 | D6 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | Supports | `GameTheory/Probability/FinDist.lean`; `GameTheory/Protocol/Information.lean` |
 | EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | Narrows; closes D7 again | `GameTheory/Experimental/Phase4/ReachMassStatements.lean`; [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md) |
-| EXP-020 | 2026-07-29 | D1 / Phase 4 | Should carrier-bearing structures keep storing their carriers, now that the reducibility cost has been paid across a whole layer? | *reserved* | `GameTheory/Core/Form.lean`; `GameTheory/Protocol/Execution.lean` |
+| EXP-020 | 2026-07-29 | D1 / Phase 4 | Should carrier-bearing structures keep storing their carriers, now that the reducibility cost has been paid across a whole layer? | Decides D1 | [`decisions/D1-signature-ownership.md`](decisions/D1-signature-ownership.md); `GameTheory/Experimental/Phase4/D1/` |
+| EXP-021 | 2026-07-29 | D6 / Phase 3 close-out | Does the one-shot deviation principle hold on the accepted sequential interface, and does the certificate already in hand carry it? | Supports | `GameTheory/Protocol/Backward.lean`; `GameTheory/Tests/OneShot.lean` |
 
 ## Entry template
 
@@ -1253,3 +1254,44 @@ memory.
   what a fresh file looks like is not what moving `Execution.lean` and its ten
   dependents costs. That measurement is the one thing still missing, and it is
   the one that decides.
+
+### EXP-021: the one-shot deviation principle
+
+- **Date / revision:** 2026-07-29
+- **Decision / question:** the sequential gate recorded the one-shot-deviation
+  *interface* but not the principle, and recorded that the principle could not be
+  stated because the runner was indexed by state. That obstruction was removed
+  earlier. The question is whether the principle now follows, and whether it
+  needs anything the layer does not already have.
+- **Representative slice:** a coin decides whether the player chooses at all, and
+  its one choice is worth `1` against `0` — the smallest protocol in which a
+  policy can be locally unimprovable without that being automatic.
+- **Evidence:** `GameTheory/Protocol/Backward.lean`;
+  `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/OneShot.lean`
+- **Observation.** The principle holds and needs no new certificate. A chooser
+  that no single legal action improves — measured against its *own* continued
+  play — is at least as good as every other chooser, at every state. The
+  induction runs along the same `Successor` relation the value recursion already
+  uses, so the well-foundedness certificate carries both and no second hypothesis
+  appears anywhere in the statement.
+  It reads forward as well as backward: where both choosers have stopped, the
+  same conclusion is a statement about run laws, via the bridge already proved
+  between the two semantics. And it meets the assessment interface: a chooser no
+  single action improves is *locally optimal* in the context its own continuation
+  induces, for any allowed set and any way of turning a choice into a joint
+  action.
+  Only sufficiency is proved, and the reason the converse is missing is worth
+  recording because it is now the fourth appearance of one obstacle. Converting
+  "best among choosers" back into "unimprovable by one action" needs, for one
+  state and one action, a chooser that plays that action there and behaves as the
+  original everywhere else — a pointwise update of a dependent function, which
+  transports along an equality of states. Same collision as the commitment
+  construction, the factorization condition, and the dependent rewrite under a
+  support-dependent bind.
+  Both directions are checked on the slice: the grabbing policy satisfies the
+  one-step condition, the passing policy provably fails it, and the conclusion is
+  not vacuous — passing really is worse at the root. So the principle detects
+  optimality rather than something the protocol hands to any policy.
+- **Outcome:** supports — the sequential flagship pair is complete.
+- **Next action:** the static-core harvest, which has been unblocked since the
+  incentive gate and touches none of this.
