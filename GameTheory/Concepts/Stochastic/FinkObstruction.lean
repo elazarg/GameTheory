@@ -29,6 +29,88 @@ open Math.Probability
 
 variable {ι : Type}
 
+/-- One member of the fixed signed-coordinate test family for a baseline PMF.
+The Boolean chooses the positive or negative orientation. -/
+noncomputable def pmfCoordinateTestScore {Ω : Type}
+    [DecidableEq Ω] (baseline : PMF Ω) (t : Ω) (positive : Bool)
+    (x : Ω) : ℝ :=
+  (if positive then 1 else -1) *
+    ((Pi.single t (1 : ℝ) : Ω → ℝ) x - (baseline t).toReal)
+
+/-- Expected signed-coordinate score under an arbitrary comparison PMF. -/
+theorem expect_pmfCoordinateTestScore {Ω : Type}
+    [Finite Ω] [DecidableEq Ω] (baseline comparison : PMF Ω)
+    (t : Ω) (positive : Bool) :
+    expect comparison (pmfCoordinateTestScore baseline t positive) =
+      (if positive then 1 else -1) *
+        ((comparison t).toReal - (baseline t).toReal) := by
+  unfold pmfCoordinateTestScore
+  rw [expect_const_mul, expect_sub, expect_pi_single, expect_const]
+
+/-- Every fixed coordinate test is centered under the baseline PMF. -/
+theorem expect_pmfCoordinateTestScore_baseline {Ω : Type}
+    [Finite Ω] [DecidableEq Ω] (baseline : PMF Ω)
+    (t : Ω) (positive : Bool) :
+    expect baseline (pmfCoordinateTestScore baseline t positive) = 0 := by
+  rw [expect_pmfCoordinateTestScore]
+  ring
+
+/-- Every fixed coordinate-test increment has absolute value at most one. -/
+theorem abs_pmfCoordinateTestScore_le_one {Ω : Type}
+    [DecidableEq Ω] (baseline : PMF Ω)
+    (t : Ω) (positive : Bool) (x : Ω) :
+    |pmfCoordinateTestScore baseline t positive x| ≤ 1 := by
+  have hmass_nonneg : 0 ≤ (baseline t).toReal :=
+    ENNReal.toReal_nonneg
+  have hmass_le_one : (baseline t).toReal ≤ 1 := by
+    have h :=
+      (ENNReal.toReal_le_toReal
+        (PMF.apply_ne_top baseline t) ENNReal.one_ne_top).2
+          (baseline.coe_le_one t)
+    simpa using h
+  unfold pmfCoordinateTestScore
+  rw [abs_mul]
+  have horientation :
+      |if positive then (1 : ℝ) else -1| = 1 := by
+    cases positive <;> norm_num
+  rw [horientation, one_mul, Pi.single_apply]
+  by_cases hx : x = t
+  · rw [if_pos hx, abs_of_nonneg (sub_nonneg.mpr hmass_le_one)]
+    linarith
+  · rw [if_neg hx, zero_sub, abs_neg, abs_of_nonneg hmass_nonneg]
+    exact hmass_le_one
+
+/-- The fixed finite family containing both signs at every coordinate
+separates the baseline PMF from every distinct comparison PMF. -/
+theorem exists_pmfCoordinateTestScore_comparison_pos {Ω : Type}
+    [Finite Ω] [DecidableEq Ω] (baseline comparison : PMF Ω)
+    (hne : baseline ≠ comparison) :
+    ∃ t positive,
+      0 < expect comparison
+        (pmfCoordinateTestScore baseline t positive) := by
+  have hcoordinate :
+      ∃ t, (baseline t).toReal ≠ (comparison t).toReal := by
+    by_contra h
+    apply hne
+    apply Math.ProbabilityMassFunction.eq_of_forall_toReal_eq
+    intro t
+    by_contra ht
+    exact h ⟨t, ht⟩
+  obtain ⟨t, ht⟩ := hcoordinate
+  by_cases hlt : (baseline t).toReal < (comparison t).toReal
+  · refine ⟨t, true, ?_⟩
+    rw [expect_pmfCoordinateTestScore]
+    change 0 < (1 : ℝ) *
+      ((comparison t).toReal - (baseline t).toReal)
+    nlinarith
+  · refine ⟨t, false, ?_⟩
+    rw [expect_pmfCoordinateTestScore]
+    change 0 < (-1 : ℝ) *
+      ((comparison t).toReal - (baseline t).toReal)
+    have hreverse : (comparison t).toReal < (baseline t).toReal :=
+      lt_of_le_of_ne (le_of_not_gt hlt) (Ne.symm ht)
+    linarith
+
 /-- Signed surprise of one PMF coordinate, centered at its baseline mass and
 oriented toward the comparison PMF. -/
 noncomputable def signedPMFCoordinateScore {Ω : Type}
@@ -443,6 +525,38 @@ theorem pureDeviationTransitionTestScore_spec
     expect_signedPMFCoordinateScore_comparison_pos _ _ _
       (Ne.symm hcoordinate),
     fun x => abs_signedPMFCoordinateScore_le_one _ _ _ x⟩
+
+/-- A fixed finite family of baseline-centered, bounded coordinate scores
+contains a strictly positive-drift test for every transition-visible pure
+deviation. -/
+theorem exists_pureDeviationCoordinateTestScore_spec
+    (G : StochasticGame ι)
+    [Fintype G.State] [DecidableEq G.State]
+    [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hkernel :
+      G.finkPureDeviationStateKernel z s who d ≠
+        G.finkStateKernel z s) :
+    ∃ t positive,
+      expect (G.finkStateKernel z s)
+          (pmfCoordinateTestScore
+            (G.finkStateKernel z s) t positive) = 0 ∧
+        0 <
+          expect (G.finkPureDeviationStateKernel z s who d)
+            (pmfCoordinateTestScore
+              (G.finkStateKernel z s) t positive) ∧
+        ∀ x,
+          |pmfCoordinateTestScore
+            (G.finkStateKernel z s) t positive x| ≤ 1 := by
+  obtain ⟨t, positive, hpositive⟩ :=
+    exists_pmfCoordinateTestScore_comparison_pos
+      (G.finkStateKernel z s)
+      (G.finkPureDeviationStateKernel z s who d) (Ne.symm hkernel)
+  exact ⟨t, positive,
+    expect_pmfCoordinateTestScore_baseline _ _ _,
+    hpositive,
+    fun x => abs_pmfCoordinateTestScore_le_one _ _ _ x⟩
 
 /-- Every normalized obstruction exposes one of two semantically distinct
 response coordinates.  A transition-visible coordinate changes the
