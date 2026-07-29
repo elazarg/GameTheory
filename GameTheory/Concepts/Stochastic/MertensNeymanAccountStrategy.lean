@@ -9,6 +9,7 @@ import GameTheory.Concepts.Stochastic.AdaptiveCertificate
 import GameTheory.Concepts.Stochastic.DiscountedShapleyAlgebraic
 import GameTheory.Concepts.Stochastic.AffinePayoff
 import Math.AlgebraicSelection
+import Math.WeierstrassCurve
 
 /-!
 # Game-facing integration of the Mertens--Neyman account controller
@@ -3844,6 +3845,54 @@ theorem exists_discountedShapleyRateValue_limit_of_polynomial_root
         hzs hpayLower hpayUpper l z
   choose L hL using hexists
   exact ⟨L, hL⟩
+
+/-- Coordinatewise bivariate relations for the canonical discounted Shapley
+value reduce to distinguished formal equations centered at a proposed endpoint.
+
+Taking primitive parts removes parameter-only factors. Weierstrass preparation
+then supplies a distinguished polynomial times a formal unit, while the
+centered canonical branch continues to satisfy the primitive equation on a
+smaller positive-rate interval. -/
+theorem exists_weierstrassFactorizations_discountedShapleyRateValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (P : G.State → Polynomial (Polynomial ℝ))
+    (ρ L : G.State → ℝ)
+    (hρ : ∀ z, 0 < ρ z)
+    (hP : ∀ z, P z ≠ 0)
+    (hroot : ∀ z l, l ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      Math.bivEval (P z) l
+        (G.discountedShapleyRateValue l z) = 0) :
+    ∃ (f : G.State → Polynomial (PowerSeries ℝ))
+        (h : G.State → PowerSeries (PowerSeries ℝ))
+        (r : G.State → ℝ),
+      ∀ z,
+        (Math.bivPolynomialToIteratedPowerSeries
+          (Math.translateBivPolynomialValue (P z) (L z)).primPart
+            ).IsWeierstrassFactorization (f z) (h z) ∧
+        r z ∈ Set.Ioc (0 : ℝ) (ρ z) ∧
+        ∀ l ∈ Set.Ioo (0 : ℝ) (r z),
+          Math.bivEval
+              (Math.translateBivPolynomialValue (P z) (L z)).primPart
+              l (G.discountedShapleyRateValue l z - L z) = 0 := by
+  have hexists (z : G.State) :
+      ∃ (fz : Polynomial (PowerSeries ℝ))
+          (hz : PowerSeries (PowerSeries ℝ)) (rz : ℝ),
+        (Math.bivPolynomialToIteratedPowerSeries
+          (Math.translateBivPolynomialValue (P z) (L z)).primPart
+            ).IsWeierstrassFactorization fz hz ∧
+        rz ∈ Set.Ioc (0 : ℝ) (ρ z) ∧
+        ∀ l ∈ Set.Ioo (0 : ℝ) rz,
+          Math.bivEval
+              (Math.translateBivPolynomialValue (P z) (L z)).primPart
+              l (G.discountedShapleyRateValue l z - L z) = 0 :=
+    Math.exists_weierstrassFactorization_and_centered_primitive_branch_on_Ioo
+      (P z) (hP z)
+      (w := fun l => G.discountedShapleyRateValue l z)
+      (L z) (ρ z) (hρ z) (hroot z)
+  choose f h r hdata using hexists
+  exact ⟨f, h, r, hdata⟩
 
 /-- Regular coordinatewise algebraic branches of the canonical discounted
 Shapley value produce the zero-sum uniform payoff.
