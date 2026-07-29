@@ -1522,6 +1522,24 @@ theorem vriezeDualZ_pos_iff_biasSlack_eq_zero
   simpa only [vriezeDualZ] using
     hstrong.dual_pos_iff_minPrimalSlack_eq_zero (Sum.inr (Sum.inl (s, j)))
 
+/-- The row-level strong-complementarity equivalence with primal bias slack
+expanded into the concrete Vrieze equality. -/
+theorem vriezeDualZ_pos_iff_tight_bias
+    {controller : Bool} {q : VriezeCol G controller → ℝ}
+    {w : VriezeRow G controller → ℝ}
+    (hstrong : Math.LinearProgramming.IsStrongComplementaryPair
+      (G.vriezeA controller) (G.vriezeB controller) (G.vriezeC controller) q w)
+    (s : G.State) (j : G.Act controller) :
+    0 < G.vriezeDualZ controller w s j ↔
+      (∑ i, G.vriezeDecodeXVal controller q s i *
+        G.rewardVal controller s i j) +
+        (∑ t, G.transProb controller s j t * G.vriezeDecodeV controller q t) =
+      G.vriezeDecodeG controller q s + G.vriezeDecodeV controller q s := by
+  rw [G.vriezeDualZ_pos_iff_biasSlack_eq_zero hstrong s j,
+    Math.LinearProgramming.minPrimalSlack, G.rowEval_vriezeA_bias]
+  simp only [vriezeB]
+  constructor <;> intro h <;> linarith
+
 /-- The abstract dual objective is exactly the sum of the decoded per-state
 simplex multipliers. -/
 theorem maxDualValue_vriezeB_eq (G : StochasticGame Bool) [Finite G.State]
@@ -1886,6 +1904,42 @@ def vriezeOccupationSupport (G : StochasticGame Bool) [Finite G.State]
     (z : G.State → G.Act controller → ℝ) (s : G.State) : Prop :=
   0 < ∑ j, z s j
 
+/-- On an occupied state, averaging the bias expression against the
+normalized occupation weights preserves the tight Vrieze bias equality. -/
+theorem normalized_vriezeDualZ_bias_eq
+    {controller : Bool} {q : VriezeCol G controller → ℝ}
+    {w : VriezeRow G controller → ℝ}
+    (hstrong : Math.LinearProgramming.IsStrongComplementaryPair
+      (G.vriezeA controller) (G.vriezeB controller) (G.vriezeC controller) q w)
+    (s : G.State)
+    (hs : G.vriezeOccupationSupport controller (G.vriezeDualZ controller w) s) :
+    (∑ j, (G.vriezeDualZ controller w s j /
+        ∑ j', G.vriezeDualZ controller w s j') *
+      ((∑ i, G.vriezeDecodeXVal controller q s i *
+        G.rewardVal controller s i j) +
+        (∑ t, G.transProb controller s j t * G.vriezeDecodeV controller q t))) =
+      G.vriezeDecodeG controller q s + G.vriezeDecodeV controller q s := by
+  classical
+  have hznonneg : ∀ j, 0 ≤ G.vriezeDualZ controller w s j :=
+    fun j => hstrong.2.1.1 (Sum.inr (Sum.inl (s, j)))
+  calc
+    _ = ∑ j, (G.vriezeDualZ controller w s j /
+          ∑ j', G.vriezeDualZ controller w s j') *
+        (G.vriezeDecodeG controller q s + G.vriezeDecodeV controller q s) := by
+      apply Finset.sum_congr rfl
+      intro j _
+      by_cases hz : G.vriezeDualZ controller w s j = 0
+      · simp [hz]
+      · have hzpos : 0 < G.vriezeDualZ controller w s j :=
+          lt_of_le_of_ne (hznonneg j) (Ne.symm hz)
+        rw [(G.vriezeDualZ_pos_iff_tight_bias hstrong s j).mp hzpos]
+    _ = (∑ j, G.vriezeDualZ controller w s j /
+          ∑ j', G.vriezeDualZ controller w s j') *
+        (G.vriezeDecodeG controller q s + G.vriezeDecodeV controller q s) := by
+      rw [Finset.sum_mul]
+    _ = G.vriezeDecodeG controller q s + G.vriezeDecodeV controller q s := by
+      rw [← Finset.sum_div, div_self hs.ne', one_mul]
+
 /-- For the dual point of a strongly complementary pair, a state belongs to
 the occupation support exactly when at least one of its primal bias rows is
 tight. -/
@@ -1920,6 +1974,27 @@ theorem vriezeOccupationSupport_iff_exists_biasSlack_eq_zero
   · rintro ⟨j, hj⟩
     have hjpos := (G.vriezeDualZ_pos_iff_biasSlack_eq_zero hstrong s j).mpr hj
     exact Finset.sum_pos' (fun k _ => hznonneg k) ⟨j, Finset.mem_univ j, hjpos⟩
+
+/-- The support/tightness equivalence with the abstract primal slack expanded
+into the concrete Vrieze bias equality for the decoded primal variables. -/
+theorem vriezeOccupationSupport_iff_exists_tight_bias
+    {controller : Bool} {q : VriezeCol G controller → ℝ}
+    {w : VriezeRow G controller → ℝ}
+    (hstrong : Math.LinearProgramming.IsStrongComplementaryPair
+      (G.vriezeA controller) (G.vriezeB controller) (G.vriezeC controller) q w)
+    (s : G.State) :
+    G.vriezeOccupationSupport controller (G.vriezeDualZ controller w) s ↔
+      ∃ j : G.Act controller,
+        (∑ i, G.vriezeDecodeXVal controller q s i *
+          G.rewardVal controller s i j) +
+          (∑ t, G.transProb controller s j t * G.vriezeDecodeV controller q t) =
+        G.vriezeDecodeG controller q s + G.vriezeDecodeV controller q s := by
+  rw [G.vriezeOccupationSupport_iff_exists_biasSlack_eq_zero hstrong s]
+  apply exists_congr
+  intro j
+  rw [Math.LinearProgramming.minPrimalSlack, G.rowEval_vriezeA_bias]
+  simp only [vriezeB]
+  constructor <;> intro h <;> linarith
 
 /-- A dual-feasible occupation measure has nonempty support whenever the
 state space is nonempty. -/
