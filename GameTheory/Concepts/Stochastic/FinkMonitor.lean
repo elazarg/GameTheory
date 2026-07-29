@@ -27,6 +27,79 @@ open Filter
 /-- The finite monitor family: a destination state and one of its two score orientations. -/
 abbrev PMFCoordinateMonitor (Ω : Type) := Ω × Bool
 
+/-- Public score obtained by mixing the destination/sign tests with an arbitrary monitor
+    distribution. In a sequential construction the distribution may be chosen from the public
+    history before the next outcome is observed. -/
+def weightedPMFCoordinateMonitorScore {Ω : Type} [DecidableEq Ω]
+    (baseline : PMF Ω) (monitorDist : PMF (PMFCoordinateMonitor Ω)) (x : Ω) : ℝ :=
+  expect monitorDist (fun monitor =>
+    pmfCoordinateTestScore baseline monitor.1 monitor.2 x)
+
+theorem abs_weightedPMFCoordinateMonitorScore_le_one
+    {Ω : Type} [DecidableEq Ω]
+    (baseline : PMF Ω) (monitorDist : PMF (PMFCoordinateMonitor Ω)) (x : Ω) :
+    |weightedPMFCoordinateMonitorScore baseline monitorDist x| ≤ 1 := by
+  exact abs_expect_le_of_abs_le monitorDist _ fun monitor =>
+    abs_pmfCoordinateTestScore_le_one baseline monitor.1 monitor.2 x
+
+theorem weightedPMFCoordinateMonitorScore_mem_Icc
+    {Ω : Type} [DecidableEq Ω]
+    (baseline : PMF Ω) (monitorDist : PMF (PMFCoordinateMonitor Ω)) (x : Ω) :
+    weightedPMFCoordinateMonitorScore baseline monitorDist x ∈
+      Set.Icc (-1 : ℝ) 1 :=
+  abs_le.mp (abs_weightedPMFCoordinateMonitorScore_le_one baseline monitorDist x)
+
+/-- Every predictable mixture of the coordinate monitors remains exactly centered under the
+    baseline kernel. This is the one-step conditional-centering interface for a public account. -/
+theorem expect_weightedPMFCoordinateMonitorScore_baseline
+    {Ω : Type} [Finite Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) (monitorDist : PMF (PMFCoordinateMonitor Ω)) :
+    expect baseline (weightedPMFCoordinateMonitorScore baseline monitorDist) = 0 := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [show weightedPMFCoordinateMonitorScore baseline monitorDist = fun x =>
+      ∑ monitor, (monitorDist monitor).toReal *
+        pmfCoordinateTestScore baseline monitor.1 monitor.2 x by
+    funext x
+    exact expect_eq_sum _ _]
+  rw [← expect_sum_comm]
+  apply Finset.sum_eq_zero
+  intro monitor _
+  rw [expect_const_mul, expect_pmfCoordinateTestScore_baseline, mul_zero]
+
+/-- Fubini formula for the expectation of a weighted coordinate-monitor score. -/
+theorem expect_weightedPMFCoordinateMonitorScore
+    {Ω : Type} [Finite Ω] [DecidableEq Ω]
+    (baseline comparison : PMF Ω)
+    (monitorDist : PMF (PMFCoordinateMonitor Ω)) :
+    expect comparison (weightedPMFCoordinateMonitorScore baseline monitorDist) =
+      expect monitorDist (fun monitor =>
+        expect comparison
+          (pmfCoordinateTestScore baseline monitor.1 monitor.2)) := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [show weightedPMFCoordinateMonitorScore baseline monitorDist = fun x =>
+      ∑ monitor, (monitorDist monitor).toReal *
+        pmfCoordinateTestScore baseline monitor.1 monitor.2 x by
+    funext x
+    exact expect_eq_sum _ _]
+  rw [← expect_sum_comm, expect_eq_sum]
+  exact Finset.sum_congr rfl fun monitor _ => by
+    rw [expect_const_mul]
+
+/-- Under a comparison kernel, the weighted score is the monitor-distribution average of the
+    oriented destination-probability differences. -/
+theorem expect_weightedPMFCoordinateMonitorScore_eq_difference
+    {Ω : Type} [Finite Ω] [DecidableEq Ω]
+    (baseline comparison : PMF Ω)
+    (monitorDist : PMF (PMFCoordinateMonitor Ω)) :
+    expect comparison (weightedPMFCoordinateMonitorScore baseline monitorDist) =
+      expect monitorDist (fun monitor =>
+        (if monitor.2 then 1 else -1) *
+          ((comparison monitor.1).toReal - (baseline monitor.1).toReal)) := by
+  rw [expect_weightedPMFCoordinateMonitorScore]
+  congr 1
+  funext monitor
+  exact expect_pmfCoordinateTestScore baseline comparison monitor.1 monitor.2
+
 /-- Realized signed gain of a coordinate monitor on an observed outcome stream. -/
 def pmfCoordinateMonitorGain {Ω : Type} [DecidableEq Ω]
     (baseline : PMF Ω) (observation : ℕ → Ω)
