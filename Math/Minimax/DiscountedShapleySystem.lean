@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 -/
 
 import Math.Minimax.ShapleySnow
+import Math.CofiniteIdeal
 import Math.MultivariateElimination
 import Mathlib.Algebra.MvPolynomial.Funext
 
@@ -38,6 +39,9 @@ determinants scale in adjacent degrees.
   relation for any chosen state coordinate of a finite coupled system.
 * `discountedShapleyActiveSystemIdeal`: the denominator-active coupled kernel
   equations with the rate moved into the coefficient ring.
+* `moduleFinite_discountedShapleyActiveSystemIdeal_of_activeBranches`:
+  fixed active-branch zero-dimensionality implies zero-dimensionality of the
+  product-generated active ideal.
 * `exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_moduleFinite`:
   zero-dimensionality of the active coupled kernel ideal gives a fixed
   bivariate coordinate relation.
@@ -516,6 +520,11 @@ theorem eval₂_polynomial_aeval_X
   rw [hcomp] at h
   simpa [Polynomial.aeval_def] using h
 
+noncomputable local instance
+    {I J : Type*} [Fintype I] [Fintype J] :
+    Fintype (ActionKernelShape I J) :=
+  Fintype.ofFinite (ActionKernelShape I J)
+
 /-- The product of all denominator-active local bordered-kernel candidates for
 one state. Candidates with identically zero bordered determinant are excluded
 because they cannot be selected by `exists_bordered_kernel`. -/
@@ -554,6 +563,85 @@ theorem discountedShapleyActiveCoordinatePoly_ne_zero
     exact discountedStochastic_borderedKernelPoly_ne_zero
       (r target) (T target) target hk.1 rows cols hk.2
   · exact one_ne_zero
+
+/-- One denominator-active local kernel factor, with the rate moved into
+`ℝ[λ]` and value coordinates retained as variables. Inactive shapes contribute
+the unit factor, matching `discountedShapleyActiveCoordinatePoly`. -/
+noncomputable def discountedShapleyActiveKernelPoly
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) (k : ActionKernelShape I J) :
+    MvPolynomial κ (Polynomial ℝ) := by
+  classical
+  exact
+    MvPolynomial.optionEquivRight ℝ κ
+      (if IsActiveKernelShape
+          (discountedStochasticEntry (r target) (T target)) k then
+        mvBorderedKernelPoly
+          (discountedStochasticEntry (r target) (T target))
+          (some target) k
+      else 1)
+
+/-- The active state polynomial is the product of its individual kernel
+factors after moving the rate into the coefficient ring. -/
+theorem prod_discountedShapleyActiveKernelPoly
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) :
+    ∏ k, discountedShapleyActiveKernelPoly r T target k =
+      MvPolynomial.optionEquivRight ℝ κ
+        (discountedShapleyActiveCoordinatePoly r T target) := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  rw [discountedShapleyActiveCoordinatePoly, map_prod]
+  apply Finset.prod_congr rfl
+  intro k _
+  rfl
+
+/-- A local active-kernel factor after extending coefficients from `ℝ[λ]`
+to the rational-function field `ℝ(λ)`. -/
+noncomputable def localizedDiscountedShapleyActiveKernelPoly
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) (k : ActionKernelShape I J) :
+    MvPolynomial κ (FractionRing (Polynomial ℝ)) :=
+  MvPolynomial.map
+    (algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ)))
+    (discountedShapleyActiveKernelPoly r T target k)
+
+/-- The localized ideal for a fixed choice of one active-kernel shape at
+each state. Choices of inactive shapes generate the unit ideal. -/
+noncomputable def discountedShapleyActiveBranchIdeal
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J) :
+    Ideal (MvPolynomial κ (FractionRing (Polynomial ℝ))) :=
+  Ideal.span
+    (Set.range fun s =>
+      localizedDiscountedShapleyActiveKernelPoly r T s (branch s))
+
+/-- A fixed branch that selects an inactive shape contains a unit generator
+and is therefore the unit ideal. -/
+theorem discountedShapleyActiveBranchIdeal_eq_top_of_not_active
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (target : κ)
+    (htarget : ¬ IsActiveKernelShape
+      (discountedStochasticEntry (r target) (T target))
+      (branch target)) :
+    discountedShapleyActiveBranchIdeal r T branch = ⊤ := by
+  rw [Ideal.eq_top_iff_one]
+  apply Ideal.subset_span
+  refine ⟨target, ?_⟩
+  simp [localizedDiscountedShapleyActiveKernelPoly,
+    discountedShapleyActiveKernelPoly, htarget]
 
 theorem eval_discountedShapleyActiveCoordinatePoly_eq_zero
     {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
@@ -688,6 +776,100 @@ noncomputable def discountedShapleyActiveSystemIdeal
     (Set.range fun s =>
       MvPolynomial.optionEquivRight ℝ κ
         (discountedShapleyActiveCoordinatePoly r T s))
+
+/-- After extending coefficients to `ℝ(λ)`, the active coupled ideal is
+generated by the statewise products of the localized kernel factors. -/
+theorem map_discountedShapleyActiveSystemIdeal
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ) :
+    (discountedShapleyActiveSystemIdeal r T).map
+        (MvPolynomial.map
+          (algebraMap (Polynomial ℝ)
+            (FractionRing (Polynomial ℝ)))) =
+      Ideal.span
+        (Set.range fun s =>
+          ∏ k, localizedDiscountedShapleyActiveKernelPoly r T s k) := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  rw [discountedShapleyActiveSystemIdeal, Ideal.map_span]
+  apply congrArg Ideal.span
+  ext P
+  constructor
+  · rintro ⟨Q, ⟨s, rfl⟩, rfl⟩
+    refine ⟨s, ?_⟩
+    change (∏ k, localizedDiscountedShapleyActiveKernelPoly r T s k) =
+      MvPolynomial.map
+        (algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ)))
+        (MvPolynomial.optionEquivRight ℝ κ
+          (discountedShapleyActiveCoordinatePoly r T s))
+    rw [← prod_discountedShapleyActiveKernelPoly, map_prod]
+    rfl
+  · rintro ⟨s, rfl⟩
+    refine
+      ⟨MvPolynomial.optionEquivRight ℝ κ
+          (discountedShapleyActiveCoordinatePoly r T s),
+        ⟨s, rfl⟩, ?_⟩
+    change MvPolynomial.map
+        (algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ)))
+        (MvPolynomial.optionEquivRight ℝ κ
+          (discountedShapleyActiveCoordinatePoly r T s)) =
+      ∏ k, localizedDiscountedShapleyActiveKernelPoly r T s k
+    rw [← prod_discountedShapleyActiveKernelPoly, map_prod]
+    rfl
+
+/-- It is enough to prove finite-dimensionality for every fixed tuple of
+local kernel choices. This is the branch-level zero-dimensionality boundary
+for the active coupled Shapley system. -/
+theorem moduleFinite_discountedShapleyActiveSystemIdeal_of_branches
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (hbranch : ∀ branch : κ → ActionKernelShape I J,
+      Module.Finite (FractionRing (Polynomial ℝ))
+        (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+          discountedShapleyActiveBranchIdeal r T branch)) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyActiveSystemIdeal r T).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ))))) := by
+  rw [map_discountedShapleyActiveSystemIdeal]
+  apply Math.CofiniteIdeal.moduleFinite_quotient_span_range_prod_of_branches
+    (f := fun s k =>
+      localizedDiscountedShapleyActiveKernelPoly r T s k)
+  intro branch
+  exact hbranch branch
+
+/-- Only tuples of denominator-active kernel shapes need a
+finite-dimensionality proof; every other branch is already the unit ideal. -/
+theorem moduleFinite_discountedShapleyActiveSystemIdeal_of_activeBranches
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (hbranch : ∀ branch : κ → ActionKernelShape I J,
+      (∀ s, IsActiveKernelShape
+        (discountedStochasticEntry (r s) (T s)) (branch s)) →
+      Module.Finite (FractionRing (Polynomial ℝ))
+        (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+          discountedShapleyActiveBranchIdeal r T branch)) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyActiveSystemIdeal r T).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ))))) := by
+  apply moduleFinite_discountedShapleyActiveSystemIdeal_of_branches r T
+  intro branch
+  by_cases hactive : ∀ s, IsActiveKernelShape
+      (discountedStochasticEntry (r s) (T s)) (branch s)
+  · exact hbranch branch hactive
+  · obtain ⟨s, hs⟩ := Classical.not_forall.mp hactive
+    rw [discountedShapleyActiveBranchIdeal_eq_top_of_not_active
+      r T branch s hs]
+    exact Math.CofiniteIdeal.moduleFinite_quotient_top
 
 /-- Every coupled Shapley value assignment annihilates the active-kernel ideal
 after specializing the rate coefficient. -/

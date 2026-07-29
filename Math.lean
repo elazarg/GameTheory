@@ -9,6 +9,7 @@ import Math.ProbabilityMassFunction.Distinguishing
 import Math.ProbabilityMassFunction.Simplex
 import Math.PMFProduct
 import Math.Coupling
+import Math.CofiniteIdeal
 import Math.PMFIter
 import Math.OutcomeClosure
 import Math.Knowledge
