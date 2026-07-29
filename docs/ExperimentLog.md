@@ -1304,4 +1304,7 @@ memory.
   optimality rather than something the protocol hands to any policy.
 - **Outcome:** supports — the sequential flagship pair is complete.
 - **Next action:** the static-core harvest, which has been unblocked since the
-  incentive gate and touches none of this.
+  incentive gate and touches none of this. Its first family — elimination of
+  strictly dominated strategies — is done and is recorded with the code rather
+  than here, since it is ordinary mathematics against a settled API rather than
+  an architecture experiment.

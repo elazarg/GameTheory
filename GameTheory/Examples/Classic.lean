@@ -77,6 +77,31 @@ theorem prisonersDilemma_bothDefect_isNash_of_dominant :
   IsDominantProfile.isNash
     ((TableGame.isDominantProfile_eq_true_iff prisonersDilemma bothDefect).1 (by decide))
 
+/-- Defection strictly dominates cooperation. -/
+theorem prisonersDilemma_defect_strictlyDominates (who : Fin 2) :
+    StrictlyDominates prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      who .defect .cooperate :=
+  (TableGame.strictlyDominates_eq_true_iff prisonersDilemma who .defect .cooperate).1
+    (by revert who; decide)
+
+/-- Hence cooperation survives no round of elimination — from the abstract
+theorem, not from a second computation. -/
+theorem prisonersDilemma_cooperate_not_isRationalizable (who : Fin 2) :
+    ¬ IsRationalizable prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      who .cooperate :=
+  (prisonersDilemma_defect_strictlyDominates who).not_isRationalizable
+
+/-- And no equilibrium plays it. The elimination and equilibrium families meet
+here: nothing about this profile is computed, it follows from the two theorems
+above. -/
+theorem prisonersDilemma_isNash_ne_cooperate {profile : Profile prisonersDilemma.sig}
+    (hnash : IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility) profile)
+    (who : Fin 2) : profile who ≠ .cooperate := by
+  intro hcooperate
+  refine hnash.not_strictlyDominates (who := who) (preferred := Choice.defect) ?_
+  rw [hcooperate]
+  exact prisonersDilemma_defect_strictlyDominates who
+
 /-! ## Matching Pennies -/
 
 /-- Heads or tails. -/

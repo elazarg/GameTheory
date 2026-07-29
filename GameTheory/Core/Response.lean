@@ -154,6 +154,97 @@ theorem IsNash.isRationalizable {profile : Profile F.sig}
       exact hstrict.2 ((isNash_iff profile).1 hnash j t)
   exact fun round => key round who
 
+/-! ## Elimination eliminates
+
+`survivors` is a definition; the facts below are what make it the *right* one.
+A strategy that something available beats strictly is gone after one round, an
+unconditionally dominated strategy is never rationalizable at all, and no
+equilibrium ever plays one. -/
+
+/-- **One round removes what it should.** If a strategy still available strictly
+beats `alternative` across the survivors, `alternative` does not survive the
+round. -/
+theorem not_mem_survivors_succ_of_strictlyDominatesOn {round : ℕ} {who : ι}
+    {preferred alternative : F.sig.Strategy who}
+    (hpreferred : preferred ∈ survivors F weaklyPrefers round who)
+    (hdom : StrictlyDominatesOn F weaklyPrefers who (survivors F weaklyPrefers round)
+      preferred alternative) :
+    alternative ∉ survivors F weaklyPrefers (round + 1) who :=
+  fun hmem => hmem.2 preferred hpreferred hdom
+
+/-- **A strictly dominated strategy is never rationalizable**, and nothing is
+assumed about the strategy that beats it — the first round already allows
+everything, so the elimination fires there. -/
+theorem StrictlyDominates.not_isRationalizable {who : ι}
+    {preferred alternative : F.sig.Strategy who}
+    (hdom : StrictlyDominates F weaklyPrefers who preferred alternative) :
+    ¬ IsRationalizable F weaklyPrefers who alternative := fun hrat =>
+  not_mem_survivors_succ_of_strictlyDominatesOn (round := 0) (Set.mem_univ preferred)
+    (hdom.strictlyDominatesOn _) (hrat 1)
+
+/-- **A strictly dominated strategy is never a best response.** Beating it at
+every profile beats it at the one the responder faces. -/
+theorem StrictlyDominates.not_isBestResponse {who : ι}
+    {preferred alternative : F.sig.Strategy who}
+    (hdom : StrictlyDominates F weaklyPrefers who preferred alternative)
+    (opponents : Profile F.sig) :
+    ¬ IsBestResponse F weaklyPrefers who opponents alternative := fun hbest =>
+  (hdom opponents fun _ => Set.mem_univ _).2 (hbest preferred)
+
+/-- **No equilibrium plays a strictly dominated strategy.** This is the two
+previous families meeting: equilibrium survives elimination, and elimination
+removes the dominated. -/
+theorem IsNash.not_strictlyDominates {profile : Profile F.sig} {who : ι}
+    {preferred : F.sig.Strategy who} (hnash : IsNash F weaklyPrefers profile) :
+    ¬ StrictlyDominates F weaklyPrefers who preferred (profile who) := fun hdom =>
+  hdom.not_isRationalizable (hnash.isRationalizable who)
+
+/-! ## Dominance orders the strategies
+
+Weak dominance inherits the shape of the preference it is built from: reflexive
+when the preference is, transitive when the preference is. Neither is assumed
+of a `WeakPreference`, so both are stated as consequences. -/
+
+/-- Weak dominance is reflexive whenever the preference is. -/
+theorem weaklyDominates_refl (hrefl : Preference.Reflexive weaklyPrefers) (who : ι)
+    (s : F.sig.Strategy who) : WeaklyDominates F weaklyPrefers who s s :=
+  fun profile => hrefl who (F.play (Profile.update profile who s))
+
+/-- Weak dominance is transitive whenever the preference is. -/
+theorem WeaklyDominates.trans (htrans : Preference.Transitive weaklyPrefers) {who : ι}
+    {first middle last : F.sig.Strategy who}
+    (hfirst : WeaklyDominates F weaklyPrefers who first middle)
+    (hsecond : WeaklyDominates F weaklyPrefers who middle last) :
+    WeaklyDominates F weaklyPrefers who first last :=
+  fun profile => htrans who _ _ _ (hfirst profile) (hsecond profile)
+
+/-- Strict dominance on an allowed set is transitive whenever the preference is,
+and the middle strategy need not be allowed. -/
+theorem StrictlyDominatesOn.trans (htrans : Preference.Transitive weaklyPrefers) {who : ι}
+    {allowed : ∀ j, Set (F.sig.Strategy j)} {first middle last : F.sig.Strategy who}
+    (hfirst : StrictlyDominatesOn F weaklyPrefers who allowed first middle)
+    (hsecond : StrictlyDominatesOn F weaklyPrefers who allowed middle last) :
+    StrictlyDominatesOn F weaklyPrefers who allowed first last := by
+  intro profile hprofile
+  refine ⟨htrans who _ _ _ (hfirst profile hprofile).1 (hsecond profile hprofile).1, ?_⟩
+  intro hback
+  exact (hfirst profile hprofile).2
+    (htrans who _ _ _ (hsecond profile hprofile).1 hback)
+
+/-- A dominant strategy weakly dominates a dominated one, so dominance and
+domination cannot disagree. -/
+theorem IsDominant.weaklyDominates {who : ι} {s : F.sig.Strategy who}
+    (hdom : IsDominant F weaklyPrefers who s) (alternative : F.sig.Strategy who) :
+    WeaklyDominates F weaklyPrefers who s alternative := hdom alternative
+
+/-- **A dominant strategy is never strictly dominated.** A witness profile is
+needed and not a technicality: with no profile at all, strict dominance is
+vacuous and every strategy is dominated by every other. -/
+theorem IsDominant.not_strictlyDominated {who : ι} {s preferred : F.sig.Strategy who}
+    (hdom : IsDominant F weaklyPrefers who s) (witness : Profile F.sig) :
+    ¬ StrictlyDominates F weaklyPrefers who preferred s := fun hstrict =>
+  (hstrict witness fun _ => Set.mem_univ _).2 (hdom preferred witness)
+
 /-! ## Pareto comparisons -/
 
 variable (F weaklyPrefers) in
