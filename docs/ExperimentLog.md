@@ -1111,16 +1111,39 @@ memory.
   The gap is real and cheap to witness: records differing only in the *order* of
   a player's own moves rule out the same policies, so a player that forgets the
   order fails recall and still constrains alike. Multiplicity goes the same way.
-  This also settles what the snapshot's posterior-locality condition is buying
-  in this setting: reweighting by reach probability multiplies the compatibility
-  indicator by a constant in the player's own coordinate, and constants wash out
-  under normalization — so that condition reduces to the two conditioning events
-  agreeing, which is `ConstrainsAlike`. The sufficiency proof in the
-  experimental file has been restated from it accordingly.
-- **Outcome:** *in progress* — the weakening is done and is the useful part; what
-  remains open is whether the remaining two conditions buy anything beyond it,
-  and hence whether a certificate level has a second consumer.
-- **Next action:** decide whether the mass and factorization conditions have
-  independent content here, or whether `ConstrainsAlike` alone carries the
-  theorem — in which case the certificate question closes negatively again, for
-  a new and better reason.
+  On the snapshot's posterior-locality condition, exactly one direction is
+  proved: `ConstrainsAlike` implies it, restated in the experimental file from
+  the weaker hypothesis. The converse is an *argument*, not a theorem, and it is
+  recorded as such — reweighting by reach probability multiplies the
+  compatibility indicator by a constant in the player's own coordinate, and
+  constants wash out under normalization. Two gaps keep it from being exact.
+  The washout is informal, and the snapshot's condition is *guarded*: it
+  constrains nothing when a law's support misses one of the two events, so
+  agreement-under-guards is strictly weaker than equality of the constraint
+  sets. Closing that would mean guarding `ConstrainsAlike` the same way and
+  checking the proof still runs — every use of the set equality does sit inside
+  a support-meeting context, so it plausibly does, but it needs a
+  support-relative form of the nested-conditioning law and is not attempted
+  here.
+- **Third observation: the other two conditions have no content here, and the
+  reason is structural.** This needs no new experiment — the theorem already
+  proved assumes neither, so as hypotheses of *this* theorem in *this* layer
+  they are simply unnecessary. What is worth recording is why, and one half of it
+  is artifact-backed rather than argued.
+  The snapshot must *assume* that reaching a state factors player by player,
+  because it conditions on reach probability and reach is not a product event.
+  Here the conditioning event is a product event *by construction* — the fibre of
+  the joint answer is exactly the per-player answer events — and the split is
+  then a theorem about the law type, proved unconditionally: independent draws
+  stay independent under conditioning on a product event. So the snapshot's
+  factorization hypothesis corresponds to something this layer proves rather than
+  assumes.
+  The mass condition has no counterpart at all, for the same underlying reason:
+  no reach mass is ever formed. The conditioning is on a compatibility event,
+  which is `0`/`1`, so there is nothing whose value could depend on the route.
+- **Outcome:** narrows, and answers the certificate question negatively for a
+  second and better reason. The level rejected earlier had no consumer; this one
+  has no *content* — its conditions are either unnecessary or theorems of the
+  layer that would have hosted them.
+- **Next action:** the guarded sharpening above, if the exact reduction is wanted.
+  Nothing else here is open.

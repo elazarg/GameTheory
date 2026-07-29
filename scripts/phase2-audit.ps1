@@ -90,6 +90,7 @@ Report 'TRANSPORT_IN_PROFILE_MODULE' (Count-Pattern @($ProfileModule) $Transport
 # the earlier measurement drift as the repository grows.
 $Phase1Files = @(Select-Files 'GameTheory/Experimental/Phase1')
 $Phase2ProbeFiles = @(Select-Files 'GameTheory/Experimental/Phase2')
+$Phase4Files = @(Select-Files 'GameTheory/Experimental/Phase4')
 $Phase2Owned = @('GameTheory/Probability', 'GameTheory/Core', 'GameTheory/Finite',
   'GameTheory/Examples', 'GameTheory/Tests/Locality.lean', 'GameTheory.lean')
 $Phase2Files = @($OutsideProfile | Where-Object {
@@ -102,6 +103,12 @@ Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
 Report 'TRANSPORT_PHASE1_EVIDENCE' (Count-Pattern $Phase1Files $TransportPattern)
+Report 'TRANSPORT_PHASE4_EVIDENCE' (Count-Pattern $Phase4Files $TransportPattern)
+# Every library file belongs to exactly one transport budget. An unbucketed file
+# is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
+$Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $Phase2Files + $Phase3Files +
+  @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
+Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
 # `PMF`, and `toPMF` must not appear outside the representation module; the
 # frozen Phase 1 candidates are evidence and are excluded.
@@ -251,6 +258,8 @@ if ($VerifyExpected) {
     TRANSPORT_PHASE2_SOURCE = 1
     TRANSPORT_PHASE3_SOURCE = 0
     TRANSPORT_PHASE2_PROBE = 0
+    TRANSPORT_PHASE4_EVIDENCE = 0
+    UNBUCKETED_FILES = 0
     FINTYPE_OF_FINITE = 0
     ALGORITHM_OPEN_CLASSICAL = 0
     SORRY_OR_ADMIT = 0
