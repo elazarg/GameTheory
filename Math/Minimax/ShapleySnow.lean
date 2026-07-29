@@ -10,6 +10,8 @@ import Mathlib.Algebra.Polynomial.Eval.Defs
 import Mathlib.Algebra.Polynomial.Div
 import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.Convex.KreinMilman
+import Mathlib.LinearAlgebra.Dual.Lemmas
+import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
 
 /-!
 # Math.Minimax.ShapleySnow
@@ -18,11 +20,17 @@ The Shapley–Snow kernel theorem for finite matrix games, and its parametric co
 
 ## Stage 1 — kernel theorem interface
 
-For a matrix game `A : Matrix (Fin m) (Fin n) ℝ` the value `V := MinimaxLoomis.lam0 A`
-satisfies a determinant identity over some square submatrix ("kernel") `B`:
-`V * (∑ i j, B.adjugate i j) = B.det` with `∑ i j, B.adjugate i j ≠ 0`. This is the
-1950 Shapley–Snow theorem. The classical proof uses extreme optimal strategies, tight
-payoff equations on their supports, and a nonsingular bordered kernel system.
+For a matrix game `A : Matrix (Fin m) (Fin n) ℝ`, the value
+`V := MinimaxLoomis.lam0 A` satisfies a determinant identity over a square
+submatrix `B`. This module uses the bordered formulation
+
+```
+det (borderedMatrix B) ≠ 0
+V * det (borderedMatrix B) = det B.
+```
+
+It also develops the classical adjugate formulation
+`V * (∑ i j, B.adjugate i j) = B.det` with nonzero adjugate sum.
 
 This module factors that argument into theorem-level interfaces:
 
@@ -33,26 +41,25 @@ This module factors that argument into theorem-level interfaces:
   condition, namely a nonzero adjugate sum;
 * the `OptimalStrategies` section supplies extreme optimizers, complementary slackness,
   trivial-kernel lemmas, and cardinality bounds;
-* `exists_kernel_of_extreme_matching_support` reassembles matching support
-  enumerations whose submatrix has nonzero adjugate sum.
+* `exists_extreme_tight_bordered_submatrix` selects a basis of tight columns
+  on one extreme strategy's support;
+* `borderedKernelIdentity` converts bordered injectivity to the determinant
+  identity by Cramer's rule;
+* `exists_bordered_kernel` is the general bordered kernel theorem.
 
-The general Stage-1 property is an explicit hypothesis of the parametric theorems.
-Its selection interface is described after `SquareKernelReassembly`: construct matching
-support enumerations for an extreme optimal pair and prove the associated bordered
-system is nonsingular. This formulation does not require the payoff submatrix itself to
-be nonsingular.
+The payoff submatrix itself may be singular; the nonsingular object is its
+bordered system.
 
 ## Stage 2 — the parametric product corollary
 
 Given a family of matrices with entries that are bivariate polynomials
 `E i j : Polynomial (Polynomial ℝ)` — outer variable `v` (`Polynomial.X`), coefficients
 in `ℝ[λ]` — and a self-referential value function `val : ℝ → ℝ` with
-`val λ = lam0 (fun i j => bivEval λ (val λ) (E i j))` for `λ` in some set `S`, Stage 1
-(applied at each `λ`) produces, for each `λ`, a square "kernel" submatrix shape whose
-associated bivariate polynomial `F_B := B.det - X * (∑ adjugate B)` vanishes at
-`(λ, val λ)`. There are only finitely many possible kernel shapes (bounded by `m`, `n`),
-so a single fixed polynomial — the product of the (finitely many, pairwise possibly
-overlapping) nonzero `F_B` — vanishes at `(λ, val λ)` for every `λ ∈ S`.
+`val λ = lam0 (fun i j => bivEval λ (val λ) (E i j))` for `λ` in some set `S`,
+Stage 1 produces a square kernel shape whose bordered polynomial
+`F_B := B.det - X * det (borderedMatrix B)` vanishes at `(λ, val λ)`.
+There are only finitely many possible shapes, so a product of the nonzero
+candidates gives one fixed polynomial vanishing along the value function.
 
 The clean, fully general engine behind this argument is
 `exists_nonzero_poly_of_forall_mem_exists` below: given *any* finite family of candidate
@@ -62,19 +69,19 @@ point, their product is a single nonzero polynomial vanishing at every parameter
 
 ### A statement adjustment, and why it is necessary
 
-The concrete matrix-game instantiation (`exists_nonzero_poly_of_kernel`) additionally
-carries a genericity hypothesis `hgen`, and takes the Stage-1 conclusion itself as an
-explicit hypothesis `hkernel`.
+The bordered matrix-game instantiation
+`exists_nonzero_poly_of_borderedKernel` carries only a genericity hypothesis
+`hgen`; `exists_bordered_kernel` supplies its matrix-game input. The adjugate
+variant `exists_nonzero_poly_of_kernel` exposes the classical kernel property
+as `hkernel`.
 
-`hgen` is needed because *nonzero adjugate sum* does not by itself imply *`F_B` is a
-nonzero polynomial*. Counterexample: `m = n = 1`, `E 0 0 = Polynomial.X` (the entry is
-literally the outer variable, i.e. the "matrix" is `[[v]]`). Then `B.adjugate = 1`
-(`Matrix.adjugate_subsingleton`), so `∑ adjugate B = 1 ≠ 0` identically, yet
-`F_B = X - X * 1 = 0` is the zero polynomial. In this example `val λ = lam0 [[val λ]] =
+`hgen` is needed because a nonzero kernel denominator does not by itself imply
+that `F_B` is a nonzero abstract polynomial. Counterexample: `m = n = 1`,
+`E 0 0 = Polynomial.X`. Both the adjugate sum and bordered determinant are
+`1`, yet `F_B = X - X * 1 = 0`. In this example `val λ = lam0 [[val λ]] =
 val λ` holds *tautologically* for every real number `val λ`, so `val` is entirely
 unconstrained by the hypotheses — and indeed no single nonzero polynomial can force
-`val` at every `λ` in this case. `hgen` rules out exactly this degeneracy: it says that
-whenever a shape's adjugate sum is nonzero, its `F_B` is also nonzero. Genuine
+`val` at every `λ` in this case. `hgen` rules out exactly this degeneracy. Genuine
 applications (Stage 3: discounted stochastic games, entries affine in `v` with slope
 `λ ∈ (0, 1)`, i.e. a *strict* contraction) are not of this degenerate form.
 
@@ -124,8 +131,12 @@ trivial kernel on the strategy support. Their proof is the `openSegment`-based
 `x ± εd` perturbation argument, derived directly from `Set.extremePoints`.
 `card_support_le_card_tightCol_of_extreme` and
 `card_support_le_card_tightRow_of_extreme` convert this injectivity into cardinality
-bounds. `exists_kernel_of_extreme_matching_support` is the reassembly interface for
-matching support enumerations and a nonzero adjugate sum.
+bounds. `eq_zero_of_extreme_optimalRow_bordered` adds the value coordinate,
+`exists_bordered_subfamily` extracts a tight-column basis, and
+`exists_extreme_tight_bordered_submatrix` instantiates that basis on the
+strategy support. `exists_bordered_kernel` packages the resulting general
+kernel theorem. `exists_kernel_of_extreme_matching_support` remains an
+alternative adjugate-form reassembly interface.
 -/
 
 /-- **Saddle-point base case.** If `(i₀, j₀)` is a saddle point of `A` — row `i₀`
@@ -171,6 +182,227 @@ theorem exists_kernel_of_saddlePoint {m n : ℕ} [Nonempty (Fin m)] [Nonempty (F
     simp
   · rw [hadj, hVeq, Matrix.det_fin_one, hB00]
     simp
+
+/-- A right equalizing strategy gives the Shapley--Snow determinant identity.
+The matrix need not be nonsingular, and no optimality hypothesis is used. -/
+theorem kernelIdentity_of_right_equalizing
+    {n : ℕ} [Nonempty (Fin n)]
+    (A : Matrix (Fin n) (Fin n) ℝ)
+    (y : stdSimplex ℝ (Fin n)) (V : ℝ)
+    (hy : ∀ i, wsum y (fun j => A i j) = V) :
+    V * (∑ i, ∑ j, A.adjugate i j) = A.det := by
+  classical
+  have hmulVec : A *ᵥ y.val = V • (1 : Fin n → ℝ) := by
+    funext i
+    have hrow :
+        (A *ᵥ y.val) i = wsum y (fun j => A i j) :=
+      dotProduct_comm (A i) y.val
+    rw [hrow, hy i]
+    simp
+  have hadj :
+      Matrix.adjugate A *ᵥ (A *ᵥ y.val) =
+        A.det • y.val := by
+    rw [Matrix.mulVec_mulVec, Matrix.adjugate_mul,
+      Matrix.smul_mulVec, Matrix.one_mulVec]
+  have hadj' :
+      Matrix.adjugate A *ᵥ (A *ᵥ y.val) =
+        V • (fun i => ∑ j, Matrix.adjugate A i j) := by
+    rw [hmulVec, Matrix.mulVec_smul]
+    congr 1
+    funext i
+    simp [Matrix.mulVec, dotProduct]
+  have hkey :
+      A.det • y.val =
+        V • (fun i => ∑ j, Matrix.adjugate A i j) :=
+    hadj.symm.trans hadj'
+  have hsum :
+      A.det * (∑ i, y.val i) =
+        V * (∑ i, ∑ j, Matrix.adjugate A i j) := by
+    have hcongr :=
+      congrArg (fun f : Fin n → ℝ => ∑ i, f i) hkey
+    simpa [Pi.smul_apply, smul_eq_mul, Finset.mul_sum]
+      using hcongr
+  rw [y.property.2, mul_one] at hsum
+  exact hsum.symm
+
+/-- A left equalizing strategy gives the Shapley--Snow determinant identity.
+This is the transpose of `kernelIdentity_of_right_equalizing`. -/
+theorem kernelIdentity_of_left_equalizing
+    {n : ℕ} [Nonempty (Fin n)]
+    (A : Matrix (Fin n) (Fin n) ℝ)
+    (x : stdSimplex ℝ (Fin n)) (V : ℝ)
+    (hx : ∀ j, wsum x (fun i => A i j) = V) :
+    V * (∑ i, ∑ j, A.adjugate i j) = A.det := by
+  have hxT :
+      ∀ j, wsum x (fun i => A.transpose j i) = V := by
+    simpa only [Matrix.transpose_apply] using hx
+  have hid :=
+    kernelIdentity_of_right_equalizing A.transpose x V hxT
+  rw [Matrix.det_transpose, ← Matrix.adjugate_transpose A] at hid
+  have hsum :
+      (∑ i, ∑ j, A.adjugate.transpose i j) =
+        ∑ i, ∑ j, A.adjugate i j := by
+    simp only [Matrix.transpose_apply]
+    rw [Finset.sum_comm]
+  rw [hsum] at hid
+  exact hid
+
+/-- The bordered matrix for column equalization and mass normalization.
+For a vector `(d, t)`, its `Fin n` coordinates are
+`∑ i, d i * B i j - t`, and its `Unit` coordinate is `∑ i, d i`. -/
+def borderedMatrix {ι R : Type*} [Fintype ι] [CommRing R]
+    (B : Matrix ι ι R) :
+    Matrix (Sum ι Unit) (Sum ι Unit) R :=
+  Matrix.fromBlocks B.transpose
+    (fun _ _ => -1) (fun _ _ => 1) 0
+
+theorem map_borderedMatrix
+    {ι R S : Type*} [Fintype ι] [CommRing R] [CommRing S]
+    (f : R →+* S) (B : Matrix ι ι R) :
+    (borderedMatrix B).map f = borderedMatrix (B.map f) := by
+  ext i j
+  rcases i with i | i <;> rcases j with j | j
+  · simp [borderedMatrix]
+  · cases j
+    simp [borderedMatrix]
+  · cases i
+    simp [borderedMatrix]
+  · cases i
+    cases j
+    simp [borderedMatrix]
+
+theorem borderedMatrix_mulVec_inl
+    {ι : Type*} [Fintype ι]
+    (B : Matrix ι ι ℝ) (d : ι → ℝ) (t : ℝ) (j : ι) :
+    (borderedMatrix B *ᵥ
+        Sum.elim d (fun _ => t)) (Sum.inl j) =
+      (∑ i, d i * B i j) - t := by
+  classical
+  simp only [mulVec, dotProduct, borderedMatrix,
+    Fintype.sum_sum_type, fromBlocks_apply₁₁,
+    transpose_apply, Sum.elim_inl, univ_unique,
+    PUnit.default_eq_unit, fromBlocks_apply₁₂,
+    Sum.elim_inr, neg_mul, one_mul, sum_neg_distrib,
+    sum_const, card_singleton, one_smul]
+  simp_rw [mul_comm]
+  ring
+
+theorem borderedMatrix_mulVec_inr
+    {ι : Type*} [Fintype ι]
+    (B : Matrix ι ι ℝ) (d : ι → ℝ) (t : ℝ) :
+    (borderedMatrix B *ᵥ
+        Sum.elim d (fun _ => t)) (Sum.inr ()) =
+      ∑ i, d i := by
+  classical
+  simp [borderedMatrix, Matrix.mulVec, dotProduct]
+
+/-- Bordered injectivity supplies a nonzero kernel denominator, and Cramer's
+rule identifies the determinant relation for a left equalizing simplex.
+
+This formulation includes value-zero singular payoff matrices without asking
+for a separate adjugate-sum argument. -/
+theorem borderedKernelIdentity
+    {n : ℕ} [Nonempty (Fin n)]
+    (B : Matrix (Fin n) (Fin n) ℝ)
+    (x : stdSimplex ℝ (Fin n)) (V : ℝ)
+    (hx : ∀ j, wsum x (fun i => B i j) = V)
+    (hborder : ∀ (d : Fin n → ℝ) (t : ℝ),
+      (∑ i, d i = 0) →
+      (∀ j, ∑ i, d i * B i j = t) →
+      d = 0 ∧ t = 0) :
+    (borderedMatrix B).det ≠ 0 ∧
+      V * (borderedMatrix B).det = B.det := by
+  classical
+  let C := borderedMatrix B
+  have hker :
+      ∀ z : Sum (Fin n) Unit → ℝ,
+        C *ᵥ z = 0 → z = 0 := by
+    intro z hz
+    let d : Fin n → ℝ := fun i => z (Sum.inl i)
+    let t : ℝ := z (Sum.inr ())
+    have hzrepr : z = Sum.elim d (fun _ => t) := by
+      funext k
+      cases k with
+      | inl i => rfl
+      | inr u =>
+          cases u
+          rfl
+    have hsum : ∑ i, d i = 0 := by
+      have hzlast := congrFun hz (Sum.inr ())
+      rw [hzrepr, borderedMatrix_mulVec_inr] at hzlast
+      exact hzlast
+    have heq : ∀ j, ∑ i, d i * B i j = t := by
+      intro j
+      have hzj := congrFun hz (Sum.inl j)
+      have hzj' :
+          (∑ i, d i * B i j) - t = 0 := by
+        rw [hzrepr, borderedMatrix_mulVec_inl] at hzj
+        exact hzj
+      exact sub_eq_zero.mp hzj'
+    obtain ⟨hd, ht⟩ := hborder d t hsum heq
+    funext k
+    cases k with
+    | inl i => simpa [d] using congrFun hd i
+    | inr u =>
+        cases u
+        simpa [t] using ht
+  have hinj :
+      Function.Injective (fun z => C *ᵥ z) := by
+    intro z z' hzz'
+    apply sub_eq_zero.mp
+    apply hker (z - z')
+    rw [Matrix.mulVec_sub]
+    exact sub_eq_zero.mpr hzz'
+  have hCmatrixUnit : IsUnit C :=
+    Matrix.mulVec_injective_iff_isUnit.mp hinj
+  have hCunit : IsUnit C.det :=
+    hCmatrixUnit.map Matrix.detMonoidHom
+  have hCne : C.det ≠ 0 := hCunit.ne_zero
+  let z : Sum (Fin n) Unit → ℝ :=
+    Sum.elim x.val (fun _ => V)
+  let e : Sum (Fin n) Unit → ℝ :=
+    Pi.single (Sum.inr ()) 1
+  have hCz : C *ᵥ z = e := by
+    funext k
+    cases k with
+    | inl j =>
+        have hxj := hx j
+        change (∑ i, x.val i * B i j) = V at hxj
+        simp [C, z, e, borderedMatrix_mulVec_inl, hxj]
+    | inr u =>
+        cases u
+        simp [C, z, e, borderedMatrix_mulVec_inr,
+          x.property.2]
+  have hsame : Matrix.cramer C e = C.det • z := by
+    apply hinj
+    change
+      C *ᵥ Matrix.cramer C e = C *ᵥ (C.det • z)
+    rw [Matrix.mulVec_cramer, Matrix.mulVec_smul, hCz]
+  have hcomponent := congrFun hsame (Sum.inr ())
+  have hupdate :
+      C.updateCol (Sum.inr ()) e =
+        Matrix.fromBlocks B.transpose 0
+          (fun _ _ => 1) 1 := by
+    ext i j
+    rcases i with i | i <;> rcases j with j | j
+    · rfl
+    · cases j
+      simp [C, e, borderedMatrix]
+    · cases i
+      rfl
+    · cases i
+      cases j
+      simp [C, e, borderedMatrix]
+  have hdetUpdate :
+      (C.updateCol (Sum.inr ()) e).det = B.det := by
+    rw [hupdate, Matrix.det_fromBlocks_zero₁₂,
+      Matrix.det_transpose]
+    simp
+  change
+    (C.updateCol (Sum.inr ()) e).det =
+      C.det * V at hcomponent
+  rw [hdetUpdate] at hcomponent
+  exact ⟨hCne, by nlinarith⟩
 
 /-- An equalizing pair determines the matrix-game value and the
 Shapley--Snow determinant identity. No nonsingularity assumption is needed for
@@ -340,8 +572,8 @@ already-proved von Neumann minimax `lam0 = mu0`) nonempty, so Krein–Milman
 player. `expectedPayoff_eq_of_optimal` and its corollaries `tight_of_optimal_col_support`
 / `tight_of_optimal_row_support` are the complementary-slackness step of the sketch: on
 the support of an optimal pair, the payoff equations are tight. The
-matching-support and bordered-basis selection interface after this section specifies
-the additional data consumed by kernel reassembly. -/
+bordered tight-column basis selector after this section converts these facts
+to a square kernel. -/
 
 section OptimalStrategies
 
@@ -706,6 +938,62 @@ theorem eq_zero_of_extreme_optimalRow [Finite J] {A : I → J → ℝ} {V : ℝ}
     · exact h
   exact hd0 hεd0
 
+/-- **The bordered tight-constraint system has trivial kernel (row side).**
+Pair an extreme optimal row strategy `x` with any optimal column strategy `y`.
+If a support-preserving direction `d` has zero total mass and changes every
+column tight at `x` by the same scalar `t`, then both `d` and `t` vanish.
+
+Complementary slackness makes the support of `y` tight at `x`, so averaging
+the common change `t` against `y` rewrites it as an average of `d` against
+the rows tight at `y`. That average is `V * ∑ i, d i = 0`. The theorem
+`eq_zero_of_extreme_optimalRow` then kills `d`. This is the injectivity
+property of the bordered linear system used by Shapley--Snow basis
+selection. -/
+theorem eq_zero_of_extreme_optimalRow_bordered
+    {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ}
+    (hx : x ∈ Set.extremePoints ℝ (optimalRowStrategies A V))
+    {y : J → ℝ} (hy : y ∈ optimalColStrategies A V)
+    {d : I → ℝ} {t : ℝ}
+    (hd_supp : ∀ i, x i = 0 → d i = 0)
+    (hd_sum : ∑ i, d i = 0)
+    (hd_tight :
+      ∀ j, ∑ i, x i * A i j = V → ∑ i, d i * A i j = t) :
+    d = 0 ∧ t = 0 := by
+  classical
+  have hxopt : x ∈ optimalRowStrategies A V := extremePoints_subset hx
+  have ht : t = 0 := by
+    calc
+      t = ∑ j, y j * t := by
+        rw [← Finset.sum_mul, hy.1.2, one_mul]
+      _ = ∑ j, y j * (∑ i, d i * A i j) := by
+        apply Finset.sum_congr rfl
+        intro j _
+        by_cases hj : y j = 0
+        · simp [hj]
+        · rw [hd_tight j (tight_of_optimal_col_support hxopt hy hj)]
+      _ = ∑ j, ∑ i, y j * (d i * A i j) := by
+        apply Finset.sum_congr rfl
+        intro j _
+        rw [Finset.mul_sum]
+      _ = ∑ i, ∑ j, y j * (d i * A i j) := Finset.sum_comm
+      _ = ∑ i, d i * (∑ j, y j * A i j) := by
+        apply Finset.sum_congr rfl
+        intro i _
+        rw [Finset.mul_sum]
+        apply Finset.sum_congr rfl
+        intro j _
+        ring
+      _ = ∑ i, d i * V := by
+        apply Finset.sum_congr rfl
+        intro i _
+        by_cases hi : x i = 0
+        · simp [hd_supp i hi]
+        · rw [tight_of_optimal_row_support hxopt hy hi]
+      _ = 0 := by rw [← Finset.sum_mul, hd_sum, zero_mul]
+  subst t
+  exact ⟨eq_zero_of_extreme_optimalRow hx hd_supp hd_sum hd_tight, rfl⟩
+
 omit [Fintype I] in
 /-- **Extremality forces the tight-constraint system to have trivial kernel (column
 side).** The column-player mirror of `eq_zero_of_extreme_optimalRow`: if `y` is an
@@ -934,6 +1222,328 @@ theorem card_support_le_card_tightRow_of_extreme {A : I → J → ℝ} {V : ℝ}
 
 end OptimalStrategies
 
+/-! ### Bordered tight-constraint basis selection -/
+
+/-- A finite separating family of linear functionals admits a basis subfamily
+that contains a prescribed nonzero functional.
+
+The family indexed by `Option T` consists of `f0` and the functionals `f j`.
+Point separation says that it spans the dual. Extending the singleton
+`{f0}` inside this finite spanning family produces a basis; the other `n`
+basis elements give the embedding `e`. -/
+theorem exists_bordered_subfamily
+    {H T : Type*} [AddCommGroup H] [Module ℝ H]
+    [FiniteDimensional ℝ H] [Finite T]
+    (n : ℕ) (hdim : Module.finrank ℝ H = n + 1)
+    (f0 : Module.Dual ℝ H) (f : T → Module.Dual ℝ H)
+    (hf0 : f0 ≠ 0)
+    (hsep : ∀ z, f0 z = 0 → (∀ j, f j z = 0) → z = 0) :
+    ∃ e : Fin n ↪ T,
+      ∀ z, f0 z = 0 → (∀ k, f (e k) z = 0) → z = 0 := by
+  classical
+  letI : Fintype T := Fintype.ofFinite T
+  let family : Option T → Module.Dual ℝ H
+    | none => f0
+    | some j => f j
+  have hfamily_span :
+      Submodule.span ℝ (Set.range family) = ⊤ := by
+    apply Submodule.span_eq_top_of_ne_zero
+    intro z hz
+    by_cases hz0 : f0 z = 0
+    · have hfj : ∃ j, f j z ≠ 0 := by
+        by_contra h
+        push Not at h
+        exact hz (hsep z hz0 h)
+      obtain ⟨j, hj⟩ := hfj
+      exact ⟨family (some j), ⟨some j, rfl⟩, hj⟩
+    · exact ⟨family none, ⟨none, rfl⟩, hz0⟩
+  have hsingle :
+      LinearIndepOn ℝ family ({none} : Set (Option T)) := by
+    rw [linearIndepOn_singleton_iff]
+    exact hf0
+  obtain ⟨b, _hbsub, hnone, hbspan, hbli⟩ :=
+    exists_linearIndepOn_extension hsingle
+      (show ({none} : Set (Option T)) ⊆ Set.univ from
+        Set.subset_univ _)
+  have hnoneb : none ∈ b := hnone (Set.mem_singleton none)
+  let B := {k : Option T // k ∈ b}
+  let S := {j : T // (some j : Option T) ∈ b}
+  letI : Fintype B := Fintype.ofFinite B
+  letI : Fintype S := Fintype.ofFinite S
+  have himage :
+      family '' b = Set.range (fun k : B => family k.val) := by
+    ext g
+    constructor
+    · rintro ⟨k, hk, rfl⟩
+      exact ⟨⟨k, hk⟩, rfl⟩
+    · rintro ⟨k, rfl⟩
+      exact ⟨k.val, k.property, rfl⟩
+  have hbspan_top :
+      Submodule.span ℝ
+          (Set.range fun k : B => family k.val) = ⊤ := by
+    apply top_unique
+    rw [← hfamily_span]
+    apply Submodule.span_le.mpr
+    intro g hg
+    obtain ⟨k, rfl⟩ := hg
+    have hkspan :
+        family k ∈ Submodule.span ℝ (family '' b) :=
+      hbspan ⟨k, Set.mem_univ k, rfl⟩
+    rwa [himage] at hkspan
+  have hbli' :
+      LinearIndependent ℝ (fun k : B => family k.val) :=
+    hbli.linearIndependent
+  let basis : Module.Basis B ℝ (Module.Dual ℝ H) :=
+    Module.Basis.mk hbli' (by rw [hbspan_top])
+  have hcardB : Fintype.card B = n + 1 := by
+    rw [← Module.finrank_eq_card_basis basis,
+      Subspace.dual_finrank_eq, hdim]
+  let eOption : Option S ≃ B :=
+    { toFun := fun
+        | none => ⟨none, hnoneb⟩
+        | some j => ⟨some j.val, j.property⟩
+      invFun := fun k =>
+        match hk : k.val with
+        | none => none
+        | some j => some ⟨j, by simpa [hk] using k.property⟩
+      left_inv := by
+        intro k
+        cases k with
+        | none => rfl
+        | some j => rfl
+      right_inv := by
+        intro k
+        rcases k with ⟨k, hk⟩
+        cases k <;> rfl }
+  have hcardS : Fintype.card S = n := by
+    have hcard := Fintype.card_congr eOption
+    rw [Fintype.card_option, hcardB] at hcard
+    omega
+  let eS : Fin n ≃ S :=
+    (Fintype.equivFinOfCardEq hcardS).symm
+  let e : Fin n ↪ T :=
+    eS.toEmbedding.trans (Function.Embedding.subtype _)
+  refine ⟨e, ?_⟩
+  intro z hz0 hz
+  apply hsep z hz0
+  intro j
+  let ev : Module.Dual ℝ H →ₗ[ℝ] ℝ :=
+    { toFun := fun g => g z
+      map_add' := fun _ _ => rfl
+      map_smul' := fun _ _ => rfl }
+  have hbker : family '' b ⊆ ev.ker := by
+    intro g hg
+    obtain ⟨k, hkb, rfl⟩ := hg
+    change family k z = 0
+    cases k with
+    | none => exact hz0
+    | some j' =>
+        let sj : S := ⟨j', hkb⟩
+        obtain ⟨k, hk⟩ := eS.surjective sj
+        have hek : e k = j' := by
+          change (eS k).val = j'
+          exact congrArg Subtype.val hk
+        simpa [hek] using hz k
+  have hmem :
+      family (some j) ∈ Submodule.span ℝ (family '' b) :=
+    hbspan ⟨some j, Set.mem_univ _, rfl⟩
+  exact
+    (Submodule.span_le.mpr hbker hmem :
+      family (some j) ∈ ev.ker)
+
+section BorderedTightSelection
+
+variable {I J : Type*} [Fintype I] [Fintype J]
+  [Nonempty I] [Nonempty J]
+
+/-- Tight payoff columns contain a square bordered basis on the support of an
+extreme optimal row strategy.
+
+The selected rows enumerate the support of `x`; the selected columns are
+tight at `x`. The final conjunct is injectivity of the associated bordered
+system: a zero-mass direction whose selected-column changes are all the same
+scalar must have zero direction and zero scalar. -/
+theorem exists_extreme_tight_bordered_submatrix
+    (A : I → J → ℝ) :
+    ∃ (r : ℕ) (_ : 0 < r)
+      (rows : Fin r ↪ I) (cols : Fin r ↪ J)
+      (x : I → ℝ),
+      x ∈ Set.extremePoints ℝ
+          (optimalRowStrategies A (MinimaxLoomis.lam0 A)) ∧
+      (∀ i, x i ≠ 0 ↔ i ∈ Set.range rows) ∧
+      (∀ j,
+        ∑ i, x i * A i (cols j) =
+          MinimaxLoomis.lam0 A) ∧
+      ∀ (d : Fin r → ℝ) (t : ℝ),
+        (∑ i, d i = 0) →
+        (∀ j,
+          ∑ i, d i * A (rows i) (cols j) = t) →
+        d = 0 ∧ t = 0 := by
+  classical
+  let V := MinimaxLoomis.lam0 A
+  obtain ⟨x, hx⟩ :=
+    extremePoints_optimalRowStrategies_nonempty A
+  obtain ⟨y, hy⟩ := optimalColStrategies_lam0_nonempty A
+  have hxopt : x ∈ optimalRowStrategies A V :=
+    extremePoints_subset hx
+  let R := {i : I // x i ≠ 0}
+  have hR : Nonempty R := by
+    by_contra h
+    have hxzero : x = 0 := by
+      funext i
+      by_contra hi
+      exact h ⟨⟨i, hi⟩⟩
+    have hxsum := hxopt.1.2
+    rw [hxzero] at hxsum
+    simp at hxsum
+  let r := Fintype.card R
+  have hr : 0 < r := Fintype.card_pos_iff.mpr hR
+  let rowsEquiv : Fin r ≃ R :=
+    (Fintype.equivFin R).symm
+  let rows : Fin r ↪ I :=
+    rowsEquiv.toEmbedding.trans
+      (Function.Embedding.subtype _)
+  have hrows :
+      ∀ i, x i ≠ 0 ↔ i ∈ Set.range rows := by
+    intro i
+    constructor
+    · intro hi
+      let ri : R := ⟨i, hi⟩
+      obtain ⟨k, hk⟩ := rowsEquiv.surjective ri
+      refine ⟨k, ?_⟩
+      change (rowsEquiv k).val = i
+      exact congrArg Subtype.val hk
+    · rintro ⟨k, rfl⟩
+      exact (rowsEquiv k).property
+  let T := {j : J // ∑ i, x i * A i j = V}
+  let H := (R → ℝ) × ℝ
+  let mass : Module.Dual ℝ H :=
+    { toFun := fun z => ∑ i, z.1 i
+      map_add' := by
+        intro z z'
+        change (∑ i, (z.1 i + z'.1 i)) =
+          (∑ i, z.1 i) + ∑ i, z'.1 i
+        rw [Finset.sum_add_distrib]
+      map_smul' := by
+        intro c z
+        change (∑ i, c * z.1 i) =
+          c * ∑ i, z.1 i
+        rw [Finset.mul_sum] }
+  let tight : T → Module.Dual ℝ H := fun j =>
+    { toFun := fun z =>
+        (∑ i, z.1 i * A i.val j.val) - z.2
+      map_add' := by
+        intro z z'
+        change
+          (∑ i, (z.1 i + z'.1 i) * A i.val j.val) -
+              (z.2 + z'.2) =
+            ((∑ i, z.1 i * A i.val j.val) - z.2) +
+              ((∑ i, z'.1 i * A i.val j.val) - z'.2)
+        simp_rw [add_mul]
+        rw [Finset.sum_add_distrib]
+        ring
+      map_smul' := by
+        intro c z
+        change
+          (∑ i, (c * z.1 i) * A i.val j.val) -
+              c * z.2 =
+            c * ((∑ i, z.1 i * A i.val j.val) - z.2)
+        simp_rw [mul_assoc]
+        rw [← Finset.mul_sum]
+        ring }
+  have hmass : mass ≠ 0 := by
+    intro hm
+    let i0 : R := Classical.choice hR
+    have hz := LinearMap.congr_fun hm
+      ((Pi.single i0 1 : R → ℝ), (0 : ℝ))
+    simp [mass] at hz
+  have hsep :
+      ∀ z : H, mass z = 0 →
+        (∀ j, tight j z = 0) → z = 0 := by
+    intro z hmassz htightz
+    let d : I → ℝ := fun i =>
+      if hi : x i ≠ 0 then z.1 ⟨i, hi⟩ else 0
+    have hd_supp : ∀ i, x i = 0 → d i = 0 := by
+      intro i hi
+      simp [d, hi]
+    have hd_on : ∀ i : R, d i.val = z.1 i := by
+      intro i
+      simp [d, i.property]
+    have hd_sum : ∑ i, d i = 0 := by
+      rw [sum_eq_sum_support d hd_supp]
+      change (∑ i : R, z.1 i) = 0 at hmassz
+      simpa only [hd_on] using hmassz
+    have hd_tight :
+        ∀ j, (∑ i, x i * A i j = V) →
+          ∑ i, d i * A i j = z.2 := by
+      intro j hj
+      rw [sum_eq_sum_support (fun i => d i * A i j)
+        (fun i hi => by
+          rw [hd_supp i hi, zero_mul])]
+      have hzj := htightz ⟨j, hj⟩
+      change
+        (∑ i : R, z.1 i * A i.val j) - z.2 = 0 at hzj
+      simpa only [hd_on] using sub_eq_zero.mp hzj
+    obtain ⟨hd, ht⟩ :=
+      eq_zero_of_extreme_optimalRow_bordered hx hy
+        hd_supp hd_sum hd_tight
+    apply Prod.ext
+    · funext i
+      have hi := congrFun hd i.val
+      simpa [d, i.property] using hi
+    · exact ht
+  have hdim : Module.finrank ℝ H = r + 1 := by
+    simp [H, r, Module.finrank_prod,
+      Module.finrank_fintype_fun_eq_card]
+  obtain ⟨colsT, hcolsT⟩ :=
+    exists_bordered_subfamily r hdim
+      mass tight hmass hsep
+  let cols : Fin r ↪ J :=
+    colsT.trans (Function.Embedding.subtype _)
+  have hcols :
+      ∀ j, ∑ i, x i * A i (cols j) = V := by
+    intro j
+    exact (colsT j).property
+  refine
+    ⟨r, hr, rows, cols, x, hx, hrows, hcols, ?_⟩
+  intro d t hd_sum hd_tight
+  let z : H := (fun i => d (rowsEquiv.symm i), t)
+  have hz0 : mass z = 0 := by
+    change ∑ i : R, d (rowsEquiv.symm i) = 0
+    rw [rowsEquiv.symm.sum_comp]
+    exact hd_sum
+  have hztight : ∀ k, tight (colsT k) z = 0 := by
+    intro k
+    change
+      (∑ i : R,
+        d (rowsEquiv.symm i) *
+          A i.val (colsT k).val) - t = 0
+    have hreindex :
+        (∑ i : R,
+          d (rowsEquiv.symm i) *
+            A i.val (colsT k).val) =
+          ∑ i : Fin r,
+            d i * A (rowsEquiv i).val (colsT k).val := by
+      simpa using rowsEquiv.symm.sum_comp
+        (fun i : Fin r =>
+          d i * A (rowsEquiv i).val (colsT k).val)
+    rw [hreindex]
+    apply sub_eq_zero.mpr
+    have hdt := hd_tight k
+    change
+      (∑ i : Fin r,
+        d i * A (rowsEquiv i).val (colsT k).val) = t at hdt
+    exact hdt
+  have hz := hcolsT z hz0 hztight
+  constructor
+  · funext i
+    have hi :=
+      congrArg (fun z : H => z.1 (rowsEquiv i)) hz
+    simpa [z] using hi
+  · exact congrArg Prod.snd hz
+
+end BorderedTightSelection
+
 /-- **Reindexing a sum along an embedding whose range is exactly a support.** If
 `e : Fin r ↪ κ` enumerates `z`'s support exactly (`z k ≠ 0 ↔ k ∈ Set.range e`) and `f`
 vanishes off `z`'s support, then summing `f ∘ e` over `Fin r` recovers the sum of `f` over
@@ -952,6 +1562,117 @@ theorem sum_embedding_eq_sum_of_range_eq_support {κ : Type*} [Fintype κ] {z : 
     obtain ⟨i, hi⟩ := he k (fun hz => hk (hf k hz))
     exact ⟨i, Finset.mem_univ i, hi⟩
   rw [← h1, h2]
+
+/-- **Bordered-kernel reassembly from one support and tight columns.**
+The support restriction is a simplex and equalizes the selected columns.
+Bordered injectivity then supplies a nonzero determinant denominator and the
+kernel identity. -/
+theorem borderedKernel_of_tight_support
+    {I J : Type*} [Fintype I]
+    {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ} (hx : x ∈ optimalRowStrategies A V)
+    {r : ℕ} (hr : 0 < r)
+    (rows : Fin r ↪ I) (cols : Fin r ↪ J)
+    (hrows : ∀ i, x i ≠ 0 ↔ i ∈ Set.range rows)
+    (hcols : ∀ j, ∑ i, x i * A i (cols j) = V)
+    (hborder : ∀ (d : Fin r → ℝ) (t : ℝ),
+      (∑ i, d i = 0) →
+      (∀ j, ∑ i, d i * A (rows i) (cols j) = t) →
+      d = 0 ∧ t = 0) :
+    let B := (Matrix.of A).submatrix rows cols
+    (borderedMatrix B).det ≠ 0 ∧
+      V * (borderedMatrix B).det = B.det := by
+  classical
+  let B := (Matrix.of A).submatrix rows cols
+  haveI : Nonempty (Fin r) := ⟨⟨0, hr⟩⟩
+  have hnonneg : ∀ i : Fin r, 0 ≤ x (rows i) :=
+    fun i => hx.1.1 (rows i)
+  have hsum : ∑ i : Fin r, x (rows i) = 1 := by
+    rw [sum_embedding_eq_sum_of_range_eq_support rows
+      (fun i hi => (hrows i).mp hi) x (fun _ hk => hk)]
+    exact hx.1.2
+  let xr : stdSimplex ℝ (Fin r) :=
+    ⟨fun i => x (rows i), hnonneg, hsum⟩
+  have hequal :
+      ∀ j : Fin r, wsum xr (fun i => B i j) = V := by
+    intro j
+    change ∑ i : Fin r, x (rows i) * B i j = V
+    simp only [B, Matrix.submatrix_apply, Matrix.of_apply]
+    rw [sum_embedding_eq_sum_of_range_eq_support rows
+      (fun i hi => (hrows i).mp hi)
+      (fun i => x i * A i (cols j))
+      (fun _ hk => by rw [hk, zero_mul])]
+    exact hcols j
+  exact borderedKernelIdentity B xr V hequal hborder
+
+/-- **General bordered Shapley--Snow kernel theorem.**
+Every nonempty finite matrix game has a square submatrix whose bordered
+determinant is nonzero and satisfies the value/determinant identity. -/
+theorem exists_bordered_kernel
+    {I J : Type*} [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J] (A : I → J → ℝ) :
+    ∃ (r : ℕ) (_ : 0 < r)
+      (rows : Fin r ↪ I) (cols : Fin r ↪ J),
+      let B := (Matrix.of A).submatrix rows cols
+      (borderedMatrix B).det ≠ 0 ∧
+        MinimaxLoomis.lam0 A * (borderedMatrix B).det =
+          B.det := by
+  obtain
+    ⟨r, hr, rows, cols, x, hx, hrows, hcols, hborder⟩ :=
+      exists_extreme_tight_bordered_submatrix A
+  have hxopt :
+      x ∈ optimalRowStrategies A (MinimaxLoomis.lam0 A) :=
+    extremePoints_subset hx
+  obtain ⟨hne, hid⟩ :=
+    borderedKernel_of_tight_support
+      hxopt hr rows cols hrows hcols hborder
+  exact ⟨r, hr, rows, cols, hne, hid⟩
+
+/-- **Kernel reassembly from one extreme support and tight columns.**
+If `rows` enumerates the support of an optimal row strategy `x`, every selected
+column is tight at value `V`, and the selected square submatrix has nonzero
+adjugate sum, then that submatrix satisfies the Shapley--Snow identity at `V`.
+
+Only the left equalizing strategy is needed for the determinant identity; no
+enumeration of a column strategy's support is required. -/
+theorem kernel_of_tight_support_of_adjugateSum_ne
+    {I J : Type*} [Fintype I]
+    {A : I → J → ℝ} {V : ℝ}
+    {x : I → ℝ} (hx : x ∈ optimalRowStrategies A V)
+    {r : ℕ} (hr : 0 < r)
+    (rows : Fin r ↪ I) (cols : Fin r ↪ J)
+    (hrows : ∀ i, x i ≠ 0 ↔ i ∈ Set.range rows)
+    (hcols : ∀ j, ∑ i, x i * A i (cols j) = V)
+    (hS : (∑ i, ∑ j,
+      ((Matrix.of A).submatrix rows cols).adjugate i j) ≠ 0) :
+    (∑ i, ∑ j,
+        ((Matrix.of A).submatrix rows cols).adjugate i j) ≠ 0 ∧
+      V * (∑ i, ∑ j,
+        ((Matrix.of A).submatrix rows cols).adjugate i j) =
+          ((Matrix.of A).submatrix rows cols).det := by
+  classical
+  let B := (Matrix.of A).submatrix rows cols
+  haveI : Nonempty (Fin r) := ⟨⟨0, hr⟩⟩
+  have hnonneg : ∀ i : Fin r, 0 ≤ x (rows i) :=
+    fun i => hx.1.1 (rows i)
+  have hsum : ∑ i : Fin r, x (rows i) = 1 := by
+    rw [sum_embedding_eq_sum_of_range_eq_support rows
+      (fun i hi => (hrows i).mp hi) x (fun _ hk => hk)]
+    exact hx.1.2
+  let xr : stdSimplex ℝ (Fin r) :=
+    ⟨fun i => x (rows i), hnonneg, hsum⟩
+  have hequal :
+      ∀ j : Fin r, wsum xr (fun i => B i j) = V := by
+    intro j
+    change ∑ i : Fin r, x (rows i) * B i j = V
+    simp only [B, Matrix.submatrix_apply, Matrix.of_apply]
+    rw [sum_embedding_eq_sum_of_range_eq_support rows
+      (fun i hi => (hrows i).mp hi)
+      (fun i => x i * A i (cols j))
+      (fun _ hk => by rw [hk, zero_mul])]
+    exact hcols j
+  exact
+    ⟨hS, kernelIdentity_of_left_equalizing B xr V hequal⟩
 
 section SquareKernelReassembly
 
@@ -1046,46 +1767,36 @@ theorem exists_kernel_of_extreme_matching_support {A : I → J → ℝ}
 
 end SquareKernelReassembly
 
-/-! ### Matching-support and bordered-basis selection interface
+/-! ### Bordered and adjugate kernel interfaces
 
-Extreme optimal mixed strategies
-`x ∈ extremePoints ℝ (optimalRowStrategies A (lam0 A))` and
-`y ∈ extremePoints ℝ (optimalColStrategies A (lam0 A))` are supplied by
-`extremePoints_optimalRowStrategies_nonempty` and
-`extremePoints_optimalColStrategies_nonempty`. Complementary slackness
-(`tight_of_optimal_row_support`, `tight_of_optimal_col_support`) makes the payoff
-equations tight on their supports.
+For an extreme optimal row strategy, complementary slackness and
+`eq_zero_of_extreme_optimalRow_bordered` show that the mass functional
+together with all tight-column functionals separates support directions and
+the value coordinate. `exists_bordered_subfamily` selects a basis containing
+the mass functional. Its other basis elements are exactly the square family
+of tight columns produced by
+`exists_extreme_tight_bordered_submatrix`.
 
-`eq_zero_of_extreme_optimalRow` and `eq_zero_of_extreme_optimalCol` express the
-extreme-point constraint as injectivity of the tight-constraint linear system on the
-support. The maps used by `card_support_le_card_tightCol_of_extreme` and
-`card_support_le_card_tightRow_of_extreme` convert that injectivity, by rank-nullity, to
-the one-sided bounds
-
-* `|support x| ≤ |tightCol x| + 1`;
-* `|support y| ≤ |tightRow y| + 1`.
-
-The selection input consumed by `exists_kernel_of_extreme_matching_support` consists of
-an extreme optimal pair, a common positive size `r`, and embeddings
-`rows : Fin r ↪ I`, `cols : Fin r ↪ J` whose ranges exactly enumerate the two supports,
-together with
+`borderedKernelIdentity` identifies the Cramer denominator of that basis as
+`det (borderedMatrix B)`. The capstone `exists_bordered_kernel` therefore
+provides, for every nonempty finite matrix game,
 
 ```
-∑ i, ∑ j, ((Matrix.of A).submatrix rows cols).adjugate i j ≠ 0.
+det (borderedMatrix B) ≠ 0
+lam0 A * det (borderedMatrix B) = det B.
 ```
 
-The last condition says that the bordered system
-`[[B, 1], [1ᵀ, 0]]` is nonsingular. It does not say that `B` is nonsingular:
-`singular_equalizing_kernel_example` gives an explicit singular `B` satisfying the
-condition. The two one-sided cardinality bounds alone do not construct this matching
-dual-basis data; a pivoting, perturbation, or induction theorem must establish it.
+This is the kernel interface consumed by
+`exists_nonzero_poly_of_borderedKernel`, so that theorem has no separate
+matrix-game existence hypothesis.
 
-Given this data, `exists_kernel_of_extreme_matching_support` restricts the strategies
-without losing probability mass, obtains an equalizing pair for `B`, and applies
-`exists_kernel_of_equalizing_of_adjugateSum_ne`. The result is the Shapley–Snow
-determinant identity for the ambient game. Accordingly,
-`exists_nonzero_poly_of_kernel` and `exists_nonzero_poly_of_discounted` expose the
-general kernel property as the explicit hypothesis `hkernel`. -/
+The adjugate API is also available. A nonzero adjugate sum and a left
+equalizing strategy give the same value/determinant relation through
+`kernel_of_tight_support_of_adjugateSum_ne`. The matching-support theorem
+`exists_kernel_of_extreme_matching_support` is a symmetric reassembly
+variant. `singular_equalizing_kernel_example` records that `B.det ≠ 0` is not
+the relevant condition: a singular payoff submatrix can have a nonsingular
+bordered system. -/
 
 /-! ### Bivariate evaluation
 
@@ -1137,7 +1848,7 @@ theorem exists_nonzero_poly_of_forall_mem_exists {ι : Type*} [Finite ι]
     rw [if_pos hk0]
     exact hkeval
 
-/-! ### `bivEval` commutes with `det` / `adjugate`
+/-! ### `bivEval` commutes with determinant, bordered determinant, and adjugate
 
 Entrywise consequences of `RingHom.map_det` / `RingHom.map_adjugate`, phrased so they
 compose directly with `Finset.sum` over matrix entries. -/
@@ -1146,6 +1857,16 @@ compose directly with `Finset.sum` over matrix entries. -/
 theorem bivEval_det {r : ℕ} (l v : ℝ) (B : Matrix (Fin r) (Fin r) (Polynomial (Polynomial ℝ))) :
     bivEval l v B.det = (B.map (bivEval l v)).det := by
   rw [RingHom.map_det, RingHom.mapMatrix_apply]
+
+/-- `bivEval` commutes with the determinant of the bordered matrix. -/
+theorem bivEval_borderedMatrix_det
+    {r : ℕ} (l v : ℝ)
+    (B : Matrix (Fin r) (Fin r)
+      (Polynomial (Polynomial ℝ))) :
+    bivEval l v (borderedMatrix B).det =
+      (borderedMatrix (B.map (bivEval l v))).det := by
+  rw [RingHom.map_det, RingHom.mapMatrix_apply,
+    map_borderedMatrix]
 
 /-- `bivEval` commutes with `adjugate`, entrywise, on a square bivariate-polynomial
 matrix. -/
@@ -1186,6 +1907,81 @@ noncomputable def kernelPoly {m n : ℕ} (E : Fin m → Fin n → Polynomial (Po
   fun ⟨_r, rows, cols⟩ =>
     let B := (Matrix.of E).submatrix rows cols
     B.det - Polynomial.X * ∑ i, ∑ j, B.adjugate i j
+
+/-- The bordered-kernel polynomial
+`det B - X * det (borderedMatrix B)` associated to a kernel shape. -/
+noncomputable def borderedKernelPoly
+    {m n : ℕ}
+    (E : Fin m → Fin n → Polynomial (Polynomial ℝ)) :
+    KernelShape m n → Polynomial (Polynomial ℝ) :=
+  fun ⟨_r, rows, cols⟩ =>
+    let B := (Matrix.of E).submatrix rows cols
+    B.det - Polynomial.X * (borderedMatrix B).det
+
+/-- **Parametric matrix-game corollary using bordered kernels.**
+The general bordered Shapley--Snow theorem supplies the kernel at every
+parameter, so no matrix-game kernel hypothesis is exposed. The genericity
+hypothesis only rules out a candidate polynomial being identically zero. -/
+theorem exists_nonzero_poly_of_borderedKernel
+    {m n : ℕ} [Nonempty (Fin m)] [Nonempty (Fin n)]
+    (E : Fin m → Fin n → Polynomial (Polynomial ℝ))
+    (S : Set ℝ) (val : ℝ → ℝ)
+    (hval : ∀ l ∈ S, val l =
+      MinimaxLoomis.lam0
+        (fun i j => bivEval l (val l) (E i j)))
+    (hgen :
+      ∀ (r : ℕ) (rows : Fin r ↪ Fin m)
+        (cols : Fin r ↪ Fin n),
+        (borderedMatrix
+          ((Matrix.of E).submatrix rows cols)).det ≠ 0 →
+        ((Matrix.of E).submatrix rows cols).det -
+            Polynomial.X *
+              (borderedMatrix
+                ((Matrix.of E).submatrix rows cols)).det ≠ 0) :
+    ∃ P : Polynomial (Polynomial ℝ),
+      P ≠ 0 ∧ ∀ l ∈ S, bivEval l (val l) P = 0 := by
+  apply exists_nonzero_poly_of_forall_mem_exists
+    (borderedKernelPoly E) S val
+  intro l hl
+  set Al : Matrix (Fin m) (Fin n) ℝ :=
+    fun i j => bivEval l (val l) (E i j) with hAl
+  obtain ⟨r, hr, rows, cols, hborder, hval_eq⟩ :=
+    exists_bordered_kernel Al
+  have hrm : r ≤ m := by
+    have := Fintype.card_le_of_embedding rows
+    simpa using this
+  have hcommute :
+      ((Matrix.of E).submatrix rows cols).map
+          (bivEval l (val l)) =
+        Al.submatrix rows cols := by
+    rw [← Matrix.submatrix_map]
+    rfl
+  refine
+    ⟨⟨⟨r, by omega⟩, rows, cols⟩, ?_, ?_⟩
+  · apply hgen
+    intro hz
+    apply hborder
+    have heval := congrArg (bivEval l (val l)) hz
+    rw [map_zero, bivEval_borderedMatrix_det,
+      hcommute] at heval
+    exact heval
+  · show
+      bivEval l (val l)
+        (borderedKernelPoly E
+          ⟨⟨r, by omega⟩, rows, cols⟩) = 0
+    unfold borderedKernelPoly
+    simp only [map_sub, map_mul, bivEval_X,
+      bivEval_det, bivEval_borderedMatrix_det, hcommute]
+    have hAlval : MinimaxLoomis.lam0 Al = val l :=
+      (hval l hl).symm
+    rw [hAlval] at hval_eq
+    apply sub_eq_zero.mpr
+    change
+      val l *
+          (borderedMatrix
+            (Al.submatrix rows cols)).det =
+        (Al.submatrix rows cols).det at hval_eq
+    exact hval_eq.symm
 
 /-- **Stage 2, concrete form.** The parametric Shapley–Snow corollary for a bivariate
 `m × n` matrix family `E`, a self-referential value function `val`, and a genericity
