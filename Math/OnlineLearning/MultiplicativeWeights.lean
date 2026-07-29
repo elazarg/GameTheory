@@ -401,6 +401,13 @@ noncomputable def restartedSignedAlgGain (rate : ℕ → ℝ) (length : ℕ → 
   ∑ k ∈ Finset.range K,
     signedAlgGainFrom (rate k) g (epochStart length k) (length k)
 
+/-- Gain of a comparator that may choose a different fixed action in each epoch. -/
+def restartedSignedEpochComparatorGain (length : ℕ → ℕ)
+    (g : ℕ → A → ℝ) (comparator : ℕ → A) (K : ℕ) : ℝ :=
+  ∑ k ∈ Finset.range K,
+    (cumGain g (epochStart length k + length k) (comparator k) -
+      cumGain g (epochStart length k) (comparator k))
+
 theorem restartedSignedAlgGain_succ (rate : ℕ → ℝ) (length : ℕ → ℕ)
     (g : ℕ → A → ℝ) (K : ℕ) :
     restartedSignedAlgGain rate length g (K + 1) =
@@ -442,6 +449,31 @@ theorem restartedSigned_fixedActionRegret_le (rate : ℕ → ℝ) (length : ℕ 
   rw [Finset.sum_sub_distrib, sum_epoch_cumGain_eq] at hsum
   simpa [restartedSignedAlgGain] using hsum
 
+/-- Restarted multiplicative weights competes independently with a different fixed comparator in
+    every deterministic epoch. The price is the sum of the epochwise regret bounds; no
+    cross-epoch telescoping of comparator gains is required. -/
+theorem restartedSigned_epochComparatorRegret_le
+    (rate : ℕ → ℝ) (length : ℕ → ℕ)
+    (hpos : ∀ k, 0 < rate k) (hle : ∀ k, rate k ≤ 1)
+    {g : ℕ → A → ℝ} (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1)
+    (comparator : ℕ → A) (K : ℕ) :
+    restartedSignedEpochComparatorGain length g comparator K -
+        restartedSignedAlgGain rate length g K
+      ≤ ∑ k ∈ Finset.range K,
+        2 * (Real.log (Fintype.card A) / rate k + rate k * length k) := by
+  have hepoch :
+      ∀ k ∈ Finset.range K,
+        (cumGain g (epochStart length k + length k) (comparator k) -
+            cumGain g (epochStart length k) (comparator k)) -
+          signedAlgGainFrom (rate k) g (epochStart length k) (length k)
+        ≤ 2 * (Real.log (Fintype.card A) / rate k + rate k * length k) := by
+    intro k _
+    exact signed_fixedActionRegretFrom_le_of_le_one (hpos k) (hle k) hg
+      (epochStart length k) (length k) (comparator k)
+  have hsum := Finset.sum_le_sum hepoch
+  rw [Finset.sum_sub_distrib] at hsum
+  simpa [restartedSignedEpochComparatorGain, restartedSignedAlgGain] using hsum
+
 /-- Algorithm gain through `K` completed epochs and a prefix of epoch `K`. -/
 noncomputable def restartedSignedAlgGainPrefix (rate : ℕ → ℝ) (length : ℕ → ℕ)
     (g : ℕ → A → ℝ) (K T : ℕ) : ℝ :=
@@ -464,6 +496,33 @@ theorem restartedSigned_fixedActionRegretPrefix_le (rate : ℕ → ℝ) (length 
     signed_fixedActionRegretFrom_le_of_le_one (hpos K) (hle K) hg
       (epochStart length K) T a
   simp only [restartedSignedAlgGainPrefix]
+  linarith
+
+/-- Comparator gain through completed epochs and a prefix of the active epoch. -/
+def restartedSignedEpochComparatorGainPrefix (length : ℕ → ℕ)
+    (g : ℕ → A → ℝ) (comparator : ℕ → A) (K T : ℕ) : ℝ :=
+  restartedSignedEpochComparatorGain length g comparator K +
+    (cumGain g (epochStart length K + T) (comparator K) -
+      cumGain g (epochStart length K) (comparator K))
+
+/-- The epochwise-comparator regret bound extends through every prefix of the active epoch. -/
+theorem restartedSigned_epochComparatorRegretPrefix_le
+    (rate : ℕ → ℝ) (length : ℕ → ℕ)
+    (hpos : ∀ k, 0 < rate k) (hle : ∀ k, rate k ≤ 1)
+    {g : ℕ → A → ℝ} (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1)
+    (comparator : ℕ → A) (K T : ℕ) :
+    restartedSignedEpochComparatorGainPrefix length g comparator K T -
+        restartedSignedAlgGainPrefix rate length g K T
+      ≤ (∑ k ∈ Finset.range K,
+          2 * (Real.log (Fintype.card A) / rate k + rate k * length k))
+        + 2 * (Real.log (Fintype.card A) / rate K + rate K * T) := by
+  have hcompleted :=
+    restartedSigned_epochComparatorRegret_le rate length hpos hle hg comparator K
+  have hprefix :=
+    signed_fixedActionRegretFrom_le_of_le_one (hpos K) (hle K) hg
+      (epochStart length K) T (comparator K)
+  simp only [restartedSignedEpochComparatorGainPrefix,
+    restartedSignedAlgGainPrefix]
   linarith
 
 end Math.OnlineLearning
