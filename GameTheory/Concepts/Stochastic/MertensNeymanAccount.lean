@@ -23,9 +23,9 @@ descriptions can hide: the account must be large enough for these formulas
 to define probabilities.
 
 This is the algebraic kernel behind the account telescope. It proves the
-logarithmic corrector estimate for the concrete discount schedule, and
-isolates the probability-weighted discounted-value switch estimate that
-remains to be supplied by a game-induced value process. Together with a
+logarithmic corrector and rare-switch estimates for the concrete discount
+schedule. The remaining analytic input is a rate-weighted derivative bound
+for the game-induced discounted-value curve. Together with a
 bounded-potential drift, these bounds control floor occupation.
 
 The formulation follows Section 4 of Hansen, Ibsen-Jensen, and Neyman,
@@ -63,6 +63,32 @@ theorem hasDerivAt_logCorrector
   unfold logCorrector
   simpa [discountRate, div_eq_mul_inv, mul_comm] using
     Real.hasDerivAt_inv_log hs0 hs1 hsm1
+
+/-- Exact derivative of the slow discount schedule. -/
+theorem hasDerivAt_discountRate {s : ℝ} (hs : 1 < s) :
+    HasDerivAt discountRate
+      (-(discountRate s) ^ 2 *
+        ((Real.log s) ^ 2 + 2 * Real.log s)) s := by
+  have hs0 : s ≠ 0 := ne_of_gt (lt_trans zero_lt_one hs)
+  have hlog0 : Real.log s ≠ 0 := ne_of_gt (Real.log_pos hs)
+  have hden : HasDerivAt
+      (fun x : ℝ => x * (Real.log x) ^ 2)
+      ((Real.log s) ^ 2 +
+        s * (2 * Real.log s * s⁻¹)) s := by
+    convert (hasDerivAt_id s).mul
+      ((Real.hasDerivAt_log hs0).pow 2) using 1
+    all_goals first | rfl | simp
+  have hden0 : s * (Real.log s) ^ 2 ≠ 0 := by
+    positivity
+  have hinv : HasDerivAt
+      (fun x : ℝ => (x * (Real.log x) ^ 2)⁻¹)
+      (-((Real.log s) ^ 2 +
+          s * (2 * Real.log s * s⁻¹)) /
+        (s * (Real.log s) ^ 2) ^ 2) s :=
+    hden.inv hden0
+  unfold discountRate
+  convert hinv using 1
+  all_goals first | rfl | field_simp [hs0, hlog0]
 
 /-- Mean-value form of the identity that the logarithmic corrector is an
 antiderivative of the negative discount rate. -/
@@ -165,6 +191,17 @@ theorem tendsto_log_div_log_mul (c : ℝ) (hc : 0 < c) :
   filter_upwards [eventually_gt_atTop (0 : ℝ)] with s hs
   rw [Real.log_mul (ne_of_gt hc) (ne_of_gt hs)]
 
+/-- A fixed numerator factor can be attached to the asymptotically unit
+logarithm ratio. -/
+theorem tendsto_const_mul_log_div_log_mul (a c : ℝ) (hc : 0 < c) :
+    Tendsto (fun s : ℝ =>
+      a * Real.log s / Real.log (c * s)) atTop (𝓝 a) := by
+  have hconst :
+      Tendsto (fun _ : ℝ => a) atTop (𝓝 a) :=
+    tendsto_const_nhds
+  have h := hconst.mul (tendsto_log_div_log_mul c hc)
+  simpa [mul_div_assoc] using h
+
 /-- `discountRate` is regularly varying with index `-1`. -/
 theorem tendsto_discountRate_mul_div (c : ℝ) (hc : 0 < c) :
     Tendsto (fun s : ℝ => discountRate (c * s) / discountRate s)
@@ -204,6 +241,68 @@ theorem discountRate_antitoneOn :
   unfold discountRate
   exact one_div_le_one_div_of_le
     (mul_pos ha0 (sq_pos_of_pos hloga)) hden
+
+/-- For the published step `γ = 1 + ε/9` with `ε < 1/4`, both logarithmic
+switch factors are eventually at most `1/32`. -/
+theorem eventually_logStepFactors_le
+    {ε : ℝ} (hε : 0 < ε) (hεquarter : ε < 1 / 4) :
+    let γ := 1 + ε / 9
+    ∀ᶠ s : ℝ in atTop,
+      Real.log γ * Real.log s / Real.log (γ * s) ≤ 1 / 32 ∧
+      Real.log γ * Real.log s / Real.log (γ⁻¹ * s) ≤ 1 / 32 := by
+  dsimp only
+  let γ : ℝ := 1 + ε / 9
+  have hγ : 1 < γ := by
+    dsimp [γ]
+    linarith
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  have hlogγ : Real.log γ < 1 / 32 := by
+    have hlogSub :=
+      Real.log_lt_sub_one_of_pos hγ0 (ne_of_gt hγ)
+    dsimp [γ] at hlogSub
+    norm_num at hεquarter ⊢
+    linarith
+  have hup :=
+    tendsto_const_mul_log_div_log_mul (Real.log γ) γ hγ0
+  have hdown :=
+    tendsto_const_mul_log_div_log_mul
+      (Real.log γ) γ⁻¹ (inv_pos.mpr hγ0)
+  filter_upwards
+    [(tendsto_order.1 hup).2 _ hlogγ,
+      (tendsto_order.1 hdown).2 _ hlogγ] with s hupS hdownS
+  exact ⟨hupS.le, hdownS.le⟩
+
+/-- Floor-threshold packaging of the two logarithmic switch factors,
+including the fact that the downward neighboring account remains above
+`1`. -/
+theorem exists_floor_logStepFactors_le
+    {ε : ℝ} (hε : 0 < ε) (hεquarter : ε < 1 / 4) :
+    let γ := 1 + ε / 9
+    ∃ M : ℝ, ∀ s : ℝ, M ≤ s →
+      1 < γ⁻¹ * s ∧
+      Real.log γ * Real.log s / Real.log (γ * s) ≤ 1 / 32 ∧
+      Real.log γ * Real.log s / Real.log (γ⁻¹ * s) ≤ 1 / 32 := by
+  dsimp only
+  let γ : ℝ := 1 + ε / 9
+  have hγ : 1 < γ := by
+    dsimp [γ]
+    linarith
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  have heventually :
+      ∀ᶠ s : ℝ in atTop,
+        1 < γ⁻¹ * s ∧
+        Real.log γ * Real.log s / Real.log (γ * s) ≤ 1 / 32 ∧
+        Real.log γ * Real.log s / Real.log (γ⁻¹ * s) ≤ 1 / 32 := by
+    filter_upwards
+      [eventually_logStepFactors_le hε hεquarter,
+        eventually_gt_atTop γ] with s hfactors hsγ
+    have hscaled :=
+      mul_lt_mul_of_pos_left hsγ (inv_pos.mpr hγ0)
+    have hinv : 1 < γ⁻¹ * s := by
+      simpa [hγ0.ne'] using hscaled
+    exact ⟨hinv, hfactors⟩
+  rcases (eventually_atTop.1 heventually) with ⟨M, hM⟩
+  exact ⟨M, fun s hs => hM s hs⟩
 
 /-- For `γ = 1 + ε/9`, the relative variation of `discountRate` across
 the whole account interval `[γ⁻¹s, γs]` is eventually at most `ε/8`.
@@ -329,6 +428,176 @@ theorem exists_floor_discountRate_secant_le_logCorrector_sub
       (eventually_discountRate_secant_le_logCorrector_sub hε)) with
     ⟨M, hM⟩
   exact ⟨M, fun s hs => hM s hs⟩
+
+/-- The source's upward-switch constant calculation. A logarithmic ratio
+at most `1/32` turns the rare-move probability scale and the
+corrector-weighted value variation into an `ε * discountRate s / 16`
+bill. -/
+theorem two_div_mul_up_correctorVariation_le
+    {ε γ s : ℝ} (hε : 0 ≤ ε) (hγ : 1 < γ) (hs : 1 < s)
+    (hfactor :
+      Real.log γ * Real.log s / Real.log (γ * s) ≤ 1 / 32) :
+    (2 / (s * (γ - 1))) *
+        (ε * (γ - 1) *
+          (logCorrector s - logCorrector (γ * s))) ≤
+      ε * discountRate s / 16 := by
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  have hs0 : 0 < s := lt_trans zero_lt_one hs
+  have hγs : 1 < γ * s := by
+    nlinarith [mul_pos (sub_pos.mpr hγ) (sub_pos.mpr hs)]
+  have hlogsum : 0 < Real.log s + Real.log γ :=
+    add_pos (Real.log_pos hs) (Real.log_pos hγ)
+  have hlogsum' : 0 < Real.log γ + Real.log s :=
+    add_pos (Real.log_pos hγ) (Real.log_pos hs)
+  have hidentity :
+      (2 / (s * (γ - 1))) *
+          (ε * (γ - 1) *
+            (logCorrector s - logCorrector (γ * s))) =
+        2 * ε * discountRate s *
+          (Real.log γ * Real.log s / Real.log (γ * s)) := by
+    unfold discountRate logCorrector
+    rw [Real.log_mul (ne_of_gt hγ0) (ne_of_gt hs0)]
+    field_simp [ne_of_gt hs0, ne_of_gt (sub_pos.mpr hγ),
+      ne_of_gt (Real.log_pos hs),
+      ne_of_gt (Real.log_pos hγs), ne_of_gt hlogsum,
+      ne_of_gt hlogsum']
+    ring
+  rw [hidentity]
+  have hscale :
+      0 ≤ 2 * ε * discountRate s :=
+    mul_nonneg (mul_nonneg (by norm_num) hε) (discountRate_pos hs).le
+  have := mul_le_mul_of_nonneg_left hfactor hscale
+  nlinarith
+
+/-- Downward-switch counterpart of
+`two_div_mul_up_correctorVariation_le`. -/
+theorem two_div_mul_down_correctorVariation_le
+    {ε γ s : ℝ} (hε : 0 ≤ ε) (hγ : 1 < γ)
+    (hdowns : 1 < γ⁻¹ * s)
+    (hfactor :
+      Real.log γ * Real.log s / Real.log (γ⁻¹ * s) ≤ 1 / 32) :
+    (2 / (s * (γ - 1))) *
+        (ε * (γ - 1) *
+          (logCorrector (γ⁻¹ * s) - logCorrector s)) ≤
+      ε * discountRate s / 16 := by
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  have hs : 1 < s := by
+    have hscaled := mul_lt_mul_of_pos_left hdowns hγ0
+    have hγs : γ < s := by
+      simpa [hγ0.ne'] using hscaled
+    exact hγ.trans hγs
+  have hs0 : 0 < s := lt_trans zero_lt_one hs
+  have hlogdiff : 0 < Real.log s - Real.log γ := by
+    have hlogdown : 0 < Real.log (γ⁻¹ * s) :=
+      Real.log_pos hdowns
+    rw [Real.log_mul (inv_ne_zero (ne_of_gt hγ0))
+      (ne_of_gt hs0), Real.log_inv] at hlogdown
+    simpa [sub_eq_add_neg, add_comm] using hlogdown
+  have hlogdiff' : 0 < -Real.log γ + Real.log s := by
+    simpa [sub_eq_add_neg, add_comm] using hlogdiff
+  have hidentity :
+      (2 / (s * (γ - 1))) *
+          (ε * (γ - 1) *
+            (logCorrector (γ⁻¹ * s) - logCorrector s)) =
+        2 * ε * discountRate s *
+          (Real.log γ * Real.log s / Real.log (γ⁻¹ * s)) := by
+    unfold discountRate logCorrector
+    rw [Real.log_mul (inv_ne_zero (ne_of_gt hγ0))
+      (ne_of_gt hs0), Real.log_inv]
+    field_simp [ne_of_gt hs0, ne_of_gt (sub_pos.mpr hγ),
+      ne_of_gt (Real.log_pos hs), ne_of_gt hlogdiff,
+      ne_of_gt hlogdiff']
+    ring
+  rw [hidentity]
+  have hscale :
+      0 ≤ 2 * ε * discountRate s :=
+    mul_nonneg (mul_nonneg (by norm_num) hε) (discountRate_pos hs).le
+  have := mul_le_mul_of_nonneg_left hfactor hscale
+  nlinarith
+
+/-- A derivative bound by `η * discountRate` integrates exactly to a
+logarithmic-corrector variation bound. The proof applies the mean value
+theorem to both `η * logCorrector + V` and
+`η * logCorrector - V`. -/
+theorem abs_value_sub_le_corrector_sub_of_deriv_bound
+    {η M a b : ℝ} {V V' : ℝ → ℝ}
+    (hM : 1 < M)
+    (hderiv : ∀ s, M ≤ s → HasDerivAt V (V' s) s)
+    (hbound : ∀ s, M ≤ s → |V' s| ≤ η * discountRate s)
+    (ha : M ≤ a) (hab : a ≤ b) :
+    |V b - V a| ≤ η * (logCorrector a - logCorrector b) := by
+  by_cases heq : a = b
+  · subst b
+    simp
+  have hab' : a < b := lt_of_le_of_ne hab heq
+  have hMab : ∀ x ∈ Set.Icc a b, M ≤ x :=
+    fun x hx => ha.trans hx.1
+  have hplusDeriv : ∀ x ∈ Set.Icc a b,
+      HasDerivAt (fun u => η * logCorrector u + V u)
+        (-η * discountRate x + V' x) x := by
+    intro x hx
+    have hxM := hMab x hx
+    have hx1 : 1 < x := hM.trans_le hxM
+    have hc := hasDerivAt_logCorrector
+      (ne_of_gt (lt_trans zero_lt_one hx1))
+      (ne_of_gt hx1) (by linarith)
+    convert (hc.const_mul η).add (hderiv x hxM) using 1
+    all_goals first | rfl | ring
+  have hminusDeriv : ∀ x ∈ Set.Icc a b,
+      HasDerivAt (fun u => η * logCorrector u - V u)
+        (-η * discountRate x - V' x) x := by
+    intro x hx
+    have hxM := hMab x hx
+    have hx1 : 1 < x := hM.trans_le hxM
+    have hc := hasDerivAt_logCorrector
+      (ne_of_gt (lt_trans zero_lt_one hx1))
+      (ne_of_gt hx1) (by linarith)
+    convert (hc.const_mul η).sub (hderiv x hxM) using 1
+    all_goals first | rfl | ring
+  have hplus :
+      η * logCorrector b + V b ≤
+        η * logCorrector a + V a := by
+    have hcont : ContinuousOn
+        (fun u => η * logCorrector u + V u) (Set.Icc a b) :=
+      fun x hx => (hplusDeriv x hx).continuousAt.continuousWithinAt
+    obtain ⟨c, hc, hslope⟩ :=
+      exists_hasDerivAt_eq_slope
+        (fun u => η * logCorrector u + V u)
+        (fun x => -η * discountRate x + V' x)
+        hab' hcont
+        (fun x hx => hplusDeriv x ⟨hx.1.le, hx.2.le⟩)
+    have hcM := hMab c ⟨hc.1.le, hc.2.le⟩
+    have hderivNonpos :
+        -η * discountRate c + V' c ≤ 0 := by
+      have hupper : V' c ≤ η * discountRate c :=
+        (le_abs_self _).trans (hbound c hcM)
+      linarith
+    have hba : 0 < b - a := sub_pos.mpr hab'
+    rw [eq_div_iff hba.ne'] at hslope
+    nlinarith
+  have hminus :
+      η * logCorrector b - V b ≤
+        η * logCorrector a - V a := by
+    have hcont : ContinuousOn
+        (fun u => η * logCorrector u - V u) (Set.Icc a b) :=
+      fun x hx => (hminusDeriv x hx).continuousAt.continuousWithinAt
+    obtain ⟨c, hc, hslope⟩ :=
+      exists_hasDerivAt_eq_slope
+        (fun u => η * logCorrector u - V u)
+        (fun x => -η * discountRate x - V' x)
+        hab' hcont
+        (fun x hx => hminusDeriv x ⟨hx.1.le, hx.2.le⟩)
+    have hcM := hMab c ⟨hc.1.le, hc.2.le⟩
+    have hderivNonpos :
+        -η * discountRate c - V' c ≤ 0 := by
+      have hupper : -V' c ≤ η * discountRate c :=
+        (neg_le_abs _).trans (hbound c hcM)
+      linarith
+    have hba : 0 < b - a := sub_pos.mpr hab'
+    rw [eq_div_iff hba.ne'] at hslope
+    nlinarith
+  rw [abs_le]
+  constructor <;> linarith
 
 /-- The three possible multiplicative account moves. -/
 inductive AccountMove
@@ -698,6 +967,241 @@ theorem downProbability_le_one_div
     · exact hdenPos.le
   · rw [downProbability, if_neg hMs]
     exact div_nonneg zero_le_one hdenPos.le
+
+/-- The probability of changing the account is at most
+`2 / (s * (γ - 1))` when `γ ≤ 2`. The positive and negative parts of the
+gap are mutually exclusive, so the directional bounds do not add. -/
+theorem up_add_down_le_two_div
+    {γ M s y : ℝ} (h : IsValidScale γ s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2) (hγ2 : γ ≤ 2) :
+    upProbability γ s y + downProbability γ M s y ≤
+      2 / (s * (γ - 1)) := by
+  by_cases hy : 0 ≤ y
+  · have hdown : downProbability γ M s y = 0 := by
+      simp [downProbability, min_eq_right hy]
+    rw [hdown, add_zero]
+    exact upProbability_le_two_div h hyUpper
+  · have hy' : y ≤ 0 := le_of_not_ge hy
+    have hup : upProbability γ s y = 0 := by
+      simp [upProbability, max_eq_right hy']
+    rw [hup, zero_add]
+    calc
+      downProbability γ M s y ≤
+          1 / (s * (1 - γ⁻¹)) :=
+        downProbability_le_one_div h hyLower
+      _ = γ / (s * (γ - 1)) := by
+        have hγ0 : γ ≠ 0 := ne_of_gt (lt_trans zero_lt_one h.1)
+        field_simp [h.s_ne_zero, hγ0]
+      _ ≤ 2 / (s * (γ - 1)) := by
+        exact div_le_div_of_nonneg_right hγ2 h.upDenom_pos.le
+
+/-- If both possible adjacent value changes are bounded by `B`, the
+probability-weighted switch bill is at most the account-move probability
+times `B`. -/
+theorem switchBudget_le_moveProbability_mul
+    {γ M s y B : ℝ} {V : ℝ → ℝ}
+    (h : IsValidScale γ s)
+    (hup : |V (γ * s) - V s| ≤ B)
+    (hdown : |V (γ⁻¹ * s) - V s| ≤ B) :
+    switchBudget γ M s y V ≤
+      (upProbability γ s y + downProbability γ M s y) * B := by
+  have hup0 : 0 ≤ upProbability γ s y := upProbability_nonneg h
+  have hdown0 : 0 ≤ downProbability γ M s y :=
+    downProbability_nonneg h
+  unfold switchBudget
+  have hupWeighted :=
+    mul_le_mul_of_nonneg_left hup hup0
+  have hdownWeighted :=
+    mul_le_mul_of_nonneg_left hdown hdown0
+  nlinarith
+
+/-- The source-faithful switch estimate. Corrector-weighted variation of
+the discounted value in each direction, combined with the logarithmic
+ratio bounds, yields the required probability-weighted `ε λ / 16` bill.
+Only one direction is active for any realized gap `y`. -/
+theorem switchBudget_le_of_logCorrector_variation
+    {ε γ M s y : ℝ} {V : ℝ → ℝ}
+    (h : IsValidScale γ s) (hs : 1 < s)
+    (hdowns : 1 < γ⁻¹ * s) (hγ2 : γ ≤ 2)
+    (hε : 0 ≤ ε) (hyLower : -1 ≤ y) (hyUpper : y ≤ 2)
+    (hfactorUp :
+      Real.log γ * Real.log s / Real.log (γ * s) ≤ 1 / 32)
+    (hfactorDown :
+      Real.log γ * Real.log s / Real.log (γ⁻¹ * s) ≤ 1 / 32)
+    (hupVariation :
+      |V (γ * s) - V s| ≤
+        ε * (γ - 1) *
+          (logCorrector s - logCorrector (γ * s)))
+    (hdownVariation :
+      |V (γ⁻¹ * s) - V s| ≤
+        ε * (γ - 1) *
+          (logCorrector (γ⁻¹ * s) - logCorrector s)) :
+    switchBudget γ M s y V ≤ ε * discountRate s / 16 := by
+  by_cases hy : 0 ≤ y
+  · have hdown0 : downProbability γ M s y = 0 := by
+      simp [downProbability, min_eq_right hy]
+    have hupBoundNonneg :
+        0 ≤ ε * (γ - 1) *
+          (logCorrector s - logCorrector (γ * s)) :=
+      (abs_nonneg _).trans hupVariation
+    rw [switchBudget, hdown0, zero_mul, add_zero]
+    calc
+      upProbability γ s y * |V (γ * s) - V s| ≤
+          upProbability γ s y *
+            (ε * (γ - 1) *
+              (logCorrector s - logCorrector (γ * s))) :=
+        mul_le_mul_of_nonneg_left hupVariation
+          (upProbability_nonneg h)
+      _ ≤ (2 / (s * (γ - 1))) *
+            (ε * (γ - 1) *
+              (logCorrector s - logCorrector (γ * s))) :=
+        mul_le_mul_of_nonneg_right
+          (upProbability_le_two_div h hyUpper) hupBoundNonneg
+      _ ≤ ε * discountRate s / 16 :=
+        two_div_mul_up_correctorVariation_le hε h.1 hs hfactorUp
+  · have hy' : y ≤ 0 := le_of_not_ge hy
+    have hup0 : upProbability γ s y = 0 := by
+      simp [upProbability, max_eq_right hy']
+    have hdownProbabilityBound :
+        downProbability γ M s y ≤ 2 / (s * (γ - 1)) := by
+      have hmove :=
+        up_add_down_le_two_div (M := M) h hyLower hyUpper hγ2
+      simpa [hup0] using hmove
+    have hdownBoundNonneg :
+        0 ≤ ε * (γ - 1) *
+          (logCorrector (γ⁻¹ * s) - logCorrector s) :=
+      (abs_nonneg _).trans hdownVariation
+    rw [switchBudget, hup0, zero_mul, zero_add]
+    calc
+      downProbability γ M s y * |V (γ⁻¹ * s) - V s| ≤
+          downProbability γ M s y *
+            (ε * (γ - 1) *
+              (logCorrector (γ⁻¹ * s) - logCorrector s)) :=
+        mul_le_mul_of_nonneg_left hdownVariation
+          (downProbability_nonneg h)
+      _ ≤ (2 / (s * (γ - 1))) *
+            (ε * (γ - 1) *
+              (logCorrector (γ⁻¹ * s) - logCorrector s)) :=
+        mul_le_mul_of_nonneg_right
+          hdownProbabilityBound hdownBoundNonneg
+      _ ≤ ε * discountRate s / 16 :=
+        two_div_mul_down_correctorVariation_le
+          hε h.1 hdowns hfactorDown
+
+/-- Tail form of the source-faithful switch estimate for the concrete
+choice `γ = 1 + ε/9`. A single two-point variation inequality on the
+account-indexed value curve supplies both directional premises. -/
+theorem switchBudget_le_of_tail_logCorrector_variation
+    {ε M₀ M s y : ℝ} {V : ℝ → ℝ}
+    (hε : 0 < ε) (hεquarter : ε < 1 / 4)
+    (h : IsValidScale (1 + ε / 9) s)
+    (hM₀ : M₀ ≤ (1 + ε / 9)⁻¹ * s)
+    (hdowns : 1 < (1 + ε / 9)⁻¹ * s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2)
+    (hfactorUp :
+      Real.log (1 + ε / 9) * Real.log s /
+          Real.log ((1 + ε / 9) * s) ≤ 1 / 32)
+    (hfactorDown :
+      Real.log (1 + ε / 9) * Real.log s /
+          Real.log ((1 + ε / 9)⁻¹ * s) ≤ 1 / 32)
+    (hvariation : ∀ {a b : ℝ}, M₀ ≤ a → a ≤ b →
+      |V b - V a| ≤
+        ε * ((1 + ε / 9) - 1) *
+          (logCorrector a - logCorrector b)) :
+    switchBudget (1 + ε / 9) M s y V ≤
+      ε * discountRate s / 16 := by
+  let γ : ℝ := 1 + ε / 9
+  have hγ : 1 < γ := by
+    dsimp [γ]
+    linarith
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  have hγ2 : γ ≤ 2 := by
+    dsimp [γ]
+    norm_num at hεquarter ⊢
+    linarith
+  have hinvγ_le_one : γ⁻¹ ≤ 1 :=
+    (inv_le_one₀ hγ0).2 hγ.le
+  have hinvγs_le_s : γ⁻¹ * s ≤ s := by
+    simpa using
+      mul_le_mul_of_nonneg_right hinvγ_le_one h.2.1.le
+  have hs_le_γs : s ≤ γ * s := by
+    nlinarith [mul_nonneg (sub_nonneg.mpr hγ.le) h.2.1.le]
+  change 1 < γ⁻¹ * s at hdowns
+  have hs : 1 < s := lt_of_lt_of_le hdowns hinvγs_le_s
+  have hM₀' : M₀ ≤ γ⁻¹ * s := by
+    exact hM₀
+  have hupVariation :
+      |V (γ * s) - V s| ≤
+        ε * (γ - 1) *
+          (logCorrector s - logCorrector (γ * s)) := by
+    exact hvariation (hM₀'.trans hinvγs_le_s) hs_le_γs
+  have hdownVariation :
+      |V (γ⁻¹ * s) - V s| ≤
+        ε * (γ - 1) *
+          (logCorrector (γ⁻¹ * s) - logCorrector s) := by
+    simpa [γ, abs_sub_comm] using
+      hvariation hM₀' hinvγs_le_s
+  exact switchBudget_le_of_logCorrector_variation h hs hdowns hγ2
+    hε.le hyLower hyUpper hfactorUp hfactorDown
+    hupVariation hdownVariation
+
+/-- A tail corrector-variation estimate yields one account floor after
+which every valid stochastic update has switch budget at most
+`ε * discountRate s / 16`. This is the threshold form consumed by the
+history-level construction. -/
+theorem exists_floor_switchBudget_le_of_tail_logCorrector_variation
+    {ε M₀ : ℝ} {V : ℝ → ℝ}
+    (hε : 0 < ε) (hεquarter : ε < 1 / 4)
+    (hvariation : ∀ {a b : ℝ}, M₀ ≤ a → a ≤ b →
+      |V b - V a| ≤
+        ε * ((1 + ε / 9) - 1) *
+          (logCorrector a - logCorrector b)) :
+    ∃ S : ℝ, ∀ s : ℝ, S ≤ s → ∀ M y : ℝ,
+      IsValidScale (1 + ε / 9) s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget (1 + ε / 9) M s y V ≤
+        ε * discountRate s / 16 := by
+  let γ : ℝ := 1 + ε / 9
+  have hγ : 1 < γ := by
+    dsimp [γ]
+    linarith
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  obtain ⟨Sfactor, hSfactor⟩ :=
+    exists_floor_logStepFactors_le hε hεquarter
+  refine ⟨max Sfactor (γ * M₀), ?_⟩
+  intro s hs M y hscale hyLower hyUpper
+  have hfactor :=
+    hSfactor s ((le_max_left _ _).trans hs)
+  have hγM₀s : γ * M₀ ≤ s :=
+    (le_max_right _ _).trans hs
+  have hM₀ : M₀ ≤ γ⁻¹ * s := by
+    have hscaled :=
+      mul_le_mul_of_nonneg_left hγM₀s (inv_pos.mpr hγ0).le
+    simpa [hγ0.ne', mul_assoc] using hscaled
+  exact switchBudget_le_of_tail_logCorrector_variation
+    hε hεquarter hscale hM₀ hfactor.1 hyLower hyUpper
+    hfactor.2.1 hfactor.2.2 hvariation
+
+/-- Rate-weighted differentiability of the account-indexed value curve is
+sufficient for an eventual `ε λ / 16` switch budget. This packages the
+calculus form of the source's value-variation lemma with the rare account
+move calculation. -/
+theorem exists_floor_switchBudget_le_of_deriv_bound
+    {ε M₀ : ℝ} {V V' : ℝ → ℝ}
+    (hε : 0 < ε) (hεquarter : ε < 1 / 4) (hM₀ : 1 < M₀)
+    (hderiv : ∀ s, M₀ ≤ s → HasDerivAt V (V' s) s)
+    (hbound : ∀ s, M₀ ≤ s →
+      |V' s| ≤
+        (ε * ((1 + ε / 9) - 1)) * discountRate s) :
+    ∃ S : ℝ, ∀ s : ℝ, S ≤ s → ∀ M y : ℝ,
+      IsValidScale (1 + ε / 9) s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget (1 + ε / 9) M s y V ≤
+        ε * discountRate s / 16 := by
+  exact exists_floor_switchBudget_le_of_tail_logCorrector_variation
+    hε hεquarter fun ha hab =>
+      abs_value_sub_le_corrector_sub_of_deriv_bound
+        hM₀ hderiv hbound ha hab
 
 /-- A sufficient adjacent-variation criterion for the weighted switch
 budget. The permitted pointwise changes are proportional to the sizes of
