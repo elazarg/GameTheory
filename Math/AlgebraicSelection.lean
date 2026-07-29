@@ -300,6 +300,49 @@ theorem finite_analytic_family_eventually_fixed_oriented_abs_maximizer
     rw [hsign]
     exact ⟨abs_pos.mpr (ne_of_gt hxpos), hxmax⟩
 
+/-- A right-nonnegative analytic germ is either identically zero as a right
+germ or eventually strictly positive. -/
+theorem analyticAt_eventually_eq_zero_or_pos_of_eventually_nonneg
+    {g : ℝ → ℝ} {x₀ : ℝ}
+    (hg : AnalyticAt ℝ g x₀)
+    (hnonneg : ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 ≤ g x) :
+    (∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), g x = 0) ∨
+      (∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 < g x) := by
+  rcases analyticAt_eventually_eq_or_lt_or_gt
+      hg analyticAt_const with heq | hneg | hpos
+  · exact Or.inl heq
+  · exfalso
+    obtain ⟨x, hxneg, hxnonneg⟩ := (hneg.and hnonneg).exists
+    exact (not_lt_of_ge hxnonneg) hxneg
+  · exact Or.inr hpos
+
+/-- A finite family of right-nonnegative analytic constraint germs has one
+eventual active set. Active constraints vanish identically as right germs;
+every other constraint is eventually strictly positive. -/
+theorem finite_analytic_nonnegative_family_eventually_active_set
+    {I : Type*} [Finite I]
+    (g : I → ℝ → ℝ) {x₀ : ℝ}
+    (hg : ∀ i, AnalyticAt ℝ (g i) x₀)
+    (hnonneg : ∀ i,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 ≤ g i x) :
+    ∃ active : I → Prop,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), ∀ i,
+        (g i x = 0 ↔ active i) ∧ (0 < g i x ↔ ¬active i) := by
+  let L := nhdsWithin x₀ (Set.Ioi x₀)
+  let active : I → Prop := fun i => ∀ᶠ x in L, g i x = 0
+  refine ⟨active, Filter.eventually_all.mpr fun i => ?_⟩
+  rcases analyticAt_eventually_eq_zero_or_pos_of_eventually_nonneg
+      (hg i) (hnonneg i) with hzero | hpos
+  · have hactive : active i := hzero
+    filter_upwards [hzero] with x hx
+    simp [hactive, hx]
+  · have hinactive : ¬active i := by
+      intro hactive
+      obtain ⟨x, hxzero, hxpos⟩ := (hactive.and hpos).exists
+      exact (ne_of_gt hxpos) hxzero
+    filter_upwards [hpos] with x hx
+    simp [hinactive, ne_of_gt hx, hx]
+
 /-- Evaluate a bivariate polynomial `P : Polynomial (Polynomial ℝ)` — outer variable `v`,
 coefficients in `ℝ[λ]` — at the point `(λ, v) = (lam, y)`: specialise every coefficient at `λ =
 lam`, then evaluate the resulting real polynomial in `v` at `y`. -/
