@@ -694,6 +694,12 @@ private theorem massOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C
     rw [Set.indicator_of_mem (hDC haD)]
   · rw [Set.indicator_of_notMem haD, Set.indicator_of_notMem haD, zero_mul]
 
+/-- Conditioning depends on the event, not on the proof that it has mass. -/
+theorem condOn_congr (μ : FinDist α) {S T : Set α} (hST : S = T)
+    (hS : ∃ a ∈ S, a ∈ μ.support) (hT : ∃ a ∈ T, a ∈ μ.support) :
+    μ.condOn S hS = μ.condOn T hT := by
+  subst hST; rfl
+
 /-- The mass a smaller event keeps after conditioning on a larger one. -/
 theorem probOf_condOn {μ : FinDist α} {C D : Set α} (hC : ∃ a ∈ C, a ∈ μ.support)
     (hDC : D ⊆ C) : (μ.condOn C hC).probOf D = μ.probOf D / μ.probOf C := by

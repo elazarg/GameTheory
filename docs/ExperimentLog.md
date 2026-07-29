@@ -980,6 +980,28 @@ memory.
   branches at once: a draw concentrated on one policy reads back as that policy
   whether or not the information state was reachable.
 
-- **Next action:** the tower properties of conditioning, and with them
-  reach-mass factorization — the step where recall stops being a statement about
-  records and starts being a statement about probabilities.
+- **Fifth observation: the induction is assembled except for one wrinkle, and
+  the wrinkle narrows the earlier prediction.** Every step of the argument is now
+  in place. The behavioral draw at a history *is* the marginal of the single
+  draw, because the profile's support already lies in the consistency event, so
+  conditioning there does nothing. The single draw disintegrates along the joint
+  answer it gives, the observed part matches the behavioral draw exactly, and
+  the remainder is the profile conditioned on that answer, which splits back
+  into one conditioning per player because nothing couples them. What a step
+  commits a player to is permanent, so the tower property makes the accumulated
+  conditioning invisible afterwards.
+  The wrinkle is the default. The earlier prediction — that the value at an
+  information state play never reaches costs nothing — is right about
+  *well-definedness* and wrong about the *proof*. The default must also be
+  **stable under conditioning**, and the one chosen is not: it is read off the
+  law's own support, and a conditioned law has a smaller support, so the two can
+  disagree at an information state where no consistent policy has mass. The
+  behavioral congruence quantifies over histories a run *could* reach rather
+  than those a given profile does reach, so that disagreement is visible to it.
+  The fix is to parameterize the fallback and hold it fixed across the
+  induction, which makes the reading determined up to its behaviour where play
+  never goes — a scope statement worth making explicit rather than a defect.
+  Recorded rather than applied, because it changes a public definition.
+
+- **Next action:** parameterize the fallback, then the induction, which needs no
+  further primitives.

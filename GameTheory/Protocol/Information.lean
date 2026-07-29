@@ -964,6 +964,64 @@ theorem map_state_runMixed_toMixed (hactsOnce : M.ActsOnceAtEachInfoState)
 
 end Equivalence
 
+/-! ## When a single draw is local randomization
+
+Reading a mixed profile back as a behavioral one preserves the law it induces,
+provided every player recalls its own play. The induction follows play: at each
+step the single draw is disintegrated along the joint action it prescribes, the
+observed part matches the behavioral draw exactly, and the remainder is the
+profile conditioned on having answered that way. What is conditioned stays
+conditioned, and the tower property makes the accumulated conditioning invisible
+to the behavioral reading. -/
+
+/-- Where every drawn policy could already have brought play here, the
+behavioral reading is the plain marginal. -/
+theorem toBehavioral_eq_map_of_support_subset {i : ι} (mixed : M.MixedPolicy i)
+    (info : M.InfoState i) (hsub : mixed.support ⊆ M.ConsistentAt i info) :
+    mixed.toBehavioral info = FinDist.map (fun policy => policy info) mixed := by
+  classical
+  obtain ⟨policy, hpolicy⟩ := mixed.support_nonempty
+  rw [MixedPolicy.toBehavioral, dif_pos ⟨policy, hsub hpolicy, hpolicy⟩,
+    FinDist.condOn_of_support_subset _ _ _ hsub]
+
+section Recall
+
+variable [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+
+/-- The joint answer a drawn profile gives at a history. -/
+def answerAt (h : E.History) (policies : (i : ι) → M.Policy i) :
+    (i : ι) → M.Choice i (M.infoOf i h.trace) := fun i => policies i (M.infoOf i h.trace)
+
+/-- The policies that answer a history the way `answer` does, player by
+player. -/
+def AnsweredBy (h : E.History) (answer : (i : ι) → M.Choice i (M.infoOf i h.trace)) (i : ι) :
+    Set (M.Policy i) :=
+  { policy | policy (M.infoOf i h.trace) = answer i }
+
+omit [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
+theorem answerAt_preimage_eq (h : E.History)
+    (answer : (i : ι) → M.Choice i (M.infoOf i h.trace)) :
+    M.answerAt h ⁻¹' {answer} = { p | ∀ i, p i ∈ M.AnsweredBy h answer i } := by
+  ext policies
+  simp only [Set.mem_preimage, Set.mem_singleton_iff, Set.mem_setOf_eq, answerAt,
+    AnsweredBy, funext_iff]
+
+omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
+/-- **The single draw splits by player.** Conditioning a profile on the answer it
+gave is conditioning each player's draw on its own answer, because nothing
+couples the players. -/
+theorem condOn_answerAt (mixed : (i : ι) → M.MixedPolicy i) (h : E.History)
+    (answer : (i : ι) → M.Choice i (M.infoOf i h.trace))
+    (hjoint : ∃ p ∈ M.answerAt h ⁻¹' {answer}, p ∈ (FinDist.pi mixed).support)
+    (hcoord : ∀ i, ∃ q ∈ M.AnsweredBy h answer i, q ∈ (mixed i).support) :
+    (FinDist.pi mixed).condOn (M.answerAt h ⁻¹' {answer}) hjoint =
+      FinDist.pi fun i => (mixed i).condOn (M.AnsweredBy h answer i) (hcoord i) := by
+  have hset := M.answerAt_preimage_eq h answer
+  rw [FinDist.condOn_congr _ hset _ (by rw [← hset]; exact hjoint)]
+  exact FinDist.condOn_pi mixed (M.AnsweredBy h answer) hcoord _
+
+end Recall
+
 /-! ## Information sets and beliefs
 
 Beliefs are analyst-level objects: unlike policies they may name execution
