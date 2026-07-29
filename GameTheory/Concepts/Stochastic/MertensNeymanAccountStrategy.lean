@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.MertensNeymanAccount
 import GameTheory.Concepts.Stochastic.MertensNeymanCriterion
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
+import GameTheory.Concepts.Stochastic.DiscountedShapleyAlgebraic
 import Math.AlgebraicSelection
 
 /-!
@@ -3730,6 +3731,62 @@ theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedValue
     hF hzs (fun _ => zero_lt_one) hlam0
     hderiv hbound hlimit
 
+/-- The canonical rate-parameterized discounted Shapley payoff admits one
+stationary Bellman profile at every natural rate `0 < λ ≤ 1`. The fixed-rate
+profile is supplied by the Fink–Shapley identification theorem; finite choice
+assembles the profiles into a total family. -/
+theorem exists_discountedShapleyRateBellmanProfileFamily
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum) :
+    ∃ x : ℝ → G.StationaryMixedProfile,
+      ∀ lam, 0 < lam → lam ≤ 1 →
+        G.IsDiscountedStationaryBellmanEq
+          (1 - lam) (x lam) (G.discountedShapleyRatePayoff lam) := by
+  have hpayAbs : ∀ s a who, |G.stagePayoff s a who| ≤ (1 : ℝ) := by
+    intro s a who
+    fin_cases who
+    · change |G.stagePayoff s a 0| ≤ 1
+      rw [abs_le]
+      exact ⟨by linarith [hpayLower s a], hpayUpper s a⟩
+    · change |G.stagePayoff s a 1| ≤ 1
+      rw [hzs s a, abs_neg, abs_le]
+      exact ⟨by linarith [hpayLower s a], hpayUpper s a⟩
+  let x₀ : G.StationaryMixedProfile :=
+    fun _ who =>
+      PMF.pure (Classical.choice (inferInstance : Nonempty (G.Act who)))
+  have hex (lam : ℝ) :
+      ∃ x : G.StationaryMixedProfile,
+        0 < lam → lam ≤ 1 →
+          G.IsDiscountedStationaryBellmanEq
+            (1 - lam) x (G.discountedShapleyRatePayoff lam) := by
+    by_cases hlam : 0 < lam ∧ lam ≤ 1
+    · obtain ⟨x, hx⟩ :=
+        G.exists_isDiscountedStationaryBellmanEq_discountedShapleyValue
+          (discountFactorOfRate_lt_one hlam.1)
+          1 zero_le_one hpayAbs hzs
+      have hvalue :
+          (fun s who =>
+            if who = 0 then
+              G.discountedShapleyValue
+                (discountFactorOfRate_lt_one hlam.1) s
+            else
+              -G.discountedShapleyValue
+                (discountFactorOfRate_lt_one hlam.1) s) =
+            G.discountedShapleyRatePayoff lam := by
+        funext s who
+        fin_cases who <;>
+          simp [discountedShapleyRatePayoff,
+            G.discountedShapleyRateValue_eq hlam.1]
+      rw [coe_discountFactorOfRate hlam.2, hvalue] at hx
+      exact ⟨x, fun _ _ => hx⟩
+    · exact ⟨x₀, fun hlam0 hlam1 => (hlam ⟨hlam0, hlam1⟩).elim⟩
+  choose x hx using hex
+  exact ⟨x, hx⟩
+
 /-- A sufficient discounted-value selection package for the two-player
 zero-sum account construction.
 
@@ -3769,6 +3826,65 @@ structure PuiseuxDiscountedValueSelection
     lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
       |g' z (lam ^ q z)| ≤ K z
 
+/-- Construct the complete semantic selection package from a coordinatewise
+Puiseux reparameterization of the canonical discounted Shapley value.
+
+The stationary Bellman family and the `[0,1]` value bounds are derived
+internally. Thus the remaining input is exactly the
+Bewley–Kohlberg/Newton–Puiseux branch data for the canonical row value. -/
+theorem exists_puiseuxDiscountedValueSelection_of_discountedShapleyRateValue_reparam
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum)
+    (q ρ K : G.State → ℝ)
+    (g g' : G.State → ℝ → ℝ)
+    (hq : ∀ z, 0 < q z)
+    (hρ : ∀ z, 0 < ρ z)
+    (hK : ∀ z, 0 ≤ K z)
+    (hreparam : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      G.discountedShapleyRateValue lam z = g z (lam ^ q z))
+    (hgcontinuous : ∀ z, ContinuousAt (g z) 0)
+    (hgderiv : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      HasDerivAt (g z) (g' z (lam ^ q z)) (lam ^ q z))
+    (hgbound : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      |g' z (lam ^ q z)| ≤ K z) :
+    ∃ S : PuiseuxDiscountedValueSelection G,
+      S.v = G.discountedShapleyRatePayoff ∧ S.g = g := by
+  obtain ⟨x, hx⟩ :=
+    exists_discountedShapleyRateBellmanProfileFamily G
+      hpayLower hpayUpper hzs
+  refine ⟨{
+    x := x
+    v := G.discountedShapleyRatePayoff
+    q := q
+    ρ := ρ
+    K := K
+    g := g
+    g' := g'
+    valueLower := ?_
+    valueUpper := ?_
+    bellman := hx
+    exponent_pos := hq
+    radius_pos := hρ
+    derivativeBound_nonneg := hK
+    reparam := ?_
+    regular_continuousAt_zero := hgcontinuous
+    regular_hasDerivAt := hgderiv
+    regular_derivative_bound := hgbound
+  }, rfl, rfl⟩
+  · intro lam z
+    simpa using
+      G.discountedShapleyRateValue_nonneg hzs hpayLower lam z
+  · intro lam z
+    simpa using
+      G.discountedShapleyRateValue_le_one
+        hzs hpayLower hpayUpper lam z
+  · intro z lam hlam
+    simpa using hreparam z lam hlam
+
 /-- A `PuiseuxDiscountedValueSelection` produces the normalized zero-sum
 uniform payoff. -/
 theorem PuiseuxDiscountedValueSelection.isUniformEquilibriumPayoff
@@ -3788,6 +3904,42 @@ theorem PuiseuxDiscountedValueSelection.isUniformEquilibriumPayoff
     S.exponent_pos S.radius_pos S.derivativeBound_nonneg
     S.reparam S.regular_continuousAt_zero
     S.regular_hasDerivAt S.regular_derivative_bound
+
+/-- A coordinatewise Puiseux reparameterization of the canonical discounted
+Shapley value is sufficient for the normalized zero-sum uniform payoff.
+
+All stationary-profile, Bellman, value-bound, and zero-sum-identification
+data are constructed internally. This is the direct game-facing
+Bewley–Kohlberg/Newton–Puiseux boundary. -/
+theorem isUniformEquilibriumPayoff_of_discountedShapleyRateValue_reparam
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum)
+    (q ρ K : G.State → ℝ)
+    (g g' : G.State → ℝ → ℝ)
+    (hq : ∀ z, 0 < q z)
+    (hρ : ∀ z, 0 < ρ z)
+    (hK : ∀ z, 0 ≤ K z)
+    (hreparam : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      G.discountedShapleyRateValue lam z = g z (lam ^ q z))
+    (hgcontinuous : ∀ z, ContinuousAt (g z) 0)
+    (hgderiv : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      HasDerivAt (g z) (g' z (lam ^ q z)) (lam ^ q z))
+    (hgbound : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      |g' z (lam ^ q z)| ≤ K z) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who => if who = 0 then g s₀ 0 else -g s₀ 0) := by
+  obtain ⟨S, _hSv, hSg⟩ :=
+    exists_puiseuxDiscountedValueSelection_of_discountedShapleyRateValue_reparam
+      G hpayLower hpayUpper hzs q ρ K g g'
+      hq hρ hK hreparam hgcontinuous hgderiv hgbound
+  have h := S.isUniformEquilibriumPayoff
+    s₀ hpayLower hpayUpper hzs
+  rwa [hSg] at h
 
 /-- Existence-facing zero-sum wrapper from a discounted-value selection
 package. -/

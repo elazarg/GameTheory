@@ -535,6 +535,59 @@ theorem discountedPayoff_shapleyBehaviorProfile_zero
     G.discountedPayoff (β : ℝ) (G.shapleyBehaviorProfile hβ) s₀ 1 at hcol
   linarith
 
+/-- Nonnegative row stage payoffs give a nonnegative normalized discounted
+Shapley value. -/
+theorem discountedShapleyValue_nonneg
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)] (hzs : G.IsZeroSum)
+    {β : ℝ≥0} (hβ : β < 1)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a 0)
+    (s₀ : G.State) :
+    0 ≤ G.discountedShapleyValue hβ s₀ := by
+  rw [← G.discountedPayoff_shapleyBehaviorProfile_zero hzs hβ]
+  unfold discountedPayoff
+  apply mul_nonneg
+  · exact sub_nonneg.mpr (by exact_mod_cast hβ.le)
+  · apply tsum_nonneg
+    intro t
+    apply mul_nonneg (pow_nonneg β.coe_nonneg t)
+    unfold expectedStagePayoff
+    apply expect_nonneg
+    intro h
+    unfold stageEUAt
+    apply expect_nonneg
+    intro a
+    exact hpayLower h.2 a
+
+/-- Row stage payoffs bounded above by one give the same upper bound for the
+normalized discounted Shapley value. -/
+theorem discountedShapleyValue_le_one
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)] (hzs : G.IsZeroSum)
+    {β : ℝ≥0} (hβ : β < 1)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a 0)
+    (hpayUpper : ∀ s a, G.stagePayoff s a 0 ≤ 1)
+    (s₀ : G.State) :
+    G.discountedShapleyValue hβ s₀ ≤ 1 := by
+  rw [← G.discountedPayoff_shapleyBehaviorProfile_zero hzs hβ]
+  apply G.discountedPayoff_le_of_forall_expectedStagePayoff_le
+    (C := (1 : ℝ))
+  · intro s a
+    rw [abs_le]
+    exact ⟨by linarith [hpayLower s a], hpayUpper s a⟩
+  · intro t
+    have habs :=
+      G.abs_expectedStagePayoff_le
+        (fun s a => by
+          rw [abs_le]
+          exact ⟨by linarith [hpayLower s a], hpayUpper s a⟩)
+        (G.shapleyBehaviorProfile hβ) s₀ t
+    exact (le_abs_self _).trans habs
+  · exact β.coe_nonneg
+  · exact_mod_cast hβ
+
 /-- At the selected stationary profile, the column player's discounted payoff
 is the negative normalized Shapley value. -/
 theorem discountedPayoff_shapleyBehaviorProfile_one

@@ -28,6 +28,8 @@ discounted-value coordinate per state.
   current-stage rate.
 * `discountedShapleyRateValue`: the discounted Shapley value as a total
   function of the current-stage rate.
+* `discountedShapleyRatePayoff`: the canonical two-coordinate zero-sum payoff
+  family built from `discountedShapleyRateValue`.
 * `exists_nonzero_mvPolynomial_discountedShapleyRateValue`: the polynomial
   relation along the coupled discounted-value vector.
 * `discountedShapleyKernelIdeal`: the canonical coupled kernel ideal over
@@ -91,6 +93,37 @@ noncomputable def discountedShapleyRateValue
   else
     0
 
+/-- The canonical two-player zero-sum payoff vector associated with the
+rate-parameterized discounted Shapley value. -/
+noncomputable def discountedShapleyRatePayoff
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (l : ℝ) : G.State → Payoff (Fin 2) :=
+  fun s who =>
+    if who = 0 then G.discountedShapleyRateValue l s
+    else -G.discountedShapleyRateValue l s
+
+@[simp]
+theorem discountedShapleyRatePayoff_zero
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (l : ℝ) (s : G.State) :
+    G.discountedShapleyRatePayoff l s 0 =
+      G.discountedShapleyRateValue l s := by
+  simp [discountedShapleyRatePayoff]
+
+@[simp]
+theorem discountedShapleyRatePayoff_one
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (l : ℝ) (s : G.State) :
+    G.discountedShapleyRatePayoff l s 1 =
+      -G.discountedShapleyRateValue l s := by
+  simp [discountedShapleyRatePayoff]
+
 /-- At a positive rate, `discountedShapleyRateValue` is the canonical
 discounted Shapley fixed point with continuation discount `1 - λ`. -/
 theorem discountedShapleyRateValue_eq
@@ -101,6 +134,39 @@ theorem discountedShapleyRateValue_eq
     G.discountedShapleyRateValue l =
       G.discountedShapleyValue (discountFactorOfRate_lt_one hl) := by
   simp [discountedShapleyRateValue, hl]
+
+/-- Normalized nonnegative row payoffs give a nonnegative canonical
+rate-parameterized Shapley value, including its total zero extension. -/
+theorem discountedShapleyRateValue_nonneg
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hzs : G.IsZeroSum)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a 0)
+    (l : ℝ) (s : G.State) :
+    0 ≤ G.discountedShapleyRateValue l s := by
+  by_cases hl : 0 < l
+  · rw [G.discountedShapleyRateValue_eq hl]
+    exact G.discountedShapleyValue_nonneg hzs
+      (discountFactorOfRate_lt_one hl) hpayLower s
+  · simp [discountedShapleyRateValue, hl]
+
+/-- Normalized row payoffs bounded above by one give the same upper bound for
+the canonical rate-parameterized Shapley value. -/
+theorem discountedShapleyRateValue_le_one
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hzs : G.IsZeroSum)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a 0)
+    (hpayUpper : ∀ s a, G.stagePayoff s a 0 ≤ 1)
+    (l : ℝ) (s : G.State) :
+    G.discountedShapleyRateValue l s ≤ 1 := by
+  by_cases hl : 0 < l
+  · rw [G.discountedShapleyRateValue_eq hl]
+    exact G.discountedShapleyValue_le_one hzs
+      (discountFactorOfRate_lt_one hl) hpayLower hpayUpper s
+  · simp [discountedShapleyRateValue, hl]
 
 /-- The rate-parameterized discounted Shapley value satisfies the coupled
 normalized Shapley equation on `0 < λ ≤ 1`. -/
