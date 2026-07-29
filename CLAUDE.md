@@ -17,7 +17,8 @@ the sequential layer under `GameTheory/Protocol`, native encodings under
 `GameTheory/Finite`, and architecture spikes under `GameTheory/Experimental`
 (never re-exported). See `docs/Phase2IncentiveSlice.md` and
 `docs/Phase3SequentialSlice.md` for what the gates guarantee and, more usefully,
-for the recorded limits they do not.
+for the recorded limits they do not, and `docs/Phase4StaticHarvest.md` for the
+theorem families recovered on the settled API.
 
 With the architecture settled, the mode shifts from validation to harvesting:
 recover theorem statements, proof structure, and tests from the pinned snapshot
