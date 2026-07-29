@@ -315,4 +315,115 @@ theorem signed_fixedActionRegret_le_of_le_one {η : ℝ} (hη : 0 < η) (hη1 : 
   have hmul := mul_le_mul_of_nonneg_right hcoeff (Nat.cast_nonneg T)
   linarith [signed_fixedActionRegret_le hη hg T a]
 
+/-- Reindex a gain stream so local time zero is absolute time `start`. -/
+def timeShiftGain (g : ℕ → A → ℝ) (start t : ℕ) (a : A) : ℝ := g (start + t) a
+
+omit [Fintype A] [Nonempty A] in
+theorem cumGain_timeShiftGain (g : ℕ → A → ℝ) (start T : ℕ) (a : A) :
+    cumGain (timeShiftGain g start) T a =
+      cumGain g (start + T) a - cumGain g start a := by
+  simpa [cumGain, timeShiftGain] using
+    (Finset.sum_range_add_sub_sum_range (fun t => g t a) start T).symm
+
+/-- The signed multiplicative-weights distribution in local round `t` of an epoch beginning at
+    absolute time `start`. Its state depends only on gains observed since the epoch began. -/
+noncomputable def signedMWDistFrom (η : ℝ) (g : ℕ → A → ℝ) (start t : ℕ) : PMF A :=
+  mwDist η (unitShiftGain (timeShiftGain g start)) t
+
+/-- Signed algorithm gain over the first `T` rounds of an epoch beginning at `start`. -/
+noncomputable def signedAlgGainFrom
+    (η : ℝ) (g : ℕ → A → ℝ) (start T : ℕ) : ℝ :=
+  ∑ t ∈ Finset.range T, expect (signedMWDistFrom η g start t) (g (start + t))
+
+theorem signedAlgGainFrom_eq (η : ℝ) (g : ℕ → A → ℝ) (start T : ℕ) :
+    signedAlgGainFrom η g start T = signedAlgGain η (timeShiftGain g start) T := by
+  rfl
+
+/-- Restartable signed regret bound for every prefix of an epoch. The epoch start and learning
+    rate are fixed independently of the prefix length `T`. -/
+theorem signed_fixedActionRegretFrom_le_of_le_one {η : ℝ} (hη : 0 < η) (hη1 : η ≤ 1)
+    {g : ℕ → A → ℝ} (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1)
+    (start T : ℕ) (a : A) :
+    (cumGain g (start + T) a - cumGain g start a) - signedAlgGainFrom η g start T
+      ≤ 2 * (Real.log (Fintype.card A) / η + η * T) := by
+  have hshift : ∀ t a, timeShiftGain g start t a ∈ Set.Icc (-1 : ℝ) 1 :=
+    fun t a => hg (start + t) a
+  simpa [cumGain_timeShiftGain, signedAlgGainFrom_eq] using
+    signed_fixedActionRegret_le_of_le_one hη hη1 hshift T a
+
+/-- Absolute start time of epoch `k` for a deterministic sequence of epoch lengths. -/
+def epochStart (length : ℕ → ℕ) (k : ℕ) : ℕ := ∑ j ∈ Finset.range k, length j
+
+@[simp] theorem epochStart_zero (length : ℕ → ℕ) : epochStart length 0 = 0 := by
+  simp [epochStart]
+
+theorem epochStart_succ (length : ℕ → ℕ) (k : ℕ) :
+    epochStart length (k + 1) = epochStart length k + length k := by
+  simp [epochStart, Finset.sum_range_succ]
+
+/-- Algorithm gain accumulated over the first `K` completed epochs, restarting signed
+    multiplicative weights at every deterministic epoch boundary. -/
+noncomputable def restartedSignedAlgGain (rate : ℕ → ℝ) (length : ℕ → ℕ)
+    (g : ℕ → A → ℝ) (K : ℕ) : ℝ :=
+  ∑ k ∈ Finset.range K,
+    signedAlgGainFrom (rate k) g (epochStart length k) (length k)
+
+omit [Fintype A] [Nonempty A] in
+theorem sum_epoch_cumGain_eq (length : ℕ → ℕ) (g : ℕ → A → ℝ) (K : ℕ) (a : A) :
+    ∑ k ∈ Finset.range K,
+        (cumGain g (epochStart length k + length k) a - cumGain g (epochStart length k) a)
+      = cumGain g (epochStart length K) a := by
+  induction K with
+  | zero => simp
+  | succ K ih =>
+      rw [Finset.sum_range_succ, ih, epochStart_succ]
+      ring
+
+/-- Regret over completed deterministic epochs is bounded by the sum of the per-epoch bounds.
+    This is a horizon-independent restarted learner: rates and boundaries are functions of the
+    epoch index alone. -/
+theorem restartedSigned_fixedActionRegret_le (rate : ℕ → ℝ) (length : ℕ → ℕ)
+    (hpos : ∀ k, 0 < rate k) (hle : ∀ k, rate k ≤ 1)
+    {g : ℕ → A → ℝ} (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1)
+    (K : ℕ) (a : A) :
+    cumGain g (epochStart length K) a - restartedSignedAlgGain rate length g K
+      ≤ ∑ k ∈ Finset.range K,
+        2 * (Real.log (Fintype.card A) / rate k + rate k * length k) := by
+  have hepoch :
+      ∀ k ∈ Finset.range K,
+        (cumGain g (epochStart length k + length k) a
+            - cumGain g (epochStart length k) a)
+          - signedAlgGainFrom (rate k) g (epochStart length k) (length k)
+        ≤ 2 * (Real.log (Fintype.card A) / rate k + rate k * length k) := by
+    intro k _
+    exact signed_fixedActionRegretFrom_le_of_le_one (hpos k) (hle k) hg
+      (epochStart length k) (length k) a
+  have hsum := Finset.sum_le_sum hepoch
+  rw [Finset.sum_sub_distrib, sum_epoch_cumGain_eq] at hsum
+  simpa [restartedSignedAlgGain] using hsum
+
+/-- Algorithm gain through `K` completed epochs and a prefix of epoch `K`. -/
+noncomputable def restartedSignedAlgGainPrefix (rate : ℕ → ℝ) (length : ℕ → ℕ)
+    (g : ℕ → A → ℝ) (K T : ℕ) : ℝ :=
+  restartedSignedAlgGain rate length g K
+    + signedAlgGainFrom (rate K) g (epochStart length K) T
+
+/-- The restarted regret bound extends to every prefix of the active epoch. -/
+theorem restartedSigned_fixedActionRegretPrefix_le (rate : ℕ → ℝ) (length : ℕ → ℕ)
+    (hpos : ∀ k, 0 < rate k) (hle : ∀ k, rate k ≤ 1)
+    {g : ℕ → A → ℝ} (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1)
+    (K T : ℕ) (a : A) :
+    cumGain g (epochStart length K + T) a
+        - restartedSignedAlgGainPrefix rate length g K T
+      ≤ (∑ k ∈ Finset.range K,
+          2 * (Real.log (Fintype.card A) / rate k + rate k * length k))
+        + 2 * (Real.log (Fintype.card A) / rate K + rate K * T) := by
+  have hcompleted :=
+    restartedSigned_fixedActionRegret_le rate length hpos hle hg K a
+  have hprefix :=
+    signed_fixedActionRegretFrom_le_of_le_one (hpos K) (hle K) hg
+      (epochStart length K) T a
+  simp only [restartedSignedAlgGainPrefix]
+  linarith
+
 end Math.OnlineLearning
