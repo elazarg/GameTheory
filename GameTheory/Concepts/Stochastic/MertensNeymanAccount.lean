@@ -977,6 +977,115 @@ def nextAccount (γ s : ℝ) : AccountMove → ℝ
   | .stay => s
   | .down => γ⁻¹ * s
 
+/-- Account value represented by a nonnegative multiplicative level. -/
+def accountAtLevel (γ M : ℝ) (k : ℕ) : ℝ :=
+  γ ^ k * M
+
+@[simp] theorem accountAtLevel_zero (γ M : ℝ) :
+    accountAtLevel γ M 0 = M := by
+  simp [accountAtLevel]
+
+/-- A valid floor scale remains valid at every higher multiplicative account
+level. -/
+theorem isValidScale_accountAtLevel
+    {γ M : ℝ} (hfloor : IsValidScale γ M) (k : ℕ) :
+    IsValidScale γ (accountAtLevel γ M k) := by
+  have hγ := hfloor.1
+  have hM := hfloor.2.1
+  have hpow : 1 ≤ γ ^ k := one_le_pow₀ hγ.le
+  have haccountPos : 0 < accountAtLevel γ M k := by
+    unfold accountAtLevel
+    positivity
+  have hMle : M ≤ accountAtLevel γ M k := by
+    unfold accountAtLevel
+    nlinarith [mul_nonneg (sub_nonneg.mpr hpow) hM.le]
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  have hdownFactor : 0 ≤ 1 - γ⁻¹ := by
+    exact sub_nonneg.mpr ((inv_le_one₀ hγ0).2 hγ.le)
+  exact ⟨hγ, haccountPos,
+    hfloor.2.2.1.trans
+      (mul_le_mul_of_nonneg_right hMle (sub_pos.mpr hγ).le),
+    hfloor.2.2.2.trans
+      (mul_le_mul_of_nonneg_right hMle hdownFactor)⟩
+
+/-- Reachable account level after one move at decision depth `t`. The
+truncated subtraction reflects downward motion at level zero; the update PMF
+assigns that move zero mass at the account floor. -/
+def nextAccountLevel {t : ℕ}
+    (k : Fin (t + 1)) : AccountMove → Fin (t + 2)
+  | .up => ⟨k + 1, by omega⟩
+  | .stay => ⟨k, by omega⟩
+  | .down => ⟨k - 1, by omega⟩
+
+@[simp] theorem accountAtLevel_nextAccountLevel_up
+    {t : ℕ} (γ M : ℝ) (k : Fin (t + 1)) :
+    accountAtLevel γ M (nextAccountLevel k .up) =
+      nextAccount γ (accountAtLevel γ M k) .up := by
+  simp [accountAtLevel, nextAccountLevel, nextAccount, pow_succ]
+  ring
+
+@[simp] theorem accountAtLevel_nextAccountLevel_stay
+    {t : ℕ} (γ M : ℝ) (k : Fin (t + 1)) :
+    accountAtLevel γ M (nextAccountLevel k .stay) =
+      nextAccount γ (accountAtLevel γ M k) .stay := by
+  simp [accountAtLevel, nextAccountLevel, nextAccount]
+
+theorem accountAtLevel_nextAccountLevel_down
+    {t : ℕ} {γ M : ℝ} (hγ : γ ≠ 0)
+    (k : Fin (t + 1)) (hk : 0 < k) :
+    accountAtLevel γ M (nextAccountLevel k .down) =
+      nextAccount γ (accountAtLevel γ M k) .down := by
+  have hkEq : (k : ℕ) = (k : ℕ) - 1 + 1 :=
+    (Nat.sub_add_cancel hk).symm
+  simp only [accountAtLevel, nextAccountLevel, nextAccount]
+  rw [hkEq, pow_succ]
+  field_simp [hγ]
+  have hexp : (k : ℕ) - 1 + 1 - 1 = (k : ℕ) - 1 := by omega
+  rw [hexp]
+  ring
+
+theorem downProbability_accountAtLevel_eq_zero_of_level_zero
+    {t : ℕ} {γ M y : ℝ} (k : Fin (t + 1)) (hk : (k : ℕ) = 0) :
+    downProbability γ M (accountAtLevel γ M k) y = 0 := by
+  unfold downProbability
+  rw [show accountAtLevel γ M k = M by simp [accountAtLevel, hk]]
+  simp
+
+/-- The published account update and discounted stationary action selector as
+a finite-reachable-memory controller. At depth `t`, the exponent lies in
+`Fin (t+1)`, even though the controller defines one strategy for all horizons.
+-/
+noncomputable def accountMemoryController
+    {ι : Type} {G : StochasticGame ι} {who : ι}
+    (γ M ε : ℝ)
+    (x : ℝ → G.State → PMF (G.Act who))
+    (v : ℝ → G.State → ℝ)
+    (hfloorScale : IsValidScale γ M)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a who)
+    (hpayUpper : ∀ s a, G.stagePayoff s a who ≤ 1)
+    (hvalueLower : ∀ lam s, 0 ≤ v lam s)
+    (hvalueUpper : ∀ lam s, v lam s ≤ 1)
+    (hε0 : 0 ≤ ε) (hε2 : ε ≤ 2) :
+    G.MemoryController who where
+  Mem t := Fin (t + 1)
+  finiteMem _ := inferInstance
+  initial := PMF.pure 0
+  select _ h k :=
+    x (discountRate (accountAtLevel γ M k)) h.2
+  update _ h a s' k :=
+    let s := accountAtLevel γ M k
+    let lam := discountRate s
+    let y := G.stagePayoff h.2 a who - v lam s' + ε / 2
+    (updatePMF γ M s y
+      (isValidScale_accountAtLevel hfloorScale k)
+      (by
+        dsimp [y]
+        nlinarith [hpayLower h.2 a, hvalueUpper lam s'])
+      (by
+        dsimp [y]
+        nlinarith [hpayUpper h.2 a, hvalueLower lam s']))
+      |>.map (nextAccountLevel k)
+
 /-- Every possible next account lies in the multiplicative interval
 `[γ⁻¹s, γs]`. -/
 theorem nextAccount_mem_interval
@@ -1008,6 +1117,35 @@ theorem expect_nextAccount_sub
   rw [show (Finset.univ : Finset AccountMove) =
       {.up, .stay, .down} by decide]
   simp [moveProbability, nextAccount, expectedChange]
+
+/-- Mapping the finite exponent update back to a real account gives the same
+expectation as `nextAccount`. At level zero the two maps differ on the
+downward constructor, but that constructor has zero update probability. -/
+theorem expect_accountAtLevel_nextAccountLevel
+    {t : ℕ} {γ M y : ℝ} (k : Fin (t + 1))
+    (h : IsValidScale γ (accountAtLevel γ M k))
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2) (f : ℝ → ℝ) :
+    expect (updatePMF γ M (accountAtLevel γ M k) y
+        h hyLower hyUpper)
+        (fun move =>
+          f (accountAtLevel γ M (nextAccountLevel k move))) =
+      expect (updatePMF γ M (accountAtLevel γ M k) y
+        h hyLower hyUpper)
+        (fun move =>
+          f (nextAccount γ (accountAtLevel γ M k) move)) := by
+  classical
+  rw [expect_eq_sum, expect_eq_sum]
+  rw [show (Finset.univ : Finset AccountMove) =
+      {.up, .stay, .down} by decide]
+  by_cases hk : (k : ℕ) = 0
+  · have hdown :=
+      downProbability_accountAtLevel_eq_zero_of_level_zero
+        (γ := γ) (M := M) (y := y) k hk
+    simp [updatePMF_apply_toReal, moveProbability, hdown]
+  · have hkpos : 0 < (k : ℕ) := Nat.pos_of_ne_zero hk
+    simp [updatePMF_apply_toReal,
+      accountAtLevel_nextAccountLevel_down
+        (ne_of_gt (lt_trans zero_lt_one h.1)) k hkpos]
 
 /-- The expected absolute account jump is at most the magnitude of the
 payoff/value gap. Away from the floor the inequality is an equality:
