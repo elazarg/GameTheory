@@ -1100,8 +1100,27 @@ memory.
   fooling oneself: recall implies the posterior condition, because it makes the
   two records equal. So the condition is genuinely weaker than recall rather than
   a restatement of it, and it is not vacuous.
-- **Outcome:** *in progress*
-- **Next action:** a model that fails recall while still satisfying the three
-  conditions. Without one, the generality is uninhabited and the certificate
-  level would have a consumer but no witness that the consumer is doing
-  anything.
+- **Second observation: the generalization is not the snapshot's three
+  conditions.** Looking for a model that fails recall while satisfying them
+  turned up something better. Nothing downstream reads a player's record except
+  through the *set of policies it rules out*, so the hypothesis the proof
+  actually uses is that two histories a player cannot tell apart constrain its
+  policy the same way. That is `ConstrainsAlike`, it is strictly weaker than
+  recall, and the whole recall direction now runs on it — the combined statement
+  included.
+  The gap is real and cheap to witness: records differing only in the *order* of
+  a player's own moves rule out the same policies, so a player that forgets the
+  order fails recall and still constrains alike. Multiplicity goes the same way.
+  This also settles what the snapshot's posterior-locality condition is buying
+  in this setting: reweighting by reach probability multiplies the compatibility
+  indicator by a constant in the player's own coordinate, and constants wash out
+  under normalization — so that condition reduces to the two conditioning events
+  agreeing, which is `ConstrainsAlike`. The sufficiency proof in the
+  experimental file has been restated from it accordingly.
+- **Outcome:** *in progress* — the weakening is done and is the useful part; what
+  remains open is whether the remaining two conditions buy anything beyond it,
+  and hence whether a certificate level has a second consumer.
+- **Next action:** decide whether the mass and factorization conditions have
+  independent content here, or whether `ConstrainsAlike` alone carries the
+  theorem — in which case the certificate question closes negatively again, for
+  a new and better reason.

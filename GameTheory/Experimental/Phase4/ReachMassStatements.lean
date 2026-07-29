@@ -113,13 +113,15 @@ def ActionPosteriorLocal (M : InformationModel E) (i : ι) : Prop :=
           (mixed.condOn (M.Consistent i (M.ownPlay i second.trace)) hsecond)
 
 variable {E} in
-/-- And the sufficiency, which is the one thing this file proves: recall makes
-the two records equal, so the condition holds for every player. -/
-theorem actionPosteriorLocal_of_perfectRecall {M : InformationModel E}
-    (hrecall : M.PerfectRecall) (i : ι) : ActionPosteriorLocal M i := by
+/-- And the sufficiency, which is the one thing this file proves — now from the
+weaker condition the library's own theorem runs on, not from recall. The two
+conditioning events are equal as *sets*; the records behind them need not be. -/
+theorem actionPosteriorLocal_of_constrainsAlike {M : InformationModel E}
+    (hconstrain : M.ConstrainsAlike) (i : ι) : ActionPosteriorLocal M i := by
   intro info mixed first second hfirst hsecond hf hs
-  have hsame : M.ownPlay i first.trace = M.ownPlay i second.trace :=
-    hrecall i first.trace second.trace (by rw [hfirst, hsecond])
-  simp only [hsame]
+  have hsame : M.Consistent i (M.ownPlay i first.trace) =
+      M.Consistent i (M.ownPlay i second.trace) :=
+    hconstrain i first.trace second.trace (by rw [hfirst, hsecond])
+  rw [FinDist.condOn_congr _ hsame hf (by rw [← hsame]; exact hf)]
 
 end GameTheory.Experimental.Phase4

@@ -687,6 +687,46 @@ def Consistent (i : ι) (record : List (M.InfoState i × E.Action i)) : Set (M.P
 def ConsistentAt (i : ι) (info : M.InfoState i) : Set (M.Policy i) :=
   M.Consistent i (M.recordAt i info)
 
+/-- **What the recall direction actually needs.** Two histories a player cannot
+tell apart constrain its policy the same way.
+
+This is weaker than recall, and the gap is not an artefact: recall compares the
+*records* two histories leave, while nothing downstream reads a record except
+through the set of policies it rules out. A player that forgets the order of its
+own past moves, or how many times it repeated one, still constrains its policy
+identically — so it fails recall and satisfies this. -/
+def ConstrainsAlike : Prop :=
+  ∀ (i : ι) {first second : E.State} (traceFirst : Trace E first) (traceSecond : Trace E second),
+    M.infoOf i traceFirst = M.infoOf i traceSecond →
+      M.Consistent i (M.ownPlay i traceFirst) = M.Consistent i (M.ownPlay i traceSecond)
+
+variable {M} in
+/-- Recall is the special case that compares the records themselves. -/
+theorem constrainsAlike_of_perfectRecall (hrecall : M.PerfectRecall) : M.ConstrainsAlike := by
+  intro i _ _ traceFirst traceSecond hinfo
+  rw [hrecall i traceFirst traceSecond hinfo]
+
+variable {M} in
+/-- **And the gap is real.** Records differing only in the order of a player's
+own moves rule out the same policies, so a player that forgets the order fails
+recall and still constrains alike. -/
+theorem consistent_eq_of_perm {i : ι} {first second : List (M.InfoState i × E.Action i)}
+    (hperm : first.Perm second) : M.Consistent i first = M.Consistent i second := by
+  ext policy
+  exact ⟨fun hpolicy step hstep => hpolicy step (hperm.mem_iff.mpr hstep),
+    fun hpolicy step hstep => hpolicy step (hperm.mem_iff.mp hstep)⟩
+
+variable {M} in
+/-- Under it, the constraint attached to an information state is the constraint
+along every history producing it — which is all the argument ever asks of the
+arbitrary choice inside `recordAt`. -/
+theorem consistentAt_eq_consistent_ownPlay (hconstrain : M.ConstrainsAlike) (i : ι)
+    (h : E.History) :
+    M.ConsistentAt i (M.infoOf i h.trace) = M.Consistent i (M.ownPlay i h.trace) := by
+  have hreached : ∃ g : E.History, M.infoOf i g.trace = M.infoOf i h.trace := ⟨h, rfl⟩
+  rw [ConsistentAt, recordAt, dif_pos hreached]
+  exact hconstrain i _ _ (Classical.choose_spec hreached)
+
 /-- A longer record is a stronger constraint. -/
 theorem consistent_subset_of_isSuffix {i : ι}
     {shorter longer : List (M.InfoState i × E.Action i)} (hsuffix : shorter <:+ longer) :
@@ -696,7 +736,7 @@ theorem consistent_subset_of_isSuffix {i : ι}
 /-- **What a step commits the player to, for the rest of play.** Having answered
 one information state, every policy still consistent with any later history
 answers it the same way. -/
-theorem consistentAt_subset_of_step (hrecall : M.PerfectRecall) (i : ι) {h : E.History}
+theorem consistentAt_subset_of_step (hconstrain : M.ConstrainsAlike) (i : ι) {h : E.History}
     {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
     {target : E.State} (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support)
     {action : E.Action i} (hjoint : joint i = some action)
@@ -705,14 +745,13 @@ theorem consistentAt_subset_of_step (hrecall : M.PerfectRecall) (i : ι) {h : E.
     M.ConsistentAt i (M.infoOf i later.trace) ⊆
       { policy : M.Policy i | (policy (M.infoOf i h.trace)).1 = some action } := by
   intro policy hpolicy
-  refine hpolicy (M.infoOf i h.trace, action) ?_
   have hstep : (M.infoOf i h.trace, action) ∈
       M.ownPlay i (h.extend isLegal realized).trace := by
     show _ ∈ M.ownPlay i (Trace.extend _ joint isLegal realized)
     rw [InfoSignals.ownPlay_extend, hjoint]
     exact List.mem_cons_self
-  rw [M.recordAt_eq_ownPlay hrecall i later]
-  exact (M.ownPlay_isSuffix_of_reachesWithin i hreach).subset hstep
+  rw [M.consistentAt_eq_consistent_ownPlay hconstrain i later] at hpolicy
+  exact hpolicy _ ((M.ownPlay_isSuffix_of_reachesWithin i hreach).subset hstep)
 
 variable {M} in
 open Classical in
@@ -1062,7 +1101,7 @@ omit [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoSt
 answer a step gave changes neither branch at any later reachable history: where
 consistent mass exists it survives the conditioning and the double conditioning
 collapses, and where it does not, both readings fall back on the same policy. -/
-theorem toBehavioralWith_condOn_answered (hrecall : M.PerfectRecall) (i : ι) {h : E.History}
+theorem toBehavioralWith_condOn_answered (hconstrain : M.ConstrainsAlike) (i : ι) {h : E.History}
     {answer : (j : ι) → M.Choice j (M.infoOf j h.trace)}
     {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
     (hanswer : ∀ j, joint j = (answer j).1)
@@ -1079,7 +1118,7 @@ theorem toBehavioralWith_condOn_answered (hrecall : M.PerfectRecall) (i : ι) {h
   have hnarrow : M.ConsistentAt i (M.infoOf i later.trace) ⊆ M.AnsweredBy h answer i := by
     intro policy hpolicy
     refine Subtype.ext ?_
-    rw [M.consistentAt_subset_of_step hrecall i isLegal realized hact hreach hpolicy,
+    rw [M.consistentAt_subset_of_step hconstrain i isLegal realized hact hreach hpolicy,
       ← hanswer i, hact]
   simp only [MixedPolicy.toBehavioralWith]
   by_cases hex : ∃ policy ∈ M.ConsistentAt i (M.infoOf i later.trace), policy ∈ mixed.support
@@ -1117,7 +1156,7 @@ randomizing afresh at each information state.
 
 The hypothesis is that the draw could already have brought play to where it
 starts, which at the start of play is no hypothesis at all. -/
-theorem runMixedFrom_toBehavioralWith (hrecall : M.PerfectRecall)
+theorem runMixedFrom_toBehavioralWith (hconstrain : M.ConstrainsAlike)
     (fallback : (i : ι) → M.Policy i) :
     ∀ (fuel : ℕ) (mixed : (i : ι) → M.MixedPolicy i) (h : E.History),
       (∀ i, (mixed i).support ⊆ M.ConsistentAt i (M.infoOf i h.trace)) →
@@ -1180,7 +1219,7 @@ theorem runMixedFrom_toBehavioralWith (hrecall : M.PerfectRecall)
           intro i q hq
           obtain ⟨hqanswer, hqmixed⟩ := FinDist.support_condOn _ _ (hcoord i) hq
           have hprior := hsub i hqmixed
-          rw [ConsistentAt, M.recordAt_eq_ownPlay hrecall i] at hprior ⊢
+          rw [M.consistentAt_eq_consistent_ownPlay hconstrain i] at hprior ⊢
           intro step hstep
           rw [show M.ownPlay i (h.extend hlegal realized : E.History).trace =
               M.ownPlay i (Trace.extend h.trace (fun j => ((M.answerAt h p) j).1) hlegal realized)
@@ -1206,21 +1245,21 @@ theorem runMixedFrom_toBehavioralWith (hrecall : M.PerfectRecall)
         cases hcase : ((M.answerAt h p) i).1 with
         | none => rw [M.condOn_answeredBy_eq_self i hlegal hcase (mixed i) (hcoord i)]
         | some action =>
-          exact M.toBehavioralWith_condOn_answered hrecall i hlegal (fun _ => rfl) realized
+          exact M.toBehavioralWith_condOn_answered hconstrain i hlegal (fun _ => rfl) realized
             hcase hreach (mixed i) (fallback i) (hcoord i)
 
 omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
 /-- **From the start of play**, where the hypothesis is no hypothesis: nobody
 has moved yet, so every policy is still possible. -/
-theorem runMixed_toBehavioralWith (hrecall : M.PerfectRecall)
+theorem runMixed_toBehavioralWith (hconstrain : M.ConstrainsAlike)
     (fallback : (i : ι) → M.Policy i) (fuel : ℕ) (mixed : (i : ι) → M.MixedPolicy i) :
     M.runMixed mixed fuel =
       M.runBehavioral (fun i => (mixed i).toBehavioralWith (fallback i)) fuel := by
-  refine M.runMixedFrom_toBehavioralWith hrecall fallback fuel mixed E.initHistory
-    fun i q _ step hstep => ?_
-  rw [M.recordAt_eq_ownPlay hrecall i,
-    show M.ownPlay i (E.initHistory : E.History).trace = [] from rfl] at hstep
-  exact absurd hstep (by simp)
+  refine M.runMixedFrom_toBehavioralWith hconstrain fallback fuel mixed E.initHistory
+    fun i q _ => ?_
+  rw [M.consistentAt_eq_consistent_ownPlay hconstrain i,
+    show M.ownPlay i (E.initHistory : E.History).trace = [] from rfl]
+  exact fun step hstep => absurd hstep (by simp)
 
 /-! ## The two randomizations describe the same laws
 
@@ -1234,16 +1273,16 @@ omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
 fixed across the induction whatever it is, and a law's own support witness is
 one such choice. So the parameter is an internal device, not part of the
 result. -/
-theorem runMixed_toBehavioral (hrecall : M.PerfectRecall) (fuel : ℕ)
+theorem runMixed_toBehavioral (hconstrain : M.ConstrainsAlike) (fuel : ℕ)
     (mixed : (i : ι) → M.MixedPolicy i) :
     M.runMixed mixed fuel = M.runBehavioral (fun i => (mixed i).toBehavioral) fuel :=
-  M.runMixed_toBehavioralWith hrecall (fun i => (mixed i).support_nonempty.choose) fuel mixed
+  M.runMixed_toBehavioralWith hconstrain (fun i => (mixed i).support_nonempty.choose) fuel mixed
 
 /-- **The two randomizations describe the same laws over plays.** Every law a
 profile of locally randomizing players induces is induced by a single draw over
 policies, and conversely. -/
 theorem runBehavioral_image_eq_runMixed_image (hactsOnce : M.ActsOnceWhereItMatters)
-    (hrecall : M.PerfectRecall) (fuel : ℕ) :
+    (hconstrain : M.ConstrainsAlike) (fuel : ℕ) :
     { law | ∃ β : (i : ι) → M.BehavioralPolicy i, M.runBehavioral β fuel = law } =
       { law | ∃ mixed : (i : ι) → M.MixedPolicy i, M.runMixed mixed fuel = law } := by
   ext law
@@ -1251,7 +1290,7 @@ theorem runBehavioral_image_eq_runMixed_image (hactsOnce : M.ActsOnceWhereItMatt
   · rintro ⟨β, rfl⟩
     exact ⟨fun i => (β i).toMixed, M.runMixed_toMixed hactsOnce β fuel⟩
   · rintro ⟨mixed, rfl⟩
-    exact ⟨fun i => (mixed i).toBehavioral, (M.runMixed_toBehavioral hrecall fuel mixed).symm⟩
+    exact ⟨fun i => (mixed i).toBehavioral, (M.runMixed_toBehavioral hconstrain fuel mixed).symm⟩
 
 end Recall
 

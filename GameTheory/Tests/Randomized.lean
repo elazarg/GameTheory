@@ -688,7 +688,8 @@ theorem recall_runMixed_toBehavioralWith (fallback : (i : Unit) → recallModel.
     (fuel : ℕ) (mixed : (i : Unit) → recallModel.MixedPolicy i) :
     recallModel.runMixed mixed fuel =
       recallModel.runBehavioral (fun i => (mixed i).toBehavioralWith (fallback i)) fuel :=
-  recallModel.runMixed_toBehavioralWith recall_perfectRecall fallback fuel mixed
+  recallModel.runMixed_toBehavioralWith
+    (InformationModel.constrainsAlike_of_perfectRecall recall_perfectRecall) fallback fuel mixed
 
 /-- **Kuhn's theorem on this slice.** Both conditions hold under the design that
 lets the player see its own vote, so the two randomizations describe exactly the
@@ -700,6 +701,6 @@ theorem recall_kuhn (fuel : ℕ) :
         recallModel.runMixed mixed fuel = law } :=
   recallModel.runBehavioral_image_eq_runMixed_image
     (recallModel.actsOnceWhereItMatters_of_actsOnce recall_actsOnceAtEachInfoState)
-    recall_perfectRecall fuel
+    (InformationModel.constrainsAlike_of_perfectRecall recall_perfectRecall) fuel
 
 end GameTheory.Tests.Repeat
