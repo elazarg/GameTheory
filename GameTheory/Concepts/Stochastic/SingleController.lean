@@ -97,20 +97,18 @@ what is missing and which pieces of the repository's LP-duality inventory
   **every** row and column (`IsStrongComplementaryPair`). This is exactly the
   extra strength Vrieze's transient/recurrent argument needs — a state's
   dual occupation mass is positive *iff* its primal row is not strictly
-  slack — but it is stated for the abstract `Row`/`Col` LP encoding, and
-  *embedding* Vrieze's single-controller primal (two families of rows
-  indexed by `(state, controller-action)`, plus the noncontroller's
-  per-state simplex rows) into that encoding is precisely the piece of work
-  this file does not do; see the TODO below.
+  slack. The abstract `Row`/`Col` embedding below supplies the input shape
+  for this theorem; the projection-witness hypothesis packages the
+  transient/recurrent support argument that would decode its conclusion.
 * `Math.Minimax.Loomis` / `MinimaxLoomis` / `ShapleySnow` — LP-flavored
   proofs of the two-player zero-sum *matrix*-game minimax theorem (stage
   games only, no state dynamics); not used here, listed for completeness of
   the inventory.
 
-None of `StrongDuality`/`StrongComplementarity` are invoked by the theorems
-below: Step 1 needs no duality, and Step 4 needs only the (already proved)
-mean-ergodic Poisson decomposition. They are inventoried because the
-residual (Steps 2–3) is exactly the place a full solution would need them.
+The LP layer below applies `StrongDuality` and decodes ordinary zero-gap
+complementary slackness at the `x` columns. The projection-witness hypothesis
+isolates the additional strict-complementarity and support analysis required
+by Steps 2–3.
 
 ## Main definitions
 
@@ -575,18 +573,22 @@ proved**. From a primal-optimal Vrieze point `(x, g, v)`, extracting a
 controller stationary strategy `τ` and a gain `ρ = -g` satisfying
 `IsControllerProjectionWitness` requires:
 
-1. Dualizing `IsVriezePrimalOptimal` — encoding its two families of rows
+1. **LP-duality layer (provided in this file):** dualizing
+   `IsVriezePrimalOptimal` — encoding its two families of rows
    (indexed by `(state, controller-action)`, one per gain inequality and one
    per bias inequality) plus the noncontroller's per-state simplex equality
    rows into `Math.LinearProgramming.Standard`'s abstract `Row`/`Col` form,
    then invoking `Math.LinearProgramming.StrongDuality.lp_strong_duality`
-   for *existence* of a dual-optimal point `(z, y)` (`z` dual to the bias
-   rows — Vrieze's occupation measure; `y` dual to the gain rows).
+   for *existence* of a dual-optimal point `(z, yGain, lam)` (`z` dual to
+   the bias rows — Vrieze's occupation measure; `yGain` dual to the gain
+   rows; `lam` the free simplex multiplier). Its flow identities,
+   reward-domination inequality, objective equality, and ordinary
+   `x`-column complementary slackness are decoded as well.
 2. Strengthening to a *strictly* complementary optimal pair via
    `Math.LinearProgramming.StrongComplementarity.exists_strong_complementary_pair`
    (Goldman–Tucker), so that a state's total dual mass
    `Σ_j z_s(j)` is positive *iff* its primal bias row is not strictly slack.
-3. **The trap**, now split into the six obligations the graph
+3. **The trap**, split into the six obligations the graph
    reformulation below isolates. Let `R := {s | 0 < Σ_j z_s(j)}` (the
    LP-optimal occupation support) and `τR` the `z`-normalized policy on `R`
    (`τR s := z_s(·) / Σ_j z_s(j)`, well defined exactly on `R`):
@@ -618,20 +620,17 @@ controller stationary strategy `τ` and a gain `ρ = -g` satisfying
    checking the resulting `τ` and `ρ := -g` satisfy both fields of
    `IsControllerProjectionWitness` per (iv)–(vi) above.
 
-**What is landed vs. open.** The `FiniteReachability` namespace and
-`controllerSucc` above discharge the *pure combinatorics* of obligation
-(ii)'s statement (a bottom-strongly-connected-component-meets-`R` fact,
-proved for an arbitrary successor relation, independent of the game and LP
-data) and give the one-step tool obligation (i)'s completion would iterate.
-They do **not** discharge (ii) itself (that `R` has no trap — the
-LP-optimality/policy-improvement argument), nor the probabilistic content of
-(iii)/(v)/(vi) (turning graph-reachability into an actual Cesàro/mean-ergodic
-statement about `ergodicProjection`), nor points 1–2 and 4 (the LP embedding
-itself). The theorem below still takes the entire conclusion as an explicit
-hypothesis `hextract` (the honest name for "Steps 2–3, assumed") and returns
-it unchanged — replacing it with an actual construction of `(τ, ρ)` from
-`hopt`, discharging the open obligations above, is the required continuation
-of this file. -/
+**Proof boundary.** The LP-embedding section supplies point 1. The
+`FiniteReachability` namespace and `controllerSucc` supply the pure
+combinatorics used by obligation (ii): a
+bottom-strongly-connected-component-meets-`R` formulation for an arbitrary
+successor relation, together with the one-step progress lemma used to
+complete a policy. The explicit hypothesis `hextract` packages the other
+ingredients: strict complementarity and its decoded consequences; the
+LP-optimality/policy-improvement proof that `R` has no trap; the
+Cesàro/mean-ergodic consequences in (iii)/(v)/(vi); and point 4's zero-`z`
+normalization. The theorem below exposes that boundary by returning
+`hextract` unchanged. -/
 theorem exists_controllerProjectionWitness_of_vriezePrimalDualOptimal
     {controller : Bool} {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
     (_hopt : G.IsVriezePrimalOptimal controller x g v)
@@ -672,11 +671,13 @@ This section carries out the "LP embedding" half of the residual above: it
 embeds `IsVriezePrimalOptimal` into `Math.LinearProgramming.Standard`'s
 min-primal/max-dual pair (`MinPrimalFeasible`/`MaxDualFeasible`), invokes
 `Math.LinearProgramming.StrongDuality.lp_strong_duality`, and decodes the
-resulting dual-optimal point into `IsVriezeDualOptimal`: the occupation
-measure `z` (dual to the bias rows), the auxiliary `yGain` (dual to the gain
-rows), and the per-state multiplier `lam` (dual to the noncontroller's
-simplex row), together with the flow/stationarity equation, the gain-dual
-identity, the reward-domination inequality, and the equal-objective fact.
+resulting dual-optimal point into `IsVriezeDualFeasible` plus the optimality
+facts exported by `exists_vriezeDualFeasible_of_vriezePrimalOptimal`: the
+occupation measure `z` (dual to the bias rows), the auxiliary `yGain` (dual
+to the gain rows), and the per-state multiplier `lam` (dual to the
+noncontroller's simplex row), together with the flow/stationarity equation,
+the gain-dual identity, reward domination and its support equality, and the
+equal-objective fact.
 
 The embedding needs `IsSingleController controller`: without it,
 `IsVriezePrimalFeasible`'s two families of inequalities are **bilinear** in
@@ -1419,11 +1420,10 @@ embedding above: from `IsVriezePrimalOptimal` (primal feasibility *plus*
 point of the embedded LP with the same objective value, via
 `Math.LinearProgramming.lp_strong_duality`. `vriezeDualZ`/`vriezeDualYGain`
 read off the two dual flows the module docstring names — `z` (dual to the
-bias rows, Vrieze's occupation measure) and `yGain` (dual to the gain rows)
-— from that single row-indexed witness; there is no third dual flow, only
-the two remaining `VriezeRow` summands (the noncontroller's split simplex-
-equality dual), which are not given names here because
-`exists_completedPolicy_of_vriezeDualFeasible` below never needs them. -/
+bias rows, Vrieze's occupation measure) and `yGain` (dual to the gain rows).
+`vriezeDualLam` reads the difference of the two remaining `VriezeRow`
+summands, the split free multiplier for the noncontroller's per-state
+simplex equality. -/
 
 theorem exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal
     {controller : Bool} (hSC : G.IsSingleController controller)
@@ -1461,6 +1461,30 @@ the abstract dual witness `w`. -/
 def vriezeDualYGain (G : StochasticGame Bool) (controller : Bool)
     (w : VriezeRow G controller → ℝ) (s : G.State) (j : G.Act controller) : ℝ :=
   w (Sum.inl (s, j))
+
+/-- **The per-state simplex multiplier** `lam`, represented in the
+standard-form dual by the difference of the nonnegative multipliers for the
+two opposite simplex inequalities. -/
+def vriezeDualLam (G : StochasticGame Bool) (controller : Bool)
+    (w : VriezeRow G controller → ℝ) (s : G.State) : ℝ :=
+  w (Sum.inr (Sum.inr (Sum.inl s))) - w (Sum.inr (Sum.inr (Sum.inr s)))
+
+/-- The abstract dual objective is exactly the sum of the decoded per-state
+simplex multipliers. -/
+theorem maxDualValue_vriezeB_eq (G : StochasticGame Bool) [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (w : VriezeRow G controller → ℝ) :
+    Math.LinearProgramming.maxDualValue (G.vriezeB controller) w =
+      ∑ s, G.vriezeDualLam controller w s := by
+  change (∑ r, G.vriezeB controller r * w r) = _
+  rw [sum_vriezeRow]
+  simp only [vriezeB, zero_mul, Finset.sum_const_zero, zero_add, one_mul, neg_one_mul,
+    vriezeDualLam]
+  rw [Finset.sum_neg_distrib]
+  symm
+  exact Finset.sum_sub_distrib
+    (fun s : G.State => w (Sum.inr (Sum.inr (Sum.inl s))))
+    (fun s : G.State => w (Sum.inr (Sum.inr (Sum.inr s))))
 
 /-!
 ### Decoding the dual *column* constraints
@@ -1667,17 +1691,16 @@ the `g±`/`v±` column pairs:
   (`transProb controller s j` sums to `1` over its target), forcing
   `Σ_t (Σ_j yGain t j + Σ_j z t j) = |G.State|`, which `(0, 0)` cannot
   produce when `G.State` is nonempty.
-
-This still omits the `x`-column value-bound inequality
-(`colEval_vriezeA_x`, the per-state multiplier's complementary-slackness
-domination) — a genuinely further increment, not needed by
-`exists_completedPolicy_of_vriezeDualFeasible` below, so not carried as a
-field here. -/
+* `reward_domination` — the `x`-column constraint: the `z`-weighted
+  noncontroller reward at every pure action, plus the per-state simplex
+  multiplier `lam`, is nonpositive. -/
 structure IsVriezeDualFeasible (G : StochasticGame Bool) [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
-    (z yGain : G.State → G.Act controller → ℝ) : Prop where
+    (z yGain : G.State → G.Act controller → ℝ) (lam : G.State → ℝ) : Prop where
   z_nonneg : ∀ s j, 0 ≤ z s j
   yGain_nonneg : ∀ s j, 0 ≤ yGain s j
+  reward_domination : ∀ s i,
+    (∑ j, z s j * G.rewardVal controller s i j) + lam s ≤ 0
   z_flow_balance : ∀ t, (∑ p : G.State × G.Act controller, z p.1 p.2 *
       G.transProb controller p.1 p.2 t) = ∑ j, z t j
   gain_coupling : ∀ t, (∑ p : G.State × G.Act controller, yGain p.1 p.2 *
@@ -1688,8 +1711,12 @@ theorem isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain
     (hw : Math.LinearProgramming.MaxDualFeasible (G.vriezeA controller)
       (G.vriezeC controller) w) :
     G.IsVriezeDualFeasible controller (G.vriezeDualZ controller w)
-      (G.vriezeDualYGain controller w) := by
-  refine ⟨fun _ _ => hw.1 _, fun _ _ => hw.1 _, ?_, ?_⟩
+      (G.vriezeDualYGain controller w) (G.vriezeDualLam controller w) := by
+  refine ⟨fun _ _ => hw.1 _, fun _ _ => hw.1 _, ?_, ?_, ?_⟩
+  · intro s i
+    have hx := hw.2 (Sum.inl (s, i))
+    rw [G.colEval_vriezeA_x] at hx
+    simpa only [vriezeC, vriezeDualLam, sub_eq_add_neg, add_assoc] using hx
   · intro t
     have hvPlus := hw.2 (Sum.inr (Sum.inr (Sum.inr (Sum.inl t))))
     have hvMinus := hw.2 (Sum.inr (Sum.inr (Sum.inr (Sum.inr t))))
@@ -1705,17 +1732,59 @@ theorem isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain
     simp only [vriezeC] at hgPlus hgMinus
     linarith
 
+/-- At zero primal-dual gap, the reward-domination inequality is tight at
+every noncontroller action assigned positive probability by the encoded
+primal strategy. This is the `x`-column complementary-slackness equation,
+decoded from the standard-form LP. -/
+theorem reward_domination_eq_of_vriezePrimalDual_gap_zero
+    {controller : Bool} (x : G.State → PMF (G.Act (!controller)))
+    (g v : G.State → ℝ) (w : VriezeRow G controller → ℝ)
+    (hx : Math.LinearProgramming.MinPrimalFeasible (G.vriezeA controller)
+      (G.vriezeB controller) (G.vriezeEncode controller x g v))
+    (hw : Math.LinearProgramming.MaxDualFeasible (G.vriezeA controller)
+      (G.vriezeC controller) w)
+    (hgap : Math.LinearProgramming.minPrimalValue (G.vriezeC controller)
+        (G.vriezeEncode controller x g v) =
+      Math.LinearProgramming.maxDualValue (G.vriezeB controller) w)
+    (s : G.State) (i : G.Act (!controller)) (hxi : 0 < ((x s) i).toReal) :
+    (∑ j, G.vriezeDualZ controller w s j * G.rewardVal controller s i j) +
+      G.vriezeDualLam controller w s = 0 := by
+  have hcomp :=
+    Math.LinearProgramming.maxDualSlack_mul_primal_eq_zero_of_gap_zero
+      hx hw hgap (Sum.inl (s, i))
+  simp only [Math.LinearProgramming.maxDualSlack, vriezeC] at hcomp
+  rw [G.colEval_vriezeA_x] at hcomp
+  simp only [vriezeEncode, sub_eq_add_neg, add_assoc] at hcomp
+  rcases mul_eq_zero.mp hcomp with hslack | hxzero
+  · rw [vriezeDualLam]
+    linarith
+  · exact absurd hxzero (ne_of_gt hxi)
+
 /-- Assembling `exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal` and
 `isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain`: from an
 `IsVriezePrimalOptimal` point, the two named dual flows `z`/`yGain` exist
-and are dual-feasible. -/
+and are dual-feasible; the decoded multiplier has the strong-duality
+objective value, and reward domination is tight on the support of `x`. -/
 theorem exists_vriezeDualFeasible_of_vriezePrimalOptimal
     {controller : Bool} (hSC : G.IsSingleController controller)
     {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
     (hopt : G.IsVriezePrimalOptimal controller x g v) :
-    ∃ z yGain : G.State → G.Act controller → ℝ, G.IsVriezeDualFeasible controller z yGain := by
-  obtain ⟨w, hw, -⟩ := G.exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal hSC hopt
-  exact ⟨_, _, G.isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain hw⟩
+    ∃ (z yGain : G.State → G.Act controller → ℝ) (lam : G.State → ℝ),
+      G.IsVriezeDualFeasible controller z yGain lam ∧
+        (∑ s, lam s) = -(∑ s, g s) ∧
+        ∀ s i, 0 < ((x s) i).toReal →
+          (∑ j, z s j * G.rewardVal controller s i j) + lam s = 0 := by
+  have hx := G.minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible hSC hopt.feasible
+  obtain ⟨w, hw, hvalue⟩ := G.exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal hSC hopt
+  have hgap : Math.LinearProgramming.minPrimalValue (G.vriezeC controller)
+        (G.vriezeEncode controller x g v) =
+      Math.LinearProgramming.maxDualValue (G.vriezeB controller) w := by
+    rw [G.minPrimalValue_vriezeC_eq, G.vriezeDecodeG_vriezeEncode, hvalue]
+  refine ⟨_, _, _, G.isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain hw, ?_, ?_⟩
+  · rw [← G.maxDualValue_vriezeB_eq]
+    exact hvalue
+  · intro s i hi
+    exact G.reward_domination_eq_of_vriezePrimalDual_gap_zero x g v w hx hw hgap s i hi
 
 /-- **The LP-optimal occupation support**, `R := {s | 0 < Σ_j z_s(j)}`, for a
 dual flow `z` — the target set the module docstring's `FiniteReachability`
@@ -1754,8 +1823,8 @@ the genuinely combinatorial policy-improvement argument the module
 docstring describes (obligation (ii) itself), not more dual-feasibility
 algebra. -/
 theorem exists_completedPolicy_of_vriezeDualFeasible
-    {controller : Bool} {z yGain : G.State → G.Act controller → ℝ}
-    (hdual : G.IsVriezeDualFeasible controller z yGain)
+    {controller : Bool} {z yGain : G.State → G.Act controller → ℝ} {lam : G.State → ℝ}
+    (hdual : G.IsVriezeDualFeasible controller z yGain lam)
     (hnotrap : ∀ s, ¬ G.vriezeOccupationSupport controller z s →
       FiniteReachability.CanReachSet (G.controllerSucc controller)
         (G.vriezeOccupationSupport controller z) s) :
