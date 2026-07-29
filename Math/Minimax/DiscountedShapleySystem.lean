@@ -757,6 +757,34 @@ theorem moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_activeBranch
         (FractionRing (Polynomial ℝ)))
       (discountedShapleyBranchDenominator r T branch))
 
+/-- If the localized denominator product is nilpotent modulo a fixed active
+branch, enforcing its inverse makes the nonvanishing branch the unit ideal. -/
+theorem map_discountedShapleyNonvanishingBranchIdeal_eq_top_of_denominator_pow_mem
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (n : ℕ)
+    (hdenominator :
+      (MvPolynomial.map
+        (algebraMap (Polynomial ℝ)
+          (FractionRing (Polynomial ℝ)))
+        (discountedShapleyBranchDenominator r T branch)) ^ n ∈
+          discountedShapleyActiveBranchIdeal r T branch) :
+    (discountedShapleyNonvanishingBranchIdeal r T branch).map
+        (MvPolynomial.map
+          (algebraMap (Polynomial ℝ)
+            (FractionRing (Polynomial ℝ)))) = ⊤ := by
+  rw [map_discountedShapleyNonvanishingBranchIdeal_eq_rabinowitschIdeal]
+  exact
+    Math.MultivariateElimination.rabinowitschIdeal_eq_top_of_pow_mem
+      (discountedShapleyActiveBranchIdeal r T branch)
+      (MvPolynomial.map
+        (algebraMap (Polynomial ℝ)
+          (FractionRing (Polynomial ℝ)))
+        (discountedShapleyBranchDenominator r T branch))
+      n hdenominator
+
 /-- With a unique state, a nonvanishing Shapley branch is exactly a
 one-variable Rabinowitsch ideal. -/
 theorem discountedShapleyNonvanishingBranchIdeal_eq_uniqueRabinowitschIdeal
@@ -1419,6 +1447,57 @@ theorem exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFin
     rw [map_prod]
     apply Finset.prod_eq_zero (Finset.mem_univ branch)
     simpa [Polynomial.eval₂_eq_eval_map] using hz'
+
+/-- A saturated branch can be discharged either because its unsaturated
+localized quotient is finite or because its denominator is nilpotent modulo
+that quotient. Under this branchwise criterion, every coupled Shapley value
+coordinate satisfies a fixed nonzero bivariate relation. -/
+theorem exists_nonzero_bivariateRelation_of_activeBranches_finite_or_denominatorNilpotent
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (hbranch : ∀ branch : κ → ActionKernelShape I J,
+      (∀ s, IsActiveKernelShape
+        (discountedStochasticEntry (r s) (T s)) (branch s)) →
+      Module.Finite (FractionRing (Polynomial ℝ))
+          (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+            discountedShapleyActiveBranchIdeal r T branch) ∨
+        ∃ n : ℕ,
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ)))
+            (discountedShapleyBranchDenominator r T branch)) ^ n ∈
+              discountedShapleyActiveBranchIdeal r T branch)
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ S,
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  apply
+    exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite
+      r T w S hw
+  intro branch hactive
+  rcases hbranch branch hactive with hfinite | ⟨n, hn⟩
+  · letI : Module.Finite (FractionRing (Polynomial ℝ))
+        (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+          discountedShapleyActiveBranchIdeal r T branch) :=
+      hfinite
+    exact
+      moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_activeBranch
+        r T branch
+  · rw [
+      map_discountedShapleyNonvanishingBranchIdeal_eq_top_of_denominator_pow_mem
+        r T branch n hn]
+    exact Math.CofiniteIdeal.moduleFinite_quotient_top
 
 /-- Explicit monic coordinate relations certify the finite-dimensionality
 needed by saturated fixed-branch elimination. This is the checkable

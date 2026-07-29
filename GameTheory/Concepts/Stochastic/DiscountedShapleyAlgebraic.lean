@@ -41,6 +41,8 @@ discounted-value coordinate per state.
   the denominator-nonvanishing fixed-branch boundary.
 * `exists_nonzero_bivariate_discountedShapleyRateValue_of_branchMonicRelations`:
   the same boundary expressed by checkable monic coordinate certificates.
+* `exists_nonzero_bivariate_discountedShapleyRateValue_of_branchFiniteOrNilpotent`:
+  a branchwise finite-or-denominator-nilpotent discharge criterion.
 * `exists_nonzero_bivariate_discountedShapleyRateValue_of_uniqueState`:
   unconditional saturated-branch elimination for one-state games.
 * `discountedShapleyRateValue_twoState_elimination_dichotomy`: the bivariate
@@ -195,6 +197,21 @@ noncomputable def discountedShapleyNonvanishingKernelBranchIdeal
     (fun s i j z => (G.pairTransition s i j z).toReal)
     branch
 
+/-- The selected branch denominator product after extending coefficients to
+`ℝ(λ)`. -/
+noncomputable def discountedShapleyKernelBranchDenominator
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    (branch : G.State →
+      ShapleySnow.ActionKernelShape (G.Act 0) (G.Act 1)) :
+    MvPolynomial G.State (FractionRing (Polynomial ℝ)) :=
+  MvPolynomial.map
+    (algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ)))
+    (ShapleySnow.discountedShapleyBranchDenominator
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      branch)
+
 /-- If the canonical coupled kernel ideal is zero-dimensional over `ℝ(λ)`,
 the canonical discounted Shapley value has a fixed nonzero bivariate relation
 in the rate and each chosen state value. -/
@@ -301,6 +318,43 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_nonvanishingActiv
       (fun l hl s =>
         G.discountedShapleyRateValue_eq_lam0 hl s)
       hfinite target
+
+/-- Every active fixed branch may be discharged either by
+finite-dimensionality before saturation or by nilpotence of its selected
+denominator product. Either certificate gives a fixed bivariate relation for
+the canonical discounted Shapley value. -/
+theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_branchFiniteOrNilpotent
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hbranch : ∀ branch : G.State →
+        ShapleySnow.ActionKernelShape (G.Act 0) (G.Act 1),
+      (∀ s, ShapleySnow.IsActiveKernelShape
+        (ShapleySnow.discountedStochasticEntry
+          (G.rowStagePayoff s)
+          (fun i j z => (G.pairTransition s i j z).toReal))
+        (branch s)) →
+      Module.Finite (FractionRing (Polynomial ℝ))
+          (MvPolynomial G.State (FractionRing (Polynomial ℝ)) ⧸
+            G.discountedShapleyKernelBranchIdeal branch) ∨
+        ∃ n : ℕ,
+          (G.discountedShapleyKernelBranchDenominator branch) ^ n ∈
+            G.discountedShapleyKernelBranchIdeal branch)
+    (target : G.State) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        Polynomial.eval
+          (G.discountedShapleyRateValue l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  exact
+    ShapleySnow.exists_nonzero_bivariateRelation_of_activeBranches_finite_or_denominatorNilpotent
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1)
+      (fun l hl s =>
+        G.discountedShapleyRateValue_eq_lam0 hl s)
+      hbranch target
 
 /-- Monic relations for every coordinate of every saturated active branch
 are an explicit certificate for a fixed bivariate relation satisfied by the
