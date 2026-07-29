@@ -13,7 +13,7 @@ fixed point, which is why the dependency that proves fixed points exist is worth
 its cost.
 -/
 
-import GameTheory.Analysis.Nash
+import GameTheory.Analysis.Minimax
 import GameTheory.Examples.Classic
 
 namespace GameTheory.Examples
@@ -37,5 +37,31 @@ theorem matchingPennies_exists_isNash_mixed :
     ∃ μ, IsNash matchingPennies.toForm.mixed (euPreference matchingPennies.utility) μ := by
   haveI : ∀ i, Nonempty (matchingPennies.toForm.sig.Strategy i) := fun _ => ⟨Side.heads⟩
   exact exists_isNash_mixed _
+
+/-! ## The value of matching pennies -/
+
+/-- Matching pennies is zero-sum: whatever one player wins the other loses. -/
+theorem matchingPennies_isZeroSum : IsZeroSum matchingPennies.utility := by
+  intro outcome
+  rw [Fin.sum_univ_two, TableGame.utility_apply, TableGame.utility_apply,
+    matchingPennies_payoff, matchingPennies_payoff]
+  split_ifs <;> simp_all
+
+/-- The verified uniform profile is a saddle point, so it carries the value. -/
+theorem matchingPennies_uniform_isSaddlePoint :
+    IsSaddlePoint (F := matchingPennies.toForm) matchingPennies.utility
+      (matchingPennies.toMixed uniformPennies uniformPennies_isMixed) :=
+  matchingPennies_uniform_isNash.isSaddlePoint matchingPennies_isZeroSum
+
+/-- **And every saddle point of matching pennies is worth exactly that.** The
+uniqueness of the value is what makes the word *value* mean anything, and here
+it anchors the abstract theorem to a profile the frontend checked by
+arithmetic. -/
+theorem matchingPennies_value_eq_uniform (σ : Profile matchingPennies.toForm.sig.mixed)
+    (hσ : IsSaddlePoint (F := matchingPennies.toForm) matchingPennies.utility σ) :
+    expectedUtility matchingPennies.utility 0 (matchingPennies.toForm.mixed.play σ) =
+      expectedUtility matchingPennies.utility 0 (matchingPennies.toForm.mixed.play
+        (matchingPennies.toMixed uniformPennies uniformPennies_isMixed)) :=
+  hσ.value_eq matchingPennies_uniform_isSaddlePoint
 
 end GameTheory.Examples

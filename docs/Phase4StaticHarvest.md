@@ -1,6 +1,6 @@
 # Phase 4: the static harvest
 
-Status: first pass complete. Five theorem families recovered against the
+Status: first pass complete. Seven theorem families recovered against the
 accepted API, each instantiated, none requiring a change to it.
 
 The mode here differs from the earlier phases. Those validated architecture by
@@ -20,16 +20,19 @@ the same commit.
 | potential games | `Core/Potential.lean` | a finite potential game has a pure equilibrium |
 | the mixed extension | `Core/Mixed.lean` | pure equilibria survive it, and a mixed equilibrium is indifferent across its own support |
 | existence | `Analysis/Nash.lean` | every finite game has an equilibrium in mixed strategies |
+| zero-sum values | `Core/ZeroSum.lean`, `Analysis/Minimax.lean` | a two-player zero-sum game has a value, and only one |
 
-Each is instantiated in `Examples/Classic.lean` on the Prisoner's Dilemma, in
-the style the file already used: the finite frontend supplies one computed fact
-and the semantic layer carries it the rest of the way. Cooperation is strictly
-dominated *by computation*; that it is never rationalizable and never played in
-equilibrium follows *by theorem*.
+The first five are instantiated in `Examples/Classic.lean` on the Prisoner's
+Dilemma, in the style the file already used: the finite frontend supplies one
+computed fact and the semantic layer carries it the rest of the way. Cooperation
+is strictly dominated *by computation*; that it is never rationalizable and
+never played in equilibrium follows *by theorem*. The last two are instantiated
+on matching pennies in `Analysis/Examples.lean`, which is inside the analytic
+root because nothing outside it may import that root.
 
 ## Hypotheses that earn their place
 
-Three hypotheses in this pass are not technical noise, and each is documented
+Four hypotheses in this pass are not technical noise, and each is documented
 where it appears rather than hidden behind an instance.
 
 *A witness profile*, for "a dominant strategy is never strictly dominated". With
@@ -87,12 +90,21 @@ existing six absence probes still pass, and a seventh and eighth probe assert
 that the analytic root does reach both, so the budget cannot quietly stop being
 spent where it was allowed.
 
-The root has three modules and one obligation each. `Simplex.lean` presents a
+The root has four modules and one obligation each. `Simplex.lean` presents a
 law on a finite carrier as a point of the standard simplex and recovers it,
 which is where the dependency actually enters. `Payoff.lean` rewrites expected
 utility as a polynomial in the weights, which is what makes it continuous and,
 more importantly, affine in one player's own coordinates. `Nash.lean` applies
 Kakutani's theorem to the best-reply correspondence.
+
+`Minimax.lean` is the fourth and is deliberately three lines long. Sion's
+theorem in Mathlib would have proved the same result independently; taking it
+that way would have put the zero-sum theory above the analytic boundary for no
+reason, since only *existence* needs a fixed point. So the definitions, the
+correspondence between a zero-sum equilibrium and a saddle point, and the
+uniqueness of the value all sit in `Core/ZeroSum.lean` with no topology
+anywhere, and the analytic root contributes the one thing that cannot be had
+without it.
 
 ## Additions to the law type
 
@@ -111,12 +123,12 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 
 | Measure | Value |
 |---|---:|
-| `GameTheory/Core` theorems | 103 |
-| `GameTheory/Core` modules | 9 |
+| `GameTheory/Core` theorems | 108 |
+| `GameTheory/Core` modules | 10 |
 | interface changes required by the harvest | 0 |
 | `sorry`, `admit`, `native_decide`, custom axioms | 0 |
 | transport tokens added to the static layer | 0 |
-| `GameTheory/Analysis` nonblank lines | 351 |
+| `GameTheory/Analysis` nonblank lines | 412 |
 | transport tokens in the analytic root | 0 |
 | modules outside the root importing it | 0 |
 | absence probes still passing | 6 |
@@ -127,9 +139,6 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 - A mechanism-design encoding, with truthful reporting as a dominance statement.
   That is a language module rather than a theorem family, so it belongs with the
   other encodings and carries the same obligation: a workaround list.
-- The two-player zero-sum minimax theorem, which Mathlib supplies directly in
-  Sion's form. It is now the cheaper of the two analytic results rather than the
-  only reachable one, and it needs no fixed point.
 - Whether any of v1's four and a half thousand lines above the same dependency
   (Schauder, KKM, Scarf, the simplex approximation layer) is worth porting. The
   existence theorem here needed none of it, so the question is what *else* would
