@@ -97,18 +97,20 @@ what is missing and which pieces of the repository's LP-duality inventory
   **every** row and column (`IsStrongComplementaryPair`). This is exactly the
   extra strength Vrieze's transient/recurrent argument needs — a state's
   dual occupation mass is positive *iff* its primal row is not strictly
-  slack. The abstract `Row`/`Col` embedding below supplies the input shape
-  for this theorem; the projection-witness hypothesis packages the
-  transient/recurrent support argument that would decode its conclusion.
+  slack. `exists_vriezeStrongComplementaryPair_of_vriezePrimalOptimal`
+  applies the finite-type form of this theorem to the Vrieze encoding, and
+  `vriezeOccupationSupport_iff_exists_biasSlack_eq_zero` decodes the
+  state-level support/tightness equivalence.
 * `Math.Minimax.Loomis` / `MinimaxLoomis` / `ShapleySnow` — LP-flavored
   proofs of the two-player zero-sum *matrix*-game minimax theorem (stage
   games only, no state dynamics); not used here, listed for completeness of
   the inventory.
 
-The LP layer below applies `StrongDuality` and decodes ordinary zero-gap
-complementary slackness at the `x` columns. The projection-witness hypothesis
-isolates the additional strict-complementarity and support analysis required
-by Steps 2–3.
+The LP layer below applies `StrongDuality` and `StrongComplementarity`,
+decodes ordinary zero-gap complementary slackness at the `x` columns, and
+identifies occupation support with bias-row tightness. The
+projection-witness hypothesis isolates the no-trap, policy-completion, and
+mean-ergodic arguments required by Steps 2–3.
 
 ## Main definitions
 
@@ -159,8 +161,8 @@ by Steps 2–3.
   `IsControllerProjectionWitness`, exercising the non-constant / transient
   branch of Step 4's mechanism
 
-This file is deliberately **not** wired into `GameTheory.lean` (the project
-aggregator): it is a standalone verification object, importable directly.
+This file is imported by the `GameTheory.lean` project aggregator and is
+also importable directly.
 -/
 
 noncomputable section
@@ -584,10 +586,12 @@ controller stationary strategy `τ` and a gain `ρ = -g` satisfying
    rows; `lam` the free simplex multiplier). Its flow identities,
    reward-domination inequality, objective equality, and ordinary
    `x`-column complementary slackness are decoded as well.
-2. Strengthening to a *strictly* complementary optimal pair via
+2. **Strict-complementarity layer (provided in this file):** strengthening
+   to a *strictly* complementary optimal pair via
    `Math.LinearProgramming.StrongComplementarity.exists_strong_complementary_pair`
    (Goldman–Tucker), so that a state's total dual mass
-   `Σ_j z_s(j)` is positive *iff* its primal bias row is not strictly slack.
+   `Σ_j z_s(j)` is positive *iff* some primal bias row at that state is
+   tight.
 3. **The trap**, split into the six obligations the graph
    reformulation below isolates. Let `R := {s | 0 < Σ_j z_s(j)}` (the
    LP-optimal occupation support) and `τR` the `z`-normalized policy on `R`
@@ -620,16 +624,15 @@ controller stationary strategy `τ` and a gain `ρ = -g` satisfying
    checking the resulting `τ` and `ρ := -g` satisfy both fields of
    `IsControllerProjectionWitness` per (iv)–(vi) above.
 
-**Proof boundary.** The LP-embedding section supplies point 1. The
+**Proof boundary.** The LP-embedding section supplies points 1–2. The
 `FiniteReachability` namespace and `controllerSucc` supply the pure
 combinatorics used by obligation (ii): a
 bottom-strongly-connected-component-meets-`R` formulation for an arbitrary
 successor relation, together with the one-step progress lemma used to
 complete a policy. The explicit hypothesis `hextract` packages the other
-ingredients: strict complementarity and its decoded consequences; the
-LP-optimality/policy-improvement proof that `R` has no trap; the
-Cesàro/mean-ergodic consequences in (iii)/(v)/(vi); and point 4's zero-`z`
-normalization. The theorem below exposes that boundary by returning
+ingredients: the LP-optimality/policy-improvement proof that `R` has no
+trap; the Cesàro/mean-ergodic consequences in (iii)/(v)/(vi); and point 4's
+zero-`z` normalization. The theorem below exposes that boundary by returning
 `hextract` unchanged. -/
 theorem exists_controllerProjectionWitness_of_vriezePrimalDualOptimal
     {controller : Bool} {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
@@ -1450,6 +1453,41 @@ theorem exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal
   refine ⟨w, hw, ?_⟩
   rw [heq, G.minPrimalValue_vriezeC_eq, G.vriezeDecodeG_vriezeEncode]
 
+/-- A nonempty-state Vrieze LP admits an optimal primal-dual pair satisfying
+Goldman–Tucker strong complementarity at every encoded row and column. -/
+theorem exists_vriezeStrongComplementaryPair_of_vriezePrimalOptimal
+    [Nonempty G.State] {controller : Bool} (hSC : G.IsSingleController controller)
+    {x : G.State → PMF (G.Act (!controller))} {g v : G.State → ℝ}
+    (hopt : G.IsVriezePrimalOptimal controller x g v) :
+    ∃ (q : VriezeCol G controller → ℝ) (w : VriezeRow G controller → ℝ),
+      Math.LinearProgramming.IsStrongComplementaryPair
+        (G.vriezeA controller) (G.vriezeB controller) (G.vriezeC controller) q w := by
+  classical
+  let q₀ := G.vriezeEncode controller x g v
+  have hq₀ : Math.LinearProgramming.MinPrimalFeasible
+      (G.vriezeA controller) (G.vriezeB controller) q₀ :=
+    G.minPrimalFeasible_vriezeEncode_of_isVriezePrimalFeasible hSC hopt.feasible
+  obtain ⟨w₀, hw₀, hw₀value⟩ :=
+    G.exists_vriezeMaxDualFeasible_of_vriezePrimalOptimal hSC hopt
+  have hq₀value : Math.LinearProgramming.minPrimalValue (G.vriezeC controller) q₀ =
+      -(∑ s, g s) := by
+    dsimp only [q₀]
+    rw [G.minPrimalValue_vriezeC_eq, G.vriezeDecodeG_vriezeEncode]
+  have hcolcard : 0 < Fintype.card (VriezeCol G controller) :=
+    Fintype.card_pos_iff.mpr
+      ⟨Sum.inr (Sum.inl (Classical.choice (inferInstance : Nonempty G.State)))⟩
+  have hNnat :
+      0 < Fintype.card (VriezeRow G controller) + Fintype.card (VriezeCol G controller) := by
+    omega
+  have hN :
+      (0 : ℝ) <
+        ((Fintype.card (VriezeRow G controller) +
+          Fintype.card (VriezeCol G controller) : ℕ) : ℝ) := by
+    exact_mod_cast hNnat
+  exact Math.LinearProgramming.exists_strong_complementary_pair_fintype
+    (G.vriezeA controller) (G.vriezeB controller) (G.vriezeC controller)
+    (-(∑ s, g s)) hN hq₀ hq₀value hw₀ hw₀value
+
 /-- **Vrieze's occupation measure** — the dual flow `z` (dual to the bias
 rows), read off the abstract dual witness `w`. -/
 def vriezeDualZ (G : StochasticGame Bool) (controller : Bool)
@@ -1468,6 +1506,21 @@ two opposite simplex inequalities. -/
 def vriezeDualLam (G : StochasticGame Bool) (controller : Bool)
     (w : VriezeRow G controller → ℝ) (s : G.State) : ℝ :=
   w (Sum.inr (Sum.inr (Sum.inl s))) - w (Sum.inr (Sum.inr (Sum.inr s)))
+
+/-- In a strongly complementary Vrieze pair, positivity of a bias-row dual
+variable is equivalent to tightness of the corresponding primal bias row. -/
+theorem vriezeDualZ_pos_iff_biasSlack_eq_zero
+    {controller : Bool} {q : VriezeCol G controller → ℝ}
+    {w : VriezeRow G controller → ℝ}
+    (hstrong : Math.LinearProgramming.IsStrongComplementaryPair
+      (G.vriezeA controller) (G.vriezeB controller) (G.vriezeC controller) q w)
+    (s : G.State) (j : G.Act controller) :
+    0 < G.vriezeDualZ controller w s j ↔
+      Math.LinearProgramming.minPrimalSlack
+        (G.vriezeA controller) (G.vriezeB controller) q
+          (Sum.inr (Sum.inl (s, j))) = 0 := by
+  simpa only [vriezeDualZ] using
+    hstrong.dual_pos_iff_minPrimalSlack_eq_zero (Sum.inr (Sum.inl (s, j)))
 
 /-- The abstract dual objective is exactly the sum of the decoded per-state
 simplex multipliers. -/
@@ -1706,6 +1759,45 @@ structure IsVriezeDualFeasible (G : StochasticGame Bool) [Finite G.State]
   gain_coupling : ∀ t, (∑ p : G.State × G.Act controller, yGain p.1 p.2 *
       G.transProb controller p.1 p.2 t) - (∑ j, yGain t j) - (∑ j, z t j) = -1
 
+/-- Summing `gain_coupling` over the target state cancels `yGain`'s inflow
+against its mass, because each transition kernel has total probability one.
+Consequently the total occupation mass is exactly the cardinality of the
+state space. -/
+theorem IsVriezeDualFeasible.sum_z_eq_card
+    {controller : Bool} {z yGain : G.State → G.Act controller → ℝ} {lam : G.State → ℝ}
+    (hdual : G.IsVriezeDualFeasible controller z yGain lam) :
+    (∑ s, ∑ j, z s j) = (Fintype.card G.State : ℝ) := by
+  classical
+  have htrans : ∀ (s : G.State) (j : G.Act controller),
+      (∑ t, G.transProb controller s j t) = 1 := by
+    intro s j
+    exact pmf_toReal_sum_one (G.transition s (G.jointOfControllerAct controller j))
+  have hyInflow :
+      (∑ t, ∑ p : G.State × G.Act controller,
+        yGain p.1 p.2 * G.transProb controller p.1 p.2 t) =
+      ∑ s, ∑ j, yGain s j := by
+    calc
+      _ = ∑ p : G.State × G.Act controller, ∑ t,
+          yGain p.1 p.2 * G.transProb controller p.1 p.2 t := Finset.sum_comm
+      _ = ∑ p : G.State × G.Act controller, yGain p.1 p.2 := by
+        apply Finset.sum_congr rfl
+        intro p _
+        rw [← Finset.mul_sum, htrans]
+        ring
+      _ = ∑ s, ∑ j, yGain s j :=
+        Fintype.sum_prod_type (fun p : G.State × G.Act controller => yGain p.1 p.2)
+  have hcoupling :
+      (fun t : G.State =>
+        (∑ p : G.State × G.Act controller,
+          yGain p.1 p.2 * G.transProb controller p.1 p.2 t) -
+          (∑ j, yGain t j) - (∑ j, z t j)) =
+      fun _ => (-1 : ℝ) :=
+    funext hdual.gain_coupling
+  have hsum := congrArg (fun f : G.State → ℝ => ∑ t, f t) hcoupling
+  rw [Finset.sum_sub_distrib, Finset.sum_sub_distrib, hyInflow] at hsum
+  simp only [Finset.sum_const, Finset.card_univ, nsmul_eq_mul] at hsum
+  linarith
+
 theorem isVriezeDualFeasible_vriezeDualZ_vriezeDualYGain
     {controller : Bool} {w : VriezeRow G controller → ℝ}
     (hw : Math.LinearProgramming.MaxDualFeasible (G.vriezeA controller)
@@ -1793,6 +1885,63 @@ def vriezeOccupationSupport (G : StochasticGame Bool) [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
     (z : G.State → G.Act controller → ℝ) (s : G.State) : Prop :=
   0 < ∑ j, z s j
+
+/-- For the dual point of a strongly complementary pair, a state belongs to
+the occupation support exactly when at least one of its primal bias rows is
+tight. -/
+theorem vriezeOccupationSupport_iff_exists_biasSlack_eq_zero
+    {controller : Bool} {q : VriezeCol G controller → ℝ}
+    {w : VriezeRow G controller → ℝ}
+    (hstrong : Math.LinearProgramming.IsStrongComplementaryPair
+      (G.vriezeA controller) (G.vriezeB controller) (G.vriezeC controller) q w)
+    (s : G.State) :
+    G.vriezeOccupationSupport controller (G.vriezeDualZ controller w) s ↔
+      ∃ j : G.Act controller,
+        Math.LinearProgramming.minPrimalSlack
+          (G.vriezeA controller) (G.vriezeB controller) q
+            (Sum.inr (Sum.inl (s, j))) = 0 := by
+  classical
+  have hznonneg : ∀ j, 0 ≤ G.vriezeDualZ controller w s j :=
+    fun j => hstrong.2.1.1 (Sum.inr (Sum.inl (s, j)))
+  constructor
+  · intro hs
+    by_contra h
+    push Not at h
+    have hzzero : ∀ j, G.vriezeDualZ controller w s j = 0 := by
+      intro j
+      apply le_antisymm
+      · apply le_of_not_gt
+        intro hj
+        exact h j ((G.vriezeDualZ_pos_iff_biasSlack_eq_zero hstrong s j).mp hj)
+      · exact hznonneg j
+    simp only [vriezeOccupationSupport] at hs
+    simp_rw [hzzero] at hs
+    simp at hs
+  · rintro ⟨j, hj⟩
+    have hjpos := (G.vriezeDualZ_pos_iff_biasSlack_eq_zero hstrong s j).mpr hj
+    exact Finset.sum_pos' (fun k _ => hznonneg k) ⟨j, Finset.mem_univ j, hjpos⟩
+
+/-- A dual-feasible occupation measure has nonempty support whenever the
+state space is nonempty. -/
+theorem exists_vriezeOccupationSupport_of_dualFeasible
+    [Nonempty G.State] {controller : Bool}
+    {z yGain : G.State → G.Act controller → ℝ} {lam : G.State → ℝ}
+    (hdual : G.IsVriezeDualFeasible controller z yGain lam) :
+    ∃ s, G.vriezeOccupationSupport controller z s := by
+  classical
+  by_contra h
+  simp only [vriezeOccupationSupport, not_exists, not_lt] at h
+  have hzero : ∀ s, (∑ j, z s j) = 0 := by
+    intro s
+    exact le_antisymm (h s) (Finset.sum_nonneg fun j _ => hdual.z_nonneg s j)
+  have htotal : (∑ s, ∑ j, z s j) = 0 := by
+    simp_rw [hzero]
+    simp
+  have hmass := hdual.sum_z_eq_card
+  rw [htotal] at hmass
+  have hcard : (0 : ℝ) < Fintype.card G.State := by
+    exact_mod_cast Fintype.card_pos
+  linarith
 
 /-- **Obligations (i)+(iii) of the residual, made concrete.** Given
 `IsVriezeDualFeasible`'s occupation measure `z` and the hypothesis that
