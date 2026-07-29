@@ -118,10 +118,19 @@ equilibrium concepts. T2, both directions of Kuhn, and T4, the one-shot
 embedding commuting with compilation, were not built, so this decision rests on
 the greenfield measurements rather than on reproducing all four.
 
-That gap is not incidental, because T2 is exactly the reopening condition D7
-names: a transfer that must preserve something the shared static target
-forgets — here, recall. Building it is the experiment that could still overturn
-the certificate rejection, and nothing else currently in the repository can.
+That gap is not incidental: T2 is the one frozen transfer whose real
+obligations the snapshot shows to be much larger than its name.
+
+**Correction (2026-07-29).** This paragraph originally also claimed T2 was the
+reopening condition for the certificate decision. Half of T2 has since been
+built, and that claim was wrong. The behavioral/mixed equivalence is a theorem
+about two strategy *representations* within one information model, not a
+transfer between two languages, so both sides of it live in the same layer and
+neither needs a witness — the same reason the compiled languages needed none.
+D7's reopening condition remains unmet, and no experiment currently in view
+meets it. T2 is worth building on its own merits, as a test of whether the
+accepted interfaces can carry a real theorem; it is not evidence about
+certificates either way.
 
 The protocol-level acceptance also carries a recorded scope limit:
 information-local policies are indexed by history while the runner is indexed by

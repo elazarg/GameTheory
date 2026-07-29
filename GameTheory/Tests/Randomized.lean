@@ -28,7 +28,7 @@ open GameTheory.Protocol.ExecutionProtocol (Trace History)
 
 /-- The player's two options. -/
 inductive Vote | up | down
-  deriving DecidableEq, Repr
+  deriving DecidableEq, Repr, Fintype
 
 /-- Play records the votes made so far. -/
 inductive Round | start | after (first : Vote) | done (first second : Vote)
@@ -507,5 +507,159 @@ theorem single_not_perfectRecall : ¬ singleSignals.PerfectRecall := by
     (Trace.extend .start _ legalUpOnce realized_up)
     (Trace.extend .start _ legalDownOnce realized_down) rfl
   exact absurd hsame (by simp [InfoSignals.ownPlay])
+
+/-! ## The same game, told to remember
+
+Nothing below changes the game: the votes, the states and the transitions are
+the ones already defined. Only what the player is told changes — it now sees its
+own vote. That is enough to satisfy both conditions at once, and so to turn the
+separation above into an equality on the very same protocol.
+
+Recall is a property of the observation map, not of the game. -/
+
+/-- What a player remembers when it remembers its own votes. -/
+inductive Memory | fresh | one (first : Vote) | both (first second : Vote)
+  deriving DecidableEq, Repr, Fintype
+
+/-- What each state leaves the player remembering. -/
+def Round.memory : Round → Memory
+  | .start => .fresh
+  | .after first => .one first
+  | .done first second => .both first second
+
+/-- Where the player has acted and what it did, read off what it remembers. -/
+def Memory.record : Memory → List (Memory × Vote)
+  | .fresh => []
+  | .one first => [(.fresh, first)]
+  | .both first second => [(.one first, second), (.fresh, first)]
+
+/-- The same game, with the player told its own vote and nothing else. -/
+@[reducible]
+def recallSignals : InfoSignals twice where
+  PublicSignal := Unit
+  PrivateSignal _ := Unit
+  initialPublic := ()
+  initialPrivate _ := ()
+  publicSignal _ := ()
+  privateSignal _ _ := ()
+  InfoState _ := Memory
+  initInfo _ _ _ := .fresh
+  pushInfo _ remembered action _ _ :=
+    match action with
+    | none => remembered
+    | some vote =>
+        match remembered with
+        | .fresh => .one vote
+        | .one first => .both first vote
+        | .both first second => .both first second
+
+theorem stopped_eq_false_of_legal {state : Round} {joint : ∀ i, Option (twice.Action i)}
+    (isLegal : twice.Legal state joint) : state.stopped = false := by
+  cases hstopped : state.stopped
+  · rfl
+  · exact absurd hstopped isLegal.1
+
+/-- One realized step advances what the player remembers exactly as it advances
+the state. -/
+theorem memory_step {source target : Round} {joint : ∀ i, Option (twice.Action i)}
+    (isLegal : twice.Legal source joint)
+    (realized : target ∈ (twice.step source ⟨joint, isLegal⟩).support) :
+    recallSignals.pushInfo () source.memory (joint ()) () () = target.memory ∧
+      (source.memory, (joint ()).getD .up) :: source.memory.record = target.memory.record := by
+  obtain ⟨vote, hvote⟩ := LegalOption.exists_eq_some_of_active (joint ())
+    (ExecutionProtocol.legalOption_of_legal isLegal ()) (stopped_eq_false_of_legal isLegal)
+  have hstopped := stopped_eq_false_of_legal isLegal
+  cases source with
+  | start =>
+    have hstep : twice.step Round.start ⟨joint, isLegal⟩ = FinDist.pure (Round.after vote) := by
+      show (match joint () with
+        | some chosen => FinDist.pure (Round.after chosen)
+        | none => FinDist.pure (Round.after Vote.up)) = _
+      rw [hvote]
+    rw [hstep, FinDist.mem_support_pure] at realized
+    subst realized
+    refine ⟨?_, ?_⟩ <;> · show _ = _; rw [hvote]; rfl
+  | after first =>
+    have hstep :
+        twice.step (Round.after first) ⟨joint, isLegal⟩ =
+          FinDist.pure (Round.done first vote) := by
+      show (match joint () with
+        | some chosen => FinDist.pure (Round.done first chosen)
+        | none => FinDist.pure (Round.done first Vote.up)) = _
+      rw [hvote]
+    rw [hstep, FinDist.mem_support_pure] at realized
+    subst realized
+    refine ⟨?_, ?_⟩ <;> · show _ = _; rw [hvote]; rfl
+  | done first second => exact absurd hstopped (by simp [Round.stopped])
+
+/-- The information state is exactly what the state records. -/
+theorem recallInfoOf_eq_memory {state : twice.State} (trace : Trace twice state) :
+    recallSignals.infoOf () trace = state.memory := by
+  induction trace with
+  | start => rfl
+  | extend prior joint isLegal realized ih =>
+    rw [InfoSignals.infoOf_extend, ih]
+    exact (memory_step isLegal realized).1
+
+/-- And the player's own record is read off it. -/
+theorem recallOwnPlay_eq_record {state : twice.State} (trace : Trace twice state) :
+    recallSignals.ownPlay () trace = state.memory.record := by
+  induction trace with
+  | start => rfl
+  | extend prior joint isLegal realized ih =>
+    obtain ⟨vote, hvote⟩ := LegalOption.exists_eq_some_of_active (joint ())
+      (ExecutionProtocol.legalOption_of_legal isLegal ()) (stopped_eq_false_of_legal isLegal)
+    rw [InfoSignals.ownPlay_extend, hvote, ih, recallInfoOf_eq_memory prior]
+    have hsecond := (memory_step isLegal realized).2
+    rw [hvote] at hsecond
+    exact hsecond
+
+/-- **The player recalls its own play.** Two histories leaving it equally
+informed leave it with the same record, because the information state *is* that
+record. -/
+theorem recall_perfectRecall : recallSignals.PerfectRecall := by
+  rintro ⟨⟩ first second traceFirst traceSecond hinfo
+  rw [recallOwnPlay_eq_record, recallOwnPlay_eq_record,
+    ← recallInfoOf_eq_memory traceFirst, ← recallInfoOf_eq_memory traceSecond, hinfo]
+
+/-- And it is still never asked twice at one information state — now for the
+substantive reason that its two decisions are told apart. -/
+theorem recall_actsOnceAtEachInfoState : recallSignals.ActsOnceAtEachInfoState := by
+  rintro ⟨⟩ state trace
+  rw [InfoSignals.actedAt_eq_map_ownPlay, recallOwnPlay_eq_record]
+  cases state <;> simp [Round.memory, Memory.record]
+
+/-- The menu, read off what the player remembers. -/
+def recallMenuAt : Memory → Set (Option Vote)
+  | .both _ _ => {none}
+  | _ => {some .up, some .down}
+
+/-- The information model in which the player recalls its own votes. -/
+@[reducible]
+def recallModel : InformationModel twice where
+  toInfoSignals := recallSignals
+  menu _ remembered := recallMenuAt remembered
+  menu_adequate := by
+    rintro ⟨⟩ state trace choice
+    rw [recallInfoOf_eq_memory trace]
+    cases state with
+    | done first second =>
+      cases choice with
+      | none => simp [recallMenuAt, LegalOption, Round.memory, Round.stopped]
+      | some vote => simp [recallMenuAt, LegalOption, Round.memory, Round.stopped]
+    | start | after first =>
+      cases choice with
+      | none => simp [recallMenuAt, LegalOption, Round.memory, Round.stopped]
+      | some vote =>
+        cases vote <;> simp [recallMenuAt, LegalOption, Round.memory, Round.stopped]
+
+/-- **The separation disappears when the player remembers.** On the very same
+game, under signals that let it see its own vote, the two randomizations induce
+the same law. Nothing about the game changed; only what the player was told. -/
+theorem recall_runMixed_eq_runBehavioral (β : (i : Unit) → recallModel.BehavioralPolicy i)
+    (fuel : ℕ) (h : History twice) :
+    recallModel.runMixedFrom (fun i => (β i).toMixed) fuel h =
+      recallModel.runBehavioralFrom β fuel h :=
+  recallModel.runMixedFrom_toMixed recall_actsOnceAtEachInfoState fuel β h
 
 end GameTheory.Tests.Repeat

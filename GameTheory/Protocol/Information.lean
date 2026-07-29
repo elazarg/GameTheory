@@ -218,6 +218,17 @@ def ownPlay (S : InfoSignals E) (i : ι) :
       | some action => (S.infoOf i prior, action) :: S.ownPlay i prior
       | none => S.ownPlay i prior
 
+@[simp]
+theorem ownPlay_extend (S : InfoSignals E) (i : ι) {source target : E.State}
+    (prior : Trace E source) (joint : ∀ j, Option (E.Action j))
+    (isLegal : E.Legal source joint)
+    (realized : target ∈ (E.step source ⟨joint, isLegal⟩).support) :
+    S.ownPlay i (.extend prior joint isLegal realized) =
+      match joint i with
+      | some action => (S.infoOf i prior, action) :: S.ownPlay i prior
+      | none => S.ownPlay i prior := by
+  rw [ownPlay]
+
 /-- The record of *where* a player acted is that record with the actions
 forgotten. -/
 theorem actedAt_eq_map_ownPlay (S : InfoSignals E) (i : ι) :

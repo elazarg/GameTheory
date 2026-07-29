@@ -700,8 +700,7 @@ but should not erase their evidence.
   one, with the pushforward theorem as the compatibility guarantee
 - **Next action:** behavioral and mixed policies over the same `Policy` type,
   then the one-shot-deviation theorem. Both are prerequisites for the
-  behavioral/mixed equivalence transfer, which is the experiment that could
-  reopen D7.
+  behavioral/mixed equivalence.
 
 ### EXP-017: Two places to put randomness
 
@@ -881,10 +880,16 @@ memory.
 - **Decision / question:** the converse direction. Given a mixed profile, is
   there a behavioral profile inducing the same law, and does the construction
   live in the existing layer? This is the direction that needs recall, and the
-  one whose obligations the semantic-architecture record named as the experiment
-  that could reopen the certificate decision.
-- **Representative slice:** not yet chosen; it must be a protocol where a player
-  forgets something, since a perfect-information example cannot exercise recall
+  one whose real obligations the architecture record found to be much larger
+  than its label suggests. It tests the accepted interfaces, not the certificate
+  decision: an equivalence of two strategy representations within one
+  information model is not a transfer between languages, and both of its sides
+  already live in the same layer. The architecture record has been corrected
+  accordingly.
+- **Representative slice:** one game under two signal designs. The same two-vote
+  protocol that separates the randomizations, given signals that let the player
+  see its own vote — so the slice is a change of observation map, not a bigger
+  game.
 - **Prediction, written before attempting.** The behavioral action law at an
   information state is the mixed law conditioned on reaching it, so the missing
   primitive in the finite-support layer is a *conditional law on an event of
@@ -948,6 +953,16 @@ memory.
   an expectation decomposed through a conditioning over a partition, which is
   what reach-mass factorization is, and iterated conditioning collapsing to the
   intersection event.
+
+- **Third observation: recall is a property of the observation map, and the
+  slice shows it.** The same game carries both designs. Told only whether play
+  has stopped, the player fails recall and the two randomizations provably
+  differ; told its own vote, it satisfies recall *and* the no-revisit condition,
+  and the equivalence applies — the separation disappears with nothing about the
+  game changed. The information state in the second design *is* the player's own
+  record, which is why recall holds by computation rather than by assumption.
+  This is also the first slice on which both conditions hold at once, so it is
+  the one the recall direction will be built against.
 
 - **Next action:** the construction itself — which pure policies an information
   state is consistent with, over `ownPlay`, and the conditioning that defines the

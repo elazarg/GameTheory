@@ -73,7 +73,7 @@ Its one substantive change is at the protocol level: Phase 0 predicted
 coordinated native branches, and the measurement is stronger than that, because
 both native shapes fit a single execution base. The finalization also records
 what it does not rest on — two of the four frozen transfers were never built,
-and one of them is precisely the experiment that could reopen D7.
+and it carries a correction about what one of them would show.
 
 ## Measurements
 
@@ -165,11 +165,13 @@ Nothing blocks the gate. What follows is carried forward:
 - A native extensive-form encoding with its own workaround list. The
   imperfect-information and chance protocols under `GameTheory/Tests/` exercise
   the interface but are not a language module and produce no such list.
-- The Kuhn-style transfer, in both directions. It is the only experiment in
-  view that could reopen D7, because it must preserve recall, which the shared
-  static target forgets. It also remains the frozen transfer with the largest
-  gap between its name and its real obligations: reach mass, support
-  factorization, and player-local action posteriors.
+- The behavioral/mixed equivalence, in both directions. It is the frozen
+  transfer with the largest gap between its name and its real obligations:
+  reach mass, support factorization, and player-local action posteriors. Its
+  value is as a test of the accepted interfaces against a real theorem — it is
+  a statement about two strategy representations within one information model,
+  not a transfer between languages, so it is not evidence about the certificate
+  decision either way.
 - The one-shot embedding commuting with compilation, the other frozen transfer
   that was not built.
 
