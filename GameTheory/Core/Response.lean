@@ -265,6 +265,72 @@ theorem ParetoDominates.irrefl (profile : Profile F.sig) :
   rintro ⟨-, i, hi⟩
   exact Preference.strict_irrefl weaklyPrefers i _ hi
 
+variable (F weaklyPrefers) in
+/-- Everyone is strictly better off under `better`. This is the comparison a
+coalition of *all* players can act on, which is why it is what an equilibrium
+against coalitions rules out — Pareto domination proper, which lets some players
+be indifferent, is a strictly stronger demand and is not ruled out. -/
+def StrictlyParetoDominates (better worse : Profile F.sig) : Prop :=
+  ∀ i, Preference.strict weaklyPrefers i (F.play better) (F.play worse)
+
+variable (F weaklyPrefers) in
+/-- No profile makes everybody strictly better off. -/
+def IsWeaklyParetoEfficient (profile : Profile F.sig) : Prop :=
+  ¬ ∃ other, StrictlyParetoDominates F weaklyPrefers other profile
+
+omit [DecidableEq ι] in
+/-- Making everybody strictly better off is in particular Pareto-dominating,
+provided there is somebody. -/
+theorem StrictlyParetoDominates.paretoDominates [Nonempty ι] {better worse : Profile F.sig}
+    (h : StrictlyParetoDominates F weaklyPrefers better worse) :
+    ParetoDominates F weaklyPrefers better worse :=
+  ⟨fun i => (h i).1, Classical.arbitrary ι, h _⟩
+
+omit [DecidableEq ι] in
+/-- Hence Pareto efficiency is the stronger notion. -/
+theorem IsParetoEfficient.isWeaklyParetoEfficient [Nonempty ι] {profile : Profile F.sig}
+    (h : IsParetoEfficient F weaklyPrefers profile) :
+    IsWeaklyParetoEfficient F weaklyPrefers profile :=
+  fun ⟨other, hstrict⟩ => h ⟨other, hstrict.paretoDominates⟩
+
+omit [DecidableEq ι] in
+/-- Pareto domination is transitive whenever the preference is. -/
+theorem ParetoDominates.trans (htrans : Preference.Transitive weaklyPrefers)
+    {first middle last : Profile F.sig}
+    (hfirst : ParetoDominates F weaklyPrefers first middle)
+    (hsecond : ParetoDominates F weaklyPrefers middle last) :
+    ParetoDominates F weaklyPrefers first last := by
+  obtain ⟨hweak, agent, hstrict⟩ := hfirst
+  refine ⟨fun i => htrans i _ _ _ (hweak i) (hsecond.1 i), agent, ?_, ?_⟩
+  · exact htrans agent _ _ _ hstrict.1 (hsecond.1 agent)
+  · exact fun hback => hstrict.2 (htrans agent _ _ _ (hsecond.1 agent) hback)
+
+omit [DecidableEq ι] in
+/-- And asymmetric whenever the preference is transitive. -/
+theorem ParetoDominates.asymm (htrans : Preference.Transitive weaklyPrefers)
+    {better worse : Profile F.sig} (h : ParetoDominates F weaklyPrefers better worse) :
+    ¬ ParetoDominates F weaklyPrefers worse better := fun hback =>
+  ParetoDominates.irrefl better (h.trans htrans hback)
+
+/-- **A strong equilibrium is weakly Pareto efficient.** If some profile made
+everybody strictly better off, the coalition of all players could move there
+together, and that is exactly the deviation a strong equilibrium forbids.
+
+Only the *weak* form follows, and the reason is visible in the statement: an
+equilibrium against coalitions objects when every member gains, while Pareto
+domination allows some to be indifferent. -/
+theorem IsStrongNash.isWeaklyParetoEfficient [Fintype ι] [Nonempty ι]
+    (htotal : Preference.Total weaklyPrefers) {profile : Profile F.sig}
+    (hstrong : IsStrongNash F weaklyPrefers profile) :
+    IsWeaklyParetoEfficient F weaklyPrefers profile := by
+  rintro ⟨other, hstrict⟩
+  refine (isStrongNash_iff_not_all_gain htotal profile).1 hstrong Finset.univ
+    Finset.univ_nonempty (Profile.restrict Finset.univ other) fun member _ => ?_
+  have hall : Profile.override Finset.univ (Profile.restrict Finset.univ other) profile = other :=
+    funext fun i => Profile.override_mem Finset.univ _ profile ⟨i, Finset.mem_univ i⟩
+  rw [hall]
+  exact hstrict member
+
 end Theorems
 
 end GameTheory

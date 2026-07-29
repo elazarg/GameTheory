@@ -102,6 +102,25 @@ theorem prisonersDilemma_isNash_ne_cooperate {profile : Profile prisonersDilemma
   rw [hcooperate]
   exact prisonersDilemma_defect_strictlyDominates who
 
+/-- Mutual defection is not Pareto efficient — both prisoners prefer mutual
+cooperation — and the computed checker and the semantic predicate agree on
+that. -/
+theorem prisonersDilemma_bothDefect_not_isParetoEfficient :
+    ¬ IsParetoEfficient prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      bothDefect := by
+  rw [← TableGame.isParetoEfficient_eq_true_iff]
+  decide
+
+/-- It *is* weakly Pareto efficient all the same, and that is not an accident:
+being a strong equilibrium forces it. The two notions come apart exactly where
+Pareto domination allows indifference. -/
+theorem prisonersDilemma_bothDefect_isWeaklyParetoEfficient
+    (hstrong : IsStrongNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      bothDefect) :
+    IsWeaklyParetoEfficient prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      bothDefect :=
+  hstrong.isWeaklyParetoEfficient (euPreference_total _)
+
 /-! ## Matching Pennies -/
 
 /-- Heads or tails. -/
