@@ -37,6 +37,8 @@ discounted-value coordinate per state.
   relation for every value coordinate.
 * `exists_nonzero_bivariate_discountedShapleyRateValue_of_activeBranches`:
   the same conclusion from fixed active-branch zero-dimensionality.
+* `exists_nonzero_bivariate_discountedShapleyRateValue_of_nonvanishingActiveBranches`:
+  the denominator-nonvanishing fixed-branch boundary.
 * `discountedShapleyRateValue_twoState_elimination_dichotomy`: the bivariate
   relation/resultant-degeneracy dichotomy for a two-state game.
 -/
@@ -175,6 +177,20 @@ noncomputable def discountedShapleyKernelBranchIdeal
     (fun s i j z => (G.pairTransition s i j z).toReal)
     branch
 
+/-- The fixed branch ideal with one extra variable witnessing the inverse of
+the product of its selected bordered denominators. -/
+noncomputable def discountedShapleyNonvanishingKernelBranchIdeal
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    (branch : G.State →
+      ShapleySnow.ActionKernelShape (G.Act 0) (G.Act 1)) :
+    Ideal
+      (MvPolynomial (Option G.State) (Polynomial ℝ)) :=
+  ShapleySnow.discountedShapleyNonvanishingBranchIdeal
+    G.rowStagePayoff
+    (fun s i j z => (G.pairTransition s i j z).toReal)
+    branch
+
 /-- If the canonical coupled kernel ideal is zero-dimensional over `ℝ(λ)`,
 the canonical discounted Shapley value has a fixed nonzero bivariate relation
 in the rate and each chosen state value. -/
@@ -245,6 +261,42 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_activeBranches
   exact
     G.exists_nonzero_bivariate_discountedShapleyRateValue_of_kernelIdeal_moduleFinite
       target
+
+/-- Zero-dimensionality of every fixed active branch after enforcing
+nonvanishing of its selected bordered denominators gives a fixed bivariate
+relation for the canonical discounted Shapley value. -/
+theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_nonvanishingActiveBranches
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hfinite : ∀ branch : G.State →
+        ShapleySnow.ActionKernelShape (G.Act 0) (G.Act 1),
+      (∀ s, ShapleySnow.IsActiveKernelShape
+        (ShapleySnow.discountedStochasticEntry
+          (G.rowStagePayoff s)
+          (fun i j z => (G.pairTransition s i j z).toReal))
+        (branch s)) →
+      Module.Finite (FractionRing (Polynomial ℝ))
+        (MvPolynomial (Option G.State) (FractionRing (Polynomial ℝ)) ⧸
+          (G.discountedShapleyNonvanishingKernelBranchIdeal branch).map
+            (MvPolynomial.map
+              (algebraMap (Polynomial ℝ)
+                (FractionRing (Polynomial ℝ))))))
+    (target : G.State) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        Polynomial.eval
+          (G.discountedShapleyRateValue l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  exact
+    ShapleySnow.exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1)
+      (fun l hl s =>
+        G.discountedShapleyRateValue_eq_lam0 hl s)
+      hfinite target
 
 /-- For a two-state game, pairwise elimination of local kernel candidates
 either produces a nonzero bivariate relation for the target discounted value

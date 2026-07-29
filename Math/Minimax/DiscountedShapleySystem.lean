@@ -42,6 +42,9 @@ determinants scale in adjacent degrees.
 * `moduleFinite_discountedShapleyActiveSystemIdeal_of_activeBranches`:
   fixed active-branch zero-dimensionality implies zero-dimensionality of the
   product-generated active ideal.
+* `exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite`:
+  zero-dimensionality after adjoining inverse-denominator equations gives one
+  fixed bivariate relation across all selected branches.
 * `exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_moduleFinite`:
   zero-dimensionality of the active coupled kernel ideal gives a fixed
   bivariate coordinate relation.
@@ -351,6 +354,10 @@ theorem exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
     ∃ k : ActionKernelShape I J,
       IsActiveKernelShape
           (discountedStochasticEntry (r target) (T target)) k ∧
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (mvBorderedKernelDenominator
+            (discountedStochasticEntry (r target) (T target)) k) ≠ 0 ∧
         mvBorderedKernelPoly
           (discountedStochasticEntry (r target) (T target))
           (some target) k ≠ 0 ∧
@@ -389,7 +396,14 @@ theorem exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
       RingHom.map_det, RingHom.mapMatrix_apply,
       map_borderedMatrix, hmap] at heval
     exact heval
-  refine ⟨k, ⟨hsz, hden⟩, ?_, ?_⟩
+  refine ⟨k, ⟨hsz, hden⟩, ?_, ?_, ?_⟩
+  · change MvPolynomial.eval a
+      (mvBorderedKernelDenominator
+        (discountedStochasticEntry (r target) (T target)) k) ≠ 0
+    simp only [mvBorderedKernelDenominator, k,
+      RingHom.map_det, RingHom.mapMatrix_apply, map_borderedMatrix]
+    rw [hmap]
+    exact hborder
   · exact discountedStochastic_borderedKernelPoly_ne_zero
       (r target) (T target) target hsz rows cols (by
         simpa [mvBorderedKernelDenominator, k] using hden)
@@ -433,7 +447,7 @@ theorem exists_nonzero_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
           (mvBorderedKernelPoly
             (discountedStochasticEntry (r target) (T target))
             (some target) k) = 0 := by
-  obtain ⟨k, _hkactive, hk, hkeval⟩ :=
+  obtain ⟨k, _hkactive, _hkdenominator, hk, hkeval⟩ :=
     exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
       r T w S hw target hl
   exact ⟨k, hk, hkeval⟩
@@ -625,6 +639,198 @@ noncomputable def discountedShapleyActiveBranchIdeal
     (Set.range fun s =>
       localizedDiscountedShapleyActiveKernelPoly r T s (branch s))
 
+/-- One bordered denominator with the rate moved into `ℝ[λ]`. -/
+noncomputable def discountedShapleyKernelDenominatorPoly
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) (k : ActionKernelShape I J) :
+    MvPolynomial κ (Polynomial ℝ) :=
+  MvPolynomial.optionEquivRight ℝ κ
+    (mvBorderedKernelDenominator
+      (discountedStochasticEntry (r target) (T target)) k)
+
+/-- The product of the selected bordered denominators in a fixed branch. -/
+noncomputable def discountedShapleyBranchDenominator
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J) :
+    MvPolynomial κ (Polynomial ℝ) :=
+  ∏ s, discountedShapleyKernelDenominatorPoly
+    r T s (branch s)
+
+/-- A fixed branch together with an inverse for the product of its bordered
+denominators. The extra `none` variable enforces pointwise denominator
+nonvanishing and removes components supported on a denominator-zero locus. -/
+noncomputable def discountedShapleyNonvanishingBranchIdeal
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J) :
+    Ideal (MvPolynomial (Option κ) (Polynomial ℝ)) :=
+  Ideal.span
+      (Set.range fun s =>
+        MvPolynomial.rename some
+          (discountedShapleyActiveKernelPoly r T s (branch s))) ⊔
+    Ideal.span {
+      MvPolynomial.X none *
+        MvPolynomial.rename some
+          (discountedShapleyBranchDenominator r T branch) - 1}
+
+/-- A common zero of a fixed branch at which the product of bordered
+denominators is nonzero extends, by assigning its inverse to `none`, to a zero
+of the nonvanishing branch ideal. -/
+theorem eval₂_mem_discountedShapleyNonvanishingBranchIdeal_eq_zero
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (l : ℝ) (v : κ → ℝ)
+    (hkernel : ∀ s,
+      MvPolynomial.eval₂ (Polynomial.evalRingHom l) v
+        (discountedShapleyActiveKernelPoly r T s (branch s)) = 0)
+    (hdenominator :
+      MvPolynomial.eval₂ (Polynomial.evalRingHom l) v
+        (discountedShapleyBranchDenominator r T branch) ≠ 0)
+    {P : MvPolynomial (Option κ) (Polynomial ℝ)}
+    (hP : P ∈ discountedShapleyNonvanishingBranchIdeal r T branch) :
+    MvPolynomial.eval₂ (Polynomial.evalRingHom l)
+        (fun x => Option.casesOn x
+          (MvPolynomial.eval₂ (Polynomial.evalRingHom l) v
+            (discountedShapleyBranchDenominator r T branch))⁻¹
+          v)
+        P = 0 := by
+  let d : ℝ :=
+    MvPolynomial.eval₂ (Polynomial.evalRingHom l) v
+      (discountedShapleyBranchDenominator r T branch)
+  let a : Option κ → ℝ :=
+    fun x => Option.casesOn x d⁻¹ v
+  have hle :
+      discountedShapleyNonvanishingBranchIdeal r T branch ≤
+        RingHom.ker
+          (MvPolynomial.eval₂Hom (Polynomial.evalRingHom l) a) := by
+    rw [discountedShapleyNonvanishingBranchIdeal, sup_le_iff]
+    constructor
+    · rw [Ideal.span_le]
+      rintro Q ⟨s, rfl⟩
+      change MvPolynomial.eval₂ (Polynomial.evalRingHom l) a
+        (MvPolynomial.rename some
+          (discountedShapleyActiveKernelPoly r T s (branch s))) = 0
+      rw [MvPolynomial.eval₂_rename]
+      have ha : a ∘ some = v := by
+        funext z
+        simp [a]
+      rw [ha]
+      exact hkernel s
+    · rw [Ideal.span_le]
+      rintro Q ⟨hQ | hQ, rfl⟩
+      · change MvPolynomial.eval₂ (Polynomial.evalRingHom l) a
+          (MvPolynomial.X none *
+            MvPolynomial.rename some
+              (discountedShapleyBranchDenominator r T branch) - 1) = 0
+        rw [MvPolynomial.eval₂_sub, MvPolynomial.eval₂_mul,
+          MvPolynomial.eval₂_X, MvPolynomial.eval₂_rename,
+          MvPolynomial.eval₂_one]
+        have ha : a ∘ some = v := by
+          funext z
+          simp [a]
+        rw [ha]
+        simp only [a]
+        change d⁻¹ * d - 1 = 0
+        rw [inv_mul_cancel₀ (by simpa [d] using hdenominator), sub_self]
+  exact hle hP
+
+/-- At every parameter, one fixed kernel choice per state gives vanishing
+branch equations whose bordered-denominator product is nonzero at the actual
+coupled Shapley value. -/
+theorem exists_activeBranch_eval_zero_denominator_ne_zero_of_discountedShapleySystem
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    {l : ℝ} (hl : l ∈ S) :
+    ∃ branch : κ → ActionKernelShape I J,
+      (∀ s, IsActiveKernelShape
+        (discountedStochasticEntry (r s) (T s)) (branch s)) ∧
+      (∀ s,
+        MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l)
+          (discountedShapleyActiveKernelPoly r T s (branch s)) = 0) ∧
+      MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l)
+        (discountedShapleyBranchDenominator r T branch) ≠ 0 := by
+  have hexists (s : κ) :
+      ∃ k : ActionKernelShape I J,
+        IsActiveKernelShape
+            (discountedStochasticEntry (r s) (T s)) k ∧
+          MvPolynomial.eval
+            (fun x => Option.casesOn x l (w l))
+            (mvBorderedKernelDenominator
+              (discountedStochasticEntry (r s) (T s)) k) ≠ 0 ∧
+          mvBorderedKernelPoly
+            (discountedStochasticEntry (r s) (T s))
+            (some s) k ≠ 0 ∧
+          MvPolynomial.eval
+            (fun x => Option.casesOn x l (w l))
+            (mvBorderedKernelPoly
+              (discountedStochasticEntry (r s) (T s))
+              (some s) k) = 0 :=
+    exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
+      r T w S hw s hl
+  choose branch hactive hdenominator _hpoly hkernel using hexists
+  refine ⟨branch, hactive, ?_, ?_⟩
+  · intro s
+    rw [discountedShapleyActiveKernelPoly, if_pos (hactive s)]
+    calc
+      MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l)
+          (MvPolynomial.optionEquivRight ℝ κ
+            (mvBorderedKernelPoly
+              (discountedStochasticEntry (r s) (T s))
+              (some s) (branch s))) =
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (mvBorderedKernelPoly
+            (discountedStochasticEntry (r s) (T s))
+            (some s) (branch s)) := by
+          simpa [Polynomial.evalRingHom] using
+            (eval₂_optionEquivRight (RingHom.id ℝ) (w l) l
+              (mvBorderedKernelPoly
+                (discountedStochasticEntry (r s) (T s))
+                (some s) (branch s)))
+      _ = 0 := hkernel s
+  · rw [discountedShapleyBranchDenominator]
+    change
+      (MvPolynomial.eval₂Hom (Polynomial.evalRingHom l) (w l))
+        (∏ s, discountedShapleyKernelDenominatorPoly
+          r T s (branch s)) ≠ 0
+    rw [map_prod, Finset.prod_ne_zero_iff]
+    intro s _
+    rw [discountedShapleyKernelDenominatorPoly]
+    calc
+      MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l)
+          (MvPolynomial.optionEquivRight ℝ κ
+            (mvBorderedKernelDenominator
+              (discountedStochasticEntry (r s) (T s))
+              (branch s))) =
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (mvBorderedKernelDenominator
+            (discountedStochasticEntry (r s) (T s))
+            (branch s)) := by
+          simpa [Polynomial.evalRingHom] using
+            (eval₂_optionEquivRight (RingHom.id ℝ) (w l) l
+              (mvBorderedKernelDenominator
+                (discountedStochasticEntry (r s) (T s))
+                (branch s)))
+      _ ≠ 0 := hdenominator s
+
 /-- A fixed branch that selects an inactive shape contains a unit generator
 and is therefore the unit ideal. -/
 theorem discountedShapleyActiveBranchIdeal_eq_top_of_not_active
@@ -642,6 +848,24 @@ theorem discountedShapleyActiveBranchIdeal_eq_top_of_not_active
   refine ⟨target, ?_⟩
   simp [localizedDiscountedShapleyActiveKernelPoly,
     discountedShapleyActiveKernelPoly, htarget]
+
+/-- A nonvanishing branch with an inactive selected shape is the unit ideal,
+because its corresponding kernel equation is the unit polynomial. -/
+theorem discountedShapleyNonvanishingBranchIdeal_eq_top_of_not_active
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (target : κ)
+    (htarget : ¬ IsActiveKernelShape
+      (discountedStochasticEntry (r target) (T target))
+      (branch target)) :
+    discountedShapleyNonvanishingBranchIdeal r T branch = ⊤ := by
+  rw [Ideal.eq_top_iff_one]
+  apply Ideal.mem_sup_left
+  apply Ideal.subset_span
+  refine ⟨target, ?_⟩
+  simp [discountedShapleyActiveKernelPoly, htarget]
 
 theorem eval_discountedShapleyActiveCoordinatePoly_eq_zero
     {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
@@ -663,7 +887,7 @@ theorem eval_discountedShapleyActiveCoordinatePoly_eq_zero
   classical
   letI : Fintype (ActionKernelShape I J) :=
     Fintype.ofFinite (ActionKernelShape I J)
-  obtain ⟨k, hk, _hkpoly, hkeval⟩ :=
+  obtain ⟨k, hk, _hkdenominator, _hkpoly, hkeval⟩ :=
     exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
       r T w S hw target hl
   rw [discountedShapleyActiveCoordinatePoly, map_prod]
@@ -945,6 +1169,113 @@ theorem exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_m
       r T w S hw hRmem hl
   rw [eval₂_polynomial_aeval_X] at hz
   simpa [Polynomial.eval₂_eq_eval_map] using hz
+
+/-- A finite-dimensional nonvanishing fixed branch supplies a nonzero
+coordinate relation in the original rate-polynomial coefficient ring. -/
+theorem exists_nonzero_coordinateRelation_mem_of_nonvanishingBranch_moduleFinite
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    [Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyNonvanishingBranchIdeal r T branch).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ)))))]
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      Polynomial.aeval (MvPolynomial.X (some target)) R ∈
+        discountedShapleyNonvanishingBranchIdeal r T branch := by
+  exact
+    Math.MultivariateElimination.exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing
+      (discountedShapleyNonvanishingBranchIdeal r T branch) (some target)
+
+/-- If every denominator-nonvanishing active fixed branch is
+zero-dimensional over `ℝ(λ)`, then every coupled Shapley value coordinate
+satisfies one fixed nonzero bivariate relation. -/
+theorem exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (hfinite : ∀ branch : κ → ActionKernelShape I J,
+      (∀ s, IsActiveKernelShape
+        (discountedStochasticEntry (r s) (T s)) (branch s)) →
+      Module.Finite (FractionRing (Polynomial ℝ))
+        (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+          (discountedShapleyNonvanishingBranchIdeal r T branch).map
+            (MvPolynomial.map
+              (algebraMap (Polynomial ℝ)
+                (FractionRing (Polynomial ℝ))))))
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ S,
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  classical
+  have hrelation (branch : κ → ActionKernelShape I J) :
+      ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+        Polynomial.aeval (MvPolynomial.X (some target)) R ∈
+          discountedShapleyNonvanishingBranchIdeal r T branch := by
+    by_cases hactive : ∀ s, IsActiveKernelShape
+        (discountedStochasticEntry (r s) (T s)) (branch s)
+    · letI : Module.Finite (FractionRing (Polynomial ℝ))
+          (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+            (discountedShapleyNonvanishingBranchIdeal r T branch).map
+              (MvPolynomial.map
+                (algebraMap (Polynomial ℝ)
+                  (FractionRing (Polynomial ℝ))))) :=
+        hfinite branch hactive
+      exact
+        exists_nonzero_coordinateRelation_mem_of_nonvanishingBranch_moduleFinite
+          r T branch target
+    · obtain ⟨s, hs⟩ := Classical.not_forall.mp hactive
+      letI : Module.Finite (FractionRing (Polynomial ℝ))
+          (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+            (discountedShapleyNonvanishingBranchIdeal r T branch).map
+              (MvPolynomial.map
+                (algebraMap (Polynomial ℝ)
+                  (FractionRing (Polynomial ℝ))))) := by
+        rw [discountedShapleyNonvanishingBranchIdeal_eq_top_of_not_active
+          r T branch s hs, Ideal.map_top]
+        exact Math.CofiniteIdeal.moduleFinite_quotient_top
+      exact
+        exists_nonzero_coordinateRelation_mem_of_nonvanishingBranch_moduleFinite
+          r T branch target
+  choose R hR hRmem using hrelation
+  refine ⟨∏ branch, R branch, ?_, ?_⟩
+  · rw [Finset.prod_ne_zero_iff]
+    intro branch _
+    exact hR branch
+  · intro l hl
+    obtain ⟨branch, _hactive, hkernel, hdenominator⟩ :=
+      exists_activeBranch_eval_zero_denominator_ne_zero_of_discountedShapleySystem
+        r T w S hw hl
+    have hz :=
+      eval₂_mem_discountedShapleyNonvanishingBranchIdeal_eq_zero
+        r T branch l (w l) hkernel hdenominator (hRmem branch)
+    rw [eval₂_polynomial_aeval_X] at hz
+    have hz' :
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) (R branch)) = 0 := by
+      simpa [Polynomial.eval₂_eq_eval_map] using hz
+    rw [← Polynomial.eval₂_eq_eval_map]
+    change
+      (Polynomial.eval₂RingHom
+        (Polynomial.evalRingHom l) (w l target))
+        (∏ branch, R branch) = 0
+    rw [map_prod]
+    apply Finset.prod_eq_zero (Finset.mem_univ branch)
+    simpa [Polynomial.eval₂_eq_eval_map] using hz'
 
 /-- The coupled bordered-kernel ideal with the rate moved into the coefficient
 ring `ℝ[λ]` and only value coordinates retained as variables. -/
