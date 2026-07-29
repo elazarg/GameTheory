@@ -271,6 +271,53 @@ theorem map_borderedMatrix
     cases j
     simp [borderedMatrix]
 
+/-- Scaling a positive-size payoff matrix by a nonzero scalar scales its
+bordered determinant by one degree less than its ordinary determinant. -/
+theorem borderedMatrix_det_smul
+    {ι : Type*} [Fintype ι] [DecidableEq ι] [Nonempty ι]
+    (B : Matrix ι ι ℝ) (c : ℝ) (hc : c ≠ 0) :
+    (borderedMatrix (c • B)).det =
+      c ^ (Fintype.card ι - 1) * (borderedMatrix B).det := by
+  classical
+  let u : Sum ι Unit → ℝ :=
+    Sum.elim (fun _ => c) (fun _ => 1)
+  let w : Sum ι Unit → ℝ :=
+    Sum.elim (fun _ => 1) (fun _ => c⁻¹)
+  let C : Matrix (Sum ι Unit) (Sum ι Unit) ℝ :=
+    Matrix.of fun i j => u i * borderedMatrix B i j
+  have hmatrix :
+      borderedMatrix (c • B) =
+        Matrix.of fun i j => w j * C i j := by
+    ext i j
+    rcases i with i | i <;> rcases j with j | j
+    · simp [C, u, w, borderedMatrix]
+    · cases j
+      simp [C, u, w, borderedMatrix, hc]
+    · cases i
+      simp [C, u, w, borderedMatrix]
+    · cases i
+      cases j
+      simp [C, u, w, borderedMatrix]
+  rw [hmatrix, Matrix.det_mul_row, show C.det =
+    (∏ i, u i) * (borderedMatrix B).det by
+      simpa [C] using Matrix.det_mul_column u (borderedMatrix B)]
+  simp only [Fintype.prod_sum_type, u, w, Sum.elim_inl,
+    Sum.elim_inr, Finset.prod_const_one, Finset.prod_const,
+    Finset.card_univ, Finset.univ_unique, PUnit.default_eq_unit,
+    Finset.card_singleton, one_mul, mul_one]
+  have hcard : 0 < Fintype.card ι := Fintype.card_pos
+  have hpow :
+      c ^ Fintype.card ι =
+        c ^ (Fintype.card ι - 1) * c := by
+    calc
+      c ^ Fintype.card ι =
+          c ^ ((Fintype.card ι - 1) + 1) := by
+            congr 1
+            omega
+      _ = c ^ (Fintype.card ι - 1) * c := pow_succ _ _
+  rw [hpow]
+  field_simp
+
 theorem borderedMatrix_mulVec_inl
     {ι : Type*} [Fintype ι]
     (B : Matrix ι ι ℝ) (d : ι → ℝ) (t : ℝ) (j : ι) :
@@ -1819,6 +1866,37 @@ theorem bivEval_C_C (l v c : ℝ) :
     bivEval l v (Polynomial.C (Polynomial.C c)) = c := by
   simp [bivEval]
 
+/-- A bivariate real polynomial is zero if it vanishes at every value-variable
+specialization and at every outer parameter except `1`. The omitted parameter
+does not matter because a univariate polynomial cannot be supported at one
+point. -/
+theorem eq_zero_of_forall_bivEval_eq_zero_of_ne_one
+    (F : Polynomial (Polynomial ℝ))
+    (hF : ∀ l : ℝ, l ≠ 1 → ∀ v : ℝ, bivEval l v F = 0) :
+    F = 0 := by
+  apply Polynomial.ext
+  intro n
+  have hcoeff :
+      ∀ l : ℝ, l ≠ 1 → Polynomial.eval l (F.coeff n) = 0 := by
+    intro l hl
+    have hmap :
+        F.map (Polynomial.evalRingHom l) = 0 := by
+      apply Polynomial.funext
+      intro v
+      simpa [bivEval, Polynomial.eval_map] using hF l hl v
+    have hn :=
+      congrArg (fun Q : Polynomial ℝ => Q.coeff n) hmap
+    simpa using hn
+  have hprod :
+      (Polynomial.X - Polynomial.C (1 : ℝ)) * F.coeff n = 0 := by
+    apply Polynomial.funext
+    intro l
+    by_cases hl : l = 1
+    · simp [hl]
+    · simp [hcoeff l hl]
+  exact (mul_eq_zero.mp hprod).resolve_left
+    (Polynomial.X_sub_C_ne_zero 1)
+
 /-! ### Stage 2, abstract engine
 
 The clean, general statement: a finite covering family of candidate polynomials, one of
@@ -1930,7 +2008,7 @@ theorem exists_nonzero_poly_of_borderedKernel
       MinimaxLoomis.lam0
         (fun i j => bivEval l (val l) (E i j)))
     (hgen :
-      ∀ (r : ℕ) (rows : Fin r ↪ Fin m)
+      ∀ (r : ℕ) (_ : 0 < r) (rows : Fin r ↪ Fin m)
         (cols : Fin r ↪ Fin n),
         (borderedMatrix
           ((Matrix.of E).submatrix rows cols)).det ≠ 0 →
@@ -1958,7 +2036,7 @@ theorem exists_nonzero_poly_of_borderedKernel
     rfl
   refine
     ⟨⟨⟨r, by omega⟩, rows, cols⟩, ?_, ?_⟩
-  · apply hgen
+  · apply hgen r hr
     intro hz
     apply hborder
     have heval := congrArg (bivEval l (val l)) hz
@@ -2119,57 +2197,192 @@ theorem kernelPoly_ne_zero_of_reward_det_ne_zero {m n : ℕ} (r P : Fin m → Fi
     Polynomial.C_ne_zero.mpr hdet
   exact (mul_ne_zero (pow_ne_zero sz h1X) hCdet) heval.symm
 
-/-- **Stage 3.** The parametric Shapley–Snow corollary specialised to a one-live-state
-discounted zero-sum stochastic game family: given the Shapley fixed-point property for
-`w` on `(0, 1)` and the Stage-1 kernel property `hkernel`, strengthened with the
-CHECKABLE conjunct "the reward submatrix of the kernel is nonsingular" in place of the
-opaque genericity hypothesis `hgen` of `exists_nonzero_poly_of_kernel` (discharged via
-`kernelPoly_ne_zero_of_reward_det_ne_zero` above) — there is a single nonzero bivariate
-polynomial vanishing at `(λ, w λ)` for every discount factor `λ ∈ (0, 1)`. This is the
-algebraic input for proving that discounted stochastic-game values are algebraic in the
-discount factor.
+/-! ### Automatic nondegeneracy of discounted bordered candidates
 
-The nonsingular-reward conjunct is a genuinely weaker, checkable ask than `hgen`: for a
-concrete game it reduces to a single real-matrix determinant computation
-(`norm_num`/`decide`), rather than a universally-quantified polynomial-nonvanishing
-claim. It is still only sufficient, not necessary — see the docstring of
-`kernelPoly_ne_zero_of_reward_det_ne_zero` for the singular-reward cases outside its
-statement. -/
+For a positive-size matrix pencil
+
+```
+B(λ, v) = (1 - λ) R + λ v T,
+```
+
+the bordered candidate `det B - v * det (borderedMatrix B)` cannot vanish
+identically when its bordered determinant is nonzero. The proof compares the
+specializations `(λ, v) = (1/2, u)` and `(1/3, 2u)`. Both payoff matrices are
+nonzero scalar multiples of `R + uT`, while the ordinary and bordered
+determinants have degrees differing by one under scalar multiplication. The
+two candidate identities therefore force the bordered determinant of
+`R + uT` to vanish for every `u`, which in turn forces the original
+bivariate bordered determinant to be zero. -/
+
+/-- A discounted bordered-kernel candidate with nonzero denominator is a
+nonzero bivariate polynomial. -/
+theorem discounted_borderedKernelPoly_ne_zero
+    {m n : ℕ}
+    (r P : Fin m → Fin n → ℝ)
+    {sz : ℕ} (hr : 0 < sz)
+    (rows : Fin sz ↪ Fin m) (cols : Fin sz ↪ Fin n)
+    (hborder :
+      (borderedMatrix
+        ((Matrix.of (discountedEntry r P)).submatrix rows cols)).det ≠ 0) :
+    ((Matrix.of (discountedEntry r P)).submatrix rows cols).det -
+        Polynomial.X *
+          (borderedMatrix
+            ((Matrix.of (discountedEntry r P)).submatrix rows cols)).det ≠ 0 := by
+  classical
+  let R : Matrix (Fin sz) (Fin sz) ℝ :=
+    (Matrix.of r).submatrix rows cols
+  let T : Matrix (Fin sz) (Fin sz) ℝ :=
+    (Matrix.of P).submatrix rows cols
+  let M (u : ℝ) : Matrix (Fin sz) (Fin sz) ℝ :=
+    R + u • T
+  let D : Polynomial (Polynomial ℝ) :=
+    (borderedMatrix
+      ((Matrix.of (discountedEntry r P)).submatrix rows cols)).det
+  haveI : Nonempty (Fin sz) := ⟨⟨0, hr⟩⟩
+  intro hzero
+  have heval_matrix (l v : ℝ) (hl : 1 - l ≠ 0) :
+      ((Matrix.of (discountedEntry r P)).submatrix rows cols).map
+          (bivEval l v) =
+        (1 - l) • M (l * v / (1 - l)) := by
+    ext i j
+    simp [M, R, T, Matrix.map_apply, Matrix.submatrix_apply,
+      bivEval_discountedEntry]
+    field_simp
+  have hscaled (u c v : ℝ) (hc : 1 - c ≠ 0)
+      (hmat :
+        ((Matrix.of (discountedEntry r P)).submatrix rows cols).map
+            (bivEval c v) =
+          (1 - c) • M u) :
+      (1 - c) ^ sz * (M u).det -
+          v * (1 - c) ^ (sz - 1) *
+            (borderedMatrix (M u)).det = 0 := by
+    have h := congrArg (bivEval c v) hzero
+    rw [map_zero, map_sub, map_mul, bivEval_X,
+      bivEval_det, bivEval_borderedMatrix_det, hmat,
+      Matrix.det_smul, Fintype.card_fin,
+      borderedMatrix_det_smul (M u) (1 - c) hc] at h
+    simpa [mul_assoc] using h
+  have hhalf (u : ℝ) :
+      (1 / 2 : ℝ) * (M u).det -
+          u * (borderedMatrix (M u)).det = 0 := by
+    have hmat :
+        ((Matrix.of (discountedEntry r P)).submatrix rows cols).map
+            (bivEval (1 / 2 : ℝ) u) =
+          (1 / 2 : ℝ) • M u := by
+      ext i j
+      simp [M, R, T, Matrix.map_apply, Matrix.submatrix_apply,
+        bivEval_discountedEntry]
+      ring
+    have h := hscaled u (1 / 2 : ℝ) u (by norm_num) (by
+      norm_num at hmat ⊢
+      exact hmat)
+    have hp : (1 / 2 : ℝ) ^ (sz - 1) ≠ 0 :=
+      pow_ne_zero _ (by norm_num)
+    have hpow :
+        (1 / 2 : ℝ) ^ sz =
+          (1 / 2 : ℝ) ^ (sz - 1) * (1 / 2 : ℝ) := by
+      calc
+        (1 / 2 : ℝ) ^ sz =
+            (1 / 2 : ℝ) ^ ((sz - 1) + 1) := by
+              congr 1
+              omega
+        _ = (1 / 2 : ℝ) ^ (sz - 1) * (1 / 2 : ℝ) :=
+          pow_succ _ _
+    norm_num at h
+    rw [hpow] at h
+    apply (mul_left_cancel₀ hp)
+    rw [mul_zero]
+    nlinarith
+  have hthird (u : ℝ) :
+      (2 / 3 : ℝ) * (M u).det -
+          2 * u * (borderedMatrix (M u)).det = 0 := by
+    have hmat :
+        ((Matrix.of (discountedEntry r P)).submatrix rows cols).map
+            (bivEval (1 / 3 : ℝ) (2 * u)) =
+          (2 / 3 : ℝ) • M u := by
+      ext i j
+      simp [M, R, T, Matrix.map_apply, Matrix.submatrix_apply,
+        bivEval_discountedEntry]
+      ring
+    have h := hscaled u (1 / 3 : ℝ) (2 * u) (by norm_num) (by
+      norm_num at hmat ⊢
+      exact hmat)
+    have hp : (2 / 3 : ℝ) ^ (sz - 1) ≠ 0 :=
+      pow_ne_zero _ (by norm_num)
+    have hpow :
+        (2 / 3 : ℝ) ^ sz =
+          (2 / 3 : ℝ) ^ (sz - 1) * (2 / 3 : ℝ) := by
+      calc
+        (2 / 3 : ℝ) ^ sz =
+            (2 / 3 : ℝ) ^ ((sz - 1) + 1) := by
+              congr 1
+              omega
+        _ = (2 / 3 : ℝ) ^ (sz - 1) * (2 / 3 : ℝ) :=
+          pow_succ _ _
+    norm_num at h
+    rw [hpow] at h
+    apply (mul_left_cancel₀ hp)
+    rw [mul_zero]
+    nlinarith
+  have hD0 : (borderedMatrix (M 0)).det = 0 := by
+    have h00 := congrArg (bivEval 0 0) hzero
+    have h01 := congrArg (bivEval 0 1) hzero
+    have hmat0 :
+        ((Matrix.of (discountedEntry r P)).submatrix rows cols).map
+            (bivEval 0 0) = M 0 := by
+      simpa using heval_matrix 0 0 (by norm_num)
+    have hmat1 :
+        ((Matrix.of (discountedEntry r P)).submatrix rows cols).map
+            (bivEval 0 1) = M 0 := by
+      simpa using heval_matrix 0 1 (by norm_num)
+    simp only [map_zero, map_sub, map_mul, bivEval_X,
+      bivEval_det, bivEval_borderedMatrix_det] at h00 h01
+    rw [hmat0] at h00
+    rw [hmat1] at h01
+    norm_num at h00 h01
+    linarith
+  have hDM (u : ℝ) : (borderedMatrix (M u)).det = 0 := by
+    by_cases hu : u = 0
+    · simpa [hu] using hD0
+    · have h1 := hhalf u
+      have h2 := hthird u
+      have huv :
+          u * (borderedMatrix (M u)).det = 0 := by
+        linarith
+      exact (mul_eq_zero.mp huv).resolve_left hu
+  apply hborder
+  apply eq_zero_of_forall_bivEval_eq_zero_of_ne_one D
+  intro l hl v
+  have hc : 1 - l ≠ 0 := sub_ne_zero.mpr (Ne.symm hl)
+  have hmap := heval_matrix l v hc
+  change bivEval l v
+      (borderedMatrix
+        ((Matrix.of (discountedEntry r P)).submatrix rows cols)).det = 0
+  rw [bivEval_borderedMatrix_det, hmap,
+    borderedMatrix_det_smul
+      (M (l * v / (1 - l))) (1 - l) hc,
+    hDM, mul_zero]
+
+/-- **Stage 3.** A one-live-state discounted zero-sum Shapley fixed point lies
+on one fixed nonzero bivariate polynomial throughout `(0, 1)`.
+
+The general bordered kernel theorem constructs a suitable square submatrix at
+each discount factor. `discounted_borderedKernelPoly_ne_zero` proves
+nondegeneracy directly from the discounted pencil, so this theorem exposes no
+kernel-selection or genericity hypothesis. -/
 theorem exists_nonzero_poly_of_discounted {m n : ℕ} [Nonempty (Fin m)] [Nonempty (Fin n)]
     (r P : Fin m → Fin n → ℝ) (w : ℝ → ℝ)
     (hw : ∀ l ∈ Set.Ioo (0 : ℝ) 1,
       w l = MinimaxLoomis.lam0 (fun i j => (1 - l) * r i j + l * P i j * w l))
-    (hkernel : ∀ (A : Matrix (Fin m) (Fin n) ℝ),
-      ∃ (sz : ℕ) (_ : 0 < sz) (rows : Fin sz ↪ Fin m) (cols : Fin sz ↪ Fin n),
-        (∑ i, ∑ j, (A.submatrix rows cols).adjugate i j) ≠ 0 ∧
-          MinimaxLoomis.lam0 A * (∑ i, ∑ j, (A.submatrix rows cols).adjugate i j)
-            = (A.submatrix rows cols).det ∧
-          ((Matrix.of r).submatrix rows cols).det ≠ 0) :
+    :
     ∃ Q : Polynomial (Polynomial ℝ), Q ≠ 0 ∧
       ∀ l ∈ Set.Ioo (0 : ℝ) 1, bivEval l (w l) Q = 0 := by
-  apply exists_nonzero_poly_of_forall_mem_exists (kernelPoly (discountedEntry r P))
-    (Set.Ioo (0 : ℝ) 1) w
-  intro l hl
-  set Al : Matrix (Fin m) (Fin n) ℝ := fun i j => (1 - l) * r i j + l * P i j * w l with hAl
-  obtain ⟨sz, -, rows, cols, hsum, hval_eq, hreddet⟩ := hkernel Al
-  have hszm : sz ≤ m := by
-    have := Fintype.card_le_of_embedding rows
-    simpa using this
-  have hlt : sz < m + 1 := by omega
-  have hmapAl : (Matrix.of (discountedEntry r P)).map (bivEval l (w l)) = Al := by
-    ext i j
-    simp [Matrix.map_apply, hAl, bivEval_discountedEntry]
-  have hcommute :
-      ((Matrix.of (discountedEntry r P)).submatrix rows cols).map (bivEval l (w l))
-        = Al.submatrix rows cols := by
-    rw [← Matrix.submatrix_map, hmapAl]
-  refine ⟨⟨⟨sz, hlt⟩, rows, cols⟩,
-    kernelPoly_ne_zero_of_reward_det_ne_zero r P hlt rows cols hreddet, ?_⟩
-  show bivEval l (w l) (kernelPoly (discountedEntry r P) ⟨⟨sz, hlt⟩, rows, cols⟩) = 0
-  unfold kernelPoly
-  simp only [map_sub, map_mul, bivEval_X, bivEval_sum_adjugate, bivEval_det, hcommute]
-  have hAlval : MinimaxLoomis.lam0 Al = w l := (hw l hl).symm
-  rw [hAlval] at hval_eq
-  linarith [hval_eq]
+  apply exists_nonzero_poly_of_borderedKernel
+    (discountedEntry r P) (Set.Ioo (0 : ℝ) 1) w
+  · intro l hl
+    simpa [bivEval_discountedEntry] using hw l hl
+  · intro sz hsz rows cols
+    exact discounted_borderedKernelPoly_ne_zero
+      r P hsz rows cols
 
 end ShapleySnow
