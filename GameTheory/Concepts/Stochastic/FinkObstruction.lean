@@ -80,6 +80,18 @@ theorem abs_pmfCoordinateTestScore_le_one {Ω : Type}
   · rw [if_neg hx, zero_sub, abs_neg, abs_of_nonneg hmass_nonneg]
     exact hmass_le_one
 
+/-- Affine shifting puts every coordinate-test score in the unit interval
+consumed by the multiplicative-weights regret theorem. -/
+theorem pmfCoordinateTestScore_unitShift_mem_Icc {Ω : Type}
+    [DecidableEq Ω] (baseline : PMF Ω)
+    (t : Ω) (positive : Bool) (x : Ω) :
+    (pmfCoordinateTestScore baseline t positive x + 1) / 2 ∈
+      Set.Icc (0 : ℝ) 1 := by
+  have hbound :=
+    abs_pmfCoordinateTestScore_le_one baseline t positive x
+  rw [abs_le] at hbound
+  constructor <;> linarith
+
 /-- The fixed finite family containing both signs at every coordinate
 separates the baseline PMF from every distinct comparison PMF. -/
 theorem exists_pmfCoordinateTestScore_comparison_pos {Ω : Type}
