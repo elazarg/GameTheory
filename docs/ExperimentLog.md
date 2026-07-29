@@ -1037,8 +1037,16 @@ memory.
   to a history. And its construction takes a global inhabitance instance for the
   action carriers, where the fallback here is derived from the law's own support.
 
-- **Next action:** the two directions now meet on one slice, both instantiated.
-  The remaining gap is the reach-mass generalization, reserved separately.
+- **Seventh observation: the fallback parameter turned out to be internal.**
+  The reading with nothing supplied satisfies the theorem too, because the
+  fallback is fixed across the induction whatever it is, and a law's own support
+  witness is one such fixed choice. So the parameter is a device the proof needs
+  and not part of the result, and the quotable statement carries no trace of it.
+  The two directions are now stated together: the laws a profile of locally
+  randomizing players can induce are exactly the laws a single draw over policies
+  can induce, and both halves are instantiated on the recall-capable slice.
+
+- **Next action:** the reach-mass generalization, reserved separately.
 
 ### EXP-019: Reach-mass conditions instead of recall
 

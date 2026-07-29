@@ -1222,6 +1222,37 @@ theorem runMixed_toBehavioralWith (hrecall : M.PerfectRecall)
     show M.ownPlay i (E.initHistory : E.History).trace = [] from rfl] at hstep
   exact absurd hstep (by simp)
 
+/-! ## The two randomizations describe the same laws
+
+Each direction carries its own condition, and they are genuinely different
+conditions. Turning local randomization into a single draw asks only that no
+player be consulted twice where the choice matters; going back asks each player
+to recall its own play. Neither implies the other. -/
+
+omit [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)] in
+/-- The reading with nothing supplied satisfies the theorem too: the fallback is
+fixed across the induction whatever it is, and a law's own support witness is
+one such choice. So the parameter is an internal device, not part of the
+result. -/
+theorem runMixed_toBehavioral (hrecall : M.PerfectRecall) (fuel : ℕ)
+    (mixed : (i : ι) → M.MixedPolicy i) :
+    M.runMixed mixed fuel = M.runBehavioral (fun i => (mixed i).toBehavioral) fuel :=
+  M.runMixed_toBehavioralWith hrecall (fun i => (mixed i).support_nonempty.choose) fuel mixed
+
+/-- **The two randomizations describe the same laws over plays.** Every law a
+profile of locally randomizing players induces is induced by a single draw over
+policies, and conversely. -/
+theorem runBehavioral_image_eq_runMixed_image (hactsOnce : M.ActsOnceWhereItMatters)
+    (hrecall : M.PerfectRecall) (fuel : ℕ) :
+    { law | ∃ β : (i : ι) → M.BehavioralPolicy i, M.runBehavioral β fuel = law } =
+      { law | ∃ mixed : (i : ι) → M.MixedPolicy i, M.runMixed mixed fuel = law } := by
+  ext law
+  constructor
+  · rintro ⟨β, rfl⟩
+    exact ⟨fun i => (β i).toMixed, M.runMixed_toMixed hactsOnce β fuel⟩
+  · rintro ⟨mixed, rfl⟩
+    exact ⟨fun i => (mixed i).toBehavioral, (M.runMixed_toBehavioral hrecall fuel mixed).symm⟩
+
 end Recall
 
 /-! ## Information sets and beliefs
