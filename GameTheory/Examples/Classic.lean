@@ -121,6 +121,14 @@ theorem prisonersDilemma_bothDefect_isWeaklyParetoEfficient
       bothDefect :=
   hstrong.isWeaklyParetoEfficient (euPreference_total _)
 
+/-- Mutual defection stays an equilibrium once the players may randomize. Mixed
+Nash is not a separate predicate here — it is `IsNash` of the mixed extension —
+so this is the abstract embedding theorem instantiated, not a new computation. -/
+theorem prisonersDilemma_bothDefect_isNash_mixed :
+    IsNash prisonersDilemma.toForm.mixed (euPreference prisonersDilemma.utility)
+      (prisonersDilemma.toForm.purify bothDefect) :=
+  prisonersDilemma_bothDefect_isNash.purify
+
 /-! ## Matching Pennies -/
 
 /-- Heads or tails. -/
