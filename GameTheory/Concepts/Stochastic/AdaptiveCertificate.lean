@@ -613,13 +613,16 @@ lower bound, the on-path upper bound, and the deviation cap — a **separate**
 per-player history potential (`φlo`/`φhi`/`φdv`) together with its own
 initial value close to `v`, one-step expectation-level monotonicity fact,
 per-stage payoff bound, and vanishing-Cesàro-average budget
-(`elo`/`ehi`/`edv`). Unlike `IsAdaptiveCertificateAt`, no potential here is
+(`elo`/`ehi`/`edv`).  The deviation budget may depend on the deviating
+behavior strategy; the verifier only needs its bound after that deviation
+has been fixed. Unlike `IsAdaptiveCertificateAt`, no potential here is
 required to stay close to `v` at any history other than the initial one. -/
 def IsAdaptivePotentialCertificateAt (G : StochasticGame ι) [Fintype ι]
     [DecidableEq ι] [Finite G.State] [∀ i, Finite (G.Act i)]
     (s₀ : G.State) (v : Payoff ι) (δ : ℝ) : Prop :=
   ∃ (σ : G.BehaviorProfile) (T₀ : ℕ)
-    (φlo φhi φdv : ι → G.HistoryPotential) (elo ehi edv : ι → ℕ → ℝ),
+    (φlo φhi φdv : ι → G.HistoryPotential) (elo ehi : ι → ℕ → ℝ)
+    (edv : ∀ i, G.BehaviorStrategy i → ℕ → ℝ),
     2 ≤ T₀ ∧
     (∀ i, |φlo i 0 (G.emptyHist s₀) - v i| ≤ δ) ∧
     (∀ i, |φhi i 0 (G.emptyHist s₀) - v i| ≤ δ) ∧
@@ -637,10 +640,12 @@ def IsAdaptivePotentialCertificateAt (G : StochasticGame ι) [Fintype ι]
         G.expectedHistoryValue (Function.update σ i dev) s₀ (φdv i) t) ∧
     (∀ i (dev : G.BehaviorStrategy i) t,
       G.expectedStagePayoff (Function.update σ i dev) s₀ t i ≤
-        G.expectedHistoryValue (Function.update σ i dev) s₀ (φdv i) t + edv i t) ∧
+        G.expectedHistoryValue (Function.update σ i dev) s₀ (φdv i) t +
+          edv i dev t) ∧
     (∀ i, ∀ T, T₀ ≤ T → (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, elo i t ≤ δ) ∧
     (∀ i, ∀ T, T₀ ≤ T → (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, ehi i t ≤ δ) ∧
-    (∀ i, ∀ T, T₀ ≤ T → (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, edv i t ≤ δ)
+    (∀ i (dev : G.BehaviorStrategy i), ∀ T, T₀ ≤ T →
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, edv i dev t ≤ δ)
 
 /-- **Adaptive equilibrium potential certificate** ("V2" verification
 interface). `v` is witnessed as a uniform-equilibrium-payoff candidate of
@@ -693,10 +698,11 @@ theorem isUniformEquilibriumPayoff_of_isAdaptivePotentialEquilibriumCertificate
   · -- Deviation cap: no unilateral deviation gains more than `δ`.
     have hT0 : 0 < T := by omega
     have hdv := G.finiteAveragePayoff_le_of_expectedHistoryValue_supermartingale_ge
-      (Function.update σ i dev) s₀ i (φdv i) (edv i) (hmonoDv i dev) (hbellDv i dev) hT0
+      (Function.update σ i dev) s₀ i (φdv i) (edv i dev)
+        (hmonoDv i dev) (hbellDv i dev) hT0
     rw [G.expectedHistoryValue_zero] at hdv
     have h1 := hinitDv i
-    have h3 := hCesDv i T hT
+    have h3 := hCesDv i dev T hT
     rw [abs_le] at h1
     linarith
 
@@ -728,7 +734,7 @@ theorem isAdaptivePotentialEquilibriumCertificate_of_isAbsorbingState
     (fun i _ _ => G.mixedStageEU s₀ (x s₀) i),
     (fun i _ _ => G.mixedStageEU s₀ (x s₀) i),
     (fun i _ _ => G.mixedStageEU s₀ (x s₀) i),
-    fun _ _ => 0, fun _ _ => 0, fun _ _ => 0, le_refl 2,
+    fun _ _ => 0, fun _ _ => 0, fun _ _ _ => 0, le_refl 2,
     ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro i; simp only [sub_self, abs_zero]; linarith
   · intro i; simp only [sub_self, abs_zero]; linarith
@@ -754,7 +760,7 @@ theorem isAdaptivePotentialEquilibriumCertificate_of_isAbsorbingState
     linarith
   · intro i T _hT; simp; linarith
   · intro i T _hT; simp; linarith
-  · intro i T _hT; simp; linarith
+  · intro i dev T _hT; simp; linarith
 
 /-- **Acceptance test, via V2.** Uniform equilibrium payoffs exist from every
 absorbing initial state, reproved via the adaptive *potential* certificate

@@ -115,6 +115,7 @@ import GameTheory.Concepts.Stochastic.TransitionIndependent
 import GameTheory.Concepts.Stochastic.Discounted
 import GameTheory.Concepts.Stochastic.Adaptive
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
+import GameTheory.Concepts.Stochastic.PublicPhaseCertificate
 import GameTheory.Concepts.Stochastic.TransitionIndependentCertificate
 import GameTheory.Concepts.Stochastic.AverageOptimalityCertificate
 import GameTheory.Concepts.Stochastic.SingleController
@@ -136,6 +137,7 @@ import GameTheory.Concepts.Stochastic.BigMatch
 import GameTheory.Concepts.Stochastic.BigMatchMarkov
 import GameTheory.Concepts.Stochastic.BigMatchNoMarkov
 import GameTheory.Concepts.Stochastic.BigMatchUniform
+import GameTheory.Concepts.Stochastic.BigMatchPublicPhase
 import GameTheory.Concepts.Stochastic.BigMatchFink
 import GameTheory.Concepts.Stochastic.BigMatchDeficitIndexNoGo
 import GameTheory.Concepts.Stochastic.MertensNeymanAccount
