@@ -41,6 +41,8 @@ discounted-value coordinate per state.
   the denominator-nonvanishing fixed-branch boundary.
 * `exists_nonzero_bivariate_discountedShapleyRateValue_of_branchMonicRelations`:
   the same boundary expressed by checkable monic coordinate certificates.
+* `exists_nonzero_bivariate_discountedShapleyRateValue_of_uniqueState`:
+  unconditional saturated-branch elimination for one-state games.
 * `discountedShapleyRateValue_twoState_elimination_dichotomy`: the bivariate
   relation/resultant-degeneracy dichotomy for a two-state game.
 -/
@@ -338,6 +340,29 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_branchMonicRelati
       (fun l hl s =>
         G.discountedShapleyRateValue_eq_lam0 hl s)
       hrelations target
+
+/-- In a one-state zero-sum stochastic game, the saturated fixed-branch
+argument gives a fixed bivariate relation with no algebraic hypothesis. -/
+theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_uniqueState
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [Unique G.State]
+    [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (target : G.State) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        Polynomial.eval
+          (G.discountedShapleyRateValue l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  exact
+    ShapleySnow.exists_nonzero_bivariateRelation_of_uniqueState
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1)
+      (fun l hl s =>
+        G.discountedShapleyRateValue_eq_lam0 hl s)
+      target
 
 /-- For a two-state game, pairwise elimination of local kernel candidates
 either produces a nonzero bivariate relation for the target discounted value

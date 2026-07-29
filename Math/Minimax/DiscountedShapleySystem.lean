@@ -48,6 +48,8 @@ determinants scale in adjacent degrees.
 * `exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_monicRelations`:
   explicit monic relations for every saturated branch coordinate certify the
   same zero-dimensionality condition.
+* `exists_nonzero_bivariateRelation_of_uniqueState`: the saturated branch
+  argument is unconditional for a one-state coupled system.
 * `exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_moduleFinite`:
   zero-dimensionality of the active coupled kernel ideal gives a fixed
   bivariate coordinate relation.
@@ -600,6 +602,26 @@ noncomputable def discountedShapleyActiveKernelPoly
           (some target) k
       else 1)
 
+/-- An active individual kernel remains a nonzero polynomial after moving the
+rate into the coefficient ring. -/
+theorem discountedShapleyActiveKernelPoly_ne_zero_of_active
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) (k : ActionKernelShape I J)
+    (hk : IsActiveKernelShape
+      (discountedStochasticEntry (r target) (T target)) k) :
+    discountedShapleyActiveKernelPoly r T target k ≠ 0 := by
+  rw [discountedShapleyActiveKernelPoly, if_pos hk]
+  rcases k with ⟨sz, rows, cols⟩
+  unfold mvBorderedKernelPoly
+  have hp := discountedStochastic_borderedKernelPoly_ne_zero
+    (r target) (T target) target hk.1 rows cols hk.2
+  intro hzero
+  apply hp
+  apply (MvPolynomial.optionEquivRight ℝ κ).injective
+  simpa only [map_zero] using hzero
+
 /-- The active state polynomial is the product of its individual kernel
 factors after moving the rate into the coefficient ring. -/
 theorem prod_discountedShapleyActiveKernelPoly
@@ -680,6 +702,70 @@ noncomputable def discountedShapleyNonvanishingBranchIdeal
       MvPolynomial.X none *
         MvPolynomial.rename some
           (discountedShapleyBranchDenominator r T branch) - 1}
+
+/-- With a unique state, a nonvanishing Shapley branch is exactly a
+one-variable Rabinowitsch ideal. -/
+theorem discountedShapleyNonvanishingBranchIdeal_eq_uniqueRabinowitschIdeal
+    {κ I J : Type*} [Fintype κ] [Unique κ]
+    [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J) :
+    discountedShapleyNonvanishingBranchIdeal r T branch =
+      Math.MultivariateElimination.uniqueRabinowitschIdeal
+        (discountedShapleyActiveKernelPoly
+          r T default (branch default))
+        (discountedShapleyBranchDenominator r T branch) := by
+  rw [discountedShapleyNonvanishingBranchIdeal,
+    Math.MultivariateElimination.uniqueRabinowitschIdeal]
+  congr 1
+  apply congrArg Ideal.span
+  ext P
+  constructor
+  · rintro ⟨s, rfl⟩
+    rw [show s = default from Subsingleton.elim _ _]
+    exact Set.mem_singleton _
+  · intro hP
+    rw [Set.mem_singleton_iff] at hP
+    subst P
+    exact ⟨default, rfl⟩
+
+/-- Every active denominator-nonvanishing fixed branch of a one-state
+Shapley system has finite-dimensional quotient over `ℝ(λ)`. -/
+theorem moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_unique
+    {κ I J : Type*} [Fintype κ] [Unique κ]
+    [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (hactive : ∀ s, IsActiveKernelShape
+      (discountedStochasticEntry (r s) (T s)) (branch s)) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyNonvanishingBranchIdeal r T branch).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ))))) := by
+  rw [discountedShapleyNonvanishingBranchIdeal_eq_uniqueRabinowitschIdeal,
+    Math.MultivariateElimination.map_uniqueRabinowitschIdeal]
+  let φ : Polynomial ℝ →+* FractionRing (Polynomial ℝ) :=
+    algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ))
+  let F := discountedShapleyActiveKernelPoly
+    r T default (branch default)
+  let D := discountedShapleyBranchDenominator r T branch
+  have hF : F ≠ 0 :=
+    discountedShapleyActiveKernelPoly_ne_zero_of_active
+      r T default (branch default) (hactive default)
+  have hmapF : MvPolynomial.map φ F ≠ 0 := by
+    intro hzero
+    apply hF
+    apply MvPolynomial.map_injective φ
+      (IsFractionRing.injective (Polynomial ℝ)
+        (FractionRing (Polynomial ℝ)))
+    simpa only [map_zero] using hzero
+  exact
+    Math.MultivariateElimination.moduleFinite_uniqueRabinowitschIdeal
+      (MvPolynomial.map φ F) (MvPolynomial.map φ D) hmapF
 
 /-- A common zero of a fixed branch at which the product of bordered
 denominators is nonzero extends, by assigning its inverse to `none`, to a zero
@@ -1328,6 +1414,35 @@ theorem exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_monicRela
           (algebraMap (Polynomial ℝ)
             (FractionRing (Polynomial ℝ)))))
       p hpmonic hpmem
+
+/-- A coupled Shapley system with a unique state satisfies a fixed nonzero
+bivariate relation without any branch-finiteness hypothesis. -/
+theorem exists_nonzero_bivariateRelation_of_uniqueState
+    {κ I J : Type*} [Fintype κ] [Unique κ]
+    [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ S,
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  apply
+    exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite
+      r T w S hw
+  intro branch hactive
+  exact
+    moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_unique
+      r T branch hactive
 
 /-- The coupled bordered-kernel ideal with the rate moved into the coefficient
 ring `ℝ[λ]` and only value coordinates retained as variables. -/
