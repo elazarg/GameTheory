@@ -464,4 +464,48 @@ theorem runMixed_eq_runBehavioral_once (β : (i : Unit) → singleModel.Behavior
       singleModel.runBehavioralFrom β fuel h :=
   singleModel.runMixedFrom_toMixed single_actsOnceAtEachInfoState fuel β h
 
+/-! ## Neither protocol here recalls its own moves
+
+Both observe only whether play has stopped, so neither can tell what it did.
+That refutes perfect recall on both, and it says what a slice for the recall
+direction has to look like: the player must see its own actions, which is a
+different signal design rather than a bigger game. -/
+
+/-- One vote cast, play continuing. -/
+def votedOnce : Trace twice (Round.after Vote.up) :=
+  .extend .start _ legalUpStart realized_afterUp
+
+/-- **The two-vote protocol forgets its own move.** Before voting and after
+voting it is in the same information state, but it has not done the same
+things. -/
+theorem not_perfectRecall : ¬ signals.PerfectRecall := by
+  intro hrecall
+  have hsame := hrecall () Trace.start votedOnce rfl
+  exact absurd hsame (by simp [InfoSignals.ownPlay, votedOnce])
+
+theorem legalUpOnce : once.Legal Single.start (fun _ => some Vote.up) :=
+  ExecutionProtocol.legal_of_legalOption (by simp [Single.stopped])
+    fun _ => ⟨rfl, Set.mem_univ _⟩
+
+theorem legalDownOnce : once.Legal Single.start (fun _ => some Vote.down) :=
+  ExecutionProtocol.legal_of_legalOption (by simp [Single.stopped])
+    fun _ => ⟨rfl, Set.mem_univ _⟩
+
+theorem realized_up : Single.voted Vote.up ∈ (once.step .start ⟨_, legalUpOnce⟩).support :=
+  FinDist.mem_support_pure.2 rfl
+
+theorem realized_down : Single.voted Vote.down ∈ (once.step .start ⟨_, legalDownOnce⟩).support :=
+  FinDist.mem_support_pure.2 rfl
+
+/-- **And so does the one-vote protocol**, for the same reason: having stopped,
+it cannot tell which way it voted. Satisfying the no-revisit condition is
+therefore not the same as recalling, and this file now separates the two
+conditions as well as the two randomizations. -/
+theorem single_not_perfectRecall : ¬ singleSignals.PerfectRecall := by
+  intro hrecall
+  have hsame := hrecall ()
+    (Trace.extend .start _ legalUpOnce realized_up)
+    (Trace.extend .start _ legalDownOnce realized_down) rfl
+  exact absurd hsame (by simp [InfoSignals.ownPlay])
+
 end GameTheory.Tests.Repeat

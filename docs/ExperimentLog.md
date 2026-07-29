@@ -921,6 +921,34 @@ memory.
   here*, and the difference is only visible if the dependency is measured before
   the import is taken.
 - **Outcome:** *in progress*
+- **Second observation: recall is a property of `infoOf`, and both existing
+  slices fail it.** `ownPlay` records the (information state, action) pairs a
+  player's own moves leave along a history, and `actedAt` is that record with the
+  actions forgotten. `PerfectRecall` then says two histories producing one
+  information state leave the same own record. Stating it that way is what
+  keeps the conditioning event a function of the information state alone, and it
+  structurally excludes the failure the open-game audit warned about: the
+  consistent-policy set will be a definition over the record, and recall stays a
+  hypothesis about `infoOf` rather than a field carrying the conclusion.
+  Neither protocol in the test file satisfies it, and both refutations are
+  machine-checked. Each observes only whether play has stopped, so neither can
+  tell what it did. That also settles the open question of the representative
+  slice: it is a different *signal design* — a player that sees its own
+  actions — not a bigger game. And it separates two conditions that could be
+  confused: voting once satisfies the no-revisit condition while still failing
+  recall.
+
+- **Predicted next, before building.** Two things, recorded now so the outcome is
+  evidence either way. First, the default at information states play never
+  reaches costs nothing and needs no hypothesis: every law has nonempty support,
+  so the given mixed policy admits a witness policy, and that witness supplies a
+  legal choice everywhere — including where menu adequacy says nothing and the
+  menu could otherwise be empty. The congruences already make the default
+  unobservable. Second, the primitives after `condOn` are its tower properties:
+  an expectation decomposed through a conditioning over a partition, which is
+  what reach-mass factorization is, and iterated conditioning collapsing to the
+  intersection event.
+
 - **Next action:** the construction itself — which pure policies an information
-  state is consistent with, and the recall condition making that well defined
-  from the information state alone.
+  state is consistent with, over `ownPlay`, and the conditioning that defines the
+  behavioral coordinate from it.

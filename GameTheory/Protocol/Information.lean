@@ -208,6 +208,56 @@ def actedAt (S : InfoSignals E) (i : ι) :
 theorem actedAt_start (S : InfoSignals E) (i : ι) :
     S.actedAt i (Trace.start : Trace E E.init) = [] := rfl
 
+/-- What a player has done, and where: the information state it held and the
+action it took, at each of its own moves, most recent first. -/
+def ownPlay (S : InfoSignals E) (i : ι) :
+    {state : E.State} → Trace E state → List (S.InfoState i × E.Action i)
+  | _, .start => []
+  | _, .extend prior joint _ _ =>
+      match joint i with
+      | some action => (S.infoOf i prior, action) :: S.ownPlay i prior
+      | none => S.ownPlay i prior
+
+/-- The record of *where* a player acted is that record with the actions
+forgotten. -/
+theorem actedAt_eq_map_ownPlay (S : InfoSignals E) (i : ι) :
+    ∀ {state : E.State} (trace : Trace E state),
+      S.actedAt i trace = (S.ownPlay i trace).map Prod.fst
+  | _, .start => rfl
+  | _, .extend prior joint _ _ => by
+    show (match joint i with
+        | some _ => S.infoOf i prior :: S.actedAt i prior
+        | none => S.actedAt i prior) =
+      List.map Prod.fst (match joint i with
+        | some action => (S.infoOf i prior, action) :: S.ownPlay i prior
+        | none => S.ownPlay i prior)
+    cases joint i with
+    | none => exact S.actedAt_eq_map_ownPlay i prior
+    | some action => rw [List.map_cons, S.actedAt_eq_map_ownPlay i prior]
+
+/-- **Perfect recall.** A player reaching one information state by two histories
+has done the same things along both: the same information states, the same
+actions, in the same order. What it may forget is what others did, never its own
+part of the play.
+
+This is a property of `infoOf`, not a field, and it is stated over the record a
+player's own moves leave rather than over the histories themselves. That is what
+makes a set of policies consistent with an information state a function of that
+information state alone. -/
+def PerfectRecall : Prop :=
+  ∀ (i : ι) {first second : E.State} (traceFirst : Trace E first)
+    (traceSecond : Trace E second),
+    S.infoOf i traceFirst = S.infoOf i traceSecond →
+      S.ownPlay i traceFirst = S.ownPlay i traceSecond
+
+/-- Recalling the actions implies recalling where they were taken. -/
+theorem actedAt_eq_of_perfectRecall (hrecall : S.PerfectRecall) (i : ι)
+    {first second : E.State} (traceFirst : Trace E first) (traceSecond : Trace E second)
+    (hinfo : S.infoOf i traceFirst = S.infoOf i traceSecond) :
+    S.actedAt i traceFirst = S.actedAt i traceSecond := by
+  rw [S.actedAt_eq_map_ownPlay i traceFirst, S.actedAt_eq_map_ownPlay i traceSecond,
+    hrecall i traceFirst traceSecond hinfo]
+
 /-- **No player is ever asked to act twice at one information state.** Stated
 over histories, so it constrains realized play rather than the syntax of the
 protocol: a state may recur freely as long as the player's information about it
