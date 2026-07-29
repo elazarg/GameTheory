@@ -3918,6 +3918,55 @@ theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedShapleyRateVal
         simpa [g] using hregular z)
   simpa [g] using h
 
+/-- A ramified simple polynomial factor for every canonical discounted
+Shapley coordinate produces the zero-sum uniform payoff.
+
+This is the canonical game-facing Newton--Puiseux endpoint: the hypotheses
+describe only the positive-power reparameterization and its regular algebraic
+factor. The factor derivative, account envelope, value bounds, and stationary
+Bellman family are derived internally. -/
+theorem isUniformEquilibriumPayoff_of_regular_reparam_algebraic_discountedShapleyRateValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (P : G.State → Polynomial (Polynomial ℝ))
+    (q ρw ρg : G.State → ℝ)
+    (g : G.State → ℝ → ℝ)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum)
+    (hq : ∀ z, 0 < q z)
+    (hρw : ∀ z, 0 < ρw z)
+    (hρg : ∀ z, 0 < ρg z)
+    (hreparam : ∀ z l, l ∈ Set.Ioo (0 : ℝ) (ρw z) →
+      G.discountedShapleyRateValue l z = g z (l ^ q z))
+    (hgcontinuousAt : ∀ z, ContinuousAt (g z) 0)
+    (hgcontinuousOn : ∀ z,
+      ContinuousOn (g z) (Set.Ioo 0 (ρg z)))
+    (hgroot : ∀ z t, t ∈ Set.Ioo (0 : ℝ) (ρg z) →
+      Math.bivEval (P z) t (g z t) = 0)
+    (hgregular : ∀ z,
+      Math.bivEval
+        (Polynomial.derivative (P z)) 0 (g z 0) ≠ 0) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who =>
+        if who = 0 then g s₀ 0 else -g s₀ 0) := by
+  obtain ⟨x, hx⟩ :=
+    exists_discountedShapleyRateBellmanProfileFamily G
+      hpayLower hpayUpper hzs
+  exact
+    isUniformEquilibriumPayoff_of_regular_reparam_algebraic_discountedValue
+      P q ρw ρg g s₀ hpayLower hpayUpper
+      (fun l z =>
+        G.discountedShapleyRateValue_nonneg hzs hpayLower l z)
+      (fun l z =>
+        G.discountedShapleyRateValue_le_one
+          hzs hpayLower hpayUpper l z)
+      hx hzs hq hρw hρg
+      (fun z l hl => by simpa using hreparam z l hl)
+      hgcontinuousAt hgcontinuousOn hgroot hgregular
+
 /-- Nondegenerate coordinate polynomials reduce the canonical zero-sum
 discounted-value problem to an explicit endpoint dichotomy: either every
 limiting root is simple and the account construction yields a uniform payoff,
