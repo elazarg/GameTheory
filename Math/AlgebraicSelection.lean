@@ -12,6 +12,7 @@ import Mathlib.Analysis.Calculus.Deriv.Polynomial
 import Mathlib.Analysis.Calculus.Deriv.Inverse
 import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.Calculus.ImplicitFunction.Bivariate
+import Mathlib.Analysis.Calculus.FDeriv.Analytic
 import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
 import Mathlib.Topology.EMetricSpace.BoundedVariation
 import Mathlib.Analysis.Normed.Group.Uniform
@@ -134,6 +135,9 @@ polynomial's root set.
 * `puiseuxDerivativeEnvelope_of_rpow_reparam`: a local representation
   `w(λ) = g(λ^q)` with `q > 0` and bounded `g'` gives the exact normalized
   derivative envelope consumed by the account construction.
+* `puiseuxDerivativeEnvelope_of_analytic_rpow_reparam`: analyticity of the
+  reparameterized factor supplies that local derivative and bound
+  automatically.
 * `puiseuxDerivativeEnvelope_of_regular_reparam_polynomial_root`: if the
   ramified factor `g` is a simple polynomial root at zero, its derivative
   and bound are derived automatically.
@@ -891,6 +895,91 @@ theorem puiseuxDerivativeEnvelope_of_rpow_reparam
     _ = lam ^ (q - 1) / lam0 := by
       rw [div_eq_mul_inv]
       ring
+
+/-- An analytic real factor has a derivative that exists and is uniformly
+bounded on some neighborhood of the origin. -/
+theorem exists_analytic_derivative_bound
+    {g : ℝ → ℝ} (hg : AnalyticAt ℝ g 0) :
+    ∃ ρ K : ℝ, 0 < ρ ∧ 0 ≤ K ∧
+      ∀ t, |t| < ρ →
+        HasDerivAt g (deriv g t) t ∧ |deriv g t| ≤ K := by
+  have hdifferentiable :
+      ∀ᶠ t in 𝓝 (0 : ℝ), DifferentiableAt ℝ g t := by
+    filter_upwards [hg.eventually_analyticAt] with t ht
+    exact ht.differentiableAt
+  have hderivContinuous : ContinuousAt (deriv g) 0 :=
+    hg.deriv.continuousAt
+  have hclose :
+      ∀ᶠ t in 𝓝 (0 : ℝ),
+        dist (deriv g t) (deriv g 0) < 1 :=
+    (Metric.tendsto_nhds.mp hderivContinuous.tendsto)
+      1 zero_lt_one
+  obtain ⟨ρ, hρ, hball⟩ :=
+    Metric.mem_nhds_iff.mp (hdifferentiable.and hclose)
+  let K := |deriv g 0| + 1
+  refine ⟨ρ, K, hρ, by positivity, ?_⟩
+  intro t ht
+  have htball : t ∈ Metric.ball (0 : ℝ) ρ := by
+    rw [Metric.mem_ball, Real.dist_eq, sub_zero]
+    exact ht
+  obtain ⟨hdiff, hdist⟩ := hball htball
+  refine ⟨hdiff.hasDerivAt, ?_⟩
+  rw [Real.dist_eq] at hdist
+  dsimp [K]
+  calc
+    |deriv g t| =
+        |(deriv g t - deriv g 0) + deriv g 0| := by ring_nf
+    _ ≤ |deriv g t - deriv g 0| + |deriv g 0| :=
+      abs_add_le _ _
+    _ ≤ |deriv g 0| + 1 := by linarith
+
+/-- A local analytic Puiseux reparameterization supplies the normalized
+derivative envelope used by the stochastic account construction.
+
+This consumes the literal analytic output of a convergent Newton--Puiseux
+expansion: no derivative function or derivative bound is assumed. -/
+theorem puiseuxDerivativeEnvelope_of_analytic_rpow_reparam
+    {w g : ℝ → ℝ} {q ρ : ℝ}
+    (hq : 0 < q) (hρ : 0 < ρ)
+    (hreparam : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      w lam = g (lam ^ q))
+    (hganalytic : AnalyticAt ℝ g 0) :
+    let g' := deriv g
+    ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ lam, 0 < lam → lam < lam0 →
+        HasDerivAt w
+            (g' (lam ^ q) * (q * lam ^ (q - 1))) lam ∧
+          |g' (lam ^ q) * (q * lam ^ (q - 1))| ≤
+            lam ^ (q - 1) / lam0 := by
+  dsimp only
+  obtain ⟨ρg, K, hρg, hK, hg⟩ :=
+    exists_analytic_derivative_bound hganalytic
+  let a := min ρg 1
+  let δ := a ^ q⁻¹
+  let ρ' := min ρ δ
+  have ha : 0 < a := lt_min hρg zero_lt_one
+  have hδ : 0 < δ := Real.rpow_pos_of_pos ha _
+  have hρ' : 0 < ρ' := lt_min hρ hδ
+  have hpowδ : δ ^ q = a := by
+    dsimp [δ]
+    exact Real.rpow_inv_rpow ha.le hq.ne'
+  have ht (lam : ℝ) (hlam : lam ∈ Set.Ioo (0 : ℝ) ρ') :
+      |lam ^ q| < ρg := by
+    have hlamδ : lam < δ :=
+      hlam.2.trans_le (min_le_right ρ δ)
+    have hlt : lam ^ q < δ ^ q :=
+      Real.rpow_lt_rpow hlam.1.le hlamδ hq
+    rw [hpowδ] at hlt
+    rw [abs_of_pos (Real.rpow_pos_of_pos hlam.1 q)]
+    exact hlt.trans_le (min_le_left ρg 1)
+  exact puiseuxDerivativeEnvelope_of_rpow_reparam
+    (w := w) (g := g) (g' := deriv g)
+    hq hρ' hK
+    (fun lam hlam =>
+      hreparam lam ⟨hlam.1,
+        hlam.2.trans_le (min_le_left ρ δ)⟩)
+    (fun lam hlam => (hg (lam ^ q) (ht lam hlam)).1)
+    (fun lam hlam => (hg (lam ^ q) (ht lam hlam)).2)
 
 /-- A ramified algebraic branch whose regular factor is a simple polynomial
 root supplies the normalized Puiseux derivative envelope.

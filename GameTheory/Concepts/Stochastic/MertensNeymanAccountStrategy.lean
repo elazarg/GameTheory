@@ -3967,6 +3967,83 @@ theorem isUniformEquilibriumPayoff_of_regular_reparam_algebraic_discountedShaple
       (fun z l hl => by simpa using hreparam z l hl)
       hgcontinuousAt hgcontinuousOn hgroot hgregular
 
+/-- An analytic Puiseux reparameterization of every canonical discounted
+Shapley coordinate produces the zero-sum uniform payoff.
+
+This theorem consumes the literal output of the classical convergent
+Newton--Puiseux expansion. Analyticity supplies the factor derivative,
+its local bound, and continuity at the origin; the canonical Shapley theory
+supplies the Bellman family and value bounds. -/
+theorem isUniformEquilibriumPayoff_of_analytic_reparam_discountedShapleyRateValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (q ρ : G.State → ℝ)
+    (g : G.State → ℝ → ℝ)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum)
+    (hq : ∀ z, 0 < q z)
+    (hρ : ∀ z, 0 < ρ z)
+    (hreparam : ∀ z l, l ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      G.discountedShapleyRateValue l z = g z (l ^ q z))
+    (hganalytic : ∀ z, AnalyticAt ℝ (g z) 0) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who =>
+        if who = 0 then g s₀ 0 else -g s₀ 0) := by
+  obtain ⟨x, hx⟩ :=
+    exists_discountedShapleyRateBellmanProfileFamily G
+      hpayLower hpayUpper hzs
+  have hEnvelope : ∀ z, ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ l, 0 < l → l < lam0 →
+        HasDerivAt
+            (fun u => G.discountedShapleyRateValue u z)
+            (deriv (g z) (l ^ q z) *
+              (q z * l ^ (q z - 1))) l ∧
+          |deriv (g z) (l ^ q z) *
+              (q z * l ^ (q z - 1))| ≤
+            l ^ (q z - 1) / lam0 := by
+    intro z
+    exact Math.puiseuxDerivativeEnvelope_of_analytic_rpow_reparam
+      (hq z) (hρ z) (hreparam z) (hganalytic z)
+  choose lam0 hlam0 hEnvelope using hEnvelope
+  let v' : G.State → ℝ → ℝ := fun z l =>
+    deriv (g z) (l ^ q z) *
+      (q z * l ^ (q z - 1))
+  have hderiv : ∀ z l, 0 < l → l < lam0 z →
+      HasDerivAt
+        (fun u => G.discountedShapleyRatePayoff u z 0)
+        (v' z l) l := by
+    intro z l hl hl0
+    simpa only [discountedShapleyRatePayoff_zero] using
+      (hEnvelope z l hl hl0).1
+  have hbound : ∀ z l, 0 < l → l < lam0 z →
+      |v' z l| ≤ l ^ (q z - 1) / lam0 z := by
+    intro z l hl hl0
+    exact (hEnvelope z l hl hl0).2
+  have hlimit : ∀ z,
+      Tendsto
+        (fun l => G.discountedShapleyRatePayoff l z 0)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0))
+        (𝓝 (g z 0)) := by
+    intro z
+    simpa only [discountedShapleyRatePayoff_zero] using
+      Math.tendsto_zero_of_rpow_reparam
+        (hq z) (hρ z) (hreparam z)
+        (hganalytic z).continuousAt
+  exact isUniformEquilibriumPayoff_of_puiseux_discountedValue
+    (v := G.discountedShapleyRatePayoff)
+    (x := x) (β := q) (lam0 := lam0) (v' := v')
+    (fun z => g z 0) s₀ hpayLower hpayUpper
+    (fun l z =>
+      G.discountedShapleyRateValue_nonneg
+        hzs hpayLower l z)
+    (fun l z =>
+      G.discountedShapleyRateValue_le_one
+        hzs hpayLower hpayUpper l z)
+    hx hzs hq hlam0 hderiv hbound hlimit
+
 /-- Nondegenerate coordinate polynomials reduce the canonical zero-sum
 discounted-value problem to an explicit endpoint dichotomy: either every
 limiting root is simple and the account construction yields a uniform payoff,
