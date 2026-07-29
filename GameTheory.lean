@@ -132,6 +132,7 @@ import GameTheory.Concepts.Stochastic.FinkTangentRate
 import GameTheory.Concepts.Stochastic.FinkTangentBridge
 import GameTheory.Concepts.Stochastic.FinkTangentCounterexample
 import GameTheory.Concepts.Stochastic.FinkSelectionCounterexample
+import GameTheory.Concepts.Stochastic.FinkObstruction
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
 import GameTheory.Concepts.Stochastic.BigMatch
 import GameTheory.Concepts.Stochastic.BigMatchMarkov
