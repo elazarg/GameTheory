@@ -20,7 +20,7 @@ import Mathlib.Probability.ProbabilityMassFunction.Monad
 
 noncomputable section
 
-open scoped BigOperators NNReal
+open scoped BigOperators NNReal ENNReal
 
 namespace GameTheory.Probability
 
@@ -553,6 +553,93 @@ theorem map_fst_product (μ : FinDist α) (ν : FinDist β) : map Prod.fst (prod
   refine Eq.trans (bind_congr fun a _ => ?_) (bind_pure μ)
   rw [map_comp]
   exact bind_const ν (pure a)
+
+/-! ## Conditioning
+
+A law restricted to an event it gives positive mass, renormalized. This is built
+by hand rather than through Mathlib's `PMF.filter`, which lives in a module this
+one deliberately does not import: taking that import would put convexity and
+polynomial theory back into the closure of everything downstream, which is the
+dependency this module exists to keep narrow. The construction below needs only
+the probability monad. -/
+
+private def massOf (μ : FinDist α) (S : Set α) : ℝ≥0∞ := ∑' a, S.indicator μ.toPMF a
+
+private theorem massOf_le_one (μ : FinDist α) (S : Set α) : massOf μ S ≤ 1 :=
+  le_trans (ENNReal.tsum_le_tsum fun a => Set.indicator_le_self' (fun _ _ => bot_le) a)
+    (le_of_eq μ.toPMF.tsum_coe)
+
+private theorem massOf_ne_top (μ : FinDist α) (S : Set α) : massOf μ S ≠ ⊤ :=
+  ne_top_of_le_ne_top ENNReal.one_ne_top (massOf_le_one μ S)
+
+private theorem massOf_ne_zero {μ : FinDist α} {S : Set α}
+    (hmeet : ∃ a ∈ S, a ∈ μ.support) : massOf μ S ≠ 0 := by
+  obtain ⟨a, haS, hasupp⟩ := hmeet
+  intro hzero
+  rw [massOf, ENNReal.tsum_eq_zero] at hzero
+  exact hasupp (by simpa [Set.indicator_of_mem haS] using hzero a)
+
+/-- The mass an event carries. -/
+def probOf (μ : FinDist α) (S : Set α) : ℝ := (massOf μ S).toReal
+
+/-- A law restricted to an event it gives positive mass, renormalized. -/
+def condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ μ.support) : FinDist α :=
+  ⟨⟨fun a => S.indicator μ.toPMF a / massOf μ S, by
+      rw [ENNReal.summable.hasSum_iff]
+      simp_rw [div_eq_mul_inv]
+      rw [ENNReal.tsum_mul_right]
+      exact ENNReal.mul_inv_cancel (massOf_ne_zero hmeet) (massOf_ne_top μ S)⟩, by
+    refine μ.support_finite.subset fun a ha => ?_
+    by_contra hnot
+    refine ha ?_
+    have hzero : S.indicator μ.toPMF a = 0 := by
+      by_cases haS : a ∈ S
+      · rw [Set.indicator_of_mem haS]
+        exact (PMF.apply_eq_zero_iff _ _).mpr hnot
+      · rw [Set.indicator_of_notMem haS]
+    show S.indicator μ.toPMF a / massOf μ S = 0
+    rw [hzero, ENNReal.zero_div]⟩
+
+theorem probOf_pos {μ : FinDist α} {S : Set α} (hmeet : ∃ a ∈ S, a ∈ μ.support) :
+    0 < μ.probOf S :=
+  ENNReal.toReal_pos (massOf_ne_zero hmeet) (massOf_ne_top μ S)
+
+theorem prob_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ μ.support)
+    [DecidablePred (· ∈ S)] (a : α) :
+    (μ.condOn S hmeet).prob a = if a ∈ S then μ.prob a / μ.probOf S else 0 := by
+  show (S.indicator μ.toPMF a / massOf μ S).toReal = _
+  rw [div_eq_mul_inv, ENNReal.toReal_mul, ENNReal.toReal_inv]
+  by_cases haS : a ∈ S
+  · rw [if_pos haS, Set.indicator_of_mem haS, probOf, div_eq_mul_inv, prob_def]
+  · rw [if_neg haS, Set.indicator_of_notMem haS]
+    simp
+
+theorem support_condOn (μ : FinDist α) (S : Set α) (hmeet : ∃ a ∈ S, a ∈ μ.support) :
+    (μ.condOn S hmeet).support ⊆ S ∩ μ.support := by
+  classical
+  intro a ha
+  have hpos : 0 < (μ.condOn S hmeet).prob a := prob_pos_iff.mpr ha
+  rw [prob_condOn] at hpos
+  by_cases haS : a ∈ S
+  · rw [if_pos haS] at hpos
+    refine ⟨haS, prob_pos_iff.mp ?_⟩
+    rcases (prob_nonneg μ a).lt_or_eq with hlt | hzero
+    · exact hlt
+    · rw [← hzero, zero_div] at hpos
+      exact absurd hpos (lt_irrefl 0)
+  · rw [if_neg haS] at hpos
+    exact absurd hpos (lt_irrefl 0)
+
+/-- Conditioning on everything changes nothing. -/
+theorem condOn_univ (μ : FinDist α) (hmeet : ∃ a ∈ Set.univ, a ∈ μ.support) :
+    μ.condOn Set.univ hmeet = μ := by
+  classical
+  refine ext_of_prob fun a => ?_
+  have hmass : μ.probOf Set.univ = 1 := by
+    show (massOf μ Set.univ).toReal = 1
+    rw [massOf]
+    simp [μ.toPMF.tsum_coe]
+  rw [prob_condOn, if_pos (Set.mem_univ a), hmass, div_one]
 
 /-! ## Convex mixing -/
 

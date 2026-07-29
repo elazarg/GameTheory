@@ -28,7 +28,7 @@ becomes difficult to scan.
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
-| EXP-018 | 2026-07-29 | D6/D7 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | *reserved* | `GameTheory/Protocol/Information.lean` |
+| EXP-018 | 2026-07-29 | D6/D7 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | *in progress* | `GameTheory/Probability/FinDist.lean` |
 
 ## Entry template
 
@@ -900,7 +900,27 @@ memory.
   some arbitrary value there. That is already known to be unobservable: the
   congruences say a profile is seen only through the histories a run can pass
   through.
-- **Evidence:** *pending*
-- **Observation:** *pending*
-- **Outcome:** *pending*
-- **Next action:** *pending*
+- **Evidence so far:** `GameTheory/Probability/FinDist.lean`, the conditioning
+  section; the reachability probe run against
+  `Mathlib.Probability.ProbabilityMassFunction.Constructions`
+- **Observation so far:** the prediction is confirmed on *what* is needed and
+  was wrong about the cost. Conditioning is the right primitive, but the obvious
+  route to it is closed: Mathlib's `PMF.filter` and `PMF.normalize` live in
+  `ProbabilityMassFunction.Constructions`, and importing that module makes both
+  `stdSimplex` and `Polynomial` reachable again — measured directly, and exactly
+  the two constants the narrowed import was chosen to exclude and that the phase
+  audits probe for. Taking the easy route would have silently widened the
+  dependency of everything downstream of the law type.
+  Hand-building it costs about fifty lines and needs only the probability monad,
+  so the budget is unchanged. `condOn` restricts a law to an event it gives
+  positive mass and renormalizes; `probOf` is the event's real mass, positive
+  under the same hypothesis. Conditioning on everything changes nothing, which is
+  the cheap check that the normalization is the intended one.
+  Worth recording as a general lesson rather than a local one: a missing
+  primitive being *available in Mathlib* is not the same as it being *available
+  here*, and the difference is only visible if the dependency is measured before
+  the import is taken.
+- **Outcome:** *in progress*
+- **Next action:** the construction itself — which pure policies an information
+  state is consistent with, and the recall condition making that well defined
+  from the information state alone.
