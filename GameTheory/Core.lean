@@ -3,7 +3,8 @@
 
 The static semantic core: signatures and profiles, finite-support laws, game
 forms, preferences, utility evaluation, local deviation schemes, the single
-equilibrium predicate, and the profile-quantified response family.
+equilibrium predicate, the profile-quantified response family, and potentials —
+the one structure at this layer that makes a pure equilibrium exist.
 
 Core imports no language front-end and no fixed-point or convexity theory.
 Existence results and the heavier solution concepts are built on top of the core
@@ -18,3 +19,4 @@ import GameTheory.Core.Deviation
 import GameTheory.Core.Equilibrium
 import GameTheory.Core.Utility
 import GameTheory.Core.Response
+import GameTheory.Core.Potential
