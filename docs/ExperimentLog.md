@@ -28,6 +28,7 @@ becomes difficult to scan.
 | EXP-015 | 2026-07-28 | D7/D0 / Phase 3 | Do named adequacy certificates beat their bespoke direct bridges on the Phase 0 budget? | Rejects D7 | [`decisions/D7-certificate-stratification.md`](decisions/D7-certificate-stratification.md); `GameTheory/Tests/Transfer.lean` |
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
+| EXP-018 | 2026-07-29 | D6/D7 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | *reserved* | `GameTheory/Protocol/Information.lean` |
 
 ## Entry template
 
@@ -873,3 +874,33 @@ What this settles about the direction that needs recall: nothing. This is the
 direction that needs none, exactly as the pinned snapshot's structure predicted,
 and the condition it does need is about being asked twice rather than about
 memory.
+
+### EXP-018: Recovering local randomization from a single draw
+
+- **Date / revision:** reserved 2026-07-29, before any attempt
+- **Decision / question:** the converse direction. Given a mixed profile, is
+  there a behavioral profile inducing the same law, and does the construction
+  live in the existing layer? This is the direction that needs recall, and the
+  one whose obligations the semantic-architecture record named as the experiment
+  that could reopen the certificate decision.
+- **Representative slice:** not yet chosen; it must be a protocol where a player
+  forgets something, since a perfect-information example cannot exercise recall
+- **Prediction, written before attempting.** The behavioral action law at an
+  information state is the mixed law conditioned on reaching it, so the missing
+  primitive in the finite-support layer is a *conditional law on an event of
+  positive mass* — the analogue of the coordinate factorization that the forward
+  direction needed, and predicted here for the same reason: it is the operation
+  the definition is phrased in. Two further obligations are expected, both named
+  in the architecture record rather than discovered: reach-mass factorization,
+  and player-local action posteriors. Perfect recall is expected to enter as the
+  hypothesis making the conditioning consistent across the histories in one
+  information set, not as a field carrying the conclusion.
+  One thing is expected *not* to be a problem. Conditioning is undefined at an
+  information state play never reaches, so the constructed profile must be given
+  some arbitrary value there. That is already known to be unobservable: the
+  congruences say a profile is seen only through the histories a run can pass
+  through.
+- **Evidence:** *pending*
+- **Observation:** *pending*
+- **Outcome:** *pending*
+- **Next action:** *pending*

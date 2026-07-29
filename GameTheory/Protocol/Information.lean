@@ -773,6 +773,22 @@ theorem runMixedFrom_toMixed (hactsOnce : M.ActsOnceAtEachInfoState) :
       refine M.runBehavioralFrom_congr fuel _ fun later hreach hlater i => ?_
       exact M.commit_agree_of_actsOnce hactsOnce β draw _ realized later hreach hlater i
 
+/-- The from-start form: the two randomizations induce the same law over plays.
+This is the shape a statement about a whole game quotes. -/
+theorem runMixed_toMixed (hactsOnce : M.ActsOnceAtEachInfoState)
+    (β : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
+    M.runMixed (fun i => (β i).toMixed) fuel = M.runBehavioral β fuel :=
+  M.runMixedFrom_toMixed hactsOnce fuel β E.initHistory
+
+/-- And hence the same law over the states play reaches, which is the shape an
+outcome-level statement quotes. Nothing is lost by forgetting the history here,
+because the laws agreed on histories in the first place. -/
+theorem map_state_runMixed_toMixed (hactsOnce : M.ActsOnceAtEachInfoState)
+    (β : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
+    FinDist.map ExecutionProtocol.History.state (M.runMixed (fun i => (β i).toMixed) fuel) =
+      FinDist.map ExecutionProtocol.History.state (M.runBehavioral β fuel) :=
+  congrArg _ (M.runMixed_toMixed hactsOnce β fuel)
+
 end Equivalence
 
 /-! ## Information sets and beliefs
