@@ -4,6 +4,8 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 import GameTheory.Concepts.Stochastic.Adaptive
+import Mathlib.Analysis.Calculus.Deriv.MeanValue
+import Mathlib.Analysis.SpecialFunctions.Log.InvLog
 
 /-!
 # The stochastic account update for uniform zero-sum strategies
@@ -20,10 +22,11 @@ downward motion is suppressed; the resulting error is bounded by one when
 descriptions can hide: the account must be large enough for these formulas
 to define probabilities.
 
-This is the algebraic kernel behind the account telescope. It also isolates
-the probability-weighted adjacent-value bounds and bounded-potential drift
-that imply the switch and floor-occupation budgets. It does not construct
-those analytic bounds for a game-induced discounted-value process.
+This is the algebraic kernel behind the account telescope. It proves the
+logarithmic corrector estimate for the concrete discount schedule, and
+isolates the probability-weighted discounted-value switch estimate that
+remains to be supplied by a game-induced value process. Together with a
+bounded-potential drift, these bounds control floor occupation.
 
 The formulation follows Section 4 of Hansen, Ibsen-Jensen, and Neyman,
 *Stochastic Games with Limited Public Memory*.
@@ -35,7 +38,297 @@ namespace GameTheory
 namespace StochasticGame
 namespace MertensNeymanAccount
 
-open Math.Probability
+open Filter Math.Probability Topology
+
+/-- The slow discount schedule used by the stochastic account
+construction. -/
+def discountRate (s : ℝ) : ℝ :=
+  1 / (s * (Real.log s) ^ 2)
+
+/-- The logarithmic corrector paired with `discountRate`. Its derivative is
+the negative discount rate. -/
+def logCorrector (s : ℝ) : ℝ :=
+  (Real.log s)⁻¹
+
+theorem discountRate_pos {s : ℝ} (hs : 1 < s) :
+    0 < discountRate s := by
+  unfold discountRate
+  apply one_div_pos.mpr
+  exact mul_pos (lt_trans zero_lt_one hs)
+    (sq_pos_of_pos (Real.log_pos hs))
+
+theorem hasDerivAt_logCorrector
+    {s : ℝ} (hs0 : s ≠ 0) (hs1 : s ≠ 1) (hsm1 : s ≠ -1) :
+    HasDerivAt logCorrector (-discountRate s) s := by
+  unfold logCorrector
+  simpa [discountRate, div_eq_mul_inv, mul_comm] using
+    Real.hasDerivAt_inv_log hs0 hs1 hsm1
+
+/-- Mean-value form of the identity that the logarithmic corrector is an
+antiderivative of the negative discount rate. -/
+theorem exists_logCorrector_secant
+    {a b : ℝ} (ha : 1 < a) (hab : a < b) :
+    ∃ c ∈ Set.Ioo a b,
+      logCorrector a - logCorrector b =
+        discountRate c * (b - a) := by
+  have hdiffIoi :
+      DifferentiableOn ℝ logCorrector (Set.Ioi 1) := by
+    unfold logCorrector
+    exact Real.differentiableOn_inv_log
+  have hcont :
+      ContinuousOn logCorrector (Set.Icc a b) :=
+    (hdiffIoi.mono (fun x hx => lt_of_lt_of_le ha hx.1)).continuousOn
+  have hderiv :
+      ∀ x ∈ Set.Ioo a b,
+        HasDerivAt logCorrector (-discountRate x) x := by
+    intro x hx
+    apply hasDerivAt_logCorrector
+    · linarith [hx.1]
+    · linarith [hx.1]
+    · linarith [hx.1]
+  obtain ⟨c, hc, heq⟩ :=
+    exists_hasDerivAt_eq_slope logCorrector
+      (fun x => -discountRate x) hab hcont hderiv
+  refine ⟨c, hc, ?_⟩
+  have hba : b - a ≠ 0 := sub_ne_zero.mpr hab.ne'
+  rw [eq_div_iff hba] at heq
+  linarith
+
+/-- A local relative-variation bound on `discountRate` yields the corrector
+inequality used by the account-potential drift argument. This is valid in
+both directions of an account move. -/
+theorem discountRate_secant_le_logCorrector_sub
+    {ε s s' : ℝ} (hs : 1 < s) (hs' : 1 < s')
+    (hlocal : ∀ u,
+      min s s' ≤ u → u ≤ max s s' →
+        |discountRate u - discountRate s| ≤
+          ε * discountRate s / 8) :
+    discountRate s *
+        (s' - s - ε * |s' - s| / 8) ≤
+      logCorrector s - logCorrector s' := by
+  rcases lt_trichotomy s s' with hlt | rfl | hgt
+  · obtain ⟨c, hc, heq⟩ :=
+      exists_logCorrector_secant hs hlt
+    have hvariation := hlocal c
+      (by simpa [min_eq_left hlt.le] using hc.1.le)
+      (by simpa [max_eq_right hlt.le] using hc.2.le)
+    have hlower :
+        -(ε * discountRate s / 8) ≤
+          discountRate c - discountRate s :=
+      neg_le_of_abs_le hvariation
+    have hscaled := mul_le_mul_of_nonneg_right hlower
+      (sub_nonneg.mpr hlt.le)
+    rw [abs_of_nonneg (sub_nonneg.mpr hlt.le)]
+    nlinarith
+  · simp
+  · obtain ⟨c, hc, heq⟩ :=
+      exists_logCorrector_secant hs' hgt
+    have hvariation := hlocal c
+      (by simpa [min_eq_right hgt.le] using hc.1.le)
+      (by simpa [max_eq_left hgt.le] using hc.2.le)
+    have hupper :
+        discountRate c - discountRate s ≤
+          ε * discountRate s / 8 :=
+      le_of_abs_le hvariation
+    have hscaled := mul_le_mul_of_nonpos_right hupper
+      (sub_nonpos.mpr hgt.le)
+    rw [abs_of_nonpos (sub_nonpos.mpr hgt.le)]
+    nlinarith
+
+/-- Multiplying the account by a fixed positive constant changes its
+logarithm by an asymptotically negligible relative amount. -/
+theorem tendsto_log_div_log_mul (c : ℝ) (hc : 0 < c) :
+    Tendsto (fun s : ℝ => Real.log s / Real.log (c * s))
+      atTop (𝓝 1) := by
+  have hden :
+      Tendsto (fun s : ℝ => Real.log c + Real.log s) atTop atTop :=
+    tendsto_const_nhds.add_atTop Real.tendsto_log_atTop
+  have hzero :
+      Tendsto (fun s : ℝ =>
+        Real.log c / (Real.log c + Real.log s)) atTop (𝓝 0) :=
+    hden.const_div_atTop (Real.log c)
+  have hone :
+      Tendsto (fun s : ℝ =>
+        1 - Real.log c / (Real.log c + Real.log s))
+        atTop (𝓝 1) := by
+    simpa using tendsto_const_nhds.sub hzero
+  have hsimple :
+      Tendsto (fun s : ℝ =>
+        Real.log s / (Real.log c + Real.log s))
+        atTop (𝓝 1) := by
+    apply hone.congr'
+    filter_upwards
+      [hden.eventually (eventually_gt_atTop (0 : ℝ))] with s hs
+    field_simp [ne_of_gt hs]
+    ring
+  apply hsimple.congr'
+  filter_upwards [eventually_gt_atTop (0 : ℝ)] with s hs
+  rw [Real.log_mul (ne_of_gt hc) (ne_of_gt hs)]
+
+/-- `discountRate` is regularly varying with index `-1`. -/
+theorem tendsto_discountRate_mul_div (c : ℝ) (hc : 0 < c) :
+    Tendsto (fun s : ℝ => discountRate (c * s) / discountRate s)
+      atTop (𝓝 c⁻¹) := by
+  have hlog := tendsto_log_div_log_mul c hc
+  have hsimple :
+      Tendsto (fun s : ℝ =>
+        c⁻¹ * (Real.log s / Real.log (c * s)) ^ 2)
+        atTop (𝓝 c⁻¹) := by
+    simpa using tendsto_const_nhds.mul (hlog.pow 2)
+  apply hsimple.congr'
+  filter_upwards
+    [eventually_gt_atTop (max 1 (1 / c))] with s hs
+  have hs1 : 1 < s := lt_of_le_of_lt (le_max_left _ _) hs
+  have hcs1 : 1 < c * s := by
+    have hdiv : 1 / c < s :=
+      lt_of_le_of_lt (le_max_right _ _) hs
+    simpa [mul_comm] using (div_lt_iff₀ hc).mp hdiv
+  unfold discountRate
+  field_simp [ne_of_gt hc, ne_of_gt (lt_trans zero_lt_one hs1),
+    ne_of_gt (Real.log_pos hs1), ne_of_gt (Real.log_pos hcs1)]
+
+theorem discountRate_antitoneOn :
+    AntitoneOn discountRate (Set.Ioi 1) := by
+  intro a ha b hb hab
+  have ha0 : 0 < a := lt_trans zero_lt_one ha
+  have hloga : 0 < Real.log a := Real.log_pos ha
+  have hlogab : Real.log a ≤ Real.log b :=
+    Real.log_le_log ha0 hab
+  have hlogsq :
+      (Real.log a) ^ 2 ≤ (Real.log b) ^ 2 := by
+    nlinarith [Real.log_nonneg hb.le]
+  have hden :
+      a * (Real.log a) ^ 2 ≤ b * (Real.log b) ^ 2 :=
+    mul_le_mul hab hlogsq (sq_nonneg _)
+      (lt_trans zero_lt_one hb).le
+  unfold discountRate
+  exact one_div_le_one_div_of_le
+    (mul_pos ha0 (sq_pos_of_pos hloga)) hden
+
+/-- For `γ = 1 + ε/9`, the relative variation of `discountRate` across
+the whole account interval `[γ⁻¹s, γs]` is eventually at most `ε/8`.
+The strict slack between `ε/9` and `ε/8` absorbs the logarithmic factor. -/
+theorem eventually_discountRate_local_variation
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ s : ℝ in atTop, ∀ u : ℝ,
+      (1 + ε / 9)⁻¹ * s ≤ u →
+      u ≤ (1 + ε / 9) * s →
+      |discountRate u - discountRate s| ≤
+        ε * discountRate s / 8 := by
+  let γ : ℝ := 1 + ε / 9
+  have hγ : 1 < γ := by
+    dsimp [γ]
+    linarith
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  have hlowerLimit : 1 - ε / 8 < γ⁻¹ := by
+    rw [inv_eq_one_div, lt_div_iff₀ hγ0]
+    dsimp [γ]
+    nlinarith [sq_nonneg ε]
+  have hupperLimit : γ < 1 + ε / 8 := by
+    dsimp [γ]
+    linarith
+  have hupRatio :
+      Tendsto (fun s : ℝ =>
+        discountRate (γ * s) / discountRate s)
+        atTop (𝓝 γ⁻¹) :=
+    tendsto_discountRate_mul_div γ hγ0
+  have hdownRatio :
+      Tendsto (fun s : ℝ =>
+        discountRate (γ⁻¹ * s) / discountRate s)
+        atTop (𝓝 γ) := by
+    simpa [hγ0.ne'] using
+      tendsto_discountRate_mul_div γ⁻¹ (inv_pos.mpr hγ0)
+  filter_upwards
+    [(tendsto_order.1 hupRatio).1 _ hlowerLimit,
+      (tendsto_order.1 hdownRatio).2 _ hupperLimit,
+      eventually_gt_atTop γ] with s hup hdown hsγ
+  intro u hsu hus
+  change γ⁻¹ * s ≤ u at hsu
+  change u ≤ γ * s at hus
+  have hs1 : 1 < s := lt_trans hγ hsγ
+  have hinvγs1 : 1 < γ⁻¹ * s := by
+    have hscaled :=
+      mul_lt_mul_of_pos_left hsγ (inv_pos.mpr hγ0)
+    simpa [hγ0.ne'] using hscaled
+  have hu1 : 1 < u := lt_of_lt_of_le hinvγs1 hsu
+  have hγs1 : 1 < γ * s := by
+    nlinarith [mul_pos (sub_pos.mpr hγ) (sub_pos.mpr hs1)]
+  have hratePos : 0 < discountRate s := discountRate_pos hs1
+  have hlowerEndpoint :
+      discountRate s * (1 - ε / 8) ≤ discountRate (γ * s) := by
+    have := (lt_div_iff₀ hratePos).mp hup
+    nlinarith
+  have hupperEndpoint :
+      discountRate (γ⁻¹ * s) ≤
+        discountRate s * (1 + ε / 8) := by
+    have := (div_lt_iff₀ hratePos).mp hdown
+    nlinarith
+  have hlowerRate :
+      discountRate (γ * s) ≤ discountRate u :=
+    discountRate_antitoneOn hu1 hγs1 hus
+  have hupperRate :
+      discountRate u ≤ discountRate (γ⁻¹ * s) :=
+    discountRate_antitoneOn hinvγs1 hu1 hsu
+  rw [abs_le]
+  constructor <;> nlinarith
+
+/-- The logarithmic corrector inequality holds eventually, simultaneously
+for every possible next account in the multiplicative update interval. -/
+theorem eventually_discountRate_secant_le_logCorrector_sub
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ s : ℝ in atTop, ∀ s' : ℝ,
+      (1 + ε / 9)⁻¹ * s ≤ s' →
+      s' ≤ (1 + ε / 9) * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s' := by
+  let γ : ℝ := 1 + ε / 9
+  have hγ : 1 < γ := by
+    dsimp [γ]
+    linarith
+  have hγ0 : 0 < γ := lt_trans zero_lt_one hγ
+  filter_upwards
+    [eventually_discountRate_local_variation hε,
+      eventually_gt_atTop γ] with s hvariation hsγ
+  intro s' hs'Lower hs'Upper
+  change γ⁻¹ * s ≤ s' at hs'Lower
+  change s' ≤ γ * s at hs'Upper
+  have hs1 : 1 < s := lt_trans hγ hsγ
+  have hs0 : 0 < s := lt_trans zero_lt_one hs1
+  have hinvγs1 : 1 < γ⁻¹ * s := by
+    have hscaled :=
+      mul_lt_mul_of_pos_left hsγ (inv_pos.mpr hγ0)
+    simpa [hγ0.ne'] using hscaled
+  have hs'1 : 1 < s' := lt_of_lt_of_le hinvγs1 hs'Lower
+  have hinvγ_le_one : γ⁻¹ ≤ 1 :=
+    (inv_le_one₀ hγ0).2 hγ.le
+  have hinvγs_le_s : γ⁻¹ * s ≤ s := by
+    simpa using mul_le_mul_of_nonneg_right hinvγ_le_one hs0.le
+  have hs_le_γs : s ≤ γ * s := by
+    nlinarith [mul_nonneg (sub_nonneg.mpr hγ.le) hs0.le]
+  apply discountRate_secant_le_logCorrector_sub hs1 hs'1
+  intro u hmin hmax
+  apply hvariation u
+  · change γ⁻¹ * s ≤ u
+    exact (le_min hinvγs_le_s hs'Lower).trans hmin
+  · change u ≤ γ * s
+    exact hmax.trans (max_le hs_le_γs hs'Upper)
+
+/-- Floor-threshold form of the eventual corrector estimate. A single
+account floor works simultaneously for all later accounts and all three
+possible multiplicative updates. -/
+theorem exists_floor_discountRate_secant_le_logCorrector_sub
+    {ε : ℝ} (hε : 0 < ε) :
+    ∃ M : ℝ, ∀ s : ℝ, M ≤ s → ∀ s' : ℝ,
+      (1 + ε / 9)⁻¹ * s ≤ s' →
+      s' ≤ (1 + ε / 9) * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s' := by
+  rcases (eventually_atTop.1
+      (eventually_discountRate_secant_le_logCorrector_sub hε)) with
+    ⟨M, hM⟩
+  exact ⟨M, fun s hs => hM s hs⟩
 
 /-- The three possible multiplicative account moves. -/
 inductive AccountMove
@@ -204,6 +497,25 @@ def nextAccount (γ s : ℝ) : AccountMove → ℝ
   | .stay => s
   | .down => γ⁻¹ * s
 
+/-- Every possible next account lies in the multiplicative interval
+`[γ⁻¹s, γs]`. -/
+theorem nextAccount_mem_interval
+    {γ s : ℝ} (h : IsValidScale γ s) (move : AccountMove) :
+    γ⁻¹ * s ≤ nextAccount γ s move ∧
+      nextAccount γ s move ≤ γ * s := by
+  have hγ0 : 0 < γ := lt_trans zero_lt_one h.1
+  have hinvγ_le_one : γ⁻¹ ≤ 1 :=
+    (inv_le_one₀ hγ0).2 h.1.le
+  have hinvγs_le_s : γ⁻¹ * s ≤ s := by
+    simpa using
+      mul_le_mul_of_nonneg_right hinvγ_le_one h.2.1.le
+  have hs_le_γs : s ≤ γ * s := by
+    nlinarith [mul_nonneg (sub_nonneg.mpr h.1.le) h.2.1.le]
+  have hinvγs_le_γs : γ⁻¹ * s ≤ γ * s :=
+    hinvγs_le_s.trans hs_le_γs
+  cases move <;>
+    simp [nextAccount, hinvγs_le_s, hs_le_γs, hinvγs_le_γs]
+
 /-- The expectation of the PMF update agrees with `expectedChange`. -/
 theorem expect_nextAccount_sub
     {γ M s y : ℝ} (h : IsValidScale γ s) (hyLower : -1 ≤ y)
@@ -216,6 +528,120 @@ theorem expect_nextAccount_sub
   rw [show (Finset.univ : Finset AccountMove) =
       {.up, .stay, .down} by decide]
   simp [moveProbability, nextAccount, expectedChange]
+
+/-- The expected absolute account jump is at most the magnitude of the
+payoff/value gap. Away from the floor the inequality is an equality:
+the positive and negative parts of `y` pay exactly for the corresponding
+upward and downward account increments. At the floor the negative part is
+suppressed. -/
+theorem expect_abs_nextAccount_sub_le_abs
+    {γ M s y : ℝ} (h : IsValidScale γ s) (hyLower : -1 ≤ y)
+    (hyUpper : y ≤ 2) :
+    expect (updatePMF γ M s y h hyLower hyUpper)
+        (fun move => |nextAccount γ s move - s|) ≤ |y| := by
+  classical
+  rw [expect_eq_sum]
+  rw [show (Finset.univ : Finset AccountMove) =
+      {.up, .stay, .down} by decide]
+  simp only [updatePMF_apply_toReal, Finset.mem_insert, reduceCtorEq,
+    Finset.mem_singleton, or_self, not_false_eq_true, Finset.sum_insert,
+    Finset.sum_singleton, moveProbability, nextAccount, sub_self, abs_zero,
+    mul_zero, zero_add]
+  have hupInc : γ * s - s = s * (γ - 1) := by ring
+  have hdownInc : γ⁻¹ * s - s = s * (γ⁻¹ - 1) := by ring
+  rw [hupInc, hdownInc, abs_of_pos h.upDenom_pos,
+    abs_of_neg h.downDenom_neg]
+  unfold upProbability downProbability
+  by_cases hMs : M < s
+  · rw [if_pos hMs, mul_neg,
+      div_mul_cancel₀ _ h.upDenom_pos.ne',
+      div_mul_cancel₀ _ h.downDenom_neg.ne]
+    by_cases hy : 0 ≤ y
+    · simp [max_eq_left hy, min_eq_right hy, abs_of_nonneg hy]
+    · have hy' : y ≤ 0 := le_of_not_ge hy
+      simp [max_eq_right hy', min_eq_left hy', abs_of_nonpos hy']
+  · rw [if_neg hMs, zero_mul, add_zero,
+      div_mul_cancel₀ _ h.upDenom_pos.ne']
+    exact max_le (le_abs_self y) (abs_nonneg y)
+
+/-- For gaps in `[-1, 2]`, the expected absolute account jump is at most
+`2`. This is the uniform movement bound used to charge corrector errors in
+the account-potential drift estimate. -/
+theorem expect_abs_nextAccount_sub_le_two
+    {γ M s y : ℝ} (h : IsValidScale γ s) (hyLower : -1 ≤ y)
+    (hyUpper : y ≤ 2) :
+    expect (updatePMF γ M s y h hyLower hyUpper)
+        (fun move => |nextAccount γ s move - s|) ≤ 2 := by
+  refine (expect_abs_nextAccount_sub_le_abs h hyLower hyUpper).trans ?_
+  rw [abs_le]
+  constructor <;> linarith
+
+/-- A pointwise logarithmic-corrector estimate on the multiplicative
+account interval passes through the actual stochastic account update.
+Linearity converts the expected corrector gain into the expected account
+change minus its absolute-movement error. -/
+theorem discountRate_mul_expect_sub_le_expect_logCorrector_sub
+    {γ M s y ε : ℝ} (h : IsValidScale γ s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2)
+    (hsecant : ∀ s',
+      γ⁻¹ * s ≤ s' → s' ≤ γ * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s') :
+    discountRate s *
+        (expect (updatePMF γ M s y h hyLower hyUpper)
+            (fun move => nextAccount γ s move - s) -
+          ε *
+            expect (updatePMF γ M s y h hyLower hyUpper)
+              (fun move => |nextAccount γ s move - s|) / 8) ≤
+      expect (updatePMF γ M s y h hyLower hyUpper)
+        (fun move =>
+          logCorrector s - logCorrector (nextAccount γ s move)) := by
+  let d := updatePMF γ M s y h hyLower hyUpper
+  have hpoint : ∀ move,
+      discountRate s *
+          (nextAccount γ s move - s -
+            ε * |nextAccount γ s move - s| / 8) ≤
+        logCorrector s - logCorrector (nextAccount γ s move) := by
+    intro move
+    exact hsecant _ (nextAccount_mem_interval h move).1
+      (nextAccount_mem_interval h move).2
+  change
+    discountRate s *
+        (expect d (fun move => nextAccount γ s move - s) -
+          ε * expect d (fun move => |nextAccount γ s move - s|) / 8) ≤
+      expect d (fun move =>
+        logCorrector s - logCorrector (nextAccount γ s move))
+  have hlinear :
+      expect d (fun move =>
+          discountRate s *
+            ((nextAccount γ s move - s) -
+              (ε / 8) * |nextAccount γ s move - s|)) =
+        discountRate s *
+          (expect d (fun move => nextAccount γ s move - s) -
+            (ε / 8) *
+              expect d (fun move => |nextAccount γ s move - s|)) := by
+    rw [expect_const_mul, expect_sub, expect_const_mul]
+  calc
+    _ = expect d (fun move =>
+        discountRate s *
+          ((nextAccount γ s move - s) -
+            (ε / 8) * |nextAccount γ s move - s|)) := by
+      rw [hlinear]
+      ring
+    _ ≤ expect d (fun move =>
+        logCorrector s - logCorrector (nextAccount γ s move)) :=
+      expect_mono d _ _ fun move => by
+        have hrewrite :
+            discountRate s *
+                (nextAccount γ s move - s -
+                  (ε / 8) * |nextAccount γ s move - s|) =
+              discountRate s *
+                (nextAccount γ s move - s -
+                  ε * |nextAccount γ s move - s| / 8) := by
+          ring
+        rw [hrewrite]
+        exact hpoint move
 
 /-- Closed form for the expected value of a scalar account potential after
 one stochastic account update. -/
@@ -410,6 +836,28 @@ theorem expectedChange_eq_of_le_floor
   rw [if_neg (not_lt.mpr hsM), hup, zero_mul, add_zero,
     div_mul_cancel₀ _ h.upDenom_pos.ne']
 
+/-- The account update never has less expected growth than its input gap.
+Away from the floor this is equality; at the floor, suppressing a requested
+downward move can only increase the expected change. -/
+theorem le_expectedChange
+    {γ M s y : ℝ} (h : IsValidScale γ s) (hMs : M ≤ s) :
+    y ≤ expectedChange γ M s y := by
+  by_cases hstrict : M < s
+  · rw [expectedChange_eq_of_floor_lt h hstrict]
+  · have hsM : s = M := le_antisymm (not_lt.mp hstrict) hMs
+    rw [expectedChange_eq_of_le_floor h hsM.le]
+    exact le_max_left y 0
+
+/-- PMF form of the lower expected-growth inequality. -/
+theorem le_expect_nextAccount_sub
+    {γ M s y : ℝ} (h : IsValidScale γ s) (hMs : M ≤ s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2) :
+    y ≤
+      expect (updatePMF γ M s y h hyLower hyUpper)
+        (fun move => nextAccount γ s move - s) := by
+  rw [expect_nextAccount_sub h hyLower hyUpper]
+  exact le_expectedChange h hMs
+
 /-- The update law's floor correction. With `M ≤ s`, expected account
 growth minus the floor indicator is bounded above by the gap `y`. This is
 the one-step inequality that telescopes in the uniform-payoff proof. -/
@@ -437,6 +885,76 @@ theorem expect_nextAccount_sub_floorIndicator_le
         (if s = M then 1 else 0) ≤ y := by
   rw [expect_nextAccount_sub h hyLower hyUpper]
   exact expectedChange_sub_floorIndicator_le h hMs hyLower
+
+/-- The conditional-expectation algebra behind the positive drift of the
+corrected value potential. The five premises are respectively the
+probability-weighted value-switch estimate, the logarithmic-corrector
+estimate, the absolute account-movement bound, the account update's lower
+drift, and the discounted Bellman inequality. Their constants yield the
+published margin `ε * lam / 8`. -/
+theorem correctedValuePotential_drift_ge
+    {ε lam oldCurrent oldNext newNext correctorGain
+      expectedAccountChange expectedAbsChange expectedGap : ℝ}
+    (hε : 0 ≤ ε) (hlam : 0 ≤ lam)
+    (hswitch : -ε * lam / 16 ≤ newNext - oldNext)
+    (hcorrector :
+      lam * (expectedAccountChange - ε * expectedAbsChange / 8) ≤
+        correctorGain)
+    (habs : expectedAbsChange ≤ 2)
+    (haccount : expectedGap + ε / 2 ≤ expectedAccountChange)
+    (hbellman : 0 ≤ oldNext - oldCurrent + lam * expectedGap) :
+    ε * lam / 8 ≤ newNext - oldCurrent + correctorGain := by
+  have habsScaled :=
+    mul_le_mul_of_nonneg_left habs (mul_nonneg hε hlam)
+  have haccountScaled :=
+    mul_le_mul_of_nonneg_left haccount hlam
+  nlinarith
+
+/-- One-step positive drift for the corrected value potential, with the
+account-movement and logarithmic-corrector premises discharged by the
+stochastic update kernel. The remaining two premises are game-facing: the
+discounted-value switch estimate and the discounted Bellman inequality. -/
+theorem correctedValuePotential_drift_ge_of_accountUpdate
+    {γ M s y ε oldCurrent oldNext newNext : ℝ}
+    (h : IsValidScale γ s) (hMs : M ≤ s) (hs1 : 1 < s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2)
+    (hε : 0 ≤ ε)
+    (hsecant : ∀ s',
+      γ⁻¹ * s ≤ s' → s' ≤ γ * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s')
+    (hswitch :
+      -ε * discountRate s / 16 ≤ newNext - oldNext)
+    (hbellman :
+      0 ≤ oldNext - oldCurrent + discountRate s * (y - ε / 2)) :
+    ε * discountRate s / 8 ≤
+      newNext - oldCurrent +
+        expect (updatePMF γ M s y h hyLower hyUpper)
+          (fun move =>
+            logCorrector s - logCorrector (nextAccount γ s move)) := by
+  let d := updatePMF γ M s y h hyLower hyUpper
+  have hcorrector :
+      discountRate s *
+          (expect d (fun move => nextAccount γ s move - s) -
+            ε *
+              expect d (fun move => |nextAccount γ s move - s|) / 8) ≤
+        expect d (fun move =>
+          logCorrector s - logCorrector (nextAccount γ s move)) := by
+    exact discountRate_mul_expect_sub_le_expect_logCorrector_sub
+      h hyLower hyUpper hsecant
+  have habs :
+      expect d (fun move => |nextAccount γ s move - s|) ≤ 2 :=
+    expect_abs_nextAccount_sub_le_two h hyLower hyUpper
+  have haccountBase :
+      y ≤ expect d (fun move => nextAccount γ s move - s) :=
+    le_expect_nextAccount_sub h hMs hyLower hyUpper
+  have haccount :
+      y - ε / 2 + ε / 2 ≤
+        expect d (fun move => nextAccount γ s move - s) := by
+    linarith
+  exact correctedValuePotential_drift_ge hε
+    (discountRate_pos hs1).le hswitch hcorrector habs haccount hbellman
 
 /-- The published one-step payoff estimate. The account gap is formed using
 the old discounted value. If switching to the next discounted value loses
