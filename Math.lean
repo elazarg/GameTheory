@@ -34,6 +34,7 @@ import Math.SimplexApproximation
 import Math.Simplex
 import Math.OnlineLearning
 import Math.OnlineAlgorithms
+import Math.OnlineLearning.CompletedEpochCalendar
 import Math.MeasureTheory.UnitInterval
 import Math.FixedPoint.KKM
 import Math.FixedPoint.Scarf
