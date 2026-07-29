@@ -74,7 +74,7 @@ def IsDiscountedStationarySecurityFamily
     [Finite G.State] [∀ i, Finite (G.Act i)]
     (who : Fin 2) (x : ℝ → G.StationaryMixedProfile)
     (v : ℝ → G.State → Payoff (Fin 2)) : Prop :=
-  ∀ lam, 0 < lam → ∀ z (m : ∀ i, PMF (G.Act i)),
+  ∀ lam, 0 < lam → lam ≤ 1 → ∀ z (m : ∀ i, PMF (G.Act i)),
     m who = x lam z who →
       v lam z who ≤
         G.discountedAuxEU (1 - lam) (v lam) z m who
@@ -86,15 +86,15 @@ theorem isDiscountedStationarySecurityFamily_zero
     [Finite G.State] [∀ i, Finite (G.Act i)]
     {x : ℝ → G.StationaryMixedProfile}
     {v : ℝ → G.State → Payoff (Fin 2)}
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
     (hVzs : ∀ lam z, v lam z 1 = -v lam z 0) :
     IsDiscountedStationarySecurityFamily (G := G) 0 x v := by
-  intro lam hlam z m hm
+  intro lam hlam hlam1 z m hm
   have hrow :=
-    (hF lam hlam).row_discountedAuxEU_ge
+    (hF lam hlam hlam1).row_discountedAuxEU_ge
       hzs (hVzs lam) z (m 1)
   have hprofile :
       Function.update (x lam z) 1 (m 1) = m := by
@@ -109,15 +109,15 @@ theorem isDiscountedStationarySecurityFamily_one
     [Finite G.State] [∀ i, Finite (G.Act i)]
     {x : ℝ → G.StationaryMixedProfile}
     {v : ℝ → G.State → Payoff (Fin 2)}
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
     (hVzs : ∀ lam z, v lam z 1 = -v lam z 0) :
     IsDiscountedStationarySecurityFamily (G := G) 1 x v := by
-  intro lam hlam z m hm
+  intro lam hlam hlam1 z m hm
   have hcol :=
-    (hF lam hlam).col_discountedAuxEU_ge
+    (hF lam hlam hlam1).col_discountedAuxEU_ge
       hzs (hVzs lam) z (m 0)
   have hprofile :
       Function.update (x lam z) 0 (m 0) = m := by
@@ -134,7 +134,8 @@ theorem account_bellman_ge_of_securityFamily
     {v : ℝ → G.State → Payoff (Fin 2)}
     (hsecurity :
       IsDiscountedStationarySecurityFamily (G := G) who x v)
-    {lam : ℝ} (hlam : 0 < lam) (s : G.State)
+    {lam : ℝ} (hlam : 0 < lam) (hlam1 : lam ≤ 1)
+    (s : G.State)
     (m : ∀ i, PMF (G.Act i))
     (hm : m who = x lam s who) :
     0 ≤
@@ -143,7 +144,7 @@ theorem account_bellman_ge_of_securityFamily
         v lam s who +
       lam * expect (stateActionOutcome G s m)
         (fun o => G.stagePayoff s o.1 who - v lam o.2 who) := by
-  have hsecure := hsecurity lam hlam s m hm
+  have hsecure := hsecurity lam hlam hlam1 s m hm
   rw [G.discountedAuxEU_eq] at hsecure
   have hpay :
       expect (stateActionOutcome G s m)
@@ -208,7 +209,7 @@ theorem controller_account_bellman_ge_of_securityFamily
     {v : ℝ → G.State → Payoff (Fin 2)}
     (hsecurity :
       IsDiscountedStationarySecurityFamily (G := G) who x v)
-    (hlam : 0 < lam)
+    (hlam : 0 < lam) (hlam1 : lam ≤ 1)
     (C : G.MemoryController who) (opp : G.BehaviorProfile)
     {t : ℕ} (h : G.Hist t) (m : C.Mem t)
     (hselect : C.select t h m = x lam h.2 who) :
@@ -224,7 +225,7 @@ theorem controller_account_bellman_ge_of_securityFamily
   rw [outcomeKernel_eq_stateActionOutcome_selected
     C opp h m (x lam) hselect]
   exact account_bellman_ge_of_securityFamily
-    hsecurity hlam h.2 profile hprofileWho
+    hsecurity hlam hlam1 h.2 profile hprofileWho
 
 /-- Positive corrected-potential drift for either secured player on an
 arbitrary unit payoff/value interval. The interval's lower endpoint cancels
@@ -243,6 +244,7 @@ theorem controller_correctedValuePotential_drift_ge_of_securityFamily
       C.select t hmem m =
         x (discountRate s) hmem.2 who)
     (hscale : IsValidScale γ s) (hMs : M ≤ s) (hs1 : 1 < s)
+    (hrateUpper : discountRate s ≤ 1)
     (hε : 0 ≤ ε)
     (hpayLower :
       ∀ a, lower ≤ G.stagePayoff hmem.2 a who)
@@ -311,7 +313,7 @@ theorem controller_correctedValuePotential_drift_ge_of_securityFamily
         discountRate s * expect d (fun o => y o - ε / 2) := by
     simpa [d, W, y] using
       controller_account_bellman_ge_of_securityFamily
-        hsecurity (discountRate_pos hs1)
+        hsecurity (discountRate_pos hs1) hrateUpper
         C opp hmem m hselect
   exact expect_correctedValuePotential_drift_ge_of_accountUpdate
     d y W hscale hMs hs1 hyLower hyUpper hε hsecant
@@ -1400,6 +1402,7 @@ theorem accountMemoryControllerOnUnitInterval_correctedPotential_drift_ge
       ∀ lam z, v lam z who ≤ lower + 1)
     (hsecurity :
       IsDiscountedStationarySecurityFamily (G := G) who x v)
+    (hrateUpper : ∀ s, M ≤ s → discountRate s ≤ 1)
     (hsecant : ∀ s, M ≤ s → ∀ s',
       γ⁻¹ * s ≤ s' → s' ≤ γ * s →
       discountRate s *
@@ -1444,7 +1447,8 @@ theorem accountMemoryControllerOnUnitInterval_correctedPotential_drift_ge
   have hs1 : 1 < s := hM1.trans_le hMs
   have hbase :=
     controller_correctedValuePotential_drift_ge_of_securityFamily
-      hsecurity C opp h k (by rfl) hscale hMs hs1 hε
+      hsecurity C opp h k (by rfl) hscale hMs hs1
+      (hrateUpper s hMs) hε
       (hpayLower h.2) (hpayUpper h.2)
       (hvalueLower (discountRate s))
       (hvalueUpper (discountRate s)) hε2
@@ -1569,6 +1573,7 @@ theorem accountMemoryControllerOnUnitInterval_beliefPotential_drift_ge
       ∀ lam z, v lam z who ≤ lower + 1)
     (hsecurity :
       IsDiscountedStationarySecurityFamily (G := G) who x v)
+    (hrateUpper : ∀ s, M ≤ s → discountRate s ≤ 1)
     (hsecant : ∀ s, M ≤ s → ∀ s',
       γ⁻¹ * s ≤ s' → s' ≤ γ * s →
       discountRate s *
@@ -1638,7 +1643,7 @@ theorem accountMemoryControllerOnUnitInterval_beliefPotential_drift_ge
     simpa [C, φ] using
       accountMemoryControllerOnUnitInterval_correctedPotential_drift_ge
         hfloor hM1 hε hε2 hpayLower hpayUpper
-        hvalueLower hvalueUpper hsecurity hsecant hbudget
+        hvalueLower hvalueUpper hsecurity hrateUpper hsecant hbudget
         opp h k
   have hlift :=
     C.beliefPotential_drift_ge opp φ h r hstep
@@ -2051,7 +2056,11 @@ theorem exists_accountControllerOnUnitInterval_bounded_beliefPotential_drift_of_
       accountMemoryControllerOnUnitInterval_beliefPotential_drift_ge
         hfloor hM1 hε.le (by linarith)
         hpayLower hpayUpper hvalueLower hvalueUpper
-        hsecurity hsecant
+        hsecurity
+        (fun s hs =>
+          discountRate_le_one_of_exp_one_le
+            (hexpM.trans hs))
+        hsecant
         (fun z s y hs hscale hyLower hyUpper =>
           hbudget z s hs M y hscale hyLower hyUpper)
         opp h
@@ -2105,7 +2114,7 @@ theorem exists_rowAccountController_bounded_beliefPotential_drift_of_puiseux
     (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
     (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
     (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
@@ -2272,7 +2281,9 @@ theorem exists_rowAccountController_bounded_beliefPotential_drift_of_puiseux
         hpayLower hpayUpper hvalueLower hvalueUpper
         (fun s hs =>
           hF (discountRate s)
-            (discountRate_pos (hM1.trans_le hs)))
+            (discountRate_pos (hM1.trans_le hs))
+            (discountRate_le_one_of_exp_one_le
+              (hexpM.trans hs)))
         hzs (fun s => hVzs (discountRate s))
         hsecant
         (fun z s y hs hscale hyLower hyUpper =>
@@ -2595,7 +2606,7 @@ theorem exists_rowAccountController_finiteAveragePayoff_ge_of_puiseux
     (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
     (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
     (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
@@ -2932,7 +2943,7 @@ theorem rowAccount_isOneSidedGuaranteeCertificateAt_of_puiseux
     (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
     (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
     (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
@@ -3188,7 +3199,7 @@ theorem colAccount_isOneSidedGuaranteeCertificate_of_puiseux_of_tendsto
     (hpayUpper : ∀ z a, G.stagePayoff z a 1 ≤ 0)
     (hvalueLower : ∀ lam z, -1 ≤ v lam z 1)
     (hvalueUpper : ∀ lam z, v lam z 1 ≤ 0)
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
@@ -3269,7 +3280,7 @@ theorem rowAccount_isOneSidedGuaranteeCertificate_of_puiseux
     (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
     (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
     (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
@@ -3325,7 +3336,7 @@ theorem rowAccount_isOneSidedGuaranteeCertificate_of_puiseux_of_tendsto
     (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
     (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
     (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
@@ -3361,7 +3372,7 @@ theorem isUniformEquilibriumPayoff_of_puiseux_discountedValue
     (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
     (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
     (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
-    (hF : ∀ lam, 0 < lam →
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
