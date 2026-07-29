@@ -53,6 +53,167 @@ structure NormalizedFinkSupportTangentDualObstruction
   target_eq_one :
     functional (G.finkSupportTangentTarget z H K) = 1
 
+/-- Unit vector in one residual-equation coordinate. -/
+noncomputable def finkSupportResidualBasis
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (s : G.State) (who : ι) :
+    G.FinkSupportTangentEquationVector := by
+  classical
+  exact (Pi.single s (Pi.single who 1), 0)
+
+/-- Unit vector in one supported-action equation coordinate. -/
+noncomputable def finkSupportActionBasis
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.FinkSupportTangentEquationVector := by
+  classical
+  exact (0, Pi.single s (Pi.single who (Pi.single d 1)))
+
+/-- Every supported-tangent equation vector is the finite sum of its
+residual and action coordinates against the corresponding unit vectors. -/
+theorem finkSupportTangentEquationVector_eq_sum_basis
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (x : G.FinkSupportTangentEquationVector) :
+    x =
+      (∑ s, ∑ who, x.1 s who • G.finkSupportResidualBasis s who) +
+      ∑ s, ∑ who, ∑ d,
+        x.2 s who d • G.finkSupportActionBasis s who d := by
+  classical
+  apply Prod.ext
+  · funext s who
+    simp [finkSupportResidualBasis, finkSupportActionBasis, Prod.fst_sum,
+      Pi.single_apply]
+  · funext s who d
+    suffices h :
+        x.2 s who d =
+          ∑ other, ∑ e,
+            x.2 s other e *
+              (Pi.single other (Pi.single e (1 : ℝ)) :
+                (who : ι) → G.Act who → ℝ) who d by
+      simpa [finkSupportResidualBasis, finkSupportActionBasis, Prod.snd_sum,
+        Pi.single_apply] using h
+    rw [Fintype.sum_eq_single who]
+    · simp [Pi.single_apply]
+    · intro other hother
+      simp [hother]
+
+/-- Coordinate expansion of a linear functional on the supported tangent
+equation space. -/
+theorem finkSupportTangentDual_apply_eq_sum
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (ℓ : Module.Dual ℝ G.FinkSupportTangentEquationVector)
+    (x : G.FinkSupportTangentEquationVector) :
+    ℓ x =
+      (∑ s, ∑ who,
+        x.1 s who * ℓ (G.finkSupportResidualBasis s who)) +
+      ∑ s, ∑ who, ∑ d,
+        x.2 s who d * ℓ (G.finkSupportActionBasis s who d) := by
+  classical
+  conv_lhs =>
+    rw [G.finkSupportTangentEquationVector_eq_sum_basis x]
+  simp only [map_add, map_sum, map_smul, smul_eq_mul]
+
+/-- A concrete signed flow certificate for tangent obstruction.
+
+`residualWeight` prices the harmonicity equations and `actionWeight` prices
+the supported-action equations.  `operator_balance` says the resulting
+signed flow annihilates every potential adjustment; `target_balance`
+normalizes the detected tangent imbalance to one. -/
+structure NormalizedFinkSupportTangentObstructionFlow
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι) where
+  residualWeight : G.State → ι → ℝ
+  actionWeight : G.State → ∀ who : ι, G.Act who → ℝ
+  operator_balance : ∀ A : G.State → Payoff ι,
+    (∑ s, ∑ who,
+      residualWeight s who *
+        G.finkContinuationResidualVector A z s who) +
+      ∑ s, ∑ who, ∑ d,
+        actionWeight s who d *
+          (if G.finkProfile z s who d ≠ 0 then
+            G.finkContinuationGain A z s who d else 0) = 0
+  target_balance :
+    ∑ s, ∑ who, ∑ d,
+      actionWeight s who d *
+        (if G.finkProfile z s who d ≠ 0 then
+          G.finkStageGain z s who d +
+            G.finkContinuationGain (H - K) z s who d else 0) = 1
+
+/-- A normalized obstruction flow must charge at least one supported action
+whose tangent target is nonzero.  Thus the coordinate certificate contains a
+concrete location at which any obstruction response has to act. -/
+theorem NormalizedFinkSupportTangentObstructionFlow.exists_active_target_coordinate
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K) :
+    ∃ s, ∃ who, ∃ d : G.Act who,
+      G.finkProfile z s who d ≠ 0 ∧
+        F.actionWeight s who d ≠ 0 ∧
+          G.finkStageGain z s who d +
+            G.finkContinuationGain (H - K) z s who d ≠ 0 := by
+  classical
+  by_contra hactive
+  push Not at hactive
+  have hzero :
+      (∑ s, ∑ who, ∑ d,
+        F.actionWeight s who d *
+          (if G.finkProfile z s who d ≠ 0 then
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d else 0)) = 0 := by
+    apply Finset.sum_eq_zero
+    intro s hs
+    apply Finset.sum_eq_zero
+    intro who hwho
+    apply Finset.sum_eq_zero
+    intro d hd
+    by_cases hsupp : G.finkProfile z s who d ≠ 0
+    · rw [if_pos hsupp]
+      by_cases hweight : F.actionWeight s who d = 0
+      · simp [hweight]
+      · rw [hactive s who d hsupp hweight]
+        simp
+    · simp [hsupp]
+  have hbalance := F.target_balance
+  rw [hzero] at hbalance
+  norm_num at hbalance
+
+/-- Extract the explicit signed obstruction flow from a normalized dual
+functional. -/
+def NormalizedFinkSupportTangentDualObstruction.toObstructionFlow
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (O : G.NormalizedFinkSupportTangentDualObstruction z H K) :
+    G.NormalizedFinkSupportTangentObstructionFlow z H K where
+  residualWeight := fun s who =>
+    O.functional (G.finkSupportResidualBasis s who)
+  actionWeight := fun s who d =>
+    O.functional (G.finkSupportActionBasis s who d)
+  operator_balance := by
+    intro A
+    have h := G.finkSupportTangentDual_apply_eq_sum O.functional
+      (G.finkSupportTangentOperator z A)
+    rw [O.operator_eq_zero A] at h
+    simpa [finkSupportTangentOperator, mul_comm] using h.symm
+  target_balance := by
+    have h := G.finkSupportTangentDual_apply_eq_sum O.functional
+      (G.finkSupportTangentTarget z H K)
+    rw [O.target_eq_one] at h
+    simpa [finkSupportTangentTarget, mul_comm] using h.symm
+
 /-- Forget the normalization while retaining the obstruction. -/
 def NormalizedFinkSupportTangentDualObstruction.toDualObstruction
     (G : StochasticGame ι)
@@ -164,6 +325,28 @@ theorem exists_harmonicAdjustment_or_normalizedDualObstruction
   · obtain ⟨O⟩ := hO
     exact Or.inr ⟨O.normalize⟩
 
+/-- Coordinate form of the tangent branch point.  The infeasible branch
+exposes finite signed residual and action weights, together with an active
+supported target coordinate. -/
+theorem exists_harmonicAdjustment_or_normalizedObstructionFlow
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι) :
+    (∃ A : G.State → Payoff ι,
+      G.finkContinuationResidualVector A z = 0 ∧
+        ∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+          G.finkContinuationGain A z s who d =
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d) ∨
+      Nonempty
+        (G.NormalizedFinkSupportTangentObstructionFlow z H K) := by
+  rcases G.exists_harmonicAdjustment_or_normalizedDualObstruction z H K with
+    hA | hO
+  · exact Or.inl hA
+  · obtain ⟨O⟩ := hO
+    exact Or.inr ⟨O.toObstructionFlow⟩
+
 namespace FinkSelectionCounterexample
 namespace Base
 
@@ -231,6 +414,27 @@ theorem selection_resistant_tangent_normalizedDualObstruction :
       (game.NormalizedFinkSupportTangentDualObstruction selectionLimitPoint
         (0 : CState → Payoff Player) 0) :=
   ⟨selectionTangentDualObstruction.normalize⟩
+
+/-- Coordinate signed-flow form of the selection-resistant obstruction. -/
+theorem selection_resistant_tangent_normalizedObstructionFlow :
+    Nonempty
+      (game.NormalizedFinkSupportTangentObstructionFlow selectionLimitPoint
+        (0 : CState → Payoff Player) 0) :=
+  ⟨selectionTangentDualObstruction.normalize.toObstructionFlow⟩
+
+/-- The selection-resistant flow necessarily identifies a supported action
+with nonzero tangent target and nonzero obstruction weight. -/
+theorem selection_resistant_tangent_active_target_coordinate :
+    ∃ s, ∃ who, ∃ d : game.Act who,
+      game.finkProfile selectionLimitPoint s who d ≠ 0 ∧
+        selectionTangentDualObstruction.normalize.toObstructionFlow.actionWeight
+          s who d ≠ 0 ∧
+          game.finkStageGain selectionLimitPoint s who d +
+            game.finkContinuationGain
+              ((0 : CState → Payoff Player) - 0)
+              selectionLimitPoint s who d ≠ 0 :=
+  selectionTangentDualObstruction.normalize.toObstructionFlow
+    |>.exists_active_target_coordinate
 
 /-- The obstruction data rules out supported harmonic adjustment in the
 selection-resistant game. -/
