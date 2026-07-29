@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.Adaptive
 import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.SpecialFunctions.Log.InvLog
+import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 
 /-!
 # The stochastic account update for uniform zero-sum strategies
@@ -38,7 +39,7 @@ namespace GameTheory
 namespace StochasticGame
 namespace MertensNeymanAccount
 
-open Filter Math.Probability Topology
+open Asymptotics Filter Math.Probability Topology
 
 /-- The slow discount schedule used by the stochastic account
 construction. -/
@@ -89,6 +90,39 @@ theorem hasDerivAt_discountRate {s : ℝ} (hs : 1 < s) :
   unfold discountRate
   convert hinv using 1
   all_goals first | rfl | field_simp [hs0, hlog0]
+
+/-- Chain rule for a discounted-value coordinate evaluated along the
+slow account schedule. -/
+theorem hasDerivAt_comp_discountRate
+    {W W' : ℝ → ℝ} {s : ℝ} (hs : 1 < s)
+    (hW : HasDerivAt W (W' (discountRate s)) (discountRate s)) :
+    HasDerivAt (fun u => W (discountRate u))
+      (W' (discountRate s) *
+        (-(discountRate s) ^ 2 *
+          ((Real.log s) ^ 2 + 2 * Real.log s))) s := by
+  exact hW.comp s (hasDerivAt_discountRate hs)
+
+/-- A bound on the Puiseux derivative envelope gives the corresponding
+rate-weighted bound after composition with the account schedule. -/
+theorem abs_comp_discountRate_deriv_le_of_envelope
+    {η s : ℝ} {W' : ℝ → ℝ} (hs : 1 < s)
+    (henvelope :
+      |W' (discountRate s)| * discountRate s *
+          ((Real.log s) ^ 2 + 2 * Real.log s) ≤ η) :
+    |W' (discountRate s) *
+        (-(discountRate s) ^ 2 *
+          ((Real.log s) ^ 2 + 2 * Real.log s))| ≤
+      η * discountRate s := by
+  have hr : 0 ≤ discountRate s := (discountRate_pos hs).le
+  have hlog : 0 ≤ Real.log s := (Real.log_pos hs).le
+  have hsum :
+      0 ≤ (Real.log s) ^ 2 + 2 * Real.log s := by
+    nlinarith [sq_nonneg (Real.log s), hlog]
+  have hscaled :=
+    mul_le_mul_of_nonneg_right henvelope hr
+  simp only [abs_mul, abs_neg, abs_pow, abs_of_nonneg hr,
+    abs_of_nonneg hsum]
+  nlinarith
 
 /-- Mean-value form of the identity that the logarithmic corrector is an
 antiderivative of the negative discount rate. -/
@@ -241,6 +275,183 @@ theorem discountRate_antitoneOn :
   unfold discountRate
   exact one_div_le_one_div_of_le
     (mul_pos ha0 (sq_pos_of_pos hloga)) hden
+
+/-- The slow discount schedule vanishes along large accounts. -/
+theorem tendsto_discountRate_atTop :
+    Tendsto discountRate atTop (𝓝 0) := by
+  apply squeeze_zero'
+  · filter_upwards [eventually_gt_atTop (1 : ℝ)] with s hs
+    exact (discountRate_pos hs).le
+  · filter_upwards [eventually_gt_atTop (Real.exp 1)] with s hs
+    have hs1 : 1 < s :=
+      (Real.one_lt_exp_iff.mpr zero_lt_one).trans hs
+    have hs0 : 0 < s := lt_trans zero_lt_one hs1
+    have hlog1 : 1 < Real.log s :=
+      (Real.lt_log_iff_exp_lt hs0).2 hs
+    change discountRate s ≤ s⁻¹
+    unfold discountRate
+    rw [one_div]
+    exact inv_anti₀ hs0
+      (le_mul_of_one_le_right hs0.le (by nlinarith))
+  · exact (tendsto_inv_atTop_zero :
+      Tendsto (fun s : ℝ => s⁻¹) atTop (𝓝 0))
+
+/-- For every positive Puiseux exponent `β`, the logarithmic factor in the
+chain-rule envelope is dominated by the polynomial account decay. -/
+theorem tendsto_discountRate_rpow_mul_logPolynomial
+    {β : ℝ} (hβ : 0 < β) :
+    Tendsto (fun s : ℝ =>
+      discountRate s ^ β *
+        ((Real.log s) ^ 2 + 2 * Real.log s))
+      atTop (𝓝 0) := by
+  have hlogRatio :
+      Tendsto (fun s : ℝ =>
+        (Real.log s) ^ 2 / s ^ β) atTop (𝓝 0) := by
+    have h :=
+      (isLittleO_log_rpow_rpow_atTop
+        (2 : ℝ) hβ).tendsto_div_nhds_zero
+    apply h.congr'
+    filter_upwards [eventually_gt_atTop (1 : ℝ)] with s hs
+    rw [Real.rpow_two]
+  have hupper :
+      Tendsto (fun s : ℝ =>
+        3 * ((Real.log s) ^ 2 / s ^ β)) atTop (𝓝 0) := by
+    simpa using
+      (show Tendsto (fun _ : ℝ => (3 : ℝ)) atTop (𝓝 3) from
+        tendsto_const_nhds).mul hlogRatio
+  apply squeeze_zero'
+  · filter_upwards [eventually_gt_atTop (Real.exp 1)] with s hs
+    have hs1 : 1 < s :=
+      (Real.one_lt_exp_iff.mpr zero_lt_one).trans hs
+    have hs0 : 0 < s := lt_trans zero_lt_one hs1
+    have hlog1 : 1 < Real.log s :=
+      (Real.lt_log_iff_exp_lt hs0).2 hs
+    exact mul_nonneg
+      (Real.rpow_nonneg (discountRate_pos hs1).le β)
+      (by nlinarith)
+  · filter_upwards [eventually_gt_atTop (Real.exp 1)] with s hs
+    have hs1 : 1 < s :=
+      (Real.one_lt_exp_iff.mpr zero_lt_one).trans hs
+    have hs0 : 0 < s := lt_trans zero_lt_one hs1
+    have hlog1 : 1 < Real.log s :=
+      (Real.lt_log_iff_exp_lt hs0).2 hs
+    have hrateLe : discountRate s ≤ 1 / s := by
+      unfold discountRate
+      apply one_div_le_one_div_of_le hs0
+      exact le_mul_of_one_le_right hs0.le (by nlinarith)
+    have hrpowLe :
+        discountRate s ^ β ≤ (1 / s) ^ β :=
+      Real.monotoneOn_rpow_Ici_of_exponent_nonneg hβ.le
+        (discountRate_pos hs1).le (one_div_nonneg.mpr hs0.le)
+        hrateLe
+    have hsum :
+        (Real.log s) ^ 2 + 2 * Real.log s ≤
+          3 * (Real.log s) ^ 2 := by
+      nlinarith [sq_nonneg (Real.log s - 1)]
+    calc
+      discountRate s ^ β *
+          ((Real.log s) ^ 2 + 2 * Real.log s) ≤
+          (1 / s) ^ β *
+            ((Real.log s) ^ 2 + 2 * Real.log s) :=
+        mul_le_mul_of_nonneg_right hrpowLe (by positivity)
+      _ ≤ (1 / s) ^ β * (3 * (Real.log s) ^ 2) :=
+        mul_le_mul_of_nonneg_left hsum
+          (Real.rpow_nonneg (one_div_nonneg.mpr hs0.le) β)
+      _ = 3 * ((Real.log s) ^ 2 / s ^ β) := by
+        rw [show (1 / s) ^ β = (s ^ β)⁻¹ by
+          simpa [one_div] using Real.inv_rpow hs0.le β]
+        ring
+  · exact hupper
+
+/-- A scalar Puiseux derivative envelope for the discounted value becomes
+the rate-weighted derivative bound required by the account argument.
+The logarithmic factors disappear against every positive Puiseux power. -/
+theorem exists_tail_comp_discountRate_deriv_bound_of_puiseux
+    {ε β lam0 : ℝ} {W W' : ℝ → ℝ}
+    (hε : 0 < ε) (hβ : 0 < β) (hlam0 : 0 < lam0)
+    (hWderiv : ∀ lam, 0 < lam → lam < lam0 →
+      HasDerivAt W (W' lam) lam)
+    (hWbound : ∀ lam, 0 < lam → lam < lam0 →
+      |W' lam| ≤ lam ^ (β - 1) / lam0) :
+    ∃ M0 : ℝ, 1 < M0 ∧ ∀ s : ℝ, M0 ≤ s →
+      HasDerivAt (fun u => W (discountRate u))
+        (W' (discountRate s) *
+          (-(discountRate s) ^ 2 *
+            ((Real.log s) ^ 2 + 2 * Real.log s))) s ∧
+      |W' (discountRate s) *
+          (-(discountRate s) ^ 2 *
+            ((Real.log s) ^ 2 + 2 * Real.log s))| ≤
+        (ε * ((1 + ε / 9) - 1)) * discountRate s := by
+  let η : ℝ := ε * ((1 + ε / 9) - 1)
+  have hη : 0 < η := by
+    dsimp [η]
+    nlinarith [sq_pos_of_pos hε]
+  have hscaled :
+      Tendsto (fun s : ℝ =>
+        (discountRate s ^ β *
+          ((Real.log s) ^ 2 + 2 * Real.log s)) / lam0)
+        atTop (𝓝 0) := by
+    simpa [hlam0.ne'] using
+      (tendsto_discountRate_rpow_mul_logPolynomial hβ).div_const lam0
+  have hsmall : ∀ᶠ s : ℝ in atTop,
+      (discountRate s ^ β *
+        ((Real.log s) ^ 2 + 2 * Real.log s)) / lam0 < η :=
+    (tendsto_order.1 hscaled).2 η hη
+  have hrate_lt : ∀ᶠ s : ℝ in atTop,
+      discountRate s < lam0 :=
+    (tendsto_order.1 tendsto_discountRate_atTop).2 lam0 hlam0
+  have heventually : ∀ᶠ s : ℝ in atTop,
+      1 < s ∧ discountRate s < lam0 ∧
+        (discountRate s ^ β *
+          ((Real.log s) ^ 2 + 2 * Real.log s)) / lam0 < η := by
+    filter_upwards [eventually_gt_atTop (1 : ℝ), hrate_lt, hsmall]
+      with s hs hsrate hssmall
+    exact ⟨hs, hsrate, hssmall⟩
+  obtain ⟨M, hM⟩ := eventually_atTop.1 heventually
+  refine ⟨max 2 M, lt_of_lt_of_le (by norm_num) (le_max_left _ _), ?_⟩
+  intro s hs
+  have hsM : M ≤ s := (le_max_right _ _).trans hs
+  obtain ⟨hs1, hrate_lt_s, hsmall_s⟩ := hM s hsM
+  have hrate_pos : 0 < discountRate s := discountRate_pos hs1
+  have hsum :
+      0 ≤ (Real.log s) ^ 2 + 2 * Real.log s := by
+    nlinarith [sq_nonneg (Real.log s), (Real.log_pos hs1).le]
+  have hrpow :
+      discountRate s ^ (β - 1) * discountRate s =
+        discountRate s ^ β := by
+    calc
+      discountRate s ^ (β - 1) * discountRate s =
+          discountRate s ^ (β - 1) *
+            discountRate s ^ (1 : ℝ) := by
+              rw [Real.rpow_one]
+      _ = discountRate s ^ ((β - 1) + 1) := by
+        rw [Real.rpow_add hrate_pos]
+      _ = discountRate s ^ β := by ring_nf
+  have henvelope :
+      |W' (discountRate s)| * discountRate s *
+          ((Real.log s) ^ 2 + 2 * Real.log s) ≤ η := by
+    calc
+      |W' (discountRate s)| * discountRate s *
+          ((Real.log s) ^ 2 + 2 * Real.log s) =
+          |W' (discountRate s)| *
+            (discountRate s *
+              ((Real.log s) ^ 2 + 2 * Real.log s)) := by ring
+      _ ≤ (discountRate s ^ (β - 1) / lam0) *
+            (discountRate s *
+              ((Real.log s) ^ 2 + 2 * Real.log s)) := by
+        exact mul_le_mul_of_nonneg_right
+          (hWbound (discountRate s) hrate_pos hrate_lt_s)
+          (mul_nonneg hrate_pos.le hsum)
+      _ = (discountRate s ^ β *
+            ((Real.log s) ^ 2 + 2 * Real.log s)) / lam0 := by
+        rw [div_eq_mul_inv, ← hrpow]
+        ring
+      _ ≤ η := hsmall_s.le
+  constructor
+  · exact hasDerivAt_comp_discountRate hs1
+      (hWderiv (discountRate s) hrate_pos hrate_lt_s)
+  · exact abs_comp_discountRate_deriv_le_of_envelope hs1
+      (by simpa [η] using henvelope)
 
 /-- For the published step `γ = 1 + ε/9` with `ε < 1/4`, both logarithmic
 switch factors are eventually at most `1/32`. -/
@@ -1202,6 +1413,30 @@ theorem exists_floor_switchBudget_le_of_deriv_bound
     hε hεquarter fun ha hab =>
       abs_value_sub_le_corrector_sub_of_deriv_bound
         hM₀ hderiv hbound ha hab
+
+/-- A Puiseux derivative envelope for one discounted-value coordinate
+supplies the complete rare-switch estimate for that coordinate. -/
+theorem exists_floor_switchBudget_le_of_puiseux_deriv_bound
+    {ε β lam0 : ℝ} {W W' : ℝ → ℝ}
+    (hε : 0 < ε) (hεquarter : ε < 1 / 4)
+    (hβ : 0 < β) (hlam0 : 0 < lam0)
+    (hWderiv : ∀ lam, 0 < lam → lam < lam0 →
+      HasDerivAt W (W' lam) lam)
+    (hWbound : ∀ lam, 0 < lam → lam < lam0 →
+      |W' lam| ≤ lam ^ (β - 1) / lam0) :
+    ∃ S : ℝ, ∀ s : ℝ, S ≤ s → ∀ M y : ℝ,
+      IsValidScale (1 + ε / 9) s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget (1 + ε / 9) M s y
+          (fun u => W (discountRate u)) ≤
+        ε * discountRate s / 16 := by
+  obtain ⟨M0, hM0, htail⟩ :=
+    exists_tail_comp_discountRate_deriv_bound_of_puiseux
+      hε hβ hlam0 hWderiv hWbound
+  exact exists_floor_switchBudget_le_of_deriv_bound
+    hε hεquarter hM0
+    (fun s hs => (htail s hs).1)
+    (fun s hs => (htail s hs).2)
 
 /-- A sufficient adjacent-variation criterion for the weighted switch
 budget. The permitted pointwise changes are proportional to the sizes of
