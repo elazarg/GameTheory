@@ -117,6 +117,39 @@ theorem expect_predictableScoreSum_eq_expect_conditionalMeanSum [Finite Ω]
         rw [expect_const]
       rw [hraw, hmean, expect_add, expect_add, ih]
 
+/-- A uniform per-round conditional-mean lower bound accumulates linearly along every history. -/
+theorem mul_le_predictableConditionalMeanSum
+    (step : ∀ n, (Fin n → Ω) → PMF Ω)
+    (score : ∀ n, (Fin n → Ω) → Ω → ℝ)
+    {δ : ℝ} (hdrift : ∀ n history, δ ≤ expect (step n history) (score n history))
+    (T : ℕ) (history : Fin T → Ω) :
+    T * δ ≤ predictableConditionalMeanSum step score T history := by
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      rw [predictableConditionalMeanSum]
+      have hprev := ih (Fin.init history)
+      have hstep := hdrift T (Fin.init history)
+      push_cast
+      nlinarith
+
+/-- Persistent positive conditional drift yields a linear expected cumulative-score lower bound. -/
+theorem mul_le_expect_predictableScoreSum [Finite Ω]
+    (step : ∀ n, (Fin n → Ω) → PMF Ω)
+    (score : ∀ n, (Fin n → Ω) → Ω → ℝ)
+    {δ : ℝ} (hdrift : ∀ n history, δ ≤ expect (step n history) (score n history))
+    (T : ℕ) :
+    T * δ ≤ expect (adaptiveHistoryLaw step T) (predictableScoreSum score T) := by
+  rw [expect_predictableScoreSum_eq_expect_conditionalMeanSum]
+  calc
+    (T : ℝ) * δ =
+        expect (adaptiveHistoryLaw step T) (fun _ => (T : ℝ) * δ) := by
+          rw [expect_const]
+    _ ≤ expect (adaptiveHistoryLaw step T)
+          (predictableConditionalMeanSum step score T) :=
+      expect_mono _ _ _ fun history =>
+        mul_le_predictableConditionalMeanSum step score hdrift T history
+
 /-- Finite-horizon martingale identity for a predictable score with zero conditional mean. -/
 theorem expect_predictableScoreSum_eq_zero [Finite Ω]
     (step : ∀ n, (Fin n → Ω) → PMF Ω)

@@ -297,6 +297,35 @@ theorem expect_predictableAnytimePMFCoordinateMonitorCumulativeScore_eq_drift
   exact expect_predictablePMFCoordinateMonitorCumulativeScore_eq_drift
     baseline comparison (predictableAnytimePMFCoordinateMonitorChoice baseline) T
 
+/-- If the causal anytime monitor has conditional oriented coordinate drift at least `δ` after
+    every public history, then its expected cumulative score is at least `Tδ`. -/
+theorem mul_le_expect_predictableAnytimePMFCoordinateMonitorCumulativeScore
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω)
+    (comparison : ∀ n, (Fin n → Ω) → PMF Ω)
+    {δ : ℝ}
+    (hdrift : ∀ n history,
+      δ ≤ expect
+        (predictableAnytimePMFCoordinateMonitorChoice baseline n history)
+        (fun monitor =>
+          (if monitor.2 then 1 else -1) *
+            (((comparison n history) monitor.1).toReal -
+              (baseline monitor.1).toReal)))
+    (T : ℕ) :
+    T * δ ≤
+      expect (adaptiveHistoryLaw comparison T)
+        (predictablePMFCoordinateMonitorCumulativeScore baseline
+          (predictableAnytimePMFCoordinateMonitorChoice baseline) T) := by
+  apply mul_le_expect_predictableScoreSum comparison
+    (predictablePMFCoordinateMonitorScore baseline
+      (predictableAnytimePMFCoordinateMonitorChoice baseline))
+  intro n history
+  change δ ≤ expect (comparison n history)
+    (weightedPMFCoordinateMonitorScore baseline
+      (predictableAnytimePMFCoordinateMonitorChoice baseline n history))
+  rw [expect_weightedPMFCoordinateMonitorScore_eq_difference]
+  exact hdrift n history
+
 /-- Every fixed coordinate monitor has vanishing positive average regret against the one
     horizon-independent weighted monitor. This statement is pathwise in the observed outcomes. -/
 theorem eventually_anytimePMFCoordinateMonitor_regret_div_lt
