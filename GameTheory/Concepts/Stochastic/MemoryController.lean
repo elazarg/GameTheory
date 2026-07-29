@@ -440,5 +440,72 @@ theorem MemoryController.behaviorOutcome_belief_succ_tagged
   rw [← C.bind_belief_outcomeKernel opp h]
   exact (C.belief_outcome_update_tagged opp h).symm
 
+/-- History potential obtained by averaging a memory-dependent potential under
+the controller's posterior belief. -/
+noncomputable def MemoryController.beliefPotential
+    {G : StochasticGame ι} {who : ι} (C : G.MemoryController who)
+    (φ : (t : ℕ) → G.Hist t → C.Mem t → ℝ) :
+    G.HistoryPotential :=
+  fun t h => expect (C.belief t h) (φ t h)
+
+/-- The one-step continuation of a posterior-averaged memory potential under
+the induced behavioral strategy equals the memory-first nested expectation.
+This is the history-law transport used by stochastic account certificates. -/
+theorem MemoryController.historyContinuationEU_beliefPotential
+    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)] [Finite G.State]
+    {who : ι} (C : G.MemoryController who) (opp : G.BehaviorProfile)
+    (φ : (t : ℕ) → G.Hist t → C.Mem t → ℝ)
+    {t : ℕ} (h : G.Hist t) :
+    G.historyContinuationEU
+        (Function.update opp who C.behaviorStrategy)
+        (C.beliefPotential φ) h =
+      expect (C.belief t h) (fun m =>
+        expect (C.outcomeKernel opp h m) (fun o =>
+          expect (C.update t h o.1 o.2 m) (fun m' =>
+            φ (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) m'))) := by
+  letI : ∀ i, Fintype (G.Act i) :=
+    fun i => Fintype.ofFinite (G.Act i)
+  letI : Fintype G.State := Fintype.ofFinite G.State
+  letI : Fintype (C.Mem t) := C.finiteMem t
+  letI : Fintype (C.Mem (t + 1)) := C.finiteMem (t + 1)
+  let F : (G.JointAct × G.State) × C.Mem (t + 1) → ℝ :=
+    fun z => φ (t + 1)
+      (Fin.snoc h.1 (h.2, z.1.1), z.1.2) z.2
+  have hlaw := C.behaviorOutcome_belief_succ_tagged opp h
+  have hExp :=
+    congrArg (fun p : PMF ((G.JointAct × G.State) × C.Mem (t + 1)) =>
+      expect p F) hlaw
+  simp only [expect_bind, expect_pure] at hExp
+  unfold historyContinuationEU MemoryController.beliefPotential
+  unfold MemoryController.behaviorOutcomeKernel at hExp
+  simp only [expect_bind, expect_pure] at hExp ⊢
+  exact hExp
+
+/-- Pointwise memory drift inequalities average to a genuine historywise drift
+for the posterior potential under the induced behavioral strategy. -/
+theorem MemoryController.beliefPotential_drift_ge
+    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)] [Finite G.State]
+    {who : ι} (C : G.MemoryController who) (opp : G.BehaviorProfile)
+    (φ : (t : ℕ) → G.Hist t → C.Mem t → ℝ)
+    {t : ℕ} (h : G.Hist t) (r : C.Mem t → ℝ)
+    (hstep : ∀ m,
+      r m ≤
+        expect (C.outcomeKernel opp h m) (fun o =>
+          expect (C.update t h o.1 o.2 m) (fun m' =>
+            φ (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) m')) -
+          φ t h m) :
+    expect (C.belief t h) r ≤
+      G.historyContinuationEU
+          (Function.update opp who C.behaviorStrategy)
+          (C.beliefPotential φ) h -
+        C.beliefPotential φ t h := by
+  letI : Fintype (C.Mem t) := C.finiteMem t
+  rw [C.historyContinuationEU_beliefPotential opp φ h]
+  unfold MemoryController.beliefPotential
+  rw [← expect_sub]
+  exact expect_mono _ _ _ hstep
+
 end StochasticGame
 end GameTheory

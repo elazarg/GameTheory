@@ -1147,6 +1147,25 @@ theorem expect_accountAtLevel_nextAccountLevel
       accountAtLevel_nextAccountLevel_down
         (ne_of_gt (lt_trans zero_lt_one h.1)) k hkpos]
 
+/-- Change-of-variables form used by the concrete memory controller: after
+mapping account moves to the next finite exponent, every real account
+potential has the same expectation as under `nextAccount`. -/
+theorem expect_map_nextAccountLevel_accountPotential
+    {t : ℕ} {γ M y : ℝ} (k : Fin (t + 1))
+    (h : IsValidScale γ (accountAtLevel γ M k))
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2) (f : ℝ → ℝ) :
+    expect
+        ((updatePMF γ M (accountAtLevel γ M k) y
+          h hyLower hyUpper).map (nextAccountLevel k))
+        (fun k' => f (accountAtLevel γ M k')) =
+      expect (updatePMF γ M (accountAtLevel γ M k) y
+        h hyLower hyUpper)
+        (fun move =>
+          f (nextAccount γ (accountAtLevel γ M k) move)) := by
+  rw [expect_map]
+  exact expect_accountAtLevel_nextAccountLevel
+    k h hyLower hyUpper f
+
 /-- The expected absolute account jump is at most the magnitude of the
 payoff/value gap. Away from the floor the inequality is an equality:
 the positive and negative parts of `y` pay exactly for the corresponding
