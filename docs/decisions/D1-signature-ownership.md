@@ -108,3 +108,65 @@ This is recorded as additional negative evidence for bundling. It is not enough
 to flip the decision on its own — the Phase 1 downstream-signature advantage
 still stands — but D1 stays provisional and the Phase 4 transformation trial
 should weigh it explicitly.
+
+---
+
+## Phase 4 recheck and decision (2026-07-29)
+
+- **Status:** decided. A form stores its signature.
+- **Experiment ID:** EXP-020.
+
+The provisional decision named three transformations to be rerun and one
+condition that would overturn it: the accepted design *repeatedly* needing
+signature equalities or user-visible transports. Both have now been done.
+
+### The tests
+
+*Nested operation chain.* Relabel outcomes, take the mixed extension, form a
+product, and state the evaluation law. Reduction proves it in both candidates.
+Neutral.
+
+*Reindex round trip, along `e` and then `e.symm`.* This one discriminates, and it
+discriminates against indexing. Reindexing forward and back does not return to
+the same signature by reduction — the strategy carrier becomes
+`sig.Strategy (e.symm (e i))`, which is the original only propositionally. Under
+indexing the two sides therefore live in different types and the statement
+**cannot be written at all** without a signature equality to transport along;
+`subst` cannot remove that hypothesis, because the signature occurs on both sides
+of it. Under bundling both sides are `Form ι` and the statement needs neither.
+
+*Equivalence lifted through mixed extension.* Reindexing commutes with the mixed
+extension only up to interchanging the independent product with the relabelling
+of players. That is a real lemma in both candidates — reduction is rejected on
+both sides. Neutral, and not free either way.
+
+### The counter-evidence, weighed rather than dismissed
+
+Two spikes measured the other axis and both favour indexing. Every one of the
+32 reducibility annotations in the library is forced by a stored carrier; they
+carry 243 projection sites; an omission fails late and far from its cause; and
+an induction over histories must have its index written at the projection rather
+than at the carrier. Nothing in the library requires the carriers to be stored:
+no structure holds a protocol as a field, nothing quantifies over protocols whose
+carriers must vary. At the static layer indexing would halve the annotations
+rather than clear them, since the signature transformers must stay reducible
+either way.
+
+### Result
+
+The overturn condition did not fire. It asked whether the accepted design
+repeatedly needs signature equalities or user-visible transports; across the
+three named tests it needs none in any statement, while the indexed candidate
+needs both in one of them. The decision was taken on downstream signature
+ergonomics and the recheck was aimed at exactly that axis, which is why it, and
+not the annotation count, settles the matter.
+
+Bundling stands. The reducibility tax is real, is now measured, and is accepted
+as a known bounded cost rather than left as folklore: `phase2-audit.ps1` fails if
+any literal instance of a carrier-bearing structure is not reducible, which
+converts the late and confusing failure into an immediate one and recovers most
+of what indexing was offering.
+
+**Consequences for public API:** unchanged. Forms keep a `sig` field, protocols
+keep their state and action carriers, and every literal instance of such a
+structure is `@[reducible]` — now enforced rather than remembered.

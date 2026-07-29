@@ -103,6 +103,29 @@ Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
 Report 'TRANSPORT_PHASE1_EVIDENCE' (Count-Pattern $Phase1Files $TransportPattern)
+# D1 keeps the carriers as fields, and the price is that every instance of a
+# carrier-bearing structure must be reducible or elaboration fails at some
+# distant use site. That failure is far from its cause, so it is checked here
+# instead of being left to whoever trips over it.
+$CarrierStructures = 'ExecutionProtocol|InfoSignals|InformationModel|GameForm|Tree'
+$unannotated = 0
+foreach ($f in $AllFiles) {
+  if ($f.StartsWith('GameTheory/Experimental')) { continue }
+  $lines = [IO.File]::ReadAllLines((Join-Path $RepoRoot $f))
+  for ($i = 0; $i -lt $lines.Count; $i++) {
+    # Only literal instances — a structure built field by field. A definition
+    # that merely takes or returns one by application needs no annotation.
+    if ($lines[$i] -notmatch "^\s*def\s+\S+.*:\s*($CarrierStructures)\b[^:]*\bwhere\s*$") { continue }
+    $j = $i - 1
+    while ($j -ge 0 -and ($lines[$j].Trim() -eq '' -or $lines[$j] -match '^\s*(/--|--|\S.*-/$)' -or
+        $lines[$j] -match '^\s*[a-z]' -and $lines[$j] -notmatch '^\s*(def|theorem|end)\b')) { $j-- }
+    if ($j -lt 0 -or $lines[$j].Trim() -ne '@[reducible]') {
+      $unannotated++
+      Write-Output "CARRIER_INSTANCE_UNANNOTATED=${f}:$($i + 1)"
+    }
+  }
+}
+Report 'CARRIER_INSTANCES_NOT_REDUCIBLE' $unannotated
 Report 'TRANSPORT_PHASE4_EVIDENCE' (Count-Pattern $Phase4Files $TransportPattern)
 # Every library file belongs to exactly one transport budget. An unbucketed file
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
@@ -258,8 +281,12 @@ if ($VerifyExpected) {
     TRANSPORT_PHASE2_SOURCE = 1
     TRANSPORT_PHASE3_SOURCE = 0
     TRANSPORT_PHASE2_PROBE = 0
-    TRANSPORT_PHASE4_EVIDENCE = 0
+    # One, and it is the measurement rather than a defect: the indexed
+    # round-trip statement cannot be written without a signature equality to
+    # transport along, which is the evidence the recheck exists to produce.
+    TRANSPORT_PHASE4_EVIDENCE = 1
     UNBUCKETED_FILES = 0
+    CARRIER_INSTANCES_NOT_REDUCIBLE = 0
     FINTYPE_OF_FINITE = 0
     ALGORITHM_OPEN_CLASSICAL = 0
     SORRY_OR_ADMIT = 0
