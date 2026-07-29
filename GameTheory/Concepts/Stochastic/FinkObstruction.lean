@@ -307,6 +307,20 @@ theorem finkSupportTangentDual_apply_eq_sum
   rw [← G.expect_finkStateKernel_eq]
   simp
 
+/-- Every continuation residual is the one-step Markov drift of the corresponding player
+    coordinate under the baseline Fink state kernel. -/
+theorem finkContinuationResidualVector_eq_expect_stateKernel
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι]
+    [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (A : G.State → Payoff ι)
+    (s : G.State) (who : ι) :
+    G.finkContinuationResidualVector A z s who =
+      expect (G.finkStateKernel z s) (fun t => A t who) - A s who := by
+  unfold finkContinuationResidualVector finkContinuationResidual
+    finkContinuationEU
+  rw [← G.expect_finkStateKernel_eq]
+
 @[simp] theorem finkContinuationResidualVector_playerPotential_of_ne
     (G : StochasticGame ι)
     [Fintype G.State] [Fintype ι] [DecidableEq ι]
@@ -370,6 +384,215 @@ structure NormalizedFinkSupportTangentObstructionFlow
         (if G.finkProfile z s who d ≠ 0 then
           G.finkStageGain z s who d +
             G.finkContinuationGain (H - K) z s who d else 0) = 1
+
+/-- A strictly positive stationary weight for the baseline Fink state kernel. Normalization is
+    unnecessary for signed-flow repair; positivity and annihilation of every Markov drift are the
+    exact properties used below. -/
+structure FullSupportFinkStationaryWeight
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U) where
+  weight : G.State → ℝ
+  weight_pos : ∀ s, 0 < weight s
+  stationary_balance : ∀ w : G.State → ℝ,
+    ∑ s, weight s * (expect (G.finkStateKernel z s) w - w s) = 0
+
+/-- A nonnegative stationary weight that gives positive mass to one designated state. In finite
+    Markov-chain language, this is the exact local witness that the state belongs to some
+    recurrent class. -/
+structure FinkStationaryWeightAt
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (target : G.State) where
+  weight : G.State → ℝ
+  weight_nonneg : ∀ s, 0 ≤ weight s
+  target_pos : 0 < weight target
+  stationary_balance : ∀ w : G.State → ℝ,
+    ∑ s, weight s * (expect (G.finkStateKernel z s) w - w s) = 0
+
+namespace FullSupportFinkStationaryWeight
+
+/-- If every state has some nonnegative stationary weight charging it, their finite sum is a
+    single strictly positive stationary weight. This is the algebraic form of combining the
+    stationary laws of all recurrent classes. -/
+noncomputable def ofForallStateSupported
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (hsupported : ∀ target, Nonempty (G.FinkStationaryWeightAt z target)) :
+    G.FullSupportFinkStationaryWeight z where
+  weight s :=
+    ∑ target, (Classical.choice (hsupported target)).weight s
+  weight_pos s := by
+    let weightAt := fun target =>
+      Classical.choice (hsupported target)
+    have hle :
+        (weightAt s).weight s ≤ ∑ target, (weightAt target).weight s := by
+      refine Finset.single_le_sum
+        (f := fun target : G.State => (weightAt target).weight s)
+        (s := Finset.univ) ?_ (Finset.mem_univ s)
+      intro target _
+      exact (weightAt target).weight_nonneg s
+    exact (weightAt s).target_pos.trans_le hle
+  stationary_balance w := by
+    simp_rw [Finset.sum_mul]
+    rw [Finset.sum_comm]
+    apply Finset.sum_eq_zero
+    intro target _
+    exact (Classical.choice (hsupported target)).stationary_balance w
+
+/-- A full-support invariant PMF supplies the positive stationary weight used for flow repair. -/
+noncomputable def ofStationaryPMF
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (μ : PMF G.State)
+    (hpositive : ∀ s, 0 < (μ s).toReal)
+    (hstationary : μ.bind (G.finkStateKernel z) = μ) :
+    G.FullSupportFinkStationaryWeight z where
+  weight s := (μ s).toReal
+  weight_pos := hpositive
+  stationary_balance w := by
+    simp_rw [mul_sub]
+    rw [Finset.sum_sub_distrib, ← expect_eq_sum, ← expect_eq_sum,
+      ← expect_bind, hstationary, sub_self]
+
+end FullSupportFinkStationaryWeight
+
+namespace NormalizedFinkSupportTangentObstructionFlow
+
+/-- Scale large enough to make one player's signed residual weights nonnegative after adding a
+    positive stationary weight. -/
+noncomputable def stationaryRepairScale
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K)
+    (π : G.FullSupportFinkStationaryWeight z) (who : ι) : ℝ :=
+  ∑ s, |F.residualWeight s who| / π.weight s
+
+theorem stationaryRepairScale_nonneg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K)
+    (π : G.FullSupportFinkStationaryWeight z) (who : ι) :
+    0 ≤ stationaryRepairScale G z H K F π who := by
+  exact Finset.sum_nonneg fun s _ =>
+    div_nonneg (abs_nonneg _) (π.weight_pos s).le
+
+theorem residualWeight_add_stationaryRepair_nonneg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K)
+    (π : G.FullSupportFinkStationaryWeight z) (s : G.State) (who : ι) :
+    0 ≤ F.residualWeight s who +
+      stationaryRepairScale G z H K F π who * π.weight s := by
+  have hterm :
+      |F.residualWeight s who| / π.weight s ≤
+        stationaryRepairScale G z H K F π who := by
+    change
+      |F.residualWeight s who| / π.weight s ≤
+        ∑ t, |F.residualWeight t who| / π.weight t
+    refine Finset.single_le_sum
+      (f := fun t : G.State => |F.residualWeight t who| / π.weight t)
+      (s := Finset.univ) ?_ (Finset.mem_univ s)
+    · intro t _
+      exact div_nonneg (abs_nonneg _) (π.weight_pos t).le
+  have habs :
+      |F.residualWeight s who| ≤
+        stationaryRepairScale G z H K F π who * π.weight s := by
+    exact (div_le_iff₀ (π.weight_pos s)).mp hterm
+  linarith [neg_abs_le (F.residualWeight s who)]
+
+/-- Add a sufficiently large stationary circulation to every player's residual weights. The
+    action weights and target normalization remain unchanged, while all residual weights become
+    nonnegative. -/
+noncomputable def repairResidualWeight
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K)
+    (π : G.FullSupportFinkStationaryWeight z) :
+    G.NormalizedFinkSupportTangentObstructionFlow z H K where
+  residualWeight s who :=
+    F.residualWeight s who +
+      stationaryRepairScale G z H K F π who * π.weight s
+  actionWeight := F.actionWeight
+  operator_balance A := by
+    have hstationary : ∀ who : ι,
+        ∑ s, π.weight s *
+          G.finkContinuationResidualVector A z s who = 0 := by
+      intro who
+      simpa only [G.finkContinuationResidualVector_eq_expect_stateKernel] using
+        π.stationary_balance (fun s => A s who)
+    have hshift :
+        (∑ s, ∑ who,
+          stationaryRepairScale G z H K F π who * π.weight s *
+            G.finkContinuationResidualVector A z s who) = 0 := by
+      rw [Finset.sum_comm]
+      apply Finset.sum_eq_zero
+      intro who _
+      simp_rw [mul_assoc]
+      rw [← Finset.mul_sum, hstationary who, mul_zero]
+    simp only [add_mul, Finset.sum_add_distrib]
+    rw [hshift, add_zero]
+    exact F.operator_balance A
+  target_balance := F.target_balance
+
+@[simp] theorem repairResidualWeight_actionWeight
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K)
+    (π : G.FullSupportFinkStationaryWeight z)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    (repairResidualWeight G z H K F π).actionWeight s who d =
+      F.actionWeight s who d := rfl
+
+theorem repairResidualWeight_residualWeight_nonneg
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K)
+    (π : G.FullSupportFinkStationaryWeight z) :
+    ∀ s who,
+      0 ≤ (repairResidualWeight G z H K F π).residualWeight s who :=
+  fun s who =>
+    residualWeight_add_stationaryRepair_nonneg G z H K F π s who
+
+/-- On a baseline chain in which every state carries stationary mass, every signed obstruction
+    flow has an equivalent representative with nonnegative residual weights and exactly the same
+    action weights. Transient-state removal is therefore the only missing Markov-structural step
+    in this repair. -/
+theorem exists_residualWeight_nonneg_of_forall_state_supported
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K)
+    (hsupported : ∀ target,
+      Nonempty (G.FinkStationaryWeightAt z target)) :
+    ∃ F' : G.NormalizedFinkSupportTangentObstructionFlow z H K,
+      (∀ s who, 0 ≤ F'.residualWeight s who) ∧
+        ∀ s who d, F'.actionWeight s who d =
+          F.actionWeight s who d := by
+  let π :=
+    FullSupportFinkStationaryWeight.ofForallStateSupported G z hsupported
+  let F' := repairResidualWeight G z H K F π
+  exact ⟨F',
+    repairResidualWeight_residualWeight_nonneg G z H K F π,
+    fun _ _ _ => rfl⟩
+
+end NormalizedFinkSupportTangentObstructionFlow
 
 /-- Playerwise weak conservation law carried by an obstruction flow.  For
 every scalar state potential, the weighted baseline residuals and supported
