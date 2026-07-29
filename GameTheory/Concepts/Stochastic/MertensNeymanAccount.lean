@@ -3,7 +3,7 @@ Copyright (c) 2026 GameTheory contributors. All rights reserved.
 Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
-import GameTheory.Concepts.Stochastic.Adaptive
+import GameTheory.Concepts.Stochastic.MemoryController
 import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.SpecialFunctions.Log.InvLog
 import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
