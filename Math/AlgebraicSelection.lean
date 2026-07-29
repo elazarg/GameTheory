@@ -136,6 +136,9 @@ polynomial's root set.
   derivative envelope consumed by the account construction.
 * `tendsto_zero_of_rpow_reparam`: if the same regular factor `g` is continuous
   at zero, the selected branch tends to `g(0)` from positive rates.
+* `puiseuxDerivativeEnvelope_of_regular_polynomial_root`: a polynomial branch
+  that stays a simple root at its limiting point needs no fractional
+  reparameterization; it has the required envelope with exponent `q = 1`.
 
 No `TODO`s remain in this file.
 -/
@@ -685,6 +688,119 @@ theorem tailEVariation_vanishes_of_polynomial_root
   have hu_pos' : 0 < u := hu_pos
   exact ⟨u / 2, by linarith, hu_sub ⟨by linarith, by linarith⟩⟩
 
+/-- A polynomial branch that is regular at its limiting point has a uniformly
+bounded derivative on a smaller positive interval.
+
+The numerator and denominator in the implicit derivative formula are
+continuous along the branch. Nonvanishing of the value-direction derivative
+at `(0, w 0)` therefore keeps the denominator uniformly away from zero, while
+the parameter-direction derivative stays bounded. The pointwise implicit
+function theorem then supplies the derivative formula throughout the smaller
+interval.
+
+This isolates the genuinely difficult algebraic case: only branches singular
+at the limiting point require a fractional Newton--Puiseux
+reparameterization. -/
+theorem exists_regularPolynomialDerivativeBound
+    {P : Polynomial (Polynomial ℝ)} {w : ℝ → ℝ} {ρ : ℝ}
+    (hρ : 0 < ρ)
+    (hw0 : ContinuousAt w 0)
+    (hw : ContinuousOn w (Set.Ioo 0 ρ))
+    (hroot : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      bivEval P lam (w lam) = 0)
+    (hD0 : bivEval (Polynomial.derivative P) 0 (w 0) ≠ 0) :
+    ∃ ρ' K : ℝ, 0 < ρ' ∧ ρ' ≤ ρ ∧ 0 ≤ K ∧
+      ∀ lam ∈ Set.Ioo (0 : ℝ) ρ',
+        HasDerivAt w
+          (-(bivEval (bivDerivLam P) lam (w lam)) /
+            bivEval (Polynomial.derivative P) lam (w lam)) lam ∧
+        |-(bivEval (bivDerivLam P) lam (w lam)) /
+            bivEval (Polynomial.derivative P) lam (w lam)| ≤ K := by
+  let N : ℝ → ℝ := fun lam =>
+    bivEval (bivDerivLam P) lam (w lam)
+  let D : ℝ → ℝ := fun lam =>
+    bivEval (Polynomial.derivative P) lam (w lam)
+  have hpair : ContinuousAt (fun lam : ℝ => (lam, w lam)) 0 :=
+    continuousAt_id.prodMk hw0
+  have hNcont : ContinuousAt N 0 := by
+    exact (continuous_bivEval (bivDerivLam P)).continuousAt.comp' hpair
+  have hDcont : ContinuousAt D 0 := by
+    exact (continuous_bivEval (Polynomial.derivative P)).continuousAt.comp' hpair
+  have hD0' : D 0 ≠ 0 := hD0
+  have hDabs : 0 < |D 0| := abs_pos.mpr hD0'
+  have hNclose : ∀ᶠ lam in 𝓝 (0 : ℝ),
+      dist (N lam) (N 0) < 1 := by
+    exact (Metric.tendsto_nhds.mp hNcont.tendsto) 1 zero_lt_one
+  have hDclose : ∀ᶠ lam in 𝓝 (0 : ℝ),
+      dist (D lam) (D 0) < |D 0| / 2 := by
+    exact (Metric.tendsto_nhds.mp hDcont.tendsto)
+      (|D 0| / 2) (half_pos hDabs)
+  obtain ⟨δN, hδN, hNδ⟩ := Metric.mem_nhds_iff.mp hNclose
+  obtain ⟨δD, hδD, hDδ⟩ := Metric.mem_nhds_iff.mp hDclose
+  let ρ' := min ρ (min δN δD)
+  let K := 2 * (|N 0| + 1) / |D 0|
+  have hρ' : 0 < ρ' := lt_min hρ (lt_min hδN hδD)
+  have hρ'ρ : ρ' ≤ ρ := min_le_left _ _
+  have hK : 0 ≤ K := by positivity
+  refine ⟨ρ', K, hρ', hρ'ρ, hK, ?_⟩
+  intro lam hlam
+  have hlamρ : lam ∈ Set.Ioo (0 : ℝ) ρ :=
+    ⟨hlam.1, hlam.2.trans_le hρ'ρ⟩
+  have hlamN : dist lam 0 < δN := by
+    simp only [Real.dist_eq, sub_zero]
+    have hδ : ρ' ≤ δN :=
+      (min_le_right ρ (min δN δD)).trans (min_le_left _ _)
+    rw [abs_of_pos hlam.1]
+    exact hlam.2.trans_le hδ
+  have hlamD : dist lam 0 < δD := by
+    simp only [Real.dist_eq, sub_zero]
+    have hδ : ρ' ≤ δD :=
+      (min_le_right ρ (min δN δD)).trans (min_le_right _ _)
+    rw [abs_of_pos hlam.1]
+    exact hlam.2.trans_le hδ
+  have hNdist := hNδ (Metric.mem_ball.mpr hlamN)
+  have hDdist := hDδ (Metric.mem_ball.mpr hlamD)
+  change dist (N lam) (N 0) < 1 at hNdist
+  change dist (D lam) (D 0) < |D 0| / 2 at hDdist
+  have hNbound : |N lam| ≤ |N 0| + 1 := by
+    rw [Real.dist_eq] at hNdist
+    have htri := abs_add_le (N lam - N 0) (N 0)
+    rw [sub_add_cancel] at htri
+    linarith
+  have hDbound : |D 0| / 2 ≤ |D lam| := by
+    rw [Real.dist_eq] at hDdist
+    have htri := abs_sub_abs_le_abs_sub (D 0) (D lam)
+    rw [abs_sub_comm] at htri
+    linarith
+  have hDne : D lam ≠ 0 := by
+    intro hzero
+    rw [hzero, abs_zero] at hDbound
+    linarith
+  have hrootEventually :
+      ∀ᶠ u in 𝓝 lam, bivEval P u (w u) = 0 := by
+    filter_upwards [Ioo_mem_nhds hlamρ.1 hlamρ.2] with u hu
+    exact hroot u hu
+  have hderiv :
+      HasDerivAt w (-(N lam) / D lam) lam := by
+    exact hasDerivAt_of_polynomial_root
+      (hw.continuousAt (Ioo_mem_nhds hlamρ.1 hlamρ.2))
+      hrootEventually hDne
+  refine ⟨hderiv, ?_⟩
+  rw [abs_div, abs_neg]
+  apply (div_le_iff₀ (abs_pos.mpr hDne)).2
+  have hmul :
+      |N lam| * |D 0| ≤ (|N 0| + 1) * (2 * |D lam|) := by
+    calc
+      |N lam| * |D 0| ≤ (|N 0| + 1) * |D 0| :=
+        mul_le_mul_of_nonneg_right hNbound (abs_nonneg _)
+      _ ≤ (|N 0| + 1) * (2 * |D lam|) := by
+        apply mul_le_mul_of_nonneg_left
+        · linarith
+        · positivity
+  dsimp [K]
+  field_simp
+  nlinarith
+
 /-- A genuine local Puiseux reparameterization supplies the exact derivative
 envelope used by the stochastic account construction.
 
@@ -774,6 +890,46 @@ theorem puiseuxDerivativeEnvelope_of_rpow_reparam
     _ = lam ^ (q - 1) / lam0 := by
       rw [div_eq_mul_inv]
       ring
+
+/-- A regular polynomial branch already satisfies the normalized account
+envelope with Puiseux exponent `q = 1`.
+
+This is the regular-branch specialization of
+`puiseuxDerivativeEnvelope_of_rpow_reparam`, using `g = w`. The only
+polynomial branches left for a Newton polygon argument are those for which
+`∂ᵥP(0, w(0)) = 0`. -/
+theorem puiseuxDerivativeEnvelope_of_regular_polynomial_root
+    {P : Polynomial (Polynomial ℝ)} {w : ℝ → ℝ} {ρ : ℝ}
+    (hρ : 0 < ρ)
+    (hw0 : ContinuousAt w 0)
+    (hw : ContinuousOn w (Set.Ioo 0 ρ))
+    (hroot : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      bivEval P lam (w lam) = 0)
+    (hD0 : bivEval (Polynomial.derivative P) 0 (w 0) ≠ 0) :
+    ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ lam, 0 < lam → lam < lam0 →
+        HasDerivAt w
+          (-(bivEval (bivDerivLam P) lam (w lam)) /
+            bivEval (Polynomial.derivative P) lam (w lam)) lam ∧
+        |-(bivEval (bivDerivLam P) lam (w lam)) /
+            bivEval (Polynomial.derivative P) lam (w lam)| ≤
+          lam ^ ((1 : ℝ) - 1) / lam0 := by
+  obtain ⟨ρ', K, hρ', _hρ'ρ, hK, hregular⟩ :=
+    exists_regularPolynomialDerivativeBound
+      hρ hw0 hw hroot hD0
+  simpa only [Real.rpow_one, sub_self, Real.rpow_zero, mul_one, one_mul] using
+    (puiseuxDerivativeEnvelope_of_rpow_reparam
+      (w := w) (g := w)
+      (g' := fun lam =>
+        -(bivEval (bivDerivLam P) lam (w lam)) /
+          bivEval (Polynomial.derivative P) lam (w lam))
+      (q := (1 : ℝ)) (ρ := ρ') (K := K)
+      zero_lt_one hρ' hK
+      (fun lam _ => by rw [Real.rpow_one])
+      (fun lam hlam => by
+        simpa only [Real.rpow_one] using (hregular lam hlam).1)
+      (fun lam hlam => by
+        simpa only [Real.rpow_one] using (hregular lam hlam).2))
 
 /-- A local Puiseux reparameterization has the expected right limit.
 

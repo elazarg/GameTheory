@@ -3512,6 +3512,76 @@ theorem isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
     hpayLower hpayUpper hvalueLower hvalueUpper
     hF hzs hVzs hq hlam0 hderiv hbound hlimit
 
+/-- Regular algebraic discounted-value branches already yield the zero-sum
+uniform payoff without a Newton--Puiseux construction.
+
+If each selected value coordinate extends continuously to `λ = 0`, remains a
+root of a bivariate polynomial for positive small rates, and is a simple root
+at `(0, v(0))`, then
+`Math.puiseuxDerivativeEnvelope_of_regular_polynomial_root` supplies the
+account envelope with exponent `1`. Continuity supplies the limit. Hence only
+coordinates singular at the limiting point remain on the Newton polygon side
+of the zero-sum selection problem. -/
+theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedValue
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (P : G.State → Polynomial (Polynomial ℝ))
+    (ρ : G.State → ℝ)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
+    (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (v lam))
+    (hzs : G.IsZeroSum)
+    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0)
+    (hρ : ∀ z, 0 < ρ z)
+    (hcontinuousAt : ∀ z,
+      ContinuousAt (fun lam => v lam z 0) 0)
+    (hcontinuousOn : ∀ z,
+      ContinuousOn (fun lam => v lam z 0)
+        (Set.Ioo 0 (ρ z)))
+    (hroot : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      Math.bivEval (P z) lam (v lam z 0) = 0)
+    (hregular : ∀ z,
+      Math.bivEval (Polynomial.derivative (P z)) 0 (v 0 z 0) ≠ 0) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who => if who = 0 then v 0 s₀ 0 else -v 0 s₀ 0) := by
+  let v' : G.State → ℝ → ℝ := fun z lam =>
+    -(Math.bivEval (Math.bivDerivLam (P z)) lam (v lam z 0)) /
+      Math.bivEval (Polynomial.derivative (P z)) lam (v lam z 0)
+  have hEnvelope : ∀ z, ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ lam, 0 < lam → lam < lam0 →
+        HasDerivAt (fun u => v u z 0) (v' z lam) lam ∧
+          |v' z lam| ≤ lam ^ ((1 : ℝ) - 1) / lam0 := by
+    intro z
+    exact Math.puiseuxDerivativeEnvelope_of_regular_polynomial_root
+      (hρ z) (hcontinuousAt z) (hcontinuousOn z)
+      (hroot z) (hregular z)
+  choose lam0 hlam0 hEnvelope using hEnvelope
+  have hderiv : ∀ z lam, 0 < lam → lam < lam0 z →
+      HasDerivAt (fun u => v u z 0) (v' z lam) lam := by
+    intro z lam hlam hlam0'
+    exact (hEnvelope z lam hlam hlam0').1
+  have hbound : ∀ z lam, 0 < lam → lam < lam0 z →
+      |v' z lam| ≤ lam ^ ((1 : ℝ) - 1) / lam0 z := by
+    intro z lam hlam hlam0'
+    exact (hEnvelope z lam hlam hlam0').2
+  have hlimit : ∀ z,
+      Tendsto (fun lam => v lam z 0)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (v 0 z 0)) := by
+    intro z
+    exact (hcontinuousAt z).tendsto.mono_left inf_le_left
+  exact isUniformEquilibriumPayoff_of_puiseux_discountedValue
+    (fun z => v 0 z 0) s₀
+    hpayLower hpayUpper hvalueLower hvalueUpper
+    hF hzs hVzs (fun _ => zero_lt_one) hlam0
+    hderiv hbound hlimit
+
 end MertensNeymanAccount
 end StochasticGame
 end GameTheory
