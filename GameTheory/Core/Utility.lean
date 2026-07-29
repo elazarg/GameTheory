@@ -95,6 +95,17 @@ theorem euPreference_strict_iff (utility : Outcome → ι → ℝ) (agent : ι)
         expectedUtility utility agent preferred :=
   lt_iff_le_not_ge.symm
 
+theorem euPreference_convex (utility : Outcome → ι → ℝ) :
+    Preference.Convex (euPreference utility) := by
+  intro agent t h0 h1 firstPreferred firstAlternative secondPreferred secondAlternative
+    hfirst hsecond
+  show expectedUtility utility agent (FinDist.mix t h0 h1 _ _) ≤
+    expectedUtility utility agent (FinDist.mix t h0 h1 _ _)
+  unfold expectedUtility
+  rw [FinDist.expect_mix, FinDist.expect_mix]
+  exact add_le_add (mul_le_mul_of_nonneg_left hfirst h0)
+    (mul_le_mul_of_nonneg_left hsecond (by linarith))
+
 /-! ## Positive-affine invariance -/
 
 /-- Rescale and shift each player's utility. -/

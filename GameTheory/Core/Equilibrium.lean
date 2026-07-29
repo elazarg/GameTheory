@@ -295,6 +295,55 @@ theorem IsStrongNash.isNash {profile : Profile F.sig}
   rintro who preferred alternative ⟨member, hmember, hpref⟩
   rwa [Finset.mem_singleton.mp hmember] at hpref
 
+/-! ## Nash sits inside the correlated hierarchy
+
+A pure equilibrium is a correlated equilibrium of its own point mass. Unlike the
+coarse case this is not definitional — a correlated deviation may read the
+recommendation — but at a point mass there is only one recommendation to read. -/
+
+/-- A pure Nash equilibrium is a correlated equilibrium of its own point mass. -/
+theorem IsNash.isCorrelatedEq {profile : Profile F.sig}
+    (h : IsNash F weaklyPrefers profile) :
+    IsCorrelatedEq F weaklyPrefers (FinDist.pure profile) := by
+  rw [isCorrelatedEq_iff]
+  intro who respond
+  have := (isNash_iff profile).1 h who (respond (profile who))
+  simpa [GameForm.outcomeLaw] using this
+
+/-! ## The correlated concepts are convex
+
+Nash equilibria are not closed under mixing — mixing two of them correlates the
+players, which is exactly what a Nash profile may not do. The correlated
+concepts are, and the reason is visible in their shape: both compare a `bind` of
+the status quo against another `bind` of the same status quo, and composition is
+affine in the law it composes with.
+
+Convexity of the preference is a hypothesis rather than a fact about weak
+preferences; expected utility satisfies it. -/
+
+/-- **Coarse correlated equilibria are closed under mixing.** -/
+theorem IsCoarseCorrelatedEq.mix (hconvex : Preference.Convex weaklyPrefers)
+    {first second : FinDist (Profile F.sig)} (hfirst : IsCoarseCorrelatedEq F weaklyPrefers first)
+    (hsecond : IsCoarseCorrelatedEq F weaklyPrefers second)
+    (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) :
+    IsCoarseCorrelatedEq F weaklyPrefers (FinDist.mix t h0 h1 first second) := by
+  rw [isCoarseCorrelatedEq_iff] at hfirst hsecond ⊢
+  intro who replacement
+  rw [GameForm.outcomeLaw_mix, FinDist.mix_bind]
+  exact hconvex who t h0 h1 _ _ _ _ (hfirst who replacement) (hsecond who replacement)
+
+/-- **And so are correlated equilibria**, by the same argument with the
+recommendation-reading deviations. -/
+theorem IsCorrelatedEq.mix (hconvex : Preference.Convex weaklyPrefers)
+    {first second : FinDist (Profile F.sig)} (hfirst : IsCorrelatedEq F weaklyPrefers first)
+    (hsecond : IsCorrelatedEq F weaklyPrefers second)
+    (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) :
+    IsCorrelatedEq F weaklyPrefers (FinDist.mix t h0 h1 first second) := by
+  rw [isCorrelatedEq_iff] at hfirst hsecond ⊢
+  intro who respond
+  rw [GameForm.outcomeLaw_mix, FinDist.mix_bind]
+  exact hconvex who t h0 h1 _ _ _ _ (hfirst who respond) (hsecond who respond)
+
 end Relations
 
 end GameTheory

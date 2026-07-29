@@ -879,6 +879,15 @@ theorem ennreal_tsum_pi {ι : Type*} [Fintype ι] {A : ι → Type*}
   rw [ennreal_tsum_pi_fin (A := fun j => A (e j)) (g := fun j a => g (e j) a)]
   rw [← e.prod_comp (g := fun i => ∑' a : A i, g i a)]
 
+/-- Composition is affine in the law it composes with: mixing before a
+continuation is mixing after it. This is what makes a set defined by comparing
+`bind`s convex. -/
+theorem mix_bind (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) (f : α → FinDist β) :
+    (mix t h0 h1 μ ν).bind f = mix t h0 h1 (μ.bind f) (ν.bind f) := by
+  classical
+  refine ext_of_prob fun b => ?_
+  rw [prob_bind, prob_mix, prob_bind, prob_bind, expect_mix]
+
 section Pi
 
 variable {ι : Type*} [Fintype ι] {A : ι → Type*}

@@ -84,6 +84,13 @@ theorem outcomeLaw_mapOutcome (F : GameForm ι) {O : Type uo'} (f : F.sig.Outcom
     (F.mapOutcome f).outcomeLaw μ = (F.outcomeLaw μ).map f := by
   simp only [outcomeLaw, mapOutcome, FinDist.map_eq_bind, FinDist.bind_bind]
 
+/-- The outcome law is affine in the law over profiles. -/
+theorem outcomeLaw_mix (F : GameForm ι) (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
+    (first second : FinDist (Profile F.sig)) :
+    F.outcomeLaw (FinDist.mix t h0 h1 first second) =
+      FinDist.mix t h0 h1 (F.outcomeLaw first) (F.outcomeLaw second) :=
+  FinDist.mix_bind ..
+
 /-! ## Mixed extension
 
 Independent randomization needs finitely many players and nothing else. -/

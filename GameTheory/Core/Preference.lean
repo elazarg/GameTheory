@@ -66,6 +66,18 @@ theorem strict_asymm {weaklyPrefers : WeakPreference Agent Outcome}
     (h : strict weaklyPrefers agent preferred alternative) :
     ¬ strict weaklyPrefers agent alternative preferred := fun h' => h.2 h'.1
 
+/-- A preference respects mixing: comparing two pairs the same way compares
+their mixtures the same way. Expected utility satisfies it, and it is what makes
+a solution concept defined by comparing laws a *convex* set. Nothing forces a
+weak preference to be convex, so it is a hypothesis rather than a field. -/
+def Convex (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
+  ∀ (agent : Agent) (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
+    (firstPreferred firstAlternative secondPreferred secondAlternative : FinDist Outcome),
+    weaklyPrefers agent firstPreferred firstAlternative →
+    weaklyPrefers agent secondPreferred secondAlternative →
+      weaklyPrefers agent (FinDist.mix t h0 h1 firstPreferred secondPreferred)
+        (FinDist.mix t h0 h1 firstAlternative secondAlternative)
+
 /-- Pointwise implication between preferences, oriented so that a `Weaker`
 preference accepts more equilibria. -/
 def Weaker (weaker stronger : WeakPreference Agent Outcome) : Prop :=
