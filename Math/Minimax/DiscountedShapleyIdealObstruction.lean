@@ -52,6 +52,8 @@ only components on which the selected denominators do not vanish.
   not finite-dimensional over `ℝ(λ)`.
 * `activeBranchObstructionBranchIdeal_not_moduleFinite`: even an all-active
   fixed branch can have a positive-dimensional quotient.
+* `activeBranchObstructionNonvanishingBranchIdeal_moduleFinite`: the
+  inverse-denominator equation removes that branch's diagonal component.
 -/
 
 namespace ShapleySnow
@@ -603,6 +605,153 @@ theorem activeBranchObstructionBranchIdeal_not_moduleFinite :
         activeBranchObstructionBranch)
       1 0
       activeBranchObstructionBranchIdeal_le_diagonal
+
+theorem activeBranchObstruction_kernelPoly
+    (s : Fin 2) :
+    discountedShapleyActiveKernelPoly
+        activeBranchObstructionReward
+        activeBranchObstructionTransition
+        s fullTwoKernelShape =
+      MvPolynomial.C (1 - Polynomial.X) *
+        (MvPolynomial.X 1 - MvPolynomial.X 0) *
+        (MvPolynomial.C (1 - Polynomial.X) *
+          (MvPolynomial.X 1 + MvPolynomial.X 0) -
+          2 * MvPolynomial.X s) := by
+  rw [discountedShapleyActiveKernelPoly,
+    if_pos (activeBranchObstruction_fullTwo_active s),
+    activeBranchObstruction_candidate]
+  simp
+
+theorem activeBranchObstruction_denominatorPoly
+    (s : Fin 2) :
+    discountedShapleyKernelDenominatorPoly
+        activeBranchObstructionReward
+        activeBranchObstructionTransition
+        s fullTwoKernelShape =
+      2 * MvPolynomial.C (1 - Polynomial.X) *
+        (MvPolynomial.X 1 - MvPolynomial.X 0) := by
+  unfold discountedShapleyKernelDenominatorPoly
+  simp only [mvBorderedKernelDenominator, fullTwoKernelShape]
+  change
+    MvPolynomial.optionEquivRight ℝ (Fin 2)
+      ((borderedMatrix
+        (Matrix.of
+          (discountedStochasticEntry
+            (activeBranchObstructionReward s)
+            (activeBranchObstructionTransition s)))).det) = _
+  rw [activeBranchObstruction_bordered_det]
+  simp
+
+theorem activeBranchObstruction_branchDenominator_eq_combination :
+    discountedShapleyBranchDenominator
+        activeBranchObstructionReward
+        activeBranchObstructionTransition
+        activeBranchObstructionBranch =
+      (2 * MvPolynomial.C (1 - Polynomial.X)) *
+        (discountedShapleyActiveKernelPoly
+            activeBranchObstructionReward
+            activeBranchObstructionTransition
+            0 fullTwoKernelShape -
+          discountedShapleyActiveKernelPoly
+            activeBranchObstructionReward
+            activeBranchObstructionTransition
+            1 fullTwoKernelShape) := by
+  rw [discountedShapleyBranchDenominator]
+  change
+    (∏ s : Fin 2,
+      discountedShapleyKernelDenominatorPoly
+        activeBranchObstructionReward
+        activeBranchObstructionTransition
+        s fullTwoKernelShape) = _
+  rw [Fin.prod_univ_two]
+  rw [activeBranchObstruction_denominatorPoly,
+    activeBranchObstruction_denominatorPoly,
+    activeBranchObstruction_kernelPoly,
+    activeBranchObstruction_kernelPoly]
+  ring
+
+/-- The inverse-denominator equation removes the positive-dimensional
+diagonal component from the active fixed-branch obstruction. -/
+theorem activeBranchObstructionNonvanishingBranchIdeal_eq_top :
+    discountedShapleyNonvanishingBranchIdeal
+        activeBranchObstructionReward
+        activeBranchObstructionTransition
+        activeBranchObstructionBranch = ⊤ := by
+  let F : Fin 2 → MvPolynomial (Fin 2) (Polynomial ℝ) :=
+    fun s =>
+      discountedShapleyActiveKernelPoly
+        activeBranchObstructionReward
+        activeBranchObstructionTransition
+        s fullTwoKernelShape
+  let D : MvPolynomial (Fin 2) (Polynomial ℝ) :=
+    discountedShapleyBranchDenominator
+      activeBranchObstructionReward
+      activeBranchObstructionTransition
+      activeBranchObstructionBranch
+  let I : Ideal (MvPolynomial (Option (Fin 2)) (Polynomial ℝ)) :=
+    Ideal.span (Set.range fun s => MvPolynomial.rename some (F s))
+  let J : Ideal (MvPolynomial (Option (Fin 2)) (Polynomial ℝ)) :=
+    discountedShapleyNonvanishingBranchIdeal
+      activeBranchObstructionReward
+      activeBranchObstructionTransition
+      activeBranchObstructionBranch
+  have hF0 : MvPolynomial.rename some (F 0) ∈ I :=
+    Ideal.subset_span ⟨0, rfl⟩
+  have hF1 : MvPolynomial.rename some (F 1) ∈ I :=
+    Ideal.subset_span ⟨1, rfl⟩
+  have hD :
+      MvPolynomial.rename some D =
+        MvPolynomial.rename some
+            (2 * MvPolynomial.C (1 - Polynomial.X)) *
+          (MvPolynomial.rename some (F 0) -
+            MvPolynomial.rename some (F 1)) := by
+    rw [← map_sub, ← map_mul]
+    apply congrArg (MvPolynomial.rename some)
+    exact activeBranchObstruction_branchDenominator_eq_combination
+  have hDI : MvPolynomial.rename some D ∈ I := by
+    rw [hD]
+    exact I.mul_mem_left _
+      (I.sub_mem hF0 hF1)
+  have hIJ : I ≤ J := by
+    change I ≤ discountedShapleyNonvanishingBranchIdeal
+      activeBranchObstructionReward
+      activeBranchObstructionTransition
+      activeBranchObstructionBranch
+    rw [discountedShapleyNonvanishingBranchIdeal]
+    exact le_sup_left
+  have hDJ : MvPolynomial.rename some D ∈ J := hIJ hDI
+  have hyD :
+      MvPolynomial.X none * MvPolynomial.rename some D ∈ J :=
+    J.mul_mem_left _ hDJ
+  have hinverse :
+      MvPolynomial.X none * MvPolynomial.rename some D - 1 ∈ J := by
+    change
+      MvPolynomial.X none * MvPolynomial.rename some D - 1 ∈
+        discountedShapleyNonvanishingBranchIdeal
+          activeBranchObstructionReward
+          activeBranchObstructionTransition
+          activeBranchObstructionBranch
+    rw [discountedShapleyNonvanishingBranchIdeal]
+    apply Ideal.mem_sup_right
+    exact Ideal.subset_span (Set.mem_singleton _)
+  rw [Ideal.eq_top_iff_one]
+  change 1 ∈ J
+  have := J.sub_mem hyD hinverse
+  simpa using this
+
+theorem activeBranchObstructionNonvanishingBranchIdeal_moduleFinite :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option (Fin 2)) (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyNonvanishingBranchIdeal
+          activeBranchObstructionReward
+          activeBranchObstructionTransition
+          activeBranchObstructionBranch).map
+            (MvPolynomial.map
+              (algebraMap (Polynomial ℝ)
+                (FractionRing (Polynomial ℝ))))) := by
+  rw [activeBranchObstructionNonvanishingBranchIdeal_eq_top,
+    Ideal.map_top]
+  exact Math.CofiniteIdeal.moduleFinite_quotient_top
 
 end
 
