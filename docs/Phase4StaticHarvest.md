@@ -1,7 +1,7 @@
 # Phase 4: the static harvest
 
-Status: first pass complete. Seven theorem families recovered against the
-accepted API, each instantiated, none requiring a change to it.
+Status: complete. Seven theorem families and one language encoding recovered
+against the accepted API, each instantiated, none requiring a change to it.
 
 The mode here differs from the earlier phases. Those validated architecture by
 pushing hostile slices at it; this one assumes the architecture and asks whether
@@ -106,6 +106,30 @@ uniqueness of the value all sit in `Core/ZeroSum.lean` with no topology
 anywhere, and the analytic root contributes the one thing that cannot be had
 without it.
 
+## The mechanism-design encoding
+
+`Languages/Mechanism.lean` is the static counterpart to the sequential
+encodings, and it carries the same obligation: a workaround list, read before
+the theorems.
+
+Its finding is a negative one, which is the useful kind here. Mechanism design
+needed no new solution concept. *Strategyproofness is `IsDominantProfile`* of
+the induced game form with the truthful profile substituted, and
+`isStrategyproof_iff` proves that unfolding it reaches the inequality an
+economist would write. No fake agents, no extension of the game form, no second
+notion of dominance.
+
+The instance is the two-bidder second-price auction, where truthful bidding is
+dominant, paired with the first-price auction, where it is refuted. The second
+half is what makes the first informative: an encoding in which no report ever
+mattered would satisfy the strategyproofness theorem and fail the refutation.
+
+The concessions are listed in the module and are worth one summary line here:
+two bidders rather than `n`, real-valued money — so neither the executable
+frontend nor the existence theorem can touch these games — no revelation
+principle, no participation or budget conditions, and the truthful profile
+supplied as a parameter rather than derived.
+
 ## Additions to the law type
 
 Five, each with a consumer in the same commit: composition is affine in the law
@@ -129,6 +153,7 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 | `sorry`, `admit`, `native_decide`, custom axioms | 0 |
 | transport tokens added to the static layer | 0 |
 | `GameTheory/Analysis` nonblank lines | 412 |
+| language modules | 3 |
 | transport tokens in the analytic root | 0 |
 | modules outside the root importing it | 0 |
 | absence probes still passing | 6 |
@@ -136,9 +161,6 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 
 ## Outstanding
 
-- A mechanism-design encoding, with truthful reporting as a dominance statement.
-  That is a language module rather than a theorem family, so it belongs with the
-  other encodings and carries the same obligation: a workaround list.
 - Whether any of v1's four and a half thousand lines above the same dependency
   (Schauder, KKM, Scarf, the simplex approximation layer) is worth porting. The
   existence theorem here needed none of it, so the question is what *else* would

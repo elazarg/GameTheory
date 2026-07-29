@@ -109,7 +109,7 @@ Report 'TRANSPORT_PHASE1_EVIDENCE' (Count-Pattern $Phase1Files $TransportPattern
 # carrier-bearing structure must be reducible or elaboration fails at some
 # distant use site. That failure is far from its cause, so it is checked here
 # instead of being left to whoever trips over it.
-$CarrierStructures = 'ExecutionProtocol|InfoSignals|InformationModel|GameForm|Tree'
+$CarrierStructures = 'ExecutionProtocol|InfoSignals|InformationModel|GameForm|Tree|Mechanism'
 $unannotated = 0
 foreach ($f in $AllFiles) {
   if ($f.StartsWith('GameTheory/Experimental')) { continue }
