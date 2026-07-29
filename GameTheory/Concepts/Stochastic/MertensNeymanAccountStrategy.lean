@@ -3446,9 +3446,9 @@ continuous at zero, and a bounded derivative of that factor supplies:
   `Math.puiseuxDerivativeEnvelope_of_rpow_reparam`;
 * the right limit `g(0)`, by `Math.tendsto_zero_of_rpow_reparam`.
 
-Thus the remaining zero-sum selection obligation is the construction of this
-Puiseux data together with the discounted Bellman family, rather than a
-separate game-facing convergence or derivative estimate. -/
+This theorem makes the Puiseux data and discounted Bellman family sufficient;
+it does not require a separate game-facing convergence or derivative
+estimate. -/
 theorem isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
     {G : StochasticGame (Fin 2)}
     [Finite G.State] [∀ i, Finite (G.Act i)]
@@ -3512,16 +3512,16 @@ theorem isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
     hpayLower hpayUpper hvalueLower hvalueUpper
     hF hzs hVzs hq hlam0 hderiv hbound hlimit
 
-/-- Regular algebraic discounted-value branches already yield the zero-sum
+/-- Regular algebraic discounted-value branches yield the zero-sum
 uniform payoff without a Newton--Puiseux construction.
 
 If each selected value coordinate extends continuously to `λ = 0`, remains a
 root of a bivariate polynomial for positive small rates, and is a simple root
 at `(0, v(0))`, then
 `Math.puiseuxDerivativeEnvelope_of_regular_polynomial_root` supplies the
-account envelope with exponent `1`. Continuity supplies the limit. Hence only
-coordinates singular at the limiting point remain on the Newton polygon side
-of the zero-sum selection problem. -/
+account envelope with exponent `1`. Continuity supplies the limit. Coordinates
+singular at the limiting point do not satisfy this theorem's regularity
+hypothesis. -/
 theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedValue
     {G : StochasticGame (Fin 2)}
     [Finite G.State] [∀ i, Finite (G.Act i)]
@@ -3581,6 +3581,81 @@ theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedValue
     hpayLower hpayUpper hvalueLower hvalueUpper
     hF hzs hVzs (fun _ => zero_lt_one) hlam0
     hderiv hbound hlimit
+
+/-- A sufficient discounted-value selection package for the two-player
+zero-sum account construction.
+
+It contains a stationary discounted Bellman family on the natural rate domain
+and a coordinatewise Puiseux reparameterization of player zero's value.
+The analytic account envelope and limiting payoff are deliberately absent:
+they are derived from these fields by
+`isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue`.
+
+Its fields state the Bewley--Kohlberg/Newton--Puiseux selection interface used
+by the verification theorem below. -/
+structure PuiseuxDiscountedValueSelection
+    (G : StochasticGame (Fin 2))
+    [Finite G.State] [∀ i, Finite (G.Act i)] where
+  x : ℝ → G.StationaryMixedProfile
+  v : ℝ → G.State → Payoff (Fin 2)
+  q : G.State → ℝ
+  ρ : G.State → ℝ
+  K : G.State → ℝ
+  g : G.State → ℝ → ℝ
+  g' : G.State → ℝ → ℝ
+  valueLower : ∀ lam z, 0 ≤ v lam z 0
+  valueUpper : ∀ lam z, v lam z 0 ≤ 1
+  bellman : ∀ lam, 0 < lam → lam ≤ 1 →
+    G.IsDiscountedStationaryBellmanEq
+      (1 - lam) (x lam) (v lam)
+  value_zeroSum : ∀ lam z, v lam z 1 = -v lam z 0
+  exponent_pos : ∀ z, 0 < q z
+  radius_pos : ∀ z, 0 < ρ z
+  derivativeBound_nonneg : ∀ z, 0 ≤ K z
+  reparam : ∀ z lam, lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+    v lam z 0 = g z (lam ^ q z)
+  regular_continuousAt_zero : ∀ z, ContinuousAt (g z) 0
+  regular_hasDerivAt : ∀ z lam,
+    lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      HasDerivAt (g z) (g' z (lam ^ q z)) (lam ^ q z)
+  regular_derivative_bound : ∀ z lam,
+    lam ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      |g' z (lam ^ q z)| ≤ K z
+
+/-- A `PuiseuxDiscountedValueSelection` produces the normalized zero-sum
+uniform payoff. -/
+theorem PuiseuxDiscountedValueSelection.isUniformEquilibriumPayoff
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (S : PuiseuxDiscountedValueSelection G)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who => if who = 0 then S.g s₀ 0 else -S.g s₀ 0) := by
+  exact isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
+    S.q S.ρ S.K S.g S.g' s₀
+    hpayLower hpayUpper S.valueLower S.valueUpper
+    S.bellman hzs S.value_zeroSum
+    S.exponent_pos S.radius_pos S.derivativeBound_nonneg
+    S.reparam S.regular_continuousAt_zero
+    S.regular_hasDerivAt S.regular_derivative_bound
+
+/-- Existence-facing zero-sum wrapper from a discounted-value selection
+package. -/
+theorem exists_uniformEquilibriumPayoff_of_puiseuxDiscountedValueSelection
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (S : PuiseuxDiscountedValueSelection G)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum) :
+    ∃ u : Payoff (Fin 2), G.IsUniformEquilibriumPayoff s₀ u := by
+  exact ⟨fun who =>
+      if who = 0 then S.g s₀ 0 else -S.g s₀ 0,
+    S.isUniformEquilibriumPayoff s₀ hpayLower hpayUpper hzs⟩
 
 end MertensNeymanAccount
 end StochasticGame

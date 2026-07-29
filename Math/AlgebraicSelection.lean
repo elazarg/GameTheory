@@ -122,8 +122,8 @@ polynomial's root set.
   `BoundedVariationOn`.
 * `dist_le_eVariationOn_uIcc_of_polynomial_root`: the interval-control export — `|w a - w b|` is
   bounded by the total variation on `Set.uIcc a b`, for `a, b` in either order.
-* `eventually_tendsto_eVariationOn_nhds_zero_of_polynomial_root`: the previously-open gap, now
-  closed — `eVariationOn w (Set.Ioo 0 δ) → 0` as `δ → 0⁺`. Proved via `BoundedVariationOn.
+* `eventually_tendsto_eVariationOn_nhds_zero_of_polynomial_root`:
+  `eVariationOn w (Set.Ioo 0 δ) → 0` as `δ → 0⁺`. Proved via `BoundedVariationOn.
   tendsto_eVariationOn_Ioc_zero` at `0` (variation on small open-closed intervals to the right of a
   point vanishes for a bounded-variation function), transported from `nhdsWithin 0 (Set.Ioo 0 ρ')`
   to `nhdsWithin 0 (Set.Ioi 0)` via `nhdsWithin_inter_of_mem'`, then squeezed against
@@ -698,9 +698,8 @@ the parameter-direction derivative stays bounded. The pointwise implicit
 function theorem then supplies the derivative formula throughout the smaller
 interval.
 
-This isolates the genuinely difficult algebraic case: only branches singular
-at the limiting point require a fractional Newton--Puiseux
-reparameterization. -/
+Branches singular at the limiting point fall outside this regular-root
+criterion and require a fractional reparameterization. -/
 theorem exists_regularPolynomialDerivativeBound
     {P : Polynomial (Polynomial ℝ)} {w : ℝ → ℝ} {ρ : ℝ}
     (hρ : 0 < ρ)
@@ -810,9 +809,8 @@ there is one positive `λ₀` such that
 `|w'(λ)| ≤ λ^(q-1) / λ₀`. The choice of `λ₀` absorbs both the original
 parameterization radius and the constant factor `Kq`.
 
-Consequently the remaining Newton--Puiseux obligation is to construct this
-reparameterization for a bounded algebraic branch; no additional
-game-specific derivative estimate is needed after that construction. -/
+Thus a construction that supplies this reparameterization also supplies the
+game-facing derivative estimate. -/
 theorem puiseuxDerivativeEnvelope_of_rpow_reparam
     {w g g' : ℝ → ℝ} {q ρ K : ℝ}
     (hq : 0 < q) (hρ : 0 < ρ) (hK : 0 ≤ K)
@@ -891,13 +889,12 @@ theorem puiseuxDerivativeEnvelope_of_rpow_reparam
       rw [div_eq_mul_inv]
       ring
 
-/-- A regular polynomial branch already satisfies the normalized account
+/-- A regular polynomial branch satisfies the normalized account
 envelope with Puiseux exponent `q = 1`.
 
 This is the regular-branch specialization of
-`puiseuxDerivativeEnvelope_of_rpow_reparam`, using `g = w`. The only
-polynomial branches left for a Newton polygon argument are those for which
-`∂ᵥP(0, w(0)) = 0`. -/
+`puiseuxDerivativeEnvelope_of_rpow_reparam`, using `g = w`. Branches with
+`∂ᵥP(0, w(0)) = 0` do not satisfy this theorem's regularity hypothesis. -/
 theorem puiseuxDerivativeEnvelope_of_regular_polynomial_root
     {P : Polynomial (Polynomial ℝ)} {w : ℝ → ℝ} {ρ : ℝ}
     (hρ : 0 < ρ)
