@@ -12,6 +12,7 @@ import Mathlib.Analysis.Calculus.Deriv.Polynomial
 import Mathlib.Analysis.Calculus.Deriv.Inverse
 import Mathlib.Analysis.Calculus.Deriv.MeanValue
 import Mathlib.Analysis.Calculus.ImplicitFunction.Bivariate
+import Mathlib.Analysis.SpecialFunctions.Pow.Deriv
 import Mathlib.Topology.EMetricSpace.BoundedVariation
 import Mathlib.Analysis.Normed.Group.Uniform
 
@@ -130,11 +131,14 @@ polynomial's root set.
 * `tailEVariation_vanishes_of_polynomial_root`: the Mertens–Neyman-facing scalar packaging of the
   above in explicit `ε`–`δ` form — the per-coordinate feeder for `MertensNeymanCriterion.
   StochasticGame.IsTailVariationBounded`.
+* `puiseuxDerivativeEnvelope_of_rpow_reparam`: a local representation
+  `w(λ) = g(λ^q)` with `q > 0` and bounded `g'` gives the exact normalized
+  derivative envelope consumed by the account construction.
 
 No `TODO`s remain in this file.
 -/
 
-open Polynomial Set
+open Polynomial Set Topology
 
 namespace Math
 
@@ -600,12 +604,8 @@ decreasing-chain sum — which is what a criterion whose index moves in both dir
 `min a b` and `max a b` may occur in either order as the index varies. Also records that the
 total variation on the whole eventually-monotone interval is finite.
 
-**Remaining gap (not proved here):** that this tail variation `eVariationOn w (Ioo 0 ρ')` tends to
-`0` as `ρ' → 0⁺`. This should follow because a bounded monotone (or antitone) function has a limit
-at `0⁺` (`MonotoneOn.tendsto_nhdsWithin_Ioo_left`-style, applied at the reflected/rescaled interval
-since that lemma is stated for the *right* endpoint of `Ioo`, not the left) so its oscillation on
-shrinking sub-intervals `Ioo 0 ρ'` vanishes; formalising the endpoint reflection and the
-"oscillation → 0" step from "has a limit" was not undertaken in this pass. -/
+The corresponding vanishing-tail result is
+`eventually_tendsto_eVariationOn_nhds_zero_of_polynomial_root` below. -/
 theorem dist_le_eVariationOn_uIcc_of_polynomial_root
     {ρ : ℝ} (hρ : 0 < ρ) {w : ℝ → ℝ} (hw : ContinuousOn w (Set.Ioo 0 ρ))
     {P : Polynomial (Polynomial ℝ)} (hP : P ≠ 0)
@@ -682,5 +682,95 @@ theorem tailEVariation_vanishes_of_polynomial_root
   obtain ⟨u, hu_pos, hu_sub⟩ := mem_nhdsGT_iff_exists_Ioo_subset.mp hev
   have hu_pos' : 0 < u := hu_pos
   exact ⟨u / 2, by linarith, hu_sub ⟨by linarith, by linarith⟩⟩
+
+/-- A genuine local Puiseux reparameterization supplies the exact derivative
+envelope used by the stochastic account construction.
+
+If `w(λ) = g(λ^q)` on a positive punctured interval, `q > 0`, and the
+derivative of `g` is bounded there by `K`, then after shrinking the interval
+there is one positive `λ₀` such that
+`|w'(λ)| ≤ λ^(q-1) / λ₀`. The choice of `λ₀` absorbs both the original
+parameterization radius and the constant factor `Kq`.
+
+Consequently the remaining Newton--Puiseux obligation is to construct this
+reparameterization for a bounded algebraic branch; no additional
+game-specific derivative estimate is needed after that construction. -/
+theorem puiseuxDerivativeEnvelope_of_rpow_reparam
+    {w g g' : ℝ → ℝ} {q ρ K : ℝ}
+    (hq : 0 < q) (hρ : 0 < ρ) (hK : 0 ≤ K)
+    (hreparam : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      w lam = g (lam ^ q))
+    (hgderiv : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      HasDerivAt g (g' (lam ^ q)) (lam ^ q))
+    (hgbound : ∀ lam ∈ Set.Ioo (0 : ℝ) ρ,
+      |g' (lam ^ q)| ≤ K) :
+    ∃ lam0 : ℝ, 0 < lam0 ∧
+      ∀ lam, 0 < lam → lam < lam0 →
+        HasDerivAt w
+            (g' (lam ^ q) * (q * lam ^ (q - 1))) lam ∧
+          |g' (lam ^ q) * (q * lam ^ (q - 1))| ≤
+            lam ^ (q - 1) / lam0 := by
+  let A := K * q
+  let r := 1 / (A + 1)
+  let lam0 := min ρ r / 2
+  have hA : 0 ≤ A := mul_nonneg hK hq.le
+  have hA1 : 0 < A + 1 := by linarith
+  have hr : 0 < r := one_div_pos.mpr hA1
+  have hlam0 : 0 < lam0 := half_pos (lt_min hρ hr)
+  refine ⟨lam0, hlam0, ?_⟩
+  intro lam hlam hlam0'
+  have hlamρ : lam < ρ := by
+    have hlam0ρ : lam0 ≤ ρ := by
+      dsimp [lam0]
+      have hmin : min ρ r ≤ ρ := min_le_left _ _
+      nlinarith [lt_min hρ hr]
+    exact hlam0'.trans_le hlam0ρ
+  have hlamMem : lam ∈ Set.Ioo (0 : ℝ) ρ := ⟨hlam, hlamρ⟩
+  have heq : w =ᶠ[𝓝 lam] fun u => g (u ^ q) := by
+    filter_upwards [Ioo_mem_nhds hlam hlamρ] with u hu
+    exact hreparam u hu
+  have hpow :
+      HasDerivAt (fun u : ℝ => u ^ q)
+        (q * lam ^ (q - 1)) lam :=
+    Real.hasDerivAt_rpow_const (Or.inl hlam.ne')
+  have hwderiv :
+      HasDerivAt w
+        (g' (lam ^ q) * (q * lam ^ (q - 1))) lam :=
+    ((hgderiv lam hlamMem).comp lam hpow).congr_of_eventuallyEq heq
+  refine ⟨hwderiv, ?_⟩
+  have hpowNonneg : 0 ≤ lam ^ (q - 1) :=
+    Real.rpow_nonneg hlam.le _
+  have hraw :
+      |g' (lam ^ q) * (q * lam ^ (q - 1))| ≤
+        A * lam ^ (q - 1) := by
+    rw [abs_mul, abs_mul, abs_of_pos hq, abs_of_nonneg hpowNonneg]
+    calc
+      |g' (lam ^ q)| * (q * lam ^ (q - 1)) ≤
+          K * (q * lam ^ (q - 1)) :=
+        mul_le_mul_of_nonneg_right (hgbound lam hlamMem)
+          (mul_nonneg hq.le hpowNonneg)
+      _ = A * lam ^ (q - 1) := by ring
+  have hlam0r : lam0 ≤ r := by
+    dsimp [lam0]
+    have hmin : min ρ r ≤ r := min_le_right _ _
+    nlinarith [lt_min hρ hr]
+  have hAr : A * r ≤ 1 := by
+    dsimp [r]
+    rw [one_div]
+    rw [← div_eq_mul_inv]
+    exact (div_le_one hA1).2 (by linarith)
+  have hAlam0 : A * lam0 ≤ 1 :=
+    (mul_le_mul_of_nonneg_left hlam0r hA).trans hAr
+  have hAinv : A ≤ lam0⁻¹ := by
+    rw [inv_eq_one_div]
+    exact (le_div_iff₀ hlam0).2 hAlam0
+  calc
+    |g' (lam ^ q) * (q * lam ^ (q - 1))| ≤
+        A * lam ^ (q - 1) := hraw
+    _ ≤ lam0⁻¹ * lam ^ (q - 1) :=
+      mul_le_mul_of_nonneg_right hAinv hpowNonneg
+    _ = lam ^ (q - 1) / lam0 := by
+      rw [div_eq_mul_inv]
+      ring
 
 end Math
