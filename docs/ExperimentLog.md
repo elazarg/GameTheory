@@ -29,7 +29,7 @@ becomes difficult to scan.
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
 | EXP-018 | 2026-07-29 | D6 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | Supports | `GameTheory/Probability/FinDist.lean`; `GameTheory/Protocol/Information.lean` |
-| EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | *reserved* | `GameTheory/Protocol/Information.lean` |
+| EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | *in progress* | `GameTheory/Experimental/Phase4/ReachMassStatements.lean` |
 
 ## Entry template
 
@@ -1081,7 +1081,27 @@ memory.
   perfect-recall corollary carries will not be needed, for the same reason, and
   the fallback will not need a global inhabitance instance, since it is already
   derived from the law's own support.
-- **Evidence:** *pending*
-- **Observation:** *pending*
-- **Outcome:** *pending*
-- **Next action:** *pending*
+- **Evidence so far:**
+  `GameTheory/Experimental/Phase4/ReachMassStatements.lean`
+- **First observation: the falsifiable half of the prediction holds.** All three
+  conditions are statable in this library's vocabulary with **no transport
+  token in any statement** — checked by scanning the file, where the only
+  occurrences of `▸` and `HEq` are in prose describing the snapshot.
+  How each one avoids it is different, and worth separating. The mass condition
+  is direct. The factorization condition needs a pointwise variant of a joint
+  action, which *is* a transport in the obvious spelling — the same collision the
+  commitment construction met — and none in the coordinate-decomposition
+  spelling this layer already uses; so it is avoided by an idiom rather than by
+  luck. The posterior condition is the one the snapshot states through
+  heterogeneous equality, and quantifying over the information state *before* the
+  objects indexed by it removes the need entirely: both sides land in one type by
+  construction.
+  Sufficiency is checked in the same file, in the direction that matters for not
+  fooling oneself: recall implies the posterior condition, because it makes the
+  two records equal. So the condition is genuinely weaker than recall rather than
+  a restatement of it, and it is not vacuous.
+- **Outcome:** *in progress*
+- **Next action:** a model that fails recall while still satisfying the three
+  conditions. Without one, the generality is uninhabited and the certificate
+  level would have a consumer but no witness that the consumer is doing
+  anything.
