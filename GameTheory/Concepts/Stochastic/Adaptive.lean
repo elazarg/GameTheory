@@ -69,6 +69,49 @@ theorem expectedHistoryValue_succ
   funext s'
   rw [expect_pure]
 
+/-- A pointwise one-step drift inequality becomes the corresponding drift of
+expected history potentials under the actual history law. -/
+theorem expectedHistoryValue_drift_ge
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)]
+    (σ : G.BehaviorProfile) (s₀ : G.State)
+    (r V : G.HistoryPotential)
+    (hdrift : ∀ (t : ℕ) (h : G.Hist t),
+      r t h ≤ G.historyContinuationEU σ V h - V t h)
+    (t : ℕ) :
+    G.expectedHistoryValue σ s₀ r t ≤
+      G.expectedHistoryValue σ s₀ V (t + 1) -
+        G.expectedHistoryValue σ s₀ V t := by
+  rw [G.expectedHistoryValue_succ]
+  unfold expectedHistoryValue
+  rw [← expect_sub]
+  exact expect_mono _ _ _ (hdrift t)
+
+/-- A historywise payoff/account inequality averages to the corresponding
+one-step inequality for expected history potentials. -/
+theorem expectedHistoryValue_payoff_step
+    (G : StochasticGame ι) [Fintype ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)]
+    (σ : G.BehaviorProfile) (s₀ : G.State) (who : ι)
+    (c : ℝ) (A F V : G.HistoryPotential)
+    (hstep : ∀ (t : ℕ) (h : G.Hist t),
+      c + G.historyContinuationEU σ A h - A t h - F t h ≤
+        G.stageEUAt σ h who - G.historyContinuationEU σ V h)
+    (t : ℕ) :
+    c +
+          (G.expectedHistoryValue σ s₀ A (t + 1) -
+            G.expectedHistoryValue σ s₀ A t) -
+          G.expectedHistoryValue σ s₀ F t ≤
+        G.expectedStagePayoff σ s₀ t who -
+          G.expectedHistoryValue σ s₀ V (t + 1) := by
+  have hmean :=
+    expect_mono (G.histDist σ s₀ t) _ _ (hstep t)
+  simp only [expect_sub, expect_add, expect_const] at hmean
+  rw [G.expectedHistoryValue_succ σ s₀ A t,
+    G.expectedHistoryValue_succ σ s₀ V t]
+  unfold expectedHistoryValue expectedStagePayoff
+  linarith
+
 /-- Finite-horizon Bellman telescope for targets and potentials that may
 adapt to the full realized history. -/
 theorem finitePayoff_telescope_of_history_bellman_le

@@ -312,6 +312,24 @@ theorem discountRate_antitoneOn :
   exact one_div_le_one_div_of_le
     (mul_pos ha0 (sq_pos_of_pos hloga)) hden
 
+/-- Beyond `exp 1`, the account discount rate is at most one. -/
+theorem discountRate_le_one_of_exp_one_le
+    {s : ℝ} (hs : Real.exp 1 ≤ s) :
+    discountRate s ≤ 1 := by
+  have hexp1 : 1 < Real.exp 1 :=
+    Real.one_lt_exp_iff.mpr zero_lt_one
+  calc
+    discountRate s ≤ discountRate (Real.exp 1) :=
+      discountRate_antitoneOn
+        (by exact hexp1)
+        (hexp1.trans_le hs) hs
+    _ ≤ 1 := by
+      unfold discountRate
+      rw [Real.log_exp]
+      simpa using
+        one_div_le_one_div_of_le (show (0 : ℝ) < 1 by norm_num)
+          (Real.one_le_exp zero_le_one)
+
 /-- The slow discount schedule vanishes along large accounts. -/
 theorem tendsto_discountRate_atTop :
     Tendsto discountRate atTop (𝓝 0) := by
@@ -878,6 +896,18 @@ def IsValidScale (γ s : ℝ) : Prop :=
     2 ≤ s * (γ - 1) ∧
     1 ≤ s * (1 - γ⁻¹)
 
+/-- Increasing the account preserves every scale-validity inequality. -/
+theorem IsValidScale.mono
+    {γ s s' : ℝ} (h : IsValidScale γ s) (hss' : s ≤ s') :
+    IsValidScale γ s' := by
+  have hγ0 : 0 < γ := lt_trans zero_lt_one h.1
+  have hupFactor : 0 ≤ γ - 1 := sub_nonneg.mpr h.1.le
+  have hdownFactor : 0 ≤ 1 - γ⁻¹ :=
+    sub_nonneg.mpr ((inv_le_one₀ hγ0).2 h.1.le)
+  exact ⟨h.1, h.2.1.trans_le hss',
+    h.2.2.1.trans (mul_le_mul_of_nonneg_right hss' hupFactor),
+    h.2.2.2.trans (mul_le_mul_of_nonneg_right hss' hdownFactor)⟩
+
 /-- For `γ = 1 + ε/9`, the explicit floor condition `18/ε ≤ s`
 implies both probability-normalization scale bounds. -/
 theorem isValidScale_one_add_epsilon_div_nine
@@ -1017,6 +1047,10 @@ def nextAccount (γ s : ℝ) : AccountMove → ℝ
 def accountAtLevel (γ M : ℝ) (k : ℕ) : ℝ :=
   γ ^ k * M
 
+/-- Indicator that the finite exponent memory is at the account floor. -/
+def accountFloorIndicator {t : ℕ} (k : Fin (t + 1)) : ℝ :=
+  if (k : ℕ) = 0 then 1 else 0
+
 @[simp] theorem accountAtLevel_zero (γ M : ℝ) :
     accountAtLevel γ M 0 = M := by
   simp [accountAtLevel]
@@ -1028,6 +1062,44 @@ theorem floor_le_accountAtLevel
   have hpow : 1 ≤ γ ^ k := one_le_pow₀ hfloor.1.le
   unfold accountAtLevel
   nlinarith [mul_nonneg (sub_nonneg.mpr hpow) hfloor.2.1.le]
+
+/-- A reachable multiplicative account equals its floor exactly at exponent
+zero. -/
+theorem accountAtLevel_eq_floor_iff
+    {γ M : ℝ} (hfloor : IsValidScale γ M) (k : ℕ) :
+    accountAtLevel γ M k = M ↔ k = 0 := by
+  constructor
+  · intro heq
+    by_contra hk
+    have hpow : 1 < γ ^ k := one_lt_pow₀ hfloor.1 hk
+    unfold accountAtLevel at heq
+    nlinarith [mul_pos (sub_pos.mpr hpow) hfloor.2.1]
+  · rintro rfl
+    simp
+
+/-- Floor occupation is pointwise dominated by the current discount rate. -/
+theorem discountRate_mul_accountFloorIndicator_le
+    {t : ℕ} {γ M : ℝ} (hfloor : IsValidScale γ M) (hM1 : 1 < M)
+    (k : Fin (t + 1)) :
+    discountRate M * accountFloorIndicator k ≤
+      discountRate (accountAtLevel γ M k) := by
+  by_cases hk : (k : ℕ) = 0
+  · simp [accountFloorIndicator, hk, accountAtLevel]
+  · have hMs : M ≤ accountAtLevel γ M k :=
+      floor_le_accountAtLevel hfloor k
+    have hs1 : 1 < accountAtLevel γ M k := hM1.trans_le hMs
+    simp [accountFloorIndicator, hk, (discountRate_pos hs1).le]
+
+/-- Expected floor occupation is dominated by the expected current discount
+under any law on reachable account levels. -/
+theorem discountRate_mul_expect_accountFloorIndicator_le
+    {t : ℕ} {γ M : ℝ} (hfloor : IsValidScale γ M) (hM1 : 1 < M)
+    (d : PMF (Fin (t + 1))) :
+    discountRate M * expect d accountFloorIndicator ≤
+      expect d (fun k => discountRate (accountAtLevel γ M k)) := by
+  rw [← expect_const_mul]
+  exact expect_mono d _ _
+    (discountRate_mul_accountFloorIndicator_le hfloor hM1)
 
 /-- A valid floor scale remains valid at every higher multiplicative account
 level. -/
@@ -1691,6 +1763,7 @@ theorem exists_commonAccountFloor_of_puiseux_deriv_bound
       |W' k lam| ≤ lam ^ (β k - 1) / lam0 k) :
     ∃ M : ℝ,
       IsValidScale (1 + ε / 9) M ∧
+      Real.exp 1 ≤ M ∧
       1 < M ∧
       logCorrector M ≤ ε / 8 ∧
       (∀ s : ℝ, M ≤ s → ∀ s' : ℝ,
@@ -1714,36 +1787,84 @@ theorem exists_commonAccountFloor_of_puiseux_deriv_bound
     exists_floor_logCorrector_le hε
   let M :=
     max (max Sswitch Ssecant)
-      (max Scorrector (max (18 / ε) 2))
+      (max Scorrector (max (18 / ε) (Real.exp 1)))
   have hswitchM : Sswitch ≤ M :=
     (le_max_left Sswitch Ssecant).trans
       (le_max_left (max Sswitch Ssecant)
-        (max Scorrector (max (18 / ε) 2)))
+        (max Scorrector (max (18 / ε) (Real.exp 1))))
   have hsecantM : Ssecant ≤ M :=
     (le_max_right Sswitch Ssecant).trans
       (le_max_left (max Sswitch Ssecant)
-        (max Scorrector (max (18 / ε) 2)))
+        (max Scorrector (max (18 / ε) (Real.exp 1))))
   have hcorrectorM : Scorrector ≤ M :=
-    (le_max_left Scorrector (max (18 / ε) 2)).trans
+    (le_max_left Scorrector (max (18 / ε) (Real.exp 1))).trans
       (le_max_right (max Sswitch Ssecant)
-        (max Scorrector (max (18 / ε) 2)))
+        (max Scorrector (max (18 / ε) (Real.exp 1))))
   have hscaleM : 18 / ε ≤ M :=
-    ((le_max_left (18 / ε) 2).trans
-      (le_max_right Scorrector (max (18 / ε) 2))).trans
+    ((le_max_left (18 / ε) (Real.exp 1)).trans
+      (le_max_right Scorrector (max (18 / ε) (Real.exp 1)))).trans
         (le_max_right (max Sswitch Ssecant)
-          (max Scorrector (max (18 / ε) 2)))
-  have htwoM : 2 ≤ M :=
-    ((le_max_right (18 / ε) 2).trans
-      (le_max_right Scorrector (max (18 / ε) 2))).trans
+          (max Scorrector (max (18 / ε) (Real.exp 1))))
+  have hexpM : Real.exp 1 ≤ M :=
+    ((le_max_right (18 / ε) (Real.exp 1)).trans
+      (le_max_right Scorrector (max (18 / ε) (Real.exp 1)))).trans
         (le_max_right (max Sswitch Ssecant)
-          (max Scorrector (max (18 / ε) 2)))
+          (max Scorrector (max (18 / ε) (Real.exp 1))))
   refine ⟨M, isValidScale_one_add_epsilon_div_nine
-    hε hε1 hscaleM, by linarith, hcorrector M hcorrectorM,
+    hε hε1 hscaleM, hexpM,
+    (Real.one_lt_exp_iff.mpr zero_lt_one).trans_le hexpM,
+    hcorrector M hcorrectorM,
     ?_, ?_⟩
   · intro s hs s' hs'Lower hs'Upper
     exact hsecant s (hsecantM.trans hs) s' hs'Lower hs'Upper
   · intro k s hs M' y hscale hyLower hyUpper
     exact hswitch k s (hswitchM.trans hs) M' y
+      hscale hyLower hyUpper
+
+/-- The common account floor may be required to lie above any additional
+external threshold, without losing any of its analytic properties. -/
+theorem exists_commonAccountFloor_above_of_puiseux_deriv_bound
+    {κ : Type*} [Finite κ]
+    {ε : ℝ} {β lam0 : κ → ℝ} {W W' : κ → ℝ → ℝ}
+    (Sextra : ℝ)
+    (hε : 0 < ε) (hε1 : ε ≤ 1) (hεquarter : ε < 1 / 4)
+    (hβ : ∀ k, 0 < β k) (hlam0 : ∀ k, 0 < lam0 k)
+    (hWderiv : ∀ k lam, 0 < lam → lam < lam0 k →
+      HasDerivAt (W k) (W' k lam) lam)
+    (hWbound : ∀ k lam, 0 < lam → lam < lam0 k →
+      |W' k lam| ≤ lam ^ (β k - 1) / lam0 k) :
+    ∃ M : ℝ,
+      Sextra ≤ M ∧
+      IsValidScale (1 + ε / 9) M ∧
+      Real.exp 1 ≤ M ∧
+      1 < M ∧
+      logCorrector M ≤ ε / 8 ∧
+      (∀ s : ℝ, M ≤ s → ∀ s' : ℝ,
+        (1 + ε / 9)⁻¹ * s ≤ s' →
+        s' ≤ (1 + ε / 9) * s →
+        discountRate s *
+            (s' - s - ε * |s' - s| / 8) ≤
+          logCorrector s - logCorrector s') ∧
+      (∀ k : κ, ∀ s : ℝ, M ≤ s → ∀ M' y : ℝ,
+        IsValidScale (1 + ε / 9) s →
+        -1 ≤ y → y ≤ 2 →
+        switchBudget (1 + ε / 9) M' s y
+            (fun u => W k (discountRate u)) ≤
+          ε * discountRate s / 16) := by
+  obtain ⟨M0, hscale0, hexp0, hM01, hcorrector0,
+      hsecant0, hbudget0⟩ :=
+    exists_commonAccountFloor_of_puiseux_deriv_bound
+      hε hε1 hεquarter hβ hlam0 hWderiv hWbound
+  let M := max M0 Sextra
+  have hM0M : M0 ≤ M := le_max_left _ _
+  have hSM : Sextra ≤ M := le_max_right _ _
+  refine ⟨M, hSM, hscale0.mono hM0M, hexp0.trans hM0M,
+    hM01.trans_le hM0M, ?_, ?_, ?_⟩
+  · exact (logCorrector_le_of_le hM01 hM0M).trans hcorrector0
+  · intro s hs s' hs'Lower hs'Upper
+    exact hsecant0 s (hM0M.trans hs) s' hs'Lower hs'Upper
+  · intro k s hs M' y hscale hyLower hyUpper
+    exact hbudget0 k s (hM0M.trans hs) M' y
       hscale hyLower hyUpper
 
 /-- A sufficient adjacent-variation criterion for the weighted switch

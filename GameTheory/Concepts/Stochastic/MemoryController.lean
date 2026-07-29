@@ -376,6 +376,31 @@ theorem MemoryController.bind_belief_outcomeKernel
       rw [C.behaviorStrategy_apply]
     _ = C.behaviorOutcomeKernel opp h := hbehavior.symm
 
+/-- Expected stage payoff under the induced behavioral strategy is the
+posterior average of the fixed-memory outcome-kernel payoffs. -/
+theorem MemoryController.stageEUAt_behaviorStrategy
+    {G : StochasticGame ι} [Fintype ι] [DecidableEq ι]
+    [∀ i, Finite (G.Act i)] [Finite G.State]
+    {who : ι} (C : G.MemoryController who) (opp : G.BehaviorProfile)
+    {t : ℕ} (h : G.Hist t) :
+    G.stageEUAt (Function.update opp who C.behaviorStrategy) h who =
+      expect (C.belief t h) (fun m =>
+        expect (C.outcomeKernel opp h m) (fun o =>
+          G.stagePayoff h.2 o.1 who)) := by
+  rw [← expect_bind, C.bind_belief_outcomeKernel opp h]
+  unfold MemoryController.behaviorOutcomeKernel stageEUAt
+  rw [expect_bind]
+  apply congrArg
+  funext a
+  rw [expect_bind]
+  rw [show (fun s' =>
+      expect (PMF.pure (a, s')) (fun o =>
+        G.stagePayoff h.2 o.1 who)) =
+      (fun _ => G.stagePayoff h.2 a who) by
+        funext s'
+        rw [expect_pure]]
+  rw [expect_const]
+
 /-- One-step realization of the hidden-memory update. Starting from the
 posterior memory law, sampling memory before the action gives the same tagged
 outcome/next-memory law as sampling the mixed outcome first and then using the
