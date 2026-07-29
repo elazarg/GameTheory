@@ -337,9 +337,8 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_branchFiniteOrNil
       Module.Finite (FractionRing (Polynomial ℝ))
           (MvPolynomial G.State (FractionRing (Polynomial ℝ)) ⧸
             G.discountedShapleyKernelBranchIdeal branch) ∨
-        ∃ n : ℕ,
-          (G.discountedShapleyKernelBranchDenominator branch) ^ n ∈
-            G.discountedShapleyKernelBranchIdeal branch)
+        G.discountedShapleyKernelBranchDenominator branch ∈
+          (G.discountedShapleyKernelBranchIdeal branch).radical)
     (target : G.State) :
     ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
       ∀ l ∈ Set.Ioc (0 : ℝ) 1,

@@ -785,6 +785,33 @@ theorem map_discountedShapleyNonvanishingBranchIdeal_eq_top_of_denominator_pow_m
         (discountedShapleyBranchDenominator r T branch))
       n hdenominator
 
+/-- Radical membership of the localized denominator product makes the
+nonvanishing branch the unit ideal. -/
+theorem map_discountedShapleyNonvanishingBranchIdeal_eq_top_of_denominator_mem_radical
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (hdenominator :
+      MvPolynomial.map
+          (algebraMap (Polynomial ℝ)
+            (FractionRing (Polynomial ℝ)))
+          (discountedShapleyBranchDenominator r T branch) ∈
+        (discountedShapleyActiveBranchIdeal r T branch).radical) :
+    (discountedShapleyNonvanishingBranchIdeal r T branch).map
+        (MvPolynomial.map
+          (algebraMap (Polynomial ℝ)
+            (FractionRing (Polynomial ℝ)))) = ⊤ := by
+  rw [map_discountedShapleyNonvanishingBranchIdeal_eq_rabinowitschIdeal]
+  exact
+    Math.MultivariateElimination.rabinowitschIdeal_eq_top_of_mem_radical
+      (discountedShapleyActiveBranchIdeal r T branch)
+      (MvPolynomial.map
+        (algebraMap (Polynomial ℝ)
+          (FractionRing (Polynomial ℝ)))
+        (discountedShapleyBranchDenominator r T branch))
+      hdenominator
+
 /-- With a unique state, a nonvanishing Shapley branch is exactly a
 one-variable Rabinowitsch ideal. -/
 theorem discountedShapleyNonvanishingBranchIdeal_eq_uniqueRabinowitschIdeal
@@ -1471,12 +1498,11 @@ theorem exists_nonzero_bivariateRelation_of_activeBranches_finite_or_denominator
       Module.Finite (FractionRing (Polynomial ℝ))
           (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
             discountedShapleyActiveBranchIdeal r T branch) ∨
-        ∃ n : ℕ,
-          (MvPolynomial.map
+        MvPolynomial.map
             (algebraMap (Polynomial ℝ)
               (FractionRing (Polynomial ℝ)))
-            (discountedShapleyBranchDenominator r T branch)) ^ n ∈
-              discountedShapleyActiveBranchIdeal r T branch)
+            (discountedShapleyBranchDenominator r T branch) ∈
+          (discountedShapleyActiveBranchIdeal r T branch).radical)
     (target : κ) :
     ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
       ∀ l ∈ S,
@@ -1486,7 +1512,7 @@ theorem exists_nonzero_bivariateRelation_of_activeBranches_finite_or_denominator
     exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite
       r T w S hw
   intro branch hactive
-  rcases hbranch branch hactive with hfinite | ⟨n, hn⟩
+  rcases hbranch branch hactive with hfinite | hnilpotent
   · letI : Module.Finite (FractionRing (Polynomial ℝ))
         (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
           discountedShapleyActiveBranchIdeal r T branch) :=
@@ -1495,8 +1521,8 @@ theorem exists_nonzero_bivariateRelation_of_activeBranches_finite_or_denominator
       moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_activeBranch
         r T branch
   · rw [
-      map_discountedShapleyNonvanishingBranchIdeal_eq_top_of_denominator_pow_mem
-        r T branch n hn]
+      map_discountedShapleyNonvanishingBranchIdeal_eq_top_of_denominator_mem_radical
+        r T branch hnilpotent]
     exact Math.CofiniteIdeal.moduleFinite_quotient_top
 
 /-- Explicit monic coordinate relations certify the finite-dimensionality
