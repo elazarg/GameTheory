@@ -41,15 +41,17 @@ built:
    securing guarantee each player's strategy must meet — nothing about
    discount families, tail variation, or adaptive indices appears in either
    definition.
-2. **Constructors (mechanism-specific).** Two ways to build a row tracking
-   certificate are proved here, both genuinely using variation:
+2. **Constructors (mechanism-specific).** Two conditional ways to build a
+   row tracking certificate are proved here:
    * `trackingCertificate_of_discountBiasControl` ("mechanism 2") — from
      `IsTailVariationBounded` plus the promoted `IsRowIndexTrackingCert`
      hypothesis, along the canonical calendar schedule.
    * `trackingCertificate_of_runningDeficit` ("mechanism 3") — from the
-     sharpened, concrete `IsRowDeficitIndexSecuring` residual (the
-     Mertens–Neyman realized-running-deficit λ-update), by unwrapping its
-     already-fixed witness strategy.
+     concrete `IsRowDeficitIndexSecuring` property for the linear
+     running-surplus index candidate, choosing its index parameters at the
+     requested error level. This constructor is logically valid, but
+     `BigMatchDeficitIndexNoGo.lean` shows that the candidate is not a
+     universal way to obtain its premise.
    The `StageBSchedule` section's no-go remark (`tendsto_atTop_calSched_ratio`)
    is exactly why a *third*, more naive constructor — deriving mechanism 2's
    `IsRowIndexTrackingCert` hypothesis directly from `IsShapleyFamily` and
@@ -63,7 +65,7 @@ built:
    certificates from layer 1 and concludes `IsUniformEquilibriumPayoff` — its
    signature mentions neither `IsTailVariationBounded` nor any other
    construction mechanism, so it applies verbatim to certificates built by
-   mechanism 2, mechanism 3, or any future mechanism.
+   either conditional constructor or any other mechanism.
 
 ## Stage A: the discounted-value family and its contract
 
@@ -92,12 +94,10 @@ built:
   estimate: the adaptive-index potential `v (λ (t, h)) (state h)` is a
   historywise near-supermartingale, up to a per-stage error budget `e`,
   under the row player's `λ`-indexed strategy, against *every* opposing
-  play. This is the exact quantitative content Mertens–Neyman's λ-update
-  argument supplies (generalizing `BigMatchUniform.lean`'s `bfX`/`bfXExpect`
-  submartingale to the abstract discounted-value family); it is promoted to
-  a hypothesis here rather than derived from `IsShapleyFamily` and
-  `IsTailVariationBounded` directly (see the docstring on the definition for
-  the exact missing step).
+  play. It is the abstract quantitative interface an adaptive-index
+  argument must supply; it is a hypothesis rather than a consequence of
+  `IsShapleyFamily` and `IsTailVariationBounded` (see the definition's
+  docstring for the logical gap).
 * `StochasticGame.trackingCertificate_of_discountBiasControl` — **the core
   reduction, mechanism 2's constructor**: bounded payoffs,
   `IsTailVariationBounded`, and `IsRowIndexTrackingCert` (supplied along the
@@ -109,9 +109,9 @@ built:
 
 ### The zero-sum row/column protection bridge (`StageAB`) and its limits (`StageBSchedule`)
 
-`IsRowIndexTrackingCert` is **not** discharged in this file; it remains a
-promoted hypothesis, exactly as before. Two sorry-free pieces of genuine
-progress towards it are added instead, sharpening the residual:
+`IsRowIndexTrackingCert` is an explicit hypothesis in this file. Two
+theorems delimit what follows from the discounted data and what requires an
+additional adaptive construction:
 
 * `StochasticGame.IsShapleyFamily.le_row_discountedPayoff` (and its column
   mirror `le_col_discountedPayoff`) — the missing zero-sum bridge: at a
@@ -133,25 +133,21 @@ progress towards it are added instead, sharpening the residual:
   that a correct average-reward Bellman conversion needs diverges as
   `lam → 0⁺`, so it does not control the *scaled* bias jump
   `FinkSchedule.lean`'s `IsScheduledFinkSwitchBound` requires.
-  `FinkSchedule.lean`'s own docstring already flags this as an "unresolved
-  selection theorem"; closing it needs Mertens–Neyman's actual λ-update rule
-  (moving `λ` by the *realized running deficit*, not by calendar time alone)
-  — genuinely new mathematical content beyond algebraic reshuffling of the
-  existing Stage A data, and the true remaining content of
-  `IsRowIndexTrackingCert`.
+  Therefore the unscaled variation hypothesis alone cannot produce the
+  required switch bound. An additional history-adaptive construction with
+  a summable error budget is required.
 
-## The Mertens–Neyman adaptive index (`AdaptiveIndex`)
+## A rejected linear running-surplus index (`AdaptiveIndex`)
 
-The λ-update rule the previous section's remark calls for — genuinely new
-content, not algebraic reshuffling — is defined here, with its elementary
-properties proved and its own one-step tracking attempt carried as far as it
-goes without `sorry`:
+This section records and analyzes a simple history-adaptive candidate. Its
+elementary properties and the conditional implications of its crossing
+budget remain useful diagnostics, but it is not the Mertens–Neyman
+constructor:
 
 * `StochasticGame.rowRunningSurplus` / `rowIndexDenom` / `rowDeficitIndex` —
-  the adaptive index itself: the row player's *realized* running surplus
-  over a target `w` (the real-valued generalization of
-  `BigMatchUniform.lean`'s `netRightExcess`), its clamped denominator
-  (generalizing `bfDenom`), and the resulting discount-complement index
+  the candidate index: the row player's *realized* running surplus over a
+  target `w`, its linearly growing clamped denominator, and the resulting
+  discount-complement index
   `δ / rowIndexDenom`. `rowIndexDenom_snoc_of_le` gives the one-step update
   law; `rowDeficitIndex_pos`/`_le`/`_mem_Ioc`/`_lt_one` give its range facts;
   `rowDeficitIndex_eq_of_surplus_zero` / `_two_eq_calSched_of_surplus_zero`
@@ -165,21 +161,33 @@ goes without `sorry`:
   `stageEUAt` term) — see its docstring for the exact algebraic point where
   strengthening it further re-encounters the `β / (1 - β)` divergence, now
   fully explicit rather than a qualitative remark.
-* `StochasticGame.IsRowDeficitIndexSecuring` — the sharpened residual:
-  `IsRowIndexTrackingCert`'s abstract, opaque hypothesis, replaced by the
-  concrete statement that row's `rowDeficitIndex`-indexed strategy secures
-  the target `w` up to `ε` over long horizons. Strictly sharper than
-  `IsRowIndexTrackingCert` (no remaining freedom in `lam` or the per-step
-  budget `e`), it is **not proved** here; its docstring identifies exactly
-  the crossing/occupation argument — bounding how often `rowIndexDenom` is
-  pushed against its floor by a sustained shortfall, weighted by
-  `IsTailVariationBounded`'s modulus at each level visited — that a proof
-  would need.
+* `StochasticGame.rowDeficitTrackingGap` /
+  `IsRowDeficitCrossingBound` — the signed expectation-level error whose
+  partial sums retain the cancellation discarded by an absolute residual,
+  and the exact uniform crossing budget required of those sums.
+  `sum_rowDeficitTrackingGap` proves its telescope, while
+  `isRowDeficitIndexSecuring_of_crossingBound` proves that this budget and a
+  bounded indexed value potential imply the concrete securing residual.
+* `StochasticGame.IsRowDeficitIndexSecuring` — a concrete conditional
+  interface replacing `IsRowIndexTrackingCert`'s abstract index choice by
+  the statement that, at every requested error level, some
+  `rowDeficitIndex`-indexed strategy secures the target `w` over long
+  horizons. The index parameters may depend on the requested error, as a
+  uniform ε-optimal strategy must; after they are chosen, they are
+  independent of the opposing strategy and the horizon.
 * `StochasticGame.trackingCertificate_of_runningDeficit` — **mechanism 3's
   constructor**: repackages `IsRowDeficitIndexSecuring`'s already-fixed
   witness strategy as an `IsRowTrackingCertificate`. Pure existential
-  introduction, not a discharge of the residual above — it only fixes the
-  *shape* a future proof of `IsRowDeficitIndexSecuring` would deliver.
+  introduction, not a proof of its premise.
+
+`BigMatchDeficitIndexNoGo.lean` supplies the decisive acceptance test. On the
+all-Right live path, discounted Big-Match Bellman equilibria force this
+index to stop with a harmonic-order hazard. Those hazards are nonsummable,
+the live probability tends to zero, and the corresponding actual game
+payoff against all-Right tends to zero rather than the value `1/2`. A
+universal proof therefore needs a different adaptive index and budget
+invariant; the Blackwell–Ferguson square hazard illustrates the missing
+summability.
 
 ## Stage C: assembly to a uniform equilibrium payoff
 
@@ -742,7 +750,7 @@ theorem trackingCertificate_of_discountBiasControl
 end StageB
 
 -- ============================================================================
--- Stage B discharge attempt: the calendar-schedule connection and its limits
+-- The calendar-schedule connection and its logical limit
 -- ============================================================================
 
 section StageBSchedule
@@ -753,10 +761,9 @@ omit [Fintype G.State] [∀ i, Fintype (G.Act i)] in
 /-- Along the canonical calendar schedule, `IsShapleyFamily` gives a genuine
 `FinkSchedule.lean`-style `IsDiscountedStationaryBellmanSchedule`: statewise
 Nash consistency at every calendar stage `t`, with discount complement
-`calSched δ t`. This is the honest connection from Stage A's abstract
-per-`λ` data to the *existing*, correctly-scaled time-varying verification
-layer of `FinkSchedule.lean` — see the remark below for why this connection,
-by itself, still does not discharge `IsRowIndexTrackingCert`. -/
+`calSched δ t`. This connects Stage A's abstract per-`λ` data to the
+correctly scaled time-varying verification layer of `FinkSchedule.lean`.
+The connection alone does not imply `IsRowIndexTrackingCert`. -/
 theorem IsShapleyFamily.isDiscountedStationaryBellmanSchedule_calSched
     {v : ℝ → G.State → Payoff (Fin 2)} {x : ℝ → G.StationaryMixedProfile}
     (hSF : G.IsShapleyFamily v x) {δ : ℝ} (hδ : 0 < δ) (hδ1 : δ ≤ 1) :
@@ -764,8 +771,7 @@ theorem IsShapleyFamily.isDiscountedStationaryBellmanSchedule_calSched
       (fun t => x (calSched δ t)) (fun t => v (calSched δ t)) :=
   fun t => hSF (calSched δ t) ⟨calSched_pos hδ t, lt_of_lt_of_le (calSched_lt hδ t) hδ1⟩
 
-/-- **Why the discharge stops here — the sharpened residual.**
-`FinkSchedule.lean`'s
+/-- **Logical limit of the calendar reduction.** `FinkSchedule.lean`'s
 `IsDiscountedStationaryBellmanSchedule.finiteAveragePayoff_ge_targetAverage`
 would (via `isDiscountedStationaryBellmanSchedule_calSched` above, plus the
 zero-sum row-protection bridge of `IsDiscountedStationaryBellmanEq.row_bellman_ge`
@@ -785,14 +791,10 @@ in the *unscaled* sup norm can have an unbounded, non-summable *scaled* bias
 jump, and `IsScheduledFinkSwitchBound` (equivalently, the genuinely
 history-adaptive λ-index-tracking accounting `IsRowIndexTrackingCert`
 promotes) is **not** implied by `IsShapleyFamily` and `IsTailVariationBounded`
-alone. `FinkSchedule.lean`'s own module docstring already flags exactly this
-gap: "It does not assume the unresolved selection theorem needed to
-construct such a schedule in a general multiplayer stochastic game."
-Closing it needs Mertens–Neyman's actual λ-update rule — moving `λ` as a
-function of the *realized running deficit* between accumulated payoff and
-target, rather than of calendar time alone — which is not encoded anywhere
-in this file's or `FinkSchedule.lean`'s existing machinery, and is the
-genuine remaining content of `IsRowIndexTrackingCert`. -/
+alone. Any derivation therefore needs an additional history-adaptive
+selection and accounting argument. The linear running-surplus candidate in
+the next section does not provide that argument: its Big-Match acceptance
+test fails in `BigMatchDeficitIndexNoGo.lean`. -/
 theorem tendsto_atTop_calSched_ratio {δ : ℝ} (hδ : 0 < δ) :
     Filter.Tendsto (fun t : ℕ => (1 - calSched δ t) / calSched δ t)
       Filter.atTop Filter.atTop := by
@@ -809,41 +811,35 @@ theorem tendsto_atTop_calSched_ratio {δ : ℝ} (hδ : 0 < δ) :
 end StageBSchedule
 
 -- ============================================================================
--- The Mertens–Neyman adaptive index: the realized running-deficit λ-update
+-- A linear running-surplus index candidate
 -- ============================================================================
 
 section AdaptiveIndex
 
 /-!
-### The adaptive index (constructive partial progress towards `IsRowIndexTrackingCert`)
+### The linear running-surplus candidate
 
 `calSched`/`calScheduleHist` above is a **calendar** schedule: it depends only
-on elapsed time `t`, never on how play has actually gone. Mertens–Neyman's
-own λ-update instead moves the discount complement by the *realized* running
-deficit between accumulated payoff and a target — a genuinely
-history-adaptive index. This section defines that index as a Lean object,
-`rowDeficitIndex`, and proves its elementary properties: the one-step update
-law of its denominator, positivity/range bounds, and the fact that it is a
-strict generalization of `calSched` (recovered exactly when the realized
-surplus stays at `0`).
+on elapsed time `t`, never on how play has actually gone. The candidate in
+this section also responds to the realized running surplus between
+accumulated payoff and a target. It is defined as the Lean object
+`rowDeficitIndex`; its denominator update, range bounds, and calendar
+special case are elementary.
 
-The concrete template is `BigMatchUniform.lean`'s `netRightExcess`/`bfDenom`:
-there the denominator `bfDenom N k := max (k + N + 1) 1` is the clamped,
-shifted excess of the minimizer's realized `±1` actions. Here the excess is
-replaced by the row player's own *realized* running surplus over an
-arbitrary real target `w` — `rowRunningSurplus` — giving `rowIndexDenom`
-exactly the same clamped-additive shape, and `rowDeficitIndex := δ /
-rowIndexDenom` the corresponding index in the discount-complement domain
-(rather than `bfDenom`'s value-potential domain).
+The construction only superficially resembles
+`BigMatchUniform.lean`'s `netRightExcess`/`bfDenom` mechanism. In particular,
+its denominator contains an extra calendar term and its induced Big-Match
+stopping hazard has first power rather than the Blackwell–Ferguson square.
+`BigMatchDeficitIndexNoGo.lean` proves that this difference is fatal on the
+all-Right path.
 
 `rowDeficitIndex_bellman_le` below then attempts the one-step tracking
 estimate against arbitrary opposing play, generalizing
 `BigMatchUniform.lean`'s `bfX_le_expect_step`. It succeeds at a *weaker*
 shape than `IsRowIndexTrackingCert` (no external scalar target, only the
-potential's own one-step drift) — see its docstring and the sharpened
-residual `IsRowDeficitIndexCrossingBound` at the end of this section for
-exactly where and why the stronger, target-based shape still resists proof
-from this file's existing hypotheses alone.
+potential's own one-step drift). The conditional crossing interface at the
+end of the section records what would suffice for this candidate, without
+asserting that the interface follows from the discounted hypotheses.
 -/
 
 variable (G : StochasticGame (Fin 2)) [Fintype G.State] [∀ i, Fintype (G.Act i)]
@@ -857,10 +853,9 @@ actual accumulated stage payoff recorded along the history `h` (via
 *not* an expectation), in excess of `w` charged once per elapsed stage.
 Positive means row has actually earned above the target `w` so far along
 this specific play; negative means row is running a realized deficit below
-`w`. The exact real-valued generalization of `BigMatchUniform.lean`'s
-`netRightExcess` (there a `±1`-per-stage integer walk driven by the
-opponent's realized action; here a real-valued walk driven by row's own
-realized stage payoff against an arbitrary target `w`). -/
+`w`. It is analogous to `BigMatchUniform.lean`'s `netRightExcess`, but is
+driven by row's realized payoff rather than solely by the opponent's
+realized action. -/
 def rowRunningSurplus (w : ℝ) {t : ℕ} (h : G.Hist t) : ℝ :=
   G.totalPayoff 0 h - t * w
 
@@ -883,15 +878,12 @@ theorem rowRunningSurplus_snoc (w : ℝ) {t : ℕ} (h : G.Hist t) (a : G.JointAc
   push_cast
   ring
 
-/-- **The Mertens–Neyman index denominator.** The calendar clock `t + N`,
-shifted by the realized running surplus and clamped below by the floor `N` —
-the exact real-valued analogue of `BigMatchUniform.lean`'s `bfDenom N k :=
-max (k + N + 1) 1`. A realized surplus (row doing well) pushes the
-denominator *up* (so the index `δ / denom` below shrinks — more patient,
-closer to the vanishing-discount limit); a realized deficit pushes it back
-*down* towards the floor `N` (more aggressive, reacting faster to the
-shortfall), exactly the "moved by the realized running deficit" update law
-the task calls for. -/
+/-- **The candidate index denominator.** The calendar clock `t + N`, shifted
+by the realized running surplus and clamped below by the floor `N`. A
+realized surplus pushes the denominator up, while a realized deficit pushes
+it towards the floor. The explicit calendar term distinguishes it from the
+Blackwell–Ferguson denominator and causes the Big-Match obstruction proved
+in `BigMatchDeficitIndexNoGo.lean`. -/
 def rowIndexDenom (N : ℕ) (w : ℝ) {t : ℕ} (h : G.Hist t) : ℝ :=
   max (N : ℝ) ((t : ℝ) + N + G.rowRunningSurplus w h)
 
@@ -928,12 +920,11 @@ theorem rowIndexDenom_snoc_of_le (N : ℕ) (w : ℝ) {t : ℕ} (h : G.Hist t)
   rw [max_eq_right (by linarith [hoff1])]
   ring
 
-/-! #### Step 1–2: the adaptive index itself -/
+/-! #### Step 1–2: the candidate index itself -/
 
-/-- **The Mertens–Neyman adaptive index.** The row player's running discount
-complement `λ`, moved by the realized running deficit between accumulated
-payoff and a running target `w`: the base calendar rate `δ` divided by the
-deficit-adjusted denominator `rowIndexDenom`. By construction a
+/-- **The linear running-surplus index candidate.** The row player's running
+discount complement `λ`: the scale `δ` divided by the
+surplus-adjusted denominator `rowIndexDenom`. By construction a
 `G.HistoryPotential` — a function of the history prefix `Hist t` alone, so
 adapted to the natural filtration with no separate measurability proof
 needed in this finite discrete setting — ready to be plugged into
@@ -1035,10 +1026,9 @@ theorem stageActionDist_pairBehaviorProfile_rowIndexStrategy
   · simp [Function.update]
 
 omit [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
-/-- **The one-step adaptive-index tracking attempt** — generalizing
-`BigMatchUniform.lean`'s `bfX_le_expect_step` from the Big Match's concrete
-`bfX` potential to the abstract discounted-value family `v`, along the
-concrete `rowDeficitIndex` update law.
+/-- **A one-step estimate for the linear candidate.** This compares the Big
+Match's concrete `bfX_le_expect_step` pattern with an abstract
+discounted-value family `v` along the `rowDeficitIndex` update law.
 
 The bound splits into exactly the two pieces the module docstring's
 `StageBSchedule` remark identifies: (1) a fixed-`λ₀ := rowDeficitIndex …  t
@@ -1056,9 +1046,9 @@ target** `w` and **no `stageEUAt` term** on the right — `IsRowIndexTrackingCer
 additionally needs `target + v(λ₀) ≤ stageEU + E[v(λ')] + e`, i.e. needs the
 *fixed-λ₀* slack `λ₀ * (stageEU - E_fixed[v(λ₀)])` (not just its absolute
 bound `λ₀ * (C + Cv)`) to be dominated by `stageEU - w` for *every* possible
-opposing deviation. `IsRowDeficitIndexCrossingBound` below states precisely
-why that further step is exactly where the `β / (1 - β)` divergence bites
-even at this fully explicit, concrete index. -/
+opposing deviation. `IsRowDeficitCrossingBound` below isolates the stronger
+signed-average property that would be sufficient, without claiming it holds
+for this candidate. -/
 theorem IsShapleyFamily.rowDeficitIndex_bellman_le
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)]
     {v : ℝ → G.State → Payoff (Fin 2)} {x : ℝ → G.StationaryMixedProfile}
@@ -1167,67 +1157,177 @@ theorem IsShapleyFamily.rowDeficitIndex_bellman_le
     mul_le_mul_of_nonneg_right hlam0_le hCCv
   linarith [hkey, hjump, hlamCCv]
 
-/-! #### Step 4: the sharpened residual -/
+/-! #### Step 4: the crossing budget -/
 
-/-- **The sharpened residual.** The precise remaining content of
-`IsRowIndexTrackingCert`, once `lam` is fixed to the *concrete*
-`rowDeficitIndex δ N w` construction above: row's `λ`-indexed strategy along
-`rowDeficitIndex` secures the target `w` up to `ε`, over every sufficiently
-long horizon, against every column deviation. Literally
-`secures_vanishingDiscountLimit_row`'s conclusion, specialized to
-`σ := rowIndexStrategy x (rowDeficitIndex δ N w)`.
+/-- The signed one-step deficit left by the concrete running-index strategy.
+Unlike an absolute Bellman residual, this quantity preserves the cancellation
+between realized payoff shortfalls and movements of `rowDeficitIndex`. Its
+partial sums are the object a crossing/occupation argument must bound. -/
+def rowDeficitTrackingGap
+    (v : ℝ → G.State → Payoff (Fin 2))
+    (x : ℝ → G.StationaryMixedProfile) (δ : ℝ) (N : ℕ) (w : ℝ)
+    (s₀ : G.State) (dev : G.BehaviorStrategy 1) (t : ℕ) : ℝ :=
+  let lam := G.rowDeficitIndex δ N w
+  let σ := G.pairBehaviorProfile (G.rowIndexStrategy x lam) dev
+  let φ := G.indexPotential v lam
+  w + G.expectedHistoryValue σ s₀ φ t -
+    G.expectedStagePayoff σ s₀ t 0 -
+    G.expectedHistoryValue σ s₀ φ (t + 1)
 
-This is **strictly sharper** than the abstract `IsRowIndexTrackingCert`: all
-the freedom in choosing an arbitrary history-dependent `lam` and an
-arbitrary per-step budget `e` is gone — only `δ, N, w` remain free, and
-through them the fully explicit update law `rowIndexDenom_snoc_of_le`.
-`rowDeficitIndex_bellman_le` above proves *part* of what a derivation would
-need — the adaptive potential's own near-drift bound `v (lam t h) h.2 0 ≤ EA
-+ (δ / N) * (C + Cv) + ε` — but, as that theorem's docstring explains, this
-bound discards the *sign* of the fixed-`λ₀` conversion slack `λ₀ *
-(stageEU - E_fixed[v λ₀])`. Recovering `IsRowDeficitIndexSecuring` from it
-needs that *signed* slack's **Cesàro average along the realized play** to
-vanish, not merely each term to be individually bounded in absolute value.
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)] in
+/-- Exact telescope for the signed running-deficit tracking gaps. -/
+theorem sum_rowDeficitTrackingGap
+    (v : ℝ → G.State → Payoff (Fin 2))
+    (x : ℝ → G.StationaryMixedProfile) (δ : ℝ) (N : ℕ) (w : ℝ)
+    (s₀ : G.State) (dev : G.BehaviorStrategy 1) (T : ℕ) :
+    ∑ t ∈ Finset.range T, G.rowDeficitTrackingGap v x δ N w s₀ dev t =
+      (T : ℝ) * w +
+        G.expectedHistoryValue
+          (G.pairBehaviorProfile
+            (G.rowIndexStrategy x (G.rowDeficitIndex δ N w)) dev)
+          s₀ (G.indexPotential v (G.rowDeficitIndex δ N w)) 0 -
+        (∑ t ∈ Finset.range T,
+          G.expectedStagePayoff
+            (G.pairBehaviorProfile
+              (G.rowIndexStrategy x (G.rowDeficitIndex δ N w)) dev)
+            s₀ t 0) -
+        G.expectedHistoryValue
+          (G.pairBehaviorProfile
+            (G.rowIndexStrategy x (G.rowDeficitIndex δ N w)) dev)
+          s₀ (G.indexPotential v (G.rowDeficitIndex δ N w)) T := by
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      rw [Finset.sum_range_succ, Finset.sum_range_succ]
+      rw [ih]
+      simp only [rowDeficitTrackingGap]
+      push_cast
+      ring
 
-Concretely: writing out the per-step gap `w + v (lam t h) - stageEU - EA`
-that a target-based telescope (`finiteAveragePayoff_ge_of_history_bellman_le`)
-would need small, `rowDeficitIndex_bellman_le`'s own algebra gives it the
-form `-(1 - λ₀) * stageEU - λ₀ * E_fixed[v λ₀] + w`, which is **not** itself
-small — the `(1 - λ₀) ≈ 1` coefficient on `stageEU` is exactly the `β / (1 -
-β)`-type divergence the module docstring already flags, now made fully
-explicit and concrete. Closing the gap needs exactly the coupling
-`rowIndexDenom_snoc_of_le` already exposes: `rowIndexDenom`'s *only* driver
-is the same realized deficit `stagePayoff - w` that this per-step gap is
-built from, so a run of play that inflates the gap's negative contribution
-*simultaneously* drives `rowIndexDenom` down towards its floor `N` (raising
-`λ`, making the index react faster to the shortfall) — a genuine
-**crossing/occupation** argument, bounding how often and how far
-`rowIndexDenom` can be pushed against its floor by a sustained shortfall,
-weighted at each level it visits by `IsTailVariationBounded`'s modulus
-there. Formalizing that coupling — rather than merely naming it, as here —
-is the true remaining mathematical content of `IsRowIndexTrackingCert`, and
-is not attempted in this file. -/
+/-- The crossing/occupation obligation for the concrete deficit index. At
+each requested average error, choose the index scale and floor before the
+opposing strategy and horizon. The average *signed* tracking gap must then be
+small uniformly over both. This definition is a conditional specification;
+no theorem asserts that tail variation implies it for the linear index. -/
+def IsRowDeficitCrossingBound
+    (v : ℝ → G.State → Payoff (Fin 2))
+    (x : ℝ → G.StationaryMixedProfile) (w : ℝ) (s₀ : G.State) : Prop :=
+  ∀ η : ℝ, 0 < η →
+    ∃ (δ : ℝ) (N T₀ : ℕ),
+      0 < δ ∧ 1 ≤ N ∧ δ < N ∧
+      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
+        (T : ℝ)⁻¹ *
+            ∑ t ∈ Finset.range T,
+              G.rowDeficitTrackingGap v x δ N w s₀ dev t ≤ η
+
+/-! #### Step 5: the conditional securing interface -/
+
+/-- **Conditional securing interface for the linear candidate.** For each
+requested error, some `rowDeficitIndex δ N w` strategy secures the target
+`w` over every sufficiently long horizon and against every column
+deviation. The index parameters and horizon threshold are chosen before the
+deviation and horizon; the side conditions keep every realized index in
+`(0, 1)`.
+
+This property is stronger and more concrete than leaving an arbitrary
+history-dependent index existentially unspecified. It is intentionally a
+premise, not a claimed consequence of `IsShapleyFamily` or tail variation.
+The Big-Match obstruction in `BigMatchDeficitIndexNoGo.lean` rejects the
+linear index as a universal constructor, while the implications from this
+property remain logically useful. -/
 def IsRowDeficitIndexSecuring
-    (x : ℝ → G.StationaryMixedProfile) (δ : ℝ) (N : ℕ) (w : ℝ) (s₀ : G.State) : Prop :=
-  ∀ ε : ℝ, 0 < ε → ∃ T₀ : ℕ, ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
-    w - ε ≤ G.finiteAveragePayoff s₀ T
-      (G.pairBehaviorProfile (G.rowIndexStrategy x (G.rowDeficitIndex δ N w)) dev) 0
+    (x : ℝ → G.StationaryMixedProfile) (w : ℝ) (s₀ : G.State) : Prop :=
+  ∀ ε : ℝ, 0 < ε →
+    ∃ (δ : ℝ) (N T₀ : ℕ),
+      0 < δ ∧ 1 ≤ N ∧ δ < N ∧
+      ∀ (dev : G.BehaviorStrategy 1) (T : ℕ), T₀ ≤ T →
+        w - ε ≤ G.finiteAveragePayoff s₀ T
+          (G.pairBehaviorProfile
+            (G.rowIndexStrategy x (G.rowDeficitIndex δ N w)) dev) 0
+
+omit [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)] in
+/-- A bounded indexed value potential and the signed crossing budget imply
+the concrete running-deficit securing guarantee. This theorem removes the
+final stochastic-game packaging from the hard step: after
+`IsRowDeficitCrossingBound`, only the exact gap telescope and a vanishing
+endpoint term remain. -/
+theorem isRowDeficitIndexSecuring_of_crossingBound
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    {x : ℝ → G.StationaryMixedProfile} {w : ℝ} {s₀ : G.State} {C : ℝ}
+    (hC : ∀ lam ∈ Set.Ioo (0 : ℝ) 1, ∀ s, |v lam s 0| ≤ C)
+    (hcross : G.IsRowDeficitCrossingBound v x w s₀) :
+    G.IsRowDeficitIndexSecuring x w s₀ := by
+  intro ε hε
+  obtain ⟨δ, N, Tcross, hδ, hN, hδN, hcrossT⟩ :=
+    hcross (ε / 2) (half_pos hε)
+  obtain ⟨Tbound, hTbound⟩ := exists_nat_gt (4 * C / ε)
+  refine ⟨δ, N, max Tcross (max Tbound 1), hδ, hN, hδN, ?_⟩
+  intro dev T hT
+  have hTcross' : Tcross ≤ T :=
+    le_trans (le_max_left _ _) hT
+  have hTbound' : Tbound ≤ T :=
+    le_trans (le_trans (le_max_left _ _) (le_max_right Tcross _)) hT
+  have hTpos : 0 < T :=
+    lt_of_lt_of_le Nat.zero_lt_one
+      (le_trans (le_trans (le_max_right Tbound 1) (le_max_right Tcross _)) hT)
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hTpos
+  set lam := G.rowDeficitIndex δ N w with hlam
+  set σ := G.pairBehaviorProfile (G.rowIndexStrategy x lam) dev with hσ
+  set φ := G.indexPotential v lam with hφ
+  have hlam_mem : ∀ t (h : G.Hist t), lam t h ∈ Set.Ioo (0 : ℝ) 1 := by
+    intro t h
+    exact ⟨G.rowDeficitIndex_pos hδ hN w t h,
+      G.rowDeficitIndex_lt_one hδ hN hδN w t h⟩
+  have hφ_bound : ∀ t (h : G.Hist t), |φ t h| ≤ C := by
+    intro t h
+    exact hC (lam t h) (hlam_mem t h) h.2
+  have hE0 : -C ≤ G.expectedHistoryValue σ s₀ φ 0 := by
+    exact neg_le_of_abs_le
+      (abs_expect_le_of_abs_le (G.histDist σ s₀ 0) (φ 0) (hφ_bound 0))
+  have hET : G.expectedHistoryValue σ s₀ φ T ≤ C := by
+    exact le_of_abs_le
+      (abs_expect_le_of_abs_le (G.histDist σ s₀ T) (φ T) (hφ_bound T))
+  have hgap := hcrossT dev T hTcross'
+  have hsumGap := G.sum_rowDeficitTrackingGap v x δ N w s₀ dev T
+  rw [hsumGap] at hgap
+  change (T : ℝ)⁻¹ *
+      ((T : ℝ) * w + G.expectedHistoryValue σ s₀ φ 0 -
+        (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t 0) -
+        G.expectedHistoryValue σ s₀ φ T) ≤ ε / 2 at hgap
+  have hpay :
+      (∑ t ∈ Finset.range T, G.expectedStagePayoff σ s₀ t 0) =
+        (T : ℝ) * G.finiteAveragePayoff s₀ T σ 0 := by
+    rw [G.finiteAveragePayoff_eq_sum_expectedStagePayoff]
+    field_simp
+  rw [hpay] at hgap
+  rw [inv_mul_le_iff₀ hTreal] at hgap
+  have hTboundReal : (Tbound : ℝ) ≤ T := by exact_mod_cast hTbound'
+  have hboundary : 4 * C ≤ (T : ℝ) * ε := by
+    have hstrict : 4 * C < (Tbound : ℝ) * ε := by
+      rw [div_lt_iff₀ hε] at hTbound
+      exact hTbound
+    have hmono : (Tbound : ℝ) * ε ≤ (T : ℝ) * ε :=
+      mul_le_mul_of_nonneg_right hTboundReal hε.le
+    exact (hstrict.trans_le hmono).le
+  change w - ε ≤ G.finiteAveragePayoff s₀ T σ 0
+  nlinarith
 
 omit [Fintype G.State] [∀ i, Fintype (G.Act i)] [∀ i, Nonempty (G.Act i)] in
 /-- **Mechanism-3 constructor: the running-deficit tracking certificate.**
-`IsRowDeficitIndexSecuring` already names its witness strategy —
-`rowIndexStrategy x (rowDeficitIndex δ N w)` — once and for all, for every
-`ε`; repackaging that as the `∃ σ` shape of `IsRowTrackingCertificate` is
-pure existential introduction, with no change to the underlying quantitative
-content (`IsRowDeficitIndexSecuring` remains unproved — the "sharpened
-residual" described above — so this constructor is only as good as a future
-proof of its hypothesis; it fixes the *shape* mechanism 3 will produce). -/
+At the requested error level, `IsRowDeficitIndexSecuring` supplies `δ`, `N`,
+and therefore the concrete witness strategy
+`rowIndexStrategy x (rowDeficitIndex δ N w)`. Repackaging that witness as the
+`∃ σ` shape of `IsRowTrackingCertificate` is pure existential introduction,
+with no change to the underlying quantitative content. -/
 theorem trackingCertificate_of_runningDeficit
-    {x : ℝ → G.StationaryMixedProfile} {δ : ℝ} {N : ℕ} {w : ℝ} {s₀ : G.State}
-    (hsec : G.IsRowDeficitIndexSecuring x δ N w s₀) :
+    {x : ℝ → G.StationaryMixedProfile} {w : ℝ} {s₀ : G.State}
+    (hsec : G.IsRowDeficitIndexSecuring x w s₀) :
     G.IsRowTrackingCertificate w s₀ := by
   intro ε hε
-  obtain ⟨T₀, hT₀⟩ := hsec ε hε
+  obtain ⟨δ, N, T₀, _hδ, _hN, _hδN, hT₀⟩ := hsec ε hε
   exact ⟨G.rowIndexStrategy x (G.rowDeficitIndex δ N w), T₀, hT₀⟩
 
 end AdaptiveIndex

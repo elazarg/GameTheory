@@ -219,6 +219,46 @@ theorem discountedStationaryBellmanEq_values
   · exact hv
   · rw [show V .live true = w from rfl, hwneg, hv]
 
+/-- The maximizer's stopping probability in every discounted stationary
+Bellman equilibrium is forced by the discount complement. With
+`lam = 1 - β`, it is `lam / (1 + lam)`. This rate is the Big-Match
+acceptance test for any strategy obtained by feeding a history-dependent
+discount index into stationary discounted equilibria. -/
+theorem live_maximizer_stopProbability_eq
+    {β : ℝ} (hβ0 : 0 ≤ β) (hβ1 : β < 1)
+    {x : game.StationaryMixedProfile} {V : State → Payoff Player}
+    (hF : game.IsDiscountedStationaryBellmanEq β x V) :
+    ((x .live false) true).toReal = (1 - β) / (2 - β) := by
+  obtain ⟨hzero, _honeMax, honeMin, hliveMax, hliveMin⟩ :=
+    discountedStationaryBellmanEq_values hβ0 hβ1 hF
+  let p : ℝ := ((x .live false) true).toReal
+  let v : ℝ := V .live false
+  let w : ℝ := V .live true
+  have hwneg : w = -v := by
+    dsimp [v, w]
+    linarith only [hliveMax, hliveMin]
+  have hleft := hF.1 .live true (PMF.pure false)
+  rw [hF.2 .live true, discountedAuxEU_live_minimizer,
+    hzero true, honeMin] at hleft
+  have hright := hF.1 .live true (PMF.pure true)
+  rw [hF.2 .live true, discountedAuxEU_live_minimizer,
+    hzero true, honeMin] at hright
+  have hleft' : v ≤ p + (1 - p) * β * v := by
+    simp [v, w, hwneg] at hleft
+    dsimp [p, v]
+    nlinarith only [hleft]
+  have hright' : v ≤ (1 - p) * ((1 - β) + β * v) := by
+    simp [v, w, hwneg] at hright
+    dsimp [p, v]
+    nlinarith only [hright]
+  have hpEq : (2 - β) * p = 1 - β := by
+    dsimp [v] at hleft' hright'
+    rw [hliveMax] at hleft' hright'
+    nlinarith only [hleft', hright']
+  change p = (1 - β) / (2 - β)
+  apply (eq_div_iff (by linarith only [hβ1])).2
+  simpa only [mul_comm] using hpEq
+
 /-- The semantic property required by the corrected-calendar endpoint. -/
 def HasHalfLiveValueForDiscountedBellmanEquilibria : Prop :=
   ∀ (β : ℝ) (x : game.StationaryMixedProfile)

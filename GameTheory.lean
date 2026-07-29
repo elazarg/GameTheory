@@ -137,6 +137,7 @@ import GameTheory.Concepts.Stochastic.BigMatchMarkov
 import GameTheory.Concepts.Stochastic.BigMatchNoMarkov
 import GameTheory.Concepts.Stochastic.BigMatchUniform
 import GameTheory.Concepts.Stochastic.BigMatchFink
+import GameTheory.Concepts.Stochastic.BigMatchDeficitIndexNoGo
 import GameTheory.Concepts.Stochastic.BigMatchFinkEndpoint
 import GameTheory.Concepts.Stochastic.FinkBoundaryCalendar
 import GameTheory.Concepts.Stochastic.QuittingGame
