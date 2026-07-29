@@ -1201,7 +1201,36 @@ memory.
   confusingly, whereas a missing index fails immediately at the signature.
   If that prediction survives, the outcome is to keep the bundled form and record
   the annotation as a known, bounded tax with a lint rather than a redesign.
-- **Evidence:** *pending*
-- **Observation:** *pending*
-- **Outcome:** *pending*
-- **Next action:** *pending*
+- **Evidence:** `GameTheory/Experimental/Phase4/D1/IndexedProtocol.lean` — the
+  same execution interface with its two carriers promoted to parameters, carried
+  as far as a concrete instance and an induction over histories.
+- **Observation: the spike confirms both costs vanish, and refutes the mechanism
+  the prediction rested on.**
+  Both costs do vanish. The concrete instance needs no reducibility annotation,
+  because there is no projection for anything downstream to get stuck on. And
+  the induction over histories goes through with its index written at the
+  carrier — the spelling that fails under the bundled form, where it must be
+  written at the structure's projection instead. Here there is no other way to
+  write it.
+  The prediction that the count favours bundling is wrong, and wrong about *why*.
+  It assumed each mention of the structure pays for the promotion. It does not:
+  the thirty-three type positions are absorbed by a `variable` declaration, as
+  they are in the spike. What the count actually shows runs the other way — the
+  library contains **243** projections of a stored carrier, every one of them a
+  site where the reducibility of the instance has to fire, and all of them
+  carried by **22** annotations. The bundled form is not paying one annotation
+  per instance; it is paying one annotation per instance to keep 243 sites
+  elaborating, and an omission is felt at some subset of them rather than where
+  it was made.
+  So the count does not favour bundling. It is closer to neutral-to-against, and
+  the deciding evidence remains the one the prediction did get right: the failure
+  mode.
+- **Outcome:** *in progress* — the prediction is narrowed rather than confirmed,
+  and the decision is not yet made. Two things the spike does not measure: the
+  transport burden that made bundling attractive on the static layer in the first
+  place, which was the original competition's subject and is not re-run here; and
+  whether anything in the library needs a collection of protocols with differing
+  carriers, which only the bundled form admits.
+- **Next action:** measure the flip on one real module rather than a toy — the
+  honest cost is what it takes to move `Execution.lean` and its dependents, not
+  what a fresh file looks like.
