@@ -513,6 +513,23 @@ def accountLevelMemoryPotential
     (γ M : ℝ) (t : ℕ) (_h : G.Hist t) (k : Fin (t + 1)) : ℝ :=
   accountAtLevel γ M k
 
+/-- Either secured player's discounted value on the finite reachable account
+memory. -/
+def accountValueMemoryPotential
+    {G : StochasticGame (Fin 2)} (who : Fin 2)
+    (γ M : ℝ) (v : ℝ → G.State → Payoff (Fin 2))
+    (t : ℕ) (h : G.Hist t) (k : Fin (t + 1)) : ℝ :=
+  v (discountRate (accountAtLevel γ M k)) h.2 who
+
+/-- Either secured player's discounted value minus the logarithmic account
+corrector on finite reachable memory. -/
+def accountCorrectedMemoryPotential
+    {G : StochasticGame (Fin 2)} (who : Fin 2)
+    (γ M : ℝ) (v : ℝ → G.State → Payoff (Fin 2))
+    (t : ℕ) (h : G.Hist t) (k : Fin (t + 1)) : ℝ :=
+  v (discountRate (accountAtLevel γ M k)) h.2 who -
+    logCorrector (accountAtLevel γ M k)
+
 /-- The row discounted value minus the logarithmic account corrector, viewed
 as a potential on the finite reachable memory of the account controller. -/
 def rowAccountCorrectedMemoryPotential
@@ -1068,6 +1085,310 @@ theorem row_accountMemoryController_beliefPotential_drift_ge
     C.beliefPotential_drift_ge opp φ h r hstep
   simpa [r, expect_const_mul] using hlift
 
+/-- The symmetric fixed-memory corrected drift for the account controller on
+an arbitrary unit payoff/value interval. -/
+theorem accountMemoryControllerOnUnitInterval_correctedPotential_drift_ge
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} {lower γ M ε : ℝ}
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hfloor : IsValidScale γ M) (hM1 : 1 < M)
+    (hε : 0 ≤ ε) (hε2 : ε ≤ 2)
+    (hpayLower :
+      ∀ z a, lower ≤ G.stagePayoff z a who)
+    (hpayUpper :
+      ∀ z a, G.stagePayoff z a who ≤ lower + 1)
+    (hvalueLower :
+      ∀ lam z, lower ≤ v lam z who)
+    (hvalueUpper :
+      ∀ lam z, v lam z who ≤ lower + 1)
+    (hsecurity :
+      IsDiscountedStationarySecurityFamily (G := G) who x v)
+    (hsecant : ∀ s, M ≤ s → ∀ s',
+      γ⁻¹ * s ≤ s' → s' ≤ γ * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s')
+    (hbudget : ∀ z s y, M ≤ s → IsValidScale γ s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget γ M s y
+          (fun u => v (discountRate u) z who) ≤
+        ε * discountRate s / 16)
+    (opp : G.BehaviorProfile) {t : ℕ} (h : G.Hist t)
+    (k : Fin (t + 1)) :
+    let C := accountMemoryControllerOnUnitInterval
+      lower γ M ε
+      (fun lam z => x lam z who)
+      (fun lam z => v lam z who)
+      hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+    ε * discountRate (accountAtLevel γ M k) / 8 ≤
+      expect (C.outcomeKernel opp h k) (fun o =>
+          expect (C.update t h o.1 o.2 k) (fun k' =>
+            accountCorrectedMemoryPotential who γ M v
+              (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) -
+        accountCorrectedMemoryPotential who γ M v t h k := by
+  dsimp only
+  let s := accountAtLevel γ M k
+  let C := accountMemoryControllerOnUnitInterval
+    lower γ M ε
+    (fun lam z => x lam z who)
+    (fun lam z => v lam z who)
+    hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+  let d : PMF (G.JointAct × G.State) :=
+    C.outcomeKernel opp h k
+  change ε * discountRate (accountAtLevel γ M k) / 8 ≤
+    expect d (fun o =>
+        expect (C.update t h o.1 o.2 k) (fun k' =>
+          accountCorrectedMemoryPotential who γ M v
+            (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) -
+      accountCorrectedMemoryPotential who γ M v t h k
+  have hMs : M ≤ s := floor_le_accountAtLevel hfloor k
+  have hscale : IsValidScale γ s :=
+    isValidScale_accountAtLevel hfloor k
+  have hs1 : 1 < s := hM1.trans_le hMs
+  have hbase :=
+    controller_correctedValuePotential_drift_ge_of_securityFamily
+      hsecurity C opp h k (by rfl) hscale hMs hs1 hε
+      (hpayLower h.2) (hpayUpper h.2)
+      (hvalueLower (discountRate s))
+      (hvalueUpper (discountRate s)) hε2
+      (hsecant s hMs)
+      (by
+        intro o
+        apply hbudget o.2 s
+          (G.stagePayoff h.2 o.1 who -
+            v (discountRate s) o.2 who + ε / 2)
+          hMs hscale
+        · nlinarith [hpayLower h.2 o.1,
+            hvalueUpper (discountRate s) o.2]
+        · nlinarith [hpayUpper h.2 o.1,
+            hvalueLower (discountRate s) o.2])
+  have hupdate :
+      ∀ o : G.JointAct × G.State,
+        expect (C.update t h o.1 o.2 k) (fun k' =>
+            accountCorrectedMemoryPotential who γ M v
+              (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k') =
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff h.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale
+              (by
+                nlinarith [hpayLower h.2 o.1,
+                  hvalueUpper (discountRate s) o.2])
+              (by
+                nlinarith [hpayUpper h.2 o.1,
+                  hvalueLower (discountRate s) o.2]))
+            (fun move =>
+              v (discountRate (nextAccount γ s move)) o.2 who -
+                logCorrector (nextAccount γ s move)) := by
+    intro o
+    simpa [C, s, accountMemoryControllerOnUnitInterval,
+      accountCorrectedMemoryPotential] using
+      expect_map_nextAccountLevel_accountPotential
+        k hscale
+        (by
+          nlinarith [hpayLower h.2 o.1,
+            hvalueUpper (discountRate s) o.2])
+        (by
+          nlinarith [hpayUpper h.2 o.1,
+            hvalueLower (discountRate s) o.2])
+        (fun u =>
+          v (discountRate u) o.2 who - logCorrector u)
+  rw [show accountAtLevel γ M k = s by rfl]
+  rw [show
+    accountCorrectedMemoryPotential who γ M v t h k =
+      v (discountRate s) h.2 who - logCorrector s by
+        rfl]
+  simp_rw [hupdate]
+  calc
+    ε * discountRate s / 8 ≤
+        expect d (fun o =>
+            expect
+              (updatePMF γ M s
+                (G.stagePayoff h.2 o.1 who -
+                  v (discountRate s) o.2 who + ε / 2)
+                hscale
+                (by
+                  nlinarith [hpayLower h.2 o.1,
+                    hvalueUpper (discountRate s) o.2])
+                (by
+                  nlinarith [hpayUpper h.2 o.1,
+                    hvalueLower (discountRate s) o.2]))
+              (fun move =>
+                v (discountRate (nextAccount γ s move)) o.2 who)) -
+          v (discountRate s) h.2 who +
+        expect d (fun o =>
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff h.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale
+              (by
+                nlinarith [hpayLower h.2 o.1,
+                  hvalueUpper (discountRate s) o.2])
+              (by
+                nlinarith [hpayUpper h.2 o.1,
+                  hvalueLower (discountRate s) o.2]))
+            (fun move =>
+              logCorrector s -
+                logCorrector (nextAccount γ s move))) := by
+          simpa [d] using hbase
+    _ = expect d (fun o =>
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff h.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale
+              (by
+                nlinarith [hpayLower h.2 o.1,
+                  hvalueUpper (discountRate s) o.2])
+              (by
+                nlinarith [hpayUpper h.2 o.1,
+                  hvalueLower (discountRate s) o.2]))
+            (fun move =>
+              v (discountRate (nextAccount γ s move)) o.2 who -
+                logCorrector (nextAccount γ s move))) -
+          (v (discountRate s) h.2 who - logCorrector s) := by
+      simp_rw [expect_sub, expect_const]
+      ring
+
+/-- Posterior averaging lifts the symmetric fixed-memory account drift to the
+behavioral history law. -/
+theorem accountMemoryControllerOnUnitInterval_beliefPotential_drift_ge
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} {lower γ M ε : ℝ}
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hfloor : IsValidScale γ M) (hM1 : 1 < M)
+    (hε : 0 ≤ ε) (hε2 : ε ≤ 2)
+    (hpayLower :
+      ∀ z a, lower ≤ G.stagePayoff z a who)
+    (hpayUpper :
+      ∀ z a, G.stagePayoff z a who ≤ lower + 1)
+    (hvalueLower :
+      ∀ lam z, lower ≤ v lam z who)
+    (hvalueUpper :
+      ∀ lam z, v lam z who ≤ lower + 1)
+    (hsecurity :
+      IsDiscountedStationarySecurityFamily (G := G) who x v)
+    (hsecant : ∀ s, M ≤ s → ∀ s',
+      γ⁻¹ * s ≤ s' → s' ≤ γ * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s')
+    (hbudget : ∀ z s y, M ≤ s → IsValidScale γ s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget γ M s y
+          (fun u => v (discountRate u) z who) ≤
+        ε * discountRate s / 16)
+    (opp : G.BehaviorProfile) {t : ℕ} (h : G.Hist t) :
+    let C := accountMemoryControllerOnUnitInterval
+      lower γ M ε
+      (fun lam z => x lam z who)
+      (fun lam z => v lam z who)
+      hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+    let φ : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+      fun n hmem k =>
+        accountCorrectedMemoryPotential who γ M v n hmem k
+    ε / 8 *
+        expect (C.belief t h) (fun k =>
+          discountRate (accountAtLevel γ M
+            ((show Fin (t + 1) from k) : ℕ))) ≤
+      G.historyContinuationEU
+          (Function.update opp who C.behaviorStrategy)
+          (C.beliefPotential φ) h -
+        C.beliefPotential φ t h := by
+  dsimp only
+  let C := accountMemoryControllerOnUnitInterval
+    lower γ M ε
+    (fun lam z => x lam z who)
+    (fun lam z => v lam z who)
+    hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+  let φ : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+    fun n hmem k =>
+      accountCorrectedMemoryPotential who γ M v n hmem k
+  let r : C.Mem t → ℝ := fun k =>
+    ε / 8 * discountRate (accountAtLevel γ M
+      ((show Fin (t + 1) from k) : ℕ))
+  change ε / 8 *
+      expect (C.belief t h) (fun k =>
+        discountRate (accountAtLevel γ M
+          ((show Fin (t + 1) from k) : ℕ))) ≤
+    G.historyContinuationEU
+        (Function.update opp who C.behaviorStrategy)
+        (C.beliefPotential φ) h -
+      C.beliefPotential φ t h
+  have hstep : ∀ k : C.Mem t,
+      r k ≤
+        expect (C.outcomeKernel opp h k) (fun o =>
+          expect (C.update t h o.1 o.2 k) (fun k' =>
+            φ (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) -
+          φ t h k := by
+    intro k
+    change ε / 8 *
+        discountRate (accountAtLevel γ M
+          ((show Fin (t + 1) from k) : ℕ)) ≤
+      expect (C.outcomeKernel opp h k) (fun o =>
+        expect (C.update t h o.1 o.2 k) (fun k' =>
+          φ (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) -
+        φ t h k
+    rw [show ε / 8 *
+        discountRate (accountAtLevel γ M
+          ((show Fin (t + 1) from k) : ℕ)) =
+      ε * discountRate (accountAtLevel γ M
+        ((show Fin (t + 1) from k) : ℕ)) / 8 by ring]
+    simpa [C, φ] using
+      accountMemoryControllerOnUnitInterval_correctedPotential_drift_ge
+        hfloor hM1 hε hε2 hpayLower hpayUpper
+        hvalueLower hvalueUpper hsecurity hsecant hbudget
+        opp h k
+  have hlift :=
+    C.beliefPotential_drift_ge opp φ h r hstep
+  simpa [r, expect_const_mul] using hlift
+
+/-- The translated corrected account potential is bounded below by the lower
+endpoint minus the floor corrector. -/
+theorem accountCorrectedMemoryPotential_lower
+    {G : StochasticGame (Fin 2)}
+    {who : Fin 2} {lower γ M ε : ℝ}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hfloor : IsValidScale γ M) (hM1 : 1 < M)
+    (hcorrector : logCorrector M ≤ ε / 8)
+    (hvalueLower : ∀ lam z, lower ≤ v lam z who)
+    {t : ℕ} (h : G.Hist t) (k : Fin (t + 1)) :
+    lower - ε / 8 ≤
+      accountCorrectedMemoryPotential who γ M v t h k := by
+  have hMs : M ≤ accountAtLevel γ M k :=
+    floor_le_accountAtLevel hfloor k
+  have hlog :
+      logCorrector (accountAtLevel γ M k) ≤ logCorrector M :=
+    logCorrector_le_of_le hM1 hMs
+  unfold accountCorrectedMemoryPotential
+  nlinarith [hvalueLower
+    (discountRate (accountAtLevel γ M k)) h.2]
+
+/-- The translated corrected account potential is bounded above by the upper
+endpoint of its unit interval. -/
+theorem accountCorrectedMemoryPotential_upper
+    {G : StochasticGame (Fin 2)}
+    {who : Fin 2} {lower γ M : ℝ}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hfloor : IsValidScale γ M) (hM1 : 1 < M)
+    (hvalueUpper : ∀ lam z, v lam z who ≤ lower + 1)
+    {t : ℕ} (h : G.Hist t) (k : Fin (t + 1)) :
+    accountCorrectedMemoryPotential who γ M v t h k ≤
+      lower + 1 := by
+  have hMs : M ≤ accountAtLevel γ M k :=
+    floor_le_accountAtLevel hfloor k
+  have hs1 : 1 < accountAtLevel γ M k := hM1.trans_le hMs
+  have hlog := (logCorrector_pos hs1).le
+  unfold accountCorrectedMemoryPotential
+  nlinarith [hvalueUpper
+    (discountRate (accountAtLevel γ M k)) h.2]
+
 /-- The corrected account potential is bounded below once the floor makes the
 logarithmic corrector at most `ε/8`. -/
 theorem rowAccountCorrectedMemoryPotential_lower
@@ -1104,40 +1425,40 @@ theorem rowAccountCorrectedMemoryPotential_upper
   nlinarith [hvalueUpper
     (discountRate (accountAtLevel γ M k)) h.2]
 
-/-- A bounded posterior potential with account-rate drift controls the total
-expected occupation of the floor under the actual history law. The controller
-is abstract here; `level` identifies each of its finite memory states with the
-reachable account exponent used for the pointwise floor-rate domination. -/
-theorem sum_expected_belief_floorOccupation_le
+/-- A posterior potential in any translated unit interval, with account-rate
+drift, controls total expected floor occupation under the actual history law.
+The controller and secured player are abstract. -/
+theorem sum_expected_belief_floorOccupation_le_on_interval
     {G : StochasticGame (Fin 2)}
     [Finite G.State] [∀ i, Finite (G.Act i)]
-    {γ M ε : ℝ} (hε : 0 < ε) (hε1 : ε ≤ 1)
+    {who : Fin 2} {γ M ε : ℝ}
+    (lower : ℝ) (hε : 0 < ε) (hε1 : ε ≤ 1)
     (hfloor : IsValidScale γ M) (hM1 : 1 < M)
-    (C : G.MemoryController 0)
+    (C : G.MemoryController who)
     (level : ∀ t, C.Mem t → Fin (t + 1))
     (φ : (t : ℕ) → G.Hist t → C.Mem t → ℝ)
     (hpotentialLower : ∀ t (h : G.Hist t),
-      -ε / 8 ≤ C.beliefPotential φ t h)
+      lower - ε / 8 ≤ C.beliefPotential φ t h)
     (hpotentialUpper : ∀ t (h : G.Hist t),
-      C.beliefPotential φ t h ≤ 1)
+      C.beliefPotential φ t h ≤ lower + 1)
     (opp : G.BehaviorProfile) (s₀ : G.State)
     (hdrift : ∀ t (h : G.Hist t),
       ε / 8 *
           expect (C.belief t h) (fun m =>
             discountRate (accountAtLevel γ M (level t m))) ≤
         G.historyContinuationEU
-            (Function.update opp 0 C.behaviorStrategy)
+            (Function.update opp who C.behaviorStrategy)
             (C.beliefPotential φ) h -
           C.beliefPotential φ t h)
     (T : ℕ) :
     ∑ t ∈ Finset.range T,
         G.expectedHistoryValue
-          (Function.update opp 0 C.behaviorStrategy) s₀
+          (Function.update opp who C.behaviorStrategy) s₀
           (C.beliefPotential (fun n _ m =>
             accountFloorIndicator (level n m))) t ≤
       9 / (ε * discountRate M) := by
   let σ : G.BehaviorProfile :=
-    Function.update opp 0 C.behaviorStrategy
+    Function.update opp who C.behaviorStrategy
   let rateMemory : (t : ℕ) → G.Hist t → C.Mem t → ℝ :=
     fun t _ m => discountRate (accountAtLevel γ M (level t m))
   let floorMemory : (t : ℕ) → G.Hist t → C.Mem t → ℝ :=
@@ -1184,29 +1505,69 @@ theorem sum_expected_belief_floorOccupation_le
     unfold expectedHistoryValue at hmean ⊢
     rw [expect_const_mul] at hmean
     nlinarith
-  have hpotential0 : -ε / 8 ≤ potential 0 := by
+  have hpotential0 : lower - ε / 8 ≤ potential 0 := by
     unfold potential expectedHistoryValue
     calc
-      -ε / 8 =
-          expect (G.histDist σ s₀ 0) (fun _ => -ε / 8) := by
+      lower - ε / 8 =
+          expect (G.histDist σ s₀ 0)
+            (fun _ => lower - ε / 8) := by
             rw [expect_const]
       _ ≤ expect (G.histDist σ s₀ 0)
           (C.beliefPotential φ 0) :=
         expect_mono _ _ _ (hpotentialLower 0)
-  have hpotentialT : potential T ≤ 1 := by
+  have hpotentialT : potential T ≤ lower + 1 := by
     unfold potential expectedHistoryValue
     calc
       expect (G.histDist σ s₀ T)
           (C.beliefPotential φ T) ≤
-          expect (G.histDist σ s₀ T) (fun _ => 1) :=
+          expect (G.histDist σ s₀ T) (fun _ => lower + 1) :=
         expect_mono _ _ _ (hpotentialUpper T)
-      _ = 1 := expect_const _ _
+      _ = lower + 1 := expect_const _ _
   have hsum :=
-    sum_floorLoss_le_of_potential_drift
-      hε hε1 (discountRate_pos hM1)
+    sum_floorLoss_le_of_potential_drift_on_interval
+      hε hε1 (discountRate_pos hM1) lower
       rate potential floorLoss hfloorRate hdriftExpected
       hpotential0 hpotentialT
   simpa [σ, floorLoss, floorMemory] using hsum
+
+/-- Zero-based row specialization of
+`sum_expected_belief_floorOccupation_le_on_interval`. -/
+theorem sum_expected_belief_floorOccupation_le
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {γ M ε : ℝ} (hε : 0 < ε) (hε1 : ε ≤ 1)
+    (hfloor : IsValidScale γ M) (hM1 : 1 < M)
+    (C : G.MemoryController 0)
+    (level : ∀ t, C.Mem t → Fin (t + 1))
+    (φ : (t : ℕ) → G.Hist t → C.Mem t → ℝ)
+    (hpotentialLower : ∀ t (h : G.Hist t),
+      -ε / 8 ≤ C.beliefPotential φ t h)
+    (hpotentialUpper : ∀ t (h : G.Hist t),
+      C.beliefPotential φ t h ≤ 1)
+    (opp : G.BehaviorProfile) (s₀ : G.State)
+    (hdrift : ∀ t (h : G.Hist t),
+      ε / 8 *
+          expect (C.belief t h) (fun m =>
+            discountRate (accountAtLevel γ M (level t m))) ≤
+        G.historyContinuationEU
+            (Function.update opp 0 C.behaviorStrategy)
+            (C.beliefPotential φ) h -
+          C.beliefPotential φ t h)
+    (T : ℕ) :
+    ∑ t ∈ Finset.range T,
+        G.expectedHistoryValue
+          (Function.update opp 0 C.behaviorStrategy) s₀
+          (C.beliefPotential (fun n _ m =>
+            accountFloorIndicator (level n m))) t ≤
+      9 / (ε * discountRate M) := by
+  simpa using
+    sum_expected_belief_floorOccupation_le_on_interval
+      0 hε hε1 hfloor hM1 C level φ
+      (fun t h => by
+        have hbound := hpotentialLower t h
+        linarith)
+      (fun t h => by simpa using hpotentialUpper t h)
+      opp s₀ hdrift T
 
 /-- A finite-state Puiseux derivative envelope produces a concrete account
 controller whose posterior corrected potential is uniformly bounded and has

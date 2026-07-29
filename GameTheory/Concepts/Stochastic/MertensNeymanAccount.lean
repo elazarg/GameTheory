@@ -2506,18 +2506,19 @@ theorem average_payoff_ge_target_sub_epsilon_of_account_bounds
     mul_nonneg (inv_nonneg.mpr hTreal.le) (sub_nonneg.mpr haccount)
   nlinarith
 
-/-- Total floor occupation is bounded by a bounded potential with positive
-drift proportional to the local discount. This is the abstract form of the
-published floor-occupation estimate `∑ 1{sₜ=M} ≤ 9 / (ε λ(M))`. -/
-theorem sum_floorLoss_le_of_potential_drift
+/-- Total floor occupation is bounded by a potential contained in any
+translated unit interval (with the logarithmic correction on its lower end).
+The translation cancels from the potential range. -/
+theorem sum_floorLoss_le_of_potential_drift_on_interval
     {ε lamFloor : ℝ} (hε : 0 < ε) (hε1 : ε ≤ 1)
     (hlamFloor : 0 < lamFloor)
+    (lower : ℝ)
     (lam potential floorLoss : ℕ → ℝ)
     (hfloor : ∀ t, lamFloor * floorLoss t ≤ lam t)
     (hdrift : ∀ t,
       ε * lam t / 8 ≤ potential (t + 1) - potential t)
-    {T : ℕ} (hpotential0 : -ε / 8 ≤ potential 0)
-    (hpotentialT : potential T ≤ 1) :
+    {T : ℕ} (hpotential0 : lower - ε / 8 ≤ potential 0)
+    (hpotentialT : potential T ≤ lower + 1) :
     ∑ t ∈ Finset.range T, floorLoss t ≤ 9 / (ε * lamFloor) := by
   have hdriftSumAll : ∀ n : ℕ,
       ε / 8 * (∑ t ∈ Finset.range n, lam t) ≤
@@ -2545,6 +2546,25 @@ theorem sum_floorLoss_le_of_potential_drift
     nlinarith
   rw [le_div_iff₀ (mul_pos hε hlamFloor)]
   nlinarith
+
+/-- Zero-based specialization of
+`sum_floorLoss_le_of_potential_drift_on_interval`. -/
+theorem sum_floorLoss_le_of_potential_drift
+    {ε lamFloor : ℝ} (hε : 0 < ε) (hε1 : ε ≤ 1)
+    (hlamFloor : 0 < lamFloor)
+    (lam potential floorLoss : ℕ → ℝ)
+    (hfloor : ∀ t, lamFloor * floorLoss t ≤ lam t)
+    (hdrift : ∀ t,
+      ε * lam t / 8 ≤ potential (t + 1) - potential t)
+    {T : ℕ} (hpotential0 : -ε / 8 ≤ potential 0)
+    (hpotentialT : potential T ≤ 1) :
+    ∑ t ∈ Finset.range T, floorLoss t ≤ 9 / (ε * lamFloor) := by
+  simpa using
+    sum_floorLoss_le_of_potential_drift_on_interval
+      hε hε1 hlamFloor 0 lam potential floorLoss
+      hfloor hdrift
+      (by linarith [hpotential0])
+      (by simpa using hpotentialT)
 
 /-- Cesàro form of the floor-occupation estimate. The explicit horizon
 condition is the cross-multiplied form of
