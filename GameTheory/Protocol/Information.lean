@@ -365,6 +365,21 @@ theorem jointAt_legal (policies : (i : ι) → M.Policy i) {state : E.State}
     (M.menu_adequate i trace ((policies i).act (M.infoOf i trace))).mp
       ((policies i).act_mem_menu (M.infoOf i trace))
 
+/-- A player's own record only grows as play continues. -/
+theorem ownPlay_isSuffix_of_reachesWithin (i : ι) :
+    ∀ {fuel : ℕ} {h target : E.History}, ExecutionProtocol.ReachesWithin E fuel h target →
+      (M.ownPlay i h.trace) <:+ (M.ownPlay i target.trace) := by
+  intro fuel h target hreach
+  induction hreach with
+  | refl => exact List.suffix_refl _
+  | step joint isLegal realized rest ih =>
+    refine List.IsSuffix.trans ?_ ih
+    show (M.ownPlay i _) <:+ M.ownPlay i (Trace.extend _ joint isLegal realized)
+    rw [InfoSignals.ownPlay_extend]
+    cases joint i with
+    | none => exact List.suffix_refl _
+    | some action => exact List.suffix_cons _ _
+
 /-! ## Playing a profile
 
 A profile of information-local policies can be *run*, because the runner it
@@ -652,6 +667,33 @@ def Consistent (i : ι) (record : List (M.InfoState i × E.Action i)) : Set (M.P
 /-- The pure policies that could have brought play to an information state. -/
 def ConsistentAt (i : ι) (info : M.InfoState i) : Set (M.Policy i) :=
   M.Consistent i (M.recordAt i info)
+
+/-- A longer record is a stronger constraint. -/
+theorem consistent_subset_of_isSuffix {i : ι}
+    {shorter longer : List (M.InfoState i × E.Action i)} (hsuffix : shorter <:+ longer) :
+    M.Consistent i longer ⊆ M.Consistent i shorter :=
+  fun _ hpolicy step hstep => hpolicy step (hsuffix.subset hstep)
+
+/-- **What a step commits the player to, for the rest of play.** Having answered
+one information state, every policy still consistent with any later history
+answers it the same way. -/
+theorem consistentAt_subset_of_step (hrecall : M.PerfectRecall) (i : ι) {h : E.History}
+    {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
+    {target : E.State} (realized : target ∈ (E.step h.state ⟨joint, isLegal⟩).support)
+    {action : E.Action i} (hjoint : joint i = some action)
+    {fuel : ℕ} {later : E.History}
+    (hreach : ExecutionProtocol.ReachesWithin E fuel (h.extend isLegal realized) later) :
+    M.ConsistentAt i (M.infoOf i later.trace) ⊆
+      { policy : M.Policy i | (policy (M.infoOf i h.trace)).1 = some action } := by
+  intro policy hpolicy
+  refine hpolicy (M.infoOf i h.trace, action) ?_
+  have hstep : (M.infoOf i h.trace, action) ∈
+      M.ownPlay i (h.extend isLegal realized).trace := by
+    show _ ∈ M.ownPlay i (Trace.extend _ joint isLegal realized)
+    rw [InfoSignals.ownPlay_extend, hjoint]
+    exact List.mem_cons_self
+  rw [M.recordAt_eq_ownPlay hrecall i later]
+  exact (M.ownPlay_isSuffix_of_reachesWithin i hreach).subset hstep
 
 variable {M} in
 open Classical in
