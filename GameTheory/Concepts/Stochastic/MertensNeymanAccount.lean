@@ -1438,6 +1438,46 @@ theorem exists_floor_switchBudget_le_of_puiseux_deriv_bound
     (fun s hs => (htail s hs).1)
     (fun s hs => (htail s hs).2)
 
+/-- Finiteness turns coordinatewise Puiseux envelopes into one account floor
+valid for every state coordinate. The exponents and envelope radii may vary
+with the coordinate. -/
+theorem exists_floor_forall_switchBudget_le_of_puiseux_deriv_bound
+    {κ : Type*} [Finite κ]
+    {ε : ℝ} {β lam0 : κ → ℝ} {W W' : κ → ℝ → ℝ}
+    (hε : 0 < ε) (hεquarter : ε < 1 / 4)
+    (hβ : ∀ k, 0 < β k) (hlam0 : ∀ k, 0 < lam0 k)
+    (hWderiv : ∀ k lam, 0 < lam → lam < lam0 k →
+      HasDerivAt (W k) (W' k lam) lam)
+    (hWbound : ∀ k lam, 0 < lam → lam < lam0 k →
+      |W' k lam| ≤ lam ^ (β k - 1) / lam0 k) :
+    ∃ S : ℝ, ∀ k : κ, ∀ s : ℝ, S ≤ s → ∀ M y : ℝ,
+      IsValidScale (1 + ε / 9) s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget (1 + ε / 9) M s y
+          (fun u => W k (discountRate u)) ≤
+        ε * discountRate s / 16 := by
+  letI : Fintype κ := Fintype.ofFinite κ
+  have hcoordinate : ∀ k : κ, ∃ S : ℝ, ∀ s : ℝ, S ≤ s →
+      ∀ M y : ℝ, IsValidScale (1 + ε / 9) s →
+        -1 ≤ y → y ≤ 2 →
+        switchBudget (1 + ε / 9) M s y
+            (fun u => W k (discountRate u)) ≤
+          ε * discountRate s / 16 := by
+    intro k
+    exact exists_floor_switchBudget_le_of_puiseux_deriv_bound
+      hε hεquarter (hβ k) (hlam0 k)
+      (hWderiv k) (hWbound k)
+  choose S hS using hcoordinate
+  refine ⟨∑ k : κ, max (S k) 0, ?_⟩
+  intro k s hs M y hscale hyLower hyUpper
+  apply hS k s ?_ M y hscale hyLower hyUpper
+  calc
+    S k ≤ max (S k) 0 := le_max_left _ _
+    _ ≤ ∑ j : κ, max (S j) 0 := by
+      exact Finset.single_le_sum
+        (fun j _ => le_max_right (S j) 0) (Finset.mem_univ k)
+    _ ≤ s := hs
+
 /-- A sufficient adjacent-variation criterion for the weighted switch
 budget. The permitted pointwise changes are proportional to the sizes of
 the corresponding account moves. After multiplication by the rare-move
@@ -1544,6 +1584,55 @@ theorem value_sub_expect_nextAccount_value_ge_neg_switchBudget
             downProbability γ M s y * V (γ⁻¹ * s)) := by
               rw [hsum]
               ring
+      _ = _ := by ring
+  rw [hidentity]
+  unfold switchBudget
+  linarith
+
+/-- Symmetric orientation of
+`value_sub_expect_nextAccount_value_ge_neg_switchBudget`: the expected value
+after the account update cannot fall below the old value by more than the
+weighted switch budget. -/
+theorem expect_nextAccount_value_sub_value_ge_neg_switchBudget
+    {γ M s y : ℝ} (h : IsValidScale γ s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2) (V : ℝ → ℝ) :
+    -switchBudget γ M s y V ≤
+      expect (updatePMF γ M s y h hyLower hyUpper)
+          (fun move => V (nextAccount γ s move)) -
+        V s := by
+  have hup0 : 0 ≤ upProbability γ s y := upProbability_nonneg h
+  have hdown0 : 0 ≤ downProbability γ M s y :=
+    downProbability_nonneg h
+  have hupDiff :
+      -upProbability γ s y * |V (γ * s) - V s| ≤
+        upProbability γ s y * (V (γ * s) - V s) := by
+    have hdiff :
+        -|V (γ * s) - V s| ≤ V (γ * s) - V s :=
+      neg_abs_le _
+    nlinarith [mul_le_mul_of_nonneg_left hdiff hup0]
+  have hdownDiff :
+      -downProbability γ M s y * |V (γ⁻¹ * s) - V s| ≤
+        downProbability γ M s y * (V (γ⁻¹ * s) - V s) := by
+    have hdiff :
+        -|V (γ⁻¹ * s) - V s| ≤ V (γ⁻¹ * s) - V s :=
+      neg_abs_le _
+    nlinarith [mul_le_mul_of_nonneg_left hdiff hdown0]
+  rw [expect_nextAccount_value h hyLower hyUpper]
+  have hsum := probabilities_sum γ M s y
+  have hidentity :
+      (upProbability γ s y * V (γ * s) +
+          stayProbability γ M s y * V s +
+          downProbability γ M s y * V (γ⁻¹ * s)) -
+        V s =
+      upProbability γ s y * (V (γ * s) - V s) +
+        downProbability γ M s y * (V (γ⁻¹ * s) - V s) := by
+    calc
+      _ = (upProbability γ s y * V (γ * s) +
+            stayProbability γ M s y * V s +
+            downProbability γ M s y * V (γ⁻¹ * s)) -
+          (upProbability γ s y + stayProbability γ M s y +
+            downProbability γ M s y) * V s := by
+              rw [hsum, one_mul]
       _ = _ := by ring
   rw [hidentity]
   unfold switchBudget
@@ -1694,6 +1783,144 @@ theorem correctedValuePotential_drift_ge_of_accountUpdate
     linarith
   exact correctedValuePotential_drift_ge hε
     (discountRate_pos hs1).le hswitch hcorrector habs haccount hbellman
+
+/-- The account drift estimate under a finite outer outcome law. The account
+coin is sampled after the outcome, while the discounted Bellman premise is
+required only after averaging over that outer law. This is the two-level
+expectation shape used for an action/next-state outcome. -/
+theorem expect_correctedValuePotential_drift_ge_of_accountUpdate
+    {Ω : Type*} [Finite Ω] (d : PMF Ω)
+    {γ M s ε oldCurrent : ℝ} (y : Ω → ℝ) (V : Ω → ℝ → ℝ)
+    (h : IsValidScale γ s) (hMs : M ≤ s) (hs1 : 1 < s)
+    (hyLower : ∀ ω, -1 ≤ y ω) (hyUpper : ∀ ω, y ω ≤ 2)
+    (hε : 0 ≤ ε)
+    (hsecant : ∀ s',
+      γ⁻¹ * s ≤ s' → s' ≤ γ * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s')
+    (hbudget : ∀ ω,
+      switchBudget γ M s (y ω) (V ω) ≤
+        ε * discountRate s / 16)
+    (hbellman :
+      0 ≤ expect d (fun ω => V ω s) - oldCurrent +
+        discountRate s * expect d (fun ω => y ω - ε / 2)) :
+    ε * discountRate s / 8 ≤
+      expect d (fun ω =>
+          expect
+            (updatePMF γ M s (y ω) h (hyLower ω) (hyUpper ω))
+            (fun move => V ω (nextAccount γ s move))) -
+        oldCurrent +
+      expect d (fun ω =>
+        expect
+          (updatePMF γ M s (y ω) h (hyLower ω) (hyUpper ω))
+          (fun move =>
+            logCorrector s -
+              logCorrector (nextAccount γ s move))) := by
+  let q : Ω → PMF AccountMove := fun ω =>
+    updatePMF γ M s (y ω) h (hyLower ω) (hyUpper ω)
+  let oldNext : Ω → ℝ := fun ω => V ω s
+  let newNext : Ω → ℝ := fun ω =>
+    expect (q ω) (fun move => V ω (nextAccount γ s move))
+  let correctorGain : Ω → ℝ := fun ω =>
+    expect (q ω) (fun move =>
+      logCorrector s - logCorrector (nextAccount γ s move))
+  let accountChange : Ω → ℝ := fun ω =>
+    expect (q ω) (fun move => nextAccount γ s move - s)
+  let absAccountChange : Ω → ℝ := fun ω =>
+    expect (q ω) (fun move => |nextAccount γ s move - s|)
+  let gap : Ω → ℝ := fun ω => y ω - ε / 2
+  have hswitchPoint : ∀ ω,
+      -ε * discountRate s / 16 ≤ newNext ω - oldNext ω := by
+    intro ω
+    have hbase :=
+      expect_nextAccount_value_sub_value_ge_neg_switchBudget
+        (M := M) h (hyLower ω) (hyUpper ω) (V ω)
+    have hneg :
+        -ε * discountRate s / 16 ≤
+          -switchBudget γ M s (y ω) (V ω) :=
+      by nlinarith [neg_le_neg (hbudget ω)]
+    exact hneg.trans (by simpa [newNext, oldNext, q] using hbase)
+  have hswitch :
+      -ε * discountRate s / 16 ≤
+        expect d newNext - expect d oldNext := by
+    calc
+      -ε * discountRate s / 16 =
+          expect d (fun _ => -ε * discountRate s / 16) := by
+            rw [expect_const]
+      _ ≤ expect d (fun ω => newNext ω - oldNext ω) :=
+        expect_mono d _ _ hswitchPoint
+      _ = expect d newNext - expect d oldNext := by
+        rw [expect_sub]
+  have hcorrectorPoint : ∀ ω,
+      discountRate s *
+          (accountChange ω - ε * absAccountChange ω / 8) ≤
+        correctorGain ω := by
+    intro ω
+    simpa [q, accountChange, absAccountChange, correctorGain] using
+      discountRate_mul_expect_sub_le_expect_logCorrector_sub
+        h (hyLower ω) (hyUpper ω) hsecant
+  have hcorrectorRaw :
+      expect d (fun ω =>
+          discountRate s *
+            (accountChange ω - ε * absAccountChange ω / 8)) ≤
+        expect d correctorGain :=
+    expect_mono d _ _ hcorrectorPoint
+  have hcorrectorIdentity :
+      expect d (fun ω =>
+          discountRate s *
+            (accountChange ω - ε * absAccountChange ω / 8)) =
+        discountRate s *
+          (expect d accountChange - ε * expect d absAccountChange / 8) := by
+    calc
+      _ = expect d (fun ω =>
+          discountRate s * accountChange ω +
+            (-(discountRate s * ε / 8)) * absAccountChange ω) := by
+        congr 1
+        funext ω
+        ring
+      _ = discountRate s * expect d accountChange +
+          (-(discountRate s * ε / 8)) *
+            expect d absAccountChange := by
+        rw [expect_add, expect_const_mul, expect_const_mul]
+      _ = _ := by ring
+  have hcorrector :
+      discountRate s *
+          (expect d accountChange - ε * expect d absAccountChange / 8) ≤
+        expect d correctorGain := by
+    rw [← hcorrectorIdentity]
+    exact hcorrectorRaw
+  have habsPoint : ∀ ω, absAccountChange ω ≤ 2 := by
+    intro ω
+    simpa [q, absAccountChange] using
+      expect_abs_nextAccount_sub_le_two
+        h (hyLower ω) (hyUpper ω)
+  have habs : expect d absAccountChange ≤ 2 := by
+    calc
+      expect d absAccountChange ≤ expect d (fun _ => (2 : ℝ)) :=
+        expect_mono d _ _ habsPoint
+      _ = 2 := expect_const _ _
+  have haccountPoint : ∀ ω,
+      gap ω + ε / 2 ≤ accountChange ω := by
+    intro ω
+    have hbase :=
+      le_expect_nextAccount_sub h hMs (hyLower ω) (hyUpper ω)
+    simpa [gap, q, accountChange] using hbase
+  have haccountRaw :
+      expect d (fun ω => gap ω + ε / 2) ≤
+        expect d accountChange :=
+    expect_mono d _ _ haccountPoint
+  have haccount :
+      expect d gap + ε / 2 ≤ expect d accountChange := by
+    calc
+      expect d gap + ε / 2 =
+          expect d (fun ω => gap ω + ε / 2) := by
+            rw [expect_add, expect_const]
+      _ ≤ expect d accountChange := haccountRaw
+  have hdrift := correctedValuePotential_drift_ge hε
+    (discountRate_pos hs1).le hswitch hcorrector habs haccount
+    (by simpa [oldNext, gap] using hbellman)
+  simpa [newNext, correctorGain, q] using hdrift
 
 /-- The published one-step payoff estimate. The account gap is formed using
 the old discounted value. If switching to the next discounted value loses
