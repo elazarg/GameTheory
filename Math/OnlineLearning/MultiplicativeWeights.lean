@@ -335,6 +335,16 @@ noncomputable def signedAlgGainFrom
     (η : ℝ) (g : ℕ → A → ℝ) (start T : ℕ) : ℝ :=
   ∑ t ∈ Finset.range T, expect (signedMWDistFrom η g start t) (g (start + t))
 
+@[simp] theorem signedAlgGainFrom_zero (η : ℝ) (g : ℕ → A → ℝ) (start : ℕ) :
+    signedAlgGainFrom η g start 0 = 0 := by
+  simp [signedAlgGainFrom]
+
+theorem signedAlgGainFrom_succ (η : ℝ) (g : ℕ → A → ℝ) (start T : ℕ) :
+    signedAlgGainFrom η g start (T + 1) =
+      signedAlgGainFrom η g start T
+        + expect (signedMWDistFrom η g start T) (g (start + T)) := by
+  simp [signedAlgGainFrom, Finset.sum_range_succ]
+
 theorem signedAlgGainFrom_eq (η : ℝ) (g : ℕ → A → ℝ) (start T : ℕ) :
     signedAlgGainFrom η g start T = signedAlgGain η (timeShiftGain g start) T := by
   rfl
@@ -367,6 +377,13 @@ noncomputable def restartedSignedAlgGain (rate : ℕ → ℝ) (length : ℕ → 
     (g : ℕ → A → ℝ) (K : ℕ) : ℝ :=
   ∑ k ∈ Finset.range K,
     signedAlgGainFrom (rate k) g (epochStart length k) (length k)
+
+theorem restartedSignedAlgGain_succ (rate : ℕ → ℝ) (length : ℕ → ℕ)
+    (g : ℕ → A → ℝ) (K : ℕ) :
+    restartedSignedAlgGain rate length g (K + 1) =
+      restartedSignedAlgGain rate length g K
+        + signedAlgGainFrom (rate K) g (epochStart length K) (length K) := by
+  simp [restartedSignedAlgGain, Finset.sum_range_succ]
 
 omit [Fintype A] [Nonempty A] in
 theorem sum_epoch_cumGain_eq (length : ℕ → ℕ) (g : ℕ → A → ℝ) (K : ℕ) (a : A) :

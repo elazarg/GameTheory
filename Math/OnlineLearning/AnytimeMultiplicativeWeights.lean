@@ -18,6 +18,7 @@ at the start of that epoch is cubic in `K`.
 namespace Math.OnlineLearning
 
 open Filter Topology
+open Math.Probability
 
 /-- Epoch `k` contains `(k + 1)²` rounds. -/
 def anytimeEpochLength (k : ℕ) : ℕ := (k + 1) ^ 2
@@ -182,6 +183,14 @@ theorem anytimeEpochOffset_le (t : ℕ) :
   rw [anytimeEpochOffset]
   omega
 
+theorem anytimeEpochOffset_lt (t : ℕ) :
+    anytimeEpochOffset t < anytimeEpochLength (anytimeEpochIndex t) := by
+  have hlt := lt_anytimeEpochStart_index_succ t
+  have hle := anytimeEpochStart_index_le t
+  rw [epochStart_succ] at hlt
+  rw [anytimeEpochOffset]
+  omega
+
 theorem anytimeEpochIndex_ge_of_start_le {K t : ℕ}
     (h : epochStart anytimeEpochLength K ≤ t) : K ≤ anytimeEpochIndex t := by
   by_contra hnot
@@ -189,6 +198,14 @@ theorem anytimeEpochIndex_ge_of_start_le {K t : ℕ}
   have hmono := monotone_anytimeEpochStart hsucc
   have hlt := lt_anytimeEpochStart_index_succ t
   omega
+
+theorem anytimeEpochIndex_eq {K t : ℕ}
+    (hleft : epochStart anytimeEpochLength K ≤ t)
+    (hright : t < epochStart anytimeEpochLength (K + 1)) :
+    anytimeEpochIndex t = K := by
+  apply Nat.le_antisymm
+  · exact Nat.find_min' (exists_lt_anytimeEpochStart_succ t) hright
+  · exact anytimeEpochIndex_ge_of_start_le hleft
 
 variable {A : Type*} [Fintype A] [Nonempty A]
 
@@ -304,6 +321,95 @@ theorem eventually_anytimeRestartedSigned_fixedActionRegretPrefix_div_lt
 noncomputable def anytimeSignedAlgGain (g : ℕ → A → ℝ) (T : ℕ) : ℝ :=
   restartedSignedAlgGainPrefix anytimeEpochRate anytimeEpochLength g
     (anytimeEpochIndex T) (anytimeEpochOffset T)
+
+/-- Distribution played by the fixed anytime learner at absolute round `t`. -/
+noncomputable def anytimeSignedMWDist (g : ℕ → A → ℝ) (t : ℕ) : PMF A :=
+  signedMWDistFrom (anytimeEpochRate (anytimeEpochIndex t)) g
+    (epochStart anytimeEpochLength (anytimeEpochIndex t)) (anytimeEpochOffset t)
+
+theorem anytimeSignedAlgGain_succ (g : ℕ → A → ℝ) (T : ℕ) :
+    anytimeSignedAlgGain g (T + 1) =
+      anytimeSignedAlgGain g T + expect (anytimeSignedMWDist g T) (g T) := by
+  let K := anytimeEpochIndex T
+  let r := anytimeEpochOffset T
+  have htime : epochStart anytimeEpochLength K + r = T := by
+    simpa [K, r] using anytimeEpochStart_add_offset T
+  have hrlt : r < anytimeEpochLength K := by
+    simpa [K, r] using anytimeEpochOffset_lt T
+  by_cases hwithin : r + 1 < anytimeEpochLength K
+  · have hleft : epochStart anytimeEpochLength K ≤ T + 1 := by omega
+    have hright : T + 1 < epochStart anytimeEpochLength (K + 1) := by
+      rw [epochStart_succ]
+      omega
+    have hindex : anytimeEpochIndex (T + 1) = K :=
+      anytimeEpochIndex_eq hleft hright
+    have hoffset : anytimeEpochOffset (T + 1) = r + 1 := by
+      rw [anytimeEpochOffset, hindex]
+      omega
+    simp only [anytimeSignedAlgGain]
+    unfold anytimeSignedMWDist
+    rw [hindex, hoffset]
+    change restartedSignedAlgGain anytimeEpochRate anytimeEpochLength g K +
+        signedAlgGainFrom (anytimeEpochRate K) g
+          (epochStart anytimeEpochLength K) (r + 1) =
+      (restartedSignedAlgGain anytimeEpochRate anytimeEpochLength g K +
+        signedAlgGainFrom (anytimeEpochRate K) g
+          (epochStart anytimeEpochLength K) r) +
+      expect (signedMWDistFrom (anytimeEpochRate K) g
+        (epochStart anytimeEpochLength K) r) (g T)
+    rw [signedAlgGainFrom_succ, ← htime]
+    ring
+  · have hboundary : r + 1 = anytimeEpochLength K := by omega
+    have hnext : T + 1 = epochStart anytimeEpochLength (K + 1) := by
+      rw [epochStart_succ]
+      omega
+    have hpos : 0 < anytimeEpochLength (K + 1) := by
+      unfold anytimeEpochLength
+      positivity
+    have hright : T + 1 < epochStart anytimeEpochLength ((K + 1) + 1) := by
+      calc
+        T + 1 = epochStart anytimeEpochLength (K + 1) := hnext
+        _ < epochStart anytimeEpochLength (K + 1) + anytimeEpochLength (K + 1) :=
+          Nat.lt_add_of_pos_right hpos
+        _ = epochStart anytimeEpochLength ((K + 1) + 1) :=
+          (epochStart_succ anytimeEpochLength (K + 1)).symm
+    have hindex : anytimeEpochIndex (T + 1) = K + 1 :=
+      anytimeEpochIndex_eq (by omega) hright
+    have hoffset : anytimeEpochOffset (T + 1) = 0 := by
+      rw [anytimeEpochOffset, hindex, hnext, Nat.sub_self]
+    simp only [anytimeSignedAlgGain]
+    unfold anytimeSignedMWDist
+    rw [hindex, hoffset]
+    change restartedSignedAlgGain anytimeEpochRate anytimeEpochLength g (K + 1) +
+        signedAlgGainFrom (anytimeEpochRate (K + 1)) g
+          (epochStart anytimeEpochLength (K + 1)) 0 =
+      (restartedSignedAlgGain anytimeEpochRate anytimeEpochLength g K +
+        signedAlgGainFrom (anytimeEpochRate K) g
+          (epochStart anytimeEpochLength K) r) +
+      expect (signedMWDistFrom (anytimeEpochRate K) g
+        (epochStart anytimeEpochLength K) r) (g T)
+    rw [restartedSignedAlgGain_succ, signedAlgGainFrom_zero, add_zero]
+    rw [← hboundary, signedAlgGainFrom_succ, htime]
+    ring
+
+@[simp] theorem anytimeSignedAlgGain_zero (g : ℕ → A → ℝ) :
+    anytimeSignedAlgGain g 0 = 0 := by
+  have hindex : anytimeEpochIndex 0 = 0 := by
+    apply anytimeEpochIndex_eq
+    · simp
+    · norm_num [epochStart, anytimeEpochLength]
+  simp [anytimeSignedAlgGain, restartedSignedAlgGainPrefix, hindex,
+    anytimeEpochOffset, restartedSignedAlgGain]
+
+/-- Operational identity: the epoch-aggregated gain is exactly the sum of the expected gains of
+    the absolute per-round distributions played by the anytime learner. -/
+theorem anytimeSignedAlgGain_eq_sum (g : ℕ → A → ℝ) (T : ℕ) :
+    anytimeSignedAlgGain g T =
+      ∑ t ∈ Finset.range T, expect (anytimeSignedMWDist g t) (g t) := by
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      rw [anytimeSignedAlgGain_succ, Finset.sum_range_succ, ih]
 
 /-- The absolute-horizon regret bound, obtained by locating `T` in its deterministic epoch. -/
 theorem anytimeSigned_fixedActionRegret_div_le

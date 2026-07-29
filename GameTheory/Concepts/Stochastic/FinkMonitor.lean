@@ -217,6 +217,26 @@ def anytimePMFCoordinateMonitorAlgGain {Ω : Type} [Fintype Ω] [Nonempty Ω]
   Math.OnlineLearning.anytimeSignedAlgGain
     (pmfCoordinateMonitorGain baseline observation) T
 
+/-- Coordinate-monitor distribution played at absolute round `t`. -/
+def anytimePMFCoordinateMonitorDist {Ω : Type} [Fintype Ω] [Nonempty Ω]
+    [DecidableEq Ω] (baseline : PMF Ω) (observation : ℕ → Ω) (t : ℕ) :
+    PMF (PMFCoordinateMonitor Ω) :=
+  Math.OnlineLearning.anytimeSignedMWDist
+    (pmfCoordinateMonitorGain baseline observation) t
+
+/-- The coordinate-monitor algorithm gain is exactly its cumulative realized weighted public
+    score. -/
+theorem anytimePMFCoordinateMonitorAlgGain_eq_sum_weightedScore
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) (observation : ℕ → Ω) (T : ℕ) :
+    anytimePMFCoordinateMonitorAlgGain baseline observation T =
+      ∑ t ∈ Finset.range T,
+        weightedPMFCoordinateMonitorScore baseline
+          (anytimePMFCoordinateMonitorDist baseline observation t) (observation t) := by
+  rw [anytimePMFCoordinateMonitorAlgGain,
+    Math.OnlineLearning.anytimeSignedAlgGain_eq_sum]
+  rfl
+
 /-- Every fixed coordinate monitor has vanishing positive average regret against the one
     horizon-independent weighted monitor. This statement is pathwise in the observed outcomes. -/
 theorem eventually_anytimePMFCoordinateMonitor_regret_div_lt
