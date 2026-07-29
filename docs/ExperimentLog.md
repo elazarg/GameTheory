@@ -33,6 +33,7 @@ becomes difficult to scan.
 | EXP-020 | 2026-07-29 | D1 / Phase 4 | Should carrier-bearing structures keep storing their carriers, now that the reducibility cost has been paid across a whole layer? | Decides D1 | [`decisions/D1-signature-ownership.md`](decisions/D1-signature-ownership.md); `GameTheory/Experimental/Phase4/D1/` |
 | EXP-021 | 2026-07-29 | D6 / Phase 3 close-out | Does the one-shot deviation principle hold on the accepted sequential interface, and does the certificate already in hand carry it? | Supports | `GameTheory/Protocol/Backward.lean`; `GameTheory/Tests/OneShot.lean` |
 | EXP-022 | 2026-07-29 | D12 / Phase 4 | What does an existence theorem at the static layer cost in dependencies, and where should the boundary be drawn? | Refutes the planned route; redirects | measurement only; no code |
+| EXP-024 | 2026-07-29 | D4 / Phase 5 | Does the core's preference vocabulary serve a theorem with no probability in it, or was it quietly about lotteries? | Finds a defect; repaired | `GameTheory/Core/Preference.lean`; `GameTheory/Core/SocialChoice.lean`; `GameTheory/Examples/Voting.lean` |
 | EXP-023 | 2026-07-29 | D12 / Phase 4 | What does taking the fixed-point primitive from outside Mathlib cost, and does the boundary hold once it is taken? | Supports; reopens general existence | `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 
 ## Entry template
@@ -1428,3 +1429,49 @@ memory.
   v1's four and a half thousand were needed. The containment checks are in
   `scripts/phase2-audit.ps1`; the direction of the new probe is the part worth
   remembering, since it asserts reachability rather than absence.
+
+### EXP-024: what the preference vocabulary is actually about
+
+- **Date / revision:** 2026-07-29
+- **Decision / question:** every theorem so far has compared outcome *laws*, so
+  nothing has yet tested whether `WeakPreference` is a preference type that
+  happens to be applied to laws or a law type wearing a preference's name.
+  Social choice is the discriminating case: it ranks alternatives, quantifies
+  over all such rankings, and contains no probability at any point.
+- **Evidence:** a reading of `GameTheory/Core/Preference.lean` against what a
+  social choice theorem needs, followed by the repair and a full rebuild.
+- **Observation, and it is a defect.** Of the sixteen declarations in the
+  preference vocabulary, **thirteen never mention the law structure they are
+  stated over**. Reflexivity, transitivity, totality, the strict part and its
+  three lemmas, the weaker-than order, and the whole coalition lifting are
+  relation algebra pinned to `FinDist Outcome` for no reason. Only convexity
+  under mixing and the pullback along a relabeling use it.
+  A second defect sits underneath the first. The vocabulary is *agent-indexed*
+  throughout, and a social ranking has no agent: society is one ranking, not a
+  family. Stating that society is transitive in the same words the voters are
+  transitive was not possible.
+  Delegating to Mathlib is not the repair. Its `Transitive`, `Reflexive`, and
+  `Total` on bare relations are deprecated in favour of `IsTrans`, `Std.Refl`,
+  and `Std.Total`, which are typeclasses — and a preference here must stay an
+  argument, since one carrier is routinely studied under several preferences at
+  once. Measured, not assumed: the deprecation warnings are what the probe
+  returned.
+- **Repair, and its cost.** The vocabulary splits in two. `Rank` states each law
+  for a single comparison over an arbitrary carrier; `Preference` states it as
+  that law holding for every agent, and is *definitionally* that. `Ranking Agent
+  α` is the family type and `WeakPreference Agent Outcome` is its specialization
+  to laws.
+  The cost was zero. Every use site in the library continues to elaborate
+  unchanged — 3277 build jobs, no downstream edit, both audits still verified —
+  because currying makes the new definitions defeq to the old ones.
+- **Downstream theorem.** `Examples/Voting.lean` proves the Condorcet paradox:
+  three voters ranking three alternatives in rotation are individually total and
+  transitive, and the majority ranking they induce is not transitive, with the
+  cycle exhibited. Individual rationality and social irrationality are stated in
+  the same words, and no probability appears in either.
+- **Outcome:** finds a real defect in a core type and repairs it at no cost. The
+  vocabulary was about lotteries by accident rather than by design, and nothing
+  had yet asked.
+- **Next action:** the repair makes Arrow's theorem statable; it does not make it
+  proved. That is the honest next target on this axis, and it will exercise the
+  vocabulary far harder than the paradox does.

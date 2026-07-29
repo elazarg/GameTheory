@@ -1,10 +1,18 @@
 /-
-# Weak preferences over outcome laws
+# Weak preferences
 
 Preferences are explicit arguments, never typeclass instances: one form is
 routinely studied under several preferences. Preference laws such as
 reflexivity are named properties of a particular relation, not fields of the
 relation's type.
+
+Most of that vocabulary is relation algebra and says nothing about what is being
+compared, so it is stated for an arbitrary carrier. `WeakPreference` names the
+case the equilibrium theory uses, comparing outcome *laws*; a theory that ranks
+outcomes themselves, as social choice does, gets the same reflexivity,
+transitivity, totality, strict part, and coalition lifting without a parallel
+copy. Only the two definitions that genuinely need a law — convexity under
+mixing, and pullback along a relabeling — are stated at that level.
 
 ## Argument orientation
 
@@ -20,49 +28,99 @@ namespace GameTheory
 
 open Probability
 
-universe ua uo uo'
+universe ua uα uo uo'
+
+/-- A comparison of `α`s held by each agent, with no commitment to what an `α`
+is. -/
+abbrev Ranking (Agent : Type ua) (α : Type uα) := Agent → α → α → Prop
 
 /-- A weak preference over outcome laws, held by each agent. -/
-abbrev WeakPreference (Agent : Type ua) (Outcome : Type uo) :=
-  Agent → FinDist Outcome → FinDist Outcome → Prop
+abbrev WeakPreference (Agent : Type ua) (Outcome : Type uo) := Ranking Agent (FinDist Outcome)
+
+/-! ## One ranking
+
+The laws below are properties of a single comparison. Mathlib states the same
+laws as typeclasses, which is the one thing a preference may not be here: a
+single carrier is routinely studied under several preferences at once, so the
+relation must stay an argument. -/
+
+namespace Rank
+
+variable {α : Type uα}
+
+/-- Nothing is worse than itself. Required exactly when a theorem treats a
+no-op as an allowed deviation. -/
+def Reflexive (ranks : α → α → Prop) : Prop := ∀ item, ranks item item
+
+/-- Chains compose. -/
+def Transitive (ranks : α → α → Prop) : Prop :=
+  ∀ preferred middle alternative,
+    ranks preferred middle → ranks middle alternative → ranks preferred alternative
+
+/-- Every pair is comparable. -/
+def Total (ranks : α → α → Prop) : Prop :=
+  ∀ preferred alternative, ranks preferred alternative ∨ ranks alternative preferred
+
+/-- The strict part: better, and not merely as good. -/
+def strict (ranks : α → α → Prop) : α → α → Prop :=
+  fun preferred alternative => ranks preferred alternative ∧ ¬ ranks alternative preferred
+
+theorem strict_le {ranks : α → α → Prop} {preferred alternative : α}
+    (h : strict ranks preferred alternative) : ranks preferred alternative := h.1
+
+theorem strict_irrefl (ranks : α → α → Prop) (item : α) : ¬ strict ranks item item :=
+  fun h => h.2 h.1
+
+theorem strict_asymm {ranks : α → α → Prop} {preferred alternative : α}
+    (h : strict ranks preferred alternative) : ¬ strict ranks alternative preferred :=
+  fun h' => h.2 h'.1
+
+/-- A total ranking compares any two one way or the other, so failing to rank
+one item above another means strictly preferring the second. -/
+theorem strict_of_not {ranks : α → α → Prop} (htotal : Total ranks)
+    {preferred alternative : α}
+    (h : ¬ ranks alternative preferred) : strict ranks preferred alternative :=
+  ⟨(htotal preferred alternative).resolve_right h, h⟩
+
+end Rank
+
+/-! ## A family of rankings, one per agent
+
+Each law below is its single-ranking counterpart holding for every agent, and is
+*definitionally* that: a theorem stated for one ranking transfers by
+application. -/
 
 namespace Preference
 
-variable {Agent : Type ua} {Outcome : Type uo} {Outcome' : Type uo'}
+variable {Agent : Type ua} {α : Type uα} {Outcome : Type uo} {Outcome' : Type uo'}
 
-/-- Every agent weakly prefers a law to itself. Required exactly when a theorem
-treats a no-op as an allowed deviation. -/
-def Reflexive (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
-  ∀ agent law, weaklyPrefers agent law law
+/-- Every agent weakly prefers a law to itself. -/
+def Reflexive (weaklyPrefers : Ranking Agent α) : Prop :=
+  ∀ agent, Rank.Reflexive (weaklyPrefers agent)
 
-/-- Weak preference chains compose. -/
-def Transitive (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
-  ∀ agent preferred middle alternative,
-    weaklyPrefers agent preferred middle →
-    weaklyPrefers agent middle alternative →
-    weaklyPrefers agent preferred alternative
+/-- Weak preference chains compose, for every agent. -/
+def Transitive (weaklyPrefers : Ranking Agent α) : Prop :=
+  ∀ agent, Rank.Transitive (weaklyPrefers agent)
 
-/-- Every pair of laws is comparable. -/
-def Total (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
-  ∀ agent preferred alternative,
-    weaklyPrefers agent preferred alternative ∨ weaklyPrefers agent alternative preferred
+/-- Every agent compares every pair. -/
+def Total (weaklyPrefers : Ranking Agent α) : Prop :=
+  ∀ agent, Rank.Total (weaklyPrefers agent)
 
 /-- The strict part of a weak preference. -/
-def strict (weaklyPrefers : WeakPreference Agent Outcome) : WeakPreference Agent Outcome :=
-  fun agent preferred alternative =>
-    weaklyPrefers agent preferred alternative ∧ ¬ weaklyPrefers agent alternative preferred
+def strict (weaklyPrefers : Ranking Agent α) : Ranking Agent α :=
+  fun agent => Rank.strict (weaklyPrefers agent)
 
-theorem strict_le {weaklyPrefers : WeakPreference Agent Outcome}
-    {agent : Agent} {preferred alternative : FinDist Outcome}
+theorem strict_le {weaklyPrefers : Ranking Agent α}
+    {agent : Agent} {preferred alternative : α}
     (h : strict weaklyPrefers agent preferred alternative) :
     weaklyPrefers agent preferred alternative := h.1
 
-theorem strict_irrefl (weaklyPrefers : WeakPreference Agent Outcome)
-    (agent : Agent) (law : FinDist Outcome) :
-    ¬ strict weaklyPrefers agent law law := fun h => h.2 h.1
+theorem strict_irrefl (weaklyPrefers : Ranking Agent α)
+    (agent : Agent) (item : α) :
+    ¬ strict weaklyPrefers agent item item := fun h => h.2 h.1
 
-theorem strict_asymm {weaklyPrefers : WeakPreference Agent Outcome}
-    {agent : Agent} {preferred alternative : FinDist Outcome}
+theorem strict_asymm {weaklyPrefers : Ranking Agent α}
+    {agent : Agent} {preferred alternative : α}
     (h : strict weaklyPrefers agent preferred alternative) :
     ¬ strict weaklyPrefers agent alternative preferred := fun h' => h.2 h'.1
 
@@ -80,11 +138,11 @@ def Convex (weaklyPrefers : WeakPreference Agent Outcome) : Prop :=
 
 /-- Pointwise implication between preferences, oriented so that a `Weaker`
 preference accepts more equilibria. -/
-def Weaker (weaker stronger : WeakPreference Agent Outcome) : Prop :=
+def Weaker (weaker stronger : Ranking Agent α) : Prop :=
   ∀ agent preferred alternative,
     stronger agent preferred alternative → weaker agent preferred alternative
 
-theorem Weaker.refl (weaklyPrefers : WeakPreference Agent Outcome) :
+theorem Weaker.refl (weaklyPrefers : Ranking Agent α) :
     Weaker weaklyPrefers weaklyPrefers := fun _ _ _ h => h
 
 /-- Lift a preference to nonempty coalitions: a coalition weakly prefers the
@@ -98,23 +156,23 @@ gains. That is the deliberate choice, because `WeakPreference` is allowed to be
 partial and the safe reading of a coalitional objection is "somebody is not
 made worse off". Only the forward implication
 (`not_forall_strict_of_coalition`) is unconditional. -/
-def coalition (weaklyPrefers : WeakPreference Agent Outcome) :
-    WeakPreference { members : Finset Agent // members.Nonempty } Outcome :=
+def coalition (weaklyPrefers : Ranking Agent α) :
+    Ranking { members : Finset Agent // members.Nonempty } α :=
   fun coalition preferred alternative =>
     ∃ member ∈ coalition.1, weaklyPrefers member preferred alternative
 
 @[simp]
-theorem coalition_apply (weaklyPrefers : WeakPreference Agent Outcome)
+theorem coalition_apply (weaklyPrefers : Ranking Agent α)
     (coalition' : { members : Finset Agent // members.Nonempty })
-    (preferred alternative : FinDist Outcome) :
+    (preferred alternative : α) :
     coalition weaklyPrefers coalition' preferred alternative =
       ∃ member ∈ coalition'.1, weaklyPrefers member preferred alternative := rfl
 
 /-- If one member weakly prefers the status quo then the members do not all
 strictly gain. This direction needs no assumption on the preference. -/
-theorem not_forall_strict_of_coalition {weaklyPrefers : WeakPreference Agent Outcome}
+theorem not_forall_strict_of_coalition {weaklyPrefers : Ranking Agent α}
     {coalition' : { members : Finset Agent // members.Nonempty }}
-    {preferred alternative : FinDist Outcome}
+    {preferred alternative : α}
     (h : coalition weaklyPrefers coalition' preferred alternative) :
     ¬ ∀ member ∈ coalition'.1, strict weaklyPrefers member alternative preferred := by
   obtain ⟨member, hmember, hpref⟩ := h
@@ -123,10 +181,10 @@ theorem not_forall_strict_of_coalition {weaklyPrefers : WeakPreference Agent Out
 /-- The converse holds exactly when the preference is total: without totality a
 member may be incomparable, which blocks both "weakly prefers the status quo"
 and "strictly gains". -/
-theorem coalition_iff_not_forall_strict (weaklyPrefers : WeakPreference Agent Outcome)
+theorem coalition_iff_not_forall_strict (weaklyPrefers : Ranking Agent α)
     (htotal : Total weaklyPrefers)
     (coalition' : { members : Finset Agent // members.Nonempty })
-    (preferred alternative : FinDist Outcome) :
+    (preferred alternative : α) :
     coalition weaklyPrefers coalition' preferred alternative ↔
       ¬ ∀ member ∈ coalition'.1, strict weaklyPrefers member alternative preferred := by
   refine ⟨not_forall_strict_of_coalition, fun hnotall => ?_⟩
