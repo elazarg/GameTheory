@@ -16,27 +16,31 @@ import Mathlib.Analysis.Convex.KreinMilman
 
 The Shapley–Snow kernel theorem for finite matrix games, and its parametric corollary.
 
-## Stage 1 (statement only — see the `TODO` block below)
+## Stage 1 — kernel theorem interface
 
 For a matrix game `A : Matrix (Fin m) (Fin n) ℝ` the value `V := MinimaxLoomis.lam0 A`
 satisfies a determinant identity over some square submatrix ("kernel") `B`:
 `V * (∑ i j, B.adjugate i j) = B.det` with `∑ i j, B.adjugate i j ≠ 0`. This is the
-1950 Shapley–Snow theorem. Its classical proof (extreme optimal strategies, tight payoff
-equations on the support, nonsingularity of the bordered kernel system) is genuinely
-substantial to formalise; it is recorded here as a precise `TODO` statement rather than
-an unproved (`sorry`-laden) declaration, per this repository's "no `sorry`" rule. The two
-base cases of the proof sketch (`exists_kernel_of_saddlePoint`,
-`exists_kernel_of_completelyMixed`) and, further down, convexity / compactness /
-Krein–Milman existence of *extreme* optimal strategies together with the
-complementary-slackness tightness step (`optimalRowStrategies`, `optimalColStrategies`,
-`expectedPayoff_eq_of_optimal`, `tight_of_optimal_row_support`,
-`tight_of_optimal_col_support`) ARE landed below, sorry-free. Of the three remaining
-sub-steps (cardinality bound, square/basis selection, reassembly), the cardinality bound
-(`card_support_le_card_tightCol_of_extreme`, `card_support_le_card_tightRow_of_extreme`)
-and the reassembly (`exists_kernel_of_extreme_matching_support`) are ALSO now landed,
-sorry-free; only the square/basis-selection step (matching support sizes and producing a
-nonsingular submatrix on them) remains open, documented precisely at the end of that
-section.
+1950 Shapley–Snow theorem. The classical proof uses extreme optimal strategies, tight
+payoff equations on their supports, and a nonsingular bordered kernel system.
+
+This module factors that argument into theorem-level interfaces:
+
+* `exists_kernel_of_saddlePoint` handles pure saddle points;
+* `value_and_kernelIdentity_of_equalizing` proves the determinant identity for any
+  square equalizing pair, including singular matrices;
+* `exists_kernel_of_equalizing_of_adjugateSum_ne` uses the correct bordered-system
+  condition, namely a nonzero adjugate sum;
+* the `OptimalStrategies` section supplies extreme optimizers, complementary slackness,
+  trivial-kernel lemmas, and cardinality bounds;
+* `exists_kernel_of_extreme_matching_support` reassembles matching support
+  enumerations whose submatrix has nonzero adjugate sum.
+
+The general Stage-1 property is an explicit hypothesis of the parametric theorems.
+Its selection interface is described after `SquareKernelReassembly`: construct matching
+support enumerations for an extreme optimal pair and prove the associated bordered
+system is nonsingular. This formulation does not require the payoff submatrix itself to
+be nonsingular.
 
 ## Stage 2 — the parametric product corollary
 
@@ -60,7 +64,7 @@ point, their product is a single nonzero polynomial vanishing at every parameter
 
 The concrete matrix-game instantiation (`exists_nonzero_poly_of_kernel`) additionally
 carries a genericity hypothesis `hgen`, and takes the Stage-1 conclusion itself as an
-explicit hypothesis `hkernel` (since Stage 1 is not proved in this file — see above).
+explicit hypothesis `hkernel`.
 
 `hgen` is needed because *nonzero adjugate sum* does not by itself imply *`F_B` is a
 nonzero polynomial*. Counterexample: `m = n = 1`, `E 0 0 = Polynomial.X` (the entry is
@@ -83,7 +87,7 @@ open Finset BigOperators Matrix Polynomial
 
 namespace ShapleySnow
 
-/-! ### Stage 1 — TODO, the classical Shapley–Snow kernel theorem
+/-! ### Stage 1 — the classical Shapley–Snow kernel theorem
 
 ```
 theorem shapley_snow_kernel {m n : ℕ} (hm : 0 < m) (hn : 0 < n)
@@ -94,7 +98,7 @@ theorem shapley_snow_kernel {m n : ℕ} (hm : 0 < m) (hn : 0 < n)
           = (A.submatrix rows cols).det
 ```
 
-Proof sketch (Shapley–Snow 1950), not yet formalised: take extreme optimal mixed
+Classical proof architecture (Shapley–Snow 1950): take extreme optimal mixed
 strategies `x` (for the row player) and `y` (for the column player) with supports
 `R ⊆ Fin m`, `C ⊆ Fin n`; on the kernel the payoff equations are tight,
 `(Aᵀ x) j = V` for `j ∈ C` and `(A y) i = V` for `i ∈ R`. Extremality of `x`, `y` among
@@ -106,26 +110,22 @@ nonsingular. Cramer's rule on that bordered system, or the determinant identity
 covers pure kernels (`B.adjugate = 1` by `Matrix.adjugate_subsingleton`, so
 `∑ i j, B.adjugate i j = 1` and `V = B.det`, i.e. a pure saddle point).
 
-### Two named partial cases, and the extremality step
+### Factored proof components
 
-The two base cases of the induction sketch above are landed below as standalone,
-sorry-free lemmas: `exists_kernel_of_saddlePoint` (a pure saddle point gives a `1 × 1`
-kernel) and `exists_kernel_of_completelyMixed` (the classical Kaplansky determinant
-formula for a completely-mixed square game: an *equalizing* pair of mixed strategies for
-a nonsingular matrix gives the whole matrix as its own kernel). The "extremality forces
-`|R| = |C|`" step of the reduction is *partially* landed: `eq_zero_of_extreme_optimalRow`
-/ `eq_zero_of_extreme_optimalCol` (in the `OptimalStrategies` section below) prove,
-sorry-free, that the tight-constraint linear system at an extreme optimal strategy has
-trivial kernel on its support — the precise `openSegment`-based `x ± εd` perturbation
-argument the reduction needs, reproved from scratch since Mathlib's `Set.extremePoints`
-carries no vertex/basic-feasible-solution theory. Turning that trivial-kernel fact into
-the cardinality bounds `|R| ≤ |C(x)| + 1`, `|C| ≤ |R(y)| + 1` (rank-nullity) and
-reassembling a matching-support nonsingular submatrix back into the Shapley–Snow identity
-for `A` itself ARE now also landed, sorry-free — see the "What remains" note after the
-`OptimalStrategies` section for exactly what is landed and what precise gap (matching
-`|R| = |C|` and selecting a nonsingular submatrix on the matching supports) remains;
-`hkernel` is accordingly still an explicit, undischarged hypothesis of
-`exists_nonzero_poly_of_kernel` / `exists_nonzero_poly_of_discounted` below.
+`exists_kernel_of_saddlePoint` gives a `1 × 1` kernel for a pure saddle point.
+`value_and_kernelIdentity_of_equalizing` gives the determinant identity for a square
+equalizing pair without assuming nonsingularity. The separate hypothesis
+`∑ i, ∑ j, B.adjugate i j ≠ 0` is the kernel condition; the formally checked
+`singular_equalizing_kernel_example` shows why it cannot be replaced by `IsUnit B.det`.
+
+For extreme optimal strategies, `eq_zero_of_extreme_optimalRow` and
+`eq_zero_of_extreme_optimalCol` prove that the tight-constraint linear system has
+trivial kernel on the strategy support. Their proof is the `openSegment`-based
+`x ± εd` perturbation argument, derived directly from `Set.extremePoints`.
+`card_support_le_card_tightCol_of_extreme` and
+`card_support_le_card_tightRow_of_extreme` convert this injectivity into cardinality
+bounds. `exists_kernel_of_extreme_matching_support` is the reassembly interface for
+matching support enumerations and a nonzero adjugate sum.
 -/
 
 /-- **Saddle-point base case.** If `(i₀, j₀)` is a saddle point of `A` — row `i₀`
@@ -172,11 +172,135 @@ theorem exists_kernel_of_saddlePoint {m n : ℕ} [Nonempty (Fin m)] [Nonempty (F
   · rw [hadj, hVeq, Matrix.det_fin_one, hB00]
     simp
 
-/-- **Completely-mixed kernel** (Kaplansky's determinant formula for a fully-mixed
-square game). If `A` is nonsingular and admits an *equalizing pair* of mixed strategies
-`x, y` for the same value `V` — every column's expected payoff under `x` is `V`, every
-row's expected payoff under `y` is `V` — then `V = lam0 A`, and the whole matrix `A` is
-its own kernel: the adjugate sum is nonzero and `V * (∑ adjugate) = det A`.
+/-- An equalizing pair determines the matrix-game value and the
+Shapley--Snow determinant identity. No nonsingularity assumption is needed for
+the identity: multiplying `A *ᵥ y = V • 1` by `adjugate A` works for singular
+matrices as well. -/
+theorem value_and_kernelIdentity_of_equalizing {n : ℕ} [Nonempty (Fin n)]
+    (A : Matrix (Fin n) (Fin n) ℝ)
+    (x y : stdSimplex ℝ (Fin n)) (V : ℝ)
+    (hxT : ∀ j, wsum x (fun i => A i j) = V)
+    (hy : ∀ i, wsum y (fun j => A i j) = V) :
+    MinimaxLoomis.lam0 A = V ∧
+      MinimaxLoomis.lam0 A * (∑ i, ∑ j, A.adjugate i j) = A.det := by
+  classical
+  have hVeq : MinimaxLoomis.lam0 A = V := by
+    have hlamaux : MinimaxLoomis.lam.aux A x = V := by
+      unfold MinimaxLoomis.lam.aux
+      rw [show (fun j => wsum x (fun i => A i j)) =
+        fun _ : Fin n => V from funext hxT]
+      exact Finset.inf'_const Finset.univ_nonempty V
+    have hmuaux : MinimaxLoomis.mu.aux A y = V := by
+      unfold MinimaxLoomis.mu.aux
+      rw [show (fun i => wsum y (fun j => A i j)) =
+        fun _ : Fin n => V from funext hy]
+      exact Finset.sup'_const Finset.univ_nonempty V
+    have hVlam0 : V ≤ MinimaxLoomis.lam0 A :=
+      hlamaux ▸ MinimaxLoomis.lam.aux.le_lam0 A x
+    have hmu0V : MinimaxLoomis.mu0 A ≤ V :=
+      hmuaux ▸ MinimaxLoomis.mu.aux.ge_mu0 A y
+    exact le_antisymm
+      ((MinimaxLoomis.lam0_le_mu0 A).trans hmu0V) hVlam0
+  have hmulVec : A *ᵥ y.val = V • (1 : Fin n → ℝ) := by
+    funext i
+    have hrow : (A *ᵥ y.val) i =
+        wsum y (fun j => A i j) :=
+      dotProduct_comm (A i) y.val
+    rw [hrow, hy i]
+    simp
+  have hadj :
+      Matrix.adjugate A *ᵥ (A *ᵥ y.val) =
+        A.det • y.val := by
+    rw [Matrix.mulVec_mulVec, Matrix.adjugate_mul,
+      Matrix.smul_mulVec, Matrix.one_mulVec]
+  have hadj' :
+      Matrix.adjugate A *ᵥ (A *ᵥ y.val) =
+        V • (fun i => ∑ j, Matrix.adjugate A i j) := by
+    rw [hmulVec, Matrix.mulVec_smul]
+    congr 1
+    funext i
+    simp [Matrix.mulVec, dotProduct]
+  have hkey :
+      A.det • y.val =
+        V • (fun i => ∑ j, Matrix.adjugate A i j) :=
+    hadj.symm.trans hadj'
+  have hsum :
+      A.det * (∑ i, y.val i) =
+        V * (∑ i, ∑ j, Matrix.adjugate A i j) := by
+    have hcongr := congrArg (fun f : Fin n → ℝ => ∑ i, f i) hkey
+    simpa [Pi.smul_apply, smul_eq_mul, Finset.mul_sum] using hcongr
+  rw [y.property.2, mul_one] at hsum
+  exact ⟨hVeq, hVeq ▸ hsum.symm⟩
+
+/-- **Completely-mixed kernel with the correct bordered-system condition.**
+If a square game has an equalizing pair and its adjugate sum is nonzero, the
+whole matrix is a Shapley--Snow kernel. This includes singular kernels of value
+zero. -/
+theorem exists_kernel_of_equalizing_of_adjugateSum_ne
+    {n : ℕ} [Nonempty (Fin n)]
+    (A : Matrix (Fin n) (Fin n) ℝ)
+    (x y : stdSimplex ℝ (Fin n)) (V : ℝ)
+    (hxT : ∀ j, wsum x (fun i => A i j) = V)
+    (hy : ∀ i, wsum y (fun j => A i j) = V)
+    (hSne : (∑ i, ∑ j, A.adjugate i j) ≠ 0) :
+    MinimaxLoomis.lam0 A = V ∧
+      (∑ i, ∑ j, A.adjugate i j) ≠ 0 ∧
+      MinimaxLoomis.lam0 A *
+          (∑ i, ∑ j, A.adjugate i j) = A.det := by
+  obtain ⟨hVeq, hid⟩ :=
+    value_and_kernelIdentity_of_equalizing A x y V hxT hy
+  exact ⟨hVeq, hSne, hid⟩
+
+/-- A singular Shapley--Snow kernel.
+
+The matrix `[-1, 2; 1, -2]` has equalizing strategies
+`x = (1/2, 1/2)` and `y = (2/3, 1/3)` at value zero. Its determinant
+vanishes, while its adjugate sum does not. This example makes the distinction
+between matrix nonsingularity and the correct nonzero-adjugate-sum
+(equivalently, bordered-system) kernel condition explicit. -/
+theorem singular_equalizing_kernel_example :
+    let A : Matrix (Fin 2) (Fin 2) ℝ := !![-1, 2; 1, -2]
+    A.det = 0 ∧
+      (∑ i, ∑ j, A.adjugate i j) ≠ 0 ∧
+      MinimaxLoomis.lam0 A = 0 ∧
+      MinimaxLoomis.lam0 A *
+        (∑ i, ∑ j, A.adjugate i j) = A.det := by
+  let A : Matrix (Fin 2) (Fin 2) ℝ := !![-1, 2; 1, -2]
+  let x : stdSimplex ℝ (Fin 2) :=
+    ⟨![1 / 2, 1 / 2],
+      (by intro i; fin_cases i <;> norm_num),
+      (by norm_num)⟩
+  let y : stdSimplex ℝ (Fin 2) :=
+    ⟨![2 / 3, 1 / 3],
+      (by intro j; fin_cases j <;> norm_num),
+      (by norm_num)⟩
+  have hx0 : x 0 = 1 / 2 := by rfl
+  have hx1 : x 1 = 1 / 2 := by rfl
+  have hy0 : y 0 = 2 / 3 := by rfl
+  have hy1 : y 1 = 1 / 3 := by rfl
+  have hx : ∀ j, wsum x (fun i => A i j) = 0 := by
+    intro j
+    fin_cases j
+    · norm_num [wsum, A, dotProduct, hx0, hx1]
+    · norm_num [wsum, A, dotProduct, hx0, hx1]
+  have hy : ∀ i, wsum y (fun j => A i j) = 0 := by
+    intro i
+    fin_cases i
+    · norm_num [wsum, A, dotProduct, hy0, hy1]
+    · norm_num [wsum, A, dotProduct, hy0, hy1]
+  have hdata :=
+    value_and_kernelIdentity_of_equalizing A x y 0 hx hy
+  have hdet : A.det = 0 := by
+    norm_num [A, Matrix.det_fin_two]
+  have hsum : (∑ i, ∑ j, A.adjugate i j) ≠ 0 := by
+    rw [Matrix.adjugate_fin_two]
+    norm_num [A]
+  exact ⟨hdet, hsum, hdata.1, hdata.2⟩
+
+/-- **Completely-mixed nonsingular kernel** (Kaplansky's determinant formula
+for a fully-mixed square game). Nonsingularity is a sufficient condition for
+the adjugate sum to be nonzero; singular kernels are covered by
+`exists_kernel_of_equalizing_of_adjugateSum_ne`.
 
 Proof: `V = lam0 A` follows the saddle-point argument above, with mixed strategies in
 place of pure ones (`lam.aux`/`mu.aux` collapse to the constant `V` since every pure
@@ -191,47 +315,18 @@ theorem exists_kernel_of_completelyMixed {n : ℕ} [Nonempty (Fin n)]
     (hxT : ∀ j, wsum x (fun i => A i j) = V) (hy : ∀ i, wsum y (fun j => A i j) = V) :
     MinimaxLoomis.lam0 A = V ∧ (∑ i, ∑ j, A.adjugate i j) ≠ 0 ∧
       MinimaxLoomis.lam0 A * (∑ i, ∑ j, A.adjugate i j) = A.det := by
-  classical
-  have hVeq : MinimaxLoomis.lam0 A = V := by
-    have hlamaux : MinimaxLoomis.lam.aux A x = V := by
-      unfold MinimaxLoomis.lam.aux
-      rw [show (fun j => wsum x (fun i => A i j)) = fun _ : Fin n => V from funext hxT]
-      exact Finset.inf'_const Finset.univ_nonempty V
-    have hmuaux : MinimaxLoomis.mu.aux A y = V := by
-      unfold MinimaxLoomis.mu.aux
-      rw [show (fun i => wsum y (fun j => A i j)) = fun _ : Fin n => V from funext hy]
-      exact Finset.sup'_const Finset.univ_nonempty V
-    have hVlam0 : V ≤ MinimaxLoomis.lam0 A := hlamaux ▸ MinimaxLoomis.lam.aux.le_lam0 A x
-    have hmu0V : MinimaxLoomis.mu0 A ≤ V := hmuaux ▸ MinimaxLoomis.mu.aux.ge_mu0 A y
-    exact le_antisymm ((MinimaxLoomis.lam0_le_mu0 A).trans hmu0V) hVlam0
-  have hmulVec : A *ᵥ y.val = V • (1 : Fin n → ℝ) := by
-    funext i
-    have hrow : (A *ᵥ y.val) i = wsum y (fun j => A i j) := dotProduct_comm (A i) y.val
-    rw [hrow, hy i]
-    simp
-  have hadj : Matrix.adjugate A *ᵥ (A *ᵥ y.val) = A.det • y.val := by
-    rw [Matrix.mulVec_mulVec, Matrix.adjugate_mul, Matrix.smul_mulVec, Matrix.one_mulVec]
-  have hadj' :
-      Matrix.adjugate A *ᵥ (A *ᵥ y.val) = V • (fun i => ∑ j, Matrix.adjugate A i j) := by
-    rw [hmulVec, Matrix.mulVec_smul]
-    congr 1
-    funext i
-    simp [Matrix.mulVec, dotProduct]
-  have hkey : A.det • y.val = V • (fun i => ∑ j, Matrix.adjugate A i j) := hadj.symm.trans hadj'
-  have hsum : A.det * (∑ i, y.val i) = V * (∑ i, ∑ j, Matrix.adjugate A i j) := by
-    have hcongr := congrArg (fun f : Fin n → ℝ => ∑ i, f i) hkey
-    simpa [Pi.smul_apply, smul_eq_mul, Finset.mul_sum] using hcongr
-  rw [y.property.2, mul_one] at hsum
+  obtain ⟨hVeq, hid⟩ :=
+    value_and_kernelIdentity_of_equalizing A x y V hxT hy
   have hSne : (∑ i, ∑ j, A.adjugate i j) ≠ 0 := by
     intro hz
-    rw [hz, mul_zero] at hsum
-    exact hA.ne_zero hsum
-  exact ⟨hVeq, hSne, hVeq ▸ hsum.symm⟩
+    rw [hz, mul_zero] at hid
+    exact hA.ne_zero hid.symm
+  exact ⟨hVeq, hSne, hid⟩
 
 /-! ### Optimal strategy sets: convexity, compactness, extreme optimizers
 
-Building blocks for the classical Shapley–Snow reduction sketch (`x`, `y` "extreme
-optimal mixed strategies" in the `TODO` proof sketch above). `optimalRowStrategies A V`
+Building blocks for the classical Shapley–Snow reduction (`x`, `y` "extreme
+optimal mixed strategies" in the proof architecture above). `optimalRowStrategies A V`
 and `optimalColStrategies A V` are the sets of row- / column-player mixed strategies
 that are optimal *at value `V`* — phrased as subsets of the ambient vector space
 `I → ℝ` / `J → ℝ` (rather than the `stdSimplex ℝ I` subtype used elsewhere) so
@@ -244,9 +339,9 @@ already-proved von Neumann minimax `lam0 = mu0`) nonempty, so Krein–Milman
 (`IsCompact.extremePoints_nonempty`) produces an *extreme* optimal strategy for each
 player. `expectedPayoff_eq_of_optimal` and its corollaries `tight_of_optimal_col_support`
 / `tight_of_optimal_row_support` are the complementary-slackness step of the sketch: on
-the support of an optimal pair, the payoff equations are tight. This is real progress
-towards the sketch, but NOT the reduction itself — see the TODO note at the end of this
-section for exactly what remains. -/
+the support of an optimal pair, the payoff equations are tight. The
+matching-support and bordered-basis selection interface after this section specifies
+the additional data consumed by kernel reassembly. -/
 
 section OptimalStrategies
 
@@ -734,7 +829,7 @@ theorem sum_eq_sum_support {ι : Type*} [Fintype ι] {x : ι → ℝ} (f : ι �
   simp only [Set.mem_setOf_eq, not_not] at hi
   exact hf i hi
 
-/-- **Cardinality bound (row side): step 1 of "What remains" below.** If `x` is an extreme
+/-- **Cardinality bound (row side).** If `x` is an extreme
 optimal row strategy at value `V`, the number of rows in its support is at most one more
 than the number of columns tight at `x`. Proof: package
 `eq_zero_of_extreme_optimalRow`'s hypotheses as an explicit `LinearMap` `g` from
@@ -788,7 +883,7 @@ theorem card_support_le_card_tightCol_of_extreme {A : I → J → ℝ} {V : ℝ}
     Module.finrank_fintype_fun_eq_card] at hle
   omega
 
-/-- **Cardinality bound (column side): step 1 of "What remains" below, mirror.** If `y`
+/-- **Cardinality bound (column side).** If `y`
 is an extreme optimal column strategy at value `V`, the number of columns in its support
 is at most one more than the number of rows tight at `y`. -/
 theorem card_support_le_card_tightRow_of_extreme {A : I → J → ℝ} {V : ℝ}
@@ -842,7 +937,7 @@ end OptimalStrategies
 /-- **Reindexing a sum along an embedding whose range is exactly a support.** If
 `e : Fin r ↪ κ` enumerates `z`'s support exactly (`z k ≠ 0 ↔ k ∈ Set.range e`) and `f`
 vanishes off `z`'s support, then summing `f ∘ e` over `Fin r` recovers the sum of `f` over
-all of `κ`. Used below (step 3 of "What remains") to transport tightness/normalisation
+all of `κ`. Used by kernel reassembly to transport tightness/normalisation
 facts about a strategy `z`, stated as sums over the ambient type `κ`, onto a
 `Fin r`-indexed enumeration of `z`'s support. -/
 theorem sum_embedding_eq_sum_of_range_eq_support {κ : Type*} [Fintype κ] {z : κ → ℝ}
@@ -863,25 +958,28 @@ section SquareKernelReassembly
 variable {I J : Type*} [Fintype I] [Fintype J] [Nonempty I] [Nonempty J]
 
 omit [Nonempty I] in
-/-- **Reassembly (step 3 of "What remains" below).** If `x`, `y` are extreme optimal
+/-- **Kernel reassembly from matching supports.** If `x`, `y` are extreme optimal
 strategies at `V := lam0 A` whose supports are *exactly* enumerated by embeddings `rows`,
 `cols` of a common size `r` (`hrows`, `hcols`), and the resulting square submatrix
-`A.submatrix rows cols` is nonsingular (`hB`), then that submatrix IS a Shapley–Snow
+has nonzero adjugate sum (`hB`), then that submatrix IS a Shapley–Snow
 kernel for `A`: the restrictions `x ∘ rows`, `y ∘ cols` are themselves mixed strategies
 (they inherit non-negativity from `x`, `y`, and sum to `1` since `rows`/`cols` exactly
 enumerate the support, so no mass is lost), and they form an *equalizing pair* for the
 submatrix at value `V` (complementary slackness, `tight_of_optimal_row_support` /
 `tight_of_optimal_col_support`, applied since every row of `rows`/column of `cols` lies in
 the support of `x`/`y`, hence in the region where the corresponding player's tightness is
-known). `exists_kernel_of_completelyMixed` then gives `lam0 (submatrix) = V`, and
+known). `exists_kernel_of_equalizing_of_adjugateSum_ne` then gives
+`lam0 (submatrix) = V`, and
 `V = lam0 A` by construction, yielding exactly the Shapley–Snow determinant identity for
 `A` itself (not just for the submatrix in isolation) — the "reassembly" step. -/
 theorem exists_kernel_of_extreme_matching_support {A : I → J → ℝ}
     {x : I → ℝ} (hx : x ∈ Set.extremePoints ℝ (optimalRowStrategies A (MinimaxLoomis.lam0 A)))
     {y : J → ℝ} (hy : y ∈ Set.extremePoints ℝ (optimalColStrategies A (MinimaxLoomis.lam0 A)))
     {r : ℕ} (rows : Fin r ↪ I) (cols : Fin r ↪ J)
-    (hrows : ∀ i, x i ≠ 0 ↔ i ∈ Set.range rows) (hcols : ∀ j, y j ≠ 0 ↔ j ∈ Set.range cols)
-    (hB : IsUnit ((Matrix.of A).submatrix rows cols).det) :
+    (hrows : ∀ i, x i ≠ 0 ↔ i ∈ Set.range rows)
+    (hcols : ∀ j, y j ≠ 0 ↔ j ∈ Set.range cols)
+    (hB : (∑ i, ∑ j,
+      ((Matrix.of A).submatrix rows cols).adjugate i j) ≠ 0) :
     ∃ (r' : ℕ) (_ : 0 < r') (rows' : Fin r' ↪ I) (cols' : Fin r' ↪ J),
       (∑ i, ∑ j, ((Matrix.of A).submatrix rows' cols').adjugate i j) ≠ 0 ∧
         MinimaxLoomis.lam0 A * (∑ i, ∑ j, ((Matrix.of A).submatrix rows' cols').adjugate i j)
@@ -938,7 +1036,9 @@ theorem exists_kernel_of_extreme_matching_support {A : I → J → ℝ}
     rw [sum_embedding_eq_sum_of_range_eq_support cols (fun j hj => (hcols j).mp hj)
       (fun j => y j * A (rows i') j) (fun k hk => by rw [hk, zero_mul])]
     exact htight
-  obtain ⟨hlamB, hadjne, heq⟩ := exists_kernel_of_completelyMixed B hB xr yr V hxr_tight hyr_tight
+  obtain ⟨hlamB, hadjne, heq⟩ :=
+    exists_kernel_of_equalizing_of_adjugateSum_ne
+      B xr yr V hxr_tight hyr_tight hB
   refine ⟨r, hr, rows, cols, hadjne, ?_⟩
   change MinimaxLoomis.lam0 A * (∑ i, ∑ j, B.adjugate i j) = B.det
   rw [← hV, ← hlamB]
@@ -946,81 +1046,46 @@ theorem exists_kernel_of_extreme_matching_support {A : I → J → ℝ}
 
 end SquareKernelReassembly
 
-/-! ### What remains: from "trivial kernel direction" to a square nonsingular submatrix
+/-! ### Matching-support and bordered-basis selection interface
 
-The building blocks above land the convexity/compactness/Krein–Milman half of the
-reduction sketch: extreme optimal mixed strategies `x ∈ extremePoints ℝ
-(optimalRowStrategies A (lam0 A))`, `y ∈ extremePoints ℝ (optimalColStrategies A (lam0
-A))` exist (`extremePoints_optimalRowStrategies_nonempty`,
-`extremePoints_optimalColStrategies_nonempty`), and on their supports the payoff
-equations are tight (`tight_of_optimal_row_support`, `tight_of_optimal_col_support`) —
-this holds for *any* optimal pair, not just extreme ones, since complementary slackness
-only used the defining inequalities, not extremality.
+Extreme optimal mixed strategies
+`x ∈ extremePoints ℝ (optimalRowStrategies A (lam0 A))` and
+`y ∈ extremePoints ℝ (optimalColStrategies A (lam0 A))` are supplied by
+`extremePoints_optimalRowStrategies_nonempty` and
+`extremePoints_optimalColStrategies_nonempty`. Complementary slackness
+(`tight_of_optimal_row_support`, `tight_of_optimal_col_support`) makes the payoff
+equations tight on their supports.
 
-`eq_zero_of_extreme_optimalRow` / `eq_zero_of_extreme_optimalCol` (above) land the
-*extremality* step proper — precisely the "if the tight constraints had a nontrivial
-kernel direction `d`, then `x ± εd` would both be optimal, contradicting extremality"
-argument anticipated in the reduction sketch, reproved from Mathlib's bare
-`openSegment`/`Set.extremePoints` definition (`Mathlib.Analysis.Convex.Extreme` carries no
-higher-level vertex/basic-feasible-solution theory, so this had to be built directly: for
-`x` extreme in `optimalRowStrategies A V`, any direction `d` that (i) is supported on
-`x`'s support, (ii) sums to `0`, and (iii) is annihilated by every column tight at `x`,
-must be `0` — i.e. the tight-constraint linear system has trivial kernel on the support).
-This is the injectivity half of the classical "extreme point = basic feasible solution"
-equivalence, made precise and PROVED (sorry-free) for this specific polytope.
+`eq_zero_of_extreme_optimalRow` and `eq_zero_of_extreme_optimalCol` express the
+extreme-point constraint as injectivity of the tight-constraint linear system on the
+support. The maps used by `card_support_le_card_tightCol_of_extreme` and
+`card_support_le_card_tightRow_of_extreme` convert that injectivity, by rank-nullity, to
+the one-sided bounds
 
-What is NOT proved here, and is needed to finish `exists_kernel`/`shapley_snow_kernel`, is
-turning that injectivity fact into the concrete combinatorial/linear-algebraic data the
-theorem statement demands. Of the three sub-steps originally identified, **two are now
-landed** (sorry-free) and one remains, sharpened to a precise standalone statement:
+* `|support x| ≤ |tightCol x| + 1`;
+* `|support y| ≤ |tightRow y| + 1`.
 
-1. **Cardinality bound — LANDED** (`card_support_le_card_tightCol_of_extreme`,
-   `card_support_le_card_tightRow_of_extreme`, just above). Injectivity of
-   `d ↦ (∑ᵢ dᵢ, (∑ᵢ dᵢAᵢⱼ)_{j ∈ C(x)})` on the directions supported on `R := {i | x i ≠
-   0}` is packaged as an explicit `LinearMap` on `(R → ℝ)`; rank-nullity
-   (`LinearMap.finrank_le_finrank_of_injective`) then gives exactly `|R| ≤ |C(x)| + 1`
-   (`C(x)` the columns tight at `x`), and symmetrically `|C| ≤ |R(y)| + 1` for the column
-   side. (`sum_eq_sum_support`, right above the row/column lemmas, is the reindexing
-   glue: a sum over the ambient type of a function vanishing off `x`'s support equals the
-   sum over the support subtype, needed to translate `eq_zero_of_extreme_*`'s
-   whole-type-indexed hypotheses onto that subtype.)
-2. **Basis/square selection — the ONE REMAINING GAP**, isolated as precisely as possible.
-   The cardinality bounds from step 1, together with the complementary-slackness
-   inclusions `C ⊆ C(x)` and `R ⊆ R(y)` (`tight_of_optimal_col_support` /
-   `tight_of_optimal_row_support`), give *rectangular* full-(row/column)-rank systems on
-   each side, but do NOT by themselves give `|R| = |C|`: that equality is a genuine fact
-   about *matching* linear-programming bases (`x`, `y` are extreme points of two *dual*
-   polytopes, and their supports correspond to bases of the *same* LP tableau), not a
-   generic rank-nullity consequence of the two one-sided bounds in isolation. Classically
-   this is established by an induction on `m + n` (a pivoting/degenerate-case argument),
-   which is a substantially larger undertaking than steps 1 and 3 and is NOT attempted
-   here. The exact remaining obligation, sharpened to a single precise statement,
-   is now exactly the hypothesis bundle of `exists_kernel_of_extreme_matching_support`
-   below: given extreme optimal `x`, `y` at `V := lam0 A`, produce `r`, embeddings
-   `rows : Fin r ↪ I`, `cols : Fin r ↪ J` whose ranges are EXACTLY `x`'s and `y`'s
-   supports (`hrows`, `hcols`), such that `(A.submatrix rows cols)` is nonsingular
-   (`hB`). No other input is missing: feeding any such `r`, `rows`, `cols`, `hB` (for
-   *some* choice of extreme `x`, `y` — not necessarily the same ones on repeated
-   invocations, since `exists_kernel` only needs existence) into that lemma finishes
-   `exists_kernel` outright.
-3. **Reassembly — LANDED** (`exists_kernel_of_extreme_matching_support`, just above,
-   in the `SquareKernelReassembly` section). Granted the step-2 data, `x ∘ rows` and
-   `y ∘ cols` are themselves valid mixed strategies (non-negativity inherited from `x`,
-   `y`; they sum to `1` because `rows`/`cols` enumerate the support *exactly*, so no
-   probability mass is dropped), and complementary slackness
-   (`tight_of_optimal_row_support` / `tight_of_optimal_col_support`) makes them an
-   *equalizing pair* for the submatrix `B` at value `V`, since every row of `rows`/column
-   of `cols` lies in `x`'s/`y`'s own support. `exists_kernel_of_completelyMixed` then
-   gives `lam0 B = V`, and since `V = lam0 A` by construction (not `lam0 B` a priori —
-   this is precisely the "reassembly" content), substituting recovers the Shapley–Snow
-   identity for `A` itself.
+The selection input consumed by `exists_kernel_of_extreme_matching_support` consists of
+an extreme optimal pair, a common positive size `r`, and embeddings
+`rows : Fin r ↪ I`, `cols : Fin r ↪ J` whose ranges exactly enumerate the two supports,
+together with
 
-`hkernel` is consequently NOT discharged in this file: `exists_nonzero_poly_of_kernel`
-and `exists_nonzero_poly_of_discounted` below still take it as an explicit hypothesis.
-But the gap is now exactly step 2 above — a single precise square/nonsingular-selection
-fact — rather than the three-part gap (rank-nullity + selection + reassembly) that stood
-before this section; steps 1 and 3, the finite-dimensional linear algebra either side of
-it, are fully formalised and sorry-free. -/
+```
+∑ i, ∑ j, ((Matrix.of A).submatrix rows cols).adjugate i j ≠ 0.
+```
+
+The last condition says that the bordered system
+`[[B, 1], [1ᵀ, 0]]` is nonsingular. It does not say that `B` is nonsingular:
+`singular_equalizing_kernel_example` gives an explicit singular `B` satisfying the
+condition. The two one-sided cardinality bounds alone do not construct this matching
+dual-basis data; a pivoting, perturbation, or induction theorem must establish it.
+
+Given this data, `exists_kernel_of_extreme_matching_support` restricts the strategies
+without losing probability mass, obtains an equalizing pair for `B`, and applies
+`exists_kernel_of_equalizing_of_adjugateSum_ne`. The result is the Shapley–Snow
+determinant identity for the ambient game. Accordingly,
+`exists_nonzero_poly_of_kernel` and `exists_nonzero_poly_of_discounted` expose the
+general kernel property as the explicit hypothesis `hkernel`. -/
 
 /-! ### Bivariate evaluation
 
@@ -1125,9 +1190,8 @@ noncomputable def kernelPoly {m n : ℕ} (E : Fin m → Fin n → Polynomial (Po
 /-- **Stage 2, concrete form.** The parametric Shapley–Snow corollary for a bivariate
 `m × n` matrix family `E`, a self-referential value function `val`, and a genericity
 hypothesis `hgen` ruling out the tautological degeneracy discussed above. The Stage-1
-kernel property is taken as the explicit hypothesis `hkernel` (Stage 1 itself is
-recorded as an unproved `TODO` above; this theorem shows exactly how the rest of the
-argument goes through once it is supplied). -/
+kernel property is the explicit hypothesis `hkernel`; the conclusion is the parametric
+polynomial consequence of that interface. -/
 theorem exists_nonzero_poly_of_kernel {m n : ℕ} [Nonempty (Fin m)] [Nonempty (Fin n)]
     (E : Fin m → Fin n → Polynomial (Polynomial ℝ)) (S : Set ℝ) (val : ℝ → ℝ)
     (hval : ∀ l ∈ S, val l =
@@ -1242,7 +1306,8 @@ nonzero element of the domain `ℝ[λ]` (`1 - λ ≠ 0` and `det r_sub ≠ 0`), 
 cannot be the zero polynomial. This is only a SUFFICIENT condition: a kernel shape whose
 reward submatrix happens to be singular could still have `kernelPoly ≠ 0` via a
 higher-degree-in-`v` coefficient, or Stage 1 might have selected a different,
-nonsingular-reward shape for the same matrix; neither residual case is handled here. -/
+nonsingular-reward shape for the same matrix. The theorem makes no claim for those
+cases. -/
 theorem kernelPoly_ne_zero_of_reward_det_ne_zero {m n : ℕ} (r P : Fin m → Fin n → ℝ)
     {sz : ℕ} (hlt : sz < m + 1) (rows : Fin sz ↪ Fin m) (cols : Fin sz ↪ Fin n)
     (hdet : ((Matrix.of r).submatrix rows cols).det ≠ 0) :
@@ -1260,7 +1325,7 @@ theorem kernelPoly_ne_zero_of_reward_det_ne_zero {m n : ℕ} (r P : Fin m → Fi
 
 /-- **Stage 3.** The parametric Shapley–Snow corollary specialised to a one-live-state
 discounted zero-sum stochastic game family: given the Shapley fixed-point property for
-`w` on `(0, 1)` and the Stage-1 kernel property `hkernel` — now strengthened with the
+`w` on `(0, 1)` and the Stage-1 kernel property `hkernel`, strengthened with the
 CHECKABLE conjunct "the reward submatrix of the kernel is nonsingular" in place of the
 opaque genericity hypothesis `hgen` of `exists_nonzero_poly_of_kernel` (discharged via
 `kernelPoly_ne_zero_of_reward_det_ne_zero` above) — there is a single nonzero bivariate
@@ -1272,8 +1337,8 @@ The nonsingular-reward conjunct is a genuinely weaker, checkable ask than `hgen`
 concrete game it reduces to a single real-matrix determinant computation
 (`norm_num`/`decide`), rather than a universally-quantified polynomial-nonvanishing
 claim. It is still only sufficient, not necessary — see the docstring of
-`kernelPoly_ne_zero_of_reward_det_ne_zero` for the residual (singular-reward-kernel)
-gap. -/
+`kernelPoly_ne_zero_of_reward_det_ne_zero` for the singular-reward cases outside its
+statement. -/
 theorem exists_nonzero_poly_of_discounted {m n : ℕ} [Nonempty (Fin m)] [Nonempty (Fin n)]
     (r P : Fin m → Fin n → ℝ) (w : ℝ → ℝ)
     (hw : ∀ l ∈ Set.Ioo (0 : ℝ) 1,
