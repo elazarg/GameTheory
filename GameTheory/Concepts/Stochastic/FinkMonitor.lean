@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.FinkObstruction
+import Math.AlgebraicSelection
 import Math.OnlineLearning.AnytimeMultiplicativeWeights
 import Math.Probability.Adaptive
 
@@ -27,6 +28,45 @@ open Filter
 
 /-- The finite monitor family: a destination state and one of its two score orientations. -/
 abbrev PMFCoordinateMonitor (Ω : Type) := Ω × Bool
+
+/-- Along an analytic branch of baseline/comparison PMFs, one fixed
+destination and orientation eventually attain the largest absolute
+coordinate difference. This is the branch-stability condition that removes
+the changing-monitor obstruction inside one ramified analytic phase. -/
+theorem exists_eventually_fixed_pmfCoordinateMonitor
+    {Ω : Type} [Finite Ω] [Nonempty Ω]
+    (baseline comparison : ℝ → PMF Ω) {x₀ : ℝ}
+    (hanalytic : ∀ destination,
+      AnalyticAt ℝ (fun x =>
+        ((comparison x) destination).toReal -
+          ((baseline x) destination).toReal) x₀)
+    (hnonzero : ∃ destination,
+      ¬∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ((comparison x) destination).toReal -
+          ((baseline x) destination).toReal = 0) :
+    ∃ monitor : PMFCoordinateMonitor Ω,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        0 <
+            (if monitor.2 then 1 else -1) *
+              (((comparison x) monitor.1).toReal -
+                ((baseline x) monitor.1).toReal) ∧
+          ∀ destination,
+            |((comparison x) destination).toReal -
+                ((baseline x) destination).toReal| ≤
+              (if monitor.2 then 1 else -1) *
+                (((comparison x) monitor.1).toReal -
+                  ((baseline x) monitor.1).toReal) := by
+  let drift : Ω → ℝ → ℝ := fun destination x =>
+    ((comparison x) destination).toReal -
+      ((baseline x) destination).toReal
+  obtain ⟨destination, σ, hσ, hdominant⟩ :=
+    Math.finite_analytic_family_eventually_fixed_oriented_abs_maximizer
+      drift hanalytic hnonzero
+  rcases hσ with hneg | hpos
+  · refine ⟨(destination, false), ?_⟩
+    simpa [drift, hneg] using hdominant
+  · refine ⟨(destination, true), ?_⟩
+    simpa [drift, hpos] using hdominant
 
 /-- Public score obtained by mixing the destination/sign tests with an arbitrary monitor
     distribution. In a sequential construction the distribution may be chosen from the public
