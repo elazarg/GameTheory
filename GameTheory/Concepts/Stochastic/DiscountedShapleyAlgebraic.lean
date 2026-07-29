@@ -45,6 +45,10 @@ discounted-value coordinate per state.
   a branchwise finite-or-denominator-nilpotent discharge criterion.
 * `exists_nonzero_bivariate_discountedShapleyRateValue_of_uniqueState`:
   unconditional saturated-branch elimination for one-state games.
+* `moduleFinite_discountedShapleyNonvanishingKernelBranchIdeal_of_forall_size_eq_one`:
+  unconditional saturated-branch finiteness for every size-one kernel branch.
+* `exists_nonzero_bivariate_discountedShapleyRateValue_of_activeKernelShapes_size_one`:
+  a game-level bivariate relation when all active local kernels have size one.
 * `discountedShapleyRateValue_twoState_elimination_dichotomy`: the bivariate
   relation/resultant-degeneracy dichotomy for a two-state game.
 -/
@@ -211,6 +215,50 @@ noncomputable def discountedShapleyKernelBranchDenominator
       G.rowStagePayoff
       (fun s i j z => (G.pairTransition s i j z).toReal)
       branch)
+
+/-- Every branch that selects one pure row action and one pure column action
+at each state has finite-dimensional denominator-nonvanishing quotient. -/
+theorem moduleFinite_discountedShapleyNonvanishingKernelBranchIdeal_of_pure
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [Nonempty (G.Act 0)]
+    (row : G.State → G.Act 0)
+    (col : G.State → G.Act 1) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option G.State)
+          (FractionRing (Polynomial ℝ)) ⧸
+        (G.discountedShapleyNonvanishingKernelBranchIdeal
+          (ShapleySnow.pureActionKernelBranch row col)).map
+            (MvPolynomial.map
+              (algebraMap (Polynomial ℝ)
+                (FractionRing (Polynomial ℝ))))) := by
+  exact
+    ShapleySnow.moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_pure
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      row col
+
+/-- Every game-level branch whose selected kernels all have size one has
+finite-dimensional denominator-nonvanishing quotient. -/
+theorem moduleFinite_discountedShapleyNonvanishingKernelBranchIdeal_of_forall_size_eq_one
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [Nonempty (G.Act 0)]
+    (branch : G.State →
+      ShapleySnow.ActionKernelShape (G.Act 0) (G.Act 1))
+    (hsize : ∀ s, (branch s).1.val = 1) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option G.State)
+          (FractionRing (Polynomial ℝ)) ⧸
+        (G.discountedShapleyNonvanishingKernelBranchIdeal branch).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ))))) := by
+  exact
+    ShapleySnow.moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_forall_size_eq_one
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      branch hsize
 
 /-- If the canonical coupled kernel ideal is zero-dimensional over `ℝ(λ)`,
 the canonical discounted Shapley value has a fixed nonzero bivariate relation
@@ -393,6 +441,35 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_branchMonicRelati
       (fun l hl s =>
         G.discountedShapleyRateValue_eq_lam0 hl s)
       hrelations target
+
+/-- If every denominator-active local Shapley--Snow kernel has size one, every
+saturated branch is affine-linear and the canonical discounted value satisfies
+a fixed nonzero bivariate relation at every state. -/
+theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_activeKernelShapes_size_one
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hsize : ∀ s k,
+      ShapleySnow.IsActiveKernelShape
+          (ShapleySnow.discountedStochasticEntry
+            (G.rowStagePayoff s)
+            (fun i j z => (G.pairTransition s i j z).toReal)) k →
+        k.1.val = 1)
+    (target : G.State) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        Polynomial.eval
+          (G.discountedShapleyRateValue l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  exact
+    ShapleySnow.exists_nonzero_bivariateRelation_of_activeKernelShapes_size_one
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1)
+      (fun l hl s =>
+        G.discountedShapleyRateValue_eq_lam0 hl s)
+      hsize target
 
 /-- In a one-state zero-sum stochastic game, the saturated fixed-branch
 argument gives a fixed bivariate relation with no algebraic hypothesis. -/

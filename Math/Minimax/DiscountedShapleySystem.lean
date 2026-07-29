@@ -56,6 +56,16 @@ determinants scale in adjacent degrees.
 * `discountedShapleySystem_twoState_kernelPair_elimination_dichotomy`:
   pairwise resultant elimination for a two-state coupled system, with a
   specific local-kernel degeneracy certificate.
+* `pureActionKernelShape`: the canonical `1 × 1` kernel selected by one row
+  and one column action.
+* `moduleFinite_discountedShapleyActiveBranchIdeal_of_forall_size_eq_one`:
+  every fixed branch made only of `1 × 1` kernels is zero-dimensional for any
+  finite state set.
+* `moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_forall_size_eq_one`:
+  the same conclusion after adjoining the inverse-denominator equation.
+* `exists_nonzero_bivariateRelation_of_activeKernelShapes_size_one`: if all
+  active local kernels have size one, every value coordinate has a fixed
+  bivariate relation.
 -/
 
 open scoped BigOperators
@@ -303,6 +313,58 @@ def ActionKernelShape (I J : Type*) [Fintype I] : Type _ :=
   Σ sz : Fin (Fintype.card I + 1),
     (Fin sz.val ↪ I) × (Fin sz.val ↪ J)
 
+/-- The canonical `1 × 1` kernel shape selected by one row action and one
+column action. -/
+noncomputable def pureActionKernelShape
+    {I J : Type*} [Fintype I] [Nonempty I]
+    (i : I) (j : J) :
+    ActionKernelShape I J :=
+  ⟨⟨1, by
+      simpa using
+        (Fintype.card_pos_iff.mpr (inferInstance : Nonempty I))⟩,
+    ⟨fun _ => i, fun _ _ _ => Subsingleton.elim _ _⟩,
+    ⟨fun _ => j, fun _ _ _ => Subsingleton.elim _ _⟩⟩
+
+/-- Every kernel shape of size one is a pure-action kernel shape. -/
+theorem exists_eq_pureActionKernelShape_of_size_eq_one
+    {I J : Type*} [Fintype I] [Nonempty I]
+    (k : ActionKernelShape I J) (hk : k.1.val = 1) :
+    ∃ i j, k = pureActionKernelShape i j := by
+  rcases k with ⟨sz, rows, cols⟩
+  have hcard : 1 < Fintype.card I + 1 := by
+    simpa using
+      (Fintype.card_pos_iff.mpr (inferInstance : Nonempty I))
+  have hsz : sz = (⟨1, hcard⟩ : Fin (Fintype.card I + 1)) :=
+    Fin.ext hk
+  subst sz
+  refine ⟨rows 0, cols 0, ?_⟩
+  congr
+  · ext x
+    change rows x = rows 0
+    rw [show x = 0 from Subsingleton.elim _ _]
+  · ext x
+    change cols x = cols 0
+    rw [show x = 0 from Subsingleton.elim _ _]
+
+/-- An explicit reindexing used to compute the bordered determinant of a
+`1 × 1` kernel. -/
+def finOneSumUnitEquivFinTwo : Sum (Fin 1) Unit ≃ Fin 2 where
+  toFun
+    | Sum.inl _ => 0
+    | Sum.inr _ => 1
+  invFun x := if x = 0 then Sum.inl 0 else Sum.inr ()
+  left_inv := by
+    intro x
+    rcases x with x | x
+    · have hx : x = 0 := Subsingleton.elim _ _
+      subst x
+      simp
+    · cases x
+      simp
+  right_inv := by
+    intro x
+    fin_cases x <;> simp
+
 noncomputable instance instFiniteActionKernelShape
     (I J : Type*) [Fintype I] [Finite J] :
     Finite (ActionKernelShape I J) := by
@@ -331,6 +393,43 @@ noncomputable def mvBorderedKernelDenominator
     (borderedMatrix
       ((Matrix.of E).submatrix rows cols)).det
 
+/-- A pure `1 × 1` kernel has constant bordered denominator one. -/
+theorem mvBorderedKernelDenominator_pureActionKernelShape
+    {σ I J : Type*} [Fintype I] [Nonempty I]
+    (E : I → J → MvPolynomial σ ℝ)
+    (i : I) (j : J) :
+    mvBorderedKernelDenominator E (pureActionKernelShape i j) = 1 := by
+  classical
+  change
+    (borderedMatrix
+      ((Matrix.of E).submatrix
+        (fun _ : Fin 1 => i) (fun _ : Fin 1 => j))).det = 1
+  rw [← Matrix.det_reindex_self finOneSumUnitEquivFinTwo]
+  rw [Matrix.det_fin_two]
+  simp [finOneSumUnitEquivFinTwo, borderedMatrix, Matrix.reindex_apply]
+
+/-- The bordered-kernel equation of a pure `1 × 1` kernel is its selected
+entry minus the target value coordinate. -/
+theorem mvBorderedKernelPoly_pureActionKernelShape
+    {σ I J : Type*} [Fintype I] [Nonempty I]
+    (E : I → J → MvPolynomial σ ℝ)
+    (target : σ) (i : I) (j : J) :
+    mvBorderedKernelPoly E target (pureActionKernelShape i j) =
+      E i j - MvPolynomial.X target := by
+  classical
+  change
+    ((Matrix.of E).submatrix
+        (fun _ : Fin 1 => i) (fun _ : Fin 1 => j)).det -
+      MvPolynomial.X target *
+        (borderedMatrix
+          ((Matrix.of E).submatrix
+            (fun _ : Fin 1 => i) (fun _ : Fin 1 => j))).det =
+      E i j - MvPolynomial.X target
+  rw [Matrix.det_eq_elem_of_subsingleton _ 0]
+  rw [← Matrix.det_reindex_self finOneSumUnitEquivFinTwo]
+  rw [Matrix.det_fin_two]
+  simp [finOneSumUnitEquivFinTwo, borderedMatrix, Matrix.reindex_apply]
+
 /-- A positive-size kernel shape whose bordered determinant is a nonzero
 formal polynomial. -/
 def IsActiveKernelShape
@@ -338,6 +437,17 @@ def IsActiveKernelShape
     (E : I → J → MvPolynomial σ ℝ)
     (k : ActionKernelShape I J) : Prop :=
   0 < k.1.val ∧ mvBorderedKernelDenominator E k ≠ 0
+
+/-- Every pure `1 × 1` kernel shape is denominator-active. -/
+theorem isActiveKernelShape_pureActionKernelShape
+    {σ I J : Type*} [Fintype I] [Nonempty I]
+    (E : I → J → MvPolynomial σ ℝ)
+    (i : I) (j : J) :
+    IsActiveKernelShape E (pureActionKernelShape i j) := by
+  constructor
+  · simp [pureActionKernelShape]
+  · rw [mvBorderedKernelDenominator_pureActionKernelShape]
+    exact one_ne_zero
 
 /-- At every parameter, a coupled Shapley equation selects a
 denominator-active local bordered-kernel candidate that vanishes at the full
@@ -652,6 +762,188 @@ noncomputable def localizedDiscountedShapleyActiveKernelPoly
     (algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ)))
     (discountedShapleyActiveKernelPoly r T target k)
 
+/-- A fixed branch consisting of a selected pure `1 × 1` kernel at every
+state. -/
+noncomputable def pureActionKernelBranch
+    {κ I J : Type*} [Fintype I] [Nonempty I]
+    (row : κ → I) (col : κ → J) :
+    κ → ActionKernelShape I J :=
+  fun s => pureActionKernelShape (row s) (col s)
+
+/-- Every branch whose selected kernels all have size one is a pure-action
+branch. -/
+theorem exists_pureActionKernelBranch_eq_of_forall_size_eq_one
+    {κ I J : Type*} [Fintype I] [Nonempty I]
+    (branch : κ → ActionKernelShape I J)
+    (hsize : ∀ s, (branch s).1.val = 1) :
+    ∃ row : κ → I, ∃ col : κ → J,
+      branch = pureActionKernelBranch row col := by
+  choose row col hbranch using fun s =>
+    exists_eq_pureActionKernelShape_of_size_eq_one
+      (branch s) (hsize s)
+  exact ⟨row, col, funext hbranch⟩
+
+/-- The rate variable embedded in the coefficient fraction field. -/
+noncomputable def pureBranchRate :
+    FractionRing (Polynomial ℝ) :=
+  algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ)) Polynomial.X
+
+/-- The polynomial coefficient matrix of the discounted linear fixed-point
+system associated with a pure branch. At rate one it specializes to the
+identity matrix. -/
+noncomputable def pureBranchPolynomialLinearMatrix
+    {κ I J : Type*} [Fintype κ]
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) :
+    Matrix κ κ (Polynomial ℝ) := by
+  classical
+  exact fun s z =>
+    (if s = z then 1 else 0) -
+      (1 - Polynomial.X) *
+        Polynomial.C (T s (row s) (col s) z)
+
+/-- The pure-branch linear coefficient matrix after passing from `ℝ[λ]` to
+`ℝ(λ)`. -/
+noncomputable def pureBranchLinearMatrix
+    {κ I J : Type*} [Fintype κ]
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) :
+    Matrix κ κ (FractionRing (Polynomial ℝ)) := by
+  classical
+  exact fun s z =>
+    (if s = z then 1 else 0) -
+      (1 - pureBranchRate) *
+        algebraMap ℝ (FractionRing (Polynomial ℝ))
+          (T s (row s) (col s) z)
+
+/-- The pure-branch discounted reward vector over `ℝ(λ)`. -/
+noncomputable def pureBranchRewardVector
+    {κ I J : Type*}
+    (r : κ → I → J → ℝ)
+    (row : κ → I) (col : κ → J) :
+    κ → FractionRing (Polynomial ℝ) :=
+  fun s =>
+    pureBranchRate *
+      algebraMap ℝ (FractionRing (Polynomial ℝ))
+        (r s (row s) (col s))
+
+/-- The polynomial coefficient matrix of a pure branch is nonsingular because
+its specialization at rate one is the identity. -/
+theorem pureBranchPolynomialLinearMatrix_det_ne_zero
+    {κ I J : Type*} [Fintype κ] [DecidableEq κ]
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) :
+    (pureBranchPolynomialLinearMatrix T row col).det ≠ 0 := by
+  let M := pureBranchPolynomialLinearMatrix T row col
+  have hmap :
+      M.map (Polynomial.evalRingHom (1 : ℝ)) = 1 := by
+    ext s z
+    by_cases hsz : s = z
+    · subst z
+      simp [M, pureBranchPolynomialLinearMatrix]
+    · simp [M, pureBranchPolynomialLinearMatrix, hsz]
+  intro hzero
+  have heval :
+      Polynomial.eval 1 M.det = 0 := by
+    rw [hzero]
+    simp
+  have hdet :
+      Polynomial.eval 1 M.det =
+        (M.map (Polynomial.evalRingHom (1 : ℝ))).det := by
+    have h := RingHom.map_det (Polynomial.evalRingHom (1 : ℝ)) M
+    change Polynomial.eval 1 M.det =
+      (M.map (Polynomial.evalRingHom (1 : ℝ))).det at h
+    exact h
+  rw [hdet, hmap, Matrix.det_one] at heval
+  norm_num at heval
+
+/-- The pure-branch coefficient matrix remains nonsingular over `ℝ(λ)`. -/
+theorem pureBranchLinearMatrix_det_ne_zero
+    {κ I J : Type*} [Fintype κ] [DecidableEq κ]
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) :
+    (pureBranchLinearMatrix T row col).det ≠ 0 := by
+  let φ : Polynomial ℝ →+* FractionRing (Polynomial ℝ) :=
+    algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ))
+  let M := pureBranchPolynomialLinearMatrix T row col
+  have hscalar (a : ℝ) :
+      algebraMap ℝ (FractionRing (Polynomial ℝ)) a =
+        φ (Polynomial.C a) :=
+    IsScalarTower.algebraMap_apply ℝ (Polynomial ℝ)
+      (FractionRing (Polynomial ℝ)) a
+  have hmatrix :
+      pureBranchLinearMatrix T row col = M.map φ := by
+    ext s z
+    by_cases hsz : s = z
+    · subst z
+      simp [pureBranchLinearMatrix, pureBranchRate, M,
+        pureBranchPolynomialLinearMatrix, φ, hscalar]
+    · simp [pureBranchLinearMatrix, pureBranchRate, M,
+        pureBranchPolynomialLinearMatrix, φ, hscalar, hsz]
+  rw [hmatrix]
+  have hdetmap :
+      (M.map φ).det = φ M.det := by
+    simpa using (RingHom.map_det φ M).symm
+  rw [hdetmap]
+  intro hzero
+  have hMzero : M.det = 0 := by
+    apply
+      (IsFractionRing.injective (Polynomial ℝ)
+        (FractionRing (Polynomial ℝ)))
+    calc
+      φ M.det = 0 := hzero
+      _ = φ 0 := (map_zero φ).symm
+  exact
+    (pureBranchPolynomialLinearMatrix_det_ne_zero T row col)
+      (by simpa [M] using hMzero)
+
+/-- A localized pure kernel equation is the negative of its affine-linear
+fixed-point coordinate equation. -/
+theorem localizedDiscountedShapleyActiveKernelPoly_pure
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J] [Nonempty I]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) (s : κ) :
+    localizedDiscountedShapleyActiveKernelPoly
+        r T s (pureActionKernelShape (row s) (col s)) =
+      -Math.MultivariateElimination.affineLinearSystemPoly
+        (pureBranchLinearMatrix T row col)
+        (pureBranchRewardVector r row col) s := by
+  classical
+  rw [localizedDiscountedShapleyActiveKernelPoly,
+    discountedShapleyActiveKernelPoly,
+    if_pos (isActiveKernelShape_pureActionKernelShape
+      (discountedStochasticEntry (r s) (T s)) (row s) (col s)),
+    mvBorderedKernelPoly_pureActionKernelShape]
+  simp only [Math.MultivariateElimination.affineLinearSystemPoly,
+    pureBranchLinearMatrix, pureBranchRewardVector, pureBranchRate,
+    discountedStochasticEntry, map_add, map_sub, map_mul, map_one,
+    map_sum, MvPolynomial.optionEquivRight_X_none,
+    MvPolynomial.optionEquivRight_X_some,
+    MvPolynomial.optionEquivRight_C, MvPolynomial.map_C,
+    MvPolynomial.map_X]
+  have hscalar (a : ℝ) :
+      algebraMap (Polynomial ℝ) (FractionRing (Polynomial ℝ))
+          (Polynomial.C a) =
+        algebraMap ℝ (FractionRing (Polynomial ℝ)) a :=
+    (IsScalarTower.algebraMap_apply ℝ (Polynomial ℝ)
+      (FractionRing (Polynomial ℝ)) a).symm
+  simp_rw [hscalar]
+  have hdelta :
+      (∑ x, MvPolynomial.C
+          (if s = x then
+            (1 : FractionRing (Polynomial ℝ)) else 0) *
+          MvPolynomial.X x) =
+        MvPolynomial.X s := by
+    classical
+    simp
+  simp_rw [sub_mul]
+  rw [Finset.sum_sub_distrib]
+  rw [hdelta]
+  rw [Finset.sum_sub_distrib]
+  simp_rw [Finset.mul_sum]
+  ring_nf
+
 /-- The localized ideal for a fixed choice of one active-kernel shape at
 each state. Choices of inactive shapes generate the unit ideal. -/
 noncomputable def discountedShapleyActiveBranchIdeal
@@ -663,6 +955,82 @@ noncomputable def discountedShapleyActiveBranchIdeal
   Ideal.span
     (Set.range fun s =>
       localizedDiscountedShapleyActiveKernelPoly r T s (branch s))
+
+/-- A pure fixed branch is exactly the invertible affine-linear system
+associated with its selected actions. -/
+theorem discountedShapleyActiveBranchIdeal_pure
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J] [Nonempty I]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) :
+    discountedShapleyActiveBranchIdeal r T
+        (pureActionKernelBranch row col) =
+      Math.MultivariateElimination.affineLinearSystemIdeal
+        (pureBranchLinearMatrix T row col)
+        (pureBranchRewardVector r row col) := by
+  rw [discountedShapleyActiveBranchIdeal,
+    Math.MultivariateElimination.affineLinearSystemIdeal]
+  apply le_antisymm
+  · apply Ideal.span_le.mpr
+    rintro P ⟨s, rfl⟩
+    change
+      localizedDiscountedShapleyActiveKernelPoly
+        r T s (pureActionKernelShape (row s) (col s)) ∈ _
+    rw [localizedDiscountedShapleyActiveKernelPoly_pure]
+    exact (Ideal.neg_mem_iff _).mpr (Ideal.subset_span ⟨s, rfl⟩)
+  · apply Ideal.span_le.mpr
+    rintro P ⟨s, rfl⟩
+    have hmem :
+        localizedDiscountedShapleyActiveKernelPoly
+            r T s ((pureActionKernelBranch row col) s) ∈
+          Ideal.span
+            (Set.range fun z =>
+              localizedDiscountedShapleyActiveKernelPoly
+                r T z ((pureActionKernelBranch row col) z)) :=
+      Ideal.subset_span ⟨s, rfl⟩
+    have hshape :
+        (pureActionKernelBranch row col) s =
+          pureActionKernelShape (row s) (col s) := rfl
+    rw [hshape,
+      localizedDiscountedShapleyActiveKernelPoly_pure] at hmem
+    exact (Ideal.neg_mem_iff _).mp hmem
+
+/-- Every arbitrary-state pure fixed branch has finite-dimensional quotient
+over `ℝ(λ)`. -/
+theorem moduleFinite_discountedShapleyActiveBranchIdeal_pure
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J] [Nonempty I]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+        discountedShapleyActiveBranchIdeal r T
+          (pureActionKernelBranch row col)) := by
+  classical
+  rw [discountedShapleyActiveBranchIdeal_pure]
+  exact
+    Math.MultivariateElimination.moduleFinite_affineLinearSystemIdeal
+      (pureBranchLinearMatrix T row col)
+      (pureBranchRewardVector r row col)
+      (pureBranchLinearMatrix_det_ne_zero T row col)
+
+/-- Any arbitrary-state fixed branch whose selected kernels all have size one
+has finite-dimensional quotient over `ℝ(λ)`. -/
+theorem moduleFinite_discountedShapleyActiveBranchIdeal_of_forall_size_eq_one
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J] [Nonempty I]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (hsize : ∀ s, (branch s).1.val = 1) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+        discountedShapleyActiveBranchIdeal r T branch) := by
+  obtain ⟨row, col, hbranch⟩ :=
+    exists_pureActionKernelBranch_eq_of_forall_size_eq_one
+      branch hsize
+  rw [hbranch]
+  exact moduleFinite_discountedShapleyActiveBranchIdeal_pure
+    r T row col
 
 /-- One bordered denominator with the rate moved into `ℝ[λ]`. -/
 noncomputable def discountedShapleyKernelDenominatorPoly
@@ -756,6 +1124,53 @@ theorem moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_activeBranch
       (algebraMap (Polynomial ℝ)
         (FractionRing (Polynomial ℝ)))
       (discountedShapleyBranchDenominator r T branch))
+
+/-- Saturating an arbitrary-state pure fixed branch by its selected bordered
+denominators preserves its finite-dimensional quotient. -/
+theorem moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_pure
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J] [Nonempty I]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (row : κ → I) (col : κ → J) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyNonvanishingBranchIdeal r T
+          (pureActionKernelBranch row col)).map
+            (MvPolynomial.map
+              (algebraMap (Polynomial ℝ)
+                (FractionRing (Polynomial ℝ))))) := by
+  classical
+  letI :
+      Module.Finite (FractionRing (Polynomial ℝ))
+        (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+          discountedShapleyActiveBranchIdeal r T
+            (pureActionKernelBranch row col)) :=
+    moduleFinite_discountedShapleyActiveBranchIdeal_pure
+      r T row col
+  exact
+    moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_activeBranch
+      r T (pureActionKernelBranch row col)
+
+/-- Denominator saturation preserves finite-dimensionality for any branch
+whose selected kernels all have size one. -/
+theorem moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_forall_size_eq_one
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J] [Nonempty I]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (branch : κ → ActionKernelShape I J)
+    (hsize : ∀ s, (branch s).1.val = 1) :
+    Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial (Option κ) (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyNonvanishingBranchIdeal r T branch).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ))))) := by
+  obtain ⟨row, col, hbranch⟩ :=
+    exists_pureActionKernelBranch_eq_of_forall_size_eq_one
+      branch hsize
+  rw [hbranch]
+  exact moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_pure
+    r T row col
 
 /-- If the localized denominator product is nilpotent modulo a fixed active
 branch, enforcing its inverse makes the nonvanishing branch the unit ideal. -/
@@ -1573,6 +1988,39 @@ theorem exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_monicRela
           (algebraMap (Polynomial ℝ)
             (FractionRing (Polynomial ℝ)))))
       p hpmonic hpmem
+
+/-- If every denominator-active local kernel has size one, the pure-branch
+closure discharges every saturated fixed branch and yields a fixed bivariate
+relation for each coupled Shapley value coordinate. -/
+theorem exists_nonzero_bivariateRelation_of_activeKernelShapes_size_one
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (hsize : ∀ s k,
+      IsActiveKernelShape
+          (discountedStochasticEntry (r s) (T s)) k →
+        k.1.val = 1)
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ S,
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  apply
+    exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite
+      r T w S hw
+  intro branch hactive
+  exact
+    moduleFinite_discountedShapleyNonvanishingBranchIdeal_of_forall_size_eq_one
+      r T branch (fun s => hsize s (branch s) (hactive s))
 
 /-- A coupled Shapley system with a unique state satisfies a fixed nonzero
 bivariate relation without any branch-finiteness hypothesis. -/
