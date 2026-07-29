@@ -207,6 +207,166 @@ theorem discountedShapleyRateValue_eq_lam0
     unfold discountedShapleyValue
     rw [coe_discountFactorOfRate hl1]
 
+/-- The canonical normalized value is locally Lipschitz in the positive
+rate. The explicit asymmetric modulus is useful near a fixed positive rate;
+no uniform estimate is asserted as the rate approaches zero. -/
+theorem dist_discountedShapleyRateValue_le
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hzs : G.IsZeroSum)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a 0)
+    (hpayUpper : ∀ s a, G.stagePayoff s a 0 ≤ 1)
+    {l m : ℝ} (hl : l ∈ Set.Ioc (0 : ℝ) 1)
+    (hm : m ∈ Set.Ioc (0 : ℝ) 1) :
+    dist (G.discountedShapleyRateValue l)
+        (G.discountedShapleyRateValue m) ≤
+      |l - m| / l := by
+  let vl := G.discountedShapleyRateValue l
+  let vm := G.discountedShapleyRateValue m
+  have hcoord (s : G.State) :
+      |vl s - vm s| ≤
+        (1 - l) * dist vl vm + |l - m| := by
+    have hvl :
+        vl s =
+          MinimaxLoomis.lam0 fun i j =>
+            l * G.rowStagePayoff s i j +
+              (1 - l) *
+                Math.Probability.expect
+                  (G.pairTransition s i j) vl := by
+      simpa only [vl, Math.Probability.expect_eq_sum] using
+        G.discountedShapleyRateValue_eq_lam0 hl s
+    have hvm :
+        vm s =
+          MinimaxLoomis.lam0 fun i j =>
+            m * G.rowStagePayoff s i j +
+              (1 - m) *
+                Math.Probability.expect
+                  (G.pairTransition s i j) vm := by
+      simpa only [vm, Math.Probability.expect_eq_sum] using
+        G.discountedShapleyRateValue_eq_lam0 hm s
+    rw [hvl, hvm]
+    apply MinimaxLoomis.abs_lam0_sub_le_of_entrywise_abs_le
+    intro i j
+    let d := G.pairTransition s i j
+    let El := Math.Probability.expect d vl
+    let Em := Math.Probability.expect d vm
+    have hEsub : |El - Em| ≤ dist vl vm := by
+      rw [← Math.Probability.expect_sub]
+      refine Math.Probability.abs_expect_le_of_abs_le
+        _ _ fun z => ?_
+      have hz := dist_le_pi_dist vl vm z
+      rwa [Real.dist_eq] at hz
+    have hEm0 : 0 ≤ Em := by
+      apply Math.Probability.expect_nonneg
+      intro z
+      exact G.discountedShapleyRateValue_nonneg
+        hzs hpayLower m z
+    have hEm1 : Em ≤ 1 := by
+      calc
+        Em ≤
+            Math.Probability.expect d (fun _ => (1 : ℝ)) := by
+          apply Math.Probability.expect_mono
+          intro z
+          exact G.discountedShapleyRateValue_le_one
+            hzs hpayLower hpayUpper m z
+        _ = 1 := by simp
+    have hr0 : 0 ≤ G.rowStagePayoff s i j :=
+      hpayLower s (G.pairJointAct i j)
+    have hr1 : G.rowStagePayoff s i j ≤ 1 :=
+      hpayUpper s (G.pairJointAct i j)
+    have hrE :
+        |G.rowStagePayoff s i j - Em| ≤ 1 := by
+      rw [abs_le]
+      constructor <;> linarith
+    have hid :
+        (l * G.rowStagePayoff s i j + (1 - l) * El) -
+            (m * G.rowStagePayoff s i j + (1 - m) * Em) =
+          (1 - l) * (El - Em) +
+            (l - m) *
+              (G.rowStagePayoff s i j - Em) := by
+      ring
+    rw [hid]
+    calc
+      |(1 - l) * (El - Em) +
+          (l - m) * (G.rowStagePayoff s i j - Em)|
+          ≤ |(1 - l) * (El - Em)| +
+              |(l - m) *
+                (G.rowStagePayoff s i j - Em)| :=
+        abs_add_le _ _
+      _ = (1 - l) * |El - Em| +
+            |l - m| *
+              |G.rowStagePayoff s i j - Em| := by
+        rw [abs_mul, abs_mul,
+          abs_of_nonneg (sub_nonneg.mpr hl.2)]
+      _ ≤ (1 - l) * dist vl vm + |l - m| := by
+        have hleft :=
+          mul_le_mul_of_nonneg_left hEsub
+            (sub_nonneg.mpr hl.2)
+        have hright :=
+          mul_le_mul_of_nonneg_left hrE
+            (abs_nonneg (l - m))
+        linarith
+  have hnorm :
+      dist vl vm ≤
+        (1 - l) * dist vl vm + |l - m| := by
+    rw [dist_pi_le_iff
+      (add_nonneg
+        (mul_nonneg (sub_nonneg.mpr hl.2) dist_nonneg)
+        (abs_nonneg _))]
+    intro s
+    rw [Real.dist_eq]
+    exact hcoord s
+  apply (le_div_iff₀ hl.1).2
+  change dist vl vm * l ≤ |l - m|
+  calc
+    dist vl vm * l =
+        dist vl vm - (1 - l) * dist vl vm := by ring
+    _ ≤ |l - m| := by linarith
+
+/-- The canonical normalized discounted value varies continuously throughout
+the positive-rate domain. -/
+theorem continuousOn_discountedShapleyRateValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hzs : G.IsZeroSum)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a 0)
+    (hpayUpper : ∀ s a, G.stagePayoff s a 0 ≤ 1) :
+    ContinuousOn G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1) := by
+  rw [Metric.continuousOn_iff]
+  intro l hl ε hε
+  refine ⟨ε * l, mul_pos hε hl.1, ?_⟩
+  intro m hm hml
+  calc
+    dist (G.discountedShapleyRateValue m)
+        (G.discountedShapleyRateValue l) =
+        dist (G.discountedShapleyRateValue l)
+          (G.discountedShapleyRateValue m) := dist_comm _ _
+    _ ≤ |l - m| / l :=
+      G.dist_discountedShapleyRateValue_le
+        hzs hpayLower hpayUpper hl hm
+    _ < ε := by
+      apply (div_lt_iff₀ hl.1).2
+      simpa only [Real.dist_eq, abs_sub_comm] using hml
+
+/-- Coordinate form of positive-rate continuity for use by scalar algebraic
+selection theorems. -/
+theorem continuousOn_discountedShapleyRateValue_apply
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hzs : G.IsZeroSum)
+    (hpayLower : ∀ s a, 0 ≤ G.stagePayoff s a 0)
+    (hpayUpper : ∀ s a, G.stagePayoff s a 0 ≤ 1)
+    (z : G.State) :
+    ContinuousOn (fun l => G.discountedShapleyRateValue l z)
+      (Set.Ioc (0 : ℝ) 1) :=
+  (continuous_apply z).comp_continuousOn
+    (G.continuousOn_discountedShapleyRateValue
+      hzs hpayLower hpayUpper)
+
 /-- Every coordinate of the canonical discounted Shapley value satisfies a
 fixed nonzero multivariate polynomial relation in the rate and the full
 finite-state value vector. -/

@@ -3787,6 +3787,194 @@ theorem exists_discountedShapleyRateBellmanProfileFamily
   choose x hx using hex
   exact ⟨x, hx⟩
 
+/-- A bounded canonical discounted-value coordinate has a right limit when it
+lies on a nondegenerate bivariate algebraic branch. Positive-rate continuity
+and boundedness are supplied by the Shapley fixed-point theory. -/
+theorem exists_discountedShapleyRateValue_limit_of_polynomial_root
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum)
+    (P : G.State → Polynomial (Polynomial ℝ))
+    (ρ : G.State → ℝ)
+    (hρ : ∀ z, 0 < ρ z)
+    (hρle : ∀ z, ρ z ≤ 1)
+    (hP : ∀ z, P z ≠ 0)
+    (hroot : ∀ z l, l ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      Math.bivEval (P z) l
+        (G.discountedShapleyRateValue l z) = 0)
+    (hRv : ∀ z,
+      Polynomial.resultant (P z)
+        (Polynomial.derivative (P z)) ≠ 0)
+    (hRlam : ∀ z,
+      Polynomial.resultant (P z)
+        (Math.bivDerivLam (P z)) ≠ 0) :
+    ∃ L : G.State → ℝ, ∀ z,
+      Tendsto
+        (fun l => G.discountedShapleyRateValue l z)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (L z)) := by
+  have hexists (z : G.State) :
+      ∃ L : ℝ,
+        Tendsto
+          (fun l => G.discountedShapleyRateValue l z)
+          (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 L) := by
+    have hcontinuous :
+        ContinuousOn
+          (fun l => G.discountedShapleyRateValue l z)
+          (Set.Ioo (0 : ℝ) (ρ z)) :=
+      (G.continuousOn_discountedShapleyRateValue_apply
+        hzs hpayLower hpayUpper z).mono (by
+          intro l hl
+          exact ⟨hl.1, hl.2.le.trans (hρle z)⟩)
+    apply Math.exists_tendsto_nhdsWithin_zero_of_polynomial_root
+      (hρ z) hcontinuous
+      (hP z) (hroot z) (hRv z) (hRlam z)
+      (C := (1 : ℝ))
+    intro l _hl
+    rw [abs_le]
+    constructor
+    · have hnonneg :=
+        G.discountedShapleyRateValue_nonneg
+          hzs hpayLower l z
+      linarith
+    · exact G.discountedShapleyRateValue_le_one
+        hzs hpayLower hpayUpper l z
+  choose L hL using hexists
+  exact ⟨L, hL⟩
+
+/-- Regular coordinatewise algebraic branches of the canonical discounted
+Shapley value produce the zero-sum uniform payoff.
+
+The stationary Bellman family, value bounds, and positive-rate continuity are
+constructed internally. The hypotheses retain only the coordinate equations,
+their right limits, and simplicity of the limiting roots. -/
+theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedShapleyRateValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (P : G.State → Polynomial (Polynomial ℝ))
+    (ρ L : G.State → ℝ)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum)
+    (hρ : ∀ z, 0 < ρ z)
+    (hρle : ∀ z, ρ z ≤ 1)
+    (hlimit : ∀ z,
+      Tendsto
+        (fun l => G.discountedShapleyRateValue l z)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (L z)))
+    (hroot : ∀ z l, l ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      Math.bivEval (P z) l
+        (G.discountedShapleyRateValue l z) = 0)
+    (hregular : ∀ z,
+      Math.bivEval (Polynomial.derivative (P z)) 0 (L z) ≠ 0) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who => if who = 0 then L s₀ else -L s₀) := by
+  let g : G.State → ℝ → ℝ := fun z l =>
+    if 0 < l then G.discountedShapleyRateValue l z else L z
+  obtain ⟨x, hx⟩ :=
+    exists_discountedShapleyRateBellmanProfileFamily G
+      hpayLower hpayUpper hzs
+  have h :=
+    isUniformEquilibriumPayoff_of_regular_reparam_algebraic_discountedValue
+      P (fun _ => (1 : ℝ)) ρ ρ g s₀
+      hpayLower hpayUpper
+      (fun l z =>
+        G.discountedShapleyRateValue_nonneg hzs hpayLower l z)
+      (fun l z =>
+        G.discountedShapleyRateValue_le_one
+          hzs hpayLower hpayUpper l z)
+      hx hzs (fun _ => zero_lt_one) hρ hρ
+      (by
+        intro z l hl
+        simp [g, hl.1])
+      (by
+        intro z
+        rw [Metric.continuousAt_iff]
+        intro ε hε
+        obtain ⟨δ, hδ, hclose⟩ :=
+          (Metric.tendsto_nhdsWithin_nhds.mp (hlimit z)) ε hε
+        refine ⟨δ, hδ, ?_⟩
+        intro l hl
+        by_cases hl0 : 0 < l
+        · simpa [g, hl0] using hclose hl0 hl
+        · simpa [g, hl0] using hε)
+      (by
+        intro z
+        refine ((G.continuousOn_discountedShapleyRateValue_apply
+          hzs hpayLower hpayUpper z).mono ?_).congr ?_
+        · intro l hl
+          exact ⟨hl.1, hl.2.le.trans (hρle z)⟩
+        · intro l hl
+          simp [g, hl.1])
+      (by
+        intro z l hl
+        simpa [g, hl.1] using hroot z l hl)
+      (by
+        intro z
+        simpa [g] using hregular z)
+  simpa [g] using h
+
+/-- Nondegenerate coordinate polynomials reduce the canonical zero-sum
+discounted-value problem to an explicit endpoint dichotomy: either every
+limiting root is simple and the account construction yields a uniform payoff,
+or a named state has a singular limiting root. -/
+theorem discountedShapleyRateValue_regular_or_singular_limit
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (P : G.State → Polynomial (Polynomial ℝ))
+    (ρ : G.State → ℝ)
+    (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hzs : G.IsZeroSum)
+    (hρ : ∀ z, 0 < ρ z)
+    (hρle : ∀ z, ρ z ≤ 1)
+    (hP : ∀ z, P z ≠ 0)
+    (hroot : ∀ z l, l ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      Math.bivEval (P z) l
+        (G.discountedShapleyRateValue l z) = 0)
+    (hRv : ∀ z,
+      Polynomial.resultant (P z)
+        (Polynomial.derivative (P z)) ≠ 0)
+    (hRlam : ∀ z,
+      Polynomial.resultant (P z)
+        (Math.bivDerivLam (P z)) ≠ 0) :
+    (∃ L : G.State → ℝ,
+        (∀ z,
+          Tendsto
+            (fun l => G.discountedShapleyRateValue l z)
+            (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (L z))) ∧
+        G.IsUniformEquilibriumPayoff s₀
+          (fun who => if who = 0 then L s₀ else -L s₀)) ∨
+      ∃ (L : G.State → ℝ) (z : G.State),
+        (∀ y,
+          Tendsto
+            (fun l => G.discountedShapleyRateValue l y)
+            (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (L y))) ∧
+        Math.bivEval
+          (Polynomial.derivative (P z)) 0 (L z) = 0 := by
+  obtain ⟨L, hL⟩ :=
+    exists_discountedShapleyRateValue_limit_of_polynomial_root
+      G hpayLower hpayUpper hzs P ρ hρ hρle hP
+      hroot hRv hRlam
+  by_cases hregular : ∀ z,
+      Math.bivEval
+        (Polynomial.derivative (P z)) 0 (L z) ≠ 0
+  · left
+    exact ⟨L, hL,
+      isUniformEquilibriumPayoff_of_regular_algebraic_discountedShapleyRateValue
+        G P ρ L s₀ hpayLower hpayUpper hzs
+        hρ hρle hL hroot hregular⟩
+  · right
+    simp only [not_forall, not_not] at hregular
+    obtain ⟨z, hz⟩ := hregular
+    exact ⟨L, z, hL, hz⟩
+
 /-- A sufficient discounted-value selection package for the two-player
 zero-sum account construction.
 
