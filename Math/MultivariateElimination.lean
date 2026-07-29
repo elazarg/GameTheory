@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Real.Basic
+import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.RingTheory.IntegralClosure.Algebra.Basic
 import Mathlib.RingTheory.Localization.Ideal
 import Mathlib.RingTheory.Localization.FractionRing
@@ -42,6 +43,8 @@ the exact algebraic condition that the formal resultant is nonzero.
 * `exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing`: a
   finite affine quotient over a coefficient fraction field gives a nonzero
   coordinate relation in the original ideal.
+* `not_moduleFinite_quotient_of_le_span_X_sub_X`: an ideal contained in a
+  diagonal hypersurface ideal has a positive-dimensional quotient.
 -/
 
 noncomputable section
@@ -460,6 +463,77 @@ theorem exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing
     exact mul_ne_zero (Polynomial.C_ne_zero.mpr hdne) hq
   refine ⟨q', hq', ?_⟩
   simpa [q', Polynomial.aeval_mul, Polynomial.aeval_C] using hmJ
+
+/-- Identifying two variables leaves a free polynomial coordinate, so the
+corresponding hypersurface quotient is not finite over the coefficient
+field. -/
+theorem not_moduleFinite_quotient_span_X_sub_X
+    {K κ : Type*} [Field K]
+    (i j : κ) :
+    ¬ Module.Finite K
+      (MvPolynomial κ K ⧸
+        Ideal.span {
+          (MvPolynomial.X i : MvPolynomial κ K) -
+            MvPolynomial.X j}) := by
+  classical
+  let I : Ideal (MvPolynomial κ K) :=
+    Ideal.span {
+      (MvPolynomial.X i : MvPolynomial κ K) -
+        MvPolynomial.X j}
+  let assign : κ → Polynomial K :=
+    fun x => if x = i ∨ x = j then Polynomial.X else 0
+  let f : MvPolynomial κ K →ₐ[K] Polynomial K :=
+    MvPolynomial.aeval assign
+  have hI : I ≤ RingHom.ker f.toRingHom := by
+    dsimp only [I]
+    rw [Ideal.span_le]
+    rintro P ⟨hP | hP, rfl⟩
+    · simp [f, assign]
+  let qf :
+      (MvPolynomial κ K ⧸ I) →ₐ[K] Polynomial K :=
+    Ideal.Quotient.liftₐ I f hI
+  intro hfinite
+  letI : Module.Finite K (MvPolynomial κ K ⧸ I) :=
+    hfinite
+  let xi : MvPolynomial κ K ⧸ I :=
+    Ideal.Quotient.mk I (MvPolynomial.X i)
+  have hxi : IsIntegral K xi :=
+    IsIntegral.of_finite K xi
+  have hmap : IsIntegral K (qf xi) :=
+    hxi.map qf
+  have hqf : qf xi = Polynomial.X := by
+    simp [qf, xi, f, assign]
+  rw [hqf] at hmap
+  exact Polynomial.transcendental_X K hmap.isAlgebraic
+
+/-- More generally, an ideal contained in a diagonal hypersurface ideal
+cannot have finite-dimensional quotient. -/
+theorem not_moduleFinite_quotient_of_le_span_X_sub_X
+    {K κ : Type*} [Field K]
+    (J : Ideal (MvPolynomial κ K))
+    (i j : κ)
+    (hJ : J ≤ Ideal.span {
+      (MvPolynomial.X i : MvPolynomial κ K) -
+        MvPolynomial.X j}) :
+    ¬ Module.Finite K (MvPolynomial κ K ⧸ J) := by
+  intro hfinite
+  letI : Module.Finite K (MvPolynomial κ K ⧸ J) :=
+    hfinite
+  let I : Ideal (MvPolynomial κ K) :=
+    Ideal.span {
+      (MvPolynomial.X i : MvPolynomial κ K) -
+        MvPolynomial.X j}
+  have hJI : J ≤ I := by
+    exact hJ
+  let q : (MvPolynomial κ K ⧸ J) →ₗ[K]
+      (MvPolynomial κ K ⧸ I) :=
+    (Ideal.Quotient.factorₐ K hJI).toLinearMap
+  letI : Module.Finite K (MvPolynomial κ K ⧸ I) :=
+    Module.Finite.of_surjective q
+      (Ideal.Quotient.factor_surjective hJI)
+  exact
+    (not_moduleFinite_quotient_span_X_sub_X
+      (K := K) (κ := κ) i j) inferInstance
 
 end MultivariateElimination
 end Math

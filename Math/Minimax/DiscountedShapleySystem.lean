@@ -496,6 +496,36 @@ theorem discountedShapleyCoordinatePoly_ne_zero
   · exact hk
   · exact one_ne_zero
 
+/-- Every nonzero local kernel candidate divides its state's fixed product
+relation. -/
+theorem mvBorderedKernelPoly_dvd_discountedShapleyCoordinatePoly
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) (k : ActionKernelShape I J)
+    (hk : mvBorderedKernelPoly
+      (discountedStochasticEntry (r target) (T target))
+      (some target) k ≠ 0) :
+    mvBorderedKernelPoly
+        (discountedStochasticEntry (r target) (T target))
+        (some target) k ∣
+      discountedShapleyCoordinatePoly r T target := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  let F : ActionKernelShape I J →
+      MvPolynomial (Option κ) ℝ :=
+    fun k =>
+      if mvBorderedKernelPoly
+          (discountedStochasticEntry (r target) (T target))
+          (some target) k ≠ 0 then
+        mvBorderedKernelPoly
+          (discountedStochasticEntry (r target) (T target))
+          (some target) k
+      else 1
+  have hdvd := Finset.dvd_prod_of_mem F (Finset.mem_univ k)
+  simpa [discountedShapleyCoordinatePoly, F, hk] using hdvd
+
 theorem eval_discountedShapleyCoordinatePoly_eq_zero
     {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
     [Nonempty I] [Nonempty J]
@@ -535,6 +565,34 @@ noncomputable def discountedShapleySystemIdeal
     (Set.range fun s =>
       MvPolynomial.optionEquivRight ℝ κ
         (discountedShapleyCoordinatePoly r T s))
+
+/-- A nonzero local kernel factor common to every statewise product contains
+the entire coupled system ideal in its principal ideal. -/
+theorem discountedShapleySystemIdeal_le_span_of_common_kernelFactor
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (H : MvPolynomial κ (Polynomial ℝ))
+    (hcommon : ∀ s, ∃ k : ActionKernelShape I J,
+      mvBorderedKernelPoly
+          (discountedStochasticEntry (r s) (T s))
+          (some s) k ≠ 0 ∧
+        MvPolynomial.optionEquivRight ℝ κ
+          (mvBorderedKernelPoly
+            (discountedStochasticEntry (r s) (T s))
+            (some s) k) = H) :
+    discountedShapleySystemIdeal r T ≤ Ideal.span {H} := by
+  rw [discountedShapleySystemIdeal, Ideal.span_le]
+  rintro P ⟨s, rfl⟩
+  obtain ⟨k, hk, hmap⟩ := hcommon s
+  change MvPolynomial.optionEquivRight ℝ κ
+      (discountedShapleyCoordinatePoly r T s) ∈
+    Ideal.span {H}
+  rw [Ideal.mem_span_singleton]
+  rw [← hmap]
+  exact map_dvd (MvPolynomial.optionEquivRight ℝ κ)
+    (mvBorderedKernelPoly_dvd_discountedShapleyCoordinatePoly
+      r T s k hk)
 
 /-- Every coupled Shapley value assignment annihilates the coupled
 bordered-kernel ideal after specializing the rate coefficient. -/
