@@ -781,6 +781,17 @@ noncomputable def transProb (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)
     (controller : Bool) (s : G.State) (j : G.Act controller) (t : G.State) : ℝ :=
   (G.transition s (G.jointOfControllerAct controller j) t).toReal
 
+/-- Coordinate formula for the controller-induced kernel on finite action
+spaces. -/
+theorem controllerKernel_apply_toReal_eq_sum (G : StochasticGame Bool)
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (controller : Bool)
+    (τ : G.State → PMF (G.Act controller)) (s t : G.State) :
+    ((G.controllerKernel controller τ s) t).toReal =
+      ∑ j, ((τ s) j).toReal * G.transProb controller s j t := by
+  unfold controllerKernel
+  rw [Math.ProbabilityMassFunction.bind_apply_toReal_eq_sum]
+  rfl
+
 /-- The noncontroller's stage reward `r(s, i, j)` at controller action `j`. -/
 def rewardVal (G : StochasticGame Bool) [∀ i, Nonempty (G.Act i)]
     (controller : Bool) (s : G.State) (i : G.Act (!controller)) (j : G.Act controller) : ℝ :=
@@ -1939,6 +1950,82 @@ theorem normalized_vriezeDualZ_bias_eq
       rw [Finset.sum_mul]
     _ = G.vriezeDecodeG controller q s + G.vriezeDecodeV controller q s := by
       rw [← Finset.sum_div, div_self hs.ne', one_mul]
+
+/-- If a controller policy uses the normalized occupation weights on every
+occupied state, the dual state-mass vector `s ↦ Σ j, z s j` is stationary
+for the induced controller kernel. The policy is unrestricted at
+zero-occupation states, whose source mass vanishes. -/
+theorem vriezeStateMass_stationary_of_normalized_z
+    {controller : Bool} {z yGain : G.State → G.Act controller → ℝ}
+    {lam : G.State → ℝ} (hdual : G.IsVriezeDualFeasible controller z yGain lam)
+    (τ : G.State → PMF (G.Act controller))
+    (hτ : ∀ s (_ : G.vriezeOccupationSupport controller z s) j,
+      ((τ s) j).toReal = z s j / ∑ j', z s j') :
+    ∀ t, (∑ s, (∑ j, z s j) * ((G.controllerKernel controller τ s) t).toReal) =
+      ∑ j, z t j := by
+  classical
+  intro t
+  have hsource : ∀ s,
+      (∑ j, z s j) * ((G.controllerKernel controller τ s) t).toReal =
+        ∑ j, z s j * G.transProb controller s j t := by
+    intro s
+    rw [G.controllerKernel_apply_toReal_eq_sum]
+    by_cases hs : G.vriezeOccupationSupport controller z s
+    · rw [Finset.mul_sum]
+      apply Finset.sum_congr rfl
+      intro j _
+      rw [hτ s hs j]
+      field_simp [hs.ne']
+    · have hmasszero : (∑ j, z s j) = 0 := by
+        apply le_antisymm
+        · exact le_of_not_gt hs
+        · exact Finset.sum_nonneg fun j _ => hdual.z_nonneg s j
+      have hzjzero : ∀ j, z s j = 0 := by
+        intro j
+        apply le_antisymm
+        · calc
+            z s j ≤ ∑ k, z s k :=
+              Finset.single_le_sum (fun k _ => hdual.z_nonneg s k) (Finset.mem_univ j)
+            _ = 0 := hmasszero
+        · exact hdual.z_nonneg s j
+      rw [hmasszero]
+      simp [hzjzero]
+  calc
+    _ = ∑ s, ∑ j, z s j * G.transProb controller s j t :=
+      Finset.sum_congr rfl (fun s _ => hsource s)
+    _ = ∑ p : G.State × G.Act controller,
+        z p.1 p.2 * G.transProb controller p.1 p.2 t :=
+      (Fintype.sum_prod_type
+        (fun p : G.State × G.Act controller =>
+          z p.1 p.2 * G.transProb controller p.1 p.2 t)).symm
+    _ = ∑ j, z t j := hdual.z_flow_balance t
+
+/-- The occupation support is forward-closed under any controller policy
+that uses the normalized occupation weights on that support. -/
+theorem vriezeOccupationSupport_closed_under_controllerKernel
+    {controller : Bool} {z yGain : G.State → G.Act controller → ℝ}
+    {lam : G.State → ℝ} (hdual : G.IsVriezeDualFeasible controller z yGain lam)
+    (τ : G.State → PMF (G.Act controller))
+    (hτ : ∀ s (_ : G.vriezeOccupationSupport controller z s) j,
+      ((τ s) j).toReal = z s j / ∑ j', z s j')
+    {s t : G.State} (hs : G.vriezeOccupationSupport controller z s)
+    (hst : t ∈ (G.controllerKernel controller τ s).support) :
+    G.vriezeOccupationSupport controller z t := by
+  classical
+  have hkernel_ne : G.controllerKernel controller τ s t ≠ 0 :=
+    (PMF.mem_support_iff _ _).mp hst
+  have hkernel_pos : 0 < ((G.controllerKernel controller τ s) t).toReal :=
+    ENNReal.toReal_pos hkernel_ne (PMF.apply_ne_top _ _)
+  have hterm_pos :
+      0 < (∑ j, z s j) * ((G.controllerKernel controller τ s) t).toReal :=
+    mul_pos hs hkernel_pos
+  have hsum_pos :
+      0 < ∑ r, (∑ j, z r j) * ((G.controllerKernel controller τ r) t).toReal := by
+    apply Finset.sum_pos' (fun r _ => mul_nonneg
+      (Finset.sum_nonneg fun j _ => hdual.z_nonneg r j) ENNReal.toReal_nonneg)
+    exact ⟨s, Finset.mem_univ s, hterm_pos⟩
+  rw [G.vriezeStateMass_stationary_of_normalized_z hdual τ hτ t] at hsum_pos
+  exact hsum_pos
 
 /-- For the dual point of a strongly complementary pair, a state belongs to
 the occupation support exactly when at least one of its primal bias rows is
