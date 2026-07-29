@@ -28,7 +28,7 @@ open Probability
 universe uι us uo
 
 variable {ι : Type uι} [Fintype ι] [DecidableEq ι] {F : GameForm ι}
-variable {utility : F.sig.Outcome → ι → ℝ}
+variable {utility : F.sig.Outcome → ι → ℝ} {mixedProfile : Profile F.sig.mixed}
 
 /-- Embedding a pure profile and then replacing one coordinate by a point mass is
 the same as replacing that coordinate first. -/
@@ -70,6 +70,39 @@ theorem IsNash.purify (hnash : IsNash F (euPreference utility) σ) :
   refine expect_le_of_forall _ _ _ fun s _ => ?_
   rw [purify_update, GameForm.mixed_play_purify]
   exact hnash who s
+
+/-! ## What a mixed equilibrium randomizes over
+
+A mixed equilibrium does not merely fail to gain by deviating; it is indifferent
+across everything it actually plays. That is the fact every computation with
+mixed equilibria uses, and it is a consequence rather than a definition. -/
+
+/-- The expected utility of a mixed profile is the deviator's own average over
+its own randomization. -/
+theorem expectedUtility_mixed_eq_expect (F : GameForm ι) (utility : F.sig.Outcome → ι → ℝ)
+    (mixedProfile : Profile F.sig.mixed) (who : ι) :
+    expectedUtility utility who (F.mixed.play mixedProfile) =
+      (mixedProfile who).expect fun s =>
+        expectedUtility utility who
+          (F.mixed.play (Profile.update mixedProfile who (FinDist.pure s))) := by
+  conv_lhs => rw [show mixedProfile = Profile.update mixedProfile who (mixedProfile who) from
+    (Profile.update_eq_self mixedProfile who).symm]
+  rw [GameForm.mixed_play_update]
+  exact FinDist.expect_bind ..
+
+/-- **A mixed equilibrium is indifferent across its own support.** Every strategy
+it gives positive weight is worth exactly what the mixture is worth — so none of
+them is a strict loss, and none is a missed gain. -/
+theorem IsNash.expectedUtility_eq_of_mem_support
+    (hnash : IsNash F.mixed (euPreference utility) mixedProfile) (who : ι)
+    {s : F.sig.Strategy who} (hs : s ∈ (mixedProfile who).support) :
+    expectedUtility utility who
+        (F.mixed.play (Profile.update mixedProfile who (FinDist.pure s))) =
+      expectedUtility utility who (F.mixed.play mixedProfile) := by
+  rw [isNash_iff] at hnash
+  refine FinDist.eq_of_expect_eq_of_le (mixedProfile who) _ _ (fun t _ => hnash who _)
+    ?_ hs
+  exact (expectedUtility_mixed_eq_expect F utility mixedProfile who).symm
 
 /-- And the embedding is faithful on outcomes, so the two equilibria describe the
 same play. -/

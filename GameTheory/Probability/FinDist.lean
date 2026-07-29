@@ -798,6 +798,33 @@ theorem eq_bind_condOnFibre (μ : FinDist α) (f : α → β) :
       · rfl
     · exact hzero
 
+/-- An expectation is *strictly* below a bound as soon as one point of positive
+mass is. -/
+theorem expect_lt_of_mem_support (μ : FinDist α) (observable : α → ℝ) (bound : ℝ)
+    (hle : ∀ a ∈ μ.support, observable a ≤ bound) {witness : α}
+    (hwitness : witness ∈ μ.support) (hlt : observable witness < bound) :
+    μ.expect observable < bound := by
+  classical
+  rw [expect_eq_sum_support]
+  have hsum : ∑ a ∈ μ.supportFinset, μ.prob a * bound = bound := by
+    rw [← Finset.sum_mul, sum_prob_supportFinset, one_mul]
+  rw [← hsum]
+  refine Finset.sum_lt_sum (fun a ha =>
+    mul_le_mul_of_nonneg_left (hle a (mem_supportFinset.mp ha)) (prob_nonneg μ a)) ?_
+  exact ⟨witness, mem_supportFinset.mpr hwitness,
+    mul_lt_mul_of_pos_left hlt (prob_pos_iff.mpr hwitness)⟩
+
+/-- **An average that attains its bound attains it everywhere it looks.** If no
+point of the support beats `bound` and the expectation equals it, every point of
+the support equals it. -/
+theorem eq_of_expect_eq_of_le (μ : FinDist α) (observable : α → ℝ) (bound : ℝ)
+    (hle : ∀ a ∈ μ.support, observable a ≤ bound) (hexpect : μ.expect observable = bound)
+    {a : α} (ha : a ∈ μ.support) : observable a = bound := by
+  by_contra hne
+  exact absurd hexpect
+    (ne_of_lt (expect_lt_of_mem_support μ observable bound hle ha
+      (lt_of_le_of_ne (hle a ha) hne)))
+
 /-! ## Convex mixing -/
 
 /-- Mix two laws, with weight `t` on the first. The interface is real-valued;
