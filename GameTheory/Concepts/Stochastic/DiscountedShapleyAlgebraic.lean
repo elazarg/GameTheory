@@ -155,7 +155,7 @@ noncomputable def discountedShapleyKernelIdeal
     (G : StochasticGame (Fin 2))
     [Fintype G.State] [∀ i, Fintype (G.Act i)] :
     Ideal (MvPolynomial G.State (Polynomial ℝ)) :=
-  ShapleySnow.discountedShapleySystemIdeal
+  ShapleySnow.discountedShapleyActiveSystemIdeal
     G.rowStagePayoff
     (fun s i j z => (G.pairTransition s i j z).toReal)
 
@@ -168,7 +168,7 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_kernelIdeal_modul
     [∀ i, Nonempty (G.Act i)]
     [Module.Finite (FractionRing (Polynomial ℝ))
       (MvPolynomial G.State (FractionRing (Polynomial ℝ)) ⧸
-        (ShapleySnow.discountedShapleySystemIdeal
+        (ShapleySnow.discountedShapleyActiveSystemIdeal
           G.rowStagePayoff
           (fun s i j z =>
             (G.pairTransition s i j z).toReal)).map
@@ -182,7 +182,7 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_kernelIdeal_modul
           (G.discountedShapleyRateValue l target)
           (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
   exact
-    ShapleySnow.exists_nonzero_bivariateRelation_of_discountedShapleySystemIdeal_moduleFinite
+    ShapleySnow.exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_moduleFinite
       G.rowStagePayoff
       (fun s i j z => (G.pairTransition s i j z).toReal)
       G.discountedShapleyRateValue

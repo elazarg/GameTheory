@@ -124,6 +124,40 @@ theorem diagonalKernel_bordered_det_eq_zero
   rw [hdet] at hz
   exact hz
 
+/-- The full two-by-two shape responsible for the diagonal component is not
+denominator-active and is therefore absent from the active-kernel product. -/
+theorem diagonalKernel_fullTwo_not_active
+    (s : Fin 2) :
+    ¬ IsActiveKernelShape
+      (discountedStochasticEntry
+        (diagonalKernelReward s)
+        (diagonalKernelTransition s))
+      fullTwoKernelShape := by
+  intro hactive
+  apply hactive.2
+  change
+    (borderedMatrix
+      ((Matrix.of
+        (discountedStochasticEntry
+          (diagonalKernelReward s)
+          (diagonalKernelTransition s))).submatrix
+            (Function.Embedding.refl (Fin 2))
+            (Function.Embedding.refl (Fin 2)))).det = 0
+  rw [show
+    (Matrix.of
+      (discountedStochasticEntry
+        (diagonalKernelReward s)
+        (diagonalKernelTransition s))).submatrix
+          (Function.Embedding.refl (Fin 2))
+          (Function.Embedding.refl (Fin 2)) =
+      Matrix.of
+        (discountedStochasticEntry
+          (diagonalKernelReward s)
+          (diagonalKernelTransition s)) by
+    ext i j
+    rfl]
+  exact diagonalKernel_bordered_det_eq_zero s
+
 theorem diagonalKernel_candidate
     (s target : Fin 2) :
     mvBorderedKernelPoly

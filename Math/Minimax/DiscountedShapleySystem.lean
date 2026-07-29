@@ -36,11 +36,11 @@ determinants scale in adjacent degrees.
   nondegeneracy for positive-size bordered kernels.
 * `exists_nonzero_mvPolynomial_of_discountedShapleySystem`: a fixed nonzero
   relation for any chosen state coordinate of a finite coupled system.
-* `discountedShapleySystemIdeal`: the coupled kernel equations with the rate
-  moved into the coefficient ring.
-* `exists_nonzero_bivariateRelation_of_discountedShapleySystemIdeal_moduleFinite`:
-  zero-dimensionality of the coupled kernel ideal gives a fixed bivariate
-  coordinate relation.
+* `discountedShapleyActiveSystemIdeal`: the denominator-active coupled kernel
+  equations with the rate moved into the coefficient ring.
+* `exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_moduleFinite`:
+  zero-dimensionality of the active coupled kernel ideal gives a fixed
+  bivariate coordinate relation.
 * `discountedShapleySystem_twoState_kernelPair_elimination_dichotomy`:
   pairwise resultant elimination for a two-state coupled system, with a
   specific local-kernel degeneracy certificate.
@@ -309,6 +309,101 @@ noncomputable def mvBorderedKernelPoly
     let B := (Matrix.of E).submatrix rows cols
     B.det - MvPolynomial.X target * (borderedMatrix B).det
 
+/-- The bordered determinant associated to a kernel shape. Its nonvanishing
+is the algebraic form of the Shapley--Snow basis condition. -/
+noncomputable def mvBorderedKernelDenominator
+    {σ I J : Type*} [Fintype I]
+    (E : I → J → MvPolynomial σ ℝ) :
+    ActionKernelShape I J → MvPolynomial σ ℝ :=
+  fun ⟨_sz, rows, cols⟩ =>
+    (borderedMatrix
+      ((Matrix.of E).submatrix rows cols)).det
+
+/-- A positive-size kernel shape whose bordered determinant is a nonzero
+formal polynomial. -/
+def IsActiveKernelShape
+    {σ I J : Type*} [Fintype I]
+    (E : I → J → MvPolynomial σ ℝ)
+    (k : ActionKernelShape I J) : Prop :=
+  0 < k.1.val ∧ mvBorderedKernelDenominator E k ≠ 0
+
+/-- At every parameter, a coupled Shapley equation selects a
+denominator-active local bordered-kernel candidate that vanishes at the full
+value assignment. -/
+theorem exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (target : κ) {l : ℝ} (hl : l ∈ S) :
+    ∃ k : ActionKernelShape I J,
+      IsActiveKernelShape
+          (discountedStochasticEntry (r target) (T target)) k ∧
+        mvBorderedKernelPoly
+          (discountedStochasticEntry (r target) (T target))
+          (some target) k ≠ 0 ∧
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (mvBorderedKernelPoly
+            (discountedStochasticEntry (r target) (T target))
+            (some target) k) = 0 := by
+  let A : Matrix I J ℝ := fun i j =>
+    l * r target i j +
+      (1 - l) * ∑ z, T target i j z * w l z
+  obtain ⟨sz, hsz, rows, cols, hborder, hvalue⟩ :=
+    exists_bordered_kernel A
+  have hszm : sz ≤ Fintype.card I := by
+    have := Fintype.card_le_of_embedding rows
+    simpa using this
+  let a : Option κ → ℝ :=
+    fun x => Option.casesOn x l (w l)
+  have hmap :
+      ((Matrix.of
+        (discountedStochasticEntry
+          (r target) (T target))).submatrix rows cols).map
+          (MvPolynomial.eval a) =
+        A.submatrix rows cols := by
+    ext i j
+    simp [a, A, Matrix.map_apply, Matrix.submatrix_apply]
+  let k : ActionKernelShape I J :=
+    ⟨⟨sz, by omega⟩, rows, cols⟩
+  have hden :
+      mvBorderedKernelDenominator
+        (discountedStochasticEntry (r target) (T target)) k ≠ 0 := by
+    intro hz
+    apply hborder
+    have heval := congrArg (MvPolynomial.eval a) hz
+    simp only [mvBorderedKernelDenominator, k, map_zero,
+      RingHom.map_det, RingHom.mapMatrix_apply,
+      map_borderedMatrix, hmap] at heval
+    exact heval
+  refine ⟨k, ⟨hsz, hden⟩, ?_, ?_⟩
+  · exact discountedStochastic_borderedKernelPoly_ne_zero
+      (r target) (T target) target hsz rows cols (by
+        simpa [mvBorderedKernelDenominator, k] using hden)
+  · change MvPolynomial.eval a
+      (mvBorderedKernelPoly
+        (discountedStochasticEntry
+          (r target) (T target))
+        (some target)
+        ⟨⟨sz, by omega⟩, rows, cols⟩) = 0
+    unfold mvBorderedKernelPoly
+    simp only [map_sub, map_mul, MvPolynomial.eval_X,
+      RingHom.map_det, RingHom.mapMatrix_apply,
+      map_borderedMatrix, hmap]
+    have hw' : MinimaxLoomis.lam0 A = w l target := by
+      exact (hw l hl target).symm
+    rw [hw'] at hvalue
+    exact sub_eq_zero.mpr hvalue.symm
+
 /-- At every parameter, a coupled Shapley equation selects a nonzero local
 bordered-kernel candidate that vanishes at the full value assignment. -/
 theorem exists_nonzero_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
@@ -334,49 +429,10 @@ theorem exists_nonzero_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
           (mvBorderedKernelPoly
             (discountedStochasticEntry (r target) (T target))
             (some target) k) = 0 := by
-  let A : Matrix I J ℝ :=
-    fun i j =>
-      l * r target i j +
-        (1 - l) * ∑ z, T target i j z * w l z
-  obtain ⟨sz, hsz, rows, cols, hborder, hvalue⟩ :=
-    exists_bordered_kernel A
-  have hszm : sz ≤ Fintype.card I := by
-    have := Fintype.card_le_of_embedding rows
-    simpa using this
-  let a : Option κ → ℝ :=
-    fun x => Option.casesOn x l (w l)
-  have hmap :
-      ((Matrix.of
-        (discountedStochasticEntry
-          (r target) (T target))).submatrix rows cols).map
-          (MvPolynomial.eval a) =
-        A.submatrix rows cols := by
-    ext i j
-    simp [a, A, Matrix.map_apply, Matrix.submatrix_apply]
-  refine ⟨⟨⟨sz, by omega⟩, rows, cols⟩, ?_, ?_⟩
-  · exact discountedStochastic_borderedKernelPoly_ne_zero
-      (r target) (T target) target hsz rows cols (by
-        intro hz
-        apply hborder
-        have heval := congrArg (MvPolynomial.eval a) hz
-        rw [map_zero, RingHom.map_det,
-          RingHom.mapMatrix_apply, map_borderedMatrix,
-          hmap] at heval
-        exact heval)
-  · change MvPolynomial.eval a
-      (mvBorderedKernelPoly
-        (discountedStochasticEntry
-          (r target) (T target))
-        (some target)
-        ⟨⟨sz, by omega⟩, rows, cols⟩) = 0
-    unfold mvBorderedKernelPoly
-    simp only [map_sub, map_mul, MvPolynomial.eval_X,
-      RingHom.map_det, RingHom.mapMatrix_apply,
-      map_borderedMatrix, hmap]
-    have hw' : MinimaxLoomis.lam0 A = w l target := by
-      exact (hw l hl target).symm
-    rw [hw'] at hvalue
-    exact sub_eq_zero.mpr hvalue.symm
+  obtain ⟨k, _hkactive, hk, hkeval⟩ :=
+    exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
+      r T w S hw target hl
+  exact ⟨k, hk, hkeval⟩
 
 /-- A finite product of local kernel candidates gives one fixed nonzero
 multivariate relation along a coupled discounted Shapley value vector. -/
@@ -459,6 +515,73 @@ theorem eval₂_polynomial_aeval_X
       (MvPolynomial.X target)
   rw [hcomp] at h
   simpa [Polynomial.aeval_def] using h
+
+/-- The product of all denominator-active local bordered-kernel candidates for
+one state. Candidates with identically zero bordered determinant are excluded
+because they cannot be selected by `exists_bordered_kernel`. -/
+noncomputable def discountedShapleyActiveCoordinatePoly
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) :
+    MvPolynomial (Option κ) ℝ := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  exact
+    ∏ k,
+      if IsActiveKernelShape
+          (discountedStochasticEntry (r target) (T target)) k then
+        mvBorderedKernelPoly
+          (discountedStochasticEntry (r target) (T target))
+          (some target) k
+      else 1
+
+theorem discountedShapleyActiveCoordinatePoly_ne_zero
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (target : κ) :
+    discountedShapleyActiveCoordinatePoly r T target ≠ 0 := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  rw [discountedShapleyActiveCoordinatePoly,
+    Finset.prod_ne_zero_iff]
+  intro k _
+  split_ifs with hk
+  · rcases k with ⟨sz, rows, cols⟩
+    exact discountedStochastic_borderedKernelPoly_ne_zero
+      (r target) (T target) target hk.1 rows cols hk.2
+  · exact one_ne_zero
+
+theorem eval_discountedShapleyActiveCoordinatePoly_eq_zero
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (target : κ) {l : ℝ} (hl : l ∈ S) :
+    MvPolynomial.eval
+        (fun x => Option.casesOn x l (w l))
+        (discountedShapleyActiveCoordinatePoly r T target) = 0 := by
+  classical
+  letI : Fintype (ActionKernelShape I J) :=
+    Fintype.ofFinite (ActionKernelShape I J)
+  obtain ⟨k, hk, _hkpoly, hkeval⟩ :=
+    exists_active_mvBorderedKernelPoly_eval_zero_of_discountedShapleySystem
+      r T w S hw target hl
+  rw [discountedShapleyActiveCoordinatePoly, map_prod]
+  apply Finset.prod_eq_zero (Finset.mem_univ k)
+  rw [if_pos hk]
+  exact hkeval
 
 /-- The product of all nonzero local bordered-kernel candidates for one
 state. -/
@@ -553,6 +676,93 @@ theorem eval_discountedShapleyCoordinatePoly_eq_zero
   apply Finset.prod_eq_zero (Finset.mem_univ k)
   rw [if_pos hk]
   exact hkeval
+
+/-- The coupled ideal generated only by denominator-active local kernel
+products, with the rate in `ℝ[λ]`. -/
+noncomputable def discountedShapleyActiveSystemIdeal
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ) :
+    Ideal (MvPolynomial κ (Polynomial ℝ)) :=
+  Ideal.span
+    (Set.range fun s =>
+      MvPolynomial.optionEquivRight ℝ κ
+        (discountedShapleyActiveCoordinatePoly r T s))
+
+/-- Every coupled Shapley value assignment annihilates the active-kernel ideal
+after specializing the rate coefficient. -/
+theorem eval₂_mem_discountedShapleyActiveSystemIdeal_eq_zero
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    {P : MvPolynomial κ (Polynomial ℝ)}
+    (hP : P ∈ discountedShapleyActiveSystemIdeal r T)
+    {l : ℝ} (hl : l ∈ S) :
+    MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l) P = 0 := by
+  have hle : discountedShapleyActiveSystemIdeal r T ≤
+      RingHom.ker (MvPolynomial.eval₂Hom
+        (Polynomial.evalRingHom l) (w l)) := by
+    rw [discountedShapleyActiveSystemIdeal, Ideal.span_le]
+    rintro P ⟨s, rfl⟩
+    change MvPolynomial.eval₂ (Polynomial.evalRingHom l) (w l)
+      (MvPolynomial.optionEquivRight ℝ κ
+        (discountedShapleyActiveCoordinatePoly r T s)) = 0
+    calc
+      _ = MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (discountedShapleyActiveCoordinatePoly r T s) := by
+        simpa [Polynomial.evalRingHom] using
+          (eval₂_optionEquivRight (RingHom.id ℝ) (w l) l
+            (discountedShapleyActiveCoordinatePoly r T s))
+      _ = 0 :=
+        eval_discountedShapleyActiveCoordinatePoly_eq_zero
+          r T w S hw s hl
+  exact hle hP
+
+/-- If the active-kernel ideal becomes zero-dimensional over `ℝ(λ)`, every
+chosen value coordinate satisfies a fixed nonzero bivariate relation. -/
+theorem exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_moduleFinite
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    [Module.Finite (FractionRing (Polynomial ℝ))
+      (MvPolynomial κ (FractionRing (Polynomial ℝ)) ⧸
+        (discountedShapleyActiveSystemIdeal r T).map
+          (MvPolynomial.map
+            (algebraMap (Polynomial ℝ)
+              (FractionRing (Polynomial ℝ)))))]
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ S,
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  obtain ⟨R, hR, hRmem⟩ :=
+    Math.MultivariateElimination.exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing
+      (discountedShapleyActiveSystemIdeal r T) target
+  refine ⟨R, hR, fun l hl => ?_⟩
+  have hz :=
+    eval₂_mem_discountedShapleyActiveSystemIdeal_eq_zero
+      r T w S hw hRmem hl
+  rw [eval₂_polynomial_aeval_X] at hz
+  simpa [Polynomial.eval₂_eq_eval_map] using hz
 
 /-- The coupled bordered-kernel ideal with the rate moved into the coefficient
 ring `ℝ[λ]` and only value coordinates retained as variables. -/
