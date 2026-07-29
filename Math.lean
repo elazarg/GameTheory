@@ -48,4 +48,5 @@ import Math.AlgebraicSelection
 import Math.WeierstrassCurve
 import Math.RamifiedWeierstrass
 import Math.InfinitesimalRatFunc
+import Math.GradedConvolution
 import Math.Topology.WeakDominance
