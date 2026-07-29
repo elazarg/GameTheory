@@ -20,9 +20,10 @@ downward motion is suppressed; the resulting error is bounded by one when
 descriptions can hide: the account must be large enough for these formulas
 to define probabilities.
 
-This is the algebraic kernel behind the account telescope. It does not
-assert the discounted-value variation estimate or the floor-occupation
-bound needed for a complete securing strategy.
+This is the algebraic kernel behind the account telescope. It also isolates
+the probability-weighted adjacent-value bounds and bounded-potential drift
+that imply the switch and floor-occupation budgets. It does not construct
+those analytic bounds for a game-induced discounted-value process.
 
 The formulation follows Section 4 of Hansen, Ibsen-Jensen, and Neyman,
 *Stochastic Games with Limited Public Memory*.
@@ -238,6 +239,100 @@ def switchBudget (γ M s y : ℝ) (V : ℝ → ℝ) : ℝ :=
   upProbability γ s y * |V (γ * s) - V s| +
     downProbability γ M s y * |V (γ⁻¹ * s) - V s|
 
+/-- The upward account-move probability is at most the largest positive gap
+`2` divided by the upward account increment. -/
+theorem upProbability_le_two_div
+    {γ s y : ℝ} (h : IsValidScale γ s) (hyUpper : y ≤ 2) :
+    upProbability γ s y ≤ 2 / (s * (γ - 1)) := by
+  unfold upProbability
+  apply div_le_div_of_nonneg_right
+  · exact max_le hyUpper (by norm_num)
+  · exact h.upDenom_pos.le
+
+/-- The downward account-move probability is at most the largest negative
+gap magnitude `1` divided by the downward account decrement. -/
+theorem downProbability_le_one_div
+    {γ M s y : ℝ} (h : IsValidScale γ s) (hyLower : -1 ≤ y) :
+    downProbability γ M s y ≤ 1 / (s * (1 - γ⁻¹)) := by
+  have hdenPos : 0 < s * (1 - γ⁻¹) :=
+    lt_of_lt_of_le zero_lt_one h.2.2.2
+  by_cases hMs : M < s
+  · rw [downProbability, if_pos hMs]
+    have hrewrite :
+        min y 0 / (s * (γ⁻¹ - 1)) =
+          (-min y 0) / (s * (1 - γ⁻¹)) := by
+      have hden :
+          s * (γ⁻¹ - 1) = -(s * (1 - γ⁻¹)) := by ring
+      rw [hden, div_neg, neg_div]
+    rw [hrewrite]
+    apply div_le_div_of_nonneg_right
+    · have hmin : -1 ≤ min y 0 :=
+        le_min hyLower (by norm_num)
+      linarith
+    · exact hdenPos.le
+  · rw [downProbability, if_neg hMs]
+    exact div_nonneg zero_le_one hdenPos.le
+
+/-- A sufficient adjacent-variation criterion for the weighted switch
+budget. The permitted pointwise changes are proportional to the sizes of
+the corresponding account moves. After multiplication by the rare-move
+probabilities, each direction costs at most `ε * lam / 32`. -/
+theorem switchBudget_le_of_adjacent_variation
+    {γ M s y ε lam : ℝ} {V : ℝ → ℝ}
+    (h : IsValidScale γ s) (hyLower : -1 ≤ y) (hyUpper : y ≤ 2)
+    (hε : 0 ≤ ε) (hlam : 0 ≤ lam)
+    (hupVariation :
+      |V (γ * s) - V s| ≤
+        ε * lam * (s * (γ - 1)) / 64)
+    (hdownVariation :
+      |V (γ⁻¹ * s) - V s| ≤
+        ε * lam * (s * (1 - γ⁻¹)) / 32) :
+    switchBudget γ M s y V ≤ ε * lam / 16 := by
+  have hup0 : 0 ≤ upProbability γ s y := upProbability_nonneg h
+  have hdown0 : 0 ≤ downProbability γ M s y :=
+    downProbability_nonneg h
+  have h_eps_lam : 0 ≤ ε * lam := mul_nonneg hε hlam
+  have hupScale : 0 < s * (γ - 1) := h.upDenom_pos
+  have hdownScale : 0 < s * (1 - γ⁻¹) :=
+    lt_of_lt_of_le zero_lt_one h.2.2.2
+  have hupTerm :
+      upProbability γ s y * |V (γ * s) - V s| ≤
+        ε * lam / 32 := by
+    calc
+      _ ≤ upProbability γ s y *
+          (ε * lam * (s * (γ - 1)) / 64) :=
+        mul_le_mul_of_nonneg_left hupVariation hup0
+      _ ≤ (2 / (s * (γ - 1))) *
+          (ε * lam * (s * (γ - 1)) / 64) := by
+        apply mul_le_mul_of_nonneg_right
+          (upProbability_le_two_div h hyUpper)
+        positivity
+      _ = ε * lam / 32 := by
+        have hcancel (D a : ℝ) (hD : D ≠ 0) :
+            (2 / D) * (a * D / 64) = a / 32 := by
+          field_simp [hD]
+          ring
+        exact hcancel _ _ hupScale.ne'
+  have hdownTerm :
+      downProbability γ M s y * |V (γ⁻¹ * s) - V s| ≤
+        ε * lam / 32 := by
+    calc
+      _ ≤ downProbability γ M s y *
+          (ε * lam * (s * (1 - γ⁻¹)) / 32) :=
+        mul_le_mul_of_nonneg_left hdownVariation hdown0
+      _ ≤ (1 / (s * (1 - γ⁻¹))) *
+          (ε * lam * (s * (1 - γ⁻¹)) / 32) := by
+        apply mul_le_mul_of_nonneg_right
+          (downProbability_le_one_div h hyLower)
+        positivity
+      _ = ε * lam / 32 := by
+        have hcancel (D a : ℝ) (hD : D ≠ 0) :
+            (1 / D) * (a * D / 32) = a / 32 := by
+          field_simp [hD]
+        exact hcancel _ _ hdownScale.ne'
+  unfold switchBudget
+  linarith
+
 /-- Expected switching, rather than pointwise switching, is controlled by
 the probability-weighted adjacent variation. This is the cancellation that
 allows rare account moves to avoid a pointwise relative-rate requirement.
@@ -406,6 +501,37 @@ theorem payoff_sub_expectedNextValue_ge
   exact payoff_sub_switchedValue_ge h hMs hε hlam1
     hyLower hyUpper hswitch
 
+/-- One-step payoff estimate discharged by the two explicit adjacent-value
+variation bounds. This is the proof-facing interface for the analytic
+discounted-value germ estimate. -/
+theorem payoff_sub_expectedNextValue_ge_of_adjacent_variation
+    {γ M s ε lam payoff : ℝ} {V : ℝ → ℝ}
+    (h : IsValidScale γ s) (hMs : M ≤ s)
+    (hε : 0 ≤ ε) (hlam0 : 0 ≤ lam) (hlam1 : lam ≤ 1)
+    (hyLower : -1 ≤ payoff - V s + ε / 2)
+    (hyUpper : payoff - V s + ε / 2 ≤ 2)
+    (hupVariation :
+      |V (γ * s) - V s| ≤
+        ε * lam * (s * (γ - 1)) / 64)
+    (hdownVariation :
+      |V (γ⁻¹ * s) - V s| ≤
+        ε * lam * (s * (1 - γ⁻¹)) / 32) :
+    -9 * ε / 16 +
+          expect
+            (updatePMF γ M s (payoff - V s + ε / 2) h
+              hyLower hyUpper)
+            (fun move => nextAccount γ s move - s) -
+          (if s = M then 1 else 0) ≤
+        payoff -
+          expect
+            (updatePMF γ M s (payoff - V s + ε / 2) h
+              hyLower hyUpper)
+            (fun move => V (nextAccount γ s move)) := by
+  apply payoff_sub_expectedNextValue_ge h hMs hε hlam1
+    hyLower hyUpper
+  exact switchBudget_le_of_adjacent_variation h hyLower hyUpper
+    hε hlam0 hupVariation hdownVariation
+
 /-- Finite-horizon telescope for the account-process payoff inequality.
 This is the deterministic expectation-level form of the summation step: a
 one-step `9ε/16` loss accumulates linearly, account increments telescope,
@@ -472,6 +598,76 @@ theorem average_payoff_ge_target_sub_epsilon_of_account_bounds
       0 ≤ (T : ℝ)⁻¹ * (account T - account 0) :=
     mul_nonneg (inv_nonneg.mpr hTreal.le) (sub_nonneg.mpr haccount)
   nlinarith
+
+/-- Total floor occupation is bounded by a bounded potential with positive
+drift proportional to the local discount. This is the abstract form of the
+published floor-occupation estimate `∑ 1{sₜ=M} ≤ 9 / (ε λ(M))`. -/
+theorem sum_floorLoss_le_of_potential_drift
+    {ε lamFloor : ℝ} (hε : 0 < ε) (hε1 : ε ≤ 1)
+    (hlamFloor : 0 < lamFloor)
+    (lam potential floorLoss : ℕ → ℝ)
+    (hfloor : ∀ t, lamFloor * floorLoss t ≤ lam t)
+    (hdrift : ∀ t,
+      ε * lam t / 8 ≤ potential (t + 1) - potential t)
+    {T : ℕ} (hpotential0 : -ε / 8 ≤ potential 0)
+    (hpotentialT : potential T ≤ 1) :
+    ∑ t ∈ Finset.range T, floorLoss t ≤ 9 / (ε * lamFloor) := by
+  have hdriftSumAll : ∀ n : ℕ,
+      ε / 8 * (∑ t ∈ Finset.range n, lam t) ≤
+        potential n - potential 0 := by
+    intro n
+    induction n with
+    | zero => simp
+    | succ n ih =>
+        rw [Finset.sum_range_succ]
+        nlinarith [hdrift n]
+  have hdriftSum := hdriftSumAll T
+  have hlamSum :
+      ε * (∑ t ∈ Finset.range T, lam t) ≤ 9 := by
+    have hpotentialRange : potential T - potential 0 ≤ 9 / 8 := by
+      nlinarith
+    nlinarith
+  have hfloorSum :
+      lamFloor * (∑ t ∈ Finset.range T, floorLoss t) ≤
+        ∑ t ∈ Finset.range T, lam t := by
+    rw [Finset.mul_sum]
+    exact Finset.sum_le_sum fun t _ => hfloor t
+  have hcombined :
+      ε * lamFloor * (∑ t ∈ Finset.range T, floorLoss t) ≤ 9 := by
+    have := mul_le_mul_of_nonneg_left hfloorSum hε.le
+    nlinarith
+  rw [le_div_iff₀ (mul_pos hε hlamFloor)]
+  nlinarith
+
+/-- Cesàro form of the floor-occupation estimate. The explicit horizon
+condition is the cross-multiplied form of
+`T ≥ 72 / (ε² * lamFloor)`. -/
+theorem average_floorLoss_le_of_potential_drift
+    {ε lamFloor : ℝ} (hε : 0 < ε) (hε1 : ε ≤ 1)
+    (hlamFloor : 0 < lamFloor)
+    (lam potential floorLoss : ℕ → ℝ)
+    (hfloor : ∀ t, lamFloor * floorLoss t ≤ lam t)
+    (hdrift : ∀ t,
+      ε * lam t / 8 ≤ potential (t + 1) - potential t)
+    {T : ℕ} (hT : 0 < T)
+    (hpotential0 : -ε / 8 ≤ potential 0)
+    (hpotentialT : potential T ≤ 1)
+    (hhorizon : 72 ≤ (T : ℝ) * ε ^ 2 * lamFloor) :
+    (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, floorLoss t) ≤ ε / 8 := by
+  have hsum := sum_floorLoss_le_of_potential_drift
+    hε hε1 hlamFloor lam potential floorLoss hfloor hdrift
+    hpotential0 hpotentialT
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  calc
+    (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, floorLoss t) ≤
+        (T : ℝ)⁻¹ * (9 / (ε * lamFloor)) :=
+      mul_le_mul_of_nonneg_left hsum (inv_nonneg.mpr hTreal.le)
+    _ = 9 / ((T : ℝ) * ε * lamFloor) := by
+      field_simp
+    _ ≤ ε / 8 := by
+      rw [div_le_div_iff₀
+        (mul_pos (mul_pos hTreal hε) hlamFloor) (by norm_num)]
+      nlinarith [sq_nonneg ε]
 
 end MertensNeymanAccount
 end StochasticGame
