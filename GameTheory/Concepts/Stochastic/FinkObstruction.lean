@@ -336,6 +336,26 @@ theorem
 
 namespace NormalizedFinkSupportTangentObstructionFlow
 
+/-- Unequal baseline and pure-deviation state kernels differ at a concrete
+destination-state probability. -/
+theorem exists_state_toReal_ne_of_pureDeviationStateKernel_ne
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who)
+    (hkernel :
+      G.finkPureDeviationStateKernel z s who d ≠
+        G.finkStateKernel z s) :
+    ∃ t,
+      (G.finkPureDeviationStateKernel z s who d t).toReal ≠
+        (G.finkStateKernel z s t).toReal := by
+  by_contra hcoordinate
+  apply hkernel
+  apply Math.ProbabilityMassFunction.eq_of_forall_toReal_eq
+  intro t
+  by_contra ht
+  exact hcoordinate ⟨t, ht⟩
+
 /-- Every normalized obstruction exposes one of two semantically distinct
 response coordinates.  A transition-visible coordinate changes the
 next-state kernel.  At a transition-invisible coordinate all continuation
@@ -372,6 +392,37 @@ theorem exists_positive_transition_coordinate_or_positive_stage_coordinate
     exact hpositive
   · left
     exact ⟨s, who, d, hsupp, hkernel, hpositive⟩
+
+/-- Observable refinement of the obstruction-response split.  The
+transition-visible branch returns a destination state whose one-step
+probability changes under the supported pure deviation. -/
+theorem exists_positive_transition_test_or_positive_stage_coordinate
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)] {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι)
+    (F : G.NormalizedFinkSupportTangentObstructionFlow z H K) :
+    (∃ s, ∃ who, ∃ d : G.Act who, ∃ t,
+      G.finkProfile z s who d ≠ 0 ∧
+        0 < F.actionWeight s who d *
+          (G.finkStageGain z s who d +
+            G.finkContinuationGain (H - K) z s who d) ∧
+        (G.finkPureDeviationStateKernel z s who d t).toReal ≠
+          (G.finkStateKernel z s t).toReal) ∨
+      ∃ s, ∃ who, ∃ d : G.Act who,
+        G.finkProfile z s who d ≠ 0 ∧
+          G.finkPureDeviationStateKernel z s who d =
+            G.finkStateKernel z s ∧
+          0 < F.actionWeight s who d * G.finkStageGain z s who d := by
+  rcases F.exists_positive_transition_coordinate_or_positive_stage_coordinate
+      with htransition | hstage
+  · left
+    obtain ⟨s, who, d, hsupp, hkernel, hpositive⟩ := htransition
+    obtain ⟨t, ht⟩ :=
+      exists_state_toReal_ne_of_pureDeviationStateKernel_ne
+        G z s who d hkernel
+    exact ⟨s, who, d, t, hsupp, hpositive, ht⟩
+  · exact Or.inr hstage
 
 end NormalizedFinkSupportTangentObstructionFlow
 
