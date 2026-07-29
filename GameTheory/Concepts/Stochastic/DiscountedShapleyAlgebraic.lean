@@ -30,6 +30,8 @@ discounted-value coordinate per state.
   function of the current-stage rate.
 * `exists_nonzero_mvPolynomial_discountedShapleyRateValue`: the polynomial
   relation along the coupled discounted-value vector.
+* `discountedShapleyRateValue_twoState_elimination_dichotomy`: the bivariate
+  relation/resultant-degeneracy dichotomy for a two-state game.
 -/
 
 noncomputable section
@@ -81,26 +83,21 @@ theorem discountedShapleyRateValue_eq
       G.discountedShapleyValue (discountFactorOfRate_lt_one hl) := by
   simp [discountedShapleyRateValue, hl]
 
-/-- Every coordinate of the canonical discounted Shapley value satisfies a
-fixed nonzero multivariate polynomial relation in the rate and the full
-finite-state value vector. -/
-theorem exists_nonzero_mvPolynomial_discountedShapleyRateValue
+/-- The rate-parameterized discounted Shapley value satisfies the coupled
+normalized Shapley equation on `0 < λ ≤ 1`. -/
+theorem discountedShapleyRateValue_eq_lam0
     (G : StochasticGame (Fin 2))
     [Fintype G.State] [∀ i, Fintype (G.Act i)]
     [∀ i, Nonempty (G.Act i)]
-    (target : G.State) :
-    ∃ Q : MvPolynomial (Option G.State) ℝ, Q ≠ 0 ∧
-      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
-        MvPolynomial.eval
-          (fun x => Option.casesOn x l
-            (G.discountedShapleyRateValue l)) Q = 0 := by
-  apply ShapleySnow.exists_nonzero_mvPolynomial_of_discountedShapleySystem
-    G.rowStagePayoff
-    (fun s i j z => (G.pairTransition s i j z).toReal)
-    G.discountedShapleyRateValue
-    (Set.Ioc (0 : ℝ) 1)
-    _ target
-  intro l hl s
+    {l : ℝ} (hl : l ∈ Set.Ioc (0 : ℝ) 1)
+    (s : G.State) :
+    G.discountedShapleyRateValue l s =
+      MinimaxLoomis.lam0
+        (fun i j =>
+          l * G.rowStagePayoff s i j +
+            (1 - l) * ∑ z,
+              (G.pairTransition s i j z).toReal *
+                G.discountedShapleyRateValue l z) := by
   have hl0 : 0 < l := hl.1
   have hl1 : l ≤ 1 := hl.2
   have hβ := discountFactorOfRate_lt_one hl0
@@ -124,6 +121,68 @@ theorem exists_nonzero_mvPolynomial_discountedShapleyRateValue
     intro z _
     unfold discountedShapleyValue
     rw [coe_discountFactorOfRate hl1]
+
+/-- Every coordinate of the canonical discounted Shapley value satisfies a
+fixed nonzero multivariate polynomial relation in the rate and the full
+finite-state value vector. -/
+theorem exists_nonzero_mvPolynomial_discountedShapleyRateValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (target : G.State) :
+    ∃ Q : MvPolynomial (Option G.State) ℝ, Q ≠ 0 ∧
+      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l
+            (G.discountedShapleyRateValue l)) Q = 0 := by
+  apply ShapleySnow.exists_nonzero_mvPolynomial_of_discountedShapleySystem
+    G.rowStagePayoff
+    (fun s i j z => (G.pairTransition s i j z).toReal)
+    G.discountedShapleyRateValue
+    (Set.Ioc (0 : ℝ) 1)
+    _ target
+  exact fun l hl s =>
+    G.discountedShapleyRateValue_eq_lam0 hl s
+
+/-- For a two-state game, eliminating the other value coordinate either
+produces a nonzero bivariate relation for the target discounted value or
+exhibits the zero formal resultant of the two selected coupled relations. -/
+theorem discountedShapleyRateValue_twoState_elimination_dichotomy
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (target other : G.State) (hne : target ≠ other)
+    (hcover : ∀ z : G.State, z = target ∨ z = other) :
+    ∃ P Q : MvPolynomial (Option G.State) ℝ,
+      P ≠ 0 ∧ Q ≠ 0 ∧
+      (∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l
+            (G.discountedShapleyRateValue l)) P = 0) ∧
+      (∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l
+            (G.discountedShapleyRateValue l)) Q = 0) ∧
+      (Polynomial.resultant
+          (Math.MultivariateElimination.isolateVariable
+            (some other) P)
+          (Math.MultivariateElimination.isolateVariable
+            (some other) Q) = 0 ∨
+        ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+          ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+            Polynomial.eval
+              (G.discountedShapleyRateValue l target)
+              (Polynomial.map
+                (Polynomial.evalRingHom l) R) = 0) := by
+  exact
+    ShapleySnow.discountedShapleySystem_twoState_elimination_dichotomy
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1)
+      (fun l hl s =>
+        G.discountedShapleyRateValue_eq_lam0 hl s)
+      target other hne hcover
 
 end StochasticGame
 end GameTheory

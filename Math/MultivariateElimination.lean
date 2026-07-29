@@ -29,6 +29,8 @@ the exact algebraic condition that the formal resultant is nonzero.
 * `eval_eliminateVariable_eq_zero`: common zeros descend through elimination.
 * `eliminateVariable_ne_zero`: the formal resultant condition ensures that the
   eliminant carries information.
+* `bivariateOfEquiv`: encode a polynomial whose variable type has two elements
+  as a nested bivariate polynomial.
 -/
 
 noncomputable section
@@ -192,6 +194,60 @@ theorem eval_eliminateVariable_eq_zero
       dsimp only [f, g]
       rw [Polynomial.resultant_map_map]
     rw [eliminateVariable, map_mul, ← hmap, hres, zero_mul]
+
+/-- Encode a polynomial on any explicitly two-element variable type as a
+nested polynomial. The `none` coordinate is the outer variable and the unique
+`some` coordinate is the inner coefficient variable. -/
+noncomputable def bivariateOfEquiv
+    {σ : Type*} (e : σ ≃ Option Unit) :
+    MvPolynomial σ ℝ ≃ₐ[ℝ] Polynomial (Polynomial ℝ) :=
+  (MvPolynomial.renameEquiv ℝ e).trans
+    ((MvPolynomial.optionEquivLeft ℝ Unit).trans
+      (Polynomial.mapAlgEquiv
+        (MvPolynomial.uniqueAlgEquiv ℝ Unit)))
+
+/-- Evaluation commutes with `bivariateOfEquiv`. -/
+theorem eval_bivariateOfEquiv
+    {σ : Type*} (e : σ ≃ Option Unit)
+    (P : MvPolynomial σ ℝ) (a : σ → ℝ) :
+    Polynomial.eval (a (e.symm none))
+        (Polynomial.map
+          (Polynomial.evalRingHom
+            (a (e.symm (some ()))))
+          (bivariateOfEquiv e P)) =
+      MvPolynomial.eval a P := by
+  classical
+  let b : Option Unit → ℝ := fun x => a (e.symm x)
+  calc
+    Polynomial.eval (a (e.symm none))
+        (Polynomial.map
+          (Polynomial.evalRingHom
+            (a (e.symm (some ()))))
+          (bivariateOfEquiv e P)) =
+        Polynomial.eval (b none)
+          (Polynomial.map
+            (MvPolynomial.eval fun _ : Unit => b (some ()))
+            (MvPolynomial.optionEquivLeft ℝ Unit
+              (MvPolynomial.rename e P))) := by
+      simp only [bivariateOfEquiv, AlgEquiv.trans_apply,
+        Polynomial.coe_mapAlgEquiv, Polynomial.map_map]
+      congr 2
+      ext q
+      · simp
+      · rw [show q = () from Subsingleton.elim _ _]
+        simp [MvPolynomial.uniqueAlgEquiv, b]
+    _ = MvPolynomial.eval b
+        (MvPolynomial.rename e P) := by
+      rw [← MvPolynomial.optionEquivLeft_elim_eval
+        (R := ℝ) (S₁ := Unit)]
+      congr
+      funext x
+      cases x <;> simp [b]
+    _ = MvPolynomial.eval a P := by
+      rw [MvPolynomial.eval_rename]
+      congr
+      funext x
+      simp [b]
 
 end MultivariateElimination
 end Math

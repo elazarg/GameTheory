@@ -4,6 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 -/
 
 import Math.Minimax.ShapleySnow
+import Math.MultivariateElimination
 import Mathlib.Algebra.MvPolynomial.Funext
 
 /-!
@@ -35,6 +36,9 @@ determinants scale in adjacent degrees.
   nondegeneracy for positive-size bordered kernels.
 * `exists_nonzero_mvPolynomial_of_discountedShapleySystem`: a fixed nonzero
   relation for any chosen state coordinate of a finite coupled system.
+* `discountedShapleySystem_twoState_elimination_dichotomy`: resultant
+  elimination for a two-state coupled system, with an explicit degeneracy
+  branch.
 -/
 
 open scoped BigOperators
@@ -367,5 +371,144 @@ theorem exists_nonzero_mvPolynomial_of_discountedShapleySystem
       exact (hw l hl target).symm
     rw [hw'] at hvalue
     exact sub_eq_zero.mpr hvalue.symm
+
+/-- After eliminating one state coordinate from a two-state system, the
+remaining variables are canonically the rate and the target value. -/
+noncomputable def twoStateRemainingEquiv
+    {κ : Type*} (target other : κ)
+    (hne : target ≠ other)
+    (hcover : ∀ z : κ, z = target ∨ z = other) :
+    {x : Option κ // x ≠ some other} ≃ Option Unit where
+  toFun x :=
+    match x.1 with
+    | none => some ()
+    | some _ => none
+  invFun x :=
+    match x with
+    | none => ⟨some target, by simpa using hne⟩
+    | some _ => ⟨none, by simp⟩
+  left_inv := by
+    rintro ⟨x, hx⟩
+    apply Subtype.ext
+    cases x with
+    | none => rfl
+    | some z =>
+        simp only
+        rcases hcover z with hzt | hzo
+        · simp [hzt]
+        · subst z
+          exact False.elim (hx rfl)
+  right_inv := by
+    intro x
+    cases x <;> rfl
+
+@[simp]
+theorem twoStateRemainingEquiv_symm_none
+    {κ : Type*} (target other : κ)
+    (hne : target ≠ other)
+    (hcover : ∀ z : κ, z = target ∨ z = other) :
+    (twoStateRemainingEquiv target other hne hcover).symm none =
+      ⟨some target, by simpa using hne⟩ := rfl
+
+@[simp]
+theorem twoStateRemainingEquiv_symm_some
+    {κ : Type*} (target other : κ)
+    (hne : target ≠ other)
+    (hcover : ∀ z : κ, z = target ∨ z = other) :
+    (twoStateRemainingEquiv target other hne hcover).symm (some ()) =
+      ⟨none, by simp⟩ := rfl
+
+/-- For a two-state discounted Shapley system, fixed nonzero relations for
+the two coordinates either have zero formal resultant in the other value
+variable, or yield a fixed nonzero bivariate polynomial in the rate and target
+value.
+
+The first branch is an explicit degeneracy certificate. The second branch has
+the nested-polynomial orientation used by the algebraic-selection API: the
+outer variable is the target value and coefficient polynomials use the rate. -/
+theorem discountedShapleySystem_twoState_elimination_dichotomy
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (target other : κ) (hne : target ≠ other)
+    (hcover : ∀ z : κ, z = target ∨ z = other) :
+    ∃ P Q : MvPolynomial (Option κ) ℝ,
+      P ≠ 0 ∧ Q ≠ 0 ∧
+      (∀ l ∈ S,
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l)) P = 0) ∧
+      (∀ l ∈ S,
+        MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l)) Q = 0) ∧
+      (Polynomial.resultant
+          (Math.MultivariateElimination.isolateVariable
+            (some other) P)
+          (Math.MultivariateElimination.isolateVariable
+            (some other) Q) = 0 ∨
+        ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+          ∀ l ∈ S,
+            Polynomial.eval (w l target)
+              (Polynomial.map (Polynomial.evalRingHom l) R) = 0) := by
+  obtain ⟨P, hP, hPvanish⟩ :=
+    exists_nonzero_mvPolynomial_of_discountedShapleySystem
+      r T w S hw target
+  obtain ⟨Q, hQ, hQvanish⟩ :=
+    exists_nonzero_mvPolynomial_of_discountedShapleySystem
+      r T w S hw other
+  refine ⟨P, Q, hP, hQ, hPvanish, hQvanish, ?_⟩
+  by_cases hres :
+      Polynomial.resultant
+        (Math.MultivariateElimination.isolateVariable
+          (some other) P)
+        (Math.MultivariateElimination.isolateVariable
+          (some other) Q) = 0
+  · exact Or.inl hres
+  · right
+    let E :=
+      Math.MultivariateElimination.eliminateVariable
+        (some other) P Q
+    let e :=
+      twoStateRemainingEquiv target other hne hcover
+    let R :=
+      Math.MultivariateElimination.bivariateOfEquiv e E
+    refine ⟨R, ?_, ?_⟩
+    · have hE0 :=
+        Math.MultivariateElimination.eliminateVariable_ne_zero
+          (some other) hP hres
+      intro hR
+      apply hE0
+      apply
+        (Math.MultivariateElimination.bivariateOfEquiv e).injective
+      simpa [R] using hR
+    · intro l hl
+      let a : Option κ → ℝ :=
+        fun x => Option.casesOn x l (w l)
+      have hE :
+          MvPolynomial.eval
+            (fun x : {x : Option κ // x ≠ some other} => a x)
+            E = 0 :=
+        Math.MultivariateElimination.eval_eliminateVariable_eq_zero
+          (some other) a (hPvanish l hl) (hQvanish l hl)
+      calc
+        Polynomial.eval (w l target)
+            (Polynomial.map (Polynomial.evalRingHom l) R) =
+          MvPolynomial.eval
+            (fun x : {x : Option κ // x ≠ some other} => a x)
+            E := by
+              simpa [R, e, a] using
+                (Math.MultivariateElimination.eval_bivariateOfEquiv
+                  e E
+                  (fun x : {x : Option κ // x ≠ some other} =>
+                    a x))
+        _ = 0 := hE
 
 end ShapleySnow
