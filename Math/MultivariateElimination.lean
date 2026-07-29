@@ -6,7 +6,11 @@ Authors: GameTheory contributors
 
 import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Real.Basic
+import Mathlib.RingTheory.IntegralClosure.Algebra.Basic
+import Mathlib.RingTheory.Localization.Ideal
 import Mathlib.RingTheory.Localization.FractionRing
+import Mathlib.RingTheory.Localization.Integral
+import Mathlib.RingTheory.MvPolynomial.Localization
 import Mathlib.RingTheory.Polynomial.Resultant.Basic
 
 /-!
@@ -35,6 +39,9 @@ the exact algebraic condition that the formal resultant is nonzero.
 * `exists_nonunit_commonFactor_map_fractionRing_of_resultant_eq_zero`: interpret
   a zero resultant as a genuine common factor over the coefficient fraction
   field.
+* `exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing`: a
+  finite affine quotient over a coefficient fraction field gives a nonzero
+  coordinate relation in the original ideal.
 -/
 
 noncomputable section
@@ -324,6 +331,135 @@ theorem exists_nonunit_commonFactor_map_fractionRing_of_resultant_eq_zero
     rw [gcd_isUnit_iff_isRelPrime,
       isRelPrime_iff_isCoprime]
     exact hcop
+
+/-- A finite affine coordinate ring makes every coordinate integral over the
+coefficient field. The resulting monic relation is recorded back in the
+defining ideal. -/
+theorem exists_monic_coordinateRelation_of_moduleFinite
+    {K κ : Type*} [Field K]
+    (I : Ideal (MvPolynomial κ K))
+    [Module.Finite K (MvPolynomial κ K ⧸ I)]
+    (target : κ) :
+    ∃ p : Polynomial K,
+      p.Monic ∧
+        Polynomial.aeval (MvPolynomial.X target) p ∈ I := by
+  let x : MvPolynomial κ K ⧸ I :=
+    Ideal.Quotient.mk I (MvPolynomial.X target)
+  obtain ⟨p, hpmonic, hp⟩ := IsIntegral.of_finite K x
+  refine ⟨p, hpmonic, Ideal.Quotient.eq_zero_iff_mem.mp ?_⟩
+  rw [Polynomial.aeval_def, Polynomial.hom_eval₂]
+  dsimp only [x] at hp
+  have hcoeff :
+      (Ideal.Quotient.mk I).comp
+          (algebraMap K (MvPolynomial κ K)) =
+        algebraMap K (MvPolynomial κ K ⧸ I) := by
+    exact Ideal.Quotient.mk_comp_algebraMap (R₁ := K) I
+  rw [hcoeff]
+  exact hp
+
+/-- Over a fraction field, finite-dimensionality supplies a nonzero coordinate
+relation with coefficients in the original domain. -/
+theorem exists_nonzero_coordinateRelation_of_moduleFinite_fractionRing
+    {A κ : Type*} [CommRing A] [IsDomain A]
+    (I : Ideal (MvPolynomial κ (FractionRing A)))
+    [Module.Finite (FractionRing A)
+      (MvPolynomial κ (FractionRing A) ⧸ I)]
+    (target : κ) :
+    ∃ q : Polynomial A,
+      q ≠ 0 ∧
+        Polynomial.aeval (MvPolynomial.X target)
+          (q.map (algebraMap A (FractionRing A))) ∈ I := by
+  obtain ⟨p, hpmonic, hpI⟩ :=
+    exists_monic_coordinateRelation_of_moduleFinite I target
+  let q : Polynomial A :=
+    IsLocalization.integerNormalization
+      (nonZeroDivisors A) p
+  have hq : q ≠ 0 := by
+    intro hqzero
+    have hpzero : p = 0 := by
+      apply (IsLocalization.integerNormalization_eq_zero_iff
+        (M := nonZeroDivisors A) le_rfl p).mp
+      exact hqzero
+    exact hpmonic.ne_zero hpzero
+  refine ⟨q, hq, ?_⟩
+  obtain ⟨b, _hb, hmap⟩ :=
+    IsLocalization.integerNormalization_spec
+      (nonZeroDivisors A) p
+  rw [hmap]
+  simpa [Algebra.smul_def, Polynomial.aeval_mul,
+    Polynomial.aeval_C] using
+      I.mul_mem_left
+        (algebraMap A
+          (MvPolynomial κ (FractionRing A)) b) hpI
+
+/-- If extending an affine ideal to the coefficient fraction field gives a
+finite quotient, then every coordinate satisfies a nonzero relation already
+in the original ideal. Clearing the ideal-membership denominator, rather than
+specializing it, covers all coefficient specializations. -/
+theorem exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing
+    {A κ : Type*} [CommRing A] [IsDomain A]
+    (J : Ideal (MvPolynomial κ A))
+    [Module.Finite (FractionRing A)
+      (MvPolynomial κ (FractionRing A) ⧸
+        J.map (MvPolynomial.map
+          (algebraMap A (FractionRing A))))]
+    (target : κ) :
+    ∃ q : Polynomial A,
+      q ≠ 0 ∧
+        Polynomial.aeval (MvPolynomial.X target) q ∈ J := by
+  letI : Algebra (MvPolynomial κ A)
+      (MvPolynomial κ (FractionRing A)) :=
+    MvPolynomial.algebraMvPolynomial
+  letI : IsLocalization
+      ((nonZeroDivisors A).map
+        (MvPolynomial.C : A →+*
+          MvPolynomial κ A).toMonoidHom)
+      (MvPolynomial κ (FractionRing A)) :=
+    MvPolynomial.isLocalization
+      (σ := κ) (nonZeroDivisors A) (FractionRing A)
+  let φ : MvPolynomial κ A →+*
+      MvPolynomial κ (FractionRing A) :=
+    MvPolynomial.map (algebraMap A (FractionRing A))
+  obtain ⟨q, hq, hqI⟩ :=
+    exists_nonzero_coordinateRelation_of_moduleFinite_fractionRing
+      (J.map φ) target
+  have hmapEval :
+      φ (Polynomial.aeval (MvPolynomial.X target) q) =
+        Polynomial.aeval (MvPolynomial.X target)
+          (q.map (algebraMap A (FractionRing A))) := by
+    have hcomp :
+        (algebraMap (FractionRing A)
+          (MvPolynomial κ (FractionRing A))).comp
+            (algebraMap A (FractionRing A)) =
+          φ.comp (algebraMap A (MvPolynomial κ A)) := by
+      ext a
+      simp [φ]
+    simpa [φ] using
+      (Polynomial.map_aeval_eq_aeval_map hcomp q
+        (MvPolynomial.X target))
+  have hlocalized :
+      φ (Polynomial.aeval (MvPolynomial.X target) q) ∈
+        J.map φ := by
+    rw [hmapEval]
+    exact hqI
+  have hcleared :=
+    (IsLocalization.algebraMap_mem_map_algebraMap_iff
+      (M := (nonZeroDivisors A).map
+        (MvPolynomial.C : A →+*
+          MvPolynomial κ A).toMonoidHom)
+      (S := MvPolynomial κ (FractionRing A))
+      J
+      (Polynomial.aeval (MvPolynomial.X target) q)).mp
+      hlocalized
+  obtain ⟨m, hm, hmJ⟩ := hcleared
+  obtain ⟨d, hd, rfl⟩ := hm
+  let q' : Polynomial A := Polynomial.C d * q
+  have hdne : d ≠ 0 :=
+    mem_nonZeroDivisors_iff_ne_zero.mp hd
+  have hq' : q' ≠ 0 := by
+    exact mul_ne_zero (Polynomial.C_ne_zero.mpr hdne) hq
+  refine ⟨q', hq', ?_⟩
+  simpa [q', Polynomial.aeval_mul, Polynomial.aeval_C] using hmJ
 
 end MultivariateElimination
 end Math
