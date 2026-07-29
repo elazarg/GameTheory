@@ -225,6 +225,18 @@ noncomputable def expWeights (η : ℝ) (score : A → ℝ) : PMF A :=
 theorem mwDist_eq_expWeights (η : ℝ) (g : ℕ → A → ℝ) (t : ℕ) :
     mwDist η g t = expWeights η (fun a => cumGain g t a) := rfl
 
+/-- The distribution at round `t` depends only on gains from rounds strictly before `t`. -/
+theorem mwDist_congr_of_forall_lt (η : ℝ) (g h : ℕ → A → ℝ) (t : ℕ)
+    (heq : ∀ s < t, g s = h s) :
+    mwDist η g t = mwDist η h t := by
+  rw [mwDist_eq_expWeights, mwDist_eq_expWeights]
+  congr 1
+  funext a
+  unfold cumGain
+  apply Finset.sum_congr rfl
+  intro s hs
+  rw [heq s (Finset.mem_range.mp hs)]
+
 /-- On `[0,1]`, `exp η − 1 − η ≤ η²` (a second-order Taylor remainder bound). This lets the
     fixed-`η` regret coefficient `(eᵑ−1−η)/η` be bounded by `η`, so the per-round regret can be
     driven to `0` by taking `η` small. -/
@@ -329,6 +341,17 @@ theorem cumGain_timeShiftGain (g : ℕ → A → ℝ) (start T : ℕ) (a : A) :
     absolute time `start`. Its state depends only on gains observed since the epoch began. -/
 noncomputable def signedMWDistFrom (η : ℝ) (g : ℕ → A → ℝ) (start t : ℕ) : PMF A :=
   mwDist η (unitShiftGain (timeShiftGain g start)) t
+
+theorem signedMWDistFrom_congr_of_forall_lt
+    (η : ℝ) (g h : ℕ → A → ℝ) (start t : ℕ)
+    (heq : ∀ s < t, g (start + s) = h (start + s)) :
+    signedMWDistFrom η g start t = signedMWDistFrom η h start t := by
+  unfold signedMWDistFrom
+  apply mwDist_congr_of_forall_lt
+  intro s hs
+  funext a
+  simp only [unitShiftGain, timeShiftGain]
+  rw [heq s hs]
 
 /-- Signed algorithm gain over the first `T` rounds of an epoch beginning at `start`. -/
 noncomputable def signedAlgGainFrom

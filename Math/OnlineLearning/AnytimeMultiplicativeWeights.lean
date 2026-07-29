@@ -327,6 +327,16 @@ noncomputable def anytimeSignedMWDist (g : ℕ → A → ℝ) (t : ℕ) : PMF A 
   signedMWDistFrom (anytimeEpochRate (anytimeEpochIndex t)) g
     (epochStart anytimeEpochLength (anytimeEpochIndex t)) (anytimeEpochOffset t)
 
+theorem anytimeSignedMWDist_congr_of_forall_lt
+    (g h : ℕ → A → ℝ) (t : ℕ) (heq : ∀ s < t, g s = h s) :
+    anytimeSignedMWDist g t = anytimeSignedMWDist h t := by
+  unfold anytimeSignedMWDist
+  apply signedMWDistFrom_congr_of_forall_lt
+  intro s hs
+  apply heq
+  have htime := anytimeEpochStart_add_offset t
+  omega
+
 theorem anytimeSignedAlgGain_succ (g : ℕ → A → ℝ) (T : ℕ) :
     anytimeSignedAlgGain g (T + 1) =
       anytimeSignedAlgGain g T + expect (anytimeSignedMWDist g T) (g T) := by

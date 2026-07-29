@@ -237,6 +237,66 @@ theorem anytimePMFCoordinateMonitorAlgGain_eq_sum_weightedScore
     Math.OnlineLearning.anytimeSignedAlgGain_eq_sum]
   rfl
 
+/-- Gain stream obtained from a finite public history. Values at rounds outside the history are
+    set to zero; causality ensures that this arbitrary continuation does not affect earlier
+    monitor choices. -/
+def pmfCoordinateMonitorFinHistoryGain
+    {Ω : Type} [DecidableEq Ω] {n : ℕ} (baseline : PMF Ω)
+    (history : Fin n → Ω) (round : ℕ) (monitor : PMFCoordinateMonitor Ω) : ℝ :=
+  if hround : round < n then
+    pmfCoordinateTestScore baseline monitor.1 monitor.2
+      (history ⟨round, hround⟩)
+  else 0
+
+/-- Anytime coordinate-monitor choice determined by exactly the preceding finite public
+    history. -/
+def predictableAnytimePMFCoordinateMonitorChoice
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) (n : ℕ) (history : Fin n → Ω) :
+    PMF (PMFCoordinateMonitor Ω) :=
+  Math.OnlineLearning.anytimeSignedMWDist
+    (pmfCoordinateMonitorFinHistoryGain baseline history) n
+
+/-- Causality of the public monitor: evaluating the finite-history choice on the prefix of any
+    full observation stream gives exactly the absolute-time monitor distribution for that stream. -/
+theorem predictableAnytimePMFCoordinateMonitorChoice_prefix
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) (observation : ℕ → Ω) (n : ℕ) :
+    predictableAnytimePMFCoordinateMonitorChoice baseline n
+        (fun i => observation i) =
+      anytimePMFCoordinateMonitorDist baseline observation n := by
+  apply Math.OnlineLearning.anytimeSignedMWDist_congr_of_forall_lt
+  intro s hs
+  funext monitor
+  simp [pmfCoordinateMonitorFinHistoryGain, pmfCoordinateMonitorGain, hs]
+
+/-- The actual causal anytime monitor has zero expected cumulative score under the baseline
+    public-history law at every horizon. -/
+theorem expect_predictableAnytimePMFCoordinateMonitorCumulativeScore_baseline_eq_zero
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) (T : ℕ) :
+    expect (baselinePMFHistoryLaw baseline T)
+        (predictablePMFCoordinateMonitorCumulativeScore baseline
+          (predictableAnytimePMFCoordinateMonitorChoice baseline) T) = 0 := by
+  exact expect_predictablePMFCoordinateMonitorCumulativeScore_baseline_eq_zero
+    baseline (predictableAnytimePMFCoordinateMonitorChoice baseline) T
+
+/-- Under an adaptive comparison law, the actual causal anytime monitor's expected cumulative
+    score equals its expected cumulative oriented coordinate drift. -/
+theorem expect_predictableAnytimePMFCoordinateMonitorCumulativeScore_eq_drift
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω)
+    (comparison : ∀ n, (Fin n → Ω) → PMF Ω)
+    (T : ℕ) :
+    expect (adaptiveHistoryLaw comparison T)
+        (predictablePMFCoordinateMonitorCumulativeScore baseline
+          (predictableAnytimePMFCoordinateMonitorChoice baseline) T) =
+      expect (adaptiveHistoryLaw comparison T)
+        (predictablePMFCoordinateMonitorConditionalDriftSum baseline comparison
+          (predictableAnytimePMFCoordinateMonitorChoice baseline) T) := by
+  exact expect_predictablePMFCoordinateMonitorCumulativeScore_eq_drift
+    baseline comparison (predictableAnytimePMFCoordinateMonitorChoice baseline) T
+
 /-- Every fixed coordinate monitor has vanishing positive average regret against the one
     horizon-independent weighted monitor. This statement is pathwise in the observed outcomes. -/
 theorem eventually_anytimePMFCoordinateMonitor_regret_div_lt
