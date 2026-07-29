@@ -618,6 +618,76 @@ theorem runMixedFrom_pure [DecidableEq ι] (policies : (i : ι) → M.Policy i)
 
 end Profiles
 
+/-! ### Reading a single draw back as local randomization
+
+A mixed policy answers an information state once, so the local law it induces
+there is the law of that answer *given* that the draw could have brought play to
+that information state. The condition is a statement about the player's own
+record, and recall is what makes that record a function of the information state
+rather than of a particular history in it. -/
+
+open Classical in
+/-- The record a player's own moves leave at an information state, read off some
+history that produces it. Which history is read does not matter under recall,
+which is the theorem below; without recall this is merely some choice. -/
+noncomputable def recordAt (i : ι) (info : M.InfoState i) :
+    List (M.InfoState i × E.Action i) :=
+  if hreached : ∃ h : E.History, M.infoOf i h.trace = info then
+    M.ownPlay i (Classical.choose hreached).trace
+  else []
+
+/-- **What recall is for.** With it, the record at an information state is the
+record along *every* history that produces it, so the arbitrary choice above is
+no choice at all. -/
+theorem recordAt_eq_ownPlay (hrecall : M.PerfectRecall) (i : ι) (h : E.History) :
+    M.recordAt i (M.infoOf i h.trace) = M.ownPlay i h.trace := by
+  have hreached : ∃ g : E.History, M.infoOf i g.trace = M.infoOf i h.trace := ⟨h, rfl⟩
+  rw [recordAt, dif_pos hreached]
+  exact hrecall i _ _ (Classical.choose_spec hreached)
+
+/-- The pure policies whose own choices match a record of past moves. -/
+def Consistent (i : ι) (record : List (M.InfoState i × E.Action i)) : Set (M.Policy i) :=
+  { policy | ∀ step ∈ record, (policy step.1).1 = some step.2 }
+
+/-- The pure policies that could have brought play to an information state. -/
+def ConsistentAt (i : ι) (info : M.InfoState i) : Set (M.Policy i) :=
+  M.Consistent i (M.recordAt i info)
+
+variable {M} in
+open Classical in
+/-- A mixed policy read as a behavioral one: at each information state, the law
+of the action it prescribes there, conditioned on the policies that could have
+brought play to that information state.
+
+Where no such policy has positive mass the conditioning is undefined, and the
+value is taken from a policy the law does give mass to. That costs no hypothesis:
+every law has something in its support, a policy already chooses legally at every
+information state — including ones no history produces, where the menu law says
+nothing — and the choice is unobservable, because a profile is seen only through
+the histories a run can reach. -/
+noncomputable def MixedPolicy.toBehavioral {i : ι} (mixed : M.MixedPolicy i) :
+    M.BehavioralPolicy i := fun info =>
+  if hreachable : ∃ policy ∈ M.ConsistentAt i info, policy ∈ mixed.support then
+    FinDist.map (fun policy => policy info) (mixed.condOn (M.ConsistentAt i info) hreachable)
+  else FinDist.pure (mixed.support_nonempty.choose info)
+
+variable {M} in
+/-- The degenerate case: a single draw that is not really random reads back as
+the policy it draws. Both branches give that answer, so nothing here depends on
+whether the information state was reachable at all. -/
+theorem MixedPolicy.toBehavioral_pure {i : ι} (policy : M.Policy i) :
+    MixedPolicy.toBehavioral (M := M) (FinDist.pure policy) = policy.toBehavioral := by
+  classical
+  funext info
+  rw [MixedPolicy.toBehavioral]
+  split
+  · rw [FinDist.condOn_pure, FinDist.map_pure]
+    rfl
+  · have hchosen := (FinDist.pure policy : M.MixedPolicy i).support_nonempty.choose_spec
+    rw [FinDist.mem_support_pure] at hchosen
+    rw [hchosen]
+    rfl
+
 variable {M} in
 /-- A behavioral policy as a mixed one: draw the action for every information
 state in advance, independently. Whether the two laws agree is exactly the

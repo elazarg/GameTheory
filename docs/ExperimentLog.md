@@ -964,6 +964,22 @@ memory.
   This is also the first slice on which both conditions hold at once, so it is
   the one the recall direction will be built against.
 
-- **Next action:** the construction itself — which pure policies an information
-  state is consistent with, over `ownPlay`, and the conditioning that defines the
-  behavioral coordinate from it.
+- **Fourth observation: the construction lands, and the default really is
+  free.** `recordAt` reads a player's own record off *some* history producing an
+  information state, and `recordAt_eq_ownPlay` is where recall does its work:
+  with it, that record is the record along *every* such history, so the arbitrary
+  choice is no choice. `Consistent` then names the pure policies whose own
+  answers match a record, and `toBehavioral` conditions the single draw on them
+  and takes the action's law.
+  The predicted-free default is confirmed. At an information state no history
+  produces, the conditioning event can have no mass, and the value is taken from
+  a policy the law does give mass to — which costs nothing, because every law has
+  something in its support and a policy already chooses legally everywhere,
+  *including* where the menu law says nothing and the menu could otherwise be
+  empty. No hypothesis was added, and the degenerate check passes on both
+  branches at once: a draw concentrated on one policy reads back as that policy
+  whether or not the information state was reachable.
+
+- **Next action:** the tower properties of conditioning, and with them
+  reach-mass factorization — the step where recall stops being a statement about
+  records and starts being a statement about probabilities.

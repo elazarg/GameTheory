@@ -641,6 +641,28 @@ theorem condOn_univ (μ : FinDist α) (hmeet : ∃ a ∈ Set.univ, a ∈ μ.supp
     simp [μ.toPMF.tsum_coe]
   rw [prob_condOn, if_pos (Set.mem_univ a), hmass, div_one]
 
+theorem probOf_pure_self [DecidableEq α] (a : α) (S : Set α) (ha : a ∈ S) :
+    (pure a).probOf S = 1 := by
+  show (massOf (pure a) S).toReal = 1
+  rw [massOf, tsum_eq_single a fun b hb => by
+    simp [toPMF_pure, PMF.pure_apply, hb]]
+  simp [Set.indicator_of_mem ha, toPMF_pure, PMF.pure_apply]
+
+/-- Conditioning a point mass changes nothing: whatever event it is compatible
+with, it is still that point. -/
+theorem condOn_pure (a : α) (S : Set α) (hmeet : ∃ b ∈ S, b ∈ (pure a).support) :
+    (pure a).condOn S hmeet = pure a := by
+  classical
+  obtain ⟨b, hbS, hbmem⟩ := hmeet
+  rw [mem_support_pure] at hbmem
+  subst hbmem
+  refine ext_of_prob fun x => ?_
+  rw [prob_condOn, probOf_pure_self b S hbS, div_one]
+  by_cases hxS : x ∈ S
+  · rw [if_pos hxS]
+  · rw [if_neg hxS, prob_pure_eq_ite, if_neg]
+    exact fun hxb => hxS (by rw [hxb]; exact hbS)
+
 /-! ## Convex mixing -/
 
 /-- Mix two laws, with weight `t` on the first. The interface is real-valued;
