@@ -429,6 +429,16 @@ def finkStateKernel (G : StochasticGame ι)
     {U : ℝ} (z : G.finkDomain U) (s : G.State) : PMF G.State :=
   (pmfPi (G.finkProfile z s)).bind (G.transition s)
 
+/-- State transition kernel induced by replacing one player's component of a
+decoded stationary Fink profile by a pure action. -/
+def finkPureDeviationStateKernel (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) : PMF G.State :=
+  (pmfPi (Function.update (G.finkProfile z s)
+    who (PMF.pure d))).bind (G.transition s)
+
 /-- Expectations under the induced state kernel are exactly the nested
 action/transition expectations used by `finkContinuationEU`. -/
 theorem expect_finkStateKernel_eq
@@ -440,6 +450,36 @@ theorem expect_finkStateKernel_eq
         expect (G.transition s a) w) := by
   unfold finkStateKernel
   rw [expect_bind]
+
+/-- Expectations under a pure unilateral-deviation state kernel are exactly
+the corresponding nested action/transition expectations. -/
+theorem expect_finkPureDeviationStateKernel_eq
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    {U : ℝ} (z : G.finkDomain U) (s : G.State)
+    (who : ι) (d : G.Act who) (w : G.State → ℝ) :
+    expect (G.finkPureDeviationStateKernel z s who d) w =
+      expect (pmfPi (Function.update (G.finkProfile z s)
+        who (PMF.pure d))) (fun a =>
+          expect (G.transition s a) w) := by
+  unfold finkPureDeviationStateKernel
+  rw [expect_bind]
+
+/-- A Fink continuation gain is the difference between expectations under the
+pure-deviation and baseline state kernels. -/
+theorem finkContinuationGain_eq_expect_stateKernels
+    (G : StochasticGame ι)
+    [Fintype G.State] [Fintype ι] [DecidableEq ι]
+    [∀ i, Fintype (G.Act i)]
+    (W : G.State → Payoff ι) {U : ℝ} (z : G.finkDomain U)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    G.finkContinuationGain W z s who d =
+      expect (G.finkPureDeviationStateKernel z s who d) (fun t => W t who) -
+        expect (G.finkStateKernel z s) (fun t => W t who) := by
+  rw [G.expect_finkPureDeviationStateKernel_eq,
+    G.expect_finkStateKernel_eq]
+  rfl
 
 /-- Every Fink forcing splits into a harmonic recurrent obstruction and a
 Poisson-solvable transient part.  The obstruction is exactly the vector of

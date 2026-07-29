@@ -129,6 +129,17 @@ theorem expect_eq_sum {Ω : Type*} [Fintype Ω] (d : PMF Ω) (f : Ω → ℝ) :
     expect d f = (∑ ω : Ω, (d ω).toReal * f ω) := by
   simp [expect]
 
+/-- The expectation of a coordinate unit vector is the corresponding
+real-valued PMF mass. -/
+theorem expect_pi_single {Ω : Type*} [Finite Ω] [DecidableEq Ω]
+    (d : PMF Ω) (ω : Ω) :
+    expect d (Pi.single ω 1) = (d ω).toReal := by
+  letI : Fintype Ω := Fintype.ofFinite Ω
+  rw [expect_eq_sum, Fintype.sum_eq_single ω]
+  · simp
+  · intro other hne
+    simp [hne]
+
 theorem pmf_apply_toReal_tendsto_of_tendsto {Ω : Type*}
     {μs : ℕ → PMF Ω} {μ : PMF Ω} {ω : Ω}
     (h : Tendsto (fun n : ℕ => μs n ω) atTop (nhds (μ ω))) :
