@@ -22,7 +22,7 @@ namespace GameTheory
 namespace StochasticGame
 namespace MertensNeymanAccount
 
-open Math.Probability Math.PMFProduct
+open Filter Math.Probability Math.PMFProduct Topology
 
 /-- Joint action and successor state under a statewise mixed profile. -/
 def stateActionOutcome
@@ -1516,6 +1516,56 @@ theorem rowAccount_isOneSidedGuaranteeCertificateAt_of_puiseux
     nlinarith
   simpa [C] using hsecure opp s₀ T hTpos hhorizon
 
+/-- Convergence of the discounted values from positive discount rates gives
+the corrected-value tail required by the account construction. Finiteness of
+the state space makes the convergence threshold uniform in the state. -/
+theorem exists_tail_correctedValue_lower_of_tendsto
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State]
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (target : G.State → ℝ)
+    (hlimit : ∀ z,
+      Tendsto (fun lam => v lam z 0)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (target z)))
+    {η : ℝ} (hη : 0 < η) :
+    ∃ S : ℝ, ∀ z s, S ≤ s →
+      target z - η / 8 ≤
+        v (discountRate s) z 0 - logCorrector s := by
+  have hrate :
+      Tendsto discountRate atTop
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) := by
+    rw [tendsto_nhdsWithin_iff]
+    refine ⟨tendsto_discountRate_atTop, ?_⟩
+    filter_upwards [eventually_gt_atTop (1 : ℝ)] with s hs
+    exact discountRate_pos hs
+  have hvalue : ∀ z,
+      ∀ᶠ s : ℝ in atTop,
+        target z - η / 16 <
+          v (discountRate s) z 0 := by
+    intro z
+    exact (tendsto_order.1 ((hlimit z).comp hrate)).1
+      (target z - η / 16) (by linarith)
+  have hvalues :
+      ∀ᶠ s : ℝ in atTop, ∀ z,
+        target z - η / 16 <
+          v (discountRate s) z 0 := by
+    rw [Filter.eventually_all]
+    exact hvalue
+  have hcorrector :
+      ∀ᶠ s : ℝ in atTop, logCorrector s < η / 16 :=
+    (tendsto_order.1 tendsto_logCorrector_atTop).2
+      (η / 16) (by linarith)
+  have htail :
+      ∀ᶠ s : ℝ in atTop, ∀ z,
+        target z - η / 8 ≤
+          v (discountRate s) z 0 - logCorrector s := by
+    filter_upwards [hvalues, hcorrector] with s hs hlog
+    intro z
+    have hz := hs z
+    linarith
+  rcases eventually_atTop.1 htail with ⟨S, hS⟩
+  exact ⟨S, fun z s hs => hS s hs z⟩
+
 /-- Full conditional one-sided securing certificate. The Puiseux envelope is
 fixed for the discounted-value family, while the corrected-value tail
 threshold may depend on the requested precision. -/
@@ -1571,6 +1621,41 @@ theorem rowAccount_isOneSidedGuaranteeCertificate_of_puiseux
   intro opp T hT
   have hbase := hsecure opp T hT
   linarith
+
+/-- The one-sided account certificate from the standard analytic inputs:
+a Puiseux derivative envelope and convergence of the discounted values from
+positive discount rates. -/
+theorem rowAccount_isOneSidedGuaranteeCertificate_of_puiseux_of_tendsto
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    {β lam0 : G.State → ℝ} {v' : G.State → ℝ → ℝ}
+    (target : G.State → ℝ) (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
+    (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
+    (hF : ∀ lam, 0 < lam →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (v lam))
+    (hzs : G.IsZeroSum)
+    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0)
+    (hβ : ∀ z, 0 < β z) (hlam0 : ∀ z, 0 < lam0 z)
+    (hderiv : ∀ z lam, 0 < lam → lam < lam0 z →
+      HasDerivAt (fun u => v u z 0) (v' z lam) lam)
+    (hbound : ∀ z lam, 0 < lam → lam < lam0 z →
+      |v' z lam| ≤ lam ^ (β z - 1) / lam0 z)
+    (hlimit : ∀ z,
+      Tendsto (fun lam => v lam z 0)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (target z))) :
+    G.IsOneSidedGuaranteeCertificate s₀ 0 (target s₀) := by
+  apply rowAccount_isOneSidedGuaranteeCertificate_of_puiseux
+    target s₀ hpayLower hpayUpper hvalueLower hvalueUpper
+    hF hzs hVzs hβ hlam0 hderiv hbound
+  intro η hη
+  exact exists_tail_correctedValue_lower_of_tendsto
+    target hlimit hη
 
 end MertensNeymanAccount
 end StochasticGame
