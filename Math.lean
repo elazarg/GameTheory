@@ -49,6 +49,7 @@ import Math.LinearAlgebra.ZeroSum
 import Math.LinearProgramming
 import Math.AlgebraicSelection
 import Math.AnalyticConeDichotomy
+import Math.AnalyticMixedObstruction
 import Math.AnalyticPowerNormalization
 import Math.WeierstrassCurve
 import Math.RamifiedWeierstrass
