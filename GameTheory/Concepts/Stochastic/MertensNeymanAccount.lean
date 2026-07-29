@@ -260,6 +260,108 @@ theorem expectedChange_sub_floorIndicator_le
     · rw [max_eq_right (le_of_not_ge hy)]
       simpa using hyLower
 
+/-- PMF form of the floor-corrected account inequality. -/
+theorem expect_nextAccount_sub_floorIndicator_le
+    {γ M s y : ℝ} (h : IsValidScale γ s) (hMs : M ≤ s)
+    (hyLower : -1 ≤ y) (hyUpper : y ≤ 2) :
+    expect (updatePMF γ M s y h hyLower hyUpper)
+          (fun move => nextAccount γ s move - s) -
+        (if s = M then 1 else 0) ≤ y := by
+  rw [expect_nextAccount_sub h hyLower hyUpper]
+  exact expectedChange_sub_floorIndicator_le h hMs hyLower
+
+/-- The published one-step payoff estimate. The account gap is formed using
+the old discounted value. If switching to the next discounted value loses
+at most `ε * lam / 16`, with `lam ≤ 1`, the stage payoff minus the switched
+value covers the account drift, the floor correction, and a `9ε/16` error.
+-/
+theorem payoff_sub_switchedValue_ge
+    {γ M s ε lam payoff oldValue newValue : ℝ}
+    (h : IsValidScale γ s) (hMs : M ≤ s)
+    (hε : 0 ≤ ε) (hlam1 : lam ≤ 1)
+    (hyLower : -1 ≤ payoff - oldValue + ε / 2)
+    (hyUpper : payoff - oldValue + ε / 2 ≤ 2)
+    (hswitch : -ε * lam / 16 ≤ oldValue - newValue) :
+    -9 * ε / 16 +
+          expect
+            (updatePMF γ M s (payoff - oldValue + ε / 2) h
+              hyLower hyUpper)
+            (fun move => nextAccount γ s move - s) -
+          (if s = M then 1 else 0) ≤
+        payoff - newValue := by
+  have haccount :=
+    expect_nextAccount_sub_floorIndicator_le h hMs hyLower hyUpper
+  have h_eps_lam : ε * lam ≤ ε := by
+    exact mul_le_of_le_one_right hε hlam1
+  nlinarith
+
+/-- Finite-horizon telescope for the account-process payoff inequality.
+This is the deterministic expectation-level form of the summation step: a
+one-step `9ε/16` loss accumulates linearly, account increments telescope,
+and floor corrections remain as an occupation sum. -/
+theorem sum_payoff_ge_of_account_steps
+    (ε : ℝ) (payoff nextValue account floorLoss : ℕ → ℝ)
+    (hstep : ∀ t,
+      -9 * ε / 16 + (account (t + 1) - account t) - floorLoss t ≤
+        payoff t - nextValue t)
+    (T : ℕ) :
+    (∑ t ∈ Finset.range T, nextValue t) -
+          (T : ℝ) * (9 * ε / 16) +
+          (account T - account 0) -
+          ∑ t ∈ Finset.range T, floorLoss t ≤
+        ∑ t ∈ Finset.range T, payoff t := by
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      rw [Finset.sum_range_succ, Finset.sum_range_succ,
+        Finset.sum_range_succ]
+      push_cast
+      linarith [hstep T]
+
+/-- Cesàro conclusion of the account telescope. If the average switched
+value loses at most `ε/8`, floor occupation costs at most `ε/8`, and the
+expected account has not fallen below its initial level, then the average
+payoff is at least the target minus `ε`. -/
+theorem average_payoff_ge_target_sub_epsilon_of_account_bounds
+    {ε target : ℝ} (hε : 0 ≤ ε)
+    (payoff nextValue account floorLoss : ℕ → ℝ)
+    (hstep : ∀ t,
+      -9 * ε / 16 + (account (t + 1) - account t) - floorLoss t ≤
+        payoff t - nextValue t)
+    {T : ℕ} (hT : 0 < T)
+    (haccount : account 0 ≤ account T)
+    (hvalue :
+      target - ε / 8 ≤
+        (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, nextValue t)
+    (hfloor :
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, floorLoss t ≤ ε / 8) :
+    target - ε ≤
+      (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, payoff t := by
+  have hTreal : (0 : ℝ) < T := by exact_mod_cast hT
+  have hsum :=
+    sum_payoff_ge_of_account_steps ε payoff nextValue account floorLoss
+      hstep T
+  have hscaled := mul_le_mul_of_nonneg_left hsum (inv_nonneg.mpr hTreal.le)
+  have hscaled' :
+      (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, nextValue t) -
+            9 * ε / 16 +
+            (T : ℝ)⁻¹ * (account T - account 0) -
+            (T : ℝ)⁻¹ * (∑ t ∈ Finset.range T, floorLoss t) ≤
+          (T : ℝ)⁻¹ * ∑ t ∈ Finset.range T, payoff t := by
+    calc
+      _ = (T : ℝ)⁻¹ *
+          ((∑ t ∈ Finset.range T, nextValue t) -
+            (T : ℝ) * (9 * ε / 16) +
+            (account T - account 0) -
+            ∑ t ∈ Finset.range T, floorLoss t) := by
+              rw [inv_eq_one_div]
+              field_simp
+      _ ≤ _ := hscaled
+  have haccountScaled :
+      0 ≤ (T : ℝ)⁻¹ * (account T - account 0) :=
+    mul_nonneg (inv_nonneg.mpr hTreal.le) (sub_nonneg.mpr haccount)
+  nlinarith
+
 end MertensNeymanAccount
 end StochasticGame
 end GameTheory
