@@ -727,6 +727,199 @@ theorem row_accountMemoryController_payoff_step
   rw [expect_const] at hmean
   linarith
 
+/-- The payoff/account step for either secured player on an arbitrary unit
+payoff/value interval. -/
+theorem accountMemoryControllerOnUnitInterval_payoff_step
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} {lower γ M ε : ℝ}
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hfloor : IsValidScale γ M)
+    (hε : 0 ≤ ε) (hε2 : ε ≤ 2)
+    (hpayLower :
+      ∀ z a, lower ≤ G.stagePayoff z a who)
+    (hpayUpper :
+      ∀ z a, G.stagePayoff z a who ≤ lower + 1)
+    (hvalueLower :
+      ∀ lam z, lower ≤ v lam z who)
+    (hvalueUpper :
+      ∀ lam z, v lam z who ≤ lower + 1)
+    (hrateUpper : ∀ s, M ≤ s → discountRate s ≤ 1)
+    (hbudget : ∀ z s y, M ≤ s → IsValidScale γ s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget γ M s y
+          (fun u => v (discountRate u) z who) ≤
+        ε * discountRate s / 16)
+    (opp : G.BehaviorProfile) {t : ℕ} (h : G.Hist t)
+    (k : Fin (t + 1)) :
+    let C := accountMemoryControllerOnUnitInterval
+      lower γ M ε
+      (fun lam z => x lam z who)
+      (fun lam z => v lam z who)
+      hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+    (-9 * ε / 16 +
+          expect (C.outcomeKernel opp h k) (fun o =>
+            expect (C.update t h o.1 o.2 k) (fun k' =>
+              accountLevelMemoryPotential γ M
+                (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) -
+          accountLevelMemoryPotential γ M t h k -
+          accountFloorIndicator k ≤
+        expect (C.outcomeKernel opp h k) (fun o =>
+          G.stagePayoff h.2 o.1 who) -
+        expect (C.outcomeKernel opp h k) (fun o =>
+          expect (C.update t h o.1 o.2 k) (fun k' =>
+            accountValueMemoryPotential who γ M v
+              (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k'))) := by
+  dsimp only
+  let C := accountMemoryControllerOnUnitInterval
+    lower γ M ε
+    (fun lam z => x lam z who)
+    (fun lam z => v lam z who)
+    hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+  let d : PMF (G.JointAct × G.State) := C.outcomeKernel opp h k
+  let s := accountAtLevel γ M k
+  change -9 * ε / 16 +
+        expect d (fun o =>
+          expect (C.update t h o.1 o.2 k) (fun k' =>
+            accountLevelMemoryPotential γ M
+              (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) -
+        accountLevelMemoryPotential γ M t h k -
+        accountFloorIndicator k ≤
+      expect d (fun o => G.stagePayoff h.2 o.1 who) -
+      expect d (fun o =>
+        expect (C.update t h o.1 o.2 k) (fun k' =>
+          accountValueMemoryPotential who γ M v
+            (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k'))
+  have hMs : M ≤ s := floor_le_accountAtLevel hfloor k
+  have hscale : IsValidScale γ s :=
+    isValidScale_accountAtLevel hfloor k
+  have hyLower : ∀ o : G.JointAct × G.State,
+      -1 ≤ G.stagePayoff h.2 o.1 who -
+        v (discountRate s) o.2 who + ε / 2 := by
+    intro o
+    nlinarith [hpayLower h.2 o.1,
+      hvalueUpper (discountRate s) o.2]
+  have hyUpper : ∀ o : G.JointAct × G.State,
+      G.stagePayoff h.2 o.1 who -
+        v (discountRate s) o.2 who + ε / 2 ≤ 2 := by
+    intro o
+    nlinarith [hpayUpper h.2 o.1,
+      hvalueLower (discountRate s) o.2]
+  have hfloorEq :
+      (if s = M then (1 : ℝ) else 0) =
+        accountFloorIndicator k := by
+    simp [s, accountFloorIndicator,
+      accountAtLevel_eq_floor_iff hfloor]
+  have hpoint : ∀ o : G.JointAct × G.State,
+      -9 * ε / 16 +
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff h.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale (hyLower o) (hyUpper o))
+            (fun move => nextAccount γ s move - s) -
+          accountFloorIndicator k ≤
+        G.stagePayoff h.2 o.1 who -
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff h.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale (hyLower o) (hyUpper o))
+            (fun move =>
+              v (discountRate (nextAccount γ s move)) o.2 who) := by
+    intro o
+    rw [← hfloorEq]
+    exact payoff_sub_expectedNextValue_ge
+      (ε := ε) (lam := discountRate s)
+      (payoff := G.stagePayoff h.2 o.1 who)
+      (V := fun u => v (discountRate u) o.2 who)
+      hscale hMs hε (hrateUpper s hMs)
+      (hyLower o) (hyUpper o)
+      (hbudget o.2 s
+        (G.stagePayoff h.2 o.1 who -
+          v (discountRate s) o.2 who + ε / 2)
+        hMs hscale (hyLower o) (hyUpper o))
+  have haccountUpdate :
+      ∀ o : G.JointAct × G.State,
+        expect (C.update t h o.1 o.2 k) (fun k' =>
+            accountLevelMemoryPotential γ M
+              (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k') =
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff h.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale (hyLower o) (hyUpper o))
+            (fun move => nextAccount γ s move) := by
+    intro o
+    simpa [C, s, accountMemoryControllerOnUnitInterval,
+      accountLevelMemoryPotential] using
+      expect_map_nextAccountLevel_accountPotential
+        k hscale (hyLower o) (hyUpper o) (fun u => u)
+  have hvalueUpdate :
+      ∀ o : G.JointAct × G.State,
+        expect (C.update t h o.1 o.2 k) (fun k' =>
+            accountValueMemoryPotential who γ M v
+              (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k') =
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff h.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale (hyLower o) (hyUpper o))
+            (fun move =>
+              v (discountRate (nextAccount γ s move)) o.2 who) := by
+    intro o
+    simpa [C, s, accountMemoryControllerOnUnitInterval,
+      accountValueMemoryPotential] using
+      expect_map_nextAccountLevel_accountPotential
+        k hscale (hyLower o) (hyUpper o)
+        (fun u => v (discountRate u) o.2 who)
+  simp_rw [haccountUpdate, hvalueUpdate]
+  rw [show accountLevelMemoryPotential γ M t h k = s by rfl]
+  have hmean := expect_mono d _ _ hpoint
+  have hnextSub : ∀ o : G.JointAct × G.State,
+      expect
+          (updatePMF γ M s
+            (G.stagePayoff h.2 o.1 who -
+              v (discountRate s) o.2 who + ε / 2)
+            hscale (hyLower o) (hyUpper o))
+          (fun move => nextAccount γ s move - s) =
+        expect
+          (updatePMF γ M s
+            (G.stagePayoff h.2 o.1 who -
+              v (discountRate s) o.2 who + ε / 2)
+            hscale (hyLower o) (hyUpper o))
+          (fun move => nextAccount γ s move) - s := by
+    intro o
+    rw [expect_sub, expect_const]
+  simp_rw [hnextSub] at hmean
+  let A : G.JointAct × G.State → ℝ := fun o =>
+    expect
+      (updatePMF γ M s
+        (G.stagePayoff h.2 o.1 who -
+          v (discountRate s) o.2 who + ε / 2)
+        hscale (hyLower o) (hyUpper o))
+      (fun move => nextAccount γ s move)
+  let B : G.JointAct × G.State → ℝ := fun o =>
+    expect
+      (updatePMF γ M s
+        (G.stagePayoff h.2 o.1 who -
+          v (discountRate s) o.2 who + ε / 2)
+        hscale (hyLower o) (hyUpper o))
+      (fun move =>
+        v (discountRate (nextAccount γ s move)) o.2 who)
+  let P : G.JointAct × G.State → ℝ := fun o =>
+    G.stagePayoff h.2 o.1 who
+  change -9 * ε / 16 + expect d A - s -
+      accountFloorIndicator k ≤ expect d P - expect d B
+  change expect d (fun o =>
+      -9 * ε / 16 + (A o - s) - accountFloorIndicator k) ≤
+    expect d (fun o => P o - B o) at hmean
+  rw [expect_sub, expect_add, expect_const, expect_sub, expect_const,
+    expect_sub] at hmean
+  rw [expect_const] at hmean
+  linarith
+
 /-- Averaging the fixed-memory payoff/account step under the controller belief
 gives the exact historywise inequality for the induced behavioral strategy. -/
 theorem row_accountMemoryController_history_payoff_step
@@ -807,6 +1000,108 @@ theorem row_accountMemoryController_history_payoff_step
     intro k
     simpa [C, A, V, F] using
       row_accountMemoryController_payoff_step
+        hfloor hε hε2 hpayLower hpayUpper
+        hvalueLower hvalueUpper hrateUpper hbudget opp h k
+  letI : Fintype (C.Mem t) := C.finiteMem t
+  have hmean := expect_mono (C.belief t h) _ _ hfixed
+  have hA :=
+    C.historyContinuationEU_beliefPotential opp A h
+  have hV :=
+    C.historyContinuationEU_beliefPotential opp V h
+  have hstage := C.stageEUAt_behaviorStrategy opp h
+  unfold MemoryController.beliefPotential at hmean hA hV ⊢
+  simp only [expect_sub, expect_add, expect_const] at hmean
+  rw [hA, hV, hstage]
+  exact hmean
+
+/-- Posterior averaging of the symmetric payoff/account step gives the
+historywise inequality for the induced behavioral strategy. -/
+theorem accountMemoryControllerOnUnitInterval_history_payoff_step
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} {lower γ M ε : ℝ}
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hfloor : IsValidScale γ M)
+    (hε : 0 ≤ ε) (hε2 : ε ≤ 2)
+    (hpayLower :
+      ∀ z a, lower ≤ G.stagePayoff z a who)
+    (hpayUpper :
+      ∀ z a, G.stagePayoff z a who ≤ lower + 1)
+    (hvalueLower :
+      ∀ lam z, lower ≤ v lam z who)
+    (hvalueUpper :
+      ∀ lam z, v lam z who ≤ lower + 1)
+    (hrateUpper : ∀ s, M ≤ s → discountRate s ≤ 1)
+    (hbudget : ∀ z s y, M ≤ s → IsValidScale γ s →
+      -1 ≤ y → y ≤ 2 →
+      switchBudget γ M s y
+          (fun u => v (discountRate u) z who) ≤
+        ε * discountRate s / 16)
+    (opp : G.BehaviorProfile) {t : ℕ} (h : G.Hist t) :
+    let C := accountMemoryControllerOnUnitInterval
+      lower γ M ε
+      (fun lam z => x lam z who)
+      (fun lam z => v lam z who)
+      hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+    let A : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+      fun n hmem k => accountLevelMemoryPotential γ M n hmem k
+    let V : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+      fun n hmem k =>
+        accountValueMemoryPotential who γ M v n hmem k
+    let F : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+      fun _ _ k => accountFloorIndicator
+        (show Fin (_ + 1) from k)
+    (-9 * ε / 16 +
+          G.historyContinuationEU
+            (Function.update opp who C.behaviorStrategy)
+            (C.beliefPotential A) h -
+          C.beliefPotential A t h -
+          C.beliefPotential F t h ≤
+        G.stageEUAt
+            (Function.update opp who C.behaviorStrategy) h who -
+          G.historyContinuationEU
+            (Function.update opp who C.behaviorStrategy)
+            (C.beliefPotential V) h) := by
+  dsimp only
+  let C := accountMemoryControllerOnUnitInterval
+    lower γ M ε
+    (fun lam z => x lam z who)
+    (fun lam z => v lam z who)
+    hfloor hpayLower hpayUpper hvalueLower hvalueUpper hε hε2
+  let A : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+    fun n hmem k => accountLevelMemoryPotential γ M n hmem k
+  let V : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+    fun n hmem k =>
+      accountValueMemoryPotential who γ M v n hmem k
+  let F : (n : ℕ) → G.Hist n → C.Mem n → ℝ :=
+    fun n _ k => accountFloorIndicator
+      (show Fin (n + 1) from k)
+  change -9 * ε / 16 +
+        G.historyContinuationEU
+          (Function.update opp who C.behaviorStrategy)
+          (C.beliefPotential A) h -
+        C.beliefPotential A t h -
+        C.beliefPotential F t h ≤
+      G.stageEUAt
+          (Function.update opp who C.behaviorStrategy) h who -
+        G.historyContinuationEU
+          (Function.update opp who C.behaviorStrategy)
+          (C.beliefPotential V) h
+  have hfixed : ∀ k : C.Mem t,
+      -9 * ε / 16 +
+            expect (C.outcomeKernel opp h k) (fun o =>
+              expect (C.update t h o.1 o.2 k) (fun k' =>
+                A (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) -
+            A t h k - F t h k ≤
+          expect (C.outcomeKernel opp h k) (fun o =>
+            G.stagePayoff h.2 o.1 who) -
+          expect (C.outcomeKernel opp h k) (fun o =>
+            expect (C.update t h o.1 o.2 k) (fun k' =>
+              V (t + 1) (Fin.snoc h.1 (h.2, o.1), o.2) k')) := by
+    intro k
+    simpa [C, A, V, F] using
+      accountMemoryControllerOnUnitInterval_payoff_step
         hfloor hε hε2 hpayLower hpayUpper
         hvalueLower hvalueUpper hrateUpper hbudget opp h k
   letI : Fintype (C.Mem t) := C.finiteMem t
