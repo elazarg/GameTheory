@@ -29,6 +29,7 @@ becomes difficult to scan.
 | EXP-016 | 2026-07-28 | D6 / Kuhn prerequisite | Can a history-indexed run law carry information-local policies without becoming a second semantics? | Supports | `GameTheory/Protocol/History.lean`; `GameTheory/Tests/History.lean` |
 | EXP-017 | 2026-07-29 | D6 / behavioral-mixed equivalence | Where can a player's randomness live, and do the two placements agree? | Supports | `GameTheory/Protocol/Randomized.lean`; `GameTheory/Protocol/Information.lean`; `GameTheory/Tests/Randomized.lean` |
 | EXP-018 | 2026-07-29 | D6 / the recall direction | Does the direction that recovers a behavioral profile from a mixed one fit the same layer, and what does conditioning cost? | Supports | `GameTheory/Probability/FinDist.lean`; `GameTheory/Protocol/Information.lean` |
+| EXP-019 | 2026-07-29 | D7 / the recall direction | Can the recall direction be restated over reach-mass conditions, stated transport-free, with recall demoted to a sufficient condition? | *reserved* | `GameTheory/Protocol/Information.lean` |
 
 ## Entry template
 
@@ -1019,5 +1020,60 @@ memory.
   The statement that results is the honest one: the behavioral reading of a
   single draw is determined up to its behaviour where play never goes.
 
-- **Next action:** the two directions now meet. Worth stating the combined
-  equivalence, and putting the recall-capable slice under both.
+- **Sixth observation, from comparing with the snapshot.** The conditions proved
+  here are cruder than the ones the snapshot proves. Its no-repeat condition
+  permits a repeat when the action set there is a subsingleton, and its recall
+  direction rests on reach-mass conditions with recall only sufficient. The
+  first gap is now closed: the condition is weakened to permit a repeat where the
+  *menu* holds a single option — a finer site than the action carrier, since an
+  information state can offer many actions and still leave one legal — and the
+  counterexample is checked against the weakened form, so the separation survives
+  it. The second gap is reserved as its own experiment.
+  Two places where the comparison runs the other way, both visible in the
+  snapshot's own statements. Its global determinism condition puts a transport
+  inside a public hypothesis and its posterior-locality condition is stated
+  through `HEq`, both because its information projection lives over
+  length-indexed lists; neither appears here, because reachability is intrinsic
+  to a history. And its construction takes a global inhabitance instance for the
+  action carriers, where the fallback here is derived from the law's own support.
+
+- **Next action:** the two directions now meet on one slice, both instantiated.
+  The remaining gap is the reach-mass generalization, reserved separately.
+
+### EXP-019: Reach-mass conditions instead of recall
+
+- **Date / revision:** reserved 2026-07-29, before any attempt
+- **Decision / question:** D7, asked again with a candidate consumer. The pinned
+  snapshot proves the recall direction not from recall but from three conditions
+  about *reach mass*: that two profiles reaching a state give it the same mass,
+  that reaching it factors coordinatewise, and that the posterior at an
+  information state does not depend on which reaching history produced it.
+  Recall is demoted to a sufficient condition. That is strictly more general than
+  what is proved here, and it is also, structurally, a named adequacy
+  certificate — the stratification rejected earlier on a baseline of zero
+  consumers. Restating the theorem over such conditions would be the *first*
+  genuine consumer of a certificate level. A second — an encoded language
+  discharging the same conditions, or a correlated-realization layer resting on
+  the same factorization — would meet the recorded two-consumer budget. So this
+  experiment is about the architecture as much as the theorem.
+- **Representative slice:** the recall-capable two-vote design, which already
+  satisfies both directions' current hypotheses, plus at least one model that
+  fails recall while still factoring — the case the generalization is *for*, and
+  which nothing here yet exhibits.
+- **Prediction, written before attempting.** The three conditions are statable
+  transport-free over the existing history and information vocabulary. The
+  snapshot states them with a `▸` inside a hypothesis and with `HEq`, because its
+  information projection lives over length-indexed lists; histories as data,
+  where reachability is intrinsic to the type, should remove both. That is the
+  falsifiable part: if the conditions *cannot* be stated without transport, the
+  finding is about where the generality belongs — an internal lemma rather than
+  a public hypothesis — and it is decision-grade either way rather than a proof
+  failure.
+  Predicted also: the global determinism side condition the snapshot's
+  perfect-recall corollary carries will not be needed, for the same reason, and
+  the fallback will not need a global inhabitance instance, since it is already
+  derived from the law's own support.
+- **Evidence:** *pending*
+- **Observation:** *pending*
+- **Outcome:** *pending*
+- **Next action:** *pending*

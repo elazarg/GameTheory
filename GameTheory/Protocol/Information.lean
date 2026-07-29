@@ -461,10 +461,30 @@ theorem actedAt_isSuffix_of_reachesWithin (i : ι) :
     | none => exact List.suffix_refl _
     | some action => exact List.suffix_cons _ _
 
-/-- **An information state a player has acted at never returns.** This is the
-form the no-revisit condition is used in: having moved at `h`, the player meets
-that information state at no later history at which it moves again. -/
-theorem infoOf_ne_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) (i : ι)
+/-- **No player is asked twice at one information state where the choice
+matters.** A repeat is harmless when the menu there holds a single option:
+there is nothing to draw, so drawing again cannot differ from drawing once.
+
+The condition is stated over the menu rather than over the action carrier,
+which is both the semantically right site and strictly finer — an information
+state can offer a rich set of actions and still leave the player one legal
+option. -/
+def ActsOnceWhereItMatters : Prop :=
+  ∀ (i : ι) {state : E.State} (trace : Trace E state),
+    (M.actedAt i trace).Pairwise fun earlier later =>
+      earlier ≠ later ∨ Subsingleton (M.Choice i later)
+
+/-- Never acting twice at one information state is the special case that ignores
+the menu. -/
+theorem actsOnceWhereItMatters_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) :
+    M.ActsOnceWhereItMatters := fun i _ trace =>
+  (hactsOnce i trace).imp fun hne => Or.inl hne
+
+/-- **An information state a player has acted at does not return, unless there
+was nothing to choose there.** This is the form the condition is used in: having
+moved at `h`, the player either never meets that information state again while
+moving, or meets it with a single option on the menu. -/
+theorem infoOf_ne_or_subsingleton_of_actsOnce (hactsOnce : M.ActsOnceWhereItMatters) (i : ι)
     {h later : E.History} {fuel : ℕ}
     {joint : ∀ j, Option (E.Action j)} (isLegal : E.Legal h.state joint)
     {reached : E.State} (realized : reached ∈ (E.step h.state ⟨joint, isLegal⟩).support)
@@ -474,9 +494,9 @@ theorem infoOf_ne_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) (i : ι)
     {laterReached : E.State}
     (laterRealized : laterReached ∈ (E.step later.state ⟨laterJoint, laterLegal⟩).support)
     (hactsLater : (laterJoint i).isSome) :
-    M.infoOf i later.trace ≠ M.infoOf i h.trace := by
-  intro hsame
-  have hnodup := hactsOnce i (later.extend laterLegal laterRealized).trace
+    M.infoOf i later.trace ≠ M.infoOf i h.trace ∨
+      Subsingleton (M.Choice i (M.infoOf i h.trace)) := by
+  have hpairwise := hactsOnce i (later.extend laterLegal laterRealized).trace
   have hstep : M.actedAt i (later.extend laterLegal laterRealized).trace =
       M.infoOf i later.trace :: M.actedAt i later.trace := by
     show M.actedAt i (Trace.extend _ laterJoint laterLegal laterRealized) = _
@@ -484,8 +504,8 @@ theorem infoOf_ne_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) (i : ι)
     cases hcase : laterJoint i with
     | none => rw [hcase] at hactsLater; exact absurd hactsLater (by simp)
     | some action => rfl
-  rw [hstep] at hnodup
-  refine (List.nodup_cons.mp hnodup).1 ?_
+  rw [hstep] at hpairwise
+  refine (List.pairwise_cons.mp hpairwise).1 _ ?_
   have hsuffix := M.actedAt_isSuffix_of_reachesWithin i hreach
   have hhead : M.infoOf i h.trace ∈ M.actedAt i (h.extend isLegal realized).trace := by
     show M.infoOf i h.trace ∈ M.actedAt i (Trace.extend _ joint isLegal realized)
@@ -493,7 +513,6 @@ theorem infoOf_ne_of_actsOnce (hactsOnce : M.ActsOnceAtEachInfoState) (i : ι)
     cases hcase : joint i with
     | none => rw [hcase] at hacts; exact absurd hacts (by simp)
     | some action => exact List.mem_cons_self
-  rw [hsame]
   exact hsuffix.subset hhead
 
 /-- **An inactive player has nothing to choose.** Its menu is the single option
@@ -849,7 +868,7 @@ theorem runFrom_succ_of_chooser_eq (policies : (i : ι) → M.Policy i) {h : E.H
 player never meets that information state again while moving, or it does not
 move there and had nothing to choose. -/
 theorem commit_agree_of_actsOnce [∀ i, DecidableEq (M.InfoState i)]
-    (hactsOnce : M.ActsOnceAtEachInfoState)
+    (hactsOnce : M.ActsOnceWhereItMatters)
     (β : (i : ι) → M.BehavioralPolicy i) {h : E.History}
     (draw : (i : ι) → M.Choice i (M.infoOf i h.trace))
     {joint : ∀ i, Option (E.Action i)} (isLegal : E.Legal h.state joint)
@@ -864,17 +883,22 @@ theorem commit_agree_of_actsOnce [∀ i, DecidableEq (M.InfoState i)]
   push Not at hne
   by_cases hactiveLater : E.active later.state i
   · by_cases hactiveHere : E.active h.state i
-    · refine absurd hne ?_
-      obtain ⟨laterJoint, hlaterJoint⟩ := E.progress later.state hlater
-      have hlaterLegal : E.Legal later.state laterJoint := ⟨hlater, hlaterJoint⟩
-      obtain ⟨laterTarget, hlaterRealized⟩ :=
-        (E.step later.state ⟨laterJoint, hlaterLegal⟩).support_nonempty
-      obtain ⟨_, hsome⟩ := LegalOption.exists_eq_some_of_active (joint i)
-        (ExecutionProtocol.legalOption_of_legal isLegal i) hactiveHere
-      obtain ⟨_, hlaterSome⟩ := LegalOption.exists_eq_some_of_active (laterJoint i)
-        (ExecutionProtocol.legalOption_of_legal hlaterLegal i) hactiveLater
-      exact M.infoOf_ne_of_actsOnce hactsOnce i isLegal realized (by rw [hsome]; rfl) hreach
-        hlaterLegal hlaterRealized (by rw [hlaterSome]; rfl)
+    · have hdisj : M.infoOf i later.trace ≠ M.infoOf i h.trace ∨
+          Subsingleton (M.Choice i (M.infoOf i h.trace)) := by
+        obtain ⟨laterJoint, hlaterJoint⟩ := E.progress later.state hlater
+        have hlaterLegal : E.Legal later.state laterJoint := ⟨hlater, hlaterJoint⟩
+        obtain ⟨laterTarget, hlaterRealized⟩ :=
+          (E.step later.state ⟨laterJoint, hlaterLegal⟩).support_nonempty
+        obtain ⟨_, hsome⟩ := LegalOption.exists_eq_some_of_active (joint i)
+          (ExecutionProtocol.legalOption_of_legal isLegal i) hactiveHere
+        obtain ⟨_, hlaterSome⟩ := LegalOption.exists_eq_some_of_active (laterJoint i)
+          (ExecutionProtocol.legalOption_of_legal hlaterLegal i) hactiveLater
+        exact M.infoOf_ne_or_subsingleton_of_actsOnce hactsOnce i isLegal realized
+          (by rw [hsome]; rfl) hreach hlaterLegal hlaterRealized (by rw [hlaterSome]; rfl)
+      rcases hdisj with hne' | hsubsingleton
+      · exact absurd hne hne'
+      · rw [hne, BehavioralPolicy.commit_self]
+        exact (FinDist.eq_pure_of_subsingleton _ (draw i)).symm
     · have : Subsingleton (M.Choice i (M.infoOf i h.trace)) :=
         M.subsingleton_choice_of_not_active h.trace hactiveHere
       rw [hne, BehavioralPolicy.commit_self]
@@ -888,7 +912,7 @@ variable [Fintype ι] [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.In
 /-- **The equivalence.** With no player ever asked to act twice at one
 information state, randomizing locally and randomizing once over policies induce
 the same law over histories. -/
-theorem runMixedFrom_toMixed (hactsOnce : M.ActsOnceAtEachInfoState) :
+theorem runMixedFrom_toMixed (hactsOnce : M.ActsOnceWhereItMatters) :
     ∀ (fuel : ℕ) (β : (i : ι) → M.BehavioralPolicy i) (h : E.History),
       M.runMixedFrom (fun i => (β i).toMixed) fuel h = M.runBehavioralFrom β fuel h := by
   intro fuel
@@ -960,7 +984,7 @@ theorem runMixedFrom_toMixed (hactsOnce : M.ActsOnceAtEachInfoState) :
 
 /-- The from-start form: the two randomizations induce the same law over plays.
 This is the shape a statement about a whole game quotes. -/
-theorem runMixed_toMixed (hactsOnce : M.ActsOnceAtEachInfoState)
+theorem runMixed_toMixed (hactsOnce : M.ActsOnceWhereItMatters)
     (β : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
     M.runMixed (fun i => (β i).toMixed) fuel = M.runBehavioral β fuel :=
   M.runMixedFrom_toMixed hactsOnce fuel β E.initHistory
@@ -968,7 +992,7 @@ theorem runMixed_toMixed (hactsOnce : M.ActsOnceAtEachInfoState)
 /-- And hence the same law over the states play reaches, which is the shape an
 outcome-level statement quotes. Nothing is lost by forgetting the history here,
 because the laws agreed on histories in the first place. -/
-theorem map_state_runMixed_toMixed (hactsOnce : M.ActsOnceAtEachInfoState)
+theorem map_state_runMixed_toMixed (hactsOnce : M.ActsOnceWhereItMatters)
     (β : (i : ι) → M.BehavioralPolicy i) (fuel : ℕ) :
     FinDist.map ExecutionProtocol.History.state (M.runMixed (fun i => (β i).toMixed) fuel) =
       FinDist.map ExecutionProtocol.History.state (M.runBehavioral β fuel) :=

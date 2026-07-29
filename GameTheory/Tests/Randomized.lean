@@ -462,7 +462,25 @@ theorem runMixed_eq_runBehavioral_once (β : (i : Unit) → singleModel.Behavior
     (fuel : ℕ) (h : History once) :
     singleModel.runMixedFrom (fun i => (β i).toMixed) fuel h =
       singleModel.runBehavioralFrom β fuel h :=
-  singleModel.runMixedFrom_toMixed single_actsOnceAtEachInfoState fuel β h
+  singleModel.runMixedFrom_toMixed
+    (singleModel.actsOnceWhereItMatters_of_actsOnce single_actsOnceAtEachInfoState) fuel β h
+
+/-- The repeated information state offers a real choice, so weakening the
+condition to ignore trivial menus does not rescue this protocol. -/
+theorem not_subsingleton_choice : ¬ Subsingleton (model.Choice () false) := by
+  intro hsub
+  have hcollapse := hsub.elim (⟨some Vote.up, up_mem_menu⟩ : model.Choice () false)
+    ⟨some Vote.down, down_mem_menu⟩
+  simp at hcollapse
+
+/-- **So the separation survives the weaker condition too.** -/
+theorem not_actsOnceWhereItMatters : ¬ model.ActsOnceWhereItMatters := by
+  intro hacts
+  have hpairwise := hacts () votedTwice
+  rw [show model.actedAt () votedTwice = [false, false] from actedAt_votedTwice] at hpairwise
+  rcases (List.pairwise_cons.mp hpairwise).1 false (by simp) with hne | hsub
+  · exact hne rfl
+  · exact not_subsingleton_choice hsub
 
 /-! ## Neither protocol here recalls its own moves
 
@@ -660,6 +678,16 @@ theorem recall_runMixed_eq_runBehavioral (β : (i : Unit) → recallModel.Behavi
     (fuel : ℕ) (h : History twice) :
     recallModel.runMixedFrom (fun i => (β i).toMixed) fuel h =
       recallModel.runBehavioralFrom β fuel h :=
-  recallModel.runMixedFrom_toMixed recall_actsOnceAtEachInfoState fuel β h
+  recallModel.runMixedFrom_toMixed
+    (recallModel.actsOnceWhereItMatters_of_actsOnce recall_actsOnceAtEachInfoState) fuel β h
+
+/-- **And the direction that needs recall, on the same slice.** Both halves of
+the equivalence now hold on one protocol, under one signal design, with each
+half's hypothesis discharged rather than assumed. -/
+theorem recall_runMixed_toBehavioralWith (fallback : (i : Unit) → recallModel.Policy i)
+    (fuel : ℕ) (mixed : (i : Unit) → recallModel.MixedPolicy i) :
+    recallModel.runMixed mixed fuel =
+      recallModel.runBehavioral (fun i => (mixed i).toBehavioralWith (fallback i)) fuel :=
+  recallModel.runMixed_toBehavioralWith recall_perfectRecall fallback fuel mixed
 
 end GameTheory.Tests.Repeat
