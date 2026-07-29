@@ -7,6 +7,7 @@ import GameTheory.Concepts.Stochastic.MertensNeymanAccount
 import GameTheory.Concepts.Stochastic.MertensNeymanCriterion
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
 import GameTheory.Concepts.Stochastic.DiscountedShapleyAlgebraic
+import GameTheory.Concepts.Stochastic.AffinePayoff
 import Math.AlgebraicSelection
 
 /-!
@@ -4043,6 +4044,63 @@ theorem isUniformEquilibriumPayoff_of_analytic_reparam_discountedShapleyRateValu
       G.discountedShapleyRateValue_le_one
         hzs hpayLower hpayUpper l z)
     hx hzs hq hlam0 hderiv hbound hlimit
+
+/-- The analytic Puiseux boundary for an arbitrary finite zero-sum payoff
+scale.
+
+An absolute bound `C` defines the positive affine normalization
+`normalizedZeroSumPayoff`, whose row payoffs lie in `[0,1]`. An analytic
+ramified representation of that normalized game's canonical discounted
+Shapley value therefore yields a uniform payoff for the original game. -/
+theorem isUniformEquilibriumPayoff_of_normalized_analytic_reparam_discountedShapleyRateValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (C : ℝ)
+    (hC : ∀ z a, |G.stagePayoff z a 0| ≤ C)
+    (q ρ : G.State → ℝ)
+    (g : G.State → ℝ → ℝ)
+    (s₀ : G.State)
+    (hzs : G.IsZeroSum)
+    (hq : ∀ z, 0 < q z)
+    (hρ : ∀ z, 0 < ρ z)
+    (hreparam : ∀ z l, l ∈ Set.Ioo (0 : ℝ) (ρ z) →
+      (G.normalizedZeroSumPayoff C).discountedShapleyRateValue l z =
+        g z (l ^ q z))
+    (hganalytic : ∀ z, AnalyticAt ℝ (g z) 0) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who =>
+        if who = 0 then (2 * C + 1) * g s₀ 0 - C
+        else -((2 * C + 1) * g s₀ 0 - C)) := by
+  let a : G.JointAct :=
+    fun i => Classical.choice (inferInstance : Nonempty (G.Act i))
+  have hC0 : 0 ≤ C :=
+    (abs_nonneg (G.stagePayoff s₀ a 0)).trans (hC s₀ a)
+  have hc : 0 < 1 / (2 * C + 1) :=
+    normalizedZeroSumPayoff_scale_pos hC0
+  have hnorm :
+      (G.normalizedZeroSumPayoff C).IsUniformEquilibriumPayoff s₀
+        (fun who => if who = 0 then g s₀ 0 else -g s₀ 0) :=
+    isUniformEquilibriumPayoff_of_analytic_reparam_discountedShapleyRateValue
+      (G.normalizedZeroSumPayoff C) q ρ g s₀
+      (G.normalizedZeroSumPayoff_stagePayoff_zero_nonneg C hC)
+      (G.normalizedZeroSumPayoff_stagePayoff_zero_le_one C hC)
+      (G.normalizedZeroSumPayoff_isZeroSum C hzs)
+      hq hρ hreparam hganalytic
+  have hback :=
+    G.isUniformEquilibriumPayoff_of_affinePayoff
+      (1 / (2 * C + 1)) hc
+      (fun who => if who = 0 then C / (2 * C + 1)
+        else -C / (2 * C + 1))
+      s₀ (fun who => if who = 0 then g s₀ 0 else -g s₀ 0) hnorm
+  convert hback using 1
+  funext who
+  fin_cases who
+  · simp
+    field_simp
+  · simp
+    field_simp
+    ring
 
 /-- Nondegenerate coordinate polynomials reduce the canonical zero-sum
 discounted-value problem to an explicit endpoint dichotomy: either every
