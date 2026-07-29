@@ -44,5 +44,6 @@ import Math.LinearAlgebra.ZeroSum
 import Math.LinearProgramming
 import Math.AlgebraicSelection
 import Math.WeierstrassCurve
+import Math.RamifiedWeierstrass
 import Math.InfinitesimalRatFunc
 import Math.Topology.WeakDominance
