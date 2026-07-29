@@ -259,6 +259,114 @@ theorem backwardValue_le_of_isOneShotOptimal {certificate : E.WellFoundedPlay}
         (hopt source hterm (other source hterm))
       exact ih reached ⟨(other source hterm).1, (other source hterm).2, hreached⟩
 
+/-! ### The converse
+
+The one-step condition is not merely sufficient. Recovering it from global
+optimality needs a chooser that plays one action at one state and follows the
+original everywhere else, and that is constructible here: a chooser's *answer*
+is a joint action, whose type does not mention the state, so only the legality
+certificate has to be repaired. Nothing is transported.
+
+What makes the recovery work is the certificate again. A state cannot be reached
+from its own successors — that would be an infinite descending chain — so the
+deviant agrees with the original everywhere the value recursion looks after the
+first step. -/
+
+variable (E) in
+/-- States reachable from `source` by realized legal steps, `source` included. -/
+def Reaches (source target : E.State) : Prop :=
+  Relation.ReflTransGen (fun earlier later => E.Successor later earlier) source target
+
+theorem Reaches.refl (state : E.State) : E.Reaches state state := Relation.ReflTransGen.refl
+
+theorem Reaches.step {source middle target : E.State} (hstep : E.Successor middle source)
+    (hrest : E.Reaches middle target) : E.Reaches source target :=
+  Relation.ReflTransGen.head hstep hrest
+
+open Classical in
+variable (E) in
+/-- The chooser that answers `replacement` at one state and follows `chooser`
+everywhere else. The answer's type does not mention the state, so the branch
+needs no transport of data; only the legality certificate is repaired. -/
+def deviateAt (state : E.State)
+    (replacement : { joint : ∀ i, Option (E.Action i) // E.Legal state joint })
+    (chooser : E.Chooser) : E.Chooser := fun source hterm =>
+  if hsame : source = state then ⟨replacement.1, by rw [hsame]; exact replacement.2⟩
+  else chooser source hterm
+
+theorem deviateAt_self {state : E.State}
+    {replacement : { joint : ∀ i, Option (E.Action i) // E.Legal state joint }}
+    {chooser : E.Chooser} (hterm : ¬ E.terminal state) :
+    E.deviateAt state replacement chooser state hterm = replacement := by
+  classical
+  show (if hsame : state = state then _ else _) = _
+  rw [dif_pos rfl]
+
+theorem deviateAt_of_ne {state source : E.State}
+    {replacement : { joint : ∀ i, Option (E.Action i) // E.Legal state joint }}
+    {chooser : E.Chooser} (hne : source ≠ state) (hterm : ¬ E.terminal source) :
+    E.deviateAt state replacement chooser source hterm = chooser source hterm := by
+  classical
+  exact dif_neg hne
+
+/-- Choosers agreeing everywhere the recursion can look from `start` give the
+same value there. -/
+theorem backwardValue_congr_of_reaches {certificate : E.WellFoundedPlay}
+    {first second : E.Chooser} {payoff : E.State → ℝ} :
+    ∀ (start : E.State),
+      (∀ source, E.Reaches start source → ∀ hterm : ¬ E.terminal source,
+        first source hterm = second source hterm) →
+      E.backwardValue certificate first payoff start =
+        E.backwardValue certificate second payoff start := by
+  intro start
+  induction start using certificate.induction with
+  | _ source ih =>
+    intro hagree
+    by_cases hterm : E.terminal source
+    · rw [backwardValue_of_terminal hterm, backwardValue_of_terminal hterm]
+    · rw [backwardValue_of_not_terminal hterm, backwardValue_of_not_terminal hterm,
+        hagree source (Reaches.refl source) hterm]
+      refine FinDist.expect_congr fun reached hreached => ?_
+      have hstep : E.Successor reached source :=
+        ⟨(second source hterm).1, (second source hterm).2, hreached⟩
+      exact ih reached hstep fun later hlater =>
+        hagree later (Reaches.step hstep hlater)
+
+/-- No state is reachable from its own successors: that would be a descending
+chain the certificate forbids. -/
+theorem not_reaches_of_successor {certificate : E.WellFoundedPlay} {source target : E.State}
+    (hstep : E.Successor target source) : ¬ E.Reaches target source := by
+  intro hback
+  have hforward : Relation.ReflTransGen E.Successor source target := by
+    clear hstep
+    induction hback with
+    | refl => exact Relation.ReflTransGen.refl
+    | tail _ hlast ih => exact Relation.ReflTransGen.head hlast ih
+  have hcycle : Relation.TransGen E.Successor source source :=
+    Relation.TransGen.tail' hforward hstep
+  exact (certificate.transGen).irrefl.irrefl source hcycle
+
+/-- **The converse.** A chooser better than every other is unimprovable by any
+single action, so the one-step condition is not merely sufficient. -/
+theorem isOneShotOptimal_of_backwardValue_le {certificate : E.WellFoundedPlay}
+    {optimal : E.Chooser} {payoff : E.State → ℝ}
+    (hbest : ∀ (other : E.Chooser) (state : E.State),
+      E.backwardValue certificate other payoff state ≤
+        E.backwardValue certificate optimal payoff state) :
+    E.IsOneShotOptimal certificate optimal payoff := by
+  intro state hterm alternative
+  have hdeviant := hbest (E.deviateAt state alternative optimal) state
+  rw [backwardValue_of_not_terminal (chooser := E.deviateAt state alternative optimal) hterm,
+    deviateAt_self hterm,
+    backwardValue_of_not_terminal (chooser := optimal) hterm] at hdeviant
+  refine le_trans (le_of_eq ?_) hdeviant
+  refine (FinDist.expect_congr fun reached hreached => ?_).symm
+  refine backwardValue_congr_of_reaches reached fun source hreaches hsourceTerm => ?_
+  refine deviateAt_of_ne (fun hsame => ?_) hsourceTerm
+  rw [hsame] at hreaches
+  exact not_reaches_of_successor (certificate := certificate)
+    (⟨alternative.1, alternative.2, hreached⟩ : E.Successor reached state) hreaches
+
 /-! ## Backward induction computes the forward semantics
 
 The fuelled evaluator and this recursion describe the same number. That is

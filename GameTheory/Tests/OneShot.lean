@@ -10,7 +10,9 @@ coin decides whether the player gets to choose at all, and its one choice is
 between a payoff of `1` and a payoff of `0`. Both directions are checked — the
 policy that grabs satisfies the one-step condition and the policy that passes
 provably does not — so what the principle detects is optimality rather than
-anything the protocol would have handed to any policy.
+anything the protocol would have handed to any policy. The equivalence is
+exercised in both directions too: the one-step condition gives global
+optimality, and global optimality gives it back.
 -/
 
 import GameTheory.Protocol.Backward
@@ -86,6 +88,13 @@ theorem grab_best (other : probe.Chooser) (state : Spot) :
     probe.backwardValue probe_wellFoundedPlay other basePayoff state ≤
       probe.backwardValue probe_wellFoundedPlay (policy .grab) basePayoff state :=
   backwardValue_le_of_isOneShotOptimal grab_isOneShotOptimal other state
+
+/-- **And back again.** The principle is an equivalence: being best among all
+choosers recovers the one-step condition, so nothing is lost by checking only
+single actions. -/
+theorem grab_isOneShotOptimal_of_best :
+    probe.IsOneShotOptimal probe_wellFoundedPlay (policy .grab) basePayoff :=
+  isOneShotOptimal_of_backwardValue_le grab_best
 
 /-- And the conclusion is not vacuous: passing really is worse at the root. -/
 theorem pass_strictly_worse :

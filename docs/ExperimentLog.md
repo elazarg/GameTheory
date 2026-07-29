@@ -1280,14 +1280,24 @@ memory.
   single action improves is *locally optimal* in the context its own continuation
   induces, for any allowed set and any way of turning a choice into a joint
   action.
-  Only sufficiency is proved, and the reason the converse is missing is worth
-  recording because it is now the fourth appearance of one obstacle. Converting
-  "best among choosers" back into "unimprovable by one action" needs, for one
-  state and one action, a chooser that plays that action there and behaves as the
-  original everywhere else — a pointwise update of a dependent function, which
-  transports along an equality of states. Same collision as the commitment
-  construction, the factorization condition, and the dependent rewrite under a
-  support-dependent bind.
+  **The principle is an equivalence**, and getting there corrected a claim worth
+  correcting. It first looked as though the converse were blocked by the same
+  pointwise-update obstacle met three times before. It is not, and the reason
+  gives the right taxonomy for all four.
+  A chooser's *answer* is a joint action, and that type does not mention the
+  state — only the legality certificate does. So the chooser that plays one
+  action at one state and follows the original elsewhere is constructible with no
+  transport of data at all; the certificate is repaired by rewriting inside a
+  proof, which is not what the budget measures. The recovery then needs one more
+  thing, and the certificate supplies it again: a state is not reachable from its
+  own successors, since that would be a descending chain, so the deviant agrees
+  with the original everywhere the recursion looks after the first step.
+  The taxonomy, replacing the count: the obstacle is real only where a *data*
+  type depends on the point being updated. Policies are such a case — a choice's
+  type depends on the information state — and that is why the commitment
+  construction needed the coordinate decomposition. Choosers are not, and were
+  never stuck. Two genuine instances with one shared idiom, one dependent rewrite
+  needing its value named, and one case that only looked like the others.
   Both directions are checked on the slice: the grabbing policy satisfies the
   one-step condition, the passing policy provably fails it, and the conclusion is
   not vacuous — passing really is worse at the root. So the principle detects
