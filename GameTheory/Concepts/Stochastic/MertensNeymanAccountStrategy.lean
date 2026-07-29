@@ -65,6 +65,258 @@ theorem account_bellman_ge_of_discounted_bellman_ge
   rw [expect_sub]
   linarith
 
+/-- A discounted stationary family protects one player's value coordinate
+when that player's selected mixed action is fixed and every other coordinate
+of the mixed profile is arbitrary. This is the symmetric Bellman interface
+consumed by an account controller. -/
+def IsDiscountedStationarySecurityFamily
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (who : Fin 2) (x : ℝ → G.StationaryMixedProfile)
+    (v : ℝ → G.State → Payoff (Fin 2)) : Prop :=
+  ∀ lam, 0 < lam → ∀ z (m : ∀ i, PMF (G.Act i)),
+    m who = x lam z who →
+      v lam z who ≤
+        G.discountedAuxEU (1 - lam) (v lam) z m who
+
+/-- The maximizing coordinate of a zero-sum discounted Bellman family has
+the symmetric stationary-security property. -/
+theorem isDiscountedStationarySecurityFamily_zero
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hF : ∀ lam, 0 < lam →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (v lam))
+    (hzs : G.IsZeroSum)
+    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0) :
+    IsDiscountedStationarySecurityFamily (G := G) 0 x v := by
+  intro lam hlam z m hm
+  have hrow :=
+    (hF lam hlam).row_discountedAuxEU_ge
+      hzs (hVzs lam) z (m 1)
+  have hprofile :
+      Function.update (x lam z) 1 (m 1) = m := by
+    funext i
+    fin_cases i <;> simp [hm]
+  simpa [hprofile] using hrow
+
+/-- The minimizing coordinate of a zero-sum discounted Bellman family has
+the same stationary-security property for its own (negated) payoff. -/
+theorem isDiscountedStationarySecurityFamily_one
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hF : ∀ lam, 0 < lam →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (v lam))
+    (hzs : G.IsZeroSum)
+    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0) :
+    IsDiscountedStationarySecurityFamily (G := G) 1 x v := by
+  intro lam hlam z m hm
+  have hcol :=
+    (hF lam hlam).col_discountedAuxEU_ge
+      hzs (hVzs lam) z (m 0)
+  have hprofile :
+      Function.update (x lam z) 0 (m 0) = m := by
+    funext i
+    fin_cases i <;> simp [hm]
+  simpa [hprofile] using hcol
+
+/-- The symmetric stationary-security property, rewritten in the exact
+successor-value/payoff-gap form used by the account update. -/
+theorem account_bellman_ge_of_securityFamily
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hsecurity :
+      IsDiscountedStationarySecurityFamily (G := G) who x v)
+    {lam : ℝ} (hlam : 0 < lam) (s : G.State)
+    (m : ∀ i, PMF (G.Act i))
+    (hm : m who = x lam s who) :
+    0 ≤
+      expect (stateActionOutcome G s m)
+          (fun o => v lam o.2 who) -
+        v lam s who +
+      lam * expect (stateActionOutcome G s m)
+        (fun o => G.stagePayoff s o.1 who - v lam o.2 who) := by
+  have hsecure := hsecurity lam hlam s m hm
+  rw [G.discountedAuxEU_eq] at hsecure
+  have hpay :
+      expect (stateActionOutcome G s m)
+          (fun o => G.stagePayoff s o.1 who) =
+        expect (pmfPi m)
+          (fun a => G.stagePayoff s a who) := by
+    simpa using
+      expect_stateActionOutcome s m
+        (fun a _ => G.stagePayoff s a who)
+  have hnext :
+      expect (stateActionOutcome G s m)
+          (fun o => v lam o.2 who) =
+        expect (pmfPi m)
+          (fun a =>
+            expect (G.transition s a) (fun s' => v lam s' who)) := by
+    simpa using
+      expect_stateActionOutcome s m
+        (fun _ s' => v lam s' who)
+  apply account_bellman_ge_of_discounted_bellman_ge
+    (stateActionOutcome G s m)
+    (fun o => G.stagePayoff s o.1 who)
+    (fun o => v lam o.2 who)
+  rw [hpay, hnext]
+  convert hsecure using 1
+  all_goals ring
+
+/-- A controller outcome kernel is the state/action outcome law obtained by
+replacing the selected player's component of the opposing profile. -/
+theorem outcomeKernel_eq_stateActionOutcome_selected
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} (C : G.MemoryController who)
+    (opp : G.BehaviorProfile)
+    {t : ℕ} (h : G.Hist t) (m : C.Mem t)
+    (x : G.StationaryMixedProfile)
+    (hselect : C.select t h m = x h.2 who) :
+    C.outcomeKernel opp h m =
+      stateActionOutcome G h.2
+        (Function.update (fun i => opp i t h) who (x h.2 who)) := by
+  letI : Fintype (Fin 2) := inferInstance
+  letI : DecidableEq (Fin 2) := inferInstance
+  unfold MemoryController.outcomeKernel stateActionOutcome stageActionDist
+  have hprofile :
+      (fun i =>
+        (Function.update opp who
+          (fun _ _ => C.select t h m)) i t h) =
+        Function.update (fun i => opp i t h) who (x h.2 who) := by
+    funext i
+    by_cases hi : i = who
+    · subst i
+      simp [hselect]
+    · simp [hi]
+  rw [hprofile]
+
+/-- Fixed-memory account Bellman premise for either secured player against an
+arbitrary opposing behavior profile. -/
+theorem controller_account_bellman_ge_of_securityFamily
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} {lam : ℝ}
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    (hsecurity :
+      IsDiscountedStationarySecurityFamily (G := G) who x v)
+    (hlam : 0 < lam)
+    (C : G.MemoryController who) (opp : G.BehaviorProfile)
+    {t : ℕ} (h : G.Hist t) (m : C.Mem t)
+    (hselect : C.select t h m = x lam h.2 who) :
+    0 ≤
+      expect (C.outcomeKernel opp h m) (fun o => v lam o.2 who) -
+        v lam h.2 who +
+      lam * expect (C.outcomeKernel opp h m)
+        (fun o => G.stagePayoff h.2 o.1 who - v lam o.2 who) := by
+  let profile : ∀ i, PMF (G.Act i) :=
+    Function.update (fun i => opp i t h) who (x lam h.2 who)
+  have hprofileWho : profile who = x lam h.2 who := by
+    simp [profile]
+  rw [outcomeKernel_eq_stateActionOutcome_selected
+    C opp h m (x lam) hselect]
+  exact account_bellman_ge_of_securityFamily
+    hsecurity hlam h.2 profile hprofileWho
+
+/-- Positive corrected-potential drift for either secured player on an
+arbitrary unit payoff/value interval. The interval's lower endpoint cancels
+from every account gap; only its width is used. -/
+theorem controller_correctedValuePotential_drift_ge_of_securityFamily
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {who : Fin 2} {lower γ M s ε : ℝ}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    {x : ℝ → G.StationaryMixedProfile}
+    (hsecurity :
+      IsDiscountedStationarySecurityFamily (G := G) who x v)
+    (C : G.MemoryController who) (opp : G.BehaviorProfile)
+    {t : ℕ} (hmem : G.Hist t) (m : C.Mem t)
+    (hselect :
+      C.select t hmem m =
+        x (discountRate s) hmem.2 who)
+    (hscale : IsValidScale γ s) (hMs : M ≤ s) (hs1 : 1 < s)
+    (hε : 0 ≤ ε)
+    (hpayLower :
+      ∀ a, lower ≤ G.stagePayoff hmem.2 a who)
+    (hpayUpper :
+      ∀ a, G.stagePayoff hmem.2 a who ≤ lower + 1)
+    (hvalueLower :
+      ∀ z, lower ≤ v (discountRate s) z who)
+    (hvalueUpper :
+      ∀ z, v (discountRate s) z who ≤ lower + 1)
+    (hε2 : ε ≤ 2)
+    (hsecant : ∀ s',
+      γ⁻¹ * s ≤ s' → s' ≤ γ * s →
+      discountRate s *
+          (s' - s - ε * |s' - s| / 8) ≤
+        logCorrector s - logCorrector s')
+    (hbudget : ∀ o : G.JointAct × G.State,
+      switchBudget γ M s
+          (G.stagePayoff hmem.2 o.1 who -
+            v (discountRate s) o.2 who + ε / 2)
+          (fun u => v (discountRate u) o.2 who) ≤
+        ε * discountRate s / 16) :
+    ε * discountRate s / 8 ≤
+      expect (C.outcomeKernel opp hmem m) (fun o =>
+          expect
+            (updatePMF γ M s
+              (G.stagePayoff hmem.2 o.1 who -
+                v (discountRate s) o.2 who + ε / 2)
+              hscale
+              (by
+                nlinarith [hpayLower o.1, hvalueUpper o.2])
+              (by
+                nlinarith [hpayUpper o.1, hvalueLower o.2]))
+            (fun move =>
+              v (discountRate (nextAccount γ s move)) o.2 who)) -
+        v (discountRate s) hmem.2 who +
+      expect (C.outcomeKernel opp hmem m) (fun o =>
+        expect
+          (updatePMF γ M s
+            (G.stagePayoff hmem.2 o.1 who -
+              v (discountRate s) o.2 who + ε / 2)
+            hscale
+            (by
+              nlinarith [hpayLower o.1, hvalueUpper o.2])
+            (by
+              nlinarith [hpayUpper o.1, hvalueLower o.2]))
+          (fun move =>
+            logCorrector s -
+              logCorrector (nextAccount γ s move))) := by
+  let d := C.outcomeKernel opp hmem m
+  let y : G.JointAct × G.State → ℝ := fun o =>
+    G.stagePayoff hmem.2 o.1 who -
+      v (discountRate s) o.2 who + ε / 2
+  let W : (G.JointAct × G.State) → ℝ → ℝ := fun o u =>
+    v (discountRate u) o.2 who
+  have hyLower : ∀ o, -1 ≤ y o := by
+    intro o
+    dsimp [y]
+    nlinarith [hpayLower o.1, hvalueUpper o.2]
+  have hyUpper : ∀ o, y o ≤ 2 := by
+    intro o
+    dsimp [y]
+    nlinarith [hpayUpper o.1, hvalueLower o.2]
+  have hbellman :
+      0 ≤ expect d (fun o => W o s) -
+          v (discountRate s) hmem.2 who +
+        discountRate s * expect d (fun o => y o - ε / 2) := by
+    simpa [d, W, y] using
+      controller_account_bellman_ge_of_securityFamily
+        hsecurity (discountRate_pos hs1)
+        C opp hmem m hselect
+  exact expect_correctedValuePotential_drift_ge_of_accountUpdate
+    d y W hscale hMs hs1 hyLower hyUpper hε hsecant
+    (by simpa [y, W] using hbudget) hbellman
+
 /-- The zero-sum discounted stationary Bellman equilibrium supplies the exact
 outer-outcome account Bellman premise against an arbitrary column mixed
 action. -/

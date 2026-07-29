@@ -1165,10 +1165,44 @@ theorem downProbability_accountAtLevel_eq_zero_of_level_zero
   rw [show accountAtLevel γ M k = M by simp [accountAtLevel, hk]]
   simp
 
-/-- The published account update and discounted stationary action selector as
-a finite-reachable-memory controller. At depth `t`, the exponent lies in
-`Fin (t+1)`, even though the controller defines one strategy for all horizons.
--/
+/-- The published account update and discounted stationary action selector on
+an arbitrary unit payoff/value interval. Only the difference between payoff
+and continuation value enters the account update, so translating both by the
+same constant leaves the controller unchanged. At depth `t`, the exponent lies
+in `Fin (t+1)`. -/
+noncomputable def accountMemoryControllerOnUnitInterval
+    {ι : Type} {G : StochasticGame ι} {who : ι}
+    (lower γ M ε : ℝ)
+    (x : ℝ → G.State → PMF (G.Act who))
+    (v : ℝ → G.State → ℝ)
+    (hfloorScale : IsValidScale γ M)
+    (hpayLower : ∀ s a, lower ≤ G.stagePayoff s a who)
+    (hpayUpper : ∀ s a, G.stagePayoff s a who ≤ lower + 1)
+    (hvalueLower : ∀ lam s, lower ≤ v lam s)
+    (hvalueUpper : ∀ lam s, v lam s ≤ lower + 1)
+    (hε0 : 0 ≤ ε) (hε2 : ε ≤ 2) :
+    G.MemoryController who where
+  Mem t := Fin (t + 1)
+  finiteMem _ := inferInstance
+  initial := PMF.pure 0
+  select _ h k :=
+    x (discountRate (accountAtLevel γ M k)) h.2
+  update _ h a s' k :=
+    let s := accountAtLevel γ M k
+    let lam := discountRate s
+    let y := G.stagePayoff h.2 a who - v lam s' + ε / 2
+    (updatePMF γ M s y
+      (isValidScale_accountAtLevel hfloorScale k)
+      (by
+        dsimp [y]
+        nlinarith [hpayLower h.2 a, hvalueUpper lam s'])
+      (by
+        dsimp [y]
+        nlinarith [hpayUpper h.2 a, hvalueLower lam s']))
+      |>.map (nextAccountLevel k)
+
+/-- The zero-based specialization of
+`accountMemoryControllerOnUnitInterval`. -/
 noncomputable def accountMemoryController
     {ι : Type} {G : StochasticGame ι} {who : ι}
     (γ M ε : ℝ)
