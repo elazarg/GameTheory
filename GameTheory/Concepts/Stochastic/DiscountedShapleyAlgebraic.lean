@@ -146,14 +146,16 @@ theorem exists_nonzero_mvPolynomial_discountedShapleyRateValue
 
 /-- For a two-state game, pairwise elimination of local kernel candidates
 either produces a nonzero bivariate relation for the target discounted value
-or identifies a specific nonzero kernel pair with zero formal resultant. -/
+or identifies a specific active nonzero kernel pair with zero formal
+resultant. -/
 theorem discountedShapleyRateValue_twoState_elimination_dichotomy
     (G : StochasticGame (Fin 2))
     [Fintype G.State] [∀ i, Fintype (G.Act i)]
     [∀ i, Nonempty (G.Act i)]
     (target other : G.State) (hne : target ≠ other)
     (hcover : ∀ z : G.State, z = target ∨ z = other) :
-    (∃ kt ko : ShapleySnow.ActionKernelShape
+    (∃ l ∈ Set.Ioc (0 : ℝ) 1,
+      ∃ kt ko : ShapleySnow.ActionKernelShape
         (G.Act 0) (G.Act 1),
       ShapleySnow.mvBorderedKernelPoly
           (ShapleySnow.discountedStochasticEntry
@@ -167,6 +169,24 @@ theorem discountedShapleyRateValue_twoState_elimination_dichotomy
             (fun i j z =>
               (G.pairTransition other i j z).toReal))
           (some other) ko ≠ 0 ∧
+      MvPolynomial.eval
+          (fun x => Option.casesOn x l
+            (G.discountedShapleyRateValue l))
+          (ShapleySnow.mvBorderedKernelPoly
+            (ShapleySnow.discountedStochasticEntry
+              (G.rowStagePayoff target)
+              (fun i j z =>
+                (G.pairTransition target i j z).toReal))
+            (some target) kt) = 0 ∧
+      MvPolynomial.eval
+          (fun x => Option.casesOn x l
+            (G.discountedShapleyRateValue l))
+          (ShapleySnow.mvBorderedKernelPoly
+            (ShapleySnow.discountedStochasticEntry
+              (G.rowStagePayoff other)
+              (fun i j z =>
+                (G.pairTransition other i j z).toReal))
+            (some other) ko) = 0 ∧
       (Polynomial.resultant
           (Math.MultivariateElimination.isolateVariable
             (some other)

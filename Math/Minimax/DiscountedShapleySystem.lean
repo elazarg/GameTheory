@@ -543,9 +543,9 @@ theorem discountedShapleySystem_twoState_elimination_dichotomy
         _ = 0 := hE
 
 /-- Pair local kernel candidates before taking resultants in a two-state
-system. Either a specific nonzero target/other kernel pair has zero resultant,
-or the product of all pairwise eliminants is a fixed nonzero bivariate
-relation for the target value.
+system. Either a specific nonzero target/other kernel pair is active at the
+same rate and has zero resultant, or the product of all nondegenerate pairwise
+eliminants is a fixed nonzero bivariate relation for the target value.
 
 This avoids artificial common factors introduced by first multiplying all
 kernel candidates for each state. -/
@@ -564,13 +564,23 @@ theorem discountedShapleySystem_twoState_kernelPair_elimination_dichotomy
               (1 - l) * ∑ z, T s i j z * w l z))
     (target other : κ) (hne : target ≠ other)
     (hcover : ∀ z : κ, z = target ∨ z = other) :
-    (∃ kt ko : ActionKernelShape I J,
+    (∃ l ∈ S, ∃ kt ko : ActionKernelShape I J,
       mvBorderedKernelPoly
           (discountedStochasticEntry (r target) (T target))
           (some target) kt ≠ 0 ∧
       mvBorderedKernelPoly
           (discountedStochasticEntry (r other) (T other))
           (some other) ko ≠ 0 ∧
+      MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (mvBorderedKernelPoly
+            (discountedStochasticEntry (r target) (T target))
+            (some target) kt) = 0 ∧
+      MvPolynomial.eval
+          (fun x => Option.casesOn x l (w l))
+          (mvBorderedKernelPoly
+            (discountedStochasticEntry (r other) (T other))
+            (some other) ko) = 0 ∧
       Polynomial.resultant
           (Math.MultivariateElimination.isolateVariable
             (some other)
@@ -599,7 +609,12 @@ theorem discountedShapleySystem_twoState_kernelPair_elimination_dichotomy
     mvBorderedKernelPoly
       (discountedStochasticEntry (r other) (T other))
       (some other)
-  by_cases hdeg : ∃ kt ko, Pt kt ≠ 0 ∧ Po ko ≠ 0 ∧
+  by_cases hdeg : ∃ l ∈ S, ∃ kt ko,
+      Pt kt ≠ 0 ∧ Po ko ≠ 0 ∧
+      MvPolynomial.eval
+        (fun x => Option.casesOn x l (w l)) (Pt kt) = 0 ∧
+      MvPolynomial.eval
+        (fun x => Option.casesOn x l (w l)) (Po ko) = 0 ∧
       Polynomial.resultant
         (Math.MultivariateElimination.isolateVariable
           (some other) (Pt kt))
@@ -611,20 +626,18 @@ theorem discountedShapleySystem_twoState_kernelPair_elimination_dichotomy
     push Not at hdeg
     let Kt := {k : ActionKernelShape I J // Pt k ≠ 0}
     let Ko := {k : ActionKernelShape I J // Po k ≠ 0}
-    have hres : ∀ (kt : Kt) (ko : Ko),
-        Polynomial.resultant
-          (Math.MultivariateElimination.isolateVariable
-            (some other) (Pt kt))
-          (Math.MultivariateElimination.isolateVariable
-            (some other) (Po ko)) ≠ 0 := by
-      intro kt ko
-      exact hdeg kt ko kt.property ko.property
-    let E : Kt × Ko →
+    let Kgood := {k : Kt × Ko //
+      Polynomial.resultant
+        (Math.MultivariateElimination.isolateVariable
+          (some other) (Pt k.1))
+        (Math.MultivariateElimination.isolateVariable
+          (some other) (Po k.2)) ≠ 0}
+    let E : Kgood →
           MvPolynomial
             {x : Option κ // x ≠ some other} ℝ :=
       fun k =>
         Math.MultivariateElimination.eliminateVariable
-          (some other) (Pt k.1) (Po k.2)
+          (some other) (Pt k.1.1) (Po k.1.2)
     let A : MvPolynomial
         {x : Option κ // x ≠ some other} ℝ :=
       ∏ k, E k
@@ -633,7 +646,7 @@ theorem discountedShapleySystem_twoState_kernelPair_elimination_dichotomy
       rw [Finset.prod_ne_zero_iff]
       intro k _
       exact Math.MultivariateElimination.eliminateVariable_ne_zero
-        (some other) k.1.property (hres k.1 k.2)
+        (some other) k.1.1.property k.property
     let e :=
       twoStateRemainingEquiv target other hne hcover
     let R :=
@@ -659,10 +672,18 @@ theorem discountedShapleySystem_twoState_kernelPair_elimination_dichotomy
         simpa [kts, Pt, a] using hkteval
       have hFoeval : MvPolynomial.eval a (Po kos) = 0 := by
         simpa [kos, Po, a] using hkoeval
+      have hres :
+          Polynomial.resultant
+            (Math.MultivariateElimination.isolateVariable
+              (some other) (Pt kts))
+            (Math.MultivariateElimination.isolateVariable
+              (some other) (Po kos)) ≠ 0 := by
+        exact hdeg l hl kt ko hkt hko hkteval hkoeval
+      let kgood : Kgood := ⟨(kts, kos), hres⟩
       have hEeval :
           MvPolynomial.eval
             (fun x : {x : Option κ // x ≠ some other} => a x)
-            (E (kts, kos)) = 0 := by
+            (E kgood) = 0 := by
         exact
           Math.MultivariateElimination.eval_eliminateVariable_eq_zero
             (some other) a hFteval hFoeval
@@ -672,7 +693,7 @@ theorem discountedShapleySystem_twoState_kernelPair_elimination_dichotomy
             A = 0 := by
         dsimp only [A]
         rw [map_prod]
-        apply Finset.prod_eq_zero (Finset.mem_univ (kts, kos))
+        apply Finset.prod_eq_zero (Finset.mem_univ kgood)
         exact hEeval
       calc
         Polynomial.eval (w l target)
