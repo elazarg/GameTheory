@@ -233,6 +233,29 @@ theorem finite_analytic_family_eventually_stable
     filter_upwards [hgt] with x hx
     simp [R, hR, not_le.mpr hx]
 
+/-- A finite family of real-analytic germs has one fixed member which
+eventually dominates every member without taking absolute values. -/
+theorem finite_analytic_family_eventually_fixed_maximizer
+    {I : Type*} [Finite I] [Nonempty I]
+    (f : I → ℝ → ℝ) {x₀ : ℝ}
+    (hf : ∀ i, AnalyticAt ℝ (f i) x₀) :
+    ∃ i, ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), ∀ j,
+      f j x ≤ f i x := by
+  letI := Fintype.ofFinite I
+  obtain ⟨R, hstable⟩ :=
+    finite_analytic_family_eventually_stable f hf
+  obtain ⟨x, hxstable⟩ := hstable.exists
+  obtain ⟨i, -, hi⟩ :=
+    Finset.exists_mem_eq_sup' Finset.univ_nonempty (fun j => f j x)
+  refine ⟨i, ?_⟩
+  filter_upwards [hstable] with y hystable
+  intro j
+  have hxle : f j x ≤ f i x := by
+    have hsup :=
+      Finset.le_sup' (fun k => f k x) (Finset.mem_univ j)
+    rwa [hi] at hsup
+  exact (hystable j i).mpr ((hxstable j i).mp hxle)
+
 /-- A finite family of real-analytic germs has one fixed index whose absolute
 value eventually dominates every member of the family. -/
 theorem finite_analytic_family_eventually_fixed_abs_maximizer
@@ -315,6 +338,144 @@ theorem analyticAt_eventually_eq_zero_or_pos_of_eventually_nonneg
     obtain ⟨x, hxneg, hxnonneg⟩ := (hneg.and hnonneg).exists
     exact (not_lt_of_ge hxnonneg) hxneg
   · exact Or.inr hpos
+
+/-- A finite family of nonnegative analytic germs with nonzero total has one
+fixed member carrying at least the average total charge. -/
+theorem finite_analytic_nonnegative_family_eventually_fixed_charge
+    {I : Type*} [Fintype I] [Nonempty I]
+    (f : I → ℝ → ℝ) {x₀ : ℝ}
+    (hf : ∀ i, AnalyticAt ℝ (f i) x₀)
+    (hnonneg : ∀ i,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 ≤ f i x)
+    (htotal :
+      ¬∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), ∑ i, f i x = 0) :
+    ∃ i, ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+      0 < f i x ∧
+        (Fintype.card I : ℝ)⁻¹ * (∑ j, f j x) ≤ f i x := by
+  obtain ⟨i, himax⟩ :=
+    finite_analytic_family_eventually_fixed_maximizer f hf
+  let total : ℝ → ℝ := fun x => ∑ i, f i x
+  have htotal_analytic : AnalyticAt ℝ total x₀ := by
+    simpa [total] using
+      (Finset.univ.analyticAt_fun_sum fun i _ => hf i)
+  have htotal_nonneg :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 ≤ total x := by
+    filter_upwards [Filter.eventually_all.mpr hnonneg] with x hx
+    exact Finset.sum_nonneg fun i _ => hx i
+  have htotal_pos :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 < total x := by
+    rcases analyticAt_eventually_eq_zero_or_pos_of_eventually_nonneg
+        htotal_analytic htotal_nonneg with hzero | hpos
+    · exact False.elim (htotal hzero)
+    · exact hpos
+  refine ⟨i, ?_⟩
+  filter_upwards [himax, htotal_pos] with x hxmax hsumpos
+  have hsum_le :
+      (∑ j, f j x) ≤ (Fintype.card I : ℝ) * f i x := by
+    calc
+      (∑ j, f j x) ≤ ∑ _j : I, f i x :=
+        Finset.sum_le_sum fun j _ => hxmax j
+      _ = (Fintype.card I : ℝ) * f i x := by simp
+  have hcard_pos : (0 : ℝ) < Fintype.card I := by
+    exact_mod_cast Fintype.card_pos
+  constructor
+  · nlinarith
+  · rw [inv_mul_le_iff₀ hcard_pos]
+    exact hsum_le
+
+/-- A positive real-analytic right germ has a positive power-law lower
+bound. The exponent is the order of its first nonzero Taylor coefficient. -/
+theorem analyticAt_eventually_const_mul_pow_le_of_eventually_pos
+    {g : ℝ → ℝ} {x₀ : ℝ}
+    (hg : AnalyticAt ℝ g x₀)
+    (hpos : ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 < g x) :
+    ∃ n : ℕ, ∃ c : ℝ, 0 < c ∧
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        c * (x - x₀) ^ n ≤ g x := by
+  have hnotzero : ¬∀ᶠ x in 𝓝 x₀, g x = 0 := by
+    intro hzero
+    obtain ⟨x, hxzero, hxpos⟩ :=
+      ((hzero.filter_mono nhdsWithin_le_nhds).and hpos).exists
+    exact (ne_of_gt hxpos) hxzero
+  obtain ⟨n, u, hu, hu0, hfactor⟩ :=
+    hg.exists_eventuallyEq_pow_smul_nonzero_iff.mpr hnotzero
+  have hu0pos : 0 < u x₀ := by
+    by_contra hnotpos
+    have hu0neg : u x₀ < 0 :=
+      lt_of_le_of_ne (le_of_not_gt hnotpos) hu0
+    have huneg : ∀ᶠ x in 𝓝 x₀, u x < 0 :=
+      hu.continuousAt.tendsto.eventually_lt_const hu0neg
+    have hgneg :
+        ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), g x < 0 := by
+      filter_upwards [hfactor.filter_mono nhdsWithin_le_nhds,
+        huneg.filter_mono nhdsWithin_le_nhds,
+        self_mem_nhdsWithin] with x hfac hux hxright
+      have hxpow : 0 < (x - x₀) ^ n :=
+        pow_pos (sub_pos.mpr hxright) n
+      change g x = (x - x₀) ^ n * u x at hfac
+      nlinarith
+    obtain ⟨x, hxneg, hxpos⟩ := (hgneg.and hpos).exists
+    exact (not_lt_of_ge hxpos.le) hxneg
+  refine ⟨n, u x₀ / 2, by linarith, ?_⟩
+  have hulower : ∀ᶠ x in 𝓝 x₀, u x₀ / 2 < u x :=
+    hu.continuousAt.tendsto.eventually_const_lt (by linarith)
+  filter_upwards [hfactor.filter_mono nhdsWithin_le_nhds,
+    hulower.filter_mono nhdsWithin_le_nhds,
+    self_mem_nhdsWithin] with x hfac hux hxright
+  change g x = (x - x₀) ^ n * u x at hfac
+  rw [hfac]
+  have hxpow : 0 ≤ (x - x₀) ^ n :=
+    (pow_nonneg (sub_pos.mpr hxright).le n)
+  nlinarith
+
+/-- A nonzero finite sum of nonnegative analytic germs has one fixed member
+which carries both its average share and a positive power-law charge. -/
+theorem finite_analytic_nonnegative_family_eventually_fixed_power_charge
+    {I : Type*} [Fintype I] [Nonempty I]
+    (f : I → ℝ → ℝ) {x₀ : ℝ}
+    (hf : ∀ i, AnalyticAt ℝ (f i) x₀)
+    (hnonneg : ∀ i,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 ≤ f i x)
+    (htotal :
+      ¬∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), ∑ i, f i x = 0) :
+    ∃ i n c, 0 < c ∧
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        c * (x - x₀) ^ n ≤
+            (Fintype.card I : ℝ)⁻¹ * (∑ j, f j x) ∧
+          (Fintype.card I : ℝ)⁻¹ * (∑ j, f j x) ≤ f i x := by
+  obtain ⟨i, hcharge⟩ :=
+    finite_analytic_nonnegative_family_eventually_fixed_charge
+      f hf hnonneg htotal
+  let total : ℝ → ℝ := fun x => ∑ i, f i x
+  have htotal_analytic : AnalyticAt ℝ total x₀ := by
+    simpa [total] using
+      (Finset.univ.analyticAt_fun_sum fun i _ => hf i)
+  have htotal_nonneg :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 ≤ total x := by
+    filter_upwards [Filter.eventually_all.mpr hnonneg] with x hx
+    exact Finset.sum_nonneg fun j _ => hx j
+  have htotal_pos :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), 0 < total x := by
+    rcases analyticAt_eventually_eq_zero_or_pos_of_eventually_nonneg
+        htotal_analytic htotal_nonneg with hzero | hpos
+    · exact False.elim (htotal hzero)
+    · exact hpos
+  obtain ⟨n, c, hc, hpower⟩ :=
+    analyticAt_eventually_const_mul_pow_le_of_eventually_pos
+      htotal_analytic htotal_pos
+  have hcard_pos : (0 : ℝ) < Fintype.card I := by
+    exact_mod_cast Fintype.card_pos
+  refine ⟨i, n, c / Fintype.card I, div_pos hc hcard_pos, ?_⟩
+  filter_upwards [hpower, hcharge] with x hxpower hxcharge
+  constructor
+  · calc
+      (c / Fintype.card I) * (x - x₀) ^ n =
+          (c * (x - x₀) ^ n) / Fintype.card I := by ring
+      _ ≤ total x / Fintype.card I :=
+        div_le_div_of_nonneg_right hxpower hcard_pos.le
+      _ = (Fintype.card I : ℝ)⁻¹ * (∑ j, f j x) := by
+        simp [total, div_eq_inv_mul]
+  · exact hxcharge.2
 
 /-- A finite family of right-nonnegative analytic constraint germs has one
 eventual active set. Active constraints vanish identically as right germs;

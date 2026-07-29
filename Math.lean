@@ -1,6 +1,7 @@
 import Math.Probability
 import Math.Probability.Adaptive
 import Math.Probability.MarkovOccupation
+import Math.Probability.HittingTimePotential
 import Math.Fin
 import Math.Fintype
 import Math.Fintype.Transport
@@ -47,6 +48,7 @@ import Math.LinearAlgebra.WeightedIncidence
 import Math.LinearAlgebra.ZeroSum
 import Math.LinearProgramming
 import Math.AlgebraicSelection
+import Math.AnalyticConeDichotomy
 import Math.WeierstrassCurve
 import Math.RamifiedWeierstrass
 import Math.InfinitesimalRatFunc
