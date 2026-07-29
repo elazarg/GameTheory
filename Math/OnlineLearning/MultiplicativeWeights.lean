@@ -247,4 +247,72 @@ theorem fixedActionRegret_le_onlineExternalRegret (η : ℝ) (g : ℕ → A → 
   rw [onlineExternalRegret]
   linarith
 
+/-- Affinely shift signed gains from `[-1, 1]` into the unit interval. -/
+noncomputable def unitShiftGain (g : ℕ → A → ℝ) (t : ℕ) (a : A) : ℝ := (g t a + 1) / 2
+
+omit [Fintype A] [Nonempty A] in
+theorem unitShiftGain_mem_Icc {g : ℕ → A → ℝ}
+    (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1) :
+    ∀ t a, unitShiftGain g t a ∈ Set.Icc (0 : ℝ) 1 := by
+  intro t a
+  constructor <;> dsimp [unitShiftGain] <;> linarith [(hg t a).1, (hg t a).2]
+
+/-- The signed gain earned by multiplicative weights trained on the unit-shifted gain sequence. -/
+noncomputable def signedAlgGain (η : ℝ) (g : ℕ → A → ℝ) (T : ℕ) : ℝ :=
+  ∑ t ∈ Finset.range T, expect (mwDist η (unitShiftGain g) t) (g t)
+
+omit [Fintype A] [Nonempty A] in
+theorem cumGain_unitShiftGain (g : ℕ → A → ℝ) (T : ℕ) (a : A) :
+    cumGain (unitShiftGain g) T a = (cumGain g T a + T) / 2 := by
+  rw [cumGain, cumGain]
+  simp_rw [unitShiftGain]
+  rw [← Finset.sum_div]
+  simp [Finset.sum_add_distrib]
+
+omit [Fintype A] [Nonempty A] in
+theorem expect_unitShiftGain [Finite A] (d : PMF A) (g : ℕ → A → ℝ) (t : ℕ) :
+    expect d (unitShiftGain g t) = (expect d (g t) + 1) / 2 := by
+  rw [show unitShiftGain g t = fun a => (1 / 2 : ℝ) * g t a + 1 / 2 by
+    funext a
+    simp [unitShiftGain]
+    ring]
+  rw [expect_add, expect_const_mul, expect_const]
+  ring
+
+theorem algGain_unitShiftGain (η : ℝ) (g : ℕ → A → ℝ) (T : ℕ) :
+    algGain η (unitShiftGain g) T = (signedAlgGain η g T + T) / 2 := by
+  rw [algGain, signedAlgGain]
+  simp_rw [expect_unitShiftGain]
+  rw [← Finset.sum_div]
+  simp [Finset.sum_add_distrib]
+
+/-- The fixed-action regret bound for signed gains in `[-1, 1]`. Multiplicative weights is
+    trained on the unit-shifted gains and evaluated against the original signed gains. -/
+theorem signed_fixedActionRegret_le {η : ℝ} (hη : 0 < η) {g : ℕ → A → ℝ}
+    (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1) (T : ℕ) (a : A) :
+    cumGain g T a - signedAlgGain η g T
+      ≤ 2 * (Real.log (Fintype.card A) / η
+        + (Real.exp η - 1 - η) / η * T) := by
+  have hregret :
+      cumGain (unitShiftGain g) T a - algGain η (unitShiftGain g) T
+        ≤ Real.log (Fintype.card A) / η
+          + (Real.exp η - 1 - η) / η * T :=
+    le_trans
+      (fixedActionRegret_le_onlineExternalRegret η (unitShiftGain g) T a)
+      (mw_externalRegret_le hη (unitShiftGain_mem_Icc hg) T)
+  rw [cumGain_unitShiftGain, algGain_unitShiftGain] at hregret
+  linarith
+
+/-- On learning rates at most one, signed fixed-action regret is bounded by
+    `2(log |A| / η + ηT)`. -/
+theorem signed_fixedActionRegret_le_of_le_one {η : ℝ} (hη : 0 < η) (hη1 : η ≤ 1)
+    {g : ℕ → A → ℝ} (hg : ∀ t a, g t a ∈ Set.Icc (-1 : ℝ) 1) (T : ℕ) (a : A) :
+    cumGain g T a - signedAlgGain η g T
+      ≤ 2 * (Real.log (Fintype.card A) / η + η * T) := by
+  have hcoeff : (Real.exp η - 1 - η) / η ≤ η := by
+    rw [div_le_iff₀ hη]
+    nlinarith [exp_sub_one_sub_self_le_sq hη.le hη1]
+  have hmul := mul_le_mul_of_nonneg_right hcoeff (Nat.cast_nonneg T)
+  linarith [signed_fixedActionRegret_le hη hg T a]
+
 end Math.OnlineLearning
