@@ -39,6 +39,8 @@ discounted-value coordinate per state.
   the same conclusion from fixed active-branch zero-dimensionality.
 * `exists_nonzero_bivariate_discountedShapleyRateValue_of_nonvanishingActiveBranches`:
   the denominator-nonvanishing fixed-branch boundary.
+* `exists_nonzero_bivariate_discountedShapleyRateValue_of_branchMonicRelations`:
+  the same boundary expressed by checkable monic coordinate certificates.
 * `discountedShapleyRateValue_twoState_elimination_dichotomy`: the bivariate
   relation/resultant-degeneracy dichotomy for a two-state game.
 -/
@@ -297,6 +299,45 @@ theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_nonvanishingActiv
       (fun l hl s =>
         G.discountedShapleyRateValue_eq_lam0 hl s)
       hfinite target
+
+/-- Monic relations for every coordinate of every saturated active branch
+are an explicit certificate for a fixed bivariate relation satisfied by the
+canonical discounted Shapley value. -/
+theorem exists_nonzero_bivariate_discountedShapleyRateValue_of_branchMonicRelations
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    (hrelations : ∀ branch : G.State →
+        ShapleySnow.ActionKernelShape (G.Act 0) (G.Act 1),
+      (∀ s, ShapleySnow.IsActiveKernelShape
+        (ShapleySnow.discountedStochasticEntry
+          (G.rowStagePayoff s)
+          (fun i j z => (G.pairTransition s i j z).toReal))
+        (branch s)) →
+      ∃ p : Option G.State →
+          Polynomial (FractionRing (Polynomial ℝ)),
+        (∀ i, (p i).Monic) ∧
+        ∀ i,
+          Polynomial.aeval (MvPolynomial.X i) (p i) ∈
+            (G.discountedShapleyNonvanishingKernelBranchIdeal branch).map
+              (MvPolynomial.map
+                (algebraMap (Polynomial ℝ)
+                  (FractionRing (Polynomial ℝ)))))
+    (target : G.State) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ Set.Ioc (0 : ℝ) 1,
+        Polynomial.eval
+          (G.discountedShapleyRateValue l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  exact
+    ShapleySnow.exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_monicRelations
+      G.rowStagePayoff
+      (fun s i j z => (G.pairTransition s i j z).toReal)
+      G.discountedShapleyRateValue
+      (Set.Ioc (0 : ℝ) 1)
+      (fun l hl s =>
+        G.discountedShapleyRateValue_eq_lam0 hl s)
+      hrelations target
 
 /-- For a two-state game, pairwise elimination of local kernel candidates
 either produces a nonzero bivariate relation for the target discounted value

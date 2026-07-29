@@ -8,6 +8,7 @@ import Mathlib.Algebra.MvPolynomial.Equiv
 import Mathlib.Data.Real.Basic
 import Mathlib.RingTheory.Algebraic.Basic
 import Mathlib.RingTheory.IntegralClosure.Algebra.Basic
+import Mathlib.RingTheory.IntegralClosure.IsIntegralClosure.Basic
 import Mathlib.RingTheory.Localization.Ideal
 import Mathlib.RingTheory.Localization.FractionRing
 import Mathlib.RingTheory.Localization.Integral
@@ -43,6 +44,8 @@ the exact algebraic condition that the formal resultant is nonzero.
 * `exists_nonzero_coordinateRelation_mem_of_moduleFinite_fractionRing`: a
   finite affine quotient over a coefficient fraction field gives a nonzero
   coordinate relation in the original ideal.
+* `moduleFinite_quotient_of_monic_coordinateRelations`: monic relations for
+  every affine coordinate give a finite quotient.
 * `not_moduleFinite_quotient_of_le_span_X_sub_X`: an ideal contained in a
   diagonal hypersurface ideal has a positive-dimensional quotient.
 -/
@@ -359,6 +362,72 @@ theorem exists_monic_coordinateRelation_of_moduleFinite
     exact Ideal.Quotient.mk_comp_algebraMap (R₁ := K) I
   rw [hcoeff]
   exact hp
+
+/-- Monic relations for all affine coordinates make the quotient finite over
+the coefficient field. Together with
+`exists_monic_coordinateRelation_of_moduleFinite`, this gives a
+certificate-level characterization of finite affine quotients when the
+variable type is finite. -/
+theorem moduleFinite_quotient_of_monic_coordinateRelations
+    {K κ : Type*} [Field K] [Finite κ]
+    (I : Ideal (MvPolynomial κ K))
+    (p : κ → Polynomial K)
+    (hpmonic : ∀ i, (p i).Monic)
+    (hpmem : ∀ i,
+      Polynomial.aeval (MvPolynomial.X i) (p i) ∈ I) :
+    Module.Finite K (MvPolynomial κ K ⧸ I) := by
+  let q : MvPolynomial κ K →ₐ[K]
+      MvPolynomial κ K ⧸ I :=
+    Ideal.Quotient.mkₐ K I
+  have hcoordinate :
+      ∀ i, IsIntegral K (q (MvPolynomial.X i)) := by
+    intro i
+    refine ⟨p i, hpmonic i, ?_⟩
+    change Polynomial.aeval (q (MvPolynomial.X i)) (p i) = 0
+    rw [Polynomial.aeval_algHom_apply q]
+    exact Ideal.Quotient.eq_zero_iff_mem.mpr (hpmem i)
+  have hadjoin :
+      Algebra.adjoin K
+          (Set.range fun i => q (MvPolynomial.X i)) = ⊤ := by
+    rw [Algebra.adjoin_range_eq_range_aeval]
+    have haeval :
+        MvPolynomial.aeval
+            (fun i => q (MvPolynomial.X i)) = q := by
+      ext i
+      simp
+    rw [haeval, AlgHom.range_eq_top]
+    exact Ideal.Quotient.mkₐ_surjective K I
+  have hclosure :
+      integralClosure K (MvPolynomial κ K ⧸ I) = ⊤ := by
+    apply top_unique
+    rw [← hadjoin]
+    exact Algebra.adjoin_le fun x hx => by
+      obtain ⟨i, rfl⟩ := hx
+      exact hcoordinate i
+  letI : Algebra.IsIntegral K (MvPolynomial κ K ⧸ I) :=
+    integralClosure_eq_top_iff.mp hclosure
+  exact Algebra.IsIntegral.finite
+
+/-- For finitely many affine coordinates, a quotient is finite over the
+coefficient field exactly when every coordinate has a monic relation in the
+defining ideal. -/
+theorem moduleFinite_quotient_iff_exists_monic_coordinateRelations
+    {K κ : Type*} [Field K] [Finite κ]
+    (I : Ideal (MvPolynomial κ K)) :
+    Module.Finite K (MvPolynomial κ K ⧸ I) ↔
+      ∃ p : κ → Polynomial K,
+        (∀ i, (p i).Monic) ∧
+        ∀ i, Polynomial.aeval (MvPolynomial.X i) (p i) ∈ I := by
+  constructor
+  · intro hfinite
+    letI : Module.Finite K (MvPolynomial κ K ⧸ I) := hfinite
+    choose p hpmonic hpmem using
+      fun i => exists_monic_coordinateRelation_of_moduleFinite I i
+    exact ⟨p, hpmonic, hpmem⟩
+  · rintro ⟨p, hpmonic, hpmem⟩
+    exact
+      moduleFinite_quotient_of_monic_coordinateRelations
+        I p hpmonic hpmem
 
 /-- Over a fraction field, finite-dimensionality supplies a nonzero coordinate
 relation with coefficients in the original domain. -/

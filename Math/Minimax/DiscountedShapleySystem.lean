@@ -45,6 +45,9 @@ determinants scale in adjacent degrees.
 * `exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite`:
   zero-dimensionality after adjoining inverse-denominator equations gives one
   fixed bivariate relation across all selected branches.
+* `exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_monicRelations`:
+  explicit monic relations for every saturated branch coordinate certify the
+  same zero-dimensionality condition.
 * `exists_nonzero_bivariateRelation_of_discountedShapleyActiveSystemIdeal_moduleFinite`:
   zero-dimensionality of the active coupled kernel ideal gives a fixed
   bivariate coordinate relation.
@@ -1276,6 +1279,55 @@ theorem exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFin
     rw [map_prod]
     apply Finset.prod_eq_zero (Finset.mem_univ branch)
     simpa [Polynomial.eval₂_eq_eval_map] using hz'
+
+/-- Explicit monic coordinate relations certify the finite-dimensionality
+needed by saturated fixed-branch elimination. This is the checkable
+certificate form of
+`exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite`.
+-/
+theorem exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_monicRelations
+    {κ I J : Type*} [Fintype κ] [Fintype I] [Fintype J]
+    [Nonempty I] [Nonempty J]
+    (r : κ → I → J → ℝ)
+    (T : κ → I → J → κ → ℝ)
+    (w : ℝ → κ → ℝ)
+    (S : Set ℝ)
+    (hw : ∀ l ∈ S, ∀ s,
+      w l s =
+        MinimaxLoomis.lam0
+          (fun i j =>
+            l * r s i j +
+              (1 - l) * ∑ z, T s i j z * w l z))
+    (hrelations : ∀ branch : κ → ActionKernelShape I J,
+      (∀ s, IsActiveKernelShape
+        (discountedStochasticEntry (r s) (T s)) (branch s)) →
+      ∃ p : Option κ →
+          Polynomial (FractionRing (Polynomial ℝ)),
+        (∀ i, (p i).Monic) ∧
+        ∀ i,
+          Polynomial.aeval (MvPolynomial.X i) (p i) ∈
+            (discountedShapleyNonvanishingBranchIdeal
+              r T branch).map
+              (MvPolynomial.map
+                (algebraMap (Polynomial ℝ)
+                  (FractionRing (Polynomial ℝ)))))
+    (target : κ) :
+    ∃ R : Polynomial (Polynomial ℝ), R ≠ 0 ∧
+      ∀ l ∈ S,
+        Polynomial.eval (w l target)
+          (Polynomial.map (Polynomial.evalRingHom l) R) = 0 := by
+  apply
+    exists_nonzero_bivariateRelation_of_nonvanishingActiveBranches_moduleFinite
+      r T w S hw
+  intro branch hactive
+  obtain ⟨p, hpmonic, hpmem⟩ := hrelations branch hactive
+  exact
+    Math.MultivariateElimination.moduleFinite_quotient_of_monic_coordinateRelations
+      ((discountedShapleyNonvanishingBranchIdeal r T branch).map
+        (MvPolynomial.map
+          (algebraMap (Polynomial ℝ)
+            (FractionRing (Polynomial ℝ)))))
+      p hpmonic hpmem
 
 /-- The coupled bordered-kernel ideal with the rate moved into the coefficient
 ring `ℝ[λ]` and only value coordinates retained as variables. -/
