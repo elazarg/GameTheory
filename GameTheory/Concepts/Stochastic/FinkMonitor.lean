@@ -355,6 +355,89 @@ theorem eventually_pmfCoordinateMonitor_cumGain_div_lt_algGain_div_add
   rw [sub_div] at hmonitor
   linarith
 
+namespace FixedMonitorSwitchingCounterexample
+
+/-- Uniform baseline for the two-round switching counterexample. -/
+def baseline : PMF Bool :=
+  PMF.uniformOfFintype Bool
+
+/-- The comparison law puts all mass on `false` in round zero and on `true` in round one. -/
+def comparison (t : Fin 2) : PMF Bool :=
+  if t = 0 then PMF.pure false else PMF.pure true
+
+/-- Per-round coordinate separation does not imply that one fixed coordinate monitor accumulates
+    positive drift. In this two-round example each comparison law has a positive-drift monitor,
+    but the cumulative conditional drift of every fixed monitor is exactly zero.
+
+    Consequently, fixed-action regret and a finite-family pigeonhole argument cannot by
+    themselves convert adaptively changing transition separation into a positive phase charge.
+    A complete response needs stable monitor blocks, tracking regret with a switching budget, or
+    another mechanism that charges changes of separating direction. -/
+theorem positive_each_round_but_every_fixed_monitor_cancels :
+    (∀ t : Fin 2, ∃ monitor : PMFCoordinateMonitor Bool,
+      0 <
+        (if monitor.2 then 1 else -1) *
+          (((comparison t) monitor.1).toReal -
+            (baseline monitor.1).toReal)) ∧
+      ∀ monitor : PMFCoordinateMonitor Bool,
+        (∑ t : Fin 2,
+          (if monitor.2 then 1 else -1) *
+            (((comparison t) monitor.1).toReal -
+              (baseline monitor.1).toReal)) = 0 := by
+  constructor
+  · intro t
+    fin_cases t
+    · refine ⟨(false, true), ?_⟩
+      norm_num [comparison, baseline, PMF.uniformOfFintype_apply, PMF.pure_apply]
+    · refine ⟨(true, true), ?_⟩
+      norm_num [comparison, baseline, PMF.uniformOfFintype_apply, PMF.pure_apply]
+  · rintro ⟨destination, positive⟩
+    cases destination <;> cases positive <;>
+      norm_num [comparison, baseline, PMF.uniformOfFintype_apply, PMF.pure_apply,
+        Fin.sum_univ_two]
+
+/-- No predictable mixture has positive drift against every distinct comparison kernel, even
+    for the uniform law on two outcomes. After the mixture is fixed, one of the two pure
+    comparison laws has nonpositive weighted drift.
+
+    This rules out a universal one-step detector against unrestricted adaptive comparison
+    kernels. The game-specific phase construction must restrict or charge changes of comparison
+    direction. -/
+theorem exists_distinct_comparison_with_nonpositive_mixture_drift
+    (monitorDist : PMF (PMFCoordinateMonitor Bool)) :
+    ∃ comparison : PMF Bool,
+      comparison ≠ baseline ∧
+        expect comparison
+          (weightedPMFCoordinateMonitorScore baseline monitorDist) ≤ 0 := by
+  have hcenter :=
+    expect_weightedPMFCoordinateMonitorScore_baseline baseline monitorDist
+  rw [expect_eq_sum, Fintype.sum_bool] at hcenter
+  norm_num [baseline, PMF.uniformOfFintype_apply] at hcenter
+  have hfalse : PMF.pure false ≠ baseline := by
+    intro h
+    have hmass := congrArg (fun p : PMF Bool => (p false).toReal) h
+    norm_num [baseline, PMF.uniformOfFintype_apply, PMF.pure_apply] at hmass
+  have htrue : PMF.pure true ≠ baseline := by
+    intro h
+    have hmass := congrArg (fun p : PMF Bool => (p true).toReal) h
+    norm_num [baseline, PMF.uniformOfFintype_apply, PMF.pure_apply] at hmass
+  by_cases hnonpos :
+      weightedPMFCoordinateMonitorScore baseline monitorDist false ≤ 0
+  · refine ⟨PMF.pure false, hfalse, ?_⟩
+    simpa using hnonpos
+  · refine ⟨PMF.pure true, htrue, ?_⟩
+    simp only [not_le] at hnonpos
+    rw [expect_pure]
+    change
+      weightedPMFCoordinateMonitorScore
+        (PMF.uniformOfFintype Bool) monitorDist false > 0 at hnonpos
+    change
+      weightedPMFCoordinateMonitorScore
+        (PMF.uniformOfFintype Bool) monitorDist true ≤ 0
+    linarith
+
+end FixedMonitorSwitchingCounterexample
+
 namespace NormalizedFinkSupportTangentObstructionFlow
 
 /-- Pair-valued form of the transition-visible monitor certificate, matching the action type of
