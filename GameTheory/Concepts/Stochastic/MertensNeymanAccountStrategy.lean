@@ -3362,7 +3362,7 @@ theorem rowAccount_isOneSidedGuaranteeCertificate_of_puiseux_of_tendsto
 discounted family data. The single row-coordinate Puiseux envelope and
 right-limit generate both one-sided account certificates by zero-sum
 antisymmetry. -/
-theorem isUniformEquilibriumPayoff_of_puiseux_discountedValue
+theorem isUniformEquilibriumPayoff_of_puiseux_discountedValue_of_value_zeroSum
     {G : StochasticGame (Fin 2)}
     [Finite G.State] [∀ i, Finite (G.Act i)]
     {x : ℝ → G.StationaryMixedProfile}
@@ -3436,6 +3436,78 @@ theorem isUniformEquilibriumPayoff_of_puiseux_discountedValue
   exact isUniformEquilibriumPayoff_of_oneSidedGuarantees
     hzs s₀ (target s₀) hrow hcol
 
+/-- Conditional two-player zero-sum uniform-value theorem from a discounted
+Bellman family and a Puiseux envelope for player zero.
+
+No separate zero-sum hypothesis on the selected value family is needed.
+On the natural rate domain, every zero-sum discounted Bellman equilibrium
+has antisymmetric values by
+`IsDiscountedStationaryBellmanEq.value_zeroSum`; outside that domain the
+unused player-one coordinate is normalized to the negative of player zero. -/
+theorem isUniformEquilibriumPayoff_of_puiseux_discountedValue
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {x : ℝ → G.StationaryMixedProfile}
+    {v : ℝ → G.State → Payoff (Fin 2)}
+    {β lam0 : G.State → ℝ} {v' : G.State → ℝ → ℝ}
+    (target : G.State → ℝ) (s₀ : G.State)
+    (hpayLower : ∀ z a, 0 ≤ G.stagePayoff z a 0)
+    (hpayUpper : ∀ z a, G.stagePayoff z a 0 ≤ 1)
+    (hvalueLower : ∀ lam z, 0 ≤ v lam z 0)
+    (hvalueUpper : ∀ lam z, v lam z 0 ≤ 1)
+    (hF : ∀ lam, 0 < lam → lam ≤ 1 →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (v lam))
+    (hzs : G.IsZeroSum)
+    (hβ : ∀ z, 0 < β z) (hlam0 : ∀ z, 0 < lam0 z)
+    (hderiv : ∀ z lam, 0 < lam → lam < lam0 z →
+      HasDerivAt (fun u => v u z 0) (v' z lam) lam)
+    (hbound : ∀ z lam, 0 < lam → lam < lam0 z →
+      |v' z lam| ≤ lam ^ (β z - 1) / lam0 z)
+    (hlimit : ∀ z,
+      Tendsto (fun lam => v lam z 0)
+        (nhdsWithin (0 : ℝ) (Set.Ioi 0)) (𝓝 (target z))) :
+    G.IsUniformEquilibriumPayoff s₀
+      (fun who => if who = 0 then target s₀ else -target s₀) := by
+  let vz : ℝ → G.State → Payoff (Fin 2) :=
+    fun lam z who => if who = 0 then v lam z 0 else -v lam z 0
+  have hvz_zero (lam : ℝ) (z : G.State) : vz lam z 0 = v lam z 0 := by
+    simp [vz]
+  have hvz_one (lam : ℝ) (z : G.State) : vz lam z 1 = -vz lam z 0 := by
+    simp [vz]
+  have hFz : ∀ lam, 0 < lam → lam ≤ 1 →
+      G.IsDiscountedStationaryBellmanEq
+        (1 - lam) (x lam) (vz lam) := by
+    intro lam hlam hlam1
+    have hEq := hF lam hlam hlam1
+    have hEqzs :
+        ∀ z, v lam z 1 = -v lam z 0 :=
+      hEq.value_zeroSum (by linarith) (by linarith) hzs
+    have hvz : vz lam = v lam := by
+      funext z who
+      fin_cases who
+      · exact hvz_zero lam z
+      · change -v lam z 0 = v lam z 1
+        exact (hEqzs z).symm
+    rwa [hvz]
+  apply
+    isUniformEquilibriumPayoff_of_puiseux_discountedValue_of_value_zeroSum
+      (v := vz) target s₀ hpayLower hpayUpper
+  · intro lam z
+    simpa [hvz_zero] using hvalueLower lam z
+  · intro lam z
+    simpa [hvz_zero] using hvalueUpper lam z
+  · exact hFz
+  · exact hzs
+  · exact hvz_one
+  · exact hβ
+  · exact hlam0
+  · intro z lam hlam hlam0'
+    simpa only [hvz_zero] using hderiv z lam hlam hlam0'
+  · exact hbound
+  · intro z
+    simpa only [hvz_zero] using hlimit z
+
 /-- A genuine coordinatewise Puiseux reparameterization discharges both
 analytic hypotheses of the zero-sum account theorem.
 
@@ -3465,7 +3537,6 @@ theorem isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
-    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0)
     (hq : ∀ z, 0 < q z)
     (hρ : ∀ z, 0 < ρ z)
     (hK : ∀ z, 0 ≤ K z)
@@ -3510,7 +3581,7 @@ theorem isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
   exact isUniformEquilibriumPayoff_of_puiseux_discountedValue
     (fun z => g z 0) s₀
     hpayLower hpayUpper hvalueLower hvalueUpper
-    hF hzs hVzs hq hlam0 hderiv hbound hlimit
+    hF hzs hq hlam0 hderiv hbound hlimit
 
 /-- A coordinatewise algebraic branch that becomes regular after a positive
 power reparameterization yields the zero-sum uniform payoff.
@@ -3537,7 +3608,6 @@ theorem isUniformEquilibriumPayoff_of_regular_reparam_algebraic_discountedValue
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
-    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0)
     (hq : ∀ z, 0 < q z)
     (hρw : ∀ z, 0 < ρw z)
     (hρg : ∀ z, 0 < ρg z)
@@ -3589,7 +3659,7 @@ theorem isUniformEquilibriumPayoff_of_regular_reparam_algebraic_discountedValue
   exact isUniformEquilibriumPayoff_of_puiseux_discountedValue
     (fun z => g z 0) s₀
     hpayLower hpayUpper hvalueLower hvalueUpper
-    hF hzs hVzs hq hlam0 hderiv hbound hlimit
+    hF hzs hq hlam0 hderiv hbound hlimit
 
 /-- Regular algebraic discounted-value branches yield the zero-sum
 uniform payoff without a Newton--Puiseux construction.
@@ -3617,7 +3687,6 @@ theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedValue
       G.IsDiscountedStationaryBellmanEq
         (1 - lam) (x lam) (v lam))
     (hzs : G.IsZeroSum)
-    (hVzs : ∀ lam z, v lam z 1 = -v lam z 0)
     (hρ : ∀ z, 0 < ρ z)
     (hcontinuousAt : ∀ z,
       ContinuousAt (fun lam => v lam z 0) 0)
@@ -3658,7 +3727,7 @@ theorem isUniformEquilibriumPayoff_of_regular_algebraic_discountedValue
   exact isUniformEquilibriumPayoff_of_puiseux_discountedValue
     (fun z => v 0 z 0) s₀
     hpayLower hpayUpper hvalueLower hvalueUpper
-    hF hzs hVzs (fun _ => zero_lt_one) hlam0
+    hF hzs (fun _ => zero_lt_one) hlam0
     hderiv hbound hlimit
 
 /-- A sufficient discounted-value selection package for the two-player
@@ -3687,7 +3756,6 @@ structure PuiseuxDiscountedValueSelection
   bellman : ∀ lam, 0 < lam → lam ≤ 1 →
     G.IsDiscountedStationaryBellmanEq
       (1 - lam) (x lam) (v lam)
-  value_zeroSum : ∀ lam z, v lam z 1 = -v lam z 0
   exponent_pos : ∀ z, 0 < q z
   radius_pos : ∀ z, 0 < ρ z
   derivativeBound_nonneg : ∀ z, 0 ≤ K z
@@ -3716,7 +3784,7 @@ theorem PuiseuxDiscountedValueSelection.isUniformEquilibriumPayoff
   exact isUniformEquilibriumPayoff_of_puiseux_reparam_discountedValue
     S.q S.ρ S.K S.g S.g' s₀
     hpayLower hpayUpper S.valueLower S.valueUpper
-    S.bellman hzs S.value_zeroSum
+    S.bellman hzs
     S.exponent_pos S.radius_pos S.derivativeBound_nonneg
     S.reparam S.regular_continuousAt_zero
     S.regular_hasDerivAt S.regular_derivative_bound

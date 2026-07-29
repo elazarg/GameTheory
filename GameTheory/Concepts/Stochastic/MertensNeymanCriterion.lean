@@ -87,6 +87,10 @@ built:
   property tying `v λ` to the stationary optimal profile `x λ` at discount
   complement `λ = 1 - β`, matching `BellmanVariety.lean`'s `λ`-convention and
   `Fink.lean`'s `IsDiscountedStationaryBellmanEq`.
+* `StochasticGame.IsDiscountedStationaryBellmanEq.value_zeroSum` and
+  `rowValue_eq_discountedShapleyValue` — in a zero-sum game, every discounted
+  Bellman equilibrium has antisymmetric values and its row coordinate is the
+  canonical Shapley fixed point.
 
 ## Stage B: the one-sided (maximizer-role) guarantee
 
@@ -116,7 +120,7 @@ additional adaptive construction:
 * `StochasticGame.IsShapleyFamily.le_row_discountedPayoff` (and its column
   mirror `le_col_discountedPayoff`) — the missing zero-sum bridge: at a
   *single, fixed* discount level `lam`, `IsShapleyFamily` plus `IsZeroSum`
-  plus the natural "value is itself zero-sum" side condition together give
+  plus the value antisymmetry derived by `value_zeroSum` together give
   row's actual `lam`-discounted Shapley-style security guarantee against
   *every* history-dependent column deviation (built from
   `IsDiscountedStationaryBellmanEq.row_bellman_ge`, the zero-sum companion to
@@ -211,10 +215,12 @@ summability.
 
 noncomputable section
 
+open scoped NNReal
+
 namespace GameTheory
 namespace StochasticGame
 
-open Math.Probability Math.PMFProduct
+open Math.Probability Math.PMFProduct Math.ProbabilityMassFunction
 
 -- ============================================================================
 -- Stage A: the discounted-value family and its contract
@@ -378,13 +384,80 @@ formalize this transport, both for the row and the column player, from
 `IsDiscountedStationaryBellmanEq`/`IsShapleyFamily` plus `IsZeroSum` plus the
 **value zero-sum** side condition `v lam s 1 = -v lam s 0`.
 
-The value zero-sum condition is not re-derived here: it is the standard fact
-that the (unique, by contraction) value of a zero-sum discounted stochastic
-game is itself zero-sum, but establishing it from `IsShapleyFamily` alone
-would need a value-uniqueness argument bridging Fink's general `n`-player
-fixed-point construction with the separate Shapley-operator/minimax value
-machinery of `ZeroSum.lean` (`discountedShapleyValue`) — out of scope here,
-and stated as an explicit hypothesis instead. -/
+The value zero-sum condition follows from Bellman consistency itself:
+the sum of the two value coordinates is a strictly discounted harmonic
+function and therefore vanishes. The Nash inequalities then identify player
+zero's value with the unique fixed point of the Shapley operator. -/
+
+/-- In a zero-sum game, the value coordinates of every discounted stationary
+Bellman equilibrium are negatives of one another. Bellman consistency makes
+their sum a `β`-discounted harmonic function; when `0 ≤ β < 1`, the sup-norm
+contraction forces that sum to vanish. -/
+theorem IsDiscountedStationaryBellmanEq.value_zeroSum
+    {G : StochasticGame (Fin 2)}
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    {β : ℝ} (hβ0 : 0 ≤ β) (hβ1 : β < 1)
+    {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
+    (hF : G.IsDiscountedStationaryBellmanEq β x V)
+    (hzs : G.IsZeroSum) :
+    ∀ s, V s 1 = -V s 0 := by
+  letI : Fintype G.State := Fintype.ofFinite G.State
+  letI (i : Fin 2) : Fintype (G.Act i) := Fintype.ofFinite (G.Act i)
+  let C : G.State → ℝ := fun s => V s 0 + V s 1
+  have hstage (s : G.State) :
+      expect (pmfPi (x s)) (fun a => G.stagePayoff s a 0) +
+          expect (pmfPi (x s)) (fun a => G.stagePayoff s a 1) = 0 := by
+    rw [show (fun a => G.stagePayoff s a 1) =
+        fun a => -G.stagePayoff s a 0 by
+      funext a
+      exact hzs s a]
+    rw [show (fun a => -G.stagePayoff s a 0) =
+        fun a => (-1 : ℝ) * G.stagePayoff s a 0 by
+      funext a
+      ring]
+    rw [expect_const_mul]
+    ring
+  have hcont (s : G.State) :
+      expect (pmfPi (x s))
+          (fun a => expect (G.transition s a) (fun z => V z 0)) +
+        expect (pmfPi (x s))
+          (fun a => expect (G.transition s a) (fun z => V z 1)) =
+      expect (pmfPi (x s))
+        (fun a => expect (G.transition s a) C) := by
+    rw [← expect_add]
+    apply congrArg (expect (pmfPi (x s)))
+    funext a
+    rw [← expect_add]
+  have hC (s : G.State) :
+      C s = β * expect (pmfPi (x s))
+        (fun a => expect (G.transition s a) C) := by
+    have h0 := (hF.2 s 0).symm
+    have h1 := (hF.2 s 1).symm
+    rw [G.discountedAuxEU_eq] at h0 h1
+    change V s 0 + V s 1 = _
+    rw [h0, h1]
+    linear_combination (1 - β) * (hstage s) + β * (hcont s)
+  have hcoord (s : G.State) : |C s| ≤ β * ‖C‖ := by
+    rw [hC s, abs_mul, abs_of_nonneg hβ0]
+    apply mul_le_mul_of_nonneg_left _ hβ0
+    refine abs_expect_le_of_abs_le _ _ fun a => ?_
+    refine abs_expect_le_of_abs_le _ _ fun z => ?_
+    have hz := norm_le_pi_norm C z
+    simpa [Real.norm_eq_abs] using hz
+  have hnorm : ‖C‖ ≤ β * ‖C‖ := by
+    apply (pi_norm_le_iff_of_nonneg
+      (mul_nonneg hβ0 (norm_nonneg C))).mpr
+    intro s
+    simpa [Real.norm_eq_abs] using hcoord s
+  have hCzero : C = 0 := by
+    apply norm_eq_zero.mp
+    have : ‖C‖ = 0 := by
+      nlinarith [norm_nonneg C]
+    exact this
+  intro s
+  have hs := congrFun hCzero s
+  dsimp [C] at hs
+  linarith
 
 /-- Zero-sum linearity of `discountedAuxEU`: if the underlying game is
 zero-sum and the continuation value `V` is itself zero-sum, the auxiliary
@@ -449,6 +522,165 @@ theorem IsDiscountedStationaryBellmanEq.col_discountedAuxEU_ge
     (Function.update (x s) 0 d)
   have hVs : V s 0 = -V s 1 := by rw [hVzs s]; ring
   linarith [hz, hnash, hVs]
+
+/-- Player zero's value in a zero-sum discounted stationary Bellman
+equilibrium is the canonical discounted Shapley value. The preceding
+zero-sum identity turns the statewise Nash conditions into saddle
+inequalities, so the row value is a fixed point of the Shapley operator;
+contraction uniqueness identifies that fixed point. -/
+theorem IsDiscountedStationaryBellmanEq.rowValue_eq_discountedShapleyValue
+    {G : StochasticGame (Fin 2)}
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    {β : ℝ≥0} (hβ : β < 1)
+    {x : G.StationaryMixedProfile} {V : G.State → Payoff (Fin 2)}
+    (hF : G.IsDiscountedStationaryBellmanEq (β : ℝ) x V)
+    (hzs : G.IsZeroSum) :
+    (fun s => V s 0) = G.discountedShapleyValue hβ := by
+  have hVzs : ∀ s, V s 1 = -V s 0 :=
+    hF.value_zeroSum β.coe_nonneg (by exact_mod_cast hβ) hzs
+  let u := G.normalizedRowStagePayoff (β : ℝ)
+  let q := G.pairTransition
+  let v : G.State → ℝ := fun s => V s 0
+  have hvalue (s : G.State) :
+      MinimaxLoomis.lam0
+          (fun i j => u s i j + (β : ℝ) * expect (q s i j) v) =
+        v s := by
+    let A : G.Act 0 → G.Act 1 → ℝ :=
+      fun i j => u s i j + (β : ℝ) * expect (q s i j) v
+    let xr : stdSimplex ℝ (G.Act 0) := stdSimplexEquiv (x s 0)
+    let yc : stdSimplex ℝ (G.Act 1) := stdSimplexEquiv (x s 1)
+    have hrow (j : G.Act 1) :
+        v s ≤ wsum xr (fun i => A i j) := by
+      have hprotect :=
+        hF.row_discountedAuxEU_ge hzs hVzs s (PMF.pure j)
+      have hm :
+          Function.update (x s) 1 (PMF.pure j) =
+            G.pairMixedActionProfile (x s 0) (PMF.pure j) := by
+        funext who
+        fin_cases who <;> simp [pairMixedActionProfile]
+      rw [hm, G.discountedAuxEU_eq,
+        G.expect_pairMixedActionProfile,
+        G.expect_pairMixedActionProfile] at hprotect
+      have heq :
+          (1 - (β : ℝ)) *
+                expect (x s 0)
+                  (fun i => G.stagePayoff s (G.pairJointAct i j) 0) +
+              (β : ℝ) *
+                expect (x s 0)
+                  (fun i => expect (G.transition s (G.pairJointAct i j))
+                    (fun z => V z 0)) =
+            wsum xr (fun i => A i j) := by
+        rw [← expect_const_mul, ← expect_const_mul, ← expect_add]
+        have hx :
+            (stdSimplexEquiv (α := G.Act 0)).symm xr = x s 0 := by
+          simp [xr]
+        rw [← hx, expect_stdSimplexEquiv_symm_eq_wsum]
+        rfl
+      rw [← heq]
+      simpa [v] using hprotect
+    have hcol (i : G.Act 0) :
+        wsum yc (fun j => A i j) ≤ v s := by
+      have hprotect :=
+        hF.col_discountedAuxEU_ge hzs hVzs s (PMF.pure i)
+      have hz := G.discountedAuxEU_one_eq_neg_zero_of_zeroSum
+        hzs (β : ℝ) V hVzs s
+          (Function.update (x s) 0 (PMF.pure i))
+      have hprotect0 :
+          G.discountedAuxEU (β : ℝ) V s
+              (Function.update (x s) 0 (PMF.pure i)) 0 ≤
+            V s 0 := by
+        rw [hVzs s] at hprotect
+        linarith
+      have hm :
+          Function.update (x s) 0 (PMF.pure i) =
+            G.pairMixedActionProfile (PMF.pure i) (x s 1) := by
+        funext who
+        fin_cases who <;> simp [pairMixedActionProfile]
+      rw [hm, G.discountedAuxEU_eq,
+        G.expect_pairMixedActionProfile,
+        G.expect_pairMixedActionProfile] at hprotect0
+      have heq :
+          (1 - (β : ℝ)) *
+                expect (x s 1)
+                  (fun j => G.stagePayoff s (G.pairJointAct i j) 0) +
+              (β : ℝ) *
+                expect (x s 1)
+                  (fun j => expect (G.transition s (G.pairJointAct i j))
+                    (fun z => V z 0)) =
+            wsum yc (fun j => A i j) := by
+        rw [← expect_const_mul, ← expect_const_mul, ← expect_add]
+        have hy :
+            (stdSimplexEquiv (α := G.Act 1)).symm yc = x s 1 := by
+          simp [yc]
+        rw [← hy, expect_stdSimplexEquiv_symm_eq_wsum]
+        rfl
+      rw [← heq]
+      simpa [v] using hprotect0
+    have hlower : v s ≤ MinimaxLoomis.lam0 A := by
+      have haux : v s ≤ MinimaxLoomis.lam.aux A xr := by
+        unfold MinimaxLoomis.lam.aux
+        exact Finset.le_inf' Finset.univ_nonempty
+          (fun j => wsum xr (fun i => A i j))
+          (fun j _ => hrow j)
+      exact haux.trans (MinimaxLoomis.lam.aux.le_lam0 A xr)
+    have hupper : MinimaxLoomis.lam0 A ≤ v s := by
+      have hmu : MinimaxLoomis.mu0 A ≤ v s := by
+        apply le_trans (MinimaxLoomis.mu.aux.ge_mu0 A yc)
+        unfold MinimaxLoomis.mu.aux
+        exact Finset.sup'_le Finset.univ_nonempty
+          (fun i => wsum yc (fun j => A i j))
+          (fun i _ => hcol i)
+      exact (MinimaxLoomis.lam0_le_mu0 A).trans hmu
+    exact le_antisymm hupper hlower
+  have hfixed :
+      Math.ShapleyOperator.shapleyOperator u q (β : ℝ) v = v := by
+    funext s
+    exact hvalue s
+  have hcanonical :
+      Math.ShapleyOperator.shapleyOperator u q (β : ℝ)
+          (G.discountedShapleyValue hβ) =
+        G.discountedShapleyValue hβ :=
+    Math.ShapleyOperator.shapleyOperator_discountedValue u q hβ
+  exact
+    (Math.ShapleyOperator.existsUnique_fixedPoint_shapleyOperator
+      u q hβ).unique hfixed hcanonical
+
+/-- Fink's discounted stationary equilibrium can be selected with value
+coordinates literally equal to the canonical zero-sum Shapley value and its
+negative. This is the profile/value bridge needed by algebraic discounted
+value selections: no additional value-identity field is required. -/
+theorem exists_isDiscountedStationaryBellmanEq_discountedShapleyValue
+    (G : StochasticGame (Fin 2))
+    [Fintype G.State] [∀ i, Fintype (G.Act i)]
+    [∀ i, Nonempty (G.Act i)]
+    {β : ℝ≥0} (hβ : β < 1)
+    (U : ℝ) (hU : 0 ≤ U)
+    (hpay : ∀ s a who, |G.stagePayoff s a who| ≤ U)
+    (hzs : G.IsZeroSum) :
+    ∃ x : G.StationaryMixedProfile,
+      G.IsDiscountedStationaryBellmanEq (β : ℝ) x
+        (fun s who =>
+          if who = 0 then G.discountedShapleyValue hβ s
+          else -G.discountedShapleyValue hβ s) := by
+  obtain ⟨x, V, hF⟩ :=
+    G.exists_isDiscountedStationaryBellmanEq
+      (β : ℝ) U hU β.coe_nonneg
+        (by exact_mod_cast hβ.le) hpay
+  have hrow := hF.rowValue_eq_discountedShapleyValue hβ hzs
+  have hVzs :=
+    hF.value_zeroSum β.coe_nonneg (by exact_mod_cast hβ) hzs
+  have hV :
+      V = fun s who =>
+        if who = 0 then G.discountedShapleyValue hβ s
+        else -G.discountedShapleyValue hβ s := by
+    funext s who
+    fin_cases who
+    · change V s 0 = G.discountedShapleyValue hβ s
+      exact congrFun hrow s
+    · change V s 1 = -G.discountedShapleyValue hβ s
+      rw [hVzs s, congrFun hrow s]
+  exact ⟨x, hV ▸ hF⟩
 
 variable {G : StochasticGame (Fin 2)} [Fintype G.State] [∀ i, Fintype (G.Act i)]
 
