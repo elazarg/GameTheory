@@ -135,5 +135,145 @@ theorem
     (G.finkObstructionBalance z) (G.finkObstructionMass z H K)
     F.coefficient F.balance_mulVec_coefficient F.mass_coefficient
 
+/-- Read a payoff adjustment as a vector indexed by player and destination
+state, the row type of the obstruction balance. -/
+def finkAdjustmentCoefficient
+    (A : G.State → Payoff ι) :
+    FinkObstructionRow G → ℝ
+  | (who, destination) => A destination who
+
+omit [∀ i, DecidableEq (G.Act i)] in
+/-- A residual coordinate of the transposed obstruction matrix is the
+corresponding continuation residual. -/
+theorem finkObstructionTranspose_mulVec_adjustment_residual
+    {U : ℝ} (z : G.finkDomain U)
+    (A : G.State → Payoff ι) (s : G.State) (who : ι) :
+    Matrix.mulVec (G.finkObstructionBalance z).transpose
+        (G.finkAdjustmentCoefficient A) (Sum.inl (s, who)) =
+      G.finkContinuationResidualVector A z s who := by
+  classical
+  rw [G.finkContinuationResidualVector_eq_expect_stateKernel,
+    Math.Probability.expect_eq_sum]
+  simp only [Matrix.mulVec, dotProduct, Matrix.transpose_apply,
+    finkObstructionBalance, finkAdjustmentCoefficient,
+    Fintype.sum_prod_type]
+  rw [Fintype.sum_eq_single who]
+  · simp only
+    calc
+      (∑ destination,
+          (((G.finkStateKernel z s destination).toReal -
+              if s = destination then 1 else 0) *
+            A destination who)) =
+          (∑ destination,
+              (G.finkStateKernel z s destination).toReal *
+                A destination who) -
+            ∑ destination,
+              (if s = destination then 1 else 0) *
+                A destination who := by
+        rw [← Finset.sum_sub_distrib]
+        apply Finset.sum_congr rfl
+        intro destination _
+        ring
+      _ = (∑ destination,
+            (G.finkStateKernel z s destination).toReal *
+              A destination who) - A s who := by
+        simp
+  · intro other hother
+    simp [Ne.symm hother]
+
+omit [∀ i, DecidableEq (G.Act i)] in
+/-- A supported-action coordinate of the transposed obstruction matrix is
+the corresponding pure-deviation continuation gain; unsupported coordinates
+are zero. -/
+theorem finkObstructionTranspose_mulVec_adjustment_action
+    {U : ℝ} (z : G.finkDomain U)
+    (A : G.State → Payoff ι)
+    (s : G.State) (who : ι) (d : G.Act who) :
+    Matrix.mulVec (G.finkObstructionBalance z).transpose
+        (G.finkAdjustmentCoefficient A) (Sum.inr ⟨who, s, d⟩) =
+      if G.finkProfile z s who d ≠ 0 then
+        G.finkContinuationGain A z s who d
+      else 0 := by
+  classical
+  by_cases hsupported : G.finkProfile z s who d ≠ 0
+  · rw [if_pos hsupported,
+      G.finkContinuationGain_eq_expect_stateKernels,
+      Math.Probability.expect_eq_sum,
+      Math.Probability.expect_eq_sum]
+    simp only [Matrix.mulVec, dotProduct, Matrix.transpose_apply,
+      finkObstructionBalance, finkAdjustmentCoefficient,
+      Fintype.sum_prod_type]
+    rw [← Finset.sum_sub_distrib]
+    rw [Fintype.sum_eq_single who]
+    · simp only [if_pos hsupported]
+      apply Finset.sum_congr rfl
+      intro destination _
+      simp only [if_true]
+      ring
+    · intro other hother
+      simp [Ne.symm hother]
+  · simp [Matrix.mulVec, dotProduct, Matrix.transpose_apply,
+      finkObstructionBalance, finkAdjustmentCoefficient,
+      hsupported]
+
+omit [∀ i, DecidableEq (G.Act i)] in
+/-- Supported harmonic adjustment is exactly solvability of the transposed
+finite obstruction matrix with the tangent mass as right-hand side. -/
+theorem exists_finkHarmonicAdjustment_iff_transpose_mulVec
+    {U : ℝ} (z : G.finkDomain U)
+    (H K : G.State → Payoff ι) :
+    (∃ A : G.State → Payoff ι,
+      G.finkContinuationResidualVector A z = 0 ∧
+        ∀ s who (d : G.Act who), G.finkProfile z s who d ≠ 0 →
+          G.finkContinuationGain A z s who d =
+            G.finkStageGain z s who d +
+              G.finkContinuationGain (H - K) z s who d) ↔
+      ∃ a : FinkObstructionRow G → ℝ,
+        Matrix.mulVec (G.finkObstructionBalance z).transpose a =
+          G.finkObstructionMass z H K := by
+  classical
+  constructor
+  · rintro ⟨A, hresidual, haction⟩
+    refine ⟨G.finkAdjustmentCoefficient A, ?_⟩
+    funext column
+    cases column with
+    | inl residual =>
+        rcases residual with ⟨s, who⟩
+        rw [G.finkObstructionTranspose_mulVec_adjustment_residual]
+        simpa [finkObstructionMass] using
+          congrFun (congrFun hresidual s) who
+    | inr e =>
+        rcases e with ⟨who, s, d⟩
+        rw [finkObstructionTranspose_mulVec_adjustment_action
+          (G := G)]
+        by_cases hsupported : G.finkProfile z s who d ≠ 0
+        · rw [if_pos hsupported]
+          simpa [finkObstructionMass, hsupported] using
+            haction s who d hsupported
+        · simp [finkObstructionMass, hsupported]
+  · rintro ⟨a, ha⟩
+    let A : G.State → Payoff ι :=
+      fun destination who => a (who, destination)
+    have hcoefficient :
+        G.finkAdjustmentCoefficient A = a := by
+      funext row
+      rcases row with ⟨who, destination⟩
+      rfl
+    refine ⟨A, ?_, ?_⟩
+    · funext s who
+      have hcoordinate := congrFun ha (Sum.inl (s, who))
+      rw [← hcoefficient,
+        G.finkObstructionTranspose_mulVec_adjustment_residual]
+        at hcoordinate
+      simpa [finkObstructionMass] using hcoordinate
+    · intro s who d hsupported
+      have hcoordinate :=
+        congrFun ha (Sum.inr ⟨who, s, d⟩)
+      rw [← hcoefficient,
+        finkObstructionTranspose_mulVec_adjustment_action
+          (G := G)]
+        at hcoordinate
+      simpa [finkObstructionMass, hsupported] using hcoordinate
+
 end StochasticGame
 end GameTheory

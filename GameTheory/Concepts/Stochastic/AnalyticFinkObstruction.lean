@@ -517,6 +517,42 @@ theorem rawFinkObstructionMass_eq_finkPointAt
           hsupported_false, Bool.false_eq_true, if_false]
         rw [finkObstructionMass, if_neg hprofile]
 
+/-- On the stabilized support, the analytic harmonic-adjustment system is
+the transpose of the raw obstruction balance with the raw target row as its
+right-hand side. -/
+theorem exists_finkHarmonicAdjustment_iff_rawTranspose_mulVec
+    (germ : G.AnalyticBellmanGerm)
+    (supported : (Σ who : ι, G.State × G.Act who) → Bool)
+    (H K : G.State → Payoff ι)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius)
+    (hsupported :
+      ∀ e : Σ who : ι, G.State × G.Act who,
+        supported e = true ↔
+          G.finkProfile (germ.finkPointAt ht)
+            e.2.1 e.1 e.2.2 ≠ 0) :
+    (∃ A : G.State → Payoff ι,
+      G.finkContinuationResidualVector A
+          (germ.finkPointAt ht) = 0 ∧
+        ∀ s who (d : G.Act who),
+          G.finkProfile (germ.finkPointAt ht) s who d ≠ 0 →
+            G.finkContinuationGain A
+                (germ.finkPointAt ht) s who d =
+              G.finkStageGain
+                  (germ.finkPointAt ht) s who d +
+                G.finkContinuationGain (H - K)
+                  (germ.finkPointAt ht) s who d) ↔
+      ∃ a : FinkObstructionRow G → ℝ,
+        Matrix.mulVec
+            (germ.rawFinkObstructionBalance
+              supported t).transpose a =
+          germ.rawFinkObstructionMass supported H K t := by
+  rw [germ.rawFinkObstructionBalance_eq_finkPointAt
+      supported ht hsupported,
+    germ.rawFinkObstructionMass_eq_finkPointAt
+      supported H K ht hsupported]
+  exact G.exists_finkHarmonicAdjustment_iff_transpose_mulVec
+    (germ.finkPointAt ht) H K
+
 /-- If the Fink alternative stays in its obstruction branch on a punctured
 right neighborhood, one fixed oriented Cramer support and one common power
 produce an analytic coefficient vector through the endpoint.
