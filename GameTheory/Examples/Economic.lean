@@ -12,6 +12,7 @@ are refuted by exhaustive enumeration of those same payoff tables.
 
 import GameTheory.Finite.Correctness
 import Mathlib.Tactic.DeriveFintype
+import Mathlib.Tactic.FinCases
 import Mathlib.Tactic.Linarith
 import Mathlib.Tactic.Ring
 
@@ -294,6 +295,16 @@ def braessAugmentedAA : Profile braessAugmented.sig := fun _ => .a
 #guard !braessAugmented.isNash braessAugmentedAA
 #guard braessAugmented.isDominantProfile braessAugmentedCC
 
+@[simp]
+theorem braessRestricted_payoff_AA (who : Fin 2) :
+    braessRestricted.payoff braessRestrictedAA who = 3 := by
+  fin_cases who <;> rfl
+
+@[simp]
+theorem braessAugmented_payoff_CC (who : Fin 2) :
+    braessAugmented.payoff braessAugmentedCC who = 2 := by
+  fin_cases who <;> rfl
+
 /-- Coordinating on `a` is Nash before the shortcut is available. -/
 theorem braessRestrictedAA_isNash :
     IsNash braessRestricted.toForm (euPreference braessRestricted.utility)
@@ -322,7 +333,8 @@ theorem braessWelfareDecreases :
           braessRestricted.payoff braessRestrictedAA 1 >
       braessAugmented.payoff braessAugmentedCC 0 +
           braessAugmented.payoff braessAugmentedCC 1 := by
-  change (3 : ℚ) + 3 > 2 + 2
+  rw [braessRestricted_payoff_AA, braessRestricted_payoff_AA,
+    braessAugmented_payoff_CC, braessAugmented_payoff_CC]
   norm_num
 
 /-! ## Parametric public goods -/

@@ -160,6 +160,9 @@ theorem eval_entryPlan (commitment : LeaderAction) :
 def commitmentValue (commitment : LeaderAction) : ℚ :=
   leaderPayoff commitment (followerResponse commitment)
 
+@[simp]
+theorem commitmentValue_fight : commitmentValue .fight = 2 := rfl
+
 /-- Fighting maximizes the leader's payoff over all commitments. -/
 theorem fight_maximizes_commitment (alternative : LeaderAction) :
     commitmentValue alternative ≤ commitmentValue .fight := by
@@ -187,6 +190,10 @@ def fightStayOut : Profile simultaneousGame.sig
   | .leader => .fight
   | .follower => .stayOut
 
+@[simp]
+theorem simultaneousGame_payoff_accommodateEnter_leader :
+    simultaneousGame.payoff accommodateEnter .leader = 1 := rfl
+
 #guard simultaneousGame.enumerateNash.card = 2
 #guard simultaneousGame.isNash accommodateEnter
 #guard simultaneousGame.isNash fightStayOut
@@ -211,7 +218,8 @@ accommodation-entry simultaneous equilibrium. -/
 theorem leaderAdvantage_strict :
     commitmentValue .fight >
       simultaneousGame.payoff accommodateEnter .leader := by
-  change (2 : ℚ) > 1
+  rw [commitmentValue_fight,
+    simultaneousGame_payoff_accommodateEnter_leader]
   norm_num
 
 /-- The weak leader-advantage statement follows from the strict comparison. -/
