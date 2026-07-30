@@ -244,6 +244,7 @@ import Math.Probability.AnalyticChargedPotentialEndpoint
 import Math.Probability.StationaryNonnegativeDrift
 import Math.FiniteLinearCompatibility
 import Math.FiniteInequalityCompatibility
+import Math.LinearAlgebra.MixedCompatibilityAlternative
 import Math.InvisibleNeutralActionDrift
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
 import GameTheory.Concepts.Stochastic.BigMatch
