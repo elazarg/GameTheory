@@ -56,6 +56,8 @@ import Math.LinearAlgebra.Pi
 import Math.LinearAlgebra.WeightedIncidence
 import Math.LinearAlgebra.ZeroSum
 import Math.LinearProgramming
+import Math.ParametricFarkasBasis
+import Math.NormalizedFarkasBasis
 import Math.AlgebraicSelection
 import Math.AnalyticConeDichotomy
 import Math.AnalyticConeLift
