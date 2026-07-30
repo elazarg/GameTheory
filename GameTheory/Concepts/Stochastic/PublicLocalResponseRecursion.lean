@@ -12,10 +12,11 @@ import GameTheory.Concepts.Stochastic.PublicPhaseCertificate
 This file is the thin packaging layer between a completed public
 local-response construction and the existing public-phase verifier.
 
-At one accuracy level, a construction consists of nodes ranked by a
-well-founded relation.  The local closer at a node may use public-phase
-certificates only from strictly lower-ranked nodes.  It must also consume two
-explicit strategic witnesses:
+At one accuracy level, a construction consists of state-indexed nodes ranked
+by a well-founded relation. The local closer at a node may use public-phase
+certificates only from strictly lower-ranked nodes, at the entry state and
+target payoff carried by each child. It must also consume two explicit
+strategic witnesses:
 
 * mixed-player continuation compatibility;
 * a legal core-history entry and continuation interface.
@@ -38,11 +39,16 @@ variable {ι : Type}
 
 /-- One completed well-founded local-response recursion at accuracy `δ`.
 
-`closeLocalResponse` is the application-facing induction step.  Its recursive
-argument can only be invoked on a node of strictly lower rank.  The two
-strategic compatibility propositions are deliberately abstract here because
-their concrete statements depend on the local-response construction; their
-proofs remain mandatory fields and are passed explicitly to the closer. -/
+`closeLocalResponse` is the application-facing induction step. Its recursive
+argument can only be invoked on a node of strictly lower rank, and returns a
+certificate for that child's own entry state and target payoff. This
+state-indexing prevents a projected or hidden-belief core interface from being
+silently replaced by the root problem.
+
+The two strategic compatibility propositions are deliberately abstract here
+because their concrete statements depend on the local-response construction;
+their proofs remain mandatory node-indexed fields and are passed explicitly
+to the closer. -/
 structure PublicLocalResponseRecursionAt
     (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
     [Finite G.State] [∀ i, Finite (G.Act i)]
@@ -53,19 +59,25 @@ structure PublicLocalResponseRecursionAt
   Node : Type
   rank : Node → Rank
   root : Node
-  MixedPlayerContinuationCompatibility : Prop
-  LegalCoreHistoryEntryInterface : Prop
+  entry : Node → G.State
+  target : Node → Payoff ι
+  root_entry : entry root = s₀
+  root_target : target root = v
+  MixedPlayerContinuationCompatibility : Node → Prop
+  LegalCoreHistoryEntryInterface : Node → Prop
   mixedPlayerContinuationCompatibility :
-    MixedPlayerContinuationCompatibility
+    ∀ node, MixedPlayerContinuationCompatibility node
   legalCoreHistoryEntryInterface :
-    LegalCoreHistoryEntryInterface
+    ∀ node, LegalCoreHistoryEntryInterface node
   closeLocalResponse :
     ∀ node : Node,
       (∀ child : Node, rankLt (rank child) (rank node) →
-        G.IsPublicPhasePunishmentSystemAt s₀ v δ) →
-      MixedPlayerContinuationCompatibility →
-      LegalCoreHistoryEntryInterface →
-      G.IsPublicPhasePunishmentSystemAt s₀ v δ
+        G.IsPublicPhasePunishmentSystemAt
+          (entry child) (target child) δ) →
+      MixedPlayerContinuationCompatibility node →
+      LegalCoreHistoryEntryInterface node →
+      G.IsPublicPhasePunishmentSystemAt
+        (entry node) (target node) δ
 
 namespace PublicLocalResponseRecursionAt
 
@@ -83,13 +95,14 @@ theorem toIsPublicPhasePunishmentSystemAt
   have hnode : WellFounded nodeLt := by
     exact C.rank_wellFounded.onFun (f := C.rank)
   let compile : ∀ node : C.Node,
-      G.IsPublicPhasePunishmentSystemAt s₀ v δ :=
+      G.IsPublicPhasePunishmentSystemAt
+        (C.entry node) (C.target node) δ :=
     hnode.fix fun node recurse =>
       C.closeLocalResponse node
         (fun child hchild => recurse child hchild)
-        C.mixedPlayerContinuationCompatibility
-        C.legalCoreHistoryEntryInterface
-  exact compile C.root
+        (C.mixedPlayerContinuationCompatibility node)
+        (C.legalCoreHistoryEntryInterface node)
+  simpa only [C.root_entry, C.root_target] using compile C.root
 
 end PublicLocalResponseRecursionAt
 
