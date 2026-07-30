@@ -287,5 +287,126 @@ theorem normalized_fixed_prefix_charge_le
     _ = error + total⁻¹ * (prefixLength : ℝ) * prefixBound := by
       ring
 
+/-- Join a scalar prefix charge to a scalar suffix charge at a fixed
+deterministic time. -/
+def fixedPrefixScalarCharge (prefixLength : ℕ)
+    (prefixCharge suffixCharge : ℕ → ℝ) : ℕ → ℝ :=
+  fun time =>
+    if time < prefixLength then
+      prefixCharge time
+    else
+      suffixCharge (time - prefixLength)
+
+/-- The charge of a deterministic prefix/suffix splice splits exactly into
+the prefix sum and the rebased suffix sum. -/
+theorem sum_fixedPrefixScalarCharge
+    (prefixLength suffixLength : ℕ)
+    (prefixCharge suffixCharge : ℕ → ℝ) :
+    ∑ time ∈ Finset.range (prefixLength + suffixLength),
+        fixedPrefixScalarCharge prefixLength prefixCharge suffixCharge time =
+      (∑ time ∈ Finset.range prefixLength, prefixCharge time) +
+        ∑ time ∈ Finset.range suffixLength, suffixCharge time := by
+  rw [Finset.sum_range_add]
+  congr 1
+  · apply Finset.sum_congr rfl
+    intro time htime
+    simp only [Finset.mem_range] at htime
+    simp [fixedPrefixScalarCharge, htime]
+  · apply Finset.sum_congr rfl
+    intro time _
+    have hnot :
+        ¬prefixLength + time < prefixLength :=
+      not_lt_of_ge (Nat.le_add_right prefixLength time)
+    simp [fixedPrefixScalarCharge, hnot]
+
+/-- A fixed scalar prefix cost and a uniform suffix Cesàro budget combine
+without losing more than the allocated prefix error.
+
+The parent threshold only has to dominate the accounting horizon, while the
+suffix length must already dominate the child's threshold. -/
+theorem normalized_fixedPrefixScalarCharge_le
+    (prefixLength suffixLength accountingHorizon : ℕ)
+    (prefixCharge suffixCharge : ℕ → ℝ)
+    (prefixError childError : ℝ)
+    (hsuffixLength : 0 < suffixLength)
+    (haccounting :
+      accountingHorizon ≤ prefixLength + suffixLength)
+    (hprefixError : 0 ≤ prefixError)
+    (hchildError : 0 ≤ childError)
+    (hprefix :
+      ∑ time ∈ Finset.range prefixLength, prefixCharge time ≤
+        (accountingHorizon : ℝ) * prefixError)
+    (hsuffix :
+      (suffixLength : ℝ)⁻¹ *
+          ∑ time ∈ Finset.range suffixLength, suffixCharge time ≤
+        childError) :
+    ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+        ∑ time ∈ Finset.range (prefixLength + suffixLength),
+          fixedPrefixScalarCharge prefixLength
+            prefixCharge suffixCharge time ≤
+      prefixError + childError := by
+  have hsuffixReal : (0 : ℝ) < suffixLength := by
+    exact_mod_cast hsuffixLength
+  have htotalNat : 0 < prefixLength + suffixLength :=
+    Nat.zero_lt_of_lt (lt_of_lt_of_le hsuffixLength
+      (Nat.le_add_left suffixLength prefixLength))
+  have htotalReal :
+      (0 : ℝ) < ((prefixLength + suffixLength : ℕ) : ℝ) := by
+    exact_mod_cast htotalNat
+  have haccountingReal :
+      (accountingHorizon : ℝ) ≤
+        ((prefixLength + suffixLength : ℕ) : ℝ) := by
+    exact_mod_cast haccounting
+  have hsuffixLeTotal :
+      (suffixLength : ℝ) ≤
+        ((prefixLength + suffixLength : ℕ) : ℝ) := by
+    exact_mod_cast Nat.le_add_left suffixLength prefixLength
+  have hprefixTotal :
+      ∑ time ∈ Finset.range prefixLength, prefixCharge time ≤
+        ((prefixLength + suffixLength : ℕ) : ℝ) * prefixError := by
+    exact hprefix.trans
+      (mul_le_mul_of_nonneg_right haccountingReal hprefixError)
+  have hsuffixSum :
+      ∑ time ∈ Finset.range suffixLength, suffixCharge time ≤
+        (suffixLength : ℝ) * childError := by
+    calc
+      ∑ time ∈ Finset.range suffixLength, suffixCharge time =
+          (suffixLength : ℝ) *
+            ((suffixLength : ℝ)⁻¹ *
+              ∑ time ∈ Finset.range suffixLength,
+                suffixCharge time) := by
+            field_simp
+      _ ≤ (suffixLength : ℝ) * childError :=
+        mul_le_mul_of_nonneg_left hsuffix hsuffixReal.le
+  have hsuffixTotal :
+      ∑ time ∈ Finset.range suffixLength, suffixCharge time ≤
+        ((prefixLength + suffixLength : ℕ) : ℝ) * childError := by
+    exact hsuffixSum.trans
+      (mul_le_mul_of_nonneg_right hsuffixLeTotal hchildError)
+  rw [sum_fixedPrefixScalarCharge]
+  have hsum :
+      (∑ time ∈ Finset.range prefixLength, prefixCharge time) +
+          ∑ time ∈ Finset.range suffixLength, suffixCharge time ≤
+        ((prefixLength + suffixLength : ℕ) : ℝ) *
+          (prefixError + childError) := by
+    calc
+      (∑ time ∈ Finset.range prefixLength, prefixCharge time) +
+          ∑ time ∈ Finset.range suffixLength, suffixCharge time ≤
+          ((prefixLength + suffixLength : ℕ) : ℝ) * prefixError +
+            ((prefixLength + suffixLength : ℕ) : ℝ) * childError :=
+        add_le_add hprefixTotal hsuffixTotal
+      _ = ((prefixLength + suffixLength : ℕ) : ℝ) *
+          (prefixError + childError) := by ring
+  calc
+    ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+        ((∑ time ∈ Finset.range prefixLength, prefixCharge time) +
+          ∑ time ∈ Finset.range suffixLength, suffixCharge time) ≤
+      ((prefixLength + suffixLength : ℕ) : ℝ)⁻¹ *
+        (((prefixLength + suffixLength : ℕ) : ℝ) *
+          (prefixError + childError)) :=
+        mul_le_mul_of_nonneg_left hsum (inv_nonneg.mpr htotalReal.le)
+    _ = prefixError + childError := by
+      field_simp
+
 end StochasticGame
 end GameTheory
