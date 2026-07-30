@@ -2849,7 +2849,7 @@ memory.
 ### EXP-044: evolutionary stability static/dynamic ownership
 
 - **Date / revision:** 2026-07-30, working tree based on `fe9cce9`
-- **Status:** running
+- **Status:** complete
 - **Decision / question:** the remaining Phase 0 D-EVOL probe; whether ESS/NSS
   belongs in the static Core, a separate stable evolutionary branch, or an
   analytic population-dynamics branch.
@@ -2867,19 +2867,36 @@ memory.
 - **Competing designs:** put ESS directly in `Core.Response`; adopt a separate
   stable `Evolutionary` root with a one-way Nash bridge; or make ESS part of a
   simplex/population-dynamics structure under Analysis.
-- **Measurements to collect:** exact scalar and finiteness premises; whether
-  the canonical Nash predicate suffices; authored/import surface; source
-  transport/update/placeholder counts; focused/full build jobs; axiom profile;
-  and static/Protocol/Analysis reachability.
+- **Measurements:** the combined hostile slice has 134 nonblank lines and 17
+  declarations and imports only `GameTheory.Core.Utility`. ESS and NSS take
+  only `S → S → ℝ` and a resident strategy; they store no scalar structure,
+  carrier enumeration, population law, or topology. The bridge uses the
+  canonical `GameForm`, `euPreference`, `Profile.update` through
+  `isNash_iff`, and the single public `IsNash` predicate. The focused build
+  completes in 1,720 jobs and the full build in 3,346. Source audits find zero
+  placeholders, native decisions, custom axioms, direct `Function.update`,
+  transports, `HEq`, tactic `change`, `Fintype.ofFinite`, or `open Classical`.
+  The generic bridge, hostile ESS proof, and hostile Nash theorem use only
+  `propext`, `Classical.choice`, and `Quot.sound`. Positive probes reach
+  `GameForm`, `IsNash`, experimental `IsESS`, and the bridge; negative probes
+  reject Protocol execution, Analysis Nash existence, `stdSimplex`, and
+  `Polynomial`. The Phase 2 expected source audit passes.
 - **Kill conditions:** define a second Nash predicate; store a population law,
   `Fintype`, topology, or dynamics in the ESS object; duplicate profile update;
   require Analysis for the static theorem; orient either player's payoff or
   unilateral deviation incorrectly; or weaken the nonvacuous stability
   example into a strict-Nash-only witness.
-- **Evidence so far:** all nine pinned declarations use a payoff kernel
+- **Evidence:** all nine pinned declarations use a payoff kernel
   `S → S → ℝ`; only the final bridge mentions the old universal game object.
   No pinned declaration defines a population state, replicator equation,
-  trajectory, limit, or simplex invariant.
-- **Outcome:** pending.
-- **Next action:** implement the hostile static slice against the canonical
-  Core form/deviation API and decide ownership from its dependency closure.
+  trajectory, limit, or simplex invariant. The hostile payoff makes
+  `u(true,true) = u(false,true)`, so strict Nash cannot establish ESS; the
+  checked second clause `u(true,false) > u(false,false)` is necessary. Both
+  player orientations then satisfy canonical Nash through the generic theorem.
+- **Outcome:** supports the predicted separate stable static branch. D17
+  adopts `GameTheory.Evolutionary` for ESS/NSS and a one-way bridge into Core.
+  ESS is not added to the Core concept surface, and no dynamics or Analysis
+  carrier is bundled with it.
+- **Next action:** promote the static definitions separately from their Core
+  Nash bridge, keep the hostile payoff as experiment evidence, add reciprocal
+  reachability probes, and complete the bounded nine-declaration D-EVOL ledger.
