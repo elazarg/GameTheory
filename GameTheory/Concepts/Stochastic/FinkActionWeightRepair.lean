@@ -1313,6 +1313,104 @@ theorem sum_rawFinkObstructionMass_mul_rawActionRepaired_eq
             signed t (Sum.inr e))
   ring
 
+/-- An eventual analytic signed Fink obstruction admits one fixed analytic
+action repair.
+
+The repaired coefficients preserve the exact raw homogeneous balance. Their
+target is the original positive monomial multiplied by the strictly positive
+support product, and every action in the stabilized support receives a
+strictly positive coefficient. Residual coefficients remain signed; repairing
+them into an occupation flow is a separate construction. -/
+theorem exists_analytic_actionRepaired_eventual_finkObstructionFlow
+    (germ : G.AnalyticBellmanGerm)
+    (H K : G.State → Payoff ι)
+    (hflow :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+          Nonempty
+            (G.NormalizedFinkSupportTangentObstructionFlow
+              (germ.finkPointAt ht) H K)) :
+    ∃ (supported :
+          (Σ who : ι, G.State × G.Act who) → Bool)
+        (poleOrder : ℕ)
+        (repaired : ℝ → FinkObstructionColumn G → ℝ),
+      AnalyticAt ℝ repaired 0 ∧
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          t ∈ Ioo (0 : ℝ) germ.radius ∧
+            (∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+              ∀ e : Σ who : ι, G.State × G.Act who,
+                supported e = true ↔
+                  G.finkProfile (germ.finkPointAt ht)
+                    e.2.1 e.1 e.2.2 ≠ 0) ∧
+            Matrix.mulVec
+                (germ.rawFinkObstructionBalance supported t)
+                (repaired t) = 0 ∧
+            (∑ column,
+                germ.rawFinkObstructionMass supported H K t column *
+                  repaired t column) =
+              germ.rawFinkSupportProduct supported t *
+                t ^ poleOrder ∧
+            (∀ e : Σ who : ι, G.State × G.Act who,
+              supported e = true →
+                0 < repaired t (Sum.inr e)) ∧
+            0 <
+              germ.rawFinkSupportProduct supported t *
+                t ^ poleOrder := by
+  classical
+  obtain ⟨supported, poleOrder, signed, hsigned, hsignedFlow⟩ :=
+    germ.exists_analytic_scaled_signed_eventual_finkObstructionFlow_withSupport
+      H K hflow
+  let repaired :=
+    germ.rawActionRepairedFinkObstructionWeight supported signed
+  have hrepaired : AnalyticAt ℝ repaired 0 := by
+    exact
+      germ.analytic_rawActionRepairedFinkObstructionWeight
+        supported signed hsigned
+  refine ⟨supported, poleOrder, repaired, hrepaired, ?_⟩
+  filter_upwards [hsignedFlow] with t ht
+  have hvalid : t ∈ Ioo (0 : ℝ) germ.radius := ht.1
+  have hsupport :
+      ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+        ∀ e : Σ who : ι, G.State × G.Act who,
+          supported e = true ↔
+            G.finkProfile (germ.finkPointAt ht)
+              e.2.1 e.1 e.2.2 ≠ 0 :=
+    ht.2.1
+  have hbalance :
+      Matrix.mulVec
+          (germ.rawFinkObstructionBalance supported t)
+          (repaired t) = 0 := by
+    exact
+      germ.rawFinkObstructionBalance_mulVec_rawActionRepaired_eq_zero
+        supported signed hvalid (hsupport hvalid) ht.2.2.1
+  have htarget :
+      (∑ column,
+          germ.rawFinkObstructionMass supported H K t column *
+            repaired t column) =
+        germ.rawFinkSupportProduct supported t *
+          t ^ poleOrder := by
+    rw [germ.sum_rawFinkObstructionMass_mul_rawActionRepaired_eq
+      supported H K signed hvalid (hsupport hvalid)]
+    rw [ht.2.2.2]
+  have haction :
+      ∀ e : Σ who : ι, G.State × G.Act who,
+        supported e = true →
+          0 < repaired t (Sum.inr e) := by
+    intro e he
+    exact
+      germ.rawActionRepairedFinkObstructionWeight_action_pos
+        supported signed hvalid (hsupport hvalid) e he
+  have htargetPos :
+      0 <
+        germ.rawFinkSupportProduct supported t *
+          t ^ poleOrder :=
+    mul_pos
+      (germ.rawFinkSupportProduct_pos
+        supported hvalid (hsupport hvalid))
+      (pow_pos hvalid.1 poleOrder)
+  exact
+    ⟨hvalid, hsupport, hbalance, htarget, haction, htargetPos⟩
+
 end AnalyticBellmanGerm
 
 end StochasticGame

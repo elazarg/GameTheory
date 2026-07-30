@@ -730,7 +730,7 @@ produce an analytic coefficient vector through the endpoint.
 This is the parameter-coherence bridge. It does not assert that the
 obstruction branch occurs; that decision belongs to the Bellman hierarchy.
 -/
-theorem exists_analytic_scaled_eventual_finkObstructionCertificate
+theorem exists_analytic_scaled_eventual_finkObstructionCertificate_withSupport
     (germ : G.AnalyticBellmanGerm)
     (H K : G.State → Payoff ι)
     (hflow :
@@ -747,6 +747,11 @@ theorem exists_analytic_scaled_eventual_finkObstructionCertificate
       AnalyticAt ℝ scaled 0 ∧
         ∀ᶠ t in nhdsWithin 0 (Ioi 0),
           t ∈ Ioo (0 : ℝ) germ.radius ∧
+            (∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+              ∀ e : Σ who : ι, G.State × G.Act who,
+                supported e = true ↔
+                  G.finkProfile (germ.finkPointAt ht)
+                    e.2.1 e.1 e.2.2 ≠ 0) ∧
             (t ^ poleOrder •
                 supportCramerVector
                   (normalizedFarkasMatrix
@@ -824,16 +829,67 @@ theorem exists_analytic_scaled_eventual_finkObstructionCertificate
       balance mass hbalance hmass hfeasible
   refine ⟨supported, support, poleOrder, scaled, hscaled, ?_⟩
   filter_upwards [hsupport, hcertificate] with t hsupport_t hcertificate_t
-  exact ⟨hsupport_t.1,
+  exact ⟨hsupport_t.1, hsupport_t.2,
     by simpa [balance, mass] using hcertificate_t.1,
     by simpa [balance, mass] using hcertificate_t.2⟩
+
+/-- Compatibility wrapper for the original analytic Fink certificate API.
+
+The stronger `_withSupport` theorem also retains the exact support witness
+needed by downstream positivity repairs; this projection deliberately
+forgets only that additional witness. -/
+theorem exists_analytic_scaled_eventual_finkObstructionCertificate
+    (germ : G.AnalyticBellmanGerm)
+    (H K : G.State → Payoff ι)
+    (hflow :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+          Nonempty
+            (G.NormalizedFinkSupportTangentObstructionFlow
+              (germ.finkPointAt ht) H K)) :
+    ∃ (supported :
+          (Σ who : ι, G.State × G.Act who) → Bool)
+        (support : Finset (FinkObstructionColumn G × Bool))
+        (poleOrder : ℕ)
+        (scaled : ℝ → FinkObstructionColumn G × Bool → ℝ),
+      AnalyticAt ℝ scaled 0 ∧
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          t ∈ Ioo (0 : ℝ) germ.radius ∧
+            (t ^ poleOrder •
+                supportCramerVector
+                  (normalizedFarkasMatrix
+                    (orientedFarkasBalance
+                      (germ.rawFinkObstructionBalance supported t))
+                    (orientedFarkasMass
+                      (germ.rawFinkObstructionMass supported H K t)))
+                  normalizedFarkasRhs support =
+              scaled t) ∧
+            supportCramerVector
+                (normalizedFarkasMatrix
+                  (orientedFarkasBalance
+                    (germ.rawFinkObstructionBalance supported t))
+                  (orientedFarkasMass
+                    (germ.rawFinkObstructionMass supported H K t)))
+                normalizedFarkasRhs support ∈
+              normalizedFarkasCertificateSet
+                (orientedFarkasBalance
+                  (germ.rawFinkObstructionBalance supported t))
+                (orientedFarkasMass
+                  (germ.rawFinkObstructionMass supported H K t)) := by
+  obtain ⟨supported, support, poleOrder, scaled,
+      hscaled, hcertificate⟩ :=
+    germ.exists_analytic_scaled_eventual_finkObstructionCertificate_withSupport
+      H K hflow
+  refine ⟨supported, support, poleOrder, scaled, hscaled, ?_⟩
+  filter_upwards [hcertificate] with t ht
+  exact ⟨ht.1, ht.2.2.1, ht.2.2.2⟩
 
 /-- Reconstruct the doubled nonnegative Cramer certificate as an ordinary
 signed analytic obstruction flow.
 
 The common pole-clearing factor changes the normalized target mass from one
 to exactly `t ^ poleOrder`; the homogeneous balance remains zero. -/
-theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
+theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow_withSupport
     (germ : G.AnalyticBellmanGerm)
     (H K : G.State → Payoff ι)
     (hflow :
@@ -849,6 +905,11 @@ theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
       AnalyticAt ℝ signed 0 ∧
         ∀ᶠ t in nhdsWithin 0 (Ioi 0),
           t ∈ Ioo (0 : ℝ) germ.radius ∧
+            (∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+              ∀ e : Σ who : ι, G.State × G.Act who,
+                supported e = true ↔
+                  G.finkProfile (germ.finkPointAt ht)
+                    e.2.1 e.1 e.2.2 ≠ 0) ∧
             Matrix.mulVec
                 (germ.rawFinkObstructionBalance supported t)
                 (signed t) = 0 ∧
@@ -860,7 +921,7 @@ theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
   obtain
       ⟨supported, support, poleOrder, scaled,
         hscaled, hcertificate⟩ :=
-    germ.exists_analytic_scaled_eventual_finkObstructionCertificate
+    germ.exists_analytic_scaled_eventual_finkObstructionCertificate_withSupport
       H K hflow
   let signed : ℝ → FinkObstructionColumn G → ℝ := fun t =>
     orientedFarkasToSigned (scaled t)
@@ -890,15 +951,15 @@ theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
     normalizedFarkasCertificateSet_oriented_toSigned
       (germ.rawFinkObstructionBalance supported t)
       (germ.rawFinkObstructionMass supported H K t)
-      ht.2.2
+      ht.2.2.2
   have hsigned_eq :
       signed t =
         t ^ poleOrder • orientedFarkasToSigned z := by
     funext column
     have hcoordinate :=
-      congrFun ht.2.1 (column, true)
+      congrFun ht.2.2.1 (column, true)
     have hcoordinate_neg :=
-      congrFun ht.2.1 (column, false)
+      congrFun ht.2.2.1 (column, false)
     change
       scaled t (column, true) -
           scaled t (column, false) =
@@ -912,7 +973,7 @@ theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
         scaled t (column, false) at hcoordinate_neg
     rw [← hcoordinate, ← hcoordinate_neg]
     ring
-  refine ⟨ht.1, ?_, ?_⟩
+  refine ⟨ht.1, ht.2.1, ?_, ?_⟩
   · rw [hsigned_eq, Matrix.mulVec_smul, hz.1, smul_zero]
   · rw [hsigned_eq]
     simp only [Pi.smul_apply, smul_eq_mul]
@@ -929,6 +990,40 @@ theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
         intro j _
         ring
       _ = t ^ poleOrder := by rw [hz.2, mul_one]
+
+/-- Compatibility wrapper for the original signed analytic-flow API.
+
+Use `_withSupport` when downstream constructions must know that the frozen
+Boolean support is exactly the decoded positive-parameter support. -/
+theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
+    (germ : G.AnalyticBellmanGerm)
+    (H K : G.State → Payoff ι)
+    (hflow :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+          Nonempty
+            (G.NormalizedFinkSupportTangentObstructionFlow
+              (germ.finkPointAt ht) H K)) :
+    ∃ (supported :
+          (Σ who : ι, G.State × G.Act who) → Bool)
+        (poleOrder : ℕ)
+        (signed : ℝ → FinkObstructionColumn G → ℝ),
+      AnalyticAt ℝ signed 0 ∧
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          t ∈ Ioo (0 : ℝ) germ.radius ∧
+            Matrix.mulVec
+                (germ.rawFinkObstructionBalance supported t)
+                (signed t) = 0 ∧
+            (∑ j,
+                germ.rawFinkObstructionMass supported H K t j *
+                  signed t j) =
+              t ^ poleOrder := by
+  obtain ⟨supported, poleOrder, signed, hsigned, hflow⟩ :=
+    germ.exists_analytic_scaled_signed_eventual_finkObstructionFlow_withSupport
+      H K hflow
+  refine ⟨supported, poleOrder, signed, hsigned, ?_⟩
+  filter_upwards [hflow] with t ht
+  exact ⟨ht.1, ht.2.2.1, ht.2.2.2⟩
 
 /-- A fixed pure deviation extracted from an analytic Fink obstruction flow.
 

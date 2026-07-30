@@ -143,6 +143,7 @@ import GameTheory.Concepts.Stochastic.FinkObstructionFarkas
 import GameTheory.Concepts.Stochastic.AnalyticBellmanHierarchy
 import GameTheory.Concepts.Stochastic.AnalyticFinkObstruction
 import GameTheory.Concepts.Stochastic.FinkActionWeightRepair
+import GameTheory.Concepts.Stochastic.EndpointHarmonicDrift
 import GameTheory.Concepts.Stochastic.OwnedAnalyticOccupationResponse
 import GameTheory.Concepts.Stochastic.OrientedResponseExtraction
 import GameTheory.Concepts.Stochastic.FinkMonitor
