@@ -6,10 +6,13 @@ This is a greenfield Lean 4 rewrite of the GameTheory library. The Lake package,
 public library, and public namespace are all named `GameTheory`; the repository
 directory being named `GameTheory2` is not an API choice.
 
-The repository initially contains environment and design files only. Do not add
-library modules, compatibility shims, or ported theorems unless the user asks to
-begin a named architecture spike. The governing RFC is
-`docs/GameTheory2Design.md`.
+The foundational architecture gates have passed and the repository now contains
+the validated core, protocol, finite, analysis, repeated, and scoped language
+layers. Current work is post-architecture delivery: close the frozen
+obligations, then recover mature theorem families in dependency-gated waves.
+The governing architecture is `docs/GameTheory2Design.md`; the mutable delivery
+order is `docs/PostArchitectureDeliveryPlan.md`, and current pinned-v1 coverage
+is `docs/V1CoverageLedger.md`.
 
 ## Sources of truth
 
@@ -21,13 +24,18 @@ matter:
 - experiment-gated decisions require a decision record with measurements;
 - disproof conditions override architectural preference.
 
+For delivery status, use the post-architecture plan and coverage ledger rather
+than inferring completion from a phase name, module count, or nearby theorem.
+Update the owning ledger row in the same commit as the evidence that changes
+its status.
+
 The ignored `reference/GameTheory-v1/` tree is an exact source snapshot at
 commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`. It is empirical evidence only:
 it is not a dependency, need not compile, must not be edited, and must never be
-imported by new code. Do not copy old declarations merely to accelerate the
-architecture-validation phase; extract an idea only after recording why it
-survives the RFC's test. Once the relevant design gate passes, the old proofs
-become a theorem inventory to harvest aggressively.
+imported by new code. After the relevant domain gate passes, mine its theorem
+statements, proof ideas, helpers, and examples aggressively with pinned-path
+attribution. Reuse mathematics, not compatibility wrappers, duplicate
+semantics, or obsolete transport machinery.
 
 ## Tempo: move fast, depth first
 
@@ -120,17 +128,21 @@ current design, not the only surviving account of how it was chosen.
 
 ```text
 docs/GameTheory2Design.md       architecture RFC
+docs/PostArchitectureDeliveryPlan.md active delivery waves and domain gates
+docs/V1CoverageLedger.md        pinned-v1 family and flagship status
 docs/ExperimentLog.md           concise chronological evidence ledger
-docs/decisions/                decision records, once experiments begin
+docs/decisions/                 measured architecture decisions
 reference/README.md            reference-snapshot contract
 reference/GameTheory-v1/       ignored old GameTheory/ and Math/ trees
-lakefile.lean                  package and future `GameTheory` library target
-lean-toolchain                 pinned Lean toolchain
+GameTheory/                     current public and opt-in Lean modules
+GameTheoryMath/                 independently reusable mathematics
+lakefile.lean                   package and `GameTheory` library targets
+lean-toolchain                  pinned Lean toolchain
 ```
 
-Future source belongs under `GameTheory/` and future public declarations below
-the `GameTheory` namespace. Package boundaries proposed in the RFC are logical
-dependency roots; create them only when their first validated slice exists.
+Game source belongs under `GameTheory/` and public declarations below the
+`GameTheory` namespace. Package boundaries in the RFC are logical dependency
+roots; create a new one only when its first hostile slice validates the need.
 
 ## Verification
 
@@ -138,7 +150,7 @@ Use `rg`/`rg --files` for local search. Prefer Lean language-server diagnostics
 for iteration when available, then run the narrowest relevant Lake target. Run
 a full build only at a phase gate or when imports/package configuration change.
 
-Environment checks before source exists:
+Toolchain checks after dependency or environment changes:
 
 ```text
 lake update

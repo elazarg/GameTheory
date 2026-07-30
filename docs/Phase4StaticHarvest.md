@@ -3,6 +3,14 @@
 Status: complete. Seven theorem families and one language encoding recovered
 against the accepted API, each instantiated, none requiring a change to it.
 
+This status is scoped to the static harvest recorded here. It does not claim
+that every deliverable originally listed under RFC Phase 4 is complete: the
+exact frozen transfers T1, T3, and T4, the minimal public D8 transformation
+surface, and several provisional domain probes remain delivery obligations.
+They are reconciled explicitly in
+[`PostArchitectureDeliveryPlan.md`](PostArchitectureDeliveryPlan.md) and
+[`V1CoverageLedger.md`](V1CoverageLedger.md).
+
 The mode here differs from the earlier phases. Those validated architecture by
 pushing hostile slices at it; this one assumes the architecture and asks whether
 ordinary mathematics goes through on it. The measure of success is therefore

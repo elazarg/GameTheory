@@ -233,10 +233,32 @@ close-out below records which have since been discharged.
   `isOneShotOptimalWithin_iff_sequentiallyRationalAt_historyContext` identifies
   the quantified one-shot premise exactly with `IsSequentiallyRationalAt` in
   those contexts.
-- **What remains is the full well-founded SPE theorem, not a runner, compiler,
-  or context bridge.** The library has no subgame-perfect-equilibrium predicate
-  and no analogue of v1's `oneShotDeviation_iff_spe` beyond the finite-horizon
-  result above. In particular, no converse from initial static Nash is claimed:
-  initial Nash does not quantify over off-path histories, while the one-shot
-  condition does. The exact frozen T4 NFG-to-FOSG embedding also remains a
+- **The full well-founded strategic theorem is now closed (EXP-036).**
+  `Protocol.SubgamePerfect` adds history-preserving backward recursion over the
+  existing `WellFoundedPlay` certificate and proves that it agrees with the
+  forward history runner whenever the latter has stopped. Its
+  `IsSubgamePerfect` predicate quantifies over every player, every whole
+  information-local replacement policy, and every complete history, including
+  off-path histories. Under `ActsOnceWhereItMatters`, it is equivalent to
+  `HasNoProfitableOneShotDeviation`. The discriminating probe is optimal from
+  the initial history yet fails subgame perfection because of a profitable
+  deviation after an off-path decision. No converse from initial static Nash is
+  claimed or needed. The exact frozen T4 NFG-to-FOSG embedding remains a
   separate language theorem.
+
+## Post-gate EFG amendment
+
+EXP-033 has since closed the native finite-EFG presentation item with a
+transparent bundle of the canonical execution and information semantics.
+EXP-034 carries that same hostile chance/imperfect-information EFG through the
+analytic consistency adapter to a concrete sequential equilibrium. EXP-035
+then gives that assessment a nonconstant hidden-state/action matching payoff
+and proves value `1 / 2` against every whole replacement behavioral policy.
+EXP-036 closes the full semantic SPE/one-shot-deviation theorem at the Protocol
+layer. A thin EFG-facing wrapper, T1 strategic/Nash extraction, and T4 remain
+delivery work; the nonconstant continuation-payoff and off-path SPE checks do
+not.
+
+The current reconciliation is maintained in
+[`V1CoverageLedger.md`](V1CoverageLedger.md), rather than by rewriting the
+gate-era findings above.

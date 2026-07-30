@@ -1,9 +1,9 @@
 # D1: signature ownership
 
-- **Status:** provisional; new negative evidence from Phase 2
-- **Date:** 2026-07-22, amended 2026-07-26
-- **Evidence:** EXP-002, EXP-004, EXP-006
-- **Decision:** A form provisionally stores a `sig` field. Strategy and outcome
+- **Status:** decided; bundling retained after the Phase 4 recheck
+- **Date:** 2026-07-22, amended 2026-07-26 and 2026-07-29
+- **Evidence:** EXP-002, EXP-004, EXP-006, EXP-020
+- **Decision:** A form stores a `sig` field. Strategy and outcome
   carriers remain fields of that signature; they are not duplicated on the form.
 
 ## Competition and hostile slice

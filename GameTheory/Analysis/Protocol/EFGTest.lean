@@ -307,6 +307,67 @@ theorem decisionInformationHistory_ne :
         history.1.state) hequal
   simp [decisionHistory] at hstate
 
+/-- Every history at the acting information state is one of nature's two
+decision histories. The proof uses reachability carried by the history rather
+than enumerating proof terms in the history subtype. -/
+theorem decision_trace_arrival_eq_noop
+    : ∀ {state : State} (_trace : execution.Trace state)
+        (hidden : Bool) (arrival : Player → Option Bool),
+        state = .decision hidden arrival → arrival = execution.noop
+  | _, .start, hidden, arrival, hstate => by cases hstate
+  | _, .extend (source := source) prior joint isLegal realized,
+      hidden, arrival, hstate => by
+      cases hstate
+      cases source with
+      | initial =>
+          rw [FinDist.support_map] at realized
+          rcases realized with ⟨side, _hside, hequal⟩
+          injection hequal with _ hjoint
+          exact hjoint.symm.trans
+            (initial_legal_joint_eq_noop ⟨joint, isLegal⟩)
+      | decision priorHidden priorArrival =>
+          simp [execution] at realized
+      | terminal priorHidden priorArrival priorAction =>
+          exact False.elim (isLegal.1 trivial)
+
+theorem history_eq_decisionHistory_of_info_acting
+    (history : execution.History)
+    (hinfo : information.infoOf .player history.trace = .acting) :
+    ∃ hidden, history = decisionHistory hidden := by
+  rcases history with ⟨state, trace⟩
+  have hview : viewOfState state = .acting := by
+    rw [← signals_infoOf .player trace]
+    exact hinfo
+  cases state with
+  | initial => simp [viewOfState] at hview
+  | terminal hidden arrival action => simp [viewOfState] at hview
+  | decision hidden arrival =>
+      have harrival :=
+        decision_trace_arrival_eq_noop trace hidden arrival rfl
+      subst arrival
+      refine ⟨hidden, ?_⟩
+      congr 1
+      exact trace_unique trace (decisionTrace hidden)
+
+/-- The acting information fiber is exactly the hidden Boolean chosen by
+nature. -/
+def actingHistoryEquivBool :
+    information.InformationHistory .player actingSite.1 ≃ Bool where
+  toFun history :=
+    match history.1.state with
+    | .decision hidden _ => hidden
+    | _ => false
+  invFun := decisionInformationHistory
+  left_inv history := by
+    rcases history with ⟨history, hinfo⟩
+    obtain ⟨hidden, hhistory⟩ :=
+      history_eq_decisionHistory_of_info_acting history hinfo
+    subst history
+    apply Subtype.ext
+    rfl
+  right_inv hidden := by
+    simp [decisionHistory]
+
 /-- The nondegenerate belief supported on the two hidden decision histories. -/
 def decisionBelief :
     FinDist (information.InformationHistory .player actingSite.1) :=
@@ -423,11 +484,54 @@ theorem historyReachProbability_decision (hidden : Bool) :
     rcases hstate with ⟨side, _hside, rfl⟩
     congr 1
 
+/-- The two equiprobable histories exhaust the acting information fiber. -/
+theorem informationMass_fullyMixed_acting :
+    information.informationMass fullyMixedBehavioralProfile
+      .player actingSite = 1 := by
+  rw [InformationModel.informationMass]
+  calc
+    (∑ history :
+        information.InformationHistory .player actingSite.1,
+        information.historyReachProbability
+          fullyMixedBehavioralProfile history) =
+      ∑ hidden : Bool,
+        information.historyReachProbability fullyMixedBehavioralProfile
+          (decisionInformationHistory hidden) := by
+            exact Fintype.sum_equiv actingHistoryEquivBool
+              (fun history =>
+                information.historyReachProbability
+                  fullyMixedBehavioralProfile history)
+              (fun hidden =>
+                information.historyReachProbability
+                  fullyMixedBehavioralProfile
+                    (decisionInformationHistory hidden))
+              (fun history => by
+                have hinverse :=
+                  actingHistoryEquivBool.symm_apply_apply history
+                exact congrArg
+                  (fun current :
+                      information.InformationHistory
+                        .player actingSite.1 =>
+                    information.historyReachProbability
+                      fullyMixedBehavioralProfile current)
+                  hinverse.symm)
+    _ = ∑ _hidden : Bool, (1 / 2 : ℝ) := by
+          apply Finset.sum_congr rfl
+          intro hidden _hhidden
+          exact historyReachProbability_decision hidden
+    _ = 1 := by norm_num
+
 theorem informationSite_info_eq_acting
     (site : information.InformationSite .player) :
     site.1 = View.acting := by
   rcases site.2 with ⟨_history, _hnonterminal, action, haction⟩
   cases hinfo : site.1 <;> simp [information, hinfo] at haction ⊢
+
+/-- There is exactly one decision information site in the hostile game. -/
+theorem informationSite_eq_actingSite
+    (site : information.InformationSite .player) :
+    site = actingSite :=
+  Subtype.ext (informationSite_info_eq_acting site)
 
 theorem informationMass_fullyMixed_pos
     (site : information.InformationSite .player) :
@@ -469,6 +573,83 @@ theorem assessment_belief_acting :
 
 def payoff (_ : Player) (_ : execution.History) : ℝ := 0
 
+/-- The player earns one exactly when its terminal action matches nature's
+hidden bit. This payoff is nonconstant, but the fair hidden bit and the single
+information set make both actions worth `1 / 2`. -/
+def matchingPayoff (_ : Player) (history : execution.History) : ℝ :=
+  match history.state with
+  | .terminal hidden _ action =>
+      if action .player = some hidden then 1 else 0
+  | _ => 0
+
+theorem runBehavioralFrom_decision_matchingPayoff
+    (hidden : Bool)
+    (alternative : information.BehavioralPolicy Player.player) :
+    (information.runBehavioralFrom
+      (Profile.update (sig := information.behavioralSignature)
+        fullyMixedBehavioralProfile Player.player alternative) 2
+      (decisionHistory hidden)).expect (matchingPayoff .player) =
+        (alternative .acting).expect fun choice =>
+          if choice.1 = some hidden then 1 else 0 := by
+  let drawLaw :
+      FinDist ((i : Player) →
+        information.Choice i
+          (information.infoOf i (decisionHistory hidden).trace)) :=
+    FinDist.pi fun i =>
+      Profile.update (sig := information.behavioralSignature)
+        fullyMixedBehavioralProfile Player.player alternative i
+        (information.infoOf i (decisionHistory hidden).trace)
+  rw [InformationModel.runBehavioralFrom,
+    ExecutionProtocol.runRandomizedFor_succ_of_not_terminal _ 1
+      (decision_not_terminal hidden),
+    FinDist.expect_bind, InformationModel.randomizedChooser,
+    InformationModel.behavioralJoint, FinDist.expect_map]
+  have hmarginal :
+      FinDist.map (fun draws => (draws Player.player).1) drawLaw =
+        FinDist.map (fun choice => choice.1) (alternative .acting) := by
+    have hchoice :
+        FinDist.map (fun draws => draws Player.player) drawLaw =
+          alternative
+            (information.infoOf Player.player
+              (decisionHistory hidden).trace) := by
+      unfold drawLaw
+      rw [FinDist.map_apply_pi, Profile.update_same]
+    have hprojected :
+        FinDist.map (fun draws => (draws Player.player).1) drawLaw =
+          FinDist.map (fun choice => choice.1)
+            (alternative
+              (information.infoOf Player.player
+                (decisionHistory hidden).trace)) := by
+      have hcongr := congrArg
+        (fun law : FinDist
+            (information.Choice Player.player
+              (information.infoOf Player.player
+                (decisionHistory hidden).trace)) =>
+          FinDist.map (fun choice => choice.1) law)
+        hchoice
+      simpa only [FinDist.map_comp, Function.comp_def] using hcongr
+    exact hprojected.trans (by
+      rw [infoOf_decisionHistory])
+  calc
+    _ =
+      drawLaw.expect (fun draws =>
+        if (draws Player.player).1 = some hidden then 1 else 0) := by
+          apply FinDist.expect_congr
+          intro draws _hdraws
+          simp [execution, decisionHistory, matchingPayoff,
+            ExecutionProtocol.runRandomizedFor_of_terminal]
+    _ = (FinDist.map (fun draws => (draws Player.player).1) drawLaw).expect
+          (fun choice : Option Bool =>
+            if choice = some hidden then 1 else 0) := by
+          rw [FinDist.expect_map]
+    _ = (FinDist.map (fun choice => choice.1) (alternative .acting)).expect
+          (fun choice : Option Bool =>
+            if choice = some hidden then 1 else 0) := by
+          rw [hmarginal]
+    _ = (alternative .acting).expect fun choice =>
+          if choice.1 = some hidden then 1 else 0 := by
+          rw [FinDist.expect_map]
+
 /-- The Bayes assessment used by the concrete equilibrium theorem. Unlike the
 presentation-only assessment above, its decision law has full support and its
 belief is constructed by normalizing the existing history reach masses. -/
@@ -493,6 +674,81 @@ theorem fullyMixedAssessment_isBayesConsistent :
   exact information.bayesBelief_prob fullyMixedBehavioralProfile .player site
     (informationMass_fullyMixed_pos site) history
 
+/-- At the unique acting site, the canonical normalized Bayes belief is the
+explicit fair mixture over nature's two hidden histories. -/
+theorem fullyMixedAssessment_belief_acting :
+    fullyMixedAssessment.belief .player actingSite = decisionBelief := by
+  classical
+  apply FinDist.ext_of_prob
+  intro history
+  obtain ⟨hidden, hcarrier⟩ :=
+    history_eq_decisionHistory_of_info_acting history.1 history.2
+  have hhistory : history = decisionInformationHistory hidden :=
+    Subtype.ext hcarrier
+  subst history
+  rw [fullyMixedAssessment, InformationModel.bayesBelief_prob,
+    informationMass_fullyMixed_acting,
+    historyReachProbability_decision]
+  cases hidden <;>
+    norm_num [decisionBelief, decisionInformationHistory_ne,
+      FinDist.prob_pure_eq_ite]
+  all_goals
+    intro hequal
+    have hhidden := decisionHistory_injective hequal
+    cases hhidden
+
+/-- Every whole continuation policy has value `1 / 2`: after projecting legal
+choices to their Boolean action, the two hidden states contribute
+complementary indicators. -/
+theorem continuationContext_matchingPayoff_value
+    (alternative : information.BehavioralPolicy .player) :
+    (fullyMixedAssessment.continuationContext actingSite
+      (matchingPayoff .player) 2).value alternative = 1 / 2 := by
+  have hstrategy :
+      fullyMixedAssessment.strategy = fullyMixedBehavioralProfile := rfl
+  have hdecision (hidden : Bool) :
+      ((decisionInformationHistory hidden :
+        information.InformationHistory .player actingSite.1) :
+          execution.History) = decisionHistory hidden := rfl
+  rw [InformationModel.BehavioralAssessment.continuationContext_value,
+    fullyMixedAssessment_belief_acting, FinDist.expect_bind,
+    decisionBelief, FinDist.expect_mix,
+    FinDist.expect_pure, FinDist.expect_pure,
+    hstrategy, hdecision true, hdecision false,
+    runBehavioralFrom_decision_matchingPayoff,
+    runBehavioralFrom_decision_matchingPayoff]
+  have hindicators :
+      (alternative .acting).expect
+          (fun choice => if choice.1 = some true then 1 else 0) +
+        (alternative .acting).expect
+          (fun choice => if choice.1 = some false then 1 else 0) = 1 := by
+    rw [← FinDist.expect_add]
+    calc
+      (alternative .acting).expect (fun choice =>
+          (if choice.1 = some true then 1 else 0) +
+            if choice.1 = some false then 1 else 0) =
+        (alternative .acting).expect (fun _choice => 1) := by
+          apply FinDist.expect_congr
+          intro choice _hchoice
+          rcases choice with ⟨choice, hlegal⟩
+          cases choice with
+          | none => simp at hlegal
+          | some action => cases action <;> simp
+      _ = 1 := FinDist.expect_const ..
+  linarith
+
+/-- The fair hidden state makes every whole continuation policy optimal, even
+though the terminal payoff itself is nonconstant. -/
+theorem fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff :
+    fullyMixedAssessment.IsSequentiallyRationalWithin matchingPayoff 2 := by
+  intro who site
+  cases who
+  have hsite := informationSite_eq_actingSite site
+  subst site
+  intro alternative _halternative
+  rw [continuationContext_matchingPayoff_value,
+    continuationContext_matchingPayoff_value]
+
 theorem fullyMixedAssessment_isSequentiallyConsistent :
     game.IsSequentiallyConsistent fullyMixedAssessment := by
   exact
@@ -509,6 +765,17 @@ theorem fullyMixedAssessment_isSequentialEquilibrium :
   rw [game.isSequentialEquilibriumWithin_iff]
   exact
     ⟨fullyMixedAssessment.isSequentiallyRationalWithin_zero 2,
+      fullyMixedAssessment_isSequentiallyConsistent⟩
+
+/-- The same fully mixed Bayes assessment is a sequential equilibrium for the
+nonconstant matching payoff. Rationality quantifies over arbitrary replacement
+policies, so this is not a fixed-strategy payoff calculation. -/
+theorem fullyMixedAssessment_isSequentialEquilibrium_matchingPayoff :
+    game.IsSequentialEquilibriumWithin
+      fullyMixedAssessment matchingPayoff 2 := by
+  rw [game.isSequentialEquilibriumWithin_iff]
+  exact
+    ⟨fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff,
       fullyMixedAssessment_isSequentiallyConsistent⟩
 
 /-- The language adapter supplies finite history fibers and the canonical

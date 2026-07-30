@@ -1,0 +1,535 @@
+# Post-architecture delivery plan
+
+Status: active delivery plan.
+
+Baseline: 2026-07-30, after EXP-034 and commit `f23e3ef`.
+
+This document is the mutable plan for turning the accepted architecture into a
+broad library. The architecture RFC remains authoritative for foundational
+decisions, decision records remain authoritative for measured choices, and
+phase records remain historical evidence. This document owns delivery order,
+coverage status, and the conditions for calling a subfield supported.
+
+The plan has three simultaneous but unequal obligations:
+
+1. recover the mature mathematics in the pinned v1 snapshot;
+2. add mature subfields that v1 omitted or represented only by a token example;
+3. create room for research without making stable users pay for speculative
+   abstractions.
+
+The first obligation is the protected critical path. The second broadens the
+subject deliberately. The third is opt-in and may never weaken either of the
+first two.
+
+## 1. What completion means
+
+File count, line count, and source compatibility are not completion metrics.
+The rewrite deliberately changes representation and removes duplicate public
+surfaces. Completion is measured by mathematical and architectural accounting.
+
+### 1.1 Declaration accounting
+
+Every public or mathematically substantive declaration in the pinned snapshot
+must eventually receive exactly one disposition:
+
+- **port:** retain essentially the same statement against the canonical v2 API;
+- **adapt:** retain the mathematical result with an honestly changed statement
+  or representation;
+- **subsumed:** a more general canonical v2 theorem proves the old result by a
+  transparent specialization;
+- **refuted:** the old statement is false, with a checked counterexample;
+- **deferred:** mathematically wanted, but gated by a named missing dependency
+  or a later scope decision;
+- **retired:** compatibility glue, duplicate semantics, dead transport
+  machinery, or a theorem with no surviving mathematical payload;
+- **out of scope:** explicitly outside the finite/discrete v1 release boundary.
+
+`docs/V1CoverageLedger.md` is the family-level index. Before routine recovery
+starts in a family, its work package must add a declaration-level ledger with
+the pinned path, old declaration, disposition, canonical destination, and
+validation evidence under `docs/coverage/`. The required schema is documented
+there. A family is not complete while it contains an unclassified declaration.
+
+### 1.2 Four completion levels
+
+The project reports four different milestones and never collapses them into
+one percentage:
+
+1. **architecture-ready:** the semantic owner and dependency direction have
+   survived a hostile theorem;
+2. **v1-accounted:** every pinned declaration has a disposition;
+3. **mature coverage:** every in-scope `port`, `adapt`, and `subsumed`
+   obligation is implemented and checked;
+4. **release-ready:** mature coverage, public import review, examples,
+   documentation, full build, audits, and cold-build measurements all pass.
+
+The project is architecture-ready for the shared static core and the principal
+Protocol and Analysis boundaries. It is not yet v1-accounted.
+
+### 1.3 Definition of support for a subfield
+
+A subfield is called **supported** only when all of the following exist:
+
+1. a mathematical object at its lowest sufficient semantic layer;
+2. a named public import and documented stability level;
+3. one hostile flagship theorem that exercises the subfield's distinctive
+   data, rather than a degenerate example;
+4. any bridge to another layer proved from independently meaningful
+   preservation facts;
+5. at least one reader-facing example and one architecture or locality test;
+6. exact assumptions on the theorem or operation that needs them;
+7. a declaration-level v1 ledger when the subfield has a v1 predecessor;
+8. a clean relevant build, trust audit, and dependency-boundary audit.
+
+A syntax bundle, one encoding example, or a directory name is a probe, not
+subfield support.
+
+## 2. The integration vision
+
+The accepted design is a stratified hybrid, not a universal game object.
+
+- `GameTheory.Core` owns static forms, profiles, preferences, utilities,
+  deviations, equilibrium, and the smallest genuinely shared social and
+  coalitional foundations.
+- `GameTheory.Protocol` owns execution, histories, information, behavioral
+  policies, assessments, and strategic extraction. Sequential structure is not
+  reconstructed from a static form after compilation.
+- `GameTheory.Languages` owns syntax and compilers. Syntax imports no solution
+  concept. A language reaches another semantic layer only through a named
+  theorem with an actual consumer.
+- `GameTheory.Finite` owns executable finite algorithms over explicit
+  enumerations and computable scalars. Correctness connects their answers to
+  proof semantics.
+- `GameTheory.Repeated` owns stagewise, recursive, and finite-prefix repeated
+  play without committing the stable root to an infinite path law.
+- `GameTheory.Analysis` imports stable semantic roots in one direction for
+  topology, convexity, fixed points, minimax, and existence. Stable roots never
+  import it back.
+- `GameTheory.Cooperative` is reserved for larger coalitional, matching,
+  bargaining, and market-design developments that do not honestly reduce to
+  strategic profiles.
+- `GameTheoryMath` owns independently reusable mathematics only when a live
+  consumer justifies it and Mathlib does not already supply it.
+- `GameTheory.Frontier` may import stable roots. No stable root imports
+  Frontier. `GameTheory.Challenges` is never a proof dependency.
+
+The integration rule is therefore:
+
+> Share foundations when two subfields prove the same mathematics; use named
+> compilers when one representation forgets structure; keep genuinely
+> different mathematical objects in coordinated parallel branches.
+
+This prevents both failure modes visible in v1: duplicating Nash-like concepts
+per language and forcing sequential, cooperative, or epistemic data through a
+static universal hub.
+
+## 3. Stable-support covenant
+
+Research breadth is welcome only under rules that preserve mature support.
+
+1. The v1 recovery waves below remain the critical path until mature coverage.
+   Beyond-v1 work cannot satisfy or postpone a recovery gate.
+2. Until v1 is accounted, at least three of every four planned integration work
+   packages target mature v1 recovery. A package is a predeclared theorem
+   family or domain gate, not a commit or a line-count target.
+3. At most one Frontier experiment may be active at a time. If fewer than four
+   independent work packages are active, Frontier occupies at most one.
+4. Mature blind-spot work may begin after Wave 1 when its prerequisites are
+   stable, but it gets its own domain gate and does not change a shared API on
+   behalf of hypothetical future consumers.
+5. A Frontier result may import stable public APIs, but no reverse import,
+   instance, notation, or foundation field is allowed.
+6. A stable API change proposed by Frontier requires a decision record, a
+   mature in-scope consumer, measured migration cost, and all existing mature
+   audits. Convenience for the Frontier theorem is not evidence.
+7. Frontier build failures, dependency upgrades, or abandoned experiments may
+   not block the stable build.
+8. No amount of Frontier coverage compensates for a regression in a mature
+   theorem, example, executable specification, or audit.
+
+Exceptions to the capacity rule require a short decision record stating what
+stable gate is paused, why the pause is bounded, and what result resumes it.
+
+## 4. Delivery workflow
+
+Every work package follows one of two paths.
+
+### 4.1 Routine recovery
+
+Use this path only when the semantic owner and integration boundary are already
+validated.
+
+1. Freeze the exact pinned files and declarations in scope.
+2. Classify each declaration before translating proofs.
+3. Search Mathlib, then the canonical v2 API, before adding helpers.
+4. Port statements and proof ideas with attribution to the pinned path and
+   commit.
+5. Split independent leaf families only after shared definitions are fixed.
+6. Integrate continuously against the canonical imports.
+7. Update the declaration ledger in the same commit.
+8. Run the narrow build, relevant audits, and full build at the domain gate.
+
+Routine recovery does not reserve an experiment merely because a proof is
+difficult.
+
+### 4.2 Architecture or frontier spike
+
+Use this path when ownership, representation, probability, scalar, topology,
+or dependency direction is unsettled.
+
+1. Predict competing designs and the smallest hostile theorem.
+2. Reserve the next `EXP-NNN` entry before code is written.
+3. State the kill condition and measurements in advance.
+4. Implement only the slice needed to discriminate the designs.
+5. Record supporting, refuting, narrowing, or inconclusive evidence.
+6. Write or amend a decision record before freezing a public API.
+7. Either unlock routine recovery or remove the unused experiment.
+
+An architecture spike does not silently become a broad port.
+
+Any proposed external dependency additionally records version/toolchain fit,
+license, manifest disturbance, its own placeholder and axiom profile, the
+trusted certificate path, import closure, build cost, and positive and negative
+reachability probes. D13 remains rejected unless a concrete recorded reopening
+condition is met.
+
+### 4.3 Work-package contract
+
+Each package instantiates this contract:
+
+```text
+Domain / horizon / priority:
+Pinned roots and declarations:
+Beyond-v1 mature target, if any:
+Current integration / flagship / harvest status:
+Semantic owner and canonical destination:
+Stable APIs reused:
+Native data retained / deliberately forgotten:
+Allowed imports / forbidden dependency edges:
+Compiler or projection / reason none is honest:
+Finite and executable boundary:
+Analysis and D11 measurable boundary:
+Hostile flagship / discriminating witness:
+Kill conditions:
+Experiment requirement and IDs:
+Ledger rows changed / exact exit criterion:
+Leaf units safe to parallelize:
+Narrow and gate-level validation:
+Attribution:
+Maturity of the result:
+```
+
+Parallel agents receive disjoint theorem/file scopes and the same target API.
+They do not independently invent shared definitions.
+
+## 5. Wave 0: make coverage accountable
+
+Status: in progress; family baseline present, exact file/declaration accounting
+and audit remain.
+
+The family ledger covers the pinned `GameTheory/` and `Math/` trees and records
+current integration and recovery status. Wave 0 closes when:
+
+1. every pinned Lean file belongs to one family row;
+2. each family has a semantic owner or an explicit experiment gate;
+3. every open package has a declaration-level ledger;
+4. a coverage audit rejects unknown dispositions, duplicate ownership, missing
+   pinned paths, and a `complete` family containing an open declaration;
+5. the moving architecture probes are consolidated under a current delivery
+   audit, while immutable gate measurements remain in their historical records
+   rather than silently changing inside Phase 2/3-named scripts;
+6. README status is derived from the ledger rather than source-size estimates.
+
+The audit is deliberately scheduled before the first claim of v1 accounting,
+not before ordinary theorem recovery. Family rows are useful now; thousands of
+unreviewed automatically classified declarations would not be.
+
+## 6. Wave 1: close the frozen promises
+
+Status: in progress.
+
+This wave closes promises made during architecture validation before broad
+recovery creates pressure to work around them.
+
+| Gate | Deliverable | Current state | Completion test |
+|---|---|---|---|
+| W1-A | nonconstant-payoff finite-EFG sequential-equilibrium stress | **complete (EXP-035)** | rationality and Bayes consistency are both nontrivial on the same finite EFG |
+| W1-B | public SPE semantics and full well-founded one-shot-deviation theorem | **complete (EXP-036)** | an honest analogue of v1 `oneShotDeviation_iff_spe`, including off-path histories |
+| W1-C | no-regret learning to CCE | open | the frozen F2 theorem uses the canonical deviation and correlation APIs |
+| W1-D | finite-prefix stochastic monitoring | partial | the frozen F8 law handles a nontrivial signal law, not only perfect public observation |
+| W1-E | Bayesian outcome-law and truthfulness transfers | partial | F5 and F6 are ported, adapted, or explicitly retired with measured reasons |
+| W1-F | named language transfers | partial | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
+| W1-G | perfect-recall-facing Kuhn surface | partial | the completed Protocol equivalence is exposed through the honest perfect-recall assumptions needed by its EFG consumer |
+| W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
+| W1-I | overdue knowledge and evolutionary ownership probes | open | Aumann/`InfoState` and ESS/static-dynamic slices either validate their proposed homes or record replacements |
+
+Recommended dependency order:
+
+1. W1-C, W1-D, and the finite Bayesian half of W1-E may proceed independently.
+2. Completed W1-A and W1-B fix the whole-policy continuation, Bayes, SPE, and
+   one-shot targets used by sequential recovery.
+3. W1-G, W1-H, and the EFG part of W1-F now exercise the fixed target.
+4. W1-I may proceed independently, but must close before those domains harvest.
+5. MAID/FOSG transfer packages proceed only after their language-specific
+   execution probes pass.
+
+Wave 1 closes only when every frozen flagship F1-F8 and transfer T1-T4 is
+`complete`, `subsumed`, `refuted`, `deferred` behind a named later gate, or
+`retired` with evidence. `Partial` is not a closing status.
+
+## 7. Wave 2: mature static recovery
+
+Status: ready where Wave 1 does not own the same declaration.
+
+The static core has already survived equilibrium existence, potential games,
+zero-sum value, Arrow, Shapley, and mechanism-encoding stress. The following
+lanes may harvest in parallel after their lead definitions are checked.
+
+| Lane | Pinned scope | Hostile lead result | Intended home |
+|---|---|---|---|
+| foundations and VNM | utility invariance, strategic equivalence, expected-utility representation, axiom independence | expected-utility representation without merging probability-free ranks back into lottery preference | `Core.Preference`, finite laws, and independent mathematics only where earned |
+| static response | dominance, rationalizability, approximate and secure equilibrium | dominance solvability and one approximation theorem without duplicate Nash predicates | `GameTheory.Core` |
+| correlation | correlation regimes, regret, signal timing, value of correlation | correlated-equilibrium existence plus one strict separation in the hierarchy | `Core` and opt-in `Analysis` |
+| learning | regret, multiplicative weights, fictitious play, approachability | F2, followed by potential-game fictitious-play convergence | stable static consumer plus `Analysis` only where a limit is essential |
+| potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | Rosenthal exact potential and finite pure-Nash existence | `Core.Potential`, then a thin congestion domain |
+| welfare | individual rationality, smoothness, price of anarchy | a smoothness price-of-anarchy bound stated on the canonical utility game | `Core` or a stable welfare root |
+| zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
+| communication | babbling and cheap talk with public randomness | babbling equilibrium through the ordinary equilibrium predicate | static consumer; Protocol only if timing matters |
+| mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial and all-pay | `n`-bidder truthful Vickrey/VCG plus one false first-price claim | coordinated mechanism/auction root |
+| social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
+
+Each lane first inventories its entire pinned family. Once the hostile result
+passes, routine leaf recovery should be broad and parallel. A lane closes when
+all its in-scope declarations are classified and all `port`/`adapt`
+obligations build.
+
+## 8. Wave 3: sequential and language recovery
+
+Status: EFG recovery is unblocked; other languages retain their named gates.
+
+Languages share execution and information infrastructure, not one mandatory
+surface syntax.
+
+| Lane | First gate | Recovery after the gate |
+|---|---|---|
+| NFG | a transparent finite syntax compiles to the canonical static form without a second Nash API | examples, public goods, Stackelberg, cheap talk, and mixed presentations |
+| EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
+| MAID | an incomparable-node DAG compiles without asserting a false linear order | evaluation, information, refinements, Kuhn specialization, and named EFG comparison |
+| FOSG | simultaneous active players and imperfect information compile honestly to Protocol | reachable histories, terminal laws, observations, strategies, values, and named EFG comparison |
+| multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
+| intrinsic games | the native strategy/information object proves one theorem not recoverable from bare Protocol | compilation, perfect recall, and native theorems |
+| bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |
+| open games | one compositional theorem with no duplicate stable equilibrium predicate | `GameTheory.Frontier`, not the stable language umbrella |
+
+Every syntax module must reject solution-concept reachability. Every compiler
+records its native data, forgotten data, evaluation theorem, workaround list,
+and source-level transport count. A broad language port starts only after the
+first gate for that language passes.
+
+Wave 3 also owns v1's standalone Kuhn and Zermelo theorem families. General
+backward induction belongs to Protocol; a syntax-specific wrapper belongs only
+where the language adds real premises.
+
+## 9. Wave 4: coordinated parallel mature domains
+
+Status: partially unlocked.
+
+These domains are not downstream of `GameForm` merely because they are game
+theory.
+
+| Domain | Gate theorem | Integration rule |
+|---|---|---|
+| coalitional games | Bondareva-Shapley or convex-game core nonemptiness after the existing Shapley/core base | larger theory moves to `GameTheory.Cooperative`; no artificial action profile |
+| matching and market design | Gale-Shapley stability and perfect matching, then strategyproofness or rural hospitals | native preferences and matchings; share order/list mathematics only |
+| bargaining | Nash solution affine invariance on an honest feasible utility set | native convex feasible-set branch under `Analysis` when topology is used |
+| finite fair division | round-robin EF1 and one envy-cycle or maximin-share result | coordinated mechanism branch; no measurable cake assumptions |
+| knowledge and epistemic games | Aumann agreement or an approximate-common-knowledge theorem | first compete a partition model with a Protocol-information consumer |
+| evolutionary stability | ESS implies symmetric Nash | separate static branch; dynamics do not enter until their scalar/topology needs are measured |
+| contracts | one incentive or participation theorem with explicit outside option | mechanism branch sharing only actual report/deviation vocabulary |
+
+Coalitional foundations and the Shapley characterization are already validated;
+their remaining theorem inventory may be harvested immediately. The other
+rows begin with an experiment if their owner is still unsettled.
+
+Divisible cake cutting that essentially uses measures, continuous knives, or
+topological existence is outside the finite v1 release and enters the D11
+measurable program rather than weakening finite fair division.
+
+## 10. Wave 5: analysis and executable depth
+
+Status: demand-driven.
+
+Analysis and computation are capabilities used by subfields, not dumping
+grounds for difficult proofs.
+
+The analysis lane includes:
+
+- correlated-equilibrium existence;
+- demand-driven recovery of reusable Brouwer, KKM, Scarf, or simplex
+  approximation mathematics only when a selected theorem needs it;
+- convex bargaining and continuous social-choice results admitted by their
+  domain gate;
+- the existing one-way Protocol and Repeated bridges;
+- no topology in Core merely to simplify an existence proof.
+
+The executable lane includes:
+
+- broader rational-table checks and specifications;
+- finite reachability, dominance, best-response, and equilibrium certificates;
+- solver-generated proof certificates only when a kernel-checked verifier and
+  acceptable dependency/toolchain surface pass a new D13 experiment;
+- no claim that enumeration or a certificate oracle is the proof semantics;
+- no exact general mixed-equilibrium solver as a release requirement.
+
+General mathematics is recovered from pinned `Math/` by live consumer, searched
+in Mathlib first, and placed in `GameTheoryMath` only when it is independently
+reusable. The old `Math/` tree is not ported wholesale.
+
+## 11. Wave 6: accounting and release
+
+Status: blocked by Waves 1-5.
+
+The v1-scope release gate requires:
+
+1. every pinned declaration classified;
+2. no open `port`, `adapt`, or `subsumed` obligation in a mature in-scope
+   family;
+3. every `deferred` row names its missing gate and remains visibly excluded
+   from the coverage claim;
+4. public umbrellas reviewed for intentional inclusion and opt-in boundaries;
+5. one reader-facing example per supported subfield;
+6. full build with warnings treated as failures;
+7. all architecture, trust, reachability, transport, and coverage audits;
+8. axiom audit on every flagship theorem;
+9. cold-build and representative incremental-build measurements;
+10. a generated release report listing support, provisional surfaces,
+    Frontier work, and explicit non-goals.
+
+Source compatibility with v1 is not a release gate.
+
+## 12. Mature subfields that v1 underrepresented
+
+The pinned tree is the recovery baseline, not a definition of game theory.
+The following are mature subjects that are absent or represented by only a
+small example in v1. They belong to the mature track, but they do not displace
+the protected recovery waves.
+
+| Candidate | Evidence of the v1 blind spot | First serious slice | Candidate placement, not yet an API commitment |
+|---|---|---|---|
+| finite stochastic/Markov games | one `MultiRound/StochasticGame.lean`, no general value or stationary-equilibrium theory | finite discounted two-player zero-sum game; Shapley operator contraction and stationary value | separate stochastic root using finite transition laws; existence in `Analysis` |
+| games on graphs and reactive synthesis | no reachability, safety, Büchi, parity, or mean-payoff family | finite reachability game with executable attractor and memoryless determinacy proof | independent graph-game root; compare its arena with Protocol before sharing |
+| graphical and network games | no local-interaction representation | compile a tree graphical game to `GameForm` and preserve local payoff/Nash facts | language/domain branch over the static core |
+| algorithmic game theory and complexity | executable support is enumeration-oriented and v1 has no complexity layer | one verified reduction or certificate family with explicit size/cost theorem | `Finite`, `GameTheoryMath`, and an experiment-gated complexity vocabulary |
+| Stackelberg and security games | one NFG Stackelberg example, no domain theory | finite leader-follower value with explicit tie-breaking and a checked response certificate | coordinated static/mechanism branch |
+| evolutionary and population dynamics | ESS is present; replicator and population dynamics are not | ESS-to-symmetric-Nash parity, then simplex invariance for one finite replicator dynamic | stable evolutionary root plus opt-in `Analysis` |
+| network formation and cooperative cost sharing | coalitional values exist, formation dynamics and cost-sharing mechanisms do not | one potential or core theorem on a finite network-formation game | cooperative or static branch, decided by the theorem's native data |
+| richer matching and market design | stable matching exists, but school choice, matching with contracts, exchange, and richer market constraints do not | deferred acceptance with one strategyproofness or rural-hospitals extension beyond the pinned model | `GameTheory.Cooperative`/market-design branch over native preferences |
+| cooperative solution depth | v1 has core, Shapley, Banzhaf, and balancedness, but no nucleolus or least-core family | finite least-core or nucleolus characterization with an independently checkable optimization certificate | `GameTheory.Cooperative`; optimization remains a named Analysis/Finite bridge |
+| psychological and behavioral games | no belief-dependent utility hierarchy or behavioral solution theory | one finite psychological-game example showing why ordinary utility on outcomes is insufficient | provisional parallel preference/belief branch |
+| mean-field and continuum-player games | absent | finite-population approximation statement before any PDE commitment | post-v1 `Analysis`/Frontier program behind D11 |
+| differential and continuous-time games | absent | a finite-state or linear-quadratic statement chosen only after scalar and integration audit | post-v1 `Analysis`/Frontier program |
+
+Admission rules for a mature blind spot:
+
+1. produce a short literature and Mathlib survey;
+2. select a theorem recognized independently of this repository;
+3. identify the smallest overlap with stable vocabulary;
+4. reserve an experiment if representation or ownership is unsettled;
+5. pass the normal subfield-support definition;
+6. enter the stable umbrella only after API review and a second nondegenerate
+   theorem.
+
+## 13. Research Frontier directions
+
+These are research programs, not release promises. Their purpose is to exploit
+the clean stable layers without turning a current fashion into a foundation.
+
+| Direction | Why this repository is unusually well placed | Admission experiment | Promotion barrier |
+|---|---|---|---|
+| kernel-checked equilibrium and optimization certificates | D10 already separates untrusted search from trusted verification | rational CE, zero-sum, or dominance certificate with dependency and axiom audit | toolchain stability, small verifier, two mature consumers |
+| causal and interventional games | MAID syntax, information, policy, and Protocol layers are already distinct | intervention commuting with one MAID evaluation and one strategic projection | causal data must not leak into ordinary game forms |
+| multi-agent learning in Markov games | static regret/CCE and a future stochastic layer can meet at a named bridge | finite-horizon Markov no-regret-to-CCE theorem | no opaque simulator assumptions in proof semantics |
+| robust and ambiguity-aware games | preferences, Bayesian data, and finite laws are separated | finite ambiguity set with robust best response and equilibrium existence | scalar/order assumptions remain local; no generic probability class |
+| compositional institutions and open games | v1 supplies evidence and failure modes; Frontier isolates native equilibrium data | one parallel/sequential composition theorem with an external semantic comparison | no duplicate stable equilibrium API and demonstrated composition payoff |
+| verified mechanism and information-design synthesis | Bayesian, social-choice, finite algorithm, and certificate layers can cooperate | synthesize or verify a small persuasion/mechanism instance and prove obedience/IC | solver remains untrusted; public theorem is representation-independent |
+| large-population and differentiable games | Analysis is opt-in and can host geometry without contaminating finite Core | one finite-dimensional approximation or convergence result | D11 measurable/continuous decision and reusable analytic infrastructure |
+| formal multi-agent safety and adversarial planning | Protocol histories and graph games can express strategic environments | finite safety/reachability game with a checked winning strategy certificate | safety terminology must correspond to a precise mathematical objective |
+
+The promotion ladder is:
+
+```text
+watchlist
+  -> EXP-NNN under Experimental
+  -> proved, opt-in Frontier module
+  -> provisional stable root after two independent theorems
+  -> stable support after the normal domain gate
+```
+
+Nothing promotes directly from a paper idea to Core.
+
+### Research signals, not dependencies
+
+The horizon above is grounded in established and active mathematical programs:
+
+- Shapley's finite stochastic games motivate the discounted Markov-game slice:
+  <https://www.pnas.org/doi/10.1073/pnas.39.10.1095>.
+- Graphical games motivate a local-interaction representation:
+  <https://arxiv.org/abs/1301.2281>.
+- Games on graphs connect game theory to verification and synthesis:
+  <https://arxiv.org/abs/2305.10546>.
+- Mean-field games motivate a deliberately post-D11 large-population program:
+  <https://doi.org/10.1016/j.crma.2006.09.019>.
+- Bayesian persuasion supplies a mature information-design target:
+  <https://www.aeaweb.org/articles?id=10.1257/aer.101.6.2590>.
+- Recent Markov-game learning results show a natural bridge from regret and CCE:
+  <https://proceedings.mlr.press/v242/mao24a.html>.
+- Structural causal games provide a concrete interventional extension of MAIDs:
+  <https://arxiv.org/abs/2301.02324>.
+- Compositional open-game work supplies an external test for Frontier:
+  <https://arxiv.org/abs/2101.12045>.
+
+These links justify keeping the directions visible. They do not authorize an
+API, dependency, or theorem statement; each admission experiment still performs
+its own current literature and dependency review.
+
+## 14. Status and reporting cadence
+
+At the end of each integrated work package:
+
+1. update the family and declaration ledgers;
+2. update the owning wave row;
+3. record exact validation commands;
+4. record any API change or newly exposed gap;
+5. attribute adapted v1 results to their pinned paths;
+6. report whether the package increased accounted coverage, mature coverage,
+   or Frontier only.
+
+At each domain gate:
+
+1. run the full build and all phase audits;
+2. check flagship axioms;
+3. review public imports and module documentation;
+4. update README's current wave;
+5. verify that Frontier capacity and reverse-dependency rules still hold.
+
+Quarterly or after five domain gates, whichever comes first, review the
+beyond-v1 horizon. A direction may be promoted, narrowed, or removed. Mature v1
+recovery status is not renegotiated during that review.
+
+## 15. Immediate queue
+
+The next work is ordered:
+
+1. create the remaining declaration-level ledgers for frozen F2, F5/F6, F8,
+   and T1-T4; the F4 ledger is complete;
+2. recover no-regret-to-CCE and the finite-prefix monitoring law;
+3. finish or reject the named transfers individually;
+4. open the static learning/communication and congestion harvest lanes;
+5. admit at most one mature blind-spot experiment—finite stochastic games or
+   finite graph reachability are the leading candidates;
+6. admit no Frontier implementation until the first four items have an active
+   owner and ledger.
+
+This queue may change when an experiment refutes an assumption, but a change
+must update this document rather than silently starting whichever domain is
+most convenient.

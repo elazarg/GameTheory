@@ -788,15 +788,21 @@ compilation in both directions under its respective no-revisit and recall-like
 hypotheses. A bare execution protocol also compiles state-indexed policies to a
 perfect-information or controller-supplied `GameForm`.
 
-The finite-horizon information-local one-shot theorem is currently a forward
-result: one-shot optimality at every history defeats every whole replacement
-policy and implies ordinary Nash in the compiled form. It is not yet a full
-well-founded `oneShotDeviation_iff_spe`: no subgame-perfect predicate exists,
-and no converse from initial static Nash is claimed because it does not
-quantify over off-path histories. The context side is complete at finite
-horizon: `historyContext` packages the actual continuation, and the one-shot
-condition is equivalent to `IsSequentiallyRationalAt` in that context at every
-history and remaining horizon.
+The finite-horizon information-local theorem remains the forward adapter from
+one-shot optimality at every history to whole-policy optimality and ordinary
+Nash in the compiled form. EXP-036 closes the distinct well-founded strategic
+theorem in `Protocol.SubgamePerfect`. History-preserving backward recursion
+uses the existing `WellFoundedPlay` certificate and agrees with the forward
+history runner wherever that runner has stopped. `IsSubgamePerfect` quantifies
+over every player, every whole information-local replacement policy, and every
+complete history, including off-path histories. Under
+`ActsOnceWhereItMatters`, it is equivalent to
+`HasNoProfitableOneShotDeviation`. The hostile probe is optimal against every
+whole replacement policy from the initial history but is rejected at an
+off-path decision, so no invalid converse from initial static Nash is claimed.
+At finite horizon, `historyContext` still packages the actual continuation,
+and the local one-shot condition is equivalent to
+`IsSequentiallyRationalAt` in that context.
 
 EXP-032 adds the assessment carrier needed by the limit-consistency layer, and
 EXP-033 sharpens it on a hostile EFG. Policies remain total on `InfoState`,
@@ -822,14 +828,18 @@ reachable states and hence an explicit history `Fintype`. The analytic EFG
 adapter supplies those instances and the assessment-induced continuation
 contexts; stable syntax imports neither Analysis nor solution concepts.
 
-EXP-034 proves the path is inhabited. Stable Protocol can normalize the
+EXP-034 proves the assessment path is inhabited. Stable Protocol can normalize the
 existing finite history reach weights into a Bayes belief whenever an
 information site has positive mass. The analytic bridge turns any fully mixed
 Bayes-consistent assessment into a sequentially consistent one through its
 constant approximating sequence. On the hostile hidden-Boolean EFG, the
 canonical runner gives both decision histories mass `1 / 2`, yielding a
-concrete sequential equilibrium for zero continuation payoff. This is not a
-general finite-EFG existence theorem.
+concrete sequential equilibrium for zero continuation payoff. EXP-035 replaces
+that vacuous payoff with one for matching the hidden Boolean: the canonical
+Bayes belief is the fair mixture, and every whole replacement behavioral
+policy has continuation value `1 / 2`, so the same assessment is sequentially
+rational for a nonconstant payoff. These are concrete witnesses, not a general
+finite-EFG existence theorem.
 
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
@@ -1530,6 +1540,23 @@ share an execution base and what information interface survived the spike.
 Deliverable: accept/reject decisions for every remaining provisional item,
 plus a frozen v1 core API. D7 is adopted only if the measured hybrid beats its
 direct bridge baselines on actual reuse or composition.
+
+#### Post-architecture delivery
+
+The checked-in `Phase4StaticHarvest.md` completed a narrower static-harvest
+package than the transform-and-analysis list above. Its mathematical results
+are complete, but that scoped status does not discharge every original item:
+the exact T1, T3, and T4 transfers, the minimal public D8 transformation
+surface, and the knowledge/evolutionary ownership probes remain open.
+
+The RFC continues to govern architecture and disproof conditions. Mutable
+delivery order, frozen-obligation status, v1 declaration accounting, mature
+subfields missing from v1, and the isolated research portfolio are governed by
+[`PostArchitectureDeliveryPlan.md`](PostArchitectureDeliveryPlan.md). The
+current pinned-v1 family baseline is
+[`V1CoverageLedger.md`](V1CoverageLedger.md). Neither document may silently
+reopen an adopted decision; a conflicting result reserves an experiment and
+amends the relevant decision record.
 
 ## 9. Escalation and kill criteria
 

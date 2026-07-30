@@ -25,6 +25,10 @@ history runner, so compilation introduces no parallel evaluator.
 `BehavioralAssessment` pairs local randomization with history-supported beliefs
 at reached decision sites, states finite Bayes consistency without importing
 topology, and forms continuation contexts from whole replacement policies.
+`SubgamePerfect` lifts well-founded backward value to complete histories and
+proves that strategic subgame perfection is equivalent to information-local
+one-shot optimality under the same no-revisit condition used by the
+behavioral/mixed representation theorem.
 
 `Tree` is the derived finite-first presentation. It is faithful only where no
 two players move at once, so it is a convenience for single-mover games rather
@@ -39,5 +43,6 @@ import GameTheory.Protocol.Randomized
 import GameTheory.Protocol.Backward
 import GameTheory.Protocol.Information
 import GameTheory.Protocol.Assessment
+import GameTheory.Protocol.SubgamePerfect
 import GameTheory.Protocol.Strategic
 import GameTheory.Protocol.BehavioralAssessment

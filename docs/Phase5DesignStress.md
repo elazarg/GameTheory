@@ -1,6 +1,6 @@
 # Phase 5: stressing the design under theorem load
 
-Status: open. The mode is neither validation nor harvesting.
+Status: named queue complete; retained as a standing design-stress protocol.
 
 Phases 0–3 asked whether the architecture survives hostile slices. Phase 4 asked
 whether ordinary mathematics goes through on it. This phase asks the question
@@ -272,12 +272,41 @@ fully mixed action law gives both decisions positive support; the actual
 behavioral runner assigns each hidden decision history probability `1 / 2`;
 stable `bayesBelief` normalizes those reach masses; and the constant assessment
 sequence proves consistency. With zero continuation payoff, the assessment is
-an actual sequential equilibrium. The rationality half is intentionally
-transparent, so this is not a general existence theorem or the final
-nonconstant-payoff stress.
+an actual sequential equilibrium.
+
+EXP-035 closes the remaining nonconstant-payoff stress on the same carrier.
+Terminal payoff is one exactly when the action matches nature's hidden bit.
+The acting history fiber is equivalent to `Bool`, the canonical Bayes belief is
+the fair mixture over those histories, and every whole replacement behavioral
+policy has continuation value `1 / 2`. The resulting assessment is a
+sequential equilibrium without a second evaluator or an EFG-specific
+rationality predicate. This remains a concrete witness, not a general finite
+EFG existence theorem.
+
+EXP-036 closes the separate well-founded strategic gap in stable Protocol.
+History-preserving backward recursion is joined to the existing forward runner,
+and subgame perfection over every whole replacement policy and every history is
+equivalent to the absence of profitable one-shot deviations under
+`ActsOnceWhereItMatters`. The hostile probe is optimal from the initial history
+but fails at an off-path decision, so the result cannot be confused with an
+initial-Nash converse. EFG syntax inherits this semantic layer; a thin
+EFG-facing theorem remains ordinary recovery work.
 
 ## Current stress queue
 
-The named Phase 5 queue is exhausted. Further theorem families should be
-reserved as new experiments rather than treated as unmeasured extensions of
-the decisions above.
+The named Phase 5 queue is exhausted. Further theorem families that challenge
+a recorded boundary should be reserved as new experiments rather than treated
+as unmeasured extensions of the decisions above.
+
+This does not mean the frozen Phase 0 flagships, transfers, or v1 theorem
+inventory are complete. Routine recovery against an already validated domain
+contract is harvesting and needs attribution plus coverage accounting, not a
+new experiment. A theorem that challenges ownership, representation,
+dependency direction, or another recorded boundary re-enters this stress
+protocol through a reserved experiment.
+
+The mutable queue, frozen-obligation reconciliation, domain gates, mature
+blind-spot program, and Frontier capacity rules now live in
+[`PostArchitectureDeliveryPlan.md`](PostArchitectureDeliveryPlan.md). Current
+pinned-v1 recovery status lives in
+[`V1CoverageLedger.md`](V1CoverageLedger.md).

@@ -2,11 +2,14 @@
 
 Greenfield Lean 4 game-theory library built on Mathlib.
 
-The architecture spike in [`docs/GameTheory2Design.md`](docs/GameTheory2Design.md)
-has passed Phase 0 (architecture evidence), Phase 1 (core competition), and
-Phase 2 (incentive vertical slice). Phase 3 (the sequential slice) passed, the
-Phase 4 static theorem harvest is complete, and Phase 5 is open as a design
-stress test under new theorem families.
+The foundational architecture spike in
+[`docs/GameTheory2Design.md`](docs/GameTheory2Design.md) has passed Phases 0-3.
+The scoped Phase 4 static harvest is complete, and Phase 5's named queue is
+complete while its method remains a standing design-stress protocol. The active
+coverage and expansion schedule is
+[`docs/PostArchitectureDeliveryPlan.md`](docs/PostArchitectureDeliveryPlan.md);
+its honest pinned-v1 baseline is
+[`docs/V1CoverageLedger.md`](docs/V1CoverageLedger.md).
 
 ```text
 GameTheory/Probability   finite-support probability laws (FinDist)
@@ -14,14 +17,16 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
                          game theory, and foundational social/coalitional theory
 GameTheory/Protocol      execution, histories, information, assessment,
-                         randomization, and static-form compilation
+                         randomization, well-founded subgame perfection, and
+                         static-form compilation
 GameTheory/Finite        executable rational frontend and its correctness layer
 GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
   /Protocol              analytic behavioral-assessment consistency bridge
   /Repeated              analytic repeated-game bridge and discounted folk theorem
 GameTheory/Repeated      stable public histories, discounting, cycles, and triggers
 GameTheory/Languages     scoped language encodings with recorded limitations
-  /EFG                   transparent finite extensive-form specialization
+  /EFG                   transparent extensive-form specialization; finite
+                         capabilities are supplied explicitly
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
@@ -66,5 +71,6 @@ pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 ```
 
 `lake build` compiles every module, including examples, tests, and experiments.
-The phase audits re-check the measurements each architecture gate was decided
-on; Phase 4 and Phase 5 add no separate audit script.
+The phase audits re-check the architecture constraints. Later Phase 4/5 probes
+were folded into the historically named Phase 2/3 scripts; the delivery plan
+requires a consolidated coverage audit before any v1-accounted claim.

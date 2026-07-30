@@ -2115,3 +2115,155 @@ memory.
   recovery. Begin a measured harvest of the pinned finite-EFG theorem inventory,
   with the first nonconstant-payoff or one-shot result kept as the next hostile
   check on whole-policy rationality.
+
+### EXP-035: nonconstant-payoff rationality on the hostile finite EFG
+
+- **Date / revision:** 2026-07-30, working tree based on `f23e3ef`
+- **Status:** complete
+- **Decision / question:** D6, D12, and delivery gate W1-A; whether the
+  EXP-034 fully mixed Bayes assessment is sequentially rational for a
+  nonconstant payoff that depends on nature's hidden bit and the player's
+  action, using the generic whole-policy continuation context.
+- **Hypothesis:** on the fair hidden-bit game, payoff one for matching the
+  hidden bit and zero otherwise gives every information-local action law value
+  `1 / 2`. The fully mixed assessment is therefore sequentially rational even
+  against an arbitrary replacement behavioral policy, while the existing
+  Bayes/consistency proof remains unchanged.
+- **Representative slice:** define the matching payoff on terminal histories;
+  calculate the continuation value from both hidden decision histories through
+  `runBehavioralFrom`; average through the canonical Bayes belief; prove
+  `IsSequentiallyRationalWithin` for every whole replacement policy; combine it
+  with EXP-034 consistency into an EFG sequential equilibrium.
+- **Competing designs:** prove the arbitrary-policy value formula directly on
+  the existing continuation context; first expose a reusable fair-hidden-state
+  expectation lemma; or, if the explicit finite calculation reveals missing
+  structure, record the smallest honest assessment/payoff interface change
+  before broad EFG harvesting.
+- **Kill conditions:** the proof needs an EFG-specific rationality predicate, a
+  second evaluator or path-probability law, access to the hidden state through
+  the policy, hand-asserted belief probabilities, measurable infinite paths,
+  `native_decide`, a custom axiom, or a transport/audit exception.
+- **Planned artifacts / commands:**
+  `GameTheory/Analysis/Protocol/EFGTest.lean`;
+  `lake build GameTheory.Analysis.Protocol.EFGTest`;
+  `pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected`;
+  `pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected`;
+  focused axiom and source audits.
+- **Evidence:**
+  1. `matchingPayoff` pays one exactly when the terminal action equals nature's
+     hidden bit. `runBehavioralFrom_decision_matchingPayoff` evaluates that
+     payoff through the canonical randomized history runner for an arbitrary
+     whole replacement policy. Projecting the dependent legal `Choice` to
+     `Option Bool` was sufficient; no policy receives the hidden state.
+  2. The history fiber at the acting information state is proved equivalent to
+     `Bool` from reachability and tree-shaped trace uniqueness. Consequently
+     the existing reach calculation proves the information mass is exactly
+     one, and `fullyMixedAssessment_belief_acting` identifies the canonical
+     normalized `bayesBelief` with the explicit fair two-history mixture. No
+     belief probability is asserted separately.
+  3. `continuationContext_matchingPayoff_value` proves value `1 / 2` for every
+     replacement behavioral policy. The two hidden states contribute
+     complementary action indicators, so legality of the acting menu and total
+     probability mass close the calculation without enumerating a particular
+     strategy.
+  4. The generic whole-policy predicate then proves
+     `fullyMixedAssessment_isSequentiallyRationalWithin_matchingPayoff`; the
+     unchanged EXP-034 consistency theorem yields
+     `fullyMixedAssessment_isSequentialEquilibrium_matchingPayoff`.
+  5. `lake build GameTheory.Analysis.Protocol.EFGTest` completed in 1,770 jobs.
+     All four phase audits pass their expected measurements. In particular,
+     `TRANSPORT_ANALYSIS_SOURCE=0`, `SORRY_OR_ADMIT=0`,
+     `CUSTOM_AXIOM=0`, all EFG syntax/bridge probes retain their expected
+     direction, and a focused source scan finds none of the experiment's
+     forbidden tokens.
+  6. Axiom checks for the branch calculation, exact information mass, Bayes
+     belief identification, arbitrary-policy value theorem, and final
+     sequential equilibrium use only `propext`, `Classical.choice`, and
+     `Quot.sound`.
+- **Outcome:** supports. Nonconstant payoff and Bayes consistency now coexist
+  on the same hostile chance/imperfect-information EFG, and rationality holds
+  against arbitrary whole replacement policies through the accepted generic
+  continuation context. None of the kill conditions fired; W1-A is complete.
+- **Next action:** use this fixed rationality target to close W1-B's public SPE
+  and full well-founded one-shot-deviation semantics before broad finite-EFG
+  equilibrium harvesting.
+
+### EXP-036: well-founded information-local one-shot deviation iff SPE
+
+- **Date / revision:** 2026-07-30, working tree based on `f23e3ef`
+- **Status:** complete
+- **Decision / question:** D6 and delivery gate W1-B; whether the accepted
+  execution/information split supports a public strategic subgame-perfect
+  predicate and a full one-shot-deviation equivalence without returning to
+  v1's syntax-recursive EFG evaluator.
+- **Hypothesis:** lift `WellFoundedPlay` from states to complete histories and
+  define terminal continuation value by well-founded recursion on history
+  extension. Subgame perfection can then quantify, for every player and every
+  history including off-path histories, over arbitrary replacement
+  information-local policies. Under `ActsOnceWhereItMatters`, this is
+  equivalent to the existing typed one-choice deviation followed by the
+  original profile.
+- **Representative slice:** a stable Protocol theorem over an arbitrary
+  `InformationModel`; multi-player utility, arbitrary whole-policy deviations,
+  every complete history, and a local replacement choice at each nonterminal
+  history. Exercise both directions on a finite tree-shaped EFG with an
+  explicitly off-path decision history.
+- **Competing designs:** port v1's recursive `GameTree`/subtree predicate;
+  expose the existing single-controller state-chooser theorem under an SPE
+  name; retain only the finite-horizon forward theorem; or add the
+  history-level well-founded strategic theorem and keep the finite EFG layer a
+  transparent specialization.
+- **Kill conditions:** the result calls a controller optimum SPE, quantifies
+  only from the initial history, assumes finite outcomes or a uniform numeric
+  horizon, requires a second transition/evaluation law, lets a policy inspect
+  hidden execution state, imports Analysis into Protocol, needs transport or
+  `Function.update`, or cannot prove the converse under the exact no-revisit
+  condition already used by the representation theorem.
+- **Planned artifacts / commands:**
+  `GameTheory/Protocol/SubgamePerfect.lean`;
+  a focused Protocol/EFG probe;
+  `lake build GameTheory.Protocol.SubgamePerfect`;
+  phase 2 and phase 3 audits; focused source and axiom checks.
+- **Evidence:**
+  1. `HistorySuccessor` is the inverse image of the accepted state successor
+     relation under `History.state`, so `WellFoundedPlay` lifts without a new
+     path order. `historyBackwardValue` recurses on complete histories while
+     every recursive call is still justified by a realized step in the
+     canonical transition law.
+  2. `historyBackwardValue_eq_expect_runHistoryFor` proves that the new
+     well-founded view equals the existing forward history runner wherever the
+     latter has stopped. This is the same semantic join used by state-level
+     `backwardValue`; no second transition or path-probability law was added.
+  3. `InformationModel.IsSubgamePerfect` quantifies over every player, every
+     arbitrary whole replacement policy, and every complete history.
+     `HasNoProfitableOneShotDeviation` changes one typed legal choice and then
+     returns to the original profile. Both use player-specific terminal
+     utility, not a controller optimum.
+  4. The forward implication is well-founded induction over histories. The
+     converse uses `Policy.replaceAt` plus `ActsOnceWhereItMatters` to prove the
+     persistent replacement is observationally invisible after the first
+     step. The public iff assumes neither finite outcomes, a uniform numeric
+     horizon, perfect information syntax, nor bounded utility.
+  5. The finite perfect-information probe has an incumbent that exits
+     immediately and is optimal against every whole replacement policy from
+     the initial history. A legal later decision history is proved absent from
+     the incumbent run support, yet rewarding there is worth one and the
+     incumbent's punishment is worth zero. The profile therefore fails SPE
+     exactly because of an off-path profitable one-shot deviation. The probe
+     also specializes both directions of the generic iff.
+  6. The focused build completed in 1,732 jobs and the full build in 3,311
+     jobs. Phase 2 and Phase 3 audits pass with
+     `TRANSPORT_PROTOCOL=0`, `FUNCTION_UPDATE_SEQUENTIAL=0`,
+     `SORRY_OR_ADMIT_SEQUENTIAL=0`, `CUSTOM_AXIOM_SEQUENTIAL=0`, and all
+     boundary/reachability probes unchanged. Phase 0 and Phase 1 audits also
+     retain their expected measurements.
+  7. Axiom checks for the forward-run join, both implications, the iff, initial
+     optimality, and off-path rejection use only `propext`,
+     `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports. The accepted Protocol layer carries an honest
+  well-founded strategic SPE predicate and the full one-shot-deviation
+  equivalence, including off-path histories. None of the kill conditions
+  fired; W1-B and the frozen F4 semantic theorem are complete.
+- **Next action:** keep any EFG syntax wrapper thin during L-EFG harvesting,
+  and move the Wave 1 critical path to F2 no-regret-to-CCE and F8 stochastic
+  monitoring while T1 proceeds independently.
