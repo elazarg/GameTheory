@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.BellmanGermFinkBridge
+import Math.AlgebraicSelection
 import Mathlib.Analysis.Analytic.Order
 
 /-!
@@ -280,6 +281,59 @@ def rawContinuationCurve (germ : G.AnalyticBellmanGerm)
     ∑ a, germ.rawProfileWeight t s a *
       ∑ s', (G.transition s a s').toReal * H t s' who
 
+/-- The on-profile state kernel written directly in the analytic mixing
+coordinates. -/
+def rawStateKernelCurve (germ : G.AnalyticBellmanGerm) :
+    ℝ → G.State → G.State → ℝ :=
+  fun t s destination =>
+    ∑ a, germ.rawProfileWeight t s a *
+      (G.transition s a destination).toReal
+
+/-- Change of the analytic on-profile state kernel from its endpoint. -/
+def rawStateKernelDriftCurve (germ : G.AnalyticBellmanGerm) :
+    ℝ → G.State → G.State → ℝ :=
+  fun t s destination =>
+    germ.rawStateKernelCurve t s destination -
+      germ.rawStateKernelCurve 0 s destination
+
+/-- One fixed public transition monitor carried by an analytic Bellman
+branch, together with a quantitative lower bound on its current-profile
+expectation. -/
+structure StateKernelMonitorPowerCharge
+    (germ : G.AnalyticBellmanGerm) where
+  source : G.State
+  destination : G.State
+  positive : Bool
+  order : ℕ
+  margin : ℝ
+  margin_pos : 0 < margin
+  baseline_centered :
+    Math.Probability.expect
+        (G.finkStateKernel germ.endpointFinkPoint source)
+        (pmfCoordinateTestScore
+          (G.finkStateKernel germ.endpointFinkPoint source)
+          destination positive) = 0
+  increment_bound : ∀ observation,
+    |pmfCoordinateTestScore
+        (G.finkStateKernel germ.endpointFinkPoint source)
+        destination positive observation| ≤ 1
+  signal :
+    ∀ᶠ t in 𝓝[>] (0 : ℝ),
+      t ∈ Ioo (0 : ℝ) germ.radius ∧
+        ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+          margin * t ^ order ≤
+              Math.Probability.expect
+                (G.finkStateKernel (germ.finkPointAt ht) source)
+                (pmfCoordinateTestScore
+                  (G.finkStateKernel germ.endpointFinkPoint source)
+                  destination positive) ∧
+            0 <
+              Math.Probability.expect
+                (G.finkStateKernel (germ.finkPointAt ht) source)
+                (pmfCoordinateTestScore
+                  (G.finkStateKernel germ.endpointFinkPoint source)
+                  destination positive)
+
 omit [DecidableEq G.State] in
 theorem analytic_rawProfileWeight
     (germ : G.AnalyticBellmanGerm)
@@ -318,6 +372,23 @@ theorem analytic_rawContinuationCurve
     ((analyticAt_pi_iff.mp ((analyticAt_pi_iff.mp hH) s')) who)
 
 omit [DecidableEq G.State] in
+theorem analytic_rawStateKernelCurve
+    (germ : G.AnalyticBellmanGerm) :
+    AnalyticAt ℝ germ.rawStateKernelCurve 0 := by
+  rw [analyticAt_pi_iff]
+  intro s
+  rw [analyticAt_pi_iff]
+  intro destination
+  exact Finset.univ.analyticAt_fun_sum fun a _ =>
+    (germ.analytic_rawProfileWeight s a).mul analyticAt_const
+
+omit [DecidableEq G.State] in
+theorem analytic_rawStateKernelDriftCurve
+    (germ : G.AnalyticBellmanGerm) :
+    AnalyticAt ℝ germ.rawStateKernelDriftCurve 0 := by
+  exact germ.analytic_rawStateKernelCurve.sub analyticAt_const
+
+omit [DecidableEq G.State] in
 /-- At a positive germ point, the raw product of mixing coordinates is the
 real mass of the decoded independent joint-action law. -/
 theorem rawProfileWeight_eq_pmfPi_finkPointAt
@@ -351,6 +422,51 @@ theorem rawProfileWeight_zero_eq_pmfPi_endpointProfile
   simpa [endpoint] using
     (G.bellmanDecodeProfile_apply_toReal
       germ.endpoint_isPolynomialBellmanSolution s who (a who)).symm
+
+omit [DecidableEq G.State] in
+/-- At a positive germ point, the raw state-kernel coordinate is the real
+probability assigned by the decoded Fink state kernel. -/
+theorem rawStateKernelCurve_eq_finkStateKernel
+    (germ : G.AnalyticBellmanGerm)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius)
+    (s destination : G.State) :
+    germ.rawStateKernelCurve t s destination =
+      (G.finkStateKernel (germ.finkPointAt ht) s destination).toReal := by
+  unfold rawStateKernelCurve finkStateKernel
+  rw [Math.ProbabilityMassFunction.bind_apply_toReal_eq_sum]
+  apply Finset.sum_congr rfl
+  intro a _
+  rw [germ.rawProfileWeight_eq_pmfPi_finkPointAt ht]
+
+omit [DecidableEq G.State] in
+/-- At the endpoint, the raw state-kernel coordinate is the probability
+assigned by the decoded endpoint profile. -/
+theorem rawStateKernelCurve_zero_eq_finkStateKernel
+    (germ : G.AnalyticBellmanGerm)
+    (s destination : G.State) :
+    germ.rawStateKernelCurve 0 s destination =
+      (G.finkStateKernel germ.endpointFinkPoint s destination).toReal := by
+  unfold rawStateKernelCurve finkStateKernel
+  rw [Math.ProbabilityMassFunction.bind_apply_toReal_eq_sum]
+  apply Finset.sum_congr rfl
+  intro a _
+  rw [germ.rawProfileWeight_zero_eq_pmfPi_endpointProfile,
+    germ.finkProfile_endpointFinkPoint]
+
+omit [DecidableEq G.State] in
+/-- On the positive analytic branch, raw kernel drift is the coordinatewise
+difference between the current and endpoint state kernels. -/
+theorem rawStateKernelDriftCurve_eq_finkStateKernel_sub_endpoint
+    (germ : G.AnalyticBellmanGerm)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius)
+    (s destination : G.State) :
+    germ.rawStateKernelDriftCurve t s destination =
+      (G.finkStateKernel (germ.finkPointAt ht) s destination).toReal -
+        (G.finkStateKernel
+          germ.endpointFinkPoint s destination).toReal := by
+  rw [rawStateKernelDriftCurve,
+    germ.rawStateKernelCurve_eq_finkStateKernel ht,
+    germ.rawStateKernelCurve_zero_eq_finkStateKernel]
 
 omit [DecidableEq G.State] in
 /-- The raw analytic stage curve agrees with the semantic Fink expectation
@@ -402,6 +518,26 @@ theorem rawContinuationCurve_zero_eq_finkContinuationEU
   rw [germ.rawProfileWeight_zero_eq_pmfPi_endpointProfile,
     germ.finkProfile_endpointFinkPoint,
     Math.Probability.expect_eq_sum]
+
+omit [DecidableEq G.State] in
+/-- Raw continuation is expectation against the raw analytic state kernel. -/
+theorem rawContinuationCurve_eq_sum_rawStateKernel
+    (germ : G.AnalyticBellmanGerm)
+    (H : ℝ → G.State → Payoff ι)
+    (t : ℝ) (s : G.State) (who : ι) :
+    germ.rawContinuationCurve H t s who =
+      ∑ destination,
+        germ.rawStateKernelCurve t s destination *
+          H t destination who := by
+  unfold rawContinuationCurve rawStateKernelCurve
+  simp_rw [Finset.mul_sum]
+  rw [Finset.sum_comm]
+  apply Finset.sum_congr rfl
+  intro destination _
+  rw [Finset.sum_mul]
+  apply Finset.sum_congr rfl
+  intro a _
+  ring
 
 omit [DecidableEq G.State] in
 /-- Raw continuation is additive in the continued state-payoff curve. -/
@@ -496,6 +632,58 @@ theorem endpointTransitionDriftCurve_zero
   rw [endpointTransitionDriftCurve, Pi.sub_apply,
     germ.rawContinuationCurve_zero_eq_finkContinuationEU]
   exact germ.finkContinuationResidualVector_endpointValue_eq_zero
+
+omit [DecidableEq G.State] in
+/-- The endpoint-value transition drift is the endpoint value paired with
+the raw state-kernel drift. -/
+theorem endpointTransitionDriftCurve_eq_sum_stateKernelDrift
+    (germ : G.AnalyticBellmanGerm)
+    (t : ℝ) (s : G.State) (who : ι) :
+    germ.endpointTransitionDriftCurve t s who =
+      ∑ destination,
+        germ.rawStateKernelDriftCurve t s destination *
+          germ.endpointValue destination who := by
+  have hzero :
+      germ.rawContinuationCurve (fun _ => germ.endpointValue) 0 s who =
+        germ.endpointValue s who := by
+    rw [germ.rawContinuationCurve_zero_eq_finkContinuationEU]
+    have hresidual :=
+      congrFun
+        (congrFun
+          germ.finkContinuationResidualVector_endpointValue_eq_zero s) who
+    exact sub_eq_zero.mp
+      (by
+        simpa [finkContinuationResidualVector,
+          finkContinuationResidual] using hresidual)
+  change
+    germ.rawContinuationCurve (fun _ => germ.endpointValue) t s who -
+        germ.endpointValue s who =
+      ∑ destination,
+        germ.rawStateKernelDriftCurve t s destination *
+          germ.endpointValue destination who
+  calc
+    germ.rawContinuationCurve (fun _ => germ.endpointValue) t s who -
+        germ.endpointValue s who =
+      germ.rawContinuationCurve (fun _ => germ.endpointValue) t s who -
+        germ.rawContinuationCurve (fun _ => germ.endpointValue) 0 s who := by
+          rw [hzero]
+    _ =
+        (∑ destination,
+          germ.rawStateKernelCurve t s destination *
+            germ.endpointValue destination who) -
+        ∑ destination,
+          germ.rawStateKernelCurve 0 s destination *
+            germ.endpointValue destination who := by
+      rw [germ.rawContinuationCurve_eq_sum_rawStateKernel,
+        germ.rawContinuationCurve_eq_sum_rawStateKernel]
+    _ = ∑ destination,
+        germ.rawStateKernelDriftCurve t s destination *
+          germ.endpointValue destination who := by
+      rw [← Finset.sum_sub_distrib]
+      apply Finset.sum_congr rfl
+      intro destination _
+      simp only [rawStateKernelDriftCurve]
+      ring
 
 omit [DecidableEq G.State] in
 @[simp]
@@ -809,6 +997,25 @@ theorem eventually_endpointTransitionDriftCurve_eq_order_smul
     (ht.2.trans_le (min_le_right _ _)) hfactor
 
 omit [DecidableEq G.State] in
+/-- Right-germ form of the coupled transition factorization. -/
+theorem eventually_endpointTransitionDriftCurve_eq_order_smul_right
+    {germ : G.AnalyticBellmanGerm}
+    (jet : germ.LowerValueJet) :
+    ∀ᶠ t in 𝓝[>] (0 : ℝ),
+      germ.endpointTransitionDriftCurve t =
+        t ^ jet.order • jet.coupledTransitionFactor t := by
+  have hcutoff :
+      (0 : ℝ) < min germ.radius 1 :=
+    lt_min germ.radius_pos zero_lt_one
+  filter_upwards
+      [Ioo_mem_nhdsGT hcutoff,
+        jet.valueIncrement_eq.filter_mono nhdsWithin_le_nhds] with
+      t ht hfactor
+  exact jet.endpointTransitionDriftCurve_eq_order_smul
+    ⟨ht.1, ht.2.trans_le (min_le_left _ _)⟩
+    (ht.2.trans_le (min_le_right _ _)) hfactor
+
+omit [DecidableEq G.State] in
 /-- A lower value jet has an endpoint-harmonic leading coefficient exactly
 when its coupled transition coefficient vanishes. -/
 theorem coupledTransitionFactor_zero_eq_zero_iff
@@ -819,6 +1026,241 @@ theorem coupledTransitionFactor_zero_eq_zero_iff
         (jet.factor 0) germ.endpointFinkPoint = 0 := by
   rw [jet.coupledTransitionFactor_zero]
   exact neg_eq_zero
+
+omit [DecidableEq G.State] in
+/-- If the lower jet is not endpoint-harmonic, at least one coordinate of
+the analytic state-kernel drift is a nonzero right germ. -/
+theorem exists_rawStateKernelDrift_not_eventually_zero
+    {germ : G.AnalyticBellmanGerm}
+    (jet : germ.LowerValueJet)
+    (hnonharmonic :
+      G.finkContinuationResidualVector
+        (jet.factor 0) germ.endpointFinkPoint ≠ 0) :
+    ∃ index : G.State × G.State,
+      ¬∀ᶠ t in 𝓝[>] (0 : ℝ),
+        germ.rawStateKernelDriftCurve t index.1 index.2 = 0 := by
+  have hcoupled_ne :
+      jet.coupledTransitionFactor 0 ≠ 0 := by
+    intro hzero
+    exact hnonharmonic
+      (jet.coupledTransitionFactor_zero_eq_zero_iff.mp hzero)
+  obtain ⟨s, who, hcoordinate⟩ :
+      ∃ s who, jet.coupledTransitionFactor 0 s who ≠ 0 := by
+    by_contra hnot
+    simp only [not_exists, not_not] at hnot
+    apply hcoupled_ne
+    funext s who
+    exact hnot s who
+  have hcoordinate_analytic :
+      AnalyticAt ℝ
+        (fun t => jet.coupledTransitionFactor t s who) 0 := by
+    exact
+      (analyticAt_pi_iff.mp
+        ((analyticAt_pi_iff.mp
+          jet.analytic_coupledTransitionFactor) s)) who
+  have hcoordinate_ne :
+      ∀ᶠ t in 𝓝 (0 : ℝ),
+        jet.coupledTransitionFactor t s who ≠ 0 :=
+    hcoordinate_analytic.continuousAt.eventually_ne hcoordinate
+  have hdrift_ne :
+      ∀ᶠ t in 𝓝[>] (0 : ℝ),
+        germ.endpointTransitionDriftCurve t s who ≠ 0 := by
+    filter_upwards
+        [jet.eventually_endpointTransitionDriftCurve_eq_order_smul_right,
+          hcoordinate_ne.filter_mono nhdsWithin_le_nhds,
+          self_mem_nhdsWithin] with t hfactor hnonzero ht
+    have hpow_ne : t ^ jet.order ≠ 0 :=
+      pow_ne_zero _ (ne_of_gt ht)
+    have hcomponent :=
+      congrFun (congrFun hfactor s) who
+    rw [hcomponent]
+    exact mul_ne_zero hpow_ne hnonzero
+  by_contra hnot
+  simp only [not_exists, not_not] at hnot
+  have hall :
+      ∀ᶠ t in 𝓝[>] (0 : ℝ),
+        ∀ destination,
+          germ.rawStateKernelDriftCurve t s destination = 0 :=
+    Filter.eventually_all.mpr fun destination =>
+      hnot (s, destination)
+  have hdrift_zero :
+      ∀ᶠ t in 𝓝[>] (0 : ℝ),
+        germ.endpointTransitionDriftCurve t s who = 0 := by
+    filter_upwards [hall] with t ht
+    rw [germ.endpointTransitionDriftCurve_eq_sum_stateKernelDrift]
+    simp [ht]
+  obtain ⟨t, ht_ne, ht_zero⟩ := (hdrift_ne.and hdrift_zero).exists
+  exact ht_ne ht_zero
+
+omit [DecidableEq G.State] in
+/-- A nonharmonic lower jet yields one fixed oriented public transition
+coordinate with a positive power-law signal.  The sign orients the score;
+the implemented transition law is never reversed. -/
+theorem exists_fixed_oriented_stateKernelDrift_powerCharge
+    {germ : G.AnalyticBellmanGerm}
+    (jet : germ.LowerValueJet)
+    (hnonharmonic :
+      G.finkContinuationResidualVector
+        (jet.factor 0) germ.endpointFinkPoint ≠ 0) :
+    ∃ s destination σ n c,
+      (σ = -1 ∨ σ = 1) ∧
+        0 < c ∧
+        ∀ᶠ t in 𝓝[>] (0 : ℝ),
+          c * t ^ n ≤
+              σ * germ.rawStateKernelDriftCurve t s destination ∧
+            0 < σ * germ.rawStateKernelDriftCurve t s destination ∧
+            ∀ s' destination',
+              |germ.rawStateKernelDriftCurve t s' destination'| ≤
+                σ * germ.rawStateKernelDriftCurve t s destination := by
+  let f : G.State × G.State → ℝ → ℝ :=
+    fun index t =>
+      germ.rawStateKernelDriftCurve t index.1 index.2
+  have hf : ∀ index, AnalyticAt ℝ (f index) 0 := by
+    intro index
+    exact
+      (analyticAt_pi_iff.mp
+        ((analyticAt_pi_iff.mp
+          germ.analytic_rawStateKernelDriftCurve) index.1)) index.2
+  obtain ⟨index₀, hindex₀⟩ :=
+    jet.exists_rawStateKernelDrift_not_eventually_zero hnonharmonic
+  letI : Nonempty (G.State × G.State) := ⟨index₀⟩
+  obtain ⟨index, σ, hσ, hmax⟩ :=
+    Math.finite_analytic_family_eventually_fixed_oriented_abs_maximizer
+      f hf ⟨index₀, hindex₀⟩
+  have horiented_analytic :
+      AnalyticAt ℝ (fun t => σ * f index t) 0 :=
+    analyticAt_const.mul (hf index)
+  have horiented_pos :
+      ∀ᶠ t in 𝓝[>] (0 : ℝ), 0 < σ * f index t :=
+    hmax.mono fun _ h => h.1
+  obtain ⟨n, c, hc, hpower⟩ :=
+    Math.analyticAt_eventually_const_mul_pow_le_of_eventually_pos
+      horiented_analytic horiented_pos
+  refine ⟨index.1, index.2, σ, n, c, hσ, hc, ?_⟩
+  filter_upwards [hmax, hpower] with t htmax htpower
+  refine ⟨by simpa [f] using htpower, htmax.1, ?_⟩
+  intro s' destination'
+  exact htmax.2 (s', destination')
+
+/-- Operational form of a nonharmonic lower jet: one fixed signed coordinate
+monitor is centered under the endpoint kernel, bounded by one, and has a
+positive power-law expectation under every sufficiently small current
+on-profile kernel. -/
+theorem exists_fixed_stateKernelMonitor_powerCharge
+    {germ : G.AnalyticBellmanGerm}
+    (jet : germ.LowerValueJet)
+    (hnonharmonic :
+      G.finkContinuationResidualVector
+        (jet.factor 0) germ.endpointFinkPoint ≠ 0) :
+    ∃ s destination positive n c,
+      0 < c ∧
+        Math.Probability.expect
+            (G.finkStateKernel germ.endpointFinkPoint s)
+            (pmfCoordinateTestScore
+              (G.finkStateKernel germ.endpointFinkPoint s)
+              destination positive) = 0 ∧
+        (∀ observation,
+          |pmfCoordinateTestScore
+              (G.finkStateKernel germ.endpointFinkPoint s)
+              destination positive observation| ≤ 1) ∧
+        ∀ᶠ t in 𝓝[>] (0 : ℝ),
+          t ∈ Ioo (0 : ℝ) germ.radius ∧
+            ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+              c * t ^ n ≤
+                  Math.Probability.expect
+                    (G.finkStateKernel (germ.finkPointAt ht) s)
+                    (pmfCoordinateTestScore
+                      (G.finkStateKernel germ.endpointFinkPoint s)
+                      destination positive) ∧
+                0 <
+                  Math.Probability.expect
+                    (G.finkStateKernel (germ.finkPointAt ht) s)
+                    (pmfCoordinateTestScore
+                      (G.finkStateKernel germ.endpointFinkPoint s)
+                      destination positive) := by
+  obtain ⟨s, destination, σ, n, c, hσ, hc, hcharge⟩ :=
+    jet.exists_fixed_oriented_stateKernelDrift_powerCharge hnonharmonic
+  have hcutoff :
+      Ioo (0 : ℝ) germ.radius ∈ 𝓝[>] (0 : ℝ) :=
+    Ioo_mem_nhdsGT germ.radius_pos
+  rcases hσ with hσ | hσ
+  · subst σ
+    refine ⟨s, destination, false, n, c, hc,
+      expect_pmfCoordinateTestScore_baseline _ _ _, ?_, ?_⟩
+    · exact fun observation =>
+        abs_pmfCoordinateTestScore_le_one _ _ _ observation
+    · filter_upwards [hcharge, hcutoff] with t htcharge ht
+      refine ⟨ht, fun ht' => ?_⟩
+      rw [expect_pmfCoordinateTestScore]
+      change
+        c * t ^ n ≤
+            (-1 : ℝ) *
+              ((G.finkStateKernel
+                    (germ.finkPointAt ht') s destination).toReal -
+                (G.finkStateKernel
+                    germ.endpointFinkPoint s destination).toReal) ∧
+          0 <
+            (-1 : ℝ) *
+              ((G.finkStateKernel
+                    (germ.finkPointAt ht') s destination).toReal -
+                (G.finkStateKernel
+                    germ.endpointFinkPoint s destination).toReal)
+      rw [← germ.rawStateKernelDriftCurve_eq_finkStateKernel_sub_endpoint
+        ht' s destination]
+      exact ⟨htcharge.1, htcharge.2.1⟩
+  · subst σ
+    refine ⟨s, destination, true, n, c, hc,
+      expect_pmfCoordinateTestScore_baseline _ _ _, ?_, ?_⟩
+    · exact fun observation =>
+        abs_pmfCoordinateTestScore_le_one _ _ _ observation
+    · filter_upwards [hcharge, hcutoff] with t htcharge ht
+      refine ⟨ht, fun ht' => ?_⟩
+      rw [expect_pmfCoordinateTestScore]
+      change
+        c * t ^ n ≤
+            (1 : ℝ) *
+              ((G.finkStateKernel
+                    (germ.finkPointAt ht') s destination).toReal -
+                (G.finkStateKernel
+                    germ.endpointFinkPoint s destination).toReal) ∧
+          0 <
+            (1 : ℝ) *
+              ((G.finkStateKernel
+                    (germ.finkPointAt ht') s destination).toReal -
+                (G.finkStateKernel
+                    germ.endpointFinkPoint s destination).toReal)
+      rw [← germ.rawStateKernelDriftCurve_eq_finkStateKernel_sub_endpoint
+        ht' s destination]
+      exact ⟨htcharge.1, htcharge.2.1⟩
+
+/-- Exact operational split for a lower value jet.  Either its leading
+coefficient is harmonic under the endpoint profile, or a fixed bounded
+public transition monitor detects the moving on-profile kernel with a
+power-law margin. -/
+theorem harmonic_or_stateKernelMonitorPowerCharge
+    {germ : G.AnalyticBellmanGerm}
+    (jet : germ.LowerValueJet) :
+    G.finkContinuationResidualVector
+          (jet.factor 0) germ.endpointFinkPoint = 0 ∨
+      Nonempty germ.StateKernelMonitorPowerCharge := by
+  by_cases hharmonic :
+      G.finkContinuationResidualVector
+        (jet.factor 0) germ.endpointFinkPoint = 0
+  · exact Or.inl hharmonic
+  · right
+    obtain ⟨s, destination, positive, n, c, hc,
+        hcentered, hbound, hsignal⟩ :=
+      jet.exists_fixed_stateKernelMonitor_powerCharge hharmonic
+    exact ⟨
+      { source := s
+        destination := destination
+        positive := positive
+        order := n
+        margin := c
+        margin_pos := hc
+        baseline_centered := hcentered
+        increment_bound := hbound
+        signal := hsignal }⟩
 
 end LowerValueJet
 
