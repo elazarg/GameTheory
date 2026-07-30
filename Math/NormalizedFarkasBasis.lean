@@ -7,6 +7,7 @@ Authors: GameTheory contributors
 import Math.ParametricFarkasBasis
 import Mathlib.Algebra.BigOperators.Field
 import Mathlib.Analysis.Convex.Extreme
+import Mathlib.Analysis.Convex.KreinMilman
 import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
 import Mathlib.LinearAlgebra.Matrix.Rank
 
@@ -217,6 +218,189 @@ def standardFeasibleSet
     {Row Col : Type*} [Fintype Col]
     (A : Matrix Row Col ℝ) (rhs : Row → ℝ) : Set (Col → ℝ) :=
   {z | (∀ j, 0 ≤ z j) ∧ Matrix.mulVec A z = rhs}
+
+/-- A feasible vector is optimal for a moving linear objective. -/
+def IsStandardOptimal
+    {Row Col : Type*} [Fintype Col]
+    (A : Matrix Row Col ℝ) (rhs : Row → ℝ)
+    (objective : Col → ℝ) (z : Col → ℝ) : Prop :=
+  z ∈ standardFeasibleSet A rhs ∧
+    ∀ w ∈ standardFeasibleSet A rhs,
+      (∑ j, objective j * w j) ≤ ∑ j, objective j * z j
+
+/-- The continuous linear functional represented by a finite coefficient
+vector. -/
+def finiteDotContinuousLinearMap
+    {Col : Type*} [Fintype Col] (c : Col → ℝ) :
+    (Col → ℝ) →L[ℝ] ℝ :=
+  ∑ j, c j • ContinuousLinearMap.proj j
+
+@[simp]
+theorem finiteDotContinuousLinearMap_apply
+    {Col : Type*} [Fintype Col] (c z : Col → ℝ) :
+    finiteDotContinuousLinearMap c z = ∑ j, c j * z j := by
+  simp [finiteDotContinuousLinearMap]
+
+/-- A standard-form nonnegative affine fiber is closed. -/
+theorem isClosed_standardFeasibleSet
+    {Row Col : Type*} [Fintype Col]
+    (A : Matrix Row Col ℝ) (rhs : Row → ℝ) :
+    IsClosed (standardFeasibleSet A rhs) := by
+  rw [show standardFeasibleSet A rhs =
+      (⋂ j, {z : Col → ℝ | 0 ≤ z j}) ∩
+        ⋂ i, {z : Col → ℝ | Matrix.mulVec A z i = rhs i} by
+    ext z
+    simp only [standardFeasibleSet, Set.mem_setOf_eq, Set.mem_inter_iff,
+      Set.mem_iInter]
+    constructor
+    · rintro ⟨hz, heq⟩
+      exact ⟨hz, fun i => congrFun heq i⟩
+    · rintro ⟨hz, heq⟩
+      exact ⟨hz, funext heq⟩]
+  apply IsClosed.inter
+  · exact isClosed_iInter fun j =>
+      isClosed_le continuous_const (continuous_apply j)
+  · exact isClosed_iInter fun i =>
+      isClosed_eq (by
+        change Continuous (fun z : Col → ℝ => ∑ j, A i j * z j)
+        exact continuous_finsetSum _ fun j _ =>
+          continuous_const.mul (continuous_apply j)) continuous_const
+
+/-- Every attained linear optimum over a standard-form nonnegative affine
+fiber is attained at an extreme point.
+
+The feasible set need not be bounded.  The proof first passes to the exposed
+optimal face, minimizes total nonnegative mass there, and applies
+Krein--Milman to the resulting compact minimum-mass face. -/
+theorem exists_extreme_standardOptimal_of_standardOptimal
+    {Row Col : Type*}
+    [Fintype Col]
+    (A : Matrix Row Col ℝ) (rhs : Row → ℝ) (objective : Col → ℝ)
+    {z : Col → ℝ}
+    (hz : IsStandardOptimal A rhs objective z) :
+    ∃ zExtreme : Col → ℝ,
+      zExtreme ∈ (standardFeasibleSet A rhs).extremePoints ℝ ∧
+        IsStandardOptimal A rhs objective zExtreme ∧
+        (∑ j, objective j * zExtreme j) =
+          ∑ j, objective j * z j := by
+  classical
+  let feasible : Set (Col → ℝ) := standardFeasibleSet A rhs
+  let objectiveMap : (Col → ℝ) →L[ℝ] ℝ :=
+    finiteDotContinuousLinearMap objective
+  let massMap : (Col → ℝ) →L[ℝ] ℝ :=
+    finiteDotContinuousLinearMap (fun _ => 1)
+  let optimalFace : Set (Col → ℝ) :=
+    objectiveMap.toExposed feasible
+  have hzOptimalFace : z ∈ optimalFace := by
+    refine ⟨hz.1, ?_⟩
+    intro w hw
+    simpa [objectiveMap, finiteDotContinuousLinearMap_apply] using hz.2 w hw
+  have hoptimalExposed : IsExposed ℝ feasible optimalFace :=
+    ContinuousLinearMap.toExposed.isExposed
+  have hfeasibleClosed : IsClosed feasible := by
+    exact isClosed_standardFeasibleSet A rhs
+  have hoptimalClosed : IsClosed optimalFace :=
+    hoptimalExposed.isClosed hfeasibleClosed
+  let upper : Col → ℝ := fun _ => massMap z
+  let truncated : Set (Col → ℝ) := optimalFace ∩ Set.Icc 0 upper
+  have hzMassNonneg : 0 ≤ massMap z := by
+    simpa [massMap, finiteDotContinuousLinearMap_apply] using
+      (Finset.sum_nonneg fun j _ => hz.1.1 j)
+  have hzTruncated : z ∈ truncated := by
+    refine ⟨hzOptimalFace, ?_⟩
+    constructor
+    · exact hz.1.1
+    · intro j
+      change z j ≤ massMap z
+      simpa [massMap, finiteDotContinuousLinearMap_apply] using
+        (Finset.single_le_sum
+          (fun k _ => hz.1.1 k) (Finset.mem_univ j))
+  have htruncatedCompact : IsCompact truncated := by
+    have hcompactBox : IsCompact (Set.Icc (0 : Col → ℝ) upper) :=
+      isCompact_Icc
+    simpa [truncated, Set.inter_comm] using
+      hcompactBox.inter_right hoptimalClosed
+  obtain ⟨m, hmTruncated, hmMin⟩ :=
+    htruncatedCompact.exists_isMinOn
+      ⟨z, hzTruncated⟩ massMap.continuous.continuousOn
+  have hmOptimalFace : m ∈ optimalFace := hmTruncated.1
+  have hmGlobalMin : ∀ w ∈ optimalFace, massMap m ≤ massMap w := by
+    intro w hw
+    by_cases hwMass : massMap w ≤ massMap z
+    · apply hmMin
+      refine ⟨hw, ?_⟩
+      constructor
+      · exact (hoptimalExposed.subset hw).1
+      · intro j
+        calc
+          w j ≤ massMap w := by
+            simpa [massMap, finiteDotContinuousLinearMap_apply] using
+              (Finset.single_le_sum
+                (fun k _ => (hoptimalExposed.subset hw).1 k)
+                (Finset.mem_univ j))
+          _ ≤ upper j := hwMass
+    · exact (hmMin hzTruncated).trans (le_of_lt (lt_of_not_ge hwMass))
+  let minimumMassFace : Set (Col → ℝ) :=
+    (-massMap).toExposed optimalFace
+  have hmMinimumMassFace : m ∈ minimumMassFace := by
+    refine ⟨hmOptimalFace, ?_⟩
+    intro w hw
+    simpa using neg_le_neg (hmGlobalMin w hw)
+  have hminimumMassExposed :
+      IsExposed ℝ optimalFace minimumMassFace :=
+    ContinuousLinearMap.toExposed.isExposed
+  let minimumUpper : Col → ℝ := fun _ => massMap m
+  have hminimumMassFace_subset :
+      minimumMassFace ⊆ Set.Icc (0 : Col → ℝ) minimumUpper := by
+    intro w hw
+    have hwFeasible := hoptimalExposed.subset (hminimumMassExposed.subset hw)
+    have hwMassLe : massMap w ≤ massMap m := by
+      have := hw.2 m hmOptimalFace
+      simpa using neg_le_neg this
+    constructor
+    · exact hwFeasible.1
+    · intro j
+      calc
+        w j ≤ massMap w := by
+          simpa [massMap, finiteDotContinuousLinearMap_apply] using
+            (Finset.single_le_sum
+              (fun k _ => hwFeasible.1 k) (Finset.mem_univ j))
+        _ ≤ minimumUpper j := hwMassLe
+  have hminimumMassCompact : IsCompact minimumMassFace := by
+    exact isCompact_Icc.of_isClosed_subset
+      (hminimumMassExposed.isClosed hoptimalClosed)
+      hminimumMassFace_subset
+  obtain ⟨zExtreme, hzExtremeMinimum⟩ :=
+    hminimumMassCompact.extremePoints_nonempty
+      ⟨m, hmMinimumMassFace⟩
+  have hzExtremeFeasible :
+      zExtreme ∈ feasible :=
+    hoptimalExposed.subset
+      (hminimumMassExposed.subset
+        (extremePoints_subset hzExtremeMinimum))
+  have hzExtremeOriginal :
+      zExtreme ∈ feasible.extremePoints ℝ := by
+    exact (hoptimalExposed.isExtreme.trans
+      hminimumMassExposed.isExtreme).extremePoints_subset_extremePoints
+        hzExtremeMinimum
+  have hzExtremeOptimalFace :
+      zExtreme ∈ optimalFace :=
+    hminimumMassExposed.subset
+      (extremePoints_subset hzExtremeMinimum)
+  have hzExtremeOptimal :
+      IsStandardOptimal A rhs objective zExtreme := by
+    constructor
+    · exact hzExtremeFeasible
+    · intro w hw
+      simpa [objectiveMap, finiteDotContinuousLinearMap_apply] using
+        hzExtremeOptimalFace.2 w hw
+  have hvalue :
+      (∑ j, objective j * zExtreme j) =
+        ∑ j, objective j * z j := by
+    apply le_antisymm
+    · exact hz.2 zExtreme hzExtremeFeasible
+    · exact hzExtremeOptimal.2 z hz.1
+  exact ⟨zExtreme, hzExtremeOriginal, hzExtremeOptimal, hvalue⟩
 
 /-- An extreme point of a standard-form nonnegative affine fiber admits
 no nonzero kernel direction supported on its positive coordinates. -/
@@ -602,15 +786,6 @@ theorem supportCramerVector_eq_of_extreme
     have hzj : z j = 0 := by
       simpa [positiveSupport] using hj
     exact hzj.symm
-
-/-- A feasible vector is optimal for a moving linear objective. -/
-def IsStandardOptimal
-    {Row Col : Type*} [Fintype Col]
-    (A : Matrix Row Col ℝ) (rhs : Row → ℝ)
-    (objective : Col → ℝ) (z : Col → ℝ) : Prop :=
-  z ∈ standardFeasibleSet A rhs ∧
-    ∀ w ∈ standardFeasibleSet A rhs,
-      (∑ j, objective j * w j) ≤ ∑ j, objective j * z j
 
 /-- Static basic-feasible-solution coverage: every extreme optimal point is
 represented exactly by the Cramer system of one nonsingular support Gram
@@ -1146,6 +1321,53 @@ theorem exists_fixed_eventual_optimal_supportCramer
           hcandidateValue.symm
   exact ⟨hcandidateFeasible, hcandidateOptimal, hcandidateValue⟩
 
+/-- Full moving basic-support closure from mere attained optimality.
+
+The static extreme-optimizer theorem discharges the only convex-geometric
+premise of `exists_fixed_eventual_optimal_supportCramer`: the caller need
+only provide an attained optimum with the analytic target value at each
+nearby parameter. -/
+theorem exists_fixed_eventual_optimal_supportCramer_of_attained
+    {Row Col : Type*}
+    [Fintype Row] [Fintype Col] [DecidableEq Col]
+    (A : ℝ → Matrix Row Col ℝ) (rhs : ℝ → Row → ℝ)
+    (objective : ℝ → Col → ℝ) (target : ℝ → ℝ)
+    {x₀ : ℝ}
+    (hA : ∀ i j, AnalyticAt ℝ (fun x => A x i j) x₀)
+    (hrhs : ∀ i, AnalyticAt ℝ (fun x => rhs x i) x₀)
+    (hobjective : ∀ j,
+      AnalyticAt ℝ (fun x => objective x j) x₀)
+    (htarget : AnalyticAt ℝ target x₀)
+    (hattained :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ∃ z : Col → ℝ,
+          IsStandardOptimal (A x) (rhs x) (objective x) z ∧
+          (∑ j, objective x j * z j) = target x) :
+    ∃ support : Finset Col,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        supportCramerVector (A x) (rhs x) support ∈
+            standardFeasibleSet (A x) (rhs x) ∧
+          IsStandardOptimal (A x) (rhs x) (objective x)
+            (supportCramerVector (A x) (rhs x) support) ∧
+          (∑ j, objective x j *
+              supportCramerVector (A x) (rhs x) support j) =
+            target x := by
+  have hextreme :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ∃ z : Col → ℝ,
+          z ∈ (standardFeasibleSet (A x) (rhs x)).extremePoints ℝ ∧
+          IsStandardOptimal (A x) (rhs x) (objective x) z ∧
+          (∑ j, objective x j * z j) = target x := by
+    filter_upwards [hattained] with x hx
+    obtain ⟨z, hzOptimal, hzValue⟩ := hx
+    obtain ⟨zExtreme, hzExtreme, hzExtremeOptimal, hsameValue⟩ :=
+      exists_extreme_standardOptimal_of_standardOptimal
+        (A x) (rhs x) (objective x) hzOptimal
+    exact ⟨zExtreme, hzExtreme, hzExtremeOptimal,
+      hsameValue.trans hzValue⟩
+  exact exists_fixed_eventual_optimal_supportCramer
+    A rhs objective target hA hrhs hobjective htarget hextreme
+
 /-- Basic-support coverage specialized to a normalized Farkas polyhedron.
 In particular, columns with zero mass are allowed in the selected basis. -/
 theorem exists_supportCramerBasis_of_extreme_optimal_normalizedFarkas
@@ -1251,6 +1473,72 @@ theorem exists_fixed_eventual_optimal_normalizedFarkas_supportCramer
   simpa [A, rhs, normalizedFarkasCertificateSet] using
     (exists_fixed_eventual_optimal_supportCramer
       A rhs objective target hA hrhs hobjective htarget hextreme')
+
+/-- Parametric normalized-Farkas closure from attained optimality.
+
+This is the premise-minimal analytic optimizer bridge: attainment and an
+analytic optimal value produce one fixed eventual Cramer support. -/
+theorem
+    exists_fixed_eventual_optimal_normalizedFarkas_supportCramer_of_attained
+    {Row Col : Type*}
+    [Fintype Row] [Fintype Col] [DecidableEq Col]
+    (balance : ℝ → Matrix Row Col ℝ)
+    (mass objective : ℝ → Col → ℝ)
+    (target : ℝ → ℝ) {x₀ : ℝ}
+    (hbalance :
+      ∀ i j, AnalyticAt ℝ (fun x => balance x i j) x₀)
+    (hmass :
+      ∀ j, AnalyticAt ℝ (fun x => mass x j) x₀)
+    (hobjective :
+      ∀ j, AnalyticAt ℝ (fun x => objective x j) x₀)
+    (htarget : AnalyticAt ℝ target x₀)
+    (hattained :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ∃ z : Col → ℝ,
+          IsStandardOptimal
+              (normalizedFarkasMatrix (balance x) (mass x))
+              normalizedFarkasRhs (objective x) z ∧
+          (∑ j, objective x j * z j) = target x) :
+    ∃ support : Finset Col,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        supportCramerVector
+              (normalizedFarkasMatrix (balance x) (mass x))
+              normalizedFarkasRhs support ∈
+            normalizedFarkasCertificateSet
+              (balance x) (mass x) ∧
+          IsStandardOptimal
+              (normalizedFarkasMatrix (balance x) (mass x))
+              normalizedFarkasRhs (objective x)
+              (supportCramerVector
+                (normalizedFarkasMatrix (balance x) (mass x))
+                normalizedFarkasRhs support) ∧
+          (∑ j, objective x j *
+              supportCramerVector
+                (normalizedFarkasMatrix (balance x) (mass x))
+                normalizedFarkasRhs support j) =
+            target x := by
+  let A : ℝ → Matrix (Sum Row Unit) Col ℝ := fun x =>
+    normalizedFarkasMatrix (balance x) (mass x)
+  let rhs : ℝ → Sum Row Unit → ℝ := fun _ => normalizedFarkasRhs
+  have hA :
+      ∀ i j, AnalyticAt ℝ (fun x => A x i j) x₀ := by
+    intro i j
+    cases i with
+    | inl i => exact hbalance i j
+    | inr _ => exact hmass j
+  have hrhs :
+      ∀ i, AnalyticAt ℝ (fun x => rhs x i) x₀ := by
+    intro i
+    exact analyticAt_const
+  have hattained' :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ∃ z : Col → ℝ,
+          IsStandardOptimal (A x) (rhs x) (objective x) z ∧
+          (∑ j, objective x j * z j) = target x := by
+    simpa [A, rhs] using hattained
+  simpa [A, rhs, normalizedFarkasCertificateSet] using
+    (exists_fixed_eventual_optimal_supportCramer_of_attained
+      A rhs objective target hA hrhs hobjective htarget hattained')
 
 end
 end LinearAlgebra

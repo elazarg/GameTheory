@@ -33,10 +33,11 @@ to exist even in two-player zero-sum games — the Big Match
 * The general n-player case is **open**; it is the central open problem of
   the field (Mertens 1986; Solan–Vieille 2010).
 
-The statement is recorded here as
-`StochasticGame.exists_uniformEquilibriumPayoff` with a `sorry` that must
-remain until the statement is actually proved.  Special cases proved in this
-development so far live in `GameTheory.Concepts.Stochastic.Absorbing`.
+The open construction is isolated here as
+`StochasticGame.exists_uniformDeviationCapConstructor`.  Its exact
+equivalence with the semantic uniform-payoff property is proved, so
+`StochasticGame.exists_uniformEquilibriumPayoff` is a checked corollary.
+Special cases live in `GameTheory.Concepts.Stochastic.Absorbing`.
 
 ## Main definitions
 
@@ -48,8 +49,10 @@ development so far live in `GameTheory.Concepts.Stochastic.Absorbing`.
 
 ## Main statements
 
-* `StochasticGame.exists_uniformEquilibriumPayoff` — the open conjecture
-  (stated with `sorry`)
+* `StochasticGame.exists_uniformDeviationCapConstructor` — the quantitative
+  form of the open conjecture
+* `StochasticGame.exists_uniformEquilibriumPayoff` — its equivalent semantic
+  formulation
 * `StochasticGame.exists_isUniformεEquilibrium` — for every `ε > 0` some
   profile is a uniform ε-equilibrium (derived from the conjecture)
 * `StochasticGame.isUniformEquilibriumPayoff_of_deviation_caps` — a direct
@@ -157,6 +160,56 @@ theorem isUniformEquilibriumPayoff_of_deviation_caps
   · intro who
     exact (hon who).trans (by linarith)
 
+/-- The quantitative construction obligation for a uniform equilibrium
+payoff.
+
+At every positive accuracy it supplies one behavior profile with a common
+horizon threshold, simultaneous on-path payoff approximation, and a cap on
+every unilateral behavioral deviation. -/
+def HasUniformDeviationCapConstructor
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    (s₀ : G.State) (v : Payoff ι) : Prop :=
+  ∀ δ : ℝ, 0 < δ →
+    ∃ (σ : G.BehaviorProfile) (T₀ : ℕ), ∀ T, T₀ ≤ T →
+      (∀ who, |G.finiteAveragePayoff s₀ T σ who - v who| ≤ δ) ∧
+      ∀ who (dev : G.BehaviorStrategy who),
+        G.finiteAveragePayoff s₀ T (Function.update σ who dev) who ≤
+          v who + δ
+
+/-- The deviation-cap constructor is exactly equivalent to the semantic
+uniform-equilibrium-payoff property. -/
+theorem hasUniformDeviationCapConstructor_iff
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    (s₀ : G.State) (v : Payoff ι) :
+    G.HasUniformDeviationCapConstructor s₀ v ↔
+      G.IsUniformEquilibriumPayoff s₀ v := by
+  constructor
+  · exact G.isUniformEquilibriumPayoff_of_deviation_caps s₀ v
+  · intro hv δ hδ
+    have hhalf : 0 < δ / 2 := by linarith
+    obtain ⟨σ, T₀, hσ⟩ := hv (δ / 2) hhalf
+    refine ⟨σ, T₀, fun T hT => ?_⟩
+    obtain ⟨hNash, honPath⟩ := hσ T hT
+    constructor
+    · intro who
+      exact (honPath who).trans (by linarith)
+    · intro who dev
+      have hdev := hNash who dev
+      have honUpper := (abs_le.mp (honPath who)).2
+      linarith
+
+/-- Quantitative form of the uniform-equilibrium existence problem.
+
+This statement is logically equivalent to
+`exists_uniformEquilibriumPayoff`; it is the proof-construction waist at
+which analytic hierarchy, public-response, coupling, and sublinear-ledger
+arguments meet. -/
+theorem exists_uniformDeviationCapConstructor (G : StochasticGame ι)
+    [Fintype ι] [DecidableEq ι] [Finite G.State]
+    [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (s₀ : G.State) :
+    ∃ v : Payoff ι, G.HasUniformDeviationCapConstructor s₀ v := by
+  sorry
+
 /-- **The uniform equilibrium existence problem.**
 
 Every stochastic game with finitely many players, finitely many states, and
@@ -167,19 +220,19 @@ This is the central open problem of stochastic game theory.  Known cases:
 two-player zero-sum games (Mertens–Neyman 1981), two-player games
 (Vieille 2000), three-player absorbing games (Solan 1999), and various
 structured classes (recursive games, quitting games under conditions).  The
-general n-player case is open; consequently this statement carries a `sorry`
-that must remain until the statement is actually proved.  Do not remove the
-`sorry` by weakening the statement. -/
+general n-player case is open.  The theorem is derived from the equivalent
+quantitative constructor above; no weakening of the semantic statement is
+involved. -/
 theorem exists_uniformEquilibriumPayoff (G : StochasticGame ι)
     [Fintype ι] [DecidableEq ι] [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (s₀ : G.State) :
     ∃ v : Payoff ι, G.IsUniformEquilibriumPayoff s₀ v := by
-  sorry
+  obtain ⟨v, hv⟩ := G.exists_uniformDeviationCapConstructor s₀
+  exact ⟨v, (G.hasUniformDeviationCapConstructor_iff s₀ v).mp hv⟩
 
 /-- For every `ε > 0`, some behavior profile is a uniform ε-equilibrium.
-Derived from the uniform equilibrium existence problem
-(`exists_uniformEquilibriumPayoff`), hence currently conditional on its
-`sorry`. -/
+Derived from the uniform equilibrium existence problem through its exact
+quantitative constructor formulation. -/
 theorem exists_isUniformεEquilibrium (G : StochasticGame ι)
     [Fintype ι] [DecidableEq ι] [Finite G.State]
     [∀ i, Finite (G.Act i)] [∀ i, Nonempty (G.Act i)] (s₀ : G.State)

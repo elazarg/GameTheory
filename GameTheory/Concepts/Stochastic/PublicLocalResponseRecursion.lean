@@ -145,7 +145,29 @@ theorem isUniformEquilibriumPayoff
   G.isUniformEquilibriumPayoff_of_isAdaptivePotentialEquilibriumCertificate
     s₀ v C.isAdaptivePotentialEquilibriumCertificate
 
+/-- A completed public local-response recursion supplies exactly the
+quantitative deviation-cap constructor isolated in `Uniform`. -/
+theorem hasUniformDeviationCapConstructor
+    (C : G.CompletedPublicLocalResponseRecursion s₀ v) :
+    G.HasUniformDeviationCapConstructor s₀ v :=
+  (G.hasUniformDeviationCapConstructor_iff s₀ v).mpr
+    C.isUniformEquilibriumPayoff
+
 end CompletedPublicLocalResponseRecursion
+
+/-- Existential construction capstone: once the global invariant produces a
+completed public local-response recursion and its target payoff, the
+quantitative existence obligation is discharged. -/
+theorem exists_uniformDeviationCapConstructor_of_completedPublicResponse
+    (G : StochasticGame ι) [Fintype ι] [DecidableEq ι]
+    [Finite G.State] [∀ i, Finite (G.Act i)]
+    (s₀ : G.State)
+    (hconstruction :
+      ∃ v : Payoff ι,
+        Nonempty (G.CompletedPublicLocalResponseRecursion s₀ v)) :
+    ∃ v : Payoff ι, G.HasUniformDeviationCapConstructor s₀ v := by
+  obtain ⟨v, ⟨C⟩⟩ := hconstruction
+  exact ⟨v, C.hasUniformDeviationCapConstructor⟩
 
 end StochasticGame
 end GameTheory
