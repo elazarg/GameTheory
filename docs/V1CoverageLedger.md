@@ -49,7 +49,7 @@ No broad family below is called complete merely because its flagship exists.
 |---|---|---|---|---|
 | F1 | finite mixed Nash existence | **complete** | `Analysis/Nash.lean`, with matching pennies in `Analysis/Examples.lean` | no remainder for the frozen result; solving is separate |
 | F2 | no-regret time average implies approximate CCE | **complete** | `Core/Learning.lean`; positive-regret two-round trace; [declaration ledger](coverage/F2-no-regret-cce.md) | no remainder for the frozen theorem; algorithms and asymptotic convergence remain D-LEARN |
-| F3 | Kuhn behavioral/mixed correspondence | **complete at the accepted Protocol layer; EFG surface partial** | both law directions and realizable-law equality in `Protocol/Information.lean`; perfect-recall hostile test | add general EFG-facing corollaries and payoff/outcome wrappers during EFG harvest |
+| F3 | Kuhn behavioral/mixed correspondence | **complete** | both law directions and realizable-law equality in `Protocol/Information.lean`; constructive EFG wrappers, arbitrary outcome pushforwards, expected utility, and a perfect-recall hostile test; [declaration ledger](coverage/T2-kuhn-correspondence.md) | no remainder for the frozen result; broader EFG/Kuhn inventory is separate |
 | F4 | one-shot deviation iff SPE | **complete at the accepted Protocol layer; EFG surface partial** | `Protocol/SubgamePerfect.lean`; full well-founded strategic iff and off-path probe; [declaration ledger](coverage/F4-one-shot-spe.md) | add only a thin EFG-facing corollary during L-EFG harvest |
 | F5 | Bayes-Nash outcome law is Bayes-correlated | **complete** | `Core/BayesCorrelated.lean`; fair private-signal probe; [declaration ledger](coverage/F5-bayes-nash-bce.md) | no remainder for the frozen theorem; complete-information BCE/CE and information design remain S-CORR/M-BAYES |
 | F6 | incentive compatibility implies truthful Bayesian Nash | **complete** | `Languages/BayesianMechanism.lean`; nondegenerate truthful-report probe; [declaration ledger](coverage/F6-ic-truthful-bayes-nash.md) | no remainder for the frozen theorem; welfare, participation, and revelation remain M-BAYES |
@@ -65,7 +65,7 @@ semantic result; the named transfer queue T1-T4 remains open.
 | ID | Frozen transfer | Status | Exact remainder |
 |---|---|---|---|
 | T1 | finite EFG strategic extraction and pure/mixed Nash transfer | **complete** | information-local contingent plans, finite-carrier capability, exact native-run Nash iff theorems, and a nonconstant-payoff hostile test; [declaration ledger](coverage/T1-efg-strategic-nash.md) |
-| T2 | behavioral/mixed correspondence | **complete at the history-law layer** | only language-facing wrappers remain |
+| T2 | behavioral/mixed correspondence | **complete** | both constructive EFG directions, exact realizable history-law equality, generic outcome-law wrappers, and expected-utility corollaries; [declaration ledger](coverage/T2-kuhn-correspondence.md) |
 | T3 | MAID to EFG outcome, utility, and strategy transfer | **partial probe** | arbitrary MAID DAG, EFG translation, strategy correspondence, and named transfer |
 | T4 | one-shot NFG to FOSG embedding commuting with compilation | **not started** | both stable frontends and the exact commuting theorem |
 
@@ -121,8 +121,8 @@ declaration-based.
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
 | L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | provisional substrate | partial | general finite syntax and T4 source |
-| L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, strategic transfer, nonconstant rationality, and Protocol SPE semantics | partial | thin F4 wrapper, then broad inventory |
-| L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem | partial | general perfect-recall EFG-facing surface |
+| L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, strategic and Kuhn transfer, nonconstant rationality, and Protocol SPE semantics | partial | thin F4 wrapper, then broad inventory |
+| L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | provisional probe | partial | incomparable-node DAG and T3 |
 | L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | native language compiling to Protocol | assigned | not started | simultaneous active-player hostile slice |
@@ -168,8 +168,8 @@ declaration-based.
   itself complete L-NFG.
 - A direct two-bidder auction witness does not complete finite auction theory
   or Bayesian mechanism design.
-- The generic Protocol behavioral/mixed theorem completes F3's semantic
-  obligation, but not the EFG theorem inventory.
+- The Protocol and EFG-facing behavioral/mixed theorems complete frozen F3/T2,
+  but not the broader generic Kuhn or EFG theorem inventories.
 - T1's finite-horizon contingent-plan and Nash transfer does not by itself
   complete the EFG syntax, refinement, recall, or language-wrapper inventory.
 - The EXP-035 nonconstant-payoff witness validates whole-policy rationality on
@@ -186,8 +186,8 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Create declaration-level ledgers for completed T2 and open T3-T4; the F2,
-   F4, F5, F6, F8, and T1 ledgers are complete.
+1. Create declaration-level ledgers for open T3-T4; the F2, F4, F5, F6, F8,
+   T1, and T2 ledgers are complete.
 2. Add a generated pinned declaration index and a coverage audit before the
    first `v1-accounted` claim.
 3. Resolve the overdue knowledge and evolutionary ownership probes.

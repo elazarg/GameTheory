@@ -31,7 +31,8 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
                          mechanism compilation with recorded limitations
   /EFG                   transparent extensive-form specialization; finite
                          capabilities are supplied explicitly; strategic
-                         extraction exposes exact pure/mixed Nash iff laws
+                         extraction exposes exact pure/mixed Nash iff laws and
+                         both Kuhn directions preserve canonical history laws
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
