@@ -2845,6 +2845,11 @@ memory.
 - **Next action:** inventory the remaining D-KNOW declarations before broad S5
   and approximate-common-knowledge recovery. The merging counterexample
   remains experiment evidence, not stable API.
+- **Recovery follow-on:** the finite S5 and public-event common-knowledge
+  layer is now stable. All 30 declarations from pinned
+  `CommonKnowledge.lean` have reviewed rows; 32 approximate-common-knowledge
+  declarations remain. The expanded root builds in 1,716 focused / 3,350 full
+  jobs, with Epistemic input/boundary probe counts `4/5`.
 
 ### EXP-044: evolutionary stability static/dynamic ownership
 

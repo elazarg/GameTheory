@@ -102,3 +102,20 @@ are rejected, and Protocol rejects both public epistemic probes. The stable
 Aumann theorem has only the standard `propext`, `Classical.choice`, and
 `Quot.sound` axiom profile. The focused build completes in 1,715 jobs and the
 full build in 3,345.
+
+## Common-knowledge recovery
+
+The next mature batch validates the same boundary rather than reopening it.
+`GameTheory.Epistemic.Knowledge` now owns the finite S5 operator, T/4/5,
+monotonicity and conjunction, mutual knowledge, and the public self-evident
+event characterization of common knowledge. Enumeration capabilities occur on
+`Knows`, mutual knowledge, and the finite common-knowledge event, never on
+`InfoPartition`.
+
+All 30 declarations in the pinned `CommonKnowledge.lean` file now have exact
+reviewed ledger rows. The expanded Epistemic root has 370 nonblank lines; its
+focused build completes in 1,716 jobs and the full build in 3,350. The full
+Phase 2 gate positively reaches the new common-knowledge layer (`4/4`
+Epistemic inputs) while rejecting the same five static, sequential, and
+analytic dependencies. Representative S5/common-knowledge theorems retain the
+standard axiom profile.
