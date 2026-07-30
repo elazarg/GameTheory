@@ -7,15 +7,15 @@ decision must leave the later site's information state unchanged.
 -/
 
 import GameTheory.Experimental.PostArchitecture.TypedMAIDTest
-import GameTheory.Experimental.PostArchitecture.TypedMAIDOrder
+import GameTheory.Languages.MAID.Order
 
 noncomputable section
 
 namespace GameTheory.Experimental.TypedMAID.ToEFGTest
 
-open GameTheory.Experimental.TypedMAID
-open GameTheory.Experimental.TypedMAID.Order
-open GameTheory.Experimental.TypedMAID.ToEFG
+open GameTheory.Languages.MAID
+open GameTheory.Languages.MAID.Order
+open GameTheory.Languages.MAID.ToEFG
 open GameTheory.Probability
 
 namespace SameOwner
@@ -103,13 +103,13 @@ theorem right_view_hides_left_decision :
           Node.rightChance = true := by
     rw [Stage.assignment, beforeRightDecisionFalse_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
   have htrueValue :
       beforeRightDecisionTrue.assignment leftFirst semantics
           Node.rightChance = true := by
     rw [Stage.assignment, beforeRightDecisionTrue_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
   have hconfig :
       beforeRightDecisionFalse.configOf leftFirst semantics
           (diagram.observedParents Node.rightDecision) =
@@ -186,13 +186,13 @@ theorem left_view_hides_right_decision :
           Node.leftChance = false := by
     rw [Stage.assignment, beforeLeftDecisionFalse_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
   have htrueValue :
       beforeLeftDecisionTrue.assignment rightFirst semantics
           Node.leftChance = false := by
     rw [Stage.assignment, beforeLeftDecisionTrue_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
   have hconfig :
       beforeLeftDecisionFalse.configOf rightFirst semantics
           (diagram.observedParents Node.leftDecision) =
@@ -259,7 +259,7 @@ theorem complete_assignments_order_independent :
     rw [Stage.assignment, Stage.assignment,
       leftCompleteResponsive_path, rightCompleteResponsive_path] <;>
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
 
 theorem native_complete_left_chance :
     completeResponsive.values Node.leftChance = false := by
@@ -281,19 +281,19 @@ theorem left_complete_assignment_eq_native :
   · rw [native_complete_left_chance, Stage.assignment,
       leftCompleteResponsive_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
   · rw [native_complete_right_chance, Stage.assignment,
       leftCompleteResponsive_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
   · rw [completeResponsive_left_value, Stage.assignment,
       leftCompleteResponsive_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
   · rw [completeResponsive_right_value, Stage.assignment,
       leftCompleteResponsive_path]
     simp [Stage.Assignment.setOne,
-      TypedMAID.Assignment.resolve]
+      GameTheory.Languages.MAID.Assignment.resolve]
 
 theorem right_complete_assignment_eq_native :
     rightCompleteResponsive.assignment rightFirst semantics =
@@ -341,9 +341,9 @@ theorem serialStep_afterLeftChance :
   rw [serialNodeLaw_of_decision leftFirst semantics responsive
     afterLeftChance (by decide) (by rfl)]
   simp [responsive, decisionParent, Stage.configOf,
-    TypedMAID.Assignment.restrict, afterLeftChance,
+    GameTheory.Languages.MAID.Assignment.restrict, afterLeftChance,
     leftInitial, Stage.initial, Stage.assignment,
-    Stage.Assignment.setOne, TypedMAID.Assignment.resolve,
+    Stage.Assignment.setOne, GameTheory.Languages.MAID.Assignment.resolve,
     leftFirst, afterLeftFalse]
 
 theorem serialStep_afterLeftFalse :
@@ -387,9 +387,9 @@ theorem serialStep_beforeRightDecision :
   rw [serialNodeLaw_of_decision leftFirst semantics responsive
     beforeRightDecisionFalse (by decide) (by rfl)]
   simp [responsive, decisionParent, Stage.configOf,
-    TypedMAID.Assignment.restrict, Stage.assignment,
+    GameTheory.Languages.MAID.Assignment.restrict, Stage.assignment,
     beforeRightDecisionFalse_path, Stage.Assignment.setOne,
-    TypedMAID.Assignment.resolve, leftCompleteResponsive]
+    GameTheory.Languages.MAID.Assignment.resolve, leftCompleteResponsive]
 
 theorem serialStep_rightInitial :
     serialStep rightFirst semantics responsive rightInitial (by decide) =
@@ -431,9 +431,9 @@ theorem serialStep_afterRightChance :
   rw [serialNodeLaw_of_decision rightFirst semantics responsive
     afterRightChance (by decide) (by rfl)]
   simp [responsive, decisionParent, Stage.configOf,
-    TypedMAID.Assignment.restrict, afterRightChance,
+    GameTheory.Languages.MAID.Assignment.restrict, afterRightChance,
     rightInitial, Stage.initial, Stage.assignment,
-    Stage.Assignment.setOne, TypedMAID.Assignment.resolve,
+    Stage.Assignment.setOne, GameTheory.Languages.MAID.Assignment.resolve,
     rightFirst, afterRightTrue]
 
 theorem serialStep_afterRightTrue :
@@ -477,9 +477,9 @@ theorem serialStep_beforeLeftDecision :
   rw [serialNodeLaw_of_decision rightFirst semantics responsive
     beforeLeftDecisionTrue (by decide) (by rfl)]
   simp [responsive, decisionParent, Stage.configOf,
-    TypedMAID.Assignment.restrict, Stage.assignment,
+    GameTheory.Languages.MAID.Assignment.restrict, Stage.assignment,
     beforeLeftDecisionTrue_path, Stage.Assignment.setOne,
-    TypedMAID.Assignment.resolve, rightCompleteResponsive]
+    GameTheory.Languages.MAID.Assignment.resolve, rightCompleteResponsive]
 
 theorem serialRun_leftFirst :
     serialRun leftFirst semantics responsive 4 leftInitial =
@@ -514,7 +514,7 @@ theorem left_serial_assignment_law_eq_native :
     FinDist.map (Stage.assignment leftFirst semantics)
         (serialRun leftFirst semantics responsive 4 leftInitial) =
       FinDist.map (fun state => state.values)
-        (TypedMAID.run diagram semantics responsive 2 initial) := by
+        (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   rw [serialRun_leftFirst, run_two_responsive,
     FinDist.map_pure, FinDist.map_pure,
     left_complete_assignment_eq_native]
@@ -523,7 +523,7 @@ theorem right_serial_assignment_law_eq_native :
     FinDist.map (Stage.assignment rightFirst semantics)
         (serialRun rightFirst semantics responsive 4 rightInitial) =
       FinDist.map (fun state => state.values)
-        (TypedMAID.run diagram semantics responsive 2 initial) := by
+        (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   rw [serialRun_rightFirst, run_two_responsive,
     FinDist.map_pure, FinDist.map_pure,
     right_complete_assignment_eq_native]
@@ -537,7 +537,7 @@ theorem left_behavioral_assignment_law_eq_native :
         ((information leftFirst semantics).runBehavioral
           leftBehavioral 4) =
       FinDist.map (fun state => state.values)
-        (TypedMAID.run diagram semantics responsive 2 initial) := by
+        (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   have hrun :=
     map_state_runBehavioralFrom_eq_serialRun_unit leftFirst
       semantics responsive 4 (execution leftFirst semantics).initHistory
@@ -560,7 +560,7 @@ theorem right_behavioral_assignment_law_eq_native :
         ((information rightFirst semantics).runBehavioral
           rightBehavioral 4) =
       FinDist.map (fun state => state.values)
-        (TypedMAID.run diagram semantics responsive 2 initial) := by
+        (GameTheory.Languages.MAID.run diagram semantics responsive 2 initial) := by
   have hrun :=
     map_state_runBehavioralFrom_eq_serialRun_unit rightFirst
       semantics responsive 4 (execution rightFirst semantics).initHistory

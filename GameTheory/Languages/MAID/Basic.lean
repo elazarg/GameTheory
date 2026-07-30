@@ -1,11 +1,11 @@
 /-
-# EXP-040: typed, site-local MAID frontier semantics
+# General typed, site-local MAID frontier semantics
 
-This file remains experimental while the general MAID API is tested. Syntax
-stores neither finite-carrier capabilities nor an execution order. Native
-policies are indexed by decision site and receive only that site's observed
-parent configuration. Evaluation resolves the entire current minimal frontier
-by one dependent finite product.
+Syntax stores neither finite-carrier capabilities nor an execution order.
+Native policies are indexed by decision site and receive only that site's
+observed-parent configuration. Evaluation resolves the entire current minimal
+frontier by one dependent finite product. EXP-040 and EXP-041 validate this
+representation and its exact compiled-EFG semantics.
 -/
 
 import GameTheory.Probability.FinDist
@@ -13,7 +13,7 @@ import GameTheoryMath.DAG
 
 noncomputable section
 
-namespace GameTheory.Experimental.TypedMAID
+namespace GameTheory.Languages.MAID
 
 open GameTheory.Probability
 
@@ -372,5 +372,5 @@ theorem completesWithin_card [Fintype Node] [DecidableEq Node]
   apply run_complete_of_remaining_le
   simp [FrontierState.initial]
 
-end GameTheory.Experimental.TypedMAID
+end GameTheory.Languages.MAID
 

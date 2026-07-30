@@ -1,5 +1,5 @@
 /-
-# EXP-041: typed MAID order algebra
+# Typed MAID order algebra
 
 This file isolates the order-independence payload from the EFG compiler.
 Node kernels act on the typed total assignment, and independent kernels commute
@@ -10,52 +10,52 @@ The adjacent-kernel proof shape is adapted from the pinned
 theorem, and compiler bridge are new.
 -/
 
-import GameTheory.Experimental.PostArchitecture.TypedMAIDToEFG
+import GameTheory.Languages.MAID.ToEFG
 
 noncomputable section
 
-namespace GameTheory.Experimental.TypedMAID.Order
+namespace GameTheory.Languages.MAID.Order
 
 open GameTheory.Probability
 open GameTheory.Protocol
 open GameTheory.Protocol.ExecutionProtocol
-open GameTheory.Experimental.TypedMAID.ToEFG
+open GameTheory.Languages.MAID.ToEFG
 
 universe uPlayer uNode uValue
 
 variable {Player : Type uPlayer} {Node : Type uNode}
-variable {diagram : TypedMAID.Structure Player Node}
+variable {diagram : GameTheory.Languages.MAID.Structure Player Node}
 
 /-- The source law for one node, viewed directly as a kernel on complete typed
 assignments. Topological validity is imposed by the caller's node order. -/
 def assignmentNodeLaw
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (assignment : TypedMAID.Assignment diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (assignment : GameTheory.Languages.MAID.Assignment diagram)
     (node : Node) : FinDist (diagram.Value node) := by
   match hkind : diagram.kind node with
   | .chance =>
       exact semantics.chanceLaw node hkind
-        (TypedMAID.Assignment.restrict diagram assignment
+        (GameTheory.Languages.MAID.Assignment.restrict diagram assignment
           (diagram.parents node))
   | .decision owner =>
       exact policy owner ⟨node, hkind⟩
-        (TypedMAID.Assignment.restrict diagram assignment
+        (GameTheory.Languages.MAID.Assignment.restrict diagram assignment
           (diagram.observedParents node))
 
 /-- Draw one node and replace exactly its coordinate. -/
 def assignmentStep [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (assignment : TypedMAID.Assignment diagram)
-    (node : Node) : FinDist (TypedMAID.Assignment diagram) :=
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (assignment : GameTheory.Languages.MAID.Assignment diagram)
+    (node : Node) : FinDist (GameTheory.Languages.MAID.Assignment diagram) :=
   FinDist.map
     (fun value =>
       Stage.Assignment.setOne assignment ⟨node, value⟩)
     (assignmentNodeLaw semantics policy assignment node)
 
 theorem setOne_comm [DecidableEq Node]
-    (assignment : TypedMAID.Assignment diagram)
+    (assignment : GameTheory.Languages.MAID.Assignment diagram)
     {first second : Node}
     (firstValue : diagram.Value first)
     (secondValue : diagram.Value second)
@@ -69,35 +69,35 @@ theorem setOne_comm [DecidableEq Node]
   funext node
   by_cases hfirst : node = first
   · subst node
-    simp [Stage.Assignment.setOne, TypedMAID.Assignment.resolve, hne]
+    simp [Stage.Assignment.setOne, GameTheory.Languages.MAID.Assignment.resolve, hne]
   · by_cases hsecond : node = second
     · subst node
-      simp [Stage.Assignment.setOne, TypedMAID.Assignment.resolve,
+      simp [Stage.Assignment.setOne, GameTheory.Languages.MAID.Assignment.resolve,
         hfirst]
-    · simp [Stage.Assignment.setOne, TypedMAID.Assignment.resolve,
+    · simp [Stage.Assignment.setOne, GameTheory.Languages.MAID.Assignment.resolve,
         hfirst, hsecond]
 
 theorem restrict_setOne_of_not_mem [DecidableEq Node]
-    (assignment : TypedMAID.Assignment diagram)
+    (assignment : GameTheory.Languages.MAID.Assignment diagram)
     (nodes : Finset Node)
     {changed : Node} (value : diagram.Value changed)
     (hchanged : changed ∉ nodes) :
-    TypedMAID.Assignment.restrict diagram
+    GameTheory.Languages.MAID.Assignment.restrict diagram
         (Stage.Assignment.setOne assignment ⟨changed, value⟩)
         nodes =
-      TypedMAID.Assignment.restrict diagram assignment nodes := by
+      GameTheory.Languages.MAID.Assignment.restrict diagram assignment nodes := by
   funext node
   have hne : node.1 ≠ changed := by
     intro heq
     subst changed
     exact hchanged node.2
-  simp [TypedMAID.Assignment.restrict, Stage.Assignment.setOne,
-    TypedMAID.Assignment.resolve, hne]
+  simp [GameTheory.Languages.MAID.Assignment.restrict, Stage.Assignment.setOne,
+    GameTheory.Languages.MAID.Assignment.resolve, hne]
 
 theorem assignmentNodeLaw_setOne_of_not_parent [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (assignment : TypedMAID.Assignment diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (assignment : GameTheory.Languages.MAID.Assignment diagram)
     {changed node : Node} (value : diagram.Value changed)
     (hnotParent : changed ∉ diagram.parents node) :
     assignmentNodeLaw semantics policy
@@ -119,9 +119,9 @@ theorem assignmentNodeLaw_setOne_of_not_parent [DecidableEq Node]
 nodes with no direct causal edge in either direction commute as assignment
 kernels. -/
 theorem assignmentStep_comm [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (assignment : TypedMAID.Assignment diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (assignment : GameTheory.Languages.MAID.Assignment diagram)
     (first second : Node)
     (hne : first ≠ second)
     (hfirstSecond : first ∉ diagram.parents second)
@@ -148,10 +148,10 @@ theorem assignmentStep_comm [DecidableEq Node]
 
 /-- Sequentially execute a node list on a typed assignment. -/
 def assignmentRun [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
-    List Node → TypedMAID.Assignment diagram →
-      FinDist (TypedMAID.Assignment diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
+    List Node → GameTheory.Languages.MAID.Assignment diagram →
+      FinDist (GameTheory.Languages.MAID.Assignment diagram)
   | [], assignment => FinDist.pure assignment
   | node :: rest, assignment =>
       (assignmentStep semantics policy assignment node).bind
@@ -160,14 +160,14 @@ def assignmentRun [DecidableEq Node]
 /-- Adjacent independent nodes may be exchanged under any already-resolved
 prefix and before any common continuation. -/
 theorem assignmentRun_swap_adjacent [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (before after : List Node)
     (first second : Node)
     (hne : first ≠ second)
     (hfirstSecond : first ∉ diagram.parents second)
     (hsecondFirst : second ∉ diagram.parents first)
-    (assignment : TypedMAID.Assignment diagram) :
+    (assignment : GameTheory.Languages.MAID.Assignment diagram) :
     assignmentRun semantics policy
         (before ++ first :: second :: after) assignment =
       assignmentRun semantics policy
@@ -186,15 +186,15 @@ theorem assignmentRun_swap_adjacent [DecidableEq Node]
 
 /-- Move one node left through a list of nodes independent of it. -/
 theorem assignmentRun_move_left [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (before after : List Node)
     (node : Node)
     (hindependent : ∀ other ∈ before,
       node ≠ other ∧
       node ∉ diagram.parents other ∧
       other ∉ diagram.parents node)
-    (assignment : TypedMAID.Assignment diagram) :
+    (assignment : GameTheory.Languages.MAID.Assignment diagram) :
     assignmentRun semantics policy
         (before ++ node :: after) assignment =
       assignmentRun semantics policy
@@ -239,8 +239,8 @@ assignment law. The proof removes the first node of the left list after
 bubbling its occurrence leftward in the right list. -/
 theorem assignmentRun_eq_of_perm
     [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (first second : List Node),
       first.Perm second →
       first.Nodup →
@@ -248,7 +248,7 @@ theorem assignmentRun_eq_of_perm
         (fun earlier later => later ∉ diagram.parents earlier) →
       second.Pairwise
         (fun earlier later => later ∉ diagram.parents earlier) →
-      ∀ assignment : TypedMAID.Assignment diagram,
+      ∀ assignment : GameTheory.Languages.MAID.Assignment diagram,
         assignmentRun semantics policy first assignment =
           assignmentRun semantics policy second assignment := by
   intro first
@@ -353,11 +353,11 @@ order. This is the direct theorem; no public swap-reachability certificate is
 introduced. -/
 theorem assignmentRun_topological_order_independent
     [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
-    (assignment : TypedMAID.Assignment diagram) :
+    (assignment : GameTheory.Languages.MAID.Assignment diagram) :
     assignmentRun semantics policy first.order assignment =
       assignmentRun semantics policy second.order assignment := by
   have hperm : first.order.Perm second.order :=
@@ -374,8 +374,8 @@ theorem serialNodeLaw_eq_assignmentNodeLaw
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) :
     serialNodeLaw topological semantics policy state hpending =
@@ -403,7 +403,7 @@ theorem serialNodeLaw_eq_assignmentNodeLaw
         contradiction
       next activeOwner hdecision =>
         have howner : activeOwner = owner :=
-          TypedMAID.NodeKind.decision.inj
+          GameTheory.Languages.MAID.NodeKind.decision.inj
             (hdecision.symm.trans hkind)
         subst activeOwner
         rfl
@@ -412,7 +412,7 @@ theorem assignment_advance
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (value : diagram.Value (state.pendingNode topological hpending)) :
@@ -426,8 +426,8 @@ theorem map_assignment_serialStep
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) :
     FinDist.map (Stage.assignment topological semantics)
@@ -453,8 +453,8 @@ theorem map_assignment_serialRun
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (fuel : ℕ) (state : Stage diagram topological),
       (topological.order.drop state.path.length).length = fuel →
       FinDist.map (Stage.assignment topological semantics)
@@ -507,8 +507,8 @@ theorem map_assignment_serialRun
 same typed assignment law. -/
 theorem serialRun_topological_order_independent
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents) :
     FinDist.map (Stage.assignment first semantics)
@@ -629,8 +629,8 @@ theorem behavioralJoint_eq_serialJointLaw
     [Fintype Player] [DecidableEq Player] [DecidableEq Node]
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (trace : (execution topological semantics).Trace state)
     (hterminal :
@@ -743,7 +743,7 @@ theorem behavioralJoint_eq_serialJointLaw
         contradiction
       next activeOwner hdecision =>
         have hownerEq : activeOwner = owner :=
-          TypedMAID.NodeKind.decision.inj
+          GameTheory.Languages.MAID.NodeKind.decision.inj
             (hdecision.symm.trans hkind)
         subst activeOwner
         rw [FinDist.map_comp]
@@ -755,8 +755,8 @@ theorem behavioralJoint_bind_transition
     [Fintype Player] [DecidableEq Player] [DecidableEq Node]
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (trace : (execution topological semantics).Trace state)
     (hterminal :
@@ -779,8 +779,8 @@ theorem map_state_runBehavioralFrom_eq_serialRun
     [Fintype Player] [DecidableEq Player] [DecidableEq Node]
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (fuel : ℕ)
       (history : (execution topological semantics).History),
       FinDist.map ExecutionProtocol.History.state
@@ -848,8 +848,8 @@ theorem map_state_runBehavioralFrom_eq_serialRun
 supplied topological order for arbitrary finite source-player carriers. -/
 theorem behavioralRun_topological_order_independent
     [Fintype Player] [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (first second :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents) :
     FinDist.map
@@ -897,4 +897,4 @@ theorem behavioralRun_topological_order_independent
         GameTheory.Protocol.InformationModel.runBehavioral,
         Function.comp_def] using hsecondAssignment.symm
 
-end GameTheory.Experimental.TypedMAID.Order
+end GameTheory.Languages.MAID.Order

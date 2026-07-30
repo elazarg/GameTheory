@@ -201,3 +201,14 @@ native evaluator, and explicit-order compiler is unblocked. T3's remaining
 equilibrium-transfer theorem is a delivery obligation, not a reason to weaken
 or reopen the adopted execution design: deviations must be regrouped by source
 owner, never by decision site.
+
+The validated surface is now promoted under `GameTheory.Languages.MAID`:
+`Basic` owns typed syntax and frontier evaluation, `ToEFG` owns the named
+compiler, `Order` owns serialized order algebra, and `FrontierEquivalence`
+owns the exact native/compiled theorem. `General` is the public aggregate
+import. The hostile fixtures remain under `Experimental/PostArchitecture`;
+promotion did not turn experiment-specific diagrams into public API. The
+aggregate and both hostile suites build; the full project builds in 3,336 jobs,
+Phase 2/3 source and reachability audits pass, and the promoted flagship
+theorems retain the standard `propext`, `Classical.choice`, `Quot.sound` axiom
+profile.

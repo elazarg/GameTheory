@@ -1,18 +1,18 @@
 /-
-# EXP-041: explicit-order typed MAID serialization
+# Explicit-order typed MAID serialization
 
-This compiler is experimental until its serialized terminal law is proved
-equal to the order-free frontier evaluator. The execution state stores the
-resolved topological prefix; information states expose only the current
-decision site and its declared observed-parent configuration.
+The execution state stores the resolved topological prefix; information states
+expose only the current decision site and its declared observed-parent
+configuration. EXP-041 proves its complete assignment law equals the
+order-free native frontier evaluator.
 -/
 
-import GameTheory.Experimental.PostArchitecture.TypedMAID
+import GameTheory.Languages.MAID.Basic
 import GameTheory.Languages.EFG
 
 noncomputable section
 
-namespace GameTheory.Experimental.TypedMAID.ToEFG
+namespace GameTheory.Languages.MAID.ToEFG
 
 open GameTheory.Languages
 open GameTheory.Probability
@@ -22,14 +22,14 @@ open GameTheory.Protocol.ExecutionProtocol
 universe uPlayer uNode uValue
 
 variable {Player : Type uPlayer} {Node : Type uNode}
-variable {diagram : TypedMAID.Structure Player Node}
+variable {diagram : GameTheory.Languages.MAID.Structure Player Node}
 
-abbrev TaggedValue (diagram : TypedMAID.Structure Player Node) :=
+abbrev TaggedValue (diagram : GameTheory.Languages.MAID.Structure Player Node) :=
   Σ node, diagram.Value node
 
 /-- A serialized state is exactly a resolved prefix of the selected order.
 The values retain their dependent node indices. -/
-structure Stage (diagram : TypedMAID.Structure Player Node)
+structure Stage (diagram : GameTheory.Languages.MAID.Structure Player Node)
     (topological : GameTheoryMath.DAG.TopologicalOrder diagram.parents) where
   path : List (TaggedValue diagram)
   length_le : path.length ≤ topological.order.length
@@ -69,9 +69,9 @@ def pendingNode (state : Stage diagram topological)
   topological.order[state.path.length]'hpending
 
 def Assignment.setOne [DecidableEq Node]
-    (assignment : TypedMAID.Assignment diagram)
-    (entry : TaggedValue diagram) : TypedMAID.Assignment diagram :=
-  TypedMAID.Assignment.resolve diagram assignment {entry.1}
+    (assignment : GameTheory.Languages.MAID.Assignment diagram)
+    (entry : TaggedValue diagram) : GameTheory.Languages.MAID.Assignment diagram :=
+  GameTheory.Languages.MAID.Assignment.resolve diagram assignment {entry.1}
       fun (node : {node // node ∈ ({entry.1} : Finset Node)}) => by
     have hnode : node.1 = entry.1 :=
       Finset.mem_singleton.mp node.2
@@ -82,8 +82,8 @@ def Assignment.setOne [DecidableEq Node]
         exact entry.2
 
 def assignment [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (state : Stage diagram topological) : TypedMAID.Assignment diagram :=
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (state : Stage diagram topological) : GameTheory.Languages.MAID.Assignment diagram :=
   state.path.foldl Assignment.setOne semantics.defaultValue
 
 theorem pending_parents_resolved [DecidableEq Node]
@@ -103,10 +103,10 @@ theorem pending_parents_resolved [DecidableEq Node]
   · simpa [hearlier] using hnode
 
 def configOf [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological) (nodes : Finset Node) :
-    TypedMAID.Config diagram nodes :=
-  TypedMAID.Assignment.restrict diagram
+    GameTheory.Languages.MAID.Config diagram nodes :=
+  GameTheory.Languages.MAID.Assignment.restrict diagram
     (state.assignment topological semantics) nodes
 
 def advanceTagged (state : Stage diagram topological)
@@ -164,8 +164,8 @@ end Stage
 
 /-- One source action carrier per source owner. Its tag is a decision site,
 and its payload has exactly that site's value type. -/
-def Action (diagram : TypedMAID.Structure Player Node) (owner : Player) :=
-  Σ site : TypedMAID.DecisionSite diagram owner,
+def Action (diagram : GameTheory.Languages.MAID.Structure Player Node) (owner : Player) :=
+  Σ site : GameTheory.Languages.MAID.DecisionSite diagram owner,
     diagram.Value site.1
 
 variable
@@ -241,7 +241,7 @@ theorem jointFor_legal [DecidableEq Player]
         (hotherPending.symm.trans
           (pending_eq_some topological hpending))
     rw [hsame, hkind] at hotherKind
-    exact howner (TypedMAID.NodeKind.decision.inj hotherKind.symm)
+    exact howner (GameTheory.Languages.MAID.NodeKind.decision.inj hotherKind.symm)
 
 theorem exists_eq_some_of_active
     {state : Stage diagram topological}
@@ -282,7 +282,7 @@ theorem selectedAction_spec
     (exists_eq_some_of_active topological hlegal hactive)
 
 def transitionAt [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (joint : (owner : Player) → Option (Action diagram owner))
@@ -316,7 +316,7 @@ def transitionAt [DecidableEq Player] [DecidableEq Node]
           ⟨action.1.1, action.2⟩ hsite)
 
 def transition [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological) :
     { joint : (owner : Player) → Option (Action diagram owner) //
       ¬ state.IsTerminal topological ∧
@@ -329,7 +329,7 @@ def transition [DecidableEq Player] [DecidableEq Node]
 
 @[reducible]
 def execution [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
     ExecutionProtocol Player where
   State := Stage diagram topological
   Action := Action diagram
@@ -365,14 +365,14 @@ def execution [DecidableEq Player] [DecidableEq Node]
 
 /-- A player either has no move or sees one source decision site together with
 exactly that site's declared observation configuration. -/
-inductive View (diagram : TypedMAID.Structure Player Node) (owner : Player)
+inductive View (diagram : GameTheory.Languages.MAID.Structure Player Node) (owner : Player)
   | inactive
-  | acting (site : TypedMAID.DecisionSite diagram owner)
+  | acting (site : GameTheory.Languages.MAID.DecisionSite diagram owner)
       (observed :
-        TypedMAID.Config diagram (diagram.observedParents site.1))
+        GameTheory.Languages.MAID.Config diagram (diagram.observedParents site.1))
 
 def viewOf [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (owner : Player) (state : Stage diagram topological) :
     View diagram owner :=
   match state.pending topological with
@@ -385,7 +385,7 @@ def viewOf [DecidableEq Player] [DecidableEq Node]
       else .inactive
 
 theorem viewOf_eq_acting [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (owner : Player) (state : Stage diagram topological)
     {node : Node} (hpending : state.pending topological = some node)
     (hkind : diagram.kind node = .decision owner) :
@@ -402,7 +402,7 @@ def menu (owner : Player) :
       { choice | ∃ value, choice = some ⟨site, value⟩ }
 
 theorem menu_adequate_at [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (owner : Player) (state : Stage diagram topological)
     (choice : Option (Action diagram owner)) :
     choice ∈ menu owner (viewOf topological semantics owner state) ↔
@@ -446,7 +446,7 @@ theorem menu_adequate_at [DecidableEq Player] [DecidableEq Node]
             subst actionNode
             have hsite :
                 (⟨node, actionKind⟩ :
-                  TypedMAID.DecisionSite diagram owner) =
+                  GameTheory.Languages.MAID.DecisionSite diagram owner) =
                     ⟨node, hkind⟩ :=
               Subtype.ext rfl
             cases hsite
@@ -466,7 +466,7 @@ theorem menu_adequate_at [DecidableEq Player] [DecidableEq Node]
 
 @[reducible]
 def signals [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
     InfoSignals (execution topological semantics) where
   PublicSignal := Unit
   PrivateSignal := View diagram
@@ -482,7 +482,7 @@ def signals [DecidableEq Player] [DecidableEq Node]
   pushInfo := fun _ _ _ signal _ => signal
 
 theorem infoOf_eq_viewOf [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (owner : Player) {state : (execution topological semantics).State}
     (trace : (execution topological semantics).Trace state) :
     (signals topological semantics).infoOf owner trace =
@@ -494,7 +494,7 @@ theorem infoOf_eq_viewOf [DecidableEq Player] [DecidableEq Node]
 
 @[reducible]
 def information [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
     InformationModel (execution topological semantics) where
   toInfoSignals := signals topological semantics
   menu := menu
@@ -504,7 +504,7 @@ def information [DecidableEq Player] [DecidableEq Node]
     exact menu_adequate_at topological semantics owner state choice
 
 theorem mem_transition_path [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (source target : Stage diagram topological)
     (certified :
       { joint : (owner : Player) → Option (Action diagram owner) //
@@ -593,11 +593,11 @@ theorem legal_eq_none_of_ne_owner
             (pending_eq_some topological hpending))
       rw [hnode, hkind] at hactiveKind
       exact False.elim
-        (hne (TypedMAID.NodeKind.decision.inj hactiveKind.symm))
+        (hne (GameTheory.Languages.MAID.NodeKind.decision.inj hactiveKind.symm))
 
 theorem mem_transition_decision_path
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (source target : Stage diagram topological)
     (certified :
       { joint : (owner : Player) → Option (Action diagram owner) //
@@ -628,7 +628,7 @@ theorem mem_transition_decision_path
     contradiction
   next activeOwner hdecision =>
     have howner : activeOwner = owner :=
-      TypedMAID.NodeKind.decision.inj
+      GameTheory.Languages.MAID.NodeKind.decision.inj
         (hdecision.symm.trans hkind)
     subst activeOwner
     rw [FinDist.mem_support_pure] at htarget
@@ -639,7 +639,7 @@ theorem mem_transition_decision_path
 
 theorem source_eq_of_same_target
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     {firstSource secondSource target : Stage diagram topological}
     (first :
       { joint : (owner : Player) → Option (Action diagram owner) //
@@ -681,7 +681,7 @@ theorem source_eq_of_same_target
 
 theorem joint_eq_of_same_target
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     {source target : Stage diagram topological}
     (first second :
       { joint : (owner : Player) → Option (Action diagram owner) //
@@ -736,7 +736,7 @@ theorem joint_eq_of_same_target
 
 theorem initial_not_mem_transition
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (source : Stage diagram topological)
     (certified :
       { joint : (owner : Player) → Option (Action diagram owner) //
@@ -753,7 +753,7 @@ theorem initial_not_mem_transition
 
 theorem step_predecessor_unique
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     {target firstSource secondSource :
       (execution topological semantics).State}
     {firstJoint secondJoint :
@@ -783,7 +783,7 @@ theorem step_predecessor_unique
       firstRealized secondRealized⟩
 
 theorem trace_unique [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
     ∀ {state : (execution topological semantics).State}
       (first second : (execution topological semantics).Trace state),
       first = second
@@ -811,13 +811,13 @@ decreasing_by simp [ExecutionProtocol.Trace.length]
 
 theorem execution_treeShaped
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
     (execution topological semantics).IsTreeShaped :=
   fun _ => ⟨trace_unique (topological := topological) semantics⟩
 
 theorem execution_singleMover
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : (execution topological semantics).State)
     {first second : Player}
     (hfirst : (execution topological semantics).active state first)
@@ -828,12 +828,12 @@ theorem execution_singleMover
   have hnode : firstNode = secondNode :=
     Option.some.inj (hfirstPending.symm.trans hsecondPending)
   subst secondNode
-  exact TypedMAID.NodeKind.decision.inj
+  exact GameTheory.Languages.MAID.NodeKind.decision.inj
     (hfirstKind.symm.trans hsecondKind)
 
 @[reducible]
 def game [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram) :
     EFG.Game Player where
   execution := execution topological semantics
   information := information topological semantics
@@ -843,8 +843,8 @@ def game [DecidableEq Player] [DecidableEq Node]
 /-- A native site-local policy becomes an EFG behavioral policy without
 receiving the serialized execution prefix. -/
 def behavioralPolicy [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) (owner : Player) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) (owner : Player) :
     (information topological semantics).BehavioralPolicy owner
   | .inactive => FinDist.pure ⟨none, rfl⟩
   | .acting site observed =>
@@ -853,8 +853,8 @@ def behavioralPolicy [DecidableEq Player] [DecidableEq Node]
         (policy owner site observed)
 
 def behavioralProfile [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     (owner : Player) →
       (information topological semantics).BehavioralPolicy owner :=
   fun owner => behavioralPolicy topological semantics policy owner
@@ -863,12 +863,12 @@ def behavioralProfile [DecidableEq Player] [DecidableEq Node]
 owner's local choice law embedded in the only joint coordinate. -/
 theorem behavioralJoint_unit_coordinate
     {Vertex : Type uNode}
-    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    {unitDiagram : GameTheory.Languages.MAID.Structure Unit Vertex}
     (unitTopological :
       GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
     [DecidableEq Vertex]
-    (semantics : TypedMAID.Semantics unitDiagram)
-    (policy : TypedMAID.Policy unitDiagram)
+    (semantics : GameTheory.Languages.MAID.Semantics unitDiagram)
+    (policy : GameTheory.Languages.MAID.Policy unitDiagram)
     (state : Stage unitDiagram unitTopological)
     (trace : (execution unitTopological semantics).Trace state)
     (hterminal :
@@ -943,8 +943,8 @@ theorem finDist_map_injective {α β : Type*} {f : α → β}
 
 /-- The source-level law for resolving exactly the pending topological node. -/
 def serialNodeLaw [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) :
     FinDist
@@ -960,8 +960,8 @@ def serialNodeLaw [DecidableEq Player] [DecidableEq Node]
           (diagram.observedParents node))
 
 def serialStep [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length) :
     FinDist (Stage diagram topological) :=
@@ -970,8 +970,8 @@ def serialStep [DecidableEq Player] [DecidableEq Node]
 
 theorem serialNodeLaw_of_chance
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     (hkind :
@@ -993,8 +993,8 @@ theorem serialNodeLaw_of_chance
 
 theorem serialNodeLaw_of_decision
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
     {owner : Player}
@@ -1015,7 +1015,7 @@ theorem serialNodeLaw_of_decision
     contradiction
   next activeOwner hdecision =>
     have howner : activeOwner = owner :=
-      TypedMAID.NodeKind.decision.inj
+      GameTheory.Languages.MAID.NodeKind.decision.inj
         (hdecision.symm.trans hkind)
     subst activeOwner
     rfl
@@ -1040,8 +1040,8 @@ theorem inactive_of_pending_chance
 /-- The joint-action law corresponding directly to one native site law. This
 is the source-facing midpoint for comparison with `behavioralJoint`. -/
 def serialJointLaw [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hterminal : ¬ (execution topological semantics).terminal state) :
     FinDist
@@ -1069,12 +1069,12 @@ def serialJointLaw [DecidableEq Player] [DecidableEq Node]
 
 theorem behavioralJoint_eq_serialJointLaw_unit
     {Vertex : Type uNode}
-    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    {unitDiagram : GameTheory.Languages.MAID.Structure Unit Vertex}
     (unitTopological :
       GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
     [DecidableEq Vertex]
-    (semantics : TypedMAID.Semantics unitDiagram)
-    (policy : TypedMAID.Policy unitDiagram)
+    (semantics : GameTheory.Languages.MAID.Semantics unitDiagram)
+    (policy : GameTheory.Languages.MAID.Policy unitDiagram)
     (state : Stage unitDiagram unitTopological)
     (trace : (execution unitTopological semantics).Trace state)
     (hterminal :
@@ -1187,7 +1187,7 @@ theorem behavioralJoint_eq_serialJointLaw_unit
 
 theorem transition_of_chance
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological)
     (certified :
       { joint : (owner : Player) → Option (Action diagram owner) //
@@ -1220,7 +1220,7 @@ theorem transition_of_chance
 
 theorem transition_jointFor
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
     (state : Stage diagram topological)
     (hterminal : ¬ state.IsTerminal topological)
     (hpending : state.path.length < topological.order.length)
@@ -1247,7 +1247,7 @@ theorem transition_jointFor
     contradiction
   next activeOwner hdecision =>
     have howner : activeOwner = owner :=
-      TypedMAID.NodeKind.decision.inj
+      GameTheory.Languages.MAID.NodeKind.decision.inj
         (hdecision.symm.trans hkind)
     subst activeOwner
     let activeProof : Active topological state owner :=
@@ -1276,8 +1276,8 @@ theorem transition_jointFor
 exactly one source-level serialized node step. -/
 theorem serialJointLaw_bind_transition
     [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (state : Stage diagram topological)
     (hterminal : ¬ (execution topological semantics).terminal state) :
     (serialJointLaw topological semantics policy state hterminal).bind
@@ -1312,12 +1312,12 @@ bridge used by the history-runner induction; neither side mentions the
 intermediate legality witnesses. -/
 theorem behavioralJoint_bind_transition_unit
     {Vertex : Type uNode}
-    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    {unitDiagram : GameTheory.Languages.MAID.Structure Unit Vertex}
     (unitTopological :
       GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
     [DecidableEq Vertex]
-    (semantics : TypedMAID.Semantics unitDiagram)
-    (policy : TypedMAID.Policy unitDiagram)
+    (semantics : GameTheory.Languages.MAID.Semantics unitDiagram)
+    (policy : GameTheory.Languages.MAID.Policy unitDiagram)
     (state : Stage unitDiagram unitTopological)
     (trace : (execution unitTopological semantics).Trace state)
     (hterminal :
@@ -1335,8 +1335,8 @@ theorem behavioralJoint_bind_transition_unit
     policy state hterminal
 
 def serialRun [DecidableEq Player] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     Nat → Stage diagram topological →
       FinDist (Stage diagram topological)
   | 0, state => FinDist.pure state
@@ -1354,12 +1354,12 @@ the native serialized stage runner. The EFG may retain a richer trace, but its
 state law is neither an approximation nor merely payoff-equivalent. -/
 theorem map_state_runBehavioralFrom_eq_serialRun_unit
     {Vertex : Type uNode}
-    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    {unitDiagram : GameTheory.Languages.MAID.Structure Unit Vertex}
     (unitTopological :
       GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
     [DecidableEq Vertex]
-    (semantics : TypedMAID.Semantics unitDiagram)
-    (policy : TypedMAID.Policy unitDiagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics unitDiagram)
+    (policy : GameTheory.Languages.MAID.Policy unitDiagram) :
     ∀ (fuel : ℕ)
       (history : (execution unitTopological semantics).History),
       FinDist.map ExecutionProtocol.History.state
@@ -1423,4 +1423,4 @@ theorem map_state_runBehavioralFrom_eq_serialRun_unit
               rw [behavioralJoint_bind_transition_unit unitTopological
                 semantics policy history.state history.trace hterminal]
 
-end GameTheory.Experimental.TypedMAID.ToEFG
+end GameTheory.Languages.MAID.ToEFG

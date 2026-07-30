@@ -50,8 +50,8 @@ becomes difficult to scan.
 | EXP-037 | 2026-07-30 | D6/D14 / MAID gate | Can incomparable MAID decisions compile without asserting a false order? | Supports frontier batching; unlocks general MAID work | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDIncomparable.lean` |
 | EXP-038 | 2026-07-30 | D6/D14 / T3 strategy gate | Does per-player frontier batching preserve locality when one player owns incomparable decisions? | Refutes combined-view policies; narrows D14 | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` |
 | EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
-| EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; public promotion awaits T3 serialization equivalence | `GameTheory/Experimental/PostArchitecture/TypedMAID*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
-| EXP-041 | 2026-07-30 | D6/D14 / T3 serialization | Can an explicit topological order compile the typed MAID to an EFG without exposing serialized incomparable decisions? | Supports; native frontier, serialized, and actual compiled-EFG assignment laws are equal for arbitrary finite typed diagrams | `GameTheory/Experimental/PostArchitecture/TypedMAID{ToEFG,Order,FrontierEquivalence}*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
+| EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; promoted after EXP-041 | `GameTheory/Languages/MAID/Basic.lean`; `GameTheory/Experimental/PostArchitecture/TypedMAIDTest.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
+| EXP-041 | 2026-07-30 | D6/D14 / T3 serialization | Can an explicit topological order compile the typed MAID to an EFG without exposing serialized incomparable decisions? | Supports; native frontier, serialized, and actual compiled-EFG assignment laws are equal for arbitrary finite typed diagrams | `GameTheory/Languages/MAID/{ToEFG,Order,FrontierEquivalence}.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 
 ## Entry template
 
@@ -2494,7 +2494,8 @@ memory.
   `Fintype`/`DecidableEq`, order-dependent native evaluation, or failure of
   generic frontier progress.
 - **Evidence:**
-  1. `TypedMAID.lean` is 327 nonblank lines and 33 declarations. `Structure`
+  1. The promoted `Languages/MAID/Basic.lean` is 327 nonblank lines and 33
+     declarations. `Structure`
      stores node kind, causal and observed parent finsets, a dependent value
      family, locality laws, and acyclicity—no order, `Fintype`, or
      `DecidableEq`. `Policy` is indexed by decision site and receives only that
@@ -2577,10 +2578,11 @@ memory.
   `treeShaped` or `singleMover`; unequal native/serialized terminal laws; or
   order-dependent serialized outcomes.
 - **Evidence so far:**
-  1. `TypedMAIDToEFG.lean` is 1,344 nonblank lines and 69 declarations,
-     `TypedMAIDOrder.lean` is 866 nonblank lines and 24 declarations, and the
-     536-nonblank-line hostile test has 50 declarations. All remain below
-     `Experimental/PostArchitecture`, so the stable API delta is zero.
+  1. The eventual promoted modules `Languages/MAID/ToEFG.lean` and
+     `Languages/MAID/Order.lean` are 1,344 nonblank lines/69 declarations and
+     866 nonblank lines/24 declarations respectively; the 536-nonblank-line
+     hostile test remains experimental with 50 declarations. During the
+     experiment the stable API delta was zero.
   2. `Action` is the dependent sum of one real source owner's decision sites
      and their value types. `Stage` stores a dependent-valued path certified
      to equal a prefix of the supplied topological order. Neither syntax nor
@@ -2642,8 +2644,9 @@ memory.
       transition and Protocol history runner.
       `behavioralRun_topological_order_independent` is therefore the general
       actual compiled-EFG assignment-law theorem.
-  13. `TypedMAIDFrontierEquivalence.lean` is 726 nonblank lines and 23
-      declarations. `finDist_pi_reindex` and `fixedAssignmentRun_eq_pi` prove
+  13. The promoted `Languages/MAID/FrontierEquivalence.lean` is 726 nonblank
+      lines and 23 declarations. `finDist_pi_reindex` and
+      `fixedAssignmentRun_eq_pi` prove
       that a dependent simultaneous frontier product equals duplicate-free
       sequential draws of the same fixed node laws.
       `map_values_step_eq_assignmentRun` then identifies one native frontier
@@ -2669,6 +2672,6 @@ memory.
   This closes T3's outcome-law half and removes D14's block on public general
   MAID recovery. It does not claim T3's separate source-owner equilibrium
   transfer.
-- **Next action:** promote the validated typed syntax/evaluator/compiler
-  surface deliberately, then prove the named equilibrium transfer with
-  deviations regrouped by source owner.
+- **Next action:** prove the named equilibrium transfer with deviations
+  regrouped by source owner. The validated syntax/evaluator/compiler surface
+  has been promoted under `GameTheory.Languages.MAID`.

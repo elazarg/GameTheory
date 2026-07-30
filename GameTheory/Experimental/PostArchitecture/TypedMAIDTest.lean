@@ -6,7 +6,7 @@ EXP-038's one-player, two-decision antichain: each decision observes only its
 own chance parent, while both sites resolve in the same native frontier.
 -/
 
-import GameTheory.Experimental.PostArchitecture.TypedMAID
+import GameTheory.Languages.MAID.Basic
 import Mathlib.Data.Fintype.OfMap
 
 noncomputable section
@@ -14,7 +14,7 @@ noncomputable section
 namespace GameTheory.Experimental.TypedMAIDTest
 
 open GameTheory.Probability
-open GameTheory.Experimental.TypedMAID
+open GameTheory.Languages.MAID
 
 /-! ## A heterogeneous diamond -/
 

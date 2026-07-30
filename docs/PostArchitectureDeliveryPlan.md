@@ -318,7 +318,7 @@ surface syntax.
 |---|---|---|
 | NFG | a transparent finite syntax compiles to the canonical static form without a second Nash API | examples, public goods, Stackelberg, cheap talk, and mixed presentations |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
-| MAID | **passed (EXP-041):** an incomparable-node typed DAG compiles locally and its native frontier law equals every compiled order's actual behavioral law | public evaluation and information recovery, then refinements, Kuhn specialization, and source-owner equilibrium transfer |
+| MAID | **passed (EXP-041):** an incomparable-node typed DAG compiles locally and its native frontier law equals every compiled order's actual behavioral law | **current:** public general evaluation/compiler promoted; next refinements, Kuhn specialization, and source-owner equilibrium transfer |
 | FOSG | simultaneous active players and imperfect information compile honestly to Protocol | reachable histories, terminal laws, observations, strategies, values, and named EFG comparison |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | the native strategy/information object proves one theorem not recoverable from bare Protocol | compilation, perfect recall, and native theorems |

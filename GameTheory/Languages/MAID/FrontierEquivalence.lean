@@ -1,25 +1,25 @@
 /-
-# EXP-041: serialized/native typed MAID equivalence
+# Serialized/native typed MAID equivalence
 
-The last serialization gate compares a dependent finite product over a native
+The serialization theorem compares a dependent finite product over a native
 frontier with sequential draws of the same node laws. This file keeps that
 probability algebra separate from both evaluators.
 -/
 
-import GameTheory.Experimental.PostArchitecture.TypedMAIDOrder
+import GameTheory.Languages.MAID.Order
 
 noncomputable section
 
-namespace GameTheory.Experimental.TypedMAID.FrontierEquivalence
+namespace GameTheory.Languages.MAID.FrontierEquivalence
 
 open GameTheory.Probability
-open GameTheory.Experimental.TypedMAID.ToEFG
-open GameTheory.Experimental.TypedMAID.Order
+open GameTheory.Languages.MAID.ToEFG
+open GameTheory.Languages.MAID.Order
 
 universe uPlayer uNode uValue uIndex
 
 variable {Player : Type uPlayer} {Node : Type uNode}
-variable {diagram : TypedMAID.Structure Player Node}
+variable {diagram : GameTheory.Languages.MAID.Structure Player Node}
 
 /-- A dependent finite product is invariant under reindexing its coordinates
 by an equivalence. -/
@@ -51,8 +51,8 @@ theorem finDist_pi_reindex
 coordinate. -/
 def fixedAssignmentRun [DecidableEq Node]
     (laws : (node : Node) → FinDist (diagram.Value node)) :
-    List Node → TypedMAID.Assignment diagram →
-      FinDist (TypedMAID.Assignment diagram)
+    List Node → GameTheory.Languages.MAID.Assignment diagram →
+      FinDist (GameTheory.Languages.MAID.Assignment diagram)
   | [], assignment => FinDist.pure assignment
   | node :: rest, assignment =>
       (laws node).bind fun value =>
@@ -65,10 +65,10 @@ once. -/
 theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
     (laws : (node : Node) → FinDist (diagram.Value node)) :
     ∀ (nodes : List Node), nodes.Nodup →
-      ∀ assignment : TypedMAID.Assignment diagram,
+      ∀ assignment : GameTheory.Languages.MAID.Assignment diagram,
         fixedAssignmentRun laws nodes assignment =
           FinDist.map
-            (TypedMAID.Assignment.resolve diagram assignment
+            (GameTheory.Languages.MAID.Assignment.resolve diagram assignment
               nodes.toFinset)
             (FinDist.pi fun node : {node // node ∈ nodes.toFinset} =>
               laws node.1) := by
@@ -97,7 +97,7 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
         FinDist.map_pure]
       apply congrArg FinDist.pure
       funext node
-      simp [TypedMAID.Assignment.resolve]
+      simp [GameTheory.Languages.MAID.Assignment.resolve]
   | cons head tail ih =>
       intro hnodup assignment
       have hheadNotMem : head ∉ tail :=
@@ -157,7 +157,7 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
           FinDist.map
               (fun draw : (node : remaining) →
                   remainingValue node =>
-                TypedMAID.Assignment.resolve diagram assignment
+                GameTheory.Languages.MAID.Assignment.resolve diagram assignment
                   (head :: tail).toFinset
                   ((Equiv.piSplitAt headIndex
                     (fun node : full =>
@@ -165,7 +165,7 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
                     (value, draw)))
               (FinDist.pi remainingLaws) =
             FinDist.map
-              (TypedMAID.Assignment.resolve diagram
+              (GameTheory.Languages.MAID.Assignment.resolve diagram
                 (Stage.Assignment.setOne assignment ⟨head, value⟩)
                 tail.toFinset)
               (FinDist.pi
@@ -176,15 +176,15 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
         funext draw node
         by_cases hnodeHead : node = head
         · subst node
-          simp [TypedMAID.Assignment.resolve,
+          simp [GameTheory.Languages.MAID.Assignment.resolve,
             Stage.Assignment.setOne, headIndex, full,
             remainingEquiv, hheadNotFinset]
         · by_cases hnodeTail : node ∈ tail.toFinset
-          · simp [TypedMAID.Assignment.resolve,
+          · simp [GameTheory.Languages.MAID.Assignment.resolve,
               Stage.Assignment.setOne, hnodeHead, hnodeTail,
               headIndex, full, remainingEquiv,
               remainingValue, tailIndex]
-          · simp [TypedMAID.Assignment.resolve,
+          · simp [GameTheory.Languages.MAID.Assignment.resolve,
               Stage.Assignment.setOne, hnodeHead, hnodeTail]
       rw [fixedAssignmentRun]
       simp_rw [ih htailNodup]
@@ -211,31 +211,31 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
 the serialized evaluator. -/
 theorem assignmentNodeLaw_eq_nodeLaw
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (state : TypedMAID.FrontierState diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (state : GameTheory.Languages.MAID.FrontierState diagram)
     (node : {node // node ∈ state.frontier}) :
     assignmentNodeLaw semantics policy state.values node.1 =
-      TypedMAID.nodeLaw diagram semantics policy state node := by
-  unfold assignmentNodeLaw TypedMAID.nodeLaw
-  simp only [TypedMAID.FrontierState.configOf]
+      GameTheory.Languages.MAID.nodeLaw diagram semantics policy state node := by
+  unfold assignmentNodeLaw GameTheory.Languages.MAID.nodeLaw
+  simp only [GameTheory.Languages.MAID.FrontierState.configOf]
   split <;> split
   · rfl
   · rename_i hchance owner hdecision
     have himpossible :
-        TypedMAID.NodeKind.chance =
-          TypedMAID.NodeKind.decision owner :=
+        GameTheory.Languages.MAID.NodeKind.chance =
+          GameTheory.Languages.MAID.NodeKind.decision owner :=
       hchance.symm.trans hdecision
     cases himpossible
   · rename_i owner hdecision hchance
     have himpossible :
-        TypedMAID.NodeKind.decision owner =
-          TypedMAID.NodeKind.chance :=
+        GameTheory.Languages.MAID.NodeKind.decision owner =
+          GameTheory.Languages.MAID.NodeKind.chance :=
       hdecision.symm.trans hchance
     cases himpossible
   · rename_i firstOwner hfirst secondOwner hsecond
     have howner : firstOwner = secondOwner :=
-      TypedMAID.NodeKind.decision.inj (hfirst.symm.trans hsecond)
+      GameTheory.Languages.MAID.NodeKind.decision.inj (hfirst.symm.trans hsecond)
     subst secondOwner
     rfl
 
@@ -243,7 +243,7 @@ theorem assignmentNodeLaw_eq_nodeLaw
 frontier. -/
 theorem not_parent_of_mem_frontier
     [Fintype Node] [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram)
+    (state : GameTheory.Languages.MAID.FrontierState diagram)
     {first second : Node}
     (hfirst : first ∈ state.frontier)
     (hsecond : second ∈ state.frontier) :
@@ -257,13 +257,13 @@ theorem not_parent_of_mem_frontier
 assignment, the dynamic serialized runner equals the runner with those laws
 held fixed. -/
 theorem assignmentRun_eq_fixed_of_pairwise [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
     (laws : (node : Node) → FinDist (diagram.Value node)) :
     ∀ (nodes : List Node),
       nodes.Pairwise
         (fun earlier later => earlier ∉ diagram.parents later) →
-      ∀ assignment : TypedMAID.Assignment diagram,
+      ∀ assignment : GameTheory.Languages.MAID.Assignment diagram,
         (∀ node ∈ nodes,
           assignmentNodeLaw semantics policy assignment node =
             laws node) →
@@ -301,9 +301,9 @@ theorem assignmentRun_eq_fixed_of_pairwise [DecidableEq Node]
 runner for that frontier. -/
 theorem assignmentRun_frontier_eq_fixed
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (state : TypedMAID.FrontierState diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     assignmentRun semantics policy state.frontier.toList state.values =
       fixedAssignmentRun
         (fun node => assignmentNodeLaw semantics policy state.values node)
@@ -338,30 +338,30 @@ theorem assignmentRun_frontier_eq_fixed
 frontier induce the same law on assignments. -/
 theorem map_values_step_eq_assignmentRun
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (state : TypedMAID.FrontierState diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     FinDist.map (fun reached => reached.values)
-        (TypedMAID.step diagram semantics policy state) =
+        (GameTheory.Languages.MAID.step diagram semantics policy state) =
       assignmentRun semantics policy state.frontier.toList state.values := by
   rw [assignmentRun_frontier_eq_fixed,
     fixedAssignmentRun_eq_pi _ state.frontier.toList
       state.frontier.nodup_toList state.values,
     Finset.toList_toFinset]
-  unfold TypedMAID.step TypedMAID.frontierLaw
+  unfold GameTheory.Languages.MAID.step GameTheory.Languages.MAID.frontierLaw
   rw [FinDist.map_comp]
   have hlaws :
       (fun node : {node // node ∈ state.frontier} =>
         assignmentNodeLaw semantics policy state.values node.1) =
         fun node : {node // node ∈ state.frontier} =>
-          TypedMAID.nodeLaw diagram semantics policy state node := by
+          GameTheory.Languages.MAID.nodeLaw diagram semantics policy state node := by
     funext node
     exact assignmentNodeLaw_eq_nodeLaw semantics policy state node
   rw [hlaws]
   apply congrArg (fun f =>
     FinDist.map f
       (FinDist.pi fun node : {node // node ∈ state.frontier} =>
-        TypedMAID.nodeLaw diagram semantics policy state node))
+        GameTheory.Languages.MAID.nodeLaw diagram semantics policy state node))
   funext draw
   rfl
 
@@ -370,7 +370,7 @@ def unresolvedOrder
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) : List Node :=
+    (state : GameTheory.Languages.MAID.FrontierState diagram) : List Node :=
   topological.order.filter fun node => node ∉ state.resolved
 
 /-- The nodes left after resolving the state's entire current frontier. -/
@@ -378,7 +378,7 @@ def remainingOrder
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) : List Node :=
+    (state : GameTheory.Languages.MAID.FrontierState diagram) : List Node :=
   topological.order.filter fun node =>
     node ∉ state.resolved ∪ state.frontier
 
@@ -386,7 +386,7 @@ theorem unresolvedOrder_nodup
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) :
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (unresolvedOrder topological state).Nodup :=
   topological.nodup.filter _
 
@@ -394,7 +394,7 @@ theorem unresolvedOrder_pairwise
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) :
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (unresolvedOrder topological state).Pairwise
       (fun earlier later => later ∉ diagram.parents earlier) :=
   (topological_pairwise topological).filter _
@@ -403,7 +403,7 @@ theorem remainingOrder_nodup
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) :
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (remainingOrder topological state).Nodup :=
   topological.nodup.filter _
 
@@ -411,7 +411,7 @@ theorem remainingOrder_pairwise
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) :
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (remainingOrder topological state).Pairwise
       (fun earlier later => later ∉ diagram.parents earlier) :=
   (topological_pairwise topological).filter _
@@ -422,7 +422,7 @@ theorem unresolvedOrder_extend
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram)
+    (state : GameTheory.Languages.MAID.FrontierState diagram)
     (draw : (node : {node // node ∈ state.frontier}) →
       diagram.Value node.1) :
     unresolvedOrder topological (state.extend draw) =
@@ -435,7 +435,7 @@ theorem frontier_append_remaining_perm
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) :
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (state.frontier.toList ++ remainingOrder topological state).Perm
       (unresolvedOrder topological state) := by
   have happendNodup :
@@ -486,7 +486,7 @@ theorem frontier_append_remaining_pairwise
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (state : TypedMAID.FrontierState diagram) :
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     (state.frontier.toList ++ remainingOrder topological state).Pairwise
       (fun earlier later => later ∉ diagram.parents earlier) := by
   rw [List.pairwise_append]
@@ -526,10 +526,10 @@ theorem frontier_append_remaining_pairwise
 
 /-- Serialized assignment execution composes over list concatenation. -/
 theorem assignmentRun_append [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     ∀ (first second : List Node)
-      (assignment : TypedMAID.Assignment diagram),
+      (assignment : GameTheory.Languages.MAID.Assignment diagram),
       assignmentRun semantics policy (first ++ second) assignment =
         (assignmentRun semantics policy first assignment).bind
           (assignmentRun semantics policy second) := by
@@ -552,9 +552,9 @@ theorem assignmentRun_unresolved_eq_frontier_bind_remaining
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram)
-    (state : TypedMAID.FrontierState diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram)
+    (state : GameTheory.Languages.MAID.FrontierState diagram) :
     assignmentRun semantics policy
         (unresolvedOrder topological state) state.values =
       (assignmentRun semantics policy state.frontier.toList
@@ -578,12 +578,12 @@ theorem map_values_run_eq_assignmentRun_unresolved
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
-    ∀ (fuel : ℕ) (state : TypedMAID.FrontierState diagram),
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
+    ∀ (fuel : ℕ) (state : GameTheory.Languages.MAID.FrontierState diagram),
       Fintype.card Node - state.resolved.card ≤ fuel →
       FinDist.map (fun reached => reached.values)
-          (TypedMAID.run diagram semantics policy fuel state) =
+          (GameTheory.Languages.MAID.run diagram semantics policy fuel state) =
         assignmentRun semantics policy
           (unresolvedOrder topological state) state.values := by
   intro fuel
@@ -601,7 +601,7 @@ theorem map_values_run_eq_assignmentRun_unresolved
       have hremaining :
           unresolvedOrder topological state = [] := by
         simp [unresolvedOrder, hcomplete]
-      rw [TypedMAID.run, FinDist.map_pure, hremaining,
+      rw [GameTheory.Languages.MAID.run, FinDist.map_pure, hremaining,
         assignmentRun]
   | succ fuel ih =>
       intro state hbound
@@ -609,22 +609,22 @@ theorem map_values_run_eq_assignmentRun_unresolved
       · have hremaining :
             unresolvedOrder topological state = [] := by
           simp [unresolvedOrder, hcomplete]
-        rw [TypedMAID.run, if_pos hcomplete, FinDist.map_pure,
+        rw [GameTheory.Languages.MAID.run, if_pos hcomplete, FinDist.map_pure,
           hremaining, assignmentRun]
-      · rw [TypedMAID.run, if_neg hcomplete, FinDist.map_bind]
+      · rw [GameTheory.Languages.MAID.run, if_neg hcomplete, FinDist.map_bind]
         calc
-          (TypedMAID.step diagram semantics policy state).bind
+          (GameTheory.Languages.MAID.step diagram semantics policy state).bind
               (fun next =>
                 FinDist.map (fun reached => reached.values)
-                  (TypedMAID.run diagram semantics policy fuel next)) =
-            (TypedMAID.step diagram semantics policy state).bind
+                  (GameTheory.Languages.MAID.run diagram semantics policy fuel next)) =
+            (GameTheory.Languages.MAID.step diagram semantics policy state).bind
               (fun next =>
                 assignmentRun semantics policy
                   (unresolvedOrder topological next) next.values) := by
               apply FinDist.bind_congr
               intro next hnext
               obtain ⟨draw, rfl⟩ :=
-                TypedMAID.eq_extend_of_mem_support_step
+                GameTheory.Languages.MAID.eq_extend_of_mem_support_step
                   diagram semantics policy state next hnext
               have hcardGrowth :
                   state.resolved.card <
@@ -645,19 +645,19 @@ theorem map_values_run_eq_assignmentRun_unresolved
                 omega
               exact ih (state.extend draw) hnextBound
           _ =
-            (TypedMAID.step diagram semantics policy state).bind
+            (GameTheory.Languages.MAID.step diagram semantics policy state).bind
               (fun next =>
                 assignmentRun semantics policy
                   (remainingOrder topological state) next.values) := by
               apply FinDist.bind_congr
               intro next hnext
               obtain ⟨draw, rfl⟩ :=
-                TypedMAID.eq_extend_of_mem_support_step
+                GameTheory.Languages.MAID.eq_extend_of_mem_support_step
                   diagram semantics policy state next hnext
               rw [unresolvedOrder_extend]
           _ =
             (FinDist.map (fun next => next.values)
-              (TypedMAID.step diagram semantics policy state)).bind
+              (GameTheory.Languages.MAID.step diagram semantics policy state)).bind
                 (assignmentRun semantics policy
                   (remainingOrder topological state)) := by
               rw [FinDist.bind_map]
@@ -679,19 +679,19 @@ theorem map_values_nativeRun_eq_assignmentRun
     (topological :
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     FinDist.map (fun reached => reached.values)
-        (TypedMAID.run diagram semantics policy
+        (GameTheory.Languages.MAID.run diagram semantics policy
           (Fintype.card Node)
-          (TypedMAID.FrontierState.initial semantics)) =
+          (GameTheory.Languages.MAID.FrontierState.initial semantics)) =
       assignmentRun semantics policy topological.order
         semantics.defaultValue := by
   rw [map_values_run_eq_assignmentRun_unresolved
     topological semantics policy (Fintype.card Node)
-      (TypedMAID.FrontierState.initial semantics) (by
-        simp [TypedMAID.FrontierState.initial])]
-  simp [unresolvedOrder, TypedMAID.FrontierState.initial]
+      (GameTheory.Languages.MAID.FrontierState.initial semantics) (by
+        simp [GameTheory.Languages.MAID.FrontierState.initial])]
+  simp [unresolvedOrder, GameTheory.Languages.MAID.FrontierState.initial]
 
 /-- The native frontier evaluator and the explicit serialized stage evaluator
 produce the same complete typed-assignment law. -/
@@ -700,12 +700,12 @@ theorem nativeRun_eq_serialRun
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     FinDist.map (fun reached => reached.values)
-        (TypedMAID.run diagram semantics policy
+        (GameTheory.Languages.MAID.run diagram semantics policy
           (Fintype.card Node)
-          (TypedMAID.FrontierState.initial semantics)) =
+          (GameTheory.Languages.MAID.FrontierState.initial semantics)) =
       FinDist.map (Stage.assignment topological semantics)
         (serialRun topological semantics policy
           topological.order.length (Stage.initial topological)) := by
@@ -723,12 +723,12 @@ theorem nativeRun_eq_compiledBehavioralRun
       GameTheoryMath.DAG.TopologicalOrder diagram.parents)
     [Fintype Player] [DecidableEq Player]
     [Fintype Node] [DecidableEq Node]
-    (semantics : TypedMAID.Semantics diagram)
-    (policy : TypedMAID.Policy diagram) :
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) :
     FinDist.map (fun reached => reached.values)
-        (TypedMAID.run diagram semantics policy
+        (GameTheory.Languages.MAID.run diagram semantics policy
           (Fintype.card Node)
-          (TypedMAID.FrontierState.initial semantics)) =
+          (GameTheory.Languages.MAID.FrontierState.initial semantics)) =
       FinDist.map
         (fun history =>
           Stage.assignment topological semantics history.state)
@@ -754,4 +754,4 @@ theorem nativeRun_eq_compiledBehavioralRun
         GameTheory.Protocol.InformationModel.runBehavioral,
         Function.comp_def] using hassignment.symm
 
-end GameTheory.Experimental.TypedMAID.FrontierEquivalence
+end GameTheory.Languages.MAID.FrontierEquivalence
