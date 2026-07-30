@@ -40,6 +40,7 @@ becomes difficult to scan.
 | EXP-027 | 2026-07-30 | D4 / Phase 5 | Does Arrow's pivotal-voter proof work through the accepted weak-ranking vocabulary without a second preference API? | Supports; repairs an import-closure leak | `GameTheory/Core/Rank.lean`; `GameTheory/Core/Arrow.lean`; `GameTheory/Tests/Arrow.lean` |
 | EXP-028 | 2026-07-30 | D0 / Phase 5 | Is the parallel `CoalitionalGame` primitive rich enough for the Shapley value and its four-axiom characterization? | Supports the parallel primitive | `GameTheory/Core/Shapley.lean`; `GameTheory/Tests/Shapley.lean` |
 | EXP-029 | 2026-07-30 | D0/D5/D6 / Phase 5 | Does the EXP-008 interim theorem survive as stable API and compile through the accepted `InformationModel` without duplicating equilibrium semantics? | Supports; fixes the static/information split | `GameTheory/Core/Bayesian*.lean`; `GameTheory/Languages/Bayesian.lean`; `GameTheory/Tests/Bayesian.lean` |
+| EXP-030 | 2026-07-30 | D0/D2/D6/D11/D12 / Phase 5 | Can repeated play reuse Protocol for finite prefixes and ordinary `IsNash` for discounting without inventing an infinite `FinDist` path law? | Supports; narrows public histories to lists | `GameTheory/Repeated/*.lean`; `GameTheory/Tests/Repeated.lean` |
 
 ## Entry template
 
@@ -1735,3 +1736,61 @@ memory.
 - **Next action:** treat the finite Bayesian axis as closed. Reserve a new
   experiment before starting repeated play or the predicted analytic bridge
   over Protocol.
+
+### EXP-030: repeated play at the finite-prefix/infinite-value boundary
+
+- **Date / revision:** 2026-07-30, working tree based on `d044e1e`
+- **Decision / question:** D0, D2, D11, D12, and Phase 5; whether public-action
+  repeated games should be represented entirely as protocols, by native
+  recursive stage paths plus a finite-prefix protocol compiler, or by a
+  stochastic law over infinite histories.
+- **Representative slice:** a generic public-action stage game; stationary and
+  history-dependent repeated strategies; exact finite-prefix execution through
+  `ExecutionProtocol`/`InformationModel`; normalized discounted payoff on the
+  deterministic stage path; and the theorem that stationary repetition of a
+  bounded stage Nash profile is ordinary Nash of the discounted repeated form.
+- **Competing designs:** make Protocol the sole repeated-game representation;
+  keep native recursive paths and prove a finite-prefix compiler law; or add an
+  infinite-path probability carrier.
+- **Kill conditions:** finite-prefix play needs a second transition or
+  information interface; discounted equilibrium needs a repeated-specific Nash
+  predicate; the stable theorem essentially quantifies over an infinite
+  stochastic path law; the fixed-point dependency or measurable probability
+  leaks into the stagewise root; or Protocol cannot express public observation
+  of the accumulated action history without exposing hidden state.
+- **Artifacts / commands:** `GameTheory/Repeated/{Basic,Discounted,Protocol}.lean`,
+  `GameTheory/Repeated.lean`, `GameTheory/Tests/Repeated.lean`;
+  `lake build GameTheory.Repeated` (1,759 jobs);
+  `lake build GameTheory.Tests.Repeated` (1,760 jobs);
+  `lake build` (3,292 jobs);
+  `scripts/phase2-audit.ps1`; and
+  `scripts/phase3-audit.ps1 -VerifyExpected`. The source inventory was
+  `Concepts/Repeated/{Basic,Discounted}.lean`,
+  `Languages/MultiRound/RepeatedGame.lean`, and
+  `Concepts/Welfare/FolkTheorem/Main.lean` in the pinned snapshot at
+  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+- **Observations / measurements:** the first candidate stored a dependent
+  `Fin t → Profile` history. Equating it with a Protocol prefix immediately
+  required proof-dependent transport, firing the kill condition. Replacing the
+  canonical history by a chronological `List Profile` makes its length the
+  period and lets native recursion and Protocol share the same state
+  definitionally. The stable repeated root is 537 nonblank lines (Basic 125,
+  Discounted 118, Protocol 280, root 14); the hostile test is 115. It contains
+  zero source transport tokens and zero forbidden imports. Basic and Discounted
+  reject all four `stdSimplex`/`Polynomial` probes. The three cross-layer
+  rejection probes and both positive compiler-input probes pass. The compiler
+  exactly reproduces a three-stage history-dependent path. Normalized discounted
+  utility is a utility on the existing deterministic repeated form, and
+  stationary repetition of a bounded stage Nash profile is ordinary `IsNash`;
+  there is no repeated-specific equilibrium predicate and no infinite-path
+  `FinDist`. Both flagship paths use only `propext`, `Classical.choice`, and
+  `Quot.sound`.
+- **Outcome:** supports the native-path/finite-prefix compiler design and D11's
+  boundary; narrows public repeated histories to chronological lists. Protocol
+  is reused for finite execution and information, not made the sole
+  infinite-horizon representation. This experiment does not validate the full
+  folk theorem's simplex-approximation geometry.
+- **Next action:** reserve a separate experiment before importing or rebuilding
+  the full folk-theorem mathematics. Compete a repeated-analysis bridge against
+  keeping that geometry inside the stable repeated root, with negative probes
+  from `GameTheory.Repeated` and positive probes from any new bridge.

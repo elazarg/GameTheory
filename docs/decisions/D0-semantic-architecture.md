@@ -8,7 +8,8 @@ outcome-law semantics and coordinated native branches for protocol/information
 semantics. Do not select a generic certificate hierarchy yet. The final
 decision, after Phase 3, is recorded below.
 
-**Experiment IDs:** EXP-001; post-decision stress evidence EXP-028, EXP-029
+**Experiment IDs:** EXP-001; post-decision stress evidence EXP-028, EXP-029,
+EXP-030
 
 **Hypothesis:** A utility-free shared static form and common deviation logic can
 remove duplicated strategic concepts without forcing sequential languages to
@@ -200,6 +201,24 @@ native presentation only where execution and information require it; their
 static incentive theory continues to use the shared form and predicate.
 Finiteness remains attached to the interim decomposition theorem rather than
 stored in the game.
+
+### Phase 5 repeated-play stress
+
+[EXP-030](../ExperimentLog.md) confirms the level split at an infinite-horizon
+consumer. A repeated profile is native deterministic recursion over one public
+list history; normalized discounted payoff evaluates that path and ordinary
+`IsNash` states equilibrium. Finite execution is not reimplemented: a
+`GameTheory.Repeated.Protocol` bridge uses the accepted `ExecutionProtocol` and
+`InformationModel`, with the accumulated public list as its state, and proves
+that every finite run is exactly the corresponding native prefix.
+
+The split is discriminating rather than cosmetic. Making Protocol the sole
+infinite-horizon representation would add no value to the deterministic
+discounted theorem, while a second repeated transition would duplicate D6.
+Basic and Discounted cannot reach Protocol; the Protocol bridge cannot reach
+discounting; positive probes show the bridge still consumes both the native
+path and the information model. No new equilibrium definition, generic
+certificate, or infinite-path law appears.
 
 ### Consequences for public API
 

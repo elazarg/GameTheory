@@ -1142,6 +1142,13 @@ theorem requiring the stochastic law of an entire infinite realized-signal
 path is routed to the measurable spike: a countably supported `PMF` layer is
 not an adequate substitute.
 
+EXP-030 validates the lower half of this boundary in the greenfield code:
+history-dependent deterministic paths, normalized discounted utility, and an
+exact finite-prefix Protocol compiler require neither a measurable kernel nor
+an infinite-path `FinDist`. It does not settle where the full folk theorem's
+simplex-approximation geometry belongs; that dependency decision remains
+experiment-gated.
+
 ### D12. Package and stability boundaries
 
 Use separate dependency roots, not only directories:

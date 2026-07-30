@@ -4,7 +4,8 @@ Decision: a fixed-point theorem may be taken from outside Mathlib, and
 everything that follows from it lives in a root the audited layers do not
 import.
 
-Experiment IDs: [EXP-022](../ExperimentLog.md), [EXP-023](../ExperimentLog.md).
+Experiment IDs: [EXP-022](../ExperimentLog.md), [EXP-023](../ExperimentLog.md);
+post-decision boundary stress [EXP-030](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -85,3 +86,21 @@ stopped being used, and the two look identical from outside.
 None to existing modules. `GameTheory.Analysis` is additive, and nothing in
 Core, Probability, Protocol, Languages, or Finite may depend on it — which is
 what keeps the executable frontend free of noncomputable analysis.
+
+## Repeated-play boundary stress
+
+EXP-030 creates the RFC's separate `GameTheory.Repeated` root and measures it
+before attempting the folk theorem. The stagewise and finite-prefix layer names
+no `GameTheory.Analysis` or `FixedPointTheorems` import. Both Basic and
+Discounted reject `stdSimplex` and `Polynomial` (four probes), repeated source
+contains zero transport tokens, and the authored-import audit reports zero
+forbidden dependencies.
+
+Discounted real series therefore do not spend the fixed-point dependency
+budget. The full folk theorem is a different question: the pinned proof imports
+simplex approximation and supporting geometry. Any implementation of that
+flagship requires a new experiment comparing a one-way repeated-analysis bridge
+with importing the mathematics into the stable repeated root. If a bridge wins,
+the enforcement pattern here is mandatory again: `GameTheory.Repeated` keeps
+negative probes, and the new bridge gets positive probes proving that its
+analytic dependency remains live.

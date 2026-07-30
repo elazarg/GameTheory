@@ -4,7 +4,7 @@
   interface, finite-first trees retained as a derived presentation
 - **Date:** 2026-07-27
 - **Experiment IDs:** EXP-010, EXP-011, EXP-012; post-decision evidence
-  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025, EXP-029
+  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025, EXP-029, EXP-030
 
 **Decision:** Execution and information are separate interfaces. The primary
 execution interface is the general-state `ExecutionProtocol`. The finite-first
@@ -153,3 +153,13 @@ the exact two-step outcome-law theorem show that this presentation agrees with
 the direct static form. The compiler imports Bayesian data but no utility,
 preference, or equilibrium theory, preserving the execution/information
 boundary while making it useful to the static incentive layer.
+
+EXP-030 adds indefinite public-action repetition without turning Protocol into
+an infinite-path probability carrier. The native repeated strategy observes a
+chronological list of prior stage profiles. For a finite horizon, that same list
+is the execution state and the public information state; one named compiler
+theorem proves that restricted repeated strategies generate exactly the native
+prefix. The bridge defines neither a second transition nor a second information
+interface. Its positive reachability probes assert that both accepted inputs
+remain in use, while Basic and Discounted reject Protocol and the Protocol
+bridge rejects discounted payoff.

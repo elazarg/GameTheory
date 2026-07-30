@@ -1,8 +1,9 @@
 # D2: finite-law representation
 
 - **Status:** adopted for the v1 finite core; Phase 2 kill tests passed
-- **Date:** 2026-07-22, amended 2026-07-26
-- **Evidence:** EXP-003, EXP-004, EXP-006, EXP-007
+- **Date:** 2026-07-22, amended 2026-07-30
+- **Evidence:** EXP-003, EXP-004, EXP-006, EXP-007; post-decision stress
+  EXP-030
 - **Decision:** Represent the future `FinDist α` by a `PMF α` paired with a
   proof that its support is finite. Hide that representation behind the public
   API; do not expose the experimental candidate name.
@@ -115,3 +116,16 @@ RFC 9.1.5 ("importing Core pulls topology") cannot be read as a statement about
 Mathlib's transitive closure, since any `ℝ`-valued expectation reaches
 topological instances. It is enforced here as an authored-import rule plus the
 reachability probes above, and this reading is recorded rather than assumed.
+
+## Repeated-path stress (EXP-030)
+
+The first infinite-horizon consumer does not reopen the finite-law
+representation. Public repeated play is an `ℕ`-indexed deterministic path of
+chosen stage profiles. A stochastic stage form is evaluated one stage at a time
+through its existing `FinDist` outcome law, while the finite Protocol compiler
+produces a `FinDist` of finite public prefixes. No declaration pretends that
+`FinDist` carries a law on an entire infinite realized-signal path.
+
+This is the boundary D2 and D11 predicted: finite support is used at each
+operation that is actually finite, and no countable or measurable abstraction
+is introduced merely because discounted utility contains an infinite series.

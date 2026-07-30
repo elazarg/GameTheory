@@ -206,6 +206,30 @@ if (-not $SkipReachability) {
     }
   }
   Report 'BAYESIAN_INPUT_PROBES_REACHED' $bayesianInputsReached
+
+  # Repeated play has one native deterministic-path layer and one deliberately
+  # finite Protocol bridge. Check both the separation and the positive joins:
+  # absence alone would pass if the compiler stopped consuming either side.
+  $repeatedBoundaryRejected = 0
+  foreach ($probe in @(
+      @('GameTheory.Repeated.Basic', 'GameTheory.Protocol.ExecutionProtocol'),
+      @('GameTheory.Repeated.Discounted', 'GameTheory.Protocol.ExecutionProtocol'),
+      @('GameTheory.Repeated.Protocol', 'GameTheory.UtilityGame.discountedPayoff'))) {
+    if (Test-Unreachable $probe[0] $probe[1]) {
+      $repeatedBoundaryRejected++
+    }
+  }
+  Report 'REPEATED_BOUNDARY_PROBES_REJECTED' $repeatedBoundaryRejected
+
+  $repeatedInputsReached = 0
+  foreach ($constant in @(
+      'GameTheory.UtilityGame.repeatedPlay',
+      'GameTheory.Repeated.informationModel')) {
+    if (-not (Test-Unreachable 'GameTheory.Repeated.Protocol' $constant)) {
+      $repeatedInputsReached++
+    }
+  }
+  Report 'REPEATED_INPUT_PROBES_REACHED' $repeatedInputsReached
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -235,6 +259,8 @@ if ($VerifyExpected) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 3
     $Expected['BAYESIAN_SOLUTION_PROBES_REJECTED'] = 2
     $Expected['BAYESIAN_INPUT_PROBES_REACHED'] = 2
+    $Expected['REPEATED_BOUNDARY_PROBES_REJECTED'] = 3
+    $Expected['REPEATED_INPUT_PROBES_REACHED'] = 2
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

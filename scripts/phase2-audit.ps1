@@ -100,7 +100,10 @@ $Phase3Files = @($OutsideProfile | Where-Object {
   $_.StartsWith('GameTheory/Protocol') -or
     ($_.StartsWith('GameTheory/Tests') -and $_ -ne 'GameTheory/Tests/Locality.lean') })
 $AnalysisFiles = @(Select-Files 'GameTheory/Analysis')
+$RepeatedFiles = @(@(Select-Files 'GameTheory/Repeated') +
+  @('GameTheory/Repeated.lean') | Sort-Object -Unique)
 Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
+Report 'TRANSPORT_REPEATED_SOURCE' (Count-Pattern $RepeatedFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
@@ -132,7 +135,7 @@ Report 'TRANSPORT_PHASE4_EVIDENCE' (Count-Pattern $Phase4Files $TransportPattern
 # Every library file belongs to exactly one transport budget. An unbucketed file
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $Phase2Files + $Phase3Files +
-  $AnalysisFiles + @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
+  $AnalysisFiles + $RepeatedFiles + @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
 # `PMF`, and `toPMF` must not appear outside the representation module; the
@@ -181,6 +184,17 @@ foreach ($imp in Get-Imports 'GameTheory/Core/Signature.lean') {
   if ($imp -match 'GameTheory\.Probability|Mathlib\.Probability') { $sigBad++ }
 }
 Report 'SIGNATURE_PROBABILITY_IMPORTS' $sigBad
+
+$RepeatedForbidden = 'GameTheory\.Languages|GameTheory\.Finite|GameTheory\.Examples|' +
+  'GameTheory\.Tests|GameTheory\.Experimental|GameTheory\.Frontier|' +
+  'GameTheory\.Challenges|GameTheory\.Analysis|FixedPointTheorems'
+$repeatedBad = 0
+foreach ($f in $RepeatedFiles) {
+  foreach ($imp in Get-Imports $f) {
+    if ($imp -match $RepeatedForbidden) { $repeatedBad++ }
+  }
+}
+Report 'REPEATED_FORBIDDEN_IMPORTS' $repeatedBad
 
 # The fixed-point dependency is not part of Mathlib and reaches the whole of
 # convexity and topology when imported. Both facts are tolerable only while it
@@ -236,6 +250,7 @@ Report 'NONBLANK_FINITE' (Measure-Nonblank (Select-Files 'GameTheory/Finite'))
 Report 'NONBLANK_EXAMPLES' (Measure-Nonblank (Select-Files 'GameTheory/Examples'))
 Report 'NONBLANK_TESTS' (Measure-Nonblank (Select-Files 'GameTheory/Tests'))
 Report 'NONBLANK_ANALYSIS' (Measure-Nonblank $AnalysisFiles)
+Report 'NONBLANK_REPEATED' (Measure-Nonblank $RepeatedFiles)
 Report 'NONBLANK_PHASE2_PROBE' `
   (Measure-Nonblank (Select-Files 'GameTheory/Experimental/Phase2'))
 
@@ -294,6 +309,18 @@ if (-not $SkipReachability) {
     if (-not (Test-Unreachable 'GameTheory.Analysis.Nash' $constant)) { $reached++ }
   }
   Report 'ANALYSIS_PROBES_REACHED' $reached
+
+  $repeatedAnalysisRejected = 0
+  foreach ($probe in @(
+      @('GameTheory.Repeated.Basic', 'stdSimplex'),
+      @('GameTheory.Repeated.Basic', 'Polynomial'),
+      @('GameTheory.Repeated.Discounted', 'stdSimplex'),
+      @('GameTheory.Repeated.Discounted', 'Polynomial'))) {
+    if (Test-Unreachable $probe[0] $probe[1]) {
+      $repeatedAnalysisRejected++
+    }
+  }
+  Report 'REPEATED_ANALYSIS_PROBES_REJECTED' $repeatedAnalysisRejected
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -313,6 +340,7 @@ if ($VerifyExpected) {
     # transport along, which is the evidence the recheck exists to produce.
     TRANSPORT_PHASE4_EVIDENCE = 1
     TRANSPORT_ANALYSIS_SOURCE = 0
+    TRANSPORT_REPEATED_SOURCE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
     # One: the module that applies the fixed-point theorem, and nothing else.
     FIXED_POINT_IMPORTERS = 1
@@ -325,6 +353,7 @@ if ($VerifyExpected) {
     CORE_FORBIDDEN_IMPORTS = 0
     ALGORITHM_FORBIDDEN_IMPORTS = 0
     SIGNATURE_PROBABILITY_IMPORTS = 0
+    REPEATED_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
   }
@@ -336,6 +365,7 @@ if ($VerifyExpected) {
   if (-not $SkipReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 6
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
+    $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 4
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

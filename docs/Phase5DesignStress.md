@@ -161,15 +161,43 @@ preference, or equilibrium concept. The split is architectural rather than
 organizational: the language compiler cannot reach the solution-concept module
 through its authored import graph.
 
+### Repeated play shares histories with Protocol, not infinite-path laws
+
+Recorded as [EXP-030](ExperimentLog.md). A history-dependent repeated strategy
+now consumes the same chronological list of public stage profiles that the
+finite Protocol bridge uses as its execution and information state. The first
+candidate used a dependent `Fin t → Profile` history; merely identifying it with
+the protocol prefix demanded proof-dependent transport. The hostile slice
+therefore changed the foundational representation before any broad theorem
+port: list length is the period, and native recursion and finite execution now
+agree definitionally.
+
+The three-stage coordination witness is deliberately history-dependent: every
+player flips the previous public action, so the exact protocol law exercises
+the accumulated history rather than only a horizon counter. Discounted utility
+evaluates the deterministic native path, and the stationary-repetition theorem
+concludes ordinary `IsNash` from an ordinary stage Nash hypothesis. There is no
+repeated-specific equilibrium predicate and no stochastic law over an entire
+infinite path.
+
+The package split is now enforced. Basic and Discounted cannot reach Protocol;
+the Protocol bridge cannot reach discounted payoff; positive probes show that
+the bridge still consumes both `repeatedPlay` and `InformationModel`. Basic and
+Discounted also reject all four `stdSimplex`/`Polynomial` probes. This validates
+the stagewise/finite-prefix half of D11 and D12, not the folk theorem's analytic
+geometry.
+
 ## Axes not yet stressed
 
 Each of these is a part of the subject the design has never been asked about,
 listed with the choice it would put pressure on.
 
-*Repeated play and the folk theorem.* Stresses the protocol layer's
-composability, and needs limits — so it also tests whether the analytic boundary
-is drawn in the right place, or whether a second class of theorem wants to live
-above it.
+*The full discounted folk theorem.* The lower repeated-play boundary is now
+validated, but the pinned flagship imports simplex approximation and supporting
+geometry. Before code, reserve a new experiment that competes a second one-way
+analytic bridge over `GameTheory.Repeated` against placing that mathematics in
+the stable root. Preserve negative probes from the stable root and require
+positive probes from any bridge, exactly as D12 does for static existence.
 
 *Sequential equilibrium.* Consistency is a limit of completely mixed behavioral
 profiles, which puts topology on strategies rather than on outcomes — the first
