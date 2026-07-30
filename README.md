@@ -32,7 +32,8 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
   /EFG                   transparent extensive-form specialization; finite
                          capabilities are supplied explicitly; strategic
                          extraction exposes exact pure/mixed Nash iff laws and
-                         both Kuhn directions preserve canonical history laws
+                         both Kuhn directions preserve canonical history laws;
+                         well-founded one-shot/SPE is a transparent specialization
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
