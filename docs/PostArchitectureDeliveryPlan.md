@@ -301,7 +301,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | Rosenthal exact potential and finite pure-Nash existence | `Core.Potential`, then a thin congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | a smoothness price-of-anarchy bound stated on the canonical utility game | `Core` or a stable welfare root |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
-| communication | observable one-stage babbling delivered; public randomness and staged cheap talk remain | babbling equilibrium through the ordinary equilibrium predicate | static construction validated by EXP-046/D18; Protocol only when theorem-observable timing matters |
+| communication | observable one-stage babbling and exact pure-Nash outcome-law preservation delivered; public randomness and staged cheap talk remain | babbling equilibrium through the ordinary equilibrium predicate | static construction validated by EXP-046/D18; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial and all-pay | `n`-bidder truthful Vickrey/VCG plus one false first-price claim | coordinated mechanism/auction root |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 

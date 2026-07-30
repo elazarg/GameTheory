@@ -8,7 +8,7 @@ Successor baseline: `2fc8dfc`
 Canonical destination: GameTheory.Core.CheapTalk; GameTheory.Examples; GameTheory.Epistemic; Protocol where timing is theorem-observable
 Domain contract / decision: D4-D10, D16, D18, EXP-043, EXP-046
 Owner: Wave 2 / communication and information
-Status: in progress; exact seed, classification pending
+Status: in progress; 32/87 reviewed, 2 deferred to the zero-sum communication gate
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the D-COMM family.
@@ -19,21 +19,21 @@ disposition.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
-| `GameTheory/Concepts/Communication/Babbling.lean` | `babbling_nashFor@32` | theorem | unreviewed | review required | generated index seed only | public, pinned line 32 |
-| same | `babbling_nashFor@50` | theorem | unreviewed | review required | generated index seed only | public, pinned line 50 |
-| same | `babblingDeviationPreservingFor` | theorem | unreviewed | review required | generated index seed only | public, pinned line 66 |
-| same | `babbling_nashFor@78` | theorem | unreviewed | review required | generated index seed only | public, pinned line 78 |
-| same | `babbling_nashFor@93` | theorem | unreviewed | review required | generated index seed only | public, pinned line 93 |
-| same | `babbling_nash@108` | theorem | unreviewed | review required | generated index seed only | public, pinned line 108 |
-| same | `CheapTalkExtension` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 138 |
-| same | `game` | def | unreviewed | review required | generated index seed only | public, pinned line 145 |
-| same | `babbling_eu` | theorem | unreviewed | review required | generated index seed only | public, pinned line 155 |
-| same | `babbling_nash@170` | theorem | unreviewed | review required | generated index seed only | public, pinned line 170 |
-| same | `actionProfile_isNash_of_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 184 |
-| same | `outcomeKernel_eq_base_nash_outcomeKernel_of_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 198 |
-| same | `exists_nash_outcomeKernel_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 209 |
-| same | `constantSum_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 225 |
-| same | `zeroSum_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 238 |
+| `GameTheory/Concepts/Communication/Babbling.lean` | `babbling_nashFor@32` | theorem | retired | D18 direct projection theorem | EXP-046/D18 | The generic preservation predicate was a proof scaffold, not a surviving public concept. |
+| same | `babbling_nashFor@50` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.babbling_isNash` | focused build (1,719 jobs) | Preference-parametric statement recovered through the sole canonical `IsNash`. |
+| same | `babblingDeviationPreservingFor` | theorem | retired | D18 rejects a public inert-extension hierarchy | EXP-046/D18 competing design 3 | The old inert-extension instance existed only to feed the retired generic predicate. |
+| same | `babbling_nashFor@78` | theorem | retired | D18 rejects a public inert-extension hierarchy | EXP-046/D18 competing design 3 | No live communication consumer earns the generic inert wrapper. |
+| same | `babbling_nashFor@93` | theorem | retired | D18 direct cheap-talk theorem | EXP-046/D18 | Generic cross-game preservation is broader than the communication construction and had no surviving consumer. |
+| same | `babbling_nash@108` | theorem | retired | D18 direct cheap-talk theorem | EXP-046/D18 | Utility-preservation plumbing is unnecessary when the exact play law is preserved. |
+| same | `CheapTalkExtension` | abbrev | subsumed | `GameTheory.GameForm.CheapTalkExtension` | focused build (1,719 jobs) | Utility is separate data in v2; the canonical construction attaches directly to the form. |
+| same | `game` | def | retired | use `C.form` with `euPreference G.utility` | D4 and D18 | Rebundling the same evaluator would recreate a parallel utility-game surface. |
+| same | `babbling_eu` | theorem | subsumed | `GameTheory.GameForm.CheapTalkExtension.form_play_update_embedProfile` | focused build (1,719 jobs) | Equality of complete outcome laws is stronger than the EU specialization. |
+| same | `babbling_nash@170` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.babbling_isNash` | focused build (1,719 jobs) | Instantiate the generic preference with `euPreference`; no utility-specific Nash predicate remains. |
+| same | `actionProfile_isNash_of_nash` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.actionProfile_isNash_of_isNash` | focused build (1,719 jobs) | Recovered for arbitrary weak preferences. |
+| same | `outcomeKernel_eq_base_nash_outcomeKernel_of_nash` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.exists_base_isNash_play_eq_of_isNash` | focused build (1,719 jobs) | Recovered for the canonical finite outcome law. |
+| same | `exists_nash_outcomeKernel_iff` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.exists_isNash_play_iff` | focused build (1,719 jobs) | Exact pure-Nash outcome-law preservation is recovered preference-parametrically. |
+| same | `constantSum_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM constant-sum value slice | D18; post-architecture zero-sum lane | Reopen with the constant-sum API and prove the communication value corollary without a wrapper game. |
+| same | `zeroSum_eu_eq_base_nash` | theorem | deferred | S-ZERO/D-COMM zero-sum value slice | D18; post-architecture zero-sum lane | Reopen from saddle-point value uniqueness after the pure/mixed bridge is fixed. |
 | `GameTheory/Concepts/Communication/CheapTalkPublicRandomness.lean` | `MessageProfile` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 47 |
 | same | `instFiniteGameOutcome` | instance | unreviewed | review required | generated index seed only | public, pinned line 50 |
 | same | `mixedMessageMarginal` | def | unreviewed | review required | generated index seed only | public, pinned line 57 |
@@ -64,23 +64,23 @@ disposition.
 | same | `mixedNash_constantSum_mixedExtension_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 42 |
 | same | `InducesPublicSignalNash.zeroSum_mixedExtension_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 55 |
 | same | `mixedNash_zeroSum_mixedExtension_eu_eq_base_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 67 |
-| `GameTheory/Core/Babbling.lean` | `BabblingDeviationPreservingFor@33` | def | unreviewed | review required | generated index seed only | public, pinned line 33 |
-| same | `CheapTalkExtension` | structure | unreviewed | review required | generated index seed only | public, pinned line 57 |
-| same | `Strategy'` | def | unreviewed | review required | generated index seed only | public, pinned line 66 |
-| same | `messageProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 70 |
-| same | `actionProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 75 |
-| same | `form` | def | unreviewed | review required | generated index seed only | public, pinned line 80 |
-| same | `embed` | def | unreviewed | review required | generated index seed only | public, pinned line 87 |
-| same | `embedProfile` | def | unreviewed | review required | generated index seed only | public, pinned line 92 |
-| same | `proj` | def | unreviewed | review required | generated index seed only | public, pinned line 101 |
-| same | `proj_embed` | theorem | unreviewed | review required | generated index seed only | public, pinned line 105 |
-| same | `outcomeKernel_embedProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 111 |
-| same | `messageProfile_update_embedProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 116 |
-| same | `actionProfile_update_embedProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 126 |
-| same | `messageProfile_update_sameMessage` | theorem | unreviewed | review required | generated index seed only | public, pinned line 136 |
-| same | `actionProfile_update_sameMessage_constPlan` | theorem | unreviewed | review required | generated index seed only | public, pinned line 147 |
-| same | `outcomeKernel_update_embedProfile` | theorem | unreviewed | review required | generated index seed only | public, pinned line 158 |
-| same | `babblingDeviationPreservingFor@167` | theorem | unreviewed | review required | generated index seed only | public, pinned line 167 |
+| `GameTheory/Core/Babbling.lean` | `BabblingDeviationPreservingFor@33` | def | retired | D18 direct projection theorem | EXP-046/D18 | The predicate duplicated no mathematical object and existed only to abstract one proof. |
+| same | `CheapTalkExtension` | structure | adapt | `GameTheory.GameForm.CheapTalkExtension` | EXP-046/D18; focused build | Recovered with explicit universes and the canonical signature/profile surface. |
+| same | `Strategy'` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.Strategy` | focused build (1,719 jobs) | Message plus a plan over the complete public message profile. |
+| same | `messageProfile` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.messageProfile` | focused build (1,719 jobs) | Canonical dependent profile. |
+| same | `actionProfile` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.actionProfile` | focused build (1,719 jobs) | Canonical induced base profile. |
+| same | `form` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.form` | focused build (1,719 jobs) | Recovered as a reducible literal `GameForm` with no second evaluator. |
+| same | `embed` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.embed` | focused build (1,719 jobs) | Canonical babbling strategy. |
+| same | `embedProfile` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.embedProfile` | focused build (1,719 jobs) | Coordinatewise canonical embedding. |
+| same | `proj` | def | adapt | `GameTheory.GameForm.CheapTalkExtension.project` | focused build (1,719 jobs) | Renamed descriptively; uses only canonical `Profile.update`. |
+| same | `proj_embed` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.project_embed` | focused build (1,719 jobs) | Exact section law recovered. |
+| same | `outcomeKernel_embedProfile` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.form_play_embedProfile` | focused build (1,719 jobs) | Exact finite outcome-law equality in the successor representation. |
+| same | `messageProfile_update_embedProfile` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.messageProfile_update_embedProfile` | focused build (1,719 jobs) | Hostile message-plus-plan deviation law recovered. |
+| same | `actionProfile_update_embedProfile` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.actionProfile_update_embedProfile` | focused build (1,719 jobs) | The hostile deviation projects to one base deviation. |
+| same | `messageProfile_update_sameMessage` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.messageProfile_update_sameMessage` | focused build (1,719 jobs) | Same-message deviation law recovered generically. |
+| same | `actionProfile_update_sameMessage_constPlan` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.actionProfile_update_sameMessage_constPlan` | focused build (1,719 jobs) | This law drives the converse Nash theorem. |
+| same | `outcomeKernel_update_embedProfile` | theorem | adapt | `GameTheory.GameForm.CheapTalkExtension.form_play_update_embedProfile` | focused build (1,719 jobs) | Exact finite outcome-law equality in the successor representation. |
+| same | `babblingDeviationPreservingFor@167` | theorem | retired | `GameTheory.GameForm.CheapTalkExtension.babbling_isNash` | EXP-046/D18 | The direct theorem eliminates its single-use proof predicate. |
 | `GameTheory/Languages/ElectronicMailGame.lean` | `EmailWorld` | inductive | unreviewed | review required | generated index seed only | public, pinned line 41 |
 | same | `<anonymous@47>` | instance | unreviewed | review required | generated index seed only | public, pinned line 47 |
 | same | `EmailView` | inductive | unreviewed | review required | generated index seed only | public, pinned line 50 |

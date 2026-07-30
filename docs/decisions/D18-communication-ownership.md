@@ -101,3 +101,9 @@ consumers. The focused targets build in 1,739 jobs and the full project in
 reaches both intended Core symbols, and rejects all four Protocol/Analysis
 boundary symbols. The generic theorem and both examples depend only on
 `propext`, `Classical.choice`, and `Quot.sound`.
+
+The first post-promotion harvest also recovered the converse:
+`actionProfile_isNash_of_isNash` sends every pure cheap-talk equilibrium to
+its realized base equilibrium, and `exists_isNash_play_iff` proves equality of
+the complete sets of pure-Nash outcome laws. These results remain
+preference-parametric and retain the same standard axiom profile.
