@@ -57,7 +57,9 @@ structure PlayerNeutralStrictLeadingDrift
     (jet : GaugeFixedPotentialJet P anchor) where
   index : germ.PlayerNeutralOccupationIndex who
   potential : G.State → ℝ
+  pairingScale : ℝ
   margin : ℝ
+  pairingScale_pos : 0 < pairingScale
   margin_pos : 0 < margin
   bounded : ∀ state, 0 ≤ potential state ∧ potential state ≤ 1
   drift_nonneg :
@@ -71,6 +73,18 @@ structure PlayerNeutralStrictLeadingDrift
     expect (germ.playerNeutralOccupationKernel who index) potential -
         potential (germ.playerNeutralOccupationSource who index) =
       margin
+  drift_eq_pairing_div :
+    ∀ candidate,
+      expect (germ.playerNeutralOccupationKernel who candidate) potential -
+          potential
+            (germ.playerNeutralOccupationSource who candidate) =
+        (∑ state,
+          jet.factor 0 state *
+            actualOccupationColumn
+              (germ.playerNeutralOccupationKernel who)
+              (germ.playerNeutralOccupationSource who)
+              candidate state) /
+          pairingScale
 
 /-- The endpoint leading pairings are all zero, or one fixed
 player-neutral column has a bounded normalized potential with a strict
@@ -190,16 +204,21 @@ theorem
     refine ⟨{
       index := selected
       potential := potential
+      pairingScale := scale
       margin := margin
+      pairingScale_pos := scale_pos
       margin_pos := margin_pos
       bounded := potential_bounded
       drift_nonneg := ?_
       selected_drift := ?_
+      drift_eq_pairing_div := ?_
     }⟩
     · intro index
       rw [normalized_drift index]
       exact div_nonneg (pairing_nonneg index) scale_pos.le
     · rw [normalized_drift selected]
+    · intro index
+      exact normalized_drift index
 
 namespace PlayerNeutralStrictLeadingDrift
 
