@@ -234,12 +234,13 @@ theorem exists_fixed_oriented_analytic_response
 finite PMFs. Both orientations work because the coordinate differences sum
 to zero. -/
 theorem exists_pmfCoordinateTestScore_pos_for_orientation
-    {S : Type} [Fintype S] [DecidableEq S]
+    {S : Type} [Finite S] [DecidableEq S]
     (baseline comparison : PMF S) (positive : Bool)
     (hne : comparison ≠ baseline) :
     ∃ x,
       0 < expect comparison
         (pmfCoordinateTestScore baseline x positive) := by
+  letI : Fintype S := Fintype.ofFinite S
   let difference : S → ℝ := fun x =>
     (comparison x).toReal - (baseline x).toReal
   have hsum : ∑ x, difference x = 0 := by
@@ -286,7 +287,7 @@ theorem exists_pmfCoordinateTestScore_pos_for_orientation
 transition is invisible or one existing public coordinate score is centered
 under the baseline and has positive drift under the forward transition. -/
 theorem pmf_orientedResponse_visible_or_invisible
-    {S : Type} [Fintype S] [DecidableEq S]
+    {S : Type} [Finite S] [DecidableEq S]
     (baseline forward : PMF S) (positive : Bool) :
     forward = baseline ∨
       ∃ x,
@@ -309,7 +310,7 @@ theorem pmf_orientedResponse_visible_or_invisible
 forward transition; `positive` orients the monitor and never constructs a
 reverse transition. -/
 theorem exists_fixed_oriented_analytic_stochastic_response
-    {S : Type} {E : Type*} [Fintype S] [DecidableEq S]
+    {S : Type} {E : Type*} [Finite S] [DecidableEq S]
     [Fintype E] [Nonempty E]
     (baseline : S → PMF S) (source : E → S) (forward : E → PMF S)
     (weight charge : E → ℝ → ℝ)

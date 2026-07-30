@@ -776,7 +776,8 @@ theorem supportCramer_feasible_iff_atoms
         intro x _ hx
         simp [supportCramerVector, hx]
       rw [← hsupport] at hi
-      simp [supportCramerVector, supportCramerCoordinate] at hi
+      simp only [univ_eq_attach, supportCramerVector, SetLike.coe_mem, ↓reduceDIte,
+        supportCramerCoordinate, Subtype.coe_eta] at hi
       have hdiv :
           (∑ x : support,
               A i x.1 *
@@ -817,7 +818,8 @@ theorem supportCramer_feasible_iff_atoms
         intro x _ hx
         simp [supportCramerVector, hx]
       rw [← hsupport]
-      simp [supportCramerVector, supportCramerCoordinate]
+      simp only [univ_eq_attach, supportCramerVector, SetLike.coe_mem, ↓reduceDIte,
+        supportCramerCoordinate, Subtype.coe_eta]
       have hcleared :
           (∑ x : support,
               A i x.1 *
