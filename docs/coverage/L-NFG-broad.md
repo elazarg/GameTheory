@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: in progress; 85 reviewed, 23 unreviewed
+Status: complete; 108/108 reviewed, 8 explicitly deferred to owning cross-family gates
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -20,10 +20,10 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
-| `GameTheory/Languages/NFG/CheapTalkExamples.lean` | `extension` | def | unreviewed | review required | generated index seed only | public, pinned line 26 |
-| same | `game` | abbrev | unreviewed | review required | generated index seed only | public, pinned line 31 |
-| same | `opera_babbling_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 36 |
-| same | `football_babbling_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 43 |
+| `GameTheory/Languages/NFG/CheapTalkExamples.lean` | `extension` | def | deferred | D-COMM babbling-equilibrium vertical slice | Post-architecture delivery plan communication lane | Reopen with the communication primitive; static timing must use Core, while staged messaging must use Protocol. |
+| same | `game` | abbrev | deferred | D-COMM babbling-equilibrium vertical slice | Post-architecture delivery plan communication lane | The extension's `GameForm` is part of the same named slice, not an NFG-local compiler. |
+| same | `opera_babbling_nash` | theorem | deferred | D-COMM babbling equilibrium through ordinary `IsNash` | `docs/V1CoverageLedger.md` D-COMM gate | Requires the missing communication extension and may not introduce a second equilibrium predicate. |
+| same | `football_babbling_nash` | theorem | deferred | D-COMM babbling equilibrium through ordinary `IsNash` | `docs/V1CoverageLedger.md` D-COMM gate | Second concrete witness for the same communication slice. |
 | `GameTheory/Languages/NFG/CountableExample.lean` | `natChoose` | def | adapt | `GameTheory.Examples.NFG.natChoose`; `natChooseUtility` | focused build | Utility is separated from the utility-free NFG syntax; no finite action capability is added. |
 | same | `natChoose_zero` | def | adapt | `GameTheory.Examples.NFG.natChooseZero` | focused build | Canonical `Profile` over the compiled signature. |
 | same | `natChoose_zero_is_nash` | theorem | adapt | `GameTheory.Examples.NFG.natChooseZero_isNash` | focused build | Uses canonical `IsNash` and `euPreference`, not a language-specific predicate. |
@@ -86,24 +86,24 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `bertrand_p1_p1` | def | adapt | `GameTheory.Examples.Economic.bothPriceOne` | focused build | Canonical `Profile` witness. |
 | same | `bertrand_p2_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.bertrandDuopoly_bothPriceTwo_isNash` | focused build | Published against canonical semantic `IsNash`. |
 | same | `bertrand_p1_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.bertrandDuopoly_bothPriceOne_isNash` | focused build | Published against canonical semantic `IsNash`. |
-| same | `pd_defect_udist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 602 |
-| same | `pd_defect_isNashFor_eu` | theorem | unreviewed | review required | generated index seed only | public, pinned line 609 |
-| same | `pd_defect_isDominantFor_eu` | theorem | unreviewed | review required | generated index seed only | public, pinned line 616 |
-| `GameTheory/Languages/NFG/MatchingPenniesMixed.lean` | `<anonymous@32>` | instance | unreviewed | review required | generated index seed only | private, pinned line 32 |
-| same | `matchingPenniesOutcomeFintype` | instance | unreviewed | review required | generated index seed only | private, pinned line 34 |
-| same | `matchingPenniesOutcomeFinite` | instance | unreviewed | review required | generated index seed only | private, pinned line 39 |
-| same | `matchingPenniesStrategyNonempty` | instance | unreviewed | review required | generated index seed only | private, pinned line 43 |
-| same | `matchingPenniesStrategyFintype` | instance | unreviewed | review required | generated index seed only | private, pinned line 47 |
-| same | `matchingPenniesLabels` | def | unreviewed | review required | generated index seed only | private, pinned line 55 |
-| same | `matchingPennies_matchingPenniesLike` | def | unreviewed | review required | generated index seed only | private, pinned line 74 |
-| same | `matchingPenniesFairMixed` | def | unreviewed | review required | generated index seed only | public, pinned line 96 |
-| same | `matchingPennies_uniform_mixed_balanced` | theorem | unreviewed | review required | generated index seed only | public, pinned line 101 |
-| same | `matchingPennies_mixed_nash_iff_half` | theorem | unreviewed | review required | generated index seed only | public, pinned line 108 |
-| same | `matchingPennies_fair_mixed_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 124 |
-| same | `matchingPenniesLabels_uniform_eq_fair` | theorem | unreviewed | review required | generated index seed only | private, pinned line 139 |
-| same | `matchingPennies_fair_correlated_eq` | theorem | unreviewed | review required | generated index seed only | public, pinned line 156 |
-| same | `matchingPennies_correlated_eq_unique` | theorem | unreviewed | review required | generated index seed only | public, pinned line 164 |
-| same | `matchingPennies_correlated_eq_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 175 |
+| same | `pd_defect_udist` | theorem | adapt | `GameTheory.Examples.prisonersDilemma_bothDefect_play` | focused build | Canonical deterministic `GameForm` law; no `KernelGame` wrapper. |
+| same | `pd_defect_isNashFor_eu` | theorem | retired | `GameTheory.Examples.prisonersDilemma_bothDefect_isNash` | D5; focused build | `IsNashFor euPref` was a parallel predicate wrapper; expected-utility Nash is the canonical `IsNash` specialization. |
+| same | `pd_defect_isDominantFor_eu` | theorem | retired | `GameTheory.Examples.prisonersDilemma_defect_isDominant` | D5; focused build | Canonical `IsDominant` replaces the `KernelGame.IsDominantFor` wrapper. |
+| `GameTheory/Languages/NFG/MatchingPenniesMixed.lean` | `<anonymous@32>` | instance | retired | `GameTheory.Examples.Side.heads` | focused build | Private nonemptiness plumbing; the concrete constructor is available where needed. |
+| same | `matchingPenniesOutcomeFintype` | instance | retired | `GameTheory.Finite.TableGame.instFintypeProfile` | D9; focused build | The executable table carries its authoritative finite strategy capabilities; semantic outcomes do not store them. |
+| same | `matchingPenniesOutcomeFinite` | instance | retired | `GameTheory.Finite.TableGame.instFintypeProfile` | D9; focused build | Duplicate private bridge from `Fintype` to `Finite`. |
+| same | `matchingPenniesStrategyNonempty` | instance | retired | `GameTheory.Examples.Side.heads` | focused build | Private instance required only by the predecessor's generic wrapper. |
+| same | `matchingPenniesStrategyFintype` | instance | retired | `GameTheory.Finite.TableGame.instFintypeAction` | D9; focused build | The finite capability is authoritative data of `TableGame`. |
+| same | `matchingPenniesLabels` | def | retired | `GameTheory.Examples.Side`; `pennyProfile` | focused build | Private Boolean-label adapter for a predecessor calculus; the canonical example uses its action type directly. |
+| same | `matchingPennies_matchingPenniesLike` | def | retired | `matchingPennies_payoff`; `uniformPennies_verify` | focused build | Private certificate for the predecessor binary wrapper; direct payoff equations and verified exact arithmetic are authoritative. |
+| same | `matchingPenniesFairMixed` | def | adapt | `GameTheory.Examples.fairPennies`; `uniformPennies` | focused build | Named semantic profile compiled from exact rational half/half weights. |
+| same | `matchingPennies_uniform_mixed_balanced` | theorem | adapt | `uniformPennies_expectedPayoff_zero`; `uniformPennies_pureDeviation_expectedPayoff_zero` | focused build | Both the status quo and every pure deviation have exact payoff zero. |
+| same | `matchingPennies_mixed_nash_iff_half` | theorem | deferred | S-MIX binary mixed-equilibrium characterization | `docs/V1CoverageLedger.md` S-MIX gate | Reopen as a language-independent theorem over the canonical mixed extension, then instantiate here; do not recreate `IsNashMixed`. |
+| same | `matchingPennies_fair_mixed_nash` | theorem | adapt | `GameTheory.Examples.fairPennies_isNash` | focused build | Published against `IsNash` of the canonical mixed extension. |
+| same | `matchingPenniesLabels_uniform_eq_fair` | theorem | retired | `GameTheory.Examples.fairPennies` | focused build | Private equality between two predecessor presentations; the successor names one canonical semantic profile. |
+| same | `matchingPennies_fair_correlated_eq` | theorem | deferred | S-CORR independent-mixed-Nash-to-CE bridge | `docs/V1CoverageLedger.md` S-CORR gate | First concrete consumer for a general theorem over `FinDist.pi`; no example-local transport proof. |
+| same | `matchingPennies_correlated_eq_unique` | theorem | deferred | S-CORR/S-ZERO constant-sum correlation recovery | shared static theory gate | Recover the language-independent constant-sum uniqueness theorem, then instantiate the canonical table. |
+| same | `matchingPennies_correlated_eq_iff` | theorem | deferred | S-CORR/S-ZERO constant-sum correlation recovery | shared static theory gate | Follows from the fair-CE and uniqueness rows once their general theorem chain builds. |
 | `GameTheory/Languages/NFG/PublicGoods.lean` | `publicGoods_freeRide_dominant` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_freeRide` | focused build | Uses the named `removeContribution` operation instead of a raw function update; the parametric inequality is unchanged. |
 | same | `publicGoods_cooperation_pareto` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_cooperationPareto` | focused build | Parametric cooperation-versus-defection payoff theorem recovered. |
 | `GameTheory/Languages/NFG/Stackelberg.lean` | `StackelbergGame` | structure | retired | `GameTheory.Protocol.Tree`; `GameTheory.Finite.TableGame` | D0/D5/D6; focused build | The parallel wrapper mixed sequential commitment and simultaneous semantics; the successor example presents each through its canonical root. |

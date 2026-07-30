@@ -74,6 +74,12 @@ theorem prisonersDilemma_bothDefect_isNash :
   rw [← TableGame.isNash_eq_true_iff]
   decide
 
+/-- The deterministic frontend plays the mutual-defection profile as its point
+mass outcome law. -/
+theorem prisonersDilemma_bothDefect_play :
+    prisonersDilemma.toForm.play bothDefect = FinDist.pure bothDefect :=
+  TableGame.toForm_play prisonersDilemma bothDefect
+
 /-- Mutual cooperation is not a Nash equilibrium: either player can profit by
 defecting. -/
 theorem prisonersDilemma_bothCooperate_not_isNash :
@@ -88,6 +94,13 @@ theorem prisonersDilemma_bothDefect_isNash_of_dominant :
     IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility) bothDefect :=
   IsDominantProfile.isNash
     ((TableGame.isDominantProfile_eq_true_iff prisonersDilemma bothDefect).1 (by decide))
+
+/-- Defection is dominant for either prisoner. -/
+theorem prisonersDilemma_defect_isDominant (who : Fin 2) :
+    IsDominant prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      who .defect :=
+  ((TableGame.isDominantProfile_eq_true_iff prisonersDilemma bothDefect).1
+    (by decide)) who
 
 /-- Defection strictly dominates cooperation. -/
 theorem prisonersDilemma_defect_strictlyDominates (who : Fin 2) :
@@ -210,14 +223,34 @@ theorem sum_pennies (f : Profile matchingPennies.sig → ℚ) :
     Finset.sum_insert (by decide), Finset.sum_singleton]
   ring
 
+/-- The fair profile gives either player expected payoff zero. -/
+theorem uniformPennies_expectedPayoff_zero (who : Fin 2) :
+    matchingPennies.expectedPayoff uniformPennies who = 0 := by
+  simp only [TableGame.expectedPayoff, sum_pennies, TableGame.mixedWeight,
+    Fin.prod_univ_two, matchingPennies_payoff, pennyProfile_zero,
+    pennyProfile_one]
+  fin_cases who <;>
+    norm_num +decide [uniformPennies]
+
+/-- Every pure deviation against a fair opponent also gives payoff zero. This
+is the concrete balanced-mixing fact behind the Nash verification. -/
+theorem uniformPennies_pureDeviation_expectedPayoff_zero
+    (who : Fin 2) (action : matchingPennies.Action who) :
+    matchingPennies.expectedPayoff
+        (Profile.update uniformPennies who
+          (matchingPennies.pureMixed who action)) who = 0 := by
+  simp only [TableGame.expectedPayoff, sum_pennies, TableGame.mixedWeight,
+    Fin.prod_univ_two, matchingPennies_payoff, pennyProfile_zero,
+    pennyProfile_one]
+  fin_cases who <;> cases action <;>
+    norm_num +decide [TableGame.pureMixed, uniformPennies]
+
 theorem uniformPennies_verify : matchingPennies.verifyMixedNash uniformPennies = true := by
   rw [TableGame.verifyMixedNash, uniformPennies_isMixed, Bool.true_and]
   simp only [decide_eq_true_eq]
   intro who a
-  simp only [TableGame.expectedPayoff, sum_pennies, TableGame.mixedWeight, Fin.prod_univ_two,
-    matchingPennies_payoff, pennyProfile_zero, pennyProfile_one]
-  fin_cases who <;> cases a <;>
-    norm_num +decide [TableGame.pureMixed, uniformPennies]
+  rw [uniformPennies_pureDeviation_expectedPayoff_zero,
+    uniformPennies_expectedPayoff_zero]
 
 /-- The verified rational profile is a mixed Nash equilibrium of the compiled
 game. There is no separate mixed-Nash predicate: this is `IsNash` of the mixed
@@ -227,6 +260,17 @@ theorem matchingPennies_uniform_isNash :
       (matchingPennies.toMixed uniformPennies uniformPennies_isMixed) := by
   rw [← TableGame.verifyMixedNash_eq_true_iff]
   exact uniformPennies_verify
+
+/-- The semantic fair profile, after validating and compiling the exact
+rational weights. -/
+abbrev fairPennies : Profile matchingPennies.toForm.sig.mixed :=
+  matchingPennies.toMixed uniformPennies uniformPennies_isMixed
+
+/-- The named fair profile is a mixed Nash equilibrium. -/
+theorem fairPennies_isNash :
+    IsNash matchingPennies.toForm.mixed
+      (euPreference matchingPennies.utility) fairPennies :=
+  matchingPennies_uniform_isNash
 
 /-! ## Stag Hunt -/
 

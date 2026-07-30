@@ -320,7 +320,7 @@ surface syntax.
 
 | Lane | First gate | Recovery after the gate |
 |---|---|---|
-| NFG | **passed (EXP-042/T4):** utility-free deterministic syntax compiles to the canonical static form without a second Nash API | examples, public goods, Stackelberg, cheap talk, and mixed presentations |
+| NFG | **passed and accounted:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified, with eight substantive cross-family rows routed to D-COMM, S-MIX, S-CORR, and S-ZERO | broad example recovery is complete; deliver the routed communication and mixed/correlation theorems in their owning lanes |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
 | FOSG | **passed (EXP-042/T4):** real source players act simultaneously through Protocol; phase-only local views cannot observe an opponent's current action; exact outcome and utility laws commute | reachable histories, terminal laws, richer observations, strategies, values, and named EFG comparison |
@@ -528,14 +528,15 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. review the exact L-NFG/L-FOSG queues and add exact broad-package ledgers for
-   the first static recovery batches, using the generated index only as a
-   review queue;
+1. review the exact L-FOSG queue and add exact broad-package ledgers for the
+   first static recovery batches; L-NFG is fully classified, and generated
+   rows remain review queues only;
 2. consolidate moving delivery probes without rewriting historical phase
    measurements;
 3. resume the broader revelation/information-design inventory and open the
    static learning/communication and congestion harvest lanes;
-4. begin broad NFG/FOSG recovery from their now-passed language gates;
+4. continue broad FOSG recovery and open the D-COMM/S-MIX/S-CORR consumers
+   routed by the completed NFG ledger;
 5. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
 6. admit no Frontier implementation until the first three items have an active

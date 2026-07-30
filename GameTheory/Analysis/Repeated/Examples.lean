@@ -19,9 +19,6 @@ open GameTheory GameTheory.Finite GameTheory.Probability
 instance choiceNonempty : Nonempty Choice :=
   ⟨.cooperate⟩
 
-def bothCooperate : Profile prisonersDilemma.sig :=
-  fun _ => .cooperate
-
 def cooperationPayoff : PayoffVector (Fin 2) :=
   fun _ => 3
 
