@@ -349,6 +349,174 @@ structure NonnegativeChildScalarCharges
       (strategy : G.BehaviorStrategy who) (time : ℕ),
       0 ≤ deviationCharge base who strategy time
 
+/-- Removing an initial segment from a nonnegative scalar sequence cannot
+increase its sum, even when the retained indices are shifted by a bounded
+stopping time. -/
+theorem sum_Ico_sub_le_sum_range_of_nonneg
+    (charge : ℕ → ℝ) (stop fuel total : ℕ)
+    (stop_le_fuel : stop ≤ fuel) (fuel_le_total : fuel ≤ total)
+    (charge_nonneg : ∀ time, 0 ≤ charge time) :
+    ∑ rootTime ∈ Finset.Ico fuel total,
+        charge (rootTime - stop) ≤
+      ∑ time ∈ Finset.range total, charge time := by
+  rw [Finset.sum_Ico_eq_sum_range]
+  calc
+    ∑ rootTime ∈ Finset.range (total - fuel),
+        charge (fuel + rootTime - stop) =
+        ∑ rootTime ∈ Finset.range (total - fuel),
+          charge ((fuel - stop) + rootTime) := by
+            apply Finset.sum_congr rfl
+            intro rootTime _
+            congr 1
+            omega
+    _ =
+        ∑ time ∈
+            Finset.Ico (fuel - stop)
+              ((fuel - stop) + (total - fuel)),
+          charge time := by
+            symm
+            simpa only [Nat.add_sub_cancel_left] using
+              Finset.sum_Ico_eq_sum_range
+                charge (fuel - stop)
+                  ((fuel - stop) + (total - fuel))
+    _ ≤ ∑ time ∈ Finset.range total, charge time := by
+      apply Finset.sum_le_sum_of_subset_of_nonneg
+      · intro time htime
+        simp only [Finset.mem_Ico, Finset.mem_range] at htime ⊢
+        omega
+      · intro time _ _
+        exact charge_nonneg time
+
+/-- Average the shifted-tail estimate over a finite stopped-base law. -/
+theorem normalized_expect_Ico_sub_le_of_nonneg
+    {Base : Type} [Finite Base]
+    (law : PMF Base) (stop : Base → ℕ)
+    (charge : Base → ℕ → ℝ)
+    (fuel total : ℕ) (error : ℝ)
+    (stop_le_fuel : ∀ base, stop base ≤ fuel)
+    (fuel_le_total : fuel ≤ total)
+    (charge_nonneg : ∀ base time, 0 ≤ charge base time)
+    (full_bound : ∀ base,
+      (total : ℝ)⁻¹ *
+          ∑ time ∈ Finset.range total, charge base time ≤
+        error) :
+    (total : ℝ)⁻¹ *
+        ∑ rootTime ∈ Finset.Ico fuel total,
+          expect law (fun base =>
+            charge base (rootTime - stop base)) ≤
+      error := by
+  classical
+  letI : Fintype Base := Fintype.ofFinite Base
+  have sum_expect :
+      ∑ rootTime ∈ Finset.Ico fuel total,
+          expect law (fun base =>
+            charge base (rootTime - stop base)) =
+        expect law (fun base =>
+          ∑ rootTime ∈ Finset.Ico fuel total,
+            charge base (rootTime - stop base)) := by
+    simp only [expect_eq_sum]
+    rw [Finset.sum_comm]
+    apply Finset.sum_congr rfl
+    intro base _
+    rw [Finset.mul_sum]
+  rw [sum_expect, ← expect_const_mul]
+  calc
+    expect law (fun base =>
+        (total : ℝ)⁻¹ *
+          ∑ rootTime ∈ Finset.Ico fuel total,
+            charge base (rootTime - stop base)) ≤
+      expect law (fun _ => error) := by
+        apply expect_mono
+        intro base
+        have tail_le :=
+          sum_Ico_sub_le_sum_range_of_nonneg
+            (charge base) (stop base) fuel total
+            (stop_le_fuel base) fuel_le_total
+            (charge_nonneg base)
+        exact
+          (mul_le_mul_of_nonneg_left tail_le (by positivity)).trans
+            (full_bound base)
+    _ = error := expect_const _ _
+
+/-- Nonnegative child scalar charges turn ordinary child Cesàro bounds into
+the common-root tail bounds required after a bounded random stopping time. -/
+def FiniteChildAdaptivePotentialFamily.commonRootChildChargeTailBound_of_nonnegative
+    [Fintype ι] [DecidableEq ι] [Finite G.State]
+    [∀ who, Finite (G.Act who)] [Fintype Child]
+    {entry : Child → G.State} {target : Child → Payoff ι}
+    {error : ℝ}
+    (family :
+      G.FiniteChildAdaptivePotentialFamily entry target error)
+    {fuel : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel)
+    (observe : G.BoundedStoppedHistory fuel → Child)
+    (nonnegative :
+      G.NonnegativeChildScalarCharges
+        (family.stoppedLowerCharge observe)
+        (family.stoppedUpperCharge observe)
+        (family.stoppedDeviationCharge observe)) :
+    G.CommonRootChildChargeTailBound
+      profile initial selector
+      (family.stoppedLowerCharge observe)
+      (family.stoppedUpperCharge observe)
+      (family.stoppedDeviationCharge observe) error where
+  horizon := max fuel family.commonHorizon
+  horizon_ge_two :=
+    le_trans family.commonHorizon_ge_two
+      (Nat.le_max_right fuel family.commonHorizon)
+  lower := by
+    intro who total htotal
+    apply normalized_expect_Ico_sub_le_of_nonneg
+    · intro base
+      exact Nat.lt_succ_iff.mp base.1.isLt
+    · exact
+        le_trans (Nat.le_max_left fuel family.commonHorizon) htotal
+    · intro base time
+      exact nonnegative.lower base who time
+    · intro base
+      exact
+        (family.system (observe base)).lower_charge_cesaro who total
+          (le_trans
+            (family.horizon_le_common (observe base))
+            (le_trans
+              (Nat.le_max_right fuel family.commonHorizon) htotal))
+  upper := by
+    intro who total htotal
+    apply normalized_expect_Ico_sub_le_of_nonneg
+    · intro base
+      exact Nat.lt_succ_iff.mp base.1.isLt
+    · exact
+        le_trans (Nat.le_max_left fuel family.commonHorizon) htotal
+    · intro base time
+      exact nonnegative.upper base who time
+    · intro base
+      exact
+        (family.system (observe base)).upper_charge_cesaro who total
+          (le_trans
+            (family.horizon_le_common (observe base))
+            (le_trans
+              (Nat.le_max_right fuel family.commonHorizon) htotal))
+  deviation := by
+    intro who strategy total htotal
+    apply normalized_expect_Ico_sub_le_of_nonneg
+    · intro base
+      exact Nat.lt_succ_iff.mp base.1.isLt
+    · exact
+        le_trans (Nat.le_max_left fuel family.commonHorizon) htotal
+    · intro base time
+      exact
+        nonnegative.deviation base who
+          (G.afterHistoryStrategy strategy base.2) time
+    · intro base
+      exact
+        (family.system (observe base)).deviation_charge_cesaro
+          who (G.afterHistoryStrategy strategy base.2) total
+          (le_trans
+            (family.horizon_le_common (observe base))
+            (le_trans
+              (Nat.le_max_right fuel family.commonHorizon) htotal))
+
 /-- Joint-law factorization is target- and charge-free: it can be reused
 unchanged for any stopped target and any scalar charge family.  Consequently
 the two interfaces above are logically additional data, rather than
