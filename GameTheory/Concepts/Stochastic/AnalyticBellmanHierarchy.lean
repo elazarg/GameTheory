@@ -334,6 +334,107 @@ structure StateKernelMonitorPowerCharge
                   (G.finkStateKernel germ.endpointFinkPoint source)
                   destination positive)
 
+/-- Endpoint continuation residual as a linear endomorphism of state-payoff
+vectors. -/
+noncomputable def endpointContinuationResidualLinearMap
+    (germ : G.AnalyticBellmanGerm) :
+    (G.State → Payoff ι) →ₗ[ℝ] (G.State → Payoff ι) where
+  toFun H :=
+    G.finkContinuationResidualVector H germ.endpointFinkPoint
+  map_add' H K :=
+    G.finkContinuationResidualVector_add
+      H K germ.endpointFinkPoint
+  map_smul' c H :=
+    G.finkContinuationResidualVector_smul
+      c H germ.endpointFinkPoint
+
+/-- Finite-dimensional space of payoff vectors harmonic under the endpoint
+state kernel. -/
+noncomputable def endpointHarmonicSubmodule
+    (germ : G.AnalyticBellmanGerm) :
+    Submodule ℝ (G.State → Payoff ι) :=
+  LinearMap.ker germ.endpointContinuationResidualLinearMap
+
+omit [DecidableEq G.State] in
+@[simp]
+theorem mem_endpointHarmonicSubmodule_iff
+    (germ : G.AnalyticBellmanGerm)
+    (H : G.State → Payoff ι) :
+    H ∈ germ.endpointHarmonicSubmodule ↔
+      G.finkContinuationResidualVector
+        H germ.endpointFinkPoint = 0 := by
+  rfl
+
+/-- Span of the genuinely informative endpoint-harmonic jets already
+processed by a local-response recursion. -/
+structure EndpointHarmonicJetSpan
+    (germ : G.AnalyticBellmanGerm) where
+  carrier : Submodule ℝ (G.State → Payoff ι)
+  carrier_le : carrier ≤ germ.endpointHarmonicSubmodule
+
+namespace EndpointHarmonicJetSpan
+
+/-- Remaining harmonic dimension.  It is the well-founded rank spent by
+linearly new harmonic jets. -/
+noncomputable def rank {germ : G.AnalyticBellmanGerm}
+    (span : germ.EndpointHarmonicJetSpan) : ℕ :=
+  Module.finrank ℝ germ.endpointHarmonicSubmodule -
+    Module.finrank ℝ span.carrier
+
+/-- Adjoin one endpoint-harmonic jet to the processed span. -/
+noncomputable def extend {germ : G.AnalyticBellmanGerm}
+    (span : germ.EndpointHarmonicJetSpan)
+    (H : G.State → Payoff ι)
+    (hH : H ∈ germ.endpointHarmonicSubmodule) :
+    germ.EndpointHarmonicJetSpan where
+  carrier := span.carrier ⊔ Submodule.span ℝ {H}
+  carrier_le := by
+    apply sup_le span.carrier_le
+    apply Submodule.span_le.mpr
+    intro K hK
+    rcases Set.mem_singleton_iff.mp hK with rfl
+    exact hH
+
+omit [DecidableEq G.State] in
+/-- A genuinely new harmonic jet strictly enlarges the processed span. -/
+theorem carrier_lt_extend {germ : G.AnalyticBellmanGerm}
+    (span : germ.EndpointHarmonicJetSpan)
+    (H : G.State → Payoff ι)
+    (hH : H ∈ germ.endpointHarmonicSubmodule)
+    (hnew : H ∉ span.carrier) :
+    span.carrier < (span.extend H hH).carrier := by
+  refine lt_of_le_of_ne le_sup_left ?_
+  intro heq
+  apply hnew
+  rw [heq]
+  change H ∈ span.carrier ⊔ Submodule.span ℝ {H}
+  exact (show Submodule.span ℝ {H} ≤
+      span.carrier ⊔ Submodule.span ℝ {H} from le_sup_right)
+    (Submodule.subset_span (R := ℝ) (Set.mem_singleton H))
+
+omit [DecidableEq G.State] in
+/-- Extending by a genuinely new harmonic jet strictly decreases the
+remaining-dimension rank. -/
+theorem rank_extend_lt {germ : G.AnalyticBellmanGerm}
+    (span : germ.EndpointHarmonicJetSpan)
+    (H : G.State → Payoff ι)
+    (hH : H ∈ germ.endpointHarmonicSubmodule)
+    (hnew : H ∉ span.carrier) :
+    (span.extend H hH).rank < span.rank := by
+  have hstrict :
+      Module.finrank ℝ span.carrier <
+        Module.finrank ℝ (span.extend H hH).carrier :=
+    Submodule.finrank_lt_finrank_of_lt
+      (span.carrier_lt_extend H hH hnew)
+  have hnext_le :
+      Module.finrank ℝ (span.extend H hH).carrier ≤
+        Module.finrank ℝ germ.endpointHarmonicSubmodule :=
+    Submodule.finrank_mono (span.extend H hH).carrier_le
+  simp only [rank]
+  omega
+
+end EndpointHarmonicJetSpan
+
 omit [DecidableEq G.State] in
 theorem analytic_rawProfileWeight
     (germ : G.AnalyticBellmanGerm)
@@ -1261,6 +1362,32 @@ theorem harmonic_or_stateKernelMonitorPowerCharge
         baseline_centered := hcentered
         increment_bound := hbound
         signal := hsignal }⟩
+
+/-- Progress alternative relative to the endpoint-harmonic jets already
+processed by a local-response recursion.
+
+The leading coefficient is either already in the processed span, is a new
+harmonic direction whose adjunction strictly lowers the remaining dimension,
+or yields a fixed bounded transition monitor with a power-law charge. -/
+theorem redundant_or_rankDecrease_or_stateKernelMonitorPowerCharge
+    {germ : G.AnalyticBellmanGerm}
+    (jet : germ.LowerValueJet)
+    (span : germ.EndpointHarmonicJetSpan) :
+    jet.factor 0 ∈ span.carrier ∨
+      (∃ hH : jet.factor 0 ∈ germ.endpointHarmonicSubmodule,
+        (span.extend (jet.factor 0) hH).rank < span.rank) ∨
+      Nonempty germ.StateKernelMonitorPowerCharge := by
+  by_cases hharmonic :
+      G.finkContinuationResidualVector
+        (jet.factor 0) germ.endpointFinkPoint = 0
+  · have hH : jet.factor 0 ∈ germ.endpointHarmonicSubmodule :=
+      (germ.mem_endpointHarmonicSubmodule_iff (jet.factor 0)).2 hharmonic
+    by_cases hprocessed : jet.factor 0 ∈ span.carrier
+    · exact Or.inl hprocessed
+    · exact Or.inr <| Or.inl
+        ⟨hH, span.rank_extend_lt (jet.factor 0) hH hprocessed⟩
+  · exact Or.inr <| Or.inr <|
+      (jet.harmonic_or_stateKernelMonitorPowerCharge).resolve_left hharmonic
 
 end LowerValueJet
 
