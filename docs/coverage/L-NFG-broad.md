@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: in progress; 64 reviewed, 44 unreviewed
+Status: in progress; 85 reviewed, 23 unreviewed
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -106,28 +106,28 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `matchingPennies_correlated_eq_iff` | theorem | unreviewed | review required | generated index seed only | public, pinned line 175 |
 | `GameTheory/Languages/NFG/PublicGoods.lean` | `publicGoods_freeRide_dominant` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_freeRide` | focused build | Uses the named `removeContribution` operation instead of a raw function update; the parametric inequality is unchanged. |
 | same | `publicGoods_cooperation_pareto` | theorem | adapt | `GameTheory.Examples.Economic.publicGoods_cooperationPareto` | focused build | Parametric cooperation-versus-defection payoff theorem recovered. |
-| `GameTheory/Languages/NFG/Stackelberg.lean` | `StackelbergGame` | structure | unreviewed | review required | generated index seed only | public, pinned line 37 |
-| same | `followerBR` | def | unreviewed | review required | generated index seed only | public, pinned line 52 |
-| same | `stackelbergPayoff` | def | unreviewed | review required | generated index seed only | public, pinned line 56 |
-| same | `IsStackelbergEq` | def | unreviewed | review required | generated index seed only | public, pinned line 60 |
-| same | `IsSimNash` | def | unreviewed | review required | generated index seed only | public, pinned line 64 |
-| same | `stackelberg_leader_ge_commitment` | theorem | unreviewed | review required | generated index seed only | public, pinned line 71 |
-| same | `followerBR_at_nash_unique` | theorem | unreviewed | review required | generated index seed only | public, pinned line 82 |
-| same | `toKernelGame` | def | unreviewed | review required | generated index seed only | public, pinned line 94 |
-| same | `fight` | def | unreviewed | review required | generated index seed only | public, pinned line 127 |
-| same | `accommodate` | def | unreviewed | review required | generated index seed only | public, pinned line 128 |
-| same | `enter` | def | unreviewed | review required | generated index seed only | public, pinned line 129 |
-| same | `stayOut` | def | unreviewed | review required | generated index seed only | public, pinned line 130 |
-| same | `uL` | def | unreviewed | review required | generated index seed only | public, pinned line 133 |
-| same | `uF` | def | unreviewed | review required | generated index seed only | public, pinned line 140 |
-| same | `game` | def | unreviewed | review required | generated index seed only | public, pinned line 147 |
-| same | `br` | def | unreviewed | review required | generated index seed only | public, pinned line 155 |
-| same | `br_isBR` | theorem | unreviewed | review required | generated index seed only | public, pinned line 160 |
-| same | `game_stackelberg_eq_fight` | theorem | unreviewed | review required | generated index seed only | public, pinned line 166 |
-| same | `game_simNash_accommodate` | theorem | unreviewed | review required | generated index seed only | public, pinned line 174 |
-| same | `game_br_at_accommodate` | theorem | unreviewed | review required | generated index seed only | public, pinned line 184 |
-| same | `leader_advantage` | theorem | unreviewed | review required | generated index seed only | public, pinned line 191 |
-| same | `leader_advantage_strict` | theorem | unreviewed | review required | generated index seed only | public, pinned line 196 |
+| `GameTheory/Languages/NFG/Stackelberg.lean` | `StackelbergGame` | structure | retired | `GameTheory.Protocol.Tree`; `GameTheory.Finite.TableGame` | D0/D5/D6; focused build | The parallel wrapper mixed sequential commitment and simultaneous semantics; the successor example presents each through its canonical root. |
+| same | `followerBR` | def | retired | `GameTheory.IsBestResponse`; `ExecutionProtocol.IsOneShotOptimal`; `followerResponse_optimal` | D5/D6; focused build | Best response is already canonical; no Stackelberg-local solution predicate is retained. |
+| same | `stackelbergPayoff` | def | retired | `ExecutionProtocol.backwardValue`; `GameTheory.Examples.Stackelberg.commitmentValue` | D6; focused build | General sequential value belongs to Protocol; the finite example's closed form is named locally. |
+| same | `IsStackelbergEq` | def | retired | `GameTheory.Protocol.Tree.PureStrategy`; `fight_maximizes_commitment` | D5/D6; focused build | A second equilibrium predicate would duplicate the validated sequential optimality surface. |
+| same | `IsSimNash` | def | retired | `GameTheory.IsNash` | D5; focused build | Simultaneous Nash is the canonical static predicate. |
+| same | `stackelberg_leader_ge_commitment` | theorem | adapt | `GameTheory.Examples.Stackelberg.leaderPayoff_ge_of_maximizes` | focused build | Generic mathematical projection retained without the retired wrapper. |
+| same | `followerBR_at_nash_unique` | theorem | adapt | `GameTheory.Examples.Stackelberg.response_eq_of_unique` | focused build | Generic uniqueness argument retained without either parallel predicate. |
+| same | `toKernelGame` | def | retired | `GameTheory.Finite.TableGame.toForm` | D0/D5; focused build | Static compilation is the existing `GameForm` bridge; no `KernelGame` compatibility surface is recreated. |
+| same | `fight` | def | adapt | `GameTheory.Examples.Stackelberg.LeaderAction.fight` | focused build | Constructor replaces a Boolean nickname. |
+| same | `accommodate` | def | adapt | `GameTheory.Examples.Stackelberg.LeaderAction.accommodate` | focused build | Constructor replaces a Boolean nickname. |
+| same | `enter` | def | adapt | `GameTheory.Examples.Stackelberg.FollowerAction.enter` | focused build | Constructor replaces a Boolean nickname. |
+| same | `stayOut` | def | adapt | `GameTheory.Examples.Stackelberg.FollowerAction.stayOut` | focused build | Constructor replaces a Boolean nickname. |
+| same | `uL` | def | adapt | `GameTheory.Examples.Stackelberg.leaderPayoff` | focused build | Exact integer payoffs represented in `ℚ`. |
+| same | `uF` | def | adapt | `GameTheory.Examples.Stackelberg.followerPayoff` | focused build | Exact integer payoffs represented in `ℚ`. |
+| same | `game` | def | adapt | `GameTheory.Examples.Stackelberg.entryTree`; `simultaneousGame` | focused build | Sequential commitment and simultaneous comparison are explicit canonical presentations. |
+| same | `br` | def | adapt | `GameTheory.Examples.Stackelberg.followerResponse` | focused build | Contingent follower strategy used directly by the tree plan. |
+| same | `br_isBR` | theorem | adapt | `GameTheory.Examples.Stackelberg.followerResponse_optimal` | focused build | Best-response inequalities proved after every possible commitment. |
+| same | `game_stackelberg_eq_fight` | theorem | adapt | `GameTheory.Examples.Stackelberg.fight_maximizes_commitment`; `eval_entryPlan` | focused build | The tree realizes the response-contingent plan and fighting maximizes its leader value. |
+| same | `game_simNash_accommodate` | theorem | adapt | `GameTheory.Examples.Stackelberg.accommodateEnter_isNash` | focused build | Published against canonical semantic `IsNash`. |
+| same | `game_br_at_accommodate` | theorem | adapt | `GameTheory.Examples.Stackelberg.followerResponse_accommodate` | focused build | Definitional response equation retained. |
+| same | `leader_advantage` | theorem | adapt | `GameTheory.Examples.Stackelberg.leaderAdvantage` | focused build | Weak comparison derived from the strict theorem. |
+| same | `leader_advantage_strict` | theorem | adapt | `GameTheory.Examples.Stackelberg.leaderAdvantage_strict` | focused build | Commitment value two is strictly above simultaneous-equilibrium payoff one. |
 
 Before this ledger can become complete, each row must be reviewed against
 the canonical successor API and assigned an allowed non-`unreviewed`
