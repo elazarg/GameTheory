@@ -1,0 +1,412 @@
+/-
+Copyright (c) 2026 GameTheory contributors. All rights reserved.
+Released under the MIT license as described in the file LICENSE.
+Authors: GameTheory contributors
+-/
+
+import GameTheory.Concepts.Stochastic.AnalyticHarmonicAdjustmentClosure
+import GameTheory.Concepts.Stochastic.SeparateBiasStationaryCertificate
+import Math.Probability.OwnerChargedOccupationAlternative
+
+/-!
+# Playerwise bias alternative for all continuation-neutral actions
+
+Fix an analytic Bellman endpoint and a candidate on-profile bias `B`. For
+each player, augment the prescribed transition at every state with all of
+that player's actual pure deviations that preserve the endpoint target.
+
+The owner-preserving charged-occupation alternative gives exactly two cases:
+
+* one player has a normalized positive charged circulation using only the
+  prescribed transitions and that player's actual neutral deviations; or
+* one vector correction has nonnegative prescribed drift and makes every
+  target-neutral corrected gain satisfy the required Bellman inequality.
+
+Unlike the invisible-action specialization, the correction branch covers
+every target-neutral pure action. Combined with the separate-bias stationary
+verifier, this is the complete finite verification side of the alternative.
+The circulation branch still makes no entry or punishment claim.
+-/
+
+noncomputable section
+
+open Math Math.Probability
+
+namespace GameTheory
+namespace StochasticGame
+
+variable {ι : Type} {G : StochasticGame ι}
+  [Fintype G.State] [DecidableEq G.State]
+  [Fintype ι] [DecidableEq ι]
+  [∀ i, Fintype (G.Act i)] [∀ i, DecidableEq (G.Act i)]
+
+namespace AnalyticBellmanGerm
+
+/-- A state/action pair for one player whose pure-deviation continuation
+preserves the analytic endpoint target. -/
+def ContinuationNeutralAction
+    (germ : G.AnalyticBellmanGerm) (who : ι) :=
+  { response : G.State × G.Act who //
+    G.finkContinuationGain germ.endpointValue
+      germ.endpointFinkPoint response.1 who response.2 = 0 }
+
+noncomputable instance instFintypeContinuationNeutralAction
+    (germ : G.AnalyticBellmanGerm) (who : ι) :
+    Fintype (germ.ContinuationNeutralAction who) := by
+  letI : Finite G.State := Finite.of_fintype G.State
+  letI : Finite (G.Act who) := Finite.of_fintype (G.Act who)
+  letI : Finite (G.State × G.Act who) := inferInstance
+  letI : Finite
+      { response : G.State × G.Act who //
+        G.finkContinuationGain germ.endpointValue
+          germ.endpointFinkPoint response.1 who response.2 = 0 } :=
+    Subtype.finite
+  change Fintype
+    { response : G.State × G.Act who //
+      G.finkContinuationGain germ.endpointValue
+        germ.endpointFinkPoint response.1 who response.2 = 0 }
+  exact Fintype.ofFinite _
+
+/-- Source state of a continuation-neutral pure action. -/
+def ContinuationNeutralAction.source
+    {germ : G.AnalyticBellmanGerm} {who : ι}
+    (response : germ.ContinuationNeutralAction who) : G.State :=
+  response.1.1
+
+/-- Actual endpoint pure-deviation kernel of a continuation-neutral action. -/
+def ContinuationNeutralAction.kernel
+    {germ : G.AnalyticBellmanGerm} {who : ι}
+    (response : germ.ContinuationNeutralAction who) : PMF G.State :=
+  G.finkPureDeviationStateKernel germ.endpointFinkPoint
+    response.source who response.1.2
+
+/-- Static target-neutral improvement at endpoint bias `B`. -/
+def neutralActionCharge
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι) (who : ι)
+    (response : germ.ContinuationNeutralAction who) : ℝ :=
+  G.finkStageGain germ.endpointFinkPoint
+      response.source who response.1.2 +
+    G.finkContinuationGain B germ.endpointFinkPoint
+      response.source who response.1.2
+
+/-- Prescribed transitions augmented with one player's actual
+continuation-neutral deviations. -/
+abbrev PlayerNeutralOccupationIndex
+    (germ : G.AnalyticBellmanGerm) (who : ι) :=
+  G.State ⊕ germ.ContinuationNeutralAction who
+
+/-- Actual endpoint kernel for a player-neutral occupation index. -/
+def playerNeutralOccupationKernel
+    (germ : G.AnalyticBellmanGerm) (who : ι) :
+    germ.PlayerNeutralOccupationIndex who → PMF G.State
+  | .inl source =>
+      G.finkStateKernel germ.endpointFinkPoint source
+  | .inr response => response.kernel
+
+/-- Source state for a player-neutral occupation index. -/
+def playerNeutralOccupationSource
+    (germ : G.AnalyticBellmanGerm) (who : ι) :
+    germ.PlayerNeutralOccupationIndex who → G.State
+  | .inl source => source
+  | .inr response => response.source
+
+/-- Prescribed indices have zero charge; neutral deviations carry their
+static improvement at `B`. -/
+def playerNeutralOccupationCharge
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι) (who : ι) :
+    germ.PlayerNeutralOccupationIndex who → ℝ
+  | .inl _ => 0
+  | .inr response => germ.neutralActionCharge B who response
+
+/-- A vector correction with nonnegative prescribed drift that controls every
+target-neutral pure action. -/
+def IsNeutralBiasCorrection
+    (germ : G.AnalyticBellmanGerm)
+    (B C : G.State → Payoff ι) : Prop :=
+  (∀ source who,
+      0 ≤ G.finkContinuationResidual C
+        germ.endpointFinkPoint source who) ∧
+    ∀ who (response : germ.ContinuationNeutralAction who),
+      G.finkStageGain germ.endpointFinkPoint
+          response.source who response.1.2 +
+          G.finkContinuationGain (B - C)
+            germ.endpointFinkPoint
+            response.source who response.1.2 ≤
+        G.finkContinuationResidual C
+          germ.endpointFinkPoint response.source who
+
+omit [DecidableEq G.State] in
+/-- The corrected neutral gain inequality is equivalent to the operational
+drift inequality for the original charge. -/
+theorem neutralAction_correctedGain_le_residual_iff
+    (germ : G.AnalyticBellmanGerm)
+    (B C : G.State → Payoff ι) (who : ι)
+    (response : germ.ContinuationNeutralAction who) :
+    G.finkStageGain germ.endpointFinkPoint
+          response.source who response.1.2 +
+          G.finkContinuationGain (B - C)
+            germ.endpointFinkPoint
+            response.source who response.1.2 ≤
+        G.finkContinuationResidual C
+          germ.endpointFinkPoint response.source who ↔
+      germ.neutralActionCharge B who response ≤
+        expect response.kernel (fun state => C state who) -
+          C response.source who := by
+  rw [G.finkContinuationGain_sub]
+  have hid :
+      G.finkContinuationGain C germ.endpointFinkPoint
+            response.source who response.1.2 +
+          G.finkContinuationResidual C germ.endpointFinkPoint
+            response.source who =
+        expect response.kernel (fun state => C state who) -
+          C response.source who := by
+    rw [G.finkContinuationGain_eq_expect_stateKernels]
+    unfold finkContinuationResidual finkContinuationEU
+    rw [← G.expect_finkStateKernel_eq]
+    change
+      (expect response.kernel (fun state => C state who) -
+            expect
+              (G.finkStateKernel
+                germ.endpointFinkPoint response.source)
+              (fun state => C state who)) +
+          (expect
+              (G.finkStateKernel
+                germ.endpointFinkPoint response.source)
+              (fun state => C state who) -
+            C response.source who) =
+        expect response.kernel (fun state => C state who) -
+          C response.source who
+    ring
+  dsimp only [neutralActionCharge] at hid ⊢
+  constructor <;> intro h <;> linarith
+
+omit [DecidableEq G.State] in
+/-- The augmented ownerwise drift-potential branch is exactly a neutral-bias
+correction in one player coordinate. -/
+theorem playerNeutral_driftPotential_iff
+    (germ : G.AnalyticBellmanGerm)
+    (B C : G.State → Payoff ι) (who : ι) :
+    (∀ index : germ.PlayerNeutralOccupationIndex who,
+      germ.playerNeutralOccupationCharge B who index ≤
+        expect (germ.playerNeutralOccupationKernel who index)
+            (fun state => C state who) -
+          C (germ.playerNeutralOccupationSource who index) who) ↔
+      (∀ source,
+        0 ≤ G.finkContinuationResidual C
+          germ.endpointFinkPoint source who) ∧
+      ∀ response : germ.ContinuationNeutralAction who,
+        G.finkStageGain germ.endpointFinkPoint
+            response.source who response.1.2 +
+            G.finkContinuationGain (B - C)
+              germ.endpointFinkPoint
+              response.source who response.1.2 ≤
+          G.finkContinuationResidual C
+            germ.endpointFinkPoint response.source who := by
+  constructor
+  · intro h
+    constructor
+    · intro source
+      have hsource := h (Sum.inl source)
+      dsimp only [playerNeutralOccupationCharge,
+        playerNeutralOccupationKernel,
+        playerNeutralOccupationSource] at hsource
+      unfold finkContinuationResidual finkContinuationEU
+      rw [← G.expect_finkStateKernel_eq]
+      exact hsource
+    · intro response
+      rw [germ.neutralAction_correctedGain_le_residual_iff]
+      simpa only [playerNeutralOccupationCharge,
+        playerNeutralOccupationKernel,
+        playerNeutralOccupationSource] using h (Sum.inr response)
+  · rintro ⟨hbaseline, haction⟩ index
+    rcases index with source | response
+    · dsimp only [playerNeutralOccupationCharge,
+        playerNeutralOccupationKernel,
+        playerNeutralOccupationSource]
+      have hsource := hbaseline source
+      unfold finkContinuationResidual finkContinuationEU at hsource
+      rw [← G.expect_finkStateKernel_eq] at hsource
+      exact hsource
+    · have hresponse := haction response
+      rw [germ.neutralAction_correctedGain_le_residual_iff] at hresponse
+      simpa only [playerNeutralOccupationCharge,
+        playerNeutralOccupationKernel,
+        playerNeutralOccupationSource] using hresponse
+
+/-- **Owner-preserving target-neutral alternative.**
+
+Either one player has a normalized positive charged circulation made from
+prescribed transitions and that player's actual target-neutral deviations,
+or one correction vector controls every target-neutral pure action. -/
+theorem exists_playerNeutralCirculation_xor_biasCorrection
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι) :
+    Xor
+      (∃ who,
+        HasNormalizedPositiveChargedCirculation
+          (actualOccupationColumn
+            (germ.playerNeutralOccupationKernel who)
+            (germ.playerNeutralOccupationSource who))
+          (germ.playerNeutralOccupationCharge B who))
+      (∃ C : G.State → Payoff ι,
+        germ.IsNeutralBiasCorrection B C) := by
+  classical
+  have halt :=
+    exists_ownerCirculation_xor_driftPotentialFamily
+      germ.playerNeutralOccupationKernel
+      germ.playerNeutralOccupationSource
+      (germ.playerNeutralOccupationCharge B)
+  rw [xor_def] at halt ⊢
+  rcases halt with halt | halt
+  · refine Or.inl ⟨halt.1, ?_⟩
+    rintro ⟨C, hC⟩
+    apply halt.2
+    refine ⟨fun who state => C state who, ?_⟩
+    intro who
+    exact
+      (germ.playerNeutral_driftPotential_iff B C who).2
+        ⟨fun source => hC.1 source who,
+          fun response => hC.2 who response⟩
+  · refine Or.inr ⟨?_, halt.2⟩
+    obtain ⟨potential, hpotential⟩ := halt.1
+    let C : G.State → Payoff ι :=
+      fun state who => potential who state
+    refine ⟨C, ?_⟩
+    constructor
+    · intro source who
+      exact
+        ((germ.playerNeutral_driftPotential_iff B C who).1
+          (by simpa only [C] using hpotential who)).1 source
+    · intro who response
+      exact
+        ((germ.playerNeutral_driftPotential_iff B C who).1
+          (by simpa only [C] using hpotential who)).2 response
+
+omit [DecidableEq G.State] in
+/-- The correction branch closes the stationary verification problem once
+`B` is an exact on-profile bias.
+
+The endpoint target is automatically harmonic and excessive. The correction
+supplies the upper on-profile inequality and every target-neutral pure-action
+inequality, so the separate-bias verifier absorbs all strict target losses. -/
+theorem IsNeutralBiasCorrection.isUniformEquilibriumPayoff
+    (germ : G.AnalyticBellmanGerm)
+    (B C : G.State → Payoff ι)
+    (hcorrection : germ.IsNeutralBiasCorrection B C)
+    (s₀ : G.State)
+    (honProfile : ∀ source who,
+      germ.endpointValue source who + B source who =
+        G.mixedStageEU source (germ.endpointProfile source) who +
+          expect (Math.PMFProduct.pmfPi (germ.endpointProfile source))
+            (fun action =>
+              expect (G.transition source action)
+                (fun next => B next who))) :
+    G.IsUniformEquilibriumPayoff
+      s₀ (germ.endpointValue s₀) := by
+  have hharmonic :
+      ∀ source who,
+        germ.endpointValue source who =
+          expect
+            (Math.PMFProduct.pmfPi (germ.endpointProfile source))
+            (fun action =>
+              expect (G.transition source action)
+                (fun next => germ.endpointValue next who)) := by
+    intro source who
+    have hzero :=
+      congrFun
+        (congrFun
+          germ.finkContinuationResidualVector_endpointValue_eq_zero
+          source) who
+    have hcontinuation :
+        G.finkContinuationEU germ.endpointValue
+            germ.endpointFinkPoint source who =
+          germ.endpointValue source who :=
+      sub_eq_zero.mp
+        (by
+          simpa [finkContinuationResidualVector,
+            finkContinuationResidual] using hzero)
+    simpa [finkContinuationEU,
+      germ.finkProfile_endpointFinkPoint] using hcontinuation.symm
+  have hexcessive :
+      ∀ source who (action : G.Act who),
+        expect
+            (Math.PMFProduct.pmfPi
+              (Function.update
+                (germ.endpointProfile source) who (PMF.pure action)))
+            (fun jointAction =>
+              expect (G.transition source jointAction)
+                (fun next => germ.endpointValue next who)) ≤
+          germ.endpointValue source who := by
+    intro source who action
+    have hgain :=
+      germ.finkContinuationGain_endpointValue_nonpos
+        source who action
+    unfold finkContinuationGain at hgain
+    rw [germ.finkProfile_endpointFinkPoint] at hgain
+    linarith [hharmonic source who]
+  apply
+    G.isUniformEquilibriumPayoff_of_stationaryAverageRewardBiasCorrection_on_neutral
+      s₀ germ.endpointProfile germ.endpointValue B C
+      hharmonic hexcessive honProfile
+  · intro source who
+    have hresidual := hcorrection.1 source who
+    unfold finkContinuationResidual finkContinuationEU at hresidual
+    rw [germ.finkProfile_endpointFinkPoint] at hresidual
+    linarith
+  · intro source who action hneutral
+    let response : germ.ContinuationNeutralAction who :=
+      ⟨(source, action), by
+        unfold finkContinuationGain
+        rw [germ.finkProfile_endpointFinkPoint]
+        linarith [hharmonic source who]⟩
+    have haction := hcorrection.2 who response
+    change
+      G.finkStageGain germ.endpointFinkPoint source who action +
+          G.finkContinuationGain (B - C)
+            germ.endpointFinkPoint source who action ≤
+        G.finkContinuationResidual C
+          germ.endpointFinkPoint source who
+      at haction
+    unfold finkStageGain finkContinuationGain
+      finkContinuationResidual finkContinuationEU at haction
+    rw [germ.finkProfile_endpointFinkPoint] at haction
+    simp only [Pi.sub_apply] at haction
+    simp_rw [expect_sub] at haction ⊢
+    linarith [honProfile source who]
+
+/-- With an exact on-profile bias, the finite target-neutral obstruction is
+now entirely concentrated in one player's positive operational circulation.
+If no such circulation exists, the assembled correction closes the uniform
+equilibrium verification problem. -/
+theorem playerNeutralCirculation_or_isUniformEquilibriumPayoff
+    (germ : G.AnalyticBellmanGerm)
+    (B : G.State → Payoff ι)
+    (s₀ : G.State)
+    (honProfile : ∀ source who,
+      germ.endpointValue source who + B source who =
+        G.mixedStageEU source (germ.endpointProfile source) who +
+          expect (Math.PMFProduct.pmfPi (germ.endpointProfile source))
+            (fun action =>
+              expect (G.transition source action)
+                (fun next => B next who))) :
+    (∃ who,
+      HasNormalizedPositiveChargedCirculation
+        (actualOccupationColumn
+          (germ.playerNeutralOccupationKernel who)
+          (germ.playerNeutralOccupationSource who))
+        (germ.playerNeutralOccupationCharge B who)) ∨
+      G.IsUniformEquilibriumPayoff
+        s₀ (germ.endpointValue s₀) := by
+  have halt :=
+    germ.exists_playerNeutralCirculation_xor_biasCorrection B
+  rw [xor_def] at halt
+  rcases halt with halt | halt
+  · exact Or.inl halt.1
+  · obtain ⟨C, hC⟩ := halt.1
+    exact Or.inr (hC.isUniformEquilibriumPayoff germ B C s₀ honProfile)
+
+end AnalyticBellmanGerm
+end StochasticGame
+end GameTheory
