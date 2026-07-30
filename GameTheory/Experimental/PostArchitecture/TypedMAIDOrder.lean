@@ -17,6 +17,8 @@ noncomputable section
 namespace GameTheory.Experimental.TypedMAID.Order
 
 open GameTheory.Probability
+open GameTheory.Protocol
+open GameTheory.Protocol.ExecutionProtocol
 open GameTheory.Experimental.TypedMAID.ToEFG
 
 universe uPlayer uNode uValue
@@ -523,16 +525,333 @@ theorem serialRun_topological_order_independent
   exact assignmentRun_topological_order_independent semantics policy
     first second semantics.defaultValue
 
-/-- On the one-owner compiler path, the actual EFG behavioral assignment law
-is independent of the supplied topological order. -/
-theorem behavioralRun_topological_order_independent_unit
-    {Vertex : Type uNode}
-    {unitDiagram : TypedMAID.Structure Unit Vertex}
-    [DecidableEq Vertex]
-    (semantics : TypedMAID.Semantics unitDiagram)
-    (policy : TypedMAID.Policy unitDiagram)
+section BehavioralJoint
+
+variable {ι : Type uPlayer} [Fintype ι] [DecidableEq ι]
+variable {E : ExecutionProtocol ι}
+variable {M : InformationModel E}
+
+/-- If nobody acts, the behavioral product is the unique all-`none` joint
+action. -/
+theorem behavioralJoint_eq_pure_of_no_active
+    (policies : (i : ι) → M.BehavioralPolicy i)
+    {state : E.State} (trace : E.Trace state)
+    (hterminal : ¬ E.terminal state)
+    (hinactive : ∀ i, ¬ E.active state i) :
+    M.behavioralJoint policies trace hterminal =
+      FinDist.pure
+        ⟨fun _ => none,
+          ExecutionProtocol.legal_of_legalOption hterminal
+            hinactive⟩ := by
+  let idle :
+      (i : ι) → M.Choice i (M.infoOf i trace) :=
+    fun i => ⟨none, (M.menu_adequate i trace none).mpr
+      (hinactive i)⟩
+  have hpolicy (i : ι) :
+      policies i (M.infoOf i trace) =
+        FinDist.pure (idle i) := by
+    haveI : Subsingleton (M.Choice i (M.infoOf i trace)) :=
+      M.subsingleton_choice_of_not_active trace (hinactive i)
+    exact FinDist.eq_pure_of_subsingleton _ (idle i)
+  unfold InformationModel.behavioralJoint
+  simp_rw [hpolicy]
+  rw [FinDist.pi_pure, FinDist.map_pure]
+
+/-- If at most one player can act, the behavioral product is that player's
+local law embedded in the only possibly active joint coordinate. -/
+theorem behavioralJoint_eq_map_of_at_most_one_active
+    (policies : (i : ι) → M.BehavioralPolicy i)
+    {state : E.State} (trace : E.Trace state)
+    (hterminal : ¬ E.terminal state)
+    (active : ι)
+    (hunique : ∀ i, E.active state i → i = active) :
+    M.behavioralJoint policies trace hterminal =
+      FinDist.map
+        (fun choice : M.Choice active (M.infoOf active trace) =>
+          ⟨(fun other =>
+              if howner : other = active then by
+                subst other
+                exact choice.1
+              else none),
+            ExecutionProtocol.legal_of_legalOption hterminal
+              fun other => by
+                by_cases howner : other = active
+                · subst other
+                  simpa using
+                    (M.menu_adequate active trace choice.1).mp
+                      choice.2
+                · have hinactive : ¬ E.active state other := by
+                    intro hother
+                    exact howner (hunique other hother)
+                  simpa only [howner, dite_false, LegalOption]
+                    using hinactive⟩)
+        (policies active (M.infoOf active trace)) := by
+  let idle :
+      (other : {other : ι // other ≠ active}) →
+        M.Choice other.1 (M.infoOf other.1 trace) :=
+    fun other => ⟨none,
+      (M.menu_adequate other.1 trace none).mpr <| by
+        intro hother
+        exact other.2 (hunique other.1 hother)⟩
+  have hpolicy (other : {other : ι // other ≠ active}) :
+      policies other.1 (M.infoOf other.1 trace) =
+        FinDist.pure (idle other) := by
+    have hinactive : ¬ E.active state other.1 := by
+      intro hother
+      exact other.2 (hunique other.1 hother)
+    haveI :
+        Subsingleton
+          (M.Choice other.1 (M.infoOf other.1 trace)) :=
+      M.subsingleton_choice_of_not_active trace hinactive
+    exact FinDist.eq_pure_of_subsingleton _ (idle other)
+  unfold InformationModel.behavioralJoint
+  rw [FinDist.pi_eq_map_product active, FinDist.map_comp]
+  simp_rw [hpolicy]
+  rw [FinDist.pi_pure]
+  unfold FinDist.product
+  simp only [FinDist.map_eq_bind,
+    FinDist.bind_bind, FinDist.pure_bind]
+  apply FinDist.bind_congr
+  intro choice _
+  apply congrArg FinDist.pure
+  apply Subtype.ext
+  funext other
+  by_cases howner : other = active
+  · subst other
+    simp
+  · simp [howner, idle]
+
+end BehavioralJoint
+
+/-- The mapped behavioral product of the compiled EFG is the source serial
+joint law for arbitrary finite source-player carriers. -/
+theorem behavioralJoint_eq_serialJointLaw
+    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    (topological :
+      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (trace : (execution topological semantics).Trace state)
+    (hterminal :
+      ¬ (execution topological semantics).terminal state) :
+    (information topological semantics).behavioralJoint
+        (behavioralProfile topological semantics policy)
+        trace hterminal =
+      serialJointLaw topological semantics policy state hterminal := by
+  have hpending :
+      state.path.length < topological.order.length :=
+    (state.not_terminal_iff topological).mp hterminal
+  apply finDist_map_injective
+    (f := fun joint => joint.1) Subtype.val_injective
+  let node := state.pendingNode topological hpending
+  match hkind : diagram.kind node with
+  | .chance =>
+      rw [behavioralJoint_eq_pure_of_no_active
+        (behavioralProfile topological semantics policy)
+        trace hterminal
+        (inactive_of_pending_chance topological state
+          hpending hkind),
+        FinDist.map_pure]
+      unfold serialJointLaw
+      dsimp only
+      split
+      next => rw [FinDist.map_pure]
+      next owner hdecision =>
+        rw [hkind] at hdecision
+        contradiction
+  | .decision owner =>
+      have hownerActive : Active topological state owner :=
+        ⟨node, pending_eq_some topological hpending, hkind⟩
+      have hunique :
+          ∀ other, Active topological state other → other = owner := by
+        intro other hother
+        exact execution_singleMover topological semantics state
+          hother hownerActive
+      rw [behavioralJoint_eq_map_of_at_most_one_active
+        (behavioralProfile topological semantics policy)
+        trace hterminal owner hunique,
+        FinDist.map_comp]
+      let jointOfOption :
+          Option (Action diagram owner) →
+            (other : Player) → Option (Action diagram other) :=
+        fun choice other =>
+          if howner : other = owner then by
+            subst other
+            exact choice
+          else none
+      have hfactor :
+          ((fun joint :
+              { joint : (other : Player) →
+                  Option (Action diagram other) //
+                (execution topological semantics).Legal state joint } =>
+              joint.1) ∘
+            (fun choice :
+                (information topological semantics).Choice owner
+                  ((information topological semantics).infoOf owner trace) =>
+              (⟨(fun other =>
+                  if howner : other = owner then by
+                    subst other
+                    exact choice.1
+                  else none),
+                ExecutionProtocol.legal_of_legalOption hterminal
+                  fun other => by
+                    by_cases howner : other = owner
+                    · subst other
+                      simpa using
+                        ((information topological semantics).menu_adequate
+                          owner trace choice.1).mp choice.2
+                    · have hinactive :
+                          ¬ Active topological state other := by
+                        intro hother
+                        exact howner (hunique other hother)
+                      simpa only [howner, dite_false, LegalOption]
+                        using hinactive⟩ :
+                { joint : (other : Player) →
+                    Option (Action diagram other) //
+                  (execution topological semantics).Legal state joint }))) =
+            jointOfOption ∘ (fun choice => choice.1) := by
+        funext choice other
+        by_cases howner : other = owner
+        · subst other
+          rfl
+        · simp [jointOfOption, howner]
+      rw [hfactor, ← FinDist.map_comp]
+      have hinfoAction :=
+        congrArg
+          (fun view =>
+            FinDist.map (fun choice => choice.1)
+              (behavioralPolicy topological semantics policy owner view))
+          (infoOf_eq_viewOf topological semantics owner trace)
+      rw [show behavioralProfile topological semantics policy owner =
+          behavioralPolicy topological semantics policy owner by rfl,
+        hinfoAction]
+      have hview :
+          viewOf topological semantics owner state =
+            .acting ⟨node, hkind⟩
+              (state.configOf topological semantics
+                (diagram.observedParents node)) :=
+        viewOf_eq_acting topological semantics owner state
+          (pending_eq_some topological hpending) hkind
+      rw [hview, behavioralPolicy, FinDist.map_comp,
+        FinDist.map_comp]
+      unfold serialJointLaw
+      dsimp only
+      split
+      next hchance =>
+        rw [hkind] at hchance
+        contradiction
+      next activeOwner hdecision =>
+        have hownerEq : activeOwner = owner :=
+          TypedMAID.NodeKind.decision.inj
+            (hdecision.symm.trans hkind)
+        subst activeOwner
+        rw [FinDist.map_comp]
+        congr 1
+
+/-- One actual behavioral step of the compiled EFG is one serialized source
+step for arbitrary finite source-player carriers. -/
+theorem behavioralJoint_bind_transition
+    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    (topological :
+      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (trace : (execution topological semantics).Trace state)
+    (hterminal :
+      ¬ (execution topological semantics).terminal state) :
+    ((information topological semantics).behavioralJoint
+        (behavioralProfile topological semantics policy)
+        trace hterminal).bind
+          (fun draw =>
+            (execution topological semantics).step state draw) =
+      serialStep topological semantics policy state
+        ((state.not_terminal_iff topological).mp hterminal) := by
+  rw [behavioralJoint_eq_serialJointLaw topological semantics
+    policy state trace hterminal]
+  exact serialJointLaw_bind_transition topological semantics
+    policy state hterminal
+
+/-- Forgetting histories from the compiled behavioral runner yields the
+serialized stage runner for arbitrary finite source-player carriers. -/
+theorem map_state_runBehavioralFrom_eq_serialRun
+    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    (topological :
+      GameTheoryMath.DAG.TopologicalOrder diagram.parents)
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram) :
+    ∀ (fuel : ℕ)
+      (history : (execution topological semantics).History),
+      FinDist.map ExecutionProtocol.History.state
+          ((information topological semantics).runBehavioralFrom
+            (behavioralProfile topological semantics policy)
+            fuel history) =
+        serialRun topological semantics policy fuel history.state := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro history
+      rw [InformationModel.runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_zero, serialRun,
+        FinDist.map_pure]
+  | succ fuel ih =>
+      intro history
+      by_cases hterminal :
+          (execution topological semantics).terminal history.state
+      · have hpath :
+            history.state.path.length =
+              topological.order.length := hterminal
+        rw [InformationModel.runBehavioralFrom,
+          ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterminal,
+          FinDist.map_pure, serialRun, dif_pos hpath]
+      · have hpath :
+            history.state.path.length ≠
+              topological.order.length := hterminal
+        rw [InformationModel.runBehavioralFrom,
+          ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
+            _ fuel hterminal,
+          FinDist.map_bind, serialRun, dif_neg hpath]
+        unfold InformationModel.randomizedChooser
+        calc
+          _ =
+              ((information topological semantics).behavioralJoint
+                (behavioralProfile topological semantics policy)
+                history.trace hterminal).bind
+                (fun draw =>
+                  ((execution topological semantics).step
+                    history.state draw).bind
+                    (serialRun topological semantics policy fuel)) := by
+              apply FinDist.bind_congr
+              intro draw _
+              rw [FinDist.map_bindOnSupport]
+              exact FinDist.bindOnSupport_eq_bind_of_eq_on_support
+                fun _ realized => ih (history.extend draw.2 realized)
+          _ =
+              (((information topological semantics).behavioralJoint
+                (behavioralProfile topological semantics policy)
+                history.trace hterminal).bind
+                  (fun draw =>
+                    (execution topological semantics).step
+                      history.state draw)).bind
+                (serialRun topological semantics policy fuel) := by
+              rw [FinDist.bind_bind]
+          _ =
+              (serialStep topological semantics policy history.state
+                ((history.state.not_terminal_iff topological).mp
+                  hterminal)).bind
+                (serialRun topological semantics policy fuel) := by
+              rw [behavioralJoint_bind_transition topological
+                semantics policy history.state history.trace hterminal]
+
+/-- The actual compiled-EFG behavioral assignment law is independent of the
+supplied topological order for arbitrary finite source-player carriers. -/
+theorem behavioralRun_topological_order_independent
+    [Fintype Player] [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
     (first second :
-      GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents) :
+      GameTheoryMath.DAG.TopologicalOrder diagram.parents) :
     FinDist.map
         (fun history =>
           Stage.assignment first semantics history.state)
@@ -546,14 +865,14 @@ theorem behavioralRun_topological_order_independent_unit
           (behavioralProfile second semantics policy)
           second.order.length) := by
   have hfirstState :=
-    map_state_runBehavioralFrom_eq_serialRun_unit first semantics
+    map_state_runBehavioralFrom_eq_serialRun first semantics
       policy first.order.length (execution first semantics).initHistory
   have hfirstAssignment :=
     congrArg (FinDist.map (Stage.assignment first semantics))
       hfirstState
   rw [FinDist.map_comp] at hfirstAssignment
   have hsecondState :=
-    map_state_runBehavioralFrom_eq_serialRun_unit second semantics
+    map_state_runBehavioralFrom_eq_serialRun second semantics
       policy second.order.length (execution second semantics).initHistory
   have hsecondAssignment :=
     congrArg (FinDist.map (Stage.assignment second semantics))

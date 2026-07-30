@@ -168,12 +168,16 @@ A head-bubbling proof shows that any two dependency-compatible, duplicate-free
 permutations induce the same law, and every pair of topological orders meets
 those conditions. The compiler bridge therefore proves complete serialized
 assignment-law equality for arbitrary player and node carriers. No public
-swap-reachability certificate is introduced. On the already audited one-owner
-behavioral-product path, this also yields actual compiled-EFG order
-independence.
+swap-reachability certificate is introduced.
+
+The actual behavioral-product bridge is general too. The information-model
+product collapses to the all-inactive point mass at chance nodes and to the
+sole active owner's local law at decision nodes. Consequently one actual EFG
+behavioral step equals one serial step for arbitrary finite source-player
+types, forgetting histories equals the serial runner at every fuel, and the
+actual compiled-EFG assignment law is order-independent.
 
 This supports the D14 representation, closes general serialized order
 independence, and closes the hostile end-to-end runner slice, but does not close
-D14. General serialized/native-frontier equality and the arbitrary-player
-behavioral-product bridge remain mandatory before public promotion or T3
-credit.
+D14. General serialized/native-frontier equality remains mandatory before
+public promotion or T3 credit.
