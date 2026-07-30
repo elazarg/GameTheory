@@ -130,6 +130,67 @@ theorem HasNormalizedPositiveChargedCirculation.reindex
         (fun index => mass index * charge index)).trans
         charge_eq_one
 
+/-- Extend an active-subtype circulation to the fixed ambient type by zero
+mass outside the active set. -/
+theorem HasNormalizedPositiveChargedCirculation.extendActive
+    [Fintype S] [Fintype I]
+    (state : FiniteDeflationState I)
+    (column : I → S → ℝ) (charge : I → ℝ)
+    (circulation :
+      HasNormalizedPositiveChargedCirculation
+        (fun index : state.ActiveIndex => column index.1)
+        (fun index : state.ActiveIndex => charge index.1)) :
+    HasNormalizedPositiveChargedCirculation column charge := by
+  classical
+  obtain ⟨mass, mass_nonneg, balance, charge_eq_one⟩ :=
+    circulation
+  let ambientMass : I → ℝ :=
+    fun index =>
+      if index_active : index ∈ state.active then
+        mass ⟨index, index_active⟩
+      else 0
+  have ambientMass_active
+      (index : state.ActiveIndex) :
+      ambientMass index.1 = mass index := by
+    simp only [ambientMass, index.2, dite_true]
+  refine ⟨ambientMass, ?_, ?_, ?_⟩
+  · intro index
+    by_cases index_active : index ∈ state.active
+    · simp only [ambientMass, index_active, dite_true]
+      exact mass_nonneg ⟨index, index_active⟩
+    · simp only [ambientMass, index_active, dite_false, le_refl]
+  · intro destination
+    let term : I → ℝ :=
+      fun index => ambientMass index * column index destination
+    have active_eq_ambient :
+        (∑ index : state.ActiveIndex, term index.1) =
+          ∑ index, term index := by
+      rw [← Finset.sum_subtype state.active
+        (fun _ => Iff.rfl) term]
+      apply Finset.sum_subset
+        (Finset.subset_univ state.active)
+      intro index _ index_not_active
+      change ambientMass index * column index destination = 0
+      simp only [ambientMass, index_not_active, dite_false, zero_mul]
+    change (∑ index, term index) = 0
+    rw [← active_eq_ambient]
+    simpa only [term, ambientMass_active] using balance destination
+  · let term : I → ℝ :=
+      fun index => ambientMass index * charge index
+    have active_eq_ambient :
+        (∑ index : state.ActiveIndex, term index.1) =
+          ∑ index, term index := by
+      rw [← Finset.sum_subtype state.active
+        (fun _ => Iff.rfl) term]
+      apply Finset.sum_subset
+        (Finset.subset_univ state.active)
+      intro index _ index_not_active
+      change ambientMass index * charge index = 0
+      simp only [ambientMass, index_not_active, dite_false, zero_mul]
+    change (∑ index, term index) = 1
+    rw [← active_eq_ambient]
+    simpa only [term, ambientMass_active] using charge_eq_one
+
 /-- A scaled active potential packaged with its first nonzero gauge-fixed
 analytic coefficient. -/
 structure ActiveAnalyticPotentialJet
@@ -559,6 +620,18 @@ inductive AnalyticOccupationDeflationTrace
 
 namespace AnalyticOccupationDeflationTrace
 
+/-- Number of strict deletions recorded by an analytic deflation trace. -/
+def length
+    [Fintype S] [Fintype I] [DecidableEq I]
+    {column : ℝ → I → S → ℝ}
+    {charge : ℝ → I → ℝ}
+    {anchor : S}
+    {initial terminal : FiniteDeflationState I} :
+    AnalyticOccupationDeflationTrace
+      column charge anchor initial terminal → ℕ
+  | .refl _ => 0
+  | .strict _ _ tail => tail.length + 1
+
 /-- Every terminal active set recorded by a deflation trace is contained in
 the initial active set. -/
 theorem terminal_active_subset
@@ -576,6 +649,72 @@ theorem terminal_active_subset
       exact Finset.Subset.rfl
   | strict next strict_nonempty tail ih =>
       exact ih.trans Finset.sdiff_subset
+
+/-- Terminal rank plus the number of strict deletions is bounded by the
+initial active-set rank.  One deletion may remove several indices, so this
+is generally an inequality rather than an equality. -/
+theorem terminal_rank_add_length_le_initial_rank
+    [Fintype S] [Fintype I] [DecidableEq I]
+    {column : ℝ → I → S → ℝ}
+    {charge : ℝ → I → ℝ}
+    {anchor : S}
+    {initial terminal : FiniteDeflationState I}
+    (trace :
+      AnalyticOccupationDeflationTrace
+        column charge anchor initial terminal) :
+    terminal.rank + trace.length ≤ initial.rank := by
+  induction trace with
+  | refl state =>
+      simp [length]
+  | @strict parent terminal next strict_nonempty tail ih =>
+      have rank_step :
+          (parent.deleteStrict next.leadingPairing).rank <
+            parent.rank :=
+        parent.rank_deleteStrict_lt
+          next.leadingPairing strict_nonempty
+      calc
+        terminal.rank + length (.strict next strict_nonempty tail) =
+            (terminal.rank + tail.length) + 1 := by
+          simp only [length]
+          omega
+        _ ≤
+            (parent.deleteStrict next.leadingPairing).rank + 1 :=
+          Nat.add_le_add_right ih 1
+        _ ≤ parent.rank := by
+          simpa only [Nat.add_one] using
+            Nat.succ_le_of_lt rank_step
+
+/-- Every analytic strict-deflation trace has at most the initial number of
+active indices. -/
+theorem length_le_initial_rank
+    [Fintype S] [Fintype I] [DecidableEq I]
+    {column : ℝ → I → S → ℝ}
+    {charge : ℝ → I → ℝ}
+    {anchor : S}
+    {initial terminal : FiniteDeflationState I}
+    (trace :
+      AnalyticOccupationDeflationTrace
+        column charge anchor initial terminal) :
+    trace.length ≤ initial.rank :=
+  le_trans (Nat.le_add_left trace.length terminal.rank)
+    trace.terminal_rank_add_length_le_initial_rank
+
+/-- Ambient cardinality is a uniform bound on the number of analytic strict
+deletions, independently of the selected trace. -/
+theorem length_le_card
+    [Fintype S] [Fintype I] [DecidableEq I]
+    {column : ℝ → I → S → ℝ}
+    {charge : ℝ → I → ℝ}
+    {anchor : S}
+    {initial terminal : FiniteDeflationState I}
+    (trace :
+      AnalyticOccupationDeflationTrace
+        column charge anchor initial terminal) :
+    trace.length ≤ Fintype.card I := by
+  exact trace.length_le_initial_rank.trans
+    (by
+      simpa only [FiniteDeflationState.rank] using
+        Finset.card_le_univ initial.active)
 
 end AnalyticOccupationDeflationTrace
 
