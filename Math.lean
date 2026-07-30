@@ -8,6 +8,7 @@ import Math.Probability.MarkovOccupation
 import Math.Probability.HittingTimePotential
 import Math.Probability.OccupationFlowAlternative
 import Math.Probability.AnalyticOccupationFlow
+import Math.Probability.AdaptiveOccupationFlow
 import Math.Probability.ResetActivation
 import Math.Probability.ShadowSeparatorAccounting
 import Math.Probability.SublinearLedger

@@ -7,7 +7,7 @@ Authors: GameTheory contributors
 import GameTheory.Concepts.Stochastic.AnalyticBellmanHierarchy
 import GameTheory.Concepts.Stochastic.FinkObstructionFarkas
 import GameTheory.Concepts.Stochastic.OrientedResponseExtraction
-import Math.Probability.AnalyticOccupationFlow
+import Math.Probability.AdaptiveOccupationFlow
 
 /-!
 # Analytic coordinates for Fink obstruction systems
@@ -91,6 +91,24 @@ def rawAnalyticOccupationColumn
       germ.rawPureDeviationStateKernelCurve
           t e.2.1 e.1 e.2.2 destination -
         if destination = e.2.1 then 1 else 0
+
+/-- Semantic actual transition attached to a baseline-state or
+pure-deviation occupation index at one valid germ parameter. -/
+def finkActualOccupationKernelAt
+    (germ : G.AnalyticBellmanGerm)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius) :
+    (G.State ⊕ (Σ who : ι, G.State × G.Act who)) → PMF G.State :=
+  occupationKernel
+    (G.finkStateKernel (germ.finkPointAt ht))
+    (fun e : Σ who : ι, G.State × G.Act who =>
+      G.finkPureDeviationStateKernel
+        (germ.finkPointAt ht) e.2.1 e.1 e.2.2)
+
+/-- Source state attached to each actual occupation index. -/
+def finkActualOccupationSource :
+    (G.State ⊕ (Σ who : ι, G.State × G.Act who)) → G.State :=
+  occupationSource
+    (fun e : Σ who : ι, G.State × G.Act who => e.2.1)
 
 omit [DecidableEq G.State] in
 theorem analytic_rawPureDeviationProfileWeight
@@ -297,6 +315,31 @@ theorem rawAnalyticOccupationColumn_eq_finkPointAt
         occupationKernel, occupationSource]
       rw [germ.rawPureDeviationStateKernelCurve_eq_finkPointAt ht]
       rfl
+
+/-- Pairing a raw analytic occupation column with a potential is the
+ordinary expected potential drift of its actual semantic transition. -/
+theorem potential_pair_rawAnalyticOccupationColumn_eq
+    (germ : G.AnalyticBellmanGerm)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius)
+    (potential : G.State → ℝ)
+    (index : G.State ⊕ (Σ who : ι, G.State × G.Act who)) :
+    (∑ destination,
+      potential destination *
+        germ.rawAnalyticOccupationColumn t index destination) =
+      expect (germ.finkActualOccupationKernelAt ht index) potential -
+        potential (finkActualOccupationSource index) := by
+  rw [germ.rawAnalyticOccupationColumn_eq_finkPointAt ht]
+  simpa [finkActualOccupationKernelAt,
+    finkActualOccupationSource, stochasticOccupationColumn] using
+    potential_pair_actualOccupationColumn
+    (occupationKernel
+      (G.finkStateKernel (germ.finkPointAt ht))
+      (fun e : Σ who : ι, G.State × G.Act who =>
+        G.finkPureDeviationStateKernel
+          (germ.finkPointAt ht) e.2.1 e.1 e.2.2))
+    (occupationSource
+      (fun e : Σ who : ι, G.State × G.Act who => e.2.1))
+    potential index
 
 /-- Actual analytic occupation columns retain zero total mass throughout a
 small punctured right neighborhood. -/
@@ -1238,6 +1281,104 @@ theorem analyticCirculation_xor_boundedPotential
     (Sum.inr C.response)
     germ.analytic_rawAnalyticOccupationColumn
     germ.eventually_sum_rawAnalyticOccupationColumn_eq_zero
+
+/-- At a valid parameter in the bounded-potential branch, all actual
+semantic transitions have nonnegative potential drift and the selected
+transition has the exact analytic charge. -/
+theorem boundedPotential_semanticDriftAt
+    {germ : G.AnalyticBellmanGerm}
+    {H K : G.State → Payoff ι}
+    (C : AnalyticOrientedFinkObstructionResponse germ H K)
+    (B : AnalyticBoundedOccupationSeparator
+      germ.rawAnalyticOccupationColumn (Sum.inr C.response))
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius)
+    (hB :
+      (∀ destination,
+        0 ≤ B.potential t destination ∧
+          B.potential t destination ≤ 1) ∧
+      (∀ index :
+          {index :
+            G.State ⊕ (Σ who : ι, G.State × G.Act who) //
+              index ≠ Sum.inr C.response},
+        0 ≤ ∑ destination,
+          B.potential t destination *
+            germ.rawAnalyticOccupationColumn
+              t index.1 destination) ∧
+      (∑ destination,
+        B.potential t destination *
+          germ.rawAnalyticOccupationColumn
+            t (Sum.inr C.response) destination) =
+        B.charge * t ^ B.poleOrder) :
+    (∀ index,
+      0 ≤
+        expect
+            (germ.finkActualOccupationKernelAt ht index)
+            (B.potential t) -
+          B.potential t (finkActualOccupationSource index)) ∧
+    expect
+          (germ.finkActualOccupationKernelAt ht
+            (Sum.inr C.response))
+          (B.potential t) -
+        B.potential t
+          (finkActualOccupationSource (Sum.inr C.response)) =
+      B.charge * t ^ B.poleOrder := by
+  have hpair (index :
+      G.State ⊕ (Σ who : ι, G.State × G.Act who)) :=
+    germ.potential_pair_rawAnalyticOccupationColumn_eq
+      ht (B.potential t) index
+  constructor
+  · intro index
+    rw [← hpair index]
+    by_cases hi : index = Sum.inr C.response
+    · subst index
+      rw [hB.2.2]
+      exact mul_nonneg B.charge_pos.le
+        (pow_nonneg (le_of_lt ht.1) _)
+    · exact hB.2.1 ⟨index, hi⟩
+  · rw [← hpair (Sum.inr C.response)]
+    exact hB.2.2
+
+/-- In the bounded-potential branch, arbitrary history-dependent switching
+among source-compatible actual transitions can use the selected response
+only a bounded expected number of times. At parameter `t`, each use costs
+the exact margin `B.charge * t ^ B.poleOrder`. -/
+theorem eventually_selectedUseBudget
+    {germ : G.AnalyticBellmanGerm}
+    {H K : G.State → Payoff ι}
+    (C : AnalyticOrientedFinkObstructionResponse germ H K)
+    (B : AnalyticBoundedOccupationSeparator
+      germ.rawAnalyticOccupationColumn (Sum.inr C.response)) :
+    ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      ∀ (ht : t ∈ Ioo (0 : ℝ) germ.radius)
+        (initial : G.State)
+        (choice :
+          ∀ n, (Fin (n + 1) → G.State) →
+            (G.State ⊕ (Σ who : ι, G.State × G.Act who))),
+        (∀ n history,
+          finkActualOccupationSource (choice n history) =
+            history (Fin.last n)) →
+        ∀ T,
+          (B.charge * t ^ B.poleOrder) *
+              expect
+                (adaptiveHistoryLaw
+                  (adaptiveMarkovStep initial
+                    (selectedTransitionComparison
+                      (germ.finkActualOccupationKernelAt ht)
+                      choice))
+                  (T + 1))
+                (selectedTransitionUseCount
+                  choice (Sum.inr C.response) T) ≤
+            1 := by
+  filter_upwards [B.eventual] with t hB
+  intro ht initial choice hsource T
+  obtain ⟨hdrift, hmargin⟩ :=
+    C.boundedPotential_semanticDriftAt B ht hB
+  exact margin_mul_expect_selectedTransitionUseCount_le_one
+    initial
+    (germ.finkActualOccupationKernelAt ht)
+    finkActualOccupationSource choice
+    (Sum.inr C.response) (B.potential t)
+    hB.1 hsource hdrift hmargin.ge T
 
 /-- At every valid positive parameter, the response selected from the
 analytic obstruction enters the exact actual-flow alternative.
