@@ -141,6 +141,7 @@ import GameTheory.Concepts.Stochastic.OneStepAbsorbingChildUniform
 import GameTheory.Concepts.Stochastic.FiniteChildTargetAlternative
 import GameTheory.Concepts.Stochastic.PublicLocalResponseRecursion
 import GameTheory.Concepts.Stochastic.AdaptiveLocalResponseRecursion
+import GameTheory.Concepts.Stochastic.AdaptiveCertificateEquivalence
 import GameTheory.Concepts.Stochastic.AdaptiveLocalResponseAtlas
 import GameTheory.Concepts.Stochastic.TransitionIndependentCertificate
 import GameTheory.Concepts.Stochastic.AverageOptimalityCertificate
