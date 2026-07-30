@@ -53,6 +53,27 @@ variable
 
 namespace PlayerNeutralAnalyticCirculationTerminalData
 
+def activeKernel
+    (data :
+      PlayerNeutralAnalyticCirculationTerminalData
+        germ B who initial terminalAnchor) :
+    data.terminal.ActiveIndex → PMF G.State :=
+  fun index => germ.playerNeutralOccupationKernel who index.1
+
+def activeSource
+    (data :
+      PlayerNeutralAnalyticCirculationTerminalData
+        germ B who initial terminalAnchor) :
+    data.terminal.ActiveIndex → G.State :=
+  fun index => germ.playerNeutralOccupationSource who index.1
+
+def activeCharge
+    (data :
+      PlayerNeutralAnalyticCirculationTerminalData
+        germ B who initial terminalAnchor) :
+    data.terminal.ActiveIndex → ℝ :=
+  fun index => germ.playerNeutralOccupationCharge B who index.1
+
 /-- A class-local positive response extracted from the positive aggregate
 charge of the selected communicating class.
 
@@ -64,27 +85,29 @@ structure ClassLocalPublicResponse
       PlayerNeutralAnalyticCirculationTerminalData
         germ B who initial terminalAnchor) where
   response : germ.ContinuationNeutralAction who
+  responseIndex : data.terminal.ActiveIndex
+  responseIndex_eq : responseIndex.1 = Sum.inr response
   sourceState :
     occupationActiveStates
-      (germ.playerNeutralOccupationSource who)
+      data.activeSource
       data.positiveClass.mass
   source_eq : sourceState.1 = response.source
   source_mem : sourceState ∈ data.positiveClass.closedClass.states
   occupied_pos :
     0 <
-      data.positiveClass.mass (Sum.inr response)
+      data.positiveClass.mass responseIndex
   charge_pos :
     0 < germ.neutralActionCharge B who response
   reachable :
     PMFReachable
       (occupationActiveKernel
-        (germ.playerNeutralOccupationKernel who)
-        (germ.playerNeutralOccupationSource who)
+        data.activeKernel
+        data.activeSource
         data.positiveClass.mass
         data.positiveClass.mass_nonneg
         (actualOccupationBalance_explicit
-          (germ.playerNeutralOccupationKernel who)
-          (germ.playerNeutralOccupationSource who)
+          data.activeKernel
+          data.activeSource
           data.positiveClass.mass
           data.positiveClass.balance))
       data.positiveClass.representative sourceState
@@ -100,28 +123,28 @@ private theorem exists_positive_index_in_class
         germ B who initial terminalAnchor) :
     ∃ (state :
         occupationActiveStates
-          (germ.playerNeutralOccupationSource who)
+          data.activeSource
           data.positiveClass.mass)
-      (index : germ.PlayerNeutralOccupationIndex who),
+      (index : data.terminal.ActiveIndex),
       state ∈ data.positiveClass.closedClass.states ∧
-        germ.playerNeutralOccupationSource who index = state.1 ∧
+        data.activeSource index = state.1 ∧
         0 <
           data.positiveClass.mass index *
-            germ.playerNeutralOccupationCharge B who index := by
+            data.activeCharge index := by
   have hstate :
       ∃ state ∈ data.positiveClass.closedClass.states,
         0 <
           occupationSourceCharge
-            (germ.playerNeutralOccupationSource who)
-            (germ.playerNeutralOccupationCharge B who)
+            data.activeSource
+            data.activeCharge
             data.positiveClass.mass state.1 := by
     by_contra hnone
     push Not at hnone
     have hnonpos :
         occupationCommunicationClassOriginalCharge
-            (germ.playerNeutralOccupationKernel who)
-            (germ.playerNeutralOccupationSource who)
-            (germ.playerNeutralOccupationCharge B who)
+            data.activeKernel
+            data.activeSource
+            data.activeCharge
             data.positiveClass.mass
             data.positiveClass.mass_nonneg
             data.positiveClass.balance
@@ -141,16 +164,16 @@ private theorem exists_positive_index_in_class
       ∃ index ∈
           Finset.univ.filter
             (fun index =>
-              germ.playerNeutralOccupationSource who index = state.1),
+              data.activeSource index = state.1),
         0 <
           data.positiveClass.mass index *
-            germ.playerNeutralOccupationCharge B who index := by
+            data.activeCharge index := by
     by_contra hnone
     push Not at hnone
     have hnonpos :
         occupationSourceCharge
-            (germ.playerNeutralOccupationSource who)
-            (germ.playerNeutralOccupationCharge B who)
+            data.activeSource
+            data.activeCharge
             data.positiveClass.mass state.1 ≤
           0 := by
       apply Finset.sum_nonpos
@@ -171,18 +194,26 @@ theorem exists_classLocalPublicResponse
     Nonempty (ClassLocalPublicResponse data) := by
   obtain ⟨state, index, hstate_mem, hsource, hpositive⟩ :=
     exists_positive_index_in_class data
-  rcases index with source | response
-  · simp only [playerNeutralOccupationCharge, mul_zero] at hpositive
-    exact False.elim (lt_irrefl 0 hpositive)
-  · have hcharge :
+  rcases hindex : index.1 with source | response
+  · simp [activeCharge, hindex, playerNeutralOccupationCharge]
+      at hpositive
+  · have hpositive' :
+        0 <
+          data.positiveClass.mass index *
+            germ.neutralActionCharge B who response := by
+      simpa [activeCharge, hindex, playerNeutralOccupationCharge]
+        using hpositive
+    have hcharge :
         0 < germ.neutralActionCharge B who response :=
-      pos_of_mul_pos_right hpositive
-        (data.positiveClass.mass_nonneg (Sum.inr response))
+      pos_of_mul_pos_right hpositive'
+        (data.positiveClass.mass_nonneg index)
     have hmass :
-        0 < data.positiveClass.mass (Sum.inr response) :=
-      pos_of_mul_pos_left hpositive hcharge.le
+        0 < data.positiveClass.mass index :=
+      pos_of_mul_pos_left hpositive' hcharge.le
     refine ⟨{
       response := response
+      responseIndex := index
+      responseIndex_eq := hindex
       sourceState := state
       source_eq := ?_
       source_mem := hstate_mem
@@ -192,7 +223,8 @@ theorem exists_classLocalPublicResponse
       publicResponse :=
         response.publicConstraintResponse B hcharge
     }⟩
-    simpa only [playerNeutralOccupationSource] using hsource.symm
+    simpa [activeSource, hindex, playerNeutralOccupationSource]
+      using hsource.symm
 
 /-- Strongest class-local semantic consequence of the terminal
 analytic-circulation data: an internally reachable, positively occupied,
@@ -225,7 +257,7 @@ abbrev ActiveState
       PlayerNeutralAnalyticCirculationTerminalData
         germ B who initial terminalAnchor) :=
   occupationActiveStates
-    (germ.playerNeutralOccupationSource who)
+    data.activeSource
     data.positiveClass.mass
 
 def legalKernel
@@ -234,13 +266,13 @@ def legalKernel
         germ B who initial terminalAnchor) :
     ActiveState data → PMF (ActiveState data) :=
   occupationActiveKernel
-    (germ.playerNeutralOccupationKernel who)
-    (germ.playerNeutralOccupationSource who)
+    data.activeKernel
+    data.activeSource
     data.positiveClass.mass
     data.positiveClass.mass_nonneg
     (actualOccupationBalance_explicit
-      (germ.playerNeutralOccupationKernel who)
-      (germ.playerNeutralOccupationSource who)
+      data.activeKernel
+      data.activeSource
       data.positiveClass.mass
       data.positiveClass.balance)
 

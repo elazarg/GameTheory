@@ -18,10 +18,11 @@ account.  Since the state space is finite, this is a bounded realized account
 and its cumulative discrepancy is asymptotically sublinear.
 
 This is an account for the observed residual transition discrepancy, not for
-the terminal's positive strategic response charge.  In fact, the same
-terminal datum proves that its positive response charge, if incurred at every
-stage, cannot be realized by any bounded account.  Thus an identification of
-the strategic charge with the observed discrepancy remains indispensable.
+the terminal's positive strategic response charge.  The repaired terminal
+provenance makes the distinction exact: the named positive response is a
+surviving active index, so its endpoint drift against the leading potential
+is zero by active harmonicity, while its strategic charge is strictly
+positive.  Thus those two quantities cannot be identified.
 
 The deflation trace gives a second exact boundary: either it is stationary at
 the initial active set, or its terminal active-set rank is strictly smaller.
@@ -214,9 +215,47 @@ theorem initial_eq_terminal_or_terminal_rank_lt
     initial = data.terminal ∨ data.terminal.rank < initial.rank :=
   data.trace.initial_eq_terminal_or_terminal_rank_lt
 
+/-- Provenance repair: the named positive response is represented by a
+surviving active index. -/
+theorem response_mem_terminal
+    (data :
+      PlayerNeutralZeroPairingTerminalData
+        germ B who initial terminalAnchor) :
+    Sum.inr data.response ∈ data.terminal.active := by
+  rw [← data.responseIndex_eq]
+  exact data.responseIndex.2
+
+/-- The active harmonic identity annihilates the endpoint drift of the named
+positive response.  In particular, this drift cannot equal its strictly
+positive strategic charge. -/
+theorem response_leadingDrift_eq_zero
+    (data :
+      PlayerNeutralZeroPairingTerminalData
+        germ B who initial terminalAnchor) :
+    expect data.response.kernel data.leadingPotential -
+      data.leadingPotential data.response.source = 0 := by
+  have harmonic := data.active_harmonic data.responseIndex
+  rw [data.responseIndex_eq] at harmonic
+  simpa only [leadingPotential,
+    playerNeutralOccupationKernel,
+    playerNeutralOccupationSource] using harmonic
+
+/-- The positive strategic response charge is not controlled by its zero
+endpoint leading-potential drift. -/
+theorem responseCharge_not_le_leadingDrift
+    (data :
+      PlayerNeutralZeroPairingTerminalData
+        germ B who initial terminalAnchor) :
+    ¬germ.neutralActionCharge B who data.response ≤
+      expect data.response.kernel data.leadingPotential -
+        data.leadingPotential data.response.source := by
+  rw [data.response_leadingDrift_eq_zero]
+  exact not_le_of_gt data.responseCharge_pos
+
 /-- The named positive response charge cannot itself be a recurring bounded
-account increment.  Hence the residual discrepancy account above does not
-discharge the response without an additional charge-identification theorem. -/
+account increment.  Hence the leading residual-discrepancy account above
+cannot discharge the response; a different higher-order or stage-gain
+mechanism is required. -/
 theorem no_boundedAccount_realizes_constant_responseCharge
     (data :
       PlayerNeutralZeroPairingTerminalData
