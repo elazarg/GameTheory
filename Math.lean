@@ -5,6 +5,7 @@ import Math.Probability.CoreShadowCompiler
 import Math.Probability.MaximalCoupling
 import Math.Probability.MarkovOccupation
 import Math.Probability.HittingTimePotential
+import Math.Probability.ResetActivation
 import Math.Probability.ShadowSeparatorAccounting
 import Math.Fin
 import Math.Fintype
@@ -37,6 +38,7 @@ import Math.Simplex
 import Math.OnlineLearning
 import Math.OnlineAlgorithms
 import Math.OnlineLearning.CompletedEpochCalendar
+import Math.OnlineLearning.FixedShare
 import Math.MeasureTheory.UnitInterval
 import Math.FixedPoint.KKM
 import Math.FixedPoint.Scarf
