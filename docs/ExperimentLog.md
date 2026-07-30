@@ -52,6 +52,10 @@ becomes difficult to scan.
 | EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
 | EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; promoted after EXP-041 | `GameTheory/Languages/MAID/Basic.lean`; `GameTheory/Experimental/PostArchitecture/TypedMAIDTest.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 | EXP-041 | 2026-07-30 | D6/D14 / T3 serialization | Can an explicit topological order compile the typed MAID to an EFG without exposing serialized incomparable decisions? | Supports; native frontier, serialized, and actual compiled-EFG assignment laws are equal for arbitrary finite typed diagrams | `GameTheory/Languages/MAID/{ToEFG,Order,FrontierEquivalence}.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
+| EXP-042 | 2026-07-30 | D0/D4/D6 / T4 | Can a one-shot NFG compile through FOSG and the actual Protocol history runner with exact outcome and utility laws? | Supports; closes T4 | [`decisions/D15-nfg-fosg.md`](decisions/D15-nfg-fosg.md); `GameTheory/Languages/{NFG,FOSG,Bridges/NFGFOSG}.lean` |
+| EXP-043 | 2026-07-30 | D0 / knowledge ownership | Is Protocol information already an epistemic partition, or does Aumann agreement need a separate branch? | Refutes Protocol ownership; decides D16 | [`decisions/D16-epistemic-ownership.md`](decisions/D16-epistemic-ownership.md); `GameTheory/Epistemic/`; `GameTheory/Experimental/PostArchitecture/KnowledgeOwnership.lean` |
+| EXP-044 | 2026-07-30 | D0 / evolutionary ownership | Is ESS static Core semantics or part of an analytic dynamics package? | Supports separate static branch; decides D17 | [`decisions/D17-evolutionary-ownership.md`](decisions/D17-evolutionary-ownership.md); `GameTheory/Evolutionary/`; `GameTheory/Experimental/PostArchitecture/EvolutionaryOwnership.lean` |
+| EXP-045 | 2026-07-30 | D8 / Wave 1 close-out | What is the smallest consumer-backed transformation API that closes reindexing, relabeling, mixed lifting, Nash, and CE transport? | In progress | `GameTheory/Experimental/PostArchitecture/D8Transformations.lean` |
 
 ## Entry template
 
@@ -2924,3 +2928,38 @@ memory.
 - **Next action:** keep the hostile payoff as experiment evidence and admit no
   population dynamics until a named analytic theorem reserves a new
   experiment. Continue with the D-KNOW inventory and minimal D8 obligations.
+
+### EXP-045: minimal consumer-backed transformation closure
+
+- **Date / revision:** 2026-07-30, working tree based on `c306f24`
+- **Status:** in progress
+- **Decision / question:** D8 and W1-H; which transformation declarations are
+  genuinely public infrastructure after the direct language transfers have
+  removed the predecessor's generic morphism and certificate wrappers.
+- **Prediction:** player reindexing and per-player strategy equivalence need
+  only transparent functions and exact laws. A single game-free
+  `FinDist.pi_reindex` theorem should serve both mixed extension and the
+  existing MAID serialization consumer. Nash and CE invariance should follow
+  directly from invertibility, without `FormHom`, `FormEquiv`, a generic
+  equilibrium certificate, or user-visible equality transport.
+- **Representative slice:** reindex a finite game along a nontrivial player
+  equivalence; relabel a player's strategies along a nontrivial equivalence;
+  prove that reindexing commutes with independent mixing; and transport both a
+  Nash profile and a correlated law. Replace the MAID-local finite-product
+  lemma with the shared probability theorem as the second real consumer.
+- **Competing designs:** revive `FormHom`/`FormEquiv` plus deviation-reflection
+  structures; expose only concrete equivalence operations and preservation
+  theorems; or leave every transfer bespoke in its language module.
+- **Measurements to collect:** declaration and nonblank-line delta; focused
+  and full build jobs; import closure; number of consumers; source transport,
+  direct update, placeholder, and axiom audits; and whether CE transport needs
+  a law beyond invertibility.
+- **Kill conditions:** a public transformation structure with only one
+  theorem consumer; a second equilibrium predicate; direct `Function.update`;
+  user-visible `cast`, `Eq.ndrec`, `HEq`, tactic `change`, or substitution
+  transport; stored finiteness or decidability; Core importing a language; or
+  a claimed equilibrium transport that silently assumes target deviations can
+  be reflected.
+- **Next action:** run the hostile experimental slice, record the measurements
+  in a D8 decision record, then promote only the declarations used by Core and
+  MAID.
