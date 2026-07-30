@@ -128,6 +128,7 @@ import GameTheory.Concepts.Stochastic.PublicTerminalChildDispatcher
 import GameTheory.Concepts.Stochastic.PublicTerminalChildLawTransfer
 import GameTheory.Concepts.Stochastic.PublicTerminalChildAdaptivePotential
 import GameTheory.Concepts.Stochastic.FiniteChildAdaptivePotentialFamily
+import GameTheory.Concepts.Stochastic.FixedDepthAdaptivePotentialSplice
 import GameTheory.Concepts.Stochastic.FiniteChildTargetAlternative
 import GameTheory.Concepts.Stochastic.PublicLocalResponseRecursion
 import GameTheory.Concepts.Stochastic.AdaptiveLocalResponseRecursion
