@@ -161,12 +161,16 @@ import GameTheory.Concepts.Stochastic.AnalyticHarmonicAdjustmentClosure
 import GameTheory.Concepts.Stochastic.PublicActionFrequencyResponse
 import GameTheory.Concepts.Stochastic.AnalyticActionFrequencyActivation
 import GameTheory.Concepts.Stochastic.PublicStagePayoffInnovation
+import GameTheory.Concepts.Stochastic.PublicBellmanInnovation
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassChild
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassTarget
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassSupportRank
 import Math.Probability.EntryReachableChargedClass
 import Math.Probability.FullSupportChargedClassRegeneration
 import Math.Probability.AnalyticKernelRegeneration
+import Math.Probability.AnalyticRegenerationCalendar
+import Math.FiniteLinearCompatibility
+import Math.InvisibleNeutralActionDrift
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
 import GameTheory.Concepts.Stochastic.BigMatch
 import GameTheory.Concepts.Stochastic.BigMatchMarkov
