@@ -174,6 +174,8 @@ import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralOccupationAlternative
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralOwnerAlternative
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralScaledPotential
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralPotentialJet
+import GameTheory.Concepts.Stochastic.PlayerNeutralLeadingDriftAlternative
+import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralHarmonicJet
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassChild
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassTarget
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassSupportRank
@@ -188,6 +190,7 @@ import Math.Probability.OwnerChargedOccupationAlternative
 import Math.Probability.AnalyticChargedOccupationFlow
 import Math.Probability.AnalyticOwnerChargedOccupationFlow
 import Math.Probability.AnalyticChargedPotentialEndpoint
+import Math.Probability.StationaryNonnegativeDrift
 import Math.FiniteLinearCompatibility
 import Math.FiniteInequalityCompatibility
 import Math.InvisibleNeutralActionDrift
