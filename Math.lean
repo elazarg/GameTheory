@@ -60,6 +60,7 @@ import Math.AlgebraicSelection
 import Math.AnalyticConeDichotomy
 import Math.AnalyticConeLift
 import Math.AnalyticCoordinateCurve
+import Math.AnalyticImplicitFunction
 import Math.AnalyticMixedObstruction
 import Math.AnalyticPowerNormalization
 import Math.AnalyticFiniteRayMaximum
