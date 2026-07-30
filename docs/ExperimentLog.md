@@ -2688,3 +2688,56 @@ memory.
 - **Next action:** T3 is complete. Inventory and close the remaining T4
   language transfer; general MAID refinements and Kuhn-facing recovery may now
   proceed behind their ordinary dependency gates.
+
+### EXP-042: one-shot NFG through FOSG and Protocol
+
+- **Date / revision:** 2026-07-30, working tree based on `2b659df`
+- **Status:** running
+- **Decision / question:** D0/T4, D4, D6, and the NFG/FOSG language gates;
+  whether a deterministic normal-form game can compile to a genuine
+  factored-observation stochastic game, then through the accepted Protocol
+  runner, with an exact commuting outcome law and without a second static,
+  history, utility, or solution theory.
+- **Prediction:** represent the source NFG as transparent finite-language
+  syntax compiling to a deterministic `GameForm`. Compile its single
+  simultaneous move to a general-state `ExecutionProtocol`; give every player
+  an information-local initial menu containing exactly its source actions and
+  observations that reveal no opponent's current action. The terminal state
+  retains the realized source profile or outcome. Lifting a source profile to
+  target policies should make the actual horizon-one history law, mapped to the
+  source outcome, definitionally or propositionally equal to the source
+  `GameForm.play`.
+- **Representative slice:** a two-player action-sensitive game in which both
+  players are active at the initial history. Prove simultaneous activation,
+  information locality, one-step stopping, the exact generic commuting law,
+  and the concrete hostile outcome equation.
+- **Competing designs:** a native FOSG syntax compiling to
+  `ExecutionProtocol` plus `InformationModel`; a thin wrapper around those two
+  canonical objects; sequentialization through the single-mover EFG/tree
+  frontend; or retiring T4 and keeping NFG solely static.
+- **Measurements to collect:** declaration and nonblank-line delta; imports
+  and closure jobs; exact source/target strategy and outcome types; direct
+  update and transport tokens; placeholders and axiom profile; simultaneous
+  activation and observation visibility; named source and target law equality;
+  and Phase 3 positive and negative reachability probes.
+- **Kill conditions:** a synthetic player, sequentialized current actions,
+  padding/default actions, a target policy that reads hidden execution state or
+  an opponent's current action, duplicated transition/history/equilibrium
+  semantics, utility stored in execution syntax, a generic morphism or
+  certificate hierarchy needed only to package the direct equality, stored
+  finite capabilities, direct `Function.update`, user-visible equality
+  transport, or failure of the actual compiled target law to equal the source
+  play law.
+- **Evidence so far:**
+  1. The pinned bridge's direct utility-law proof is 21 nonblank lines and its
+     morphism wrapper is 9, but its closure is 31 files/11,031 nonblank lines.
+     The declaration ledger isolates the one-step law from that predecessor
+     infrastructure.
+  2. D6 already rules out the superficially smaller tree target:
+     `sequentialization_enlarges_strategy_space` exhibits a contingent plan
+     unavailable in simultaneous play. T4 must therefore exercise the
+     general-state Protocol branch.
+- **Outcome:** pending.
+- **Next action:** implement the smallest hostile NFG/FOSG slice
+  experimentally, measure it, and promote only if every kill condition is
+  avoided.
