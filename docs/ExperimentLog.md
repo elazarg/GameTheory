@@ -37,6 +37,7 @@ becomes difficult to scan.
 | EXP-023 | 2026-07-29 | D12 / Phase 4 | What does taking the fixed-point primitive from outside Mathlib cost, and does the boundary hold once it is taken? | Supports; reopens general existence | `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 | EXP-025 | 2026-07-30 | D6 / Phase 5 close-out | Can information-local policies compile to the static core, with randomization and one-shot deviations commuting through the existing run laws? | Supports; narrows SPE remainder | `GameTheory/Protocol/Strategic.lean`; `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Strategic.lean`; `GameTheory/Tests/Assessment.lean` |
 | EXP-026 | 2026-07-30 | D10/D12 / finite certificates | Can an external LP verifier replace hand-expanded rational proofs without widening the trusted base or the audited finite layer? | Narrows; trust passes, adoption does not | [`experiments/EXP-026.md`](experiments/EXP-026.md); [`decisions/D13-lp-certificates.md`](decisions/D13-lp-certificates.md) |
+| EXP-027 | 2026-07-30 | D4 / Phase 5 | Does Arrow's pivotal-voter proof work through the accepted weak-ranking vocabulary without a second preference API? | Supports; repairs an import-closure leak | `GameTheory/Core/Rank.lean`; `GameTheory/Core/Arrow.lean`; `GameTheory/Tests/Arrow.lean` |
 
 ## Entry template
 
@@ -1592,3 +1593,49 @@ memory.
   finite-game-to-`Problem` bridge plus one generic duality/feasibility theorem,
   or when a downstream theorem can consume a checked certificate without
   retaining the explicit enumeration proof it was meant to replace.
+
+### EXP-027: Arrow through the canonical ranking vocabulary
+
+- **Date / revision:** 2026-07-30, working tree based on `7b184d0`
+- **Decision / question:** D4 and Phase 5; whether Arrow's theorem can quantify
+  over the accepted `Ranking` family and its named laws, rather than reviving
+  v1's separate `PrefRel` vocabulary or silently reinterpreting a weak
+  comparison as a strict one.
+- **Representative slice:** finite nonempty electorate, at least three
+  alternatives, unrestricted profiles of linear weak rankings, collective
+  rationality, strict Pareto, and IIA, through the Geanakoplos pivotal-voter
+  proof to an exact dictator.
+- **Competing designs:** prove directly with weak rankings; use
+  `Rank.strict`/reflexive-closure as a private proof representation; or expose a
+  second strict-ranking API.
+- **Kill conditions:** a second public preference/profile/SWF type is needed;
+  constructed profiles cannot be stated through the existing ranking laws;
+  public statements must reinterpret argument orientation; or the proof pulls
+  probability, game forms, topology, or executable finiteness into its authored
+  surface.
+- **Evidence:** the theorem inventory is
+  `reference/GameTheory-v1/GameTheory/Mechanism/SocialChoice/Arrow.lean` at
+  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the adapted proof is
+  `GameTheory/Core/Arrow.lean`, and the three-voter/three-alternative public
+  witness is `GameTheory/Tests/Arrow.lean`. `lake build
+  GameTheory.Tests.Arrow` completed in 842 jobs. `#print axioms
+  GameTheory.Arrow.impossibility` reports only `propext`,
+  `Classical.choice`, and `Quot.sound`. All four phase audits passed with their
+  expected measurements and reachability probes; the final `lake build`
+  completed cleanly in 3,281 jobs.
+- **Observation:** the pivotal-voter proof reaches an exact dictator while its
+  public domain remains `Ranking`, `Rank.Linear`, and `Rank.strict`; strict
+  relations, profiles, and aggregators are private proof representations.
+  Moving alternatives to the top or bottom and recovering the weak ranking
+  require no second semantic type. The first closure probe did expose a real
+  leftover defect: importing `SocialChoice` reached `FinDist` because all
+  relation algebra still lived physically in `Preference.lean`. Moving that
+  algebra to probability-free `Core/Rank.lean` reduced the Arrow target from
+  1,715 to 842 jobs. After the repair, both `SocialChoice` and `Arrow` reject a
+  `GameTheory.Probability.FinDist` probe.
+- **Outcome:** supports D4 with a physical-layer refinement. None of the
+  semantic kill conditions fired, and the import-closure defect found by the
+  stress test is repaired rather than documented away.
+- **Next action:** treat Arrow as closed on this axis. Keep lottery operations
+  in `Core/Preference.lean` and all carrier-generic ranking laws in
+  `Core/Rank.lean`; proceed to the next Phase 5 stress theorem.

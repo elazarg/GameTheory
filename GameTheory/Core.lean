@@ -15,6 +15,7 @@ a definition never costs the machinery a later theorem happens to need.
 
 import GameTheory.Core.Signature
 import GameTheory.Core.Form
+import GameTheory.Core.Rank
 import GameTheory.Core.Preference
 import GameTheory.Core.Deviation
 import GameTheory.Core.Equilibrium
@@ -24,4 +25,5 @@ import GameTheory.Core.Potential
 import GameTheory.Core.Mixed
 import GameTheory.Core.ZeroSum
 import GameTheory.Core.SocialChoice
+import GameTheory.Core.Arrow
 import GameTheory.Core.Coalitional

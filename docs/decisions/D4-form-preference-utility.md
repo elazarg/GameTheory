@@ -95,3 +95,20 @@ may not choose the probability representation or create a second mixed-game API.
 `euPreference` is a definition of *data*, not of a concept. Bundling a form with
 a utility (`UtilityGame`) is an ergonomic option; generic theorems continue to
 take the form and preference as separate arguments.
+
+## Phase 5 stress refinement
+
+[EXP-027](../ExperimentLog.md) proved Arrow's theorem against whole profiles of
+linear rankings. The semantic split survived: the theorem uses the same
+`Ranking`, `Rank.Linear`, and `Rank.strict` vocabulary, and the strict-order
+pivotal construction is a private proof representation rather than a second
+preference API.
+
+The import split had not survived. Before EXP-027, `Core/SocialChoice.lean`
+imported `Core/Preference.lean`, so `FinDist` was reachable even though no
+social-choice declaration mentioned probability. The generic relation algebra
+now lives in `Core/Rank.lean`; lottery-specific convexity and relabeling remain
+in `Core/Preference.lean`, which imports `Rank` in the one allowed direction.
+Negative reachability probes now keep `FinDist` out of both `SocialChoice` and
+`Arrow`. This refines D4's physical boundary without changing any accepted
+semantic declaration.

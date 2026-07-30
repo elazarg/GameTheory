@@ -13,7 +13,8 @@ The rule below is pairwise majority, and the theorem it exists for is a
 failure is why the subject has impossibility theorems at all.
 -/
 
-import GameTheory.Core.Preference
+import GameTheory.Core.Rank
+import Mathlib.Data.Fintype.Card
 
 namespace GameTheory
 

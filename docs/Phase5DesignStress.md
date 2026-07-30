@@ -71,6 +71,29 @@ Delegating to Mathlib was measured and rejected. Its bare-relation `Transitive`,
 preference here must stay an argument — one carrier is routinely studied under
 several preferences at once.
 
+### Arrow forced the semantic split to become a physical one
+
+Recorded as [EXP-027](ExperimentLog.md). Arrow's theorem now runs from
+unrestricted profiles of linear weak rankings through collective rationality,
+strict Pareto, and IIA to an exact dictator. The public statement uses
+`Ranking`, `Rank.Linear`, and `Rank.strict`; the Geanakoplos pivotal-voter proof
+changes to strict relations only behind a private reflexive-closure bridge. The
+pinned v1 proof supplied the theorem inventory and proof architecture without
+restoring its parallel `PrefRel`/`PrefProfile`/`SWF` vocabulary.
+
+The first reachability probe found the defect the Condorcet slice had missed.
+The declarations were carrier-generic, but they still lived in
+`Core/Preference.lean`, so importing `SocialChoice` quietly reached `FinDist`.
+The repair gives relation algebra its own probability-free `Core/Rank.lean`;
+lottery convexity and outcome-law relabeling stay in `Core/Preference.lean`.
+Both `SocialChoice` and `Arrow` now reject the `FinDist` probe, and the Arrow
+target's dependency closure fell from 1,715 to 842 jobs. The split is therefore
+enforced by imports rather than described only by type signatures.
+
+The three-voter/three-alternative witness shows the hypotheses are jointly
+satisfiable, and the flagship's axiom audit reports only `propext`,
+`Classical.choice`, and `Quot.sound`.
+
 ### A coalitional game is not a game form, and that is the right answer
 
 `Core/Coalitional.lean` states what each coalition can guarantee itself, the
@@ -102,10 +125,6 @@ listed with the choice it would put pressure on.
 proved to fail; the Shapley value is the concept that never fails, and its
 characterization by symmetry, efficiency, and additivity is the theorem that
 would stress whether that primitive is rich enough.
-
-*Arrow's theorem.* The vocabulary now states it. Proving it is the honest test
-of whether the split above was deep enough, since the pivotal-voter argument
-manipulates whole profiles of rankings rather than one comparison at a time.
 
 *Repeated play and the folk theorem.* Stresses the protocol layer's
 composability, and needs limits — so it also tests whether the analytic boundary
