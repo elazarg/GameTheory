@@ -2778,3 +2778,65 @@ memory.
 - **Next action:** T4 and every frozen transfer are complete. Continue broad
   NFG/FOSG declaration recovery behind the passed gates; do not generalize the
   retired morphism wrapper without a new composition consumer.
+
+### EXP-043: epistemic ownership versus Protocol information
+
+- **Date / revision:** 2026-07-30, working tree based on `d68e707`
+- **Status:** complete
+- **Decision / question:** the overdue Phase 0 D-KNOW probe; whether Aumann
+  agreement and partition-based common knowledge belong directly on
+  `Protocol.InformationModel.InfoState`, in a separate epistemic branch, or in
+  game-free mathematics.
+- **Prediction:** an arbitrary Protocol information state is history-local,
+  not a partition of execution states. A merging protocol can reach one state
+  through two histories that leave distinct information states, so no
+  state-indexed view can recover `infoOf` and `InformationModel.InfoSet`s may
+  overlap. Aumann's theorem should instead use an explicit finite-cell
+  epistemic partition and the canonical `FinDist` prior in a separate stable
+  branch. Game-free view-induced S5 lemmas may later be extracted to
+  `GameTheoryMath` if the epistemic consumer needs them.
+- **Representative slice:** construct a one-player merging protocol whose two
+  simultaneous actions reach the same terminal execution state while the
+  player remembers which action it took. Prove that terminal state lies in two
+  distinct `InfoSet`s and refute every state-only view representing `infoOf`.
+  Independently adapt the pinned finite-cell posterior and full Aumann
+  agreement theorem to a `FinDist` prior with operation-local full support.
+- **Competing designs:** define epistemic events directly from Protocol
+  `InfoSet`; add a tree-shaped/unique-history premise and derive partitions
+  only there; adopt a parallel epistemic partition object; or place the entire
+  development in `GameTheoryMath`.
+- **Measurements:** the 287-nonblank-line, 22-declaration spike imports only
+  `GameTheory.Protocol.Information`; its positive theorem uses the existing
+  `Probability.FinDist`, with `DecidableEq` and full support requested only by
+  the operations and theorem that need them. The focused build completes in
+  1,718 jobs and the full build in 3,342. Source scans find zero placeholders,
+  native decisions, custom axioms, direct updates, transports, `HEq`, tactic
+  `change`, or `open Classical`. All three flagship declarations report only
+  `propext`, `Classical.choice`, and `Quot.sound`. Positive probes reach
+  `FinDist`, `InformationModel`, the experimental partition, and Aumann
+  agreement; negative probes reject `IsNash`, the sequential-analysis
+  convergence declaration, `stdSimplex`, and `Polynomial`. Phase 2/3
+  non-reachability audits and the declaration-coverage audit pass.
+- **Kill conditions:** silently choose one history for a merging state; add
+  partition laws to every `InformationModel`; duplicate the finite-law
+  representation; make an action profile or game form a premise of Aumann's
+  theorem; store `Fintype` or decidability in epistemic data; or require
+  topology/Analysis for the finite agreement theorem.
+- **Evidence:** Mathlib has no Aumann/common-knowledge development. The
+  pinned theorem uses only finite cells, a common prior, self-evidence, and
+  finite sums. Protocol deliberately defines `InfoSet` by existence of a
+  history and does not assert a state partition. The hostile model satisfies
+  menu adequacy, yet its one merged terminal state belongs to the information
+  sets for both `done false` and `done true`; moreover no function of execution
+  state can represent `infoOf` on both histories. Recovering a partition from
+  Protocol therefore needs an explicit extra premise such as unique history;
+  it is not a law of `InformationModel`.
+- **Outcome:** supports the predicted separate epistemic branch. D16 adopts a
+  finite-cell `Epistemic.InfoPartition` using the canonical `FinDist` prior and
+  rejects both adding partition laws to Protocol and duplicating Protocol
+  histories inside the epistemic API. The theorem is game-theoretic domain
+  semantics, so moving it wholesale to `GameTheoryMath` is not earned.
+- **Next action:** promote the positive finite epistemic slice without a
+  Protocol import, keep the merging counterexample as experiment evidence, add
+  positive/negative boundary probes, and inventory the remaining D-KNOW
+  declarations before broad recovery.
