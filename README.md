@@ -85,9 +85,12 @@ pwsh -NoProfile -File scripts/phase0-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
+pwsh -NoProfile -File scripts/coverage-audit.ps1 -VerifyExpected
 ```
 
 `lake build` compiles every module, including examples, tests, and experiments.
 The phase audits re-check the architecture constraints. Later Phase 4/5 probes
-were folded into the historically named Phase 2/3 scripts; the delivery plan
-requires a consolidated coverage audit before any v1-accounted claim.
+were folded into the historically named Phase 2/3 scripts. The coverage audit
+owns the separate pinned-v1 accounting gate: it checks exclusive file
+ownership, a current generated declaration index, and exact reviewed ledger
+rows before any `v1-accounted` claim.

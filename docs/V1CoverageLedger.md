@@ -5,7 +5,7 @@ Status: active family-level ledger.
 Pinned source: `reference/GameTheory-v1/` at
 `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
 
-Last reconciled: 2026-07-30 at successor commit `f23e3ef`.
+Last reconciled: 2026-07-30 against successor commit `4014cbb`.
 
 This ledger answers three different questions separately:
 
@@ -18,6 +18,14 @@ The disposition vocabulary and completion rules are defined in
 `PostArchitectureDeliveryPlan.md`.
 Detailed work-package ledgers use the schema in
 [`coverage/README.md`](coverage/README.md).
+
+The generated pinned index currently contains 436 Lean files and 8,324
+declarations. Nine reviewed work-package ledgers account for 162 declarations;
+8,162 remain explicitly unaccounted. `scripts/coverage-audit.ps1` verifies
+exclusive family ownership, exact ledger references, disposition vocabulary,
+duplicate claims, complete-status consistency, and index freshness. These
+numbers do not imply equal mathematical weight and are never converted into a
+completion percentage.
 
 ## Status vocabulary
 
@@ -188,9 +196,9 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Add a generated pinned declaration index and a coverage audit before the
-   first `v1-accounted` claim.
-2. Resolve the overdue knowledge and evolutionary ownership probes.
+1. Resolve the overdue knowledge and evolutionary ownership probes.
+2. Add exact broad-package ledgers for the first NFG/FOSG and static recovery
+   batches, seeded but never classified by the generated index.
 3. Start broad NFG/FOSG recovery from their passed gates while keeping broader
    family status partial until every pinned declaration is classified.
 4. Update this file in the same commit that changes a family status.

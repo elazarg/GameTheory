@@ -58,3 +58,34 @@ A ledger is complete only when:
 
 Generated declaration indices may seed a ledger, but classification is a
 mathematical review and is never inferred from matching names.
+
+## Machine-readable coverage gate
+
+`FamilyScopes.tsv` is the exact, non-overlapping ownership routing for every
+Lean file in the pinned snapshot. `PinnedDeclarations.tsv` is generated from
+that snapshot after nested comments, line comments, and strings are removed.
+It records source path, line, family owner, declaration kind, source spelling,
+and visibility. It is an index, not a disposition ledger.
+
+Regenerate and verify it with:
+
+```text
+pwsh -NoProfile -File scripts/coverage-audit.ps1 -UpdateIndex
+pwsh -NoProfile -File scripts/coverage-audit.ps1 -VerifyExpected
+```
+
+The audit rejects:
+
+- a pinned file with zero or multiple family owners;
+- a family route absent from `V1CoverageLedger.md`;
+- an unknown family recovery state or declaration disposition;
+- a stale generated index;
+- a ledger row naming a missing or ambiguous pinned path/declaration;
+- duplicate disposition claims for one pinned declaration;
+- an exactly `complete` ledger with an unreviewed/deferred row; and
+- a broad family marked `complete` while any declaration is unaccounted,
+  unreviewed, or deferred.
+
+`UNACCOUNTED_PINNED_DECLARATIONS` is deliberately reported rather than forced
+to zero today. It reaches zero only by adding reviewed ledger rows; the
+generator never fills it with guessed name matches.

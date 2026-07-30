@@ -12,17 +12,17 @@ Owner: Wave 1 / EFG and Kuhn recovery
 Status: complete
 Last verified: 2026-07-30
 
-| Pinned declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
-|---|---|---|---|---|---|
-| `EFG.kuhn_behavioral_to_mixed_runDist` | theorem | adapt | `InformationModel.runMixed_toMixed` | EXP-017; hostile repeated-information test | The successor proves equality of full history laws on the canonical runner under the sharper `ActsOnceWhereItMatters` condition. |
-| `EFG.kuhn_behavioral_to_mixed_evalDist` | theorem | subsumed | exact history-law equality, then `Game.kuhn_behavioral_to_mixed_outcomeLaw` | focused build; outcome-map wrapper | The generic pushforward corollary covers every retained outcome map instead of only the old tree evaluator. |
-| `EFG.kuhn_behavioral_to_mixed` | theorem | adapt | `Game.kuhn_behavioral_to_mixed` | two-decision EFG integration test | The witness is the independent product of local laws over the canonical contingent-plan carrier. |
-| `EFG.kuhn_behavioral_to_mixed_pr` | theorem | narrow | `Game.kuhn_behavioral_to_mixed`; `Game.kuhn_historyLaws` | D6 sharp-hypothesis split | The successor states no-revisit separately from recall. An EFG consumer must discharge both for the bidirectional theorem rather than hide absent-mindedness inside a stronger language-specific recall name. |
-| `EFG.kuhn_behavioral_to_mixed_udist` | theorem | generalize | `Game.kuhn_behavioral_to_mixed_outcomeLaw`; `Game.kuhn_behavioral_to_mixed_expectedUtility` | focused build; arbitrary history utility probe | The exact history law yields both arbitrary pushforwards and expected utility for every player. |
-| `EFG.kuhn_mixed_to_behavioral_core` | private theorem | subsumed | `InformationModel.runMixed_toBehavioralWith` | EXP-018 | Conditioning, support, and fallback work is integrated once at the Protocol layer. |
-| `EFG.compiledCore_runEq_to_evalDistEq` | private theorem | retired | no bridge required | D6 one execution semantics | The successor theorem already speaks about the canonical history runner, so no second run/evaluation bridge remains. |
-| `EFG.kuhn_mixed_to_behavioral` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | perfect-recall two-decision EFG integration test | `PerfectRecall` supplies the weaker `ConstrainsAlike` fact actually consumed by the canonical conditioning proof. |
-| `EFG.kuhn_mixed_to_behavioral_udist` | theorem | generalize | `Game.kuhn_mixed_to_behavioral_outcomeLaw`; `Game.kuhn_mixed_to_behavioral_expectedUtility` | focused build; axiom audit | As in the forward direction, the successor retains full history-law equality before forgetting to utility. |
+| Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
+|---|---|---|---|---|---|---|
+| `Languages/EFG/Kuhn.lean` | `EFG.kuhn_behavioral_to_mixed_runDist` | theorem | adapt | `InformationModel.runMixed_toMixed` | EXP-017; hostile repeated-information test | The successor proves equality of full history laws on the canonical runner under the sharper `ActsOnceWhereItMatters` condition. |
+| same | `EFG.kuhn_behavioral_to_mixed_evalDist` | theorem | subsumed | exact history-law equality, then `Game.kuhn_behavioral_to_mixed_outcomeLaw` | focused build; outcome-map wrapper | The generic pushforward corollary covers every retained outcome map instead of only the old tree evaluator. |
+| same | `EFG.kuhn_behavioral_to_mixed` | theorem | adapt | `Game.kuhn_behavioral_to_mixed` | two-decision EFG integration test | The witness is the independent product of local laws over the canonical contingent-plan carrier. |
+| same | `EFG.kuhn_behavioral_to_mixed_pr` | theorem | adapt | `Game.kuhn_behavioral_to_mixed`; `Game.kuhn_historyLaws` | D6 sharp-hypothesis split | The successor narrows the assumptions by stating no-revisit separately from recall. An EFG consumer discharges both rather than hiding absent-mindedness inside a stronger language-specific recall name. |
+| same | `EFG.kuhn_behavioral_to_mixed_udist` | theorem | adapt | `Game.kuhn_behavioral_to_mixed_outcomeLaw`; `Game.kuhn_behavioral_to_mixed_expectedUtility` | focused build; arbitrary history utility probe | The successor generalizes the conclusion: exact history law yields arbitrary pushforwards and expected utility for every player. |
+| same | `EFG.kuhn_mixed_to_behavioral_core` | private theorem | subsumed | `InformationModel.runMixed_toBehavioralWith` | EXP-018 | Conditioning, support, and fallback work is integrated once at the Protocol layer. |
+| same | `EFG.compiledCore_runEq_to_evalDistEq` | private theorem | retired | no bridge required | D6 one execution semantics | The successor theorem already speaks about the canonical history runner, so no second run/evaluation bridge remains. |
+| same | `EFG.kuhn_mixed_to_behavioral` | theorem | adapt | `Game.kuhn_mixed_to_behavioral` | perfect-recall two-decision EFG integration test | `PerfectRecall` supplies the weaker `ConstrainsAlike` fact actually consumed by the canonical conditioning proof. |
+| same | `EFG.kuhn_mixed_to_behavioral_udist` | theorem | adapt | `Game.kuhn_mixed_to_behavioral_outcomeLaw`; `Game.kuhn_mixed_to_behavioral_expectedUtility` | focused build; axiom audit | The successor generalizes from utility distribution to full history-law equality before forgetting to utility. |
 
 Attribution: the two Kuhn directions, the product-of-local-laws witness, and
 the conditional behavioral reading come from the pinned EFG/Kuhn development.

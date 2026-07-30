@@ -224,8 +224,9 @@ They do not independently invent shared definitions.
 
 ## 5. Wave 0: make coverage accountable
 
-Status: in progress; family baseline present, exact file/declaration accounting
-and audit remain.
+Status: in progress; exact file ownership, generated declaration indexing, and
+the structural coverage audit are present. Broad package ledgers and the
+consolidated moving delivery audit remain.
 
 The family ledger covers the pinned `GameTheory/` and `Math/` trees and records
 current integration and recovery status. Wave 0 closes when:
@@ -240,9 +241,11 @@ current integration and recovery status. Wave 0 closes when:
    rather than silently changing inside Phase 2/3-named scripts;
 6. README status is derived from the ledger rather than source-size estimates.
 
-The audit is deliberately scheduled before the first claim of v1 accounting,
-not before ordinary theorem recovery. Family rows are useful now; thousands of
-unreviewed automatically classified declarations would not be.
+The audit now indexes 436 files and 8,324 declarations. Nine reviewed
+work-package ledgers account for 162 declarations; 8,162 remain explicitly
+unaccounted. That number is a queue, not an auto-classification target.
+Family rows are useful now; thousands of generated `unreviewed` dispositions
+would not be.
 
 ## 6. Wave 1: close the frozen promises
 
@@ -525,15 +528,17 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. add a generated pinned declaration index and consolidated coverage audit
-   before the first `v1-accounted` claim;
-2. resolve the overdue knowledge and evolutionary ownership probes;
-3. resume the broader revelation/information-design inventory and open the
+1. resolve the overdue knowledge and evolutionary ownership probes;
+2. add exact broad-package ledgers for the first NFG/FOSG and static recovery
+   batches, using the generated index only as a review queue;
+3. consolidate moving delivery probes without rewriting historical phase
+   measurements;
+4. resume the broader revelation/information-design inventory and open the
    static learning/communication and congestion harvest lanes;
-4. begin broad NFG/FOSG recovery from their now-passed language gates;
-5. admit at most one mature blind-spot experiment—finite stochastic games or
+5. begin broad NFG/FOSG recovery from their now-passed language gates;
+6. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
-6. admit no Frontier implementation until the first three items have an active
+7. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change

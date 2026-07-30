@@ -24,23 +24,41 @@ simultaneous move as a single-mover tree strictly enlarges the strategy space.
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
 | `Languages/NFG/Syntax.lean` | `NFGGame` | structure | adapt | `GameTheory.Languages.NFG.Game` | EXP-042; full build | Keeps action syntax and deterministic outcome. Utility and capabilities remain operation-local. |
-| same | `StrategyProfile` | abbreviation | subsume | `Profile` of the compiled signature | D1 | The source action family is the compiled strategy family definitionally. |
-| same | `deviate`, `deviate_same`, `deviate_other` | definition/theorems | retire | `Profile.update` | D1/D5 | The stable profile implementation already owns the only point update. |
-| same | `IsNashPure`, `IsDominant`, `dominant_is_nash` | solution family | retire as language API | canonical Core predicates and later theorem recovery | D4/D5 | T4 must not create a second Nash API. Mathematical results may be adapted after the frontend gate. |
+| same | `StrategyProfile` | abbreviation | subsumed | `Profile` of the compiled signature | D1 | The source action family is the compiled strategy family definitionally. |
+| same | `deviate` | definition | retired | `Profile.update` | D1/D5 | The stable profile implementation already owns the only point update. |
+| same | `deviate_same` | theorem | retired | `Profile.update_same` | D1/D5 | Duplicate wrapper over the canonical operation. |
+| same | `deviate_other` | theorem | retired | `Profile.update_of_ne` | D1/D5 | Duplicate wrapper over the canonical operation. |
+| same | `IsNashPure` | definition | retired | canonical `IsNash` | D4/D5 | T4 must not create a second Nash API. |
+| same | `IsDominant` | definition | retired | canonical `IsDominant` | D4/D5 | T4 must not create a second dominance API. |
+| same | `dominant_is_nash` | theorem | subsumed | `IsDominantProfile.isNash` | D4/D5; `Core.Response` build | The generic canonical theorem applies directly after deterministic NFG compilation. |
 | `Languages/NFG/Compile.lean` | `NFGGame.toKernelGame` | compiler | adapt | `NFG.Game.toGameForm` | D1/D2/D4 | Deterministic play is `FinDist.pure`; utilities remain a separate evaluation. |
 | same | `toKernelGame_outcomeKernel` | theorem | adapt | `NFG.Game.toGameForm_play` | EXP-042 | This is the direct source-side equation used by T4. |
-| same | `IsNashPure_iff_kernelGame`, `IsDominant_iff_kernelGame` | bridge theorems | retire | definitional use of Core predicates | D5 | There is no source duplicate to bridge. |
-| same | `toKernelGame_udist` | theorem | subsume | direct outcome-law theorem plus `expectedUtility_pure` | D2/D4 | A joint utility distribution is not a second primitive in the successor. |
-| same | mixed definitions and bridge | definitions/theorems | subsume | `GameForm.mixed` and its existing laws | D2/D5 | T4 is pure and one-shot; later NFG recovery reuses the canonical mixed extension. |
-| `Languages/Bridges/NFG_FOSG.lean` | `actionsOfJoint` | definition | adapt privately | `NFG.OneShotFOSG.State.actionOfJoint` | hostile slice | Consumes only a certified legal simultaneous joint action; no default action or padding value. |
+| same | `IsNashPure_iff_kernelGame` | theorem | retired | definitional use of canonical `IsNash` | D5 | There is no source duplicate to bridge. |
+| same | `IsDominant_iff_kernelGame` | theorem | retired | definitional use of canonical `IsDominant` | D5 | There is no source duplicate to bridge. |
+| same | `toKernelGame_udist` | theorem | subsumed | direct outcome-law theorem plus finite-law mapping | D2/D4 | A joint utility distribution is not a second primitive in the successor. |
+| same | `MixedProfile` | abbreviation | subsumed | `Profile G.toGameForm.sig.mixed` | D2/D5 | The canonical mixed signature supplies the strategy family. |
+| same | `NFGGame.toMixedKernelGame` | definition | subsumed | `GameForm.mixed` | D2/D5 | One canonical mixed extension. |
+| same | `NFGGame.toMixedKernelGame_eq_mixedExtension` | theorem | subsumed | definitional equality of `GameForm.mixed` | D2/D5 | The predecessor wrapper disappears. |
+| same | `IsNashMixed` | definition | retired | canonical `IsNash` on `GameForm.mixed` | D5 | No language-specific mixed-Nash predicate. |
+| same | `NFGGame.toMixed_morphism` | definition | retired | `GameForm.mixed_play_purify` | D7 | A generic morphism wrapper is not needed for the point-mass law. |
+| `Languages/Bridges/NFG_FOSG.lean` | `actionsOfJoint` | definition | adapt | `NFG.OneShotFOSG.State.actionOfJoint` | hostile slice | Private successor helper; consumes only a certified legal simultaneous joint action. |
 | same | `toFOSG` | definition | adapt | `NFG.OneShotFOSG.game` | EXP-042 | Target state retains the source profile; observations and menus compile through Protocol rather than redefining execution. |
-| same | terminal/active/transition/bounded-horizon lemmas | theorem family | adapt minimally | `active_initial`; `runFor_chooserOfProfile_one` | EXP-042 | Horizon one follows from the named run law; no stored horizon certificate. |
-| same | history/view helper lemmas | theorem family | subsume | canonical `Trace`, `History`, and `InformationModel` laws | D6 | Do not recover a parallel FOSG history evaluator. |
-| same | `liftBehavioral`, `jointActionOf`, `liftProfile` | definitions | adapt | `Policy.ofAction`; `policyProfile`; `chooserOfProfile` | EXP-042 | The lift preserves source players and action types; all players act at the same target history. |
-| same | `toFOSG_legalActionLaw_nil`, transition-support, `oneStepHistory`, `toFOSG_runDist_one` | laws/helpers | adapt minimally | `historyChooser_policyProfile`; `runFor_chooserOfProfile_one` | EXP-042 | Uses the actual Protocol/Information runner. |
-| same | `toFOSG_oneStepHistory_utility` | theorem | subsume | outcome preservation plus utility pullback | D4 | Utilities do not belong in execution syntax. |
+| same | `toFOSG_boundedHorizon` | theorem | adapt | `runFor_chooserOfProfile_one` | EXP-042 | Horizon one follows from the named run law; no stored horizon certificate. |
+| same | `toFOSG_history_eq_nil_of_playerView_nil` | theorem | subsumed | canonical `Trace`/`InformationModel` history view | D6 | No parallel FOSG history evaluator. |
+| same | `toFOSG_lastState_true_of_steps_ne_nil` | theorem | subsumed | `runFor_chooserOfProfile_one` | D6/EXP-042 | Terminal state retains the profile rather than a Boolean flag. |
+| same | `liftBehavioral` | definition | adapt | `Policy.ofAction` | EXP-042 | Source action becomes an information-local target policy. |
+| same | `jointActionOf` | definition | adapt | `chooserOfProfile` | EXP-042 | The all-player joint action is constructed without padding. |
+| same | `actionsOfJoint_jointActionOf` | theorem | adapt | `State.actionOfJoint_some` | EXP-042 | Certified decoding recovers every coordinate. |
+| same | `liftProfile` | definition | adapt | `policyProfile` | EXP-042 | The lift preserves source players and action types. |
+| same | `toFOSG_legalActionLaw_nil` | theorem | adapt | `historyChooser_policyProfile` | EXP-042 | Uses the actual information-local chooser. |
+| same | `instDecidablePredToFOSGTerminal` | instance | retired | target terminality reduces by cases | D9 | No stored or public decidability capability is needed. |
+| same | `instFintypeToFOSGHistory` | instance | retired | operation-local finite history capability | D9 | T4 uses the runner directly and needs no history enumeration. |
+| same | `toFOSG_transition_init_support` | theorem | subsumed | `FinDist.support_pure` on the named execution | EXP-042 | General finite-law fact. |
+| same | `oneStepHistory` | definition | retired | canonical Protocol history generated by the runner | D6 | No second history constructor. |
+| same | `toFOSG_runDist_one` | theorem | adapt | `runFor_chooserOfProfile_one`; `historyChooser_policyProfile` | EXP-042 | Uses the actual Protocol/Information runner. |
+| same | `toFOSG_oneStepHistory_utility` | theorem | subsumed | outcome preservation plus utility mapping | D4 | Utilities do not belong in execution syntax. |
 | same | `toFOSG_udist_eq` | theorem | adapt | `toProtocolForm_play_policyProfile`; `toProtocolForm_utilityLaw_policyProfile` | D0/T4/EXP-042 | Exact equality for canonical finite outcome laws and every external utility. |
-| same | `toFOSG_morphism` | certificate wrapper | retire | direct named theorems | D7/D15 | The wrapper adds no composition consumer; T4 credits the named equalities. |
+| same | `toFOSG_morphism` | certificate wrapper | retired | direct named theorems | D7/D15 | The wrapper adds no composition consumer; T4 credits the named equalities. |
 
 Attribution: the predecessor supplies the one-step encoding, all-player profile
 lift, and exact preservation target. The successor deliberately does not copy

@@ -47,7 +47,7 @@ Last verified: 2026-07-30
 | same | `maidToEFGAt_outcomeKernel` | theorem | adapt | `FrontierEquivalence.nativeRun_eq_compiledBehavioralRun` | EXP-041/T3 | Exact arbitrary typed-DAG native/actual-compiled behavioral assignment law. |
 | same | `maidToEFGAt_pure_outcomeKernel` | theorem | adapt | T3 pure outcome-law equality | frozen T3 | Keep the pure specialization if it is shorter than re-specializing at use sites. |
 | same | `maidToEFGAt_pure_bisimulation` | definition | retired | direct named pure law | D7 | Generic certificate wrappers were rejected. |
-| same | `maidToEFGAt_udist` | theorem | subsume | `nativeRun_eq_compiledBehavioralRun` plus finite-law mapping | EXP-041/T3 | Utility remains external to both syntax and execution. |
+| same | `maidToEFGAt_udist` | theorem | subsumed | `nativeRun_eq_compiledBehavioralRun` plus finite-law mapping | EXP-041/T3 | Utility remains external to both syntax and execution. |
 | same | `maidToEFGAt_bisimulation` | definition | retired | direct named laws | D7 | Twenty-line certificate wrapper bought no extra theorem. |
 | same | `maidToEFGAt_simulation` | definition | retired | direct named laws | D7 | Same certificate-hierarchy rejection. |
 | same | `maidToEFGAt_morphism` | definition | retired | direct named laws | D7 | Same certificate-hierarchy rejection. |
