@@ -140,6 +140,7 @@ import GameTheory.Concepts.Stochastic.FinkObstruction
 import GameTheory.Concepts.Stochastic.BellmanGermFinkBridge
 import GameTheory.Concepts.Stochastic.FinkObstructionFarkas
 import GameTheory.Concepts.Stochastic.AnalyticBellmanHierarchy
+import GameTheory.Concepts.Stochastic.AnalyticFinkObstruction
 import GameTheory.Concepts.Stochastic.OrientedResponseExtraction
 import GameTheory.Concepts.Stochastic.FinkMonitor
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
