@@ -110,6 +110,16 @@ theorem bind_bind (μ : FinDist α) (f : α → FinDist β) (g : β → FinDist 
     bind (bind μ f) g = bind μ fun a => bind (f a) g := by
   apply ext; simp [PMF.bind_bind]
 
+/-- Two independent finite draws may be sampled in either order. -/
+theorem bind_comm (μ : FinDist α) (ν : FinDist β)
+    (f : α → β → FinDist γ) :
+    μ.bind (fun a => ν.bind (f a)) =
+      ν.bind fun b => μ.bind fun a => f a b := by
+  apply ext
+  simp only [toPMF_bind]
+  exact PMF.bind_comm μ.toPMF ν.toPMF
+    (fun a b => (f a b).toPMF)
+
 theorem map_eq_bind (f : α → β) (μ : FinDist α) :
     map f μ = bind μ fun a => pure (f a) := rfl
 

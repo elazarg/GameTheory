@@ -7,13 +7,14 @@ decision must leave the later site's information state unchanged.
 -/
 
 import GameTheory.Experimental.PostArchitecture.TypedMAIDTest
-import GameTheory.Experimental.PostArchitecture.TypedMAIDToEFG
+import GameTheory.Experimental.PostArchitecture.TypedMAIDOrder
 
 noncomputable section
 
 namespace GameTheory.Experimental.TypedMAID.ToEFGTest
 
 open GameTheory.Experimental.TypedMAID
+open GameTheory.Experimental.TypedMAID.Order
 open GameTheory.Experimental.TypedMAID.ToEFG
 open GameTheory.Probability
 
@@ -505,9 +506,9 @@ theorem serial_assignment_law_order_independent :
         (serialRun leftFirst semantics responsive 4 leftInitial) =
       FinDist.map (Stage.assignment rightFirst semantics)
         (serialRun rightFirst semantics responsive 4 rightInitial) := by
-  rw [serialRun_leftFirst, serialRun_rightFirst,
-    FinDist.map_pure, FinDist.map_pure,
-    complete_assignments_order_independent]
+  simpa [leftInitial, rightInitial, leftFirst, rightFirst] using
+    serialRun_topological_order_independent semantics responsive
+      leftFirst rightFirst
 
 theorem left_serial_assignment_law_eq_native :
     FinDist.map (Stage.assignment leftFirst semantics)
