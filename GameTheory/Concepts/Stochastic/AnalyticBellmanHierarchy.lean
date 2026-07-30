@@ -8,6 +8,7 @@ import GameTheory.Concepts.Stochastic.BellmanCurveGate
 import GameTheory.Concepts.Stochastic.BellmanGermFinkBridge
 import GameTheory.Concepts.Stochastic.FinkMonitor
 import Math.AlgebraicSelection
+import Math.OnlineLearning.CompletedEpochCalendar
 import Mathlib.Analysis.Analytic.Order
 
 /-!
@@ -339,6 +340,44 @@ structure StateKernelMonitorPowerCharge
                   destination positive)
 
 namespace StateKernelMonitorPowerCharge
+
+/-- The universal logarithmic calendar eventually enters the positive
+analytic signal interval, without knowing the charge's finite power order. -/
+theorem eventually_universalEpochSignal
+    {germ : G.AnalyticBellmanGerm}
+    (charge : germ.StateKernelMonitorPowerCharge) :
+    ∀ᶠ k : ℕ in atTop,
+      Math.OnlineLearning.universalEpochScale k ∈
+          Ioo (0 : ℝ) germ.radius ∧
+        ∀ ht :
+            Math.OnlineLearning.universalEpochScale k ∈
+              Ioo (0 : ℝ) germ.radius,
+          charge.margin *
+                Math.OnlineLearning.universalEpochScale k ^ charge.order ≤
+              Math.Probability.expect
+                (G.finkStateKernel
+                  (germ.finkPointAt ht) charge.source)
+                (pmfCoordinateTestScore
+                  (G.finkStateKernel
+                    germ.endpointFinkPoint charge.source)
+                  charge.destination charge.positive) ∧
+            0 <
+              Math.Probability.expect
+                (G.finkStateKernel
+                  (germ.finkPointAt ht) charge.source)
+                (pmfCoordinateTestScore
+                  (G.finkStateKernel
+                    germ.endpointFinkPoint charge.source)
+                  charge.destination charge.positive) := by
+  have htend :
+      Tendsto Math.OnlineLearning.universalEpochScale atTop
+        (𝓝[>] (0 : ℝ)) := by
+    apply tendsto_nhdsWithin_iff.mpr
+    exact
+      ⟨Math.OnlineLearning.tendsto_universalEpochScale,
+        Filter.Eventually.of_forall
+          Math.OnlineLearning.universalEpochScale_pos⟩
+  exact htend.eventually charge.signal
 
 /-- At a fixed positive germ slice where its power-law signal holds, the
 charge transfers to the causal anytime monitor.  The lower bound loses only
