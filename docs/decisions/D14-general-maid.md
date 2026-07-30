@@ -1,9 +1,9 @@
 # D14: general MAID execution by unresolved frontiers
 
-- **Status:** adopted native evaluation principle, narrowed by EXP-038; general
-  public syntax still delivery-gated
+- **Status:** adopted; native evaluation and explicit-order EFG compilation
+  validated, public recovery unblocked
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-014, EXP-037, EXP-038, EXP-039, EXP-040
+- **Experiment IDs:** EXP-014, EXP-037, EXP-038, EXP-039, EXP-040, EXP-041
 
 ## Decision / question
 
@@ -139,7 +139,7 @@ frontier law and independence from the chosen order.
 
 ## Explicit-order compiler milestone
 
-EXP-041 is in progress. Its generic experimental compiler now constructs an
+EXP-041's generic experimental compiler constructs an
 accepted `Languages.EFG.Game` from a typed diagram, semantics, and explicit
 topological order. Source owners remain the EFG players; their action carrier
 is a dependent sum over their own decision sites. An active information state
@@ -177,7 +177,27 @@ behavioral step equals one serial step for arbitrary finite source-player
 types, forgetting histories equals the serial runner at every fuel, and the
 actual compiled-EFG assignment law is order-independent.
 
-This supports the D14 representation, closes general serialized order
-independence, and closes the hostile end-to-end runner slice, but does not close
-D14. General serialized/native-frontier equality remains mandatory before
-public promotion or T3 credit.
+The final native comparison uses kernel-checked finite probability algebra.
+A dependent product is invariant under coordinate equivalence, and a
+duplicate-free sequential list of fixed node laws equals the corresponding
+dependent product resolved simultaneously. Nodes within one frontier cannot be
+parents of one another, so their dynamic serialized laws remain fixed during
+that pass. This proves one native frontier step equals one serialized frontier
+pass.
+
+For the recursive lift, the current frontier followed by the nodes remaining
+after that frontier is a duplicate-free, dependency-compatible permutation of
+the current unresolved topological order. The native completion bound then
+supports an induction over frontier layers, including nonsingleton frontiers.
+`nativeRun_eq_compiledBehavioralRun` concludes that the native
+simultaneous-frontier evaluator and the actual compiled
+`InformationModel.runBehavioral` have the same complete assignment law for
+arbitrary finite typed diagrams, source-player carriers, and supplied
+topological orders.
+
+EXP-041 therefore closes D14's representation, locality, order-independence,
+and exact-evaluation gates. Public recovery of the validated typed syntax,
+native evaluator, and explicit-order compiler is unblocked. T3's remaining
+equilibrium-transfer theorem is a delivery obligation, not a reason to weaken
+or reopen the adopted execution design: deviations must be regrouped by source
+owner, never by decision site.

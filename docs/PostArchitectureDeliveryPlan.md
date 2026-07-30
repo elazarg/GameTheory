@@ -258,7 +258,7 @@ recovery creates pressure to work around them.
 | W1-C | no-regret learning to CCE | **complete** | the frozen F2 theorem uses the canonical deviation and correlation APIs |
 | W1-D | finite-prefix stochastic monitoring | **complete** | the frozen F8 law handles a nontrivial signal law, not only perfect public observation |
 | W1-E | Bayesian outcome-law and truthfulness transfers | **complete** | F5 and F6 are ported, adapted, or explicitly retired with measured reasons |
-| W1-F | named language transfers | partial; T1 complete | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
+| W1-F | named language transfers | partial; T1 complete, T3 outcome law complete | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | **complete** | both constructive directions, realizable history-law equality, arbitrary outcome pushforwards, and expected utility are exposed under the sharp no-revisit/recall hypotheses |
 | W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
 | W1-I | overdue knowledge and evolutionary ownership probes | open | Aumann/`InfoState` and ESS/static-dynamic slices either validate their proposed homes or record replacements |
@@ -318,7 +318,7 @@ surface syntax.
 |---|---|---|
 | NFG | a transparent finite syntax compiles to the canonical static form without a second Nash API | examples, public goods, Stackelberg, cheap talk, and mixed presentations |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
-| MAID | an incomparable-node DAG compiles without asserting a false linear order | evaluation, information, refinements, Kuhn specialization, and named EFG comparison |
+| MAID | **passed (EXP-041):** an incomparable-node typed DAG compiles locally and its native frontier law equals every compiled order's actual behavioral law | public evaluation and information recovery, then refinements, Kuhn specialization, and source-owner equilibrium transfer |
 | FOSG | simultaneous active players and imperfect information compile honestly to Protocol | reachable histories, terminal laws, observations, strategies, values, and named EFG comparison |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | the native strategy/information object proves one theorem not recoverable from bare Protocol | compilation, perfect recall, and native theorems |
