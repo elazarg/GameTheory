@@ -1,6 +1,7 @@
 import Math.Probability
 import Math.Probability.Adaptive
 import Math.Probability.CoreShadow
+import Math.Probability.CoreShadowCompiler
 import Math.Probability.MaximalCoupling
 import Math.Probability.MarkovOccupation
 import Math.Probability.HittingTimePotential
