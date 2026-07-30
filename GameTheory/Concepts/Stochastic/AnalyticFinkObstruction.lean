@@ -6,6 +6,8 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.AnalyticBellmanHierarchy
 import GameTheory.Concepts.Stochastic.FinkObstructionFarkas
+import GameTheory.Concepts.Stochastic.OrientedResponseExtraction
+import Math.Probability.OccupationFlowAlternative
 
 /-!
 # Analytic coordinates for Fink obstruction systems
@@ -657,6 +659,484 @@ theorem exists_analytic_scaled_eventual_finkObstructionCertificate
   exact ⟨hsupport_t.1,
     by simpa [balance, mass] using hcertificate_t.1,
     by simpa [balance, mass] using hcertificate_t.2⟩
+
+/-- Reconstruct the doubled nonnegative Cramer certificate as an ordinary
+signed analytic obstruction flow.
+
+The common pole-clearing factor changes the normalized target mass from one
+to exactly `t ^ poleOrder`; the homogeneous balance remains zero. -/
+theorem exists_analytic_scaled_signed_eventual_finkObstructionFlow
+    (germ : G.AnalyticBellmanGerm)
+    (H K : G.State → Payoff ι)
+    (hflow :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+          Nonempty
+            (G.NormalizedFinkSupportTangentObstructionFlow
+              (germ.finkPointAt ht) H K)) :
+    ∃ (supported :
+          (Σ who : ι, G.State × G.Act who) → Bool)
+        (poleOrder : ℕ)
+        (signed : ℝ → FinkObstructionColumn G → ℝ),
+      AnalyticAt ℝ signed 0 ∧
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          t ∈ Ioo (0 : ℝ) germ.radius ∧
+            Matrix.mulVec
+                (germ.rawFinkObstructionBalance supported t)
+                (signed t) = 0 ∧
+            (∑ j,
+                germ.rawFinkObstructionMass supported H K t j *
+                  signed t j) =
+              t ^ poleOrder := by
+  classical
+  obtain
+      ⟨supported, support, poleOrder, scaled,
+        hscaled, hcertificate⟩ :=
+    germ.exists_analytic_scaled_eventual_finkObstructionCertificate
+      H K hflow
+  let signed : ℝ → FinkObstructionColumn G → ℝ := fun t =>
+    orientedFarkasToSigned (scaled t)
+  have hsigned : AnalyticAt ℝ signed 0 := by
+    rw [analyticAt_pi_iff]
+    intro column
+    exact
+      ((analyticAt_pi_iff.mp hscaled (column, true)).sub
+        (analyticAt_pi_iff.mp hscaled (column, false)))
+  refine ⟨supported, poleOrder, signed, hsigned, ?_⟩
+  filter_upwards [hcertificate] with t ht
+  let z :=
+    supportCramerVector
+      (normalizedFarkasMatrix
+        (orientedFarkasBalance
+          (germ.rawFinkObstructionBalance supported t))
+        (orientedFarkasMass
+          (germ.rawFinkObstructionMass supported H K t)))
+      normalizedFarkasRhs support
+  have hz :
+      Matrix.mulVec
+          (germ.rawFinkObstructionBalance supported t)
+          (orientedFarkasToSigned z) = 0 ∧
+        (∑ j,
+            germ.rawFinkObstructionMass supported H K t j *
+              orientedFarkasToSigned z j) = 1 :=
+    normalizedFarkasCertificateSet_oriented_toSigned
+      (germ.rawFinkObstructionBalance supported t)
+      (germ.rawFinkObstructionMass supported H K t)
+      ht.2.2
+  have hsigned_eq :
+      signed t =
+        t ^ poleOrder • orientedFarkasToSigned z := by
+    funext column
+    have hcoordinate :=
+      congrFun ht.2.1 (column, true)
+    have hcoordinate_neg :=
+      congrFun ht.2.1 (column, false)
+    change
+      scaled t (column, true) -
+          scaled t (column, false) =
+        t ^ poleOrder *
+          (z (column, true) - z (column, false))
+    change
+      t ^ poleOrder * z (column, true) =
+        scaled t (column, true) at hcoordinate
+    change
+      t ^ poleOrder * z (column, false) =
+        scaled t (column, false) at hcoordinate_neg
+    rw [← hcoordinate, ← hcoordinate_neg]
+    ring
+  refine ⟨ht.1, ?_, ?_⟩
+  · rw [hsigned_eq, Matrix.mulVec_smul, hz.1, smul_zero]
+  · rw [hsigned_eq]
+    simp only [Pi.smul_apply, smul_eq_mul]
+    calc
+      (∑ j,
+          germ.rawFinkObstructionMass supported H K t j *
+            (t ^ poleOrder * orientedFarkasToSigned z j)) =
+          t ^ poleOrder *
+            ∑ j,
+              germ.rawFinkObstructionMass supported H K t j *
+                orientedFarkasToSigned z j := by
+        rw [Finset.mul_sum]
+        apply Finset.sum_congr rfl
+        intro j _
+        ring
+      _ = t ^ poleOrder := by rw [hz.2, mul_one]
+
+/-- A fixed pure deviation extracted from an analytic Fink obstruction flow.
+
+The signed obstruction is retained so downstream arguments can use its exact
+flow balance.  The selected deviation carries a positive power-law share of
+the normalized obstruction mass.  Its actual transition is either
+indistinguishable from the baseline as an analytic right germ, or one fixed
+destination coordinate has a positive oriented power-law drift. -/
+structure AnalyticOrientedFinkObstructionResponse
+    (germ : G.AnalyticBellmanGerm)
+    (H K : G.State → Payoff ι) where
+  supported :
+    (Σ who : ι, G.State × G.Act who) → Bool
+  poleOrder : ℕ
+  signed : ℝ → FinkObstructionColumn G → ℝ
+  analytic_signed : AnalyticAt ℝ signed 0
+  eventual_flow :
+    ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      t ∈ Ioo (0 : ℝ) germ.radius ∧
+        Matrix.mulVec
+            (germ.rawFinkObstructionBalance supported t)
+            (signed t) = 0 ∧
+        (∑ j,
+            germ.rawFinkObstructionMass supported H K t j *
+              signed t j) =
+          t ^ poleOrder
+  response : Σ who : ι, G.State × G.Act who
+  positive : Bool
+  weightOrder : ℕ
+  kappa : ℝ
+  kappa_pos : 0 < kappa
+  eventual_charge :
+    ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      (Fintype.card
+          (Σ who : ι, G.State × G.Act who) : ℝ)⁻¹ *
+            t ^ poleOrder ≤
+          signed t (Sum.inr response) *
+            germ.rawFinkObstructionMass supported H K t
+              (Sum.inr response) ∧
+        kappa * t ^ weightOrder ≤
+          responseOrientation positive *
+            signed t (Sum.inr response) ∧
+        kappa * t ^ weightOrder ≤
+          responseOrientation positive *
+            germ.rawFinkObstructionMass supported H K t
+              (Sum.inr response)
+  transition :
+    (∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      ∀ destination,
+        germ.rawPureDeviationStateKernelCurve
+            t response.2.1 response.1 response.2.2 destination =
+          germ.rawStateKernelCurve t response.2.1 destination) ∨
+      ∃ destination n c, 0 < c ∧
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          c * t ^ n ≤
+              responseOrientation positive *
+                (germ.rawPureDeviationStateKernelCurve
+                    t response.2.1 response.1 response.2.2 destination -
+                  germ.rawStateKernelCurve
+                    t response.2.1 destination) ∧
+            0 <
+              responseOrientation positive *
+                (germ.rawPureDeviationStateKernelCurve
+                    t response.2.1 response.1 response.2.2 destination -
+                  germ.rawStateKernelCurve
+                    t response.2.1 destination)
+
+/-- Extract one fixed, operationally oriented pure deviation from every
+eventual analytic Fink obstruction.
+
+The orientation changes the sign of the statistical monitor only.  The
+forward kernel in the conclusion is always the transition induced by the
+selected action itself. -/
+theorem exists_analyticOrientedFinkObstructionResponse
+    [Nonempty G.State] [Nonempty ι] [∀ i, Nonempty (G.Act i)]
+    (germ : G.AnalyticBellmanGerm)
+    (H K : G.State → Payoff ι)
+    (hflow :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ ht : t ∈ Ioo (0 : ℝ) germ.radius,
+          Nonempty
+            (G.NormalizedFinkSupportTangentObstructionFlow
+              (germ.finkPointAt ht) H K)) :
+    Nonempty (germ.AnalyticOrientedFinkObstructionResponse H K) := by
+  classical
+  let E := Σ who : ι, G.State × G.Act who
+  letI : Nonempty E := by
+    let who : ι := Classical.choice (inferInstance : Nonempty ι)
+    let s : G.State :=
+      Classical.choice (inferInstance : Nonempty G.State)
+    let d : G.Act who :=
+      Classical.choice (inferInstance : Nonempty (G.Act who))
+    exact ⟨⟨who, s, d⟩⟩
+  let baseline : G.State → ℝ → G.State → ℝ :=
+    fun source t destination =>
+      germ.rawStateKernelCurve t source destination
+  let source : E → G.State := fun e => e.2.1
+  let forward : E → ℝ → G.State → ℝ :=
+    fun e t destination =>
+      germ.rawPureDeviationStateKernelCurve
+        t e.2.1 e.1 e.2.2 destination
+  obtain ⟨supported, poleOrder, signed, hsigned, hsignedFlow⟩ :=
+    germ.exists_analytic_scaled_signed_eventual_finkObstructionFlow
+      H K hflow
+  let weight : E → ℝ → ℝ := fun e t => signed t (Sum.inr e)
+  let charge : E → ℝ → ℝ := fun e t =>
+    germ.rawFinkObstructionMass supported H K t (Sum.inr e)
+  have hbaseline :
+      ∀ s destination,
+        AnalyticAt ℝ (fun t => baseline s t destination) 0 := by
+    intro s destination
+    exact
+      (analyticAt_pi_iff.mp
+        (analyticAt_pi_iff.mp
+          germ.analytic_rawStateKernelCurve s) destination)
+  have hforward :
+      ∀ e destination,
+        AnalyticAt ℝ (fun t => forward e t destination) 0 := by
+    intro e destination
+    exact
+      (analyticAt_pi_iff.mp
+        (analyticAt_pi_iff.mp
+          (analyticAt_pi_iff.mp
+            (analyticAt_pi_iff.mp
+              germ.analytic_rawPureDeviationStateKernelCurve e.2.1)
+            e.1) e.2.2) destination)
+  have hmass :
+      ∀ e,
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          ∑ destination, forward e t destination =
+            ∑ destination, baseline (source e) t destination := by
+    intro e
+    filter_upwards [Ioo_mem_nhdsGT germ.radius_pos] with t ht
+    calc
+      (∑ destination, forward e t destination) =
+          ∑ destination,
+            (G.finkPureDeviationStateKernel
+              (germ.finkPointAt ht) e.2.1 e.1 e.2.2 destination).toReal := by
+        apply Finset.sum_congr rfl
+        intro destination _
+        exact
+          germ.rawPureDeviationStateKernelCurve_eq_finkPointAt
+            ht e.2.1 e.1 e.2.2 destination
+      _ = 1 :=
+        Math.Probability.pmf_toReal_sum_one
+          (G.finkPureDeviationStateKernel
+            (germ.finkPointAt ht) e.2.1 e.1 e.2.2)
+      _ =
+          ∑ destination,
+            (G.finkStateKernel
+              (germ.finkPointAt ht) e.2.1 destination).toReal :=
+        (Math.Probability.pmf_toReal_sum_one
+          (G.finkStateKernel
+            (germ.finkPointAt ht) e.2.1)).symm
+      _ = ∑ destination, baseline (source e) t destination := by
+        apply Finset.sum_congr rfl
+        intro destination _
+        exact
+          (germ.rawStateKernelCurve_eq_finkStateKernel
+            ht e.2.1 destination).symm
+  have hweight : ∀ e, AnalyticAt ℝ (weight e) 0 := by
+    intro e
+    exact analyticAt_pi_iff.mp hsigned (Sum.inr e)
+  have hcharge : ∀ e, AnalyticAt ℝ (charge e) 0 := by
+    intro e
+    exact germ.analytic_rawFinkObstructionMass
+      supported H K (Sum.inr e)
+  have htotal :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        (1 : ℝ) * t ^ poleOrder ≤
+          ∑ e, weight e t * charge e t := by
+    filter_upwards [hsignedFlow] with t ht
+    have hmass_eq := ht.2.2
+    rw [Fintype.sum_sum_type] at hmass_eq
+    have haction :
+        (∑ e,
+            germ.rawFinkObstructionMass supported H K t (Sum.inr e) *
+              signed t (Sum.inr e)) =
+          t ^ poleOrder := by
+      simpa only [rawFinkObstructionMass, zero_mul,
+        Finset.sum_const_zero, zero_add] using hmass_eq
+    rw [one_mul]
+    apply le_of_eq
+    calc
+      t ^ poleOrder =
+          ∑ e,
+            germ.rawFinkObstructionMass supported H K t (Sum.inr e) *
+              signed t (Sum.inr e) :=
+        haction.symm
+      _ = ∑ e, weight e t * charge e t := by
+        apply Finset.sum_congr rfl
+        intro e _
+        simp only [weight, charge]
+        ring
+  obtain ⟨e, positive, weightOrder, kappa, hkappa,
+      hevidence, htransition⟩ :=
+    exists_fixed_oriented_analytic_stochastic_response_curve
+      baseline source forward weight charge
+      hbaseline hforward hmass hweight hcharge
+      (C := (1 : ℝ)) (K := poleOrder) (by norm_num) htotal
+  exact ⟨{
+    supported := supported
+    poleOrder := poleOrder
+    signed := signed
+    analytic_signed := hsigned
+    eventual_flow := hsignedFlow
+    response := e
+    positive := positive
+    weightOrder := weightOrder
+    kappa := kappa
+    kappa_pos := hkappa
+    eventual_charge := by
+      simpa only [weight, charge, one_mul] using hevidence
+    transition := by
+      simpa only [baseline, source, forward] using htransition }⟩
+
+namespace AnalyticOrientedFinkObstructionResponse
+
+/-- The selected response belongs to the stabilized support. Otherwise its
+target charge would vanish identically, contradicting the positive
+power-law lower bound. -/
+theorem response_supported
+    {germ : G.AnalyticBellmanGerm}
+    {H K : G.State → Payoff ι}
+    (C : AnalyticOrientedFinkObstructionResponse germ H K) :
+    C.supported C.response = true := by
+  by_contra hunsupported
+  have hfalse : C.supported C.response = false :=
+    Bool.eq_false_of_not_eq_true hunsupported
+  obtain ⟨t, hevidence, ht⟩ :=
+    (C.eventual_charge.and self_mem_nhdsWithin).exists
+  have hlower_pos :
+      0 < C.kappa * t ^ C.weightOrder :=
+    mul_pos C.kappa_pos (pow_pos ht C.weightOrder)
+  have hmass_zero :
+      germ.rawFinkObstructionMass C.supported H K t
+          (Sum.inr C.response) = 0 := by
+    simp [rawFinkObstructionMass, hfalse]
+  simp only [hmass_zero, mul_zero] at hevidence
+  exact (not_le_of_gt hlower_pos) hevidence.2.2
+
+/-- Correct decomposition of the selected obstruction charge.
+
+The positive total Bellman charge may be carried by the stage term even
+when the action changes the transition law. Therefore the stage branch does
+not assume transition invisibility. In the continuation branch the whole
+transition-value pairing, rather than an unrelated coordinate contrast, is
+proved positive with a power-law margin. -/
+theorem stageCharge_or_continuationCharge
+    {germ : G.AnalyticBellmanGerm}
+    {H K : G.State → Payoff ι}
+    (C : AnalyticOrientedFinkObstructionResponse germ H K) :
+    (∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      (C.kappa / 2) * t ^ C.weightOrder ≤
+        responseOrientation C.positive *
+          germ.rawPureDeviationStageGainCurve
+            t C.response.2.1 C.response.1 C.response.2.2) ∨
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        (C.kappa / 2) * t ^ C.weightOrder ≤
+          responseOrientation C.positive *
+            germ.rawPureDeviationContinuationGainCurve
+              (H - K) t C.response.2.1
+                C.response.1 C.response.2.2 := by
+  let stage : ℝ → ℝ := fun t =>
+    responseOrientation C.positive *
+      germ.rawPureDeviationStageGainCurve
+        t C.response.2.1 C.response.1 C.response.2.2
+  let continuation : ℝ → ℝ := fun t =>
+    responseOrientation C.positive *
+      germ.rawPureDeviationContinuationGainCurve
+        (H - K) t C.response.2.1 C.response.1 C.response.2.2
+  have hstage : AnalyticAt ℝ stage 0 := by
+    exact analyticAt_const.mul
+      (analyticAt_pi_iff.mp
+        (analyticAt_pi_iff.mp
+          (analyticAt_pi_iff.mp
+            germ.analytic_rawPureDeviationStageGainCurve
+            C.response.2.1) C.response.1) C.response.2.2)
+  have hcontinuation : AnalyticAt ℝ continuation 0 := by
+    exact analyticAt_const.mul
+      (analyticAt_pi_iff.mp
+        (analyticAt_pi_iff.mp
+          (analyticAt_pi_iff.mp
+            (germ.analytic_rawPureDeviationContinuationGainCurve
+              (H - K)) C.response.2.1) C.response.1)
+        C.response.2.2)
+  have htotal :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        C.kappa * t ^ C.weightOrder ≤
+          stage t + continuation t := by
+    filter_upwards [C.eventual_charge] with t ht
+    simpa only [stage, continuation, rawFinkObstructionMass,
+      C.response_supported, if_true, mul_add] using ht.2.2
+  simpa only [stage, continuation] using
+    analytic_sum_powerCharge_left_or_right
+      hstage hcontinuation htotal
+
+/-- A transition-invisible selected response carries its entire obstruction
+margin in the stage term. -/
+theorem stageCharge_of_transitionInvisible
+    {germ : G.AnalyticBellmanGerm}
+    {H K : G.State → Payoff ι}
+    (C : AnalyticOrientedFinkObstructionResponse germ H K)
+    (hinvisible :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ destination,
+          germ.rawPureDeviationStateKernelCurve
+              t C.response.2.1 C.response.1 C.response.2.2 destination =
+            germ.rawStateKernelCurve
+              t C.response.2.1 destination) :
+    ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      C.kappa * t ^ C.weightOrder ≤
+        responseOrientation C.positive *
+          germ.rawPureDeviationStageGainCurve
+            t C.response.2.1 C.response.1 C.response.2.2 := by
+  filter_upwards [C.eventual_charge, hinvisible] with t hevidence hsame
+  have hcontinuation :
+      germ.rawPureDeviationContinuationGainCurve
+          (H - K) t C.response.2.1
+            C.response.1 C.response.2.2 = 0 := by
+    unfold rawPureDeviationContinuationGainCurve
+    apply Finset.sum_eq_zero
+    intro destination _
+    rw [hsame destination, sub_self, zero_mul]
+  simpa only [rawFinkObstructionMass, C.response_supported, if_true,
+    hcontinuation, add_zero] using hevidence.2.2
+
+/-- At every valid positive parameter, the response selected from the
+analytic obstruction enters the exact actual-flow alternative.
+
+The circulation branch uses only genuinely available baseline and pure
+deviation transitions. In the other branch, a Euclidean-unit potential is
+subharmonic for every unselected transition and has strict positive drift
+on the selected response. -/
+theorem circulation_xor_unitPotentialAt
+    {germ : G.AnalyticBellmanGerm}
+    {H K : G.State → Payoff ι}
+    (C : AnalyticOrientedFinkObstructionResponse germ H K)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius) :
+    let z := germ.finkPointAt ht
+    Xor
+      (HasPositiveCirculation
+        (stochasticOccupationColumn
+          (G.finkStateKernel z)
+          (fun e : Σ who : ι, G.State × G.Act who =>
+            G.finkPureDeviationStateKernel
+              z e.2.1 e.1 e.2.2)
+          (fun e : Σ who : ι, G.State × G.Act who => e.2.1))
+        (Sum.inr C.response))
+      (∃ h : G.State → ℝ,
+        (∑ destination, h destination ^ 2) = 1 ∧
+        (∀ s,
+          0 ≤
+            expect (G.finkStateKernel z s) h - h s) ∧
+        (∀ e : Σ who : ι, G.State × G.Act who,
+          e ≠ C.response →
+            0 ≤
+              expect
+                  (G.finkPureDeviationStateKernel
+                    z e.2.1 e.1 e.2.2) h -
+                h e.2.1) ∧
+        0 <
+          expect
+              (G.finkPureDeviationStateKernel
+                z C.response.2.1 C.response.1 C.response.2.2) h -
+            h C.response.2.1) := by
+  dsimp only
+  exact controlledEdgeCirculation_xor_unitPotential
+    (G.finkStateKernel (germ.finkPointAt ht))
+    (fun e : Σ who : ι, G.State × G.Act who =>
+      G.finkPureDeviationStateKernel
+        (germ.finkPointAt ht) e.2.1 e.1 e.2.2)
+    (fun e : Σ who : ι, G.State × G.Act who => e.2.1)
+    C.response
+
+end AnalyticOrientedFinkObstructionResponse
 
 end AnalyticBellmanGerm
 end StochasticGame

@@ -51,6 +51,111 @@ theorem responseOrientation_eq_one_or_neg_one (positive : Bool) :
       responseOrientation positive = -1 := by
   cases positive <;> simp
 
+/-- If a power-law lower bound is carried by the sum of two analytic
+germs, then one fixed summand carries half that lower bound.
+
+Analyticity is used only to stabilize the comparison between the two
+summands. No sign assumption on either summand is required. -/
+theorem analytic_sum_powerCharge_left_or_right
+    {left right : ℝ → ℝ}
+    (hleft : AnalyticAt ℝ left 0)
+    (hright : AnalyticAt ℝ right 0)
+    {c : ℝ} {n : ℕ}
+    (hsum :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        c * t ^ n ≤ left t + right t) :
+    (∀ᶠ t in nhdsWithin 0 (Ioi 0),
+      (c / 2) * t ^ n ≤ left t) ∨
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        (c / 2) * t ^ n ≤ right t := by
+  rcases analyticAt_eventually_eq_or_lt_or_gt hleft hright with
+    heq | hleft_lt | hright_lt
+  · left
+    filter_upwards [hsum, heq] with t hsum_t heq_t
+    rw [heq_t] at hsum_t
+    linarith
+  · right
+    filter_upwards [hsum, hleft_lt] with t hsum_t hlt_t
+    linarith
+  · left
+    filter_upwards [hsum, hright_lt] with t hsum_t hlt_t
+    linarith
+
+/-- A nonzero finite analytic zero-sum family has one fixed coordinate
+which is eventually positive with a power-law lower bound. -/
+theorem exists_coordinate_powerCharge_of_analytic_zeroSum
+    {S : Type*} [Fintype S]
+    (f : S → ℝ → ℝ)
+    (hf : ∀ x, AnalyticAt ℝ (f x) 0)
+    (hsum :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∑ x, f x t = 0)
+    (hne :
+      ¬∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ x, f x t = 0) :
+    ∃ x n c, 0 < c ∧
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        c * t ^ n ≤ f x t ∧
+          0 < f x t := by
+  classical
+  let family : Option S → ℝ → ℝ
+    | none => fun _ => 0
+    | some x => f x
+  have hfamily :
+      ∀ index, AnalyticAt ℝ (family index) 0 := by
+    intro index
+    cases index with
+    | none => exact analyticAt_const
+    | some x => exact hf x
+  obtain ⟨R, hstable⟩ :=
+    Math.finite_analytic_family_eventually_stable
+      family hfamily
+  have hex :
+      ∃ t,
+        (∀ i j, family i t ≤ family j t ↔ R i j) ∧
+          (∑ x, f x t = 0) ∧
+          ¬∀ x, f x t = 0 := by
+    by_contra h
+    push Not at h
+    apply hne
+    filter_upwards [hstable, hsum] with t htstable htsum
+    exact h t htstable htsum
+  obtain ⟨t, htstable, htsum, htnonzero⟩ := hex
+  have hpositive : ∃ x, 0 < f x t := by
+    by_contra h
+    push Not at h
+    have hzero :
+        (fun x => f x t) = 0 :=
+      (Fintype.sum_eq_zero_iff_of_nonpos h).mp htsum
+    exact htnonzero fun x => congrFun hzero x
+  obtain ⟨x, hx⟩ := hpositive
+  have hRpositive : R none (some x) := by
+    apply (htstable none (some x)).mp
+    simpa [family] using hx.le
+  have hRnotNonpositive : ¬R (some x) none := by
+    intro hR
+    have hxle :=
+      (htstable (some x) none).mpr hR
+    have : f x t ≤ 0 := by
+      simpa [family] using hxle
+    exact (not_le_of_gt hx) this
+  have heventuallyPositive :
+      ∀ᶠ y in nhdsWithin 0 (Ioi 0),
+        0 < f x y := by
+    filter_upwards [hstable] with y hystable
+    have hynot : ¬f x y ≤ 0 := by
+      intro hyle
+      apply hRnotNonpositive
+      apply (hystable (some x) none).mp
+      simpa [family] using hyle
+    exact lt_of_not_ge hynot
+  obtain ⟨n, c, hc, hpower⟩ :=
+    Math.analyticAt_eventually_const_mul_pow_le_of_eventually_pos
+      (hf x) heventuallyPositive
+  refine ⟨x, n, c, hc, ?_⟩
+  filter_upwards [hpower, heventuallyPositive] with y hpower_y hpos_y
+  simpa only [sub_zero] using And.intro hpower_y hpos_y
+
 /-- A fixed analytic member carries at least the average of any finite
 analytic family, even when the other members have arbitrary signs. -/
 theorem exists_fixed_analytic_average_charge
@@ -74,7 +179,7 @@ theorem exists_fixed_analytic_average_charge
 
 /-- Analytic extraction of one fixed oriented response.
 
-The exponent `L` and constant `kappa` work simultaneously for the absolute
+The exponent `L` and constant `kappa` work simultaneously for the oriented
 weight and the oriented stage charge. The first inequality records the
 stronger average-share conclusion for their product. -/
 theorem exists_fixed_oriented_analytic_response
@@ -90,7 +195,8 @@ theorem exists_fixed_oriented_analytic_response
       ∀ᶠ t in nhdsWithin 0 (Ioi 0),
         (Fintype.card E : ℝ)⁻¹ * (C * t ^ K) ≤
             weight e t * charge e t ∧
-          kappa * t ^ L ≤ |weight e t| ∧
+          kappa * t ^ L ≤
+            responseOrientation positive * weight e t ∧
           kappa * t ^ L ≤
             responseOrientation positive * charge e t := by
   let term : E → ℝ → ℝ := fun e t => weight e t * charge e t
@@ -181,8 +287,7 @@ theorem exists_fixed_oriented_analytic_response
     have hcp_t' : cc * t ^ nc ≤ -charge e t := by
       simpa only [sub_zero] using hcp_t
     refine ⟨hp_t.1, ?_, ?_⟩
-    · rw [abs_of_neg hw_t]
-      exact hkw.trans hwp_t'
+    · simpa [responseOrientation] using hkw.trans hwp_t'
     · simpa [responseOrientation] using hkc.trans hcp_t'
   · have hcharge_positive :
         ∀ᶠ t in nhdsWithin 0 (Ioi 0), 0 < charge e t := by
@@ -226,9 +331,66 @@ theorem exists_fixed_oriented_analytic_response
     have hcp_t' : cc * t ^ nc ≤ charge e t := by
       simpa only [sub_zero] using hcp_t
     refine ⟨hp_t.1, ?_, ?_⟩
-    · rw [abs_of_pos hw_t]
-      exact hkw.trans hwp_t'
+    · simpa [responseOrientation] using hkw.trans hwp_t'
     · simpa [responseOrientation] using hkc.trans hcp_t'
+
+/-- A positive analytic pairing against a zero-sum coordinate family has
+one fixed oriented coordinate and one fixed value contrast carrying a
+power-law share.
+
+The value anchor may be chosen arbitrarily. Zero total coordinate mass
+removes the anchor term, so the sum of the coordinate/contrast products is
+the original pairing. This proves the continuation contribution directly;
+it does not infer it from two unrelated coordinate inequalities. -/
+theorem exists_fixed_oriented_analytic_zeroSum_pairing
+    {S : Type*} [Fintype S] [Nonempty S]
+    (difference value : S → ℝ → ℝ)
+    (hdifference :
+      ∀ x, AnalyticAt ℝ (difference x) 0)
+    (hvalue :
+      ∀ x, AnalyticAt ℝ (value x) 0)
+    (hzero :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∑ x, difference x t = 0)
+    {C : ℝ} {K : ℕ} (hC : 0 < C)
+    (hpairing :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        C * t ^ K ≤
+          ∑ x, difference x t * value x t) :
+    ∃ x y positive L kappa, 0 < kappa ∧
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        (Fintype.card S : ℝ)⁻¹ * (C * t ^ K) ≤
+            difference x t * (value x t - value y t) ∧
+          kappa * t ^ L ≤
+            responseOrientation positive * difference x t ∧
+          kappa * t ^ L ≤
+            responseOrientation positive *
+              (value x t - value y t) := by
+  let y : S := Classical.choice (inferInstance : Nonempty S)
+  let weight : S → ℝ → ℝ := difference
+  let charge : S → ℝ → ℝ := fun x t =>
+    value x t - value y t
+  have hweight : ∀ x, AnalyticAt ℝ (weight x) 0 :=
+    hdifference
+  have hcharge : ∀ x, AnalyticAt ℝ (charge x) 0 := by
+    intro x
+    exact (hvalue x).sub (hvalue y)
+  have htotal :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        C * t ^ K ≤ ∑ x, weight x t * charge x t := by
+    filter_upwards [hzero, hpairing] with t hzero_t hpairing_t
+    calc
+      C * t ^ K ≤ ∑ x, difference x t * value x t :=
+        hpairing_t
+      _ = ∑ x, weight x t * charge x t := by
+        simp only [weight, charge, mul_sub,
+          Finset.sum_sub_distrib]
+        rw [← Finset.sum_mul, hzero_t, zero_mul, sub_zero]
+  obtain ⟨x, positive, L, kappa, hkappa, hevidence⟩ :=
+    exists_fixed_oriented_analytic_response
+      weight charge hweight hcharge hC htotal
+  exact ⟨x, y, positive, L, kappa, hkappa, by
+    simpa only [weight, charge] using hevidence⟩
 
 /-- A prescribed orientation detects some coordinate of any two distinct
 finite PMFs. Both orientations work because the coordinate differences sum
@@ -324,7 +486,8 @@ theorem exists_fixed_oriented_analytic_stochastic_response
       (∀ᶠ t in nhdsWithin 0 (Ioi 0),
         (Fintype.card E : ℝ)⁻¹ * (C * t ^ K) ≤
             weight e t * charge e t ∧
-          kappa * t ^ L ≤ |weight e t| ∧
+          kappa * t ^ L ≤
+            responseOrientation positive * weight e t ∧
           kappa * t ^ L ≤
             responseOrientation positive * charge e t) ∧
       (forward e = baseline (source e) ∨
@@ -344,6 +507,95 @@ theorem exists_fixed_oriented_analytic_stochastic_response
   exact ⟨e, positive, L, kappa, hkappa, hextract,
     pmf_orientedResponse_visible_or_invisible
       (baseline (source e)) (forward e) positive⟩
+
+/-- Analytic-kernel form of oriented stochastic response extraction.
+
+The selected response is fixed across the punctured germ. Its baseline and
+forward kernel curves are either identical as right germs, or one fixed
+oriented destination coordinate has its own positive power-law drift. -/
+theorem exists_fixed_oriented_analytic_stochastic_response_curve
+    {S E : Type*} [Fintype S] [Fintype E] [Nonempty E]
+    (baseline : S → ℝ → S → ℝ)
+    (source : E → S)
+    (forward : E → ℝ → S → ℝ)
+    (weight charge : E → ℝ → ℝ)
+    (hbaseline :
+      ∀ s x, AnalyticAt ℝ (fun t => baseline s t x) 0)
+    (hforward :
+      ∀ e x, AnalyticAt ℝ (fun t => forward e t x) 0)
+    (hmass :
+      ∀ e,
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          ∑ x, forward e t x =
+            ∑ x, baseline (source e) t x)
+    (hweight : ∀ e, AnalyticAt ℝ (weight e) 0)
+    (hcharge : ∀ e, AnalyticAt ℝ (charge e) 0)
+    {C : ℝ} {K : ℕ} (hC : 0 < C)
+    (htotal :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        C * t ^ K ≤ ∑ e, weight e t * charge e t) :
+    ∃ e positive L kappa, 0 < kappa ∧
+      (∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        (Fintype.card E : ℝ)⁻¹ * (C * t ^ K) ≤
+            weight e t * charge e t ∧
+          kappa * t ^ L ≤
+            responseOrientation positive * weight e t ∧
+          kappa * t ^ L ≤
+            responseOrientation positive * charge e t) ∧
+      ((∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          ∀ x,
+            forward e t x =
+              baseline (source e) t x) ∨
+        ∃ x n c, 0 < c ∧
+          ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+            c * t ^ n ≤
+                responseOrientation positive *
+                  (forward e t x -
+                    baseline (source e) t x) ∧
+              0 <
+                responseOrientation positive *
+                  (forward e t x -
+                    baseline (source e) t x)) := by
+  obtain ⟨e, positive, L, kappa, hkappa, hextract⟩ :=
+    exists_fixed_oriented_analytic_response
+      weight charge hweight hcharge hC htotal
+  refine ⟨e, positive, L, kappa, hkappa, hextract, ?_⟩
+  by_cases hsame :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ x,
+          forward e t x =
+            baseline (source e) t x
+  · exact Or.inl hsame
+  · right
+    let difference : S → ℝ → ℝ := fun x t =>
+      responseOrientation positive *
+        (forward e t x - baseline (source e) t x)
+    have hdifference :
+        ∀ x, AnalyticAt ℝ (difference x) 0 := by
+      intro x
+      exact analyticAt_const.mul
+        ((hforward e x).sub (hbaseline (source e) x))
+    have hsum :
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          ∑ x, difference x t = 0 := by
+      filter_upwards [hmass e] with t ht
+      simp only [difference, ← Finset.mul_sum,
+        Finset.sum_sub_distrib, ht, sub_self, mul_zero]
+    have hne :
+        ¬∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          ∀ x, difference x t = 0 := by
+      intro hzero
+      apply hsame
+      filter_upwards [hzero] with t ht
+      intro x
+      have horientation :
+          responseOrientation positive ≠ 0 := by
+        cases positive <;> norm_num [responseOrientation]
+      exact sub_eq_zero.mp
+        ((mul_eq_zero.mp (ht x)).resolve_left horientation)
+    simpa only [difference] using
+      exists_coordinate_powerCharge_of_analytic_zeroSum
+        difference hdifference hsum hne
 
 end StochasticGame
 end GameTheory
