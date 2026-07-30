@@ -128,6 +128,7 @@ import GameTheory.Concepts.Stochastic.PublicTerminalChildDispatcher
 import GameTheory.Concepts.Stochastic.PublicTerminalChildLawTransfer
 import GameTheory.Concepts.Stochastic.PublicTerminalChildAdaptivePotential
 import GameTheory.Concepts.Stochastic.FiniteChildAdaptivePotentialFamily
+import GameTheory.Concepts.Stochastic.FiniteChildTargetAlternative
 import GameTheory.Concepts.Stochastic.PublicLocalResponseRecursion
 import GameTheory.Concepts.Stochastic.AdaptiveLocalResponseRecursion
 import GameTheory.Concepts.Stochastic.AdaptiveLocalResponseAtlas
@@ -228,6 +229,7 @@ import GameTheory.Concepts.Stochastic.FinitePublicCoinStoppedExpectation
 import GameTheory.Concepts.Stochastic.JointlyControlledPublicXor
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassTarget
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassSupportRank
+import GameTheory.Concepts.Stochastic.FullSupportTerminalBranchObstruction
 import Math.Probability.EntryReachableChargedClass
 import Math.Probability.EntryReachableDistinguishedCirculation
 import Math.Probability.PositiveChargedCirculationClass
