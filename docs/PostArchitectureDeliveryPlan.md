@@ -301,7 +301,7 @@ lanes may harvest in parallel after their lead definitions are checked.
 | potential and congestion | finite-improvement, harmonic/decomposition results, Rosenthal, affine price of anarchy | Rosenthal exact potential and finite pure-Nash existence | `Core.Potential`, then a thin congestion domain |
 | welfare | individual rationality, smoothness, price of anarchy | a smoothness price-of-anarchy bound stated on the canonical utility game | `Core` or a stable welfare root |
 | zero/constant sum | security, matrix games, complementarity, correlation | minimax/security equivalence and one constant-sum correlation result | `Core.ZeroSum`; existence in `Analysis` |
-| communication | babbling and cheap talk with public randomness | babbling equilibrium through the ordinary equilibrium predicate | static consumer; Protocol only if timing matters |
+| communication | observable one-stage babbling delivered; public randomness and staged cheap talk remain | babbling equilibrium through the ordinary equilibrium predicate | static construction validated by EXP-046/D18; Protocol only when theorem-observable timing matters |
 | mechanisms and finite auctions | Vickrey, first-price, reserve, VCG, combinatorial and all-pay | `n`-bidder truthful Vickrey/VCG plus one false first-price claim | coordinated mechanism/auction root |
 | social choice and voting | May, median voter, Gibbard-Satterthwaite, delegation, liquid democracy | one rule theorem and one strategic theorem without conflating rankings with lotteries | `Core` foundations plus coordinated voting modules |
 
@@ -320,7 +320,7 @@ surface syntax.
 
 | Lane | First gate | Recovery after the gate |
 |---|---|---|
-| NFG | **passed and accounted:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified, with eight substantive cross-family rows routed to D-COMM, S-MIX, S-CORR, and S-ZERO | broad example recovery is complete; deliver the routed communication and mixed/correlation theorems in their owning lanes |
+| NFG | **passed and accounted:** EXP-042/T4 validates compilation; all 126 pinned declarations are classified, with four substantive cross-family rows routed to S-MIX, S-CORR, and S-ZERO | broad example and observable cheap-talk recovery are complete; deliver the routed mixed/correlation theorems in their owning lanes |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
 | FOSG | **passed (EXP-042/T4):** real source players act simultaneously through Protocol; phase-only local views cannot observe an opponent's current action; exact outcome and utility laws commute | reachable histories, terminal laws, richer observations, strategies, values, and named EFG comparison |
@@ -534,9 +534,10 @@ The next work is ordered:
 2. consolidate moving delivery probes without rewriting historical phase
    measurements;
 3. resume the broader revelation/information-design inventory and open the
-   static learning/communication and congestion harvest lanes;
-4. continue broad FOSG recovery and open the D-COMM/S-MIX/S-CORR consumers
-   routed by the completed NFG ledger;
+   static learning and congestion harvest lanes;
+4. continue broad FOSG recovery, extend D-COMM from observable one-stage
+   babbling to public randomness and Electronic Mail, and open the
+   S-MIX/S-CORR consumers routed by the completed NFG ledger;
 5. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
 6. admit no Frontier implementation until the first three items have an active

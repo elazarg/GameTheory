@@ -56,6 +56,7 @@ becomes difficult to scan.
 | EXP-043 | 2026-07-30 | D0 / knowledge ownership | Is Protocol information already an epistemic partition, or does Aumann agreement need a separate branch? | Refutes Protocol ownership; decides D16 | [`decisions/D16-epistemic-ownership.md`](decisions/D16-epistemic-ownership.md); `GameTheory/Epistemic/`; `GameTheory/Experimental/PostArchitecture/KnowledgeOwnership.lean` |
 | EXP-044 | 2026-07-30 | D0 / evolutionary ownership | Is ESS static Core semantics or part of an analytic dynamics package? | Supports separate static branch; decides D17 | [`decisions/D17-evolutionary-ownership.md`](decisions/D17-evolutionary-ownership.md); `GameTheory/Evolutionary/`; `GameTheory/Experimental/PostArchitecture/EvolutionaryOwnership.lean` |
 | EXP-045 | 2026-07-30 | D8 / Wave 1 close-out | What is the smallest consumer-backed transformation API that closes reindexing, relabeling, mixed lifting, Nash, and CE transport? | Supports concrete equivalences; decides D8 | [`decisions/D8-minimal-transformations.md`](decisions/D8-minimal-transformations.md); `GameTheory/Experimental/PostArchitecture/D8Transformations.lean` |
+| EXP-046 | 2026-07-30 | D0/D5/D6 / communication ownership | Is observable pre-play cheap talk a static `GameForm` construction, or must even the babbling theorem use Protocol timing? | Supports static ownership; decides D18; promoted | [`decisions/D18-communication-ownership.md`](decisions/D18-communication-ownership.md); `GameTheory/Experimental/PostArchitecture/CheapTalk.lean`; `GameTheory/Core/CheapTalk.lean`; `GameTheory/Examples/CheapTalk.lean` |
 
 ## Entry template
 
@@ -2991,3 +2992,68 @@ memory.
   laws and rejects both game-semantic probes. Phase 3 records the single
   intended MAID use. The full project builds in 3,355 jobs, and every promoted
   flagship retains the standard axiom profile. W1-H is complete.
+
+### EXP-046: ownership of observable pre-play cheap talk
+
+- **Date / revision:** 2026-07-30, working tree based on `ec81e80`
+- **Status:** supports static ownership; decides D18
+- **Decision / question:** D0/D5/D6 and D-COMM; whether the observable
+  cheap-talk extension needed by the NFG babbling examples is a static
+  strategy enrichment of `GameForm`, or whether its message-before-action
+  timing forces ownership by Protocol.
+- **Prediction:** for the pure babbling theorem, the enriched strategy can be
+  a message plus a contingent base strategy over the public message profile.
+  Its play law is the base form evaluated at the realized contingent actions.
+  The ordinary `IsNash` predicate should then prove babbling by projecting an
+  arbitrary enriched unilateral deviation to the base action it induces
+  against default messages. Protocol is earned only by a theorem that observes
+  intermediate message histories or randomizes during the communication
+  stage.
+- **Representative slice:** a two-message Battle-of-the-Sexes extension in
+  which the deviator may change both its message and its entire contingent
+  action plan. Embed the opera and football equilibria as babbling profiles
+  and prove both with ordinary `IsNash`.
+- **Competing designs:** a static `GameForm` construction with a generic
+  babbling theorem; a two-stage `ExecutionProtocol` with a compilation theorem;
+  or an inert-extension abstraction that forgets the communication-specific
+  strategy shape.
+- **Measurements to collect:** source/import surface; focused and full build
+  jobs; whether the proof uses only `Profile.update`; whether any second
+  equilibrium predicate, stored finiteness, transport, or Protocol dependency
+  appears; axiom profile; and whether the hostile contingent-plan deviation is
+  discharged generically.
+- **Kill conditions:** a static construction cannot represent the arbitrary
+  contingent-plan deviation; the babbling proof needs intermediate histories;
+  the extension introduces another Nash predicate or evaluator; direct
+  `Function.update`, user-visible dependent transport, stored finite
+  capabilities, or a reverse Core-to-Protocol import is required.
+- **Evidence:** the 141-nonblank-line experiment has 20 declarations and one
+  authored import, `GameTheory.Examples.Classic`. Its generic construction
+  depends only on the static form/equilibrium closure brought by that example;
+  it imports no Protocol or Analysis module. The focused target builds in
+  1,738 jobs.
+- **Observation:** the arbitrary enriched deviation changes both its message
+  and its complete contingent plan. `actionProfile_update_embedProfile`
+  nevertheless proves that the induced base profile is exactly one canonical
+  `Profile.update`; the preference-parametric babbling theorem then closes by
+  the ordinary `isNash_iff` characterization. Both Battle-of-the-Sexes
+  equilibria instantiate it without further payoff reasoning.
+- **Measurements:** source scans find zero placeholders, native decisions,
+  direct `Function.update`, transports, `HEq`, stored finite capabilities,
+  `open Classical`, or custom axioms. The generic theorem and both witnesses
+  use only `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports the prediction and decides D18. Observable one-stage
+  pre-play cheap talk is a static `GameForm` strategy enrichment. Protocol
+  remains the owner only when a theorem observes message histories, staged
+  rounds, or during-play randomization. The inert-extension competitor is too
+  weak as the public construction because it erases the message/plan shape.
+- **Promotion:** `GameTheory/Core/CheapTalk.lean` contains the 17-declaration
+  generic construction; `GameTheory/Examples/CheapTalk.lean` contains the
+  concrete extension and two witnesses. The focused build passes in 1,739
+  jobs and the full project in 3,361 jobs. Phase 2 verifies the original
+  transport budget, zero forbidden Core imports, positive reachability of
+  both public cheap-talk symbols, and rejection of all four Protocol/Analysis
+  boundary probes. The generic theorem and both examples retain the standard
+  `propext`, `Classical.choice`, and `Quot.sound` axiom profile.
+- **Next action:** inventory the whole D-COMM family, then test public
+  randomness and Electronic Mail against the static/Protocol timing boundary.

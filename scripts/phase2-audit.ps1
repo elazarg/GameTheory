@@ -178,7 +178,8 @@ Report 'CUSTOM_AXIOM' (Count-Pattern $TrustedFiles '(?m)^\s*axiom\s')
 
 $CoreFiles = @(Select-Files 'GameTheory/Core') + @('GameTheory/Core.lean') +
   @(Select-Files 'GameTheory/Probability')
-$CoreForbidden = 'GameTheory\.Finite|GameTheory\.Languages|GameTheory\.Frontier|' +
+$CoreForbidden = 'GameTheory\.Finite|GameTheory\.Languages|GameTheory\.Protocol|' +
+  'GameTheory\.Frontier|' +
   'GameTheory\.Challenges|GameTheory\.Experimental|Mathlib\.Analysis|Mathlib\.Topology|' +
   'Mathlib\.Dynamics|Mathlib\.Geometry'
 $coreBad = 0
@@ -507,6 +508,34 @@ if (-not $SkipReachability) {
   }
   Report 'CORE_EVOLUTIONARY_PROBES_REJECTED' $coreEvolutionaryRejected
 
+  # D18 makes observable one-stage cheap talk a static Core construction.
+  # The public root must expose the extension and its ordinary Nash theorem
+  # without also acquiring Protocol timing or analytic existence machinery.
+  $cheapTalkInputs = @(
+    'GameTheory.GameForm.CheapTalkExtension',
+    'GameTheory.GameForm.CheapTalkExtension.babbling_isNash')
+  $cheapTalkBoundary = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Analysis.nash_exists',
+    'stdSimplex',
+    'Polynomial')
+  $cheapTalkOutput =
+    Run-Probe 'GameTheory.Core' ($cheapTalkInputs + $cheapTalkBoundary)
+  $cheapTalkInputsReached = 0
+  foreach ($constant in $cheapTalkInputs) {
+    if (-not (Is-Unreachable $cheapTalkOutput $constant)) {
+      $cheapTalkInputsReached++
+    }
+  }
+  Report 'CHEAP_TALK_INPUT_PROBES_REACHED' $cheapTalkInputsReached
+  $cheapTalkBoundaryRejected = 0
+  foreach ($constant in $cheapTalkBoundary) {
+    if (Is-Unreachable $cheapTalkOutput $constant) {
+      $cheapTalkBoundaryRejected++
+    }
+  }
+  Report 'CHEAP_TALK_BOUNDARY_PROBES_REJECTED' $cheapTalkBoundaryRejected
+
   # D8 exposes only concrete equivalences. The probability laws remain
   # game-free, while the Core root deliberately reaches the preservation
   # theorems that consume them.
@@ -612,6 +641,8 @@ if ($VerifyExpected) {
     $Expected['EVOLUTIONARY_BRIDGE_INPUT_PROBES_REACHED'] = 3
     $Expected['EVOLUTIONARY_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['CORE_EVOLUTIONARY_PROBES_REJECTED'] = 2
+    $Expected['CHEAP_TALK_INPUT_PROBES_REACHED'] = 2
+    $Expected['CHEAP_TALK_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['TRANSFORM_INPUT_PROBES_REACHED'] = 6
     $Expected['PROBABILITY_REINDEX_INPUT_PROBES_REACHED'] = 2
     $Expected['PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED'] = 2

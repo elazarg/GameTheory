@@ -23,6 +23,7 @@ import GameTheory.Core.Rank
 import GameTheory.Core.Preference
 import GameTheory.Core.Deviation
 import GameTheory.Core.Equilibrium
+import GameTheory.Core.CheapTalk
 import GameTheory.Core.Utility
 import GameTheory.Core.Learning
 import GameTheory.Core.Response

@@ -121,7 +121,7 @@ declaration-based.
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
 | D-LEARN | `Concepts/Learning/**` | 8 | stable static consumer; limits in `Analysis` | validated by F2 | partial | inventory regret algorithms, then fictitious play on a potential game |
-| D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | assigned | not started | babbling equilibrium without a second solution concept |
+| D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | observable one-stage cheap talk validated by EXP-046/D18 | partial | exact family inventory; public randomness and Electronic Mail must choose static or Protocol ownership from theorem-observable timing |
 | D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | complete; 62/62 declarations accounted | [finite and approximate common-knowledge ledger](coverage/D-KNOW-aumann.md); private mass machinery and the public quantitative bound build |
 | D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic and finite public-signal theory | partial | monitoring equilibrium/rank hierarchy and uniform results; no infinite realized-path law |
 | D-EVOL | `Concepts/Classes/EvolutionaryStability.lean` | 1 | stable `Evolutionary`; dynamics only in future opt-in Analysis | validated by EXP-044/D17 | complete | [nine-declaration ledger](coverage/D-EVOL-static.md); no pinned population dynamics to recover |
@@ -130,7 +130,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | validated by EXP-042/T4 | complete accounting; 126/126 reviewed, 8 cross-family rows deferred | [exact declaration ledger](coverage/L-NFG-broad.md); broad examples recovered; cheap talk is owned by D-COMM and the remaining mixed/CE characterizations by S-MIX/S-CORR/S-ZERO |
+| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | validated by EXP-042/T4 | complete accounting; 126/126 reviewed, 4 cross-family rows deferred | [exact declaration ledger](coverage/L-NFG-broad.md); broad examples and observable cheap talk recovered; remaining mixed/CE characterizations are owned by S-MIX/S-CORR/S-ZERO |
 | L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, strategic and Kuhn transfer, nonconstant rationality, and EFG-facing SPE semantics | partial | broad declaration inventory and non-flagship recovery |
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |

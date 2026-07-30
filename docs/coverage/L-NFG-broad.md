@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: complete; 108/108 reviewed, 8 explicitly deferred to owning cross-family gates
+Status: complete; 108/108 reviewed, 4 explicitly deferred to owning cross-family gates
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -20,10 +20,10 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
-| `GameTheory/Languages/NFG/CheapTalkExamples.lean` | `extension` | def | deferred | D-COMM babbling-equilibrium vertical slice | Post-architecture delivery plan communication lane | Reopen with the communication primitive; static timing must use Core, while staged messaging must use Protocol. |
-| same | `game` | abbrev | deferred | D-COMM babbling-equilibrium vertical slice | Post-architecture delivery plan communication lane | The extension's `GameForm` is part of the same named slice, not an NFG-local compiler. |
-| same | `opera_babbling_nash` | theorem | deferred | D-COMM babbling equilibrium through ordinary `IsNash` | `docs/V1CoverageLedger.md` D-COMM gate | Requires the missing communication extension and may not introduce a second equilibrium predicate. |
-| same | `football_babbling_nash` | theorem | deferred | D-COMM babbling equilibrium through ordinary `IsNash` | `docs/V1CoverageLedger.md` D-COMM gate | Second concrete witness for the same communication slice. |
+| `GameTheory/Languages/NFG/CheapTalkExamples.lean` | `extension` | def | adapt | `GameTheory.Examples.CheapTalk.battleMessages` | EXP-046/D18; full build (3,361 jobs) | The concrete message extension uses the canonical static construction; staged messaging remains Protocol-owned. |
+| same | `game` | abbrev | adapt | `GameTheory.Examples.CheapTalk.battleMessages.form` | EXP-046/D18; full build (3,361 jobs) | The extension's `GameForm` is transparent and does not introduce an NFG-local evaluator. |
+| same | `opera_babbling_nash` | theorem | adapt | `GameTheory.Examples.CheapTalk.battleOfTheSexes_opera_babbling_isNash` | EXP-046/D18; full build (3,361 jobs) | Recovered through `GameForm.CheapTalkExtension.babbling_isNash` and ordinary `IsNash`. |
+| same | `football_babbling_nash` | theorem | adapt | `GameTheory.Examples.CheapTalk.battleOfTheSexes_football_babbling_isNash` | EXP-046/D18; full build (3,361 jobs) | Second concrete witness of the same generic theorem. |
 | `GameTheory/Languages/NFG/CountableExample.lean` | `natChoose` | def | adapt | `GameTheory.Examples.NFG.natChoose`; `natChooseUtility` | focused build | Utility is separated from the utility-free NFG syntax; no finite action capability is added. |
 | same | `natChoose_zero` | def | adapt | `GameTheory.Examples.NFG.natChooseZero` | focused build | Canonical `Profile` over the compiled signature. |
 | same | `natChoose_zero_is_nash` | theorem | adapt | `GameTheory.Examples.NFG.natChooseZero_isNash` | focused build | Uses canonical `IsNash` and `euPreference`, not a language-specific predicate. |
