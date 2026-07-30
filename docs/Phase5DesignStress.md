@@ -118,4 +118,10 @@ above it.
 *Sequential equilibrium.* Consistency is a limit of completely mixed behavioral
 profiles, which puts topology on strategies rather than on outcomes — the first
 thing that would want the analytic root to reach *down* into the protocol layer
-rather than up from the static core.
+rather than up from the static core. That theorem is a predicted D12
+renegotiation, not an exception to the current boundary: before any
+implementation, compete and measure a second one-way analytic bridge root that
+imports Protocol and the required topology while Protocol itself remains
+analysis-free. As with the static bridge, negative probes must keep the
+dependency unreachable from Protocol and positive probes must show it is
+actually reachable from the new root.

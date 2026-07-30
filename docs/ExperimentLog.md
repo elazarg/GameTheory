@@ -36,6 +36,7 @@ becomes difficult to scan.
 | EXP-024 | 2026-07-29 | D4 / Phase 5 | Does the core's preference vocabulary serve a theorem with no probability in it, or was it quietly about lotteries? | Finds a defect; repaired | `GameTheory/Core/Preference.lean`; `GameTheory/Core/SocialChoice.lean`; `GameTheory/Examples/Voting.lean` |
 | EXP-023 | 2026-07-29 | D12 / Phase 4 | What does taking the fixed-point primitive from outside Mathlib cost, and does the boundary hold once it is taken? | Supports; reopens general existence | `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
 | EXP-025 | 2026-07-30 | D6 / Phase 5 close-out | Can information-local policies compile to the static core, with randomization and one-shot deviations commuting through the existing run laws? | Supports; narrows SPE remainder | `GameTheory/Protocol/Strategic.lean`; `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Strategic.lean`; `GameTheory/Tests/Assessment.lean` |
+| EXP-026 | 2026-07-30 | D10/D12 / finite certificates | Can an external LP verifier replace hand-expanded rational proofs without widening the trusted base or the audited finite layer? | Narrows; trust passes, adoption does not | [`experiments/EXP-026.md`](experiments/EXP-026.md); [`decisions/D13-lp-certificates.md`](decisions/D13-lp-certificates.md) |
 
 ## Entry template
 
@@ -1541,3 +1542,53 @@ memory.
   for a well-founded `oneShotDeviation_iff_spe`. Do not present initial Nash as
   that target. The compiler, finite-horizon context equivalence, and forward
   global theorem are no longer blockers to the next architecture slice.
+
+### EXP-026: kernel-checked finite LP certificates
+
+- **Date / revision:** 2026-07-30, working tree based on `389bfe8`
+- **Decision / question:** D10/D12; whether `lp-verify`, `lp-tactic`, or neither
+  earns a second external dependency by replacing EXP-007's explicit
+  `norm_num` proofs while leaving certificate search outside the trusted base.
+- **Representative slice:** first replay one closed rational inequality from
+  Matching Pennies, then distinguish that concrete certificate result from the
+  stronger claims of correlated-equilibrium feasibility and finite minimax.
+- **Competing designs:** keep the current enumeration proofs; import the
+  solver-free verifier and check an external certificate; import the tactic but
+  provide certificates out of process; or add a solver backend as a separately
+  measured dependency.
+- **Measurements reserved before import:** toolchain and Mathlib skew; licenses
+  of every transitive package; manifest disturbance; source and theorem axiom
+  profile; `sorry`, `admit`, `unsafe`, `native_decide`, and FFI use; build jobs
+  and platform requirements; import closure with positive and negative
+  reachability probes; certificate size, elaboration time, and authored-proof
+  reduction against the EXP-007 baseline.
+- **Kill conditions:** any checked proof depends on a nonstandard axiom or
+  compiler-trust shortcut; the verifier requires a native backend; the
+  dependency leaks into Core, Protocol, or `Finite.Algorithm`; no compatible
+  pinned revision exists; or the representative proof is not materially
+  smaller or more maintainable than the current proof.
+- **Evidence:** exact pins, source counts, commands, proof snippets, failed
+  goals, and reachability results are preserved in
+  [`experiments/EXP-026.md`](experiments/EXP-026.md); the interpretation is
+  [`decisions/D13-lp-certificates.md`](decisions/D13-lp-certificates.md).
+- **Observation:** trust and containment pass. The verifier, tactic, and
+  pure-Lean backend compile on this project's `v4.32.0`; the verifier's tamper
+  tests pass; all checked soundness and downstream theorems use only
+  `propext`, `Classical.choice`, and `Quot.sound`; and fifteen negative
+  reachability probes pass while three positive LP probes fire. The full
+  solver-free/tactic/pure-backend candidate adds four Apache-2.0 packages,
+  67 Lean files, 9,935 lines, and 49 downstream build jobs including the probe.
+- **Disproof:** the representative game theorem does not become smaller.
+  `by lp` cannot consume `uniformPennies_verify` before the explicit
+  `pennyProfiles`/`sum_pennies` expansion, and after structural simplification
+  it rejects the generated goal shape. It can prove the resulting closed
+  inequality, but that replaces only the final `norm_num` line. A payoff
+  parameter multiplied by an existential probability is rejected as nonlinear,
+  so this stack does not by itself prove generic CE existence or minimax.
+- **Outcome:** narrows. Kernel-checked LP certificates are admissible in
+  principle, but the material-proof-reduction kill condition fired. No package,
+  source root, manifest entry, or public API is accepted.
+- **Next action:** keep the current EXP-007 proof. Reopen only with a concrete
+  finite-game-to-`Problem` bridge plus one generic duality/feasibility theorem,
+  or when a downstream theorem can consume a checked certificate without
+  retaining the explicit enumeration proof it was meant to replace.

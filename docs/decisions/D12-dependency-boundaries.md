@@ -31,6 +31,7 @@ below is what makes it defensible rather than convenient.
 | Measure | Value |
 |---|---|
 | toolchain skew against `harfe/fixed-point-theorems-lean4` | none; both pin `v4.32.0` |
+| license | MIT, Copyright (c) 2026 harfe |
 | pre-existing manifest revisions changed by `lake update` | 0 |
 | axioms behind `brouwer_fixed_point`, `kakutani_fixed_point` | the three standard ones |
 | `sorry`, `admit`, custom axioms in the dependency | 0 |
