@@ -6,7 +6,8 @@ import.
 
 Experiment IDs: [EXP-022](../ExperimentLog.md), [EXP-023](../ExperimentLog.md);
 post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
-[EXP-031](../ExperimentLog.md).
+[EXP-031](../ExperimentLog.md); Protocol amendment
+[EXP-032](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -153,3 +154,49 @@ vector, and residual-floor counts. Thus the bridge is known to consume each
 side it was created to connect, while the negative probes show that
 `GameTheory.Repeated`, Protocol, and the independent mathematics target have
 not silently changed roles.
+
+## Sequential-equilibrium amendment
+
+EXP-032 tests the predicted collision where analysis applies to Protocol
+strategy objects rather than static mixed profiles.
+
+| Competing design | Measured result |
+|---|---|
+| import topology into stable Protocol | rejected: ownership would be invisible because basic topology names are already transitively reachable |
+| keep only a caller-supplied convergence predicate in Protocol | accepted for the stable limit schema, but insufficient as the public Kreps-Wilson specialization |
+| put the full notion in an EFG-specific analytic adapter | deferred: it would couple the generic boundary decision to an unvalidated language compiler |
+| create `GameTheory.Analysis.Protocol` | accepted: a one-way bridge over existing behavioral policies, Bayes data, and local rationality |
+
+The hostile carrier check changed the stable side. `InfoState` is a total policy
+domain and may contain unreachable values; a belief law over the history fiber
+of every such value can therefore demand a law on an empty type.
+`InformationSite` restricts assessment beliefs to witnessed fibers, while
+strategies remain the existing total `BehavioralPolicy`. History beliefs
+project to the existing state-level `BeliefOn`, and sequential rationality is
+the existing `Context.IsLocallyOptimal` specialized to the played local law.
+Thus the amendment adds no parallel policy, state-belief, runner, or
+equilibrium semantics.
+
+The analytic bridge defines pointwise convergence of finite laws and the
+Kreps-Wilson limit of fully mixed, finite-Bayes-consistent assessments. A
+vanishing Boolean tremble proves that fully mixed approximants may converge to
+a non-fully-mixed target. This needs only finite coordinate topology, not a
+measurable law on infinite execution paths and not the fixed-point geometry
+used by the static existence root.
+
+Raw probes for names such as `TopologicalSpace` cannot state this boundary:
+those names are already reachable from Protocol through Mathlib. The enforced
+checks therefore name project declarations and are two-sided:
+
+| Check | Expected |
+|---|---:|
+| `PROTOCOL_ANALYSIS_PROBES_REJECTED` | 2 |
+| `SEQUENTIAL_BRIDGE_INPUTS_REACHED` | 3 |
+| `SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED` | 2 |
+| `PROTOCOL_FORBIDDEN_IMPORTS` | 0 |
+| `TRANSPORT_PROTOCOL` | 0 |
+
+This amendment validates the generic assessment and consistency presentation,
+not an EFG compiler or a sequential-equilibrium existence theorem. A future
+language adapter must provide its continuation contexts and finite
+information-site instances in a separately reserved spike.

@@ -46,6 +46,13 @@ theorem support_finite (μ : FinDist α) : μ.support.Finite := μ.2
 /-- Every law puts mass somewhere. -/
 theorem support_nonempty (μ : FinDist α) : μ.support.Nonempty := PMF.support_nonempty _
 
+/-- Every point of the carrier occurs with positive probability. -/
+def FullSupport (μ : FinDist α) : Prop :=
+  ∀ a, a ∈ μ.support
+
+theorem FullSupport.apply {μ : FinDist α} (h : μ.FullSupport) (a : α) :
+    a ∈ μ.support :=
+  h a
 
 /-- The finite support as a `Finset`. -/
 def supportFinset (μ : FinDist α) : Finset α := μ.support_finite.toFinset

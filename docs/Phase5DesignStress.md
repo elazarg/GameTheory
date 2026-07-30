@@ -217,18 +217,37 @@ permanent defection bounds every mixed best response by one, and the theorem
 produces sufficiently patient repeated Nash profiles whose payoff approaches
 three. Thus the hypotheses are not merely a polished empty interface.
 
-## Axes not yet stressed
+### Sequential consistency needs history beliefs and an analytic Protocol bridge
 
-Each of these is a part of the subject the design has never been asked about,
-listed with the choice it would put pressure on.
+Recorded as [EXP-032](ExperimentLog.md). The predicted D12 collision is now
+measured rather than hypothetical. Stable Protocol owns a topology-free limit
+schema; `GameTheory.Analysis.Protocol` specializes it to pointwise convergence
+of fully mixed, Bayes-consistent behavioral assessments. Protocol cannot reach
+the specialization, while positive probes show that the bridge still consumes
+stable rationality and Bayes consistency. It also rejects the fixed-point
+geometry used by the static existence layer.
 
-*Sequential equilibrium.* Consistency is a limit of completely mixed behavioral
-profiles, which puts topology on strategies rather than on outcomes — the first
-thing that would want the analytic root to reach *down* into the protocol layer
-rather than up from the static core. That theorem is a predicted D12
-renegotiation, not an exception to the current boundary: before any
-implementation, compete and measure a second one-way analytic bridge root that
-imports Protocol and the required topology while Protocol itself remains
-analysis-free. As with the static bridge, negative probes must keep the
-dependency unreachable from Protocol and positive probes must show it is
-actually reachable from the new root.
+The hostile finding was below topology. A model's `InfoState` is a total domain
+for policies and may contain values no history reaches. Indexing beliefs by
+every raw value would then require a probability law on an empty history fiber
+and could make assessments uninhabited. `InformationSite` retains only
+witnessed fibers. Beliefs live over complete histories because distinct
+histories can merge into one execution state; their state projection satisfies
+the existing `BeliefOn` predicate. Strategies remain the existing
+`BehavioralPolicy`, and rationality remains `Context.IsLocallyOptimal`.
+
+A vanishing Boolean tremble is the minimal analytic witness: every approximant
+has full support, but the pointwise limit is pure. The limit topology therefore
+does real work without a measurable infinite-path law.
+
+This closes the generic boundary question, not the language theorem. The pinned
+EFG adapter was deliberately not ported, and no sequential-equilibrium
+existence result is claimed. Either requires its own reserved spike, with an
+actual compiler supplying continuation contexts and finite information-site
+fibers.
+
+## Current stress queue
+
+The named Phase 5 queue is exhausted. Further theorem families should be
+reserved as new experiments rather than treated as unmeasured extensions of
+the decisions above.

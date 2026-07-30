@@ -1,0 +1,13 @@
+/-
+# `GameTheory.Analysis.Protocol`
+
+The one-way analytic bridge over Protocol. Stable assessment data and
+sequential rationality flow upward; pointwise limit consistency never flows
+back into Protocol.
+-/
+
+import GameTheory.Analysis.Protocol.Sequential
+
+namespace GameTheory.Analysis.Protocol
+
+end GameTheory.Analysis.Protocol

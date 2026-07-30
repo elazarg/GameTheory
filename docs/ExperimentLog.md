@@ -42,6 +42,7 @@ becomes difficult to scan.
 | EXP-029 | 2026-07-30 | D0/D5/D6 / Phase 5 | Does the EXP-008 interim theorem survive as stable API and compile through the accepted `InformationModel` without duplicating equilibrium semantics? | Supports; fixes the static/information split | `GameTheory/Core/Bayesian*.lean`; `GameTheory/Languages/Bayesian.lean`; `GameTheory/Tests/Bayesian.lean` |
 | EXP-030 | 2026-07-30 | D0/D2/D6/D11/D12 / Phase 5 | Can repeated play reuse Protocol for finite prefixes and ordinary `IsNash` for discounting without inventing an infinite `FinDist` path law? | Supports; narrows public histories to lists | `GameTheory/Repeated/*.lean`; `GameTheory/Tests/Repeated.lean` |
 | EXP-031 | 2026-07-30 | D11/D12 / Phase 5 | Does the full discounted folk theorem belong in stable Repeated, under Analysis, or behind a new repeated-analysis bridge? | Supports one-way Analysis bridge | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Analysis/Repeated/`; `GameTheoryMath/` |
+| EXP-032 | 2026-07-30 | D6/D12 / Phase 5 | Where should Kreps-Wilson limit consistency live when its topology is on Protocol policies and beliefs? | Supports one-way Analysis bridge; narrows beliefs to reachable sites | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/` |
 
 ## Entry template
 
@@ -1876,3 +1877,81 @@ memory.
 - **Next action:** treat the deterministic discounted folk-theorem axis as
   closed. Sequential equilibrium remains a separate predicted D12
   renegotiation because its topology sits over Protocol strategy objects.
+
+### EXP-032: analytic boundary for sequential equilibrium
+
+- **Date / revision:** 2026-07-30, working tree based on `fa5bc1e`
+- **Decision / question:** D6, D12, and Phase 5; whether pointwise
+  Kreps-Wilson consistency should put topology inside Protocol, stay a generic
+  user-supplied convergence predicate there, or live in a one-way analytic
+  bridge over Protocol.
+- **Representative slice:** the finite-information assessment interface over
+  behavioral policies and history beliefs; fully mixed approximating
+  assessments satisfying Bayes consistency; pointwise convergence to a target
+  assessment; and the conjunction with the existing
+  sequential-rationality predicate.
+- **Competing designs:** import topology into
+  `GameTheory.Protocol.Assessment`; keep only a predicate-parameterized limit
+  schema in Protocol and define pointwise convergence in
+  `GameTheory.Analysis.Protocol`; or specialize the whole notion to a language
+  such as EFG under an analytic language bridge.
+- **Kill conditions:** Protocol starts reaching `stdSimplex`, `Polynomial`, or
+  topology-only constants; policies or beliefs require a second representation;
+  the analytic bridge must expose hidden execution state to policies; the
+  existing assessment/sequential-rationality API cannot state the rational half
+  unchanged; or pointwise convergence needs measurable path probability rather
+  than finite-coordinate topology.
+- **Evidence:**
+  1. The pinned generic assessment, EFG adapter, and convergence helper contain
+     406, 560, and 49 nonblank lines respectively. Their topology is isolated
+     in the convergence helper; most of the generic file is assessment,
+     support, Bayes, and rationality plumbing already represented differently
+     by current Protocol.
+  2. A pre-import probe after `import GameTheory.Protocol` found
+     `TopologicalSpace`, `nhds`, `Filter.Tendsto`, `Continuous`, and
+     `Metric.tendsto_atTop` already reachable through Mathlib dependencies.
+     Raw topology-name absence therefore cannot enforce this boundary.
+     GameTheory declaration probes can: Protocol rejects both
+     `FinDistConvergesPointwise` and `IsSequentiallyConsistent`, while the
+     bridge positively reaches stable sequential rationality, finite Bayes
+     consistency, and its pointwise convergence definition.
+  3. The first assessment carrier was refuted before the gate. A raw
+     `InfoState` value need not be produced by any history, so requiring a
+     `FinDist` over its empty history fiber could make the whole assessment
+     type uninhabited. `InformationSite` now pairs an information-state value
+     with a nonempty history fiber. `BehavioralAssessment.ofStrategy` proves
+     every existing behavioral strategy admits an assessment. Beliefs remain
+     over histories, because two histories can merge into one execution state;
+     `stateBelief_onInfoSet` projects them to the existing state-level
+     `BeliefOn` predicate.
+  4. The stable addition is 142 nonblank lines in
+     `Protocol/BehavioralAssessment.lean` plus the six-line
+     `FinDist.FullSupport` interface. The analytic subtree is 188 nonblank
+     lines: pointwise strategy and belief convergence, fully mixed and Bayes
+     approximants, sequential consistency/equilibrium, and a Boolean tremble
+     witness. Fully mixed laws converge there to a pure law, so the topology is
+     load-bearing rather than decorative. No second policy, runner,
+     state-belief, local-optimality, or equilibrium semantics was introduced.
+  5. The narrow bridge build completed in 1,768 jobs. Phase 2 reports zero
+     Analysis imports outside its root, one fixed-point importer, zero
+     Analysis transport, and all six stable reachability probes passing.
+     Phase 3 reports zero forbidden Protocol imports and transport, two
+     Protocol-to-Analysis rejections, three positive bridge inputs, and two
+     rejected fixed-point-geometry probes. The full build completed in 3,306
+     jobs and all four phase audits pass. Axiom checks for the history-to-state
+     belief projection, tremble convergence, and convergence projection use
+     only `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports a second one-way bridge,
+  `GameTheory.Analysis.Protocol`. Stable Protocol owns reachable information
+  sites, behavioral assessments, history-supported beliefs, finite Bayes
+  consistency, and predicate-parametric limit consistency; the bridge owns
+  pointwise topology and its Kreps-Wilson specialization. The raw
+  topology-name subcondition was already true at baseline, so it refuted
+  vocabulary absence as an enforcement design rather than the bridge; no
+  semantic kill condition fired. The experiment validates this presentation
+  and dependency direction; it does not claim an EFG compiler or a
+  sequential-equilibrium existence theorem.
+- **Next action:** treat the generic sequential-consistency boundary as
+  closed. Reserve a separate language spike before adapting the pinned
+  560-line EFG layer; that compiler must supply continuation contexts and
+  finite information-site fibers rather than widening this bridge in advance.

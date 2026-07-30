@@ -89,7 +89,7 @@ $LanguageFiles = @(Select-Files 'GameTheory/Languages')
 # --------------------------------------------------------------------------
 
 $ProtocolForbidden = 'GameTheory\.Languages|GameTheory\.Finite|GameTheory\.Examples|' +
-  'GameTheory\.Tests|GameTheory\.Experimental'
+  'GameTheory\.Tests|GameTheory\.Experimental|GameTheory\.Analysis|FixedPointTheorems'
 $protocolBad = 0
 foreach ($f in $ProtocolFiles) {
   foreach ($imp in Get-Imports $f) { if ($imp -match $ProtocolForbidden) { $protocolBad++ } }
@@ -169,19 +169,26 @@ Report 'LANGUAGE_MODULES' $LanguageFiles.Count
 
 if (-not $SkipReachability) {
   $probeFile = Join-Path ([IO.Path]::GetTempPath()) 'gametheory-phase3-probe.lean'
-  function Test-Unreachable([string] $Root, [string] $Constant) {
-    Set-Content -Path $probeFile -Value "import $Root`n#check @$Constant" -Encoding utf8
-    $output = & lake env lean $probeFile 2>&1 | Out-String
-    return ($output -match 'Unknown identifier|unknown identifier|unknown constant')
+  function Run-Probe([string] $Root, [string[]] $Constants) {
+    $checks = $Constants | ForEach-Object { "#check @$_" }
+    Set-Content -Path $probeFile -Value (@("import $Root") + $checks) -Encoding utf8
+    return (& lake env lean $probeFile 2>&1 | Out-String)
+  }
+  function Is-Unreachable([string] $Output, [string] $Constant) {
+    $escaped = [regex]::Escape($Constant)
+    return ($Output -match
+      "(?im)unknown (identifier|constant)[^\r\n]*$escaped")
   }
   $unreachable = 0
   $reachable = @()
-  foreach ($probe in @(
-      @('GameTheory.Protocol.Execution', 'stdSimplex'),
-      @('GameTheory.Protocol.Execution', 'Polynomial'),
-      @('GameTheory.Protocol.Information', 'stdSimplex'))) {
-    if (Test-Unreachable $probe[0] $probe[1]) { $unreachable++ }
-    else { $reachable += "$($probe[0]) reaches $($probe[1])" }
+  foreach ($group in @(
+      @('GameTheory.Protocol.Execution', @('stdSimplex', 'Polynomial')),
+      @('GameTheory.Protocol.Information', @('stdSimplex')))) {
+    $output = Run-Probe $group[0] $group[1]
+    foreach ($constant in $group[1]) {
+      if (Is-Unreachable $output $constant) { $unreachable++ }
+      else { $reachable += "$($group[0]) reaches $constant" }
+    }
   }
   Report 'UNREACHABLE_PROBES_PASSED' $unreachable
   foreach ($r in $reachable) { Write-Output "REACHABLE_UNEXPECTED=$r" }
@@ -190,8 +197,14 @@ if (-not $SkipReachability) {
   # interfaces, but not solution concepts. Test both directions: absence alone
   # would also pass if the compiler had quietly stopped using either input.
   $bayesianSolutionRejected = 0
+  $bayesianConstants = @(
+    'GameTheory.IsNash',
+    'GameTheory.euPreference',
+    'GameTheory.BayesianGame',
+    'GameTheory.Languages.Bayesian.informationModel')
+  $bayesianOutput = Run-Probe 'GameTheory.Languages.Bayesian' $bayesianConstants
   foreach ($constant in @('GameTheory.IsNash', 'GameTheory.euPreference')) {
-    if (Test-Unreachable 'GameTheory.Languages.Bayesian' $constant) {
+    if (Is-Unreachable $bayesianOutput $constant) {
       $bayesianSolutionRejected++
     }
   }
@@ -201,7 +214,7 @@ if (-not $SkipReachability) {
   foreach ($constant in @(
       'GameTheory.BayesianGame',
       'GameTheory.Languages.Bayesian.informationModel')) {
-    if (-not (Test-Unreachable 'GameTheory.Languages.Bayesian' $constant)) {
+    if (-not (Is-Unreachable $bayesianOutput $constant)) {
       $bayesianInputsReached++
     }
   }
@@ -211,13 +224,24 @@ if (-not $SkipReachability) {
   # finite Protocol bridge. Check both the separation and the positive joins:
   # absence alone would pass if the compiler stopped consuming either side.
   $repeatedBoundaryRejected = 0
-  foreach ($probe in @(
-      @('GameTheory.Repeated.Basic', 'GameTheory.Protocol.ExecutionProtocol'),
-      @('GameTheory.Repeated.Discounted', 'GameTheory.Protocol.ExecutionProtocol'),
-      @('GameTheory.Repeated.Protocol', 'GameTheory.UtilityGame.discountedPayoff'))) {
-    if (Test-Unreachable $probe[0] $probe[1]) {
+  foreach ($root in @(
+      'GameTheory.Repeated.Basic',
+      'GameTheory.Repeated.Discounted')) {
+    $output = Run-Probe $root @('GameTheory.Protocol.ExecutionProtocol')
+    if (Is-Unreachable $output 'GameTheory.Protocol.ExecutionProtocol') {
       $repeatedBoundaryRejected++
     }
+  }
+  $repeatedProtocolConstants = @(
+    'GameTheory.UtilityGame.discountedPayoff',
+    'GameTheory.UtilityGame.repeatedPlay',
+    'GameTheory.Repeated.informationModel')
+  $repeatedProtocolOutput =
+    Run-Probe 'GameTheory.Repeated.Protocol' $repeatedProtocolConstants
+  $discountedRejected = Is-Unreachable $repeatedProtocolOutput `
+    'GameTheory.UtilityGame.discountedPayoff'
+  if ($discountedRejected) {
+    $repeatedBoundaryRejected++
   }
   Report 'REPEATED_BOUNDARY_PROBES_REJECTED' $repeatedBoundaryRejected
 
@@ -225,11 +249,48 @@ if (-not $SkipReachability) {
   foreach ($constant in @(
       'GameTheory.UtilityGame.repeatedPlay',
       'GameTheory.Repeated.informationModel')) {
-    if (-not (Test-Unreachable 'GameTheory.Repeated.Protocol' $constant)) {
+    if (-not (Is-Unreachable $repeatedProtocolOutput $constant)) {
       $repeatedInputsReached++
     }
   }
   Report 'REPEATED_INPUT_PROBES_REACHED' $repeatedInputsReached
+
+  # Sequential equilibrium is a one-way analytic bridge over Protocol.
+  # Protocol must not see the convergence specialization, while the bridge
+  # must positively consume both stable halves and its analytic definition.
+  $protocolAnalysisRejected = 0
+  $protocolAnalysisConstants = @(
+      'GameTheory.Analysis.Protocol.FinDistConvergesPointwise',
+      'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
+  $protocolOutput = Run-Probe 'GameTheory.Protocol' $protocolAnalysisConstants
+  foreach ($constant in $protocolAnalysisConstants) {
+    if (Is-Unreachable $protocolOutput $constant) {
+      $protocolAnalysisRejected++
+    }
+  }
+  Report 'PROTOCOL_ANALYSIS_PROBES_REJECTED' $protocolAnalysisRejected
+
+  $sequentialBridgeInputsReached = 0
+  $sequentialBridgeConstants = @(
+      'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyRational',
+      'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsBayesConsistent',
+      'GameTheory.Analysis.Protocol.FinDistConvergesPointwise')
+  $sequentialOutput = Run-Probe 'GameTheory.Analysis.Protocol' `
+    ($sequentialBridgeConstants + @('stdSimplex', 'Polynomial'))
+  foreach ($constant in $sequentialBridgeConstants) {
+    if (-not (Is-Unreachable $sequentialOutput $constant)) {
+      $sequentialBridgeInputsReached++
+    }
+  }
+  Report 'SEQUENTIAL_BRIDGE_INPUTS_REACHED' $sequentialBridgeInputsReached
+
+  $sequentialGeometryRejected = 0
+  foreach ($constant in @('stdSimplex', 'Polynomial')) {
+    if (Is-Unreachable $sequentialOutput $constant) {
+      $sequentialGeometryRejected++
+    }
+  }
+  Report 'SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED' $sequentialGeometryRejected
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -261,6 +322,9 @@ if ($VerifyExpected) {
     $Expected['BAYESIAN_INPUT_PROBES_REACHED'] = 2
     $Expected['REPEATED_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_INPUT_PROBES_REACHED'] = 2
+    $Expected['PROTOCOL_ANALYSIS_PROBES_REJECTED'] = 2
+    $Expected['SEQUENTIAL_BRIDGE_INPUTS_REACHED'] = 3
+    $Expected['SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED'] = 2
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

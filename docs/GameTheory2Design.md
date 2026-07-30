@@ -798,6 +798,16 @@ horizon: `historyContext` packages the actual continuation, and the one-shot
 condition is equivalent to `IsSequentiallyRationalAt` in that context at every
 history and remaining horizon.
 
+EXP-032 adds the assessment carrier needed by the limit-consistency layer.
+Policies remain total on `InfoState`, including values no play reaches, but
+beliefs are indexed by `InformationSite`: an information-state value together
+with evidence that its history fiber is nonempty. Beliefs are laws over those
+complete histories, not merely execution states, because two histories may
+merge into one state. Their projection satisfies the existing state-level
+`BeliefOn` predicate. Finite Bayes consistency and a predicate-parametric limit
+schema stay in Protocol; pointwise convergence and Kreps-Wilson consistency
+live in the one-way `GameTheory.Analysis.Protocol` bridge.
+
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
 `InfoState`, but not the hidden execution state or a proof from which that state
@@ -1151,6 +1161,11 @@ periodic continuations, and public trigger punishments still require no law on
 an infinite realized path. Its convex geometry is isolated under
 `GameTheory.Analysis.Repeated`.
 
+EXP-032 likewise needs no measurable path law. Sequential consistency is
+pointwise convergence of finite local strategy and belief coordinates, even
+though those coordinates are indexed by Protocol histories. That topology is
+isolated under `GameTheory.Analysis.Protocol`.
+
 ### D12. Package and stability boundaries
 
 Use separate dependency roots, not only directories:
@@ -1161,6 +1176,7 @@ GameTheory.Protocol      transition/information semantics and execution
 GameTheory.Finite        executable rational frontend
 GameTheory.Languages     stable language syntax and compilers
 GameTheory.Analysis      fixed points, LP, minimax, existence
+  ├─ Protocol            one-way analytic bridge over stable assessments
   └─ Repeated            one-way analytic bridge over stable repeated play
 GameTheory.Repeated      stable stagewise and finite-prefix repeated-game theory
 GameTheory.Cooperative   larger cooperative theories, matching, bargaining
@@ -1189,6 +1205,17 @@ the separate `GameTheoryMath` target. The stable root retains negative
 `stdSimplex`/`Polynomial` probes, while positive bridge probes require the
 trigger, minmax, and generic approximation sides to remain reachable. Protocol
 is deliberately unreachable from this bridge.
+
+EXP-032 fixes the complementary bridge direction needed by sequential
+consistency. Stable `GameTheory.Protocol` owns behavioral assessments,
+history-supported beliefs, finite Bayes consistency, and a topology-free limit
+schema. `GameTheory.Analysis.Protocol` owns pointwise convergence and the
+Kreps-Wilson specialization. Protocol rejects both analytic declarations;
+positive bridge probes reach stable rationality, stable Bayes consistency, and
+the analytic convergence definition; the bridge rejects `stdSimplex` and
+`Polynomial`. Basic topology names are already transitively reachable through
+Mathlib, so project-declaration probes, not vocabulary probes, enforce this
+boundary.
 
 General results suitable for Mathlib should be written to Mathlib conventions
 from the beginning and upstreamed aggressively. Project-specific glue remains
