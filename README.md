@@ -21,6 +21,8 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation
+GameTheory/Epistemic     finite information partitions, posteriors,
+                         self-evident events, and Aumann agreement
 GameTheory/Finite        executable rational frontend and its correctness layer
 GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
   /Protocol              analytic behavioral-assessment consistency bridge
@@ -50,7 +52,9 @@ GameTheory/Experimental  architecture spikes, never re-exported
 GameTheoryMath           independently reusable, game-free mathematics
 ```
 
-The root `GameTheory` import re-exports Core, Protocol, and Finite. Analysis is
+The root `GameTheory` import re-exports Core, Protocol, Epistemic, and Finite.
+Epistemic is deliberately independent of Protocol: Protocol information is
+history-local, whereas epistemic cells partition a state space. Analysis is
 stable but deliberately opt-in so its fixed-point and topology dependencies
 cannot leak across the audited boundary. Repeated is also opt-in: its stable
 root remains analysis-light, while `GameTheory.Analysis.Repeated` is the

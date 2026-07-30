@@ -1,6 +1,6 @@
 # D16: epistemic ownership is separate from Protocol information
 
-- **Status:** adopted; promotion pending
+- **Status:** adopted and promoted
 - **Date:** 2026-07-30
 - **Experiment IDs:** EXP-043
 
@@ -90,3 +90,15 @@ Promotion starts with the checked finite-cell, posterior, self-evidence,
 disjoint-cell, sum-decomposition, and Aumann-agreement slice. Broader S5 and
 approximate-common-knowledge recovery follows only after the D-KNOW
 declaration ledger classifies the pinned inventory.
+
+That promotion is complete. `GameTheory.Epistemic.Basic` contains the
+partition, posterior, and self-evidence interface;
+`GameTheory.Epistemic.Agreement` contains the cell decomposition and Aumann
+theorem; and `GameTheory.Epistemic` is re-exported by the public root. The
+stable branch has 174 nonblank lines and no Protocol, static-solution, or
+Analysis import. Full Phase 2/3 reachability audits pass: all three intended
+finite-law/epistemic inputs are reached, five forbidden epistemic dependencies
+are rejected, and Protocol rejects both public epistemic probes. The stable
+Aumann theorem has only the standard `propext`, `Classical.choice`, and
+`Quot.sound` axiom profile. The focused build completes in 1,715 jobs and the
+full build in 3,345.

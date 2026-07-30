@@ -1544,10 +1544,10 @@ direct bridge baselines on actual reuse or composition.
 #### Post-architecture delivery
 
 The checked-in `Phase4StaticHarvest.md` completed a narrower static-harvest
-package than the transform-and-analysis list above. Its mathematical results
-are complete, but that scoped status does not discharge every original item:
-the exact T1, T3, and T4 transfers, the minimal public D8 transformation
-surface, and the knowledge/evolutionary ownership probes remain open.
+package than the transform-and-analysis list above. Subsequent delivery closed
+T1-T4 and EXP-043/D16 settled knowledge ownership in a separate stable
+epistemic branch. The remaining original items are the minimal public D8
+transformation surface and the evolutionary static/dynamic ownership probe.
 
 The RFC continues to govern architecture and disproof conditions. Mutable
 delivery order, frozen-obligation status, v1 declaration accounting, mature

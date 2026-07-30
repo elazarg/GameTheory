@@ -2836,7 +2836,12 @@ memory.
   rejects both adding partition laws to Protocol and duplicating Protocol
   histories inside the epistemic API. The theorem is game-theoretic domain
   semantics, so moving it wholesale to `GameTheoryMath` is not earned.
-- **Next action:** promote the positive finite epistemic slice without a
-  Protocol import, keep the merging counterexample as experiment evidence, add
-  positive/negative boundary probes, and inventory the remaining D-KNOW
-  declarations before broad recovery.
+- **Promotion:** `GameTheory.Epistemic.Basic` and
+  `GameTheory.Epistemic.Agreement` now contain the positive slice without a
+  Protocol import; the public root re-exports their umbrella. Full Phase 2/3
+  reachability audits pass with epistemic input/boundary counts `3/5` and two
+  rejected reciprocal Protocol probes. The stable theorem's axiom profile is
+  unchanged.
+- **Next action:** inventory the remaining D-KNOW declarations before broad S5
+  and approximate-common-knowledge recovery. The merging counterexample
+  remains experiment evidence, not stable API.

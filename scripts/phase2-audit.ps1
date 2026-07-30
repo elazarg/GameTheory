@@ -107,9 +107,12 @@ $Phase3Files = @($OutsideProfile | Where-Object {
 $AnalysisFiles = @(Select-Files 'GameTheory/Analysis')
 $RepeatedFiles = @(@(Select-Files 'GameTheory/Repeated') +
   @('GameTheory/Repeated.lean') | Sort-Object -Unique)
+$EpistemicFiles = @(@(Select-Files 'GameTheory/Epistemic') +
+  @('GameTheory/Epistemic.lean') | Sort-Object -Unique)
 Report 'TRANSPORT_GAMETHEORYMATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
 Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
 Report 'TRANSPORT_REPEATED_SOURCE' (Count-Pattern $RepeatedFiles $TransportPattern)
+Report 'TRANSPORT_EPISTEMIC_SOURCE' (Count-Pattern $EpistemicFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
 Report 'TRANSPORT_PHASE3_SOURCE' (Count-Pattern $Phase3Files $TransportPattern)
 Report 'TRANSPORT_PHASE2_PROBE' (Count-Pattern $Phase2ProbeFiles $TransportPattern)
@@ -143,7 +146,7 @@ Report 'TRANSPORT_POST_ARCHITECTURE' `
 # Every library file belongs to exactly one transport budget. An unbucketed file
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
 $Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectureFiles +
-  $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles +
+  $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles + $EpistemicFiles +
   @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
@@ -204,6 +207,18 @@ foreach ($f in $RepeatedFiles) {
   }
 }
 Report 'REPEATED_FORBIDDEN_IMPORTS' $repeatedBad
+
+$EpistemicForbidden = 'GameTheory\.Core|GameTheory\.Protocol|GameTheory\.Finite|' +
+  'GameTheory\.Languages|GameTheory\.Repeated|GameTheory\.Examples|' +
+  'GameTheory\.Tests|GameTheory\.Experimental|GameTheory\.Analysis|' +
+  'FixedPointTheorems'
+$epistemicBad = 0
+foreach ($f in $EpistemicFiles) {
+  foreach ($imp in Get-Imports $f) {
+    if ($imp -match $EpistemicForbidden) { $epistemicBad++ }
+  }
+}
+Report 'EPISTEMIC_FORBIDDEN_IMPORTS' $epistemicBad
 
 $mathBad = 0
 foreach ($f in $MathFiles) {
@@ -268,6 +283,7 @@ Report 'NONBLANK_EXAMPLES' (Measure-Nonblank (Select-Files 'GameTheory/Examples'
 Report 'NONBLANK_TESTS' (Measure-Nonblank (Select-Files 'GameTheory/Tests'))
 Report 'NONBLANK_ANALYSIS' (Measure-Nonblank $AnalysisFiles)
 Report 'NONBLANK_REPEATED' (Measure-Nonblank $RepeatedFiles)
+Report 'NONBLANK_EPISTEMIC' (Measure-Nonblank $EpistemicFiles)
 Report 'NONBLANK_GAMETHEORYMATH' (Measure-Nonblank $MathFiles)
 Report 'NONBLANK_PHASE2_PROBE' `
   (Measure-Nonblank (Select-Files 'GameTheory/Experimental/Phase2'))
@@ -368,6 +384,35 @@ if (-not $SkipReachability) {
     @('GameTheory.UtilityGame')
   $mathGameRejected = Is-Unreachable $mathOutput 'GameTheory.UtilityGame'
   Report 'GAMETHEORYMATH_GAME_REJECTED' ([int] $mathGameRejected)
+
+  # D16's epistemic branch consumes the canonical finite law but remains
+  # independent of static, sequential, and analytic game semantics.
+  $epistemicInputs = @(
+    'GameTheory.Probability.FinDist',
+    'GameTheory.Epistemic.InfoPartition',
+    'GameTheory.Epistemic.aumann_full_agreement')
+  $epistemicBoundary = @(
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.InformationModel',
+    'GameTheory.Analysis.Protocol.FinDistConvergesPointwise',
+    'stdSimplex',
+    'Polynomial')
+  $epistemicOutput =
+    Run-Probe 'GameTheory.Epistemic' ($epistemicInputs + $epistemicBoundary)
+  $epistemicInputsReached = 0
+  foreach ($constant in $epistemicInputs) {
+    if (-not (Is-Unreachable $epistemicOutput $constant)) {
+      $epistemicInputsReached++
+    }
+  }
+  Report 'EPISTEMIC_INPUT_PROBES_REACHED' $epistemicInputsReached
+  $epistemicBoundaryRejected = 0
+  foreach ($constant in $epistemicBoundary) {
+    if (Is-Unreachable $epistemicOutput $constant) {
+      $epistemicBoundaryRejected++
+    }
+  }
+  Report 'EPISTEMIC_BOUNDARY_PROBES_REJECTED' $epistemicBoundaryRejected
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -388,6 +433,7 @@ if ($VerifyExpected) {
     TRANSPORT_PHASE4_EVIDENCE = 1
     TRANSPORT_ANALYSIS_SOURCE = 0
     TRANSPORT_REPEATED_SOURCE = 0
+    TRANSPORT_EPISTEMIC_SOURCE = 0
     TRANSPORT_GAMETHEORYMATH_SOURCE = 0
     TRANSPORT_POST_ARCHITECTURE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
@@ -403,6 +449,7 @@ if ($VerifyExpected) {
     ALGORITHM_FORBIDDEN_IMPORTS = 0
     SIGNATURE_PROBABILITY_IMPORTS = 0
     REPEATED_FORBIDDEN_IMPORTS = 0
+    EPISTEMIC_FORBIDDEN_IMPORTS = 0
     GAMETHEORYMATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
@@ -419,6 +466,8 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
+    $Expected['EPISTEMIC_INPUT_PROBES_REACHED'] = 3
+    $Expected['EPISTEMIC_BOUNDARY_PROBES_REJECTED'] = 5
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

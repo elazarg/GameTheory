@@ -109,6 +109,8 @@ Report 'LANGUAGE_FORBIDDEN_IMPORTS' $languageBad
 $rootImports = Get-Imports 'GameTheory.lean'
 Report 'ROOT_REEXPORTS_PROTOCOL' `
   (@($rootImports | Where-Object { $_ -eq 'GameTheory.Protocol' }).Count)
+Report 'ROOT_REEXPORTS_EPISTEMIC' `
+  (@($rootImports | Where-Object { $_ -eq 'GameTheory.Epistemic' }).Count)
 Report 'ROOT_FORBIDDEN_IMPORTS' `
   (@($rootImports | Where-Object {
     $_ -match 'GameTheory\.Languages|GameTheory\.Tests|GameTheory\.Experimental' }).Count)
@@ -270,6 +272,21 @@ if (-not $SkipReachability) {
     }
   }
   Report 'PROTOCOL_ANALYSIS_PROBES_REJECTED' $protocolAnalysisRejected
+
+  # Protocol information is history-local, while D16's epistemic cells are a
+  # separate state-partition branch. Neither stable root imports the other.
+  $protocolEpistemicRejected = 0
+  $protocolEpistemicConstants = @(
+    'GameTheory.Epistemic.InfoPartition',
+    'GameTheory.Epistemic.aumann_full_agreement')
+  $protocolEpistemicOutput =
+    Run-Probe 'GameTheory.Protocol' $protocolEpistemicConstants
+  foreach ($constant in $protocolEpistemicConstants) {
+    if (Is-Unreachable $protocolEpistemicOutput $constant) {
+      $protocolEpistemicRejected++
+    }
+  }
+  Report 'PROTOCOL_EPISTEMIC_PROBES_REJECTED' $protocolEpistemicRejected
 
   $sequentialBridgeInputsReached = 0
   $sequentialBridgeConstants = @(
@@ -461,6 +478,7 @@ if ($VerifyExpected) {
     PROTOCOL_FORBIDDEN_IMPORTS = 0
     LANGUAGE_FORBIDDEN_IMPORTS = 0
     ROOT_REEXPORTS_PROTOCOL = 1
+    ROOT_REEXPORTS_EPISTEMIC = 1
     ROOT_FORBIDDEN_IMPORTS = 0
     TRANSPORT_PROTOCOL = 0
     TRANSPORT_LANGUAGES = 0
@@ -481,6 +499,7 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BOUNDARY_PROBES_REJECTED'] = 3
     $Expected['REPEATED_INPUT_PROBES_REACHED'] = 2
     $Expected['PROTOCOL_ANALYSIS_PROBES_REJECTED'] = 2
+    $Expected['PROTOCOL_EPISTEMIC_PROBES_REJECTED'] = 2
     $Expected['SEQUENTIAL_BRIDGE_INPUTS_REACHED'] = 3
     $Expected['SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED'] = 2
     $Expected['EFG_SYNTAX_SOLUTION_PROBES_REJECTED'] = 3

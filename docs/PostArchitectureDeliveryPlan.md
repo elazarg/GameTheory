@@ -264,7 +264,7 @@ recovery creates pressure to work around them.
 | W1-F | named language transfers | **complete; T1, T3, and T4 closed** | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | **complete** | both constructive directions, realizable history-law equality, arbitrary outcome pushforwards, and expected utility are exposed under the sharp no-revisit/recall hypotheses |
 | W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
-| W1-I | overdue knowledge and evolutionary ownership probes | open | Aumann/`InfoState` and ESS/static-dynamic slices either validate their proposed homes or record replacements |
+| W1-I | overdue knowledge and evolutionary ownership probes | **knowledge complete (EXP-043/D16); evolutionary open** | Aumann/`InfoState` is settled in a separate stable branch; ESS/static-dynamic still must validate its proposed home or record a replacement |
 
 Recommended dependency order:
 
@@ -351,7 +351,7 @@ theory.
 | matching and market design | Gale-Shapley stability and perfect matching, then strategyproofness or rural hospitals | native preferences and matchings; share order/list mathematics only |
 | bargaining | Nash solution affine invariance on an honest feasible utility set | native convex feasible-set branch under `Analysis` when topology is used |
 | finite fair division | round-robin EF1 and one envy-cycle or maximin-share result | coordinated mechanism branch; no measurable cake assumptions |
-| knowledge and epistemic games | Aumann agreement or an approximate-common-knowledge theorem | first compete a partition model with a Protocol-information consumer |
+| knowledge and epistemic games | **passed (EXP-043/D16):** Aumann agreement over finite-cell partitions | recover S5 and approximate common knowledge in `Epistemic`; any Protocol bridge must state the extra state-view premise |
 | evolutionary stability | ESS implies symmetric Nash | separate static branch; dynamics do not enter until their scalar/topology needs are measured |
 | contracts | one incentive or participation theorem with explicit outside option | mechanism branch sharing only actual report/deviation vocabulary |
 
@@ -528,7 +528,8 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. resolve the overdue knowledge and evolutionary ownership probes;
+1. resolve the remaining evolutionary ownership probe and inventory the
+   D-KNOW declarations behind the passed knowledge gate;
 2. add exact broad-package ledgers for the first NFG/FOSG and static recovery
    batches, using the generated index only as a review queue;
 3. consolidate moving delivery probes without rewriting historical phase
