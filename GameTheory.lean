@@ -5,6 +5,8 @@ import GameTheory.Theorems
 -- Probability and core
 import Math.Probability
 import Math.RelationalKernel
+import Math.NormalizedFarkasBasis
+import Math.AnalyticLinearSystem
 import GameTheory.Core.KernelGame
 import GameTheory.Core.GameForm
 import GameTheory.Core.Coalition
@@ -149,6 +151,18 @@ import GameTheory.Concepts.Stochastic.OrientedResponseExtraction
 import GameTheory.Concepts.Stochastic.FinkMonitor
 import GameTheory.Concepts.Stochastic.ContextualFinkMonitor
 import GameTheory.Concepts.Stochastic.FinkContinuationCompatibilityCounterexample
+import GameTheory.Concepts.Stochastic.FinkConstraintPublicResponse
+import GameTheory.Concepts.Stochastic.AnalyticFinkPublicResponse
+import GameTheory.Concepts.Stochastic.MovingHarmonicCorrection
+import GameTheory.Concepts.Stochastic.AnalyticStageBranchStabilization
+import GameTheory.Concepts.Stochastic.AnalyticStageResponseDichotomy
+import GameTheory.Concepts.Stochastic.AnalyticHarmonicAdjustmentSelection
+import GameTheory.Concepts.Stochastic.PublicActionFrequencyResponse
+import GameTheory.Concepts.Stochastic.AnalyticActionFrequencyActivation
+import GameTheory.Concepts.Stochastic.PublicRecurrentClassChild
+import GameTheory.Concepts.Stochastic.PublicRecurrentClassTarget
+import GameTheory.Concepts.Stochastic.PublicRecurrentClassSupportRank
+import Math.Probability.EntryReachableChargedClass
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
 import GameTheory.Concepts.Stochastic.BigMatch
 import GameTheory.Concepts.Stochastic.BigMatchMarkov
