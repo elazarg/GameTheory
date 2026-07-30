@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import GameTheory.Concepts.Stochastic.PublicCausalTerminalChildDispatcher
+import GameTheory.Concepts.Stochastic.PublicFixedPrefixAccounting
 import GameTheory.Concepts.Stochastic.PublicTerminalChildLawTransfer
 
 /-!
@@ -36,6 +37,152 @@ theorem pmf_map_eq_of_eq_on_support
   intro value hvalue
   simpa only [Function.comp_apply] using
     congrArg PMF.pure (heq value hvalue)
+
+/-- Projecting a deterministic-horizon history law to its fixed prefix
+recovers the shorter history law. -/
+theorem histDist_add_map_terminalPrefix
+    [Fintype ι] [Finite G.State] [∀ who, Finite (G.Act who)]
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (prefixLength suffixLength : ℕ) :
+    (G.histDist profile initial (prefixLength + suffixLength)).map
+        G.terminalPrefix =
+      G.histDist profile initial prefixLength := by
+  rw [G.histDist_add_eq_bind_histDistAfter, PMF.map_bind]
+  have hkernel : (fun base : G.Hist prefixLength =>
+      (G.histDistAfter profile base suffixLength).map
+        G.terminalPrefix) =
+      (fun base => PMF.pure base) := by
+    funext base
+    unfold histDistAfter
+    rw [PMF.map_comp]
+    let localLaw :=
+      G.histDist (G.afterHistoryProfile profile base) base.2
+        suffixLength
+    calc
+      localLaw.map
+          (G.terminalPrefix ∘ G.appendHist base) =
+          localLaw.map (fun _suffix => base) := by
+        apply pmf_map_eq_of_eq_on_support
+        intro suffix hsuffix
+        exact G.terminalPrefix_appendHist base suffix
+          (G.startsAt_of_mem_support_histDist
+            (G.afterHistoryProfile profile base) base.2
+            suffixLength suffix hsuffix)
+      _ = PMF.pure base := PMF.map_const localLaw base
+  rw [hkernel, PMF.bind_pure]
+
+/-- The bounded-prefix and fixed-prefix presentations agree when the total
+horizon is displayed as a sum. -/
+theorem boundedHistoryPrefix_add_eq_terminalPrefix
+    {prefixLength suffixLength : ℕ}
+    (history : G.Hist (prefixLength + suffixLength)) :
+    G.boundedHistoryPrefix history
+        ⟨prefixLength, Nat.lt_succ_of_le
+          (Nat.le_add_right prefixLength suffixLength)⟩ =
+      G.terminalPrefix history := by
+  apply Prod.ext
+  · funext index
+    rfl
+  · cases suffixLength with
+    | zero =>
+        simp [boundedHistoryPrefix, terminalPrefix]
+    | succ suffixLength =>
+        simp only [boundedHistoryPrefix, terminalPrefix,
+          Nat.lt_add_of_pos_right (Nat.zero_lt_succ _),
+          ↓reduceDIte]
+        congr 2
+
+/-- The stopped-base marginal of the actual root decomposition is the
+selected stopped-history law.  Causality is not needed for this marginal. -/
+theorem rootStoppedPath_base_marginal_add
+    [Fintype ι] [Finite G.State] [∀ who, Finite (G.Act who)]
+    {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel) :
+    ((G.histDist profile initial (fuel + suffixLength)).map
+        (G.rootStoppedPathOfHistory selector
+          (Nat.le_add_right fuel suffixLength))).map Sigma.fst =
+      G.stoppedHistoryLaw profile initial selector := by
+  rw [PMF.map_comp]
+  have hdecompose :
+      Sigma.fst ∘
+          G.rootStoppedPathOfHistory selector
+            (Nat.le_add_right fuel suffixLength) =
+        G.selectedStoppedHistory selector ∘ G.terminalPrefix := by
+    funext history
+    unfold rootStoppedPathOfHistory
+    dsimp only [Function.comp_apply]
+    rw [G.boundedHistoryPrefix_add_eq_terminalPrefix]
+  rw [hdecompose, ← PMF.map_comp,
+    G.histDist_add_map_terminalPrefix]
+  rfl
+
+/-- The conditional-kernel form of the finite strong stopping property.
+Only supported stopped bases matter. -/
+def IsStoppedSuffixConditionalKernelAdd
+    [Fintype ι] {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel) : Prop :=
+  let joint :=
+    (G.histDist profile initial (fuel + suffixLength)).map
+      (G.rootStoppedPathOfHistory selector
+        (Nat.le_add_right fuel suffixLength))
+  ∀ base,
+    base ∈ (G.stoppedHistoryLaw profile initial selector).support →
+      Math.ProbabilityMassFunction.condOn joint Sigma.fst base =
+        (G.histDist (G.afterHistoryProfile profile base.2)
+          base.2.2 (fuel + suffixLength - base.1.val)).map
+          fun suffix =>
+            (⟨base, suffix⟩ :
+              G.RootHorizonStoppedSuffix fuel
+                (fuel + suffixLength))
+
+/-- Conditional strong stopping kernels imply the full stopped-suffix
+factorization. -/
+theorem rootStoppedPath_factorization_add_of_conditionalKernel
+    [Fintype ι] [Finite G.State] [∀ who, Finite (G.Act who)]
+    {fuel suffixLength : ℕ}
+    (profile : G.BehaviorProfile) (initial : G.State)
+    (selector : G.BoundedPublicStopSelector fuel)
+    (hkernel :
+      G.IsStoppedSuffixConditionalKernelAdd
+        (suffixLength := suffixLength) profile initial selector) :
+    (G.histDist profile initial (fuel + suffixLength)).map
+        (G.rootStoppedPathOfHistory selector
+          (Nat.le_add_right fuel suffixLength)) =
+      G.rootHorizonStoppedSuffixLaw profile initial selector
+        (fuel + suffixLength) := by
+  let joint :=
+    (G.histDist profile initial (fuel + suffixLength)).map
+      (G.rootStoppedPathOfHistory selector
+        (Nat.le_add_right fuel suffixLength))
+  calc
+    joint =
+        (joint.map Sigma.fst).bind fun base =>
+          Math.ProbabilityMassFunction.condOn
+            joint Sigma.fst base :=
+      Math.ProbabilityMassFunction.bind_pushforward_condOn_pure
+        joint Sigma.fst
+    _ =
+        (G.stoppedHistoryLaw profile initial selector).bind
+          fun base =>
+            (G.histDist (G.afterHistoryProfile profile base.2)
+              base.2.2
+              (fuel + suffixLength - base.1.val)).map
+              fun suffix =>
+                (⟨base, suffix⟩ :
+                  G.RootHorizonStoppedSuffix fuel
+                    (fuel + suffixLength)) := by
+      rw [show joint.map Sigma.fst =
+          G.stoppedHistoryLaw profile initial selector from
+        G.rootStoppedPath_base_marginal_add
+          profile initial selector]
+      apply Math.ProbabilityMassFunction.bind_congr_on_support
+      intro base hbase
+      exact hkernel base hbase
+    _ =
+        G.rootHorizonStoppedSuffixLaw profile initial selector
+          (fuel + suffixLength) := rfl
 
 /-- Equality of a longer bounded prefix implies equality of every strictly
 shorter bounded prefix. -/
