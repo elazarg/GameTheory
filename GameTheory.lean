@@ -164,6 +164,7 @@ import GameTheory.Concepts.Stochastic.PublicStagePayoffInnovation
 import GameTheory.Concepts.Stochastic.PublicBellmanInnovation
 import GameTheory.Concepts.Stochastic.InvisibleResponseCompatibility
 import GameTheory.Concepts.Stochastic.InvisibleResponseCompatibilityCounterexample
+import GameTheory.Concepts.Stochastic.PlayerInvisibleBiasAlternative
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassChild
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassTarget
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassSupportRank
