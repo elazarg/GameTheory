@@ -2845,3 +2845,41 @@ memory.
 - **Next action:** inventory the remaining D-KNOW declarations before broad S5
   and approximate-common-knowledge recovery. The merging counterexample
   remains experiment evidence, not stable API.
+
+### EXP-044: evolutionary stability static/dynamic ownership
+
+- **Date / revision:** 2026-07-30, working tree based on `fe9cce9`
+- **Status:** running
+- **Decision / question:** the remaining Phase 0 D-EVOL probe; whether ESS/NSS
+  belongs in the static Core, a separate stable evolutionary branch, or an
+  analytic population-dynamics branch.
+- **Prediction:** the pinned nine-declaration family is entirely static. ESS
+  and NSS need only a two-argument real payoff kernel; the flagship
+  ESS-to-symmetric-Nash theorem should cross into Core through one canonical
+  deterministic `GameForm` and `IsNash`. Replicator dynamics, simplex
+  invariance, topology, and limiting behavior should remain absent until a
+  dynamics theorem earns an opt-in `Analysis.Evolutionary` root.
+- **Representative slice:** recover ESS, NSS, their elementary implications,
+  the symmetric two-player form/utility presentation, and the generic
+  ESS-to-Nash theorem. Use a Boolean payoff kernel where a mutant ties the
+  resident against the resident, so the second ESS clause is genuinely used
+  rather than discharged by strict Nash.
+- **Competing designs:** put ESS directly in `Core.Response`; adopt a separate
+  stable `Evolutionary` root with a one-way Nash bridge; or make ESS part of a
+  simplex/population-dynamics structure under Analysis.
+- **Measurements to collect:** exact scalar and finiteness premises; whether
+  the canonical Nash predicate suffices; authored/import surface; source
+  transport/update/placeholder counts; focused/full build jobs; axiom profile;
+  and static/Protocol/Analysis reachability.
+- **Kill conditions:** define a second Nash predicate; store a population law,
+  `Fintype`, topology, or dynamics in the ESS object; duplicate profile update;
+  require Analysis for the static theorem; orient either player's payoff or
+  unilateral deviation incorrectly; or weaken the nonvacuous stability
+  example into a strict-Nash-only witness.
+- **Evidence so far:** all nine pinned declarations use a payoff kernel
+  `S → S → ℝ`; only the final bridge mentions the old universal game object.
+  No pinned declaration defines a population state, replicator equation,
+  trajectory, limit, or simplex invariant.
+- **Outcome:** pending.
+- **Next action:** implement the hostile static slice against the canonical
+  Core form/deviation API and decide ownership from its dependency closure.
