@@ -130,3 +130,15 @@ This raises the expanded Epistemic root to 544 nonblank lines. Its focused
 build completes in 1,717 jobs and the full build in 3,351. The Phase 2 audit
 now positively reaches all five intended Epistemic layers and still rejects
 all five forbidden dependency probes.
+
+The final quantitative batch promotes
+`commonPBelief_posterior_reports_close`. Its 13 supporting mass, cell, and
+scalar lemmas remain private. The proof uses `FinDist.prob` and `FullSupport`
+throughout and establishes the full Monderer--Samet
+`|r i - r j| ≤ 2 * (1 - p)` bound.
+
+D-KNOW recovery is now complete: all 62 pinned declarations have exact
+reviewed dispositions. The final Epistemic root has 1,149 nonblank lines,
+builds in 1,718 focused / 3,352 full jobs, has zero source transport or trust
+tokens, and retains the standard axiom profile. The full Phase 2 gate reaches
+all six intended Epistemic layers and rejects all five forbidden dependencies.

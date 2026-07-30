@@ -2,20 +2,19 @@
 
 Title: Finite S5/common knowledge and Aumann agreement
 Family ID: D-KNOW
-Pinned roots: `GameTheory/Concepts/Knowledge/CommonKnowledge.lean`
+Pinned roots: `GameTheory/Concepts/Knowledge/CommonKnowledge.lean`;
+`GameTheory/Concepts/Knowledge/ApproximateCommonKnowledge.lean`
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
 Successor baseline: working tree based on `c011ddd`
 Canonical destination: `GameTheory.Epistemic`
 Domain contract / decision: D16, EXP-043
 Owner: Wave 1 / knowledge ownership
-Status: partial
+Status: complete
 Last verified: 2026-07-30
 
-This ledger accounts for every declaration in the pinned
-`CommonKnowledge.lean` file and the public operator/exact-bridge layer of
-`ApproximateCommonKnowledge.lean`. Fourteen quantitative-agreement declarations
-and private mass lemmas remain unaccounted; generated index rows are not
-classifications.
+This ledger accounts for every declaration in both pinned knowledge files.
+The quantitative finite-mass machinery remains private in the successor; its
+public result is the Monderer--Samet approximate-agreement bound.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
 |---|---|---|---|---|---|---|
@@ -67,6 +66,20 @@ classifications.
 | same | `posterior_eq_one_of_cell_subset` | theorem | adapt | `GameTheory.Epistemic.posterior_eq_one_of_cell_subset` | focused build | Local full-support bridge without whole-state finiteness. |
 | same | `IsSelfEvident.isPEvident` | theorem | adapt | `GameTheory.Epistemic.IsSelfEvident.isPEvident` | focused build | Exact self-evidence implies threshold evidence for `p ≤ 1`. |
 | same | `CommonKnowledgeAt.commonPBeliefAt` | theorem | adapt | `GameTheory.Epistemic.CommonKnowledgeAt.commonPBeliefAt` | focused build; axiom audit | Exact common knowledge implies common `p`-belief without Protocol or Analysis. |
+| `Concepts/Knowledge/ApproximateCommonKnowledge.lean` | `eventMass` | definition | adapt | private `ApproximateAgreement.eventMass` | quantitative focused build | Sums `FinDist.prob` over a finite event; not public API. |
+| same | `eventMass_decomp_cells` | theorem | adapt | private `ApproximateAgreement.eventMass_decomp_cells` | quantitative focused build | Reuses the stable self-evident cell decomposition. |
+| same | `eventMass_mono` | theorem | adapt | private `ApproximateAgreement.eventMass_mono` | quantitative focused build | Sharpened to require only canonical probability nonnegativity. |
+| same | `eventMass_nonneg` | theorem | adapt | private `ApproximateAgreement.eventMass_nonneg` | quantitative focused build | Derived from `FinDist.prob_nonneg`. |
+| same | `eventMass_pos_of_nonempty` | theorem | adapt | private `ApproximateAgreement.eventMass_pos_of_nonempty` | quantitative focused build | Uses `FinDist.FullSupport` only where strict positivity is needed. |
+| same | `eventMass_inter_add_sdiff` | theorem | adapt | private `ApproximateAgreement.eventMass_inter_add_sdiff` | quantitative focused build | Finite event decomposition. |
+| same | `PBelief_mono_event` | theorem | adapt | private `ApproximateAgreement.PBelief_mono_event` | quantitative focused build | Event monotonicity under full support. |
+| same | `PBelief_cell_inter_nonempty` | theorem | adapt | private `ApproximateAgreement.PBelief_cell_inter_nonempty` | quantitative focused build | Positive threshold forces a witness in the cell/event intersection. |
+| same | `posterior_eq_of_mem_PBelief_const` | theorem | adapt | private `ApproximateAgreement.posterior_eq_of_mem_PBelief_const` | quantitative focused build | Cell coherence transports a constant report. |
+| same | `PBelief_of_PBelief_subset_PBelief` | theorem | adapt | private `ApproximateAgreement.PBelief_of_PBelief_subset_PBelief` | quantitative focused build | Nested belief witness step. |
+| same | `commonPBelief_atom_real_arith` | lemma | adapt | private `ApproximateAgreement.commonPBelief_atom_real_arith` | quantitative focused build | Scalar atom bound; kept implementation-private. |
+| same | `commonPBelief_atom_bound` | theorem | adapt | private `ApproximateAgreement.commonPBelief_atom_bound` | quantitative focused build | Per-cell conditional-report bound. |
+| same | `commonPBelief_core_bound` | theorem | adapt | private `ApproximateAgreement.commonPBelief_core_bound` | quantitative focused build | Sums the atom bounds across distinct cells. |
+| same | `commonPBelief_posterior_reports_close` | theorem | adapt | `GameTheory.Epistemic.commonPBelief_posterior_reports_close` | quantitative focused build; axiom audit | Public Monderer--Samet bound `|r i - r j| ≤ 2 * (1 - p)`. |
 
 Attribution: the pinned file supplies the finite S5 operators, public-event
 common-knowledge characterization, cell decomposition, and agreement proof
@@ -97,3 +110,11 @@ now require the finite law, partition, Aumann, exact-common-knowledge, and
 exact-to-approximate layers; all five forbidden dependency probes remain
 unreachable. The exact-to-approximate bridge retains the standard axiom
 profile.
+
+The quantitative close-out expands the final root to 1,149 nonblank lines,
+with a 1,718-job focused build and 3,352-job full build. All 62 pinned
+declarations are accounted. The 13 quantitative helpers are private; the
+public report-distance theorem has the standard axiom profile. The final
+source audit reports zero transport/trust tokens, and the reachability gate
+passes at six intended inputs reached and five forbidden dependencies
+rejected.

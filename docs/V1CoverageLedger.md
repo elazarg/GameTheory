@@ -122,7 +122,7 @@ declaration-based.
 |---|---|---:|---|---|---|---|
 | D-LEARN | `Concepts/Learning/**` | 8 | stable static consumer; limits in `Analysis` | validated by F2 | partial | inventory regret algorithms, then fictitious play on a potential game |
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | assigned | not started | babbling equilibrium without a second solution concept |
-| D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | partial; 48/62 declarations accounted | [finite and approximate common-knowledge ledger](coverage/D-KNOW-aumann.md); recover the remaining quantitative bound and 13 private mass lemmas |
+| D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | complete; 62/62 declarations accounted | [finite and approximate common-knowledge ledger](coverage/D-KNOW-aumann.md); private mass machinery and the public quantitative bound build |
 | D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic and finite public-signal theory | partial | monitoring equilibrium/rank hierarchy and uniform results; no infinite realized-path law |
 | D-EVOL | `Concepts/Classes/EvolutionaryStability.lean` | 1 | stable `Evolutionary`; dynamics only in future opt-in Analysis | validated by EXP-044/D17 | complete | [nine-declaration ledger](coverage/D-EVOL-static.md); no pinned population dynamics to recover |
 
@@ -196,8 +196,7 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Recover the remaining 32 D-KNOW approximate-common-knowledge declarations
-   and complete the minimal D8 transformation obligations.
+1. Complete the minimal D8 transformation obligations.
 2. Add exact broad-package ledgers for the first NFG/FOSG and static recovery
    batches, seeded but never classified by the generated index.
 3. Start broad NFG/FOSG recovery from their passed gates while keeping broader

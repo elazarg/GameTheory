@@ -7,6 +7,7 @@ is independent of history-local Protocol information.
 
 import GameTheory.Epistemic.Agreement
 import GameTheory.Epistemic.Approximate
+import GameTheory.Epistemic.ApproximateAgreement
 import GameTheory.Epistemic.Knowledge
 
 namespace GameTheory.Epistemic

@@ -2855,6 +2855,11 @@ memory.
   D-KNOW accounting is 48/62; the quantitative approximate-agreement theorem
   and 13 private mass lemmas remain. The expanded root builds in 1,717 focused
   / 3,351 full jobs with input/boundary probe counts `5/5`.
+- **Quantitative close-out:** the Monderer--Samet report-distance theorem and
+  its 13 private mass/cell lemmas are stable. D-KNOW is complete at 62/62
+  declarations. The final root is 1,149 nonblank lines, builds in 1,718
+  focused / 3,352 full jobs, and passes input/boundary probes `6/5` with zero
+  source transport and the standard axiom profile.
 
 ### EXP-044: evolutionary stability static/dynamic ownership
 
