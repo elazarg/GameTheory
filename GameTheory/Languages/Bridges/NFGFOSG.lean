@@ -1,14 +1,14 @@
 /-
-# EXP-042: one-shot NFG through FOSG
+# One-shot NFG through FOSG
 
-This file tests the last frozen language transfer against the accepted static
-and sequential interfaces. The source normal form compiles to `GameForm`; the
-target FOSG contains exactly an execution protocol and its factored information
-model. The one-shot compiler uses the real history runner and preserves the
-source outcome law.
+The source normal form compiles to `GameForm`; the target FOSG contains exactly
+an execution protocol and its factored information model. The one-shot
+compiler uses the real history runner and preserves the source outcome and
+utility laws.
 -/
 
-import GameTheory.Protocol.Strategic
+import GameTheory.Languages.NFG
+import GameTheory.Languages.FOSG
 
 noncomputable section
 
@@ -17,78 +17,7 @@ namespace GameTheory.Languages
 open GameTheory GameTheory.Protocol GameTheory.Probability
 open ExecutionProtocol
 
-universe uι ua uo us up uq uk
-
-namespace NFG
-
-set_option linter.checkUnivs false in
-/-- Utility-free deterministic normal-form syntax. Capabilities such as
-finiteness and utilities belong to the operations that need them. -/
-structure Game (ι : Type uι) where
-  /-- Each player's action carrier. -/
-  Action : ι → Type ua
-  /-- The outcome carrier. -/
-  Outcome : Type uo
-  /-- The outcome selected by a pure action profile. -/
-  outcome : (∀ i, Action i) → Outcome
-
-namespace Game
-
-variable {ι : Type uι} (G : Game ι)
-
-/-- The canonical static signature of a normal-form game. -/
-abbrev signature : GameSignature ι where
-  Strategy := G.Action
-  Outcome := G.Outcome
-
-/-- Deterministic normal-form syntax compiles directly to the canonical static
-form. It introduces no language-specific deviation or equilibrium predicate. -/
-@[reducible]
-def toGameForm : GameForm ι where
-  sig := G.signature
-  play profile := FinDist.pure (G.outcome profile)
-
-@[simp]
-theorem toGameForm_play (profile : Profile G.signature) :
-    G.toGameForm.play profile = FinDist.pure (G.outcome profile) := rfl
-
-end Game
-
-end NFG
-
-namespace FOSG
-
-set_option linter.checkUnivs false in
-/-- A factored-observation stochastic game uses the accepted execution object
-and its information model directly. It owns no second runner or history type. -/
-structure Game (ι : Type uι) where
-  /-- Legal simultaneous actions and stochastic transitions. -/
-  execution : ExecutionProtocol.{uι, us, ua} ι
-  /-- Public/private observations, local information, and legal local menus. -/
-  information : InformationModel.{uι, us, ua, up, uq, uk} execution
-
-namespace Game
-
-variable {ι : Type uι} (G : Game ι)
-
-/-- FOSG histories are canonical Protocol histories. -/
-abbrev History := G.execution.History
-
-/-- Compile information-local pure policies using the canonical history
-runner. -/
-@[reducible]
-def toGameForm (horizon : ℕ) : GameForm ι :=
-  G.information.toGameForm horizon
-
-@[simp]
-theorem toGameForm_play (horizon : ℕ)
-    (profile : Profile G.information.strategicSignature) :
-    (G.toGameForm horizon).play profile =
-      G.information.run profile horizon := rfl
-
-end Game
-
-end FOSG
+universe uι
 
 namespace NFG.OneShotFOSG
 

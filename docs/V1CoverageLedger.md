@@ -56,9 +56,10 @@ No broad family below is called complete merely because its flagship exists.
 | F7 | discounted folk theorem | **complete** | `Analysis/Repeated/Folk.lean` and a nontrivial Prisoner's Dilemma witness | no remainder for the frozen theorem; monitoring is separate |
 | F8 | public-monitoring signal-prefix successor/bind law | **complete** | `Repeated/Monitoring.lean`; noisy branch-dependent two-period probe; [declaration ledger](coverage/F8-public-monitoring-prefix.md) | no remainder for the frozen law; monitoring equilibrium and rank theory remain D-REPEAT |
 
-Headline: F1, F2, F5, F6, F7, and F8 are complete. F3 and F4 are complete at
-their accepted semantic layers. Every frozen flagship F1-F8 now has a completed
-semantic result; the named transfer queue T1-T4 remains open.
+Headline: every frozen flagship F1-F8 is complete at its accepted semantic
+layer, and every frozen transfer T1-T4 now has its named direct theorem. This
+closes the architecture-era flagship and transfer queue; broad family recovery
+remains separately accounted below.
 
 ## Frozen transfer reconciliation
 
@@ -66,11 +67,12 @@ semantic result; the named transfer queue T1-T4 remains open.
 |---|---|---|---|
 | T1 | finite EFG strategic extraction and pure/mixed Nash transfer | **complete** | information-local contingent plans, finite-carrier capability, exact native-run Nash iff theorems, and a nonconstant-payoff hostile test; [declaration ledger](coverage/T1-efg-strategic-nash.md) |
 | T2 | behavioral/mixed correspondence | **complete** | both constructive EFG directions, exact realizable history-law equality, generic outcome-law wrappers, and expected-utility corollaries; [declaration ledger](coverage/T2-kuhn-correspondence.md) |
-| T3 | MAID to EFG outcome, utility, and strategy transfer | **partial probe** | arbitrary MAID DAG, same-owner incomparable-decision locality, EFG translation, strategy correspondence, and named transfer; [declaration ledger](coverage/T3-maid-efg.md) |
-| T4 | one-shot NFG to FOSG embedding commuting with compilation | **not started** | both stable frontends and the exact commuting theorem |
+| T3 | MAID to EFG outcome, utility, and strategy transfer | **complete** | arbitrary typed DAG, same-owner incomparable-decision locality, native/compiled behavioral law equality at every topological order, source-owner policy equivalence, and canonical Nash iff; [declaration ledger](coverage/T3-maid-efg.md) |
+| T4 | one-shot NFG to FOSG embedding commuting with compilation | **complete** | stable NFG/FOSG frontends, actual Protocol history-runner equality, arbitrary external utility-law equality, and simultaneous/locality hostile witness; [declaration ledger](coverage/T4-nfg-fosg.md) |
 
-T1 and T2 are complete. The absence of a generic certificate hierarchy does not
-complete T3 or T4; each named theorem is credited or rejected independently.
+T1-T4 are complete by their named direct theorems. The generic predecessor
+certificate wrappers remain retired under D7 and receive no independent
+credit.
 
 ## Cross-cutting obligations
 
@@ -120,15 +122,15 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | provisional substrate | partial | general finite syntax and T4 source |
+| L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | validated by EXP-042/T4 | partial | inventory and recover examples, public goods, Stackelberg, cheap talk, and mixed presentations |
 | L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, strategic and Kuhn transfer, nonconstant rationality, and EFG-facing SPE semantics | partial | broad declaration inventory and non-flagship recovery |
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem and EFG surface | partial | inventory non-flagship generic and language-specific declarations |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
-| L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | provisional probe | partial | incomparable-node DAG and T3 |
-| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | native language compiling to Protocol | assigned | not started | simultaneous active-player hostile slice |
+| L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | validated by EXP-041/T3 | partial | broader refinement, recall, and Kuhn-facing declaration recovery |
+| L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | transparent Protocol execution/information specialization | validated by EXP-042/T4 | partial | inventory reachable histories, richer observations, values, and named EFG comparisons |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | native branch only if it retains theorem-relevant data | assigned | not started | one theorem unavailable from bare Protocol |
-| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1 complete | partial/retirement open | T3, T4, then declaration accounting |
+| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1, T3, and T4 complete | partial/retirement open | declaration accounting; add composition only after two live consumers earn it |
 | L-OPEN | `Languages/OpenGame.lean`, `Languages/OpenGame/**` | 15 | `Frontier` | Frontier | not started | one compositional theorem and external semantic comparison |
 
 ### Mechanisms, auctions, and collective choice
@@ -186,9 +188,9 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Create the remaining declaration-level ledger for T4; the F2, F4, F5, F6,
-   F8, T1, T2, and T3 ledgers are complete inventories.
-2. Add a generated pinned declaration index and a coverage audit before the
+1. Add a generated pinned declaration index and a coverage audit before the
    first `v1-accounted` claim.
-3. Resolve the overdue knowledge and evolutionary ownership probes.
+2. Resolve the overdue knowledge and evolutionary ownership probes.
+3. Start broad NFG/FOSG recovery from their passed gates while keeping broader
+   family status partial until every pinned declaration is classified.
 4. Update this file in the same commit that changes a family status.

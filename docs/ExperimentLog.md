@@ -2765,10 +2765,16 @@ memory.
      axioms, or `open Classical`.
   9. Axiom checks for both generic laws and all hostile simultaneous/locality
      probes use only `propext`, `Classical.choice`, and `Quot.sound`.
+  10. Promotion splits `Languages.NFG`, `Languages.FOSG`, and
+      `Languages.Bridges.NFGFOSG`; the hostile fixture stays experimental. The
+      focused stable/test build is 1,724 jobs and the full build 3,341.
+      Full Phase 2/3 reachability audits pass. New probes report NFG
+      boundary/input counts `2/3`, FOSG solution/input counts `2/3`, and all
+      four intended bridge inputs reached.
 - **Outcome:** supports. No kill condition fired. D15 adopts a utility-free
   deterministic NFG frontend, the transparent Protocol-backed FOSG
   specialization, and the named direct one-shot bridge. The predecessor's
   generic morphism wrapper is retired under D7.
-- **Next action:** promote the three surfaces as separate stable modules, keep
-  the hostile fixture experimental, add positive/negative import probes, and
-  rerun full Phase 2/3 reachability before crediting T4.
+- **Next action:** T4 and every frozen transfer are complete. Continue broad
+  NFG/FOSG declaration recovery behind the passed gates; do not generalize the
+  retired morphism wrapper without a new composition consumer.

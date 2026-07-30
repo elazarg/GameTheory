@@ -258,7 +258,7 @@ recovery creates pressure to work around them.
 | W1-C | no-regret learning to CCE | **complete** | the frozen F2 theorem uses the canonical deviation and correlation APIs |
 | W1-D | finite-prefix stochastic monitoring | **complete** | the frozen F8 law handles a nontrivial signal law, not only perfect public observation |
 | W1-E | Bayesian outcome-law and truthfulness transfers | **complete** | F5 and F6 are ported, adapted, or explicitly retired with measured reasons |
-| W1-F | named language transfers | partial; T1 and T3 complete | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
+| W1-F | named language transfers | **complete; T1, T3, and T4 closed** | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | **complete** | both constructive directions, realizable history-law equality, arbitrary outcome pushforwards, and expected utility are exposed under the sharp no-revisit/recall hypotheses |
 | W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
 | W1-I | overdue knowledge and evolutionary ownership probes | open | Aumann/`InfoState` and ESS/static-dynamic slices either validate their proposed homes or record replacements |
@@ -270,12 +270,12 @@ Recommended dependency order:
 2. Completed W1-A through W1-E fix the continuation, Bayes, SPE, one-shot,
    external-regret, approximate-CCE, public-monitoring, recommendation-law, and
    truthful-mechanism targets used by later recovery.
-3. T1, T3, and W1-G now fix the EFG/MAID strategic-form and Kuhn targets; W1-H
-   and the T4 remainder of W1-F exercise those and the other
-   language-specific targets.
+3. T1, T3, T4, and W1-G now fix the EFG/MAID/NFG/FOSG strategic-form,
+   transformation, and Kuhn targets; W1-H exercises the remaining minimal
+   transformation surface.
 4. W1-I may proceed independently, but must close before those domains harvest.
-5. MAID/FOSG transfer packages proceed only after their language-specific
-   execution probes pass.
+5. The MAID and FOSG execution probes and named transfer packages have passed;
+   broader recovery proceeds through their declaration ledgers.
 
 Wave 1 closes only when every frozen flagship F1-F8 and transfer T1-T4 is
 `complete`, `subsumed`, `refuted`, `deferred` behind a named later gate, or
@@ -309,17 +309,18 @@ obligations build.
 
 ## 8. Wave 3: sequential and language recovery
 
-Status: EFG recovery is unblocked; other languages retain their named gates.
+Status: NFG, EFG, MAID, and FOSG recovery is unblocked; other languages retain
+their named gates.
 
 Languages share execution and information infrastructure, not one mandatory
 surface syntax.
 
 | Lane | First gate | Recovery after the gate |
 |---|---|---|
-| NFG | a transparent finite syntax compiles to the canonical static form without a second Nash API | examples, public goods, Stackelberg, cheap talk, and mixed presentations |
+| NFG | **passed (EXP-042/T4):** utility-free deterministic syntax compiles to the canonical static form without a second Nash API | examples, public goods, Stackelberg, cheap talk, and mixed presentations |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
 | MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
-| FOSG | simultaneous active players and imperfect information compile honestly to Protocol | reachable histories, terminal laws, observations, strategies, values, and named EFG comparison |
+| FOSG | **passed (EXP-042/T4):** real source players act simultaneously through Protocol; phase-only local views cannot observe an opponent's current action; exact outcome and utility laws commute | reachable histories, terminal laws, richer observations, strategies, values, and named EFG comparison |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | the native strategy/information object proves one theorem not recoverable from bare Protocol | compilation, perfect recall, and native theorems |
 | bridges and expressiveness | two real transfers compose more cheaply than direct named proofs | only the earned relation or composition API; otherwise classify v1 transport as retired |
@@ -524,14 +525,15 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. create the remaining declaration-level ledger for open T4; the F2, F4, F5,
-   F6, F8, T1, T2, and T3 ledgers are complete inventories;
-2. finish or reject the named language transfers individually, then resume the
-   broader revelation and information-design inventory without reopening F5/F6;
-3. open the static learning/communication and congestion harvest lanes;
-4. admit at most one mature blind-spot experiment—finite stochastic games or
+1. add a generated pinned declaration index and consolidated coverage audit
+   before the first `v1-accounted` claim;
+2. resolve the overdue knowledge and evolutionary ownership probes;
+3. resume the broader revelation/information-design inventory and open the
+   static learning/communication and congestion harvest lanes;
+4. begin broad NFG/FOSG recovery from their now-passed language gates;
+5. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
-5. admit no Frontier implementation until the first three items have an active
+6. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change

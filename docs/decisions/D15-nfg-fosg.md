@@ -1,7 +1,6 @@
 # D15: normal-form and factored-observation language surfaces
 
-- **Status:** adopted; experimental one-shot transfer passes, promotion
-  unblocked
+- **Status:** adopted and promoted; T4 complete
 - **Date:** 2026-07-30
 - **Experiment IDs:** EXP-042
 
@@ -93,3 +92,8 @@ Promotion must split syntax, FOSG specialization, and the named bridge into
 separate modules so import probes can verify the intended boundaries. The
 hostile fixture remains experimental.
 
+That promotion is complete. `Languages.NFG`, `Languages.FOSG`, and
+`Languages.Bridges.NFGFOSG` are separate stable modules; the hostile fixture
+remains under `Experimental/PostArchitecture`. The full build completes in
+3,341 jobs. Phase 2/3 full reachability audits pass, including positive and
+negative NFG/FOSG/bridge probes, and the flagship axiom profile is unchanged.

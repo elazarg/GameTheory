@@ -6,7 +6,7 @@ changes the terminal outcome but cannot change the row player's initial policy
 input or action.
 -/
 
-import GameTheory.Experimental.PostArchitecture.NFGFOSG
+import GameTheory.Languages.Bridges.NFGFOSG
 
 noncomputable section
 

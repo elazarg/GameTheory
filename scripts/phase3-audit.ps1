@@ -368,6 +368,74 @@ if (-not $SkipReachability) {
   }
   Report 'MAID_STRATEGIC_INPUT_PROBES_REACHED' $maidStrategicInputsReached
 
+  # D15 separates deterministic NFG syntax, Protocol-backed FOSG semantics,
+  # and their one named join. Probe both absence and positive use so a boundary
+  # cannot pass merely because an intended input fell out of the implementation.
+  $nfgBoundaryRejected = 0
+  $nfgBoundaryConstants = @(
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.ExecutionProtocol')
+  $nfgInputConstants = @(
+    'GameTheory.GameForm',
+    'GameTheory.Languages.NFG.Game',
+    'GameTheory.Languages.NFG.Game.toGameForm')
+  $nfgOutput = Run-Probe 'GameTheory.Languages.NFG' `
+    ($nfgBoundaryConstants + $nfgInputConstants)
+  foreach ($constant in $nfgBoundaryConstants) {
+    if (Is-Unreachable $nfgOutput $constant) {
+      $nfgBoundaryRejected++
+    }
+  }
+  Report 'NFG_BOUNDARY_PROBES_REJECTED' $nfgBoundaryRejected
+
+  $nfgInputsReached = 0
+  foreach ($constant in $nfgInputConstants) {
+    if (-not (Is-Unreachable $nfgOutput $constant)) {
+      $nfgInputsReached++
+    }
+  }
+  Report 'NFG_INPUT_PROBES_REACHED' $nfgInputsReached
+
+  $fosgBoundaryRejected = 0
+  $fosgBoundaryConstants = @(
+    'GameTheory.IsNash',
+    'GameTheory.euPreference')
+  $fosgInputConstants = @(
+    'GameTheory.Protocol.ExecutionProtocol',
+    'GameTheory.Protocol.InformationModel',
+    'GameTheory.Languages.FOSG.Game.toGameForm')
+  $fosgOutput = Run-Probe 'GameTheory.Languages.FOSG' `
+    ($fosgBoundaryConstants + $fosgInputConstants)
+  foreach ($constant in $fosgBoundaryConstants) {
+    if (Is-Unreachable $fosgOutput $constant) {
+      $fosgBoundaryRejected++
+    }
+  }
+  Report 'FOSG_SOLUTION_PROBES_REJECTED' $fosgBoundaryRejected
+
+  $fosgInputsReached = 0
+  foreach ($constant in $fosgInputConstants) {
+    if (-not (Is-Unreachable $fosgOutput $constant)) {
+      $fosgInputsReached++
+    }
+  }
+  Report 'FOSG_INPUT_PROBES_REACHED' $fosgInputsReached
+
+  $nfgFosgBridgeInputsReached = 0
+  $nfgFosgBridgeConstants = @(
+    'GameTheory.Languages.NFG.Game.toGameForm',
+    'GameTheory.Languages.FOSG.Game.toGameForm',
+    'GameTheory.Languages.NFG.OneShotFOSG.toProtocolForm_play_policyProfile',
+    'GameTheory.Languages.NFG.OneShotFOSG.toProtocolForm_utilityLaw_policyProfile')
+  $nfgFosgBridgeOutput =
+    Run-Probe 'GameTheory.Languages.Bridges.NFGFOSG' $nfgFosgBridgeConstants
+  foreach ($constant in $nfgFosgBridgeConstants) {
+    if (-not (Is-Unreachable $nfgFosgBridgeOutput $constant)) {
+      $nfgFosgBridgeInputsReached++
+    }
+  }
+  Report 'NFG_FOSG_BRIDGE_INPUT_PROBES_REACHED' $nfgFosgBridgeInputsReached
+
   $efgBridgeInputsReached = 0
   $efgBridgeConstants = @(
       'GameTheory.Languages.EFG.Game',
@@ -420,6 +488,11 @@ if ($VerifyExpected) {
     $Expected['MAID_BASIC_BOUNDARY_PROBES_REJECTED'] = 2
     $Expected['MAID_BASIC_INPUT_PROBES_REACHED'] = 3
     $Expected['MAID_STRATEGIC_INPUT_PROBES_REACHED'] = 4
+    $Expected['NFG_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['NFG_INPUT_PROBES_REACHED'] = 3
+    $Expected['FOSG_SOLUTION_PROBES_REJECTED'] = 2
+    $Expected['FOSG_INPUT_PROBES_REACHED'] = 3
+    $Expected['NFG_FOSG_BRIDGE_INPUT_PROBES_REACHED'] = 4
     $Expected['EFG_BRIDGE_INPUT_PROBES_REACHED'] = 3
   }
   foreach ($entry in $Expected.GetEnumerator()) {

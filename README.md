@@ -29,6 +29,12 @@ GameTheory/Repeated      stable public histories, finite public monitoring,
                          discounting, cycles, and triggers
 GameTheory/Languages     scoped language encodings and truthful Bayesian
                          mechanism compilation with recorded limitations
+  /NFG                   deterministic normal-form syntax compiling directly
+                         to the canonical static form, with no second Nash API
+  /FOSG                  transparent Protocol execution/information
+                         specialization with simultaneous actions
+  /Bridges/NFGFOSG       exact one-shot source-to-target outcome and utility
+                         laws through the actual Protocol history runner
   /EFG                   transparent extensive-form specialization; finite
                          capabilities are supplied explicitly; strategic
                          extraction exposes exact pure/mixed Nash iff laws and

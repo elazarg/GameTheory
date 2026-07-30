@@ -20,8 +20,10 @@ name in quotation marks is a test label, not a frozen public declaration name.
 
 T1's baselines are theorem-specific equalities rather than a second strategic
 semantics. T2 is intentionally asymmetric: the expensive Kuhn proof is audited,
-not reimplemented. T3 and T4 retain both the direct theorem and certificate
-wrapper so Phase 3 can measure whether composition earns the wrapper.
+not reimplemented. Phase 0 froze both the T3/T4 direct theorem and predecessor
+certificate wrapper so Phase 3 could measure whether composition earned the
+wrapper. D7 and the completed T3/T4 slices retained the direct theorems and
+retired the wrappers: no live composition consumer justified them.
 
 ### Kuhn dependency audit
 

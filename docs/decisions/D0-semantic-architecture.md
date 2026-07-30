@@ -148,7 +148,17 @@ source-owner policy profile is coordinatewise equivalent to the compiled
 behavioral profile, unilateral updates commute with that equivalence, and
 ordinary expected-utility `IsNash` is equivalent on the native and compiled
 game forms. Decision sites are not relabelled as players and no certificate
-layer was introduced. T4 is the only frozen transfer still open.
+layer was introduced.
+
+**T4 delivery close-out (2026-07-30).** Utility-free deterministic
+`Languages.NFG.Game` compiles directly to `GameForm`, while
+`Languages.FOSG.Game` is the transparent pairing of the accepted execution and
+information objects. The named one-shot bridge keeps source players and action
+types, makes every player active at the same history, and proves that the
+actual Protocol history law mapped back to source outcomes equals the direct
+NFG law. Mapping any external utility preserves the joint utility law as well.
+The predecessor morphism wrapper is retired under D7. All four frozen
+transfers T1-T4 are now closed without a generic certificate hierarchy.
 
 The execution-side scope limit recorded at finalization is now closed.
 `History.lean` and `Randomized.lean` run information-local deterministic,

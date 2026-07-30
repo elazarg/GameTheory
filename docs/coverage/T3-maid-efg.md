@@ -5,12 +5,11 @@ Family ID: T3
 Pinned roots: all declarations in
 `GameTheory/Languages/Bridges/MAID_EFG.lean`
 Pinned commit: `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`
-Successor baseline: `2964804`
-Canonical destination: pending the D14 general-DAG slice;
-`GameTheory.Languages.MAID` and a thin named EFG bridge
+Successor baseline: `2b659df`
+Canonical destination: `GameTheory.Languages.MAID` and its named EFG compiler
 Domain contract / decision: D0, D6, D7, D14; post-architecture gate W1-F
 Owner: Wave 1 / MAID transfer
-Status: in progress; inventory complete, implementation open
+Status: complete for frozen T3; non-flagship bridge recovery remains in L-MAID
 Last verified: 2026-07-30
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
@@ -45,10 +44,10 @@ Last verified: 2026-07-30
 | same | `maid_efg_evalDist_at` | theorem | adapt | T3 explicit-order outcome law | Phase 0 T3 | Preserve the direct public form. |
 | same | `buildTree_pol_irrel` | private theorem | retired | T3 compiler construction | D7 | Seed-policy irrelevance is an artifact of the old tree builder. |
 | same | `maidToEFGAt_pol_irrel` | theorem | retired | T3 compiler construction | D7 | The successor compiler must not take irrelevant policy data. |
-| same | `maidToEFGAt_outcomeKernel` | theorem | adapt | T3 behavioral outcome-law equality | frozen T3 | One of the exact frozen transfer declarations. |
+| same | `maidToEFGAt_outcomeKernel` | theorem | adapt | `FrontierEquivalence.nativeRun_eq_compiledBehavioralRun` | EXP-041/T3 | Exact arbitrary typed-DAG native/actual-compiled behavioral assignment law. |
 | same | `maidToEFGAt_pure_outcomeKernel` | theorem | adapt | T3 pure outcome-law equality | frozen T3 | Keep the pure specialization if it is shorter than re-specializing at use sites. |
 | same | `maidToEFGAt_pure_bisimulation` | definition | retired | direct named pure law | D7 | Generic certificate wrappers were rejected. |
-| same | `maidToEFGAt_udist` | theorem | adapt | T3 expected-utility equality | frozen T3 | One of the exact frozen transfer declarations. |
+| same | `maidToEFGAt_udist` | theorem | subsume | `nativeRun_eq_compiledBehavioralRun` plus finite-law mapping | EXP-041/T3 | Utility remains external to both syntax and execution. |
 | same | `maidToEFGAt_bisimulation` | definition | retired | direct named laws | D7 | Twenty-line certificate wrapper bought no extra theorem. |
 | same | `maidToEFGAt_simulation` | definition | retired | direct named laws | D7 | Same certificate-hierarchy rejection. |
 | same | `maidToEFGAt_morphism` | definition | retired | direct named laws | D7 | Same certificate-hierarchy rejection. |
@@ -68,11 +67,12 @@ Last verified: 2026-07-30
 | same | `kuhn_behavioral_to_mixed_udist` | theorem | subsumed | generic EFG Kuhn theorem after T3 recall | W1-G | No MAID-specific duplicate proof. |
 | same | `kuhn_mixed_to_behavioral_udist` | theorem | subsumed | generic EFG Kuhn theorem after T3 recall | W1-G | No MAID-specific duplicate proof. |
 
-The pinned bridge has 52 declarations: 28 are targeted for adaptation, 6 are
+The pinned bridge has 52 declarations: 27 are targeted for adaptation, 7 are
 subsumed by accepted generic laws, and 18 are retired as duplicate spellings,
 private implementation details, or D7 certificate wrappers. No row is
-`unreviewed`; implementation status remains open because the `adapt` targets do
-not yet exist.
+`unreviewed`. The frozen outcome, utility, strategy, and equilibrium transfer
+is complete; remaining non-flagship `adapt` rows belong to broad L-MAID
+recovery and do not reopen T3.
 
 The source contains no named Nash-equilibrium iff theorem despite D0 freezing
 an outcome, utility, and equilibrium transfer. T3 therefore has one explicit
@@ -80,8 +80,11 @@ successor-only obligation: after the profile equivalence and outcome law are
 proved, expose pure and behavioral unilateral-deviation/Nash preservation using
 the one canonical equilibrium predicate. A bisimulation record is not credit.
 
-EXP-037 passes the first MAID lane gate but deliberately does not satisfy this
-ledger. It validates simultaneous resolution of a two-player decision
-antichain. The general slice must additionally address multiple incomparable
-decision sites owned by one player; otherwise the target EFG strategy space may
-silently gain information through the serialization order.
+EXP-037 passed the first execution gate; EXP-038 then refuted a combined view
+for same-owner incomparable decisions. EXP-040/041 supply the general typed
+frontier evaluator, site-local explicit-order compiler, order independence,
+and exact actual-runner law. `Strategic.ownerPolicyEquiv` regroups target
+policies by source owner, `behavioralProfileEquiv_update` preserves unilateral
+replacement at that coordinate, and `isNash_native_iff_compiled` proves the
+canonical Nash equivalence. The full build and Phase 2/3 audits pass, and the
+flagship declarations use only `propext`, `Classical.choice`, and `Quot.sound`.
