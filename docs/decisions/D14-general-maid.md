@@ -115,3 +115,24 @@ Consequently:
 
 This is a narrowing of EXP-037, not a reversal: its execution result and
 distinct-owner policy probe remain valid.
+
+## Typed native evaluator
+
+EXP-040 supports the narrowed design. The experimental syntax uses an arbitrary
+node carrier and heterogeneous dependent value family, keeps site-local policy
+in the type, and derives unresolved frontiers from the EXP-039 acyclicity
+certificate. Evaluation samples a dependent product over the whole frontier
+and replaces those coordinates simultaneously. The named state certificate
+proves all node-law parents resolved; unresolved default coordinates are never
+passed to a law.
+
+The same API instantiates both a heterogeneous diamond and EXP-038's
+same-owner/disjoint-observation graph. The latter's real runner commits both
+decisions together and distinguishes changes at each site. The source contains
+no direct update or transport token and stores no finite capability.
+
+This validates the native side of T3 but does not freeze it publicly.
+`resolved_ssubset_extend_of_incomplete` gives strict finite progress; a named
+cardinality-bounded completion theorem remains required. More importantly, the
+explicit-order EFG compiler must still prove exact equality with the frontier
+law and independence from the chosen order.

@@ -50,6 +50,7 @@ becomes difficult to scan.
 | EXP-037 | 2026-07-30 | D6/D14 / MAID gate | Can incomparable MAID decisions compile without asserting a false order? | Supports frontier batching; unlocks general MAID work | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDIncomparable.lean` |
 | EXP-038 | 2026-07-30 | D6/D14 / T3 strategy gate | Does per-player frontier batching preserve locality when one player owns incomparable decisions? | Refutes combined-view policies; narrows D14 | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` |
 | EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
+| EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; public promotion awaits totality and T3 | `GameTheory/Experimental/PostArchitecture/TypedMAID*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 
 ## Entry template
 
@@ -2462,3 +2463,76 @@ memory.
   node carrier, with site-local policies and order-free frontier evaluation;
   do not promote the syntax until the same-owner and diamond probes instantiate
   it.
+
+### EXP-040: heterogeneous site-local frontier evaluation
+
+- **Date / revision:** 2026-07-30, working tree based on `9bdc140`
+- **Status:** complete
+- **Decision / question:** D2, D9, D14, and T3; whether a general typed MAID can
+  keep heterogeneous node values and native site-local policies while
+  evaluating every currently minimal unresolved node in one order-free
+  frontier step.
+- **Hypothesis, recorded before implementation:** store only node kinds,
+  predecessor/observation finsets, a dependent value family, and acyclicity in
+  syntax. Put finite enumeration and decidable equality on evaluation. A state
+  may carry a total assignment plus a resolved finset; unresolved coordinates
+  contain explicit defaults and are semantically inaccessible. A frontier draw
+  is a dependent finite product, and updating all frontier coordinates at once
+  needs no equality transport because each sampled coordinate retains its
+  original node index.
+- **Representative slice:** one typed API instantiated twice: the four-node
+  diamond and the same-owner/disjoint-observation graph from EXP-038. Prove
+  generic frontier nonemptiness before completion, parent closure after a
+  step, exact simultaneous commitment, and a terminal outcome law sensitive to
+  both site-local policies.
+- **Competing designs:** homogeneous node values; dependent partial maps with a
+  transport module; total defaulted assignments plus resolved finsets;
+  explicit topological folds; or retaining only the concrete stable MAID.
+- **Kill conditions:** user-visible transport, direct `Function.update`,
+  unresolved values reaching a node law, combined-view policies, stored
+  `Fintype`/`DecidableEq`, order-dependent native evaluation, or failure of
+  generic frontier progress.
+- **Evidence:**
+  1. `TypedMAID.lean` is 240 nonblank lines and 29 declarations. `Structure`
+     stores node kind, causal and observed parent finsets, a dependent value
+     family, locality laws, and acyclicity—no order, `Fintype`, or
+     `DecidableEq`. `Policy` is indexed by decision site and receives only that
+     site's observed-parent configuration.
+  2. A frontier state stores a total defaulted assignment, a resolved finset,
+     and predecessor closure. `frontier_nonempty` derives a well-founded
+     minimal unresolved node whenever the state is incomplete. `extend`
+     preserves predecessor closure and
+     `resolved_ssubset_extend_of_incomplete` proves strict progress.
+  3. `frontierLaw` uses `FinDist.pi` over the dependent frontier family.
+     `Assignment.resolve` updates every sampled coordinate simultaneously
+     without `Function.update` or equality transport. A node law is constructed
+     only after its causal parents—and, by subset, its observed parents—are
+     proved resolved.
+  4. The 494-nonblank-line hostile test has 63 declarations. Its diamond uses
+     four different dependent alphabets (`Bool`, `Fin 2`, `Unit`, `Bool`) and
+     derives the correct initial frontier. Its same-owner fixture has two
+     disjointly observed decision sites in one frontier.
+  5. The actual generic runner, not a manual second evaluator, reaches a pure
+     complete state in two steps under responsive and constant policies.
+     Both chance nodes and both decision nodes commit simultaneously at their
+     respective frontier. Responsive utility is two; constant-false and
+     constant-true utility are one, so separate theorems show right- and
+     left-site policy sensitivity.
+  6. The evaluator has exactly two project prerequisites, `FinDist` and the
+     game-independent DAG module. The focused target builds in 1,715 jobs and
+     the full build in 3,331. Source scans find zero placeholders,
+     `native_decide`, direct updates, or transport tokens.
+  7. Axiom checks for generic frontier progress/strict growth, heterogeneous
+     frontier calculation, the two-step run, simultaneous commitment, and both
+     policy-sensitivity theorems use only `propext`, `Classical.choice`, and
+     `Quot.sound`. Phase 2/3 audits retain all expected trust, boundary, and
+     reachability measurements.
+- **Outcome:** supports. The total-defaulted assignment design preserves
+  heterogeneous indices without a transport surface, and native site-local
+  policies survive the exact same-owner falsifier that rejected combined
+  Protocol views. No kill condition fired.
+- **Next action:** prove a generic cardinality-bounded completion theorem for
+  `run`, then translate an explicit topological order to an EFG whose
+  information states expose exactly `observedParents`. Keep the implementation
+  experimental until the serialized run equals this frontier law and order
+  independence is proved.
