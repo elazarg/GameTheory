@@ -45,6 +45,9 @@ becomes difficult to scan.
 | EXP-032 | 2026-07-30 | D6/D12 / Phase 5 | Where should Kreps-Wilson limit consistency live when its topology is on Protocol policies and beliefs? | Supports one-way Analysis bridge; narrows beliefs to reachable sites | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/` |
 | EXP-033 | 2026-07-30 | D6/D12 / Phase 5 | Can a finite EFG adapter instantiate behavioral assessments and sequential consistency without importing solution concepts into syntax or duplicating Protocol semantics? | Supports transparent specialization; corrects the assessment interface | `GameTheory/Languages/EFG.lean`; `GameTheory/Analysis/Protocol/EFG.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
 | EXP-034 | 2026-07-30 | D6/D12 / finite EFG theorem | Can the hostile hidden-information EFG carry an actual sequential-equilibrium witness rather than only the proposition? | Supports; concrete consistency and equilibrium witness | `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/Sequential.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
+| EXP-035 | 2026-07-30 | D6/D12 / finite EFG theorem | Does the hostile EFG remain sequentially rational under a nonconstant hidden-state payoff? | Supports; completes W1-A | `GameTheory/Analysis/Protocol/EFGTest.lean` |
+| EXP-036 | 2026-07-30 | D6 / sequential theory | Does well-founded information-local one-shot optimality characterize SPE, including off-path histories? | Supports; completes W1-B | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SubgamePerfect.lean` |
+| EXP-037 | 2026-07-30 | D6/D14 / MAID gate | Can incomparable MAID decisions compile without asserting a false order? | Supports frontier batching; unlocks general MAID work | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDIncomparable.lean` |
 
 ## Entry template
 
@@ -2267,3 +2270,76 @@ memory.
 - **Next action:** keep any EFG syntax wrapper thin during L-EFG harvesting,
   and move the Wave 1 critical path to F2 no-regret-to-CCE and F8 stochastic
   monitoring while T1 proceeds independently.
+
+### EXP-037: incomparable MAID decisions without false serialization
+
+- **Date / revision:** 2026-07-30, working tree based on `eb17f87`
+- **Status:** complete
+- **Decision / question:** D6, D14, and the L-MAID/T3 delivery gate; whether a
+  MAID with two causally incomparable decision nodes can compile to the
+  accepted execution/information layer without asserting that either decision
+  precedes the other.
+- **Hypothesis, recorded before implementation:** compile the current minimal
+  frontier as one Protocol step. Incomparable decisions are then simultaneous
+  active players whose joint action advances the frontier once. Each policy
+  sees common resolved parents but neither decision sees the other's current
+  action. The exact terminal outcome law should equal direct evaluation of both
+  decision rules under the shared chance law.
+- **Representative slice:** one nondegenerate Boolean chance node; two Boolean
+  decision nodes owned by different agents, both observing chance and
+  incomparable with each other; one utility node depending nontrivially on both
+  decisions. The hostile tests must show that both players are active at the
+  same history, each decision changes the law, observation matters, and there
+  is no intermediate state in which only one decision has been recorded.
+- **Competing designs:** serialize an arbitrary topological order while hiding
+  the first action from the second policy; batch the antichain frontier into a
+  simultaneous joint step; or keep the concrete linear MAID and reject a
+  general public MAID until a different execution representation exists.
+- **Kill conditions:** any fake player or padding action beyond Protocol's
+  canonical `none`; a state that records one incomparable decision before the
+  other; a policy that can inspect the other current action or hidden execution
+  state; a second evaluator; outcome-law dependence on an arbitrary order;
+  transport/audit exceptions; or a public API frozen before the hostile slice
+  and D14 measurement are complete.
+- **Planned artifacts / commands:**
+  `GameTheory/Experimental/PostArchitecture/MAIDIncomparable.lean`;
+  `lake build GameTheory.Experimental.PostArchitecture.MAIDIncomparable`;
+  source and axiom audits; full phase audits if the spike is promoted.
+- **Evidence:**
+  1. The 406-nonblank-line experimental module has 58 declarations, all under
+     `GameTheory.Experimental`; no stable declaration or import changed. Its
+     only authored import is `GameTheory.Protocol.Information`. The generated
+     project import graph has six prerequisites: `FinDist`, Execution,
+     Extraction, History, Randomized, and Information; it reaches no language,
+     solution-concept, or Analysis root.
+  2. At `.chanceKnown signal`, both source agents are active and one legal joint
+     transition records both decisions. The state type has no constructor for
+     a partially recorded frontier, and `decisions_commit_together` proves
+     every supported target contains both choices.
+  3. Policies receive only the shared resolved chance parent. The compiled
+     three-step information-local run is proved equal to the direct law; no
+     second transition or evaluator was introduced.
+  4. Separate hostile theorems prove that changing either decision changes the
+     outcome law and that observing the common parent raises expected payoff
+     from one to two. The slice is therefore not validated by a vacuous or
+     policy-insensitive diagram.
+  5. The focused target builds in 1,718 jobs. Source scans report zero
+     `sorry`, `admit`, `native_decide`, direct `Function.update`, transport
+     tokens, `HEq`, or tactic `change`.
+  6. Axiom checks for the run law, simultaneous-commit theorem, and all three
+     outcome-dependence theorems use only `propext`, `Classical.choice`, and
+     `Quot.sound`.
+  7. The full build completes in 3,326 jobs. Phase 0, Phase 1, Phase 2, and
+     Phase 3 audits pass with their expected measurements and reachability
+     probes. The first Phase 2 run correctly rejected the new file as
+     unbucketed; the audit now gives post-architecture experiments an explicit
+     zero-transport budget instead of silently folding them into a historical
+     phase.
+- **Outcome:** supports. Frontier batching passes the hostile incomparable-node
+  gate without a fake order, fake player, padding action, hidden-state policy,
+  transport exception, or new runner. D14 adopts it as the compilation
+  invariant for general MAID work. This fixed antichain is evidence for the
+  design, not an implementation of arbitrary finite DAG syntax or T3.
+- **Next action:** inventory T3 at declaration level, then implement the
+  smallest general finite-DAG MAID whose frontier compiler specializes to this
+  slice before proving the named MAID-to-EFG laws.

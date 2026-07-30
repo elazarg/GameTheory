@@ -95,6 +95,7 @@ Report 'TRANSPORT_IN_PROFILE_MODULE' (Count-Pattern @($ProfileModule) $Transport
 $Phase1Files = @(Select-Files 'GameTheory/Experimental/Phase1')
 $Phase2ProbeFiles = @(Select-Files 'GameTheory/Experimental/Phase2')
 $Phase4Files = @(Select-Files 'GameTheory/Experimental/Phase4')
+$PostArchitectureFiles = @(Select-Files 'GameTheory/Experimental/PostArchitecture')
 $Phase2Owned = @('GameTheory/Probability', 'GameTheory/Core', 'GameTheory/Finite',
   'GameTheory/Examples', 'GameTheory/Tests/Locality.lean', 'GameTheory.lean')
 $Phase2Files = @($OutsideProfile | Where-Object {
@@ -137,10 +138,13 @@ foreach ($f in $AllFiles) {
 }
 Report 'CARRIER_INSTANCES_NOT_REDUCIBLE' $unannotated
 Report 'TRANSPORT_PHASE4_EVIDENCE' (Count-Pattern $Phase4Files $TransportPattern)
+Report 'TRANSPORT_POST_ARCHITECTURE' `
+  (Count-Pattern $PostArchitectureFiles $TransportPattern)
 # Every library file belongs to exactly one transport budget. An unbucketed file
 # is worse than a mis-bucketed one: nothing measures it, so it drifts unseen.
-$Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $Phase2Files + $Phase3Files +
-  $AnalysisFiles + $RepeatedFiles + @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
+$Bucketed = @($Phase1Files + $Phase2ProbeFiles + $Phase4Files + $PostArchitectureFiles +
+  $Phase2Files + $Phase3Files + $AnalysisFiles + $RepeatedFiles +
+  @($ProfileModule) + @(Select-Files 'GameTheory/Languages'))
 Report 'UNBUCKETED_FILES' (@($AllFiles | Where-Object { $Bucketed -notcontains $_ }).Count)
 # D2 requires the finite-law representation to stay hidden. `ENNReal`, `toReal`,
 # `PMF`, and `toPMF` must not appear outside the representation module; the
@@ -385,6 +389,7 @@ if ($VerifyExpected) {
     TRANSPORT_ANALYSIS_SOURCE = 0
     TRANSPORT_REPEATED_SOURCE = 0
     TRANSPORT_GAMETHEORYMATH_SOURCE = 0
+    TRANSPORT_POST_ARCHITECTURE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
     # One: the module that applies the fixed-point theorem, and nothing else.
     FIXED_POINT_IMPORTERS = 1
