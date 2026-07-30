@@ -160,7 +160,7 @@ theorem hasPositiveCirculation_iff_normalized
           (∑ i : {i : I // i ≠ i₀}, mass i * column i.1 u) /
             distinguishedMass := by
       simp only [div_mul_eq_mul_div]
-      rw [← Finset.sum_div]
+      rw [Finset.sum_div]
     rw [hsum]
     calc
       column i₀ u +
@@ -203,27 +203,36 @@ theorem normalizedPositiveCirculation_not_strictSeparator
         (∑ u, h u * column i₀ u) +
           ∑ i : {i : I // i ≠ i₀},
             alpha i * (∑ u, h u * column i.1 u) := by
-    simp only [mul_add]
-    rw [Finset.sum_add_distrib]
-    congr 1
     calc
       (∑ u, h u *
-          ∑ i : {i : I // i ≠ i₀}, alpha i * column i.1 u) =
+          (column i₀ u +
+            ∑ i : {i : I // i ≠ i₀}, alpha i * column i.1 u)) =
+          (∑ u, h u * column i₀ u) +
+            ∑ u, h u *
+              ∑ i : {i : I // i ≠ i₀},
+                alpha i * column i.1 u := by
+                  simp only [mul_add, Finset.sum_add_distrib]
+      _ = (∑ u, h u * column i₀ u) +
           ∑ u, ∑ i : {i : I // i ≠ i₀},
             h u * (alpha i * column i.1 u) := by
+              congr 1
               apply Finset.sum_congr rfl
               intro u _
               rw [Finset.mul_sum]
-      _ = ∑ i : {i : I // i ≠ i₀}, ∑ u,
-          h u * (alpha i * column i.1 u) := Finset.sum_comm
-      _ = ∑ i : {i : I // i ≠ i₀},
-          alpha i * (∑ u, h u * column i.1 u) := by
-            apply Finset.sum_congr rfl
-            intro i _
-            rw [Finset.mul_sum]
-            apply Finset.sum_congr rfl
-            intro u _
-            ring
+      _ = (∑ u, h u * column i₀ u) +
+          ∑ i : {i : I // i ≠ i₀}, ∑ u,
+            h u * (alpha i * column i.1 u) := by
+              rw [Finset.sum_comm]
+      _ = (∑ u, h u * column i₀ u) +
+          ∑ i : {i : I // i ≠ i₀},
+            alpha i * (∑ u, h u * column i.1 u) := by
+              congr 1
+              apply Finset.sum_congr rfl
+              intro i _
+              rw [Finset.mul_sum]
+              apply Finset.sum_congr rfl
+              intro u _
+              ring
   have hzero :
       (∑ u, h u *
         (column i₀ u +
@@ -242,6 +251,7 @@ theorem normalizedPositiveCirculation_xor_strictSeparator
     Xor (HasNormalizedPositiveCirculation column i₀)
       (∃ h, IsUnitStrictColumnSeparator column i₀ h) := by
   classical
+  rw [xor_def]
   by_cases hcirculation : HasNormalizedPositiveCirculation column i₀
   · exact Or.inl ⟨hcirculation,
       normalizedPositiveCirculation_not_strictSeparator hcirculation⟩
@@ -271,7 +281,11 @@ theorem positiveCirculation_xor_strictSeparator
     (column : I → S → ℝ) (i₀ : I) :
     Xor (HasPositiveCirculation column i₀)
       (∃ h, IsUnitStrictColumnSeparator column i₀ h) := by
-  rcases normalizedPositiveCirculation_xor_strictSeparator column i₀ with
+  rw [xor_def]
+  have h :=
+    normalizedPositiveCirculation_xor_strictSeparator column i₀
+  rw [xor_def] at h
+  rcases h with
       ⟨hcirculation, hnotSeparator⟩ | ⟨hseparator, hnotCirculation⟩
   · exact Or.inl
       ⟨(hasPositiveCirculation_iff_normalized column i₀).2 hcirculation,
@@ -360,10 +374,13 @@ theorem controlledEdgeCirculation_xor_unitPotential
           0 ≤ expect (controlled e) h - h (controlledSource e)) ∧
         0 < expect (controlled e₀) h - h (controlledSource e₀)) := by
   classical
+  rw [xor_def]
   let column :=
     stochasticOccupationColumn baseline controlled controlledSource
-  rcases positiveCirculation_xor_strictSeparator
-      column (Sum.inr e₀) with
+  have h :=
+    positiveCirculation_xor_strictSeparator column (Sum.inr e₀)
+  rw [xor_def] at h
+  rcases h with
       ⟨hcirculation, hnotSeparator⟩ | ⟨hseparator, hnotCirculation⟩
   · exact Or.inl ⟨hcirculation, by
       rintro ⟨h, hunit, hbaseline, hcontrolled, hstrict⟩
