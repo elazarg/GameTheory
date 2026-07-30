@@ -51,6 +51,7 @@ becomes difficult to scan.
 | EXP-038 | 2026-07-30 | D6/D14 / T3 strategy gate | Does per-player frontier batching preserve locality when one player owns incomparable decisions? | Refutes combined-view policies; narrows D14 | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` |
 | EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
 | EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; public promotion awaits T3 serialization equivalence | `GameTheory/Experimental/PostArchitecture/TypedMAID*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
+| EXP-041 | 2026-07-30 | D6/D14 / T3 serialization | Can an explicit topological order compile the typed MAID to an EFG without exposing serialized incomparable decisions? | In progress; generic EFG and two-order locality pass, outcome gate open | `GameTheory/Experimental/PostArchitecture/TypedMAIDToEFG*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 
 ## Entry template
 
@@ -2538,3 +2539,78 @@ memory.
   information states expose exactly `observedParents`. Keep the implementation
   experimental until the serialized run equals this frontier law and order
   independence is proved.
+
+### EXP-041: typed MAID serialization through EFG
+
+- **Date / revision:** 2026-07-30, working tree based on `6ef38c5`
+- **Status:** in progress; compiler and locality milestone supports, outcome
+  equivalence remains open
+- **Decision / question:** D6, D14, and T3; whether an explicit topological
+  order can compile the typed native diagram to the accepted
+  `Languages.EFG.Game` while preserving decision-site locality and the native
+  terminal law.
+- **Prediction:** use a dependent sum of the source owner's decision sites and
+  their value types as the EFG action carrier. At a serialized decision state,
+  the information state identifies that site and contains exactly its
+  `observedParents` configuration; an earlier incomparable decision may exist
+  in the execution state but cannot occur in this view. Keep source owners as
+  players. Store the complete resolved prefix in the execution state so the
+  EFG tree law has a unique predecessor, but do not make that prefix a policy
+  input.
+- **Representative slice:** compile EXP-040's same-owner,
+  disjoint-observation diagram at both topological orders. Prove that the
+  second decision's information state is unchanged when the earlier
+  incomparable decision changes, map every native site-local behavioral
+  policy into the target information model, and compare both serialized
+  terminal laws with the native frontier law.
+- **Competing designs:** dependent tagged source actions; one synthetic player
+  per decision site; a homogeneous sum with value transport; or retaining the
+  native frontier evaluator without an EFG bridge.
+- **Measurements to collect:** stable/public API delta, authored and import
+  size, focused/full build jobs, source trust and transport tokens, axiom
+  profile, the exact information-state types, outcome equality in both orders,
+  and Phase 2/3 boundary probes.
+- **Kill conditions:** a synthetic player or padding action; a policy view
+  containing an unobserved or merely earlier node; direct `Function.update`;
+  user-visible equality transport; stored finite capabilities; failure of
+  `treeShaped` or `singleMover`; unequal native/serialized terminal laws; or
+  order-dependent serialized outcomes.
+- **Evidence so far:**
+  1. `TypedMAIDToEFG.lean` is 776 nonblank lines and 53 declarations; the
+     202-nonblank-line hostile test has 25 declarations. Both remain below
+     `Experimental/PostArchitecture`, so the stable API delta is zero.
+  2. `Action` is the dependent sum of one real source owner's decision sites
+     and their value types. `Stage` stores a dependent-valued path certified
+     to equal a prefix of the supplied topological order. Neither syntax nor
+     state invents a player, padding value, homogeneous alphabet, or stored
+     finite typeclass.
+  3. `View.acting` contains exactly one source decision site and a
+     `Config` over that site's `observedParents`. `behavioralProfile` maps the
+     native site-local law directly to the corresponding menu choice; the
+     serialized state is not an argument.
+  4. The generic compiler constructs the accepted `EFG.Game`, including
+     `menu_adequate`, `treeShaped`, and `singleMover`. Tree shape is proved from
+     the resolved prefix: every realized target has one source prefix, and a
+     decision target records enough dependent action data to recover the
+     unique joint action.
+  5. The hostile test supplies two explicit topological orders. In the
+     left-first order, changing the earlier left decision leaves the later
+     right-site view equal; `left_view_hides_right_decision` proves the
+     symmetric fact under the right-first order. Both compiled games and both
+     native behavioral profiles elaborate.
+  6. The compiler has two project prerequisites, typed MAID semantics and the
+     stable EFG specialization. The focused test builds in 1,723 jobs and the
+     full build in 3,333. Source scans report zero placeholders,
+     `native_decide`, direct updates, transport tokens, or `open Classical`.
+     Phase 2/3 expected measurements and all reachability probes pass.
+  7. Axiom checks for the generic tree-shaped EFG, behavioral profile, and
+     both locality theorems use only `propext`, `Classical.choice`, and
+     `Quot.sound`.
+- **Interim outcome:** supports the representation and information-locality
+  halves of the prediction. EXP-041 remains open: no T3 credit or public
+  promotion is allowed until both serialized terminal laws equal the native
+  frontier law and the general order-independence statement is proved.
+- **Next action:** prove the behavioral EFG step law against a one-node serial
+  fold, use it to close terminal-law equality on both hostile orders, then
+  lift adjacent independent-node commutation to the general topological-order
+  theorem.

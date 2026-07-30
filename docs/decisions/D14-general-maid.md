@@ -3,7 +3,7 @@
 - **Status:** adopted native evaluation principle, narrowed by EXP-038; general
   public syntax still delivery-gated
 - **Date:** 2026-07-30
-- **Experiment IDs:** EXP-014, EXP-037
+- **Experiment IDs:** EXP-014, EXP-037, EXP-038, EXP-039, EXP-040
 
 ## Decision / question
 
@@ -136,3 +136,20 @@ This validates the native side of T3 but does not freeze it publicly.
 frontier growth to a uniform finite completion certificate. The remaining gate
 is the explicit-order EFG compiler: it must prove exact equality with the
 frontier law and independence from the chosen order.
+
+## Explicit-order compiler milestone
+
+EXP-041 is in progress. Its generic experimental compiler now constructs an
+accepted `Languages.EFG.Game` from a typed diagram, semantics, and explicit
+topological order. Source owners remain the EFG players; their action carrier
+is a dependent sum over their own decision sites. An active information state
+contains one such site and exactly its declared observed-parent configuration.
+The resolved execution prefix is not a policy input.
+
+The compiler proves menu adequacy, tree shape, and the single-mover law. The
+same-owner hostile fixture compiles at two opposite topological orders, and
+each order proves that changing the earlier incomparable decision leaves the
+later site's view unchanged. This supports the D14 representation but does not
+close it: behavioral terminal-law equality with the native frontier evaluator
+and the general order-independence theorem remain mandatory before public
+promotion or T3 credit.
