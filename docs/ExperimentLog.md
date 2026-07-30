@@ -41,6 +41,7 @@ becomes difficult to scan.
 | EXP-028 | 2026-07-30 | D0 / Phase 5 | Is the parallel `CoalitionalGame` primitive rich enough for the Shapley value and its four-axiom characterization? | Supports the parallel primitive | `GameTheory/Core/Shapley.lean`; `GameTheory/Tests/Shapley.lean` |
 | EXP-029 | 2026-07-30 | D0/D5/D6 / Phase 5 | Does the EXP-008 interim theorem survive as stable API and compile through the accepted `InformationModel` without duplicating equilibrium semantics? | Supports; fixes the static/information split | `GameTheory/Core/Bayesian*.lean`; `GameTheory/Languages/Bayesian.lean`; `GameTheory/Tests/Bayesian.lean` |
 | EXP-030 | 2026-07-30 | D0/D2/D6/D11/D12 / Phase 5 | Can repeated play reuse Protocol for finite prefixes and ordinary `IsNash` for discounting without inventing an infinite `FinDist` path law? | Supports; narrows public histories to lists | `GameTheory/Repeated/*.lean`; `GameTheory/Tests/Repeated.lean` |
+| EXP-031 | 2026-07-30 | D11/D12 / Phase 5 | Does the full discounted folk theorem belong in stable Repeated, under Analysis, or behind a new repeated-analysis bridge? | Supports one-way Analysis bridge | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Analysis/Repeated/`; `GameTheoryMath/` |
 
 ## Entry template
 
@@ -1794,3 +1795,84 @@ memory.
   the full folk-theorem mathematics. Compete a repeated-analysis bridge against
   keeping that geometry inside the stable repeated root, with negative probes
   from `GameTheory.Repeated` and positive probes from any new bridge.
+
+### EXP-031: dependency home for the discounted folk theorem
+
+- **Date / revision:** 2026-07-30, working tree based on `681be12`
+- **Decision / question:** D11, D12, and Phase 5; whether the full discounted
+  folk theorem's feasible-payoff geometry and simplex approximation belong in
+  the stable `GameTheory.Repeated` root, in `GameTheory.Analysis`, or in a new
+  one-way analytic bridge over repeated play.
+- **Representative slice:** the pinned theorem
+  `KernelGame.discounted_folk_theorem_approx`: approximate a feasible payoff
+  strictly above every opponent-security level by normalized discounted payoff
+  vectors of history-dependent Nash profiles. Preserve its deterministic
+  `ℕ`-indexed stage path and ordinary Nash reading.
+- **Competing designs:** import the required general mathematics directly into
+  stable Repeated; place the theorem under `GameTheory.Analysis.Repeated`,
+  importing only Basic/Discounted plus the existing analytic payoff/minimax
+  interfaces; or introduce a separate `GameTheory.Repeated.Analysis` bridge
+  root with its own reachability budget.
+- **Kill conditions:** the stable repeated root starts reaching
+  `stdSimplex`/`Polynomial`; the theorem needs a second payoff, mixed-game,
+  security, or equilibrium definition; any candidate needs a stochastic law
+  over the entire infinite path; the bridge must import Protocol despite using
+  no finite execution semantics; or the borrowed geometry costs more or exposes
+  more transport than a focused greenfield lemma.
+- **Evidence:** the source inventory was
+  `Concepts/Welfare/FolkTheorem/{Geometry,Periodic,Trigger,Main}.lean`,
+  `Concepts/ZeroSum/SecurityStrategy.lean`, and
+  `Math/SimplexApproximation.lean` in the pinned snapshot at
+  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
+- **Pre-implementation measurement:** the eight apparent v1 support files total
+  2,324 nonblank lines. Of those, the 255-line ambient/interior `Geometry.lean`
+  contributes no declaration used by the flagship, and the 328-line general
+  security file is imported only for a narrower opponent-minmax construction
+  already developed inside `Feasible.lean`. The required denominator-clearing
+  lemma is a 134-line game-independent file and has no Mathlib equivalent in the
+  pinned dependency. Greenfield Analysis currently provides the finite-law
+  simplex equivalence, mixed-profile polytope, mixed payoff polynomial, Nash
+  existence, and two-player zero-sum minimax. The last two do not directly
+  express an `n`-player game against a coalition, so forcing reuse would change
+  the punishment value rather than remove duplication. Stable Repeated rejects
+  all four `stdSimplex`/`Polynomial` probes; `Analysis.Payoff` reaches both.
+- **Selection tested:** place general denominator clearing in the
+  independent `GameTheoryMath` target; keep continuation, periodic-path, and
+  trigger incentive results in stable Repeated; place feasible-payoff convex
+  geometry, opponent-minmax construction, and the existence/approximation
+  theorem under `GameTheory.Analysis.Repeated`. Reject
+  `GameTheory.Repeated.Analysis`, because directory membership would make the
+  audited stable root own the analytic surface. The bridge must import
+  Basic/Discounted directly, not the Repeated umbrella, and must not import
+  Protocol.
+- **Artifacts / commands:** `GameTheoryMath/SimplexApproximation.lean`;
+  `GameTheory/Repeated/{Discounted,Periodic,Trigger}.lean`;
+  `GameTheory/Analysis/Repeated/{Feasible,Folk,Examples}.lean`;
+  `GameTheory/Analysis/Repeated.lean`; `lake build
+  GameTheory.Analysis.Repeated.Folk` (1,835 jobs); `lake build
+  GameTheory.Analysis.Repeated` (1,844); `lake build
+  GameTheory.Analysis.Repeated.Examples` (1,850); and
+  `lake build` (3,302); all four phase audits, including
+  `scripts/phase2-audit.ps1 -VerifyExpected`.
+- **Observations / measurements:** the resulting stable Repeated root is 1,468
+  nonblank lines, the analytic repeated subtree including its witness and root
+  is 783, and independent `GameTheoryMath` is 185. All three source buckets
+  contain zero transport tokens; `GameTheoryMath` imports no game or
+  fixed-point module. `GameTheory.Repeated` still rejects both `stdSimplex` and
+  `Polynomial` (six negative probes across Basic, Discounted, and the public
+  root). The bridge positively reaches the trigger profile, opponent-minmax
+  vector, and residual-floor counts, while rejecting `ExecutionProtocol`;
+  `GameTheoryMath.SimplexApproximation` rejects `UtilityGame`. No second mixed
+  form, payoff evaluator, security hierarchy, equilibrium predicate, or
+  infinite-path law was needed. The Prisoner's Dilemma witness proves mutual
+  cooperation feasible, permanent defection bounds every mixed best response
+  by one, and patient repeated Nash payoffs approach three. The flagship,
+  trigger theorem, cycle approximation, and witness use only `propext`,
+  `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports the one-way `GameTheory.Analysis.Repeated` bridge and
+  the independent `GameTheoryMath` target. None of the kill conditions fired.
+  The unused ambient/interior geometry and general security hierarchy were not
+  ported.
+- **Next action:** treat the deterministic discounted folk-theorem axis as
+  closed. Sequential equilibrium remains a separate predicted D12
+  renegotiation because its topology sits over Protocol strategy objects.

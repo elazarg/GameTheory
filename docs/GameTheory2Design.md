@@ -1145,9 +1145,11 @@ not an adequate substitute.
 EXP-030 validates the lower half of this boundary in the greenfield code:
 history-dependent deterministic paths, normalized discounted utility, and an
 exact finite-prefix Protocol compiler require neither a measurable kernel nor
-an infinite-path `FinDist`. It does not settle where the full folk theorem's
-simplex-approximation geometry belongs; that dependency decision remains
-experiment-gated.
+an infinite-path `FinDist`. EXP-031 validates the full deterministic discounted
+folk theorem on the same representation: observable mixed stage profiles,
+periodic continuations, and public trigger punishments still require no law on
+an infinite realized path. Its convex geometry is isolated under
+`GameTheory.Analysis.Repeated`.
 
 ### D12. Package and stability boundaries
 
@@ -1159,6 +1161,7 @@ GameTheory.Protocol      transition/information semantics and execution
 GameTheory.Finite        executable rational frontend
 GameTheory.Languages     stable language syntax and compilers
 GameTheory.Analysis      fixed points, LP, minimax, existence
+  └─ Repeated            one-way analytic bridge over stable repeated play
 GameTheory.Repeated      stable stagewise and finite-prefix repeated-game theory
 GameTheory.Cooperative   larger cooperative theories, matching, bargaining
 GameTheory.Frontier      unstable open-game and repeated-monitoring research
@@ -1177,6 +1180,15 @@ the following dependency properties are mandatory:
 - no stable or Frontier package imports Challenges;
 - executable modules do not import noncomputable analysis;
 - general mathematics can be tested and versioned without importing games.
+
+EXP-031 fixes one instance of the last two rules. Continuation, periodic-path,
+and trigger-incentive theorems remain in `GameTheory.Repeated`; feasible-payoff
+geometry, opponent minmax, and the discounted folk theorem live in the one-way
+`GameTheory.Analysis.Repeated` bridge; generic denominator clearing lives in
+the separate `GameTheoryMath` target. The stable root retains negative
+`stdSimplex`/`Polynomial` probes, while positive bridge probes require the
+trigger, minmax, and generic approximation sides to remain reachable. Protocol
+is deliberately unreachable from this bridge.
 
 General results suitable for Mathlib should be written to Mathlib conventions
 from the beginning and upstreamed aggressively. Project-specific glue remains

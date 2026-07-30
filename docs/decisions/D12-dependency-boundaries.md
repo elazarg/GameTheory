@@ -5,7 +5,8 @@ everything that follows from it lives in a root the audited layers do not
 import.
 
 Experiment IDs: [EXP-022](../ExperimentLog.md), [EXP-023](../ExperimentLog.md);
-post-decision boundary stress [EXP-030](../ExperimentLog.md).
+post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
+[EXP-031](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -97,10 +98,58 @@ contains zero transport tokens, and the authored-import audit reports zero
 forbidden dependencies.
 
 Discounted real series therefore do not spend the fixed-point dependency
-budget. The full folk theorem is a different question: the pinned proof imports
-simplex approximation and supporting geometry. Any implementation of that
-flagship requires a new experiment comparing a one-way repeated-analysis bridge
-with importing the mathematics into the stable repeated root. If a bridge wins,
-the enforcement pattern here is mandatory again: `GameTheory.Repeated` keeps
-negative probes, and the new bridge gets positive probes proving that its
-analytic dependency remains live.
+budget. The pinned full folk theorem did import simplex approximation and
+supporting geometry, so EXP-030 left that theorem to a separate competition.
+EXP-031, recorded next, ran it with the same mandatory enforcement pattern:
+negative probes from `GameTheory.Repeated` and positive probes proving that any
+new bridge remains live.
+
+## Discounted folk-theorem amendment
+
+EXP-031 ran that competition rather than treating the bridge as a directory
+preference.
+
+| Competing design | Measured result |
+|---|---|
+| put all support under stable `GameTheory.Repeated` | rejected: feasible-payoff convex geometry and denominator clearing would widen the stable root |
+| create `GameTheory.Repeated.Analysis` | rejected: it would place the analytic surface inside the audited stable subtree |
+| create `GameTheory.Analysis.Repeated` | accepted: a one-way bridge over stable continuation and trigger theorems |
+| leave denominator clearing inside the game theorem | rejected: the 177-line result is game-independent and imports no game semantics |
+
+The representative slice is the approximate discounted folk theorem itself:
+every feasible payoff strictly above the opponent-minmax vector is approached
+by normalized discounted payoffs of history-dependent Nash profiles in the
+observable mixed-action repeated game. Its kill conditions were a leak of
+`stdSimplex` or `Polynomial` into the stable root, a second mixed-game/payoff/
+security/equilibrium API, an infinite-path probability law, a Protocol import
+in the analytic bridge, or more supporting geometry than the focused
+greenfield proof.
+
+None fired. Stable continuation, periodic paths, and trigger incentives live
+under `GameTheory.Repeated`; convex feasibility, opponent minmax, and the
+flagship live under `GameTheory.Analysis.Repeated`; residual-floor denominator
+clearing lives in the independent `GameTheoryMath` Lake target. The 2,324-line
+apparent v1 support closure narrowed to 1,468 nonblank lines in stable Repeated,
+783 in the analytic repeated subtree including its concrete witness and root,
+and 185 in `GameTheoryMath` (177 in the approximation module plus its root). In
+particular, the old 255-line unused
+ambient/interior geometry and 328-line general security hierarchy did not
+survive the dependency test.
+
+The enforcement is again two-sided:
+
+| Check | Expected |
+|---|---:|
+| `REPEATED_ANALYSIS_PROBES_REJECTED` | 6 |
+| `REPEATED_BRIDGE_PROBES_REACHED` | 3 |
+| `REPEATED_BRIDGE_PROTOCOL_REJECTED` | 1 |
+| `GAMETHEORYMATH_GAME_REJECTED` | 1 |
+| `TRANSPORT_REPEATED_SOURCE` | 0 |
+| `TRANSPORT_ANALYSIS_SOURCE` | 0 |
+| `TRANSPORT_GAMETHEORYMATH_SOURCE` | 0 |
+
+The three positive bridge probes reach a trigger profile, the opponent-minmax
+vector, and residual-floor counts. Thus the bridge is known to consume each
+side it was created to connect, while the negative probes show that
+`GameTheory.Repeated`, Protocol, and the independent mathematics target have
+not silently changed roles.

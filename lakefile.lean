@@ -29,3 +29,10 @@ gate: examples, architecture tests, and experiments must compile too. -/
 lean_lib GameTheory where
   globs := #[.andSubmodules `GameTheory]
   leanOptions := gameTheoryLeanOptions
+
+/-- Game-independent mathematics extracted by validated library slices. This
+target must remain importable without importing game semantics. -/
+@[default_target]
+lean_lib GameTheoryMath where
+  globs := #[.andSubmodules `GameTheoryMath]
+  leanOptions := gameTheoryLeanOptions

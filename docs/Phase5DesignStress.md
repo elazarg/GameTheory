@@ -187,17 +187,40 @@ Discounted also reject all four `stdSimplex`/`Polynomial` probes. This validates
 the stagewise/finite-prefix half of D11 and D12, not the folk theorem's analytic
 geometry.
 
+### The folk theorem needs a bridge, not a second repeated-game theory
+
+Recorded as [EXP-031](ExperimentLog.md). The flagship now states that every
+feasible payoff strictly above the opponent-minmax vector is approached by
+normalized discounted payoffs of history-dependent Nash profiles in the
+observable mixed-action repeated game. The conclusion uses the existing
+`UtilityGame.mixed`, deterministic `repeatedPlay`, discounted utility, and
+ordinary `IsNash`; it adds no repeated-equilibrium wrapper or law over an
+infinite realized path.
+
+The dependency split follows the mathematics. Bellman continuation, finite
+periodic paths, discount-factor convergence, first-mismatch detection, and
+trigger incentives are reusable stable repeated theory. Convex feasibility,
+the opponent-minmax construction, and the existence theorem form the one-way
+`GameTheory.Analysis.Repeated` bridge. Residual-floor denominator clearing is
+game-independent and therefore lives in the separately audited
+`GameTheoryMath` target. The 255-line unused ambient geometry and 328-line
+general security hierarchy in the apparent v1 support closure were not ported.
+
+The probes make the split physical. Basic, Discounted, and the public Repeated
+root all reject `stdSimplex` and `Polynomial`; the bridge positively reaches a
+trigger profile, opponent minmax, and the generic residual-floor construction,
+but cannot reach Protocol; the math target cannot reach `UtilityGame`. Each
+source bucket has zero transport tokens.
+
+Prisoner's Dilemma is the honest witness. Mutual cooperation is feasible,
+permanent defection bounds every mixed best response by one, and the theorem
+produces sufficiently patient repeated Nash profiles whose payoff approaches
+three. Thus the hypotheses are not merely a polished empty interface.
+
 ## Axes not yet stressed
 
 Each of these is a part of the subject the design has never been asked about,
 listed with the choice it would put pressure on.
-
-*The full discounted folk theorem.* The lower repeated-play boundary is now
-validated, but the pinned flagship imports simplex approximation and supporting
-geometry. Before code, reserve a new experiment that competes a second one-way
-analytic bridge over `GameTheory.Repeated` against placing that mathematics in
-the stable root. Preserve negative probes from the stable root and require
-positive probes from any bridge, exactly as D12 does for static existence.
 
 *Sequential equilibrium.* Consistency is a limit of completely mixed behavioral
 profiles, which puts topology on strategies rather than on outcomes — the first

@@ -46,6 +46,10 @@ function Remove-LeanCommentsAndStrings([string] $Source) {
 $AllFiles = Get-ChildItem -Path (Join-Path $RepoRoot 'GameTheory') -Filter '*.lean' -Recurse |
   ForEach-Object { $_.FullName.Substring($RepoRoot.Length + 1).Replace('\', '/') }
 $AllFiles += 'GameTheory.lean'
+$MathFiles = @(Get-ChildItem -Path (Join-Path $RepoRoot 'GameTheoryMath') -Filter '*.lean' -Recurse |
+  ForEach-Object { $_.FullName.Substring($RepoRoot.Length + 1).Replace('\', '/') })
+$MathFiles += 'GameTheoryMath.lean'
+$TrustedFiles = @($AllFiles + $MathFiles)
 
 function Get-Code([string] $Relative) {
   $text = [IO.File]::ReadAllText((Join-Path $RepoRoot $Relative)).Replace("`r", '')
@@ -102,6 +106,7 @@ $Phase3Files = @($OutsideProfile | Where-Object {
 $AnalysisFiles = @(Select-Files 'GameTheory/Analysis')
 $RepeatedFiles = @(@(Select-Files 'GameTheory/Repeated') +
   @('GameTheory/Repeated.lean') | Sort-Object -Unique)
+Report 'TRANSPORT_GAMETHEORYMATH_SOURCE' (Count-Pattern $MathFiles $TransportPattern)
 Report 'TRANSPORT_ANALYSIS_SOURCE' (Count-Pattern $AnalysisFiles $TransportPattern)
 Report 'TRANSPORT_REPEATED_SOURCE' (Count-Pattern $RepeatedFiles $TransportPattern)
 Report 'TRANSPORT_PHASE2_SOURCE' (Count-Pattern $Phase2Files $TransportPattern)
@@ -148,12 +153,12 @@ Report 'REPRESENTATION_TOKENS_OUTSIDE_FINDIST' `
   (Count-Pattern $NonRepresentation `
     '(?<![A-Za-z0-9_])(ENNReal|toReal|toPMF|PMF)(?![A-Za-z0-9_])')
 
-Report 'FINTYPE_OF_FINITE' (Count-Pattern $AllFiles 'Fintype\.ofFinite')
+Report 'FINTYPE_OF_FINITE' (Count-Pattern $TrustedFiles 'Fintype\.ofFinite')
 Report 'ALGORITHM_OPEN_CLASSICAL' `
   (Count-Pattern @('GameTheory/Finite/Algorithm.lean') '(?<![A-Za-z0-9_])(open\s+Classical|classical|noncomputable)(?![A-Za-z0-9_])')
 Report 'SORRY_OR_ADMIT' `
-  (Count-Pattern $AllFiles '(?<![A-Za-z0-9_])(sorry|admit|native_decide)(?![A-Za-z0-9_])')
-Report 'CUSTOM_AXIOM' (Count-Pattern $AllFiles '(?m)^\s*axiom\s')
+  (Count-Pattern $TrustedFiles '(?<![A-Za-z0-9_])(sorry|admit|native_decide)(?![A-Za-z0-9_])')
+Report 'CUSTOM_AXIOM' (Count-Pattern $TrustedFiles '(?m)^\s*axiom\s')
 
 # --------------------------------------------------------------------------
 # 2. Authored-import audit (RFC 7.1, D12)
@@ -195,6 +200,14 @@ foreach ($f in $RepeatedFiles) {
   }
 }
 Report 'REPEATED_FORBIDDEN_IMPORTS' $repeatedBad
+
+$mathBad = 0
+foreach ($f in $MathFiles) {
+  foreach ($imp in Get-Imports $f) {
+    if ($imp -match '^(GameTheory(\.|$)|FixedPointTheorems)') { $mathBad++ }
+  }
+}
+Report 'GAMETHEORYMATH_FORBIDDEN_IMPORTS' $mathBad
 
 # The fixed-point dependency is not part of Mathlib and reaches the whole of
 # convexity and topology when imported. Both facts are tolerable only while it
@@ -251,6 +264,7 @@ Report 'NONBLANK_EXAMPLES' (Measure-Nonblank (Select-Files 'GameTheory/Examples'
 Report 'NONBLANK_TESTS' (Measure-Nonblank (Select-Files 'GameTheory/Tests'))
 Report 'NONBLANK_ANALYSIS' (Measure-Nonblank $AnalysisFiles)
 Report 'NONBLANK_REPEATED' (Measure-Nonblank $RepeatedFiles)
+Report 'NONBLANK_GAMETHEORYMATH' (Measure-Nonblank $MathFiles)
 Report 'NONBLANK_PHASE2_PROBE' `
   (Measure-Nonblank (Select-Files 'GameTheory/Experimental/Phase2'))
 
@@ -283,44 +297,73 @@ Report 'PRISONERS_DILEMMA_DEF_LINES' `
 
 if (-not $SkipReachability) {
   $probeFile = Join-Path ([IO.Path]::GetTempPath()) 'gametheory-phase2-probe.lean'
-  function Test-Unreachable([string] $Root, [string] $Constant) {
-    Set-Content -Path $probeFile -Value "import $Root`n#check @$Constant" -Encoding utf8
-    $output = & lake env lean $probeFile 2>&1 | Out-String
-    return ($output -match 'Unknown identifier|unknown identifier|unknown constant')
+  function Run-Probe([string] $Root, [string[]] $Constants) {
+    $checks = $Constants | ForEach-Object { "#check @$_" }
+    Set-Content -Path $probeFile -Value (@("import $Root") + $checks) -Encoding utf8
+    return (& lake env lean $probeFile 2>&1 | Out-String)
+  }
+  function Is-Unreachable([string] $Output, [string] $Constant) {
+    $escaped = [regex]::Escape($Constant)
+    return ($Output -match
+      "(?im)unknown (identifier|constant)[^\r\n]*$escaped")
   }
   $unreachable = 0
   $reachable = @()
-  foreach ($probe in @(
-      @('GameTheory.Finite.Algorithm', 'Real.instAdd'),
-      @('GameTheory.Finite.Algorithm', 'PMF'),
-      @('GameTheory.Finite.Algorithm', 'MeasureTheory.Measure'),
-      @('GameTheory.Finite.Algorithm', 'stdSimplex'),
-      @('GameTheory.Core', 'stdSimplex'),
-      @('GameTheory.Core', 'Polynomial'))) {
-    if (Test-Unreachable $probe[0] $probe[1]) { $unreachable++ }
-    else { $reachable += "$($probe[0]) reaches $($probe[1])" }
+  foreach ($group in @(
+      @('GameTheory.Finite.Algorithm',
+        @('Real.instAdd', 'PMF', 'MeasureTheory.Measure', 'stdSimplex')),
+      @('GameTheory.Core', @('stdSimplex', 'Polynomial')))) {
+    $output = Run-Probe $group[0] $group[1]
+    foreach ($constant in $group[1]) {
+      if (Is-Unreachable $output $constant) { $unreachable++ }
+      else { $reachable += "$($group[0]) reaches $constant" }
+    }
   }
   Report 'UNREACHABLE_PROBES_PASSED' $unreachable
   foreach ($r in $reachable) { Write-Output "REACHABLE_UNEXPECTED=$r" }
   # The analytic root is the one place the budget is spent, and a probe that
   # only ever asserts absence would not notice if it stopped being spent there.
   $reached = 0
+  $analysisOutput = Run-Probe 'GameTheory.Analysis.Nash' @('stdSimplex', 'Polynomial')
   foreach ($constant in @('stdSimplex', 'Polynomial')) {
-    if (-not (Test-Unreachable 'GameTheory.Analysis.Nash' $constant)) { $reached++ }
+    if (-not (Is-Unreachable $analysisOutput $constant)) { $reached++ }
   }
   Report 'ANALYSIS_PROBES_REACHED' $reached
 
   $repeatedAnalysisRejected = 0
-  foreach ($probe in @(
-      @('GameTheory.Repeated.Basic', 'stdSimplex'),
-      @('GameTheory.Repeated.Basic', 'Polynomial'),
-      @('GameTheory.Repeated.Discounted', 'stdSimplex'),
-      @('GameTheory.Repeated.Discounted', 'Polynomial'))) {
-    if (Test-Unreachable $probe[0] $probe[1]) {
-      $repeatedAnalysisRejected++
+  foreach ($root in @(
+      'GameTheory.Repeated.Basic',
+      'GameTheory.Repeated.Discounted',
+      'GameTheory.Repeated')) {
+    $output = Run-Probe $root @('stdSimplex', 'Polynomial')
+    foreach ($constant in @('stdSimplex', 'Polynomial')) {
+      if (Is-Unreachable $output $constant) {
+        $repeatedAnalysisRejected++
+      }
     }
   }
   Report 'REPEATED_ANALYSIS_PROBES_REJECTED' $repeatedAnalysisRejected
+
+  $repeatedBridgeReached = 0
+  $bridgeConstants = @(
+      'GameTheory.UtilityGame.triggerRepeatedProfile',
+      'GameTheory.UtilityGame.opponentMinmaxVector',
+      'GameTheoryMath.SimplexApproximation.residualFloorCounts')
+  $bridgeOutput = Run-Probe 'GameTheory.Analysis.Repeated' `
+    ($bridgeConstants + @('GameTheory.Protocol.ExecutionProtocol'))
+  foreach ($constant in $bridgeConstants) {
+    if (-not (Is-Unreachable $bridgeOutput $constant)) {
+      $repeatedBridgeReached++
+    }
+  }
+  Report 'REPEATED_BRIDGE_PROBES_REACHED' $repeatedBridgeReached
+  $bridgeProtocolRejected = Is-Unreachable $bridgeOutput `
+    'GameTheory.Protocol.ExecutionProtocol'
+  Report 'REPEATED_BRIDGE_PROTOCOL_REJECTED' ([int] $bridgeProtocolRejected)
+  $mathOutput = Run-Probe 'GameTheoryMath' `
+    @('GameTheory.UtilityGame')
+  $mathGameRejected = Is-Unreachable $mathOutput 'GameTheory.UtilityGame'
+  Report 'GAMETHEORYMATH_GAME_REJECTED' ([int] $mathGameRejected)
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -341,6 +384,7 @@ if ($VerifyExpected) {
     TRANSPORT_PHASE4_EVIDENCE = 1
     TRANSPORT_ANALYSIS_SOURCE = 0
     TRANSPORT_REPEATED_SOURCE = 0
+    TRANSPORT_GAMETHEORYMATH_SOURCE = 0
     ANALYSIS_IMPORTED_OUTSIDE_ROOT = 0
     # One: the module that applies the fixed-point theorem, and nothing else.
     FIXED_POINT_IMPORTERS = 1
@@ -354,6 +398,7 @@ if ($VerifyExpected) {
     ALGORITHM_FORBIDDEN_IMPORTS = 0
     SIGNATURE_PROBABILITY_IMPORTS = 0
     REPEATED_FORBIDDEN_IMPORTS = 0
+    GAMETHEORYMATH_FORBIDDEN_IMPORTS = 0
     CONCEPTS_NOT_DEFINED_EXACTLY_ONCE = 0
     REPRESENTATION_TOKENS_OUTSIDE_FINDIST = 0
   }
@@ -365,7 +410,10 @@ if ($VerifyExpected) {
   if (-not $SkipReachability) {
     $Expected['UNREACHABLE_PROBES_PASSED'] = 6
     $Expected['ANALYSIS_PROBES_REACHED'] = 2
-    $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 4
+    $Expected['REPEATED_ANALYSIS_PROBES_REJECTED'] = 6
+    $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
+    $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1
+    $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

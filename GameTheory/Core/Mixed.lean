@@ -30,6 +30,14 @@ universe uι us uo
 variable {ι : Type uι} [Fintype ι] [DecidableEq ι] {F : GameForm ι}
 variable {utility : F.sig.Outcome → ι → ℝ} {mixedProfile : Profile F.sig.mixed}
 
+/-- Bundle the existing mixed form with the original outcome utility. This is
+only ergonomic packaging: it introduces neither a second mixed construction nor
+a second evaluator. -/
+@[reducible]
+def UtilityGame.mixed (G : UtilityGame ι) : UtilityGame ι where
+  form := G.form.mixed
+  utility := G.utility
+
 /-- Embedding a pure profile and then replacing one coordinate by a point mass is
 the same as replacing that coordinate first. -/
 theorem purify_update (F : GameForm ι) (σ : Profile F.sig) (who : ι)
