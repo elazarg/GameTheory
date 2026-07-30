@@ -23,6 +23,7 @@ import GameTheory.Core.Preference
 import GameTheory.Core.Deviation
 import GameTheory.Core.Equilibrium
 import GameTheory.Core.Utility
+import GameTheory.Core.Learning
 import GameTheory.Core.Response
 import GameTheory.Core.Potential
 import GameTheory.Core.Mixed

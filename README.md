@@ -15,7 +15,8 @@ its honest pinned-v1 baseline is
 GameTheory/Probability   finite-support probability laws (FinDist)
 GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
-                         game theory, and foundational social/coalitional theory
+                         game theory, finite no-regret learning, and
+                         foundational social/coalitional theory
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation

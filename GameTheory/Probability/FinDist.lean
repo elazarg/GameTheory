@@ -310,6 +310,19 @@ theorem prob_ofWeights [Fintype α] (weight : α → ℝ) (hnonneg : ∀ a, 0 �
     (ofWeights weight hnonneg hsum).prob a = weight a :=
   ENNReal.toReal_ofReal (hnonneg a)
 
+/-- The uniform finite-support law on a nonempty finite ordinal. -/
+def uniformFin (n : ℕ) [NeZero n] : FinDist (Fin n) :=
+  ofWeights (fun _ => (n : ℝ)⁻¹)
+    (fun _ => inv_nonneg.mpr (Nat.cast_nonneg n))
+    (by
+      rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
+      exact mul_inv_cancel₀ (by exact_mod_cast NeZero.ne n))
+
+@[simp]
+theorem prob_uniformFin (n : ℕ) [NeZero n] (t : Fin n) :
+    (uniformFin n).prob t = (n : ℝ)⁻¹ :=
+  prob_ofWeights ..
+
 /-! ## Expectation
 
 Finite support makes real expectation unconditional: no summability or
@@ -336,6 +349,14 @@ theorem expect_eq_sum_support (μ : FinDist α) (u : α → ℝ) :
 theorem expect_eq_sum [Fintype α] (μ : FinDist α) (u : α → ℝ) :
     expect μ u = ∑ a, μ.prob a * u a := by
   simp [expect, tsum_fintype]
+
+/-- Expectation under the uniform law on `Fin n` is the finite average. -/
+theorem expect_uniformFin {n : ℕ} [NeZero n] (u : Fin n → ℝ) :
+    expect (uniformFin n) u = (∑ t, u t) / n := by
+  rw [expect_eq_sum]
+  simp_rw [prob_uniformFin]
+  rw [← Finset.mul_sum]
+  simp [div_eq_inv_mul]
 
 /-- A sum over any finite superset of the support computes an expectation. This
 is what lets two laws built from the same family be compared term by term over

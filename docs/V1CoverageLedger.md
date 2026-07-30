@@ -48,7 +48,7 @@ No broad family below is called complete merely because its flagship exists.
 | ID | Frozen predecessor result | Delivery status | Successor evidence | Exact remainder |
 |---|---|---|---|---|
 | F1 | finite mixed Nash existence | **complete** | `Analysis/Nash.lean`, with matching pennies in `Analysis/Examples.lean` | no remainder for the frozen result; solving is separate |
-| F2 | no-regret time average implies approximate CCE | **not started** | canonical CCE exists, but there is no Learning module or regret theorem | recover `NoRegretToCCE` as a stable consumer with a nonvacuous finite trace |
+| F2 | no-regret time average implies approximate CCE | **complete** | `Core/Learning.lean`; positive-regret two-round trace; [declaration ledger](coverage/F2-no-regret-cce.md) | no remainder for the frozen theorem; algorithms and asymptotic convergence remain D-LEARN |
 | F3 | Kuhn behavioral/mixed correspondence | **complete at the accepted Protocol layer; EFG surface partial** | both law directions and realizable-law equality in `Protocol/Information.lean`; perfect-recall hostile test | add general EFG-facing corollaries and payoff/outcome wrappers during EFG harvest |
 | F4 | one-shot deviation iff SPE | **complete at the accepted Protocol layer; EFG surface partial** | `Protocol/SubgamePerfect.lean`; full well-founded strategic iff and off-path probe; [declaration ledger](coverage/F4-one-shot-spe.md) | add only a thin EFG-facing corollary during L-EFG harvest |
 | F5 | Bayes-Nash outcome law is Bayes-correlated | **partial** | stable Bayesian data, interim characterization, and exact Protocol compiler | recommendation/obedience surface and the outcome-law transfer |
@@ -56,8 +56,8 @@ No broad family below is called complete merely because its flagship exists.
 | F7 | discounted folk theorem | **complete** | `Analysis/Repeated/Folk.lean` and a nontrivial Prisoner's Dilemma witness | stochastic monitoring belongs to F8 |
 | F8 | public-monitoring signal-prefix successor/bind law | **not started; deterministic substrate exists** | exact perfect-public-monitoring prefix compiler | finite public signal kernel/history law and the bind-first recursion theorem |
 
-Headline: F1 and F7 are complete. F3 and F4 are complete at their accepted
-semantic layers. F5-F6 are partial. F2 and F8 are not started.
+Headline: F1, F2, and F7 are complete. F3 and F4 are complete at their accepted
+semantic layers. F5-F6 are partial. F8 is not started.
 
 ## Frozen transfer reconciliation
 
@@ -109,7 +109,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| D-LEARN | `Concepts/Learning/**` | 8 | stable static consumer; limits in `Analysis` | assigned | not started | F2 no-regret-to-CCE, then fictitious play on a potential game |
+| D-LEARN | `Concepts/Learning/**` | 8 | stable static consumer; limits in `Analysis` | validated by F2 | partial | inventory regret algorithms, then fictitious play on a potential game |
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | assigned | not started | babbling equilibrium without a second solution concept |
 | D-KNOW | `Concepts/Knowledge/**` | 2 | epistemic branch or Protocol information consumer | assigned, overdue probe | not started | Aumann agreement/approximate common knowledge ownership experiment |
 | D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic/stagewise theory | partial | F8, monitoring hierarchy, uniform results; no infinite realized-path law |
@@ -180,8 +180,8 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Create declaration-level ledgers for F2, F5-F6, F8, and T1-T4; the F4
-   ledger is complete.
+1. Create declaration-level ledgers for F5-F6, F8, and T1-T4; the F2 and F4
+   ledgers are complete.
 2. Add a generated pinned declaration index and a coverage audit before the
    first `v1-accounted` claim.
 3. Resolve the overdue knowledge and evolutionary ownership probes.
