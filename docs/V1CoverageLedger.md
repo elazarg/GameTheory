@@ -53,11 +53,11 @@ No broad family below is called complete merely because its flagship exists.
 | F4 | one-shot deviation iff SPE | **complete at the accepted Protocol layer; EFG surface partial** | `Protocol/SubgamePerfect.lean`; full well-founded strategic iff and off-path probe; [declaration ledger](coverage/F4-one-shot-spe.md) | add only a thin EFG-facing corollary during L-EFG harvest |
 | F5 | Bayes-Nash outcome law is Bayes-correlated | **partial** | stable Bayesian data, interim characterization, and exact Protocol compiler | recommendation/obedience surface and the outcome-law transfer |
 | F6 | incentive compatibility implies truthful Bayesian Nash | **partial** | direct mechanism strategyproofness, Vickrey truthfulness, first-price refutation | Bayesian mechanism compiler and generic IC-to-truthful-Bayes-Nash theorem |
-| F7 | discounted folk theorem | **complete** | `Analysis/Repeated/Folk.lean` and a nontrivial Prisoner's Dilemma witness | stochastic monitoring belongs to F8 |
-| F8 | public-monitoring signal-prefix successor/bind law | **not started; deterministic substrate exists** | exact perfect-public-monitoring prefix compiler | finite public signal kernel/history law and the bind-first recursion theorem |
+| F7 | discounted folk theorem | **complete** | `Analysis/Repeated/Folk.lean` and a nontrivial Prisoner's Dilemma witness | no remainder for the frozen theorem; monitoring is separate |
+| F8 | public-monitoring signal-prefix successor/bind law | **complete** | `Repeated/Monitoring.lean`; noisy branch-dependent two-period probe; [declaration ledger](coverage/F8-public-monitoring-prefix.md) | no remainder for the frozen law; monitoring equilibrium and rank theory remain D-REPEAT |
 
-Headline: F1, F2, and F7 are complete. F3 and F4 are complete at their accepted
-semantic layers. F5-F6 are partial. F8 is not started.
+Headline: F1, F2, F7, and F8 are complete. F3 and F4 are complete at their
+accepted semantic layers. F5-F6 are partial.
 
 ## Frozen transfer reconciliation
 
@@ -112,7 +112,7 @@ declaration-based.
 | D-LEARN | `Concepts/Learning/**` | 8 | stable static consumer; limits in `Analysis` | validated by F2 | partial | inventory regret algorithms, then fictitious play on a potential game |
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | assigned | not started | babbling equilibrium without a second solution concept |
 | D-KNOW | `Concepts/Knowledge/**` | 2 | epistemic branch or Protocol information consumer | assigned, overdue probe | not started | Aumann agreement/approximate common knowledge ownership experiment |
-| D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic/stagewise theory | partial | F8, monitoring hierarchy, uniform results; no infinite realized-path law |
+| D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic and finite public-signal theory | partial | monitoring equilibrium/rank hierarchy and uniform results; no infinite realized-path law |
 | D-EVOL | `Concepts/Classes/EvolutionaryStability.lean` | 1 | separate evolutionary branch | assigned, overdue probe | not started | ESS implies symmetric Nash; classify dynamics separately; OpenGame material stays in L-OPEN |
 
 ### Languages and sequential theory
@@ -171,7 +171,8 @@ declaration-based.
   obligation, but not the EFG theorem inventory.
 - The EXP-035 nonconstant-payoff witness validates whole-policy rationality on
   the hostile finite EFG, not a general finite-EFG existence theorem.
-- Perfect public monitoring is not the stochastic signal-prefix law F8.
+- F8's finite stochastic signal-prefix law does not complete monitoring
+  equilibrium, rank, or self-generation theory.
 - Rejecting generic transport/certificates does not prove named transfers.
 - Arrow and Shapley validate their semantic homes; they do not complete social
   choice or cooperative game theory.
@@ -180,7 +181,7 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Create declaration-level ledgers for F5-F6, F8, and T1-T4; the F2 and F4
+1. Create declaration-level ledgers for F5-F6 and T1-T4; the F2, F4, and F8
    ledgers are complete.
 2. Add a generated pinned declaration index and a coverage audit before the
    first `v1-accounted` claim.

@@ -24,7 +24,8 @@ GameTheory/Finite        executable rational frontend and its correctness layer
 GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
   /Protocol              analytic behavioral-assessment consistency bridge
   /Repeated              analytic repeated-game bridge and discounted folk theorem
-GameTheory/Repeated      stable public histories, discounting, cycles, and triggers
+GameTheory/Repeated      stable public histories, finite public monitoring,
+                         discounting, cycles, and triggers
 GameTheory/Languages     scoped language encodings with recorded limitations
   /EFG                   transparent extensive-form specialization; finite
                          capabilities are supplied explicitly

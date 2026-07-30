@@ -256,7 +256,7 @@ recovery creates pressure to work around them.
 | W1-A | nonconstant-payoff finite-EFG sequential-equilibrium stress | **complete (EXP-035)** | rationality and Bayes consistency are both nontrivial on the same finite EFG |
 | W1-B | public SPE semantics and full well-founded one-shot-deviation theorem | **complete (EXP-036)** | an honest analogue of v1 `oneShotDeviation_iff_spe`, including off-path histories |
 | W1-C | no-regret learning to CCE | **complete** | the frozen F2 theorem uses the canonical deviation and correlation APIs |
-| W1-D | finite-prefix stochastic monitoring | partial | the frozen F8 law handles a nontrivial signal law, not only perfect public observation |
+| W1-D | finite-prefix stochastic monitoring | **complete** | the frozen F8 law handles a nontrivial signal law, not only perfect public observation |
 | W1-E | Bayesian outcome-law and truthfulness transfers | partial | F5 and F6 are ported, adapted, or explicitly retired with measured reasons |
 | W1-F | named language transfers | partial | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | partial | the completed Protocol equivalence is exposed through the honest perfect-recall assumptions needed by its EFG consumer |
@@ -265,9 +265,10 @@ recovery creates pressure to work around them.
 
 Recommended dependency order:
 
-1. W1-D and the finite Bayesian half of W1-E may proceed independently.
-2. Completed W1-A, W1-B, and W1-C fix the continuation, Bayes, SPE, one-shot,
-   external-regret, and approximate-CCE targets used by later recovery.
+1. The finite Bayesian half of W1-E may proceed independently.
+2. Completed W1-A through W1-D fix the continuation, Bayes, SPE, one-shot,
+   external-regret, approximate-CCE, and finite public-monitoring targets used
+   by later recovery.
 3. W1-G, W1-H, and the EFG part of W1-F now exercise the fixed target.
 4. W1-I may proceed independently, but must close before those domains harvest.
 5. MAID/FOSG transfer packages proceed only after their language-specific
@@ -520,14 +521,13 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. create the remaining declaration-level ledgers for frozen F5/F6, F8, and
-   T1-T4; the F2 and F4 ledgers are complete;
-2. recover the finite-prefix monitoring law;
-3. finish or reject the named transfers individually;
-4. open the static learning/communication and congestion harvest lanes;
-5. admit at most one mature blind-spot experiment—finite stochastic games or
+1. create the remaining declaration-level ledgers for frozen F5/F6 and T1-T4;
+   the F2, F4, and F8 ledgers are complete;
+2. finish or reject the Bayesian and named language transfers individually;
+3. open the static learning/communication and congestion harvest lanes;
+4. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
-6. admit no Frontier implementation until the first four items have an active
+5. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change
