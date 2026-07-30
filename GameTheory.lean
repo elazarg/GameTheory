@@ -118,6 +118,7 @@ import GameTheory.Concepts.Stochastic.Discounted
 import GameTheory.Concepts.Stochastic.Adaptive
 import GameTheory.Concepts.Stochastic.AdaptiveCertificate
 import GameTheory.Concepts.Stochastic.PublicPhaseCertificate
+import GameTheory.Concepts.Stochastic.PublicSuffixHistory
 import GameTheory.Concepts.Stochastic.PublicLocalResponseRecursion
 import GameTheory.Concepts.Stochastic.TransitionIndependentCertificate
 import GameTheory.Concepts.Stochastic.AverageOptimalityCertificate
@@ -188,6 +189,8 @@ import GameTheory.Concepts.Stochastic.ProcessedHarmonicResidualCalendar
 import GameTheory.Concepts.Stochastic.ProcessedHarmonicResponseGainCalendar
 import GameTheory.Concepts.Stochastic.ProcessedHarmonicResponseAlternative
 import GameTheory.Concepts.Stochastic.ProcessedHarmonicResponseRealization
+import GameTheory.Concepts.Stochastic.ProcessedHarmonicRealizedBellmanGain
+import GameTheory.Concepts.Stochastic.ProcessedHarmonicBaselineFallback
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralOccupationAlternative
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralOwnerAlternative
 import GameTheory.Concepts.Stochastic.AnalyticPlayerNeutralScaledPotential
@@ -208,6 +211,7 @@ import GameTheory.Concepts.Stochastic.PublicRecurrentClassChild
 import GameTheory.Concepts.Stochastic.PublicQuotientCoreHistoryInterface
 import GameTheory.Concepts.Stochastic.PublicQuotientCoreHistoryClosedClass
 import GameTheory.Concepts.Stochastic.PublicRandomizedRecurrentChild
+import GameTheory.Concepts.Stochastic.DeviationSafePublicCoinSelection
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassTarget
 import GameTheory.Concepts.Stochastic.PublicRecurrentClassSupportRank
 import Math.Probability.EntryReachableChargedClass
