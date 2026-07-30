@@ -205,10 +205,25 @@ owner, never by decision site.
 The validated surface is now promoted under `GameTheory.Languages.MAID`:
 `Basic` owns typed syntax and frontier evaluation, `ToEFG` owns the named
 compiler, `Order` owns serialized order algebra, and `FrontierEquivalence`
-owns the exact native/compiled theorem. `General` is the public aggregate
-import. The hostile fixtures remain under `Experimental/PostArchitecture`;
-promotion did not turn experiment-specific diagrams into public API. The
-aggregate and both hostile suites build; the full project builds in 3,336 jobs,
-Phase 2/3 source and reachability audits pass, and the promoted flagship
-theorems retain the standard `propext`, `Classical.choice`, `Quot.sound` axiom
-profile.
+owns the exact native/compiled theorem. `Strategic` presents both assignment
+laws as ordinary `GameForm`s and proves T3's equilibrium half; `General` is the
+public aggregate import. The hostile fixtures remain under
+`Experimental/PostArchitecture`; promotion did not turn experiment-specific
+diagrams into public API.
+
+The strategic transfer respects EXP-038's narrowing. `OwnerPolicy` is the
+whole family of one source owner's site-local rules.
+`ownerPolicyEquiv` identifies that coordinate with the same owner's compiled
+behavioral policy, including arbitrary compiled policies.
+`behavioralProfileEquiv_update` proves a unilateral replacement changes that
+one source-owner coordinate, not one synthetic decision-site player.
+`isNash_native_iff_compiled` consequently uses the canonical `IsNash` on both
+ordinary game forms and proves exact equivalence.
+
+The aggregate and both hostile suites build; the full project and Phase 2/3
+source/reachability audits pass, and the promoted flagship theorems retain the
+standard `propext`, `Classical.choice`, `Quot.sound` axiom profile.
+The Phase 3 audit now checks the split positively: `MAID.Basic` rejects two
+Protocol/solution probes while reaching three probability/DAG/syntax inputs,
+and `MAID.Strategic` reaches all four intended information, outcome-law, and
+equilibrium inputs.

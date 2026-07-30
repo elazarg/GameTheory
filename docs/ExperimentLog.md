@@ -2666,12 +2666,25 @@ memory.
       `native_decide`, direct updates, transport tokens, or `open Classical`;
       Phase 2/3 expected measurements pass. Axiom checks use only `propext`,
       `Classical.choice`, and `Quot.sound`.
+  16. Post-gate delivery adds the 397-nonblank-line, 19-declaration
+      `Languages/MAID/Strategic.lean`. `ownerPolicyEquiv` proves that one
+      source owner's complete family of site-local rules is equivalent to that
+      owner's compiled behavioral policy; the inactive choice is uniquely
+      forced, and every acting choice decodes to its typed source value.
+      `behavioralProfileEquiv_update` proves a unilateral update stays at the
+      same source-owner coordinate. `isNash_native_iff_compiled` then proves
+      the exact native/compiled behavioral Nash equivalence using the canonical
+      `IsNash`, without a MAID-specific equilibrium predicate. The strategic
+      module builds in 1,732 jobs and the full project in 3,337; source audits
+      remain zero for placeholders, custom axioms, direct updates, transport
+      tokens, and forbidden imports. Its flagship declarations use only
+      `propext`, `Classical.choice`, and `Quot.sound`.
 - **Outcome:** supports the prediction and closes EXP-041. General typed MAID
   serialization is local, order-independent, and exactly equal to both the
   native frontier evaluator and the actual compiled-EFG behavioral runner.
-  This closes T3's outcome-law half and removes D14's block on public general
-  MAID recovery. It does not claim T3's separate source-owner equilibrium
-  transfer.
-- **Next action:** prove the named equilibrium transfer with deviations
-  regrouped by source owner. The validated syntax/evaluator/compiler surface
-  has been promoted under `GameTheory.Languages.MAID`.
+  This closed T3's outcome-law half and removed D14's block on public general
+  MAID recovery. The subsequent promoted strategic module closes the remaining
+  source-owner equilibrium transfer.
+- **Next action:** T3 is complete. Inventory and close the remaining T4
+  language transfer; general MAID refinements and Kuhn-facing recovery may now
+  proceed behind their ordinary dependency gates.

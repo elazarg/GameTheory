@@ -141,6 +141,15 @@ sets of realizable laws are equal when both conditions hold. D7's reopening
 condition remains unmet, because this is still a same-layer representation
 theorem. T4 remains outside the evidence on which D0 was finalized.
 
+**T3 delivery close-out (2026-07-30).** The general typed MAID now has both
+frozen transfer results. Its order-free frontier assignment law equals the
+actual compiled-EFG behavioral law at every topological order. Its native
+source-owner policy profile is coordinatewise equivalent to the compiled
+behavioral profile, unilateral updates commute with that equivalence, and
+ordinary expected-utility `IsNash` is equivalent on the native and compiled
+game forms. Decision sites are not relabelled as players and no certificate
+layer was introduced. T4 is the only frozen transfer still open.
+
 The execution-side scope limit recorded at finalization is now closed.
 `History.lean` and `Randomized.lean` run information-local deterministic,
 behavioral, and mixed policies over histories, with pushforward and point-mass

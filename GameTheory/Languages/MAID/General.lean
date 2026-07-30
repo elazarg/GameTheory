@@ -9,12 +9,13 @@ evaluation, and finite completion. `ToEFG` compiles an explicit topological
 order to the shared EFG and information layers. `Order` and
 `FrontierEquivalence` prove that the compiled behavioral assignment law is
 independent of that order and exactly equals native frontier evaluation.
+`Strategic` proves the source-owner profile and Nash-equilibrium transfer.
 
 The earlier `GameTheory.Languages.MAID` module remains the concrete three-node
 architecture witness. This module is the validated general surface.
 -/
 
-import GameTheory.Languages.MAID.FrontierEquivalence
+import GameTheory.Languages.MAID.Strategic
 
 namespace GameTheory.Languages.MAID
 

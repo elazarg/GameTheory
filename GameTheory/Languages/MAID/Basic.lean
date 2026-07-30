@@ -53,13 +53,17 @@ def Assignment.restrict (assignment : Assignment diagram)
 def DecisionSite (owner : Player) :=
   {node : Node // diagram.kind node = .decision owner}
 
+/-- One source owner's complete family of site-local behavioral rules. Sites
+remain indexed by their source owner; they are not promoted to players. -/
+abbrev OwnerPolicy (owner : Player) :=
+  (site : DecisionSite diagram owner) →
+    Config diagram (diagram.observedParents site.1) →
+      FinDist (diagram.Value site.1)
+
 /-- Behavioral policy is local by type: a decision-site rule receives only
 that site's declared observation configuration. -/
-def Policy :=
-  (owner : Player) →
-    (site : DecisionSite diagram owner) →
-      Config diagram (diagram.observedParents site.1) →
-        FinDist (diagram.Value site.1)
+abbrev Policy :=
+  (owner : Player) → OwnerPolicy diagram owner
 
 /-- Numeric semantics. Defaults initialize semantically inaccessible unresolved
 coordinates; chance laws and utility are the actual mathematical content. -/

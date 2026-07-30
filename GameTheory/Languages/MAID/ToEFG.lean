@@ -840,17 +840,26 @@ def game [DecidableEq Player] [DecidableEq Node]
   treeShaped := execution_treeShaped topological semantics
   singleMover := execution_singleMover topological semantics
 
-/-- A native site-local policy becomes an EFG behavioral policy without
-receiving the serialized execution prefix. -/
-def behavioralPolicy [DecidableEq Player] [DecidableEq Node]
+/-- One source owner's site-local rules become one EFG behavioral policy
+without receiving the serialized execution prefix. -/
+def ownerBehavioralPolicy [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
-    (policy : GameTheory.Languages.MAID.Policy diagram) (owner : Player) :
+    (owner : Player)
+    (policy : GameTheory.Languages.MAID.OwnerPolicy diagram owner) :
     (information topological semantics).BehavioralPolicy owner
   | .inactive => FinDist.pure ⟨none, rfl⟩
   | .acting site observed =>
       FinDist.map
         (fun value => ⟨some ⟨site, value⟩, ⟨value, rfl⟩⟩)
-        (policy owner site observed)
+        (policy site observed)
+
+/-- A native policy profile becomes one compiled EFG behavioral policy per
+source owner. -/
+def behavioralPolicy [DecidableEq Player] [DecidableEq Node]
+    (semantics : GameTheory.Languages.MAID.Semantics diagram)
+    (policy : GameTheory.Languages.MAID.Policy diagram) (owner : Player) :
+    (information topological semantics).BehavioralPolicy owner :=
+  ownerBehavioralPolicy topological semantics owner (policy owner)
 
 def behavioralProfile [DecidableEq Player] [DecidableEq Node]
     (semantics : GameTheory.Languages.MAID.Semantics diagram)
@@ -1151,7 +1160,8 @@ theorem behavioralJoint_eq_serialJointLaw_unit
         unfold viewOf
         rw [pending_eq_some unitTopological hpending]
         simp [hnotDecision]
-      rw [hstateView, behavioralPolicy, FinDist.map_pure,
+      rw [hstateView, behavioralPolicy, ownerBehavioralPolicy,
+        FinDist.map_pure,
         FinDist.map_pure]
       unfold serialJointLaw
       dsimp only
@@ -1171,7 +1181,8 @@ theorem behavioralJoint_eq_serialJointLaw_unit
                 (unitDiagram.observedParents node)) :=
         viewOf_eq_acting unitTopological semantics () state
           (pending_eq_some unitTopological hpending) hkind
-      rw [hstateView, behavioralPolicy, FinDist.map_comp,
+      rw [hstateView, behavioralPolicy, ownerBehavioralPolicy,
+        FinDist.map_comp,
         FinDist.map_comp]
       unfold serialJointLaw
       dsimp only

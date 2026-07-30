@@ -258,7 +258,7 @@ recovery creates pressure to work around them.
 | W1-C | no-regret learning to CCE | **complete** | the frozen F2 theorem uses the canonical deviation and correlation APIs |
 | W1-D | finite-prefix stochastic monitoring | **complete** | the frozen F8 law handles a nontrivial signal law, not only perfect public observation |
 | W1-E | Bayesian outcome-law and truthfulness transfers | **complete** | F5 and F6 are ported, adapted, or explicitly retired with measured reasons |
-| W1-F | named language transfers | partial; T1 complete, T3 outcome law complete | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
+| W1-F | named language transfers | partial; T1 and T3 complete | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | **complete** | both constructive directions, realizable history-law equality, arbitrary outcome pushforwards, and expected utility are exposed under the sharp no-revisit/recall hypotheses |
 | W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
 | W1-I | overdue knowledge and evolutionary ownership probes | open | Aumann/`InfoState` and ESS/static-dynamic slices either validate their proposed homes or record replacements |
@@ -270,9 +270,9 @@ Recommended dependency order:
 2. Completed W1-A through W1-E fix the continuation, Bayes, SPE, one-shot,
    external-regret, approximate-CCE, public-monitoring, recommendation-law, and
    truthful-mechanism targets used by later recovery.
-3. T1 and W1-G now fix the EFG strategic-form and Kuhn targets; W1-H and the
-   T3/T4 remainder of W1-F exercise those and the other language-specific
-   targets.
+3. T1, T3, and W1-G now fix the EFG/MAID strategic-form and Kuhn targets; W1-H
+   and the T4 remainder of W1-F exercise those and the other
+   language-specific targets.
 4. W1-I may proceed independently, but must close before those domains harvest.
 5. MAID/FOSG transfer packages proceed only after their language-specific
    execution probes pass.
@@ -318,7 +318,7 @@ surface syntax.
 |---|---|---|
 | NFG | a transparent finite syntax compiles to the canonical static form without a second Nash API | examples, public goods, Stackelberg, cheap talk, and mixed presentations |
 | EFG | W1-A and W1-B complete | syntax-facing histories, refinements, perfect recall, Kuhn, sequential rationality, one-shot deviation, and strategic extraction |
-| MAID | **passed (EXP-041):** an incomparable-node typed DAG compiles locally and its native frontier law equals every compiled order's actual behavioral law | **current:** public general evaluation/compiler promoted; next refinements, Kuhn specialization, and source-owner equilibrium transfer |
+| MAID | **passed (EXP-041/T3):** an incomparable-node typed DAG compiles locally; native and compiled outcome laws and source-owner Nash equilibrium are equivalent | public evaluation, compiler, and strategic transfer promoted; next refinements and Kuhn specialization |
 | FOSG | simultaneous active players and imperfect information compile honestly to Protocol | reachable histories, terminal laws, observations, strategies, values, and named EFG comparison |
 | multi-round | exact previous-action information and imperfect monitoring survive the compiler | stochastic, repeated, absent-minded, and Kuhn-facing theorems |
 | intrinsic games | the native strategy/information object proves one theorem not recoverable from bare Protocol | compilation, perfect recall, and native theorems |

@@ -325,6 +325,49 @@ if (-not $SkipReachability) {
   }
   Report 'EFG_SYNTAX_INPUT_PROBES_REACHED' $efgSyntaxInputsReached
 
+  # General MAID has the same deliberate split. Basic syntax and native
+  # frontier evaluation stay solution- and Protocol-blind; the named strategic
+  # bridge positively reaches the shared information and equilibrium layers.
+  $maidBasicRejected = 0
+  $maidBasicConstants = @(
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.InformationModel')
+  $maidBasicInputs = @(
+    'GameTheory.Languages.MAID.Structure',
+    'GameTheoryMath.DAG.Acyclic',
+    'GameTheory.Probability.FinDist')
+  $maidBasicOutput = Run-Probe 'GameTheory.Languages.MAID.Basic' `
+    ($maidBasicConstants + $maidBasicInputs)
+  foreach ($constant in $maidBasicConstants) {
+    if (Is-Unreachable $maidBasicOutput $constant) {
+      $maidBasicRejected++
+    }
+  }
+  Report 'MAID_BASIC_BOUNDARY_PROBES_REJECTED' $maidBasicRejected
+
+  $maidBasicInputsReached = 0
+  foreach ($constant in $maidBasicInputs) {
+    if (-not (Is-Unreachable $maidBasicOutput $constant)) {
+      $maidBasicInputsReached++
+    }
+  }
+  Report 'MAID_BASIC_INPUT_PROBES_REACHED' $maidBasicInputsReached
+
+  $maidStrategicInputsReached = 0
+  $maidStrategicConstants = @(
+    'GameTheory.IsNash',
+    'GameTheory.Protocol.InformationModel',
+    'GameTheory.Languages.MAID.FrontierEquivalence.nativeRun_eq_compiledBehavioralRun',
+    'GameTheory.Languages.MAID.Strategic.isNash_native_iff_compiled')
+  $maidStrategicOutput =
+    Run-Probe 'GameTheory.Languages.MAID.Strategic' $maidStrategicConstants
+  foreach ($constant in $maidStrategicConstants) {
+    if (-not (Is-Unreachable $maidStrategicOutput $constant)) {
+      $maidStrategicInputsReached++
+    }
+  }
+  Report 'MAID_STRATEGIC_INPUT_PROBES_REACHED' $maidStrategicInputsReached
+
   $efgBridgeInputsReached = 0
   $efgBridgeConstants = @(
       'GameTheory.Languages.EFG.Game',
@@ -374,6 +417,9 @@ if ($VerifyExpected) {
     $Expected['SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED'] = 2
     $Expected['EFG_SYNTAX_SOLUTION_PROBES_REJECTED'] = 3
     $Expected['EFG_SYNTAX_INPUT_PROBES_REACHED'] = 3
+    $Expected['MAID_BASIC_BOUNDARY_PROBES_REJECTED'] = 2
+    $Expected['MAID_BASIC_INPUT_PROBES_REACHED'] = 3
+    $Expected['MAID_STRATEGIC_INPUT_PROBES_REACHED'] = 4
     $Expected['EFG_BRIDGE_INPUT_PROBES_REACHED'] = 3
   }
   foreach ($entry in $Expected.GetEnumerator()) {

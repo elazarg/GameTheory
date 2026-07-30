@@ -34,6 +34,10 @@ GameTheory/Languages     scoped language encodings and truthful Bayesian
                          extraction exposes exact pure/mixed Nash iff laws and
                          both Kuhn directions preserve canonical history laws;
                          well-founded one-shot/SPE is a transparent specialization
+  /MAID                  typed acyclic influence diagrams with site-local
+                         policies, order-free frontier evaluation, explicit
+                         EFG compilation, order independence, and exact
+                         source-owner behavioral Nash transfer
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
