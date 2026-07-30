@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: in progress; 32 reviewed, 76 unreviewed
+Status: in progress; 54 reviewed, 54 unreviewed
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -56,20 +56,20 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `bos_football_football` | def | adapt | `GameTheory.Examples.bothFootball` | focused build | Canonical `Profile` witness. |
 | same | `bos_opera_is_nash` | theorem | adapt | `GameTheory.Examples.battleOfTheSexes_bothOpera_isNash` | focused build | Published against canonical semantic `IsNash`. |
 | same | `bos_football_is_nash` | theorem | adapt | `GameTheory.Examples.battleOfTheSexes_bothFootball_isNash` | focused build | Published against canonical semantic `IsNash`. |
-| same | `DGAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 290 |
-| same | `dictatorGame` | def | unreviewed | review required | generated index seed only | public, pinned line 300 |
-| same | `dg_keep_all` | def | unreviewed | review required | generated index seed only | public, pinned line 313 |
-| same | `dg_keep_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 318 |
-| same | `dg_giveAll_not_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 325 |
-| same | `TDAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 343 |
-| same | `travelersDilemma` | def | unreviewed | review required | generated index seed only | public, pinned line 356 |
-| same | `td_claim2_claim2` | def | unreviewed | review required | generated index seed only | public, pinned line 369 |
-| same | `td_claim2_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 374 |
-| same | `CournotQty` | inductive | unreviewed | review required | generated index seed only | public, pinned line 388 |
-| same | `cournotProfit` | def | unreviewed | review required | generated index seed only | public, pinned line 398 |
-| same | `cournotDuopoly` | def | unreviewed | review required | generated index seed only | public, pinned line 404 |
-| same | `cournot_q2_q2` | def | unreviewed | review required | generated index seed only | public, pinned line 412 |
-| same | `cournot_q2_q2_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 416 |
+| same | `DGAction` | inductive | adapt | `GameTheory.Examples.Economic.Split` | focused build | Only the dictator receives this action carrier in the canonical heterogeneous signature. |
+| same | `dictatorGame` | def | adapt | `GameTheory.Examples.Economic.dictatorGame` | focused build | Receiver carrier narrowed from three payoff-irrelevant actions to `PUnit`; payoffs are unchanged. |
+| same | `dg_keep_all` | def | adapt | `GameTheory.Examples.Economic.dictatorKeepsAll` | focused build | Canonical heterogeneous `Profile` witness. |
+| same | `dg_keep_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.dictatorKeepsAll_isNash` | focused build | Published against canonical semantic `IsNash`. |
+| same | `dg_giveAll_not_nash` | theorem | adapt | `GameTheory.Examples.Economic.dictatorGivesAll_not_isNash` | focused build | Canonical semantic refutation. |
+| same | `TDAction` | inductive | adapt | `GameTheory.Examples.Economic.Claim` | focused build | Canonical descriptive action type. |
+| same | `travelersDilemma` | def | adapt | `GameTheory.Examples.Economic.travelersDilemma` | focused build | Exact rational `TableGame`. |
+| same | `td_claim2_claim2` | def | adapt | `GameTheory.Examples.Economic.bothClaimTwo` | focused build | Canonical `Profile` witness. |
+| same | `td_claim2_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.travelersDilemma_bothClaimTwo_isNash` | focused build | Semantic theorem retained; exhaustive enumeration additionally records the weak `(3,3)` equilibrium. |
+| same | `CournotQty` | inductive | adapt | `GameTheory.Examples.Economic.Quantity` | focused build | Canonical descriptive action type. |
+| same | `cournotProfit` | def | adapt | `GameTheory.Examples.Economic.cournotProfit` | focused build | Same integer-valued table, represented computably in `ℚ`. |
+| same | `cournotDuopoly` | def | adapt | `GameTheory.Examples.Economic.cournotDuopoly` | focused build | Canonical symmetric `TableGame`. |
+| same | `cournot_q2_q2` | def | adapt | `GameTheory.Examples.Economic.bothQuantityTwo` | focused build | Canonical `Profile` witness. |
+| same | `cournot_q2_q2_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.cournotDuopoly_bothQuantityTwo_isNash` | focused build | The theorem survives; `cournotDuopoly_nashCount` machine-refutes the pinned prose claim of uniqueness and records three equilibria and payoff two at `(2,2)`. |
 | same | `BraessRAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 446 |
 | same | `BraessAAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 450 |
 | same | `braessRestricted` | def | unreviewed | review required | generated index seed only | public, pinned line 455 |
@@ -78,14 +78,14 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `braessAugmented_cc_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 494 |
 | same | `braessAugmented_aa_not_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 502 |
 | same | `braess_welfare_decreases` | theorem | unreviewed | review required | generated index seed only | public, pinned line 516 |
-| same | `BertrandPrice` | inductive | unreviewed | review required | generated index seed only | public, pinned line 546 |
-| same | `BertrandPrice.toReal` | def | unreviewed | review required | generated index seed only | public, pinned line 551 |
-| same | `bertrandProfit` | def | unreviewed | review required | generated index seed only | public, pinned line 556 |
-| same | `bertrandDuopoly` | def | unreviewed | review required | generated index seed only | public, pinned line 568 |
-| same | `bertrand_p2_p2` | def | unreviewed | review required | generated index seed only | public, pinned line 576 |
-| same | `bertrand_p1_p1` | def | unreviewed | review required | generated index seed only | public, pinned line 580 |
-| same | `bertrand_p2_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 584 |
-| same | `bertrand_p1_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 592 |
+| same | `BertrandPrice` | inductive | adapt | `GameTheory.Examples.Economic.Price` | focused build | Canonical descriptive action type. |
+| same | `BertrandPrice.toReal` | def | adapt | `GameTheory.Examples.Economic.Price.value` | focused build | Exact value is sufficient in `ℚ`; no analytic scalar is needed. |
+| same | `bertrandProfit` | def | adapt | `GameTheory.Examples.Economic.bertrandProfit` | focused build | Every payoff is multiplied by two, preserving preferences while avoiding kernel reduction over `1/2`. |
+| same | `bertrandDuopoly` | def | adapt | `GameTheory.Examples.Economic.bertrandDuopoly` | focused build | Canonical symmetric `TableGame`. |
+| same | `bertrand_p2_p2` | def | adapt | `GameTheory.Examples.Economic.bothPriceTwo` | focused build | Canonical `Profile` witness. |
+| same | `bertrand_p1_p1` | def | adapt | `GameTheory.Examples.Economic.bothPriceOne` | focused build | Canonical `Profile` witness. |
+| same | `bertrand_p2_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.bertrandDuopoly_bothPriceTwo_isNash` | focused build | Published against canonical semantic `IsNash`. |
+| same | `bertrand_p1_is_nash` | theorem | adapt | `GameTheory.Examples.Economic.bertrandDuopoly_bothPriceOne_isNash` | focused build | Published against canonical semantic `IsNash`. |
 | same | `pd_defect_udist` | theorem | unreviewed | review required | generated index seed only | public, pinned line 602 |
 | same | `pd_defect_isNashFor_eu` | theorem | unreviewed | review required | generated index seed only | public, pinned line 609 |
 | same | `pd_defect_isDominantFor_eu` | theorem | unreviewed | review required | generated index seed only | public, pinned line 616 |
