@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import Math.ParametricFarkasBasis
 import Mathlib.Algebra.BigOperators.Field
+import Mathlib.Analysis.Analytic.Order
 import Mathlib.Analysis.Convex.Extreme
 import Mathlib.Analysis.Convex.KreinMilman
 import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
@@ -843,6 +844,36 @@ def normalizedFarkasCertificateSet
     (normalizedFarkasMatrix balance mass)
     normalizedFarkasRhs
 
+/-- A normalized support Cramer certificate necessarily has nonsingular
+support Gram matrix: if the determinant vanished, every Cramer coordinate
+would be zero, contradicting the normalization row. -/
+theorem det_supportGram_ne_zero_of_mem_normalizedFarkasCertificateSet
+    {Row Col : Type*}
+    [Fintype Row] [Fintype Col] [DecidableEq Col]
+    (balance : Matrix Row Col ℝ) (mass : Col → ℝ)
+    (support : Finset Col)
+    (hz :
+      supportCramerVector
+          (normalizedFarkasMatrix balance mass)
+          normalizedFarkasRhs support ∈
+        normalizedFarkasCertificateSet balance mass) :
+    (supportGram
+      (normalizedFarkasMatrix balance mass) support).det ≠ 0 := by
+  intro hdet
+  have hz_zero :
+      supportCramerVector
+          (normalizedFarkasMatrix balance mass)
+          normalizedFarkasRhs support = 0 := by
+    funext j
+    by_cases hj : j ∈ support
+    · simp [supportCramerVector, supportCramerCoordinate, hj, hdet]
+    · simp [supportCramerVector, hj]
+  have hequation := hz.2
+  rw [hz_zero] at hequation
+  have hnormalization := congrFun hequation (Sum.inr ())
+  simp [normalizedFarkasMatrix, normalizedFarkasRhs,
+    Matrix.mulVec, dotProduct] at hnormalization
+
 /-- Objective numerator of a support Cramer candidate. -/
 def supportObjectiveNumerator
     {Row Col : Type*}
@@ -1539,6 +1570,208 @@ theorem
   simpa [A, rhs, normalizedFarkasCertificateSet] using
     (exists_fixed_eventual_optimal_supportCramer_of_attained
       A rhs objective target hA hrhs hobjective htarget hattained')
+
+/-- Feasibility-only analytic normalized-Farkas closure.
+
+With zero objective every feasible certificate is optimal.  Thus eventual
+feasibility alone freezes one Cramer support, including zero-mass and
+degenerate supports. -/
+theorem exists_fixed_eventual_feasible_normalizedFarkas_supportCramer
+    {Row Col : Type*}
+    [Fintype Row] [Fintype Col] [DecidableEq Col]
+    (balance : ℝ → Matrix Row Col ℝ)
+    (mass : ℝ → Col → ℝ) {x₀ : ℝ}
+    (hbalance :
+      ∀ i j, AnalyticAt ℝ (fun x => balance x i j) x₀)
+    (hmass :
+      ∀ j, AnalyticAt ℝ (fun x => mass x j) x₀)
+    (hfeasible :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        (normalizedFarkasCertificateSet
+          (balance x) (mass x)).Nonempty) :
+    ∃ support : Finset Col,
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        (supportGram
+          (normalizedFarkasMatrix (balance x) (mass x))
+          support).det ≠ 0 ∧
+          supportCramerVector
+              (normalizedFarkasMatrix (balance x) (mass x))
+              normalizedFarkasRhs support ∈
+            normalizedFarkasCertificateSet
+              (balance x) (mass x) := by
+  let objective : ℝ → Col → ℝ := fun _ _ => 0
+  let target : ℝ → ℝ := fun _ => 0
+  have hobjective :
+      ∀ j, AnalyticAt ℝ (fun x => objective x j) x₀ :=
+    fun _ => analyticAt_const
+  have htarget : AnalyticAt ℝ target x₀ :=
+    analyticAt_const
+  have hattained :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        ∃ z : Col → ℝ,
+          IsStandardOptimal
+              (normalizedFarkasMatrix (balance x) (mass x))
+              normalizedFarkasRhs (objective x) z ∧
+            (∑ j, objective x j * z j) = target x := by
+    filter_upwards [hfeasible] with x hx
+    obtain ⟨z, hz⟩ := hx
+    refine ⟨z, ⟨hz, ?_⟩, ?_⟩
+    · intro w hw
+      simp [objective]
+    · simp [objective, target]
+  obtain ⟨support, hsupport⟩ :=
+    exists_fixed_eventual_optimal_normalizedFarkas_supportCramer_of_attained
+      balance mass objective target hbalance hmass hobjective htarget
+        hattained
+  refine ⟨support, hsupport.mono fun x hx => ⟨?_, hx.1⟩⟩
+  exact
+    det_supportGram_ne_zero_of_mem_normalizedFarkasCertificateSet
+      (balance x) (mass x) support hx.1
+
+/-- A fixed support Cramer vector has one common finite pole order.
+
+Multiplying every coordinate by `(x - x₀) ^ poleOrder` produces an ordinary
+analytic vector germ. This avoids a separate Laurent-series datatype while
+retaining the exact punctured-neighborhood certificate. -/
+theorem exists_analytic_scaled_supportCramerVector
+    {Row Col : Type*}
+    [Fintype Row] [Fintype Col] [DecidableEq Col]
+    (A : ℝ → Matrix Row Col ℝ) (rhs : ℝ → Row → ℝ)
+    (support : Finset Col) {x₀ : ℝ}
+    (hA : ∀ i j, AnalyticAt ℝ (fun x => A x i j) x₀)
+    (hrhs : ∀ i, AnalyticAt ℝ (fun x => rhs x i) x₀)
+    (hdet_ne :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        (supportGram (A x) support).det ≠ 0) :
+    ∃ (poleOrder : ℕ) (scaled : ℝ → Col → ℝ),
+      AnalyticAt ℝ scaled x₀ ∧
+        ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+          (x - x₀) ^ poleOrder •
+              supportCramerVector (A x) (rhs x) support =
+            scaled x := by
+  let den : ℝ → ℝ := fun x =>
+    (supportGram (A x) support).det
+  have hden : AnalyticAt ℝ den x₀ := by
+    apply analyticAt_matrix_det
+    exact analyticAt_parametricSupportGram_entry A support hA
+  have hden_order_ne_top : analyticOrderAt den x₀ ≠ ⊤ := by
+    intro htop
+    have hzero :
+        ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), den x = 0 :=
+      (analyticOrderAt_eq_top.mp htop).filter_mono
+        nhdsWithin_le_nhds
+    obtain ⟨x, hxzero, hxne⟩ := (hzero.and hdet_ne).exists
+    exact hxne hxzero
+  obtain ⟨denFactor, hdenFactorAnalytic, hdenFactorZero, hdenFactor⟩ :=
+    hden.analyticOrderAt_ne_top.mp hden_order_ne_top
+  let poleOrder := analyticOrderNatAt den x₀
+  let numerator : ℝ → Col → ℝ := fun x j =>
+    if hj : j ∈ support then
+      Matrix.cramer (supportGram (A x) support)
+        (supportGramRhs (A x) (rhs x) support) ⟨j, hj⟩
+    else 0
+  let scaled : ℝ → Col → ℝ := fun x j =>
+    numerator x j / denFactor x
+  have hnumerator : AnalyticAt ℝ numerator x₀ := by
+    rw [analyticAt_pi_iff]
+    intro j
+    by_cases hj : j ∈ support
+    · have hcoordinate :=
+        analyticAt_matrix_cramer_apply
+          (fun x => supportGram (A x) support)
+          (fun x => supportGramRhs (A x) (rhs x) support)
+          (analyticAt_parametricSupportGram_entry A support hA)
+          (analyticAt_parametricSupportGramRhs
+            A rhs support hA hrhs) ⟨j, hj⟩
+      simpa only [dif_pos hj] using hcoordinate
+    · simpa only [dif_neg hj] using
+        (analyticAt_const :
+          AnalyticAt ℝ (fun _ : ℝ => (0 : ℝ)) x₀)
+  have hscaled : AnalyticAt ℝ scaled x₀ := by
+    rw [analyticAt_pi_iff] at hnumerator ⊢
+    intro j
+    exact (hnumerator j).div hdenFactorAnalytic hdenFactorZero
+  refine ⟨poleOrder, scaled, hscaled, ?_⟩
+  have hdenFactor_ne :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀), denFactor x ≠ 0 :=
+    (hdenFactorAnalytic.continuousAt.eventually_ne
+      hdenFactorZero).filter_mono nhdsWithin_le_nhds
+  filter_upwards [hdet_ne,
+    hdenFactor.filter_mono nhdsWithin_le_nhds,
+    hdenFactor_ne] with x hxdet hxfactor hxfactor_ne
+  funext j
+  by_cases hj : j ∈ support
+  · have hxpow : (x - x₀) ^ poleOrder ≠ 0 := by
+      intro hxpow
+      apply hxdet
+      have hdetEq :
+          (supportGram (A x) support).det =
+            (x - x₀) ^ poleOrder * denFactor x := by
+        simpa [den, poleOrder, smul_eq_mul] using hxfactor
+      rw [hdetEq, hxpow, zero_mul]
+    simp only [Pi.smul_apply, supportCramerVector, dif_pos hj,
+      supportCramerCoordinate, scaled, numerator, smul_eq_mul]
+    rw [show (supportGram (A x) support).det =
+        (x - x₀) ^ poleOrder * denFactor x by
+      simpa [den, poleOrder, smul_eq_mul] using hxfactor]
+    field_simp [hxpow, hxfactor_ne]
+  · simp [supportCramerVector, scaled, numerator, hj]
+
+/-- Eventual feasibility of an analytic normalized-Farkas system yields one
+fixed support and one common power that clear all endpoint poles
+simultaneously. The resulting coefficient vector is analytic at the
+endpoint and agrees exactly with the scaled feasible certificate on the
+punctured right neighborhood. -/
+theorem exists_analytic_scaled_eventual_feasible_normalizedFarkasCertificate
+    {Row Col : Type*}
+    [Fintype Row] [Fintype Col] [DecidableEq Col]
+    (balance : ℝ → Matrix Row Col ℝ)
+    (mass : ℝ → Col → ℝ) {x₀ : ℝ}
+    (hbalance :
+      ∀ i j, AnalyticAt ℝ (fun x => balance x i j) x₀)
+    (hmass :
+      ∀ j, AnalyticAt ℝ (fun x => mass x j) x₀)
+    (hfeasible :
+      ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+        (normalizedFarkasCertificateSet
+          (balance x) (mass x)).Nonempty) :
+    ∃ (support : Finset Col) (poleOrder : ℕ)
+        (scaled : ℝ → Col → ℝ),
+      AnalyticAt ℝ scaled x₀ ∧
+        ∀ᶠ x in nhdsWithin x₀ (Set.Ioi x₀),
+          (x - x₀) ^ poleOrder •
+              supportCramerVector
+                (normalizedFarkasMatrix (balance x) (mass x))
+                normalizedFarkasRhs support =
+            scaled x ∧
+          supportCramerVector
+              (normalizedFarkasMatrix (balance x) (mass x))
+              normalizedFarkasRhs support ∈
+            normalizedFarkasCertificateSet
+              (balance x) (mass x) := by
+  obtain ⟨support, hsupport⟩ :=
+    exists_fixed_eventual_feasible_normalizedFarkas_supportCramer
+      balance mass hbalance hmass hfeasible
+  let A : ℝ → Matrix (Sum Row Unit) Col ℝ := fun x =>
+    normalizedFarkasMatrix (balance x) (mass x)
+  let rhs : ℝ → Sum Row Unit → ℝ := fun _ =>
+    normalizedFarkasRhs
+  have hA :
+      ∀ i j, AnalyticAt ℝ (fun x => A x i j) x₀ := by
+    intro i j
+    cases i with
+    | inl i => exact hbalance i j
+    | inr _ => exact hmass j
+  have hrhs :
+      ∀ i, AnalyticAt ℝ (fun x => rhs x i) x₀ := by
+    intro i
+    exact analyticAt_const
+  obtain ⟨poleOrder, scaled, hscaled, hscaled_eq⟩ :=
+    exists_analytic_scaled_supportCramerVector
+      A rhs support hA hrhs (hsupport.mono fun _ hx => hx.1)
+  refine ⟨support, poleOrder, scaled, hscaled, ?_⟩
+  filter_upwards [hscaled_eq, hsupport] with x hxscaled hxsupport
+  exact ⟨by simpa [A, rhs] using hxscaled, hxsupport.2⟩
 
 end
 end LinearAlgebra
