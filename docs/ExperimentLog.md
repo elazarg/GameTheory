@@ -39,6 +39,7 @@ becomes difficult to scan.
 | EXP-026 | 2026-07-30 | D10/D12 / finite certificates | Can an external LP verifier replace hand-expanded rational proofs without widening the trusted base or the audited finite layer? | Narrows; trust passes, adoption does not | [`experiments/EXP-026.md`](experiments/EXP-026.md); [`decisions/D13-lp-certificates.md`](decisions/D13-lp-certificates.md) |
 | EXP-027 | 2026-07-30 | D4 / Phase 5 | Does Arrow's pivotal-voter proof work through the accepted weak-ranking vocabulary without a second preference API? | Supports; repairs an import-closure leak | `GameTheory/Core/Rank.lean`; `GameTheory/Core/Arrow.lean`; `GameTheory/Tests/Arrow.lean` |
 | EXP-028 | 2026-07-30 | D0 / Phase 5 | Is the parallel `CoalitionalGame` primitive rich enough for the Shapley value and its four-axiom characterization? | Supports the parallel primitive | `GameTheory/Core/Shapley.lean`; `GameTheory/Tests/Shapley.lean` |
+| EXP-029 | 2026-07-30 | D0/D5/D6 / Phase 5 | Does the EXP-008 interim theorem survive as stable API and compile through the accepted `InformationModel` without duplicating equilibrium semantics? | Supports; fixes the static/information split | `GameTheory/Core/Bayesian*.lean`; `GameTheory/Languages/Bayesian.lean`; `GameTheory/Tests/Bayesian.lean` |
 
 ## Entry template
 
@@ -1685,3 +1686,52 @@ memory.
   introduced.
 - **Next action:** treat the Shapley axis as closed and continue with the next
   Phase 5 stress theorem.
+
+### EXP-029: Bayesian interim semantics through the information boundary
+
+- **Date / revision:** 2026-07-30, working tree based on `9233027`
+- **Decision / question:** D0, D5, D6, and Phase 5; whether EXP-008's finite
+  common-prior Bayesian form and genuinely interim deviation theorem can leave
+  `Experimental`, while the same data compiles through the accepted
+  `ExecutionProtocol`/`InformationModel` boundary without a second evaluator
+  or equilibrium predicate.
+- **Representative slice:** a finite Bayesian game with unstored finiteness
+  assumptions; type-contingent plans compiled both directly to `GameForm` and
+  through a two-step chance-then-simultaneous protocol whose policies see only
+  their own type; exact policy/plan and play-law bridges; and one typed example
+  exercising the interim theorem on the protocol-backed presentation.
+- **Competing designs:** keep the static probe experimental; make Bayesian
+  games a monolithic language module containing equilibrium theory; or split
+  stable static data and interim theory from a solution-concept-free protocol
+  compiler.
+- **Kill conditions:** the protocol policy exposes the full type profile;
+  `InformationModel` cannot express the own-type information set or its menu;
+  a second Bayes-Nash/evaluation predicate is needed; finiteness must be stored
+  in semantic data; the language compiler must import solution concepts; or
+  the direct and protocol-induced outcome laws require user-visible transport.
+- **Evidence:** `GameTheory/Core/Bayesian.lean` (53 nonblank lines),
+  `GameTheory/Core/BayesianEquilibrium.lean` (117),
+  `GameTheory/Languages/Bayesian.lean` (386), and
+  `GameTheory/Tests/Bayesian.lean` (135). `lake build
+  GameTheory.Tests.Bayesian` completed in 1,729 jobs; the final `lake build`
+  completed cleanly in 3,287. All four phase audits passed. The Phase 3 audit
+  now permanently rejects two solution-concept probes from the Bayesian
+  compiler and positively reaches both Bayesian data and the information
+  compiler. Axiom checks for `isNash_iff_interim`, `toProtocolForm_play`, and
+  `truthful_protocol_isNash` report only `propext`, `Classical.choice`, and
+  `Quot.sound`.
+- **Observation:** the data module stores no finiteness or decidable-equality
+  capability; only the interim decomposition enumerates types. The separate
+  equilibrium module promotes EXP-008's theorem without adding `BayesNash`.
+  The solution-concept-free language module draws types at chance, exposes
+  player `i` only to `View B i`, proves exact policy/plan equivalence, and
+  identifies the two-step protocol law with the direct law mapped to completed
+  outcomes. In the fair-bit endpoint, truth is interim-optimal and ordinary
+  Nash in both presentations.
+- **Outcome:** supports D0, D5, and D6 with a physical split. Bayesian games
+  need coordinated static and information presentations, but no duplicate
+  evaluator, preference, or equilibrium predicate; none of the kill conditions
+  fired.
+- **Next action:** treat the finite Bayesian axis as closed. Reserve a new
+  experiment before starting repeated play or the predicted analytic bridge
+  over Protocol.

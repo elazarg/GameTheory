@@ -4,7 +4,7 @@
   interface, finite-first trees retained as a derived presentation
 - **Date:** 2026-07-27
 - **Experiment IDs:** EXP-010, EXP-011, EXP-012; post-decision evidence
-  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025
+  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025, EXP-029
 
 **Decision:** Execution and information are separate interfaces. The primary
 execution interface is the general-state `ExecutionProtocol`. The finite-first
@@ -144,3 +144,12 @@ subgame-perfect-equilibrium predicate or full well-founded
 claimed: unlike the one-shot condition, that predicate does not inspect every
 off-path history. This is downstream semantics over the accepted execution and
 information interfaces, not a missing execution representation.
+
+EXP-029 adds the complementary incomplete-information stress. A common-prior
+Bayesian game compiles to a two-step execution protocol whose chance step draws
+types and whose simultaneous step records actions. Its `InformationModel`
+exposes only player `i`'s own type in `View B i`; policy/plan equivalence and
+the exact two-step outcome-law theorem show that this presentation agrees with
+the direct static form. The compiler imports Bayesian data but no utility,
+preference, or equilibrium theory, preserving the execution/information
+boundary while making it useful to the static incentive layer.

@@ -3,8 +3,9 @@
 
 The stable foundation and static theory: signatures and profiles, game forms,
 preferences and utility evaluation, local deviation schemes, the single
-equilibrium predicate, response concepts, potentials, mixed and zero-sum
-games, social choice, and foundational coalitional games.
+equilibrium predicate, finite Bayesian forms and interim optimality, response
+concepts, potentials, mixed and zero-sum games, social choice, and foundational
+coalitional games.
 
 Not every concept here is forced through `GameForm`: a coalitional game has no
 strategies or outcome law and is deliberately a parallel primitive. Core
@@ -15,6 +16,8 @@ a definition never costs the machinery a later theorem happens to need.
 
 import GameTheory.Core.Signature
 import GameTheory.Core.Form
+import GameTheory.Core.Bayesian
+import GameTheory.Core.BayesianEquilibrium
 import GameTheory.Core.Rank
 import GameTheory.Core.Preference
 import GameTheory.Core.Deviation

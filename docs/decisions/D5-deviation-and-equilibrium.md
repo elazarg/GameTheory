@@ -3,7 +3,7 @@
 - **Status:** accepted for the static core (Phase 2 gate); the interface is
   re-tested against sequential deviations in Phase 3
 - **Date:** 2026-07-26
-- **Experiment IDs:** EXP-005, EXP-008
+- **Experiment IDs:** EXP-005, EXP-008; stable stress evidence EXP-029
 
 **Decision:** Equilibrium of a law is defined once, by `IsEquilibrium`, from a
 `DeviationScheme` whose local action function receives only the deviating
@@ -96,6 +96,12 @@ specializations need more boilerplate than direct definitions.
 Neither fired. All five concepts are one line each on top of `IsEquilibrium`,
 and the Bayesian probe (EXP-008) showed that an interim, type-dependent
 deviation is also expressible without widening the interface.
+
+EXP-029 promotes that result from a probe to stable API and compiles the same
+game through `InformationModel`. The prior-weighted interim theorem is still an
+equivalence with ordinary `IsNash`; the protocol-backed fair-bit endpoint uses
+the same predicate after the policy/plan and outcome-law equalities. No
+`BayesNash` definition or wrapper was introduced.
 
 ## Result
 

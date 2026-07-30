@@ -183,9 +183,30 @@ if (-not $SkipReachability) {
     if (Test-Unreachable $probe[0] $probe[1]) { $unreachable++ }
     else { $reachable += "$($probe[0]) reaches $($probe[1])" }
   }
-  Remove-Item $probeFile -ErrorAction SilentlyContinue
   Report 'UNREACHABLE_PROBES_PASSED' $unreachable
   foreach ($r in $reachable) { Write-Output "REACHABLE_UNEXPECTED=$r" }
+
+  # The Bayesian compiler deliberately imports the static data and information
+  # interfaces, but not solution concepts. Test both directions: absence alone
+  # would also pass if the compiler had quietly stopped using either input.
+  $bayesianSolutionRejected = 0
+  foreach ($constant in @('GameTheory.IsNash', 'GameTheory.euPreference')) {
+    if (Test-Unreachable 'GameTheory.Languages.Bayesian' $constant) {
+      $bayesianSolutionRejected++
+    }
+  }
+  Report 'BAYESIAN_SOLUTION_PROBES_REJECTED' $bayesianSolutionRejected
+
+  $bayesianInputsReached = 0
+  foreach ($constant in @(
+      'GameTheory.BayesianGame',
+      'GameTheory.Languages.Bayesian.informationModel')) {
+    if (-not (Test-Unreachable 'GameTheory.Languages.Bayesian' $constant)) {
+      $bayesianInputsReached++
+    }
+  }
+  Report 'BAYESIAN_INPUT_PROBES_REACHED' $bayesianInputsReached
+  Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
 # --------------------------------------------------------------------------
@@ -210,7 +231,11 @@ if ($VerifyExpected) {
     # stop it drifting.
     LIBRARY_LINES_OVER_100 = 0
   }
-  if (-not $SkipReachability) { $Expected['UNREACHABLE_PROBES_PASSED'] = 3 }
+  if (-not $SkipReachability) {
+    $Expected['UNREACHABLE_PROBES_PASSED'] = 3
+    $Expected['BAYESIAN_SOLUTION_PROBES_REJECTED'] = 2
+    $Expected['BAYESIAN_INPUT_PROBES_REACHED'] = 2
+  }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {
       throw "$($entry.Key): expected $($entry.Value), got $($Results[$entry.Key])"

@@ -8,7 +8,7 @@ outcome-law semantics and coordinated native branches for protocol/information
 semantics. Do not select a generic certificate hierarchy yet. The final
 decision, after Phase 3, is recorded below.
 
-**Experiment IDs:** EXP-001
+**Experiment IDs:** EXP-001; post-decision stress evidence EXP-028, EXP-029
 
 **Hypothesis:** A utility-free shared static form and common deviation logic can
 remove duplicated strategic concepts without forcing sequential languages to
@@ -180,6 +180,26 @@ probability, or certificate layer appears. The Phase 0 judgment that
 `GameForm` is not the universal semantic hub therefore survives a theorem that
 uses substantially more of cooperative-game structure than the original core
 example.
+
+### Phase 5 Bayesian stress
+
+[EXP-029](../ExperimentLog.md) closes the unfinished Bayesian edge between the
+shared static form and the accepted information layer. Stable
+`BayesianGame` data compiles directly to a type-contingent `GameForm`; a
+separate core module proves its ordinary Nash predicate equivalent to
+prior-weighted interim optimality. The solution-concept-free language compiler
+turns the same data into a two-step chance/simultaneous `ExecutionProtocol` and
+an `InformationModel` whose acting view contains only the observing player's
+own type.
+
+Policies and contingent plans are exactly equivalent, and the compiled
+two-step outcome law equals the direct law mapped to completed outcomes. The
+typed fair-bit endpoint transfers truthful Nash through that equality without
+a Bayesian equilibrium wrapper. Bayesian games therefore form a coordinated
+native presentation only where execution and information require it; their
+static incentive theory continues to use the shared form and predicate.
+Finiteness remains attached to the interim decomposition theorem rather than
+stored in the game.
 
 ### Consequences for public API
 

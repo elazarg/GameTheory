@@ -136,6 +136,31 @@ characterization.
 probes for `FinDist`, `GameForm`, and `Polynomial`, and both efficiency and the
 characterization use only `propext`, `Classical.choice`, and `Quot.sound`.
 
+### Bayesian syntax and interim theory separate at the right boundary
+
+Recorded as [EXP-029](ExperimentLog.md). EXP-008's common-prior scope probe is
+now stable in two physically separated core modules. `Core/Bayesian.lean`
+contains only types, actions, the prior, payoff data, and the direct game-form
+compiler. `Core/BayesianEquilibrium.lean` adds the prior-weighted interim value
+and proves ordinary `IsNash` equivalent to optimality at every own type. The
+game stores neither type finiteness nor decidable equality; those capabilities
+appear only on the decomposition theorem that enumerates types.
+
+`Languages/Bayesian.lean` imports the data module but not the equilibrium
+module. Its two-step protocol draws the full type profile at chance, gives each
+player a `View` carrying only its own type, and then asks all players to act
+simultaneously. Local policies and contingent plans are exactly equivalent.
+After two steps, the protocol-backed outcome law is the direct form's law
+mapped entirely to completed outcomes. Thus the compiler knows nothing about
+Nash, while the typed fair-bit test can transfer truthful Nash to the compiled
+information-local form with the ordinary predicate.
+
+This closes the ambiguity left by EXP-008. Bayesian games need coordinated
+static and information presentations, but they do not need a second evaluator,
+preference, or equilibrium concept. The split is architectural rather than
+organizational: the language compiler cannot reach the solution-concept module
+through its authored import graph.
+
 ## Axes not yet stressed
 
 Each of these is a part of the subject the design has never been asked about,
@@ -145,9 +170,6 @@ listed with the choice it would put pressure on.
 composability, and needs limits — so it also tests whether the analytic boundary
 is drawn in the right place, or whether a second class of theorem wants to live
 above it.
-
-*Bayesian games.* Types, priors, and interim expected utility, against
-`InformationModel`.
 
 *Sequential equilibrium.* Consistency is a limit of completely mixed behavioral
 profiles, which puts topology on strategies rather than on outcomes — the first
