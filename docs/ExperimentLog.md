@@ -2692,7 +2692,8 @@ memory.
 ### EXP-042: one-shot NFG through FOSG and Protocol
 
 - **Date / revision:** 2026-07-30, working tree based on `2b659df`
-- **Status:** running
+- **Status:** supports; exact outcome and utility laws pass through the actual
+  Protocol history runner
 - **Decision / question:** D0/T4, D4, D6, and the NFG/FOSG language gates;
   whether a deterministic normal-form game can compile to a genuine
   factored-observation stochastic game, then through the accepted Protocol
@@ -2737,7 +2738,37 @@ memory.
      `sequentialization_enlarges_strategy_space` exhibits a contingent plan
      unavailable in simultaneous play. T4 must therefore exercise the
      general-state Protocol branch.
-- **Outcome:** pending.
-- **Next action:** implement the smallest hostile NFG/FOSG slice
-  experimentally, measure it, and promote only if every kill condition is
-  avoided.
+  3. The experimental compiler and hostile test are 401 nonblank lines and 42
+     declarations. They import `Protocol.Strategic` and add no stable
+     declaration or import during the experiment.
+  4. `NFG.Game.toGameForm` is the deterministic canonical form.
+     `FOSG.Game` contains only an `ExecutionProtocol` and its
+     `InformationModel`; `FOSG.Game.toGameForm` is the existing Protocol
+     compiler, not a second evaluator.
+  5. The one-shot state is either initial or terminal with the full source
+     profile. Every real source player is active initially and the certified
+     simultaneous joint action is decoded without a default or padding action.
+     `Nonempty` actions are requested only by the execution construction's
+     progress proof.
+  6. Each policy input is only `acting` or `done`. In the hostile two-player
+     game, changing the column player's current action leaves the row player's
+     initial policy action unchanged, while the terminal law changes from the
+     all-false outcome to `(false, true)`.
+  7. `toProtocolForm_play_policyProfile` proves the actual horizon-one
+     information-local history law, mapped to the source outcome, equals the
+     direct NFG play law. `toProtocolForm_utilityLaw_policyProfile` derives the
+     predecessor's joint utility-distribution equality for every external
+     utility.
+  8. The focused test builds in 1,722 jobs and the full project in 3,339.
+     Phase 2 and Phase 3 expected source audits pass. Source scans find zero
+     placeholders, native decisions, direct updates, transports, custom
+     axioms, or `open Classical`.
+  9. Axiom checks for both generic laws and all hostile simultaneous/locality
+     probes use only `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports. No kill condition fired. D15 adopts a utility-free
+  deterministic NFG frontend, the transparent Protocol-backed FOSG
+  specialization, and the named direct one-shot bridge. The predecessor's
+  generic morphism wrapper is retired under D7.
+- **Next action:** promote the three surfaces as separate stable modules, keep
+  the hostile fixture experimental, add positive/negative import probes, and
+  rerun full Phase 2/3 reachability before crediting T4.
