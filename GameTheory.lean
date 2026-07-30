@@ -173,6 +173,7 @@ import Math.Probability.AnalyticKernelRegeneration
 import Math.Probability.AnalyticRegenerationCalendar
 import Math.Probability.IntegratedResponseLedger
 import Math.FiniteLinearCompatibility
+import Math.FiniteInequalityCompatibility
 import Math.InvisibleNeutralActionDrift
 import GameTheory.Concepts.Stochastic.FinkMarkovEndpoint
 import GameTheory.Concepts.Stochastic.BigMatch
