@@ -8,7 +8,7 @@ Successor baseline: `01f790a`
 Canonical destination: GameTheory.Languages.NFG; GameTheory.Examples; canonical Core and Analysis concepts
 Domain contract / decision: D4-D10, D15, EXP-042
 Owner: Wave 2 / mature static and language recovery
-Status: in progress; 4 reviewed, 104 unreviewed
+Status: in progress; 32 reviewed, 76 unreviewed
 Last verified: 2026-07-30
 
 This ledger is an exact generated review queue for the L-NFG family.
@@ -28,34 +28,34 @@ disposition. Reviewed rows replace that seed with explicit evidence.
 | same | `natChoose_zero` | def | adapt | `GameTheory.Examples.NFG.natChooseZero` | focused build | Canonical `Profile` over the compiled signature. |
 | same | `natChoose_zero_is_nash` | theorem | adapt | `GameTheory.Examples.NFG.natChooseZero_isNash` | focused build | Uses canonical `IsNash` and `euPreference`, not a language-specific predicate. |
 | same | `natChoose_zero_dominant_0` | theorem | adapt | `GameTheory.Examples.NFG.natChooseZero_isDominant_zero` | focused build | Uses canonical `IsDominant`; the action carrier remains `ℕ`. |
-| `GameTheory/Languages/NFG/Examples.lean` | `PDAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 27 |
-| same | `prisonersDilemma` | def | unreviewed | review required | generated index seed only | public, pinned line 36 |
-| same | `pd_defect_defect` | def | unreviewed | review required | generated index seed only | public, pinned line 51 |
-| same | `pd_defect_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 55 |
-| same | `pd_coop_coop` | def | unreviewed | review required | generated index seed only | public, pinned line 61 |
-| same | `pd_coop_not_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 65 |
-| same | `MPAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 75 |
-| same | `matchingPennies` | def | unreviewed | review required | generated index seed only | public, pinned line 84 |
-| same | `matchingPennies_no_pure_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 99 |
-| same | `SHAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 127 |
-| same | `stagHunt` | def | unreviewed | review required | generated index seed only | public, pinned line 139 |
-| same | `sh_stag_stag` | def | unreviewed | review required | generated index seed only | public, pinned line 152 |
-| same | `sh_hare_hare` | def | unreviewed | review required | generated index seed only | public, pinned line 156 |
-| same | `sh_stag_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 160 |
-| same | `sh_hare_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 166 |
-| same | `sh_stag_hare_not_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 173 |
-| same | `HDAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 188 |
-| same | `hawkDove` | def | unreviewed | review required | generated index seed only | public, pinned line 200 |
-| same | `hd_hawk_dove` | def | unreviewed | review required | generated index seed only | public, pinned line 213 |
-| same | `hd_dove_hawk` | def | unreviewed | review required | generated index seed only | public, pinned line 217 |
-| same | `hd_hawk_dove_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 221 |
-| same | `hd_dove_hawk_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 227 |
-| same | `BoSAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 239 |
-| same | `battleOfTheSexes` | def | unreviewed | review required | generated index seed only | public, pinned line 251 |
-| same | `bos_opera_opera` | def | unreviewed | review required | generated index seed only | public, pinned line 263 |
-| same | `bos_football_football` | def | unreviewed | review required | generated index seed only | public, pinned line 267 |
-| same | `bos_opera_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 271 |
-| same | `bos_football_is_nash` | theorem | unreviewed | review required | generated index seed only | public, pinned line 277 |
+| `GameTheory/Languages/NFG/Examples.lean` | `PDAction` | inductive | adapt | `GameTheory.Examples.Choice` | focused build | Canonical descriptive action type; no NFG-local semantic type. |
+| same | `prisonersDilemma` | def | adapt | `GameTheory.Examples.prisonersDilemma` | focused build | Canonical rational `TableGame`; uses the standard ordinally equivalent payoff normalization. |
+| same | `pd_defect_defect` | def | adapt | `GameTheory.Examples.bothDefect` | focused build | Canonical `Profile` witness. |
+| same | `pd_defect_is_nash` | theorem | adapt | `GameTheory.Examples.prisonersDilemma_bothDefect_isNash` | focused build | Published against canonical semantic `IsNash`. |
+| same | `pd_coop_coop` | def | adapt | `GameTheory.Examples.bothCooperate` | focused build | Canonical `Profile` witness. |
+| same | `pd_coop_not_nash` | theorem | adapt | `GameTheory.Examples.prisonersDilemma_bothCooperate_not_isNash` | focused build | Derived from the canonical unique-equilibrium theorem. |
+| same | `MPAction` | inductive | adapt | `GameTheory.Examples.Side` | focused build | Canonical coin-side action type. |
+| same | `matchingPennies` | def | adapt | `GameTheory.Examples.matchingPennies` | focused build | Exact rational `TableGame` with the canonical mixed extension available separately. |
+| same | `matchingPennies_no_pure_nash` | theorem | adapt | `GameTheory.Examples.matchingPennies_noPureNash` | focused build | Universal semantic no-pure-Nash statement recovered. |
+| same | `SHAction` | inductive | adapt | `GameTheory.Examples.Hunt` | focused build | Canonical descriptive action type. |
+| same | `stagHunt` | def | adapt | `GameTheory.Examples.stagHunt` | focused build | Symmetric canonical `TableGame`, indexed by own and opponent actions. |
+| same | `sh_stag_stag` | def | adapt | `GameTheory.Examples.bothStag` | focused build | Canonical `Profile` witness. |
+| same | `sh_hare_hare` | def | adapt | `GameTheory.Examples.bothHare` | focused build | Canonical `Profile` witness. |
+| same | `sh_stag_is_nash` | theorem | adapt | `GameTheory.Examples.stagHunt_bothStag_isNash` | focused build | Semantic `IsNash` theorem backed by the verified finite checker. |
+| same | `sh_hare_is_nash` | theorem | adapt | `GameTheory.Examples.stagHunt_bothHare_isNash` | focused build | Semantic `IsNash` theorem backed by the verified finite checker. |
+| same | `sh_stag_hare_not_nash` | theorem | adapt | `GameTheory.Examples.stagHunt_stagHare_not_isNash` | focused build | Canonical mismatched profile and semantic refutation. |
+| same | `HDAction` | inductive | adapt | `GameTheory.Examples.Contest` | focused build | Canonical descriptive action type. |
+| same | `hawkDove` | def | adapt | `GameTheory.Examples.hawkDove` | focused build | Symmetric canonical `TableGame`, indexed by own and opponent actions. |
+| same | `hd_hawk_dove` | def | adapt | `GameTheory.Examples.hawkDoveProfile` | focused build | Canonical asymmetric `Profile` witness. |
+| same | `hd_dove_hawk` | def | adapt | `GameTheory.Examples.doveHawkProfile` | focused build | Canonical role-reversed `Profile` witness. |
+| same | `hd_hawk_dove_is_nash` | theorem | adapt | `GameTheory.Examples.hawkDoveProfile_isNash` | focused build | Semantic `IsNash` theorem backed by the verified finite checker. |
+| same | `hd_dove_hawk_is_nash` | theorem | adapt | `GameTheory.Examples.doveHawkProfile_isNash` | focused build | Semantic `IsNash` theorem backed by the verified finite checker. |
+| same | `BoSAction` | inductive | adapt | `GameTheory.Examples.Venue` | focused build | Canonical venue action type. |
+| same | `battleOfTheSexes` | def | adapt | `GameTheory.Examples.battleOfTheSexes` | focused build | Canonical rational `TableGame`. |
+| same | `bos_opera_opera` | def | adapt | `GameTheory.Examples.bothOpera` | focused build | Canonical `Profile` witness. |
+| same | `bos_football_football` | def | adapt | `GameTheory.Examples.bothFootball` | focused build | Canonical `Profile` witness. |
+| same | `bos_opera_is_nash` | theorem | adapt | `GameTheory.Examples.battleOfTheSexes_bothOpera_isNash` | focused build | Published against canonical semantic `IsNash`. |
+| same | `bos_football_is_nash` | theorem | adapt | `GameTheory.Examples.battleOfTheSexes_bothFootball_isNash` | focused build | Published against canonical semantic `IsNash`. |
 | same | `DGAction` | inductive | unreviewed | review required | generated index seed only | public, pinned line 290 |
 | same | `dictatorGame` | def | unreviewed | review required | generated index seed only | public, pinned line 300 |
 | same | `dg_keep_all` | def | unreviewed | review required | generated index seed only | public, pinned line 313 |

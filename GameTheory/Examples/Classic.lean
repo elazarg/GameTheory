@@ -46,7 +46,11 @@ def prisonersDilemma : TableGame (Fin 2) where
 /-- Both defect. -/
 def bothDefect : Profile prisonersDilemma.sig := fun _ => .defect
 
+/-- Both cooperate. -/
+def bothCooperate : Profile prisonersDilemma.sig := fun _ => .cooperate
+
 #guard prisonersDilemma.isNash bothDefect
+#guard !prisonersDilemma.isNash bothCooperate
 #guard prisonersDilemma.enumerateNash.card = 1
 #guard prisonersDilemma.isDominantProfile bothDefect
 #guard !prisonersDilemma.isParetoEfficient bothDefect
@@ -68,6 +72,14 @@ semantics; the executable and semantic sides agree. -/
 theorem prisonersDilemma_bothDefect_isNash :
     IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility) bothDefect := by
   rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- Mutual cooperation is not a Nash equilibrium: either player can profit by
+defecting. -/
+theorem prisonersDilemma_bothCooperate_not_isNash :
+    ¬ IsNash prisonersDilemma.toForm (euPreference prisonersDilemma.utility)
+      bothCooperate := by
+  rw [prisonersDilemma_isNash_iff]
   decide
 
 /-- Defection is dominant, hence Nash by the abstract theorem rather than a
@@ -153,6 +165,14 @@ theorem matchingPennies_payoff (profile : Fin 2 → Side) (i : Fin 2) :
 
 #guard matchingPennies.enumerateNash.card = 0
 
+/-- Matching Pennies has no pure Nash equilibrium. -/
+theorem matchingPennies_noPureNash (profile : Profile matchingPennies.sig) :
+    ¬ IsNash matchingPennies.toForm (euPreference matchingPennies.utility)
+      profile := by
+  rw [← TableGame.isNash_eq_true_iff]
+  revert profile
+  decide
+
 /-- The standard uniform mixed equilibrium, supplied by the reader. -/
 def uniformPennies : Profile matchingPennies.mixedSig := fun _ _ => 1 / 2
 
@@ -208,6 +228,102 @@ theorem matchingPennies_uniform_isNash :
   rw [← TableGame.verifyMixedNash_eq_true_iff]
   exact uniformPennies_verify
 
+/-! ## Stag Hunt -/
+
+/-- Hunt stag together or take the safe hare. -/
+inductive Hunt
+  | stag
+  | hare
+  deriving DecidableEq, Fintype, Repr
+
+/-- The Stag Hunt coordination game, written as a symmetric payoff table. -/
+def stagHunt : TableGame (Fin 2) where
+  Action _ := Hunt
+  actionFintype _ := inferInstance
+  actionDecEq _ := inferInstance
+  payoff profile i :=
+    match profile i, profile (opponent i) with
+    | .stag, .stag => 3
+    | .stag, .hare => 0
+    | .hare, .stag => 1
+    | .hare, .hare => 1
+
+/-- The Pareto-dominant coordination profile. -/
+def bothStag : Profile stagHunt.sig := fun _ => .stag
+
+/-- The safer coordination profile. -/
+def bothHare : Profile stagHunt.sig := fun _ => .hare
+
+/-- A mismatched Stag Hunt profile. -/
+def stagHare : Profile stagHunt.sig := ![.stag, .hare]
+
+#guard stagHunt.enumerateNash.card = 2
+#guard stagHunt.isNash bothStag
+#guard stagHunt.isNash bothHare
+#guard !stagHunt.isNash stagHare
+
+/-- Mutual stag hunting is a Nash equilibrium. -/
+theorem stagHunt_bothStag_isNash :
+    IsNash stagHunt.toForm (euPreference stagHunt.utility) bothStag := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- Mutual hare hunting is also a Nash equilibrium. -/
+theorem stagHunt_bothHare_isNash :
+    IsNash stagHunt.toForm (euPreference stagHunt.utility) bothHare := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- A stag hunter facing a hare hunter profitably switches to hare. -/
+theorem stagHunt_stagHare_not_isNash :
+    ¬ IsNash stagHunt.toForm (euPreference stagHunt.utility) stagHare := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-! ## Hawk–Dove -/
+
+/-- Escalate as a hawk or accommodate as a dove. -/
+inductive Contest
+  | hawk
+  | dove
+  deriving DecidableEq, Fintype, Repr
+
+/-- The symmetric Hawk–Dove anti-coordination game. -/
+def hawkDove : TableGame (Fin 2) where
+  Action _ := Contest
+  actionFintype _ := inferInstance
+  actionDecEq _ := inferInstance
+  payoff profile i :=
+    match profile i, profile (opponent i) with
+    | .hawk, .hawk => -1
+    | .hawk, .dove => 3
+    | .dove, .hawk => 0
+    | .dove, .dove => 1
+
+/-- Player zero escalates and player one accommodates. -/
+def hawkDoveProfile : Profile hawkDove.sig := ![.hawk, .dove]
+
+/-- Player zero accommodates and player one escalates. -/
+def doveHawkProfile : Profile hawkDove.sig := ![.dove, .hawk]
+
+#guard hawkDove.enumerateNash.card = 2
+#guard hawkDove.isNash hawkDoveProfile
+#guard hawkDove.isNash doveHawkProfile
+
+/-- Hawk against dove is a Nash equilibrium. -/
+theorem hawkDoveProfile_isNash :
+    IsNash hawkDove.toForm (euPreference hawkDove.utility)
+      hawkDoveProfile := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- The role-reversed profile is the second pure Nash equilibrium. -/
+theorem doveHawkProfile_isNash :
+    IsNash hawkDove.toForm (euPreference hawkDove.utility)
+      doveHawkProfile := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
 /-! ## Battle of the Sexes -/
 
 /-- Where to spend the evening. -/
@@ -226,12 +342,32 @@ def battleOfTheSexes : TableGame (Fin 2) where
     else if profile i = .opera then (if i = 0 then 2 else 1)
     else (if i = 0 then 1 else 2)
 
+/-- Both players attend the opera. -/
+def bothOpera : Profile battleOfTheSexes.sig := fun _ => .opera
+
+/-- Both players attend the football match. -/
+def bothFootball : Profile battleOfTheSexes.sig := fun _ => .football
+
 #guard battleOfTheSexes.enumerateNash.card = 2
-#guard battleOfTheSexes.isNash (fun _ => Venue.opera)
-#guard battleOfTheSexes.isNash (fun _ => Venue.football)
-#guard !battleOfTheSexes.isDominantProfile (fun _ => Venue.opera)
+#guard battleOfTheSexes.isNash bothOpera
+#guard battleOfTheSexes.isNash bothFootball
+#guard !battleOfTheSexes.isDominantProfile bothOpera
 
 #eval battleOfTheSexes.enumerateNash.card
+
+/-- Coordinating on opera is a Nash equilibrium. -/
+theorem battleOfTheSexes_bothOpera_isNash :
+    IsNash battleOfTheSexes.toForm (euPreference battleOfTheSexes.utility)
+      bothOpera := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
+
+/-- Coordinating on football is the other pure Nash equilibrium. -/
+theorem battleOfTheSexes_bothFootball_isNash :
+    IsNash battleOfTheSexes.toForm (euPreference battleOfTheSexes.utility)
+      bothFootball := by
+  rw [← TableGame.isNash_eq_true_iff]
+  decide
 
 /-! ## A three-player game -/
 
