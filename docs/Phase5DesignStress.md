@@ -227,24 +227,45 @@ the specialization, while positive probes show that the bridge still consumes
 stable rationality and Bayes consistency. It also rejects the fixed-point
 geometry used by the static existence layer.
 
-The hostile finding was below topology. A model's `InfoState` is a total domain
-for policies and may contain values no history reaches. Indexing beliefs by
-every raw value would then require a probability law on an empty history fiber
-and could make assessments uninhabited. `InformationSite` retains only
-witnessed fibers. Beliefs live over complete histories because distinct
-histories can merge into one execution state; their state projection satisfies
-the existing `BeliefOn` predicate. Strategies remain the existing
-`BehavioralPolicy`, and rationality remains `Context.IsLocallyOptimal`.
+The first hostile finding was below topology. A model's `InfoState` is a total
+domain for policies and may contain values no history reaches. Indexing beliefs
+by every raw value would then require a probability law on an empty history
+fiber and could make assessments uninhabited. Beliefs live over complete
+histories because distinct histories can merge into one execution state; their
+state projection satisfies the existing `BeliefOn` predicate. Strategies remain
+the existing `BehavioralPolicy`, and rationality remains
+`Context.IsLocallyOptimal`.
 
 A vanishing Boolean tremble is the minimal analytic witness: every approximant
 has full support, but the pointwise limit is pure. The limit topology therefore
 does real work without a measurable infinite-path law.
 
-This closes the generic boundary question, not the language theorem. The pinned
-EFG adapter was deliberately not ported, and no sequential-equilibrium
-existence result is claimed. Either requires its own reserved spike, with an
-actual compiler supplying continuation contexts and finite information-site
-fibers.
+This closed the generic boundary question, not the language theorem. EXP-033
+subsequently tested the language carrier separately.
+
+### Finite EFG is a transparent specialization, not a second semantics
+
+Recorded as [EXP-033](ExperimentLog.md). The pinned EFG syntax and sequential
+adapter are 452 and 560 nonblank lines. The hostile slice did not justify
+rebuilding them: `GameTheory.Languages.EFG` is a 52-line transparent bundle of
+the accepted execution and information objects with tree-shapedness and a
+single-mover law. Its analytic adapter supplies finite history fibers and
+canonical continuation contexts to the generic predicate.
+
+Nature privately selects a Boolean value before one player acts. The two
+decision histories are distinct, have positive belief, and share the same
+information state. That example exposed two semantic gaps. Reached inactive,
+chance, and terminal observations are not decision information sets, so
+`InformationSite` now also witnesses a nonterminal history and a genuine menu
+action. The nonterminal evidence is explicit because Protocol permits `active`
+to be arbitrary after play stops. And comparing only the local mixed action is
+not sequential rationality without a one-shot deviation theorem, so
+alternatives are now whole continuation behavioral policies.
+
+The adapter passes three negative syntax probes, three positive syntax-input
+probes, and three positive bridge probes. This validates the presentation and
+the proposition, not the exhibited assessment as an equilibrium and not an
+existence theorem.
 
 ## Current stress queue
 

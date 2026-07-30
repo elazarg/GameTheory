@@ -6,8 +6,8 @@ import.
 
 Experiment IDs: [EXP-022](../ExperimentLog.md), [EXP-023](../ExperimentLog.md);
 post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
-[EXP-031](../ExperimentLog.md); Protocol amendment
-[EXP-032](../ExperimentLog.md).
+[EXP-031](../ExperimentLog.md); Protocol amendments
+[EXP-032](../ExperimentLog.md) and [EXP-033](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -170,12 +170,16 @@ strategy objects rather than static mixed profiles.
 The hostile carrier check changed the stable side. `InfoState` is a total policy
 domain and may contain unreachable values; a belief law over the history fiber
 of every such value can therefore demand a law on an empty type.
-`InformationSite` restricts assessment beliefs to witnessed fibers, while
-strategies remain the existing total `BehavioralPolicy`. History beliefs
+`InformationSite` restricts assessment beliefs to reached decision sites by
+carrying a nonterminal history with a genuine action in the menu. The
+nonterminal witness cannot be inferred from
+`active`, which Protocol deliberately leaves unconstrained after play stops.
+Strategies remain the existing total `BehavioralPolicy`. History beliefs
 project to the existing state-level `BeliefOn`, and sequential rationality is
-the existing `Context.IsLocallyOptimal` specialized to the played local law.
-Thus the amendment adds no parallel policy, state-belief, runner, or
-equilibrium semantics.
+the existing `Context.IsLocallyOptimal` over the player's whole continuation
+policy. A current-information-set deviation becomes equivalent only through a
+separately proved one-shot-deviation theorem. Thus the amendment adds no
+parallel policy, state-belief, runner, or equilibrium semantics.
 
 The analytic bridge defines pointwise convergence of finite laws and the
 Kreps-Wilson limit of fully mixed, finite-Bayes-consistent assessments. A
@@ -196,7 +200,24 @@ checks therefore name project declarations and are two-sided:
 | `PROTOCOL_FORBIDDEN_IMPORTS` | 0 |
 | `TRANSPORT_PROTOCOL` | 0 |
 
-This amendment validates the generic assessment and consistency presentation,
-not an EFG compiler or a sequential-equilibrium existence theorem. A future
-language adapter must provide its continuation contexts and finite
-information-site instances in a separately reserved spike.
+EXP-033 closes the language-adapter half without reversing the dependency.
+Stable `GameTheory.Languages.EFG` is a transparent bundle of an
+`ExecutionProtocol`, its `InformationModel`, tree-shapedness, and the
+single-mover law. It imports neither Analysis nor a solution concept and
+defines no second evaluator. The one-way `GameTheory.Analysis.Protocol.EFG`
+adapter obtains finite histories from an explicit equivalence with reachable
+states and supplies assessment-induced full-policy continuation contexts.
+
+The additional enforced probes are two-sided:
+
+| Check | Expected |
+|---|---:|
+| `EFG_SYNTAX_SOLUTION_PROBES_REJECTED` | 3 |
+| `EFG_SYNTAX_INPUT_PROBES_REACHED` | 3 |
+| `EFG_BRIDGE_INPUT_PROBES_REACHED` | 3 |
+| `LANGUAGE_FORBIDDEN_IMPORTS` | 0 |
+| `TRANSPORT_LANGUAGES` | 0 |
+
+These amendments validate the generic assessment, consistency, and finite-EFG
+presentation. They do not prove a sequential-equilibrium witness or existence
+theorem.

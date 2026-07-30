@@ -798,15 +798,29 @@ horizon: `historyContext` packages the actual continuation, and the one-shot
 condition is equivalent to `IsSequentiallyRationalAt` in that context at every
 history and remaining horizon.
 
-EXP-032 adds the assessment carrier needed by the limit-consistency layer.
-Policies remain total on `InfoState`, including values no play reaches, but
-beliefs are indexed by `InformationSite`: an information-state value together
-with evidence that its history fiber is nonempty. Beliefs are laws over those
-complete histories, not merely execution states, because two histories may
-merge into one state. Their projection satisfies the existing state-level
-`BeliefOn` predicate. Finite Bayes consistency and a predicate-parametric limit
-schema stay in Protocol; pointwise convergence and Kreps-Wilson consistency
-live in the one-way `GameTheory.Analysis.Protocol` bridge.
+EXP-032 adds the assessment carrier needed by the limit-consistency layer, and
+EXP-033 sharpens it on a hostile EFG. Policies remain total on `InfoState`,
+including values no play reaches, but beliefs are indexed by
+`InformationSite`: a reached information-state value with an explicitly
+nonterminal history and a genuine action in its menu. Reached inactive, chance,
+and terminal observations do not require beliefs. The nonterminal witness is
+separate because `active` is deliberately unconstrained after play stops.
+Beliefs are laws over complete histories, not merely execution states, because
+two histories may merge into one state. Their projection
+satisfies the existing state-level `BeliefOn` predicate. Sequential rationality
+compares whole continuation behavioral policies; a local-law reduction requires
+a separately proved one-shot-deviation theorem. Finite Bayes consistency and a
+predicate-parametric limit schema stay in Protocol; pointwise convergence and
+Kreps-Wilson consistency live in the one-way
+`GameTheory.Analysis.Protocol` bridge.
+
+Finite EFG syntax is a transparent Protocol specialization: it stores the
+accepted execution and information objects with tree-shapedness and a
+single-mover law, and defines no second runner or policy. For finite state
+carriers, tree-shapedness gives an explicit equivalence from histories to
+reachable states and hence an explicit history `Fintype`. The analytic EFG
+adapter supplies those instances and the assessment-induced continuation
+contexts; stable syntax imports neither Analysis nor solution concepts.
 
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
@@ -1216,6 +1230,14 @@ the analytic convergence definition; the bridge rejects `stdSimplex` and
 `Polynomial`. Basic topology names are already transitively reachable through
 Mathlib, so project-declaration probes, not vocabulary probes, enforce this
 boundary.
+
+EXP-033 closes the finite-EFG adapter under that boundary. Stable
+`GameTheory.Languages.EFG` positively reaches its execution, information, and
+finite-history inputs while rejecting solution and analytic declarations.
+`GameTheory.Analysis.Protocol.EFG` positively reaches the stable EFG carrier,
+generic consistency, and assessment continuation contexts. This is a one-way
+specialization and does not introduce a language-specific equilibrium
+semantics.
 
 General results suitable for Mathlib should be written to Mathlib conventions
 from the beginning and upstreamed aggressively. Project-specific glue remains

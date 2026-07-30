@@ -96,7 +96,8 @@ foreach ($f in $ProtocolFiles) {
 }
 Report 'PROTOCOL_FORBIDDEN_IMPORTS' $protocolBad
 
-$LanguageForbidden = 'GameTheory\.Examples|GameTheory\.Tests|GameTheory\.Experimental'
+$LanguageForbidden =
+  'GameTheory\.Examples|GameTheory\.Tests|GameTheory\.Experimental|GameTheory\.Analysis'
 $languageBad = 0
 foreach ($f in $LanguageFiles) {
   foreach ($imp in Get-Imports $f) { if ($imp -match $LanguageForbidden) { $languageBad++ } }
@@ -177,7 +178,7 @@ if (-not $SkipReachability) {
   function Is-Unreachable([string] $Output, [string] $Constant) {
     $escaped = [regex]::Escape($Constant)
     return ($Output -match
-      "(?im)unknown (identifier|constant)[^\r\n]*$escaped")
+      "(?im)unknown (identifier|constant)[^\r\n]*$escaped(?![A-Za-z0-9_.])")
   }
   $unreachable = 0
   $reachable = @()
@@ -291,6 +292,52 @@ if (-not $SkipReachability) {
     }
   }
   Report 'SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED' $sequentialGeometryRejected
+
+  # The finite EFG syntax is a transparent Protocol specialization. It must
+  # reach its semantic inputs but no equilibrium or analytic declaration.
+  $efgSyntaxRejected = 0
+  $efgSyntaxConstants = @(
+      'GameTheory.IsNash',
+      'GameTheory.Analysis.Protocol.FinDistConvergesPointwise',
+      'GameTheory.Protocol.InformationModel.BehavioralAssessment.IsSequentiallyConsistent')
+  $efgSyntaxOutput = Run-Probe 'GameTheory.Languages.EFG' `
+    ($efgSyntaxConstants + @(
+      'GameTheory.Protocol.ExecutionProtocol',
+      'GameTheory.Protocol.InformationModel',
+      'GameTheory.Languages.EFG.Game.historyFintype'))
+  foreach ($constant in $efgSyntaxConstants) {
+    if (Is-Unreachable $efgSyntaxOutput $constant) {
+      $efgSyntaxRejected++
+    }
+  }
+  Report 'EFG_SYNTAX_SOLUTION_PROBES_REJECTED' $efgSyntaxRejected
+
+  $efgSyntaxInputsReached = 0
+  foreach ($constant in @(
+      'GameTheory.Protocol.ExecutionProtocol',
+      'GameTheory.Protocol.InformationModel',
+      'GameTheory.Languages.EFG.Game.historyFintype')) {
+    if (-not (Is-Unreachable $efgSyntaxOutput $constant)) {
+      $efgSyntaxInputsReached++
+    } else {
+      Write-Output "EFG_SYNTAX_INPUT_UNREACHABLE=$constant"
+    }
+  }
+  Report 'EFG_SYNTAX_INPUT_PROBES_REACHED' $efgSyntaxInputsReached
+
+  $efgBridgeInputsReached = 0
+  $efgBridgeConstants = @(
+      'GameTheory.Languages.EFG.Game',
+      'GameTheory.Languages.EFG.Game.IsSequentiallyConsistent',
+      'GameTheory.Protocol.InformationModel.BehavioralAssessment.continuationContext')
+  $efgBridgeOutput =
+    Run-Probe 'GameTheory.Analysis.Protocol.EFG' $efgBridgeConstants
+  foreach ($constant in $efgBridgeConstants) {
+    if (-not (Is-Unreachable $efgBridgeOutput $constant)) {
+      $efgBridgeInputsReached++
+    }
+  }
+  Report 'EFG_BRIDGE_INPUT_PROBES_REACHED' $efgBridgeInputsReached
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -325,6 +372,9 @@ if ($VerifyExpected) {
     $Expected['PROTOCOL_ANALYSIS_PROBES_REJECTED'] = 2
     $Expected['SEQUENTIAL_BRIDGE_INPUTS_REACHED'] = 3
     $Expected['SEQUENTIAL_BRIDGE_GEOMETRY_REJECTED'] = 2
+    $Expected['EFG_SYNTAX_SOLUTION_PROBES_REJECTED'] = 3
+    $Expected['EFG_SYNTAX_INPUT_PROBES_REACHED'] = 3
+    $Expected['EFG_BRIDGE_INPUT_PROBES_REACHED'] = 3
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

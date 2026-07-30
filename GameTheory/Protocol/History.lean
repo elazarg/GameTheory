@@ -46,6 +46,34 @@ structure History where
 about the history runner needs the induction the state runner needed. -/
 theorem History.reachable_state (h : E.History) : E.Reachable h.state := ⟨h.trace⟩
 
+/-- In a tree-shaped protocol, a complete history is exactly a reachable
+state: existence supplies a trace and tree-shapedness makes that trace unique.
+This is the bridge finite EFG presentations use to enumerate histories without
+`Fintype.ofFinite`. -/
+noncomputable def historyEquivReachableState (htree : E.IsTreeShaped) :
+    E.History ≃ { state : E.State // E.Reachable state } where
+  toFun history := ⟨history.state, ⟨history.trace⟩⟩
+  invFun state := ⟨state.1, Classical.choice state.2⟩
+  left_inv history := by
+    rcases history with ⟨state, trace⟩
+    dsimp [ExecutionProtocol.Reachable]
+    letI : Subsingleton (E.Trace state) := htree state
+    congr
+    exact Subsingleton.elim _ _
+  right_inv state := by
+    apply Subtype.ext
+    rfl
+
+/-- A finite-state tree-shaped protocol has finitely many complete histories.
+The instance is an explicit equivalence construction, not a global
+`Finite`-to-`Fintype` escape hatch. -/
+@[reducible]
+noncomputable def historyFintype [Fintype E.State]
+    (htree : E.IsTreeShaped) : Fintype E.History := by
+  classical
+  exact Fintype.ofEquiv { state : E.State // E.Reachable state }
+    (historyEquivReachableState htree).symm
+
 variable (E) in
 /-- The empty history, at the initial state. -/
 def initHistory : E.History := ⟨E.init, .start⟩

@@ -21,6 +21,7 @@ GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theo
   /Repeated              analytic repeated-game bridge and discounted folk theorem
 GameTheory/Repeated      stable public histories, discounting, cycles, and triggers
 GameTheory/Languages     scoped language encodings with recorded limitations
+  /EFG                   transparent finite extensive-form specialization
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
@@ -33,7 +34,9 @@ cannot leak across the audited boundary. Repeated is also opt-in: its stable
 root remains analysis-light, while `GameTheory.Analysis.Repeated` is the
 one-way bridge for feasible-payoff geometry and the discounted folk theorem.
 `GameTheory.Analysis.Protocol` is the separate one-way bridge for pointwise
-Kreps-Wilson consistency over stable behavioral assessments.
+Kreps-Wilson consistency over stable behavioral assessments; its EFG adapter
+supplies finite history instances and canonical continuation contexts without
+moving solution concepts into stable syntax.
 `GameTheoryMath` is a separate Lake target and cannot import game semantics.
 Languages and Experimental also stay outside the root for the separate reasons
 recorded in their modules. Examples and Tests compile in the default library

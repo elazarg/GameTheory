@@ -22,8 +22,9 @@ value as the fuelled runner.
 pure and behavioral policies into static `GameForm`s. The ordinary mixed
 extension of the information-local pure form is exactly the existing mixed
 history runner, so compilation introduces no parallel evaluator.
-`BehavioralAssessment` pairs local randomization with history-supported
-beliefs and states finite Bayes consistency without importing topology.
+`BehavioralAssessment` pairs local randomization with history-supported beliefs
+at reached decision sites, states finite Bayes consistency without importing
+topology, and forms continuation contexts from whole replacement policies.
 
 `Tree` is the derived finite-first presentation. It is faithful only where no
 two players move at once, so it is a convenience for single-mover games rather

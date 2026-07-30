@@ -101,7 +101,7 @@ def BehavioralAssessment.IsSequentialEquilibriumFor
       Fintype (M.InformationHistory i site.1)]
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
-        (FinDist (M.Choice i site.1)) E.History) : Prop :=
+        (M.BehavioralPolicy i) E.History) : Prop :=
   A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent
 
 theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
@@ -110,7 +110,7 @@ theorem BehavioralAssessment.isSequentialEquilibriumFor_iff
       Fintype (M.InformationHistory i site.1)]
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
-        (FinDist (M.Choice i site.1)) E.History) :
+        (M.BehavioralPolicy i) E.History) :
     A.IsSequentialEquilibriumFor context ↔
       A.IsSequentiallyRational context ∧ A.IsSequentiallyConsistent :=
   Iff.rfl

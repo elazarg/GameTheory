@@ -2,7 +2,7 @@
 # Behavioral assessments
 
 A behavioral assessment pairs information-local randomized play with one
-belief at every reachable information site. Beliefs range over complete
+belief at every reached decision information site. Beliefs range over complete
 histories, not only terminal states: two histories may merge into one execution
 state while remaining distinguishable to an analyst.
 
@@ -32,19 +32,26 @@ invariant for beliefs is carried by this subtype. -/
 abbrev InformationHistory (i : ι) (info : M.InfoState i) :=
   { history : E.History // M.infoOf i history.trace = info }
 
-/-- An information-state value that some complete history actually produces.
-Models may contain unreachable `InfoState` values so that policies stay total;
-an assessment must not be forced to invent a belief over an empty fiber. -/
+/-- A reached information-state value at which the player has a genuine action.
+Models may contain unreachable values and observations at which the player is
+inactive; neither is an information set requiring an assessment belief. -/
 def InformationSite (i : ι) :=
-  { info : M.InfoState i // Nonempty (M.InformationHistory i info) }
+  { info : M.InfoState i //
+    ∃ history : M.InformationHistory i info,
+      ¬ E.terminal history.1.state ∧
+        ∃ action : E.Action i, some action ∈ M.menu i info }
 
-/-- The information site reached by a complete history. -/
-def informationSite (i : ι) (history : E.History) : M.InformationSite i :=
-  ⟨M.infoOf i history.trace, ⟨⟨history, rfl⟩⟩⟩
+/-- A complete decision history determines an information site. -/
+def informationSite (i : ι) (history : E.History) (action : E.Action i)
+    (hnonterminal : ¬ E.terminal history.state)
+    (hmenu : some action ∈ M.menu i (M.infoOf i history.trace)) :
+    M.InformationSite i :=
+  ⟨M.infoOf i history.trace,
+    ⟨⟨history, rfl⟩, hnonterminal, action, hmenu⟩⟩
 
 /-- A behavioral strategy profile together with a supported belief at every
-reachable information site. Policies still receive only `InfoState`; full
-histories occur only in the analyst's belief field. -/
+reached decision information site. Policies still receive only `InfoState`;
+full histories occur only in the analyst's belief field. -/
 structure BehavioralAssessment where
   /-- Independent local randomization at each player's information states. -/
   strategy : (i : ι) → M.BehavioralPolicy i
@@ -62,7 +69,7 @@ value: each indexed history fiber is inhabited by construction. -/
 def ofStrategy (strategy : (i : ι) → M.BehavioralPolicy i) :
     M.BehavioralAssessment where
   strategy := strategy
-  belief := fun _ site => FinDist.pure site.2.some
+  belief := fun _ site => FinDist.pure (Classical.choose site.2)
 
 @[simp]
 theorem ofStrategy_strategy
@@ -87,13 +94,14 @@ theorem stateBelief_onInfoSet (A : M.BehavioralAssessment)
   exact ⟨history.1.trace, history.2⟩
 
 /-- Sequential rationality of a behavioral assessment at one information
-state is the existing context-local optimality predicate, specialized to the
-local law actually played there. -/
+site is the existing context-local optimality predicate, specialized to the
+player's whole continuation policy. Comparing only the current local law would
+need a separate one-shot-deviation theorem. -/
 def IsSequentiallyRationalAt (A : M.BehavioralAssessment)
-    {i : ι} (site : M.InformationSite i)
+    {i : ι} (_site : M.InformationSite i)
     (ctx : GameTheory.Protocol.Context
-      (FinDist (M.Choice i site.1)) E.History) : Prop :=
-  ctx.IsLocallyOptimal Set.univ (A.strategy i site.1)
+      (M.BehavioralPolicy i) E.History) : Prop :=
+  ctx.IsLocallyOptimal Set.univ (A.strategy i)
 
 /-- Sequential rationality at every information state for a supplied family of
 continuation contexts. The contexts are the only game-specific input; the
@@ -101,9 +109,44 @@ optimality predicate is not redefined. -/
 def IsSequentiallyRational (A : M.BehavioralAssessment)
     (context : (i : ι) → (site : M.InformationSite i) →
       GameTheory.Protocol.Context
-        (FinDist (M.Choice i site.1)) E.History) : Prop :=
+        (M.BehavioralPolicy i) E.History) : Prop :=
   ∀ (i : ι) (site : M.InformationSite i),
     A.IsSequentiallyRationalAt site (context i site)
+
+/-- The continuation context induced by an assessment belief. An alternative
+is a whole behavioral policy for the player; all other policies remain fixed,
+and play begins from the history sampled by the belief. -/
+def continuationContext [Fintype ι] [DecidableEq ι]
+    (A : M.BehavioralAssessment) {i : ι}
+    (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ) :
+    GameTheory.Protocol.Context (M.BehavioralPolicy i) E.History where
+  outcome alternative :=
+    (A.belief i site).bind fun history =>
+      M.runBehavioralFrom
+        (Profile.update (sig := M.behavioralSignature)
+          A.strategy i alternative) fuel history.1
+  continuation := payoff
+
+@[simp]
+theorem continuationContext_value [Fintype ι] [DecidableEq ι]
+    (A : M.BehavioralAssessment) {i : ι}
+    (site : M.InformationSite i) (payoff : E.History → ℝ) (fuel : ℕ)
+    (alternative : M.BehavioralPolicy i) :
+    (A.continuationContext site payoff fuel).value alternative =
+      ((A.belief i site).bind fun history =>
+        M.runBehavioralFrom
+          (Profile.update (sig := M.behavioralSignature)
+            A.strategy i alternative) fuel history.1).expect
+            payoff :=
+  rfl
+
+/-- Sequential rationality in the assessment's own finite-horizon
+continuation contexts. -/
+def IsSequentiallyRationalWithin [Fintype ι] [DecidableEq ι]
+    (A : M.BehavioralAssessment)
+    (payoff : ι → E.History → ℝ) (fuel : ℕ) : Prop :=
+  A.IsSequentiallyRational fun i site =>
+    A.continuationContext site (payoff i) fuel
 
 /-- A topology-free limit schema. The analytic bridge supplies pointwise
 convergence; other consumers may supply a different convergence relation

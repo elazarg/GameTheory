@@ -43,6 +43,7 @@ becomes difficult to scan.
 | EXP-030 | 2026-07-30 | D0/D2/D6/D11/D12 / Phase 5 | Can repeated play reuse Protocol for finite prefixes and ordinary `IsNash` for discounting without inventing an infinite `FinDist` path law? | Supports; narrows public histories to lists | `GameTheory/Repeated/*.lean`; `GameTheory/Tests/Repeated.lean` |
 | EXP-031 | 2026-07-30 | D11/D12 / Phase 5 | Does the full discounted folk theorem belong in stable Repeated, under Analysis, or behind a new repeated-analysis bridge? | Supports one-way Analysis bridge | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Analysis/Repeated/`; `GameTheoryMath/` |
 | EXP-032 | 2026-07-30 | D6/D12 / Phase 5 | Where should Kreps-Wilson limit consistency live when its topology is on Protocol policies and beliefs? | Supports one-way Analysis bridge; narrows beliefs to reachable sites | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/` |
+| EXP-033 | 2026-07-30 | D6/D12 / Phase 5 | Can a finite EFG adapter instantiate behavioral assessments and sequential consistency without importing solution concepts into syntax or duplicating Protocol semantics? | Supports transparent specialization; corrects the assessment interface | `GameTheory/Languages/EFG.lean`; `GameTheory/Analysis/Protocol/EFG.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
 
 ## Entry template
 
@@ -1955,3 +1956,97 @@ memory.
   closed. Reserve a separate language spike before adapting the pinned
   560-line EFG layer; that compiler must supply continuation contexts and
   finite information-site fibers rather than widening this bridge in advance.
+- **Post-experiment correction (EXP-033):** the EFG hostile slice narrowed two
+  stable claims without changing this boundary result. A nonempty history fiber
+  does not by itself make an information state a decision site: reached chance,
+  inactive, and terminal observations need no assessment belief.
+  `InformationSite` now also witnesses a nonterminal history and a genuine
+  action in the local menu.
+  Moreover, local-law optimality is not sequential rationality without a proved
+  one-shot-deviation principle. The generic predicate now compares whole
+  continuation behavioral policies; a future local-law specialization must
+  prove that reduction.
+
+### EXP-033: finite EFG adapter for sequential assessments
+
+- **Date / revision:** 2026-07-30, working tree based on `4db0eb9`
+- **Decision / question:** D6, D12, and Phase 5; whether a finite
+  extensive-form language can compile through the accepted general-state
+  Protocol and instantiate EXP-032's assessment boundary without creating
+  parallel policy, evaluator, belief, rationality, or equilibrium semantics.
+- **Representative slice:** a finite single-mover tree with chance and two
+  distinct decision histories in one information set; compilation to
+  `ExecutionProtocol` and `InformationModel`; finite information-site fibers;
+  a behavioral assessment and its history-supported belief; and the
+  language-specific continuation contexts consumed by
+  `IsSequentialEquilibriumFor`.
+- **Competing designs:** expose `Protocol.Tree` plus information labels as the
+  language; define independent recursive EFG syntax and prove a compiler
+  correct; or reject a generic EFG layer and keep sequential assessments
+  protocol-native.
+- **Kill conditions:** EFG syntax imports a solution concept or
+  `GameTheory.Analysis`; compilation introduces a second runner or policy
+  representation; finite information-site instances require
+  `Fintype.ofFinite`, user-visible transport, or proof-heavy public casts; a
+  policy can recover hidden execution state; continuation contexts cannot reuse
+  `Context.IsLocallyOptimal`; or the adapter needs measurable path probability.
+- **Evidence:**
+  1. The pinned `Languages/EFG/Syntax.lean` and `Sequential.lean` contain 452
+     and 560 nonblank lines. The current finite `Protocol.Tree` has neither
+     information labels nor a law identifying actions at two nodes in one
+     information set. Adding those fields would build a second information and
+     policy presentation before it supplied any new semantics.
+  2. The winning presentation is therefore a transparent specialization:
+     `Languages/EFG.lean` is 52 nonblank lines and stores exactly an
+     `ExecutionProtocol`, its `InformationModel`, tree-shapedness, and the
+     single-mover law. It defines no recursive syntax, transition, runner,
+     policy, payoff, belief, or equilibrium. Finiteness is supplied by the
+     theorem that needs it rather than stored in the game.
+  3. The 300-line hostile test has a nondegenerate chance step, two distinct
+     decision histories carrying different hidden Boolean states, and one
+     shared `acting` information state. Its belief gives both histories positive
+     support. The execution state records the full position, so tree-shapedness
+     is proved rather than obtained by merging histories or proof irrelevance;
+     the player's view still cannot recover nature's bit.
+  4. The test refuted two assumptions inherited from EXP-032. First, a reached
+     raw information state may describe chance, inactivity, or termination, so
+     assessments now range only over reached decision sites with a witnessed
+     nonterminal history and `some action` in the menu. This explicit
+     nonterminal witness matters because Protocol deliberately leaves `active`
+     unconstrained after play stops. Second, changing only the law at the
+     current information state is not a general sequential deviation.
+     `IsSequentiallyRationalAt` now compares the player's whole
+     `BehavioralPolicy`, and `continuationContext` runs that replacement from a
+     history sampled by the assessment belief. A one-shot reduction, if wanted,
+     is a theorem with its own hypotheses rather than definitional semantics.
+  5. Tree-shapedness gives an explicit equivalence between complete histories
+     and reachable states. A finite state carrier therefore supplies
+     `Fintype History` through `Fintype.ofEquiv`; the source uses no
+     `Fintype.ofFinite`, direct `Function.update`, visible transport, custom
+     axiom, or placeholder. The analytic EFG adapter is 63 nonblank lines and
+     only supplies these finite instances plus the canonical continuation
+     contexts to the generic Protocol predicate.
+  6. The analytic adapter plus hostile test build completed in 1,771 jobs. An
+     initial placement under `GameTheory/Tests` made Phase 2 report
+     `ANALYSIS_IMPORTED_OUTSIDE_ROOT=1`; moving the same integration witness to
+     `GameTheory/Analysis/Protocol/EFGTest.lean` restored zero without weakening
+     the audit. Phase 3 reports zero forbidden Protocol or Languages imports
+     and zero transport. Stable EFG syntax rejects three solution or analysis
+     probes while positively reaching all three semantic inputs; the analytic
+     adapter positively reaches all three bridge inputs.
+  7. The full build completed in 3,309 jobs and all four phase audits pass.
+     Axiom checks for the mixture-support lemma, history equivalence and
+     enumeration, hostile tree proof, and EFG adapter theorem use only
+     `propext`, `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports the transparent specialization and closes the finite
+  presentation gate. No independent EFG syntax/compiler survived the
+  competition: the language object is a named bundle of the canonical Protocol
+  semantics and structural laws, and the analytic adapter is one-way. The
+  experiment validates that an imperfect-information assessment and the full
+  sequential-equilibrium proposition can be stated on this carrier. It does
+  not prove that the exhibited assessment is consistent or rational, and it
+  proves neither a concrete sequential equilibrium nor an existence theorem.
+- **Next action:** reserve a theorem spike for an actual finite-EFG sequential
+  equilibrium witness or existence result. Broad harvesting of the pinned EFG
+  theorem surface remains gated on that mathematical slice rather than on more
+  presentation machinery.

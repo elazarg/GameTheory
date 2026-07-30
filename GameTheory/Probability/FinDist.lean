@@ -911,6 +911,26 @@ theorem prob_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) (a
     ENNReal.toReal_ofReal h0, ENNReal.toReal_ofReal (by linarith : (0:ℝ) ≤ 1 - t)]
   rfl
 
+/-- A point in the first law's support remains supported by a mixture with
+positive first weight. -/
+theorem mem_support_mix_left (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
+    (ht : 0 < t) {μ ν : FinDist α} {a : α} (ha : a ∈ μ.support) :
+    a ∈ (mix t h0 h1 μ ν).support := by
+  rw [← prob_pos_iff, prob_mix]
+  exact add_pos_of_pos_of_nonneg
+    (mul_pos ht (prob_pos_iff.mpr ha))
+    (mul_nonneg (by linarith) (prob_nonneg ν a))
+
+/-- A point in the second law's support remains supported by a mixture whose
+second weight is positive. -/
+theorem mem_support_mix_right (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1)
+    (ht : t < 1) {μ ν : FinDist α} {a : α} (ha : a ∈ ν.support) :
+    a ∈ (mix t h0 h1 μ ν).support := by
+  rw [← prob_pos_iff, prob_mix]
+  exact add_pos_of_nonneg_of_pos
+    (mul_nonneg h0 (prob_nonneg μ a))
+    (mul_pos (sub_pos.mpr ht) (prob_pos_iff.mpr ha))
+
 /-- Expectation is affine in the law. -/
 theorem expect_mix (t : ℝ) (h0 : 0 ≤ t) (h1 : t ≤ 1) (μ ν : FinDist α) (u : α → ℝ) :
     expect (mix t h0 h1 μ ν) u = t * expect μ u + (1 - t) * expect ν u := by

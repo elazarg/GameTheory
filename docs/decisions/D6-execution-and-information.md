@@ -4,7 +4,7 @@
   interface, finite-first trees retained as a derived presentation
 - **Date:** 2026-07-27
 - **Experiment IDs:** EXP-010, EXP-011, EXP-012; post-decision evidence
-  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025, EXP-029, EXP-030
+  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025, EXP-029, EXP-030, EXP-033
 
 **Decision:** Execution and information are separate interfaces. The primary
 execution interface is the general-state `ExecutionProtocol`. The finite-first
@@ -163,3 +163,17 @@ prefix. The bridge defines neither a second transition nor a second information
 interface. Its positive reachability probes assert that both accepted inputs
 remain in use, while Basic and Discounted reject Protocol and the Protocol
 bridge rejects discounted payoff.
+
+EXP-033 applies the same discipline to finite extensive forms. An EFG is a
+transparent specialization containing the canonical execution and information
+objects plus tree-shapedness and a single-mover law, not a second inductive
+syntax or evaluator. Tree-shapedness identifies histories with reachable
+states, so finite-state EFG theorems can enumerate histories explicitly without
+storing `Fintype` or using `Fintype.ofFinite`.
+
+The hostile imperfect-information carrier also sharpened assessments. Beliefs
+are required only at reached decision sites, witnessed by a nonterminal history
+and a genuine menu action, not at reached inactive, chance, or terminal
+observations. Sequential rationality compares whole continuation behavioral
+policies; reducing that comparison to one local randomized action is a
+one-shot-deviation result, not part of the semantic definition.
