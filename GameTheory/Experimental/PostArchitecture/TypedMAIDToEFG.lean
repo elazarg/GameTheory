@@ -859,6 +859,88 @@ def behavioralProfile [DecidableEq Player] [DecidableEq Node]
       (information topological semantics).BehavioralPolicy owner :=
   fun owner => behavioralPolicy topological semantics policy owner
 
+/-- With one source owner, the independent behavioral product is just that
+owner's local choice law embedded in the only joint coordinate. -/
+theorem behavioralJoint_unit_coordinate
+    {Vertex : Type uNode}
+    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    (unitTopological :
+      GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
+    [DecidableEq Vertex]
+    (semantics : TypedMAID.Semantics unitDiagram)
+    (policy : TypedMAID.Policy unitDiagram)
+    (state : Stage unitDiagram unitTopological)
+    (trace : (execution unitTopological semantics).Trace state)
+    (hterminal :
+      ¬ (execution unitTopological semantics).terminal state) :
+    (information unitTopological semantics).behavioralJoint
+        (behavioralProfile unitTopological semantics policy)
+        trace hterminal =
+      FinDist.map
+        (fun choice :
+            (information unitTopological semantics).Choice ()
+              ((information unitTopological semantics).infoOf () trace) =>
+          ⟨(fun _ => choice.1),
+            ExecutionProtocol.legal_of_legalOption hterminal
+              fun owner => by
+                cases owner
+                exact
+                  ((information unitTopological semantics).menu_adequate
+                    () trace choice.1).mp choice.2⟩)
+        (behavioralPolicy unitTopological semantics policy ()
+          ((information unitTopological semantics).infoOf () trace)) := by
+  let model := information unitTopological semantics
+  let assemble :
+      ((owner : Unit) →
+        model.Choice owner (model.infoOf owner trace)) →
+          { joint : (owner : Unit) →
+              Option ((execution unitTopological semantics).Action owner) //
+            (execution unitTopological semantics).Legal state joint } :=
+    fun draws => ⟨
+      (fun owner => (draws owner).1),
+      ExecutionProtocol.legal_of_legalOption hterminal fun owner =>
+        (model.menu_adequate owner trace (draws owner).1).mp
+          (draws owner).2⟩
+  let atUnit :
+      model.Choice () (model.infoOf () trace) →
+        { joint : (owner : Unit) →
+            Option ((execution unitTopological semantics).Action owner) //
+          (execution unitTopological semantics).Legal state joint } :=
+    fun choice => ⟨
+      fun _ => choice.1,
+      ExecutionProtocol.legal_of_legalOption hterminal fun owner => by
+        cases owner
+        exact (model.menu_adequate () trace choice.1).mp choice.2⟩
+  have hassemble :
+      assemble = atUnit ∘ (fun draws => draws ()) := by
+    funext draws
+    apply Subtype.ext
+    funext owner
+    cases owner
+    rfl
+  unfold InformationModel.behavioralJoint
+  rw [show (fun draws => ⟨
+      (fun owner => (draws owner).1),
+      ExecutionProtocol.legal_of_legalOption hterminal fun owner =>
+        ((information unitTopological semantics).menu_adequate
+          owner trace (draws owner).1).mp (draws owner).2⟩) =
+      assemble by rfl,
+    hassemble, ← FinDist.map_comp, FinDist.map_apply_pi]
+  rfl
+
+theorem finDist_map_injective {α β : Type*} {f : α → β}
+    (hf : Function.Injective f) :
+    Function.Injective (FinDist.map f) := by
+  intro first second hequal
+  letI : Nonempty α := ⟨first.support_nonempty.choose⟩
+  have hback :=
+    congrArg (FinDist.map (Function.invFun f)) hequal
+  rw [FinDist.map_comp, FinDist.map_comp] at hback
+  have hleft : Function.invFun f ∘ f = id := by
+    funext value
+    exact Function.leftInverse_invFun hf value
+  simpa only [hleft, FinDist.map_id] using hback
+
 /-- The source-level law for resolving exactly the pending topological node. -/
 def serialNodeLaw [DecidableEq Player] [DecidableEq Node]
     (semantics : TypedMAID.Semantics diagram)
@@ -985,6 +1067,124 @@ def serialJointLaw [DecidableEq Player] [DecidableEq Node]
           (state.configOf topological semantics
             (diagram.observedParents node)))
 
+theorem behavioralJoint_eq_serialJointLaw_unit
+    {Vertex : Type uNode}
+    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    (unitTopological :
+      GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
+    [DecidableEq Vertex]
+    (semantics : TypedMAID.Semantics unitDiagram)
+    (policy : TypedMAID.Policy unitDiagram)
+    (state : Stage unitDiagram unitTopological)
+    (trace : (execution unitTopological semantics).Trace state)
+    (hterminal :
+      ¬ (execution unitTopological semantics).terminal state) :
+    (information unitTopological semantics).behavioralJoint
+        (behavioralProfile unitTopological semantics policy)
+        trace hterminal =
+      serialJointLaw unitTopological semantics policy state hterminal := by
+  apply finDist_map_injective
+    (f := fun joint => joint.1) Subtype.val_injective
+  rw [behavioralJoint_unit_coordinate unitTopological semantics
+    policy state trace hterminal, FinDist.map_comp]
+  let jointOfOption :
+      Option (Action unitDiagram ()) →
+        (owner : Unit) → Option (Action unitDiagram owner) :=
+    fun choice owner => by
+      cases owner
+      exact choice
+  have hfactor :
+      (fun choice :
+          (information unitTopological semantics).Choice ()
+            ((information unitTopological semantics).infoOf () trace) =>
+        (fun _ => choice.1)) =
+        jointOfOption ∘ (fun choice => choice.1) := by
+    funext choice owner
+    cases owner
+    rfl
+  have hfull :
+      ((fun joint :
+          { joint : (owner : Unit) → Option (Action unitDiagram owner) //
+            (execution unitTopological semantics).Legal state joint } =>
+          joint.1) ∘
+        (fun choice :
+            (information unitTopological semantics).Choice ()
+              ((information unitTopological semantics).infoOf () trace) =>
+          (⟨(fun _ => choice.1),
+            ExecutionProtocol.legal_of_legalOption hterminal
+              fun owner => by
+                cases owner
+                exact
+                  ((information unitTopological semantics).menu_adequate
+                    () trace choice.1).mp choice.2⟩ :
+            { joint :
+                (owner : Unit) → Option (Action unitDiagram owner) //
+              (execution unitTopological semantics).Legal state joint }))) =
+        jointOfOption ∘ (fun choice => choice.1) := by
+    funext choice owner
+    cases owner
+    rfl
+  rw [hfull, ← FinDist.map_comp]
+  have hinfoAction :=
+    congrArg
+      (fun view =>
+        FinDist.map (fun choice => choice.1)
+          (behavioralPolicy unitTopological semantics policy () view))
+      (infoOf_eq_viewOf unitTopological semantics () trace)
+  rw [hinfoAction]
+  have hpending :
+      state.path.length < unitTopological.order.length :=
+    (state.not_terminal_iff unitTopological).mp hterminal
+  let node := state.pendingNode unitTopological hpending
+  match hkind : unitDiagram.kind node with
+  | .chance =>
+      have hstateView :
+          viewOf unitTopological semantics () state =
+            .inactive := by
+        have hnotDecision :
+            unitDiagram.kind
+                (state.pendingNode unitTopological hpending) ≠
+              .decision () := by
+          intro hdecision
+          rw [hkind] at hdecision
+          contradiction
+        unfold viewOf
+        rw [pending_eq_some unitTopological hpending]
+        simp [hnotDecision]
+      rw [hstateView, behavioralPolicy, FinDist.map_pure,
+        FinDist.map_pure]
+      unfold serialJointLaw
+      dsimp only
+      split
+      next =>
+        rw [FinDist.map_pure]
+      next owner hdecision =>
+        rw [hkind] at hdecision
+        contradiction
+  | .decision owner =>
+      have howner : owner = () := Subsingleton.elim _ _
+      subst owner
+      have hstateView :
+          viewOf unitTopological semantics () state =
+            .acting ⟨node, hkind⟩
+              (state.configOf unitTopological semantics
+                (unitDiagram.observedParents node)) :=
+        viewOf_eq_acting unitTopological semantics () state
+          (pending_eq_some unitTopological hpending) hkind
+      rw [hstateView, behavioralPolicy, FinDist.map_comp,
+        FinDist.map_comp]
+      unfold serialJointLaw
+      dsimp only
+      split
+      next hchance =>
+        rw [hkind] at hchance
+        contradiction
+      next activeOwner hdecision =>
+        have hactiveOwner : activeOwner = () := Subsingleton.elim _ _
+        subst activeOwner
+        rw [FinDist.map_comp]
+        congr 1
+
 theorem transition_of_chance
     [DecidableEq Player] [DecidableEq Node]
     (semantics : TypedMAID.Semantics diagram)
@@ -1106,6 +1306,34 @@ theorem serialJointLaw_bind_transition
       transition_jointFor topological semantics state hterminal
         hpending hkind value
 
+/-- For a one-owner typed MAID, one actual behavioral step of the compiled EFG
+is exactly the corresponding serialized source step. This is the semantic
+bridge used by the history-runner induction; neither side mentions the
+intermediate legality witnesses. -/
+theorem behavioralJoint_bind_transition_unit
+    {Vertex : Type uNode}
+    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    (unitTopological :
+      GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
+    [DecidableEq Vertex]
+    (semantics : TypedMAID.Semantics unitDiagram)
+    (policy : TypedMAID.Policy unitDiagram)
+    (state : Stage unitDiagram unitTopological)
+    (trace : (execution unitTopological semantics).Trace state)
+    (hterminal :
+      ¬ (execution unitTopological semantics).terminal state) :
+    ((information unitTopological semantics).behavioralJoint
+        (behavioralProfile unitTopological semantics policy)
+        trace hterminal).bind
+          (fun draw =>
+            (execution unitTopological semantics).step state draw) =
+      serialStep unitTopological semantics policy state
+        ((state.not_terminal_iff unitTopological).mp hterminal) := by
+  rw [behavioralJoint_eq_serialJointLaw_unit unitTopological
+    semantics policy state trace hterminal]
+  exact serialJointLaw_bind_transition unitTopological semantics
+    policy state hterminal
+
 def serialRun [DecidableEq Player] [DecidableEq Node]
     (semantics : TypedMAID.Semantics diagram)
     (policy : TypedMAID.Policy diagram) :
@@ -1120,5 +1348,79 @@ def serialRun [DecidableEq Player] [DecidableEq Node]
         (serialStep topological semantics policy state
           (Nat.lt_of_le_of_ne state.length_le hterminal)).bind
             (serialRun semantics policy fuel)
+
+/-- Forgetting histories from the compiled one-owner EFG runner yields exactly
+the native serialized stage runner. The EFG may retain a richer trace, but its
+state law is neither an approximation nor merely payoff-equivalent. -/
+theorem map_state_runBehavioralFrom_eq_serialRun_unit
+    {Vertex : Type uNode}
+    {unitDiagram : TypedMAID.Structure Unit Vertex}
+    (unitTopological :
+      GameTheoryMath.DAG.TopologicalOrder unitDiagram.parents)
+    [DecidableEq Vertex]
+    (semantics : TypedMAID.Semantics unitDiagram)
+    (policy : TypedMAID.Policy unitDiagram) :
+    ∀ (fuel : ℕ)
+      (history : (execution unitTopological semantics).History),
+      FinDist.map ExecutionProtocol.History.state
+          ((information unitTopological semantics).runBehavioralFrom
+            (behavioralProfile unitTopological semantics policy)
+            fuel history) =
+        serialRun unitTopological semantics policy fuel history.state := by
+  intro fuel
+  induction fuel with
+  | zero =>
+      intro history
+      rw [InformationModel.runBehavioralFrom,
+        ExecutionProtocol.runRandomizedFor_zero, serialRun,
+        FinDist.map_pure]
+  | succ fuel ih =>
+      intro history
+      by_cases hterminal :
+          (execution unitTopological semantics).terminal history.state
+      · have hpath :
+            history.state.path.length =
+              unitTopological.order.length := hterminal
+        rw [InformationModel.runBehavioralFrom,
+          ExecutionProtocol.runRandomizedFor_of_terminal _ _ hterminal,
+          FinDist.map_pure, serialRun, dif_pos hpath]
+      · have hpath :
+            history.state.path.length ≠
+              unitTopological.order.length := hterminal
+        rw [InformationModel.runBehavioralFrom,
+          ExecutionProtocol.runRandomizedFor_succ_of_not_terminal
+            _ fuel hterminal,
+          FinDist.map_bind, serialRun, dif_neg hpath]
+        unfold InformationModel.randomizedChooser
+        calc
+          _ =
+              ((information unitTopological semantics).behavioralJoint
+                (behavioralProfile unitTopological semantics policy)
+                history.trace hterminal).bind
+                (fun draw =>
+                  ((execution unitTopological semantics).step
+                    history.state draw).bind
+                    (serialRun unitTopological semantics policy fuel)) := by
+              apply FinDist.bind_congr
+              intro draw _
+              rw [FinDist.map_bindOnSupport]
+              exact FinDist.bindOnSupport_eq_bind_of_eq_on_support
+                fun _ realized => ih (history.extend draw.2 realized)
+          _ =
+              (((information unitTopological semantics).behavioralJoint
+                (behavioralProfile unitTopological semantics policy)
+                history.trace hterminal).bind
+                  (fun draw =>
+                    (execution unitTopological semantics).step
+                      history.state draw)).bind
+                (serialRun unitTopological semantics policy fuel) := by
+              rw [FinDist.bind_bind]
+          _ =
+              (serialStep unitTopological semantics policy history.state
+                ((history.state.not_terminal_iff unitTopological).mp
+                  hterminal)).bind
+                (serialRun unitTopological semantics policy fuel) := by
+              rw [behavioralJoint_bind_transition_unit unitTopological
+                semantics policy history.state history.trace hterminal]
 
 end GameTheory.Experimental.TypedMAID.ToEFG

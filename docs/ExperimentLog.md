@@ -51,7 +51,7 @@ becomes difficult to scan.
 | EXP-038 | 2026-07-30 | D6/D14 / T3 strategy gate | Does per-player frontier batching preserve locality when one player owns incomparable decisions? | Refutes combined-view policies; narrows D14 | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` |
 | EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
 | EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; public promotion awaits T3 serialization equivalence | `GameTheory/Experimental/PostArchitecture/TypedMAID*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
-| EXP-041 | 2026-07-30 | D6/D14 / T3 serialization | Can an explicit topological order compile the typed MAID to an EFG without exposing serialized incomparable decisions? | In progress; generic EFG and two-order locality pass, outcome gate open | `GameTheory/Experimental/PostArchitecture/TypedMAIDToEFG*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
+| EXP-041 | 2026-07-30 | D6/D14 / T3 serialization | Can an explicit topological order compile the typed MAID to an EFG without exposing serialized incomparable decisions? | In progress; actual EFG runner passes hostile outcome slice, general order theorem open | `GameTheory/Experimental/PostArchitecture/TypedMAIDToEFG*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 
 ## Entry template
 
@@ -2542,9 +2542,9 @@ memory.
 
 ### EXP-041: typed MAID serialization through EFG
 
-- **Date / revision:** 2026-07-30, working tree based on `6ef38c5`
-- **Status:** in progress; compiler and locality milestone supports, outcome
-  equivalence remains open
+- **Date / revision:** 2026-07-30, working tree based on `94321f2`
+- **Status:** in progress; compiler, locality, and hostile actual-runner outcome
+  milestones support; general order independence remains open
 - **Decision / question:** D6, D14, and T3; whether an explicit topological
   order can compile the typed native diagram to the accepted
   `Languages.EFG.Game` while preserving decision-site locality and the native
@@ -2576,8 +2576,8 @@ memory.
   `treeShaped` or `singleMover`; unequal native/serialized terminal laws; or
   order-dependent serialized outcomes.
 - **Evidence so far:**
-  1. `TypedMAIDToEFG.lean` is 1,047 nonblank lines and 65 declarations; the
-     476-nonblank-line hostile test has 47 declarations. Both remain below
+  1. `TypedMAIDToEFG.lean` is 1,344 nonblank lines and 69 declarations; the
+     535-nonblank-line hostile test has 50 declarations. Both remain below
      `Experimental/PostArchitecture`, so the stable API delta is zero.
   2. `Action` is the dependent sum of one real source owner's decision sites
      and their value types. `Stage` stores a dependent-valued path certified
@@ -2615,12 +2615,19 @@ memory.
      complete assignment laws equal, while
      `left_serial_assignment_law_eq_native` and its right-order counterpart
      prove each equals the native two-frontier runner's assignment law.
+  10. `behavioralJoint_eq_serialJointLaw_unit` identifies the actual
+      `InformationModel.behavioralJoint` with the source joint law for any
+      one-owner typed diagram. `behavioralJoint_bind_transition_unit` composes
+      that law with the real EFG transition, and
+      `map_state_runBehavioralFrom_eq_serialRun_unit` lifts the equality through
+      the Protocol history runner for every fuel and starting history. The two
+      hostile compiled games therefore have equal actual behavioral assignment
+      laws, and each equals the native frontier runner.
 - **Interim outcome:** supports the representation and information-locality
-  halves of the prediction and closes the source-joint/transition and hostile
-  terminal-law comparisons. EXP-041 remains open: no T3 credit or public
-  promotion is allowed until the mapped `behavioralJoint` is identified with
-  `serialJointLaw` and the general order-independence statement is proved.
-- **Next action:** identify the actual mapped `behavioralJoint` with
-  `serialJointLaw`, lift the equality through the Protocol history runner, then
-  prove adjacent independent-node commutation and the general
-  topological-order theorem.
+  halves of the prediction and closes the actual compiled-runner comparison on
+  the hostile slice. EXP-041 remains open: no T3 credit or public promotion is
+  allowed until adjacent independent-node commutation and the general
+  topological-order theorem are proved.
+- **Next action:** prove adjacent independent-node commutation, lift it to the
+  general topological-order theorem, and compare the resulting serialized
+  assignment law with the native frontier evaluator for arbitrary diagrams.

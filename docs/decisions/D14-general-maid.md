@@ -154,8 +154,15 @@ transition now equals a named one-node serial step. Both hostile serial orders
 produce the same complete assignment law, and each equals the native frontier
 runner's assignment law.
 
-This supports the D14 representation but does not close it: the mapped
-`InformationModel.behavioralJoint` must still be identified with that source
-joint law and lifted through the history runner, and the general
-order-independence theorem remains mandatory before public promotion or T3
-credit.
+The actual Protocol path is now connected too. For every one-owner typed
+diagram, the mapped `InformationModel.behavioralJoint` equals the source joint
+law, one compiled behavioral transition equals one serialized source step, and
+forgetting histories from the behavioral runner equals the serialized stage
+runner for every fuel and starting history. On the hostile fixture, the two
+opposite-order compiled EFG assignment laws are equal and each is exactly the
+native frontier law.
+
+This supports the D14 representation and closes the hostile end-to-end runner
+slice, but does not close D14: adjacent independent-node commutation and the
+general topological-order/native-frontier theorem remain mandatory before
+public promotion or T3 credit.

@@ -527,6 +527,68 @@ theorem right_serial_assignment_law_eq_native :
     FinDist.map_pure, FinDist.map_pure,
     right_complete_assignment_eq_native]
 
+/-- The actual compiled EFG behavioral runner agrees with the native frontier
+runner after histories are forgotten and the completed assignment is read. -/
+theorem left_behavioral_assignment_law_eq_native :
+    FinDist.map
+        (fun history =>
+          Stage.assignment leftFirst semantics history.state)
+        ((information leftFirst semantics).runBehavioral
+          leftBehavioral 4) =
+      FinDist.map (fun state => state.values)
+        (TypedMAID.run diagram semantics responsive 2 initial) := by
+  have hrun :=
+    map_state_runBehavioralFrom_eq_serialRun_unit leftFirst
+      semantics responsive 4 (execution leftFirst semantics).initHistory
+  have hmapped :=
+    congrArg (FinDist.map (Stage.assignment leftFirst semantics))
+      hrun
+  rw [FinDist.map_comp] at hmapped
+  calc
+    _ = FinDist.map (Stage.assignment leftFirst semantics)
+          (serialRun leftFirst semantics responsive 4 leftInitial) := by
+        simpa [GameTheory.Protocol.InformationModel.runBehavioral,
+          leftBehavioral, leftInitial,
+          Function.comp_def] using hmapped
+    _ = _ := left_serial_assignment_law_eq_native
+
+theorem right_behavioral_assignment_law_eq_native :
+    FinDist.map
+        (fun history =>
+          Stage.assignment rightFirst semantics history.state)
+        ((information rightFirst semantics).runBehavioral
+          rightBehavioral 4) =
+      FinDist.map (fun state => state.values)
+        (TypedMAID.run diagram semantics responsive 2 initial) := by
+  have hrun :=
+    map_state_runBehavioralFrom_eq_serialRun_unit rightFirst
+      semantics responsive 4 (execution rightFirst semantics).initHistory
+  have hmapped :=
+    congrArg (FinDist.map (Stage.assignment rightFirst semantics))
+      hrun
+  rw [FinDist.map_comp] at hmapped
+  calc
+    _ = FinDist.map (Stage.assignment rightFirst semantics)
+          (serialRun rightFirst semantics responsive 4 rightInitial) := by
+        simpa [GameTheory.Protocol.InformationModel.runBehavioral,
+          rightBehavioral, rightInitial,
+          Function.comp_def] using hmapped
+    _ = _ := right_serial_assignment_law_eq_native
+
+theorem behavioral_assignment_law_order_independent :
+    FinDist.map
+        (fun history =>
+          Stage.assignment leftFirst semantics history.state)
+        ((information leftFirst semantics).runBehavioral
+          leftBehavioral 4) =
+      FinDist.map
+        (fun history =>
+          Stage.assignment rightFirst semantics history.state)
+        ((information rightFirst semantics).runBehavioral
+          rightBehavioral 4) :=
+  left_behavioral_assignment_law_eq_native.trans
+    right_behavioral_assignment_law_eq_native.symm
+
 end SameOwner
 
 end GameTheory.Experimental.TypedMAID.ToEFGTest
