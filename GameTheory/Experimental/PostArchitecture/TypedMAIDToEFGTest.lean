@@ -15,6 +15,7 @@ namespace GameTheory.Experimental.TypedMAID.ToEFGTest
 
 open GameTheory.Experimental.TypedMAID
 open GameTheory.Experimental.TypedMAID.ToEFG
+open GameTheory.Probability
 
 namespace SameOwner
 
@@ -230,6 +231,301 @@ def leftBehavioral :=
 
 def rightBehavioral :=
   behavioralProfile rightFirst semantics responsive
+
+def leftCompleteResponsive : Stage diagram leftFirst :=
+  beforeRightDecisionFalse.advance leftFirst (by decide) true
+
+def rightCompleteResponsive : Stage diagram rightFirst :=
+  beforeLeftDecisionTrue.advance rightFirst (by decide) false
+
+theorem leftCompleteResponsive_path :
+    leftCompleteResponsive.path =
+      [⟨Node.leftChance, false⟩, ⟨Node.leftDecision, false⟩,
+        ⟨Node.rightChance, true⟩, ⟨Node.rightDecision, true⟩] := by
+  rfl
+
+theorem rightCompleteResponsive_path :
+    rightCompleteResponsive.path =
+      [⟨Node.rightChance, true⟩, ⟨Node.rightDecision, true⟩,
+        ⟨Node.leftChance, false⟩, ⟨Node.leftDecision, false⟩] := by
+  rfl
+
+theorem complete_assignments_order_independent :
+    leftCompleteResponsive.assignment leftFirst semantics =
+      rightCompleteResponsive.assignment rightFirst semantics := by
+  funext node
+  cases node <;>
+    rw [Stage.assignment, Stage.assignment,
+      leftCompleteResponsive_path, rightCompleteResponsive_path] <;>
+    simp [Stage.Assignment.setOne,
+      TypedMAID.Assignment.resolve]
+
+theorem native_complete_left_chance :
+    completeResponsive.values Node.leftChance = false := by
+  simp [completeResponsive, FrontierState.extend,
+    Assignment.resolve_of_notMem, afterChance_frontier,
+    afterChance_left_value]
+
+theorem native_complete_right_chance :
+    completeResponsive.values Node.rightChance = true := by
+  simp [completeResponsive, FrontierState.extend,
+    Assignment.resolve_of_notMem, afterChance_frontier,
+    afterChance_right_value]
+
+theorem left_complete_assignment_eq_native :
+    leftCompleteResponsive.assignment leftFirst semantics =
+      completeResponsive.values := by
+  funext node
+  cases node
+  · rw [native_complete_left_chance, Stage.assignment,
+      leftCompleteResponsive_path]
+    simp [Stage.Assignment.setOne,
+      TypedMAID.Assignment.resolve]
+  · rw [native_complete_right_chance, Stage.assignment,
+      leftCompleteResponsive_path]
+    simp [Stage.Assignment.setOne,
+      TypedMAID.Assignment.resolve]
+  · rw [completeResponsive_left_value, Stage.assignment,
+      leftCompleteResponsive_path]
+    simp [Stage.Assignment.setOne,
+      TypedMAID.Assignment.resolve]
+  · rw [completeResponsive_right_value, Stage.assignment,
+      leftCompleteResponsive_path]
+    simp [Stage.Assignment.setOne,
+      TypedMAID.Assignment.resolve]
+
+theorem right_complete_assignment_eq_native :
+    rightCompleteResponsive.assignment rightFirst semantics =
+      completeResponsive.values :=
+  complete_assignments_order_independent.symm.trans
+    left_complete_assignment_eq_native
+
+theorem serialStep_leftInitial :
+    serialStep leftFirst semantics responsive leftInitial (by decide) =
+      FinDist.pure afterLeftChance := by
+  let hpending :
+      leftInitial.path.length < leftFirst.order.length := by
+    decide
+  have hnode :
+      leftInitial.pendingNode leftFirst hpending =
+        Node.leftChance :=
+    pendingNode_eq_of_pending_eq leftFirst hpending (by rfl)
+  have hkind :
+      diagram.kind (leftInitial.pendingNode leftFirst hpending) =
+        NodeKind.chance := by
+    rw [hnode]
+    rfl
+  have hlaw :
+      semantics.chanceLaw
+          (leftInitial.pendingNode leftFirst hpending) hkind
+          (leftInitial.configOf leftFirst semantics
+            (diagram.parents
+              (leftInitial.pendingNode leftFirst hpending))) =
+        FinDist.pure false := by
+    generalize hnodeEq :
+      leftInitial.pendingNode leftFirst hpending = node at hkind ⊢
+    have heq : node = Node.leftChance :=
+      hnodeEq.symm.trans hnode
+    subst node
+    rfl
+  unfold serialStep
+  rw [serialNodeLaw_of_chance leftFirst semantics responsive
+    leftInitial hpending hkind, hlaw, FinDist.map_pure]
+  rfl
+
+theorem serialStep_afterLeftChance :
+    serialStep leftFirst semantics responsive afterLeftChance (by decide) =
+      FinDist.pure afterLeftFalse := by
+  unfold serialStep
+  rw [serialNodeLaw_of_decision leftFirst semantics responsive
+    afterLeftChance (by decide) (by rfl)]
+  simp [responsive, decisionParent, Stage.configOf,
+    TypedMAID.Assignment.restrict, afterLeftChance,
+    leftInitial, Stage.initial, Stage.assignment,
+    Stage.Assignment.setOne, TypedMAID.Assignment.resolve,
+    leftFirst, afterLeftFalse]
+
+theorem serialStep_afterLeftFalse :
+    serialStep leftFirst semantics responsive afterLeftFalse (by decide) =
+      FinDist.pure beforeRightDecisionFalse := by
+  let hpending :
+      afterLeftFalse.path.length < leftFirst.order.length := by
+    decide
+  have hnode :
+      afterLeftFalse.pendingNode leftFirst hpending =
+        Node.rightChance :=
+    pendingNode_eq_of_pending_eq leftFirst hpending (by rfl)
+  have hkind :
+      diagram.kind (afterLeftFalse.pendingNode leftFirst hpending) =
+        NodeKind.chance := by
+    rw [hnode]
+    rfl
+  have hlaw :
+      semantics.chanceLaw
+          (afterLeftFalse.pendingNode leftFirst hpending) hkind
+          (afterLeftFalse.configOf leftFirst semantics
+            (diagram.parents
+              (afterLeftFalse.pendingNode leftFirst hpending))) =
+        FinDist.pure true := by
+    generalize hnodeEq :
+      afterLeftFalse.pendingNode leftFirst hpending = node at hkind ⊢
+    have heq : node = Node.rightChance :=
+      hnodeEq.symm.trans hnode
+    subst node
+    rfl
+  unfold serialStep
+  rw [serialNodeLaw_of_chance leftFirst semantics responsive
+    afterLeftFalse hpending hkind, hlaw, FinDist.map_pure]
+  rfl
+
+theorem serialStep_beforeRightDecision :
+    serialStep leftFirst semantics responsive
+        beforeRightDecisionFalse (by decide) =
+      FinDist.pure leftCompleteResponsive := by
+  unfold serialStep
+  rw [serialNodeLaw_of_decision leftFirst semantics responsive
+    beforeRightDecisionFalse (by decide) (by rfl)]
+  simp [responsive, decisionParent, Stage.configOf,
+    TypedMAID.Assignment.restrict, Stage.assignment,
+    beforeRightDecisionFalse_path, Stage.Assignment.setOne,
+    TypedMAID.Assignment.resolve, leftCompleteResponsive]
+
+theorem serialStep_rightInitial :
+    serialStep rightFirst semantics responsive rightInitial (by decide) =
+      FinDist.pure afterRightChance := by
+  let hpending :
+      rightInitial.path.length < rightFirst.order.length := by
+    decide
+  have hnode :
+      rightInitial.pendingNode rightFirst hpending =
+        Node.rightChance :=
+    pendingNode_eq_of_pending_eq rightFirst hpending (by rfl)
+  have hkind :
+      diagram.kind (rightInitial.pendingNode rightFirst hpending) =
+        NodeKind.chance := by
+    rw [hnode]
+    rfl
+  have hlaw :
+      semantics.chanceLaw
+          (rightInitial.pendingNode rightFirst hpending) hkind
+          (rightInitial.configOf rightFirst semantics
+            (diagram.parents
+              (rightInitial.pendingNode rightFirst hpending))) =
+        FinDist.pure true := by
+    generalize hnodeEq :
+      rightInitial.pendingNode rightFirst hpending = node at hkind ⊢
+    have heq : node = Node.rightChance :=
+      hnodeEq.symm.trans hnode
+    subst node
+    rfl
+  unfold serialStep
+  rw [serialNodeLaw_of_chance rightFirst semantics responsive
+    rightInitial hpending hkind, hlaw, FinDist.map_pure]
+  rfl
+
+theorem serialStep_afterRightChance :
+    serialStep rightFirst semantics responsive afterRightChance (by decide) =
+      FinDist.pure afterRightTrue := by
+  unfold serialStep
+  rw [serialNodeLaw_of_decision rightFirst semantics responsive
+    afterRightChance (by decide) (by rfl)]
+  simp [responsive, decisionParent, Stage.configOf,
+    TypedMAID.Assignment.restrict, afterRightChance,
+    rightInitial, Stage.initial, Stage.assignment,
+    Stage.Assignment.setOne, TypedMAID.Assignment.resolve,
+    rightFirst, afterRightTrue]
+
+theorem serialStep_afterRightTrue :
+    serialStep rightFirst semantics responsive afterRightTrue (by decide) =
+      FinDist.pure beforeLeftDecisionTrue := by
+  let hpending :
+      afterRightTrue.path.length < rightFirst.order.length := by
+    decide
+  have hnode :
+      afterRightTrue.pendingNode rightFirst hpending =
+        Node.leftChance :=
+    pendingNode_eq_of_pending_eq rightFirst hpending (by rfl)
+  have hkind :
+      diagram.kind (afterRightTrue.pendingNode rightFirst hpending) =
+        NodeKind.chance := by
+    rw [hnode]
+    rfl
+  have hlaw :
+      semantics.chanceLaw
+          (afterRightTrue.pendingNode rightFirst hpending) hkind
+          (afterRightTrue.configOf rightFirst semantics
+            (diagram.parents
+              (afterRightTrue.pendingNode rightFirst hpending))) =
+        FinDist.pure false := by
+    generalize hnodeEq :
+      afterRightTrue.pendingNode rightFirst hpending = node at hkind ⊢
+    have heq : node = Node.leftChance :=
+      hnodeEq.symm.trans hnode
+    subst node
+    rfl
+  unfold serialStep
+  rw [serialNodeLaw_of_chance rightFirst semantics responsive
+    afterRightTrue hpending hkind, hlaw, FinDist.map_pure]
+  rfl
+
+theorem serialStep_beforeLeftDecision :
+    serialStep rightFirst semantics responsive
+        beforeLeftDecisionTrue (by decide) =
+      FinDist.pure rightCompleteResponsive := by
+  unfold serialStep
+  rw [serialNodeLaw_of_decision rightFirst semantics responsive
+    beforeLeftDecisionTrue (by decide) (by rfl)]
+  simp [responsive, decisionParent, Stage.configOf,
+    TypedMAID.Assignment.restrict, Stage.assignment,
+    beforeLeftDecisionTrue_path, Stage.Assignment.setOne,
+    TypedMAID.Assignment.resolve, rightCompleteResponsive]
+
+theorem serialRun_leftFirst :
+    serialRun leftFirst semantics responsive 4 leftInitial =
+      FinDist.pure leftCompleteResponsive := by
+  rw [serialRun, dif_neg (by decide), serialStep_leftInitial,
+    FinDist.pure_bind, serialRun, dif_neg (by decide),
+    serialStep_afterLeftChance, FinDist.pure_bind, serialRun,
+    dif_neg (by decide), serialStep_afterLeftFalse,
+    FinDist.pure_bind, serialRun, dif_neg (by decide),
+    serialStep_beforeRightDecision, FinDist.pure_bind, serialRun]
+
+theorem serialRun_rightFirst :
+    serialRun rightFirst semantics responsive 4 rightInitial =
+      FinDist.pure rightCompleteResponsive := by
+  rw [serialRun, dif_neg (by decide), serialStep_rightInitial,
+    FinDist.pure_bind, serialRun, dif_neg (by decide),
+    serialStep_afterRightChance, FinDist.pure_bind, serialRun,
+    dif_neg (by decide), serialStep_afterRightTrue,
+    FinDist.pure_bind, serialRun, dif_neg (by decide),
+    serialStep_beforeLeftDecision, FinDist.pure_bind, serialRun]
+
+theorem serial_assignment_law_order_independent :
+    FinDist.map (Stage.assignment leftFirst semantics)
+        (serialRun leftFirst semantics responsive 4 leftInitial) =
+      FinDist.map (Stage.assignment rightFirst semantics)
+        (serialRun rightFirst semantics responsive 4 rightInitial) := by
+  rw [serialRun_leftFirst, serialRun_rightFirst,
+    FinDist.map_pure, FinDist.map_pure,
+    complete_assignments_order_independent]
+
+theorem left_serial_assignment_law_eq_native :
+    FinDist.map (Stage.assignment leftFirst semantics)
+        (serialRun leftFirst semantics responsive 4 leftInitial) =
+      FinDist.map (fun state => state.values)
+        (TypedMAID.run diagram semantics responsive 2 initial) := by
+  rw [serialRun_leftFirst, run_two_responsive,
+    FinDist.map_pure, FinDist.map_pure,
+    left_complete_assignment_eq_native]
+
+theorem right_serial_assignment_law_eq_native :
+    FinDist.map (Stage.assignment rightFirst semantics)
+        (serialRun rightFirst semantics responsive 4 rightInitial) =
+      FinDist.map (fun state => state.values)
+        (TypedMAID.run diagram semantics responsive 2 initial) := by
+  rw [serialRun_rightFirst, run_two_responsive,
+    FinDist.map_pure, FinDist.map_pure,
+    right_complete_assignment_eq_native]
 
 end SameOwner
 

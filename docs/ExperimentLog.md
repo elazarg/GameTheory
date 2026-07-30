@@ -2576,8 +2576,8 @@ memory.
   `treeShaped` or `singleMover`; unequal native/serialized terminal laws; or
   order-dependent serialized outcomes.
 - **Evidence so far:**
-  1. `TypedMAIDToEFG.lean` is 776 nonblank lines and 53 declarations; the
-     202-nonblank-line hostile test has 25 declarations. Both remain below
+  1. `TypedMAIDToEFG.lean` is 1,047 nonblank lines and 65 declarations; the
+     476-nonblank-line hostile test has 47 declarations. Both remain below
      `Experimental/PostArchitecture`, so the stable API delta is zero.
   2. `Action` is the dependent sum of one real source owner's decision sites
      and their value types. `Stage` stores a dependent-valued path certified
@@ -2606,11 +2606,21 @@ memory.
   7. Axiom checks for the generic tree-shaped EFG, behavioral profile, and
      both locality theorems use only `propext`, `Classical.choice`, and
      `Quot.sound`.
+  8. `serialNodeLaw` and `serialJointLaw` name the source-facing one-node
+     midpoint. `serialJointLaw_bind_transition` proves generically that drawing
+     this legal joint law and taking the actual compiled EFG transition is
+     exactly `serialStep`; it is not a second transition definition.
+  9. The hostile responsive policy runs to completion under both opposite
+     serial orders. `serial_assignment_law_order_independent` proves the two
+     complete assignment laws equal, while
+     `left_serial_assignment_law_eq_native` and its right-order counterpart
+     prove each equals the native two-frontier runner's assignment law.
 - **Interim outcome:** supports the representation and information-locality
-  halves of the prediction. EXP-041 remains open: no T3 credit or public
-  promotion is allowed until both serialized terminal laws equal the native
-  frontier law and the general order-independence statement is proved.
-- **Next action:** prove the behavioral EFG step law against a one-node serial
-  fold, use it to close terminal-law equality on both hostile orders, then
-  lift adjacent independent-node commutation to the general topological-order
-  theorem.
+  halves of the prediction and closes the source-joint/transition and hostile
+  terminal-law comparisons. EXP-041 remains open: no T3 credit or public
+  promotion is allowed until the mapped `behavioralJoint` is identified with
+  `serialJointLaw` and the general order-independence statement is proved.
+- **Next action:** identify the actual mapped `behavioralJoint` with
+  `serialJointLaw`, lift the equality through the Protocol history runner, then
+  prove adjacent independent-node commutation and the general
+  topological-order theorem.

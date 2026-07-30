@@ -149,7 +149,13 @@ The resolved execution prefix is not a policy input.
 The compiler proves menu adequacy, tree shape, and the single-mover law. The
 same-owner hostile fixture compiles at two opposite topological orders, and
 each order proves that changing the earlier incomparable decision leaves the
-later site's view unchanged. This supports the D14 representation but does not
-close it: behavioral terminal-law equality with the native frontier evaluator
-and the general order-independence theorem remain mandatory before public
-promotion or T3 credit.
+later site's view unchanged. Its source joint law followed by the actual EFG
+transition now equals a named one-node serial step. Both hostile serial orders
+produce the same complete assignment law, and each equals the native frontier
+runner's assignment law.
+
+This supports the D14 representation but does not close it: the mapped
+`InformationModel.behavioralJoint` must still be identified with that source
+joint law and lifted through the history runner, and the general
+order-independence theorem remains mandatory before public promotion or T3
+credit.

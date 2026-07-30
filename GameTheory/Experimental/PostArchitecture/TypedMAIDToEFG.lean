@@ -148,6 +148,18 @@ theorem advance_length (state : Stage diagram topological)
       state.path.length + 1 := by
   simp [advance, advanceTagged]
 
+theorem eq_of_path_eq
+    {first second : Stage diagram topological}
+    (hpath : first.path = second.path) :
+    first = second := by
+  cases first with
+  | mk firstPath firstLength firstFollows =>
+      cases second with
+      | mk secondPath secondLength secondFollows =>
+          dsimp only at hpath
+          subst secondPath
+          rfl
+
 end Stage
 
 /-- One source action carrier per source owner. Its tag is a decision site,
@@ -179,6 +191,15 @@ theorem pending_eq_some {state : Stage diagram topological}
     : state.pending topological =
       some (state.pendingNode topological hpending) := by
   simp [Stage.pending, Stage.pendingNode, hpending]
+
+theorem pendingNode_eq_of_pending_eq
+    {state : Stage diagram topological}
+    (hpending : state.path.length < topological.order.length)
+    {node : Node}
+    (heq : state.pending topological = some node) :
+    state.pendingNode topological hpending = node :=
+  Option.some.inj
+    ((pending_eq_some topological hpending).symm.trans heq)
 
 def jointFor [DecidableEq Player] (state : Stage diagram topological)
     (hpending : state.path.length < topological.order.length)
@@ -837,5 +858,267 @@ def behavioralProfile [DecidableEq Player] [DecidableEq Node]
     (owner : Player) →
       (information topological semantics).BehavioralPolicy owner :=
   fun owner => behavioralPolicy topological semantics policy owner
+
+/-- The source-level law for resolving exactly the pending topological node. -/
+def serialNodeLaw [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (hpending : state.path.length < topological.order.length) :
+    FinDist
+      (diagram.Value (state.pendingNode topological hpending)) := by
+  let node := state.pendingNode topological hpending
+  match hkind : diagram.kind node with
+  | .chance =>
+      exact semantics.chanceLaw node hkind
+        (state.configOf topological semantics (diagram.parents node))
+  | .decision owner =>
+      exact policy owner ⟨node, hkind⟩
+        (state.configOf topological semantics
+          (diagram.observedParents node))
+
+def serialStep [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (hpending : state.path.length < topological.order.length) :
+    FinDist (Stage diagram topological) :=
+  FinDist.map (state.advance topological hpending)
+    (serialNodeLaw topological semantics policy state hpending)
+
+theorem serialNodeLaw_of_chance
+    [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (hpending : state.path.length < topological.order.length)
+    (hkind :
+      diagram.kind (state.pendingNode topological hpending) =
+        .chance) :
+    serialNodeLaw topological semantics policy state hpending =
+      semantics.chanceLaw
+        (state.pendingNode topological hpending) hkind
+        (state.configOf topological semantics
+          (diagram.parents
+            (state.pendingNode topological hpending))) := by
+  unfold serialNodeLaw
+  dsimp only
+  split
+  next => rfl
+  next owner hdecision =>
+    rw [hkind] at hdecision
+    contradiction
+
+theorem serialNodeLaw_of_decision
+    [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (hpending : state.path.length < topological.order.length)
+    {owner : Player}
+    (hkind :
+      diagram.kind (state.pendingNode topological hpending) =
+        .decision owner) :
+    serialNodeLaw topological semantics policy state hpending =
+      policy owner
+        ⟨state.pendingNode topological hpending, hkind⟩
+        (state.configOf topological semantics
+          (diagram.observedParents
+            (state.pendingNode topological hpending))) := by
+  unfold serialNodeLaw
+  dsimp only
+  split
+  next hchance =>
+    rw [hkind] at hchance
+    contradiction
+  next activeOwner hdecision =>
+    have howner : activeOwner = owner :=
+      TypedMAID.NodeKind.decision.inj
+        (hdecision.symm.trans hkind)
+    subst activeOwner
+    rfl
+
+theorem inactive_of_pending_chance
+    [DecidableEq Player] [DecidableEq Node]
+    (state : Stage diagram topological)
+    (hpending : state.path.length < topological.order.length)
+    (hkind :
+      diagram.kind (state.pendingNode topological hpending) =
+        .chance)
+    (owner : Player) :
+    ¬ Active topological state owner := by
+  rintro ⟨node, hnode, hdecision⟩
+  have hsame :
+      node = state.pendingNode topological hpending :=
+    Option.some.inj
+      (hnode.symm.trans (pending_eq_some topological hpending))
+  rw [hsame, hkind] at hdecision
+  contradiction
+
+/-- The joint-action law corresponding directly to one native site law. This
+is the source-facing midpoint for comparison with `behavioralJoint`. -/
+def serialJointLaw [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (hterminal : ¬ (execution topological semantics).terminal state) :
+    FinDist
+      { joint : (owner : Player) →
+          Option ((execution topological semantics).Action owner) //
+        (execution topological semantics).Legal state joint } := by
+  have hpending :
+      state.path.length < topological.order.length :=
+    (state.not_terminal_iff topological).mp hterminal
+  let node := state.pendingNode topological hpending
+  match hkind : diagram.kind node with
+  | .chance =>
+      exact FinDist.pure ⟨fun _ => none, hterminal,
+        fun owner => inactive_of_pending_chance topological state
+          hpending hkind owner⟩
+  | .decision owner =>
+      exact FinDist.map
+        (fun value => ⟨
+          jointFor topological state hpending hkind value,
+          hterminal,
+          jointFor_legal topological state hpending hkind value⟩)
+        (policy owner ⟨node, hkind⟩
+          (state.configOf topological semantics
+            (diagram.observedParents node)))
+
+theorem transition_of_chance
+    [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (state : Stage diagram topological)
+    (certified :
+      { joint : (owner : Player) → Option (Action diagram owner) //
+        ¬ state.IsTerminal topological ∧
+          IsLegalJoint (Active topological state)
+            (Available topological state) joint })
+    (hpending : state.path.length < topological.order.length)
+    (hkind :
+      diagram.kind (state.pendingNode topological hpending) =
+        .chance) :
+    transition topological semantics state certified =
+      FinDist.map (state.advance topological hpending)
+        (semantics.chanceLaw
+          (state.pendingNode topological hpending) hkind
+          (state.configOf topological semantics
+            (diagram.parents
+              (state.pendingNode topological hpending)))) := by
+  have hpendingEq :
+      hpending =
+        (state.not_terminal_iff topological).mp certified.2.1 :=
+    Subsingleton.elim _ _
+  subst hpending
+  unfold transition transitionAt
+  dsimp only
+  split
+  next => rfl
+  next owner hdecision =>
+    rw [hkind] at hdecision
+    contradiction
+
+theorem transition_jointFor
+    [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (state : Stage diagram topological)
+    (hterminal : ¬ state.IsTerminal topological)
+    (hpending : state.path.length < topological.order.length)
+    {owner : Player}
+    (hkind :
+      diagram.kind (state.pendingNode topological hpending) =
+        .decision owner)
+    (value : diagram.Value (state.pendingNode topological hpending)) :
+    transition topological semantics state
+        ⟨jointFor topological state hpending hkind value,
+          hterminal,
+          jointFor_legal topological state hpending hkind value⟩ =
+      FinDist.pure (state.advance topological hpending value) := by
+  have hpendingEq :
+      hpending =
+        (state.not_terminal_iff topological).mp hterminal :=
+    Subsingleton.elim _ _
+  subst hpending
+  unfold transition transitionAt
+  dsimp only
+  split
+  next hchance =>
+    rw [hkind] at hchance
+    contradiction
+  next activeOwner hdecision =>
+    have howner : activeOwner = owner :=
+      TypedMAID.NodeKind.decision.inj
+        (hdecision.symm.trans hkind)
+    subst activeOwner
+    let activeProof : Active topological state owner :=
+      ⟨state.pendingNode topological _, pending_eq_some topological _,
+        hdecision⟩
+    have hselected :=
+      selectedAction_spec topological
+        (jointFor topological state _ hdecision value)
+        (jointFor_legal topological state _ hdecision value)
+        owner activeProof
+    have hjoint :
+        jointFor topological state _ hdecision value owner =
+          some ⟨
+            ⟨state.pendingNode topological _, hdecision⟩,
+            value⟩ := by
+      simp [jointFor]
+    rw [hjoint] at hselected
+    have haction := Option.some.inj hselected
+    apply congrArg FinDist.pure
+    apply Stage.eq_of_path_eq
+    simp only [Stage.advanceTagged, Stage.advance]
+    exact congrArg (fun entry => state.path ++ [entry])
+      (congrArg eraseAction haction).symm
+
+/-- Drawing the source joint law and taking the compiled EFG transition is
+exactly one source-level serialized node step. -/
+theorem serialJointLaw_bind_transition
+    [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram)
+    (state : Stage diagram topological)
+    (hterminal : ¬ (execution topological semantics).terminal state) :
+    (serialJointLaw topological semantics policy state hterminal).bind
+        (fun draw =>
+          (execution topological semantics).step state draw) =
+      serialStep topological semantics policy state
+        ((state.not_terminal_iff topological).mp hterminal) := by
+  let hpending :=
+    (state.not_terminal_iff topological).mp hterminal
+  unfold serialJointLaw
+  dsimp only
+  split
+  next hkind =>
+    rw [FinDist.pure_bind,
+      transition_of_chance topological semantics state _
+        hpending hkind]
+    unfold serialStep
+    rw [serialNodeLaw_of_chance topological semantics policy
+      state hpending hkind]
+  next owner hkind =>
+    rw [FinDist.bind_map]
+    unfold serialStep
+    rw [serialNodeLaw_of_decision topological semantics policy
+      state hpending hkind, FinDist.map_eq_bind]
+    exact FinDist.bind_congr fun value _ =>
+      transition_jointFor topological semantics state hterminal
+        hpending hkind value
+
+def serialRun [DecidableEq Player] [DecidableEq Node]
+    (semantics : TypedMAID.Semantics diagram)
+    (policy : TypedMAID.Policy diagram) :
+    Nat → Stage diagram topological →
+      FinDist (Stage diagram topological)
+  | 0, state => FinDist.pure state
+  | fuel + 1, state =>
+      if hterminal :
+          state.path.length = topological.order.length then
+        FinDist.pure state
+      else
+        (serialStep topological semantics policy state
+          (Nat.lt_of_le_of_ne state.length_le hterminal)).bind
+            (serialRun semantics policy fuel)
 
 end GameTheory.Experimental.TypedMAID.ToEFG
