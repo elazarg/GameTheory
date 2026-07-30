@@ -258,7 +258,7 @@ recovery creates pressure to work around them.
 | W1-C | no-regret learning to CCE | **complete** | the frozen F2 theorem uses the canonical deviation and correlation APIs |
 | W1-D | finite-prefix stochastic monitoring | **complete** | the frozen F8 law handles a nontrivial signal law, not only perfect public observation |
 | W1-E | Bayesian outcome-law and truthfulness transfers | **complete** | F5 and F6 are ported, adapted, or explicitly retired with measured reasons |
-| W1-F | named language transfers | partial | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
+| W1-F | named language transfers | partial; T1 complete | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | partial | the completed Protocol equivalence is exposed through the honest perfect-recall assumptions needed by its EFG consumer |
 | W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
 | W1-I | overdue knowledge and evolutionary ownership probes | open | Aumann/`InfoState` and ESS/static-dynamic slices either validate their proposed homes or record replacements |
@@ -270,7 +270,8 @@ Recommended dependency order:
 2. Completed W1-A through W1-E fix the continuation, Bayes, SPE, one-shot,
    external-regret, approximate-CCE, public-monitoring, recommendation-law, and
    truthful-mechanism targets used by later recovery.
-3. W1-G, W1-H, and the EFG part of W1-F now exercise the fixed target.
+3. T1 now fixes the EFG strategic-form target; W1-G, W1-H, and the T3/T4
+   remainder of W1-F exercise it and the other language-specific targets.
 4. W1-I may proceed independently, but must close before those domains harvest.
 5. MAID/FOSG transfer packages proceed only after their language-specific
    execution probes pass.
@@ -522,8 +523,8 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. create the remaining declaration-level ledgers for frozen T1-T4; the F2,
-   F4, F5, F6, and F8 ledgers are complete;
+1. create the remaining declaration-level ledgers for completed T2 and open
+   T3-T4; the F2, F4, F5, F6, F8, and T1 ledgers are complete;
 2. finish or reject the named language transfers individually, then resume the
    broader revelation and information-design inventory without reopening F5/F6;
 3. open the static learning/communication and congestion harvest lanes;

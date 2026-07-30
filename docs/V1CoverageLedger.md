@@ -64,13 +64,13 @@ semantic result; the named transfer queue T1-T4 remains open.
 
 | ID | Frozen transfer | Status | Exact remainder |
 |---|---|---|---|
-| T1 | finite EFG strategic extraction and pure/mixed Nash transfer | **partial substrate** | contingent-plan extraction and exact Nash iff theorems |
+| T1 | finite EFG strategic extraction and pure/mixed Nash transfer | **complete** | information-local contingent plans, finite-carrier capability, exact native-run Nash iff theorems, and a nonconstant-payoff hostile test; [declaration ledger](coverage/T1-efg-strategic-nash.md) |
 | T2 | behavioral/mixed correspondence | **complete at the history-law layer** | only language-facing wrappers remain |
 | T3 | MAID to EFG outcome, utility, and strategy transfer | **partial probe** | arbitrary MAID DAG, EFG translation, strategy correspondence, and named transfer |
 | T4 | one-shot NFG to FOSG embedding commuting with compilation | **not started** | both stable frontends and the exact commuting theorem |
 
-The absence of a generic certificate hierarchy does not complete T1, T3, or
-T4. Each named theorem is credited or rejected independently.
+T1 and T2 are complete. The absence of a generic certificate hierarchy does not
+complete T3 or T4; each named theorem is credited or rejected independently.
 
 ## Cross-cutting obligations
 
@@ -121,14 +121,14 @@ declaration-based.
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
 | L-NFG | `Languages/NFG.lean`, `Languages/NFG/**` | 10 | transparent language/front-end to `GameForm`; algorithms in `Finite` | provisional substrate | partial | general finite syntax and T4 source |
-| L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, nonconstant rationality, and Protocol SPE semantics | partial | thin F4 wrapper, T1, then broad inventory |
+| L-EFG | `Languages/EFG.lean`, `Languages/EFG/**` | 15 | transparent Protocol specialization plus named bridges | validated presentation, strategic transfer, nonconstant rationality, and Protocol SPE semantics | partial | thin F4 wrapper, then broad inventory |
 | L-KUHN | `Languages/Kuhn.lean`, `Languages/Kuhn/**`, `Theorems/Kuhn.lean`, `Theorems/Kuhn/**` | 15 | Protocol representation theorem with language wrappers | validated core theorem | partial | general perfect-recall EFG-facing surface |
 | L-INFO | `Languages/InfoModel.lean`, `Languages/InfoModel/**` | 4 | `Protocol.Information` | validated in replacement architecture | partial | classify old simulation/semantic-form wrappers |
 | L-MAID | `Languages/MAID.lean`, `Languages/MAID/**` | 14 | native language compiling to Protocol | provisional probe | partial | incomparable-node DAG and T3 |
 | L-FOSG | `Languages/FOSG.lean`, `Languages/FOSG/**` | 24 | native language compiling to Protocol | assigned | not started | simultaneous active-player hostile slice |
 | L-ROUND | `Languages/MultiRound.lean`, `Languages/MultiRound/**` | 15 | native language compiling to Protocol | provisional probe | partial | preserve previous actions and imperfect monitoring |
 | L-INTR | `Languages/Intrinsic.lean`, `Languages/Intrinsic/**` | 8 | native branch only if it retains theorem-relevant data | assigned | not started | one theorem unavailable from bare Protocol |
-| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated | partial/retirement open | T1, T3, T4, then declaration accounting |
+| L-BRIDGE | `Languages/Bridges.lean`, `Languages/Bridges/**`, `Languages/Expressiveness.lean`, `Languages/Expressiveness/**` | 22 | named direct bridges; composition only when earned | named-bridge policy validated; T1 complete | partial/retirement open | T3, T4, then declaration accounting |
 | L-OPEN | `Languages/OpenGame.lean`, `Languages/OpenGame/**` | 15 | `Frontier` | Frontier | not started | one compositional theorem and external semantic comparison |
 
 ### Mechanisms, auctions, and collective choice
@@ -170,6 +170,8 @@ declaration-based.
   or Bayesian mechanism design.
 - The generic Protocol behavioral/mixed theorem completes F3's semantic
   obligation, but not the EFG theorem inventory.
+- T1's finite-horizon contingent-plan and Nash transfer does not by itself
+  complete the EFG syntax, refinement, recall, or language-wrapper inventory.
 - The EXP-035 nonconstant-payoff witness validates whole-policy rationality on
   the hostile finite EFG, not a general finite-EFG existence theorem.
 - F8's finite stochastic signal-prefix law does not complete monitoring
@@ -184,8 +186,8 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Create declaration-level ledgers for T1-T4; the F2, F4, F5, F6, and F8
-   ledgers are complete.
+1. Create declaration-level ledgers for completed T2 and open T3-T4; the F2,
+   F4, F5, F6, F8, and T1 ledgers are complete.
 2. Add a generated pinned declaration index and a coverage audit before the
    first `v1-accounted` claim.
 3. Resolve the overdue knowledge and evolutionary ownership probes.
