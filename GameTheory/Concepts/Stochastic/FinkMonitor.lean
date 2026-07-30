@@ -297,6 +297,14 @@ def predictableAnytimePMFCoordinateMonitorChoice
   Math.OnlineLearning.anytimeSignedMWDist
     (pmfCoordinateMonitorFinHistoryGain baseline history) n
 
+/-- Predictable choice that always plays one fixed coordinate monitor. -/
+def fixedPMFCoordinateMonitorChoice
+    {Ω : Type} [DecidableEq Ω]
+    (monitor : PMFCoordinateMonitor Ω)
+    (_n : ℕ) (_history : Fin _n → Ω) :
+    PMF (PMFCoordinateMonitor Ω) :=
+  PMF.pure monitor
+
 /-- Causality of the public monitor: evaluating the finite-history choice on the prefix of any
     full observation stream gives exactly the absolute-time monitor distribution for that stream. -/
 theorem predictableAnytimePMFCoordinateMonitorChoice_prefix
@@ -309,6 +317,80 @@ theorem predictableAnytimePMFCoordinateMonitorChoice_prefix
   intro s hs
   funext monitor
   simp [pmfCoordinateMonitorFinHistoryGain, pmfCoordinateMonitorGain, hs]
+
+/-- The recursively accumulated score of the causal finite-history monitor
+is exactly the absolute-time learner gain on every full observation stream. -/
+theorem predictableAnytimePMFCoordinateMonitorCumulativeScore_restrict_eq_algGain
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) (observation : ℕ → Ω) (T : ℕ) :
+    predictablePMFCoordinateMonitorCumulativeScore baseline
+        (predictableAnytimePMFCoordinateMonitorChoice baseline) T
+        (fun i => observation i) =
+      anytimePMFCoordinateMonitorAlgGain baseline observation T := by
+  rw [predictablePMFCoordinateMonitorCumulativeScore,
+    Math.Probability.predictableScoreSum_restrict_eq_sum,
+    anytimePMFCoordinateMonitorAlgGain_eq_sum_weightedScore]
+  apply Finset.sum_congr rfl
+  intro t ht
+  unfold predictablePMFCoordinateMonitorScore
+  rw [predictableAnytimePMFCoordinateMonitorChoice_prefix]
+
+/-- On every observation stream, the causal finite-history monitor satisfies
+the same explicit fixed-action regret bound as the absolute-time learner. -/
+theorem predictableAnytimePMFCoordinateMonitor_fixedActionRegret_div_le
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) (observation : ℕ → Ω)
+    (T : ℕ) (hT : 1 ≤ T) (monitor : PMFCoordinateMonitor Ω) :
+    (predictablePMFCoordinateMonitorCumulativeScore baseline
+          (fixedPMFCoordinateMonitorChoice monitor) T
+          (fun i => observation i) -
+        predictablePMFCoordinateMonitorCumulativeScore baseline
+          (predictableAnytimePMFCoordinateMonitorChoice baseline) T
+          (fun i => observation i)) / T ≤
+      Math.OnlineLearning.anytimeRegretEnvelope
+        (Real.log (Fintype.card (PMFCoordinateMonitor Ω)) + 1)
+        (Math.OnlineLearning.anytimeEpochIndex T) := by
+  rw [
+    predictableAnytimePMFCoordinateMonitorCumulativeScore_restrict_eq_algGain]
+  have hfixed :
+      predictablePMFCoordinateMonitorCumulativeScore baseline
+          (fixedPMFCoordinateMonitorChoice monitor) T
+          (fun i => observation i) =
+        Math.OnlineLearning.cumGain
+          (pmfCoordinateMonitorGain baseline observation) T monitor := by
+    rw [predictablePMFCoordinateMonitorCumulativeScore,
+      Math.Probability.predictableScoreSum_restrict_eq_sum]
+    simp [predictablePMFCoordinateMonitorScore,
+      fixedPMFCoordinateMonitorChoice,
+      weightedPMFCoordinateMonitorScore,
+      pmfCoordinateMonitorGain, Math.OnlineLearning.cumGain]
+  rw [hfixed]
+  exact
+    Math.OnlineLearning.anytimeSigned_fixedActionRegret_div_le
+      (pmfCoordinateMonitorGain_mem_Icc baseline observation) T hT monitor
+
+/-- Finite-history form of the causal fixed-action regret bound. -/
+theorem predictableAnytimePMFCoordinateMonitor_fixedActionRegret_div_le_history
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω) {T : ℕ} (history : Fin T → Ω)
+    (hT : 1 ≤ T) (monitor : PMFCoordinateMonitor Ω) :
+    (predictablePMFCoordinateMonitorCumulativeScore baseline
+          (fixedPMFCoordinateMonitorChoice monitor) T history -
+        predictablePMFCoordinateMonitorCumulativeScore baseline
+          (predictableAnytimePMFCoordinateMonitorChoice baseline) T
+          history) / T ≤
+      Math.OnlineLearning.anytimeRegretEnvelope
+        (Real.log (Fintype.card (PMFCoordinateMonitor Ω)) + 1)
+        (Math.OnlineLearning.anytimeEpochIndex T) := by
+  let observation : ℕ → Ω := fun n =>
+    if hn : n < T then history ⟨n, hn⟩ else Classical.choice inferInstance
+  have hrestrict :
+      (fun i : Fin T => observation i) = history := by
+    funext i
+    simp [observation, i.isLt]
+  simpa only [hrestrict] using
+    predictableAnytimePMFCoordinateMonitor_fixedActionRegret_div_le
+      baseline observation T hT monitor
 
 /-- The actual causal anytime monitor has zero expected cumulative score under the baseline
     public-history law at every horizon. -/
@@ -336,6 +418,92 @@ theorem expect_predictableAnytimePMFCoordinateMonitorCumulativeScore_eq_drift
           (predictableAnytimePMFCoordinateMonitorChoice baseline) T) := by
   exact expect_predictablePMFCoordinateMonitorCumulativeScore_eq_drift
     baseline comparison (predictableAnytimePMFCoordinateMonitorChoice baseline) T
+
+/-- A fixed coordinate monitor with a uniform conditional drift lower bound
+accumulates that drift linearly in expectation. -/
+theorem mul_le_expect_fixedPMFCoordinateMonitorCumulativeScore
+    {Ω : Type} [Finite Ω] [DecidableEq Ω]
+    (baseline : PMF Ω)
+    (comparison : ∀ n, (Fin n → Ω) → PMF Ω)
+    (monitor : PMFCoordinateMonitor Ω) {δ : ℝ}
+    (hdrift : ∀ n history,
+      δ ≤
+        (if monitor.2 then 1 else -1) *
+          (((comparison n history) monitor.1).toReal -
+            (baseline monitor.1).toReal))
+    (T : ℕ) :
+    T * δ ≤
+      expect (adaptiveHistoryLaw comparison T)
+        (predictablePMFCoordinateMonitorCumulativeScore baseline
+          (fixedPMFCoordinateMonitorChoice monitor) T) := by
+  apply mul_le_expect_predictableScoreSum comparison
+    (predictablePMFCoordinateMonitorScore baseline
+      (fixedPMFCoordinateMonitorChoice monitor))
+  intro n history
+  change δ ≤
+    expect (comparison n history)
+      (weightedPMFCoordinateMonitorScore baseline (PMF.pure monitor))
+  rw [expect_weightedPMFCoordinateMonitorScore_eq_difference, expect_pure]
+  exact hdrift n history
+
+/-- Fixed-monitor drift transfers to the actual causal anytime learner with
+only its explicit deterministic regret envelope. -/
+theorem mul_sub_regret_le_expect_predictableAnytimePMFCoordinateMonitorScore
+    {Ω : Type} [Fintype Ω] [Nonempty Ω] [DecidableEq Ω]
+    (baseline : PMF Ω)
+    (comparison : ∀ n, (Fin n → Ω) → PMF Ω)
+    (monitor : PMFCoordinateMonitor Ω) {δ : ℝ}
+    (hdrift : ∀ n history,
+      δ ≤
+        (if monitor.2 then 1 else -1) *
+          (((comparison n history) monitor.1).toReal -
+            (baseline monitor.1).toReal))
+    (T : ℕ) (hT : 1 ≤ T) :
+    T * δ -
+        T * Math.OnlineLearning.anytimeRegretEnvelope
+          (Real.log (Fintype.card (PMFCoordinateMonitor Ω)) + 1)
+          (Math.OnlineLearning.anytimeEpochIndex T) ≤
+      expect (adaptiveHistoryLaw comparison T)
+        (predictablePMFCoordinateMonitorCumulativeScore baseline
+          (predictableAnytimePMFCoordinateMonitorChoice baseline) T) := by
+  let fixedScore : (Fin T → Ω) → ℝ :=
+    predictablePMFCoordinateMonitorCumulativeScore baseline
+      (fixedPMFCoordinateMonitorChoice monitor) T
+  let learnerScore : (Fin T → Ω) → ℝ :=
+    predictablePMFCoordinateMonitorCumulativeScore baseline
+      (predictableAnytimePMFCoordinateMonitorChoice baseline) T
+  let regret : ℝ :=
+    Math.OnlineLearning.anytimeRegretEnvelope
+      (Real.log (Fintype.card (PMFCoordinateMonitor Ω)) + 1)
+      (Math.OnlineLearning.anytimeEpochIndex T)
+  have hTpos : (0 : ℝ) < T := by exact_mod_cast hT
+  have hpoint : ∀ history, fixedScore history - learnerScore history ≤
+      T * regret := by
+    intro history
+    simpa [fixedScore, learnerScore, regret, mul_comm] using
+      (div_le_iff₀ hTpos).mp
+        (predictableAnytimePMFCoordinateMonitor_fixedActionRegret_div_le_history
+          baseline history hT monitor)
+  have hregret :
+      expect (adaptiveHistoryLaw comparison T)
+          (fun history => fixedScore history - learnerScore history) ≤
+        T * regret := by
+    calc
+      expect (adaptiveHistoryLaw comparison T)
+          (fun history => fixedScore history - learnerScore history) ≤
+          expect (adaptiveHistoryLaw comparison T)
+            (fun _ => T * regret) :=
+        expect_mono _ _ _ hpoint
+      _ = T * regret := expect_const _ _
+  rw [expect_sub] at hregret
+  have hfixed :
+      T * δ ≤
+        expect (adaptiveHistoryLaw comparison T) fixedScore := by
+    exact mul_le_expect_fixedPMFCoordinateMonitorCumulativeScore
+      baseline comparison monitor hdrift T
+  change T * δ - T * regret ≤
+    expect (adaptiveHistoryLaw comparison T) learnerScore
+  linarith
 
 /-- If the causal anytime monitor has conditional oriented coordinate drift at least `δ` after
     every public history, then its expected cumulative score is at least `Tδ`. -/

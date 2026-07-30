@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.BellmanCurveGate
 import GameTheory.Concepts.Stochastic.BellmanGermFinkBridge
+import GameTheory.Concepts.Stochastic.FinkMonitor
 import Math.AlgebraicSelection
 import Mathlib.Analysis.Analytic.Order
 
@@ -336,6 +337,66 @@ structure StateKernelMonitorPowerCharge
                 (pmfCoordinateTestScore
                   (G.finkStateKernel germ.endpointFinkPoint source)
                   destination positive)
+
+namespace StateKernelMonitorPowerCharge
+
+/-- At a fixed positive germ slice where its power-law signal holds, the
+charge transfers to the causal anytime monitor.  The lower bound loses only
+the explicit deterministic fixed-action regret envelope.
+
+This theorem concerns a frozen on-profile comparison kernel.  A public-phase
+construction must separately justify the stability of that kernel or charge
+changes of slice and monitor. -/
+theorem mul_sub_regret_le_expect_causalMonitorScore
+    {germ : G.AnalyticBellmanGerm}
+    (charge : germ.StateKernelMonitorPowerCharge)
+    {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) germ.radius)
+    (hsignal :
+      charge.margin * t ^ charge.order ≤
+        Math.Probability.expect
+          (G.finkStateKernel (germ.finkPointAt ht) charge.source)
+          (pmfCoordinateTestScore
+            (G.finkStateKernel
+              germ.endpointFinkPoint charge.source)
+            charge.destination charge.positive))
+    (T : ℕ) (hT : 1 ≤ T) :
+    T * (charge.margin * t ^ charge.order) -
+        T * Math.OnlineLearning.anytimeRegretEnvelope
+          (Real.log
+              (Fintype.card (PMFCoordinateMonitor G.State)) + 1)
+          (Math.OnlineLearning.anytimeEpochIndex T) ≤
+      Math.Probability.expect
+        (Math.Probability.adaptiveHistoryLaw
+          (fun _ _ =>
+            G.finkStateKernel
+              (germ.finkPointAt ht) charge.source) T)
+        (predictablePMFCoordinateMonitorCumulativeScore
+          (G.finkStateKernel germ.endpointFinkPoint charge.source)
+          (@predictableAnytimePMFCoordinateMonitorChoice
+            G.State _ ⟨charge.source⟩ _
+            (G.finkStateKernel
+              germ.endpointFinkPoint charge.source)) T) := by
+  letI : Nonempty G.State := ⟨charge.source⟩
+  let baseline :=
+    G.finkStateKernel germ.endpointFinkPoint charge.source
+  let comparison :=
+    G.finkStateKernel (germ.finkPointAt ht) charge.source
+  let monitor : PMFCoordinateMonitor G.State :=
+    (charge.destination, charge.positive)
+  apply
+    mul_sub_regret_le_expect_predictableAnytimePMFCoordinateMonitorScore
+      baseline (fun _ _ => comparison) monitor
+  · intro n history
+    change
+      charge.margin * t ^ charge.order ≤
+        (if charge.positive then 1 else -1) *
+          ((comparison charge.destination).toReal -
+            (baseline charge.destination).toReal)
+    rw [← expect_pmfCoordinateTestScore]
+    exact hsignal
+  · exact hT
+
+end StateKernelMonitorPowerCharge
 
 /-- Endpoint continuation residual as a linear endomorphism of state-payoff
 vectors. -/

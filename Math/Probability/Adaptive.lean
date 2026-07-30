@@ -58,6 +58,26 @@ noncomputable def predictableScoreSum
       predictableScoreSum score n history + score n history x := by
   simp [predictableScoreSum]
 
+/-- Along a full observation stream, the recursively defined predictable
+score is the ordinary sum of its prefix-selected one-step scores. -/
+theorem predictableScoreSum_restrict_eq_sum
+    (score : ∀ n, (Fin n → Ω) → Ω → ℝ)
+    (observation : ℕ → Ω) (T : ℕ) :
+    predictableScoreSum score T (fun i => observation i) =
+      ∑ t ∈ Finset.range T,
+        score t (fun i => observation i) (observation t) := by
+  induction T with
+  | zero => simp
+  | succ T ih =>
+      have hinit :
+          Fin.init (fun i : Fin (T + 1) => observation i) =
+            (fun i : Fin T => observation i) := by
+        rfl
+      rw [← Fin.snoc_init_self
+        (fun i : Fin (T + 1) => observation i)]
+      rw [predictableScoreSum_snoc, hinit, Finset.sum_range_succ, ih]
+      simp
+
 /-- Sum of the conditional means of a predictable score along a finite history. -/
 noncomputable def predictableConditionalMeanSum
     (step : ∀ n, (Fin n → Ω) → PMF Ω)
