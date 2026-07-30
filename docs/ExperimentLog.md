@@ -55,7 +55,7 @@ becomes difficult to scan.
 | EXP-042 | 2026-07-30 | D0/D4/D6 / T4 | Can a one-shot NFG compile through FOSG and the actual Protocol history runner with exact outcome and utility laws? | Supports; closes T4 | [`decisions/D15-nfg-fosg.md`](decisions/D15-nfg-fosg.md); `GameTheory/Languages/{NFG,FOSG,Bridges/NFGFOSG}.lean` |
 | EXP-043 | 2026-07-30 | D0 / knowledge ownership | Is Protocol information already an epistemic partition, or does Aumann agreement need a separate branch? | Refutes Protocol ownership; decides D16 | [`decisions/D16-epistemic-ownership.md`](decisions/D16-epistemic-ownership.md); `GameTheory/Epistemic/`; `GameTheory/Experimental/PostArchitecture/KnowledgeOwnership.lean` |
 | EXP-044 | 2026-07-30 | D0 / evolutionary ownership | Is ESS static Core semantics or part of an analytic dynamics package? | Supports separate static branch; decides D17 | [`decisions/D17-evolutionary-ownership.md`](decisions/D17-evolutionary-ownership.md); `GameTheory/Evolutionary/`; `GameTheory/Experimental/PostArchitecture/EvolutionaryOwnership.lean` |
-| EXP-045 | 2026-07-30 | D8 / Wave 1 close-out | What is the smallest consumer-backed transformation API that closes reindexing, relabeling, mixed lifting, Nash, and CE transport? | In progress | `GameTheory/Experimental/PostArchitecture/D8Transformations.lean` |
+| EXP-045 | 2026-07-30 | D8 / Wave 1 close-out | What is the smallest consumer-backed transformation API that closes reindexing, relabeling, mixed lifting, Nash, and CE transport? | Supports concrete equivalences; decides D8 | [`decisions/D8-minimal-transformations.md`](decisions/D8-minimal-transformations.md); `GameTheory/Experimental/PostArchitecture/D8Transformations.lean` |
 
 ## Entry template
 
@@ -2932,7 +2932,8 @@ memory.
 ### EXP-045: minimal consumer-backed transformation closure
 
 - **Date / revision:** 2026-07-30, working tree based on `c306f24`
-- **Status:** in progress
+- **Status:** supports; concrete equivalences suffice and no transformation
+  structure is earned
 - **Decision / question:** D8 and W1-H; which transformation declarations are
   genuinely public infrastructure after the direct language transfers have
   removed the predecessor's generic morphism and certificate wrappers.
@@ -2960,6 +2961,22 @@ memory.
   transport; stored finiteness or decidability; Core importing a language; or
   a claimed equilibrium transport that silently assumes target deviations can
   be reflected.
-- **Next action:** run the hostile experimental slice, record the measurements
-  in a D8 decision record, then promote only the declarations used by Core and
-  MAID.
+- **Evidence:** the 395-nonblank-line, 37-declaration experiment imports only
+  `GameTheory.Core.Mixed`. The player fixture swaps unequal `Bool` and `Fin 3`
+  strategy carriers. The strategy fixture flips both Boolean carriers and
+  transports a recommendation-dependent correlated law by conjugating every
+  response map. Player reindexing commutes with the actual mixed play law via
+  forward/inverse dependent `FinDist.pi` reindexing. The forward orientation
+  has the exact shape needed by the existing MAID serialization consumer.
+- **Measurements:** the focused build completes in 1,721 jobs. Source scans
+  find zero placeholders, native decisions, direct updates, transports,
+  `HEq`, tactic `change`, `Fintype.ofFinite`, or `open Classical`. Nash, CE,
+  mixed lifting, and both hostile witnesses use only `propext`,
+  `Classical.choice`, and `Quot.sound`.
+- **Outcome:** supports prediction and decides D8. No `FormHom`, `FormEquiv`,
+  payoff-law morphism, or equilibrium certificate is earned. D8 adopts
+  transparent player/strategy equivalence operations, the two game-free
+  finite-product orientations, and direct Nash/CE invariance theorems.
+- **Next action:** promote the accepted declarations, replace MAID's local
+  probability proof with the shared theorem, add reachability/source audits,
+  and close W1-H only after focused and full builds pass.
