@@ -6,6 +6,7 @@ Authors: GameTheory contributors
 
 import GameTheory.Concepts.Stochastic.BellmanVariety
 import Math.PolynomialSignCell
+import Mathlib.Topology.Algebra.MvPolynomial
 
 /-!
 # Exact sign cells for the polynomial Bellman system
@@ -153,6 +154,47 @@ theorem isPolynomialBellmanSolution_iff_forall_constraint_sign
 /-- The set of real assignments satisfying the polynomial Bellman system. -/
 def polynomialBellmanSolutionSet : Set (BellmanVar G → ℝ) :=
   {assign | G.IsPolynomialBellmanSolution assign}
+
+/-- The polynomial Bellman solution set is closed. -/
+theorem isClosed_polynomialBellmanSolutionSet :
+    IsClosed G.polynomialBellmanSolutionSet := by
+  have hsum : IsClosed
+      {assign : BellmanVar G → ℝ |
+        ∀ s i,
+          MvPolynomial.eval assign (G.simplexSumPoly s i) = 0} := by
+    simp only [setOf_forall]
+    exact isClosed_iInter fun s => isClosed_iInter fun i =>
+      isClosed_eq (G.simplexSumPoly s i).continuous_eval continuous_const
+  have hnonneg : IsClosed
+      {assign : BellmanVar G → ℝ |
+        ∀ s i a,
+          0 ≤ MvPolynomial.eval assign
+            (G.simplexNonnegPoly s i a)} := by
+    simp only [setOf_forall]
+    exact isClosed_iInter fun s => isClosed_iInter fun i =>
+      isClosed_iInter fun a =>
+        isClosed_le continuous_const
+          (G.simplexNonnegPoly s i a).continuous_eval
+  have hbellman : IsClosed
+      {assign : BellmanVar G → ℝ |
+        ∀ s i,
+          MvPolynomial.eval assign (G.bellmanPoly s i) = 0} := by
+    simp only [setOf_forall]
+    exact isClosed_iInter fun s => isClosed_iInter fun i =>
+      isClosed_eq (G.bellmanPoly s i).continuous_eval continuous_const
+  have hbest : IsClosed
+      {assign : BellmanVar G → ℝ |
+        ∀ s i a,
+          0 ≤ MvPolynomial.eval assign
+            (G.bestResponsePoly s i a)} := by
+    simp only [setOf_forall]
+    exact isClosed_iInter fun s => isClosed_iInter fun i =>
+      isClosed_iInter fun a =>
+        isClosed_le continuous_const
+          (G.bestResponsePoly s i a).continuous_eval
+  simpa only [polynomialBellmanSolutionSet,
+    IsPolynomialBellmanSolution, setOf_and] using
+    hsum.inter (hnonneg.inter (hbellman.inter hbest))
 
 /-- Bellman-solution membership is invariant on every complete sign cell of
 the combined constraint family. -/
