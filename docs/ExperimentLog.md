@@ -48,6 +48,8 @@ becomes difficult to scan.
 | EXP-035 | 2026-07-30 | D6/D12 / finite EFG theorem | Does the hostile EFG remain sequentially rational under a nonconstant hidden-state payoff? | Supports; completes W1-A | `GameTheory/Analysis/Protocol/EFGTest.lean` |
 | EXP-036 | 2026-07-30 | D6 / sequential theory | Does well-founded information-local one-shot optimality characterize SPE, including off-path histories? | Supports; completes W1-B | `GameTheory/Protocol/SubgamePerfect.lean`; `GameTheory/Tests/SubgamePerfect.lean` |
 | EXP-037 | 2026-07-30 | D6/D14 / MAID gate | Can incomparable MAID decisions compile without asserting a false order? | Supports frontier batching; unlocks general MAID work | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDIncomparable.lean` |
+| EXP-038 | 2026-07-30 | D6/D14 / T3 strategy gate | Does per-player frontier batching preserve locality when one player owns incomparable decisions? | Refutes combined-view policies; narrows D14 | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` |
+| EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
 
 ## Entry template
 
@@ -2343,3 +2345,120 @@ memory.
 - **Next action:** inventory T3 at declaration level, then implement the
   smallest general finite-DAG MAID whose frontier compiler specializes to this
   slice before proving the named MAID-to-EFG laws.
+
+### EXP-038: same-owner incomparable decisions
+
+- **Date / revision:** 2026-07-30, working tree based on `2964804`
+- **Status:** complete
+- **Decision / question:** D6, D14, and T3; whether one Protocol action and
+  information state per source player can batch multiple incomparable
+  decision sites without letting one site depend on another site's private
+  parents.
+- **Hypothesis, recorded before implementation:** naive per-player batching is
+  too permissive. If one player owns two incomparable decisions, the left site
+  observes only a left chance bit, and the right site observes only a right
+  chance bit, a combined frontier view exposes both bits while choosing both
+  actions. It therefore admits a cross-reading action pair that no pair of
+  native local decision rules can implement.
+- **Representative slice:** two independent Boolean chance parents; one player;
+  two incomparable Boolean decisions with disjoint singleton observation
+  sets; a candidate compiled policy returning the other site's observed bit at
+  each decision. Prove that no `leftRule : Bool → Bool` and
+  `rightRule : Bool → Bool` agrees with this policy on all four parent
+  assignments.
+- **Competing designs:** restrict stable MAIDs so a player's decisions are
+  ancestry-comparable; add a named locality certificate around batched
+  per-player actions; index Protocol actors by decision sites and regroup
+  deviations by owner; or keep order-free frontier evaluation native and
+  translate to a serialized EFG whose information sets hide incomparable
+  actions, proving the result independent of the chosen topological order.
+- **Kill conditions:** calling the combined view information-local without a
+  proof; admitting a target EFG strategy with no native counterpart; treating
+  decision sites as source players in equilibrium statements; weakening the
+  frozen T3 claim silently; or freezing general syntax before the mismatch is
+  resolved.
+- **Evidence:**
+  1. `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` defines
+     native policies as site-indexed local Boolean rules and the naive compiled
+     policy as a function from the combined parent view to both actions.
+  2. `crossReading` sends each action to the parent observed only by the other
+     site. Both dependence theorems are nonvacuous, while native left and right
+     noninterference are definitional equalities.
+  3. `crossReading_not_representable` proves no native local policy maps to
+     that compiled policy. Thus the combined-view target is strictly larger,
+     not merely presented differently.
+  4. The slice is 68 nonblank lines and 13 declarations, imports no GameTheory
+     module, builds in 105 jobs, and has zero placeholder, native-decision,
+     direct-update, or transport tokens.
+  5. Axiom checks for non-representability and both native noninterference laws
+     report no axioms.
+  6. The integrated full build completes in 3,329 jobs, and Phase 2/3 boundary,
+     trust, and reachability audits retain their expected values.
+- **Outcome:** refutes naive per-player frontier compilation. EXP-037 remains
+  valid as an execution-law result for a distinct-owner antichain, but its
+  combined information view cannot generalize to arbitrary MAIDs.
+- **Next action:** keep site-local policy in the native typed-DAG semantics and
+  use its order-free frontier evaluation as the reference law. Translate to an
+  explicitly ordered EFG whose decision information hides all incomparable
+  assignments, then prove outcome order independence and a true strategy
+  correspondence. Do not expose a general frontier `InformationModel`.
+
+### EXP-039: capability-parametric finite DAG substrate
+
+- **Date / revision:** 2026-07-30, working tree based on `2964804`
+- **Status:** complete
+- **Decision / question:** D9, D14, and T3; whether the reusable DAG fragment
+  needed by general MAIDs can be recovered as game-independent mathematics
+  without storing `Fintype`/`DecidableEq` in semantic graph data or fixing the
+  public node carrier to `Fin n`.
+- **Hypothesis, recorded before implementation:** define acyclicity for any
+  relation and a topological-order certificate for any predecessor function.
+  Require finite enumeration only on the theorem that constructs an order.
+  The predecessor's well-founded construction should generalize from `Fin n`
+  to an arbitrary finite carrier while its MAID-specific API is discarded.
+- **Representative slice:** a four-node diamond with two incomparable middle
+  nodes. Derive a topological order from acyclicity and prove every direct and
+  transitive predecessor occurs earlier.
+- **Competing designs:** port the pinned `Fin n` API; store an explicit rank or
+  order inside every MAID; use an arbitrary node carrier with an acyclic
+  predecessor relation and derive an order under operation-local finite
+  capabilities; or find an existing Mathlib theorem.
+- **Mathlib search:** local source search found undirected
+  `SimpleGraph.IsAcyclic` but no directed topological-order construction for a
+  finite predecessor relation.
+- **Kill conditions:** game imports in the reusable module; finiteness stored in
+  graph semantic data; user-visible transport through an equivalence with
+  `Fin n`; a custom axiom; or inability to recover parent-before-child and
+  ancestor-before-descendant facts on the diamond.
+- **Evidence:**
+  1. `GameTheoryMath/DAG.lean` is 194 nonblank lines and eight declarations. It
+     defines relation acyclicity and a list topological-order certificate for
+     an arbitrary carrier. Neither object stores a finite-carrier capability;
+     only `topologicalOrder_of_acyclic` assumes `Fintype` and `DecidableEq`.
+  2. The well-founded minimal-vertex construction is adapted from pinned
+     `Math/DAG.lean`, but its `Fin n`, length-equals-`n`, and game-adjacent
+     surface are removed. The public facts are direct-parent order,
+     transitive-ancestor order, construction, and the converse acyclicity
+     certificate.
+  3. The 85-nonblank-line diamond probe derives an order for an arbitrary
+     four-constructor carrier, proves the middle vertices incomparable, and
+     exercises direct and transitive predecessor ordering.
+  4. Focused builds complete in 1,666 jobs. The reusable module has no
+     GameTheory import or project dependency, and `GameTheoryMath` continues to
+     import no game module.
+  5. Both files have zero placeholder, native-decision, direct-update, or
+     source transport tokens. Axiom checks use at most `propext`,
+     `Classical.choice`, and `Quot.sound`; the choice occurs only when deriving
+     an order or choosing the diamond witness.
+  6. The integrated full build completes in 3,329 jobs. Phase 2 reports
+     `TRANSPORT_GAMETHEORYMATH_SOURCE=0`,
+     `GAMETHEORYMATH_FORBIDDEN_IMPORTS=0`, and
+     `GAMETHEORYMATH_GAME_REJECTED=1`; all Phase 2/3 expected boundary and
+     reachability probes pass.
+- **Outcome:** supports. The reusable DAG proof survives with a better
+  capability boundary and no public `Fin n` transport. No kill condition
+  fired.
+- **Next action:** define experimental typed MAID syntax over this arbitrary
+  node carrier, with site-local policies and order-free frontier evaluation;
+  do not promote the syntax until the same-owner and diamond probes instantiate
+  it.

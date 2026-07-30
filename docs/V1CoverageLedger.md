@@ -66,7 +66,7 @@ semantic result; the named transfer queue T1-T4 remains open.
 |---|---|---|---|
 | T1 | finite EFG strategic extraction and pure/mixed Nash transfer | **complete** | information-local contingent plans, finite-carrier capability, exact native-run Nash iff theorems, and a nonconstant-payoff hostile test; [declaration ledger](coverage/T1-efg-strategic-nash.md) |
 | T2 | behavioral/mixed correspondence | **complete** | both constructive EFG directions, exact realizable history-law equality, generic outcome-law wrappers, and expected-utility corollaries; [declaration ledger](coverage/T2-kuhn-correspondence.md) |
-| T3 | MAID to EFG outcome, utility, and strategy transfer | **partial probe** | arbitrary MAID DAG, EFG translation, strategy correspondence, and named transfer |
+| T3 | MAID to EFG outcome, utility, and strategy transfer | **partial probe** | arbitrary MAID DAG, same-owner incomparable-decision locality, EFG translation, strategy correspondence, and named transfer; [declaration ledger](coverage/T3-maid-efg.md) |
 | T4 | one-shot NFG to FOSG embedding commuting with compilation | **not started** | both stable frontends and the exact commuting theorem |
 
 T1 and T2 are complete. The absence of a generic certificate hierarchy does not
@@ -186,8 +186,8 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Create declaration-level ledgers for open T3-T4; the F2, F4, F5, F6, F8,
-   T1, and T2 ledgers are complete.
+1. Create the remaining declaration-level ledger for T4; the F2, F4, F5, F6,
+   F8, T1, T2, and T3 ledgers are complete inventories.
 2. Add a generated pinned declaration index and a coverage audit before the
    first `v1-accounted` claim.
 3. Resolve the overdue knowledge and evolutionary ownership probes.

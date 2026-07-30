@@ -524,8 +524,8 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. create the remaining declaration-level ledgers for open T3-T4; the F2, F4,
-   F5, F6, F8, T1, and T2 ledgers are complete;
+1. create the remaining declaration-level ledger for open T4; the F2, F4, F5,
+   F6, F8, T1, T2, and T3 ledgers are complete inventories;
 2. finish or reject the named language transfers individually, then resume the
    broader revelation and information-design inventory without reopening F5/F6;
 3. open the static learning/communication and congestion harvest lanes;

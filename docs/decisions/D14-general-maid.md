@@ -1,7 +1,7 @@
 # D14: general MAID execution by unresolved frontiers
 
-- **Status:** adopted compilation principle; general public syntax still
-  delivery-gated
+- **Status:** adopted native evaluation principle, narrowed by EXP-038; general
+  public syntax still delivery-gated
 - **Date:** 2026-07-30
 - **Experiment IDs:** EXP-014, EXP-037
 
@@ -21,10 +21,13 @@ inventing a causal order absent from the diagram.
 3. Keep only the existing concrete linear MAID in the stable tree and reject
    general MAID recovery for this release.
 
-Design 2 is adopted. Design 1 remains only a comparison baseline because it
-matches the pinned implementation shape; it must prove order independence
-before it may describe an unordered source. Design 3 remains the fallback if a
-general typed-DAG implementation later fires a disproof condition.
+Design 2 is adopted for the order-free native evaluator. EXP-038 rejects using
+one combined per-player frontier view as the general strategy interface.
+Design 1 is therefore permitted only for the named EFG target: it must hide
+incomparable assignments from decision information and prove both exact
+agreement with the native evaluator and order independence. Design 3 remains
+the fallback if a general typed-DAG implementation later fires a disproof
+condition.
 
 ## Representative hostile slice
 
@@ -83,3 +86,32 @@ The gate also exposed an audit-ownership gap: the new post-architecture
 experiment was initially unbucketed by the Phase 2 source audit. It now has its
 own zero-transport bucket, leaving the historical Phase 1–4 measurements
 unchanged.
+
+## Open strategy-locality challenge
+
+EXP-037 had distinct owners for the two incomparable decisions. It therefore
+validated the execution frontier but did not test the harder case in which one
+source player owns multiple decision sites in the same frontier. Giving that
+player one combined information state and one batched action may let either
+site depend on parents observed only at the other site, enlarging the native
+MAID strategy space.
+
+EXP-038 supplies the counterexample. A combined-view policy can cross-read the
+two sites' disjoint private parents, while no pair of native local rules can
+represent it. The mismatch is axiom-free and definitional on the native side.
+
+Consequently:
+
+1. native general-MAID policy is indexed by decision site and its own observed
+   parent configuration;
+2. frontier batching defines the order-free native evaluation law, not a
+   general `InformationModel` strategy space;
+3. the EFG translation may serialize an explicit topological order, but each
+   decision view exposes exactly its native observed parents;
+4. T3 must prove the serialized run equals native evaluation and is independent
+   of order before the order-free wrapper is public;
+5. equilibrium transfer regroups deviations by the source owner; decision
+   sites are never relabelled as players.
+
+This is a narrowing of EXP-037, not a reversal: its execution result and
+distinct-owner policy probe remain valid.
