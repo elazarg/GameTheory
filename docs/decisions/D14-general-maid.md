@@ -132,7 +132,7 @@ decisions together and distinguishes changes at each site. The source contains
 no direct update or transport token and stores no finite capability.
 
 This validates the native side of T3 but does not freeze it publicly.
-`resolved_ssubset_extend_of_incomplete` gives strict finite progress; a named
-cardinality-bounded completion theorem remains required. More importantly, the
-explicit-order EFG compiler must still prove exact equality with the frontier
-law and independence from the chosen order.
+`run_complete_of_remaining_le` and `completesWithin_card` now lift strict
+frontier growth to a uniform finite completion certificate. The remaining gate
+is the explicit-order EFG compiler: it must prove exact equality with the
+frontier law and independence from the chosen order.

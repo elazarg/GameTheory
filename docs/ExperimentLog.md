@@ -50,7 +50,7 @@ becomes difficult to scan.
 | EXP-037 | 2026-07-30 | D6/D14 / MAID gate | Can incomparable MAID decisions compile without asserting a false order? | Supports frontier batching; unlocks general MAID work | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDIncomparable.lean` |
 | EXP-038 | 2026-07-30 | D6/D14 / T3 strategy gate | Does per-player frontier batching preserve locality when one player owns incomparable decisions? | Refutes combined-view policies; narrows D14 | [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md); `GameTheory/Experimental/PostArchitecture/MAIDSameOwner.lean` |
 | EXP-039 | 2026-07-30 | D9/D14 / general MAID substrate | Can the pinned finite-DAG mathematics be recovered without storing finiteness in semantic data or tying it to `Fin n`? | Supports; generalizes the pinned DAG proof | `GameTheoryMath/DAG.lean`; `GameTheory/Experimental/PostArchitecture/DAGDiamond.lean` |
-| EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; public promotion awaits totality and T3 | `GameTheory/Experimental/PostArchitecture/TypedMAID*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
+| EXP-040 | 2026-07-30 | D2/D9/D14 / typed MAID semantics | Can heterogeneous site-local MAID semantics evaluate unresolved frontiers without dependent transport or stored finite capabilities? | Supports; public promotion awaits T3 serialization equivalence | `GameTheory/Experimental/PostArchitecture/TypedMAID*.lean`; [`decisions/D14-general-maid.md`](decisions/D14-general-maid.md) |
 
 ## Entry template
 
@@ -2493,7 +2493,7 @@ memory.
   `Fintype`/`DecidableEq`, order-dependent native evaluation, or failure of
   generic frontier progress.
 - **Evidence:**
-  1. `TypedMAID.lean` is 240 nonblank lines and 29 declarations. `Structure`
+  1. `TypedMAID.lean` is 327 nonblank lines and 33 declarations. `Structure`
      stores node kind, causal and observed parent finsets, a dependent value
      family, locality laws, and acyclicity—no order, `Fintype`, or
      `DecidableEq`. `Policy` is indexed by decision site and receives only that
@@ -2503,12 +2503,15 @@ memory.
      minimal unresolved node whenever the state is incomplete. `extend`
      preserves predecessor closure and
      `resolved_ssubset_extend_of_incomplete` proves strict progress.
+     `run_complete_of_remaining_le` lifts that measure through finite-law
+     support, and `completesWithin_card` gives the uniform one-step-per-node
+     completion bound.
   3. `frontierLaw` uses `FinDist.pi` over the dependent frontier family.
      `Assignment.resolve` updates every sampled coordinate simultaneously
      without `Function.update` or equality transport. A node law is constructed
      only after its causal parents—and, by subset, its observed parents—are
      proved resolved.
-  4. The 494-nonblank-line hostile test has 63 declarations. Its diamond uses
+  4. The 494-nonblank-line hostile test has 61 declarations. Its diamond uses
      four different dependent alphabets (`Bool`, `Fin 2`, `Unit`, `Bool`) and
      derives the correct initial frontier. Its same-owner fixture has two
      disjointly observed decision sites in one frontier.
@@ -2531,8 +2534,7 @@ memory.
   heterogeneous indices without a transport surface, and native site-local
   policies survive the exact same-owner falsifier that rejected combined
   Protocol views. No kill condition fired.
-- **Next action:** prove a generic cardinality-bounded completion theorem for
-  `run`, then translate an explicit topological order to an EFG whose
+- **Next action:** translate an explicit topological order to an EFG whose
   information states expose exactly `observedParents`. Keep the implementation
   experimental until the serialized run equals this frontier law and order
   independence is proved.

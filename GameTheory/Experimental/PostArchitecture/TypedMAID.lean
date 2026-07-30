@@ -280,5 +280,97 @@ def run [Fintype Node] [DecidableEq Node]
       else (step diagram semantics policy state).bind
         (run semantics policy fuel)
 
+def CompletesWithin [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : Policy diagram)
+    (horizon : Nat) (state : FrontierState diagram) : Prop :=
+  ∀ reached ∈ (run diagram semantics policy horizon state).support,
+    reached.IsComplete
+
+theorem eq_extend_of_mem_support_step
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : Policy diagram)
+    (state reached : FrontierState diagram)
+    (hreached :
+      reached ∈ (step diagram semantics policy state).support) :
+    ∃ draw :
+        (node : {node // node ∈ state.frontier}) →
+          diagram.Value node.1,
+      reached = state.extend draw := by
+  rw [step, FinDist.support_map] at hreached
+  obtain ⟨draw, _, rfl⟩ := hreached
+  exact ⟨draw, rfl⟩
+
+theorem run_of_complete [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : Policy diagram)
+    (fuel : Nat) (state : FrontierState diagram)
+    (hcomplete : state.IsComplete) :
+    run diagram semantics policy fuel state = FinDist.pure state := by
+  cases fuel with
+  | zero => rfl
+  | succ fuel => rw [run, if_pos hcomplete]
+
+/-- One step per node is a uniform completion bound. A frontier may resolve
+several nodes, so the actual run can finish earlier. -/
+theorem run_complete_of_remaining_le
+    [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : Policy diagram)
+    (fuel : Nat) (state : FrontierState diagram)
+    (hbound :
+      Fintype.card Node - state.resolved.card ≤ fuel) :
+    ∀ reached ∈ (run diagram semantics policy fuel state).support,
+      reached.IsComplete := by
+  induction fuel generalizing state with
+  | zero =>
+      intro reached hreached
+      have hcardLe :
+          state.resolved.card ≤ Fintype.card Node :=
+        Finset.card_le_univ state.resolved
+      have hcard :
+          state.resolved.card = Fintype.card Node := by
+        omega
+      have hcomplete : state.IsComplete :=
+        state.resolved.card_eq_iff_eq_univ.mp hcard
+      rw [run, FinDist.mem_support_pure] at hreached
+      simpa [hreached] using hcomplete
+  | succ fuel ih =>
+      intro reached hreached
+      by_cases hcomplete : state.IsComplete
+      · rw [run, if_pos hcomplete,
+          FinDist.mem_support_pure] at hreached
+        simpa [hreached] using hcomplete
+      · rw [run, if_neg hcomplete,
+          FinDist.support_bind] at hreached
+        obtain ⟨next, hnext⟩ := Set.mem_iUnion.mp hreached
+        obtain ⟨hnextStep, hnextRun⟩ :=
+          Set.mem_iUnion.mp hnext
+        obtain ⟨draw, rfl⟩ :=
+          eq_extend_of_mem_support_step
+            diagram semantics policy state next hnextStep
+        have hcardGrowth :
+            state.resolved.card <
+              (state.extend draw).resolved.card :=
+          Finset.card_lt_card
+            (state.resolved_ssubset_extend_of_incomplete
+              hcomplete draw)
+        have hstateCardLe :
+            state.resolved.card ≤ Fintype.card Node :=
+          Finset.card_le_univ state.resolved
+        have hnextCardLe :
+            (state.extend draw).resolved.card ≤
+              Fintype.card Node :=
+          Finset.card_le_univ (state.extend draw).resolved
+        have hnextBound :
+            Fintype.card Node -
+                (state.extend draw).resolved.card ≤ fuel := by
+          omega
+        exact ih (state.extend draw) hnextBound reached hnextRun
+
+theorem completesWithin_card [Fintype Node] [DecidableEq Node]
+    (semantics : Semantics diagram) (policy : Policy diagram) :
+    CompletesWithin diagram semantics policy (Fintype.card Node)
+      (FrontierState.initial semantics) := by
+  apply run_complete_of_remaining_le
+  simp [FrontierState.initial]
+
 end GameTheory.Experimental.TypedMAID
 
