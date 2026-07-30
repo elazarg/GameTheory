@@ -164,6 +164,23 @@ the shared local-deviation interface could carry an interim, type-dependent
 deviation at all. It can: the interim probe fits the same interface with no new
 equilibrium predicate.
 
+### Phase 5 cooperative stress
+
+[EXP-028](../ExperimentLog.md) confirms the decision to keep coalitional games
+as a parallel stable primitive. The existing `CoalitionalGame` supports the
+direct marginal-contribution formula for the Shapley value, its efficiency,
+symmetry, null-player, and additivity laws, and the unanimity-basis proof that
+those four axioms characterize it uniquely. `Fintype` is required by the value
+and theorems that enumerate coalitions; it is not stored in the game.
+
+The three-agent majority game separates the two cooperative solution concepts
+without changing representation: its core is empty, while its Shapley
+allocation exists and pays every agent `1/3`. No `GameForm`, strategy, outcome,
+probability, or certificate layer appears. The Phase 0 judgment that
+`GameForm` is not the universal semantic hub therefore survives a theorem that
+uses substantially more of cooperative-game structure than the original core
+example.
+
 ### Consequences for public API
 
 `GameTheory.Core` and `GameTheory.Protocol` are both public. Both a bare

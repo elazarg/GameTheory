@@ -116,15 +116,30 @@ The impossibility is the load-bearing half. Without it the core would look like
 a solution concept rather than one that routinely fails to exist, which is the
 fact every other cooperative concept is a response to.
 
+EXP-028 supplies the other half. The Shapley allocation is the weighted sum of
+marginal contributions on the same `CoalitionalGame`; finiteness remains a
+capability of the operation, not a field of the game. Efficiency, symmetry,
+the null-player law, and additivity are named properties of allocation rules,
+and the unanimity-basis decomposition proves that those four properties
+characterize the Shapley value uniquely.
+
+The existing majority game is the discriminating witness. It still has no core
+allocation, but symmetry and efficiency give every agent Shapley value `1/3`;
+any allocation rule satisfying the four axioms agrees with that allocation.
+No strategy, outcome, probability, `GameForm`, or generic certificate enters
+the proof. The theorem therefore confirms the earlier absence-of-reuse finding:
+the parallel primitive was not merely enough to state the core, but enough for
+the cooperative theory's canonical always-existing value and its flagship
+characterization.
+
+`GameTheory.Tests.Shapley` builds in 1,070 jobs. `Shapley` rejects reachability
+probes for `FinDist`, `GameForm`, and `Polynomial`, and both efficiency and the
+characterization use only `propext`, `Classical.choice`, and `Quot.sound`.
+
 ## Axes not yet stressed
 
 Each of these is a part of the subject the design has never been asked about,
 listed with the choice it would put pressure on.
-
-*The Shapley value.* The coalitional primitive is in place and the core is
-proved to fail; the Shapley value is the concept that never fails, and its
-characterization by symmetry, efficiency, and additivity is the theorem that
-would stress whether that primitive is rich enough.
 
 *Repeated play and the folk theorem.* Stresses the protocol layer's
 composability, and needs limits — so it also tests whether the analytic boundary

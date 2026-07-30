@@ -36,6 +36,22 @@ structure CoalitionalGame (Agent : Type ua) where
   /-- Nobody together achieves nothing. -/
   value_empty : value ∅ = 0
 
+namespace CoalitionalGame
+
+variable {Agent : Type ua}
+
+@[ext]
+theorem ext {G H : CoalitionalGame Agent}
+    (h : ∀ coalition, G.value coalition = H.value coalition) :
+    G = H := by
+  cases G
+  cases H
+  congr
+  funext coalition
+  exact h coalition
+
+end CoalitionalGame
+
 /-- A division of the proceeds among the agents. -/
 abbrev Allocation (Agent : Type ua) := Agent → ℝ
 

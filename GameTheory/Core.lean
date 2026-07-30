@@ -27,3 +27,4 @@ import GameTheory.Core.ZeroSum
 import GameTheory.Core.SocialChoice
 import GameTheory.Core.Arrow
 import GameTheory.Core.Coalitional
+import GameTheory.Core.Shapley

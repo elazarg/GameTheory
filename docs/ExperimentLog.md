@@ -38,6 +38,7 @@ becomes difficult to scan.
 | EXP-025 | 2026-07-30 | D6 / Phase 5 close-out | Can information-local policies compile to the static core, with randomization and one-shot deviations commuting through the existing run laws? | Supports; narrows SPE remainder | `GameTheory/Protocol/Strategic.lean`; `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Strategic.lean`; `GameTheory/Tests/Assessment.lean` |
 | EXP-026 | 2026-07-30 | D10/D12 / finite certificates | Can an external LP verifier replace hand-expanded rational proofs without widening the trusted base or the audited finite layer? | Narrows; trust passes, adoption does not | [`experiments/EXP-026.md`](experiments/EXP-026.md); [`decisions/D13-lp-certificates.md`](decisions/D13-lp-certificates.md) |
 | EXP-027 | 2026-07-30 | D4 / Phase 5 | Does Arrow's pivotal-voter proof work through the accepted weak-ranking vocabulary without a second preference API? | Supports; repairs an import-closure leak | `GameTheory/Core/Rank.lean`; `GameTheory/Core/Arrow.lean`; `GameTheory/Tests/Arrow.lean` |
+| EXP-028 | 2026-07-30 | D0 / Phase 5 | Is the parallel `CoalitionalGame` primitive rich enough for the Shapley value and its four-axiom characterization? | Supports the parallel primitive | `GameTheory/Core/Shapley.lean`; `GameTheory/Tests/Shapley.lean` |
 
 ## Entry template
 
@@ -1639,3 +1640,48 @@ memory.
 - **Next action:** treat Arrow as closed on this axis. Keep lottery operations
   in `Core/Preference.lean` and all carrier-generic ranking laws in
   `Core/Rank.lean`; proceed to the next Phase 5 stress theorem.
+
+### EXP-028: Shapley value on the parallel coalitional primitive
+
+- **Date / revision:** 2026-07-30, working tree based on `0173c66`
+- **Decision / question:** D0 and Phase 5; whether the accepted
+  `CoalitionalGame` is sufficient for the Shapley value, its efficiency,
+  symmetry, null-player, and additivity laws, and the theorem that those laws
+  characterize it uniquely.
+- **Representative slice:** finite explicitly enumerable agents, marginal
+  contributions, unanimity games and their decomposition, the four Shapley
+  axioms, uniqueness on every coalitional game, and the existing three-agent
+  majority game as a concrete value calculation.
+- **Competing designs:** define the value by weighted marginal contributions;
+  average over arrival orders; or introduce extra linear/game-form structure
+  and characterize through it.
+- **Kill conditions:** the theorem needs strategies, outcomes, probability, or
+  `GameForm`; a second coalitional-game or allocation type appears; finiteness
+  must be stored in the game; the characterization requires a generic
+  certificate hierarchy; or the majority-game witness cannot use the existing
+  primitive unchanged.
+- **Evidence:** the pinned inventory is
+  `reference/GameTheory-v1/GameTheory/Cooperative/CoalitionalGame/Core.lean`
+  and `Shapley.lean` at
+  `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`; the adapted construction and
+  characterization are `GameTheory/Core/Shapley.lean`, and the discriminating
+  endpoint is `GameTheory/Tests/Shapley.lean`. `lake build
+  GameTheory.Tests.Shapley` completed in 1,070 jobs. Axiom checks for
+  `shapleyValue_efficient` and `shapleyValue_characterization` report only
+  `propext`, `Classical.choice`, and `Quot.sound`; `Shapley` rejects probes for
+  `FinDist`, `GameForm`, and `Polynomial`. All four phase audits passed with
+  their expected measurements and reachability probes; the final `lake build`
+  completed cleanly in 3,283 jobs.
+- **Observation:** the weighted marginal formula, four named rule properties,
+  unanimity-basis decomposition, and uniqueness theorem all use the existing
+  `CoalitionalGame` and `Allocation`. Explicit `Fintype` enumeration is needed
+  by the value and theorems but is not stored in the game. The existing
+  majority game is unchanged: its core is empty, its Shapley allocation pays
+  each agent `1/3`, and every rule satisfying the four axioms agrees with it.
+  The imported proof path is finite algebra only; probability, game forms,
+  topology, and the analytic dependency remain unreachable.
+- **Outcome:** supports D0's parallel-primitive decision. None of the kill
+  conditions fired, and no new semantic wrapper or certificate hierarchy was
+  introduced.
+- **Next action:** treat the Shapley axis as closed and continue with the next
+  Phase 5 stress theorem.
