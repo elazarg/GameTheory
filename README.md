@@ -4,18 +4,30 @@ Greenfield Lean 4 game-theory library built on Mathlib.
 
 The architecture spike in [`docs/GameTheory2Design.md`](docs/GameTheory2Design.md)
 has passed Phase 0 (architecture evidence), Phase 1 (core competition), and
-Phase 2 (incentive vertical slice). Phase 3, the sequential slice, has not
-started.
+Phase 2 (incentive vertical slice). Phase 3 (the sequential slice) passed, the
+Phase 4 static theorem harvest is complete, and Phase 5 is open as a design
+stress test under new theorem families.
 
 ```text
 GameTheory/Probability   finite-support probability laws (FinDist)
 GameTheory/Core          signatures, profiles, forms, preferences, utility,
-                         deviation schemes, equilibrium, response concepts
+                         deviations, equilibrium and response concepts, static
+                         game theory, and foundational social/coalitional theory
+GameTheory/Protocol      execution, histories, information, assessment,
+                         randomization, and static-form compilation
 GameTheory/Finite        executable rational frontend and its correctness layer
+GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
+GameTheory/Languages     scoped language encodings with recorded limitations
 GameTheory/Examples      reader-facing examples with #eval and #guard tests
 GameTheory/Tests         architecture and locality tests
 GameTheory/Experimental  architecture spikes, never re-exported
 ```
+
+The root `GameTheory` import re-exports Core, Protocol, and Finite. Analysis is
+stable but deliberately opt-in so its fixed-point and topology dependencies
+cannot leak across the audited boundary; Languages and Experimental also stay
+outside the root for the separate reasons recorded in their modules. Examples
+and Tests compile in the default library target but are not public-root imports.
 
 The ignored `reference/GameTheory-v1/` directory is an exact source snapshot of
 the previous library at commit `a3d8c67ed91d58e197b8c978ddcc00ba96f87c29`.
@@ -37,7 +49,9 @@ lake build
 pwsh -NoProfile -File scripts/phase0-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase1-audit.ps1 -VerifyExpected
 pwsh -NoProfile -File scripts/phase2-audit.ps1 -VerifyExpected
+pwsh -NoProfile -File scripts/phase3-audit.ps1 -VerifyExpected
 ```
 
 `lake build` compiles every module, including examples, tests, and experiments.
-The phase audits re-check the measurements each gate was decided on.
+The phase audits re-check the measurements each architecture gate was decided
+on; Phase 4 and Phase 5 add no separate audit script.

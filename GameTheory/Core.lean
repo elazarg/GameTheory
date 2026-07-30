@@ -1,15 +1,16 @@
 /-
 # `GameTheory.Core`
 
-The static semantic core: signatures and profiles, finite-support laws, game
-forms, preferences, utility evaluation, local deviation schemes, the single
-equilibrium predicate, the profile-quantified response family, and potentials —
-the one structure at this layer that makes a pure equilibrium exist.
+The stable foundation and static theory: signatures and profiles, game forms,
+preferences and utility evaluation, local deviation schemes, the single
+equilibrium predicate, response concepts, potentials, mixed and zero-sum
+games, social choice, and foundational coalitional games.
 
-Core imports no language front-end and no fixed-point or convexity theory.
-Existence results and the heavier solution concepts are built on top of the core
-rather than inside it, so that reading a definition never costs the machinery
-some later theorem about it happens to need.
+Not every concept here is forced through `GameForm`: a coalitional game has no
+strategies or outcome law and is deliberately a parallel primitive. Core
+imports no protocol, language front-end, executable frontend, or fixed-point
+and topology dependencies. Analytic existence results live above it, so reading
+a definition never costs the machinery a later theorem happens to need.
 -/
 
 import GameTheory.Core.Signature

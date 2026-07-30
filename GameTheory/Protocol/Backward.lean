@@ -213,20 +213,15 @@ theorem backwardValue_of_not_terminal {source : E.State} (hterm : ¬ E.terminal 
 
 Checking a strategy against every alternative strategy is checking infinitely
 many things; checking it against every alternative *action*, one step at a time,
-is checking finitely many. The principle below says the second suffices, and the
-certificate that makes it true is the same well-foundedness the backward
-recursion already needs — nothing further is assumed.
+is checking finitely many. The principle below says the two tests are
+equivalent, and the certificate that makes the sufficient direction work is the
+same well-foundedness the backward recursion already needs — nothing further is
+assumed.
 
 What makes it non-circular is that the one-step comparison is made against the
 chooser's *own* continuation value. A chooser that cannot improve on itself by
 changing one action, given that it will go on playing as it does, cannot be
-improved on by any other chooser at all.
-
-Only the sufficient direction is proved. The converse would need, for one state
-and one alternative action, a chooser that takes that action there and plays as
-the original does everywhere else — a pointwise update of a dependent function,
-which transports along an equality of states and is not available in this
-layer. -/
+improved on by any other chooser at all. -/
 
 variable (E) in
 /-- No single legal action, substituted at one state and followed by the

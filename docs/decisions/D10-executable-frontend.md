@@ -31,7 +31,7 @@ implementation" holds across both layers.
 | `strictlyDominates` | `strictlyDominates_eq_true_iff` |
 | `isDominant`, `isDominantProfile` | `isDominantProfile_eq_true_iff` |
 | `paretoDominates`, `isParetoEfficient` | `paretoDominates_eq_true_iff`, `isParetoEfficient_eq_true_iff` |
-| `eliminateRound`, `survivors` | `mem_survivors_iff` |
+| `eliminateRound`, `survivors`, `survivorsStable` | `mem_survivors_iff`, `survivorsStable_eq_true_iff`, `semantic_survivors_add_eq_of_survivorsStable` |
 | `expectedPayoff`, `verifyMixedNash` | `expectedUtility_toMixed`, `verifyMixedNash_eq_true_iff` |
 
 `verifyMixedNash_eq_true_iff` is the D2 kill test "NFG mixed extension using the

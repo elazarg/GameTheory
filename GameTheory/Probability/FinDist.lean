@@ -416,6 +416,51 @@ theorem expect_bind (μ : FinDist α) (f : α → FinDist β) (u : β → ℝ) :
   rw [hjoint.tsum_comm' hrow hcol]
   exact tsum_congr fun a => by rw [← tsum_mul_left]
 
+/-- Expectation is monotone branchwise for support-dependent composition.
+
+The continuations may use the evidence that their input occurs. Extending each
+one arbitrarily off the support reduces the statement to ordinary
+`expect_bind`; the extension is invisible because those inputs have zero mass. -/
+theorem expect_bindOnSupport_mono {μ : FinDist α}
+    {f g : ∀ a ∈ μ.support, FinDist β} {u : β → ℝ}
+    (h : ∀ a (ha : a ∈ μ.support), expect (f a ha) u ≤ expect (g a ha) u) :
+    expect (μ.bindOnSupport f) u ≤ expect (μ.bindOnSupport g) u := by
+  classical
+  obtain ⟨fallback, hfallback⟩ := μ.support_nonempty
+  let f' : α → FinDist β := fun a =>
+    if ha : a ∈ μ.support then f a ha else f fallback hfallback
+  let g' : α → FinDist β := fun a =>
+    if ha : a ∈ μ.support then g a ha else g fallback hfallback
+  rw [bindOnSupport_eq_bind_of_eq_on_support
+      (g := f') (fun a ha => by simp [f', ha]),
+    bindOnSupport_eq_bind_of_eq_on_support
+      (g := g') (fun a ha => by simp [g', ha]),
+    expect_bind, expect_bind]
+  exact expect_mono fun a ha => by
+    simpa [f', g', ha] using h a ha
+
+/-- Two support-dependent compositions have the same expectation when their
+branch expectations agree. The branch laws and their evaluated outcome types
+may differ; only the resulting real values are compared. -/
+theorem expect_bindOnSupport_congr {μ : FinDist α}
+    {f : ∀ a ∈ μ.support, FinDist β} {g : ∀ a ∈ μ.support, FinDist γ}
+    {u : β → ℝ} {v : γ → ℝ}
+    (h : ∀ a (ha : a ∈ μ.support), expect (f a ha) u = expect (g a ha) v) :
+    expect (μ.bindOnSupport f) u = expect (μ.bindOnSupport g) v := by
+  classical
+  obtain ⟨fallback, hfallback⟩ := μ.support_nonempty
+  let f' : α → FinDist β := fun a =>
+    if ha : a ∈ μ.support then f a ha else f fallback hfallback
+  let g' : α → FinDist γ := fun a =>
+    if ha : a ∈ μ.support then g a ha else g fallback hfallback
+  rw [bindOnSupport_eq_bind_of_eq_on_support
+      (g := f') (fun a ha => by simp [f', ha]),
+    bindOnSupport_eq_bind_of_eq_on_support
+      (g := g') (fun a ha => by simp [g', ha]),
+    expect_bind, expect_bind]
+  exact expect_congr fun a ha => by
+    simpa [f', g', ha] using h a ha
+
 @[simp]
 theorem expect_map (f : α → β) (μ : FinDist α) (u : β → ℝ) :
     expect (map f μ) u = expect μ (fun a => u (f a)) := by

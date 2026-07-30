@@ -3,7 +3,8 @@
 - **Status:** decided for v1 — general-state execution as the primary
   interface, finite-first trees retained as a derived presentation
 - **Date:** 2026-07-27
-- **Experiment IDs:** EXP-010, EXP-011, EXP-012
+- **Experiment IDs:** EXP-010, EXP-011, EXP-012; post-decision evidence
+  EXP-016, EXP-017, EXP-018, EXP-021, EXP-025
 
 **Decision:** Execution and information are separate interfaces. The primary
 execution interface is the general-state `ExecutionProtocol`. The finite-first
@@ -95,12 +96,19 @@ example.
 ## Consequences for public API
 
 Execution and information stay separate structures; the information model
-consumes `StepEvent` and never redefines a transition. Histories are
-`Type`-valued, so `IsTreeShaped` is a real statement and a merging arena
-refutes it. `BoundedHorizon` is a predicate over reachable traces, never a
-stored field. Strategies over a protocol are `SiteStrategy`, indexed by
-reachable decision sites; `Chooser` remains the runner's input, and
-`runFor_congr_of_restrict_eq` connects them.
+consumes `StepEvent` and never redefines a transition. `Trace` is `Type`-valued,
+so `IsTreeShaped` is a real statement and a merging arena refutes it.
+`BoundedHorizon` is a predicate over reachable traces, never a stored field.
+
+The strategy types are deliberately attached to the operation that needs them.
+`SiteStrategy` is the finite extracted strategy over reachable decision sites;
+`Chooser` drives the state-indexed runner; `HistoryChooser` drives the
+history-indexed runner. An `InformationModel.Policy` receives only its
+`InfoState`, while `BehavioralPolicy` randomizes at each information state and
+`MixedPolicy` draws a deterministic policy once. The corresponding history-law
+runners are all present, and point-mass and pushforward theorems connect them
+to the simpler runners. No one of these types is the universal definition of
+"strategy."
 
 Two costs are recorded rather than hidden. The information model's `menu`
 ranges over `Option (Action i)`, committing the design to "the information state
@@ -109,8 +117,30 @@ inlined `∀ i, match …`, so its pointwise form is not definitionally equal an
 needed a one-off case split; a later refactor to `∀ i, LegalOption …` would
 remove that friction.
 
-## Still open
+## Post-decision close-out
 
-D6 is decided; D7 is not. The assessment and one-shot-deviation slice and both
-language encodings have since been recorded, so what remains is the
-certificate-versus-direct-bridge measurement. D0 is not final until that exists.
+D7 has since been rejected for v1 and D0 is final; neither status remains open.
+The post-decision history and randomized runners close the execution mismatch
+that was recorded at the gate. Both behavioral/mixed directions now hold at the
+history-law level, under their distinct no-revisit and recall-like conditions,
+and the one-shot principle for state-indexed choosers is an equivalence under
+`WellFoundedPlay`.
+
+The composed compiler is now present too. `InformationModel.toGameForm`
+compiles pure information-local policies with full histories as outcomes;
+`toBehavioralGameForm` compiles local randomization; and the ordinary static
+mixed extension is exactly `runMixed`. Their named evaluation and
+behavioral/mixed commutation theorems use the existing runners. The
+finite-horizon information-local one-shot theorem proves that local one-shot
+optimality at every history defeats every whole replacement policy, and its
+compiler corollary is ordinary static `IsNash`. The actual history continuation
+is packaged as `historyContext`, and the quantified premise is equivalent to
+`IsSequentiallyRationalAt` in that context at every history and remaining
+horizon.
+
+The remaining SPE-style theorem does not reopen D6. There is no public
+subgame-perfect-equilibrium predicate or full well-founded
+`oneShotDeviation_iff_spe` analogue. No converse from initial static Nash is
+claimed: unlike the one-shot condition, that predicate does not inspect every
+off-path history. This is downstream semantics over the accepted execution and
+information interfaces, not a missing execution representation.

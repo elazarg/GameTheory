@@ -136,6 +136,47 @@ theorem mem_survivors_iff (G : TableGame ι) :
     exact and_congr (ih i s)
       (forall_congr' fun t => imp_congr (ih i t) (not_congr (hdom t)))
 
+/-- The executable stability test is true exactly when the canonical semantic
+survivor sets have reached a fixed point. -/
+theorem survivorsStable_eq_true_iff (G : TableGame ι) (round : ℕ) :
+    G.survivorsStable round = true ↔
+      ∀ i, _root_.GameTheory.survivors G.toForm (euPreference G.utility) (round + 1) i =
+        _root_.GameTheory.survivors G.toForm (euPreference G.utility) round i := by
+  rw [survivorsStable, decide_eq_true_eq]
+  constructor
+  · intro hstable i
+    ext s
+    rw [← mem_survivors_iff G, ← mem_survivors_iff G, hstable i]
+  · intro hstable i
+    apply Finset.ext
+    intro s
+    rw [mem_survivors_iff G, mem_survivors_iff G, hstable i]
+
+/-- Once the executable survivor iteration reaches a fixed point, every later
+round returns the same finite survivor family. -/
+theorem survivors_add_eq_of_survivorsStable (G : TableGame ι) {round : ℕ}
+    (hstable : G.survivorsStable round = true) (later : ℕ) :
+    G.survivors (round + later) = G.survivors round := by
+  rw [survivorsStable, decide_eq_true_eq] at hstable
+  have hstep : G.survivors (round + 1) = G.survivors round :=
+    funext hstable
+  induction later with
+  | zero => simp
+  | succ later ih =>
+    rw [Nat.add_succ, survivors, ih]
+    simpa only [survivors] using hstep
+
+/-- In particular, executable stability certifies stabilization of the
+canonical semantic survivor iteration at every later round. -/
+theorem semantic_survivors_add_eq_of_survivorsStable (G : TableGame ι) {round : ℕ}
+    (hstable : G.survivorsStable round = true) (later : ℕ) :
+    _root_.GameTheory.survivors G.toForm (euPreference G.utility) (round + later) =
+      _root_.GameTheory.survivors G.toForm (euPreference G.utility) round := by
+  funext i
+  ext s
+  rw [← mem_survivors_iff G, ← mem_survivors_iff G,
+    survivors_add_eq_of_survivorsStable G hstable later]
+
 /-! ## Pareto efficiency -/
 
 theorem paretoDominates_eq_true_iff (G : TableGame ι) (better worse : Profile G.sig) :

@@ -3,7 +3,11 @@
 Status: gate passed. Neither sequential kill criterion fired, D6 and D7 are
 decided, and D0 is final at every semantic level.
 
-## What was built
+## What was built at the gate
+
+This is the gate inventory. The history and randomized runners and the theorem
+close-outs added afterwards are recorded separately at the end rather than
+retroactively folded into the gate measurements.
 
 | Module | Contents |
 |---|---|
@@ -75,7 +79,7 @@ both native shapes fit a single execution base. The finalization also records
 what it does not rest on — two of the four frozen transfers were never built,
 and it carries a correction about what one of them would show.
 
-## Measurements
+## Measurements at the gate
 
 Reproduce with:
 
@@ -103,7 +107,11 @@ the marginal cost is. `Rounds.lean` is 158 lines and receives the run law,
 histories, reachability, backward induction, information locality, assessment,
 and compilation into the static core, contributing none of them.
 
-## Findings
+## Findings at the gate
+
+These findings describe the interface at the gate revision. Finding 4 is the
+one subsequently resolved in stages; the close-out records the replacement
+runners, compilers, and theorems without rewriting this evidence.
 
 1. **Legality including non-terminality turns an assumption into a theorem.**
    The obvious design stores `terminal_no_legal` as a field. Folding
@@ -158,9 +166,10 @@ idle player. Its recorded limit is that the middle state carries the round's
 *outcome* rather than its actions, so a game needing the exact previous profile
 would need a wider state.
 
-## Outstanding
+## Outstanding at the gate
 
-Nothing blocks the gate. What follows is carried forward:
+Nothing blocked the gate. These were the carry-forwards at that date; the
+close-out below records which have since been discharged.
 
 - A native extensive-form encoding with its own workaround list. The
   imperfect-information and chance protocols under `GameTheory/Tests/` exercise
@@ -182,21 +191,52 @@ Nothing blocks the gate. What follows is carried forward:
   measured. `GameTheory.Languages` stays outside the umbrella: those encodings
   are demonstrations with recorded scope limits, not coverage of their source
   formalisms.
-- **Done since the gate.** A history-indexed runner now exists in
-  `GameTheory/Protocol/History.lean`, and finding 4's first half is resolved: a
-  profile of information-local policies can be run. The state law is that law's
-  pushforward, so it is not a second semantics, and the gap it closes is
-  measured — the merging protocol in `Tests/History.lean` exhibits a profile
-  whose law no state-indexed chooser produces, together with a control profile
-  whose law one does. What remains of finding 4 is the one-shot-deviation
-  theorem, which now has the runner it was missing. The paragraph below is the
-  close-out item as it stood at the gate.
-- A trace-indexed runner is the single change that would remove the largest
-  remaining limitation. Finding 4 blocks two things at once: the strategic
-  compilation is restricted to state-indexed policies, and the one-shot
-  deviation *theorem* — local optimality at every information state implying
-  global optimality under `WellFoundedPlay` — cannot be stated, because it needs
-  a run law fed by history-indexed policies. A law over `Trace` with the state
-  law as its pushforward would lift both, and `infoOf` already recurses over
-  traces. Worth evaluating in the same pass that revisits signature ownership,
-  since both rest on how carriers are indexed.
+- **History-local execution is done (EXP-016).**
+  `GameTheory/Protocol/History.lean` runs a `HistoryChooser` and proves that,
+  when the chooser ignores history, pushing its history law forward along
+  `History.state` recovers `runFor`. It is therefore a refinement of the state
+  runner, not a second semantics. The merging test also shows why it is
+  necessary: an information-local profile can distinguish two histories that
+  reach one state and induce a law no state-indexed chooser induces.
+- **Randomized history-local execution is done (EXP-017).**
+  `GameTheory/Protocol/Randomized.lean` lets each history return a law over legal
+  joint actions. Point-mass answers recover the deterministic history runner by
+  theorem. `Information.lean` uses that runner for behavioral policies and uses
+  the deterministic history runner after one initial policy draw for mixed
+  policies.
+- **Both behavioral/mixed directions are done (EXP-017 and EXP-018).** Local
+  randomization becomes one draw over policies under
+  `ActsOnceWhereItMatters`; one draw becomes local randomization under
+  `ConstrainsAlike`, which perfect recall implies. The quotable result,
+  `runBehavioral_image_eq_runMixed_image`, equates the realizable sets of laws
+  over histories when both distinct conditions hold. This closes T2 as a
+  theorem about two representations in one information model, not as evidence
+  for a certificate layer.
+- **The state-chooser one-shot principle is an equivalence (EXP-021).**
+  Under `WellFoundedPlay`, `IsOneShotOptimal` implies that the chooser beats
+  every alternative chooser from every state, and the converse constructs
+  `deviateAt`. `Assessment.lean` reads the forward direction as local
+  optimality in a supplied context.
+- **Composed static compilation and its forward one-shot bridge are done
+  (EXP-025).** `InformationModel.toGameForm` gives players information-local
+  `Policy` strategies and retains full histories as outcomes;
+  `toBehavioralGameForm` presents behavioral policies, while the ordinary
+  mixed extension of the pure-policy form is definitionally `runMixed`. The
+  two sharp behavioral/mixed law theorems therefore commute with compilation
+  rather than being reproved for it. For finite horizons,
+  `IsOneShotOptimalWithin` quantifies over every history and every local
+  replacement choice. It implies that no whole replacement policy improves
+  expected payoff from any history, and
+  `isNash_toGameForm_of_isOneShotOptimalWithin` carries the from-start result
+  into the ordinary static `IsNash`. `historyContext` supplies the actual
+  profile-plus-continuation context at a history, and
+  `isOneShotOptimalWithin_iff_sequentiallyRationalAt_historyContext` identifies
+  the quantified one-shot premise exactly with `IsSequentiallyRationalAt` in
+  those contexts.
+- **What remains is the full well-founded SPE theorem, not a runner, compiler,
+  or context bridge.** The library has no subgame-perfect-equilibrium predicate
+  and no analogue of v1's `oneShotDeviation_iff_spe` beyond the finite-horizon
+  result above. In particular, no converse from initial static Nash is claimed:
+  initial Nash does not quantify over off-path histories, while the one-shot
+  condition does. The exact frozen T4 NFG-to-FOSG embedding also remains a
+  separate language theorem.

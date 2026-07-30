@@ -35,6 +35,7 @@ becomes difficult to scan.
 | EXP-022 | 2026-07-29 | D12 / Phase 4 | What does an existence theorem at the static layer cost in dependencies, and where should the boundary be drawn? | Refutes the planned route; redirects | measurement only; no code |
 | EXP-024 | 2026-07-29 | D4 / Phase 5 | Does the core's preference vocabulary serve a theorem with no probability in it, or was it quietly about lotteries? | Finds a defect; repaired | `GameTheory/Core/Preference.lean`; `GameTheory/Core/SocialChoice.lean`; `GameTheory/Examples/Voting.lean` |
 | EXP-023 | 2026-07-29 | D12 / Phase 4 | What does taking the fixed-point primitive from outside Mathlib cost, and does the boundary hold once it is taken? | Supports; reopens general existence | `lakefile.lean`; `lake-manifest.json`; [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md) |
+| EXP-025 | 2026-07-30 | D6 / Phase 5 close-out | Can information-local policies compile to the static core, with randomization and one-shot deviations commuting through the existing run laws? | Supports; narrows SPE remainder | `GameTheory/Protocol/Strategic.lean`; `GameTheory/Protocol/Assessment.lean`; `GameTheory/Tests/Strategic.lean`; `GameTheory/Tests/Assessment.lean` |
 
 ## Entry template
 
@@ -1475,3 +1476,68 @@ memory.
 - **Next action:** the repair makes Arrow's theorem statable; it does not make it
   proved. That is the honest next target on this axis, and it will exercise the
   vocabulary far harder than the paradox does.
+
+### EXP-025: information-local compilation and the one-shot bridge
+
+- **Date / revision:** 2026-07-30, working tree based on `ecc927b`
+- **Decision / question:** D6 and the RFC's composed execution/information
+  requirement; whether information-local pure, behavioral, and mixed policies
+  reach `GameForm` through the existing history run laws, and whether a
+  unilateral one-shot change has the same law before and after compilation.
+- **Representative slice:** compile a finite-horizon `InformationModel` with
+  strategies `Policy`, use `run`, `runBehavioral`, and `runMixed` as the only
+  evaluators, connect the two randomization representations to the compiled
+  form, and instantiate the bridge on the existing imperfect-information test
+  protocol.
+- **Evidence:** `GameTheory/Protocol/Strategic.lean`,
+  `GameTheory/Protocol/Assessment.lean`,
+  `GameTheory/Protocol/Information.lean`,
+  `GameTheory/Probability/FinDist.lean`,
+  `GameTheory/Tests/Strategic.lean`, and
+  `GameTheory/Tests/Assessment.lean`. Validation:
+  `lake build GameTheory.Protocol.Strategic`,
+  `lake build GameTheory.Tests.Strategic`,
+  `lake build GameTheory.Protocol.Assessment`,
+  `lake build GameTheory.Tests.Assessment`, and the final `lake build`
+  (3,278 jobs), all clean. The Phase 0 audit reported
+  `EXPECTED_MEASUREMENTS=ok`; the Phase 1, 2, and 3 audits each reported
+  `VERIFIED=1`.
+- **Observation:** the accepted interfaces carry the slice, with two useful
+  refinements exposed by the hostile cases.
+  1. Pure information-local policies compile through `run` with histories as
+     outcomes. Behavioral policies compile through `runBehavioral`, while the
+     ordinary mixed extension of the pure form is definitionally `runMixed`.
+     The two existing behavioral/mixed theorems commute with those forms under
+     their sharp `ActsOnceWhereItMatters` and `ConstrainsAlike` hypotheses. The
+     repeated-information-state counterexample still separates the forms when
+     the first hypothesis fails.
+  2. The old state-specialized `Context` could not express continuation values
+     after two histories merge into one state. Generalizing the same two-field
+     concept over its choice and outcome types lets `historyContext` retain the
+     history without exposing it to a policy. Menu legality is now carried by
+     the typed `Choice`; `IsOneShotOptimalWithin` is exactly
+     `IsSequentiallyRationalAt` in these contexts at every history and remaining
+     sub-horizon.
+  3. Two expectation laws for support-dependent bind are the only new
+     probability lemmas needed. Their branchwise monotonicity drives a
+     finite-horizon induction: if every current typed choice is locally
+     unimprovable, then every whole unilateral replacement policy is no better
+     from every history. The from-start corollary is the ordinary static
+     `IsNash` of `InformationModel.toGameForm`.
+  4. The concrete repeated-vote endpoint is nonvacuous: the accepted profile
+     has utility `1`, the down profile has utility `0`, arbitrary replacement
+     policies satisfy the global bound, and the compiled profile is Nash.
+     Source audits report zero sequential `Function.update`, transport,
+     placeholders, and custom axioms. The fixed-player operations require
+     decidable equality only for that player's information states.
+- **Outcome:** supports and closes the finite-horizon composed-compiler and
+  forward one-shot bridge. None of the kill conditions fired: no policy receives
+  hidden execution state, no evaluator or equilibrium concept is duplicated,
+  and no adequacy record or user-visible transport was introduced. The result
+  deliberately does not claim a converse from initial static Nash, which cannot
+  inspect off-path histories.
+- **Next action:** the remaining sequential theorem is now sharply separate:
+  define a genuine subgame-perfect/sequential-equilibrium target before asking
+  for a well-founded `oneShotDeviation_iff_spe`. Do not present initial Nash as
+  that target. The compiler, finite-horizon context equivalence, and forward
+  global theorem are no longer blockers to the next architecture slice.

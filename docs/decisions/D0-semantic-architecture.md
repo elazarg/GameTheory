@@ -1,8 +1,12 @@
 # D0: semantic architecture by level
 
-**Decision:** Provisionally select a stratified hybrid for static outcome-law
-semantics and coordinated native branches for protocol/information semantics.
-Do not select a generic certificate hierarchy yet.
+**Status:** final at every semantic level; the Phase 3 finalization below
+supersedes the provisional Phase 0 choice.
+
+**Phase 0 provisional decision:** Select a stratified hybrid for static
+outcome-law semantics and coordinated native branches for protocol/information
+semantics. Do not select a generic certificate hierarchy yet. The final
+decision, after Phase 3, is recorded below.
 
 **Experiment IDs:** EXP-001
 
@@ -111,31 +115,47 @@ certificate level can beat.
 
 ### What the finalization does not rest on
 
-Phase 0 froze four transfers, T1–T4, as the intended yardstick. Phase 3 measured
-the T1 and T3 shapes: strategy extraction over a protocol's own decision sites,
-and a diagram compiled to a static outcome law consumed by the static
-equilibrium concepts. T2, both directions of Kuhn, and T4, the one-shot
-embedding commuting with compilation, were not built, so this decision rests on
-the greenfield measurements rather than on reproducing all four.
+Phase 0 froze four transfers, T1–T4, as the intended yardstick. At finalization,
+Phase 3 had measured the T1 and T3 shapes: strategy extraction over a protocol's
+own decision sites, and a diagram compiled to a static outcome law consumed by
+the static equilibrium concepts. T2, both directions of Kuhn, and T4, the
+one-shot embedding commuting with compilation, had not been built, so this
+decision did not rest on reproducing all four.
 
 That gap is not incidental: T2 is the one frozen transfer whose real
 obligations the snapshot shows to be much larger than its name.
 
 **Correction (2026-07-29).** This paragraph originally also claimed T2 was the
-reopening condition for the certificate decision. Half of T2 has since been
-built, and that claim was wrong. The behavioral/mixed equivalence is a theorem
-about two strategy *representations* within one information model, not a
-transfer between two languages, so both sides of it live in the same layer and
+reopening condition for the certificate decision. Once its first direction was
+built, that claim was visibly wrong. The behavioral/mixed equivalence is a
+theorem about two strategy *representations* within one information model, not
+a transfer between two languages, so both sides live in the same layer and
 neither needs a witness — the same reason the compiled languages needed none.
-D7's reopening condition remains unmet, and no experiment currently in view
-meets it. T2 is worth building on its own merits, as a test of whether the
-accepted interfaces can carry a real theorem; it is not evidence about
-certificates either way.
 
-The protocol-level acceptance also carries a recorded scope limit:
-information-local policies are indexed by history while the runner is indexed by
-state, so the compilation into the static core covers the perfect-information
-case. Lifting it needs a trace-indexed run law.
+**Close-out (2026-07-30).** T2 is now built in both directions at the stronger
+history-law level. Local randomization is representable by one policy draw
+under `ActsOnceWhereItMatters`; one policy draw is representable by local
+randomization under `ConstrainsAlike`, which perfect recall implies; and the
+sets of realizable laws are equal when both conditions hold. D7's reopening
+condition remains unmet, because this is still a same-layer representation
+theorem. T4 remains outside the evidence on which D0 was finalized.
+
+The execution-side scope limit recorded at finalization is now closed.
+`History.lean` and `Randomized.lean` run information-local deterministic,
+behavioral, and mixed policies over histories, with pushforward and point-mass
+compatibility theorems. `InformationModel.toGameForm` compiles pure policies
+with histories as outcomes, its ordinary mixed extension is the existing
+mixed-policy runner, and a separate behavioral form is connected by the two
+sharp correspondence theorems.
+
+The finite-horizon information-local one-shot theorem also reaches the
+compiler: one-shot optimality at every history defeats every whole replacement
+policy and implies ordinary static Nash. Its `historyContext` packages the
+actual continuation at a history, and the one-shot premise is equivalent to
+`IsSequentiallyRationalAt` in those contexts. This is not yet a full
+well-founded `oneShotDeviation_iff_spe`: there is no SPE predicate, and no
+converse from initial static Nash is claimed because it does not quantify over
+off-path histories.
 
 ### Unexpected cost from Phase 0, resolved
 
@@ -146,8 +166,9 @@ equilibrium predicate.
 
 ### Consequences for public API
 
-`GameTheory.Core` and `GameTheory.Protocol` are both public, and `Protocol`
-compiles into `Core` by an ordinary function with a named evaluation theorem.
-There is no `Adequacy` record at any level, no user-visible transport, and no
-theorem stored as a certificate field. Language encodings stay outside the
-public umbrella until one of them covers its source formalism.
+`GameTheory.Core` and `GameTheory.Protocol` are both public. Both a bare
+`ExecutionProtocol` and a composed `InformationModel` compile into `Core` by
+ordinary functions with named evaluation theorems. There is no `Adequacy`
+record at any level, no user-visible transport, and no theorem stored as a
+certificate field. Language encodings stay outside the public umbrella until
+one of them covers its source formalism.

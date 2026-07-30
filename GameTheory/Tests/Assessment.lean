@@ -13,6 +13,7 @@ field and varies the other.
 -/
 
 import GameTheory.Protocol.Assessment
+import GameTheory.Tests.Randomized
 
 noncomputable section
 
@@ -164,5 +165,183 @@ theorem belief_matters :
         prefersLeft).value (some .up) := by
   rw [ofBelief_value_pure, ofBelief_value_pure]
   simp [prefersLeft]
+
+/-! ## Probe 5: information-local one-shot optimality reaches compiled Nash
+
+The repeated-vote information model is hostile to a merely initial-history
+argument: the same player can be at either of two nonterminal histories, and
+the one-shot premise must cover both. At horizon one, always voting up is
+locally optimal at every such history when utility rewards the vote just made.
+The generic bridge then controls every replacement policy and proves ordinary
+Nash in the compiled `GameForm`.
+-/
+
+namespace AssessmentBridge
+
+open Repeat
+open GameTheory.Protocol.ExecutionProtocol (History)
+
+/-- Vote up at the continuing information state and do nothing after play
+stops. -/
+def upPolicy : model.Policy () := fun info =>
+  match info with
+  | false => ⟨some .up, by simp [menuAt]⟩
+  | true => ⟨none, by simp [menuAt]⟩
+
+/-- The one-player profile using `upPolicy`. -/
+def upProfile : Profile model.strategicSignature := fun _ => upPolicy
+
+/-- The comparison profile that votes down. -/
+def downPolicy : model.Policy () := fun info =>
+  match info with
+  | false => ⟨some .down, by simp [menuAt]⟩
+  | true => ⟨none, by simp [menuAt]⟩
+
+/-- The one-player profile using `downPolicy`. -/
+def downProfile : Profile model.strategicSignature := fun _ => downPolicy
+
+/-- Reward an up vote when it is the most recent vote in the reached state. -/
+def upStateUtility : Round → ℝ
+  | .after .up => 1
+  | .done _ .up => 1
+  | _ => 0
+
+/-- The corresponding utility on compiled history outcomes. -/
+def upUtility (h : History twice) (_ : Unit) : ℝ :=
+  upStateUtility h.state
+
+/-- At every nonterminal history, the typed up choice is locally optimal in
+the actual history context. The payoff bound handles every typed alternative;
+the existing one-step run theorem computes the baseline value. -/
+theorem up_sequentiallyRationalAt_historyContext :
+    ∀ fuel, fuel < 1 → ∀ (h : History twice)
+      (hterm : ¬ twice.terminal h.state),
+        model.IsSequentiallyRationalAt
+          (upProfile ()) (model.infoOf () h.trace)
+          (model.historyContext upProfile ()
+            (fun outcome => upUtility outcome ()) fuel h hterm) := by
+  intro fuel hfuel h hterm
+  have hfuel0 : fuel = 0 := by omega
+  subst fuel
+  have hstopped : h.state.stopped = false := by
+    cases hstopped : h.state.stopped
+    · rfl
+    · exact absurd hstopped hterm
+  have hup : (upProfile () false).1 = some Vote.up := rfl
+  intro alternative _
+  rw [InformationModel.historyContext_value,
+    InformationModel.historyContext_value,
+    InformationModel.oneShotLaw_self]
+  calc
+    (model.oneShotLaw upProfile 0 h hterm () alternative).expect
+          (fun outcome => upUtility outcome ()) ≤
+        (model.oneShotLaw upProfile 0 h hterm () alternative).expect
+            (fun _ => 1) := by
+              apply FinDist.expect_mono
+              intro outcome _
+              rcases outcome with ⟨state, outcomeTrace⟩
+              cases state with
+              | start => norm_num [upUtility, upStateUtility]
+              | after vote =>
+                  cases vote <;> norm_num [upUtility, upStateUtility]
+              | done first second =>
+                  cases second <;> norm_num [upUtility, upStateUtility]
+    _ = 1 := FinDist.expect_const ..
+    _ = (model.runFrom upProfile 1 h).expect
+          (fun outcome => upUtility outcome ()) := by
+      have hvalue : upStateUtility (stepTo h.state Vote.up) = 1 := by
+        cases hstate : h.state with
+        | start => rfl
+        | after first => rfl
+        | done first second =>
+            simp [hstate, Round.stopped] at hstopped
+      calc
+        1 = (FinDist.pure (stepTo h.state Vote.up)).expect
+            upStateUtility := by
+              simp [hvalue]
+        _ = (FinDist.map History.state
+              (model.runFrom upProfile 1 h)).expect upStateUtility := by
+                rw [map_state_runFrom_one upProfile Vote.up hup h hstopped]
+        _ = (model.runFrom upProfile 1 h).expect
+            (fun outcome => upUtility outcome ()) := by
+              rw [FinDist.expect_map]
+              rfl
+
+/-- The history-context characterization packages the concrete local proof as
+finite-horizon one-shot optimality. -/
+theorem up_isOneShotOptimalWithin :
+    model.IsOneShotOptimalWithin upProfile ()
+      (fun outcome => upUtility outcome ()) 1 := by
+  rw [InformationModel.isOneShotOptimalWithin_iff_sequentiallyRationalAt_historyContext]
+  exact up_sequentiallyRationalAt_historyContext
+
+/-- The generic global bridge now controls an arbitrary replacement policy,
+including policies that reach a different continuation history. -/
+theorem arbitrary_policy_update_no_better (alternative : model.Policy ()) :
+    (model.runFrom (Profile.update upProfile () alternative) 1
+        twice.initHistory).expect (fun outcome => upUtility outcome ()) ≤
+      (model.runFrom upProfile 1 twice.initHistory).expect
+        (fun outcome => upUtility outcome ()) :=
+  model.expect_runFrom_update_le_of_isOneShotOptimalWithin
+    upProfile () (fun outcome => upUtility outcome ()) 1
+    up_isOneShotOptimalWithin alternative (le_refl 1) twice.initHistory
+
+/-- The optimal profile has value one in the compiled form. -/
+theorem up_expectedUtility :
+    expectedUtility upUtility ()
+      ((model.toGameForm 1).play upProfile) = 1 := by
+  rw [InformationModel.toGameForm_play]
+  unfold expectedUtility InformationModel.run
+  calc
+    (model.runFrom upProfile 1 twice.initHistory).expect
+        (fun outcome => upUtility outcome ()) =
+      (FinDist.map History.state
+        (model.runFrom upProfile 1 twice.initHistory)).expect
+          upStateUtility := by
+            rw [FinDist.expect_map]
+            rfl
+    _ = 1 := by
+      rw [map_state_runFrom_one upProfile Vote.up rfl
+        twice.initHistory rfl]
+      norm_num [stepTo, upStateUtility]
+
+/-- The down profile has value zero, so optimality is not vacuous. -/
+theorem down_expectedUtility :
+    expectedUtility upUtility ()
+      ((model.toGameForm 1).play downProfile) = 0 := by
+  rw [InformationModel.toGameForm_play]
+  unfold expectedUtility InformationModel.run
+  calc
+    (model.runFrom downProfile 1 twice.initHistory).expect
+        (fun outcome => upUtility outcome ()) =
+      (FinDist.map History.state
+        (model.runFrom downProfile 1 twice.initHistory)).expect
+          upStateUtility := by
+            rw [FinDist.expect_map]
+            rfl
+    _ = 0 := by
+      rw [map_state_runFrom_one downProfile Vote.down rfl
+        twice.initHistory rfl]
+      norm_num [stepTo, upStateUtility]
+
+/-- The concrete alternative is strictly worse. -/
+theorem up_strictly_better_than_down :
+    expectedUtility upUtility ()
+        ((model.toGameForm 1).play downProfile) <
+      expectedUtility upUtility ()
+        ((model.toGameForm 1).play upProfile) := by
+  rw [down_expectedUtility, up_expectedUtility]
+  norm_num
+
+/-- **Hostile endpoint.** Concrete local rationality at every history implies
+ordinary Nash for the information-local compiled game. -/
+theorem up_isNash :
+    IsNash (model.toGameForm 1) (euPreference upUtility) upProfile := by
+  apply model.isNash_toGameForm_of_isOneShotOptimalWithin
+  intro who
+  cases who
+  exact up_isOneShotOptimalWithin
+
+end AssessmentBridge
 
 end GameTheory.Tests

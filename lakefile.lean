@@ -4,6 +4,7 @@ open Lake DSL
 
 abbrev gameTheoryLeanOptions : Array LeanOption := #[
   ⟨`pp.unicode.fun, true⟩,
+  ⟨`warningAsError, true⟩,
   ⟨`relaxedAutoImplicit, false⟩,
   ⟨`maxSynthPendingDepth, .ofNat 3⟩
 ]

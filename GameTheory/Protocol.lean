@@ -13,11 +13,15 @@ pushforward. `Randomized` lets the answer at a history be a law rather than a
 single action, with deterministic play as the point-mass case. `Information`
 keeps a policy's domain to what its owner can see, by typing rather than by a
 side condition, and is where a player's randomness is placed either at each
-information state or once over whole policies. `Backward` supplies the
-well-founded recursion and proves it computes the same value as the fuelled
-runner.
-`Strategic` compiles a protocol into a static `GameForm`, which is where this
-layer meets `GameTheory.Core`.
+information state or once over whole policies. `Assessment` packages a typed
+choice and continuation as a context; its finite-horizon history context
+identifies sequential rationality with information-local one-shot optimality.
+`Backward` supplies the well-founded recursion and proves it computes the same
+value as the fuelled runner.
+`Strategic` compiles both state-indexed protocol policies and information-local
+pure and behavioral policies into static `GameForm`s. The ordinary mixed
+extension of the information-local pure form is exactly the existing mixed
+history runner, so compilation introduces no parallel evaluator.
 
 `Tree` is the derived finite-first presentation. It is faithful only where no
 two players move at once, so it is a convenience for single-mover games rather

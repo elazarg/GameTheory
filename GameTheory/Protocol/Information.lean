@@ -346,6 +346,38 @@ theorem Policy.act_eq_of_infoOf_eq {i : ι} (policy : M.Policy i)
     policy.act (M.infoOf i traceFirst) = policy.act (M.infoOf i traceSecond) :=
   congrArg policy.act hinfo
 
+/-- Change one information-local choice and leave every other information state
+untouched. The dependent coordinate is split and reassembled by an equivalence,
+so no transport appears in the public operation. -/
+def Policy.replaceAt {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.Policy i) (info : M.InfoState i) (choice : M.Choice i info) :
+    M.Policy i :=
+  (Equiv.piSplitAt info fun w => M.Choice i w).symm
+    (choice, fun w => policy w.1)
+
+@[simp]
+theorem Policy.replaceAt_self {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.Policy i) (info : M.InfoState i) (choice : M.Choice i info) :
+    policy.replaceAt info choice info = choice := by
+  simp [Policy.replaceAt]
+
+@[simp]
+theorem Policy.replaceAt_of_ne {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.Policy i) (info : M.InfoState i) (choice : M.Choice i info)
+    {other : M.InfoState i} (hne : other ≠ info) :
+    policy.replaceAt info choice other = policy other := by
+  simp [Policy.replaceAt, hne]
+
+@[simp]
+theorem Policy.replaceAt_eq_self {i : ι} [DecidableEq (M.InfoState i)]
+    (policy : M.Policy i) (info : M.InfoState i) :
+    policy.replaceAt info (policy info) = policy := by
+  funext other
+  by_cases hsame : other = info
+  · subst other
+    exact policy.replaceAt_self info (policy info)
+  · exact policy.replaceAt_of_ne info (policy info) hsame
+
 variable (M)
 
 /-- The joint action a profile of information-local policies takes after a

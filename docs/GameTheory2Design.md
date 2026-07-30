@@ -106,26 +106,29 @@ sequential rationality, or causal claims. Sequential languages retain their
 protocol semantics and expose a forgetful compilation to `GameForm` only when
 that compilation supports named downstream theorems.
 
-Cooperative games, matching, and bargaining remain a parallel branch. They do
-not acquire artificial strategy profiles merely to fit this diagram.
+Coalitional games, matching, and bargaining remain a parallel semantic branch.
+The foundational characteristic-function game and its core live in
+`GameTheory.Core.Coalitional`; they do not acquire artificial strategy profiles
+merely to fit this diagram. Larger cooperative developments may still warrant
+their own dependency root.
 
 ## 4. Decision summary
 
-| ID | Default decision | Status | Fastest serious test |
+| ID | Current/default decision | Status | Fastest serious test |
 |---|---|---|---|
-| D0 | Prefer a stratified hybrid over a universal hub or coordinated-only branches | Experiment-gated | Mine the existing hub, price direct bridges, and prototype only the hybrid |
-| D1 | Bind profiles to a signature; test whether forms index or store that signature | Experiment-gated | Implement six core operations in indexed and bundled-signature prototypes |
-| D2 | Use finite-support laws in the main core; choose their representation experimentally | Experiment-gated | Compare a finite-support `PMF` subtype with normalized `Finsupp`, including their finite-carrier simplex bridge |
-| D3 | Do not introduce a generic probability-monad class in v1 | Adopt | Revisit only after a second probability model shares three nontrivial theorems |
-| D4 | Separate `GameForm`, preferences, and utility evaluation | Adopt | Define Nash, CE, welfare, and utility invariance without duplicate predicates |
-| D5 | Define equilibrium once from local, law-linear deviations; keep profile-quantified response concepts distinct | Provisional | Express five equilibria plus best response, dominance, and one Bayesian slice |
-| D6 | Separate execution protocols from information models | Provisional | Compare both execution orders on terminal, chance, locality, and assessment tests |
-| D7 | If D0 selects the hybrid, stratify semantic certificates | Experiment-gated | Compare certificate composition with a bespoke direct-bridge baseline |
-| D8 | Keep only a minimal transformation taxonomy | Adopt | Prove relabeling, reindexing, mixed lifting, and equilibrium transport |
-| D9 | Treat finiteness as independent capabilities | Adopt | Audit assumptions in the vertical slices |
-| D10 | Add a separate rational, finite, executable frontend | Adopt | `#eval` pure Nash/dominance and prove the output specification |
-| D11 | Keep measurable and infinite-path probability outside v1 | Adopt | A later isolated measurable-kernel spike may reopen this decision |
-| D12 | Split general mathematics, challenges, and frontier research from the stable core | Adopt | Enforce trust, dependency, documentation-sync, and cold-build tests |
+| D0 | Share static forms, incentive logic, and one execution base; use direct named bridges | Final | Mine the existing hub, price direct bridges, and prototype only the hybrid |
+| D1 | Bind profiles to a signature and store that signature in each form | Decided | Implement six core operations in indexed and bundled-signature prototypes |
+| D2 | Represent finite-support laws by a finite-support `PMF` subtype | Adopted | Compare a finite-support `PMF` subtype with normalized `Finsupp`, including their finite-carrier simplex bridge |
+| D3 | Do not introduce a generic probability-monad class in v1 | Adopted | Revisit only after a second probability model shares three nontrivial theorems |
+| D4 | Separate `GameForm`, preferences, and utility evaluation | Adopted | Define Nash, CE, welfare, and utility invariance without duplicate predicates |
+| D5 | Define equilibrium once from local, law-linear deviations; keep profile-quantified response concepts distinct | Accepted | Express five equilibria plus best response, dominance, and one Bayesian slice |
+| D6 | Keep execution and information separate; use general-state execution primarily and finite trees as a derived presentation | Decided | Compare both execution orders on terminal, chance, locality, and assessment tests |
+| D7 | Use direct named bridges; add no semantic certificate hierarchy in v1 | Rejected for v1 | Compare certificate composition with a bespoke direct-bridge baseline |
+| D8 | Keep only a minimal transformation taxonomy | Adopted | Prove relabeling, reindexing, mixed lifting, and equilibrium transport |
+| D9 | Treat finiteness as independent capabilities | Adopted | Audit assumptions in the vertical slices |
+| D10 | Add a separate rational, finite, executable frontend | Adopted | `#eval` pure Nash/dominance and prove the output specification |
+| D11 | Keep measurable and infinite-path probability outside v1 | Adopted | A later isolated measurable-kernel spike may reopen this decision |
+| D12 | Split general mathematics, challenges, and frontier research from the stable core | Adopted | Enforce trust, dependency, documentation-sync, and cold-build tests |
 
 ## 5. Core decisions and falsification plans
 
@@ -775,9 +778,25 @@ terminal states have no legal actions. Chance must be carried by the transition
 law or an explicit chance policy; a `none` mover with no probability law is not
 chance semantics.
 
-Pure and behavioral strategies and compilation to `GameForm` are defined over
-the composed execution/information pair. A bare execution protocol can still
-compile to a perfect-information or controller-supplied game form.
+Deterministic information-local policies, behavioral policies, and mixed
+policies are defined over the composed execution/information pair and induce
+laws over histories. The pure and behavioral types compile to `GameForm`
+without a second evaluator, and the ordinary mixed extension of the pure form
+is definitionally the existing mixed-policy runner. Point-mass theorems recover
+deterministic play, and the behavioral/mixed correspondence commutes with
+compilation in both directions under its respective no-revisit and recall-like
+hypotheses. A bare execution protocol also compiles state-indexed policies to a
+perfect-information or controller-supplied `GameForm`.
+
+The finite-horizon information-local one-shot theorem is currently a forward
+result: one-shot optimality at every history defeats every whole replacement
+policy and implies ordinary Nash in the compiled form. It is not yet a full
+well-founded `oneShotDeviation_iff_spe`: no subgame-perfect predicate exists,
+and no converse from initial static Nash is claimed because it does not
+quantify over off-path histories. The context side is complete at finite
+horizon: `historyContext` packages the actual continuation, and the one-shot
+condition is equivalent to `IsSequentiallyRationalAt` in that context at every
+history and remaining horizon.
 
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
@@ -1128,13 +1147,13 @@ not an adequate substitute.
 Use separate dependency roots, not only directories:
 
 ```text
-GameTheory.Core          signatures, finite laws, forms, preferences, deviations
+GameTheory.Core          static foundations and foundational social/coalitional theory
 GameTheory.Protocol      transition/information semantics and execution
 GameTheory.Finite        executable rational frontend
 GameTheory.Languages     stable language syntax and compilers
 GameTheory.Analysis      fixed points, LP, minimax, existence
 GameTheory.Repeated      stable stagewise and finite-prefix repeated-game theory
-GameTheory.Cooperative   cooperative games, matching, bargaining
+GameTheory.Cooperative   larger cooperative theories, matching, bargaining
 GameTheory.Frontier      unstable open-game and repeated-monitoring research
 GameTheory.Challenges    untrusted, opt-in formal targets and open problems
 GameTheory.Tests         compilation and architecture tests

@@ -1,25 +1,32 @@
 /-
 # Strategic-form compilation
 
-The bridge from the protocol layer to the static core: a protocol plus a
-horizon compiles to a `GameForm` whose strategies are per-player policies and
-whose outcome law is the run law.
+The bridge from the protocol layer to the static core. There are two entry
+points, reflecting two genuinely different strategy types already present in
+the sequential layer.
 
-Two deliberate restrictions, both recorded rather than hidden.
+* An `ExecutionProtocol` compiles state-indexed `StatePolicy` strategies through
+  `runFor`. This is the perfect-information presentation retained for users
+  whose strategy really may read the execution state.
+* An `InformationModel` compiles information-local `Policy` strategies through
+  the history-indexed `run`. Its outcomes are full histories: forgetting to the
+  terminal state is then the ordinary `GameForm.mapOutcome History.state`, while
+  compiling directly to states would irreversibly discard observable history.
 
-* Strategies here are *state*-indexed (`StatePolicy`), which is the
-  perfect-information case. Information-local policies are history-indexed,
-  because `InfoSignals.infoOf` recurses over `Trace`, and folding those into a
-  `Chooser` needs a history-indexed runner, which does not yet exist.
-* The compiled form carries a fuel argument. `ExecutionProtocol.StopsWithin`
-  turns that into a horizon-independent law.
+The information-local mixed presentation is not a second compiler:
+`GameForm.mixed` of the pure-policy form reduces exactly to `runMixed`.
+Behavioral strategies are a distinct presentation because they draw locally
+during play, and their form uses `runBehavioral`. The existing behavioral/mixed
+law theorems connect those presentations under exactly their respective
+conditions.
 
-Once compiled, every static concept applies unchanged: `IsNash`,
-`IsCoarseCorrelatedEq`, dominance, and the executable frontend all take a
-`GameForm` and a preference, and none of them knows a protocol exists.
+Every static concept applies unchanged to either compiled form. The compiler
+knows about strategies and induced laws; it introduces no protocol-specific
+equilibrium predicate.
 -/
 
 import GameTheory.Protocol.Extraction
+import GameTheory.Protocol.Information
 import GameTheory.Core.Form
 
 noncomputable section
@@ -106,5 +113,130 @@ theorem toGameForm_play_congr {horizon : ℕ}
   runFor_congr_of_restrict_eq hagree horizon reachable_init
 
 end ExecutionProtocol
+
+namespace InformationModel
+
+variable {E : ExecutionProtocol ι} (M : InformationModel E)
+
+/-- The signature of the information-local strategic form. Strategies receive
+only a player's information state, and outcomes retain the realized history. -/
+abbrev strategicSignature : GameSignature ι where
+  Strategy := M.Policy
+  Outcome := E.History
+
+/-- Compile information-local pure policies through the canonical
+history-indexed evaluator. Reducibility keeps the strategy and outcome carriers
+available to the static core without transports. -/
+@[reducible]
+def toGameForm (horizon : ℕ) : GameForm ι where
+  sig := M.strategicSignature
+  play profile := M.run profile horizon
+
+/-- The named evaluation fact for information-local pure strategies. Compiler
+consumers should quote this theorem rather than unfold the form. -/
+@[simp]
+theorem toGameForm_play (horizon : ℕ) (profile : Profile M.strategicSignature) :
+    (M.toGameForm horizon).play profile = M.run profile horizon := rfl
+
+@[simp]
+theorem toGameForm_sig (horizon : ℕ) :
+    (M.toGameForm horizon).sig = M.strategicSignature := rfl
+
+/-- The signature for local randomization at information states. It has the
+same history outcomes as the pure-policy strategic form. -/
+abbrev behavioralSignature : GameSignature ι where
+  Strategy := M.BehavioralPolicy
+  Outcome := E.History
+
+variable [Fintype ι]
+
+/-- Present behavioral strategies to the static core without defining another
+runner: evaluation is exactly `InformationModel.runBehavioral`. -/
+@[reducible]
+def toBehavioralGameForm (horizon : ℕ) : GameForm ι where
+  sig := M.behavioralSignature
+  play profile := M.runBehavioral profile horizon
+
+/-- The named evaluation fact for behavioral strategies. -/
+@[simp]
+theorem toBehavioralGameForm_play (horizon : ℕ)
+    (profile : Profile M.behavioralSignature) :
+    (M.toBehavioralGameForm horizon).play profile = M.runBehavioral profile horizon := rfl
+
+@[simp]
+theorem toBehavioralGameForm_sig (horizon : ℕ) :
+    (M.toBehavioralGameForm horizon).sig = M.behavioralSignature := rfl
+
+/-! ## The two randomization presentations
+
+A `MixedPolicy i` is definitionally `FinDist (M.Policy i)`. Consequently the
+ordinary static mixed extension of `M.toGameForm` already has exactly the right
+strategy type and evaluator: draw one pure policy profile, then call `M.run`.
+There is deliberately no `toMixedGameForm`.
+
+A behavioral policy instead draws whenever its information state is consulted.
+That is not `GameForm.mixed` in general. The equalities below state precisely
+when the two presentations induce the same law; the hypotheses cannot be
+dropped, as the repeated-information-set test demonstrates.
+-/
+
+/-- Static mixing of the pure-policy compilation is exactly the existing mixed
+history evaluator, not a parallel semantics. -/
+@[simp]
+theorem toGameForm_mixed_play (horizon : ℕ)
+    (mixed : (i : ι) → M.MixedPolicy i) :
+    ((M.toGameForm horizon).mixed).play mixed = M.runMixed mixed horizon := rfl
+
+/-- Behavioral play restricts to pure play when every local law is a point
+mass. -/
+@[simp]
+theorem toBehavioralGameForm_play_toBehavioral [DecidableEq ι]
+    (profile : Profile M.strategicSignature) (horizon : ℕ) :
+    (M.toBehavioralGameForm horizon).play (fun i => (profile i).toBehavioral) =
+      (M.toGameForm horizon).play profile := by
+  rw [toBehavioralGameForm_play, toGameForm_play]
+  simpa only [runBehavioral, run] using
+    M.runBehavioralFrom_toBehavioral profile horizon E.initHistory
+
+/-- If no player is asked twice at an information state where its answer can
+vary, pre-drawing every behavioral choice commutes with compilation. -/
+theorem toGameForm_mixed_play_toMixed
+    [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+    (hactsOnce : M.ActsOnceWhereItMatters)
+    (behavioral : Profile M.behavioralSignature) (horizon : ℕ) :
+    ((M.toGameForm horizon).mixed).play (fun i => (behavioral i).toMixed) =
+      (M.toBehavioralGameForm horizon).play behavioral := by
+  rw [toGameForm_mixed_play, toBehavioralGameForm_play]
+  exact M.runMixed_toMixed hactsOnce behavioral horizon
+
+/-- If histories with the same information state constrain a player's drawn
+policy alike, reading a mixed policy behaviorally commutes with compilation. -/
+theorem toGameForm_mixed_play_toBehavioral
+    (hconstrain : M.ConstrainsAlike) (mixed : (i : ι) → M.MixedPolicy i)
+    (horizon : ℕ) :
+    ((M.toGameForm horizon).mixed).play mixed =
+      (M.toBehavioralGameForm horizon).play
+        (fun i => (mixed i).toBehavioral) := by
+  rw [toGameForm_mixed_play, toBehavioralGameForm_play]
+  exact M.runMixed_toBehavioral hconstrain horizon mixed
+
+/-- Under both sharp hypotheses, behavioral profiles and static mixed profiles
+describe exactly the same set of compiled history laws. -/
+theorem toBehavioralGameForm_play_image_eq_mixed_play_image
+    [∀ i, Fintype (M.InfoState i)] [∀ i, DecidableEq (M.InfoState i)]
+    (hactsOnce : M.ActsOnceWhereItMatters) (hconstrain : M.ConstrainsAlike)
+    (horizon : ℕ) :
+    { law | ∃ behavioral : Profile M.behavioralSignature,
+        (M.toBehavioralGameForm horizon).play behavioral = law } =
+      { law | ∃ mixed : (i : ι) → M.MixedPolicy i,
+        ((M.toGameForm horizon).mixed).play mixed = law } := by
+  show
+    { law | ∃ behavioral : (i : ι) → M.BehavioralPolicy i,
+        M.runBehavioral behavioral horizon = law } =
+      { law | ∃ mixed : (i : ι) → M.MixedPolicy i,
+        M.runMixed mixed horizon = law }
+  exact M.runBehavioral_image_eq_runMixed_image hactsOnce hconstrain horizon
+
+end InformationModel
 
 end GameTheory.Protocol
