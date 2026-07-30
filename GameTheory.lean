@@ -121,6 +121,9 @@ import GameTheory.Concepts.Stochastic.AverageOptimalityCertificate
 import GameTheory.Concepts.Stochastic.SingleController
 import GameTheory.Concepts.Stochastic.DiscountBiasNoGo
 import GameTheory.Concepts.Stochastic.BellmanVariety
+import GameTheory.Concepts.Stochastic.BellmanSignCell
+import GameTheory.Concepts.Stochastic.BellmanGerm
+import GameTheory.Concepts.Stochastic.BellmanCurveGate
 import GameTheory.Concepts.Stochastic.ZeroSum
 import GameTheory.Concepts.Stochastic.Fink
 import GameTheory.Concepts.Stochastic.MertensNeymanCriterion

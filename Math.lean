@@ -55,10 +55,15 @@ import Math.LinearAlgebra.ZeroSum
 import Math.LinearProgramming
 import Math.AlgebraicSelection
 import Math.AnalyticConeDichotomy
+import Math.AnalyticConeLift
+import Math.AnalyticCoordinateCurve
 import Math.AnalyticMixedObstruction
 import Math.AnalyticPowerNormalization
 import Math.AnalyticFiniteRayMaximum
 import Math.PolynomialSignCell
+import Math.RamifiedBinomialBranch
+import Math.RegularPolynomialCurveSelection
+import Math.UnivariatePolynomialCurveSelection
 import Math.WeierstrassCurve
 import Math.RamifiedWeierstrass
 import Math.InfinitesimalRatFunc
