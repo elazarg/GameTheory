@@ -7,7 +7,8 @@ import.
 Experiment IDs: [EXP-022](../ExperimentLog.md), [EXP-023](../ExperimentLog.md);
 post-decision boundary stresses [EXP-030](../ExperimentLog.md) and
 [EXP-031](../ExperimentLog.md); Protocol amendments
-[EXP-032](../ExperimentLog.md) and [EXP-033](../ExperimentLog.md).
+[EXP-032](../ExperimentLog.md), [EXP-033](../ExperimentLog.md), and
+[EXP-034](../ExperimentLog.md).
 
 ## Hypothesis
 
@@ -218,6 +219,11 @@ The additional enforced probes are two-sided:
 | `LANGUAGE_FORBIDDEN_IMPORTS` | 0 |
 | `TRANSPORT_LANGUAGES` | 0 |
 
-These amendments validate the generic assessment, consistency, and finite-EFG
-presentation. They do not prove a sequential-equilibrium witness or existence
-theorem.
+EXP-034 supplies the first concrete theorem through that path. Stable Protocol
+normalizes existing history reach masses into a Bayes belief; the analytic
+bridge proves a fully mixed Bayes-consistent assessment sequentially consistent
+with its constant approximating sequence. On the hostile hidden-Boolean EFG,
+the canonical runner gives both decision histories probability `1 / 2`, and the
+resulting assessment is a sequential equilibrium for zero continuation payoff.
+This is a concrete witness, not a general finite-EFG existence theorem, and it
+does not change the dependency direction.

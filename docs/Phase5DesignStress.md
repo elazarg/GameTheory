@@ -267,6 +267,15 @@ probes, and three positive bridge probes. This validates the presentation and
 the proposition, not the exhibited assessment as an equilibrium and not an
 existence theorem.
 
+EXP-034 closes that last concrete gap without changing the architecture. A
+fully mixed action law gives both decisions positive support; the actual
+behavioral runner assigns each hidden decision history probability `1 / 2`;
+stable `bayesBelief` normalizes those reach masses; and the constant assessment
+sequence proves consistency. With zero continuation payoff, the assessment is
+an actual sequential equilibrium. The rationality half is intentionally
+transparent, so this is not a general existence theorem or the final
+nonconstant-payoff stress.
+
 ## Current stress queue
 
 The named Phase 5 queue is exhausted. Further theorem families should be

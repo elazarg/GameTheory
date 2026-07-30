@@ -44,6 +44,7 @@ becomes difficult to scan.
 | EXP-031 | 2026-07-30 | D11/D12 / Phase 5 | Does the full discounted folk theorem belong in stable Repeated, under Analysis, or behind a new repeated-analysis bridge? | Supports one-way Analysis bridge | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Analysis/Repeated/`; `GameTheoryMath/` |
 | EXP-032 | 2026-07-30 | D6/D12 / Phase 5 | Where should Kreps-Wilson limit consistency live when its topology is on Protocol policies and beliefs? | Supports one-way Analysis bridge; narrows beliefs to reachable sites | [`decisions/D12-dependency-boundaries.md`](decisions/D12-dependency-boundaries.md); `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/` |
 | EXP-033 | 2026-07-30 | D6/D12 / Phase 5 | Can a finite EFG adapter instantiate behavioral assessments and sequential consistency without importing solution concepts into syntax or duplicating Protocol semantics? | Supports transparent specialization; corrects the assessment interface | `GameTheory/Languages/EFG.lean`; `GameTheory/Analysis/Protocol/EFG.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
+| EXP-034 | 2026-07-30 | D6/D12 / finite EFG theorem | Can the hostile hidden-information EFG carry an actual sequential-equilibrium witness rather than only the proposition? | Supports; concrete consistency and equilibrium witness | `GameTheory/Protocol/BehavioralAssessment.lean`; `GameTheory/Analysis/Protocol/Sequential.lean`; `GameTheory/Analysis/Protocol/EFGTest.lean` |
 
 ## Entry template
 
@@ -2050,3 +2051,67 @@ memory.
   equilibrium witness or existence result. Broad harvesting of the pinned EFG
   theorem surface remains gated on that mathematical slice rather than on more
   presentation machinery.
+
+### EXP-034: concrete sequential equilibrium on the hostile finite EFG
+
+- **Date / revision:** 2026-07-30, working tree based on `adf1acc`
+- **Decision / question:** D6, D12, and the finite EFG theorem gate; whether the
+  EXP-033 hidden-information carrier supports a proved sequential-equilibrium
+  assessment, not merely a well-typed target.
+- **Representative slice:** the same fair hidden Boolean chance move and shared
+  decision information set; a fully mixed behavioral policy, the conditional
+  belief induced by reach probability, sequential consistency, and
+  full-continuation-policy rationality for an explicit payoff.
+- **Competing designs:** prove the constant fully mixed assessment directly;
+  first extract the generic theorem that a fully mixed Bayes-consistent
+  assessment is sequentially consistent and instantiate it; or retreat to a
+  simpler perfect-information witness if the hostile Bayes denominator cannot
+  be controlled without new semantics.
+- **Kill conditions:** the proof needs a second path-probability definition,
+  hand-asserted consistency, measurable infinite paths, an EFG-specific
+  equilibrium predicate, `native_decide`, a custom axiom, or a representation
+  change merely to normalize the finite Bayes calculation.
+- **Evidence:**
+  1. Stable Protocol now constructs `bayesBelief` by normalizing the existing
+     `historyReachProbability` weights at any finite positive-mass information
+     site. Its probability theorem is definitionally the quotient already used
+     by `IsBayesConsistentAt`; no second path law or conditional-belief
+     predicate was introduced.
+  2. Two generic reductions keep the EFG proof honest and small at the semantic
+     boundary. Zero continuation payoff makes every whole replacement policy
+     sequentially rational. A fully mixed, finite-Bayes-consistent assessment
+     is sequentially consistent via the constant approximating sequence, using
+     pointwise convergence of constant finite laws.
+  3. The hostile carrier's fully mixed policy maps the fair coin into both
+     decision actions and has full support at every genuine information site.
+     The actual one-step behavioral runner assigns each hidden decision history
+     probability `1 / 2`; this is proved through the canonical randomized
+     chooser and runner, not asserted by a second evaluator. One such history
+     proves the information mass is positive.
+  4. The resulting assessment uses `bayesBelief` at every site, proves finite
+     Bayes consistency, then proves `game.IsSequentiallyConsistent` and
+     `game.IsSequentialEquilibriumWithin ... payoff 2`. The payoff is
+     identically zero, so this slice deliberately makes the Bayes/consistency
+     path hostile while keeping the rationality calculation transparent.
+  5. The narrow analytic EFG test build completed in 1,770 jobs. Source scans
+     find no `Fintype.ofFinite`, direct `Function.update`, transport, custom
+     axiom, placeholder, or `native_decide`. Axiom checks for the Bayes
+     constructor, zero-payoff rationality, constant-sequence consistency,
+     one-step reach calculation, and final equilibrium theorem use only
+     `propext`, `Classical.choice`, and `Quot.sound`.
+  6. A first direct normalization proof used four `change` tactic tokens, and
+     Phase 2 rejected it with `TRANSPORT_ANALYSIS_SOURCE=4`. Rewriting the same
+     definitional steps with typed goals restored the enforced value to zero;
+     no audit allowance changed. The full build completed in 3,309 jobs and all
+     four phase audits pass.
+- **Outcome:** supports. The same chance/imperfect-information EFG used to
+  validate the adapter now has a kernel-checked sequential-equilibrium witness.
+  The result exercises full support, the real behavioral runner, positive
+  information mass, Bayes normalization, pointwise consistency, and the
+  generic EFG predicate. It is a concrete existence witness, not a general
+  finite-EFG existence theorem; zero payoff means it does not yet stress a
+  nonconstant continuation calculation.
+- **Next action:** the presentation gate is no longer blocking theorem
+  recovery. Begin a measured harvest of the pinned finite-EFG theorem inventory,
+  with the first nonconstant-payoff or one-shot result kept as the next hostile
+  check on whole-policy rationality.

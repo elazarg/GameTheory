@@ -26,6 +26,11 @@ def FinDistConvergesPointwise {α : Type*}
     Tendsto (fun n => (sequence n).prob value) atTop
       (nhds (target.prob value))
 
+/-- A constant sequence of finite laws converges pointwise to that law. -/
+theorem finDistConvergesPointwise_const {α : Type*} (law : FinDist α) :
+    FinDistConvergesPointwise (fun _ => law) law :=
+  fun _ => tendsto_const_nhds
+
 end GameTheory.Analysis.Protocol
 
 namespace GameTheory.Protocol
@@ -81,6 +86,14 @@ theorem BehavioralAssessmentConvergesPointwise.belief
       (target.belief i site) :=
   h.2 i site
 
+/-- The constant assessment sequence converges in every strategy and belief
+coordinate. -/
+theorem behavioralAssessmentConvergesPointwise_const
+    (A : M.BehavioralAssessment) :
+    BehavioralAssessmentConvergesPointwise (fun _ => A) A :=
+  ⟨fun _ _ => finDistConvergesPointwise_const _,
+    fun _ _ => finDistConvergesPointwise_const _⟩
+
 /-- Kreps-Wilson consistency for a finite protocol assessment: a pointwise
 limit of fully mixed, Bayes-consistent behavioral assessments. -/
 def BehavioralAssessment.IsSequentiallyConsistent
@@ -92,6 +105,18 @@ def BehavioralAssessment.IsSequentiallyConsistent
     (fun assessment =>
       BehavioralAssessment.IsBayesConsistent M assessment)
     BehavioralAssessmentConvergesPointwise
+
+/-- A fully mixed assessment that already obeys finite Bayes' rule is
+sequentially consistent, witnessed by the constant approximating sequence. -/
+theorem BehavioralAssessment.IsSequentiallyConsistent.of_fullyMixed_bayes
+    [Fintype ι] {A : M.BehavioralAssessment}
+    [∀ (i : ι) (site : M.InformationSite i),
+      Fintype (M.InformationHistory i site.1)]
+    (hfull : A.IsFullyMixed)
+    (hbayes : BehavioralAssessment.IsBayesConsistent M A) :
+    A.IsSequentiallyConsistent :=
+  ⟨fun _ => A, fun _ => ⟨hfull, hbayes⟩,
+    behavioralAssessmentConvergesPointwise_const A⟩
 
 /-- Sequential equilibrium is the existing context-local rationality predicate
 paired with Kreps-Wilson consistency. -/

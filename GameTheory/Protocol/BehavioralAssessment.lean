@@ -148,6 +148,14 @@ def IsSequentiallyRationalWithin [Fintype ι] [DecidableEq ι]
   A.IsSequentiallyRational fun i site =>
     A.continuationContext site (payoff i) fuel
 
+/-- With identically zero continuation payoff, every behavioral assessment is
+sequentially rational against whole continuation-policy deviations. -/
+theorem isSequentiallyRationalWithin_zero [Fintype ι] [DecidableEq ι]
+    (A : M.BehavioralAssessment) (fuel : ℕ) :
+    A.IsSequentiallyRationalWithin (fun _ _ => 0) fuel := by
+  intro i site alternative _halternative
+  simp [continuationContext, Context.value]
+
 /-- A topology-free limit schema. The analytic bridge supplies pointwise
 convergence; other consumers may supply a different convergence relation
 without making Protocol import it. -/
@@ -192,6 +200,38 @@ def informationMass
     [Fintype (M.InformationHistory i site.1)] : ℝ :=
   ∑ history : M.InformationHistory i site.1,
     M.historyReachProbability strategy history
+
+/-- The Bayes belief obtained by normalizing history reach probabilities at an
+information site of positive mass. -/
+def bayesBelief
+    (strategy : (i : ι) → M.BehavioralPolicy i)
+    (i : ι) (site : M.InformationSite i)
+    [Fintype (M.InformationHistory i site.1)]
+    (hmass : 0 < M.informationMass strategy i site) :
+    FinDist (M.InformationHistory i site.1) :=
+  FinDist.ofWeights
+    (fun history =>
+      M.historyReachProbability strategy history /
+        M.informationMass strategy i site)
+    (fun history => div_nonneg (by
+      show 0 ≤ M.historyReachProbability strategy (history : E.History)
+      exact FinDist.prob_nonneg _ _)
+      (le_of_lt hmass))
+    (by
+      simp_rw [div_eq_mul_inv]
+      rw [← Finset.sum_mul, ← informationMass, mul_inv_cancel₀ hmass.ne'])
+
+@[simp]
+theorem bayesBelief_prob
+    (strategy : (i : ι) → M.BehavioralPolicy i)
+    (i : ι) (site : M.InformationSite i)
+    [Fintype (M.InformationHistory i site.1)]
+    (hmass : 0 < M.informationMass strategy i site)
+    (history : M.InformationHistory i site.1) :
+    (M.bayesBelief strategy i site hmass).prob history =
+      M.historyReachProbability strategy history /
+        M.informationMass strategy i site :=
+  FinDist.prob_ofWeights _ _ _ _
 
 /-- Bayes' rule at one finite information set. -/
 def BehavioralAssessment.IsBayesConsistentAt

@@ -822,6 +822,15 @@ reachable states and hence an explicit history `Fintype`. The analytic EFG
 adapter supplies those instances and the assessment-induced continuation
 contexts; stable syntax imports neither Analysis nor solution concepts.
 
+EXP-034 proves the path is inhabited. Stable Protocol can normalize the
+existing finite history reach weights into a Bayes belief whenever an
+information site has positive mass. The analytic bridge turns any fully mixed
+Bayes-consistent assessment into a sequentially consistent one through its
+constant approximating sequence. On the hostile hidden-Boolean EFG, the
+canonical runner gives both decision histories mass `1 / 2`, yielding a
+concrete sequential equilibrium for zero continuation payoff. This is not a
+general finite-EFG existence theorem.
+
 Information locality must hold by construction. A player's policy may receive
 its `InfoState`, recommendation, and a legal-menu value determined by that
 `InfoState`, but not the hidden execution state or a proof from which that state
