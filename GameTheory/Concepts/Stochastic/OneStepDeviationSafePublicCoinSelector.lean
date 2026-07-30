@@ -4,7 +4,7 @@ Released under the MIT license as described in the file LICENSE.
 Authors: GameTheory contributors
 -/
 
-import GameTheory.Concepts.Stochastic.PublicFixedDepthAdaptiveCertificate
+import GameTheory.Concepts.Stochastic.PublicFixedDepthApproximateTargetCertificate
 
 /-!
 # One-step deviation-safe public-child selection
@@ -265,6 +265,43 @@ theorem isAdaptivePotentialCertificateAt_of_exactExpectedTarget
   · intro who
     rw [data.selector_value_initial]
     exact exact_target who
+  · exact childCertificates
+
+/-- The same concrete one-step selector permits an approximate parent
+target.  A mismatch of at most half the requested tolerance is absorbed by
+the generic target-retargeting theorem. -/
+theorem isAdaptivePotentialCertificateAt_of_approximateExpectedTarget
+    (entry : Child → G.State)
+    (target : Child → Payoff ι)
+    (selection : G.BehaviorProfile)
+    (parentTarget : Payoff ι)
+    (error : ℝ) (error_pos : 0 < error)
+    (terminal_entry :
+      ∀ state, data.terminal state →
+        state = entry (data.observe state))
+    (target_close :
+      ∀ who,
+        |expect (PMF.map data.observe data.kernel)
+            (fun child => target child who) -
+          parentTarget who| ≤ error / 2)
+    (childCertificates :
+      ∀ child childError, 0 < childError →
+        G.IsAdaptivePotentialCertificateAt
+          (entry child) (target child) childError) :
+    G.IsAdaptivePotentialCertificateAt
+      data.initial parentTarget error := by
+  letI : Fintype Child := Fintype.ofFinite Child
+  apply
+    FixedDepthAdaptivePotentialSplice.isAdaptivePotentialCertificateAt_of_approximateTarget
+      (selector := data.selector)
+      (entry := entry) (target := target)
+      (initial := data.initial) (fuel := 1)
+      selection parentTarget error error_pos
+  · change data.process.rank data.initial ≤ 1
+    rw [data.process_rank_initial]
+  · exact data.selector_terminal_entry entry terminal_entry
+  · intro who
+    simpa using target_close who
   · exact childCertificates
 
 end OneStepDeviationSafePublicCoinData
