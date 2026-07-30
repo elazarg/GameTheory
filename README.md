@@ -15,8 +15,9 @@ its honest pinned-v1 baseline is
 GameTheory/Probability   finite-support probability laws (FinDist)
 GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
-                         game theory, finite no-regret learning, and
-                         foundational social/coalitional theory
+                         game theory, Bayesian recommendation/obedience,
+                         finite no-regret learning, and foundational
+                         social/coalitional theory
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation
@@ -26,7 +27,8 @@ GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theo
   /Repeated              analytic repeated-game bridge and discounted folk theorem
 GameTheory/Repeated      stable public histories, finite public monitoring,
                          discounting, cycles, and triggers
-GameTheory/Languages     scoped language encodings with recorded limitations
+GameTheory/Languages     scoped language encodings and truthful Bayesian
+                         mechanism compilation with recorded limitations
   /EFG                   transparent extensive-form specialization; finite
                          capabilities are supplied explicitly
 GameTheory/Examples      reader-facing examples with #eval and #guard tests

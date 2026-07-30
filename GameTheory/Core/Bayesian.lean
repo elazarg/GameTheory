@@ -52,6 +52,20 @@ def actionsOf (B : BayesianGame ι) (plan : Profile B.signature)
     (types : ∀ i, B.Ty i) : Profile B.actionSignature :=
   fun i => plan i (types i)
 
+/-- Updating one contingent plan updates exactly the corresponding realized
+action at every type profile. -/
+theorem actionsOf_update (B : BayesianGame ι) [DecidableEq ι]
+    (plan : Profile B.signature) (who : ι)
+    (replacement : B.Ty who → B.Act who) (types : ∀ i, B.Ty i) :
+    B.actionsOf (Profile.update plan who replacement) types =
+      Profile.update (B.actionsOf plan types) who
+        (replacement (types who)) := by
+  funext i
+  by_cases hi : i = who
+  · subst hi
+    simp [actionsOf]
+  · simp [actionsOf, Profile.update_of_ne _ _ hi]
+
 /-- The direct ex-ante strategic form: draw a type profile, then apply each
 player's contingent plan to its own coordinate. -/
 @[reducible]

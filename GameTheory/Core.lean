@@ -18,6 +18,7 @@ import GameTheory.Core.Signature
 import GameTheory.Core.Form
 import GameTheory.Core.Bayesian
 import GameTheory.Core.BayesianEquilibrium
+import GameTheory.Core.BayesCorrelated
 import GameTheory.Core.Rank
 import GameTheory.Core.Preference
 import GameTheory.Core.Deviation

@@ -51,13 +51,14 @@ No broad family below is called complete merely because its flagship exists.
 | F2 | no-regret time average implies approximate CCE | **complete** | `Core/Learning.lean`; positive-regret two-round trace; [declaration ledger](coverage/F2-no-regret-cce.md) | no remainder for the frozen theorem; algorithms and asymptotic convergence remain D-LEARN |
 | F3 | Kuhn behavioral/mixed correspondence | **complete at the accepted Protocol layer; EFG surface partial** | both law directions and realizable-law equality in `Protocol/Information.lean`; perfect-recall hostile test | add general EFG-facing corollaries and payoff/outcome wrappers during EFG harvest |
 | F4 | one-shot deviation iff SPE | **complete at the accepted Protocol layer; EFG surface partial** | `Protocol/SubgamePerfect.lean`; full well-founded strategic iff and off-path probe; [declaration ledger](coverage/F4-one-shot-spe.md) | add only a thin EFG-facing corollary during L-EFG harvest |
-| F5 | Bayes-Nash outcome law is Bayes-correlated | **partial** | stable Bayesian data, interim characterization, and exact Protocol compiler | recommendation/obedience surface and the outcome-law transfer |
-| F6 | incentive compatibility implies truthful Bayesian Nash | **partial** | direct mechanism strategyproofness, Vickrey truthfulness, first-price refutation | Bayesian mechanism compiler and generic IC-to-truthful-Bayes-Nash theorem |
+| F5 | Bayes-Nash outcome law is Bayes-correlated | **complete** | `Core/BayesCorrelated.lean`; fair private-signal probe; [declaration ledger](coverage/F5-bayes-nash-bce.md) | no remainder for the frozen theorem; complete-information BCE/CE and information design remain S-CORR/M-BAYES |
+| F6 | incentive compatibility implies truthful Bayesian Nash | **complete** | `Languages/BayesianMechanism.lean`; nondegenerate truthful-report probe; [declaration ledger](coverage/F6-ic-truthful-bayes-nash.md) | no remainder for the frozen theorem; welfare, participation, and revelation remain M-BAYES |
 | F7 | discounted folk theorem | **complete** | `Analysis/Repeated/Folk.lean` and a nontrivial Prisoner's Dilemma witness | no remainder for the frozen theorem; monitoring is separate |
 | F8 | public-monitoring signal-prefix successor/bind law | **complete** | `Repeated/Monitoring.lean`; noisy branch-dependent two-period probe; [declaration ledger](coverage/F8-public-monitoring-prefix.md) | no remainder for the frozen law; monitoring equilibrium and rank theory remain D-REPEAT |
 
-Headline: F1, F2, F7, and F8 are complete. F3 and F4 are complete at their
-accepted semantic layers. F5-F6 are partial.
+Headline: F1, F2, F5, F6, F7, and F8 are complete. F3 and F4 are complete at
+their accepted semantic layers. Every frozen flagship F1-F8 now has a completed
+semantic result; the named transfer queue T1-T4 remains open.
 
 ## Frozen transfer reconciliation
 
@@ -134,7 +135,7 @@ declaration-based.
 
 | ID | Pinned scope | Files | Intended successor owner | Integration | Recovery | Next gate |
 |---|---|---:|---|---|---|---|
-| M-BAYES | `Mechanism/Bayesian.lean`, `Mechanism/Bayesian/**` | 12 | Bayesian data/equilibrium plus coordinated mechanism modules | validated split | partial | F5, F6, revelation/information-design inventory |
+| M-BAYES | `Mechanism/Bayesian.lean`, `Mechanism/Bayesian/**` | 12 | Bayesian data/equilibrium plus coordinated mechanism modules | validated split; F5/F6 complete | partial | revelation, welfare/participation, and information-design inventory |
 | M-CONTRACT | `Mechanism/Contracts/**` | 1 | mechanism branch | assigned | not started | participation/incentive theorem with explicit outside option |
 | M-FAIR | `Mechanism/FairDivision.lean`, finite indivisible files | 6 | finite mechanism/fair-division branch | assigned | not started | round-robin EF1 and one algorithmic allocation theorem |
 | M-CAKE | divisible fair-division files | 6 | D11/`Analysis` or Frontier | deferred | out of scope | measurable/continuous probability decision |
@@ -173,6 +174,8 @@ declaration-based.
   the hostile finite EFG, not a general finite-EFG existence theorem.
 - F8's finite stochastic signal-prefix law does not complete monitoring
   equilibrium, rank, or self-generation theory.
+- F5/F6 close their recommendation-law and truthful-compiler promises; they do
+  not complete revelation, information design, welfare, or participation.
 - Rejecting generic transport/certificates does not prove named transfers.
 - Arrow and Shapley validate their semantic homes; they do not complete social
   choice or cooperative game theory.
@@ -181,7 +184,7 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Create declaration-level ledgers for F5-F6 and T1-T4; the F2, F4, and F8
+1. Create declaration-level ledgers for T1-T4; the F2, F4, F5, F6, and F8
    ledgers are complete.
 2. Add a generated pinned declaration index and a coverage audit before the
    first `v1-accounted` claim.
