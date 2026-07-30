@@ -844,6 +844,147 @@ def normalizedFarkasCertificateSet
     (normalizedFarkasMatrix balance mass)
     normalizedFarkasRhs
 
+/-- The sign attached to one of the two nonnegative copies of a signed
+Farkas coordinate. -/
+def farkasOrientation (positive : Bool) : ℝ :=
+  if positive then 1 else -1
+
+@[simp]
+theorem farkasOrientation_true : farkasOrientation true = 1 := by
+  rfl
+
+@[simp]
+theorem farkasOrientation_false : farkasOrientation false = -1 := by
+  rfl
+
+/-- Replace every column of a signed balance system by its positive and
+negative orientations. -/
+def orientedFarkasBalance
+    {Row Col : Type*}
+    (balance : Matrix Row Col ℝ) :
+    Matrix Row (Col × Bool) ℝ
+  | i, (j, positive) =>
+      farkasOrientation positive * balance i j
+
+/-- Apply the same two-orientation construction to the normalizing
+functional. -/
+def orientedFarkasMass
+    {Col : Type*} (mass : Col → ℝ) :
+    Col × Bool → ℝ
+  | (j, positive) => farkasOrientation positive * mass j
+
+/-- Reconstruct a signed vector from its two nonnegative orientations. -/
+def orientedFarkasToSigned
+    {Col : Type*} (z : Col × Bool → ℝ) :
+    Col → ℝ :=
+  fun j => z (j, true) - z (j, false)
+
+/-- Canonical positive/negative-parts representation of a signed vector. -/
+def signedFarkasToOriented
+    {Col : Type*} (x : Col → ℝ) :
+    Col × Bool → ℝ
+  | (j, true) => max (x j) 0
+  | (j, false) => max (-x j) 0
+
+theorem signedFarkasToOriented_nonneg
+    {Col : Type*} (x : Col → ℝ) :
+    ∀ j, 0 ≤ signedFarkasToOriented x j := by
+  rintro ⟨j, positive⟩
+  cases positive <;> simp [signedFarkasToOriented]
+
+@[simp]
+theorem orientedFarkasToSigned_signedFarkasToOriented
+    {Col : Type*} (x : Col → ℝ) :
+    orientedFarkasToSigned (signedFarkasToOriented x) = x := by
+  funext j
+  simp only [orientedFarkasToSigned, signedFarkasToOriented]
+  rcases le_total 0 (x j) with hx | hx
+  · simp [max_eq_left hx, max_eq_right (neg_nonpos.mpr hx)]
+  · simp [max_eq_right hx, max_eq_left (neg_nonneg.mpr hx)]
+
+/-- Oriented matrix multiplication is ordinary signed matrix
+multiplication after reconstruction. -/
+theorem orientedFarkasBalance_mulVec
+    {Row Col : Type*} [Fintype Col]
+    (balance : Matrix Row Col ℝ)
+    (z : Col × Bool → ℝ) (i : Row) :
+    Matrix.mulVec (orientedFarkasBalance balance) z i =
+      Matrix.mulVec balance (orientedFarkasToSigned z) i := by
+  classical
+  simp only [Matrix.mulVec, dotProduct, orientedFarkasBalance,
+    orientedFarkasToSigned]
+  rw [Fintype.sum_prod_type]
+  apply Finset.sum_congr rfl
+  intro j _
+  simp [farkasOrientation]
+  ring
+
+/-- The oriented normalizing functional is the signed functional after
+reconstruction. -/
+theorem orientedFarkasMass_dotProduct
+    {Col : Type*} [Fintype Col]
+    (mass : Col → ℝ) (z : Col × Bool → ℝ) :
+    ∑ j, orientedFarkasMass mass j * z j =
+      ∑ j, mass j * orientedFarkasToSigned z j := by
+  classical
+  rw [Fintype.sum_prod_type]
+  apply Finset.sum_congr rfl
+  intro j _
+  simp [orientedFarkasMass, orientedFarkasToSigned,
+    farkasOrientation]
+  ring
+
+/-- A signed normalized homogeneous solution has a canonical nonnegative
+certificate in the doubled oriented system. -/
+theorem signedFarkasToOriented_mem_normalizedFarkasCertificateSet
+    {Row Col : Type*} [Fintype Col]
+    (balance : Matrix Row Col ℝ) (mass : Col → ℝ)
+    (x : Col → ℝ)
+    (hbalance : Matrix.mulVec balance x = 0)
+    (hmass : (∑ j, mass j * x j) = 1) :
+    signedFarkasToOriented x ∈
+      normalizedFarkasCertificateSet
+        (orientedFarkasBalance balance)
+        (orientedFarkasMass mass) := by
+  refine ⟨signedFarkasToOriented_nonneg x, ?_⟩
+  funext i
+  cases i with
+  | inl i =>
+      change Matrix.mulVec
+        (orientedFarkasBalance balance)
+        (signedFarkasToOriented x) i = 0
+      rw [orientedFarkasBalance_mulVec,
+        orientedFarkasToSigned_signedFarkasToOriented]
+      exact congrFun hbalance i
+  | inr i =>
+      change (∑ j, orientedFarkasMass mass j *
+        signedFarkasToOriented x j) = 1
+      rw [orientedFarkasMass_dotProduct,
+        orientedFarkasToSigned_signedFarkasToOriented, hmass]
+
+/-- Conversely, every nonnegative certificate in the doubled system
+reconstructs a signed normalized homogeneous solution. -/
+theorem normalizedFarkasCertificateSet_oriented_toSigned
+    {Row Col : Type*} [Fintype Col]
+    (balance : Matrix Row Col ℝ) (mass : Col → ℝ)
+    {z : Col × Bool → ℝ}
+    (hz :
+      z ∈ normalizedFarkasCertificateSet
+        (orientedFarkasBalance balance)
+        (orientedFarkasMass mass)) :
+    Matrix.mulVec balance (orientedFarkasToSigned z) = 0 ∧
+      (∑ j, mass j * orientedFarkasToSigned z j) = 1 := by
+  constructor
+  · funext i
+    have hi := congrFun hz.2 (Sum.inl i)
+    change Matrix.mulVec (orientedFarkasBalance balance) z i = 0 at hi
+    rw [orientedFarkasBalance_mulVec] at hi
+    exact hi
+  · have hi := congrFun hz.2 (Sum.inr ())
+    change (∑ j, orientedFarkasMass mass j * z j) = 1 at hi
+    rw [orientedFarkasMass_dotProduct] at hi
+    exact hi
+
 /-- A normalized support Cramer certificate necessarily has nonsingular
 support Gram matrix: if the determinant vanished, every Cramer coordinate
 would be zero, contradicting the normalization row. -/
