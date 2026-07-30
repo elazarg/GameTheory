@@ -407,6 +407,74 @@ theorem playerNeutralCirculation_or_isUniformEquilibriumPayoff
   · obtain ⟨C, hC⟩ := halt.1
     exact Or.inr (hC.isUniformEquilibriumPayoff germ B C s₀ honProfile)
 
+omit [DecidableEq G.State] in
+/-- A Poisson correction for a finite-bias seed produces the exact
+on-profile endpoint bias required by the ownerwise neutral alternative. -/
+theorem FiniteBiasSeed.onProfileBias_H_sub
+    {germ : G.AnalyticBellmanGerm}
+    (seed : germ.FiniteBiasSeed)
+    (K : G.State → Payoff ι)
+    (hPoisson :
+      G.finkBellmanForcingVector
+          germ.endpointValue seed.H germ.endpointFinkPoint =
+        -G.finkContinuationResidualVector
+          K germ.endpointFinkPoint) :
+    ∀ source who,
+      germ.endpointValue source who + (seed.H - K) source who =
+        G.mixedStageEU source (germ.endpointProfile source) who +
+          expect (Math.PMFProduct.pmfPi (germ.endpointProfile source))
+            (fun action =>
+              expect (G.transition source action)
+                (fun next => (seed.H - K) next who)) := by
+  intro source who
+  have hcoordinate :=
+    congrFun (congrFun hPoisson source) who
+  unfold finkBellmanForcingVector
+    finkContinuationResidualVector
+    finkContinuationResidual at hcoordinate
+  change
+    germ.endpointValue source who + seed.H source who -
+          G.finkStageEU germ.endpointFinkPoint source who -
+          G.finkContinuationEU seed.H
+            germ.endpointFinkPoint source who =
+      -(G.finkContinuationEU K
+          germ.endpointFinkPoint source who - K source who)
+    at hcoordinate
+  rw [← germ.finkProfile_endpointFinkPoint]
+  change
+    germ.endpointValue source who + (seed.H - K) source who =
+      G.finkStageEU germ.endpointFinkPoint source who +
+        G.finkContinuationEU (seed.H - K)
+          germ.endpointFinkPoint source who
+  rw [G.finkContinuationEU_sub]
+  simp only [Pi.sub_apply] at hcoordinate ⊢
+  linarith
+
+/-- In the finite-bias/Poisson branch, either verification is complete or
+one player carries the sole remaining normalized positive neutral-action
+circulation. No coherent stage-adjustment hypothesis is needed for this
+dichotomy. -/
+theorem FiniteBiasSeed.playerNeutralCirculation_or_isUniformEquilibriumPayoff
+    (germ : G.AnalyticBellmanGerm)
+    (seed : germ.FiniteBiasSeed)
+    (K : G.State → Payoff ι)
+    (s₀ : G.State)
+    (hPoisson :
+      G.finkBellmanForcingVector
+          germ.endpointValue seed.H germ.endpointFinkPoint =
+        -G.finkContinuationResidualVector
+          K germ.endpointFinkPoint) :
+    (∃ who,
+      HasNormalizedPositiveChargedCirculation
+        (actualOccupationColumn
+          (germ.playerNeutralOccupationKernel who)
+          (germ.playerNeutralOccupationSource who))
+        (germ.playerNeutralOccupationCharge (seed.H - K) who)) ∨
+      G.IsUniformEquilibriumPayoff
+        s₀ (germ.endpointValue s₀) :=
+  germ.playerNeutralCirculation_or_isUniformEquilibriumPayoff
+    (seed.H - K) s₀ (seed.onProfileBias_H_sub K hPoisson)
+
 end AnalyticBellmanGerm
 end StochasticGame
 end GameTheory
