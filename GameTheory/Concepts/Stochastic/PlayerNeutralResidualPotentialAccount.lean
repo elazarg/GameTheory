@@ -23,7 +23,7 @@ fact instead of restoring a false full-family statement:
 * its negative drift on the original family is supported entirely on the
   previously deleted strict set;
 * this negative-drift cost is asymptotically sublinear under every
-  source-compatible adaptive selector; and
+  source-compatible adaptive pure selector or predictable mixture; and
 * pathwise, the selected centered transition scores are bounded by endpoint
   motion of the potential plus that exceptional cost.
 
@@ -233,6 +233,87 @@ theorem ZeroDriftAnalyticPotentialJet.centeredScore_le_account_add_negativeCost
     (germ.playerNeutralOccupationKernel who)
     (germ.playerNeutralOccupationSource who)
     next.leadingPotential choice source_compatible
+    next.negativeDriftCost
+  intro index
+  exact min_le_left _ _
+
+/-- Behavioral version of `negativeDriftCost_isSublinear`: predictable mixed
+mass on the previously deleted strict set pays every negative drift of the
+next residual potential. -/
+theorem ZeroDriftAnalyticPotentialJet.negativeDriftCost_isSublinear_mixed
+    {C : germ.PlayerNeutralStrictLeadingDrift B who jet}
+    {nextAnchor : G.State}
+    (next : C.ZeroDriftAnalyticPotentialJet nextAnchor)
+    (circulation :
+      HasNormalizedPositiveChargedCirculation
+        (actualOccupationColumn
+          (germ.playerNeutralOccupationKernel who)
+          (germ.playerNeutralOccupationSource who))
+        (germ.playerNeutralOccupationCharge B who))
+    (initial : G.State)
+    (selection :
+      ∀ n, (Fin (n + 1) → G.State) →
+        PMF (germ.PlayerNeutralOccupationIndex who))
+    (source_compatible :
+      ∀ n history index,
+        selection n history index ≠ 0 →
+          germ.playerNeutralOccupationSource who index =
+            history (Fin.last n)) :
+    IsAsymptoticallySublinear
+      (fun T =>
+        expect
+          (adaptiveHistoryLaw
+            (adaptiveMarkovStep initial
+              (mixedTransitionComparison
+                (germ.playerNeutralOccupationKernel who) selection))
+            (T + 1))
+          (fun history =>
+            |mixedTransitionCostSum
+              selection next.negativeDriftCost T history|)) := by
+  apply exceptionalMixedTransitionCost_isAsymptoticallySublinear
+    initial (germ.playerNeutralOccupationKernel who)
+    selection next.negativeDriftCost C.strictIndexSet
+    next.negativeDriftBound
+  · intro index index_not_mem
+    exact next.negativeDriftCost_eq_zero_of_not_mem
+      circulation index index_not_mem
+  · intro index _
+    exact next.abs_negativeDriftCost_le_bound index
+  · change IsAsymptoticallySublinear
+      (C.strictSetExpectedMass initial selection)
+    exact C.strictSetExpectedMass_isAsymptoticallySublinear
+      initial selection source_compatible
+
+/-- Pathwise behavioral account inequality.  Scores are centered under the
+complete mixed transition, while all negative residual drift is charged to
+predictable mass on the previously deleted strict set. -/
+theorem
+    ZeroDriftAnalyticPotentialJet.mixedCenteredScore_le_account_add_negativeCost
+    {C : germ.PlayerNeutralStrictLeadingDrift B who jet}
+    {nextAnchor : G.State}
+    (next : C.ZeroDriftAnalyticPotentialJet nextAnchor)
+    (selection :
+      ∀ n, (Fin (n + 1) → G.State) →
+        PMF (germ.PlayerNeutralOccupationIndex who))
+    (source_compatible :
+      ∀ n history index,
+        selection n history index ≠ 0 →
+          germ.playerNeutralOccupationSource who index =
+            history (Fin.last n))
+    (T : ℕ) (history : Fin (T + 1) → G.State) :
+    predictableScoreSum
+        (adaptiveMixedTransitionCenteredScore
+          (germ.playerNeutralOccupationKernel who)
+          next.leadingPotential selection)
+        (T + 1) history ≤
+      next.leadingPotential (history (Fin.last T)) -
+          next.leadingPotential (history 0) +
+        |mixedTransitionCostSum selection
+          next.negativeDriftCost T history| := by
+  apply mixedTransitionCenteredScore_le_accountIncrement_add_cost
+    (germ.playerNeutralOccupationKernel who)
+    (germ.playerNeutralOccupationSource who)
+    next.leadingPotential selection source_compatible
     next.negativeDriftCost
   intro index
   exact min_le_left _ _

@@ -6,6 +6,8 @@ Authors: GameTheory contributors
 
 import Mathlib.Data.Finset.Card
 import Mathlib.Data.Finset.SDiff
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Data.Real.Basic
 import Mathlib.Order.WellFounded
 
@@ -27,6 +29,8 @@ deflation step or attach any stochastic or strategic meaning to one.
 -/
 
 set_option autoImplicit false
+
+noncomputable section
 
 namespace Math
 
@@ -249,6 +253,163 @@ theorem supportsExceptional_accumulate
       (fun index => oldCost index + newCost index) :=
   (old_exceptional.of_deflates step).add
     (supportsExceptional_of_supportedOn_removed step new_supported)
+
+/-- The dependent finite type of indices active at one ambient node. -/
+abbrev ActiveIndex (state : FiniteDeflationState I) :=
+  {index : I // index ∈ state.active}
+
+noncomputable instance instFintypeActiveIndex
+    (state : FiniteDeflationState I) :
+    Fintype state.ActiveIndex :=
+  Fintype.ofFinite _
+
+/-- Active indices on which a scalar score is strictly positive. -/
+def strictActiveSet
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ) :
+    Finset state.ActiveIndex :=
+  Finset.univ.filter fun index => 0 < score index
+
+omit [DecidableEq I] in
+theorem mem_strictActiveSet_iff
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ)
+    (index : state.ActiveIndex) :
+    index ∈ state.strictActiveSet score ↔ 0 < score index := by
+  simp [strictActiveSet]
+
+/-- Flatten a strict set of active subtype indices back into the fixed
+ambient type. -/
+def strictAmbientSet
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ) : Finset I :=
+  (state.strictActiveSet score).image Subtype.val
+
+theorem strictAmbientSet_subset_active
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ) :
+    state.strictAmbientSet score ⊆ state.active := by
+  intro index index_strict
+  simp only [strictAmbientSet, Finset.mem_image] at index_strict
+  obtain ⟨activeIndex, _, rfl⟩ := index_strict
+  exact activeIndex.2
+
+theorem strictAmbientSet_nonempty_iff
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ) :
+    (state.strictAmbientSet score).Nonempty ↔
+      ∃ index, 0 < score index := by
+  constructor
+  · rintro ⟨index, index_strict⟩
+    simp only [strictAmbientSet, Finset.mem_image] at index_strict
+    obtain ⟨activeIndex, activeIndex_strict, _⟩ := index_strict
+    exact ⟨activeIndex,
+      (state.mem_strictActiveSet_iff score activeIndex).mp
+        activeIndex_strict⟩
+  · rintro ⟨activeIndex, score_pos⟩
+    refine ⟨activeIndex.1, ?_⟩
+    simp only [strictAmbientSet, Finset.mem_image]
+    exact ⟨activeIndex,
+      (state.mem_strictActiveSet_iff score activeIndex).mpr score_pos,
+      rfl⟩
+
+/-- Delete every currently active index with positive score. -/
+def deleteStrict
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ) :
+    FiniteDeflationState I :=
+  state.delete (state.strictAmbientSet score)
+
+/-- A positive active score makes strict deletion a genuine ambient
+deflation. -/
+theorem deleteStrict_deflates
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ)
+    (strict_nonempty : ∃ index, 0 < score index) :
+    (state.deleteStrict score).Deflates state := by
+  apply state.delete_deflates
+  · exact state.strictAmbientSet_subset_active score
+  · exact
+      (state.strictAmbientSet_nonempty_iff score).mpr
+        strict_nonempty
+
+/-- Strict active deletion lowers the ambient active-set rank. -/
+theorem rank_deleteStrict_lt
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ)
+    (strict_nonempty : ∃ index, 0 < score index) :
+    (state.deleteStrict score).rank < state.rank :=
+  rankLt_of_deflates
+    (state.deleteStrict_deflates score strict_nonempty)
+
+/-- For nonnegative scores, either all active scores vanish or deleting the
+positive-score set is a genuine finite deflation. -/
+theorem all_score_zero_or_deleteStrict_deflates
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ)
+    (score_nonneg : ∀ index, 0 ≤ score index) :
+    (∀ index, score index = 0) ∨
+      (state.deleteStrict score).Deflates state := by
+  by_cases strict_nonempty : ∃ index, 0 < score index
+  · exact Or.inr (state.deleteStrict_deflates score strict_nonempty)
+  · left
+    intro index
+    apply le_antisymm
+    · exact le_of_not_gt fun score_pos =>
+        strict_nonempty ⟨index, score_pos⟩
+    · exact score_nonneg index
+
+/-- The exceptional set after strict active deletion is the old exceptional
+set together with the newly positive-score indices. -/
+theorem exceptional_deleteStrict_eq
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ) :
+    (state.deleteStrict score).exceptional =
+      state.exceptional ∪ state.strictAmbientSet score := by
+  ext index
+  by_cases index_active : index ∈ state.active <;>
+    by_cases index_strict :
+      index ∈ state.strictAmbientSet score <;>
+    simp [exceptional, deleteStrict, delete,
+      index_active, index_strict]
+
+/-- Active indices after strict deletion are equivalent to the old active
+indices outside the strict active set.  This equivalence flattens the
+otherwise nested residual subtype. -/
+def deleteStrictActiveEquivRetained
+    (state : FiniteDeflationState I)
+    (score : state.ActiveIndex → ℝ) :
+    (state.deleteStrict score).ActiveIndex ≃
+      {index : state.ActiveIndex //
+        index ∉ state.strictActiveSet score} where
+  toFun index := by
+    have retained :
+        index.1 ∈ state.active ∧
+          index.1 ∉ state.strictAmbientSet score :=
+      Finset.mem_sdiff.mp index.2
+    refine ⟨⟨index.1, retained.1⟩, ?_⟩
+    intro index_strict
+    apply retained.2
+    simp only [strictAmbientSet, Finset.mem_image]
+    exact ⟨⟨index.1, retained.1⟩, index_strict, rfl⟩
+  invFun index := by
+    refine ⟨index.1.1, Finset.mem_sdiff.mpr ⟨index.1.2, ?_⟩⟩
+    intro index_ambient_strict
+    simp only [strictAmbientSet, Finset.mem_image] at index_ambient_strict
+    obtain ⟨strictIndex, strictIndex_mem, value_eq⟩ :=
+      index_ambient_strict
+    apply index.2
+    have strictIndex_eq : strictIndex = index.1 := by
+      apply Subtype.ext
+      exact value_eq
+    simpa only [strictIndex_eq] using strictIndex_mem
+  left_inv index := by
+    apply Subtype.ext
+    rfl
+  right_inv index := by
+    apply Subtype.ext
+    apply Subtype.ext
+    rfl
 
 end FiniteDeflationState
 end Math

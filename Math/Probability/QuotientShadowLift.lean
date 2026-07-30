@@ -5,6 +5,7 @@ Authors: GameTheory contributors
 -/
 
 import Math.Probability.PredictableCoreShadow
+import Math.Probability.MarkovOccupation
 
 /-!
 # Causal lifting of finite quotient shadows
@@ -299,6 +300,251 @@ theorem adaptiveHistoryLaw_quotientShadowLift_map_quotientPair
   exact quotientShadowLiftStep_map_quotientPair
     χ controlled quotientControlled quotientStep
     controlled_quotient quotientStep_fst
+
+/-! ## Strong lumpability and supplied quotient gluing -/
+
+/-- A time-homogeneous Markov comparison reads the current state from the
+last coordinate of the nonempty history. -/
+def markovKernelComparison
+    (kernel : S → PMF S) :
+    ∀ n, (Fin (n + 1) → S) → PMF S :=
+  fun n history => kernel (history (Fin.last n))
+
+/-- A full-state kernel is strongly lumpable through `χ` when its quotient
+transition depends only on the current quotient state.  The quotient kernel
+is included as data, avoiding any choice of representatives. -/
+def IsStronglyLumpable
+    (kernel : S → PMF S) (χ : S → C)
+    (quotientKernel : C → PMF C) : Prop :=
+  ∀ state,
+    (kernel state).map χ = quotientKernel (χ state)
+
+/-- Strong lumpability commutes with the adaptive history-step encoding of
+a finite Markov chain, including the initial point-mass step. -/
+theorem adaptiveMarkovStep_map_of_stronglyLumpable
+    (initial : S) (kernel : S → PMF S) (χ : S → C)
+    (quotientKernel : C → PMF C)
+    (lumpable : IsStronglyLumpable kernel χ quotientKernel) :
+    ∀ n history,
+      (adaptiveMarkovStep initial
+          (markovKernelComparison kernel) n history).map χ =
+        adaptiveMarkovStep (χ initial)
+          (markovKernelComparison quotientKernel) n
+          (mapFiniteHistory χ history) := by
+  intro n history
+  cases n with
+  | zero =>
+      exact PMF.pure_map χ initial
+  | succ n =>
+      change
+        (kernel (history (Fin.last n))).map χ =
+          quotientKernel
+            ((mapFiniteHistory χ history) (Fin.last n))
+      simpa using lumpable (history (Fin.last n))
+
+/-- Supplied one-step gluing of a quotient-state law and a core-state law.
+
+The joint step may depend on the complete quotient/core history.  Its two
+marginals must be exactly the prescribed quotient and core steps at their
+respective projected histories.  Strategic legality of `coreStep` is not
+part of this probabilistic structure. -/
+structure QuotientGluingInterface
+    (quotientControlled : ∀ n, (Fin n → C) → PMF C)
+    (coreStep : ∀ n, (Fin n → R) → PMF R) where
+  jointStep : ∀ n, (Fin n → C × R) → PMF (C × R)
+  map_fst :
+    ∀ n history,
+      (jointStep n history).map Prod.fst =
+        quotientControlled n
+          (mapFiniteHistory Prod.fst history)
+  map_snd :
+    ∀ n history,
+      (jointStep n history).map Prod.snd =
+        coreStep n
+          (mapFiniteHistory Prod.snd history)
+
+namespace QuotientGluingInterface
+
+/-- Causally lift a supplied quotient gluing to the full state space. -/
+noncomputable def liftStep
+    [Finite S] [Finite C]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S) :
+    ∀ n, (Fin n → S × R) → PMF (S × R) :=
+  quotientShadowLiftStep χ controlled G.jointStep
+
+theorem liftStep_map_fst
+    [Finite S] [Finite C]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S)
+    (controlled_quotient :
+      ∀ n history,
+        (controlled n history).map χ =
+          quotientControlled n
+            (mapFiniteHistory χ history))
+    (n : ℕ) (history : Fin n → S × R) :
+    (G.liftStep χ controlled n history).map Prod.fst =
+      controlled n (mapFiniteHistory Prod.fst history) := by
+  exact quotientShadowLiftStep_map_fst
+    χ controlled quotientControlled G.jointStep
+    controlled_quotient G.map_fst n history
+
+theorem liftStep_map_snd
+    [Finite S] [Finite C]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S)
+    (n : ℕ) (history : Fin n → S × R) :
+    (G.liftStep χ controlled n history).map Prod.snd =
+      coreStep n (mapFiniteHistory Prod.snd history) := by
+  apply heterogeneousFiberLift_map_snd
+  exact G.map_snd n
+    (mapFiniteHistory (quotientPairMap χ) history)
+
+theorem liftStep_map_quotientPair
+    [Finite S] [Finite C]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S)
+    (controlled_quotient :
+      ∀ n history,
+        (controlled n history).map χ =
+          quotientControlled n
+            (mapFiniteHistory χ history))
+    (n : ℕ) (history : Fin n → S × R) :
+    (G.liftStep χ controlled n history).map
+        (quotientPairMap χ) =
+      G.jointStep n
+        (mapFiniteHistory (quotientPairMap χ) history) := by
+  exact quotientShadowLiftStep_map_quotientPair
+    χ controlled quotientControlled G.jointStep
+    controlled_quotient G.map_fst n history
+
+theorem adaptiveHistoryLaw_liftStep_map_fst
+    [Finite S] [Finite C] [Finite R]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S)
+    (controlled_quotient :
+      ∀ n history,
+        (controlled n history).map χ =
+          quotientControlled n
+            (mapFiniteHistory χ history))
+    (T : ℕ) :
+    (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+        (mapFiniteHistory Prod.fst) =
+      adaptiveHistoryLaw controlled T := by
+  apply adaptiveHistoryLaw_map
+  exact G.liftStep_map_fst χ controlled controlled_quotient
+
+theorem adaptiveHistoryLaw_liftStep_map_snd
+    [Finite S] [Finite C] [Finite R]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S)
+    (T : ℕ) :
+    (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+        (mapFiniteHistory Prod.snd) =
+      adaptiveHistoryLaw coreStep T := by
+  apply adaptiveHistoryLaw_map
+  exact G.liftStep_map_snd χ controlled
+
+theorem adaptiveHistoryLaw_liftStep_map_quotientPair
+    [Finite S] [Finite C] [Finite R]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S)
+    (controlled_quotient :
+      ∀ n history,
+        (controlled n history).map χ =
+          quotientControlled n
+            (mapFiniteHistory χ history))
+    (T : ℕ) :
+    (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+        (mapFiniteHistory (quotientPairMap χ)) =
+      adaptiveHistoryLaw G.jointStep T := by
+  apply adaptiveHistoryLaw_map
+  exact G.liftStep_map_quotientPair
+    χ controlled controlled_quotient
+
+/-- The supplied one-step gluing recursively yields one causal full-state
+shadow with all three exact history laws. -/
+theorem adaptiveHistoryLaw_liftStep_exact
+    [Finite S] [Finite C] [Finite R]
+    {quotientControlled : ∀ n, (Fin n → C) → PMF C}
+    {coreStep : ∀ n, (Fin n → R) → PMF R}
+    (G : QuotientGluingInterface quotientControlled coreStep)
+    (χ : S → C)
+    (controlled : ∀ n, (Fin n → S) → PMF S)
+    (controlled_quotient :
+      ∀ n history,
+        (controlled n history).map χ =
+          quotientControlled n
+            (mapFiniteHistory χ history))
+    (T : ℕ) :
+    (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+          (mapFiniteHistory Prod.fst) =
+        adaptiveHistoryLaw controlled T ∧
+      (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+          (mapFiniteHistory Prod.snd) =
+        adaptiveHistoryLaw coreStep T ∧
+      (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+          (mapFiniteHistory (quotientPairMap χ)) =
+        adaptiveHistoryLaw G.jointStep T :=
+  ⟨G.adaptiveHistoryLaw_liftStep_map_fst
+      χ controlled controlled_quotient T,
+    G.adaptiveHistoryLaw_liftStep_map_snd χ controlled T,
+    G.adaptiveHistoryLaw_liftStep_map_quotientPair
+      χ controlled controlled_quotient T⟩
+
+/-- Finite strong lumpability supplies the quotient-commutation hypothesis
+needed by the exact causal gluing theorem for time-homogeneous Markov
+kernels. -/
+theorem adaptiveHistoryLaw_strongLumpableMarkov_liftStep_exact
+    [Finite S] [Finite C] [Finite R]
+    (initial : S) (kernel : S → PMF S) (χ : S → C)
+    (quotientKernel : C → PMF C)
+    (lumpable : IsStronglyLumpable kernel χ quotientKernel)
+    (coreStep : ∀ n, (Fin n → R) → PMF R)
+    (G : QuotientGluingInterface
+      (adaptiveMarkovStep (χ initial)
+        (markovKernelComparison quotientKernel))
+      coreStep)
+    (T : ℕ) :
+    let controlled :=
+      adaptiveMarkovStep initial
+        (markovKernelComparison kernel)
+    (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+          (mapFiniteHistory Prod.fst) =
+        adaptiveHistoryLaw controlled T ∧
+      (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+          (mapFiniteHistory Prod.snd) =
+        adaptiveHistoryLaw coreStep T ∧
+      (adaptiveHistoryLaw (G.liftStep χ controlled) T).map
+          (mapFiniteHistory (quotientPairMap χ)) =
+        adaptiveHistoryLaw G.jointStep T := by
+  dsimp only
+  apply G.adaptiveHistoryLaw_liftStep_exact
+  exact adaptiveMarkovStep_map_of_stronglyLumpable
+    initial kernel χ quotientKernel lumpable
+
+end QuotientGluingInterface
 
 end Probability
 end Math
