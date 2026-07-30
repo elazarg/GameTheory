@@ -81,6 +81,66 @@ structure AnalyticBoundedOccupationSeparator
         potential t destination * column t i₀ destination) =
           charge * t ^ poleOrder
 
+namespace AnalyticPositiveCirculation
+
+/-- The positive support of an analytic nonnegative circulation stabilizes
+on a punctured right neighborhood. The distinguished transition belongs to
+that fixed support because its mass is exactly a positive power of the
+parameter. -/
+theorem exists_eventually_fixed_positiveSupport
+    [Fintype S] [Fintype I]
+    {column : ℝ → I → S → ℝ} {i₀ : I}
+    (C : AnalyticPositiveCirculation column i₀) :
+    ∃ support : Finset I,
+      i₀ ∈ support ∧
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          ∀ i, (0 < C.mass t i ↔ i ∈ support) := by
+  classical
+  have hanalytic :
+      ∀ i, AnalyticAt ℝ (fun t => C.mass t i) 0 := by
+    have hmassAnalytic := C.analytic_mass
+    rw [analyticAt_pi_iff] at hmassAnalytic
+    exact hmassAnalytic
+  have hnonnegative :
+      ∀ i,
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          0 ≤ C.mass t i := by
+    intro i
+    exact C.eventual.mono fun _ ht => ht.1 i
+  obtain ⟨zeroMass, hzeroMass⟩ :=
+    finite_analytic_nonnegative_family_eventually_active_set
+      (fun i t => C.mass t i) hanalytic hnonnegative
+  let support : Finset I :=
+    Finset.univ.filter fun i => ¬zeroMass i
+  have hsupport :
+      ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+        ∀ i, (0 < C.mass t i ↔ i ∈ support) := by
+    filter_upwards [hzeroMass] with t ht i
+    simpa [support] using (ht i).2
+  have hi₀ : i₀ ∈ support := by
+    obtain ⟨t, ⟨htSupport, htMass⟩, htpos⟩ :=
+      ((hsupport.and C.eventual).and self_mem_nhdsWithin).exists
+    apply (htSupport i₀).mp
+    rw [htMass.2.1]
+    exact pow_pos (mem_Ioi.mp htpos) _
+  exact ⟨support, hi₀, hsupport⟩
+
+/-- Erasing the distinguished transition from the stabilized positive
+support is a strict finite support-rank decrease. -/
+theorem card_erase_distinguished_lt_fixedSupport
+    [Fintype S] [Fintype I] [DecidableEq I]
+    {column : ℝ → I → S → ℝ} {i₀ : I}
+    (C : AnalyticPositiveCirculation column i₀) :
+    ∃ support : Finset I,
+      (support.erase i₀).card < support.card ∧
+        ∀ᶠ t in nhdsWithin 0 (Ioi 0),
+          ∀ i, (0 < C.mass t i ↔ i ∈ support) := by
+  obtain ⟨support, hi₀, hsupport⟩ :=
+    C.exists_eventually_fixed_positiveSupport
+  exact ⟨support, card_erase_lt_supportRank support hi₀, hsupport⟩
+
+end AnalyticPositiveCirculation
+
 /-- Full-vector form of normalized positive circulation. -/
 def HasFullNormalizedPositiveCirculation
     [Fintype S] [Fintype I]
