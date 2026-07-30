@@ -12,9 +12,9 @@ Status: partial
 Last verified: 2026-07-30
 
 This ledger accounts for every declaration in the pinned
-`CommonKnowledge.lean` file. The 32 declarations in
-`ApproximateCommonKnowledge.lean` remain unaccounted until their separate
-threshold-belief batch is reviewed; generated index rows are not
+`CommonKnowledge.lean` file and the public operator/exact-bridge layer of
+`ApproximateCommonKnowledge.lean`. Fourteen quantitative-agreement declarations
+and private mass lemmas remain unaccounted; generated index rows are not
 classifications.
 
 | Pinned path | Declaration | Kind | Disposition | Successor declaration or gate | Evidence | Notes |
@@ -49,6 +49,24 @@ classifications.
 | same | `selfEvident_eq_biUnion_cells` | theorem | adapt | `GameTheory.Epistemic.selfEvident_eq_biUnion_cells` | focused build | Uses distinct finite cells. |
 | same | `selfEvident_sum_decomp` | theorem | adapt | `GameTheory.Epistemic.selfEvident_sum_decomp` | focused build | Finite sums require decidable equality only at the theorem. |
 | same | `aumann_full_agreement` | theorem | adapt | `GameTheory.Epistemic.aumann_full_agreement` | EXP-043/D16; axiom audit | Full support is operation-local; no action profile, Protocol, or topology premise appears. |
+| `Concepts/Knowledge/ApproximateCommonKnowledge.lean` | `IsPositivePrior` | definition | subsumed | `GameTheory.Probability.FinDist.FullSupport` | D2/D16 | The canonical finite law already owns the exact positivity condition. |
+| same | `IsProbabilityThreshold` | definition | adapt | `GameTheory.Epistemic.IsProbabilityThreshold` | focused build | Unit-interval side condition remains explicit and operation-local. |
+| same | `PBelief` | definition | adapt | `GameTheory.Epistemic.PBelief` | focused build | Uses the canonical `FinDist` posterior. |
+| same | `mem_PBelief_iff` | theorem | adapt | `GameTheory.Epistemic.mem_PBelief_iff` | focused build | Posterior-at-least-threshold characterization. |
+| same | `PBelief_mono_threshold` | theorem | adapt | `GameTheory.Epistemic.PBelief_mono_threshold` | focused build | Lower thresholds enlarge belief events. |
+| same | `mutualPBelief` | definition | adapt | `GameTheory.Epistemic.mutualPBelief` | focused build | Finite agent enumeration is requested only by the operator. |
+| same | `mem_mutualPBelief_iff` | theorem | adapt | `GameTheory.Epistemic.mem_mutualPBelief_iff` | focused build | Simultaneous posterior characterization. |
+| same | `mutualPBelief_mono_threshold` | theorem | adapt | `GameTheory.Epistemic.mutualPBelief_mono_threshold` | focused build | Pointwise threshold monotonicity. |
+| same | `IsPEvident` | definition | adapt | `GameTheory.Epistemic.IsPEvident` | focused build | Witness-event evidence over the shared partition model. |
+| same | `IsPEvident.mono_threshold` | theorem | adapt | `GameTheory.Epistemic.IsPEvident.mono_threshold` | focused build | Threshold weakening. |
+| same | `CommonPBeliefAt` | definition | adapt | `GameTheory.Epistemic.CommonPBeliefAt` | focused build | Finite Monderer--Samet witness formulation. |
+| same | `CommonPBelief` | definition | adapt | `GameTheory.Epistemic.CommonPBelief` | focused build | Enumerates only the finite state carrier at this operation. |
+| same | `mem_CommonPBelief_iff` | theorem | adapt | `GameTheory.Epistemic.mem_CommonPBelief_iff` | focused build | Membership characterization. |
+| same | `CommonPBeliefAt.implies_mutualPBelief` | theorem | adapt | `GameTheory.Epistemic.CommonPBeliefAt.implies_mutualPBelief` | focused build | Witness containment gives mutual belief at the state. |
+| same | `CommonPBeliefAt.mono_threshold` | theorem | adapt | `GameTheory.Epistemic.CommonPBeliefAt.mono_threshold` | focused build | Reuses both evidence and mutual-belief monotonicity. |
+| same | `posterior_eq_one_of_cell_subset` | theorem | adapt | `GameTheory.Epistemic.posterior_eq_one_of_cell_subset` | focused build | Local full-support bridge without whole-state finiteness. |
+| same | `IsSelfEvident.isPEvident` | theorem | adapt | `GameTheory.Epistemic.IsSelfEvident.isPEvident` | focused build | Exact self-evidence implies threshold evidence for `p ≤ 1`. |
+| same | `CommonKnowledgeAt.commonPBeliefAt` | theorem | adapt | `GameTheory.Epistemic.CommonKnowledgeAt.commonPBeliefAt` | focused build; axiom audit | Exact common knowledge implies common `p`-belief without Protocol or Analysis. |
 
 Attribution: the pinned file supplies the finite S5 operators, public-event
 common-knowledge characterization, cell decomposition, and agreement proof
@@ -72,3 +90,10 @@ audits remain at zero forbidden tokens and the standard `propext`,
 `Classical.choice`, and `Quot.sound` profile. Boundary probes positively reach
 all four finite-law/epistemic/common-knowledge inputs and reject the same five
 static, sequential, and analytic dependencies.
+
+The approximate operator/bridge batch expands the root to 544 nonblank lines,
+with a 1,717-job focused build and 3,351-job full build. Five positive probes
+now require the finite law, partition, Aumann, exact-common-knowledge, and
+exact-to-approximate layers; all five forbidden dependency probes remain
+unreachable. The exact-to-approximate bridge retains the standard axiom
+profile.

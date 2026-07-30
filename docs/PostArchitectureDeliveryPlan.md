@@ -351,7 +351,7 @@ theory.
 | matching and market design | Gale-Shapley stability and perfect matching, then strategyproofness or rural hospitals | native preferences and matchings; share order/list mathematics only |
 | bargaining | Nash solution affine invariance on an honest feasible utility set | native convex feasible-set branch under `Analysis` when topology is used |
 | finite fair division | round-robin EF1 and one envy-cycle or maximin-share result | coordinated mechanism branch; no measurable cake assumptions |
-| knowledge and epistemic games | **passed (EXP-043/D16); finite S5/common knowledge recovered** | recover the remaining 32 approximate-common-knowledge declarations in `Epistemic`; any Protocol bridge must state the extra state-view premise |
+| knowledge and epistemic games | **passed (EXP-043/D16); finite S5/common knowledge and approximate operators recovered** | recover the remaining quantitative approximate-agreement bound and 13 private mass lemmas; any Protocol bridge must state the extra state-view premise |
 | evolutionary stability | **passed (EXP-044/D17):** ESS implies canonical symmetric Nash | recover static ESS/NSS in `Evolutionary`; dynamics do not enter until a named theorem measures scalar/topology needs |
 | contracts | one incentive or participation theorem with explicit outside option | mechanism branch sharing only actual report/deviation vocabulary |
 
@@ -528,9 +528,8 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. inventory and recover the remaining 32 approximate-common-knowledge
-   declarations behind D16, and finish the minimal D8 transformation
-   obligations;
+1. recover the remaining D-KNOW quantitative approximate-agreement batch
+   behind D16, and finish the minimal D8 transformation obligations;
 2. add exact broad-package ledgers for the first NFG/FOSG and static recovery
    batches, using the generated index only as a review queue;
 3. consolidate moving delivery probes without rewriting historical phase

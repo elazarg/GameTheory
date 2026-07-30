@@ -409,7 +409,8 @@ if (-not $SkipReachability) {
     'GameTheory.Probability.FinDist',
     'GameTheory.Epistemic.InfoPartition',
     'GameTheory.Epistemic.aumann_full_agreement',
-    'GameTheory.Epistemic.CommonKnowledgeAt.idem')
+    'GameTheory.Epistemic.CommonKnowledgeAt.idem',
+    'GameTheory.Epistemic.CommonKnowledgeAt.commonPBeliefAt')
   $epistemicBoundary = @(
     'GameTheory.IsNash',
     'GameTheory.Protocol.InformationModel',
@@ -559,7 +560,7 @@ if ($VerifyExpected) {
     $Expected['REPEATED_BRIDGE_PROBES_REACHED'] = 3
     $Expected['REPEATED_BRIDGE_PROTOCOL_REJECTED'] = 1
     $Expected['GAMETHEORYMATH_GAME_REJECTED'] = 1
-    $Expected['EPISTEMIC_INPUT_PROBES_REACHED'] = 4
+    $Expected['EPISTEMIC_INPUT_PROBES_REACHED'] = 5
     $Expected['EPISTEMIC_BOUNDARY_PROBES_REJECTED'] = 5
     $Expected['EVOLUTIONARY_BASIC_INPUT_PROBES_REACHED'] = 2
     $Expected['EVOLUTIONARY_BASIC_BOUNDARY_PROBES_REJECTED'] = 6

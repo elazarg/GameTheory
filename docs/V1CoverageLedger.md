@@ -122,7 +122,7 @@ declaration-based.
 |---|---|---:|---|---|---|---|
 | D-LEARN | `Concepts/Learning/**` | 8 | stable static consumer; limits in `Analysis` | validated by F2 | partial | inventory regret algorithms, then fictitious play on a potential game |
 | D-COMM | `Concepts/Communication/**`, `Core/Babbling.lean`, `Languages/ElectronicMailGame.lean` | 5 | static core or Protocol according to timing | assigned | not started | babbling equilibrium without a second solution concept |
-| D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | partial; 30/62 declarations accounted | [finite S5/common-knowledge ledger](coverage/D-KNOW-aumann.md); recover the remaining 32 approximate-common-knowledge declarations |
+| D-KNOW | `Concepts/Knowledge/**` | 2 | stable `Epistemic` branch; a Protocol bridge only with an explicit state-view premise | validated by EXP-043/D16 | partial; 48/62 declarations accounted | [finite and approximate common-knowledge ledger](coverage/D-KNOW-aumann.md); recover the remaining quantitative bound and 13 private mass lemmas |
 | D-REPEAT | `Concepts/Repeated/**` | 16 | `Repeated`, finite Protocol bridge, opt-in `Analysis.Repeated` | validated for deterministic and finite public-signal theory | partial | monitoring equilibrium/rank hierarchy and uniform results; no infinite realized-path law |
 | D-EVOL | `Concepts/Classes/EvolutionaryStability.lean` | 1 | stable `Evolutionary`; dynamics only in future opt-in Analysis | validated by EXP-044/D17 | complete | [nine-declaration ledger](coverage/D-EVOL-static.md); no pinned population dynamics to recover |
 

@@ -119,3 +119,14 @@ Phase 2 gate positively reaches the new common-knowledge layer (`4/4`
 Epistemic inputs) while rejecting the same five static, sequential, and
 analytic dependencies. Representative S5/common-knowledge theorems retain the
 standard axiom profile.
+
+The approximate operator batch also stays inside D16. `PBelief`,
+`mutualPBelief`, `IsPEvident`, and `CommonPBeliefAt` reuse the same posterior,
+partition, and finite event model; exact common knowledge implies common
+`p`-belief for every threshold at most one. The predecessor's separate
+positive-prior predicate is subsumed by `FinDist.FullSupport`.
+
+This raises the expanded Epistemic root to 544 nonblank lines. Its focused
+build completes in 1,717 jobs and the full build in 3,351. The Phase 2 audit
+now positively reaches all five intended Epistemic layers and still rejects
+all five forbidden dependency probes.

@@ -2850,6 +2850,11 @@ memory.
   `CommonKnowledge.lean` have reviewed rows; 32 approximate-common-knowledge
   declarations remain. The expanded root builds in 1,716 focused / 3,350 full
   jobs, with Epistemic input/boundary probe counts `4/5`.
+- **Approximate follow-on:** the `p`-belief, mutual/common `p`-belief,
+  threshold-monotonicity, and exact-to-approximate bridge layer is now stable.
+  D-KNOW accounting is 48/62; the quantitative approximate-agreement theorem
+  and 13 private mass lemmas remain. The expanded root builds in 1,717 focused
+  / 3,351 full jobs with input/boundary probe counts `5/5`.
 
 ### EXP-044: evolutionary stability static/dynamic ownership
 

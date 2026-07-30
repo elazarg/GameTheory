@@ -21,8 +21,8 @@ GameTheory/Core          signatures, profiles, forms, preferences, utility,
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation
-GameTheory/Epistemic     finite information partitions, posteriors, S5 and
-                         common knowledge, and Aumann agreement
+GameTheory/Epistemic     finite information partitions, posteriors, exact and
+                         approximate common knowledge, and agreement
 GameTheory/Evolutionary  static ESS/NSS and the canonical symmetric-Nash bridge
 GameTheory/Finite        executable rational frontend and its correctness layer
 GameTheory/Analysis      stable, opt-in fixed-point, minimax, and existence theory
