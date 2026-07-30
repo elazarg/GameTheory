@@ -21,32 +21,6 @@ universe uPlayer uNode uValue uIndex
 variable {Player : Type uPlayer} {Node : Type uNode}
 variable {diagram : GameTheory.Languages.MAID.Structure Player Node}
 
-/-- A dependent finite product is invariant under reindexing its coordinates
-by an equivalence. -/
-theorem finDist_pi_reindex
-    {ι κ : Type uIndex} [Fintype ι] [Fintype κ]
-    (A : ι → Type uValue) (equiv : κ ≃ ι)
-    (laws : (i : ι) → FinDist (A i)) :
-    FinDist.map (Equiv.piCongrLeft A equiv).symm
-        (FinDist.pi laws) =
-      FinDist.pi (fun k => laws (equiv k)) := by
-  classical
-  apply FinDist.ext_of_prob
-  intro target
-  let functionEquiv := Equiv.piCongrLeft A equiv
-  have htarget :
-      target = functionEquiv.symm (functionEquiv target) :=
-    (functionEquiv.symm_apply_apply target).symm
-  conv_lhs => rw [htarget]
-  rw [FinDist.prob_map_of_injective functionEquiv.symm
-      functionEquiv.symm.injective,
-    FinDist.prob_pi, FinDist.prob_pi,
-    ← equiv.prod_comp
-      (g := fun i => (laws i).prob (functionEquiv target i))]
-  apply Finset.prod_congr rfl
-  intro k _
-  simp [functionEquiv]
-
 /-- Sequentially draw a fixed node-law family and replace each listed
 coordinate. -/
 def fixedAssignmentRun [DecidableEq Node]
@@ -148,10 +122,8 @@ theorem fixedAssignmentRun_eq_pi [DecidableEq Node]
               (FinDist.pi remainingLaws) =
             FinDist.pi
               (fun node : tailIndex => laws node.1) := by
-        simpa [remainingEquiv, remainingValue, remainingLaws,
-          tailIndex] using
-          finDist_pi_reindex remainingValue remainingEquiv
-            remainingLaws
+        simpa [remainingEquiv, remainingValue, remainingLaws, tailIndex] using
+          FinDist.pi_reindex remainingValue remainingEquiv remainingLaws
       have hresolve
           (value : diagram.Value head) :
           FinDist.map

@@ -16,8 +16,9 @@ GameTheory/Probability   finite-support probability laws (FinDist)
 GameTheory/Core          signatures, profiles, forms, preferences, utility,
                          deviations, equilibrium and response concepts, static
                          game theory, Bayesian recommendation/obedience,
-                         finite no-regret learning, and foundational
-                         social/coalitional theory
+                         finite no-regret learning, concrete reindexing and
+                         relabeling laws, and foundational social/coalitional
+                         theory
 GameTheory/Protocol      execution, histories, information, assessment,
                          randomization, well-founded subgame perfection, and
                          static-form compilation

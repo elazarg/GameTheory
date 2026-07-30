@@ -1107,6 +1107,59 @@ theorem support_pi_subset [DecidableEq ι] (μ : ∀ i, FinDist (A i)) :
   simp only [Finset.mem_coe, Fintype.mem_piFinset, mem_supportFinset]
   exact mem_support_pi.mp hs
 
+/-- **Independent products commute with inverse coordinate reindexing.**
+The dependent transports induced by the index equivalence remain contained in
+`Equiv.piCongrLeft'`; callers see an equality of ordinary finite laws. -/
+theorem pi_unreindex {κ : Type*} [Fintype κ] (A : ι → Type*)
+    (equiv : ι ≃ κ)
+    (laws : (target : κ) → FinDist (A (equiv.symm target))) :
+    map (Equiv.piCongrLeft' A equiv).symm (pi laws) =
+      pi ((Equiv.piCongrLeft' (fun player => FinDist (A player)) equiv).symm laws) := by
+  classical
+  let profileEquiv := Equiv.piCongrLeft' A equiv
+  let lawEquiv :=
+    Equiv.piCongrLeft' (fun player => FinDist (A player)) equiv
+  apply ext_of_prob
+  intro source
+  have htarget :
+      source = profileEquiv.symm (profileEquiv source) :=
+    (profileEquiv.symm_apply_apply source).symm
+  conv_lhs => rw [htarget]
+  rw [prob_map_of_injective profileEquiv.symm
+      profileEquiv.symm.injective,
+    prob_pi, prob_pi,
+    ← equiv.prod_comp
+      (g := fun target => (laws target).prob (profileEquiv source target))]
+  apply Finset.prod_congr rfl
+  intro player _
+  obtain ⟨target, rfl⟩ := equiv.symm.surjective player
+  simp [profileEquiv]
+  rw [equiv.apply_symm_apply target]
+
+/-- **Independent products commute with forward coordinate reindexing.**
+This orientation exposes the target family as ordinary composition with the
+equivalence, which is the form used by serialization consumers. -/
+theorem pi_reindex {κ : Type*} [Fintype κ] (A : ι → Type*)
+    (equiv : κ ≃ ι) (laws : (source : ι) → FinDist (A source)) :
+    map (Equiv.piCongrLeft A equiv).symm (pi laws) =
+      pi (fun target => laws (equiv target)) := by
+  classical
+  apply ext_of_prob
+  intro target
+  let profileEquiv := Equiv.piCongrLeft A equiv
+  have htarget :
+      target = profileEquiv.symm (profileEquiv target) :=
+    (profileEquiv.symm_apply_apply target).symm
+  conv_lhs => rw [htarget]
+  rw [prob_map_of_injective profileEquiv.symm
+      profileEquiv.symm.injective,
+    prob_pi, prob_pi,
+    ← equiv.prod_comp
+      (g := fun source => (laws source).prob (profileEquiv target source))]
+  apply Finset.prod_congr rfl
+  intro player _
+  simp [profileEquiv]
+
 /-- **Independent draws commute with coordinatewise pushforward.** Drawing a
 tuple and then relabelling each coordinate is drawing from the relabelled
 factors. -/

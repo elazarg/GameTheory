@@ -86,7 +86,7 @@ credit.
 
 | Obligation | Status | Delivery owner |
 |---|---|---|
-| minimal D8 transformation taxonomy | **partial** | Wave 1: player/strategy reindexing and only the preservation maps with real consumers |
+| minimal D8 transformation taxonomy | **complete (EXP-045/D8)** | concrete player/strategy equivalences, mixed lifting, Nash/CE invariance, and shared finite-product reindexing |
 | nonconstant-payoff finite-EFG rationality stress | **complete (EXP-035)** | arbitrary whole-policy deviations have value `1 / 2` under the canonical Bayes belief |
 | well-founded strategic SPE/one-shot equivalence | **complete (EXP-036)** | every whole-policy deviation and typed one-shot deviation are equivalent at all histories under `ActsOnceWhereItMatters` |
 | knowledge/`InfoState` hostile probe promised by Phase 0 | **complete (EXP-043/D16)** | separate stable `Epistemic` branch; Protocol counterexample retained as evidence |
@@ -196,9 +196,8 @@ declaration-based.
 
 ## Next ledger actions
 
-1. Complete the minimal D8 transformation obligations.
-2. Add exact broad-package ledgers for the first NFG/FOSG and static recovery
+1. Add exact broad-package ledgers for the first NFG/FOSG and static recovery
    batches, seeded but never classified by the generated index.
-3. Start broad NFG/FOSG recovery from their passed gates while keeping broader
+2. Start broad NFG/FOSG recovery from their passed gates while keeping broader
    family status partial until every pinned declaration is classified.
-4. Update this file in the same commit that changes a family status.
+3. Update this file in the same commit that changes a family status.

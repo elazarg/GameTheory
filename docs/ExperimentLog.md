@@ -2980,3 +2980,14 @@ memory.
 - **Next action:** promote the accepted declarations, replace MAID's local
   probability proof with the shared theorem, add reachability/source audits,
   and close W1-H only after focused and full builds pass.
+- **Promotion:** `Probability.FinDist` now owns exact forward and inverse
+  dependent-product reindexing laws; `Core.Transform` owns the transparent
+  player/strategy operations and Nash/CE/mixed preservation theorems; MAID
+  uses the shared forward law. The stable module and regression test contain
+  246 and 67 nonblank lines. The focused regression target builds in 1,722
+  jobs. Phase 2 source audits pass with no new transport, direct update,
+  placeholder, custom axiom, carrier-reducibility, or import-boundary defect.
+  Core reaches all six D8 probes; the game-free probability root reaches both
+  laws and rejects both game-semantic probes. Phase 3 records the single
+  intended MAID use. The full project builds in 3,355 jobs, and every promoted
+  flagship retains the standard axiom profile. W1-H is complete.

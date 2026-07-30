@@ -1,6 +1,6 @@
 # D8: concrete equivalences, not a transformation hierarchy
 
-- **Status:** adopted; promotion pending
+- **Status:** adopted and promoted; W1-H complete
 - **Date:** 2026-07-30
 - **Experiment IDs:** EXP-020, EXP-045
 
@@ -47,7 +47,7 @@ equivalence, explicitly witnessing both directions of deviation reflection.
 | axiom profile | `propext`, `Classical.choice`, `Quot.sound` only |
 | deviation transport | Nash and CE are both iff theorems; CE response maps are conjugated in both directions |
 | mixed lifting | exact equality of actual play laws for the heterogeneous player swap |
-| probability reuse | forward and inverse dependent-product reindexing use one probability proof; the forward law matches the existing MAID consumer |
+| probability reuse | exact forward and inverse dependent-product laws live together in `Probability.FinDist`; the forward law replaces the MAID-local proof |
 
 ## Kill condition
 
@@ -80,5 +80,13 @@ transformation must name its deviation-reflection hypothesis directly. A new
 structure still requires two independent consumers and a theorem unavailable
 from these concrete operations.
 
-Promotion closes W1-H only after the shared MAID consumer, source audits,
-reachability probes, focused build, and full build pass.
+Promotion is complete. `GameTheory.Core.Transform` contains 246 nonblank lines
+and `GameTheory.Tests.Transform` contains 67. The focused regression target
+builds in 1,722 jobs. MAID now calls `FinDist.pi_reindex` rather than owning a
+local probability proof. Phase 2 source audits pass with zero added transport,
+direct updates, placeholders, custom axioms, unbucketed files, or opaque
+carrier fixtures. Core reaches all six transformation probes; the probability
+root reaches both reindexing laws while rejecting `GameForm` and `IsNash`.
+Phase 3 records exactly one MAID use of the shared theorem. The full project
+build completes in 3,355 jobs, and the promoted flagship axioms remain
+`propext`, `Classical.choice`, and `Quot.sound`.

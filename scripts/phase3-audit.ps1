@@ -126,6 +126,9 @@ Report 'TRANSPORT_PROTOCOL' (Count-Pattern $ProtocolFiles $TransportPattern)
 Report 'TRANSPORT_LANGUAGES' (Count-Pattern $LanguageFiles $TransportPattern)
 Report 'FUNCTION_UPDATE_SEQUENTIAL' `
   (Count-Pattern $SequentialFiles '(?<![A-Za-z0-9_.])Function\.update(?![A-Za-z0-9_])')
+Report 'MAID_SHARED_PI_REINDEX_USES' `
+  (Count-Pattern @('GameTheory/Languages/MAID/FrontierEquivalence.lean') `
+    '(?<![A-Za-z0-9_.])FinDist\.pi_reindex(?![A-Za-z0-9_])')
 Report 'SORRY_OR_ADMIT_SEQUENTIAL' `
   (Count-Pattern $SequentialFiles '(?<![A-Za-z0-9_])(sorry|admit|native_decide)(?![A-Za-z0-9_])')
 Report 'CUSTOM_AXIOM_SEQUENTIAL' (Count-Pattern $SequentialFiles '(?m)^\s*axiom\s')
@@ -500,6 +503,7 @@ if ($VerifyExpected) {
     TRANSPORT_PROTOCOL = 0
     TRANSPORT_LANGUAGES = 0
     FUNCTION_UPDATE_SEQUENTIAL = 0
+    MAID_SHARED_PI_REINDEX_USES = 1
     SORRY_OR_ADMIT_SEQUENTIAL = 0
     CUSTOM_AXIOM_SEQUENTIAL = 0
     EXECUTION_IMPORTS_INFORMATION = 0

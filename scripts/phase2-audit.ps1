@@ -506,6 +506,50 @@ if (-not $SkipReachability) {
     }
   }
   Report 'CORE_EVOLUTIONARY_PROBES_REJECTED' $coreEvolutionaryRejected
+
+  # D8 exposes only concrete equivalences. The probability laws remain
+  # game-free, while the Core root deliberately reaches the preservation
+  # theorems that consume them.
+  $transformInputs = @(
+    'GameTheory.GameSignature.reindexPlayers',
+    'GameTheory.Profile.relabelStrategies',
+    'GameTheory.isNash_reindexPlayers',
+    'GameTheory.isNash_relabelStrategies',
+    'GameTheory.isCorrelatedEq_relabelStrategies',
+    'GameTheory.mixed_reindexPlayers_play')
+  $transformOutput = Run-Probe 'GameTheory.Core' $transformInputs
+  $transformInputsReached = 0
+  foreach ($constant in $transformInputs) {
+    if (-not (Is-Unreachable $transformOutput $constant)) {
+      $transformInputsReached++
+    }
+  }
+  Report 'TRANSFORM_INPUT_PROBES_REACHED' $transformInputsReached
+
+  $probabilityReindexInputs = @(
+    'GameTheory.Probability.FinDist.pi_reindex',
+    'GameTheory.Probability.FinDist.pi_unreindex')
+  $probabilityReindexBoundary = @(
+    'GameTheory.GameForm',
+    'GameTheory.IsNash')
+  $probabilityReindexOutput = Run-Probe 'GameTheory.Probability.FinDist' `
+    ($probabilityReindexInputs + $probabilityReindexBoundary)
+  $probabilityReindexInputsReached = 0
+  foreach ($constant in $probabilityReindexInputs) {
+    if (-not (Is-Unreachable $probabilityReindexOutput $constant)) {
+      $probabilityReindexInputsReached++
+    }
+  }
+  Report 'PROBABILITY_REINDEX_INPUT_PROBES_REACHED' `
+    $probabilityReindexInputsReached
+  $probabilityReindexBoundaryRejected = 0
+  foreach ($constant in $probabilityReindexBoundary) {
+    if (Is-Unreachable $probabilityReindexOutput $constant) {
+      $probabilityReindexBoundaryRejected++
+    }
+  }
+  Report 'PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED' `
+    $probabilityReindexBoundaryRejected
   Remove-Item $probeFile -ErrorAction SilentlyContinue
 }
 
@@ -568,6 +612,9 @@ if ($VerifyExpected) {
     $Expected['EVOLUTIONARY_BRIDGE_INPUT_PROBES_REACHED'] = 3
     $Expected['EVOLUTIONARY_BRIDGE_BOUNDARY_PROBES_REJECTED'] = 4
     $Expected['CORE_EVOLUTIONARY_PROBES_REJECTED'] = 2
+    $Expected['TRANSFORM_INPUT_PROBES_REACHED'] = 6
+    $Expected['PROBABILITY_REINDEX_INPUT_PROBES_REACHED'] = 2
+    $Expected['PROBABILITY_REINDEX_BOUNDARY_PROBES_REJECTED'] = 2
   }
   foreach ($entry in $Expected.GetEnumerator()) {
     if ($Results[$entry.Key] -ne $entry.Value) {

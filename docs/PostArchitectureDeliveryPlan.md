@@ -249,7 +249,7 @@ would not be.
 
 ## 6. Wave 1: close the frozen promises
 
-Status: in progress.
+Status: complete.
 
 This wave closes promises made during architecture validation before broad
 recovery creates pressure to work around them.
@@ -263,7 +263,7 @@ recovery creates pressure to work around them.
 | W1-E | Bayesian outcome-law and truthfulness transfers | **complete** | F5 and F6 are ported, adapted, or explicitly retired with measured reasons |
 | W1-F | named language transfers | **complete; T1, T3, and T4 closed** | T1, T3, and T4 are proved or rejected individually; no generic certificate is credited for a missing theorem |
 | W1-G | perfect-recall-facing Kuhn surface | **complete** | both constructive directions, realizable history-law equality, arbitrary outcome pushforwards, and expected utility are exposed under the sharp no-revisit/recall hypotheses |
-| W1-H | minimal D8 transformation surface | partial | player/strategy reindexing and only the preservation maps used by real consumers are public and transport-audited |
+| W1-H | minimal D8 transformation surface | **complete (EXP-045/D8)** | concrete player/strategy equivalences, mixed lifting, Nash/CE invariance, and the shared MAID probability law are public and transport-audited |
 | W1-I | overdue knowledge and evolutionary ownership probes | **complete (EXP-043/D16; EXP-044/D17)** | Aumann/`InfoState` and ESS/static-dynamic ownership are settled in separate stable branches with explicit reverse-dependency probes |
 
 Recommended dependency order:
@@ -273,9 +273,8 @@ Recommended dependency order:
 2. Completed W1-A through W1-E fix the continuation, Bayes, SPE, one-shot,
    external-regret, approximate-CCE, public-monitoring, recommendation-law, and
    truthful-mechanism targets used by later recovery.
-3. T1, T3, T4, and W1-G now fix the EFG/MAID/NFG/FOSG strategic-form,
-   transformation, and Kuhn targets; W1-H exercises the remaining minimal
-   transformation surface.
+3. T1, T3, T4, W1-G, and W1-H fix the EFG/MAID/NFG/FOSG strategic-form,
+   transformation, and Kuhn targets.
 4. W1-I may proceed independently, but must close before those domains harvest.
 5. The MAID and FOSG execution probes and named transfer packages have passed;
    broader recovery proceeds through their declaration ledgers.
@@ -528,17 +527,16 @@ recovery status is not renegotiated during that review.
 
 The next work is ordered:
 
-1. finish the minimal D8 transformation obligations;
-2. add exact broad-package ledgers for the first NFG/FOSG and static recovery
+1. add exact broad-package ledgers for the first NFG/FOSG and static recovery
    batches, using the generated index only as a review queue;
-3. consolidate moving delivery probes without rewriting historical phase
+2. consolidate moving delivery probes without rewriting historical phase
    measurements;
-4. resume the broader revelation/information-design inventory and open the
+3. resume the broader revelation/information-design inventory and open the
    static learning/communication and congestion harvest lanes;
-5. begin broad NFG/FOSG recovery from their now-passed language gates;
-6. admit at most one mature blind-spot experiment—finite stochastic games or
+4. begin broad NFG/FOSG recovery from their now-passed language gates;
+5. admit at most one mature blind-spot experiment—finite stochastic games or
    finite graph reachability are the leading candidates;
-7. admit no Frontier implementation until the first three items have an active
+6. admit no Frontier implementation until the first three items have an active
    owner and ledger.
 
 This queue may change when an experiment refutes an assumption, but a change
